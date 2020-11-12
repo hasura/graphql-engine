@@ -15,7 +15,7 @@ import ViewRows from './ViewRows';
 
 import { NotFoundError } from '../../../Error/PageNotFound';
 import { exists } from '../../../Common/utils/jsUtils';
-import { getPersistedPageSize } from './localStorageUtils';
+import { getPersistedPageSize } from './tableUtils';
 
 class ViewTable extends Component {
   constructor(props) {
@@ -29,7 +29,7 @@ class ViewTable extends Component {
     this.getInitialData(this.props.tableName);
   }
 
-  componentWillReceiveProps(nextProps) {
+  UNSAFE_componentWillReceiveProps(nextProps) {
     if (nextProps.tableName !== this.props.tableName) {
       this.getInitialData(nextProps.tableName);
     }
@@ -148,6 +148,7 @@ class ViewTable extends Component {
         schemas={schemas}
         curDepth={0}
         count={exists(count) ? count : estimatedCount}
+        shouldHidePagination={!exists(count) && !estimatedCount}
         dispatch={dispatch}
         expandedRow={expandedRow}
         manualTriggers={manualTriggers}

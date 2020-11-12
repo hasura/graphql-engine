@@ -1,23 +1,29 @@
 module Hasura.RQL.DML.Internal where
-
-import qualified Database.PG.Query   as Q
-import qualified Hasura.SQL.DML      as S
+-- ( mkAdminRolePermInfo
+-- , SessVarBldr
+-- ) where
 
 import           Hasura.Prelude
-import           Hasura.RQL.GBoolExp
-import           Hasura.RQL.Types
-import           Hasura.Session
-import           Hasura.SQL.Error
-import           Hasura.SQL.Types
-import           Hasura.SQL.Value
+
+import qualified Data.HashMap.Strict                        as M
+import qualified Data.HashSet                               as HS
+import qualified Data.Sequence                              as DS
+import qualified Data.Text                                  as T
+import qualified Database.PG.Query                          as Q
 
 import           Control.Lens
 import           Data.Aeson.Types
+import           Data.Text.Extended
 
-import qualified Data.HashMap.Strict as M
-import qualified Data.HashSet        as HS
-import qualified Data.Sequence       as DS
-import qualified Data.Text           as T
+import qualified Hasura.Backends.Postgres.SQL.DML           as S
+
+import           Hasura.Backends.Postgres.SQL.Error
+import           Hasura.Backends.Postgres.SQL.Types
+import           Hasura.Backends.Postgres.SQL.Value
+import           Hasura.Backends.Postgres.Translate.BoolExp
+import           Hasura.RQL.Types
+import           Hasura.Session
+
 
 newtype DMLP1T m a
   = DMLP1T { unDMLP1T :: StateT (DS.Seq Q.PrepArg) m a }
@@ -29,7 +35,7 @@ newtype DMLP1T m a
 runDMLP1T :: DMLP1T m a -> m (a, DS.Seq Q.PrepArg)
 runDMLP1T = flip runStateT DS.empty . unDMLP1T
 
-mkAdminRolePermInfo :: TableCoreInfo -> RolePermInfo
+mkAdminRolePermInfo :: (Eq (Column backend), Hashable (Column backend)) => TableCoreInfo backend -> RolePermInfo backend
 mkAdminRolePermInfo ti =
   RolePermInfo (Just i) (Just s) (Just u) (Just d)
   where
@@ -40,30 +46,35 @@ mkAdminRolePermInfo ti =
 
     tn = _tciName ti
     i = InsPermInfo (HS.fromList pgCols) annBoolExpTrue M.empty False []
-    s = SelPermInfo (HS.fromList pgCols) (HS.fromList scalarComputedFields) tn annBoolExpTrue
+    s = SelPermInfo (HS.fromList pgCols) (HS.fromList scalarComputedFields) annBoolExpTrue
         Nothing True []
     u = UpdPermInfo (HS.fromList pgCols) tn annBoolExpTrue Nothing M.empty []
     d = DelPermInfo tn annBoolExpTrue []
 
 askPermInfo'
   :: (UserInfoM m)
-  => PermAccessor c
-  -> TableInfo
+  => PermAccessor 'Postgres c
+  -> TableInfo 'Postgres
   -> m (Maybe c)
 askPermInfo' pa tableInfo = do
   roleName <- askCurRole
-  let mrpi = getRolePermInfo roleName
-  return $ mrpi >>= (^. permAccToLens pa)
-  where
-    rpim = _tiRolePermInfoMap tableInfo
-    getRolePermInfo roleName
-      | roleName == adminRoleName = Just $ mkAdminRolePermInfo (_tiCoreInfo tableInfo)
-      | otherwise             = M.lookup roleName rpim
+  return $ getPermInfoMaybe roleName pa tableInfo
+
+getPermInfoMaybe :: RoleName -> PermAccessor 'Postgres c -> TableInfo 'Postgres -> Maybe c
+getPermInfoMaybe roleName pa tableInfo =
+  getRolePermInfo roleName tableInfo >>= (^. permAccToLens pa)
+
+getRolePermInfo :: RoleName -> TableInfo 'Postgres -> Maybe (RolePermInfo 'Postgres)
+getRolePermInfo roleName tableInfo
+  | roleName == adminRoleName =
+    Just $ mkAdminRolePermInfo (_tiCoreInfo tableInfo)
+  | otherwise                 =
+    M.lookup roleName (_tiRolePermInfoMap tableInfo)
 
 askPermInfo
   :: (UserInfoM m, QErrM m)
-  => PermAccessor c
-  -> TableInfo
+  => PermAccessor 'Postgres c
+  -> TableInfo 'Postgres
   -> m c
 askPermInfo pa tableInfo = do
   roleName <- askCurRole
@@ -78,38 +89,38 @@ askPermInfo pa tableInfo = do
   where
     pt = permTypeToCode $ permAccToType pa
 
-isTabUpdatable :: RoleName -> TableInfo -> Bool
-isTabUpdatable roleName ti
-  | roleName == adminRoleName = True
-  | otherwise = isJust $ M.lookup roleName rpim >>= _permUpd
+isTabUpdatable :: RoleName -> TableInfo 'Postgres -> Bool
+isTabUpdatable role ti
+  | role == adminRoleName = True
+  | otherwise = isJust $ M.lookup role rpim >>= _permUpd
   where
     rpim = _tiRolePermInfoMap ti
 
 askInsPermInfo
   :: (UserInfoM m, QErrM m)
-  => TableInfo -> m InsPermInfo
+  => TableInfo 'Postgres -> m (InsPermInfo 'Postgres)
 askInsPermInfo = askPermInfo PAInsert
 
 askSelPermInfo
   :: (UserInfoM m, QErrM m)
-  => TableInfo -> m SelPermInfo
+  => TableInfo 'Postgres -> m (SelPermInfo 'Postgres)
 askSelPermInfo = askPermInfo PASelect
 
 askUpdPermInfo
   :: (UserInfoM m, QErrM m)
-  => TableInfo -> m UpdPermInfo
+  => TableInfo 'Postgres -> m (UpdPermInfo 'Postgres)
 askUpdPermInfo = askPermInfo PAUpdate
 
 askDelPermInfo
   :: (UserInfoM m, QErrM m)
-  => TableInfo -> m DelPermInfo
+  => TableInfo 'Postgres -> m (DelPermInfo 'Postgres)
 askDelPermInfo = askPermInfo PADelete
 
 verifyAsrns :: (MonadError QErr m) => [a -> m ()] -> [a] -> m ()
 verifyAsrns preds xs = indexedForM_ xs $ \a -> mapM_ ($ a) preds
 
 checkSelOnCol :: (UserInfoM m, QErrM m)
-              => SelPermInfo -> PGCol -> m ()
+              => SelPermInfo 'Postgres -> PGCol -> m ()
 checkSelOnCol selPermInfo =
   checkPermOnCol PTSelect (spiCols selPermInfo)
 
@@ -142,17 +153,17 @@ binRHSBuilder colType val = do
 fetchRelTabInfo
   :: (QErrM m, CacheRM m)
   => QualifiedTable
-  -> m TableInfo
+  -> m (TableInfo 'Postgres)
 fetchRelTabInfo refTabName =
   -- Internal error
   modifyErrAndSet500 ("foreign " <> ) $ askTabInfo refTabName
 
-type SessVarBldr m = PGType PGScalarType -> SessionVariable -> m S.SQLExp
+type SessVarBldr b m = PGType (ScalarType b) -> SessionVariable -> m (SQLExp b)
 
 fetchRelDet
   :: (UserInfoM m, QErrM m, CacheRM m)
   => RelName -> QualifiedTable
-  -> m (FieldInfoMap FieldInfo, SelPermInfo)
+  -> m (FieldInfoMap (FieldInfo 'Postgres), SelPermInfo 'Postgres)
 fetchRelDet relName refTabName = do
   roleName <- askCurRole
   -- Internal error
@@ -173,10 +184,10 @@ fetchRelDet relName refTabName = do
 
 checkOnColExp
   :: (UserInfoM m, QErrM m, CacheRM m)
-  => SelPermInfo
-  -> SessVarBldr m
-  -> AnnBoolExpFldSQL
-  -> m AnnBoolExpFldSQL
+  => SelPermInfo 'Postgres
+  -> SessVarBldr 'Postgres m
+  -> AnnBoolExpFldSQL 'Postgres
+  -> m (AnnBoolExpFldSQL 'Postgres)
 checkOnColExp spi sessVarBldr annFld = case annFld of
   AVCol colInfo _ -> do
     let cn = pgiColumn colInfo
@@ -190,19 +201,19 @@ checkOnColExp spi sessVarBldr annFld = case annFld of
 
 convAnnBoolExpPartialSQL
   :: (Applicative f)
-  => SessVarBldr f
-  -> AnnBoolExpPartialSQL
-  -> f AnnBoolExpSQL
+  => SessVarBldr backend f
+  -> AnnBoolExpPartialSQL backend
+  -> f (AnnBoolExpSQL backend)
 convAnnBoolExpPartialSQL f =
   traverseAnnBoolExp (convPartialSQLExp f)
 
 convPartialSQLExp
   :: (Applicative f)
-  => SessVarBldr f
-  -> PartialSQLExp
-  -> f S.SQLExp
+  => SessVarBldr backend f
+  -> PartialSQLExp backend
+  -> f (SQLExp backend)
 convPartialSQLExp f = \case
-  PSESQLExp sqlExp -> pure sqlExp
+  PSESQLExp sqlExp                 -> pure sqlExp
   PSESessVar colTy sessionVariable -> f colTy sessionVariable
 
 sessVarFromCurrentSetting
@@ -225,21 +236,21 @@ currentSession = S.SEUnsafe "current_setting('hasura.user')::json"
 
 checkSelPerm
   :: (UserInfoM m, QErrM m, CacheRM m)
-  => SelPermInfo
-  -> SessVarBldr m
-  -> AnnBoolExpSQL
-  -> m AnnBoolExpSQL
+  => SelPermInfo 'Postgres
+  -> SessVarBldr 'Postgres m
+  -> AnnBoolExpSQL 'Postgres
+  -> m (AnnBoolExpSQL 'Postgres)
 checkSelPerm spi sessVarBldr =
   traverse (checkOnColExp spi sessVarBldr)
 
 convBoolExp
   :: (UserInfoM m, QErrM m, CacheRM m)
-  => FieldInfoMap FieldInfo
-  -> SelPermInfo
-  -> BoolExp
-  -> SessVarBldr m
+  => FieldInfoMap (FieldInfo 'Postgres)
+  -> SelPermInfo 'Postgres
+  -> BoolExp 'Postgres
+  -> SessVarBldr 'Postgres m
   -> (PGColumnType -> Value -> m S.SQLExp)
-  -> m AnnBoolExpSQL
+  -> m (AnnBoolExpSQL 'Postgres)
 convBoolExp cim spi be sessVarBldr prepValBldr = do
   abe <- annBoolExp rhsParser cim $ unBoolExp be
   checkSelPerm spi sessVarBldr abe
@@ -277,7 +288,7 @@ toJSONableExp strfyNum colTy asText expn
   | otherwise = expn
 
 -- validate headers
-validateHeaders :: (UserInfoM m, QErrM m) => [T.Text] -> m ()
+validateHeaders :: (UserInfoM m, QErrM m) => [Text] -> m ()
 validateHeaders depHeaders = do
   headers <- getSessionVariables . _uiSession <$> askUserInfo
   forM_ depHeaders $ \hdr ->

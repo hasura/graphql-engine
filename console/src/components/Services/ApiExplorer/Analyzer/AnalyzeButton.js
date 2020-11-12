@@ -4,8 +4,9 @@ import QueryAnalyzer from './QueryAnalyzer';
 import GraphiQL from 'graphiql';
 import { print, parse } from 'graphql';
 import { isValidGraphQLOperation } from '../utils';
+import { getGraphQLQueryPayload } from '../../../Common/utils/graphqlUtils';
 
-export default class AnalyseButton extends React.Component {
+export default class AnalyzeButton extends React.Component {
   constructor(props) {
     super(props);
     // Ensure props are correct
@@ -20,7 +21,7 @@ export default class AnalyseButton extends React.Component {
     };
   }
   render() {
-    const operations = this.props.operations;
+    const { operations, mode } = this.props;
     const optionsOpen = this.state.optionsOpen;
     const hasOptions = operations && operations.length > 1;
 
@@ -67,8 +68,10 @@ export default class AnalyseButton extends React.Component {
         {this.state.analyseQuery && (
           <QueryAnalyzer
             show={this.state.isAnalysing}
+            mode={mode}
             analyseQuery={this.state.analyseQuery}
             clearAnalyse={this.clearAnalyse.bind(this)}
+            dispatch={this.props.dispatch}
             {...this.props}
           />
         )}
@@ -125,15 +128,13 @@ export default class AnalyseButton extends React.Component {
     }
 
     const plainQuery = print(parseQuery);
-    const query = {
-      query: plainQuery,
-      variables: jsonVariables,
-    };
+    const query = getGraphQLQueryPayload(plainQuery, jsonVariables);
     if (operation) {
       query.operationName = operation;
     }
     const analyseQuery = {
       query,
+      is_relay: this.props.mode === 'relay',
     };
     this.setState({
       analyseQuery,
@@ -172,7 +173,7 @@ export default class AnalyseButton extends React.Component {
   };
 }
 
-AnalyseButton.propTypes = {
+AnalyzeButton.propTypes = {
   operations: PropTypes.array,
   query: PropTypes.string,
   variables: PropTypes.string,

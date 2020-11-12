@@ -18,8 +18,8 @@ import (
 )
 
 const (
-	actionsFileName string = "actions.yaml"
-	graphqlFileName        = "actions.graphql"
+	actionsFileName = "actions.yaml"
+	graphqlFileName = "actions.graphql"
 )
 
 type ActionConfig struct {
@@ -100,7 +100,7 @@ input SampleInput {
 		defaultSDL = sdlToResp.SDL.Complete
 	}
 	graphqlFileContent = defaultSDL + "\n" + graphqlFileContent
-	data, err := editor.CaptureInputFromEditor(editor.GetPreferredEditorFromEnvironment, graphqlFileContent)
+	data, err := editor.CaptureInputFromEditor(editor.GetPreferredEditorFromEnvironment, graphqlFileContent, "graphql")
 	if err != nil {
 		return errors.Wrap(err, "error in getting input from editor")
 	}

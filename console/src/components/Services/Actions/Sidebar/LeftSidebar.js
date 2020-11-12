@@ -4,7 +4,11 @@ import { Link } from 'react-router';
 import LeftSubSidebar from '../../../Common/Layout/LeftSubSidebar/LeftSubSidebar';
 import styles from '../../../Common/Layout/LeftSubSidebar/LeftSubSidebar.scss';
 
-const LeftSidebar = ({ appPrefix, common: { actions, currentAction } }) => {
+const LeftSidebar = ({
+  appPrefix,
+  common: { actions, currentAction },
+  readOnlyMode,
+}) => {
   const [searchText, setSearchText] = React.useState('');
 
   const handleSearch = e => setSearchText(e.target.value);
@@ -37,6 +41,17 @@ const LeftSidebar = ({ appPrefix, common: { actions, currentAction } }) => {
     actionsList = [...actions];
   }
 
+  const getActionIcon = action => {
+    switch (action.action_defn.type) {
+      case 'mutation':
+        return 'fa-pencil-square-o';
+      case 'query':
+        return 'fa-book';
+      default:
+        return 'fa-wrench';
+    }
+  };
+
   const getChildList = () => {
     let childList;
     if (actionsList.length === 0) {
@@ -55,6 +70,8 @@ const LeftSidebar = ({ appPrefix, common: { actions, currentAction } }) => {
           activeTableClass = styles.activeLink;
         }
 
+        const actionIcon = getActionIcon(a);
+
         return (
           <li
             className={activeTableClass}
@@ -66,7 +83,7 @@ const LeftSidebar = ({ appPrefix, common: { actions, currentAction } }) => {
               data-test={a.action_name}
             >
               <i
-                className={styles.tableIcon + ' fa fa-wrench'}
+                className={styles.tableIcon + ' fa ' + actionIcon}
                 aria-hidden="true"
               />
               {a.action_name}
@@ -81,7 +98,7 @@ const LeftSidebar = ({ appPrefix, common: { actions, currentAction } }) => {
 
   return (
     <LeftSubSidebar
-      showAddBtn
+      showAddBtn={!readOnlyMode}
       searchInput={getSearchInput()}
       heading={`Actions (${actionsList.length})`}
       addLink={`${appPrefix}/manage/add`}

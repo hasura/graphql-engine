@@ -88,11 +88,10 @@ consoleAssetsVersion = case currentVersion of
         Nothing -> Nothing
         Just r  -> if
           | T.null r   -> Nothing
-          | otherwise  -> T.pack <$> (getChannelFromPreRelease $ T.unpack r)
+          | otherwise  -> T.pack <$> getChannelFromPreRelease (T.unpack r)
 
     getChannelFromPreRelease :: String -> Maybe String
     getChannelFromPreRelease sv = sv =~~ ("^([a-z]+)"::String)
-
 
     getTextFromId :: V.Identifier -> Maybe Text
     getTextFromId i = Just i ^? (toTextualM . V._Textual)

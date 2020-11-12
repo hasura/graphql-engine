@@ -6,7 +6,9 @@ module Hasura.GraphQL.Transport.WebSocket.Protocol
   , StopMsg(..)
   , ClientMsg(..)
   , ServerMsg(..)
+  , ServerMsgType(..)
   , encodeServerMsg
+  , serverMsgType
   , DataMsg(..)
   , ErrorMsg(..)
   , ConnErrMsg(..)
@@ -68,7 +70,7 @@ instance J.FromJSON ClientMsg where
 data DataMsg
   = DataMsg
   { _dmId      :: !OperationId
-  , _dmPayload :: !GraphqlResponse
+  , _dmPayload :: !GQResponse
   }
 
 data ErrorMsg
@@ -114,6 +116,14 @@ instance Show ServerMsgType where
 instance J.ToJSON ServerMsgType where
   toJSON = J.toJSON . show
 
+serverMsgType :: ServerMsg -> ServerMsgType
+serverMsgType SMConnAck       = SMT_GQL_CONNECTION_ACK
+serverMsgType SMConnKeepAlive = SMT_GQL_CONNECTION_KEEP_ALIVE
+serverMsgType (SMConnErr _)   = SMT_GQL_CONNECTION_ERROR
+serverMsgType (SMData _)      = SMT_GQL_DATA
+serverMsgType (SMErr _)       = SMT_GQL_ERROR
+serverMsgType (SMComplete _)  = SMT_GQL_COMPLETE
+
 encodeServerMsg :: ServerMsg -> BL.ByteString
 encodeServerMsg msg =
   encJToLBS $ encJFromAssocList $ case msg of
@@ -132,7 +142,7 @@ encodeServerMsg msg =
   SMData (DataMsg opId payload) ->
     [ encTy SMT_GQL_DATA
     , ("id", encJFromJValue opId)
-    , ("payload", encodeGraphqlResponse payload)
+    , ("payload", encodeGQResp payload)
     ]
 
   SMErr (ErrorMsg opId payload) ->

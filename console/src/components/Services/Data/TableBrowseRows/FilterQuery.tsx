@@ -26,7 +26,7 @@ import {
   getPersistedPageSize,
   getPersistedSelectedColumns,
   persistSelectedColumns,
-} from './localStorageUtils';
+} from './tableUtils';
 import { isEmpty } from '../../../Common/utils/jsUtils';
 import { getDefaultValue, getQueryFromUrl } from './utils';
 import { ColumnsSelector } from './ColumnsSelector';
@@ -426,11 +426,12 @@ const FilterQuery: React.FC<FilterQueryProps> = ({
         >
           Run query
         </Button>
-        <ReloadEnumValuesButton
-          dispatch={dispatch}
-          isEnum={tableSchema.is_enum}
-          tooltipStyle={styles.add_mar_left_mid}
-        />
+        {tableSchema.is_enum ? (
+          <ReloadEnumValuesButton
+            dispatch={dispatch}
+            tooltipStyle={styles.add_mar_left_mid}
+          />
+        ) : null}
       </div>
     </form>
   );

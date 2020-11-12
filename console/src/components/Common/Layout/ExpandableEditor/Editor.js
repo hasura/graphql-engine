@@ -7,7 +7,7 @@ class Editor extends React.Component {
     isEditing: this.props.toggled || false,
   };
 
-  componentWillReceiveProps(nextProps) {
+  UNSAFE_componentWillReceiveProps(nextProps) {
     if (nextProps.toggled !== this.state.isEditing) {
       if (nextProps.toggled !== undefined) {
         this.setState({
@@ -29,7 +29,17 @@ class Editor extends React.Component {
   };
 
   toggleButton = () => {
-    if (this.props.isCollapsable === false && this.state.isEditing) {
+    const {
+      readOnlyMode = false,
+      isCollapsable,
+      service,
+      property,
+      collapseButtonText,
+      expandButtonText,
+    } = this.props;
+
+    const { isEditing } = this.state;
+    if (isCollapsable === false && isEditing) {
       return null;
     }
 
@@ -38,14 +48,11 @@ class Editor extends React.Component {
         className={`${styles.add_mar_small}`}
         color="white"
         size="xs"
-        data-test={`${this.props.service}-${
-          this.state.isEditing ? 'close' : 'edit'
-        }-${this.props.property}`}
+        data-test={`${service}-${isEditing ? 'close' : 'edit'}-${property}`}
         onClick={this.toggleEditor}
+        disabled={readOnlyMode}
       >
-        {this.state.isEditing
-          ? this.props.collapseButtonText || 'Close'
-          : this.props.expandButtonText || 'Edit'}
+        {isEditing ? collapseButtonText || 'Close' : expandButtonText || 'Edit'}
       </Button>
     );
   };
@@ -104,6 +111,7 @@ class Editor extends React.Component {
       editorExpanded,
       collapsedLabel,
       expandedLabel,
+      readOnlyMode = false,
     } = this.props;
 
     let editorClass;
@@ -139,7 +147,9 @@ class Editor extends React.Component {
           {editorLabel}
         </div>
         {editorContent}
-        <div className={styles.add_mar_top_small}>{actionButtons}</div>
+        <div className={styles.add_mar_top_small}>
+          {!readOnlyMode && actionButtons}
+        </div>
       </div>
     );
   }

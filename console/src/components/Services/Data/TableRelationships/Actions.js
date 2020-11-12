@@ -3,7 +3,17 @@ import inflection from 'inflection';
 import { makeMigrationCall, updateSchemaInfo } from '../DataActions';
 import gqlPattern, { gqlRelErrorNotif } from '../Common/GraphQLValidation';
 import { showErrorNotification } from '../../Common/Notification';
+import {
+  getSaveRemoteRelQuery,
+  getDropRemoteRelQuery,
+} from '../../../Common/utils/v1QueryUtils';
+import { getConfirmation } from '../../../Common/utils/jsUtils';
 import suggestedRelationshipsRaw from './autoRelations';
+import {
+  getRemoteRelPayload,
+  parseRemoteRelationship,
+} from './RemoteRelationships/utils';
+import Migration from '../../../../utils/migration/Migration';
 
 export const SET_MANUAL_REL_ADD = 'ModifyTable/SET_MANUAL_REL_ADD';
 export const MANUAL_REL_SET_TYPE = 'ModifyTable/MANUAL_REL_SET_TYPE';
@@ -15,6 +25,171 @@ export const REL_SELECTION_CHANGED = 'ModifyTable/REL_SELECTION_CHANGED';
 export const MANUAL_REL_NAME_CHANGED = 'ModifyTable/MANUAL_REL_NAME_CHANGED';
 export const REL_NAME_CHANGED = 'ModifyTable/REL_NAME_CHANGED';
 export const REL_ADD_NEW_CLICKED = 'ModifyTable/REL_ADD_NEW_CLICKED';
+
+export const SET_REMOTE_RELATIONSHIPS = 'ModifyTable/SET_REMOTE_RELATIONSHIPS';
+
+export const defaultRemoteRelationship = {
+  name: '',
+  remoteSchema: '',
+  remoteField: [],
+};
+
+export const saveRemoteRelationship = (
+  state,
+  existingRel,
+  successCallback,
+  errorCallback
+) => {
+  return (dispatch, getState) => {
+    const isNew = !existingRel;
+    if (!gqlPattern.test(state.name)) {
+      return dispatch(
+        showErrorNotification(
+          gqlRelErrorNotif[0],
+          gqlRelErrorNotif[1],
+          gqlRelErrorNotif[2]
+        )
+      );
+    }
+    if (!state.remoteSchema) {
+      return dispatch(showErrorNotification('Remote schema is required'));
+    }
+    const table = {
+      schema: getState().tables.currentSchema,
+      name: getState().tables.currentTable,
+    };
+
+    const errorMsg = `${
+      isNew ? 'Creating' : 'Updating'
+    } remote relationship failed`;
+
+    let remoteRelQueryArgs;
+    try {
+      remoteRelQueryArgs = getRemoteRelPayload(state);
+    } catch (e) {
+      if (errorCallback) {
+        errorCallback();
+      }
+      return dispatch(showErrorNotification(errorMsg, e.message));
+    }
+    const migration = new Migration();
+    let downQry;
+    if (isNew) {
+      downQry = getDropRemoteRelQuery(state.name, state.table);
+    } else {
+      downQry = getSaveRemoteRelQuery(
+        getRemoteRelPayload(parseRemoteRelationship(existingRel)),
+        isNew
+      );
+    }
+    migration.add(
+      getSaveRemoteRelQuery(remoteRelQueryArgs, !existingRel),
+      downQry
+    );
+
+    // Apply migrations
+    const migrationName = `table_${table.name}_${
+      isNew ? 'create' : 'update'
+    }_remote_relationship_${state.name}`;
+
+    const requestMsg = `${
+      isNew ? 'Creating' : 'Updating'
+    } remote relationship...`;
+    const successMsg = `Successfully ${
+      isNew ? 'created' : 'updated'
+    } remote relationship`;
+
+    const customOnSuccess = () => {
+      if (successCallback) {
+        successCallback();
+      }
+    };
+    const customOnError = () => {
+      if (errorCallback) {
+        errorCallback();
+      }
+    };
+
+    // Rename relationship should fetch entire schema info.
+    makeMigrationCall(
+      dispatch,
+      getState,
+      migration.upMigration,
+      migration.downMigration,
+      migrationName,
+      customOnSuccess,
+      customOnError,
+      requestMsg,
+      successMsg,
+      errorMsg
+    );
+  };
+};
+
+export const dropRemoteRelationship = (
+  state,
+  existingRel,
+  successCallback,
+  errorCallback
+) => {
+  return (dispatch, getState) => {
+    if (
+      !getConfirmation('This will permanently delete the remote relationship')
+    ) {
+      if (errorCallback) {
+        errorCallback();
+      }
+      return;
+    }
+
+    const table = state.table;
+    const migration = new Migration();
+
+    migration.add(
+      getDropRemoteRelQuery(existingRel.remote_relationship_name, table),
+      getSaveRemoteRelQuery(
+        getRemoteRelPayload(parseRemoteRelationship(existingRel)),
+        true
+      )
+    );
+    // Apply migrations
+    const migrationName = `table_${table.name}_drop_remote_relationship_${state.name}`;
+
+    const requestMsg = 'Deleting remote relationship...';
+    const successMsg = 'Successfully deleted remote relationship';
+    const errorMsg = 'Deleting remote relationship failed';
+
+    const customOnSuccess = () => {
+      if (successCallback) {
+        successCallback();
+      }
+    };
+    const customOnError = () => {
+      if (errorCallback) {
+        errorCallback();
+      }
+    };
+
+    // Rename relationship should fetch entire schema info.
+    makeMigrationCall(
+      dispatch,
+      getState,
+      migration.upMigration,
+      migration.downMigration,
+      migrationName,
+      customOnSuccess,
+      customOnError,
+      requestMsg,
+      successMsg,
+      errorMsg
+    );
+  };
+};
+
+export const setRemoteRelationships = remoteRelationships => ({
+  type: SET_REMOTE_RELATIONSHIPS,
+  remoteRelationships,
+});
 
 const resetRelationshipForm = () => ({ type: REL_RESET });
 const resetManualRelationshipForm = () => ({ type: MANUAL_REL_RESET });
@@ -43,32 +218,32 @@ const manualRelRSchemaChanged = rSchema => ({
 const saveRenameRelationship = (oldName, newName, tableName, callback) => {
   return (dispatch, getState) => {
     const currentSchema = getState().tables.currentSchema;
-    const migrateUp = [
-      {
-        type: 'rename_relationship',
-        args: {
-          table: {
-            name: tableName,
-            schema: currentSchema,
-          },
-          name: oldName,
-          new_name: newName,
+    const migrateUp = {
+      type: 'rename_relationship',
+      args: {
+        table: {
+          name: tableName,
+          schema: currentSchema,
         },
+        name: oldName,
+        new_name: newName,
       },
-    ];
-    const migrateDown = [
-      {
-        type: 'rename_relationship',
-        args: {
-          table: {
-            name: tableName,
-            schema: currentSchema,
-          },
-          name: newName,
-          new_name: oldName,
+    };
+
+    const migrateDown = {
+      type: 'rename_relationship',
+      args: {
+        table: {
+          name: tableName,
+          schema: currentSchema,
         },
+        name: newName,
+        new_name: oldName,
       },
-    ];
+    };
+
+    const migration = new Migration();
+    migration.add(migrateUp, migrateDown);
     // Apply migrations
     const migrationName = `rename_relationship_${oldName}_to_${newName}_schema_${currentSchema}_table_${tableName}`;
 
@@ -85,8 +260,8 @@ const saveRenameRelationship = (oldName, newName, tableName, callback) => {
     makeMigrationCall(
       dispatch,
       getState,
-      migrateUp,
-      migrateDown,
+      migration.upMigration,
+      migration.downMigration,
       migrationName,
       customOnSuccess,
       customOnError,
@@ -200,9 +375,9 @@ const generateRelationshipsQuery = relMeta => {
 
 const deleteRelMigrate = relMeta => (dispatch, getState) => {
   const { upQuery, downQuery } = generateRelationshipsQuery(relMeta);
-  const relChangesUp = [downQuery];
-  const relChangesDown = [upQuery];
 
+  const migration = new Migration();
+  migration.add(downQuery, upQuery); // upquery from generateRelationshipsQuery used as downMigratio and vice versa
   // Apply migrations
   const migrationName = `drop_relationship_${relMeta.relName}_${relMeta.lSchema}_table_${relMeta.lTable}`;
 
@@ -219,8 +394,8 @@ const deleteRelMigrate = relMeta => (dispatch, getState) => {
   makeMigrationCall(
     dispatch,
     getState,
-    relChangesUp,
-    relChangesDown,
+    migration.upMigration,
+    migration.downMigration,
     migrationName,
     customOnSuccess,
     customOnError,
@@ -244,8 +419,9 @@ const addRelNewFromStateMigrate = () => (dispatch, getState) => {
     rSchema: state.rSchema,
     isUnique: state.isUnique,
   });
-  const relChangesUp = [upQuery];
-  const relChangesDown = [downQuery];
+  const migration = new Migration();
+
+  migration.add(upQuery, downQuery);
 
   // Apply migrations
   const migrationName = `add_relationship_${state.name}_table_${state.lSchema}_${state.lTable}`;
@@ -274,8 +450,8 @@ const addRelNewFromStateMigrate = () => (dispatch, getState) => {
   makeMigrationCall(
     dispatch,
     getState,
-    relChangesUp,
-    relChangesDown,
+    migration.upMigration,
+    migration.downMigration,
     migrationName,
     customOnSuccess,
     customOnError,
@@ -318,32 +494,29 @@ const addRelViewMigrate = (tableSchema, toggleEditor) => (
     columnMapping[colMap.column] = colMap.refColumn;
   });
 
-  const relChangesUp = [
-    {
-      type: isObjRel
-        ? 'create_object_relationship'
-        : 'create_array_relationship',
-      args: {
-        name: relName,
-        table: { name: currentTableName, schema: currentTableSchema },
-        using: {
-          manual_configuration: {
-            remote_table: { name: rTable, schema: rSchema },
-            column_mapping: columnMapping,
-          },
+  //Migration
+  const migration = new Migration();
+  const relChangesUp = {
+    type: isObjRel ? 'create_object_relationship' : 'create_array_relationship',
+    args: {
+      name: relName,
+      table: { name: currentTableName, schema: currentTableSchema },
+      using: {
+        manual_configuration: {
+          remote_table: { name: rTable, schema: rSchema },
+          column_mapping: columnMapping,
         },
       },
     },
-  ];
-  const relChangesDown = [
-    {
-      type: 'drop_relationship',
-      args: {
-        table: { name: currentTableName, schema: currentTableSchema },
-        relationship: relName,
-      },
+  };
+  const relChangesDown = {
+    type: 'drop_relationship',
+    args: {
+      table: { name: currentTableName, schema: currentTableSchema },
+      relationship: relName,
     },
-  ];
+  };
+  migration.add(relChangesUp, relChangesDown);
 
   // Apply migrations
   const migrationName = `create_relationship_${relName}_${currentTableSchema}_table_${currentTableName}`;
@@ -388,8 +561,8 @@ const addRelViewMigrate = (tableSchema, toggleEditor) => (
     makeMigrationCall(
       dispatch,
       getState,
-      relChangesUp,
-      relChangesDown,
+      migration.upMigration,
+      migration.downMigration,
       migrationName,
       customOnSuccess,
       customOnError,
@@ -528,8 +701,11 @@ const getAllUnTrackedRelations = (allSchemas, currentSchema) => {
 };
 
 const autoTrackRelations = autoTrackData => (dispatch, getState) => {
-  const relChangesUp = autoTrackData.map(data => data.upQuery);
-  const relChangesDown = autoTrackData.map(data => data.downQuery);
+  const migration = new Migration();
+  autoTrackData.forEach(({ upQuery, downQuery }) =>
+    migration.add(upQuery, downQuery)
+  );
+
   // Apply migrations
   const migrationName = 'track_all_relationships';
 
@@ -544,8 +720,8 @@ const autoTrackRelations = autoTrackData => (dispatch, getState) => {
   makeMigrationCall(
     dispatch,
     getState,
-    relChangesUp,
-    relChangesDown,
+    migration.upMigration,
+    migration.downMigration,
     migrationName,
     customOnSuccess,
     customOnError,
@@ -560,8 +736,8 @@ const autoAddRelName = obj => (dispatch, getState) => {
   const currentSchema = getState().tables.currentSchema;
   const relName = obj.upQuery.args.name;
 
-  const relChangesUp = [obj.upQuery];
-  const relChangesDown = [obj.downQuery];
+  const migration = new Migration();
+  migration.add(obj.upQuery, obj.downQuery);
 
   // Apply migrations
   const migrationName = `add_relationship_${relName}_table_${currentSchema}_${obj.data.tableName}`;
@@ -578,8 +754,8 @@ const autoAddRelName = obj => (dispatch, getState) => {
   makeMigrationCall(
     dispatch,
     getState,
-    relChangesUp,
-    relChangesDown,
+    migration.upMigration,
+    migration.downMigration,
     migrationName,
     customOnSuccess,
     customOnError,
