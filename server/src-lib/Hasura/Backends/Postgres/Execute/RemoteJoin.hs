@@ -8,12 +8,14 @@ module Hasura.Backends.Postgres.Execute.RemoteJoin
   , FieldPath(..)
   , RemoteJoin(..)
   , executeQueryWithRemoteJoins
+  , processRemoteJoins
   ) where
 
 import           Hasura.Prelude
 
 import qualified Data.Aeson                             as A
 import qualified Data.Aeson.Ordered                     as AO
+import qualified Data.ByteString.Lazy                   as BL
 import qualified Data.Environment                       as Env
 import qualified Data.HashMap.Strict                    as Map
 import qualified Data.HashMap.Strict.Extended           as Map
@@ -64,9 +66,27 @@ executeQueryWithRemoteJoins
   -> RemoteJoins 'Postgres
   -> m EncJSON
 executeQueryWithRemoteJoins env manager reqHdrs userInfo q prepArgs rjs = do
-  -- Step 1: Perform the query on database and fetch the response
+  -- Perform the query on database and fetch the response
   pgRes <- runIdentity . Q.getRow <$> Tracing.trace "Postgres" (liftTx (Q.rawQE dmlTxErrorHandler q prepArgs True))
-  jsonRes <- either (throw500 . T.pack) pure $ AO.eitherDecode pgRes
+  -- Process remote joins in the response
+  processRemoteJoins env manager reqHdrs userInfo pgRes rjs
+
+processRemoteJoins
+  :: ( HasVersion
+     , MonadTx m
+     , MonadIO m
+     , Tracing.MonadTrace m
+     )
+  => Env.Environment
+  -> HTTP.Manager
+  -> [N.Header]
+  -> UserInfo
+  -> BL.ByteString
+  -> RemoteJoins 'Postgres
+  -> m EncJSON
+processRemoteJoins env manager reqHdrs userInfo pgRes rjs = do
+  -- Step 1: Decode the given bytestring as a JSON value
+  jsonRes <- onLeft (AO.eitherDecode pgRes) (throw500 . T.pack)
   -- Step 2: Traverse through the JSON obtained in above step and generate composite JSON value with remote joins
   compositeJson <- traverseQueryResponseJSON rjMap jsonRes
   let remoteJoins = collectRemoteFields compositeJson
@@ -101,7 +121,7 @@ getCounter = do
   pure c
 
 parseGraphQLName :: (MonadError QErr m) => Text -> m G.Name
-parseGraphQLName txt = maybe (throw400 RemoteSchemaError $ errMsg) pure $ G.mkName txt
+parseGraphQLName txt = onNothing (G.mkName txt) (throw400 RemoteSchemaError $ errMsg)
   where
     errMsg = txt <> " is not a valid GraphQL name"
 
@@ -405,69 +425,45 @@ fetchRemoteJoinFields
   -> m AO.Object
 fetchRemoteJoinFields env manager reqHdrs userInfo remoteJoins = do
   results <- forM (Map.toList remoteSchemaBatch) $ \(rsi, batch) -> do
-    let batchList = toList batch
-        gqlReq = fieldsToRequest G.OperationTypeQuery
-                                 (map _rjfField batchList)
+    let gqlReq = fieldsToRequest G.OperationTypeQuery $ _rjfField <$> batch
         gqlReqUnparsed = GQLQueryText . G.renderExecutableDoc . G.ExecutableDocument . unGQLExecDoc <$> gqlReq
     -- NOTE: discard remote headers (for now):
     (_, _, respBody) <- execRemoteGQ' env manager userInfo reqHdrs gqlReqUnparsed rsi G.OperationTypeQuery
     case AO.eitherDecode respBody of
       Left e -> throw500 $ "Remote server response is not valid JSON: " <> T.pack e
       Right r -> do
-        respObj <- either throw500 pure $ AO.asObject r
+        respObj <- onLeft (AO.asObject r) throw500
         let errors = AO.lookup "errors" respObj
         if | isNothing errors || errors == Just AO.Null ->
                case AO.lookup "data" respObj of
                  Nothing -> throw400 Unexpected "\"data\" field not found in remote response"
-                 Just v  -> either throw500 pure $ AO.asObject v
+                 Just v  -> onLeft (AO.asObject v) throw500
 
            | otherwise ->
              throwError (err400 Unexpected "Errors from remote server")
              {qeInternal = Just $ A.object ["errors" A..= (AO.fromOrdered <$> errors)]}
-
-  either (throw500 . T.pack) pure $ foldM AO.safeUnion AO.empty results
+  onLeft (foldM AO.safeUnion AO.empty results) (throw500 . T.pack)
   where
     remoteSchemaBatch = Map.groupOnNE _rjfRemoteSchema remoteJoins
 
-    fieldsToRequest :: G.OperationType -> [G.Field G.NoFragments Variable] -> GQLReqParsed
-    fieldsToRequest opType gFields =
-      let variableInfos = Just <$> foldl Map.union mempty $ Map.elems $ fmap collectVariables $ G._fArguments $ head gFields
-          gFields' = map (G.fmapFieldFragment G.inline . convertFieldWithVariablesToName) gFields
-      in
-      case variableInfos of
-        Nothing ->
-          GQLReq
-            { _grOperationName = Nothing
-            , _grQuery =
-               GQLExecDoc
-                 [ G.ExecutableDefinitionOperation
-                     (G.OperationDefinitionTyped
-                       ( emptyOperationDefinition
-                           { G._todSelectionSet = map G.SelectionField gFields'
-                           }
-                       )
-                     )
-                  ]
-             , _grVariables = Nothing
-             }
-
-        Just vars' ->
-          GQLReq
-            { _grOperationName = Nothing
-            , _grQuery =
-               GQLExecDoc
-                 [ G.ExecutableDefinitionOperation
-                     (G.OperationDefinitionTyped
-                       ( emptyOperationDefinition
-                           { G._todSelectionSet = map G.SelectionField gFields'
-                           , G._todVariableDefinitions = map fst $ Map.toList vars'
-                           }
-                       )
-                     )
-                  ]
-             , _grVariables = Just $ Map.fromList
-                                      (map (\(varDef, val) -> (G._vdName varDef, val)) $ Map.toList vars')
-             }
+    fieldsToRequest :: G.OperationType -> NonEmpty (G.Field G.NoFragments Variable) -> GQLReqParsed
+    fieldsToRequest opType gFields@(headField :| _) =
+      let variableInfos =
+            -- only the `headField` is used for collecting the variables here because
+            -- the variable information of all the fields will be the same.
+            -- For example:
+            -- {
+            --   author {
+            --     name
+            --     remote_relationship (extra_arg: $extra_arg)
+            --   }
+            -- }
+            --
+            -- If there are 10 authors, then there are 10 fields that will be requested
+            -- each containing exactly the same variable info.
+            foldl Map.union mempty $ Map.elems $ fmap collectVariables $ G._fArguments $ headField
+          gFields' = NE.toList $ NE.map (G.fmapFieldFragment G.inline . convertFieldWithVariablesToName) gFields
+      in mkGQLRequest gFields' variableInfos
       where
         emptyOperationDefinition =
           G.TypedOperationDefinition {
@@ -475,7 +471,30 @@ fetchRemoteJoinFields env manager reqHdrs userInfo remoteJoins = do
            , G._todName = Nothing
            , G._todVariableDefinitions = []
            , G._todDirectives = []
-           , G._todSelectionSet = [] }
+           , G._todSelectionSet = []
+           }
+
+        mkGQLRequest fields variableInfos =
+          let variableValues =
+                if (Map.null variableInfos)
+                then Nothing
+                else Just $ Map.fromList (map (\(varDef, val) -> (G._vdName varDef, val)) $ Map.toList variableInfos)
+          in
+          GQLReq
+            { _grOperationName = Nothing
+            , _grQuery =
+               GQLExecDoc
+                 [ G.ExecutableDefinitionOperation
+                     (G.OperationDefinitionTyped
+                       ( emptyOperationDefinition
+                           { G._todSelectionSet        = map G.SelectionField fields
+                           , G._todVariableDefinitions = map fst $ Map.toList variableInfos
+                           }
+                       )
+                     )
+                  ]
+             , _grVariables = variableValues
+            }
 
 -- | Replace 'RemoteJoinField' in composite JSON with it's json value from remote server response.
 replaceRemoteFields
@@ -574,10 +593,9 @@ createArguments
   -> RemoteArguments
   -> m (HashMap G.Name (G.Value Void))
 createArguments variables (RemoteArguments arguments) =
-  either
-    (throw400 Unexpected . \errors -> "Found errors: " <> commaSeparated errors)
-    pure
+  onLeft
     (toEither (substituteVariables variables arguments))
+    (throw400 Unexpected . \errors -> "Found errors: " <> commaSeparated errors)
 
 -- | Substitute values in the argument list.
 substituteVariables

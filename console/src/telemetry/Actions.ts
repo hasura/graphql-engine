@@ -149,81 +149,168 @@ const setPreReleaseNotificationOptOutInDB = () => (
   return dispatch(setConsoleOptsInDB(options, successCb, errorCb));
 };
 
+// TODO: We could fetch the latest `read` state from the DB everytime we
+// open the notifications dropdown. That way we can reach a more consistent behavior on notifications.
+// OR another option would be to provide a refresh button so that users can use it to refresh state
 const updateConsoleNotificationsState = (updatedState: NotificationsState) => {
   return (
     dispatch: ThunkDispatch<ReduxState, unknown, AnyAction>,
     getState: GetReduxState
   ) => {
-    const url = Endpoints.schemaChange;
-    const currentNotifications = getState().main.consoleNotifications;
-    const restState = getState().telemetry.console_opts;
-    const headers = dataHeaders(getState);
-    let userType = 'admin';
-    if (headers?.[HASURA_COLLABORATOR_TOKEN]) {
-      const collabToken = headers[HASURA_COLLABORATOR_TOKEN];
-      userType = getUserType(collabToken);
-    }
-    let composedUpdatedState: ConsoleState['console_opts'] = {
-      ...restState,
-      console_notifications: {
-        [userType]: updatedState,
-      },
-    };
-    if (userType !== 'admin') {
-      const currentState = restState?.console_notifications;
-      if (Object.keys(currentState ?? {}).length > 1) {
-        composedUpdatedState = {
-          ...restState,
-          console_notifications: {
-            ...currentState,
-            [userType]: updatedState,
-          },
-        };
-      }
-    }
-    if (currentNotifications && Array.isArray(currentNotifications)) {
-      if (isUpdateIDsEqual(currentNotifications, updatedState.read)) {
-        composedUpdatedState = {
-          ...restState,
-          console_notifications: {
-            ...restState?.console_notifications,
-            [userType]: {
-              read: 'all',
-              showBadge: false,
-              date: updatedState.date,
-            },
-          },
-        };
-        // update the localStorage var with all the notifications
-        // since all the notifications were clicked on read state
-        window.localStorage.setItem(
-          'notifications:data',
-          JSON.stringify(currentNotifications)
-        );
-      }
-    }
-    const updatedReadNotifications = getUpdateConsoleStateQuery(
-      composedUpdatedState
-    );
-    const options: RequestInit = {
-      credentials: globalCookiePolicy,
+    const getStateURL = Endpoints.query;
+    const getStateOptions: RequestInit = {
       method: 'POST',
-      headers,
-      body: JSON.stringify(updatedReadNotifications),
+      body: JSON.stringify(getConsoleOptsQuery()),
+      headers: dataHeaders(getState),
+      credentials: globalCookiePolicy,
     };
-    return dispatch(requestAction(url, options))
-      .then((data: any) => {
-        dispatch({
-          type: UPDATE_CONSOLE_NOTIFICATIONS,
-          data: data.returning[0].console_state.console_notifications,
-        });
+    // make a query to get the latest state from db prior to updating the read state for a user
+    return dispatch(requestAction(getStateURL, getStateOptions))
+      .then((data: Telemetry[]) => {
+        if (data?.length) {
+          const { console_state: current_console_state } = data[0];
+          let composedUpdatedState: ConsoleState['console_opts'] = {
+            ...current_console_state,
+            console_notifications: {
+              ...current_console_state?.console_notifications,
+            },
+          };
+          const url = Endpoints.query;
+          const currentNotifications = getState().main.consoleNotifications;
+          const headers = dataHeaders(getState);
+          let userType = 'admin';
+
+          const headerHasAdminToken = Object.keys(headers).find(
+            header => header.toLowerCase() === HASURA_COLLABORATOR_TOKEN
+          );
+          if (headerHasAdminToken) {
+            const collabToken = headers[headerHasAdminToken];
+            userType = getUserType(collabToken);
+          }
+
+          const dbReadState =
+            current_console_state?.console_notifications?.[userType]?.read;
+          let combinedReadState: NotificationsState['read'] = [];
+
+          if (
+            !dbReadState ||
+            dbReadState === 'default' ||
+            dbReadState === 'error'
+          ) {
+            composedUpdatedState = {
+              ...current_console_state,
+              console_notifications: {
+                ...current_console_state?.console_notifications,
+                [userType]: updatedState,
+              },
+            };
+          } else if (dbReadState === 'all') {
+            if (updatedState.read === 'all') {
+              composedUpdatedState = {
+                ...current_console_state,
+                console_notifications: {
+                  ...current_console_state?.console_notifications,
+                  [userType]: {
+                    read: 'all',
+                    date: updatedState.date,
+                    showBadge: false,
+                  },
+                },
+              };
+            } else {
+              composedUpdatedState = {
+                ...current_console_state,
+                console_notifications: {
+                  ...current_console_state?.console_notifications,
+                  [userType]: updatedState,
+                },
+              };
+            }
+          } else {
+            if (typeof updatedState.read === 'string') {
+              combinedReadState = updatedState.read;
+            } else if (Array.isArray(updatedState.read)) {
+              // this is being done to ensure that there is a consistency between the read
+              // state of the users and the data present in the DB
+              combinedReadState = dbReadState
+                .concat(updatedState.read)
+                .reduce((acc: string[], val: string) => {
+                  if (!acc.includes(val)) {
+                    return [...acc, val];
+                  }
+                  return acc;
+                }, []);
+            }
+
+            composedUpdatedState = {
+              ...current_console_state,
+              console_notifications: {
+                ...current_console_state?.console_notifications,
+                [userType]: {
+                  ...updatedState,
+                  read: combinedReadState,
+                },
+              },
+            };
+          }
+
+          if (
+            currentNotifications &&
+            Array.isArray(currentNotifications) &&
+            Array.isArray(combinedReadState)
+          ) {
+            if (isUpdateIDsEqual(currentNotifications, combinedReadState)) {
+              composedUpdatedState = {
+                ...current_console_state,
+                console_notifications: {
+                  ...current_console_state?.console_notifications,
+                  [userType]: {
+                    read: 'all',
+                    showBadge: false,
+                    date: updatedState.date,
+                  },
+                },
+              };
+              // update the localStorage var with all the notifications
+              // since all the notifications were clicked on read state
+              window.localStorage.setItem(
+                'notifications:data',
+                JSON.stringify(currentNotifications)
+              );
+            }
+          }
+
+          const updatedReadNotifications = getUpdateConsoleStateQuery(
+            composedUpdatedState
+          );
+          const options: RequestInit = {
+            credentials: globalCookiePolicy,
+            method: 'POST',
+            headers,
+            body: JSON.stringify(updatedReadNotifications),
+          };
+
+          return dispatch(requestAction(url, options))
+            .then((retData: any) => {
+              dispatch({
+                type: UPDATE_CONSOLE_NOTIFICATIONS,
+                data: retData.returning[0].console_state.console_notifications,
+              });
+            })
+            .catch(error => {
+              console.error(
+                'There was an error in updating the read console notifications.',
+                error
+              );
+              return error;
+            });
+        }
       })
-      .catch(error => {
+      .catch(err => {
         console.error(
-          'There was an error in updating the console notifications.',
-          error
+          'There was an error in fetching the latest state from the DB.',
+          err
         );
-        return error;
       });
   };
 };
@@ -242,12 +329,18 @@ const loadConsoleOpts = () => {
       body: JSON.stringify(getConsoleOptsQuery()),
     };
     let userType = 'admin';
-    if (headers?.[HASURA_COLLABORATOR_TOKEN]) {
-      userType = headers[HASURA_COLLABORATOR_TOKEN];
+
+    const headerHasAdminToken = Object.keys(headers).find(
+      header => header.toLowerCase() === HASURA_COLLABORATOR_TOKEN
+    );
+    if (headerHasAdminToken) {
+      const collabToken = headers[headerHasAdminToken];
+      userType = getUserType(collabToken);
     }
-    return dispatch(requestAction(url, options) as any).then(
+
+    return dispatch(requestAction(url, options)).then(
       (data: Telemetry[]) => {
-        if (data.length) {
+        if (data?.length) {
           const { hasura_uuid, console_state } = data[0];
 
           dispatch({
@@ -264,6 +357,20 @@ const loadConsoleOpts = () => {
           globals.telemetryNotificationShown = !!console_state?.telemetryNotificationShown;
 
           if (!console_state?.console_notifications) {
+            dispatch({
+              type: UPDATE_CONSOLE_NOTIFICATIONS,
+              data: {
+                [userType]: {
+                  read: [],
+                  date: null,
+                  showBadge: true,
+                },
+              },
+            });
+          } else if (
+            console_state.console_notifications &&
+            !console_state.console_notifications[userType]
+          ) {
             dispatch({
               type: UPDATE_CONSOLE_NOTIFICATIONS,
               data: {
@@ -353,7 +460,10 @@ const telemetryReducer = (
         ...state,
         console_opts: {
           ...state.console_opts,
-          console_notifications: action.data,
+          console_notifications: {
+            ...state.console_opts?.console_notifications,
+            ...action.data,
+          },
         },
       };
     default:
@@ -369,4 +479,5 @@ export {
   setPreReleaseNotificationOptOutInDB,
   setTelemetryNotificationShownInDB,
   updateConsoleNotificationsState,
+  UPDATE_CONSOLE_NOTIFICATIONS,
 };
