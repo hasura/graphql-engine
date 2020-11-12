@@ -51,11 +51,11 @@ instance FromJSON STRetryConf where
   parseJSON = withObject "STRetryConf" \o -> do
     numRetries' <- o .:? "num_retries" .!= 0
     retryInterval <-
-      o .:? "retry_interval_seconds" .!= (unsafeNonNegativeDiffTime $ seconds 10)
+      o .:? "retry_interval_seconds" .!= unsafeNonNegativeDiffTime (seconds 10)
     timeout <-
-      o .:? "timeout_seconds" .!= (unsafeNonNegativeDiffTime $ seconds 60)
+      o .:? "timeout_seconds" .!= unsafeNonNegativeDiffTime (seconds 60)
     tolerance <-
-      o .:? "tolerance_seconds" .!= (unsafeNonNegativeDiffTime $ hours 6)
+      o .:? "tolerance_seconds" .!= unsafeNonNegativeDiffTime (hours 6)
     if numRetries' < 0
     then fail "num_retries cannot be a negative value"
     else pure $ STRetryConf numRetries' retryInterval timeout tolerance
@@ -139,7 +139,7 @@ newtype ScheduledTriggerName
 
 $(deriveJSON (aesonDrop 2 snakeCase) ''ScheduledTriggerName)
 
-formatTime' :: UTCTime -> T.Text
+formatTime' :: UTCTime -> Text
 formatTime'= T.pack . iso8601Show
 
 data CreateScheduledEvent

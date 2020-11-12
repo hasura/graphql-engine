@@ -15,7 +15,7 @@ nonNegIntSpec :: Spec
 nonNegIntSpec =
     describe "non negative integer type" $ do
         it "only validates non negative integers" $ do
-            (mkNonNegativeInt 23) `shouldBe` (Just 23)
-            (mkNonNegativeInt (-23)) `shouldBe` Nothing
+            mkNonNegativeInt 23 `shouldBe` Just 23
+            mkNonNegativeInt (-23) `shouldBe` Nothing
 
  -- TODO: add spec for fromJSON for NonNegativeInt type

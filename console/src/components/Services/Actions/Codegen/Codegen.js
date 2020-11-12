@@ -7,12 +7,12 @@ import {
   getStarterKitDownloadPath,
   getGlitchProjectURL,
 } from './utils';
-import { getPersistedDerivedAction } from '../lsUtils';
 import Spinner from '../../../Common/Spinner/Spinner';
 import styles from '../Common/components/Styles.scss';
 import { Icon } from '../../../UIKit/atoms';
 import CodeTabs from './CodeTabs';
 import DerivedFrom from './DerivedFrom';
+import { getPersistedDerivedAction } from '../utils';
 
 const Codegen = ({ dispatch, allActions, allTypes, currentAction }) => {
   const [allFrameworks, setAllFrameworks] = React.useState([]);

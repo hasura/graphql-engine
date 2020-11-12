@@ -15,7 +15,7 @@ import ViewRows from './ViewRows';
 
 import { NotFoundError } from '../../../Error/PageNotFound';
 import { exists } from '../../../Common/utils/jsUtils';
-import { getPersistedPageSize } from './localStorageUtils';
+import { getPersistedPageSize } from './tableUtils';
 
 class ViewTable extends Component {
   constructor(props) {
