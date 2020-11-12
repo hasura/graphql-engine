@@ -180,18 +180,9 @@ func (h *HasuraDB) ApplyMetadata() error {
 	if err != nil {
 		return err
 	}
-	query := HasuraInterfaceBulk{
-		Type: "bulk",
-		Args: []interface{}{
-			HasuraInterfaceQuery{
-				Type: "clear_metadata",
-				Args: HasuraArgs{},
-			},
-			HasuraInterfaceQuery{
-				Type: "replace_metadata",
-				Args: obj,
-			},
-		},
+	query := HasuraInterfaceQuery{
+		Type: "replace_metadata",
+		Args: obj,
 	}
 	resp, body, err := h.sendv1Query(query)
 	if err != nil {
@@ -219,7 +210,7 @@ func (h *HasuraDB) ApplyMetadata() error {
 					if err != nil {
 						return err
 					}
-					herror.migrationQuery = "offending object: \n\r\n\r" + string(queryData)
+					h.logger.Debugf("offending object: \n\r\n\r" + string(queryData))
 				}
 			}
 			return herror

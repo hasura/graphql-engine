@@ -103,7 +103,7 @@ const TextInput = props => {
         theme="chrome"
         name="texttoggler"
         minLines={10}
-        maxLines={100}
+        maxLines={30}
         width="100%"
         value={data}
         showPrintMargin={false}

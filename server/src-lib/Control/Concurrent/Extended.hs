@@ -42,8 +42,7 @@ threadDelay = Base.threadDelay
 
 {-# DEPRECATED forkIO 
    "Please use 'Control.Control.Concurrent.Async.Lifted.Safe.withAsync'\
-  \ or our 'forkImmortal' instead formore robust threading." 
-#-}
+  \ or our 'forkImmortal' instead formore robust threading." #-}
 forkIO :: IO () -> IO ThreadId 
 forkIO = Base.forkIO
 
