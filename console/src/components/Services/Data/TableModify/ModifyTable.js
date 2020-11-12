@@ -190,9 +190,7 @@ class ModifyTable extends React.Component {
         <React.Fragment>
           <h4 className={styles.subheading_text}>
             Computed fields
-            <Tooltip
-              message={'Add a function as a virtual field in the GraphQL API'}
-            />
+            <Tooltip message="Add a function as a virtual field in the GraphQL API" />
             <KnowMoreLink href="https://hasura.io/docs/1.0/graphql/manual/schema/computed-fields.html" />
           </h4>
           <ComputedFieldsEditor
@@ -200,6 +198,7 @@ class ModifyTable extends React.Component {
             currentSchema={currentSchema}
             functions={allFunctions} // TODO: fix cross schema functions
             schemaList={schemaList}
+            dispatch={dispatch}
           />
           <hr />
         </React.Fragment>

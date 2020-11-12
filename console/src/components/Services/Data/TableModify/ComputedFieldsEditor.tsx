@@ -22,14 +22,15 @@ import {
 import { deleteComputedField, saveComputedField } from './ModifyActions';
 import { fetchFunctionInit } from '../DataActions';
 import SearchableSelectBox from '../../../Common/SearchableSelect/SearchableSelect';
-import { mapDispatchToPropsEmpty } from '../../../Common/utils/reactUtils';
 import KnowMoreLink from '../../../Common/KnowMoreLink/KnowMoreLink';
+import { Dispatch } from '../../../../types';
 
-interface ComputedFieldsEditorProps extends InjectedProps {
+interface ComputedFieldsEditorProps {
   table: Table;
   currentSchema: string;
   functions: PGFunction[];
   schemaList: PGSchema[];
+  dispatch: Dispatch;
 }
 
 const ComputedFieldsEditor: React.FC<ComputedFieldsEditorProps> = ({
@@ -400,7 +401,6 @@ const ComputedFieldsEditor: React.FC<ComputedFieldsEditorProps> = ({
             <div className={`${styles.add_mar_bottom_mid}`}>
               <b>Session argument:</b>
               <Tooltip message="The function argument into which Hasura session variables will be passed" />
-              &nbsp;
               <KnowMoreLink href="https://hasura.io/docs/1.0/graphql/core/schema/computed-fields.html#accessing-hasura-session-variables-in-computed-fields" />
             </div>
             <input
@@ -417,7 +417,7 @@ const ComputedFieldsEditor: React.FC<ComputedFieldsEditorProps> = ({
             </div>
             <input
               type="text"
-              value={computedFieldComment ?? undefined}
+              value={computedFieldComment ?? ''}
               onChange={handleCommentChange}
               className={`form-control ${styles.wd50percent}`}
             />
@@ -465,9 +465,4 @@ const ComputedFieldsEditor: React.FC<ComputedFieldsEditorProps> = ({
   return <>{fieldsEditor}</>;
 };
 
-const connector = connect(null, mapDispatchToPropsEmpty);
-type InjectedProps = ConnectedProps<typeof connector>;
-
-const connectedComputedFieldsEditor = connector(ComputedFieldsEditor);
-
-export default connectedComputedFieldsEditor;
+export default ComputedFieldsEditor;
