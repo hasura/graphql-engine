@@ -290,11 +290,11 @@ fromAnnOrderByItemG ::
 fromAnnOrderByItemG IR.OrderByItemG {obiType, obiColumn, obiNulls} = do
   orderByFieldName <- unfurlAnnOrderByElement obiColumn
   let morderByOrder =
-        obiType <&> \order -> case IR.unOrderType order of
+        obiType <&> \case
           PG.OTAsc  -> AscOrder
           PG.OTDesc -> DescOrder
   let orderByNullsOrder =
-        case fmap IR.unNullsOrder obiNulls of
+        case obiNulls of
           Nothing -> NullsAnyOrder
           Just nullsOrder ->
             case nullsOrder of
