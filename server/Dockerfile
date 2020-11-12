@@ -1,4 +1,4 @@
-FROM hasura/graphql-engine-packager:20201111 AS builder
+FROM jberryman/graphql-engine-server-builder-8.10:2020-04-29 AS builder
 
 ENV LANG=C.UTF-8 LC_ALL=C.UTF-8
 
@@ -23,5 +23,7 @@ RUN apt-get update \
   && apt-get install -y ca-certificates libkrb5-3 libpq5 libnuma1
 
 COPY --from=builder /build/graphql-engine /bin/
+
+# TODO: copy console assets
 
 CMD ["graphql-engine", "serve"]
