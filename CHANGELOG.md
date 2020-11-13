@@ -61,6 +61,8 @@ This release contains the [PDV refactor (#4111)](https://github.com/hasura/graph
 - server: Configurable websocket keep-alive interval. Add `--websocket-keepalive` command-line flag and `HASURA_GRAPHQL_WEBSOCKET_KEEPALIVE` env variable (fix #3539)
 - server: validate remote schema queries (fixes #4143)
 - server: introduce optional custom table name in table configuration to track the table according to the custom name. The `set_table_custom_fields` API has been deprecated, A new API `set_table_customization` has been added to set the configuration. (#3811)
+- server: add support for POSIX operators (close #4317) (#6172)
+- console: add support for POSIX operators (close #4317) (#6172)
 - console: allow user to cascade Postgres dependencies when dropping Postgres objects (close #5109) (#5248)
 - console: mark inconsistent remote schemas in the UI (close #5093) (#5181)
 - console: remove ONLY as default for ALTER TABLE in column alter operations (close #5512) #5706
@@ -69,6 +71,8 @@ This release contains the [PDV refactor (#4111)](https://github.com/hasura/graph
 - console: allow setting computed fields for views (close #6168) (#6174)
 - cli: add missing global flags for seed command (#5565)
 - cli: allow seeds as alias for seed command (#5693)
+- cli-ext: fix get-shared-modules script execution on mac (#6172)
+- docs: add support for POSIX operators (close #4317) (#6172)
 
 ## v1.3.3
 
@@ -120,7 +124,7 @@ For a more comprehensive overview, please see [the readme located here](./contri
 **Sample Code**
 
 ```ts
-import { TableEntry } from "../generated/HasuraMetadataV2"
+import { TableEntry } from "../generated/HasuraMetadataV2";
 
 const newTable: TableEntry = {
   table: { schema: "public", name: "user" },
@@ -138,7 +142,7 @@ const newTable: TableEntry = {
       },
     },
   ],
-}
+};
 ```
 
 **IntelliSense Example**
@@ -176,14 +180,14 @@ arguments.
 - server: allow configuring timeouts for actions (fixes #4966)
 - server: fix bug which arised when renaming a table which had a manual relationship defined (close #4158)
 - server: limit the length of event trigger names (close #5786)
-**NOTE:** If you have event triggers with names greater than 42 chars, then you should update their names to avoid running into Postgres identifier limit bug (#5786)
+  **NOTE:** If you have event triggers with names greater than 42 chars, then you should update their names to avoid running into Postgres identifier limit bug (#5786)
 - server: enable HASURA_GRAPHQL_PG_CONN_LIFETIME by default to reclaim memory
 - server: fix issue with tracking custom functions that return `SETOF` materialized view (close #5294) (#5945)
 - server: allow remote relationships with union, interface and enum type fields as well (fixes #5875) (#6080)
 - server: Fix fine-grained incremental cache invalidation (fix #6027)
   This issue could cause enum table values to sometimes not be properly reloaded without restarting `graphql-engine`. Now a `reload_metadata` API call (or clicking “Reload enum values” in the console) should consistently force a reload of all enum table values.
 - server: fix event trigger cleanup on deletion via replace_metadata (fix #5461) (#6137)
-**WARNING**: This can cause significant load on PG on startup if you have lots of event triggers. Delay in starting up is expected.
+  **WARNING**: This can cause significant load on PG on startup if you have lots of event triggers. Delay in starting up is expected.
 - console: add notifications (#5070)
 - cli: fix bug in metadata apply which made the server aquire some redundant and unnecessary locks (close #6115)
 - cli: fix cli-migrations-v2 image failing to run as a non root user (close #4651, close #5333)
@@ -192,7 +196,6 @@ arguments.
 - docs: add tabs for console / cli / api workflows (close #3593) (#4948)
 - docs: add postgres concepts page to docs (close #4440) (#4471)
 - docs: add guides on connecting hasura cloud to pg databases of different cloud vendors (#5948)
-
 
 ## `v1.3.2`
 
