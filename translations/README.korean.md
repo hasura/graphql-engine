@@ -56,7 +56,7 @@ Hasura는 Postgres를 지원하는 GraphQL 앱을 만들거나 Postgres를 사�
 - [지원 및 문제 해결](#지원__트러뷸슈팅)
 - [기여 방법](#기여)
 - [브랜드 자산들](#브랜드_자산)
-- [라이센스](#라이선스)
+- [라이선스](#라이선스)
 - [번역](#번역)
 
 <!-- markdown-toc end -->
@@ -193,11 +193,11 @@ Hasura로 만든 어플리케이션에 "Powered by Hasura" 배지를 넣어주�
 </a>
 ```
 
-## 라이센스
+## 라이선스
 
-GraphQL Engine core 는 [아파치 라이센스 2.0](https://www.apache.org/licenses/LICENSE-2.0) (Apache-2.0)를 적용하고 있습니다.
+GraphQL Engine core 는 [아파치 라이선스 2.0](https://www.apache.org/licenses/LICENSE-2.0) (Apache-2.0)를 적용하고 있습니다.
 
-**다른 컨텐츠들은** ([`server`](../server), [`cli`](../cli), [`console`](../console) 디렉토리 제외) [MIT 라이센스](../LICENSE-community)를 적용하고 있습니다.
+**다른 컨텐츠들은** ([`server`](../server), [`cli`](../cli), [`console`](../console) 디렉토리 제외) [MIT 라이선스](../LICENSE-community)를 적용하고 있습니다.
 이건 [`docs`](../docs) 와 [`community`](../community) 내에 있는 모든 컨텐츠들이 포함됩니다.
 
 ## 번역
