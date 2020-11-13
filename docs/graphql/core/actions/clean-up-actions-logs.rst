@@ -14,25 +14,35 @@ Clean up actions logs
 
 Introduction
 ------------
+Hasura stores actions logs from asynchronous operations. If there are a lot of logs, the tables can get huge and you may want to prune them.
+You can use any of the following options to prune your logs depending on your need.
+Read more on asynchronous actions here: 
 
-
-Table Involved
----------------
+The table involved
+------------------
 
 Actions has a table managed by Hasura:
 
 - ``hdb_catalog.hdb_action_log``: This is the table that stores all captured logs.
 
-
-
 Option 1: Get all logs
 ----------------------
+.. code-block:: SQL
+   
+   SELECT * FROM hdb_catalog.hdb_action_log;
 
 Option 2: Delete a single log
 -----------------------------
+.. code-block:: SQL
+   
+   DELETE FROM hdb_catalog.hdb_action_log WHERE id = '<action-id>;
 
-Option 3: Delete all logs
--------------------------
+Option 3: Clear all logs
+------------------------
+.. admonition:: Warning
+ 
+   This will clear all captured logs.
+
 .. code-block:: SQL
 
    DELETE FROM hdb_catalog.hdb_action_log;
