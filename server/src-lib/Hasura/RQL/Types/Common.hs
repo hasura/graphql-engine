@@ -81,6 +81,8 @@ import           Language.Haskell.TH.Syntax         (Lift)
 import qualified Hasura.Backends.Postgres.SQL.DML   as PG
 import qualified Hasura.Backends.Postgres.SQL.Types as PG
 
+import qualified Hasura.Backends.MSSQL.Types as MSSQL
+
 import           Hasura.EncJSON
 import           Hasura.Incremental                 (Cacheable)
 import           Hasura.RQL.DDL.Headers             ()
@@ -167,6 +169,22 @@ instance Backend 'Postgres where
   type SQLOperator    'Postgres = PG.SQLOp
   type XAILIKE        'Postgres = ()
   type XANILIKE       'Postgres = ()
+
+instance Backend 'MSSQL where
+  type Identifier     'MSSQL = ()
+  type Alias          'MSSQL = MSSQL.EntityAlias
+  type TableName      'MSSQL = MSSQL.TableName
+  type FunctionName   'MSSQL = ()
+  type ConstraintName 'MSSQL = ()
+  type BasicOrderType 'MSSQL = MSSQL.Order
+  type NullsOrderType 'MSSQL = MSSQL.NullsOrder
+  type CountType      'MSSQL = MSSQL.Countable
+  type Column         'MSSQL = MSSQL.ColumnName
+  type ScalarType     'MSSQL = MSSQL.ScalarType
+  type SQLExpression  'MSSQL = MSSQL.Expression
+  type SQLOperator    'MSSQL = ()
+  type XAILIKE        'MSSQL = ()
+  type XANILIKE       'MSSQL = ()
 
 -- instance Backend 'Mysql where
 --   type XAILIKE 'MySQL = Void

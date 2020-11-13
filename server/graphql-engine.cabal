@@ -291,6 +291,8 @@ library
                      , Hasura.Backends.MSSQL.Plan
                      , Hasura.Backends.MSSQL.ToQuery
                      , Hasura.Backends.MSSQL.Types
+                     , Hasura.Backends.MSSQL.Types.Internal
+                     , Hasura.Backends.MSSQL.Types.Instances
   }
   exposed-modules:     Control.Arrow.Extended
                      , Control.Arrow.Trans

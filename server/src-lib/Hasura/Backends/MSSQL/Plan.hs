@@ -17,25 +17,21 @@ import qualified Language.GraphQL.Draft.Syntax      as G
 
 import           Control.Monad.Validate
 import           Data.Bifunctor                     (first)
-import           Data.Int
 
-import qualified Hasura.Backends.Postgres.SQL.DML   as PG
-import qualified Hasura.Backends.Postgres.SQL.Types as PG
-import qualified Hasura.Backends.Postgres.SQL.Value as PG
-import qualified Hasura.GraphQL.Context             as Graphql
+-- import qualified Hasura.GraphQL.Context             as Graphql
 import qualified Hasura.GraphQL.Execute.Query       as EQ
 import qualified Hasura.GraphQL.Parser              as Graphql
+import qualified Hasura.GraphQL.Context              as Graphql
 
 import           Hasura.Backends.MSSQL.FromIr       as Tsql
 import           Hasura.Backends.MSSQL.Types        as Tsql
-
 
 -- --------------------------------------------------------------------------------
 -- -- Top-level planner
 
 -- -- | Plan a query without prepare/exec.
 planNoPlan ::
-     Graphql.SubscriptionRootField Graphql.UnpreparedValue
+     Graphql.SubscriptionRootFieldMSSQL Graphql.UnpreparedValue
   -> Either PrepareError Select
 planNoPlan unpreparedRoot = do
   rootField <- EQ.traverseQueryRootField prepareValueNoPlan unpreparedRoot
@@ -52,7 +48,7 @@ planNoPlan unpreparedRoot = do
       }
 
 planMultiplex ::
-     OMap.InsOrdHashMap G.Name (Graphql.SubscriptionRootField Graphql.UnpreparedValue)
+     OMap.InsOrdHashMap G.Name (Graphql.SubscriptionRootFieldMSSQL Graphql.UnpreparedValue)
   -> Either PrepareError Select
 planMultiplex unpreparedMap = do
   rootFieldMap <-
@@ -69,7 +65,7 @@ planMultiplex unpreparedMap = do
 
 -- | Plan a query without prepare/exec.
 planNoPlanMap ::
-     OMap.InsOrdHashMap G.Name (Graphql.SubscriptionRootField Graphql.UnpreparedValue)
+     OMap.InsOrdHashMap G.Name (Graphql.SubscriptionRootFieldMSSQL Graphql.UnpreparedValue)
   -> Either PrepareError Reselect
 planNoPlanMap unpreparedMap = do
   rootFieldMap <-
@@ -120,9 +116,9 @@ envObjectExpression =
 -- Resolving values
 
 data PrepareError
-  = UVLiteralNotSupported
-  | SessionVarNotSupported
-  | UnsupportedPgType PG.PGScalarValue
+  = {-UVLiteralNotSupported-}
+   SessionVarNotSupported
+  -- | UnsupportedPgType Odbc.Value -- PG.PGScalarValue
   | FromIrError (NonEmpty Tsql.Error)
   -- deriving (Show, Eq)
 
@@ -140,13 +136,17 @@ emptyPrepareState =
 prepareValueNoPlan :: Graphql.UnpreparedValue -> Either PrepareError Tsql.Expression
 prepareValueNoPlan =
   \case
-    Graphql.UVLiteral (_ :: PG.SQLExp) -> Left UVLiteralNotSupported
+    -- FIXME: Cannot compile this until there is a generic literal type.
+    Graphql.UVLiteral {} -> undefined
+    {-Graphql.UVLiteral (_ :: Expression {-PG.SQLExp-}) -> Left UVLiteralNotSupported-}
     Graphql.UVSession -> pure (JsonQueryExpression globalSessionExpression)
     Graphql.UVSessionVar _typ _text -> Left SessionVarNotSupported
-    Graphql.UVParameter Graphql.PGColumnValue {pcvValue = PG.WithScalarType {pstValue}} _mVariableInfo ->
+    -- FIXME: Cannot compile this until there is a generic "ColumnValue" type.
+    Graphql.UVParameter {} -> undefined
+    {-Graphql.UVParameter Graphql.PGColumnValue {pcvValue = PG.WithScalarType {pstValue}} _mVariableInfo ->
       case fromPgScalarValue pstValue of
         Nothing    -> Left (UnsupportedPgType pstValue)
-        Just value -> pure (ValueExpression value)
+        Just value -> pure (ValueExpression value)-}
 
 -- | Prepare a value for multiplexed queries.
 prepareValueMultiplex ::
@@ -154,7 +154,9 @@ prepareValueMultiplex ::
   -> StateT PrepareState (Either PrepareError) Tsql.Expression
 prepareValueMultiplex =
   \case
-    Graphql.UVLiteral (_ :: PG.SQLExp) -> lift (Left UVLiteralNotSupported)
+    -- FIXME: Cannot compile this until there is a generic literal type.
+    Graphql.UVLiteral {} -> undefined
+    {-Graphql.UVLiteral (_ :: Expression {-PG.SQLExp-}) -> lift (Left UVLiteralNotSupported)-}
     Graphql.UVSession ->
       pure (JsonQueryExpression globalSessionExpression)
     Graphql.UVSessionVar _typ _text -> lift (Left SessionVarNotSupported)
@@ -263,39 +265,41 @@ rowAlias = "row"
 --------------------------------------------------------------------------------
 -- PG compat
 
--- | Convert from PG values to ODBC. Later, this shouldn't be
--- necessary; the value should come in as an ODBC value already.
-fromPgScalarValue :: PG.PGScalarValue -> Maybe Odbc.Value
-fromPgScalarValue =
-  \case
-    PG.PGValInteger i32 ->
-      pure (Odbc.IntValue ((fromIntegral :: Int32 -> Int) i32))
-    PG.PGValSmallInt i16 ->
-      pure (Odbc.IntValue ((fromIntegral :: Int16 -> Int) i16))
-    PG.PGValBigInt i64 ->
-      pure (Odbc.IntValue ((fromIntegral :: Int64 -> Int) i64))
-    PG.PGValFloat float -> pure (Odbc.FloatValue float)
-    PG.PGValDouble double -> pure (Odbc.DoubleValue double)
-    PG.PGNull _pgscalartype -> pure Odbc.NullValue
-    PG.PGValBoolean boolean -> pure (Odbc.BoolValue boolean)
-    PG.PGValVarchar text -> pure (Odbc.TextValue text)
-    PG.PGValText text -> pure (Odbc.TextValue text)
-    PG.PGValDate day -> pure (Odbc.DayValue day)
-    PG.PGValTimeStamp localtime -> pure (Odbc.LocalTimeValue localtime)
-     -- For these, see Datetime2 in Database.ODBC.SQLServer.
-    PG.PGValTimeStampTZ _utctime -> Nothing -- TODO: PG.PGValTimeStampTZ utctime
-    PG.PGValTimeTZ _zonedtimeofday -> Nothing -- TODO: PG.PGValTimeTZ zonedtimeofday
-    PG.PGValNumeric _scientific -> Nothing -- TODO: PG.PGValNumeric scientific
-    PG.PGValMoney _scientific -> Nothing -- TODO: PG.PGValMoney scientific
-    PG.PGValChar _char -> Nothing -- TODO: PG.PGValChar char
-    PG.PGValCitext _text -> Nothing -- TODO: PG.PGValCitext text
-     -- I'm not sure whether it's fine to encode as string, because
-     -- that's what SQL Server treats JSON as. But wrapping it in a
-     -- JsonQueryExpression might help.
-    PG.PGValJSON _json -> Nothing -- TODO: PG.PGValJSON json
-    PG.PGValJSONB _jsonb -> Nothing -- TODO: PG.PGValJSONB jsonb
-    PG.PGValGeo _geometrywithcrs -> Nothing -- TODO: PG.PGValGeo geometrywithcrs
-    PG.PGValRaster _rasterwkb -> Nothing -- TODO: PG.PGValRaster rasterwkb
-     -- There is a UUID type in SQL Server, but it needs research.
-    PG.PGValUUID _uuid -> Nothing -- TODO: PG.PGValUUID uuid
-    PG.PGValUnknown _text -> Nothing -- TODO: PG.PGValUnknown text
+-- No longer needed
+
+-- -- | Convert from PG values to ODBC. Later, this shouldn't be
+-- -- necessary; the value should come in as an ODBC value already.
+-- fromPgScalarValue :: PG.PGScalarValue -> Maybe Odbc.Value
+-- fromPgScalarValue =
+--   \case
+--     PG.PGValInteger i32 ->
+--       pure (Odbc.IntValue ((fromIntegral :: Int32 -> Int) i32))
+--     PG.PGValSmallInt i16 ->
+--       pure (Odbc.IntValue ((fromIntegral :: Int16 -> Int) i16))
+--     PG.PGValBigInt i64 ->
+--       pure (Odbc.IntValue ((fromIntegral :: Int64 -> Int) i64))
+--     PG.PGValFloat float -> pure (Odbc.FloatValue float)
+--     PG.PGValDouble double -> pure (Odbc.DoubleValue double)
+--     PG.PGNull _pgscalartype -> pure Odbc.NullValue
+--     PG.PGValBoolean boolean -> pure (Odbc.BoolValue boolean)
+--     PG.PGValVarchar text -> pure (Odbc.TextValue text)
+--     PG.PGValText text -> pure (Odbc.TextValue text)
+--     PG.PGValDate day -> pure (Odbc.DayValue day)
+--     PG.PGValTimeStamp localtime -> pure (Odbc.LocalTimeValue localtime)
+--      -- For these, see Datetime2 in Database.ODBC.SQLServer.
+--     PG.PGValTimeStampTZ _utctime -> Nothing -- TODO: PG.PGValTimeStampTZ utctime
+--     PG.PGValTimeTZ _zonedtimeofday -> Nothing -- TODO: PG.PGValTimeTZ zonedtimeofday
+--     PG.PGValNumeric _scientific -> Nothing -- TODO: PG.PGValNumeric scientific
+--     PG.PGValMoney _scientific -> Nothing -- TODO: PG.PGValMoney scientific
+--     PG.PGValChar _char -> Nothing -- TODO: PG.PGValChar char
+--     PG.PGValCitext _text -> Nothing -- TODO: PG.PGValCitext text
+--      -- I'm not sure whether it's fine to encode as string, because
+--      -- that's what SQL Server treats JSON as. But wrapping it in a
+--      -- JsonQueryExpression might help.
+--     PG.PGValJSON _json -> Nothing -- TODO: PG.PGValJSON json
+--     PG.PGValJSONB _jsonb -> Nothing -- TODO: PG.PGValJSONB jsonb
+--     PG.PGValGeo _geometrywithcrs -> Nothing -- TODO: PG.PGValGeo geometrywithcrs
+--     PG.PGValRaster _rasterwkb -> Nothing -- TODO: PG.PGValRaster rasterwkb
+--      -- There is a UUID type in SQL Server, but it needs research.
+--     PG.PGValUUID _uuid -> Nothing -- TODO: PG.PGValUUID uuid
+--     PG.PGValUnknown _text -> Nothing -- TODO: PG.PGValUnknown text

@@ -16,6 +16,8 @@ module Hasura.GraphQL.Context
   , MutationRootField
   , SubscriptionRootField
   , SubscriptionRootFieldResolved
+  , SubscriptionRootFieldMSSQL
+  , SubscriptionRootFieldResolvedMSSQL
   ) where
 
 import           Hasura.Prelude
@@ -116,3 +118,6 @@ type MutationRootField v =
 
 type SubscriptionRootField v = RootField (QueryDB 'Postgres v) Void (RQL.AnnActionAsyncQuery 'Postgres v) Void
 type SubscriptionRootFieldResolved = RootField (QueryDB 'Postgres PG.SQLExp) Void (IR.AnnSimpleSel 'Postgres) Void
+
+type SubscriptionRootFieldMSSQL v = RootField (QueryDB 'MSSQL v) Void (RQL.AnnActionAsyncQuery 'MSSQL v) Void
+type SubscriptionRootFieldResolvedMSSQL = RootField (QueryDB 'MSSQL PG.SQLExp) Void (IR.AnnSimpleSel 'MSSQL) Void
