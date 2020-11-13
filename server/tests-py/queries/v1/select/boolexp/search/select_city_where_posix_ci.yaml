@@ -1,16 +1,16 @@
-description: Select cities ending with gham
+description: Select cities starting with fram
 url: /v1/query
 status: 200
 response:
   - name: Framlingham
     country: UK
 query:
-  type: select
+type: select
   args:
     table: city
     where:
       name:
-       $similar: '_*gham'
+       $posix_ci: 'fram.*'
     columns:
     - name
     - country

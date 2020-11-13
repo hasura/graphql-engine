@@ -1,18 +1,22 @@
-description: Select cities not starting with new
+description: Select cities not start with new
 url: /v1/query
 status: 200
 response:
   - name: Durham
     country: USA 
+  - name:  New York
+    country: USA
   - name: Framlingham
     country: UK
+  - name: New Orleans 
+    country: USA
 query:
-  type: select
+type: select
   args:
     table: city
     where:
       name:
-       $nilike: 'new %'
+       $nposix_cs: 'new.*'
     columns:
     - name
     - country
