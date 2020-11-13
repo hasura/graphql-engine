@@ -33,3 +33,6 @@ Option 2: Delete a single log
 
 Option 3: Delete all logs
 -------------------------
+.. code-block:: SQL
+
+   DELETE FROM hdb_catalog.hdb_action_log;
