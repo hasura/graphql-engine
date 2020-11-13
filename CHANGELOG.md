@@ -43,6 +43,7 @@ The corresponding JWT config can be:
 - server: allow configuring timeouts for actions (fixes #4966)
 - server: fix bug which arised when renaming a table which had a manual relationship defined (close #4158)
 - server: limit the length of event trigger names (close #5786)
+- server: enable HASURA_GRAPHQL_PG_CONN_LIFETIME by default to reclaim memory
 **NOTE:** If you have event triggers with names greater than 42 chars, then you should update their names to avoid running into Postgres identifier limit bug (#5786)
 - server: fix issue with tracking custom functions that return `SETOF` materialized view (close #5294) (#5945)
 - server: allow remote relationships with union, interface and enum type fields as well (fixes #5875) (#6080)
