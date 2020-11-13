@@ -5,7 +5,7 @@ response:
   - name: Framlingham
     country: UK
 query:
-type: select
+  type: select
   args:
     table: city
     where:

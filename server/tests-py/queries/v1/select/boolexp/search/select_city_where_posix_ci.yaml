@@ -5,12 +5,12 @@ response:
   - name: Framlingham
     country: UK
 query:
-type: select
+  type: select
   args:
     table: city
     where:
       name:
-       $posix_ci: 'fram.*'
+        $posix_ci: 'fram.*'
     columns:
     - name
     - country
