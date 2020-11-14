@@ -16,7 +16,8 @@ Introduction
 ------------
 Hasura stores actions logs from asynchronous operations. If there are a lot of logs, the tables can get huge and you may want to prune them.
 You can use any of the following options to prune your logs depending on your need.
-Read more on asynchronous actions here: 
+
+Read more on asynchronous actions here: :ref:`<async-actions>`
 
 The table involved
 ------------------
@@ -35,7 +36,7 @@ Option 2: Delete a single log
 -----------------------------
 .. code-block:: SQL
    
-   DELETE FROM hdb_catalog.hdb_action_log WHERE id = '<action-id>;
+   DELETE FROM hdb_catalog.hdb_action_log WHERE id = '<action-id>';
 
 Option 3: Clear all logs
 ------------------------
