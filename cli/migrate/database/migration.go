@@ -2,6 +2,16 @@ package database
 
 import "sort"
 
+// Abstraction for the storage layer for migration state
+type MigrationsStateStore interface {
+	InsertVersion(version int64) error
+	RemoveVersion(version int64) error
+
+	// This method is expected to initialize the datastore
+	// and validate it
+	Prepare() error
+}
+
 // Migrations wraps Migration and has an internal index
 // to keep track of Migration order in database.
 type Migrations struct {

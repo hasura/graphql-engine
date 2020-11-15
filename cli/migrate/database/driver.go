@@ -109,6 +109,7 @@ type Driver interface {
 	Squash(list *CustomList, ret chan<- interface{})
 
 	SettingsDriver
+	MigrationsStateStore
 
 	MetadataDriver
 
