@@ -10,7 +10,6 @@ import (
 	nurl "net/url"
 	"path"
 	"regexp"
-	"strconv"
 	"strings"
 
 	"github.com/mitchellh/mapstructure"
@@ -66,14 +65,15 @@ type Config struct {
 }
 
 type HasuraDB struct {
-	config             *Config
-	settings           []database.Setting
-	migrations         *database.Migrations
-	migrationQuery     HasuraInterfaceBulk
-	jsonPath           map[string]string
-	isLocked           bool
-	logger             *log.Logger
-	serverFeatureFlags version.ServerFeatureFlags
+	config              *Config
+	settings            []database.Setting
+	migrations          *database.Migrations
+	migrationQuery      HasuraInterfaceBulk
+	jsonPath            map[string]string
+	isLocked            bool
+	logger              *log.Logger
+	serverFeatureFlags  version.ServerFeatureFlags
+	migrationStateStore database.MigrationsStateStore
 }
 
 func WithInstance(config *Config, logger *log.Logger, serverFeatureFlags version.ServerFeatureFlags) (database.Driver, error) {
@@ -89,8 +89,13 @@ func WithInstance(config *Config, logger *log.Logger, serverFeatureFlags version
 		logger:             logger,
 		serverFeatureFlags: serverFeatureFlags,
 	}
+	if serverFeatureFlags.HasDatasources {
+		hx.migrationStateStore = NewMigrationsStateWithCatalogStateAPI(hx)
+	} else {
+		hx.migrationStateStore = NewMigrationStateStoreWithSQL(hx)
+	}
 
-	if err := hx.ensureVersionTable(); err != nil {
+	if err := hx.PrepareMigrationsStateStore(); err != nil {
 		logger.Debug(err)
 		return nil, err
 	}
@@ -300,75 +305,15 @@ func (h *HasuraDB) ResetQuery() {
 }
 
 func (h *HasuraDB) InsertVersion(version int64) error {
-	query := HasuraQuery{
-		Type: "run_sql",
-		Args: HasuraArgs{
-			SQL: `INSERT INTO ` + fmt.Sprintf("%s.%s", DefaultSchema, h.config.MigrationsTable) + ` (version, dirty) VALUES (` + strconv.FormatInt(version, 10) + `, ` + fmt.Sprintf("%t", false) + `)`,
-		},
-	}
-	h.migrationQuery.Args = append(h.migrationQuery.Args, query)
-	return nil
+	return h.migrationStateStore.InsertVersion(version)
 }
 
 func (h *HasuraDB) RemoveVersion(version int64) error {
-	query := HasuraQuery{
-		Type: "run_sql",
-		Args: HasuraArgs{
-			SQL: `DELETE FROM ` + fmt.Sprintf("%s.%s", DefaultSchema, h.config.MigrationsTable) + ` WHERE version = ` + strconv.FormatInt(version, 10),
-		},
-	}
-	h.migrationQuery.Args = append(h.migrationQuery.Args, query)
-	return nil
+	return h.migrationStateStore.RemoveVersion(version)
 }
 
 func (h *HasuraDB) getVersions() (err error) {
-
-	query := HasuraQuery{
-		Type: "run_sql",
-		Args: HasuraArgs{
-			SQL: `SELECT version, dirty FROM ` + fmt.Sprintf("%s.%s", DefaultSchema, h.config.MigrationsTable),
-		},
-	}
-
-	// Send Query
-	resp, body, err := h.sendQueryOrMetadataRequest(query)
-	if err != nil {
-		return err
-	}
-
-	// If status != 200 return error
-	if resp.StatusCode != http.StatusOK {
-		return NewHasuraError(body, h.config.isCMD)
-	}
-
-	var hres HasuraSQLRes
-	err = json.Unmarshal(body, &hres)
-	if err != nil {
-		return err
-	}
-
-	if hres.ResultType != TuplesOK {
-		return fmt.Errorf("Invalid result Type %s", hres.ResultType)
-	}
-
-	if len(hres.Result) == 1 {
-		return nil
-	}
-
-	for index, val := range hres.Result {
-		if index == 0 {
-			continue
-		}
-
-		version, err := strconv.ParseUint(val[0], 10, 64)
-		if err != nil {
-			return err
-		}
-
-		h.migrations.Append(version)
-	}
-
-	return nil
+	return h.migrationStateStore.GetVersions()
 }
 
 func (h *HasuraDB) Version() (version int64, dirty bool, err error) {

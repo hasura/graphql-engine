@@ -6,10 +6,11 @@ import "sort"
 type MigrationsStateStore interface {
 	InsertVersion(version int64) error
 	RemoveVersion(version int64) error
+	GetVersions() error
 
 	// This method is expected to initialize the datastore
 	// and validate it
-	Prepare() error
+	PrepareMigrationsStateStore() error
 }
 
 // Migrations wraps Migration and has an internal index

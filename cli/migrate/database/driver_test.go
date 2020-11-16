@@ -160,7 +160,7 @@ func (m *mockDriver) GetDatasources() ([]string, error) {
 	return nil, nil
 }
 
-func (m *mockDriver) Prepare() error {
+func (m *mockDriver) PrepareMigrationsStateStore() error {
 	return nil
 }
 
