@@ -60,7 +60,6 @@ func (v *Version) GetServerFeatureFlags() error {
 		flags.HasDatasources = multipleDatasourcesConstraint.Check(v.ServerSemver)
 
 	}
-	flags.HasDatasources = true
 	v.ServerFeatureFlags = flags
 	return nil
 }

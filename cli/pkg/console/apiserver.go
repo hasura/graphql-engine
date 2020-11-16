@@ -26,7 +26,10 @@ type APIServer struct {
 }
 
 func NewAPIServer(address string, port string, ec *cli.ExecutionContext) (*APIServer, error) {
-	migrate, err := migrate.NewMigrate(ec, false)
+	if ec.Version.ServerFeatureFlags.HasDatasources {
+		// TODO
+	}
+	migrate, err := migrate.NewMigrate(ec, false, "")
 	if err != nil {
 		return nil, errors.Wrap(err, "error creating migrate instance")
 	}

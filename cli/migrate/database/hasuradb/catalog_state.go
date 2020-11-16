@@ -76,8 +76,12 @@ func (c *CatalogStateAPI) SetCLICatalogState(hasuradb *HasuraDB, cliState CLICat
 
 	q := HasuraInterfaceQuery{
 		Type: "set_catalog_state",
-		Args: CatalogState{
-			CLIState: cliState,
+		Args: struct {
+			Type  string          `json:"type"`
+			State CLICatalogState `json:"state"`
+		}{
+			Type:  "cli",
+			State: cliState,
 		},
 	}
 	resp, body, err := hasuradb.sendQueryOrMetadataRequest(q)

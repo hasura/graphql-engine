@@ -14,8 +14,6 @@ import (
 
 	"github.com/mitchellh/mapstructure"
 
-	"github.com/hasura/graphql-engine/cli/version"
-
 	yaml "github.com/ghodss/yaml"
 	"github.com/hasura/graphql-engine/cli/metadata/types"
 	"github.com/hasura/graphql-engine/cli/migrate/database"
@@ -72,24 +70,24 @@ type HasuraDB struct {
 	jsonPath            map[string]string
 	isLocked            bool
 	logger              *log.Logger
-	serverFeatureFlags  version.ServerFeatureFlags
-	migrationStateStore database.MigrationsStateStore
+	hasuraOpts          *database.HasuraOpts
+	migrationStateStore MigrationsStateStore
 }
 
-func WithInstance(config *Config, logger *log.Logger, serverFeatureFlags version.ServerFeatureFlags) (database.Driver, error) {
+func WithInstance(config *Config, logger *log.Logger, hasuraOpts *database.HasuraOpts) (database.Driver, error) {
 	if config == nil {
 		logger.Debug(ErrNilConfig)
 		return nil, ErrNilConfig
 	}
 
 	hx := &HasuraDB{
-		config:             config,
-		migrations:         database.NewMigrations(),
-		settings:           database.Settings,
-		logger:             logger,
-		serverFeatureFlags: serverFeatureFlags,
+		config:     config,
+		migrations: database.NewMigrations(),
+		settings:   database.Settings,
+		logger:     logger,
+		hasuraOpts: hasuraOpts,
 	}
-	if serverFeatureFlags.HasDatasources {
+	if hasuraOpts.ServerFeatureFlags.HasDatasources {
 		hx.migrationStateStore = NewMigrationsStateWithCatalogStateAPI(hx)
 	} else {
 		hx.migrationStateStore = NewMigrationStateStoreWithSQL(hx)
@@ -107,7 +105,7 @@ func WithInstance(config *Config, logger *log.Logger, serverFeatureFlags version
 	return hx, nil
 }
 
-func (h *HasuraDB) Open(url string, isCMD bool, tlsConfig *tls.Config, logger *log.Logger, serverFeatureFlags version.ServerFeatureFlags) (database.Driver, error) {
+func (h *HasuraDB) Open(url string, isCMD bool, tlsConfig *tls.Config, logger *log.Logger, hasuraOpts *database.HasuraOpts) (database.Driver, error) {
 	if logger == nil {
 		logger = log.New()
 	}
@@ -169,7 +167,7 @@ func (h *HasuraDB) Open(url string, isCMD bool, tlsConfig *tls.Config, logger *l
 		Plugins: make(types.MetadataPlugins, 0),
 		Req:     req,
 	}
-	hx, err := WithInstance(config, logger, serverFeatureFlags)
+	hx, err := WithInstance(config, logger, hasuraOpts)
 	if err != nil {
 		logger.Debug(err)
 		return nil, err
@@ -329,76 +327,12 @@ func (h *HasuraDB) Drop() error {
 	return nil
 }
 
-func (h *HasuraDB) ensureVersionTable() error {
-	// check if migration table exists
-	query := HasuraQuery{
-		Type: "run_sql",
-		Args: HasuraArgs{
-			SQL: `SELECT COUNT(1) FROM information_schema.tables WHERE table_name = '` + h.config.MigrationsTable + `' AND table_schema = '` + DefaultSchema + `' LIMIT 1`,
-		},
-	}
-
-	resp, body, err := h.sendQueryOrMetadataRequest(query)
-	if err != nil {
-		h.logger.Debug(err)
-		return err
-	}
-	h.logger.Debug("response: ", string(body))
-
-	if resp.StatusCode != http.StatusOK {
-		return NewHasuraError(body, h.config.isCMD)
-	}
-
-	var hres HasuraSQLRes
-	err = json.Unmarshal(body, &hres)
-	if err != nil {
-		h.logger.Debug(err)
-		return err
-	}
-
-	if hres.ResultType != TuplesOK {
-		return fmt.Errorf("Invalid result Type %s", hres.ResultType)
-	}
-
-	if hres.Result[1][0] != "0" {
-		return nil
-	}
-
-	// Now Create the table
-	query = HasuraQuery{
-		Type: "run_sql",
-		Args: HasuraArgs{
-			SQL: `CREATE TABLE ` + fmt.Sprintf("%s.%s", DefaultSchema, h.config.MigrationsTable) + ` (version bigint not null primary key, dirty boolean not null)`,
-		},
-	}
-
-	resp, body, err = h.sendQueryOrMetadataRequest(query)
-	if err != nil {
-		return err
-	}
-
-	if resp.StatusCode != http.StatusOK {
-		return NewHasuraError(body, h.config.isCMD)
-	}
-
-	err = json.Unmarshal(body, &hres)
-	if err != nil {
-		return err
-	}
-
-	if hres.ResultType != CommandOK {
-		return fmt.Errorf("Creating Version table failed %s", hres.ResultType)
-	}
-
-	return nil
-}
-
 func (h *HasuraDB) sendQueryOrMetadataRequest(m interface{}) (resp *http.Response, body []byte, err error) {
 	var endpoint string
 	switch {
-	case !h.serverFeatureFlags.HasDatasources:
+	case !h.hasuraOpts.ServerFeatureFlags.HasDatasources:
 		endpoint = h.config.queryURL.String()
-	case h.serverFeatureFlags.HasDatasources:
+	case h.hasuraOpts.ServerFeatureFlags.HasDatasources:
 		// TODO: Make this better
 
 		// FIXME can also be an array

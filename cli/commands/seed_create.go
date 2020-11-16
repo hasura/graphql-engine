@@ -72,7 +72,7 @@ func (o *SeedNewOptions) Run() error {
 	if createSeedOpts.Data == nil {
 		var body []byte
 		if len(o.FromTableNames) > 0 {
-			migrateDriver, err := migrate.NewMigrate(ec, true)
+			migrateDriver, err := migrate.NewMigrate(ec, true, "")
 			if err != nil {
 				return errors.Wrap(err, "cannot initialize migrate driver")
 			}

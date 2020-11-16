@@ -95,7 +95,7 @@ func (o *MetadataDiffOptions) runv2(args []string) error {
 	}
 	o.EC.Logger.Info(message)
 	var oldYaml, newYaml []byte
-	migrateDrv, err := migrate.NewMigrate(o.EC, true)
+	migrateDrv, err := migrate.NewMigrate(o.EC, true, "")
 	if err != nil {
 		return err
 	}
@@ -170,7 +170,7 @@ func (o *MetadataDiffOptions) runv1(args []string) error {
 
 	o.EC.Logger.Info(message)
 	var oldYaml, newYaml []byte
-	migrateDrv, err := migrate.NewMigrate(o.EC, true)
+	migrateDrv, err := migrate.NewMigrate(o.EC, true, "")
 	if err != nil {
 		return err
 	}

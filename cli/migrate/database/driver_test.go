@@ -5,8 +5,6 @@ import (
 	"io"
 	"testing"
 
-	"github.com/hasura/graphql-engine/cli/version"
-
 	"github.com/hasura/graphql-engine/cli/metadata/types"
 	"github.com/sirupsen/logrus"
 	"gopkg.in/yaml.v2"
@@ -16,7 +14,7 @@ type mockDriver struct {
 	url string
 }
 
-func (m *mockDriver) Open(url string, isCmd bool, tlsConfig *tls.Config, logger *logrus.Logger, serverFeatureFlags version.ServerFeatureFlags) (Driver, error) {
+func (m *mockDriver) Open(url string, isCmd bool, tlsConfig *tls.Config, logger *logrus.Logger, hasuraOpts *HasuraOpts) (Driver, error) {
 	return &mockDriver{
 		url: url,
 	}, nil
@@ -204,7 +202,7 @@ func TestOpen(t *testing.T) {
 
 	for _, c := range cases {
 		t.Run(c.url, func(t *testing.T) {
-			d, err := Open(c.url, false, nil, nil, version.ServerFeatureFlags{})
+			d, err := Open(c.url, false, nil, nil, nil)
 
 			if err == nil {
 				if c.err {

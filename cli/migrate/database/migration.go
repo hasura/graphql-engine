@@ -1,17 +1,10 @@
 package database
 
-import "sort"
+import (
+	"sort"
 
-// Abstraction for the storage layer for migration state
-type MigrationsStateStore interface {
-	InsertVersion(version int64) error
-	RemoveVersion(version int64) error
-	GetVersions() error
-
-	// This method is expected to initialize the datastore
-	// and validate it
-	PrepareMigrationsStateStore() error
-}
+	"github.com/hasura/graphql-engine/cli/version"
+)
 
 // Migrations wraps Migration and has an internal index
 // to keep track of Migration order in database.
@@ -99,3 +92,10 @@ func (s uint64Slice) Less(i, j int) bool {
 func (s uint64Slice) Search(x uint64) int {
 	return sort.Search(len(s), func(i int) bool { return s[i] >= x })
 }
+
+type HasuraOpts struct {
+	ServerFeatureFlags version.ServerFeatureFlags
+	Datasource         Datasource
+}
+
+type Datasource string

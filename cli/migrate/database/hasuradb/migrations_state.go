@@ -7,6 +7,17 @@ import (
 	"strconv"
 )
 
+// Abstraction for the storage layer for migration state
+type MigrationsStateStore interface {
+	InsertVersion(version int64) error
+	RemoveVersion(version int64) error
+	GetVersions() error
+
+	// This method is expected to initialize the datastore
+	// and validate it
+	PrepareMigrationsStateStore() error
+}
+
 func (h *HasuraDB) PrepareMigrationsStateStore() error {
 	return h.migrationStateStore.PrepareMigrationsStateStore()
 }
@@ -109,7 +120,6 @@ func (m *migrationStateWithSQL) PrepareMigrationsStateStore() error {
 }
 
 func (m *migrationStateWithSQL) GetVersions() error {
-
 	query := HasuraQuery{
 		Type: "run_sql",
 		Args: HasuraArgs{

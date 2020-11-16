@@ -48,7 +48,7 @@ func newSeedApplyCmd(ec *cli.ExecutionContext) *cobra.Command {
 }
 
 func (o *SeedApplyOptions) Run() error {
-	migrateDriver, err := migrate.NewMigrate(o.EC, true)
+	migrateDriver, err := migrate.NewMigrate(o.EC, true, "")
 	if err != nil {
 		return err
 	}

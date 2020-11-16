@@ -47,7 +47,7 @@ type metadataReloadOptions struct {
 }
 
 func (o *metadataReloadOptions) run() error {
-	migrateDrv, err := migrate.NewMigrate(o.EC, true)
+	migrateDrv, err := migrate.NewMigrate(o.EC, true, "")
 	if err != nil {
 		return err
 	}

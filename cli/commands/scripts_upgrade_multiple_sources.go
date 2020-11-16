@@ -43,7 +43,7 @@ func newUpdateMultipleSources(ec *cli.ExecutionContext) *cobra.Command {
 				return fmt.Errorf("server doesn't support multiple data sources")
 			}
 			//get the list of data sources
-			migrateDrv, err := migrate.NewMigrate(ec, true)
+			migrateDrv, err := migrate.NewMigrate(ec, true, "")
 			if err != nil {
 				return err
 			}

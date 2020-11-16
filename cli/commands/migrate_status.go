@@ -48,7 +48,8 @@ type MigrateStatusOptions struct {
 }
 
 func (o *MigrateStatusOptions) Run() (*migrate.Status, error) {
-	migrateDrv, err := migrate.NewMigrate(o.EC, true)
+	// TODO
+	migrateDrv, err := migrate.NewMigrate(o.EC, true, "")
 	if err != nil {
 		return nil, err
 	}

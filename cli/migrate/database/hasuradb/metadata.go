@@ -251,7 +251,7 @@ func (h *HasuraDB) Query(data interface{}) error {
 }
 
 func (h *HasuraDB) GetDatasources() ([]string, error) {
-	if !h.serverFeatureFlags.HasDatasources {
+	if !h.hasuraOpts.ServerFeatureFlags.HasDatasources {
 		return nil, fmt.Errorf("server version does not support datasources")
 	}
 	query := HasuraInterfaceQuery{
