@@ -24,3 +24,30 @@ $$;
 CREATE TRIGGER event_trigger_table_name_update_trigger
 AFTER UPDATE ON hdb_catalog.hdb_table
 FOR EACH ROW EXECUTE PROCEDURE hdb_catalog.event_trigger_table_name_update();
+
+
+-- this clears pre-existing invalid triggers
+CREATE TEMP TABLE invalid_triggers AS
+WITH valid_event_triggers AS (
+  SELECT name FROM hdb_catalog.event_triggers
+),
+  archive_invalid_events AS (
+  UPDATE hdb_catalog.event_log set archived = 't'
+  WHERE trigger_name NOT IN (select name from valid_event_triggers)
+)
+SELECT routine_name FROM information_schema.routines
+WHERE routine_type='FUNCTION' AND specific_schema='hdb_views' AND routine_name NOT IN (
+  SELECT 'notify_hasura_' || name || '_INSERT' FROM valid_event_triggers
+  UNION
+  SELECT 'notify_hasura_' || name || '_UPDATE' FROM valid_event_triggers
+  UNION
+  select 'notify_hasura_' || name || '_DELETE' FROM valid_event_triggers
+);
+
+DO $$ DECLARE
+r RECORD;
+BEGIN
+  FOR r IN (SELECT routine_name from invalid_triggers) LOOP
+    EXECUTE 'DROP FUNCTION IF EXISTS hdb_views.' || quote_ident(r.routine_name) || ' CASCADE';
+  END LOOP;
+END $$;
