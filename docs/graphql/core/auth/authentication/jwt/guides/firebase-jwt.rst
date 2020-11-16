@@ -217,39 +217,7 @@ Then deploy the function by running:
 
     firebase deploy --only functions
 
-Step 5: Create React app
-------------------------
 
-If you don't already have a React app, create one by running:
-
-.. code-block:: bash
-
-    npx create-react-app my-movie-app --template typescript
-
-Under ``src/app``, create a file called ``auth-state.ts``:
-
-.. code-block:: javascript
-
-    export type AuthState = AuthStateLoading | AuthStateOut | AuthStateIn;
-
-    export interface AuthStateLoading {
-      status: "loading";
-    }
-
-    export interface AuthStateOut {
-      status: "out";
-    }
-
-    export interface AuthStateIn {
-      status: "in";
-      user: firebase.User;
-      token: string;
-    }
-
-    export type Disp<T> = React.Dispatch<React.SetStateAction<T>>;
-
-
-Also, create a file called ``auth.tsx`` with the following content:
 
 
 
