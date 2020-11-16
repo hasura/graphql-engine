@@ -59,3 +59,8 @@ source-repository-package
   type: git
   location: https://github.com/hasura/pool.git
   tag: 0fdfaed4e109ca6a6bf00ed6d79c329626e3bdd4
+
+source-repository-package
+  type: git
+  location: https://github.com/fpco/odbc.git
+  tag: 76f688030420e122bbcc3b2d5bfb073658b3be83

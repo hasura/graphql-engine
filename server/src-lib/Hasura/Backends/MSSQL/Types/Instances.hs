@@ -6,38 +6,18 @@ module Hasura.Backends.MSSQL.Types.Instances where
 
 import           Control.DeepSeq
 import           Data.Aeson
-import           Data.ByteString (ByteString)
 import           Data.Function
 import           Data.Hashable
 import qualified Data.Text as T
 import           Data.Text.Extended (ToTxt(..))
 import           Data.Time
-import           Data.Word
 import qualified Database.ODBC.SQLServer as Odbc
 import           Hasura.Backends.MSSQL.Types.Internal
 import           Hasura.Incremental.Internal.Dependency
 import           Prelude
 
--- FIXME: Orphans, push out!
-
-instance Hashable Odbc.Value
-instance Hashable Day where hashWithSalt = undefined
-instance Hashable TimeOfDay where hashWithSalt = undefined
-instance Hashable LocalTime where hashWithSalt = undefined
-instance Hashable Odbc.Binary
-
--- FIXME: Garbage orphan instances for third-party types.
-
 instance Cacheable Odbc.Value
-instance Cacheable Day where unchanged access = on (unchanged access) show
-instance Cacheable TimeOfDay where unchanged access = on (unchanged access) show
-instance Cacheable LocalTime where unchanged access = on (unchanged access) show
-instance Cacheable ByteString where unchanged access = on (unchanged access) show
-instance Cacheable Float where unchanged access = on (unchanged access) show
-instance Cacheable Word8 where unchanged access = on (unchanged access) show
 instance Cacheable Odbc.Binary
-
---
 
 instance FromJSON ColumnName
 instance FromJSON NullsOrder
