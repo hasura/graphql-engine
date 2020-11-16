@@ -2,10 +2,10 @@
    :description: clean up actions logs
    :keywords: hasura, docs, actions, clean up, async actions
 
-.. _clean_up_actions_logs:
+.. _clean_up_action_logs:
 
-Clean up actions logs
-=====================
+Clean up action logs
+====================
 
 .. contents:: Table of contents
   :backlinks: none
@@ -36,12 +36,12 @@ Option 2: Delete one log
    
    DELETE FROM hdb_catalog.hdb_action_log WHERE id = '<action-id>';
 
-Option 3: Clear all logs
-------------------------
-.. admonition:: Warning
- 
-   Clearing all logs is irreversible.
-
+Option 3: Delete all logs
+-------------------------
 .. code-block:: SQL
 
    DELETE FROM hdb_catalog.hdb_action_log;
+
+.. admonition:: Warning
+ 
+   Deleting all logs is irreversible.   

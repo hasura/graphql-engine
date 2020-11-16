@@ -165,7 +165,7 @@ Learn more
   action-permissions
   reuse-types-actions
   debugging
-  clean-up-actions-logs
+  clean-up-action-logs
 
 ..
   action-examples
