@@ -174,6 +174,7 @@ const AddAction = ({
         type="submit"
         disabled={!allowSave}
         onClick={onSubmit}
+        data-test="create-action-btn"
       >
         Create
       </Button>
