@@ -1,6 +1,6 @@
 .. meta::
-   :description: clean up actions logs
-   :keywords: hasura, docs, actions, clean up, async actions
+   :description: clean up action logs
+   :keywords: hasura, docs, action, clean up, async actions
 
 .. _clean_up_action_logs:
 
