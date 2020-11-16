@@ -20,7 +20,7 @@ You can use any of the following options to prune your logs depending on your ne
 The table involved
 ------------------
 
-Actions has a table managed by Hasura:
+There is a specific table for action logs that is managed by Hasura:
 
 - ``hdb_catalog.hdb_action_log``: This is the table that stores all captured logs.
 
