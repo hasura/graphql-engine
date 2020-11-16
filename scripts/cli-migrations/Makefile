@@ -5,7 +5,6 @@ BUILD_DIR ?= /build
 BINARY ?= $(BUILD_DIR)/_cli_output/binaries/cli-hasura-linux-amd64
 IMAGE_TAG ?= cli-migrations
 BUILD_OUTPUT ?= $(BUILD_DIR)/_cli_migrations_output
-CLI_EXT_MANIFEST_FILE ?= $(BUILD_DIR)/_cli_ext_output/manifest-dev.yaml
 SERVER_BUILD_OUTPUT := $(BUILD_DIR)/_server_output
 
 .PHONY: load-server-image
@@ -30,8 +29,7 @@ test-cli-migrations-v1:
 .ONESHELL:
 build-cli-migrations-v2:
 	cd v2
-	cp ${BINARY} .
-	cp ${CLI_EXT_MANIFEST_FILE} manifest.yaml
+	./prepare_docker_context.sh
 	docker build -t '${IMAGE_TAG}-v2' .
 	docker save -o '$(BUILD_OUTPUT)/v2.tar' '$(IMAGE_TAG)-v2'
 

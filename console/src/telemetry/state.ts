@@ -18,7 +18,7 @@ export type ConsoleState = {
   hasura_uuid: string;
 };
 
-const defaultConsoleState: ConsoleState = {
+export const defaultConsoleState: ConsoleState = {
   console_opts: null,
   hasura_uuid: '',
 };

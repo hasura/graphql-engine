@@ -5,6 +5,40 @@ import { RouterAction } from 'react-router-redux';
 import { RAEvents } from './components/Services/Events/types';
 import reducer from './reducer';
 
+export type ApiExplorer = {
+  authApiExpanded: string;
+  currentTab: number;
+  headerFocus: boolean;
+  loading: boolean;
+  mode: string;
+  modalState: Record<string, string>;
+  explorerData: Record<string, string>;
+  displayedApi: DisplayedApiState;
+};
+
+export type DisplayedApiState = {
+  details: Record<string, string>;
+  id: string;
+  request: ApiExplorerRequest;
+};
+
+export type ApiExplorerRequest = {
+  bodyType: string;
+  headers: ApiExplorerHeader[];
+  headersInitialised: boolean;
+  method: string;
+  params: string;
+  url: string;
+};
+
+export type ApiExplorerHeader = {
+  key: string;
+  value: string;
+  isActive: boolean;
+  isNewHeader: boolean;
+  isDisabled: boolean;
+};
+
 // Redux Utils
 export type ReduxState = ReturnType<typeof reducer>;
 

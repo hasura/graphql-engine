@@ -30,6 +30,7 @@ import UniqueKeyEditor from './UniqueKeyEditor';
 import TriggerEditorList from './TriggerEditorList';
 import CheckConstraints from './CheckConstraints';
 import RootFields from './RootFields';
+import ComputedFields from './ComputedFields';
 import styles from './ModifyTable.scss';
 import { NotFoundError } from '../../../Error/PageNotFound';
 
@@ -37,13 +38,9 @@ import { getConfirmation } from '../../../Common/utils/jsUtils';
 import {
   findTable,
   generateTableDef,
-  getTableCustomRootFields,
   getTableCustomColumnNames,
 } from '../../../../dataSources';
 import Tooltip from '../../../Common/Tooltip/Tooltip';
-import KnowMoreLink from '../../../Common/KnowMoreLink/KnowMoreLink';
-import ComputedFieldsEditor from './ComputedFieldsEditor';
-import ToolTip from '../../../Common/Tooltip/Tooltip';
 import {
   foreignKeyDescription,
   primaryKeyDescription,
@@ -72,8 +69,6 @@ class ModifyTable extends React.Component {
     const {
       tableName,
       allTables,
-      nonTrackableFunctions,
-      trackableFunctions,
       dispatch,
       migrationMode,
       readOnlyMode,
@@ -89,7 +84,6 @@ class ModifyTable extends React.Component {
       columnDefaultFunctions,
       schemaList,
       tableEnum,
-      rootFieldsEdit,
       postgresVersion,
       currentSource,
     } = this.props;
@@ -160,59 +154,6 @@ class ModifyTable extends React.Component {
       );
     };
 
-    // if (table.primary_key.columns > 0) {}
-    const getTableRootFieldsSection = () => {
-      const existingRootFields = getTableCustomRootFields(table);
-
-      return (
-        <React.Fragment>
-          <h4 className={styles.subheading_text}>
-            Custom GraphQL Root Fields
-            <Tooltip
-              message={
-                'Change the root fields for the table in the GraphQL API'
-              }
-            />
-          </h4>
-          <RootFields
-            existingRootFields={existingRootFields}
-            rootFieldsEdit={rootFieldsEdit}
-            dispatch={dispatch}
-            tableName={tableName}
-          />
-          <hr />
-        </React.Fragment>
-      );
-    };
-
-    const getComputedFieldsSection = () => {
-      const allFunctions = nonTrackableFunctions.concat(trackableFunctions);
-
-      return (
-        <React.Fragment>
-          <div className={styles.add_mar_bottom}>
-            <h4 className={styles.subheading_text_no_padd}>
-              Computed fields
-              <Tooltip
-                message={'Add a function as a virtual field in the GraphQL API'}
-              />
-              <KnowMoreLink href="https://hasura.io/docs/1.0/graphql/manual/schema/computed-fields.html" />
-            </h4>
-            <NotSupportedNote unsupported={['mysql']} />
-          </div>
-          <ComputedFieldsEditor
-            table={table}
-            currentSchema={currentSchema}
-            functions={allFunctions} // TODO: fix cross schema functions
-            schemaList={schemaList}
-            dispatch={dispatch}
-          />
-          <hr />
-        </React.Fragment>
-      );
-    };
-
-    // if (tableSchema.primary_key.columns > 0) {}
     return (
       <RightContainer>
         <div className={`${styles.container} container-fluid`}>
@@ -260,10 +201,11 @@ class ModifyTable extends React.Component {
                 postgresVersion={postgresVersion}
               />
               <hr />
-              {getComputedFieldsSection()}
+              <ComputedFields tableSchema={table} />
+              <hr />
               <h4 className={styles.subheading_text}>
                 Primary Key &nbsp; &nbsp;
-                <ToolTip message={primaryKeyDescription} />
+                <Tooltip message={primaryKeyDescription} />
               </h4>
               <PrimaryKeyEditor
                 tableSchema={table}
@@ -274,7 +216,7 @@ class ModifyTable extends React.Component {
               <hr />
               <h4 className={styles.subheading_text}>
                 Foreign Keys &nbsp; &nbsp;
-                <ToolTip message={foreignKeyDescription} />
+                <Tooltip message={foreignKeyDescription} />
               </h4>
               <ForeignKeyEditor
                 tableSchema={table}
@@ -287,7 +229,7 @@ class ModifyTable extends React.Component {
               <hr />
               <h4 className={styles.subheading_text}>
                 Unique Keys &nbsp; &nbsp;
-                <ToolTip message={uniqueKeyDescription} />
+                <Tooltip message={uniqueKeyDescription} />
               </h4>
               <UniqueKeyEditor
                 tableSchema={table}
@@ -307,7 +249,7 @@ class ModifyTable extends React.Component {
               <div className={styles.add_mar_bottom}>
                 <h4 className={styles.subheading_text_no_padd}>
                   Check Constraints &nbsp; &nbsp;
-                  <ToolTip message={checkConstraintsDescription} />
+                  <Tooltip message={checkConstraintsDescription} />
                 </h4>
                 <NotSupportedNote unsupported={['mysql']} />
               </div>
@@ -317,7 +259,8 @@ class ModifyTable extends React.Component {
                 dispatch={dispatch}
               />
               <hr />
-              {getTableRootFieldsSection()}
+              <RootFields tableSchema={table} />
+              <hr />
               {getEnumsSection()}
               {untrackBtn}
               {deleteBtn}
@@ -354,8 +297,6 @@ ModifyTable.propTypes = {
 const mapStateToProps = (state, ownProps) => ({
   tableName: ownProps.params.table,
   allTables: state.tables.allSchemas,
-  nonTrackableFunctions: state.tables.nonTrackablePostgresFunctions || [],
-  trackableFunctions: state.tables.postgresFunctions || [],
   migrationMode: state.main.migrationMode,
   readOnlyMode: state.main.readOnlyMode,
   serverVersion: state.main.serverVersion,

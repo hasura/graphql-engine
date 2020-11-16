@@ -8,11 +8,6 @@ import {
   showSuccessNotification,
 } from '../components/Services/Common/Notification';
 import globals from '../Globals';
-import defaultConsoleState, {
-  ConsoleState,
-  NotificationsState,
-  TelemetryNotificationsState,
-} from './state';
 import {
   getSetConsoleStateQuery,
   getConsoleStateQuery,
@@ -21,6 +16,7 @@ import { GetReduxState, ReduxState } from '../types';
 import { isUpdateIDsEqual } from './utils';
 import { HASURA_COLLABORATOR_TOKEN } from '../constants';
 import { getUserType } from '../components/Main/utils';
+import { ConsoleState, NotificationsState, defaultConsoleState } from './state';
 
 const SET_CONSOLE_OPTS = 'Telemetry/SET_CONSOLE_OPTS';
 const SET_NOTIFICATION_SHOWN = 'Telemetry/SET_NOTIFICATION_SHOWN';
@@ -141,152 +137,216 @@ const setPreReleaseNotificationOptOutInDB = () => (
   return dispatch(setConsoleOptsInDB(options, successCb, errorCb));
 };
 
+// TODO: We could fetch the latest `read` state from the DB everytime we
+// open the notifications dropdown. That way we can reach a more consistent behavior on notifications.
+// OR another option would be to provide a refresh button so that users can use it to refresh state
 const updateConsoleNotificationsState = (updatedState: NotificationsState) => {
   return (
     dispatch: ThunkDispatch<ReduxState, unknown, AnyAction>,
     getState: GetReduxState
   ) => {
-    const url = Endpoints.metadata;
-    const currentNotifications = getState().main.consoleNotifications;
-    const restState = getState().telemetry.console_opts;
-    const headers = dataHeaders(getState);
-    let userType = 'admin';
-    if (headers?.[HASURA_COLLABORATOR_TOKEN]) {
-      const collabToken = headers[HASURA_COLLABORATOR_TOKEN];
-      userType = getUserType(collabToken);
-    }
-    let composedUpdatedState: ConsoleState['console_opts'] = {
-      ...restState,
-      console_notifications: {
-        [userType]: updatedState,
-      },
-    };
-    if (userType !== 'admin') {
-      const currentState = restState?.console_notifications;
-      if (Object.keys(currentState ?? {}).length > 1) {
-        composedUpdatedState = {
-          ...restState,
-          console_notifications: {
-            ...currentState,
-            [userType]: updatedState,
-          },
-        };
-      }
-    }
-    if (currentNotifications && Array.isArray(currentNotifications)) {
-      if (isUpdateIDsEqual(currentNotifications, updatedState.read)) {
-        composedUpdatedState = {
-          ...restState,
-          console_notifications: {
-            ...restState?.console_notifications,
-            [userType]: {
-              read: 'all',
-              showBadge: false,
-              date: updatedState.date,
-            },
-          },
-        };
-        // update the localStorage var with all the notifications
-        // since all the notifications were clicked on read state
-        window.localStorage.setItem(
-          'notifications:data',
-          JSON.stringify(currentNotifications)
-        );
-      }
-    }
-    const updatedReadNotifications = getSetConsoleStateQuery(
-      composedUpdatedState
-    );
-    const options: RequestInit = {
-      credentials: globalCookiePolicy,
+    const getStateURL = Endpoints.metadata;
+    const getStateOptions: RequestInit = {
       method: 'POST',
-      headers,
-      body: JSON.stringify(updatedReadNotifications),
+      body: JSON.stringify(getConsoleStateQuery),
+      headers: dataHeaders(getState),
+      credentials: globalCookiePolicy,
     };
-    return dispatch(requestAction(url, options))
-      .then((data: { message?: string }) => {
-        if (!data?.message || data.message !== 'success') {
-          console.error(
-            'There was an error in updating the state of console notifications.'
+    // make a query to get the latest state from db prior to updating the read state for a user
+    return dispatch(requestAction(getStateURL, getStateOptions))
+      .then((data: ConsoleStateResponse[]) => {
+        if (data?.length) {
+          const { console_state: current_console_state } = data[0];
+          let composedUpdatedState: ConsoleState['console_opts'] = {
+            ...current_console_state,
+            console_notifications: {
+              ...current_console_state?.console_notifications,
+            },
+          };
+          const url = Endpoints.metadata;
+          const currentNotifications = getState().main.consoleNotifications;
+          const headers = dataHeaders(getState);
+          let userType = 'admin';
+
+          const headerHasAdminToken = Object.keys(headers).find(
+            header => header.toLowerCase() === HASURA_COLLABORATOR_TOKEN
           );
-          return;
-        }
-        // successfully updated the state, now we need to fetch the latest and update console_notifications in redux
-        const getStatePayload: RequestInit = {
-          credentials: globalCookiePolicy,
-          method: 'POST',
-          headers,
-          body: JSON.stringify(getConsoleStateQuery),
-        };
-        return dispatch(requestAction(url, getStatePayload))
-          .then((resData: ConsoleStateResponse) => {
-            try {
-              const latestNotificationsState =
-                resData.console_state?.console_notifications;
-              dispatch({
-                type: UPDATE_CONSOLE_NOTIFICATIONS,
-                data: latestNotificationsState,
-              });
-            } catch {
-              // there's a different or an error in extracting the response
-              dispatch({
-                type: UPDATE_CONSOLE_NOTIFICATIONS,
-                data: {
+          if (headerHasAdminToken) {
+            const collabToken = headers[headerHasAdminToken];
+            userType = getUserType(collabToken);
+          }
+
+          const dbReadState =
+            current_console_state?.console_notifications?.[userType]?.read;
+          let combinedReadState: NotificationsState['read'] = [];
+
+          if (
+            !dbReadState ||
+            dbReadState === 'default' ||
+            dbReadState === 'error'
+          ) {
+            composedUpdatedState = {
+              ...current_console_state,
+              console_notifications: {
+                ...current_console_state?.console_notifications,
+                [userType]: updatedState,
+              },
+            };
+          } else if (dbReadState === 'all') {
+            if (updatedState.read === 'all') {
+              composedUpdatedState = {
+                ...current_console_state,
+                console_notifications: {
+                  ...current_console_state?.console_notifications,
                   [userType]: {
-                    read: 'error',
-                    date: null,
-                    showBadge: true,
+                    read: 'all',
+                    date: updatedState.date,
+                    showBadge: false,
                   },
                 },
-              });
+              };
+            } else {
+              composedUpdatedState = {
+                ...current_console_state,
+                console_notifications: {
+                  ...current_console_state?.console_notifications,
+                  [userType]: updatedState,
+                },
+              };
             }
-          })
-          .catch((err: Error) => {
-            console.error(
-              'There was an error in fetching the latest notifications state.',
-              err
-            );
-            return err;
-          });
+          } else {
+            if (typeof updatedState.read === 'string') {
+              combinedReadState = updatedState.read;
+            } else if (Array.isArray(updatedState.read)) {
+              // this is being done to ensure that there is a consistency between the read
+              // state of the users and the data present in the DB
+              combinedReadState = dbReadState
+                .concat(updatedState.read)
+                .reduce((acc: string[], val: string) => {
+                  if (!acc.includes(val)) {
+                    return [...acc, val];
+                  }
+                  return acc;
+                }, []);
+            }
+
+            composedUpdatedState = {
+              ...current_console_state,
+              console_notifications: {
+                ...current_console_state?.console_notifications,
+                [userType]: {
+                  ...updatedState,
+                  read: combinedReadState,
+                },
+              },
+            };
+          }
+
+          if (
+            currentNotifications &&
+            Array.isArray(currentNotifications) &&
+            Array.isArray(combinedReadState)
+          ) {
+            if (isUpdateIDsEqual(currentNotifications, combinedReadState)) {
+              composedUpdatedState = {
+                ...current_console_state,
+                console_notifications: {
+                  ...current_console_state?.console_notifications,
+                  [userType]: {
+                    read: 'all',
+                    showBadge: false,
+                    date: updatedState.date,
+                  },
+                },
+              };
+              // update the localStorage var with all the notifications
+              // since all the notifications were clicked on read state
+              window.localStorage.setItem(
+                'notifications:data',
+                JSON.stringify(currentNotifications)
+              );
+            }
+          }
+
+          const updatedReadNotifications = getSetConsoleStateQuery(
+            composedUpdatedState
+          );
+          const options: RequestInit = {
+            credentials: globalCookiePolicy,
+            method: 'POST',
+            headers,
+            body: JSON.stringify(updatedReadNotifications),
+          };
+
+          return dispatch(requestAction(url, options))
+            .then((retData: any) => {
+              dispatch({
+                type: UPDATE_CONSOLE_NOTIFICATIONS,
+                data: retData.returning[0].console_state.console_notifications,
+              });
+            })
+            .catch(error => {
+              console.error(
+                'There was an error in updating the read console notifications.',
+                error
+              );
+              return error;
+            });
+        }
       })
-      .catch(error => {
+      .catch(err => {
         console.error(
-          'There was an error in updating the console notifications.',
-          error
+          'There was an error in fetching the latest state from the DB.',
+          err
         );
-        return error;
       });
   };
 };
 
-const loadConsoleOpts = () => {
-  return (
-    dispatch: ThunkDispatch<ReduxState, unknown, AnyAction>,
-    getState: GetReduxState
-  ) => {
-    const options: RequestInit = {
-      credentials: globalCookiePolicy,
-      method: 'POST',
-      headers: dataHeaders(getState),
-      body: JSON.stringify(getConsoleStateQuery),
-    };
-    const headers = dataHeaders(getState);
-    let userType = 'admin';
-    if (headers?.[HASURA_COLLABORATOR_TOKEN]) {
-      userType = headers[HASURA_COLLABORATOR_TOKEN];
-    }
-    return dispatch(requestAction(Endpoints.metadata, options) as any).then(
-      (data: ConsoleStateResponse) => {
+const loadConsoleOpts = () => (
+  dispatch: ThunkDispatch<ReduxState, unknown, AnyAction>,
+  getState: GetReduxState
+) => {
+  const options: RequestInit = {
+    credentials: globalCookiePolicy,
+    method: 'POST',
+    headers: dataHeaders(getState),
+    body: JSON.stringify(getConsoleStateQuery),
+  };
+  const headers = dataHeaders(getState);
+  let userType = 'admin';
+
+  const headerHasAdminToken = Object.keys(headers).find(
+    header => header.toLowerCase() === HASURA_COLLABORATOR_TOKEN
+  );
+  if (headerHasAdminToken) {
+    const collabToken = headers[headerHasAdminToken];
+    userType = getUserType(collabToken);
+  }
+
+  return dispatch(requestAction(Endpoints.metadata, options)).then(
+    (data: ConsoleStateResponse) => {
+      if (data) {
+        const { id, console_state } = data;
+
         dispatch({
           type: SET_HASURA_UUID,
-          data: data.id,
+          data: id,
         });
-        globals.hasuraUUID = data.id;
+        globals.hasuraUUID = id;
+
         dispatch({
           type: SET_CONSOLE_OPTS,
-          data: data.console_state,
+          data: console_state,
         });
-        if (!data?.console_state?.console_notifications) {
+
+        globals.telemetryNotificationShown = !!console_state?.telemetryNotificationShown;
+
+        if (
+          !console_state?.console_notifications ||
+          (console_state.console_notifications &&
+            !console_state.console_notifications[userType])
+        ) {
           dispatch({
             type: UPDATE_CONSOLE_NOTIFICATIONS,
             data: {
@@ -298,18 +358,14 @@ const loadConsoleOpts = () => {
             },
           });
         }
-        globals.telemetryNotificationShown = !!data.console_state
-          ?.telemetryNotificationShown;
         return Promise.resolve();
-      },
-      (error: Error) => {
-        console.error(
-          `Failed to load console options: ${JSON.stringify(error)}`
-        );
-        return Promise.reject();
       }
-    );
-  };
+    },
+    (error: Error) => {
+      console.error(`Failed to load console options: ${JSON.stringify(error)}`);
+      return Promise.reject();
+    }
+  );
 };
 
 interface SetConsoleOptsAction {
@@ -328,7 +384,7 @@ interface SetHasuraUuid {
 
 interface UpdateConsoleNotifications {
   type: typeof UPDATE_CONSOLE_NOTIFICATIONS;
-  data: TelemetryNotificationsState;
+  data: Record<string, NotificationsState>;
 }
 
 type TelemetryActionTypes =
@@ -348,7 +404,7 @@ export const requireConsoleOpts = ({
 const telemetryReducer = (
   state = defaultConsoleState,
   action: TelemetryActionTypes
-): ConsoleState => {
+) => {
   switch (action.type) {
     case SET_CONSOLE_OPTS:
       return {
@@ -375,7 +431,10 @@ const telemetryReducer = (
         ...state,
         console_opts: {
           ...state.console_opts,
-          console_notifications: action.data,
+          console_notifications: {
+            ...state.console_opts?.console_notifications,
+            ...action.data,
+          },
         },
       };
     default:
@@ -391,4 +450,5 @@ export {
   setPreReleaseNotificationOptOutInDB,
   setTelemetryNotificationShownInDB,
   updateConsoleNotificationsState,
+  UPDATE_CONSOLE_NOTIFICATIONS,
 };
