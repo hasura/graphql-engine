@@ -22,7 +22,7 @@ The table involved
 
 There is a specific table for action logs that is managed by Hasura:
 
-- ``hdb_catalog.hdb_action_log``: This is the table that stores all captured logs.
+- ``hdb_catalog.hdb_action_log``: This table stores all captured action logs.
 
 Option 1: Get all logs
 ----------------------
