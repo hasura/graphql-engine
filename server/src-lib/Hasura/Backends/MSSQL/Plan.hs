@@ -18,20 +18,25 @@ import qualified Language.GraphQL.Draft.Syntax      as G
 import           Control.Monad.Validate
 import           Data.Bifunctor                     (first)
 
--- import qualified Hasura.GraphQL.Context             as Graphql
+
 import qualified Hasura.GraphQL.Execute.Query       as EQ
 import qualified Hasura.GraphQL.Parser              as Graphql
-import qualified Hasura.GraphQL.Context              as Graphql
-
 import           Hasura.Backends.MSSQL.FromIr       as Tsql
 import           Hasura.Backends.MSSQL.Types        as Tsql
+import           Hasura.Prelude ()
+import qualified Hasura.RQL.Types.Action            as RQL
+import           Hasura.GraphQL.Context
+import           Hasura.SQL.Backend
+
+type SubscriptionRootFieldMSSQL v = RootField (QueryDB 'MSSQL v) Void (RQL.AnnActionAsyncQuery 'MSSQL v) Void
+
 
 -- --------------------------------------------------------------------------------
 -- -- Top-level planner
 
 -- -- | Plan a query without prepare/exec.
 planNoPlan ::
-     Graphql.SubscriptionRootFieldMSSQL Graphql.UnpreparedValue
+     SubscriptionRootFieldMSSQL Graphql.UnpreparedValue
   -> Either PrepareError Select
 planNoPlan unpreparedRoot = do
   rootField <- EQ.traverseQueryRootField prepareValueNoPlan unpreparedRoot
@@ -48,7 +53,7 @@ planNoPlan unpreparedRoot = do
       }
 
 planMultiplex ::
-     OMap.InsOrdHashMap G.Name (Graphql.SubscriptionRootFieldMSSQL Graphql.UnpreparedValue)
+     OMap.InsOrdHashMap G.Name (SubscriptionRootFieldMSSQL Graphql.UnpreparedValue)
   -> Either PrepareError Select
 planMultiplex unpreparedMap = do
   rootFieldMap <-
@@ -65,7 +70,7 @@ planMultiplex unpreparedMap = do
 
 -- | Plan a query without prepare/exec.
 planNoPlanMap ::
-     OMap.InsOrdHashMap G.Name (Graphql.SubscriptionRootFieldMSSQL Graphql.UnpreparedValue)
+     OMap.InsOrdHashMap G.Name (SubscriptionRootFieldMSSQL Graphql.UnpreparedValue)
   -> Either PrepareError Reselect
 planNoPlanMap unpreparedMap = do
   rootFieldMap <-
