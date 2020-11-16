@@ -10,7 +10,6 @@ import           Data.Function
 import           Data.Hashable
 import qualified Data.Text as T
 import           Data.Text.Extended (ToTxt(..))
-import           Data.Time
 import qualified Database.ODBC.SQLServer as Odbc
 import           Hasura.Backends.MSSQL.Types.Internal
 import           Hasura.Incremental.Internal.Dependency
