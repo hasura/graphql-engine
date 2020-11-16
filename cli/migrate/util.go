@@ -7,14 +7,13 @@ import (
 	"strings"
 
 	crontriggers "github.com/hasura/graphql-engine/cli/metadata/cron_triggers"
+	"github.com/hasura/graphql-engine/cli/metadata/sources"
 
 	"github.com/hasura/graphql-engine/cli/metadata"
 	"github.com/hasura/graphql-engine/cli/metadata/actions"
 	"github.com/hasura/graphql-engine/cli/metadata/allowlist"
-	"github.com/hasura/graphql-engine/cli/metadata/functions"
 	"github.com/hasura/graphql-engine/cli/metadata/querycollections"
 	"github.com/hasura/graphql-engine/cli/metadata/remoteschemas"
-	"github.com/hasura/graphql-engine/cli/metadata/tables"
 	"github.com/hasura/graphql-engine/cli/metadata/types"
 	"github.com/hasura/graphql-engine/cli/metadata/version"
 
@@ -166,23 +165,12 @@ func SetMetadataPluginsWithDir(ec *cli.ExecutionContext, drv *Migrate, dir ...st
 	plugins := make(types.MetadataPlugins, 0)
 	if ec.Config.Version == cli.V2 && metadataDir != "" {
 		plugins = append(plugins, version.New(ec, metadataDir))
-		plugins = append(plugins, tables.New(ec, metadataDir))
-		plugins = append(plugins, functions.New(ec, metadataDir))
 		plugins = append(plugins, querycollections.New(ec, metadataDir))
 		plugins = append(plugins, allowlist.New(ec, metadataDir))
 		plugins = append(plugins, remoteschemas.New(ec, metadataDir))
 		plugins = append(plugins, actions.New(ec, metadataDir))
 		plugins = append(plugins, crontriggers.New(ec, metadataDir))
-		//} else if ec.Config.Version == cli.V3 {
-		// 	plugins = append(plugins, version.New(ec, metadataDir))
-		// 	plugins = append(plugins, sources.New(ec, metadataDir))
-		// 	plugins = append(plugins, querycollections.New(ec, metadataDir))
-		// 	plugins = append(plugins, allowlist.New(ec, metadataDir))
-		// 	plugins = append(plugins, remoteschemas.New(ec, metadataDir))
-		// 	plugins = append(plugins, actions.New(ec, metadataDir))
-		// 	plugins = append(plugins, crontriggers.New(ec, metadataDir))
-		// }
-		// needed to change
+		plugins = append(plugins, sources.New(ec, metadataDir))
 	} else {
 		plugins = append(plugins, metadata.New(ec, ec.MigrationDir))
 	}

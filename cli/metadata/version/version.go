@@ -17,12 +17,15 @@ type Version struct {
 }
 
 type VersionConfig struct {
-	MetadataDir string
+	MetadataDir    string
+	HasDatasources bool
 }
 
 func New(ec *cli.ExecutionContext, baseDir string) *VersionConfig {
+	ec.Version.GetServerFeatureFlags()
 	return &VersionConfig{
-		MetadataDir: baseDir,
+		MetadataDir:    baseDir,
+		HasDatasources: ec.Version.ServerFeatureFlags.HasDatasources,
 	}
 }
 
@@ -32,8 +35,7 @@ func (a *VersionConfig) Validate() error {
 
 func (a *VersionConfig) CreateFiles() error {
 	v := Version{
-		//Version: 3,
-		Version: 2, // needed to change
+		Version: 3,
 	}
 	data, err := yaml.Marshal(v)
 	if err != nil {
@@ -56,11 +58,19 @@ func (a *VersionConfig) Build(metadata *yaml.MapSlice) error {
 	if err != nil {
 		return err
 	}
-	item := yaml.MapItem{
-		Key:   "version",
-		Value: v.Version,
+	if a.HasDatasources {
+		item := yaml.MapItem{
+			Key:   "version",
+			Value: v.Version,
+		}
+		*metadata = append(*metadata, item)
+	} else {
+		item := yaml.MapItem{
+			Key:   "version",
+			Value: 2,
+		}
+		*metadata = append(*metadata, item)
 	}
-	*metadata = append(*metadata, item)
 	return nil
 }
 
@@ -71,7 +81,12 @@ func (a *VersionConfig) Export(metadata yaml.MapSlice) (map[string][]byte, error
 		if !ok || k != "version" {
 			continue
 		}
-		version = item.Value.(int)
+
+		if a.HasDatasources {
+			version = item.Value.(int)
+		} else {
+			version = 3
+		}
 	}
 	v := Version{
 		Version: version,
