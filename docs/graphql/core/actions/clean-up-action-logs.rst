@@ -15,6 +15,7 @@ Clean up action logs
 Introduction
 ------------
 Hasura stores action logs of asynchronous operations. As the table gets larger, you may want to prune them.
+
 You can use any of the following options to prune your logs depending on your need.
 
 The table involved
