@@ -40,7 +40,7 @@ Option 3: Clear all logs
 ------------------------
 .. admonition:: Warning
  
-   This will clear all captured logs.
+   Clearing all logs is irreversible.
 
 .. code-block:: SQL
 
