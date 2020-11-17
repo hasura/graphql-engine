@@ -37,7 +37,6 @@ type metadataVersion int
 const (
 	v1 metadataVersion = 1
 	v2                 = 2
-	v3                 = 3
 )
 
 type newHasuraIntefaceQuery struct {

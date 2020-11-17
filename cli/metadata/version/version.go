@@ -35,7 +35,7 @@ func (a *VersionConfig) Validate() error {
 
 func (a *VersionConfig) CreateFiles() error {
 	v := Version{
-		Version: 3,
+		Version: 2,
 	}
 	data, err := yaml.Marshal(v)
 	if err != nil {
