@@ -40,7 +40,6 @@ const makeDataRouter = (
 ) => {
   return (
     <Route path="data" component={dataPageConnector(connect)}>
-      <Route path="sql" component={rawSQLConnector(connect)} />
       <Route
         path="migrations"
         onEnter={composeOnEnterHooks([consoleModeRedirects])}
@@ -50,6 +49,7 @@ const makeDataRouter = (
       <Route path="manage" component={ConnectedDatabaseManagePage} />
       <Route path="schema/manage" component={ConnectedDatabaseManagePage} />
       <Route path=":source" component={ConnectedDataSourceContainer}>
+        <Route path="sql" component={rawSQLConnector(connect)} />
         <Route path="schema">
           <Route path=":schema" component={schemaConnector(connect)} />
           <Route path=":schema/tables" component={schemaConnector(connect)} />

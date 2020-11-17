@@ -148,11 +148,11 @@ const DataPageContainer = ({
       </li>
       <li
         role="presentation"
-        className={currentLocation.includes('data/sql') ? styles.active : ''}
+        className={currentLocation.includes('/sql') ? styles.active : ''}
       >
         <Link
           className={styles.linkBorder}
-          to={'/data/sql'}
+          to={`/data/${currentDataSource}/sql`}
           data-test="sql-link"
         >
           SQL

@@ -34,6 +34,7 @@ const DataSourceContainer = ({
   dispatch,
   currentSource,
   driver,
+  location,
 }: DataSourceContainerProps) => {
   const [dataLoaded, setDataLoaded] = useState(false);
   const { source, schema } = params;
@@ -85,8 +86,10 @@ const DataSourceContainer = ({
       newSchema = schemaList.includes('public') ? 'public' : schemaList[0];
     }
     dispatch({ type: UPDATE_CURRENT_SCHEMA, currentSchema: newSchema });
-    dispatch(push(`/data/${source}/schema/${newSchema}`));
-  }, [dispatch, schema, schemaList, source]);
+    if (location.pathname.includes('schema')) {
+      dispatch(push(`/data/${source}/schema/${newSchema}`));
+    }
+  }, [dispatch, schema, schemaList, source, location]);
 
   useEffect(() => {
     setDriver(driver);

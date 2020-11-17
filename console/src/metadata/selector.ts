@@ -10,13 +10,10 @@ import {
 } from '../components/Services/Events/types';
 
 export const getDataSourceMetadata = (state: ReduxState) => {
-  const currentDataSource = state.tables.currentDataSource;
+  const currentDataSource = state.tables?.currentDataSource;
   if (!currentDataSource) return null;
   return state.metadata.metadataObject?.sources.find(
     source => source.name === currentDataSource
-    // NOTE: Commented this since, kind is not being mentioned on the metadata object atm
-    // &&
-    // (source.kind || 'postgres') === currentDriver
   );
 };
 
@@ -52,7 +49,7 @@ const getInconsistentObjects = (state: ReduxState) => {
   return state.metadata.inconsistentObjects;
 };
 
-const getTables = createSelector(getDataSourceMetadata, source => {
+export const getTables = createSelector(getDataSourceMetadata, source => {
   return source?.tables || [];
 });
 
