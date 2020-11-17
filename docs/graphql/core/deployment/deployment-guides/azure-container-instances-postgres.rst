@@ -181,6 +181,21 @@ If you'd like to connect to an existing database, use that server's database url
 If the ``<dns-name-label>`` is not available, choose another unique name and
 execute the command again.
 
+Securing the GraphQL endpoint
+-----------------------------
+
+To make sure that your GraphQL endpoint and the Hasura console are not publicly accessible, you need to
+configure an admin secret key.
+
+Add an admin secret
+^^^^^^^^^^^^^^^^^^^
+
+Add the admin secret key as an environment variable to your container instance:
+
+.. code-block:: bash
+
+     --environment-variables "HASURA_GRAPHQL_ADMIN_SECRET" = "<your-secret>"
+
 Open the Hasura Console
 -----------------------
 
