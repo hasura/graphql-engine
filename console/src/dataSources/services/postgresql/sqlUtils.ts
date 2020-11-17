@@ -1180,3 +1180,29 @@ export const getEventInvocationInfoByIDSql = (
   WHERE original_table.event_id = '${eventId}'
   ORDER BY original_table.created_at DESC NULLS LAST;
 `;
+
+/**
+ * SQL to retrive:
+ * { table_name: string, table_schema: string, columns: string[] }[].
+ *
+ * `columns` is an array of column names.
+ */
+export const getDatabaseInfo = `
+SELECT
+	COALESCE(json_agg(row_to_json(info)), '[]'::JSON)
+FROM (
+	SELECT
+		table_name,
+		table_schema,
+		ARRAY_AGG("column_name") as columns
+	FROM
+		information_schema.columns
+	WHERE
+		table_schema NOT in('information_schema', 'pg_catalog')
+		AND table_schema NOT LIKE 'pg_toast%'
+		AND table_schema NOT LIKE 'pg_temp_%'
+		AND table_schema NOT LIKE 'hdb_catalog'
+	GROUP BY
+		table_name,
+		table_schema) AS info;
+`;

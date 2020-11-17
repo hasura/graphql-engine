@@ -1,13 +1,11 @@
 import React from 'react';
 import styles from '../../Actions.scss';
-import { updateSchemaInfo, getSchemaList } from '../../../Data/DataActions';
+import {
+  updateSchemaInfo,
+  getDatabaseSchemasInfo,
+} from '../../../Data/DataActions';
 import { isEmpty, getLastArrayElement } from '../../../../Common/utils/jsUtils';
 import ExpandableEditor from '../../../../Common/Layout/ExpandableEditor/Editor';
-import {
-  getSchemaTables,
-  getTableColumnNames,
-  getTrackedTables,
-} from '../../../../../dataSources';
 import {
   parseCustomTypeRelationship,
   getRelValidationError,
@@ -23,8 +21,6 @@ import tableStyles from '../../../../Common/TableCommon/TableStyles.scss';
 
 const RelationshipEditor = ({
   objectType,
-  schemaList,
-  allTables,
   dispatch,
   existingRelConfig,
   stateCallback,
@@ -33,23 +29,22 @@ const RelationshipEditor = ({
   const [relConfig, setRelConfig] = React.useState(
     existingRelConfig || defaultRelConfig
   );
-  const [currentSchemaList, updateCurrentSchemaList] = React.useState(
-    schemaList
-  );
+
+  const [currentDatabaseInfo, setCurrentDatabaseInfo] = React.useState({});
 
   // if it is an existing relationship, fetch the pg schema metadata
   React.useEffect(() => {
     if (existingRelConfig) {
       dispatch(updateSchemaInfo({ schemas: [existingRelConfig.refSchema] }));
     }
-  }, []);
+  }, [dispatch, existingRelConfig]);
 
   // hoist the state to parent whenever there's a change
   React.useEffect(() => {
     if (stateCallback) {
       stateCallback(relConfig);
     }
-  }, [relConfig]);
+  }, [relConfig, stateCallback]);
 
   const { name, type, refDb, refSchema, refTable, fieldMapping } = relConfig;
 
@@ -71,14 +66,14 @@ const RelationshipEditor = ({
     }));
   };
 
-  const setDBType = e => {
+  const setDatabase = e => {
     const value = e.target.value;
     setRelConfig(rc => ({
       ...rc,
       refDb: value,
     }));
-    return dispatch(getSchemaList('postgres', value)).then(data => {
-      updateCurrentSchemaList(data.result.slice(1));
+    return dispatch(getDatabaseSchemasInfo('postgres', value)).then(data => {
+      setCurrentDatabaseInfo(data);
     });
   };
 
@@ -118,16 +113,6 @@ const RelationshipEditor = ({
       fieldMapping: f,
     }));
   };
-
-  // get the tracked tables in a schema
-  const refTables = getTrackedTables(
-    getSchemaTables(allTables, refSchema)
-  ).reduce((all, trackedTable) => {
-    return {
-      ...all,
-      [trackedTable.table_name]: getTableColumnNames(trackedTable),
-    };
-  }, {});
 
   // rel name input
   const relNameInput = () => {
@@ -191,12 +176,12 @@ const RelationshipEditor = ({
     return (
       <div className={`${styles.add_mar_bottom}`}>
         <div className={`${styles.add_mar_bottom_mid}`}>
-          <b>Data Source:</b>
+          <b>Database:</b>
         </div>
         <select
           className={`${styles.select} form-control ${styles.add_pad_left}`}
           data-test={'manual-relationship-db-choice'}
-          onChange={setDBType}
+          onChange={setDatabase}
           disabled={!name}
           value={refDb}
         >
@@ -215,9 +200,8 @@ const RelationshipEditor = ({
     );
   };
 
-  // ref schema select
   const refSchemaSelect = () => {
-    const orderedSchemaList = currentSchemaList.sort();
+    const orderedSchemaList = Object.keys(currentDatabaseInfo || {}).sort();
     return (
       <div className={`${styles.add_mar_bottom}`}>
         <div className={`${styles.add_mar_bottom_mid}`}>
@@ -228,34 +212,23 @@ const RelationshipEditor = ({
           className={`${styles.select} form-control ${styles.add_pad_left}`}
           data-test={'manual-relationship-ref-schema'}
           onChange={setRelRefSchema}
-          disabled={!name}
+          disabled={!name || !refDb}
         >
-          {
-            // default unselected option
-            refSchema === '' && (
-              <option value={''} disabled>
-                {'-- reference schema --'}
-              </option>
-            )
-          }
-          {
-            // all reference schema options
-            orderedSchemaList.map((rs, j) => (
-              <option key={j} value={rs}>
-                {rs}
-              </option>
-            ))
-          }
+          {refSchema === '' && (
+            <option value={''} disabled>
+              {'-- reference schema --'}
+            </option>
+          )}
+          {orderedSchemaList.map((rs, j) => (
+            <option key={j} value={rs}>
+              {rs}
+            </option>
+          ))}
         </select>
       </div>
     );
   };
 
-  // ref table select
-  // FIXME: because of `allTables` we don't have the information
-  // of the tables that belong to a particular schema, we need to
-  // make sure that we use the appropriate value to to show the correct
-  // tables for that particular schema and data source
   const refTableSelect = () => {
     return (
       <div className={`${styles.add_mar_bottom}`}>
@@ -274,13 +247,14 @@ const RelationshipEditor = ({
               {'-- reference table --'}
             </option>
           )}
-          {Object.keys(refTables)
-            .sort()
-            .map((rt, j) => (
-              <option key={j} value={rt}>
-                {rt}
-              </option>
-            ))}
+          {currentDatabaseInfo[refSchema] &&
+            Object.keys(currentDatabaseInfo[refSchema])
+              .sort()
+              .map((rt, j) => (
+                <option key={j} value={rt}>
+                  {rt}
+                </option>
+              ))}
         </select>
       </div>
     );
@@ -389,8 +363,9 @@ const RelationshipEditor = ({
                       {'-- ref_column --'}
                     </option>
                   )}
-                  {refTables[refTable] &&
-                    refTables[refTable].map(rcOpt => {
+                  {currentDatabaseInfo[refSchema] &&
+                    currentDatabaseInfo[refSchema][refTable] &&
+                    currentDatabaseInfo[refSchema][refTable].map(rcOpt => {
                       return (
                         <option key={rcOpt} value={rcOpt}>
                           {rcOpt}

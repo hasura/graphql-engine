@@ -445,6 +445,49 @@ export const getSchemaList = (sourceType, sourceName) => (
   );
 };
 
+/**
+ *
+ * @param {'postgres' | 'mysql'} sourceType
+ * @param {string} sourceName
+ *
+ * @returns {{ [schema_name]: {[table_name]: string[]} }}
+ */
+export const getDatabaseSchemasInfo = (sourceType = 'postgres', sourceName) => (
+  dispatch,
+  getState
+) => {
+  const url = Endpoints.query;
+  const sql = services[sourceType].getDatabaseInfo;
+  const query = getRunSqlQuery(sql, sourceName);
+  const options = {
+    credentials: globalCookiePolicy,
+    method: 'POST',
+    headers: dataHeaders(getState),
+    body: JSON.stringify(query),
+  };
+  return dispatch(requestAction(url, options)).then(
+    ({ result }) => {
+      if (!result.length > 1) {
+        return {};
+      }
+      const schemasInfo = {};
+
+      JSON.parse(result[1]).forEach(i => {
+        schemasInfo[i.table_schema] = {
+          ...schemasInfo[i.table_schema],
+          [i.table_name]: i.columns,
+        };
+      });
+
+      return schemasInfo;
+    },
+    error => {
+      console.error('Failed to fetch schemas info ' + JSON.stringify(error));
+      return error;
+    }
+  );
+};
+
 const setTable = tableName => ({ type: SET_TABLE, tableName });
 
 /* **********Shared functions between table actions********* */
