@@ -18,9 +18,12 @@ import { exportMetadata } from '../../../../metadata/actions';
 import { getRunSqlQuery } from '../../../Common/utils/v1QueryUtils';
 import { getDownQueryComments } from '../../../../utils/migration/utils';
 import {
-  addExistingTableSql,
-  addExistingFunction,
-} from '../Add/AddExistingTableViewActions';
+  getTrackFunctionQuery,
+  getTrackFunctionV2Query,
+  getTrackTableQuery,
+} from '../../../../metadata/queryUtils';
+import globals from '../../../../Globals';
+import { CLI_CONSOLE_MODE } from '../../../../constants';
 
 const MAKING_REQUEST = 'RawSQL/MAKING_REQUEST';
 const SET_SQL = 'RawSQL/SET_SQL';
@@ -36,21 +39,60 @@ const MODAL_OPEN = 'EditItem/MODAL_OPEN';
 const modalOpen = () => ({ type: MODAL_OPEN });
 const modalClose = () => ({ type: MODAL_CLOSE });
 
-const executeSQLCallback = sql => dispatch => {
-  const objects = parseCreateSQL(sql);
-  const requests = [];
+const trackAllItems = (sql, isMigration, migrationName) => (
+  dispatch,
+  getState
+) => {
+  const currMigrationMode = getState().main.migrationMode;
+  const source = getState().tables.currentDataSource;
 
-  objects.forEach(object => {
+  const objects = parseCreateSQL(sql);
+  const changes = [];
+  objects.forEach(({ type, name, schema }) => {
     let req = {};
-    if (object.type === 'function') {
-      req = addExistingFunction(object.name, object.schema, true);
+    if (type === 'function') {
+      req = getTrackFunctionV2Query(name, schema, {}, source);
     } else {
-      req = addExistingTableSql(object.name, object.schema, true);
+      req = getTrackTableQuery({ name, schema }, source);
     }
-    requests.push(req);
+    changes.push(req);
   });
 
-  requests.forEach(dispatch);
+  let url = Endpoints.metadata;
+  let request;
+  if (isMigration) {
+    if (globals.consoleMode === CLI_CONSOLE_MODE) {
+      url = currMigrationMode
+        ? Endpoints.hasuractlMigrate
+        : Endpoints.hasuractlMetadata;
+    }
+    request = {
+      name: migrationName,
+      up: changes,
+      down: [],
+    };
+  } else {
+    request = {
+      type: 'bulk',
+      args: changes,
+    };
+  }
+
+  const options = {
+    method: 'POST',
+    credentials: globalCookiePolicy,
+    headers: dataHeaders(getState),
+    body: JSON.stringify(request),
+  };
+
+  return dispatch(requestAction(url, options)).then(
+    () => {
+      dispatch(showSuccessNotification('Items were tracked successfuly'));
+    },
+    err => {
+      dispatch(showErrorNotification('Tracking items failed', err.code, err));
+    }
+  );
 };
 
 const executeSQL = (isMigration, migrationName, statementTimeout) => (
@@ -127,7 +169,9 @@ const executeSQL = (isMigration, migrationName, statementTimeout) => (
     .then(
       data => {
         if (isTableTrackChecked) {
-          dispatch(executeSQLCallback(sql)).then(callback(data));
+          dispatch(trackAllItems(sql, isMigration, migrationName)).then(
+            callback(data)
+          );
           return;
         }
         callback(data);
