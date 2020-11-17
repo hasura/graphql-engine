@@ -516,13 +516,12 @@ replaceRemoteFields
 replaceRemoteFields compositeJson remoteServerResponse =
   compositeValueToJSON <$> traverse replaceValue compositeJson
   where
-    -- `Nothing` below signfies that at-least one of the
-    -- joining fields was NULL, when that happens we
-    -- have to manually insert the `NULL` value for the
+    -- `Nothing` below signfies that at-least one of the joining fields was NULL
+    -- , when that happens we have to manually insert the `NULL` value for the
     -- remoteField value in the response.
     replaceValue Nothing = pure $ AO.Null
-    replaceValue (Just (RemoteJoinField _ alias _ fieldCall)) =
-      extractAtPath (alias:fieldCall) $ AO.Object remoteServerResponse
+    replaceValue (Just RemoteJoinField {_rjfAlias, _rjfFieldCall}) =
+      extractAtPath (_rjfAlias:_rjfFieldCall) $ AO.Object remoteServerResponse
 
     -- | 'FieldCall' is path to remote relationship value in remote server response.
     -- 'extractAtPath' traverse through the path and extracts the json value
