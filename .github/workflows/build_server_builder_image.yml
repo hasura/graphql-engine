@@ -1,0 +1,26 @@
+name: Build the graphql-engine-server-builder docker image used by the CI
+
+on:
+  workflow_dispatch:
+    inputs:
+      dockerfileBranch:
+        description: 'Branch in the graphql-engine-mono repo to load the dockerfile from'
+        default: main
+        required: true
+
+jobs:
+  build-image:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2 # may be actions/checkout@v2 now
+      with:
+        ref: ${{ github.event.inputs.dockerfileBranch }}
+    - name: Login to DockerHub Registry
+      run: echo ${{ secrets.DOCKERHUB_PASSWORD }} | docker login -u ${{ secrets.DOCKERHUB_USERNAME }} --password-stdin
+    - name: Get the version
+      id: vars
+      run: echo ::set-output name=tag_sha::$(sha256sum .circleci/server-builder.dockerfile)
+    - name: Build the tagged Docker image
+      run: docker build --tag hasura/graphql-engine-server-builder:${{steps.vars.outputs.tag_sha}} - < .circleci/server-builder.dockerfile
+    - name: Push the tagged Docker image
+      run: docker push hasura/graphql-engine-server-builder:${{steps.vars.outputs.tag_sha}}
