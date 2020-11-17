@@ -310,7 +310,7 @@ buildSchemaCacheRule env = proc (metadata, invalidationKeys) -> do
               addTriggerContext e = "in event trigger " <> triggerName <<> ": " <> e
           (| withRecordInconsistency (
              (| modifyErrA (do
-                  (info, dependencies) <- bindErrorA -< subTableP2Setup env table eventTriggerConf
+                  (info, dependencies) <- bindErrorA -< mkEventTriggerInfo env table eventTriggerConf
                   let tableColumns = M.mapMaybe (^? _FIColumn) (_tciFieldInfoMap tableInfo)
                   recreateViewIfNeeded -< (table, tableColumns, triggerName, etcDefinition eventTriggerConf)
                   recordDependencies -< (metadataObject, schemaObjectId, dependencies)
@@ -470,9 +470,9 @@ withMetadataCheck cascade action = do
         \tn -> tell $ MetadataModifier $ metaTables %~ OMap.delete tn
 
       for_ alteredTables $ \(oldQtn, tableDiff) -> do
-        ti <- case M.lookup oldQtn preActionTables of
-          Just ti -> return ti
-          Nothing -> throw500 $ "old table metadata not found in cache : " <>> oldQtn
+        ti <- onNothing
+          (M.lookup oldQtn preActionTables)
+          (throw500 $ "old table metadata not found in cache : " <>> oldQtn)
         processTableChanges (_tiCoreInfo ti) tableDiff
       where
         SchemaDiff droppedTables alteredTables = schemaDiff

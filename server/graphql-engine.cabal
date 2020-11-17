@@ -468,7 +468,6 @@ library
                      , Hasura.GraphQL.Schema.Action
                      , Hasura.GraphQL.Schema.BoolExp
                      , Hasura.GraphQL.Schema.Common
-                     , Hasura.GraphQL.Schema.Insert
                      , Hasura.GraphQL.Schema.Introspect
                      , Hasura.GraphQL.Schema.Mutation
                      , Hasura.GraphQL.Schema.OrderBy

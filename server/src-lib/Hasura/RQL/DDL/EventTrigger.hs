@@ -9,13 +9,12 @@ module Hasura.RQL.DDL.EventTrigger
   , runInvokeEventTrigger
 
   -- TODO(from master): review
-  , subTableP2Setup
+  , mkEventTriggerInfo
   , mkAllTriggersQ
   , delTriggerQ
   , getEventTriggerDef
   , getWebhookInfoFromConf
   , getHeaderInfosFromConf
-  , updateEventTriggerInCatalog
   ) where
 
 import           Hasura.Prelude
@@ -191,13 +190,13 @@ subTableP1 (CreateEventTriggerQuery name qt insert update delete enableManual re
         SubCStar         -> return ()
         SubCArray pgcols -> forM_ pgcols (assertPGCol (_tciFieldInfoMap ti) "")
 
-subTableP2Setup
+mkEventTriggerInfo
   :: QErrM m
   => Env.Environment
   -> QualifiedTable
   -> EventTriggerConf
   -> m (EventTriggerInfo, [SchemaDependency])
-subTableP2Setup env qt (EventTriggerConf name def webhook webhookFromEnv rconf mheaders) = do
+mkEventTriggerInfo env qt (EventTriggerConf name def webhook webhookFromEnv rconf mheaders) = do
   webhookConf <- case (webhook, webhookFromEnv) of
     (Just w, Nothing)    -> return $ WCValue w
     (Nothing, Just wEnv) -> return $ WCEnv wEnv
@@ -347,13 +346,3 @@ getEventTriggerDef triggerName = do
      FROM hdb_catalog.event_triggers e where e.name = $1
            |] (Identity triggerName) False
   return (QualifiedObject sn tn, etc)
-
-updateEventTriggerInCatalog :: EventTriggerConf -> Q.TxE QErr ()
-updateEventTriggerInCatalog trigConf =
-  Q.unitQE defaultTxErrorHandler
-    [Q.sql|
-      UPDATE hdb_catalog.event_triggers
-      SET
-      configuration = $1
-      WHERE name = $2
-    |] (Q.AltJ $ toJSON trigConf, etcName trigConf) True
