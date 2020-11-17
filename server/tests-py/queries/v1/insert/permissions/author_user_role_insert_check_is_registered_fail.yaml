@@ -6,7 +6,7 @@ headers:
   X-Hasura-User-Id: '5'
 response:
   path: $.args
-  error: Check constraint violation. insert check constraint failed
+  error: check constraint of an insert/update permission has failed
   code: permission-error
 query:
   type: insert
@@ -19,4 +19,4 @@ query:
     returning:
     - id
     - name
-    - is_registered  
+    - is_registered
