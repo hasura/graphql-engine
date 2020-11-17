@@ -136,6 +136,7 @@ This release contains the [PDV refactor (#4111)](https://github.com/hasura/graph
 - console: add notifications (#5070)
 - console: down migrations improvements (close #3503, #4988) (#4790)
 - console: add session argument field for computed fields (close #5154) (#5610)
+- console: allow setting computed fields for views (close #6168) (#6174)
 - cli: add missing global flags for seed command (#5565)
 - cli: allow seeds as alias for seed command (#5693)
 - cli: fix bug in metadata apply which made the server aquire some redundant and unnecessary locks (close #6115)

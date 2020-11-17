@@ -30,6 +30,7 @@ import UniqueKeyEditor from './UniqueKeyEditor';
 import TriggerEditorList from './TriggerEditorList';
 import CheckConstraints from './CheckConstraints';
 import RootFields from './RootFields';
+import ComputedFields from './ComputedFields';
 import styles from './ModifyTable.scss';
 import { NotFoundError } from '../../../Error/PageNotFound';
 
@@ -38,13 +39,9 @@ import {
   getTableCheckConstraints,
   findTable,
   generateTableDef,
-  getTableCustomRootFields,
   getTableCustomColumnNames,
 } from '../../../Common/utils/pgUtils';
 import Tooltip from '../../../Common/Tooltip/Tooltip';
-import KnowMoreLink from '../../../Common/KnowMoreLink/KnowMoreLink';
-import ComputedFieldsEditor from './ComputedFieldsEditor';
-import ToolTip from '../../../Common/Tooltip/Tooltip';
 import {
   foreignKeyDescription,
   primaryKeyDescription,
@@ -71,8 +68,6 @@ class ModifyTable extends React.Component {
     const {
       tableName,
       allTables,
-      nonTrackableFunctions,
-      trackableFunctions,
       dispatch,
       migrationMode,
       readOnlyMode,
@@ -88,7 +83,6 @@ class ModifyTable extends React.Component {
       columnDefaultFunctions,
       schemaList,
       tableEnum,
-      rootFieldsEdit,
       postgresVersion,
     } = this.props;
 
@@ -158,7 +152,6 @@ class ModifyTable extends React.Component {
       );
     };
 
-    // if (table.primary_key.columns > 0) {}
     const getTableRootFieldsSection = () => {
       const existingRootFields = getTableCustomRootFields(table);
 
@@ -251,9 +244,10 @@ class ModifyTable extends React.Component {
             />
             <hr />
             {getComputedFieldsSection()}
+            <hr />
             <h4 className={styles.subheading_text}>
               Primary Key &nbsp; &nbsp;
-              <ToolTip message={primaryKeyDescription} />
+              <Tooltip message={primaryKeyDescription} />
             </h4>
             <PrimaryKeyEditor
               tableSchema={table}
@@ -264,7 +258,7 @@ class ModifyTable extends React.Component {
             <hr />
             <h4 className={styles.subheading_text}>
               Foreign Keys &nbsp; &nbsp;
-              <ToolTip message={foreignKeyDescription} />
+              <Tooltip message={foreignKeyDescription} />
             </h4>
             <ForeignKeyEditor
               tableSchema={table}
@@ -277,7 +271,7 @@ class ModifyTable extends React.Component {
             <hr />
             <h4 className={styles.subheading_text}>
               Unique Keys &nbsp; &nbsp;
-              <ToolTip message={uniqueKeyDescription} />
+              <Tooltip message={uniqueKeyDescription} />
             </h4>
             <UniqueKeyEditor
               tableSchema={table}
@@ -293,7 +287,7 @@ class ModifyTable extends React.Component {
             <hr />
             <h4 className={styles.subheading_text}>
               Check Constraints &nbsp; &nbsp;
-              <ToolTip message={checkConstraintsDescription} />
+              <Tooltip message={checkConstraintsDescription} />
             </h4>
             <CheckConstraints
               constraints={getTableCheckConstraints(table)}
@@ -301,7 +295,8 @@ class ModifyTable extends React.Component {
               dispatch={dispatch}
             />
             <hr />
-            {getTableRootFieldsSection()}
+            <RootFields tableSchema={table} />
+            <hr />
             {getEnumsSection()}
             {untrackBtn}
             {deleteBtn}
@@ -337,8 +332,6 @@ ModifyTable.propTypes = {
 const mapStateToProps = (state, ownProps) => ({
   tableName: ownProps.params.table,
   allTables: state.tables.allSchemas,
-  nonTrackableFunctions: state.tables.nonTrackablePostgresFunctions || [],
-  trackableFunctions: state.tables.postgresFunctions || [],
   migrationMode: state.main.migrationMode,
   readOnlyMode: state.main.readOnlyMode,
   serverVersion: state.main.serverVersion,
