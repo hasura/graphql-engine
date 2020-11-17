@@ -17,8 +17,6 @@ const OptimizeCssAssetsPlugin = require('optimize-css-assets-webpack-plugin');
 const ForkTsCheckerWebpackPlugin = require('fork-ts-checker-webpack-plugin');
 const nodeExternals = require('webpack-node-externals');
 
-const BundleAnalyzerPlugin = require('webpack-bundle-analyzer').BundleAnalyzerPlugin;
-
 const getRandomHexString = () => {
   return Math.random()
     .toString(16)
@@ -231,6 +229,5 @@ module.exports = {
         checkJs: false,
       },
     }),
-    // new BundleAnalyzerPlugin()
   ],
 };
