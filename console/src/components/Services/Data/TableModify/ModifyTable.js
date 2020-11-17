@@ -1,9 +1,8 @@
 import PropTypes from 'prop-types';
 import React from 'react';
+
 import TableHeader from '../TableCommon/TableHeader';
-
 import { getAllDataTypeMap } from '../Common/utils';
-
 import {
   deleteTableSql,
   untrackTableSql,
@@ -30,16 +29,15 @@ import UniqueKeyEditor from './UniqueKeyEditor';
 import TriggerEditorList from './TriggerEditorList';
 import CheckConstraints from './CheckConstraints';
 import RootFields from './RootFields';
-import ComputedFields from './ComputedFields';
 import styles from './ModifyTable.scss';
 import { NotFoundError } from '../../../Error/PageNotFound';
-
 import { getConfirmation } from '../../../Common/utils/jsUtils';
 import {
   getTableCheckConstraints,
   findTable,
   generateTableDef,
   getTableCustomColumnNames,
+  getTableCustomRootFields,
 } from '../../../Common/utils/pgUtils';
 import Tooltip from '../../../Common/Tooltip/Tooltip';
 import {
@@ -48,6 +46,8 @@ import {
   uniqueKeyDescription,
   checkConstraintsDescription,
 } from '../Common/TooltipMessages';
+import KnowMoreLink from '../../../Common/KnowMoreLink/KnowMoreLink';
+import ComputedFieldsEditor from './ComputedFieldsEditor';
 
 class ModifyTable extends React.Component {
   componentDidMount() {
@@ -84,6 +84,9 @@ class ModifyTable extends React.Component {
       schemaList,
       tableEnum,
       postgresVersion,
+      rootFieldsEdit,
+      nonTrackableFunctions,
+      trackableFunctions,
     } = this.props;
 
     const dataTypeIndexMap = getAllDataTypeMap(dataTypes);
@@ -295,7 +298,7 @@ class ModifyTable extends React.Component {
               dispatch={dispatch}
             />
             <hr />
-            <RootFields tableSchema={table} />
+            {getTableRootFieldsSection()}
             <hr />
             {getEnumsSection()}
             {untrackBtn}
@@ -345,6 +348,9 @@ const mapStateToProps = (state, ownProps) => ({
   columnDataTypeFetchErr: state.tables.columnDataTypeFetchErr,
   schemaList: state.tables.schemaList,
   postgresVersion: state.main.postgresVersion,
+  nonTrackableFunctions: state.tables.nonTrackablePostgresFunctions || [],
+  trackableFunctions: state.tables.postgresFunctions || [],
+  rootFieldsEdit: state.tables.modify.rootFieldsEdit,
   ...state.tables.modify,
 });
 
