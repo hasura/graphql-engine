@@ -8,7 +8,9 @@ import (
 	"strings"
 
 	crontriggers "github.com/hasura/graphql-engine/cli/metadata/cron_triggers"
+	"github.com/hasura/graphql-engine/cli/metadata/functions"
 	"github.com/hasura/graphql-engine/cli/metadata/sources"
+	"github.com/hasura/graphql-engine/cli/metadata/tables"
 
 	"github.com/hasura/graphql-engine/cli/metadata/actions"
 	"github.com/hasura/graphql-engine/cli/metadata/actions/types"
@@ -240,8 +242,9 @@ func (o *InitOptions) createFiles() error {
 		o.EC.MetadataDir = filepath.Join(o.EC.ExecutionDirectory, cli.DefaultMetadataDirectory)
 		err = os.MkdirAll(o.EC.MetadataDir, os.ModePerm)
 		if err != nil {
-			return errors.Wrap(err, "cannot write migration directory")
+			return errors.Wrap(err, "cannot write metadata directory")
 		}
+		o.EC.Version.GetServerFeatureFlags()
 
 		// create metadata files
 		plugins := make(metadataTypes.MetadataPlugins, 0)
@@ -251,7 +254,13 @@ func (o *InitOptions) createFiles() error {
 		plugins = append(plugins, remoteschemas.New(o.EC, o.EC.MetadataDir))
 		plugins = append(plugins, actions.New(o.EC, o.EC.MetadataDir))
 		plugins = append(plugins, crontriggers.New(o.EC, o.EC.MetadataDir))
-		plugins = append(plugins, sources.New(o.EC, o.EC.MetadataDir))
+		if o.EC.Version.ServerFeatureFlags.HasDatasources {
+			plugins = append(plugins, sources.New(o.EC, o.EC.MetadataDir))
+		} else {
+			plugins = append(plugins, tables.New(o.EC, o.EC.MetadataDir))
+			plugins = append(plugins, functions.New(o.EC, o.EC.MetadataDir))
+		}
+
 		for _, plg := range plugins {
 			err := plg.CreateFiles()
 			if err != nil {
