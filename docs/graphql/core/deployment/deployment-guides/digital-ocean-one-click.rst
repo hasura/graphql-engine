@@ -71,7 +71,7 @@ can create a table on this Postgres instance and make your first GraphQL query.
 Step 3: Create a table
 ^^^^^^^^^^^^^^^^^^^^^^
 
-Navigate to ``Data -> Create table`` on the console and create a table called ``profile`` with the following columns:
+Navigate to ``Data -> Add table`` on the console and create a table called ``profile`` with the following columns:
 
 ``profile``
 
@@ -82,7 +82,7 @@ Navigate to ``Data -> Create table`` on the console and create a table called ``
 ``name``           Text
 ===============  ========
 
-Choose ``id`` as the Primary key and click the ``Create`` button.
+Choose ``id`` as the Primary key and click the ``Add Table`` button.
 
 .. thumbnail:: /img/graphql/core/deployment/digital-ocean-create-table.png
    :alt: Create a table   

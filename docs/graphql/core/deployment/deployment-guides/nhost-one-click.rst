@@ -44,7 +44,8 @@ Once your Nhost project is up and running, the ``Overview`` page will give infor
 .. thumbnail:: /img/graphql/core/deployment/nhost-dashboard.png
    :alt: Dashboard   
 
-Click on ``Hasura`` in the navigation to open the Hasura console on Nhost:
+Click on the ``Hasura`` tab in the navigation to open the dashboard. Then click on the ``Open Hasura Console`` button
+to open the Hasura console.
 
 .. thumbnail:: /img/graphql/core/deployment/nhost-hasura-console.png
    :alt: Nhost Hasura console  

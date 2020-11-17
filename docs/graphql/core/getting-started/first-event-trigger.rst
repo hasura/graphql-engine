@@ -22,7 +22,7 @@ Let's create a sample event trigger with https://httpbin.org as our simple webho
 Create a table
 --------------
 
-Head to the Hasura console, navigate to ``Data -> Create table`` and create a sample table called ``profile`` with
+Head to the Hasura console, navigate to ``Data -> Add table`` and create a sample table called ``profile`` with
 the following columns:
 
 .. code-block:: sql
@@ -38,12 +38,13 @@ the following columns:
 Set up an event trigger
 -----------------------
 
-In the Hasura console, navigate to ``Events -> Create trigger`` and:
+In the Hasura console, navigate to ``Events -> Create`` and:
 
 1. Enter trigger name as ``echo``.
 2. Select table ``profile`` from the table dropdown.
 3. Select operations: ``insert``, ``update`` and ``delete``.
 4. Enter webhook URL as: ``https://httpbin.org/post``.
+5. Then click on the ``Create Event Trigger`` button.
 
 .. thumbnail:: /img/graphql/core/getting-started/create-event-trigger.png
    :alt: Set up an event trigger
@@ -57,7 +58,7 @@ Watch the trigger in action
 
 1. Insert some sample data into the ``profile`` table using the ``Insert Row`` tab.
 2. Now navigate to the ``Events`` tab and click on the ``echo`` trigger in the left sidebar.
-3. Expand the details of an event to see the response from the webhook.
+3. Click on the ``Processed Events`` tab to see the response(s) from the webhook.
 
 .. thumbnail:: /img/graphql/core/getting-started/trigger-events.png
    :alt: Trigger in action

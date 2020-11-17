@@ -20,7 +20,7 @@ Let's create a sample table and query data from it using the Hasura console, a U
 Create a table
 --------------
 
-Head to the Hasura console, navigate to ``Data -> Create table`` and create a sample table called ``profile`` with
+Head to the Hasura console, navigate to ``Data -> Add table`` and create a sample table called ``profile`` with
 the following columns:
 
 .. code-block:: sql

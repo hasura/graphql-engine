@@ -40,7 +40,7 @@ To merge your remote schema with the GraphQL engine's auto-generated schema:
 
   .. tab:: Console
 
-    Head to the ``Remote Schemas`` tab of the console and click on the ``Add`` button.
+    Head to the ``Remote Schemas`` tab of the console and click on the ``Add`` button on the left sidebar.
 
     .. thumbnail:: /img/graphql/core/business-logic/add-remote-schemas-interface.png
       :alt: Merge remote schema
