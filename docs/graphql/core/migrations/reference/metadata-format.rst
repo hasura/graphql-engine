@@ -27,6 +27,11 @@ Metadata directory format
 
 The following files will be generated in the ``metadata/`` directory of your project:
 
+.. contents::
+  :backlinks: none
+  :depth: 1
+  :local:
+
 actions.graphql
 ^^^^^^^^^^^^^^^
 
@@ -100,7 +105,7 @@ allow_list.yaml
 
 The ``allow_list.yaml`` file contains the metadata related to :ref:`allow lists<allow_list>`.
 
-**Example**: An allow list called ``allowed-queries``.
+**Example**: A query collection called ``allowed-queries`` set as the allow-list.
 
 .. code-block::  yaml
 
@@ -129,7 +134,7 @@ The ``webhook`` can be an HTTP endpoint or an environment variable containing th
 
 .. note::
   
-  The metadata about cron triggers will not be stored if ``Include this trigger in Hasura Metadata`` is disabled in the advanced option of ``events`` on the console.
+  The metadata about a cron trigger will not be stored if ``Include this trigger in Hasura Metadata`` is disabled in the advanced option of ``events`` on the console or ``include_in_metadata`` is passed as ``false`` via the API.
 
 functions.yaml
 ^^^^^^^^^^^^^^
