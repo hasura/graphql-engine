@@ -34,14 +34,14 @@ const RelationshipEditor = ({
 
   // if it is an existing relationship, fetch the pg schemas metadata
   React.useEffect(() => {
-    if (existingRelConfig) {
+    if (existingRelConfig && relConfig.refDb === existingRelConfig.refDb) {
       dispatch(
         getDatabaseSchemasInfo('postgres', existingRelConfig.refDb)
       ).then(data => {
         setCurrentDatabaseInfo(data);
       });
     }
-  }, [dispatch, existingRelConfig]);
+  }, [dispatch, existingRelConfig, relConfig.refDb]);
 
   // hoist the state to parent whenever there's a change
   React.useEffect(() => {
@@ -186,7 +186,7 @@ const RelationshipEditor = ({
           className={`${styles.select} form-control ${styles.add_pad_left}`}
           data-test={'manual-relationship-db-choice'}
           onChange={setDatabase}
-          disabled={!name}
+          disabled={!name || existingRelConfig}
           value={refDb}
         >
           {refDb === '' && (
@@ -203,6 +203,8 @@ const RelationshipEditor = ({
       </div>
     );
   };
+
+  console.log({ currentDatabaseInfo });
 
   const refSchemaSelect = () => {
     const orderedSchemaList = Object.keys(currentDatabaseInfo).sort();
