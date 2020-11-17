@@ -32,10 +32,14 @@ const RelationshipEditor = ({
 
   const [currentDatabaseInfo, setCurrentDatabaseInfo] = React.useState({});
 
-  // if it is an existing relationship, fetch the pg schema metadata
+  // if it is an existing relationship, fetch the pg schemas metadata
   React.useEffect(() => {
     if (existingRelConfig) {
-      dispatch(updateSchemaInfo({ schemas: [existingRelConfig.refSchema] }));
+      dispatch(
+        getDatabaseSchemasInfo('postgres', existingRelConfig.refDb)
+      ).then(data => {
+        setCurrentDatabaseInfo(data);
+      });
     }
   }, [dispatch, existingRelConfig]);
 
@@ -201,7 +205,7 @@ const RelationshipEditor = ({
   };
 
   const refSchemaSelect = () => {
-    const orderedSchemaList = Object.keys(currentDatabaseInfo || {}).sort();
+    const orderedSchemaList = Object.keys(currentDatabaseInfo).sort();
     return (
       <div className={`${styles.add_mar_bottom}`}>
         <div className={`${styles.add_mar_bottom_mid}`}>

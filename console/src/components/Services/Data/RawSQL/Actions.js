@@ -18,7 +18,6 @@ import { exportMetadata } from '../../../../metadata/actions';
 import { getRunSqlQuery } from '../../../Common/utils/v1QueryUtils';
 import { getDownQueryComments } from '../../../../utils/migration/utils';
 import {
-  getTrackFunctionQuery,
   getTrackFunctionV2Query,
   getTrackTableQuery,
 } from '../../../../metadata/queryUtils';
