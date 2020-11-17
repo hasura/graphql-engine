@@ -19,7 +19,7 @@ const BreadCrumb: React.FC<Props> = ({ breadCrumbs }) => {
       let bCElem;
 
       const addArrow = () => (
-        <React.Fragment>
+        <React.Fragment key={i}>
           &nbsp;
           <i
             key={`${b.title}-arrow`}
@@ -43,7 +43,7 @@ const BreadCrumb: React.FC<Props> = ({ breadCrumbs }) => {
         bCElem = [b.title];
       }
 
-      return bCElem;
+      return <span key={i}>{bCElem}</span>;
     });
   }
 
