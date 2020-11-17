@@ -16,7 +16,7 @@ const CONNECTION_FAILED = 'App/CONNECTION_FAILED';
  * title: string null
  * message: string null
  * autoDismiss: integer 5, set to 0 to not auto-dismiss
- * dismissible: bool true, set if user can dismiss notification
+ * dismissible: 'button', set if the user can dismiss the notification, false otherwise
  * action: object null, action button with label string and callback function
  * children: element/string, null, add custom element, over-rides action
  * onAdd: function, null, called when notification is successfully created, 1st argument is the notification

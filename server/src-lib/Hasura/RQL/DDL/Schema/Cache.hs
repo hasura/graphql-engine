@@ -366,7 +366,7 @@ buildSchemaCacheRule env = proc (catalogMetadata, invalidationKeys) -> do
           (| withRecordInconsistency (
              (| modifyErrA (do
                   etc <- bindErrorA -< decodeValue configuration
-                  (info, dependencies) <- bindErrorA -< subTableP2Setup env qt etc
+                  (info, dependencies) <- bindErrorA -< mkEventTriggerInfo env qt etc
                   let tableColumns = M.mapMaybe (^? _FIColumn) (_tciFieldInfoMap tableInfo)
                   recreateViewIfNeeded -< (qt, tableColumns, trn, etcDefinition etc)
                   recordDependencies -< (metadataObject, schemaObjectId, dependencies)
@@ -557,9 +557,9 @@ withMetadataCheck cascade action = do
 
       sc <- askSchemaCache
       for_ alteredTables $ \(oldQtn, tableDiff) -> do
-        ti <- case M.lookup oldQtn $ scTables sc of
-          Just ti -> return ti
-          Nothing -> throw500 $ "old table metadata not found in cache : " <>> oldQtn
+        ti <- onNothing
+          (M.lookup oldQtn $ scTables sc)
+          (throw500 $ "old table metadata not found in cache : " <>> oldQtn)
         processTableChanges (_tiCoreInfo ti) tableDiff
       where
         SchemaDiff droppedTables alteredTables = schemaDiff

@@ -65,7 +65,7 @@ execPGDump b ci = do
         -- delete front matter
         || line `elem` preambleLines
         -- delete notify triggers
-        || notifyTriggerRegex `TDFA.match` line
+        || eventTriggerRegex `TDFA.match` line
 
     preambleLines =
       [ "SET statement_timeout = 0;"
@@ -85,8 +85,10 @@ execPGDump b ci = do
       , "COMMENT ON SCHEMA public IS 'standard public schema';"
       ]
 
-    notifyTriggerRegex =
+    eventTriggerRegex =
       let regexStr :: String =
+        -- pg functions created by hasura for event triggers used "notify_hasura"
+        -- These changes are also documented on the method pgIdenTrigger
             "^CREATE TRIGGER \"?notify_hasura_.+\"? AFTER [[:alnum:]]+ "
               <> "ON .+ FOR EACH ROW EXECUTE (FUNCTION|PROCEDURE) "
               <> "\"?hdb_views\"?\\.\"?notify_hasura_.+\"?\\(\\);$"

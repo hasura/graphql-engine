@@ -41,6 +41,9 @@ module Hasura.RQL.Types.Common
        , InputWebhook(..)
        , ResolvedWebhook(..)
        , resolveWebhook
+
+       , Timeout(..)
+       , defaultActionTimeoutSecs
        ) where
 
 import           Hasura.EncJSON
@@ -54,8 +57,10 @@ import           Hasura.SQL.Types
 import           Control.Lens                  (makeLenses)
 import           Data.Aeson
 import           Data.Aeson.Casing
+import           Data.Bifunctor                (bimap)
 import           Data.Aeson.TH
 import           Data.Sequence.NonEmpty
+import           Data.Scientific               (toBoundedInteger)
 import           Data.URL.Template
 import           Instances.TH.Lift             ()
 import           Language.Haskell.TH.Syntax    (Lift, Q, TExp)
@@ -303,8 +308,29 @@ instance FromJSON InputWebhook where
       Left e  -> fail $ "Parsing URL template failed: " ++ e
       Right v -> pure $ InputWebhook v
 
+instance Q.FromCol InputWebhook where
+  fromCol bs = do
+    urlTemplate <- parseURLTemplate <$> Q.fromCol bs
+    bimap (\e -> "Parsing URL template failed: " <> T.pack e) InputWebhook urlTemplate
+
 resolveWebhook :: QErrM m => Env.Environment -> InputWebhook -> m ResolvedWebhook
 resolveWebhook env (InputWebhook urlTemplate) = do
   let eitherRenderedTemplate = renderURLTemplate env urlTemplate
   either (throw400 Unexpected . T.pack)
     (pure . ResolvedWebhook) eitherRenderedTemplate
+
+newtype Timeout = Timeout { unTimeout :: Int }
+  deriving (Show, Eq, ToJSON, Generic, NFData, Cacheable, Lift)
+
+instance FromJSON Timeout where
+  parseJSON = withScientific "Timeout" $ \t -> do
+    timeout <- onNothing (toBoundedInteger t) $ fail (show t <> " is out of bounds")
+    case (timeout >= 0) of
+      True  -> return $ Timeout timeout
+      False -> fail "timeout value cannot be negative"
+
+instance Arbitrary Timeout where
+  arbitrary = Timeout <$> QC.choose (0, 10000000)
+
+defaultActionTimeoutSecs :: Timeout
+defaultActionTimeoutSecs = Timeout 30

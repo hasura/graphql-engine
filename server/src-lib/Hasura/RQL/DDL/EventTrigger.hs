@@ -9,15 +9,22 @@ module Hasura.RQL.DDL.EventTrigger
 
   -- TODO: review
   , delEventTriggerFromCatalog
-  , subTableP2
-  , subTableP2Setup
+  , mkEventTriggerInfo
   , mkAllTriggersQ
   , delTriggerQ
   , getEventTriggerDef
   , getWebhookInfoFromConf
   , getHeaderInfosFromConf
   , updateEventTriggerInCatalog
+  , replaceEventTriggersInCatalog
   ) where
+
+import qualified Data.Environment                   as Env
+import qualified Data.HashMap.Strict.Extended       as Map
+import qualified Data.Text                          as T
+import qualified Data.Text.Lazy                     as TL
+import qualified Database.PG.Query                  as Q
+import qualified Text.Shakespeare.Text              as ST
 
 import           Data.Aeson
 
@@ -30,15 +37,10 @@ import           Hasura.SQL.Types
 
 import qualified Hasura.SQL.DML          as S
 
-import qualified Data.Text               as T
-import qualified Data.Environment        as Env
-import qualified Data.Text.Lazy          as TL
-import qualified Database.PG.Query       as Q
-import qualified Text.Shakespeare.Text   as ST
-
-
 data OpVar = OLD | NEW deriving (Show)
 
+-- pgIdenTrigger is a method used to construct the name of the pg function
+-- used for event triggers which are present in the hdb_views schema.
 pgIdenTrigger:: Ops -> TriggerName -> T.Text
 pgIdenTrigger op trn = pgFmtIden . qualifyTriggerName op $ triggerNameToTxt trn
   where
@@ -207,13 +209,13 @@ subTableP1 (CreateEventTriggerQuery name qt insert update delete enableManual re
         SubCStar         -> return ()
         SubCArray pgcols -> forM_ pgcols (assertPGCol (_tciFieldInfoMap ti) "")
 
-subTableP2Setup
+mkEventTriggerInfo
   :: QErrM m
   => Env.Environment
   -> QualifiedTable
   -> EventTriggerConf
   -> m (EventTriggerInfo, [SchemaDependency])
-subTableP2Setup env qt (EventTriggerConf name def webhook webhookFromEnv rconf mheaders) = do
+mkEventTriggerInfo env qt (EventTriggerConf name def webhook webhookFromEnv rconf mheaders) = do
   webhookConf <- case (webhook, webhookFromEnv) of
     (Just w, Nothing)    -> return $ WCValue w
     (Nothing, Just wEnv) -> return $ WCEnv wEnv
@@ -245,19 +247,14 @@ getTrigDefDeps qt (TriggerOpsDef mIns mUpd mDel _) =
       SubCStar         -> []
       SubCArray pgcols -> pgcols
 
-subTableP2
-  :: (MonadTx m)
-  => QualifiedTable -> Bool -> EventTriggerConf -> m ()
-subTableP2 qt replace etc = liftTx if replace
-  then updateEventTriggerInCatalog etc
-  else addEventTriggerToCatalog qt etc
-
 runCreateEventTriggerQuery
   :: (QErrM m, UserInfoM m, CacheRWM m, MonadTx m)
   => CreateEventTriggerQuery -> m EncJSON
 runCreateEventTriggerQuery q = do
   (qt, replace, etc) <- subTableP1 q
-  subTableP2 qt replace etc
+  liftTx if replace
+    then updateEventTriggerInCatalog etc
+    else addEventTriggerToCatalog qt etc
   buildSchemaCacheFor $ MOTableObj qt (MTOTrigger $ etcName etc)
   return successMsg
 
@@ -332,7 +329,9 @@ getWebhookInfoFromConf
   -> WebhookConf
   -> m WebhookConfInfo
 getWebhookInfoFromConf env wc = case wc of
-  WCValue w -> return $ WebhookConfInfo wc w
+  WCValue w -> do
+    resolvedWebhook <- resolveWebhook env w
+    return $ WebhookConfInfo wc $ unResolvedWebhook resolvedWebhook
   WCEnv we -> do
     envVal <- getEnv env we
     return $ WebhookConfInfo wc envVal
@@ -364,3 +363,35 @@ updateEventTriggerInCatalog trigConf =
       configuration = $1
       WHERE name = $2
     |] (Q.AltJ $ toJSON trigConf, etcName trigConf) True
+
+-- | Replaces /all/ event triggers in the catalog with new ones, taking care to
+-- drop SQL trigger functions and archive events for any deleted event triggers.
+--
+-- See Note [Diff-and-patch event triggers on replace] for more details.
+replaceEventTriggersInCatalog
+  :: MonadTx m
+  => HashMap TriggerName (QualifiedTable, EventTriggerConf)
+  -> m ()
+replaceEventTriggersInCatalog triggerConfs = do
+  existingTriggers <- Map.fromListOn id <$> fetchExistingTriggers
+  liftTx $ for_ (align existingTriggers triggerConfs) \case
+    This triggerName              -> delEventTriggerFromCatalog triggerName
+    That (tableName, triggerConf) -> addEventTriggerToCatalog tableName triggerConf
+    These _ (_, triggerConf)      -> updateEventTriggerInCatalog triggerConf
+  where
+    fetchExistingTriggers = liftTx $ map runIdentity <$>
+      Q.listQE defaultTxErrorHandler
+        [Q.sql|SELECT name FROM hdb_catalog.event_triggers|] () True
+
+{- Note [Diff-and-patch event triggers on replace]
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+When executing a replace_metadata API call, we usually just drop everything in
+the catalog and recreate it from scratch, then rebuild the schema cache. This
+works fine for most things, but it’s a bad idea for event triggers, because
+delEventTriggerFromCatalog does extra work: it deletes the SQL trigger functions
+and archives all associated events.
+
+Therefore, we have to be more careful about which event triggers we drop. We
+diff the new metadata against the old metadata, and we only drop triggers that
+are actually absent in the new metadata. The replaceEventTriggersInCatalog
+function implements this diff-and-patch operation. -}
