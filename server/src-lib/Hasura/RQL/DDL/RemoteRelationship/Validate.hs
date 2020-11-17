@@ -134,13 +134,13 @@ validateRemoteRelationship remoteRelationship remoteSchemaMap pgColumns = do
                      innerObjTyInfo <-
                        if isObjType (GS._gTypes gctx) objFldInfo
                          then getTyInfoFromField (GS._gTypes gctx) objFldInfo
-                         else if isScalarType (GS._gTypes gctx) objFldInfo
+                         else if isValidType (GS._gTypes gctx) objFldInfo
                                 then pure objTyInfo
                                 else (Left
                                         (pure
                                            (InvalidType
                                               (_fiTy objFldInfo)
-                                              "only objects or scalar types expected")))
+                                              "only output type is expected")))
                      pure
                        ( innerObjTyInfo
                        , _fiTy objFldInfo
@@ -175,11 +175,14 @@ validateRemoteRelationship remoteRelationship remoteSchemaMap pgColumns = do
             Just (TIObj _) -> True
             _              -> False
 
-    isScalarType types field =
+    isValidType types field =
       let baseTy = getBaseTy (_fiTy field)
           typeInfo = HM.lookup baseTy types
        in case typeInfo of
             Just (TIScalar _) -> True
+            Just (TIEnum   _) -> True
+            Just (TIIFace _)  -> True
+            Just (TIUnion _)  -> True
             _                 -> False
 
     remoteArgumentsToMap =
@@ -363,13 +366,21 @@ validateType permittedVariables value expectedGType types =
         Just fieldInfo ->
           bindValidation
             (columnInfoToNamedType fieldInfo)
-            (\actualNamedType -> assertType (G.toGT actualNamedType) expectedGType)
-    G.VInt {} -> assertType (G.toGT $ mkScalarTy PGInteger) expectedGType
-    G.VFloat {} -> assertType (G.toGT $ mkScalarTy PGFloat) expectedGType
-    G.VBoolean {} -> assertType (G.toGT $ mkScalarTy PGBoolean) expectedGType
-    G.VNull -> Failure (pure NullNotAllowedHere)
-    G.VString {} -> assertType (G.toGT $ mkScalarTy PGText) expectedGType
-    G.VEnum _ -> Failure (pure UnsupportedEnum)
+            (\actualNamedType -> isTypeCoercible (G.toGT actualNamedType) expectedGType)
+    G.VInt {} -> do
+      let intScalarGType = G.toGT $ mkScalarTy PGInteger
+      isTypeCoercible intScalarGType expectedGType
+    G.VFloat {} -> do
+      let floatScalarGType = G.toGT $ mkScalarTy PGFloat
+      isTypeCoercible floatScalarGType expectedGType
+    G.VBoolean {} -> do
+      let boolScalarGType = G.toGT $ mkScalarTy PGBoolean
+      isTypeCoercible boolScalarGType expectedGType
+    G.VNull -> Failure $ pure NullNotAllowedHere
+    G.VString {} -> do
+      let stringScalarGType = G.toGT $ mkScalarTy PGText
+      isTypeCoercible stringScalarGType expectedGType
+    G.VEnum _ -> Failure $ pure UnsupportedEnum
     G.VList (G.unListValue -> values) -> do
       case values of
         []  -> pure ()
@@ -405,19 +416,26 @@ validateType permittedVariables value expectedGType types =
                         (G.toGT $ G.NamedType name)
                         "not an input object type"))
 
-assertType :: G.GType -> G.GType -> Validation (NonEmpty ValidationError) ()
-assertType actualType expectedType = do
-  -- check if both are list types or both are named types
-  (when
-     (isListType' actualType /= isListType' expectedType)
-     (Failure (pure $ ExpectedTypeButGot expectedType actualType)))
-  -- if list type then check over unwrapped type, else check base types
-  if isListType' actualType
-    then assertType (unwrapTy actualType) (unwrapTy expectedType)
-    else (when
-            (getBaseTy actualType /= getBaseTy expectedType)
-            (Failure (pure $ ExpectedTypeButGot expectedType actualType)))
-  pure ()
+isTypeCoercible
+  :: G.GType
+  -> G.GType
+  -> Validation (NonEmpty ValidationError) ()
+isTypeCoercible actualType expectedType =
+  -- The GraphQL spec says that, a singleton type can be coerced into  an array
+  -- type. Which means that if the 'actualType' is a singleton type, like
+  -- 'Int' we should be able to join this with a remote node, which expects an
+  -- input argument of type '[Int]'
+  -- http://spec.graphql.org/June2018/#sec-Type-System.List
+  let (actualBaseType, actualNestingLevel) = getBaseTyWithNestedLevelsCount actualType
+      (expectedBaseType, expectedNestingLevel) = getBaseTyWithNestedLevelsCount expectedType
+  in
+  if | actualBaseType /= expectedBaseType -> raiseValidationError
+       -- we cannot coerce two types with different nesting levels,
+       -- for example, we cannot coerce [Int] to [[Int]]
+     | (actualNestingLevel == expectedNestingLevel || actualNestingLevel == 0) -> pure ()
+     | otherwise -> raiseValidationError
+     where
+       raiseValidationError = Failure $ pure $ ExpectedTypeButGot expectedType actualType
 
 assertListType :: G.GType -> Validation (NonEmpty ValidationError) ()
 assertListType actualType =
