@@ -47,6 +47,7 @@ This release contains the [PDV refactor (#4111)](https://github.com/hasura/graph
 - console: allow setting computed fields for views (close #6168) (#6174)
 - cli: add missing global flags for seed command (#5565)
 - cli: allow seeds as alias for seed command (#5693)
+- docs: add Vietnamese version of README.md
 
 ## v1.3.3
 
