@@ -48,6 +48,7 @@ const PermissionEditor = ({
         color="yellow"
         className={buttonStyle}
         disabled={isFetching}
+        data-test="save-permissions-for-action"
       >
         Save
       </Button>
