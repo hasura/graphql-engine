@@ -333,24 +333,20 @@ traverseQueryResponseJSON rjm =
       where
         mkRemoteSchemaField
           :: (MonadError QErr m, MonadState Counter m)
-          => [(Text, AO.Value)]
+          => AO.Object
           -> RemoteJoin 'Postgres
           -> m (Maybe RemoteJoinField)
         mkRemoteSchemaField siblingFields remoteJoin = runMaybeT $ do
           counter <- getCounter
-          let RemoteJoin fieldName inputArgs selSet hasuraFields fieldCall rsi _ = remoteJoin
+          let RemoteJoin fieldName@(FieldName fieldNameTxt) inputArgs selSet hasuraFields fieldCall rsi _ = remoteJoin
           -- when any of the joining fields are `Null`, we don't query
           -- the remote schema
-          for_ (toList hasuraFields) $ \(FieldName fieldNameTxt) ->
-            case (Map.lookup fieldNameTxt $ Map.fromList siblingFields) of
-              Nothing -> MaybeT $ pure Nothing
-              Just fldValue ->
-                if | fldValue == AO.Null -> MaybeT $ pure Nothing
-                   | otherwise -> pure ()
+          fldValue <- hoistMaybe $ AO.lookup fieldNameTxt siblingFields
+          guard $ fldValue /= AO.Null
           hasuraFieldVariables <- lift $ mapM (parseGraphQLName . getFieldNameTxt) $ toList hasuraFields
           siblingFieldArgsVars <- lift $ mapM (\(k,val) -> do
                                            (,) <$> parseGraphQLName k <*> ordJSONValueToGValue val)
-                                  $ siblingFields
+                                  $ AO.toList siblingFields
           let siblingFieldArgs = Map.fromList $ siblingFieldArgsVars
               hasuraFieldArgs = flip Map.filterWithKey siblingFieldArgs $ \k _ -> k `elem` hasuraFieldVariables
           fieldAlias <- lift $ pathToAlias (appendPath fieldName path) counter
@@ -381,7 +377,7 @@ traverseQueryResponseJSON rjm =
                   if | fieldName `elem` phantomColumnFields -> pure Nothing
                      | otherwise -> do
                          case find ((== fieldName) . _rjName) remoteJoins of
-                           Just rj -> Just . CVFromRemote <$> mkRemoteSchemaField fields rj
+                           Just rj -> Just . CVFromRemote <$> mkRemoteSchemaField obj rj
                            Nothing -> Just <$> traverseValue fieldPath value
           pure $ CVObject $ OMap.fromList processedFields
 
