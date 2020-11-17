@@ -207,8 +207,8 @@ const addAllUntrackedTablesSql = tableList => {
     makeMigrationCall(
       dispatch,
       getState,
-      [bulkQueryUp],
-      [bulkQueryDown],
+      bulkQueryUp,
+      bulkQueryDown,
       migrationName,
       customOnSuccess,
       customOnError,
