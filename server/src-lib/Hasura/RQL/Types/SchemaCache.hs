@@ -115,13 +115,27 @@ module Hasura.RQL.Types.SchemaCache
   , CronTriggerInfo(..)
   ) where
 
-import           Hasura.Db
-import           Hasura.GraphQL.Context            (GQLContext, RoleContext, RemoteField)
-import qualified Hasura.GraphQL.Parser             as P
-import           Hasura.Incremental                (Dependency, MonadDepend (..), selectKeyD)
 import           Hasura.Prelude
+
+import qualified Data.ByteString.Lazy                as BL
+import qualified Data.HashMap.Strict                 as M
+import qualified Data.HashSet                        as HS
+import qualified Language.GraphQL.Draft.Syntax       as G
+
+import           Data.Aeson
+import           Data.Aeson.Casing
+import           Data.Aeson.TH
+import           Data.Text.Extended
+import           System.Cron.Types
+
+import qualified Hasura.GraphQL.Parser               as P
+
+import           Hasura.Backends.Postgres.Connection
+import           Hasura.Backends.Postgres.SQL.Types
+import           Hasura.GraphQL.Context              (GQLContext, RemoteField, RoleContext)
+import           Hasura.Incremental                  (Dependency, MonadDepend (..), selectKeyD)
+import           Hasura.RQL.IR.BoolExp
 import           Hasura.RQL.Types.Action
-import           Hasura.RQL.Types.BoolExp
 import           Hasura.RQL.Types.Common
 import           Hasura.RQL.Types.ComputedField
 import           Hasura.RQL.Types.CustomTypes
@@ -132,27 +146,16 @@ import           Hasura.RQL.Types.Metadata
 --import           Hasura.RQL.Types.Permission
 import           Hasura.RQL.Types.QueryCollection
 import           Hasura.RQL.Types.RemoteSchema
-
 import           Hasura.RQL.Types.ScheduledTrigger
 import           Hasura.RQL.Types.SchemaCacheTypes
 import           Hasura.RQL.Types.Table
+import           Hasura.SQL.Backend
 import           Hasura.Session
-import           Hasura.SQL.Types
-import           Hasura.Tracing                    (TraceT)
+import           Hasura.Tracing                      (TraceT)
 
-import           Data.Aeson
-import           Data.Aeson.Casing
-import           Data.Aeson.TH
-import           System.Cron.Types
 
-import qualified Data.ByteString.Lazy              as BL
-import qualified Data.HashMap.Strict               as M
-import qualified Data.HashSet                      as HS
-import qualified Data.Text                         as T
-import qualified Language.GraphQL.Draft.Syntax     as G
-
-reportSchemaObjs :: [SchemaObjId] -> T.Text
-reportSchemaObjs = T.intercalate ", " . sort . map reportSchemaObj
+reportSchemaObjs :: [SchemaObjId] -> Text
+reportSchemaObjs = commaSeparated . sort . map reportSchemaObj
 
 mkParentDep :: QualifiedTable -> SchemaDependency
 mkParentDep tn = SchemaDependency (SOTable tn) DRTable
@@ -223,8 +226,7 @@ incSchemaCacheVer :: SchemaCacheVer -> SchemaCacheVer
 incSchemaCacheVer (SchemaCacheVer prev) =
   SchemaCacheVer $ prev + 1
 
-type FunctionCache = M.HashMap QualifiedFunction FunctionInfo -- info of all functions
-type ActionCache = M.HashMap ActionName ActionInfo -- info of all actions
+type ActionCache = M.HashMap ActionName (ActionInfo 'Postgres) -- info of all actions
 
 data SchemaCache
   = SchemaCache
@@ -259,8 +261,8 @@ getAllRemoteSchemas sc =
 -- | A more limited version of 'CacheRM' that is used when building the schema cache, since the
 -- entire schema cache has not been built yet.
 class (Monad m) => TableCoreInfoRM m where
-  lookupTableCoreInfo :: QualifiedTable -> m (Maybe TableCoreInfo)
-  default lookupTableCoreInfo :: (CacheRM m) => QualifiedTable -> m (Maybe TableCoreInfo)
+  lookupTableCoreInfo :: QualifiedTable -> m (Maybe (TableCoreInfo 'Postgres))
+  default lookupTableCoreInfo :: (CacheRM m) => QualifiedTable -> m (Maybe (TableCoreInfo 'Postgres))
   lookupTableCoreInfo tableName = fmap _tiCoreInfo . M.lookup tableName . scTables <$> askSchemaCache
 
 instance (TableCoreInfoRM m) => TableCoreInfoRM (ReaderT r m) where
@@ -308,7 +310,7 @@ askFunctionInfo
   => QualifiedFunction ->  m FunctionInfo
 askFunctionInfo qf = do
   sc <- askSchemaCache
-  maybe throwNoFn return $ M.lookup qf $ scFunctions sc
+  onNothing (M.lookup qf $ scFunctions sc) throwNoFn
   where
     throwNoFn = throw400 NotExists $
       "function not found in cache " <>> qf

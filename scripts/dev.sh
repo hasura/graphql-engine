@@ -484,7 +484,7 @@ elif [ "$MODE" = "test" ]; then
   if [ "$RUN_HLINT" = true ]; then
 
     cd "$PROJECT_ROOT/server"
-    hlint .
+    hlint src-*
 
   fi # RUN_HLINT
 

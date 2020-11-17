@@ -6,7 +6,7 @@ response:
   - extensions:
       path: $.selectionSet.insert_computer.args.objects
       code: permission-error
-    message: Check constraint violation. insert check constraint failed
+    message: check constraint of an insert/update permission has failed
 headers:
   X-Hasura-Role: seller
   X-Hasura-Spec-Required-Keys: |-
@@ -15,8 +15,8 @@ query:
   variables:
     spec:
       processor: AMD
-      display: '16" FHD'
-      memory: '16 GB DDR4'
+      display: 16" FHD
+      memory: 16 GB DDR4
   query: |
     mutation insert_computer($spec: jsonb) {
       insert_computer (

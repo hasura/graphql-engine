@@ -23,8 +23,8 @@ Action relationships allow you to join data across tables and actions. Once you 
 Create an action relationship
 -----------------------------
 
-Before you begin
-^^^^^^^^^^^^^^^^
+Step 0: Create an action
+^^^^^^^^^^^^^^^^^^^^^^^^
 
 Create an action either :ref:`from scratch <create_actions>` or :ref:`derived from an existing mutation <derive_actions>`.
 

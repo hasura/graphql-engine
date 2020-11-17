@@ -4,26 +4,26 @@ module Hasura.GraphQL.Execute.Mutation
 
 import           Hasura.Prelude
 
-import qualified Data.Environment                       as Env
-import qualified Data.HashMap.Strict                    as Map
-import qualified Data.HashMap.Strict.InsOrd             as OMap
-import qualified Data.HashSet                           as Set
-import qualified Data.Sequence                          as Seq
-import qualified Data.Sequence.NonEmpty                 as NE
-import qualified Language.GraphQL.Draft.Syntax          as G
-import qualified Network.HTTP.Client                    as HTTP
-import qualified Network.HTTP.Types                     as HTTP
+import qualified Data.Environment                          as Env
+import qualified Data.HashMap.Strict                       as Map
+import qualified Data.HashMap.Strict.InsOrd                as OMap
+import qualified Data.HashSet                              as Set
+import qualified Data.Sequence                             as Seq
+import qualified Data.Sequence.NonEmpty                    as NE
+import qualified Language.GraphQL.Draft.Syntax             as G
+import qualified Network.HTTP.Client                       as HTTP
+import qualified Network.HTTP.Types                        as HTTP
 
-import qualified Hasura.GraphQL.Transport.HTTP.Protocol as GH
-import qualified Hasura.RQL.DML.Delete                  as RQL
-import qualified Hasura.RQL.DML.Mutation                as RQL
-import qualified Hasura.RQL.DML.Returning.Types         as RQL
-import qualified Hasura.RQL.DML.Update                  as RQL
-import qualified Hasura.Tracing                         as Tracing
-import qualified Hasura.Logging                         as L
+import qualified Hasura.Backends.Postgres.Execute.Mutation as PGE
+import qualified Hasura.GraphQL.Transport.HTTP.Protocol    as GH
+import qualified Hasura.Logging                            as L
+import qualified Hasura.RQL.IR.Delete                      as IR
+import qualified Hasura.RQL.IR.Insert                      as IR
+import qualified Hasura.RQL.IR.Returning                   as IR
+import qualified Hasura.RQL.IR.Update                      as IR
+import qualified Hasura.Tracing                            as Tracing
 
-
-import           Hasura.Db
+import           Hasura.Backends.Postgres.Connection
 import           Hasura.EncJSON
 import           Hasura.GraphQL.Context
 import           Hasura.GraphQL.Execute.Action
@@ -32,10 +32,10 @@ import           Hasura.GraphQL.Execute.Prepare
 import           Hasura.GraphQL.Execute.Remote
 import           Hasura.GraphQL.Execute.Resolve
 import           Hasura.GraphQL.Parser
-import           Hasura.GraphQL.Schema.Insert
 import           Hasura.RQL.Types
-import           Hasura.Server.Version                  (HasVersion)
+import           Hasura.Server.Version                     (HasVersion)
 import           Hasura.Session
+
 
 convertDelete
   :: ( HasVersion
@@ -45,14 +45,14 @@ convertDelete
      , MonadIO tx)
   => Env.Environment
   -> SessionVariables
-  -> RQL.MutationRemoteJoinCtx
-  -> RQL.AnnDelG UnpreparedValue
+  -> PGE.MutationRemoteJoinCtx
+  -> IR.AnnDelG 'Postgres UnpreparedValue
   -> Bool
   -> m (tx EncJSON)
 convertDelete env usrVars remoteJoinCtx deleteOperation stringifyNum = do
-  let (preparedDelete, expectedVariables) = flip runState Set.empty $ RQL.traverseAnnDel prepareWithoutPlan deleteOperation
+  let (preparedDelete, expectedVariables) = flip runState Set.empty $ IR.traverseAnnDel prepareWithoutPlan deleteOperation
   validateSessionVariables expectedVariables usrVars
-  pure $ RQL.execDeleteQuery env stringifyNum (Just remoteJoinCtx) (preparedDelete, Seq.empty)
+  pure $ PGE.execDeleteQuery env stringifyNum (Just remoteJoinCtx) (preparedDelete, Seq.empty)
 
 convertUpdate
   :: ( HasVersion
@@ -63,17 +63,17 @@ convertUpdate
      )
   => Env.Environment
   -> SessionVariables
-  -> RQL.MutationRemoteJoinCtx
-  -> RQL.AnnUpdG UnpreparedValue
+  -> PGE.MutationRemoteJoinCtx
+  -> IR.AnnUpdG 'Postgres UnpreparedValue
   -> Bool
   -> m (tx EncJSON)
 convertUpdate env usrVars remoteJoinCtx updateOperation stringifyNum = do
-  let (preparedUpdate, expectedVariables) = flip runState Set.empty $ RQL.traverseAnnUpd prepareWithoutPlan updateOperation
-  if null $ RQL.uqp1OpExps updateOperation
-  then pure $ pure $ RQL.buildEmptyMutResp $ RQL.uqp1Output preparedUpdate
+  let (preparedUpdate, expectedVariables) = flip runState Set.empty $ IR.traverseAnnUpd prepareWithoutPlan updateOperation
+  if null $ IR.uqp1OpExps updateOperation
+  then pure $ pure $ IR.buildEmptyMutResp $ IR.uqp1Output preparedUpdate
   else do
     validateSessionVariables expectedVariables usrVars
-    pure $ RQL.execUpdateQuery env stringifyNum (Just remoteJoinCtx) (preparedUpdate, Seq.empty)
+    pure $ PGE.execUpdateQuery env stringifyNum (Just remoteJoinCtx) (preparedUpdate, Seq.empty)
 
 convertInsert
   :: ( HasVersion
@@ -83,8 +83,8 @@ convertInsert
      , MonadIO tx)
   => Env.Environment
   -> SessionVariables
-  -> RQL.MutationRemoteJoinCtx
-  -> AnnInsert UnpreparedValue
+  -> PGE.MutationRemoteJoinCtx
+  -> IR.AnnInsert 'Postgres UnpreparedValue
   -> Bool
   -> m (tx EncJSON)
 convertInsert env usrVars remoteJoinCtx insertOperation stringifyNum = do
@@ -102,9 +102,9 @@ convertMutationDB
      )
   => Env.Environment
   -> SessionVariables
-  -> RQL.MutationRemoteJoinCtx
+  -> PGE.MutationRemoteJoinCtx
   -> Bool
-  -> MutationDB UnpreparedValue
+  -> MutationDB 'Postgres UnpreparedValue
   -> m (tx EncJSON, HTTP.ResponseHeaders)
 convertMutationDB env userSession remoteJoinCtx stringifyNum = \case
   MDBInsert s -> noResponseHeaders <$> convertInsert env userSession remoteJoinCtx s stringifyNum
@@ -128,7 +128,7 @@ convertMutationAction
   -> UserInfo
   -> HTTP.Manager
   -> HTTP.RequestHeaders
-  -> ActionMutation UnpreparedValue
+  -> ActionMutation 'Postgres UnpreparedValue
   -> m (tx EncJSON, HTTP.ResponseHeaders)
 convertMutationAction env logger userInfo manager reqHeaders = \case
   AMSync s  -> (_aerTransaction &&& _aerHeaders) <$>
