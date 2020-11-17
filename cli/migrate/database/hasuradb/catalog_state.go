@@ -5,17 +5,16 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/hasura/graphql-engine/cli/migrate/database"
+
 	"github.com/mitchellh/mapstructure"
 
 	"github.com/pkg/errors"
 )
 
-type MigrationsState []DatasourceState
+type MigrationsState map[database.Datasource]MigrationVersion
 
-type DatasourceState struct {
-	Name     string
-	Versions map[string]bool `json:"versions"`
-}
+type MigrationVersion map[int64]bool
 
 type SettingsState struct {
 }
@@ -36,6 +35,12 @@ type CatalogStateAPI struct {
 	CLIStateKeyName string
 }
 
+func NewCatalogStateAPI(cliStateKey string) *CatalogStateAPI {
+	return &CatalogStateAPI{
+		CLIStateKeyName: cliStateKey,
+	}
+}
+
 func (c *CatalogStateAPI) GetCLICatalogState(hasuradb *HasuraDB) (*CLICatalogState, error) {
 	// useful for construcing errors
 	var opName = "getting catalog state"
@@ -43,7 +48,7 @@ func (c *CatalogStateAPI) GetCLICatalogState(hasuradb *HasuraDB) (*CLICatalogSta
 		Type: "get_catalog_state",
 		Args: HasuraArgs{},
 	}
-	resp, body, err := hasuradb.sendQueryOrMetadataRequest(q)
+	resp, body, err := hasuradb.sendQueryOrMetadataRequest(q, "")
 	if err != nil {
 		return nil, err
 	}
@@ -84,7 +89,7 @@ func (c *CatalogStateAPI) SetCLICatalogState(hasuradb *HasuraDB, cliState CLICat
 			State: cliState,
 		},
 	}
-	resp, body, err := hasuradb.sendQueryOrMetadataRequest(q)
+	resp, body, err := hasuradb.sendQueryOrMetadataRequest(q, "")
 	if err != nil {
 		return err
 	}

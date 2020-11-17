@@ -64,7 +64,7 @@ func (m *migrationStateWithSQL) PrepareMigrationsStateStore() error {
 		},
 	}
 
-	resp, body, err := m.hasuraDB.sendQueryOrMetadataRequest(query)
+	resp, body, err := m.hasuraDB.sendQueryOrMetadataRequest(query, "")
 	if err != nil {
 		m.hasuraDB.logger.Debug(err)
 		return err
@@ -98,7 +98,7 @@ func (m *migrationStateWithSQL) PrepareMigrationsStateStore() error {
 		},
 	}
 
-	resp, body, err = m.hasuraDB.sendQueryOrMetadataRequest(query)
+	resp, body, err = m.hasuraDB.sendQueryOrMetadataRequest(query, "")
 	if err != nil {
 		return err
 	}
@@ -128,7 +128,7 @@ func (m *migrationStateWithSQL) GetVersions() error {
 	}
 
 	// Send Query
-	resp, body, err := m.hasuraDB.sendQueryOrMetadataRequest(query)
+	resp, body, err := m.hasuraDB.sendQueryOrMetadataRequest(query, "")
 	if err != nil {
 		return err
 	}
@@ -172,21 +172,51 @@ func (m *migrationStateWithSQL) GetVersions() error {
 // rather than assuming a SQL backend for metadata storage
 type migrationsStateWithCatalogStateAPI struct {
 	hasuradb *HasuraDB
-	State    *MigrationsState
 }
 
 func NewMigrationsStateWithCatalogStateAPI(hasuraDB *HasuraDB) *migrationsStateWithCatalogStateAPI {
 	return &migrationsStateWithCatalogStateAPI{
 		hasuradb: hasuraDB,
-		State:    new(MigrationsState),
 	}
 }
 
 func (m *migrationsStateWithCatalogStateAPI) InsertVersion(version int64) error {
+	if m.hasuradb.CLICatalogState.Migrations[m.hasuradb.hasuraOpts.Datasource] == nil {
+		m.hasuradb.CLICatalogState.Migrations[m.hasuradb.hasuraOpts.Datasource] = MigrationVersion{}
+	}
+	cliState := *m.hasuradb.CLICatalogState
+	cliState.Migrations[m.hasuradb.hasuraOpts.Datasource][version] = false
+
+	q := HasuraInterfaceQuery{
+		Type: "set_catalog_state",
+		Args: struct {
+			Type  string          `json:"type"`
+			State CLICatalogState `json:"state"`
+		}{
+			Type:  "cli",
+			State: cliState,
+		},
+	}
+	m.hasuradb.migrationQuery.Args = append(m.hasuradb.migrationQuery.Args, q)
+
 	return nil
 }
 
 func (m *migrationsStateWithCatalogStateAPI) RemoveVersion(version int64) error {
+	cliState := *m.hasuradb.CLICatalogState
+	delete(cliState.Migrations[m.hasuradb.hasuraOpts.Datasource], version)
+
+	q := HasuraInterfaceQuery{
+		Type: "set_catalog_state",
+		Args: struct {
+			Type  string          `json:"type"`
+			State CLICatalogState `json:"state"`
+		}{
+			Type:  "cli",
+			State: cliState,
+		},
+	}
+	m.hasuradb.migrationQuery.Args = append(m.hasuradb.migrationQuery.Args, q)
 	return nil
 }
 
@@ -195,5 +225,17 @@ func (m *migrationsStateWithCatalogStateAPI) PrepareMigrationsStateStore() error
 }
 
 func (m *migrationsStateWithCatalogStateAPI) GetVersions() error {
+	catalogStateAPI := NewCatalogStateAPI("cli_state")
+	state, err := catalogStateAPI.GetCLICatalogState(m.hasuradb)
+	if err != nil {
+		return err
+	}
+	v, ok := state.Migrations[m.hasuradb.hasuraOpts.Datasource]
+	if !ok {
+		return nil
+	}
+	for version, _ := range v {
+		m.hasuradb.migrations.Append(uint64(version))
+	}
 	return nil
 }

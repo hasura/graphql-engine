@@ -12,6 +12,8 @@ import (
 	"regexp"
 	"strings"
 
+	"github.com/pkg/errors"
+
 	"github.com/mitchellh/mapstructure"
 
 	yaml "github.com/ghodss/yaml"
@@ -71,6 +73,7 @@ type HasuraDB struct {
 	isLocked            bool
 	logger              *log.Logger
 	hasuraOpts          *database.HasuraOpts
+	CLICatalogState     *CLICatalogState
 	migrationStateStore MigrationsStateStore
 }
 
@@ -88,6 +91,8 @@ func WithInstance(config *Config, logger *log.Logger, hasuraOpts *database.Hasur
 		hasuraOpts: hasuraOpts,
 	}
 	if hasuraOpts.ServerFeatureFlags.HasDatasources {
+		hx.CLICatalogState = new(CLICatalogState)
+		hx.CLICatalogState.Migrations = MigrationsState{}
 		hx.migrationStateStore = NewMigrationsStateWithCatalogStateAPI(hx)
 	} else {
 		hx.migrationStateStore = NewMigrationStateStoreWithSQL(hx)
@@ -98,10 +103,6 @@ func WithInstance(config *Config, logger *log.Logger, hasuraOpts *database.Hasur
 		return nil, err
 	}
 
-	if err := hx.ensureSettingsTable(); err != nil {
-		logger.Debug(err)
-		return nil, err
-	}
 	return hx, nil
 }
 
@@ -167,6 +168,7 @@ func (h *HasuraDB) Open(url string, isCMD bool, tlsConfig *tls.Config, logger *l
 		Plugins: make(types.MetadataPlugins, 0),
 		Req:     req,
 	}
+	hasuraOpts.Datasource = "default"
 	hx, err := WithInstance(config, logger, hasuraOpts)
 	if err != nil {
 		logger.Debug(err)
@@ -211,49 +213,167 @@ func (h *HasuraDB) UnLock() error {
 	if len(h.migrationQuery.Args) == 0 {
 		return nil
 	}
-
-	resp, body, err := h.sendQueryOrMetadataRequest(h.migrationQuery)
-	if err != nil {
-		return err
-	}
-
-	if resp.StatusCode != http.StatusOK {
-		switch herror := NewHasuraError(body, h.config.isCMD).(type) {
-		case HasuraError:
-			// Handle migration version here
-			if herror.Path != "" {
-				jsonData, err := json.Marshal(h.migrationQuery)
-				if err != nil {
-					return err
-				}
-				var migrationQuery interface{}
-				err = json.Unmarshal(jsonData, &migrationQuery)
-				if err != nil {
-					return err
-				}
-				res, err := jsonpath.JsonPathLookup(migrationQuery, herror.Path)
-				if err == nil {
-					queryData, err := json.MarshalIndent(res, "", "    ")
-					if err != nil {
-						return err
-					}
-					herror.migrationQuery = string(queryData)
-				}
-				re1, err := regexp.Compile(`\$.args\[([0-9]+)\]*`)
-				if err != nil {
-					return err
-				}
-				result := re1.FindAllStringSubmatch(herror.Path, -1)
-				if len(result) != 0 {
-					migrationNumber, ok := h.jsonPath[result[0][1]]
-					if ok {
-						herror.migrationFile = migrationNumber
+	// can have both metadata and query api requests in h.migrationQuery
+	// this has to
+	if h.hasuraOpts.ServerFeatureFlags.HasDatasources {
+		var reqs []interface{}
+		var metadataAPIRequests []interface{}
+		var queryAPIRequests []interface{}
+		if err := mapstructure.Decode(h.migrationQuery.Args, &reqs); err != nil {
+			return errors.Wrap(err, "constructing list of API calls")
+		}
+		for _, req := range reqs {
+			var r map[string]interface{}
+			if err := mapstructure.Decode(req, &r); err != nil {
+				return err
+			}
+			if v, ok := r["Type"]; ok {
+				if w := fmt.Sprintf("%v", v); w != "" {
+					if _, ok := queryTypesMap[w]; ok {
+						queryAPIRequests = append(queryAPIRequests, req)
+					} else {
+						metadataAPIRequests = append(metadataAPIRequests, req)
 					}
 				}
 			}
-			return herror
-		default:
-			return herror
+		}
+		resp, body, err := h.sendQueryOrMetadataRequest(HasuraInterfaceQuery{
+			Type: "bulk",
+			Args: queryAPIRequests,
+		}, "query")
+		if err != nil {
+			return err
+		}
+		if resp.StatusCode != http.StatusOK {
+			switch herror := NewHasuraError(body, h.config.isCMD).(type) {
+			case HasuraError:
+				// Handle migration version here
+				if herror.Path != "" {
+					jsonData, err := json.Marshal(h.migrationQuery)
+					if err != nil {
+						return err
+					}
+					var migrationQuery interface{}
+					err = json.Unmarshal(jsonData, &migrationQuery)
+					if err != nil {
+						return err
+					}
+					res, err := jsonpath.JsonPathLookup(migrationQuery, herror.Path)
+					if err == nil {
+						queryData, err := json.MarshalIndent(res, "", "    ")
+						if err != nil {
+							return err
+						}
+						herror.migrationQuery = string(queryData)
+					}
+					re1, err := regexp.Compile(`\$.args\[([0-9]+)\]*`)
+					if err != nil {
+						return err
+					}
+					result := re1.FindAllStringSubmatch(herror.Path, -1)
+					if len(result) != 0 {
+						migrationNumber, ok := h.jsonPath[result[0][1]]
+						if ok {
+							herror.migrationFile = migrationNumber
+						}
+					}
+				}
+				return herror
+			default:
+				return herror
+			}
+		}
+		resp, body, err = h.sendQueryOrMetadataRequest(HasuraInterfaceQuery{
+			Type: "bulk",
+			Args: metadataAPIRequests,
+		}, "metadata")
+		if err != nil {
+			return err
+		}
+		if resp.StatusCode != http.StatusOK {
+			switch herror := NewHasuraError(body, h.config.isCMD).(type) {
+			case HasuraError:
+				// Handle migration version here
+				if herror.Path != "" {
+					jsonData, err := json.Marshal(h.migrationQuery)
+					if err != nil {
+						return err
+					}
+					var migrationQuery interface{}
+					err = json.Unmarshal(jsonData, &migrationQuery)
+					if err != nil {
+						return err
+					}
+					res, err := jsonpath.JsonPathLookup(migrationQuery, herror.Path)
+					if err == nil {
+						queryData, err := json.MarshalIndent(res, "", "    ")
+						if err != nil {
+							return err
+						}
+						herror.migrationQuery = string(queryData)
+					}
+					re1, err := regexp.Compile(`\$.args\[([0-9]+)\]*`)
+					if err != nil {
+						return err
+					}
+					result := re1.FindAllStringSubmatch(herror.Path, -1)
+					if len(result) != 0 {
+						migrationNumber, ok := h.jsonPath[result[0][1]]
+						if ok {
+							herror.migrationFile = migrationNumber
+						}
+					}
+				}
+				return herror
+			default:
+				return herror
+			}
+		}
+
+	} else {
+		resp, body, err := h.sendQueryOrMetadataRequest(h.migrationQuery, "metadata")
+		if err != nil {
+			return err
+		}
+
+		if resp.StatusCode != http.StatusOK {
+			switch herror := NewHasuraError(body, h.config.isCMD).(type) {
+			case HasuraError:
+				// Handle migration version here
+				if herror.Path != "" {
+					jsonData, err := json.Marshal(h.migrationQuery)
+					if err != nil {
+						return err
+					}
+					var migrationQuery interface{}
+					err = json.Unmarshal(jsonData, &migrationQuery)
+					if err != nil {
+						return err
+					}
+					res, err := jsonpath.JsonPathLookup(migrationQuery, herror.Path)
+					if err == nil {
+						queryData, err := json.MarshalIndent(res, "", "    ")
+						if err != nil {
+							return err
+						}
+						herror.migrationQuery = string(queryData)
+					}
+					re1, err := regexp.Compile(`\$.args\[([0-9]+)\]*`)
+					if err != nil {
+						return err
+					}
+					result := re1.FindAllStringSubmatch(herror.Path, -1)
+					if len(result) != 0 {
+						migrationNumber, ok := h.jsonPath[result[0][1]]
+						if ok {
+							herror.migrationFile = migrationNumber
+						}
+					}
+				}
+				return herror
+			default:
+				return herror
+			}
 		}
 	}
 	return nil
@@ -327,13 +447,21 @@ func (h *HasuraDB) Drop() error {
 	return nil
 }
 
-func (h *HasuraDB) sendQueryOrMetadataRequest(m interface{}) (resp *http.Response, body []byte, err error) {
+func (h *HasuraDB) sendQueryOrMetadataRequest(m interface{}, queryType string) (resp *http.Response, body []byte, err error) {
 	var endpoint string
 	switch {
 	case !h.hasuraOpts.ServerFeatureFlags.HasDatasources:
 		endpoint = h.config.queryURL.String()
 	case h.hasuraOpts.ServerFeatureFlags.HasDatasources:
 		// TODO: Make this better
+		if queryType == "metadata" {
+			endpoint = h.config.metadataURL.String()
+			break
+		}
+		if queryType == "query" {
+			endpoint = h.config.queryURL.String()
+			break
+		}
 
 		// FIXME can also be an array
 		var v map[string]interface{}
