@@ -102,7 +102,7 @@ export const fetchTableListQuery = (options, source) => {
 
 export const cascadeUpQueries = (upQueries = [], isCascade = false) =>
   upQueries.map((i = {}) => {
-    if (i.type === 'run_sql' || i.type === 'untrack_table') {
+    if (i.type === 'run_sql' || i.type.includes('untrack_table')) {
       return {
         ...i,
         args: {
