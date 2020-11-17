@@ -38,11 +38,7 @@ runClearMetadata
   :: (QErrM m, CacheRWM m, MetadataM m)
   => ClearMetadata -> m EncJSON
 runClearMetadata _ = do
-  withNewInconsistentObjsCheck
-    $ buildSchemaCache
-    $ MetadataModifier
-    $ const emptyMetadata
-  pure successMsg
+  runReplaceMetadata emptyMetadata
 
 runReplaceMetadata
   :: ( QErrM m
