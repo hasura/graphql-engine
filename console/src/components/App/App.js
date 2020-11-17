@@ -7,7 +7,6 @@ import { hot } from 'react-hot-loader';
 import { ThemeProvider } from 'styled-components';
 import ErrorBoundary from '../Error/ErrorBoundary';
 import {
-  loadConsoleOpts,
   telemetryNotificationShown,
 } from '../../telemetry/Actions';
 import { showTelemetryNotification } from '../../telemetry/Notifications';
@@ -34,6 +33,7 @@ const App = ({
     document.getElementById('content').className = className + ' show';
     document.getElementById('loading').style.display = 'none';
   }, []);
+
   React.useEffect(() => {
     if (
       telemetry.console_opts &&

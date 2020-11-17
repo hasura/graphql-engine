@@ -1,2 +1,0 @@
-b37b451992f9689968e665e9baa04f3f280dd6c9 console: fix primary key selector bug and raw sql error message (close #4226) (#5469)
-9694a3a575db8080b5fad26b15333a49561c65af console: misc updates (#5484, #5488, #5486, #5481, #5252) (#5496)

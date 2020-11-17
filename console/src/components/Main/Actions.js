@@ -141,6 +141,7 @@ const fetchConsoleNotifications = () => (dispatch, getState) => {
         // because within the GQL query, I can't be using the `_ilike` operator during
         // filtering. Hence I'm keeping it here since this is a new feature and
         // mistakes can happen while adding data into the DB.
+
         // TODO: is to remove these once things are more streamlined
         const uppercaseScopedData = makeUppercaseScopes(fetchedData);
         let filteredData = filterScope(uppercaseScopedData, consoleScope);

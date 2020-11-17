@@ -24,6 +24,8 @@ import { loadInconsistentObjects } from '../Settings/Actions';
 import { filterInconsistentMetadataObjects } from '../Settings/utils';
 import globals from '../../../Globals';
 
+const compositeFnCheck = 'c';
+
 import {
   fetchTrackedTableReferencedFkQuery,
   fetchTrackedTableFkQuery,
