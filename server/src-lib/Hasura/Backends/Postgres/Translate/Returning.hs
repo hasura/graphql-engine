@@ -1,5 +1,8 @@
 module Hasura.Backends.Postgres.Translate.Returning
-  ( mkMutFldExp
+  ( MutationCTE(..)
+  , getMutationCTE
+  , checkPermissionRequired
+  , mkMutFldExp
   , mkDefaultMutFlds
   , mkCheckErrorExp
   , mkMutationOutputExp
@@ -20,6 +23,28 @@ import           Hasura.RQL.DML.Internal
 import           Hasura.RQL.IR.Returning
 import           Hasura.RQL.IR.Select
 import           Hasura.RQL.Types
+
+
+-- | The postgres common table expression (CTE) for mutation queries.
+-- This CTE expression is used to generate mutation field output expression,
+-- see Note [Mutation output expression].
+data MutationCTE
+  = MCCheckConstraint !S.CTE -- ^ A Mutation with check constraint validation (Insert or Update)
+  | MCSelectValues !S.Select -- ^ A Select statement which emits mutated table rows
+  | MCDelete !S.SQLDelete    -- ^ A Delete statement
+  deriving (Show, Eq)
+
+getMutationCTE :: MutationCTE -> S.CTE
+getMutationCTE = \case
+  MCCheckConstraint cte -> cte
+  MCSelectValues select -> S.CTESelect select
+  MCDelete delete       -> S.CTEDelete delete
+
+checkPermissionRequired :: MutationCTE -> Bool
+checkPermissionRequired = \case
+  MCCheckConstraint _ -> True
+  MCSelectValues _    -> False
+  MCDelete _          -> False
 
 
 pgColsToSelFlds :: [ColumnInfo 'Postgres] -> [(FieldName, AnnField 'Postgres)]

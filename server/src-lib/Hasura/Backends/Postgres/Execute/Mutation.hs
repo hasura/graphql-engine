@@ -35,21 +35,21 @@ import           Hasura.Backends.Postgres.Translate.Select
 import           Hasura.Backends.Postgres.Translate.Update
 import           Hasura.EncJSON
 import           Hasura.RQL.DML.Internal
-import           Hasura.RQL.Instances                         ()
 import           Hasura.RQL.IR.Delete
 import           Hasura.RQL.IR.Insert
 import           Hasura.RQL.IR.Returning
 import           Hasura.RQL.IR.Select
 import           Hasura.RQL.IR.Update
+import           Hasura.RQL.Instances                         ()
 import           Hasura.RQL.Types
+import           Hasura.SQL.Types
 import           Hasura.Server.Version                        (HasVersion)
 import           Hasura.Session
-import           Hasura.SQL.Types
 
 
 type MutationRemoteJoinCtx = (HTTP.Manager, [N.Header], UserInfo)
 
-data Mutation (b :: Backend)
+data Mutation (b :: BackendType)
   = Mutation
   { _mTable       :: !QualifiedTable
   , _mQuery       :: !(MutationCTE, DS.Seq Q.PrepArg)
