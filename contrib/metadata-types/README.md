@@ -63,7 +63,7 @@ _**"I want to..."**_
 
 ### TypeScript SDK
 
-![](TypeScript-typecheck-demo.gif)
+![](typescript-typecheck-demo.gif)
 
 ### Type-Checking & Docs inside of Metadata YAML files
 

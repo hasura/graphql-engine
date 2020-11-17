@@ -7,8 +7,8 @@ module Hasura.RQL.Types.Common
        , RelInfo(..)
 
        , ScalarType
-       , Column
        , SQLExp
+       , Backend (..)
 
        , FieldName(..)
        , fromPGCol
@@ -71,16 +71,18 @@ import           Data.Aeson
 import           Data.Aeson.Casing
 import           Data.Aeson.TH
 import           Data.Bifunctor                     (bimap)
+import           Data.Kind                          (Type)
 import           Data.Scientific                    (toBoundedInteger)
 import           Data.Text.Extended
 import           Data.Text.NonEmpty
+import           Data.Typeable
 import           Data.URL.Template
 import           Instances.TH.Lift                  ()
 import           Language.Haskell.TH.Syntax         (Lift)
 
-import qualified Hasura.Backends.Postgres.SQL.DML   as S
+import qualified Hasura.Backends.Postgres.SQL.DML   as PG
+import qualified Hasura.Backends.Postgres.SQL.Types as PG
 
-import           Hasura.Backends.Postgres.SQL.Types
 import           Hasura.EncJSON
 import           Hasura.Incremental                 (Cacheable)
 import           Hasura.RQL.DDL.Headers             ()
@@ -88,17 +90,64 @@ import           Hasura.RQL.Types.Error
 import           Hasura.SQL.Backend
 
 
-type family ScalarType (b :: Backend) where
-  ScalarType 'Postgres = PGScalarType
+type family ScalarType (b :: BackendType) where
+  ScalarType 'Postgres = PG.PGScalarType
 
-type family ColumnType (b :: Backend) where
-  ColumnType 'Postgres = PGType
+type family ColumnType (b :: BackendType) where
+  ColumnType 'Postgres = PG.PGType
 
-type family Column (b :: Backend) where
-  Column 'Postgres = PGCol
+type family SQLExp (b :: BackendType) where
+  SQLExp 'Postgres = PG.SQLExp
 
-type family SQLExp (b :: Backend) where
-  SQLExp 'Postgres = S.SQLExp
+
+-- | Mapping from abstract types to concrete backend representation
+--
+-- The RQL IR, used as the output of GraphQL parsers and of the RQL parsers, is
+-- backend-agnostic: it uses an abstract representation of the structure of a
+-- query, and delegates to the backends the task of choosing an appropriate
+-- concrete representation.
+--
+-- Additionally, grouping all those types under one typeclass rather than having
+-- dedicated type families allows to explicitly list all typeclass requirements,
+-- which simplifies the instance declarations of all IR types.
+class
+  ( Show (TableName b)
+  , Show (ConstraintName b)
+  , Show (Column b)
+  , Show (BasicOrderType b)
+  , Show (NullsOrderType b)
+  , Eq (TableName b)
+  , Eq (ConstraintName b)
+  , Eq (Column b)
+  , Eq (BasicOrderType b)
+  , Eq (NullsOrderType b)
+  , Lift (TableName b)
+  , Lift (BasicOrderType b)
+  , Lift (NullsOrderType b)
+  , Cacheable (TableName b)
+  , Data (TableName b)
+  , Hashable (BasicOrderType b)
+  , Hashable (NullsOrderType b)
+  , Hashable (TableName b)
+  , NFData (TableName b)
+  , FromJSON (BasicOrderType b)
+  , FromJSON (NullsOrderType b)
+  , ToJSON (BasicOrderType b)
+  , ToJSON (NullsOrderType b)
+  , Typeable b
+  ) => Backend (b :: BackendType) where
+  type TableName      b :: Type
+  type ConstraintName b :: Type
+  type BasicOrderType b :: Type
+  type NullsOrderType b :: Type
+  type Column         b :: Type
+
+instance Backend 'Postgres where
+  type TableName      'Postgres = PG.QualifiedTable
+  type ConstraintName 'Postgres = PG.ConstraintName
+  type BasicOrderType 'Postgres = PG.OrderType
+  type NullsOrderType 'Postgres = PG.NullsOrder
+  type Column         'Postgres = PG.PGCol
 
 
 adminText :: NonEmptyText
@@ -111,8 +160,8 @@ newtype RelName
   = RelName { getRelTxt :: NonEmptyText }
   deriving (Show, Eq, Hashable, FromJSON, ToJSON, ToJSONKey, Q.ToPrepArg, Q.FromCol, Lift, Generic, Arbitrary, NFData, Cacheable)
 
-instance IsIdentifier RelName where
-  toIdentifier rn = Identifier $ relNameToTxt rn
+instance PG.IsIdentifier RelName where
+  toIdentifier rn = PG.Identifier $ relNameToTxt rn
 
 instance ToTxt RelName where
   toTxt = relNameToTxt
@@ -153,8 +202,8 @@ data RelInfo
   = RelInfo
   { riName       :: !RelName
   , riType       :: !RelType
-  , riMapping    :: !(HashMap PGCol PGCol)
-  , riRTable     :: !QualifiedTable
+  , riMapping    :: !(HashMap PG.PGCol PG.PGCol)
+  , riRTable     :: !PG.QualifiedTable
   , riIsManual   :: !Bool
   , riIsNullable :: !Bool
   } deriving (Show, Eq, Generic)
@@ -171,14 +220,14 @@ newtype FieldName
            , Semigroup
            )
 
-instance IsIdentifier FieldName where
-  toIdentifier (FieldName f) = Identifier f
+instance PG.IsIdentifier FieldName where
+  toIdentifier (FieldName f) = PG.Identifier f
 
 instance ToTxt FieldName where
   toTxt (FieldName c) = c
 
-fromPGCol :: PGCol -> FieldName
-fromPGCol c = FieldName $ getPGColTxt c
+fromPGCol :: PG.PGCol -> FieldName
+fromPGCol c = FieldName $ PG.getPGColTxt c
 
 fromRel :: RelName -> FieldName
 fromRel = FieldName . relNameToTxt
@@ -188,7 +237,7 @@ class ToAesonPairs a where
 
 data WithTable a
   = WithTable
-  { wtName :: !QualifiedTable
+  { wtName :: !PG.QualifiedTable
   , wtInfo :: !a
   } deriving (Show, Eq, Lift)
 
@@ -202,7 +251,7 @@ instance (ToAesonPairs a) => ToJSON (WithTable a) where
   toJSON (WithTable tn rel) =
     object $ ("table" .= tn):toAesonPairs rel
 
-type ColumnValues a = HM.HashMap PGCol a
+type ColumnValues a = HM.HashMap PG.PGCol a
 
 data MutateResp a
   = MutateResp
@@ -212,7 +261,7 @@ data MutateResp a
 $(deriveJSON (aesonDrop 3 snakeCase) ''MutateResp)
 
 
-type ColMapping = HM.HashMap PGCol PGCol
+type ColMapping = HM.HashMap PG.PGCol PG.PGCol
 
 -- | Postgres OIDs. <https://www.postgresql.org/docs/12/datatype-oid.html>
 newtype OID = OID { unOID :: Int }
@@ -220,7 +269,7 @@ newtype OID = OID { unOID :: Int }
 
 data Constraint
   = Constraint
-  { _cName :: !ConstraintName
+  { _cName :: !PG.ConstraintName
   , _cOid  :: !OID
   } deriving (Show, Eq, Generic)
 instance NFData Constraint
@@ -241,7 +290,7 @@ $(deriveJSON (aesonDrop 3 snakeCase) ''PrimaryKey)
 data ForeignKey
   = ForeignKey
   { _fkConstraint    :: !Constraint
-  , _fkForeignTable  :: !QualifiedTable
+  , _fkForeignTable  :: !PG.QualifiedTable
   , _fkColumnMapping :: !ColMapping
   } deriving (Show, Eq, Generic)
 instance NFData ForeignKey
@@ -267,7 +316,7 @@ class EquatableGType a where
   type EqProps a
   getEqProps :: a -> EqProps a
 
-type CustomColumnNames = HM.HashMap PGCol G.Name
+type CustomColumnNames = HM.HashMap PG.PGCol G.Name
 
 newtype SystemDefined = SystemDefined { unSystemDefined :: Bool }
   deriving (Show, Eq, FromJSON, ToJSON, Q.ToPrepArg, NFData, Cacheable)
@@ -292,12 +341,8 @@ unsafeNonNegativeInt = NonNegativeInt
 instance FromJSON NonNegativeInt where
   parseJSON = withScientific "NonNegativeInt" $ \t -> do
     case t >= 0 of
-      True  -> NonNegativeInt <$> maybeInt (toBoundedInteger t)
+      True  -> maybe (fail "integer passed is out of bounds") (pure . NonNegativeInt) $ toBoundedInteger t
       False -> fail "negative value not allowed"
-    where
-      maybeInt x = case x of
-        Just v  -> return v
-        Nothing -> fail "integer passed is out of bounds"
 
 newtype NonNegativeDiffTime = NonNegativeDiffTime { unNonNegativeDiffTime :: DiffTime }
   deriving (Show, Eq,ToJSON,Generic, NFData, Cacheable, Num)

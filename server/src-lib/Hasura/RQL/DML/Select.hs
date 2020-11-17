@@ -37,7 +37,7 @@ type SelectQExt b = SelectG (ExtCol b) (BoolExp b) Int
 -- it is specific to this module; however the generalization work was
 -- already done, and there's no particular reason to force this to be
 -- specific.
-data ExtCol (b :: Backend)
+data ExtCol (b :: BackendType)
   = ECSimple !(Column b)
   | ECRel !RelName !(Maybe RelName) !(SelectQExt b)
 deriving instance Lift (ExtCol 'Postgres)

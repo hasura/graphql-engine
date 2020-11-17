@@ -1,13 +1,10 @@
 module Hasura.RQL.Types.Permission where
 
-import           Hasura.Backends.Postgres.SQL.Types (PGCol, TableName, getTableTxt)
-import           Hasura.Incremental                 (Cacheable)
 import           Hasura.Prelude
-import           Hasura.RQL.IR.BoolExp
-import           Hasura.RQL.Types.Common
-import           Hasura.RQL.Types.ComputedField
-import           Hasura.SQL.Backend
-import           Hasura.Session
+
+import qualified Data.Text                          as T
+import qualified Database.PG.Query                  as Q
+import qualified PostgreSQL.Binary.Decoding         as PD
 
 import           Control.Lens                       (makeLenses)
 import           Data.Aeson
@@ -17,9 +14,14 @@ import           Data.Hashable
 import           Instances.TH.Lift                  ()
 import           Language.Haskell.TH.Syntax         (Lift)
 
-import qualified Data.Text                          as T
-import qualified Database.PG.Query                  as Q
-import qualified PostgreSQL.Binary.Decoding         as PD
+import           Hasura.Backends.Postgres.SQL.Types (PGCol, TableName, getTableTxt)
+import           Hasura.Incremental                 (Cacheable)
+import           Hasura.RQL.IR.BoolExp
+import           Hasura.RQL.Types.Common            hiding (TableName)
+import           Hasura.RQL.Types.ComputedField
+import           Hasura.SQL.Backend
+import           Hasura.Session
+
 
 data PermType
   = PTInsert
@@ -116,7 +118,7 @@ instance (ToJSON a) => ToAesonPairs (PermDef a) where
   ]
 
 -- Insert permission
-data InsPerm (b :: Backend)
+data InsPerm (b :: BackendType)
   = InsPerm
   { ipCheck       :: !(BoolExp b)
   , ipSet         :: !(Maybe (ColumnValues Value))
@@ -132,7 +134,7 @@ instance ToJSON (InsPerm 'Postgres) where
 type InsPermDef    b = PermDef    (InsPerm b)
 
 -- Select constraint
-data SelPerm (b :: Backend)
+data SelPerm (b :: BackendType)
   = SelPerm
   { spColumns           :: !PermColSpec         -- ^ Allowed columns
   , spFilter            :: !(BoolExp b)         -- ^ Filter expression
@@ -156,7 +158,7 @@ instance FromJSON (SelPerm 'Postgres) where
 type SelPermDef b = PermDef (SelPerm b)
 
 -- Delete permission
-data DelPerm (b :: Backend)
+data DelPerm (b :: BackendType)
   = DelPerm { dcFilter :: !(BoolExp b) }
   deriving (Show, Eq, Lift, Generic)
 instance Cacheable (DelPerm 'Postgres)
@@ -168,7 +170,7 @@ instance ToJSON (DelPerm 'Postgres) where
 type DelPermDef    b = PermDef    (DelPerm b)
 
 -- Update constraint
-data UpdPerm (b :: Backend)
+data UpdPerm (b :: BackendType)
   = UpdPerm
   { ucColumns :: !PermColSpec -- Allowed columns
   , ucSet     :: !(Maybe (ColumnValues Value)) -- Preset columns
