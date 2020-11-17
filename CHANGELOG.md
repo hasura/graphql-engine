@@ -2,52 +2,6 @@
 
 ## Next release
 
-### Bug fixes and improvements
-
-(Add entries here in the order of: server, console, cli, docs, others)
-- server: fix explain queries with role permissions (fix #4816)
-- server: compile with GHC 8.10.1, closing a space leak with subscriptions. (close #4517) (#3388)
-
-- server: fixes an issue where introspection queries with variables would fail because of caching (fix #4547)
-- server: avoid loss of precision when passing values in scientific notation (fix #4733)
-- server: fix mishandling of GeoJSON inputs in subscriptions (fix #3239)
-- server: fix importing of allow list query from metadata (fix #4687)
-- server: fix edge case with printing logs on startup failure (fix #4772)
-
-## `v1.2.0`
-
-Include the changelog from **v1.2.0-beta.1**, **v1.2.0-beta.2**, **v1.2.0-beta.3**, **v1.2.0-beta.4**, **v1.2.0-beta.5**
-
-Additional changelog:
-
-### CLI: Support servers with self-signed certificates (close #4564) (#4582)
-
-A new flag `--certificate-authority` is added so that the CA certificate can be
-provided to trust the Hasura Endpoint with a self-signed SSL certificate.
-
-Another flag `--insecure-skip-tls-verification` is added to skip verifying the certificate
-in case you don't have access to the CA certificate. As the name suggests,
-using this flag is insecure since verification is not carried out.
-
-### CLI: Support servers with self-signed certificates (close #4564) (#4582)
-
-A new flag `--certificate-authority` is added so that the CA certificate can be
-provided to trust the Hasura Endpoint with a self-signed SSL certificate.
-
-Another flag `--insecure-skip-tls-verification` is added to skip verifying the certificate
-in case you don't have access to the CA certificate. As the name suggests,
-using this flag is insecure since verification is not carried out.
-
-### Bug fixes and improvements
-
-- console: update graphiql explorer to support operation transform (#4567)
-- console: make GraphiQL Explorer taking the whole viewport (#4553)
-- console: fix table columns type comparision during column edit (close #4125) (#4393)
-- cli: allow initialising project in current directory (fix #4560) #4566
-- cli: remove irrelevant flags from init command (close #4508) (#4549)
-
-## `v1.2.0-beta.5`
-
 ### Heterogeneous execution
 
 Previous releases have allowed queries to request data from either Postgres or remote schemas, but not both. This release removes that restriction, so multiple data sources may be mixed within a single query. For example, GraphQL Engine can execute a query like
@@ -219,7 +173,6 @@ If you do have such headers configured, then you must update the header configur
 - server: add logs for action handlers
 - server: add request/response sizes in event triggers (and scheduled trigger) logs (#5463)
 - server: change startup log kind `db_migrate` to `catalog_migrate` (#5531)
-- server: fixes select permission in computed fields regression (fixes #5696)
 - console: handle nested fragments in allowed queries (close #5137) (#5252)
 - console: update sidebar icons for different action and trigger types (#5445)
 - console: make add column UX consistent with others (#5486)
