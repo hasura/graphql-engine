@@ -3,7 +3,6 @@
 import ruamel.yaml as yaml
 from ruamel.yaml.compat import ordereddict, StringIO
 from ruamel.yaml.comments import CommentedMap
-from fuzzywuzzy import fuzz
 import json
 import copy
 import graphql
@@ -346,12 +345,6 @@ def equal_CommentedMap(m1, m2):
                     for (k1,v1),(k2,v2) in zip(m1_l,m2_l)))
     # else this is a scalar:
     else:
-        if isinstance(m1, str) and isinstance(m2, str):
-            ratioCheck = fuzz.ratio(m1, m2)   # there's a partial_ratio function too, if the check can be more casual
-            if ratioCheck != 100:
-                print("Message 1: ", m1)
-                print("Message 2: ", m2)
-            return ratioCheck >= 85
         return m1 == m2
 
 # Parse test case YAML file
