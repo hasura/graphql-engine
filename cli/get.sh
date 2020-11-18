@@ -17,12 +17,20 @@ NC='\033[0m'
 INSTALL_PATH=${INSTALL_PATH:-"/usr/local/bin"}
 NEED_SUDO=0
 
+REPO="hasura/graphql-engine"
+
 function maybe_sudo() {
     if [[ "$NEED_SUDO" == '1' ]]; then
         sudo "$@"
     else
         "$@"
     fi
+}
+
+get_latest_release() {
+  curl --silent "https://api.github.com/repos/$1/releases/latest" | 
+    grep '"tag_name":' |                                            
+    sed -E 's/.*"([^"]+)".*/\1/'                                   
 }
 
 # check for curl
@@ -37,6 +45,12 @@ log "Getting $release version..."
 
 # adapted from https://github.com/openfaas/faas-cli/blob/master/get.sh
 version=`echo $(curl -s -f -H 'Content-Type: application/json' https://releases.hasura.io/graphql-engine?agent=cli-get.sh) | sed -n -e "s/^.*\"$release\":\"\([^\",}]*\)\".*$/\1/p"`
+
+if [ ! $version ]; then
+  # fallback to using github API directly
+  version=$(curl --silent "https://api.github.com/repos/$REPO/releases/latest" | grep '"tag_name":' |  sed -E 's/.*"([^"]+)".*/\1/')
+fi
+
 if [ ! $version ]; then
     log "${YELLOW}"
     log "Failed while attempting to install hasura graphql-engine cli. Please manually install:"
@@ -134,7 +148,7 @@ if [ -e $targetFile ]; then
     rm $targetFile
 fi
 
-hasura version
+hasura version --skip-update-check
 
 if ! $(echo "$PATH" | grep -q "$INSTALL_PATH"); then
     log
