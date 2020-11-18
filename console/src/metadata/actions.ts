@@ -196,7 +196,7 @@ export const addDataSource = (
   dispatch,
   getState
 ) => {
-  const { dataHeaders, currentDataSource } = getState().tables;
+  const { dataHeaders } = getState().tables;
 
   const query = addSource(data.driver, data.payload);
 
@@ -211,12 +211,10 @@ export const addDataSource = (
       successCb();
       dispatch(showSuccessNotification('Data source added successfully!'));
       dispatch(exportMetadata());
-      if (!currentDataSource) {
-        dispatch({
-          type: UPDATE_CURRENT_DATA_SOURCE,
-          source: data.payload.name,
-        });
-      }
+      dispatch({
+        type: UPDATE_CURRENT_DATA_SOURCE,
+        source: data.payload.name,
+      });
       return getState();
     })
     .catch(err => {

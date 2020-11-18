@@ -196,7 +196,7 @@ const addAllUntrackedTablesSql = tableList => {
       dispatch(showSuccessNotification('Existing table/view added!'));
       dispatch({ type: REQUEST_SUCCESS });
       dispatch(updateSchemaInfo()).then(() => {
-        dispatch(_push(getSchemaBaseRoute(currentSchema)));
+        dispatch(_push(getSchemaBaseRoute(currentSchema, currentDataSource)));
       });
       return;
     };

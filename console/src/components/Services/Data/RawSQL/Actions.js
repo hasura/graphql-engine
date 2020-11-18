@@ -14,7 +14,6 @@ import dataHeaders from '../Common/Headers';
 import returnMigrateUrl from '../Common/getMigrateUrl';
 import requestAction from '../../../../utils/requestAction';
 import { dataSource } from '../../../../dataSources';
-import { exportMetadata } from '../../../../metadata/actions';
 import { getRunSqlQuery } from '../../../Common/utils/v1QueryUtils';
 import { getDownQueryComments } from '../../../../utils/migration/utils';
 import {
