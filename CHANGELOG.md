@@ -123,6 +123,26 @@ const newTable: TableEntry = {
 
 ![](./contrib/metadata-types/json-schema-typecheck-demo.gif)
 
+### Breaking changes
+
+#### PDV
+
+This release contains the [PDV refactor (#4111)](https://github.com/hasura/graphql-engine/pull/4111), a significant rewrite of the internals of the server, which did include some breaking changes:
+
+- The semantics of explicit `null` values in `where` filters have changed according to the discussion in [issue 704](https://github.com/hasura/graphql-engine/issues/704#issuecomment-635571407): an explicit `null` value in a comparison input object will be treated as an error rather than resulting in the expression being evaluated to `True`. For instance: `delete_users(where: {id: {_eq: $userId}}) { name }` will yield an error if `$userId` is `null` instead of deleting all users.
+- The validation of required headers has been fixed (closing #14 and #3659):
+  - if a query selects table `bar` through table `foo` via a relationship, the required permissions headers will be the union of the required headers of table `foo` and table `bar` (we used to only check the headers of the root table);
+  - if an insert does not have an `on_conflict` clause, it will not require the update permissions headers.
+
+#### Remote Relationship
+
+In this release, a breaking change has been introduced:
+
+In a remote relationship query, the remote schema will be queried when all of the joining arguments
+are **not** `null` values. When there are `null` value(s), the remote schema won't be queried and the
+response of the remote relationship field will be `null`. Earlier, the remote schema
+was queried with the `null` value arguments and the response depended upon how the remote schema handled the `null`
+arguments.
 
 ### Bug fixes and improvements
 
