@@ -96,8 +96,29 @@ instance (MonadMetadataStorage m) => MonadMetadataStorage (Tracing.TraceT m) whe
   unlockScheduledEvents a b          = lift $ unlockScheduledEvents a b
   unlockAllLockedScheduledEvents     = lift unlockAllLockedScheduledEvents
 
+{- Note [MonadMetadataStorage class constraint]
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+All functions in @'MonadMetadataStorage' type class are expected to raise a
+@'QErr' exception. These exceptions are caught at the call site and not expected
+to be embeded in the underlying function's monad. To acheive this, we take help
+of @'MetadataStorageT' transformer which is a newtype wrapper over @'ExceptT QErr'.
+And do following:-
+
+1. Functions which implements @'MonadMetadataStorage' have
+   `MonadMetadataStorage (MetadataStorageT m)` as type class constraint.
+   Hence, we derive instance for any monad, let's say 'MyMonad', as
+
+   `instance MonadMetadataStorage (MetadataStorageT MyMonad) where`
+
+2. We use @'runMetadataStorageT' to catch exception thrown by the class methods
+   at call site.
+
+-}
+
 -- | The 'MetadataStorageT' transformer adds ability to throw exceptions
 -- for monads deriving @'MonadMetadataStorage' instance.
+-- For more details see Note [MonadMetadataStorage class constraint]
 newtype MetadataStorageT m a
   = MetadataStorageT {unMetadataStorageT :: ExceptT QErr m a}
   deriving ( Functor, Applicative, Monad

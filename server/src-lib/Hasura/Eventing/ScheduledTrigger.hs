@@ -126,7 +126,7 @@ import           Hasura.SQL.Types
 --   have an adequate buffer of cron events.
 runCronEventsGenerator
   :: ( MonadIO m
-     , MonadMetadataStorage (MetadataStorageT m)
+     , MonadMetadataStorage (MetadataStorageT m) -- see Note [MonadMetadataStorage class constraint]
      )
   => L.Logger L.Hasura
   -> IO SchemaCache
@@ -187,7 +187,7 @@ processCronEvents
   :: ( HasVersion
      , MonadIO m
      , Tracing.HasReporter m
-     , MonadMetadataStorage (MetadataStorageT m)
+     , MonadMetadataStorage (MetadataStorageT m) -- see Note [MonadMetadataStorage class constraint]
      )
   => L.Logger L.Hasura
   -> LogEnvHeaders
@@ -225,7 +225,7 @@ processOneOffScheduledEvents
   :: ( HasVersion
      , MonadIO m
      , Tracing.HasReporter m
-     , MonadMetadataStorage (MetadataStorageT m)
+     , MonadMetadataStorage (MetadataStorageT m) -- see Note [MonadMetadataStorage class constraint]
      )
   => Env.Environment
   -> L.Logger L.Hasura
@@ -259,7 +259,7 @@ processScheduledTriggers
   :: ( HasVersion
      , MonadIO m
      , Tracing.HasReporter m
-     , MonadMetadataStorage (MetadataStorageT m)
+     , MonadMetadataStorage (MetadataStorageT m) -- see Note [MonadMetadataStorage class constraint]
      )
   => Env.Environment
   -> L.Logger L.Hasura
