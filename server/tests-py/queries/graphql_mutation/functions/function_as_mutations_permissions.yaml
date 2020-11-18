@@ -1,0 +1,60 @@
+- description: Works as admin
+  url: /v1/graphql
+  status: 200
+  query:
+    query: |
+      mutation {
+        add_to_score(args: {search: "Black"}){
+          name
+          score
+          role_echo
+        }
+      }
+  response:
+    data:
+      add_to_score:
+      - name: Dora Black
+        score: 51
+        role_echo: admin
+
+- description: Fails as anonymous due to permissions set up previously
+  headers:
+    X-Hasura-Role: anonymous
+  url: /v1/graphql
+  status: 200
+  query:
+    query: |
+      mutation {
+        add_to_score(args: {search: "Black"}){
+          name
+          score
+          role_echo
+        }
+      }
+  response:
+    # We also expect that the side-effectful function wasn't run (see below)
+    errors:
+    - extensions:
+        path: $.selectionSet.add_to_score.selectionSet.role_echo
+        code: validation-failed
+      message: "field \"role_echo\" not found in type: 'user'"
+
+- description: Works with permitted columns
+  headers:
+    X-Hasura-Role: anonymous
+  url: /v1/graphql
+  status: 200
+  query:
+    query: |
+      mutation {
+        add_to_score(args: {search: "Black"}){
+          name
+          score
+        }
+      }
+  response:
+    data:
+      add_to_score:
+      - name: Dora Black
+        # NOTE: the function didn't run above (good):
+        score: 52
