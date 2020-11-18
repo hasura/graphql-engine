@@ -1,3 +1,4 @@
+{-# LANGUAGE TemplateHaskell #-}
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 
 -- | Instances that're slow to compile.
@@ -6,118 +7,131 @@ module Hasura.Backends.MSSQL.Types.Instances where
 
 import           Control.DeepSeq
 import           Data.Aeson
+import           Data.Data
 import           Data.Function
 import           Data.Hashable
 import qualified Data.Text as T
 import           Data.Text.Extended (ToTxt(..))
 import qualified Database.ODBC.SQLServer as Odbc
+import           GHC.Generics
 import           Hasura.Backends.MSSQL.Types.Internal
 import           Hasura.Incremental.Internal.Dependency
-import           Prelude
+import           Hasura.Prelude
+import           Language.Haskell.TH
+import           Language.Haskell.TH.Syntax
+
+$(fmap concat $ for [''Aliased]
+  \name -> [d|
+  deriving instance Generic ($(conT name) a)
+  instance Hashable a => Hashable ($(conT name) a)
+  instance Cacheable a => Cacheable ($(conT name) a)
+  deriving instance Eq a => Eq ($(conT name) a)
+  instance NFData a => NFData ($(conT name) a)
+  deriving instance Show a => Show ($(conT name) a)
+  deriving instance Functor $(conT name)
+  deriving instance Data a => Data ($(conT name) a)
+  |])
+
+instance FromJSONKey UserTableName
+
+$(fmap concat $ for [ ''UserMetadata
+                    , ''UserTableMetadata
+                    , ''UserTableName
+                    , ''UserObjectRelationship
+                    , ''UserArrayRelationship
+                    , ''UserUsing
+                    , ''UserOn
+                    ]
+  \name -> [d|
+  deriving instance Generic $(conT name)
+  instance Hashable $(conT name)
+  instance Cacheable $(conT name)
+  deriving instance Eq $(conT name)
+  deriving instance Show $(conT name)
+  deriving instance Data $(conT name)
+  instance FromJSON $(conT name)
+  |])
+
+$(fmap concat $ for [ ''Where
+                    , ''For
+                    , ''Aggregate
+                    , ''Countable
+                    , ''EntityAlias
+                    , ''ForJson
+                    , ''JsonCardinality
+                    , ''Root
+                    , ''OrderBy
+                    , ''JoinAlias
+                    , ''Reselect
+                    , ''ColumnName
+                    , ''Expression
+                    , ''NullsOrder
+                    , ''Order
+                    , ''ScalarType
+                    , ''TableName
+                    , ''Select
+                    , ''Top
+                    , ''FieldName
+                    , ''JsonPath
+                    , ''Op
+                    , ''Projection
+                    , ''From
+                    , ''OpenJson
+                    , ''JsonFieldSpec
+                    , ''Join
+                    , ''JoinSource
+                    ]
+  \name -> [d|
+  deriving instance Generic $(conT name)
+  instance Hashable $(conT name)
+  instance Cacheable $(conT name)
+  deriving instance Eq $(conT name)
+  deriving instance Show $(conT name)
+  deriving instance Data $(conT name)
+  instance NFData $(conT name)
+  |])
+
+-- Why are these needed by the Backend class?
+$(fmap concat $ for [''Order, ''NullsOrder, ''Countable, ''ColumnName, ''ScalarType, ''FieldName, ''TableName]
+  \name -> [d|
+  instance ToJSON $(conT name)
+  instance FromJSON $(conT name) |])
+
+instance ToJSONKey ColumnName
+instance FromJSONKey ColumnName
+
+$(fmap concat $ for [''TableName, ''ScalarType]
+  \name -> [d|deriving instance Ord $(conT name) |])
+
+$(fmap concat $ for [''TableName, ''NullsOrder, ''Order]
+  \name -> [d|deriving instance Lift $(conT name) |])
+
+--------------------------------------------------------------------------------
+-- Third-party types
 
 instance Cacheable Odbc.Value
 instance Cacheable Odbc.Binary
 
-instance FromJSON ColumnName
-instance FromJSON NullsOrder
-instance FromJSON Order
-instance FromJSON ScalarType
-instance FromJSON TableName
-instance FromJSONKey ColumnName
+--------------------------------------------------------------------------------
+-- Manual instances
 
-instance ToJSON ColumnName
-instance ToJSON NullsOrder
-instance ToJSON Order
-instance ToJSON ScalarType
-instance ToJSON TableName
-instance ToJSONKey ColumnName
+instance ToTxt ScalarType where
+  toTxt = T.pack . show -- TODO:
 
-instance Hashable Where
-instance Hashable For
-instance Hashable Aggregate
-instance Hashable Countable
-instance Hashable ForJson
-instance Hashable JsonCardinality
-instance Hashable Root
-instance Hashable OrderBy
-instance Hashable JoinAlias
-instance Hashable Reselect
-instance Hashable ColumnName
-instance Hashable Expression
-instance Hashable NullsOrder
-instance Hashable Order
-instance Hashable ScalarType
-instance Hashable TableName
-instance Hashable Select
-instance Hashable Top
-instance Hashable FieldName
-instance Hashable JsonPath
-instance Hashable Op
-instance Hashable Projection
-instance Hashable a => Hashable (Aliased a)
-instance Hashable From
-instance Hashable OpenJson
-instance Hashable JsonFieldSpec
-instance Hashable Join
-instance Hashable JoinSource
+instance ToTxt TableName where
+  toTxt = T.pack . show -- TODO:
 
-instance Cacheable Where
-instance Cacheable For
-instance Cacheable Aggregate
-instance Cacheable Countable
-instance Cacheable ForJson
-instance Cacheable JsonCardinality
-instance Cacheable Root
-instance Cacheable OrderBy
-instance Cacheable JoinAlias
-instance Cacheable Reselect
-instance Cacheable ColumnName
-instance Cacheable Expression
-instance Cacheable NullsOrder
-instance Cacheable Order
-instance Cacheable ScalarType
-instance Cacheable TableName
-instance Cacheable Select
-instance Cacheable Top
-instance Cacheable FieldName
-instance Cacheable JsonPath
-instance Cacheable Op
-instance Cacheable Projection
-instance Cacheable a => Cacheable (Aliased a)
-instance Cacheable From
-instance Cacheable OpenJson
-instance Cacheable JsonFieldSpec
-instance Cacheable Join
-instance Cacheable JoinSource
+instance Monoid Where where
+  mempty = Where mempty
 
-instance NFData Where
-instance NFData For
-instance NFData Aggregate
-instance NFData Countable
-instance NFData ForJson
-instance NFData JsonCardinality
-instance NFData Root
-instance NFData OrderBy
-instance NFData JoinAlias
-instance NFData Reselect
-instance NFData ColumnName
-instance NFData Expression
-instance NFData NullsOrder
-instance NFData Order
-instance NFData ScalarType
-instance NFData TableName
-instance NFData Select
-instance NFData Top
-instance NFData FieldName
-instance NFData JsonPath
-instance NFData Op
-instance NFData Projection
-instance NFData a => NFData (Aliased a)
-instance NFData From
-instance NFData OpenJson
-instance NFData JsonFieldSpec
-instance NFData Join
-instance NFData JoinSource
+instance Semigroup Where where
+  (Where x) <> (Where y) = Where (x <> y)
 
-instance ToTxt ScalarType where toTxt = T.pack . show -- TODO:
-instance ToTxt TableName where toTxt = T.pack . show -- TODO:
+instance Monoid Top where
+  mempty = NoTop
+
+instance Semigroup Top where
+  (<>) :: Top -> Top -> Top
+  (<>) NoTop x         = x
+  (<>) x NoTop         = x
+  (<>) (Top x) (Top y) = Top (min x y)
