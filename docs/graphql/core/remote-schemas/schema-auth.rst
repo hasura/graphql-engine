@@ -28,7 +28,7 @@ You can also configure Hasura to have (as shown :ref:`here <merge_remote_schema>
 
 1. static header values that are sent to the remote server
 2. forward all headers from the client (like ``Authorization``, ``Cookie`` headers etc.)
-3. :ref:`fine grained access control <remote_schema_permissions>`
+3. :ref:`Fine grained access control <remote_schema_permissions>`
 
 In case there are multiple headers with same name, the order of precedence is:
 configuration headers > resolved user (``x-hasura-*``) variables > client headers.

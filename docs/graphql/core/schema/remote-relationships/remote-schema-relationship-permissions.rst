@@ -14,7 +14,7 @@ not be added to the schema for the role.
 
 Some of the cases in which a remote relationship cannot be derived are:
 
-1. There are no remote schema permissions defined for the role
+1. There are no remote schema permissions defined for the role.
 2. The role doesn't have access to the types that are used by the
    remote relationship.
 

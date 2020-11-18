@@ -116,7 +116,7 @@ The schema document should look like:
 Argument Presets
 ----------------
 
-The role-based schema only helps in changing the type definitions that are expose. Argument
+The role-based schema only helps in changing the type definitions that are exposed. Argument
 presets are used to introduce constraints in arguments.
 
 Argument presets can inject values from session variables or static values during execution.
@@ -154,7 +154,7 @@ graphql-engine:
      get_user_activities(user_id: ID!, limit: Int!): [Activity]
    }
 
-We want to configure the ``user`` role to only be able to query only their
+We want to configure the ``user`` role to only be able to query their
 own record. To do this, we need to preset the ``id`` parameter of the ``get_user``
 field defined in the ``Query`` object. Let's say we have the value of the ``id``
 argument set in one of the :ref:`session variables <dynamic_session_variables>`, we can
