@@ -69,7 +69,7 @@ We use the [fork-and-branch git workflow](https://blog.scottlowe.org/2015/01/27/
 
 ### Changelog 
 
-In order for all the checks to pass on Github, it's required to do one of the following:
+In order for all the checks to pass on GitHub, it's required to do one of the following:
 
 - Make an entry to the `CHANGELOG.md` file (under "Next release") to describe the change from a user's perspective.
 

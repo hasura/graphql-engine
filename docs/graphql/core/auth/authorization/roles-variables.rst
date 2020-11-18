@@ -104,7 +104,7 @@ General guidelines for modelling roles in Hasura.
 
 Roles are typically modelled in two ways:
 
-1. **Hierarchical roles**: Access scopes are nested depending on available roles. `Roles in Github for organisations <https://help.github.com/en/articles/managing-peoples-access-to-your-organization-with-roles>`_
+1. **Hierarchical roles**: Access scopes are nested depending on available roles. `Roles in GitHub for organisations <https://help.github.com/en/articles/managing-peoples-access-to-your-organization-with-roles>`_
    is a great example of such modelling where access scopes are inherited by deeper roles:
 
    .. thumbnail:: /img/graphql/core/auth/github-org-hierarchical-roles.png
