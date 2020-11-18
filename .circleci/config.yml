@@ -241,10 +241,9 @@ jobs:
     environment:
       PG_VERSION: "13"
       POSTGIS_VERSION: "3.0.0"
-      POSTGRES_PASSWORD: "postgres"
     docker:
     - image: *server_builder_image
-    - image: postgis/postgis:13-3.0-alpine
+    - image: hasura/postgres-13.0-alpine-postgis3:latest
       <<: *test_pg_env
 
   test_server_pg_12:
