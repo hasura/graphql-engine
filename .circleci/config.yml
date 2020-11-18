@@ -1,7 +1,7 @@
 # anchor refs to be used elsewhere
 refs:
   constants:
-  - &server_builder_image hasura/graphql-engine-server-builder:2020-08-26
+  - &server_builder_image hasura/graphql-engine-server-builder:3e6b3275b29bc7607a8ae7870d015605e1cdadcc55e1fb6a1cef7c9a646edb95
   skip_job_on_ciignore: &skip_job_on_ciignore
     run:
       name: checking if job should be terminated or not
