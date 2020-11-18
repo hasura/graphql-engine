@@ -161,7 +161,6 @@ const executeSQL = (isMigration, migrationName, statementTimeout) => (
         data: data && (isStatementTimeout ? data[1] : data[0]),
       });
     });
-    dispatch(exportMetadata());
   };
 
   return dispatch(requestAction(url, options))
