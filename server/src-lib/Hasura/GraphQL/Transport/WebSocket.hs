@@ -369,7 +369,7 @@ onStart env serverEnv wsConn (StartMsg opId q) = catchAndIgnore $ do
       let cacheKey = QueryCacheKey reqParsed $ _uiRole userInfo
       -- We ignore the response headers (containing TTL information) because
       -- WebSockets don't support them.
-      (_responseHeaders, cachedValue) <- Tracing.interpTraceT id $ cacheLookup asts cacheKey
+      (_responseHeaders, cachedValue) <- Tracing.interpTraceT (withExceptT mempty) $ cacheLookup asts cacheKey
       case cachedValue of
         Just cachedResponseData -> do
           sendSuccResp cachedResponseData $ LQ.LiveQueryMetadata 0
@@ -388,7 +388,7 @@ onStart env serverEnv wsConn (StartMsg opId q) = catchAndIgnore $ do
           case conclusion of
             Left _ -> pure ()
             Right results ->
-              Tracing.interpTraceT id $ cacheStore cacheKey $ encJFromInsOrdHashMap $ rfResponse <$> OMap.mapKeys G.unName results
+              Tracing.interpTraceT (withExceptT mempty) $ cacheStore cacheKey $ encJFromInsOrdHashMap $ rfResponse <$> OMap.mapKeys G.unName results
       sendCompleted (Just requestId)
 
     E.MutationExecutionPlan mutationPlan -> do
