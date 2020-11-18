@@ -154,9 +154,9 @@ const updateConsoleNotificationsState = (updatedState: NotificationsState) => {
     };
     // make a query to get the latest state from db prior to updating the read state for a user
     return dispatch(requestAction(getStateURL, getStateOptions))
-      .then((data: ConsoleStateResponse[]) => {
-        if (data?.length) {
-          const { console_state: current_console_state } = data[0];
+      .then((data: ConsoleStateResponse) => {
+        if (data) {
+          const { console_state: current_console_state } = data;
           let composedUpdatedState: ConsoleState['console_opts'] = {
             ...current_console_state,
             console_notifications: {
@@ -279,11 +279,9 @@ const updateConsoleNotificationsState = (updatedState: NotificationsState) => {
           };
 
           return dispatch(requestAction(url, options))
-            .then((retData: any) => {
-              dispatch({
-                type: UPDATE_CONSOLE_NOTIFICATIONS,
-                data: retData.returning[0].console_state.console_notifications,
-              });
+            .then(() => {
+              // eslint-disable-next-line no-use-before-define
+              dispatch(loadConsoleOpts());
             })
             .catch(error => {
               console.error(

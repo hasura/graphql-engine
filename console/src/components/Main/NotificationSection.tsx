@@ -328,11 +328,11 @@ const ViewMoreOptions: React.FC<ViewMoreProps> = ({
 };
 
 const checkIsRead = (prevRead?: string | string[], id?: number) => {
-  if (!prevRead || !id) {
-    return false;
-  }
   if (prevRead === 'all' || prevRead === 'default' || prevRead === 'error') {
     return true;
+  }
+  if (!prevRead || !id) {
+    return false;
   }
   return prevRead.indexOf(`${id}`) !== -1;
 };
