@@ -220,17 +220,13 @@ initialiseServeCtx env GlobalCtx{..} so@ServeOptions{..} = do
 
   -- Start a background thread for listening schema sync events from other server instances,
   -- just before building @'RebuildableSchemaCache' (happens in @'migrateCatalogSchema' function).
-  -- So, the listener thread will capture all schema syncing events which may happen after
-  -- executing @'migrateCatalogSchema' and before invoking @'startSchemaSyncProcessorThread'
-  -- in @'runHGEServer'. These events are processed as soon as the processor thread starts
-  -- and refreshes the schema cache. This will ensure the schema cache is in sync with the
-  -- latest changes made to metadata present in catalog.
+  -- See Note [Schema Cache Sync]
   (schemaSyncListenerThread, schemaSyncEventRef) <- startSchemaSyncListenerThread pool logger instanceId
 
-  (rebuildableSchemaCache, cacheInitTime) <-
+  (rebuildableSchemaCache, cacheInitStartTime) <-
     flip onException (flushLogger loggerCtx) $ migrateCatalogSchema env logger pool _gcHttpManager sqlGenCtx
 
-  let schemaSyncCtx = SchemaSyncCtx schemaSyncListenerThread schemaSyncEventRef cacheInitTime
+  let schemaSyncCtx = SchemaSyncCtx schemaSyncListenerThread schemaSyncEventRef cacheInitStartTime
       initCtx = ServeCtx _gcHttpManager instanceId loggers _gcConnInfo pool latch
                 rebuildableSchemaCache schemaSyncCtx
   pure initCtx

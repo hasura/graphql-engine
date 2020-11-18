@@ -96,9 +96,9 @@ type SchemaSyncEventRef = STM.TVar (Maybe SchemaSyncEvent)
 -- event references and cache init time
 data SchemaSyncCtx
   = SchemaSyncCtx
-  { _sscListenerThreadId :: !Immortal.Thread
-  , _sscSyncEventRef     :: !SchemaSyncEventRef
-  , _sscCacheInitTime    :: !UTC.UTCTime
+  { _sscListenerThreadId   :: !Immortal.Thread
+  , _sscSyncEventRef       :: !SchemaSyncEventRef
+  , _sscCacheInitStartTime :: !UTC.UTCTime
   }
 
 logThreadStarted
@@ -113,7 +113,50 @@ logThreadStarted logger instanceId threadType thread =
               , "message" .= msg
               ]
 
+{- Note [Schema Cache Sync]
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+When multiple graphql-engine instances are serving on same metadata storage,
+each instance should have schema cache in sync with latest metadata. Somehow
+all instances should communicate each other when any request has modified metadata.
+We make use of Postgres listen-notify to notify metadata updates and listen to those
+events. Each instance is identified by an @'InstanceId'. We choose 'hasura_schema_update'
+as our notify channel. Following steps take place when an API request made to update
+metadata:
+
+1. After handling the request we publish an event via a postgres channel with payload
+   containing instance id and other information to build schema cache.
+   See @'notifySchemaCacheSync'.
+
+2. On start up, before initialising schema cache, an async thread is invoked to
+   continuously listen to Postgres events on 'hasura_schema_update' channel. The payload
+   present in the event is decoded and pushed to a shared @'SchemaSyncEventRef' reference.
+   See @'startSchemaSyncListenerThread'.
+
+3. Before starting API server, another async thread is invoked to process events pushed
+   by the listener thread via @'SchemaSyncEventRef' reference. Based on the event instance id
+   or listen start time we decide to reload schema cache or not.
+   See @'startSchemaSyncProcessorThread'.
+
+Why we need two threads if we can capture and reload schema cache in a single thread?
+
+If we want to implement schema sync in a single async thread we have to invoke the same
+after initialising schema cache. We may loose events that published after schema cache
+init and before invoking the thread. In such case, schema cache is not in sync with metadata.
+So we choose two threads in which one will start listening before schema cache init and the
+other after it.
+
+What happens if listen connection to Postgres is lost?
+
+Listener thread will keep trying to establish connection to Postgres for every one second.
+Once connection established, it pushes @'SSEListenStart' event with time. We aren't sure
+about any metadata modify requests made in meanwhile. So we reload schema cache unconditionally
+if listen started after schema cache init start time.
+
+-}
+
 -- | An async thread which listen to Postgres notify to enable schema syncing
+-- See Note [Schema Cache Sync]
 startSchemaSyncListenerThread
   :: (MonadIO m)
   => PG.PGPool
@@ -132,6 +175,7 @@ startSchemaSyncListenerThread pool logger instanceId = do
   pure (listenerThread, schemaSyncEventRef)
 
 -- | An async thread which processes the schema sync events
+-- See Note [Schema Cache Sync]
 startSchemaSyncProcessorThread
   :: (MonadIO m)
   => SQLGenCtx
@@ -144,10 +188,10 @@ startSchemaSyncProcessorThread
   -> UTC.UTCTime
   -> m Immortal.Thread
 startSchemaSyncProcessorThread sqlGenCtx pool logger httpMgr
-  schemaSyncEventRef cacheRef instanceId cacheInitTime = do
+  schemaSyncEventRef cacheRef instanceId cacheInitStartTime = do
   -- Start processor thread
   processorThread <- liftIO $ C.forkImmortal "SchemeUpdate.processor" logger $
-    processor sqlGenCtx pool logger httpMgr schemaSyncEventRef cacheRef instanceId cacheInitTime
+    processor sqlGenCtx pool logger httpMgr schemaSyncEventRef cacheRef instanceId cacheInitStartTime
   logThreadStarted logger instanceId TTProcessor processorThread
   pure processorThread
 
@@ -164,6 +208,8 @@ listener pool logger updateEventRef =
       liftIO $ runExceptT $ PG.listen pool pgChannel notifyHandler
     onLeft listenResE onError
     logWarn
+    -- Trying to start listening after one second.
+    -- See Note [Schema Cache Sync].
     C.sleep $ seconds 1
   where
     threadType = TTListener
@@ -203,7 +249,7 @@ processor
   -> UTC.UTCTime
   -> IO void
 processor sqlGenCtx pool logger httpMgr updateEventRef
-  cacheRef instanceId cacheInitTime =
+  cacheRef instanceId cacheInitStartTime =
   -- Never exits
   forever $ do
     event <- STM.atomically getLatestEvent
@@ -223,14 +269,11 @@ processor sqlGenCtx pool logger httpMgr updateEventRef
         Nothing -> STM.retry
     threadType = TTProcessor
 
-      -- If event is from another server
     shouldReload = \case
       SSEListenStart time ->
         -- If listening started after cache initialization, just refresh the schema cache unconditionally.
-        -- Possible scenarios where listening start time > cache init time are:-
-        -- - More time spent on acquiring Postgres connection for listening
-        -- - Listening has restarted due to connection issues with the Postgres
-        time > cacheInitTime
+        -- See Note [Schema Cache Sync]
+        time > cacheInitStartTime
       SSEPayload payload  ->
         -- When event is from other sever instance
         _epInstanceId payload /= instanceId
