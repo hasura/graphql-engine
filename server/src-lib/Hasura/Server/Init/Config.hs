@@ -35,7 +35,7 @@ data RawConnParams
   , rcpAllowPrepare :: !(Maybe Bool)
   } deriving (Show, Eq)
 
-type RawAuthHook = AuthHookG (Maybe T.Text) (Maybe AuthHookType)
+type RawAuthHook = AuthHookG (Maybe Text) (Maybe AuthHookType)
 
 data RawServeOptions impl
   = RawServeOptions
@@ -65,7 +65,8 @@ data RawServeOptions impl
   , rsoEventsHttpPoolSize    :: !(Maybe Int)
   , rsoEventsFetchInterval   :: !(Maybe Milliseconds)
   , rsoLogHeadersFromEnv     :: !Bool
-  , rsoWebSocketCompression :: !Bool
+  , rsoWebSocketCompression  :: !Bool
+  , rsoWebSocketKeepAlive    :: !(Maybe Int)
   }
 
 -- | @'ResponseInternalErrorsConfig' represents the encoding of the internal
@@ -82,6 +83,11 @@ shouldIncludeInternal role = \case
   InternalErrorsAllRequests -> True
   InternalErrorsAdminOnly   -> isAdmin role
   InternalErrorsDisabled    -> False
+
+newtype KeepAliveDelay
+  = KeepAliveDelay
+      { unKeepAliveDelay :: Seconds
+      } deriving (Eq, Show)
 
 data ServeOptions impl
   = ServeOptions
@@ -109,11 +115,12 @@ data ServeOptions impl
   , soEventsFetchInterval          :: !(Maybe Milliseconds)
   , soLogHeadersFromEnv            :: !Bool
   , soConnectionOptions            :: !WS.ConnectionOptions
+  , soWebsocketKeepAlive           :: !KeepAliveDelay
   }
 
 data DowngradeOptions
   = DowngradeOptions
-  { dgoTargetVersion :: !T.Text
+  { dgoTargetVersion :: !Text
   , dgoDryRun        :: !Bool
   } deriving (Show, Eq)
 

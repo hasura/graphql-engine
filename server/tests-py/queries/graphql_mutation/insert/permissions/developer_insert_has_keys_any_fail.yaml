@@ -6,7 +6,7 @@ response:
   - extensions:
       path: $.selectionSet.insert_computer.args.objects
       code: permission-error
-    message: Check constraint violation. insert check constraint failed
+    message: check constraint of an insert/update permission has failed
 headers:
   X-Hasura-Role: developer
   X-Hasura-Spec-Keys: |-

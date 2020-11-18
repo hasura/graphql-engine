@@ -180,7 +180,7 @@ class ActionsWebhookHandler(http.server.BaseHTTPRequestHandler):
             self._send_response(status, resp)
 
         elif req_path == "/create-user-timeout":
-            time.sleep(2)
+            time.sleep(3)
             resp, status = self.create_user()
             self._send_response(status, resp)
 
