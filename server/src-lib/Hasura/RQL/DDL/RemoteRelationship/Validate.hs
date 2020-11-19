@@ -42,6 +42,7 @@ data ValidationError
   | UnsupportedMultipleElementLists
   | UnsupportedEnum
   | InvalidGraphQLName !Text
+  | IDTypeJoin !G.Name
 
 errorToText :: ValidationError -> Text
 errorToText = \case
@@ -77,6 +78,8 @@ errorToText = \case
     "enum value is not supported"
   InvalidGraphQLName t ->
     t <<> " is not a valid GraphQL identifier"
+  IDTypeJoin typeName ->
+    "Only ID, Int or String scalar types can be joined to the ID type, but recieved " <>> typeName
 
 -- | Validate a remote relationship given a context.
 validateRemoteRelationship
@@ -409,7 +412,16 @@ isTypeCoercible actualType expectedType =
   let (actualBaseType, actualNestingLevel) = getBaseTyWithNestedLevelsCount actualType
       (expectedBaseType, expectedNestingLevel) = getBaseTyWithNestedLevelsCount expectedType
   in
-  if | actualBaseType /= expectedBaseType -> raiseValidationError
+  if | expectedBaseType == $$(G.litName "ID") ->
+         bool (throwError $ IDTypeJoin actualBaseType)
+              (pure ())
+              -- Check under `Input Coercion` https://spec.graphql.org/June2018/#sec-ID
+              -- We can also include the `ID` type in the below list but it will be
+              -- extraneous because at the time of writing this, we don't generate
+              -- the `ID` type in the DB schema
+              (G.unName actualBaseType `elem`
+               [ "Int", "String", "bigint", "smallint" ])
+     | actualBaseType /= expectedBaseType -> raiseValidationError
        -- we cannot coerce two types with different nesting levels,
        -- for example, we cannot coerce [Int] to [[Int]]
      | (actualNestingLevel == expectedNestingLevel || actualNestingLevel == 0) -> pure ()
