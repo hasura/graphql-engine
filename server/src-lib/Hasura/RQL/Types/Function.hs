@@ -9,6 +9,7 @@ import           Control.Lens
 import           Data.Aeson
 import           Data.Aeson.Casing
 import           Data.Aeson.TH
+import           Data.Char                          (toLower)
 import           Data.Text.Extended
 import           Language.Haskell.TH.Syntax         (Lift)
 
@@ -17,21 +18,22 @@ import           Hasura.Incremental                 (Cacheable)
 import           Hasura.RQL.Types.Common
 
 
-data FunctionType
+-- | https://www.postgresql.org/docs/current/xfunc-volatility.html
+data FunctionVolatility
   = FTVOLATILE
   | FTIMMUTABLE
   | FTSTABLE
   deriving (Eq, Generic)
-instance NFData FunctionType
-instance Cacheable FunctionType
-$(deriveJSON defaultOptions{constructorTagModifier = drop 2} ''FunctionType)
+instance NFData FunctionVolatility
+instance Cacheable FunctionVolatility
+$(deriveJSON defaultOptions{constructorTagModifier = drop 2} ''FunctionVolatility)
 
-funcTypToTxt :: FunctionType -> Text
+funcTypToTxt :: FunctionVolatility -> Text
 funcTypToTxt FTVOLATILE  = "VOLATILE"
 funcTypToTxt FTIMMUTABLE = "IMMUTABLE"
 funcTypToTxt FTSTABLE    = "STABLE"
 
-instance Show FunctionType where
+instance Show FunctionVolatility where
   show = T.unpack . funcTypToTxt
 
 newtype FunctionArgName =
@@ -64,13 +66,34 @@ $(makePrisms ''InputArgument)
 
 type FunctionInputArgument = InputArgument FunctionArg
 
+
+-- | Indicates whether the user requested the corresponding function to be
+-- tracked as a mutation or a query/subscription, in @track_function@.
+data FunctionExposedAs = FEAQuery | FEAMutation
+  deriving (Show, Eq, Lift, Generic)
+
+instance NFData FunctionExposedAs
+instance Cacheable FunctionExposedAs
+$(deriveJSON
+    defaultOptions{ sumEncoding = UntaggedValue, constructorTagModifier = map toLower . drop 3 }
+    ''FunctionExposedAs)
+
+
+-- | Tracked SQL function metadata. See 'mkFunctionInfo'.
 data FunctionInfo
   = FunctionInfo
   { fiName          :: !QualifiedFunction
   , fiSystemDefined :: !SystemDefined
-  , fiType          :: !FunctionType
+  , fiVolatility    :: !FunctionVolatility
+  , fiExposedAs     :: !FunctionExposedAs
+  -- ^ In which part of the schema should this function be exposed?
+  --
+  -- See 'mkFunctionInfo' and '_fcExposedAs'.
   , fiInputArgs     :: !(Seq.Seq FunctionInputArgument)
   , fiReturnType    :: !QualifiedTable
+  -- ^ NOTE: when a table is created, a new composite type of the same name is
+  -- automatically created; so strictly speaking this field means "the function
+  -- returns the composite type corresponding to this table".
   , fiDescription   :: !(Maybe PGDescription)
   } deriving (Show, Eq)
 $(deriveToJSON (aesonDrop 2 snakeCase) ''FunctionInfo)
@@ -82,17 +105,30 @@ getInputArgs =
 type FunctionCache = HashMap QualifiedFunction FunctionInfo -- info of all functions
 
 -- Metadata requests related types
+
+-- | Tracked function configuration, and payload of the 'track_function' API call.
 data FunctionConfig
   = FunctionConfig
   { _fcSessionArgument :: !(Maybe FunctionArgName)
+  , _fcExposedAs       :: !(Maybe FunctionExposedAs)
+  -- ^ In which top-level field should we expose this function?
+  --
+  -- The user might omit this, in which case we'll infer the location from the
+  -- SQL functions volatility. See 'mkFunctionInfo' or the @track_function@ API
+  -- docs for details of validation, etc.
   } deriving (Show, Eq, Generic, Lift)
 instance NFData FunctionConfig
 instance Cacheable FunctionConfig
 $(deriveJSON (aesonDrop 3 snakeCase){omitNothingFields = True} ''FunctionConfig)
 
+-- | The default function config; v1 of the API implies this.
 emptyFunctionConfig :: FunctionConfig
-emptyFunctionConfig = FunctionConfig Nothing
+emptyFunctionConfig = FunctionConfig Nothing Nothing
 
+
+-- | JSON API payload for v2 of 'track_function':
+--
+-- https://hasura.io/docs/1.0/graphql/core/api-reference/schema-metadata-api/custom-functions.html#track-function-v2
 data TrackFunctionV2
   = TrackFunctionV2
   { _tfv2Function      :: !QualifiedFunction
@@ -111,7 +147,7 @@ data RawFunctionInfo
   = RawFunctionInfo
   { rfiOid              :: !OID
   , rfiHasVariadic      :: !Bool
-  , rfiFunctionType     :: !FunctionType
+  , rfiFunctionType     :: !FunctionVolatility
   , rfiReturnTypeSchema :: !SchemaName
   , rfiReturnTypeName   :: !PGScalarType
   , rfiReturnTypeType   :: !PGTypeKind

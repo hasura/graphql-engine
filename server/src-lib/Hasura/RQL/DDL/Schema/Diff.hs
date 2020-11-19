@@ -40,7 +40,7 @@ data FunctionMeta
   = FunctionMeta
   { fmOid      :: !OID
   , fmFunction :: !QualifiedFunction
-  , fmType     :: !FunctionType
+  , fmType     :: !FunctionVolatility
   } deriving (Show, Eq)
 $(deriveJSON (aesonDrop 2 snakeCase) ''FunctionMeta)
 
@@ -226,7 +226,7 @@ getSchemaChangeDeps schemaDiff = do
 data FunctionDiff
   = FunctionDiff
   { fdDropped :: ![QualifiedFunction]
-  , fdAltered :: ![(QualifiedFunction, FunctionType)]
+  , fdAltered :: ![(QualifiedFunction, FunctionVolatility)]
   } deriving (Show, Eq)
 
 getFuncDiff :: [FunctionMeta] -> [FunctionMeta] -> FunctionDiff
