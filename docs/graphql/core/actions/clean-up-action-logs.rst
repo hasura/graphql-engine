@@ -45,4 +45,4 @@ Option 3: Delete all logs
 
 .. admonition:: Warning
  
-   Deleting all logs is irreversible.   
+   Deleting logs is irreversible, so be careful with this action.
