@@ -53,6 +53,18 @@ export const getTables = createSelector(getDataSourceMetadata, source => {
   return source?.tables || [];
 });
 
+export const getTablesFromAllSources = (
+  state: ReduxState
+): (TableEntry & { source: string })[] => {
+  return (
+    state.metadata.metadataObject?.sources.reduce((accTables, source) => {
+      return accTables.concat(
+        source.tables.map(t => ({ ...t, source: source.name }))
+      );
+    }, [] as (TableEntry & { source: string })[]) || []
+  );
+};
+
 const getMetadata = (state: ReduxState) => {
   return state.metadata.metadataObject;
 };
@@ -76,7 +88,7 @@ const permKeys: Array<keyof PermKeys> = [
   'delete_permissions',
 ];
 export const rolesSelector = createSelector(
-  [getTables, getActions],
+  [getTablesFromAllSources, getActions],
   (tables, actions) => {
     const roleNames: string[] = [];
     tables?.forEach(table =>
