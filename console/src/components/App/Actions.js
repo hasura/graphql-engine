@@ -28,7 +28,7 @@ export const requireAsyncGlobals = ({ dispatch }, shouldLoadOpts, shouldLoadServ
   return (nextState, finalState, callback) => {
     Promise.all([
       shouldLoadOpts && dispatch(loadConsoleOpts()),
-      shouldLoadServerConfig && dispatch(fetchServerConfig()),
+      shouldLoadServerConfig && dispatch(fetchServerConfig),
     ]).finally(callback);
   };
 };

@@ -118,7 +118,7 @@ const routes = store => {
       component={App}
       onEnter={composeOnEnterHooks([
         validateLogin(store),
-        requireAsyncGlobals(store),
+        requireAsyncGlobals(store, true, true),
       ])}
     >
       <Route path="login" component={generatedLoginConnector(connect)} />

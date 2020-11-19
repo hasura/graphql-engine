@@ -43,7 +43,7 @@ import { Help, ProPopup } from './components/';
 import { HASURA_COLLABORATOR_TOKEN } from '../../constants';
 import { UPDATE_CONSOLE_NOTIFICATIONS } from '../../telemetry/Actions';
 
-const updateRequestHeaders = props => {
+export const updateRequestHeaders = props => {
   const { requestHeaders, dispatch } = props;
 
   const collabTokenKey = Object.keys(requestHeaders).find(
