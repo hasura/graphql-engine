@@ -19,7 +19,9 @@ import qualified Network.HTTP.Client.TLS             as HTTP
 import qualified Test.Hspec.Runner                   as Hspec
 
 import           Hasura.Backends.Postgres.Connection (mkPGExecCtx)
-import           Hasura.RQL.Types                    (SQLGenCtx (..))
+import           Hasura.Backends.Postgres.Connection (liftTx)
+import           Hasura.RQL.DDL.Schema.Catalog       (fetchMetadataTx)
+import           Hasura.RQL.Types                    (SQLGenCtx (..), runMetadataT)
 import           Hasura.RQL.Types.Run
 import           Hasura.Server.Init                  (RawConnInfo, mkConnInfo, mkRawConnInfo,
                                                       parseRawConnInfo, runWithEnv)
@@ -91,9 +93,12 @@ buildPostgresSpecs pgConnOptions = do
               >>> runExceptT
               >=> flip onLeft printErrJExit
 
-        schemaCache <- snd <$> runAsAdmin (migrateCatalog (Env.mkEnvironment env) =<< liftIO getCurrentTime)
+        (schemaCache, metadata) <- runAsAdmin do
+          sc <- snd <$> (migrateCatalog (Env.mkEnvironment env) =<< liftIO getCurrentTime)
+          metadata <- liftTx fetchMetadataTx
+          pure (sc, metadata)
         cacheRef <- newMVar schemaCache
-        pure $ NT (runAsAdmin . flip MigrateSpec.runCacheRefT cacheRef)
+        pure $ NT (runAsAdmin . flip MigrateSpec.runCacheRefT cacheRef . fmap fst . runMetadataT metadata)
 
   pure $ beforeAll setupCacheRef $
     describe "Hasura.Server.Migrate" $ MigrateSpec.spec pgConnInfo

@@ -1,4 +1,5 @@
-{-# LANGUAGE Arrows #-}
+{-# LANGUAGE Arrows               #-}
+{-# LANGUAGE UndecidableInstances #-}
 
 -- | Types and functions used in the process of building the schema cache from metadata information
 -- stored in the @hdb_catalog@ schema in Postgres.
@@ -30,6 +31,7 @@ import qualified Data.Sequence                       as Seq
 
 import           Control.Arrow.Extended
 import           Control.Lens
+import           Control.Monad.Trans.Control
 import           Control.Monad.Unique
 import           Data.Aeson                          (toJSON)
 import           Data.Aeson.Casing
@@ -163,11 +165,13 @@ instance (MetadataM m) => MetadataM (TraceT m) where
 newtype MetadataT m a
   = MetadataT {unMetadataT :: StateT Metadata m a}
   deriving
-    ( Functor, Applicative, Monad
+    ( Functor, Applicative, Monad, MonadTrans
     , MonadIO, MonadUnique, MonadReader r, MonadError e, MonadTx
     , MonadState Metadata , UserInfoM, HasHttpManager, HasSQLGenCtx
     , TableCoreInfoRM, CacheRM, CacheRWM
     )
+deriving instance (MonadBase IO m) => MonadBase IO (MetadataT m)
+deriving instance (MonadBaseControl IO m) => MonadBaseControl IO (MetadataT m)
 
 instance (Monad m) => MetadataM (MetadataT m) where
   getMetadata = get

@@ -258,8 +258,8 @@ migrations dryRun =
         $  [| ("0.8", MigrationPair $(migrationFromFile "08" "1") Nothing) |]
         :  migrationsFromFile [2..3]
         ++ [| ("3", MigrationPair from3To4 Nothing) |]
-        :  migrationsFromFile [5..41]
-        ++ [[| ("41", MigrationPair from41To42 (Just from42To41)) |]]
+        :  migrationsFromFile [5..42]
+        ++ [[| ("42", MigrationPair from42To43 (Just from43To42)) |]]
      )
   where
     runTxOrPrint :: Q.Query -> m ()
@@ -267,22 +267,6 @@ migrations dryRun =
       | dryRun =
           liftIO . TIO.putStrLn . Q.getQueryText
       | otherwise = runTx
-
-    from41To42 = do
-      let query = $(Q.sqlFromFile "src-rsr/migrations/41_to_42.sql")
-      if dryRun then (liftIO . TIO.putStrLn . Q.getQueryText) query
-        else do
-        metadata <- fetchMetadataFromHdbTables
-        runTx query
-        liftTx $ setMetadataTx metadata
-
-    from42To41 = do
-      let query = $(Q.sqlFromFile "src-rsr/migrations/42_to_41.sql")
-      if dryRun then (liftIO . TIO.putStrLn . Q.getQueryText) query
-        else do
-        metadata <- liftTx fetchMetadataTx
-        runTx query
-        liftTx $ runHasSystemDefinedT (SystemDefined False) $ saveMetadataToHdbTables metadata
 
     from3To4 = liftTx $ Q.catchE defaultTxErrorHandler $ do
       Q.unitQ [Q.sql|
@@ -309,6 +293,24 @@ migrations dryRun =
                                              configuration = $1
                                              WHERE name = $2
                                              |] (Q.AltJ $ A.toJSON etc, name) True
+
+    from42To43 = do
+      let query = $(Q.sqlFromFile "src-rsr/migrations/42_to_43.sql")
+      if dryRun then (liftIO . TIO.putStrLn . Q.getQueryText) query
+        else do
+        metadata <- fetchMetadataFromHdbTables
+        runTx query
+        liftTx $ setMetadataTx metadata
+
+    from43To42 = do
+      let query = $(Q.sqlFromFile "src-rsr/migrations/43_to_42.sql")
+      if dryRun then (liftIO . TIO.putStrLn . Q.getQueryText) query
+        else do
+        metadata <- liftTx fetchMetadataTx
+        runTx query
+        liftTx $ runHasSystemDefinedT (SystemDefined False) $ saveMetadataToHdbTables metadata
+        recreateSystemMetadata
+
 
 runTx :: (MonadTx m) => Q.Query -> m ()
 runTx = liftTx . Q.multiQE defaultTxErrorHandler
