@@ -69,6 +69,7 @@ This release contains the [PDV refactor (#4111)](https://github.com/hasura/graph
 - console: allow setting computed fields for views (close #6168) (#6174)
 - cli: add missing global flags for seed command (#5565)
 - cli: allow seeds as alias for seed command (#5693)
+- build: add `test_server_pg_13` to the CI to run the server tests on Postgres v13 (#6070)
 
 ## v1.3.3
 
@@ -184,7 +185,6 @@ arguments.
   This issue could cause enum table values to sometimes not be properly reloaded without restarting `graphql-engine`. Now a `reload_metadata` API call (or clicking “Reload enum values” in the console) should consistently force a reload of all enum table values.
 - server: fix event trigger cleanup on deletion via replace_metadata (fix #5461) (#6137)
 **WARNING**: This can cause significant load on PG on startup if you have lots of event triggers. Delay in starting up is expected.
-- server: update the server to be built with pg_dump version 13 (close #5836) (#6070)
 - console: allow user to cascade Postgres dependencies when dropping Postgres objects (close #5109) (#5248)
 - console: mark inconsistent remote schemas in the UI (close #5093) (#5181)
 - console: remove ONLY as default for ALTER TABLE in column alter operations (close #5512) #5706
@@ -196,8 +196,7 @@ arguments.
 - docs: add docs page on networking with docker (close #4346) (#4811)
 - docs: add tabs for console / cli / api workflows (close #3593) (#4948)
 - docs: add postgres concepts page to docs (close #4440) (#4471)
-- docs: add guides on connecting hasura cloud to pg databases of different cloud vendors (#5948)
-- build: add `test_server_pg_13` to the CI to run the server tests on Postgres v13 (#6070) 
+- docs: add guides on connecting hasura cloud to pg databases of different cloud vendors (#5948) 
 
 
 ## `v1.3.2`
