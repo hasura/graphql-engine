@@ -96,25 +96,49 @@ instance (MonadMetadataStorage m) => MonadMetadataStorage (Tracing.TraceT m) whe
   unlockScheduledEvents a b          = lift $ unlockScheduledEvents a b
   unlockAllLockedScheduledEvents     = lift unlockAllLockedScheduledEvents
 
-{- Note [MonadMetadataStorage class constraint]
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+{- Note [Generic MetadataStorageT transformer]
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+All methods of the MonadMetadataStorage class may fail, which we represent in
+the usual way using a MonadError superclass:
 
-All functions in @'MonadMetadataStorage' type class are expected to raise a
-@'QErr' exception. These exceptions are caught at the call site and not expected
-to be embeded in the underlying function's monad. To acheive this, we take help
-of @'MetadataStorageT' transformer which is a newtype wrapper over @'ExceptT QErr'.
-And do following:-
+    class MonadError QErr m => MonadMetadataStorage m
 
-1. Functions which implements @'MonadMetadataStorage' have
-   `MonadMetadataStorage (MetadataStorageT m)` as type class constraint.
-   Hence, we derive instance for any monad, let's say 'MyMonad', as
+However, unusually, the location where we pick a concrete MonadMetadataStorage
+instance is not a context where we can handle errors, and as such the monad at
+that point has no MonadError instance! Instead, clients of MonadMetadataStorage
+are expected to handle errors /locally/, even though the code is parameterized
+over an arbitrary metadata storage mechanism.
 
-   `instance MonadMetadataStorage (MetadataStorageT MyMonad) where`
+To encode this, we take a slightly unorthodox approach involving the auxiliary
+MetadataStorageT transformer, which is really just a wrapper around ExceptT:
 
-2. We use @'runMetadataStorageT' to catch exception thrown by the class methods
-   at call site.
+    newtype MetadataStorageT m a
+      = MetadataStorageT { unMetadataStorageT :: ExceptT QErr m a }
 
--}
+We then define MonadMetadataStorage instances on a transformer stack comprising
+both MetadataStorageT and a concrete base monad:
+
+    instance MonadMetadataStorage (MetadataStorageT PGMetadataStorageApp)
+
+This looks unconventional, but it allows polymorphic code to be parameterized
+over the metadata storage implementation while still handling errors locally.
+Such functions include a constraint of the form
+
+    MonadMetadataStorage (MetadataStorageT m) => ...
+
+and use runMetadataStorageT at the location where errors should be handled, e.g.:
+
+    result <- runMetadataStorageT do
+      {- ... some metadata operations ... -}
+    case result of
+      Left err -> ...
+      Right value -> ...
+
+In other words, runMetadataStorageT serves as a marker that says “I’m going to
+handle exceptions raised by metadata operations right here,” which allows them
+to be handled more locally than the point at which the concrete
+MonadMetadataStorage instance (and thus the particular metadata storage
+implementation) is actually chosen. -}
 
 -- | The 'MetadataStorageT' transformer adds ability to throw exceptions
 -- for monads deriving @'MonadMetadataStorage' instance.
