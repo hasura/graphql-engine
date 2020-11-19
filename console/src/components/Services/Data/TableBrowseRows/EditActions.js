@@ -158,9 +158,12 @@ const editItem = (tableName, colValues, isMigration = false) => {
     }
     const { oldItem } = state.tables.update;
     let newWhereClause = getwhereClause(oldItem);
-    if (state.tables.update.pkClause || Object.keys(state.tables.update.pkClause).length) {
-      newWhereClause = getwhereClause(state.tables.update.pkClause)
-    };
+    if (
+      state.tables.update.pkClause ||
+      Object.keys(state.tables.update.pkClause).length
+    ) {
+      newWhereClause = getwhereClause(state.tables.update.pkClause);
+    }
     const reqBody = {
       type: 'update',
       args: {
