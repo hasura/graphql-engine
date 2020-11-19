@@ -19,6 +19,28 @@ query {
 
 where the articles are fetched from the database, and the weather is fetched from a remote server.
 
+### Support tracking VOLATILE SQL functions as mutations. (closing #1514)
+
+Previously we could only track `STABLE` or `IMMUTABLE` functions, and only as
+queries. Now the version 2 of `track_table` also supports tracking functions as
+mutations:
+
+```
+  {
+    "type": "track_function",
+    "version": 2,
+    "args": {
+        "function": {
+            "schema": "public",
+            "name": "some_volatile_function"
+        },
+        "configuration": {
+            "exposed_as": "mutation"
+        }
+      }
+    }
+```
+
 ### Breaking changes
 
 This release contains the [PDV refactor (#4111)](https://github.com/hasura/graphql-engine/pull/4111), a significant rewrite of the internals of the server, which did include some breaking changes:
