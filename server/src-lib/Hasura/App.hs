@@ -380,7 +380,7 @@ runHGEServer env ServeOptions{..} ServeCtx{..} pgExecCtx initTime shutdownApp po
   -- Start a background thread for processing schema sync event present in the '_sscSyncEventRef'
   schemaSyncProcessorThread <- startSchemaSyncProcessorThread sqlGenCtx _scPgPool
                                logger _scHttpManager _sscSyncEventRef
-                               cacheRef _scInstanceId _sscCacheInitTime
+                               cacheRef _scInstanceId _sscCacheInitStartTime
 
   let
     maxEvThrds    = fromMaybe defaultMaxEventThreads soEventsHttpPoolSize
