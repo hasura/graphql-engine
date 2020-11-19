@@ -288,7 +288,6 @@ def validate_http_anyq_with_allowed_responses(hge_ctx, url, query, headers, exp_
             resp_result, pass_test = assert_graphql_resp_expected(resp, response, query, resp_hdrs, hge_ctx.avoid_err_msg_checks, True)
             if pass_test == True:
                 return resp_result, True
-
         return resp, False
     else:
         return resp, True
