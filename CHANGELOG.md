@@ -28,7 +28,7 @@ The corresponding JWT config can be:
 ```
   {
     "type":"RS512",
-    "key": "<The public Key>",
+    "key": "<The public key>",
     "claims_map": {
       "x-hasura-allowed-roles": {"path":"$.user.appRoles"},
       "x-hasura-default-role": {"path":"$.user.appRoles[0]","default":"user"},
