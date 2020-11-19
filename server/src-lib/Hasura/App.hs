@@ -308,7 +308,7 @@ runHGEServer
      , MonadExecuteQuery m
      , Tracing.HasReporter m
      , MonadQueryInstrumentation m
-     , MonadMetadataStorage (MetadataStorageT m) -- see Note [MonadMetadataStorage class constraint]
+     , MonadMetadataStorage (MetadataStorageT m)
      )
   => Env.Environment
   -> ServeOptions impl
@@ -687,7 +687,7 @@ runInSeparateTx tx = do
 
 -- | Each of the function in the type class is executed in a totally separate transaction.
 --
--- To learn more about why the instance is derived as following see Note [MonadMetadataStorage class constraint]
+-- To learn more about why the instance is derived as following, see Note [Generic MetadataStorageT transformer]
 instance MonadMetadataStorage (MetadataStorageT PGMetadataStorageApp) where
 
   getDeprivedCronTriggerStats        = runInSeparateTx getDeprivedCronTriggerStatsTx

@@ -142,7 +142,7 @@ implementation) is actually chosen. -}
 
 -- | The 'MetadataStorageT' transformer adds ability to throw exceptions
 -- for monads deriving @'MonadMetadataStorage' instance.
--- For more details see Note [MonadMetadataStorage class constraint]
+-- For more details see Note [Generic MetadataStorageT transformer]
 newtype MetadataStorageT m a
   = MetadataStorageT {unMetadataStorageT :: ExceptT QErr m a}
   deriving ( Functor, Applicative, Monad
