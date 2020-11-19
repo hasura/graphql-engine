@@ -7,20 +7,20 @@ module Hasura.RQL.DDL.Schema.Cache.Common where
 
 import           Hasura.Prelude
 
-import qualified Data.HashMap.Strict.Extended     as M
-import qualified Data.HashSet                     as HS
-import qualified Data.Sequence                    as Seq
+import qualified Data.HashMap.Strict.Extended       as M
+import qualified Data.HashSet                       as HS
+import qualified Data.Sequence                      as Seq
 
 import           Control.Arrow.Extended
 import           Control.Lens
+import           Data.Text.Extended
 
-import qualified Hasura.Incremental               as Inc
+import qualified Hasura.Incremental                 as Inc
 
+import           Hasura.Backends.Postgres.SQL.Types
 import           Hasura.RQL.Types
 import           Hasura.RQL.Types.Catalog
-import           Hasura.RQL.Types.QueryCollection
 import           Hasura.RQL.Types.Run
-import           Hasura.SQL.Types
 
 -- | 'InvalidationKeys' used to apply requested 'CacheInvalidations'.
 data InvalidationKeys = InvalidationKeys
@@ -61,8 +61,9 @@ data BuildOutputs
   -- reuse it later if we need to mark the remote schema inconsistent during GraphQL schema
   -- generation (because of field conflicts).
   , _boAllowlist     :: !(HS.HashSet GQLQuery)
-  , _boCustomTypes   :: !(NonObjectTypeMap, AnnotatedObjects)
-  } deriving (Show, Eq)
+  , _boCustomTypes   :: !(AnnotatedCustomTypes 'Postgres)
+  , _boCronTriggers  :: !(M.HashMap TriggerName CronTriggerInfo)
+  }
 $(makeLenses ''BuildOutputs)
 
 data RebuildableSchemaCache m

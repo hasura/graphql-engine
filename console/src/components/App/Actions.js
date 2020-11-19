@@ -1,5 +1,6 @@
 import defaultState from './State';
-import Notifications from 'react-notification-system-redux';
+import { loadConsoleOpts } from '../../telemetry/Actions';
+import { fetchServerConfig } from '../Main/Actions';
 
 const LOAD_REQUEST = 'App/ONGOING_REQUEST';
 const DONE_REQUEST = 'App/DONE_REQUEST';
@@ -15,34 +16,20 @@ const CONNECTION_FAILED = 'App/CONNECTION_FAILED';
  * title: string null
  * message: string null
  * autoDismiss: integer 5, set to 0 to not auto-dismiss
- * dismissible: bool true, set if user can dismiss notification
+ * dismissible: 'button', set if the user can dismiss the notification, false otherwise
  * action: object null, action button with label string and callback function
  * children: element/string, null, add custom element, over-rides action
  * onAdd: function, null, called when notification is successfully created, 1st argument is the notification
  * onRemove: function, null, same as onAdd
  * uid: integer/string, null, unique identifier to the notification, same uid will not be shown again
  */
-const showNotification = ({
-  level = 'info',
-  position = 'tr',
-  ...options
-} = {}) => {
-  return dispatch => {
-    if (level === 'success') {
-      dispatch(Notifications.removeAll());
-    }
 
-    dispatch(
-      Notifications.show(
-        {
-          position,
-          autoDismiss: ['error', 'warning'].includes(level) ? 0 : 5,
-          dismissible: ['error', 'warning'].includes(level) ? 'button' : 'both',
-          ...options,
-        },
-        level
-      )
-    );
+export const requireAsyncGlobals = ({ dispatch }) => {
+  return (nextState, finalState, callback) => {
+    Promise.all([
+      dispatch(loadConsoleOpts()),
+      dispatch(fetchServerConfig),
+    ]).finally(callback);
   };
 };
 
@@ -93,6 +80,7 @@ const progressBarReducer = (state = defaultState, action) => {
         ...state,
         modalOpen: true,
         error: true,
+        ongoingRequest: false,
         connectionFailed: true,
       };
     default:
@@ -107,5 +95,4 @@ export {
   FAILED_REQUEST,
   ERROR_REQUEST,
   CONNECTION_FAILED,
-  showNotification,
 };

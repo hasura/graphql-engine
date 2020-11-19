@@ -12,6 +12,8 @@ from enum import Enum
 
 import time
 
+from graphql import GraphQLError
+
 HGE_URLS=[]
 
 def mkJSONResp(graphql_result):
@@ -53,6 +55,8 @@ class HelloGraphQL(RequestHandler):
 class User(graphene.ObjectType):
     id = graphene.Int()
     username = graphene.String()
+    generateError = graphene.String()
+
     def __init__(self, id, username):
         self.id = id
         self.username = username
@@ -62,6 +66,9 @@ class User(graphene.ObjectType):
 
     def resolve_username(self, info):
         return self.username
+
+    def resolve_generateError(self, info):
+        return GraphQLError ('Cannot query field "generateError" on type "User".')
 
     @staticmethod
     def get_by_id(_id):
@@ -75,6 +82,25 @@ all_users = [
     User(2, 'john'),
     User(3, 'joe'),
 ]
+
+class UserDetailsInput(graphene.InputObjectType):
+    id = graphene.Int(required=True)
+    username = graphene.String(required=True)
+
+class CreateUserInputObject(graphene.Mutation):
+    class Arguments:
+        user_data = UserDetailsInput(required=True)
+
+    ok = graphene.Boolean()
+    user = graphene.Field(lambda: User)
+
+    def mutate(self, info, user_data=None):
+        user = User(
+            id = user_data.id,
+            username = user_data.username
+        )
+        all_users.append(user)
+        return CreateUserInputObject(ok=True, user = user)
 
 class CreateUser(graphene.Mutation):
     class Arguments:
@@ -101,6 +127,8 @@ class UserQuery(graphene.ObjectType):
 
 class UserMutation(graphene.ObjectType):
     createUser = CreateUser.Field()
+    createUserInputObj = CreateUserInputObject.Field()
+
 user_schema = graphene.Schema(query=UserQuery, mutation=UserMutation)
 
 class UserGraphQL(RequestHandler):
@@ -581,10 +609,14 @@ class Echo(graphene.ObjectType):
 class EchoQuery(graphene.ObjectType):
     echo = graphene.Field(
                 Echo,
-                int_input=graphene.Int( default_value=1234),
+                int_input=graphene.Int(default_value=1234),
                 list_input=graphene.Argument(graphene.List(graphene.String), default_value=["hi","there"]),
                 obj_input=graphene.Argument(SizeInput, default_value=SizeInput.default()),
                 enum_input=graphene.Argument(GQColorEnum, default_value=GQColorEnum.RED.name),
+                r_int_input=graphene.Int(required=True, default_value=1234),
+                r_list_input=graphene.Argument(graphene.List(graphene.String, required=True), default_value=["general","Kenobi"]),
+                r_obj_input=graphene.Argument(SizeInput, required=True, default_value=SizeInput.default()),
+                r_enum_input=graphene.Argument(GQColorEnum, required=True, default_value=GQColorEnum.RED.name),
             )
 
     def resolve_echo(self, info, int_input, list_input, obj_input, enum_input):
@@ -643,6 +675,54 @@ class HeaderTestGraphQL(RequestHandler):
                                          context=request.headers)
         return mkJSONResp(res)
 
+
+class Message(graphene.ObjectType):
+    id = graphene.Int()
+    msg = graphene.String()
+    def __init__(self, id, msg):
+        self.id = id
+        self.msg = msg
+
+    def resolve_id(self, info):
+        return self.id
+
+    def resolve_msg(self, info):
+        return self.msg
+
+    @staticmethod
+    def get_by_id(_id):
+        xs = list(filter(lambda u: u.id == _id, all_messages))
+        if not xs:
+            return None
+        return xs[0]
+
+all_messages = [
+    Message(1, 'You win!'),
+    Message(2, 'You lose!')
+]
+
+class MessagesQuery(graphene.ObjectType):
+    message = graphene.Field(Message, id=graphene.Int(required=True))
+    messages = graphene.List(Message)
+
+    def resolve_message(self, info, id):
+        return Message.get_by_id(id)
+
+    def resolve_messages(self, info):
+        return all_messages
+
+messages_schema = graphene.Schema(query=MessagesQuery)
+
+class MessagesGraphQL(RequestHandler):
+    def get(self, request):
+        return Response(HTTPStatus.METHOD_NOT_ALLOWED)
+
+    def post(self, request):
+        if not request.json:
+            return Response(HTTPStatus.BAD_REQUEST)
+        res = messages_schema.execute(request.json['query'])
+        return mkJSONResp(res)
+
 handlers = MkHandlers({
     '/hello': HelloWorldHandler,
     '/hello-graphql': HelloGraphQL,
@@ -664,7 +744,8 @@ handlers = MkHandlers({
     '/default-value-echo-graphql' : EchoGraphQL,
     '/person-graphql': PersonGraphQL,
     '/header-graphql': HeaderTestGraphQL,
-    '/auth-graphql': SampleAuthGraphQL,
+    '/messages-graphql' : MessagesGraphQL,
+    '/auth-graphql': SampleAuthGraphQL
 })
 
 

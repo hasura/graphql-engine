@@ -31,27 +31,29 @@ from sphinx.util import compat
 compat.make_admonition = BaseAdmonition
 
 # from sphinx.util.osutil import relative_uri
-StandaloneHTMLBuilder.script_files = ["_static/vendor.js"]
+StandaloneHTMLBuilder.script_files = ["_static/scripts/vendor.js"]
 # StandaloneHTMLBuilder.imgpath = relative_uri("v0.13", '_images')
 
 # Defaults to development
 CURRENT_ENV = os.getenv("ENV") if os.getenv("ENV") else "development"
-BASE_DOMAIN = os.getenv("BASE_DOMAIN", "development")
+RELEASE_MODE = os.getenv("RELEASE_MODE", "development")
 
 # GraphiQL defaults
 GRAPHIQL_DEFAULT_ENDPOINT = "http://localhost:8080/v1/graphql"
+
 # Get from env if set
 if os.getenv("GRAPHIQL_DEFAULT_ENDPOINT"):
     GRAPHIQL_DEFAULT_ENDPOINT = os.getenv("GRAPHIQL_DEFAULT_ENDPOINT")
 
-sitemap_domain = "https://hasura-stg.hasura-app.io/docs/"
-if(BASE_DOMAIN == "production"):
-    sitemap_domain = "https://hasura.io/docs/"
+BASE_DOMAIN = "hasura.io" if RELEASE_MODE == "production" else "hasura-stg.hasura-app.io"
+
+SITEMAP_DOMAIN = BASE_DOMAIN + '/docs'
 
 # set context
 html_context = {
-    "SITEMAP_DOMAIN": sitemap_domain,
-    "BASE_DOMAIN": "hasura.io" if BASE_DOMAIN == "production" else "hasura-stg.hasura-app.io",
+    "BASE_DOMAIN": BASE_DOMAIN,
+    "RELEASE_MODE": RELEASE_MODE,
+    "SITEMAP_DOMAIN": SITEMAP_DOMAIN,
     "GRAPHIQL_DEFAULT_ENDPOINT": GRAPHIQL_DEFAULT_ENDPOINT,
 }
 
@@ -82,7 +84,6 @@ extensions = [
     "sphinxcontrib.httpdomain",
     "sphinxcontrib.images",
     "sphinx.ext.todo",
-    "global_tabs",
     "sphinx_tabs.tabs",
     "graphiql",
     "lexer_jsx",

@@ -13,8 +13,8 @@ type serverVersionResponse struct {
 }
 
 // FetchServerVersion reads the version from server.
-func FetchServerVersion(endpoint string) (version string, err error) {
-	response, err := http.Get(endpoint)
+func FetchServerVersion(endpoint string, client *http.Client) (version string, err error) {
+	response, err := client.Get(endpoint)
 	if err != nil {
 		return "", errors.Wrap(err, "failed making version api call")
 	}

@@ -2,10 +2,9 @@ module Hasura.RQL.Types
   ( MonadTx(..)
 
   , UserInfoM(..)
-  , successMsg
 
   , HasHttpManager (..)
-  , HasGCtxMap (..)
+  -- , HasGCtxMap (..)
 
   , SQLGenCtx(..)
   , HasSQLGenCtx(..)
@@ -28,6 +27,7 @@ module Hasura.RQL.Types
   , askFieldInfo
   , askPGColInfo
   , askComputedFieldInfo
+  , askRemoteRel
   , askCurRole
   , askEventTriggerInfo
   , askTabInfoFromTrigger
@@ -38,40 +38,45 @@ module Hasura.RQL.Types
   , module R
   ) where
 
-import           Hasura.EncJSON
 import           Hasura.Prelude
-import           Hasura.SQL.Types
 
-import           Hasura.Db                          as R
-import           Hasura.RQL.Types.Action            as R
-import           Hasura.RQL.Types.BoolExp           as R
-import           Hasura.RQL.Types.Column            as R
-import           Hasura.RQL.Types.Common            as R
-import           Hasura.RQL.Types.ComputedField     as R
-import           Hasura.RQL.Types.CustomTypes       as R
-import           Hasura.RQL.Types.DML               as R
-import           Hasura.RQL.Types.Error             as R
-import           Hasura.RQL.Types.EventTrigger      as R
-import           Hasura.RQL.Types.Function          as R
-import           Hasura.RQL.Types.Metadata          as R
-import           Hasura.RQL.Types.Permission        as R
-import           Hasura.RQL.Types.RemoteSchema      as R
-import           Hasura.RQL.Types.SchemaCache       as R
-import           Hasura.RQL.Types.SchemaCache.Build as R
-import           Hasura.RQL.Types.Table             as R
+import qualified Data.HashMap.Strict                 as M
+import qualified Network.HTTP.Client                 as HTTP
 
-import qualified Hasura.GraphQL.Context             as GC
+import           Control.Monad.Unique
+import           Data.Text.Extended
 
-import qualified Data.HashMap.Strict                as M
-import qualified Data.Text                          as T
-import qualified Network.HTTP.Client                as HTTP
+import           Hasura.Backends.Postgres.Connection as R
+import           Hasura.Backends.Postgres.SQL.Types
+import           Hasura.RQL.IR.BoolExp               as R
+import           Hasura.RQL.Types.Action             as R
+import           Hasura.RQL.Types.Column             as R
+import           Hasura.RQL.Types.Common             as R
+import           Hasura.RQL.Types.ComputedField      as R
+import           Hasura.RQL.Types.CustomTypes        as R
+import           Hasura.RQL.Types.Error              as R
+import           Hasura.RQL.Types.EventTrigger       as R
+import           Hasura.RQL.Types.Function           as R
+import           Hasura.RQL.Types.Metadata           as R
+import           Hasura.RQL.Types.Permission         as R
+import           Hasura.RQL.Types.QueryCollection    as R
+import           Hasura.RQL.Types.Relationship       as R
+import           Hasura.RQL.Types.RemoteRelationship as R
+import           Hasura.RQL.Types.RemoteSchema       as R
+import           Hasura.RQL.Types.ScheduledTrigger   as R
+import           Hasura.RQL.Types.SchemaCache        as R
+import           Hasura.RQL.Types.SchemaCache.Build  as R
+import           Hasura.RQL.Types.Table              as R
+import           Hasura.Session
+import           Hasura.SQL.Backend                  as R
+import           Hasura.Tracing                      (TraceT)
 
 data QCtx
   = QCtx
   { qcUserInfo    :: !UserInfo
   , qcSchemaCache :: !SchemaCache
   , qcSQLCtx      :: !SQLGenCtx
-  } deriving (Show, Eq)
+  }
 
 class HasQCtx a where
   getQCtx :: a -> QCtx
@@ -89,10 +94,12 @@ instance (UserInfoM m) => UserInfoM (ReaderT r m) where
   askUserInfo = lift askUserInfo
 instance (UserInfoM m) => UserInfoM (StateT s m) where
   askUserInfo = lift askUserInfo
+instance (UserInfoM m) => UserInfoM (TraceT m) where
+  askUserInfo = lift askUserInfo
 
 askTabInfo
   :: (QErrM m, CacheRM m)
-  => QualifiedTable -> m TableInfo
+  => QualifiedTable -> m (TableInfo 'Postgres)
 askTabInfo tabName = do
   rawSchemaCache <- askSchemaCache
   liftMaybe (err400 NotExists errMsg) $ M.lookup tabName $ scTables rawSchemaCache
@@ -105,7 +112,7 @@ isTableTracked sc qt =
 
 askTabInfoFromTrigger
   :: (QErrM m, CacheRM m)
-  => TriggerName -> m TableInfo
+  => TriggerName -> m (TableInfo 'Postgres)
 askTabInfoFromTrigger trn = do
   sc <- askSchemaCache
   let tabInfos = M.elems $ scTables sc
@@ -134,14 +141,16 @@ instance (HasHttpManager m) => HasHttpManager (StateT s m) where
   askHttpManager = lift askHttpManager
 instance (Monoid w, HasHttpManager m) => HasHttpManager (WriterT w m) where
   askHttpManager = lift askHttpManager
+instance (HasHttpManager m) => HasHttpManager (TraceT m) where
+  askHttpManager = lift askHttpManager
 
-class (Monad m) => HasGCtxMap m where
-  askGCtxMap :: m GC.GCtxMap
+-- class (Monad m) => HasGCtxMap m where
+--   askGCtxMap :: m GC.GCtxMap
 
-instance (HasGCtxMap m) => HasGCtxMap (ReaderT r m) where
-  askGCtxMap = lift askGCtxMap
-instance (Monoid w, HasGCtxMap m) => HasGCtxMap (WriterT w m) where
-  askGCtxMap = lift askGCtxMap
+-- instance (HasGCtxMap m) => HasGCtxMap (ReaderT r m) where
+--   askGCtxMap = lift askGCtxMap
+-- instance (Monoid w, HasGCtxMap m) => HasGCtxMap (WriterT w m) where
+--   askGCtxMap = lift askGCtxMap
 
 newtype SQLGenCtx
   = SQLGenCtx
@@ -159,6 +168,8 @@ instance (Monoid w, HasSQLGenCtx m) => HasSQLGenCtx (WriterT w m) where
   askSQLGenCtx = lift askSQLGenCtx
 instance (HasSQLGenCtx m) => HasSQLGenCtx (TableCoreCacheRT m) where
   askSQLGenCtx = lift askSQLGenCtx
+instance (HasSQLGenCtx m) => HasSQLGenCtx (TraceT m) where
+  askSQLGenCtx = lift askSQLGenCtx
 
 class (Monad m) => HasSystemDefined m where
   askSystemDefined :: m SystemDefined
@@ -169,10 +180,12 @@ instance (HasSystemDefined m) => HasSystemDefined (StateT s m) where
   askSystemDefined = lift askSystemDefined
 instance (Monoid w, HasSystemDefined m) => HasSystemDefined (WriterT w m) where
   askSystemDefined = lift askSystemDefined
+instance (HasSystemDefined m) => HasSystemDefined (TraceT m) where
+  askSystemDefined = lift askSystemDefined
 
 newtype HasSystemDefinedT m a
   = HasSystemDefinedT { unHasSystemDefinedT :: ReaderT SystemDefined m a }
-  deriving ( Functor, Applicative, Monad, MonadTrans, MonadIO, MonadError e, MonadTx
+  deriving ( Functor, Applicative, Monad, MonadTrans, MonadIO, MonadUnique, MonadError e, MonadTx
            , HasHttpManager, HasSQLGenCtx, TableCoreInfoRM, CacheRM, CacheRWM, UserInfoM )
 
 runHasSystemDefinedT :: SystemDefined -> HasSystemDefinedT m a -> m a
@@ -191,35 +204,36 @@ getTableInfo :: (QErrM m) => QualifiedTable -> HashMap QualifiedTable a -> m a
 getTableInfo tableName infoMap =
   M.lookup tableName infoMap `onNothing` throwTableDoesNotExist tableName
 
-askTableCoreInfo :: (QErrM m, TableCoreInfoRM m) => QualifiedTable -> m TableCoreInfo
+askTableCoreInfo :: (QErrM m, TableCoreInfoRM m) => QualifiedTable -> m (TableCoreInfo 'Postgres)
 askTableCoreInfo tableName =
   lookupTableCoreInfo tableName >>= (`onNothing` throwTableDoesNotExist tableName)
 
-askFieldInfoMap :: (QErrM m, TableCoreInfoRM m) => QualifiedTable -> m (FieldInfoMap FieldInfo)
+askFieldInfoMap :: (QErrM m, TableCoreInfoRM m) => QualifiedTable -> m (FieldInfoMap (FieldInfo 'Postgres))
 askFieldInfoMap = fmap _tciFieldInfoMap . askTableCoreInfo
 
 askPGType
   :: (MonadError QErr m)
-  => FieldInfoMap FieldInfo
+  => FieldInfoMap (FieldInfo 'Postgres)
   -> PGCol
-  -> T.Text
+  -> Text
   -> m PGColumnType
 askPGType m c msg =
   pgiType <$> askPGColInfo m c msg
 
 askPGColInfo
   :: (MonadError QErr m)
-  => FieldInfoMap FieldInfo
+  => FieldInfoMap (FieldInfo backend)
   -> PGCol
-  -> T.Text
-  -> m PGColumnInfo
+  -> Text
+  -> m (ColumnInfo backend)
 askPGColInfo m c msg = do
   fieldInfo <- modifyErr ("column " <>) $
              askFieldInfo m (fromPGCol c)
   case fieldInfo of
-    (FIColumn pgColInfo) -> pure pgColInfo
-    (FIRelationship   _) -> throwErr "relationship"
-    (FIComputedField _)  -> throwErr "computed field"
+    (FIColumn pgColInfo)     -> pure pgColInfo
+    (FIRelationship   _)     -> throwErr "relationship"
+    (FIComputedField _)      -> throwErr "computed field"
+    (FIRemoteRelationship _) -> throwErr "remote relationship"
   where
     throwErr fieldType =
       throwError $ err400 UnexpectedPayload $ mconcat
@@ -230,16 +244,17 @@ askPGColInfo m c msg = do
 
 askComputedFieldInfo
   :: (MonadError QErr m)
-  => FieldInfoMap FieldInfo
+  => FieldInfoMap (FieldInfo backend)
   -> ComputedFieldName
-  -> m ComputedFieldInfo
+  -> m (ComputedFieldInfo backend)
 askComputedFieldInfo fields computedField = do
   fieldInfo <- modifyErr ("computed field " <>) $
                askFieldInfo fields $ fromComputedField computedField
   case fieldInfo of
-    (FIColumn           _) -> throwErr "column"
-    (FIRelationship     _) -> throwErr "relationship"
-    (FIComputedField cci)  -> pure cci
+    (FIColumn           _)       -> throwErr "column"
+    (FIRelationship     _)       -> throwErr "relationship"
+    (FIRemoteRelationship     _) -> throwErr "remote relationship"
+    (FIComputedField cci)        -> pure cci
   where
     throwErr fieldType =
       throwError $ err400 UnexpectedPayload $ mconcat
@@ -248,8 +263,8 @@ askComputedFieldInfo fields computedField = do
       ]
 
 assertPGCol :: (MonadError QErr m)
-            => FieldInfoMap FieldInfo
-            -> T.Text
+            => FieldInfoMap (FieldInfo backend)
+            -> Text
             -> PGCol
             -> m ()
 assertPGCol m msg c = do
@@ -257,9 +272,9 @@ assertPGCol m msg c = do
   return ()
 
 askRelType :: (MonadError QErr m)
-           => FieldInfoMap FieldInfo
+           => FieldInfoMap (FieldInfo backend)
            -> RelName
-           -> T.Text
+           -> Text
            -> m RelInfo
 askRelType m r msg = do
   colInfo <- modifyErr ("relationship " <>) $
@@ -285,10 +300,18 @@ askFieldInfo m f =
     [ f <<> " does not exist"
     ]
 
+askRemoteRel :: (MonadError QErr m)
+           => FieldInfoMap (FieldInfo backend)
+           -> RemoteRelationshipName
+           -> m (RemoteFieldInfo backend)
+askRemoteRel fieldInfoMap relName = do
+  fieldInfo <- askFieldInfo fieldInfoMap (fromRemoteRelationship relName)
+  case fieldInfo of
+    (FIRemoteRelationship remoteFieldInfo) -> return remoteFieldInfo
+    _                                      ->
+      throw400 UnexpectedPayload "expecting a remote relationship"
+
 askCurRole :: (UserInfoM m) => m RoleName
-askCurRole = userRole <$> askUserInfo
+askCurRole = _uiRole <$> askUserInfo
 
-successMsg :: EncJSON
-successMsg = "{\"message\":\"success\"}"
-
-type HeaderObj = M.HashMap T.Text T.Text
+type HeaderObj = M.HashMap Text Text

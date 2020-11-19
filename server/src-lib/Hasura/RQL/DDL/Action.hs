@@ -23,30 +23,30 @@ module Hasura.RQL.DDL.Action
   , deleteActionPermissionFromCatalog
   ) where
 
-import           Hasura.EncJSON
-import           Hasura.GraphQL.Context        (defaultTypes)
-import           Hasura.GraphQL.Utils
 import           Hasura.Prelude
+
+import qualified Data.Aeson                         as J
+import qualified Data.Aeson.Casing                  as J
+import qualified Data.Aeson.TH                      as J
+import qualified Data.Environment                   as Env
+import qualified Data.HashMap.Strict                as Map
+import qualified Database.PG.Query                  as Q
+import qualified Language.GraphQL.Draft.Syntax      as G
+
+import           Data.Text.Extended
+import           Language.Haskell.TH.Syntax         (Lift)
+
+import           Hasura.Backends.Postgres.SQL.Types
+import           Hasura.EncJSON
+import           Hasura.GraphQL.Utils
+import           Hasura.RQL.DDL.CustomTypes         (lookupPGScalar)
 import           Hasura.RQL.Types
-import           Hasura.SQL.Types
+import           Hasura.Session
 
-import qualified Hasura.GraphQL.Validate.Types as VT
-
-import qualified Data.Aeson                    as J
-import qualified Data.Aeson.Casing             as J
-import qualified Data.Aeson.TH                 as J
-import qualified Data.HashMap.Strict           as Map
-import qualified Data.HashSet                  as Set
-import qualified Data.Text                     as T
-import qualified Database.PG.Query             as Q
-import qualified Language.GraphQL.Draft.Syntax as G
-
-import           Data.URL.Template             (renderURLTemplate)
-import           Language.Haskell.TH.Syntax    (Lift)
 
 getActionInfo
   :: (QErrM m, CacheRM m)
-  => ActionName -> m ActionInfo
+  => ActionName -> m (ActionInfo 'Postgres)
 getActionInfo actionName = do
   actionMap <- scActions <$> askSchemaCache
   case Map.lookup actionName actionMap of
@@ -78,7 +78,7 @@ persistCreateAction (CreateAction actionName actionDefinition comment) = do
       VALUES ($1, $2, $3)
   |] (actionName, Q.AltJ actionDefinition, comment) True
 
-{- Note [Postgres scalars in action input arguments]
+{-| Note [Postgres scalars in action input arguments]
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 It's very comfortable to be able to reference Postgres scalars in actions
 input arguments. For example, see the following action mutation:
@@ -97,58 +97,40 @@ referred scalars.
 -}
 
 resolveAction
-  :: (QErrM m, MonadIO m)
-  => (NonObjectTypeMap, AnnotatedObjects)
-  -> HashSet PGScalarType -- ^ List of all Postgres scalar types.
+  :: QErrM m
+  => Env.Environment
+  -> AnnotatedCustomTypes 'Postgres
   -> ActionDefinitionInput
+  -> HashSet PGScalarType -- See Note [Postgres scalars in custom types]
   -> m ( ResolvedActionDefinition
-       , AnnotatedObjectType
-       , HashSet PGScalarType -- ^ see Note [Postgres scalars in action input arguments].
+       , AnnotatedObjectType 'Postgres
        )
-resolveAction customTypes allPGScalars actionDefinition = do
-  let responseType = unGraphQLType $ _adOutputType actionDefinition
-      responseBaseType = G.getBaseType responseType
-
-  reusedPGScalars <- execWriterT $
-    forM (_adArguments actionDefinition) $ \argument -> do
-      let argumentBaseType = G.getBaseType $ unGraphQLType $ _argType argument
-          maybeArgTypeInfo = getNonObjectTypeInfo argumentBaseType
-          maybePGScalar = find ((==) argumentBaseType . VT.mkScalarTy) allPGScalars
-
-      if | Just argTypeInfo <- maybeArgTypeInfo ->
-             case argTypeInfo of
-               VT.TIScalar _ -> pure ()
-               VT.TIEnum _   -> pure ()
-               VT.TIInpObj _ -> pure ()
-               _ -> throw400 InvalidParams $ "the argument's base type: "
-                   <> showNamedTy argumentBaseType <>
-                   " should be a scalar/enum/input_object"
-         -- Collect the referred Postgres scalar. See Note [Postgres scalars in action input arguments].
-         | Just pgScalar <- maybePGScalar -> tell $ Set.singleton pgScalar
-         | Nothing <- maybeArgTypeInfo ->
-             throw400 NotExists $ "the type: " <> showNamedTy argumentBaseType
-             <> " is not defined in custom types"
-         | otherwise -> pure ()
+resolveAction env AnnotatedCustomTypes{..} ActionDefinition{..} allPGScalars = do
+  resolvedArguments <- forM _adArguments $ \argumentDefinition -> do
+    forM argumentDefinition $ \argumentType -> do
+      let gType = unGraphQLType argumentType
+          argumentBaseType = G.getBaseType gType
+      (gType,) <$>
+        if | Just pgScalar <- lookupPGScalar allPGScalars argumentBaseType ->
+               pure $ NOCTScalar $ ASTReusedScalar argumentBaseType pgScalar
+           | Just nonObjectType <- Map.lookup argumentBaseType _actNonObjects ->
+               pure nonObjectType
+           | otherwise ->
+               throw400 InvalidParams $
+               "the type: " <> showName argumentBaseType
+               <> " is not defined in custom types or it is not a scalar/enum/input_object"
 
   -- Check if the response type is an object
-  outputObject <- getObjectTypeInfo responseBaseType
-  resolvedDef <- traverse resolveWebhook actionDefinition
-  pure (resolvedDef, outputObject, reusedPGScalars)
-  where
-    getNonObjectTypeInfo typeName =
-      let nonObjectTypeMap = unNonObjectTypeMap $ fst $ customTypes
-          inputTypeInfos = nonObjectTypeMap <> mapFromL VT.getNamedTy defaultTypes
-      in Map.lookup typeName inputTypeInfos
-
-    resolveWebhook (InputWebhook urlTemplate) = do
-      eitherRenderedTemplate <- renderURLTemplate urlTemplate
-      either (throw400 Unexpected . T.pack) (pure . ResolvedWebhook) eitherRenderedTemplate
-
-    getObjectTypeInfo typeName =
-      onNothing (Map.lookup (ObjectTypeName typeName) (snd customTypes)) $
-        throw400 NotExists $ "the type: "
-        <> showNamedTy typeName <>
-        " is not an object type defined in custom types"
+  let outputType = unGraphQLType _adOutputType
+      outputBaseType = G.getBaseType outputType
+  outputObject <- onNothing (Map.lookup outputBaseType _actObjects) $
+    throw400 NotExists $ "the type: " <> showName outputBaseType
+    <> " is not an object type defined in custom types"
+  resolvedWebhook <- resolveWebhook env _adHandler
+  pure ( ActionDefinition resolvedArguments _adOutputType _adType
+         _adHeaders _adForwardClientHeaders _adTimeout resolvedWebhook
+       , outputObject
+       )
 
 runUpdateAction
   :: forall m. ( QErrM m , CacheRWM m, MonadTx m)
@@ -248,15 +230,15 @@ runCreateActionPermission
   => CreateActionPermission -> m EncJSON
 runCreateActionPermission createActionPermission = do
   actionInfo <- getActionInfo actionName
-  void $ onJust (Map.lookup role $ _aiPermissions actionInfo) $ const $
-    throw400 AlreadyExists $ "permission for role: " <> role
-    <<> "is already defined on " <>> actionName
+  void $ onJust (Map.lookup roleName $ _aiPermissions actionInfo) $ const $
+    throw400 AlreadyExists $ "permission for role " <> roleName
+    <<> " is already defined on " <>> actionName
   persistCreateActionPermission createActionPermission
-  buildSchemaCacheFor $ MOActionPermission actionName role
+  buildSchemaCacheFor $ MOActionPermission actionName roleName
   pure successMsg
   where
     actionName = _capAction createActionPermission
-    role = _capRole createActionPermission
+    roleName = _capRole createActionPermission
 
 persistCreateActionPermission :: (MonadTx m) => CreateActionPermission -> m ()
 persistCreateActionPermission CreateActionPermission{..}= do
@@ -278,14 +260,15 @@ runDropActionPermission
   => DropActionPermission -> m EncJSON
 runDropActionPermission dropActionPermission = do
   actionInfo <- getActionInfo actionName
-  void $ onNothing (Map.lookup role $ _aiPermissions actionInfo) $
+  void $ onNothing (Map.lookup roleName $ _aiPermissions actionInfo) $
     throw400 NotExists $
-    "permission for role: " <> role <<> " is not defined on " <>> actionName
-  liftTx $ deleteActionPermissionFromCatalog actionName role
+    "permission for role: " <> roleName <<> " is not defined on " <>> actionName
+  liftTx $ deleteActionPermissionFromCatalog actionName roleName
+  buildSchemaCacheFor $ MOActionPermission actionName roleName
   return successMsg
   where
     actionName = _dapAction dropActionPermission
-    role = _dapRole dropActionPermission
+    roleName = _dapRole dropActionPermission
 
 deleteActionPermissionFromCatalog :: ActionName -> RoleName -> Q.TxE QErr ()
 deleteActionPermissionFromCatalog actionName role =

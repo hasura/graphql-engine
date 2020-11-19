@@ -63,6 +63,8 @@ class ApiExplorer extends Component {
       location,
       serverVersion,
       serverConfig,
+      mode,
+      loading,
     } = this.props;
 
     const styles = require('./ApiExplorer.scss');
@@ -83,12 +85,14 @@ class ApiExplorer extends Component {
             details={displayedApi.details}
             request={displayedApi.request}
             route={route}
+            mode={mode}
             dataHeaders={dataHeaders}
             numberOfTables={tables.length}
             headerFocus={headerFocus}
             urlParams={location.query}
             serverVersion={serverVersion}
             consoleUrl={consoleUrl}
+            loading={loading}
             serverConfig={serverConfig}
           />
         </div>
@@ -105,6 +109,7 @@ ApiExplorer.propTypes = {
   tables: PropTypes.array.isRequired,
   headerFocus: PropTypes.bool.isRequired,
   location: PropTypes.object.isRequired,
+  mode: PropTypes.string.isRequired,
 };
 
 const generatedApiExplorer = connect => {

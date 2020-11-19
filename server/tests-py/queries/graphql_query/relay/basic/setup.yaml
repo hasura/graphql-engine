@@ -1,0 +1,133 @@
+type: bulk
+args:
+- type: run_sql
+  args:
+    sql: |
+      CREATE TABLE author(
+          id SERIAL PRIMARY KEY,
+          name TEXT UNIQUE NOT NULL
+      );
+
+      INSERT INTO author (name)
+      VALUES ('Author 1'), ('Author 2'), ('Author 3'), ('Author 4');
+
+      CREATE TABLE article (
+        id SERIAL PRIMARY KEY,
+        title TEXT,
+        content TEXT,
+        author_id INTEGER REFERENCES author(id)
+      );
+
+      INSERT INTO article (title, content, author_id)
+      VALUES
+      (
+        'Article 1',
+        'Sample article content 1',
+        1
+      ),
+      (
+        'Article 2',
+        'Sample article content 2',
+        1
+      ),
+      (
+        'Article 3',
+        'Sample article content 3',
+        1
+      ),
+      (
+        'Article 4',
+        'Sample article content 4',
+        2
+      ),
+      (
+        'Article 5',
+        'Sample article content 5',
+        2
+      ),
+      (
+        'Article 6',
+        'Sample article content 6',
+        3
+      );
+
+      -- Create article view for testing https://github.com/hasura/graphql-engine/issues/5020
+      CREATE VIEW article_view AS (
+      SELECT * FROM article
+      );
+
+      CREATE FUNCTION search_articles(search text)
+      RETURNS SETOF article AS $$
+          SELECT *
+          FROM article
+          WHERE
+          title ilike ('%' || search || '%') OR
+          content ilike ('%' || search || '%')
+      $$ LANGUAGE SQL STABLE;
+
+      -- Table with two primary key columns
+      CREATE TABLE "user"(
+      first_name TEXT not null,
+      last_name TEXT not null,
+      age INTEGER,
+      address TEXT,
+
+      PRIMARY KEY (first_name, last_name)
+      );
+
+      INSERT INTO "user"(first_name, last_name, age, address)
+      VALUES
+        ('first_1', 'last_1', 24, null),
+        ('first_2', 'last_2', null, 'Bangalore');
+
+# Track tables and define relationships
+- type: track_table
+  args:
+    name: author
+    schema: public
+
+- type: track_table
+  args:
+    name: article
+    schema: public
+
+- type: track_table
+  args:
+    name: article_view
+    schema: public
+
+- type: create_object_relationship
+  args:
+    table: article
+    name: author
+    using:
+      foreign_key_constraint_on: author_id
+
+- type: create_array_relationship
+  args:
+    table: author
+    name: articles
+    using:
+      foreign_key_constraint_on:
+        table: article
+        column: author_id
+
+- type: create_array_relationship
+  args:
+    table: author
+    name: articles_view
+    using:
+      manual_configuration:
+        remote_table: article_view
+        column_mapping:
+          id: author_id
+
+- type: track_function
+  version: 2
+  args:
+    function: search_articles
+
+- type: track_table
+  args:
+    name: user
+    schema: public

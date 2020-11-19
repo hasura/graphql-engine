@@ -1,32 +1,36 @@
+{-# LANGUAGE CPP #-}
 module Hasura.Server.SchemaUpdate
   (startSchemaSyncThreads)
 where
 
-import           Hasura.Prelude
-
+import           Hasura.Backends.Postgres.Connection
 import           Hasura.Logging
-import           Hasura.RQL.DDL.Schema     (runCacheRWT)
+import           Hasura.Prelude
+import           Hasura.RQL.DDL.Schema               (runCacheRWT)
 import           Hasura.RQL.Types
 import           Hasura.RQL.Types.Run
-import           Hasura.Server.App         (SchemaCacheRef (..), withSCUpdate)
-import           Hasura.Server.Init        (InstanceId (..))
+import           Hasura.Server.API.Query
+import           Hasura.Server.App                   (SchemaCacheRef (..), withSCUpdate)
+import           Hasura.Server.Init                  (InstanceId (..))
 import           Hasura.Server.Logging
-import           Hasura.Server.Query
+import           Hasura.Session
 
 import           Data.Aeson
 import           Data.Aeson.Casing
 import           Data.Aeson.TH
 import           Data.IORef
+#ifndef PROFILING
 import           GHC.AssertNF
+#endif
 
-import qualified Control.Concurrent.Extended as C
-import qualified Control.Concurrent.STM      as STM
-import qualified Control.Immortal            as Immortal
-import qualified Data.Text                   as T
-import qualified Data.Time                   as UTC
-import qualified Database.PG.Query           as PG
-import qualified Database.PostgreSQL.LibPQ   as PQ
-import qualified Network.HTTP.Client         as HTTP
+import qualified Control.Concurrent.Extended         as C
+import qualified Control.Concurrent.STM              as STM
+import qualified Control.Immortal                    as Immortal
+import qualified Data.Text                           as T
+import qualified Data.Time                           as UTC
+import qualified Database.PG.Query                   as PG
+import qualified Database.PostgreSQL.LibPQ           as PQ
+import qualified Network.HTTP.Client                 as HTTP
 
 pgChannel :: PG.PGChannel
 pgChannel = "hasura_schema_update"
@@ -67,7 +71,7 @@ data EventPayload
 $(deriveJSON (aesonDrop 3 snakeCase) ''EventPayload)
 
 data ThreadError
-  = TEJsonParse !T.Text
+  = TEJsonParse !Text
   | TEQueryError !QErr
 $(deriveToJSON
   defaultOptions { constructorTagModifier = snakeCase . drop 2
@@ -93,7 +97,7 @@ startSchemaSyncThreads sqlGenCtx pool logger httpMgr cacheRef instanceId cacheIn
   updateEventRef <- liftIO $ STM.newTVarIO Nothing
 
   -- Start listener thread
-  lTId <- liftIO $ C.forkImmortal "SchemeUpdate.listener" logger $ 
+  lTId <- liftIO $ C.forkImmortal "SchemeUpdate.listener" logger $
     listener sqlGenCtx pool logger httpMgr updateEventRef cacheRef instanceId cacheInitTime
   logThreadStarted TTListener lTId
 
@@ -130,7 +134,7 @@ listener sqlGenCtx pool logger httpMgr updateEventRef
   forever $ do
     listenResE <-
       liftIO $ runExceptT $ PG.listen pool pgChannel notifyHandler
-    either onError return listenResE
+    onLeft listenResE onError
     logWarn
     C.sleep $ seconds 1
   where
@@ -160,12 +164,14 @@ listener sqlGenCtx pool logger httpMgr updateEventRef
           Left e -> logError logger threadType $ TEJsonParse $ T.pack e
           Right payload -> do
             logInfo logger threadType $ object ["received_event" .= payload]
+#ifndef PROFILING
             $assertNFHere payload  -- so we don't write thunks to mutable vars
+#endif
             -- Push a notify event to Queue
             STM.atomically $ STM.writeTVar updateEventRef $ Just payload
 
     onError = logError logger threadType . TEQueryError
-    -- NOTE: we handle expected error conditions here, while unexpected exceptions will result in 
+    -- NOTE: we handle expected error conditions here, while unexpected exceptions will result in
     -- a restart and log from 'forkImmortal'
     logWarn = unLogger logger $
       SchemaSyncThreadLog LevelWarn TTListener $ String
@@ -213,21 +219,21 @@ refreshSchemaCache
   -> SchemaCacheRef
   -> CacheInvalidations
   -> ThreadType
-  -> T.Text -> IO ()
+  -> Text -> IO ()
 refreshSchemaCache sqlGenCtx pool logger httpManager cacheRef invalidations threadType msg = do
   -- Reload schema cache from catalog
   resE <- liftIO $ runExceptT $ withSCUpdate cacheRef logger do
     rebuildableCache <- fst <$> liftIO (readIORef $ _scrCache cacheRef)
     ((), cache, _) <- buildSchemaCacheWithOptions CatalogSync invalidations
       & runCacheRWT rebuildableCache
-      & peelRun runCtx pgCtx PG.ReadWrite
+      & peelRun runCtx pgCtx PG.ReadWrite Nothing
     pure ((), cache)
   case resE of
     Left e   -> logError logger threadType $ TEQueryError e
     Right () -> logInfo logger threadType $ object ["message" .= msg]
  where
   runCtx = RunCtx adminUserInfo httpManager sqlGenCtx
-  pgCtx = PGExecCtx pool PG.Serializable
+  pgCtx = mkPGExecCtx PG.Serializable pool
 
 logInfo :: Logger Hasura -> ThreadType -> Value -> IO ()
 logInfo logger threadType val = unLogger logger $

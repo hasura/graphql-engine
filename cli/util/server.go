@@ -1,10 +1,11 @@
 package util
 
 import (
-	"github.com/sirupsen/logrus"
+	"crypto/tls"
 
 	"github.com/Masterminds/semver"
 	"github.com/parnurzeal/gorequest"
+	"github.com/sirupsen/logrus"
 )
 
 // ServerState is the state of Hasura stored on the server.
@@ -19,7 +20,7 @@ type hdbVersion struct {
 }
 
 // GetServerState queries a server for the state.
-func GetServerState(endpoint, adminSecret string, serverVersion *semver.Version, log *logrus.Logger) *ServerState {
+func GetServerState(endpoint, adminSecret string, config *tls.Config, serverVersion *semver.Version, log *logrus.Logger) *ServerState {
 	state := &ServerState{
 		UUID: "00000000-0000-0000-0000-000000000000",
 	}
@@ -37,7 +38,10 @@ func GetServerState(endpoint, adminSecret string, serverVersion *semver.Version,
 		}
 	}`
 	req := gorequest.New()
-	req = req.Post(endpoint + "/v1/query").Send(payload)
+	if config != nil {
+		req.TLSClientConfig(config)
+	}
+	req.Post(endpoint).Send(payload)
 	req.Set("X-Hasura-Admin-Secret", adminSecret)
 
 	var r []hdbVersion

@@ -179,6 +179,11 @@ class ActionsWebhookHandler(http.server.BaseHTTPRequestHandler):
             resp, status = self.create_user()
             self._send_response(status, resp)
 
+        elif req_path == "/create-user-timeout":
+            time.sleep(3)
+            resp, status = self.create_user()
+            self._send_response(status, resp)
+
         elif req_path == "/create-users":
             resp, status = self.create_users()
             self._send_response(status, resp)
@@ -328,7 +333,8 @@ class ActionsWebhookHandler(http.server.BaseHTTPRequestHandler):
         return code, resp
 
     def _send_response(self, status, body):
-        self.send_response(status)
+        self.log_request(status)
+        self.send_response_only(status)
         self.send_header('Content-Type', 'application/json')
         self.send_header('Set-Cookie', 'abcd')
         self.end_headers()
@@ -410,6 +416,9 @@ class EvtsWebhookServer(ThreadedHTTPServer):
             self.error_queue.get()
             sz = sz + 1
         return sz
+
+    def is_queue_empty(self):
+        return self.resp_queue.empty
 
     def teardown(self):
         self.evt_trggr_httpd.shutdown()

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import 'react-table/react-table.css';
 import '../../../Common/TableCommon/ReactTableOverrides.css';
 import DragFoldTable, {
@@ -7,7 +7,7 @@ import DragFoldTable, {
 
 import Dropdown from '../../../Common/Dropdown/Dropdown';
 
-import InvokeManualTrigger from '../../EventTrigger/Common/InvokeManualTrigger/InvokeManualTrigger';
+import InvokeManualTrigger from '../../Events/EventTriggers/InvokeManualTrigger/InvokeManualTrigger';
 
 import {
   vExpandRel,
@@ -46,6 +46,7 @@ import {
   getRelationshipRefTable,
   getTableName,
   getTableSchema,
+  arrayToPostgresArray,
 } from '../../../Common/utils/pgUtils';
 import { updateSchemaInfo } from '../DataActions';
 import {
@@ -54,7 +55,9 @@ import {
   persistColumnOrderChange,
   getPersistedColumnsOrder,
   persistPageSizeChange,
-} from './localStorageUtils';
+} from './tableUtils';
+import { compareRows, isTableWithPK } from './utils';
+import styles from '../../../Common/TableCommon/Table.scss';
 
 const ViewRows = ({
   curTableName,
@@ -82,10 +85,12 @@ const ViewRows = ({
   triggeredFunction,
   location,
   readOnlyMode,
+  shouldHidePagination,
 }) => {
   const [selectedRows, setSelectedRows] = useState([]);
-
-  const styles = require('../../../Common/TableCommon/Table.scss');
+  useEffect(() => {
+    setSelectedRows([]);
+  }, [curTableName, currentSchema]);
 
   const NO_PRIMARY_KEY_MSG = 'No primary key to identify row';
 
@@ -132,12 +137,6 @@ const ViewRows = ({
     return _isSingleRow;
   };
 
-  const checkIfHasPrimaryKey = _tableSchema => {
-    return (
-      _tableSchema.primary_key && _tableSchema.primary_key.columns.length > 0
-    );
-  };
-
   const getGridHeadings = (_columns, _relationships, _disableBulkSelect) => {
     const _gridHeadings = [];
 
@@ -160,6 +159,7 @@ const ViewRows = ({
             title={_disableBulkSelect ? 'No primary key to identify row' : ''}
             type="checkbox"
             onChange={handleAllCheckboxChange}
+            data-test="select-all-rows"
           />
         </div>
       ),
@@ -214,30 +214,12 @@ const ViewRows = ({
     return _gridHeadings;
   };
 
-  const compareRows = (row1, row2, _tableSchema, _hasPrimaryKey) => {
-    let same = true;
-    if (!isView && _hasPrimaryKey) {
-      _tableSchema.primary_key.columns.map(pk => {
-        if (row1[pk] !== row2[pk]) {
-          same = false;
-        }
-      });
-      return same;
-    }
-    _tableSchema.columns.map(k => {
-      if (row1[k.column_name] !== row2[k.column_name]) {
-        return false;
-      }
-    });
-    return same;
-  };
-
-  const handleCheckboxChange = (row, e, ...rest) => {
+  const handleCheckboxChange = (row, e, tableSchema) => {
     if (e.target.checked) {
       setSelectedRows(prev => [...prev, row]);
     } else {
       setSelectedRows(prev =>
-        prev.filter(prevRow => !compareRows(prevRow, row, ...rest))
+        prev.filter(prevRow => !compareRows(prevRow, row, tableSchema, isView))
       );
     }
   };
@@ -246,14 +228,20 @@ const ViewRows = ({
     const pkClause = {};
 
     if (!isView && hasPrimaryKey) {
-      tableSchema.primary_key.columns.map(pk => {
-        pkClause[pk] = row[pk];
+      tableSchema.primary_key.columns.map(key => {
+        pkClause[key] = row[key];
       });
     } else {
-      tableSchema.columns.map(k => {
-        pkClause[k.column_name] = row[k.column_name];
+      tableSchema.columns.map(key => {
+        pkClause[key.column_name] = row[key.column_name];
       });
     }
+
+    Object.keys(pkClause).forEach(key => {
+      if (Array.isArray(pkClause[key])) {
+        pkClause[key] = arrayToPostgresArray(pkClause[key]);
+      }
+    });
 
     return pkClause;
   };
@@ -360,7 +348,10 @@ const ViewRows = ({
           const deleteIcon = <i className="fa fa-trash" />;
 
           const handleDeleteClick = () => {
-            dispatch(deleteItem(pkClause));
+            setSelectedRows(prev =>
+              prev.filter(r => !compareRows(r, pkClause, _tableSchema, isView))
+            );
+            dispatch(deleteItem(pkClause, curTableName, currentSchema));
           };
 
           const deleteTitle = 'Delete row';
@@ -473,7 +464,10 @@ const ViewRows = ({
         manualTriggersButton = getManualTriggersButton();
 
         return (
-          <div key={rowIndex} className={styles.tableCellCenterAligned}>
+          <div
+            key={rowIndex}
+            className={`${styles.tableCenterContent} ${styles.overflowUnset}`}
+          >
             {cloneButton}
             {editButton}
             {deleteButton}
@@ -495,11 +489,10 @@ const ViewRows = ({
             disabled={_disableBulkSelect}
             title={_disableBulkSelect ? NO_PRIMARY_KEY_MSG : ''}
             checked={selectedRows.some(selectedRow =>
-              compareRows(selectedRow, row, _tableSchema, _hasPrimaryKey)
+              compareRows(selectedRow, row, _tableSchema, isView)
             )}
-            onChange={e =>
-              handleCheckboxChange(row, e, _tableSchema, _hasPrimaryKey)
-            }
+            onChange={e => handleCheckboxChange(row, e, _tableSchema, isView)}
+            data-test={`row-checkbox-${rowIndex}`}
           />
         </div>
       );
@@ -641,7 +634,7 @@ const ViewRows = ({
   const tableColumnsSorted = tableSchema.columns.sort(ordinalColSort);
   const tableRelationships = tableSchema.relationships;
 
-  const hasPrimaryKey = checkIfHasPrimaryKey(tableSchema);
+  const hasPrimaryKey = isTableWithPK(tableSchema);
 
   const isSingleRow = checkIfSingleRow(curRelName);
 
@@ -703,7 +696,7 @@ const ViewRows = ({
       const pkClauses = selectedRows.map(row =>
         getPKClause(row, hasPrimaryKey, tableSchema)
       );
-      dispatch(deleteItems(pkClauses));
+      dispatch(deleteItems(pkClauses, curTableName, currentSchema));
       setSelectedRows([]);
     };
 
@@ -718,6 +711,7 @@ const ViewRows = ({
             className={`${styles.add_mar_right_small} btn btn-xs btn-default ${styles.bulkDeleteButton}`}
             title="Delete selected rows"
             onClick={handleDeleteItems}
+            data-test="bulk-delete"
           >
             <i className="fa fa-trash" />
           </button>
@@ -932,7 +926,7 @@ const ViewRows = ({
 
     return (
       <DragFoldTable
-        className="-highlight -fit-content"
+        className="dataTable -highlight -fit-content"
         data={_gridRows}
         columns={_gridHeadings}
         headerTitle={'Click to sort / Drag to rearrange'}
@@ -960,6 +954,7 @@ const ViewRows = ({
           persistColumnOrderChange(curTableName, currentSchema, reorderData)
         }
         defaultReorders={columnsOrder}
+        showPagination={!shouldHidePagination}
       />
     );
   };

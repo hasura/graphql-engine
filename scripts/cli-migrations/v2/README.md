@@ -23,7 +23,7 @@ See [./docker-entrypoint.sh](docker-entrypoint.sh)
 It is used in a docker file as:
 
 ```dockerfile
-FROM hasura/graphql-engine:<version>.cli-migrations
+FROM hasura/graphql-engine:<version>.cli-migrations-v2
 
 CMD graphql-engine \
   --database-url $DATABASE_URL \

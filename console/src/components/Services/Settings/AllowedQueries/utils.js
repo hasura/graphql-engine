@@ -14,22 +14,25 @@ export const readFile = (file, callback) => {
   reader.readAsText(file);
 };
 
-const getQueryFragments = queryDef => {
-  const fragments = [];
-
+function recurQueryDef(queryDef, fragments, definitionHash) {
   visit(queryDef, {
     FragmentSpread(node) {
-      fragments.push(node.name.value);
+      fragments.add(node.name.value);
+      recurQueryDef(definitionHash[node.name.value], fragments, definitionHash);
     },
   });
+}
 
-  return fragments;
+const getQueryFragments = (queryDef, definitionHash = {}) => {
+  const fragments = new Set();
+  recurQueryDef(queryDef, fragments, definitionHash);
+  return [...fragments];
 };
 
-const getQueryString = (queryDef, fragmentDefs) => {
+const getQueryString = (queryDef, fragmentDefs, definitionHash = {}) => {
   let queryString = print(queryDef);
 
-  const queryFragments = getQueryFragments(queryDef);
+  const queryFragments = getQueryFragments(queryDef, definitionHash);
 
   queryFragments.forEach(qf => {
     const fragmentDef = fragmentDefs.find(fd => fd.name.value === qf);
@@ -50,8 +53,16 @@ export const parseQueryString = queryString => {
   try {
     parsedQueryString = parse(queryString);
   } catch (ex) {
-    throw new Error('Parsing query failed');
+    throw new Error('Parsing operation failed');
   }
+
+  const definitionHash = (parsedQueryString.definitions || []).reduce(
+    (defObj, queryObj) => {
+      defObj[queryObj.name.value] = queryObj;
+      return defObj;
+    },
+    {}
+  );
 
   const queryDefs = parsedQueryString.definitions.filter(
     def => def.kind === 'OperationDefinition'
@@ -63,12 +74,12 @@ export const parseQueryString = queryString => {
 
   queryDefs.forEach(queryDef => {
     if (!queryDef.name) {
-      throw new Error(`Query without name found: ${print(queryDef)}`);
+      throw new Error(`Operation without name found: ${print(queryDef)}`);
     }
 
     const query = {
       name: queryDef.name.value,
-      query: getQueryString(queryDef, fragmentDefs),
+      query: getQueryString(queryDef, fragmentDefs, definitionHash),
     };
 
     queries.push(query);
@@ -80,7 +91,7 @@ export const parseQueryString = queryString => {
   );
   if (duplicateNames.length > 0) {
     throw new Error(
-      `Queries with duplicate names found: ${duplicateNames.join(', ')}`
+      `Operations with duplicate names found: ${duplicateNames.join(', ')}`
     );
   }
 

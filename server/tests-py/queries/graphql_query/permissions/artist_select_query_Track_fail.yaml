@@ -1,4 +1,4 @@
-description: Artist can only select his/her tracks. Without sending header (Error)
+description: Artist can only select their tracks. Without sending header (Error)
 url: /v1/graphql
 status: 200
 headers:
@@ -8,7 +8,7 @@ response:
   - extensions:
       code: not-found
       path: "$"
-    message: '"x-hasura-artist-id" header is expected but not found'
+    message: 'missing session variables: "x-hasura-artist-id"'
 query:
   query: |
     query {

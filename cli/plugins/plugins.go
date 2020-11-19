@@ -48,8 +48,8 @@ type Config struct {
 	Logger *logrus.Logger
 }
 
-// InstallOpts - options available during plugin install
-type InstallOpts struct {
+// FetchOpts - options available during fetching plugin manifest
+type FetchOpts struct {
 	ManifestFile string
 
 	Version *semver.Version
@@ -96,7 +96,7 @@ func (c *Config) ListPlugins() (Plugins, error) {
 	return c.LoadPluginListFromFS(c.Paths.IndexPluginsPath())
 }
 
-func (c *Config) Install(pluginName string, opts InstallOpts) error {
+func (c *Config) GetPlugin(pluginName string, opts FetchOpts) (Plugin, error) {
 	var plugin Plugin
 	var err error
 	if opts.ManifestFile == "" {
@@ -104,31 +104,31 @@ func (c *Config) Install(pluginName string, opts InstallOpts) error {
 		ps, err := c.LoadPluginByName(pluginName)
 		if err != nil {
 			if os.IsNotExist(err) {
-				return errors.Errorf("plugin %q does not exist in the plugin index", pluginName)
+				return plugin, errors.Errorf("plugin %q does not exist in the plugin index", pluginName)
 			}
-			return errors.Wrapf(err, "failed to load plugin %q from the index", pluginName)
+			return plugin, errors.Wrapf(err, "failed to load plugin %q from the index", pluginName)
 		}
 
 		// Load the installed manifest
 		pluginReceipt, err := c.LoadManifest(c.Paths.PluginInstallReceiptPath(pluginName))
 		if err != nil && !os.IsNotExist(err) {
-			return errors.Wrap(err, "failed to look up plugin receipt")
+			return plugin, errors.Wrap(err, "failed to look up plugin receipt")
 		}
 
 		if opts.Version != nil {
 			if pluginReceipt.Version == opts.Version.Original() {
-				return ErrIsAlreadyInstalled
+				return plugin, ErrIsAlreadyInstalled
 			}
 			// check if version is available
 			ver := ps.Index.Search(opts.Version)
 			if ver != nil {
 				plugin = ps.Versions[ver]
 			} else {
-				return ErrVersionNotAvailable
+				return plugin, ErrVersionNotAvailable
 			}
 		} else {
 			if err == nil {
-				return ErrIsAlreadyInstalled
+				return plugin, ErrIsAlreadyInstalled
 			}
 			// get the latest version
 			latestVersion := ps.Index[len(ps.Index)-1]
@@ -137,13 +137,16 @@ func (c *Config) Install(pluginName string, opts InstallOpts) error {
 	} else {
 		plugin, err = c.ReadPluginFromFile(opts.ManifestFile)
 		if err != nil {
-			return errors.Wrap(err, "failed to load plugin manifest from file")
+			return plugin, errors.Wrap(err, "failed to load plugin manifest from file")
 		}
 		if plugin.Name != pluginName {
-			return fmt.Errorf("plugin name %s doesn't match with plugin in the manifest file %s", pluginName, opts.ManifestFile)
+			return plugin, fmt.Errorf("plugin name %s doesn't match with plugin in the manifest file %s", pluginName, opts.ManifestFile)
 		}
 	}
+	return plugin, nil
+}
 
+func (c *Config) Install(plugin Plugin) error {
 	// Find available installation platform
 	platform, ok, err := MatchPlatform(plugin.Platforms)
 	if err != nil {

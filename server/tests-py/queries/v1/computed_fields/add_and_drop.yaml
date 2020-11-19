@@ -48,3 +48,32 @@
       name: get_articles
   response:
     message: success
+
+- description: Add a computed field, passing the Hasura session argument
+  url: /v1/query
+  status: 200
+  query:
+    type: add_computed_field
+    args:
+      table: author
+      name: test_session
+      definition:
+        function: test_session
+        session_argument: session
+  response:
+    message: success
+
+- description: obtain the session variable via computed fields
+  url: /v1/graphql
+  status: 200
+  query:
+    query: |
+      query {
+        author_by_pk(id: 1) {
+          test_session(args:{key:"x-hasura-role"})
+        }
+      }
+  response:
+    data:
+      author_by_pk:
+        test_session: admin

@@ -13,8 +13,8 @@ load and modify the Hasura catalog and schema cache.
     representation of the data stored in the catalog. The in-memory representation is not identical
     to the data in the catalog, since it has some post-processing applied to it in order to make it
     easier to consume for other parts of the system, such as GraphQL schema generation. For example,
-    although column information is represented by 'PGRawColumnInfo', the schema cache contains
-    “processed” 'PGColumnInfo' values, instead.
+    although column information is represented by 'RawColumnInfo', the schema cache contains
+    “processed” 'ColumnInfo' values, instead.
 
     Ultimately, the catalog is the source of truth for all information contained in the schema
     cache, but to avoid rebuilding the entire schema cache on every change to the catalog, various
@@ -32,6 +32,7 @@ module Hasura.RQL.DDL.Schema
 
  , RunSQL(..)
  , runRunSQL
+ , isSchemaCacheBuildRequiredRunSQL
  ) where
 
 import           Hasura.Prelude
@@ -86,15 +87,30 @@ instance ToJSON RunSQL where
           Q.ReadWrite -> False
       ]
 
+-- | see Note [Checking metadata consistency in run_sql]
+isSchemaCacheBuildRequiredRunSQL :: RunSQL -> Bool
+isSchemaCacheBuildRequiredRunSQL RunSQL {..} =
+  case rTxAccessMode of
+    Q.ReadOnly  -> False
+    Q.ReadWrite -> fromMaybe (containsDDLKeyword rSql) rCheckMetadataConsistency
+  where
+    containsDDLKeyword :: Text -> Bool
+    containsDDLKeyword = TDFA.match $$(quoteRegex
+      TDFA.defaultCompOpt
+        { TDFA.caseSensitive = False
+        , TDFA.multiline = True
+        , TDFA.lastStarGreedy = True }
+        TDFA.defaultExecOpt
+        { TDFA.captureGroups = False }
+        "\\balter\\b|\\bdrop\\b|\\breplace\\b|\\bcreate function\\b|\\bcomment on\\b")
+
 runRunSQL :: (MonadTx m, CacheRWM m, HasSQLGenCtx m) => RunSQL -> m EncJSON
-runRunSQL RunSQL {..} = do
+runRunSQL q@RunSQL {..}
   -- see Note [Checking metadata consistency in run_sql]
-  let metadataCheckNeeded = case rTxAccessMode of
-        Q.ReadOnly  -> False
-        Q.ReadWrite -> fromMaybe (containsDDLKeyword rSql) rCheckMetadataConsistency
-  if metadataCheckNeeded
-    then withMetadataCheck rCascade $ execRawSQL rSql
-    else execRawSQL rSql
+  | isSchemaCacheBuildRequiredRunSQL q
+  = withMetadataCheck rCascade $ execRawSQL rSql
+  | otherwise
+  = execRawSQL rSql
   where
     execRawSQL :: (MonadTx m) => Text -> m EncJSON
     execRawSQL =
@@ -102,17 +118,6 @@ runRunSQL RunSQL {..} = do
       where
         rawSqlErrHandler txe =
           (err400 PostgresError "query execution failed") { qeInternal = Just $ toJSON txe }
-
-    -- see Note [Checking metadata consistency in run_sql]
-    containsDDLKeyword :: Text -> Bool
-    containsDDLKeyword = TDFA.match $$(quoteRegex
-      TDFA.defaultCompOpt
-        { TDFA.caseSensitive = False
-        , TDFA.multiline = True
-        , TDFA.lastStarGreedy = True }
-      TDFA.defaultExecOpt
-        { TDFA.captureGroups = False }
-      "\\balter\\b|\\bdrop\\b|\\breplace\\b|\\bcreate function\\b|\\bcomment on\\b")
 
 {- Note [Checking metadata consistency in run_sql]
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -148,7 +153,7 @@ instance Q.FromRes RunSQLRes where
     csvRows <- resToCSV res
     return $ RunSQLRes "TuplesOk" $ toJSON csvRows
     where
-      resToCSV :: PQ.Result -> ExceptT T.Text IO [[Text]]
+      resToCSV :: PQ.Result -> ExceptT Text IO [[Text]]
       resToCSV r =  do
         nr  <- liftIO $ PQ.ntuples r
         nc  <- liftIO $ PQ.nfields r

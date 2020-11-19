@@ -7,30 +7,32 @@ module Hasura.RQL.DDL.Schema.Cache.Permission
 
 import           Hasura.Prelude
 
-import qualified Data.HashMap.Strict.Extended       as M
-import qualified Data.Sequence                      as Seq
+import qualified Data.HashMap.Strict.Extended        as M
+import qualified Data.Sequence                       as Seq
 
 import           Control.Arrow.Extended
 import           Data.Aeson
+import           Data.Text.Extended
 
-import qualified Hasura.Incremental                 as Inc
+import qualified Hasura.Incremental                  as Inc
 
-import           Hasura.Db
+import           Hasura.Backends.Postgres.Connection
+import           Hasura.Backends.Postgres.SQL.Types
 import           Hasura.RQL.DDL.Permission
 import           Hasura.RQL.DDL.Permission.Internal
 import           Hasura.RQL.DDL.Schema.Cache.Common
 import           Hasura.RQL.Types
 import           Hasura.RQL.Types.Catalog
-import           Hasura.SQL.Types
+import           Hasura.Session
 
 buildTablePermissions
   :: ( ArrowChoice arr, Inc.ArrowDistribute arr, Inc.ArrowCache m arr
      , ArrowWriter (Seq CollectedInfo) arr, MonadTx m )
   => ( Inc.Dependency TableCoreCache
      , QualifiedTable
-     , FieldInfoMap FieldInfo
+     , FieldInfoMap (FieldInfo 'Postgres)
      , HashSet CatalogPermission
-     ) `arr` RolePermInfoMap
+     ) `arr` RolePermInfoMap 'Postgres
 buildTablePermissions = Inc.cache proc (tableCache, tableName, tableFields, tablePermissions) ->
   (| Inc.keyed (\_ rolePermissions -> do
        let (insertPerms, selectPerms, updatePerms, deletePerms) =
@@ -85,14 +87,14 @@ buildPermission
      )
   => ( Inc.Dependency TableCoreCache
      , QualifiedTable
-     , FieldInfoMap FieldInfo
+     , FieldInfoMap (FieldInfo 'Postgres)
      , [CatalogPermission]
      ) `arr` Maybe (PermInfo a)
 buildPermission = Inc.cache proc (tableCache, tableName, tableFields, permissions) -> do
       (permissions >- noDuplicates mkPermissionMetadataObject)
   >-> (| traverseA (\permission@(CatalogPermission _ roleName _ pDef _) ->
          (| withPermission (do
-              bindErrorA -< when (roleName == adminRole) $
+              bindErrorA -< when (roleName == adminRoleName) $
                 throw400 ConstraintViolation "cannot define permission for admin role"
               perm <- bindErrorA -< decodeValue pDef
               let permDef = PermDef roleName perm Nothing

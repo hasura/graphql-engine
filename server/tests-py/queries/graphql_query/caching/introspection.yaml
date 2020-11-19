@@ -1,0 +1,56 @@
+- description: Test that introspection queries are properly cached (#4547)
+  url: /v1/graphql
+  status: 200
+  response:
+    data:
+      __type:
+        name: __TypeKind
+        enumValues:
+        - name: ENUM
+        - name: INPUT_OBJECT
+        - name: INTERFACE
+        - name: LIST
+        - name: NON_NULL
+        - name: OBJECT
+        - name: SCALAR
+        - name: UNION
+  query:
+    variables:
+      includeDeprecated: true
+    query: |
+      query IntrospectionQuery($includeDeprecated: Boolean!) {
+        __type(name:"__TypeKind") {
+          name
+          enumValues(includeDeprecated: $includeDeprecated) {
+            name
+          }
+        }
+      }
+- description: Test that introspection queries are properly cached (#4547)
+  url: /v1/graphql
+  status: 200
+  response:
+    data:
+      __type:
+        name: __TypeKind
+        enumValues:
+        - name: ENUM
+        - name: INPUT_OBJECT
+        - name: INTERFACE
+        - name: LIST
+        - name: NON_NULL
+        - name: OBJECT
+        - name: SCALAR
+        - name: UNION
+  query:
+    variables:
+      includeDeprecated: true
+    query: |
+      query IntrospectionQuery($includeDeprecated: Boolean!) {
+        __type(name:"__TypeKind") {
+          name
+          enumValues(includeDeprecated: $includeDeprecated) {
+            name
+          }
+        }
+      }

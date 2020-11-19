@@ -1,11 +1,7 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 import Helmet from 'react-helmet';
-
-import Toggle from 'react-toggle';
-import 'react-toggle/style.css';
-import '../../../Common/ReactToggle/ReactToggleOverrides.css';
-
+import Toggle from '../../../Common/Toggle/Toggle';
 import { updateMigrationModeStatus } from '../../../Main/Actions';
 import { getConfirmation } from '../../../Common/utils/jsUtils';
 

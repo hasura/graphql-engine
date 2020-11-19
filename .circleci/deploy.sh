@@ -83,7 +83,7 @@ send_pr_to_repo() {
   git add .
   git commit -m "update image version to ${LATEST_TAG}"
   git push -q https://${GITHUB_TOKEN}@github.com/hasura/$1.git ${LATEST_TAG}
-  hub pull-request -F- <<<"Update image version to ${LATEST_TAG}" -r ${REVIEWERS} -a ${REVIEWERS}
+  hub pull-request -f -F- <<<"Update image version to ${LATEST_TAG}" -r ${REVIEWERS} -a ${REVIEWERS}
 }
 
 deploy_console() {
@@ -127,7 +127,7 @@ deploy_cli_ext() {
     git add .
     git commit -m "update cli-ext manifest to ${LATEST_TAG}"
     git push -q https://${GITHUB_TOKEN}@github.com/hasura/cli-plugins-index.git cli-ext-${LATEST_TAG}
-    hub pull-request -F- <<<"Update cli-ext manifest to ${LATEST_TAG}" -r ${REVIEWERS} -a ${REVIEWERS}
+    hub pull-request -f -F- <<<"Update cli-ext manifest to ${LATEST_TAG}" -r ${REVIEWERS} -a ${REVIEWERS}
 
     unset VERSION
     unset DIST_PATH

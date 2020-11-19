@@ -1,20 +1,12 @@
 package v2
 
 import (
-	"math/rand"
 	"os"
-	"path/filepath"
-	"strconv"
 	"testing"
-	"time"
 
 	"github.com/hasura/graphql-engine/cli"
 	"github.com/hasura/graphql-engine/cli/commands"
 )
-
-func init() {
-	rand.Seed(time.Now().UTC().UnixNano())
-}
 
 func TestInitCmd(t *testing.T, ec *cli.ExecutionContext, initDir string) {
 	tt := []struct {
@@ -27,7 +19,7 @@ func TestInitCmd(t *testing.T, ec *cli.ExecutionContext, initDir string) {
 			Version:     cli.V2,
 			Endpoint:    os.Getenv("HASURA_GRAPHQL_TEST_ENDPOINT"),
 			AdminSecret: os.Getenv("HASURA_GRAPHQL_TEST_ADMIN_SECRET"),
-			InitDir:     filepath.Join(os.TempDir(), "hasura-cli-test-"+strconv.Itoa(rand.Intn(1000))),
+			InitDir:     initDir,
 		}, nil},
 	}
 

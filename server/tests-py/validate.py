@@ -10,8 +10,10 @@ import os
 import base64
 import jsondiff
 import jwt
+import queue
 import random
 import warnings
+import pytest
 
 from context import GQLWsClient, PytestConf
 
@@ -63,7 +65,7 @@ def check_event(hge_ctx, evts_webhook, trig_name, table, operation, exp_ev_data,
 
 
 def test_forbidden_when_admin_secret_reqd(hge_ctx, conf):
-    if conf['url'] == '/v1/graphql':
+    if conf['url'] == '/v1/graphql' or conf['url'] == '/v1beta1/relay':
         if conf['status'] == 404:
             status = [404]
         else:
@@ -102,7 +104,7 @@ def test_forbidden_when_admin_secret_reqd(hge_ctx, conf):
 
 
 def test_forbidden_webhook(hge_ctx, conf):
-    if conf['url'] == '/v1/graphql':
+    if conf['url'] == '/v1/graphql' or conf['url'] == '/v1beta1/relay':
         if conf['status'] == 404:
             status = [404]
         else:
@@ -122,18 +124,22 @@ def test_forbidden_webhook(hge_ctx, conf):
         'request id': resp_hdrs.get('x-request-id')
     })
 
-
 def mk_claims_with_namespace_path(claims,hasura_claims,namespace_path):
-        if namespace_path is None:
-            claims['https://hasura.io/jwt/claims'] = hasura_claims
-        elif namespace_path == "$.hasuraClaims":
-            claims['hasuraClaims'] = hasura_claims
-        else:
-            raise Exception(
+    if namespace_path is None:
+        claims['https://hasura.io/jwt/claims'] = hasura_claims
+    elif namespace_path == "$":
+        claims.update(hasura_claims)
+    elif namespace_path == "$.hasura_claims":
+        claims['hasura_claims'] = hasura_claims
+    elif namespace_path == "$.hasura['claims%']":
+        claims['hasura'] = {}
+        claims['hasura']['claims%'] = hasura_claims
+    else:
+        raise Exception(
                 '''claims_namespace_path should not be anything
-                other than $.hasuraClaims for testing. The
+                other than $.hasura_claims, $.hasura['claims%'] or $ for testing. The
                 value of claims_namespace_path was {}'''.format(namespace_path))
-        return claims
+    return claims
 
 # Returns the response received and a bool indicating whether the test passed
 # or not (this will always be True unless we are `--accepting`)
@@ -190,36 +196,45 @@ def check_query(hge_ctx, conf, transport='http', add_auth=True, claims_namespace
             test_forbidden_when_admin_secret_reqd(hge_ctx, conf)
             headers['X-Hasura-Admin-Secret'] = hge_ctx.hge_key
 
-    assert transport in ['websocket', 'http'], "Unknown transport type " + transport
-    if transport == 'websocket':
-        assert 'response' in conf
-        assert conf['url'].endswith('/graphql')
-        print('running on websocket')
-        return validate_gql_ws_q(
-            hge_ctx,
-            conf['url'],
-            conf['query'],
-            headers,
-            conf['response'],
-            True
-        )
-    elif transport == 'http':
+    assert transport in ['http', 'websocket', 'subscription'], "Unknown transport type " + transport
+    if transport == 'http':
         print('running on http')
         return validate_http_anyq(hge_ctx, conf['url'], conf['query'], headers,
                                   conf['status'], conf.get('response'))
+    elif transport == 'websocket':
+        print('running on websocket')
+        return validate_gql_ws_q(hge_ctx, conf, headers, retry=True)
+    elif transport == 'subscription':
+        print('running via subscription')
+        return validate_gql_ws_q(hge_ctx, conf, headers, retry=True, via_subscription=True)
 
 
+def validate_gql_ws_q(hge_ctx, conf, headers, retry=False, via_subscription=False):
+    assert 'response' in conf
+    assert conf['url'].endswith('/graphql') or conf['url'].endswith('/relay')
+    endpoint = conf['url']
+    query = conf['query']
+    exp_http_response = conf['response']
 
-def validate_gql_ws_q(hge_ctx, endpoint, query, headers, exp_http_response, retry=False):
+    if via_subscription:
+        query_text = query['query']
+        assert query_text.startswith('query '), query_text
+        # make the query into a subscription and add the
+        # _multiple_subscriptions directive that enables having more
+        # than 1 root field in a subscription
+        query['query'] = 'subscription' + query_text[len('query'):].replace("{"," @_multiple_top_level_fields {",1)
+
     if endpoint == '/v1alpha1/graphql':
         ws_client = GQLWsClient(hge_ctx, '/v1alpha1/graphql')
+    elif endpoint == '/v1beta1/relay':
+        ws_client = GQLWsClient(hge_ctx, '/v1beta1/relay')
     else:
         ws_client = hge_ctx.ws_client
     print(ws_client.ws_url)
     if not headers or len(headers) == 0:
         ws_client.init({})
 
-    query_resp = ws_client.send_query(query, headers=headers, timeout=15)
+    query_resp = ws_client.send_query(query, query_id='hge_test', headers=headers, timeout=15)
     resp = next(query_resp)
     print('websocket resp: ', resp)
 
@@ -236,10 +251,15 @@ def validate_gql_ws_q(hge_ctx, endpoint, query, headers, exp_http_response, retr
         assert resp['type'] in ['data', 'error'], resp
     else:
         assert resp['type'] == 'data', resp
-
     assert 'payload' in resp, resp
-    resp_done = next(query_resp)
-    assert resp_done['type'] == 'complete'
+
+    if via_subscription:
+        ws_client.send({ 'id': 'hge_test', 'type': 'stop' })
+        with pytest.raises(queue.Empty):
+            ws_client.get_ws_event(0)
+    else:
+        resp_done = next(query_resp)
+        assert resp_done['type'] == 'complete'
 
     return assert_graphql_resp_expected(resp['payload'], exp_http_response, query, skip_if_err_msg=hge_ctx.avoid_err_msg_checks)
 
@@ -247,7 +267,7 @@ def validate_gql_ws_q(hge_ctx, endpoint, query, headers, exp_http_response, retr
 def validate_http_anyq(hge_ctx, url, query, headers, exp_code, exp_response):
     code, resp, resp_hdrs = hge_ctx.anyq(url, query, headers)
     print(headers)
-    assert code == exp_code, resp
+    assert code == exp_code, (code, exp_code, resp)
     print('http resp: ', resp)
     if exp_response:
         return assert_graphql_resp_expected(resp, exp_response, query, resp_hdrs, hge_ctx.avoid_err_msg_checks)
@@ -298,7 +318,7 @@ def assert_graphql_resp_expected(resp_orig, exp_response_orig, query, resp_hdrs=
             # If it is a batch GraphQL query, compare each individual response separately
             for (exp, out) in zip(as_list(exp_response), as_list(resp)):
                 matched_ = equal_CommentedMap(exp, out)
-                if is_err_msg(exp):
+                if is_err_msg(exp) and is_err_msg(out):
                     if not matched_:
                         warnings.warn("Response does not have the expected error message\n" + dump_str.getvalue())
                         return resp, matched
@@ -326,6 +346,11 @@ def equal_CommentedMap(m1, m2):
     # else this is a scalar:
     else:
         return m1 == m2
+
+# Parse test case YAML file
+def get_conf_f(f):
+    with open(f, 'r+') as c:
+        return yaml.YAML().load(c)
 
 def check_query_f(hge_ctx, f, transport='http', add_auth=True):
     print("Test file: " + f)

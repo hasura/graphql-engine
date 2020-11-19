@@ -4,7 +4,6 @@ module Hasura.Server.CheckUpdates
 
 import           Control.Exception     (try)
 import           Control.Lens
-import           Control.Monad         (forever)
 import           Data.Text.Conversions (toText)
 
 import qualified CI
@@ -31,7 +30,7 @@ newtype UpdateInfo
 
 $(A.deriveJSON (A.aesonDrop 2 A.snakeCase) ''UpdateInfo)
 
-checkForUpdates :: (HasVersion) => LoggerCtx a -> H.Manager -> IO void
+checkForUpdates :: HasVersion => LoggerCtx a -> H.Manager -> IO void
 checkForUpdates (LoggerCtx loggerSet _ _ _) manager = do
   let options = wreqOptions manager []
   url <- getUrl

@@ -1,6 +1,5 @@
 module Data.Parser.JSONPathSpec (spec) where
 
-import           Data.Aeson.Internal  (JSONPath, JSONPathElement (..))
 import           Hasura.Prelude
 import           Hasura.RQL.Types     (encodeJSONPath)
 
@@ -16,14 +15,20 @@ spec = describe "encode and parse JSONPath" $ do
     forM_ generateTestEncodeJSONPath $ \(jsonPath, result) ->
       encodeJSONPath jsonPath `shouldBe` result
 
-  it "JSONPath parser" $
-    withMaxSuccess 1000 $
-    forAll(resize 20 generateJSONPath) $ \jsonPath ->
-      let encPath = encodeJSONPath jsonPath
-          parsedJSONPathE =  parseJSONPath $ T.pack encPath
-      in case parsedJSONPathE of
-           Left err             -> counterexample (err <> ": " <> encPath) False
-           Right parsedJSONPath -> property $ parsedJSONPath == jsonPath
+  describe "JSONPath parser" $ do
+
+    it "Single $" $
+      parseJSONPath "$" `shouldBe` (Right [] :: Either String JSONPath)
+
+    it "Random json paths" $
+      withMaxSuccess 1000 $
+        forAll (resize 20 generateJSONPath) $ \jsonPath ->
+          let encPath = encodeJSONPath jsonPath
+              parsedJSONPathE = parseJSONPath $ T.pack encPath
+          in case parsedJSONPathE of
+              Left err             -> counterexample (err <> ": " <> encPath) False
+              Right parsedJSONPath -> property $ parsedJSONPath == jsonPath
+
 
 
 generateTestEncodeJSONPath :: [(JSONPath, String)]
@@ -40,4 +45,4 @@ generateJSONPath = map (either id id) <$> listOf1 genPathElementEither
       keyRight <- Right <$> genKey
       elements [indexLeft, keyRight]
     genIndex = Index <$> choose (0, 100)
-    genKey = (Key . T.pack) <$> listOf1 (elements $ alphaNumerics ++ ".,!@#$%^&*_-?:;|/\"")
+    genKey = Key . T.pack <$> listOf1 (elements $ alphaNumerics ++ ".,!@#$%^&*_-?:;|/\"")
