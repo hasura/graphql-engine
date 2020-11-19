@@ -34,7 +34,7 @@ const MODAL_OPEN = 'EditItem/MODAL_OPEN';
 const modalOpen = () => ({ type: MODAL_OPEN });
 const modalClose = () => ({ type: MODAL_CLOSE });
 
-const whereClause = oldItem => {
+const getwhereClause = oldItem => {
   const listOfElems = [];
   const oldItemKeys = Object.keys(oldItem);
   oldItemKeys.forEach(key => {
@@ -157,7 +157,10 @@ const editItem = (tableName, colValues, isMigration = false) => {
       returning = columns.map(col => col.column_name);
     }
     const { oldItem } = state.tables.update;
-    const newWhereClause = whereClause(oldItem);
+    let newWhereClause = getwhereClause(oldItem);
+    if (state.tables.update.pkClause || Object.keys(state.tables.update.pkClause).length) {
+      newWhereClause = getwhereClause(state.tables.update.pkClause)
+    };
     const reqBody = {
       type: 'update',
       args: {
