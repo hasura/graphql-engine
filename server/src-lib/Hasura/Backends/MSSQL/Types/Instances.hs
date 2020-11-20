@@ -48,6 +48,7 @@ $(fmap concat $ for [ ''UserMetadata
                     , ''CatalogArrayRelationship
                     , ''CatalogUsing
                     , ''CatalogOn
+                    , ''CatalogColumn
                     ]
   \name -> [d|
   deriving instance Generic $(conT name)

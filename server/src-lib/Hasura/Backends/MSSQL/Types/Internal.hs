@@ -61,8 +61,14 @@ data CatalogMetadata = CatalogMetadata
 
 data CatalogTableMetadata = CatalogTableMetadata
   { table :: !CatalogTableName
-  , object_relationships :: [CatalogObjectRelationship]
-  , array_relationships :: [CatalogArrayRelationship]
+  , object_relationships :: ![CatalogObjectRelationship]
+  , array_relationships :: ![CatalogArrayRelationship]
+  , columns :: ![CatalogColumn]
+  }
+
+data CatalogColumn = CatalogColumn
+  { name :: !Text
+  , type' :: !ScalarType
   }
 
 data CatalogTableName = CatalogTableName
