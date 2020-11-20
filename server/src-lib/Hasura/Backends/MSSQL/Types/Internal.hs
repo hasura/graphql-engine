@@ -30,7 +30,7 @@ data UserTableMetadata = UserTableMetadata
   }
 
 data UserTableName = UserTableName
-  { schema :: !(Maybe Text)
+  { schema :: !Text
   , name :: !Text
   }
 

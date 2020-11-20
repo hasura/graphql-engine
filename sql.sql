@@ -1,3 +1,4 @@
+-- SCHEMA_NAME(..)
 SELECT object.name, object.schema_id, object.object_id, object.type_desc,
        JSON_QUERY([schema].json) AS [joined_sys_schema],
        JSON_QUERY([column].json) AS [joined_sys_column]

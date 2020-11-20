@@ -1,44 +1,34 @@
+{-# LANGUAGE EmptyDataDeriving #-}
+{-# LANGUAGE ApplicativeDo #-}
 {-# language DuplicateRecordFields #-}
 
 -- |
 
 module Hasura.Backends.MSSQL.Meta where
 
+import           Control.Monad.Validate
 import           Data.Aeson as Aeson
 import           Data.Aeson.Types (parseEither)
 import           Data.Attoparsec.ByteString
-import qualified Data.ByteString.Builder as SB
 import qualified Data.ByteString.Lazy as L
+import           Data.Foldable
 import qualified Data.HashMap.Strict as HM
 import           Data.String
 import qualified Data.Text.Encoding as T
-import qualified Data.Text.Lazy.Encoding as LT
 import           Database.ODBC.SQLServer as Odbc
 import           Hasura.Backends.MSSQL.Types
 import           Hasura.Prelude
 
-loadMetadata :: FilePath -> IO (Either String UserMetadata)
-loadMetadata fp = fmap eitherDecode $ L.readFile fp
-
-loadCatalogMetadata :: Text -> UserMetadata -> IO ()
-loadCatalogMetadata connStr userMetadata = do
-  conn <- connect connStr
-  sql <- readFile "sql.sql"
-  objects :: [SysObject] <- queryJson conn (fromString sql)
-  print (filter (\SysObject{name} -> elem name ["Track","Artist","Album"]) objects)
-  pure ()
-
 --------------------------------------------------------------------------------
--- MSSQL-specific types
+-- Types
 
-data SysObject = SysObject
+data SysTable = SysTable
   { name :: Text
   , object_id :: Int
-  , type_desc :: Text
   , joined_sys_column :: [SysColumn]
   , joined_sys_schema :: SysSchema
   } deriving (Show, Generic)
-instance FromJSON SysObject
+instance FromJSON SysTable
 
 data SysSchema = SysSchema
   { name :: Text
@@ -75,6 +65,81 @@ data SysForeignKeyColumn = SysForeignKeyColumn
   , joined_referenced_sys_schema :: SysSchema
   } deriving (Show, Generic)
 instance FromJSON SysForeignKeyColumn
+
+data UnifyProblem
+  = MissingTable UserTableName
+  | MissingTableForRelationship UserUsing
+  | MissingColumnForRelationship UserUsing
+  deriving (Show)
+
+--------------------------------------------------------------------------------
+-- Schema loaders
+
+loadMetadata :: FilePath -> IO (Either String UserMetadata)
+loadMetadata fp = fmap eitherDecode $ L.readFile fp
+
+loadCatalogMetadata :: Text -> UserMetadata -> IO ()
+loadCatalogMetadata connStr UserMetadata{tables} = do
+  conn <- connect connStr
+  sql <- readFile "sql.sql"
+  sysTables :: [SysTable] <- queryJson conn (fromString sql)
+  print (runValidate (unifyTables tables sysTables))
+  pure ()
+
+--------------------------------------------------------------------------------
+-- Unification
+
+unifyTables ::
+     [UserTableMetadata] -> [SysTable] -> Validate (NonEmpty UnifyProblem) ()
+unifyTables userTableMetadatas sysTables = do
+  let indexedSysTables =
+        HM.fromList
+          (map
+             (\sysTable@(SysTable { name
+                                  , joined_sys_schema = SysSchema {name = schema}
+                                  }) -> (UserTableName {..}, sysTable))
+             sysTables)
+  tablesStage1 <- traverse (unifyTable indexedSysTables) userTableMetadatas
+  let indexedValidTables =
+        HM.fromList
+          (map
+             (\(UserTableMetadata {table}, sysTable) -> (table, sysTable))
+             tablesStage1)
+  traverse_ (unifyRelationships indexedValidTables) tablesStage1
+
+unifyTable ::
+     HashMap UserTableName b
+  -> UserTableMetadata
+  -> Validate (NonEmpty UnifyProblem) (UserTableMetadata, b)
+unifyTable indexedSysTables userMetaTable@UserTableMetadata {table} = do
+  case HM.lookup table indexedSysTables of
+    Nothing -> refute (pure (MissingTable table))
+    Just sysTable -> pure (userMetaTable, sysTable)
+
+unifyRelationships ::
+     HashMap UserTableName SysTable
+  -> (UserTableMetadata, b)
+  -> Validate (NonEmpty UnifyProblem) ()
+unifyRelationships indexedValidTables (UserTableMetadata {..}, _) = do
+  traverse_
+    (\UserObjectRelationship {using} -> checkUsing using)
+    object_relationships
+  traverse_
+    (\UserArrayRelationship {using} -> checkUsing using)
+    array_relationships
+  where
+    checkUsing using@UserUsing {foreign_key_constraint_on} =
+      case HM.lookup referencedTable indexedValidTables of
+        Nothing -> refute (pure (MissingTableForRelationship using))
+        Just SysTable {joined_sys_column = columns} ->
+          case find
+                 (\SysColumn {name = referencedColumn} ->
+                    referencedColumn == column)
+                 columns of
+            Nothing -> refute (pure (MissingColumnForRelationship using))
+            Just {} -> pure ()
+      where
+        UserOn {table = referencedTable, column} = foreign_key_constraint_on
 
 --------------------------------------------------------------------------------
 -- Quick catalog queries
