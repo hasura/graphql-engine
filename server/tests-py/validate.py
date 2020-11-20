@@ -283,14 +283,15 @@ def validate_http_anyq_with_allowed_responses(hge_ctx, url, query, headers, exp_
     print(headers)
     assert code == exp_code, resp
     print('http resp: ', resp)
-    if allowed_responses:
+    if isinstance(allowed_responses, list) and len(allowed_responses) > 0:
         for response in allowed_responses:
             resp_result, pass_test = assert_graphql_resp_expected(resp, response, query, resp_hdrs, hge_ctx.avoid_err_msg_checks, True)
             if pass_test == True:
                 return resp_result, True
+        # test should fail if none of the allowed responses work
         return resp, False
     else:
-        return resp, True
+        raise Exception("allowed_responses was not a list of permissible responses")
 
 # Check the actual graphql response is what we expected, also taking into
 # consideration the ordering of keys that we expect to be preserved, based on
