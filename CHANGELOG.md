@@ -192,7 +192,6 @@ arguments.
 - docs: add docs page on networking with docker (close #4346) (#4811)
 - docs: add tabs for console / cli / api workflows (close #3593) (#4948)
 - docs: add postgres concepts page to docs (close #4440) (#4471)
-- docs: add guides on connecting hasura cloud to pg databases of different cloud vendors (#5948) 
 
 
 ## `v1.3.2`
