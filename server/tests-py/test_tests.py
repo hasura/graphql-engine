@@ -321,13 +321,15 @@ class TestTests3:
         }
         allowed_responses = [allowed_response_1, allowed_response_2]
 
-        resp, err = validate_http_anyq_with_allowed_responses(
-            hge_ctx, url, query, {}, 200, allowed_responses
-        )
-        if err != True:
-            assert 1, "No error occurred. The test passed when it should be failing"
-        else:
-            assert 0, "Test failed, as expected"  # the test failed, which is as expected
+        try:
+            resp, err = validate_http_anyq_with_allowed_responses(
+                hge_ctx, url, query, {}, 200, allowed_responses
+            )
+        except:
+            print("FAIL!")
+            assert 0, "Test failed, as expected"
+            
+            
 
     # Re-use setup and teardown from where we adapted this test case:
     @classmethod
