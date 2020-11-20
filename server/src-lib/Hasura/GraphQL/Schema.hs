@@ -80,6 +80,7 @@ buildGQLContext =
     adminHasuraDBContext <- bindA -<
       buildFullestDBSchema queryContext allTables allFunctions allActionInfos nonObjectCustomTypes
 
+    -- TODO factor out the common function; throw500 in both cases:
     queryFieldNames :: [G.Name] <- bindA -<
       case P.discardNullability $ P.parserType $ fst adminHasuraDBContext of
         -- It really ought to be this case; anything else is a programming error.
@@ -138,11 +139,11 @@ buildRoleContext queryContext (takeValidTables -> allTables) (takeValidFunctions
   runMonadSchema roleName queryContext allTables $ do
     mutationParserFrontend <-
       buildPGMutationFields Frontend tableNames >>=
-      buildMutationParser mutationRemotes allActionInfos nonObjectCustomTypes
+      buildMutationParser mutationRemotes allActionInfos nonObjectCustomTypes allFunctions
 
     mutationParserBackend <-
       buildPGMutationFields Backend tableNames >>=
-      buildMutationParser mutationRemotes allActionInfos nonObjectCustomTypes
+      buildMutationParser mutationRemotes allActionInfos nonObjectCustomTypes allFunctions
 
     queryPGFields <- buildPostgresQueryFields tableNames allFunctions
     subscriptionParser <- buildSubscriptionParser queryPGFields allActionInfos
@@ -161,6 +162,13 @@ buildRoleContext queryContext (takeValidTables -> allTables) (takeValidFunctions
     where
       tableNames = Map.keysSet allTables
 
+-- TODO why do we do these validations at this point? What does it mean to track
+--      a function but not add it to the schema...?
+--      Auke: 
+--        I believe the intention is simply to allow the console to do postgres data management
+--      Karthikeyan: Yes, this is correct. We allowed this pre PDV but somehow
+--        got removed in PDV. OTOH, I’m not sure how prevalent this feature
+--        actually is
 takeValidTables :: TableCache -> TableCache
 takeValidTables = Map.filterWithKey graphQLTableFilter . Map.filter tableFilter
   where
@@ -171,10 +179,15 @@ takeValidTables = Map.filterWithKey graphQLTableFilter . Map.filter tableFilter
       isGraphQLCompliantTableName tableName
       || (isJust . _tcCustomName . _tciCustomConfig . _tiCoreInfo $ tableInfo)
 
+-- TODO and what about graphql-compliant function names here too?
 takeValidFunctions :: FunctionCache -> [FunctionInfo]
 takeValidFunctions = Map.elems . Map.filter functionFilter
   where
     functionFilter = not . isSystemDefined . fiSystemDefined
+
+takeExposedAs :: FunctionExposedAs -> [FunctionInfo] -> [FunctionInfo]
+takeExposedAs x = filter ((== x) . fiExposedAs)
+
 
 buildFullestDBSchema
   :: (MonadError QErr m, MonadIO m, MonadUnique m)
@@ -187,7 +200,9 @@ buildFullestDBSchema queryContext (takeValidTables -> allTables) (takeValidFunct
   runMonadSchema adminRoleName queryContext allTables $ do
     mutationParserFrontend <-
       buildPGMutationFields Frontend tableNames >>=
-      buildMutationParser mempty allActionInfos nonObjectCustomTypes
+      -- NOTE: we omit remotes here on purpose since we're trying to check name
+      -- clashes with remotes:
+      buildMutationParser mempty allActionInfos nonObjectCustomTypes allFunctions
 
     queryPGFields <- buildPostgresQueryFields tableNames allFunctions
     subscriptionParser <- buildSubscriptionParser queryPGFields allActionInfos
@@ -212,11 +227,11 @@ buildRelayRoleContext queryContext (takeValidTables -> allTables) (takeValidFunc
   runMonadSchema roleName queryContext allTables $ do
     mutationParserFrontend <-
       buildPGMutationFields Frontend tableNames >>=
-      buildMutationParser mutationRemotes allActionInfos nonObjectCustomTypes
+      buildMutationParser mutationRemotes allActionInfos nonObjectCustomTypes allFunctions
 
     mutationParserBackend <-
       buildPGMutationFields Backend tableNames >>=
-      buildMutationParser mutationRemotes allActionInfos nonObjectCustomTypes
+      buildMutationParser mutationRemotes allActionInfos nonObjectCustomTypes allFunctions
 
     queryPGFields <- buildRelayPostgresQueryFields tableNames allFunctions
     subscriptionParser <- P.safeSelectionSet subscriptionRoot Nothing queryPGFields
@@ -316,7 +331,7 @@ buildPostgresQueryFields
   => HashSet QualifiedTable
   -> [FunctionInfo]
   -> m [P.FieldParser n (QueryRootField UnpreparedValue)]
-buildPostgresQueryFields allTables allFunctions = do
+buildPostgresQueryFields allTables (takeExposedAs FEAQuery -> queryFunctions) = do
   tableSelectExpParsers <- for (toList allTables) \table -> do
     selectPerms <- tableSelectPermissions table
     customRootFields <- _tcCustomRootFields . _tciCustomConfig . _tiCoreInfo <$> askTableInfo table
@@ -332,7 +347,7 @@ buildPostgresQueryFields allTables allFunctions = do
         , mapMaybeFieldParser (RFDB . QDBPrimaryKey)  $ selectTableByPk      table (fromMaybe pkName       $ _tcrfSelectByPk      customRootFields) (Just pkDesc)     perms
         , mapMaybeFieldParser (RFDB . QDBAggregation) $ selectTableAggregate table (fromMaybe aggName      $ _tcrfSelectAggregate customRootFields) (Just aggDesc)    perms
         ]
-  functionSelectExpParsers <- for allFunctions \function -> do
+  functionSelectExpParsers <- for queryFunctions \function -> do
     let targetTable = fiReturnType function
         functionName = fiName function
     selectPerms <- tableSelectPermissions targetTable
@@ -347,11 +362,13 @@ buildPostgresQueryFields allTables allFunctions = do
         ]
   pure $ (concat . catMaybes) (tableSelectExpParsers <> functionSelectExpParsers)
   where
-    requiredFieldParser :: (a -> b) -> m (P.FieldParser n a) -> m (Maybe (P.FieldParser n b))
-    requiredFieldParser f = fmap $ Just . fmap f
-
     mapMaybeFieldParser :: (a -> b) -> m (Maybe (P.FieldParser n a)) -> m (Maybe (P.FieldParser n b))
     mapMaybeFieldParser f = fmap $ fmap $ fmap f
+
+requiredFieldParser 
+  :: (Functor n, Functor m)=> (a -> b) -> m (P.FieldParser n a) -> m (Maybe (P.FieldParser n b))
+requiredFieldParser f = fmap $ Just . fmap f
+
 
 -- | Includes remote schema fields and actions
 buildActionQueryFields
@@ -402,7 +419,7 @@ buildRelayPostgresQueryFields
   => HashSet QualifiedTable
   -> [FunctionInfo]
   -> m [P.FieldParser n (QueryRootField UnpreparedValue)]
-buildRelayPostgresQueryFields allTables allFunctions = do
+buildRelayPostgresQueryFields allTables (takeExposedAs FEAQuery -> queryFunctions) = do
   tableConnectionFields <- for (toList allTables) $ \table -> runMaybeT do
     pkeyColumns <- MaybeT $ (^? tiCoreInfo.tciPrimaryKey._Just.pkColumns)
                    <$> askTableInfo table
@@ -412,7 +429,7 @@ buildRelayPostgresQueryFields allTables allFunctions = do
         fieldDesc = Just $ G.Description $ "fetch data from the table: " <>> table
     lift $ selectTableConnection table fieldName fieldDesc pkeyColumns selectPerms
 
-  functionConnectionFields <- for allFunctions $ \function -> runMaybeT do
+  functionConnectionFields <- for queryFunctions $ \function -> runMaybeT do
     let returnTable = fiReturnType function
         functionName = fiName function
     pkeyColumns <- MaybeT $ (^? tiCoreInfo.tciPrimaryKey._Just.pkColumns)
@@ -626,9 +643,27 @@ buildMutationParser
   => [P.FieldParser n RemoteField]
   -> [ActionInfo 'Postgres]
   -> NonObjectTypeMap
+  -> [FunctionInfo]
+  -- ^ all "valid" functions
   -> [P.FieldParser n (MutationRootField UnpreparedValue)]
   -> m (Maybe (Parser 'Output n (OMap.InsOrdHashMap G.Name (MutationRootField UnpreparedValue))))
-buildMutationParser allRemotes allActions nonObjectCustomTypes pgMutationFields = do
+buildMutationParser allRemotes allActions nonObjectCustomTypes 
+    (takeExposedAs FEAMutation -> mutationFunctions) pgMutationFields = do
+
+   -- NOTE: this is basically copied from functionSelectExpParsers body
+  functionMutationExpParsers <- for mutationFunctions \function@FunctionInfo{..} -> do
+    selectPerms <- tableSelectPermissions fiReturnType
+    for selectPerms \perms -> do
+      displayName <- qualifiedObjectToName fiName
+      let functionDesc = G.Description $ 
+            "execute VOLATILE function " <> fiName <<> " which returns " <>> fiReturnType
+      catMaybes <$> sequenceA
+        [ requiredFieldParser (RFDB . MDBFunction) $ 
+            selectFunction function displayName (Just functionDesc) perms
+        -- FWIW: The equivalent of this is possible for mutations; do we want that?:
+        -- , mapMaybeFieldParser (RFDB . QDBAggregation) $ selectFunctionAggregate function aggName     (Just aggDesc)      perms
+        ]
+
   actionParsers <- for allActions $ \actionInfo ->
     case _adType (_aiDefinition actionInfo) of
       ActionMutation ActionSynchronous ->
@@ -636,7 +671,12 @@ buildMutationParser allRemotes allActions nonObjectCustomTypes pgMutationFields 
       ActionMutation ActionAsynchronous ->
         fmap (fmap (RFAction . AMAsync)) <$> actionAsyncMutation nonObjectCustomTypes actionInfo
       ActionQuery -> pure Nothing
-  let mutationFieldsParser = pgMutationFields <> catMaybes actionParsers <> fmap (fmap RFRemote) allRemotes
+
+  let mutationFieldsParser = 
+        pgMutationFields <>
+        concat (catMaybes functionMutationExpParsers) <>
+        catMaybes actionParsers <>
+        fmap (fmap RFRemote) allRemotes
   if null mutationFieldsParser
   then pure Nothing
   else P.safeSelectionSet mutationRoot (Just $ G.Description "mutation root") mutationFieldsParser

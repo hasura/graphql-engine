@@ -1,0 +1,28 @@
+# For now this is an error since this seens very likely user error, but we're
+# not committed to this.
+- description: non-volatile function as mutation (error, for now)
+  url: /v1/query
+  status: 400
+  response:
+    internal:
+    - definition:
+        schema: public
+        name: stable_func1
+      reason: 'in function "stable_func1": the function "stable_func1" cannot be tracked
+        because the function was requested to be exposed as a mutation, but is not
+        marked VOLATILE. Maybe the function was given the wrong volatility when it
+        was defined?'
+      type: function
+    path: $.args
+    error: 'in function "stable_func1": the function "stable_func1" cannot be tracked
+      because the function was requested to be exposed as a mutation, but is not marked
+      VOLATILE. Maybe the function was given the wrong volatility when it was defined?'
+    code: constraint-violation
+  query:
+    version: 2
+    type: track_function
+    args:
+      function: stable_func1
+      configuration:
+        exposed_as: mutation
+

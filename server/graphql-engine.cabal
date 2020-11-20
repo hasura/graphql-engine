@@ -443,6 +443,7 @@ library
                      , Hasura.GraphQL.Execute.Plan
                      , Hasura.GraphQL.Execute.Types
                      , Hasura.GraphQL.Execute.Mutation
+                     , Hasura.GraphQL.Execute.Common
                      , Hasura.GraphQL.Execute.Remote
                      , Hasura.GraphQL.Execute.Resolve
                      , Hasura.GraphQL.Execute.Prepare

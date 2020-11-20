@@ -1,0 +1,33 @@
+description: Remote join with null joining fields
+url: /v1/graphql
+status: 200
+response:
+  data:
+    employees:
+      - id: 1
+        name: alice
+        employeeMessages:
+          - id: 1
+            name: alice
+            msg: You win!
+      - id: 2
+        name: null
+        # since the join argument (name) was `NULL`, we don't perform the remote query 
+        # and just return `null` for the joined field:
+        employeeMessages: null
+      - id: 3
+        name: bob
+        employeeMessages: []
+query:
+  query: |
+    query {
+      employees {
+        id
+        name
+        employeeMessages {
+          id
+          name
+          msg
+        }
+      }
+    }
