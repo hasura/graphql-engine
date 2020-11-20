@@ -124,6 +124,7 @@ input SampleInput {
 		for oldActionIndex, oldActionObj := range oldAction.Actions {
 			if action.Name == oldActionObj.Name {
 				sdlFromResp.Actions[actionIndex].Permissions = oldAction.Actions[oldActionIndex].Permissions
+				sdlFromResp.Actions[actionIndex].Definition.Timeout = oldAction.Actions[oldActionIndex].Definition.Timeout
 				sdlFromResp.Actions[actionIndex].Definition.Kind = oldAction.Actions[oldActionIndex].Definition.Kind
 				sdlFromResp.Actions[actionIndex].Definition.Type = oldAction.Actions[oldActionIndex].Definition.Type
 				sdlFromResp.Actions[actionIndex].Definition.Handler = oldAction.Actions[oldActionIndex].Definition.Handler
