@@ -185,10 +185,6 @@ arguments.
   This issue could cause enum table values to sometimes not be properly reloaded without restarting `graphql-engine`. Now a `reload_metadata` API call (or clicking “Reload enum values” in the console) should consistently force a reload of all enum table values.
 - server: fix event trigger cleanup on deletion via replace_metadata (fix #5461) (#6137)
 **WARNING**: This can cause significant load on PG on startup if you have lots of event triggers. Delay in starting up is expected.
-- console: allow user to cascade Postgres dependencies when dropping Postgres objects (close #5109) (#5248)
-- console: mark inconsistent remote schemas in the UI (close #5093) (#5181)
-- console: remove ONLY as default for ALTER TABLE in column alter operations (close #5512) #5706
-- console: add option to flag an insertion as a migration from `Data` section (close #1766) (#4933)
 - console: add notifications (#5070)
 - cli: fix bug in metadata apply which made the server aquire some redundant and unnecessary locks (close #6115)
 - cli: fix cli-migrations-v2 image failing to run as a non root user (close #4651, close #5333)
