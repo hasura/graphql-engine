@@ -77,7 +77,7 @@ buildGQLContext =
     let allRoles = Set.insert adminRoleName $
              (allTables ^.. folded.tiRolePermInfoMap.to Map.keys.folded)
           <> (allActionInfos ^.. folded.aiPermissions.to Map.keys.folded)
-          <> (Set.fromList $ bool mempty remoteSchemasRoles $ remoteSchemaPermsCtx == Enabled)
+          <> Set.fromList (bool mempty remoteSchemasRoles $ remoteSchemaPermsCtx == Enabled)
         allActionInfos = Map.elems allActions
         queryRemotesMap =
           fmap (map fDefinition . piQuery . rscParsed . _rscpContext . fst) allRemoteSchemas
