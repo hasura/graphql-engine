@@ -2,8 +2,6 @@
 
 ## Next release
 
-- console: append "IF NOT EXISTS" for adding and "IF EXISTS" for removing of columns (fix #5284) (#5895)
-
 ### Heterogeneous execution
 
 Previous releases have allowed queries to request data from either Postgres or remote schemas, but not both. This release removes that restriction, so multiple data sources may be mixed within a single query. For example, GraphQL Engine can execute a query like
@@ -138,6 +136,7 @@ This release contains the [PDV refactor (#4111)](https://github.com/hasura/graph
 - console: add notifications (#5070)
 - console: down migrations improvements (close #3503, #4988) (#4790)
 - console: allow setting computed fields for views (close #6168) (#6174)
+- console: append "IF NOT EXISTS" for adding and "IF EXISTS" for removing of columns (fix #5284) (#5895)
 - cli: add missing global flags for seed command (#5565)
 - cli: allow seeds as alias for seed command (#5693)
 - cli: fix bug in metadata apply which made the server aquire some redundant and unnecessary locks (close #6115)
