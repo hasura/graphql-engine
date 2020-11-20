@@ -1,3 +1,4 @@
+{-# LANGUAGE CPP #-}
 module Hasura.Server.Auth.JWT
   ( processJwt
   , RawJWT
@@ -34,7 +35,9 @@ import           Data.IORef                      (IORef, readIORef, writeIORef)
 import           Data.Parser.JSONPath            (parseJSONPath)
 import           Data.Time.Clock                 (NominalDiffTime, UTCTime, diffUTCTime,
                                                   getCurrentTime)
+#ifndef PROFILING
 import           GHC.AssertNF
+#endif
 import           Network.URI                     (URI)
 
 import           Data.Aeson.Internal             (JSONPath)
@@ -267,7 +270,9 @@ updateJwkRef (Logger logger) manager url jwkRef = do
   let parseErr e = JFEJwkParseError (T.pack e) $ "Error parsing JWK from url: " <> urlT
   !jwkset <- either (logAndThrow . parseErr) return $ J.eitherDecode' respBody
   liftIO $ do
+#ifndef PROFILING
     $assertNFHere jwkset  -- so we don't write thunks to mutable vars
+#endif
     writeIORef jwkRef jwkset
 
   -- first check for Cache-Control header to get max-age, if not found, look for Expires header
@@ -597,7 +602,7 @@ instance J.FromJSON JWTConfig where
           "RS256" -> runEither $ parseRsaKey rawKey
           "RS384" -> runEither $ parseRsaKey rawKey
           "RS512" -> runEither $ parseRsaKey rawKey
-          -- TODO: support ES256, ES384, ES512, PS256, PS384
+          -- TODO(from master): support ES256, ES384, ES512, PS256, PS384
           _       -> invalidJwk ("Key type: " <> T.unpack keyType <> " is not supported")
 
       runEither = either (invalidJwk . T.unpack) return

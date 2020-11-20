@@ -27,13 +27,9 @@ newtype RemoteSchemaName
            , Generic, Cacheable, Arbitrary
            )
 
-remoteSchemaNameToTxt :: RemoteSchemaName -> Text
-remoteSchemaNameToTxt = unNonEmptyText . unRemoteSchemaName
-
 data RemoteSchemaInfo
   = RemoteSchemaInfo
-  { rsName             :: !RemoteSchemaName
-  , rsUrl              :: !N.URI
+  { rsUrl              :: !N.URI
   , rsHeaders          :: ![HeaderConf]
   , rsFwdClientHeaders :: !Bool
   , rsTimeoutSeconds   :: !Int
@@ -94,19 +90,18 @@ getUrlFromEnv env urlFromEnv = do
 validateRemoteSchemaDef
   :: (MonadError QErr m, MonadIO m)
   => Env.Environment
-  -> RemoteSchemaName
   -> RemoteSchemaDef
   -> m RemoteSchemaInfo
-validateRemoteSchemaDef env rsName (RemoteSchemaDef mUrl mUrlEnv hdrC fwdHdrs mTimeout) =
+validateRemoteSchemaDef env (RemoteSchemaDef mUrl mUrlEnv hdrC fwdHdrs mTimeout) =
   case (mUrl, mUrlEnv) of
     (Just url, Nothing)    -> do
       resolvedWebhookTxt <- unResolvedWebhook <$> resolveWebhook env url
       case N.parseURI $ T.unpack resolvedWebhookTxt of
         Nothing  -> throw400 InvalidParams $ "not a valid URI: " <> resolvedWebhookTxt
-        Just uri -> return $ RemoteSchemaInfo rsName uri hdrs fwdHdrs timeout
+        Just uri -> return $ RemoteSchemaInfo uri hdrs fwdHdrs timeout
     (Nothing, Just urlEnv) -> do
-      url <- getUrlFromEnv env  urlEnv
-      return $ RemoteSchemaInfo rsName url hdrs fwdHdrs timeout
+      url <- getUrlFromEnv env urlEnv
+      return $ RemoteSchemaInfo url hdrs fwdHdrs timeout
     (Nothing, Nothing)     ->
         throw400 InvalidParams "both `url` and `url_from_env` can't be empty"
     (Just _, Just _)       ->

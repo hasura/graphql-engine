@@ -32,7 +32,6 @@ import           Hasura.Server.Utils
 import           Hasura.Session
 import qualified Hasura.Tracing              as Tracing
 
-
 data AuthHookType
   = AHTGet
   | AHTPost
@@ -88,9 +87,9 @@ userInfoFromAuthHook logger manager hook reqHeaders = do
             let contentType = ("Content-Type", "application/json")
                 headersPayload = J.toJSON $ Map.fromList $ hdrsToText reqHeaders
             H.httpLbs (req' { H.method         = "POST"
-                            , H.requestHeaders = addDefaultHeaders [contentType] 
-                            , H.requestBody    = H.RequestBodyLBS . J.encode $ object ["headers" J..= headersPayload]
-                            }) manager
+                           , H.requestHeaders = addDefaultHeaders [contentType]
+                           , H.requestBody    = H.RequestBodyLBS . J.encode $ object ["headers" J..= headersPayload]
+                           }) manager
 
     logAndThrow :: H.HttpException -> m a
     logAndThrow err = do

@@ -13,6 +13,7 @@ module Hasura.Session
   , mkSessionVariablesHeaders
   , sessionVariablesToHeaders
   , getSessionVariableValue
+  , getSessionVariablesSet
   , getSessionVariables
   , UserAdminSecret(..)
   , UserRoleBuild(..)
@@ -23,6 +24,7 @@ module Hasura.Session
   , mkUserInfo
   , adminUserInfo
   , BackendOnlyFieldAccess(..)
+  , userInfoToList
   ) where
 
 import           Hasura.Incremental         (Cacheable)
@@ -40,6 +42,7 @@ import           Language.Haskell.TH.Syntax (Lift)
 
 import qualified Data.CaseInsensitive       as CI
 import qualified Data.HashMap.Strict        as Map
+import qualified Data.HashSet               as Set
 import qualified Data.Text                  as T
 import qualified Database.PG.Query          as Q
 import qualified Network.HTTP.Types         as HTTP
@@ -123,6 +126,9 @@ sessionVariablesToHeaders =
 
 getSessionVariables :: SessionVariables -> [Text]
 getSessionVariables = map sessionVariableToText . Map.keys . unSessionVariables
+
+getSessionVariablesSet :: SessionVariables -> Set.HashSet SessionVariable
+getSessionVariablesSet = Map.keysSet . unSessionVariables
 
 getSessionVariableValue :: SessionVariable -> SessionVariables -> Maybe SessionVariableValue
 getSessionVariableValue k = Map.lookup k . unSessionVariables
@@ -211,3 +217,9 @@ maybeRoleFromSessionVariables sessionVariables =
 
 adminUserInfo :: UserInfo
 adminUserInfo = UserInfo adminRoleName mempty BOFADisallowed
+
+userInfoToList :: UserInfo -> [(Text, Text)]
+userInfoToList userInfo =
+  let vars = map (first sessionVariableToText) $ Map.toList $ unSessionVariables . _uiSession $ userInfo
+      rn = roleNameToTxt . _uiRole $ userInfo
+  in (sessionVariableToText userRoleHeader, rn) : vars

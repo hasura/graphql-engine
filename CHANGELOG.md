@@ -2,6 +2,33 @@
 
 ## Next release
 
+### Breaking changes
+
+This release contains the [PDV refactor (#4111)](https://github.com/hasura/graphql-engine/pull/4111), a significant rewrite of the internals of the server, which did include some breaking changes:
+
+- The semantics of explicit `null` values in `where` filters have changed according to the discussion in [issue 704](https://github.com/hasura/graphql-engine/issues/704#issuecomment-635571407): an explicit `null` value in a comparison input object will be treated as an error rather than resulting in the expression being evaluated to `True`. For instance: `delete_users(where: {id: {_eq: $userId}}) { name }` will yield an error if `$userId` is `null` instead of deleting all users.
+- The validation of required headers has been fixed (closing #14 and #3659):
+  - if a query selects table `bar` through table `foo` via a relationship, the required permissions headers will be the union of the required headers of table `foo` and table `bar` (we used to only check the headers of the root table);
+  - if an insert does not have an `on_conflict` clause, it will not require the update permissions headers.
+
+#### Remote Relationship
+
+In this release, a breaking change has been introduced:
+
+In a remote relationship query, the remote schema will be queried when all of the joining arguments
+are **not** `null` values. When there are `null` value(s), the remote schema won't be queried and the
+response of the remote relationship field will be `null`. Earlier, the remote schema
+was queried with the `null` value arguments and the response depended upon how the remote schema handled the `null`
+arguments.
+
+### Bug fixes and improvements
+
+(Add entries here in the order of: server, console, cli, docs, others)
+
+- server: in a remote relationship query, do not query the remote server and return null for the corresponding result if a joining argument is null (See Breaking changes for more info) (fixes #5448)
+
+## v1.3.3
+
 ### Server - Support for mapping session variables to default JWT claims
 
 Some auth providers do not let users add custom claims in JWT. In such cases, the server can take a JWT configuration option called `claims_map` to specify a mapping of Hasura session variables to values in existing claims via JSONPath or literal values.
@@ -36,6 +63,48 @@ The corresponding JWT config can be:
     }
   }
 ```
+
+### Metadata Types SDK
+
+The types and documentation comments for Metadata V2 have been converted into JSON/YAML Schema, and used to autogenerate type definitions for popular languages.
+
+This enables users to build type-safe tooling in the language of their choice around Metadata interactions and automations.
+
+Additionally, the JSON/YAML Schemas can be used to provide IntelliSense and autocomplete + documentation when interacting with Metadata YAML/JSON files.
+
+For a more comprehensive overview, please see [the readme located here](./contrib/metadata-types/README.md)
+
+**Sample Code**
+
+```ts
+import { TableEntry } from "../generated/HasuraMetadataV2"
+
+const newTable: TableEntry = {
+  table: { schema: "public", name: "user" },
+  select_permissions: [
+    {
+      role: "user",
+      permission: {
+        limit: 100,
+        allow_aggregations: false,
+        columns: ["id", "name", "etc"],
+        computed_fields: ["my_computed_field"],
+        filter: {
+          id: { _eq: "X-Hasura-User-ID" },
+        },
+      },
+    },
+  ],
+}
+```
+
+**IntelliSense Example**
+
+![](./contrib/metadata-types/json-schema-typecheck-demo.gif)
+
+### Bug fixes and improvements
+
+(Add entries here in the order of: server, console, cli, docs, others)
 
 - server: allow remote relationships joining `type` column with `[type]` input argument as spec allows this coercion (fixes #5133)
 - server: add action-like URL templating for event triggers and remote schemas (fixes #2483)

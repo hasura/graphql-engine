@@ -40,6 +40,7 @@ import qualified Network.HTTP.Types                   as N
 import           Hasura.Logging
 import           Hasura.Prelude
 import           Hasura.RQL.Types
+
 import           Hasura.Server.Auth.JWT               hiding (processJwt_)
 import           Hasura.Server.Auth.WebHook
 import           Hasura.Server.Utils
