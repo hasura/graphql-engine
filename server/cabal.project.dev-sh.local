@@ -24,4 +24,5 @@ package graphql-engine
   -- which is not what we originally wanted. But building the test modules
   -- themselves with coverage is actually nice for validation.
   coverage: true
+  -- to match CI:
   ghc-options: -Werror
