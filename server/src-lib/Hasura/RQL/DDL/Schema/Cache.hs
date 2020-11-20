@@ -62,7 +62,7 @@ buildRebuildableSchemaCache
   => Env.Environment
   -> m (RebuildableSchemaCache m)
 buildRebuildableSchemaCache env = do
-  metadata <- liftTx fetchMetadataTx
+  metadata <- liftTx fetchMetadataFromCatalog
   result <- flip runReaderT CatalogSync $
     Inc.build (buildSchemaCacheRule env) (metadata, initialInvalidationKeys)
   pure $ RebuildableSchemaCache (Inc.result result) initialInvalidationKeys (Inc.rebuildRule result)
@@ -413,7 +413,7 @@ withMetadataCheck cascade action = do
   -- Do not allow overloading functions
   unless (null overloadedFuncs) $
     throw400 NotSupported $ "the following tracked function(s) cannot be overloaded: "
-    <> reportFuncs overloadedFuncs
+    <> commaSeparated overloadedFuncs
 
   indirectDeps <- getSchemaChangeDeps schemaDiff
 
@@ -425,8 +425,7 @@ withMetadataCheck cascade action = do
     mapM_ (purgeDependentObject >=> tell) indirectDeps
 
     -- Purge all dropped functions
-    let purgedFuncs = flip mapMaybe indirectDeps $ \dep ->
-          case dep of
+    let purgedFuncs = flip mapMaybe indirectDeps $ \case
             SOFunction qf -> Just qf
             _             -> Nothing
 
@@ -456,8 +455,6 @@ withMetadataCheck cascade action = do
 
   pure actionResult
   where
-    reportFuncs = T.intercalate ", " . map dquote
-
     processSchemaChanges
       :: ( MonadError QErr m
          , CacheRM m

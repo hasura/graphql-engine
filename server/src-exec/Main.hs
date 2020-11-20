@@ -71,7 +71,7 @@ runApp env (HGEOptionsG rci hgeCmd) = do
       runHGEServer env serveOptions serveCtx Nothing initTime shutdownApp Nothing ekgStore
 
     HCExport -> do
-      res <- runTxWithMinimalPool _gcConnInfo fetchMetadataTx
+      res <- runTxWithMinimalPool _gcConnInfo fetchMetadataFromCatalog
       either (printErrJExit MetadataExportError) printJSON res
 
     HCClean -> do
@@ -85,7 +85,7 @@ runApp env (HGEOptionsG rci hgeCmd) = do
       pool <- mkMinimalPool _gcConnInfo
       res <- runAsAdmin pool sqlGenCtx _gcHttpManager $ do
         schemaCache <- buildRebuildableSchemaCache env
-        metadata <- liftTx fetchMetadataTx
+        metadata <- liftTx fetchMetadataFromCatalog
         execQuery env queryBs
           & Tracing.runTraceTWithReporter Tracing.noReporter "execute"
           & runMetadataT metadata

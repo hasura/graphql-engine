@@ -20,7 +20,7 @@ import qualified Test.Hspec.Runner                   as Hspec
 
 import           Hasura.Backends.Postgres.Connection (mkPGExecCtx)
 import           Hasura.Backends.Postgres.Connection (liftTx)
-import           Hasura.RQL.DDL.Schema.Catalog       (fetchMetadataTx)
+import           Hasura.RQL.DDL.Schema.Catalog       (fetchMetadataFromCatalog)
 import           Hasura.RQL.Types                    (SQLGenCtx (..), runMetadataT)
 import           Hasura.RQL.Types.Run
 import           Hasura.Server.Init                  (RawConnInfo, mkConnInfo, mkRawConnInfo,
@@ -95,7 +95,7 @@ buildPostgresSpecs pgConnOptions = do
 
         (schemaCache, metadata) <- runAsAdmin do
           sc <- snd <$> (migrateCatalog (Env.mkEnvironment env) =<< liftIO getCurrentTime)
-          metadata <- liftTx fetchMetadataTx
+          metadata <- liftTx fetchMetadataFromCatalog
           pure (sc, metadata)
         cacheRef <- newMVar schemaCache
         pure $ NT (runAsAdmin . flip MigrateSpec.runCacheRefT cacheRef . fmap fst . runMetadataT metadata)

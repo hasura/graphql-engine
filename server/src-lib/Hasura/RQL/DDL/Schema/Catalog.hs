@@ -1,7 +1,7 @@
 -- | Functions for fetching and updating @'Metadata' in the catalog.
 module Hasura.RQL.DDL.Schema.Catalog
-  ( fetchMetadataTx
-  , setMetadataTx
+  ( fetchMetadataFromCatalog
+  , setMetadataInCatalog
   ) where
 
 import           Hasura.Prelude
@@ -12,8 +12,8 @@ import           Hasura.Backends.Postgres.Connection
 import           Hasura.RQL.Types.Error
 import           Hasura.RQL.Types.Metadata
 
-fetchMetadataTx :: Q.TxE QErr Metadata
-fetchMetadataTx = do
+fetchMetadataFromCatalog :: Q.TxE QErr Metadata
+fetchMetadataFromCatalog = do
   rows <- Q.withQE defaultTxErrorHandler
     [Q.sql|
        SELECT metadata from hdb_catalog.hdb_metadata where id = 1
@@ -23,8 +23,8 @@ fetchMetadataTx = do
     [(Identity (Q.AltJ metadata))] -> pure metadata
     _                              -> throw500 "multiple rows in hdb_metadata table"
 
-setMetadataTx :: Metadata -> Q.TxE QErr ()
-setMetadataTx metadata =
+setMetadataInCatalog :: Metadata -> Q.TxE QErr ()
+setMetadataInCatalog metadata =
   Q.unitQE defaultTxErrorHandler
     [Q.sql|
      INSERT INTO hdb_catalog.hdb_metadata

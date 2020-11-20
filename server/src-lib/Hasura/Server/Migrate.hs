@@ -300,13 +300,13 @@ migrations dryRun =
         else do
         metadata <- fetchMetadataFromHdbTables
         runTx query
-        liftTx $ setMetadataTx metadata
+        liftTx $ setMetadataInCatalog metadata
 
     from43To42 = do
       let query = $(Q.sqlFromFile "src-rsr/migrations/43_to_42.sql")
       if dryRun then (liftIO . TIO.putStrLn . Q.getQueryText) query
         else do
-        metadata <- liftTx fetchMetadataTx
+        metadata <- liftTx fetchMetadataFromCatalog
         runTx query
         liftTx $ runHasSystemDefinedT (SystemDefined False) $ saveMetadataToHdbTables metadata
         recreateSystemMetadata

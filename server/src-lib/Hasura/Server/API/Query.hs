@@ -212,10 +212,10 @@ runQuery env pgExecCtx instanceId userInfo sc hMgr sqlGenCtx query = do
 
     withMetadata :: (MonadTx m) => MetadataT m a -> m a
     withMetadata m = do
-      metadata <- liftTx fetchMetadataTx
+      metadata <- liftTx fetchMetadataFromCatalog
       (r, modifiedMetadata) <- runMetadataT metadata m
       when (queryModifiesSchemaCache query) $
-        liftTx $ setMetadataTx modifiedMetadata
+        liftTx $ setMetadataInCatalog modifiedMetadata
       pure r
 
     withReload (result, updatedCache, invalidations) = do

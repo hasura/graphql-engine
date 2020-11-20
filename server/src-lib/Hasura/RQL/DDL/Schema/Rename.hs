@@ -1,8 +1,6 @@
-{-# LANGUAGE ViewPatterns #-}
-
--- | Functions for mutating the catalog (with integrity checking) to incorporate schema changes
+-- | Functions for updating the metadata (with integrity checking) to incorporate schema changes
 -- discovered after applying a user-supplied SQL query. None of these functions modify the schema
--- cache, so it must be reloaded after the catalog is updated.
+-- cache, so it must be reloaded after the metadata is updated.
 module Hasura.RQL.DDL.Schema.Rename
   ( renameTableInMetadata
   , renameColumnInMetadata

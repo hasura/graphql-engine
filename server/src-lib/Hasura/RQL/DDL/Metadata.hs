@@ -1,4 +1,3 @@
-{-# LANGUAGE RecordWildCards #-}
 module Hasura.RQL.DDL.Metadata
   ( runReplaceMetadata
   , runExportMetadata
