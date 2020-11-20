@@ -391,9 +391,7 @@ validateType permittedVariables value expectedGType schemaDocument =
 
     mkScalarTy scalarType = do
       eitherScalar <- runExceptT $ mkScalarTypeName scalarType
-      case eitherScalar of
-        Left _  -> throwError $ InvalidGraphQLName $ toSQLTxt scalarType
-        Right s -> pure s
+      onLeft eitherScalar $ const $ throwError $ InvalidGraphQLName $ toSQLTxt scalarType
 
 isTypeCoercible
   :: (MonadError ValidationError m)
@@ -431,7 +429,5 @@ columnInfoToNamedType pci =
   case pgiType pci of
     ColumnScalar scalarType -> do
       eitherScalar <- runExceptT $ mkScalarTypeName scalarType
-      case eitherScalar of
-        Left _  -> throwError $ InvalidGraphQLName $ toSQLTxt scalarType
-        Right s -> pure s
+      onLeft eitherScalar $ const $ throwError $ InvalidGraphQLName $ toSQLTxt scalarType
     _                       -> throwError UnsupportedEnum
