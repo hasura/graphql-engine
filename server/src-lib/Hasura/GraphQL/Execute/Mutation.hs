@@ -14,27 +14,30 @@ import qualified Language.GraphQL.Draft.Syntax             as G
 import qualified Network.HTTP.Client                       as HTTP
 import qualified Network.HTTP.Types                        as HTTP
 
-import qualified Hasura.Backends.Postgres.Execute.Mutation as RQL
+import qualified Hasura.Backends.Postgres.Execute.Mutation as PGE
 import qualified Hasura.GraphQL.Transport.HTTP.Protocol    as GH
 import qualified Hasura.Logging                            as L
-import qualified Hasura.RQL.IR.Delete                      as RQL
-import qualified Hasura.RQL.IR.Returning                   as RQL
-import qualified Hasura.RQL.IR.Update                      as RQL
+import qualified Hasura.RQL.IR.Delete                      as IR
+import qualified Hasura.RQL.IR.Insert                      as IR
+import qualified Hasura.RQL.IR.Returning                   as IR
+import qualified Hasura.RQL.IR.Select                      as IR
+import qualified Hasura.RQL.IR.Update                      as IR
 import qualified Hasura.Tracing                            as Tracing
 
 import           Hasura.Backends.Postgres.Connection
 import           Hasura.EncJSON
 import           Hasura.GraphQL.Context
 import           Hasura.GraphQL.Execute.Action
+import           Hasura.GraphQL.Execute.Common
 import           Hasura.GraphQL.Execute.Insert
 import           Hasura.GraphQL.Execute.Prepare
 import           Hasura.GraphQL.Execute.Remote
 import           Hasura.GraphQL.Execute.Resolve
 import           Hasura.GraphQL.Parser
-import           Hasura.GraphQL.Schema.Insert
 import           Hasura.RQL.Types
 import           Hasura.Server.Version                     (HasVersion)
 import           Hasura.Session
+
 
 convertDelete
   :: ( HasVersion
@@ -44,14 +47,14 @@ convertDelete
      , MonadIO tx)
   => Env.Environment
   -> SessionVariables
-  -> RQL.MutationRemoteJoinCtx
-  -> RQL.AnnDelG 'Postgres UnpreparedValue
+  -> PGE.MutationRemoteJoinCtx
+  -> IR.AnnDelG 'Postgres UnpreparedValue
   -> Bool
   -> m (tx EncJSON)
 convertDelete env usrVars remoteJoinCtx deleteOperation stringifyNum = do
-  let (preparedDelete, expectedVariables) = flip runState Set.empty $ RQL.traverseAnnDel prepareWithoutPlan deleteOperation
+  let (preparedDelete, expectedVariables) = flip runState Set.empty $ IR.traverseAnnDel prepareWithoutPlan deleteOperation
   validateSessionVariables expectedVariables usrVars
-  pure $ RQL.execDeleteQuery env stringifyNum (Just remoteJoinCtx) (preparedDelete, Seq.empty)
+  pure $ PGE.execDeleteQuery env stringifyNum (Just remoteJoinCtx) (preparedDelete, Seq.empty)
 
 convertUpdate
   :: ( HasVersion
@@ -62,17 +65,17 @@ convertUpdate
      )
   => Env.Environment
   -> SessionVariables
-  -> RQL.MutationRemoteJoinCtx
-  -> RQL.AnnUpdG 'Postgres UnpreparedValue
+  -> PGE.MutationRemoteJoinCtx
+  -> IR.AnnUpdG 'Postgres UnpreparedValue
   -> Bool
   -> m (tx EncJSON)
 convertUpdate env usrVars remoteJoinCtx updateOperation stringifyNum = do
-  let (preparedUpdate, expectedVariables) = flip runState Set.empty $ RQL.traverseAnnUpd prepareWithoutPlan updateOperation
-  if null $ RQL.uqp1OpExps updateOperation
-  then pure $ pure $ RQL.buildEmptyMutResp $ RQL.uqp1Output preparedUpdate
+  let (preparedUpdate, expectedVariables) = flip runState Set.empty $ IR.traverseAnnUpd prepareWithoutPlan updateOperation
+  if null $ IR.uqp1OpExps updateOperation
+  then pure $ pure $ IR.buildEmptyMutResp $ IR.uqp1Output preparedUpdate
   else do
     validateSessionVariables expectedVariables usrVars
-    pure $ RQL.execUpdateQuery env stringifyNum (Just remoteJoinCtx) (preparedUpdate, Seq.empty)
+    pure $ PGE.execUpdateQuery env stringifyNum (Just remoteJoinCtx) (preparedUpdate, Seq.empty)
 
 convertInsert
   :: ( HasVersion
@@ -82,8 +85,8 @@ convertInsert
      , MonadIO tx)
   => Env.Environment
   -> SessionVariables
-  -> RQL.MutationRemoteJoinCtx
-  -> AnnInsert 'Postgres UnpreparedValue
+  -> PGE.MutationRemoteJoinCtx
+  -> IR.AnnInsert 'Postgres UnpreparedValue
   -> Bool
   -> m (tx EncJSON)
 convertInsert env usrVars remoteJoinCtx insertOperation stringifyNum = do
@@ -91,24 +94,6 @@ convertInsert env usrVars remoteJoinCtx insertOperation stringifyNum = do
   validateSessionVariables expectedVariables usrVars
   pure $ convertToSQLTransaction env preparedInsert remoteJoinCtx Seq.empty stringifyNum
 
-convertMutationDB
-  :: ( HasVersion
-     , MonadIO m
-     , MonadError QErr m
-     , Tracing.MonadTrace tx
-     , MonadIO tx
-     , MonadTx tx
-     )
-  => Env.Environment
-  -> SessionVariables
-  -> RQL.MutationRemoteJoinCtx
-  -> Bool
-  -> MutationDB 'Postgres UnpreparedValue
-  -> m (tx EncJSON, HTTP.ResponseHeaders)
-convertMutationDB env userSession remoteJoinCtx stringifyNum = \case
-  MDBInsert s -> noResponseHeaders <$> convertInsert env userSession remoteJoinCtx s stringifyNum
-  MDBUpdate s -> noResponseHeaders <$> convertUpdate env userSession remoteJoinCtx s stringifyNum
-  MDBDelete s -> noResponseHeaders <$> convertDelete env userSession remoteJoinCtx s stringifyNum
 
 noResponseHeaders :: tx EncJSON -> (tx EncJSON, HTTP.ResponseHeaders)
 noResponseHeaders rTx = (rTx, [])
@@ -158,7 +143,7 @@ convertMutationSelectionSet
   -> [G.VariableDefinition]
   -> Maybe GH.VariableValues
   -> m (ExecutionPlan (tx EncJSON, HTTP.ResponseHeaders))
-convertMutationSelectionSet env logger gqlContext sqlGenCtx userInfo manager reqHeaders fields varDefs varValsM = do
+convertMutationSelectionSet env logger gqlContext SQLGenCtx{stringifyNum} userInfo manager reqHeaders fields varDefs varValsM = do
   mutationParser <- onNothing (gqlMutationParser gqlContext) $
     throw400 ValidationFailed "no mutations exist"
   -- Parse the GraphQL query into the RQL AST
@@ -171,7 +156,12 @@ convertMutationSelectionSet env logger gqlContext sqlGenCtx userInfo manager req
   let userSession = _uiSession userInfo
       remoteJoinCtx = (manager, reqHeaders, userInfo)
   txs <- for unpreparedQueries \case
-    RFDB db             -> ExecStepDB <$> convertMutationDB env userSession remoteJoinCtx (stringifyNum sqlGenCtx) db
+    RFDB db -> ExecStepDB . noResponseHeaders <$> case db of
+      MDBInsert s -> convertInsert env userSession remoteJoinCtx s stringifyNum
+      MDBUpdate s -> convertUpdate env userSession remoteJoinCtx s stringifyNum
+      MDBDelete s -> convertDelete env userSession remoteJoinCtx s stringifyNum
+      MDBFunction s -> convertFunction env userInfo manager reqHeaders s
+
     RFRemote remoteField -> do
       RemoteFieldG remoteSchemaInfo resolvedRemoteField <- resolveRemoteField userInfo remoteField
       pure $ buildExecStepRemote
@@ -189,3 +179,32 @@ convertMutationSelectionSet env logger gqlContext sqlGenCtx userInfo manager req
       -- here. It would be nice to report all of them!
       ParseError{ pePath, peMessage, peCode } ->
         throwError (err400 peCode peMessage){ qePath = pePath }
+
+-- | A pared-down version of 'Query.convertQuerySelSet', for use in execution of
+-- special case of SQL function mutations (see 'MDBFunction').
+convertFunction
+  :: forall m tx .
+     ( MonadError QErr m
+     , HasVersion
+     , MonadIO tx
+     , MonadTx tx
+     , Tracing.MonadTrace tx
+     )
+  => Env.Environment
+  -> UserInfo
+  -> HTTP.Manager
+  -> HTTP.RequestHeaders
+  -> IR.AnnSimpleSelG 'Postgres UnpreparedValue
+  -- ^ VOLATILE function as 'SelectExp'
+  -> m (tx EncJSON)
+convertFunction env userInfo manager reqHeaders unpreparedQuery = do
+  -- Transform the RQL AST into a prepared SQL query
+  (preparedQuery, PlanningSt _ _ planVals expectedVariables)
+    <- flip runStateT initPlanningSt
+       $ IR.traverseAnnSimpleSelect prepareWithPlan unpreparedQuery
+  validateSessionVariables expectedVariables $ _uiSession userInfo
+
+  pure $!
+    fst $ -- forget (Maybe PreparedSql)
+      mkCurPlanTx env manager reqHeaders userInfo id noProfile $
+        RFPPostgres $ irToRootFieldPlan planVals $ QDBSimple preparedQuery

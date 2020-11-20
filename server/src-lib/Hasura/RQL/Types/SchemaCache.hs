@@ -108,7 +108,7 @@ module Hasura.RQL.Types.SchemaCache
   , getDependentObjs
   , getDependentObjsWith
 
-  , FunctionType(..)
+  , FunctionVolatility(..)
   , FunctionArg(..)
   , FunctionArgName(..)
   , FunctionName(..)

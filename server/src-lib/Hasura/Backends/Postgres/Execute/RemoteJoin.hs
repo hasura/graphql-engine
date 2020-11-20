@@ -50,7 +50,6 @@ import           Hasura.RQL.Types
 import           Hasura.Server.Version                  (HasVersion)
 import           Hasura.Session
 
-
 -- | Executes given query and fetch response JSON from Postgres. Substitutes remote relationship fields.
 executeQueryWithRemoteJoins
   :: ( HasVersion
@@ -90,7 +89,8 @@ processRemoteJoins env manager reqHdrs userInfo pgRes rjs = do
   jsonRes <- onLeft (AO.eitherDecode pgRes) (throw500 . T.pack)
   -- Step 2: Traverse through the JSON obtained in above step and generate composite JSON value with remote joins
   compositeJson <- traverseQueryResponseJSON rjMap jsonRes
-  let remoteJoins = collectRemoteFields compositeJson
+  -- The remote server is queried only when all of the joining fields are *not* NULL:
+  let remoteJoins = catMaybes $ collectRemoteFields compositeJson
   -- Step 3: Make queries to remote server and fetch graphql response
   remoteServerResp <- fetchRemoteJoinFields env manager reqHdrs userInfo remoteJoins
   -- Step 4: Replace remote fields in composite json with remote join values
@@ -314,7 +314,7 @@ data RemoteJoinField
 --   from remote join map and query response JSON from Postgres.
 traverseQueryResponseJSON
   :: (MonadError QErr m)
-  => RemoteJoinMap 'Postgres -> AO.Value -> m (CompositeValue RemoteJoinField)
+  => RemoteJoinMap 'Postgres -> AO.Value -> m (CompositeValue (Maybe RemoteJoinField))
 traverseQueryResponseJSON rjm =
   flip runReaderT rjm . flip evalStateT (Counter 0) . traverseValue mempty
   where
@@ -323,24 +323,72 @@ traverseQueryResponseJSON rjm =
     askRemoteJoins path = asks (Map.lookup path)
 
     traverseValue :: (MonadError QErr m, MonadReader (RemoteJoinMap 'Postgres) m, MonadState Counter m)
-                  => FieldPath -> AO.Value -> m (CompositeValue RemoteJoinField)
+                  => FieldPath -> AO.Value -> m (CompositeValue (Maybe RemoteJoinField))
     traverseValue path = \case
       AO.Object obj -> traverseObject obj
       AO.Array arr  -> CVObjectArray <$> mapM (traverseValue path) (toList arr)
       v             -> pure $ CVOrdValue v
-
       where
-        mkRemoteSchemaField siblingFields remoteJoin = do
+        mkRemoteSchemaField
+          :: (MonadError QErr m, MonadState Counter m)
+          => AO.Object
+          -> RemoteJoin 'Postgres
+          -> m (Maybe RemoteJoinField)
+        mkRemoteSchemaField siblingFields remoteJoin = runMaybeT $ do
           counter <- getCounter
           let RemoteJoin fieldName inputArgs selSet hasuraFields fieldCall rsi _ = remoteJoin
-          hasuraFieldVariables <- mapM (parseGraphQLName . getFieldNameTxt) $ toList hasuraFields
-          siblingFieldArgsVars <- mapM (\(k,val) -> do
-                                          (,) <$> parseGraphQLName k <*> ordJSONValueToGValue val)
-                                  $ siblingFields
+          -- when any of the joining fields are `NULL`, we don't query
+          -- the remote schema
+          --
+          -- The rationale for performing such a join is that, postgres
+          -- implements joins in the same way. For example:
+          -- Let's say we have the following tables
+          --
+          -- test_db=# select * from users;
+          -- id | first_name | last_name
+          -- ----+------------+-----------
+          --   4 | foo        |
+          --   5 | baz        | bar
+          --   6 | hello      |
+          -- (3 rows)
+
+          -- test_db=# select * from address;
+          --  id | first_name | last_name | address
+          -- ----+------------+-----------+----------
+          --   4 | foo        |           | address1
+          --   5 | baz        | bar       | address2
+          --   6 |            | hello     | address3
+          --
+          -- Executing the following query:
+          -- select u.first_name,u.last_name,a.address
+          -- from users u
+          -- left join address a on u.first_name = a.first_name
+          -- and u.last_name = a.last_name;
+          --
+          -- gives the following result:
+          --
+          -- first_name | last_name | address
+          -- -----------+-----------+----------
+          --  baz       | bar       | address2
+          --  foo       |           |
+          --  hello     |           |
+          --
+          -- The data from the `address` table is fetched only when all
+          -- of the arguments are **NOT** NULL.
+          --
+          -- For discussion of this design here
+          -- see: https://github.com/hasura/graphql-engine-mono/pull/31#issuecomment-728230307
+          for_ hasuraFields $ \(FieldName fieldNameTxt) -> do
+            fldValue <- hoistMaybe $ AO.lookup fieldNameTxt siblingFields
+            guard $ fldValue /= AO.Null
+          hasuraFieldVariables <- lift $ mapM (parseGraphQLName . getFieldNameTxt) $ toList hasuraFields
+          siblingFieldArgsVars <- lift $ mapM (\(k,val) -> do
+                                           (,) <$> parseGraphQLName k <*> ordJSONValueToGValue val)
+                                  $ AO.toList siblingFields
           let siblingFieldArgs = Map.fromList $ siblingFieldArgsVars
               hasuraFieldArgs = flip Map.filterWithKey siblingFieldArgs $ \k _ -> k `elem` hasuraFieldVariables
-          fieldAlias <- pathToAlias (appendPath fieldName path) counter
-          queryField <- fieldCallsToField (inputArgsToMap inputArgs) hasuraFieldArgs selSet fieldAlias fieldCall
+          fieldAlias <- lift $ pathToAlias (appendPath fieldName path) counter
+          queryField <- lift $ fieldCallsToField (inputArgsToMap inputArgs) hasuraFieldArgs selSet fieldAlias fieldCall
           pure $ RemoteJoinField rsi
                                  fieldAlias
                                  queryField
@@ -365,9 +413,9 @@ traverseQueryResponseJSON rjm =
                       phantomColumnFields = map (fromPGCol . pgiColumn) $
                                             concatMap _rjPhantomFields remoteJoins
                   if | fieldName `elem` phantomColumnFields -> pure Nothing
-                     | otherwise ->
+                     | otherwise -> do
                          case find ((== fieldName) . _rjName) remoteJoins of
-                           Just rj -> Just . CVFromRemote <$> mkRemoteSchemaField fields rj
+                           Just rj -> Just . CVFromRemote <$> mkRemoteSchemaField obj rj
                            Nothing -> Just <$> traverseValue fieldPath value
           pure $ CVObject $ OMap.fromList processedFields
 
@@ -489,16 +537,18 @@ fetchRemoteJoinFields env manager reqHdrs userInfo remoteJoins = do
 -- | Replace 'RemoteJoinField' in composite JSON with it's json value from remote server response.
 replaceRemoteFields
   :: MonadError QErr m
-  => CompositeValue RemoteJoinField
+  => CompositeValue (Maybe RemoteJoinField)
   -> AO.Object
   -> m AO.Value
 replaceRemoteFields compositeJson remoteServerResponse =
   compositeValueToJSON <$> traverse replaceValue compositeJson
   where
-    replaceValue rj = do
-      let alias = _rjfAlias rj
-          fieldCall = _rjfFieldCall rj
-      extractAtPath (alias:fieldCall) $ AO.Object remoteServerResponse
+    -- `Nothing` below signifies that at-least one of the joining fields was NULL
+    -- , when that happens we have to manually insert the `NULL` value for the
+    -- remoteField value in the response.
+    replaceValue Nothing = pure $ AO.Null
+    replaceValue (Just RemoteJoinField {_rjfAlias, _rjfFieldCall}) =
+      extractAtPath (_rjfAlias:_rjfFieldCall) $ AO.Object remoteServerResponse
 
     -- | 'FieldCall' is path to remote relationship value in remote server response.
     -- 'extractAtPath' traverse through the path and extracts the json value
@@ -597,7 +647,7 @@ substituteVariables values = traverse go
     go = \case
       G.VVariable variableName ->
         onNothing (Map.lookup variableName values) $
-        Failure ["Value for variable " <> variableName <<> " not provided"]
+          Failure ["Value for variable " <> variableName <<> " not provided"]
       G.VList listValue ->
         fmap G.VList (traverse go listValue)
       G.VObject objectValue ->

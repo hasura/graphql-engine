@@ -267,7 +267,7 @@ def validate_gql_ws_q(hge_ctx, conf, headers, retry=False, via_subscription=Fals
 def validate_http_anyq(hge_ctx, url, query, headers, exp_code, exp_response):
     code, resp, resp_hdrs = hge_ctx.anyq(url, query, headers)
     print(headers)
-    assert code == exp_code, resp
+    assert code == exp_code, (code, exp_code, resp)
     print('http resp: ', resp)
     if exp_response:
         return assert_graphql_resp_expected(resp, exp_response, query, resp_hdrs, hge_ctx.avoid_err_msg_checks)

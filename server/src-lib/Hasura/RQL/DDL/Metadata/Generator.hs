@@ -174,6 +174,9 @@ instance Arbitrary TableMetadata where
 instance Arbitrary FunctionConfig where
   arbitrary = genericArbitrary
 
+instance Arbitrary FunctionExposedAs where
+  arbitrary = genericArbitrary
+
 instance Arbitrary TrackFunctionV2 where
   arbitrary = genericArbitrary
 
