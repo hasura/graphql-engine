@@ -274,8 +274,9 @@ class TestTests3:
             )
         except:
             print("FAIL!")
-            return True
-        assert 0, "Expected failure is expected"
+            assert 0, "Test failure, occurs as expected"
+        # It reaches here only if the exception wasn't caught, in which case
+        # this current test should fail  
 
     """
       This test case is about testing validate_http_anyq_with_allowed_responses
@@ -324,9 +325,9 @@ class TestTests3:
             hge_ctx, url, query, {}, 200, allowed_responses
         )
         if err != True:
-            return False  # this should not be happening
+            assert 1, "No error occurred. The test passed when it should be failing"
         else:
-            return True  # the test failed, which is as expected
+            assert 0, "Test failed, as expected"  # the test failed, which is as expected
 
     # Re-use setup and teardown from where we adapted this test case:
     @classmethod
