@@ -8,7 +8,7 @@ on:
 jobs:
   hlint:
     runs-on: ubuntu-20.04
-    if: "!contains(github.event.pull_request.labels.*.name, 'ignore-server-lint-checks') && github.event.label.name != 'ignore-server-lint-checks'"
+    if: "!contains(github.event.pull_request.labels.*.name, 'ignore-server-hlint-checks') && github.event.label.name != 'ignore-server-hlint-checks'"
     env:
       working-directory: ./server
       HLINT_BASE_URL: https://dl.haskellworks.io/binaries/hlint
