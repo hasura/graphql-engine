@@ -284,12 +284,23 @@ def validate_http_anyq_with_allowed_responses(hge_ctx, url, query, headers, exp_
     assert code == exp_code, resp
     print('http resp: ', resp)
     if isinstance(allowed_responses, list) and len(allowed_responses) > 0:
+        resp_res = {}
+        test_passed = False
+
         for response in allowed_responses:
-            resp_result, pass_test = assert_graphql_resp_expected(resp, response, query, resp_hdrs, hge_ctx.avoid_err_msg_checks, True)
+            dict_resp = json.loads(json.dumps(response))
+            exp_resp = dict_resp['response']
+            resp_result, pass_test = assert_graphql_resp_expected(resp, exp_resp, query, resp_hdrs, hge_ctx.avoid_err_msg_checks, True)
             if pass_test == True:
-                return resp_result, True
-        # test should fail if none of the allowed responses work
-        raise Exception("allowed_responses did not contain the response that was expected. Please check your allowed_responses")
+                test_passed = True
+                resp_res = resp_result
+                break
+
+        if test_passed == True:
+            return resp_res, test_passed
+        else:
+            # test should fail if none of the allowed responses work
+            raise Exception("allowed_responses did not contain the response that was expected. Please check your allowed_responses")
     else:
         raise Exception("allowed_responses was not a list of permissible responses")
 
