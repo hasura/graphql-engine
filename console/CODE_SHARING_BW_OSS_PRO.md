@@ -24,6 +24,7 @@ Few changes are made on the OSS source code that essentially enable `PRO` or `CL
   2. Server metadata would require the collaborator to have atleast `admin` access as this queries `/v1/query` and that is only allowed for `admins` for now
   `boolean` values will be passed accordingly based on the collaborator access.
 2. *Change*: Modifies `initQueries` to filter schema tables/view based on certain parameters passed by `PRO`/`CLOUD` to the function `dataRouterUtils`.
+3. *Change*: Adds `ADMIN_SECRET_HEADER_KEY` to constants at `cypress/helper` and update the imports accordingly. The constant was resolved from `src/` before and it was causing some trouble while sharing the tests with `pro`.
 
 
 ## Bundle
