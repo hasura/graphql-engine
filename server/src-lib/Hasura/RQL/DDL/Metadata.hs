@@ -15,6 +15,7 @@ module Hasura.RQL.DDL.Metadata
 import           Hasura.Prelude
 
 import qualified Data.Aeson.Ordered                 as AO
+import qualified Data.HashMap.Strict                as HM
 import qualified Data.HashMap.Strict.InsOrd         as HMIns
 import qualified Data.HashSet                       as HS
 import qualified Data.HashSet.InsOrd                as HSIns
@@ -36,7 +37,8 @@ import qualified Hasura.RQL.DDL.Schema              as Schema
 import           Hasura.Backends.Postgres.SQL.Types
 import           Hasura.EncJSON
 import           Hasura.RQL.DDL.ComputedField       (dropComputedFieldFromCatalog)
-import           Hasura.RQL.DDL.EventTrigger        (delEventTriggerFromCatalog, subTableP2)
+import           Hasura.RQL.DDL.EventTrigger        (delEventTriggerFromCatalog,
+                                                     replaceEventTriggersInCatalog)
 import           Hasura.RQL.DDL.Metadata.Types
 import           Hasura.RQL.DDL.Permission.Internal (dropPermFromCatalog)
 import           Hasura.RQL.DDL.RemoteSchema        (addRemoteSchemaToCatalog,
@@ -49,10 +51,11 @@ import           Hasura.RQL.Types
 -- | Purge all user-defined metadata; metadata with is_system_defined = false
 clearUserMetadata :: MonadTx m => m ()
 clearUserMetadata = liftTx $ Q.catchE defaultTxErrorHandler $ do
+  -- Note: we don’t drop event triggers here because we update them a different
+  -- way; see Note [Diff-and-patch event triggers on replace] in Hasura.RQL.DDL.EventTrigger.
   Q.unitQ "DELETE FROM hdb_catalog.hdb_function WHERE is_system_defined <> 'true'" () False
   Q.unitQ "DELETE FROM hdb_catalog.hdb_permission WHERE is_system_defined <> 'true'" () False
   Q.unitQ "DELETE FROM hdb_catalog.hdb_relationship WHERE is_system_defined <> 'true'" () False
-  Q.unitQ "DELETE FROM hdb_catalog.event_triggers" () False
   Q.unitQ "DELETE FROM hdb_catalog.hdb_computed_field" () False
   Q.unitQ "DELETE FROM hdb_catalog.hdb_remote_relationship" () False
   Q.unitQ "DELETE FROM hdb_catalog.hdb_table WHERE is_system_defined <> 'true'" () False
@@ -69,6 +72,7 @@ runClearMetadata
   => ClearMetadata -> m EncJSON
 runClearMetadata _ = do
   clearUserMetadata
+  replaceEventTriggersInCatalog mempty
   buildSchemaCacheStrict
   return successMsg
 
@@ -110,9 +114,10 @@ saveMetadata (Metadata tables functions
       withPathK "update_permissions" $ processPerms _tmTable _tmUpdatePermissions
       withPathK "delete_permissions" $ processPerms _tmTable _tmDeletePermissions
 
-      -- Event triggers
-      withPathK "event_triggers" $
-        indexedForM_ _tmEventTriggers $ \etc -> subTableP2 _tmTable False etc
+    -- Event triggers
+    let allEventTriggers = HMIns.elems tables & map \table ->
+          (_tmTable table,) <$> HMIns.toHashMap (_tmEventTriggers table)
+    replaceEventTriggersInCatalog $ HM.unions allEventTriggers
 
   -- sql functions
   withPathK "functions" $ indexedForM_ functions $

@@ -28,6 +28,7 @@ import           Hasura.Backends.Postgres.Translate.BoolExp
 import           Hasura.EncJSON
 import           Hasura.GraphQL.Schema.Common
 import           Hasura.RQL.DML.Internal
+import           Hasura.RQL.IR.OrderBy
 import           Hasura.RQL.IR.Select
 import           Hasura.RQL.Types
 import           Hasura.SQL.Types
@@ -696,8 +697,7 @@ processOrderByItems sourcePrefix' fieldAlias' similarArrayFields orderByItems = 
     toOrderByExp :: OrderByItemExp 'Postgres -> S.OrderByItem
     toOrderByExp orderByItemExp =
       let OrderByItemG obTyM expAlias obNullsM = fst . snd <$> orderByItemExp
-      in S.OrderByItem (S.SEIdentifier $ toIdentifier expAlias)
-         (unOrderType <$> obTyM) (unNullsOrder <$> obNullsM)
+      in S.OrderByItem (S.SEIdentifier $ toIdentifier expAlias) obTyM obNullsM
 
     mkCursorExp :: [OrderByItemExp 'Postgres] -> S.SQLExp
     mkCursorExp orderByItemExps =
@@ -1125,7 +1125,7 @@ processConnectionSelect sourcePrefixes fieldAlias relAlias colMapping connection
 
         mkSplitCompareExp (ConnectionSplit kind v (OrderByItemG obTyM obCol _)) =
           let obAlias = mkAnnOrderByAlias thisPrefix fieldAlias similarArrayFields obCol
-              obTy = maybe S.OTAsc unOrderType obTyM
+              obTy = fromMaybe S.OTAsc obTyM
               compareOp = case (kind, obTy) of
                 (CSKAfter, S.OTAsc)   -> S.SGT
                 (CSKAfter, S.OTDesc)  -> S.SLT
