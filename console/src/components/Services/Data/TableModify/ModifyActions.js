@@ -1467,7 +1467,11 @@ const saveColumnChangesSql = (colName, column, onSuccess) => {
           gqlColumnErrorNotif[2]
         )
       );
-    const { migrationName, migration } = getColumnUpdateMigration(
+    const {
+      migrationName,
+      migration,
+      metadataMigration,
+    } = getColumnUpdateMigration(
       column,
       columnEdit,
       allSchemas,
@@ -1477,15 +1481,37 @@ const saveColumnChangesSql = (colName, column, onSuccess) => {
     );
     // Apply migrations
 
-    const requestMsg = 'Saving Column Changes...';
+    const requestMsg = 'Saving column changes...';
     const successMsg = 'Column modified';
     const errorMsg = 'Modifying column failed';
 
-    const customOnSuccess = () => {
+    const successCallback = () => {
       dispatch(resetColumnEdit(colName));
       onSuccess();
     };
-    const customOnError = () => {};
+
+    const makeMetadataMigrationCall = () => {
+      makeMigrationCall(
+        dispatch,
+        getState,
+        metadataMigration.migration.upMigration,
+        metadataMigration.migration.downMigration,
+        metadataMigration.migrationName,
+        successCallback,
+        () => {},
+        'Saving column metadata changes...',
+        'Column metadata modified',
+        'Modifying column metadata failed'
+      );
+    };
+
+    const customOnSuccess = () => {
+      if (metadataMigration.migration.hasValue()) {
+        makeMetadataMigrationCall();
+      } else {
+        successCallback();
+      }
+    };
 
     if (migration.hasValue()) {
       makeMigrationCall(
@@ -1495,11 +1521,13 @@ const saveColumnChangesSql = (colName, column, onSuccess) => {
         migration.downMigration,
         migrationName,
         customOnSuccess,
-        customOnError,
+        () => {},
         requestMsg,
         successMsg,
         errorMsg
       );
+    } else if (metadataMigration.migration.hasValue()) {
+      makeMetadataMigrationCall();
     } else {
       dispatch(
         showSuccessNotification(

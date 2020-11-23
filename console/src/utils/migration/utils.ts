@@ -121,37 +121,6 @@ export const getColumnUpdateMigration = (
     );
   }
 
-  /* column custom field up/down migration */
-  const existingCustomColumnNames = getTableCustomColumnNames(table);
-  const existingRootFields = getTableCustomRootFields(table);
-  const newCustomColumnNames = { ...existingCustomColumnNames };
-  let isCustomFieldNameChanged = false;
-  if (customFieldName) {
-    if (customFieldName !== existingCustomColumnNames[colName]) {
-      isCustomFieldNameChanged = true;
-      newCustomColumnNames[colName] = customFieldName.trim();
-    }
-  } else if (existingCustomColumnNames[colName]) {
-    isCustomFieldNameChanged = true;
-    delete newCustomColumnNames[colName];
-  }
-  if (isCustomFieldNameChanged) {
-    migration.add(
-      getSetCustomRootFieldsQuery(
-        tableDef,
-        existingRootFields,
-        newCustomColumnNames,
-        source
-      ),
-      getSetCustomRootFieldsQuery(
-        tableDef,
-        existingRootFields,
-        existingCustomColumnNames,
-        source
-      )
-    );
-  }
-
   let columnDefaultUpQuery;
   if (colDefault !== '') {
     columnDefaultUpQuery = dataSource.getSetColumnDefaultSql(
@@ -159,7 +128,7 @@ export const getColumnUpdateMigration = (
       currentSchema,
       colName,
       colDefault,
-      source // todo?
+      source
     );
   } else {
     columnDefaultUpQuery = dataSource.getDropColumnDefaultSql(
@@ -327,10 +296,46 @@ export const getColumnUpdateMigration = (
     );
   }
 
+  const metadataMigration = new Migration();
+  /* column custom field up/down migration */
+  const existingCustomColumnNames = getTableCustomColumnNames(table);
+  const existingRootFields = getTableCustomRootFields(table);
+  const newCustomColumnNames = { ...existingCustomColumnNames };
+  let isCustomFieldNameChanged = false;
+  if (customFieldName) {
+    if (customFieldName !== existingCustomColumnNames[colName]) {
+      isCustomFieldNameChanged = true;
+      newCustomColumnNames[colName] = customFieldName.trim();
+    }
+  } else if (existingCustomColumnNames[colName]) {
+    isCustomFieldNameChanged = true;
+    delete newCustomColumnNames[colName];
+  }
+  if (isCustomFieldNameChanged) {
+    metadataMigration.add(
+      getSetCustomRootFieldsQuery(
+        tableDef,
+        existingRootFields,
+        newCustomColumnNames,
+        source
+      ),
+      getSetCustomRootFieldsQuery(
+        tableDef,
+        existingRootFields,
+        existingCustomColumnNames,
+        source
+      )
+    );
+  }
+
   const migrationName = `alter_table_${currentSchema}_${tableName}_alter_column_${colName}`;
   return {
     migrationName,
     migration,
+    metadataMigration: {
+      migration: metadataMigration,
+      migrationName: `alter_table_${currentSchema}_${tableName}_alter_column_${colName}_custom_fields`,
+    },
   };
 };
 
