@@ -76,28 +76,17 @@ const makeRequest = (
       down: downQuery.args,
     };
 
-    const upQueriesContainsRunSQL =
-      upQueries.filter(query => query.type === 'run_sql').length > 0;
-    const downQueriesContainsRunSQL =
-      downQueries.filter(query => query.type === 'run_sql').length > 0;
-
     const currMigrationMode = getState().main.migrationMode;
 
-    let migrateUrl = returnMigrateUrl(currMigrationMode);
+    const migrateUrl = returnMigrateUrl(currMigrationMode, upQueries);
 
     let finalReqBody;
     if (globals.consoleMode === SERVER_CONSOLE_MODE) {
       finalReqBody = upQuery;
-      migrateUrl = Endpoints.metadata;
     } else if (globals.consoleMode === CLI_CONSOLE_MODE) {
       finalReqBody = migrationBody;
     }
 
-    if (upQueriesContainsRunSQL || downQueriesContainsRunSQL) {
-      migrateUrl = Endpoints.queryV2;
-    }
-
-    const url = migrateUrl;
     const options = {
       method: 'POST',
       credentials: globalCookiePolicy,
@@ -121,7 +110,10 @@ const makeRequest = (
     };
 
     dispatch(showSuccessNotification(requestMsg));
-    return dispatch(requestAction(url, options)).then(onSuccess, onError);
+    return dispatch(requestAction(migrateUrl, options)).then(
+      onSuccess,
+      onError
+    );
   };
 };
 

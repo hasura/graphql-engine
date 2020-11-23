@@ -552,21 +552,7 @@ const makeMigrationCall = (
 
   const currMigrationMode = getState().main.migrationMode;
 
-  let migrateUrl = returnMigrateUrl(currMigrationMode);
-  // todo: this is a temprorary, super ugly, pre-release solution
-  if (migrateUrl === Endpoints.query) {
-    upQueries.forEach(query => {
-      let type = '';
-      if (query.type === 'bulk') {
-        type = query.args[0].type.replace('pg_', '').replace('mysql_', '');
-      } else {
-        type = query.type.replace('pg_', '').replace('mysql_', '');
-      }
-      if (metadataQueryTypes.includes(type)) {
-        migrateUrl = Endpoints.metadata;
-      }
-    });
-  }
+  const migrateUrl = returnMigrateUrl(currMigrationMode, upQueries);
 
   let finalReqBody;
   if (globals.consoleMode === SERVER_CONSOLE_MODE) {
