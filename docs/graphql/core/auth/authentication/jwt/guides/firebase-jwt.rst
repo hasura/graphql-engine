@@ -65,27 +65,34 @@ As for the security rules, you can select either. ``Test mode`` is enough for th
 
 Then click ``Enable``.
 
+Step 1.3: Choose sign-in methods
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Now you can choose the sign-in methods you want to use. On the left-hand navigation, click on ``Authentiction`` and then click on ``Sign-in method``:
+
+.. thumbnail:: /img/graphql/core/auth/firebase-signin-method.png
+   :alt: Define security rules for Firebase
+   :width: 1000px
+
+Step 1.4: Define rules
+^^^^^^^^^^^^^^^^^^^^^^
+
 Finally, we need define conditions for when data can be read by users.
 
-Click on the ``Rules`` tab and replace the existing rules with the following:
-
-.. code-block:: json
-
-    {
-      "rules": {
-        "metadata": {
-          "$uid": {
-            ".read": "auth != null && auth.uid == $uid"
-          }
-        }
-      }
-    }
+Click on the ``Rules`` tab and replace the existing rules with the rules you want to use.
+The below example specifies that a user can read their data that has their ``uid``.
 
 .. thumbnail:: /img/graphql/core/auth/firebase-db-rules.png
    :alt: Firebase realtime DB rules
    :width: 1000px
 
 Then hit ``Publish``.
+
+.. note::
+
+   Read more about rules in the `Firebase documentation <https://firebase.google.com/docs/rules/rules-and-auth>`__.
+
+.. _configure_jwt_mode:
 
 Step 2: Configure JWT mode for Hasura
 -------------------------------------
@@ -125,33 +132,7 @@ Click on ``Create project``.
    :alt: Firebase project id
    :width: 1000px
 
-Step 3: Add a database table
-----------------------------
-
-Add the following table to your database:
-
-.. code-block:: sql
-
-  todos (
-    id SERIAL PRIMARY KEY,
-    title TEXT,
-    description TEXT
-  )
-
-Insert some sample data, so that we can later query the table.
-
-Step 4: Add permissions
------------------------
-
-On the ``movies`` table, add a new role ``user`` and give it ``select`` permissions for ``title``, ``duration`` and ``rating``.
-
-.. thumbnail:: /img/graphql/core/auth/firebase-table-permissions.png
-   :alt: Table permissions
-   :width: 1000px
-
-Then click ``Save permissions``.
-
-Step 5: Configure custom claims
+Step 3: Configure custom claims
 -------------------------------
 
 As per the :ref:`Hasura JWT spec <auth_jwt_spec>`, Hasura needs custom claims to be sent alongside the JWT token. 
@@ -181,7 +162,8 @@ Then go through the following steps:
 - Choose if you want to use ``TSLint``. It's up to you.
 - Choose to install dependencies.
 
-Now add the following code to ``functions/src/index.ts``:
+Now add the example code below to ``functions/src/index.ts``. The example assumes that the default role is ``user`` and the allowed roles in this case only include ``user``.
+All other request fall in the role ``anonymous``, as defined in :ref:`step 2 <configure_jwt_mode>`.
 
 .. code-block:: javascript
 
@@ -218,23 +200,42 @@ Then deploy the function by running:
     firebase deploy --only functions
 
 
-Step 6: Test use cases
+Step 4: Test use cases
 ----------------------
 
-Create table x.
+Let's assume you have an app that enables users to manage their todos. We want logged in users to be able to insert, select, update and delete their own todos.
+Users who are not logged in can't see any todos.
 
-User (logged in)
-^^^^^^^^^^^^^^^^
+Add the following table to your database:
 
-- Add role user
-- Give permissions x
+.. code-block:: sql
 
-- You'll see the following 
+  todos (
+    id SERIAL PRIMARY KEY,
+    title TEXT,
+    description TEXT,
+    user_id INT
+  )
+
+Insert some sample data, so that we can later query the table.
 
 Anonymous (not logged in)
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 
-- Add role anonymous
-- Give permissions x
+With the anonymous role, you shouldn't be able to see anything regarding the management of todos.
 
-- You'll see the following 
+User (logged in)
+^^^^^^^^^^^^^^^^
+
+- On the ``todos`` table, add a role ``user`` and give it insert, select, update and delete :ref:`permissions <authorization>`.
+- Make sure you add the following custom check in all permissions: ``{"user_id":{"_eq":"X-Hasura-User-Id"}}``.
+- Log in.
+- You should be able to manage todos.
+
+
+Next steps
+----------
+
+- Add more firebase rules
+- Add more roles depending on your use case
+- Apply permissions to other tables in your project
