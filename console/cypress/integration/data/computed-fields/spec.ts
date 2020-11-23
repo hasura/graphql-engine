@@ -5,7 +5,8 @@ import {
 } from '../../../helpers/dataHelpers';
 
 const statements = {
-  createTableSql: 'CREATE TABLE a_test_test_author (id serial PRIMARY KEY, first_name text, last_name text);',
+  createTableSql:
+    'CREATE TABLE a_test_test_author (id serial PRIMARY KEY, first_name text, last_name text);',
   createCustomFuncSql: `CREATE OR REPLACE FUNCTION test_get_author_full_name(a_test_test_author_row a_test_test_author)
     RETURNS TEXT AS $function$
     SELECT a_test_test_author_row.first_name || ' ' || a_test_test_author_row.last_name
@@ -22,25 +23,20 @@ const statements = {
 };
 
 export const openRawSQL = () => {
-  cy.get('a')
-    .contains('Data')
-    .click();
+  cy.get('a').contains('Data').click();
   cy.wait(3000);
   cy.get(getElementFromAlias('sql-link')).click();
   cy.wait(3000);
-  cy.url()
-    .should('eq', `${baseUrl}/data/sql`);
+  cy.url().should('eq', `${baseUrl}/data/sql`);
 };
 
 const clearText = () => {
-  cy.get('textarea')
-    .type('{selectall}', { force: true });
-  cy.get('textarea')
-    .trigger('keydown', {
-      keyCode: 46,
-      which: 46,
-      force: true,
-    });
+  cy.get('textarea').type('{selectall}', { force: true });
+  cy.get('textarea').trigger('keydown', {
+    keyCode: 46,
+    which: 46,
+    force: true,
+  });
   cy.wait(2000);
 };
 
@@ -50,7 +46,7 @@ const typeStatement = (
   shouldClearText = false,
   waitTimeUponType = 2000,
   endWaitTime = 5000,
-  uncheckTrackCheckbox = false,
+  uncheckTrackCheckbox = false
 ) => {
   if (shouldClearText) {
     clearText();
@@ -66,8 +62,7 @@ const typeStatement = (
   cy.wait(endWaitTime);
 };
 
-export const createTableAuthor = () =>
-  typeStatement(statements.createTableSql);
+export const createTableAuthor = () => typeStatement(statements.createTableSql);
 
 export const createCustomFunction = () =>
   typeStatement(statements.createCustomFuncSql, true, 2000, 5000, true);
@@ -79,10 +74,11 @@ export const insertAuthorsIntoTable = () => {
 };
 
 export const searchForTable = () => {
-  cy.get(getElementFromAlias('search-tables'))
-    .type('a_test_test_author');
-  cy.get(getElementFromAlias('table-links'))
-    .should('contain', 'a_test_test_author');
+  cy.get(getElementFromAlias('search-tables')).type('a_test_test_author');
+  cy.get(getElementFromAlias('table-links')).should(
+    'contain',
+    'a_test_test_author'
+  );
   cy.get(getElementFromAlias('a_test_test_author')).click();
 };
 
@@ -92,16 +88,17 @@ export const openModifySection = () => {
   // click on computed field section
   cy.get(getElementFromAlias('modify-table-edit-computed-field-0')).click();
   // type name
-  cy.get(getElementFromAlias('computed-field-name-input'))
-  .type('{selectall}', { force: true });
-  cy.get(getElementFromAlias('computed-field-name-input'))
-  .trigger('keydown', {
+  cy.get(getElementFromAlias('computed-field-name-input')).type('{selectall}', {
+    force: true,
+  });
+  cy.get(getElementFromAlias('computed-field-name-input')).trigger('keydown', {
     keyCode: 46,
     which: 46,
     force: true,
   });
-  cy.get(getElementFromAlias('computed-field-name-input'))
-    .type('full_name', { force: true });
+  cy.get(getElementFromAlias('computed-field-name-input')).type('full_name', {
+    force: true,
+  });
   cy.wait(2000);
   // type & select function name
   cy.get(getElementFromClassName('function-name-select__control'))
@@ -114,17 +111,18 @@ export const openModifySection = () => {
     .first()
     .click();
   // enter table row arg. (not necessarily required)
-  cy.get(getElementFromAlias('computed-field-first-arg-input'))
-    .type('a_test_test_author_row', { force: true });
+  cy.get(
+    getElementFromAlias('computed-field-first-arg-input')
+  ).type('a_test_test_author_row', { force: true });
   // enter comment
-  cy.get(getElementFromAlias('computed-field-comment-input'))
-    .type('this is a test comment', { force: true });
+  cy.get(
+    getElementFromAlias('computed-field-comment-input')
+  ).type('this is a test comment', { force: true });
   // saving the computed field
   cy.get(getElementFromAlias('modify-table-computed-field-0-save')).click();
   // verify that a computed field exists
   cy.wait(5000);
-  cy.get(getElementFromAlias('computed-field-full_name'))
-    .contains('full_name');
+  cy.get(getElementFromAlias('computed-field-full_name')).contains('full_name');
   cy.wait(5000);
 };
 
@@ -138,25 +136,20 @@ export const verifyComputedFieldsResult = () => {
   // type the query
   cy.get('textarea')
     .first()
-    .type(
-      `{enter}{uparrow}${statements.graphql.query}`,
-      { force: true }
-    );
+    .type(`{enter}{uparrow}${statements.graphql.query}`, { force: true });
   cy.wait(2000);
   // execute the query
   cy.get('.execute-button').click();
   // verify if full_name is present
   cy.get('.cm-property').contains('full_name');
   cy.get('.cm-string').contains('ruskin bond');
-  // TODO?: verify enid blyton also
   cy.wait(2000);
 };
 
-export const cleanUpSql = () =>
-  typeStatement(statements.cleanUpSql, true);
+export const cleanUpSql = () => typeStatement(statements.cleanUpSql, true);
 
 export const routeToSQLPage = () => {
-  cy.visit('/data/sql')
+  cy.visit('/data/sql');
   cy.wait(7000);
   cy.url().should('eq', `${baseUrl}/data/sql`);
 };

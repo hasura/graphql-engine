@@ -134,7 +134,10 @@ export const checkInsertRoute = () => {
   // Match URL
   cy.url().should(
     'eq',
-    `${baseUrl}/data/default/schema/public/tables/${getTableName(0, testName)}/insert`
+    `${baseUrl}/data/default/schema/public/tables/${getTableName(
+      0,
+      testName
+    )}/insert`
   );
 };
 
@@ -197,7 +200,10 @@ export const checkBrowseRoute = () => {
   // Match URL
   cy.url().should(
     'eq',
-    `${baseUrl}/data/default/schema/public/tables/${getTableName(0, testName)}/browse`
+    `${baseUrl}/data/default/schema/public/tables/${getTableName(
+      0,
+      testName
+    )}/browse`
   );
 };
 
@@ -231,7 +237,6 @@ export const checkPagination = () => {
 };
 
 export const passBISort = (order: string) => {
-  // Scroll to top TODO responsive is messy
   cy.wait(7000);
   // Select column with type 'serial'
   const serialIndex = dataTypes.indexOf('serial');
@@ -372,7 +377,10 @@ export const passEditButton = () => {
   cy.wait(2000);
   cy.url().should(
     'eq',
-    `${baseUrl}/data/default/schema/public/tables/${getTableName(0, testName)}/edit`
+    `${baseUrl}/data/default/schema/public/tables/${getTableName(
+      0,
+      testName
+    )}/edit`
   );
   const textIndex = dataTypes.indexOf('text');
   cy.get(getElementFromAlias(`typed-input-${textIndex}`)).type(
@@ -389,7 +397,10 @@ export const passCloneButton = () => {
   cy.get(getElementFromAlias('row-clone-button-0')).click();
   cy.url().should(
     'eq',
-    `${baseUrl}/data/default/schema/public/tables/${getTableName(0, testName)}/insert`
+    `${baseUrl}/data/default/schema/public/tables/${getTableName(
+      0,
+      testName
+    )}/insert`
   );
   cy.get(getElementFromAlias('clear-button')).click();
   cy.get(getElementFromAlias('typed-input-0')).should('have.value', '');
@@ -452,7 +463,7 @@ export const passDeleteRow = () => {
   cy.on('window:confirm', str => {
     expect(
       str.indexOf('This will permanently delete this row from this table') !==
-      -1
+        -1
     ).to.be.true;
   });
   cy.get(getElementFromAlias('table-browse-rows')).contains('20');

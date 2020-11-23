@@ -24,8 +24,6 @@ const setup = () => {
   });
 };
 
-// TODO: modify these tests to use session arguments once that is merged on master
-// TODO: add tests for Table Computed fields as well. Currently only added for scalar computed fields
 export const runComputedFieldTests = () => {
   describe('Computed Fields', () => {
     it('Open Raw SQL page', openRawSQL);

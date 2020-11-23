@@ -47,8 +47,10 @@ export const createTestTable = () => {
   cy.get(getElementFromAlias('table-create')).click();
   cy.wait(10000);
   // Check if the table got created and navigatied to modify table
-  // TODO: these URLs should be configurable based on the data source
-  cy.url().should('eq', `${baseUrl}/data/default/schema/public/tables/users/modify`);
+  cy.url().should(
+    'eq',
+    `${baseUrl}/data/default/schema/public/tables/users/modify`
+  );
   // Validate
   validateCT('users', ResultType.SUCCESS);
 };
@@ -146,11 +148,11 @@ export const delTestTable = () => {
   //   Confirm
   cy.window().its('prompt').should('be.called');
   cy.wait(5000);
-  
+
   // Temporarily disabled, until it's fixed on the main branch
   // Match the URL
   // cy.url().should('eq', `${baseUrl}/data/default/schema/public`);
-  
+
   // Validate
   validateCT('users', ResultType.FAILURE);
 };
