@@ -22,123 +22,46 @@ Best practices
 
 In the following, we'll go over some best practices for the project setup that will help ensuring a smooth transition of environments later.
 
+.. _env_guide_migrations_metadata:
+
 Migrations & metadata
 ^^^^^^^^^^^^^^^^^^^^^
 
-The state of your Postgres database is managed via incremental SQL migration files. 
+The state of your Postgres database is managed via incremental SQL migration files.
 These migration files can be applied one after the other to produce the final DB schema.
-
-DB migration files can be generated incrementally and can be applied in parts to reach particular checkpoints. 
-They can also be used to roll back the DB schema.
-
-Migrations are also versioned with timestamps. At any point in time, using the migrations, 
-you should be able to (re)create the schema and apply metadata to replicate the project quickly.
 
 .. note::
 
     Using Hasura's migration system is optional. In case you are comfortable or familiar using other database migration tooling, 
     you can continue to use that to manage your database schema.
 
-Setting up a project on the Hasura CLI
-**************************************
+The state of Hasura metadata is managed via snapshots of the metadata. Hasura stores this metadata to create the GraphQL API over Postgres and provide other functionalities like remote schemas, event triggers etc.
 
-First, we need to :ref:`install the Hasura CLI <install_hasura_cli>`. 
-After that, we can initialise a Hasura project by running the :ref:`hasura init <hasura_init>` command which will scaffold a project directory with migrations, metadata and config.
-
-*New database*: If your database is clean without any existing schema, you can start using the console via the CLI (:ref:`hasura console <hasura_console>`), 
-modify the Postgres schema, and the CLI will take care of creating the ``up`` and ``down`` migration files.
-
-*Existing database*: In case you have an existing database schema, you can use the CLI to initialise the migration for that schema using the following command:
-
-.. code-block:: bash
-
-  hasura migrate create init-schema --from-server
-
-This will take a ``pg_dump`` of the ``public`` schema and create an ``up`` migration to get started. 
-
-Alternatively, if you have an SQL file with all the DDL statements, you can also specify that as an argument:
-
-.. code-block:: bash
-
-  hasura migrate create init-schema --sql-from-file ./file.sql
-
-Once you set this up, you can continue to use the Hasura console served via the CLI and make any schema changes and migration files will be automatically created as you work along.
+Migrations & metadata allow you to move between development environments smootly. At any point in time, using the migrations, 
+you should be able to (re)create the schema and apply metadata to replicate the project quickly. 
 
 .. note::
 
-  If you're interested in a more extensive guide on setting up migrations, see :ref:`this docs page <migrations_setup>`.
-
-Squashing migrations
-********************
-
-During local development, we typically iterate over schema modifications multiple times. 
-This leads to a large number of migration files being created over time. 
-If you are building a schema for a specific feature and you really don't want to roll back or manage the smaller iterations in between, 
-you can :ref:`squash the migration files into a single file <hasura_migrate_squash>` for easier organisation:
-
-.. code-block:: bash
-
-  hasura migrate squash --from <version>
-
-Metadata
-********
-
-The state of Hasura metadata is managed via snapshots of the metadata. Hasura stores this metadata to create the GraphQL API over Postgres and provide other functionalities like remote schemas, event triggers etc. 
-All the actions performed on the console, like tracking tables/views/functions, creating relationships, configuring permissions, 
-creating event triggers and remote schemas, etc. can be exported as a JSON/yaml metadata file.
-
-These snapshots can be :ref:`exported <export_hasura_metadata>` and :ref:`imported <import_hasura_metadata>` as a whole to configure Hasura to a state represented in the snapshot.
-
-The metadata directory of your Hasura project should be included in your version control system like git, 
-so that you can roll back corresponding changes later, if required.
-
-.. note::
-
-    Read more about Hasura metadata on :ref:`this docs page <manage_hasura_metadata>`.
-
-Applying migrations and metadata
-********************************
-
-When you decide to move to another environment, such as staging or production, you can apply the migrations and metadata to your new instance.
-This will allow you to have the same database schema with a clean state.
-
-Migrations can be :ref:`manually applied <hasura_migrate_apply>` to any Hasura instance through:
-
-.. code-block:: bash
-
-  hasura migrate apply --endpoint <graphql-engine-endpoint> --admin-secret <admin-secret>
-
-This will apply only migrations which have not been already applied to the instance.
-
-Metadata can be :ref:`manually applied <hasura_metadata_apply>` via:
-
-.. code-block:: bash
-
-  hasura metadata apply --endpoint <graphql-engine-endpoint> --admin-secret <admin-secret>
-
-If you are self-hosting Hasura and have a CI/CD setup, you can also :ref:`auto-apply migrations/metadata <auto_apply_migrations>` when the graphql-engine server starts.
+  Read more about :ref:`migrations <migrations_setup>` and :ref:`metadata <manage_hasura_metadata>`.
 
 Developing & testing business logic
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Hasura lets you write business logic in a flexible way. 
-If you are comfortable writing your own GraphQL server from scratch, you can add them as a :ref:`remote schema <remote_schemas>`. 
-If you are interested in (re)using REST API endpoints, you can map GraphQL types with :ref:`actions <actions>`.
+Hasura lets you write business logic in a flexible way. There are several options depending on your use case:
 
-Adding either a remote schema or action will become part of Hasura's metadata. 
-When you are adding either of them, you will have to give the HTTP handler / URL so that Hasura can communicate with that endpoint.
-
-Assuming that the handler is also running on your local machine, 
-you will need to give an endpoint that is accessible from inside the Docker container of Hasura.
-Typically for Mac, this will be ``host.docker.internal`` and for Linux where the containers are running in ``host`` mode, 
-it will be ``localhost``.
-
-.. note::
-
-    See :ref:`this docs page <docker_networking>` to learn more about Docker networking.
+- If you are comfortable writing your own GraphQL server from scratch, you can add them as a :ref:`remote schema <remote_schemas>`. 
+- If you are interested in (re)using REST API endpoints, you can map GraphQL types with :ref:`actions <actions>`.
+- If you want to trigger a serverless function based on a database event, you can use :ref:`event triggers <event_triggers>`. 
 
 Configuring handlers via environment variables
 **********************************************
+
+Adding any of the above business logic options will become part of Hasura's metadata. 
+When you are adding either of them, you will have to give the HTTP handler / URL so that Hasura can communicate with that endpoint.
+
+.. note::
+
+    See :ref:`this docs page <docker_networking>` to learn about local development and Docker networking.
 
 The recommended way to configure these handler URLs is via environment variables, 
 irrespective of the development environment (local/staging/prod).
@@ -194,7 +117,7 @@ Configuring environment variables
 There are various components of Hasura metadata which are dependent on environment variables. 
 This allows environment specific runtime without changing the metadata definition. 
 If an environment variable is being used by some part of the metadata and isn't available in an environment, the metadata application won't succeed. 
-Before applying migrations/metadata, we need to ensure that the configuration is correct. 
+Before applying :ref:`migrations/metadata <env_guide_migrations_metadata>` to a new environment, we need to ensure that the configuration is correct. 
 Additionally, you can check for the following:
 
 - The GraphQL endpoint needs to be :ref:`secured <securing_graphql_endpoint>`. You will need to add an ``HASURA_GRAPHQL_ADMIN_SECRET`` env var.
@@ -215,7 +138,7 @@ As you keep making schema changes, running regression tests on Hasura Cloud will
 Setting up CI/CD
 ^^^^^^^^^^^^^^^^
 
-Generally, when you are done developing your app locally, you would push it to your upstream version control system like Github or Gitlab. 
+Generally, when developing an app, you would push it to your upstream version control system like Github or Gitlab. 
 You can trigger CI/CD workflows when a push is made to your upstream repository. 
 When you want to deploy your changes to staging, you may push your latest code to a special branch or push a new tag which updates your staging environment.
 
@@ -235,12 +158,13 @@ Then run the migrate/metadata/regression tests commands, passing in the endpoint
 Recommended setups
 ------------------
 
-In the following, we'll provide you with recommended stups for the development environment and production environment.
+The recommended setup differs depending on your use case and requirements. 
+In the following, we'll provide you with some recommendations for the development environment and production environment.
 
 Development environment
 ^^^^^^^^^^^^^^^^^^^^^^^
 
-Our recommended development environment depends on if you want to host Hasura in the cloud or locally/
+The recommended development environment setup depends on if you want to host Hasura in the cloud or locally.
 
 Cloud development: Hasura Cloud
 *******************************
