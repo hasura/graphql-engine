@@ -20,7 +20,7 @@ that can be used to either encapsulate some custom business logic or extend the 
 are also referred to as **stored procedures**.
 
 Hasura GraphQL engine lets you expose certain types of custom functions as top level fields in the GraphQL API to allow
-querying them using both ``queries`` and ``subscriptions``.
+querying them as either ``queries`` or ``subscriptions``, or (for ``VOLATILE`` functions) as ``mutations``.
 
 .. note::
 
@@ -34,8 +34,8 @@ Supported SQL functions
 Currently, only functions which satisfy the following constraints can be exposed as top level fields in the GraphQL API
 (*terminology from* `Postgres docs <https://www.postgresql.org/docs/current/sql-createfunction.html>`__):
 
-- **Function behaviour**: ONLY ``STABLE`` or ``IMMUTABLE``
-- **Return type**: MUST be ``SETOF <table-name>``
+- **Function behaviour**: ``STABLE`` or ``IMMUTABLE`` functions may *only* be exposed as queries (i.e. with ``exposed_as: query``)
+- **Return type**: MUST be ``SETOF <table-name>`` where ``<table-name>`` is already tracked
 - **Argument modes**: ONLY ``IN``
 
 .. _create_sql_functions:
@@ -550,6 +550,30 @@ following example.
 .. note::
 
    The specified session argument will not be included in the ``<function-name>_args`` input object in the GraphQL schema.
+
+
+Tracking functions with side effects
+************************************
+
+You can also use the :ref:`track_function_v2 <track_function_v2>` API to track
+`VOLATILE functions <https://www.postgresql.org/docs/current/xfunc-volatility.html>`__
+as mutations.
+
+Aside from showing up under the ``mutation`` root (and presumably having
+side-effects), these tracked functions behave the same as described above for
+``queries``.
+
+We also permit tracking ``VOLATILE`` functions under the ``query`` root, in
+which case the user needs to guarantee that the field is idempotent and
+side-effect free, in the context of the resulting GraphQL API. One such use
+case might be a function that wraps a simple query and performs some logging
+visible only to administrators.
+
+.. note::
+
+   It's easy to accidentally give an SQL function the wrong volatility (or for a
+   function to end up with ``VOLATILE`` mistakenly, since it's the default).
+
 
 Permissions for custom function queries
 ---------------------------------------
