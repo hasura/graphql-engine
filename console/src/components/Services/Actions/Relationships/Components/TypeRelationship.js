@@ -204,8 +204,6 @@ const RelationshipEditor = ({
     );
   };
 
-  console.log({ currentDatabaseInfo });
-
   const refSchemaSelect = () => {
     const orderedSchemaList = Object.keys(currentDatabaseInfo).sort();
     return (

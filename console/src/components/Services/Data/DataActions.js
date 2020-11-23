@@ -34,7 +34,11 @@ import { getDownQueryComments } from '../../../utils/migration/utils';
 import { isEmpty } from '../../Common/utils/jsUtils';
 import { dataSource } from '../../../dataSources';
 import { exportMetadata } from '../../../metadata/actions';
-import { getTablesInfoSelector } from '../../../metadata/selector';
+import {
+  getTables,
+  getTablesFromAllSources,
+  getTablesInfoSelector,
+} from '../../../metadata/selector';
 import {
   checkFeatureSupport,
   READ_ONLY_RUN_SQL_QUERIES,
@@ -470,9 +474,14 @@ export const getDatabaseSchemasInfo = (sourceType = 'postgres', sourceName) => (
       if (!result.length > 1) {
         return {};
       }
+
+      const allTrackedTables = getTablesFromAllSources(getState()).map(
+        t => t.table.name
+      );
       const schemasInfo = {};
 
       JSON.parse(result[1]).forEach(i => {
+        if (!allTrackedTables.includes(i.table_name)) return;
         schemasInfo[i.table_schema] = {
           ...schemasInfo[i.table_schema],
           [i.table_name]: i.columns,
