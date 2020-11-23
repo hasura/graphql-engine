@@ -1,5 +1,7 @@
 import React from 'react';
+
 import styles from './CollapsibleToggle.scss';
+
 /**
  *  Accepts following props
  *    `title, string || react-element `: Title of the collapsible toggle
@@ -13,8 +15,9 @@ interface CollapsibleToggleProps {
   title: React.ReactNode;
   isOpen?: boolean;
   toggleHandler?: () => void;
-  testId: string;
+  testId?: string;
   useDefaultTitleStyle?: boolean;
+  className?: string;
 }
 
 interface CollapsibleToggleState {
@@ -49,7 +52,13 @@ class CollapsibleToggle extends React.Component<
   }
 
   render() {
-    const { title, children, testId, useDefaultTitleStyle } = this.props;
+    const {
+      title,
+      children,
+      testId,
+      useDefaultTitleStyle,
+      className = '',
+    } = this.props;
 
     const { isOpen, toggleHandler } = this.state;
 
@@ -72,7 +81,7 @@ class CollapsibleToggle extends React.Component<
     };
 
     return (
-      <div className={styles.collapsibleWrapper}>
+      <div className={`${styles.collapsibleWrapper} ${className}`}>
         <div
           className={styles.collapsibleToggle}
           data-test={testId}

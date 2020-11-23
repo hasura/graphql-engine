@@ -20,6 +20,7 @@ const SET_LIMIT = 'ViewTable/FilterQuery/SET_LIMIT';
 const SET_OFFSET = 'ViewTable/FilterQuery/SET_OFFSET';
 const SET_NEXTPAGE = 'ViewTable/FilterQuery/SET_NEXTPAGE';
 const SET_PREVPAGE = 'ViewTable/FilterQuery/SET_PREVPAGE';
+const SET_FILTER_COLUMNS = 'ViewTable/FilterQuery/SET_FILTER_COLUMNS';
 // const MAKING_REQUEST = 'ViewTable/FilterQuery/MAKING_REQUEST';
 // const REQUEST_SUCCESS = 'ViewTable/FilterQuery/REQUEST_SUCCESS';
 // const REQUEST_ERROR = 'ViewTable/FilterQuery/REQUEST_ERROR';
@@ -42,6 +43,8 @@ const setLimit = limit => ({ type: SET_LIMIT, limit });
 const setOffset = offset => ({ type: SET_OFFSET, offset });
 const setNextPage = () => ({ type: SET_NEXTPAGE });
 const setPrevPage = () => ({ type: SET_PREVPAGE });
+
+const setFilterColumns = columns => ({ type: SET_FILTER_COLUMNS, columns });
 
 const parseArray = val => {
   if (Array.isArray(val)) return val;
@@ -107,6 +110,9 @@ const runQuery = tableSchema => {
     if (newQuery.order_by.length === 0) {
       delete newQuery.order_by;
     }
+    if (state.columns) {
+      newQuery.columns = state.columns;
+    }
     dispatch({ type: 'ViewTable/V_SET_QUERY_OPTS', queryStuff: newQuery });
     dispatch(vMakeTableRequests());
   };
@@ -118,26 +124,23 @@ const filterReducer = (state = defaultCurFilter, action) => {
   switch (action.type) {
     case SET_DEFQUERY:
       const q = action.curQuery;
-      if (
-        'order_by' in q ||
-        'limit' in q ||
-        'offset' in q ||
-        ('where' in q && '$and' in q.where)
-      ) {
-        const newCurFilterQ = {};
-        newCurFilterQ.where =
-          'where' in q && '$and' in q.where
-            ? { $and: [...q.where.$and, { '': { '': '' } }] }
-            : { ...defaultCurFilter.where };
-        newCurFilterQ.order_by =
-          'order_by' in q
-            ? [...q.order_by, ...defaultCurFilter.order_by]
-            : [...defaultCurFilter.order_by];
-        newCurFilterQ.limit = q.limit || defaultCurFilter.limit;
-        newCurFilterQ.offset = q.offset || defaultCurFilter.offset;
-        return newCurFilterQ;
+      const filterQuery = { ...defaultCurFilter };
+      if (q.where && q.where.$and) {
+        filterQuery.where = { $and: [...q.where.$and, { '': { '': '' } }] };
       }
-      return defaultCurFilter;
+      if (q.order_by) {
+        filterQuery.order_by = [...q.order_by, ...filterQuery.order_by];
+      }
+      if (q.limit) {
+        filterQuery.limit = q.limit;
+      }
+      if (q.offset) {
+        filterQuery.offset = q.offset;
+      }
+      if (q.columns && q.columns.length) {
+        filterQuery.columns = q.columns;
+      }
+      return filterQuery;
     case SET_FILTERCOL:
       const oldColName = Object.keys(state.where.$and[i])[0];
       newFilter[action.name] = { ...state.where.$and[i][oldColName] };
@@ -245,6 +248,11 @@ const filterReducer = (state = defaultCurFilter, action) => {
         ...state,
         offset: action.offset,
       };
+    case SET_FILTER_COLUMNS:
+      return {
+        ...state,
+        columns: action.columns,
+      };
     case SET_NEXTPAGE:
       return {
         ...state,
@@ -285,4 +293,5 @@ export {
   setLoading,
   unsetLoading,
   runQuery,
+  setFilterColumns,
 };

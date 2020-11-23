@@ -18,6 +18,27 @@ class DragFoldTable extends Component {
     };
     this.tableRef = React.createRef();
   }
+
+  getOrderedColumns() {
+    const { columns, headerTitle } = this.props;
+    let cols = columns.map((col, idx) => ({
+      ...col,
+      Header: (
+        <div
+          className="draggable-header"
+          id={col.id}
+          title={headerTitle || 'Drag to rearrange'}
+        >
+          {col.Header}
+        </div>
+      ),
+    }));
+    this.reorders.forEach(o =>
+      cols.splice(o.newOrder, 0, cols.splice(o.defaultOrder, 1)[0])
+    );
+    return cols;
+  }
+
   mountEvents() {
     if (!this.tableRef.current) return;
 
@@ -30,7 +51,13 @@ class DragFoldTable extends Component {
       //the dragged header
       header.ondragstart = e => {
         e.stopPropagation();
-        this.dragged = i;
+        if (this.props.hiddenColumns && this.props.hiddenColumns.length) {
+          const orderedCols = this.getOrderedColumns();
+          const prevOrder = orderedCols.findIndex(col => col.id === header.id);
+          this.dragged = prevOrder || i;
+        } else {
+          this.dragged = i;
+        }
       };
 
       header.ondrag = e => e.stopPropagation;
@@ -68,24 +95,13 @@ class DragFoldTable extends Component {
     this.mountEvents();
   }
   render() {
-    const { data, columns, headerTitle } = this.props;
+    const { data, hiddenColumns } = this.props;
 
-    const cols = columns.map((col, idx) => ({
-      ...col,
-      Header: (
-        <div
-          className="draggable-header"
-          title={headerTitle || 'Drag to rearrange'}
-        >
-          {col.Header}
-        </div>
-      ),
-    }));
+    let cols = this.getOrderedColumns();
 
-    //run all reorder events
-    this.reorders.forEach(o =>
-      cols.splice(o.newOrder, 0, cols.splice(o.defaultOrder, 1)[0])
-    );
+    if (hiddenColumns && hiddenColumns.length) {
+      cols = cols.filter(col => !hiddenColumns.includes(col.id));
+    }
 
     const FoldableTable = FoldableHoc(ReactTable);
 

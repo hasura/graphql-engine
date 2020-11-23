@@ -110,6 +110,7 @@ class ViewTable extends Component {
       triggeredFunction,
       location,
       estimatedCount,
+      currentTable,
       isCountEstimated,
     } = this.props;
 
@@ -157,6 +158,7 @@ class ViewTable extends Component {
         triggeredFunction={triggeredFunction}
         location={location}
         readOnlyMode={readOnlyMode}
+        currentTable={currentTable}
       />
     );
 
@@ -218,6 +220,7 @@ const mapStateToProps = (state, ownProps) => {
   return {
     tableName: ownProps.params.table,
     currentSchema: state.tables.currentSchema,
+    currentTable: state.tables.currentTable,
     schemas: state.tables.allSchemas,
     tableComment: state.tables.tableComment,
     migrationMode: state.main.migrationMode,

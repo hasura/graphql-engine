@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import 'react-table/react-table.css';
 import '../../../Common/TableCommon/ReactTableOverrides.css';
 import DragFoldTable, {
@@ -88,6 +88,17 @@ const ViewRows = ({
   shouldHidePagination,
 }) => {
   const [selectedRows, setSelectedRows] = useState([]);
+
+  const allColumns = useMemo(() => {
+    const currSchema = schemas.find(
+      schema => schema.table_name === curTableName
+    );
+    if (currSchema) {
+      return currSchema.columns.map(col => col.column_name);
+    }
+    return [];
+  }, [schemas, curTableName]);
+
   useEffect(() => {
     setSelectedRows([]);
   }, [curTableName, currentSchema]);
@@ -632,6 +643,7 @@ const ViewRows = ({
   );
 
   const tableColumnsSorted = tableSchema.columns.sort(ordinalColSort);
+
   const tableRelationships = tableSchema.relationships;
 
   const hasPrimaryKey = isTableWithPK(tableSchema);
@@ -683,6 +695,8 @@ const ViewRows = ({
             tableName={curTableName}
             offset={offset}
             urlQuery={location && location.query}
+            allColumns={allColumns}
+            currentColumns={curFilter.columns}
           />
         );
       }
@@ -924,6 +938,16 @@ const ViewRows = ({
       }
     };
 
+    const hiddenColumns = [];
+    const columns = curFilter.columns || allColumns;
+    if (columns && columns.length) {
+      allColumns.forEach(col => {
+        if (!columns.includes(col)) {
+          hiddenColumns.push(col);
+        }
+      });
+    }
+
     return (
       <DragFoldTable
         className="dataTable -highlight -fit-content"
@@ -954,6 +978,7 @@ const ViewRows = ({
           persistColumnOrderChange(curTableName, currentSchema, reorderData)
         }
         defaultReorders={columnsOrder}
+        hiddenColumns={hiddenColumns}
         showPagination={!shouldHidePagination}
       />
     );

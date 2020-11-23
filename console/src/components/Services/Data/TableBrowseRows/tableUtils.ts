@@ -83,3 +83,26 @@ export const persistPageSizeChange = (pageSize: number) => {
 export const getPersistedPageSize = () => {
   return getParsedLSItem(LS_KEYS.dataPageSizeKey);
 };
+
+const selectedColumnsKey = 'data:selectedColumns';
+
+export const persistSelectedColumns = (
+  tableName: string,
+  schemaName: string,
+  columns: string[]
+) => {
+  const selectedColumns = getParsedLSItem(selectedColumnsKey) || {};
+  const newSelectedColumnsState = {
+    ...selectedColumns,
+    [`${schemaName}.${tableName}`]: columns,
+  };
+  setLSItem(selectedColumnsKey, JSON.stringify(newSelectedColumnsState));
+};
+
+export const getPersistedSelectedColumns = (
+  tableName: string,
+  schemaName: string
+) => {
+  const selectedColumns = getParsedLSItem(selectedColumnsKey) || {};
+  return selectedColumns[`${schemaName}.${tableName}`];
+};

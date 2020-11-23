@@ -35,6 +35,8 @@ const V_COLLAPSE_ROW = 'ViewTable/V_COLLAPSE_ROW';
 const V_COUNT_REQUEST_SUCCESS = 'ViewTable/V_COUNT_REQUEST_SUCCESS';
 const V_COUNT_REQUEST_ERROR = 'ViewTable/V_COUNT_REQUEST_SUCCESS';
 
+const V_RESET_QUERY_COLUMNS = 'ViewTable/V_RESET_QUERY_COLUMN';
+
 const FETCHING_MANUAL_TRIGGER = 'ViewTable/FETCHING_MANUAL_TRIGGER';
 const FETCH_MANUAL_TRIGGER_SUCCESS = 'ViewTable/FETCH_MANUAL_TRIGGER_SUCCESS';
 const FETCH_MANUAL_TRIGGER_FAIL = 'ViewTable/FETCH_MANUAL_TRIGGER_SUCCESS';
@@ -61,6 +63,10 @@ const vCollapseRow = () => ({
 });
 
 const vSetDefaults = limit => ({ type: V_SET_DEFAULTS, limit });
+
+const vResetColumns = () => ({
+  type: V_RESET_QUERY_COLUMNS,
+});
 
 const vMakeRowsRequest = () => {
   return (dispatch, getState) => {
@@ -502,7 +508,7 @@ const addQueryOptsActivePath = (query, queryStuff, activePath) => {
   const newQuery = { ...query };
   let curQuery = newQuery;
   while (curPath.length > 0) {
-    curQuery = curQuery.columns.find(c => c.name === curPath[0]); // eslint-disable-line no-loop-func
+    curQuery = curQuery.columns.find(c => c.name === curPath[0]);
     curPath = curPath.slice(1);
   }
 
@@ -682,4 +688,5 @@ export {
   UPDATE_TRIGGER_ROW,
   UPDATE_TRIGGER_FUNCTION,
   vMakeTableRequests,
+  vResetColumns,
 };

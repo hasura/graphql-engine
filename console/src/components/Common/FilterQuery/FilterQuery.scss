@@ -1,4 +1,4 @@
-@import "../Common.scss";
+@import '../Common.scss';
 
 .queryBox {
   box-sizing: border-box;
@@ -8,7 +8,7 @@
   .inputRow {
     margin: 20px 0;
 
-    div[class^=col-xs-] {
+    div[class^='col-xs-'] {
       padding-left: 0;
       padding-right: 2.5px;
     }
@@ -19,7 +19,8 @@
     }
 
     :global(.form-control):focus {
-      box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075), 0 0 0px rgba(102, 175, 233, 0.6);
+      box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075),
+        0 0 0px rgba(102, 175, 233, 0.6);
     }
 
     :global(.fa) {
@@ -32,4 +33,9 @@
       color: #888;
     }
   }
+}
+
+.summaryLabel {
+  padding-bottom: 9px;
+  padding-left: 10px;
 }

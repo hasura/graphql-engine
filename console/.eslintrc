@@ -157,6 +157,7 @@
         "react/jsx-filename-extension": 0,
         "no-unused-vars": "off",
         "camelcase": "off",
+        "jsx-a11y/no-noninteractive-element-interactions": "off",
         "no-param-reassign": "off",
         "consistent-return": "off",
         "@typescript-eslint/no-unused-vars": 2,
