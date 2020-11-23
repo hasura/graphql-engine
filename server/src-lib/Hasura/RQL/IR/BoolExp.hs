@@ -244,6 +244,10 @@ data OpExpG (b :: BackendType) a
   | ASIMILAR !a -- similar, regex
   | ANSIMILAR !a-- not similar, regex
 
+  -- Now that in the RQL code we've started to take a "trees that grow"
+  -- approach (see PR #6003), we may eventually want to move these
+  -- recently added constructors, which correspond to newly supported
+  -- Postgres operators, to the backend-specific extensions of this type.
   | APOSIXCS !a -- match POSIX case sensitive, regex
   | APOSIXCI !a -- match POSIX case insensitive, regex
   | ANPOSIXCS !a-- dont match POSIX case sensitive, regex
