@@ -704,7 +704,6 @@ const HasuraNotifications: React.FC<
           },
         })),
     ].filter((x): x is NotificationsListItemProps => Boolean(x));
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
     consoleNotifications,
     consoleScope,
@@ -768,7 +767,7 @@ const HasuraNotifications: React.FC<
           </div>
         </Flex>
         <Box className={styles.notificationsContainer}>
-          {dataShown.length &&
+          {dataShown.length > 0 &&
             dataShown.map(payload => <NotificationsListItem {...payload} />)}
           {shouldDisplayViewMore && (
             <ViewMoreOptions
