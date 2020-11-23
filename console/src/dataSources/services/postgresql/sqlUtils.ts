@@ -60,7 +60,6 @@ export const getFetchTablesListQuery = (options: {
     'and'
   );
 
-  // TODO: optimise this.
   return `
   SELECT
     COALESCE(Json_agg(Row_to_json(info)), '[]' :: json) AS tables
@@ -539,7 +538,6 @@ export const getDropColumnSql = (
   schemaName: string,
   columnName: string,
   options?: {
-    // todo
     sqlGenerator?: FrequentlyUsedColumn['dependentSQLGenerator'];
   }
 ) => {
@@ -570,7 +568,6 @@ export const getAddColumnSql = (
     nullable: boolean;
     unique: boolean;
     default: any;
-    // todo
     sqlGenerator?: FrequentlyUsedColumn['dependentSQLGenerator'];
   }
 ) => {

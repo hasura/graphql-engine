@@ -2,8 +2,6 @@ import { MetadataActions } from './actions';
 import { QueryCollection, HasuraMetadataV3 } from './types';
 import { allowedQueriesCollection } from './utils';
 
-// todo -- separate allowed queries
-
 type MetadataState = {
   metadataObject: null | HasuraMetadataV3;
   error: null | string | boolean;

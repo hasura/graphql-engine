@@ -31,7 +31,7 @@ import {
 import { Driver } from '../dataSources';
 import { addSource, removeSource, reloadSource } from './sourcesUtils';
 import { getDataSources } from './selector';
-import { ReduxState, Thunk } from '../types';
+import { FixMe, ReduxState, Thunk } from '../types';
 
 export interface ExportMetadataSuccess {
   type: 'Metadata/EXPORT_METADATA_SUCCESS';
@@ -417,8 +417,7 @@ const handleInconsistentObjects = (
         'tables'
       );
 
-      // todo
-      dispatch(setConsistentSchema(filteredSchema) as any);
+      dispatch(setConsistentSchema(filteredSchema) as FixMe);
     }
   };
 };

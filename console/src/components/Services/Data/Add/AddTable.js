@@ -36,7 +36,7 @@ import { resetValidation } from './AddActions';
 import gqlPattern, {
   gqlTableErrorNotif,
   gqlColumnErrorNotif,
-} from '../Common/GraphQLValidation'; // TODO add the others
+} from '../Common/GraphQLValidation';
 
 import {
   tableNameNullNotif,

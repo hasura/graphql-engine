@@ -44,10 +44,6 @@ import {
   READ_ONLY_RUN_SQL_QUERIES,
 } from '../../../helpers/versionUtils';
 import { getRunSqlQuery } from '../../Common/utils/v1QueryUtils';
-import {
-  metadataQueryTypes,
-  // getSetTableEnumQuery,
-} from '../../../metadata/queryUtils';
 import { services } from '../../../dataSources/services';
 import insertReducer from './TableInsertItem/InsertActions';
 
@@ -212,7 +208,6 @@ const loadSchema = configOptions => {
             checkConstraints
           );
 
-          // todo
           const { inconsistentObjects } = state.metadata;
           const maybeInconsistentSchemas = allSchemas.concat(mergedData);
 

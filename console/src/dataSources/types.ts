@@ -1,6 +1,6 @@
 import { Nullable } from '../components/Common/utils/tsUtils';
 import { Column } from '../utils/postgresColumnTypes';
-import { FunctionDefinition } from '../metadata/types';
+import { FunctionDefinition, RemoteRelationshipDef } from '../metadata/types';
 
 export interface Relationship
   extends Pick<BaseTable, 'table_name' | 'table_schema'> {
@@ -137,6 +137,12 @@ export interface Table extends BaseTable {
     table_name: string;
     view_definition: string;
   };
+  remote_relationships: {
+    remote_relationship_name: string;
+    table_name: string;
+    table_schema: string;
+    definition: RemoteRelationshipDef;
+  }[];
 }
 
 export type ColumnAction = 'add' | 'modify';

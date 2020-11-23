@@ -2,9 +2,10 @@
 import { Table } from '../../../dataSources/types';
 import { TableEntry } from '../../../metadata/types';
 import { PostgresTable } from '../../../dataSources/services/postgresql/types';
+import { FixMe } from '../../../types';
 
-// TODO -- each service should export this function and results should be "merged" to Table object
-// copied from utils
+// TODO — each service should export `mergeLoadSchemaData` — results should be "merged" to Table object
+
 type PermKeys = Pick<
   TableEntry,
   | 'update_permissions'
@@ -28,14 +29,14 @@ const keyToPermission = {
 };
 
 export const mergeLoadSchemaData = (
-  infoSchemaTableData: PostgresTable[], // todo
+  infoSchemaTableData: PostgresTable[],
   fkData: Omit<
     Table['foreign_key_constraints'][0],
     'is_table_tracked' | 'is_ref_table_tracked'
   >[],
   metadataTables: TableEntry[],
   primaryKeys: Table['primary_key'][],
-  uniqueKeys: any, // todo
+  uniqueKeys: FixMe,
   checkConstraints: Table['check_constraints']
 ): Table[] => {
   const _mergedTableData: Table[] = [];
@@ -64,8 +65,8 @@ export const mergeLoadSchemaData = (
     const columns = infoSchemaTableInfo.columns;
     const comment = infoSchemaTableInfo.comment;
     const tableType = infoSchemaTableInfo.table_type;
-    const triggers = infoSchemaTableInfo.triggers; // TODO: get from v1/query
-    const viewInfo = infoSchemaTableInfo.view_info; // TODO: get from v1/query
+    const triggers = infoSchemaTableInfo.triggers;
+    const viewInfo = infoSchemaTableInfo.view_info;
 
     const keys =
       primaryKeys.find(
@@ -87,7 +88,7 @@ export const mergeLoadSchemaData = (
     const permissions: Table['permissions'] = [];
     let fkConstraints: Table['foreign_key_constraints'] = [];
     let refFkConstraints: Table['foreign_key_constraints'] = [];
-    let remoteRelationships: any = []; // todo, update type Table
+    let remoteRelationships: Table['remote_relationships'] = [];
     let isEnum = false;
     let configuration = {};
     let computed_fields: Table['computed_fields'] = [];

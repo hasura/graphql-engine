@@ -53,12 +53,10 @@ const RedeliverEvent: React.FC<Props> = ({
   const latestLog = logs[0];
 
   if (!logs.length && !error) {
-    // TODO: if there's a error on the query, then handle it here. can't keep showing the loader
     return <Spinner />;
   }
 
   if (error) {
-    // TODO: better UI for this error
     return (
       <>There was an error in fetching the details of the recent invocations.</>
     );

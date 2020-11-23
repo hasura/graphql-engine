@@ -1,5 +1,5 @@
 import { createSelector } from 'reselect';
-import { ReduxState } from '../types';
+import { FixMe, ReduxState } from '../types';
 import { TableEntry, DataSource } from './types';
 import { filterInconsistentMetadataObjects } from '../components/Services/Settings/utils';
 import { parseCustomTypes } from '../shared/utils/hasuraCustomTypeUtils';
@@ -238,7 +238,7 @@ export const getEventTriggers = createSelector(
           name: trigger.name,
           comment: '',
           configuration: {
-            definition: trigger.definition as any, // todo
+            definition: trigger.definition as FixMe,
             headers: trigger.headers || [],
             retry_conf: trigger.retry_conf,
             webhook: trigger.webhook || '',
@@ -282,7 +282,7 @@ export const getEventTriggerByName = createSelector(
             name: trigger.name,
             comment: '',
             configuration: {
-              definition: trigger.definition as any, // todo
+              definition: trigger.definition as FixMe,
               headers: trigger.headers || [],
               retry_conf: trigger.retry_conf,
               webhook: trigger.webhook || '',

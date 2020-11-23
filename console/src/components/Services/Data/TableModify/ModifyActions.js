@@ -621,8 +621,8 @@ const saveForeignKeys = (index, tableSchema, columns) => {
         },
         generatedConstraintName,
         constraintName,
-        dataSource.getReferenceOption(oldConstraint.on_update), // todo
-        dataSource.getReferenceOption(oldConstraint.on_delete) // todo
+        dataSource.getReferenceOption(oldConstraint.on_update),
+        dataSource.getReferenceOption(oldConstraint.on_delete)
       );
       migrationDown.push(getRunSqlQuery(migrationDownAlterFKeySql, source));
     } else {
@@ -1001,7 +1001,6 @@ const fetchViewDefinition = (viewName, isRedirect) => {
         const fullName = '"' + currentSchema + '"."' + viewName + '"';
         let runSqlDef = '';
 
-        // todo, but can stay for now
         if (viewType == 'VIEW') {
           runSqlDef =
             'CREATE OR REPLACE VIEW ' + fullName + ' AS \n' + finalDef;
@@ -1542,7 +1541,6 @@ const fetchColumnCasts = () => {
   return (dispatch, getState) => {
     const url = Endpoints.query;
     const source = getState().tables.currentDataSource;
-    // todo -- it should be normalized for different data sources
     const reqQuery = getRunSqlQuery(dataSource.fetchColumnCastsQuery, source);
     const options = {
       credentials: globalCookiePolicy,
@@ -1554,7 +1552,6 @@ const fetchColumnCasts = () => {
       data => {
         return dispatch({
           type: FETCH_COLUMN_TYPE_CASTS,
-          // todo: dataSource.convertTypeCasts or something like that
           data: convertArrayToJson(data.result.slice(1)),
         });
       },

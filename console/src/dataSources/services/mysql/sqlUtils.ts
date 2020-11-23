@@ -138,7 +138,6 @@ export const getAddColumnSql = (
   if (options.default) {
     let defaultVal = options.default;
     if (isColTypeString(columnType)) {
-      // todo: check for mysql
       defaultVal = `'${options.default}'`;
     }
     sql += defaultVal;

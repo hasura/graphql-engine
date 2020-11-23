@@ -57,7 +57,6 @@ export const isTable = (table: Table) => {
 };
 
 export const displayTableName = (table: Table) => {
-  // TODO: it shouldn't be here
   const tableName = table.table_name;
 
   return isTable(table) ? <span>{tableName}</span> : <i>{tableName}</i>;

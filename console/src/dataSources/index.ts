@@ -175,7 +175,6 @@ export interface DataSourcesAPI {
     schemaName: string,
     columnName: string,
     options?: {
-      // todo
       sqlGenerator?: FrequentlyUsedColumn['dependentSQLGenerator'];
     }
   ) => string;
@@ -216,7 +215,7 @@ export interface DataSourcesAPI {
     columnType: string
   ) => string;
   getSetCommentSql: (
-    on: 'table' | 'column' | string, // todo
+    on: 'table' | 'column' | string,
     tableName: string,
     schemaName: string,
     columnName: string,

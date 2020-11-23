@@ -4,7 +4,7 @@ import { connect, ConnectedProps } from 'react-redux';
 
 import Button from '../../../Common/Button/Button';
 import styles from '../../../Common/Common.scss';
-import { ReduxState } from '../../../../types';
+import { FixMe, ReduxState } from '../../../../types';
 import BreadCrumb from '../../../Common/Layout/BreadCrumb/BreadCrumb';
 import AddDataSource from './AddDataSource';
 import { DataSource } from '../../../../metadata/types';
@@ -135,12 +135,12 @@ const ManageDatabase: React.FC<ManageDatabaseProps> = ({
       name
     );
     if (confirmation) {
-      (dispatch(removeDataSource({ driver, name })) as any).then(cb); // todo
+      (dispatch(removeDataSource({ driver, name })) as FixMe).then(cb);
     }
   };
 
   const onReload = (name: string, driver: Driver, cb: () => void) => {
-    (dispatch(reloadDataSource({ driver, name })) as any).then(cb); // todo
+    (dispatch(reloadDataSource({ driver, name })) as FixMe).then(cb);
   };
 
   const onSubmitAddDataSource = (

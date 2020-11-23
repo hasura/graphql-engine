@@ -6,7 +6,6 @@ import Headers from '../../../../Common/Headers/Headers';
 const editorLabel = 'Headers';
 const editorTooltip =
   'Headers Hasura will send to the webhook with the POST request';
-// Tooltip todo
 
 const HeaderConfEditor = ({
   className,

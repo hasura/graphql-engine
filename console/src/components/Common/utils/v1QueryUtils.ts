@@ -3,6 +3,7 @@ import { QualifiedTable } from '../../../metadata/types';
 import { Nullable } from './tsUtils';
 import { ConsoleScope } from '../../Main/ConsoleNotification';
 import { BaseTableColumn } from '../../../dataSources/types';
+import { FixMe } from '../../../types';
 
 export type OrderByType = 'asc' | 'desc';
 export type OrderByNulls = 'first' | 'last';
@@ -61,7 +62,6 @@ export const convertPGValue = (
   return value;
 };
 
-// TODO
 export const createPKClause = (
   primaryKeyInfo: any,
   insertion: Record<string, any>,
@@ -90,7 +90,7 @@ export const createPKClause = (
 };
 
 export const getInsertUpQuery = (
-  tableDef: any, // todo
+  tableDef: FixMe,
   insertion: Record<string, any>,
   columns: BaseTableColumn[]
 ) => {
@@ -104,7 +104,7 @@ export const getInsertUpQuery = (
 
   const sql = `INSERT INTO "${tableDef.schema}"."${tableDef.name}"(${columnValues}) VALUES (${values});`;
 
-  return getRunSqlQuery(sql, '' /** TODO */);
+  return getRunSqlQuery(sql, '' /** TODO: data-sources */);
 };
 
 export const convertPGPrimaryKeyValue = (value: any, pk: string): string => {
@@ -124,7 +124,7 @@ export const convertPGPrimaryKeyValue = (value: any, pk: string): string => {
 };
 
 export const getInsertDownQuery = (
-  tableDef: any, // todo
+  tableDef: FixMe,
   insertion: Record<string, any>,
   primaryKeyInfo: any,
   columns: BaseTableColumn[]

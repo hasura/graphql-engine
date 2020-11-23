@@ -31,7 +31,7 @@ const ColumnEditor = ({
       selectedProperties[colName].type
     );
   };
-  // todo
+  // todo — data-sources
   let columnTypePG = getColumnType();
   if (columnProperties.display_type_name === dataSource.columnDataTypes.ARRAY) {
     columnTypePG = columnTypePG.replace('_', '') + '[]';
@@ -58,7 +58,7 @@ const ColumnEditor = ({
     colName
   );
 
-  // todo
+  // todo — data-sources
   if (isArrayDataType) {
     alterOptions = convertToArrayOptions(alterOptions);
   }

@@ -145,7 +145,7 @@ export const mysql: DataSourcesAPI = {
   isColumnAutoIncrement: (column: TableColumn) => {
     return column.extra === 'auto-increment';
   },
-  getTableSupportedQueries, // todo
+  getTableSupportedQueries,
   getColumnType: (col: TableColumn) => {
     return col.data_type;
   },
@@ -158,7 +158,7 @@ export const mysql: DataSourcesAPI = {
   fetchColumnTypesQuery: 'select "[]"',
   fetchColumnCastsQuery: 'select "[]"',
   fetchColumnDefaultFunctions: () => 'select "[]"',
-  isSQLFunction: () => false, // todo
+  isSQLFunction: () => false,
   getEstimateCountQuery: (schema: string, table: string) => {
     return `
 SELECT
@@ -172,7 +172,7 @@ WHERE
   },
   getStatementTimeoutSql: (seconds: number) =>
     `SET SESSION MAX_EXECUTION_TIME=${seconds * 1000};`,
-  isTimeoutError: () => false, // todo
+  isTimeoutError: () => false,
   getViewDefinitionSql: viewName => `
   SELECT  VIEW_DEFINITION
     FROM    INFORMATION_SCHEMA.VIEWS
@@ -216,7 +216,7 @@ WHERE
   frequentlyUsedColumns: [],
   primaryKeysInfoSql,
   uniqueKeysSql,
-  checkConstraintsSql: undefined, // todo
+  checkConstraintsSql: undefined,
   getFKRelations,
   getReferenceOption: (option: string) => option,
   getEventInvocationInfoByIDSql: undefined,

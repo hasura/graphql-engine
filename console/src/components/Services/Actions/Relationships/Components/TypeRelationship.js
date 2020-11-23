@@ -121,9 +121,9 @@ const RelationshipEditor = ({
   // rel name input
   const relNameInput = () => {
     /*
+      TODO FIXME
       There is no neat solution to renaming a relationship.
       This is because name is the only unique identifier of a relationship.
-      TODO FIXME
     */
     const isDisabled = !!existingRelConfig;
     const relNameInputTitle = isDisabled

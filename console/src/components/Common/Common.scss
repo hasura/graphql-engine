@@ -116,7 +116,8 @@ table tbody tr th {
       padding: 0px 0px;
       // border-left: 5px solid transparent;
 
-      a {
+      a,
+      .dbSelect {
         color: #767e93;
         background-color: #f0f0f0;
         width: 100%;
@@ -140,7 +141,8 @@ table tbody tr th {
       color: #333;
       text-decoration: none;
 
-      a {
+      a,
+      .dbSelect {
         text-decoration: none;
         background-color: #fff3d5;
         display: inline-block;

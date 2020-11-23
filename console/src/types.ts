@@ -5,6 +5,8 @@ import { RouterAction } from 'react-router-redux';
 import { RAEvents } from './components/Services/Events/types';
 import reducer from './reducer';
 
+export type FixMe = any;
+
 export type ApiExplorer = {
   authApiExpanded: string;
   currentTab: number;

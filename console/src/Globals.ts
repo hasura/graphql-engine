@@ -5,8 +5,6 @@ import { stripTrailingSlash } from './components/Common/utils/urlUtils';
 import { isEmpty } from './components/Common/utils/jsUtils';
 import { Nullable } from './components/Common/utils/tsUtils';
 
-// TODO: move this section to a more appropriate location
-
 declare global {
   interface Window {
     __env: {

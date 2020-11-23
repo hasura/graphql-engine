@@ -2,6 +2,7 @@ import { Nullable } from '../components/Common/utils/tsUtils';
 import { Table, Relationship, CheckConstraint, BaseTable } from './types';
 import { isEqual } from '../components/Common/utils/jsUtils';
 import { QualifiedTable } from '../metadata/types';
+import { FixMe } from '../types';
 
 export type Operations = 'insert' | 'select' | 'update' | 'delete';
 export const QUERY_TYPES: Operations[] = [
@@ -245,7 +246,7 @@ export const findTableFromRel = (
   curTable: Table,
   rel: Relationship
 ) => {
-  let rTable: any = null; // todo
+  let rTable: FixMe = null;
   let rSchema = 'public';
 
   // for view

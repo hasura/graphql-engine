@@ -6,13 +6,13 @@ import Endpoints from '../../../Endpoints';
 import '../../../../node_modules/graphql-voyager/dist/voyager.css';
 import './voyagerView.css';
 import requestAction from '../../../utils/requestAction';
-import { Dispatch } from '../../../types';
+import { Dispatch, ReduxState } from '../../../types';
 
 interface VoyagerViewProps {
   headers: Headers;
 }
 
-const mapStateToProps = (state: State) => {
+const mapStateToProps = (state: ReduxState) => {
   return {
     headers: state.tables.dataHeaders,
   };
@@ -23,18 +23,12 @@ const mapDispatchToProps = (dispatch: Dispatch) => {
       dispatch(requestAction(url, options)),
   };
 };
-// TODO: replace by redux State when it's defined
-interface State {
-  tables: {
-    dataHeaders: Headers;
-  };
-}
 
 type Props = VoyagerViewProps &
   ReturnType<typeof mapStateToProps> &
   ReturnType<typeof mapDispatchToProps>;
 
-class VoyagerView extends Component<Props, State> {
+class VoyagerView extends Component<Props, ReduxState> {
   introspectionProvider = (query: string) =>
     this.props.requestAction(Endpoints.graphQLUrl, {
       method: 'POST',

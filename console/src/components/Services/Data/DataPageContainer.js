@@ -99,10 +99,7 @@ const DataPageContainer = ({
             : ''
         }
       >
-        <Link
-          className={styles.linkBorder}
-          // todo — don't use Link
-        >
+        <section className={`${styles.linkBorder} ${styles.dbSelect}`}>
           <div className={styles.schemaWrapper}>
             <div
               className={styles.schemaSidebarSection}
@@ -143,7 +140,7 @@ const DataPageContainer = ({
               )}
             </div>
           </div>
-        </Link>
+        </section>
         <DataSubSidebar location={location} />
       </li>
       <li

@@ -1,12 +1,8 @@
-// TODO: add some SQL support for filters and the where clause
-
 import { getRunSqlQuery } from '../components/Common/utils/v1QueryUtils';
 import { TriggerOperation } from '../components/Common/FilterQuery/state';
 
 const eventRelTable = `"hdb_catalog"."event_log"`;
 const eventInvTable = `"hdb_catalog"."event_invocation_logs"`;
-
-// NOTE: should trigger name be the only unique thing among the different triggers?
 
 export const getDataTriggerLogsQuery = (
   triggerOp: TriggerOperation,
@@ -18,9 +14,9 @@ export const getDataTriggerLogsQuery = (
   let sql = '';
 
   if (triggerOp === 'pending') {
-    sql = `SELECT original_table.*, data_table.* 
+    sql = `SELECT original_table.*, data_table.*
     FROM ${eventInvTable} original_table JOIN ${eventRelTable} data_table
-    ON original_table.event_id = data_table.id 
+    ON original_table.event_id = data_table.id
     WHERE data_table.trigger_name = '${triggerName}' AND
     data_table.delivered = FALSE
     ORDER BY original_table.created_at DESC NULLS LAST`;
@@ -28,9 +24,9 @@ export const getDataTriggerLogsQuery = (
 
   if (triggerOp === 'invocation' || triggerOp === 'processed') {
     // fixme: unsure of this, to check again.
-    sql = `SELECT original_table.*, data_table.* 
+    sql = `SELECT original_table.*, data_table.*
   FROM ${eventInvTable} original_table JOIN ${eventRelTable} data_table
-  ON original_table.event_id = data_table.id 
+  ON original_table.event_id = data_table.id
   WHERE data_table.trigger_name = '${triggerName}'
   ORDER BY original_table.created_at DESC NULLS LAST`;
   }
@@ -38,7 +34,7 @@ export const getDataTriggerLogsQuery = (
   if (limit) {
     sql += ` LIMIT ${limit}`;
   } else {
-    sql += ` LIMIT 10`; // todo
+    sql += ` LIMIT 10`;
   }
 
   if (offset) {

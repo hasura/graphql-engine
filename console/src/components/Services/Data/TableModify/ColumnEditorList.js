@@ -62,7 +62,7 @@ const ColumnEditorList = ({
     const colName = col.column_name;
     const isArrayDataType = col.data_type === dataSource.columnDataTypes.ARRAY;
 
-    // todo -- getColumnProperties utility
+    // todo -- create getColumnProperties utility
     const getDisplayName = () => {
       if (isArrayDataType) {
         return col.data_type_name.replace('_', '') + '[]';
