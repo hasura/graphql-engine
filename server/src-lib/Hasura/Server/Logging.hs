@@ -203,6 +203,7 @@ data HttpLogContext
   = HttpLogContext
   { hlcHttpInfo  :: !HttpInfoLog
   , hlcOperation :: !OperationLog
+  , hlcRequestId :: !RequestId
   } deriving (Show, Eq)
 $(deriveToJSON (aesonDrop 3 snakeCase) ''HttpLogContext)
 
@@ -236,7 +237,7 @@ mkHttpAccessLogContext userInfoM reqId req res mTiming compressTypeM headers =
            , olRawQuery = Nothing
            , olError = Nothing
            }
-  in HttpLogContext http op
+  in HttpLogContext http op reqId
   where
     status = HTTP.status200
     respSize = Just $ BL.length res
@@ -272,7 +273,7 @@ mkHttpErrorLogContext userInfoM reqId waiReq (reqBody, parsedReq) err mTiming co
            , olRawQuery           = maybe (Just $ bsToTxt $ BL.toStrict reqBody) (const Nothing) parsedReq
            , olError              = Just err
            }
-  in HttpLogContext http op
+  in HttpLogContext http op reqId
 
 data HttpLogLine
   = HttpLogLine
