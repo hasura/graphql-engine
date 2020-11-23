@@ -17,14 +17,15 @@ and other utility functions. Each of the above functionality are considered a mo
 
 Few changes are made on the OSS source code that essentially enable `PRO` or `CLOUD` code to enforce certain access control. For example:
 1. `requireAsyncGlobals` in `App/Actions` is changed as follows
-  *Change*: extend the function signature to accept two flags to enable each fetch as described below with default to true for it to work with OSS
+
+  **Change**: extend the function signature to accept two flags to enable each fetch as described below with default to true for it to work with OSS
 
   The function fetches the server config by pinging `/v1alpha1/config` and retrieves the hasura `server` metadata stored in the user's graphql engine using `/v1/query`
   1. Server config will only be live for users with atleast `graphql` access or the `admin`
   2. Server metadata would require the collaborator to have atleast `admin` access as this queries `/v1/query` and that is only allowed for `admins` for now
   `boolean` values will be passed accordingly based on the collaborator access.
-2. *Change*: Modifies `initQueries` to filter schema tables/view based on certain parameters passed by `PRO`/`CLOUD` to the function `dataRouterUtils`.
-3. *Change*: Adds `ADMIN_SECRET_HEADER_KEY` to constants at `cypress/helper` and update the imports accordingly. The constant was resolved from `src/` before and it was causing some trouble while sharing the tests with `pro`.
+2. **Change**: Modifies `initQueries` to filter schema tables/view based on certain parameters passed by `PRO`/`CLOUD` to the function `dataRouterUtils`.
+3. **Change**: Adds `ADMIN_SECRET_HEADER_KEY` to constants at `cypress/helper` and update the imports accordingly. The constant was resolved from `src/` before and it was causing some trouble while sharing the tests with `pro`.
 
 
 ## Bundle
