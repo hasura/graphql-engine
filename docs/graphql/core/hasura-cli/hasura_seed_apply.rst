@@ -18,7 +18,7 @@ Apply seed data
 
 ::
 
-  hasura seed apply [flags]
+  hasura seeds apply [flags]
 
 Examples
 ~~~~~~~~
@@ -26,10 +26,10 @@ Examples
 ::
 
     # Apply all seeds on the database:
-    hasura seed apply
+    hasura seeds apply
 
     # Apply only a particular file:
-    hasura seed apply --file seeds/1234_add_some_seed_data.sql
+    hasura seeds apply --file seeds/1234_add_some_seed_data.sql
 
 Options
 ~~~~~~~
