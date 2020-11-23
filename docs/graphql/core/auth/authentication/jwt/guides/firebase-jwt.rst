@@ -218,23 +218,23 @@ Then deploy the function by running:
     firebase deploy --only functions
 
 
+Step 6: Test use cases
+----------------------
 
+Create table x.
 
+User (logged in)
+^^^^^^^^^^^^^^^^
 
+- Add role user
+- Give permissions x
 
-Step 6: Test your app
----------------------
+- You'll see the following 
 
-In your React app folder, run: 
+Anonymous (not logged in)
+^^^^^^^^^^^^^^^^^^^^^^^^^
 
-.. code-block:: bash
+- Add role anonymous
+- Give permissions x
 
-    yarn start
-
-You should now see a prompt to log in:
-
-IMAGE
-
-After that, you should see the query showing for the logged-in user:
-
-IMAGE
+- You'll see the following 
