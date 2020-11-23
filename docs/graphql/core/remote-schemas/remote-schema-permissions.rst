@@ -7,6 +7,14 @@
 Remote schema permissions
 =========================
 
+.. contents:: Table of contents
+   :backlinks: none
+   :depth: 1
+   :local:
+
+Introduction
+------------
+
 Hasura supports :ref:`role-based authorization <authorization>` for remote schemas.
 
 Remote schema permissions can be configured to expose only certain parts of
@@ -23,13 +31,12 @@ value to an input value.
    Remote schema permissions are **not** enabled by default in the graphql-engine.
    To enable them, you will have to run the graphql-engine either with the
    server flag ``--enable-remote-schema-permissions`` or environment variable
-   ``HASURA_GRAPHQL_ENABLE_REMOTE_SCHEMA_PERMISSIONS`` set to ``true``.
+   ``HASURA_GRAPHQL_ENABLE_REMOTE_SCHEMA_PERMISSIONS`` set to ``true``. When remote
+   schema permissions are not enabled in the graphql-engine, the remote schemas are
+   considered to be a public entity i.e all roles will have unrestricted access to the
+   remote schema.
 
 .. note::
-
-   When remote schema permissions are not enabled in the graphql-engine,
-   the remote schemas are considered to be a public entity i.e all roles will have
-   unrestricted access to the remote schema.
 
 Role based remote schemas
 -------------------------
@@ -113,7 +120,7 @@ The schema document should look like:
      get_users_by_name (first_name: String!): [User]
    }
 
-Argument Presets
+Argument presets
 ----------------
 
 The role-based schema only helps in changing the type definitions that are exposed. Argument
@@ -219,7 +226,7 @@ this change should look like:
 .. note::
 
    By default, any preset string value in the format of  ``x-hasura-*`` is assumed
-   to be a :ref:`session variable <dynamic-session-variables>`. To override this
+   to be a :ref:`session variable <dynamic_session_variables>`. To override this
    behaviour i.e. to treat the value literally, the ``static`` argument equal to ``true``
    needs to be added in the ``preset`` directive. In the following example,
    the ``x-hasura-user-id`` will be treated literally.
