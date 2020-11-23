@@ -128,7 +128,7 @@ Argument presets can be set on an argument value using the ``preset`` directive.
 .. note::
 
    A preset value can be defined only at the ``INPUT_FIELD_DEFINITION`` and ``ARGUMENT_DEFINITION``
-   system directive locations.
+   system directive locations i.e. only at an input object field or an argument field.
 
 For example, let's say we have the following upstream remote schema added to the
 graphql-engine:

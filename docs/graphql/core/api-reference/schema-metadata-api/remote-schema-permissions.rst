@@ -180,7 +180,7 @@ of the user being able to explicitly specify the value for the field. Argument p
 are of two types:
 
 1. Static Value
-2. Session Variable Value
+2. :ref:`Session Variable Value <dynamic_session_variables>`
 
 A preset value can be added to an input value via the ``preset`` directive.
 
@@ -205,10 +205,10 @@ dynamic session variable value, then its value is read from the specified sessio
 value when the query is executed and then its value is substituted in the appropriate place.
 
 .. note::
-   By default, it's assumed that if an input value preset contains a session variable,
-   its value will be resolved when the query is executed. To treat the session
-   variable value as a literal value i.e avoiding resolving of the session variable
-   value can be done by specifying ``static`` as ``true`` while defining the preset.
+   By default, if the input value preset contains a :ref:`session variable value <dynamic_session_variables>`,
+   then its value will be resolved when the query is executed. To treat the session
+   variable value as a literal value (avoiding resolving of the session variable
+   value) can be done by specifying ``static`` as ``true`` while defining the preset.
 
    For example:
 
