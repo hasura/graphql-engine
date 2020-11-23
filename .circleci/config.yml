@@ -168,12 +168,6 @@ jobs:
         - cabal-store-v3-{{ checksum "server/cabal.project" }}-
         - cabal-store-v3-
     - run:
-        name: Install dependencies
-        command: |
-          apt-get -y update
-          apt-get -y install postgresql-client-12
-          apt-get -y install unixodbc-dev freetds-dev
-    - run:
         name: Build the binary
         working_directory: ./server
         command: |
