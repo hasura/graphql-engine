@@ -55,43 +55,43 @@ data UserOn = UserOn
 
 --------------------------------------------------------------------------------
 
-data CatalogMetadata = CatalogMetadata
-  { tables :: ![CatalogTableMetadata]
+data UnifiedMetadata = UnifiedMetadata
+  { tables :: ![UnifiedTableMetadata]
   }
 
-data CatalogTableMetadata = CatalogTableMetadata
-  { table :: !CatalogTableName
-  , object_relationships :: ![CatalogObjectRelationship]
-  , array_relationships :: ![CatalogArrayRelationship]
-  , columns :: ![CatalogColumn]
+data UnifiedTableMetadata = UnifiedTableMetadata
+  { table :: !UnifiedTableName
+  , object_relationships :: ![UnifiedObjectRelationship]
+  , array_relationships :: ![UnifiedArrayRelationship]
+  , columns :: ![UnifiedColumn]
   }
 
-data CatalogColumn = CatalogColumn
+data UnifiedColumn = UnifiedColumn
   { name :: !Text
   , type' :: !ScalarType
   }
 
-data CatalogTableName = CatalogTableName
-  { schema :: !(Maybe Text)
+data UnifiedTableName = UnifiedTableName
+  { schema :: !Text
   , name :: !Text
   }
 
-data CatalogObjectRelationship = CatalogObjectRelationship
-  { using :: !CatalogUsing
+data UnifiedObjectRelationship = UnifiedObjectRelationship
+  { using :: !UnifiedUsing
   , name :: !Text
   }
 
-data CatalogArrayRelationship = CatalogArrayRelationship
-  { using :: !CatalogUsing
+data UnifiedArrayRelationship = UnifiedArrayRelationship
+  { using :: !UnifiedUsing
   , name :: !Text
   }
 
-data CatalogUsing = CatalogUsing
-  { foreign_key_constraint_on :: !CatalogOn
+data UnifiedUsing = UnifiedUsing
+  { foreign_key_constraint_on :: !UnifiedOn
   }
 
-data CatalogOn = CatalogOn
-  { table :: !CatalogTableName
+data UnifiedOn = UnifiedOn
+  { table :: !UnifiedTableName
   , column :: !Text
   }
 
@@ -278,26 +278,27 @@ newtype ColumnName = ColumnName { columnNameText :: Text }
 
 -- | Derived from the odbc package.
 data ScalarType
-  = CharType
-  | NumericType
-  | DecimalType
-  | IntegerType
-  | SmallintType
-  | FloatType
-  | RealType
-  | DoubleType
-  | DateType
-  | Ss_time2Type
-  | VarcharType
-  | WcharType
-  | WvarcharType
-  | WlongvarcharType
-  | TimeType
-  | TimestampType
-  | LongvarcharType
-  | BinaryType
-  | VarbinaryType
-  | BigintType
-  | TinyintType
-  | BitType
-  | GuidType
+ = IntType | NVarCharType
+  -- = CharType
+  -- | NumericType
+  -- | DecimalType
+  -- | IntegerType
+  -- | SmallintType
+  -- | FloatType
+  -- | RealType
+  -- | DoubleType
+  -- | DateType
+  -- | Ss_time2Type
+  -- | VarcharType
+  -- | WcharType
+  -- | WvarcharType
+  -- | WlongvarcharType
+  -- | TimeType
+  -- | TimestampType
+  -- | LongvarcharType
+  -- | BinaryType
+  -- | VarbinaryType
+  -- | BigintType
+  -- | TinyintType
+  -- | BitType
+  -- | GuidType

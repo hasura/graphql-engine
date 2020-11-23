@@ -70,6 +70,7 @@ data UnifyProblem
   = MissingTable UserTableName
   | MissingTableForRelationship UserUsing
   | MissingColumnForRelationship UserUsing
+  | UnknownScalarType Text
   deriving (Show)
 
 --------------------------------------------------------------------------------
@@ -90,7 +91,9 @@ loadCatalogMetadata connStr UserMetadata{tables} = do
 -- Unification
 
 unifyTables ::
-     [UserTableMetadata] -> [SysTable] -> Validate (NonEmpty UnifyProblem) ()
+     [UserTableMetadata]
+  -> [SysTable]
+  -> Validate (NonEmpty UnifyProblem) [UnifiedTableMetadata]
 unifyTables userTableMetadatas sysTables = do
   let indexedSysTables =
         HM.fromList
@@ -105,12 +108,12 @@ unifyTables userTableMetadatas sysTables = do
           (map
              (\(UserTableMetadata {table}, sysTable) -> (table, sysTable))
              tablesStage1)
-  traverse_ (unifyRelationships indexedValidTables) tablesStage1
+  traverse (unifyRelationships indexedValidTables) tablesStage1
 
 unifyTable ::
-     HashMap UserTableName b
+     HashMap UserTableName SysTable
   -> UserTableMetadata
-  -> Validate (NonEmpty UnifyProblem) (UserTableMetadata, b)
+  -> Validate (NonEmpty UnifyProblem) (UserTableMetadata, SysTable)
 unifyTable indexedSysTables userMetaTable@UserTableMetadata {table} = do
   case HM.lookup table indexedSysTables of
     Nothing -> refute (pure (MissingTable table))
@@ -118,15 +121,37 @@ unifyTable indexedSysTables userMetaTable@UserTableMetadata {table} = do
 
 unifyRelationships ::
      HashMap UserTableName SysTable
-  -> (UserTableMetadata, b)
-  -> Validate (NonEmpty UnifyProblem) ()
-unifyRelationships indexedValidTables (UserTableMetadata {..}, _) = do
-  traverse_
-    (\UserObjectRelationship {using} -> checkUsing using)
-    object_relationships
-  traverse_
-    (\UserArrayRelationship {using} -> checkUsing using)
-    array_relationships
+  -> (UserTableMetadata, SysTable)
+  -> Validate (NonEmpty UnifyProblem) UnifiedTableMetadata
+unifyRelationships indexedValidTables (UserTableMetadata {..}, SysTable {joined_sys_column}) = do
+  object_relationships' <-
+    traverse
+      (\UserObjectRelationship {using = using0, ..} -> do
+         using <- checkUsing using0
+         pure UnifiedObjectRelationship {..})
+      object_relationships
+  array_relationships' <-
+    traverse
+      (\UserArrayRelationship {using = using0, ..} -> do
+         using <- checkUsing using0
+         pure UnifiedArrayRelationship {..})
+      array_relationships
+  columns <-
+    traverse
+      (\SysColumn {..} -> do
+         let SysType {name = typeName} = joined_sys_type
+         type' <- parseScalarType typeName
+         pure UnifiedColumn {type', ..})
+      joined_sys_column
+  pure
+    UnifiedTableMetadata
+      { table =
+          let UserTableName {..} = table
+           in UnifiedTableName {..}
+      , object_relationships = object_relationships'
+      , array_relationships = array_relationships'
+      , columns
+      }
   where
     checkUsing using@UserUsing {foreign_key_constraint_on} =
       case HM.lookup referencedTable indexedValidTables of
@@ -137,9 +162,26 @@ unifyRelationships indexedValidTables (UserTableMetadata {..}, _) = do
                     referencedColumn == column)
                  columns of
             Nothing -> refute (pure (MissingColumnForRelationship using))
-            Just {} -> pure ()
+            Just {} ->
+              pure
+                (UnifiedUsing
+                   { foreign_key_constraint_on =
+                       UnifiedOn
+                         { table =
+                             let UserTableName {..} = referencedTable
+                              in UnifiedTableName {..}
+                         , ..
+                         }
+                   })
       where
         UserOn {table = referencedTable, column} = foreign_key_constraint_on
+
+parseScalarType :: Text -> Validate (NonEmpty UnifyProblem) ScalarType
+parseScalarType =
+  \case
+    "int" -> pure IntType
+    "nvarchar" -> pure NVarCharType
+    t -> refute (pure (UnknownScalarType t))
 
 --------------------------------------------------------------------------------
 -- Quick catalog queries
