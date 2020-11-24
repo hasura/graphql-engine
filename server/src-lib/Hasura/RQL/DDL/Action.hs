@@ -194,7 +194,7 @@ runCreateActionPermission createActionPermission = do
   buildSchemaCacheFor (MOActionPermission actionName roleName)
     $ MetadataModifier
     $ metaActions.ix actionName.amPermissions
-      %~ ((:) $ ActionPermissionMetadata roleName comment)
+      %~ (:) (ActionPermissionMetadata roleName comment)
   pure successMsg
   where
     CreateActionPermission actionName roleName _ comment = createActionPermission

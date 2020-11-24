@@ -1,4 +1,3 @@
-{-# LANGUAGE ViewPatterns #-}
 module Hasura.RQL.DDL.RemoteSchema
   ( runAddRemoteSchema
   , runRemoveRemoteSchema
