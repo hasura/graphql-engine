@@ -39,7 +39,7 @@ On the SQL tab of the Hasura console, run the following command:
 Step 3: Pull the schema and metadata from the server
 ----------------------------------------------------
 
-We will set up fresh migrations by pulling the schema and metadata from the server using the following commands:
+If the migrations were resetted, then we will set up fresh migrations by pulling the schema and metadata from the server using the following commands:
 
 .. code-block:: bash
 
@@ -53,6 +53,12 @@ We will set up fresh migrations by pulling the schema and metadata from the serv
    ## mark the migration as applied on this server
    
    hasura migrate apply --version "<version>" --skip-execution
+
+.. code-block:: bash
+
+   ## To also export the Hasura metadata and save it in the ```migrations/metadata.yaml```
+
+   hasura metadata export   
 
 .. note::
 
