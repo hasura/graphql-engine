@@ -39,7 +39,7 @@ On the SQL tab of the Hasura console, run the following command:
 Step 3: Pull the schema and metadata from the server
 ----------------------------------------------------
 
-If the migrations were resetted, then we will set up fresh migrations by pulling the schema and metadata from the server using the following commands:
+If the migrations were reset, then we will set up fresh migrations by pulling the schema and metadata from the server using the following commands:
 
 .. code-block:: bash
 
