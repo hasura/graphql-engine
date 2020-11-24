@@ -100,11 +100,11 @@ func WithInstance(config *Config, logger *log.Logger, hasuraOpts *database.Hasur
 		hx.CLICatalogState.Migrations = MigrationsState{}
 		hx.migrationStateStore = NewMigrationsStateWithCatalogStateAPI(hx)
 		hx.settingsStateStore = NewSettingsStateStoreWithCatalogStateAPI(hx)
-		hx.sendMetadataOrQueryRequest = hx.sendv1Query
+		hx.sendMetadataOrQueryRequest = hx.sendV2QueryOrV1Metadata
 	default:
 		hx.migrationStateStore = NewMigrationStateStoreWithSQL(hx)
 		hx.settingsStateStore = NewSettingsStateStoreWithSQL(hx)
-		hx.sendMetadataOrQueryRequest = hx.sendV2QueryOrV1Metadata
+		hx.sendMetadataOrQueryRequest = hx.sendv1Query
 	}
 
 	if err := hx.migrationStateStore.PrepareMigrationsStateStore(); err != nil {

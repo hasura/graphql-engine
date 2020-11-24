@@ -251,6 +251,9 @@ func (s SettingsStateStoreWithCatalogStateAPI) setDefaults() error {
 	if err != nil {
 		return err
 	}
+	if cliState.SettingsState == nil {
+		cliState.SettingsState = make(map[string]string)
+	}
 	for _, setting := range s.hasuraDB.settings {
 		cliState.SettingsState[setting.GetName()] = setting.GetDefaultValue()
 	}
