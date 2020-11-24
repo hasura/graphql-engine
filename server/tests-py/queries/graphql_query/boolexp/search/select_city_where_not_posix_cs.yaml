@@ -1,18 +1,22 @@
-description: Select cities not ending with ham
+description: Select cities not start with new
 url: /v1/graphql
 status: 200
 response:
   data:
     city:
+    - name: Durham
+      country: USA 
     - name:  New York
       country: USA
+    - name: Framlingham
+      country: UK
     - name: New Orleans 
       country: USA
 query:
   query: |
     query {
       city (
-      where: {name: {_nlike: "%ham" }}
+      where: {name: {_nposix_cs: "new.*" }}
       ) {
         name
         country

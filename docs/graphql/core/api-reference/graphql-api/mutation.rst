@@ -717,6 +717,10 @@ Operator
 - ``_nilike``
 - ``_similar``
 - ``_nsimilar``
+- ``_posix_ci``
+- ``_nposix_ci``
+- ``_posix_cs``
+- ``_nposix_cs``
 
 **Checking for NULL values:**
 

@@ -244,6 +244,11 @@ data OpExpG (b :: BackendType) a
   | ASIMILAR !a -- similar, regex
   | ANSIMILAR !a-- not similar, regex
 
+  | APOSIXCS !a -- match POSIX case sensitive, regex
+  | APOSIXCI !a -- match POSIX case insensitive, regex
+  | ANPOSIXCS !a-- dont match POSIX case sensitive, regex
+  | ANPOSIXCI !a-- dont match POSIX case insensitive, regex
+
   | AContains !a
   | AContainedIn !a
   | AHasKey !a
@@ -318,6 +323,11 @@ opExpToJPair f = \case
 
   ASIMILAR a               -> ("_similar", f a)
   ANSIMILAR a              -> ("_nsimilar", f a)
+
+  APOSIXCS a               -> ("_posix_cs", f a)
+  APOSIXCI a               -> ("_posix_ci", f a)
+  ANPOSIXCS a              -> ("_nposix_cs", f a)
+  ANPOSIXCI a              -> ("_nposix_ci", f a)
 
   AContains a              -> ("_contains", f a)
   AContainedIn a           -> ("_contained_in", f a)

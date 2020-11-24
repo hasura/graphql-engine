@@ -82,6 +82,22 @@
                     "type": "string",
                     "title": "_similar"
                 },
+                "_posix_cs": {
+                    "type": "string",
+                    "title": "_posix_cs"
+                },
+                "_posix_ci": {
+                    "type": "string",
+                    "title": "_posix_ci"
+                },
+                "_nposix_cs": {
+                    "type": "string",
+                    "title": "_nposix_cs"
+                },
+                "_nposix_ci": {
+                    "type": "string",
+                    "title": "_nposix_ci"
+                },
                 "_eq": {
                     "type": "string",
                     "title": "_eq"

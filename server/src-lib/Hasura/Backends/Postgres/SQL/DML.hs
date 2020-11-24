@@ -723,15 +723,19 @@ data CompareOp
   | SLT
   | SIN
   | SNE
+  | SGTE
+  | SLTE
+  | SNIN
   | SLIKE
   | SNLIKE
   | SILIKE
   | SNILIKE
   | SSIMILAR
   | SNSIMILAR
-  | SGTE
-  | SLTE
-  | SNIN
+  | SPOSIXCS
+  | SPOSIXCI
+  | SNPOSIXCS
+  | SNPOSIXCI
   | SContains
   | SContainedIn
   | SHasKey
@@ -758,6 +762,10 @@ instance Show CompareOp where
     SNILIKE      -> "NOT ILIKE"
     SSIMILAR     -> "SIMILAR TO"
     SNSIMILAR    -> "NOT SIMILAR TO"
+    SPOSIXCS    -> "~"
+    SPOSIXCI    -> "~*"
+    SNPOSIXCS    -> "!~"
+    SNPOSIXCI    -> "!~*"
     SContains    -> "@>"
     SContainedIn -> "<@"
     SHasKey      -> "?"

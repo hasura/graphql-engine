@@ -154,6 +154,22 @@ const columnOperatorsInfo = {
     type: 'pattern_match',
     inputStructure: 'object',
   },
+  _posix_cs: {
+    type: 'pattern_match',
+    inputStructure: 'object',
+  },
+  _posix_ci: {
+    type: 'pattern_match',
+    inputStructure: 'object',
+  },
+  _nposix_cs: {
+    type: 'pattern_match',
+    inputStructure: 'object',
+  },
+  _nposix_ci: {
+    type: 'pattern_match',
+    inputStructure: 'object',
+  },
   _contains: {
     type: 'jsonb',
     inputStructure: 'object',

@@ -28,6 +28,27 @@ export const Operators = [
   },
   { name: 'similar', value: '$similar', graphqlOp: '_similar' },
   { name: 'not similar', value: '$nsimilar', graphqlOp: '_nsimilar' },
+
+  {
+    name: 'posix (case-sensitive)',
+    value: '$posix_cs',
+    graphqlOp: '_posix_cs',
+  },
+  {
+    name: 'posix (case-insensitive)',
+    value: '$posix_ci',
+    graphqlOp: '_posix_ci',
+  },
+  {
+    name: 'not posix (case-sensitive)',
+    value: '$nposix_cs',
+    graphqlOp: '_nposix_cs',
+  },
+  {
+    name: 'not posix (case-insensitive)',
+    value: '$nposix_ci',
+    graphqlOp: '_nposix_ci',
+  },
 ];
 
 export const Integers = [

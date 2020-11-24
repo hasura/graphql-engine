@@ -168,6 +168,18 @@ class TestV1SelectBoolExpSearch:
     def test_city_where_not_similar(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + '/select_city_where_not_similar.yaml')
 
+    def test_city_where_posix_cs(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/select_city_where_posix_cs.yaml')
+
+    def test_city_where_not_posix_cs(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/select_city_where_not_posix_cs.yaml')
+
+    def test_city_where_posix_ci(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/select_city_where_posix_ci.yaml')
+
+    def test_city_where_not_posix_ci(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/select_city_where_not_posix_ci.yaml')
+
     @classmethod
     def dir(cls):
         return 'queries/v1/select/boolexp/search'

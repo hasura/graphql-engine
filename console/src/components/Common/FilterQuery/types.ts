@@ -19,7 +19,11 @@ export type Operator =
   | '$ilike'
   | '$nilike'
   | '$similar'
-  | '$nsimilar';
+  | '$nsimilar'
+  | '$posix_cs'
+  | '$posix_ci'
+  | '$nposix_cs'
+  | '$nposix_ci';
 
 // Operator with names and aliases
 export type OperatorDef = {

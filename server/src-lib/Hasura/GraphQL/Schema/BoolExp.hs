@@ -150,6 +150,18 @@ comparisonExps = P.memoize 'comparisonExps \columnType -> do
       , P.fieldOptional $$(G.litName "_nsimilar")
         (Just "does the column NOT match the given SQL regular expression")
         (ANSIMILAR . mkParameter <$> columnParser)
+      , P.fieldOptional $$(G.litName "_posix_cs")
+        (Just "does the column match the given POSIX regular expression, case sensitive")
+        (APOSIXCS  . mkParameter <$> columnParser)
+      , P.fieldOptional $$(G.litName "_posix_ci")
+        (Just "does the column match the given POSIX regular expression, case insensitive")
+        (APOSIXCI . mkParameter <$> columnParser)
+      , P.fieldOptional $$(G.litName "_nposix_cs")
+        (Just "does the column NOT match the given POSIX regular expression, case sensitive")
+        (ANPOSIXCS  . mkParameter <$> columnParser)
+      , P.fieldOptional $$(G.litName "_nposix_ci")
+        (Just "does the column NOT match the given POSIX regular expression, case insensitive")
+        (ANPOSIXCI . mkParameter <$> columnParser)
       ]
     -- Ops for JSONB type
     , guard (isScalarColumnWhere (== PGJSONB) columnType) *>
