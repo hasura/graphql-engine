@@ -18,10 +18,6 @@ type MigrationsStateStore interface {
 	PrepareMigrationsStateStore() error
 }
 
-func (h *HasuraDB) PrepareMigrationsStateStore() error {
-	return h.migrationStateStore.PrepareMigrationsStateStore()
-}
-
 // until version 1.4 migration state was stored a special table
 // this struct will implement the methods required
 type migrationStateWithSQL struct {
@@ -64,7 +60,7 @@ func (m *migrationStateWithSQL) PrepareMigrationsStateStore() error {
 		},
 	}
 
-	resp, body, err := m.hasuraDB.sendQueryOrMetadataRequest(query, "")
+	resp, body, err := m.hasuraDB.sendMetadataOrQueryRequest(query, "")
 	if err != nil {
 		m.hasuraDB.logger.Debug(err)
 		return err
@@ -98,7 +94,7 @@ func (m *migrationStateWithSQL) PrepareMigrationsStateStore() error {
 		},
 	}
 
-	resp, body, err = m.hasuraDB.sendQueryOrMetadataRequest(query, "")
+	resp, body, err = m.hasuraDB.sendMetadataOrQueryRequest(query, "")
 	if err != nil {
 		return err
 	}
@@ -128,7 +124,7 @@ func (m *migrationStateWithSQL) GetVersions() error {
 	}
 
 	// Send Query
-	resp, body, err := m.hasuraDB.sendQueryOrMetadataRequest(query, "")
+	resp, body, err := m.hasuraDB.sendMetadataOrQueryRequest(query, "")
 	if err != nil {
 		return err
 	}

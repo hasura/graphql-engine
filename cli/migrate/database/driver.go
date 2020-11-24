@@ -78,9 +78,6 @@ type Driver interface {
 	// version must be >= -1. -1 means NilVersion.
 	RemoveVersion(version int64) error
 
-	// prepare migrations state store
-	PrepareMigrationsStateStore() error
-
 	// Version returns the currently active version and if the database is dirty.
 	// When no migration has been applied, it must return version -1.
 	// Dirty means, a previous migration failed and user interaction is required.
@@ -109,8 +106,6 @@ type Driver interface {
 
 	Squash(list *CustomList, ret chan<- interface{})
 
-	SettingsDriver
-
 	MetadataDriver
 
 	GraphQLDriver
@@ -118,6 +113,8 @@ type Driver interface {
 	SchemaDriver
 
 	SeedDriver
+
+	SettingsDriver
 }
 
 // Open returns a new driver instance.

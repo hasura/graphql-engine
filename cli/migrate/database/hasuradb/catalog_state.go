@@ -17,11 +17,12 @@ type MigrationsState map[database.Datasource]MigrationVersion
 type MigrationVersion map[int64]bool
 
 type SettingsState struct {
+	MigrationMode *bool `json:"migrationMode"`
 }
 
 type CLICatalogState struct {
 	Migrations    MigrationsState
-	SettingsState SettingsState
+	SettingsState map[string]string
 }
 
 type CatalogState struct {
@@ -34,6 +35,8 @@ type CatalogStateAPI struct {
 	// key name in which cli state is stored
 	CLIStateKeyName string
 }
+
+const defaultCLIStateKey = "cli_state"
 
 func NewCatalogStateAPI(cliStateKey string) *CatalogStateAPI {
 	return &CatalogStateAPI{
@@ -48,7 +51,7 @@ func (c *CatalogStateAPI) GetCLICatalogState(hasuradb *HasuraDB) (*CLICatalogSta
 		Type: "get_catalog_state",
 		Args: HasuraArgs{},
 	}
-	resp, body, err := hasuradb.sendQueryOrMetadataRequest(q, "")
+	resp, body, err := hasuradb.sendMetadataOrQueryRequest(q, "")
 	if err != nil {
 		return nil, err
 	}
@@ -76,7 +79,7 @@ func (c *CatalogStateAPI) GetCLICatalogState(hasuradb *HasuraDB) (*CLICatalogSta
 }
 
 func (c *CatalogStateAPI) SetCLICatalogState(hasuradb *HasuraDB, cliState CLICatalogState) error {
-	// useful for construcing errors
+	// useful for constructing errors
 	var opName = "setting catalog state"
 
 	q := HasuraInterfaceQuery{
@@ -89,7 +92,7 @@ func (c *CatalogStateAPI) SetCLICatalogState(hasuradb *HasuraDB, cliState CLICat
 			State: cliState,
 		},
 	}
-	resp, body, err := hasuradb.sendQueryOrMetadataRequest(q, "")
+	resp, body, err := hasuradb.sendMetadataOrQueryRequest(q, "")
 	if err != nil {
 		return err
 	}

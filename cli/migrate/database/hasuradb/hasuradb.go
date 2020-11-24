@@ -65,16 +65,20 @@ type Config struct {
 }
 
 type HasuraDB struct {
-	config              *Config
-	settings            []database.Setting
-	migrations          *database.Migrations
-	migrationQuery      HasuraInterfaceBulk
-	jsonPath            map[string]string
-	isLocked            bool
-	logger              *log.Logger
-	hasuraOpts          *database.HasuraOpts
-	CLICatalogState     *CLICatalogState
-	migrationStateStore MigrationsStateStore
+	config         *Config
+	settings       []database.Setting
+	migrations     *database.Migrations
+	migrationQuery HasuraInterfaceBulk
+	jsonPath       map[string]string
+	isLocked       bool
+	logger         *log.Logger
+	hasuraOpts     *database.HasuraOpts
+
+	CLICatalogState *CLICatalogState
+
+	migrationStateStore        MigrationsStateStore
+	settingsStateStore         SettingsStateStore
+	sendMetadataOrQueryRequest func(m interface{}, queryType string) (*http.Response, []byte, error)
 }
 
 func WithInstance(config *Config, logger *log.Logger, hasuraOpts *database.HasuraOpts) (database.Driver, error) {
@@ -90,15 +94,24 @@ func WithInstance(config *Config, logger *log.Logger, hasuraOpts *database.Hasur
 		logger:     logger,
 		hasuraOpts: hasuraOpts,
 	}
-	if hasuraOpts.ServerFeatureFlags.HasDatasources {
+	switch {
+	case hasuraOpts.ServerFeatureFlags.HasDatasources:
 		hx.CLICatalogState = new(CLICatalogState)
 		hx.CLICatalogState.Migrations = MigrationsState{}
 		hx.migrationStateStore = NewMigrationsStateWithCatalogStateAPI(hx)
-	} else {
+		hx.settingsStateStore = NewSettingsStateStoreWithCatalogStateAPI(hx)
+		hx.sendMetadataOrQueryRequest = hx.sendv1Query
+	default:
 		hx.migrationStateStore = NewMigrationStateStoreWithSQL(hx)
+		hx.settingsStateStore = NewSettingsStateStoreWithSQL(hx)
+		hx.sendMetadataOrQueryRequest = hx.sendV2QueryOrV1Metadata
 	}
 
-	if err := hx.PrepareMigrationsStateStore(); err != nil {
+	if err := hx.migrationStateStore.PrepareMigrationsStateStore(); err != nil {
+		logger.Debug(err)
+		return nil, err
+	}
+	if err := hx.settingsStateStore.PrepareSettingsDriver(); err != nil {
 		logger.Debug(err)
 		return nil, err
 	}
@@ -237,7 +250,7 @@ func (h *HasuraDB) UnLock() error {
 				}
 			}
 		}
-		resp, body, err := h.sendQueryOrMetadataRequest(HasuraInterfaceQuery{
+		resp, body, err := h.sendMetadataOrQueryRequest(HasuraInterfaceQuery{
 			Type: "bulk",
 			Args: queryAPIRequests,
 		}, "query")
@@ -283,7 +296,7 @@ func (h *HasuraDB) UnLock() error {
 				return herror
 			}
 		}
-		resp, body, err = h.sendQueryOrMetadataRequest(HasuraInterfaceQuery{
+		resp, body, err = h.sendMetadataOrQueryRequest(HasuraInterfaceQuery{
 			Type: "bulk",
 			Args: metadataAPIRequests,
 		}, "metadata")
@@ -331,7 +344,7 @@ func (h *HasuraDB) UnLock() error {
 		}
 
 	} else {
-		resp, body, err := h.sendQueryOrMetadataRequest(h.migrationQuery, "metadata")
+		resp, body, err := h.sendMetadataOrQueryRequest(h.migrationQuery, "metadata")
 		if err != nil {
 			return err
 		}
@@ -447,7 +460,25 @@ func (h *HasuraDB) Drop() error {
 	return nil
 }
 
-func (h *HasuraDB) sendQueryOrMetadataRequest(m interface{}, queryType string) (resp *http.Response, body []byte, err error) {
+func (h *HasuraDB) sendv1Query(m interface{}, _ string) (resp *http.Response, body []byte, err error) {
+	request := h.config.Req.Clone()
+	request = request.Post(h.config.queryURL.String()).Send(m)
+	for headerName, headerValue := range h.config.Headers {
+		request.Set(headerName, headerValue)
+	}
+
+	resp, body, errs := request.EndBytes()
+
+	if len(errs) == 0 {
+		err = nil
+	} else {
+		err = errs[0]
+	}
+
+	return resp, body, err
+}
+
+func (h *HasuraDB) sendV2QueryOrV1Metadata(m interface{}, queryType string) (resp *http.Response, body []byte, err error) {
 	var endpoint string
 	switch {
 	case !h.hasuraOpts.ServerFeatureFlags.HasDatasources:

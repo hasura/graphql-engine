@@ -186,6 +186,14 @@ func SetMetadataPluginsWithDir(ec *cli.ExecutionContext, drv *Migrate, dir ...st
 		plugins = append(plugins, remoteschemas.New(ec, metadataDir))
 		plugins = append(plugins, actions.New(ec, metadataDir))
 		plugins = append(plugins, crontriggers.New(ec, metadataDir))
+	} else if ec.Config.Version == cli.V2 && ec.Version.ServerFeatureFlags.HasDatasources {
+
+		plugins = append(plugins, version.New(ec, metadataDir))
+		plugins = append(plugins, querycollections.New(ec, metadataDir))
+		plugins = append(plugins, allowlist.New(ec, metadataDir))
+		plugins = append(plugins, remoteschemas.New(ec, metadataDir))
+		plugins = append(plugins, actions.New(ec, metadataDir))
+		plugins = append(plugins, crontriggers.New(ec, metadataDir))
 	} else {
 		plugins = append(plugins, metadata.New(ec, ec.MigrationDir))
 	}
