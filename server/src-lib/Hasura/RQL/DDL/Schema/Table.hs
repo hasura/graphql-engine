@@ -30,7 +30,6 @@ import           Hasura.Prelude
 import qualified Data.HashMap.Strict.Extended       as Map
 import qualified Data.HashMap.Strict.InsOrd         as OMap
 import qualified Data.HashSet                       as S
-import qualified Data.Text                          as T
 import qualified Language.GraphQL.Draft.Syntax      as G
 
 import           Control.Arrow.Extended
@@ -502,7 +501,7 @@ buildTableCache = Inc.cache proc (pgTables, tableBuildInputs, reloadMetadataInva
             Just enumReferences -> throw400 ConstraintViolation
               $ "column " <> prciName rawInfo <<> " in table " <> tableName
               <<> " references multiple enum tables ("
-              <> T.intercalate ", " (map (dquote . erTable) $ toList enumReferences) <> ")"
+              <> commaSeparated (map (dquote . erTable) $ toList enumReferences) <> ")"
 
     assertNoDuplicateFieldNames columns =
       flip Map.traverseWithKey (Map.groupOn pgiName columns) \name columnsWithName ->

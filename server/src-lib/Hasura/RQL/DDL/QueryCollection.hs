@@ -97,7 +97,7 @@ runDropQueryFromCollection
 runDropQueryFromCollection (DropQueryFromCollection collName queryName) = do
   CreateCollection _ (CollectionDef qList) _ <- getCollectionDef collName
   let queryExists = flip any qList $ \q -> _lqName q == queryName
-  when (not queryExists) $ throw400 NotFound $ "query with name "
+  unless queryExists $ throw400 NotFound $ "query with name "
     <> queryName <<> " not found in collection " <>> collName
 
   withNewInconsistentObjsCheck

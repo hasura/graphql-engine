@@ -47,11 +47,8 @@ getActionInfo
   => ActionName -> m (ActionInfo 'Postgres)
 getActionInfo actionName = do
   actionMap <- scActions <$> askSchemaCache
-  case Map.lookup actionName actionMap of
-    Just actionInfo -> return actionInfo
-    Nothing         ->
-      throw400 NotExists $
-      "action with name " <> actionName <<> " does not exist"
+  onNothing (Map.lookup actionName actionMap) $
+    throw400 NotExists $ "action with name " <> actionName <<> " does not exist"
 
 runCreateAction
   :: (QErrM m , CacheRWM m, MetadataM m)

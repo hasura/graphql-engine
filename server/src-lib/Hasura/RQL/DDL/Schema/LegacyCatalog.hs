@@ -340,10 +340,8 @@ fetchMetadataFromHdbTables = liftTx do
   -- fetch actions
   actions <- oMapFromL _amName <$> fetchActions
 
-  cronTriggers <- fetchCronTriggers
-
-  pure $ Metadata fullTableMetaMap functions remoteSchemas collections
-                  allowlist customTypes actions cronTriggers
+  Metadata fullTableMetaMap functions remoteSchemas collections
+           allowlist customTypes actions <$> fetchCronTriggers
 
   where
     modMetaMap l f xs = do

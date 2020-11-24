@@ -399,7 +399,7 @@ processCronEvents logger logEnv httpMgr pgpool getSC lockedCronEvents = do
             finally <- runExceptT $
               runReaderT (processScheduledEvent logEnv pgpool scheduledEvent Cron) (logger, httpMgr)
             removeEventFromLockedEvents id' lockedCronEvents
-            either logInternalError pure finally
+            onLeft finally logInternalError
     Left err -> logInternalError err
   where
     logInternalError err = liftIO . L.unLogger logger $ ScheduledTriggerInternalErr err
@@ -457,7 +457,7 @@ processOneOffScheduledEvents env logger logEnv httpMgr pgpool lockedOneOffSchedu
                   runReaderT (processScheduledEvent logEnv pgpool scheduledEvent OneOff) $
                     (logger, httpMgr)
                 removeEventFromLockedEvents id' lockedOneOffScheduledEvents
-                either logInternalError pure finally
+                onLeft finally logInternalError
 
               Left headerInfoErr -> logInternalError headerInfoErr
 

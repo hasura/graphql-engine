@@ -25,7 +25,6 @@ import qualified Data.HashMap.Strict.Extended             as M
 import qualified Data.HashMap.Strict.InsOrd               as OMap
 import qualified Data.HashSet                             as HS
 import qualified Data.HashSet.InsOrd                      as HSIns
-import qualified Data.Text                                as T
 
 import           Control.Arrow.Extended
 import           Control.Lens                             hiding ((.=))

@@ -18,8 +18,7 @@ import qualified Network.HTTP.Client                 as HTTP
 import qualified Network.HTTP.Client.TLS             as HTTP
 import qualified Test.Hspec.Runner                   as Hspec
 
-import           Hasura.Backends.Postgres.Connection (mkPGExecCtx)
-import           Hasura.Backends.Postgres.Connection (liftTx)
+import           Hasura.Backends.Postgres.Connection (liftTx, mkPGExecCtx)
 import           Hasura.RQL.DDL.Schema.Catalog       (fetchMetadataFromCatalog)
 import           Hasura.RQL.Types                    (SQLGenCtx (..), runMetadataT)
 import           Hasura.RQL.Types.Run

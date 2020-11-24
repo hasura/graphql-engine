@@ -376,7 +376,7 @@ updateColInRemoteRelationship remoteRelationshipName renameCol = do
                )
       . unRemoteFields
 
-    parseGraphQLName txt = maybe (throw400 ParseFailed errMsg) pure $ G.mkName txt
+    parseGraphQLName txt = onNothing (G.mkName txt) $ throw400 ParseFailed errMsg
       where
         errMsg = txt <> " is not a valid GraphQL name"
 
