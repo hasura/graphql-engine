@@ -178,6 +178,7 @@ $(deriveJSON
 
 -- | Using @pg_notify@ function to publish schema sync events to other server
 -- instances via 'hasura_schema_update' channel.
+-- See Note [Schema Cache Sync]
 notifySchemaCacheSync :: InstanceId -> CacheInvalidations -> Q.TxE QErr ()
 notifySchemaCacheSync instanceId invalidations = do
   Q.Discard () <- Q.withQE defaultTxErrorHandler [Q.sql|
