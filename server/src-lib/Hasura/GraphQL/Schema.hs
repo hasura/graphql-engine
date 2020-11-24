@@ -10,12 +10,14 @@ import qualified Data.Aeson                            as J
 import qualified Data.HashMap.Strict                   as Map
 import qualified Data.HashMap.Strict.InsOrd            as OMap
 import qualified Data.HashSet                          as Set
+import qualified Data.List.NonEmpty                    as NE
 import qualified Language.GraphQL.Draft.Syntax         as G
 
 import           Control.Arrow.Extended
 import           Control.Lens.Extended
 import           Control.Monad.Unique
 import           Data.Has
+import           Data.List                             (subsequences)
 import           Data.List.Extended                    (duplicates)
 
 import qualified Hasura.GraphQL.Parser                 as P
@@ -59,7 +61,7 @@ buildGQLContext
      , NonObjectTypeMap
      )
      `arr`
-     ( HashMap RoleName (RoleContext GQLContext)
+     ( HashMap (HashSet RoleName) (RoleContext GQLContext)
      , GQLContext
      )
 buildGQLContext =
@@ -71,6 +73,7 @@ buildGQLContext =
              (allTables ^.. folded.tiRolePermInfoMap.to Map.keys.folded)
           <> (allActionInfos ^.. folded.aiPermissions.to Map.keys.folded)
         allActionInfos = Map.elems allActions
+        allRolesCombinations = Set.fromList $ mapMaybe (fmap (Set.fromList . NE.toList) . NE.nonEmpty) $ subsequences (toList allRoles)
         queryRemotesMap =
           fmap (map fDefinition . piQuery . rscParsed . fst) allRemoteSchemas
         queryContext = QueryContext stringifyNum queryType queryRemotesMap
@@ -104,26 +107,26 @@ buildGQLContext =
         mutationRemotes = concatMap (concat . piMutation . snd) remotes
 
     roleContexts <- bindA -<
-      ( Set.toMap allRoles & Map.traverseWithKey \roleName () ->
+      ( Set.toMap allRolesCombinations & Map.traverseWithKey \roleCombination () ->
           case queryType of
             QueryHasura ->
               buildRoleContext queryContext allTables allFunctions allActionInfos
-              nonObjectCustomTypes queryRemotes mutationRemotes roleName
-            QueryRelay ->
-              buildRelayRoleContext queryContext allTables allFunctions allActionInfos
-              nonObjectCustomTypes mutationRemotes roleName
+              nonObjectCustomTypes queryRemotes mutationRemotes roleCombination
+            -- QueryRelay ->
+            --   buildRelayRoleContext queryContext allTables allFunctions allActionInfos
+            --   nonObjectCustomTypes mutationRemotes roleCombination
       )
     unauthenticated <- bindA -< unauthenticatedContext queryRemotes mutationRemotes
     returnA -< (roleContexts, unauthenticated)
 
 runMonadSchema
   :: (Monad m)
-  => RoleName
+  => HashSet RoleName
   -> QueryContext
   -> Map.HashMap QualifiedTable (TableInfo 'Postgres)
-  -> P.SchemaT (P.ParseT Identity) (ReaderT (RoleName, Map.HashMap QualifiedTable (TableInfo 'Postgres), QueryContext) m) a -> m a
-runMonadSchema roleName queryContext tableCache m =
-  flip runReaderT (roleName, tableCache, queryContext) $ P.runSchemaT m
+  -> P.SchemaT (P.ParseT Identity) (ReaderT (HashSet RoleName, Map.HashMap QualifiedTable (TableInfo 'Postgres), QueryContext) m) a -> m a
+runMonadSchema roleNames queryContext tableCache m =
+  flip runReaderT (roleNames, tableCache, queryContext) $ P.runSchemaT m
 
 -- TODO: Integrate relay schema
 buildRoleContext
@@ -131,12 +134,12 @@ buildRoleContext
   => QueryContext -> TableCache -> FunctionCache -> [ActionInfo 'Postgres] -> NonObjectTypeMap
   -> [P.FieldParser (P.ParseT Identity) RemoteField]
   -> [P.FieldParser (P.ParseT Identity) RemoteField]
-  -> RoleName
+  -> HashSet RoleName
   -> m (RoleContext GQLContext)
 buildRoleContext queryContext (takeValidTables -> allTables) (takeValidFunctions -> allFunctions)
-  allActionInfos nonObjectCustomTypes queryRemotes mutationRemotes roleName =
+  allActionInfos nonObjectCustomTypes queryRemotes mutationRemotes roleCombinations =
 
-  runMonadSchema roleName queryContext allTables $ do
+  runMonadSchema roleCombinations queryContext allTables $ do
     mutationParserFrontend <-
       buildPGMutationFields Frontend tableNames >>=
       buildMutationParser mutationRemotes allActionInfos nonObjectCustomTypes allFunctions
@@ -163,8 +166,8 @@ buildRoleContext queryContext (takeValidTables -> allTables) (takeValidFunctions
       tableNames = Map.keysSet allTables
 
 -- TODO why do we do these validations at this point? What does it mean to track
---      a function but not add it to the schema...?
---      Auke: 
+--      a table but not add it to the schema...?
+--      Auke:
 --        I believe the intention is simply to allow the console to do postgres data management
 --      Karthikeyan: Yes, this is correct. We allowed this pre PDV but somehow
 --        got removed in PDV. OTOH, I’m not sure how prevalent this feature
@@ -197,7 +200,7 @@ buildFullestDBSchema
        )
 buildFullestDBSchema queryContext (takeValidTables -> allTables) (takeValidFunctions -> allFunctions)
   allActionInfos nonObjectCustomTypes = do
-  runMonadSchema adminRoleName queryContext allTables $ do
+  runMonadSchema (Set.singleton adminRoleName) queryContext allTables $ do
     mutationParserFrontend <-
       buildPGMutationFields Frontend tableNames >>=
       -- NOTE: we omit remotes here on purpose since we're trying to check name
@@ -215,40 +218,40 @@ buildFullestDBSchema queryContext (takeValidTables -> allTables) (takeValidFunct
     where
       tableNames = Map.keysSet allTables
 
-buildRelayRoleContext
-  :: (MonadError QErr m, MonadIO m, MonadUnique m)
-  => QueryContext -> TableCache -> FunctionCache -> [ActionInfo 'Postgres] -> NonObjectTypeMap
-  -> [P.FieldParser (P.ParseT Identity) RemoteField]
-  -> RoleName
-  -> m (RoleContext GQLContext)
-buildRelayRoleContext queryContext (takeValidTables -> allTables) (takeValidFunctions -> allFunctions)
-  allActionInfos nonObjectCustomTypes mutationRemotes roleName =
+-- buildRelayRoleContext
+--   :: (MonadError QErr m, MonadIO m, MonadUnique m)
+--   => QueryContext -> TableCache -> FunctionCache -> [ActionInfo 'Postgres] -> NonObjectTypeMap
+--   -> [P.FieldParser (P.ParseT Identity) RemoteField]
+--   -> RoleName
+--   -> m (RoleContext GQLContext)
+-- buildRelayRoleContext queryContext (takeValidTables -> allTables) (takeValidFunctions -> allFunctions)
+--   allActionInfos nonObjectCustomTypes mutationRemotes roleName =
 
-  runMonadSchema roleName queryContext allTables $ do
-    mutationParserFrontend <-
-      buildPGMutationFields Frontend tableNames >>=
-      buildMutationParser mutationRemotes allActionInfos nonObjectCustomTypes allFunctions
+--   runMonadSchema roleName queryContext allTables $ do
+--     mutationParserFrontend <-
+--       buildPGMutationFields Frontend tableNames >>=
+--       buildMutationParser mutationRemotes allActionInfos nonObjectCustomTypes allFunctions
 
-    mutationParserBackend <-
-      buildPGMutationFields Backend tableNames >>=
-      buildMutationParser mutationRemotes allActionInfos nonObjectCustomTypes allFunctions
+--     mutationParserBackend <-
+--       buildPGMutationFields Backend tableNames >>=
+--       buildMutationParser mutationRemotes allActionInfos nonObjectCustomTypes allFunctions
 
-    queryPGFields <- buildRelayPostgresQueryFields tableNames allFunctions
-    subscriptionParser <- P.safeSelectionSet subscriptionRoot Nothing queryPGFields
-                             <&> fmap (fmap (P.handleTypename (RFRaw . J.String. G.unName)))
-    queryParserFrontend <- queryWithIntrospectionHelper queryPGFields
-      mutationParserFrontend subscriptionParser
-    queryParserBackend <- queryWithIntrospectionHelper queryPGFields
-      mutationParserBackend subscriptionParser
+--     queryPGFields <- buildRelayPostgresQueryFields tableNames allFunctions
+--     subscriptionParser <- P.safeSelectionSet subscriptionRoot Nothing queryPGFields
+--                              <&> fmap (fmap (P.handleTypename (RFRaw . J.String. G.unName)))
+--     queryParserFrontend <- queryWithIntrospectionHelper queryPGFields
+--       mutationParserFrontend subscriptionParser
+--     queryParserBackend <- queryWithIntrospectionHelper queryPGFields
+--       mutationParserBackend subscriptionParser
 
-    let frontendContext = GQLContext (finalizeParser queryParserFrontend)
-                          (finalizeParser <$> mutationParserFrontend)
-    let backendContext = GQLContext (finalizeParser queryParserBackend)
-                         (finalizeParser <$> mutationParserBackend)
-    pure $ RoleContext frontendContext $ Just backendContext
+--     let frontendContext = GQLContext (finalizeParser queryParserFrontend)
+--                           (finalizeParser <$> mutationParserFrontend)
+--     let backendContext = GQLContext (finalizeParser queryParserBackend)
+--                          (finalizeParser <$> mutationParserBackend)
+--     pure $ RoleContext frontendContext $ Just backendContext
 
-    where
-      tableNames = Map.keysSet allTables
+--     where
+--       tableNames = Map.keysSet allTables
 
 unauthenticatedContext
   :: forall m
@@ -325,7 +328,7 @@ buildPostgresQueryFields
   :: forall m n r
    . ( MonadSchema n m
      , MonadTableInfo r m
-     , MonadRole r m
+     , MonadRoleCombination r m
      , Has QueryContext r
      )
   => HashSet QualifiedTable
@@ -365,7 +368,7 @@ buildPostgresQueryFields allTables (takeExposedAs FEAQuery -> queryFunctions) = 
     mapMaybeFieldParser :: (a -> b) -> m (Maybe (P.FieldParser n a)) -> m (Maybe (P.FieldParser n b))
     mapMaybeFieldParser f = fmap $ fmap $ fmap f
 
-requiredFieldParser 
+requiredFieldParser
   :: (Functor n, Functor m)=> (a -> b) -> m (P.FieldParser n a) -> m (Maybe (P.FieldParser n b))
 requiredFieldParser f = fmap $ Just . fmap f
 
@@ -413,7 +416,7 @@ buildRelayPostgresQueryFields
   :: forall m n r
    . ( MonadSchema n m
      , MonadTableInfo r m
-     , MonadRole r m
+     , MonadRoleCombination r m
      , Has QueryContext r
      )
   => HashSet QualifiedTable
@@ -520,7 +523,7 @@ buildQueryParser
   :: forall m n r
    . ( MonadSchema n m
      , MonadTableInfo r m
-     , MonadRole r m
+     , MonadRoleCombination r m
      , Has QueryContext r
      )
   => [P.FieldParser n (QueryRootField UnpreparedValue)]
@@ -542,7 +545,7 @@ buildSubscriptionParser
   :: forall m n r
    . ( MonadSchema n m
      , MonadTableInfo r m
-     , MonadRole r m
+     , MonadRoleCombination r m
      , Has QueryContext r
      )
   => [P.FieldParser n (QueryRootField UnpreparedValue)]
@@ -556,7 +559,7 @@ buildSubscriptionParser pgQueryFields allActions = do
 
 buildPGMutationFields
   :: forall m n r
-   . (MonadSchema n m, MonadTableInfo r m, MonadRole r m, Has QueryContext r)
+   . (MonadSchema n m, MonadTableInfo r m, MonadRoleCombination r m, Has QueryContext r)
   => Scenario -> HashSet QualifiedTable
   -> m [P.FieldParser n (MutationRootField UnpreparedValue)]
 buildPGMutationFields scenario allTables = do
@@ -639,7 +642,7 @@ queryRoot = $$(G.litName "query_root")
 
 buildMutationParser
   :: forall m n r
-   . (MonadSchema n m, MonadTableInfo r m, MonadRole r m, Has QueryContext r)
+   . (MonadSchema n m, MonadTableInfo r m, MonadRoleCombination r m, Has QueryContext r)
   => [P.FieldParser n RemoteField]
   -> [ActionInfo 'Postgres]
   -> NonObjectTypeMap
@@ -647,7 +650,7 @@ buildMutationParser
   -- ^ all "valid" functions
   -> [P.FieldParser n (MutationRootField UnpreparedValue)]
   -> m (Maybe (Parser 'Output n (OMap.InsOrdHashMap G.Name (MutationRootField UnpreparedValue))))
-buildMutationParser allRemotes allActions nonObjectCustomTypes 
+buildMutationParser allRemotes allActions nonObjectCustomTypes
     (takeExposedAs FEAMutation -> mutationFunctions) pgMutationFields = do
 
    -- NOTE: this is basically copied from functionSelectExpParsers body
@@ -655,10 +658,10 @@ buildMutationParser allRemotes allActions nonObjectCustomTypes
     selectPerms <- tableSelectPermissions fiReturnType
     for selectPerms \perms -> do
       displayName <- qualifiedObjectToName fiName
-      let functionDesc = G.Description $ 
+      let functionDesc = G.Description $
             "execute VOLATILE function " <> fiName <<> " which returns " <>> fiReturnType
       catMaybes <$> sequenceA
-        [ requiredFieldParser (RFDB . MDBFunction) $ 
+        [ requiredFieldParser (RFDB . MDBFunction) $
             selectFunction function displayName (Just functionDesc) perms
         -- FWIW: The equivalent of this is possible for mutations; do we want that?:
         -- , mapMaybeFieldParser (RFDB . QDBAggregation) $ selectFunctionAggregate function aggName     (Just aggDesc)      perms
@@ -672,7 +675,7 @@ buildMutationParser allRemotes allActions nonObjectCustomTypes
         fmap (fmap (RFAction . AMAsync)) <$> actionAsyncMutation nonObjectCustomTypes actionInfo
       ActionQuery -> pure Nothing
 
-  let mutationFieldsParser = 
+  let mutationFieldsParser =
         pgMutationFields <>
         concat (catMaybes functionMutationExpParsers) <>
         catMaybes actionParsers <>

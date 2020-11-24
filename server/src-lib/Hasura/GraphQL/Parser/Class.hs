@@ -108,12 +108,19 @@ class (Monad m, MonadParse n) => MonadSchema n m | m -> n where
     -> m (Parser k n b) -> m (Parser k n b)
 
 type MonadRole r m = (MonadReader r m, Has RoleName r)
+type MonadRoleCombination r m = (MonadReader r m, Has (HashSet RoleName) r)
 
 -- | Gets the current role the schema is being built for.
 askRoleName
   :: MonadRole r m
   => m RoleName
 askRoleName = asks getter
+
+-- | Gets the current role the schema is being built for.
+askRoleNameCombination
+  :: MonadRoleCombination r m
+  => m (HashSet RoleName)
+askRoleNameCombination = asks getter
 
 type MonadTableInfo r m = (MonadReader r m, Has TableCache r, MonadError QErr m)
 
