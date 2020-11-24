@@ -414,7 +414,7 @@ isTypeCoercible actualType expectedType =
               -- extraneous because at the time of writing this, we don't generate
               -- the `ID` type in the DB schema
               (G.unName actualBaseType `elem`
-               [ "Int", "String", "bigint", "smallint" ])
+               [ "Int", "String", "bigint", "smallint" , "uuid"])
      | actualBaseType /= expectedBaseType -> raiseValidationError
        -- we cannot coerce two types with different nesting levels,
        -- for example, we cannot coerce [Int] to [[Int]]
