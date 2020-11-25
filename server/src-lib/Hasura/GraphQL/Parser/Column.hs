@@ -1,7 +1,7 @@
 {-# LANGUAGE StrictData #-}
 
 module Hasura.GraphQL.Parser.Column
-  ( PGColumnValue(..)
+  ( ColumnValue(..)
   , column
   , mkScalarTypeName
 
@@ -25,13 +25,13 @@ import           Language.GraphQL.Draft.Syntax         (Description (..), Name (
 import qualified Hasura.RQL.Types.Column               as RQL
 import qualified Hasura.RQL.Types.CustomTypes          as RQL
 
-import           Hasura.Backends.Postgres.SQL.DML
 import           Hasura.Backends.Postgres.SQL.Types
 import           Hasura.Backends.Postgres.SQL.Value
 import           Hasura.GraphQL.Parser.Class
 import           Hasura.GraphQL.Parser.Internal.Parser
 import           Hasura.GraphQL.Parser.Schema
 import           Hasura.RQL.Types.Column               hiding (EnumValue (..), EnumValueInfo (..))
+import           Hasura.RQL.Types.Common
 import           Hasura.RQL.Types.Error
 import           Hasura.SQL.Backend
 import           Hasura.SQL.Types
@@ -50,24 +50,25 @@ openOpaque :: MonadParse m => Opaque a -> m a
 openOpaque (Opaque Nothing  value) = pure value
 openOpaque (Opaque (Just _) value) = markNotReusable $> value
 
-data UnpreparedValue
+data UnpreparedValue (b :: BackendType)
   -- | A SQL value that can be parameterized over.
-  = UVParameter PGColumnValue
-                (Maybe VariableInfo)
-                -- ^ The GraphQL variable this value came from, if any.
+  = UVParameter
+      (ColumnValue b)
+      (Maybe VariableInfo)
+      -- ^ The GraphQL variable this value came from, if any.
   -- | A literal SQL expression that /cannot/ be parameterized over.
-  | UVLiteral SQLExp
+  | UVLiteral (SQLExpression b)
   -- | The entire session variables JSON object.
   | UVSession
   -- | A single session variable.
-  | UVSessionVar (PGType PGScalarType) SessionVariable
+  | UVSessionVar (SessionVarType b) SessionVariable
 
-data PGColumnValue = PGColumnValue
-  { pcvType  :: ColumnType 'Postgres
-  , pcvValue :: WithScalarType PGScalarValue
+data ColumnValue (b :: BackendType) = ColumnValue
+  { cvType  :: ColumnType b
+  , cvValue :: ColumnValueType b
   }
 
-mkParameter :: Opaque PGColumnValue -> UnpreparedValue
+mkParameter :: Opaque (ColumnValue b) -> UnpreparedValue b
 mkParameter (Opaque variable value) = UVParameter value variable
 
 -- -------------------------------------------------------------------------------------------------
@@ -76,12 +77,12 @@ column
   :: (MonadSchema n m, MonadError QErr m)
   => ColumnType 'Postgres
   -> Nullability
-  -> m (Parser 'Both n (Opaque PGColumnValue))
+  -> m (Parser 'Both n (Opaque (ColumnValue 'Postgres)))
 column columnType (Nullability isNullable) =
   -- TODO(PDV): It might be worth memoizing this function even though it isn’t
   -- recursive simply for performance reasons, since it’s likely to be hammered
   -- during schema generation. Need to profile to see whether or not it’s a win.
-  opaque . fmap (PGColumnValue columnType) <$> case columnType of
+  opaque . fmap (ColumnValue columnType) <$> case columnType of
     ColumnScalar scalarType -> withScalarType scalarType <$> case scalarType of
       PGInteger -> pure (PGValInteger <$> int)
       PGBoolean -> pure (PGValBoolean <$> boolean)

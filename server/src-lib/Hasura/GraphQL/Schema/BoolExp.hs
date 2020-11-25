@@ -20,7 +20,7 @@ import           Hasura.GraphQL.Parser.Class
 import           Hasura.GraphQL.Schema.Table
 import           Hasura.RQL.Types
 
-type ComparisonExp b = OpExpG b UnpreparedValue
+type ComparisonExp b = OpExpG b (UnpreparedValue b)
 
 -- |
 -- > input type_bool_exp {
@@ -34,7 +34,7 @@ boolExp
   :: forall m n r. (MonadSchema n m, MonadTableInfo r m, MonadRole r m)
   => QualifiedTable
   -> Maybe (SelPermInfo 'Postgres)
-  -> m (Parser 'Input n (AnnBoolExp 'Postgres UnpreparedValue))
+  -> m (Parser 'Input n (AnnBoolExp 'Postgres (UnpreparedValue 'Postgres)))
 boolExp table selectPermissions = memoizeOn 'boolExp table $ do
   tableGQLName <- getTableGQLName table
   let name = tableGQLName <> $$(G.litName "_bool_exp")
@@ -61,7 +61,7 @@ boolExp table selectPermissions = memoizeOn 'boolExp table $ do
     pure (tableFields ++ specialFields)
   where
     mkField
-      :: FieldInfo 'Postgres -> m (Maybe (InputFieldsParser n (Maybe (AnnBoolExpFld 'Postgres UnpreparedValue))))
+      :: FieldInfo 'Postgres -> m (Maybe (InputFieldsParser n (Maybe (AnnBoolExpFld 'Postgres (UnpreparedValue 'Postgres)))))
     mkField fieldInfo = runMaybeT do
       fieldName <- MaybeT $ pure $ fieldInfoGraphQLName fieldInfo
       P.fieldOptional fieldName Nothing <$> case fieldInfo of
@@ -207,12 +207,12 @@ comparisonExps = P.memoize 'comparisonExps \columnType -> do
       ]
     ]
   where
-    mkListLiteral :: ColumnType 'Postgres -> [P.PGColumnValue] -> UnpreparedValue
+    mkListLiteral :: ColumnType 'Postgres -> [P.ColumnValue 'Postgres] -> UnpreparedValue 'Postgres
     mkListLiteral columnType columnValues = P.UVLiteral $ SETyAnn
-      (SEArray $ txtEncoder . pstValue . P.pcvValue <$> columnValues)
+      (SEArray $ txtEncoder . pstValue . P.cvValue <$> columnValues)
       (mkTypeAnn $ PGTypeArray $ unsafePGColumnToBackend columnType)
 
-    castExp :: ColumnType 'Postgres -> m (Maybe (Parser 'Input n (CastExp 'Postgres UnpreparedValue)))
+    castExp :: ColumnType 'Postgres -> m (Maybe (Parser 'Input n (CastExp 'Postgres (UnpreparedValue 'Postgres))))
     castExp sourceType = do
       let maybeScalars = case sourceType of
             ColumnScalar PGGeography -> Just (PGGeography, PGGeometry)
@@ -228,7 +228,7 @@ comparisonExps = P.memoize 'comparisonExps \columnType -> do
 
 geographyWithinDistanceInput
   :: forall m n. (MonadSchema n m, MonadError QErr m)
-  => m (Parser 'Input n (DWithinGeogOp UnpreparedValue))
+  => m (Parser 'Input n (DWithinGeogOp (UnpreparedValue 'Postgres)))
 geographyWithinDistanceInput = do
   geographyParser <- P.column (ColumnScalar PGGeography) (G.Nullability False)
   -- FIXME
@@ -246,7 +246,7 @@ geographyWithinDistanceInput = do
 
 geometryWithinDistanceInput
   :: forall m n. (MonadSchema n m, MonadError QErr m)
-  => m (Parser 'Input n (DWithinGeomOp UnpreparedValue))
+  => m (Parser 'Input n (DWithinGeomOp (UnpreparedValue 'Postgres)))
 geometryWithinDistanceInput = do
   geometryParser <- P.column (ColumnScalar PGGeometry) (G.Nullability False)
   floatParser    <- P.column (ColumnScalar PGFloat)    (G.Nullability False)
@@ -256,7 +256,7 @@ geometryWithinDistanceInput = do
 
 intersectsNbandGeomInput
   :: forall m n. (MonadSchema n m, MonadError QErr m)
-  => m (Parser 'Input n (STIntersectsNbandGeommin UnpreparedValue))
+  => m (Parser 'Input n (STIntersectsNbandGeommin (UnpreparedValue 'Postgres)))
 intersectsNbandGeomInput = do
   geometryParser <- P.column (ColumnScalar PGGeometry) (G.Nullability False)
   integerParser  <- P.column (ColumnScalar PGInteger)  (G.Nullability False)
@@ -266,7 +266,7 @@ intersectsNbandGeomInput = do
 
 intersectsGeomNbandInput
   :: forall m n. (MonadSchema n m, MonadError QErr m)
-  => m (Parser 'Input n (STIntersectsGeomminNband UnpreparedValue))
+  => m (Parser 'Input n (STIntersectsGeomminNband (UnpreparedValue 'Postgres)))
 intersectsGeomNbandInput = do
   geometryParser <- P.column (ColumnScalar PGGeometry) (G.Nullability False)
   integerParser  <- P.column (ColumnScalar PGInteger)  (G.Nullability False)

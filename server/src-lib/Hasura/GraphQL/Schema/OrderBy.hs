@@ -37,7 +37,7 @@ orderByExp
   :: forall m n r. (MonadSchema n m, MonadTableInfo r m, MonadRole r m)
   => QualifiedTable
   -> SelPermInfo 'Postgres
-  -> m (Parser 'Input n [IR.AnnOrderByItemG 'Postgres UnpreparedValue])
+  -> m (Parser 'Input n [IR.AnnOrderByItemG 'Postgres (UnpreparedValue 'Postgres)])
 orderByExp table selectPermissions = memoizeOn 'orderByExp table $ do
   tableGQLName <- getTableGQLName table
   let name = tableGQLName <> $$(G.litName "_order_by")
@@ -49,7 +49,7 @@ orderByExp table selectPermissions = memoizeOn 'orderByExp table $ do
   where
     mkField
       :: FieldInfo 'Postgres
-      -> m (Maybe (InputFieldsParser n (Maybe [IR.AnnOrderByItemG 'Postgres UnpreparedValue])))
+      -> m (Maybe (InputFieldsParser n (Maybe [IR.AnnOrderByItemG 'Postgres (UnpreparedValue 'Postgres)])))
     mkField fieldInfo = runMaybeT $
       case fieldInfo of
         FIColumn columnInfo -> do

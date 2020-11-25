@@ -150,7 +150,7 @@ resolveActionExecution
   => Env.Environment
   -> L.Logger L.Hasura
   -> UserInfo
-  -> AnnActionExecution 'Postgres UnpreparedValue
+  -> AnnActionExecution 'Postgres (UnpreparedValue 'Postgres)
   -> ActionExecContext
   -> m ActionExecuteResult
 resolveActionExecution env logger userInfo annAction execContext = do
@@ -237,8 +237,8 @@ action's type. Here, we treat the "output" field as a computed field to hdb_acti
 -- TODO: Add tracing here? Avoided now because currently the function is pure
 resolveAsyncActionQuery
   :: UserInfo
-  -> AnnActionAsyncQuery 'Postgres UnpreparedValue
-  -> RS.AnnSimpleSelG 'Postgres UnpreparedValue
+  -> AnnActionAsyncQuery 'Postgres (UnpreparedValue 'Postgres)
+  -> RS.AnnSimpleSelG 'Postgres (UnpreparedValue 'Postgres)
 resolveAsyncActionQuery userInfo annAction =
   let annotatedFields = asyncFields <&> second \case
         AsyncTypename t -> RS.AFExpression t
@@ -276,7 +276,7 @@ resolveAsyncActionQuery userInfo annAction =
           actionIdColumnEq = BoolFld $ AVCol actionIdColumnInfo [AEQ True actionId]
           sessionVarsColumnInfo = ColumnInfo (unsafePGCol "session_variables") $$(G.litName "session_variables")
                                   0 (ColumnScalar PGJSONB) False Nothing
-          sessionVarValue = flip UVParameter Nothing $ PGColumnValue (ColumnScalar PGJSONB) $
+          sessionVarValue = flip UVParameter Nothing $ ColumnValue (ColumnScalar PGJSONB) $
                             WithScalarType PGJSONB $ PGValJSONB $ Q.JSONB $ J.toJSON $ _uiSession userInfo
           sessionVarsColumnEq = BoolFld $ AVCol sessionVarsColumnInfo [AEQ True sessionVarValue]
 
