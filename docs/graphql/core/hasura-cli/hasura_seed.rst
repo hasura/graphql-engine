@@ -1,6 +1,6 @@
 
 .. meta::
-   :description: Use hasura seeds to manage seed data
+   :description: Use hasura seed to manage seed data
    :keywords: hasura, docs, CLI, hasura seeds
 
 .. _hasura_seed:

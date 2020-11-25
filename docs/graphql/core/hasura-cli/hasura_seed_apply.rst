@@ -1,7 +1,7 @@
 
 .. meta::
-   :description: Use hasura seeds apply to apply seed data
-   :keywords: hasura, docs, CLI, hasura seeds apply
+   :description: Use hasura seed apply to apply seed data
+   :keywords: hasura, docs, CLI, hasura seed apply
 
 .. _hasura_seed_apply:
 
@@ -18,7 +18,7 @@ Apply seed data
 
 ::
 
-  hasura seeds apply [flags]
+  hasura seed apply [flags]
 
 Examples
 ~~~~~~~~
@@ -26,10 +26,10 @@ Examples
 ::
 
     # Apply all seeds on the database:
-    hasura seeds apply
+    hasura seed apply
 
     # Apply only a particular file:
-    hasura seeds apply --file seeds/1234_add_some_seed_data.sql
+    hasura seed apply --file seed/1234_add_some_seed_data.sql
 
 Options
 ~~~~~~~
