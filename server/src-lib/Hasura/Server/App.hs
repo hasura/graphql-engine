@@ -227,8 +227,21 @@ class Monad m => MonadConfigApiHandler m where
     -- ^ console assets directory
     -> Spock.SpockCtxT () m ()
 
--- instance (MonadIO m, UserAuthentication m, HttpLog m, Tracing.HasReporter m) => MonadConfigApiHandler (Tracing.TraceT m) where
---   runConfigApiHandler = configApiGetHandler
+-- | The graphql API (/v1/graphql) handler
+class Monad m => MonadGQLApiHandler m where
+  runGQLApiHandler
+      ::  ( HasVersion
+      , MonadIO m
+      , UserAuthentication (Tracing.TraceT m)
+      , HttpLog m
+      , Tracing.HasReporter m
+      , E.MonadGQLExecutionCheck m
+      , MonadQueryLog m
+      , GH.MonadExecuteQuery m
+      , EQ.MonadQueryInstrumentation m
+      )
+    => ServerCtx
+    -> Spock.SpockCtxT () m ()
 
 mapActionT
   :: (Monad m, Monad n)
@@ -535,6 +548,25 @@ configApiGetHandler serverCtx@ServerCtx{..} consoleAssetsDir =
                 (EL._lqsOptions $ scLQState) consoleAssetsDir
       return $ JSONResp $ HttpResponse (encJFromJValue res) []
 
+-- | Default implementation of the 'MonadGQLApiHandler'
+-- | Handles the POST request to `v1/graphql`
+gqlPostApiHandler 
+  ::  ( HasVersion
+      , MonadIO m
+      , UserAuthentication (Tracing.TraceT m)
+      , HttpLog m
+      , Tracing.HasReporter m
+      , E.MonadGQLExecutionCheck m
+      , MonadQueryLog m
+      , GH.MonadExecuteQuery m
+      , EQ.MonadQueryInstrumentation m
+      )
+  => ServerCtx -> Spock.SpockCtxT () m ()
+gqlPostApiHandler serverCtx = 
+  Spock.post "v1/graphql" $ mkSpockAction serverCtx GH.encodeGQErr allMod200 $
+    mkPostHandler $ mkAPIRespHandler v1GQHandler
+  where allMod200 qe     = qe { qeStatus = HTTP.status200 }
+  
 data HasuraApp
   = HasuraApp
   { _hapApplication      :: !Wai.Application
@@ -562,6 +594,7 @@ mkWaiApp
      , Tracing.HasReporter m
      , GH.MonadExecuteQuery m
      , EQ.MonadQueryInstrumentation m
+     , MonadGQLApiHandler m
      )
   => Env.Environment
   -- ^ Set of environment variables for reference in UIs
@@ -674,6 +707,7 @@ httpApp
      , Tracing.HasReporter m
      , GH.MonadExecuteQuery m
      , EQ.MonadQueryInstrumentation m
+     , MonadGQLApiHandler m
      )
   => CorsConfig
   -> ServerCtx
@@ -727,8 +761,8 @@ httpApp corsCfg serverCtx enableConsole consoleAssetsDir enableTelemetry = do
       Spock.post "v1alpha1/graphql" $ spockAction GH.encodeGQErr id $
         mkPostHandler $ mkAPIRespHandler $ v1Alpha1GQHandler E.QueryHasura
 
-      Spock.post "v1/graphql" $ spockAction GH.encodeGQErr allMod200 $
-        mkPostHandler $ mkAPIRespHandler v1GQHandler
+      -- See 'MonadGQLApiHandler'
+      runGQLApiHandler serverCtx 
 
       Spock.post "v1beta1/relay" $ spockAction GH.encodeGQErr allMod200 $
         mkPostHandler $ mkAPIRespHandler $ v1GQRelayHandler
