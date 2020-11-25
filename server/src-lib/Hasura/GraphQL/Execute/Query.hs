@@ -13,21 +13,21 @@ module Hasura.GraphQL.Execute.Query
 
 import           Hasura.Prelude
 
-import qualified Data.Aeson                                  as J
-import qualified Data.Environment                            as Env
-import qualified Data.HashMap.Strict                         as Map
-import qualified Data.HashMap.Strict.InsOrd                  as OMap
-import qualified Data.Sequence.NonEmpty                      as NESeq
-import qualified Database.PG.Query                           as Q
-import qualified Language.GraphQL.Draft.Syntax               as G
-import qualified Network.HTTP.Client                         as HTTP
-import qualified Network.HTTP.Types                          as HTTP
+import qualified Data.Aeson                                as J
+import qualified Data.Environment                          as Env
+import qualified Data.HashMap.Strict                       as Map
+import qualified Data.HashMap.Strict.InsOrd                as OMap
+import qualified Data.Sequence.NonEmpty                    as NESeq
+import qualified Database.PG.Query                         as Q
+import qualified Language.GraphQL.Draft.Syntax             as G
+import qualified Network.HTTP.Client                       as HTTP
+import qualified Network.HTTP.Types                        as HTTP
 
-import qualified Hasura.Backends.Postgres.Translate.Select   as DS
-import qualified Hasura.GraphQL.Transport.HTTP.Protocol      as GH
-import qualified Hasura.Logging                              as L
-import qualified Hasura.RQL.IR.Select                        as DS
-import qualified Hasura.Tracing                              as Tracing
+import qualified Hasura.Backends.Postgres.Translate.Select as DS
+import qualified Hasura.GraphQL.Transport.HTTP.Protocol    as GH
+import qualified Hasura.Logging                            as L
+import qualified Hasura.RQL.IR.Select                      as DS
+import qualified Hasura.Tracing                            as Tracing
 
 import           Hasura.Backends.Postgres.Connection
 import           Hasura.EncJSON
@@ -39,7 +39,7 @@ import           Hasura.GraphQL.Execute.Remote
 import           Hasura.GraphQL.Execute.Resolve
 import           Hasura.GraphQL.Parser
 import           Hasura.RQL.Types
-import           Hasura.Server.Version                       (HasVersion)
+import           Hasura.Server.Version                     (HasVersion)
 import           Hasura.Session
 
 
@@ -104,7 +104,7 @@ parseGraphQLQuery
   -> [G.VariableDefinition]
   -> Maybe (HashMap G.Name J.Value)
   -> G.SelectionSet G.NoFragments G.Name
-  -> m ( InsOrdHashMap G.Name (QueryRootField UnpreparedValue)
+  -> m ( InsOrdHashMap G.Name (QueryRootField (UnpreparedValue 'Postgres))
        , QueryReusability
        )
 parseGraphQLQuery gqlContext varDefs varValsM fields =
@@ -170,7 +170,7 @@ convertQuerySelSet
   -> Maybe GH.VariableValues
   -> m ( ExecutionPlan (tx EncJSON, Maybe PreparedSql)
        -- , Maybe ReusableQueryPlan
-       , [QueryRootField UnpreparedValue]
+       , [QueryRootField (UnpreparedValue 'Postgres)]
        )
 convertQuerySelSet env logger gqlContext userInfo manager reqHeaders directives fields varDefs varValsM = do
   -- Parse the GraphQL query into the RQL AST
@@ -200,14 +200,14 @@ convertQuerySelSet env logger gqlContext userInfo manager reqHeaders directives 
         RFAction rfp -> ExecStepDB $ mkCurPlanTx env manager reqHeaders userInfo instrument ep rfp
         RFRaw r      -> ExecStepRaw r
 
-  let asts :: [QueryRootField UnpreparedValue]
+  let asts :: [QueryRootField (UnpreparedValue 'Postgres)]
       asts = OMap.elems unpreparedQueries
   pure (executionPlan, asts)  -- See Note [Temporarily disabling query plan caching]
   where
     usrVars = _uiSession userInfo
 
     convertActionQuery
-      :: ActionQuery 'Postgres UnpreparedValue -> StateT PlanningSt m (ActionQueryPlan 'Postgres)
+      :: ActionQuery 'Postgres (UnpreparedValue 'Postgres) -> StateT PlanningSt m (ActionQueryPlan 'Postgres)
     convertActionQuery = \case
       AQQuery s -> lift $ do
         result <- resolveActionExecution env logger userInfo s $ ActionExecContext manager reqHeaders usrVars

@@ -65,7 +65,7 @@ class Monad m => MonadExecuteQuery m where
   -- headers that can instruct a client how long a response can be cached
   -- locally (i.e. client-side).
   cacheLookup
-    :: [QueryRootField UnpreparedValue]
+    :: [QueryRootField (UnpreparedValue 'Postgres)]
     -- ^ Used to check that the query is cacheable
     -> QueryCacheKey
     -- ^ Key that uniquely identifies the result of a query execution

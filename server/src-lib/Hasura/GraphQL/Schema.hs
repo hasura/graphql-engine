@@ -1,5 +1,5 @@
+{-# LANGUAGE Arrows       #-}
 {-# LANGUAGE ViewPatterns #-}
-{-# LANGUAGE Arrows #-}
 module Hasura.GraphQL.Schema
   ( buildGQLContext
   ) where
@@ -238,8 +238,8 @@ takeExposedAs x = filter ((== x) . fiExposedAs)
 buildFullestDBSchema
   :: (MonadError QErr m, MonadIO m, MonadUnique m)
   => QueryContext -> TableCache -> FunctionCache -> [ActionInfo 'Postgres] -> NonObjectTypeMap
-  -> m ( Parser 'Output (P.ParseT Identity) (OMap.InsOrdHashMap G.Name (QueryRootField UnpreparedValue))
-       , Maybe (Parser 'Output (P.ParseT Identity) (OMap.InsOrdHashMap G.Name (MutationRootField UnpreparedValue)))
+  -> m ( Parser 'Output (P.ParseT Identity) (OMap.InsOrdHashMap G.Name (QueryRootField (UnpreparedValue 'Postgres)))
+       , Maybe (Parser 'Output (P.ParseT Identity) (OMap.InsOrdHashMap G.Name (MutationRootField (UnpreparedValue 'Postgres))))
        )
 buildFullestDBSchema queryContext (takeValidTables -> allTables) (takeValidFunctions -> allFunctions)
   allActionInfos nonObjectCustomTypes = do
@@ -385,7 +385,7 @@ buildPostgresQueryFields
      )
   => HashSet QualifiedTable
   -> [FunctionInfo]
-  -> m [P.FieldParser n (QueryRootField UnpreparedValue)]
+  -> m [P.FieldParser n (QueryRootField (UnpreparedValue 'Postgres))]
 buildPostgresQueryFields allTables (takeExposedAs FEAQuery -> queryFunctions) = do
   tableSelectExpParsers <- for (toList allTables) \table -> do
     selectPerms <- tableSelectPermissions table
@@ -435,7 +435,7 @@ buildActionQueryFields
      )
   => [ActionInfo 'Postgres]
   -> NonObjectTypeMap
-  -> m [P.FieldParser n (QueryRootField UnpreparedValue)]
+  -> m [P.FieldParser n (QueryRootField (UnpreparedValue 'Postgres))]
 buildActionQueryFields allActions nonObjectCustomTypes = do
   actionParsers <- for allActions $ \actionInfo ->
     case _adType (_aiDefinition actionInfo) of
@@ -454,7 +454,7 @@ buildActionSubscriptionFields
      , Has QueryContext r
      )
   => [ActionInfo 'Postgres]
-  -> m [P.FieldParser n (QueryRootField UnpreparedValue)]
+  -> m [P.FieldParser n (QueryRootField (UnpreparedValue 'Postgres))]
 buildActionSubscriptionFields allActions = do
   actionParsers <- for allActions $ \actionInfo ->
     case _adType (_aiDefinition actionInfo) of
@@ -473,7 +473,7 @@ buildRelayPostgresQueryFields
      )
   => HashSet QualifiedTable
   -> [FunctionInfo]
-  -> m [P.FieldParser n (QueryRootField UnpreparedValue)]
+  -> m [P.FieldParser n (QueryRootField (UnpreparedValue 'Postgres))]
 buildRelayPostgresQueryFields allTables (takeExposedAs FEAQuery -> queryFunctions) = do
   tableConnectionFields <- for (toList allTables) $ \table -> runMaybeT do
     pkeyColumns <- MaybeT $ (^? tiCoreInfo.tciPrimaryKey._Just.pkColumns)
@@ -503,8 +503,8 @@ buildRelayPostgresQueryFields allTables (takeExposedAs FEAQuery -> queryFunction
 queryRootFromFields
   :: forall n m
    . (MonadError QErr m, MonadParse n)
-  => [P.FieldParser n (QueryRootField UnpreparedValue)]
-  -> m (Parser 'Output n (OMap.InsOrdHashMap G.Name (QueryRootField UnpreparedValue)))
+  => [P.FieldParser n (QueryRootField (UnpreparedValue 'Postgres))]
+  -> m (Parser 'Output n (OMap.InsOrdHashMap G.Name (QueryRootField (UnpreparedValue 'Postgres))))
 queryRootFromFields fps =
   P.safeSelectionSet queryRoot Nothing fps
     <&> fmap (fmap (P.handleTypename (RFRaw . J.String . G.unName)))
@@ -512,7 +512,7 @@ queryRootFromFields fps =
 emptyIntrospection
   :: forall m n
    . (MonadSchema n m, MonadError QErr m)
-  => m [P.FieldParser n (QueryRootField UnpreparedValue)]
+  => m [P.FieldParser n (QueryRootField (UnpreparedValue 'Postgres))]
 emptyIntrospection = do
   emptyQueryP <- queryRootFromFields @n []
   introspectionTypes <- collectTypes (P.parserType emptyQueryP)
@@ -539,10 +539,10 @@ collectTypes x = case P.collectTypeDefinitions x of
 
 queryWithIntrospectionHelper
   :: (MonadSchema n m, MonadError QErr m)
-  => [P.FieldParser n (QueryRootField UnpreparedValue)]
-  -> Maybe (Parser 'Output n (OMap.InsOrdHashMap G.Name (MutationRootField UnpreparedValue)))
-  -> Parser 'Output n (OMap.InsOrdHashMap G.Name (QueryRootField UnpreparedValue))
-  -> m (Parser 'Output n (OMap.InsOrdHashMap G.Name (QueryRootField UnpreparedValue)))
+  => [P.FieldParser n (QueryRootField (UnpreparedValue 'Postgres))]
+  -> Maybe (Parser 'Output n (OMap.InsOrdHashMap G.Name (MutationRootField (UnpreparedValue 'Postgres))))
+  -> Parser 'Output n (OMap.InsOrdHashMap G.Name (QueryRootField (UnpreparedValue 'Postgres)))
+  -> m (Parser 'Output n (OMap.InsOrdHashMap G.Name (QueryRootField (UnpreparedValue 'Postgres))))
 queryWithIntrospectionHelper basicQueryFP mutationP subscriptionP = do
   basicQueryP <- queryRootFromFields basicQueryFP
   emptyIntro <- emptyIntrospection
@@ -578,13 +578,13 @@ buildQueryParser
      , MonadRole r m
      , Has QueryContext r
      )
-  => [P.FieldParser n (QueryRootField UnpreparedValue)]
+  => [P.FieldParser n (QueryRootField (UnpreparedValue 'Postgres))]
   -> [P.FieldParser n RemoteField]
   -> [ActionInfo 'Postgres]
   -> NonObjectTypeMap
-  -> Maybe (Parser 'Output n (OMap.InsOrdHashMap G.Name (MutationRootField UnpreparedValue)))
-  -> Parser 'Output n (OMap.InsOrdHashMap G.Name (QueryRootField UnpreparedValue))
-  -> m (Parser 'Output n (OMap.InsOrdHashMap G.Name (QueryRootField UnpreparedValue)))
+  -> Maybe (Parser 'Output n (OMap.InsOrdHashMap G.Name (MutationRootField (UnpreparedValue 'Postgres))))
+  -> Parser 'Output n (OMap.InsOrdHashMap G.Name (QueryRootField (UnpreparedValue 'Postgres)))
+  -> m (Parser 'Output n (OMap.InsOrdHashMap G.Name (QueryRootField (UnpreparedValue 'Postgres))))
 buildQueryParser pgQueryFields remoteFields allActions nonObjectCustomTypes mutationParser subscriptionParser = do
   actionQueryFields <- buildActionQueryFields allActions nonObjectCustomTypes
   let allQueryFields = pgQueryFields <> actionQueryFields <> map (fmap RFRemote) remoteFields
@@ -600,9 +600,9 @@ buildSubscriptionParser
      , MonadRole r m
      , Has QueryContext r
      )
-  => [P.FieldParser n (QueryRootField UnpreparedValue)]
+  => [P.FieldParser n (QueryRootField (UnpreparedValue 'Postgres))]
   -> [ActionInfo 'Postgres]
-  -> m (Parser 'Output n (OMap.InsOrdHashMap G.Name (QueryRootField UnpreparedValue)))
+  -> m (Parser 'Output n (OMap.InsOrdHashMap G.Name (QueryRootField (UnpreparedValue 'Postgres))))
 buildSubscriptionParser pgQueryFields allActions = do
   actionSubscriptionFields <- buildActionSubscriptionFields allActions
   let subscriptionFields = pgQueryFields <> actionSubscriptionFields
@@ -613,7 +613,7 @@ buildPGMutationFields
   :: forall m n r
    . (MonadSchema n m, MonadTableInfo r m, MonadRole r m, Has QueryContext r)
   => Scenario -> HashSet QualifiedTable
-  -> m [P.FieldParser n (MutationRootField UnpreparedValue)]
+  -> m [P.FieldParser n (MutationRootField (UnpreparedValue 'Postgres))]
 buildPGMutationFields scenario allTables = do
   concat . catMaybes <$> for (toList allTables) \table -> do
     tableCoreInfo <- _tiCoreInfo <$> askTableInfo table
@@ -700,8 +700,8 @@ buildMutationParser
   -> NonObjectTypeMap
   -> [FunctionInfo]
   -- ^ all "valid" functions
-  -> [P.FieldParser n (MutationRootField UnpreparedValue)]
-  -> m (Maybe (Parser 'Output n (OMap.InsOrdHashMap G.Name (MutationRootField UnpreparedValue))))
+  -> [P.FieldParser n (MutationRootField (UnpreparedValue 'Postgres))]
+  -> m (Maybe (Parser 'Output n (OMap.InsOrdHashMap G.Name (MutationRootField (UnpreparedValue 'Postgres)))))
 buildMutationParser allRemotes allActions nonObjectCustomTypes
     (takeExposedAs FEAMutation -> mutationFunctions) pgMutationFields = do
 
