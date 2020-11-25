@@ -78,6 +78,8 @@ import           Data.URL.Template
 import           Instances.TH.Lift                  ()
 import           Language.Haskell.TH.Syntax         (Lift)
 
+import qualified Hasura.SQL.BigQuery.Types          as BigQuery
+
 import qualified Hasura.Backends.Postgres.SQL.DML   as PG
 import qualified Hasura.Backends.Postgres.SQL.Types as PG
 
@@ -172,6 +174,22 @@ instance Backend 'Postgres where
 --   type XAILIKE 'MySQL = Void
 --   type XANILIKE 'MySQL = Void
 
+
+instance Backend 'BigQuery where
+  type Identifier     'BigQuery = ()
+  type Alias          'BigQuery = BigQuery.EntityAlias
+  type TableName      'BigQuery = BigQuery.TableName
+  type FunctionName   'BigQuery = ()
+  type ConstraintName 'BigQuery = ()
+  type BasicOrderType 'BigQuery = BigQuery.Order
+  type NullsOrderType 'BigQuery = BigQuery.NullsOrder
+  type CountType      'BigQuery = BigQuery.Countable
+  type Column         'BigQuery = BigQuery.ColumnName
+  type ScalarType     'BigQuery = BigQuery.ScalarType
+  type SQLExpression  'BigQuery = BigQuery.Expression
+  type SQLOperator    'BigQuery = ()
+  type XAILIKE        'BigQuery = ()
+  type XANILIKE       'BigQuery = ()
 
 adminText :: NonEmptyText
 adminText = mkNonEmptyTextUnsafe "admin"

@@ -2,13 +2,20 @@
 
 module Hasura.SQL.BigQuery.Types where
 
-import Data.Hashable
-import Data.List.NonEmpty (NonEmpty(..))
-import Data.Text (Text)
-import Data.Vector (Vector)
-import Data.Vector.Instances ()
-import GHC.Generics
-import Prelude
+import           Control.DeepSeq
+import           Data.Aeson (ToJSONKey,FromJSONKey,ToJSON,FromJSON)
+import           Data.Data
+import           Data.Hashable
+import           Data.List.NonEmpty (NonEmpty(..))
+import           Data.Text (Text)
+import qualified Data.Text as T
+import           Data.Text.Extended
+import           Data.Vector (Vector)
+import           Data.Vector.Instances ()
+import           GHC.Generics
+import           Hasura.Incremental.Internal.Dependency
+import           Language.Haskell.TH.Syntax
+import           Prelude
 
 data Select = Select
   { selectTop :: !Top
@@ -21,57 +28,107 @@ data Select = Select
   , selectOffset :: !(Maybe Expression)
   , selectGroupBy :: [FieldName]
   , selectFinalWantedFields :: !(Maybe [Text])
-  } deriving (Eq, Show)
+  } deriving (Eq, Show, Generic, Data, Lift)
+instance FromJSON Select
+instance Hashable Select
+instance Cacheable Select
+instance ToJSON Select
+instance NFData Select
 
 data ArrayAgg = ArrayAgg
   { arrayAggProjections :: !(NonEmpty Projection)
   , arrayAggOrderBy :: !(Maybe (NonEmpty OrderBy))
   , arrayAggTop :: !Top
   , arrayAggOffset :: !(Maybe Expression)
-  } deriving (Eq, Show)
+  } deriving (Eq, Show, Generic, Data, Lift)
+instance FromJSON ArrayAgg
+instance Hashable ArrayAgg
+instance Cacheable ArrayAgg
+instance ToJSON ArrayAgg
+instance NFData ArrayAgg
 
 data Reselect = Reselect
   { reselectProjections :: !(NonEmpty Projection)
   , reselectFor :: !For
   , reselectWhere :: !Where
-  } deriving (Eq, Show)
+  } deriving (Eq, Show, Generic, Data, Lift)
+instance FromJSON Reselect
+instance Hashable Reselect
+instance Cacheable Reselect
+instance ToJSON Reselect
+instance NFData Reselect
 
 data OrderBy = OrderBy
   { orderByFieldName :: FieldName
   , orderByOrder :: Order
   , orderByNullsOrder :: NullsOrder
-  } deriving (Eq, Show)
+  } deriving (Eq, Show, Generic, Data, Lift)
+instance FromJSON OrderBy
+instance Hashable OrderBy
+instance Cacheable OrderBy
+instance ToJSON OrderBy
+instance NFData OrderBy
 
 data Order
   = AscOrder
   | DescOrder
-  deriving (Eq, Show)
+  deriving (Eq, Show, Generic, Data, Lift)
+instance FromJSON Order
+instance Hashable Order
+instance Cacheable Order
+instance ToJSON Order
+instance NFData Order
 
 data NullsOrder
   = NullsFirst
   | NullsLast
   | NullsAnyOrder
-  deriving (Eq, Show)
+  deriving (Eq, Show, Generic, Data, Lift)
+instance FromJSON NullsOrder
+instance Hashable NullsOrder
+instance Cacheable NullsOrder
+instance ToJSON NullsOrder
+instance NFData NullsOrder
 
 data For
   = JsonFor ForJson
   | NoFor
-  deriving (Eq, Show)
+  deriving (Eq, Show, Generic, Data, Lift)
+instance FromJSON For
+instance Hashable For
+instance Cacheable For
+instance ToJSON For
+instance NFData For
 
 data ForJson = ForJson
   { jsonCardinality :: JsonCardinality
   , jsonRoot :: Root
-  } deriving (Eq, Show)
+  } deriving (Eq, Show, Generic, Data, Lift)
+instance FromJSON ForJson
+instance Hashable ForJson
+instance Cacheable ForJson
+instance ToJSON ForJson
+instance NFData ForJson
 
 data Root
   = NoRoot
   | Root Text
-  deriving (Eq, Show)
+  deriving (Eq, Show, Generic, Data, Lift)
+instance FromJSON Root
+instance Hashable Root
+instance Cacheable Root
+instance ToJSON Root
+instance NFData Root
 
 data JsonCardinality
   = JsonArray
   | JsonSingleton
-  deriving (Eq, Show)
+  deriving (Eq, Show, Generic, Data, Lift)
+instance FromJSON JsonCardinality
+instance Hashable JsonCardinality
+instance Cacheable JsonCardinality
+instance ToJSON JsonCardinality
+instance NFData JsonCardinality
 
 data Projection
   = ExpressionProjection (Aliased Expression)
@@ -80,7 +137,12 @@ data Projection
   | StarProjection
   | ArrayAggProjection (Aliased ArrayAgg)
   | EntityProjection (Aliased EntityAlias)
-  deriving (Eq, Show)
+  deriving (Eq, Show, Generic, Data, Lift)
+instance FromJSON Projection
+instance Hashable Projection
+instance Cacheable Projection
+instance ToJSON Projection
+instance NFData Projection
 
 data Join = Join
   { joinSource :: !JoinSource
@@ -90,7 +152,12 @@ data Join = Join
   , joinFieldName :: !Text
   , joinExtractPath :: !(Maybe Text)
   , joinRightTable :: !EntityAlias
-  } deriving (Eq, Show)
+  } deriving (Eq, Show, Generic, Data, Lift)
+instance FromJSON Join
+instance Hashable Join
+instance Cacheable Join
+instance ToJSON Join
+instance NFData Join
 
 data JoinProvenance
   = OrderByJoinProvenance
@@ -98,18 +165,28 @@ data JoinProvenance
   | ArrayAggregateJoinProvenance
   | ArrayJoinProvenance
   | MultiplexProvenance
-  deriving (Eq, Show)
+  deriving (Eq, Show, Generic, Data, Lift)
+instance FromJSON JoinProvenance
+instance Hashable JoinProvenance
+instance Cacheable JoinProvenance
+instance ToJSON JoinProvenance
+instance NFData JoinProvenance
 
 data JoinSource
   = JoinSelect Select
   -- We're not using existingJoins at the moment, which was used to
   -- avoid re-joining on the same table twice.
   -- | JoinReselect Reselect
-  deriving (Eq, Show)
+  deriving (Eq, Show, Generic, Data, Lift)
+instance FromJSON JoinSource
+instance Hashable JoinSource
+instance Cacheable JoinSource
+instance ToJSON JoinSource
+instance NFData JoinSource
 
 newtype Where =
   Where [Expression]
-  deriving (Eq, Show)
+  deriving (NFData, Eq, Show, Generic, Data, Lift, FromJSON, ToJSON, Hashable, Cacheable)
 
 instance Monoid Where where
   mempty = Where mempty
@@ -120,7 +197,12 @@ instance Semigroup Where where
 data Top
   = NoTop
   | Top Int
-  deriving (Eq, Show)
+  deriving (Eq, Show, Generic, Data, Lift)
+instance FromJSON Top
+instance Hashable Top
+instance Cacheable Top
+instance ToJSON Top
+instance NFData Top
 
 instance Monoid Top where
   mempty = NoTop
@@ -153,66 +235,128 @@ data Expression
     -- ^ This is for getting actual atomic values out of a JSON
     -- string.
   | OpExpression Op Expression Expression
-  deriving (Eq, Show)
+  deriving (Eq, Show, Generic, Data, Lift)
+instance FromJSON Expression
+instance Hashable Expression
+instance Cacheable Expression
+instance ToJSON Expression
+instance NFData Expression
 
 data JsonPath
   = RootPath
   | FieldPath JsonPath Text
   | IndexPath JsonPath Integer
-  deriving (Eq, Show)
+  deriving (Eq, Show, Generic, Data, Lift)
+instance FromJSON JsonPath
+instance Hashable JsonPath
+instance Cacheable JsonPath
+instance ToJSON JsonPath
+instance NFData JsonPath
 
 data Aggregate
   = CountAggregate Countable
   | OpAggregates !Text (NonEmpty (Text, Expression))
   | OpAggregate !Text Expression
   | TextAggregate !Text
-  deriving (Eq, Show)
+  deriving (Eq, Show, Generic, Data, Lift)
+instance FromJSON Aggregate
+instance Hashable Aggregate
+instance Cacheable Aggregate
+instance ToJSON Aggregate
+instance NFData Aggregate
 
 data Countable
   = StarCountable
   | NonNullFieldCountable (NonEmpty FieldName)
   | DistinctCountable (NonEmpty FieldName)
-  deriving (Eq, Show)
+  deriving (Eq, Show, Generic, Data, Lift)
+instance FromJSON Countable
+instance Hashable Countable
+instance Cacheable Countable
+instance ToJSON Countable
+instance NFData Countable
 
 data From
   = FromQualifiedTable (Aliased TableName)
-  deriving (Eq, Show)
+  deriving (Eq, Show, Generic, Data, Lift, Ord)
+instance FromJSON From
+instance Hashable From
+instance Cacheable From
+instance ToJSON From
+instance NFData From
 
 data OpenJson = OpenJson
   { openJsonExpression :: Expression
   , openJsonWith :: NonEmpty JsonFieldSpec
-  } deriving (Eq, Show)
+  } deriving (Eq, Show, Generic, Data, Lift)
+instance FromJSON OpenJson
+instance Hashable OpenJson
+instance Cacheable OpenJson
+instance ToJSON OpenJson
+instance NFData OpenJson
 
 data JsonFieldSpec
   = IntField Text
   | JsonField Text
-  deriving (Eq, Show)
+  deriving (Eq, Show, Generic, Data, Lift)
+instance FromJSON JsonFieldSpec
+instance Hashable JsonFieldSpec
+instance Cacheable JsonFieldSpec
+instance ToJSON JsonFieldSpec
+instance NFData JsonFieldSpec
 
 data Aliased a = Aliased
   { aliasedThing :: !a
   , aliasedAlias :: !Text
-  } deriving (Eq, Show, Functor)
+  } deriving (Eq, Show, Generic, Data, Lift, Functor)
+instance FromJSON a => FromJSON (Aliased a)
+instance Hashable a => Hashable (Aliased a)
+instance Cacheable a => Cacheable (Aliased a)
+instance ToJSON a => ToJSON (Aliased a)
+instance NFData a => NFData (Aliased a)
+deriving instance Ord a => Ord (Aliased a)
 
 newtype SchemaName = SchemaName
   { schemaNameParts :: [Text]
-  } deriving (Eq, Show)
+  } deriving (NFData, Eq, Show, Generic, Data, Lift, FromJSON, ToJSON, Hashable, Cacheable)
 
 data TableName = TableName
   { tableName :: Text
   , tableNameSchema :: Text
-  } deriving (Eq, Show)
+  } deriving (Eq, Show, Generic, Data, Lift, Ord)
+instance FromJSON TableName
+instance Hashable TableName
+instance Cacheable TableName
+instance ToJSON TableName
+instance NFData TableName
+
+instance ToTxt TableName where toTxt = T.pack . show
 
 data FieldName = FieldName
   { fieldName :: Text
   , fieldNameEntity :: !Text
-  } deriving (Eq, Show)
+  } deriving (Eq, Show, Generic, Data, Lift)
+instance FromJSON FieldName
+instance Hashable FieldName
+instance Cacheable FieldName
+instance ToJSON FieldName
+instance NFData FieldName
+
+newtype ColumnName = ColumnName
+  { columnName :: Text
+  } deriving (Eq, Show, Generic, Data, Lift, FromJSON, ToJSON, ToJSONKey, FromJSONKey, Hashable, Cacheable, NFData)
 
 data Comment = DueToPermission | RequestedSingleObject
-  deriving (Eq, Show)
+  deriving (Eq, Show, Generic, Data, Lift)
+instance FromJSON Comment
+instance Hashable Comment
+instance Cacheable Comment
+instance ToJSON Comment
+instance NFData Comment
 
 newtype EntityAlias = EntityAlias
   { entityAliasText :: Text
-  } deriving (Eq, Show)
+  } deriving (NFData, Eq, Show, Generic, Data, Lift, FromJSON, ToJSON, Hashable, Cacheable)
 
 data Op
   = LessOp
@@ -235,12 +379,34 @@ data Op
   -- | SHasKey
   -- | SHasKeysAny
   -- | SHasKeysAll
-  deriving (Eq, Show)
+  deriving (Eq, Show, Generic, Data, Lift)
+instance FromJSON Op
+instance Hashable Op
+instance Cacheable Op
+instance ToJSON Op
+instance NFData Op
 
 data Value
   = IntValue !Int
   | TextValue !Text
   | BoolValue !Bool
   | ArrayValue !(Vector Value)
-  deriving (Show, Eq, Ord, Generic)
+  deriving (Show, Eq, Ord, Generic, Data, Lift)
+instance FromJSON Value
+instance Cacheable Value
+instance ToJSON Value
+instance NFData Value
 instance Hashable Value
+
+data ScalarType
+  = IntScalarType
+  | TextScalarType
+  | BoolScalarType
+  | ArrayScalarType
+  deriving (Show, Eq, Ord, Generic, Data, Lift)
+instance FromJSON ScalarType
+instance Cacheable ScalarType
+instance ToJSON ScalarType
+instance NFData ScalarType
+instance Hashable ScalarType
+instance ToTxt ScalarType where toTxt = T.pack . show
