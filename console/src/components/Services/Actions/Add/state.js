@@ -38,6 +38,7 @@ const state = {
   derive: {
     operation: '',
   },
+  timeout: 30,
 };
 
 export default state;
