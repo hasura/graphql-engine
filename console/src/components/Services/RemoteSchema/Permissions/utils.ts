@@ -101,3 +101,25 @@ export const updateBulkSelect = (
     : bulkSelect.filter(e => e !== selectedRole);
   return bulkRes;
 };
+
+export const getTree = (schema: any, typeS: any) => {
+  const fields =
+    typeS === 'QUERY'
+      ? schema.getQueryType().getFields()
+      : schema.getMutationType().getFields();
+  return Object.values(fields).map(
+    ({ name, args: argArray, type, ...rest }: any) => {
+      const args = argArray.reduce((p, c, cIx) => {
+        return { ...p, [c.name]: { ...c } };
+      }, {});
+      return { name, checked: true, args, return: type.toString(), ...rest };
+    }
+  );
+};
+
+export const getType = (schema: any) => {
+  const fields = schema.getTypeMap();
+  console.log({ fields });
+  const ret = fields;
+  return ret;
+};

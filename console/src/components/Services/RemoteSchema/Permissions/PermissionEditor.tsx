@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useCallback, useState } from 'react';
 import Button from '../../../Common/Button/Button';
 import styles from '../../../Common/Permissions/PermissionStyles.scss';
 
@@ -79,15 +79,38 @@ const Tree = ({ list, setState }: any) => {
   // TODO add checkbox
   // TODO create and sync tree
   // TODO check actual gql schema structure and change, if required
-  const onCheck = (ix: any) => (e: any) => {
-    const newList = [...list];
-    newList[ix] = { ...list[ix], checked: e.target.checked };
-    setState([...newList]);
-  };
-  const setValue = (ix: any) => (newState: any) => {
-    const newList = [...list];
-    newList[ix] = { ...list[ix], children: [...newState] };
-    setState([...newList]);
+  const [expandedItems, setExpandedItems] = useState({});
+  const onCheck = useCallback(
+    ix => e => {
+      const newList = [...list];
+      newList[ix] = { ...list[ix], checked: e.target.checked };
+      setState([...newList]);
+    },
+    [setState, list]
+  );
+
+  const setItem = useCallback(
+    ix => newState => {
+      const newList = [...list];
+      newList[ix] = { ...newState };
+      setState([...newList]);
+    },
+    [setState, list]
+  );
+  const setValue = useCallback(
+    ix => newState => {
+      const newList = [...list];
+      newList[ix] = { ...list[ix], children: [...newState] };
+      setState([...newList]);
+    },
+    [setState, list]
+  );
+  const toggleExpand = ix => e => {
+    setExpandedItems(expandedItems => {
+      const newState = !expandedItems[ix];
+      const newExpandeditems = { ...expandedItems, [ix]: newState };
+      return newExpandeditems;
+    });
   };
   return (
     <ul>
@@ -102,36 +125,63 @@ const Tree = ({ list, setState }: any) => {
               onChange={onCheck(ix)}
             />
           )}
-          <Item i={i} />
-          {i.children && <Tree list={i.children} setState={setValue(ix)} />}
+          {i.children && (
+            <button
+              onClick={toggleExpand(ix)}
+              style={{
+                backgroundColor: 'transparent',
+                border: 0,
+                color: '#0008',
+                cursor: 'pointer',
+              }}
+            >
+              {expandedItems[ix] ? '-' : '+'}
+            </button>
+          )}
+          <Item i={i} setItem={setItem(ix)} />
+          {i.children && expandedItems[ix] && (
+            <Tree list={i.children} setState={setValue(ix)} />
+          )}
         </li>
       ))}
     </ul>
   );
 };
 
-const Item = ({ i }: any) => {
+const Item = ({ i, setItem = e => console.log(e) }) => {
+  const setArg = useCallback(
+    k => v => setItem({ ...i, args: { ...i.args, [k]: v } }),
+    [setItem, i]
+  );
   return (
     <b>
-      {i.name}
+      <b id={i.name}>{i.name}</b>
       {i.args && ' ('}
       {i.args &&
-        Object.entries(i.args).map(([k, v]) => <Select {...{ k, v }} />)}
+        Object.entries(i.args).map(([k, v]) => (
+          <Select {...{ k, v, setArg: setArg(k) }} />
+        ))}
       {i.args && ' )'}
-      {i.return && `: ${i.return}`}
+      {i.return && (
+        <>
+          :{' '}
+          <a href={`#type_${i.return.replace(/[^\w\s]/gi, '')}`}>{i.return}</a>
+        </>
+      )}
     </b>
   );
 };
 
-const Select = ({ k, v }: any) => {
+const Select = ({ k, v, setArg = e => console.log(e) }) => {
+  const setArgVal = useCallback(d => setArg({ ...v, value: d }), [setArg, v]);
   return (
     <>
       <label htmlFor={k}> {k}:</label>
-      <select name={k} id={k} value={v.type}>
-        <option value="staticVal">static value</option>
-        <option value="sessionVar">from session var</option>
-      </select>
-      <input value={v.value} />
+      <input
+        value={v.value}
+        style={{ border: 0, borderBottom: '2px solid #354c9d' }}
+        onChange={e => setArgVal(e.target.value)}
+      />
     </>
   );
 };
@@ -147,11 +197,12 @@ const PermissionEditor = ({ ...props }: any) => {
     saveRemoteSchemaPermission,
     removeRemoteSchemaPermission,
     setSchemaDefinition,
+    jsonTree,
   } = props;
 
   const { isNewRole, isNewPerm } = permissionEdit;
 
-  const [state, setState] = React.useState(data);
+  const [state, setState] = React.useState(jsonTree);
   React.useEffect(() => {
     console.log('changed--->', state);
   }, [state]);

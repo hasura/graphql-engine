@@ -1,6 +1,6 @@
 import React from 'react';
 import Helmet from 'react-helmet';
-import { parse } from 'graphql';
+import { buildClientSchema, GraphQLObjectType } from 'graphql';
 import PermissionsTable from './PermissionsTable';
 import PermissionEditor from './PermissionEditor';
 import { getConfirmation } from '../../../Common/utils/jsUtils';
@@ -8,6 +8,7 @@ import { useIntrospectionSchemaRemote } from '../graphqlUtils';
 import globals from '../../../../Globals';
 import Button from '../../../Common/Button/Button';
 import styles from '../../../Common/Permissions/PermissionStyles.scss';
+import { getTree, getType } from './utils';
 
 const BulkSelectSection = ({ bulkSelect, permRemoveMultipleRoles }: any) => {
   const getSelectedRoles = () => {
@@ -94,6 +95,41 @@ const Permissions = ({ allRoles, ...props }: any) => {
     );
   }
 
+  const jsonTree = [
+    {
+      name: 'query_root',
+      children: getTree(schema, 'QUERY'),
+    },
+    {
+      name: 'mutation_root',
+      children: getTree(schema, 'MUTATION'),
+    },
+  ];
+  const types = getType(schema);
+
+  Object.entries(types).forEach(([key, value]: any) => {
+    if (!(value instanceof GraphQLObjectType)) return;
+    const name = value.inspect();
+
+    const obj: any = {
+      name: `Type ${name}`,
+    };
+
+    const childArray: any[] = [];
+    // eslint-disable-next-line no-underscore-dangle
+    // if (value._fields) {
+    const fields = value.getFields();
+    Object.entries(fields).forEach(([k, v]: any) => {
+      childArray.push({
+        name: v.name,
+        checked: true,
+      });
+    });
+    // }
+    obj.children = childArray;
+    jsonTree.push(obj);
+  });
+
   return (
     <div>
       <Helmet
@@ -130,6 +166,7 @@ const Permissions = ({ allRoles, ...props }: any) => {
             saveRemoteSchemaPermission={saveRemoteSchemaPermission}
             removeRemoteSchemaPermission={removeRemoteSchemaPermission}
             setSchemaDefinition={setSchemaDefinition}
+            jsonTree={jsonTree}
           />
         )}
       </div>
