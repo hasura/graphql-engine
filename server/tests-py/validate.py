@@ -65,7 +65,7 @@ def check_event(hge_ctx, evts_webhook, trig_name, table, operation, exp_ev_data,
 
 
 def test_forbidden_when_admin_secret_reqd(hge_ctx, conf):
-    if conf['url'] == '/v1/graphql':
+    if conf['url'] == '/v1/graphql' or conf['url'] == '/v1beta1/relay':
         if conf['status'] == 404:
             status = [404]
         else:
@@ -104,7 +104,7 @@ def test_forbidden_when_admin_secret_reqd(hge_ctx, conf):
 
 
 def test_forbidden_webhook(hge_ctx, conf):
-    if conf['url'] == '/v1/graphql':
+    if conf['url'] == '/v1/graphql' or conf['url'] == '/v1beta1/relay':
         if conf['status'] == 404:
             status = [404]
         else:
@@ -211,7 +211,7 @@ def check_query(hge_ctx, conf, transport='http', add_auth=True, claims_namespace
 
 def validate_gql_ws_q(hge_ctx, conf, headers, retry=False, via_subscription=False):
     assert 'response' in conf
-    assert conf['url'].endswith('/graphql')
+    assert conf['url'].endswith('/graphql') or conf['url'].endswith('/relay')
     endpoint = conf['url']
     query = conf['query']
     exp_http_response = conf['response']
@@ -226,6 +226,8 @@ def validate_gql_ws_q(hge_ctx, conf, headers, retry=False, via_subscription=Fals
 
     if endpoint == '/v1alpha1/graphql':
         ws_client = GQLWsClient(hge_ctx, '/v1alpha1/graphql')
+    elif endpoint == '/v1beta1/relay':
+        ws_client = GQLWsClient(hge_ctx, '/v1beta1/relay')
     else:
         ws_client = hge_ctx.ws_client
     print(ws_client.ws_url)
@@ -265,7 +267,7 @@ def validate_gql_ws_q(hge_ctx, conf, headers, retry=False, via_subscription=Fals
 def validate_http_anyq(hge_ctx, url, query, headers, exp_code, exp_response):
     code, resp, resp_hdrs = hge_ctx.anyq(url, query, headers)
     print(headers)
-    assert code == exp_code, resp
+    assert code == exp_code, (code, exp_code, resp)
     print('http resp: ', resp)
     if exp_response:
         return assert_graphql_resp_expected(resp, exp_response, query, resp_hdrs, hge_ctx.avoid_err_msg_checks)
@@ -316,7 +318,7 @@ def assert_graphql_resp_expected(resp_orig, exp_response_orig, query, resp_hdrs=
             # If it is a batch GraphQL query, compare each individual response separately
             for (exp, out) in zip(as_list(exp_response), as_list(resp)):
                 matched_ = equal_CommentedMap(exp, out)
-                if is_err_msg(exp):
+                if is_err_msg(exp) and is_err_msg(out):
                     if not matched_:
                         warnings.warn("Response does not have the expected error message\n" + dump_str.getvalue())
                         return resp, matched

@@ -6,6 +6,8 @@ module Hasura.RQL.Types.Common
        , relTypeToTxt
        , RelInfo(..)
 
+       , Backend (..)
+
        , FieldName(..)
        , fromPGCol
        , fromRel
@@ -21,13 +23,10 @@ module Hasura.RQL.Types.Common
        , pkConstraint
        , pkColumns
        , ForeignKey(..)
+       , EquatableGType(..)
+       , InpValInfo(..)
        , CustomColumnNames
 
-       , NonEmptyText
-       , mkNonEmptyTextUnsafe
-       , mkNonEmptyText
-       , unNonEmptyText
-       , nonEmptyText
        , adminText
        , rootText
 
@@ -35,89 +34,173 @@ module Hasura.RQL.Types.Common
        , isSystemDefined
 
        , successMsg
-       , NonNegativeDiffTime(..)
+       , NonNegativeDiffTime
+       , unNonNegativeDiffTime
+       , unsafeNonNegativeDiffTime
+       , mkNonNegativeDiffTime
        , InputWebhook(..)
        , ResolvedWebhook(..)
        , resolveWebhook
+       , NonNegativeInt
+       , getNonNegativeInt
+       , mkNonNegativeInt
+       , unsafeNonNegativeInt
+       , Timeout(..)
+       , defaultActionTimeoutSecs
+
+       , UrlConf(..)
+       , resolveUrlConf
+       , getEnv
        ) where
 
-import           Hasura.EncJSON
-import           Hasura.Incremental            (Cacheable)
 import           Hasura.Prelude
-import           Hasura.SQL.Types
-import           Hasura.RQL.Types.Error
-import           Hasura.RQL.DDL.Headers        ()
 
+import qualified Data.Environment                   as Env
+import qualified Data.HashMap.Strict                as HM
+import qualified Data.Text                          as T
+import qualified Database.PG.Query                  as Q
+import qualified Language.GraphQL.Draft.Syntax      as G
+import qualified Language.Haskell.TH.Syntax         as TH
+import qualified PostgreSQL.Binary.Decoding         as PD
+import qualified Test.QuickCheck                    as QC
 
-import           Control.Lens                  (makeLenses)
+import           Control.Lens                       (makeLenses)
 import           Data.Aeson
 import           Data.Aeson.Casing
 import           Data.Aeson.TH
+import           Data.Bifunctor                     (bimap)
+import           Data.Kind                          (Type)
+import           Data.Scientific                    (toBoundedInteger)
+import           Data.Text.Extended
+import           Data.Text.NonEmpty
+import           Data.Typeable
 import           Data.URL.Template
-import           Instances.TH.Lift             ()
-import           Language.Haskell.TH.Syntax    (Q, TExp, Lift)
+import           Instances.TH.Lift                  ()
+import           Language.Haskell.TH.Syntax         (Lift)
 
-import qualified Data.HashMap.Strict           as HM
-import qualified Data.Text                     as T
-import qualified Database.PG.Query             as Q
-import qualified Language.GraphQL.Draft.Syntax as G
-import qualified PostgreSQL.Binary.Decoding    as PD
-import qualified Test.QuickCheck               as QC
+import qualified Hasura.Backends.Postgres.SQL.DML   as PG
+import qualified Hasura.Backends.Postgres.SQL.Types as PG
+import qualified Hasura.Backends.Postgres.SQL.Value as PG
 
-newtype NonEmptyText = NonEmptyText { unNonEmptyText :: T.Text }
-  deriving (Show, Eq, Ord, Hashable, ToJSON, ToJSONKey, Lift, Q.ToPrepArg, DQuote, Generic, NFData, Cacheable)
+import           Hasura.EncJSON
+import           Hasura.Incremental                 (Cacheable)
+import           Hasura.RQL.DDL.Headers             ()
+import           Hasura.RQL.Types.Error
+import           Hasura.SQL.Backend
 
-instance Arbitrary NonEmptyText where
-  arbitrary = NonEmptyText . T.pack <$> QC.listOf1 (QC.elements alphaNumerics)
 
-mkNonEmptyText :: T.Text -> Maybe NonEmptyText
-mkNonEmptyText ""   = Nothing
-mkNonEmptyText text = Just $ NonEmptyText text
+type Representable a = (Show a, Eq a, Hashable a, Cacheable a, NFData a)
 
-mkNonEmptyTextUnsafe :: T.Text -> NonEmptyText
-mkNonEmptyTextUnsafe = NonEmptyText
+-- | Mapping from abstract types to concrete backend representation
+--
+-- The RQL IR, used as the output of GraphQL parsers and of the RQL parsers, is
+-- backend-agnostic: it uses an abstract representation of the structure of a
+-- query, and delegates to the backends the task of choosing an appropriate
+-- concrete representation.
+--
+-- Additionally, grouping all those types under one typeclass rather than having
+-- dedicated type families allows to explicitly list all typeclass requirements,
+-- which simplifies the instance declarations of all IR types.
+class
+  ( Representable (Identifier b)
+  , Representable (TableName b)
+  , Representable (FunctionName b)
+  , Representable (ConstraintName b)
+  , Representable (BasicOrderType b)
+  , Representable (NullsOrderType b)
+  , Representable (Column b)
+  , Representable (ScalarType b)
+  , Representable (SQLExpression b)
+  , Representable (SQLOperator b)
+  , Representable (XAILIKE b)
+  , Representable (XANILIKE b)
+  , Ord (TableName b)
+  , Ord (ScalarType b)
+  , Lift (TableName b)
+  , Lift (BasicOrderType b)
+  , Lift (NullsOrderType b)
+  , Data (TableName b)
+  , Data (ScalarType b)
+  , Data (SQLExpression b)
+  , FromJSON (TableName b)
+  , FromJSON (ScalarType b)
+  , FromJSON (BasicOrderType b)
+  , FromJSON (NullsOrderType b)
+  , FromJSON (Column b)
+  , ToJSON (TableName b)
+  , ToJSON (ScalarType b)
+  , ToJSON (BasicOrderType b)
+  , ToJSON (NullsOrderType b)
+  , ToJSON (Column b)
+  , FromJSONKey (Column b)
+  , ToJSONKey (Column b)
+  , ToTxt (TableName b)
+  , ToTxt (ScalarType b)
+  , Typeable b
+  ) => Backend (b :: BackendType) where
+  type Identifier      b :: Type
+  type Alias           b :: Type
+  type TableName       b :: Type
+  type FunctionName    b :: Type
+  type ConstraintName  b :: Type
+  type BasicOrderType  b :: Type
+  type NullsOrderType  b :: Type
+  type CountType       b :: Type
+  type Column          b :: Type
+  type ColumnValueType b :: Type
+  type ScalarType      b :: Type
+  type SQLExpression   b :: Type
+  type SQLOperator     b :: Type
+  type SessionVarType  b :: Type
+  type XAILIKE         b :: Type
+  type XANILIKE        b :: Type
 
-parseNonEmptyText :: MonadFail m => Text -> m NonEmptyText
-parseNonEmptyText text = case mkNonEmptyText text of
-  Nothing     -> fail "empty string not allowed"
-  Just neText -> return neText
+instance Backend 'Postgres where
+  type Identifier      'Postgres = PG.Identifier
+  type Alias           'Postgres = PG.Alias
+  type TableName       'Postgres = PG.QualifiedTable
+  type FunctionName    'Postgres = PG.QualifiedFunction
+  type ConstraintName  'Postgres = PG.ConstraintName
+  type BasicOrderType  'Postgres = PG.OrderType
+  type NullsOrderType  'Postgres = PG.NullsOrder
+  type CountType       'Postgres = PG.CountType
+  type Column          'Postgres = PG.PGCol
+  type ColumnValueType 'Postgres = PG.WithScalarType PG.PGScalarValue
+  type ScalarType      'Postgres = PG.PGScalarType
+  type SQLExpression   'Postgres = PG.SQLExp
+  type SQLOperator     'Postgres = PG.SQLOp
+  type SessionVarType  'Postgres = PG.PGType PG.PGScalarType
+  type XAILIKE         'Postgres = ()
+  type XANILIKE        'Postgres = ()
 
-nonEmptyText :: Text -> Q (TExp NonEmptyText)
-nonEmptyText = parseNonEmptyText >=> \text -> [|| text ||]
+-- instance Backend 'Mysql where
+--   type XAILIKE 'MySQL = Void
+--   type XANILIKE 'MySQL = Void
 
-instance FromJSON NonEmptyText where
-  parseJSON = withText "String" parseNonEmptyText
-
-instance FromJSONKey NonEmptyText where
-  fromJSONKey = FromJSONKeyTextParser parseNonEmptyText
-
-instance Q.FromCol NonEmptyText where
-  fromCol bs = mkNonEmptyText <$> Q.fromCol bs
-    >>= maybe (Left "empty string not allowed") Right
 
 adminText :: NonEmptyText
-adminText = NonEmptyText "admin"
+adminText = mkNonEmptyTextUnsafe "admin"
 
 rootText :: NonEmptyText
-rootText = NonEmptyText "root"
+rootText = mkNonEmptyTextUnsafe "root"
 
 newtype RelName
   = RelName { getRelTxt :: NonEmptyText }
-  deriving (Show, Eq, Hashable, FromJSON, ToJSON, Q.ToPrepArg, Q.FromCol, Lift, Generic, Arbitrary, NFData, Cacheable)
+  deriving (Show, Eq, Hashable, FromJSON, ToJSON, ToJSONKey, Q.ToPrepArg, Q.FromCol, Lift, Generic, Arbitrary, NFData, Cacheable)
 
-instance IsIden RelName where
-  toIden rn = Iden $ relNameToTxt rn
+instance PG.IsIdentifier RelName where
+  toIdentifier rn = PG.Identifier $ relNameToTxt rn
 
-instance DQuote RelName where
-  dquoteTxt = relNameToTxt
+instance ToTxt RelName where
+  toTxt = relNameToTxt
 
 rootRelName :: RelName
 rootRelName = RelName rootText
 
-relNameToTxt :: RelName -> T.Text
+relNameToTxt :: RelName -> Text
 relNameToTxt = unNonEmptyText . getRelTxt
 
-relTypeToTxt :: RelType -> T.Text
+relTypeToTxt :: RelType -> Text
 relTypeToTxt ObjRel = "object"
 relTypeToTxt ArrRel = "array"
 
@@ -141,35 +224,47 @@ instance Q.FromCol RelType where
   fromCol bs = flip Q.fromColHelper bs $ PD.enum $ \case
     "object" -> Just ObjRel
     "array"  -> Just ArrRel
-    _   -> Nothing
+    _        -> Nothing
 
-data RelInfo
+-- should this be parameterized by both the source and the destination backend?
+data RelInfo (b :: BackendType)
   = RelInfo
-  { riName     :: !RelName
-  , riType     :: !RelType
-  , riMapping  :: !(HashMap PGCol PGCol)
-  , riRTable   :: !QualifiedTable
-  , riIsManual :: !Bool
-  } deriving (Show, Eq, Generic)
-instance NFData RelInfo
-instance Cacheable RelInfo
-$(deriveToJSON (aesonDrop 2 snakeCase) ''RelInfo)
+  { riName       :: !RelName
+  , riType       :: !RelType
+  , riMapping    :: !(HashMap (Column b) (Column b))
+  , riRTable     :: !(TableName b)
+  , riIsManual   :: !Bool
+  , riIsNullable :: !Bool
+  } deriving (Generic)
+deriving instance Backend b => Show (RelInfo b)
+deriving instance Backend b => Eq   (RelInfo b)
+instance Backend b => NFData (RelInfo b)
+instance Backend b => Cacheable (RelInfo b)
+instance Backend b => Hashable (RelInfo b)
+
+instance (Backend b) => FromJSON (RelInfo b) where
+  parseJSON = genericParseJSON $ aesonPrefix snakeCase
+
+instance (Backend b) => ToJSON (RelInfo b) where
+  toJSON = genericToJSON $ aesonPrefix snakeCase
+
 
 newtype FieldName
-  = FieldName { getFieldNameTxt :: T.Text }
+  = FieldName { getFieldNameTxt :: Text }
   deriving ( Show, Eq, Ord, Hashable, FromJSON, ToJSON
            , FromJSONKey, ToJSONKey, Lift, Data, Generic
            , IsString, Arbitrary, NFData, Cacheable
+           , Semigroup
            )
 
-instance IsIden FieldName where
-  toIden (FieldName f) = Iden f
+instance PG.IsIdentifier FieldName where
+  toIdentifier (FieldName f) = PG.Identifier f
 
-instance DQuote FieldName where
-  dquoteTxt (FieldName c) = c
+instance ToTxt FieldName where
+  toTxt (FieldName c) = c
 
-fromPGCol :: PGCol -> FieldName
-fromPGCol c = FieldName $ getPGColTxt c
+fromPGCol :: PG.PGCol -> FieldName
+fromPGCol c = FieldName $ PG.getPGColTxt c
 
 fromRel :: RelName -> FieldName
 fromRel = FieldName . relNameToTxt
@@ -179,7 +274,7 @@ class ToAesonPairs a where
 
 data WithTable a
   = WithTable
-  { wtName :: !QualifiedTable
+  { wtName :: !PG.QualifiedTable
   , wtInfo :: !a
   } deriving (Show, Eq, Lift)
 
@@ -193,7 +288,7 @@ instance (ToAesonPairs a) => ToJSON (WithTable a) where
   toJSON (WithTable tn rel) =
     object $ ("table" .= tn):toAesonPairs rel
 
-type ColumnValues a = HM.HashMap PGCol a
+type ColumnValues a = HM.HashMap PG.PGCol a
 
 data MutateResp a
   = MutateResp
@@ -202,7 +297,8 @@ data MutateResp a
   } deriving (Show, Eq)
 $(deriveJSON (aesonDrop 3 snakeCase) ''MutateResp)
 
-type ColMapping = HM.HashMap PGCol PGCol
+
+type ColMapping = HM.HashMap PG.PGCol PG.PGCol
 
 -- | Postgres OIDs. <https://www.postgresql.org/docs/12/datatype-oid.html>
 newtype OID = OID { unOID :: Int }
@@ -210,7 +306,7 @@ newtype OID = OID { unOID :: Int }
 
 data Constraint
   = Constraint
-  { _cName :: !ConstraintName
+  { _cName :: !PG.ConstraintName
   , _cOid  :: !OID
   } deriving (Show, Eq, Generic)
 instance NFData Constraint
@@ -221,8 +317,8 @@ $(deriveJSON (aesonDrop 2 snakeCase) ''Constraint)
 data PrimaryKey a
   = PrimaryKey
   { _pkConstraint :: !Constraint
-  , _pkColumns    :: !(NonEmpty a)
-  } deriving (Show, Eq, Generic)
+  , _pkColumns    :: !(NESeq a)
+  } deriving (Show, Eq, Generic, Foldable)
 instance (NFData a) => NFData (PrimaryKey a)
 instance (Cacheable a) => Cacheable (PrimaryKey a)
 $(makeLenses ''PrimaryKey)
@@ -231,7 +327,7 @@ $(deriveJSON (aesonDrop 3 snakeCase) ''PrimaryKey)
 data ForeignKey
   = ForeignKey
   { _fkConstraint    :: !Constraint
-  , _fkForeignTable  :: !QualifiedTable
+  , _fkForeignTable  :: !PG.QualifiedTable
   , _fkColumnMapping :: !ColMapping
   } deriving (Show, Eq, Generic)
 instance NFData ForeignKey
@@ -239,7 +335,25 @@ instance Hashable ForeignKey
 instance Cacheable ForeignKey
 $(deriveJSON (aesonDrop 3 snakeCase) ''ForeignKey)
 
-type CustomColumnNames = HM.HashMap PGCol G.Name
+data InpValInfo
+  = InpValInfo
+  { _iviDesc   :: !(Maybe G.Description)
+  , _iviName   :: !G.Name
+  , _iviDefVal :: !(Maybe (G.Value Void))
+  , _iviType   :: !G.GType
+  } deriving (Show, Eq, TH.Lift, Generic)
+instance Cacheable InpValInfo
+
+instance EquatableGType InpValInfo where
+  type EqProps InpValInfo = (G.Name, G.GType)
+  getEqProps ity = (,) (_iviName ity) (_iviType ity)
+
+-- | Typeclass for equating relevant properties of various GraphQL types defined below
+class EquatableGType a where
+  type EqProps a
+  getEqProps :: a -> EqProps a
+
+type CustomColumnNames = HM.HashMap PG.PGCol G.Name
 
 newtype SystemDefined = SystemDefined { unSystemDefined :: Bool }
   deriving (Show, Eq, FromJSON, ToJSON, Q.ToPrepArg, NFData, Cacheable)
@@ -250,18 +364,43 @@ isSystemDefined = unSystemDefined
 successMsg :: EncJSON
 successMsg = "{\"message\":\"success\"}"
 
+newtype NonNegativeInt = NonNegativeInt { getNonNegativeInt :: Int }
+  deriving (Show, Eq, ToJSON, Generic, NFData, Cacheable, Num)
+
+mkNonNegativeInt :: Int -> Maybe NonNegativeInt
+mkNonNegativeInt x = case x >= 0 of
+  True  -> Just $ NonNegativeInt x
+  False -> Nothing
+
+unsafeNonNegativeInt :: Int -> NonNegativeInt
+unsafeNonNegativeInt = NonNegativeInt
+
+instance FromJSON NonNegativeInt where
+  parseJSON = withScientific "NonNegativeInt" $ \t -> do
+    case t >= 0 of
+      True  -> maybe (fail "integer passed is out of bounds") (pure . NonNegativeInt) $ toBoundedInteger t
+      False -> fail "negative value not allowed"
+
 newtype NonNegativeDiffTime = NonNegativeDiffTime { unNonNegativeDiffTime :: DiffTime }
-  deriving (Show, Eq,ToJSON,Generic, NFData, Cacheable)
+  deriving (Show, Eq,ToJSON,Generic, NFData, Cacheable, Num)
+
+unsafeNonNegativeDiffTime :: DiffTime -> NonNegativeDiffTime
+unsafeNonNegativeDiffTime = NonNegativeDiffTime
+
+mkNonNegativeDiffTime :: DiffTime -> Maybe NonNegativeDiffTime
+mkNonNegativeDiffTime x = case x >= 0 of
+  True  -> Just $ NonNegativeDiffTime x
+  False -> Nothing
 
 instance FromJSON NonNegativeDiffTime where
   parseJSON = withScientific "NonNegativeDiffTime" $ \t -> do
-    case (t > 0) of
-      True -> return $ NonNegativeDiffTime . realToFrac $ t
+    case t >= 0 of
+      True  -> return $ NonNegativeDiffTime . realToFrac $ t
       False -> fail "negative value not allowed"
 
 newtype ResolvedWebhook
   = ResolvedWebhook { unResolvedWebhook :: Text}
-  deriving ( Show, Eq, FromJSON, ToJSON, Hashable, DQuote, Lift)
+  deriving ( Show, Eq, FromJSON, ToJSON, Hashable, ToTxt, Lift)
 
 newtype InputWebhook
   = InputWebhook {unInputWebhook :: URLTemplate}
@@ -278,8 +417,61 @@ instance FromJSON InputWebhook where
       Left e  -> fail $ "Parsing URL template failed: " ++ e
       Right v -> pure $ InputWebhook v
 
-resolveWebhook :: (QErrM m,MonadIO m) => InputWebhook -> m ResolvedWebhook
-resolveWebhook (InputWebhook urlTemplate) = do
-  eitherRenderedTemplate <- renderURLTemplate urlTemplate
+instance Q.FromCol InputWebhook where
+  fromCol bs = do
+    urlTemplate <- parseURLTemplate <$> Q.fromCol bs
+    bimap (\e -> "Parsing URL template failed: " <> T.pack e) InputWebhook urlTemplate
+
+resolveWebhook :: QErrM m => Env.Environment -> InputWebhook -> m ResolvedWebhook
+resolveWebhook env (InputWebhook urlTemplate) = do
+  let eitherRenderedTemplate = renderURLTemplate env urlTemplate
   either (throw400 Unexpected . T.pack)
     (pure . ResolvedWebhook) eitherRenderedTemplate
+
+newtype Timeout = Timeout { unTimeout :: Int }
+  deriving (Show, Eq, ToJSON, Generic, NFData, Cacheable, Lift)
+
+instance FromJSON Timeout where
+  parseJSON = withScientific "Timeout" $ \t -> do
+    timeout <- onNothing (toBoundedInteger t) $ fail (show t <> " is out of bounds")
+    case timeout >= 0 of
+      True  -> return $ Timeout timeout
+      False -> fail "timeout value cannot be negative"
+
+instance Arbitrary Timeout where
+  arbitrary = Timeout <$> QC.choose (0, 10000000)
+
+defaultActionTimeoutSecs :: Timeout
+defaultActionTimeoutSecs = Timeout 30
+
+data UrlConf
+  = UrlValue !InputWebhook
+  | UrlFromEnv !T.Text
+  deriving (Show, Eq, Generic, Lift)
+instance NFData UrlConf
+instance Cacheable UrlConf
+
+instance ToJSON UrlConf where
+  toJSON (UrlValue w)      = toJSON w
+  toJSON (UrlFromEnv wEnv) = object ["from_env" .= wEnv ]
+
+instance FromJSON UrlConf where
+  parseJSON (Object o) = UrlFromEnv <$> o .: "from_env"
+  parseJSON t@(String _) =
+    case (fromJSON t) of
+      Error s   -> fail s
+      Success a -> pure $ UrlValue a
+  parseJSON _          = fail "one of string or object must be provided for url/webhook"
+
+resolveUrlConf
+  :: MonadError QErr m => Env.Environment -> UrlConf -> m Text
+resolveUrlConf env = \case
+  UrlValue v        -> unResolvedWebhook <$> resolveWebhook env v
+  UrlFromEnv envVar -> getEnv env envVar
+
+getEnv :: QErrM m => Env.Environment -> T.Text -> m T.Text
+getEnv env k = do
+  let mEnv = Env.lookupEnv env (T.unpack k)
+  case mEnv of
+    Nothing     -> throw400 NotFound $ "environment variable '" <> k <> "' not set"
+    Just envVal -> return (T.pack envVal)

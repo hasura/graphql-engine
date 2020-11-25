@@ -1,5 +1,5 @@
 const defaultCurFilter = {
-  where: { $and: [{ '': { '': '' } }] },
+  where: { $and: [{ '': { $eq: '' } }] },
   limit: 10,
   offset: 0,
   order_by: [{ column: '', type: 'asc', nulls: 'last' }],
@@ -117,6 +117,9 @@ const defaultModifyState = {
     colMappings: [{ column: '', refColumn: '' }],
     isToggled: false,
   },
+  remoteRelationships: {
+    remoteSchema: {},
+  },
   rootFieldsEdit: {
     select: '',
     select_by_pk: '',
@@ -135,6 +138,7 @@ const defaultModifyState = {
   lastSuccess: null,
   viewDefinition: null,
   viewDefinitionError: null,
+  viewDefSql: '',
   tableCommentEdit: { enabled: false, editedValue: null },
   alterColumnOptions: [], // Store supported implicit column -> column casts
   alterColumnOptionsFetchErr: null,

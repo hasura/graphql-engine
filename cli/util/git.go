@@ -13,14 +13,14 @@ import (
 // Default Codegen Assets constants
 const (
 	ActionsCodegenOrg     string = "hasura/codegen-assets"
-	ActionsCodegenRepoURI        = "https://github.com/hasura/codegen-assets.git"
-	ActionsCodegenDirName        = "actions-codegen-assets"
+	ActionsCodegenRepoURI string = "https://github.com/hasura/codegen-assets.git"
+	ActionsCodegenDirName string = "actions-codegen-assets"
 )
 
 // Default init-templates repo constants
 const (
 	InitTemplatesRepoURI string = "https://github.com/hasura/graphql-engine-install-manifests.git"
-	InitTemplatesDirName        = "init-templates"
+	InitTemplatesDirName string = "init-templates"
 )
 
 type GitUtil struct {
@@ -107,6 +107,7 @@ func (g *GitUtil) updateAndCleanUntracked() error {
 	}
 	err = wt.Pull(&git.PullOptions{
 		ReferenceName: g.ReferenceName,
+		Force:         true,
 	})
 	if err != nil && err != git.NoErrAlreadyUpToDate {
 		return err

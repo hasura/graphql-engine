@@ -1,16 +1,17 @@
-{-# LANGUAGE TypeApplications #-}
 module Hasura.Server.Utils where
 
 import           Hasura.Prelude
 
 import           Control.Lens               ((^..))
 import           Data.Aeson
+import           Data.Aeson.Internal
 import           Data.Char
+import           Data.Text.Extended
+import           Hasura.Server.Types
 import           Language.Haskell.TH.Syntax (Lift, Q, TExp)
 import           System.Environment
 import           System.Exit
 import           System.Process
-import           Data.Aeson.Internal
 
 import qualified Data.ByteString            as B
 import qualified Data.CaseInsensitive       as CI
@@ -20,6 +21,7 @@ import qualified Data.Text                  as T
 import qualified Data.Text.IO               as TI
 import qualified Data.UUID                  as UUID
 import qualified Data.UUID.V4               as UUID
+import qualified Data.Vector                as V
 import qualified Language.Haskell.TH.Syntax as TH
 import qualified Network.HTTP.Client        as HC
 import qualified Network.HTTP.Types         as HTTP
@@ -27,13 +29,8 @@ import qualified Network.Wreq               as Wreq
 import qualified Text.Regex.TDFA            as TDFA
 import qualified Text.Regex.TDFA.ReadRegex  as TDFA
 import qualified Text.Regex.TDFA.TDFA       as TDFA
-import qualified Data.Vector                as V
 
 import           Hasura.RQL.Instances       ()
-
-newtype RequestId
-  = RequestId { unRequestId :: Text }
-  deriving (Show, Eq, ToJSON, FromJSON)
 
 jsonHeader :: HTTP.Header
 jsonHeader = ("Content-Type", "application/json; charset=utf-8")
@@ -230,13 +227,13 @@ instance FromJSON APIVersion where
       2 -> return VIVersion2
       i -> fail $ "expected 1 or 2, encountered " ++ show i
 
-englishList :: NonEmpty Text -> Text
-englishList = \case
+englishList :: Text -> NonEmpty Text -> Text
+englishList joiner = \case
   one :| []    -> one
-  one :| [two] -> one <> " and " <> two
+  one :| [two] -> one <> " " <> joiner <> " " <> two
   several      ->
     let final :| initials = NE.reverse several
-    in T.intercalate ", " (reverse initials) <> ", and " <> final
+    in commaSeparated (reverse initials) <> ", " <> joiner <> " " <> final
 
 makeReasonMessage :: [a] -> (a -> Text) -> Text
 makeReasonMessage errors showError =

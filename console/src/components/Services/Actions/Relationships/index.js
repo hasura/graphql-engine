@@ -7,6 +7,7 @@ const mapStateToProps = state => {
     allTables: state.tables.allSchemas,
     schemaList: state.tables.schemaList,
     allTypes: state.types.types,
+    readOnlyMode: state.main.readOnlyMode,
   };
 };
 

@@ -1,8 +1,6 @@
 import React from 'react';
-// import {push} fropm 'react-router-redux';
 import { Route, IndexRedirect } from 'react-router';
 import globals from '../../../Globals';
-// import { loadAdminSecretState } from '../../AppState';
 import { SERVER_CONSOLE_MODE } from '../../../constants';
 
 import {
@@ -24,21 +22,16 @@ import {
   permissionsSummaryConnector,
   ModifyCustomFunction,
   PermissionCustomFunction,
-  // metadataConnector,
 } from '.';
 
-import { rightContainerConnector } from '../../Common/Layout';
+import { RightContainer } from '../../Common/Layout/RightContainer';
 
 import {
   fetchDataInit,
   fetchFunctionInit,
   UPDATE_CURRENT_SCHEMA,
   updateSchemaInfo,
-  // ADMIN_SECRET_ERROR,
 } from './DataActions';
-
-// import { changeRequestHeader } from '../../ApiExplorer/Actions';
-// import { validateLogin } from '../../Main/Actions';
 
 const makeDataRouter = (
   connect,
@@ -51,7 +44,7 @@ const makeDataRouter = (
   return (
     <Route path="data" component={dataPageConnector(connect)}>
       <IndexRedirect to="schema/public" />
-      <Route path="schema" component={rightContainerConnector(connect)}>
+      <Route path="schema" component={RightContainer}>
         <IndexRedirect to="public" />
         <Route path=":schema" component={schemaConnector(connect)} />
         <Route path=":schema/tables" component={schemaConnector(connect)} />
@@ -126,9 +119,6 @@ const makeDataRouter = (
         component={addExistingTableViewConnector(connect)}
       />
       <Route path="sql" component={rawSQLConnector(connect)} />
-      {/*
-      <Route path="metadata" component={metadataConnector(connect)} />
-      */}
       <Route
         path="migrations"
         onEnter={composeOnEnterHooks([consoleModeRedirects])}
@@ -176,7 +166,6 @@ const dataRouterUtils = (connect, store, composeOnEnterHooks) => {
         cb();
       },
       () => {
-        // alert('Could not load schema.');
         replaceState('/');
         cb();
       }

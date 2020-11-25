@@ -1,5 +1,9 @@
 -- | API related to server configuration
-module Hasura.Server.API.Config (runGetConfig) where
+module Hasura.Server.API.Config
+  -- required by pro
+  ( ServerConfig(..)
+  , runGetConfig
+  ) where
 
 import           Data.Aeson.Casing
 import           Data.Aeson.TH
@@ -13,8 +17,9 @@ import qualified Hasura.GraphQL.Execute.LiveQuery.Options as LQ
 
 data JWTInfo
   = JWTInfo
-  { jwtiClaimsNamespace :: !JWTConfigClaims
+  { jwtiClaimsNamespace :: !JWTNamespace
   , jwtiClaimsFormat    :: !JWTClaimsFormat
+  , jwtiClaimsMap       :: !(Maybe JWTCustomClaimsMap)
   } deriving (Show, Eq)
 
 $(deriveToJSON (aesonDrop 4 snakeCase) ''JWTInfo)
@@ -28,12 +33,13 @@ data ServerConfig
   , scfgJwt                :: !(Maybe JWTInfo)
   , scfgIsAllowListEnabled :: !Bool
   , scfgLiveQueries        :: !LQ.LiveQueriesOptions
+  , scfgConsoleAssetsDir   :: !(Maybe Text)
   } deriving (Show, Eq)
 
 $(deriveToJSON (aesonDrop 4 snakeCase) ''ServerConfig)
 
-runGetConfig :: HasVersion => AuthMode -> Bool -> LQ.LiveQueriesOptions -> ServerConfig
-runGetConfig am isAllowListEnabled liveQueryOpts = ServerConfig
+runGetConfig :: HasVersion => AuthMode -> Bool -> LQ.LiveQueriesOptions -> Maybe Text -> ServerConfig
+runGetConfig am isAllowListEnabled liveQueryOpts consoleAssetsDir = ServerConfig
     currentVersion
     (isAdminSecretSet am)
     (isAuthHookSet am)
@@ -41,6 +47,7 @@ runGetConfig am isAllowListEnabled liveQueryOpts = ServerConfig
     (getJWTInfo am)
     isAllowListEnabled
     liveQueryOpts
+    consoleAssetsDir
 
 isAdminSecretSet :: AuthMode -> Bool
 isAdminSecretSet = \case
@@ -59,8 +66,9 @@ isJWTSet = \case
 
 getJWTInfo :: AuthMode -> Maybe JWTInfo
 getJWTInfo (AMAdminSecretAndJWT _ jwtCtx _) =
-  Just $ JWTInfo claimsNs format
-  where
-    claimsNs = jcxClaimNs jwtCtx
-    format = jcxClaimsFormat jwtCtx
+  Just $ case jcxClaims jwtCtx of
+    JCNamespace namespace claimsFormat ->
+      JWTInfo namespace claimsFormat Nothing
+    JCMap claimsMap ->
+      JWTInfo (ClaimNs defaultClaimsNamespace) defaultClaimsFormat $ Just claimsMap
 getJWTInfo _ = Nothing

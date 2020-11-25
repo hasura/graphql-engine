@@ -1,6 +1,6 @@
 {-# OPTIONS_HADDOCK not-home #-}
-{-# LANGUAGE Arrows               #-}
 {-# LANGUAGE UndecidableInstances #-}
+{-# LANGUAGE CPP                  #-}
 
 -- | Defines the basic 'Rule' datatype and its core operations.
 module Hasura.Incremental.Internal.Rule where
@@ -9,7 +9,6 @@ import           Hasura.Prelude                         hiding (id, (.))
 
 import qualified Data.HashMap.Strict                    as HM
 
-import           Control.Applicative                    hiding (liftA)
 import           Control.Arrow.Extended
 import           Control.Category
 import           Data.Profunctor
@@ -86,24 +85,29 @@ Rule f `rComp` Rule g = Rule \s a k -> g s a \s' b g' -> f s' b \s'' c f' -> k s
 rId :: Rule m a a
 rId = Rule \s a k -> k s a rId
 {-# INLINABLE[0] rId #-}
+#ifndef __HLINT__
 {-# RULES
 "f/id" forall f. f `rComp` rId = f
 "id/f" forall f. rId `rComp` f = f
 #-}
+#endif
 
 rArr :: (a -> b) -> Rule m a b
 rArr f = Rule \s a k -> k s (f a) (rArr f)
 {-# INLINABLE[0] rArr #-}
+#ifndef __HLINT__
 {-# RULES
 "arr/id"        rArr (\x -> x) = rId
 "arr/const" [1] forall x. rArr (\_ -> x) = rPure x
 "arr/arr"       forall f g. rArr f `rComp` rArr g = rArr (f . g)
 "arr/arr/f"     forall f g h. (f `rComp` rArr g) `rComp` rArr h = f `rComp` rArr (g . h)
 #-}
+#endif
 
 rArrM :: (Monad m) => (a -> m b) -> Rule m a b
 rArrM f = Rule \s a k -> f a >>= \b -> k s b (rArrM f)
 {-# INLINABLE[0] rArrM #-}
+#ifndef __HLINT__
 {-# RULES
 "arrM/arrM"   forall f g. rArrM f `rComp` rArrM g = rArrM (f <=< g)
 "arr/arrM"    forall f g. rArr f `rComp` rArrM g = rArrM (fmap f . g)
@@ -112,10 +116,12 @@ rArrM f = Rule \s a k -> f a >>= \b -> k s b (rArrM f)
 "arr/arrM/f"  forall f g h. (f `rComp` rArr g) `rComp` rArrM h = f `rComp` rArrM (fmap g . h)
 "arrM/arr/f"  forall f g h. (f `rComp` rArrM g) `rComp` rArr h = f `rComp` rArrM (g . h)
 #-}
+#endif
 
 rFirst :: Rule m a b1 -> Rule m (a, b2) (b1, b2)
 rFirst (Rule r) = Rule \s (a, c) k -> r s a \s' b r' -> k s' (b, c) (rFirst r')
 {-# INLINABLE[0] rFirst #-}
+#ifndef __HLINT__
 {-# RULES
 "first/id"         rFirst rId = rId
 "first/arr"        forall f. rFirst (rArr f) = rArr (first f)
@@ -124,6 +130,7 @@ rFirst (Rule r) = Rule \s (a, c) k -> r s a \s' b r' -> k s' (b, c) (rFirst r')
 "first/pull"   [1] forall f g. rFirst f `rComp` rFirst g = rFirst (f `rComp` g)
 "first/f/pull" [1] forall f g h. (f `rComp` rFirst g) `rComp` rFirst h = f `rComp` rFirst (g `rComp` h)
 #-}
+#endif
 
 rLeft :: Rule m a b1 -> Rule m (Either a b2) (Either b1 b2)
 rLeft r0 = go r0 where
@@ -131,6 +138,7 @@ rLeft r0 = go r0 where
     Left  a -> r s a \s' b r' -> k s' (Left b) (go r')
     Right c -> k s (Right c) (go r0)
 {-# INLINABLE[0] rLeft #-}
+#ifndef __HLINT__
 {-# RULES
 "left/id"         rLeft rId = rId
 "left/arr"        forall f. rLeft (rArr f) = rArr (left f)
@@ -139,6 +147,7 @@ rLeft r0 = go r0 where
 "left/pull"   [1] forall f g. rLeft f `rComp` rLeft g = rLeft (f `rComp` g)
 "left/f/pull" [1] forall f g h. (f `rComp` rLeft g) `rComp` rLeft h = f `rComp` rLeft (g `rComp` h)
 #-}
+#endif
 
 rPure :: b -> Rule m a b
 rPure a = Rule \s _ k -> k s a (rPure a)
@@ -268,7 +277,7 @@ class (Arrow arr) => ArrowDistribute arr where
     -> arr (e, (HashMap k a, s)) (HashMap k b)
 
 instance (Monoid w, ArrowDistribute arr) => ArrowDistribute (WriterA w arr) where
-  keyed (WriterA f) = WriterA (arr (swap . sequence . fmap swap) . keyed f)
+  keyed (WriterA f) = WriterA (arr (swap . mapM swap) . keyed f)
   {-# INLINE keyed #-}
 
 -- | Unlike 'traverseA', using 'keyed' preserves incrementalization: if the input rule is

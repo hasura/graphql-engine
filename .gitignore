@@ -8,6 +8,7 @@ test-server-output
 test-server-flags-output
 .vscode
 .idea
+.now
 
 # Standardize on 'venv' as the name for python venv directories
 venv

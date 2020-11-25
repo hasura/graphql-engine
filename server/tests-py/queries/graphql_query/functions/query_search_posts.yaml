@@ -1,18 +1,38 @@
-description: Custom GraphQL query using search_posts function
-url: /v1/graphql
-status: 200
-response:
-  data:
-    search_posts:
-    - title: post by hasura
-      content: content for post
-query:
-  query: |
-    query {
-      search_posts(
-        args: {search: "hasura"}
-      ) {
-        title
-        content
+- description: Custom GraphQL query using search_posts function
+  url: /v1/graphql
+  status: 200
+  response:
+    data:
+      search_posts:
+      - title: post by hasura
+        content: content for post
+  query:
+    query: |
+      query {
+        search_posts(
+          args: {search: "hasura"}
+        ) {
+          title
+          content
+        }
       }
-    }
+
+- description: ...and make sure this didn't somehow end up under the mutation root
+  url: /v1/graphql
+  status: 200
+  response:
+    errors:
+    - extensions:
+        path: $.selectionSet.search_posts
+        code: validation-failed
+      message: "field \"search_posts\" not found in type: 'mutation_root'"
+  query:
+    query: |
+      mutation {
+        search_posts(
+          args: {search: "hasura"}
+        ) {
+          title
+          content
+        }
+      }

@@ -1,6 +1,5 @@
 import PropTypes from 'prop-types';
 import React from 'react';
-import AceEditor from 'react-ace';
 import TableHeader from '../TableCommon/TableHeader';
 import ExpandableEditor from '../../../Common/Layout/ExpandableEditor/Editor';
 import {
@@ -21,17 +20,17 @@ import {
   findTable,
   generateTableDef,
   getColumnName,
-  getTableCustomRootFields,
   getTableCustomColumnNames,
 } from '../../../Common/utils/pgUtils';
-import RootFields from './RootFields';
 import Tooltip from '../../../Common/Tooltip/Tooltip';
-import { changeViewRootFields } from '../Common/TooltipMessages';
 import styles from './ModifyTable.scss';
+import ViewDefinitions from './ViewDefinitions';
+import ComputedFields from './ComputedFields';
+import RootFields from './RootFields';
 
 const ModifyView = props => {
   const {
-    sql,
+    viewDefSql,
     tableName,
     tableType,
     allSchemas,
@@ -41,7 +40,6 @@ const ModifyView = props => {
     dispatch,
     currentSchema,
     tableCommentEdit,
-    rootFieldsEdit,
     migrationMode,
     readOnlyMode,
   } = props;
@@ -98,16 +96,10 @@ const ModifyView = props => {
     );
   }
 
-  const modifyViewDefinition = viewName => {
-    // fetch the definition
-    dispatch(fetchViewDefinition(viewName, true));
-    // redirect the user to run_sql page and set state
-  };
-
   const getViewColumnsSection = () => {
     const columns = tableSchema.columns.sort(ordinalColSort);
 
-    return columns.map((c, i) => {
+    const columnList = columns.map((c, i) => {
       const columnName = getColumnName(c);
 
       const setCustomColumnName = e => {
@@ -179,41 +171,14 @@ const ModifyView = props => {
         </div>
       );
     });
-  };
 
-  const getViewRootFieldsSection = () => {
-    const existingRootFields = getTableCustomRootFields(tableSchema);
     return (
-      <React.Fragment>
-        <h4 className={styles.subheading_text}>
-          Custom GraphQL Root Fields
-          <Tooltip message={changeViewRootFields} />
-        </h4>
-        <RootFields
-          existingRootFields={existingRootFields}
-          rootFieldsEdit={rootFieldsEdit}
-          dispatch={dispatch}
-          tableName={tableName}
-        />
-        <hr />
-      </React.Fragment>
+      <>
+        <h4 className={styles.subheading_text}>Columns</h4>
+        {columnList}
+      </>
     );
   };
-
-  const modifyViewOnClick = () => {
-    modifyViewDefinition(tableName);
-  };
-  const modifyBtn = (
-    <Button
-      type="submit"
-      size="xs"
-      className={styles.add_mar_right}
-      onClick={modifyViewOnClick}
-      data-test="modify-view"
-    >
-      Modify
-    </Button>
-  );
 
   const untrackOnclick = () => {
     const confirmMessage = `This will remove the view "${tableName}" from the GraphQL schema`;
@@ -273,26 +238,14 @@ const ModifyView = props => {
             tableType={tableType}
             dispatch={dispatch}
           />
-          <h4 className={styles.subheading_text}>Columns</h4>
-          {getViewColumnsSection()}
-          <br />
-          <h4 className={styles.subheading_text}>
-            View Definition:
-            <span className={styles.add_mar_left}>{modifyBtn}</span>
-          </h4>
-          <AceEditor
-            mode="sql"
-            theme="github"
-            value={sql}
-            name="raw_sql"
-            minLines={8}
-            maxLines={100}
-            width="100%"
-            showPrintMargin={false}
-            readOnly
-          />
+          <ViewDefinitions dispatch={dispatch} sql={viewDefSql} />
           <hr />
-          {getViewRootFieldsSection()}
+          {getViewColumnsSection()}
+          <hr />
+          <ComputedFields tableSchema={tableSchema} />
+          <hr />
+          <RootFields tableSchema={tableSchema} />
+          <hr />
           {untrackBtn}
           {deleteBtn}
           <br />
@@ -342,7 +295,6 @@ const mapStateToProps = (state, ownProps) => {
     tableType,
     currentSchema: schemaName,
     allSchemas: state.tables.allSchemas,
-    sql: state.rawSQL.sql,
     migrationMode: state.main.migrationMode,
     readOnlyMode: state.main.readOnlyMode,
     serverVersion: state.main.serverVersion,

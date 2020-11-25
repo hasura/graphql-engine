@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"os"
 
 	gyaml "github.com/ghodss/yaml"
 	"github.com/hasura/graphql-engine/cli/metadata/types"
@@ -151,6 +152,10 @@ func (h *HasuraDB) BuildMetadata() (yaml.MapSlice, error) {
 	for _, plg := range h.config.Plugins {
 		err := plg.Build(&tmpMeta)
 		if err != nil {
+			if os.IsNotExist(errors.Cause(err)) {
+				h.logger.Debugf("metadata file for %s was not found, assuming an empty file", plg.Name())
+				continue
+			}
 			return tmpMeta, errors.Wrap(err, fmt.Sprintf("cannot build %s from metadata", plg.Name()))
 		}
 	}
@@ -175,18 +180,9 @@ func (h *HasuraDB) ApplyMetadata() error {
 	if err != nil {
 		return err
 	}
-	query := HasuraInterfaceBulk{
-		Type: "bulk",
-		Args: []interface{}{
-			HasuraInterfaceQuery{
-				Type: "clear_metadata",
-				Args: HasuraArgs{},
-			},
-			HasuraInterfaceQuery{
-				Type: "replace_metadata",
-				Args: obj,
-			},
-		},
+	query := HasuraInterfaceQuery{
+		Type: "replace_metadata",
+		Args: obj,
 	}
 	resp, body, err := h.sendv1Query(query)
 	if err != nil {
@@ -214,7 +210,7 @@ func (h *HasuraDB) ApplyMetadata() error {
 					if err != nil {
 						return err
 					}
-					herror.migrationQuery = "offending object: \n\r\n\r" + string(queryData)
+					h.logger.Debugf("offending object: \n\r\n\r" + string(queryData))
 				}
 			}
 			return herror
