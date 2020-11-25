@@ -6,8 +6,6 @@ module Hasura.RQL.Types.Common
        , relTypeToTxt
        , RelInfo(..)
 
-       , ScalarType
-       , SQLExp
        , Backend (..)
 
        , FieldName(..)
@@ -90,15 +88,7 @@ import           Hasura.RQL.Types.Error
 import           Hasura.SQL.Backend
 
 
-type family ScalarType (b :: BackendType) where
-  ScalarType 'Postgres = PG.PGScalarType
-
-type family ColumnType (b :: BackendType) where
-  ColumnType 'Postgres = PG.PGType
-
-type family SQLExp (b :: BackendType) where
-  SQLExp 'Postgres = PG.SQLExp
-
+type Representable a = (Show a, Eq a, Hashable a, Cacheable a, NFData a)
 
 -- | Mapping from abstract types to concrete backend representation
 --
@@ -111,43 +101,76 @@ type family SQLExp (b :: BackendType) where
 -- dedicated type families allows to explicitly list all typeclass requirements,
 -- which simplifies the instance declarations of all IR types.
 class
-  ( Show (TableName b)
-  , Show (ConstraintName b)
-  , Show (Column b)
-  , Show (BasicOrderType b)
-  , Show (NullsOrderType b)
-  , Eq (TableName b)
-  , Eq (ConstraintName b)
-  , Eq (Column b)
-  , Eq (BasicOrderType b)
-  , Eq (NullsOrderType b)
+  ( Representable (Identifier b)
+  , Representable (TableName b)
+  , Representable (FunctionName b)
+  , Representable (ConstraintName b)
+  , Representable (BasicOrderType b)
+  , Representable (NullsOrderType b)
+  , Representable (Column b)
+  , Representable (ScalarType b)
+  , Representable (SQLExpression b)
+  , Representable (SQLOperator b)
+  , Representable (XAILIKE b)
+  , Representable (XANILIKE b)
+  , Ord (TableName b)
+  , Ord (ScalarType b)
   , Lift (TableName b)
   , Lift (BasicOrderType b)
   , Lift (NullsOrderType b)
-  , Cacheable (TableName b)
   , Data (TableName b)
-  , Hashable (BasicOrderType b)
-  , Hashable (NullsOrderType b)
-  , Hashable (TableName b)
-  , NFData (TableName b)
+  , Data (ScalarType b)
+  , Data (SQLExpression b)
+  , FromJSON (TableName b)
+  , FromJSON (ScalarType b)
   , FromJSON (BasicOrderType b)
   , FromJSON (NullsOrderType b)
+  , FromJSON (Column b)
+  , ToJSON (TableName b)
+  , ToJSON (ScalarType b)
   , ToJSON (BasicOrderType b)
   , ToJSON (NullsOrderType b)
+  , ToJSON (Column b)
+  , FromJSONKey (Column b)
+  , ToJSONKey (Column b)
+  , ToTxt (TableName b)
+  , ToTxt (ScalarType b)
   , Typeable b
   ) => Backend (b :: BackendType) where
+  type Identifier     b :: Type
+  type Alias          b :: Type
   type TableName      b :: Type
+  type FunctionName   b :: Type
   type ConstraintName b :: Type
   type BasicOrderType b :: Type
   type NullsOrderType b :: Type
+  type CountType      b :: Type
   type Column         b :: Type
+  type ScalarType     b :: Type
+  type SQLExpression  b :: Type
+  type SQLOperator    b :: Type
+  type XAILIKE        b :: Type
+  type XANILIKE       b :: Type
 
 instance Backend 'Postgres where
+  type Identifier     'Postgres = PG.Identifier
+  type Alias          'Postgres = PG.Alias
   type TableName      'Postgres = PG.QualifiedTable
+  type FunctionName   'Postgres = PG.QualifiedFunction
   type ConstraintName 'Postgres = PG.ConstraintName
   type BasicOrderType 'Postgres = PG.OrderType
   type NullsOrderType 'Postgres = PG.NullsOrder
+  type CountType      'Postgres = PG.CountType
   type Column         'Postgres = PG.PGCol
+  type ScalarType     'Postgres = PG.PGScalarType
+  type SQLExpression  'Postgres = PG.SQLExp
+  type SQLOperator    'Postgres = PG.SQLOp
+  type XAILIKE        'Postgres = ()
+  type XANILIKE       'Postgres = ()
+
+-- instance Backend 'Mysql where
+--   type XAILIKE 'MySQL = Void
+--   type XANILIKE 'MySQL = Void
 
 
 adminText :: NonEmptyText
@@ -198,19 +221,28 @@ instance Q.FromCol RelType where
     "array"  -> Just ArrRel
     _        -> Nothing
 
-data RelInfo
+-- should this be parameterized by both the source and the destination backend?
+data RelInfo (b :: BackendType)
   = RelInfo
   { riName       :: !RelName
   , riType       :: !RelType
-  , riMapping    :: !(HashMap PG.PGCol PG.PGCol)
-  , riRTable     :: !PG.QualifiedTable
+  , riMapping    :: !(HashMap (Column b) (Column b))
+  , riRTable     :: !(TableName b)
   , riIsManual   :: !Bool
   , riIsNullable :: !Bool
-  } deriving (Show, Eq, Generic)
-instance NFData RelInfo
-instance Cacheable RelInfo
-instance Hashable RelInfo
-$(deriveToJSON (aesonDrop 2 snakeCase) ''RelInfo)
+  } deriving (Generic)
+deriving instance Backend b => Show (RelInfo b)
+deriving instance Backend b => Eq   (RelInfo b)
+instance Backend b => NFData (RelInfo b)
+instance Backend b => Cacheable (RelInfo b)
+instance Backend b => Hashable (RelInfo b)
+
+instance (Backend b) => FromJSON (RelInfo b) where
+  parseJSON = genericParseJSON $ aesonPrefix snakeCase
+
+instance (Backend b) => ToJSON (RelInfo b) where
+  toJSON = genericToJSON $ aesonPrefix snakeCase
+
 
 newtype FieldName
   = FieldName { getFieldNameTxt :: Text }

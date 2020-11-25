@@ -33,6 +33,7 @@ import           Hasura.GraphQL.Parser.Internal.Parser
 import           Hasura.GraphQL.Parser.Schema
 import           Hasura.RQL.Types.Column               hiding (EnumValue (..), EnumValueInfo (..))
 import           Hasura.RQL.Types.Error
+import           Hasura.SQL.Backend
 import           Hasura.SQL.Types
 import           Hasura.Session                        (SessionVariable)
 
@@ -62,7 +63,7 @@ data UnpreparedValue
   | UVSessionVar (PGType PGScalarType) SessionVariable
 
 data PGColumnValue = PGColumnValue
-  { pcvType  :: PGColumnType
+  { pcvType  :: ColumnType 'Postgres
   , pcvValue :: WithScalarType PGScalarValue
   }
 
@@ -73,7 +74,7 @@ mkParameter (Opaque variable value) = UVParameter value variable
 
 column
   :: (MonadSchema n m, MonadError QErr m)
-  => PGColumnType
+  => ColumnType 'Postgres
   -> Nullability
   -> m (Parser 'Both n (Opaque PGColumnValue))
 column columnType (Nullability isNullable) =
@@ -81,7 +82,7 @@ column columnType (Nullability isNullable) =
   -- recursive simply for performance reasons, since it’s likely to be hammered
   -- during schema generation. Need to profile to see whether or not it’s a win.
   opaque . fmap (PGColumnValue columnType) <$> case columnType of
-    PGColumnScalar scalarType -> withScalarType scalarType <$> case scalarType of
+    ColumnScalar scalarType -> withScalarType scalarType <$> case scalarType of
       PGInteger -> pure (PGValInteger <$> int)
       PGBoolean -> pure (PGValBoolean <$> boolean)
       PGFloat   -> pure (PGValDouble  <$> float)
@@ -104,7 +105,7 @@ column columnType (Nullability isNullable) =
               valueToJSON (toGraphQLType schemaType) >=>
               either (parseErrorWith ParseFailed . qeError) pure . runAesonParser (parsePGValue scalarType)
           }
-    PGColumnEnumReference (EnumReference tableName enumValues) ->
+    ColumnEnumReference (EnumReference tableName enumValues) ->
       case nonEmpty (M.toList enumValues) of
         Just enumValuesList -> do
           name <- qualifiedObjectToName tableName <&> (<> $$(litName "_enum"))

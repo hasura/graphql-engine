@@ -23,7 +23,7 @@ data AnnUpdG (b :: BackendType) v
   , uqp1AllCols :: ![ColumnInfo b]
   }
 
-type AnnUpd b = AnnUpdG b (SQLExp b)
+type AnnUpd b = AnnUpdG b (SQLExpression b)
 
 data UpdOpExpG v = UpdSet !v
                  | UpdInc !v

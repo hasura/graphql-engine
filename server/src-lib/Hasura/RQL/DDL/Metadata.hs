@@ -129,7 +129,7 @@ saveMetadata (Metadata tables functions
     indexedForM_ collections $ \c -> liftTx $ Collection.addCollectionToCatalog c systemDefined
 
   -- allow list
-  withPathK "allowlist" $ do
+  withPathK "allowlist" $
     indexedForM_ allowlist $ \(Collection.CollectionReq name) ->
       liftTx $ Collection.addCollectionToAllowlistCatalog name
 
@@ -143,7 +143,7 @@ saveMetadata (Metadata tables functions
 
   -- cron triggers
   withPathK "cron_triggers" $
-    indexedForM_ cronTriggers $ \ct -> liftTx $ do
+    indexedForM_ cronTriggers $ \ct -> liftTx $
     addCronTriggerToCatalog ct
 
   -- actions

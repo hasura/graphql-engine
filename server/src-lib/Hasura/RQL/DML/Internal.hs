@@ -77,15 +77,13 @@ askPermInfo
   -> TableInfo 'Postgres
   -> m c
 askPermInfo pa tableInfo = do
-  roleName <- askCurRole
+  roleName  <- askCurRole
   mPermInfo <- askPermInfo' pa tableInfo
-  case mPermInfo of
-    Just c  -> return c
-    Nothing -> throw400 PermissionDenied $ mconcat
-      [ pt <> " on " <>> _tciName (_tiCoreInfo tableInfo)
-      , " for role " <>> roleName
-      , " is not allowed. "
-      ]
+  onNothing mPermInfo $ throw400 PermissionDenied $ mconcat
+    [ pt <> " on " <>> _tciName (_tiCoreInfo tableInfo)
+    , " for role " <>> roleName
+    , " is not allowed. "
+    ]
   where
     pt = permTypeToCode $ permAccToType pa
 
@@ -143,7 +141,7 @@ checkPermOnCol pt allowedCols pgCol = do
         , permTypeToCode pt <> " column " <>> pgCol
         ]
 
-binRHSBuilder :: (QErrM m) => PGColumnType -> Value -> DMLP1T m S.SQLExp
+binRHSBuilder :: (QErrM m) => ColumnType 'Postgres -> Value -> DMLP1T m S.SQLExp
 binRHSBuilder colType val = do
   preparedArgs <- get
   scalarValue <- parsePGScalarValue colType val
@@ -158,7 +156,7 @@ fetchRelTabInfo refTabName =
   -- Internal error
   modifyErrAndSet500 ("foreign " <> ) $ askTabInfo refTabName
 
-type SessVarBldr b m = PGType (ScalarType b) -> SessionVariable -> m (SQLExp b)
+type SessVarBldr b m = PGType (ScalarType b) -> SessionVariable -> m (SQLExpression b)
 
 fetchRelDet
   :: (UserInfoM m, QErrM m, CacheRM m)
@@ -211,7 +209,7 @@ convPartialSQLExp
   :: (Applicative f)
   => SessVarBldr backend f
   -> PartialSQLExp backend
-  -> f (SQLExp backend)
+  -> f (SQLExpression backend)
 convPartialSQLExp f = \case
   PSESQLExp sqlExp                 -> pure sqlExp
   PSESessVar colTy sessionVariable -> f colTy sessionVariable
@@ -249,7 +247,7 @@ convBoolExp
   -> SelPermInfo 'Postgres
   -> BoolExp 'Postgres
   -> SessVarBldr 'Postgres m
-  -> (PGColumnType -> Value -> m S.SQLExp)
+  -> (ColumnType 'Postgres -> Value -> m S.SQLExp)
   -> m (AnnBoolExpSQL 'Postgres)
 convBoolExp cim spi be sessVarBldr prepValBldr = do
   abe <- annBoolExp rhsParser cim $ unBoolExp be
@@ -274,7 +272,7 @@ dmlTxErrorHandler = mkTxErrorHandler $ \case
     , PGInvalidColumnReference ]
   _ -> False
 
-toJSONableExp :: Bool -> PGColumnType -> Bool -> S.SQLExp -> S.SQLExp
+toJSONableExp :: Bool -> ColumnType 'Postgres -> Bool -> S.SQLExp -> S.SQLExp
 toJSONableExp strfyNum colTy asText expn
   | asText || (isScalarColumnWhere isBigNum colTy && strfyNum) =
     expn `S.SETyAnn` S.textTypeAnn

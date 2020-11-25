@@ -481,7 +481,7 @@ buildTableCache = Inc.cache proc (catalogTables, reloadMetadataInvalidationKey) 
     -- known enum tables.
     processColumnInfo
       :: (QErrM n)
-      => Map.HashMap PGCol (NonEmpty EnumReference)
+      => Map.HashMap PGCol (NonEmpty (EnumReference 'Postgres))
       -> QualifiedTable -- ^ the table this column belongs to
       -> (RawColumnInfo 'Postgres, G.Name)
       -> n (ColumnInfo 'Postgres)
@@ -500,9 +500,9 @@ buildTableCache = Inc.cache proc (catalogTables, reloadMetadataInvalidationKey) 
         resolveColumnType =
           case Map.lookup pgCol tableEnumReferences of
             -- no references? not an enum
-            Nothing -> pure $ PGColumnScalar (prciType rawInfo)
+            Nothing -> pure $ ColumnScalar (prciType rawInfo)
             -- one reference? is an enum
-            Just (enumReference:|[]) -> pure $ PGColumnEnumReference enumReference
+            Just (enumReference:|[]) -> pure $ ColumnEnumReference enumReference
             -- multiple referenced enums? the schema is strange, so let’s reject it
             Just enumReferences -> throw400 ConstraintViolation
               $ "column " <> prciName rawInfo <<> " in table " <> tableName
