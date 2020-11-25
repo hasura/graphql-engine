@@ -393,26 +393,6 @@ const toPayload = {
                 description: null,
               },
               {
-                name: '_niregex',
-                defaultValue: null,
-                type: {
-                  kind: 'SCALAR',
-                  name: 'String',
-                  ofType: null,
-                },
-                description: null,
-              },
-              {
-                name: '_iregex',
-                defaultValue: null,
-                type: {
-                  kind: 'SCALAR',
-                  name: 'String',
-                  ofType: null,
-                },
-                description: null,
-              },
-              {
                 name: '_nregex',
                 defaultValue: null,
                 type: {
@@ -424,6 +404,26 @@ const toPayload = {
               },
               {
                 name: '_regex',
+                defaultValue: null,
+                type: {
+                  kind: 'SCALAR',
+                  name: 'String',
+                  ofType: null,
+                },
+                description: null,
+              },
+              {
+                name: '_niregex',
+                defaultValue: null,
+                type: {
+                  kind: 'SCALAR',
+                  name: 'String',
+                  ofType: null,
+                },
+                description: null,
+              },
+              {
+                name: '_iregex',
                 defaultValue: null,
                 type: {
                   kind: 'SCALAR',
