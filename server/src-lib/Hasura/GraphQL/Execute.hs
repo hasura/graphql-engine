@@ -28,8 +28,8 @@ import qualified Data.Environment                       as Env
 import qualified Data.HashMap.Strict                    as Map
 
 import qualified Data.HashSet                           as HS
-import qualified Language.GraphQL.Draft.Syntax          as G
 import qualified Language.GraphQL.Draft.Printer         as G
+import qualified Language.GraphQL.Draft.Syntax          as G
 import qualified Network.HTTP.Client                    as HTTP
 import qualified Network.HTTP.Types                     as HTTP
 import qualified Network.Wai.Extended                   as Wai
@@ -42,7 +42,7 @@ import           Hasura.GraphQL.Transport.HTTP.Protocol
 import           Hasura.GraphQL.Utils                   (showName)
 import           Hasura.HTTP
 import           Hasura.RQL.Types
-import           Hasura.Server.Utils                    (RequestId)
+import           Hasura.Server.Types                    (RequestId)
 import           Hasura.Server.Version                  (HasVersion)
 import           Hasura.Session
 

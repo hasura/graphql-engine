@@ -34,13 +34,13 @@ main = do
   tryExit $ do
     args <- parseArgs
     env  <- Env.getEnvironment
-    unAppM (runApp env args)
+    runApp env args
   where
     tryExit io = try io >>= \case
       Left (ExitException _code msg) -> BC.putStrLn msg >> Sys.exitFailure
       Right r -> return r
 
-runApp :: Env.Environment -> HGEOptions Hasura -> AppM ()
+runApp :: Env.Environment -> HGEOptions Hasura -> IO ()
 runApp env (HGEOptionsG rci hgeCmd) = do
   initTime <- liftIO getCurrentTime
   globalCtx@GlobalCtx{..} <- initGlobalCtx rci
@@ -69,7 +69,8 @@ runApp env (HGEOptionsG rci hgeCmd) = do
         Signals.sigTERM
         (Signals.CatchOnce (shutdownGracefully $ _scShutdownLatch serveCtx))
         Nothing
-      runHGEServer env serveOptions serveCtx Nothing initTime shutdownApp Nothing ekgStore
+      flip runPGMetadataStorageApp (_scPgPool serveCtx) $
+        runHGEServer env serveOptions serveCtx Nothing initTime shutdownApp Nothing ekgStore
 
     HCExport -> do
       res <- runTxWithMinimalPool _gcConnInfo fetchMetadataFromHdbTables
