@@ -30,19 +30,19 @@ export const allOperators: OperatorDef[] = [
   },
   { name: 'similar', operator: '$similar', alias: '_similar' },
   { name: 'not similar', operator: '$nsimilar', alias: '_nsimilar' },
-  { name: 'posix (case-sensitive)', operator: '$regex', alias: '_regex' },
+  { name: '~', operator: '$regex', alias: '_regex' },
   {
-    name: 'posix (case-insensitive)',
+    name: '~*',
     operator: '$iregex',
     alias: '_iregex',
   },
   {
-    name: 'not posix (case-sensitive)',
+    name: '!~',
     operator: '$nregex',
     alias: '_nregex',
   },
   {
-    name: 'not posix (case-insensitive)',
+    name: '!~*',
     operator: '$niregex',
     alias: '_niregex',
   },
