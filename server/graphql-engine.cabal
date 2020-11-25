@@ -104,6 +104,7 @@ library
   hs-source-dirs:      src-lib
   build-depends:       base
                      , bifunctors
+                     , safe-exceptions
                      , witherable
                      , vector-instances
                      , validation
