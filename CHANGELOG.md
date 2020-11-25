@@ -26,6 +26,7 @@ arguments.
 (Add entries here in the order of: server, console, cli, docs, others)
 
 - server: in a remote relationship query, do not query the remote server and return null for the corresponding result if a joining argument is null (See Breaking changes for more info) (fixes #5448)
+- server: support joining Int or String scalar types to ID scalar type in remote relationship
 
 ## v1.3.3
 

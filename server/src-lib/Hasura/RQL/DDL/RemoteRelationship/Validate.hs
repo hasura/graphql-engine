@@ -37,8 +37,8 @@ data ValidationError
   | InvalidGTypeForStripping !G.GType
   | UnsupportedMultipleElementLists
   | UnsupportedEnum
-  | InvalidGraphQLName !T.Text
-  deriving (Show, Eq)
+  | InvalidGraphQLName !Text
+  | IDTypeJoin !G.Name
 
 errorToText :: ValidationError -> Text
 errorToText = \case
@@ -74,6 +74,8 @@ errorToText = \case
     "enum value is not supported"
   InvalidGraphQLName t ->
     t <<> " is not a valid GraphQL identifier"
+  IDTypeJoin typeName ->
+    "Only ID, Int, uuid or String scalar types can be joined to the ID type, but recieved " <>> typeName
 
 -- | Validate a remote relationship given a context.
 validateRemoteRelationship
@@ -281,10 +283,10 @@ renameNamedType rename =
   G.unsafeMkName . rename . G.unName
 
 -- | Convert a field name to a variable name.
-pgColumnToVariable :: (MonadError ValidationError m) => PGCol -> m G.Name
+pgColumnToVariable :: MonadError ValidationError m => PGCol -> m G.Name
 pgColumnToVariable pgCol =
   let pgColText = getPGColTxt pgCol
-  in maybe (throwError $ InvalidGraphQLName pgColText) pure $ G.mkName pgColText
+  in onNothing (G.mkName pgColText) (throwError $ InvalidGraphQLName pgColText)
 
 -- | Lookup the field in the schema.
 lookupField
@@ -342,17 +344,17 @@ validateType permittedVariables value expectedGType schemaDocument =
           namedType <- columnInfoToNamedType fieldInfo
           isTypeCoercible (mkGraphQLType namedType) expectedGType
     G.VInt {} -> do
-      intScalarGType <- (mkGraphQLType <$> mkScalarTy PGInteger)
+      intScalarGType <- mkGraphQLType <$> getPGScalarTypeName PGInteger
       isTypeCoercible intScalarGType expectedGType
     G.VFloat {} -> do
-      floatScalarGType <- (mkGraphQLType <$> mkScalarTy PGFloat)
+      floatScalarGType <- mkGraphQLType <$> getPGScalarTypeName PGFloat
       isTypeCoercible floatScalarGType expectedGType
     G.VBoolean {} -> do
-      boolScalarGType <- (mkGraphQLType <$> mkScalarTy PGBoolean)
+      boolScalarGType <- mkGraphQLType <$> getPGScalarTypeName PGBoolean
       isTypeCoercible boolScalarGType expectedGType
     G.VNull -> throwError NullNotAllowedHere
     G.VString {} -> do
-      stringScalarGType <- (mkGraphQLType <$> mkScalarTy PGText)
+      stringScalarGType <- mkGraphQLType <$> getPGScalarTypeName PGText
       isTypeCoercible stringScalarGType expectedGType
     G.VEnum _ -> throwError UnsupportedEnum
     G.VList values -> do
@@ -391,12 +393,6 @@ validateType permittedVariables value expectedGType schemaDocument =
     mkGraphQLType =
       G.TypeNamed (G.Nullability False)
 
-    mkScalarTy scalarType = do
-      eitherScalar <- runExceptT $ mkScalarTypeName scalarType
-      case eitherScalar of
-        Left _  -> throwError $ InvalidGraphQLName $ toSQLTxt scalarType
-        Right s -> pure s
-
 isTypeCoercible
   :: MonadError ValidationError m
   => G.GType
@@ -411,13 +407,27 @@ isTypeCoercible actualType expectedType =
   let (actualBaseType, actualNestingLevel) = getBaseTyWithNestedLevelsCount actualType
       (expectedBaseType, expectedNestingLevel) = getBaseTyWithNestedLevelsCount expectedType
   in
-  if | actualBaseType /= expectedBaseType -> raiseValidationError
+  if | expectedBaseType == $$(G.litName "ID") ->
+         bool (throwError $ IDTypeJoin actualBaseType)
+              (pure ())
+              -- Check under `Input Coercion` https://spec.graphql.org/June2018/#sec-ID
+              -- We can also include the `ID` type in the below list but it will be
+              -- extraneous because at the time of writing this, we don't generate
+              -- the `ID` type in the DB schema
+              (G.unName actualBaseType `elem`
+               ["ID", "Int", "String", "bigint", "smallint" , "uuid"])
+     | actualBaseType /= expectedBaseType -> raiseValidationError
        -- we cannot coerce two types with different nesting levels,
        -- for example, we cannot coerce [Int] to [[Int]]
      | (actualNestingLevel == expectedNestingLevel || actualNestingLevel == 0) -> pure ()
      | otherwise -> raiseValidationError
      where
        raiseValidationError = throwError $ ExpectedTypeButGot expectedType actualType
+
+getPGScalarTypeName :: MonadError ValidationError m => PGScalarType -> m G.Name
+getPGScalarTypeName scalarType =
+  runExceptT (mkScalarTypeName scalarType) >>=
+    flip onLeft (\ _ -> throwError $ InvalidGraphQLName $ toSQLTxt scalarType)
 
 assertListType :: (MonadError ValidationError m) => G.GType -> m ()
 assertListType actualType =
@@ -431,9 +441,5 @@ columnInfoToNamedType
   -> m G.Name
 columnInfoToNamedType pci =
   case pgiType pci of
-    PGColumnScalar scalarType -> do
-      eitherScalar <- runExceptT $ mkScalarTypeName scalarType
-      case eitherScalar of
-        Left _ -> throwError $ InvalidGraphQLName $ toSQLTxt scalarType
-        Right s -> pure s
+    PGColumnScalar scalarType -> getPGScalarTypeName scalarType
     _                         -> throwError UnsupportedEnum
