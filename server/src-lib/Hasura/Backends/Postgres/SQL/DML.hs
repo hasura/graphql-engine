@@ -219,6 +219,9 @@ instance ToSQL Qual where
 mkQIdentifier :: (IsIdentifier a, IsIdentifier b) => a -> b -> QIdentifier
 mkQIdentifier q t = QIdentifier (QualifiedIdentifier (toIdentifier q) Nothing) (toIdentifier t)
 
+mkQIdentifierTable :: (IsIdentifier a) => QualifiedTable -> a -> QIdentifier
+mkQIdentifierTable q = QIdentifier (mkQual q) . toIdentifier
+
 data QIdentifier
   = QIdentifier !Qual !Identifier
   deriving (Show, Eq, Generic, Data)

@@ -13,7 +13,7 @@ import qualified Data.HashMap.Strict                as Map
 
 renameRelP2
   :: (QErrM m, MonadTx m, CacheRM m)
-  => QualifiedTable -> RelName -> RelInfo -> m ()
+  => QualifiedTable -> RelName -> (RelInfo 'Postgres) -> m ()
 renameRelP2 qt newRN relInfo = withNewInconsistentObjsCheck $ do
   tabInfo <- askTableCoreInfo qt
   -- check for conflicts in fieldInfoMap

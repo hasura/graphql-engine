@@ -12,8 +12,8 @@ import           Hasura.Backends.Postgres.SQL.Types
 import           Hasura.Backends.Postgres.Translate.BoolExp
 import           Hasura.Backends.Postgres.Translate.Insert
 import           Hasura.Backends.Postgres.Translate.Returning
-import           Hasura.RQL.Instances                         ()
 import           Hasura.RQL.IR.Update
+import           Hasura.RQL.Instances                         ()
 import           Hasura.RQL.Types
 
 
@@ -51,5 +51,5 @@ expandOperator infos (column, op) = S.SetExpItem $ (column,) $ case op of
     asArray a  = S.SETyAnn (S.SEArray a) S.textArrTypeAnn
     asNum  e   = S.SETyAnn e $
       case find (\info -> pgiColumn info == column) infos <&> pgiType of
-        Just (PGColumnScalar s) -> S.mkTypeAnn $ PGTypeScalar s
-        _                       -> S.numericTypeAnn
+        Just (ColumnScalar s) -> S.mkTypeAnn $ PGTypeScalar s
+        _                     -> S.numericTypeAnn

@@ -46,7 +46,7 @@ import           Hasura.RQL.DML.Internal
 import           Hasura.RQL.IR.RemoteJoin
 import           Hasura.RQL.IR.Returning
 import           Hasura.RQL.IR.Select
-import           Hasura.RQL.Types
+import           Hasura.RQL.Types                       hiding (Alias)
 import           Hasura.Server.Version                  (HasVersion)
 import           Hasura.Session
 
@@ -128,7 +128,7 @@ parseGraphQLName txt = onNothing (G.mkName txt) (throw400 RemoteSchemaError $ er
 
 -- | Generate the alias for remote field.
 pathToAlias :: (MonadError QErr m) => FieldPath -> Counter -> m Alias
-pathToAlias path counter = do
+pathToAlias path counter =
   parseGraphQLName $ T.intercalate "_" (map getFieldNameTxt $ unFieldPath path)
                  <> "__" <> (T.pack . show . unCounter) counter
 
@@ -646,8 +646,8 @@ substituteVariables values = traverse go
   where
     go = \case
       G.VVariable variableName ->
-        onNothing (Map.lookup variableName values) $
-          Failure ["Value for variable " <> variableName <<> " not provided"]
+        Map.lookup variableName values
+        `onNothing` Failure ["Value for variable " <> variableName <<> " not provided"]
       G.VList listValue ->
         fmap G.VList (traverse go listValue)
       G.VObject objectValue ->

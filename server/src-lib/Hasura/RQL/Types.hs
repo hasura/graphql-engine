@@ -54,7 +54,7 @@ import           Hasura.Backends.Postgres.SQL.Types
 import           Hasura.RQL.IR.BoolExp               as R
 import           Hasura.RQL.Types.Action             as R
 import           Hasura.RQL.Types.Column             as R
-import           Hasura.RQL.Types.Common             as R
+import           Hasura.RQL.Types.Common             as R hiding (FunctionName)
 import           Hasura.RQL.Types.ComputedField      as R
 import           Hasura.RQL.Types.CustomTypes        as R
 import           Hasura.RQL.Types.Error              as R
@@ -70,8 +70,8 @@ import           Hasura.RQL.Types.ScheduledTrigger   as R
 import           Hasura.RQL.Types.SchemaCache        as R
 import           Hasura.RQL.Types.SchemaCache.Build  as R
 import           Hasura.RQL.Types.Table              as R
-import           Hasura.Session
 import           Hasura.SQL.Backend                  as R
+import           Hasura.Session
 import           Hasura.Tracing                      (TraceT)
 
 data QCtx
@@ -241,7 +241,7 @@ askPGType
   => FieldInfoMap (FieldInfo 'Postgres)
   -> PGCol
   -> Text
-  -> m PGColumnType
+  -> m (ColumnType 'Postgres)
 askPGType m c msg =
   pgiType <$> askPGColInfo m c msg
 
@@ -300,7 +300,7 @@ askRelType :: (MonadError QErr m)
            => FieldInfoMap (FieldInfo backend)
            -> RelName
            -> Text
-           -> m RelInfo
+           -> m (RelInfo backend)
 askRelType m r msg = do
   colInfo <- modifyErr ("relationship " <>) $
              askFieldInfo m (fromRel r)
@@ -318,7 +318,7 @@ askFieldInfo :: (MonadError QErr m)
              -> FieldName
              -> m fieldInfo
 askFieldInfo m f =
-  onNothing (M.lookup f m) (throw400 NotExists $ mconcat [f <<> " does not exist"])
+  M.lookup f m `onNothing` throw400 NotExists (f <<> " does not exist")
 
 askRemoteRel :: (MonadError QErr m)
            => FieldInfoMap (FieldInfo backend)

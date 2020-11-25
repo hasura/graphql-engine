@@ -167,7 +167,7 @@ emptyCustomRootFields =
 
 data FieldInfo (b :: BackendType)
   = FIColumn !(ColumnInfo b)
-  | FIRelationship !RelInfo
+  | FIRelationship !(RelInfo b)
   | FIComputedField !(ComputedFieldInfo b)
   | FIRemoteRelationship !(RemoteFieldInfo b)
   deriving (Generic)
@@ -217,7 +217,7 @@ getCols = mapMaybe (^? _FIColumn) . M.elems
 sortCols :: [ColumnInfo backend] -> [ColumnInfo backend]
 sortCols = sortBy (\l r -> compare (pgiPosition l) (pgiPosition r))
 
-getRels :: FieldInfoMap (FieldInfo backend) -> [RelInfo]
+getRels :: FieldInfoMap (FieldInfo backend) -> [RelInfo backend]
 getRels = mapMaybe (^? _FIRelationship) . M.elems
 
 getComputedFieldInfos :: FieldInfoMap (FieldInfo backend) -> [ComputedFieldInfo backend]

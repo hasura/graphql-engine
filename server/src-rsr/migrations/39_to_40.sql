@@ -37,17 +37,17 @@ WITH valid_event_triggers AS (
 )
 SELECT routine_name FROM information_schema.routines
 WHERE routine_type='FUNCTION' AND specific_schema='hdb_views' AND routine_name NOT IN (
-  SELECT 'notify_hasura_' || name || '_INSERT' FROM valid_event_triggers
+  SELECT left('notify_hasura_' || name || '_INSERT', 63) FROM valid_event_triggers -- trigger names are truncated to 63 chars
   UNION
-  SELECT 'notify_hasura_' || name || '_UPDATE' FROM valid_event_triggers
+  SELECT left('notify_hasura_' || name || '_UPDATE', 63) FROM valid_event_triggers
   UNION
-  select 'notify_hasura_' || name || '_DELETE' FROM valid_event_triggers
+  select left('notify_hasura_' || name || '_DELETE', 63) FROM valid_event_triggers
 );
 
 DO $$ DECLARE
 r RECORD;
 BEGIN
   FOR r IN (SELECT routine_name from invalid_triggers) LOOP
-    EXECUTE 'DROP FUNCTION IF EXISTS hdb_views.' || quote_ident(r.routine_name) || ' CASCADE';
+    EXECUTE 'DROP FUNCTION IF EXISTS hdb_views.' || quote_ident(r.routine_name) || '() CASCADE'; -- without '()' here, PG < 10 will throw error
   END LOOP;
 END $$;
