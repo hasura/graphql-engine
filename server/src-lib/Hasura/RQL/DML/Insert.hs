@@ -147,7 +147,12 @@ convInsertQuery objsParser sessVarBldr prepFn (InsertQuery tableName val oC mRet
 
   -- Check if the role has insert permissions
   insPerm   <- askInsPermInfo tableInfo
-  updPerm   <- askPermInfo' PAUpdate tableInfo
+  updPerm'  <- askPermInfo' PAUpdate tableInfo
+
+  updPerm <-
+    case updPerm' of
+      Just [updatePerm] -> pure $ Just updatePerm
+      _                 -> throw500 "unexpected: got more than one update permissions"
 
   -- Check if all dependent headers are present
   validateHeaders $ ipiRequiredHeaders insPerm
@@ -181,7 +186,7 @@ convInsertQuery objsParser sessVarBldr prepFn (InsertQuery tableName val oC mRet
   updCheck <- traverse (convAnnBoolExpPartialSQL sessVarFromCurrentSetting) (upiCheck =<< updPerm)
 
   conflictClause <- withPathK "on_conflict" $ forM oC $ \c -> do
-      roleName <- askCurRole
+      roleName <- getSingleRoleName =<< askCurRoles
       unless (isTabUpdatable roleName tableInfo) $ throw400 PermissionDenied $
         "upsert is not allowed for role " <> roleName
         <<> " since update permissions are not defined"
@@ -190,6 +195,12 @@ convInsertQuery objsParser sessVarBldr prepFn (InsertQuery tableName val oC mRet
   return $ InsertQueryP1 tableName insCols sqlExps
            conflictClause (insCheck, updCheck) mutOutput allCols
   where
+    -- FIXME: this very function exists in `Hasura.GraphQL.Schema.Common` also
+    getSingleRoleName (RoleSet roleSet) = do
+      case toList roleSet of
+        [role] -> pure role
+        _      -> throw500 "unexpected: expected only a single role but got multiple roles"
+
     selNecessaryMsg =
       "; \"returning\" can only be used if the role has "
       <> "\"select\" permission on the table"

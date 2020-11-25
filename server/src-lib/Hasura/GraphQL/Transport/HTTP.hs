@@ -51,7 +51,7 @@ import qualified Network.Wai.Extended                   as Wai
 
 data QueryCacheKey = QueryCacheKey
   { qckQueryString :: !GQLReqParsed
-  , qckUserRole    :: !RoleName
+  , qckUserRole    :: !RoleSet
   }
 
 instance J.ToJSON QueryCacheKey where

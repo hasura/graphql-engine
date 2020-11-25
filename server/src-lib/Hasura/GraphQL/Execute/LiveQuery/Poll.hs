@@ -274,7 +274,7 @@ data PollerKey
   -- we don't need operation name here as a subscription will only have a
   -- single top level field
   = PollerKey
-  { _lgRole  :: !RoleName
+  { _lgRole  :: !RoleSet
   , _lgQuery :: !MultiplexedQuery
   } deriving (Show, Eq, Generic)
 

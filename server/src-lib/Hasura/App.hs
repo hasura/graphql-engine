@@ -642,8 +642,8 @@ instance UserAuthentication (Tracing.TraceT AppM) where
 
 instance MetadataApiAuthorization AppM where
   authorizeMetadataApi query userInfo = do
-    let currRole = _uiRole userInfo
-    when (requiresAdmin query && currRole /= adminRoleName) $
+    let currRoleSet = _uiRole userInfo
+    when (requiresAdmin query && (not (isAdminRoleSet currRoleSet))) $
       withPathK "args" $ throw400 AccessDenied errMsg
     where
       errMsg = "restricted access : admin only"

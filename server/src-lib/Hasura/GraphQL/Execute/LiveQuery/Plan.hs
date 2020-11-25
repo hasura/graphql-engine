@@ -327,7 +327,7 @@ data LiveQueryPlan
 
 data ParameterizedLiveQueryPlan
   = ParameterizedLiveQueryPlan
-  { _plqpRole  :: !RoleName
+  { _plqpRole  :: !RoleSet
   , _plqpQuery :: !MultiplexedQuery
   } deriving (Show)
 $(J.deriveToJSON (J.aesonDrop 4 J.snakeCase) ''ParameterizedLiveQueryPlan)

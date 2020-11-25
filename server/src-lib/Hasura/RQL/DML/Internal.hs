@@ -23,6 +23,7 @@ import           Hasura.Backends.Postgres.SQL.Value
 import           Hasura.Backends.Postgres.Translate.BoolExp
 import           Hasura.RQL.Types
 import           Hasura.Session
+import qualified Data.HashSet as Set
 
 
 newtype DMLP1T m a
@@ -55,10 +56,12 @@ askPermInfo'
   :: (UserInfoM m)
   => PermAccessor 'Postgres c
   -> TableInfo 'Postgres
-  -> m (Maybe c)
+  -> m (Maybe [c])
 askPermInfo' pa tableInfo = do
-  roleName <- askCurRole
-  return $ getPermInfoMaybe roleName pa tableInfo
+  RoleSet roles <- askCurRoles
+  sequenceA <$>
+    (for (toList roles) $ \roleName ->
+    return $ getPermInfoMaybe roleName pa tableInfo)
 
 getPermInfoMaybe :: RoleName -> PermAccessor 'Postgres c -> TableInfo 'Postgres -> Maybe c
 getPermInfoMaybe roleName pa tableInfo =
@@ -75,15 +78,15 @@ askPermInfo
   :: (UserInfoM m, QErrM m)
   => PermAccessor 'Postgres c
   -> TableInfo 'Postgres
-  -> m c
+  -> m [c]
 askPermInfo pa tableInfo = do
-  roleName <- askCurRole
+  roleSet <- askCurRoles
   mPermInfo <- askPermInfo' pa tableInfo
   case mPermInfo of
     Just c  -> return c
     Nothing -> throw400 PermissionDenied $ mconcat
       [ pt <> " on " <>> _tciName (_tiCoreInfo tableInfo)
-      , " for role " <>> roleName
+      , " for role " <>> roleSet
       , " is not allowed. "
       ]
   where
@@ -99,22 +102,36 @@ isTabUpdatable role ti
 askInsPermInfo
   :: (UserInfoM m, QErrM m)
   => TableInfo 'Postgres -> m (InsPermInfo 'Postgres)
-askInsPermInfo = askPermInfo PAInsert
+askInsPermInfo tableInfo = do
+  insPermInfo <- askPermInfo PAInsert tableInfo
+  case insPermInfo of
+    [insPerm] -> pure insPerm
+    _         -> throw500 "unexpected: got multiple insert permissions"
 
 askSelPermInfo
   :: (UserInfoM m, QErrM m)
   => TableInfo 'Postgres -> m (SelPermInfo 'Postgres)
-askSelPermInfo = askPermInfo PASelect
+askSelPermInfo tableInfo = do
+  selPermInfo <- askPermInfo PASelect tableInfo
+  pure $ mconcat selPermInfo
 
 askUpdPermInfo
   :: (UserInfoM m, QErrM m)
   => TableInfo 'Postgres -> m (UpdPermInfo 'Postgres)
-askUpdPermInfo = askPermInfo PAUpdate
+askUpdPermInfo tableInfo = do
+  updPermInfo <- askPermInfo PAUpdate tableInfo
+  case updPermInfo of
+    [updPerm] -> pure updPerm
+    _         -> throw500 "unexpected: got multiple update permissions"
 
 askDelPermInfo
   :: (UserInfoM m, QErrM m)
   => TableInfo 'Postgres -> m (DelPermInfo 'Postgres)
-askDelPermInfo = askPermInfo PADelete
+askDelPermInfo tableInfo = do
+  delPermInfo <- askPermInfo PADelete tableInfo
+  case delPermInfo of
+    [delPerm] -> pure delPerm
+    _         -> throw500 "unexpected: got multiple delete permissions"
 
 verifyAsrns :: (MonadError QErr m) => [a -> m ()] -> [a] -> m ()
 verifyAsrns preds xs = indexedForM_ xs $ \a -> mapM_ ($ a) preds
@@ -131,14 +148,14 @@ checkPermOnCol
   -> PGCol
   -> m ()
 checkPermOnCol pt allowedCols pgCol = do
-  roleName <- askCurRole
+  roleSet <- askCurRoles
   unless (HS.member pgCol allowedCols) $
-    throw400 PermissionDenied $ permErrMsg roleName
+    throw400 PermissionDenied $ permErrMsg roleSet
   where
-    permErrMsg roleName
-      | roleName == adminRoleName = "no such column exists : " <>> pgCol
+    permErrMsg roleSet
+      | unRoleSet roleSet == Set.singleton adminRoleName = "no such column exists : " <>> pgCol
       | otherwise = mconcat
-        [ "role " <>> roleName
+        [ "role(s) " <>> roleSet
         , " does not have permission to "
         , permTypeToCode pt <> " column " <>> pgCol
         ]
@@ -165,18 +182,18 @@ fetchRelDet
   => RelName -> QualifiedTable
   -> m (FieldInfoMap (FieldInfo 'Postgres), SelPermInfo 'Postgres)
 fetchRelDet relName refTabName = do
-  roleName <- askCurRole
+  roleSet <- askCurRoles
   -- Internal error
   refTabInfo <- fetchRelTabInfo refTabName
   -- Get the correct constraint that applies to the given relationship
-  refSelPerm <- modifyErr (relPermErr refTabName roleName) $
+  refSelPerm <- modifyErr (relPermErr refTabName roleSet) $
                 askSelPermInfo refTabInfo
 
   return (_tciFieldInfoMap $ _tiCoreInfo refTabInfo, refSelPerm)
   where
-    relPermErr rTable roleName _ =
+    relPermErr rTable roleSet _ =
       mconcat
-      [ "role " <>> roleName
+      [ "role(s) " <>> roleSet
       , " does not have permission to read relationship " <>> relName
       , "; no permission on"
       , " table " <>> rTable

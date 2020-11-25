@@ -50,6 +50,9 @@ gzipHeader = ("Content-Encoding", "gzip")
 userRoleHeader :: IsString a => a
 userRoleHeader = "x-hasura-role"
 
+userRolesHeader :: IsString a => a
+userRolesHeader = "x-hasura-roles"
+
 deprecatedAccessKeyHeader :: IsString a => a
 deprecatedAccessKeyHeader = "x-hasura-access-key"
 

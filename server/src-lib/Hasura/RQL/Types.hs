@@ -28,7 +28,7 @@ module Hasura.RQL.Types
   , askPGColInfo
   , askComputedFieldInfo
   , askRemoteRel
-  , askCurRole
+  , askCurRoles
   , askEventTriggerInfo
   , askTabInfoFromTrigger
 
@@ -311,7 +311,7 @@ askRemoteRel fieldInfoMap relName = do
     _                                      ->
       throw400 UnexpectedPayload "expecting a remote relationship"
 
-askCurRole :: (UserInfoM m) => m RoleName
-askCurRole = _uiRole <$> askUserInfo
+askCurRoles :: (UserInfoM m) => m RoleSet
+askCurRoles = _uiRole <$> askUserInfo
 
 type HeaderObj = M.HashMap Text Text
