@@ -333,13 +333,13 @@ Operator
      - ``SIMILAR TO``
    * - ``"$nsimilar"``
      - ``NOT SIMILAR TO``
-   * - ``$posix_cs``
+   * - ``$regex``
      - ``~``
-   * - ``$posix_ci``
+   * - ``$iregex``
      - ``~*``
-   * - ``$nposix_cs``
+   * - ``$nregex``
      - ``!~``
-   * - ``$nposix_ci``
+   * - ``$niregex``
      - ``!~*``
   
 

@@ -393,7 +393,7 @@ const toPayload = {
                 description: null,
               },
               {
-                name: '_nposix_ci',
+                name: '_niregex',
                 defaultValue: null,
                 type: {
                   kind: 'SCALAR',
@@ -403,7 +403,7 @@ const toPayload = {
                 description: null,
               },
               {
-                name: '_posix_ci',
+                name: '_iregex',
                 defaultValue: null,
                 type: {
                   kind: 'SCALAR',
@@ -413,7 +413,7 @@ const toPayload = {
                 description: null,
               },
               {
-                name: '_nposix_cs',
+                name: '_nregex',
                 defaultValue: null,
                 type: {
                   kind: 'SCALAR',
@@ -423,7 +423,7 @@ const toPayload = {
                 description: null,
               },
               {
-                name: '_posix_cs',
+                name: '_regex',
                 defaultValue: null,
                 type: {
                   kind: 'SCALAR',

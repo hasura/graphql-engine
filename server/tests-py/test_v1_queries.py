@@ -168,17 +168,17 @@ class TestV1SelectBoolExpSearch:
     def test_city_where_not_similar(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + '/select_city_where_not_similar.yaml')
 
-    def test_city_where_posix_cs(self, hge_ctx):
-        check_query_f(hge_ctx, self.dir() + '/select_city_where_posix_cs.yaml')
+    def test_city_where_regex(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/select_city_where_regex.yaml')
 
-    def test_city_where_not_posix_cs(self, hge_ctx):
-        check_query_f(hge_ctx, self.dir() + '/select_city_where_not_posix_cs.yaml')
+    def test_city_where_not_regex(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/select_city_where_not_regex.yaml')
 
-    def test_city_where_posix_ci(self, hge_ctx):
-        check_query_f(hge_ctx, self.dir() + '/select_city_where_posix_ci.yaml')
+    def test_city_where_iregex(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/select_city_where_iregex.yaml')
 
-    def test_city_where_not_posix_ci(self, hge_ctx):
-        check_query_f(hge_ctx, self.dir() + '/select_city_where_not_posix_ci.yaml')
+    def test_city_where_not_iregex(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/select_city_where_not_iregex.yaml')
 
     @classmethod
     def dir(cls):

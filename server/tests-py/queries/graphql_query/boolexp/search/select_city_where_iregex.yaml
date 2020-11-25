@@ -1,18 +1,16 @@
-description: Select cities not starting with new
+description: Select cities starting with fram
 url: /v1/graphql
 status: 200
 response:
   data:
     city:
-    - name: Durham
-      country: USA 
     - name: Framlingham
       country: UK
 query:
   query: |
     query {
       city (
-      where: {name: {_nposix_ci: "new.*" }}
+      where: {name: {_iregex: "fram.*" }}
       ) {
         name
         country

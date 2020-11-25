@@ -732,10 +732,10 @@ data CompareOp
   | SNILIKE
   | SSIMILAR
   | SNSIMILAR
-  | SPOSIXCS
-  | SPOSIXCI
-  | SNPOSIXCS
-  | SNPOSIXCI
+  | SREGEX
+  | SIREGEX
+  | SNREGEX
+  | SNIREGEX
   | SContains
   | SContainedIn
   | SHasKey
@@ -762,10 +762,10 @@ instance Show CompareOp where
     SNILIKE      -> "NOT ILIKE"
     SSIMILAR     -> "SIMILAR TO"
     SNSIMILAR    -> "NOT SIMILAR TO"
-    SPOSIXCS    -> "~"
-    SPOSIXCI    -> "~*"
-    SNPOSIXCS    -> "!~"
-    SNPOSIXCI    -> "!~*"
+    SREGEX    -> "~"
+    SIREGEX    -> "~*"
+    SNREGEX    -> "!~"
+    SNIREGEX    -> "!~*"
     SContains    -> "@>"
     SContainedIn -> "<@"
     SHasKey      -> "?"

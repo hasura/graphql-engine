@@ -16,7 +16,7 @@ query:
     table: city
     where:
       name:
-       $nposix_cs: 'new.*'
+       $nregex: 'new.*'
     columns:
     - name
     - country

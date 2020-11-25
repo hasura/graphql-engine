@@ -717,10 +717,10 @@ Operator
 - ``_nilike``
 - ``_similar``
 - ``_nsimilar``
-- ``_posix_ci``
-- ``_nposix_ci``
-- ``_posix_cs``
-- ``_nposix_cs``
+- ``_iregex``
+- ``_niregex``
+- ``_regex``
+- ``_nregex``
 
 **Checking for NULL values:**
 

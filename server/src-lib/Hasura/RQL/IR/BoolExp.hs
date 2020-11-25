@@ -248,10 +248,10 @@ data OpExpG (b :: BackendType) a
   -- approach (see PR #6003), we may eventually want to move these
   -- recently added constructors, which correspond to newly supported
   -- Postgres operators, to the backend-specific extensions of this type.
-  | APOSIXCS !a -- match POSIX case sensitive, regex
-  | APOSIXCI !a -- match POSIX case insensitive, regex
-  | ANPOSIXCS !a-- dont match POSIX case sensitive, regex
-  | ANPOSIXCI !a-- dont match POSIX case insensitive, regex
+  | AREGEX !a -- match POSIX case sensitive, regex
+  | AIREGEX !a -- match POSIX case insensitive, regex
+  | ANREGEX !a -- dont match POSIX case sensitive, regex
+  | ANIREGEX !a -- dont match POSIX case insensitive, regex
 
   | AContains !a
   | AContainedIn !a
@@ -328,10 +328,10 @@ opExpToJPair f = \case
   ASIMILAR a               -> ("_similar", f a)
   ANSIMILAR a              -> ("_nsimilar", f a)
 
-  APOSIXCS a               -> ("_posix_cs", f a)
-  APOSIXCI a               -> ("_posix_ci", f a)
-  ANPOSIXCS a              -> ("_nposix_cs", f a)
-  ANPOSIXCI a              -> ("_nposix_ci", f a)
+  AREGEX a                 -> ("_regex", f a)
+  AIREGEX a                -> ("_iregex", f a)
+  ANREGEX a                -> ("_nregex", f a)
+  ANIREGEX a               -> ("_niregex", f a)
 
   AContains a              -> ("_contains", f a)
   AContainedIn a           -> ("_contained_in", f a)

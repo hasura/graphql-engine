@@ -24,10 +24,10 @@ interface StringOperator extends GenericOperator<string> {
   _nlike?: string
   _nsimilar?: string
   _similar?: string
-  _posix_cs?: string
-  _posix_ci?: string
-  _nposix_cs?: string
-  _nposix_ci?: string
+  _regex?: string
+  _iregex?: string
+  _nregex?: string
+  _niregex?: string
 }
 
 /** expression to compare columns of type json. All fields are combined with logical 'AND'. */

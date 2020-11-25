@@ -1,16 +1,18 @@
-description: Select cities ending with gham
+description: Select cities not starting with new
 url: /v1/graphql
 status: 200
 response:
   data:
     city:
+    - name: Durham
+      country: USA 
     - name: Framlingham
       country: UK
 query:
   query: |
     query {
       city (
-      where: {name: {_posix_cs: ".*gham" }}
+      where: {name: {_niregex: "new.*" }}
       ) {
         name
         country

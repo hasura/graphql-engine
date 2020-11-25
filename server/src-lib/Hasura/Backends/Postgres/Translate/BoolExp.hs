@@ -107,14 +107,14 @@ parseOperationsExpression rhsParser fim columnInfo =
         "$nsimilar"      -> parseNsimilar
         "_nsimilar"      -> parseNsimilar
 
-        "$posix_cs"      -> parsePosixcs
-        "_posix_cs"      -> parsePosixcs
-        "$posix_ci"      -> parsePosixci
-        "_posix_ci"      -> parsePosixci
-        "$nposix_cs"     -> parseNposixcs
-        "_nposix_cs"     -> parseNposixcs
-        "$nposix_ci"     -> parseNposixci
-        "_nposix_ci"     -> parseNposixci
+        "$regex"         -> parseRegex
+        "_regex"         -> parseRegex
+        "$iregex"        -> parseIRegex
+        "_iregex"        -> parseIRegex
+        "$nregex"        -> parseNRegex
+        "_nregex"        -> parseNRegex
+        "$niregex"       -> parseNIRegex
+        "_niregex"       -> parseNIRegex
 
         "$is_null"       -> parseIsNull
         "_is_null"       -> parseIsNull
@@ -189,10 +189,10 @@ parseOperationsExpression rhsParser fim columnInfo =
         parseNilike   = guardType stringTypes >> ANILIKE () <$> parseOne
         parseSimilar  = guardType stringTypes >> ASIMILAR <$> parseOne
         parseNsimilar = guardType stringTypes >> ANSIMILAR <$> parseOne
-        parsePosixcs  = guardType stringTypes >> APOSIXCS <$> parseOne
-        parsePosixci  = guardType stringTypes >> APOSIXCI <$> parseOne
-        parseNposixcs = guardType stringTypes >> ANPOSIXCS <$> parseOne
-        parseNposixci = guardType stringTypes >> ANPOSIXCI <$> parseOne
+        parseRegex    = guardType stringTypes >> AREGEX <$> parseOne
+        parseIRegex   = guardType stringTypes >> AIREGEX <$> parseOne
+        parseNRegex   = guardType stringTypes >> ANREGEX <$> parseOne
+        parseNIRegex  = guardType stringTypes >> ANIREGEX <$> parseOne
 
         parseIsNull   = bool ANISNOTNULL ANISNULL -- is null
                         <$> parseVal
@@ -417,10 +417,10 @@ mkFieldCompExp qual lhsField = mkCompExp (mkQField lhsField)
       ANILIKE _ val    -> S.BECompare S.SNILIKE lhs val
       ASIMILAR val     -> S.BECompare S.SSIMILAR lhs val
       ANSIMILAR val    -> S.BECompare S.SNSIMILAR lhs val
-      APOSIXCS val     -> S.BECompare S.SPOSIXCS lhs val
-      APOSIXCI val     -> S.BECompare S.SPOSIXCI lhs val
-      ANPOSIXCS val    -> S.BECompare S.SNPOSIXCS lhs val
-      ANPOSIXCI val    -> S.BECompare S.SNPOSIXCI lhs val
+      AREGEX val       -> S.BECompare S.SREGEX lhs val
+      AIREGEX val      -> S.BECompare S.SIREGEX lhs val
+      ANREGEX val      -> S.BECompare S.SNREGEX lhs val
+      ANIREGEX val     -> S.BECompare S.SNIREGEX lhs val
       AContains val    -> S.BECompare S.SContains lhs val
       AContainedIn val -> S.BECompare S.SContainedIn lhs val
       AHasKey val      -> S.BECompare S.SHasKey lhs val

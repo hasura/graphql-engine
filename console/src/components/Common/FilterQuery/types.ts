@@ -20,10 +20,10 @@ export type Operator =
   | '$nilike'
   | '$similar'
   | '$nsimilar'
-  | '$posix_cs'
-  | '$posix_ci'
-  | '$nposix_cs'
-  | '$nposix_ci';
+  | '$regex'
+  | '$iregex'
+  | '$nregex'
+  | '$niregex';
 
 // Operator with names and aliases
 export type OperatorDef = {

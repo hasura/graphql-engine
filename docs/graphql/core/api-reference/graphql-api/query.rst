@@ -605,13 +605,13 @@ Operator
      - ``SIMILAR TO``
    * - ``_nsimilar``
      - ``NOT SIMILAR TO``
-   * - ``_posix_cs``
+   * - ``_regex``
      - ``~``
-   * - ``_posix_ci``
+   * - ``_iregex``
      - ``~*``
-   * - ``_nposix_cs``
+   * - ``_nregex``
      - ``!~``
-   * - ``_nposix_ci``
+   * - ``_niregex``
      - ``!~*``
 
 (For more details on text related operators, refer to the `Postgres docs <https://www.postgresql.org/docs/current/functions-matching.html>`__.)

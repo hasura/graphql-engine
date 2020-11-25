@@ -62,7 +62,6 @@ This release contains the [PDV refactor (#4111)](https://github.com/hasura/graph
 - server: validate remote schema queries (fixes #4143)
 - server: introduce optional custom table name in table configuration to track the table according to the custom name. The `set_table_custom_fields` API has been deprecated, A new API `set_table_customization` has been added to set the configuration. (#3811)
 - server: add support for POSIX operators (close #4317) (#6172)
-- console: add support for POSIX operators (close #4317) (#6172)
 - console: allow user to cascade Postgres dependencies when dropping Postgres objects (close #5109) (#5248)
 - console: mark inconsistent remote schemas in the UI (close #5093) (#5181)
 - console: remove ONLY as default for ALTER TABLE in column alter operations (close #5512) #5706
@@ -71,8 +70,6 @@ This release contains the [PDV refactor (#4111)](https://github.com/hasura/graph
 - console: allow setting computed fields for views (close #6168) (#6174)
 - cli: add missing global flags for seed command (#5565)
 - cli: allow seeds as alias for seed command (#5693)
-- cli-ext: fix get-shared-modules script execution on mac (#6172)
-- docs: add support for POSIX operators (close #4317) (#6172)
 
 ## v1.3.3
 

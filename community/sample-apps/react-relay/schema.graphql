@@ -581,10 +581,10 @@ input String_comparison_exp {
   _nlike: String
   _nsimilar: String
   _similar: String
-  _nposix_ci: String
-  _posix_ci: String
-  _nposix_cs: String
-  _posix_cs: String
+  _niregex: String
+  _iregex: String
+  _nregex: String
+  _regex: String
 }
 
 # subscription root

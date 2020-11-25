@@ -1,9 +1,7 @@
-description: Select cities not starting with new (case-sensitively)
+description: Select cities ending with gham
 url: /v1/query
 status: 200
 response:
-  - name: Durham
-    country: USA 
   - name: Framlingham
     country: UK
 query:
@@ -12,7 +10,7 @@ query:
     table: city
     where:
       name:
-       $nposix_ci: 'new.*'
+       $regex: '.*gham'
     columns:
     - name
     - country

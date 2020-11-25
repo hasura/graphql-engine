@@ -154,19 +154,19 @@ const columnOperatorsInfo = {
     type: 'pattern_match',
     inputStructure: 'object',
   },
-  _posix_cs: {
+  _regex: {
     type: 'pattern_match',
     inputStructure: 'object',
   },
-  _posix_ci: {
+  _iregex: {
     type: 'pattern_match',
     inputStructure: 'object',
   },
-  _nposix_cs: {
+  _nregex: {
     type: 'pattern_match',
     inputStructure: 'object',
   },
-  _nposix_ci: {
+  _niregex: {
     type: 'pattern_match',
     inputStructure: 'object',
   },

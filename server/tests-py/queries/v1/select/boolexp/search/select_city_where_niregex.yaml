@@ -1,7 +1,9 @@
-description: Select cities starting with fram
+description: Select cities not starting with new (case-sensitively)
 url: /v1/query
 status: 200
 response:
+  - name: Durham
+    country: USA 
   - name: Framlingham
     country: UK
 query:
@@ -10,7 +12,7 @@ query:
     table: city
     where:
       name:
-        $posix_ci: 'fram.*'
+       $niregex: 'new.*'
     columns:
     - name
     - country

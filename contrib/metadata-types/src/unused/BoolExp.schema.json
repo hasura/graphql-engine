@@ -82,21 +82,21 @@
                     "type": "string",
                     "title": "_similar"
                 },
-                "_posix_cs": {
+                "_regex": {
                     "type": "string",
-                    "title": "_posix_cs"
+                    "title": "_regex"
                 },
-                "_posix_ci": {
+                "_iregex": {
                     "type": "string",
-                    "title": "_posix_ci"
+                    "title": "_iregex"
                 },
-                "_nposix_cs": {
+                "_nregex": {
                     "type": "string",
-                    "title": "_nposix_cs"
+                    "title": "_nregex"
                 },
-                "_nposix_ci": {
+                "_niregex": {
                     "type": "string",
-                    "title": "_nposix_ci"
+                    "title": "_niregex"
                 },
                 "_eq": {
                     "type": "string",

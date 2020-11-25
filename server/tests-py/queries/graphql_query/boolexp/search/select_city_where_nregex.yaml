@@ -16,7 +16,7 @@ query:
   query: |
     query {
       city (
-      where: {name: {_nposix_cs: "new.*" }}
+      where: {name: {_nregex: "new.*" }}
       ) {
         name
         country
