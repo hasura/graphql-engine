@@ -159,6 +159,7 @@ data RawColumnInfo (b :: BackendType)
   , prciDescription :: !(Maybe G.Description)
   } deriving (Generic)
 deriving instance Eq (RawColumnInfo 'Postgres)
+deriving instance Show (RawColumnInfo 'Postgres)
 instance NFData (RawColumnInfo 'Postgres)
 instance Cacheable (RawColumnInfo 'Postgres)
 instance ToJSON (RawColumnInfo 'Postgres) where

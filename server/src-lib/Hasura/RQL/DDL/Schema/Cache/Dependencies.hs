@@ -93,7 +93,7 @@ pruneDanglingDependents cache = fmap (M.filter (not . null)) . traverse do
         case tableObjectId of
           TOCol columnName ->
             void $ resolveField tableInfo (fromPGCol columnName) _FIColumn "column"
-          TORel relName ->
+          TORel relName _ ->
             void $ resolveField tableInfo (fromRel relName) _FIRelationship "relationship"
           TOComputedField fieldName ->
             void $ resolveField tableInfo (fromComputedField fieldName) _FIComputedField "computed field"

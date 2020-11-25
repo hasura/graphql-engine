@@ -21,7 +21,7 @@ import           Hasura.Session
 
 data TableObjId
   = TOCol !PGCol
-  | TORel !RelName
+  | TORel !RelName !RelType
   | TOComputedField !ComputedFieldName
   | TORemoteRel !RemoteRelationshipName
   | TOForeignKey !ConstraintName
@@ -44,7 +44,7 @@ reportSchemaObj (SOTable tn) = "table " <> qualifiedObjectToText tn
 reportSchemaObj (SOFunction fn) = "function " <> qualifiedObjectToText fn
 reportSchemaObj (SOTableObj tn (TOCol cn)) =
   "column " <> qualifiedObjectToText tn <> "." <> getPGColTxt cn
-reportSchemaObj (SOTableObj tn (TORel cn)) =
+reportSchemaObj (SOTableObj tn (TORel cn _)) =
   "relationship " <> qualifiedObjectToText tn <> "." <> relNameToTxt cn
 reportSchemaObj (SOTableObj tn (TOForeignKey cn)) =
   "constraint " <> qualifiedObjectToText tn <> "." <> getConstraintTxt cn

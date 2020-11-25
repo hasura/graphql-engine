@@ -56,13 +56,7 @@ import           Hasura.GraphQL.Transport.HTTP.Protocol    (toParsed)
 import           Hasura.Logging
 import           Hasura.Prelude
 import           Hasura.RQL.DDL.Schema.Cache
-import           Hasura.RQL.Types                          (CacheRWM, Code (..), HasHttpManager,
-                                                            HasSQLGenCtx, HasSystemDefined,
-                                                            QErr (..), SQLGenCtx (..),
-                                                            SchemaCache (..), UserInfoM,
-                                                            buildSchemaCacheStrict, decodeValue,
-                                                            throw400, withPathK)
-
+import           Hasura.RQL.Types
 import           Hasura.RQL.Types.Run
 import           Hasura.Server.API.Query                   (requiresAdmin, runQueryM)
 import           Hasura.Server.App
@@ -613,8 +607,8 @@ execQuery
      , HasHttpManager m
      , HasSQLGenCtx m
      , UserInfoM m
-     , HasSystemDefined m
      , Tracing.MonadTrace m
+     , MetadataM m
      )
   => Env.Environment
   -> BLC.ByteString

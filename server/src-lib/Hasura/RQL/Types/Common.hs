@@ -35,6 +35,8 @@ module Hasura.RQL.Types.Common
        , SystemDefined(..)
        , isSystemDefined
 
+       , SQLGenCtx(..)
+
        , successMsg
        , NonNegativeDiffTime
        , unNonNegativeDiffTime
@@ -158,7 +160,8 @@ rootText = mkNonEmptyTextUnsafe "root"
 
 newtype RelName
   = RelName { getRelTxt :: NonEmptyText }
-  deriving (Show, Eq, Hashable, FromJSON, ToJSON, ToJSONKey, Q.ToPrepArg, Q.FromCol, Lift, Generic, Arbitrary, NFData, Cacheable)
+  deriving (Show, Eq, Ord, Hashable, FromJSON, ToJSON, ToJSONKey
+           , Q.ToPrepArg, Q.FromCol, Lift, Generic, Arbitrary, NFData, Cacheable)
 
 instance PG.IsIdentifier RelName where
   toIdentifier rn = PG.Identifier $ relNameToTxt rn
@@ -323,6 +326,11 @@ newtype SystemDefined = SystemDefined { unSystemDefined :: Bool }
 
 isSystemDefined :: SystemDefined -> Bool
 isSystemDefined = unSystemDefined
+
+newtype SQLGenCtx
+  = SQLGenCtx
+  { stringifyNum :: Bool
+  } deriving (Show, Eq)
 
 successMsg :: EncJSON
 successMsg = "{\"message\":\"success\"}"

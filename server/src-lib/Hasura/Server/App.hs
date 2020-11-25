@@ -361,7 +361,7 @@ v1QueryHandler query = do
       pgExecCtx   <- asks (scPGExecCtx . hcServerCtx)
       instanceId  <- asks (scInstanceId . hcServerCtx)
       env         <- asks (scEnvironment . hcServerCtx)
-      runQuery env pgExecCtx instanceId userInfo schemaCache httpMgr sqlGenCtx (SystemDefined False) query
+      runQuery env pgExecCtx instanceId userInfo schemaCache httpMgr sqlGenCtx  query
 
 v1Alpha1GQHandler
   :: ( HasVersion

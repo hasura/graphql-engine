@@ -109,8 +109,8 @@ import           Hasura.HTTP
 import           Hasura.RQL.DDL.EventTrigger        (getHeaderInfosFromConf)
 import           Hasura.RQL.DDL.Headers
 import           Hasura.RQL.Types
-import           Hasura.SQL.Types
 import           Hasura.Server.Version              (HasVersion)
+import           Hasura.SQL.Types
 
 
 newtype ScheduledTriggerInternalErr
@@ -286,10 +286,17 @@ runCronEventsGenerator logger pgpool getSC = do
         map uncurryStats <$>
           Q.listQE defaultTxErrorHandler
           [Q.sql|
-           SELECT name, upcoming_events_count, max_scheduled_time
-            FROM hdb_catalog.hdb_cron_events_stats
-            WHERE upcoming_events_count < 100
-           |] () True
+            SELECT * FROM
+             ( SELECT
+                trigger_name,
+                 count(*) as upcoming_events_count,
+                 max(scheduled_time) as max_scheduled_time
+                FROM hdb_catalog.hdb_cron_events
+                WHERE tries = 0 and status = 'scheduled'
+                GROUP BY trigger_name
+             ) AS q
+            WHERE q.upcoming_events_count < 100
+          |] () True
 
       uncurryStats (n, count, maxTs) = CronTriggerStats n count maxTs
 
@@ -392,7 +399,7 @@ processCronEvents logger logEnv httpMgr pgpool getSC lockedCronEvents = do
             finally <- runExceptT $
               runReaderT (processScheduledEvent logEnv pgpool scheduledEvent Cron) (logger, httpMgr)
             removeEventFromLockedEvents id' lockedCronEvents
-            either logInternalError pure finally
+            onLeft finally logInternalError
     Left err -> logInternalError err
   where
     logInternalError err = liftIO . L.unLogger logger $ ScheduledTriggerInternalErr err
@@ -450,7 +457,7 @@ processOneOffScheduledEvents env logger logEnv httpMgr pgpool lockedOneOffSchedu
                   runReaderT (processScheduledEvent logEnv pgpool scheduledEvent OneOff) $
                     (logger, httpMgr)
                 removeEventFromLockedEvents id' lockedOneOffScheduledEvents
-                either logInternalError pure finally
+                onLeft finally logInternalError
 
               Left headerInfoErr -> logInternalError headerInfoErr
 

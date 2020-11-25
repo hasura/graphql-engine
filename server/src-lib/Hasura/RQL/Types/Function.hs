@@ -74,8 +74,8 @@ data FunctionExposedAs = FEAQuery | FEAMutation
 
 instance NFData FunctionExposedAs
 instance Cacheable FunctionExposedAs
-$(deriveJSON 
-    defaultOptions{ sumEncoding = UntaggedValue, constructorTagModifier = map toLower . drop 3 } 
+$(deriveJSON
+    defaultOptions{ sumEncoding = UntaggedValue, constructorTagModifier = map toLower . drop 3 }
     ''FunctionExposedAs)
 
 
@@ -145,7 +145,8 @@ instance FromJSON TrackFunctionV2 where
 -- | Raw SQL function metadata from postgres
 data RawFunctionInfo
   = RawFunctionInfo
-  { rfiHasVariadic      :: !Bool
+  { rfiOid              :: !OID
+  , rfiHasVariadic      :: !Bool
   , rfiFunctionType     :: !FunctionVolatility
   , rfiReturnTypeSchema :: !SchemaName
   , rfiReturnTypeName   :: !PGScalarType

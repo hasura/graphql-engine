@@ -39,6 +39,10 @@ module Hasura.RQL.Types.Action
   , CreateActionPermission(..)
 
   , ActionMetadata(..)
+  , amName
+  , amComment
+  , amDefinition
+  , amPermissions
   , ActionPermissionMetadata(..)
 
   , AnnActionExecution(..)
@@ -69,13 +73,13 @@ import           Hasura.RQL.DDL.Headers
 import           Hasura.RQL.IR.Select
 import           Hasura.RQL.Types.Common
 import           Hasura.RQL.Types.CustomTypes
-import           Hasura.SQL.Backend
 import           Hasura.Session
+import           Hasura.SQL.Backend
 
 
 newtype ActionName
   = ActionName { unActionName :: G.Name }
-  deriving ( Show, Eq, J.FromJSON, J.ToJSON, J.FromJSONKey, J.ToJSONKey
+  deriving ( Show, Eq, Ord, J.FromJSON, J.ToJSON, J.FromJSONKey, J.ToJSONKey
            , Hashable, ToTxt, Lift, Generic, NFData, Cacheable)
 
 instance Q.FromCol ActionName where
@@ -249,6 +253,7 @@ data ActionMetadata
   , _amPermissions :: ![ActionPermissionMetadata]
   } deriving (Show, Eq, Lift, Generic)
 $(J.deriveToJSON (J.aesonDrop 3 J.snakeCase) ''ActionMetadata)
+$(makeLenses ''ActionMetadata)
 instance NFData ActionMetadata
 instance Cacheable ActionMetadata
 

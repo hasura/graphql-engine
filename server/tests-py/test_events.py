@@ -226,7 +226,7 @@ class TestUpdateEvtQuery(object):
         assert st_code == 200, resp
         st_code, resp = hge_ctx.v1q_f('queries/event_triggers/update_query/update-setup.yaml')
         assert st_code == 200, '{}'.format(resp)
-        assert resp[1][0]["configuration"]["webhook"] == 'http://127.0.0.1:5592/new'
+        assert resp[1]["tables"][0]["event_triggers"][0]["webhook"] == 'http://127.0.0.1:5592/new'
         yield
         st_code, resp = hge_ctx.v1q_f('queries/event_triggers/update_query/teardown.yaml')
         assert st_code == 200, resp
