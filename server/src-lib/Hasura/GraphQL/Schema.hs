@@ -10,7 +10,6 @@ import qualified Data.Aeson                            as J
 import qualified Data.HashMap.Strict                   as Map
 import qualified Data.HashMap.Strict.InsOrd            as OMap
 import qualified Data.HashSet                          as Set
-import qualified Data.List.NonEmpty                    as NE
 import qualified Language.GraphQL.Draft.Syntax         as G
 
 import           Control.Arrow.Extended
@@ -61,7 +60,7 @@ buildGQLContext
      , NonObjectTypeMap
      )
      `arr`
-     ( HashMap (HashSet RoleName) (RoleContext GQLContext)
+     ( HashMap RoleSet (RoleContext GQLContext)
      , GQLContext
      )
 buildGQLContext =
@@ -69,11 +68,23 @@ buildGQLContext =
 
     SQLGenCtx{ stringifyNum } <- bindA -< askSQLGenCtx
 
-    let allRoles = Set.insert adminRoleName $
+    let allRolesWithoutAdmin :: HashSet RoleName
+        allRolesWithoutAdmin =
              (allTables ^.. folded.tiRolePermInfoMap.to Map.keys.folded)
           <> (allActionInfos ^.. folded.aiPermissions.to Map.keys.folded)
         allActionInfos = Map.elems allActions
-        allRolesCombinations = Set.fromList $ mapMaybe (fmap (Set.fromList . NE.toList) . NE.nonEmpty) $ subsequences (toList allRoles)
+        -- If there are n roles, then there will be 2^n role combinations
+        -- and hence 2^n schemas.
+        -- The 2^n number comes from
+        -- nC0 + nC1 + ..... nCn = 2^n
+        allRolesCombinations
+          = Set.insert (Set.singleton adminRoleName) $
+            Set.fromList $
+            map Set.fromList $
+            filter ((>= 1) . length) $
+            -- The admin role is not included, while making
+            -- all the possible combinations of the roles
+            subsequences (toList allRolesWithoutAdmin)
         queryRemotesMap =
           fmap (map fDefinition . piQuery . rscParsed . fst) allRemoteSchemas
         queryContext = QueryContext stringifyNum queryType queryRemotesMap
@@ -107,24 +118,24 @@ buildGQLContext =
         mutationRemotes = concatMap (concat . piMutation . snd) remotes
 
     roleContexts <- bindA -<
-      ( Set.toMap allRolesCombinations & Map.traverseWithKey \roleCombination () ->
+      ( Set.toMap (Set.fromList $ map RoleSet $ toList allRolesCombinations) & Map.traverseWithKey \roleSet () ->
           case queryType of
             QueryHasura ->
-              buildRoleContext queryContext allTables allFunctions allActionInfos
-              nonObjectCustomTypes queryRemotes mutationRemotes roleCombination
+              (buildRoleContext queryContext allTables allFunctions allActionInfos
+              nonObjectCustomTypes queryRemotes mutationRemotes roleSet)
             -- QueryRelay ->
             --   buildRelayRoleContext queryContext allTables allFunctions allActionInfos
-            --   nonObjectCustomTypes mutationRemotes roleCombination
+            --   nonObjectCustomTypes mutationRemotes roleSet
       )
     unauthenticated <- bindA -< unauthenticatedContext queryRemotes mutationRemotes
     returnA -< (roleContexts, unauthenticated)
 
 runMonadSchema
   :: (Monad m)
-  => HashSet RoleName
+  => RoleSet
   -> QueryContext
   -> Map.HashMap QualifiedTable (TableInfo 'Postgres)
-  -> P.SchemaT (P.ParseT Identity) (ReaderT (HashSet RoleName, Map.HashMap QualifiedTable (TableInfo 'Postgres), QueryContext) m) a -> m a
+  -> P.SchemaT (P.ParseT Identity) (ReaderT (RoleSet, Map.HashMap QualifiedTable (TableInfo 'Postgres), QueryContext) m) a -> m a
 runMonadSchema roleNames queryContext tableCache m =
   flip runReaderT (roleNames, tableCache, queryContext) $ P.runSchemaT m
 
@@ -134,19 +145,27 @@ buildRoleContext
   => QueryContext -> TableCache -> FunctionCache -> [ActionInfo 'Postgres] -> NonObjectTypeMap
   -> [P.FieldParser (P.ParseT Identity) RemoteField]
   -> [P.FieldParser (P.ParseT Identity) RemoteField]
-  -> HashSet RoleName
+  -> RoleSet
   -> m (RoleContext GQLContext)
 buildRoleContext queryContext (takeValidTables -> allTables) (takeValidFunctions -> allFunctions)
-  allActionInfos nonObjectCustomTypes queryRemotes mutationRemotes roleCombinations =
+  allActionInfos nonObjectCustomTypes queryRemotes mutationRemotes roleSet =
 
-  runMonadSchema roleCombinations queryContext allTables $ do
+  runMonadSchema roleSet queryContext allTables $ do
+    -- Mutations are enabled only in single role role sets
+    let isSingleRole = Set.size (unRoleSet roleSet) == 1
     mutationParserFrontend <-
-      buildPGMutationFields Frontend tableNames >>=
-      buildMutationParser mutationRemotes allActionInfos nonObjectCustomTypes allFunctions
+      case isSingleRole of
+        True ->
+          buildPGMutationFields Frontend tableNames >>=
+          buildMutationParser mutationRemotes allActionInfos nonObjectCustomTypes allFunctions
+        False -> pure Nothing
 
     mutationParserBackend <-
-      buildPGMutationFields Backend tableNames >>=
-      buildMutationParser mutationRemotes allActionInfos nonObjectCustomTypes allFunctions
+      case isSingleRole of
+        True ->
+          buildPGMutationFields Backend tableNames >>=
+          buildMutationParser mutationRemotes allActionInfos nonObjectCustomTypes allFunctions
+        False -> pure Nothing
 
     queryPGFields <- buildPostgresQueryFields tableNames allFunctions
     subscriptionParser <- buildSubscriptionParser queryPGFields allActionInfos
@@ -200,7 +219,7 @@ buildFullestDBSchema
        )
 buildFullestDBSchema queryContext (takeValidTables -> allTables) (takeValidFunctions -> allFunctions)
   allActionInfos nonObjectCustomTypes = do
-  runMonadSchema (Set.singleton adminRoleName) queryContext allTables $ do
+  runMonadSchema (RoleSet (Set.singleton adminRoleName)) queryContext allTables $ do
     mutationParserFrontend <-
       buildPGMutationFields Frontend tableNames >>=
       -- NOTE: we omit remotes here on purpose since we're trying to check name
@@ -328,7 +347,7 @@ buildPostgresQueryFields
   :: forall m n r
    . ( MonadSchema n m
      , MonadTableInfo r m
-     , MonadRoleCombination r m
+     , MonadRoleSet r m
      , Has QueryContext r
      )
   => HashSet QualifiedTable
@@ -378,7 +397,7 @@ buildActionQueryFields
   :: forall m n r
    . ( MonadSchema n m
      , MonadTableInfo r m
-     , MonadRole r m
+     , MonadRoleSet r m
      , Has QueryContext r
      )
   => [ActionInfo 'Postgres]
@@ -398,7 +417,7 @@ buildActionSubscriptionFields
   :: forall m n r
    . ( MonadSchema n m
      , MonadTableInfo r m
-     , MonadRole r m
+     , MonadRoleSet r m
      , Has QueryContext r
      )
   => [ActionInfo 'Postgres]
@@ -416,7 +435,7 @@ buildRelayPostgresQueryFields
   :: forall m n r
    . ( MonadSchema n m
      , MonadTableInfo r m
-     , MonadRoleCombination r m
+     , MonadRoleSet r m
      , Has QueryContext r
      )
   => HashSet QualifiedTable
@@ -523,7 +542,7 @@ buildQueryParser
   :: forall m n r
    . ( MonadSchema n m
      , MonadTableInfo r m
-     , MonadRoleCombination r m
+     , MonadRoleSet r m
      , Has QueryContext r
      )
   => [P.FieldParser n (QueryRootField UnpreparedValue)]
@@ -545,7 +564,7 @@ buildSubscriptionParser
   :: forall m n r
    . ( MonadSchema n m
      , MonadTableInfo r m
-     , MonadRoleCombination r m
+     , MonadRoleSet r m
      , Has QueryContext r
      )
   => [P.FieldParser n (QueryRootField UnpreparedValue)]
@@ -559,14 +578,15 @@ buildSubscriptionParser pgQueryFields allActions = do
 
 buildPGMutationFields
   :: forall m n r
-   . (MonadSchema n m, MonadTableInfo r m, MonadRoleCombination r m, Has QueryContext r)
+   . (MonadSchema n m, MonadTableInfo r m, MonadRoleSet r m, Has QueryContext r)
   => Scenario -> HashSet QualifiedTable
   -> m [P.FieldParser n (MutationRootField UnpreparedValue)]
 buildPGMutationFields scenario allTables = do
   concat . catMaybes <$> for (toList allTables) \table -> do
     tableCoreInfo <- _tiCoreInfo <$> askTableInfo table
     tableGQLName   <- getTableGQLName table
-    tablePerms    <- tablePermissions table
+    roleName      <- getSingleRoleName =<< askRoleSet
+    tablePerms    <- tablePermissions table roleName
     for tablePerms \RolePermInfo{..} -> do
       let customRootFields = _tcCustomRootFields $ _tciCustomConfig tableCoreInfo
           viewInfo         = _tciViewInfo tableCoreInfo
@@ -642,7 +662,7 @@ queryRoot = $$(G.litName "query_root")
 
 buildMutationParser
   :: forall m n r
-   . (MonadSchema n m, MonadTableInfo r m, MonadRoleCombination r m, Has QueryContext r)
+   . (MonadSchema n m, MonadTableInfo r m, MonadRoleSet r m, Has QueryContext r)
   => [P.FieldParser n RemoteField]
   -> [ActionInfo 'Postgres]
   -> NonObjectTypeMap

@@ -16,6 +16,8 @@ import qualified Hasura.RQL.IR.Select               as RQL (Fields)
 import           Hasura.Backends.Postgres.SQL.Types
 import           Hasura.RQL.Types
 
+import           Hasura.Session
+
 data QueryContext =
   QueryContext
   { qcStringifyNum :: !Bool
@@ -31,6 +33,12 @@ textToName textName = G.mkName textName `onNothing` throw400 ValidationFailed
 partialSQLExpToUnpreparedValue :: PartialSQLExp 'Postgres -> P.UnpreparedValue
 partialSQLExpToUnpreparedValue (PSESessVar pftype var) = P.UVSessionVar pftype var
 partialSQLExpToUnpreparedValue (PSESQLExp sqlExp)      = P.UVLiteral sqlExp
+
+getSingleRoleName :: MonadError QErr m => RoleSet -> m RoleName
+getSingleRoleName (RoleSet roleSet) = do
+  case toList roleSet of
+    [role] -> pure role
+    _      -> throw500 "unexpected: expected only a single role but got multiple roles"
 
 mapField
   :: Functor m

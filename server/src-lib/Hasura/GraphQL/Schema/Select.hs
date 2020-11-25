@@ -84,7 +84,7 @@ type AnnotatedField      b = IR.AnnFieldG b UnpreparedValue
 -- >   col2: col2_type
 -- > }: [table!]!
 selectTable
-  :: forall m n r. (MonadSchema n m, MonadTableInfo r m, MonadRole r m, Has QueryContext r)
+  :: forall m n r. (MonadSchema n m, MonadTableInfo r m, MonadRoleSet r m, Has QueryContext r)
   => QualifiedTable       -- ^ qualified name of the table
   -> G.Name               -- ^ field display name
   -> Maybe G.Description  -- ^ field description, if any
@@ -123,7 +123,7 @@ selectTable table fieldName description selectPermissions = do
 -- >   }
 -- > }: table_nameConnection!
 selectTableConnection
-  :: forall m n r. (MonadSchema n m, MonadTableInfo r m, MonadRole r m, Has QueryContext r)
+  :: forall m n r. (MonadSchema n m, MonadTableInfo r m, MonadRoleSet r m, Has QueryContext r)
   => QualifiedTable         -- ^ qualified name of the table
   -> G.Name                 -- ^ field display name
   -> Maybe G.Description    -- ^ field description, if any
@@ -160,7 +160,7 @@ selectTableConnection table fieldName description pkeyColumns selectPermissions 
 -- current permissions or if there are primary keys the user
 -- doesn't have select permissions for.
 selectTableByPk
-  :: forall m n r. (MonadSchema n m, MonadTableInfo r m, MonadRole r m, Has QueryContext r)
+  :: forall m n r. (MonadSchema n m, MonadTableInfo r m, MonadRoleSet r m, Has QueryContext r)
   => QualifiedTable       -- ^ qualified name of the table
   -> G.Name               -- ^ field display name
   -> Maybe G.Description  -- ^ field description, if any
@@ -200,7 +200,7 @@ selectTableByPk table fieldName description selectPermissions = runMaybeT do
 -- Returns Nothing if there's nothing that can be selected with
 -- current permissions.
 selectTableAggregate
-  :: forall m n r. (MonadSchema n m, MonadTableInfo r m, MonadRole r m, Has QueryContext r)
+  :: forall m n r. (MonadSchema n m, MonadTableInfo r m, MonadRoleSet r m, Has QueryContext r)
   => QualifiedTable       -- ^ qualified name of the table
   -> G.Name               -- ^ field display name
   -> Maybe G.Description  -- ^ field description, if any
@@ -294,7 +294,7 @@ cause errors on the client side, for the following reasons:
 tableSelectionSet
   :: ( MonadSchema n m
      , MonadTableInfo r m
-     , MonadRole r m
+     , MonadRoleSet r m
      , Has QueryContext r
      )
   => QualifiedTable
@@ -338,7 +338,7 @@ tableSelectionSet table selectPermissions = memoizeOn 'tableSelectionSet table d
 tableSelectionList
   :: ( MonadSchema n m
      , MonadTableInfo r m
-     , MonadRole r m
+     , MonadRoleSet r m
      , Has QueryContext r
      )
   => QualifiedTable
@@ -373,7 +373,7 @@ nonNullableObjectList =
 tableConnectionSelectionSet
   :: forall m n r. ( MonadSchema n m
                    , MonadTableInfo r m
-                   , MonadRole r m
+                   , MonadRoleSet r m
                    , Has QueryContext r
                    )
   => QualifiedTable
@@ -425,7 +425,7 @@ tableConnectionSelectionSet table selectPermissions = do
 
 -- | User-defined function (AKA custom function)
 selectFunction
-  :: (MonadSchema n m, MonadTableInfo r m, MonadRole r m, Has QueryContext r)
+  :: (MonadSchema n m, MonadTableInfo r m, MonadRoleSet r m, Has QueryContext r)
   => FunctionInfo         -- ^ SQL function info
   -> G.Name               -- ^ field display name
   -> Maybe G.Description  -- ^ field description, if any
@@ -448,7 +448,7 @@ selectFunction function fieldName description selectPermissions = do
       }
 
 selectFunctionAggregate
-  :: (MonadSchema n m, MonadTableInfo r m, MonadRole r m, Has QueryContext r)
+  :: (MonadSchema n m, MonadTableInfo r m, MonadRoleSet r m, Has QueryContext r)
   => FunctionInfo         -- ^ SQL function info
   -> G.Name               -- ^ field display name
   -> Maybe G.Description  -- ^ field description, if any
@@ -481,7 +481,7 @@ selectFunctionAggregate function fieldName description selectPermissions = runMa
       }
 
 selectFunctionConnection
-  :: (MonadSchema n m, MonadTableInfo r m, MonadRole r m, Has QueryContext r)
+  :: (MonadSchema n m, MonadTableInfo r m, MonadRoleSet r m, Has QueryContext r)
   => FunctionInfo           -- ^ SQL function info
   -> G.Name                 -- ^ field display name
   -> Maybe G.Description    -- ^ field description, if any
@@ -517,7 +517,7 @@ selectFunctionConnection function fieldName description pkeyColumns selectPermis
 -- | Argument to filter rows returned from table selection
 -- > where: table_bool_exp
 tableWhere
-  :: forall m n r. (MonadSchema n m, MonadTableInfo r m, MonadRole r m)
+  :: forall m n r. (MonadSchema n m, MonadTableInfo r m, MonadRoleSet r m)
   => QualifiedTable
   -> SelPermInfo 'Postgres
   -> m (InputFieldsParser n (Maybe (IR.AnnBoolExp 'Postgres UnpreparedValue)))
@@ -532,7 +532,7 @@ tableWhere table selectPermissions = do
 -- | Argument to sort rows returned from table selection
 -- > order_by: [table_order_by!]
 tableOrderBy
-  :: forall m n r. (MonadSchema n m, MonadTableInfo r m, MonadRole r m)
+  :: forall m n r. (MonadSchema n m, MonadTableInfo r m, MonadRoleSet r m)
   => QualifiedTable
   -> SelPermInfo 'Postgres
   -> m (InputFieldsParser n (Maybe (NonEmpty (IR.AnnOrderByItemG 'Postgres UnpreparedValue))))
@@ -549,7 +549,7 @@ tableOrderBy table selectPermissions = do
 -- | Argument to distinct select on columns returned from table selection
 -- > distinct_on: [table_select_column!]
 tableDistinctOn
-  :: forall m n r. (MonadSchema n m, MonadTableInfo r m, MonadRole r m)
+  :: forall m n r. (MonadSchema n m, MonadTableInfo r m, MonadRoleSet r m)
   => QualifiedTable
   -> SelPermInfo 'Postgres
   -> m (InputFieldsParser n (Maybe (NonEmpty PGCol)))
@@ -571,7 +571,7 @@ tableDistinctOn table selectPermissions = do
 -- > order_by: [table_order_by!]
 -- > where: table_bool_exp
 tableArgs
-  :: forall m n r. (MonadSchema n m, MonadTableInfo r m, MonadRole r m)
+  :: forall m n r. (MonadSchema n m, MonadTableInfo r m, MonadRoleSet r m)
   => QualifiedTable
   -> SelPermInfo 'Postgres
   -> m (InputFieldsParser n (SelectArgs 'Postgres))
@@ -657,7 +657,7 @@ positiveInt = P.int `P.bind` \value -> do
 -- > before: String
 -- > after: String
 tableConnectionArgs
-  :: forall m n r. (MonadSchema n m, MonadTableInfo r m, MonadRole r m)
+  :: forall m n r. (MonadSchema n m, MonadTableInfo r m, MonadRoleSet r m)
   => PrimaryKeyColumns 'Postgres
   -> QualifiedTable
   -> SelPermInfo 'Postgres
@@ -783,7 +783,7 @@ tableConnectionArgs pkeyColumns table selectPermissions = do
 -- >   min: table_min_fields
 -- > }
 tableAggregationFields
-  :: forall m n r. (MonadSchema n m, MonadTableInfo r m, MonadRole r m)
+  :: forall m n r. (MonadSchema n m, MonadTableInfo r m, MonadRoleSet r m)
   => QualifiedTable
   -> SelPermInfo 'Postgres
   -> m (Parser 'Output n (IR.AggregateFields 'Postgres))
@@ -864,7 +864,7 @@ lookupRemoteField' fieldInfos (FieldCall fcName _) =
     Just (P.Definition _ _ _ fieldInfo) -> pure fieldInfo
 
 lookupRemoteField
-  :: (MonadSchema n m, MonadTableInfo r m, MonadRole r m)
+  :: (MonadSchema n m, MonadTableInfo r m, MonadRoleSet r m)
   => [P.Definition P.FieldInfo]
   -> NonEmpty FieldCall
   -> m P.FieldInfo
@@ -882,7 +882,7 @@ lookupRemoteField fieldInfos (fieldCall :| rest) =
 --
 -- > field_name(arg_name: arg_type, ...): field_type
 fieldSelection
-  :: (MonadSchema n m, MonadTableInfo r m, MonadRole r m, Has QueryContext r)
+  :: (MonadSchema n m, MonadTableInfo r m, MonadRoleSet r m, Has QueryContext r)
   => QualifiedTable
   -> Maybe (PrimaryKeyColumns 'Postgres)
   -> FieldInfo 'Postgres
@@ -916,7 +916,7 @@ fieldSelection table maybePkeyColumns fieldInfo selectPermissions =
 
 -- | Field parsers for a table relationship
 relationshipField
-  :: (MonadSchema n m, MonadTableInfo r m, MonadRole r m, Has QueryContext r)
+  :: (MonadSchema n m, MonadTableInfo r m, MonadRoleSet r m, Has QueryContext r)
   => RelInfo -> m (Maybe [FieldParser n (AnnotatedField 'Postgres)])
 relationshipField relationshipInfo = runMaybeT do
   let otherTable = riRTable  relationshipInfo
@@ -960,7 +960,7 @@ relationshipField relationshipInfo = runMaybeT do
 -- | Computed field parser
 computedField
   :: forall m n r
-  . (MonadSchema n m, MonadTableInfo r m, MonadRole r m, Has QueryContext r)
+  . (MonadSchema n m, MonadTableInfo r m, MonadRoleSet r m, Has QueryContext r)
   => ComputedFieldInfo 'Postgres
   -> SelPermInfo 'Postgres
   -> m (Maybe (FieldParser n (AnnotatedField 'Postgres)))
@@ -1021,7 +1021,7 @@ computedField ComputedFieldInfo{..} selectPermissions = runMaybeT do
 
 -- | Remote relationship field parsers
 remoteRelationshipField
-  :: (MonadSchema n m, MonadTableInfo r m, MonadRole r m, Has QueryContext r)
+  :: (MonadSchema n m, MonadTableInfo r m, MonadRoleSet r m, Has QueryContext r)
   => RemoteFieldInfo 'Postgres -> m (Maybe [FieldParser n (AnnotatedField 'Postgres)])
 remoteRelationshipField remoteFieldInfo = runMaybeT do
   queryType <- asks $ qcQueryType . getter
@@ -1276,7 +1276,7 @@ node
   :: forall m n r
    . ( MonadSchema n m
      , MonadTableInfo r m
-     , MonadRole r m
+     , MonadRoleSet r m
      , Has QueryContext r
      )
   => m (P.Parser 'Output n (HashMap QualifiedTable (SelPermInfo 'Postgres, PrimaryKeyColumns 'Postgres, AnnotatedFields 'Postgres)))
@@ -1298,7 +1298,7 @@ nodeField
   :: forall m n r
    . ( MonadSchema n m
      , MonadTableInfo r m
-     , MonadRole r m
+     , MonadRoleSet r m
      , Has QueryContext r
      )
   => m (P.FieldParser n (SelectExp 'Postgres))

@@ -235,9 +235,9 @@ data SchemaCache
   , scFunctions                   :: !FunctionCache
   , scRemoteSchemas               :: !RemoteSchemaMap
   , scAllowlist                   :: !(HS.HashSet GQLQuery)
-  , scGQLContext                  :: !(HashMap RoleName (RoleContext GQLContext))
+  , scGQLContext                  :: !(HashMap RoleSet (RoleContext GQLContext))
   , scUnauthenticatedGQLContext   :: !GQLContext
-  , scRelayContext                :: !(HashMap RoleName (RoleContext GQLContext))
+  , scRelayContext                :: !(HashMap RoleSet (RoleContext GQLContext))
   , scUnauthenticatedRelayContext :: !GQLContext
   -- , scCustomTypes       :: !(NonObjectTypeMap, AnnotatedObjects)
   , scDepMap                      :: !DepMap

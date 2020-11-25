@@ -44,7 +44,7 @@ import           Hasura.RQL.Types                    hiding (ConstraintName)
 
 -- | Construct a root field, normally called insert_tablename, that can be used to add several rows to a DB table
 insertIntoTable
-  :: forall m n r. (MonadSchema n m, MonadTableInfo r m, MonadRole r m, Has QueryContext r)
+  :: forall m n r. (MonadSchema n m, MonadTableInfo r m, MonadRoleSet r m, Has QueryContext r)
   => QualifiedTable       -- ^ qualified name of the table
   -> G.Name               -- ^ field display name
   -> Maybe G.Description  -- ^ field description, if any
@@ -81,7 +81,7 @@ mkConflictClause conflictParser
 
 -- | Variant of 'insertIntoTable' that inserts a single row
 insertOneIntoTable
-  :: forall m n r. (MonadSchema n m, MonadTableInfo r m, MonadRole r m, Has QueryContext r)
+  :: forall m n r. (MonadSchema n m, MonadTableInfo r m, MonadRoleSet r m, Has QueryContext r)
   => QualifiedTable       -- ^ qualified name of the table
   -> G.Name               -- ^ field display name
   -> Maybe G.Description  -- ^ field description, if any
@@ -108,12 +108,19 @@ insertOneIntoTable table fieldName description insertPerms selectPerms updatePer
 
 -- | We specify the data of an individual row to insert through this input parser.
 tableFieldsInput
-  :: forall m n r. (MonadSchema n m, MonadTableInfo r m, MonadRole r m)
+  :: forall m n r. (MonadSchema n m, MonadTableInfo r m, MonadRoleSet r m)
   => QualifiedTable -- ^ qualified name of the table
   -> InsPermInfo 'Postgres    -- ^ insert permissions of the table
   -> m (Parser 'Input n (IR.AnnInsObj 'Postgres UnpreparedValue))
 tableFieldsInput table insertPerms = memoizeOn 'tableFieldsInput table do
-  tableGQLName    <- getTableGQLName table
+  tableGQLName <- getTableGQLName table
+  roleSet      <- askRoleSet
+  -- FIXME: This is ugly, but at the time of writing the code. Multiple
+  -- roles are not supported for mutations. Refactoring this function
+  -- to not have the `MonadRoleSet` will take a lot of effort because
+  -- this module uses lots of functions from the `Schema/Select.hs` function
+  -- and they do support
+  roleName <- getSingleRoleName =<< askRoleSet
   allFields    <- _tciFieldInfoMap . _tiCoreInfo <$> askTableInfo table
   objectFields <- catMaybes <$> for (Map.elems allFields) \case
     FIComputedField _ -> pure Nothing
@@ -128,7 +135,7 @@ tableFieldsInput table insertPerms = memoizeOn 'tableFieldsInput table do
     FIRelationship relationshipInfo -> runMaybeT $ do
       let otherTable = riRTable  relationshipInfo
           relName    = riName    relationshipInfo
-      permissions  <- MaybeT $ tablePermissions otherTable
+      permissions  <- MaybeT $ tablePermissions otherTable roleName
       relFieldName <- lift $ textToName $ relNameToTxt relName
       insPerms     <- MaybeT $ pure $ _permIns permissions
       let selPerms = _permSel permissions
@@ -150,7 +157,7 @@ tableFieldsInput table insertPerms = memoizeOn 'tableFieldsInput table do
 
 -- | Used by 'tableFieldsInput' for object data that is nested through object relationships
 objectRelationshipInput
-  :: forall m n r. (MonadSchema n m, MonadTableInfo r m, MonadRole r m)
+  :: forall m n r. (MonadSchema n m, MonadTableInfo r m, MonadRoleSet r m)
   => QualifiedTable
   -> InsPermInfo 'Postgres
   -> Maybe (SelPermInfo 'Postgres)
@@ -173,7 +180,7 @@ objectRelationshipInput table insertPerms selectPerms updatePerms =
 
 -- | Used by 'tableFieldsInput' for object data that is nested through object relationships
 arrayRelationshipInput
-  :: forall m n r. (MonadSchema n m, MonadTableInfo r m, MonadRole r m)
+  :: forall m n r. (MonadSchema n m, MonadTableInfo r m, MonadRoleSet r m)
   => QualifiedTable
   -> InsPermInfo 'Postgres
   -> Maybe (SelPermInfo 'Postgres)
@@ -217,7 +224,7 @@ mkInsertObject objects table columns conflictClause insertPerms updatePerms =
 
 -- | Specifies the "ON CONFLICT" SQL clause
 conflictObject
-  :: forall m n r. (MonadSchema n m, MonadTableInfo r m, MonadRole r m)
+  :: forall m n r. (MonadSchema n m, MonadTableInfo r m, MonadRoleSet r m)
   => QualifiedTable
   -> Maybe (SelPermInfo 'Postgres)
   -> UpdPermInfo 'Postgres
@@ -267,7 +274,7 @@ conflictConstraint constraints table = memoizeOn 'conflictConstraint table $ do
 -- to update rows in a DB table specified by filters. Only returns a parser if
 -- there are columns the user is allowed to update; otherwise returns Nothing.
 updateTable
-  :: forall m n r. (MonadSchema n m, MonadTableInfo r m, MonadRole r m, Has QueryContext r)
+  :: forall m n r. (MonadSchema n m, MonadTableInfo r m, MonadRoleSet r m, Has QueryContext r)
   => QualifiedTable       -- ^ qualified name of the table
   -> G.Name               -- ^ field display name
   -> Maybe G.Description  -- ^ field description, if any
@@ -290,7 +297,7 @@ updateTable table fieldName description updatePerms selectPerms = runMaybeT $ do
 -- parser if there are columns the user is allowed to update and if the user has
 -- select permissions on all primary keys; otherwise returns Nothing.
 updateTableByPk
-  :: forall m n r. (MonadSchema n m, MonadTableInfo r m, MonadRole r m, Has QueryContext r)
+  :: forall m n r. (MonadSchema n m, MonadTableInfo r m, MonadRoleSet r m, Has QueryContext r)
   => QualifiedTable       -- ^ qualified name of the table
   -> G.Name               -- ^ field display name
   -> Maybe G.Description  -- ^ field description, if any
@@ -433,7 +440,7 @@ updateOperators table updatePermissions = do
 -- | Construct a root field, normally called delete_tablename, that can be used
 -- to delete several rows from a DB table
 deleteFromTable
-  :: forall m n r. (MonadSchema n m, MonadTableInfo r m, MonadRole r m, Has QueryContext r)
+  :: forall m n r. (MonadSchema n m, MonadTableInfo r m, MonadRoleSet r m, Has QueryContext r)
   => QualifiedTable       -- ^ qualified name of the table
   -> G.Name               -- ^ field display name
   -> Maybe G.Description  -- ^ field description, if any
@@ -452,7 +459,7 @@ deleteFromTable table fieldName description deletePerms selectPerms = do
 -- | Construct a root field, normally called delete_tablename, that can be used
 -- to delete an individual rows from a DB table, specified by primary key
 deleteFromTableByPk
-  :: forall m n r. (MonadSchema n m, MonadTableInfo r m, MonadRole r m, Has QueryContext r)
+  :: forall m n r. (MonadSchema n m, MonadTableInfo r m, MonadRoleSet r m, Has QueryContext r)
   => QualifiedTable       -- ^ qualified name of the table
   -> G.Name               -- ^ field display name
   -> Maybe G.Description  -- ^ field description, if any
@@ -488,7 +495,7 @@ mkDeleteObject table columns deletePerms (whereExp, mutationOutput) =
 -- | All mutations allow returning results, such as what the updated database
 -- rows look like.  This parser allows a query to specify what data to fetch.
 mutationSelectionSet
-  :: forall m n r. (MonadSchema n m, MonadTableInfo r m, MonadRole r m, Has QueryContext r)
+  :: forall m n r. (MonadSchema n m, MonadTableInfo r m, MonadRoleSet r m, Has QueryContext r)
   => QualifiedTable
   -> Maybe (SelPermInfo 'Postgres)
   -> m (Parser 'Output n (IR.MutFldsG 'Postgres UnpreparedValue))

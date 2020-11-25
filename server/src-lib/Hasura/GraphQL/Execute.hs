@@ -131,7 +131,9 @@ getExecPlanPartial userInfo sc queryType req =
 
     getGCtx :: C.GQLContext
     getGCtx =
-      case Map.lookup roleName contextMap of
+      -- FIXME: the below should not be a singleton of the roleName
+      -- We should be passing the RoleSet here from `X-Hasura-Roles`
+      case Map.lookup (RoleSet $ HS.singleton roleName) contextMap of
         Nothing  -> defaultContext
         Just (C.RoleContext frontend backend) ->
           case _uiBackendOnlyFieldAccess userInfo of

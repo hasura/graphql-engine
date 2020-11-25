@@ -93,6 +93,7 @@ import           Control.Lens
 import           Data.Aeson
 import           Data.Aeson.Casing
 import           Data.Aeson.TH
+import           Data.List                           (nub)
 import           Data.Text.Extended
 import           Language.Haskell.TH.Syntax          (Lift)
 
@@ -255,6 +256,33 @@ deriving instance Eq (SelPermInfo 'Postgres)
 instance Cacheable (SelPermInfo 'Postgres)
 instance ToJSON (SelPermInfo 'Postgres) where
   toJSON = genericToJSON $ aesonDrop 3 snakeCase
+
+instance Semigroup (SelPermInfo 'Postgres) where
+  lSelPermInfo <> rSelPermInfo =
+    SelPermInfo
+    { spiCols = spiCols lSelPermInfo <> spiCols rSelPermInfo
+    , spiScalarComputedFields = spiScalarComputedFields lSelPermInfo <> spiScalarComputedFields rSelPermInfo
+    , spiFilter = BoolOr [spiFilter lSelPermInfo, spiFilter rSelPermInfo]
+    , spiLimit =
+      case (spiLimit lSelPermInfo, spiLimit rSelPermInfo) of
+        (Nothing, Nothing) -> Nothing
+        (Just l , Nothing) -> Just l
+        (Nothing, Just r)  -> Just r
+        (Just l,  Just r)  -> Just (max l r)
+    , spiAllowAgg = spiAllowAgg lSelPermInfo || spiAllowAgg rSelPermInfo
+    , spiRequiredHeaders = nub $ spiRequiredHeaders lSelPermInfo <> spiRequiredHeaders rSelPermInfo
+    }
+
+instance Monoid (SelPermInfo 'Postgres) where
+  mempty =
+    SelPermInfo
+    { spiCols = mempty
+    , spiScalarComputedFields = mempty
+    , spiFilter = gBoolExpTrue -- TODO: check if this is correct
+    , spiLimit = Nothing
+    , spiAllowAgg = False
+    , spiRequiredHeaders = mempty
+    }
 
 data UpdPermInfo (b :: BackendType)
   = UpdPermInfo

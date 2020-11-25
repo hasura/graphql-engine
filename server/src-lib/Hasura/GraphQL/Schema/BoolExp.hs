@@ -31,7 +31,7 @@ type ComparisonExp b = OpExpG b UnpreparedValue
 -- >   ...
 -- > }
 boolExp
-  :: forall m n r. (MonadSchema n m, MonadTableInfo r m, MonadRole r m)
+  :: forall m n r. (MonadSchema n m, MonadTableInfo r m, MonadRoleSet r m)
   => QualifiedTable
   -> Maybe (SelPermInfo 'Postgres)
   -> m (Parser 'Input n (AnnBoolExp 'Postgres UnpreparedValue))

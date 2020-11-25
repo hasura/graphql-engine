@@ -34,7 +34,7 @@ import           Hasura.RQL.Types
 -- >   obj-rel: <remote-table>_order_by
 -- > }
 orderByExp
-  :: forall m n r. (MonadSchema n m, MonadTableInfo r m, MonadRole r m)
+  :: forall m n r. (MonadSchema n m, MonadTableInfo r m, MonadRoleSet r m)
   => QualifiedTable
   -> SelPermInfo 'Postgres
   -> m (Parser 'Input n [IR.AnnOrderByItemG 'Postgres UnpreparedValue])
@@ -88,7 +88,7 @@ type OrderInfo = (PG.OrderType, PG.NullsOrder)
 -- order, rather than using a general intermediary representation
 
 orderByAggregation
-  :: forall m n r. (MonadSchema n m, MonadTableInfo r m, MonadRole r m)
+  :: forall m n r. (MonadSchema n m, MonadTableInfo r m, MonadRoleSet r m)
   => QualifiedTable
   -> SelPermInfo 'Postgres
   -> m (Parser 'Input n [IR.OrderByItemG 'Postgres (IR.AnnAggregateOrderBy 'Postgres)])

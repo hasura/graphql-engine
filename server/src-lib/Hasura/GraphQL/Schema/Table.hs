@@ -4,8 +4,6 @@ module Hasura.GraphQL.Schema.Table
   , tableUpdateColumnsEnum
   , tablePermissions
   , tableSelectPermissions
-  , tableUpdatePermissions
-  , tableDeletePermissions
   , tableSelectFields
   , tableColumns
   , tableSelectColumns
@@ -28,6 +26,8 @@ import           Hasura.GraphQL.Parser.Class
 import           Hasura.RQL.DML.Internal            (getRolePermInfo)
 import           Hasura.RQL.Types
 
+import           Hasura.Session
+
 -- | Table select columns enum
 --
 -- Parser for an enum type that matches the columns of the given
@@ -37,7 +37,7 @@ import           Hasura.RQL.Types
 -- Return Nothing if there's no column the current user has "select"
 -- permissions for.
 tableSelectColumnsEnum
-  :: (MonadSchema n m, MonadRole r m, MonadTableInfo r m)
+  :: (MonadSchema n m, MonadRoleSet r m, MonadTableInfo r m)
   => QualifiedTable
   -> SelPermInfo 'Postgres
   -> m (Maybe (Parser 'Both n PGCol))
@@ -66,7 +66,7 @@ tableSelectColumnsEnum table selectPermissions = do
 -- Return Nothing if there's no column the current user has "update"
 -- permissions for.
 tableUpdateColumnsEnum
-  :: (MonadSchema n m, MonadRole r m, MonadTableInfo r m)
+  :: (MonadSchema n m, MonadRoleSet r m, MonadTableInfo r m)
   => QualifiedTable
   -> UpdPermInfo 'Postgres
   -> m (Maybe (Parser 'Both n PGCol))
@@ -87,34 +87,27 @@ tableUpdateColumnsEnum table updatePermissions = do
       P.mkDefinition name (Just $ G.Description "column name") P.EnumValueInfo
 
 tablePermissions
-  :: forall m n r. (MonadSchema n m, MonadTableInfo r m, MonadRole r m)
+  :: forall m n r. (MonadSchema n m, MonadTableInfo r m)
   => QualifiedTable
+  -> RoleName
   -> m (Maybe (RolePermInfo 'Postgres))
-tablePermissions table = do
-  roleName  <- askRoleName
+tablePermissions table roleName = do
   tableInfo <- askTableInfo table
   pure $ getRolePermInfo roleName tableInfo
 
 tableSelectPermissions
-  :: forall m n r. (MonadSchema n m, MonadTableInfo r m, MonadRole r m)
+  :: forall m n r. (MonadSchema n m, MonadTableInfo r m, MonadRoleSet r m)
   => QualifiedTable
   -> m (Maybe (SelPermInfo 'Postgres))
-tableSelectPermissions table = (_permSel =<<) <$> tablePermissions table
-
-tableUpdatePermissions
-  :: forall m n r. (MonadSchema n m, MonadTableInfo r m, MonadRole r m)
-  => QualifiedTable
-  -> m (Maybe (UpdPermInfo 'Postgres))
-tableUpdatePermissions table = (_permUpd =<<) <$> tablePermissions table
-
-tableDeletePermissions
-  :: forall m n r. (MonadSchema n m, MonadTableInfo r m, MonadRole r m)
-  => QualifiedTable
-  -> m (Maybe (DelPermInfo 'Postgres))
-tableDeletePermissions table = (_permDel =<<) <$> tablePermissions table
+tableSelectPermissions table = do
+  RoleSet roleSet <- askRoleSet
+  roleSetPermissions <-
+    for (toList roleSet) $ \roleName ->
+      (_permSel =<<) <$> tablePermissions table roleName
+  pure $ mconcat roleSetPermissions
 
 tableSelectFields
-  :: forall m n r. (MonadSchema n m, MonadTableInfo r m, MonadRole r m)
+  :: forall m n r. (MonadSchema n m, MonadTableInfo r m, MonadRoleSet r m)
   => QualifiedTable
   -> SelPermInfo 'Postgres
   -> m [FieldInfo 'Postgres]
@@ -146,7 +139,7 @@ tableColumns table =
     columnInfo _             = Nothing
 
 tableSelectColumns
-  :: forall m n r. (MonadSchema n m, MonadTableInfo r m, MonadRole r m)
+  :: forall m n r. (MonadSchema n m, MonadTableInfo r m, MonadRoleSet r m)
   => QualifiedTable
   -> SelPermInfo 'Postgres
   -> m [ColumnInfo 'Postgres]

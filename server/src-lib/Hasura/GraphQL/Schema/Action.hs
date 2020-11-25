@@ -40,12 +40,12 @@ import           Hasura.Session
 -- >   col2: col2_type
 -- > }
 actionExecute
-  :: forall m n r. (MonadSchema n m, MonadTableInfo r m, MonadRole r m, Has QueryContext r)
+  :: forall m n r. (MonadSchema n m, MonadTableInfo r m, MonadRoleSet r m, Has QueryContext r)
   => NonObjectTypeMap
   -> ActionInfo 'Postgres
   -> m (Maybe (FieldParser n (AnnActionExecution 'Postgres UnpreparedValue)))
 actionExecute nonObjectTypeMap actionInfo = runMaybeT do
-  roleName <- lift askRoleName
+  roleName <- lift $ getSingleRoleName =<< askRoleSet
   guard $ roleName == adminRoleName || roleName `Map.member` permissions
   let fieldName = unActionName actionName
       description = G.Description <$> comment
@@ -76,12 +76,12 @@ actionExecute nonObjectTypeMap actionInfo = runMaybeT do
 --
 -- > action_name(action_input_arguments)
 actionAsyncMutation
-  :: forall m n r. (MonadSchema n m, MonadTableInfo r m, MonadRole r m)
+  :: forall m n r. (MonadSchema n m, MonadTableInfo r m, MonadRoleSet r m)
   => NonObjectTypeMap
   -> ActionInfo 'Postgres
   -> m (Maybe (FieldParser n AnnActionMutationAsync))
 actionAsyncMutation nonObjectTypeMap actionInfo = runMaybeT do
-  roleName <- lift askRoleName
+  roleName <- lift $ getSingleRoleName =<< askRoleSet
   guard $ roleName == adminRoleName || roleName `Map.member` permissions
   inputArguments <- lift $ actionInputArguments nonObjectTypeMap $ _adArguments definition
   actionId <- lift actionIdParser
@@ -106,11 +106,11 @@ actionAsyncMutation nonObjectTypeMap actionInfo = runMaybeT do
 -- >   output: user_defined_type!
 -- > }
 actionAsyncQuery
-  :: forall m n r. (MonadSchema n m, MonadTableInfo r m, MonadRole r m, Has QueryContext r)
+  :: forall m n r. (MonadSchema n m, MonadTableInfo r m, MonadRoleSet r m, Has QueryContext r)
   => ActionInfo 'Postgres
   -> m (Maybe (FieldParser n (AnnActionAsyncQuery 'Postgres UnpreparedValue)))
 actionAsyncQuery actionInfo = runMaybeT do
-  roleName <- lift askRoleName
+  roleName <- lift $ getSingleRoleName =<< askRoleSet
   guard $ roleName == adminRoleName || roleName `Map.member` permissions
   actionId <- lift actionIdParser
   actionOutputParser <- lift $ actionOutputFields outputObject
@@ -164,7 +164,7 @@ actionIdParser =
   fmap P.mkParameter <$> P.column (PGColumnScalar PGUUID) (G.Nullability False)
 
 actionOutputFields
-  :: forall m n r. (MonadSchema n m, MonadTableInfo r m, MonadRole r m, Has QueryContext r)
+  :: forall m n r. (MonadSchema n m, MonadTableInfo r m, MonadRoleSet r m, Has QueryContext r)
   => AnnotatedObjectType 'Postgres
   -> m (Parser 'Output n (RQL.AnnFieldsG 'Postgres UnpreparedValue))
 actionOutputFields outputObject = do
@@ -200,7 +200,7 @@ actionOutputFields outputObject = do
       let TypeRelationship relName relType tableInfo fieldMapping = typeRelationship
           tableName = _tciName $ _tiCoreInfo tableInfo
           fieldName = unRelationshipName relName
-      roleName <- lift askRoleName
+      roleName <- lift $ getSingleRoleName =<< askRoleSet
       tablePerms <- MaybeT $ pure $ RQL.getPermInfoMaybe roleName PASelect tableInfo
       tableParser <- lift $ selectTable tableName fieldName Nothing tablePerms
       pure $ tableParser <&> \selectExp ->
