@@ -123,9 +123,9 @@ buildGQLContext =
             QueryHasura ->
               (buildRoleContext queryContext allTables allFunctions allActionInfos
               nonObjectCustomTypes queryRemotes mutationRemotes roleSet)
-            -- QueryRelay ->
-            --   buildRelayRoleContext queryContext allTables allFunctions allActionInfos
-            --   nonObjectCustomTypes mutationRemotes roleSet
+            QueryRelay ->
+              buildRelayRoleContext queryContext allTables allFunctions allActionInfos
+              nonObjectCustomTypes mutationRemotes roleSet
       )
     unauthenticated <- bindA -< unauthenticatedContext queryRemotes mutationRemotes
     returnA -< (roleContexts, unauthenticated)
@@ -237,40 +237,47 @@ buildFullestDBSchema queryContext (takeValidTables -> allTables) (takeValidFunct
     where
       tableNames = Map.keysSet allTables
 
--- buildRelayRoleContext
---   :: (MonadError QErr m, MonadIO m, MonadUnique m)
---   => QueryContext -> TableCache -> FunctionCache -> [ActionInfo 'Postgres] -> NonObjectTypeMap
---   -> [P.FieldParser (P.ParseT Identity) RemoteField]
---   -> RoleName
---   -> m (RoleContext GQLContext)
--- buildRelayRoleContext queryContext (takeValidTables -> allTables) (takeValidFunctions -> allFunctions)
---   allActionInfos nonObjectCustomTypes mutationRemotes roleName =
+buildRelayRoleContext
+  :: (MonadError QErr m, MonadIO m, MonadUnique m)
+  => QueryContext -> TableCache -> FunctionCache -> [ActionInfo 'Postgres] -> NonObjectTypeMap
+  -> [P.FieldParser (P.ParseT Identity) RemoteField]
+  -> RoleSet
+  -> m (RoleContext GQLContext)
+buildRelayRoleContext queryContext (takeValidTables -> allTables) (takeValidFunctions -> allFunctions)
+  allActionInfos nonObjectCustomTypes mutationRemotes roleSet =
 
---   runMonadSchema roleName queryContext allTables $ do
---     mutationParserFrontend <-
---       buildPGMutationFields Frontend tableNames >>=
---       buildMutationParser mutationRemotes allActionInfos nonObjectCustomTypes allFunctions
+  runMonadSchema roleSet queryContext allTables $ do
+    let isSingleRole = Set.size (unRoleSet roleSet) == 1
+    mutationParserFrontend <-
+      case isSingleRole of
+        True ->
+          buildPGMutationFields Frontend tableNames >>=
+          buildMutationParser mutationRemotes allActionInfos nonObjectCustomTypes allFunctions
+        False -> pure Nothing
 
---     mutationParserBackend <-
---       buildPGMutationFields Backend tableNames >>=
---       buildMutationParser mutationRemotes allActionInfos nonObjectCustomTypes allFunctions
+    mutationParserBackend <-
+      case isSingleRole of
+        True ->
+          buildPGMutationFields Backend tableNames >>=
+          buildMutationParser mutationRemotes allActionInfos nonObjectCustomTypes allFunctions
+        False -> pure Nothing
 
---     queryPGFields <- buildRelayPostgresQueryFields tableNames allFunctions
---     subscriptionParser <- P.safeSelectionSet subscriptionRoot Nothing queryPGFields
---                              <&> fmap (fmap (P.handleTypename (RFRaw . J.String. G.unName)))
---     queryParserFrontend <- queryWithIntrospectionHelper queryPGFields
---       mutationParserFrontend subscriptionParser
---     queryParserBackend <- queryWithIntrospectionHelper queryPGFields
---       mutationParserBackend subscriptionParser
+    queryPGFields <- buildRelayPostgresQueryFields tableNames allFunctions
+    subscriptionParser <- P.safeSelectionSet subscriptionRoot Nothing queryPGFields
+                             <&> fmap (fmap (P.handleTypename (RFRaw . J.String. G.unName)))
+    queryParserFrontend <- queryWithIntrospectionHelper queryPGFields
+      mutationParserFrontend subscriptionParser
+    queryParserBackend <- queryWithIntrospectionHelper queryPGFields
+      mutationParserBackend subscriptionParser
 
---     let frontendContext = GQLContext (finalizeParser queryParserFrontend)
---                           (finalizeParser <$> mutationParserFrontend)
---     let backendContext = GQLContext (finalizeParser queryParserBackend)
---                          (finalizeParser <$> mutationParserBackend)
---     pure $ RoleContext frontendContext $ Just backendContext
+    let frontendContext = GQLContext (finalizeParser queryParserFrontend)
+                          (finalizeParser <$> mutationParserFrontend)
+    let backendContext = GQLContext (finalizeParser queryParserBackend)
+                         (finalizeParser <$> mutationParserBackend)
+    pure $ RoleContext frontendContext $ Just backendContext
 
---     where
---       tableNames = Map.keysSet allTables
+    where
+      tableNames = Map.keysSet allTables
 
 unauthenticatedContext
   :: forall m
