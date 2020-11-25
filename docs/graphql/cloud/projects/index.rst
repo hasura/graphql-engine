@@ -15,7 +15,7 @@ Projects & collaborators
 Introduction
 ------------
 
-The ``Projects`` page show a list of your projects.
+The ``Projects`` page shows a list of your projects.
 
 .. thumbnail:: /img/graphql/cloud/projects/projects-list.png
    :alt: Projects list
