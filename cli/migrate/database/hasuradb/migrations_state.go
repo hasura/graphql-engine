@@ -188,6 +188,8 @@ func (m *migrationsStateWithCatalogStateAPI) InsertVersion(version int64) error 
 	versionString := fmt.Sprintf("%d", version)
 	if cliState.Migrations == nil {
 		cliState.Migrations = MigrationsState{}
+	}
+	if cliState.Migrations[m.hasuradb.hasuraOpts.Datasource] == nil {
 		cliState.Migrations[m.hasuradb.hasuraOpts.Datasource] = map[string]bool{}
 	}
 

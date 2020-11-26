@@ -101,6 +101,7 @@ func newMigrateApplyCmd(ec *cli.ExecutionContext) *cobra.Command {
 	f.StringVar(&opts.MigrationType, "type", "up", "type of migration (up, down) to be used with version flag")
 
 	f.BoolVar(&opts.dryRun, "dry-run", false, "print the names of migrations which are going to be applied")
+	f.StringVar(&opts.Datasource, "datasource", "", "name of database to apply migrations on")
 	return migrateApplyCmd
 }
 
@@ -115,6 +116,7 @@ type MigrateApplyOptions struct {
 	GotoVersion   string
 	SkipExecution bool
 	dryRun        bool
+	Datasource string
 }
 
 func (o *MigrateApplyOptions) Run() error {
@@ -123,7 +125,7 @@ func (o *MigrateApplyOptions) Run() error {
 		return errors.Wrap(err, "error validating flags")
 	}
 
-	migrateDrv, err := migrate.NewMigrate(o.EC, true, "")
+	migrateDrv, err := migrate.NewMigrate(o.EC, true, o.Datasource)
 	if err != nil {
 		return err
 	}

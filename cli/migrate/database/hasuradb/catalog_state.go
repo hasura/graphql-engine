@@ -5,8 +5,6 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/hasura/graphql-engine/cli/migrate/database"
-
 	"github.com/mitchellh/mapstructure"
 
 	"github.com/pkg/errors"
@@ -15,8 +13,12 @@ import (
 type CatalogStateAPIClient interface {
 	sendMetadataOrQueryRequest(m interface{}, opts metadataOrQueryClientFuncOpts) (*http.Response, []byte, error)
 }
-
-type MigrationsState map[database.Datasource]map[string]bool
+//
+// "default:
+//		Version			     Dirty
+//		--------------------------
+//		"12321312321321321": true
+type MigrationsState map[string]map[string]bool
 
 type SettingsState struct {
 	MigrationMode *bool `json:"migrationMode"`
@@ -47,7 +49,6 @@ func NewCatalogStateAPI(cliStateKey string) *CatalogStateAPI {
 }
 
 func (c *CatalogStateAPI) GetCLICatalogState(client CatalogStateAPIClient) (*CLICatalogState, error) {
-	// useful for construcing errors
 	var opName = "getting catalog state"
 	q := HasuraInterfaceQuery{
 		Type: "get_catalog_state",

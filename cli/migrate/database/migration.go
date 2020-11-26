@@ -95,7 +95,6 @@ func (s uint64Slice) Search(x uint64) int {
 
 type HasuraOpts struct {
 	ServerFeatureFlags version.ServerFeatureFlags
-	Datasource         Datasource
+	Datasource         string
 }
 
-type Datasource string

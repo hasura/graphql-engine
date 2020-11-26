@@ -3,6 +3,7 @@ package migrate
 import (
 	"fmt"
 	nurl "net/url"
+	"path/filepath"
 	"runtime"
 	"strings"
 
@@ -120,9 +121,9 @@ func FilterCustomQuery(u *nurl.URL) *nurl.URL {
 	return &ux
 }
 
-func NewMigrate(ec *cli.ExecutionContext, isCmd bool, datasource database.Datasource) (*Migrate, error) {
+func NewMigrate(ec *cli.ExecutionContext, isCmd bool, datasource string) (*Migrate, error) {
 	dbURL := GetDataPath(ec)
-	fileURL := GetFilePath(ec.MigrationDir)
+	fileURL := GetFilePath(filepath.Join(ec.MigrationDir, datasource))
 	opts := NewMigrateOpts{
 		fileURL.String(),
 		dbURL.String(),

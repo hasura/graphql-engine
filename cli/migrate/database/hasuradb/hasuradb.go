@@ -193,7 +193,6 @@ func (h *HasuraDB) Open(url string, isCMD bool, tlsConfig *tls.Config, logger *l
 		Plugins: make(types.MetadataPlugins, 0),
 		Req:     req,
 	}
-	hasuraOpts.Datasource = "default"
 	hx, err := WithInstance(config, logger, hasuraOpts)
 	if err != nil {
 		logger.Debug(err)
@@ -264,6 +263,7 @@ func (h *HasuraDB) UnLock() error {
 		}
 		resp, body, err := h.sendMetadataOrQueryRequest(HasuraInterfaceQuery{
 			Type: "bulk",
+			Source: h.hasuraOpts.Datasource,
 			Args: queryAPIRequests,
 		}, metadataOrQueryClientFuncOpts{queryRequestOpts: &queryRequestOpts{}})
 		if err != nil {
