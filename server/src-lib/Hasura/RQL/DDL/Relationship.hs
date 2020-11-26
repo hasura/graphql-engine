@@ -19,7 +19,6 @@ import qualified Database.PG.Query                  as Q
 
 import           Data.Aeson.Types
 import           Data.Tuple                         (swap)
-import           Instances.TH.Lift                  ()
 
 import           Hasura.Backends.Postgres.SQL.Types
 import           Hasura.EncJSON

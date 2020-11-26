@@ -12,8 +12,6 @@ import qualified Data.Text                  as T
 
 import           Data.Aeson
 import           Data.Aeson.Casing
-import           Instances.TH.Lift          ()
-import           Language.Haskell.TH.Syntax (Lift)
 
 import           Hasura.RQL.Instances       ()
 import           Hasura.RQL.Types.Common
@@ -25,7 +23,7 @@ import           Hasura.SQL.Backend
 data OrderByCol
   = OCPG !FieldName
   | OCRel !FieldName !OrderByCol
-  deriving (Show, Eq, Lift)
+  deriving (Show, Eq)
 
 instance FromJSON OrderByCol where
   parseJSON = \case
@@ -70,7 +68,6 @@ data OrderByItemG (b :: BackendType) a
   } deriving (Functor, Foldable, Traversable, Generic)
 deriving instance (Backend b, Show a) => Show (OrderByItemG b a)
 deriving instance (Backend b, Eq a)   => Eq   (OrderByItemG b a)
-deriving instance (Backend b, Lift a) => Lift (OrderByItemG b a)
 instance (Backend b, Hashable a) => Hashable (OrderByItemG b a)
 
 type OrderByItem b = OrderByItemG b OrderByCol

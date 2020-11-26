@@ -51,8 +51,6 @@ import           Data.Aeson.Casing
 import           Data.Aeson.Internal
 import           Data.Aeson.TH
 import           Data.Typeable
-import           Instances.TH.Lift                  ()
-import           Language.Haskell.TH.Syntax         (Lift)
 
 import qualified Hasura.Backends.Postgres.SQL.Types as PG
 
@@ -68,7 +66,7 @@ data ColExp
   = ColExp
   { ceCol :: !FieldName
   , ceVal :: !Value
-  } deriving (Show, Eq, Lift, Data, Generic)
+  } deriving (Show, Eq, Data, Generic)
 instance NFData ColExp
 instance Cacheable ColExp
 
@@ -80,7 +78,6 @@ data GExists (b :: BackendType) a
   } deriving (Functor, Foldable, Traversable, Generic)
 deriving instance (Backend b, Show a) => Show (GExists b a)
 deriving instance (Backend b, Eq a) => Eq (GExists b a)
-deriving instance (Backend b, Lift a) => Lift (GExists b a)
 deriving instance (Backend b, Typeable a, Data a) => Data (GExists b a)
 instance (Backend b, NFData a) => NFData (GExists b a)
 instance (Backend b, Data a) => Plated (GExists b a)
@@ -109,7 +106,7 @@ data GBoolExp (b :: BackendType) a
   | BoolNot !(GBoolExp b a)
   | BoolExists !(GExists b a)
   | BoolFld !a
-  deriving (Show, Eq, Lift, Functor, Foldable, Traversable, Data, Generic)
+  deriving (Show, Eq, Functor, Foldable, Traversable, Data, Generic)
 instance (Backend b, NFData a) => NFData (GBoolExp b a)
 instance (Backend b, Data a) => Plated (GBoolExp b a)
 instance (Backend b, Cacheable a) => Cacheable (GBoolExp b a)
@@ -160,7 +157,7 @@ parseGBoolExp f = \case
 
 newtype BoolExp (b :: BackendType)
   = BoolExp { unBoolExp :: GBoolExp b ColExp }
-  deriving (Show, Eq, Lift, Generic, NFData, Cacheable)
+  deriving (Show, Eq, Generic, NFData, Cacheable)
 
 $(makeWrapped ''BoolExp)
 

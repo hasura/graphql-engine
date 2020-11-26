@@ -75,8 +75,6 @@ import           Data.Text.Extended
 import           Data.Text.NonEmpty
 import           Data.Typeable
 import           Data.URL.Template
-import           Instances.TH.Lift                  ()
-import           Language.Haskell.TH.Syntax         (Lift)
 
 import qualified Hasura.Backends.Postgres.SQL.DML   as PG
 import qualified Hasura.Backends.Postgres.SQL.Types as PG
@@ -116,9 +114,6 @@ class
   , Representable (XANILIKE b)
   , Ord (TableName b)
   , Ord (ScalarType b)
-  , Lift (TableName b)
-  , Lift (BasicOrderType b)
-  , Lift (NullsOrderType b)
   , Data (TableName b)
   , Data (ScalarType b)
   , Data (SQLExpression b)
@@ -186,7 +181,7 @@ rootText = mkNonEmptyTextUnsafe "root"
 
 newtype RelName
   = RelName { getRelTxt :: NonEmptyText }
-  deriving (Show, Eq, Hashable, FromJSON, ToJSON, ToJSONKey, Q.ToPrepArg, Q.FromCol, Lift, Generic, Arbitrary, NFData, Cacheable)
+  deriving (Show, Eq, Hashable, FromJSON, ToJSON, ToJSONKey, Q.ToPrepArg, Q.FromCol, Generic, Arbitrary, NFData, Cacheable)
 
 instance PG.IsIdentifier RelName where
   toIdentifier rn = PG.Identifier $ relNameToTxt rn
@@ -207,7 +202,7 @@ relTypeToTxt ArrRel = "array"
 data RelType
   = ObjRel
   | ArrRel
-  deriving (Show, Eq, Lift, Generic)
+  deriving (Show, Eq, Generic)
 instance NFData RelType
 instance Hashable RelType
 instance Cacheable RelType
@@ -252,7 +247,7 @@ instance (Backend b) => ToJSON (RelInfo b) where
 newtype FieldName
   = FieldName { getFieldNameTxt :: Text }
   deriving ( Show, Eq, Ord, Hashable, FromJSON, ToJSON
-           , FromJSONKey, ToJSONKey, Lift, Data, Generic
+           , FromJSONKey, ToJSONKey, Data, Generic
            , IsString, Arbitrary, NFData, Cacheable
            , Semigroup
            )
@@ -276,7 +271,7 @@ data WithTable a
   = WithTable
   { wtName :: !PG.QualifiedTable
   , wtInfo :: !a
-  } deriving (Show, Eq, Lift)
+  } deriving (Show, Eq)
 
 instance (FromJSON a) => FromJSON (WithTable a) where
   parseJSON v@(Object o) =
@@ -400,11 +395,11 @@ instance FromJSON NonNegativeDiffTime where
 
 newtype ResolvedWebhook
   = ResolvedWebhook { unResolvedWebhook :: Text}
-  deriving ( Show, Eq, FromJSON, ToJSON, Hashable, ToTxt, Lift)
+  deriving ( Show, Eq, FromJSON, ToJSON, Hashable, ToTxt)
 
 newtype InputWebhook
   = InputWebhook {unInputWebhook :: URLTemplate}
-  deriving (Show, Eq, Lift, Generic)
+  deriving (Show, Eq, Generic)
 instance NFData InputWebhook
 instance Cacheable InputWebhook
 
@@ -429,7 +424,7 @@ resolveWebhook env (InputWebhook urlTemplate) = do
     (pure . ResolvedWebhook) eitherRenderedTemplate
 
 newtype Timeout = Timeout { unTimeout :: Int }
-  deriving (Show, Eq, ToJSON, Generic, NFData, Cacheable, Lift)
+  deriving (Show, Eq, ToJSON, Generic, NFData, Cacheable)
 
 instance FromJSON Timeout where
   parseJSON = withScientific "Timeout" $ \t -> do
@@ -447,7 +442,7 @@ defaultActionTimeoutSecs = Timeout 30
 data UrlConf
   = UrlValue !InputWebhook
   | UrlFromEnv !T.Text
-  deriving (Show, Eq, Generic, Lift)
+  deriving (Show, Eq, Generic)
 instance NFData UrlConf
 instance Cacheable UrlConf
 

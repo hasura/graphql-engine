@@ -15,8 +15,6 @@ import           Data.Aeson.Casing
 import           Data.Aeson.TH
 import           Data.Aeson.Types
 import           Data.Text.Extended
-import           Instances.TH.Lift                          ()
-import           Language.Haskell.TH.Syntax                 (Lift)
 
 import           Hasura.Backends.Postgres.SQL.Types
 import           Hasura.Backends.Postgres.SQL.Value
@@ -58,13 +56,14 @@ askPermInfo
   -> PermAccessor backend c
   -> m c
 askPermInfo tabInfo roleName pa =
-  case M.lookup roleName rpim >>= (^. paL) of
-    Just c  -> return c
-    Nothing -> throw400 PermissionDenied $ mconcat
-               [ pt <> " permission on " <>> _tciName (_tiCoreInfo tabInfo)
-               , " for role " <>> roleName
-               , " does not exist"
-               ]
+  (M.lookup roleName rpim >>= (^. paL))
+  `onNothing`
+  throw400 PermissionDenied
+  (mconcat
+    [ pt <> " permission on " <>> _tciName (_tiCoreInfo tabInfo)
+    , " for role " <>> roleName
+    , " does not exist"
+    ])
   where
     paL = permAccToLens pa
     pt = permTypeToCode $ permAccToType pa
@@ -196,7 +195,7 @@ data DropPerm a
   = DropPerm
   { dipTable :: !QualifiedTable
   , dipRole  :: !RoleName
-  } deriving (Show, Eq, Lift)
+  } deriving (Show, Eq)
 
 $(deriveJSON (aesonDrop 3 snakeCase){omitNothingFields=True} ''DropPerm)
 

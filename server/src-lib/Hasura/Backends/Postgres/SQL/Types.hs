@@ -69,8 +69,6 @@ import           Data.Aeson.Encoding           (text)
 import           Data.Aeson.TH
 import           Data.Aeson.Types              (toJSONKeyText)
 import           Data.Text.Extended
-import           Instances.TH.Lift             ()
-import           Language.Haskell.TH.Syntax    (Lift)
 
 import           Hasura.Incremental            (Cacheable)
 import           Hasura.RQL.Types.Error
@@ -109,7 +107,7 @@ trimNullChars = T.takeWhile (/= '\x0')
 
 newtype TableName
   = TableName { getTableTxt :: Text }
-  deriving ( Show, Eq, Ord, FromJSON, ToJSON, Hashable, Q.ToPrepArg, Q.FromCol, Lift, Data
+  deriving ( Show, Eq, Ord, FromJSON, ToJSON, Hashable, Q.ToPrepArg, Q.FromCol, Data
            , Generic, Arbitrary, NFData, Cacheable, IsString )
 
 instance IsIdentifier TableName where
@@ -151,7 +149,7 @@ isView _      = False
 
 newtype ConstraintName
   = ConstraintName { getConstraintTxt :: Text }
-  deriving (Show, Eq, ToTxt, FromJSON, ToJSON, Q.ToPrepArg, Q.FromCol, Hashable, Lift, NFData, Cacheable)
+  deriving (Show, Eq, ToTxt, FromJSON, ToJSON, Q.ToPrepArg, Q.FromCol, Hashable, NFData, Cacheable)
 
 instance IsIdentifier ConstraintName where
   toIdentifier (ConstraintName t) = Identifier t
@@ -161,7 +159,7 @@ instance ToSQL ConstraintName where
 
 newtype FunctionName
   = FunctionName { getFunctionTxt :: Text }
-  deriving (Show, Eq, Ord, FromJSON, ToJSON, Q.ToPrepArg, Q.FromCol, Hashable, Lift, Data, Generic, Arbitrary, NFData, Cacheable)
+  deriving (Show, Eq, Ord, FromJSON, ToJSON, Q.ToPrepArg, Q.FromCol, Hashable, Data, Generic, Arbitrary, NFData, Cacheable)
 
 instance IsIdentifier FunctionName where
   toIdentifier (FunctionName t) = Identifier t
@@ -174,7 +172,7 @@ instance ToSQL FunctionName where
 
 newtype SchemaName
   = SchemaName { getSchemaTxt :: Text }
-  deriving ( Show, Eq, Ord, FromJSON, ToJSON, Hashable, Q.ToPrepArg, Q.FromCol, Lift, Data, Generic
+  deriving ( Show, Eq, Ord, FromJSON, ToJSON, Hashable, Q.ToPrepArg, Q.FromCol, Data, Generic
            , Arbitrary, NFData, Cacheable, IsString )
 
 publicSchema :: SchemaName
@@ -193,7 +191,7 @@ data QualifiedObject a
   = QualifiedObject
   { qSchema :: !SchemaName
   , qName   :: !a
-  } deriving (Show, Eq, Functor, Ord, Generic, Lift, Data)
+  } deriving (Show, Eq, Functor, Ord, Generic, Data)
 instance (NFData a) => NFData (QualifiedObject a)
 instance (Cacheable a) => Cacheable (QualifiedObject a)
 
@@ -256,7 +254,7 @@ newtype PGDescription
 newtype PGCol
   = PGCol { getPGColTxt :: Text }
   deriving ( Show, Eq, Ord, FromJSON, ToJSON, Hashable, Q.ToPrepArg, Q.FromCol, ToJSONKey
-           , FromJSONKey, Lift, Data, Generic, Arbitrary, NFData, Cacheable, IsString )
+           , FromJSONKey, Data, Generic, Arbitrary, NFData, Cacheable, IsString )
 
 instance IsIdentifier PGCol where
   toIdentifier (PGCol t) = Identifier t
@@ -299,7 +297,7 @@ data PGScalarType
   | PGRaster
   | PGUUID
   | PGUnknown !Text
-  deriving (Show, Eq, Ord, Lift, Generic, Data)
+  deriving (Show, Eq, Ord, Generic, Data)
 instance NFData PGScalarType
 instance Hashable PGScalarType
 instance Cacheable PGScalarType

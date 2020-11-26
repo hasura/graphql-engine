@@ -35,7 +35,6 @@ import           Data.Aeson
 import           Data.Aeson.Casing
 import           Data.Aeson.TH
 import           Data.Text.Extended
-import           Language.Haskell.TH.Syntax         (Lift)
 
 import           Hasura.Backends.Postgres.SQL.Types hiding (TableName)
 import           Hasura.Backends.Postgres.SQL.Value
@@ -48,12 +47,12 @@ import           Hasura.SQL.Backend
 
 newtype EnumValue
   = EnumValue { getEnumValue :: G.Name }
-  deriving (Show, Eq, Ord, Lift, NFData, Hashable, ToJSON, ToJSONKey, FromJSON, FromJSONKey, Cacheable)
+  deriving (Show, Eq, Ord, NFData, Hashable, ToJSON, ToJSONKey, FromJSON, FromJSONKey, Cacheable)
 
 newtype EnumValueInfo
   = EnumValueInfo
   { evComment :: Maybe Text
-  } deriving (Show, Eq, Ord, Lift, NFData, Hashable, Cacheable)
+  } deriving (Show, Eq, Ord, NFData, Hashable, Cacheable)
 $(deriveJSON (aesonDrop 2 snakeCase) ''EnumValueInfo)
 
 type EnumValues = M.HashMap EnumValue EnumValueInfo
@@ -68,7 +67,6 @@ data EnumReference (b :: BackendType)
 deriving instance (Backend b) => Show (EnumReference b)
 deriving instance (Backend b) => Eq (EnumReference b)
 deriving instance (Backend b) => Ord (EnumReference b)
-deriving instance (Backend b) => Lift (EnumReference b)
 instance (Backend b) => NFData (EnumReference b)
 instance (Backend b) => Hashable (EnumReference b)
 instance (Backend b) => Cacheable (EnumReference b)

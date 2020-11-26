@@ -1,7 +1,6 @@
 module Hasura.RQL.Types.RemoteSchema where
 
 import           Hasura.Prelude
-import           Language.Haskell.TH.Syntax (Lift)
 
 import qualified Data.Aeson                 as J
 import qualified Data.Aeson.Casing          as J
@@ -23,7 +22,7 @@ type UrlFromEnv = Text
 newtype RemoteSchemaName
   = RemoteSchemaName
   { unRemoteSchemaName :: NonEmptyText }
-  deriving ( Show, Eq, Ord, Lift, Hashable, J.ToJSON, J.ToJSONKey
+  deriving ( Show, Eq, Ord, Hashable, J.ToJSON, J.ToJSONKey
            , J.FromJSON, Q.ToPrepArg, Q.FromCol, ToTxt, NFData
            , Generic, Cacheable, Arbitrary
            )
@@ -34,7 +33,7 @@ data RemoteSchemaInfo
   , rsHeaders          :: ![HeaderConf]
   , rsFwdClientHeaders :: !Bool
   , rsTimeoutSeconds   :: !Int
-  } deriving (Show, Eq, Lift, Generic)
+  } deriving (Show, Eq, Generic)
 instance NFData RemoteSchemaInfo
 instance Cacheable RemoteSchemaInfo
 instance Hashable RemoteSchemaInfo
@@ -48,7 +47,7 @@ data RemoteSchemaDef
   , _rsdHeaders              :: !(Maybe [HeaderConf])
   , _rsdForwardClientHeaders :: !Bool
   , _rsdTimeoutSeconds       :: !(Maybe Int)
-  } deriving (Show, Eq, Lift, Generic)
+  } deriving (Show, Eq, Generic)
 instance NFData RemoteSchemaDef
 instance Cacheable RemoteSchemaDef
 $(J.deriveToJSON (J.aesonDrop 4 J.snakeCase){J.omitNothingFields=True} ''RemoteSchemaDef)
@@ -67,7 +66,7 @@ data AddRemoteSchemaQuery
   { _arsqName       :: !RemoteSchemaName
   , _arsqDefinition :: !RemoteSchemaDef
   , _arsqComment    :: !(Maybe Text)
-  } deriving (Show, Eq, Lift, Generic)
+  } deriving (Show, Eq, Generic)
 instance NFData AddRemoteSchemaQuery
 instance Cacheable AddRemoteSchemaQuery
 $(J.deriveJSON (J.aesonDrop 5 J.snakeCase) ''AddRemoteSchemaQuery)
@@ -75,7 +74,7 @@ $(J.deriveJSON (J.aesonDrop 5 J.snakeCase) ''AddRemoteSchemaQuery)
 newtype RemoteSchemaNameQuery
   = RemoteSchemaNameQuery
   { _rsnqName    :: RemoteSchemaName
-  } deriving (Show, Eq, Lift)
+  } deriving (Show, Eq)
 
 $(J.deriveJSON (J.aesonDrop 5 J.snakeCase) ''RemoteSchemaNameQuery)
 

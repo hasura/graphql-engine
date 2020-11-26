@@ -15,7 +15,6 @@ import qualified Database.PG.Query                  as Q
 import           Control.Lens                       hiding ((.=))
 import           Data.Aeson
 import           Data.Text.Extended
-import           Language.Haskell.TH.Syntax         (Lift)
 
 import qualified Language.GraphQL.Draft.Syntax      as G
 
@@ -94,7 +93,7 @@ mkFunctionInfo qf systemDefined FunctionConfig{..} rawFuncInfo =
       -- is using the function to do some logging, say). But this is also a
       -- footgun we'll need to try to document (since `VOLATILE` is default
       -- when volatility is omitted). See the original approach here:
-      -- https://github.com/hasura/graphql-engine/pull/5858 
+      -- https://github.com/hasura/graphql-engine/pull/5858
       --
       -- This is the one exception where we do some validation. We're not
       -- commited to this check, and it would be backwards compatible to remove
@@ -179,7 +178,7 @@ delFunctionFromCatalog (QualifiedObject sn fn) =
 newtype TrackFunction
   = TrackFunction
   { tfName :: QualifiedFunction}
-  deriving (Show, Eq, FromJSON, ToJSON, Lift)
+  deriving (Show, Eq, FromJSON, ToJSON)
 
 -- | Track function, Phase 1:
 -- Validate function tracking operation. Fails if function is already being
@@ -244,7 +243,7 @@ runTrackFunctionV2 (TrackFunctionV2 qf config) = do
 newtype UnTrackFunction
   = UnTrackFunction
   { utfName :: QualifiedFunction }
-  deriving (Show, Eq, FromJSON, ToJSON, Lift)
+  deriving (Show, Eq, FromJSON, ToJSON)
 
 runUntrackFunc
   :: (QErrM m, CacheRWM m, MonadTx m)

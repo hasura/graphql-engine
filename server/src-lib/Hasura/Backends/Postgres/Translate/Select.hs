@@ -18,7 +18,6 @@ import qualified Database.PG.Query                          as Q
 import           Control.Lens                               hiding (op)
 import           Control.Monad.Writer.Strict
 import           Data.Text.Extended
-import           Instances.TH.Lift                          ()
 
 import qualified Hasura.Backends.Postgres.SQL.DML           as S
 

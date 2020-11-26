@@ -10,7 +10,6 @@ import qualified Text.Builder                       as TB
 
 import           Data.String                        (fromString)
 import           Data.Text.Extended
-import           Language.Haskell.TH.Syntax         (Lift)
 
 import           Hasura.Backends.Postgres.SQL.Types
 import           Hasura.Incremental                 (Cacheable)
@@ -76,7 +75,7 @@ instance ToSQL OrderByItem where
     toSQL e <~> toSQL ot <~> toSQL no
 
 data OrderType = OTAsc | OTDesc
-  deriving (Show, Eq, Lift, Generic, Data)
+  deriving (Show, Eq, Generic, Data)
 instance NFData OrderType
 instance Cacheable OrderType
 instance Hashable OrderType
@@ -94,7 +93,7 @@ instance J.ToJSON OrderType where
 data NullsOrder
   = NFirst
   | NLast
-  deriving (Show, Eq, Lift, Generic, Data)
+  deriving (Show, Eq, Generic, Data)
 instance NFData NullsOrder
 instance Cacheable NullsOrder
 instance Hashable NullsOrder

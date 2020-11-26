@@ -11,7 +11,6 @@ import qualified Database.PG.Query                            as Q
 
 import           Data.Aeson.Types
 import           Data.Text.Extended
-import           Instances.TH.Lift                            ()
 
 import qualified Hasura.Backends.Postgres.SQL.DML             as S
 import qualified Hasura.Tracing                               as Tracing
@@ -25,7 +24,6 @@ import           Hasura.RQL.DML.Internal
 import           Hasura.RQL.DML.Types
 import           Hasura.RQL.IR.BoolExp
 import           Hasura.RQL.IR.Update
-import           Hasura.RQL.Instances                         ()
 import           Hasura.RQL.Types
 import           Hasura.Server.Version                        (HasVersion)
 import           Hasura.Session
