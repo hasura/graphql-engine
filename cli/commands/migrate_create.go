@@ -95,6 +95,7 @@ type migrateCreateOptions struct {
 	schemaNames    []string
 	upSQL          string
 	downSQL        string
+	Datasource     string
 }
 
 func (o *migrateCreateOptions) run() (version int64, err error) {
@@ -134,7 +135,7 @@ func (o *migrateCreateOptions) run() (version int64, err error) {
 
 	var migrateDrv *migrate.Migrate
 	if o.sqlServer || o.metaDataServer || o.flags.Changed("up-sql") || o.flags.Changed("down-sql") {
-		migrateDrv, err = migrate.NewMigrate(o.EC, true, "")
+		migrateDrv, err = migrate.NewMigrate(o.EC, true, o.Datasource)
 		if err != nil {
 			return 0, errors.Wrap(err, "cannot create migrate instance")
 		}

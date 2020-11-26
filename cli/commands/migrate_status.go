@@ -39,17 +39,17 @@ func newMigrateStatusCmd(ec *cli.ExecutionContext) *cobra.Command {
 			return nil
 		},
 	}
-
+	migrateStatusCmd.Flags().StringVar(&opts.Datasource, "datasource", "", "name of datasource to show the status of")
 	return migrateStatusCmd
 }
 
 type MigrateStatusOptions struct {
 	EC *cli.ExecutionContext
+	Datasource string
 }
 
 func (o *MigrateStatusOptions) Run() (*migrate.Status, error) {
-	// TODO
-	migrateDrv, err := migrate.NewMigrate(o.EC, true, "")
+	migrateDrv, err := migrate.NewMigrate(o.EC, true, o.Datasource)
 	if err != nil {
 		return nil, err
 	}

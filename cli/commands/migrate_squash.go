@@ -44,6 +44,7 @@ func newMigrateSquashCmd(ec *cli.ExecutionContext) *cobra.Command {
 	f := migrateSquashCmd.Flags()
 	f.Uint64Var(&opts.from, "from", 0, "start squashing from this version")
 	f.StringVar(&opts.name, "name", "squashed", "name for the new squashed migration")
+	f.StringVar(&opts.Datasource, "datasource", "", "datasource migrations to squash")
 	f.BoolVar(&opts.deleteSource, "delete-source", false, "delete the source files after squashing without any confirmation")
 
 	// mark flag as required
@@ -60,13 +61,14 @@ type migrateSquashOptions struct {
 	newVersion int64
 
 	deleteSource bool
+	Datasource string
 }
 
 func (o *migrateSquashOptions) run() error {
 	o.EC.Logger.Warnln("This command is currently experimental and hence in preview, correctness of squashed migration is not guaranteed!")
 	o.EC.Spin(fmt.Sprintf("Squashing migrations from %d to latest...", o.from))
 	defer o.EC.Spinner.Stop()
-	migrateDrv, err := migrate.NewMigrate(o.EC, true, "")
+	migrateDrv, err := migrate.NewMigrate(o.EC, true, o.Datasource)
 	if err != nil {
 		return errors.Wrap(err, "unable to initialize migrations driver")
 	}
