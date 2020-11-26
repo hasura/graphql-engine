@@ -80,6 +80,7 @@ import           Language.Haskell.TH.Syntax         (Lift)
 
 import qualified Hasura.Backends.Postgres.SQL.DML   as PG
 import qualified Hasura.Backends.Postgres.SQL.Types as PG
+import qualified Hasura.Backends.Postgres.SQL.Value as PG
 
 import qualified Hasura.Backends.MSSQL.Types as MSSQL
 
@@ -139,36 +140,40 @@ class
   , ToTxt (ScalarType b)
   , Typeable b
   ) => Backend (b :: BackendType) where
-  type Identifier     b :: Type
-  type Alias          b :: Type
-  type TableName      b :: Type
-  type FunctionName   b :: Type
-  type ConstraintName b :: Type
-  type BasicOrderType b :: Type
-  type NullsOrderType b :: Type
-  type CountType      b :: Type
-  type Column         b :: Type
-  type ScalarType     b :: Type
-  type SQLExpression  b :: Type
-  type SQLOperator    b :: Type
-  type XAILIKE        b :: Type
-  type XANILIKE       b :: Type
+  type Identifier      b :: Type
+  type Alias           b :: Type
+  type TableName       b :: Type
+  type FunctionName    b :: Type
+  type ConstraintName  b :: Type
+  type BasicOrderType  b :: Type
+  type NullsOrderType  b :: Type
+  type CountType       b :: Type
+  type Column          b :: Type
+  type ColumnValueType b :: Type
+  type ScalarType      b :: Type
+  type SQLExpression   b :: Type
+  type SQLOperator     b :: Type
+  type SessionVarType  b :: Type
+  type XAILIKE         b :: Type
+  type XANILIKE        b :: Type
 
 instance Backend 'Postgres where
-  type Identifier     'Postgres = PG.Identifier
-  type Alias          'Postgres = PG.Alias
-  type TableName      'Postgres = PG.QualifiedTable
-  type FunctionName   'Postgres = PG.QualifiedFunction
-  type ConstraintName 'Postgres = PG.ConstraintName
-  type BasicOrderType 'Postgres = PG.OrderType
-  type NullsOrderType 'Postgres = PG.NullsOrder
-  type CountType      'Postgres = PG.CountType
-  type Column         'Postgres = PG.PGCol
-  type ScalarType     'Postgres = PG.PGScalarType
-  type SQLExpression  'Postgres = PG.SQLExp
-  type SQLOperator    'Postgres = PG.SQLOp
-  type XAILIKE        'Postgres = ()
-  type XANILIKE       'Postgres = ()
+  type Identifier      'Postgres = PG.Identifier
+  type Alias           'Postgres = PG.Alias
+  type TableName       'Postgres = PG.QualifiedTable
+  type FunctionName    'Postgres = PG.QualifiedFunction
+  type ConstraintName  'Postgres = PG.ConstraintName
+  type BasicOrderType  'Postgres = PG.OrderType
+  type NullsOrderType  'Postgres = PG.NullsOrder
+  type CountType       'Postgres = PG.CountType
+  type Column          'Postgres = PG.PGCol
+  type ColumnValueType 'Postgres = PG.WithScalarType PG.PGScalarValue
+  type ScalarType      'Postgres = PG.PGScalarType
+  type SQLExpression   'Postgres = PG.SQLExp
+  type SQLOperator     'Postgres = PG.SQLOp
+  type SessionVarType  'Postgres = PG.PGType PG.PGScalarType
+  type XAILIKE         'Postgres = ()
+  type XANILIKE        'Postgres = ()
 
 instance Backend 'MSSQL where
   type Identifier     'MSSQL = ()

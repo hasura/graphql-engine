@@ -36,7 +36,7 @@ type SubscriptionRootFieldMSSQL v = RootField (QueryDB 'MSSQL v) Void (RQL.AnnAc
 
 -- -- | Plan a query without prepare/exec.
 planNoPlan ::
-     SubscriptionRootFieldMSSQL Graphql.UnpreparedValue
+     SubscriptionRootFieldMSSQL (Graphql.UnpreparedValue 'MSSQL)
   -> Either PrepareError Select
 planNoPlan unpreparedRoot = do
   rootField <- EQ.traverseQueryRootField prepareValueNoPlan unpreparedRoot
@@ -53,7 +53,7 @@ planNoPlan unpreparedRoot = do
       }
 
 planMultiplex ::
-     OMap.InsOrdHashMap G.Name (SubscriptionRootFieldMSSQL Graphql.UnpreparedValue)
+     OMap.InsOrdHashMap G.Name (SubscriptionRootFieldMSSQL (Graphql.UnpreparedValue 'MSSQL))
   -> Either PrepareError Select
 planMultiplex unpreparedMap = do
   rootFieldMap <-
@@ -70,7 +70,7 @@ planMultiplex unpreparedMap = do
 
 -- | Plan a query without prepare/exec.
 planNoPlanMap ::
-     OMap.InsOrdHashMap G.Name (SubscriptionRootFieldMSSQL Graphql.UnpreparedValue)
+     OMap.InsOrdHashMap G.Name (SubscriptionRootFieldMSSQL (Graphql.UnpreparedValue 'MSSQL))
   -> Either PrepareError Reselect
 planNoPlanMap unpreparedMap = do
   rootFieldMap <-
@@ -129,7 +129,7 @@ data PrepareError
 
 data PrepareState = PrepareState
   { positionalArguments :: !Integer
-  , namedArguments      :: !(HashMap G.Name Graphql.PGColumnValue)
+  , namedArguments      :: !(HashMap G.Name (Graphql.ColumnValue 'MSSQL))
   }
 
 emptyPrepareState :: PrepareState
@@ -138,7 +138,7 @@ emptyPrepareState =
 
 -- | Prepare a value without any query planning; we just execute the
 -- query with the values embedded.
-prepareValueNoPlan :: Graphql.UnpreparedValue -> Either PrepareError Tsql.Expression
+prepareValueNoPlan :: Graphql.UnpreparedValue 'MSSQL -> Either PrepareError Tsql.Expression
 prepareValueNoPlan =
   \case
     -- FIXME: Cannot compile this until there is a generic literal type.
@@ -155,7 +155,7 @@ prepareValueNoPlan =
 
 -- | Prepare a value for multiplexed queries.
 prepareValueMultiplex ::
-     Graphql.UnpreparedValue
+     Graphql.UnpreparedValue 'MSSQL
   -> StateT PrepareState (Either PrepareError) Tsql.Expression
 prepareValueMultiplex =
   \case

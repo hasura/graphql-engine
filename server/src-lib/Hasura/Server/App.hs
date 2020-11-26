@@ -32,7 +32,6 @@ import           Control.Monad.Trans.Control               (MonadBaseControl)
 import           Data.Aeson                                hiding (json)
 import           Data.IORef
 import           Data.String                               (fromString)
-import           Data.Time.Clock                           (UTCTime)
 import           Network.Mime                              (defaultMimeLookup)
 import           System.FilePath                           (joinPath, takeFileName)
 import           Web.Spock.Core                            ((<//>))
@@ -66,6 +65,7 @@ import           Hasura.Server.Cors
 import           Hasura.Server.Init
 import           Hasura.Server.Logging
 import           Hasura.Server.Middleware                  (corsMiddleware)
+import           Hasura.Server.Types
 import           Hasura.Server.Utils
 import           Hasura.Server.Version
 import           Hasura.Session
@@ -540,7 +540,6 @@ data HasuraApp
   = HasuraApp
   { _hapApplication      :: !Wai.Application
   , _hapSchemaRef        :: !SchemaCacheRef
-  , _hapCacheBuildTime   :: !(Maybe UTCTime)
   , _hapShutdownWsServer :: !(IO ())
   }
 
@@ -598,13 +597,13 @@ mkWaiApp
   -> E.PlanCacheOptions
   -> ResponseInternalErrorsConfig
   -> Maybe EL.LiveQueryPostPollHook
-  -> (RebuildableSchemaCache Run, Maybe UTCTime)
+  -> RebuildableSchemaCache Run
   -> EKG.Store
   -> WS.ConnectionOptions
   -> KeepAliveDelay
   -> m HasuraApp
 mkWaiApp env isoLevel logger sqlGenCtx enableAL pool pgExecCtxCustom ci httpManager mode corsCfg enableConsole consoleAssetsDir
-         enableTelemetry instanceId apis lqOpts _ {- planCacheOptions -} responseErrorsConfig liveQueryHook (schemaCache, cacheBuiltTime) ekgStore connectionOptions keepAliveDelay = do
+         enableTelemetry instanceId apis lqOpts _ {- planCacheOptions -} responseErrorsConfig liveQueryHook schemaCache ekgStore connectionOptions keepAliveDelay = do
 
     -- See Note [Temporarily disabling query plan caching]
     -- (planCache, schemaCacheRef) <- initialiseCache
@@ -647,7 +646,7 @@ mkWaiApp env isoLevel logger sqlGenCtx enableAL pool pgExecCtxCustom ci httpMana
     waiApp <- liftWithStateless $ \lowerIO ->
       pure $ WSC.websocketsOr connectionOptions (\ip conn -> lowerIO $ wsServerApp ip conn) spockApp
 
-    return $ HasuraApp waiApp schemaCacheRef cacheBuiltTime stopWSServer
+    return $ HasuraApp waiApp schemaCacheRef stopWSServer
   where
     -- initialiseCache :: m (E.PlanCache, SchemaCacheRef)
     initialiseCache :: m SchemaCacheRef
