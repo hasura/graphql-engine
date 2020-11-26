@@ -9,8 +9,6 @@ import           Hasura.Prelude
 
 import qualified Text.Builder      as TB
 
-import           Instances.TH.Lift ()
-
 
 class ToSQL a where
   toSQL :: a -> TB.Builder

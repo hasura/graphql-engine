@@ -114,7 +114,7 @@ mkRelationshipMetadataObject (CatalogRelation qt rn rt rDef cmnt) =
 
 buildRelationship
   :: (ArrowChoice arr, ArrowWriter (Seq CollectedInfo) arr)
-  => (HashMap QualifiedTable (HashSet ForeignKey), CatalogRelation) `arr` Maybe RelInfo
+  => (HashMap QualifiedTable (HashSet ForeignKey), CatalogRelation) `arr` Maybe (RelInfo 'Postgres)
 buildRelationship = proc (foreignKeys, relationship) -> do
   let CatalogRelation tableName rn rt rDef _ = relationship
       metadataObject = mkRelationshipMetadataObject relationship

@@ -28,7 +28,7 @@ import           Hasura.HTTP
 import           Hasura.Prelude
 import           Hasura.RQL.Types
 import           Hasura.Server.Init.Config
-import           Hasura.Server.Utils                    (RequestId)
+import           Hasura.Server.Types                    (RequestId)
 import           Hasura.Server.Version                  (HasVersion)
 import           Hasura.Session
 import           Hasura.Tracing                         (MonadTrace, TraceT, trace)
@@ -65,7 +65,7 @@ class Monad m => MonadExecuteQuery m where
   -- headers that can instruct a client how long a response can be cached
   -- locally (i.e. client-side).
   cacheLookup
-    :: [QueryRootField UnpreparedValue]
+    :: [QueryRootField (UnpreparedValue 'Postgres)]
     -- ^ Used to check that the query is cacheable
     -> QueryCacheKey
     -- ^ Key that uniquely identifies the result of a query execution

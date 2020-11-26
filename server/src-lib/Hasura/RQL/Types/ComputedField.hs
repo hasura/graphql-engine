@@ -16,8 +16,6 @@ import           Data.Aeson.Casing
 import           Data.Aeson.TH
 import           Data.Text.Extended
 import           Data.Text.NonEmpty
-import           Instances.TH.Lift                  ()
-import           Language.Haskell.TH.Syntax         (Lift)
 
 import           Hasura.Backends.Postgres.SQL.Types
 import           Hasura.Incremental                 (Cacheable)
@@ -28,7 +26,7 @@ import           Hasura.SQL.Backend
 
 newtype ComputedFieldName =
   ComputedFieldName { unComputedFieldName :: NonEmptyText}
-  deriving (Show, Eq, NFData, Lift, FromJSON, ToJSON, ToJSONKey, Q.ToPrepArg, ToTxt, Hashable, Q.FromCol, Generic, Arbitrary, Cacheable)
+  deriving (Show, Eq, NFData, FromJSON, ToJSON, ToJSONKey, Q.ToPrepArg, ToTxt, Hashable, Q.FromCol, Generic, Arbitrary, Cacheable)
 
 computedFieldNameToText :: ComputedFieldName -> Text
 computedFieldNameToText = unNonEmptyText . unComputedFieldName
@@ -41,7 +39,7 @@ data ComputedFieldDefinition
   { _cfdFunction        :: !QualifiedFunction
   , _cfdTableArgument   :: !(Maybe FunctionArgName)
   , _cfdSessionArgument :: !(Maybe FunctionArgName)
-  } deriving (Show, Eq, Lift, Generic)
+  } deriving (Show, Eq, Generic)
 instance NFData ComputedFieldDefinition
 instance Cacheable ComputedFieldDefinition
 $(deriveJSON (aesonDrop 4 snakeCase){omitNothingFields = True} ''ComputedFieldDefinition)

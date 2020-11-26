@@ -49,8 +49,8 @@ data RoleContext a
 $(deriveToJSON (aesonDrop 5 snakeCase) ''RoleContext)
 
 data GQLContext = GQLContext
-  { gqlQueryParser    :: ParserFn (InsOrdHashMap G.Name (QueryRootField UnpreparedValue))
-  , gqlMutationParser :: Maybe (ParserFn (InsOrdHashMap G.Name (MutationRootField UnpreparedValue)))
+  { gqlQueryParser    :: ParserFn (InsOrdHashMap G.Name (QueryRootField (UnpreparedValue 'Postgres)))
+  , gqlMutationParser :: Maybe (ParserFn (InsOrdHashMap G.Name (MutationRootField (UnpreparedValue 'Postgres))))
   }
 
 instance J.ToJSON GQLContext where

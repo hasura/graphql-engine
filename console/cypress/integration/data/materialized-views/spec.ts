@@ -301,13 +301,6 @@ export const passVFilterQueryEq = () => {
     .parent()
     .first()
     .select('id');
-  // Select operator as `eq`
-  cy.get('select')
-    .find('option')
-    .contains('-- op --')
-    .parent()
-    .last()
-    .select('$eq');
   // Type value as `filter-text`
   cy.get("input[placeholder='-- value --']")
     .last()
