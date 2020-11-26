@@ -176,20 +176,22 @@ instance Backend 'Postgres where
   type XANILIKE        'Postgres = ()
 
 instance Backend 'MSSQL where
-  type Identifier     'MSSQL = ()
-  type Alias          'MSSQL = MSSQL.EntityAlias
-  type TableName      'MSSQL = MSSQL.TableName
-  type FunctionName   'MSSQL = ()
-  type ConstraintName 'MSSQL = ()
-  type BasicOrderType 'MSSQL = MSSQL.Order
-  type NullsOrderType 'MSSQL = MSSQL.NullsOrder
-  type CountType      'MSSQL = MSSQL.Countable
-  type Column         'MSSQL = MSSQL.ColumnName
-  type ScalarType     'MSSQL = MSSQL.ScalarType
-  type SQLExpression  'MSSQL = MSSQL.Expression
-  type SQLOperator    'MSSQL = ()
-  type XAILIKE        'MSSQL = ()
-  type XANILIKE       'MSSQL = ()
+  type Identifier      'MSSQL = ()
+  type Alias           'MSSQL = MSSQL.EntityAlias
+  type TableName       'MSSQL = MSSQL.TableName
+  type FunctionName    'MSSQL = ()
+  type ConstraintName  'MSSQL = ()
+  type BasicOrderType  'MSSQL = MSSQL.Order
+  type NullsOrderType  'MSSQL = MSSQL.NullsOrder
+  type CountType       'MSSQL = MSSQL.Countable
+  type Column          'MSSQL = MSSQL.ColumnName
+  type ColumnValueType 'MSSQL = Void -- TODO pick an appropriate representation
+  type ScalarType      'MSSQL = MSSQL.ScalarType
+  type SQLExpression   'MSSQL = MSSQL.Expression
+  type SessionVarType  'MSSQL = Void -- TODO pick an appropriate representation
+  type SQLOperator     'MSSQL = ()
+  type XAILIKE         'MSSQL = ()
+  type XANILIKE        'MSSQL = ()
 
 -- instance Backend 'Mysql where
 --   type XAILIKE 'MySQL = Void
