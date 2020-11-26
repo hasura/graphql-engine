@@ -63,7 +63,7 @@ type Config struct {
 	enableCheckMetadataConsistency bool
 	Req                            *gorequest.SuperAgent
 }
-
+type metadataOrQueryClientFunc func(m interface{}, queryType string) (*http.Response, []byte, error)
 type HasuraDB struct {
 	config         *Config
 	settings       []database.Setting
@@ -76,11 +76,14 @@ type HasuraDB struct {
 
 	CLICatalogState *CLICatalogState
 
-	migrationStateStore        MigrationsStateStore
-	settingsStateStore         SettingsStateStore
-	sendMetadataOrQueryRequest func(m interface{}, queryType string) (*http.Response, []byte, error)
+	migrationStateStore   MigrationsStateStore
+	settingsStateStore    SettingsStateStore
+	metadataOrQueryClient metadataOrQueryClientFunc
 }
 
+func (h *HasuraDB) sendMetadataOrQueryRequest(m interface{}, queryType string) (*http.Response, []byte, error) {
+	return h.metadataOrQueryClient(m, queryType)
+}
 func WithInstance(config *Config, logger *log.Logger, hasuraOpts *database.HasuraOpts) (database.Driver, error) {
 	if config == nil {
 		logger.Debug(ErrNilConfig)
@@ -100,11 +103,11 @@ func WithInstance(config *Config, logger *log.Logger, hasuraOpts *database.Hasur
 		hx.CLICatalogState.Migrations = MigrationsState{}
 		hx.migrationStateStore = NewMigrationsStateWithCatalogStateAPI(hx)
 		hx.settingsStateStore = NewSettingsStateStoreWithCatalogStateAPI(hx)
-		hx.sendMetadataOrQueryRequest = hx.sendV2QueryOrV1Metadata
+		hx.metadataOrQueryClient = hx.sendV2QueryOrV1Metadata
 	default:
 		hx.migrationStateStore = NewMigrationStateStoreWithSQL(hx)
 		hx.settingsStateStore = NewSettingsStateStoreWithSQL(hx)
-		hx.sendMetadataOrQueryRequest = hx.sendv1Query
+		hx.metadataOrQueryClient = hx.sendv1Query
 	}
 
 	if err := hx.migrationStateStore.PrepareMigrationsStateStore(); err != nil {
@@ -493,17 +496,17 @@ func (h *HasuraDB) sendV2QueryOrV1Metadata(m interface{}, queryType string) (res
 			endpoint = h.config.queryURL.String()
 			break
 		}
-
-		// FIXME can also be an array
-		var v map[string]interface{}
-		if err := mapstructure.Decode(m, &v); err != nil {
-			return nil, nil, fmt.Errorf("unmarshalling request body failed")
-		} else {
-			requestType := fmt.Sprintf("%v", v["Type"])
-			if _, ok := queryTypesMap[requestType]; ok {
-				endpoint = h.config.queryURL.String()
+		if endpoint == "" {
+			var v map[string]interface{}
+			if err := mapstructure.Decode(m, &v); err != nil {
+				return nil, nil, fmt.Errorf("unmarshalling request body failed")
 			} else {
-				endpoint = h.config.metadataURL.String()
+				requestType := fmt.Sprintf("%v", v["Type"])
+				if _, ok := queryTypesMap[requestType]; ok {
+					endpoint = h.config.queryURL.String()
+				} else {
+					endpoint = h.config.metadataURL.String()
+				}
 			}
 		}
 

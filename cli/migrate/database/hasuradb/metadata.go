@@ -194,7 +194,7 @@ func (h *HasuraDB) ApplyMetadata() error {
 			},
 		},
 	}
-	resp, body, err := h.sendMetadataOrQueryRequest(query, "")
+	resp, body, err := h.sendMetadataOrQueryRequest(query, "metadata")
 	if err != nil {
 		h.logger.Debug(err)
 		return err

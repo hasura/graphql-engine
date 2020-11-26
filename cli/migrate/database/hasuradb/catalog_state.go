@@ -12,17 +12,19 @@ import (
 	"github.com/pkg/errors"
 )
 
-type MigrationsState map[database.Datasource]MigrationVersion
+type CatalogStateAPIClient interface {
+	sendMetadataOrQueryRequest(m interface{}, queryType string) (*http.Response, []byte, error)
+}
 
-type MigrationVersion map[int64]bool
+type MigrationsState map[database.Datasource]map[string]bool
 
 type SettingsState struct {
 	MigrationMode *bool `json:"migrationMode"`
 }
 
 type CLICatalogState struct {
-	Migrations    MigrationsState
-	SettingsState map[string]string
+	Migrations MigrationsState   `json:"migrations" mapstructure:"migrations"`
+	Settings   map[string]string `json:"settings" mapstructure:"settings"`
 }
 
 type CatalogState struct {
@@ -44,14 +46,14 @@ func NewCatalogStateAPI(cliStateKey string) *CatalogStateAPI {
 	}
 }
 
-func (c *CatalogStateAPI) GetCLICatalogState(hasuradb *HasuraDB) (*CLICatalogState, error) {
+func (c *CatalogStateAPI) GetCLICatalogState(client CatalogStateAPIClient) (*CLICatalogState, error) {
 	// useful for construcing errors
 	var opName = "getting catalog state"
 	q := HasuraInterfaceQuery{
 		Type: "get_catalog_state",
 		Args: HasuraArgs{},
 	}
-	resp, body, err := hasuradb.sendMetadataOrQueryRequest(q, "")
+	resp, body, err := client.sendMetadataOrQueryRequest(q, "")
 	if err != nil {
 		return nil, err
 	}
@@ -71,14 +73,16 @@ func (c *CatalogStateAPI) GetCLICatalogState(hasuradb *HasuraDB) (*CLICatalogSta
 	}
 
 	var cliState = new(CLICatalogState)
+	fmt.Printf("%+v\n", state)
 	if err := mapstructure.Decode(v, cliState); err != nil {
 		return nil, errors.Wrap(err, opName)
 	}
+	fmt.Printf("%+v\n", cliState)
 	return cliState, nil
 
 }
 
-func (c *CatalogStateAPI) SetCLICatalogState(hasuradb *HasuraDB, cliState CLICatalogState) error {
+func (c *CatalogStateAPI) SetCLICatalogState(client CatalogStateAPIClient, cliState CLICatalogState) error {
 	// useful for constructing errors
 	var opName = "setting catalog state"
 
@@ -92,7 +96,7 @@ func (c *CatalogStateAPI) SetCLICatalogState(hasuradb *HasuraDB, cliState CLICat
 			State: cliState,
 		},
 	}
-	resp, body, err := hasuradb.sendMetadataOrQueryRequest(q, "")
+	resp, body, err := client.sendMetadataOrQueryRequest(q, "")
 	if err != nil {
 		return err
 	}

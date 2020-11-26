@@ -222,7 +222,7 @@ func (s SettingsStateStoreWithCatalogStateAPI) GetSetting(name string) (value st
 	if err != nil {
 		return "", err
 	}
-	v, ok := catalogState.SettingsState[name]
+	v, ok := catalogState.Settings[name]
 	if !ok {
 		return "", fmt.Errorf("not found")
 	}
@@ -236,7 +236,7 @@ func (s SettingsStateStoreWithCatalogStateAPI) UpdateSetting(name string, value 
 	if err != nil {
 		return err
 	}
-	cliState.SettingsState[name] = value
+	cliState.Settings[name] = value
 	return catalogStateAPI.SetCLICatalogState(s.hasuraDB, *cliState)
 }
 
@@ -251,11 +251,12 @@ func (s SettingsStateStoreWithCatalogStateAPI) setDefaults() error {
 	if err != nil {
 		return err
 	}
-	if cliState.SettingsState == nil {
-		cliState.SettingsState = make(map[string]string)
+	fmt.Printf("%+v\n", cliState)
+	if len(cliState.Settings) == 0 {
+		cliState.Settings = make(map[string]string)
 	}
 	for _, setting := range s.hasuraDB.settings {
-		cliState.SettingsState[setting.GetName()] = setting.GetDefaultValue()
+		cliState.Settings[setting.GetName()] = setting.GetDefaultValue()
 	}
 	return catalogStateAPI.SetCLICatalogState(s.hasuraDB, *cliState)
 }
