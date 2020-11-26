@@ -495,6 +495,8 @@ library
                      , Hasura.SQL.BigQuery.Types
                      , Hasura.SQL.BigQuery.FromIr
                      , Hasura.SQL.BigQuery.Execute
+                     , Hasura.SQL.BigQuery.Meta
+                     , Hasura.SQL.BigQuery.Credentials
                      , Hasura.Tracing
                      , Network.URI.Extended
                      , Network.Wai.Extended

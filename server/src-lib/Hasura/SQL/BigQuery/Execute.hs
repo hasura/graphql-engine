@@ -43,6 +43,7 @@ import           Data.Tree
 import           Data.Vector (Vector)
 import qualified Data.Vector as V
 import           GHC.Generics
+import           Hasura.SQL.BigQuery.Credentials
 import qualified Hasura.SQL.BigQuery.Plan as Plan
 import qualified Hasura.SQL.BigQuery.Plan as Select (Select (..))
 import qualified Hasura.SQL.BigQuery.ToQuery as ToQuery
@@ -50,7 +51,6 @@ import           Hasura.SQL.BigQuery.Types as BigQuery
 import           Network.HTTP.Conduit
 import           Network.HTTP.Types
 import           Prelude hiding (head,tail)
-import           System.Environment
 
 --------------------------------------------------------------------------------
 -- Types
@@ -127,18 +127,6 @@ data Parameter = Parameter
 newtype ParameterName =
   ParameterName LT.Text deriving (Show, Aeson.ToJSON, Ord, Eq, Hashable)
 
-data Credentials = Credentials
-  { accessToken :: !Text
-  , apiToken :: !Text
-  , projectName :: !Text
-  }
-
-instance Show Credentials where
-  show Credentials {projectName} =
-    "Credentials { accessToken = _, apiToken = _, projectName = " <>
-    show projectName <>
-    " }"
-
 data BigQueryField = BigQueryField
   { name :: !Plan.FieldName
   , typ :: !BigQueryFieldType
@@ -161,18 +149,6 @@ data Mode
 data IsNullable
   = IsNullable
   | IsRequired
-
---------------------------------------------------------------------------------
--- Handy testing
-
-getCredentialsEnv :: IO Credentials
-getCredentialsEnv = do
-  accessToken <- getEnvUnline "BIGQUERYACCESSTOKEN"
-  apiToken <- getEnvUnline "BIGQUERYAPITOKEN"
-  projectName <- getEnvUnline "BIGQUERYPROJECTNAME"
-  pure Credentials {..}
-  where
-    getEnvUnline key = fmap (T.pack . concat . take 1 . lines) (getEnv key)
 
 --------------------------------------------------------------------------------
 -- Constants
