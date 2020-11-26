@@ -13,7 +13,7 @@ import (
 )
 
 type CatalogStateAPIClient interface {
-	sendMetadataOrQueryRequest(m interface{}, queryType string) (*http.Response, []byte, error)
+	sendMetadataOrQueryRequest(m interface{}, opts metadataOrQueryClientFuncOpts) (*http.Response, []byte, error)
 }
 
 type MigrationsState map[database.Datasource]map[string]bool
@@ -53,7 +53,7 @@ func (c *CatalogStateAPI) GetCLICatalogState(client CatalogStateAPIClient) (*CLI
 		Type: "get_catalog_state",
 		Args: HasuraArgs{},
 	}
-	resp, body, err := client.sendMetadataOrQueryRequest(q, "")
+	resp, body, err := client.sendMetadataOrQueryRequest(q, metadataOrQueryClientFuncOpts{metadataRequestOpts: &metadataRequestOpts{}})
 	if err != nil {
 		return nil, err
 	}
@@ -73,11 +73,9 @@ func (c *CatalogStateAPI) GetCLICatalogState(client CatalogStateAPIClient) (*CLI
 	}
 
 	var cliState = new(CLICatalogState)
-	fmt.Printf("%+v\n", state)
 	if err := mapstructure.Decode(v, cliState); err != nil {
 		return nil, errors.Wrap(err, opName)
 	}
-	fmt.Printf("%+v\n", cliState)
 	return cliState, nil
 
 }
@@ -96,7 +94,7 @@ func (c *CatalogStateAPI) SetCLICatalogState(client CatalogStateAPIClient, cliSt
 			State: cliState,
 		},
 	}
-	resp, body, err := client.sendMetadataOrQueryRequest(q, "")
+	resp, body, err := client.sendMetadataOrQueryRequest(q, metadataOrQueryClientFuncOpts{metadataRequestOpts: &metadataRequestOpts{}})
 	if err != nil {
 		return err
 	}

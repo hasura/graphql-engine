@@ -63,7 +63,16 @@ type Config struct {
 	enableCheckMetadataConsistency bool
 	Req                            *gorequest.SuperAgent
 }
-type metadataOrQueryClientFunc func(m interface{}, queryType string) (*http.Response, []byte, error)
+
+type queryRequestOpts struct {}
+
+type metadataRequestOpts struct {}
+
+type metadataOrQueryClientFuncOpts struct {
+	queryRequestOpts *queryRequestOpts
+	metadataRequestOpts *metadataRequestOpts
+}
+type metadataOrQueryClientFunc func(m interface{}, opts metadataOrQueryClientFuncOpts) (*http.Response, []byte, error)
 type HasuraDB struct {
 	config         *Config
 	settings       []database.Setting
@@ -81,8 +90,8 @@ type HasuraDB struct {
 	metadataOrQueryClient metadataOrQueryClientFunc
 }
 
-func (h *HasuraDB) sendMetadataOrQueryRequest(m interface{}, queryType string) (*http.Response, []byte, error) {
-	return h.metadataOrQueryClient(m, queryType)
+func (h *HasuraDB) sendMetadataOrQueryRequest(m interface{}, opts metadataOrQueryClientFuncOpts) (*http.Response, []byte, error) {
+	return h.metadataOrQueryClient(m, opts)
 }
 func WithInstance(config *Config, logger *log.Logger, hasuraOpts *database.HasuraOpts) (database.Driver, error) {
 	if config == nil {
@@ -256,7 +265,7 @@ func (h *HasuraDB) UnLock() error {
 		resp, body, err := h.sendMetadataOrQueryRequest(HasuraInterfaceQuery{
 			Type: "bulk",
 			Args: queryAPIRequests,
-		}, "query")
+		}, metadataOrQueryClientFuncOpts{queryRequestOpts: &queryRequestOpts{}})
 		if err != nil {
 			return err
 		}
@@ -302,7 +311,7 @@ func (h *HasuraDB) UnLock() error {
 		resp, body, err = h.sendMetadataOrQueryRequest(HasuraInterfaceQuery{
 			Type: "bulk",
 			Args: metadataAPIRequests,
-		}, "metadata")
+		}, metadataOrQueryClientFuncOpts{metadataRequestOpts: &metadataRequestOpts{}})
 		if err != nil {
 			return err
 		}
@@ -347,7 +356,7 @@ func (h *HasuraDB) UnLock() error {
 		}
 
 	} else {
-		resp, body, err := h.sendMetadataOrQueryRequest(h.migrationQuery, "metadata")
+		resp, body, err := h.sendMetadataOrQueryRequest(h.migrationQuery, metadataOrQueryClientFuncOpts{metadataRequestOpts: &metadataRequestOpts{}})
 		if err != nil {
 			return err
 		}
@@ -463,7 +472,7 @@ func (h *HasuraDB) Drop() error {
 	return nil
 }
 
-func (h *HasuraDB) sendv1Query(m interface{}, _ string) (resp *http.Response, body []byte, err error) {
+func (h *HasuraDB) sendv1Query(m interface{}, _ metadataOrQueryClientFuncOpts) (resp *http.Response, body []byte, err error) {
 	request := h.config.Req.Clone()
 	request = request.Post(h.config.queryURL.String()).Send(m)
 	for headerName, headerValue := range h.config.Headers {
@@ -481,18 +490,18 @@ func (h *HasuraDB) sendv1Query(m interface{}, _ string) (resp *http.Response, bo
 	return resp, body, err
 }
 
-func (h *HasuraDB) sendV2QueryOrV1Metadata(m interface{}, queryType string) (resp *http.Response, body []byte, err error) {
+func (h *HasuraDB) sendV2QueryOrV1Metadata(m interface{}, opts metadataOrQueryClientFuncOpts) (resp *http.Response, body []byte, err error) {
 	var endpoint string
 	switch {
 	case !h.hasuraOpts.ServerFeatureFlags.HasDatasources:
 		endpoint = h.config.queryURL.String()
 	case h.hasuraOpts.ServerFeatureFlags.HasDatasources:
 		// TODO: Make this better
-		if queryType == "metadata" {
+		if opts.metadataRequestOpts != nil {
 			endpoint = h.config.metadataURL.String()
 			break
 		}
-		if queryType == "query" {
+		if opts.queryRequestOpts != nil {
 			endpoint = h.config.queryURL.String()
 			break
 		}

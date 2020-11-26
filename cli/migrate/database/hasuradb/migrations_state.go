@@ -62,7 +62,7 @@ func (m *migrationStateWithSQL) PrepareMigrationsStateStore() error {
 		},
 	}
 
-	resp, body, err := m.hasuraDB.sendMetadataOrQueryRequest(query, "")
+	resp, body, err := m.hasuraDB.sendMetadataOrQueryRequest(query, metadataOrQueryClientFuncOpts{queryRequestOpts: &queryRequestOpts{}})
 	if err != nil {
 		m.hasuraDB.logger.Debug(err)
 		return err
@@ -96,7 +96,7 @@ func (m *migrationStateWithSQL) PrepareMigrationsStateStore() error {
 		},
 	}
 
-	resp, body, err = m.hasuraDB.sendMetadataOrQueryRequest(query, "")
+	resp, body, err = m.hasuraDB.sendMetadataOrQueryRequest(query, metadataOrQueryClientFuncOpts{queryRequestOpts: &queryRequestOpts{}})
 	if err != nil {
 		return err
 	}
@@ -126,7 +126,7 @@ func (m *migrationStateWithSQL) GetVersions() error {
 	}
 
 	// Send Query
-	resp, body, err := m.hasuraDB.sendMetadataOrQueryRequest(query, "")
+	resp, body, err := m.hasuraDB.sendMetadataOrQueryRequest(query, metadataOrQueryClientFuncOpts{queryRequestOpts: &queryRequestOpts{}})
 	if err != nil {
 		return err
 	}
@@ -179,13 +179,19 @@ func NewMigrationsStateWithCatalogStateAPI(hasuraDB *HasuraDB) *migrationsStateW
 }
 
 func (m *migrationsStateWithCatalogStateAPI) InsertVersion(version int64) error {
-	if m.hasuradb.CLICatalogState.Migrations[m.hasuradb.hasuraOpts.Datasource] == nil {
-		m.hasuradb.CLICatalogState.Migrations[m.hasuradb.hasuraOpts.Datasource] = map[string]bool{}
+	// get setting
+	catalogStateAPI := NewCatalogStateAPI(defaultCLIStateKey)
+	cliState, err := catalogStateAPI.GetCLICatalogState(m.hasuradb)
+	if err != nil {
+		return err
 	}
-	cliState := *m.hasuradb.CLICatalogState
 	versionString := fmt.Sprintf("%d", version)
-	cliState.Migrations[m.hasuradb.hasuraOpts.Datasource][versionString] = false
+	if cliState.Migrations == nil {
+		cliState.Migrations = MigrationsState{}
+		cliState.Migrations[m.hasuradb.hasuraOpts.Datasource] = map[string]bool{}
+	}
 
+	cliState.Migrations[m.hasuradb.hasuraOpts.Datasource][versionString] = false
 	q := HasuraInterfaceQuery{
 		Type: "set_catalog_state",
 		Args: struct {
@@ -193,7 +199,7 @@ func (m *migrationsStateWithCatalogStateAPI) InsertVersion(version int64) error 
 			State CLICatalogState `json:"state"`
 		}{
 			Type:  "cli",
-			State: cliState,
+			State: *cliState,
 		},
 	}
 	m.hasuradb.migrationQuery.Args = append(m.hasuradb.migrationQuery.Args, q)
@@ -235,7 +241,7 @@ func (m *migrationsStateWithCatalogStateAPI) GetVersions() error {
 	}
 	for version, _ := range v {
 		n, err := strconv.ParseInt(version, 10, 64)
-		if err == nil {
+		if err != nil {
 			return errors.Wrap(err, "parsing migration version")
 		}
 		m.hasuradb.migrations.Append(uint64(n))
