@@ -57,9 +57,9 @@ $(J.deriveJSON (J.aesonDrop 3 J.camelCase) ''FieldPlan)
 
 resolveUnpreparedValue
   :: (MonadError QErr m)
-  => UserInfo -> UnpreparedValue -> m S.SQLExp
+  => UserInfo -> UnpreparedValue 'Postgres -> m S.SQLExp
 resolveUnpreparedValue userInfo = \case
-  UVParameter pgValue _ -> pure $ toTxtValue $ pcvValue pgValue
+  UVParameter pgValue _ -> pure $ toTxtValue $ cvValue pgValue
   UVLiteral sqlExp      -> pure sqlExp
   UVSession             -> pure $ sessionInfoJsonExp $ _uiSession userInfo
   UVSessionVar ty sessionVariable -> do
@@ -80,7 +80,7 @@ explainQueryField
   :: (MonadError QErr m, MonadTx m)
   => UserInfo
   -> G.Name
-  -> QueryRootField UnpreparedValue
+  -> QueryRootField (UnpreparedValue 'Postgres)
   -> m FieldPlan
 explainQueryField userInfo fieldName rootField = do
   resolvedRootField <- E.traverseQueryRootField (resolveUnpreparedValue userInfo) rootField

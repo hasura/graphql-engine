@@ -48,7 +48,7 @@ convertDelete
   => Env.Environment
   -> SessionVariables
   -> PGE.MutationRemoteJoinCtx
-  -> IR.AnnDelG 'Postgres UnpreparedValue
+  -> IR.AnnDelG 'Postgres (UnpreparedValue 'Postgres)
   -> Bool
   -> m (tx EncJSON)
 convertDelete env usrVars remoteJoinCtx deleteOperation stringifyNum = do
@@ -66,7 +66,7 @@ convertUpdate
   => Env.Environment
   -> SessionVariables
   -> PGE.MutationRemoteJoinCtx
-  -> IR.AnnUpdG 'Postgres UnpreparedValue
+  -> IR.AnnUpdG 'Postgres (UnpreparedValue 'Postgres)
   -> Bool
   -> m (tx EncJSON)
 convertUpdate env usrVars remoteJoinCtx updateOperation stringifyNum = do
@@ -86,7 +86,7 @@ convertInsert
   => Env.Environment
   -> SessionVariables
   -> PGE.MutationRemoteJoinCtx
-  -> IR.AnnInsert 'Postgres UnpreparedValue
+  -> IR.AnnInsert 'Postgres (UnpreparedValue 'Postgres)
   -> Bool
   -> m (tx EncJSON)
 convertInsert env usrVars remoteJoinCtx insertOperation stringifyNum = do
@@ -112,7 +112,7 @@ convertMutationAction
   -> UserInfo
   -> HTTP.Manager
   -> HTTP.RequestHeaders
-  -> ActionMutation 'Postgres UnpreparedValue
+  -> ActionMutation 'Postgres (UnpreparedValue 'Postgres)
   -> m (tx EncJSON, HTTP.ResponseHeaders)
 convertMutationAction env logger userInfo manager reqHeaders = \case
   AMSync s  -> (_aerTransaction &&& _aerHeaders) <$>
@@ -148,7 +148,7 @@ convertMutationSelectionSet env logger gqlContext SQLGenCtx{stringifyNum} userIn
     throw400 ValidationFailed "no mutations exist"
   -- Parse the GraphQL query into the RQL AST
   (unpreparedQueries, _reusability)
-    :: (OMap.InsOrdHashMap G.Name (MutationRootField UnpreparedValue), QueryReusability)
+    :: (OMap.InsOrdHashMap G.Name (MutationRootField (UnpreparedValue 'Postgres)), QueryReusability)
     <-  resolveVariables varDefs (fromMaybe Map.empty varValsM) fields
     >>= (mutationParser >>> (`onLeft` reportParseErrors))
 
@@ -157,9 +157,9 @@ convertMutationSelectionSet env logger gqlContext SQLGenCtx{stringifyNum} userIn
       remoteJoinCtx = (manager, reqHeaders, userInfo)
   txs <- for unpreparedQueries \case
     RFDB db -> ExecStepDB . noResponseHeaders <$> case db of
-      MDBInsert s -> convertInsert env userSession remoteJoinCtx s stringifyNum
-      MDBUpdate s -> convertUpdate env userSession remoteJoinCtx s stringifyNum
-      MDBDelete s -> convertDelete env userSession remoteJoinCtx s stringifyNum
+      MDBInsert s   -> convertInsert env userSession remoteJoinCtx s stringifyNum
+      MDBUpdate s   -> convertUpdate env userSession remoteJoinCtx s stringifyNum
+      MDBDelete s   -> convertDelete env userSession remoteJoinCtx s stringifyNum
       MDBFunction s -> convertFunction env userInfo manager reqHeaders s
 
     RFRemote (remoteSchemaInfo, remoteField) ->
@@ -195,7 +195,7 @@ convertFunction
   -> UserInfo
   -> HTTP.Manager
   -> HTTP.RequestHeaders
-  -> IR.AnnSimpleSelG 'Postgres UnpreparedValue
+  -> IR.AnnSimpleSelG 'Postgres (UnpreparedValue 'Postgres)
   -- ^ VOLATILE function as 'SelectExp'
   -> m (tx EncJSON)
 convertFunction env userInfo manager reqHeaders unpreparedQuery = do

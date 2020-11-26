@@ -136,7 +136,7 @@ import           Hasura.GraphQL.Context              (GQLContext, RemoteField, R
 import           Hasura.Incremental                  (Dependency, MonadDepend (..), selectKeyD)
 import           Hasura.RQL.IR.BoolExp
 import           Hasura.RQL.Types.Action
-import           Hasura.RQL.Types.Common
+import           Hasura.RQL.Types.Common             hiding (FunctionName)
 import           Hasura.RQL.Types.ComputedField
 import           Hasura.RQL.Types.CustomTypes
 import           Hasura.RQL.Types.Error

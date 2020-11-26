@@ -43,7 +43,7 @@ actionExecute
   :: forall m n r. (MonadSchema n m, MonadTableInfo r m, MonadRole r m, Has QueryContext r)
   => NonObjectTypeMap
   -> ActionInfo 'Postgres
-  -> m (Maybe (FieldParser n (AnnActionExecution 'Postgres UnpreparedValue)))
+  -> m (Maybe (FieldParser n (AnnActionExecution 'Postgres (UnpreparedValue 'Postgres))))
 actionExecute nonObjectTypeMap actionInfo = runMaybeT do
   roleName <- lift askRoleName
   guard $ roleName == adminRoleName || roleName `Map.member` permissions
@@ -108,16 +108,16 @@ actionAsyncMutation nonObjectTypeMap actionInfo = runMaybeT do
 actionAsyncQuery
   :: forall m n r. (MonadSchema n m, MonadTableInfo r m, MonadRole r m, Has QueryContext r)
   => ActionInfo 'Postgres
-  -> m (Maybe (FieldParser n (AnnActionAsyncQuery 'Postgres UnpreparedValue)))
+  -> m (Maybe (FieldParser n (AnnActionAsyncQuery 'Postgres (UnpreparedValue 'Postgres))))
 actionAsyncQuery actionInfo = runMaybeT do
   roleName <- lift askRoleName
   guard $ roleName == adminRoleName || roleName `Map.member` permissions
   actionId <- lift actionIdParser
   actionOutputParser <- lift $ actionOutputFields outputObject
   createdAtFieldParser <-
-    lift $ P.column (PGColumnScalar PGTimeStampTZ) (G.Nullability False)
+    lift $ P.column (ColumnScalar PGTimeStampTZ) (G.Nullability False)
   errorsFieldParser <-
-    lift $ P.column (PGColumnScalar PGJSON) (G.Nullability True)
+    lift $ P.column (ColumnScalar PGJSON) (G.Nullability True)
 
   let fieldName = unActionName actionName
       description = G.Description <$> comment
@@ -159,14 +159,14 @@ actionAsyncQuery actionInfo = runMaybeT do
 -- | Async action's unique id
 actionIdParser
   :: (MonadSchema n m, MonadError QErr m)
-  => m (Parser 'Both n UnpreparedValue)
+  => m (Parser 'Both n (UnpreparedValue 'Postgres))
 actionIdParser =
-  fmap P.mkParameter <$> P.column (PGColumnScalar PGUUID) (G.Nullability False)
+  fmap P.mkParameter <$> P.column (ColumnScalar PGUUID) (G.Nullability False)
 
 actionOutputFields
   :: forall m n r. (MonadSchema n m, MonadTableInfo r m, MonadRole r m, Has QueryContext r)
   => AnnotatedObjectType 'Postgres
-  -> m (Parser 'Output n (RQL.AnnFieldsG 'Postgres UnpreparedValue))
+  -> m (Parser 'Output n (RQL.AnnFieldsG 'Postgres (UnpreparedValue 'Postgres)))
 actionOutputFields outputObject = do
   let scalarOrEnumFields = map scalarOrEnumFieldParser $ toList $ _otdFields outputObject
   relationshipFields <- forM (_otdRelationships outputObject) $ traverse relationshipFieldParser
@@ -179,13 +179,13 @@ actionOutputFields outputObject = do
   where
     scalarOrEnumFieldParser
       :: ObjectFieldDefinition (G.GType, AnnotatedObjectFieldType)
-      -> FieldParser n (RQL.AnnFieldG 'Postgres UnpreparedValue)
+      -> FieldParser n (RQL.AnnFieldG 'Postgres (UnpreparedValue 'Postgres))
     scalarOrEnumFieldParser (ObjectFieldDefinition name _ description ty) =
       let (gType, objectFieldType) = ty
           fieldName = unObjectFieldName name
           -- FIXME? (from master)
           pgColumnInfo = ColumnInfo (unsafePGCol $ G.unName fieldName)
-                         fieldName 0 (PGColumnScalar PGJSON) (G.isNullable gType) Nothing
+                         fieldName 0 (ColumnScalar PGJSON) (G.isNullable gType) Nothing
           fieldParser = case objectFieldType of
             AOFTScalar def -> customScalarParser def
             AOFTEnum def   -> customEnumParser def
@@ -195,7 +195,7 @@ actionOutputFields outputObject = do
 
     relationshipFieldParser
       :: TypeRelationship (TableInfo 'Postgres) (ColumnInfo 'Postgres)
-      -> m (Maybe (FieldParser n (RQL.AnnFieldG 'Postgres UnpreparedValue)))
+      -> m (Maybe (FieldParser n (RQL.AnnFieldG 'Postgres (UnpreparedValue 'Postgres))))
     relationshipFieldParser typeRelationship = runMaybeT do
       let TypeRelationship relName relType tableInfo fieldMapping = typeRelationship
           tableName = _tciName $ _tiCoreInfo tableInfo
@@ -222,7 +222,7 @@ mkDefinitionList ObjectTypeDefinition{..} =
     (unsafePGCol . G.unName . unObjectFieldName $ _ofdName,) $
     case Map.lookup _ofdName fieldReferences of
       Nothing         -> fieldTypeToScalarType $ snd _ofdType
-      Just columnInfo -> unsafePGColumnToRepresentation $ pgiType columnInfo
+      Just columnInfo -> unsafePGColumnToBackend $ pgiType columnInfo
   where
     fieldReferences =
       Map.unions $ map _trFieldMapping $ maybe [] toList _otdRelationships

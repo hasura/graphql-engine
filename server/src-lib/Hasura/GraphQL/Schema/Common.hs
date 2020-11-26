@@ -28,7 +28,7 @@ textToName textName = G.mkName textName `onNothing` throw400 ValidationFailed
                       ("cannot include " <> textName <<> " in the GraphQL schema because "
                        <> " it is not a valid GraphQL identifier")
 
-partialSQLExpToUnpreparedValue :: PartialSQLExp 'Postgres -> P.UnpreparedValue
+partialSQLExpToUnpreparedValue :: PartialSQLExp 'Postgres -> P.UnpreparedValue 'Postgres
 partialSQLExpToUnpreparedValue (PSESessVar pftype var) = P.UVSessionVar pftype var
 partialSQLExpToUnpreparedValue (PSESQLExp sqlExp)      = P.UVLiteral sqlExp
 

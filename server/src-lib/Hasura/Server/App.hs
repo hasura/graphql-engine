@@ -65,6 +65,7 @@ import           Hasura.Server.Cors
 import           Hasura.Server.Init
 import           Hasura.Server.Logging
 import           Hasura.Server.Middleware                  (corsMiddleware)
+import           Hasura.Server.Types
 import           Hasura.Server.Utils
 import           Hasura.Server.Version
 import           Hasura.Session
