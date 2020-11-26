@@ -27,7 +27,7 @@ const MigrationCheckbox = ({
         This is a migration
         <ToolTip
           placement="right"
-          message="Create a migration file with the current insertion"
+          message="Create a migration file with the current operation"
         />
       </label>
     </div>

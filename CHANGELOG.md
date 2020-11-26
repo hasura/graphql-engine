@@ -179,6 +179,7 @@ arguments.
 - server: fix bug which arised when renaming a table which had a manual relationship defined (close #4158)
 - server: limit the length of event trigger names (close #5786)
 **NOTE:** If you have event triggers with names greater than 42 chars, then you should update their names to avoid running into Postgres identifier limit bug (#5786)
+- server: validate remote schema queries (fixes #4143)
 - server: enable HASURA_GRAPHQL_PG_CONN_LIFETIME by default to reclaim memory
 - server: fix issue with tracking custom functions that return `SETOF` materialized view (close #5294) (#5945)
 - server: allow remote relationships with union, interface and enum type fields as well (fixes #5875) (#6080)
@@ -187,6 +188,12 @@ arguments.
 - server: fix event trigger cleanup on deletion via replace_metadata (fix #5461) (#6137)
 **WARNING**: This can cause significant load on PG on startup if you have lots of event triggers. Delay in starting up is expected.
 - console: add notifications (#5070)
+- console: allow user to cascade Postgres dependencies when dropping Postgres objects (close #5109) (#5248)
+- console: mark inconsistent remote schemas in the UI (close #5093) (#5181)
+- console: remove ONLY as default for ALTER TABLE in column alter operations (close #5512) #5706
+- console: add option to flag an insertion and edit as a migration from `Data` section (close #1766) (#4933, #5874)
+- cli: add missing global flags for seed command (#5565)
+- cli: allow seeds as alias for seed command (#5693)
 - cli: fix bug in metadata apply which made the server aquire some redundant and unnecessary locks (close #6115)
 - cli: fix cli-migrations-v2 image failing to run as a non root user (close #4651, close #5333)
 - cli: fix issue with cli binary on latest Mac (Big Sur) (fix #5462)

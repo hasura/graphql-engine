@@ -14,9 +14,13 @@ import {
   getEnumColumnMappings,
   arrayToPostgresArray,
 } from '../../../Common/utils/pgUtils';
-import { getEnumOptionsQuery } from '../../../Common/utils/v1QueryUtils';
+import {
+  getEnumOptionsQuery,
+  getEditRowQuery,
+} from '../../../Common/utils/v1QueryUtils';
 import { ARRAY } from '../utils';
 import { isStringArray } from '../../../Common/utils/jsUtils';
+import { makeMigrationCall } from '../DataActions';
 
 const E_SET_EDITITEM = 'EditItem/E_SET_EDITITEM';
 const E_ONGOING_REQ = 'EditItem/E_ONGOING_REQ';
@@ -30,8 +34,54 @@ const MODAL_OPEN = 'EditItem/MODAL_OPEN';
 const modalOpen = () => ({ type: MODAL_OPEN });
 const modalClose = () => ({ type: MODAL_CLOSE });
 
+const getwhereClause = oldItem => {
+  const listOfElems = [];
+  const oldItemKeys = Object.keys(oldItem);
+  oldItemKeys.forEach(key => {
+    listOfElems.push({ [key]: { $eq: oldItem[key] } });
+  });
+
+  return {
+    $and: listOfElems,
+  };
+};
+
+const editRowAsMigration = (tableDef, oldItem, newItem, callback, columns) => (
+  dispatch,
+  getState
+) => {
+  const upQuery = getEditRowQuery(tableDef, newItem, columns, oldItem);
+  const downQuery = getEditRowQuery(tableDef, oldItem, columns, newItem);
+
+  const migrationName = `update_row_in_${tableDef.schema}_${tableDef.name}`;
+  const customOnSuccess = () => {
+    if (callback) {
+      callback();
+    }
+  };
+  const customOnError = () => {};
+  const requestMessage = 'Creating migration...';
+  const successMessage = 'Migration created';
+  const errorMessage = 'Creating migration failed';
+
+  makeMigrationCall(
+    dispatch,
+    getState,
+    [upQuery],
+    [downQuery],
+    migrationName,
+    customOnSuccess,
+    customOnError,
+    requestMessage,
+    successMessage,
+    errorMessage,
+    true,
+    true
+  );
+};
+
 /* ****************** edit action creators ************ */
-const editItem = (tableName, colValues) => {
+const editItem = (tableName, colValues, isMigration = false) => {
   return (dispatch, getState) => {
     const state = getState();
 
@@ -42,6 +92,10 @@ const editItem = (tableName, colValues) => {
 
     const table = findTable(allSchemas, tableDef);
 
+    const currentTable = state.tables.allSchemas.find(tab => {
+      return tab.table_name === tableName && tab.table_schema === currentSchema;
+    });
+    const { columns } = currentTable;
     const _setObject = {};
     const _defaultArray = [];
 
@@ -76,19 +130,14 @@ const editItem = (tableName, colValues) => {
           try {
             _setObject[colName] = JSON.parse(colValue);
           } catch (e) {
-            errorMessage =
-              colName +
-              ' :: could not read ' +
-              colValue +
-              ' as a valid JSON object/array';
+            errorMessage = `${colName} :: could not read ${colValue} as a valid object/array`;
           }
         } else if (colType === ARRAY && isStringArray(colValue)) {
           try {
             const arr = JSON.parse(colValue);
             _setObject[colName] = arrayToPostgresArray(arr);
           } catch {
-            errorMessage =
-              colName + ' :: could not read ' + colValue + ' as a valid array';
+            errorMessage = `${colName} :: could not read ${colValue} as a valid array`;
           }
         } else {
           _setObject[colName] = colValue;
@@ -103,14 +152,26 @@ const editItem = (tableName, colValues) => {
         error: { message: errorMessage },
       });
     }
-
+    let returning = [];
+    if (isMigration) {
+      returning = columns.map(col => col.column_name);
+    }
+    const { oldItem } = state.tables.update;
+    let newWhereClause = getwhereClause(oldItem);
+    if (
+      state.tables.update.pkClause ||
+      Object.keys(state.tables.update.pkClause).length
+    ) {
+      newWhereClause = getwhereClause(state.tables.update.pkClause);
+    }
     const reqBody = {
       type: 'update',
       args: {
         table: tableDef,
         $set: _setObject,
         $default: _defaultArray,
-        where: state.tables.update.pkClause,
+        where: newWhereClause,
+        returning,
       },
     };
     const options = {
@@ -120,17 +181,35 @@ const editItem = (tableName, colValues) => {
       body: JSON.stringify(reqBody),
     };
     const url = Endpoints.query;
+    // call back
+    const cb = affectedRows => {
+      dispatch(
+        showSuccessNotification(
+          'Edited!',
+          `Affected Rows: ${affectedRows}`,
+          true
+        )
+      );
+    };
 
     return dispatch(
       requestAction(url, options, E_REQUEST_SUCCESS, E_REQUEST_ERROR)
     ).then(
       data => {
-        dispatch(
-          showSuccessNotification(
-            'Edited!',
-            'Affected rows: ' + data.affected_rows
-          )
-        );
+        const affectedRows = data.affected_rows;
+        if (!isMigration) {
+          cb(affectedRows);
+        } else {
+          dispatch(
+            editRowAsMigration(
+              tableDef,
+              oldItem,
+              data.returning[0],
+              () => cb(affectedRows),
+              columns
+            )
+          );
+        }
       },
       err => {
         dispatch(showErrorNotification('Edit failed!', err.error, err));
