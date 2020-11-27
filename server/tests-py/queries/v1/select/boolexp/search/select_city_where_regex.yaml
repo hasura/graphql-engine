@@ -10,7 +10,7 @@ query:
     table: city
     where:
       name:
-       $similar: '_*gham'
+       $regex: '.*gham'
     columns:
     - name
     - country

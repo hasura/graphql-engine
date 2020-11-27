@@ -107,6 +107,15 @@ parseOperationsExpression rhsParser fim columnInfo =
         "$nsimilar"      -> parseNsimilar
         "_nsimilar"      -> parseNsimilar
 
+        "$regex"         -> parseRegex
+        "_regex"         -> parseRegex
+        "$iregex"        -> parseIRegex
+        "_iregex"        -> parseIRegex
+        "$nregex"        -> parseNRegex
+        "_nregex"        -> parseNRegex
+        "$niregex"       -> parseNIRegex
+        "_niregex"       -> parseNIRegex
+
         "$is_null"       -> parseIsNull
         "_is_null"       -> parseIsNull
 
@@ -180,6 +189,10 @@ parseOperationsExpression rhsParser fim columnInfo =
         parseNilike   = guardType stringTypes >> ANILIKE () <$> parseOne
         parseSimilar  = guardType stringTypes >> ASIMILAR <$> parseOne
         parseNsimilar = guardType stringTypes >> ANSIMILAR <$> parseOne
+        parseRegex    = guardType stringTypes >> AREGEX <$> parseOne
+        parseIRegex   = guardType stringTypes >> AIREGEX <$> parseOne
+        parseNRegex   = guardType stringTypes >> ANREGEX <$> parseOne
+        parseNIRegex  = guardType stringTypes >> ANIREGEX <$> parseOne
 
         parseIsNull   = bool ANISNOTNULL ANISNULL -- is null
                         <$> parseVal
@@ -404,6 +417,10 @@ mkFieldCompExp qual lhsField = mkCompExp (mkQField lhsField)
       ANILIKE _ val    -> S.BECompare S.SNILIKE lhs val
       ASIMILAR val     -> S.BECompare S.SSIMILAR lhs val
       ANSIMILAR val    -> S.BECompare S.SNSIMILAR lhs val
+      AREGEX val       -> S.BECompare S.SREGEX lhs val
+      AIREGEX val      -> S.BECompare S.SIREGEX lhs val
+      ANREGEX val      -> S.BECompare S.SNREGEX lhs val
+      ANIREGEX val     -> S.BECompare S.SNIREGEX lhs val
       AContains val    -> S.BECompare S.SContains lhs val
       AContainedIn val -> S.BECompare S.SContainedIn lhs val
       AHasKey val      -> S.BECompare S.SHasKey lhs val

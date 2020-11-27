@@ -241,6 +241,15 @@ data OpExpG (b :: BackendType) a
   | ASIMILAR !a -- similar, regex
   | ANSIMILAR !a-- not similar, regex
 
+  -- Now that in the RQL code we've started to take a "trees that grow"
+  -- approach (see PR #6003), we may eventually want to move these
+  -- recently added constructors, which correspond to newly supported
+  -- Postgres operators, to the backend-specific extensions of this type.
+  | AREGEX !a -- match POSIX case sensitive, regex
+  | AIREGEX !a -- match POSIX case insensitive, regex
+  | ANREGEX !a -- dont match POSIX case sensitive, regex
+  | ANIREGEX !a -- dont match POSIX case insensitive, regex
+
   | AContains !a
   | AContainedIn !a
   | AHasKey !a
@@ -310,6 +319,11 @@ opExpToJPair f = \case
 
   ASIMILAR a               -> ("_similar", f a)
   ANSIMILAR a              -> ("_nsimilar", f a)
+
+  AREGEX a                 -> ("_regex", f a)
+  AIREGEX a                -> ("_iregex", f a)
+  ANREGEX a                -> ("_nregex", f a)
+  ANIREGEX a               -> ("_niregex", f a)
 
   AContains a              -> ("_contains", f a)
   AContainedIn a           -> ("_contained_in", f a)

@@ -10,7 +10,7 @@ query:
   query: |
     query {
       city (
-      where: {name: {_similar: "_*gham" }}
+      where: {name: {_regex: ".*gham" }}
       ) {
         name
         country
