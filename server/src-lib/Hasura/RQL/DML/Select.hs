@@ -1,13 +1,13 @@
 module Hasura.RQL.DML.Select
-  ( selectP2
-  , convSelectQuery
-  , runSelect
+  (-- selectP2
+--  , convSelectQuery
+  runSelect
   )
 where
 
 import           Hasura.Prelude
 
-import qualified Data.HashSet                              as HS
+import qualified Data.HashMap.Strict                       as HM
 import qualified Data.List.NonEmpty                        as NE
 import qualified Data.Sequence                             as DS
 import qualified Database.PG.Query                         as Q
@@ -29,6 +29,7 @@ import           Hasura.RQL.IR.Select
 import           Hasura.RQL.Types
 import           Hasura.SQL.Types
 
+import Debug.Pretty.Simple
 
 type SelectQExt b = SelectG (ExtCol b) (BoolExp b) Int
 
@@ -69,9 +70,11 @@ convSelCol :: (UserInfoM m, QErrM m, CacheRM m)
            -> SelCol 'Postgres
            -> m [ExtCol 'Postgres]
 convSelCol _ _ (SCExtSimple cn) =
+  pTrace ("convSelCol has been called 1") $
   return [ECSimple cn]
 convSelCol fieldInfoMap _ (SCExtRel rn malias selQ) = do
   -- Point to the name key
+  pTraceM ("convSelCol has been called 2")
   let pgWhenRelErr = "only relationships can be expanded"
   relInfo <- withPathK "name" $
     askRelType fieldInfoMap rn pgWhenRelErr
@@ -80,6 +83,7 @@ convSelCol fieldInfoMap _ (SCExtRel rn malias selQ) = do
   resolvedSelQ <- resolveStar rfim rspi selQ
   return [ECRel rn malias resolvedSelQ]
 convSelCol fieldInfoMap spi (SCStar wildcard) =
+  pTrace ("convSelCol has been called 3") $
   convWildcard fieldInfoMap spi wildcard
 
 convWildcard
@@ -97,7 +101,7 @@ convWildcard fieldInfoMap selPermInfo wildcard =
     pgCols = map pgiColumn $ getCols fieldInfoMap
     relColInfos = getRels fieldInfoMap
 
-    simpleCols = map ECSimple $ filter (`HS.member` cols) pgCols
+    simpleCols = map ECSimple $ filter (`HM.member` cols) pgCols
 
     mkRelCol wc relInfo = do
       let relName = riName relInfo
@@ -119,6 +123,7 @@ resolveStar :: (UserInfoM m, QErrM m, CacheRM m)
             -> SelectQ 'Postgres
             -> m (SelectQExt 'Postgres)
 resolveStar fim spi (SelectG selCols mWh mOb mLt mOf) = do
+  pTraceM ("resolveStar has been called")
   procOverrides <- fmap (concat . catMaybes) $ withPathK "columns" $
     indexedForM selCols $ \selCol -> case selCol of
     (SCStar _) -> return Nothing
@@ -202,23 +207,24 @@ convSelectQ
   -> (PGColumnType -> Value -> m S.SQLExp)
   -> m (AnnSimpleSel 'Postgres)
 convSelectQ table fieldInfoMap selPermInfo selQ sessVarBldr prepValBldr = do
+  pTraceM ("convSelectQ has been called")
+  -- Convert where clause
+  wClause <- forM (sqWhere selQ) $ \be ->
+    withPathK "where" $
+    convBoolExp fieldInfoMap selPermInfo be sessVarBldr prepValBldr
 
   annFlds <- withPathK "columns" $
     indexedForM (sqColumns selQ) $ \case
     (ECSimple pgCol) -> do
-      colInfo <- convExtSimple fieldInfoMap selPermInfo pgCol
-      return (fromPGCol pgCol, mkAnnColumnField colInfo Nothing)
+      (colInfo, partialCaseBoolExpMaybe) <- convExtSimple fieldInfoMap selPermInfo pgCol
+--      resolvedCaseBoolExp <- traverse (convAnnBoolExpPartialSQL sessVarBldr) partialCaseBoolExpMaybe
+      return (fromPGCol pgCol, mkAnnColumnField colInfo ((, table) <$> partialCaseBoolExpMaybe) Nothing)
     (ECRel relName mAlias relSelQ) -> do
       annRel <- convExtRel fieldInfoMap relName mAlias
                 relSelQ sessVarBldr prepValBldr
       return ( fromRel $ fromMaybe relName mAlias
              , either AFObjectRelation AFArrayRelation annRel
              )
-
-  -- Convert where clause
-  wClause <- forM (sqWhere selQ) $ \be ->
-    withPathK "where" $
-    convBoolExp fieldInfoMap selPermInfo be sessVarBldr prepValBldr
 
   annOrdByML <- forM (sqOrderBy selQ) $ \(OrderByExp obItems) ->
     withPathK "order_by" $ indexedForM obItems $ mapM $
@@ -251,10 +257,11 @@ convExtSimple
   => FieldInfoMap (FieldInfo 'Postgres)
   -> SelPermInfo 'Postgres
   -> PGCol
-  -> m (ColumnInfo 'Postgres)
+  -> m (ColumnInfo 'Postgres, Maybe (AnnBoolExpPartialSQL 'Postgres))
 convExtSimple fieldInfoMap selPermInfo pgCol = do
   checkSelOnCol selPermInfo pgCol
-  askPGColInfo fieldInfoMap pgCol relWhenPGErr
+  pgColInfo <- askPGColInfo fieldInfoMap pgCol relWhenPGErr
+  pure (pgColInfo, HM.lookup pgCol (spiCols selPermInfo))
   where
     relWhenPGErr = "relationships have to be expanded"
 
@@ -305,6 +312,7 @@ convSelectQuery
 convSelectQuery sessVarBldr prepArgBuilder (DMLQuery qt selQ) = do
   tabInfo     <- withPathK "table" $ askTabInfo qt
   selPermInfo <- askSelPermInfo tabInfo
+  pTraceM ("convSelectQuery has been called")
   let fieldInfo = _tciFieldInfoMap $ _tiCoreInfo tabInfo
   extSelQ <- resolveStar fieldInfo selPermInfo selQ
   validateHeaders $ spiRequiredHeaders selPermInfo

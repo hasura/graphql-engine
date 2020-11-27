@@ -42,12 +42,13 @@ mkAdminRolePermInfo ti =
   where
     fields = _tciFieldInfoMap ti
     pgCols = map pgiColumn $ getCols fields
+    pgColsWithFilter = M.fromList $ map (\col -> (col, annBoolExpTrue)) pgCols
     scalarComputedFields = map _cfiName $ onlyScalarComputedFields $
                      getComputedFieldInfos fields
 
     tn = _tciName ti
     i = InsPermInfo (HS.fromList pgCols) annBoolExpTrue M.empty False []
-    s = SelPermInfo (HS.fromList pgCols) (HS.fromList scalarComputedFields) annBoolExpTrue
+    s = SelPermInfo pgColsWithFilter (HS.fromList scalarComputedFields) annBoolExpTrue
         Nothing True []
     u = UpdPermInfo (HS.fromList pgCols) tn annBoolExpTrue Nothing M.empty []
     d = DelPermInfo tn annBoolExpTrue []
@@ -139,7 +140,7 @@ verifyAsrns preds xs = indexedForM_ xs $ \a -> mapM_ ($ a) preds
 checkSelOnCol :: (UserInfoM m, QErrM m)
               => SelPermInfo 'Postgres -> PGCol -> m ()
 checkSelOnCol selPermInfo =
-  checkPermOnCol PTSelect (spiCols selPermInfo)
+  checkPermOnCol PTSelect (HS.fromList $ M.keys $ spiCols selPermInfo)
 
 checkPermOnCol
   :: (UserInfoM m, QErrM m)

@@ -116,7 +116,7 @@ tableSelectFields table permissions = do
   filterM canBeSelected $ Map.elems tableFields
   where
     canBeSelected (FIColumn columnInfo) =
-      pure $ Set.member (pgiColumn columnInfo) (spiCols permissions)
+      pure $ Set.member (pgiColumn columnInfo) (Set.fromList $ Map.keys $ spiCols permissions)
     canBeSelected (FIRelationship relationshipInfo) =
       isJust <$> tableSelectPermissions (riRTable relationshipInfo)
     canBeSelected (FIComputedField computedFieldInfo) =

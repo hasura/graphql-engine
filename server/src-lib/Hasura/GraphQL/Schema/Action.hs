@@ -191,7 +191,8 @@ actionOutputFields outputObject = do
             AOFTEnum def   -> customEnumParser def
       in bool P.nonNullableField id (G.isNullable gType) $
          P.selection_ (unObjectFieldName name) description fieldParser
-         $> RQL.mkAnnColumnField pgColumnInfo Nothing
+         -- TODO: check if the last argument here should be `Nothing`
+         $> RQL.mkAnnColumnField pgColumnInfo Nothing Nothing
 
     relationshipFieldParser
       :: TypeRelationship (TableInfo 'Postgres) (ColumnInfo 'Postgres)

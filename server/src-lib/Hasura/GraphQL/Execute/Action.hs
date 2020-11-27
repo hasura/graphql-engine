@@ -250,9 +250,9 @@ resolveAsyncActionQuery userInfo annAction =
              processOutputSelectionSet inputTableArgument outputType
              definitionList annFields stringifyNumerics
 
-        AsyncId        -> mkAnnFldFromPGCol "id" PGUUID
-        AsyncCreatedAt -> mkAnnFldFromPGCol "created_at" PGTimeStampTZ
-        AsyncErrors    -> mkAnnFldFromPGCol "errors" PGJSONB
+        AsyncId        -> mkAnnFldFromPGCol "id" PGUUID Nothing
+        AsyncCreatedAt -> mkAnnFldFromPGCol "created_at" PGTimeStampTZ Nothing
+        AsyncErrors    -> mkAnnFldFromPGCol "errors" PGJSONB Nothing
 
       tableFromExp = RS.FromTable actionLogTable
       tableArguments = RS.noSelectArgs

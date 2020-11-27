@@ -91,7 +91,7 @@ selectTable
   -> SelPermInfo 'Postgres          -- ^ select permissions of the table
   -> m (FieldParser n (SelectExp 'Postgres))
 selectTable table fieldName description selectPermissions = do
-  stringifyNum <- asks $ qcStringifyNum . getter
+  stringifyNum       <- asks $ qcStringifyNum . getter
   tableArgsParser    <- tableArgs table selectPermissions
   selectionSetParser <- tableSelectionList table selectPermissions
   pure $ P.subselection fieldName description tableArgsParser selectionSetParser
@@ -169,7 +169,7 @@ selectTableByPk
 selectTableByPk table fieldName description selectPermissions = runMaybeT do
   stringifyNum <- asks $ qcStringifyNum . getter
   primaryKeys <- MaybeT $ fmap _pkColumns . _tciPrimaryKey . _tiCoreInfo <$> askTableInfo table
-  guard $ all (\c -> pgiColumn c `Set.member` spiCols selectPermissions) primaryKeys
+  guard $ all (\c -> pgiColumn c `Map.member` (spiCols selectPermissions)) primaryKeys
   argsParser <- lift $ sequenceA <$> for primaryKeys \columnInfo -> do
     field <- P.column (pgiType columnInfo) (G.Nullability $ pgiIsNullable columnInfo)
     pure $ BoolFld . AVCol columnInfo . pure . AEQ True . mkParameter <$>
@@ -899,11 +899,12 @@ fieldSelection table maybePkeyColumns fieldInfo selectPermissions =
              pure $ P.selection_ fieldName Nothing P.identifier
                     $> IR.AFNodeId table pkeyColumns
          | otherwise -> do
-             guard $ Set.member columnName (spiCols selectPermissions)
+             guard $ columnName `Map.member` (spiCols selectPermissions)
+             let caseBoolExp = Map.lookup columnName (spiCols selectPermissions)
              let pathArg = jsonPathArg $ pgiType columnInfo
              field <- lift $ P.column (pgiType columnInfo) (G.Nullability $ pgiIsNullable columnInfo)
              pure $ P.selection fieldName (pgiDescription columnInfo) pathArg field
-               <&> IR.mkAnnColumnField columnInfo
+               <&> IR.mkAnnColumnField columnInfo ((,table) <$> caseBoolExp)
 
     FIRelationship relationshipInfo ->
       concat . maybeToList <$> relationshipField relationshipInfo

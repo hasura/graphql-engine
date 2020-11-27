@@ -530,7 +530,7 @@ primaryKeysArguments
 primaryKeysArguments table selectPerms = runMaybeT $ do
   primaryKeys <- MaybeT $ _tciPrimaryKey . _tiCoreInfo <$> askTableInfo table
   let columns = _pkColumns primaryKeys
-  guard $ all (\c -> pgiColumn c `Set.member` spiCols selectPerms) columns
+  guard $ all (\c -> pgiColumn c `Map.member` spiCols selectPerms) columns
   lift $ fmap (BoolAnd . toList) . sequenceA <$> for columns \columnInfo -> do
     field <- P.column (pgiType columnInfo) (G.Nullability False)
     pure $ BoolFld . AVCol columnInfo . pure . AEQ True . mkParameter <$>

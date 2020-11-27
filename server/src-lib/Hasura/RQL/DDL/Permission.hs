@@ -212,6 +212,8 @@ buildSelPermInfo tn fieldInfoMap sp = withPathK "permission" $ do
   (be, beDeps) <- withPathK "filter" $
     procBoolExp tn fieldInfoMap  $ spFilter sp
 
+  let pgColsWithFilter = HM.fromList $ map (, be) pgCols
+
   -- check if the columns exist
   void $ withPathK "columns" $ indexedForM pgCols $ \pgCol ->
     askPGType fieldInfoMap pgCol autoInferredErr
@@ -234,7 +236,7 @@ buildSelPermInfo tn fieldInfoMap sp = withPathK "permission" $ do
 
   withPathK "limit" $ mapM_ onlyPositiveInt mLimit
 
-  return ( SelPermInfo (HS.fromList pgCols) (HS.fromList computedFields)
+  return ( SelPermInfo pgColsWithFilter (HS.fromList computedFields)
                         be mLimit allowAgg depHeaders
          , deps
          )

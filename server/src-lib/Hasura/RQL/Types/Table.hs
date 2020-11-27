@@ -244,7 +244,7 @@ instance ToJSON (InsPermInfo 'Postgres) where
 
 data SelPermInfo (b :: BackendType)
   = SelPermInfo
-  { spiCols                 :: !(HS.HashSet (Column b))
+  { spiCols                 :: !(M.HashMap (Column b) (AnnBoolExpPartialSQL b))
   , spiScalarComputedFields :: !(HS.HashSet ComputedFieldName)
   , spiFilter               :: !(AnnBoolExpPartialSQL b)
   , spiLimit                :: !(Maybe Int)
@@ -260,7 +260,7 @@ instance ToJSON (SelPermInfo 'Postgres) where
 instance Semigroup (SelPermInfo 'Postgres) where
   lSelPermInfo <> rSelPermInfo =
     SelPermInfo
-    { spiCols = spiCols lSelPermInfo <> spiCols rSelPermInfo
+    { spiCols = M.unionWith (\ l r -> BoolOr [l, r]) (spiCols lSelPermInfo) (spiCols rSelPermInfo)
     , spiScalarComputedFields = spiScalarComputedFields lSelPermInfo <> spiScalarComputedFields rSelPermInfo
     , spiFilter = BoolOr [spiFilter lSelPermInfo, spiFilter rSelPermInfo]
     , spiLimit =
