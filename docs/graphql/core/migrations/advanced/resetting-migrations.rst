@@ -29,7 +29,11 @@ From your local project directory, delete all the contents in the ``migrations``
 
 .. note::
 
-   Before deleting the local migrations, you might consider storing them in a backup folder in case you need them later.
+   Before deleting the local migrations, you might consider storing them in a backup folder in case you need them later using the following command:
+
+.. code-block:: bash
+   
+   mv -r migrations migrations_bckup
 
 Step 2: Reset the migration history on the server
 -------------------------------------------------
