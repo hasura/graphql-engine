@@ -64,12 +64,12 @@ type Config struct {
 	Req                            *gorequest.SuperAgent
 }
 
-type queryRequestOpts struct {}
+type queryRequestOpts struct{}
 
-type metadataRequestOpts struct {}
+type metadataRequestOpts struct{}
 
 type metadataOrQueryClientFuncOpts struct {
-	queryRequestOpts *queryRequestOpts
+	queryRequestOpts    *queryRequestOpts
 	metadataRequestOpts *metadataRequestOpts
 }
 type metadataOrQueryClientFunc func(m interface{}, opts metadataOrQueryClientFuncOpts) (*http.Response, []byte, error)
@@ -251,7 +251,7 @@ func (h *HasuraDB) UnLock() error {
 			if err := mapstructure.Decode(req, &r); err != nil {
 				return err
 			}
-			if v, ok := r["Type"]; ok {
+			if v, ok := r["type"]; ok {
 				if w := fmt.Sprintf("%v", v); w != "" {
 					if _, ok := queryTypesMap[w]; ok {
 						queryAPIRequests = append(queryAPIRequests, req)
@@ -262,9 +262,9 @@ func (h *HasuraDB) UnLock() error {
 			}
 		}
 		resp, body, err := h.sendMetadataOrQueryRequest(HasuraInterfaceQuery{
-			Type: "bulk",
+			Type:   "bulk",
 			Source: h.hasuraOpts.Datasource,
-			Args: queryAPIRequests,
+			Args:   queryAPIRequests,
 		}, metadataOrQueryClientFuncOpts{queryRequestOpts: &queryRequestOpts{}})
 		if err != nil {
 			return err

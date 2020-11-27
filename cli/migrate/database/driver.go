@@ -62,7 +62,7 @@ type Driver interface {
 	// all migrations have been run.
 	UnLock() error
 
-	// Run applies a migration to the database. migration is garantueed to be not nil.
+	// Run applies a migration to the database. migration is guaranteed to be not nil.
 	Run(migration io.Reader, fileType, fileName string) error
 
 	// Reset Migration Query Args
