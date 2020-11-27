@@ -4,6 +4,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+
+	"github.com/hasura/graphql-engine/cli/internal/client"
 )
 
 const (
@@ -45,7 +47,7 @@ func (s SettingsStateStoreWithSQL) GetSetting(name string) (value string, err er
 	}
 
 	// Send Query
-	resp, body, err := s.hasuradb.sendMetadataOrQueryRequest(query, metadataOrQueryClientFuncOpts{metadataRequestOpts: &metadataRequestOpts{}})
+	resp, body, err := s.hasuradb.sendMetadataOrQueryRequest(query, client.MetadataOrQueryClientFuncOpts{MetadataRequestOpts: &client.MetadataRequestOpts{}})
 	if err != nil {
 		return value, err
 	}
@@ -87,7 +89,7 @@ func (s SettingsStateStoreWithSQL) UpdateSetting(name string, value string) erro
 	}
 
 	// Send Query
-	resp, body, err := s.hasuradb.sendMetadataOrQueryRequest(query, metadataOrQueryClientFuncOpts{metadataRequestOpts: &metadataRequestOpts{}})
+	resp, body, err := s.hasuradb.sendMetadataOrQueryRequest(query, client.MetadataOrQueryClientFuncOpts{MetadataRequestOpts: &client.MetadataRequestOpts{}})
 	if err != nil {
 		return err
 	}
@@ -120,7 +122,7 @@ func (s SettingsStateStoreWithSQL) PrepareSettingsDriver() error {
 		},
 	}
 
-	resp, body, err := s.hasuradb.sendMetadataOrQueryRequest(query, metadataOrQueryClientFuncOpts{metadataRequestOpts: &metadataRequestOpts{}})
+	resp, body, err := s.hasuradb.sendMetadataOrQueryRequest(query, client.MetadataOrQueryClientFuncOpts{MetadataRequestOpts: &client.MetadataRequestOpts{}})
 	if err != nil {
 		h.logger.Debug(err)
 		return err
@@ -155,7 +157,7 @@ func (s SettingsStateStoreWithSQL) PrepareSettingsDriver() error {
 		},
 	}
 
-	resp, body, err = s.hasuradb.sendMetadataOrQueryRequest(query, metadataOrQueryClientFuncOpts{metadataRequestOpts: &metadataRequestOpts{}})
+	resp, body, err = s.hasuradb.sendMetadataOrQueryRequest(query, client.MetadataOrQueryClientFuncOpts{MetadataRequestOpts: &client.MetadataRequestOpts{}})
 	if err != nil {
 		return err
 	}
@@ -195,7 +197,7 @@ func (s SettingsStateStoreWithSQL) setDefaults() error {
 		return nil
 	}
 
-	resp, body, err := s.hasuradb.sendMetadataOrQueryRequest(query, metadataOrQueryClientFuncOpts{metadataRequestOpts: &metadataRequestOpts{}})
+	resp, body, err := s.hasuradb.sendMetadataOrQueryRequest(query, client.MetadataOrQueryClientFuncOpts{MetadataRequestOpts: &client.MetadataRequestOpts{}})
 	if err != nil {
 		return err
 	}

@@ -6,6 +6,8 @@ import (
 	"net/http"
 	"os"
 
+	"github.com/hasura/graphql-engine/cli/internal/client"
+
 	gyaml "github.com/ghodss/yaml"
 	"github.com/hasura/graphql-engine/cli/metadata/types"
 	"github.com/hasura/graphql-engine/cli/migrate/database"
@@ -30,7 +32,7 @@ func (h *HasuraDB) ExportMetadata() (map[string][]byte, error) {
 		Args: HasuraArgs{},
 	}
 
-	resp, body, err := h.sendMetadataOrQueryRequest(query, metadataOrQueryClientFuncOpts{metadataRequestOpts: &metadataRequestOpts{}})
+	resp, body, err := h.sendMetadataOrQueryRequest(query, client.MetadataOrQueryClientFuncOpts{MetadataRequestOpts: &client.MetadataRequestOpts{}})
 	if err != nil {
 		h.logger.Debug(err)
 		return nil, err
@@ -67,7 +69,7 @@ func (h *HasuraDB) ResetMetadata() error {
 		Args: HasuraArgs{},
 	}
 
-	resp, body, err := h.sendMetadataOrQueryRequest(query, metadataOrQueryClientFuncOpts{metadataRequestOpts: &metadataRequestOpts{}})
+	resp, body, err := h.sendMetadataOrQueryRequest(query, client.MetadataOrQueryClientFuncOpts{MetadataRequestOpts: &client.MetadataRequestOpts{}})
 	if err != nil {
 		h.logger.Debug(err)
 		return err
@@ -87,7 +89,7 @@ func (h *HasuraDB) ReloadMetadata() error {
 		Args: HasuraArgs{},
 	}
 
-	resp, body, err := h.sendMetadataOrQueryRequest(query, metadataOrQueryClientFuncOpts{metadataRequestOpts: &metadataRequestOpts{}})
+	resp, body, err := h.sendMetadataOrQueryRequest(query, client.MetadataOrQueryClientFuncOpts{MetadataRequestOpts: &client.MetadataRequestOpts{}})
 	if err != nil {
 		h.logger.Debug(err)
 		return err
@@ -106,7 +108,7 @@ func (h *HasuraDB) GetInconsistentMetadata() (bool, []database.InconsistentMetad
 		Args: HasuraArgs{},
 	}
 
-	resp, body, err := h.sendMetadataOrQueryRequest(query, metadataOrQueryClientFuncOpts{metadataRequestOpts: &metadataRequestOpts{}})
+	resp, body, err := h.sendMetadataOrQueryRequest(query, client.MetadataOrQueryClientFuncOpts{MetadataRequestOpts: &client.MetadataRequestOpts{}})
 	if err != nil {
 		h.logger.Debug(err)
 		return false, nil, err
@@ -135,7 +137,7 @@ func (h *HasuraDB) DropInconsistentMetadata() error {
 		Args: HasuraArgs{},
 	}
 
-	resp, body, err := h.sendMetadataOrQueryRequest(query, metadataOrQueryClientFuncOpts{metadataRequestOpts: &metadataRequestOpts{}})
+	resp, body, err := h.sendMetadataOrQueryRequest(query, client.MetadataOrQueryClientFuncOpts{MetadataRequestOpts: &client.MetadataRequestOpts{}})
 	if err != nil {
 		h.logger.Debug(err)
 		return err
@@ -194,7 +196,7 @@ func (h *HasuraDB) ApplyMetadata() error {
 			},
 		},
 	}
-	resp, body, err := h.sendMetadataOrQueryRequest(query, metadataOrQueryClientFuncOpts{metadataRequestOpts: &metadataRequestOpts{}})
+	resp, body, err := h.sendMetadataOrQueryRequest(query, client.MetadataOrQueryClientFuncOpts{MetadataRequestOpts: &client.MetadataRequestOpts{}})
 	if err != nil {
 		h.logger.Debug(err)
 		return err
@@ -237,7 +239,7 @@ func (h *HasuraDB) Query(data interface{}) error {
 		Args: data,
 	}
 
-	resp, body, err := h.sendMetadataOrQueryRequest(query, metadataOrQueryClientFuncOpts{metadataRequestOpts: &metadataRequestOpts{}})
+	resp, body, err := h.sendMetadataOrQueryRequest(query, client.MetadataOrQueryClientFuncOpts{MetadataRequestOpts: &client.MetadataRequestOpts{}})
 	if err != nil {
 		h.logger.Debug(err)
 		return err
@@ -259,7 +261,7 @@ func (h *HasuraDB) GetDatasources() ([]string, error) {
 		Args: map[string]interface{}{},
 	}
 
-	resp, body, err := h.sendMetadataOrQueryRequest(query, metadataOrQueryClientFuncOpts{metadataRequestOpts: &metadataRequestOpts{}})
+	resp, body, err := h.sendMetadataOrQueryRequest(query, client.MetadataOrQueryClientFuncOpts{MetadataRequestOpts: &client.MetadataRequestOpts{}})
 	if err != nil {
 		h.logger.Debug(err)
 		return nil, err

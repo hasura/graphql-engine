@@ -5,14 +5,18 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/hasura/graphql-engine/cli/internal/client"
+	apiClient "github.com/hasura/graphql-engine/cli/internal/client"
+
 	"github.com/mitchellh/mapstructure"
 
 	"github.com/pkg/errors"
 )
 
 type CatalogStateAPIClient interface {
-	sendMetadataOrQueryRequest(m interface{}, opts metadataOrQueryClientFuncOpts) (*http.Response, []byte, error)
+	sendMetadataOrQueryRequest(m interface{}, opts client.MetadataOrQueryClientFuncOpts) (*http.Response, []byte, error)
 }
+
 //
 // "default:
 //		Version			     Dirty
@@ -54,7 +58,7 @@ func (c *CatalogStateAPI) GetCLICatalogState(client CatalogStateAPIClient) (*CLI
 		Type: "get_catalog_state",
 		Args: HasuraArgs{},
 	}
-	resp, body, err := client.sendMetadataOrQueryRequest(q, metadataOrQueryClientFuncOpts{metadataRequestOpts: &metadataRequestOpts{}})
+	resp, body, err := client.sendMetadataOrQueryRequest(q, apiClient.MetadataOrQueryClientFuncOpts{MetadataRequestOpts: &apiClient.MetadataRequestOpts{}})
 	if err != nil {
 		return nil, err
 	}
@@ -95,7 +99,7 @@ func (c *CatalogStateAPI) SetCLICatalogState(client CatalogStateAPIClient, cliSt
 			State: cliState,
 		},
 	}
-	resp, body, err := client.sendMetadataOrQueryRequest(q, metadataOrQueryClientFuncOpts{metadataRequestOpts: &metadataRequestOpts{}})
+	resp, body, err := client.sendMetadataOrQueryRequest(q, apiClient.MetadataOrQueryClientFuncOpts{MetadataRequestOpts: &apiClient.MetadataRequestOpts{}})
 	if err != nil {
 		return err
 	}

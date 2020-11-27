@@ -133,6 +133,7 @@ func NewMigrate(ec *cli.ExecutionContext, isCmd bool, datasource string) (*Migra
 		&database.HasuraOpts{
 			ServerFeatureFlags: *ec.Version.ServerFeatureFlags,
 			Datasource:         datasource,
+			Client:             ec.APIClient,
 		},
 	}
 	t, err := New(opts)

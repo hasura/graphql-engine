@@ -3,6 +3,7 @@ package database
 import (
 	"sort"
 
+	"github.com/hasura/graphql-engine/cli/internal/client"
 	"github.com/hasura/graphql-engine/cli/version"
 )
 
@@ -96,5 +97,5 @@ func (s uint64Slice) Search(x uint64) int {
 type HasuraOpts struct {
 	ServerFeatureFlags version.ServerFeatureFlags
 	Datasource         string
+	Client             *client.Client
 }
-

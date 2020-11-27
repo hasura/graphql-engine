@@ -6,6 +6,8 @@ import (
 	"net/http"
 	"strconv"
 
+	"github.com/hasura/graphql-engine/cli/internal/client"
+
 	"github.com/pkg/errors"
 )
 
@@ -62,7 +64,7 @@ func (m *migrationStateWithSQL) PrepareMigrationsStateStore() error {
 		},
 	}
 
-	resp, body, err := m.hasuraDB.sendMetadataOrQueryRequest(query, metadataOrQueryClientFuncOpts{queryRequestOpts: &queryRequestOpts{}})
+	resp, body, err := m.hasuraDB.sendMetadataOrQueryRequest(query, client.MetadataOrQueryClientFuncOpts{QueryRequestOpts: &client.QueryRequestOpts{}})
 	if err != nil {
 		m.hasuraDB.logger.Debug(err)
 		return err
@@ -96,7 +98,7 @@ func (m *migrationStateWithSQL) PrepareMigrationsStateStore() error {
 		},
 	}
 
-	resp, body, err = m.hasuraDB.sendMetadataOrQueryRequest(query, metadataOrQueryClientFuncOpts{queryRequestOpts: &queryRequestOpts{}})
+	resp, body, err = m.hasuraDB.sendMetadataOrQueryRequest(query, client.MetadataOrQueryClientFuncOpts{QueryRequestOpts: &client.QueryRequestOpts{}})
 	if err != nil {
 		return err
 	}
@@ -126,7 +128,7 @@ func (m *migrationStateWithSQL) GetVersions() error {
 	}
 
 	// Send Query
-	resp, body, err := m.hasuraDB.sendMetadataOrQueryRequest(query, metadataOrQueryClientFuncOpts{queryRequestOpts: &queryRequestOpts{}})
+	resp, body, err := m.hasuraDB.sendMetadataOrQueryRequest(query, client.MetadataOrQueryClientFuncOpts{QueryRequestOpts: &client.QueryRequestOpts{}})
 	if err != nil {
 		return err
 	}
