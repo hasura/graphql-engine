@@ -4,19 +4,30 @@ import (
 	"net/http"
 	"strings"
 
+	"github.com/hasura/graphql-engine/cli"
+
 	"github.com/gin-gonic/gin"
 	"github.com/hasura/graphql-engine/cli/migrate"
 )
 
 func MetadataAPI(c *gin.Context) {
 	// Get migrate instance
-	migratePtr, ok := c.Get("migrate")
+	ecPtr, ok := c.Get("ec")
 	if !ok {
 		return
 	}
 
 	// Convert to url.URL
-	t := migratePtr.(*migrate.Migrate)
+	ec, ok := ecPtr.(*cli.ExecutionContext)
+	if !ok {
+		c.JSON(http.StatusInternalServerError, &Response{Code: "internal_error", Message: "cannot get execution context"})
+		return
+	}
+	t, err := migrate.NewMigrate(ec, false, "")
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, &Response{Code: "internal_error", Message: err.Error()})
+		return
+	}
 
 	// Switch on request method
 	switch c.Request.Method {

@@ -106,43 +106,52 @@ type Migrate struct {
 	DryRun        bool
 }
 
+type NewMigrateOpts struct {
+	sourceUrl, databaseUrl string
+	cmd                    bool
+	configVersion          int
+	tlsConfig              *tls.Config
+	logger                 *log.Logger
+	hasuraOpts             *database.HasuraOpts
+}
+
 // New returns a new Migrate instance from a source URL and a database URL.
 // The URL scheme is defined by each driver.
-func New(sourceUrl string, databaseUrl string, cmd bool, configVersion int, tlsConfig *tls.Config, logger *log.Logger) (*Migrate, error) {
-	m := newCommon(cmd)
+func New(opts NewMigrateOpts) (*Migrate, error) {
+	m := newCommon(opts.cmd)
 
-	sourceName, err := schemeFromUrl(sourceUrl)
+	sourceName, err := schemeFromUrl(opts.sourceUrl)
 	if err != nil {
 		log.Debug(err)
 		return nil, err
 	}
 	m.sourceName = sourceName
-	m.sourceURL = sourceUrl
+	m.sourceURL = opts.sourceUrl
 
-	databaseName, err := schemeFromUrl(databaseUrl)
+	databaseName, err := schemeFromUrl(opts.databaseUrl)
 	if err != nil {
 		log.Debug(err)
 		return nil, err
 	}
 	m.databaseName = databaseName
-	m.databaseURL = databaseUrl
+	m.databaseURL = opts.databaseUrl
 
-	if logger == nil {
-		logger = log.New()
+	if opts.logger == nil {
+		opts.logger = log.New()
 	}
-	m.Logger = logger
+	m.Logger = opts.logger
 
-	sourceDrv, err := source.Open(sourceUrl, logger)
+	sourceDrv, err := source.Open(opts.sourceUrl, opts.logger)
 	if err != nil {
 		log.Debug(err)
 		return nil, err
 	}
 	m.sourceDrv = sourceDrv
-	if configVersion >= 2 {
+	if opts.configVersion >= 2 {
 		m.sourceDrv.DefaultParser(source.DefaultParsev2)
 	}
 
-	databaseDrv, err := database.Open(databaseUrl, cmd, tlsConfig, logger)
+	databaseDrv, err := database.Open(opts.databaseUrl, opts.cmd, opts.tlsConfig, opts.logger, opts.hasuraOpts)
 	if err != nil {
 		log.Debug(err)
 		return nil, err
@@ -1850,11 +1859,11 @@ func (m *Migrate) ApplySeed(q interface{}) error {
 func (m *Migrate) ExportDataDump(tableNames []string) ([]byte, error) {
 	// to support tables starting with capital letters
 	modifiedTableNames := make([]string, len(tableNames))
-	
+
 	for idx, val := range tableNames {
 		split := strings.Split(val, ".")
 		splitLen := len(split)
-		
+
 		if splitLen != 1 && splitLen != 2 {
 			return nil, fmt.Errorf(`invalid schema/table provided "%s"`, val)
 		}
@@ -1865,7 +1874,7 @@ func (m *Migrate) ExportDataDump(tableNames []string) ([]byte, error) {
 			modifiedTableNames[idx] = fmt.Sprintf(`"%s"`, val)
 		}
 	}
-	
+
 	return m.databaseDrv.ExportDataDump(modifiedTableNames)
 }
 
@@ -1890,4 +1899,8 @@ func printDryRunStatus(migrations []*Migration) *bytes.Buffer {
 	}
 	out.Flush()
 	return buf
+}
+
+func (m *Migrate) GetDatasources() ([]string, error) {
+	return m.databaseDrv.GetDatasources()
 }

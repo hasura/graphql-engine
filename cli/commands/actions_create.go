@@ -64,7 +64,8 @@ type actionsCreateOptions struct {
 }
 
 func (o *actionsCreateOptions) run() error {
-	migrateDrv, err := migrate.NewMigrate(o.EC, true)
+	//TODO
+	migrateDrv, err := migrate.NewMigrate(o.EC, true, "")
 	if err != nil {
 		return err
 	}

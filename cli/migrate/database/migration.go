@@ -1,6 +1,11 @@
 package database
 
-import "sort"
+import (
+	"sort"
+
+	"github.com/hasura/graphql-engine/cli/internal/client"
+	"github.com/hasura/graphql-engine/cli/version"
+)
 
 // Migrations wraps Migration and has an internal index
 // to keep track of Migration order in database.
@@ -87,4 +92,10 @@ func (s uint64Slice) Less(i, j int) bool {
 
 func (s uint64Slice) Search(x uint64) int {
 	return sort.Search(len(s), func(i int) bool { return s[i] >= x })
+}
+
+type HasuraOpts struct {
+	ServerFeatureFlags version.ServerFeatureFlags
+	Datasource         string
+	Client             *client.Client
 }

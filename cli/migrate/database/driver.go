@@ -44,7 +44,7 @@ type Driver interface {
 	// Open returns a new driver instance configured with parameters
 	// coming from the URL string. Migrate will call this function
 	// only once per instance.
-	Open(url string, isCMD bool, tlsConfig *tls.Config, logger *log.Logger) (Driver, error)
+	Open(url string, isCMD bool, tlsConfig *tls.Config, logger *log.Logger, hasuraOpts *HasuraOpts) (Driver, error)
 
 	// Close closes the underlying database instance managed by the driver.
 	// Migrate will call this function only once per instance.
@@ -62,7 +62,7 @@ type Driver interface {
 	// all migrations have been run.
 	UnLock() error
 
-	// Run applies a migration to the database. migration is garantueed to be not nil.
+	// Run applies a migration to the database. migration is guaranteed to be not nil.
 	Run(migration io.Reader, fileType, fileName string) error
 
 	// Reset Migration Query Args
@@ -106,8 +106,6 @@ type Driver interface {
 
 	Squash(list *CustomList, ret chan<- interface{})
 
-	SettingsDriver
-
 	MetadataDriver
 
 	GraphQLDriver
@@ -115,10 +113,12 @@ type Driver interface {
 	SchemaDriver
 
 	SeedDriver
+
+	SettingsDriver
 }
 
 // Open returns a new driver instance.
-func Open(url string, isCMD bool, tlsConfig *tls.Config, logger *log.Logger) (Driver, error) {
+func Open(url string, isCMD bool, tlsConfig *tls.Config, logger *log.Logger, hasuraOpts *HasuraOpts) (Driver, error) {
 	u, err := nurl.Parse(url)
 	if err != nil {
 		log.Debug(err)
@@ -140,7 +140,7 @@ func Open(url string, isCMD bool, tlsConfig *tls.Config, logger *log.Logger) (Dr
 		logger = log.New()
 	}
 
-	return d.Open(url, isCMD, tlsConfig, logger)
+	return d.Open(url, isCMD, tlsConfig, logger, hasuraOpts)
 }
 
 func Register(name string, driver Driver) {

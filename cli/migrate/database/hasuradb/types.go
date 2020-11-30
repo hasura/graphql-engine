@@ -29,6 +29,7 @@ func (h *HasuraInterfaceBulk) ResetArgs() {
 type HasuraInterfaceQuery struct {
 	Type    requestTypes    `json:"type" yaml:"type"`
 	Version metadataVersion `json:"version,omitempty" yaml:"version,omitempty"`
+	Source  string          `json:"source,omitempty" yaml:"source,omitempty"`
 	Args    interface{}     `json:"args" yaml:"args"`
 }
 
@@ -1087,6 +1088,7 @@ func (i InconsistentMeatadataObject) GetReason() string {
 
 type RunSQLInput struct {
 	SQL                      string `json:"sql" yaml:"sql"`
+	Datasource               string `json:"datasource" yaml:"datasource"`
 	Cascade                  bool   `json:"cascade,omitempty" yaml:"cascade,omitempty"`
 	ReadOnly                 bool   `json:"read_only,omitempty" yaml:"read_only,omitempty"`
 	CheckMetadataConsistency *bool  `json:"check_metadata_consistency,omitempty" yaml:"check_metadata_consistency,omitempty"`

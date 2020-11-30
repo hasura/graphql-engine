@@ -23,6 +23,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/hasura/graphql-engine/cli/internal/client"
+
 	"github.com/Masterminds/semver"
 	"github.com/briandowns/spinner"
 	"github.com/gofrs/uuid"
@@ -86,7 +88,7 @@ type ServerAPIPaths struct {
 	Query string `yaml:"query,omitempty"`
 	// Metadata relevant since v1.4.0-alpha.1
 	// since v1/query is now split into v1/metadata and v2/query to support multiple datasources
-	Metadata string `yaml:"query,omitempty"`
+	Metadata string `yaml:"metadata,omitempty"`
 	GraphQL  string `yaml:"graphql,omitempty"`
 	Config   string `yaml:"config,omitempty"`
 	PGDump   string `yaml:"pg_dump,omitempty"`
@@ -402,6 +404,9 @@ type ExecutionContext struct {
 
 	// IsTerminal indicates whether the current session is a terminal or not
 	IsTerminal bool
+
+	// instance of API client which communicates with Hasura API
+	APIClient *client.Client
 }
 
 // NewExecutionContext returns a new instance of execution context
@@ -622,6 +627,7 @@ func (ec *ExecutionContext) Validate() error {
 		}
 		ec.SetHGEHeaders(headers)
 	}
+	ec.APIClient = client.NewClient(ec.Version.ServerFeatureFlags)
 	return nil
 }
 

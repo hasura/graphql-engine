@@ -272,7 +272,7 @@ func newScriptsUpdateConfigV2Cmd(ec *cli.ExecutionContext) *cobra.Command {
 				}
 			}
 			ec.Spin("Removing versions from database...")
-			migrateDrv, err := migrate.NewMigrate(ec, true)
+			migrateDrv, err := migrate.NewMigrate(ec, true, "")
 			if err != nil {
 				return errors.Wrap(err, "unable to initialize migrations driver")
 			}
@@ -307,7 +307,7 @@ func newScriptsUpdateConfigV2Cmd(ec *cli.ExecutionContext) *cobra.Command {
 			ec.Config.ActionConfig.Codegen = nil
 			// run metadata export
 			ec.Spin("Exporting metadata...")
-			migrateDrv, err = migrate.NewMigrate(ec, true)
+			migrateDrv, err = migrate.NewMigrate(ec, true, "")
 			if err != nil {
 				return errors.Wrap(err, "unable to initialize migrations driver")
 			}
