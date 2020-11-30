@@ -21,6 +21,7 @@ type VersionConfig struct {
 }
 
 func New(ec *cli.ExecutionContext, baseDir string) *VersionConfig {
+	ec.Version.GetServerFeatureFlags()
 	return &VersionConfig{
 		MetadataDir: baseDir,
 	}
@@ -32,7 +33,7 @@ func (a *VersionConfig) Validate() error {
 
 func (a *VersionConfig) CreateFiles() error {
 	v := Version{
-		Version: 2,
+		Version: 3,
 	}
 	data, err := yaml.Marshal(v)
 	if err != nil {

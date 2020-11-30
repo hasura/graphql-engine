@@ -54,7 +54,7 @@ func (v *Version) GetServerFeatureFlags() error {
 		// multiple datasources Constraint
 		multipleDatasourcesConstraint, err := semver.NewConstraint(">= " + datasourcesVersion)
 		if err != nil {
-			return errors.Wrap(err, "building cron triggers constraint failed")
+			return errors.Wrap(err, "building data sources constraint failed")
 		}
 		// check the current version with the constraint
 		flags.HasDatasources = multipleDatasourcesConstraint.Check(v.ServerSemver)
