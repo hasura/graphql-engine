@@ -17,7 +17,6 @@ import qualified Hasura.Backends.Postgres.SQL.DML    as PG
 import qualified Hasura.Backends.Postgres.SQL.Types  as PG
 
 import           Hasura.GraphQL.Parser.Schema
-import           Hasura.GraphQL.Parser               (UnpreparedValue)
 import           Hasura.RQL.IR.BoolExp
 import           Hasura.RQL.IR.OrderBy
 import           Hasura.RQL.Types.Column
@@ -166,7 +165,9 @@ data ColumnOp (b :: BackendType)
 deriving instance Show (ColumnOp 'Postgres)
 deriving instance Eq   (ColumnOp 'Postgres)
 
-data AnnColumnField (b :: BackendType)
+type ColumnBoolExpression b = Either (AnnBoolExpPartialSQL b) (AnnBoolExpSQL b)
+
+data AnnColumnField (b :: BackendType) v
   = AnnColumnField
   { _acfInfo               :: !(ColumnInfo b)
   , _acfAsText             :: !Bool
@@ -174,8 +175,20 @@ data AnnColumnField (b :: BackendType)
   -- an issue that occurs because we don’t currently have proper support for array types. See
   -- https://github.com/hasura/graphql-engine/pull/3198 for more details.
   , _acfOp                 :: !(Maybe (ColumnOp b))
-  , _acfCaseBoolExpression :: !(Maybe (AnnBoolExpPartialSQL b, PG.QualifiedTable))
+  , _acfCaseBoolExpression :: !(Maybe (PG.QualifiedTable, AnnBoolExp b v))
   }
+
+traverseAnnColumnField
+  :: (Applicative f)
+  => (a -> f b)
+  -> AnnColumnField backend a
+  -> f (AnnColumnField backend b)
+traverseAnnColumnField f (AnnColumnField info asText op caseBoolExpMaybe) =
+  AnnColumnField
+  <$> pure info
+  <*> pure asText
+  <*> pure op
+  <*> (traverse (traverse (traverseAnnBoolExp f)) caseBoolExpMaybe)
 
 data RemoteFieldArgument
   = RemoteFieldArgument
@@ -193,7 +206,7 @@ data RemoteSelect (b :: BackendType)
   }
 
 data AnnFieldG (b :: BackendType) v
-  = AFColumn !(AnnColumnField b)
+  = AFColumn !(AnnColumnField b v)
   | AFObjectRelation !(ObjectRelationSelectG b v)
   | AFArrayRelation !(ArraySelectG b v)
   | AFComputedField !(ComputedFieldSelect b v)
@@ -203,7 +216,7 @@ data AnnFieldG (b :: BackendType) v
 
 mkAnnColumnField
   :: ColumnInfo backend
-  -> Maybe ((AnnBoolExpPartialSQL backend), PG.QualifiedTable)
+  -> Maybe (PG.QualifiedTable, AnnBoolExp backend v)
   -> Maybe (ColumnOp backend)
   -> AnnFieldG backend v
 mkAnnColumnField ci caseBoolExp colOpM =
@@ -219,7 +232,7 @@ traverseAnnField
   :: (Applicative f)
   => (a -> f b) -> AnnFieldG backend a -> f (AnnFieldG backend b)
 traverseAnnField f = \case
-  AFColumn colFld      -> pure $ AFColumn colFld
+  AFColumn colFld      -> AFColumn <$> traverseAnnColumnField f colFld
   AFObjectRelation sel -> AFObjectRelation <$> traverse (traverseAnnObjectSelect f) sel
   AFArrayRelation sel  -> AFArrayRelation <$> traverseArraySelect f sel
   AFComputedField sel  -> AFComputedField <$> traverseComputedFieldSelect f sel

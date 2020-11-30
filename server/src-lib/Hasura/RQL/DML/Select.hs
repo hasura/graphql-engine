@@ -216,9 +216,12 @@ convSelectQ table fieldInfoMap selPermInfo selQ sessVarBldr prepValBldr = do
   annFlds <- withPathK "columns" $
     indexedForM (sqColumns selQ) $ \case
     (ECSimple pgCol) -> do
-      (colInfo, partialCaseBoolExpMaybe) <- convExtSimple fieldInfoMap selPermInfo pgCol
---      resolvedCaseBoolExp <- traverse (convAnnBoolExpPartialSQL sessVarBldr) partialCaseBoolExpMaybe
-      return (fromPGCol pgCol, mkAnnColumnField colInfo ((, table) <$> partialCaseBoolExpMaybe) Nothing)
+      (colInfo, caseBoolExpMaybe) <- convExtSimple fieldInfoMap selPermInfo pgCol
+      resolvedCaseBoolExp <-
+        for caseBoolExpMaybe $ \case
+          Left caseBoolExp -> convAnnBoolExpPartialSQL sessVarBldr caseBoolExp
+          Right _          -> throw500 "unexpected: the column case boolean expression has already been resolved"
+      return (fromPGCol pgCol, mkAnnColumnField colInfo ((table,) <$> resolvedCaseBoolExp) Nothing)
     (ECRel relName mAlias relSelQ) -> do
       annRel <- convExtRel fieldInfoMap relName mAlias
                 relSelQ sessVarBldr prepValBldr
@@ -257,11 +260,11 @@ convExtSimple
   => FieldInfoMap (FieldInfo 'Postgres)
   -> SelPermInfo 'Postgres
   -> PGCol
-  -> m (ColumnInfo 'Postgres, Maybe (AnnBoolExpPartialSQL 'Postgres))
+  -> m (ColumnInfo 'Postgres, Maybe (ColumnBoolExpression 'Postgres))
 convExtSimple fieldInfoMap selPermInfo pgCol = do
   checkSelOnCol selPermInfo pgCol
   pgColInfo <- askPGColInfo fieldInfoMap pgCol relWhenPGErr
-  pure (pgColInfo, HM.lookup pgCol (spiCols selPermInfo))
+  pure (pgColInfo, Left <$> HM.lookup pgCol (spiCols selPermInfo))
   where
     relWhenPGErr = "relationships have to be expanded"
 

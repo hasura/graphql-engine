@@ -901,10 +901,11 @@ fieldSelection table maybePkeyColumns fieldInfo selectPermissions =
          | otherwise -> do
              guard $ columnName `Map.member` (spiCols selectPermissions)
              let caseBoolExp = Map.lookup columnName (spiCols selectPermissions)
+             let caseBoolExpUnpreparedValue = fmap (fmap partialSQLExpToUnpreparedValue) <$> caseBoolExp
              let pathArg = jsonPathArg $ pgiType columnInfo
              field <- lift $ P.column (pgiType columnInfo) (G.Nullability $ pgiIsNullable columnInfo)
              pure $ P.selection fieldName (pgiDescription columnInfo) pathArg field
-               <&> IR.mkAnnColumnField columnInfo ((,table) <$> caseBoolExp)
+               <&> IR.mkAnnColumnField columnInfo ((table,) <$> caseBoolExpUnpreparedValue)
 
     FIRelationship relationshipInfo ->
       concat . maybeToList <$> relationshipField relationshipInfo

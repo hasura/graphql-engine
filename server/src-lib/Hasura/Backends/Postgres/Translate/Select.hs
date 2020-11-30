@@ -820,7 +820,7 @@ processAnnFields sourcePrefix fieldAlias similarArrFields annFields = do
     toRowToJsonExtr (fieldName, fieldExp) =
       S.Extractor fieldExp $ Just $ S.toAlias fieldName
 
-    toSQLCol :: AnnColumnField 'Postgres -> m S.SQLExp
+    toSQLCol :: AnnColumnField 'Postgres S.SQLExp -> m S.SQLExp
     toSQLCol (AnnColumnField col asText colOpM caseBoolExpAndTableMaybe) = do
       strfyNum <- ask
       let sqlExpression =
@@ -829,9 +829,9 @@ processAnnFields sourcePrefix fieldAlias similarArrFields annFields = do
           finalSQLExpression =
             case caseBoolExpAndTableMaybe of
               Nothing          -> sqlExpression
-              Just (caseBoolExp, table) -> sqlExpression
-                -- let boolExp = toSQLBoolExp (S.QualTable table) caseBoolExp
-                -- in S.SECond boolExp sqlExpression S.SENull
+              Just (table, caseBoolExp) ->
+                let boolExp = toSQLBoolExp (S.QualTable table) caseBoolExp
+                in S.SECond boolExp sqlExpression S.SENull
       pure $ toJSONableExp strfyNum (pgiType col) asText finalSQLExpression
 
     fromScalarComputedField :: ComputedFieldScalarSelect 'Postgres S.SQLExp -> m S.SQLExp
