@@ -125,7 +125,7 @@ response would be:
 
     {
       "accessToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVC",
-      "userId": 4829
+      "userId": 423
     }
 
 To throw an error, you must a response payload of the following type while
