@@ -17,8 +17,8 @@ import           Data.Aeson.Types
 import           Data.Text.Extended
 
 import           Hasura.Backends.Postgres.SQL.Types
-import           Hasura.Backends.Postgres.SQL.Value
 import           Hasura.Backends.Postgres.Translate.BoolExp
+import           Hasura.Backends.Postgres.Translate.Column
 import           Hasura.RQL.Types
 import           Hasura.SQL.Types
 import           Hasura.Server.Utils
@@ -165,13 +165,13 @@ valueParser pgType = \case
     | isReqUserId t -> return $ mkTypedSessionVar pgType userIdHeader
   -- Typical value as Aeson's value
   val -> case pgType of
-    CollectableTypeScalar columnType -> PSESQLExp . toTxtValue <$> parsePGScalarValue columnType val
+    CollectableTypeScalar cvType -> PSESQLExp . toTxtValue . ColumnValue cvType<$> parsePGScalarValue cvType val
     CollectableTypeArray ofType -> do
       vals <- runAesonParser parseJSON val
-      WithScalarType scalarType scalarValues <- parsePGScalarValues ofType vals
+      scalarValues <- parsePGScalarValues ofType vals
       return . PSESQLExp $ S.SETyAnn
-        (S.SEArray $ map (toTxtValue . WithScalarType scalarType) scalarValues)
-        (S.mkTypeAnn $ CollectableTypeArray scalarType)
+        (S.SEArray $ map (toTxtValue . ColumnValue ofType) scalarValues)
+        (S.mkTypeAnn $ CollectableTypeArray (columnTypePGScalarRepresentation ofType))
 
 mkTypedSessionVar :: CollectableType (ColumnType 'Postgres) -> SessionVariable -> PartialSQLExp 'Postgres
 mkTypedSessionVar columnType =

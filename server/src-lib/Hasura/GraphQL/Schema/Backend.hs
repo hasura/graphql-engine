@@ -11,7 +11,7 @@ import qualified Hasura.RQL.IR.Select         as IR
 
 import           Language.GraphQL.Draft.Syntax         (Nullability, Name)
 import           Hasura.GraphQL.Parser        ( InputFieldsParser, Kind (..), Parser
-                                              , UnpreparedValue (..), Opaque, ColumnValue
+                                              , UnpreparedValue (..), Opaque
                                               , Definition, EnumValueInfo, FieldParser)
 import           Hasura.GraphQL.Parser.Class
 import           Hasura.GraphQL.Schema.Common

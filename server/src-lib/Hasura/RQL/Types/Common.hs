@@ -171,7 +171,7 @@ instance Backend 'Postgres where
   type NullsOrderType  'Postgres = PG.NullsOrder
   type CountType       'Postgres = PG.CountType
   type Column          'Postgres = PG.PGCol
-  type ColumnValueType 'Postgres = PG.WithScalarType PG.PGScalarValue
+  type ColumnValueType 'Postgres = PG.PGScalarValue
   type ScalarType      'Postgres = PG.PGScalarType
   type SQLExpression   'Postgres = PG.SQLExp
   type SQLOperator     'Postgres = PG.SQLOp

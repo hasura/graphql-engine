@@ -11,6 +11,7 @@ import qualified Hasura.Backends.Postgres.SQL.Types as PG
 
 import           Hasura.RQL.IR.Select
 import           Hasura.RQL.Types.Common
+import           Hasura.RQL.Types.Column
 import           Hasura.SQL.Backend
 
 

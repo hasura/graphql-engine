@@ -1,8 +1,7 @@
 {-# LANGUAGE StrictData #-}
 
 module Hasura.GraphQL.Parser.Column
-  ( ColumnValue(..)
-  , mkScalarTypeName
+  ( mkScalarTypeName
 
   , UnpreparedValue(..)
 
@@ -59,14 +58,6 @@ data UnpreparedValue (b :: BackendType)
   -- | A single session variable.
   | UVSessionVar (SessionVarType b) SessionVariable
 
-data ColumnValue (b :: BackendType) = ColumnValue
-  { cvType  :: ColumnType b
-  , cvValue :: ColumnValueType b
-  }
-
--- FIXME exporting this method means doing away with the opaqueness of the
--- 'Opaque' data type, since the constructors of 'UnpreparedValue' are exported
--- globally.
 mkParameter :: Opaque (ColumnValue b) -> UnpreparedValue b
 mkParameter (Opaque variable value) = UVParameter value variable
 

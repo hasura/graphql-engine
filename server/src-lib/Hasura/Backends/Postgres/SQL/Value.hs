@@ -13,7 +13,6 @@ module Hasura.Backends.Postgres.SQL.Value
   , binEncoder
   , txtEncoder
   , toBinaryValue
-  , toTxtValue
   , toPrepParam
   ) where
 
@@ -280,9 +279,5 @@ toPrepParam i ty =
   -- See Note [Type casting prepared params] above
   S.withTyAnn ty . withConstructorFn ty $ S.SEPrep i
 
-toBinaryValue :: WithScalarType PGScalarValue -> Q.PrepArg
-toBinaryValue = binEncoder . pstValue
-
-toTxtValue :: WithScalarType PGScalarValue -> S.SQLExp
-toTxtValue (WithScalarType ty val) =
-  S.withTyAnn ty . withConstructorFn ty $ txtEncoder val
+toBinaryValue :: PGScalarValue -> Q.PrepArg
+toBinaryValue = binEncoder

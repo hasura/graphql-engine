@@ -32,7 +32,6 @@ import           Hasura.GraphQL.Parser                 (Definition, InputFieldsP
                                                         Opaque, Parser, UnpreparedValue (..),
                                                         Variable (..), mkParameter)
 import           Hasura.GraphQL.Parser.Class
-import           Hasura.GraphQL.Parser.Column          (ColumnValue)
 import           Hasura.GraphQL.Parser.Internal.Parser (Parser (..), peelVariable, typeCheck,
                                                         typeMismatch, valueToJSON)
 import           Hasura.GraphQL.Schema.Backend         (BackendSchema, ComparisonExp)
@@ -49,7 +48,7 @@ columnParser columnType (G.Nullability isNullable) =
   -- TODO(PDV): It might be worth memoizing this function even though it isn’t
   -- recursive simply for performance reasons, since it’s likely to be hammered
   -- during schema generation. Need to profile to see whether or not it’s a win.
-  opaque . fmap (P.ColumnValue columnType) <$> case columnType of
+  opaque . fmap (ColumnValue columnType) <$> case columnType of
     ColumnScalar scalarType -> withScalarType scalarType <$> case scalarType of
       PGInteger -> pure (PGValInteger <$> P.int)
       PGBoolean -> pure (PGValBoolean <$> P.boolean)
@@ -102,7 +101,7 @@ columnParser columnType (G.Nullability isNullable) =
             P.mkOpaque (Just vInfo) <$> pParser parser (absurd <$> vValue)
           value -> P.mkOpaque Nothing <$> pParser parser value
       }
-    withScalarType scalarType = fmap (WithScalarType scalarType) . possiblyNullable scalarType
+    withScalarType scalarType = possiblyNullable scalarType
     possiblyNullable scalarType
       | isNullable = fmap (fromMaybe $ PGNull scalarType) . P.nullable
       | otherwise  = id
@@ -302,9 +301,9 @@ comparisonExps = P.memoize 'comparisonExps \columnType -> do
       ]
     ]
   where
-    mkListLiteral :: ColumnType 'Postgres -> [P.ColumnValue 'Postgres] -> UnpreparedValue 'Postgres
+    mkListLiteral :: ColumnType 'Postgres -> [ColumnValue 'Postgres] -> UnpreparedValue 'Postgres
     mkListLiteral columnType columnValues = P.UVLiteral $ SETyAnn
-      (SEArray $ txtEncoder . pstValue . P.cvValue <$> columnValues)
+      (SEArray $ txtEncoder . cvValue <$> columnValues)
       (mkTypeAnn $ CollectableTypeArray $ unsafePGColumnToBackend columnType)
 
     castExp :: ColumnType 'Postgres -> m (Maybe (Parser 'Input n (CastExp 'Postgres (UnpreparedValue 'Postgres))))
