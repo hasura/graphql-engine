@@ -59,6 +59,7 @@ data ExecutionStep db
   -- ^ A query to execute against a remote schema
   | ExecStepRaw J.Value
   -- ^ Output a plain JSON object
+  deriving (Functor, Foldable, Traversable)
 
 data PlanningSt
   = PlanningSt
