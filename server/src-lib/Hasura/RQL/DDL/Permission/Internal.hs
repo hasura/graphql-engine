@@ -20,6 +20,7 @@ import           Hasura.Backends.Postgres.SQL.Types
 import           Hasura.Backends.Postgres.SQL.Value
 import           Hasura.Backends.Postgres.Translate.BoolExp
 import           Hasura.RQL.Types
+import           Hasura.SQL.Types
 import           Hasura.Server.Utils
 import           Hasura.Session
 
@@ -34,7 +35,7 @@ permissionIsDefined rpi pa =
   isJust $ join $ rpi ^? _Just.permAccToLens pa
 
 assertPermDefined
-  :: (MonadError QErr m)
+  :: (Backend backend, MonadError QErr m)
   => RoleName
   -> PermAccessor backend a
   -> TableInfo backend
@@ -50,13 +51,13 @@ assertPermDefined roleName pa tableInfo =
     rpi = M.lookup roleName $ _tiRolePermInfoMap tableInfo
 
 askPermInfo
-  :: (MonadError QErr m)
+  :: (Backend backend, MonadError QErr m)
   => TableInfo backend
   -> RoleName
   -> PermAccessor backend c
   -> m c
 askPermInfo tabInfo roleName pa =
-  (M.lookup roleName rpim >>= (^. paL))
+  (M.lookup roleName rpim >>= (^. permAccToLens pa))
   `onNothing`
   throw400 PermissionDenied
   (mconcat
@@ -65,7 +66,6 @@ askPermInfo tabInfo roleName pa =
     , " does not exist"
     ])
   where
-    paL = permAccToLens pa
     pt = permTypeToCode $ permAccToType pa
     rpim = _tiRolePermInfoMap tabInfo
 
@@ -157,7 +157,7 @@ getDependentHeaders (BoolExp boolExp) =
 
 valueParser
   :: (MonadError QErr m)
-  => PGType (ColumnType 'Postgres) -> Value -> m (PartialSQLExp 'Postgres)
+  => CollectableType (ColumnType 'Postgres) -> Value -> m (PartialSQLExp 'Postgres)
 valueParser pgType = \case
   -- When it is a special variable
   String t
@@ -165,13 +165,17 @@ valueParser pgType = \case
     | isReqUserId t -> return $ mkTypedSessionVar pgType userIdHeader
   -- Typical value as Aeson's value
   val -> case pgType of
-    PGTypeScalar columnType -> PSESQLExp . toTxtValue <$> parsePGScalarValue columnType val
-    PGTypeArray ofType -> do
+    CollectableTypeScalar columnType -> PSESQLExp . toTxtValue <$> parsePGScalarValue columnType val
+    CollectableTypeArray ofType -> do
       vals <- runAesonParser parseJSON val
       WithScalarType scalarType scalarValues <- parsePGScalarValues ofType vals
       return . PSESQLExp $ S.SETyAnn
         (S.SEArray $ map (toTxtValue . WithScalarType scalarType) scalarValues)
-        (S.mkTypeAnn $ PGTypeArray scalarType)
+        (S.mkTypeAnn $ CollectableTypeArray scalarType)
+
+mkTypedSessionVar :: CollectableType (ColumnType 'Postgres) -> SessionVariable -> PartialSQLExp 'Postgres
+mkTypedSessionVar columnType =
+  PSESessVar (unsafePGColumnToBackend <$> columnType)
 
 injectDefaults :: QualifiedTable -> QualifiedTable -> Q.Query
 injectDefaults qv qt =

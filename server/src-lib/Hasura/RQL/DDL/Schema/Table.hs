@@ -401,7 +401,7 @@ buildTableCache = Inc.cache proc (catalogTables, reloadMetadataInvalidationKey) 
       :: ErrorA QErr arr
        ( CatalogTable
        , Inc.Dependency Inc.InvalidationKey
-       ) (TableCoreInfoG (RawColumnInfo 'Postgres) PGCol)
+       ) (TableCoreInfoG 'Postgres (RawColumnInfo 'Postgres) PGCol)
     buildRawTableInfo = Inc.cache proc (catalogTable, reloadMetadataInvalidationKey) -> do
       let CatalogTable name systemDefined isEnum config maybeInfo = catalogTable
       catalogInfo <-
@@ -439,7 +439,7 @@ buildTableCache = Inc.cache proc (catalogTables, reloadMetadataInvalidationKey) 
     processTableInfo
       :: ErrorA QErr arr
        ( Map.HashMap QualifiedTable (PrimaryKey PGCol, EnumValues)
-       , TableCoreInfoG (RawColumnInfo 'Postgres) PGCol
+       , TableCoreInfoG 'Postgres (RawColumnInfo 'Postgres) PGCol
        ) (TableRawInfo 'Postgres)
     processTableInfo = proc (enumTables, rawInfo) -> liftEitherA -< do
       let columns = _tciFieldInfoMap rawInfo

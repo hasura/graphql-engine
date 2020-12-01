@@ -26,7 +26,7 @@ import           Hasura.Backends.Postgres.SQL.Types
 import           Hasura.Backends.Postgres.Translate.BoolExp
 import           Hasura.Backends.Postgres.Translate.Types
 import           Hasura.EncJSON
-import           Hasura.GraphQL.Schema.Common
+import           Hasura.GraphQL.Schema.Common               (nodeIdVersionInt, currentNodeIdVersion)
 import           Hasura.RQL.DML.Internal
 import           Hasura.RQL.IR.OrderBy
 import           Hasura.RQL.IR.Select

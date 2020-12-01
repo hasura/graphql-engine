@@ -36,7 +36,7 @@ import           Data.Aeson.Casing
 import           Data.Aeson.TH
 import           Data.Text.Extended
 
-import           Hasura.Backends.Postgres.SQL.Types hiding (TableName)
+import           Hasura.Backends.Postgres.SQL.Types hiding (TableName, isNumType, isComparableType)
 import           Hasura.Backends.Postgres.SQL.Value
 import           Hasura.Incremental                 (Cacheable)
 import           Hasura.RQL.Instances               ()
@@ -196,15 +196,15 @@ type PrimaryKeyColumns b = NESeq (ColumnInfo b)
 onlyIntCols :: [ColumnInfo 'Postgres] -> [ColumnInfo 'Postgres]
 onlyIntCols = filter (isScalarColumnWhere isIntegerType . pgiType)
 
-onlyNumCols :: [ColumnInfo 'Postgres] -> [ColumnInfo 'Postgres]
-onlyNumCols = filter (isScalarColumnWhere isNumType . pgiType)
+onlyNumCols :: forall b . Backend b => [ColumnInfo b] -> [ColumnInfo b]
+onlyNumCols = filter (isScalarColumnWhere (isNumType @b) . pgiType)
 
 onlyJSONBCols :: [ColumnInfo 'Postgres] -> [ColumnInfo 'Postgres]
 onlyJSONBCols = filter (isScalarColumnWhere (== PGJSONB) . pgiType)
 
-onlyComparableCols :: [ColumnInfo 'Postgres] -> [ColumnInfo 'Postgres]
-onlyComparableCols = filter (isScalarColumnWhere isComparableType . pgiType)
+onlyComparableCols :: forall b. Backend b => [ColumnInfo b] -> [ColumnInfo b]
+onlyComparableCols = filter (isScalarColumnWhere (isComparableType @b) . pgiType)
 
-getColInfos :: Eq (Column backend) => [Column backend] -> [ColumnInfo backend] -> [ColumnInfo backend]
+getColInfos :: Backend b => [Column b] -> [ColumnInfo b] -> [ColumnInfo b]
 getColInfos cols allColInfos =
   flip filter allColInfos $ \ci -> pgiColumn ci `elem` cols

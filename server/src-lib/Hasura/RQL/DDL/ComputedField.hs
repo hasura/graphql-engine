@@ -188,7 +188,7 @@ addComputedFieldP2Setup trackedTables table computedField definition rawFunction
             ComputedFieldFunction function inputArgSeq tableArgument maybePGSessionArg $
             rfiDescription rawFunctionInfo
 
-      pure $ ComputedFieldInfo computedField computedFieldFunction returnType comment
+      pure $ ComputedFieldInfo () computedField computedFieldFunction returnType comment
 
     validateTableArgumentType :: (MV.MonadValidate [ComputedFieldValidateError] m)
                               => FunctionTableArgument

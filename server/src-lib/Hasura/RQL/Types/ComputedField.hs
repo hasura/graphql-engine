@@ -14,10 +14,11 @@ import           Control.Lens                       hiding ((.=))
 import           Data.Aeson
 import           Data.Aeson.Casing
 import           Data.Aeson.TH
+import           Data.Kind                          (Type)
 import           Data.Text.Extended
 import           Data.Text.NonEmpty
 
-import           Hasura.Backends.Postgres.SQL.Types
+import           Hasura.Backends.Postgres.SQL.Types hiding (TableName)
 import           Hasura.Incremental                 (Cacheable)
 import           Hasura.RQL.Types.Common
 import           Hasura.RQL.Types.Function
@@ -72,7 +73,7 @@ instance ToJSON FunctionSessionArgument where
 
 data ComputedFieldReturn (b :: BackendType)
   = CFRScalar !(ScalarType b)
-  | CFRSetofTable !QualifiedTable
+  | CFRSetofTable !(TableName b)
   deriving (Generic)
 deriving instance Show (ComputedFieldReturn 'Postgres)
 deriving instance Eq (ComputedFieldReturn 'Postgres)
@@ -101,11 +102,15 @@ $(deriveToJSON (aesonDrop 4 snakeCase) ''ComputedFieldFunction)
 
 data ComputedFieldInfo (b :: BackendType)
   = ComputedFieldInfo
-  { _cfiName       :: !ComputedFieldName
+  { _cfiXComputedFieldInfo :: (XComputedFieldInfo b)
+  , _cfiName       :: !ComputedFieldName
   , _cfiFunction   :: !ComputedFieldFunction
   , _cfiReturnType :: !(ComputedFieldReturn b)
   , _cfiComment    :: !(Maybe Text)
   } deriving (Generic)
+type family XComputedFieldInfo (b :: BackendType) :: Type where
+  XComputedFieldInfo 'Postgres = ()
+  XComputedFieldInfo 'MSSQL    = Void -- To be supported later
 deriving instance Eq (ComputedFieldInfo 'Postgres)
 instance Cacheable (ComputedFieldInfo 'Postgres)
 instance ToJSON (ComputedFieldInfo 'Postgres) where

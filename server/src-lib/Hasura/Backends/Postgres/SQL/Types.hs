@@ -42,7 +42,6 @@ module Hasura.Backends.Postgres.SQL.Types
 
   , PGScalarType(..)
   , WithScalarType(..)
-  , PGType(..)
   , textToPGScalarType
   , pgTypeOid
 
@@ -487,28 +486,6 @@ data WithScalarType a
   { pstType  :: !PGScalarType
   , pstValue :: !a
   } deriving (Show, Eq, Functor, Foldable, Traversable)
-
--- | The type of all Postgres types (i.e. scalars and arrays). This type is parameterized so that
--- we can have both @'PGType' 'PGScalarType'@ and @'PGType' 'Hasura.RQL.Types.PGColumnType'@, for
--- when we care about the distinction made by 'Hasura.RQL.Types.PGColumnType'. If we ever change
--- 'Hasura.RQL.Types.PGColumnType' to handle arrays, not just scalars, then the parameterization can
--- go away.
---
--- TODO (from master): This is incorrect modeling, as 'PGScalarType' will capture anything (under 'PGUnknown').
--- This should be fixed when support for all types is merged.
-data PGType a
-  = PGTypeScalar !a
-  | PGTypeArray !a
-  deriving (Show, Eq, Generic, Data, Functor)
-instance (NFData a) => NFData (PGType a)
-instance (Cacheable a) => Cacheable (PGType a)
-$(deriveJSON defaultOptions{constructorTagModifier = drop 6} ''PGType)
-
-instance (ToSQL a) => ToSQL (PGType a) where
-  toSQL = \case
-    PGTypeScalar ty -> toSQL ty
-    -- typename array is an sql standard way of declaring types
-    PGTypeArray ty  -> toSQL ty <> " array"
 
 data PGTypeKind
   = PGKindBase

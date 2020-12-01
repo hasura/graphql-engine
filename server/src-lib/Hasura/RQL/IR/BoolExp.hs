@@ -30,7 +30,6 @@ module Hasura.RQL.IR.BoolExp
        , AnnBoolExpFldSQL
        , AnnBoolExpSQL
        , PartialSQLExp(..)
-       , mkTypedSessionVar
        , isStaticValue
        , AnnBoolExpFldPartialSQL
        , AnnBoolExpPartialSQL
@@ -51,8 +50,7 @@ import           Data.Aeson.Casing
 import           Data.Aeson.Internal
 import           Data.Aeson.TH
 import           Data.Typeable
-
-import qualified Hasura.Backends.Postgres.SQL.Types as PG
+import           Data.Text.Extended
 
 import           Hasura.Incremental                 (Cacheable)
 import           Hasura.RQL.Types.Column
@@ -406,17 +404,13 @@ type PreSetColsPartial b = M.HashMap (Column b) (PartialSQLExp b)
 
 -- doesn't resolve the session variable
 data PartialSQLExp (b :: BackendType)
-  = PSESessVar !(PG.PGType (ScalarType b)) !SessionVariable
+  = PSESessVar !(SessionVarType b) !SessionVariable
   | PSESQLExp !(SQLExpression b)
   deriving (Generic)
 deriving instance Backend b => Eq (PartialSQLExp b)
 deriving instance Backend b => Data (PartialSQLExp b)
 instance Backend b => NFData (PartialSQLExp b)
 instance Backend b => Cacheable (PartialSQLExp b)
-
-mkTypedSessionVar :: PG.PGType (ColumnType 'Postgres) -> SessionVariable -> PartialSQLExp 'Postgres
-mkTypedSessionVar columnType =
-  PSESessVar (unsafePGColumnToBackend <$> columnType)
 
 instance ToJSON (PartialSQLExp 'Postgres) where
   toJSON = \case
@@ -428,7 +422,7 @@ instance ToJSON (AnnBoolExpPartialSQL 'Postgres) where
     where
       f annFld = case annFld of
         AVCol pci opExps ->
-          ( PG.getPGColTxt $ pgiColumn pci
+          ( toTxt $ pgiColumn pci
           , toJSON (pci, map opExpSToJSON opExps)
           )
         AVRel ri relBoolExp ->

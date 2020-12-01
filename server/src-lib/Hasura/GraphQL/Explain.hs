@@ -25,13 +25,13 @@ import qualified Hasura.GraphQL.Execute.Query                as E
 import qualified Hasura.GraphQL.Transport.HTTP.Protocol      as GH
 import qualified Hasura.RQL.IR.Select                        as DS
 
-import           Hasura.Backends.Postgres.SQL.Types
 import           Hasura.Backends.Postgres.SQL.Value
 import           Hasura.EncJSON
 import           Hasura.GraphQL.Context
 import           Hasura.GraphQL.Parser
 import           Hasura.RQL.DML.Internal
 import           Hasura.RQL.Types
+import           Hasura.SQL.Types
 import           Hasura.Session
 
 
@@ -71,8 +71,8 @@ resolveUnpreparedValue userInfo = \case
       <> _uiRole userInfo <<> " : " <> sessionVariableToText sessionVariable
 
     pure $ flip S.SETyAnn (S.mkTypeAnn ty) $ case ty of
-      PGTypeScalar colTy -> withConstructorFn colTy sessionVariableValue
-      PGTypeArray _      -> sessionVariableValue
+      CollectableTypeScalar colTy -> withConstructorFn colTy sessionVariableValue
+      CollectableTypeArray _      -> sessionVariableValue
 
 -- NOTE: This function has a 'MonadTrace' constraint in master, but we don't need it
 -- here. We should evaluate if we need it here.

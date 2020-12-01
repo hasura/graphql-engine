@@ -33,6 +33,7 @@ import           Hasura.GraphQL.Parser.Column
 import           Hasura.GraphQL.Parser.Schema
 import           Hasura.RQL.DML.Internal                (currentSession)
 import           Hasura.RQL.Types
+import           Hasura.SQL.Types
 import           Hasura.Session
 
 
@@ -81,8 +82,8 @@ prepareWithPlan = \case
   UVSessionVar ty sessVar -> do
     sessVarVal <- retrieveAndFlagSessionVariableValue insertSessionVariable sessVar currentSessionExp
     pure $ flip S.SETyAnn (S.mkTypeAnn ty) $ case ty of
-      PGTypeScalar colTy -> withConstructorFn colTy sessVarVal
-      PGTypeArray _      -> sessVarVal
+      CollectableTypeScalar colTy -> withConstructorFn colTy sessVarVal
+      CollectableTypeArray _      -> sessVarVal
 
   UVLiteral sqlExp -> pure sqlExp
   UVSession        -> pure currentSessionExp
@@ -101,8 +102,8 @@ prepareWithoutPlan = \case
     -- TODO: this piece of code appears at least three times: twice here
     -- and once in RQL.DML.Internal. Some de-duplication is in order.
     pure $ flip S.SETyAnn (S.mkTypeAnn ty) $ case ty of
-      PGTypeScalar colTy -> withConstructorFn colTy sessVarVal
-      PGTypeArray _      -> sessVarVal
+      CollectableTypeScalar colTy -> withConstructorFn colTy sessVarVal
+      CollectableTypeArray _      -> sessVarVal
 
 retrieveAndFlagSessionVariableValue
   :: (MonadState s m)

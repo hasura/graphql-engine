@@ -18,9 +18,10 @@ import qualified Hasura.Backends.Postgres.SQL.DML   as S
 
 import           Hasura.Backends.Postgres.SQL.Types
 import           Hasura.RQL.Types
+import           Hasura.SQL.Types
 
 type OpRhsParser m v =
-  PGType (ColumnType 'Postgres) -> Value -> m v
+  CollectableType (ColumnType 'Postgres) -> Value -> m v
 
 -- | Represents a reference to a Postgres column, possibly casted an arbitrary
 -- number of times. Used within 'parseOperationsExpression' for bookkeeping.
@@ -56,7 +57,7 @@ parseOperationsExpression rhsParser fim columnInfo =
       Object o -> mapM (parseOperation column) (M.toList o)
       val      -> pure . AEQ False <$> rhsParser columnType val
       where
-        columnType = PGTypeScalar $ columnReferenceType column
+        columnType = CollectableTypeScalar $ columnReferenceType column
 
     parseOperation :: ColumnReference 'Postgres -> (Text, Value) -> m (OpExpG 'Postgres v)
     parseOperation column (opStr, val) = withPathK opStr $
@@ -252,13 +253,13 @@ parseOperationsExpression rhsParser fim columnInfo =
                  "incompatible column types : " <> column <<> ", " <>> rhsCol
             else return rhsCol
 
-        parseWithTy ty = rhsParser (PGTypeScalar ty) val
+        parseWithTy ty = rhsParser (CollectableTypeScalar ty) val
 
         -- parse one with the column's type
         parseOne = parseWithTy colTy
-        parseOneNoSess ty = rhsParser (PGTypeScalar ty)
+        parseOneNoSess ty = rhsParser (CollectableTypeScalar ty)
 
-        parseManyWithType ty = rhsParser (PGTypeArray ty) val
+        parseManyWithType ty = rhsParser (CollectableTypeArray ty) val
 
         guardType validTys = unless (isScalarColumnWhere (`elem` validTys) colTy) $
           throwError $ buildMsg colTy validTys
@@ -466,7 +467,7 @@ mkFieldCompExp qual lhsField = mkCompExp (mkQField lhsField)
 
         mkCastsExp casts =
           sqlAll . flip map (M.toList casts) $ \(targetType, operations) ->
-            let targetAnn = S.mkTypeAnn $ PGTypeScalar targetType
+            let targetAnn = S.mkTypeAnn $ CollectableTypeScalar targetType
             in sqlAll $ map (mkCompExp (S.SETyAnn lhs targetAnn)) operations
 
         sqlAll = foldr (S.BEBin S.AndOp) (S.BELit True)

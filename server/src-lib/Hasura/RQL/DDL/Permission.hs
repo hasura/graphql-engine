@@ -52,6 +52,7 @@ import           Hasura.EncJSON
 import           Hasura.RQL.DDL.Permission.Internal
 import           Hasura.RQL.DML.Internal            hiding (askPermInfo)
 import           Hasura.RQL.Types
+import           Hasura.SQL.Types
 import           Hasura.Session
 
 
@@ -98,7 +99,7 @@ procSetObj tn fieldInfoMap mObj = do
     fmap unzip $ forM (HM.toList setObj) $ \(pgCol, val) -> do
       ty <- askPGType fieldInfoMap pgCol $
         "column " <> pgCol <<> " not found in table " <>> tn
-      sqlExp <- valueParser (PGTypeScalar ty) val
+      sqlExp <- valueParser (CollectableTypeScalar ty) val
       let dep = mkColDep (getDepReason sqlExp) tn pgCol
       return ((pgCol, sqlExp), dep)
   return (HM.fromList setColTups, depHeaders, deps)
