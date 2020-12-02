@@ -3,7 +3,7 @@
 module Hasura.Backends.MSSQL.Types.Internal where
 
 import           Data.Data
-import           Data.Text.Extended ()
+import           Data.Text.Extended (ToTxt)
 import           GHC.Generics
 import           Language.Haskell.TH.Syntax (Lift)
 import           Prelude
@@ -222,7 +222,7 @@ data Op
 -- | Column name of some database table -- this differs to FieldName
 -- that is used for referring to things within a query.
 newtype ColumnName = ColumnName { columnNameText :: Text }
-  deriving (Data, Generic, Eq, Show, Ord)
+  deriving (Data, Generic, Eq, Show, Ord, ToTxt)
 
 -- | Derived from the odbc package.
 data ScalarType
@@ -250,3 +250,22 @@ data ScalarType
   | BitType
   | GuidType
   deriving (Data, Generic, Show, Eq, Ord)
+
+isComparableType, isNumType :: ScalarType -> Bool
+isComparableType = \case
+  BinaryType    -> False
+  VarbinaryType -> False
+  BitType       -> False
+  GuidType      -> False
+  _             -> True
+isNumType = \case
+  NumericType  -> True
+  DecimalType  -> True
+  IntegerType  -> True
+  SmallintType -> True
+  FloatType    -> True
+  RealType     -> True
+  DoubleType   -> True
+  BigintType   -> True
+  TinyintType  -> True
+  _            -> False

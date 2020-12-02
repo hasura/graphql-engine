@@ -116,11 +116,6 @@ class
   , Representable (ScalarType b)
   , Representable (SQLExpression b)
   , Representable (SQLOperator b)
-  -- TODO define sufficiently many synonyms to get rid of these 4 lines for SessionVarType:
-  , Eq (SessionVarType b)
-  , Data (SessionVarType b)
-  , NFData (SessionVarType b)
-  , Cacheable (SessionVarType b)
   , Representable (XAILIKE b)
   , Representable (XANILIKE b)
   , Ord (TableName b)
@@ -195,10 +190,11 @@ instance Backend 'MSSQL where
   type ColumnValueType 'MSSQL = Void -- TODO pick an appropriate representation
   type ScalarType      'MSSQL = MSSQL.ScalarType
   type SQLExpression   'MSSQL = MSSQL.Expression
-  type SessionVarType  'MSSQL = Void -- TODO pick an appropriate representation
   type SQLOperator     'MSSQL = ()
   type XAILIKE         'MSSQL = ()
   type XANILIKE        'MSSQL = ()
+  isComparableType            = MSSQL.isComparableType
+  isNumType                   = MSSQL.isNumType
 
 -- instance Backend 'Mysql where
 --   type XAILIKE 'MySQL = Void
