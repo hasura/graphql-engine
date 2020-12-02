@@ -70,6 +70,7 @@ This release contains the [PDV refactor (#4111)](https://github.com/hasura/graph
 - console: down migrations improvements (close #3503, #4988) (#4790)
 - console: allow setting computed fields for views (close #6168) (#6174)
 - console: select first operator by default on the browse rows screen (close #5729) (#6032)
+- console: support tracking VOLATILE functions as mutations or queries (close #6228) (#6096)
 - cli: add missing global flags for seed command (#5565)
 - cli: allow seeds as alias for seed command (#5693)
 - build: add `test_server_pg_13` to the CI to run the server tests on Postgres v13 (#6070)
