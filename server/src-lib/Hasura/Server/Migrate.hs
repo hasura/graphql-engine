@@ -164,7 +164,9 @@ migrateCatalog env migrationTime = do
     buildCacheAndRecreateSystemMetadata :: m (RebuildableSchemaCache m)
     buildCacheAndRecreateSystemMetadata = do
       schemaCache <- buildRebuildableSchemaCache env
-      view _2 <$> runCacheRWT schemaCache recreateSystemMetadata
+      case scInconsistentObjs (lastBuiltSchemaCache schemaCache) of
+        [] -> view _2 <$> runCacheRWT schemaCache recreateSystemMetadata
+        _  -> pure schemaCache
 
 downgradeCatalog :: forall m. (MonadIO m, MonadTx m) => DowngradeOptions -> UTCTime -> m MigrationResult
 downgradeCatalog opts time = do
