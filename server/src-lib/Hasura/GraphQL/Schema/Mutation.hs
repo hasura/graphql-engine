@@ -114,7 +114,7 @@ tableFieldsInput
   -> InsPermInfo 'Postgres    -- ^ insert permissions of the table
   -> m (Parser 'Input n (IR.AnnInsObj 'Postgres (UnpreparedValue 'Postgres)))
 tableFieldsInput table insertPerms = memoizeOn 'tableFieldsInput table do
-  tableGQLName    <- getTableGQLName @'Postgres table
+  tableGQLName <- getTableGQLName @'Postgres table
   allFields    <- _tciFieldInfoMap . _tiCoreInfo <$> askTableInfo table
   objectFields <- catMaybes <$> for (Map.elems allFields) \case
     FIComputedField _ -> pure Nothing
@@ -159,7 +159,7 @@ objectRelationshipInput
   -> m (Parser 'Input n (IR.SingleObjIns 'Postgres (UnpreparedValue 'Postgres)))
 objectRelationshipInput table insertPerms selectPerms updatePerms =
   memoizeOn 'objectRelationshipInput table do
-  tableGQLName    <- getTableGQLName @'Postgres table
+  tableGQLName   <- getTableGQLName @'Postgres table
   columns        <- tableColumns table
   objectParser   <- tableFieldsInput table insertPerms
   conflictParser <- fmap join $ sequenceA $ conflictObject table selectPerms <$> updatePerms
@@ -300,10 +300,10 @@ updateTableByPk
   -> m (Maybe (FieldParser n (IR.AnnUpdG 'Postgres (UnpreparedValue 'Postgres))))
 updateTableByPk table fieldName description updatePerms selectPerms = runMaybeT $ do
   tableGQLName <- getTableGQLName @'Postgres table
-  columns   <- lift   $ tableSelectColumns table selectPerms
-  pkArgs    <- MaybeT $ primaryKeysArguments table selectPerms
-  opArgs    <- MaybeT $ updateOperators table updatePerms
-  selection <- lift $ tableSelectionSet table selectPerms
+  columns      <- lift $ tableColumns table
+  pkArgs       <- MaybeT $ primaryKeysArguments table selectPerms
+  opArgs       <- MaybeT $ updateOperators table updatePerms
+  selection    <- lift $ tableSelectionSet table selectPerms
   let pkFieldName  = $$(G.litName "pk_columns")
       pkObjectName = tableGQLName <> $$(G.litName "_pk_columns_input")
       pkObjectDesc = G.Description $ "primary key columns input for table: " <> G.unName tableGQLName
@@ -344,7 +344,7 @@ updateOperators
   -> m (Maybe (InputFieldsParser n [(PGCol, IR.UpdOpExpG (UnpreparedValue 'Postgres))]))
 updateOperators table updatePermissions = do
   tableGQLName <- getTableGQLName @'Postgres table
-  columns   <- tableUpdateColumns table updatePermissions
+  columns      <- tableUpdateColumns table updatePermissions
   let numericCols = onlyNumCols   columns
       jsonCols    = onlyJSONBCols columns
   parsers <- catMaybes <$> sequenceA
@@ -461,7 +461,7 @@ deleteFromTableByPk
   -> SelPermInfo 'Postgres  -- ^ select permissions of the table
   -> m (Maybe (FieldParser n (IR.AnnDelG 'Postgres (UnpreparedValue 'Postgres))))
 deleteFromTableByPk table fieldName description deletePerms selectPerms = runMaybeT $ do
-  columns   <- lift   $ tableSelectColumns table selectPerms
+  columns   <- lift $ tableColumns table
   pkArgs    <- MaybeT $ primaryKeysArguments table selectPerms
   selection <- lift $ tableSelectionSet table selectPerms
   pure $ P.subselection fieldName description pkArgs selection
