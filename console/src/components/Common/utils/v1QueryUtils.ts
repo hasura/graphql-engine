@@ -830,16 +830,9 @@ export const getConsoleNotificationQuery = (
 export const getTrackFunctionQuery = (
   name: string,
   schema: string,
-  type: string,
-  configuration: Record<string, any> | undefined | null,
-  asQuery?: boolean
+  configuration: Record<string, any> | undefined | null
 ) => {
-  let volatileConf: Record<string, boolean | string> | null = null;
-  if (type.toLowerCase() === 'volatile') {
-    volatileConf = { exposed_as: asQuery ? 'query' : 'mutation' };
-  }
-
-  if (configuration || volatileConf) {
+  if (configuration) {
     return {
       type: 'track_function',
       version: 2,
@@ -848,10 +841,7 @@ export const getTrackFunctionQuery = (
           name,
           schema,
         },
-        configuration: {
-          ...volatileConf,
-          ...configuration,
-        },
+        configuration,
       },
     };
   }

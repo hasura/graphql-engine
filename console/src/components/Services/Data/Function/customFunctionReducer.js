@@ -176,7 +176,7 @@ const deleteFunctionSql = () => {
 const unTrackCustomFunction = () => {
   return (dispatch, getState) => {
     const currentSchema = getState().tables.currentSchema;
-    const functionName = getState().functions.functionName;
+    const { functionName, configuration } = getState().functions;
 
     const migrationName = 'remove_custom_function_' + functionName;
     const payload = {
@@ -187,17 +187,10 @@ const unTrackCustomFunction = () => {
       },
     };
 
-    const func =
-      getState().tables?.postgresFunctions?.find(
-        f =>
-          f.function_name === functionName &&
-          f.function_schema === currentSchema
-      ) || {};
-
     const downPayload = getTrackFunctionQuery(
       functionName,
       currentSchema,
-      func.function_type
+      configuration
     );
 
     const migration = new Migration();
@@ -250,17 +243,9 @@ const updateSessVar = session_argument => {
       },
     };
 
-    const func =
-      getState().tables?.postgresFunctions?.find(
-        f =>
-          f.function_name === functionName &&
-          f.function_schema === currentSchema
-      ) || {};
-
     const retrackPayloadDown = getTrackFunctionQuery(
       functionName,
       currentSchema,
-      func.function_type || '',
       oldConfiguration
     );
 
@@ -268,12 +253,12 @@ const updateSessVar = session_argument => {
     const retrackPayloadUp = getTrackFunctionQuery(
       functionName,
       currentSchema,
-      func.function_type || '',
-      session_argument
-        ? {
-            session_argument,
-          }
-        : null
+      {
+        ...oldConfiguration,
+        ...(session_argument && {
+          session_argument,
+        }),
+      }
     );
 
     const untrackPayloadDown = {

@@ -102,13 +102,9 @@ const trackVolatileFuncAsQuery = (name, ...reqArgs) => (dispatch, getState) => {
   dispatch(removeAll());
   const currentSchema = getState().tables.currentSchema;
 
-  const requestBodyUp = getTrackFunctionQuery(
-    name,
-    currentSchema,
-    'volatile',
-    {},
-    true
-  );
+  const requestBodyUp = getTrackFunctionQuery(name, currentSchema, {
+    exposed_as: 'query',
+  });
 
   const requestBodyDown = {
     type: 'untrack_function',
@@ -220,11 +216,7 @@ const addExistingFunction = name => {
         f => f.function_name === name && f.function_schema === currentSchema
       ) || {};
 
-    const requestBodyUp = getTrackFunctionQuery(
-      name,
-      currentSchema,
-      func.function_type
-    );
+    const requestBodyUp = getTrackFunctionQuery(name, currentSchema);
 
     const requestBodyDown = {
       type: 'untrack_function',
