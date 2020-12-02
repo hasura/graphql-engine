@@ -22,6 +22,7 @@ import           Hasura.Backends.Postgres.SQL.Types
 import           Hasura.Backends.Postgres.SQL.Value
 import           Hasura.Backends.Postgres.Translate.BoolExp
 import           Hasura.RQL.Types
+import           Hasura.SQL.Types
 import           Hasura.Session
 
 
@@ -35,7 +36,7 @@ newtype DMLP1T m a
 runDMLP1T :: DMLP1T m a -> m (a, DS.Seq Q.PrepArg)
 runDMLP1T = flip runStateT DS.empty . unDMLP1T
 
-mkAdminRolePermInfo :: (Eq (Column backend), Hashable (Column backend)) => TableCoreInfo backend -> RolePermInfo backend
+mkAdminRolePermInfo :: Backend b => TableCoreInfo b -> RolePermInfo b
 mkAdminRolePermInfo ti =
   RolePermInfo (Just i) (Just s) (Just u) (Just d)
   where
@@ -64,7 +65,7 @@ getPermInfoMaybe :: RoleName -> PermAccessor 'Postgres c -> TableInfo 'Postgres 
 getPermInfoMaybe roleName pa tableInfo =
   getRolePermInfo roleName tableInfo >>= (^. permAccToLens pa)
 
-getRolePermInfo :: RoleName -> TableInfo 'Postgres -> Maybe (RolePermInfo 'Postgres)
+getRolePermInfo :: Backend b => RoleName -> TableInfo b -> Maybe (RolePermInfo b)
 getRolePermInfo roleName tableInfo
   | roleName == adminRoleName =
     Just $ mkAdminRolePermInfo (_tiCoreInfo tableInfo)
@@ -156,7 +157,7 @@ fetchRelTabInfo refTabName =
   -- Internal error
   modifyErrAndSet500 ("foreign " <> ) $ askTabInfo refTabName
 
-type SessVarBldr b m = PGType (ScalarType b) -> SessionVariable -> m (SQLExpression b)
+type SessVarBldr b m = SessionVarType b -> SessionVariable -> m (SQLExpression b)
 
 fetchRelDet
   :: (UserInfoM m, QErrM m, CacheRM m)
@@ -215,16 +216,16 @@ convPartialSQLExp f = \case
   PSESessVar colTy sessionVariable -> f colTy sessionVariable
 
 sessVarFromCurrentSetting
-  :: (Applicative f) => PGType PGScalarType -> SessionVariable -> f S.SQLExp
+  :: (Applicative f) => CollectableType PGScalarType -> SessionVariable -> f S.SQLExp
 sessVarFromCurrentSetting pgType sessVar =
   pure $ sessVarFromCurrentSetting' pgType sessVar
 
-sessVarFromCurrentSetting' :: PGType PGScalarType -> SessionVariable -> S.SQLExp
+sessVarFromCurrentSetting' :: CollectableType PGScalarType -> SessionVariable -> S.SQLExp
 sessVarFromCurrentSetting' ty sessVar =
   flip S.SETyAnn (S.mkTypeAnn ty) $
   case ty of
-    PGTypeScalar baseTy -> withConstructorFn baseTy sessVarVal
-    PGTypeArray _       -> sessVarVal
+    CollectableTypeScalar baseTy -> withConstructorFn baseTy sessVarVal
+    CollectableTypeArray _       -> sessVarVal
   where
     sessVarVal = S.SEOpApp (S.SQLOp "->>")
                  [currentSession, S.SELit $ sessionVariableToText sessVar]
@@ -254,14 +255,14 @@ convBoolExp cim spi be sessVarBldr prepValBldr = do
   checkSelPerm spi sessVarBldr abe
   where
     rhsParser pgType val = case pgType of
-      PGTypeScalar ty  -> prepValBldr ty val
-      PGTypeArray ofTy -> do
+      CollectableTypeScalar ty  -> prepValBldr ty val
+      CollectableTypeArray ofTy -> do
         -- for arrays, we don't use the prepared builder
         vals <- runAesonParser parseJSON val
         WithScalarType scalarType scalarValues <- parsePGScalarValues ofTy vals
         return $ S.SETyAnn
           (S.SEArray $ map (toTxtValue . WithScalarType scalarType) scalarValues)
-          (S.mkTypeAnn $ PGTypeArray scalarType)
+          (S.mkTypeAnn $ CollectableTypeArray scalarType)
 
 dmlTxErrorHandler :: Q.PGTxErr -> QErr
 dmlTxErrorHandler = mkTxErrorHandler $ \case

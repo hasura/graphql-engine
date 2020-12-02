@@ -35,9 +35,8 @@ import           Data.Aeson
 import           Data.Aeson.Casing
 import           Data.Aeson.TH
 import           Data.Text.Extended
-import           Language.Haskell.TH.Syntax         (Lift)
 
-import           Hasura.Backends.Postgres.SQL.Types hiding (TableName)
+import           Hasura.Backends.Postgres.SQL.Types hiding (TableName, isNumType, isComparableType)
 import           Hasura.Backends.Postgres.SQL.Value
 import           Hasura.Incremental                 (Cacheable)
 import           Hasura.RQL.Instances               ()
@@ -48,12 +47,12 @@ import           Hasura.SQL.Backend
 
 newtype EnumValue
   = EnumValue { getEnumValue :: G.Name }
-  deriving (Show, Eq, Ord, Lift, NFData, Hashable, ToJSON, ToJSONKey, FromJSON, FromJSONKey, Cacheable)
+  deriving (Show, Eq, Ord, NFData, Hashable, ToJSON, ToJSONKey, FromJSON, FromJSONKey, Cacheable)
 
 newtype EnumValueInfo
   = EnumValueInfo
   { evComment :: Maybe Text
-  } deriving (Show, Eq, Ord, Lift, NFData, Hashable, Cacheable)
+  } deriving (Show, Eq, Ord, NFData, Hashable, Cacheable)
 $(deriveJSON (aesonDrop 2 snakeCase) ''EnumValueInfo)
 
 type EnumValues = M.HashMap EnumValue EnumValueInfo
@@ -68,7 +67,6 @@ data EnumReference (b :: BackendType)
 deriving instance (Backend b) => Show (EnumReference b)
 deriving instance (Backend b) => Eq (EnumReference b)
 deriving instance (Backend b) => Ord (EnumReference b)
-deriving instance (Backend b) => Lift (EnumReference b)
 instance (Backend b) => NFData (EnumReference b)
 instance (Backend b) => Hashable (EnumReference b)
 instance (Backend b) => Cacheable (EnumReference b)
@@ -198,15 +196,15 @@ type PrimaryKeyColumns b = NESeq (ColumnInfo b)
 onlyIntCols :: [ColumnInfo 'Postgres] -> [ColumnInfo 'Postgres]
 onlyIntCols = filter (isScalarColumnWhere isIntegerType . pgiType)
 
-onlyNumCols :: [ColumnInfo 'Postgres] -> [ColumnInfo 'Postgres]
-onlyNumCols = filter (isScalarColumnWhere isNumType . pgiType)
+onlyNumCols :: forall b . Backend b => [ColumnInfo b] -> [ColumnInfo b]
+onlyNumCols = filter (isScalarColumnWhere (isNumType @b) . pgiType)
 
 onlyJSONBCols :: [ColumnInfo 'Postgres] -> [ColumnInfo 'Postgres]
 onlyJSONBCols = filter (isScalarColumnWhere (== PGJSONB) . pgiType)
 
-onlyComparableCols :: [ColumnInfo 'Postgres] -> [ColumnInfo 'Postgres]
-onlyComparableCols = filter (isScalarColumnWhere isComparableType . pgiType)
+onlyComparableCols :: forall b. Backend b => [ColumnInfo b] -> [ColumnInfo b]
+onlyComparableCols = filter (isScalarColumnWhere (isComparableType @b) . pgiType)
 
-getColInfos :: Eq (Column backend) => [Column backend] -> [ColumnInfo backend] -> [ColumnInfo backend]
+getColInfos :: Backend b => [Column b] -> [ColumnInfo b] -> [ColumnInfo b]
 getColInfos cols allColInfos =
   flip filter allColInfos $ \ci -> pgiColumn ci `elem` cols

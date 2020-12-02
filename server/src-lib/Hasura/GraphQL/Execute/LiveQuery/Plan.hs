@@ -271,8 +271,8 @@ validateVariables pgExecCtx variableValues = do
 -- of a subscription field's AST as we resolve them to SQL expressions.
 data QueryParametersInfo
   = QueryParametersInfo
-  { _qpiReusableVariableValues     :: !(HashMap G.Name PGColumnValue)
-  , _qpiSyntheticVariableValues    :: !(Seq PGColumnValue)
+  { _qpiReusableVariableValues     :: !(HashMap G.Name (ColumnValue 'Postgres))
+  , _qpiSyntheticVariableValues    :: !(Seq (ColumnValue 'Postgres))
   , _qpiReferencedSessionVariables :: !(Set.HashSet SessionVariable)
   -- ^ The session variables that are referenced in the query root fld's AST.
   -- This information is used to determine a cohort's required session
@@ -287,7 +287,7 @@ makeLenses ''QueryParametersInfo
 -- about various parameters of the query along the way.
 resolveMultiplexedValue
   :: (MonadState QueryParametersInfo m)
-  => UnpreparedValue -> m S.SQLExp
+  => UnpreparedValue 'Postgres -> m S.SQLExp
 resolveMultiplexedValue = \case
   UVParameter colVal varM -> do
     varJsonPath <- case fmap PS.getName varM of
@@ -298,20 +298,20 @@ resolveMultiplexedValue = \case
         syntheticVarIndex <- use (qpiSyntheticVariableValues . to length)
         modifying qpiSyntheticVariableValues (|> colVal)
         pure ["synthetic", T.pack $ show syntheticVarIndex]
-    pure $ fromResVars (PGTypeScalar $ pstType $ pcvValue colVal) varJsonPath
+    pure $ fromResVars (CollectableTypeScalar $ pstType $ cvValue colVal) varJsonPath
   UVSessionVar ty sessVar -> do
     modifying qpiReferencedSessionVariables (Set.insert sessVar)
     pure $ fromResVars ty ["session", sessionVariableToText sessVar]
   UVLiteral sqlExp -> pure sqlExp
-  UVSession -> pure $ fromResVars (PGTypeScalar PGJSON) ["session"]
+  UVSession -> pure $ fromResVars (CollectableTypeScalar PGJSON) ["session"]
   where
     fromResVars pgType jPath = addTypeAnnotation pgType $ S.SEOpApp (S.SQLOp "#>>")
       [ S.SEQIdentifier $ S.QIdentifier (S.QualifiedIdentifier (Identifier "_subs") Nothing) (Identifier "result_vars")
       , S.SEArray $ map S.SELit jPath
       ]
     addTypeAnnotation pgType = flip S.SETyAnn (S.mkTypeAnn pgType) . case pgType of
-      PGTypeScalar scalarType -> withConstructorFn scalarType
-      PGTypeArray _           -> id
+      CollectableTypeScalar scalarType -> withConstructorFn scalarType
+      CollectableTypeArray _           -> id
 
 -- -----------------------------------------------------------------------------------
 -- Live query plans
@@ -349,7 +349,7 @@ buildLiveQueryPlan
      )
   => PGExecCtx
   -> UserInfo
-  -> InsOrdHashMap G.Name (SubscriptionRootField UnpreparedValue)
+  -> InsOrdHashMap G.Name (SubscriptionRootField (UnpreparedValue 'Postgres))
   -> m (LiveQueryPlan, Maybe ReusableLiveQueryPlan)
 buildLiveQueryPlan pgExecCtx userInfo unpreparedAST = do
   (preparedAST, QueryParametersInfo{..}) <- flip runStateT mempty $
@@ -374,8 +374,8 @@ buildLiveQueryPlan pgExecCtx userInfo unpreparedAST = do
   -- We need to ensure that the values provided for variables are correct according to Postgres.
   -- Without this check an invalid value for a variable for one instance of the subscription will
   -- take down the entire multiplexed query.
-  validatedQueryVars <- validateVariables pgExecCtx $ fmap pcvValue _qpiReusableVariableValues
-  validatedSyntheticVars <- validateVariables pgExecCtx $ map pcvValue $ toList _qpiSyntheticVariableValues
+  validatedQueryVars <- validateVariables pgExecCtx $ fmap cvValue _qpiReusableVariableValues
+  validatedSyntheticVars <- validateVariables pgExecCtx $ map cvValue $ toList _qpiSyntheticVariableValues
 
   let -- TODO validatedQueryVars validatedSyntheticVars
       cohortVariables = mkCohortVariables _qpiReferencedSessionVariables

@@ -39,9 +39,6 @@ import           Data.Aeson
 import           Data.Aeson.Casing
 import           Data.Aeson.TH
 import           Data.Text.Extended
-import           Instances.TH.Lift                  ()
-import           Language.Haskell.TH.Syntax         (Lift)
-import           Network.URI.Extended               ()
 
 import qualified Hasura.Incremental                 as Inc
 
@@ -64,7 +61,7 @@ data TrackTable
   = TrackTable
   { tName   :: !QualifiedTable
   , tIsEnum :: !Bool
-  } deriving (Show, Eq, Lift)
+  } deriving (Show, Eq)
 
 instance FromJSON TrackTable where
   parseJSON v = withOptions <|> withoutOptions
@@ -83,14 +80,14 @@ data SetTableIsEnum
   = SetTableIsEnum
   { stieTable  :: !QualifiedTable
   , stieIsEnum :: !Bool
-  } deriving (Show, Eq, Lift)
+  } deriving (Show, Eq)
 $(deriveJSON (aesonDrop 4 snakeCase) ''SetTableIsEnum)
 
 data UntrackTable =
   UntrackTable
   { utTable   :: !QualifiedTable
   , utCascade :: !(Maybe Bool)
-  } deriving (Show, Eq, Lift)
+  } deriving (Show, Eq)
 $(deriveJSON (aesonDrop 2 snakeCase){omitNothingFields=True} ''UntrackTable)
 
 -- | Track table/view, Phase 1:
@@ -183,7 +180,7 @@ data TrackTableV2
   = TrackTableV2
   { ttv2Table         :: !TrackTable
   , ttv2Configuration :: !TableConfig
-  } deriving (Show, Eq, Lift)
+  } deriving (Show, Eq)
 $(deriveJSON (aesonDrop 4 snakeCase) ''TrackTableV2)
 
 runTrackTableV2Q
@@ -203,7 +200,7 @@ data SetTableCustomization
   = SetTableCustomization
   { _stcTable         :: !QualifiedTable
   , _stcConfiguration :: !TableConfig
-  } deriving (Show, Eq, Lift)
+  } deriving (Show, Eq)
 $(deriveJSON (aesonDrop 4 snakeCase) ''SetTableCustomization)
 
 data SetTableCustomFields
@@ -211,7 +208,7 @@ data SetTableCustomFields
   { _stcfTable             :: !QualifiedTable
   , _stcfCustomRootFields  :: !TableCustomRootFields
   , _stcfCustomColumnNames :: !CustomColumnNames
-  } deriving (Show, Eq, Lift)
+  } deriving (Show, Eq)
 $(deriveToJSON (aesonDrop 5 snakeCase) ''SetTableCustomFields)
 
 instance FromJSON SetTableCustomFields where
@@ -404,7 +401,7 @@ buildTableCache = Inc.cache proc (catalogTables, reloadMetadataInvalidationKey) 
       :: ErrorA QErr arr
        ( CatalogTable
        , Inc.Dependency Inc.InvalidationKey
-       ) (TableCoreInfoG (RawColumnInfo 'Postgres) PGCol)
+       ) (TableCoreInfoG 'Postgres (RawColumnInfo 'Postgres) PGCol)
     buildRawTableInfo = Inc.cache proc (catalogTable, reloadMetadataInvalidationKey) -> do
       let CatalogTable name systemDefined isEnum config maybeInfo = catalogTable
       catalogInfo <-
@@ -442,7 +439,7 @@ buildTableCache = Inc.cache proc (catalogTables, reloadMetadataInvalidationKey) 
     processTableInfo
       :: ErrorA QErr arr
        ( Map.HashMap QualifiedTable (PrimaryKey PGCol, EnumValues)
-       , TableCoreInfoG (RawColumnInfo 'Postgres) PGCol
+       , TableCoreInfoG 'Postgres (RawColumnInfo 'Postgres) PGCol
        ) (TableRawInfo 'Postgres)
     processTableInfo = proc (enumTables, rawInfo) -> liftEitherA -< do
       let columns = _tciFieldInfoMap rawInfo

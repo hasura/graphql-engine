@@ -30,7 +30,6 @@ module Hasura.RQL.IR.BoolExp
        , AnnBoolExpFldSQL
        , AnnBoolExpSQL
        , PartialSQLExp(..)
-       , mkTypedSessionVar
        , isStaticValue
        , AnnBoolExpFldPartialSQL
        , AnnBoolExpPartialSQL
@@ -51,10 +50,7 @@ import           Data.Aeson.Casing
 import           Data.Aeson.Internal
 import           Data.Aeson.TH
 import           Data.Typeable
-import           Instances.TH.Lift                  ()
-import           Language.Haskell.TH.Syntax         (Lift)
-
-import qualified Hasura.Backends.Postgres.SQL.Types as PG
+import           Data.Text.Extended
 
 import           Hasura.Incremental                 (Cacheable)
 import           Hasura.RQL.Types.Column
@@ -68,7 +64,7 @@ data ColExp
   = ColExp
   { ceCol :: !FieldName
   , ceVal :: !Value
-  } deriving (Show, Eq, Lift, Data, Generic)
+  } deriving (Show, Eq, Data, Generic)
 instance NFData ColExp
 instance Cacheable ColExp
 
@@ -80,7 +76,6 @@ data GExists (b :: BackendType) a
   } deriving (Functor, Foldable, Traversable, Generic)
 deriving instance (Backend b, Show a) => Show (GExists b a)
 deriving instance (Backend b, Eq a) => Eq (GExists b a)
-deriving instance (Backend b, Lift a) => Lift (GExists b a)
 deriving instance (Backend b, Typeable a, Data a) => Data (GExists b a)
 instance (Backend b, NFData a) => NFData (GExists b a)
 instance (Backend b, Data a) => Plated (GExists b a)
@@ -109,7 +104,7 @@ data GBoolExp (b :: BackendType) a
   | BoolNot !(GBoolExp b a)
   | BoolExists !(GExists b a)
   | BoolFld !a
-  deriving (Show, Eq, Lift, Functor, Foldable, Traversable, Data, Generic)
+  deriving (Show, Eq, Functor, Foldable, Traversable, Data, Generic)
 instance (Backend b, NFData a) => NFData (GBoolExp b a)
 instance (Backend b, Data a) => Plated (GBoolExp b a)
 instance (Backend b, Cacheable a) => Cacheable (GBoolExp b a)
@@ -160,7 +155,7 @@ parseGBoolExp f = \case
 
 newtype BoolExp (b :: BackendType)
   = BoolExp { unBoolExp :: GBoolExp b ColExp }
-  deriving (Show, Eq, Lift, Generic, NFData, Cacheable)
+  deriving (Show, Eq, Generic, NFData, Cacheable)
 
 $(makeWrapped ''BoolExp)
 
@@ -244,6 +239,15 @@ data OpExpG (b :: BackendType) a
   | ASIMILAR !a -- similar, regex
   | ANSIMILAR !a-- not similar, regex
 
+  -- Now that in the RQL code we've started to take a "trees that grow"
+  -- approach (see PR #6003), we may eventually want to move these
+  -- recently added constructors, which correspond to newly supported
+  -- Postgres operators, to the backend-specific extensions of this type.
+  | AREGEX !a -- match POSIX case sensitive, regex
+  | AIREGEX !a -- match POSIX case insensitive, regex
+  | ANREGEX !a -- dont match POSIX case sensitive, regex
+  | ANIREGEX !a -- dont match POSIX case insensitive, regex
+
   | AContains !a
   | AContainedIn !a
   | AHasKey !a
@@ -313,6 +317,11 @@ opExpToJPair f = \case
 
   ASIMILAR a               -> ("_similar", f a)
   ANSIMILAR a              -> ("_nsimilar", f a)
+
+  AREGEX a                 -> ("_regex", f a)
+  AIREGEX a                -> ("_iregex", f a)
+  ANREGEX a                -> ("_nregex", f a)
+  ANIREGEX a               -> ("_niregex", f a)
 
   AContains a              -> ("_contains", f a)
   AContainedIn a           -> ("_contained_in", f a)
@@ -395,17 +404,13 @@ type PreSetColsPartial b = M.HashMap (Column b) (PartialSQLExp b)
 
 -- doesn't resolve the session variable
 data PartialSQLExp (b :: BackendType)
-  = PSESessVar !(PG.PGType (ScalarType b)) !SessionVariable
+  = PSESessVar !(SessionVarType b) !SessionVariable
   | PSESQLExp !(SQLExpression b)
   deriving (Generic)
 deriving instance Backend b => Eq (PartialSQLExp b)
 deriving instance Backend b => Data (PartialSQLExp b)
 instance Backend b => NFData (PartialSQLExp b)
 instance Backend b => Cacheable (PartialSQLExp b)
-
-mkTypedSessionVar :: PG.PGType (ColumnType 'Postgres) -> SessionVariable -> PartialSQLExp 'Postgres
-mkTypedSessionVar columnType =
-  PSESessVar (unsafePGColumnToBackend <$> columnType)
 
 instance ToJSON (PartialSQLExp 'Postgres) where
   toJSON = \case
@@ -417,7 +422,7 @@ instance ToJSON (AnnBoolExpPartialSQL 'Postgres) where
     where
       f annFld = case annFld of
         AVCol pci opExps ->
-          ( PG.getPGColTxt $ pgiColumn pci
+          ( toTxt $ pgiColumn pci
           , toJSON (pci, map opExpSToJSON opExps)
           )
         AVRel ri relBoolExp ->

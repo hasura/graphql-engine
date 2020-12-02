@@ -13,9 +13,17 @@ query:
       }
     } 
 
-response:
-  errors:
-  - extensions:
-      code: constraint-violation
-      path: $.selectionSet.insert_address.args.objects
-    message: "Not-NULL violation. null value in column \"door_no\" violates not-null constraint"
+allowed_responses:
+  - response:
+      errors:
+      - extensions:
+          code: constraint-violation
+          path: $.selectionSet.insert_address.args.objects
+        message: "Not-NULL violation. null value in column \"door_no\" violates not-null constraint"
+  # postgres 13
+  - response:
+      errors:
+      - extensions:
+          code: constraint-violation
+          path: $.selectionSet.insert_address.args.objects
+        message: "Not-NULL violation. null value in column \"door_no\" of relation \"address\" violates not-null constraint"

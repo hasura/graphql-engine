@@ -69,8 +69,9 @@ runApp env (HGEOptionsG rci hgeCmd) = do
         Signals.sigTERM
         (Signals.CatchOnce (shutdownGracefully $ _scShutdownLatch serveCtx))
         Nothing
+      serverMetrics <- liftIO $ createServerMetrics ekgStore
       flip runPGMetadataStorageApp (_scPgPool serveCtx) $
-        runHGEServer env serveOptions serveCtx Nothing initTime shutdownApp Nothing ekgStore
+        runHGEServer env serveOptions serveCtx Nothing initTime shutdownApp Nothing serverMetrics ekgStore
 
     HCExport -> do
       res <- runTxWithMinimalPool _gcConnInfo fetchMetadataFromHdbTables

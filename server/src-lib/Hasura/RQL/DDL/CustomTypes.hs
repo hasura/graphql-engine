@@ -54,7 +54,7 @@ GraphQL types. To support this, we have to take a few extra steps:
 -- scalars).
 validateCustomTypeDefinitions
   :: (MonadValidate [CustomTypeValidationError] m)
-  => TableCache
+  => TableCache 'Postgres
   -> CustomTypes
   -> HashSet (ScalarType 'Postgres)
   -- ^ all Postgres base types. See Note [Postgres scalars in custom types]
@@ -204,11 +204,10 @@ validateCustomTypeDefinitions tableCache customTypes allPGScalars = do
                   objectTypeName _trName fieldName
 
             -- the column should be a column of the table
-            case getColumnInfoM remoteTableInfo (fromPGCol columnName) of
-              Nothing ->
-                refute $ pure $ ObjectRelationshipColumnDoesNotExist
-                objectTypeName _trName _trRemoteTable columnName
-              Just pgColumnInfo -> pure pgColumnInfo
+            getColumnInfoM remoteTableInfo (fromPGCol columnName)
+              `onNothing`
+              refute (pure (ObjectRelationshipColumnDoesNotExist
+                            objectTypeName _trName _trRemoteTable columnName))
 
         pure $ TypeRelationship _trName _trType remoteTableInfo annotatedFieldMapping
 
@@ -335,7 +334,7 @@ clearCustomTypes = do
 
 resolveCustomTypes
   :: (MonadError QErr m)
-  => TableCache
+  => TableCache 'Postgres
   -> CustomTypes
   -> HashSet (ScalarType 'Postgres)
   -> m (AnnotatedCustomTypes 'Postgres)

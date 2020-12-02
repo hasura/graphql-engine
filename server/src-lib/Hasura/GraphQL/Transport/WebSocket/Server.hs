@@ -297,7 +297,9 @@ createServerApp (WSServer logger@(L.Logger writeLog) serverStatus) wsHandlers !i
       --      Requires a fork of 'wai-websockets' and 'websockets', it looks like.
       --      Adding `package` stanzas with -Xstrict -XStrictData for those two packages
       --      helped, cutting the number of thunks approximately in half.
+#   ifndef PROFILING
       liftIO $ $assertNFHere wsConn  -- so we don't write thunks to mutable vars
+#   endif
 
       let whenAcceptingInsertConn = liftIO $ STM.atomically $ do
             status <- STM.readTVar serverStatus
