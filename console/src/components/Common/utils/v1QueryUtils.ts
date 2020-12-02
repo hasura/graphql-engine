@@ -836,10 +836,7 @@ export const getTrackFunctionQuery = (
 ) => {
   let volatileConf: Record<string, boolean | string> | null = null;
   if (type.toLowerCase() === 'volatile') {
-    if (asQuery) {
-      volatileConf = { expose_as: 'query' };
-    }
-    volatileConf = { as_mutation: true };
+    volatileConf = { exposed_as: asQuery ? 'query' : 'mutation' };
   }
 
   if (configuration || volatileConf) {
