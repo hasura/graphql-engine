@@ -12,7 +12,7 @@ import qualified Data.HashMap.Strict                as HM
 import qualified Data.HashMap.Strict.InsOrd         as OMap
 import qualified Data.List.NonEmpty                 as NE
 import qualified Data.Text                          as T
-import qualified Database.ODBC.SQLServer            as Odbc
+import qualified Database.ODBC.SQLServer            as ODBC
 import qualified Language.GraphQL.Draft.Syntax      as G
 
 import           Control.Monad.Validate
@@ -20,9 +20,9 @@ import           Data.Bifunctor                     (first)
 
 
 import qualified Hasura.GraphQL.Execute.Query       as EQ
-import qualified Hasura.GraphQL.Parser              as Graphql
-import           Hasura.Backends.MSSQL.FromIr       as Tsql
-import           Hasura.Backends.MSSQL.Types        as Tsql
+import qualified Hasura.GraphQL.Parser              as GraphQL
+import           Hasura.Backends.MSSQL.FromIr       as TSQL
+import           Hasura.Backends.MSSQL.Types        as TSQL
 import           Hasura.Prelude ()
 import qualified Hasura.RQL.Types.Action            as RQL
 import           Hasura.GraphQL.Context
@@ -36,14 +36,14 @@ type SubscriptionRootFieldMSSQL v = RootField (QueryDB 'MSSQL v) Void (RQL.AnnAc
 
 -- -- | Plan a query without prepare/exec.
 planNoPlan ::
-     SubscriptionRootFieldMSSQL (Graphql.UnpreparedValue 'MSSQL)
+     SubscriptionRootFieldMSSQL (GraphQL.UnpreparedValue 'MSSQL)
   -> Either PrepareError Select
 planNoPlan unpreparedRoot = do
   rootField <- EQ.traverseQueryRootField prepareValueNoPlan unpreparedRoot
   select <-
     first
       FromIrError
-      (runValidate (Tsql.runFromIr (Tsql.fromRootField rootField)))
+      (runValidate (TSQL.runFromIr (TSQL.fromRootField rootField)))
   pure
     select
       { selectFor =
@@ -53,7 +53,7 @@ planNoPlan unpreparedRoot = do
       }
 
 planMultiplex ::
-     OMap.InsOrdHashMap G.Name (SubscriptionRootFieldMSSQL (Graphql.UnpreparedValue 'MSSQL))
+     OMap.InsOrdHashMap G.Name (SubscriptionRootFieldMSSQL (GraphQL.UnpreparedValue 'MSSQL))
   -> Either PrepareError Select
 planMultiplex unpreparedMap = do
   rootFieldMap <-
@@ -65,12 +65,12 @@ planMultiplex unpreparedMap = do
   selectMap <-
     first
       FromIrError
-      (runValidate (Tsql.runFromIr (traverse Tsql.fromRootField rootFieldMap)))
+      (runValidate (TSQL.runFromIr (traverse TSQL.fromRootField rootFieldMap)))
   pure (multiplexRootReselect (collapseMap selectMap))
 
 -- | Plan a query without prepare/exec.
 planNoPlanMap ::
-     OMap.InsOrdHashMap G.Name (SubscriptionRootFieldMSSQL (Graphql.UnpreparedValue 'MSSQL))
+     OMap.InsOrdHashMap G.Name (SubscriptionRootFieldMSSQL (GraphQL.UnpreparedValue 'MSSQL))
   -> Either PrepareError Reselect
 planNoPlanMap unpreparedMap = do
   rootFieldMap <-
@@ -78,7 +78,7 @@ planNoPlanMap unpreparedMap = do
   selectMap <-
     first
       FromIrError
-      (runValidate (Tsql.runFromIr (traverse Tsql.fromRootField rootFieldMap)))
+      (runValidate (TSQL.runFromIr (traverse TSQL.fromRootField rootFieldMap)))
   pure (collapseMap selectMap)
 
 --------------------------------------------------------------------------------
@@ -108,14 +108,14 @@ collapseMap selects =
 --------------------------------------------------------------------------------
 -- Session variables
 
-globalSessionExpression :: Tsql.Expression
+globalSessionExpression :: TSQL.Expression
 globalSessionExpression =
-  ValueExpression (Odbc.TextValue "TODO: sessionExpression")
+  ValueExpression (ODBC.TextValue "TODO: sessionExpression")
 
 -- TODO: real env object.
-envObjectExpression :: Tsql.Expression
+envObjectExpression :: TSQL.Expression
 envObjectExpression =
-  ValueExpression (Odbc.TextValue "[{\"result_id\":1,\"result_vars\":{\"synthetic\":[10]}}]")
+  ValueExpression (ODBC.TextValue "[{\"result_id\":1,\"result_vars\":{\"synthetic\":[10]}}]")
 
 --------------------------------------------------------------------------------
 -- Resolving values
@@ -123,13 +123,13 @@ envObjectExpression =
 data PrepareError
   = {-UVLiteralNotSupported-}
    SessionVarNotSupported
-  -- | UnsupportedPgType Odbc.Value -- PG.PGScalarValue
-  | FromIrError (NonEmpty Tsql.Error)
+  -- | UnsupportedPgType ODBC.Value -- PG.PGScalarValue
+  | FromIrError (NonEmpty TSQL.Error)
   -- deriving (Show, Eq)
 
 data PrepareState = PrepareState
   { positionalArguments :: !Integer
-  , namedArguments      :: !(HashMap G.Name (Graphql.ColumnValue 'MSSQL))
+  , namedArguments      :: !(HashMap G.Name (GraphQL.ColumnValue 'MSSQL))
   }
 
 emptyPrepareState :: PrepareState
@@ -138,35 +138,26 @@ emptyPrepareState =
 
 -- | Prepare a value without any query planning; we just execute the
 -- query with the values embedded.
-prepareValueNoPlan :: Graphql.UnpreparedValue 'MSSQL -> Either PrepareError Tsql.Expression
+prepareValueNoPlan :: GraphQL.UnpreparedValue 'MSSQL -> Either PrepareError TSQL.Expression
 prepareValueNoPlan =
   \case
-    -- FIXME: Cannot compile this until there is a generic literal type.
-    Graphql.UVLiteral {} -> undefined
-    {-Graphql.UVLiteral (_ :: Expression {-PG.SQLExp-}) -> Left UVLiteralNotSupported-}
-    Graphql.UVSession -> pure (JsonQueryExpression globalSessionExpression)
-    Graphql.UVSessionVar _typ _text -> Left SessionVarNotSupported
-    -- FIXME: Cannot compile this until there is a generic "ColumnValue" type.
-    Graphql.UVParameter {} -> undefined
-    {-Graphql.UVParameter Graphql.PGColumnValue {pcvValue = PG.WithScalarType {pstValue}} _mVariableInfo ->
-      case fromPgScalarValue pstValue of
-        Nothing    -> Left (UnsupportedPgType pstValue)
-        Just value -> pure (ValueExpression value)-}
+    GraphQL.UVLiteral x -> pure x
+    GraphQL.UVSession -> pure (JsonQueryExpression globalSessionExpression)
+    GraphQL.UVSessionVar _typ _text -> Left SessionVarNotSupported
+    GraphQL.UVParameter GraphQL.ColumnValue{..} _ -> pure $ ValueExpression cvValue
 
 -- | Prepare a value for multiplexed queries.
 prepareValueMultiplex ::
-     Graphql.UnpreparedValue 'MSSQL
-  -> StateT PrepareState (Either PrepareError) Tsql.Expression
+     GraphQL.UnpreparedValue 'MSSQL
+  -> StateT PrepareState (Either PrepareError) TSQL.Expression
 prepareValueMultiplex =
   \case
-    -- FIXME: Cannot compile this until there is a generic literal type.
-    Graphql.UVLiteral {} -> undefined
-    {-Graphql.UVLiteral (_ :: Expression {-PG.SQLExp-}) -> lift (Left UVLiteralNotSupported)-}
-    Graphql.UVSession ->
+    GraphQL.UVLiteral x -> pure x
+    GraphQL.UVSession ->
       pure (JsonQueryExpression globalSessionExpression)
-    Graphql.UVSessionVar _typ _text -> lift (Left SessionVarNotSupported)
-    Graphql.UVParameter pgcolumnvalue mVariableInfo ->
-      case fmap Graphql.getName mVariableInfo of
+    GraphQL.UVSessionVar _typ _text -> lift (Left SessionVarNotSupported)
+    GraphQL.UVParameter pgcolumnvalue mVariableInfo ->
+      case fmap GraphQL.getName mVariableInfo of
         Nothing -> do
           index <- gets positionalArguments
           modify' (\s -> s {positionalArguments = index + 1})
@@ -201,7 +192,7 @@ prepareValueMultiplex =
 -- [ Select x y | (x,y) <- [..] ]
 --
 
-multiplexRootReselect :: Tsql.Reselect -> Tsql.Select
+multiplexRootReselect :: TSQL.Reselect -> TSQL.Select
 multiplexRootReselect rootReselect =
   Select
     { selectTop = NoTop
@@ -221,7 +212,7 @@ multiplexRootReselect rootReselect =
                       (ColumnExpression
                          (FieldName
                             { fieldNameEntity = resultAlias
-                            , fieldName = Tsql.jsonFieldName
+                            , fieldName = TSQL.jsonFieldName
                             }))
                 , aliasedAlias = resultAlias
                 }
@@ -244,7 +235,7 @@ multiplexRootReselect rootReselect =
             , joinJoinAlias =
                 JoinAlias
                   { joinAliasEntity = resultAlias
-                  , joinAliasField = Just Tsql.jsonFieldName
+                  , joinAliasField = Just TSQL.jsonFieldName
                   }
             }
         ]
@@ -266,45 +257,3 @@ resultAlias = "result"
 
 rowAlias :: T.Text
 rowAlias = "row"
-
---------------------------------------------------------------------------------
--- PG compat
-
--- No longer needed
-
--- -- | Convert from PG values to ODBC. Later, this shouldn't be
--- -- necessary; the value should come in as an ODBC value already.
--- fromPgScalarValue :: PG.PGScalarValue -> Maybe Odbc.Value
--- fromPgScalarValue =
---   \case
---     PG.PGValInteger i32 ->
---       pure (Odbc.IntValue ((fromIntegral :: Int32 -> Int) i32))
---     PG.PGValSmallInt i16 ->
---       pure (Odbc.IntValue ((fromIntegral :: Int16 -> Int) i16))
---     PG.PGValBigInt i64 ->
---       pure (Odbc.IntValue ((fromIntegral :: Int64 -> Int) i64))
---     PG.PGValFloat float -> pure (Odbc.FloatValue float)
---     PG.PGValDouble double -> pure (Odbc.DoubleValue double)
---     PG.PGNull _pgscalartype -> pure Odbc.NullValue
---     PG.PGValBoolean boolean -> pure (Odbc.BoolValue boolean)
---     PG.PGValVarchar text -> pure (Odbc.TextValue text)
---     PG.PGValText text -> pure (Odbc.TextValue text)
---     PG.PGValDate day -> pure (Odbc.DayValue day)
---     PG.PGValTimeStamp localtime -> pure (Odbc.LocalTimeValue localtime)
---      -- For these, see Datetime2 in Database.ODBC.SQLServer.
---     PG.PGValTimeStampTZ _utctime -> Nothing -- TODO: PG.PGValTimeStampTZ utctime
---     PG.PGValTimeTZ _zonedtimeofday -> Nothing -- TODO: PG.PGValTimeTZ zonedtimeofday
---     PG.PGValNumeric _scientific -> Nothing -- TODO: PG.PGValNumeric scientific
---     PG.PGValMoney _scientific -> Nothing -- TODO: PG.PGValMoney scientific
---     PG.PGValChar _char -> Nothing -- TODO: PG.PGValChar char
---     PG.PGValCitext _text -> Nothing -- TODO: PG.PGValCitext text
---      -- I'm not sure whether it's fine to encode as string, because
---      -- that's what SQL Server treats JSON as. But wrapping it in a
---      -- JsonQueryExpression might help.
---     PG.PGValJSON _json -> Nothing -- TODO: PG.PGValJSON json
---     PG.PGValJSONB _jsonb -> Nothing -- TODO: PG.PGValJSONB jsonb
---     PG.PGValGeo _geometrywithcrs -> Nothing -- TODO: PG.PGValGeo geometrywithcrs
---     PG.PGValRaster _rasterwkb -> Nothing -- TODO: PG.PGValRaster rasterwkb
---      -- There is a UUID type in SQL Server, but it needs research.
---     PG.PGValUUID _uuid -> Nothing -- TODO: PG.PGValUUID uuid
---     PG.PGValUnknown _text -> Nothing -- TODO: PG.PGValUnknown text

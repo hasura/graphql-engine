@@ -10,13 +10,13 @@ import           Data.Function
 import           Data.Hashable
 import qualified Data.Text as T
 import           Data.Text.Extended (ToTxt(..))
-import qualified Database.ODBC.SQLServer as Odbc
+import qualified Database.ODBC.SQLServer as ODBC
 import           Hasura.Backends.MSSQL.Types.Internal
 import           Hasura.Incremental.Internal.Dependency
 import           Prelude
 
-instance Cacheable Odbc.Value
-instance Cacheable Odbc.Binary
+instance Cacheable ODBC.Value
+instance Cacheable ODBC.Binary
 
 instance FromJSON ColumnName
 instance FromJSON NullsOrder

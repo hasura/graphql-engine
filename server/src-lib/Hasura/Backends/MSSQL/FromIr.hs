@@ -17,7 +17,7 @@ import qualified Data.HashMap.Strict                as HM
 import qualified Data.List.NonEmpty                 as NE
 import qualified Data.Map.Strict                    as M
 import qualified Data.Text                          as T
-import qualified Database.ODBC.SQLServer            as Odbc
+import qualified Database.ODBC.SQLServer            as ODBC
 
 --import           Control.Monad.Trans.State.Strict   as S
 import           Control.Monad.Validate
@@ -25,14 +25,14 @@ import           Data.Map.Strict                    (Map)
 import           Data.Proxy
 
 
-import qualified Hasura.GraphQL.Context             as Graphql
+import qualified Hasura.GraphQL.Context             as GraphQL
 import qualified Hasura.RQL.IR.BoolExp              as IR
 import qualified Hasura.RQL.IR.OrderBy              as IR
 import qualified Hasura.RQL.IR.Select               as IR
 import qualified Hasura.RQL.Types.Column            as IR
 import qualified Hasura.RQL.Types.Common            as IR
 
-import           Hasura.Backends.MSSQL.Types        as Tsql
+import           Hasura.Backends.MSSQL.Types        as TSQL
 import           Hasura.SQL.Backend
 
 
@@ -94,7 +94,7 @@ runFromIr fromIr = evalStateT (unFromIr fromIr) mempty
 mkSQLSelect ::
      IR.JsonAggSelect
   -> IR.AnnSelectG 'MSSQL (IR.AnnFieldsG 'MSSQL Expression) Expression
-  -> FromIr Tsql.Select
+  -> FromIr TSQL.Select
 mkSQLSelect jsonAggSelect annSimpleSel =
   case jsonAggSelect of
     IR.JASMultipleRows -> fromSelectRows annSimpleSel
@@ -110,21 +110,21 @@ mkSQLSelect jsonAggSelect annSimpleSel =
 
 -- | Convert from the IR database query into a select.
 fromRootField ::
-     Graphql.RootField (Graphql.QueryDB 'MSSQL Expression) Void void Void
+     GraphQL.RootField (GraphQL.QueryDB 'MSSQL Expression) Void void Void
   -> FromIr Select
 fromRootField =
   \case
-    Graphql.RFDB (Graphql.QDBPrimaryKey s) -> mkSQLSelect IR.JASSingleObject s
-    Graphql.RFDB (Graphql.QDBSimple s) -> mkSQLSelect IR.JASMultipleRows s
-    Graphql.RFDB (Graphql.QDBAggregation s) -> fromSelectAggregate s
-    Graphql.RFDB (Graphql.QDBConnection {}) ->
+    GraphQL.RFDB (GraphQL.QDBPrimaryKey s) -> mkSQLSelect IR.JASSingleObject s
+    GraphQL.RFDB (GraphQL.QDBSimple s) -> mkSQLSelect IR.JASMultipleRows s
+    GraphQL.RFDB (GraphQL.QDBAggregation s) -> fromSelectAggregate s
+    GraphQL.RFDB (GraphQL.QDBConnection {}) ->
       refute (pure ConnectionsNotSupported)
-    Graphql.RFAction {} -> refute (pure ActionsNotSupported)
+    GraphQL.RFAction {} -> refute (pure ActionsNotSupported)
 
 --------------------------------------------------------------------------------
 -- Top-level exported functions
 
-fromSelectRows :: IR.AnnSelectG 'MSSQL (IR.AnnFieldsG 'MSSQL Expression) Expression -> FromIr Tsql.Select
+fromSelectRows :: IR.AnnSelectG 'MSSQL (IR.AnnFieldsG 'MSSQL Expression) Expression -> FromIr TSQL.Select
 fromSelectRows annSelectG = do
   selectFrom <-
     case from of
@@ -178,7 +178,7 @@ fromSelectRows annSelectG = do
 
 fromSelectAggregate ::
      IR.AnnSelectG 'MSSQL [(IR.FieldName, IR.TableAggregateFieldG 'MSSQL Expression)] Expression
-  -> FromIr Tsql.Select
+  -> FromIr TSQL.Select
 fromSelectAggregate annSelectG = do
   selectFrom <-
     case from of
@@ -530,7 +530,7 @@ fromTableAggregateFieldG (IR.FieldName name, field) =
       pure
         (ExpressionFieldSource
            Aliased
-             { aliasedThing = Tsql.ValueExpression (Odbc.TextValue text)
+             { aliasedThing = TSQL.ValueExpression (ODBC.TextValue text)
              , aliasedAlias = name
              })
     IR.TAFNodes {} -> refute (pure (NodesUnsupportedForNow field))
@@ -564,7 +564,7 @@ fromAggregateField aggregateField =
           (\(_fieldName, pgColFld) ->
              case pgColFld of
                IR.CFCol pgCol -> fmap ColumnExpression (fromPGCol pgCol)
-               IR.CFExp text  -> pure (ValueExpression (Odbc.TextValue text)))
+               IR.CFExp text  -> pure (ValueExpression (ODBC.TextValue text)))
           fs
       pure (OpAggregate op args)
 
@@ -585,7 +585,7 @@ fromAnnFieldsG existingJoins stringifyNumbers (IR.FieldName name, field) =
       pure
         (ExpressionFieldSource
            Aliased
-             { aliasedThing = Tsql.ValueExpression (Odbc.TextValue text)
+             { aliasedThing = TSQL.ValueExpression (ODBC.TextValue text)
              , aliasedAlias = name
              })
     IR.AFObjectRelation objectRelationSelectG ->
@@ -901,7 +901,7 @@ fromSQLExpAsInt = pure
   {-\case
     s@(PG.SELit text) ->
       case T.decimal text of
-        Right (d, "") -> pure (ValueExpression (Odbc.IntValue d))
+        Right (d, "") -> pure (ValueExpression (ODBC.IntValue d))
         _             -> refute (pure (InvalidIntegerishSql s))
     s -> refute (pure (InvalidIntegerishSql s))-}
 
@@ -920,7 +920,7 @@ fromGBoolExp =
 -- Misc combinators
 
 trueExpression :: Expression
-trueExpression = ValueExpression (Odbc.BoolValue True)
+trueExpression = ValueExpression (ODBC.BoolValue True)
 
 --------------------------------------------------------------------------------
 -- Constants

@@ -83,7 +83,8 @@ import qualified Hasura.Backends.Postgres.SQL.DML   as PG
 import qualified Hasura.Backends.Postgres.SQL.Types as PG
 import qualified Hasura.Backends.Postgres.SQL.Value as PG
 
-import qualified Hasura.Backends.MSSQL.Types as MSSQL
+import qualified Hasura.Backends.MSSQL.Types        as MSSQL
+import qualified Database.ODBC.SQLServer            as MSSQL
 
 import           Hasura.EncJSON
 import           Hasura.Incremental                 (Cacheable)
@@ -187,7 +188,7 @@ instance Backend 'MSSQL where
   type NullsOrderType  'MSSQL = MSSQL.NullsOrder
   type CountType       'MSSQL = MSSQL.Countable
   type Column          'MSSQL = MSSQL.ColumnName
-  type ColumnValueType 'MSSQL = Void -- TODO pick an appropriate representation
+  type ColumnValueType 'MSSQL = MSSQL.Value
   type ScalarType      'MSSQL = MSSQL.ScalarType
   type SQLExpression   'MSSQL = MSSQL.Expression
   type SQLOperator     'MSSQL = ()

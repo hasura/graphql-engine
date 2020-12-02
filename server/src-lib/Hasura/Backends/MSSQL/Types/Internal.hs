@@ -8,7 +8,7 @@ import           GHC.Generics
 import           Language.Haskell.TH.Syntax (Lift)
 import           Prelude
 
-import qualified Database.ODBC.SQLServer as Odbc
+import qualified Database.ODBC.SQLServer as ODBC
 
 import           Data.List.NonEmpty (NonEmpty (..))
 import           Data.Text (Text)
@@ -115,7 +115,7 @@ instance Semigroup Top where
   (<>) (Top x) (Top y) = Top (min x y)
 
 data Expression
-  = ValueExpression Odbc.Value
+  = ValueExpression ODBC.Value
   | AndExpression [Expression]
   | OrExpression [Expression]
   | NotExpression Expression
