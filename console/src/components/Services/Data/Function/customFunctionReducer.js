@@ -177,12 +177,7 @@ const unTrackCustomFunction = () => {
   return (dispatch, getState) => {
     const currentSchema = getState().tables.currentSchema;
     const functionName = getState().functions.functionName;
-    // const url = Endpoints.getSchema;
-    /*
-    const customFunctionObj = {
-      function_name: functionName,
-    };
-    */
+
     const migrationName = 'remove_custom_function_' + functionName;
     const payload = {
       type: 'untrack_function',
@@ -194,11 +189,13 @@ const unTrackCustomFunction = () => {
 
     const func =
       getState().tables?.postgresFunctions?.find(
-        f => f.function_name === name && f.function_schema === currentSchema
+        f =>
+          f.function_name === functionName &&
+          f.function_schema === currentSchema
       ) || {};
 
     const downPayload = getTrackFunctionQuery(
-      name,
+      functionName,
       currentSchema,
       func.function_type
     );
@@ -206,9 +203,9 @@ const unTrackCustomFunction = () => {
     const migration = new Migration();
     migration.add(payload, downPayload);
 
-    const requestMsg = 'Deleting custom function...';
-    const successMsg = 'Custom function deleted successfully';
-    const errorMsg = 'Delete custom function failed';
+    const requestMsg = 'Untracking custom function...';
+    const successMsg = 'Custom function untracked successfully';
+    const errorMsg = 'Untrack custom function failed';
 
     const customOnSuccess = () => {
       dispatch(_push(getSchemaBaseRoute(currentSchema)));

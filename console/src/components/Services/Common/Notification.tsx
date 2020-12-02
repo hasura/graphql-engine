@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { ComponentProps } from 'react';
 import AceEditor from 'react-ace';
 import {
   removeAll as removeNotifications,
@@ -14,23 +14,21 @@ import { isObject, isString } from '../../Common/utils/jsUtils';
 
 import styles from './Notification/Notification.scss';
 
-export interface Notification {
-  title?: string | JSX.Element;
-  message?: string | JSX.Element;
-  level?: 'error' | 'warning' | 'info' | 'success';
-  position?: 'tr' | 'tl' | 'tc' | 'br' | 'bl' | 'bc';
-  autoDismiss?: number;
-  dismissible?: 'both' | 'button' | 'click' | 'hide' | 'none' | boolean;
-  children?: React.ReactNode;
-  uid?: number | string;
-  action?: {
-    label: string;
-    callback?: () => void;
-  };
-}
+export const NotificationButton: React.FC<
+  ComponentProps<'button'> & {
+    type: NotificationLevel;
+  }
+> = ({ children, type, ...props }) => {
+  const className = `notificationButton__${type}`;
+  return (
+    <button {...props} className={styles[className]}>
+      {children}
+    </button>
+  );
+};
 
 export const showNotification = (
-  options: Notification,
+  options: Parameters<typeof displayNotification>[0],
   level: NotificationLevel,
   noDismissNotifications?: boolean
 ): Thunk => {
@@ -42,11 +40,11 @@ export const showNotification = (
     dispatch(
       displayNotification(
         {
-          position: options.position || 'tr',
+          position: options?.position || 'tr',
           autoDismiss: ['error', 'warning'].includes(level) ? 0 : 5,
           dismissible: ['error', 'warning'].includes(level)
-            ? ('button' as any) // bug in @types/react-notification-system-redux types
-            : ('click' as any),
+            ? 'button'
+            : 'click',
           ...options,
         },
         level

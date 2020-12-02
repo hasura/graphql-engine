@@ -831,9 +831,18 @@ export const getTrackFunctionQuery = (
   name: string,
   schema: string,
   type: string,
-  configuration: Record<string, any> | undefined | null
+  configuration: Record<string, any> | undefined | null,
+  asQuery?: boolean
 ) => {
-  if (type.toLowerCase() === 'volatile' || configuration) {
+  let volatileConf: Record<string, boolean | string> | null = null;
+  if (type.toLowerCase() === 'volatile') {
+    if (asQuery) {
+      volatileConf = { expose_as: 'query' };
+    }
+    volatileConf = { as_mutation: true };
+  }
+
+  if (configuration || volatileConf) {
     return {
       type: 'track_function',
       version: 2,
@@ -843,7 +852,7 @@ export const getTrackFunctionQuery = (
           schema,
         },
         configuration: {
-          ...(type.toLowerCase() === 'volatile' && { as_mutation: true }),
+          ...volatileConf,
           ...configuration,
         },
       },

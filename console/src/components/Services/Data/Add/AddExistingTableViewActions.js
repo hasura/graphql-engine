@@ -1,3 +1,6 @@
+import React from 'react';
+import { removeAll } from 'react-notification-system-redux';
+
 import defaultState from './AddExistingTableViewState';
 import _push from '../push';
 import {
@@ -5,7 +8,11 @@ import {
   fetchTrackedFunctions,
   makeMigrationCall,
 } from '../DataActions';
-import { showSuccessNotification } from '../../Common/Notification';
+import {
+  showSuccessNotification,
+  showNotification,
+  NotificationButton,
+} from '../../Common/Notification';
 import {
   getSchemaBaseRoute,
   getTableBrowseRoute,
@@ -91,10 +98,112 @@ const addExistingTableSql = () => {
   };
 };
 
+const trackVolatileFuncAsQuery = (name, ...reqArgs) => (dispatch, getState) => {
+  dispatch(removeAll());
+  const currentSchema = getState().tables.currentSchema;
+
+  const requestBodyUp = getTrackFunctionQuery(
+    name,
+    currentSchema,
+    'volatile',
+    {},
+    true
+  );
+
+  const requestBodyDown = {
+    type: 'untrack_function',
+    args: {
+      name,
+      schema: currentSchema,
+    },
+  };
+  const migration = new Migration();
+  migration.add(requestBodyUp, requestBodyDown);
+
+  const migrationName = 'add_existing_function ' + currentSchema + '_' + name;
+
+  const makeCall = () =>
+    makeMigrationCall(
+      dispatch,
+      getState,
+      migration.upMigration,
+      migration.downMigration,
+      migrationName,
+      ...reqArgs
+    );
+
+  dispatch(
+    showNotification(
+      {
+        title:
+          'Queries are supposed to be read only and hence recommended to be STABLE or IMMUTABLE',
+        level: 'warning',
+        message: 'Are you sure?',
+        autoDismiss: 0,
+        children: (
+          <div>
+            <NotificationButton onClick={makeCall} type="warning">
+              Continue
+            </NotificationButton>
+          </div>
+        ),
+      },
+      'warning'
+    )
+  );
+};
+
+const trackVolatileFunction = (name, migration, migrationName, ...reqArgs) => {
+  return (dispatch, getState) => {
+    const trackAsMutation = () => {
+      dispatch(showSuccessNotification('Adding an function...'));
+      makeMigrationCall(
+        dispatch,
+        getState,
+        migration.upMigration,
+        migration.downMigration,
+        migrationName,
+        ...reqArgs
+      );
+    };
+
+    dispatch(
+      showNotification(
+        {
+          title:
+            'It will be tracked as mutation, because the function is VOLATILE',
+          level: 'warning',
+          autoDismiss: 0,
+          uid: 'track-volatile-func',
+          children: (
+            <div>
+              <NotificationButton onClick={trackAsMutation} type="warning">
+                Continue
+              </NotificationButton>
+              <NotificationButton
+                type="warning"
+                onClick={() =>
+                  dispatch(trackVolatileFuncAsQuery(name, ...reqArgs))
+                }
+                style={{
+                  marginLeft: '15px',
+                }}
+              >
+                Add as query
+              </NotificationButton>
+            </div>
+          ),
+        },
+        'warning'
+      )
+    );
+  };
+};
+
 const addExistingFunction = name => {
   return (dispatch, getState) => {
     dispatch({ type: MAKING_REQUEST });
-    dispatch(showSuccessNotification('Adding an function...'));
+
     const currentSchema = getState().tables.currentSchema;
 
     const func =
@@ -134,6 +243,23 @@ const addExistingFunction = name => {
       dispatch({ type: REQUEST_ERROR, data: err });
     };
 
+    if (func.function_type.toLowerCase() === 'volatile') {
+      dispatch(
+        trackVolatileFunction(
+          name,
+          migration,
+          migrationName,
+          customOnSuccess,
+          customOnError,
+          requestMsg,
+          successMsg,
+          errorMsg
+        )
+      );
+      return;
+    }
+
+    dispatch(showSuccessNotification('Adding an function...'));
     makeMigrationCall(
       dispatch,
       getState,
