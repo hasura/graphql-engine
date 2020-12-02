@@ -142,7 +142,11 @@ const trackVolatileFuncAsQuery = (name, ...reqArgs) => (dispatch, getState) => {
         autoDismiss: 0,
         children: (
           <div>
-            <NotificationButton onClick={makeCall} type="warning">
+            <NotificationButton
+              data-test="track-as-query-confirm"
+              onClick={makeCall}
+              type="warning"
+            >
               Continue
             </NotificationButton>
           </div>
@@ -177,10 +181,15 @@ const trackVolatileFunction = (name, migration, migrationName, ...reqArgs) => {
           uid: 'track-volatile-func',
           children: (
             <div>
-              <NotificationButton onClick={trackAsMutation} type="warning">
+              <NotificationButton
+                data-test="track-as-mutation"
+                onClick={trackAsMutation}
+                type="warning"
+              >
                 Continue
               </NotificationButton>
               <NotificationButton
+                data-test="track-as-query"
                 type="warning"
                 onClick={() =>
                   dispatch(trackVolatileFuncAsQuery(name, ...reqArgs))

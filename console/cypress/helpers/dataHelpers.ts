@@ -122,6 +122,27 @@ export const testCustomFunctionSQLWithSessArg = (
     ],
   };
 };
+
+export const createVolatileFunction = (name: string) => {
+  return {
+    type: 'bulk',
+    args: [
+      {
+        type: 'run_sql',
+        args: {
+          sql: `CREATE OR REPLACE  FUNCTION public.${name}()
+          RETURNS SETOF text_result
+          LANGUAGE sql
+          AS $function$
+            SELECT * FROM text_result;
+          $function$`,
+          cascade: false,
+        },
+      },
+    ],
+  };
+};
+
 export const getTrackFnPayload = (name = 'customfunctionwithsessionarg') => ({
   type: 'bulk',
   args: [
@@ -134,6 +155,7 @@ export const getTrackFnPayload = (name = 'customfunctionwithsessionarg') => ({
     },
   ],
 });
+
 export const createTable = () => {
   return {
     type: 'bulk',
@@ -156,7 +178,7 @@ export const createTable = () => {
     ],
   };
 };
-export const createTableSessVar = () => {
+export const createSampleTable = () => {
   return {
     type: 'bulk',
     args: [

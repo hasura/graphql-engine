@@ -6,9 +6,10 @@ import {
   testCustomFunctionSQL,
   createTable,
   dropTable,
-  createTableSessVar,
   testCustomFunctionSQLWithSessArg,
   getTrackFnPayload,
+  createSampleTable,
+  createVolatileFunction,
 } from '../../../helpers/dataHelpers';
 
 import {
@@ -60,7 +61,7 @@ export const trackFunction = () => {
 export const testSessVariable = () => {
   // Round about way to create a function
   const fN = 'customFunctionWithSessionArg'.toLowerCase(); // for reading
-  dataRequest(createTableSessVar(), ResultType.SUCCESS);
+  dataRequest(createSampleTable(), ResultType.SUCCESS);
   createFunctionRequest(
     testCustomFunctionSQLWithSessArg(fN),
     ResultType.SUCCESS
@@ -99,6 +100,34 @@ export const testSessVariable = () => {
   );
   dropTableRequest(dropTable('text_result', true), ResultType.SUCCESS);
   cy.wait(2000);
+};
+
+export const trackVolatileFunction = () => {
+  const fN = 'customVolatileFunc'.toLowerCase();
+  dataRequest(createSampleTable(), ResultType.SUCCESS);
+  createFunctionRequest(createVolatileFunction(fN), ResultType.SUCCESS);
+  cy.wait(1500);
+  cy.visit(`data/schema/public`);
+  cy.get(getElementFromAlias(`add-track-function-${fN}`)).click();
+  cy.get(getElementFromAlias('track-as-mutation')).click();
+  cy.wait(500);
+  cy.url().should('eq', `${baseUrl}/data/schema/public/functions/${fN}/modify`);
+  dropTableRequest(dropTable('text_result', true), ResultType.SUCCESS);
+};
+
+export const trackVolatileFunctionAsQuery = () => {
+  const fN = 'customVolatileFunc'.toLowerCase();
+  dataRequest(createSampleTable(), ResultType.SUCCESS);
+  createFunctionRequest(createVolatileFunction(fN), ResultType.SUCCESS);
+  cy.wait(1500);
+  cy.visit(`data/schema/public`);
+  cy.get(getElementFromAlias(`add-track-function-${fN}`)).click();
+  cy.get(getElementFromAlias('track-as-query')).click();
+  cy.wait(100);
+  cy.get(getElementFromAlias('track-as-query-confirm')).click();
+  cy.wait(500);
+  cy.url().should('eq', `${baseUrl}/data/schema/public/functions/${fN}/modify`);
+  dropTableRequest(dropTable('text_result', true), ResultType.SUCCESS);
 };
 
 export const verifyPermissionTab = () => {
