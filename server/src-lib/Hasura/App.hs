@@ -4,7 +4,7 @@
 module Hasura.App where
 
 import           Control.Concurrent.STM.TVar               (TVar, readTVarIO)
-import           Control.Exception                         (throwIO)
+import           Control.Exception                         (bracket_, throwIO)
 import           Control.Monad.Base
 import           Control.Monad.Catch                       (Exception, MonadCatch, MonadMask,
                                                             MonadThrow, onException)
@@ -77,6 +77,7 @@ import qualified Hasura.GraphQL.Execute.LiveQuery.Poll     as EL
 import qualified Hasura.GraphQL.Transport.WebSocket.Server as WS
 import qualified Hasura.Tracing                            as Tracing
 import qualified System.Metrics                            as EKG
+import qualified System.Metrics.Gauge                      as EKG.Gauge
 
 
 data ExitCode
@@ -292,6 +293,17 @@ shutdownGracefully = flip C.putMVar () . unShutdownLatch
 flushLogger :: MonadIO m => LoggerCtx impl -> m ()
 flushLogger = liftIO . FL.flushLogStr . _lcLoggerSet
 
+data ServerMetrics
+  = ServerMetrics
+  { smWarpThreads :: !EKG.Gauge.Gauge
+  }
+
+createServerMetrics :: EKG.Store -> IO ServerMetrics
+createServerMetrics store = do
+  smWarpThreads <- EKG.createGauge "warp_threads" store
+  pure ServerMetrics { .. }
+
+{- HLINT ignore runHGEServer "Avoid lambda" -}
 runHGEServer
   :: ( HasVersion
      , MonadIO m
@@ -322,9 +334,10 @@ runHGEServer
   -> IO ()
   -- ^ shutdown function
   -> Maybe EL.LiveQueryPostPollHook
+  -> ServerMetrics
   -> EKG.Store
   -> m ()
-runHGEServer env ServeOptions{..} ServeCtx{..} pgExecCtx initTime shutdownApp postPollHook ekgStore = do
+runHGEServer env ServeOptions{..} ServeCtx{..} pgExecCtx initTime shutdownApp postPollHook serverMetrics ekgStore = do
   -- Comment this to enable expensive assertions from "GHC.AssertNF". These
   -- will log lines to STDOUT containing "not in normal form". In the future we
   -- could try to integrate this into our tests. For now this is a development
@@ -447,10 +460,21 @@ runHGEServer env ServeOptions{..} ServeCtx{..} pgExecCtx initTime shutdownApp po
   shutdownHandler' <- liftWithStateless $ \lowerIO ->
     pure $ shutdownHandler _scLoggers immortalThreads stopWsServer lockedEventsCtx _scPgPool $
            \a b -> hoist lowerIO $ unlockScheduledEvents a b
+           
+  -- Install a variant of forkIOWithUnmask which tracks Warp threads using an EKG metric
+  let setForkIOWithMetrics :: Warp.Settings -> Warp.Settings
+      setForkIOWithMetrics = Warp.setFork \f -> do
+        void $ C.forkIOWithUnmask (\unmask ->
+          bracket_ 
+            (EKG.Gauge.inc $ smWarpThreads serverMetrics)
+            (EKG.Gauge.dec $ smWarpThreads serverMetrics)
+              (f unmask))
+  
   let warpSettings = Warp.setPort soPort
                      . Warp.setHost soHost
                      . Warp.setGracefulShutdownTimeout (Just 30) -- 30s graceful shutdown
                      . Warp.setInstallShutdownHandler shutdownHandler'
+                     . setForkIOWithMetrics
                      $ Warp.defaultSettings
   liftIO $ Warp.runSettings warpSettings app
 
@@ -648,7 +672,7 @@ instance HttpLog PGMetadataStorageApp where
       mkHttpAccessLogContext userInfoM reqId waiReq compressedResponse qTime cType headers
 
 instance MonadExecuteQuery PGMetadataStorageApp where
-  cacheLookup _ _ = pure ([], Nothing)
+  cacheLookup _ _ _ = pure ([], Nothing)
   cacheStore  _ _ = pure ()
 
 instance UserAuthentication (Tracing.TraceT PGMetadataStorageApp) where

@@ -46,7 +46,7 @@ import           Hasura.Backends.Postgres.SQL.Value          (PGScalarValue (..)
 import           Hasura.Backends.Postgres.Translate.Select   (asSingleRowJsonResp)
 import           Hasura.EncJSON
 import           Hasura.GraphQL.Execute.Prepare
-import           Hasura.GraphQL.Parser                       hiding (column)
+import           Hasura.GraphQL.Parser
 import           Hasura.GraphQL.Utils                        (showNames)
 import           Hasura.HTTP
 import           Hasura.RQL.DDL.Headers

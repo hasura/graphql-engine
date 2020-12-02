@@ -379,9 +379,6 @@ class TestGraphqlUpdateBasic:
     def test_column_in_multiple_operators(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + "/article_column_multiple_operators.yaml")
 
-    def test_column_in_multiple_operators(self, hge_ctx):
-        check_query_f(hge_ctx, self.dir() + "/article_column_multiple_operators.yaml")
-
     def test_author_by_pk(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + "/author_by_pk.yaml")
 

@@ -19,8 +19,6 @@ import           Control.Lens                        hiding (set, (.=))
 import           Data.Aeson.Casing
 import           Data.Aeson.TH
 import           Data.Aeson.Types
-import           Language.Haskell.TH.Syntax          (Lift)
-
 
 import           Hasura.Backends.Postgres.SQL.Types
 import           Hasura.Incremental                  (Cacheable)
@@ -165,7 +163,7 @@ parseListAsMap t mapFn listP = do
 data MetadataVersion
   = MVVersion1
   | MVVersion2
-  deriving (Show, Eq, Lift, Generic)
+  deriving (Show, Eq, Generic)
 
 instance ToJSON MetadataVersion where
   toJSON = \case
@@ -188,7 +186,7 @@ data ComputedFieldMetadata
   { _cfmName       :: !ComputedFieldName
   , _cfmDefinition :: !ComputedFieldDefinition
   , _cfmComment    :: !(Maybe Text)
-  } deriving (Show, Eq, Lift, Generic)
+  } deriving (Show, Eq, Generic)
 instance Cacheable ComputedFieldMetadata
 $(deriveJSON (aesonDrop 4 snakeCase) ''ComputedFieldMetadata)
 
@@ -196,7 +194,7 @@ data RemoteRelationshipMetadata
   = RemoteRelationshipMetadata
   { _rrmName       :: !RemoteRelationshipName
   , _rrmDefinition :: !RemoteRelationshipDef
-  } deriving (Show, Eq, Lift, Generic)
+  } deriving (Show, Eq, Generic)
 instance Cacheable RemoteRelationshipMetadata
 $(deriveJSON (aesonDrop 4 snakeCase) ''RemoteRelationshipMetadata)
 $(makeLenses ''RemoteRelationshipMetadata)
@@ -278,7 +276,7 @@ data FunctionMetadata
   = FunctionMetadata
   { _fmFunction      :: !QualifiedFunction
   , _fmConfiguration :: !FunctionConfig
-  } deriving (Show, Eq, Lift, Generic)
+  } deriving (Show, Eq, Generic)
 instance Cacheable FunctionMetadata
 $(makeLenses ''FunctionMetadata)
 $(deriveToJSON (aesonDrop 3 snakeCase) ''FunctionMetadata)

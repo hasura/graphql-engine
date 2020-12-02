@@ -8,7 +8,7 @@ import           Data.Aeson.Internal
 import           Data.Char
 import           Data.Text.Extended
 import           Hasura.Server.Types
-import           Language.Haskell.TH.Syntax (Lift, Q, TExp)
+import           Language.Haskell.TH.Syntax (Q, TExp)
 import           System.Environment
 import           System.Exit
 import           System.Process
@@ -213,7 +213,7 @@ applyFirst f (x:xs) = f x: xs
 data APIVersion
   = VIVersion1
   | VIVersion2
-  deriving (Show, Eq, Lift)
+  deriving (Show, Eq)
 
 instance ToJSON APIVersion where
   toJSON VIVersion1 = toJSON @Int 1

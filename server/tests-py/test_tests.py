@@ -4,12 +4,17 @@
 # tests are running correctly, or test our python test helpers.
 
 import pytest
-from validate import check_query_f, collapse_order_not_selset
+from validate import (
+    check_query_f,
+    collapse_order_not_selset,
+    validate_http_anyq_with_allowed_responses,
+)
 from ruamel.yaml.comments import CommentedMap
 
 usefixtures = pytest.mark.usefixtures
 
-@usefixtures('per_class_tests_db_state')
+
+@usefixtures("per_class_tests_db_state")
 class TestTests1:
     """
     Test various things about our test framework code. Validate that tests work
@@ -161,3 +166,90 @@ class TestTests2:
     @classmethod
     def dir(cls):
         return 'queries/graphql_query/permissions'
+    
+@usefixtures("per_class_tests_db_state")
+class TestTests3:
+
+    """
+    This test case is about testing validate_http_anyq_with_allowed_responses
+    with an empty list of allowed responses wherein it should throw an exception
+    """
+
+    @pytest.mark.xfail(reason="expected, validating function working")
+    def test_tests_validate_http_anyq_with_allowed_responses_with_empty_list(
+        self, hge_ctx
+    ):
+        # These values are being set as they are in address_not_null_constraint_error.yaml
+
+        url = "/v1/graphql"
+        query = {
+            "query": 'mutation {\n  insert_address(objects: [{street: "koramangala"}]){\n    returning{\n      id\n      street\n    }\n    affected_rows\n  }\n} \n'
+        }
+
+        try:
+            resp, pass_test = validate_http_anyq_with_allowed_responses(
+                hge_ctx, url, query, {}, 200, []
+            )
+        except:
+            print("FAIL!")
+            assert 0, "Test failure, occurs as expected"
+        # It reaches here only if the exception wasn't caught, in which case
+        # this current test should fail  
+
+    """
+      This test case is about testing validate_http_anyq_with_allowed_responses
+      with a list of allowed responses which are incorrect wherein it should fail the test
+    """
+
+    @pytest.mark.xfail(reason="expected, validating test code")
+    def test_tests_validate_http_anyq_with_allowed_responses_with_no_correct_response(
+        self, hge_ctx
+    ):
+        # These values are being set as they are in address_not_null_constraint_error.yaml
+
+        url = "/v1/graphql"
+        query = {
+            "query": 'mutation {\n  insert_address(objects: [{street: "koramangala"}]){\n    returning{\n      id\n      street\n    }\n    affected_rows\n  }\n} \n'
+        }
+        allowed_response_1 = {
+            "response": {
+                "errors": [
+                    {
+                        "extensions": {
+                            "code": "constraint-violation",
+                            "path": "$.selectionSet.insert_address.args.objects",
+                        },
+                        "message": 'Not-NULL. null value in column "door_no" violates not-null constraint',
+                    }
+                ]
+            }
+        }
+        allowed_response_2 = {
+            "response": {
+                "errors": [
+                    {
+                        "extensions": {
+                            "code": "constraint-violation",
+                            "path": "$.selectionSet.insert_address.args.objects",
+                        },
+                        "message": 'Not-NULL violation. null value in column "door_no" of relation "address" not-null constraint',
+                    }
+                ]
+            }
+        }
+        allowed_responses = [allowed_response_1, allowed_response_2]
+
+        try:
+            resp, err = validate_http_anyq_with_allowed_responses(
+                hge_ctx, url, query, {}, 200, allowed_responses
+            )
+        except:
+            print("FAIL!")
+            assert 0, "Test failed, as expected"
+            
+            
+
+    # Re-use setup and teardown from where we adapted this test case:
+    @classmethod
+    def dir(cls):
+        return "queries/graphql_mutation/insert/constraints"

@@ -46,7 +46,6 @@ import qualified Text.Regex.TDFA                as TDFA
 import           Data.Aeson
 import           Data.Aeson.Casing
 import           Data.Aeson.TH
-import           Language.Haskell.TH.Syntax     (Lift)
 
 import           Hasura.EncJSON
 import           Hasura.RQL.DDL.Schema.Cache
@@ -64,7 +63,7 @@ data RunSQL
   , rCascade                  :: !Bool
   , rCheckMetadataConsistency :: !(Maybe Bool)
   , rTxAccessMode             :: !Q.TxAccess
-  } deriving (Show, Eq, Lift)
+  } deriving (Show, Eq)
 
 instance FromJSON RunSQL where
   parseJSON = withObject "RunSQL" $ \o -> do

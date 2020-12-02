@@ -482,11 +482,13 @@ library
                      , Hasura.GraphQL.Parser.Schema
                      , Hasura.GraphQL.Schema
                      , Hasura.GraphQL.Schema.Action
+                     , Hasura.GraphQL.Schema.Backend
                      , Hasura.GraphQL.Schema.BoolExp
                      , Hasura.GraphQL.Schema.Common
                      , Hasura.GraphQL.Schema.Introspect
                      , Hasura.GraphQL.Schema.Mutation
                      , Hasura.GraphQL.Schema.OrderBy
+                     , Hasura.GraphQL.Schema.Postgres
                      , Hasura.GraphQL.Schema.Remote
                      , Hasura.GraphQL.Schema.Select
                      , Hasura.GraphQL.Schema.Table

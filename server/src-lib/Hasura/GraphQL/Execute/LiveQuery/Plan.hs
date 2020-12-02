@@ -298,20 +298,20 @@ resolveMultiplexedValue = \case
         syntheticVarIndex <- use (qpiSyntheticVariableValues . to length)
         modifying qpiSyntheticVariableValues (|> colVal)
         pure ["synthetic", T.pack $ show syntheticVarIndex]
-    pure $ fromResVars (PGTypeScalar $ pstType $ cvValue colVal) varJsonPath
+    pure $ fromResVars (CollectableTypeScalar $ pstType $ cvValue colVal) varJsonPath
   UVSessionVar ty sessVar -> do
     modifying qpiReferencedSessionVariables (Set.insert sessVar)
     pure $ fromResVars ty ["session", sessionVariableToText sessVar]
   UVLiteral sqlExp -> pure sqlExp
-  UVSession -> pure $ fromResVars (PGTypeScalar PGJSON) ["session"]
+  UVSession -> pure $ fromResVars (CollectableTypeScalar PGJSON) ["session"]
   where
     fromResVars pgType jPath = addTypeAnnotation pgType $ S.SEOpApp (S.SQLOp "#>>")
       [ S.SEQIdentifier $ S.QIdentifier (S.QualifiedIdentifier (Identifier "_subs") Nothing) (Identifier "result_vars")
       , S.SEArray $ map S.SELit jPath
       ]
     addTypeAnnotation pgType = flip S.SETyAnn (S.mkTypeAnn pgType) . case pgType of
-      PGTypeScalar scalarType -> withConstructorFn scalarType
-      PGTypeArray _           -> id
+      CollectableTypeScalar scalarType -> withConstructorFn scalarType
+      CollectableTypeArray _           -> id
 
 -- -----------------------------------------------------------------------------------
 -- Live query plans

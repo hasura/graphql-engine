@@ -367,9 +367,10 @@ onStart env serverEnv wsConn (StartMsg opId q) = catchAndIgnore $ do
   case execPlan of
     E.QueryExecutionPlan queryPlan asts -> Tracing.trace "Query" $ do
       let cacheKey = QueryCacheKey reqParsed $ _uiRole userInfo
+          redactedPlan = fmap (fmap (fmap EQ._psRemoteJoins . snd)) queryPlan
       -- We ignore the response headers (containing TTL information) because
       -- WebSockets don't support them.
-      (_responseHeaders, cachedValue) <- Tracing.interpTraceT (withExceptT mempty) $ cacheLookup asts cacheKey
+      (_responseHeaders, cachedValue) <- Tracing.interpTraceT (withExceptT mempty) $ cacheLookup asts redactedPlan cacheKey
       case cachedValue of
         Just cachedResponseData -> do
           sendSuccResp cachedResponseData $ LQ.LiveQueryMetadata 0

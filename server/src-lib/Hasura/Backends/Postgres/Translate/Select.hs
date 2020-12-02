@@ -18,7 +18,6 @@ import qualified Database.PG.Query                          as Q
 import           Control.Lens                               hiding (op)
 import           Control.Monad.Writer.Strict
 import           Data.Text.Extended
-import           Instances.TH.Lift                          ()
 
 import qualified Hasura.Backends.Postgres.SQL.DML           as S
 
@@ -27,7 +26,7 @@ import           Hasura.Backends.Postgres.SQL.Types
 import           Hasura.Backends.Postgres.Translate.BoolExp
 import           Hasura.Backends.Postgres.Translate.Types
 import           Hasura.EncJSON
-import           Hasura.GraphQL.Schema.Common
+import           Hasura.GraphQL.Schema.Common               (nodeIdVersionInt, currentNodeIdVersion)
 import           Hasura.RQL.DML.Internal
 import           Hasura.RQL.IR.OrderBy
 import           Hasura.RQL.IR.Select

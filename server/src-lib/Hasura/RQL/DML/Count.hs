@@ -12,7 +12,6 @@ import qualified Data.ByteString.Builder                    as BB
 import qualified Data.Sequence                              as DS
 
 import           Data.Aeson
-import           Instances.TH.Lift                          ()
 
 import qualified Database.PG.Query                          as Q
 import qualified Hasura.Backends.Postgres.SQL.DML           as S
