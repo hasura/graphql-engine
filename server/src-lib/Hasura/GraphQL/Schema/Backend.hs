@@ -11,7 +11,7 @@ import qualified Hasura.RQL.IR.Select         as IR
 
 import           Language.GraphQL.Draft.Syntax         (Nullability, Name)
 import           Hasura.GraphQL.Parser        ( InputFieldsParser, Kind (..), Parser
-                                              , UnpreparedValue (..), Opaque, ColumnValue
+                                              , UnpreparedValue (..), Opaque
                                               , Definition, EnumValueInfo, FieldParser)
 import           Hasura.GraphQL.Parser.Class
 import           Hasura.GraphQL.Schema.Common
@@ -51,7 +51,7 @@ class Backend b => BackendSchema (b :: BackendType) where
     :: (MonadError QErr m)
     => ColumnType b
     -> Value
-    -> m (ColumnValueType b)
+    -> m (ScalarValue b)
   -- TODO: THIS IS A TEMPORARY FIX
   -- while offset is exposed in the schema as a GraphQL Int, which
   -- is a bounded Int32, previous versions of the code used to also

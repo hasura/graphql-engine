@@ -511,6 +511,9 @@ class TestGraphqlDeletePermissions:
     def test_agent_delete_perm_arr_sess_var_fail(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + "/agent_delete_perm_arr_sess_var_fail.yaml")
 
+    def test_user_delete_author(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + "/user_delete_author.yaml")
+
     def test_user_delete_account_success(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + "/user_delete_account_success.yaml")
 

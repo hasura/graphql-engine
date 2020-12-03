@@ -41,7 +41,6 @@ module Hasura.Backends.Postgres.SQL.Types
   , isGraphQLCompliantTableName
 
   , PGScalarType(..)
-  , WithScalarType(..)
   , textToPGScalarType
   , pgTypeOid
 
@@ -480,12 +479,6 @@ geoTypes = [PGGeometry, PGGeography]
 
 isGeoType :: PGScalarType -> Bool
 isGeoType = (`elem` geoTypes)
-
-data WithScalarType a
-  = WithScalarType
-  { pstType  :: !PGScalarType
-  , pstValue :: !a
-  } deriving (Show, Eq, Functor, Foldable, Traversable)
 
 data PGTypeKind
   = PGKindBase

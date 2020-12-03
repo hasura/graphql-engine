@@ -7,7 +7,8 @@ args:
     sql: |
       create table author(
           id serial primary key,
-          name text unique
+          name text unique,
+          user_id int
       );
 - type: track_table
   args:
@@ -91,7 +92,7 @@ args:
     table: author
     role: user
     permission:
-      columns: '*'
+      columns: [id, name]
       filter:
         id: X-HASURA-USER-ID
 

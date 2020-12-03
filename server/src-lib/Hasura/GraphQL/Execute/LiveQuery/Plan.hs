@@ -54,6 +54,7 @@ import           Hasura.Backends.Postgres.Connection
 import           Hasura.Backends.Postgres.SQL.Error
 import           Hasura.Backends.Postgres.SQL.Types
 import           Hasura.Backends.Postgres.SQL.Value
+import           Hasura.Backends.Postgres.Translate.Column   (toTxtValue)
 import           Hasura.GraphQL.Context
 import           Hasura.GraphQL.Execute.Action
 import           Hasura.GraphQL.Execute.Query
@@ -248,17 +249,17 @@ type ValidatedSyntheticVariables = ValidatedVariables []
 validateVariables
   :: (Traversable f, MonadError QErr m, MonadIO m)
   => PGExecCtx
-  -> f (WithScalarType PGScalarValue)
+  -> f (ColumnValue 'Postgres)
   -> m (ValidatedVariables f)
 validateVariables pgExecCtx variableValues = do
   let valSel = mkValidationSel $ toList variableValues
   Q.Discard () <- runQueryTx_ $ liftTx $
     Q.rawQE dataExnErrHandler (Q.fromBuilder $ toSQL valSel) [] False
-  pure . ValidatedVariables $ fmap (txtEncodedPGVal . pstValue) variableValues
+  pure . ValidatedVariables $ fmap (txtEncodedPGVal . cvValue) variableValues
   where
-    mkExtrs = map (flip S.Extractor Nothing . toTxtValue)
+    mkExtr = flip S.Extractor Nothing . toTxtValue
     mkValidationSel vars =
-      S.mkSelect { S.selExtr = mkExtrs vars }
+      S.mkSelect { S.selExtr = map mkExtr vars }
     runQueryTx_ tx = do
       res <- liftIO $ runExceptT (runQueryTx pgExecCtx tx)
       liftEither res
@@ -289,7 +290,7 @@ resolveMultiplexedValue
   :: (MonadState QueryParametersInfo m)
   => UnpreparedValue 'Postgres -> m S.SQLExp
 resolveMultiplexedValue = \case
-  UVParameter colVal varM -> do
+  UVParameter varM colVal -> do
     varJsonPath <- case fmap PS.getName varM of
       Just varName -> do
         modifying qpiReusableVariableValues $ Map.insert varName colVal
@@ -298,7 +299,7 @@ resolveMultiplexedValue = \case
         syntheticVarIndex <- use (qpiSyntheticVariableValues . to length)
         modifying qpiSyntheticVariableValues (|> colVal)
         pure ["synthetic", T.pack $ show syntheticVarIndex]
-    pure $ fromResVars (CollectableTypeScalar $ pstType $ cvValue colVal) varJsonPath
+    pure $ fromResVars (CollectableTypeScalar $ unsafePGColumnToBackend $ cvType colVal) varJsonPath
   UVSessionVar ty sessVar -> do
     modifying qpiReferencedSessionVariables (Set.insert sessVar)
     pure $ fromResVars ty ["session", sessionVariableToText sessVar]
@@ -374,8 +375,8 @@ buildLiveQueryPlan pgExecCtx userInfo unpreparedAST = do
   -- We need to ensure that the values provided for variables are correct according to Postgres.
   -- Without this check an invalid value for a variable for one instance of the subscription will
   -- take down the entire multiplexed query.
-  validatedQueryVars <- validateVariables pgExecCtx $ fmap cvValue _qpiReusableVariableValues
-  validatedSyntheticVars <- validateVariables pgExecCtx $ map cvValue $ toList _qpiSyntheticVariableValues
+  validatedQueryVars <- validateVariables pgExecCtx _qpiReusableVariableValues
+  validatedSyntheticVars <- validateVariables pgExecCtx $ toList _qpiSyntheticVariableValues
 
   let -- TODO validatedQueryVars validatedSyntheticVars
       cohortVariables = mkCohortVariables _qpiReferencedSessionVariables

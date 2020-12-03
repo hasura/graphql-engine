@@ -704,7 +704,7 @@ tableConnectionArgs pkeyColumns table selectPermissions = do
             pgColumnValue <- iResultToMaybe (executeJSONPath columnJsonPath cursorValue)
               `onNothing` throwInvalidCursor
             pgValue <- liftQErr $ parseScalarValue columnType pgColumnValue
-            let unresolvedValue = flip UVParameter Nothing $ P.ColumnValue columnType pgValue
+            let unresolvedValue = UVParameter Nothing $ ColumnValue columnType pgValue
             pure $ IR.ConnectionSplit splitKind unresolvedValue $
                    IR.OrderByItemG Nothing (IR.AOCColumn pgColumnInfo) Nothing
         Just orderBys ->
@@ -714,7 +714,7 @@ tableConnectionArgs pkeyColumns table selectPermissions = do
             orderByItemValue <- iResultToMaybe (executeJSONPath (getPathFromOrderBy annObCol) cursorValue)
               `onNothing` throwInvalidCursor
             pgValue <- liftQErr $ parseScalarValue columnType orderByItemValue
-            let unresolvedValue = flip UVParameter Nothing $ P.ColumnValue columnType pgValue
+            let unresolvedValue = UVParameter Nothing $ ColumnValue columnType pgValue
             pure $ IR.ConnectionSplit splitKind unresolvedValue $
                    IR.OrderByItemG orderType (() <$ annObCol) nullsOrder
       where
@@ -1307,5 +1307,5 @@ nodeField = do
                                 <<> " in node id: " <> t
                 pgColumnType = pgiType columnInfo
             pgValue <- modifyErr modifyErrFn $ parseScalarValue pgColumnType columnValue
-            let unpreparedValue = flip UVParameter Nothing $ P.ColumnValue pgColumnType pgValue
+            let unpreparedValue = UVParameter Nothing $ ColumnValue pgColumnType pgValue
             pure $ IR.BoolFld $ IR.AVCol columnInfo [IR.AEQ True unpreparedValue]

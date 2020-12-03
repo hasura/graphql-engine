@@ -82,7 +82,7 @@ actionQueryToRootFieldPlan prepped = \case
 --       let varName = G.unName var
 --       colVal <- onNothing (Map.lookup var annVars) $
 --         throw500 $ "missing variable in annVars : " <> varName
---       let prepVal = (toBinaryValue colVal, pstValue colVal)
+--       let prepVal = (binEncoder colVal, pstValue colVal)
 --       return $ IntMap.insert prepNo prepVal accum
 
 

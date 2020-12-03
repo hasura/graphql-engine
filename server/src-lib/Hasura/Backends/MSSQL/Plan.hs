@@ -25,6 +25,7 @@ import           Hasura.Backends.MSSQL.FromIr       as TSQL
 import           Hasura.Backends.MSSQL.Types        as TSQL
 import           Hasura.Prelude ()
 import qualified Hasura.RQL.Types.Action            as RQL
+import qualified Hasura.RQL.Types.Column            as RQL
 import           Hasura.GraphQL.Context
 import           Hasura.SQL.Backend
 
@@ -129,7 +130,7 @@ data PrepareError
 
 data PrepareState = PrepareState
   { positionalArguments :: !Integer
-  , namedArguments      :: !(HashMap G.Name (GraphQL.ColumnValue 'MSSQL))
+  , namedArguments      :: !(HashMap G.Name (RQL.ColumnValue 'MSSQL))
   }
 
 emptyPrepareState :: PrepareState
@@ -144,7 +145,7 @@ prepareValueNoPlan =
     GraphQL.UVLiteral x -> pure x
     GraphQL.UVSession -> pure (JsonQueryExpression globalSessionExpression)
     GraphQL.UVSessionVar _typ _text -> Left SessionVarNotSupported
-    GraphQL.UVParameter GraphQL.ColumnValue{..} _ -> pure $ ValueExpression cvValue
+    GraphQL.UVParameter _ RQL.ColumnValue{..} -> pure $ ValueExpression cvValue
 
 -- | Prepare a value for multiplexed queries.
 prepareValueMultiplex ::
@@ -156,7 +157,7 @@ prepareValueMultiplex =
     GraphQL.UVSession ->
       pure (JsonQueryExpression globalSessionExpression)
     GraphQL.UVSessionVar _typ _text -> lift (Left SessionVarNotSupported)
-    GraphQL.UVParameter pgcolumnvalue mVariableInfo ->
+    GraphQL.UVParameter mVariableInfo pgcolumnvalue ->
       case fmap GraphQL.getName mVariableInfo of
         Nothing -> do
           index <- gets positionalArguments
