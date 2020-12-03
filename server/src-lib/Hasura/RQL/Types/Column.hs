@@ -14,6 +14,8 @@ module Hasura.RQL.Types.Column
   , unsafePGColumnToBackend
   , parseTxtEncodedPGValue
 
+  , ColumnValue(..)
+
   , ColumnInfo(..)
   , RawColumnInfo(..)
   , PrimaryKeyColumns
@@ -77,9 +79,10 @@ instance Backend b => FromJSON (EnumReference b) where
 instance Backend b => ToJSON (EnumReference b) where
   toJSON = genericToJSON $ aesonPrefix snakeCase
 
--- | The type we use for columns, which are currently always “scalars” (though see the note about
--- 'PGType'). Unlike 'PGScalarType', which represents a type that /Postgres/ knows about, this type
--- characterizes distinctions we make but Postgres doesn’t.
+-- | The type we use for columns, which are currently always “scalars” (though
+-- see the note about 'CollectableType'). Unlike 'ScalarType', which represents
+-- a type that a backend knows about, this type characterizes distinctions we
+-- make but the backend doesn’t.
 data ColumnType (b :: BackendType)
   -- | Ordinary Postgres columns.
   = ColumnScalar !(ScalarType b)
@@ -103,6 +106,11 @@ instance Backend b => ToTxt (ColumnType b) where
     ColumnScalar scalar                             -> toTxt scalar
     ColumnEnumReference (EnumReference tableName _) -> toTxt tableName
 
+data ColumnValue (b :: BackendType) = ColumnValue
+  { cvType  :: ColumnType b
+  , cvValue :: ScalarValue b
+  }
+
 isScalarColumnWhere :: (ScalarType b -> Bool) -> ColumnType b -> Bool
 isScalarColumnWhere f = \case
   ColumnScalar scalar   -> f scalar
@@ -111,19 +119,18 @@ isScalarColumnWhere f = \case
 -- | Gets the representation type associated with a 'ColumnType'. Avoid using this if possible.
 -- Prefer 'parsePGScalarValue', 'parsePGScalarValues', or
 -- 'Hasura.RQL.Types.BoolExp.mkTypedSessionVar'.
-unsafePGColumnToBackend :: ColumnType 'Postgres -> PGScalarType
+unsafePGColumnToBackend :: ColumnType 'Postgres -> ScalarType 'Postgres
 unsafePGColumnToBackend = \case
   ColumnScalar scalarType -> scalarType
   ColumnEnumReference _   -> PGText
 
 -- | Note: Unconditionally accepts null values and returns 'PGNull'.
 parsePGScalarValue
-  :: forall m. (MonadError QErr m) => ColumnType 'Postgres -> Value -> m (WithScalarType PGScalarValue)
+  :: forall m. (MonadError QErr m) => ColumnType 'Postgres -> Value -> m PGScalarValue
 parsePGScalarValue columnType value = case columnType of
-  ColumnScalar scalarType ->
-    WithScalarType scalarType <$> runAesonParser (parsePGValue scalarType) value
+  ColumnScalar scalarType -> runAesonParser (parsePGValue scalarType) value
   ColumnEnumReference (EnumReference tableName enumValues) ->
-    WithScalarType PGText <$> (maybe (pure $ PGNull PGText) parseEnumValue =<< decodeValue value)
+    maybe (pure $ PGNull PGText) parseEnumValue =<< decodeValue value
     where
       parseEnumValue :: G.Name -> m PGScalarValue
       parseEnumValue enumValueName = do
@@ -135,19 +142,17 @@ parsePGScalarValue columnType value = case columnType of
 
 parsePGScalarValues
   :: (MonadError QErr m)
-  => ColumnType 'Postgres -> [Value] -> m (WithScalarType [PGScalarValue])
-parsePGScalarValues columnType values = do
-  scalarValues <- indexedMapM (fmap pstValue . parsePGScalarValue columnType) values
-  pure $ WithScalarType (unsafePGColumnToBackend columnType) scalarValues
+  => ColumnType 'Postgres -> [Value] -> m [PGScalarValue]
+parsePGScalarValues columnType values =
+  indexedMapM (parsePGScalarValue columnType) values
 
 parseTxtEncodedPGValue
   :: (MonadError QErr m)
-  => ColumnType 'Postgres -> TxtEncodedPGVal -> m (WithScalarType PGScalarValue)
+  => ColumnType 'Postgres -> TxtEncodedPGVal -> m PGScalarValue
 parseTxtEncodedPGValue colTy val =
   parsePGScalarValue colTy $ case val of
     TENull  -> Null
     TELit t -> String t
-
 
 -- | “Raw” column info, as stored in the catalog (but not in the schema cache). Instead of
 -- containing a 'PGColumnType', it only contains a 'PGScalarType', which is combined with the

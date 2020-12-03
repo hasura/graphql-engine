@@ -21,6 +21,7 @@ import           Hasura.Backends.Postgres.SQL.Error
 import           Hasura.Backends.Postgres.SQL.Types
 import           Hasura.Backends.Postgres.SQL.Value
 import           Hasura.Backends.Postgres.Translate.BoolExp
+import           Hasura.Backends.Postgres.Translate.Column
 import           Hasura.RQL.Types
 import           Hasura.SQL.Types
 import           Hasura.Session
@@ -146,8 +147,8 @@ binRHSBuilder :: (QErrM m) => ColumnType 'Postgres -> Value -> DMLP1T m S.SQLExp
 binRHSBuilder colType val = do
   preparedArgs <- get
   scalarValue <- parsePGScalarValue colType val
-  put (preparedArgs DS.|> toBinaryValue scalarValue)
-  return $ toPrepParam (DS.length preparedArgs + 1) (pstType scalarValue)
+  put (preparedArgs DS.|> binEncoder scalarValue)
+  return $ toPrepParam (DS.length preparedArgs + 1) (unsafePGColumnToBackend colType)
 
 fetchRelTabInfo
   :: (QErrM m, CacheRM m)
@@ -259,10 +260,10 @@ convBoolExp cim spi be sessVarBldr prepValBldr = do
       CollectableTypeArray ofTy -> do
         -- for arrays, we don't use the prepared builder
         vals <- runAesonParser parseJSON val
-        WithScalarType scalarType scalarValues <- parsePGScalarValues ofTy vals
+        scalarValues <- parsePGScalarValues ofTy vals
         return $ S.SETyAnn
-          (S.SEArray $ map (toTxtValue . WithScalarType scalarType) scalarValues)
-          (S.mkTypeAnn $ CollectableTypeArray scalarType)
+          (S.SEArray $ map (toTxtValue . ColumnValue ofTy) scalarValues)
+          (S.mkTypeAnn $ CollectableTypeArray (unsafePGColumnToBackend ofTy))
 
 dmlTxErrorHandler :: Q.PGTxErr -> QErr
 dmlTxErrorHandler = mkTxErrorHandler $ \case
