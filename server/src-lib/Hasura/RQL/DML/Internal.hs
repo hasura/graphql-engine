@@ -42,7 +42,7 @@ mkAdminRolePermInfo ti =
   where
     fields = _tciFieldInfoMap ti
     pgCols = map pgiColumn $ getCols fields
-    pgColsWithFilter = M.fromList $ map (\col -> (col, annBoolExpTrue)) pgCols
+    pgColsWithFilter = M.fromList $ map (\col -> (col, gBoolExpTrue)) pgCols
     scalarComputedFields = map _cfiName $ onlyScalarComputedFields $
                      getComputedFieldInfos fields
 
@@ -224,6 +224,14 @@ convAnnBoolExpPartialSQL
   -> f (AnnBoolExpSQL backend)
 convAnnBoolExpPartialSQL f =
   traverseAnnBoolExp (convPartialSQLExp f)
+
+convAnnColumnCaseBoolExpPartialSQL
+  :: (Applicative f)
+  => SessVarBldr backend f
+  -> AnnColumnCaseBoolExpPartialSQL backend
+  -> f (AnnColumnCaseBoolExp backend (SQLExp backend))
+convAnnColumnCaseBoolExpPartialSQL f =
+  traverseAnnColumnCaseBoolExp (convPartialSQLExp f)
 
 convPartialSQLExp
   :: (Applicative f)

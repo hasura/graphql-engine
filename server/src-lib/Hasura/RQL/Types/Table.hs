@@ -84,6 +84,7 @@ module Hasura.RQL.Types.Table
 import           Hasura.Prelude
 
 import qualified Data.HashMap.Strict                 as M
+import qualified Data.Aeson                          as J
 import qualified Data.HashSet                        as HS
 import qualified Data.List.NonEmpty                  as NE
 import qualified Data.Text                           as T
@@ -244,7 +245,7 @@ instance ToJSON (InsPermInfo 'Postgres) where
 
 data SelPermInfo (b :: BackendType)
   = SelPermInfo
-  { spiCols                 :: !(M.HashMap (Column b) (AnnBoolExpPartialSQL b))
+  { spiCols                 :: !(M.HashMap (Column b) (AnnColumnCaseBoolExpPartialSQL b))
   , spiScalarComputedFields :: !(HS.HashSet ComputedFieldName)
   , spiFilter               :: !(AnnBoolExpPartialSQL b)
   , spiLimit                :: !(Maybe Int)
@@ -254,8 +255,16 @@ data SelPermInfo (b :: BackendType)
 instance NFData (SelPermInfo 'Postgres)
 deriving instance Eq (SelPermInfo 'Postgres)
 instance Cacheable (SelPermInfo 'Postgres)
+-- deriving the `ToJSON` instance manually for backwards compatibility
 instance ToJSON (SelPermInfo 'Postgres) where
-  toJSON = genericToJSON $ aesonDrop 3 snakeCase
+  toJSON (SelPermInfo cols scalarFields filterExp limit allowAgg requiredHeaders) = object
+    [ "cols"                   J..= toJSON (M.keys cols)
+    , "scalar_computed_fields" J..= toJSON scalarFields
+    , "filter"                 J..= toJSON filterExp
+    , "limit"                  J..= toJSON limit
+    , "allow_agg"              J..= toJSON allowAgg
+    , "required_headers"       J..= toJSON requiredHeaders
+    ]
 
 instance Semigroup (SelPermInfo 'Postgres) where
   lSelPermInfo <> rSelPermInfo =

@@ -22,8 +22,12 @@ module Hasura.RQL.IR.BoolExp
 
        , AnnBoolExpFld(..)
        , AnnBoolExp
+       , AnnColumnCaseBoolExpPartialSQL
+       , AnnColumnCaseBoolExp
        , traverseAnnBoolExp
        , fmapAnnBoolExp
+       , traverseAnnColumnCaseBoolExp
+       , fmapAnnColumnCaseBoolExp
        , annBoolExpTrue
        , andAnnBoolExps
 
@@ -275,6 +279,7 @@ data OpExpG (b :: BackendType) a
   | CLTE !(Column b)
   deriving (Functor, Foldable, Traversable, Generic)
 deriving instance (Eq a) => Eq (OpExpG 'Postgres a)
+deriving instance (Show a) => Show (OpExpG 'Postgres a)
 instance (NFData a) => NFData (OpExpG 'Postgres a)
 instance (Cacheable a) => Cacheable (OpExpG 'Postgres a)
 instance (Hashable a) => Hashable (OpExpG 'Postgres a)
@@ -356,12 +361,18 @@ data AnnBoolExpFld (b :: BackendType) a
   | AVRel !RelInfo !(AnnBoolExp b a)
   deriving (Functor, Foldable, Traversable, Generic)
 deriving instance Eq a => Eq (AnnBoolExpFld 'Postgres a)
+deriving instance Show a => Show (AnnBoolExpFld 'Postgres a)
 instance (NFData a) => NFData (AnnBoolExpFld 'Postgres a)
 instance (Cacheable a) => Cacheable (AnnBoolExpFld 'Postgres a)
 instance (Hashable a) => Hashable (AnnBoolExpFld 'Postgres a)
 
 type AnnBoolExp b a
   = GBoolExp b (AnnBoolExpFld b a)
+
+type AnnColumnCaseBoolExp b a
+  = GBoolExp b (M.HashMap (ColumnInfo b) [OpExpG 'Postgres a])
+
+type AnnColumnCaseBoolExpPartialSQL b = AnnColumnCaseBoolExp b (PartialSQLExp b)
 
 traverseAnnBoolExp
   :: (Applicative f)
@@ -375,12 +386,27 @@ traverseAnnBoolExp f =
    AVRel relInfo annBoolExp ->
      AVRel relInfo <$> traverseAnnBoolExp f annBoolExp
 
+traverseAnnColumnCaseBoolExp
+  :: (Applicative f)
+  => (a -> f b)
+  -> AnnColumnCaseBoolExp backend a
+  -> f (AnnColumnCaseBoolExp backend b)
+traverseAnnColumnCaseBoolExp f = traverse (traverse (traverse (traverse f)))
+
 fmapAnnBoolExp
   :: (a -> b)
   -> AnnBoolExp backend a
   -> AnnBoolExp backend b
 fmapAnnBoolExp f =
   runIdentity . traverseAnnBoolExp (pure . f)
+
+fmapAnnColumnCaseBoolExp
+  :: (a -> b)
+  -> AnnColumnCaseBoolExp backend a
+  -> AnnColumnCaseBoolExp backend b
+fmapAnnColumnCaseBoolExp f =
+  runIdentity . traverseAnnColumnCaseBoolExp (pure . f)
+
 
 annBoolExpTrue :: AnnBoolExp backend a
 annBoolExpTrue = gBoolExpTrue

@@ -175,7 +175,7 @@ data AnnColumnField (b :: BackendType) v
   -- an issue that occurs because we don’t currently have proper support for array types. See
   -- https://github.com/hasura/graphql-engine/pull/3198 for more details.
   , _acfOp                 :: !(Maybe (ColumnOp b))
-  , _acfCaseBoolExpression :: !(Maybe (PG.QualifiedTable, AnnBoolExp b v))
+  , _acfCaseBoolExpression :: !(Maybe (AnnColumnCaseBoolExp b v))
   }
 
 traverseAnnColumnField
@@ -188,7 +188,7 @@ traverseAnnColumnField f (AnnColumnField info asText op caseBoolExpMaybe) =
   <$> pure info
   <*> pure asText
   <*> pure op
-  <*> (traverse (traverse (traverseAnnBoolExp f)) caseBoolExpMaybe)
+  <*> (traverse (traverseAnnColumnCaseBoolExp f) caseBoolExpMaybe)
 
 data RemoteFieldArgument
   = RemoteFieldArgument
@@ -216,7 +216,7 @@ data AnnFieldG (b :: BackendType) v
 
 mkAnnColumnField
   :: ColumnInfo backend
-  -> Maybe (PG.QualifiedTable, AnnBoolExp backend v)
+  -> Maybe (AnnColumnCaseBoolExp backend v)
   -> Maybe (ColumnOp backend)
   -> AnnFieldG backend v
 mkAnnColumnField ci caseBoolExp colOpM =

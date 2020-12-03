@@ -829,8 +829,8 @@ processAnnFields sourcePrefix fieldAlias similarArrFields annFields = do
           finalSQLExpression =
             case caseBoolExpAndTableMaybe of
               Nothing          -> sqlExpression
-              Just (table, caseBoolExp) ->
-                let boolExp = toSQLBoolExp (S.QualTable table) caseBoolExp
+              Just caseBoolExp ->
+                let boolExp = S.simplifyBoolExp $ toSQLColumnCaseBoolExp caseBoolExp
                 in S.SECond boolExp sqlExpression S.SENull
       pure $ toJSONableExp strfyNum (pgiType col) asText finalSQLExpression
 

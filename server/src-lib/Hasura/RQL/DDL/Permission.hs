@@ -209,10 +209,15 @@ buildSelPermInfo
 buildSelPermInfo tn fieldInfoMap sp = withPathK "permission" $ do
   let pgCols     = convColSpec fieldInfoMap $ spColumns sp
 
-  (be, beDeps) <- withPathK "filter" $
+  (boolExp, boolExpDeps) <- withPathK "filter" $
     procBoolExp tn fieldInfoMap  $ spFilter sp
 
-  let pgColsWithFilter = HM.fromList $ map (, be) pgCols
+  caseBoolExp <-
+    for boolExp $ \case
+      AVCol colInfo ops -> pure $ HM.singleton colInfo ops
+      AVRel _ _         -> error "yup, this shouldn't have happened. Consider throwing a 500 here"
+
+  let pgColsWithFilter = HM.fromList $ map (, caseBoolExp) pgCols
 
   -- check if the columns exist
   void $ withPathK "columns" $ indexedForM pgCols $ \pgCol ->
@@ -229,7 +234,7 @@ buildSelPermInfo tn fieldInfoMap sp = withPathK "permission" $ do
           <<> " are auto-derived from the permissions on its returning table "
           <> returnTable <<> " and cannot be specified manually"
 
-  let deps = mkParentDep tn : beDeps ++ map (mkColDep DRUntyped tn) pgCols
+  let deps = mkParentDep tn : boolExpDeps ++ map (mkColDep DRUntyped tn) pgCols
              ++ map (mkComputedFieldDep DRUntyped tn) scalarComputedFields
       depHeaders = getDependentHeaders $ spFilter sp
       mLimit = spLimit sp
@@ -237,7 +242,7 @@ buildSelPermInfo tn fieldInfoMap sp = withPathK "permission" $ do
   withPathK "limit" $ mapM_ onlyPositiveInt mLimit
 
   return ( SelPermInfo pgColsWithFilter (HS.fromList computedFields)
-                        be mLimit allowAgg depHeaders
+                        boolExp mLimit allowAgg depHeaders
          , deps
          )
   where
