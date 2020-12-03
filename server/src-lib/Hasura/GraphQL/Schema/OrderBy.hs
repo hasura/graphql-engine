@@ -36,7 +36,7 @@ import           Hasura.RQL.Types
 orderByExp
   :: forall m n r. (MonadSchema n m, MonadTableInfo r m, MonadRoleSet r m)
   => QualifiedTable
-  -> SelPermInfo 'Postgres
+  -> CombinedSelPermInfo 'Postgres
   -> m (Parser 'Input n [IR.AnnOrderByItemG 'Postgres UnpreparedValue])
 orderByExp table selectPermissions = memoizeOn 'orderByExp table $ do
   tableGQLName <- getTableGQLName table
@@ -60,7 +60,7 @@ orderByExp table selectPermissions = memoizeOn 'orderByExp table $ do
           let remoteTable = riRTable relationshipInfo
           fieldName <- MaybeT $ pure $ G.mkName $ relNameToTxt $ riName relationshipInfo
           perms <- MaybeT $ tableSelectPermissions remoteTable
-          let newPerms = fmapAnnBoolExp partialSQLExpToUnpreparedValue $ spiFilter perms
+          let newPerms = fmapAnnBoolExp partialSQLExpToUnpreparedValue $ cspiFilter perms
           case riType relationshipInfo of
             ObjRel -> do
               otherTableParser <- lift $ orderByExp remoteTable perms
@@ -90,7 +90,7 @@ type OrderInfo = (PG.OrderType, PG.NullsOrder)
 orderByAggregation
   :: forall m n r. (MonadSchema n m, MonadTableInfo r m, MonadRoleSet r m)
   => QualifiedTable
-  -> SelPermInfo 'Postgres
+  -> CombinedSelPermInfo 'Postgres
   -> m (Parser 'Input n [IR.OrderByItemG 'Postgres (IR.AnnAggregateOrderBy 'Postgres)])
 orderByAggregation table selectPermissions = do
   -- WIP NOTE

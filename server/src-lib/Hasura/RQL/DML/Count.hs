@@ -91,7 +91,7 @@ validateCountQWith sessVarBldr prepValBldr (CountQuery qt mDistCols mWhere) = do
     convBoolExp colInfoMap selPerm be sessVarBldr prepValBldr
 
   resolvedSelFltr <- convAnnBoolExpPartialSQL sessVarBldr $
-                     spiFilter selPerm
+                     cspiFilter selPerm
 
   return $ CountQueryP1
     qt

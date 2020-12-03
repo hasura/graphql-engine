@@ -33,7 +33,7 @@ type ComparisonExp b = OpExpG b UnpreparedValue
 boolExp
   :: forall m n r. (MonadSchema n m, MonadTableInfo r m, MonadRoleSet r m)
   => QualifiedTable
-  -> Maybe (SelPermInfo 'Postgres)
+  -> Maybe (CombinedSelPermInfo 'Postgres)
   -> m (Parser 'Input n (AnnBoolExp 'Postgres UnpreparedValue))
 boolExp table selectPermissions = memoizeOn 'boolExp table $ do
   tableGQLName <- getTableGQLName table

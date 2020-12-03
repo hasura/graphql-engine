@@ -161,7 +161,7 @@ asCheckErrorExtractor s =
 checkRetCols
   :: (UserInfoM m, QErrM m)
   => FieldInfoMap (FieldInfo 'Postgres)
-  -> SelPermInfo 'Postgres
+  -> CombinedSelPermInfo 'Postgres
   -> [PGCol]
   -> m [ColumnInfo 'Postgres]
 checkRetCols fieldInfoMap selPermInfo cols = do

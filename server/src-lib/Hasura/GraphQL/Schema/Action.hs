@@ -203,7 +203,7 @@ actionOutputFields outputObject = do
           fieldName = unRelationshipName relName
       roleName <- lift $ getSingleRoleName =<< askRoleSet
       tablePerms <- MaybeT $ pure $ RQL.getPermInfoMaybe roleName PASelect tableInfo
-      tableParser <- lift $ selectTable tableName fieldName Nothing tablePerms
+      tableParser <- lift $ selectTable tableName fieldName Nothing $ convertSelPermToCombinedSelPerm tablePerms
       pure $ tableParser <&> \selectExp ->
         let tableRelName = RelName $ mkNonEmptyTextUnsafe $ G.unName fieldName
             columnMapping = Map.fromList $

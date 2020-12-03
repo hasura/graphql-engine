@@ -38,8 +38,6 @@ import           Hasura.GraphQL.Schema.Select
 import           Hasura.GraphQL.Schema.Table
 import           Hasura.RQL.Types                    hiding (ConstraintName)
 
-
-
 -- insert
 
 -- | Construct a root field, normally called insert_tablename, that can be used to add several rows to a DB table
@@ -91,7 +89,7 @@ insertOneIntoTable
   -> m (FieldParser n (IR.AnnInsert 'Postgres UnpreparedValue))
 insertOneIntoTable table fieldName description insertPerms selectPerms updatePerms  = do
   columns         <- tableColumns table
-  selectionParser <- tableSelectionSet table selectPerms
+  selectionParser <- tableSelectionSet table $ convertSelPermToCombinedSelPerm selectPerms
   objectParser    <- tableFieldsInput table insertPerms
   conflictParser  <- fmap join $ sequenceA $ conflictObject table (Just selectPerms) <$> updatePerms
   let objectName    = $$(G.litName "object")
@@ -234,7 +232,7 @@ conflictObject table selectPerms updatePerms = runMaybeT $ do
   columnsEnum      <- MaybeT $ tableUpdateColumnsEnum table updatePerms
   constraints      <- MaybeT $ tciUniqueOrPrimaryKeyConstraints . _tiCoreInfo <$> askTableInfo table
   constraintParser <- lift $ conflictConstraint constraints table
-  whereExpParser   <- lift $ boolExp table selectPerms
+  whereExpParser   <- lift $ boolExp table $ convertSelPermToCombinedSelPerm <$> selectPerms
   let objectName = tableGQLName <> $$(G.litName "_on_conflict")
       objectDesc = G.Description $ "on conflict condition type for table " <>> table
       constraintName = $$(G.litName "constraint")
@@ -286,7 +284,7 @@ updateTable table fieldName description updatePerms selectPerms = runMaybeT $ do
       whereDesc = "filter the rows which have to be updated"
   opArgs    <- MaybeT $ updateOperators table updatePerms
   columns   <- lift $ tableColumns table
-  whereArg  <- lift $ P.field whereName (Just whereDesc) <$> boolExp table selectPerms
+  whereArg  <- lift $ P.field whereName (Just whereDesc) <$> boolExp table (convertSelPermToCombinedSelPerm <$> selectPerms)
   selection <- lift $ mutationSelectionSet table selectPerms
   let argsParser = liftA2 (,) opArgs whereArg
   pure $ P.subselection fieldName description argsParser selection
@@ -306,10 +304,11 @@ updateTableByPk
   -> m (Maybe (FieldParser n (IR.AnnUpdG 'Postgres UnpreparedValue)))
 updateTableByPk table fieldName description updatePerms selectPerms = runMaybeT $ do
   tableGQLName <- getTableGQLName table
-  columns   <- lift   $ tableSelectColumns table selectPerms
+  let combinedSelectPerms = convertSelPermToCombinedSelPerm selectPerms
+  columns   <- lift   $ tableSelectColumns table combinedSelectPerms
   pkArgs    <- MaybeT $ primaryKeysArguments table selectPerms
   opArgs    <- MaybeT $ updateOperators table updatePerms
-  selection <- lift $ tableSelectionSet table selectPerms
+  selection <- lift $ tableSelectionSet table combinedSelectPerms
   let pkFieldName  = $$(G.litName "pk_columns")
       pkObjectName = tableGQLName <> $$(G.litName "_pk_columns_input")
       pkObjectDesc = G.Description $ "primary key columns input for table: " <> G.unName tableGQLName
@@ -450,7 +449,7 @@ deleteFromTable
 deleteFromTable table fieldName description deletePerms selectPerms = do
   let whereName = $$(G.litName "where")
       whereDesc = "filter the rows which have to be deleted"
-  whereArg  <- P.field whereName (Just whereDesc) <$> boolExp table selectPerms
+  whereArg  <- P.field whereName (Just whereDesc) <$> boolExp table (convertSelPermToCombinedSelPerm <$> selectPerms)
   selection <- mutationSelectionSet table selectPerms
   columns   <- tableColumns table
   pure $ P.subselection fieldName description whereArg selection
@@ -467,9 +466,10 @@ deleteFromTableByPk
   -> SelPermInfo 'Postgres  -- ^ select permissions of the table
   -> m (Maybe (FieldParser n (IR.AnnDelG 'Postgres UnpreparedValue)))
 deleteFromTableByPk table fieldName description deletePerms selectPerms = runMaybeT $ do
-  columns   <- lift   $ tableSelectColumns table selectPerms
+  let combinedSelectPerms = convertSelPermToCombinedSelPerm selectPerms
+  columns   <- lift   $ tableSelectColumns table combinedSelectPerms
   pkArgs    <- MaybeT $ primaryKeysArguments table selectPerms
-  selection <- lift $ tableSelectionSet table selectPerms
+  selection <- lift $ tableSelectionSet table combinedSelectPerms
   pure $ P.subselection fieldName description pkArgs selection
     <&> mkDeleteObject table columns deletePerms . fmap IR.MOutSinglerowObject
 
@@ -503,7 +503,7 @@ mutationSelectionSet table selectPerms =
   memoizeOn 'mutationSelectionSet table do
   tableGQLName <- getTableGQLName table
   returning <- runMaybeT do
-    permissions <- MaybeT $ pure selectPerms
+    permissions <- MaybeT $ pure $ convertSelPermToCombinedSelPerm <$> selectPerms
     tableSet    <- lift $ tableSelectionList table permissions
     let returningName = $$(G.litName "returning")
         returningDesc = "data from the rows affected by the mutation"
@@ -530,7 +530,7 @@ primaryKeysArguments
 primaryKeysArguments table selectPerms = runMaybeT $ do
   primaryKeys <- MaybeT $ _tciPrimaryKey . _tiCoreInfo <$> askTableInfo table
   let columns = _pkColumns primaryKeys
-  guard $ all (\c -> pgiColumn c `Map.member` spiCols selectPerms) columns
+  guard $ all (\c -> pgiColumn c `Set.member` spiCols selectPerms) columns
   lift $ fmap (BoolAnd . toList) . sequenceA <$> for columns \columnInfo -> do
     field <- P.column (pgiType columnInfo) (G.Nullability False)
     pure $ BoolFld . AVCol columnInfo . pure . AEQ True . mkParameter <$>

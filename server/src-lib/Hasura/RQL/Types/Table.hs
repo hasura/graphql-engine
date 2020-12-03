@@ -68,6 +68,7 @@ module Hasura.RQL.Types.Table
        , InsPermInfo(..)
        , SelPermInfo(..)
        , getSelectPermissionInfoM
+       , CombinedSelPermInfo(..)
        , UpdPermInfo(..)
        , DelPermInfo(..)
        , PreSetColsPartial
@@ -245,7 +246,7 @@ instance ToJSON (InsPermInfo 'Postgres) where
 
 data SelPermInfo (b :: BackendType)
   = SelPermInfo
-  { spiCols                 :: !(M.HashMap (Column b) (AnnColumnCaseBoolExpPartialSQL b))
+  { spiCols                 :: !(HS.HashSet (Column b))
   , spiScalarComputedFields :: !(HS.HashSet ComputedFieldName)
   , spiFilter               :: !(AnnBoolExpPartialSQL b)
   , spiLimit                :: !(Maybe Int)
@@ -255,43 +256,21 @@ data SelPermInfo (b :: BackendType)
 instance NFData (SelPermInfo 'Postgres)
 deriving instance Eq (SelPermInfo 'Postgres)
 instance Cacheable (SelPermInfo 'Postgres)
--- deriving the `ToJSON` instance manually for backwards compatibility
 instance ToJSON (SelPermInfo 'Postgres) where
-  toJSON (SelPermInfo cols scalarFields filterExp limit allowAgg requiredHeaders) = object
-    [ "cols"                   J..= toJSON (M.keys cols)
-    , "scalar_computed_fields" J..= toJSON scalarFields
-    , "filter"                 J..= toJSON filterExp
-    , "limit"                  J..= toJSON limit
-    , "allow_agg"              J..= toJSON allowAgg
-    , "required_headers"       J..= toJSON requiredHeaders
-    ]
+  toJSON = genericToJSON $ aesonDrop 3 snakeCase
 
-instance Semigroup (SelPermInfo 'Postgres) where
-  lSelPermInfo <> rSelPermInfo =
-    SelPermInfo
-    { spiCols = M.unionWith (\ l r -> BoolOr [l, r]) (spiCols lSelPermInfo) (spiCols rSelPermInfo)
-    , spiScalarComputedFields = spiScalarComputedFields lSelPermInfo <> spiScalarComputedFields rSelPermInfo
-    , spiFilter = BoolOr [spiFilter lSelPermInfo, spiFilter rSelPermInfo]
-    , spiLimit =
-      case (spiLimit lSelPermInfo, spiLimit rSelPermInfo) of
-        (Nothing, Nothing) -> Nothing
-        (Just l , Nothing) -> Just l
-        (Nothing, Just r)  -> Just r
-        (Just l,  Just r)  -> Just (max l r)
-    , spiAllowAgg = spiAllowAgg lSelPermInfo || spiAllowAgg rSelPermInfo
-    , spiRequiredHeaders = nub $ spiRequiredHeaders lSelPermInfo <> spiRequiredHeaders rSelPermInfo
-    }
-
-instance Monoid (SelPermInfo 'Postgres) where
-  mempty =
-    SelPermInfo
-    { spiCols = mempty
-    , spiScalarComputedFields = mempty
-    , spiFilter = gBoolExpTrue -- TODO: check if this is correct
-    , spiLimit = Nothing
-    , spiAllowAgg = False
-    , spiRequiredHeaders = mempty
-    }
+data CombinedSelPermInfo (b :: BackendType)
+  = CombinedSelPermInfo
+  { cspiCols                 :: !(M.HashMap (Column b) (Maybe (AnnColumnCaseBoolExpPartialSQL b)))
+  , cspiScalarComputedFields :: !(HS.HashSet ComputedFieldName)
+  , cspiFilter               :: !(AnnBoolExpPartialSQL b)
+  , cspiLimit                :: !(Maybe Int)
+  , cspiAllowAgg             :: !Bool
+  , cspiRequiredHeaders      :: ![Text]
+  } deriving (Generic)
+instance NFData (CombinedSelPermInfo 'Postgres)
+deriving instance Eq (CombinedSelPermInfo 'Postgres)
+instance Cacheable (CombinedSelPermInfo 'Postgres)
 
 data UpdPermInfo (b :: BackendType)
   = UpdPermInfo

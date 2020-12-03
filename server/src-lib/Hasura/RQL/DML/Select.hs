@@ -1,7 +1,5 @@
 module Hasura.RQL.DML.Select
-  (-- selectP2
---  , convSelectQuery
-  runSelect
+  ( runSelect
   )
 where
 
@@ -66,7 +64,7 @@ instance FromJSON (ExtCol 'Postgres) where
 
 convSelCol :: (UserInfoM m, QErrM m, CacheRM m)
            => FieldInfoMap (FieldInfo 'Postgres)
-           -> SelPermInfo 'Postgres
+           -> CombinedSelPermInfo 'Postgres
            -> SelCol 'Postgres
            -> m [ExtCol 'Postgres]
 convSelCol _ _ (SCExtSimple cn) =
@@ -89,7 +87,7 @@ convSelCol fieldInfoMap spi (SCStar wildcard) =
 convWildcard
   :: (UserInfoM m, QErrM m, CacheRM m)
   => FieldInfoMap (FieldInfo 'Postgres)
-  -> SelPermInfo 'Postgres
+  -> CombinedSelPermInfo 'Postgres
   -> Wildcard
   -> m [ExtCol 'Postgres]
 convWildcard fieldInfoMap selPermInfo wildcard =
@@ -97,7 +95,7 @@ convWildcard fieldInfoMap selPermInfo wildcard =
   Star         -> return simpleCols
   (StarDot wc) -> (simpleCols ++) <$> (catMaybes <$> relExtCols wc)
   where
-    cols = spiCols selPermInfo
+    cols = cspiCols selPermInfo
     pgCols = map pgiColumn $ getCols fieldInfoMap
     relColInfos = getRels fieldInfoMap
 
@@ -107,11 +105,11 @@ convWildcard fieldInfoMap selPermInfo wildcard =
       let relName = riName relInfo
           relTab  = riRTable relInfo
       relTabInfo <- fetchRelTabInfo relTab
-      mRelSelPerm <- do
-        fmap mconcat <$> askPermInfo' PASelect relTabInfo
+      mRelSelPerm <-
+        traverse combineSelectPermInfos =<< askPermInfo' PASelect relTabInfo
 
-      forM mRelSelPerm $ \rspi -> do
-        rExtCols <- convWildcard (_tciFieldInfoMap $ _tiCoreInfo relTabInfo) rspi wc
+      forM mRelSelPerm $ \relSelPermInfo -> do
+        rExtCols <- convWildcard (_tciFieldInfoMap $ _tiCoreInfo relTabInfo) relSelPermInfo wc
         return $ ECRel relName Nothing $
           SelectG rExtCols Nothing Nothing Nothing Nothing
 
@@ -119,18 +117,17 @@ convWildcard fieldInfoMap selPermInfo wildcard =
 
 resolveStar :: (UserInfoM m, QErrM m, CacheRM m)
             => FieldInfoMap (FieldInfo 'Postgres)
-            -> SelPermInfo 'Postgres
+            -> CombinedSelPermInfo 'Postgres
             -> SelectQ 'Postgres
             -> m (SelectQExt 'Postgres)
-resolveStar fim spi (SelectG selCols mWh mOb mLt mOf) = do
-  pTraceM ("resolveStar has been called")
+resolveStar fim selPermInfo (SelectG selCols mWh mOb mLt mOf) = do
   procOverrides <- fmap (concat . catMaybes) $ withPathK "columns" $
     indexedForM selCols $ \selCol -> case selCol of
     (SCStar _) -> return Nothing
-    _          -> Just <$> convSelCol fim spi selCol
+    _          -> Just <$> convSelCol fim selPermInfo selCol
   everything <- case wildcards of
     [] -> return []
-    _  -> convWildcard fim spi $ maximum wildcards
+    _  -> convWildcard fim selPermInfo $ maximum wildcards
   let extCols = unionBy equals procOverrides everything
   return $ SelectG extCols mWh mOb mLt mOf
   where
@@ -146,7 +143,7 @@ resolveStar fim spi (SelectG selCols mWh mOb mLt mOf) = do
 convOrderByElem
   :: (UserInfoM m, QErrM m, CacheRM m)
   => SessVarBldr 'Postgres m
-  -> (FieldInfoMap (FieldInfo 'Postgres), SelPermInfo 'Postgres)
+  -> (FieldInfoMap (FieldInfo 'Postgres), CombinedSelPermInfo 'Postgres)
   -> OrderByCol
   -> m (AnnOrderByElement 'Postgres S.SQLExp)
 convOrderByElem sessVarBldr (flds, spi) = \case
@@ -190,10 +187,10 @@ convOrderByElem sessVarBldr (flds, spi) = \case
           [ fldName <<> " is an array relationship"
           ," and can't be used in 'order_by'"
           ]
-        (relFim, relSpi) <- fetchRelDet (riName relInfo) (riRTable relInfo)
-        resolvedSelFltr <- convAnnBoolExpPartialSQL sessVarBldr $ spiFilter relSpi
+        (relFim, relSelPermInfo) <- fetchRelDet (riName relInfo) (riRTable relInfo)
+        resolvedSelFltr <- convAnnBoolExpPartialSQL sessVarBldr $ cspiFilter relSelPermInfo
         AOCObjectRelation relInfo resolvedSelFltr <$>
-          convOrderByElem sessVarBldr (relFim, relSpi) rest
+          convOrderByElem sessVarBldr (relFim, relSelPermInfo) rest
       FIRemoteRelationship {} ->
         throw400 UnexpectedPayload (mconcat [ fldName <<> " is a remote field" ])
 
@@ -201,7 +198,7 @@ convSelectQ
   :: (UserInfoM m, QErrM m, CacheRM m, HasSQLGenCtx m)
   => QualifiedTable
   -> FieldInfoMap (FieldInfo 'Postgres)  -- Table information of current table
-  -> SelPermInfo 'Postgres   -- Additional select permission info
+  -> CombinedSelPermInfo 'Postgres   -- Additional select permission info
   -> SelectQExt 'Postgres     -- Given Select Query
   -> SessVarBldr 'Postgres m
   -> (PGColumnType -> Value -> m S.SQLExp)
@@ -209,9 +206,9 @@ convSelectQ
 convSelectQ table fieldInfoMap selPermInfo selQ sessVarBldr prepValBldr = do
   pTraceM ("convSelectQ has been called")
   -- Convert where clause
-  wClause <- forM (sqWhere selQ) $ \be ->
+  wClause <- forM (sqWhere selQ) $ \boolExp ->
     withPathK "where" $
-    convBoolExp fieldInfoMap selPermInfo be sessVarBldr prepValBldr
+    convBoolExp fieldInfoMap selPermInfo boolExp sessVarBldr prepValBldr
 
   annFlds <- withPathK "columns" $
     indexedForM (sqColumns selQ) $ \case
@@ -238,7 +235,7 @@ convSelectQ table fieldInfoMap selPermInfo selQ sessVarBldr prepValBldr = do
   withPathK "offset" $ mapM_ onlyPositiveInt mQueryOffset
 
   resolvedSelFltr <- convAnnBoolExpPartialSQL sessVarBldr $
-                     spiFilter selPermInfo
+                     cspiFilter selPermInfo
 
   let tabFrom = FromTable table
       tabPerm = TablePerm resolvedSelFltr mPermLimit
@@ -251,18 +248,18 @@ convSelectQ table fieldInfoMap selPermInfo selQ sessVarBldr prepValBldr = do
   where
     mQueryOffset = sqOffset selQ
     mQueryLimit = sqLimit selQ
-    mPermLimit = spiLimit selPermInfo
+    mPermLimit = cspiLimit selPermInfo
 
 convExtSimple
   :: (UserInfoM m, QErrM m)
   => FieldInfoMap (FieldInfo 'Postgres)
-  -> SelPermInfo 'Postgres
+  -> CombinedSelPermInfo 'Postgres
   -> PGCol
   -> m (ColumnInfo 'Postgres, Maybe (AnnColumnCaseBoolExpPartialSQL 'Postgres))
 convExtSimple fieldInfoMap selPermInfo pgCol = do
   checkSelOnCol selPermInfo pgCol
   pgColInfo <- askPGColInfo fieldInfoMap pgCol relWhenPGErr
-  pure (pgColInfo, HM.lookup pgCol (spiCols selPermInfo))
+  pure (pgColInfo, join $ HM.lookup pgCol (cspiCols selPermInfo))
   where
     relWhenPGErr = "relationships have to be expanded"
 
@@ -316,7 +313,7 @@ convSelectQuery sessVarBldr prepArgBuilder (DMLQuery qt selQ) = do
   pTraceM ("convSelectQuery has been called")
   let fieldInfo = _tciFieldInfoMap $ _tiCoreInfo tabInfo
   extSelQ <- resolveStar fieldInfo selPermInfo selQ
-  validateHeaders $ spiRequiredHeaders selPermInfo
+  validateHeaders $ cspiRequiredHeaders selPermInfo
   convSelectQ qt fieldInfo selPermInfo extSelQ sessVarBldr prepArgBuilder
 
 selectP2 :: JsonAggSelect -> (AnnSimpleSel 'Postgres, DS.Seq Q.PrepArg) -> Q.TxE QErr EncJSON

@@ -42,13 +42,12 @@ mkAdminRolePermInfo ti =
   where
     fields = _tciFieldInfoMap ti
     pgCols = map pgiColumn $ getCols fields
-    pgColsWithFilter = M.fromList $ map (\col -> (col, gBoolExpTrue)) pgCols
     scalarComputedFields = map _cfiName $ onlyScalarComputedFields $
                      getComputedFieldInfos fields
 
     tn = _tciName ti
     i = InsPermInfo (HS.fromList pgCols) annBoolExpTrue M.empty False []
-    s = SelPermInfo pgColsWithFilter (HS.fromList scalarComputedFields) annBoolExpTrue
+    s = SelPermInfo (HS.fromList pgCols) (HS.fromList scalarComputedFields) annBoolExpTrue
         Nothing True []
     u = UpdPermInfo (HS.fromList pgCols) tn annBoolExpTrue Nothing M.empty []
     d = DelPermInfo tn annBoolExpTrue []
@@ -111,10 +110,8 @@ askInsPermInfo tableInfo = do
 
 askSelPermInfo
   :: (UserInfoM m, QErrM m)
-  => TableInfo 'Postgres -> m (SelPermInfo 'Postgres)
-askSelPermInfo tableInfo = do
-  selPermInfo <- askPermInfo PASelect tableInfo
-  pure $ mconcat selPermInfo
+  => TableInfo 'Postgres -> m (CombinedSelPermInfo 'Postgres)
+askSelPermInfo tableInfo = askPermInfo PASelect tableInfo >>= combineSelectPermInfos
 
 askUpdPermInfo
   :: (UserInfoM m, QErrM m)
@@ -138,9 +135,9 @@ verifyAsrns :: (MonadError QErr m) => [a -> m ()] -> [a] -> m ()
 verifyAsrns preds xs = indexedForM_ xs $ \a -> mapM_ ($ a) preds
 
 checkSelOnCol :: (UserInfoM m, QErrM m)
-              => SelPermInfo 'Postgres -> PGCol -> m ()
+              => CombinedSelPermInfo 'Postgres -> PGCol -> m ()
 checkSelOnCol selPermInfo =
-  checkPermOnCol PTSelect (HS.fromList $ M.keys $ spiCols selPermInfo)
+  checkPermOnCol PTSelect (HS.fromList $ M.keys $ cspiCols selPermInfo)
 
 checkPermOnCol
   :: (UserInfoM m, QErrM m)
@@ -181,7 +178,7 @@ type SessVarBldr b m = PGType (ScalarType b) -> SessionVariable -> m (SQLExp b)
 fetchRelDet
   :: (UserInfoM m, QErrM m, CacheRM m)
   => RelName -> QualifiedTable
-  -> m (FieldInfoMap (FieldInfo 'Postgres), SelPermInfo 'Postgres)
+  -> m (FieldInfoMap (FieldInfo 'Postgres), CombinedSelPermInfo 'Postgres)
 fetchRelDet relName refTabName = do
   roleSet <- askCurRoles
   -- Internal error
@@ -202,7 +199,7 @@ fetchRelDet relName refTabName = do
 
 checkOnColExp
   :: (UserInfoM m, QErrM m, CacheRM m)
-  => SelPermInfo 'Postgres
+  => CombinedSelPermInfo 'Postgres
   -> SessVarBldr 'Postgres m
   -> AnnBoolExpFldSQL 'Postgres
   -> m (AnnBoolExpFldSQL 'Postgres)
@@ -214,7 +211,7 @@ checkOnColExp spi sessVarBldr annFld = case annFld of
   AVRel relInfo nesAnn -> do
     relSPI <- snd <$> fetchRelDet (riName relInfo) (riRTable relInfo)
     modAnn <- checkSelPerm relSPI sessVarBldr nesAnn
-    resolvedFltr <- convAnnBoolExpPartialSQL sessVarBldr $ spiFilter relSPI
+    resolvedFltr <- convAnnBoolExpPartialSQL sessVarBldr $ cspiFilter relSPI
     return $ AVRel relInfo $ andAnnBoolExps modAnn resolvedFltr
 
 convAnnBoolExpPartialSQL
@@ -262,7 +259,7 @@ currentSession = S.SEUnsafe "current_setting('hasura.user')::json"
 
 checkSelPerm
   :: (UserInfoM m, QErrM m, CacheRM m)
-  => SelPermInfo 'Postgres
+  => CombinedSelPermInfo 'Postgres
   -> SessVarBldr 'Postgres m
   -> AnnBoolExpSQL 'Postgres
   -> m (AnnBoolExpSQL 'Postgres)
@@ -272,7 +269,7 @@ checkSelPerm spi sessVarBldr =
 convBoolExp
   :: (UserInfoM m, QErrM m, CacheRM m)
   => FieldInfoMap (FieldInfo 'Postgres)
-  -> SelPermInfo 'Postgres
+  -> CombinedSelPermInfo 'Postgres
   -> BoolExp 'Postgres
   -> SessVarBldr 'Postgres m
   -> (PGColumnType -> Value -> m S.SQLExp)

@@ -241,7 +241,7 @@ buildSelPermInfo tn fieldInfoMap sp = withPathK "permission" $ do
 
   withPathK "limit" $ mapM_ onlyPositiveInt mLimit
 
-  return ( SelPermInfo pgColsWithFilter (HS.fromList computedFields)
+  return ( SelPermInfo (HS.fromList pgCols) (HS.fromList computedFields)
                         boolExp mLimit allowAgg depHeaders
          , deps
          )

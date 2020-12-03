@@ -31,6 +31,7 @@ module Hasura.RQL.Types
   , askCurRoles
   , askEventTriggerInfo
   , askTabInfoFromTrigger
+  , combineSelectPermInfos
 
   , HeaderObj
 
@@ -41,9 +42,11 @@ module Hasura.RQL.Types
 import           Hasura.Prelude
 
 import qualified Data.HashMap.Strict                 as M
+import qualified Data.HashSet                        as Set
 import qualified Network.HTTP.Client                 as HTTP
 
 import           Control.Monad.Unique
+import           Data.List                           (nub)
 import           Data.Text.Extended
 
 import           Hasura.Backends.Postgres.Connection as R
@@ -315,3 +318,50 @@ askCurRoles :: (UserInfoM m) => m RoleSet
 askCurRoles = _uiRole <$> askUserInfo
 
 type HeaderObj = M.HashMap Text Text
+
+combineSelectPermInfos
+  :: (MonadError QErr m)
+  => [SelPermInfo 'Postgres]
+  -> m (CombinedSelPermInfo 'Postgres)
+combineSelectPermInfos selPermInfos =
+  foldrM combine emptyCombinedSelPermInfo selPermInfos
+  where
+    combine selPermInfo combinedSelPermInfo = do
+      let CombinedSelPermInfo combinedCols scalarComputedFields
+           filter' limit allowAgg reqHdrs = combinedSelPermInfo
+      columnCaseBoolExp <-
+        for (spiFilter selPermInfo) $ \case
+          AVCol colInfo ops -> pure (colInfo, ops)
+          AVRel _ _         -> throw500 "unexpected: got relationship boolean expression"
+      let pgColsWithFilter = M.fromList $ map (, Just columnCaseBoolExp) $ Set.toList (spiCols selPermInfo)
+      pure $ CombinedSelPermInfo
+            { cspiCols = M.unionWith (\l r ->
+                                        case (l, r) of
+                                          (Nothing, Nothing) -> Nothing
+                                          (Just caseBoolExp, Nothing)  -> Just caseBoolExp
+                                          (Nothing, Just caseBoolExp)  -> Just caseBoolExp
+                                          (Just caseBoolExpL, Just caseBoolExpR) -> Just $ BoolOr [caseBoolExpL, caseBoolExpR]
+                                     )
+                                     combinedCols
+                                     pgColsWithFilter
+            , cspiScalarComputedFields = Set.intersection scalarComputedFields (spiScalarComputedFields selPermInfo)
+            , cspiFilter = BoolOr [filter', (spiFilter selPermInfo)]
+            , cspiLimit =
+                case (limit, spiLimit selPermInfo) of
+                  (Nothing, Nothing) -> Nothing
+                  (Just l, Nothing)  -> Just l
+                  (Nothing, Just r)  -> Just r
+                  (Just l , Just r)  -> Just $ max l r
+            , cspiAllowAgg = allowAgg && (spiAllowAgg selPermInfo)
+            , cspiRequiredHeaders = nub $ reqHdrs <> (spiRequiredHeaders selPermInfo)
+            }
+
+    emptyCombinedSelPermInfo =
+      CombinedSelPermInfo
+      { cspiCols = mempty
+      , cspiScalarComputedFields = mempty
+      , cspiFilter = gBoolExpTrue
+      , cspiLimit = Nothing
+      , cspiAllowAgg = True
+      , cspiRequiredHeaders = mempty
+      }

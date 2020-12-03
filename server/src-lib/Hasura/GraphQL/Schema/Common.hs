@@ -4,6 +4,7 @@ import           Hasura.Prelude
 
 import qualified Data.Aeson                         as J
 import qualified Data.HashMap.Strict.InsOrd         as OMap
+import qualified Data.HashSet                       as Set
 
 import           Data.Text.Extended
 import           Language.GraphQL.Draft.Syntax      as G
@@ -103,3 +104,15 @@ defaultDirectives =
       [G.EDLFIELD, G.EDLFRAGMENT_SPREAD, G.EDLINLINE_FRAGMENT]
     mkDirective name =
       P.DirectiveInfo name Nothing [ifInputField] dirLocs
+
+-- This function is used to convert a select permission to
+-- a combined select permission to be able to call the
+-- parsers defined in `Hasura.GraphQL.Schema.Query`
+-- *NOTE*: This function should not be called for mutations and actions
+-- which do *not* support multiple roles
+convertSelPermToCombinedSelPerm
+  :: SelPermInfo 'Postgres
+  -> CombinedSelPermInfo 'Postgres
+convertSelPermToCombinedSelPerm (SelPermInfo cols scalarCompFields filter' limit allowAgg reqHdrs) =
+  let combinedCols = Set.toMap cols $> Nothing
+  in CombinedSelPermInfo combinedCols scalarCompFields filter' limit allowAgg reqHdrs
