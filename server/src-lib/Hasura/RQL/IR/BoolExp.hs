@@ -370,7 +370,7 @@ type AnnBoolExp b a
   = GBoolExp b (AnnBoolExpFld b a)
 
 type AnnColumnCaseBoolExp b a
-  = GBoolExp b (M.HashMap (ColumnInfo b) [OpExpG 'Postgres a])
+  = GBoolExp b (ColumnInfo b, [OpExpG 'Postgres a])
 
 type AnnColumnCaseBoolExpPartialSQL b = AnnColumnCaseBoolExp b (PartialSQLExp b)
 

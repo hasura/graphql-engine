@@ -214,7 +214,7 @@ buildSelPermInfo tn fieldInfoMap sp = withPathK "permission" $ do
 
   caseBoolExp <-
     for boolExp $ \case
-      AVCol colInfo ops -> pure $ HM.singleton colInfo ops
+      AVCol colInfo ops -> pure $ (colInfo, ops)
       AVRel _ _         -> error "yup, this shouldn't have happened. Consider throwing a 500 here"
 
   let pgColsWithFilter = HM.fromList $ map (, caseBoolExp) pgCols

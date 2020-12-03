@@ -366,14 +366,11 @@ convColRhs tableQual = \case
     mkQCol q = S.SEQIdentifier . S.QIdentifier q . toIdentifier
 
 convColCaseBoolRhs
-  :: M.HashMap (ColumnInfo 'Postgres) [OpExpG 'Postgres S.SQLExp] -> State Word64 S.BoolExp
-convColCaseBoolRhs hashMap =
-  case M.toList hashMap of
-    [(colInfo, opExps)] ->
-      let colFld = fromPGCol $ pgiColumn colInfo
-          bExps = map (mkFieldCompExpCopy colFld) opExps
-      in return $ foldr (S.BEBin S.AndOp) (S.BELit True) bExps
-    _ -> error "again, this shouldn't have happened"
+  :: (ColumnInfo 'Postgres, [OpExpG 'Postgres S.SQLExp]) -> State Word64 S.BoolExp
+convColCaseBoolRhs (colInfo, opExps) =
+  let colFld = fromPGCol $ pgiColumn colInfo
+      bExps = map (mkFieldCompExpCopy colFld) opExps
+  in return $ foldr (S.BEBin S.AndOp) (S.BELit True) bExps
 
 foldExists :: GExists 'Postgres (AnnBoolExpFldSQL 'Postgres) -> State Word64 S.BoolExp
 foldExists (GExists qt wh) = do
@@ -398,7 +395,7 @@ foldBoolExp f = \case
   BoolFld ce           -> f ce
 
 foldColumnCaseBoolExp
-  :: (M.HashMap (ColumnInfo 'Postgres) [OpExpG 'Postgres S.SQLExp] -> State Word64 S.BoolExp)
+  :: ((ColumnInfo 'Postgres, [OpExpG 'Postgres S.SQLExp]) -> State Word64 S.BoolExp)
   -> AnnColumnCaseBoolExp 'Postgres S.SQLExp
   -> State Word64 S.BoolExp
 foldColumnCaseBoolExp f = \case
