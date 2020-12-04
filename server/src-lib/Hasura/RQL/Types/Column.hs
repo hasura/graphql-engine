@@ -4,7 +4,6 @@ module Hasura.RQL.Types.Column
   , _ColumnEnumReference
   , isScalarColumnWhere
 
-  , onlyIntCols
   , onlyNumCols
   , onlyJSONBCols
   , onlyComparableCols
@@ -197,9 +196,6 @@ instance ToJSON (ColumnInfo 'Postgres) where
   toEncoding = genericToEncoding $ aesonDrop 3 snakeCase
 
 type PrimaryKeyColumns b = NESeq (ColumnInfo b)
-
-onlyIntCols :: [ColumnInfo 'Postgres] -> [ColumnInfo 'Postgres]
-onlyIntCols = filter (isScalarColumnWhere isIntegerType . pgiType)
 
 onlyNumCols :: forall b . Backend b => [ColumnInfo b] -> [ColumnInfo b]
 onlyNumCols = filter (isScalarColumnWhere (isNumType @b) . pgiType)
