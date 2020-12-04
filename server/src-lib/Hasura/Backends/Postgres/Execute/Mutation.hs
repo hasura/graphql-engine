@@ -17,9 +17,6 @@ import qualified Database.PG.Query                            as Q
 import qualified Network.HTTP.Client                          as HTTP
 import qualified Network.HTTP.Types                           as N
 
-
-import           Instances.TH.Lift                            ()
-
 import qualified Hasura.Backends.Postgres.SQL.DML             as S
 import qualified Hasura.Tracing                               as Tracing
 

@@ -33,7 +33,7 @@ import qualified Language.GraphQL.Draft.Syntax as G
 
 newtype GQLExecDoc
   = GQLExecDoc { unGQLExecDoc :: [G.ExecutableDefinition G.Name] }
-  deriving (Ord, Show, Eq, Hashable,Lift)
+  deriving (Ord, Show, Eq, Hashable, Lift)
 
 instance J.FromJSON GQLExecDoc where
   parseJSON v = GQLExecDoc . G.getExecutableDefinitions <$> J.parseJSON v
@@ -82,7 +82,7 @@ instance J.FromJSON a => J.FromJSON (GQLBatchedReqs a) where
 newtype GQLQueryText
   = GQLQueryText
   { _unGQLQueryText :: Text
-  } deriving (Show, Eq, Ord, J.FromJSON, J.ToJSON, Hashable, Lift, IsString)
+  } deriving (Show, Eq, Ord, J.FromJSON, J.ToJSON, Hashable, IsString)
 
 type GQLReqUnparsed = GQLReq GQLQueryText
 type GQLReqParsed = GQLReq GQLExecDoc

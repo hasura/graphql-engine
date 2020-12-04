@@ -24,7 +24,6 @@ import           Data.Aeson
 import           Data.Aeson.Casing
 import           Data.Aeson.TH
 import           Data.Text.Extended
-import           Language.Haskell.TH.Syntax         (Lift)
 
 import           Hasura.Backends.Postgres.SQL.Types
 import           Hasura.EncJSON
@@ -43,7 +42,7 @@ data AddComputedField
   , _afcName       :: !ComputedFieldName
   , _afcDefinition :: !ComputedFieldDefinition
   , _afcComment    :: !(Maybe Text)
-  } deriving (Show, Eq, Lift, Generic)
+  } deriving (Show, Eq, Generic)
 instance NFData AddComputedField
 instance Cacheable AddComputedField
 $(deriveJSON (aesonDrop 4 snakeCase) ''AddComputedField)
@@ -189,7 +188,7 @@ addComputedFieldP2Setup trackedTables table computedField definition rawFunction
             ComputedFieldFunction function inputArgSeq tableArgument maybePGSessionArg $
             rfiDescription rawFunctionInfo
 
-      pure $ ComputedFieldInfo computedField computedFieldFunction returnType comment
+      pure $ ComputedFieldInfo () computedField computedFieldFunction returnType comment
 
     validateTableArgumentType :: (MV.MonadValidate [ComputedFieldValidateError] m)
                               => FunctionTableArgument
@@ -251,7 +250,7 @@ data DropComputedField
   { _dccTable   :: !QualifiedTable
   , _dccName    :: !ComputedFieldName
   , _dccCascade :: !Bool
-  } deriving (Show, Eq, Lift)
+  } deriving (Show, Eq)
 $(deriveToJSON (aesonDrop 4 snakeCase) ''DropComputedField)
 
 instance FromJSON DropComputedField where

@@ -1,0 +1,18 @@
+- description: user can only select artists having name matching X-Hasura-iregex-artists
+  url: /v1/graphql
+  status: 200
+  headers:
+    X-Hasura-Role: user_iregex
+    X-Hasura-iregex-artists: "(.*ak)|(.*lla)"
+  response:
+    data:
+      Artist:
+        - name: Akon
+        - name: Camilla
+  query:
+    query: |
+      query {
+        Artist (order_by: {name: asc}) {
+          name
+        }
+      }

@@ -313,10 +313,10 @@ func (mderror *InconsistentMetadataError) String() string {
 }
 
 type SQLInternalError struct {
-	Arguments                 []string      `json:"arguments" mapstructure:"arguments,omitempty"`
+	Arguments                 []string       `json:"arguments" mapstructure:"arguments,omitempty"`
 	Error                     *PostgresError `json:"error" mapstructure:"error,omitempty"`
-	Prepared                  bool          `json:"prepared" mapstructure:"prepared,omitempty"`
-	Statement                 string        `json:"statement" mapstructure:"statement,omitempty"`
+	Prepared                  bool           `json:"prepared" mapstructure:"prepared,omitempty"`
+	Statement                 string         `json:"statement" mapstructure:"statement,omitempty"`
 	InconsistentMetadataError `mapstructure:",squash"`
 }
 type PostgresError struct {

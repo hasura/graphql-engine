@@ -302,16 +302,19 @@ library
                      , Data.Time.Clock.Units
                      , Data.URL.Template
                      , Hasura.App
+                     , Hasura.Metadata.Class
 
                      , Hasura.Backends.Postgres.Connection
                      , Hasura.Backends.Postgres.Execute.Mutation
                      , Hasura.Backends.Postgres.Execute.RemoteJoin
                      , Hasura.Backends.Postgres.Translate.BoolExp
+                     , Hasura.Backends.Postgres.Translate.Column
                      , Hasura.Backends.Postgres.Translate.Delete
                      , Hasura.Backends.Postgres.Translate.Insert
                      , Hasura.Backends.Postgres.Translate.Mutation
                      , Hasura.Backends.Postgres.Translate.Returning
                      , Hasura.Backends.Postgres.Translate.Select
+                     , Hasura.Backends.Postgres.Translate.Types
                      , Hasura.Backends.Postgres.Translate.Update
                      , Hasura.Backends.Postgres.SQL.DML
                      , Hasura.Backends.Postgres.SQL.Error
@@ -334,6 +337,7 @@ library
                      , Hasura.Server.Logging
                      , Hasura.Server.Migrate
                      , Hasura.Server.Compression
+                     , Hasura.Server.Types
                      , Hasura.Server.API.PGDump
                      , Hasura.Prelude
 
@@ -443,6 +447,7 @@ library
                      , Hasura.GraphQL.Execute.Plan
                      , Hasura.GraphQL.Execute.Types
                      , Hasura.GraphQL.Execute.Mutation
+                     , Hasura.GraphQL.Execute.Common
                      , Hasura.GraphQL.Execute.Remote
                      , Hasura.GraphQL.Execute.Resolve
                      , Hasura.GraphQL.Execute.Prepare
@@ -464,18 +469,20 @@ library
                      , Hasura.GraphQL.Parser.Schema
                      , Hasura.GraphQL.Schema
                      , Hasura.GraphQL.Schema.Action
+                     , Hasura.GraphQL.Schema.Backend
                      , Hasura.GraphQL.Schema.BoolExp
                      , Hasura.GraphQL.Schema.Common
-                     , Hasura.GraphQL.Schema.Insert
                      , Hasura.GraphQL.Schema.Introspect
                      , Hasura.GraphQL.Schema.Mutation
                      , Hasura.GraphQL.Schema.OrderBy
+                     , Hasura.GraphQL.Schema.Postgres
                      , Hasura.GraphQL.Schema.Remote
                      , Hasura.GraphQL.Schema.Select
                      , Hasura.GraphQL.Schema.Table
                      , Hasura.Eventing.HTTP
                      , Hasura.Eventing.EventTrigger
                      , Hasura.Eventing.ScheduledTrigger
+                     , Hasura.Eventing.ScheduledTrigger.Types
                      , Hasura.Eventing.Common
                      , Data.GADT.Compare.Extended
                      , Data.Tuple.Extended

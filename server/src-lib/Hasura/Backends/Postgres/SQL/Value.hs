@@ -12,8 +12,6 @@ module Hasura.Backends.Postgres.SQL.Value
 
   , binEncoder
   , txtEncoder
-  , toBinaryValue
-  , toTxtValue
   , toPrepParam
   ) where
 
@@ -128,17 +126,19 @@ withConstructorFn ty v
 
 
 scientificToInteger :: (Integral i, Bounded i) => Scientific -> AT.Parser i
-scientificToInteger num = case toBoundedInteger num of
-  Just parsed -> pure parsed
-  Nothing     -> fail $ "The value " ++ show num ++ " lies outside the "
-                     ++ "bounds or is not an integer.  Maybe it is a "
-                     ++ "float, or is there integer overflow?"
+scientificToInteger num =
+  toBoundedInteger num
+  `onNothing`
+   fail ("The value " ++ show num ++ " lies outside the "
+      ++ "bounds or is not an integer.  Maybe it is a "
+      ++ "float, or is there integer overflow?")
 
 scientificToFloat :: (RealFloat f) => Scientific -> AT.Parser f
-scientificToFloat num = case toBoundedRealFloat num of
-  Right parsed -> pure parsed
-  Left _       -> fail $ "The value " ++ show num ++ " lies outside the "
-                    ++ "bounds.  Is it overflowing the float bounds?"
+scientificToFloat num =
+  toBoundedRealFloat num
+  `onLeft` \ _ ->
+  fail ("The value " ++ show num ++ " lies outside the "
+     ++ "bounds.  Is it overflowing the float bounds?")
 
 
 parsePGValue :: PGScalarType -> Value -> AT.Parser PGScalarValue
@@ -279,10 +279,3 @@ toPrepParam :: Int -> PGScalarType -> S.SQLExp
 toPrepParam i ty =
   -- See Note [Type casting prepared params] above
   S.withTyAnn ty . withConstructorFn ty $ S.SEPrep i
-
-toBinaryValue :: WithScalarType PGScalarValue -> Q.PrepArg
-toBinaryValue = binEncoder . pstValue
-
-toTxtValue :: WithScalarType PGScalarValue -> S.SQLExp
-toTxtValue (WithScalarType ty val) =
-  S.withTyAnn ty . withConstructorFn ty $ txtEncoder val

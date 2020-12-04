@@ -15,7 +15,6 @@ import qualified Data.Sequence                                as DS
 import qualified Database.PG.Query                            as Q
 
 import           Data.Aeson
-import           Instances.TH.Lift                            ()
 
 import qualified Hasura.Backends.Postgres.SQL.DML             as S
 import qualified Hasura.Tracing                               as Tracing

@@ -1,4 +1,4 @@
-description: Select cities ending with ham
+description: Select cities not starting with new
 url: /v1/graphql
 status: 200
 response:
