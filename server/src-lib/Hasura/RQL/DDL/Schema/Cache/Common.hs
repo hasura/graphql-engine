@@ -53,7 +53,7 @@ data BuildInputs
 -- 'MonadWriter' side channel.
 data BuildOutputs
   = BuildOutputs
-  { _boTables        :: !TableCache
+  { _boTables        :: !(TableCache 'Postgres)
   , _boActions       :: !ActionCache
   , _boFunctions     :: !FunctionCache
   , _boRemoteSchemas :: !(HashMap RemoteSchemaName (RemoteSchemaCtx, MetadataObject))

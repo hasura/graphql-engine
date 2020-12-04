@@ -52,3 +52,17 @@ args:
   args:
     schema: public
     name: authors
+
+- type: run_sql
+  args:
+    sql: |
+      create table employees (
+         id serial primary key,
+         name text
+      );
+      insert into employees (name) values ('alice'),(NULL),('bob');
+
+- type: track_table
+  args:
+    schema: public
+    name: employees

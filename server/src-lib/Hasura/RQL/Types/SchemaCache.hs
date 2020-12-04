@@ -104,7 +104,7 @@ module Hasura.RQL.Types.SchemaCache
   , getDependentObjs
   , getDependentObjsWith
 
-  , FunctionType(..)
+  , FunctionVolatility(..)
   , FunctionArg(..)
   , FunctionArgName(..)
   , FunctionName(..)
@@ -136,7 +136,7 @@ import           Hasura.GraphQL.Context              (GQLContext, RemoteField, R
 import           Hasura.Incremental                  (Dependency, MonadDepend (..), selectKeyD)
 import           Hasura.RQL.IR.BoolExp
 import           Hasura.RQL.Types.Action
-import           Hasura.RQL.Types.Common
+import           Hasura.RQL.Types.Common             hiding (FunctionName)
 import           Hasura.RQL.Types.ComputedField
 import           Hasura.RQL.Types.CustomTypes
 import           Hasura.RQL.Types.Error
@@ -230,7 +230,7 @@ type ActionCache = M.HashMap ActionName (ActionInfo 'Postgres) -- info of all ac
 
 data SchemaCache
   = SchemaCache
-  { scTables                      :: !TableCache
+  { scTables                      :: !(TableCache 'Postgres)
   , scActions                     :: !ActionCache
   , scFunctions                   :: !FunctionCache
   , scRemoteSchemas               :: !RemoteSchemaMap
@@ -275,10 +275,10 @@ instance (TableCoreInfoRM m) => TableCoreInfoRM (TraceT m) where
   lookupTableCoreInfo = lift . lookupTableCoreInfo
 
 newtype TableCoreCacheRT m a
-  = TableCoreCacheRT { runTableCoreCacheRT :: Dependency TableCoreCache -> m a }
+  = TableCoreCacheRT { runTableCoreCacheRT :: Dependency (TableCoreCache 'Postgres) -> m a }
   deriving (Functor, Applicative, Monad, MonadIO, MonadError e, MonadState s, MonadWriter w, MonadTx)
-    via (ReaderT (Dependency TableCoreCache) m)
-  deriving (MonadTrans) via (ReaderT (Dependency TableCoreCache))
+    via (ReaderT (Dependency (TableCoreCache 'Postgres)) m)
+  deriving (MonadTrans) via (ReaderT (Dependency (TableCoreCache 'Postgres)))
 
 instance (MonadReader r m) => MonadReader r (TableCoreCacheRT m) where
   ask = lift ask

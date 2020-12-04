@@ -94,9 +94,8 @@ import           Data.Aeson
 import           Data.Aeson.Casing
 import           Data.Aeson.TH
 import           Data.Text.Extended
-import           Language.Haskell.TH.Syntax          (Lift)
 
-import           Hasura.Backends.Postgres.SQL.Types
+import qualified Hasura.Backends.Postgres.SQL.Types  as PG
 import           Hasura.Incremental                  (Cacheable)
 import           Hasura.RQL.IR.BoolExp
 import           Hasura.RQL.Types.Column
@@ -122,7 +121,7 @@ data TableCustomRootFields
   , _tcrfUpdateByPk      :: !(Maybe G.Name)
   , _tcrfDelete          :: !(Maybe G.Name)
   , _tcrfDeleteByPk      :: !(Maybe G.Name)
-  } deriving (Show, Eq, Lift, Generic)
+  } deriving (Show, Eq, Generic)
 instance NFData TableCustomRootFields
 instance Cacheable TableCustomRootFields
 $(deriveToJSON (aesonDrop 5 snakeCase){omitNothingFields=True} ''TableCustomRootFields)
@@ -167,7 +166,7 @@ emptyCustomRootFields =
 
 data FieldInfo (b :: BackendType)
   = FIColumn !(ColumnInfo b)
-  | FIRelationship !RelInfo
+  | FIRelationship !(RelInfo b)
   | FIComputedField !(ComputedFieldInfo b)
   | FIRemoteRelationship !(RemoteFieldInfo b)
   deriving (Generic)
@@ -189,7 +188,7 @@ fieldInfoName = \case
   FIComputedField info      -> fromComputedField $ _cfiName info
   FIRemoteRelationship info -> fromRemoteRelationship $ _rfiName info
 
-fieldInfoGraphQLName :: FieldInfo 'Postgres -> Maybe G.Name
+fieldInfoGraphQLName :: FieldInfo b -> Maybe G.Name
 fieldInfoGraphQLName = \case
   FIColumn info             -> Just $ pgiName info
   FIRelationship info       -> G.mkName $ relNameToTxt $ riName info
@@ -217,7 +216,7 @@ getCols = mapMaybe (^? _FIColumn) . M.elems
 sortCols :: [ColumnInfo backend] -> [ColumnInfo backend]
 sortCols = sortBy (\l r -> compare (pgiPosition l) (pgiPosition r))
 
-getRels :: FieldInfoMap (FieldInfo backend) -> [RelInfo]
+getRels :: FieldInfoMap (FieldInfo backend) -> [RelInfo backend]
 getRels = mapMaybe (^? _FIRelationship) . M.elems
 
 getComputedFieldInfos :: FieldInfoMap (FieldInfo backend) -> [ComputedFieldInfo backend]
@@ -259,7 +258,7 @@ instance ToJSON (SelPermInfo 'Postgres) where
 data UpdPermInfo (b :: BackendType)
   = UpdPermInfo
   { upiCols            :: !(HS.HashSet (Column b))
-  , upiTable           :: !QualifiedTable
+  , upiTable           :: !(TableName b)
   , upiFilter          :: !(AnnBoolExpPartialSQL b)
   , upiCheck           :: !(Maybe (AnnBoolExpPartialSQL b))
   , upiSet             :: !(PreSetColsPartial b)
@@ -273,7 +272,7 @@ instance ToJSON (UpdPermInfo 'Postgres) where
 
 data DelPermInfo (b :: BackendType)
   = DelPermInfo
-  { dpiTable           :: !QualifiedTable
+  { dpiTable           :: !(TableName b)
   , dpiFilter          :: !(AnnBoolExpPartialSQL b)
   , dpiRequiredHeaders :: ![Text]
   } deriving (Generic)
@@ -381,7 +380,7 @@ isMutable :: (ViewInfo -> Bool) -> Maybe ViewInfo -> Bool
 isMutable _ Nothing   = True
 isMutable f (Just vi) = f vi
 
-mutableView :: (MonadError QErr m) => QualifiedTable
+mutableView :: (MonadError QErr m) => TableName 'Postgres
             -> (ViewInfo -> Bool) -> Maybe ViewInfo
             -> Text -> m ()
 mutableView qt f mVI operation =
@@ -393,7 +392,7 @@ data TableConfig
   { _tcCustomRootFields  :: !TableCustomRootFields
   , _tcCustomColumnNames :: !CustomColumnNames
   , _tcCustomName        :: !(Maybe G.Name)
-  } deriving (Show, Eq, Lift, Generic)
+  } deriving (Show, Eq, Generic)
 instance NFData TableConfig
 instance Cacheable TableConfig
 $(deriveToJSON (aesonDrop 3 snakeCase){omitNothingFields=True} ''TableConfig)
@@ -411,10 +410,10 @@ instance FromJSON TableConfig where
 
 -- | The @field@ and @primaryKeyColumn@ type parameters vary as the schema cache is built and more
 -- information is accumulated. See 'TableRawInfo' and 'TableCoreInfo'.
-data TableCoreInfoG field primaryKeyColumn
+data TableCoreInfoG (b :: BackendType) field primaryKeyColumn
   = TableCoreInfo
-  { _tciName              :: !QualifiedTable
-  , _tciDescription       :: !(Maybe PGDescription)
+  { _tciName              :: !(TableName b)
+  , _tciDescription       :: !(Maybe PG.PGDescription) -- TODO make into type family?
   , _tciSystemDefined     :: !SystemDefined
   , _tciFieldInfoMap      :: !(FieldInfoMap field)
   , _tciPrimaryKey        :: !(Maybe (PrimaryKey primaryKeyColumn))
@@ -424,18 +423,20 @@ data TableCoreInfoG field primaryKeyColumn
   , _tciViewInfo          :: !(Maybe ViewInfo)
   , _tciEnumValues        :: !(Maybe EnumValues)
   , _tciCustomConfig      :: !TableConfig
-  } deriving (Show, Eq, Generic)
-instance (Cacheable a, Cacheable b) => Cacheable (TableCoreInfoG a b)
-$(deriveToJSON (aesonDrop 4 snakeCase) ''TableCoreInfoG)
+  } deriving (Generic)
+deriving instance (Eq field, Eq pkCol, Backend b) => Eq (TableCoreInfoG b field pkCol)
+instance (Cacheable field, Cacheable pkCol, Backend b) => Cacheable (TableCoreInfoG b field pkCol)
+instance (Backend b, ToJSON field, ToJSON pkCol) => ToJSON (TableCoreInfoG b field pkCol) where
+  toJSON = genericToJSON $ aesonDrop 4 snakeCase
 $(makeLenses ''TableCoreInfoG)
 
 -- | The result of the initial processing step for table info. Includes all basic information, but
 -- is missing non-column fields.
-type TableRawInfo b = TableCoreInfoG (ColumnInfo b) (ColumnInfo b)
+type TableRawInfo b = TableCoreInfoG b (ColumnInfo b) (ColumnInfo b)
 -- | Fully-processed table info that includes non-column fields.
-type TableCoreInfo b = TableCoreInfoG (FieldInfo b) (ColumnInfo b)
+type TableCoreInfo b = TableCoreInfoG b (FieldInfo b) (ColumnInfo b)
 
-tciUniqueOrPrimaryKeyConstraints :: TableCoreInfoG a b -> Maybe (NonEmpty Constraint)
+tciUniqueOrPrimaryKeyConstraints :: TableCoreInfoG b f pkCol -> Maybe (NonEmpty Constraint)
 tciUniqueOrPrimaryKeyConstraints info = NE.nonEmpty $
   maybeToList (_pkConstraint <$> _tciPrimaryKey info)
   <> toList (_tciUniqueConstraints info)
@@ -450,8 +451,8 @@ instance ToJSON (TableInfo 'Postgres) where
   toJSON = genericToJSON $ aesonDrop 3 snakeCase
 $(makeLenses ''TableInfo)
 
-type TableCoreCache = M.HashMap QualifiedTable (TableCoreInfo 'Postgres)
-type TableCache = M.HashMap QualifiedTable (TableInfo 'Postgres) -- info of all tables
+type TableCoreCache b = M.HashMap (TableName b) (TableCoreInfo b)
+type TableCache b = M.HashMap (TableName b) (TableInfo b) -- info of all tables
 
 getFieldInfoM
   :: TableInfo b -> FieldName -> Maybe (FieldInfo b)

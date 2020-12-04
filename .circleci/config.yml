@@ -1,7 +1,7 @@
 # anchor refs to be used elsewhere
 refs:
   constants:
-  - &server_builder_image hasura/graphql-engine-server-builder:2020-08-26
+  - &server_builder_image hasura/graphql-engine-server-builder:2020-11-05
   skip_job_on_ciignore: &skip_job_on_ciignore
     run:
       name: checking if job should be terminated or not
@@ -79,7 +79,7 @@ refs:
 
   setup_remote_docker: &setup_remote_docker
     setup_remote_docker:
-      version: 17.09.0-ce
+      version: 19.03.13
       docker_layer_caching: true
 
   # ref pg environment for testing
@@ -105,7 +105,7 @@ refs:
         command: |
           mkdir -p /usr/share/man/man{1,7}
           apt-get update
-          apt install --yes pgbouncer jq curl postgresql-client-12
+          apt install --yes pgbouncer jq curl postgresql-client-13
     - run:
         name: Ensure databases are present
         environment:
@@ -171,7 +171,7 @@ jobs:
         name: Install latest postgresql client tools
         command: |
           apt-get -y update
-          apt-get -y install postgresql-client-12
+          apt-get -y install postgresql-client-13
     - run:
         name: Build the binary
         working_directory: ./server
@@ -236,6 +236,16 @@ jobs:
         command: echo 'all server tests passed!'
 
   # pytest the server with postgres versions >= 9.5
+  test_server_pg_13:
+    <<: *test_server
+    environment:
+      PG_VERSION: "13"
+      POSTGIS_VERSION: "3.0.0"
+    docker:
+    - image: *server_builder_image
+    - image: hasura/postgres-13.0-alpine-postgis3
+      <<: *test_pg_env
+
   test_server_pg_12:
     <<: *test_server
     environment:
@@ -609,6 +619,10 @@ workflows:
         requires:
         - build_server
         - build_console
+    - test_server_pg_13:
+        <<: *filter_only_vtags
+        requires:
+        - build_server
     - test_server_pg_12:
         <<: *filter_only_vtags
         requires:
@@ -640,6 +654,7 @@ workflows:
     - all_server_tests_pass:
         <<: *filter_only_vtags
         requires:
+        - test_server_pg_13
         - test_server_pg_12
         - test_server_pg_11
         - test_server_pg_10

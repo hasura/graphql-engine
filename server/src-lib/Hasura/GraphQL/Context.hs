@@ -49,8 +49,8 @@ data RoleContext a
 $(deriveToJSON (aesonDrop 5 snakeCase) ''RoleContext)
 
 data GQLContext = GQLContext
-  { gqlQueryParser    :: ParserFn (InsOrdHashMap G.Name (QueryRootField UnpreparedValue))
-  , gqlMutationParser :: Maybe (ParserFn (InsOrdHashMap G.Name (MutationRootField UnpreparedValue)))
+  { gqlQueryParser    :: ParserFn (InsOrdHashMap G.Name (QueryRootField (UnpreparedValue 'Postgres)))
+  , gqlMutationParser :: Maybe (ParserFn (InsOrdHashMap G.Name (MutationRootField (UnpreparedValue 'Postgres))))
   }
 
 instance J.ToJSON GQLContext where
@@ -106,6 +106,9 @@ data MutationDB (b :: BackendType) v
   = MDBInsert (IR.AnnInsert   b v)
   | MDBUpdate (IR.AnnUpdG b v)
   | MDBDelete (IR.AnnDelG b v)
+  | MDBFunction (IR.AnnSimpleSelG b v)
+  -- ^ This represents a VOLATILE function, and is AnnSimpleSelG for easy
+  -- re-use of non-VOLATILE function tracking code.
 
 data ActionMutation (b :: BackendType) v
   = AMSync !(RQL.AnnActionExecution b v)

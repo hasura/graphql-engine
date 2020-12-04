@@ -28,7 +28,7 @@ import           Hasura.Session
 buildTablePermissions
   :: ( ArrowChoice arr, Inc.ArrowDistribute arr, Inc.ArrowCache m arr
      , ArrowWriter (Seq CollectedInfo) arr, MonadTx m )
-  => ( Inc.Dependency TableCoreCache
+  => ( Inc.Dependency (TableCoreCache 'Postgres)
      , QualifiedTable
      , FieldInfoMap (FieldInfo 'Postgres)
      , HashSet CatalogPermission
@@ -85,7 +85,7 @@ buildPermission
      , ArrowWriter (Seq CollectedInfo) arr
      , MonadTx m, IsPerm a, FromJSON a
      )
-  => ( Inc.Dependency TableCoreCache
+  => ( Inc.Dependency (TableCoreCache 'Postgres)
      , QualifiedTable
      , FieldInfoMap (FieldInfo 'Postgres)
      , [CatalogPermission]

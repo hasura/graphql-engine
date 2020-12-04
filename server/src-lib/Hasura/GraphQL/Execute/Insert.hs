@@ -245,9 +245,9 @@ insertArrRel env resCols remoteJoinCtx planVars stringifyNum arrRelIns =
 -- | insert object relations and additional columns from parent
 validateInsert
   :: (MonadError QErr m)
-  => [PGCol] -- ^ inserting columns
-  -> [RelInfo] -- ^ object relation inserts
-  -> [PGCol] -- ^ additional fields from parent
+  => [PGCol]             -- ^ inserting columns
+  -> [RelInfo 'Postgres] -- ^ object relation inserts
+  -> [PGCol]             -- ^ additional fields from parent
   -> m ()
 validateInsert insCols objRels addCols = do
   -- validate insertCols

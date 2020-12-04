@@ -1,3 +1,3 @@
 module Hasura.SQL.Backend where
 
-data BackendType = Postgres | MySQL -- | Misc
+data BackendType = Postgres | MySQL | MSSQL
