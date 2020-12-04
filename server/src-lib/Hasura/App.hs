@@ -1,10 +1,10 @@
-{-# LANGUAGE UndecidableInstances #-}
 {-# LANGUAGE CPP                  #-}
+{-# LANGUAGE UndecidableInstances #-}
 
 module Hasura.App where
 
 import           Control.Concurrent.STM.TVar               (TVar, readTVarIO)
-import           Control.Exception                         (throwIO)
+import           Control.Exception                         (bracket_, throwIO)
 import           Control.Lens                              (view, _2)
 import           Control.Monad.Base
 import           Control.Monad.Catch                       (Exception, MonadCatch, MonadMask,
@@ -80,6 +80,7 @@ import qualified Hasura.GraphQL.Execute.LiveQuery.Poll     as EL
 import qualified Hasura.GraphQL.Transport.WebSocket.Server as WS
 import qualified Hasura.Tracing                            as Tracing
 import qualified System.Metrics                            as EKG
+import qualified System.Metrics.Gauge                      as EKG.Gauge
 
 data ExitCode
   = InvalidEnvironmentVariableOptionsError
@@ -285,6 +286,17 @@ shutdownGracefully' = flip C.putMVar () . unShutdownLatch
 flushLogger :: MonadIO m => LoggerCtx impl -> m ()
 flushLogger = liftIO . FL.flushLogStr . _lcLoggerSet
 
+data ServerMetrics
+  = ServerMetrics
+  { smWarpThreads :: !EKG.Gauge.Gauge
+  }
+
+createServerMetrics :: EKG.Store -> IO ServerMetrics
+createServerMetrics store = do
+  smWarpThreads <- EKG.createGauge "warp_threads" store
+  pure ServerMetrics { .. }
+
+{- HLINT ignore runHGEServer "Avoid lambda" -}
 runHGEServer
   :: ( HasVersion
      , MonadIO m
@@ -301,6 +313,7 @@ runHGEServer
      , WS.MonadWSLog m
      , MonadExecuteQuery m
      , Tracing.HasReporter m
+     , HasResourceLimits m
      )
   => Env.Environment
   -> ServeOptions impl
@@ -313,9 +326,13 @@ runHGEServer
   -> IO ()
   -- ^ shutdown function
   -> Maybe EL.LiveQueryPostPollHook
+  -> ServerMetrics
   -> EKG.Store
   -> m ()
-runHGEServer env ServeOptions{..} InitCtx{..} pgExecCtx initTime shutdownApp postPollHook ekgStore = do
+runHGEServer env ServeOptions{..} InitCtx{..} pgExecCtx initTime shutdownApp postPollHook serverMetrics ekgStore = do
+-- =======
+-- runHGEServer env ServeOptions{..} ServeCtx{..} pgExecCtx initTime shutdownApp postPollHook serverMetrics ekgStore = do
+-- >>>>>>> 02e5d85c (server: add metric for warp threads (#88))
   -- Comment this to enable expensive assertions from "GHC.AssertNF". These
   -- will log lines to STDOUT containing "not in normal form". In the future we
   -- could try to integrate this into our tests. For now this is a development
@@ -432,10 +449,21 @@ runHGEServer env ServeOptions{..} InitCtx{..} pgExecCtx initTime shutdownApp pos
   let apiInitTime = realToFrac $ Clock.diffUTCTime finishTime initTime
   unLogger logger $
     mkGenericLog LevelInfo "server" $ StartupTimeInfo "starting API server" apiInitTime
+
+  -- Install a variant of forkIOWithUnmask which tracks Warp threads using an EKG metric
+  let setForkIOWithMetrics :: Warp.Settings -> Warp.Settings
+      setForkIOWithMetrics = Warp.setFork \f -> do
+        void $ C.forkIOWithUnmask (\unmask ->
+          bracket_
+            (EKG.Gauge.inc $ smWarpThreads serverMetrics)
+            (EKG.Gauge.dec $ smWarpThreads serverMetrics)
+              (f unmask))
+
   let warpSettings = Warp.setPort soPort
                      . Warp.setHost soHost
                      . Warp.setGracefulShutdownTimeout (Just 30) -- 30s graceful shutdown
                      . Warp.setInstallShutdownHandler (shutdownHandler _icLoggers immortalThreads stopWsServer lockedEventsCtx _icPgPool)
+                     . setForkIOWithMetrics
                      $ Warp.defaultSettings
   liftIO $ Warp.runSettings warpSettings app
 
@@ -621,7 +649,11 @@ execQuery env queryBs = do
 
 instance Tracing.HasReporter AppM
 
+instance HasResourceLimits AppM where
+  askResourceLimits = pure (ResourceLimits id)
+
 instance HttpLog AppM where
+
   logHttpError logger userInfoM reqId waiReq req qErr headers =
     unLogger logger $ mkHttpLog $
       mkHttpErrorLogContext userInfoM reqId waiReq req qErr Nothing Nothing headers

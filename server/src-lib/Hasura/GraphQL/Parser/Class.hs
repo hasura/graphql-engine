@@ -3,20 +3,21 @@ module Hasura.GraphQL.Parser.Class where
 
 import           Hasura.Prelude
 
-import qualified Data.HashMap.Strict                   as Map
-import qualified Language.Haskell.TH                   as TH
+import                qualified Data.HashMap.Strict                   as Map
+import                qualified Language.Haskell.TH                   as TH
+import                qualified Language.GraphQL.Draft.Syntax         as G
 
-import           Data.Has
-import           Data.Parser.JSONPath
-import           Data.Tuple.Extended
-import           GHC.Stack                             (HasCallStack)
-import           Type.Reflection                       (Typeable)
+import                          Data.Has
+import                          Data.Parser.JSONPath
+import                          Data.Tuple.Extended
+import                          GHC.Stack                             (HasCallStack)
+import                          Type.Reflection                       (Typeable)
 
-import {-# SOURCE #-} Hasura.GraphQL.Parser.Internal.Parser
-import           Hasura.RQL.Types.Error
-import           Hasura.RQL.Types.Table                (TableCache, TableInfo)
-import           Hasura.Session                        (RoleName)
-import           Hasura.SQL.Types
+import                          Hasura.SQL.Types
+import {-# SOURCE #-}           Hasura.GraphQL.Parser.Internal.Parser
+import                          Hasura.RQL.Types.Error
+import                          Hasura.RQL.Types.Table
+import                          Hasura.Session                        (RoleName)
 
 {- Note [Tying the knot]
 ~~~~~~~~~~~~~~~~~~~~~~~~
@@ -121,6 +122,23 @@ askTableInfo tableName = do
   -- This should never fail, since the schema cache construction process is
   -- supposed to ensure that all dependencies are resolved.
   tableInfo `onNothing` throw500 ("askTableInfo: no info for " <>> tableName)
+
+-- | Helper function to get the table GraphQL name. A table may have an
+-- identifier configured with it. When the identifier exists, the GraphQL nodes
+-- that are generated according to the identifier. For example: Let's say,
+-- we have a table called `users address`, the name of the table is not GraphQL
+-- compliant so we configure the table with a GraphQL compliant name,
+-- say `users_address`
+-- The generated top-level nodes of this table will be like `users_address`,
+-- `insert_users_address` etc
+getTableGQLName
+  :: MonadTableInfo r m
+  => QualifiedTable
+  -> m G.Name
+getTableGQLName table = do
+  tableInfo <- askTableInfo table
+  let tableCustomName = _tcCustomName . _tciCustomConfig . _tiCoreInfo $ tableInfo
+  maybe (qualifiedObjectToName table) pure tableCustomName
 
 -- | A wrapper around 'memoizeOn' that memoizes a function by using its argument
 -- as the key.

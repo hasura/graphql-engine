@@ -64,7 +64,12 @@ runApp env (HGEOptionsG rci hgeCmd) =
         Signals.sigTERM
         (Signals.CatchOnce (shutdownGracefully initCtx))
         Nothing
-      runHGEServer env serveOptions initCtx Nothing initTime shutdownApp Nothing ekgStore
+      serverMetrics <- liftIO $ createServerMetrics ekgStore
+      runHGEServer env serveOptions initCtx Nothing initTime shutdownApp Nothing serverMetrics ekgStore
+-- =======
+--       flip runPGMetadataStorageApp (_scPgPool serveCtx) $
+--         runHGEServer env serveOptions serveCtx Nothing initTime shutdownApp Nothing serverMetrics ekgStore
+-- >>>>>>> 02e5d85c (server: add metric for warp threads (#88))
 
     HCExport -> do
       (initCtx, _) <- initialiseCtx env hgeCmd rci

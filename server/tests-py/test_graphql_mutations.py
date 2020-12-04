@@ -514,6 +514,9 @@ class TestGraphqlDeletePermissions:
     def test_agent_delete_perm_arr_sess_var_fail(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + "/agent_delete_perm_arr_sess_var_fail.yaml")
 
+    def test_user_delete_author(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + "/user_delete_author.yaml")
+
     def test_user_delete_account_success(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + "/user_delete_account_success.yaml")
 
@@ -542,6 +545,26 @@ class TestGraphqlMutationCustomSchema:
     @classmethod
     def dir(cls):
         return "queries/graphql_mutation/custom_schema"
+
+@pytest.mark.parametrize("transport", ['http', 'websocket'])
+@use_mutation_fixtures
+class TestGraphqlMutationCustomGraphQLTableName:
+
+    def test_insert_author(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/insert_author_details.yaml', transport)
+
+    def test_insert_article_author(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/insert_article_author.yaml', transport)
+
+    def test_update_author(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/update_author_details.yaml', transport)
+
+    def test_delete_author(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/delete_author_details.yaml', transport)
+
+    @classmethod
+    def dir(cls):
+        return "queries/graphql_mutation/custom_schema/custom_table_name"
 
 @pytest.mark.parametrize('transport', ['http', 'websocket'])
 @use_mutation_fixtures

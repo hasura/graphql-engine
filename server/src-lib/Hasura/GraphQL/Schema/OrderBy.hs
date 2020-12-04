@@ -36,7 +36,8 @@ orderByExp
   -> SelPermInfo
   -> m (Parser 'Input n [RQL.AnnOrderByItemG UnpreparedValue])
 orderByExp table selectPermissions = memoizeOn 'orderByExp table $ do
-  name <- qualifiedObjectToName table <&> (<> $$(G.litName "_order_by"))
+  tableGQLName <- getTableGQLName table
+  let name = tableGQLName <> $$(G.litName "_order_by")
   let description = G.Description $
         "Ordering options when selecting data from " <> table <<> "."
   tableFields  <- tableSelectFields table selectPermissions
@@ -89,8 +90,8 @@ orderByAggregation table selectPermissions = do
   -- there is heavy duplication between this and Select.tableAggregationFields
   -- it might be worth putting some of it in common, just to avoid issues when
   -- we change one but not the other?
-  tableName  <- qualifiedObjectToName table
-  allColumns <- tableSelectColumns table selectPermissions
+  tableGQLName <- getTableGQLName table
+  allColumns   <- tableSelectColumns table selectPermissions
   let numColumns  = onlyNumCols allColumns
       compColumns = onlyComparableCols allColumns
       numFields   = catMaybes <$> traverse mkField numColumns
@@ -102,13 +103,13 @@ orderByAggregation table selectPermissions = do
         , -- operators on numeric columns
           if null numColumns then Nothing else Just $
           for numericAggOperators \operator ->
-            parseOperator operator tableName numFields
+            parseOperator operator tableGQLName numFields
         , -- operators on comparable columns
           if null compColumns then Nothing else Just $
           for comparisonAggOperators \operator ->
-            parseOperator operator tableName compFields
+            parseOperator operator tableGQLName compFields
         ]
-  let objectName  = tableName <> $$(G.litName "_aggregate_order_by")
+  let objectName  = tableGQLName <> $$(G.litName "_aggregate_order_by")
       description = G.Description $ "order by aggregate values of table " <>> table
   pure $ P.object objectName (Just description) aggFields
   where
@@ -122,14 +123,12 @@ orderByAggregation table selectPermissions = do
       -> G.Name
       -> InputFieldsParser n [(PGColumnInfo, OrderInfo)]
       -> InputFieldsParser n (Maybe [OrderByItemG RQL.AnnAggregateOrderBy])
-    parseOperator operator tableName columns =
+    parseOperator operator tableGQLName columns =
       let opText     = G.unName operator
-          objectName = tableName <> $$(G.litName "_") <> operator <> $$(G.litName "_order_by")
+          objectName = tableGQLName <> $$(G.litName "_") <> operator <> $$(G.litName "_order_by")
           objectDesc = Just $ G.Description $ "order by " <> opText <> "() on columns of table " <>> table
       in  P.fieldOptional operator Nothing (P.object objectName objectDesc columns)
         `mapField` map (\(col, info) -> mkOrderByItemG (RQL.AAOOp opText col) info)
-
-
 
 orderByOperator :: MonadParse m => Parser 'Both m (Maybe OrderInfo)
 orderByOperator =

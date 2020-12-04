@@ -238,9 +238,30 @@ mapActionT
   -> Spock.ActionT n a
 mapActionT f tma = MTC.restoreT . pure =<< (MTC.liftWith $ \run -> f (run tma))
 
+-- | Resource limits, represented by a function which modifies IO actions to
+-- enforce those limits by throwing errors using 'MonadError' in the case
+-- where they are exceeded.
+
+newtype ResourceLimits = ResourceLimits
+  { runResourceLimits :: forall m a. (MonadBaseControl IO m, MonadError QErr m) => m a -> m a
+  }
+
+-- | Monads which support resource (memory, CPU time, etc.) limiting
+class Monad m => HasResourceLimits m where
+  askResourceLimits :: m ResourceLimits
+
+  -- A default for monad transformer instances
+  default askResourceLimits
+    :: (m ~ t n, MonadTrans t, HasResourceLimits n)
+    => m ResourceLimits
+  askResourceLimits = lift askResourceLimits
+
+instance HasResourceLimits m => HasResourceLimits (ReaderT r m)
+instance HasResourceLimits m => HasResourceLimits (ExceptT e m)
+instance HasResourceLimits m => HasResourceLimits (Tracing.TraceT m)
 
 mkSpockAction
-  :: (HasVersion, MonadIO m, FromJSON a, ToJSON a, UserAuthentication (Tracing.TraceT m), HttpLog m, Tracing.HasReporter m)
+  :: (HasVersion, MonadIO m, MonadBaseControl IO m, FromJSON a, ToJSON a, UserAuthentication (Tracing.TraceT m), HttpLog m, Tracing.HasReporter m, HasResourceLimits m)
   => ServerCtx
   -> (Bool -> QErr -> Value)
   -- ^ `QErr` JSON encoder function
@@ -286,15 +307,21 @@ mkSpockAction serverCtx qErrEncoder qErrModifier apiHandler = do
           includeInternal = shouldIncludeInternal (_uiRole userInfo) $
                             scResponseInternalErrorsConfig serverCtx
 
+      limits <- lift askResourceLimits
+
       (serviceTime, (result, q)) <- withElapsedTime $ case apiHandler of
         AHGet handler -> do
-          res <- lift $ runReaderT (runExceptT handler) handlerState
+          res <- lift $ runReaderT (runExceptT (runResourceLimits limits handler)) handlerState
           return (res, Nothing)
         AHPost handler -> do
           parsedReqE <- runExceptT $ parseBody reqBody
-          parsedReq  <- either (logErrorAndResp (Just userInfo) requestId req (reqBody, Nothing) includeInternal headers . qErrModifier)
-                        return parsedReqE
-          res <- lift $ runReaderT (runExceptT $ handler parsedReq) handlerState
+-- <<<<<<< HEAD
+--           parsedReq  <- either (logErrorAndResp (Just userInfo) requestId req (reqBody, Nothing) includeInternal headers . qErrModifier)
+--                         return parsedReqE
+--           res <- lift $ runReaderT (runExceptT $ handler parsedReq) handlerState
+-- =======
+          parsedReq  <- onLeft parsedReqE (logErrorAndResp (Just userInfo) requestId req (reqBody, Nothing) includeInternal headers . qErrModifier)
+          res <- lift $ runReaderT (runExceptT . runResourceLimits limits $ handler parsedReq) handlerState
           return (res, Just parsedReq)
 
       -- apply the error modifier
@@ -525,7 +552,7 @@ legacyQueryHandler tn queryType req =
 
 -- | Default implementation of the 'MonadConfigApiHandler'
 configApiGetHandler
-  :: (HasVersion, MonadIO m, UserAuthentication (Tracing.TraceT m), HttpLog m, Tracing.HasReporter m)
+  :: (HasVersion, MonadIO m, MonadBaseControl IO m, UserAuthentication (Tracing.TraceT m), HttpLog m, Tracing.HasReporter m, HasResourceLimits m)
   => ServerCtx -> Maybe Text -> Spock.SpockCtxT () m ()
 configApiGetHandler serverCtx@ServerCtx{..} consoleAssetsDir =
   Spock.get "v1alpha1/config" $ mkSpockAction serverCtx encodeQErr id $
@@ -562,6 +589,7 @@ mkWaiApp
      , WS.MonadWSLog m
      , Tracing.HasReporter m
      , GH.MonadExecuteQuery m
+     , HasResourceLimits m
      )
   => Env.Environment
   -- ^ Set of environment variables for reference in UIs
@@ -671,6 +699,7 @@ httpApp
      , MonadQueryLog m
      , Tracing.HasReporter m
      , GH.MonadExecuteQuery m
+     , HasResourceLimits m
      )
   => CorsConfig
   -> ServerCtx
@@ -762,7 +791,7 @@ httpApp corsCfg serverCtx enableConsole consoleAssetsDir enableTelemetry = do
     logger = scLogger serverCtx
 
     spockAction
-      :: (FromJSON a, ToJSON a, MonadIO m, UserAuthentication (Tracing.TraceT m), HttpLog m, Tracing.HasReporter m)
+      :: (FromJSON a, ToJSON a, MonadIO m, MonadBaseControl IO m, UserAuthentication (Tracing.TraceT m), HttpLog m, Tracing.HasReporter m, HasResourceLimits m)
       => (Bool -> QErr -> Value)
       -> (QErr -> QErr) -> APIHandler (Tracing.TraceT m) a -> Spock.ActionT m ()
     spockAction = mkSpockAction serverCtx

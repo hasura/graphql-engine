@@ -118,6 +118,7 @@ const newTable: TableEntry = {
           and handle `HASURA_GRAPHQL_WEBSOCKET_KEEPALIVE` env variable (fix #3539)
   **NOTE:** If you have event triggers with names greater than 42 chars, then you should update their names to avoid running into Postgres identifier limit bug (#5786)
 - server: fix issue with tracking custom functions that return `SETOF` materialized view (close #5294) (#5945)
+- server: introduce optional custom table name in table configuration to track the table according to the custom name. The `set_table_custom_fields` API has been deprecated, A new API `set_table_customization` has been added to set the configuration. (#3811)
 - server: allow remote relationships with union, interface and enum type fields as well (fixes #5875) (#6080)
 - server: Fix fine-grained incremental cache invalidation (fix #3759)
 
