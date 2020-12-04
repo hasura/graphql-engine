@@ -79,7 +79,7 @@ For example, consider the following mutation.
 .. code-block:: graphql
 
     extend type Mutation {
-      UserLogin (username: String!, email: String!): UserInfo
+      UserLogin (username: String!, password: String!): UserInfo
     }
 
     type UserInfo {
