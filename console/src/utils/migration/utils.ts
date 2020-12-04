@@ -11,12 +11,7 @@ import {
   getSetCustomRootFieldsQuery,
   CustomRootFields,
 } from '../../components/Common/utils/v1QueryUtils';
-import {
-  isColTypeString,
-  isPostgresFunction,
-  isTypeCast,
-  quoteDefault,
-} from '../../components/Services/Data/utils';
+import { quoteDefault } from '../../components/Services/Data/utils';
 import gqlPattern from '../../components/Services/Data/Common/GraphQLValidation';
 import { sqlEscapeText } from '../../components/Common/utils/sqlUtils';
 import Migration from './Migration';
