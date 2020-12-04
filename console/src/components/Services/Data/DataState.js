@@ -1,5 +1,5 @@
 const defaultCurFilter = {
-  where: { $and: [{ '': { '': '' } }] },
+  where: { $and: [{ '': { $eq: '' } }] },
   limit: 10,
   offset: 0,
   order_by: [{ column: '', type: 'asc', nulls: 'last' }],

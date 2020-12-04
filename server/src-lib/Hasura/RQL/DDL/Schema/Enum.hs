@@ -49,11 +49,11 @@ import           Hasura.Server.Utils                 (makeReasonMessage)
 resolveEnumReferences
   :: HashMap QualifiedTable (PrimaryKey PGCol, EnumValues)
   -> HashSet ForeignKey
-  -> HashMap PGCol (NonEmpty EnumReference)
+  -> HashMap PGCol (NonEmpty (EnumReference 'Postgres))
 resolveEnumReferences enumTables =
   M.fromListWith (<>) . map (fmap (:|[])) . mapMaybe resolveEnumReference . toList
   where
-    resolveEnumReference :: ForeignKey -> Maybe (PGCol, EnumReference)
+    resolveEnumReference :: ForeignKey -> Maybe (PGCol, EnumReference 'Postgres)
     resolveEnumReference foreignKey = do
       [(localColumn, foreignColumn)] <- pure $ M.toList (_fkColumnMapping foreignKey)
       (primaryKey, enumValues) <- M.lookup (_fkForeignTable foreignKey) enumTables

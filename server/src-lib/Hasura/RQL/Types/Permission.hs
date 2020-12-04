@@ -11,8 +11,6 @@ import           Data.Aeson
 import           Data.Aeson.Casing
 import           Data.Aeson.TH
 import           Data.Hashable
-import           Instances.TH.Lift                  ()
-import           Language.Haskell.TH.Syntax         (Lift)
 
 import           Hasura.Backends.Postgres.SQL.Types (PGCol, TableName, getTableTxt)
 import           Hasura.Incremental                 (Cacheable)
@@ -28,7 +26,7 @@ data PermType
   | PTSelect
   | PTUpdate
   | PTDelete
-  deriving (Eq, Lift, Generic)
+  deriving (Eq, Generic)
 instance NFData PermType
 instance Cacheable PermType
 
@@ -86,7 +84,7 @@ instance Show PermId where
 data PermColSpec
   = PCStar
   | PCCols ![PGCol]
-  deriving (Show, Eq, Lift, Generic)
+  deriving (Show, Eq, Generic)
 instance Cacheable PermColSpec
 
 instance FromJSON PermColSpec where
@@ -102,7 +100,7 @@ data PermDef a =
   { _pdRole       :: !RoleName
   , _pdPermission :: !a
   , _pdComment    :: !(Maybe T.Text)
-  } deriving (Show, Eq, Lift, Generic)
+  } deriving (Show, Eq, Generic)
 instance (Cacheable a) => Cacheable (PermDef a)
 $(deriveFromJSON (aesonDrop 3 snakeCase){omitNothingFields=True} ''PermDef)
 $(makeLenses ''PermDef)
@@ -124,7 +122,7 @@ data InsPerm (b :: BackendType)
   , ipSet         :: !(Maybe (ColumnValues Value))
   , ipColumns     :: !(Maybe PermColSpec)
   , ipBackendOnly :: !(Maybe Bool) -- see Note [Backend only permissions]
-  } deriving (Show, Eq, Lift, Generic)
+  } deriving (Show, Eq, Generic)
 instance Cacheable (InsPerm 'Postgres)
 instance FromJSON (InsPerm 'Postgres) where
   parseJSON = genericParseJSON (aesonDrop 2 snakeCase){omitNothingFields=True}
@@ -141,7 +139,7 @@ data SelPerm (b :: BackendType)
   , spLimit             :: !(Maybe Int)         -- ^ Limit value
   , spAllowAggregations :: !Bool                -- ^ Allow aggregation
   , spComputedFields    :: ![ComputedFieldName] -- ^ Allowed computed fields
-  } deriving (Show, Eq, Lift, Generic)
+  } deriving (Show, Eq, Generic)
 instance Cacheable (SelPerm 'Postgres)
 instance ToJSON (SelPerm 'Postgres) where
   toJSON = genericToJSON (aesonDrop 2 snakeCase) {omitNothingFields=True}
@@ -160,7 +158,7 @@ type SelPermDef b = PermDef (SelPerm b)
 -- Delete permission
 data DelPerm (b :: BackendType)
   = DelPerm { dcFilter :: !(BoolExp b) }
-  deriving (Show, Eq, Lift, Generic)
+  deriving (Show, Eq, Generic)
 instance Cacheable (DelPerm 'Postgres)
 instance FromJSON (DelPerm 'Postgres) where
   parseJSON = genericParseJSON $ aesonDrop 2 snakeCase
@@ -180,7 +178,7 @@ data UpdPerm (b :: BackendType)
   -- This is optional because we don't want to break the v1 API
   -- but Nothing should be equivalent to the expression which always
   -- returns true.
-  } deriving (Show, Eq, Lift, Generic)
+  } deriving (Show, Eq, Generic)
 instance Cacheable (UpdPerm 'Postgres)
 instance FromJSON (UpdPerm 'Postgres) where
   parseJSON = genericParseJSON (aesonDrop 2 snakeCase){omitNothingFields=True}

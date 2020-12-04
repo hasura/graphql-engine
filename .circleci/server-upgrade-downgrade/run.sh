@@ -89,6 +89,7 @@ export GHCRTS='-N1'
 # Required for event trigger tests
 export WEBHOOK_FROM_ENV="http://127.0.0.1:5592"
 export EVENT_WEBHOOK_HEADER="MyEnvValue"
+export REMOTE_SCHEMAS_WEBHOOK_DOMAIN="http://127.0.0.1:5000"
 
 # graphql-engine will be run on this port
 fail_if_port_busy ${HASURA_GRAPHQL_SERVER_PORT}

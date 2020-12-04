@@ -241,7 +241,7 @@ func (o *InitOptions) createFiles() error {
 		o.EC.MetadataDir = filepath.Join(o.EC.ExecutionDirectory, cli.DefaultMetadataDirectory)
 		err = os.MkdirAll(o.EC.MetadataDir, os.ModePerm)
 		if err != nil {
-			return errors.Wrap(err, "cannot write migration directory")
+			return errors.Wrap(err, "cannot write metadata directory")
 		}
 
 		// create metadata files
