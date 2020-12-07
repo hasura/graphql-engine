@@ -45,14 +45,11 @@ data Error
   | NoOrderSpecifiedInOrderBy
   | MalformedAgg
   | FieldTypeUnsupportedForNow (IR.AnnFieldG 'MSSQL Expression)
-  | AggTypeUnsupportedForNow (IR.TableAggregateFieldG 'MSSQL Expression)
   | NodesUnsupportedForNow (IR.TableAggregateFieldG 'MSSQL Expression)
   | NoProjectionFields
   | NoAggregatesMustBeABug
   | UnsupportedArraySelect (IR.ArraySelectG 'MSSQL Expression)
   | UnsupportedOpExpG (IR.OpExpG 'MSSQL Expression)
-  | UnsupportedSQLExp Expression
-  | UnsupportedDistinctOn
   | InvalidIntegerishSql Expression
   | DistinctIsn'tSupported
   | ConnectionsNotSupported
