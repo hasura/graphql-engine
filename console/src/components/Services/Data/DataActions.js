@@ -35,7 +35,6 @@ import { isEmpty } from '../../Common/utils/jsUtils';
 import { dataSource } from '../../../dataSources';
 import { exportMetadata } from '../../../metadata/actions';
 import {
-  getTables,
   getTablesFromAllSources,
   getTablesInfoSelector,
 } from '../../../metadata/selector';

@@ -1,5 +1,5 @@
 import { listState } from './state';
-import Endpoints, { globalCookiePolicy } from '../../../Endpoints';
+import { globalCookiePolicy } from '../../../Endpoints';
 import requestAction from '../../../utils/requestAction';
 import dataHeaders from '../Data/Common/Headers';
 import globals from '../../../Globals';

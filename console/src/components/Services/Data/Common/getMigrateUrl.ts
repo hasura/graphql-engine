@@ -1,8 +1,7 @@
 import Endpoints from '../../../../Endpoints';
 import globals from '../../../../Globals';
 
-import { CLI_CONSOLE_MODE, SERVER_CONSOLE_MODE } from '../../../../constants';
-import { MetadataQueryType } from '../../../../metadata/queryUtils';
+import { CLI_CONSOLE_MODE } from '../../../../constants';
 
 const rqlQueryTypes = [
   'select',
