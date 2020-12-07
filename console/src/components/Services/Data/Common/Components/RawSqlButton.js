@@ -4,12 +4,12 @@ import { SET_SQL } from '../../RawSQL/Actions';
 import Button from '../../../../Common/Button/Button';
 
 const RawSqlButton = props => {
-  const { dataTestId, sql, customStyles, dispatch, children } = props;
+  const { dataTestId, sql, customStyles, dispatch, children, source } = props;
 
   const handleClick = e => {
     e.preventDefault();
 
-    dispatch(_push('/data/sql'));
+    dispatch(_push(`/data/${source}/sql`));
 
     dispatch({
       type: SET_SQL,

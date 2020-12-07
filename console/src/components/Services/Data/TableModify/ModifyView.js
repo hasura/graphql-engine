@@ -241,7 +241,11 @@ const ModifyView = props => {
               tableType={tableType}
               dispatch={dispatch}
             />
-            <ViewDefinitions dispatch={dispatch} sql={viewDefSql} />
+            <ViewDefinitions
+              dispatch={dispatch}
+              sql={viewDefSql}
+              source={currentSource}
+            />
             <hr />
             {getViewColumnsSection()}
             <hr />
