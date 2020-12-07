@@ -42,7 +42,6 @@ import           Hasura.SQL.Backend
 -- | Most of these errors should be checked for legitimacy.
 data Error
   = FromTypeUnsupported (IR.SelectFromG 'MSSQL Expression)
-  | NoOrderSpecifiedInOrderBy
   | MalformedAgg
   | FieldTypeUnsupportedForNow (IR.AnnFieldG 'MSSQL Expression)
   | NodesUnsupportedForNow (IR.TableAggregateFieldG 'MSSQL Expression)
@@ -284,15 +283,9 @@ fromAnnOrderByItemG ::
      IR.AnnOrderByItemG 'MSSQL Expression -> WriterT (Seq UnfurledJoin) (ReaderT EntityAlias FromIr) OrderBy
 fromAnnOrderByItemG IR.OrderByItemG {obiType, obiColumn, obiNulls} = do
   orderByFieldName <- unfurlAnnOrderByElement obiColumn
-  let morderByOrder =
-        obiType
-  let orderByNullsOrder =
-        case obiNulls of
-          Nothing -> NullsAnyOrder
-          Just nullsOrder -> nullsOrder
-  case morderByOrder of
-    Just orderByOrder -> pure OrderBy {..}
-    Nothing           -> refute (pure NoOrderSpecifiedInOrderBy)
+  let orderByNullsOrder = fromMaybe NullsAnyOrder obiNulls
+      orderByOrder      = fromMaybe AscOrder obiType
+  pure OrderBy {..}
 
 -- | Unfurl the nested set of object relations (tell'd in the writer)
 -- that are terminated by field name (IR.AOCColumn and
