@@ -75,7 +75,7 @@ import           Hasura.Server.Utils                   (executeJSONPath)
 -- >   col2: col2_type
 -- > }: [table!]!
 selectTable
-  :: forall b m n r. (BackendSchema b, MonadSchema n m, MonadTableInfo b r m, MonadRole r m, Has QueryContext r)
+  :: forall b m n r. (BackendSchema b, MonadSchema n m, MonadTableInfo b r m, MonadRole r m, Has QueryContext r, Has (BackendNode b) r)
   => TableName b            -- ^ full name of the table
   -> G.Name                 -- ^ field display name
   -> Maybe G.Description    -- ^ field description, if any
@@ -114,7 +114,7 @@ selectTable table fieldName description selectPermissions = do
 -- >   }
 -- > }: table_nameConnection!
 selectTableConnection
-  :: forall m n r b. (BackendSchema b, MonadSchema n m, MonadTableInfo b r m, MonadRole r m, Has QueryContext r)
+  :: forall m n r b. (BackendSchema b, MonadSchema n m, MonadTableInfo b r m, MonadRole r m, Has QueryContext r, Has (BackendNode b) r)
   => TableName b              -- ^ qualified name of the table
   -> G.Name                      -- ^ field display name
   -> Maybe G.Description         -- ^ field description, if any
@@ -151,7 +151,7 @@ selectTableConnection table fieldName description pkeyColumns selectPermissions 
 -- current permissions or if there are primary keys the user
 -- doesn't have select permissions for.
 selectTableByPk
-  :: forall m n r b. (BackendSchema b, MonadSchema n m, MonadTableInfo b r m, MonadRole r m, Has QueryContext r)
+  :: forall m n r b. (BackendSchema b, MonadSchema n m, MonadTableInfo b r m, MonadRole r m, Has QueryContext r, Has (BackendNode b) r)
   => TableName b          -- ^ qualified name of the table
   -> G.Name               -- ^ field display name
   -> Maybe G.Description  -- ^ field description, if any
@@ -191,7 +191,7 @@ selectTableByPk table fieldName description selectPermissions = runMaybeT do
 -- Returns Nothing if there's nothing that can be selected with
 -- current permissions.
 selectTableAggregate
-  :: forall m n r b. (BackendSchema b, MonadSchema n m, MonadTableInfo b r m, MonadRole r m, Has QueryContext r)
+  :: forall m n r b. (BackendSchema b, MonadSchema n m, MonadTableInfo b r m, MonadRole r m, Has QueryContext r, Has (BackendNode b) r)
   => TableName b       -- ^ qualified name of the table
   -> G.Name               -- ^ field display name
   -> Maybe G.Description  -- ^ field description, if any
@@ -289,6 +289,7 @@ tableSelectionSet
      , MonadTableInfo b r m
      , MonadRole r m
      , Has QueryContext r
+     , Has (BackendNode b) r
      )
   => TableName b
   -> SelPermInfo b
@@ -315,8 +316,9 @@ tableSelectionSet table selectPermissions = memoizeOn 'tableSelectionSet table d
   case (queryType, tablePkeyColumns) of
     -- A relay table
     (ET.QueryRelay, Just pkeyColumns) -> do
+      x <- asks $ unBackendNode @b . getter
       let nodeIdFieldParser =
-            P.selection_ $$(G.litName "id") Nothing P.identifier $> IR.AFNodeId table pkeyColumns
+            P.selection_ $$(G.litName "id") Nothing P.identifier $> IR.AFNodeId x table pkeyColumns
           allFieldParsers = fieldParsers <> [nodeIdFieldParser]
       nodeInterface <- node @b
       pure $ P.selectionSetObject tableGQLName description allFieldParsers [nodeInterface]
@@ -334,6 +336,7 @@ tableSelectionList
      , MonadTableInfo b r m
      , MonadRole r m
      , Has QueryContext r
+     , Has (BackendNode b) r
      )
   => TableName b
   -> SelPermInfo b
@@ -370,6 +373,7 @@ tableConnectionSelectionSet
                    , MonadTableInfo b r m
                    , MonadRole r m
                    , Has QueryContext r
+                   , Has (BackendNode b) r
                    )
   => TableName b
   -> SelPermInfo b
@@ -420,7 +424,7 @@ tableConnectionSelectionSet table selectPermissions = do
 
 -- | User-defined function (AKA custom function)
 selectFunction
-  :: (BackendSchema 'Postgres, MonadSchema n m, MonadTableInfo 'Postgres r m, MonadRole r m, Has QueryContext r)
+  :: (BackendSchema 'Postgres, MonadSchema n m, MonadTableInfo 'Postgres r m, MonadRole r m, Has QueryContext r, Has (BackendNode 'Postgres) r)
   => FunctionInfo         -- ^ SQL function info
   -> G.Name               -- ^ field display name
   -> Maybe G.Description  -- ^ field description, if any
@@ -443,7 +447,7 @@ selectFunction function fieldName description selectPermissions = do
       }
 
 selectFunctionAggregate
-  :: (BackendSchema 'Postgres, MonadSchema n m, MonadTableInfo 'Postgres r m, MonadRole r m, Has QueryContext r)
+  :: (BackendSchema 'Postgres, MonadSchema n m, MonadTableInfo 'Postgres r m, MonadRole r m, Has QueryContext r, Has (BackendNode 'Postgres) r)
   => FunctionInfo         -- ^ SQL function info
   -> G.Name               -- ^ field display name
   -> Maybe G.Description  -- ^ field description, if any
@@ -476,7 +480,7 @@ selectFunctionAggregate function fieldName description selectPermissions = runMa
       }
 
 selectFunctionConnection
-  :: (BackendSchema 'Postgres, MonadSchema n m, MonadTableInfo 'Postgres r m, MonadRole r m, Has QueryContext r)
+  :: (BackendSchema 'Postgres, MonadSchema n m, MonadTableInfo 'Postgres r m, MonadRole r m, Has QueryContext r, Has (BackendNode 'Postgres) r)
   => FunctionInfo           -- ^ SQL function info
   -> G.Name                 -- ^ field display name
   -> Maybe G.Description    -- ^ field description, if any
@@ -851,7 +855,8 @@ lookupRemoteField fieldInfos (fieldCall :| rest) =
 --
 -- > field_name(arg_name: arg_type, ...): field_type
 fieldSelection
-  :: (BackendSchema b, MonadSchema n m, MonadTableInfo b r m, MonadRole r m, Has QueryContext r)
+  :: forall m n r b
+   . (BackendSchema b, MonadSchema n m, MonadTableInfo b r m, MonadRole r m, Has QueryContext r, Has (BackendNode b) r)
   => TableName b
   -> Maybe (PrimaryKeyColumns b)
   -> FieldInfo b
@@ -864,9 +869,10 @@ fieldSelection table maybePkeyColumns fieldInfo selectPermissions =
       let columnName = pgiColumn columnInfo
           fieldName = pgiName columnInfo
       if | fieldName == $$(G.litName "id") && queryType == ET.QueryRelay -> do
+             x <- asks $ unBackendNode @b . getter
              pkeyColumns <- MaybeT $ pure maybePkeyColumns
              pure $ P.selection_ fieldName Nothing P.identifier
-                    $> IR.AFNodeId table pkeyColumns
+                    $> IR.AFNodeId x table pkeyColumns
          | otherwise -> do
              guard $ Set.member columnName (spiCols selectPermissions)
              let pathArg = jsonPathArg $ pgiType columnInfo
@@ -885,7 +891,7 @@ fieldSelection table maybePkeyColumns fieldInfo selectPermissions =
 
 -- | Field parsers for a table relationship
 relationshipField
-  :: (BackendSchema b, MonadSchema n m, MonadTableInfo b r m, MonadRole r m, Has QueryContext r)
+  :: (BackendSchema b, MonadSchema n m, MonadTableInfo b r m, MonadRole r m, Has QueryContext r, Has (BackendNode b) r)
   => RelInfo b -> m (Maybe [FieldParser n (AnnotatedField b)])
 relationshipField relationshipInfo = runMaybeT do
   let otherTable = riRTable  relationshipInfo
@@ -929,7 +935,7 @@ relationshipField relationshipInfo = runMaybeT do
 -- | Computed field parser
 computedFieldPG
   :: forall m n r
-   . (BackendSchema 'Postgres, MonadSchema n m, MonadTableInfo 'Postgres r m, MonadRole r m, Has QueryContext r)
+   . (BackendSchema 'Postgres, MonadSchema n m, MonadTableInfo 'Postgres r m, MonadRole r m, Has QueryContext r, Has (BackendNode 'Postgres) r)
   => ComputedFieldInfo 'Postgres
   -> SelPermInfo 'Postgres
   -> m (Maybe (FieldParser n (AnnotatedField 'Postgres)))
@@ -943,7 +949,7 @@ computedFieldPG ComputedFieldInfo{..} selectPermissions = runMaybeT do
       let fieldArgsParser = do
             args  <- functionArgsParser
             colOp <- jsonPathArg $ ColumnScalar scalarReturnType
-            pure $ IR.AFComputedField $ IR.CFSScalar $ IR.ComputedFieldScalarSelect
+            pure $ IR.AFComputedField _cfiXComputedFieldInfo $ IR.CFSScalar $ IR.ComputedFieldScalarSelect
               { IR._cfssFunction  = _cffName _cfiFunction
               , IR._cfssType      = scalarReturnType
               , IR._cfssColumnOp  = colOp
@@ -958,7 +964,7 @@ computedFieldPG ComputedFieldInfo{..} selectPermissions = runMaybeT do
       let fieldArgsParser = liftA2 (,) functionArgsParser selectArgsParser
       pure $ P.subselection fieldName (Just fieldDescription) fieldArgsParser selectionSetParser <&>
         \((functionArgs', args), fields) ->
-          IR.AFComputedField $ IR.CFSTable IR.JASMultipleRows $ IR.AnnSelectG
+          IR.AFComputedField _cfiXComputedFieldInfo $ IR.CFSTable IR.JASMultipleRows $ IR.AnnSelectG
             { IR._asnFields   = fields
             , IR._asnFrom     = IR.FromFunction (_cffName _cfiFunction) functionArgs' Nothing
             , IR._asnPerm     = tablePermissionsInfo remotePerms
@@ -1021,7 +1027,7 @@ remoteRelationshipField remoteFieldInfo = runMaybeT do
       pure $ pure $ P.unsafeRawField (P.mkDefinition fieldName Nothing fieldInfo')
         `P.bindField` \G.Field{ G._fArguments = args, G._fSelectionSet = selSet } -> do
           remoteArgs <- P.ifParser remoteFieldsArgumentsParser' $ P.GraphQLValue <$> args
-          pure $ IR.AFRemote $ IR.RemoteSelect
+          pure $ IR.AFRemote (_rfiXRemoteFieldInfo remoteFieldInfo) $ IR.RemoteSelect
             { _rselArgs          = remoteArgs
             , _rselSelection     = selSet
             , _rselHasuraColumns = _rfiHasuraFields remoteFieldInfo
@@ -1227,6 +1233,7 @@ nodePG
      , MonadTableInfo 'Postgres r m
      , MonadRole r m
      , Has QueryContext r
+     , Has (BackendNode 'Postgres) r
      )
   => m (P.Parser 'Output n (HashMap (TableName 'Postgres) (SelPermInfo 'Postgres, PrimaryKeyColumns 'Postgres, AnnotatedFields 'Postgres)))
 nodePG = memoizeOn 'nodePG () do
@@ -1250,6 +1257,7 @@ nodeField
      , MonadTableInfo 'Postgres r m
      , MonadRole r m
      , Has QueryContext r
+     , Has (BackendNode 'Postgres) r
      )
   => m (P.FieldParser n (SelectExp 'Postgres))
 nodeField = do

@@ -759,11 +759,11 @@ processAnnFields sourcePrefix fieldAlias similarArrFields annFields = do
     case field of
       AFExpression t -> pure $ S.SELit t
 
-      AFNodeId tn pKeys -> pure $ mkNodeId tn pKeys
+      AFNodeId _ tn pKeys -> pure $ mkNodeId tn pKeys
 
       AFColumn c -> toSQLCol c
 
-      AFRemote _ -> pure $ S.SELit "null: remote field selected"
+      AFRemote _ _ -> pure $ S.SELit "null: remote field selected"
 
       AFObjectRelation objSel -> withWriteObjectRelation $ do
         let AnnRelationSelectG relName relMapping annObjSel = objSel
@@ -786,9 +786,9 @@ processAnnFields sourcePrefix fieldAlias similarArrFields annFields = do
         processArrayRelation (mkSourcePrefixes arrRelSourcePrefix) fieldName arrRelAlias arrSel
         pure $ S.mkQIdenExp arrRelSourcePrefix fieldName
 
-      AFComputedField (CFSScalar scalar) -> fromScalarComputedField scalar
+      AFComputedField _ (CFSScalar scalar) -> fromScalarComputedField scalar
 
-      AFComputedField (CFSTable selectTy sel) -> withWriteComputedFieldTableSet $ do
+      AFComputedField _ (CFSTable selectTy sel) -> withWriteComputedFieldTableSet $ do
         let computedFieldSourcePrefix =
               mkComputedFieldTableAlias sourcePrefix fieldName
         (selectSource, nodeExtractors) <-

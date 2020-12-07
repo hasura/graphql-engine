@@ -7,6 +7,7 @@ module Hasura.RQL.Types.RemoteRelationship
   , fromRemoteRelationship
   , RemoteFields(..)
   , RemoteFieldInfo(..)
+  , XRemoteFieldInfo
   , RemoteRelationship(..)
   , RemoteRelationshipDef(..)
   , FieldCall(..)
@@ -24,6 +25,7 @@ import qualified Language.GraphQL.Draft.Syntax      as G
 import           Data.Aeson
 import           Data.Aeson.Casing
 import           Data.Aeson.TH
+import           Data.Kind
 import           Data.Scientific
 import           Data.Set                           (Set)
 import           Data.Text.Extended
@@ -53,7 +55,8 @@ fromRemoteRelationship = FieldName . remoteRelationshipNameToText
 -- | Resolved remote relationship
 data RemoteFieldInfo (b :: BackendType)
   = RemoteFieldInfo
-  { _rfiName             :: !RemoteRelationshipName
+  { _rfiXRemoteFieldInfo :: XRemoteFieldInfo b
+  , _rfiName             :: !RemoteRelationshipName
     -- ^ Field name to which we'll map the remote in hasura; this becomes part
     -- of the hasura schema.
   , _rfiParamMap         :: !(HashMap G.Name G.InputValueDefinition)
@@ -70,6 +73,9 @@ data RemoteFieldInfo (b :: BackendType)
   , _rfiRemoteSchemaName :: !RemoteSchemaName
   -- ^ Name of the remote schema, that's used for joining
   } deriving (Generic)
+type family XRemoteFieldInfo (b :: BackendType) :: Type where
+  XRemoteFieldInfo 'Postgres = ()
+  XRemoteFieldInfo 'MSSQL    = Void -- To be supported later
 deriving instance Eq (RemoteFieldInfo 'Postgres)
 instance Cacheable (RemoteFieldInfo 'Postgres)
 

@@ -225,7 +225,7 @@ getRemoteJoinsMutationOutput =
 transformAnnFields :: FieldPath -> AnnFields 'Postgres -> State (RemoteJoinMap 'Postgres) (AnnFields 'Postgres)
 transformAnnFields path fields = do
   let pgColumnFields = map fst $ getFields _AFColumn fields
-      remoteSelects = getFields _AFRemote fields
+      remoteSelects = getFields (_AFRemote . _2) fields
       remoteJoins = flip map remoteSelects $ \(fieldName, remoteSelect) ->
         let RemoteSelect argsMap selSet hasuraColumns remoteFields rsi = remoteSelect
             hasuraColumnL = toList hasuraColumns
@@ -236,7 +236,7 @@ transformAnnFields path fields = do
   transformedFields <- forM fields $ \(fieldName, field') -> do
     let fieldPath = appendPath fieldName path
     (fieldName,) <$> case field' of
-      AFNodeId qt pkeys -> pure $ AFNodeId qt pkeys
+      AFNodeId x qt pkeys -> pure $ AFNodeId x qt pkeys
       AFColumn c -> pure $ AFColumn c
       AFObjectRelation annRel ->
         AFObjectRelation <$> transformAnnRelation annRel (transformObjectSelect fieldPath)
@@ -246,11 +246,11 @@ transformAnnFields path fields = do
         AFArrayRelation . ASAggregate <$> transformAnnAggregateRelation fieldPath aggRel
       AFArrayRelation (ASConnection annRel) ->
         AFArrayRelation . ASConnection <$> transformArrayConnection fieldPath annRel
-      AFComputedField computedField ->
-        AFComputedField <$> case computedField of
+      AFComputedField x computedField ->
+        AFComputedField x <$> case computedField of
           CFSScalar _         -> pure computedField
           CFSTable jas annSel -> CFSTable jas <$> transformSelect fieldPath annSel
-      AFRemote rs -> pure $ AFRemote rs
+      AFRemote x rs -> pure $ AFRemote x rs
       AFExpression t     -> pure $ AFExpression t
 
   case NE.nonEmpty remoteJoins of

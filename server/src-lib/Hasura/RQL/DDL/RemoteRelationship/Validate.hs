@@ -112,7 +112,8 @@ validateRemoteRelationship remoteRelationship remoteSchemaMap pgColumns = do
     (queryRoot,(mempty,mempty))
     (unRemoteFields $ rtrRemoteField remoteRelationship)
   pure $ RemoteFieldInfo
-        { _rfiName = rtrName remoteRelationship
+        { _rfiXRemoteFieldInfo = ()
+        , _rfiName = rtrName remoteRelationship
         , _rfiParamMap = leafParamMap
         , _rfiHasuraFields = HS.fromList hasuraFields
         , _rfiRemoteFields = rtrRemoteField remoteRelationship

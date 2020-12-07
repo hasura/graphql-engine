@@ -43,7 +43,6 @@ import           Hasura.SQL.Backend
 data Error
   = FromTypeUnsupported (IR.SelectFromG 'MSSQL Expression)
   | MalformedAgg
-  | FieldTypeUnsupportedForNow (IR.AnnFieldG 'MSSQL Expression)
   | NodesUnsupportedForNow (IR.TableAggregateFieldG 'MSSQL Expression)
   | NoProjectionFields
   | NoAggregatesMustBeABug
@@ -560,7 +559,7 @@ fromAggregateField aggregateField =
 
 -- | The main sources of fields, either constants, fields or via joins.
 fromAnnFieldsG ::
-     Map TableName {-PG.QualifiedTable-} EntityAlias
+     Map TableName EntityAlias
   -> StringifyNumbers
   -> (IR.FieldName, IR.AnnFieldG 'MSSQL Expression)
   -> ReaderT EntityAlias FromIr FieldSource
@@ -590,9 +589,9 @@ fromAnnFieldsG existingJoins stringifyNumbers (IR.FieldName name, field) =
         (fromArraySelectG arraySelectG)
     -- TODO:
     -- Vamshi said to ignore these three for now:
-    IR.AFNodeId {} -> refute (pure (FieldTypeUnsupportedForNow field))
-    IR.AFRemote {} -> refute (pure (FieldTypeUnsupportedForNow field))
-    IR.AFComputedField {} -> refute (pure (FieldTypeUnsupportedForNow field))
+    IR.AFNodeId x _ _      -> case x of {}
+    IR.AFRemote x _        -> case x of {}
+    IR.AFComputedField x _ -> case x of {}
 
 -- | Here is where we project a field as a column expression. If
 -- number stringification is on, then we wrap it in a

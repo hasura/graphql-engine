@@ -119,6 +119,8 @@ class
   , Representable (SQLOperator b)
   , Representable (XAILIKE b)
   , Representable (XANILIKE b)
+  , Representable (XNode b)
+  , Ord (XNode b)
   , Ord (TableName b)
   , Ord (ScalarType b)
   , Data (TableName b)
@@ -156,6 +158,8 @@ class
   type SQLOperator    b :: Type
   type XAILIKE        b :: Type
   type XANILIKE       b :: Type
+  type XComputedField b :: Type
+  type XNode          b :: Type
   isComparableType :: ScalarType b -> Bool
   isNumType :: ScalarType b -> Bool
 
@@ -175,6 +179,8 @@ instance Backend 'Postgres where
   type SQLOperator    'Postgres = PG.SQLOp
   type XAILIKE        'Postgres = ()
   type XANILIKE       'Postgres = ()
+  type XComputedField 'Postgres = ()
+  type XNode          'Postgres = ()
   isComparableType              = PG.isComparableType
   isNumType                     = PG.isNumType
 
@@ -194,6 +200,8 @@ instance Backend 'MSSQL where
   type SQLOperator    'MSSQL = ()
   type XAILIKE        'MSSQL = ()
   type XANILIKE       'MSSQL = ()
+  type XComputedField 'MSSQL = Void
+  type XNode          'MSSQL = Void
   isComparableType           = MSSQL.isComparableType
   isNumType                  = MSSQL.isNumType
 

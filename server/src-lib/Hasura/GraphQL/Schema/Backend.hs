@@ -66,7 +66,13 @@ class Backend b => BackendSchema (b :: BackendType) where
   aggregateOrderByCountType :: ScalarType b
   -- | Computed field parser
   computedField
-    :: (BackendSchema b, MonadSchema n m, MonadTableInfo b r m, MonadRole r m, Has QueryContext r)
+    :: ( BackendSchema b
+       , MonadSchema n m
+       , MonadTableInfo b r m
+       , MonadRole r m
+       , Has QueryContext r
+       , Has (BackendNode b) r
+       )
     => ComputedFieldInfo b
     -> SelPermInfo b
     -> m (Maybe (FieldParser n (AnnotatedField b)))
@@ -77,7 +83,10 @@ class Backend b => BackendSchema (b :: BackendType) where
        , MonadTableInfo b r m
        , MonadRole r m
        , Has QueryContext r
+       , Has (BackendNode b) r
        )
     => m (Parser 'Output n (HashMap (TableName b) (SelPermInfo b, PrimaryKeyColumns b, AnnotatedFields b)))
 
 type ComparisonExp b = OpExpG b (UnpreparedValue b)
+
+newtype BackendNode b = BackendNode { unBackendNode :: XNode b }

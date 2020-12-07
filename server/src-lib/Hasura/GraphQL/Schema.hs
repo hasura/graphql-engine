@@ -144,9 +144,9 @@ runMonadSchema
   => RoleName
   -> QueryContext
   -> Map.HashMap PG.QualifiedTable (TableInfo 'Postgres)
-  -> P.SchemaT (P.ParseT Identity) (ReaderT (RoleName, Map.HashMap PG.QualifiedTable (TableInfo 'Postgres), QueryContext) m) a -> m a
+  -> P.SchemaT (P.ParseT Identity) (ReaderT (RoleName, Map.HashMap PG.QualifiedTable (TableInfo 'Postgres), QueryContext, BackendNode 'Postgres) m) a -> m a
 runMonadSchema roleName queryContext tableCache m =
-  flip runReaderT (roleName, tableCache, queryContext) $ P.runSchemaT m
+  flip runReaderT (roleName, tableCache, queryContext, BackendNode ()) $ P.runSchemaT m
 
 -- TODO: Integrate relay schema
 buildRoleContext
@@ -350,6 +350,7 @@ buildPostgresQueryFields
      , MonadTableInfo 'Postgres r m
      , MonadRole r m
      , Has QueryContext r
+     , Has (BackendNode 'Postgres) r
      )
   => HashSet PG.QualifiedTable
   -> [FunctionInfo]
@@ -400,6 +401,7 @@ buildActionQueryFields
      , MonadTableInfo 'Postgres r m
      , MonadRole r m
      , Has QueryContext r
+     , Has (BackendNode 'Postgres) r
      )
   => [ActionInfo 'Postgres]
   -> NonObjectTypeMap
@@ -420,6 +422,7 @@ buildActionSubscriptionFields
      , MonadTableInfo 'Postgres r m
      , MonadRole r m
      , Has QueryContext r
+     , Has (BackendNode 'Postgres) r
      )
   => [ActionInfo 'Postgres]
   -> m [P.FieldParser n (QueryRootField (UnpreparedValue 'Postgres))]
@@ -438,6 +441,7 @@ buildRelayPostgresQueryFields
      , MonadTableInfo 'Postgres r m
      , MonadRole r m
      , Has QueryContext r
+     , Has (BackendNode 'Postgres) r
      )
   => HashSet PG.QualifiedTable
   -> [FunctionInfo]
@@ -545,6 +549,7 @@ buildQueryParser
      , MonadTableInfo 'Postgres r m
      , MonadRole r m
      , Has QueryContext r
+     , Has (BackendNode 'Postgres) r
      )
   => [P.FieldParser n (QueryRootField (UnpreparedValue 'Postgres))]
   -> [P.FieldParser n RemoteField]
@@ -567,6 +572,7 @@ buildSubscriptionParser
      , MonadTableInfo 'Postgres r m
      , MonadRole r m
      , Has QueryContext r
+     , Has (BackendNode 'Postgres) r
      )
   => [P.FieldParser n (QueryRootField (UnpreparedValue 'Postgres))]
   -> [ActionInfo 'Postgres]
@@ -579,7 +585,7 @@ buildSubscriptionParser pgQueryFields allActions = do
 
 buildPGMutationFields
   :: forall m n r
-   . (MonadSchema n m, MonadTableInfo 'Postgres r m, MonadRole r m, Has QueryContext r)
+   . (MonadSchema n m, MonadTableInfo 'Postgres r m, MonadRole r m, Has QueryContext r, Has (BackendNode 'Postgres) r)
   => Scenario -> HashSet PG.QualifiedTable
   -> m [P.FieldParser n (MutationRootField (UnpreparedValue 'Postgres))]
 buildPGMutationFields scenario allTables = do
@@ -662,7 +668,7 @@ queryRoot = $$(G.litName "query_root")
 
 buildMutationParser
   :: forall m n r
-   . (MonadSchema n m, MonadTableInfo 'Postgres r m, MonadRole r m, Has QueryContext r)
+   . (MonadSchema n m, MonadTableInfo 'Postgres r m, MonadRole r m, Has QueryContext r, Has (BackendNode 'Postgres) r)
   => [P.FieldParser n RemoteField]
   -> [ActionInfo 'Postgres]
   -> NonObjectTypeMap

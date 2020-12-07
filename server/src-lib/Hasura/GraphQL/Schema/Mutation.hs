@@ -45,7 +45,7 @@ import           Hasura.RQL.Types                    hiding (ConstraintName)
 
 -- | Construct a root field, normally called insert_tablename, that can be used to add several rows to a DB table
 insertIntoTable
-  :: forall m n r. (BackendSchema 'Postgres, MonadSchema n m, MonadTableInfo 'Postgres r m, MonadRole r m, Has QueryContext r)
+  :: forall m n r. (BackendSchema 'Postgres, MonadSchema n m, MonadTableInfo 'Postgres r m, MonadRole r m, Has QueryContext r, Has (BackendNode 'Postgres) r)
   => QualifiedTable       -- ^ qualified name of the table
   -> G.Name               -- ^ field display name
   -> Maybe G.Description  -- ^ field description, if any
@@ -82,7 +82,7 @@ mkConflictClause conflictParser
 
 -- | Variant of 'insertIntoTable' that inserts a single row
 insertOneIntoTable
-  :: forall m n r. (BackendSchema 'Postgres, MonadSchema n m, MonadTableInfo 'Postgres r m, MonadRole r m, Has QueryContext r)
+  :: forall m n r. (BackendSchema 'Postgres, MonadSchema n m, MonadTableInfo 'Postgres r m, MonadRole r m, Has QueryContext r, Has (BackendNode 'Postgres) r)
   => QualifiedTable       -- ^ qualified name of the table
   -> G.Name               -- ^ field display name
   -> Maybe G.Description  -- ^ field description, if any
@@ -109,7 +109,7 @@ insertOneIntoTable table fieldName description insertPerms selectPerms updatePer
 
 -- | We specify the data of an individual row to insert through this input parser.
 tableFieldsInput
-  :: forall m n r. (BackendSchema 'Postgres, MonadSchema n m, MonadTableInfo 'Postgres r m, MonadRole r m)
+  :: forall m n r. (BackendSchema 'Postgres, MonadSchema n m, MonadTableInfo 'Postgres r m, MonadRole r m, Has (BackendNode 'Postgres) r)
   => QualifiedTable -- ^ qualified name of the table
   -> InsPermInfo 'Postgres    -- ^ insert permissions of the table
   -> m (Parser 'Input n (IR.AnnInsObj 'Postgres (UnpreparedValue 'Postgres)))
@@ -151,7 +151,7 @@ tableFieldsInput table insertPerms = memoizeOn 'tableFieldsInput table do
 
 -- | Used by 'tableFieldsInput' for object data that is nested through object relationships
 objectRelationshipInput
-  :: forall m n r. (BackendSchema 'Postgres, MonadSchema n m, MonadTableInfo 'Postgres r m, MonadRole r m)
+  :: forall m n r. (BackendSchema 'Postgres, MonadSchema n m, MonadTableInfo 'Postgres r m, MonadRole r m, Has (BackendNode 'Postgres) r)
   => QualifiedTable
   -> InsPermInfo 'Postgres
   -> Maybe (SelPermInfo 'Postgres)
@@ -174,7 +174,7 @@ objectRelationshipInput table insertPerms selectPerms updatePerms =
 
 -- | Used by 'tableFieldsInput' for object data that is nested through object relationships
 arrayRelationshipInput
-  :: forall m n r. (BackendSchema 'Postgres, MonadSchema n m, MonadTableInfo 'Postgres r m, MonadRole r m)
+  :: forall m n r. (BackendSchema 'Postgres, MonadSchema n m, MonadTableInfo 'Postgres r m, MonadRole r m, Has (BackendNode 'Postgres) r)
   => QualifiedTable
   -> InsPermInfo 'Postgres
   -> Maybe (SelPermInfo 'Postgres)
@@ -268,7 +268,7 @@ conflictConstraint constraints table = memoizeOn 'conflictConstraint table $ do
 -- to update rows in a DB table specified by filters. Only returns a parser if
 -- there are columns the user is allowed to update; otherwise returns Nothing.
 updateTable
-  :: forall m n r. (BackendSchema 'Postgres, MonadSchema n m, MonadTableInfo 'Postgres r m, MonadRole r m, Has QueryContext r)
+  :: forall m n r. (BackendSchema 'Postgres, MonadSchema n m, MonadTableInfo 'Postgres r m, MonadRole r m, Has QueryContext r, Has (BackendNode 'Postgres) r)
   => QualifiedTable       -- ^ qualified name of the table
   -> G.Name               -- ^ field display name
   -> Maybe G.Description  -- ^ field description, if any
@@ -291,7 +291,7 @@ updateTable table fieldName description updatePerms selectPerms = runMaybeT $ do
 -- parser if there are columns the user is allowed to update and if the user has
 -- select permissions on all primary keys; otherwise returns Nothing.
 updateTableByPk
-  :: forall m n r. (BackendSchema 'Postgres, MonadSchema n m, MonadTableInfo 'Postgres r m, MonadRole r m, Has QueryContext r)
+  :: forall m n r. (BackendSchema 'Postgres, MonadSchema n m, MonadTableInfo 'Postgres r m, MonadRole r m, Has QueryContext r, Has (BackendNode 'Postgres) r)
   => QualifiedTable       -- ^ qualified name of the table
   -> G.Name               -- ^ field display name
   -> Maybe G.Description  -- ^ field description, if any
@@ -434,7 +434,7 @@ updateOperators table updatePermissions = do
 -- | Construct a root field, normally called delete_tablename, that can be used
 -- to delete several rows from a DB table
 deleteFromTable
-  :: forall m n r. (BackendSchema 'Postgres, MonadSchema n m, MonadTableInfo 'Postgres r m, MonadRole r m, Has QueryContext r)
+  :: forall m n r. (BackendSchema 'Postgres, MonadSchema n m, MonadTableInfo 'Postgres r m, MonadRole r m, Has QueryContext r, Has (BackendNode 'Postgres) r)
   => QualifiedTable       -- ^ qualified name of the table
   -> G.Name               -- ^ field display name
   -> Maybe G.Description  -- ^ field description, if any
@@ -453,7 +453,7 @@ deleteFromTable table fieldName description deletePerms selectPerms = do
 -- | Construct a root field, normally called delete_tablename, that can be used
 -- to delete an individual rows from a DB table, specified by primary key
 deleteFromTableByPk
-  :: forall m n r. (BackendSchema 'Postgres, MonadSchema n m, MonadTableInfo 'Postgres r m, MonadRole r m, Has QueryContext r)
+  :: forall m n r. (BackendSchema 'Postgres, MonadSchema n m, MonadTableInfo 'Postgres r m, MonadRole r m, Has QueryContext r, Has (BackendNode 'Postgres) r)
   => QualifiedTable       -- ^ qualified name of the table
   -> G.Name               -- ^ field display name
   -> Maybe G.Description  -- ^ field description, if any
@@ -489,7 +489,7 @@ mkDeleteObject table columns deletePerms (whereExp, mutationOutput) =
 -- | All mutations allow returning results, such as what the updated database
 -- rows look like.  This parser allows a query to specify what data to fetch.
 mutationSelectionSet
-  :: forall m n r. (BackendSchema 'Postgres, MonadSchema n m, MonadTableInfo 'Postgres r m, MonadRole r m, Has QueryContext r)
+  :: forall m n r. (BackendSchema 'Postgres, MonadSchema n m, MonadTableInfo 'Postgres r m, MonadRole r m, Has QueryContext r, Has (BackendNode 'Postgres) r)
   => QualifiedTable
   -> Maybe (SelPermInfo 'Postgres)
   -> m (Parser 'Output n (IR.MutFldsG 'Postgres (UnpreparedValue 'Postgres)))

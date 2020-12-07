@@ -11,7 +11,7 @@ import qualified Language.GraphQL.Draft.Syntax       as G
 
 import           Control.Lens.TH                     (makeLenses, makePrisms)
 
-import           Hasura.GraphQL.Parser.Schema
+import           Hasura.GraphQL.Parser.Schema        (InputValue, Variable)
 import           Hasura.RQL.IR.BoolExp
 import           Hasura.RQL.IR.OrderBy
 import           Hasura.RQL.Types.Column
@@ -189,9 +189,9 @@ data AnnFieldG (b :: BackendType) v
   = AFColumn !(AnnColumnField b)
   | AFObjectRelation !(ObjectRelationSelectG b v)
   | AFArrayRelation !(ArraySelectG b v)
-  | AFComputedField !(ComputedFieldSelect b v)
-  | AFRemote !(RemoteSelect b)
-  | AFNodeId !(TableName b) !(PrimaryKeyColumns b)
+  | AFComputedField (XComputedField b) !(ComputedFieldSelect b v)
+  | AFRemote (XRemoteFieldInfo b) !(RemoteSelect b)
+  | AFNodeId (XNode b) !(TableName b) !(PrimaryKeyColumns b)
   | AFExpression !Text
 
 mkAnnColumnField :: ColumnInfo backend -> Maybe (ColumnOp backend) -> AnnFieldG backend v
@@ -206,13 +206,13 @@ traverseAnnField
   :: (Applicative f)
   => (a -> f b) -> AnnFieldG backend a -> f (AnnFieldG backend b)
 traverseAnnField f = \case
-  AFColumn colFld      -> pure $ AFColumn colFld
-  AFObjectRelation sel -> AFObjectRelation <$> traverse (traverseAnnObjectSelect f) sel
-  AFArrayRelation sel  -> AFArrayRelation <$> traverseArraySelect f sel
-  AFComputedField sel  -> AFComputedField <$> traverseComputedFieldSelect f sel
-  AFRemote s           -> pure $ AFRemote s
-  AFNodeId qt pKeys    -> pure $ AFNodeId qt pKeys
-  AFExpression t       -> AFExpression <$> pure t
+  AFColumn colFld       -> pure $ AFColumn colFld
+  AFObjectRelation sel  -> AFObjectRelation <$> traverse (traverseAnnObjectSelect f) sel
+  AFArrayRelation sel   -> AFArrayRelation <$> traverseArraySelect f sel
+  AFComputedField x sel -> AFComputedField x <$> traverseComputedFieldSelect f sel
+  AFRemote x s          -> pure $ AFRemote x s
+  AFNodeId x qt pKeys   -> pure $ AFNodeId x qt pKeys
+  AFExpression t        -> AFExpression <$> pure t
 
 type AnnField b = AnnFieldG b (SQLExpression b)
 
