@@ -408,8 +408,15 @@ foldColumnCaseBoolExp f = \case
     return $ foldr (S.BEBin S.OrOp) (S.BELit False) sqlBExps
 
   BoolNot notExp       -> S.BENot <$> foldColumnCaseBoolExp f notExp
-  -- BoolExists existsExp -> foldExists existsExp
+  BoolExists existsExp -> foldColumnCaseBoolExpExists existsExp
   BoolFld ce           -> f ce
+  where
+    foldColumnCaseBoolExpExists
+      :: GExists 'Postgres (ColumnInfo 'Postgres, [OpExpG 'Postgres S.SQLExp])
+      -> State Word64 S.BoolExp
+    foldColumnCaseBoolExpExists (GExists qt wh) = do
+      whereExp <- foldColumnCaseBoolExp (\(colInfo, opExps) -> convColRhs (S.QualTable qt) (AVCol colInfo opExps)) wh
+      return $ S.mkExists (S.FISimple qt Nothing) whereExp
 
 mkFieldCompExp
   :: S.Qual -> FieldName -> OpExpG 'Postgres (SQLExp 'Postgres) -> S.BoolExp
