@@ -136,6 +136,7 @@ export type PGFunction = {
   function_schema: string;
   function_definition: string;
   return_type_type: string;
+  function_type: string;
 };
 
 export type PGSchema = {
