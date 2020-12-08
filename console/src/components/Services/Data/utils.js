@@ -793,10 +793,18 @@ WHERE
 export const isColTypeString = colType =>
   ['text', 'varchar', 'char', 'bpchar', 'name'].includes(colType);
 
+export const quoteDefault = colDefault => {
+  if (isPostgresFunction(colDefault) || isTypeCast(colDefault)) {
+    return colDefault;
+  }
+  return `'${colDefault}'`;
+};
+
 const isCascadable = sql => {
   const regex = new RegExp(/(\s|^)drop\s/i); // all queries with drop (with space on both sides Ie:this would ignore names matches with "" or prefix/suffix)
   return regex.test(sql);
 };
+
 const cascadePGSqlQuery = sql => {
   if (!isCascadable(sql)) return sql;
   if (sql[sql.length - 1] === ';')

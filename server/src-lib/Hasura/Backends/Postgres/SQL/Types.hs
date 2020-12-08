@@ -13,7 +13,6 @@ module Hasura.Backends.Postgres.SQL.Types
   , getPGColTxt
   , showPGCols
 
-  , isIntegerType
   , isNumType
   , stringTypes
   , isStringType
@@ -42,7 +41,6 @@ module Hasura.Backends.Postgres.SQL.Types
 
   , PGScalarType(..)
   , textToPGScalarType
-  , pgTypeOid
 
   , PGTypeKind(..)
   , QualifiedPGType(..)
@@ -55,8 +53,6 @@ import           Hasura.Prelude
 
 import qualified Data.Text                     as T
 import qualified Database.PG.Query             as Q
-import qualified Database.PG.Query.PTI         as PTI
-import qualified Database.PostgreSQL.LibPQ     as PQ
 import qualified Language.GraphQL.Draft.Syntax as G
 import qualified PostgreSQL.Binary.Decoding    as PD
 import qualified Text.Builder                  as TB
@@ -124,15 +120,6 @@ data TableType
   | TTLocalTemporary
   deriving (Eq)
 
-tableTyToTxt :: TableType -> Text
-tableTyToTxt TTBaseTable      = "BASE TABLE"
-tableTyToTxt TTView           = "VIEW"
-tableTyToTxt TTForeignTable   = "FOREIGN TABLE"
-tableTyToTxt TTLocalTemporary = "LOCAL TEMPORARY"
-
-instance Show TableType where
-  show = T.unpack . tableTyToTxt
-
 instance Q.FromCol TableType where
   fromCol bs = flip Q.fromColHelper bs $ PD.enum $ \case
     "BASE TABLE"      -> Just TTBaseTable
@@ -163,7 +150,7 @@ instance IsIdentifier FunctionName where
   toIdentifier (FunctionName t) = Identifier t
 
 instance ToTxt FunctionName where
-  toTxt (FunctionName t) = t
+  toTxt = getFunctionTxt
 
 instance ToSQL FunctionName where
   toSQL = toSQL . toIdentifier
@@ -261,7 +248,7 @@ instance ToSQL PGCol where
   toSQL = toSQL . toIdentifier
 
 instance ToTxt PGCol where
-  toTxt (PGCol t) = t
+  toTxt = getPGColTxt
 
 unsafePGCol :: Text -> PGCol
 unsafePGCol = PGCol
@@ -404,45 +391,15 @@ instance FromJSON PGScalarType where
   parseJSON (String t) = return $ textToPGScalarType t
   parseJSON _          = fail "Expecting a string for PGScalarType"
 
-pgTypeOid :: PGScalarType -> PQ.Oid
-pgTypeOid PGSmallInt    = PTI.int2
-pgTypeOid PGInteger     = PTI.int4
-pgTypeOid PGBigInt      = PTI.int8
-pgTypeOid PGSerial      = PTI.int4
-pgTypeOid PGBigSerial   = PTI.int8
-pgTypeOid PGFloat       = PTI.float4
-pgTypeOid PGDouble      = PTI.float8
-pgTypeOid PGNumeric     = PTI.numeric
-pgTypeOid PGMoney       = PTI.numeric
-pgTypeOid PGBoolean     = PTI.bool
-pgTypeOid PGChar        = PTI.char
-pgTypeOid PGVarchar     = PTI.varchar
-pgTypeOid PGText        = PTI.text
-pgTypeOid PGCitext      = PTI.text -- Explict type cast to citext needed, See also Note [Type casting prepared params]
-pgTypeOid PGDate        = PTI.date
-pgTypeOid PGTimeStamp   = PTI.timestamp
-pgTypeOid PGTimeStampTZ = PTI.timestamptz
-pgTypeOid PGTimeTZ      = PTI.timetz
-pgTypeOid PGJSON        = PTI.json
-pgTypeOid PGJSONB       = PTI.jsonb
-pgTypeOid PGGeometry    = PTI.text -- we are using the ST_GeomFromGeoJSON($i) instead of $i
-pgTypeOid PGGeography   = PTI.text
-pgTypeOid PGRaster      = PTI.text -- we are using the ST_RastFromHexWKB($i) instead of $i
-pgTypeOid PGUUID        = PTI.uuid
-pgTypeOid (PGUnknown _) = PTI.auto
-
-isIntegerType :: PGScalarType -> Bool
-isIntegerType PGInteger  = True
-isIntegerType PGSmallInt = True
-isIntegerType PGBigInt   = True
-isIntegerType _          = False
-
 isNumType :: PGScalarType -> Bool
-isNumType PGFloat   = True
-isNumType PGDouble  = True
-isNumType PGNumeric = True
-isNumType PGMoney   = True
-isNumType ty        = isIntegerType ty
+isNumType PGInteger  = True
+isNumType PGSmallInt = True
+isNumType PGBigInt   = True
+isNumType PGFloat    = True
+isNumType PGDouble   = True
+isNumType PGNumeric  = True
+isNumType PGMoney    = True
+isNumType _          = False
 
 stringTypes :: [PGScalarType]
 stringTypes = [PGVarchar, PGText, PGCitext]
