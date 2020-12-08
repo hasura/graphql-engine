@@ -27,7 +27,7 @@ export const openRawSQL = () => {
   cy.wait(3000);
   cy.get(getElementFromAlias('sql-link')).click();
   cy.wait(3000);
-  cy.url().should('eq', `${baseUrl}/data/sql`);
+  cy.url().should('eq', `${baseUrl}/data/default/sql`);
 };
 
 const clearText = () => {
@@ -110,10 +110,6 @@ export const openModifySection = () => {
     .get(getElementFromClassName('function-name-select__menu'))
     .first()
     .click();
-  // enter table row arg. (not necessarily required)
-  cy.get(
-    getElementFromAlias('computed-field-first-arg-input')
-  ).type('a_test_test_author_row', { force: true });
   // enter comment
   cy.get(
     getElementFromAlias('computed-field-comment-input')
@@ -149,7 +145,7 @@ export const verifyComputedFieldsResult = () => {
 export const cleanUpSql = () => typeStatement(statements.cleanUpSql, true);
 
 export const routeToSQLPage = () => {
-  cy.visit('/data/sql');
+  cy.visit('/data/default/sql');
   cy.wait(7000);
-  cy.url().should('eq', `${baseUrl}/data/sql`);
+  cy.url().should('eq', `${baseUrl}/data/default/sql`);
 };

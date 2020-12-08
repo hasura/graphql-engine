@@ -1,10 +1,8 @@
-import {
-  baseUrl,
-  getElementFromAlias,
-} from '../../../helpers/dataHelpers';
+import { baseUrl, getElementFromAlias } from '../../../helpers/dataHelpers';
 
 const statements = {
-  createTableSql: 'CREATE TABLE a_test_test_article (id serial PRIMARY KEY, title text, content text);',
+  createTableSql:
+    'CREATE TABLE a_test_test_article (id serial PRIMARY KEY, title text, content text);',
   createCustomFuncSql: `CREATE FUNCTION a_test_test_search_articles(search text)
 RETURNS SETOF a_test_test_article AS $function$
 SELECT *
@@ -24,30 +22,25 @@ $function$ LANGUAGE sql STABLE;`,
             id
             title
             content
-        `
+        `,
   },
 };
 
 export const openRawSQL = () => {
-  cy.get('a')
-    .contains('Data')
-    .click();
+  cy.get('a').contains('Data').click();
   cy.wait(3000);
   cy.get(getElementFromAlias('sql-link')).click();
   cy.wait(3000);
-  cy.url()
-    .should('eq', `${baseUrl}/data/sql`);
+  cy.url().should('eq', `${baseUrl}/data/default/sql`);
 };
 
 const clearText = () => {
-  cy.get('textarea')
-    .type('{selectall}', { force: true });
-  cy.get('textarea')
-    .trigger('keydown', {
-      keyCode: 46,
-      which: 46,
-      force: true,
-    });
+  cy.get('textarea').type('{selectall}', { force: true });
+  cy.get('textarea').trigger('keydown', {
+    keyCode: 46,
+    which: 46,
+    force: true,
+  });
   cy.wait(2000);
 };
 
@@ -57,7 +50,7 @@ const typeStatement = (
   shouldClearText = false,
   waitTimeUponType = 2000,
   endWaitTime = 5000,
-  unCheckTrackFunction = false,
+  unCheckTrackFunction = false
 ) => {
   if (shouldClearText) {
     clearText();
@@ -91,8 +84,9 @@ export const trackCustomFn = () => {
   cy.url().should('eq', `${baseUrl}/data/default/schema/public`);
 
   // Track Function
-  cy.get(getElementFromAlias('add-track-function-a_test_test_search_articles'))
-    .click();
+  cy.get(
+    getElementFromAlias('add-track-function-a_test_test_search_articles')
+  ).click();
   cy.wait(5000);
 };
 
@@ -106,10 +100,7 @@ export const verifyCustomFnResult = () => {
   // Type the query
   cy.get('textarea')
     .first()
-    .type(
-      `{enter}{uparrow}${statements.graphql.query}`,
-      { force: true }
-    );
+    .type(`{enter}{uparrow}${statements.graphql.query}`, { force: true });
   cy.wait(2000);
   cy.get('.execute-button').click();
   // verify if article is present
@@ -129,10 +120,10 @@ export const cleanUpSql = () => {
   typeStatement(statements.cleanUpSql, true);
   clearText();
   cy.wait(2000);
-}
+};
 
 export const routeToSQLPage = () => {
-  cy.visit('/data/sql')
+  cy.visit('/data/default/sql');
   cy.wait(7000);
-  cy.url().should('eq', `${baseUrl}/data/sql`);
+  cy.url().should('eq', `${baseUrl}/data/default/sql`);
 };

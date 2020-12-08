@@ -343,7 +343,7 @@ export const passVAscendingSort = () => {
 export const passModifyView = () => {
   cy.get(getElementFromAlias('table-modify')).click();
   cy.get('button').contains('Modify').last().click();
-  cy.url().should('eq', `${baseUrl}/data/sql`);
+  cy.url().should('eq', `${baseUrl}/data/default/sql`);
 };
 
 export const passVAddManualObjRel = () => {
