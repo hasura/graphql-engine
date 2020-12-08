@@ -15,13 +15,10 @@ import           Hasura.Prelude
 import qualified Data.HashSet                               as HS
 import qualified Database.PG.Query                          as Q
 
-import           Instances.TH.Lift                          ()
-
 import           Hasura.Backends.Postgres.SQL.Types
 import           Hasura.EncJSON
 import           Hasura.RQL.DDL.RemoteRelationship.Validate
 import           Hasura.RQL.Types
-import           Hasura.RQL.Types.Column                    ()
 
 runCreateRemoteRelationship
   :: (MonadTx m, CacheRWM m) => RemoteRelationship -> m EncJSON
@@ -44,7 +41,7 @@ resolveRemoteRelationship remoteRelationship
                           remoteSchemaMap = do
   eitherRemoteField <- runExceptT $
     validateRemoteRelationship remoteRelationship remoteSchemaMap pgColumns
-  remoteField <- either (throw400 RemoteSchemaError . errorToText) pure $ eitherRemoteField
+  remoteField <- onLeft eitherRemoteField $ throw400 RemoteSchemaError . errorToText
   let table = rtrTable remoteRelationship
       schemaDependencies =
         let tableDep = SchemaDependency (SOTable table) DRTable

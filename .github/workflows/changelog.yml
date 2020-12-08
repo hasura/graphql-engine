@@ -1,5 +1,5 @@
-on: pull_request
-name: changelog 
+on: [label, pull_request]
+name: changelog
 jobs:
   check:
     runs-on: ubuntu-latest

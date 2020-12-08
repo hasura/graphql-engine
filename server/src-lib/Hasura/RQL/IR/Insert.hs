@@ -29,14 +29,14 @@ data AnnIns (b :: BackendType) a v
 type SingleObjIns b v = AnnIns b (AnnInsObj b v) v
 type MultiObjIns  b v = AnnIns b [AnnInsObj b v] v
 
-data RelIns a
+data RelIns (b :: BackendType) a
   = RelIns
   { _riAnnIns  :: !a
-  , _riRelInfo :: !RelInfo
+  , _riRelInfo :: !(RelInfo b)
   } deriving (Show, Eq)
 
-type ObjRelIns b v = RelIns (SingleObjIns b v)
-type ArrRelIns b v = RelIns (MultiObjIns  b v)
+type ObjRelIns b v = RelIns b (SingleObjIns b v)
+type ArrRelIns b v = RelIns b (MultiObjIns  b v)
 
 data AnnInsObj (b :: BackendType) v
   = AnnInsObj
@@ -74,8 +74,8 @@ data InsertQueryP1 (b :: BackendType)
   = InsertQueryP1
   { iqp1Table     :: !(TableName b)
   , iqp1Cols      :: ![Column b]
-  , iqp1Tuples    :: ![[SQLExp b]]
-  , iqp1Conflict  :: !(Maybe (ConflictClauseP1 b (SQLExp b)))
+  , iqp1Tuples    :: ![[SQLExpression b]]
+  , iqp1Conflict  :: !(Maybe (ConflictClauseP1 b (SQLExpression b)))
   , iqp1CheckCond :: !(AnnBoolExpSQL b, Maybe (AnnBoolExpSQL b))
   , iqp1Output    :: !(MutationOutput b)
   , iqp1AllCols   :: ![ColumnInfo b]

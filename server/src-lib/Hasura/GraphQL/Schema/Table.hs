@@ -20,9 +20,9 @@ import           Data.Text.Extended
 
 import qualified Hasura.GraphQL.Parser              as P
 
-import           Hasura.Backends.Postgres.SQL.Types
 import           Hasura.GraphQL.Parser              (Kind (..), Parser)
 import           Hasura.GraphQL.Parser.Class
+import           Hasura.GraphQL.Schema.Backend
 import           Hasura.RQL.DML.Internal            (getRolePermInfo)
 import           Hasura.RQL.Types
 
@@ -37,12 +37,13 @@ import           Hasura.Session
 -- Return Nothing if there's no column the current user has "select"
 -- permissions for.
 tableSelectColumnsEnum
-  :: (MonadSchema n m, MonadRoleSet r m, MonadTableInfo r m)
-  => QualifiedTable
-  -> CombinedSelPermInfo 'Postgres
-  -> m (Maybe (Parser 'Both n PGCol))
+  :: forall m n r b
+   . (BackendSchema b, MonadSchema n m, MonadRoleSet r m, MonadTableInfo b r m)
+  => TableName b
+  -> CombinedSelPermInfo b
+  -> m (Maybe (Parser 'Both n (Column b)))
 tableSelectColumnsEnum table selectPermissions = do
-  tableGQLName <- getTableGQLName table
+  tableGQLName <- getTableGQLName @b table
   columns      <- tableSelectColumns table selectPermissions
   let enumName    = tableGQLName <> $$(G.litName "_select_column")
       description = Just $ G.Description $
@@ -66,12 +67,13 @@ tableSelectColumnsEnum table selectPermissions = do
 -- Return Nothing if there's no column the current user has "update"
 -- permissions for.
 tableUpdateColumnsEnum
-  :: (MonadSchema n m, MonadRoleSet r m, MonadTableInfo r m)
-  => QualifiedTable
-  -> UpdPermInfo 'Postgres
-  -> m (Maybe (Parser 'Both n PGCol))
+  :: forall m n r b
+   . (BackendSchema b, MonadSchema n m, MonadRoleSet r m, MonadTableInfo b r m)
+  => TableName b
+  -> UpdPermInfo b
+  -> m (Maybe (Parser 'Both n (Column b)))
 tableUpdateColumnsEnum table updatePermissions = do
-  tableGQLName <- getTableGQLName table
+  tableGQLName <- getTableGQLName @b table
   columns      <- tableUpdateColumns table updatePermissions
   let enumName    = tableGQLName <> $$(G.litName "_update_column")
       description = Just $ G.Description $
@@ -87,18 +89,18 @@ tableUpdateColumnsEnum table updatePermissions = do
       P.mkDefinition name (Just $ G.Description "column name") P.EnumValueInfo
 
 tablePermissions
-  :: forall m n r. (MonadSchema n m, MonadTableInfo r m)
-  => QualifiedTable
+  :: forall m n r b. (Backend b, MonadSchema n m, MonadTableInfo b r m)
+  => TableName b
   -> RoleName
-  -> m (Maybe (RolePermInfo 'Postgres))
+  -> m (Maybe (RolePermInfo b))
 tablePermissions table roleName = do
   tableInfo <- askTableInfo table
   pure $ getRolePermInfo roleName tableInfo
 
 tableSelectPermissions
-  :: forall m n r. (MonadSchema n m, MonadTableInfo r m, MonadRoleSet r m)
-  => QualifiedTable
-  -> m (Maybe (CombinedSelPermInfo 'Postgres))
+  :: forall m n r b. (Backend b, MonadSchema n m, MonadTableInfo b r m, MonadRoleSet r m)
+  => TableName b
+  -> m (Maybe (CombinedSelPermInfo b))
 tableSelectPermissions table = do
   RoleSet roleSet <- askRoleSet
   roleSetPermissions <-
@@ -107,10 +109,10 @@ tableSelectPermissions table = do
   traverse combineSelectPermInfos $ sequenceA (filter isJust roleSetPermissions)
 
 tableSelectFields
-  :: forall m n r. (MonadSchema n m, MonadTableInfo r m, MonadRoleSet r m)
-  => QualifiedTable
-  -> CombinedSelPermInfo 'Postgres
-  -> m [FieldInfo 'Postgres]
+  :: forall m n r b. (Backend b, MonadSchema n m, MonadTableInfo b r m, MonadRoleSet r m)
+  => TableName b
+  -> CombinedSelPermInfo b
+  -> m [FieldInfo b]
 tableSelectFields table permissions = do
   tableFields <- _tciFieldInfoMap . _tiCoreInfo <$> askTableInfo table
   filterM canBeSelected $ Map.elems tableFields
@@ -118,20 +120,20 @@ tableSelectFields table permissions = do
     canBeSelected (FIColumn columnInfo) =
       pure $ Map.member (pgiColumn columnInfo) (cspiCols permissions)
     canBeSelected (FIRelationship relationshipInfo) =
-      isJust <$> tableSelectPermissions (riRTable relationshipInfo)
+      isJust <$> tableSelectPermissions @_ @_ @_ @b (riRTable relationshipInfo)
     canBeSelected (FIComputedField computedFieldInfo) =
       case _cfiReturnType computedFieldInfo of
         CFRScalar _ ->
           pure $ Set.member (_cfiName computedFieldInfo) $ cspiScalarComputedFields permissions
         CFRSetofTable tableName ->
-          isJust <$> tableSelectPermissions tableName
+          isJust <$> tableSelectPermissions @_ @_ @_ @b tableName
     -- TODO (from master): Derive permissions for remote relationships
     canBeSelected (FIRemoteRelationship _) = pure True
 
 tableColumns
-  :: forall m n r. (MonadSchema n m, MonadTableInfo r m)
-  => QualifiedTable
-  -> m [ColumnInfo 'Postgres]
+  :: forall m n r b. (Backend b, MonadSchema n m, MonadTableInfo b r m)
+  => TableName b
+  -> m [ColumnInfo b]
 tableColumns table =
   mapMaybe columnInfo . Map.elems . _tciFieldInfoMap . _tiCoreInfo <$> askTableInfo table
   where
@@ -139,10 +141,10 @@ tableColumns table =
     columnInfo _             = Nothing
 
 tableSelectColumns
-  :: forall m n r. (MonadSchema n m, MonadTableInfo r m, MonadRoleSet r m)
-  => QualifiedTable
-  -> CombinedSelPermInfo 'Postgres
-  -> m [ColumnInfo 'Postgres]
+  :: forall m n r b. (Backend b, MonadSchema n m, MonadTableInfo b r m, MonadRoleSet r m)
+  => TableName b
+  -> CombinedSelPermInfo b
+  -> m [ColumnInfo b]
 tableSelectColumns table permissions =
   mapMaybe columnInfo <$> tableSelectFields table permissions
   where
@@ -150,10 +152,10 @@ tableSelectColumns table permissions =
     columnInfo _             = Nothing
 
 tableUpdateColumns
-  :: forall m n r. (MonadSchema n m, MonadTableInfo r m)
-  => QualifiedTable
-  -> UpdPermInfo 'Postgres
-  -> m [ColumnInfo 'Postgres]
+  :: forall m n r b. (Backend b, MonadSchema n m, MonadTableInfo b r m)
+  => TableName b
+  -> UpdPermInfo b
+  -> m [ColumnInfo b]
 tableUpdateColumns table permissions = do
   tableFields <- _tciFieldInfoMap . _tiCoreInfo <$> askTableInfo table
   pure $ mapMaybe isUpdatable $ Map.elems tableFields

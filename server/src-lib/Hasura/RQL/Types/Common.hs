@@ -1,3 +1,5 @@
+{-# LANGUAGE AllowAmbiguousTypes #-}
+
 module Hasura.RQL.Types.Common
        ( RelName(..)
        , relNameToTxt
@@ -6,9 +8,8 @@ module Hasura.RQL.Types.Common
        , relTypeToTxt
        , RelInfo(..)
 
-       , ScalarType
-       , SQLExp
        , Backend (..)
+       , SessionVarType
 
        , FieldName(..)
        , fromPGCol
@@ -77,28 +78,20 @@ import           Data.Text.Extended
 import           Data.Text.NonEmpty
 import           Data.Typeable
 import           Data.URL.Template
-import           Instances.TH.Lift                  ()
-import           Language.Haskell.TH.Syntax         (Lift)
 
 import qualified Hasura.Backends.Postgres.SQL.DML   as PG
 import qualified Hasura.Backends.Postgres.SQL.Types as PG
+import qualified Hasura.Backends.Postgres.SQL.Value as PG
 
 import           Hasura.EncJSON
 import           Hasura.Incremental                 (Cacheable)
 import           Hasura.RQL.DDL.Headers             ()
 import           Hasura.RQL.Types.Error
 import           Hasura.SQL.Backend
+import           Hasura.SQL.Types
 
 
-type family ScalarType (b :: BackendType) where
-  ScalarType 'Postgres = PG.PGScalarType
-
-type family ColumnType (b :: BackendType) where
-  ColumnType 'Postgres = PG.PGType
-
-type family SQLExp (b :: BackendType) where
-  SQLExp 'Postgres = PG.SQLExp
-
+type Representable a = (Show a, Eq a, Hashable a, Cacheable a, NFData a)
 
 -- | Mapping from abstract types to concrete backend representation
 --
@@ -111,44 +104,87 @@ type family SQLExp (b :: BackendType) where
 -- dedicated type families allows to explicitly list all typeclass requirements,
 -- which simplifies the instance declarations of all IR types.
 class
-  ( Show (TableName b)
-  , Show (ConstraintName b)
-  , Show (Column b)
-  , Show (BasicOrderType b)
-  , Show (NullsOrderType b)
-  , Eq (TableName b)
-  , Eq (ConstraintName b)
-  , Eq (Column b)
-  , Eq (BasicOrderType b)
-  , Eq (NullsOrderType b)
-  , Lift (TableName b)
-  , Lift (BasicOrderType b)
-  , Lift (NullsOrderType b)
-  , Cacheable (TableName b)
+  ( Representable (Identifier b)
+  , Representable (TableName b)
+  , Representable (FunctionName b)
+  , Representable (ConstraintName b)
+  , Representable (BasicOrderType b)
+  , Representable (NullsOrderType b)
+  , Representable (Column b)
+  , Representable (ScalarType b)
+  , Representable (SQLExpression b)
+  , Representable (SQLOperator b)
+  -- TODO define sufficiently many synonyms to get rid of these 4 lines for SessionVarType:
+  , Eq (SessionVarType b)
+  , Data (SessionVarType b)
+  , NFData (SessionVarType b)
+  , Cacheable (SessionVarType b)
+  , Representable (XAILIKE b)
+  , Representable (XANILIKE b)
+  , Ord (TableName b)
+  , Ord (ScalarType b)
   , Data (TableName b)
-  , Hashable (BasicOrderType b)
-  , Hashable (NullsOrderType b)
-  , Hashable (TableName b)
-  , NFData (TableName b)
+  , Data (ScalarType b)
+  , Data (SQLExpression b)
+  , FromJSON (TableName b)
+  , FromJSON (ScalarType b)
   , FromJSON (BasicOrderType b)
   , FromJSON (NullsOrderType b)
+  , FromJSON (Column b)
+  , ToJSON (TableName b)
+  , ToJSON (ScalarType b)
   , ToJSON (BasicOrderType b)
   , ToJSON (NullsOrderType b)
+  , ToJSON (Column b)
+  , FromJSONKey (Column b)
+  , ToJSONKey (Column b)
+  , ToTxt (TableName b)
+  , ToTxt (ScalarType b)
+  , ToTxt (Column b)
   , Typeable b
   ) => Backend (b :: BackendType) where
+  type Identifier     b :: Type
+  type Alias          b :: Type
   type TableName      b :: Type
+  type FunctionName   b :: Type
   type ConstraintName b :: Type
   type BasicOrderType b :: Type
   type NullsOrderType b :: Type
+  type CountType      b :: Type
   type Column         b :: Type
+  type ScalarValue    b :: Type
+  type ScalarType     b :: Type
+  type SQLExpression  b :: Type
+  type SQLOperator    b :: Type
+  type XAILIKE        b :: Type
+  type XANILIKE       b :: Type
+  isComparableType :: ScalarType b -> Bool
+  isNumType :: ScalarType b -> Bool
 
 instance Backend 'Postgres where
+  type Identifier     'Postgres = PG.Identifier
+  type Alias          'Postgres = PG.Alias
   type TableName      'Postgres = PG.QualifiedTable
+  type FunctionName   'Postgres = PG.QualifiedFunction
   type ConstraintName 'Postgres = PG.ConstraintName
   type BasicOrderType 'Postgres = PG.OrderType
   type NullsOrderType 'Postgres = PG.NullsOrder
+  type CountType      'Postgres = PG.CountType
   type Column         'Postgres = PG.PGCol
+  type ScalarValue    'Postgres = PG.PGScalarValue
+  type ScalarType     'Postgres = PG.PGScalarType
+  type SQLExpression  'Postgres = PG.SQLExp
+  type SQLOperator    'Postgres = PG.SQLOp
+  type XAILIKE        'Postgres = ()
+  type XANILIKE       'Postgres = ()
+  isComparableType = PG.isComparableType
+  isNumType = PG.isNumType
 
+-- instance Backend 'Mysql where
+--   type XAILIKE 'MySQL = Void
+--   type XANILIKE 'MySQL = Void
+
+type SessionVarType b = CollectableType (ScalarType b)
 
 adminText :: NonEmptyText
 adminText = mkNonEmptyTextUnsafe "admin"
@@ -158,7 +194,7 @@ rootText = mkNonEmptyTextUnsafe "root"
 
 newtype RelName
   = RelName { getRelTxt :: NonEmptyText }
-  deriving (Show, Eq, Hashable, FromJSON, ToJSON, ToJSONKey, Q.ToPrepArg, Q.FromCol, Lift, Generic, Arbitrary, NFData, Cacheable)
+  deriving (Show, Eq, Hashable, FromJSON, ToJSON, ToJSONKey, Q.ToPrepArg, Q.FromCol, Generic, Arbitrary, NFData, Cacheable)
 
 instance PG.IsIdentifier RelName where
   toIdentifier rn = PG.Identifier $ relNameToTxt rn
@@ -179,7 +215,7 @@ relTypeToTxt ArrRel = "array"
 data RelType
   = ObjRel
   | ArrRel
-  deriving (Show, Eq, Lift, Generic)
+  deriving (Show, Eq, Generic)
 instance NFData RelType
 instance Hashable RelType
 instance Cacheable RelType
@@ -198,24 +234,33 @@ instance Q.FromCol RelType where
     "array"  -> Just ArrRel
     _        -> Nothing
 
-data RelInfo
+-- should this be parameterized by both the source and the destination backend?
+data RelInfo (b :: BackendType)
   = RelInfo
   { riName       :: !RelName
   , riType       :: !RelType
-  , riMapping    :: !(HashMap PG.PGCol PG.PGCol)
-  , riRTable     :: !PG.QualifiedTable
+  , riMapping    :: !(HashMap (Column b) (Column b))
+  , riRTable     :: !(TableName b)
   , riIsManual   :: !Bool
   , riIsNullable :: !Bool
-  } deriving (Show, Eq, Generic)
-instance NFData RelInfo
-instance Cacheable RelInfo
-instance Hashable RelInfo
-$(deriveToJSON (aesonDrop 2 snakeCase) ''RelInfo)
+  } deriving (Generic)
+deriving instance Backend b => Show (RelInfo b)
+deriving instance Backend b => Eq   (RelInfo b)
+instance Backend b => NFData (RelInfo b)
+instance Backend b => Cacheable (RelInfo b)
+instance Backend b => Hashable (RelInfo b)
+
+instance (Backend b) => FromJSON (RelInfo b) where
+  parseJSON = genericParseJSON $ aesonPrefix snakeCase
+
+instance (Backend b) => ToJSON (RelInfo b) where
+  toJSON = genericToJSON $ aesonPrefix snakeCase
+
 
 newtype FieldName
   = FieldName { getFieldNameTxt :: Text }
   deriving ( Show, Eq, Ord, Hashable, FromJSON, ToJSON
-           , FromJSONKey, ToJSONKey, Lift, Data, Generic
+           , FromJSONKey, ToJSONKey, Data, Generic
            , IsString, Arbitrary, NFData, Cacheable
            , Semigroup
            )
@@ -239,7 +284,7 @@ data WithTable a
   = WithTable
   { wtName :: !PG.QualifiedTable
   , wtInfo :: !a
-  } deriving (Show, Eq, Lift)
+  } deriving (Show, Eq)
 
 instance (FromJSON a) => FromJSON (WithTable a) where
   parseJSON v@(Object o) =
@@ -363,11 +408,11 @@ instance FromJSON NonNegativeDiffTime where
 
 newtype ResolvedWebhook
   = ResolvedWebhook { unResolvedWebhook :: Text}
-  deriving ( Show, Eq, FromJSON, ToJSON, Hashable, ToTxt, Lift)
+  deriving ( Show, Eq, FromJSON, ToJSON, Hashable, ToTxt)
 
 newtype InputWebhook
   = InputWebhook {unInputWebhook :: URLTemplate}
-  deriving (Show, Eq, Lift, Generic)
+  deriving (Show, Eq, Generic)
 instance NFData InputWebhook
 instance Cacheable InputWebhook
 
@@ -392,7 +437,7 @@ resolveWebhook env (InputWebhook urlTemplate) = do
     (pure . ResolvedWebhook) eitherRenderedTemplate
 
 newtype Timeout = Timeout { unTimeout :: Int }
-  deriving (Show, Eq, ToJSON, Generic, NFData, Cacheable, Lift)
+  deriving (Show, Eq, ToJSON, Generic, NFData, Cacheable)
 
 instance FromJSON Timeout where
   parseJSON = withScientific "Timeout" $ \t -> do
@@ -410,7 +455,7 @@ defaultActionTimeoutSecs = Timeout 30
 data UrlConf
   = UrlValue !InputWebhook
   | UrlFromEnv !T.Text
-  deriving (Show, Eq, Generic, Lift)
+  deriving (Show, Eq, Generic)
 instance NFData UrlConf
 instance Cacheable UrlConf
 

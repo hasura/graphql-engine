@@ -54,7 +54,7 @@ import           Hasura.Backends.Postgres.SQL.Types
 import           Hasura.RQL.IR.BoolExp               as R
 import           Hasura.RQL.Types.Action             as R
 import           Hasura.RQL.Types.Column             as R
-import           Hasura.RQL.Types.Common             as R
+import           Hasura.RQL.Types.Common             as R hiding (FunctionName)
 import           Hasura.RQL.Types.ComputedField      as R
 import           Hasura.RQL.Types.CustomTypes        as R
 import           Hasura.RQL.Types.Error              as R
@@ -70,8 +70,8 @@ import           Hasura.RQL.Types.ScheduledTrigger   as R
 import           Hasura.RQL.Types.SchemaCache        as R
 import           Hasura.RQL.Types.SchemaCache.Build  as R
 import           Hasura.RQL.Types.Table              as R
-import           Hasura.Session
 import           Hasura.SQL.Backend                  as R
+import           Hasura.Session
 import           Hasura.Tracing                      (TraceT)
 
 data QCtx
@@ -219,7 +219,7 @@ askPGType
   => FieldInfoMap (FieldInfo 'Postgres)
   -> PGCol
   -> Text
-  -> m PGColumnType
+  -> m (ColumnType 'Postgres)
 askPGType m c msg =
   pgiType <$> askPGColInfo m c msg
 
@@ -278,7 +278,7 @@ askRelType :: (MonadError QErr m)
            => FieldInfoMap (FieldInfo backend)
            -> RelName
            -> Text
-           -> m RelInfo
+           -> m (RelInfo backend)
 askRelType m r msg = do
   colInfo <- modifyErr ("relationship " <>) $
              askFieldInfo m (fromRel r)
@@ -296,12 +296,7 @@ askFieldInfo :: (MonadError QErr m)
              -> FieldName
              -> m fieldInfo
 askFieldInfo m f =
-  case M.lookup f m of
-  Just colInfo -> return colInfo
-  Nothing ->
-    throw400 NotExists $ mconcat
-    [ f <<> " does not exist"
-    ]
+  M.lookup f m `onNothing` throw400 NotExists (f <<> " does not exist")
 
 askRemoteRel :: (MonadError QErr m)
            => FieldInfoMap (FieldInfo backend)
@@ -320,12 +315,14 @@ askCurRoles = _uiRole <$> askUserInfo
 type HeaderObj = M.HashMap Text Text
 
 combineSelectPermInfos
-  :: (MonadError QErr m)
-  => [SelPermInfo 'Postgres]
-  -> m (CombinedSelPermInfo 'Postgres)
+  :: forall m b
+   . (Backend b, MonadError QErr m)
+  => [SelPermInfo b]
+  -> m (CombinedSelPermInfo b)
 combineSelectPermInfos selPermInfos =
   foldrM combine emptyCombinedSelPermInfo selPermInfos
   where
+    combine :: SelPermInfo b -> CombinedSelPermInfo b -> m (CombinedSelPermInfo b)
     combine selPermInfo combinedSelPermInfo = do
       let CombinedSelPermInfo combinedCols scalarComputedFields
            filter' limit allowAgg reqHdrs = combinedSelPermInfo
@@ -333,7 +330,7 @@ combineSelectPermInfos selPermInfos =
         for (spiFilter selPermInfo) $ \case
           AVCol colInfo ops -> pure (colInfo, ops)
           AVRel _ _         -> throw500 "unexpected: got relationship boolean expression"
-      let pgColsWithFilter = M.fromList $ map (, Just columnCaseBoolExp) $ Set.toList (spiCols selPermInfo)
+      let colsWithFilter = M.fromList $ map (, Just columnCaseBoolExp) $ Set.toList (spiCols selPermInfo)
       pure $ CombinedSelPermInfo
             { cspiCols = M.unionWith (\l r ->
                                         case (l, r) of
@@ -343,7 +340,7 @@ combineSelectPermInfos selPermInfos =
                                           (Just caseBoolExpL, Just caseBoolExpR) -> Just $ BoolOr [caseBoolExpL, caseBoolExpR]
                                      )
                                      combinedCols
-                                     pgColsWithFilter
+                                     colsWithFilter
             , cspiScalarComputedFields = Set.intersection scalarComputedFields (spiScalarComputedFields selPermInfo)
             , cspiFilter = BoolOr [filter', (spiFilter selPermInfo)]
             , cspiLimit =
@@ -351,8 +348,8 @@ combineSelectPermInfos selPermInfos =
                   (Nothing, Nothing) -> Nothing
                   (Just l, Nothing)  -> Just l
                   (Nothing, Just r)  -> Just r
-                  (Just l , Just r)  -> Just $ max l r
-            , cspiAllowAgg = allowAgg && (spiAllowAgg selPermInfo)
+                  (Just l , Just r)  -> Just $ max l r -- TODO: change this to min
+            , cspiAllowAgg = allowAgg && (spiAllowAgg selPermInfo) -- TODO: change && to ||
             , cspiRequiredHeaders = nub $ reqHdrs <> (spiRequiredHeaders selPermInfo)
             }
 
@@ -362,6 +359,6 @@ combineSelectPermInfos selPermInfos =
       , cspiScalarComputedFields = mempty
       , cspiFilter = gBoolExpTrue
       , cspiLimit = Nothing
-      , cspiAllowAgg = True
+      , cspiAllowAgg = False -- TODO: after addressing the above TODOs, change this to True
       , cspiRequiredHeaders = mempty
       }

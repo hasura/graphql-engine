@@ -34,7 +34,6 @@ import qualified Database.PG.Query                  as Q
 import qualified Language.GraphQL.Draft.Syntax      as G
 
 import           Data.Text.Extended
-import           Language.Haskell.TH.Syntax         (Lift)
 
 import           Hasura.Backends.Postgres.SQL.Types
 import           Hasura.EncJSON
@@ -49,11 +48,10 @@ getActionInfo
   => ActionName -> m (ActionInfo 'Postgres)
 getActionInfo actionName = do
   actionMap <- scActions <$> askSchemaCache
-  case Map.lookup actionName actionMap of
-    Just actionInfo -> return actionInfo
-    Nothing         ->
-      throw400 NotExists $
-      "action with name " <> actionName <<> " does not exist"
+  Map.lookup actionName actionMap
+    `onNothing`
+    throw400 NotExists
+    ("action with name " <> actionName <<> " does not exist")
 
 runCreateAction
   :: (QErrM m , CacheRWM m, MonadTx m)
@@ -154,7 +152,7 @@ runUpdateAction (UpdateAction actionName actionDefinition) = do
 
 newtype ClearActionData
   = ClearActionData { unClearActionData :: Bool }
-  deriving (Show, Eq, Lift, J.FromJSON, J.ToJSON)
+  deriving (Show, Eq, J.FromJSON, J.ToJSON)
 
 shouldClearActionData :: ClearActionData -> Bool
 shouldClearActionData = unClearActionData
@@ -166,7 +164,7 @@ data DropAction
   = DropAction
   { _daName      :: !ActionName
   , _daClearData :: !(Maybe ClearActionData)
-  } deriving (Show, Eq, Lift)
+  } deriving (Show, Eq)
 $(J.deriveJSON (J.aesonDrop 3 J.snakeCase) ''DropAction)
 
 runDropAction
@@ -252,7 +250,7 @@ data DropActionPermission
   = DropActionPermission
   { _dapAction :: !ActionName
   , _dapRole   :: !RoleName
-  } deriving (Show, Eq, Lift)
+  } deriving (Show, Eq)
 $(J.deriveJSON (J.aesonDrop 4 J.snakeCase) ''DropActionPermission)
 
 runDropActionPermission

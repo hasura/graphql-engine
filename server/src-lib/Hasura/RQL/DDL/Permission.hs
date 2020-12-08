@@ -46,13 +46,13 @@ import           Data.Aeson
 import           Data.Aeson.Casing
 import           Data.Aeson.TH
 import           Data.Text.Extended
-import           Language.Haskell.TH.Syntax         (Lift)
 
 import           Hasura.Backends.Postgres.SQL.Types
 import           Hasura.EncJSON
 import           Hasura.RQL.DDL.Permission.Internal
 import           Hasura.RQL.DML.Internal            hiding (askPermInfo)
 import           Hasura.RQL.Types
+import           Hasura.SQL.Types
 import           Hasura.Session
 
 
@@ -99,7 +99,7 @@ procSetObj tn fieldInfoMap mObj = do
     fmap unzip $ forM (HM.toList setObj) $ \(pgCol, val) -> do
       ty <- askPGType fieldInfoMap pgCol $
         "column " <> pgCol <<> " not found in table " <>> tn
-      sqlExp <- valueParser (PGTypeScalar ty) val
+      sqlExp <- valueParser (CollectableTypeScalar ty) val
       let dep = mkColDep (getDepReason sqlExp) tn pgCol
       return ((pgCol, sqlExp), dep)
   return (HM.fromList setColTups, depHeaders, deps)
@@ -322,7 +322,7 @@ data SetPermComment
   , apRole       :: !RoleName
   , apPermission :: !PermType
   , apComment    :: !(Maybe Text)
-  } deriving (Show, Eq, Lift)
+  } deriving (Show, Eq)
 
 $(deriveJSON (aesonDrop 2 snakeCase) ''SetPermComment)
 

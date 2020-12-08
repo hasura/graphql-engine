@@ -43,8 +43,7 @@ import           Data.Aeson.Types           (Parser, toJSONKeyText)
 import           Data.Text.Extended
 import           Data.Text.NonEmpty
 import           Data.List                  (intersperse)
-import           Instances.TH.Lift          ()
-import           Language.Haskell.TH.Syntax (Lift)
+
 
 import           Hasura.Incremental         (Cacheable)
 import           Hasura.RQL.Types.Common    (adminText)
@@ -55,7 +54,7 @@ import           Hasura.Server.Utils
 newtype RoleName
   = RoleName {getRoleTxt :: NonEmptyText}
   deriving ( Show, Eq, Ord, Hashable, FromJSONKey, ToJSONKey, FromJSON
-           , ToJSON, Q.FromCol, Q.ToPrepArg, Lift, Generic, Arbitrary, NFData, Cacheable )
+           , ToJSON, Q.FromCol, Q.ToPrepArg, Generic, Arbitrary, NFData, Cacheable )
 
 instance ToTxt RoleName where
   toTxt = roleNameToTxt
