@@ -162,7 +162,7 @@ const TrackableEntry: React.FC<TrackableEntryProps> = ({
       </div>
 
       {isVolatile && state.volatileNoteOpen && (
-        <div style={{ width: '420px', padding: '8px 0' }}>
+        <div className={styles.volatileFuncNote}>
           <VolatileFuncNote
             showQueryNote={state.queryWarningOpen}
             onCancelClick={() => dispatchR('cancel')}

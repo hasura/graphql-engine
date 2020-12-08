@@ -1,4 +1,4 @@
-import React, { ComponentProps } from 'react';
+import React from 'react';
 import AceEditor from 'react-ace';
 import {
   removeAll as removeNotifications,
@@ -13,19 +13,6 @@ import './Notification/NotificationOverrides.css';
 import { isObject, isString } from '../../Common/utils/jsUtils';
 
 import styles from './Notification/Notification.scss';
-
-export const NotificationButton: React.FC<
-  ComponentProps<'button'> & {
-    type: NotificationLevel;
-  }
-> = ({ children, type, ...props }) => {
-  const className = `notificationButton__${type}`;
-  return (
-    <button {...props} className={styles[className]}>
-      {children}
-    </button>
-  );
-};
 
 export const showNotification = (
   options: Parameters<typeof displayNotification>[0],
