@@ -36,15 +36,17 @@ const LeftSidebar: React.FC<Props> = props => {
     count,
   } = getLeftSidebarSection({
     getServiceEntityLink: entityName => {
+      const encodedEntityName = encodeURIComponent(entityName);
+
       switch (service) {
         case 'data':
-          return getETModifyRoute(entityName);
+          return getETModifyRoute(encodedEntityName);
           break;
         case 'cron':
-          return getSTModifyRoute(entityName);
+          return getSTModifyRoute(encodedEntityName);
           break;
         default:
-          return getSTModifyRoute(entityName);
+          return getSTModifyRoute(encodedEntityName);
           break;
       }
     },

@@ -26,6 +26,7 @@ import qualified Hasura.GraphQL.Transport.HTTP.Protocol      as GH
 import qualified Hasura.RQL.IR.Select                        as DS
 
 import           Hasura.Backends.Postgres.SQL.Value
+import           Hasura.Backends.Postgres.Translate.Column   (toTxtValue)
 import           Hasura.EncJSON
 import           Hasura.GraphQL.Context
 import           Hasura.GraphQL.Parser
@@ -59,7 +60,7 @@ resolveUnpreparedValue
   :: (MonadError QErr m)
   => UserInfo -> UnpreparedValue 'Postgres -> m S.SQLExp
 resolveUnpreparedValue userInfo = \case
-  UVParameter pgValue _ -> pure $ toTxtValue $ cvValue pgValue
+  UVParameter _ cv      -> pure $ toTxtValue cv
   UVLiteral sqlExp      -> pure sqlExp
   UVSession             -> pure $ sessionInfoJsonExp $ _uiSession userInfo
   UVSessionVar ty sessionVariable -> do

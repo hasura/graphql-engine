@@ -8,7 +8,8 @@ args:
       create table author(
           id serial primary key,
           name text unique,
-          payments_done boolean not null default false
+          payments_done boolean not null default false,
+          user_id int
       );
 - type: track_table
   args:
@@ -61,6 +62,15 @@ args:
           - id: X-HASURA-USER-ID
           - payments_done: true
 
+#Author select permission for user
+- type: create_select_permission
+  args:
+    table: author
+    role: user
+    permission:
+      columns: [id, name, payments_done]
+      filter:
+        id: X-HASURA-USER-ID
 
 #A user can delete only his articles
 - type: create_select_permission
