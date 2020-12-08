@@ -26,7 +26,7 @@ import {
   getUniqueConstraintName,
 } from '../Common/Components/utils';
 
-import { isColTypeString, isPostgresFunction } from '../utils';
+import { quoteDefault } from '../utils';
 import {
   sqlEscapeText,
   getCreateCheckConstraintSql,
@@ -1183,14 +1183,7 @@ const addColSql = (
   colDependentSQLGenerator,
   callback
 ) => {
-  let defWithQuotes = "''";
-
-  const checkIfFunctionFormat = isPostgresFunction(colDefault);
-  if (isColTypeString(colType) && colDefault !== '' && !checkIfFunctionFormat) {
-    defWithQuotes = "'" + colDefault + "'";
-  } else {
-    defWithQuotes = colDefault;
-  }
+  const defWithQuotes = quoteDefault(colDefault);
 
   return (dispatch, getState) => {
     const currentSchema = getState().tables.currentSchema;
