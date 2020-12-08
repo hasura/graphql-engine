@@ -24,12 +24,12 @@ import qualified Hasura.GraphQL.Parser              as GraphQL
 import           Hasura.Backends.MSSQL.FromIr       as TSQL
 import           Hasura.Backends.MSSQL.Types        as TSQL
 import           Hasura.Prelude ()
-import qualified Hasura.RQL.Types.Action            as RQL
+-- import qualified Hasura.RQL.Types.Action            as RQL
 import qualified Hasura.RQL.Types.Column            as RQL
 import           Hasura.GraphQL.Context
 import           Hasura.SQL.Backend
 
-type SubscriptionRootFieldMSSQL v = RootField (QueryDB 'MSSQL v) Void (RQL.AnnActionAsyncQuery 'MSSQL v) Void
+type SubscriptionRootFieldMSSQL v = RootField (QueryDB 'MSSQL v) Void Void {-(RQL.AnnActionAsyncQuery 'MSSQL v)-} Void
 
 
 -- --------------------------------------------------------------------------------

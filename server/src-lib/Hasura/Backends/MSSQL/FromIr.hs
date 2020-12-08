@@ -45,11 +45,8 @@ data Error
   | MalformedAgg
   | NoProjectionFields
   | NoAggregatesMustBeABug
-  | UnsupportedArraySelect (IR.ArraySelectG 'MSSQL Expression)
   | UnsupportedOpExpG (IR.OpExpG 'MSSQL Expression)
-  | InvalidIntegerishSql Expression
   | DistinctIsn'tSupported
-  | ActionsNotSupported
   -- deriving (Show, Eq)
 
 -- | The base monad used throughout this module for all conversion
@@ -103,7 +100,7 @@ mkSQLSelect jsonAggSelect annSimpleSel =
 
 -- | Convert from the IR database query into a select.
 fromRootField ::
-     GraphQL.RootField (GraphQL.QueryDB 'MSSQL Expression) Void void Void
+     GraphQL.RootField (GraphQL.QueryDB 'MSSQL Expression) Void Void Void
   -> FromIr Select
 fromRootField =
   \case
@@ -111,7 +108,6 @@ fromRootField =
     GraphQL.RFDB (GraphQL.QDBSimple s) -> mkSQLSelect IR.JASMultipleRows s
     GraphQL.RFDB (GraphQL.QDBAggregation s) -> fromSelectAggregate s
     GraphQL.RFDB (GraphQL.QDBConnection (IR.ConnectionSelect{..})) -> case _csXRelay of {}
-    GraphQL.RFAction {} -> refute (pure ActionsNotSupported)
 
 --------------------------------------------------------------------------------
 -- Top-level exported functions
@@ -737,8 +733,7 @@ fromArraySelectG =
       fromArrayRelationSelectG arrayRelationSelectG
     IR.ASAggregate arrayAggregateSelectG ->
       fromArrayAggregateSelectG arrayAggregateSelectG
-    select@IR.ASConnection {} ->
-      refute (pure (UnsupportedArraySelect select))
+    IR.ASConnection x -> case IR._csXRelay $ IR.aarAnnSelect x of {}
 
 fromArrayAggregateSelectG ::
      IR.AnnRelationSelectG 'MSSQL (IR.AnnAggregateSelectG 'MSSQL Expression)
@@ -882,14 +877,8 @@ nullableBoolInequality x y =
     , AndExpression [IsNotNullExpression x, IsNullExpression y]
     ]
 
-fromSQLExpAsInt :: Expression {-PG.SQLExp-} -> FromIr Expression
+fromSQLExpAsInt :: Expression -> FromIr Expression
 fromSQLExpAsInt = pure
-  {-\case
-    s@(PG.SELit text) ->
-      case T.decimal text of
-        Right (d, "") -> pure (ValueExpression (ODBC.IntValue d))
-        _             -> refute (pure (InvalidIntegerishSql s))
-    s -> refute (pure (InvalidIntegerishSql s))-}
 
 fromGBoolExp :: IR.GBoolExp 'MSSQL Expression -> ReaderT EntityAlias FromIr Expression
 fromGBoolExp =
