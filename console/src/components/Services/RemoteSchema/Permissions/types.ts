@@ -40,7 +40,8 @@ export type SchemaPermissionsState = {
   isEditing: false;
   isFetching: false;
   permissionEdit: PermissionEdit;
-  schemaDefinition: SchemaDefinition;
+  // schemaDefinition: SchemaDefinition;
+  schemaDefinition : string;
   bulkSelect: string[];
 };
 

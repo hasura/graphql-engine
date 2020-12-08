@@ -1,3 +1,4 @@
+import { string } from 'prop-types';
 import { SchemaPermissionsState } from './types';
 
 const defaultSchemaDefSdl = `type SampleType {
@@ -14,12 +15,13 @@ const state: SchemaPermissionsState = {
     role: '',
     filter: '',
   },
-  schemaDefinition: {
-    value: defaultSchemaDefSdl,
-    error: null,
-    timer: null,
-    ast: null,
-  },
+  // schemaDefinition: {
+  //   value: defaultSchemaDefSdl,
+  //   error: null,
+  //   timer: null,
+  //   ast: null,
+  // },
+  schemaDefinition: defaultSchemaDefSdl,
   bulkSelect: [],
 };
 

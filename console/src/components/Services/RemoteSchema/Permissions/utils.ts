@@ -1,10 +1,20 @@
+import {
+  GraphQLEnumType,
+  GraphQLInputObjectType,
+  GraphQLNonNull,
+  GraphQLObjectType,
+  GraphQLScalarType,
+  GraphQLSchema,
+} from 'graphql';
+import { add } from 'lodash';
 import { findRemoteSchemaPermission } from '../utils';
 import { PermissionEdit, SchemaDefinition } from './types';
 
 export const getCreateRemoteSchemaPermissionQuery = (
   def: { role: string },
   remoteSchemaName: string,
-  schemaDefinition: SchemaDefinition
+  // schemaDefinition: SchemaDefinition
+  schemaDefinition: string
 ) => {
   return {
     type: 'add_remote_schema_permissions',
@@ -12,7 +22,7 @@ export const getCreateRemoteSchemaPermissionQuery = (
       remote_schema: remoteSchemaName,
       role: def.role,
       definition: {
-        schema: schemaDefinition.value,
+        schema: schemaDefinition,
       },
     },
   };
@@ -35,7 +45,8 @@ export const getRemoteSchemaPermissionQueries = (
   permissionEdit: PermissionEdit,
   allPermissions: any,
   remoteSchemaName: string,
-  schemaDefinition: SchemaDefinition
+  // schemaDefinition: SchemaDefinition
+  schemaDefinition: string
 ) => {
   const { role, newRole } = permissionEdit;
 
@@ -117,9 +128,138 @@ export const getTree = (schema: any, typeS: any) => {
   );
 };
 
-export const getType = (schema: any) => {
+export const getType = (schema: any, scalarTypes: boolean) => {
   const fields = schema.getTypeMap();
+  const types: any[] = [];
   console.log({ fields });
-  const ret = fields;
-  return ret;
+  Object.entries(fields).forEach(([key, value]: any) => {
+    if (
+      (!scalarTypes &&
+        !(
+          value instanceof GraphQLObjectType ||
+          value instanceof GraphQLInputObjectType
+        )) ||
+      (scalarTypes && !(value instanceof GraphQLEnumType))
+    )
+      return;
+
+    const name = value.inspect();
+    if (name === 'query_root' || name === 'mutation_root') return;
+
+    if (name.includes('__')) return;
+
+    const type: any = {};
+
+    if (value instanceof GraphQLObjectType) {
+      type.name = `type ${name}`;
+    } else if (value instanceof GraphQLInputObjectType) {
+      type.name = `input ${name}`;
+    } else if (value instanceof GraphQLEnumType) {
+      type.name = `enum ${name}`;
+    }
+
+    const childArray: any[] = [];
+    let fieldVal;
+
+    if (scalarTypes) fieldVal = value.getValues();
+    else fieldVal = value.getFields();
+
+    Object.entries(fieldVal).forEach(([k, v]) => {
+      if (scalarTypes)
+        childArray.push({
+          name: v.name,
+          checked: true,
+          return: v.value.toString(),
+        });
+      else
+        childArray.push({
+          name: v.name,
+          checked: true,
+          return: v.type.toString(),
+        });
+    });
+
+    type.children = childArray;
+    types.push(type);
+    console.log({ types });
+  });
+  return types;
+};
+
+export const getGqlTypeName = typeObj => {
+  if (typeObj.ofType) {
+    return getGqlTypeName(typeObj.ofType);
+  }
+  return typeObj.name;
+};
+
+const getSDLField = (type, argTree) => {
+  let result: any;
+  const typeName: string = type.name;
+  if (type.name === 'query_root' || type.name === 'mutation_root')
+    result = `type ${typeName}{`;
+  else result = `${typeName}{`;
+
+  console.log('>>>', { type });
+
+  type.children.map(f => {
+    // TODO filter selected fields
+    if (!f.checked) return null;
+
+    // TODO handle types, this will handle only query and mutations, ie: it adds the brackets
+    let fieldStr = f.name;
+
+    if (!typeName.includes('enum')) {
+      if (fieldStr.includes('_by_pk')) return null; // TODO handle by_pk fields
+      if (f?.args) {
+        console.log({ f });
+        fieldStr = `${fieldStr}(`;
+        Object.values(f.args).map((arg: any) => {
+          let valueStr = ``;
+          if (argTree && argTree[f.name] && argTree[f.name][arg.name]) {
+            const jsonStr = JSON.stringify(argTree[f.name][arg.name]);
+            const unquoted = jsonStr.replace(/"([^"]+)":/g, '$1:');
+            valueStr = `${arg.name} : ${getGqlTypeName(
+              arg.type
+            )} @preset(value: ${unquoted})`;
+          } else {
+            valueStr = `${arg.name} : ${arg.type.inspect()}`;
+          }
+          fieldStr = `${fieldStr + valueStr} `;
+        });
+        fieldStr = `${fieldStr})`;
+        fieldStr = `${fieldStr}: ${f.return}`;
+      } else fieldStr = `${fieldStr} : ${f.return}`; // normal data type - ie: without arguments/ presets
+    }
+
+    result = `${result}
+      ${fieldStr}`;
+  });
+  return `${result}\n}`;
+};
+
+export const generateSDL = (types, argTree, schema) => {
+  let result = `schema{
+    query: query_root
+    mutation: mutation_root
+}\n`;
+  types.forEach(type => {
+    result = `${result}\n${getSDLField(type, argTree)}\n`;
+  });
+  const otherTypes = getType(schema, true);
+  otherTypes.forEach(type => {
+    result = `${result}\n${getSDLField(type, null)}`;
+  });
+  result = `${result}\nscalar timestamptz`
+  return result;
+};
+
+export const getChildArgument = v => {
+  if (typeof v === 'string') return { children: null }; // value field
+  if (v?.type instanceof GraphQLInputObjectType && v?.type?.getFields)
+    return { children: v?.type?.getFields(), path: 'type._fields' };
+  if (v?.type instanceof GraphQLNonNull || v?.type?.ofType) {
+    return { children: v?.type?.ofType?._fields, path: 'type.ofType._fields' };
+  }
+  return {};
 };

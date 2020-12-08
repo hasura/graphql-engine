@@ -36,7 +36,11 @@ export const permSetRoleName = (rolename: string) => ({
 export const setDefaults = () => ({
   type: SET_DEFAULTS,
 });
-export const setSchemaDefinition = (definition: SchemaDefinition) => ({
+// export const setSchemaDefinition = (definition: SchemaDefinition) => ({
+//   type: SET_SCHEMA_DEFINITION,
+//   definition,
+// });
+export const setSchemaDefinition = (definition: string) => ({
   type: SET_SCHEMA_DEFINITION,
   definition,
 });
@@ -95,16 +99,21 @@ const reducer = (state = defaultState, action: any) => {
         isEditing: false,
         permissionEdit: { ...defaultState.permissionEdit },
       };
+    // case SET_SCHEMA_DEFINITION:
+    //   return {
+    //     ...state,
+    //     schemaDefinition: {
+    //       ...action.definition,
+    //       value:
+    //         action.definition.value !== null
+    //           ? action.definition.value
+    //           : state.schemaDefinition.value,
+    //     },
+    //   };
     case SET_SCHEMA_DEFINITION:
       return {
         ...state,
-        schemaDefinition: {
-          ...action.definition,
-          value:
-            action.definition.value !== null
-              ? action.definition.value
-              : state.schemaDefinition.value,
-        },
+        schemaDefinition: action.definition,
       };
     case SET_ROLE_NAME:
       return {
@@ -121,8 +130,8 @@ const reducer = (state = defaultState, action: any) => {
           state.bulkSelect,
           action.selectedRole,
           true
-          ),
-        };
+        ),
+      };
     case PERM_DESELECT_BULK:
       return {
         ...state,

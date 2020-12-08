@@ -1,6 +1,7 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import Helmet from 'react-helmet';
-import { buildClientSchema, GraphQLObjectType } from 'graphql';
+import * as GQL from 'graphql';
+// import { buildClientSchema, GraphQLObjectType } from 'graphql';
 import PermissionsTable from './PermissionsTable';
 import PermissionEditor from './PermissionEditor';
 import { getConfirmation } from '../../../Common/utils/jsUtils';
@@ -46,6 +47,8 @@ const BulkSelectSection = ({ bulkSelect, permRemoveMultipleRoles }: any) => {
   );
 };
 
+declare const window: any;
+
 const Permissions = ({ allRoles, ...props }: any) => {
   const {
     currentRemoteSchema,
@@ -75,6 +78,8 @@ const Permissions = ({ allRoles, ...props }: any) => {
     };
   }, []);
 
+  const [datasource, setDatasource]: any[] = useState([]);
+
   const { loading, error, schema, introspect } = useIntrospectionSchemaRemote(
     currentRemoteSchema.name,
     {
@@ -82,6 +87,26 @@ const Permissions = ({ allRoles, ...props }: any) => {
     },
     dispatch
   );
+
+  useEffect(() => {
+    if (!schema) return;
+
+    window.SCHEMA = schema;
+    window.GQL = GQL;
+
+    const types = getType(schema, false);
+    setDatasource([
+      {
+        name: 'query_root',
+        children: getTree(schema, 'QUERY'),
+      },
+      {
+        name: 'mutation_root',
+        children: getTree(schema, 'MUTATION'),
+      },
+      ...types,
+    ]);
+  }, [schema]);
 
   if (error || !schema) {
     return (
@@ -94,41 +119,6 @@ const Permissions = ({ allRoles, ...props }: any) => {
       </div>
     );
   }
-
-  const jsonTree = [
-    {
-      name: 'query_root',
-      children: getTree(schema, 'QUERY'),
-    },
-    {
-      name: 'mutation_root',
-      children: getTree(schema, 'MUTATION'),
-    },
-  ];
-  const types = getType(schema);
-
-  Object.entries(types).forEach(([key, value]: any) => {
-    if (!(value instanceof GraphQLObjectType)) return;
-    const name = value.inspect();
-
-    const obj: any = {
-      name: `Type ${name}`,
-    };
-
-    const childArray: any[] = [];
-    // eslint-disable-next-line no-underscore-dangle
-    // if (value._fields) {
-    const fields = value.getFields();
-    Object.entries(fields).forEach(([k, v]: any) => {
-      childArray.push({
-        name: v.name,
-        checked: true,
-      });
-    });
-    // }
-    obj.children = childArray;
-    jsonTree.push(obj);
-  });
 
   return (
     <div>
@@ -166,7 +156,8 @@ const Permissions = ({ allRoles, ...props }: any) => {
             saveRemoteSchemaPermission={saveRemoteSchemaPermission}
             removeRemoteSchemaPermission={removeRemoteSchemaPermission}
             setSchemaDefinition={setSchemaDefinition}
-            jsonTree={jsonTree}
+            datasource={datasource}
+            schema={schema}
           />
         )}
       </div>
