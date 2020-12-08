@@ -62,8 +62,7 @@ askPermInfo'
 askPermInfo' pa tableInfo = do
   RoleSet roles <- askCurRoles
   sequenceA <$>
-    (for (toList roles) $ \roleName ->
-    return $ getPermInfoMaybe roleName pa tableInfo)
+    for (toList roles) (\roleName -> return $ getPermInfoMaybe roleName pa tableInfo)
 
 getPermInfoMaybe :: RoleName -> PermAccessor 'Postgres c -> TableInfo 'Postgres -> Maybe c
 getPermInfoMaybe roleName pa tableInfo =

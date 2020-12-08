@@ -104,7 +104,7 @@ buildGQLContext =
           = Set.insert (Set.singleton adminRoleName) $
             Set.fromList $
             map Set.fromList $
-            filter ((>= 1) . length) $
+            filter (not . null) $
             -- The admin role is not included, while making
             -- all the possible combinations of the roles
             subsequences (toList allRolesWithoutAdmin)
