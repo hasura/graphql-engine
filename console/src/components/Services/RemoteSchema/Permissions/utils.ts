@@ -144,9 +144,9 @@ export const getType = (schema: any, scalarTypes: boolean) => {
       return;
 
     const name = value.inspect();
-    if (name === 'query_root' || name === 'mutation_root') return;
+    if (name === 'query_root' || name === 'mutation_root' || name === 'subscription_root') return;
 
-    if (name.includes('__')) return;
+    if (name.includes('__')) return; // TODO change this check
 
     const type: any = {};
 
@@ -210,7 +210,6 @@ const getSDLField = (type, argTree) => {
     let fieldStr = f.name;
 
     if (!typeName.includes('enum')) {
-      if (fieldStr.includes('_by_pk')) return null; // TODO handle by_pk fields
       if (f?.args) {
         console.log({ f });
         fieldStr = `${fieldStr}(`;

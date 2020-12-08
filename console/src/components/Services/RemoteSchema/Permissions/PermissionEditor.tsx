@@ -270,6 +270,10 @@ const PermissionEditor = ({ ...props }: any) => {
   const { isNewRole, isNewPerm } = permissionEdit;
 
   useEffect(() => {
+
+    window.SCHEMA = schema;
+    window.GQL = GQL;
+
     console.log('changed--->', state);
     if (!state) return;
     // TODO make this a utility
