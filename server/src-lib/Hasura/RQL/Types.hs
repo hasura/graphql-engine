@@ -314,6 +314,7 @@ askCurRoles = _uiRole <$> askUserInfo
 
 type HeaderObj = M.HashMap Text Text
 
+-- TODO: document this function
 combineSelectPermInfos
   :: forall m b
    . (Backend b, MonadError QErr m)
@@ -325,7 +326,7 @@ combineSelectPermInfos selPermInfos =
     combine :: SelPermInfo b -> CombinedSelPermInfo b -> m (CombinedSelPermInfo b)
     combine selPermInfo combinedSelPermInfo = do
       let CombinedSelPermInfo combinedCols scalarComputedFields
-           filter' limit allowAgg reqHdrs = combinedSelPermInfo
+           combinedFilter combinedLimit combinedAllowAgg combinedReqHdrs = combinedSelPermInfo
       columnCaseBoolExp <-
         for (spiFilter selPermInfo) $ \case
           AVCol colInfo ops -> pure (colInfo, ops)
@@ -342,15 +343,15 @@ combineSelectPermInfos selPermInfos =
                                      combinedCols
                                      colsWithFilter
             , cspiScalarComputedFields = Set.intersection scalarComputedFields (spiScalarComputedFields selPermInfo)
-            , cspiFilter = BoolOr [filter', (spiFilter selPermInfo)]
+            , cspiFilter = BoolOr [combinedFilter, (spiFilter selPermInfo)]
             , cspiLimit =
-                case (limit, spiLimit selPermInfo) of
+                case (combinedLimit, spiLimit selPermInfo) of
                   (Nothing, Nothing) -> Nothing
                   (Just l, Nothing)  -> Just l
                   (Nothing, Just r)  -> Just r
-                  (Just l , Just r)  -> Just $ max l r -- TODO: change this to min
-            , cspiAllowAgg = allowAgg && (spiAllowAgg selPermInfo) -- TODO: change && to ||
-            , cspiRequiredHeaders = nub $ reqHdrs <> (spiRequiredHeaders selPermInfo)
+                  (Just l , Just r)  -> Just $ min l r
+            , cspiAllowAgg = combinedAllowAgg || (spiAllowAgg selPermInfo)
+            , cspiRequiredHeaders = nub $ combinedReqHdrs <> (spiRequiredHeaders selPermInfo)
             }
 
     emptyCombinedSelPermInfo =
@@ -359,6 +360,6 @@ combineSelectPermInfos selPermInfos =
       , cspiScalarComputedFields = mempty
       , cspiFilter = gBoolExpTrue
       , cspiLimit = Nothing
-      , cspiAllowAgg = False -- TODO: after addressing the above TODOs, change this to True
+      , cspiAllowAgg = False
       , cspiRequiredHeaders = mempty
       }
