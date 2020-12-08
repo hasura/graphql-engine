@@ -16,6 +16,7 @@ module Hasura.Prelude
   , spanMaybeM
   , liftEitherM
   , hoistMaybe
+  , tshow
   -- * Efficient coercions
   , coerce
   , findWithIndex
@@ -184,3 +185,6 @@ startTimer = do
 -- copied from http://hackage.haskell.org/package/errors-2.3.0/docs/src/Control.Error.Util.html#hoistMaybe
 hoistMaybe :: (Monad m) => Maybe b -> MaybeT m b
 hoistMaybe = MaybeT . return
+
+tshow :: Show a => a -> Text
+tshow = T.pack . show
