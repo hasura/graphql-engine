@@ -11,7 +11,6 @@ import           Data.Time.Clock.POSIX      (getPOSIXTime)
 import           Hasura.App
 import           Hasura.Logging             (Hasura, LogLevel (..), defaultEnabledEngineLogTypes)
 import           Hasura.Prelude
-import           Hasura.RQL.DDL.Metadata    (fetchMetadataFromHdbTables)
 import           Hasura.RQL.DDL.Schema
 import           Hasura.RQL.Types
 import           Hasura.Server.Init
@@ -74,7 +73,7 @@ runApp env (HGEOptionsG rci hgeCmd) = do
         runHGEServer env serveOptions serveCtx Nothing initTime shutdownApp Nothing serverMetrics ekgStore
 
     HCExport -> do
-      res <- runTxWithMinimalPool _gcConnInfo fetchMetadataFromHdbTables
+      res <- runTxWithMinimalPool _gcConnInfo fetchMetadataFromCatalog
       either (printErrJExit MetadataExportError) printJSON res
 
     HCClean -> do
@@ -88,11 +87,12 @@ runApp env (HGEOptionsG rci hgeCmd) = do
       pool <- mkMinimalPool _gcConnInfo
       res <- runAsAdmin pool sqlGenCtx _gcHttpManager $ do
         schemaCache <- buildRebuildableSchemaCache env
+        metadata <- liftTx fetchMetadataFromCatalog
         execQuery env queryBs
           & Tracing.runTraceTWithReporter Tracing.noReporter "execute"
-          & runHasSystemDefinedT (SystemDefined False)
+          & runMetadataT metadata
           & runCacheRWT schemaCache
-          & fmap (\(res, _, _) -> res)
+          & fmap (\((res, _), _, _) -> res)
       either (printErrJExit ExecuteProcessError) (liftIO . BLC.putStrLn) res
 
     HCDowngrade opts -> do

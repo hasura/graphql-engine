@@ -645,8 +645,8 @@ execQuery
      , HasHttpManager m
      , HasSQLGenCtx m
      , UserInfoM m
-     , HasSystemDefined m
      , Tracing.MonadTrace m
+     , MetadataM m
      )
   => Env.Environment
   -> BLC.ByteString

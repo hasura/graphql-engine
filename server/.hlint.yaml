@@ -109,7 +109,6 @@
     - warn: {lhs: "case x of {Just b -> pure b; Nothing -> a}", rhs: "onNothing x a"}
     - warn: {lhs: "case x of {Nothing -> a; Just b -> return b}", rhs: "onNothing x a"}
     - warn: {lhs: "case x of {Just b -> return b; Nothing -> a}", rhs: "onNothing x a"}
-    - warn: {lhs: "fromMaybe [] x", rhs: "maybeToList x"}
     - warn: {lhs: "Data.Text.pack (Prelude.show x)", rhs: "Hasura.Prelude.tshow x"}
 
 - group:

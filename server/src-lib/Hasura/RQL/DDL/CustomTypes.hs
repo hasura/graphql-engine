@@ -1,8 +1,7 @@
 {-# LANGUAGE RecordWildCards #-}
 module Hasura.RQL.DDL.CustomTypes
   ( runSetCustomTypes
-  , persistCustomTypes
-  , clearCustomTypes
+  , clearCustomTypesInMetadata
   , resolveCustomTypes
   , lookupPGScalar
   ) where
@@ -14,9 +13,9 @@ import qualified Data.HashMap.Strict                as Map
 import qualified Data.HashSet                       as Set
 import qualified Data.List.Extended                 as L
 import qualified Data.Text                          as T
-import qualified Database.PG.Query                  as Q
 import qualified Language.GraphQL.Draft.Syntax      as G
 
+import           Control.Lens                       ((.~))
 import           Control.Monad.Validate
 import           Data.Text.Extended
 
@@ -204,10 +203,8 @@ validateCustomTypeDefinitions tableCache customTypes allPGScalars = do
                   objectTypeName _trName fieldName
 
             -- the column should be a column of the table
-            getColumnInfoM remoteTableInfo (fromPGCol columnName)
-              `onNothing`
-              refute (pure (ObjectRelationshipColumnDoesNotExist
-                            objectTypeName _trName _trRemoteTable columnName))
+            onNothing (getColumnInfoM remoteTableInfo (fromPGCol columnName)) $ refute $ pure $
+              ObjectRelationshipColumnDoesNotExist objectTypeName _trName _trRemoteTable columnName
 
         pure $ TypeRelationship _trName _trType remoteTableInfo annotatedFieldMapping
 
@@ -309,28 +306,17 @@ showCustomTypeValidationError = \case
 runSetCustomTypes
   :: ( MonadError QErr m
      , CacheRWM m
-     , MonadTx m
+     , MetadataM m
      )
   => CustomTypes -> m EncJSON
 runSetCustomTypes customTypes = do
-  persistCustomTypes customTypes
-  buildSchemaCacheFor MOCustomTypes
-  return successMsg
+  buildSchemaCacheFor MOCustomTypes $
+    MetadataModifier $ metaCustomTypes .~ customTypes
+  pure successMsg
 
-persistCustomTypes :: MonadTx m => CustomTypes -> m ()
-persistCustomTypes customTypes = liftTx do
-  clearCustomTypes
-  Q.unitQE defaultTxErrorHandler [Q.sql|
-    INSERT into hdb_catalog.hdb_custom_types
-      (custom_types)
-      VALUES ($1)
-  |] (Identity $ Q.AltJ customTypes) False
-
-clearCustomTypes :: Q.TxE QErr ()
-clearCustomTypes = do
-  Q.unitQE defaultTxErrorHandler [Q.sql|
-    DELETE FROM hdb_catalog.hdb_custom_types
-  |] () False
+clearCustomTypesInMetadata :: MetadataModifier
+clearCustomTypesInMetadata =
+  MetadataModifier $ metaCustomTypes .~ emptyCustomTypes
 
 resolveCustomTypes
   :: (MonadError QErr m)

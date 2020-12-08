@@ -3,6 +3,10 @@
 
 module Hasura.RQL.Types.Table
        ( TableConfig(..)
+
+       , tcCustomRootFields
+       , tcCustomColumnNames
+       , tcCustomName
        , emptyTableConfig
 
        , TableCoreCache
@@ -12,6 +16,10 @@ module Hasura.RQL.Types.Table
        , tiCoreInfo
        , tiRolePermInfoMap
        , tiEventTriggerInfoMap
+
+       , PGForeignKeyMetadata(..)
+       , PGTableMetadata(..)
+       , PostgresTablesMetadata
 
        , TableCoreInfoG(..)
        , TableRawInfo
@@ -105,9 +113,9 @@ import           Hasura.RQL.Types.Error
 import           Hasura.RQL.Types.EventTrigger
 import           Hasura.RQL.Types.Permission
 import           Hasura.RQL.Types.RemoteRelationship
-import           Hasura.SQL.Backend
 import           Hasura.Server.Utils                 (duplicates, englishList)
 import           Hasura.Session
+import           Hasura.SQL.Backend
 
 
 data TableCustomRootFields
@@ -396,6 +404,7 @@ data TableConfig
 instance NFData TableConfig
 instance Cacheable TableConfig
 $(deriveToJSON (aesonDrop 3 snakeCase){omitNothingFields=True} ''TableConfig)
+$(makeLenses ''TableConfig)
 
 emptyTableConfig :: TableConfig
 emptyTableConfig =
@@ -453,6 +462,48 @@ $(makeLenses ''TableInfo)
 
 type TableCoreCache b = M.HashMap (TableName b) (TableCoreInfo b)
 type TableCache b = M.HashMap (TableName b) (TableInfo b) -- info of all tables
+
+-- | Metadata of a Postgres foreign key constraint which is being
+-- extracted from database via 'src-rsr/pg_table_metadata.sql'
+newtype PGForeignKeyMetadata
+  = PGForeignKeyMetadata
+  { unPGForeignKeyMetadata :: ForeignKey
+  } deriving (Show, Eq, NFData, Hashable, Cacheable)
+
+instance FromJSON PGForeignKeyMetadata where
+  parseJSON = withObject "PGForeignKeyMetadata" \o -> do
+    constraint <- o .: "constraint"
+    foreignTable <- o .: "foreign_table"
+
+    columns <- o .: "columns"
+    foreignColumns <- o .: "foreign_columns"
+    if (length columns == length foreignColumns) then
+      pure $ PGForeignKeyMetadata ForeignKey
+        { _fkConstraint = constraint
+        , _fkForeignTable = foreignTable
+        , _fkColumnMapping = M.fromList $ zip columns foreignColumns
+        }
+    else fail "columns and foreign_columns differ in length"
+
+
+-- | Metadata of a Postgres table which is being extracted from
+-- database via 'src-rsr/pg_table_metadata.sql'
+data PGTableMetadata
+  = PGTableMetadata
+  { _ptmiOid               :: !OID
+  , _ptmiColumns           :: ![RawColumnInfo 'Postgres]
+  , _ptmiPrimaryKey        :: !(Maybe (PrimaryKey PG.PGCol))
+  , _ptmiUniqueConstraints :: !(HashSet Constraint)
+  -- ^ Does /not/ include the primary key!
+  , _ptmiForeignKeys       :: !(HashSet PGForeignKeyMetadata)
+  , _ptmiViewInfo          :: !(Maybe ViewInfo)
+  , _ptmiDescription       :: !(Maybe PG.PGDescription)
+  } deriving (Show, Eq, Generic)
+instance NFData PGTableMetadata
+instance Cacheable PGTableMetadata
+$(deriveFromJSON (aesonDrop 5 snakeCase) ''PGTableMetadata)
+
+type PostgresTablesMetadata = HashMap PG.QualifiedTable PGTableMetadata
 
 getFieldInfoM
   :: TableInfo b -> FieldName -> Maybe (FieldInfo b)

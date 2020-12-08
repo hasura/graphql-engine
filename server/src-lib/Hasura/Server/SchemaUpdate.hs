@@ -9,7 +9,7 @@ where
 import           Hasura.Backends.Postgres.Connection
 import           Hasura.Logging
 import           Hasura.Prelude
-import           Hasura.RQL.DDL.Schema               (runCacheRWT)
+import           Hasura.RQL.DDL.Schema               (fetchMetadataFromCatalog, runCacheRWT)
 import           Hasura.RQL.Types
 import           Hasura.RQL.Types.Run
 import           Hasura.Server.App                   (SchemaCacheRef (..), withSCUpdate)
@@ -78,7 +78,7 @@ data SchemaSyncEvent
 
 instance ToJSON SchemaSyncEvent where
   toJSON = \case
-    SSEListenStart time -> String $ "event listening started at " <> T.pack (show time)
+    SSEListenStart time -> String $ "event listening started at " <> tshow time
     SSEPayload payload -> toJSON payload
 
 data ThreadError
@@ -105,7 +105,7 @@ logThreadStarted
   :: (MonadIO m)
   => Logger Hasura -> InstanceId -> ThreadType -> Immortal.Thread -> m ()
 logThreadStarted logger instanceId threadType thread =
-  let msg = T.pack (show threadType) <> " thread started"
+  let msg = tshow threadType <> " thread started"
   in unLogger logger $
      StartupLog LevelInfo "schema-sync" $
        object [ "instance_id" .= getInstanceId instanceId
@@ -295,7 +295,7 @@ refreshSchemaCache sqlGenCtx pool logger httpManager cacheRef invalidations thre
   -- Reload schema cache from catalog
   resE <- liftIO $ runExceptT $ withSCUpdate cacheRef logger do
     rebuildableCache <- fst <$> liftIO (readIORef $ _scrCache cacheRef)
-    ((), cache, _) <- buildSchemaCacheWithOptions CatalogSync invalidations
+    ((), cache, _) <- fetchMetadataAndBuildCache
       & runCacheRWT rebuildableCache
       & peelRun runCtx pgCtx PG.ReadWrite Nothing
     pure ((), cache)
@@ -305,6 +305,10 @@ refreshSchemaCache sqlGenCtx pool logger httpManager cacheRef invalidations thre
  where
   runCtx = RunCtx adminUserInfo httpManager sqlGenCtx
   pgCtx = mkPGExecCtx PG.Serializable pool
+
+  fetchMetadataAndBuildCache = do
+    metadata <- liftTx fetchMetadataFromCatalog
+    buildSchemaCacheWithOptions CatalogSync invalidations metadata
 
 logInfo :: Logger Hasura -> ThreadType -> Value -> IO ()
 logInfo logger threadType val = unLogger logger $
