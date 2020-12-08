@@ -42,8 +42,9 @@ import qualified Hasura.RQL.IR.Select                        as RS
 import qualified Hasura.Tracing                              as Tracing
 
 import           Hasura.Backends.Postgres.SQL.Types
-import           Hasura.Backends.Postgres.SQL.Value          (PGScalarValue (..), toTxtValue)
+import           Hasura.Backends.Postgres.SQL.Value          (PGScalarValue (..))
 import           Hasura.Backends.Postgres.Translate.Select   (asSingleRowJsonResp)
+import           Hasura.Backends.Postgres.Translate.Column   (toTxtValue)
 import           Hasura.EncJSON
 import           Hasura.GraphQL.Execute.Prepare
 import           Hasura.GraphQL.Parser
@@ -159,7 +160,7 @@ resolveActionExecution env logger userInfo annAction execContext = do
   (webhookRes, respHeaders) <- flip runReaderT logger $ callWebhook env manager outputType outputFields reqHeaders confHeaders
                                forwardClientHeaders resolvedWebhook handlerPayload timeout
   let webhookResponseExpression = RS.AEInput $ UVLiteral $
-        toTxtValue $ WithScalarType PGJSONB $ PGValJSONB $ Q.JSONB $ J.toJSON webhookRes
+        toTxtValue $ ColumnValue (ColumnScalar PGJSONB) $ PGValJSONB $ Q.JSONB $ J.toJSON webhookRes
       selectAstUnresolved = processOutputSelectionSet webhookResponseExpression
                             outputType definitionList annFields stringifyNum
   (astResolved, _expectedVariables) <- flip runStateT Set.empty $ RS.traverseAnnSimpleSelect prepareWithoutPlan selectAstUnresolved
@@ -276,8 +277,8 @@ resolveAsyncActionQuery userInfo annAction =
           actionIdColumnEq = BoolFld $ AVCol actionIdColumnInfo [AEQ True actionId]
           sessionVarsColumnInfo = ColumnInfo (unsafePGCol "session_variables") $$(G.litName "session_variables")
                                   0 (ColumnScalar PGJSONB) False Nothing
-          sessionVarValue = flip UVParameter Nothing $ ColumnValue (ColumnScalar PGJSONB) $
-                            WithScalarType PGJSONB $ PGValJSONB $ Q.JSONB $ J.toJSON $ _uiSession userInfo
+          sessionVarValue = UVParameter Nothing $ ColumnValue (ColumnScalar PGJSONB) $
+                            PGValJSONB $ Q.JSONB $ J.toJSON $ _uiSession userInfo
           sessionVarsColumnEq = BoolFld $ AVCol sessionVarsColumnInfo [AEQ True sessionVarValue]
 
       -- For non-admin roles, accessing an async action's response should be allowed only for the user

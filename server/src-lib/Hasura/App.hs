@@ -321,6 +321,7 @@ runHGEServer
      , MonadExecuteQuery m
      , Tracing.HasReporter m
      , MonadQueryInstrumentation m
+     , HasResourceLimits m
      , MonadMetadataStorage (MetadataStorageT m)
      )
   => Env.Environment
@@ -661,6 +662,9 @@ instance Tracing.HasReporter PGMetadataStorageApp
 
 instance MonadQueryInstrumentation PGMetadataStorageApp where
   askInstrumentQuery _ = pure (id, noProfile)
+
+instance HasResourceLimits PGMetadataStorageApp where
+  askResourceLimits = pure (ResourceLimits id)
 
 instance HttpLog PGMetadataStorageApp where
   logHttpError logger userInfoM reqId waiReq req qErr headers =

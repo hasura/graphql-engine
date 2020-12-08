@@ -27,8 +27,8 @@ import           Data.Text.Extended
 import qualified Hasura.Backends.Postgres.SQL.DML       as S
 import qualified Hasura.GraphQL.Transport.HTTP.Protocol as GH
 
-import           Hasura.Backends.Postgres.SQL.Types
 import           Hasura.Backends.Postgres.SQL.Value
+import           Hasura.Backends.Postgres.Translate.Column
 import           Hasura.GraphQL.Parser.Column
 import           Hasura.GraphQL.Parser.Schema
 import           Hasura.RQL.DML.Internal                (currentSession)
@@ -75,10 +75,10 @@ initPlanningSt =
 
 prepareWithPlan :: (MonadState PlanningSt m) => UnpreparedValue 'Postgres -> m S.SQLExp
 prepareWithPlan = \case
-  UVParameter ColumnValue{ cvValue = colVal } varInfoM -> do
+  UVParameter varInfoM ColumnValue{..} -> do
     argNum <- maybe getNextArgNum (getVarArgNum . getName) varInfoM
-    addPrepArg argNum (toBinaryValue colVal, pstValue colVal)
-    return $ toPrepParam argNum (pstType colVal)
+    addPrepArg argNum (binEncoder cvValue, cvValue)
+    return $ toPrepParam argNum (unsafePGColumnToBackend cvType)
 
   UVSessionVar ty sessVar -> do
     sessVarVal <- retrieveAndFlagSessionVariableValue insertSessionVariable sessVar currentSessionExp
@@ -95,7 +95,7 @@ prepareWithPlan = \case
 
 prepareWithoutPlan :: (MonadState (Set.HashSet SessionVariable) m) => UnpreparedValue 'Postgres -> m S.SQLExp
 prepareWithoutPlan = \case
-  UVParameter pgValue _   -> pure $ toTxtValue $ cvValue pgValue
+  UVParameter _ cv        -> pure $ toTxtValue cv
   UVLiteral sqlExp        -> pure sqlExp
   UVSession               -> pure currentSession
   UVSessionVar ty sessVar -> do
