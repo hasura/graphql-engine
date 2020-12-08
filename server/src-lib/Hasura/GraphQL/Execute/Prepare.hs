@@ -27,12 +27,13 @@ import           Data.Text.Extended
 import qualified Hasura.Backends.Postgres.SQL.DML       as S
 import qualified Hasura.GraphQL.Transport.HTTP.Protocol as GH
 
-import           Hasura.Backends.Postgres.SQL.Types
 import           Hasura.Backends.Postgres.SQL.Value
+import           Hasura.Backends.Postgres.Translate.Column
 import           Hasura.GraphQL.Parser.Column
 import           Hasura.GraphQL.Parser.Schema
 import           Hasura.RQL.DML.Internal                (currentSession)
 import           Hasura.RQL.Types
+import           Hasura.SQL.Types
 import           Hasura.Session
 
 
@@ -58,6 +59,7 @@ data ExecutionStep db
   -- ^ A query to execute against a remote schema
   | ExecStepRaw J.Value
   -- ^ Output a plain JSON object
+  deriving (Functor, Foldable, Traversable)
 
 data PlanningSt
   = PlanningSt
@@ -71,18 +73,18 @@ initPlanningSt :: PlanningSt
 initPlanningSt =
   PlanningSt 2 Map.empty IntMap.empty Set.empty
 
-prepareWithPlan :: (MonadState PlanningSt m) => UnpreparedValue -> m S.SQLExp
+prepareWithPlan :: (MonadState PlanningSt m) => UnpreparedValue 'Postgres -> m S.SQLExp
 prepareWithPlan = \case
-  UVParameter PGColumnValue{ pcvValue = colVal } varInfoM -> do
+  UVParameter varInfoM ColumnValue{..} -> do
     argNum <- maybe getNextArgNum (getVarArgNum . getName) varInfoM
-    addPrepArg argNum (toBinaryValue colVal, pstValue colVal)
-    return $ toPrepParam argNum (pstType colVal)
+    addPrepArg argNum (binEncoder cvValue, cvValue)
+    return $ toPrepParam argNum (unsafePGColumnToBackend cvType)
 
   UVSessionVar ty sessVar -> do
     sessVarVal <- retrieveAndFlagSessionVariableValue insertSessionVariable sessVar currentSessionExp
     pure $ flip S.SETyAnn (S.mkTypeAnn ty) $ case ty of
-      PGTypeScalar colTy -> withConstructorFn colTy sessVarVal
-      PGTypeArray _      -> sessVarVal
+      CollectableTypeScalar colTy -> withConstructorFn colTy sessVarVal
+      CollectableTypeArray _      -> sessVarVal
 
   UVLiteral sqlExp -> pure sqlExp
   UVSession        -> pure currentSessionExp
@@ -91,9 +93,9 @@ prepareWithPlan = \case
     insertSessionVariable sessVar plan =
       plan { _psSessionVariables = Set.insert sessVar $ _psSessionVariables plan }
 
-prepareWithoutPlan :: (MonadState (Set.HashSet SessionVariable) m) => UnpreparedValue -> m S.SQLExp
+prepareWithoutPlan :: (MonadState (Set.HashSet SessionVariable) m) => UnpreparedValue 'Postgres -> m S.SQLExp
 prepareWithoutPlan = \case
-  UVParameter pgValue _   -> pure $ toTxtValue $ pcvValue pgValue
+  UVParameter _ cv        -> pure $ toTxtValue cv
   UVLiteral sqlExp        -> pure sqlExp
   UVSession               -> pure currentSession
   UVSessionVar ty sessVar -> do
@@ -101,8 +103,8 @@ prepareWithoutPlan = \case
     -- TODO: this piece of code appears at least three times: twice here
     -- and once in RQL.DML.Internal. Some de-duplication is in order.
     pure $ flip S.SETyAnn (S.mkTypeAnn ty) $ case ty of
-      PGTypeScalar colTy -> withConstructorFn colTy sessVarVal
-      PGTypeArray _      -> sessVarVal
+      CollectableTypeScalar colTy -> withConstructorFn colTy sessVarVal
+      CollectableTypeArray _      -> sessVarVal
 
 retrieveAndFlagSessionVariableValue
   :: (MonadState s m)
@@ -130,11 +132,9 @@ validateSessionVariables requiredVariables sessionVariables = do
 getVarArgNum :: (MonadState PlanningSt m) => G.Name -> m Int
 getVarArgNum var = do
   PlanningSt curArgNum vars prepped sessionVariables <- get
-  case Map.lookup var vars of
-    Just argNum -> pure argNum
-    Nothing     -> do
-      put $ PlanningSt (curArgNum + 1) (Map.insert var curArgNum vars) prepped sessionVariables
-      pure curArgNum
+  Map.lookup var vars `onNothing` do
+    put $ PlanningSt (curArgNum + 1) (Map.insert var curArgNum vars) prepped sessionVariables
+    pure curArgNum
 
 addPrepArg
   :: (MonadState PlanningSt m)

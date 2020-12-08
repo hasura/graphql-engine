@@ -266,6 +266,17 @@ args:
         name:
           _nin: X-Hasura-Premium-Artists
 
+#Create select permission on Track using _iregex operator
+- type: create_select_permission
+  args:
+    table: Artist
+    role: user_iregex
+    permission:
+      columns: '*'
+      filter:
+        name:
+          _iregex: X-Hasura-IRegex-Artists
+
 # Create search_track function
 - type: run_sql
   args:

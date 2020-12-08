@@ -452,11 +452,11 @@ withMetadataCheck cascade action = do
         SOFunction qf -> Just qf
         _             -> Nothing
 
-  forM_ (droppedFuncs \\ purgedFuncs) $ \qf -> do
+  forM_ (droppedFuncs \\ purgedFuncs) $ \qf ->
     liftTx $ delFunctionFromCatalog qf
 
   -- Process altered functions
-  forM_ alteredFuncs $ \(qf, newTy) -> do
+  forM_ alteredFuncs $ \(qf, newTy) ->
     when (newTy == FTVOLATILE) $
       throw400 NotSupported $
       "type of function " <> qf <<> " is altered to \"VOLATILE\" which is not supported now"

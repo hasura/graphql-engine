@@ -19,7 +19,6 @@ import           Control.DeepSeq               (NFData (..))
 import           Data.Functor.Product
 import           Data.GADT.Compare
 import           Data.Text
-import           Instances.TH.Lift             ()
 import           System.Cron.Parser
 import           System.Cron.Types
 
@@ -95,7 +94,7 @@ instance (GCompare f, GCompare g) => GCompare (Product f g) where
 
 instance J.FromJSON CronSchedule where
   parseJSON = J.withText "CronSchedule" $ \t ->
-    either fail pure $ parseCronSchedule t
+    onLeft (parseCronSchedule t) fail
 
 instance J.ToJSON CronSchedule where
   toJSON = J.String . serializeCronSchedule

@@ -19,6 +19,10 @@ args:
       - name: Author 2
       - name: Author 3
         payments_done: true
+      - name: Author 4
+        payments_done: true
+      - name: Author 5
+        payments_done: true
 
 #Insert aticle table data
 - type: insert

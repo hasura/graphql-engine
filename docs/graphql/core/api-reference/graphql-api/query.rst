@@ -605,6 +605,14 @@ Operator
      - ``SIMILAR TO``
    * - ``_nsimilar``
      - ``NOT SIMILAR TO``
+   * - ``_regex``
+     - ``~``
+   * - ``_iregex``
+     - ``~*``
+   * - ``_nregex``
+     - ``!~``
+   * - ``_niregex``
+     - ``!~*``
 
 (For more details on text related operators, refer to the `Postgres docs <https://www.postgresql.org/docs/current/functions-matching.html>`__.)
 
