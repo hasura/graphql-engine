@@ -6,8 +6,14 @@ module Hasura.SQL.BigQuery.Meta where
 
 import           Control.Exception.Safe
 import           Control.Monad.IO.Class
+import           Control.Monad.Validate
 import           Data.Aeson
 import qualified Data.Aeson as Aeson
+import qualified Data.ByteString.Lazy as L
+import           Data.HashMap.Strict (HashMap)
+import qualified Data.HashMap.Strict as HM
+import           Data.List (find)
+import           Data.List.NonEmpty (NonEmpty(..))
 import           Data.Maybe
 import qualified Data.Sequence as Seq
 import           Data.Text (Text)
@@ -15,12 +21,20 @@ import qualified Data.Text as T
 import qualified Data.Text.Encoding as T
 import           GHC.Generics
 import           Hasura.SQL.BigQuery.Credentials
+import           Hasura.SQL.BigQuery.Types
 import           Network.HTTP.Conduit
 import           Network.HTTP.Types
 import           Prelude
 
 --------------------------------------------------------------------------------
 -- Types
+
+data UnifyProblem
+  = MissingTable UserTableName
+  | MissingTableForRelationship UserUsing
+  | MissingColumnForRelationship UserUsing
+  | UnknownScalarType Text
+  deriving (Show)
 
 data RestProblem
   = GetTablesProblem SomeException
@@ -71,8 +85,8 @@ data RestTableSchema = RestTableSchema
 instance FromJSON RestTableSchema
 
 data RestFieldSchema = RestFieldSchema
-  { name :: String
-  , type' :: Type
+  { name :: Text
+  , type' :: RestType
     -- ^ The field data type. Possible values include STRING, BYTES,
     -- INTEGER, INT64 (same as INTEGER), FLOAT, FLOAT64 (same as
     -- FLOAT), BOOLEAN, BOOL (same as BOOLEAN), TIMESTAMP, DATE, TIME,
@@ -103,7 +117,7 @@ instance FromJSON Mode where
       "REPEATED" -> pure Repeated
       _ -> fail ("invalid mode " ++ show s)
 
-data Type
+data RestType
   = STRING
   | BYTES
   | INTEGER
@@ -121,7 +135,7 @@ data Type
   | RECORD -- (where RECORD indicates that the field contains a nested schema)
   | STRUCT -- (same as RECORD).
    deriving (Show)
-instance FromJSON Type where
+instance FromJSON RestType where
   parseJSON j = do
     s <- parseJSON j
     case s :: Text of
@@ -142,6 +156,12 @@ instance FromJSON Type where
       "RECORD" -> pure RECORD
       "STRUCT" -> pure RECORD
       _ -> fail ("invalid type " ++ show s)
+
+--------------------------------------------------------------------------------
+-- Schema loaders
+
+loadMetadata :: FilePath -> IO (Either String UserMetadata)
+loadMetadata fp = fmap eitherDecode $ L.readFile fp
 
 --------------------------------------------------------------------------------
 -- REST request
@@ -252,3 +272,350 @@ getTable Credentials {..} dataSet tableId =
 
 encodeParams :: [(Text, Text)] -> Text
 encodeParams = T.intercalate "&" . map (\(k, v) -> k <> "=" <> v)
+
+--------------------------------------------------------------------------------
+-- Unification
+
+unifyTables ::
+     [UserTableMetadata]
+  -> [RestTable]
+  -> Validate (NonEmpty UnifyProblem) [UnifiedTableMetadata]
+unifyTables userTableMetadatas sysTables = do
+  let indexedRestTables =
+        HM.fromList
+          (map
+             (\sysTable@RestTable {tableReference} ->
+                (restTableReferenceToUserTableName tableReference, sysTable))
+             sysTables)
+  tablesStage1 <- traverse (unifyTable indexedRestTables) userTableMetadatas
+  let indexedValidTables =
+        HM.fromList
+          (map
+             (\(UserTableMetadata {table}, sysTable) -> (table, sysTable))
+             tablesStage1)
+  traverse (unifyRelationships indexedValidTables) tablesStage1
+
+-- Hierarchy: Project / Dataset / Table
+-- see <https://cloud.google.com/bigquery/docs/datasets-intro>
+restTableReferenceToUserTableName :: RestTableReference -> UserTableName
+restTableReferenceToUserTableName RestTableReference {..} =
+  UserTableName {name = tableId, schema = datasetId}
+  -- We ignore project id and push that requirement up to the top to
+  -- the data source level.
+
+unifyTable ::
+     HashMap UserTableName RestTable
+  -> UserTableMetadata
+  -> Validate (NonEmpty UnifyProblem) (UserTableMetadata, RestTable)
+unifyTable indexedRestTables userMetaTable@UserTableMetadata {table} = do
+  case HM.lookup table indexedRestTables of
+    Nothing -> refute (pure (MissingTable table))
+    Just sysTable -> pure (userMetaTable, sysTable)
+
+unifyRelationships ::
+     HashMap UserTableName RestTable
+  -> (UserTableMetadata, RestTable)
+  -> Validate (NonEmpty UnifyProblem) UnifiedTableMetadata
+unifyRelationships indexedValidTables (UserTableMetadata {..}, RestTable {schema = RestTableSchema {fields}}) = do
+  object_relationships' <-
+    traverse
+      (\UserObjectRelationship {using = using0, ..} -> do
+         using <- checkUsing using0
+         pure UnifiedObjectRelationship {..})
+      object_relationships
+  array_relationships' <-
+    traverse
+      (\UserArrayRelationship {using = using0, ..} -> do
+         using <- checkUsing using0
+         pure UnifiedArrayRelationship {..})
+      array_relationships
+  columns <-
+    traverse
+      (\RestFieldSchema {..} -> do
+         pure UnifiedColumn {type' = restToScalarType type', ..})
+      fields
+  pure
+    UnifiedTableMetadata
+      { table =
+          let UserTableName {..} = table
+           in UnifiedTableName {..}
+      , object_relationships = object_relationships'
+      , array_relationships = array_relationships'
+      , columns
+      }
+  where
+    checkUsing using@UserUsing {foreign_key_constraint_on} =
+      case HM.lookup referencedTable indexedValidTables of
+        Nothing -> refute (pure (MissingTableForRelationship using))
+        Just RestTable {schema = RestTableSchema {fields = remoteFields}} ->
+          case find
+                 (\RestFieldSchema {name = referencedColumn} ->
+                    referencedColumn == column)
+                 remoteFields of
+            Nothing -> refute (pure (MissingColumnForRelationship using))
+            Just {} ->
+              pure
+                (UnifiedUsing
+                   { foreign_key_constraint_on =
+                       UnifiedOn
+                         { table =
+                             let UserTableName {..} = referencedTable
+                              in UnifiedTableName {..}
+                         , ..
+                         }
+                   })
+      where
+        UserOn {table = referencedTable, column} = foreign_key_constraint_on
+
+restToScalarType :: RestType -> ScalarType
+restToScalarType =
+ \case
+    STRING -> StringScalarType
+    BYTES -> BytesScalarType
+    INTEGER -> IntegerScalarType
+    INT64 -> Int64ScalarType
+    FLOAT -> FloatScalarType
+    FLOAT64 -> Float64ScalarType
+    BOOLEAN -> BooleanScalarType
+    BOOL -> BoolScalarType
+    TIMESTAMP -> TimestampScalarType
+    DATE -> DateScalarType
+    TIME -> TimeScalarType
+    DATETIME -> DatetimeScalarType
+    GEOGRAPHY -> GeographyScalarType
+    NUMERIC -> NumericScalarType
+    RECORD -> RecordScalarType
+    STRUCT -> StructScalarType
+
+--------------------------------------------------------------------------------
+-- Sample rest tables
+
+sample :: [RestTable]
+sample =
+  [ RestTable
+      { tableReference =
+          RestTableReference
+            { datasetId = "chinook"
+            , projectId = "secret-epsilon-291908"
+            , tableId = "Album"
+            }
+      , schema =
+          RestTableSchema
+            { fields =
+                [ RestFieldSchema
+                    {name = "AlbumId", type' = INTEGER, mode = Required}
+                , RestFieldSchema
+                    {name = "ArtistId", type' = INTEGER, mode = Required}
+                , RestFieldSchema
+                    {name = "Title", type' = STRING, mode = Required}
+                ]
+            }
+      }
+  , RestTable
+      { tableReference =
+          RestTableReference
+            { datasetId = "chinook"
+            , projectId = "secret-epsilon-291908"
+            , tableId = "Artist"
+            }
+      , schema =
+          RestTableSchema
+            { fields =
+                [ RestFieldSchema
+                    {name = "ArtistId", type' = INTEGER, mode = Required}
+                , RestFieldSchema
+                    {name = "Name", type' = STRING, mode = Required}
+                ]
+            }
+      }
+  , RestTable
+      { tableReference =
+          RestTableReference
+            { datasetId = "chinook"
+            , projectId = "secret-epsilon-291908"
+            , tableId = "Award"
+            }
+      , schema =
+          RestTableSchema
+            { fields =
+                [ RestFieldSchema
+                    {name = "TrackId", type' = INTEGER, mode = Required}
+                , RestFieldSchema
+                    {name = "Name", type' = STRING, mode = Required}
+                ]
+            }
+      }
+  , RestTable
+      { tableReference =
+          RestTableReference
+            { datasetId = "chinook"
+            , projectId = "secret-epsilon-291908"
+            , tableId = "Genre"
+            }
+      , schema =
+          RestTableSchema
+            { fields =
+                [ RestFieldSchema
+                    {name = "GenreId", type' = INTEGER, mode = Required}
+                , RestFieldSchema
+                    {name = "Name", type' = STRING, mode = Required}
+                ]
+            }
+      }
+  , RestTable
+      { tableReference =
+          RestTableReference
+            { datasetId = "chinook"
+            , projectId = "secret-epsilon-291908"
+            , tableId = "Track"
+            }
+      , schema =
+          RestTableSchema
+            { fields =
+                [ RestFieldSchema
+                    {name = "AlbumId", type' = INTEGER, mode = Required}
+                , RestFieldSchema
+                    {name = "Name", type' = STRING, mode = Required}
+                , RestFieldSchema
+                    {name = "TrackId", type' = INTEGER, mode = Nullable}
+                , RestFieldSchema
+                    {name = "GenreId", type' = INTEGER, mode = Nullable}
+                ]
+            }
+      }
+  ]
+
+--------------------------------------------------------------------------------
+-- Example
+
+{-
+
+> do Right (UserMetadata{tables}) <- loadMetadata "schema.json"; pure $ runValidate $ unifyTables tables sample
+
+Right
+  [ UnifiedTableMetadata
+      { table = UnifiedTableName {schema = "chinook", name = "Album"}
+      , object_relationships =
+          [ UnifiedObjectRelationship
+              { using =
+                  UnifiedUsing
+                    { foreign_key_constraint_on =
+                        UnifiedOn
+                          { table =
+                              UnifiedTableName
+                                {schema = "chinook", name = "Artist"}
+                          , column = "ArtistId"
+                          }
+                    }
+              , name = "Artist"
+              }
+          ]
+      , array_relationships =
+          [ UnifiedArrayRelationship
+              { using =
+                  UnifiedUsing
+                    { foreign_key_constraint_on =
+                        UnifiedOn
+                          { table =
+                              UnifiedTableName
+                                {schema = "chinook", name = "Track"}
+                          , column = "AlbumId"
+                          }
+                    }
+              , name = "Track"
+              }
+          ]
+      , columns =
+          [ UnifiedColumn {name = "AlbumId", type' = IntegerScalarType}
+          , UnifiedColumn {name = "ArtistId", type' = IntegerScalarType}
+          , UnifiedColumn {name = "Title", type' = StringScalarType}
+          ]
+      }
+  , UnifiedTableMetadata
+      { table = UnifiedTableName {schema = "chinook", name = "Genre"}
+      , object_relationships = []
+      , array_relationships =
+          [ UnifiedArrayRelationship
+              { using =
+                  UnifiedUsing
+                    { foreign_key_constraint_on =
+                        UnifiedOn
+                          { table =
+                              UnifiedTableName
+                                {schema = "chinook", name = "Track"}
+                          , column = "GenreId"
+                          }
+                    }
+              , name = "Track"
+              }
+          ]
+      , columns =
+          [ UnifiedColumn {name = "GenreId", type' = IntegerScalarType}
+          , UnifiedColumn {name = "Name", type' = StringScalarType}
+          ]
+      }
+  , UnifiedTableMetadata
+      { table = UnifiedTableName {schema = "chinook", name = "Track"}
+      , object_relationships =
+          [ UnifiedObjectRelationship
+              { using =
+                  UnifiedUsing
+                    { foreign_key_constraint_on =
+                        UnifiedOn
+                          { table =
+                              UnifiedTableName
+                                {schema = "chinook", name = "Album"}
+                          , column = "AlbumId"
+                          }
+                    }
+              , name = "album"
+              }
+          , UnifiedObjectRelationship
+              { using =
+                  UnifiedUsing
+                    { foreign_key_constraint_on =
+                        UnifiedOn
+                          { table =
+                              UnifiedTableName
+                                {schema = "chinook", name = "Genre"}
+                          , column = "GenreId"
+                          }
+                    }
+              , name = "genre"
+              }
+          ]
+      , array_relationships = []
+      , columns =
+          [ UnifiedColumn {name = "AlbumId", type' = IntegerScalarType}
+          , UnifiedColumn {name = "Name", type' = StringScalarType}
+          , UnifiedColumn {name = "TrackId", type' = IntegerScalarType}
+          , UnifiedColumn {name = "GenreId", type' = IntegerScalarType}
+          ]
+      }
+  , UnifiedTableMetadata
+      { table = UnifiedTableName {schema = "chinook", name = "Artist"}
+      , object_relationships = []
+      , array_relationships =
+          [ UnifiedArrayRelationship
+              { using =
+                  UnifiedUsing
+                    { foreign_key_constraint_on =
+                        UnifiedOn
+                          { table =
+                              UnifiedTableName
+                                {schema = "chinook", name = "Album"}
+                          , column = "ArtistId"
+                          }
+                    }
+              , name = "Album"
+              }
+          ]
+      , columns =
+          [ UnifiedColumn {name = "ArtistId", type' = IntegerScalarType}
+          , UnifiedColumn {name = "Name", type' = StringScalarType}
+          ]
+      }
+  ]
+
+
+-}

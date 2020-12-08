@@ -1,3 +1,5 @@
+{-# LANGUAGE DuplicateRecordFields #-}
+
 -- | Types for Transact-SQL aka T-SQL; the language of SQL Server.
 
 module Hasura.SQL.BigQuery.Types where
@@ -399,10 +401,22 @@ instance NFData Value
 instance Hashable Value
 
 data ScalarType
-  = IntScalarType
-  | TextScalarType
+  = StringScalarType
+  | BytesScalarType
+  | IntegerScalarType
+  | Int64ScalarType
+  | FloatScalarType
+  | Float64ScalarType
+  | BooleanScalarType
   | BoolScalarType
-  | ArrayScalarType
+  | TimestampScalarType
+  | DateScalarType
+  | TimeScalarType
+  | DatetimeScalarType
+  | GeographyScalarType
+  | NumericScalarType
+  | RecordScalarType
+  | StructScalarType
   deriving (Show, Eq, Ord, Generic, Data, Lift)
 instance FromJSON ScalarType
 instance Cacheable ScalarType
@@ -410,3 +424,91 @@ instance ToJSON ScalarType
 instance NFData ScalarType
 instance Hashable ScalarType
 instance ToTxt ScalarType where toTxt = T.pack . show
+
+--------------------------------------------------------------------------------
+-- Metadata
+
+data UserMetadata = UserMetadata
+  { tables :: ![UserTableMetadata]
+  }deriving (Eq, Show, Generic)
+instance FromJSON UserMetadata
+
+data UserTableMetadata = UserTableMetadata
+  { table :: !UserTableName
+  , object_relationships :: [UserObjectRelationship]
+  , array_relationships :: [UserArrayRelationship]
+  }deriving (Eq, Show, Generic)
+instance FromJSON UserTableMetadata
+
+data UserTableName = UserTableName
+  { schema :: !Text
+  , name :: !Text
+  }deriving (Eq, Show, Generic)
+instance FromJSON UserTableName
+instance Hashable UserTableName
+
+data UserObjectRelationship = UserObjectRelationship
+  { using :: !UserUsing
+  , name :: !Text
+  }deriving (Eq, Show, Generic)
+instance FromJSON UserObjectRelationship
+
+data UserArrayRelationship = UserArrayRelationship
+  { using :: !UserUsing
+  , name :: !Text
+  }deriving (Eq, Show, Generic)
+instance FromJSON UserArrayRelationship
+
+data UserUsing = UserUsing
+  { foreign_key_constraint_on :: !UserOn
+  }deriving (Eq, Show, Generic)
+instance FromJSON UserUsing
+
+data UserOn = UserOn
+  { table :: !UserTableName
+  , column :: !Text
+  }deriving (Eq, Show, Generic)
+instance FromJSON UserOn
+
+--------------------------------------------------------------------------------
+-- Unified table metadata
+
+data UnifiedMetadata = UnifiedMetadata
+  { tables :: ![UnifiedTableMetadata]
+  }deriving (Eq, Show)
+
+data UnifiedTableMetadata = UnifiedTableMetadata
+  { table :: !UnifiedTableName
+  , object_relationships :: ![UnifiedObjectRelationship]
+  , array_relationships :: ![UnifiedArrayRelationship]
+  , columns :: ![UnifiedColumn]
+  }deriving (Eq, Show)
+
+data UnifiedColumn = UnifiedColumn
+  { name :: !Text
+  , type' :: !ScalarType
+  }deriving (Eq, Show)
+
+data UnifiedTableName = UnifiedTableName
+  { schema :: !Text
+  , name :: !Text
+  }deriving (Eq, Show)
+
+data UnifiedObjectRelationship = UnifiedObjectRelationship
+  { using :: !UnifiedUsing
+  , name :: !Text
+  }deriving (Eq, Show)
+
+data UnifiedArrayRelationship = UnifiedArrayRelationship
+  { using :: !UnifiedUsing
+  , name :: !Text
+  }deriving (Eq, Show)
+
+data UnifiedUsing = UnifiedUsing
+  { foreign_key_constraint_on :: !UnifiedOn
+  }deriving (Eq, Show)
+
+data UnifiedOn = UnifiedOn
+  { table :: !UnifiedTableName
+  , column :: !Text
+  }deriving (Eq, Show)
