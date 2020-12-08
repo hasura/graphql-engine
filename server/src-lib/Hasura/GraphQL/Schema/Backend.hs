@@ -71,7 +71,7 @@ class Backend b => BackendSchema (b :: BackendType) where
        , MonadTableInfo b r m
        , MonadRole r m
        , Has QueryContext r
-       , Has (BackendNode b) r
+       , Has (BackendSupport b) r
        )
     => ComputedFieldInfo b
     -> SelPermInfo b
@@ -83,10 +83,10 @@ class Backend b => BackendSchema (b :: BackendType) where
        , MonadTableInfo b r m
        , MonadRole r m
        , Has QueryContext r
-       , Has (BackendNode b) r
+       , Has (BackendSupport b) r
        )
     => m (Parser 'Output n (HashMap (TableName b) (SelPermInfo b, PrimaryKeyColumns b, AnnotatedFields b)))
 
 type ComparisonExp b = OpExpG b (UnpreparedValue b)
 
-newtype BackendNode b = BackendNode { unBackendNode :: XNode b }
+data BackendSupport b = BackendSupport { backendRelay :: XRelay b, backendNodesAgg :: XNodesAgg b }

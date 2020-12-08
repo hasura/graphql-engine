@@ -168,9 +168,9 @@ transformAggregateSelect path sel = do
   let aggFields = _asnFields sel
   transformedFields <- forM aggFields $ \(fieldName, aggField) ->
     (fieldName,) <$> case aggField of
-      TAFAgg agg         -> pure $ TAFAgg agg
-      TAFNodes annFields -> TAFNodes <$> transformAnnFields (appendPath fieldName path) annFields
-      TAFExp t           -> pure $ TAFExp t
+      TAFAgg agg           -> pure $ TAFAgg agg
+      TAFNodes x annFields -> TAFNodes x <$> transformAnnFields (appendPath fieldName path) annFields
+      TAFExp t             -> pure $ TAFExp t
   pure sel{_asnFields = transformedFields}
 
 -- | Traverse through @'ConnectionSelect' and collect remote join fields (if any).
@@ -190,7 +190,7 @@ transformConnectionSelect path ConnectionSelect{..} = do
       ConnectionPageInfo p  -> pure $ ConnectionPageInfo p
       ConnectionEdges edges -> ConnectionEdges <$> transformEdges (appendPath fieldName path) edges
   let select = _csSelect{_asnFields = transformedFields}
-  pure $ ConnectionSelect _csPrimaryKeyColumns _csSplit _csSlice select
+  pure $ ConnectionSelect () _csPrimaryKeyColumns _csSplit _csSlice select
   where
     transformEdges edgePath edgeFields =
       forM edgeFields $ \(fieldName, edgeField) ->

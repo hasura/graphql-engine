@@ -191,7 +191,7 @@ data AnnFieldG (b :: BackendType) v
   | AFArrayRelation !(ArraySelectG b v)
   | AFComputedField (XComputedField b) !(ComputedFieldSelect b v)
   | AFRemote (XRemoteFieldInfo b) !(RemoteSelect b)
-  | AFNodeId (XNode b) !(TableName b) !(PrimaryKeyColumns b)
+  | AFNodeId (XRelay b) !(TableName b) !(PrimaryKeyColumns b)
   | AFExpression !Text
 
 mkAnnColumnField :: ColumnInfo backend -> Maybe (ColumnOp backend) -> AnnFieldG backend v
@@ -277,7 +277,7 @@ type AnnFields b = AnnFieldsG b (SQLExpression b)
 
 data TableAggregateFieldG (b :: BackendType) v
   = TAFAgg !(AggregateFields b)
-  | TAFNodes !(AnnFieldsG b v)
+  | TAFNodes (XNodesAgg b) !(AnnFieldsG b v)
   | TAFExp !Text
 
 data PageInfoField
@@ -323,7 +323,7 @@ traverseTableAggregateField
   => (a -> f b) -> TableAggregateFieldG backend a -> f (TableAggregateFieldG backend b)
 traverseTableAggregateField f = \case
   TAFAgg aggFlds   -> pure $ TAFAgg aggFlds
-  TAFNodes annFlds -> TAFNodes <$> traverseAnnFields f annFlds
+  TAFNodes x annFlds -> TAFNodes x <$> traverseAnnFields f annFlds
   TAFExp t         -> pure $ TAFExp t
 
 type TableAggregateField b = TableAggregateFieldG b (SQLExpression b)
@@ -444,7 +444,8 @@ traverseConnectionSplit f (ConnectionSplit k v ob) =
 
 data ConnectionSelect (b :: BackendType) v
   = ConnectionSelect
-  { _csPrimaryKeyColumns :: !(PrimaryKeyColumns b)
+  { _csXRelay            :: XRelay b
+  , _csPrimaryKeyColumns :: !(PrimaryKeyColumns b)
   , _csSplit             :: !(Maybe (NE.NonEmpty (ConnectionSplit b v)))
   , _csSlice             :: !(Maybe ConnectionSlice)
   , _csSelect            :: !(AnnSelectG b (ConnectionFields b v) v)
@@ -454,8 +455,8 @@ traverseConnectionSelect
   :: (Applicative f)
   => (a -> f b)
   -> ConnectionSelect backend a -> f (ConnectionSelect backend b)
-traverseConnectionSelect f (ConnectionSelect pkCols cSplit cSlice sel) =
-  ConnectionSelect pkCols
+traverseConnectionSelect f (ConnectionSelect x pkCols cSplit cSlice sel) =
+  ConnectionSelect x pkCols
   <$> traverse (traverse (traverseConnectionSplit f)) cSplit
   <*> pure cSlice
   <*> traverseAnnSelect (traverse (traverse (traverseConnectionField f))) f sel

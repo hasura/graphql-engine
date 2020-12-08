@@ -43,14 +43,12 @@ import           Hasura.SQL.Backend
 data Error
   = FromTypeUnsupported (IR.SelectFromG 'MSSQL Expression)
   | MalformedAgg
-  | NodesUnsupportedForNow (IR.TableAggregateFieldG 'MSSQL Expression)
   | NoProjectionFields
   | NoAggregatesMustBeABug
   | UnsupportedArraySelect (IR.ArraySelectG 'MSSQL Expression)
   | UnsupportedOpExpG (IR.OpExpG 'MSSQL Expression)
   | InvalidIntegerishSql Expression
   | DistinctIsn'tSupported
-  | ConnectionsNotSupported
   | ActionsNotSupported
   -- deriving (Show, Eq)
 
@@ -112,8 +110,7 @@ fromRootField =
     GraphQL.RFDB (GraphQL.QDBPrimaryKey s) -> mkSQLSelect IR.JASSingleObject s
     GraphQL.RFDB (GraphQL.QDBSimple s) -> mkSQLSelect IR.JASMultipleRows s
     GraphQL.RFDB (GraphQL.QDBAggregation s) -> fromSelectAggregate s
-    GraphQL.RFDB (GraphQL.QDBConnection {}) ->
-      refute (pure ConnectionsNotSupported)
+    GraphQL.RFDB (GraphQL.QDBConnection (IR.ConnectionSelect{..})) -> case _csXRelay of {}
     GraphQL.RFAction {} -> refute (pure ActionsNotSupported)
 
 --------------------------------------------------------------------------------
@@ -522,7 +519,7 @@ fromTableAggregateFieldG (IR.FieldName name, field) =
              { aliasedThing = TSQL.ValueExpression (ODBC.TextValue text)
              , aliasedAlias = name
              })
-    IR.TAFNodes {} -> refute (pure (NodesUnsupportedForNow field))
+    IR.TAFNodes x _ -> case x of {}
 
 fromAggregateField :: IR.AggregateField 'MSSQL -> ReaderT EntityAlias FromIr Aggregate
 fromAggregateField aggregateField =
