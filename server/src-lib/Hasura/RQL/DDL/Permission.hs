@@ -212,13 +212,6 @@ buildSelPermInfo tn fieldInfoMap sp = withPathK "permission" $ do
   (boolExp, boolExpDeps) <- withPathK "filter" $
     procBoolExp tn fieldInfoMap  $ spFilter sp
 
-  caseBoolExp <-
-    for boolExp $ \case
-      AVCol colInfo ops -> pure $ (colInfo, ops)
-      AVRel _ _         -> error "yup, this shouldn't have happened. Consider throwing a 500 here"
-
-  let pgColsWithFilter = HM.fromList $ map (, caseBoolExp) pgCols
-
   -- check if the columns exist
   void $ withPathK "columns" $ indexedForM pgCols $ \pgCol ->
     askPGType fieldInfoMap pgCol autoInferredErr

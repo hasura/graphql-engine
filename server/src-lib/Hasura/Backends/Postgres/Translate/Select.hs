@@ -32,12 +32,9 @@ import           Hasura.RQL.IR.OrderBy
 import           Hasura.RQL.IR.Select
 import           Hasura.RQL.Types
 import           Hasura.SQL.Types
-import Debug.Pretty.Simple (pTraceM, pTrace)
-
 
 selectQuerySQL :: JsonAggSelect -> AnnSimpleSel 'Postgres -> Q.Query
 selectQuerySQL jsonAggSelect sel =
-  pTrace ("selectQuerySQL has been called") $
   Q.fromBuilder $ toSQL $ mkSQLSelect jsonAggSelect sel
 
 selectAggregateQuerySQL :: AnnAggregateSelect 'Postgres -> Q.Query

@@ -85,7 +85,6 @@ module Hasura.RQL.Types.Table
 import           Hasura.Prelude
 
 import qualified Data.HashMap.Strict                 as M
-import qualified Data.Aeson                          as J
 import qualified Data.HashSet                        as HS
 import qualified Data.List.NonEmpty                  as NE
 import qualified Data.Text                           as T
@@ -95,7 +94,6 @@ import           Control.Lens
 import           Data.Aeson
 import           Data.Aeson.Casing
 import           Data.Aeson.TH
-import           Data.List                           (nub)
 import           Data.Text.Extended
 import           Language.Haskell.TH.Syntax          (Lift)
 
