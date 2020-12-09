@@ -6,6 +6,7 @@ import React, {
   useRef,
   useState,
 } from 'react';
+import * as GQL from 'graphql';
 import _ from 'lodash';
 import Pen from './Pen';
 import { generateSDL, getChildArgument } from './utils';
@@ -247,6 +248,8 @@ const ArgSelect = ({ k, v, value, level, setArg = e => console.log(e) }) => {
     </li>
   );
 };
+
+declare const window: any;
 
 const PermissionEditor = ({ ...props }: any) => {
   const {
