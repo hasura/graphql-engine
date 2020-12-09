@@ -92,9 +92,6 @@ const Permissions = ({ allRoles, ...props }: any) => {
   useEffect(() => {
     if (!schema) return;
 
-    window.SCHEMA = schema;
-    window.GQL = GQL;
-
     const types = getType(schema, false);
     setDatasource([
       {
