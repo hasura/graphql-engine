@@ -96,6 +96,7 @@ const LeftSidebarSection = ({
     getChildList,
     getSearchInput,
     count: itemList.length,
+    items: itemList,
   };
 };
 

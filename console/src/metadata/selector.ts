@@ -1,3 +1,4 @@
+/* eslint-disable no-restricted-syntax */
 import { createSelector } from 'reselect';
 import { FixMe, ReduxState } from '../types';
 import { TableEntry, DataSource } from './types';
@@ -43,6 +44,10 @@ const getCurrentSchema = (state: ReduxState) => {
 
 const getCurrentTable = (state: ReduxState) => {
   return state.tables.currentTable;
+};
+
+const getCurrentSource = (state: ReduxState) => {
+  return state.tables.currentDataSource;
 };
 
 const getInconsistentObjects = (state: ReduxState) => {
@@ -224,31 +229,36 @@ export const getRemoteSchemaSelector = createSelector(
   }
 );
 
-export const getEventTriggers = createSelector(
-  getDataSourceMetadata,
-  source => {
-    if (!source) return [];
-
-    return source.tables.reduce((acc, t) => {
-      const triggers: EventTrigger[] =
-        t.event_triggers?.map(trigger => ({
-          table_name: t.table.name,
-          schema_name: t.table.schema,
-          source: source.name,
-          name: trigger.name,
-          comment: '',
-          configuration: {
-            definition: trigger.definition as FixMe,
-            headers: trigger.headers || [],
-            retry_conf: trigger.retry_conf,
-            webhook: trigger.webhook || '',
-            webhook_from_env: trigger.webhook_from_env,
-          },
-        })) || [];
-      return [...triggers, ...acc];
-    }, [] as EventTrigger[]);
+export const getEventTriggers = createSelector(getMetadata, metadata => {
+  let triggersMap: EventTrigger[] = [];
+  if (!metadata) {
+    return triggersMap;
   }
-);
+
+  metadata.sources.forEach(source => {
+    triggersMap = triggersMap.concat(
+      source.tables.reduce((acc, t) => {
+        const triggers: EventTrigger[] =
+          t.event_triggers?.map(trigger => ({
+            table_name: t.table.name,
+            schema_name: t.table.schema,
+            source: source.name,
+            name: trigger.name,
+            comment: '',
+            configuration: {
+              definition: trigger.definition as FixMe,
+              headers: trigger.headers || [],
+              retry_conf: trigger.retry_conf,
+              webhook: trigger.webhook || '',
+              webhook_from_env: trigger.webhook_from_env,
+            },
+          })) || [];
+        return [...triggers, ...acc];
+      }, [] as EventTrigger[])
+    );
+  });
+  return triggersMap;
+});
 
 export const getManualEventsTriggers = createSelector(
   getEventTriggers,
