@@ -8,6 +8,7 @@ module Hasura.RQL.DDL.Schema.Cache.Common where
 import           Hasura.Prelude
 
 import qualified Data.HashMap.Strict.Extended       as M
+import qualified Data.HashMap.Strict.InsOrd         as OMap
 import qualified Data.HashSet                       as HS
 import qualified Data.Sequence                      as Seq
 
@@ -19,7 +20,6 @@ import qualified Hasura.Incremental                 as Inc
 
 import           Hasura.Backends.Postgres.SQL.Types
 import           Hasura.RQL.Types
-import           Hasura.RQL.Types.Catalog
 import           Hasura.RQL.Types.Run
 
 -- | 'InvalidationKeys' used to apply requested 'CacheInvalidations'.
@@ -41,19 +41,58 @@ invalidateKeys CacheInvalidations{..} InvalidationKeys{..} = InvalidationKeys
   where
     invalidateRemoteSchema = M.alter $ Just . maybe Inc.initialInvalidationKey Inc.invalidate
 
-data BuildInputs
-  = BuildInputs
-  { _biReason          :: !BuildReason
-  , _biCatalogMetadata :: !CatalogMetadata
-  , _biInvalidationMap :: !InvalidationKeys
-  } deriving (Eq)
+data TableBuildInput
+  = TableBuildInput
+  { _tbiName          :: !QualifiedTable
+  , _tbiIsEnum        :: !Bool
+  , _tbiConfiguration :: !TableConfig
+  } deriving (Show, Eq, Generic)
+instance NFData TableBuildInput
+instance Inc.Cacheable TableBuildInput
+
+data NonColumnTableInputs
+  = NonColumnTableInputs
+  { _nctiTable               :: !QualifiedTable
+  , _nctiObjectRelationships :: ![ObjRelDef]
+  , _nctiArrayRelationships  :: ![ArrRelDef]
+  , _nctiComputedFields      :: ![ComputedFieldMetadata]
+  , _nctiRemoteRelationships :: ![RemoteRelationshipMetadata]
+  } deriving (Show, Eq, Generic)
+-- instance NFData NonColumnTableInputs
+-- instance Inc.Cacheable NonColumnTableInputs
+
+data TablePermissionInputs
+  = TablePermissionInputs
+  { _tpiTable  :: !QualifiedTable
+  , _tpiInsert :: ![InsPermDef 'Postgres]
+  , _tpiSelect :: ![SelPermDef 'Postgres]
+  , _tpiUpdate :: ![UpdPermDef 'Postgres]
+  , _tpiDelete :: ![DelPermDef 'Postgres]
+  } deriving (Show, Eq, Generic)
+instance Inc.Cacheable TablePermissionInputs
+
+mkTableInputs :: TableMetadata -> (TableBuildInput, NonColumnTableInputs, TablePermissionInputs)
+mkTableInputs TableMetadata{..} =
+  (buildInput, nonColumns, permissions)
+  where
+    buildInput = TableBuildInput _tmTable _tmIsEnum _tmConfiguration
+    nonColumns = NonColumnTableInputs _tmTable
+                 (OMap.elems _tmObjectRelationships)
+                 (OMap.elems _tmArrayRelationships)
+                 (OMap.elems _tmComputedFields)
+                 (OMap.elems _tmRemoteRelationships)
+    permissions = TablePermissionInputs _tmTable
+                  (OMap.elems _tmInsertPermissions)
+                  (OMap.elems _tmSelectPermissions)
+                  (OMap.elems _tmUpdatePermissions)
+                  (OMap.elems _tmDeletePermissions)
 
 -- | The direct output of 'buildSchemaCacheRule'. Contains most of the things necessary to build a
 -- schema cache, but dependencies and inconsistent metadata objects are collected via a separate
 -- 'MonadWriter' side channel.
 data BuildOutputs
   = BuildOutputs
-  { _boTables        :: !TableCache
+  { _boTables        :: !(TableCache 'Postgres)
   , _boActions       :: !ActionCache
   , _boFunctions     :: !FunctionCache
   , _boRemoteSchemas :: !(HashMap RemoteSchemaName (RemoteSchemaCtx, MetadataObject))
@@ -70,7 +109,7 @@ data RebuildableSchemaCache m
   = RebuildableSchemaCache
   { lastBuiltSchemaCache :: !SchemaCache
   , _rscInvalidationMap :: !InvalidationKeys
-  , _rscRebuild :: !(Inc.Rule (ReaderT BuildReason m) (CatalogMetadata, InvalidationKeys) SchemaCache)
+  , _rscRebuild :: !(Inc.Rule (ReaderT BuildReason m) (Metadata, InvalidationKeys) SchemaCache)
   }
 $(makeLenses ''RebuildableSchemaCache)
 

@@ -9,6 +9,9 @@ module Hasura.RQL.Types.RemoteRelationship
   , RemoteFieldInfo(..)
   , RemoteRelationship(..)
   , RemoteRelationshipDef(..)
+  , rrdRemoteSchema
+  , rrdHasuraFields
+  , rrdRemoteField
   , FieldCall(..)
   , RemoteArguments(..)
   , DeleteRemoteRelationship(..)
@@ -21,6 +24,7 @@ import qualified Data.Text                          as T
 import qualified Database.PG.Query                  as Q
 import qualified Language.GraphQL.Draft.Syntax      as G
 
+import           Control.Lens                       (makeLenses)
 import           Data.Aeson
 import           Data.Aeson.Casing
 import           Data.Aeson.TH
@@ -28,7 +32,6 @@ import           Data.Scientific
 import           Data.Set                           (Set)
 import           Data.Text.Extended
 import           Data.Text.NonEmpty
-import           Language.Haskell.TH.Syntax         (Lift)
 
 import           Hasura.Backends.Postgres.SQL.Types
 import           Hasura.Incremental                 (Cacheable)
@@ -41,7 +44,7 @@ import           Hasura.SQL.Backend
 newtype RemoteRelationshipName
   = RemoteRelationshipName
   { unRemoteRelationshipName :: NonEmptyText}
-  deriving ( Show, Eq, Lift, Hashable, ToJSON, ToJSONKey, FromJSON
+  deriving ( Show, Eq, Ord, Hashable, ToJSON, ToJSONKey, FromJSON
            , Q.ToPrepArg, Q.FromCol, ToTxt, Cacheable, NFData, Arbitrary
            )
 
@@ -117,7 +120,7 @@ instance ToJSON (RemoteFieldInfo 'Postgres) where
 newtype RemoteArguments =
   RemoteArguments
     { getRemoteArguments :: HashMap G.Name (G.Value G.Name)
-    } deriving (Show, Eq, Lift, Cacheable, NFData)
+    } deriving (Show, Eq, Cacheable, NFData)
 
 instance ToJSON RemoteArguments where
   toJSON (RemoteArguments fields) = fieldsToObject fields
@@ -187,12 +190,12 @@ data FieldCall =
   FieldCall
     { fcName      :: !G.Name
     , fcArguments :: !RemoteArguments
-    } deriving (Show, Eq, Lift, Generic)
+    } deriving (Show, Eq, Generic)
 instance NFData FieldCall
 instance Cacheable FieldCall
 
 newtype RemoteFields = RemoteFields {unRemoteFields :: NonEmpty FieldCall}
-  deriving (Show, Eq, Lift, Generic)
+  deriving (Show, Eq, Generic)
 instance NFData RemoteFields
 instance Cacheable RemoteFields
 
@@ -253,7 +256,7 @@ data RemoteRelationship =
     , rtrRemoteSchema :: !RemoteSchemaName
     -- ^ Identifier for this mapping.
     , rtrRemoteField  :: !RemoteFields
-    }  deriving (Show, Eq, Lift, Generic)
+    }  deriving (Show, Eq, Generic)
 instance NFData RemoteRelationship
 instance Cacheable RemoteRelationship
 $(deriveJSON (aesonDrop 3 snakeCase) ''RemoteRelationship)
@@ -263,14 +266,15 @@ data RemoteRelationshipDef
   { _rrdRemoteSchema :: !RemoteSchemaName
   , _rrdHasuraFields :: !(Set FieldName)
   , _rrdRemoteField  :: !RemoteFields
-  } deriving (Show, Eq, Generic, Lift)
+  } deriving (Show, Eq, Generic)
 instance Cacheable RemoteRelationshipDef
 $(deriveJSON (aesonDrop 4 snakeCase) ''RemoteRelationshipDef)
+$(makeLenses ''RemoteRelationshipDef)
 
 data DeleteRemoteRelationship =
   DeleteRemoteRelationship
     { drrTable :: QualifiedTable
     , drrName  :: RemoteRelationshipName
-    }  deriving (Show, Eq, Lift)
+    }  deriving (Show, Eq)
 
 $(deriveJSON (aesonDrop 3 snakeCase){omitNothingFields=True} ''DeleteRemoteRelationship)

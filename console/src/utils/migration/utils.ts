@@ -11,11 +11,7 @@ import {
   getSetCustomRootFieldsQuery,
   CustomRootFields,
 } from '../../components/Common/utils/v1QueryUtils';
-import {
-  isColTypeString,
-  isPostgresFunction,
-  isTypeCast,
-} from '../../components/Services/Data/utils';
+import { quoteDefault } from '../../components/Services/Data/utils';
 import gqlPattern from '../../components/Services/Data/Common/GraphQLValidation';
 import { sqlEscapeText } from '../../components/Common/utils/sqlUtils';
 import Migration from './Migration';
@@ -151,18 +147,8 @@ export const getColumnUpdateMigration = (
     );
   }
 
-  const colDefaultWithQuotes =
-    isColTypeString(colType) &&
-    !isPostgresFunction(colDefault) &&
-    !isTypeCast(colDefault)
-      ? `'${colDefault}'`
-      : colDefault;
-  const originalColDefaultWithQuotes =
-    isColTypeString(colType) &&
-    !isPostgresFunction(originalColDefault) &&
-    !isTypeCast(originalColDefault)
-      ? `'${originalColDefault}'`
-      : originalColDefault;
+  const colDefaultWithQuotes = quoteDefault(colDefault);
+  const originalColDefaultWithQuotes = quoteDefault(originalColDefault);
 
   /* column default up/down migration */
   let columnDefaultUpQuery;

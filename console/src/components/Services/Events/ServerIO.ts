@@ -25,7 +25,11 @@ import {
 } from '../../Common/utils/routesUtils';
 import { transformHeaders } from '../../Common/Headers/utils';
 import { Table } from '../../Common/utils/pgUtils';
-import { getConfirmation, isValidURL } from '../../Common/utils/jsUtils';
+import {
+  getConfirmation,
+  isURLTemplated,
+  isValidURL,
+} from '../../Common/utils/jsUtils';
 import { Nullable } from '../../Common/utils/tsUtils';
 import Endpoints, { globalCookiePolicy } from '../../../Endpoints';
 import dataHeaders from '../Data/Common/Headers';
@@ -139,7 +143,9 @@ export const addScheduledTrigger = (
         if (successCb) {
           successCb();
         }
-        dispatch(push(getSTModifyRoute(state.name, 'absolute')));
+        dispatch(
+          push(getSTModifyRoute(encodeURIComponent(state.name), 'absolute'))
+        );
       })
       .catch(() => {
         if (errorCb) {
@@ -233,8 +239,11 @@ export const saveScheduledTrigger = (
         }
         if (isRenamed) {
           const newHref = window.location.href.replace(
-            getSTModifyRoute(existingTrigger.name, 'relative'),
-            getSTModifyRoute(state.name, 'relative')
+            getSTModifyRoute(
+              encodeURIComponent(existingTrigger.name),
+              'relative'
+            ),
+            getSTModifyRoute(encodeURIComponent(state.name), 'relative')
           );
           dispatch(replace(newHref));
           dispatch(setCurrentTrigger(state.name));
@@ -333,6 +342,7 @@ export const createEventTrigger = (
       dispatch(
         showErrorNotification('Creating event trigger failed', validationError)
       );
+      return;
     }
 
     const migrationName = `create_event_trigger_${state.name.trim()}`;
@@ -401,14 +411,20 @@ export const modifyEventTrigger = (
 
   switch (property) {
     case 'webhook': {
-      if (state.webhook.type === 'static' && !isValidURL(state.webhook.value)) {
+      if (
+        state.webhook.type === 'static' &&
+        !(
+          isValidURL(state.webhook.value) || isURLTemplated(state.webhook.value)
+        )
+      ) {
         return dispatch(showErrorNotification(errorMsg, 'Invalid URL'));
       }
       upQuery.args = {
         ...upQuery.args,
-        webhook: state.webhook.type === 'static' ? state.webhook.value : null,
+        webhook:
+          state.webhook.type === 'static' ? state.webhook.value.trim() : null,
         webhook_from_env:
-          state.webhook.type === 'env' ? state.webhook.value : null,
+          state.webhook.type === 'env' ? state.webhook.value.trim() : null,
       };
       break;
     }

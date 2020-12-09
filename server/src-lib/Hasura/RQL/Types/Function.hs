@@ -11,7 +11,6 @@ import           Data.Aeson.Casing
 import           Data.Aeson.TH
 import           Data.Char                          (toLower)
 import           Data.Text.Extended
-import           Language.Haskell.TH.Syntax         (Lift)
 
 import           Hasura.Backends.Postgres.SQL.Types
 import           Hasura.Incremental                 (Cacheable)
@@ -38,7 +37,7 @@ instance Show FunctionVolatility where
 
 newtype FunctionArgName =
   FunctionArgName { getFuncArgNameTxt :: Text}
-  deriving (Show, Eq, NFData, ToJSON, FromJSON, Lift, ToTxt, IsString, Generic, Arbitrary, Cacheable)
+  deriving (Show, Eq, NFData, ToJSON, FromJSON, ToTxt, IsString, Generic, Arbitrary, Cacheable)
 
 newtype HasDefault = HasDefault { unHasDefault :: Bool }
   deriving (Show, Eq, ToJSON, Cacheable)
@@ -70,12 +69,12 @@ type FunctionInputArgument = InputArgument FunctionArg
 -- | Indicates whether the user requested the corresponding function to be
 -- tracked as a mutation or a query/subscription, in @track_function@.
 data FunctionExposedAs = FEAQuery | FEAMutation
-  deriving (Show, Eq, Lift, Generic)
+  deriving (Show, Eq, Generic)
 
 instance NFData FunctionExposedAs
 instance Cacheable FunctionExposedAs
-$(deriveJSON 
-    defaultOptions{ sumEncoding = UntaggedValue, constructorTagModifier = map toLower . drop 3 } 
+$(deriveJSON
+    defaultOptions{ sumEncoding = UntaggedValue, constructorTagModifier = map toLower . drop 3 }
     ''FunctionExposedAs)
 
 
@@ -116,7 +115,7 @@ data FunctionConfig
   -- The user might omit this, in which case we'll infer the location from the
   -- SQL functions volatility. See 'mkFunctionInfo' or the @track_function@ API
   -- docs for details of validation, etc.
-  } deriving (Show, Eq, Generic, Lift)
+  } deriving (Show, Eq, Generic)
 instance NFData FunctionConfig
 instance Cacheable FunctionConfig
 $(deriveJSON (aesonDrop 3 snakeCase){omitNothingFields = True} ''FunctionConfig)
@@ -133,7 +132,7 @@ data TrackFunctionV2
   = TrackFunctionV2
   { _tfv2Function      :: !QualifiedFunction
   , _tfv2Configuration :: !FunctionConfig
-  } deriving (Show, Eq, Lift, Generic)
+  } deriving (Show, Eq, Generic)
 $(deriveToJSON (aesonDrop 5 snakeCase) ''TrackFunctionV2)
 
 instance FromJSON TrackFunctionV2 where
@@ -145,7 +144,8 @@ instance FromJSON TrackFunctionV2 where
 -- | Raw SQL function metadata from postgres
 data RawFunctionInfo
   = RawFunctionInfo
-  { rfiHasVariadic      :: !Bool
+  { rfiOid              :: !OID
+  , rfiHasVariadic      :: !Bool
   , rfiFunctionType     :: !FunctionVolatility
   , rfiReturnTypeSchema :: !SchemaName
   , rfiReturnTypeName   :: !PGScalarType
