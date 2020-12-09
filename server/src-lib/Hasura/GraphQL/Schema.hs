@@ -583,8 +583,15 @@ buildQueryParser
   -> Parser 'Output n (OMap.InsOrdHashMap G.Name (QueryRootField (UnpreparedValue 'Postgres)))
   -> m (Parser 'Output n (OMap.InsOrdHashMap G.Name (QueryRootField (UnpreparedValue 'Postgres))))
 buildQueryParser pgQueryFields remoteFields allActions nonObjectCustomTypes mutationParser subscriptionParser = do
-  actionQueryFields <- buildActionQueryFields allActions nonObjectCustomTypes
-  let allQueryFields = pgQueryFields <> actionQueryFields <> map (fmap RFRemote) remoteFields
+  RoleSet roleSet <- askRoleSet
+  allQueryFields <-
+    case Set.size roleSet == 1 of
+      True -> do
+        actionQueryFields <- buildActionQueryFields allActions nonObjectCustomTypes
+        pure $ pgQueryFields <> actionQueryFields <> map (fmap RFRemote) remoteFields
+      -- at the time of writing this function, actions and remote schemas
+      -- are not supported for mutliple roles
+      False -> pure pgQueryFields
   queryWithIntrospectionHelper allQueryFields mutationParser subscriptionParser
 
 -- | Prepare the parser for subscriptions. Every postgres query field is
