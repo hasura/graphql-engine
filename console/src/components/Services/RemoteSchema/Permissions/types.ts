@@ -1,3 +1,4 @@
+import {  GraphQLField } from 'graphql';
 import { Dispatch } from '../../../../types';
 import { Nullable } from '../../../Common/utils/tsUtils';
 
@@ -41,7 +42,7 @@ export type SchemaPermissionsState = {
   isFetching: false;
   permissionEdit: PermissionEdit;
   // schemaDefinition: SchemaDefinition;
-  schemaDefinition : string;
+  schemaDefinition: string;
   bulkSelect: string[];
 };
 
@@ -66,3 +67,19 @@ export type RolePermissions = {
   bulkSection: Record<string, any>;
   isNewRole?: boolean;
 };
+
+
+// TODO generic types -> seperate this 
+
+export interface CustomFieldType {
+  args: any[];
+  name: string;
+  checked?: boolean;
+  return?: string;
+  children?: FieldType[]
+}
+export type FieldType = CustomFieldType & GraphQLField<any, any>
+export interface DatasourceObject {
+  name: string;
+  children: FieldType[] // TODO extend type 
+}

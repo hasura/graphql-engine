@@ -131,7 +131,6 @@ export const getTree = (schema: any, typeS: any) => {
 export const getType = (schema: any, isEnumType: boolean) => {
   const fields = schema.getTypeMap();
   const types: any[] = [];
-  console.log({ fields });
   Object.entries(fields).forEach(([key, value]: any) => {
     if (
       (!isEnumType &&

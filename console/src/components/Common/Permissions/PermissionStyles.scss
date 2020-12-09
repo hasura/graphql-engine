@@ -152,6 +152,42 @@ width: 85%;
       }
     }
   }
+
+.tree {
+  a {
+    color: #2f88e7;
+    text-decoration: none;
+  }
+  button {
+    border: 0;
+    color: #0008;
+    cursor: pointer;
+    background-color: transparent;
+    transition: 0.1s;
+    &:hover {
+      text-shadow: 0px 0px 2px #d9d9d9;
+    }
+  }
+  ul {
+    list-style: none;
+    /* margin-left: 0; */
+    padding-left: 18px;
+  }
+  
+  li {
+    padding-left: 1em;
+    text-indent: -1em;
+  }
+  label{
+    font-size: 16px;
+    transition: 0.1s;
+    &:hover {
+      // text-decoration-line: underline;
+      text-shadow: 0px 0px 2px #d9d9d9;
+    }
+  }
+}
+
 }
 
 .permissionSymbolNA {
