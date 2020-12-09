@@ -76,16 +76,16 @@ type HasuraDB struct {
 	logger         *log.Logger
 	hasuraOpts     *database.HasuraOpts
 
-	CLICatalogState *CLICatalogState
+	CLICatalogState *client.CLICatalogState
 
 	migrationStateStore   MigrationsStateStore
 	settingsStateStore    SettingsStateStore
-	metadataOrQueryClient client.MetadataOrQueryClientFunc
+	MetadataOrQueryClient client.MetadataOrQueryClientFunc
 	client                *client.Client
 }
 
-func (h *HasuraDB) sendMetadataOrQueryRequest(m interface{}, opts client.MetadataOrQueryClientFuncOpts) (*http.Response, []byte, error) {
-	return h.metadataOrQueryClient(m, opts, client.Config{
+func (h *HasuraDB) SendMetadataOrQueryRequest(m interface{}, opts client.MetadataOrQueryClientFuncOpts) (*http.Response, []byte, error) {
+	return h.MetadataOrQueryClient(m, opts, client.Config{
 		QueryURL:    h.config.queryURL,
 		MetadataURL: h.config.metadataURL,
 		GraphqlURL:  h.config.graphqlURL,
@@ -110,15 +110,15 @@ func WithInstance(config *Config, logger *log.Logger, hasuraOpts *database.Hasur
 	}
 	switch {
 	case hasuraOpts.ServerFeatureFlags.HasDatasources:
-		hx.CLICatalogState = new(CLICatalogState)
-		hx.CLICatalogState.Migrations = MigrationsState{}
+		hx.CLICatalogState = new(client.CLICatalogState)
+		hx.CLICatalogState.Migrations = client.MigrationsState{}
 		hx.migrationStateStore = NewMigrationsStateWithCatalogStateAPI(hx)
 		hx.settingsStateStore = NewSettingsStateStoreWithCatalogStateAPI(hx)
-		hx.metadataOrQueryClient = hx.client.SendV2QueryOrV1Metadata
+		hx.MetadataOrQueryClient = hx.client.SendV2QueryOrV1Metadata
 	default:
 		hx.migrationStateStore = NewMigrationStateStoreWithSQL(hx)
 		hx.settingsStateStore = NewSettingsStateStoreWithSQL(hx)
-		hx.metadataOrQueryClient = hx.client.Sendv1Query
+		hx.MetadataOrQueryClient = hx.client.Sendv1Query
 	}
 
 	if err := hx.migrationStateStore.PrepareMigrationsStateStore(); err != nil {
@@ -267,7 +267,7 @@ func (h *HasuraDB) UnLock() error {
 				}
 			}
 		}
-		resp, body, err := h.sendMetadataOrQueryRequest(HasuraInterfaceQuery{
+		resp, body, err := h.SendMetadataOrQueryRequest(HasuraInterfaceQuery{
 			Type:   "bulk",
 			Source: h.hasuraOpts.Datasource,
 			Args:   queryAPIRequests,
@@ -314,7 +314,7 @@ func (h *HasuraDB) UnLock() error {
 				return herror
 			}
 		}
-		resp, body, err = h.sendMetadataOrQueryRequest(HasuraInterfaceQuery{
+		resp, body, err = h.SendMetadataOrQueryRequest(HasuraInterfaceQuery{
 			Type: "bulk",
 			Args: metadataAPIRequests,
 		}, client.MetadataOrQueryClientFuncOpts{MetadataRequestOpts: &client.MetadataRequestOpts{}})
@@ -362,7 +362,7 @@ func (h *HasuraDB) UnLock() error {
 		}
 
 	} else {
-		resp, body, err := h.sendMetadataOrQueryRequest(h.migrationQuery, client.MetadataOrQueryClientFuncOpts{MetadataRequestOpts: &client.MetadataRequestOpts{}})
+		resp, body, err := h.SendMetadataOrQueryRequest(h.migrationQuery, client.MetadataOrQueryClientFuncOpts{MetadataRequestOpts: &client.MetadataRequestOpts{}})
 		if err != nil {
 			return err
 		}

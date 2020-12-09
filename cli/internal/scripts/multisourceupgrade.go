@@ -4,6 +4,10 @@ import (
 	"path/filepath"
 	"regexp"
 
+	"github.com/hasura/graphql-engine/cli"
+	"github.com/hasura/graphql-engine/cli/internal/client"
+	"github.com/hasura/graphql-engine/cli/migrate/database/hasuradb"
+
 	"fmt"
 
 	"github.com/hasura/graphql-engine/cli/util"
@@ -13,6 +17,7 @@ import (
 )
 
 type UpgradeToMuUpgradeProjectToMultipleSourcesOpts struct {
+	EC *cli.ExecutionContext
 	Fs afero.Fs
 	// Path to project directory
 	ProjectDirectory string
@@ -48,6 +53,27 @@ func UpgradeProjectToMultipleSources(opts UpgradeToMuUpgradeProjectToMultipleSou
 	// move migration directories to target datasource directory
 	if err := moveMigrationsToDatasourceDirectory(opts.Fs, directoriesToMove, opts.MigrationsDirectory, targetDatasourceDirectoryName); err != nil {
 		return errors.Wrap(err, "moving migrations to target datasource directory")
+	}
+
+	hasuraAPIClient, err := client.NewHasuraRestAPIClient(client.NewHasuraRestAPIClientOpts{
+		Headers:        opts.EC.HGEHeaders,
+		QueryAPIURL:    fmt.Sprintf("%s/%s", opts.EC.Config.Endpoint, "v1/query"),
+		MetadataAPIURL: fmt.Sprintf("%s/%s", opts.EC.Config.Endpoint, "v1/metadata"),
+		TLSConfig:      opts.EC.Config.TLSConfig,
+	})
+	if err != nil {
+		return err
+	}
+	migrations, err := hasuraAPIClient.GetMigrationVersions(hasuradb.DefaultSchema, hasuradb.DefaultMigrationsTable)
+	if err != nil {
+		return err
+	}
+	settings, err := hasuraAPIClient.GetCLISettingsFromSQLTable(hasuradb.DefaultSchema, hasuradb.DefaultSettingsTable)
+	if err != nil {
+		return err
+	}
+	if err := hasuraAPIClient.MoveMigrationsAndSettingsToCatalogState(opts.TargetDatasourceName, migrations, settings); err != nil {
+		return err
 	}
 
 	// delete original migrations

@@ -62,6 +62,7 @@ func newUpdateMultipleSources(ec *cli.ExecutionContext) *cobra.Command {
 				MigrationsDirectory:  ec.MigrationDir,
 				TargetDatasourceName: targetDatasource,
 				Logger:               ec.Logger,
+				EC:                   ec,
 			}
 			if err := scripts.UpgradeProjectToMultipleSources(opts); err != nil {
 				return err

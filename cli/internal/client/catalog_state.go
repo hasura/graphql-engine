@@ -1,12 +1,9 @@
-package hasuradb
+package client
 
 import (
 	"encoding/json"
 	"fmt"
 	"net/http"
-
-	"github.com/hasura/graphql-engine/cli/internal/client"
-	apiClient "github.com/hasura/graphql-engine/cli/internal/client"
 
 	"github.com/mitchellh/mapstructure"
 
@@ -14,7 +11,7 @@ import (
 )
 
 type CatalogStateAPIClient interface {
-	sendMetadataOrQueryRequest(m interface{}, opts client.MetadataOrQueryClientFuncOpts) (*http.Response, []byte, error)
+	SendMetadataOrQueryRequest(m interface{}, opts MetadataOrQueryClientFuncOpts) (*http.Response, []byte, error)
 }
 
 //
@@ -44,7 +41,7 @@ type CatalogStateAPI struct {
 	CLIStateKeyName string
 }
 
-const defaultCLIStateKey = "cli_state"
+const DefaultCLIStateKey = "cli_state"
 
 func NewCatalogStateAPI(cliStateKey string) *CatalogStateAPI {
 	return &CatalogStateAPI{
@@ -54,11 +51,14 @@ func NewCatalogStateAPI(cliStateKey string) *CatalogStateAPI {
 
 func (c *CatalogStateAPI) GetCLICatalogState(client CatalogStateAPIClient) (*CLICatalogState, error) {
 	var opName = "getting catalog state"
-	q := HasuraInterfaceQuery{
+	q := struct {
+		Type string      `json:"type"`
+		Args interface{} `json:"args"`
+	}{
 		Type: "get_catalog_state",
-		Args: HasuraArgs{},
+		Args: map[string]string{},
 	}
-	resp, body, err := client.sendMetadataOrQueryRequest(q, apiClient.MetadataOrQueryClientFuncOpts{MetadataRequestOpts: &apiClient.MetadataRequestOpts{}})
+	resp, body, err := client.SendMetadataOrQueryRequest(q, MetadataOrQueryClientFuncOpts{MetadataRequestOpts: &MetadataRequestOpts{}})
 	if err != nil {
 		return nil, err
 	}
@@ -89,7 +89,10 @@ func (c *CatalogStateAPI) SetCLICatalogState(client CatalogStateAPIClient, cliSt
 	// useful for constructing errors
 	var opName = "setting catalog state"
 
-	q := HasuraInterfaceQuery{
+	q := struct {
+		Type string      `json:"type"`
+		Args interface{} `json:"args"`
+	}{
 		Type: "set_catalog_state",
 		Args: struct {
 			Type  string          `json:"type"`
@@ -99,7 +102,7 @@ func (c *CatalogStateAPI) SetCLICatalogState(client CatalogStateAPIClient, cliSt
 			State: cliState,
 		},
 	}
-	resp, body, err := client.sendMetadataOrQueryRequest(q, apiClient.MetadataOrQueryClientFuncOpts{MetadataRequestOpts: &apiClient.MetadataRequestOpts{}})
+	resp, body, err := client.SendMetadataOrQueryRequest(q, MetadataOrQueryClientFuncOpts{MetadataRequestOpts: &MetadataRequestOpts{}})
 	if err != nil {
 		return err
 	}

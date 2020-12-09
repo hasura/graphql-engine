@@ -47,7 +47,7 @@ func (s SettingsStateStoreWithSQL) GetSetting(name string) (value string, err er
 	}
 
 	// Send Query
-	resp, body, err := s.hasuradb.sendMetadataOrQueryRequest(query, client.MetadataOrQueryClientFuncOpts{MetadataRequestOpts: &client.MetadataRequestOpts{}})
+	resp, body, err := s.hasuradb.SendMetadataOrQueryRequest(query, client.MetadataOrQueryClientFuncOpts{MetadataRequestOpts: &client.MetadataRequestOpts{}})
 	if err != nil {
 		return value, err
 	}
@@ -89,7 +89,7 @@ func (s SettingsStateStoreWithSQL) UpdateSetting(name string, value string) erro
 	}
 
 	// Send Query
-	resp, body, err := s.hasuradb.sendMetadataOrQueryRequest(query, client.MetadataOrQueryClientFuncOpts{MetadataRequestOpts: &client.MetadataRequestOpts{}})
+	resp, body, err := s.hasuradb.SendMetadataOrQueryRequest(query, client.MetadataOrQueryClientFuncOpts{MetadataRequestOpts: &client.MetadataRequestOpts{}})
 	if err != nil {
 		return err
 	}
@@ -122,7 +122,7 @@ func (s SettingsStateStoreWithSQL) PrepareSettingsDriver() error {
 		},
 	}
 
-	resp, body, err := s.hasuradb.sendMetadataOrQueryRequest(query, client.MetadataOrQueryClientFuncOpts{MetadataRequestOpts: &client.MetadataRequestOpts{}})
+	resp, body, err := s.hasuradb.SendMetadataOrQueryRequest(query, client.MetadataOrQueryClientFuncOpts{MetadataRequestOpts: &client.MetadataRequestOpts{}})
 	if err != nil {
 		h.logger.Debug(err)
 		return err
@@ -157,7 +157,7 @@ func (s SettingsStateStoreWithSQL) PrepareSettingsDriver() error {
 		},
 	}
 
-	resp, body, err = s.hasuradb.sendMetadataOrQueryRequest(query, client.MetadataOrQueryClientFuncOpts{MetadataRequestOpts: &client.MetadataRequestOpts{}})
+	resp, body, err = s.hasuradb.SendMetadataOrQueryRequest(query, client.MetadataOrQueryClientFuncOpts{MetadataRequestOpts: &client.MetadataRequestOpts{}})
 	if err != nil {
 		return err
 	}
@@ -197,7 +197,7 @@ func (s SettingsStateStoreWithSQL) setDefaults() error {
 		return nil
 	}
 
-	resp, body, err := s.hasuradb.sendMetadataOrQueryRequest(query, client.MetadataOrQueryClientFuncOpts{MetadataRequestOpts: &client.MetadataRequestOpts{}})
+	resp, body, err := s.hasuradb.SendMetadataOrQueryRequest(query, client.MetadataOrQueryClientFuncOpts{MetadataRequestOpts: &client.MetadataRequestOpts{}})
 	if err != nil {
 		return err
 	}
@@ -219,7 +219,7 @@ func NewSettingsStateStoreWithCatalogStateAPI(hasuradb *HasuraDB) *SettingsState
 }
 
 func (s SettingsStateStoreWithCatalogStateAPI) GetSetting(name string) (value string, err error) {
-	catalogStateAPI := NewCatalogStateAPI(defaultCLIStateKey)
+	catalogStateAPI := client.NewCatalogStateAPI(client.DefaultCLIStateKey)
 	catalogState, err := catalogStateAPI.GetCLICatalogState(s.hasuraDB)
 	if err != nil {
 		return "", err
@@ -233,7 +233,7 @@ func (s SettingsStateStoreWithCatalogStateAPI) GetSetting(name string) (value st
 
 func (s SettingsStateStoreWithCatalogStateAPI) UpdateSetting(name string, value string) error {
 	// get setting
-	catalogStateAPI := NewCatalogStateAPI(defaultCLIStateKey)
+	catalogStateAPI := client.NewCatalogStateAPI(client.DefaultCLIStateKey)
 	cliState, err := catalogStateAPI.GetCLICatalogState(s.hasuraDB)
 	if err != nil {
 		return err
@@ -248,7 +248,7 @@ func (s SettingsStateStoreWithCatalogStateAPI) PrepareSettingsDriver() error {
 
 func (s SettingsStateStoreWithCatalogStateAPI) setDefaults() error {
 	// get setting
-	catalogStateAPI := NewCatalogStateAPI(defaultCLIStateKey)
+	catalogStateAPI := client.NewCatalogStateAPI(client.DefaultCLIStateKey)
 	cliState, err := catalogStateAPI.GetCLICatalogState(s.hasuraDB)
 	if err != nil {
 		return err

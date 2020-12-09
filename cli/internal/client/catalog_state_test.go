@@ -1,4 +1,4 @@
-package hasuradb
+package client
 
 import (
 	"net/http"
@@ -20,14 +20,14 @@ func TestCatalogStateAPI_GetCLICatalogState(t *testing.T) {
 		CLIStateKeyName string
 	}
 	type args struct {
-		client CatalogStateAPIClient
+		client client2.CatalogStateAPIClient
 	}
 	mockClient := new(mockCatalogAPI)
 	tests := []struct {
 		name    string
 		fields  fields
 		args    args
-		want    *CLICatalogState
+		want    *client2.CLICatalogState
 		wantErr bool
 	}{
 		{
@@ -36,7 +36,7 @@ func TestCatalogStateAPI_GetCLICatalogState(t *testing.T) {
 				"cli_state",
 			},
 			args{
-				func() CatalogStateAPIClient {
+				func() client2.CatalogStateAPIClient {
 					mockClient.mock = func(m interface{}, queryType string) (*http.Response, []byte, error) {
 						r := &http.Response{
 							StatusCode: http.StatusOK,
@@ -62,8 +62,8 @@ func TestCatalogStateAPI_GetCLICatalogState(t *testing.T) {
 					return mockClient
 				}(),
 			},
-			&CLICatalogState{
-				Migrations: MigrationsState{
+			&client2.CLICatalogState{
+				Migrations: client2.MigrationsState{
 					"default": map[string]bool{
 						"1606208931894": false,
 					},
@@ -77,7 +77,7 @@ func TestCatalogStateAPI_GetCLICatalogState(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			c := &CatalogStateAPI{
+			c := &client2.CatalogStateAPI{
 				CLIStateKeyName: tt.fields.CLIStateKeyName,
 			}
 			got, err := c.GetCLICatalogState(tt.args.client)
