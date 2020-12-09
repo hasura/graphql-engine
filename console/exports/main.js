@@ -50,3 +50,7 @@ export { EndpointNamedExps };
 
 export { updateRequestHeaders } from '../src/components/Main/Main';
 
+export {
+  showErrorNotification,
+  showSuccessNotification,
+} from '../src/components/Services/Common/Notification';
