@@ -131,7 +131,6 @@ export const getTree = (schema: any, typeS: any) => {
 export const getType = (schema: any, scalarTypes: boolean) => {
   const fields = schema.getTypeMap();
   const types: any[] = [];
-  console.log({ fields });
   Object.entries(fields).forEach(([key, value]: any) => {
     if (
       (!scalarTypes &&
@@ -181,7 +180,7 @@ export const getType = (schema: any, scalarTypes: boolean) => {
 
     type.children = childArray;
     types.push(type);
-    console.log({ types });
+    // console.log({ types });
   });
   return types;
 };
@@ -200,8 +199,6 @@ const getSDLField = (type, argTree) => {
     result = `type ${typeName}{`;
   else result = `${typeName}{`;
 
-  console.log('>>>', { type });
-
   type.children.map(f => {
     // TODO filter selected fields
     if (!f.checked) return null;
@@ -211,7 +208,6 @@ const getSDLField = (type, argTree) => {
 
     if (!typeName.includes('enum')) {
       if (f?.args) {
-        console.log({ f });
         fieldStr = `${fieldStr}(`;
         Object.values(f.args).map((arg: any) => {
           let valueStr = ``;

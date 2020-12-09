@@ -7,20 +7,20 @@ import React, {
   useState,
 } from 'react';
 import _ from 'lodash';
-import Pen from './Pen';
 import { generateSDL, getChildArgument } from './utils';
 import Button from '../../../Common/Button/Button';
 import styles from '../../../Common/Permissions/PermissionStyles.scss';
 import { DatasourceObject, FieldType } from './types';
+import RSPInput from './RSPInput';
 
 const RootContext = createContext({});
 interface RSPTreeComponentProps {
   list: FieldType[];
-  setState: (d: FieldType[]) => void
+  setState: (d: FieldType[]) => void;
 }
 type ExpandedItems = {
-  [key: string]: boolean
-}
+  [key: string]: boolean;
+};
 
 const Tree: React.FC<RSPTreeComponentProps> = ({ list, setState }) => {
   // TODO add checkbox
@@ -29,7 +29,7 @@ const Tree: React.FC<RSPTreeComponentProps> = ({ list, setState }) => {
   const [expandedItems, setExpandedItems] = useState<ExpandedItems>({});
   const onCheck = useCallback(
     ix => (e: React.FormEvent<HTMLInputElement>) => {
-      const newList = [...list] as FieldType[]
+      const newList = [...list] as FieldType[];
       newList[ix] = { ...list[ix], checked: e.target.checked };
       setState([...newList]);
     },
@@ -37,8 +37,8 @@ const Tree: React.FC<RSPTreeComponentProps> = ({ list, setState }) => {
   );
 
   const setItem = useCallback(
-    ix => (newState) => {
-      const newList = [...list]
+    ix => newState => {
+      const newList = [...list];
       newList[ix] = { ...newState };
       setState([...newList]);
     },
@@ -73,15 +73,13 @@ const Tree: React.FC<RSPTreeComponentProps> = ({ list, setState }) => {
             />
           )}
           {i.children && (
-            <button
-              onClick={toggleExpand(ix)}
-            >
+            <button onClick={toggleExpand(ix)}>
               {expandedItems[ix] ? '-' : '+'}
             </button>
           )}
           <Field i={i} setItem={setItem(ix)} key={i.name} />
           {i.children && expandedItems[ix] && (
-            <Tree list={i.children} setState={setValue(ix)} />
+            <MemoisedTree list={i.children} setState={setValue(ix)} />
           )}
         </li>
       ))}
@@ -89,13 +87,17 @@ const Tree: React.FC<RSPTreeComponentProps> = ({ list, setState }) => {
   );
 };
 
+const MemoisedTree = React.memo(Tree);
 // TODO seperate components
 interface CollapsedFieldProps {
   field: any;
   i: FieldType;
-  onClick: (e: React.MouseEvent<HTMLAnchorElement>) => void
+  onClick: (e: React.MouseEvent<HTMLAnchorElement>) => void;
 }
-const CollapsedField: React.FC<CollapsedFieldProps> = ({ field: i, onClick }) => (
+const CollapsedField: React.FC<CollapsedFieldProps> = ({
+  field: i,
+  onClick,
+}) => (
   <>
     <b id={i.name}>{i.name}</b>
     {i.return && (
@@ -116,7 +118,7 @@ const CollapsedField: React.FC<CollapsedFieldProps> = ({ field: i, onClick }) =>
 // TODO seperate components
 interface FieldProps {
   i: FieldType;
-  setItem: (e?: FieldType) => void
+  setItem: (e?: FieldType) => void;
 }
 
 const Field: React.FC<FieldProps> = ({ i, setItem = e => console.log(e) }) => {
@@ -220,17 +222,14 @@ const ArgSelect = ({ k, v, value, level, setArg = e => console.log(e) }) => {
   if (children) {
     return (
       <ul>
-        <label
-          style={{ cursor: 'pointer' }}
-          htmlFor={k}
-        >
+        <label style={{ cursor: 'pointer' }} htmlFor={k}>
           {k}:
         </label>
         <button onClick={toggleExpandMode} style={{}}>
           {expanded ? '-' : '+'}
         </button>
         {expanded &&
-          Object.values(children).map((i) => {
+          Object.values(children).map(i => {
             const childVal = value ? value[i?.name] : undefined;
             return (
               <li>
@@ -251,23 +250,11 @@ const ArgSelect = ({ k, v, value, level, setArg = e => console.log(e) }) => {
   }
   return (
     <li>
-      <label htmlFor={k}> {k}:</label>
-      {editMode ? (
-        <>
-          <input
-            value={value}
-            style={{ border: 0, borderBottom: '2px dotted black' }}
-            onChange={e => setArgVal({ [v?.name]: e.target.value })}
-          />
-        </>
-      ) : (
-          <button onClick={() => setEditMode(true)}>
-            <Pen />
-          </button>
-        )}
+      <RSPInput {...{ k, editMode, value, setArgVal, v, setEditMode }} />
     </li>
   );
 };
+
 
 const PermissionEditor = ({ ...props }: any) => {
   const {
@@ -281,7 +268,7 @@ const PermissionEditor = ({ ...props }: any) => {
     removeRemoteSchemaPermission,
     setSchemaDefinition,
     datasource,
-    schema
+    schema,
   } = props;
 
   const [state, setState] = React.useState<DatasourceObject[]>(datasource); // TODO - low priority:  a copy of datasource, could be able to remove this after evaluation
@@ -291,9 +278,8 @@ const PermissionEditor = ({ ...props }: any) => {
   const { isNewRole, isNewPerm } = permissionEdit;
 
   useEffect(() => {
-
-    window.SCHEMA = schema;
-    window.GQL = GQL;
+    // window.SCHEMA = schema;
+    // window.GQL = GQL;
 
     console.log('changed--->', state);
     if (!state) return;
@@ -349,7 +335,7 @@ const PermissionEditor = ({ ...props }: any) => {
     <div className={styles.activeEdit}>
       <div className={styles.tree}>
         <RootContext.Provider value={{ argTree, setArgTree }}>
-          <Tree list={state} setState={setState} />
+          <MemoisedTree list={state} setState={setState} />
           {/* <code style={{ whiteSpace: 'pre-wrap' }}>{resultString}</code> */}
         </RootContext.Provider>
       </div>
@@ -378,4 +364,4 @@ const PermissionEditor = ({ ...props }: any) => {
   );
 };
 
-export default PermissionEditor;
+export default React.memo(PermissionEditor);
