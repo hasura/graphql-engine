@@ -608,8 +608,13 @@ buildSubscriptionParser
   -> [ActionInfo 'Postgres]
   -> m (Parser 'Output n (OMap.InsOrdHashMap G.Name (QueryRootField (UnpreparedValue 'Postgres))))
 buildSubscriptionParser pgQueryFields allActions = do
-  actionSubscriptionFields <- buildActionSubscriptionFields allActions
-  let subscriptionFields = pgQueryFields <> actionSubscriptionFields
+  RoleSet roleSet <- askRoleSet
+  subscriptionFields <-
+    case Set.size roleSet == 1 of
+      True -> do
+        actionSubscriptionFields <- buildActionSubscriptionFields allActions
+        pure $ pgQueryFields <> actionSubscriptionFields
+      False -> pure pgQueryFields
   P.safeSelectionSet subscriptionRoot Nothing subscriptionFields
          <&> fmap (fmap (P.handleTypename (RFRaw . J.String . G.unName)))
 
