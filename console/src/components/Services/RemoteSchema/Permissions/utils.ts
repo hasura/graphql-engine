@@ -128,18 +128,18 @@ export const getTree = (schema: any, typeS: any) => {
   );
 };
 
-export const getType = (schema: any, scalarTypes: boolean) => {
+export const getType = (schema: any, isEnumType: boolean) => {
   const fields = schema.getTypeMap();
   const types: any[] = [];
   console.log({ fields });
   Object.entries(fields).forEach(([key, value]: any) => {
     if (
-      (!scalarTypes &&
+      (!isEnumType &&
         !(
           value instanceof GraphQLObjectType ||
           value instanceof GraphQLInputObjectType
         )) ||
-      (scalarTypes && !(value instanceof GraphQLEnumType))
+      (isEnumType && !(value instanceof GraphQLEnumType))
     )
       return;
 
@@ -161,11 +161,11 @@ export const getType = (schema: any, scalarTypes: boolean) => {
     const childArray: any[] = [];
     let fieldVal;
 
-    if (scalarTypes) fieldVal = value.getValues();
+    if (isEnumType) fieldVal = value.getValues();
     else fieldVal = value.getFields();
 
     Object.entries(fieldVal).forEach(([k, v]) => {
-      if (scalarTypes)
+      if (isEnumType)
         childArray.push({
           name: v.name,
           checked: true,
@@ -181,7 +181,7 @@ export const getType = (schema: any, scalarTypes: boolean) => {
 
     type.children = childArray;
     types.push(type);
-    console.log({ types });
+    // console.log({ types });
   });
   return types;
 };
@@ -200,8 +200,6 @@ const getSDLField = (type, argTree) => {
     result = `type ${typeName}{`;
   else result = `${typeName}{`;
 
-  console.log('>>>', { type });
-
   type.children.map(f => {
     // TODO filter selected fields
     if (!f.checked) return null;
@@ -211,7 +209,6 @@ const getSDLField = (type, argTree) => {
 
     if (!typeName.includes('enum')) {
       if (f?.args) {
-        console.log({ f });
         fieldStr = `${fieldStr}(`;
         Object.values(f.args).map((arg: any) => {
           let valueStr = ``;
@@ -237,6 +234,21 @@ const getSDLField = (type, argTree) => {
   return `${result}\n}`;
 };
 
+export const getScalarFields = (schema: any) => {
+  const fields = schema.getTypeMap();
+  let types = '';
+  const gqlDefaultTypes = ['Boolean', 'Float', 'String', 'Int', 'ID'];
+  Object.entries(fields).forEach(([key, value]: any) => {
+    const name = value.inspect();
+    if(!(value instanceof GraphQLScalarType)) return;
+    if(gqlDefaultTypes.indexOf(name) > -1) return;
+
+    const type = `scalar ${name}`;
+    types = `${types}\n${type}`;
+  })
+  return types;
+}
+
 export const generateSDL = (types, argTree, schema) => {
   let result = `schema{
     query: query_root
@@ -249,7 +261,10 @@ export const generateSDL = (types, argTree, schema) => {
   otherTypes.forEach(type => {
     result = `${result}\n${getSDLField(type, null)}`;
   });
-  result = `${result}\nscalar timestamptz`
+  const scalarFields = getScalarFields(schema);
+  // result = `${result}\nscalar timestamptz`
+  result = `${result}\n${scalarFields}`;
+
   return result;
 };
 
