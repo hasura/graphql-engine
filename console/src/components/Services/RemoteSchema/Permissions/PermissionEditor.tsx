@@ -11,17 +11,25 @@ import Pen from './Pen';
 import { generateSDL, getChildArgument } from './utils';
 import Button from '../../../Common/Button/Button';
 import styles from '../../../Common/Permissions/PermissionStyles.scss';
+import { DatasourceObject, FieldType } from './types';
 
-const RootContext = createContext();
+const RootContext = createContext({});
+interface RSPTreeComponentProps {
+  list: FieldType[];
+  setState: (d: FieldType[]) => void
+}
+type ExpandedItems = {
+  [key: string]: boolean
+}
 
-const Tree = ({ list, setState }) => {
+const Tree: React.FC<RSPTreeComponentProps> = ({ list, setState }) => {
   // TODO add checkbox
   // TODO create and sync tree
   // TODO check actual gql schema structure and change, if required
-  const [expandedItems, setExpandedItems] = useState({});
+  const [expandedItems, setExpandedItems] = useState<ExpandedItems>({});
   const onCheck = useCallback(
-    ix => e => {
-      const newList = [...list];
+    ix => (e: React.FormEvent<HTMLInputElement>) => {
+      const newList = [...list] as FieldType[]
       newList[ix] = { ...list[ix], checked: e.target.checked };
       setState([...newList]);
     },
@@ -29,31 +37,31 @@ const Tree = ({ list, setState }) => {
   );
 
   const setItem = useCallback(
-    ix => newState => {
-      const newList = [...list];
+    ix => (newState) => {
+      const newList = [...list]
       newList[ix] = { ...newState };
       setState([...newList]);
     },
     [setState, list]
   );
   const setValue = useCallback(
-    ix => newState => {
+    ix => (newState: FieldType[]) => {
       const newList = [...list];
       newList[ix] = { ...list[ix], children: [...newState] };
       setState([...newList]);
     },
     [setState, list]
   );
-  const toggleExpand = ix => e => {
-    setExpandedItems(expandedItems => {
-      const newState = !expandedItems[ix];
-      const newExpandeditems = { ...expandedItems, [ix]: newState };
+  const toggleExpand = (ix: number) => () => {
+    setExpandedItems(oldExpandedItems => {
+      const newState = !oldExpandedItems[ix];
+      const newExpandeditems = { ...oldExpandedItems, [ix]: newState };
       return newExpandeditems;
     });
   };
   return (
     <ul>
-      {list.map((i, ix) => (
+      {list.map((i: FieldType, ix) => (
         <li key={i.name}>
           {i.checked !== undefined && (
             <input
@@ -65,7 +73,9 @@ const Tree = ({ list, setState }) => {
             />
           )}
           {i.children && (
-            <button onClick={toggleExpand(ix)}>
+            <button
+              onClick={toggleExpand(ix)}
+            >
               {expandedItems[ix] ? '-' : '+'}
             </button>
           )}
@@ -78,7 +88,14 @@ const Tree = ({ list, setState }) => {
     </ul>
   );
 };
-const CollapsedField = ({ field: i, onClick }) => (
+
+// TODO seperate components
+interface CollapsedFieldProps {
+  field: any;
+  i: FieldType;
+  onClick: (e: React.MouseEvent<HTMLAnchorElement>) => void
+}
+const CollapsedField: React.FC<CollapsedFieldProps> = ({ field: i, onClick }) => (
   <>
     <b id={i.name}>{i.name}</b>
     {i.return && (
@@ -96,10 +113,16 @@ const CollapsedField = ({ field: i, onClick }) => (
   </>
 );
 
-const Field = ({ i, setItem = e => console.log(e) }) => {
+// TODO seperate components
+interface FieldProps {
+  i: FieldType;
+  setItem: (e?: FieldType) => void
+}
+
+const Field: React.FC<FieldProps> = ({ i, setItem = e => console.log(e) }) => {
   const [fieldVal, setfieldVal] = useState({});
   const setArg = useCallback(
-    (k, v) => vStr => {
+    (k, v) => (vStr: Record<string, unknown>) => {
       setfieldVal(oldVal => {
         const newState = {
           ...oldVal,
@@ -196,20 +219,18 @@ const ArgSelect = ({ k, v, value, level, setArg = e => console.log(e) }) => {
 
   if (children) {
     return (
-      <ul style={{ paddingLeft: 0, marginLeft: '-8px' }}>
-        <button onClick={toggleExpandMode} style={{}}>
-          {expanded ? '-' : '+'}
-        </button>
+      <ul>
         <label
           style={{ cursor: 'pointer' }}
           htmlFor={k}
-          onClick={toggleExpandMode}
         >
-          {' '}
           {k}:
         </label>
+        <button onClick={toggleExpandMode} style={{}}>
+          {expanded ? '-' : '+'}
+        </button>
         {expanded &&
-          Object.values(children).map(i => {
+          Object.values(children).map((i) => {
             const childVal = value ? value[i?.name] : undefined;
             return (
               <li>
@@ -235,15 +256,15 @@ const ArgSelect = ({ k, v, value, level, setArg = e => console.log(e) }) => {
         <>
           <input
             value={value}
-            style={{ border: 0, borderBottom: '2px solid #354c9d' }}
+            style={{ border: 0, borderBottom: '2px dotted black' }}
             onChange={e => setArgVal({ [v?.name]: e.target.value })}
           />
         </>
       ) : (
-        <button onClick={() => setEditMode(true)}>
-          <Pen />
-        </button>
-      )}
+          <button onClick={() => setEditMode(true)}>
+            <Pen />
+          </button>
+        )}
     </li>
   );
 };
@@ -263,7 +284,7 @@ const PermissionEditor = ({ ...props }: any) => {
     schema
   } = props;
 
-  const [state, setState] = React.useState(datasource); // TODO - low priority:  a copy of datasource, could be able to remove this after evaluation
+  const [state, setState] = React.useState<DatasourceObject[]>(datasource); // TODO - low priority:  a copy of datasource, could be able to remove this after evaluation
   const [argTree, setArgTree] = React.useState({}); // all @presets as an object tree
   const [resultString, setResultString] = React.useState(''); // Generated SDL
 
@@ -322,10 +343,10 @@ const PermissionEditor = ({ ...props }: any) => {
 
   return (
     <div className={styles.activeEdit}>
-      <div className="tree">
+      <div className={styles.tree}>
         <RootContext.Provider value={{ argTree, setArgTree }}>
           <Tree list={state} setState={setState} />
-          <code style={{ whiteSpace: 'pre-wrap' }}>{resultString}</code>
+          {/* <code style={{ whiteSpace: 'pre-wrap' }}>{resultString}</code> */}
         </RootContext.Provider>
       </div>
       <Button

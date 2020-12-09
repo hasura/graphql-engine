@@ -10,6 +10,7 @@ import globals from '../../../../Globals';
 import Button from '../../../Common/Button/Button';
 import styles from '../../../Common/Permissions/PermissionStyles.scss';
 import { getTree, getType } from './utils';
+import { DatasourceObject } from './types';
 
 const BulkSelectSection = ({ bulkSelect, permRemoveMultipleRoles }: any) => {
   const getSelectedRoles = () => {
@@ -76,9 +77,9 @@ const Permissions = ({ allRoles, ...props }: any) => {
     return () => {
       setDefaults();
     };
-  }, []);
+  }, [fetchRoleList, setDefaults]);
 
-  const [datasource, setDatasource]: any[] = useState([]);
+  const [datasource, setDatasource] = useState<DatasourceObject[]>([]);
 
   const { loading, error, schema, introspect } = useIntrospectionSchemaRemote(
     currentRemoteSchema.name,
