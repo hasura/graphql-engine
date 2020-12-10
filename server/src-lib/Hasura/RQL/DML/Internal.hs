@@ -7,6 +7,7 @@ import           Hasura.Prelude
 
 import qualified Data.HashMap.Strict                        as M
 import qualified Data.HashSet                               as HS
+import qualified Data.List.NonEmpty                         as NE
 import qualified Data.Sequence                              as DS
 import qualified Data.Text                                  as T
 import qualified Database.PG.Query                          as Q
@@ -58,11 +59,13 @@ askPermInfo'
   :: (UserInfoM m)
   => PermAccessor 'Postgres c
   -> TableInfo 'Postgres
-  -> m (Maybe [c])
+  -> m (Maybe (NonEmpty c))
 askPermInfo' pa tableInfo = do
   RoleSet roles <- askCurRoles
-  sequenceA <$>
+  perms <-
+    sequenceA <$>
     for (toList roles) (\roleName -> return $ getPermInfoMaybe roleName pa tableInfo)
+  return $ join $ NE.nonEmpty <$> perms
 
 getPermInfoMaybe :: RoleName -> PermAccessor 'Postgres c -> TableInfo 'Postgres -> Maybe c
 getPermInfoMaybe roleName pa tableInfo =
@@ -79,7 +82,7 @@ askPermInfo
   :: (UserInfoM m, QErrM m)
   => PermAccessor 'Postgres c
   -> TableInfo 'Postgres
-  -> m [c]
+  -> m (NonEmpty c)
 askPermInfo pa tableInfo = do
   roleSet   <- askCurRoles
   mPermInfo <- askPermInfo' pa tableInfo
@@ -104,8 +107,8 @@ askInsPermInfo
 askInsPermInfo tableInfo = do
   insPermInfo <- askPermInfo PAInsert tableInfo
   case insPermInfo of
-    [insPerm] -> pure insPerm
-    _         -> throw500 "unexpected: got multiple insert permissions"
+    insPerm NE.:| [] -> pure insPerm
+    _                -> throw500 "unexpected: got multiple insert permissions"
 
 askSelPermInfo
   :: (UserInfoM m, QErrM m)
@@ -118,8 +121,8 @@ askUpdPermInfo
 askUpdPermInfo tableInfo = do
   updPermInfo <- askPermInfo PAUpdate tableInfo
   case updPermInfo of
-    [updPerm] -> pure updPerm
-    _         -> throw500 "unexpected: got multiple update permissions"
+    updPerm NE.:| [] -> pure updPerm
+    _                -> throw500 "unexpected: got multiple update permissions"
 
 askDelPermInfo
   :: (UserInfoM m, QErrM m)
@@ -127,8 +130,8 @@ askDelPermInfo
 askDelPermInfo tableInfo = do
   delPermInfo <- askPermInfo PADelete tableInfo
   case delPermInfo of
-    [delPerm] -> pure delPerm
-    _         -> throw500 "unexpected: got multiple delete permissions"
+    delPerm NE.:| [] -> pure delPerm
+    _                -> throw500 "unexpected: got multiple delete permissions"
 
 verifyAsrns :: (MonadError QErr m) => [a -> m ()] -> [a] -> m ()
 verifyAsrns preds xs = indexedForM_ xs $ \a -> mapM_ ($ a) preds

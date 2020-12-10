@@ -7,6 +7,7 @@ import           Hasura.Prelude
 import qualified Data.HashMap.Strict                          as HM
 import qualified Data.HashSet                                 as HS
 import qualified Data.Sequence                                as DS
+import qualified Data.List.NonEmpty                           as NE
 import qualified Database.PG.Query                            as Q
 
 import           Data.Aeson.Types
@@ -150,8 +151,8 @@ convInsertQuery objsParser sessVarBldr prepFn (InsertQuery tableName val oC mRet
 
   updPerm <-
     case updPerm' of
-      Just [updatePerm] -> pure $ Just updatePerm
-      _                 -> throw500 "unexpected: got more than one update permissions"
+      Just (updatePerm NE.:| []) -> pure $ Just updatePerm
+      _                          -> throw500 "unexpected: got more than one update permissions"
 
   -- Check if all dependent headers are present
   validateHeaders $ ipiRequiredHeaders insPerm

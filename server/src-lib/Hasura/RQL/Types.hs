@@ -43,6 +43,7 @@ import           Hasura.Prelude
 
 import qualified Data.HashMap.Strict                 as M
 import qualified Data.HashSet                        as Set
+import qualified Data.List.NonEmpty                  as NE
 import qualified Network.HTTP.Client                 as HTTP
 
 import           Control.Monad.Unique
@@ -318,7 +319,7 @@ type HeaderObj = M.HashMap Text Text
 combineSelectPermInfos
   :: forall m b
    . (Backend b, MonadError QErr m)
-  => [SelPermInfo b]
+  => (NE.NonEmpty (SelPermInfo b))
   -> m (CombinedSelPermInfo b)
 combineSelectPermInfos selPermInfos =
   foldrM combine emptyCombinedSelPermInfo selPermInfos
@@ -330,7 +331,7 @@ combineSelectPermInfos selPermInfos =
       columnCaseBoolExp <-
         for (spiFilter selPermInfo) $ \case
           AVCol colInfo ops -> pure (colInfo, ops)
-          AVRel _ _         -> throw500 "unexpected: got relationship boolean expression"
+          AVRel _ _         -> throw500 "unexpected: relationships in boolean expressions are not supported with multiple roles"
       let colsWithFilter = M.fromList $ map (, Just columnCaseBoolExp) $ Set.toList (spiCols selPermInfo)
       pure $ CombinedSelPermInfo
             { cspiCols = M.unionWith (\l r ->
@@ -354,11 +355,13 @@ combineSelectPermInfos selPermInfos =
             , cspiRequiredHeaders = nub $ combinedReqHdrs <> (spiRequiredHeaders selPermInfo)
             }
 
+    -- we won't need this, by using the first element of the NonEmpty
+    -- list as the accumulator in `foldrM`
     emptyCombinedSelPermInfo =
       CombinedSelPermInfo
       { cspiCols = mempty
       , cspiScalarComputedFields = mempty
-      , cspiFilter = gBoolExpTrue
+      , cspiFilter = BoolNot $ gBoolExpTrue -- TODO: is there anything for false? '^^
       , cspiLimit = Nothing
       , cspiAllowAgg = False
       , cspiRequiredHeaders = mempty

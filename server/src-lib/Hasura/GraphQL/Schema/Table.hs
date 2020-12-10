@@ -14,6 +14,7 @@ import           Hasura.Prelude
 
 import qualified Data.HashMap.Strict                as Map
 import qualified Data.HashSet                       as Set
+import qualified Data.List.NonEmpty                 as NE
 import qualified Language.GraphQL.Draft.Syntax      as G
 
 import           Data.Text.Extended
@@ -106,7 +107,8 @@ tableSelectPermissions table = do
   roleSetPermissions <-
     for (toList roleSet) $ \roleName ->
       (_permSel =<<) <$> tablePermissions table roleName
-  traverse combineSelectPermInfos $ sequenceA (filter isJust roleSetPermissions)
+  let nonEmptySelPerms = join $ fmap NE.nonEmpty $ sequenceA $ filter isJust roleSetPermissions
+  traverse combineSelectPermInfos nonEmptySelPerms
 
 tableSelectFields
   :: forall m n r b. (Backend b, MonadSchema n m, MonadTableInfo b r m, MonadRoleSet r m)
