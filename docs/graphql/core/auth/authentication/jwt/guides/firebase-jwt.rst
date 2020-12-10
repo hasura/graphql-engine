@@ -17,8 +17,6 @@ Introduction
 
 This guide will show how to integrate Firebase JWT authentication with Hasura.
 
-For this example, we are using Hasura as a backend and React as a frontend.
-
 .. _set_up_firebase_project:
 
 Step 1: Set up a Firebase project
@@ -163,7 +161,7 @@ Then go through the following steps:
 - Choose to install dependencies.
 
 Now add the example code below to ``functions/src/index.ts``. The example assumes that the default role is ``user`` and the allowed roles in this case only include ``user``.
-All other request fall in the role ``anonymous``, as defined in :ref:`step 2 <configure_jwt_mode>`.
+All other requests fall in the role ``anonymous``, as defined in :ref:`step 2 <configure_jwt_mode>`.
 
 .. code-block:: javascript
 
@@ -204,7 +202,7 @@ Step 4: Test use cases
 ----------------------
 
 Let's assume you have an app that enables users to manage their todos. We want logged in users to be able to insert, select, update and delete their own todos.
-Users who are not logged in can't see any todos.
+Users who are not logged in can't see or manage any todos.
 
 Add the following table to your database:
 
@@ -236,6 +234,6 @@ User (logged in)
 Next steps
 ----------
 
-- Add more firebase rules
-- Add more roles depending on your use case
-- Apply permissions to other tables in your project
+- Add more `Firebase rules <https://firebase.google.com/docs/rules>`__.
+- Add more :ref:`roles <roles_variables>` depending on your use case.
+- Apply :ref:`permissions <permission_rules>` to other tables in your project.

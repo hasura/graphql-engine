@@ -23,7 +23,6 @@ Guides
 .. toctree::
   :maxdepth: 1
 
-  Custom JWT integration with NodeJS <custom-jwt-nodejs>
   Auth0 JWT integration <auth0-jwt>
   Firebase JWT integration <firebase-jwt>
   OneGraph's AuthGuardian JWT integration <auth-guardian-jwt>
