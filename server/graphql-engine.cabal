@@ -527,7 +527,7 @@ test-suite graphql-engine-tests
   import: common-all, common-exe
   type: exitcode-stdio-1.0
   build-depends:
-    , aeson
+      aeson
     , base
     , bytestring
     , graphql-engine
