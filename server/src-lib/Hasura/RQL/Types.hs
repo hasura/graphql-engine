@@ -321,6 +321,12 @@ combineSelectPermInfos
    . (Backend b, MonadError QErr m)
   => (NE.NonEmpty (SelPermInfo b))
   -> m (CombinedSelPermInfo b)
+combineSelectPermInfos (headSelPermInfo NE.:| []) = do
+  -- when there's only a single select perm info in the list, we want to keep the old
+  -- behaviour i.e. there should be no case boolean expressions on the columns
+  let SelPermInfo cols scalarComputedFields filter' limit allowAgg reqHdrs = headSelPermInfo
+      colsWithFilter = M.fromList $ map (, Nothing) $ Set.toList cols
+  pure $ CombinedSelPermInfo colsWithFilter scalarComputedFields filter' limit allowAgg reqHdrs
 combineSelectPermInfos (headSelPermInfo NE.:| restSelPermInfos) = do
   headCombinedSelPermInfo <- do
     headCaseBoolExp <- getColumnCaseBoolExp (spiFilter headSelPermInfo)
