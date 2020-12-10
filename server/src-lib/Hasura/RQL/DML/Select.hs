@@ -25,8 +25,6 @@ import           Hasura.RQL.IR.Select
 import           Hasura.RQL.Types
 import           Hasura.SQL.Types
 
-import Debug.Pretty.Simple
-
 type SelectQExt b = SelectG (ExtCol b) (BoolExp b) Int
 
 -- Columns in RQL
@@ -65,11 +63,9 @@ convSelCol :: (UserInfoM m, QErrM m, CacheRM m)
            -> SelCol 'Postgres
            -> m [ExtCol 'Postgres]
 convSelCol _ _ (SCExtSimple cn) =
-  pTrace ("convSelCol has been called 1") $
   return [ECSimple cn]
 convSelCol fieldInfoMap _ (SCExtRel rn malias selQ) = do
   -- Point to the name key
-  pTraceM ("convSelCol has been called 2")
   let pgWhenRelErr = "only relationships can be expanded"
   relInfo <- withPathK "name" $
     askRelType fieldInfoMap rn pgWhenRelErr
@@ -78,7 +74,6 @@ convSelCol fieldInfoMap _ (SCExtRel rn malias selQ) = do
   resolvedSelQ <- resolveStar rfim rspi selQ
   return [ECRel rn malias resolvedSelQ]
 convSelCol fieldInfoMap spi (SCStar wildcard) =
-  pTrace ("convSelCol has been called 3") $
   convWildcard fieldInfoMap spi wildcard
 
 convWildcard
@@ -201,7 +196,6 @@ convSelectQ
   -> (ColumnType 'Postgres -> Value -> m S.SQLExp)
   -> m (AnnSimpleSel 'Postgres)
 convSelectQ table fieldInfoMap selPermInfo selQ sessVarBldr prepValBldr = do
-  pTraceM ("convSelectQ has been called")
   -- Convert where clause
   wClause <- forM (sqWhere selQ) $ \boolExp ->
     withPathK "where" $
@@ -307,7 +301,6 @@ convSelectQuery
 convSelectQuery sessVarBldr prepArgBuilder (DMLQuery qt selQ) = do
   tabInfo     <- withPathK "table" $ askTabInfo qt
   selPermInfo <- askSelPermInfo tabInfo
-  pTraceM ("convSelectQuery has been called")
   let fieldInfo = _tciFieldInfoMap $ _tiCoreInfo tabInfo
   extSelQ <- resolveStar fieldInfo selPermInfo selQ
   validateHeaders $ cspiRequiredHeaders selPermInfo
