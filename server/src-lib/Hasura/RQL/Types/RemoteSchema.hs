@@ -1,7 +1,6 @@
 module Hasura.RQL.Types.RemoteSchema where
 
 import           Hasura.Prelude
-import           Language.Haskell.TH.Syntax (Lift)
 
 import qualified Data.Aeson                 as J
 import qualified Data.Aeson.Casing          as J
@@ -9,6 +8,7 @@ import qualified Data.Aeson.TH              as J
 import qualified Data.Environment           as Env
 import qualified Data.Text                  as T
 import           Data.Text.Extended
+import           Data.Text.NonEmpty
 import qualified Database.PG.Query          as Q
 import qualified Network.URI.Extended       as N
 
@@ -22,7 +22,7 @@ type UrlFromEnv = Text
 newtype RemoteSchemaName
   = RemoteSchemaName
   { unRemoteSchemaName :: NonEmptyText }
-  deriving ( Show, Eq, Ord, Lift, Hashable, J.ToJSON, J.ToJSONKey
+  deriving ( Show, Eq, Ord, Hashable, J.ToJSON, J.ToJSONKey
            , J.FromJSON, Q.ToPrepArg, Q.FromCol, ToTxt, NFData
            , Generic, Cacheable, Arbitrary
            )
@@ -33,7 +33,7 @@ data RemoteSchemaInfo
   , rsHeaders          :: ![HeaderConf]
   , rsFwdClientHeaders :: !Bool
   , rsTimeoutSeconds   :: !Int
-  } deriving (Show, Eq, Lift, Generic)
+  } deriving (Show, Eq, Generic)
 instance NFData RemoteSchemaInfo
 instance Cacheable RemoteSchemaInfo
 instance Hashable RemoteSchemaInfo
@@ -47,7 +47,7 @@ data RemoteSchemaDef
   , _rsdHeaders              :: !(Maybe [HeaderConf])
   , _rsdForwardClientHeaders :: !Bool
   , _rsdTimeoutSeconds       :: !(Maybe Int)
-  } deriving (Show, Eq, Lift, Generic)
+  } deriving (Show, Eq, Generic)
 instance NFData RemoteSchemaDef
 instance Cacheable RemoteSchemaDef
 $(J.deriveToJSON (J.aesonDrop 4 J.snakeCase){J.omitNothingFields=True} ''RemoteSchemaDef)
@@ -66,7 +66,7 @@ data AddRemoteSchemaQuery
   { _arsqName       :: !RemoteSchemaName
   , _arsqDefinition :: !RemoteSchemaDef
   , _arsqComment    :: !(Maybe Text)
-  } deriving (Show, Eq, Lift, Generic)
+  } deriving (Show, Eq, Generic)
 instance NFData AddRemoteSchemaQuery
 instance Cacheable AddRemoteSchemaQuery
 $(J.deriveJSON (J.aesonDrop 5 J.snakeCase) ''AddRemoteSchemaQuery)
@@ -74,15 +74,15 @@ $(J.deriveJSON (J.aesonDrop 5 J.snakeCase) ''AddRemoteSchemaQuery)
 newtype RemoteSchemaNameQuery
   = RemoteSchemaNameQuery
   { _rsnqName    :: RemoteSchemaName
-  } deriving (Show, Eq, Lift)
+  } deriving (Show, Eq)
 
 $(J.deriveJSON (J.aesonDrop 5 J.snakeCase) ''RemoteSchemaNameQuery)
 
 getUrlFromEnv :: (MonadIO m, MonadError QErr m) => Env.Environment -> Text -> m N.URI
 getUrlFromEnv env urlFromEnv = do
   let mEnv = Env.lookupEnv env $ T.unpack urlFromEnv
-  uri <- maybe (throw400 InvalidParams $ envNotFoundMsg urlFromEnv) return mEnv
-  maybe (throw400 InvalidParams $ invalidUri uri) return $ N.parseURI uri
+  uri <- onNothing mEnv (throw400 InvalidParams $ envNotFoundMsg urlFromEnv)
+  onNothing (N.parseURI uri) (throw400 InvalidParams $ invalidUri uri)
   where
     invalidUri x = "not a valid URI: " <> T.pack x
     envNotFoundMsg e = "environment variable '" <> e <> "' not set"

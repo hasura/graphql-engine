@@ -16,27 +16,29 @@ module Hasura.RQL.DDL.Schema.Enum (
 
 import           Hasura.Prelude
 
+import qualified Data.HashMap.Strict                 as M
+import qualified Data.List.NonEmpty                  as NE
+import qualified Data.Sequence                       as Seq
+import qualified Data.Sequence.NonEmpty              as NESeq
+import qualified Data.Text                           as T
+import qualified Database.PG.Query                   as Q
+import qualified Language.GraphQL.Draft.Syntax       as G
+
 import           Control.Monad.Validate
-import           Data.List                     (delete)
-
-import qualified Data.HashMap.Strict           as M
-import qualified Data.List.NonEmpty            as NE
-import qualified Data.Sequence                 as Seq
-import qualified Data.Sequence.NonEmpty        as NESeq
-import qualified Data.Text                     as T
+import           Data.List                           (delete)
 import           Data.Text.Extended
-import qualified Database.PG.Query             as Q
-import qualified Language.GraphQL.Draft.Syntax as G
 
-import           Hasura.Db
+import qualified Hasura.Backends.Postgres.SQL.DML    as S
+
+import           Hasura.Backends.Postgres.Connection
+import           Hasura.Backends.Postgres.SQL.Types
 import           Hasura.RQL.Types.Column
 import           Hasura.RQL.Types.Common
 import           Hasura.RQL.Types.Error
 import           Hasura.SQL.Backend
 import           Hasura.SQL.Types
-import           Hasura.Server.Utils           (makeReasonMessage)
+import           Hasura.Server.Utils                 (makeReasonMessage)
 
-import qualified Hasura.SQL.DML                as S
 
 -- | Given a map of enum tables, computes all enum references implied by the given set of foreign
 -- keys. A foreign key constitutes an enum reference iff the following conditions hold:
@@ -47,11 +49,11 @@ import qualified Hasura.SQL.DML                as S
 resolveEnumReferences
   :: HashMap QualifiedTable (PrimaryKey PGCol, EnumValues)
   -> HashSet ForeignKey
-  -> HashMap PGCol (NonEmpty EnumReference)
+  -> HashMap PGCol (NonEmpty (EnumReference 'Postgres))
 resolveEnumReferences enumTables =
   M.fromListWith (<>) . map (fmap (:|[])) . mapMaybe resolveEnumReference . toList
   where
-    resolveEnumReference :: ForeignKey -> Maybe (PGCol, EnumReference)
+    resolveEnumReference :: ForeignKey -> Maybe (PGCol, EnumReference 'Postgres)
     resolveEnumReference foreignKey = do
       [(localColumn, foreignColumn)] <- pure $ M.toList (_fkColumnMapping foreignKey)
       (primaryKey, enumValues) <- M.lookup (_fkForeignTable foreignKey) enumTables
@@ -63,7 +65,7 @@ data EnumTableIntegrityError
   | EnumTableMultiColumnPrimaryKey ![PGCol]
   | EnumTableNonTextualPrimaryKey !(RawColumnInfo 'Postgres)
   | EnumTableNoEnumValues
-  | EnumTableInvalidEnumValueNames !(NE.NonEmpty T.Text)
+  | EnumTableInvalidEnumValueNames !(NE.NonEmpty Text)
   | EnumTableNonTextualCommentColumn !(RawColumnInfo 'Postgres)
   | EnumTableTooManyColumns ![PGCol]
 
@@ -124,13 +126,13 @@ fetchAndValidateEnumValues tableName maybePrimaryKey columnInfos =
           if name `elem` ["true", "false", "null"] then Nothing
           else G.mkName name
 
-    showErrors :: [EnumTableIntegrityError] -> T.Text
+    showErrors :: [EnumTableIntegrityError] -> Text
     showErrors allErrors =
       "the table " <> tableName <<> " cannot be used as an enum " <> reasonsMessage
       where
         reasonsMessage = makeReasonMessage allErrors showOne
 
-        showOne :: EnumTableIntegrityError -> T.Text
+        showOne :: EnumTableIntegrityError -> Text
         showOne = \case
           EnumTableMissingPrimaryKey -> "the table must have a primary key"
           EnumTableMultiColumnPrimaryKey cols ->

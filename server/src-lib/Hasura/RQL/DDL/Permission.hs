@@ -1,7 +1,6 @@
 module Hasura.RQL.DDL.Permission
     ( CreatePerm
     , runCreatePerm
-    , purgePerm
     , PermDef(..)
 
     , InsPerm(..)
@@ -25,10 +24,10 @@ module Hasura.RQL.DDL.Permission
     , buildDelPermInfo
 
     , IsPerm(..)
-    , addPermP2
 
     , DropPerm
     , runDropPerm
+    , dropPermissionInMetadata
 
     , SetPermComment(..)
     , runSetPermComment
@@ -38,25 +37,25 @@ module Hasura.RQL.DDL.Permission
 
 import           Hasura.Prelude
 
+import qualified Data.HashMap.Strict                as HM
+import qualified Data.HashMap.Strict.InsOrd         as OMap
+import qualified Data.HashSet                       as HS
+import qualified Database.PG.Query                  as Q
+
+import           Data.Aeson
+import           Data.Aeson.Casing
+import           Data.Aeson.TH
 import           Data.Text.Extended
+
+import           Hasura.Backends.Postgres.SQL.Types
 import           Hasura.EncJSON
-import           Hasura.Incremental                 (Cacheable)
 import           Hasura.RQL.DDL.Permission.Internal
 import           Hasura.RQL.DML.Internal            hiding (askPermInfo)
 import           Hasura.RQL.Types
 import           Hasura.SQL.Types
 import           Hasura.Session
 
-import qualified Database.PG.Query                  as Q
 
-import           Data.Aeson
-import           Data.Aeson.Casing
-import           Data.Aeson.TH
-import           Language.Haskell.TH.Syntax         (Lift)
-
-import qualified Data.HashMap.Strict                as HM
-import qualified Data.HashSet                       as HS
-import qualified Data.Text                          as T
 
 {- Note [Backend only permissions]
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -87,19 +86,7 @@ TRUE            TRUE (OR NOT-SET)         FALSE                                 
 TRUE            TRUE (OR NOT-SET)         TRUE                                   Mutation is shown
 -}
 
--- Insert permission
-data InsPerm
-  = InsPerm
-  { ipCheck       :: !BoolExp
-  , ipSet         :: !(Maybe (ColumnValues Value))
-  , ipColumns     :: !(Maybe PermColSpec)
-  , ipBackendOnly :: !(Maybe Bool) -- see Note [Backend only permissions]
-  } deriving (Show, Eq, Lift, Generic)
-instance Cacheable InsPerm
-$(deriveJSON (aesonDrop 2 snakeCase){omitNothingFields=True} ''InsPerm)
-
-type InsPermDef = PermDef InsPerm
-type CreateInsPerm = CreatePerm InsPerm
+type CreateInsPerm b = CreatePerm (InsPerm b)
 
 procSetObj
   :: (QErrM m)
@@ -112,7 +99,7 @@ procSetObj tn fieldInfoMap mObj = do
     fmap unzip $ forM (HM.toList setObj) $ \(pgCol, val) -> do
       ty <- askPGType fieldInfoMap pgCol $
         "column " <> pgCol <<> " not found in table " <>> tn
-      sqlExp <- valueParser (PGTypeScalar ty) val
+      sqlExp <- valueParser (CollectableTypeScalar ty) val
       let dep = mkColDep (getDepReason sqlExp) tn pgCol
       return ((pgCol, sqlExp), dep)
   return (HM.fromList setColTups, depHeaders, deps)
@@ -123,11 +110,67 @@ procSetObj tn fieldInfoMap mObj = do
 
     getDepReason = bool DRSessionVariable DROnType . isStaticValue
 
+class (ToJSON a) => IsPerm a where
+
+  permAccessor
+    :: PermAccessor 'Postgres (PermInfo a)
+
+  buildPermInfo
+    :: (QErrM m, TableCoreInfoRM m)
+    => QualifiedTable
+    -> FieldInfoMap (FieldInfo 'Postgres)
+    -> PermDef a
+    -> m (WithDeps (PermInfo a))
+
+  getPermAcc1
+    :: PermDef a -> PermAccessor 'Postgres (PermInfo a)
+  getPermAcc1 _ = permAccessor
+
+  getPermAcc2
+    :: DropPerm a -> PermAccessor 'Postgres (PermInfo a)
+  getPermAcc2 _ = permAccessor
+
+  addPermToMetadata
+    :: PermDef a -> TableMetadata -> TableMetadata
+
+runCreatePerm
+  :: (UserInfoM m, CacheRWM m, IsPerm a, MonadError QErr m, MetadataM m)
+  => CreatePerm a -> m EncJSON
+runCreatePerm (WithTable tn pd) = do
+  let pt = permAccToType $ getPermAcc1 pd
+      role = _pdRole pd
+      metadataObject = MOTableObj tn $ MTOPerm role pt
+  buildSchemaCacheFor metadataObject
+    $ MetadataModifier
+    $ metaTables.ix tn %~ addPermToMetadata pd
+  pure successMsg
+
+runDropPerm
+  :: (IsPerm a, UserInfoM m, CacheRWM m, MonadTx m, MetadataM m)
+  => DropPerm a -> m EncJSON
+runDropPerm dp@(DropPerm table role) = do
+  tabInfo <- askTabInfo table
+  let permType = permAccToType $ getPermAcc2 dp
+  askPermInfo tabInfo role $ getPermAcc2 dp
+  withNewInconsistentObjsCheck
+    $ buildSchemaCache
+    $ MetadataModifier
+    $ metaTables.ix table %~ dropPermissionInMetadata role permType
+  return successMsg
+
+dropPermissionInMetadata
+  :: RoleName -> PermType -> TableMetadata -> TableMetadata
+dropPermissionInMetadata rn = \case
+  PTInsert -> tmInsertPermissions %~ OMap.delete rn
+  PTSelect -> tmSelectPermissions %~ OMap.delete rn
+  PTDelete -> tmDeletePermissions %~ OMap.delete rn
+  PTUpdate -> tmUpdatePermissions %~ OMap.delete rn
+
 buildInsPermInfo
   :: (QErrM m, TableCoreInfoRM m)
   => QualifiedTable
   -> FieldInfoMap (FieldInfo 'Postgres)
-  -> PermDef InsPerm
+  -> PermDef (InsPerm 'Postgres)
   -> m (WithDeps (InsPermInfo 'Postgres))
 buildInsPermInfo tn fieldInfoMap (PermDef _rn (InsPerm checkCond set mCols mBackendOnly) _) =
   withPathK "permission" $ do
@@ -142,47 +185,27 @@ buildInsPermInfo tn fieldInfoMap (PermDef _rn (InsPerm checkCond set mCols mBack
         insColsWithoutPresets = insCols \\ HM.keys setColsSQL
     return (InsPermInfo (HS.fromList insColsWithoutPresets) be setColsSQL backendOnly reqHdrs, deps)
   where
-    backendOnly = fromMaybe False mBackendOnly
+    backendOnly = Just True == mBackendOnly
     allCols = map pgiColumn $ getCols fieldInfoMap
-    insCols = fromMaybe allCols $ convColSpec fieldInfoMap <$> mCols
+    insCols = maybe allCols (convColSpec fieldInfoMap) mCols
 
 -- TODO this is a dirty hack, hardcoding permissions to postgres.  When
 -- implementing support for other backends, the type family 'PermInfo' probably
 -- needs to be refactored.
-type instance PermInfo InsPerm = InsPermInfo 'Postgres
+type instance PermInfo (InsPerm b) = InsPermInfo b
 
-instance IsPerm InsPerm where
-
+instance IsPerm (InsPerm 'Postgres) where
   permAccessor = PAInsert
-
   buildPermInfo = buildInsPermInfo
 
--- Select constraint
-data SelPerm
-  = SelPerm
-  { spColumns           :: !PermColSpec         -- ^ Allowed columns
-  , spFilter            :: !BoolExp             -- ^ Filter expression
-  , spLimit             :: !(Maybe Int)         -- ^ Limit value
-  , spAllowAggregations :: !Bool                -- ^ Allow aggregation
-  , spComputedFields    :: ![ComputedFieldName] -- ^ Allowed computed fields
-  } deriving (Show, Eq, Lift, Generic)
-instance Cacheable SelPerm
-$(deriveToJSON (aesonDrop 2 snakeCase){omitNothingFields=True} ''SelPerm)
-
-instance FromJSON SelPerm where
-  parseJSON = withObject "SelPerm" $ \o ->
-    SelPerm
-    <$> o .: "columns"
-    <*> o .: "filter"
-    <*> o .:? "limit"
-    <*> o .:? "allow_aggregations" .!= False
-    <*> o .:? "computed_fields" .!= []
+  addPermToMetadata permDef =
+    tmInsertPermissions %~ OMap.insert (_pdRole permDef) permDef
 
 buildSelPermInfo
   :: (QErrM m, TableCoreInfoRM m)
   => QualifiedTable
   -> FieldInfoMap (FieldInfo 'Postgres)
-  -> SelPerm
+  -> SelPerm 'Postgres
   -> m (WithDeps (SelPermInfo 'Postgres))
 buildSelPermInfo tn fieldInfoMap sp = withPathK "permission" $ do
   let pgCols     = convColSpec fieldInfoMap $ spColumns sp
@@ -221,43 +244,26 @@ buildSelPermInfo tn fieldInfoMap sp = withPathK "permission" $ do
     computedFields = spComputedFields sp
     autoInferredErr = "permissions for relationships are automatically inferred"
 
-type SelPermDef = PermDef SelPerm
-type CreateSelPerm = CreatePerm SelPerm
+type CreateSelPerm b = CreatePerm (SelPerm b)
 
 -- TODO see TODO for PermInfo above.
-type instance PermInfo SelPerm = SelPermInfo 'Postgres
+type instance PermInfo (SelPerm b) = SelPermInfo b
 
-instance IsPerm SelPerm where
-
+instance IsPerm (SelPerm 'Postgres) where
   permAccessor = PASelect
-
   buildPermInfo tn fieldInfoMap (PermDef _ a _) =
     buildSelPermInfo tn fieldInfoMap a
 
--- Update constraint
-data UpdPerm
-  = UpdPerm
-  { ucColumns :: !PermColSpec -- Allowed columns
-  , ucSet     :: !(Maybe (ColumnValues Value)) -- Preset columns
-  , ucFilter  :: !BoolExp     -- Filter expression (applied before update)
-  , ucCheck   :: !(Maybe BoolExp)
-  -- ^ Check expression, which must be true after update.
-  -- This is optional because we don't want to break the v1 API
-  -- but Nothing should be equivalent to the expression which always
-  -- returns true.
-  } deriving (Show, Eq, Lift, Generic)
-instance Cacheable UpdPerm
-$(deriveJSON (aesonDrop 2 snakeCase){omitNothingFields=True} ''UpdPerm)
+  addPermToMetadata permDef =
+    tmSelectPermissions %~ OMap.insert (_pdRole permDef) permDef
 
-type UpdPermDef = PermDef UpdPerm
-type CreateUpdPerm = CreatePerm UpdPerm
-
+type CreateUpdPerm b = CreatePerm (UpdPerm b)
 
 buildUpdPermInfo
   :: (QErrM m, TableCoreInfoRM m)
   => QualifiedTable
   -> FieldInfoMap (FieldInfo 'Postgres)
-  -> UpdPerm
+  -> UpdPerm 'Postgres
   -> m (WithDeps (UpdPermInfo 'Postgres))
 buildUpdPermInfo tn fieldInfoMap (UpdPerm colSpec set fltr check) = do
   (be, beDeps) <- withPathK "filter" $
@@ -284,30 +290,23 @@ buildUpdPermInfo tn fieldInfoMap (UpdPerm colSpec set fltr check) = do
     relInUpdErr = "relationships can't be used in update"
 
 -- TODO see TODO for PermInfo above
-type instance PermInfo UpdPerm = UpdPermInfo 'Postgres
+type instance PermInfo (UpdPerm b) = UpdPermInfo b
 
-instance IsPerm UpdPerm where
-
+instance IsPerm (UpdPerm 'Postgres) where
   permAccessor = PAUpdate
-
   buildPermInfo tn fieldInfoMap (PermDef _ a _) =
     buildUpdPermInfo tn fieldInfoMap a
 
--- Delete permission
-data DelPerm
-  = DelPerm { dcFilter :: !BoolExp }
-  deriving (Show, Eq, Lift, Generic)
-instance Cacheable DelPerm
-$(deriveJSON (aesonDrop 2 snakeCase){omitNothingFields=True} ''DelPerm)
+  addPermToMetadata permDef =
+    tmUpdatePermissions %~ OMap.insert (_pdRole permDef) permDef
 
-type DelPermDef = PermDef DelPerm
-type CreateDelPerm = CreatePerm DelPerm
+type CreateDelPerm b = CreatePerm (DelPerm b)
 
 buildDelPermInfo
   :: (QErrM m, TableCoreInfoRM m)
   => QualifiedTable
   -> FieldInfoMap (FieldInfo 'Postgres)
-  -> DelPerm
+  -> DelPerm 'Postgres
   -> m (WithDeps (DelPermInfo 'Postgres))
 buildDelPermInfo tn fieldInfoMap (DelPerm fltr) = do
   (be, beDeps) <- withPathK "filter" $
@@ -317,22 +316,23 @@ buildDelPermInfo tn fieldInfoMap (DelPerm fltr) = do
   return (DelPermInfo tn be depHeaders, deps)
 
 -- TODO see TODO for PermInfo above
-type instance PermInfo DelPerm = DelPermInfo 'Postgres
+type instance PermInfo (DelPerm b) = DelPermInfo b
 
-instance IsPerm DelPerm where
-
+instance IsPerm (DelPerm 'Postgres) where
   permAccessor = PADelete
-
   buildPermInfo tn fieldInfoMap (PermDef _ a _) =
     buildDelPermInfo tn fieldInfoMap a
+
+  addPermToMetadata permDef =
+    tmDeletePermissions %~ OMap.insert (_pdRole permDef) permDef
 
 data SetPermComment
   = SetPermComment
   { apTable      :: !QualifiedTable
   , apRole       :: !RoleName
   , apPermission :: !PermType
-  , apComment    :: !(Maybe T.Text)
-  } deriving (Show, Eq, Lift)
+  , apComment    :: !(Maybe Text)
+  } deriving (Show, Eq)
 
 $(deriveJSON (aesonDrop 2 snakeCase) ''SetPermComment)
 
@@ -372,24 +372,13 @@ setPermCommentTx (SetPermComment (QualifiedObject sn tn) rn pt comment) =
              AND perm_type = $5
                 |] (comment, sn, tn, rn, permTypeToCode pt) True
 
-purgePerm :: MonadTx m => QualifiedTable -> RoleName -> PermType -> m ()
-purgePerm qt rn pt =
-    case pt of
-      PTInsert -> dropPermP2 @InsPerm dp
-      PTSelect -> dropPermP2 @SelPerm dp
-      PTUpdate -> dropPermP2 @UpdPerm dp
-      PTDelete -> dropPermP2 @DelPerm dp
-  where
-    dp :: DropPerm a
-    dp = DropPerm qt rn
-
 fetchPermDef
   :: QualifiedTable
   -> RoleName
   -> PermType
-  -> Q.TxE QErr (Value, Maybe T.Text)
+  -> Q.TxE QErr (Value, Maybe Text)
 fetchPermDef (QualifiedObject sn tn) rn pt =
- (first Q.getAltJ .  Q.getRow) <$> Q.withQE defaultTxErrorHandler
+ first Q.getAltJ .  Q.getRow <$> Q.withQE defaultTxErrorHandler
       [Q.sql|
             SELECT perm_def::json, comment
               FROM hdb_catalog.hdb_permission

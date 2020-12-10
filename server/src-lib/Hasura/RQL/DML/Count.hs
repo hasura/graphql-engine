@@ -8,20 +8,23 @@ module Hasura.RQL.DML.Count
 
 import           Hasura.Prelude
 
+import qualified Data.ByteString.Builder                    as BB
+import qualified Data.Sequence                              as DS
+
 import           Data.Aeson
-import           Instances.TH.Lift       ()
 
-import qualified Data.ByteString.Builder as BB
-import qualified Data.Sequence           as DS
+import qualified Database.PG.Query                          as Q
+import qualified Hasura.Backends.Postgres.SQL.DML           as S
 
+import           Hasura.Backends.Postgres.SQL.Types
+import           Hasura.Backends.Postgres.Translate.BoolExp
 import           Hasura.EncJSON
 import           Hasura.RQL.DML.Internal
-import           Hasura.RQL.GBoolExp
+import           Hasura.RQL.DML.Types
+import           Hasura.RQL.IR.BoolExp
 import           Hasura.RQL.Types
 import           Hasura.SQL.Types
 
-import qualified Database.PG.Query       as Q
-import qualified Hasura.SQL.DML          as S
 
 data CountQueryP1
   = CountQueryP1
@@ -64,7 +67,7 @@ mkSQLCount (CountQueryP1 tn (permFltr, mWc) mDistCols) =
 validateCountQWith
   :: (UserInfoM m, QErrM m, CacheRM m)
   => SessVarBldr 'Postgres m
-  -> (PGColumnType -> Value -> m S.SQLExp)
+  -> (ColumnType 'Postgres -> Value -> m S.SQLExp)
   -> CountQuery
   -> m CountQueryP1
 validateCountQWith sessVarBldr prepValBldr (CountQuery qt mDistCols mWhere) = do

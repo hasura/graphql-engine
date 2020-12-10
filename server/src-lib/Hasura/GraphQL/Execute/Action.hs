@@ -9,54 +9,57 @@ module Hasura.GraphQL.Execute.Action
 
 import           Hasura.Prelude
 
-import qualified Data.Aeson                           as J
-import qualified Data.Aeson.Casing                    as J
-import qualified Data.Aeson.TH                        as J
-import qualified Data.ByteString.Lazy                 as BL
-import qualified Data.CaseInsensitive                 as CI
-import qualified Data.HashMap.Strict                  as Map
-import qualified Data.HashSet                         as Set
-import qualified Data.Text                            as T
-import qualified Data.UUID                            as UUID
-import qualified Database.PG.Query                    as Q
-import qualified Language.GraphQL.Draft.Syntax        as G
-import qualified Network.HTTP.Client                  as HTTP
-import qualified Network.HTTP.Types                   as HTTP
-import qualified Network.Wreq                         as Wreq
+import qualified Control.Concurrent.Async.Lifted.Safe        as LA
+import qualified Data.Aeson                                  as J
+import qualified Data.Aeson.Casing                           as J
+import qualified Data.Aeson.TH                               as J
+import qualified Data.ByteString.Lazy                        as BL
+import qualified Data.CaseInsensitive                        as CI
+import qualified Data.Environment                            as Env
+import qualified Data.HashMap.Strict                         as Map
+import qualified Data.HashSet                                as Set
+import qualified Data.Text                                   as T
+import qualified Data.UUID                                   as UUID
+import qualified Database.PG.Query                           as Q
+import qualified Language.GraphQL.Draft.Syntax               as G
+import qualified Network.HTTP.Client                         as HTTP
+import qualified Network.HTTP.Types                          as HTTP
+import qualified Network.Wreq                                as Wreq
 
-import           Control.Concurrent                   (threadDelay)
-import           Control.Exception                    (try)
+import           Control.Concurrent                          (threadDelay)
+import           Control.Exception                           (try)
 import           Control.Lens
+import           Control.Monad.Trans.Control                 (MonadBaseControl)
 import           Data.Has
 import           Data.IORef
-import           Data.Int                             (Int64)
-
-import qualified Hasura.RQL.DML.RemoteJoin            as RJ
-import qualified Hasura.RQL.DML.Select                as RS
--- import qualified Hasura.GraphQL.Resolve.Select  as GRS
-import           Control.Monad.Trans.Control          (MonadBaseControl)
-
-import qualified Control.Concurrent.Async.Lifted.Safe as LA
-import qualified Data.Environment                     as Env
-import qualified Hasura.Logging                       as L
-import qualified Hasura.Tracing                       as Tracing
-
+import           Data.Int                                    (Int64)
 import           Data.Text.Extended
+
+import qualified Hasura.Backends.Postgres.Execute.RemoteJoin as RJ
+import qualified Hasura.Backends.Postgres.Translate.Select   as RS
+import qualified Hasura.Logging                              as L
+import qualified Hasura.RQL.IR.Select                        as RS
+import qualified Hasura.Tracing                              as Tracing
+
+import           Hasura.Backends.Postgres.SQL.Types
+import           Hasura.Backends.Postgres.SQL.Value          (PGScalarValue (..))
+import           Hasura.Backends.Postgres.Translate.Select   (asSingleRowJsonResp)
+import           Hasura.Backends.Postgres.Translate.Column   (toTxtValue)
 import           Hasura.EncJSON
 import           Hasura.GraphQL.Execute.Prepare
-import           Hasura.GraphQL.Parser                hiding (column)
-import           Hasura.GraphQL.Utils                 (showNames)
+import           Hasura.GraphQL.Parser
+import           Hasura.GraphQL.Utils                        (showNames)
 import           Hasura.HTTP
 import           Hasura.RQL.DDL.Headers
 import           Hasura.RQL.DDL.Schema.Cache
-import           Hasura.RQL.DML.Select                (asSingleRowJsonResp)
 import           Hasura.RQL.Types
 import           Hasura.RQL.Types.Run
 import           Hasura.SQL.Types
-import           Hasura.SQL.Value                     (PGScalarValue (..), toTxtValue)
-import           Hasura.Server.Utils                  (mkClientHeadersForward, mkSetCookieHeaders)
-import           Hasura.Server.Version                (HasVersion)
+import           Hasura.Server.Utils                         (mkClientHeadersForward,
+                                                              mkSetCookieHeaders)
+import           Hasura.Server.Version                       (HasVersion)
 import           Hasura.Session
+
 
 type ActionExecuteTx =
   forall tx. (MonadIO tx, MonadTx tx, Tracing.MonadTrace tx) => tx EncJSON
@@ -148,7 +151,7 @@ resolveActionExecution
   => Env.Environment
   -> L.Logger L.Hasura
   -> UserInfo
-  -> AnnActionExecution 'Postgres UnpreparedValue
+  -> AnnActionExecution 'Postgres (UnpreparedValue 'Postgres)
   -> ActionExecContext
   -> m ActionExecuteResult
 resolveActionExecution env logger userInfo annAction execContext = do
@@ -157,7 +160,7 @@ resolveActionExecution env logger userInfo annAction execContext = do
   (webhookRes, respHeaders) <- flip runReaderT logger $ callWebhook env manager outputType outputFields reqHeaders confHeaders
                                forwardClientHeaders resolvedWebhook handlerPayload timeout
   let webhookResponseExpression = RS.AEInput $ UVLiteral $
-        toTxtValue $ WithScalarType PGJSONB $ PGValJSONB $ Q.JSONB $ J.toJSON webhookRes
+        toTxtValue $ ColumnValue (ColumnScalar PGJSONB) $ PGValJSONB $ Q.JSONB $ J.toJSON webhookRes
       selectAstUnresolved = processOutputSelectionSet webhookResponseExpression
                             outputType definitionList annFields stringifyNum
   (astResolved, _expectedVariables) <- flip runStateT Set.empty $ RS.traverseAnnSimpleSelect prepareWithoutPlan selectAstUnresolved
@@ -203,7 +206,7 @@ resolveActionMutationAsync
   -> [HTTP.Header]
   -> SessionVariables
   -> m (tx EncJSON)
-resolveActionMutationAsync annAction reqHeaders sessionVariables = do
+resolveActionMutationAsync annAction reqHeaders sessionVariables =
   pure $ liftTx do
     actionId <- runIdentity . Q.getRow <$> Q.withQE defaultTxErrorHandler [Q.sql|
       INSERT INTO
@@ -235,14 +238,14 @@ action's type. Here, we treat the "output" field as a computed field to hdb_acti
 -- TODO: Add tracing here? Avoided now because currently the function is pure
 resolveAsyncActionQuery
   :: UserInfo
-  -> AnnActionAsyncQuery 'Postgres UnpreparedValue
-  -> RS.AnnSimpleSelG 'Postgres UnpreparedValue
+  -> AnnActionAsyncQuery 'Postgres (UnpreparedValue 'Postgres)
+  -> RS.AnnSimpleSelG 'Postgres (UnpreparedValue 'Postgres)
 resolveAsyncActionQuery userInfo annAction =
   let annotatedFields = asyncFields <&> second \case
         AsyncTypename t -> RS.AFExpression t
         AsyncOutput annFields ->
           -- See Note [Resolving async action query/subscription]
-          let inputTableArgument = RS.AETableRow $ Just $ Iden "response_payload"
+          let inputTableArgument = RS.AETableRow $ Just $ Identifier "response_payload"
               jsonAggSelect = mkJsonAggSelect outputType
           in RS.AFComputedField $ RS.CFSTable jsonAggSelect $
              processOutputSelectionSet inputTableArgument outputType
@@ -266,16 +269,16 @@ resolveAsyncActionQuery userInfo annAction =
     -- TODO (from master):- Avoid using ColumnInfo
     mkAnnFldFromPGCol column' columnType =
       flip RS.mkAnnColumnField Nothing $
-      ColumnInfo (unsafePGCol column') (G.unsafeMkName column') 0 (PGColumnScalar columnType) True Nothing
+      ColumnInfo (unsafePGCol column') (G.unsafeMkName column') 0 (ColumnScalar columnType) True Nothing
 
     tableBoolExpression =
       let actionIdColumnInfo = ColumnInfo (unsafePGCol "id") $$(G.litName "id")
-                               0 (PGColumnScalar PGUUID) False Nothing
+                               0 (ColumnScalar PGUUID) False Nothing
           actionIdColumnEq = BoolFld $ AVCol actionIdColumnInfo [AEQ True actionId]
           sessionVarsColumnInfo = ColumnInfo (unsafePGCol "session_variables") $$(G.litName "session_variables")
-                                  0 (PGColumnScalar PGJSONB) False Nothing
-          sessionVarValue = flip UVParameter Nothing $ PGColumnValue (PGColumnScalar PGJSONB) $
-                            WithScalarType PGJSONB $ PGValJSONB $ Q.JSONB $ J.toJSON $ _uiSession userInfo
+                                  0 (ColumnScalar PGJSONB) False Nothing
+          sessionVarValue = UVParameter Nothing $ ColumnValue (ColumnScalar PGJSONB) $
+                            PGValJSONB $ Q.JSONB $ J.toJSON $ _uiSession userInfo
           sessionVarsColumnEq = BoolFld $ AVCol sessionVarsColumnInfo [AEQ True sessionVarValue]
 
       -- For non-admin roles, accessing an async action's response should be allowed only for the user
@@ -318,7 +321,7 @@ asyncActionsProcessor env logger cacheRef pgPool httpManager = forever $ do
     runTx :: (Monoid a) => Q.TxE QErr a -> IO a
     runTx q = do
       res <- runExceptT $ Q.runTx' pgPool q
-      either mempty return res
+      onLeft res mempty
 
     callHandler :: ActionCache -> ActionLogItem -> m ()
     callHandler actionCache actionLogItem = Tracing.runTraceT "async actions processor" do
@@ -425,7 +428,7 @@ callWebhook env manager outputType outputFields reqHeaders confHeaders
       requestBody = J.encode postPayload
       requestBodySize = BL.length requestBody
       url = unResolvedWebhook resolvedWebhook
-      responseTimeout = HTTP.responseTimeoutMicro $ (unTimeout timeoutSeconds) * 1000000
+      responseTimeout = HTTP.responseTimeoutMicro $ unTimeout timeoutSeconds * 1000000
   httpResponse <- do
     initReq <- liftIO $ HTTP.parseRequest (T.unpack url)
     let req = initReq { HTTP.method          = "POST"
@@ -473,7 +476,7 @@ callWebhook env manager outputType outputFields reqHeaders confHeaders
                    webhookResponse <- decodeValue responseValue
                    case webhookResponse of
                      AWRArray objs -> do
-                       when (not expectingArray) $
+                       unless expectingArray $
                          throwUnexpected "expecting object for action webhook response but got array"
                        mapM_ validateResponseObject objs
                      AWRObject obj -> do
@@ -501,12 +504,12 @@ callWebhook env manager outputType outputFields reqHeaders confHeaders
       validateResponseObject obj = do
         -- Fields not specified in the output type shouldn't be present in the response
         let extraFields = filter (not . flip Map.member outputFields) $ Map.keys obj
-        when (not $ null extraFields) $ throwUnexpected $
+        unless (null extraFields) $ throwUnexpected $
           "unexpected fields in webhook response: " <> showNames extraFields
 
         void $ flip Map.traverseWithKey outputFields $ \fieldName fieldTy ->
           -- When field is non-nullable, it has to present in the response with no null value
-          when (not $ G.isNullable fieldTy) $ case Map.lookup fieldName obj of
+          unless (G.isNullable fieldTy) $ case Map.lookup fieldName obj of
             Nothing -> throwUnexpected $
                        "field " <> fieldName <<> " expected in webhook response, but not found"
             Just v -> when (v == J.Null) $ throwUnexpected $
@@ -517,12 +520,12 @@ mkJsonAggSelect =
   bool RS.JASSingleObject RS.JASMultipleRows . isListType
 
 processOutputSelectionSet
-  :: RS.ArgumentExp v
+  :: RS.ArgumentExp 'Postgres v
   -> GraphQLType
-  -> [(Column backend, ScalarType backend)]
-  -> RS.AnnFieldsG backend v
+  -> [(Column 'Postgres, ScalarType 'Postgres)]
+  -> RS.AnnFieldsG 'Postgres v
   -> Bool
-  -> RS.AnnSimpleSelG backend v
+  -> RS.AnnSimpleSelG 'Postgres v
 processOutputSelectionSet tableRowInput actionOutputType definitionList annotatedFields =
   RS.AnnSelectG annotatedFields selectFrom RS.noTablePermissions RS.noSelectArgs
   where

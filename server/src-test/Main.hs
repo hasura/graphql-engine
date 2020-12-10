@@ -3,41 +3,42 @@ module Main (main) where
 import           Hasura.Prelude
 
 import           Control.Concurrent.MVar
-import           Control.Natural              ((:~>) (..))
-import           Data.Time.Clock              (getCurrentTime)
+import           Control.Natural                     ((:~>) (..))
+import           Data.Time.Clock                     (getCurrentTime)
 import           Options.Applicative
-import           System.Environment           (getEnvironment)
-import           System.Exit                  (exitFailure)
+import           System.Environment                  (getEnvironment)
+import           System.Exit                         (exitFailure)
 import           Test.Hspec
 
-import qualified Data.Aeson                   as A
-import qualified Data.ByteString.Lazy.Char8   as BL
-import qualified Data.Environment             as Env
-import qualified Database.PG.Query            as Q
-import qualified Network.HTTP.Client          as HTTP
-import qualified Network.HTTP.Client.TLS      as HTTP
-import qualified Test.Hspec.Runner            as Hspec
+import qualified Data.Aeson                          as A
+import qualified Data.ByteString.Lazy.Char8          as BL
+import qualified Data.Environment                    as Env
+import qualified Database.PG.Query                   as Q
+import qualified Network.HTTP.Client                 as HTTP
+import qualified Network.HTTP.Client.TLS             as HTTP
+import qualified Test.Hspec.Runner                   as Hspec
 
-import           Hasura.Db                    (mkPGExecCtx)
-import           Hasura.RQL.Types             (SQLGenCtx (..))
+import           Hasura.Backends.Postgres.Connection (liftTx, mkPGExecCtx)
+import           Hasura.RQL.DDL.Schema.Catalog       (fetchMetadataFromCatalog)
+import           Hasura.RQL.Types                    (SQLGenCtx (..), runMetadataT)
 import           Hasura.RQL.Types.Run
-import           Hasura.Server.Init           (RawConnInfo, mkConnInfo, mkRawConnInfo,
-                                               parseRawConnInfo, runWithEnv)
+import           Hasura.Server.Init                  (RawConnInfo, mkConnInfo, mkRawConnInfo,
+                                                      parseRawConnInfo, runWithEnv)
 import           Hasura.Server.Migrate
 import           Hasura.Server.Version
-import           Hasura.Session               (adminUserInfo)
+import           Hasura.Session                      (adminUserInfo)
 
-import qualified Data.Parser.CacheControlSpec as CacheControlParser
-import qualified Data.Parser.JSONPathSpec     as JsonPath
-import qualified Data.Parser.URLTemplate      as URLTemplate
-import qualified Data.TimeSpec                as TimeSpec
-import qualified Data.NonNegativeIntSpec      as NonNegetiveIntSpec
-import qualified Hasura.IncrementalSpec       as IncrementalSpec
+import qualified Data.NonNegativeIntSpec             as NonNegetiveIntSpec
+import qualified Data.Parser.CacheControlSpec        as CacheControlParser
+import qualified Data.Parser.JSONPathSpec            as JsonPath
+import qualified Data.Parser.URLTemplate             as URLTemplate
+import qualified Data.TimeSpec                       as TimeSpec
+import qualified Hasura.IncrementalSpec              as IncrementalSpec
 -- import qualified Hasura.RQL.MetadataSpec      as MetadataSpec
-import qualified Hasura.Server.MigrateSpec    as MigrateSpec
-import qualified Hasura.Server.TelemetrySpec  as TelemetrySpec
-import qualified Hasura.CacheBoundedSpec      as CacheBoundedSpec
-import qualified Hasura.Server.AuthSpec       as AuthSpec
+import qualified Hasura.CacheBoundedSpec             as CacheBoundedSpec
+import qualified Hasura.Server.AuthSpec              as AuthSpec
+import qualified Hasura.Server.MigrateSpec           as MigrateSpec
+import qualified Hasura.Server.TelemetrySpec         as TelemetrySpec
 
 data TestSuites
   = AllSuites !RawConnInfo
@@ -72,7 +73,7 @@ unitSpecs = do
   describe "Hasura.Server.Auth" AuthSpec.spec
   describe "Hasura.Cache.Bounded" CacheBoundedSpec.spec
 
-buildPostgresSpecs :: (HasVersion) => RawConnInfo -> IO Spec
+buildPostgresSpecs :: HasVersion => RawConnInfo -> IO Spec
 buildPostgresSpecs pgConnOptions = do
   env <- getEnvironment
 
@@ -91,9 +92,12 @@ buildPostgresSpecs pgConnOptions = do
               >>> runExceptT
               >=> flip onLeft printErrJExit
 
-        schemaCache <- snd <$> runAsAdmin (migrateCatalog (Env.mkEnvironment env) =<< liftIO getCurrentTime)
+        (schemaCache, metadata) <- runAsAdmin do
+          sc <- snd <$> (migrateCatalog (Env.mkEnvironment env) =<< liftIO getCurrentTime)
+          metadata <- liftTx fetchMetadataFromCatalog
+          pure (sc, metadata)
         cacheRef <- newMVar schemaCache
-        pure $ NT (runAsAdmin . flip MigrateSpec.runCacheRefT cacheRef)
+        pure $ NT (runAsAdmin . flip MigrateSpec.runCacheRefT cacheRef . fmap fst . runMetadataT metadata)
 
   pure $ beforeAll setupCacheRef $
     describe "Hasura.Server.Migrate" $ MigrateSpec.spec pgConnInfo

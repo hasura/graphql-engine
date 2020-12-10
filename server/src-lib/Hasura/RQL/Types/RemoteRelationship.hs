@@ -1,6 +1,5 @@
-{-# LANGUAGE DisambiguateRecordFields #-}
-{-# LANGUAGE NamedFieldPuns           #-}
-{-# LANGUAGE RecordWildCards          #-}
+{-# LANGUAGE NamedFieldPuns  #-}
+{-# LANGUAGE RecordWildCards #-}
 
 module Hasura.RQL.Types.RemoteRelationship
   ( RemoteRelationshipName(..)
@@ -10,6 +9,9 @@ module Hasura.RQL.Types.RemoteRelationship
   , RemoteFieldInfo(..)
   , RemoteRelationship(..)
   , RemoteRelationshipDef(..)
+  , rrdRemoteSchema
+  , rrdHasuraFields
+  , rrdRemoteField
   , FieldCall(..)
   , RemoteArguments(..)
   , DeleteRemoteRelationship(..)
@@ -17,31 +19,32 @@ module Hasura.RQL.Types.RemoteRelationship
 
 import           Hasura.Prelude
 
-import qualified Data.HashMap.Strict           as HM
-import qualified Data.Text                     as T
-import qualified Database.PG.Query             as Q
-import qualified Language.GraphQL.Draft.Syntax as G
+import qualified Data.HashMap.Strict                as HM
+import qualified Data.Text                          as T
+import qualified Database.PG.Query                  as Q
+import qualified Language.GraphQL.Draft.Syntax      as G
 
+import           Control.Lens                       (makeLenses)
 import           Data.Aeson
 import           Data.Aeson.Casing
 import           Data.Aeson.TH
 import           Data.Scientific
-import           Data.Set                      (Set)
+import           Data.Set                           (Set)
 import           Data.Text.Extended
-import           Language.Haskell.TH.Syntax    (Lift)
+import           Data.Text.NonEmpty
 
-import           Hasura.Incremental            (Cacheable)
+import           Hasura.Backends.Postgres.SQL.Types
+import           Hasura.Incremental                 (Cacheable)
 import           Hasura.RQL.Types.Column
 import           Hasura.RQL.Types.Common
 import           Hasura.RQL.Types.RemoteSchema
 import           Hasura.SQL.Backend
-import           Hasura.SQL.Types
 
 
 newtype RemoteRelationshipName
   = RemoteRelationshipName
   { unRemoteRelationshipName :: NonEmptyText}
-  deriving ( Show, Eq, Lift, Hashable, ToJSON, ToJSONKey, FromJSON
+  deriving ( Show, Eq, Ord, Hashable, ToJSON, ToJSONKey, FromJSON
            , Q.ToPrepArg, Q.FromCol, ToTxt, Cacheable, NFData, Arbitrary
            )
 
@@ -52,7 +55,7 @@ fromRemoteRelationship :: RemoteRelationshipName -> FieldName
 fromRemoteRelationship = FieldName . remoteRelationshipNameToText
 
 -- | Resolved remote relationship
-data RemoteFieldInfo (b :: Backend)
+data RemoteFieldInfo (b :: BackendType)
   = RemoteFieldInfo
   { _rfiName             :: !RemoteRelationshipName
     -- ^ Field name to which we'll map the remote in hasura; this becomes part
@@ -116,8 +119,8 @@ instance ToJSON (RemoteFieldInfo 'Postgres) where
 -- over (brought into scope, e.g. in 'rtrHasuraFields'.
 newtype RemoteArguments =
   RemoteArguments
-    { getRemoteArguments :: (HashMap G.Name (G.Value G.Name))
-    } deriving (Show, Eq, Lift, Cacheable, NFData)
+    { getRemoteArguments :: HashMap G.Name (G.Value G.Name)
+    } deriving (Show, Eq, Cacheable, NFData)
 
 instance ToJSON RemoteArguments where
   toJSON (RemoteArguments fields) = fieldsToObject fields
@@ -152,9 +155,7 @@ instance FromJSON RemoteArguments where
         bleh <-
           traverse
           (\(key, value) -> do
-              name <- case G.mkName key of
-                Nothing    -> fail $ T.unpack key <> " is an invalid key name"
-                Just name' -> pure name'
+              name <- G.mkName key `onNothing` fail (T.unpack key <> " is an invalid key name")
               parsedValue <- parseValueAsGValue value
               pure (name,parsedValue))
              (HM.toList hashMap)
@@ -189,12 +190,12 @@ data FieldCall =
   FieldCall
     { fcName      :: !G.Name
     , fcArguments :: !RemoteArguments
-    } deriving (Show, Eq, Lift, Generic)
+    } deriving (Show, Eq, Generic)
 instance NFData FieldCall
 instance Cacheable FieldCall
 
 newtype RemoteFields = RemoteFields {unRemoteFields :: NonEmpty FieldCall}
-  deriving (Show, Eq, Lift, Generic)
+  deriving (Show, Eq, Generic)
 instance NFData RemoteFields
 instance Cacheable RemoteFields
 
@@ -255,7 +256,7 @@ data RemoteRelationship =
     , rtrRemoteSchema :: !RemoteSchemaName
     -- ^ Identifier for this mapping.
     , rtrRemoteField  :: !RemoteFields
-    }  deriving (Show, Eq, Lift, Generic)
+    }  deriving (Show, Eq, Generic)
 instance NFData RemoteRelationship
 instance Cacheable RemoteRelationship
 $(deriveJSON (aesonDrop 3 snakeCase) ''RemoteRelationship)
@@ -265,13 +266,15 @@ data RemoteRelationshipDef
   { _rrdRemoteSchema :: !RemoteSchemaName
   , _rrdHasuraFields :: !(Set FieldName)
   , _rrdRemoteField  :: !RemoteFields
-  } deriving (Show, Eq, Generic, Lift)
+  } deriving (Show, Eq, Generic)
+instance Cacheable RemoteRelationshipDef
 $(deriveJSON (aesonDrop 4 snakeCase) ''RemoteRelationshipDef)
+$(makeLenses ''RemoteRelationshipDef)
 
 data DeleteRemoteRelationship =
   DeleteRemoteRelationship
     { drrTable :: QualifiedTable
     , drrName  :: RemoteRelationshipName
-    }  deriving (Show, Eq, Lift)
+    }  deriving (Show, Eq)
 
 $(deriveJSON (aesonDrop 3 snakeCase){omitNothingFields=True} ''DeleteRemoteRelationship)

@@ -7,33 +7,44 @@ module Hasura.RQL.Types.ComputedField where
 
 import           Hasura.Prelude
 
-import qualified Data.Sequence              as Seq
-import qualified Database.PG.Query          as Q
+import qualified Data.Sequence                      as Seq
+import qualified Database.PG.Query                  as Q
 
-import           Control.Lens               hiding ((.=))
+import           Control.Lens                       hiding ((.=))
 import           Data.Aeson
 import           Data.Aeson.Casing
 import           Data.Aeson.TH
+import           Data.Kind                          (Type)
 import           Data.Text.Extended
-import           Instances.TH.Lift          ()
-import           Language.Haskell.TH.Syntax (Lift)
+import           Data.Text.NonEmpty
 
-import           Hasura.Incremental         (Cacheable)
+import           Hasura.Backends.Postgres.SQL.Types hiding (TableName)
+import           Hasura.Incremental                 (Cacheable)
 import           Hasura.RQL.Types.Common
 import           Hasura.RQL.Types.Function
 import           Hasura.SQL.Backend
-import           Hasura.SQL.Types
 
 
 newtype ComputedFieldName =
   ComputedFieldName { unComputedFieldName :: NonEmptyText}
-  deriving (Show, Eq, NFData, Lift, FromJSON, ToJSON, Q.ToPrepArg, ToTxt, Hashable, Q.FromCol, Generic, Arbitrary, Cacheable)
+  deriving (Show, Eq, Ord, NFData, FromJSON, ToJSON, ToJSONKey
+           , Q.ToPrepArg, ToTxt, Hashable, Q.FromCol, Generic, Arbitrary, Cacheable)
 
 computedFieldNameToText :: ComputedFieldName -> Text
 computedFieldNameToText = unNonEmptyText . unComputedFieldName
 
 fromComputedField :: ComputedFieldName -> FieldName
 fromComputedField = FieldName . computedFieldNameToText
+
+data ComputedFieldDefinition
+  = ComputedFieldDefinition
+  { _cfdFunction        :: !QualifiedFunction
+  , _cfdTableArgument   :: !(Maybe FunctionArgName)
+  , _cfdSessionArgument :: !(Maybe FunctionArgName)
+  } deriving (Show, Eq, Generic)
+instance NFData ComputedFieldDefinition
+instance Cacheable ComputedFieldDefinition
+$(deriveJSON (aesonDrop 4 snakeCase){omitNothingFields = True} ''ComputedFieldDefinition)
 
 -- | The function table argument is either the very first argument or the named
 -- argument with an index. The index is 0 if the named argument is the first.
@@ -61,9 +72,9 @@ instance Cacheable FunctionSessionArgument
 instance ToJSON FunctionSessionArgument where
   toJSON (FunctionSessionArgument argName _) = toJSON argName
 
-data ComputedFieldReturn (b :: Backend)
+data ComputedFieldReturn (b :: BackendType)
   = CFRScalar !(ScalarType b)
-  | CFRSetofTable !QualifiedTable
+  | CFRSetofTable !(TableName b)
   deriving (Generic)
 deriving instance Show (ComputedFieldReturn 'Postgres)
 deriving instance Eq (ComputedFieldReturn 'Postgres)
@@ -90,13 +101,17 @@ data ComputedFieldFunction
 instance Cacheable ComputedFieldFunction
 $(deriveToJSON (aesonDrop 4 snakeCase) ''ComputedFieldFunction)
 
-data ComputedFieldInfo (b :: Backend)
+data ComputedFieldInfo (b :: BackendType)
   = ComputedFieldInfo
-  { _cfiName       :: !ComputedFieldName
+  { _cfiXComputedFieldInfo :: (XComputedFieldInfo b)
+  , _cfiName       :: !ComputedFieldName
   , _cfiFunction   :: !ComputedFieldFunction
   , _cfiReturnType :: !(ComputedFieldReturn b)
   , _cfiComment    :: !(Maybe Text)
   } deriving (Generic)
+type family XComputedFieldInfo (b :: BackendType) :: Type where
+  XComputedFieldInfo 'Postgres = ()
+  XComputedFieldInfo 'MSSQL    = Void -- To be supported later
 deriving instance Eq (ComputedFieldInfo 'Postgres)
 instance Cacheable (ComputedFieldInfo 'Postgres)
 instance ToJSON (ComputedFieldInfo 'Postgres) where

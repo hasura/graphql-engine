@@ -40,6 +40,19 @@ module Hasura.Eventing.EventTrigger
   , EventEngineCtx(..)
   ) where
 
+import           Hasura.Prelude
+
+import qualified Control.Concurrent.Async.Lifted.Safe as LA
+import qualified Data.ByteString.Lazy                 as LBS
+import qualified Data.HashMap.Strict                  as M
+import qualified Data.TByteString                     as TBS
+import qualified Data.Text                            as T
+import qualified Data.Time.Clock                      as Time
+import qualified Database.PG.Query                    as Q
+import qualified Database.PG.Query.PTI                as PTI
+import qualified Network.HTTP.Client                  as HTTP
+import qualified PostgreSQL.Binary.Encoding           as PE
+
 import           Control.Concurrent.Extended          (sleep)
 import           Control.Concurrent.STM.TVar
 import           Control.Monad.Catch                  (MonadMask, bracket_)
@@ -52,29 +65,20 @@ import           Data.Has
 import           Data.Int                             (Int64)
 import           Data.String
 import           Data.Text.Extended
+import           Data.Text.NonEmpty
 import           Data.Time.Clock
-import           Data.Word
+
+import qualified Hasura.Logging                       as L
+import qualified Hasura.Tracing                       as Tracing
+
+import           Hasura.Backends.Postgres.SQL.Types
 import           Hasura.Eventing.Common
 import           Hasura.Eventing.HTTP
 import           Hasura.HTTP
-import           Hasura.Prelude
 import           Hasura.RQL.DDL.Headers
 import           Hasura.RQL.Types
-import           Hasura.SQL.Types
 import           Hasura.Server.Version                (HasVersion)
-import qualified Hasura.Tracing                       as Tracing
 
-import qualified Control.Concurrent.Async.Lifted.Safe as LA
-import qualified Data.ByteString.Lazy                 as LBS
-import qualified Data.HashMap.Strict                  as M
-import qualified Data.TByteString                     as TBS
-import qualified Data.Text                            as T
-import qualified Data.Time.Clock                      as Time
-import qualified Database.PG.Query                    as Q
-import qualified Database.PG.Query.PTI                as PTI
-import qualified Hasura.Logging                       as L
-import qualified Network.HTTP.Client                  as HTTP
-import qualified PostgreSQL.Binary.Encoding           as PE
 
 data TriggerMetadata
   = TriggerMetadata { tmName :: TriggerName }
@@ -183,7 +187,17 @@ processEventQueue logger logenv httpMgr pool getSchemaCache eeCtx@EventEngineCtx
   where
     fetchBatchSize = 100
     popEventsBatch = do
-      let run = liftIO . runExceptT . Q.runTx pool (Q.RepeatableRead, Just Q.ReadWrite)
+      {-
+        SELECT FOR UPDATE .. SKIP LOCKED can throw serialization errors in RepeatableRead: https://stackoverflow.com/a/53289263/1911889
+        We can avoid this safely by running it in ReadCommitted as Postgres will recheck the
+        predicate condition if a row is updated concurrently: https://www.postgresql.org/docs/9.5/transaction-iso.html#XACT-READ-COMMITTED
+
+        Every other action on an event_log row (like post-processing, archival, etc) are single writes (no R-W or W-R)
+        so it is safe to perform them in ReadCommitted as well (the writes will then acquire some serial order).
+        Any serial order of updates to a row will lead to an eventually consistent state as the row will have
+        (delivered=t or error=t or archived=t) after a fixed number of tries (assuming it begins with locked='f').
+      -}
+      let run = liftIO . runExceptT . Q.runTx' pool
       run (fetchEvents fetchBatchSize) >>= \case
           Left err -> do
             liftIO $ L.unLogger logger $ EventInternalErr err
@@ -347,7 +361,7 @@ processError pool e retryConf decodedHeaders ep err = do
               respStatus = hrsStatus errResp
           mkInvocation ep respStatus decodedHeaders respPayload respHeaders
         HOther detail -> do
-          let errMsg = (TBS.fromLBS $ encode detail)
+          let errMsg = TBS.fromLBS $ encode detail
           mkInvocation ep 500 decodedHeaders errMsg []
   liftIO $ runExceptT $ Q.runTx pool (Q.ReadCommitted, Just Q.ReadWrite) $ do
     insertInvocation invocation
@@ -378,7 +392,7 @@ retryOrSetError e retryConf err = do
 
 mkInvocation
   :: EventPayload -> Int -> [HeaderConf] -> TBS.TByteString -> [HeaderConf]
-  -> (Invocation 'EventType)
+  -> Invocation 'EventType
 mkInvocation ep status reqHeaders respBody respHeaders
   = let resp = if isClientError status
           then mkClientErr respBody
@@ -494,7 +508,7 @@ toInt64 = fromIntegral
 newtype EventIdArray = EventIdArray { unEventIdArray :: [EventId]} deriving (Show, Eq)
 
 instance Q.ToPrepArg EventIdArray where
-  toPrepVal (EventIdArray l) = Q.toPrepValHelper PTI.unknown encoder $ l
+  toPrepVal (EventIdArray l) = Q.toPrepValHelper PTI.unknown encoder $ map unEventId l
     where
       -- 25 is the OID value of TEXT, https://jdbc.postgresql.org/development/privateapi/constant-values.html
       encoder = PE.array 25 . PE.dimensionArray foldl' (PE.encodingArray . PE.text_strict)
@@ -503,7 +517,7 @@ instance Q.ToPrepArg EventIdArray where
 --   when a graceful shutdown is initiated.
 unlockEvents :: [EventId] -> Q.TxE QErr Int
 unlockEvents eventIds =
-   (runIdentity . Q.getRow) <$> Q.withQE defaultTxErrorHandler
+   runIdentity . Q.getRow <$> Q.withQE defaultTxErrorHandler
    [Q.sql|
      WITH "cte" AS
      (UPDATE hdb_catalog.event_log

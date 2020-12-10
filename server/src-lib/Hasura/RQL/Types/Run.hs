@@ -26,7 +26,7 @@ data RunCtx
   }
 
 newtype Run a
-  = Run { unRun :: ReaderT RunCtx (LazyTx QErr) a }
+  = Run { unRun :: ReaderT RunCtx (LazyTxT QErr IO) a }
   deriving ( Functor, Applicative, Monad
            , MonadError QErr
            , MonadReader RunCtx
@@ -54,5 +54,8 @@ peelRun
   -> Maybe Tracing.TraceContext
   -> Run a
   -> ExceptT QErr m a
-peelRun runCtx@(RunCtx userInfo _ _) pgExecCtx txAccess ctx (Run m) =
-  runLazyTx pgExecCtx txAccess $ maybe id withTraceContext ctx $ withUserInfo userInfo $ runReaderT m runCtx
+peelRun runCtx pgExecCtx txAccess ctx (Run m) =
+  mapExceptT liftIO $ runLazyTx pgExecCtx txAccess $
+  maybe id withTraceContext ctx $ withUserInfo userInfo $ runReaderT m runCtx
+  where
+    userInfo = _rcUserInfo runCtx

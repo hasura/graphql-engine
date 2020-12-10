@@ -1,13 +1,10 @@
 package migrate
 
 import (
-	"bufio"
 	"fmt"
-	"io"
 	nurl "net/url"
 	"runtime"
 	"strings"
-	"time"
 
 	crontriggers "github.com/hasura/graphql-engine/cli/metadata/cron_triggers"
 
@@ -62,6 +59,7 @@ func suint64(n int64) uint64 {
 	return uint64(n)
 }
 
+/*
 // newSlowReader turns an io.ReadCloser into a slow io.ReadCloser.
 // Use this to simulate a slow internet connection.
 func newSlowReader(r io.ReadCloser) io.ReadCloser {
@@ -89,7 +87,7 @@ func (b *slowReader) Read(p []byte) (n int, err error) {
 
 func (b *slowReader) Close() error {
 	return b.rx.Close()
-}
+} */
 
 var errNoScheme = fmt.Errorf("no scheme")
 

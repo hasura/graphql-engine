@@ -1,0 +1,18 @@
+description: Select cities ending with gham
+url: /v1/graphql
+status: 200
+response:
+  data:
+    city:
+    - name: Framlingham
+      country: UK
+query:
+  query: |
+    query {
+      city (
+      where: {name: {_regex: ".*gham" }}
+      ) {
+        name
+        country
+      }
+    }

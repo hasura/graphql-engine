@@ -1,8 +1,7 @@
 {-# LANGUAGE RecordWildCards #-}
 module Hasura.RQL.DDL.CustomTypes
   ( runSetCustomTypes
-  , persistCustomTypes
-  , clearCustomTypes
+  , clearCustomTypesInMetadata
   , resolveCustomTypes
   , lookupPGScalar
   ) where
@@ -10,16 +9,17 @@ module Hasura.RQL.DDL.CustomTypes
 
 import           Hasura.Prelude
 
-import qualified Data.HashMap.Strict           as Map
-import qualified Data.HashSet                  as Set
-import qualified Data.List.Extended            as L
-import qualified Data.Text                     as T
-import qualified Database.PG.Query             as Q
-import qualified Language.GraphQL.Draft.Syntax as G
+import qualified Data.HashMap.Strict                as Map
+import qualified Data.HashSet                       as Set
+import qualified Data.List.Extended                 as L
+import qualified Data.Text                          as T
+import qualified Language.GraphQL.Draft.Syntax      as G
 
+import           Control.Lens                       ((.~))
 import           Control.Monad.Validate
-
 import           Data.Text.Extended
+
+import           Hasura.Backends.Postgres.SQL.Types
 import           Hasura.EncJSON
 import           Hasura.RQL.Types
 import           Hasura.SQL.Types
@@ -53,7 +53,7 @@ GraphQL types. To support this, we have to take a few extra steps:
 -- scalars).
 validateCustomTypeDefinitions
   :: (MonadValidate [CustomTypeValidationError] m)
-  => TableCache
+  => TableCache 'Postgres
   -> CustomTypes
   -> HashSet (ScalarType 'Postgres)
   -- ^ all Postgres base types. See Note [Postgres scalars in custom types]
@@ -203,11 +203,8 @@ validateCustomTypeDefinitions tableCache customTypes allPGScalars = do
                   objectTypeName _trName fieldName
 
             -- the column should be a column of the table
-            case getColumnInfoM remoteTableInfo (fromPGCol columnName) of
-              Nothing ->
-                refute $ pure $ ObjectRelationshipColumnDoesNotExist
-                objectTypeName _trName _trRemoteTable columnName
-              Just pgColumnInfo -> pure pgColumnInfo
+            onNothing (getColumnInfoM remoteTableInfo (fromPGCol columnName)) $ refute $ pure $
+              ObjectRelationshipColumnDoesNotExist objectTypeName _trName _trRemoteTable columnName
 
         pure $ TypeRelationship _trName _trType remoteTableInfo annotatedFieldMapping
 
@@ -257,7 +254,7 @@ data CustomTypeValidationError
   deriving (Show, Eq)
 
 showCustomTypeValidationError
-  :: CustomTypeValidationError -> T.Text
+  :: CustomTypeValidationError -> Text
 showCustomTypeValidationError = \case
   DuplicateTypeNames types ->
     "duplicate type names: " <> dquoteList types
@@ -309,32 +306,21 @@ showCustomTypeValidationError = \case
 runSetCustomTypes
   :: ( MonadError QErr m
      , CacheRWM m
-     , MonadTx m
+     , MetadataM m
      )
   => CustomTypes -> m EncJSON
 runSetCustomTypes customTypes = do
-  persistCustomTypes customTypes
-  buildSchemaCacheFor MOCustomTypes
-  return successMsg
+  buildSchemaCacheFor MOCustomTypes $
+    MetadataModifier $ metaCustomTypes .~ customTypes
+  pure successMsg
 
-persistCustomTypes :: MonadTx m => CustomTypes -> m ()
-persistCustomTypes customTypes = liftTx do
-  clearCustomTypes
-  Q.unitQE defaultTxErrorHandler [Q.sql|
-    INSERT into hdb_catalog.hdb_custom_types
-      (custom_types)
-      VALUES ($1)
-  |] (Identity $ Q.AltJ customTypes) False
-
-clearCustomTypes :: Q.TxE QErr ()
-clearCustomTypes = do
-  Q.unitQE defaultTxErrorHandler [Q.sql|
-    DELETE FROM hdb_catalog.hdb_custom_types
-  |] () False
+clearCustomTypesInMetadata :: MetadataModifier
+clearCustomTypesInMetadata =
+  MetadataModifier $ metaCustomTypes .~ emptyCustomTypes
 
 resolveCustomTypes
   :: (MonadError QErr m)
-  => TableCache
+  => TableCache 'Postgres
   -> CustomTypes
   -> HashSet (ScalarType 'Postgres)
   -> m (AnnotatedCustomTypes 'Postgres)
@@ -342,7 +328,7 @@ resolveCustomTypes tableCache customTypes allPGScalars =
   either (throw400 ConstraintViolation . showErrors) pure
     =<< runValidateT (validateCustomTypeDefinitions tableCache customTypes allPGScalars)
   where
-    showErrors :: [CustomTypeValidationError] -> T.Text
+    showErrors :: [CustomTypeValidationError] -> Text
     showErrors allErrors =
       "validation for the given custom types failed " <> reasonsMessage
       where

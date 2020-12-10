@@ -18,8 +18,8 @@ import           Hasura.HTTP
 import           Hasura.Logging
 import           Hasura.Prelude
 import           Hasura.RQL.Types
-import           Hasura.Server.Init
 import           Hasura.Server.Telemetry.Counters
+import           Hasura.Server.Types
 import           Hasura.Server.Version
 import           Hasura.Session
 
@@ -210,9 +210,9 @@ data TelemetryLog
 data TelemetryHttpError
   = TelemetryHttpError
   { tlheStatus        :: !(Maybe HTTP.Status)
-  , tlheUrl           :: !T.Text
+  , tlheUrl           :: !Text
   , tlheHttpException :: !(Maybe HttpException)
-  , tlheResponse      :: !(Maybe T.Text)
+  , tlheResponse      :: !(Maybe Text)
   } deriving (Show)
 
 instance A.ToJSON TelemetryLog where

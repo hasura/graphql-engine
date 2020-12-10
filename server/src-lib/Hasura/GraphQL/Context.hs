@@ -20,21 +20,22 @@ module Hasura.GraphQL.Context
 
 import           Hasura.Prelude
 
-import qualified Data.Aeson                    as J
+import qualified Data.Aeson                       as J
+import qualified Language.GraphQL.Draft.Syntax    as G
+
 import           Data.Aeson.Casing
 import           Data.Aeson.TH
-import           Hasura.SQL.Backend
-import qualified Language.GraphQL.Draft.Syntax as G
 
-import qualified Hasura.RQL.DML.Delete.Types   as RQL
-import qualified Hasura.RQL.DML.Select.Types   as RQL
-import qualified Hasura.RQL.DML.Update.Types   as RQL
-import qualified Hasura.RQL.Types.Action       as RQL
-import qualified Hasura.RQL.Types.RemoteSchema as RQL
-import qualified Hasura.SQL.DML                as S
+import qualified Hasura.Backends.Postgres.SQL.DML as PG
+import qualified Hasura.RQL.IR.Delete             as IR
+import qualified Hasura.RQL.IR.Insert             as IR
+import qualified Hasura.RQL.IR.Select             as IR
+import qualified Hasura.RQL.IR.Update             as IR
+import qualified Hasura.RQL.Types.Action          as RQL
+import qualified Hasura.RQL.Types.RemoteSchema    as RQL
 
 import           Hasura.GraphQL.Parser
-import           Hasura.GraphQL.Schema.Insert  (AnnInsert)
+import           Hasura.SQL.Backend
 
 -- | For storing both a normal GQLContext and one for the backend variant.
 -- Currently, this is to enable the backend variant to have certain insert
@@ -48,8 +49,8 @@ data RoleContext a
 $(deriveToJSON (aesonDrop 5 snakeCase) ''RoleContext)
 
 data GQLContext = GQLContext
-  { gqlQueryParser    :: ParserFn (InsOrdHashMap G.Name (QueryRootField UnpreparedValue))
-  , gqlMutationParser :: Maybe (ParserFn (InsOrdHashMap G.Name (MutationRootField UnpreparedValue)))
+  { gqlQueryParser    :: ParserFn (InsOrdHashMap G.Name (QueryRootField (UnpreparedValue 'Postgres)))
+  , gqlMutationParser :: Maybe (ParserFn (InsOrdHashMap G.Name (MutationRootField (UnpreparedValue 'Postgres))))
   }
 
 instance J.ToJSON GQLContext where
@@ -71,10 +72,10 @@ traverseDB :: forall db db' remote action raw f
        -> RootField db remote action raw
        -> f (RootField db' remote action raw)
 traverseDB f = \case
-  RFDB x -> RFDB <$> f x
+  RFDB x     -> RFDB <$> f x
   RFRemote x -> pure $ RFRemote x
   RFAction x -> pure $ RFAction x
-  RFRaw x -> pure $ RFRaw x
+  RFRaw x    -> pure $ RFRaw x
 
 traverseAction :: forall db remote action action' raw f
         . Applicative f
@@ -82,18 +83,18 @@ traverseAction :: forall db remote action action' raw f
        -> RootField db remote action raw
        -> f (RootField db remote action' raw)
 traverseAction f = \case
-  RFDB x -> pure $ RFDB x
+  RFDB x     -> pure $ RFDB x
   RFRemote x -> pure $ RFRemote x
   RFAction x -> RFAction <$> f x
-  RFRaw x -> pure $ RFRaw x
+  RFRaw x    -> pure $ RFRaw x
 
 data QueryDB b v
-  = QDBSimple      (RQL.AnnSimpleSelG       b v)
-  | QDBPrimaryKey  (RQL.AnnSimpleSelG       b v)
-  | QDBAggregation (RQL.AnnAggregateSelectG b v)
-  | QDBConnection  (RQL.ConnectionSelect    b v)
+  = QDBSimple      (IR.AnnSimpleSelG       b v)
+  | QDBPrimaryKey  (IR.AnnSimpleSelG       b v)
+  | QDBAggregation (IR.AnnAggregateSelectG b v)
+  | QDBConnection  (IR.ConnectionSelect    b v)
 
-data ActionQuery (b :: Backend) v
+data ActionQuery (b :: BackendType) v
   = AQQuery !(RQL.AnnActionExecution b v)
   | AQAsync !(RQL.AnnActionAsyncQuery b v)
 
@@ -101,12 +102,15 @@ type RemoteField = (RQL.RemoteSchemaInfo, G.Field G.NoFragments G.Name)
 
 type QueryRootField v = RootField (QueryDB 'Postgres v) RemoteField (ActionQuery 'Postgres v) J.Value
 
-data MutationDB (b :: Backend) v
-  = MDBInsert (AnnInsert   b v)
-  | MDBUpdate (RQL.AnnUpdG b v)
-  | MDBDelete (RQL.AnnDelG b v)
+data MutationDB (b :: BackendType) v
+  = MDBInsert (IR.AnnInsert   b v)
+  | MDBUpdate (IR.AnnUpdG b v)
+  | MDBDelete (IR.AnnDelG b v)
+  | MDBFunction (IR.AnnSimpleSelG b v)
+  -- ^ This represents a VOLATILE function, and is AnnSimpleSelG for easy
+  -- re-use of non-VOLATILE function tracking code.
 
-data ActionMutation (b :: Backend) v
+data ActionMutation (b :: BackendType) v
   = AMSync !(RQL.AnnActionExecution b v)
   | AMAsync !RQL.AnnActionMutationAsync
 
@@ -114,4 +118,4 @@ type MutationRootField v =
   RootField (MutationDB 'Postgres v) RemoteField (ActionMutation 'Postgres v) J.Value
 
 type SubscriptionRootField v = RootField (QueryDB 'Postgres v) Void (RQL.AnnActionAsyncQuery 'Postgres v) Void
-type SubscriptionRootFieldResolved = RootField (QueryDB 'Postgres S.SQLExp) Void (RQL.AnnSimpleSel 'Postgres) Void
+type SubscriptionRootFieldResolved = RootField (QueryDB 'Postgres PG.SQLExp) Void (IR.AnnSimpleSel 'Postgres) Void
