@@ -4,8 +4,8 @@ ALTER TABLE hdb_catalog.event_triggers
 ALTER TABLE hdb_catalog.event_triggers
   DROP CONSTRAINT IF EXISTS event_triggers_schema_name_table_name_fkey;
 
--- since we removed the foreign key constraint with hdb_catalog.hdb_table which had 'ON UPDATE CASCADE'
--- (see Note [Diff-and-patch event triggers on replace] in Hasura.RQL.DDL.EventTrigger), we perform the update using trigger
+-- since we removed the foreign key constraint with hdb_catalog.hdb_table which had 'ON UPDATE CASCADE',
+-- we perform the update using trigger
 CREATE OR REPLACE FUNCTION hdb_catalog.event_trigger_table_name_update()
 RETURNS TRIGGER
 LANGUAGE PLPGSQL
@@ -37,17 +37,17 @@ WITH valid_event_triggers AS (
 )
 SELECT routine_name FROM information_schema.routines
 WHERE routine_type='FUNCTION' AND specific_schema='hdb_views' AND routine_name NOT IN (
-  SELECT 'notify_hasura_' || name || '_INSERT' FROM valid_event_triggers
+  SELECT left('notify_hasura_' || name || '_INSERT', 63) FROM valid_event_triggers -- trigger names are truncated to 63 chars
   UNION
-  SELECT 'notify_hasura_' || name || '_UPDATE' FROM valid_event_triggers
+  SELECT left('notify_hasura_' || name || '_UPDATE', 63) FROM valid_event_triggers
   UNION
-  select 'notify_hasura_' || name || '_DELETE' FROM valid_event_triggers
+  select left('notify_hasura_' || name || '_DELETE', 63) FROM valid_event_triggers
 );
 
 DO $$ DECLARE
 r RECORD;
 BEGIN
   FOR r IN (SELECT routine_name from invalid_triggers) LOOP
-    EXECUTE 'DROP FUNCTION IF EXISTS hdb_views.' || quote_ident(r.routine_name) || ' CASCADE';
+    EXECUTE 'DROP FUNCTION IF EXISTS hdb_views.' || quote_ident(r.routine_name) || '() CASCADE'; -- without '()' here, PG < 10 will throw error
   END LOOP;
 END $$;

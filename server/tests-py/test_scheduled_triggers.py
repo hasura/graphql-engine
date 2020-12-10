@@ -218,22 +218,16 @@ class TestCronTrigger(object):
         st,resp = hge_ctx.v1q(q)
         assert st == 200, resp
 
-        sql = '''
-        select header_conf::json
-        from hdb_catalog.hdb_cron_triggers where
-        name = '{}' '''
-        q = {
-            "type":"run_sql",
-            "args":{
-                "sql":sql.format(self.cron_trigger_name)
-            }
-        }
-        st,resp = hge_ctx.v1q(q)
+        st, resp = hge_ctx.v1q({'type': 'export_metadata', 'args': {}})
         assert st == 200,resp
-        assert json.loads(resp['result'][1][0]) == [{
-            "name":"header-name",
-            "value":"header-value"
-        }]
+
+        all_cron_triggers = resp['cron_triggers']
+        for cron_trigger in all_cron_triggers:
+            if cron_trigger['name'] == self.cron_trigger_name:
+                assert cron_trigger['headers'] == [{
+                    "name":"header-name",
+                    "value":"header-value"
+                }]
 
         # Get timestamps in UTC from the db to compare it with
         # the croniter generated timestamps

@@ -18,8 +18,8 @@ import           Hasura.HTTP
 import           Hasura.Logging
 import           Hasura.Prelude
 import           Hasura.RQL.Types
-import           Hasura.Server.Init
 import           Hasura.Server.Telemetry.Counters
+import           Hasura.Server.Types
 import           Hasura.Server.Version
 import           Hasura.Session
 
