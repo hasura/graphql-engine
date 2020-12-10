@@ -321,17 +321,19 @@ combineSelectPermInfos
    . (Backend b, MonadError QErr m)
   => (NE.NonEmpty (SelPermInfo b))
   -> m (CombinedSelPermInfo b)
-combineSelectPermInfos selPermInfos =
-  foldrM combine emptyCombinedSelPermInfo selPermInfos
+combineSelectPermInfos (headSelPermInfo NE.:| restSelPermInfos) = do
+  headCombinedSelPermInfo <- do
+    headCaseBoolExp <- getColumnCaseBoolExp (spiFilter headSelPermInfo)
+    let SelPermInfo cols scalarComputedFields filter' limit allowAgg reqHdrs = headSelPermInfo
+        colsWithFilter = M.fromList $ map (, Just headCaseBoolExp) $ Set.toList cols
+    pure $ CombinedSelPermInfo colsWithFilter scalarComputedFields filter' limit allowAgg reqHdrs
+  foldrM combine headCombinedSelPermInfo restSelPermInfos
   where
     combine :: SelPermInfo b -> CombinedSelPermInfo b -> m (CombinedSelPermInfo b)
     combine selPermInfo combinedSelPermInfo = do
-      let CombinedSelPermInfo combinedCols scalarComputedFields
+      let CombinedSelPermInfo combinedCols combinedScalarComputedFields
            combinedFilter combinedLimit combinedAllowAgg combinedReqHdrs = combinedSelPermInfo
-      columnCaseBoolExp <-
-        for (spiFilter selPermInfo) $ \case
-          AVCol colInfo ops -> pure (colInfo, ops)
-          AVRel _ _         -> throw500 "unexpected: relationships in boolean expressions are not supported with multiple roles"
+      columnCaseBoolExp <- getColumnCaseBoolExp (spiFilter selPermInfo)
       let colsWithFilter = M.fromList $ map (, Just columnCaseBoolExp) $ Set.toList (spiCols selPermInfo)
       pure $ CombinedSelPermInfo
             { cspiCols = M.unionWith (\l r ->
@@ -343,7 +345,7 @@ combineSelectPermInfos selPermInfos =
                                      )
                                      combinedCols
                                      colsWithFilter
-            , cspiScalarComputedFields = Set.intersection scalarComputedFields (spiScalarComputedFields selPermInfo)
+            , cspiScalarComputedFields = combinedScalarComputedFields `Set.intersection` (spiScalarComputedFields selPermInfo)
             , cspiFilter = BoolOr [combinedFilter, (spiFilter selPermInfo)]
             , cspiLimit =
                 case (combinedLimit, spiLimit selPermInfo) of
@@ -355,14 +357,7 @@ combineSelectPermInfos selPermInfos =
             , cspiRequiredHeaders = nub $ combinedReqHdrs <> (spiRequiredHeaders selPermInfo)
             }
 
-    -- we won't need this, by using the first element of the NonEmpty
-    -- list as the accumulator in `foldrM`
-    emptyCombinedSelPermInfo =
-      CombinedSelPermInfo
-      { cspiCols = mempty
-      , cspiScalarComputedFields = mempty
-      , cspiFilter = BoolNot $ gBoolExpTrue -- TODO: is there anything for false? '^^
-      , cspiLimit = Nothing
-      , cspiAllowAgg = False
-      , cspiRequiredHeaders = mempty
-      }
+    getColumnCaseBoolExp boolExp =
+      for boolExp $ \case
+        AVCol colInfo ops -> pure (colInfo, ops)
+        AVRel _ _         -> throw500 "unexpected: relationships in boolean expressions are not supported for multiple roles"
