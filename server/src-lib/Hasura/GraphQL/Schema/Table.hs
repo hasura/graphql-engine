@@ -107,7 +107,7 @@ tableSelectPermissions table = do
   roleSetPermissions <-
     for (toList roleSet) $ \roleName ->
       (_permSel =<<) <$> tablePermissions table roleName
-  let nonEmptySelPerms = NE.nonEmpty =<< (sequenceA $ filter isJust roleSetPermissions)
+  let nonEmptySelPerms = NE.nonEmpty =<< sequenceA (filter isJust roleSetPermissions)
   traverse combineSelectPermInfos nonEmptySelPerms
 
 tableSelectFields

@@ -571,7 +571,7 @@ replaceRemoteFields compositeJson remoteServerResponse =
                            (extractAtPath rest)
                            (AO.lookup (G.unName h) o)
           AO.Array arr -> AO.array <$> mapM (extractAtPath path) (toList arr)
-          _            -> throw500 $ "expecting array or object in remote response at path " <> T.pack (show path)
+          _            -> throw500 $ "expecting array or object in remote response at path " <> (tshow path)
 
 -- | Fold nested 'FieldCall's into a bare 'Field', inserting the passed
 -- selection set at the leaf of the tree we construct.

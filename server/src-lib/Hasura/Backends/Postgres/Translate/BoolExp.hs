@@ -365,7 +365,7 @@ convColRhs tableQual = \case
     -- Convert the where clause on the relationship
     curVarNum <- get
     put $ curVarNum + 1
-    let newIdentifier  = Identifier $ "_be_" <> T.pack (show curVarNum) <> "_"
+    let newIdentifier  = Identifier $ "_be_" <> (tshow curVarNum) <> "_"
                    <> snakeCaseQualifiedObject relTN
         newIdenQ = S.QualifiedIdentifier newIdentifier Nothing
     annRelBoolExp <- convBoolRhs' newIdenQ nesAnn
