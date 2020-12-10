@@ -180,7 +180,7 @@ convertQuerySelSet env logger gqlContext userInfo manager reqHeaders directives 
   queryPlan <- for unpreparedQueries \unpreparedQuery -> do
     (preparedQuery, PlanningSt _ _ planVals expectedVariables)
       <- flip runStateT initPlanningSt
-         $ traverseQueryRootField prepareWithPlan unpreparedQuery
+      $ traverseQueryRootField prepareWithPlan unpreparedQuery
            >>= traverseAction convertActionQuery
     validateSessionVariables expectedVariables $ _uiSession userInfo
     traverseDB (pure . irToRootFieldPlan planVals) preparedQuery

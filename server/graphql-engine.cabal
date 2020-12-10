@@ -224,6 +224,7 @@ library
 
                      -- pretty printer
                      , ansi-wl-pprint
+                     , pretty-simple
 
                      -- for capturing various metrics
                      , ekg-core

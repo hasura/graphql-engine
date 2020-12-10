@@ -251,9 +251,9 @@ resolveAsyncActionQuery userInfo annAction =
              processOutputSelectionSet inputTableArgument outputType
              definitionList annFields stringifyNumerics
 
-        AsyncId        -> mkAnnFldFromPGCol "id" PGUUID
-        AsyncCreatedAt -> mkAnnFldFromPGCol "created_at" PGTimeStampTZ
-        AsyncErrors    -> mkAnnFldFromPGCol "errors" PGJSONB
+        AsyncId        -> mkAnnFldFromPGCol "id" PGUUID Nothing
+        AsyncCreatedAt -> mkAnnFldFromPGCol "created_at" PGTimeStampTZ Nothing
+        AsyncErrors    -> mkAnnFldFromPGCol "errors" PGJSONB Nothing
 
       tableFromExp = RS.FromTable actionLogTable
       tableArguments = RS.noSelectArgs
@@ -281,10 +281,12 @@ resolveAsyncActionQuery userInfo annAction =
                             PGValJSONB $ Q.JSONB $ J.toJSON $ _uiSession userInfo
           sessionVarsColumnEq = BoolFld $ AVCol sessionVarsColumnInfo [AEQ True sessionVarValue]
 
+          adminRoleSet = (RoleSet $ Set.singleton adminRoleName)
+
       -- For non-admin roles, accessing an async action's response should be allowed only for the user
       -- who initiated the action through mutation. The action's response is accessible for a query/subscription
       -- only when it's session variables are equal to that of action's.
-      in if isAdmin (_uiRole userInfo) then actionIdColumnEq
+      in if (adminRoleSet == (_uiRole userInfo))  then actionIdColumnEq
          else BoolAnd [actionIdColumnEq, sessionVarsColumnEq]
 
 data ActionLogItem

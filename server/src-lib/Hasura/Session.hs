@@ -3,6 +3,7 @@ module Hasura.Session
   , mkRoleName
   , adminRoleName
   , isAdmin
+  , isAdminRoleSet
   , roleNameToTxt
   , SessionVariable
   , mkSessionVariable
@@ -25,6 +26,7 @@ module Hasura.Session
   , mkUserInfo
   , adminUserInfo
   , BackendOnlyFieldAccess(..)
+  , RoleSet(..)
   ) where
 
 import           Hasura.Prelude
@@ -40,6 +42,8 @@ import           Data.Aeson
 import           Data.Aeson.Types           (Parser, toJSONKeyText)
 import           Data.Text.Extended
 import           Data.Text.NonEmpty
+import           Data.List                  (intersperse)
+
 
 import           Hasura.Incremental         (Cacheable)
 import           Hasura.RQL.Types.Common    (adminText)
@@ -55,6 +59,24 @@ newtype RoleName
 instance ToTxt RoleName where
   toTxt = roleNameToTxt
 
+newtype RoleSet = RoleSet { unRoleSet :: HashSet RoleName }
+  deriving (Show, Eq, ToJSON, FromJSON, Hashable)
+
+instance ToTxt RoleSet where
+  toTxt (RoleSet roleSet) = T.concat $ intersperse "," (toTxt <$> toList roleSet)
+
+instance ToJSONKey RoleSet where
+  toJSONKey  = toJSONKeyText toTxt
+
+parseRoleSet :: Text -> Parser RoleSet
+parseRoleSet t = do
+  let rolesTxt = T.split (==',') t
+  roleNames <- mapM (flip onNothing (fail "invalid role name, a role name cannot be empty") . mkRoleName) rolesTxt
+  pure $ RoleSet (Set.fromList roleNames)
+
+instance FromJSONKey RoleSet where
+  fromJSONKey = FromJSONKeyTextParser parseRoleSet
+
 roleNameToTxt :: RoleName -> Text
 roleNameToTxt = unNonEmptyText . getRoleTxt
 
@@ -66,6 +88,9 @@ adminRoleName = RoleName adminText
 
 isAdmin :: RoleName -> Bool
 isAdmin = (adminRoleName ==)
+
+isAdminRoleSet :: RoleSet -> Bool
+isAdminRoleSet = (RoleSet (Set.singleton adminRoleName) ==)
 
 newtype SessionVariable = SessionVariable {unSessionVariable :: CI.CI Text}
   deriving (Show, Eq, Hashable, IsString, Cacheable, Data, NFData)
@@ -157,7 +182,7 @@ instance Hashable BackendOnlyFieldAccess
 
 data UserInfo
   = UserInfo
-  { _uiRole                   :: !RoleName
+  { _uiRole                   :: !RoleSet
   , _uiSession                :: !SessionVariables
   , _uiBackendOnlyFieldAccess :: !BackendOnlyFieldAccess
   } deriving (Show, Eq, Generic)
@@ -178,22 +203,21 @@ mkUserInfo
   :: forall m. (MonadError QErr m)
   => UserRoleBuild -> UserAdminSecret -> SessionVariables -> m UserInfo
 mkUserInfo roleBuild userAdminSecret sessionVariables = do
+  maybeSessionRole <- maybeRoleFromSessionVariables sessionVariables
   roleName <- case roleBuild of
     URBFromSessionVariables -> onNothing maybeSessionRole $
       throw400 InvalidParams $ userRoleHeader <> " not found in session variables"
-    URBFromSessionVariablesFallback role -> pure $ fromMaybe role maybeSessionRole
-    URBPreDetermined role -> pure role
+    URBFromSessionVariablesFallback role -> pure $ fromMaybe (RoleSet (Set.singleton role)) maybeSessionRole
+    URBPreDetermined role -> pure $ RoleSet (Set.singleton role)
   backendOnlyFieldAccess <- getBackendOnlyFieldAccess
   let modifiedSession = modifySessionVariables roleName sessionVariables
   pure $ UserInfo roleName modifiedSession backendOnlyFieldAccess
   where
-    maybeSessionRole = maybeRoleFromSessionVariables sessionVariables
-
     -- | Add x-hasura-role header and remove admin secret headers
-    modifySessionVariables :: RoleName -> SessionVariables -> SessionVariables
-    modifySessionVariables roleName =
+    modifySessionVariables :: RoleSet -> SessionVariables -> SessionVariables
+    modifySessionVariables roleSet =
       SessionVariables
-      . Map.insert userRoleHeader (roleNameToTxt roleName)
+      . Map.insert userRoleHeader (toTxt roleSet)
       . Map.delete adminSecretHeader
       . Map.delete deprecatedAccessKeyHeader
       . unSessionVariables
@@ -215,10 +239,28 @@ mkUserInfo roleBuild userAdminSecret sessionVariables = do
                 Right privilege -> pure $ if privilege then BOFAAllowed else BOFADisallowed
 
 
-maybeRoleFromSessionVariables :: SessionVariables -> Maybe RoleName
+maybeRoleFromSessionVariables
+  :: MonadError QErr m
+  => SessionVariables
+  -> m (Maybe RoleSet)
 maybeRoleFromSessionVariables sessionVariables =
   -- returns Nothing if x-hasura-role is an empty string
-  getSessionVariableValue userRoleHeader sessionVariables >>= mkRoleName
+  let usersSessionVarVal = getSessionVariableValue userRolesHeader sessionVariables
+  in
+  case usersSessionVarVal of
+    Nothing -> do
+      let roleName = getSessionVariableValue userRoleHeader sessionVariables >>= mkRoleName
+      pure $ RoleSet . Set.singleton <$> roleName
+    Just rolesTxt -> do
+      let roleTxtArray = T.split (==',') rolesTxt
+      case roleTxtArray of
+        [] -> pure Nothing
+        _  -> do
+          -- TODO: can we use the `parseRoleSet` function defined in the `Hasura.Session`
+          -- module here?
+          roleNames <-
+            mapM (flip onNothing (throw400 InvalidHeaders "invalid role name, a role name cannot be empty") . mkRoleName) roleTxtArray
+          pure $ Just $ RoleSet (Set.fromList roleNames)
 
 adminUserInfo :: UserInfo
-adminUserInfo = UserInfo adminRoleName mempty BOFADisallowed
+adminUserInfo = UserInfo (RoleSet $ Set.singleton adminRoleName) mempty BOFADisallowed

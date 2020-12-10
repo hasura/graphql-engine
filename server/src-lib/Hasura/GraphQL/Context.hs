@@ -16,6 +16,7 @@ module Hasura.GraphQL.Context
   , MutationRootField
   , SubscriptionRootField
   , SubscriptionRootFieldResolved
+  , RoleSet(..)
   ) where
 
 import           Hasura.Prelude
@@ -36,6 +37,8 @@ import qualified Hasura.RQL.Types.RemoteSchema    as RQL
 
 import           Hasura.GraphQL.Parser
 import           Hasura.SQL.Backend
+
+import           Hasura.Session
 
 -- | For storing both a normal GQLContext and one for the backend variant.
 -- Currently, this is to enable the backend variant to have certain insert

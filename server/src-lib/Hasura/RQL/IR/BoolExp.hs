@@ -22,8 +22,12 @@ module Hasura.RQL.IR.BoolExp
 
        , AnnBoolExpFld(..)
        , AnnBoolExp
+       , AnnColumnCaseBoolExpPartialSQL
+       , AnnColumnCaseBoolExp
        , traverseAnnBoolExp
        , fmapAnnBoolExp
+       , traverseAnnColumnCaseBoolExp
+       , fmapAnnColumnCaseBoolExp
        , annBoolExpTrue
        , andAnnBoolExps
 
@@ -283,7 +287,6 @@ instance (Backend b, NFData a) => NFData (OpExpG b a)
 instance (Backend b, Cacheable a) => Cacheable (OpExpG b a)
 instance (Backend b, Hashable a) => Hashable (OpExpG b a)
 
-
 opExpDepCol :: OpExpG backend a -> Maybe (Column backend)
 opExpDepCol = \case
   CEQ c  -> Just c
@@ -367,6 +370,11 @@ instance (Backend b, Hashable (ColumnInfo b), Hashable a) => Hashable (AnnBoolEx
 type AnnBoolExp b a
   = GBoolExp b (AnnBoolExpFld b a)
 
+type AnnColumnCaseBoolExp b a
+  = GBoolExp b (ColumnInfo b, [OpExpG b a])
+
+type AnnColumnCaseBoolExpPartialSQL b = AnnColumnCaseBoolExp b (PartialSQLExp b)
+
 traverseAnnBoolExp
   :: (Applicative f)
   => (a -> f b)
@@ -379,12 +387,27 @@ traverseAnnBoolExp f =
    AVRel relInfo annBoolExp ->
      AVRel relInfo <$> traverseAnnBoolExp f annBoolExp
 
+traverseAnnColumnCaseBoolExp
+  :: (Applicative f)
+  => (a -> f b)
+  -> AnnColumnCaseBoolExp backend a
+  -> f (AnnColumnCaseBoolExp backend b)
+traverseAnnColumnCaseBoolExp f = traverse (traverse (traverse (traverse f)))
+
 fmapAnnBoolExp
   :: (a -> b)
   -> AnnBoolExp backend a
   -> AnnBoolExp backend b
 fmapAnnBoolExp f =
   runIdentity . traverseAnnBoolExp (pure . f)
+
+fmapAnnColumnCaseBoolExp
+  :: (a -> b)
+  -> AnnColumnCaseBoolExp backend a
+  -> AnnColumnCaseBoolExp backend b
+fmapAnnColumnCaseBoolExp f =
+  runIdentity . traverseAnnColumnCaseBoolExp (pure . f)
+
 
 annBoolExpTrue :: AnnBoolExp backend a
 annBoolExpTrue = gBoolExpTrue

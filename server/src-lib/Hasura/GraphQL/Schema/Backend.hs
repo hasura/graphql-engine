@@ -66,18 +66,18 @@ class Backend b => BackendSchema (b :: BackendType) where
   aggregateOrderByCountType :: ScalarType b
   -- | Computed field parser
   computedField
-    :: (BackendSchema b, MonadSchema n m, MonadTableInfo b r m, MonadRole r m, Has QueryContext r)
+    :: (BackendSchema b, MonadSchema n m, MonadTableInfo b r m, MonadRoleSet r m, Has QueryContext r)
     => ComputedFieldInfo b
-    -> SelPermInfo b
+    -> CombinedSelPermInfo b
     -> m (Maybe (FieldParser n (AnnotatedField b)))
   -- | The 'node' root field of a Relay request.
   node
     :: ( BackendSchema b
        , MonadSchema n m
        , MonadTableInfo b r m
-       , MonadRole r m
+       , MonadRoleSet r m
        , Has QueryContext r
        )
-    => m (Parser 'Output n (HashMap (TableName b) (SelPermInfo b, PrimaryKeyColumns b, AnnotatedFields b)))
+    => m (Parser 'Output n (HashMap (TableName b) (CombinedSelPermInfo b, PrimaryKeyColumns b, AnnotatedFields b)))
 
 type ComparisonExp b = OpExpG b (UnpreparedValue b)

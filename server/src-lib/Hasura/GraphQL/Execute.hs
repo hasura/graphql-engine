@@ -117,7 +117,7 @@ getExecPlanPartial
 getExecPlanPartial userInfo sc queryType req =
   (getGCtx ,) <$> getQueryParts req
   where
-    roleName = _uiRole userInfo
+    roleSet = _uiRole userInfo
 
     contextMap =
       case queryType of
@@ -131,7 +131,9 @@ getExecPlanPartial userInfo sc queryType req =
 
     getGCtx :: C.GQLContext
     getGCtx =
-      case Map.lookup roleName contextMap of
+      -- FIXME: the below should not be a singleton of the roleName
+      -- We should be passing the RoleSet here from `X-Hasura-Roles`
+      case Map.lookup roleSet contextMap of
         Nothing  -> defaultContext
         Just (C.RoleContext frontend backend) ->
           case _uiBackendOnlyFieldAccess userInfo of
@@ -189,7 +191,7 @@ checkQueryInAllowlist
 checkQueryInAllowlist enableAL userInfo req sc =
   -- only for non-admin roles
   -- check if query is in allowlist
-  when (enableAL && (_uiRole userInfo /= adminRoleName)) $ do
+  when (enableAL && (_uiRole userInfo /= RoleSet (HS.singleton adminRoleName))) $ do
     let notInAllowlist =
           not $ isQueryInAllowlist (_grQuery req) (scAllowlist sc)
     when notInAllowlist $ modifyQErr modErr $ throw400 ValidationFailed "query is not allowed"

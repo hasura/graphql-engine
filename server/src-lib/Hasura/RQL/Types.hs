@@ -27,9 +27,10 @@ module Hasura.RQL.Types
   , askPGColInfo
   , askComputedFieldInfo
   , askRemoteRel
-  , askCurRole
+  , askCurRoles
   , askEventTriggerInfo
   , askTabInfoFromTrigger
+  , combineSelectPermInfos
 
   , HeaderObj
 
@@ -40,9 +41,12 @@ module Hasura.RQL.Types
 import           Hasura.Prelude
 
 import qualified Data.HashMap.Strict                 as M
+import qualified Data.HashSet                        as Set
+import qualified Data.List.NonEmpty                  as NE
 import qualified Network.HTTP.Client                 as HTTP
 
 import           Control.Monad.Unique
+import           Data.List                           (nub)
 import           Data.Text.Extended
 
 import           Hasura.Backends.Postgres.Connection as R
@@ -299,7 +303,60 @@ askRemoteRel fieldInfoMap relName = do
     _                                      ->
       throw400 UnexpectedPayload "expecting a remote relationship"
 
-askCurRole :: (UserInfoM m) => m RoleName
-askCurRole = _uiRole <$> askUserInfo
+askCurRoles :: (UserInfoM m) => m RoleSet
+askCurRoles = _uiRole <$> askUserInfo
 
 type HeaderObj = M.HashMap Text Text
+
+-- TODO: document this function
+combineSelectPermInfos
+  :: forall m b
+   . (Backend b, MonadError QErr m)
+  => (NE.NonEmpty (SelPermInfo b))
+  -> m (CombinedSelPermInfo b)
+combineSelectPermInfos (headSelPermInfo NE.:| []) = do
+  -- when there's only a single select perm info in the list, we want to keep the old
+  -- behaviour i.e. there should be no case boolean expressions on the columns
+  let SelPermInfo cols scalarComputedFields filter' limit allowAgg reqHdrs = headSelPermInfo
+      colsWithFilter = M.fromList $ map (, Nothing) $ Set.toList cols
+  pure $ CombinedSelPermInfo colsWithFilter scalarComputedFields filter' limit allowAgg reqHdrs
+combineSelectPermInfos (headSelPermInfo NE.:| restSelPermInfos) = do
+  headCombinedSelPermInfo <- do
+    headCaseBoolExp <- getColumnCaseBoolExp (spiFilter headSelPermInfo)
+    let SelPermInfo cols scalarComputedFields filter' limit allowAgg reqHdrs = headSelPermInfo
+        colsWithFilter = M.fromList $ map (, Just headCaseBoolExp) $ Set.toList cols
+    pure $ CombinedSelPermInfo colsWithFilter scalarComputedFields filter' limit allowAgg reqHdrs
+  foldrM combine headCombinedSelPermInfo restSelPermInfos
+  where
+    combine :: SelPermInfo b -> CombinedSelPermInfo b -> m (CombinedSelPermInfo b)
+    combine selPermInfo combinedSelPermInfo = do
+      let CombinedSelPermInfo combinedCols combinedScalarComputedFields
+           combinedFilter combinedLimit combinedAllowAgg combinedReqHdrs = combinedSelPermInfo
+      columnCaseBoolExp <- getColumnCaseBoolExp (spiFilter selPermInfo)
+      let colsWithFilter = M.fromList $ map (, Just columnCaseBoolExp) $ Set.toList (spiCols selPermInfo)
+      pure $ CombinedSelPermInfo
+            { cspiCols = M.unionWith (\l r ->
+                                        case (l, r) of
+                                          (Nothing, Nothing) -> Nothing
+                                          (Just caseBoolExp, Nothing)  -> Just caseBoolExp
+                                          (Nothing, Just caseBoolExp)  -> Just caseBoolExp
+                                          (Just caseBoolExpL, Just caseBoolExpR) -> Just $ BoolOr [caseBoolExpL, caseBoolExpR]
+                                     )
+                                     combinedCols
+                                     colsWithFilter
+            , cspiScalarComputedFields = combinedScalarComputedFields `Set.intersection` (spiScalarComputedFields selPermInfo)
+            , cspiFilter = BoolOr [combinedFilter, (spiFilter selPermInfo)]
+            , cspiLimit =
+                case (combinedLimit, spiLimit selPermInfo) of
+                  (Nothing, Nothing) -> Nothing
+                  (Just l, Nothing)  -> Just l
+                  (Nothing, Just r)  -> Just r
+                  (Just l , Just r)  -> Just $ min l r
+            , cspiAllowAgg = combinedAllowAgg || (spiAllowAgg selPermInfo)
+            , cspiRequiredHeaders = nub $ combinedReqHdrs <> (spiRequiredHeaders selPermInfo)
+            }
+
+    getColumnCaseBoolExp boolExp =
+      for boolExp $ \case
+        AVCol colInfo ops -> pure (colInfo, ops)
+        AVRel _ _         -> throw500 "unexpected: relationships in boolean expressions are not supported for multiple roles"

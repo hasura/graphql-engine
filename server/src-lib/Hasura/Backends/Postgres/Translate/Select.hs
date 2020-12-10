@@ -33,7 +33,6 @@ import           Hasura.RQL.IR.Select
 import           Hasura.RQL.Types                           hiding (Identifier)
 import           Hasura.SQL.Types
 
-
 selectQuerySQL :: JsonAggSelect -> AnnSimpleSel 'Postgres -> Q.Query
 selectQuerySQL jsonAggSelect sel =
   Q.fromBuilder $ toSQL $ mkSQLSelect jsonAggSelect sel
@@ -156,7 +155,7 @@ withJsonAggExtr permLimitSubQuery ordBy alias =
     (newOBItems, obCols, newOBAliases) = maybe ([], [], []) transformOrderBy ordBy
     transformOrderBy (S.OrderByExp l) = unzip3 $
       flip map (zip (toList l) [1..]) $ \(obItem, i::Int) ->
-                 let iden = Identifier $ "ob_col_" <> T.pack (show i)
+                 let iden = Identifier $ "ob_col_" <> (tshow i)
                  in ( obItem{S.oColumn = S.SEIdentifier iden}
                     , S.oColumn obItem
                     , iden
@@ -601,7 +600,7 @@ processSelectParams sourcePrefixes fieldAlias similarArrFields selectFrom
                   orderByM
   let fromItem = selectFromToFromItem (_pfBase sourcePrefixes) selectFrom
       (maybeDistinct, distinctExtrs) =
-        maybe (Nothing, []) (first Just) $ processDistinctOnColumns thisSourcePrefix <$> distM
+          maybe (Nothing, []) (first Just) $ processDistinctOnColumns thisSourcePrefix <$> distM
       finalWhere = toSQLBoolExp (selectFromToQual selectFrom) $
                    maybe permFilter (andAnnBoolExps permFilter) whereM
       selectSource = SelectSource thisSourcePrefix fromItem maybeDistinct finalWhere
@@ -745,9 +744,10 @@ aggregateFieldsToExtractorExps sourcePrefix aggregateFields =
     mkColExp _ = Nothing
 
 processAnnFields
-  :: forall m . ( MonadReader Bool m
-               , MonadWriter (JoinTree 'Postgres) m
-               )
+  :: forall m
+   . ( MonadReader Bool m
+     , MonadWriter (JoinTree 'Postgres) m
+     )
   => Identifier
   -> FieldName
   -> SimilarArrayFields
@@ -802,7 +802,7 @@ processAnnFields sourcePrefix fieldAlias similarArrFields annFields = do
              )
 
   pure $
-    -- posttgres ignores anything beyond 63 chars for an iden
+    -- postgres ignores anything beyond 63 chars for an iden
     -- in this case, we'll need to use json_build_object function
     -- json_build_object is slower than row_to_json hence it is only
     -- used when needed
@@ -817,11 +817,19 @@ processAnnFields sourcePrefix fieldAlias similarArrFields annFields = do
     toRowToJsonExtr (fieldName, fieldExp) =
       S.Extractor fieldExp $ Just $ S.toAlias fieldName
 
-    toSQLCol :: AnnColumnField 'Postgres -> m S.SQLExp
-    toSQLCol (AnnColumnField col asText colOpM) = do
+    toSQLCol :: AnnColumnField 'Postgres S.SQLExp -> m S.SQLExp
+    toSQLCol (AnnColumnField col asText colOpM caseBoolExpAndTableMaybe) = do
       strfyNum <- ask
-      pure $ toJSONableExp strfyNum (pgiType col) asText $ withColumnOp colOpM $
-             S.mkQIdenExp (mkBaseTableAlias sourcePrefix) $ pgiColumn col
+      let sqlExpression =
+            withColumnOp colOpM $
+            S.mkQIdenExp (mkBaseTableAlias sourcePrefix) $ pgiColumn col
+          finalSQLExpression =
+            case caseBoolExpAndTableMaybe of
+              Nothing          -> sqlExpression
+              Just caseBoolExp ->
+                let boolExp = S.simplifyBoolExp $ toSQLColumnCaseBoolExp caseBoolExp
+                in S.SECond boolExp sqlExpression S.SENull
+      pure $ toJSONableExp strfyNum (pgiType col) asText finalSQLExpression
 
     fromScalarComputedField :: ComputedFieldScalarSelect 'Postgres S.SQLExp -> m S.SQLExp
     fromScalarComputedField computedFieldScalar = do

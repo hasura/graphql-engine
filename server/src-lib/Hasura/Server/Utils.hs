@@ -47,6 +47,9 @@ gzipHeader = ("Content-Encoding", "gzip")
 userRoleHeader :: IsString a => a
 userRoleHeader = "x-hasura-role"
 
+userRolesHeader :: IsString a => a
+userRolesHeader = "x-hasura-roles"
+
 deprecatedAccessKeyHeader :: IsString a => a
 deprecatedAccessKeyHeader = "x-hasura-access-key"
 
@@ -146,7 +149,7 @@ httpExceptToJSON e = case e of
   _        -> toJSON $ show e
   where
     showProxy (HC.Proxy h p) =
-      "host: " <> bsToTxt h <> " port: " <> T.pack (show p)
+      "host: " <> bsToTxt h <> " port: " <> (tshow p)
 
 -- ignore the following request headers from the client
 commonClientHeadersIgnored :: (IsString a) => [a]

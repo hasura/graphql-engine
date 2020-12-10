@@ -12,6 +12,7 @@ import           Data.Aeson                  ((.=))
 import qualified Data.Aeson                  as J
 import           Data.Parser.JSONPath
 import qualified Data.HashMap.Strict         as Map
+import qualified Data.HashSet                as Set
 import qualified Network.HTTP.Types          as N
 
 import           Hasura.RQL.Types
@@ -34,6 +35,9 @@ allowedRolesClaimText = sessionVariableToText allowedRolesClaim
 defaultRoleClaimText :: Text
 defaultRoleClaimText = sessionVariableToText defaultRoleClaim
 
+adminRoleSet :: RoleSet
+adminRoleSet = convertRoleNameToRoleSet adminRoleName
+
 -- Unit test the core of our authentication code. This doesn't test the details
 -- of resolving roles from JWT or webhook.
 getUserInfoWithExpTimeTests :: Spec
@@ -43,7 +47,7 @@ getUserInfoWithExpTimeTests = describe "getUserInfo" $ do
         :: J.Object
         -- ^ For JWT, inject the raw claims object as though returned from 'processAuthZHeader'
         -- acting on an 'Authorization' header from the request
-        -> [N.Header] -> AuthMode -> IO (Either Code RoleName)
+        -> [N.Header] -> AuthMode -> IO (Either Code RoleSet)
       getUserInfoWithExpTime claims rawHeaders =
         runExceptT
         . withExceptT qeCode -- just look at Code for purposes of tests
@@ -70,17 +74,18 @@ getUserInfoWithExpTimeTests = describe "getUserInfo" $ do
         either (const $ error "fixme") id <$> setupAuthMode' a b c d
 
   let ourUnauthRole = mkRoleNameE "an0nymous"
+      ourUnauthRoleSet = mkRoleSetE "an0nymous"
 
 
   describe "started without admin secret" $ do
     it "gives admin by default" $ do
       mode <- setupAuthMode'E Nothing Nothing Nothing Nothing
       getUserInfoWithExpTime mempty [] mode
-        `shouldReturn` Right adminRoleName
+        `shouldReturn` Right adminRoleSet
     it "allows any requested role" $ do
       mode <- setupAuthMode'E Nothing Nothing Nothing Nothing
       getUserInfoWithExpTime mempty [(userRoleHeader, "r00t")] mode
-        `shouldReturn` Right (mkRoleNameE "r00t")
+        `shouldReturn` Right (mkRoleSetE "r00t")
 
 
   describe "admin secret only" $ do
@@ -89,10 +94,10 @@ getUserInfoWithExpTimeTests = describe "getUserInfo" $ do
 
       it "accepts when admin secret matches" $ do
         getUserInfoWithExpTime mempty [(adminSecretHeader, "secret")] mode
-          `shouldReturn` Right adminRoleName
+          `shouldReturn` Right adminRoleSet
       it "accepts when admin secret matches, honoring role request" $ do
         getUserInfoWithExpTime mempty [(adminSecretHeader, "secret"), (userRoleHeader, "r00t")] mode
-          `shouldReturn` Right (mkRoleNameE "r00t")
+          `shouldReturn` Right (mkRoleSetE "r00t")
 
       it "rejects when doesn't match" $ do
         getUserInfoWithExpTime mempty [(adminSecretHeader, "bad secret")] mode
@@ -124,12 +129,12 @@ getUserInfoWithExpTimeTests = describe "getUserInfo" $ do
         setupAuthMode'E (Just $ hashAdminSecret "secret") Nothing Nothing (Just ourUnauthRole)
       it "accepts when admin secret matches" $ do
         getUserInfoWithExpTime mempty [(adminSecretHeader, "secret")] mode
-          `shouldReturn` Right adminRoleName
+          `shouldReturn` Right adminRoleSet
         getUserInfoWithExpTime mempty [(adminSecretHeader, "secret"), ("heh", "heh")] mode
-          `shouldReturn` Right adminRoleName
+          `shouldReturn` Right adminRoleSet
       it "accepts when admin secret matches, honoring role request" $ do
         getUserInfoWithExpTime mempty [(adminSecretHeader, "secret"), (userRoleHeader, "r00t")] mode
-          `shouldReturn` Right (mkRoleNameE "r00t")
+          `shouldReturn` Right (mkRoleSetE "r00t")
 
       it "rejects when doesn't match" $ do
         getUserInfoWithExpTime mempty [(adminSecretHeader, "bad secret")] mode
@@ -148,12 +153,12 @@ getUserInfoWithExpTimeTests = describe "getUserInfo" $ do
 
       it "accepts when no secret sent and unauth role defined" $ do
         getUserInfoWithExpTime mempty [] mode
-          `shouldReturn` Right ourUnauthRole
+          `shouldReturn` Right ourUnauthRoleSet
         getUserInfoWithExpTime mempty [("heh", "heh")] mode
-          `shouldReturn` Right ourUnauthRole
+          `shouldReturn` Right ourUnauthRoleSet
         -- FIXME MAYBE (see NOTE (*))
         getUserInfoWithExpTime mempty [(userRoleHeader, "r00t")] mode
-          `shouldReturn` Right ourUnauthRole
+          `shouldReturn` Right ourUnauthRoleSet
 
 
   -- Unauthorized role is not supported for webhook
@@ -163,10 +168,10 @@ getUserInfoWithExpTimeTests = describe "getUserInfo" $ do
 
     it "accepts when admin secret matches" $ do
       getUserInfoWithExpTime mempty [(adminSecretHeader, "secret")] mode
-        `shouldReturn` Right adminRoleName
+        `shouldReturn` Right adminRoleSet
     it "accepts when admin secret matches, honoring role request" $ do
       getUserInfoWithExpTime mempty [(adminSecretHeader, "secret"), (userRoleHeader, "r00t")] mode
-        `shouldReturn` Right (mkRoleNameE "r00t")
+        `shouldReturn` Right (mkRoleSetE "r00t")
 
     it "rejects when admin secret doesn't match" $ do
       getUserInfoWithExpTime mempty [(adminSecretHeader, "bad secret")] mode
@@ -185,18 +190,18 @@ getUserInfoWithExpTimeTests = describe "getUserInfo" $ do
 
     it "authenticates with webhook when no admin secret sent" $ do
       getUserInfoWithExpTime mempty [] mode
-        `shouldReturn` Right (mkRoleNameE "hook")
+        `shouldReturn` Right (mkRoleSetE "hook")
       getUserInfoWithExpTime mempty [("blah", "blah")] mode
-        `shouldReturn` Right (mkRoleNameE "hook")
+        `shouldReturn` Right (mkRoleSetE "hook")
       getUserInfoWithExpTime mempty [(userRoleHeader, "hook")] mode
-        `shouldReturn` Right (mkRoleNameE "hook")
+        `shouldReturn` Right (mkRoleSetE "hook")
 
     -- FIXME MAYBE (see NOTE (*))
     it "ignores requested role, uses webhook role" $ do
       getUserInfoWithExpTime mempty [(userRoleHeader, "r00t"), (userRoleHeader, "admin")] mode
-        `shouldReturn` Right (mkRoleNameE "hook")
+        `shouldReturn` Right (mkRoleSetE "hook")
       getUserInfoWithExpTime mempty [(userRoleHeader, "r00t")] mode
-        `shouldReturn` Right (mkRoleNameE "hook")
+        `shouldReturn` Right (mkRoleSetE "hook")
 
 
   -- helper for generating mocked up verified JWT token claims, as though returned by 'processAuthZHeader':
@@ -211,10 +216,10 @@ getUserInfoWithExpTimeTests = describe "getUserInfo" $ do
 
       it "accepts when admin secret matches" $ do
         getUserInfoWithExpTime mempty [(adminSecretHeader, "secret")] mode
-          `shouldReturn` Right adminRoleName
+          `shouldReturn` Right adminRoleSet
       it "accepts when admin secret matches, honoring role request" $ do
         getUserInfoWithExpTime mempty [(adminSecretHeader, "secret"), (userRoleHeader, "r00t")] mode
-          `shouldReturn` Right (mkRoleNameE "r00t")
+          `shouldReturn` Right (mkRoleSetE "r00t")
 
       it "rejects when admin secret doesn't match" $ do
         getUserInfoWithExpTime mempty [(adminSecretHeader, "bad secret")] mode
@@ -244,12 +249,12 @@ getUserInfoWithExpTimeTests = describe "getUserInfo" $ do
 
       it "accepts when admin secret matches" $ do
         getUserInfoWithExpTime mempty [(adminSecretHeader, "secret")] mode
-          `shouldReturn` Right adminRoleName
+          `shouldReturn` Right adminRoleSet
         getUserInfoWithExpTime mempty [(adminSecretHeader, "secret"), ("heh", "heh")] mode
-          `shouldReturn` Right adminRoleName
+          `shouldReturn` Right adminRoleSet
       it "accepts when admin secret matches, honoring role request" $ do
         getUserInfoWithExpTime mempty [(adminSecretHeader, "secret"), (userRoleHeader, "r00t")] mode
-          `shouldReturn` Right (mkRoleNameE "r00t")
+          `shouldReturn` Right (mkRoleSetE "r00t")
 
       it "rejects when admin secret doesn't match" $ do
         getUserInfoWithExpTime mempty [(adminSecretHeader, "bad secret")] mode
@@ -268,9 +273,9 @@ getUserInfoWithExpTimeTests = describe "getUserInfo" $ do
 
       it "authorizes as unauth role when no 'Authorization' header" $ do
         getUserInfoWithExpTime mempty [("blah", "blah")] mode
-          `shouldReturn` Right ourUnauthRole
+          `shouldReturn` Right ourUnauthRoleSet
         getUserInfoWithExpTime mempty [] mode
-          `shouldReturn` Right ourUnauthRole
+          `shouldReturn` Right ourUnauthRoleSet
 
     describe "when Authorization header sent, and no admin secret" $ do
       modeA <- runIO $ setupAuthMode'E (Just $ hashAdminSecret "secret") Nothing
@@ -287,10 +292,10 @@ getUserInfoWithExpTimeTests = describe "getUserInfo" $ do
                                 , defaultRoleClaimText .= ("user" :: Text)
                                 ]
             getUserInfoWithExpTime claim [("Authorization", "IGNORED"), (userRoleHeader, "editor")] mode
-              `shouldReturn` Right (mkRoleNameE "editor")
+              `shouldReturn` Right (mkRoleSetE "editor")
             -- Uses the defaultRoleClaimText:
             getUserInfoWithExpTime claim [("Authorization", "IGNORED")] mode
-              `shouldReturn` Right (mkRoleNameE "user")
+              `shouldReturn` Right (mkRoleSetE "user")
 
           it "rejects when requested role is not allowed" $ do
             let claim = unObject [ allowedRolesClaimText .= (["editor","user", "mod"] :: [Text])
@@ -566,9 +571,14 @@ fakeAuthHook = AuthHookG "http://fake" AHTGet
 mkRoleNameE :: Text -> RoleName
 mkRoleNameE = fromMaybe (error "fixme") . mkRoleName
 
+mkRoleSetE :: Text -> RoleSet
+mkRoleSetE = convertRoleNameToRoleSet . mkRoleNameE
+
+convertRoleNameToRoleSet :: RoleName -> RoleSet
+convertRoleNameToRoleSet = RoleSet . Set.singleton
+
 mkJSONPathE :: Text -> JSONPath
 mkJSONPathE = either error id . parseJSONPath
-
 
 newtype NoReporter a = NoReporter { runNoReporter :: IO a }
   deriving newtype (Functor, Applicative, Monad, MonadIO, MonadBase IO, MonadBaseControl IO)

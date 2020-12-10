@@ -26,9 +26,9 @@ import           Hasura.RQL.Types
 -- >   ...
 -- > }
 boolExp
-  :: forall m n r b. (BackendSchema b, MonadSchema n m, MonadTableInfo b r m, MonadRole r m)
+  :: forall m n r b. (BackendSchema b, MonadSchema n m, MonadTableInfo b r m, MonadRoleSet r m)
   => TableName b
-  -> Maybe (SelPermInfo b)
+  -> Maybe (CombinedSelPermInfo b)
   -> m (Parser 'Input n (AnnBoolExp b (UnpreparedValue b)))
 boolExp table selectPermissions = memoizeOn 'boolExp table $ do
   tableGQLName <- getTableGQLName @b table

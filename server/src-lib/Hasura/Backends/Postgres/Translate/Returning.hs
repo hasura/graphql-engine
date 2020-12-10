@@ -50,7 +50,8 @@ checkPermissionRequired = \case
 pgColsToSelFlds :: [ColumnInfo 'Postgres] -> [(FieldName, AnnField 'Postgres)]
 pgColsToSelFlds cols =
   flip map cols $
-  \pgColInfo -> (fromPGCol $ pgiColumn pgColInfo, mkAnnColumnField pgColInfo Nothing)
+  \pgColInfo -> (fromPGCol $ pgiColumn pgColInfo, mkAnnColumnField pgColInfo Nothing Nothing)
+  --                                                                         ^^ Nothing here is justified because mutations don't support multiple roles
 
 mkDefaultMutFlds :: Maybe [ColumnInfo 'Postgres] -> MutationOutput 'Postgres
 mkDefaultMutFlds = MOutMultirowFields . \case
@@ -67,7 +68,7 @@ mkMutFldExp cteAlias preCalAffRows strfyNum = \case
           { S.selExtr = [S.Extractor S.countStar Nothing]
           , S.selFrom = Just $ S.FromExp $ pure $ S.FIIdentifier cteAlias
           }
-    in maybe countExp (S.SEUnsafe . T.pack . show) preCalAffRows
+    in maybe countExp (S.SEUnsafe . tshow) preCalAffRows
   MExp t -> S.SELit t
   MRet selFlds ->
     let tabFrom = FromIdentifier cteAlias
@@ -160,7 +161,7 @@ asCheckErrorExtractor s =
 checkRetCols
   :: (UserInfoM m, QErrM m)
   => FieldInfoMap (FieldInfo 'Postgres)
-  -> SelPermInfo 'Postgres
+  -> CombinedSelPermInfo 'Postgres
   -> [PGCol]
   -> m [ColumnInfo 'Postgres]
 checkRetCols fieldInfoMap selPermInfo cols = do
