@@ -223,12 +223,12 @@ const ArgSelect = ({ k, v, value, level, setArg = e => console.log(e) }) => {
   if (children) {
     return (
       <ul>
+        <button onClick={toggleExpandMode} style={{marginLeft:'-1em'}}>
+          {expanded ? '-' : '+'}
+        </button>
         <label style={{ cursor: 'pointer' }} htmlFor={k}>
           {k}:
         </label>
-        <button onClick={toggleExpandMode} style={{}}>
-          {expanded ? '-' : '+'}
-        </button>
         {expanded &&
           Object.values(children).map(i => {
             const childVal = value ? value[i?.name] : undefined;

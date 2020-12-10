@@ -22,6 +22,7 @@ const RSPInput: React.FC<RSPInputProps> = ({
 
   // TODO check more on the browser console error message
   useDebouncedEffect(() => setArgVal({ [v?.name]: localValue }), 500, [localValue]);// ignore continues onChange events till the user finish typing 
+  // TODO support different input types :?
   return (
     <>
       <label htmlFor={k}> {k}:</label>

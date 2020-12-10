@@ -171,12 +171,12 @@ width: 85%;
   ul {
     list-style: none;
     /* margin-left: 0; */
-    padding-left: 18px;
+    padding-left: 1em;
+    border-left: 2px dotted #737171;
   }
   
   li {
     padding-left: 1em;
-    text-indent: -1em;
   }
   label{
     font-size: 16px;
