@@ -1,0 +1,24 @@
+description: Select cities not starting with new (case-sensitively)
+url: /v1/graphql
+status: 200
+response:
+  data:
+    city:
+    - name: Durham
+      country: USA 
+    - name:  New York
+      country: USA
+    - name: Framlingham
+      country: UK
+    - name: New Orleans 
+      country: USA
+query:
+  query: |
+    query {
+      city (
+      where: {name: {_nregex: "new.*" }}
+      ) {
+        name
+        country
+      }
+    }

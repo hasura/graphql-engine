@@ -508,7 +508,7 @@ toInt64 = fromIntegral
 newtype EventIdArray = EventIdArray { unEventIdArray :: [EventId]} deriving (Show, Eq)
 
 instance Q.ToPrepArg EventIdArray where
-  toPrepVal (EventIdArray l) = Q.toPrepValHelper PTI.unknown encoder $ l
+  toPrepVal (EventIdArray l) = Q.toPrepValHelper PTI.unknown encoder $ map unEventId l
     where
       -- 25 is the OID value of TEXT, https://jdbc.postgresql.org/development/privateapi/constant-values.html
       encoder = PE.array 25 . PE.dimensionArray foldl' (PE.encodingArray . PE.text_strict)

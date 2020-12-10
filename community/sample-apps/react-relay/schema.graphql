@@ -581,6 +581,10 @@ input String_comparison_exp {
   _nlike: String
   _nsimilar: String
   _similar: String
+  _niregex: String
+  _iregex: String
+  _nregex: String
+  _regex: String
 }
 
 # subscription root
@@ -654,4 +658,3 @@ input uuid_comparison_exp {
   _neq: uuid
   _nin: [uuid!]
 }
-

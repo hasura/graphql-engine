@@ -2,7 +2,7 @@ import { MapStateToProps as ReduxMapStateToProps } from 'react-redux';
 import { Store } from 'redux';
 import { ThunkAction, ThunkDispatch } from 'redux-thunk';
 import { RouterAction } from 'react-router-redux';
-import { Table, Schema } from './components/Common/utils/pgUtils';
+import { Table, Schema, PGFunction } from './components/Common/utils/pgUtils';
 import { EventsState } from './components/Services/Events/state';
 import { RAEvents } from './components/Services/Events/types';
 import { ConsoleNotification } from './components/Main/ConsoleNotification';
@@ -67,6 +67,9 @@ export type ReduxState = {
     schemaList: Schema[];
     allSchemas: Table[];
     dataHeaders: Record<string, string>;
+    nonTrackablePostgresFunctions: Array<PGFunction>;
+    postgresFunctions: Array<PGFunction>;
+    currentSchema: string;
   };
   events: EventsState;
   main: {

@@ -15,6 +15,8 @@ module Hasura.Prelude
   , base64Decode
   , spanMaybeM
   , liftEitherM
+  , hoistMaybe
+  , tshow
   -- * Efficient coercions
   , coerce
   , findWithIndex
@@ -29,7 +31,7 @@ module Hasura.Prelude
 import           Control.Applicative               as M (Alternative (..), liftA2)
 import           Control.Arrow                     as M (first, second, (&&&), (***), (<<<), (>>>))
 import           Control.DeepSeq                   as M (NFData, deepseq, force)
-import           Control.Lens                      as M ((%~))
+import           Control.Lens                      as M (ix, (%~))
 import           Control.Monad.Base                as M
 import           Control.Monad.Except              as M
 import           Control.Monad.Identity            as M
@@ -179,3 +181,10 @@ startTimer = do
   return $ do
     aft <- liftIO Clock.getMonotonicTimeNSec
     return $ nanoseconds $ fromIntegral (aft - bef)
+
+-- copied from http://hackage.haskell.org/package/errors-2.3.0/docs/src/Control.Error.Util.html#hoistMaybe
+hoistMaybe :: (Monad m) => Maybe b -> MaybeT m b
+hoistMaybe = MaybeT . return
+
+tshow :: Show a => a -> Text
+tshow = T.pack . show

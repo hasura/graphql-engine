@@ -1,5 +1,5 @@
 import { LocalEventTriggerState } from './state';
-import { isValidURL } from '../../../Common/utils/jsUtils';
+import { isURLTemplated, isValidURL } from '../../../Common/utils/jsUtils';
 import { makeBaseTable } from '../../../Common/utils/pgUtils';
 
 // check 2xx success status codes
@@ -78,7 +78,10 @@ export const validateETState = (state: LocalEventTriggerState) => {
   if (!state.webhook.value) {
     return 'Webhook URL cannot be empty';
   }
-  if (state.webhook.type === 'static' && !isValidURL(state.webhook.value)) {
+  if (
+    state.webhook.type === 'static' &&
+    !(isValidURL(state.webhook.value) || isURLTemplated(state.webhook.value))
+  ) {
     return 'Invalid webhook URL';
   }
 

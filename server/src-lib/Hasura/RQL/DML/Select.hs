@@ -14,8 +14,6 @@ import qualified Database.PG.Query                         as Q
 
 import           Data.Aeson.Types
 import           Data.Text.Extended
-import           Instances.TH.Lift                         ()
-import           Language.Haskell.TH.Syntax                (Lift)
 
 import qualified Hasura.Backends.Postgres.SQL.DML          as S
 
@@ -40,7 +38,6 @@ type SelectQExt b = SelectG (ExtCol b) (BoolExp b) Int
 data ExtCol (b :: BackendType)
   = ECSimple !(Column b)
   | ECRel !RelName !(Maybe RelName) !(SelectQExt b)
-deriving instance Lift (ExtCol 'Postgres)
 
 instance ToJSON (ExtCol 'Postgres) where
   toJSON (ECSimple s) = toJSON s
@@ -198,7 +195,7 @@ convSelectQ
   -> SelPermInfo 'Postgres   -- Additional select permission info
   -> SelectQExt 'Postgres     -- Given Select Query
   -> SessVarBldr 'Postgres m
-  -> (PGColumnType -> Value -> m S.SQLExp)
+  -> (ColumnType 'Postgres -> Value -> m S.SQLExp)
   -> m (AnnSimpleSel 'Postgres)
 convSelectQ table fieldInfoMap selPermInfo selQ sessVarBldr prepValBldr = do
 
@@ -264,7 +261,7 @@ convExtRel
   -> Maybe RelName
   -> SelectQExt 'Postgres
   -> SessVarBldr 'Postgres m
-  -> (PGColumnType -> Value -> m S.SQLExp)
+  -> (ColumnType 'Postgres -> Value -> m S.SQLExp)
   -> m (Either (ObjectRelationSelect 'Postgres) (ArraySelect 'Postgres))
 convExtRel fieldInfoMap relName mAlias selQ sessVarBldr prepValBldr = do
   -- Point to the name key

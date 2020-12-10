@@ -22,7 +22,7 @@ import           Hasura.Backends.Postgres.Translate.Select
 import           Hasura.RQL.DML.Internal
 import           Hasura.RQL.IR.Returning
 import           Hasura.RQL.IR.Select
-import           Hasura.RQL.Types
+import           Hasura.RQL.Types                          hiding (Identifier)
 
 
 -- | The postgres common table expression (CTE) for mutation queries.
