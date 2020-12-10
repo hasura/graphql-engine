@@ -434,13 +434,13 @@ updateOperators table updatePermissions = do
 -- | Construct a root field, normally called delete_tablename, that can be used
 -- to delete several rows from a DB table
 deleteFromTable
-  :: forall m n r. (BackendSchema 'Postgres, MonadSchema n m, MonadTableInfo 'Postgres r m, MonadRole r m, Has QueryContext r, Has (BackendSupport 'Postgres) r)
-  => QualifiedTable       -- ^ qualified name of the table
+  :: forall b m n r. (BackendSchema b, MonadSchema n m, MonadTableInfo b r m, MonadRole r m, Has QueryContext r)
+  => TableName b       -- ^ qualified name of the table
   -> G.Name               -- ^ field display name
   -> Maybe G.Description  -- ^ field description, if any
-  -> DelPermInfo 'Postgres -- ^ delete permissions of the table
-  -> Maybe (SelPermInfo 'Postgres)    -- ^ select permissions of the table (if any)
-  -> m (FieldParser n (IR.AnnDelG 'Postgres (UnpreparedValue 'Postgres)))
+  -> DelPermInfo b -- ^ delete permissions of the table
+  -> Maybe (SelPermInfo b)    -- ^ select permissions of the table (if any)
+  -> m (FieldParser n (IR.AnnDelG b (UnpreparedValue b)))
 deleteFromTable table fieldName description deletePerms selectPerms = do
   let whereName = $$(G.litName "where")
       whereDesc = "filter the rows which have to be deleted"
@@ -453,13 +453,13 @@ deleteFromTable table fieldName description deletePerms selectPerms = do
 -- | Construct a root field, normally called delete_tablename, that can be used
 -- to delete an individual rows from a DB table, specified by primary key
 deleteFromTableByPk
-  :: forall m n r. (BackendSchema 'Postgres, MonadSchema n m, MonadTableInfo 'Postgres r m, MonadRole r m, Has QueryContext r, Has (BackendSupport 'Postgres) r)
-  => QualifiedTable       -- ^ qualified name of the table
+  :: forall b m n r. (BackendSchema b, MonadSchema n m, MonadTableInfo b r m, MonadRole r m, Has QueryContext r)
+  => TableName b          -- ^ qualified name of the table
   -> G.Name               -- ^ field display name
   -> Maybe G.Description  -- ^ field description, if any
-  -> DelPermInfo 'Postgres  -- ^ delete permissions of the table
-  -> SelPermInfo 'Postgres  -- ^ select permissions of the table
-  -> m (Maybe (FieldParser n (IR.AnnDelG 'Postgres (UnpreparedValue 'Postgres))))
+  -> DelPermInfo b  -- ^ delete permissions of the table
+  -> SelPermInfo b  -- ^ select permissions of the table
+  -> m (Maybe (FieldParser n (IR.AnnDelG b (UnpreparedValue b))))
 deleteFromTableByPk table fieldName description deletePerms selectPerms = runMaybeT $ do
   columns   <- lift $ tableColumns table
   pkArgs    <- MaybeT $ primaryKeysArguments table selectPerms
@@ -468,11 +468,11 @@ deleteFromTableByPk table fieldName description deletePerms selectPerms = runMay
     <&> mkDeleteObject table columns deletePerms . fmap IR.MOutSinglerowObject
 
 mkDeleteObject
-  :: QualifiedTable
-  -> [ColumnInfo 'Postgres]
-  -> DelPermInfo 'Postgres
-  -> (AnnBoolExp 'Postgres (UnpreparedValue 'Postgres), IR.MutationOutputG 'Postgres (UnpreparedValue 'Postgres))
-  -> IR.AnnDelG 'Postgres (UnpreparedValue 'Postgres)
+  :: TableName b
+  -> [ColumnInfo b]
+  -> DelPermInfo b
+  -> (AnnBoolExp b (UnpreparedValue b), IR.MutationOutputG b (UnpreparedValue b))
+  -> IR.AnnDelG b (UnpreparedValue b)
 mkDeleteObject table columns deletePerms (whereExp, mutationOutput) =
   IR.AnnDel { IR.dqp1Table   = table
             , IR.dqp1Where   = (permissionFilter, whereExp)
@@ -489,13 +489,13 @@ mkDeleteObject table columns deletePerms (whereExp, mutationOutput) =
 -- | All mutations allow returning results, such as what the updated database
 -- rows look like.  This parser allows a query to specify what data to fetch.
 mutationSelectionSet
-  :: forall m n r. (BackendSchema 'Postgres, MonadSchema n m, MonadTableInfo 'Postgres r m, MonadRole r m, Has QueryContext r, Has (BackendSupport 'Postgres) r)
-  => QualifiedTable
-  -> Maybe (SelPermInfo 'Postgres)
-  -> m (Parser 'Output n (IR.MutFldsG 'Postgres (UnpreparedValue 'Postgres)))
+  :: forall b m n r. (BackendSchema b, MonadSchema n m, MonadTableInfo b r m, MonadRole r m, Has QueryContext r)
+  => TableName b
+  -> Maybe (SelPermInfo b)
+  -> m (Parser 'Output n (IR.MutFldsG b (UnpreparedValue b)))
 mutationSelectionSet table selectPerms =
   memoizeOn 'mutationSelectionSet table do
-  tableGQLName <- getTableGQLName @'Postgres table
+  tableGQLName <- getTableGQLName @b table
   returning <- runMaybeT do
     permissions <- MaybeT $ pure selectPerms
     tableSet    <- lift $ tableSelectionList table permissions
@@ -517,10 +517,10 @@ mutationSelectionSet table selectPerms =
 
 -- | How to specify a database row by primary key.
 primaryKeysArguments
-  :: forall m n r. (BackendSchema 'Postgres, MonadSchema n m, MonadTableInfo 'Postgres r m)
-  => QualifiedTable
-  -> SelPermInfo 'Postgres
-  -> m (Maybe (InputFieldsParser n (AnnBoolExp 'Postgres (UnpreparedValue 'Postgres))))
+  :: forall b m n r. (BackendSchema b, MonadSchema n m, MonadTableInfo b r m)
+  => TableName b
+  -> SelPermInfo b
+  -> m (Maybe (InputFieldsParser n (AnnBoolExp b (UnpreparedValue b))))
 primaryKeysArguments table selectPerms = runMaybeT $ do
   primaryKeys <- MaybeT $ _tciPrimaryKey . _tiCoreInfo <$> askTableInfo table
   let columns = _pkColumns primaryKeys
