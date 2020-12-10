@@ -10,7 +10,6 @@ import           Data.Aeson.TH
 
 import qualified Data.Environment                   as Env
 import qualified Data.HashMap.Strict                as HM
-import qualified Data.Text                          as T
 import qualified Database.PG.Query                  as Q
 import qualified Network.HTTP.Client                as HTTP
 
@@ -195,22 +194,30 @@ runQuery
   :: (HasVersion, MonadIO m, MonadError QErr m, Tracing.MonadTrace m)
   => Env.Environment -> PGExecCtx -> InstanceId
   -> UserInfo -> RebuildableSchemaCache Run -> HTTP.Manager
-  -> SQLGenCtx -> SystemDefined -> RQLQuery -> m (EncJSON, RebuildableSchemaCache Run)
-runQuery env pgExecCtx instanceId userInfo sc hMgr sqlGenCtx systemDefined query = do
+  -> SQLGenCtx -> RQLQuery -> m (EncJSON, RebuildableSchemaCache Run)
+runQuery env pgExecCtx instanceId userInfo sc hMgr sqlGenCtx query = do
   accessMode <- getQueryAccessMode query
   traceCtx <- Tracing.currentContext
-  resE <- runQueryM env query & Tracing.interpTraceT \x -> do
-    a <- x & runHasSystemDefinedT systemDefined
+  result <- runQueryM env query & Tracing.interpTraceT \x -> do
+    ((js, meta), rsc, ci) <-
+         x & withMetadata
            & runCacheRWT sc
            & peelRun runCtx pgExecCtx accessMode (Just traceCtx)
            & runExceptT
-           & liftIO
-    pure (either
-      ((, mempty) . Left)
-      (\((js, meta), rsc, ci) -> (Right (js, rsc, ci), meta)) a)
-  either throwError withReload resE
+           & liftEitherM
+    pure ((js, rsc, ci), meta)
+  withReload result
   where
     runCtx = RunCtx userInfo hMgr sqlGenCtx
+
+    withMetadata :: (MonadTx m) => MetadataT m a -> m a
+    withMetadata m = do
+      metadata <- liftTx fetchMetadataFromCatalog
+      (r, modifiedMetadata) <- runMetadataT metadata m
+      when (queryModifiesSchemaCache query) $
+        liftTx $ setMetadataInCatalog modifiedMetadata
+      pure r
+
     withReload (result, updatedCache, invalidations) = do
       when (queryModifiesSchemaCache query) $ do
         e <- liftIO $ runExceptT $ runLazyTx pgExecCtx Q.ReadWrite $ liftTx $
@@ -332,12 +339,12 @@ getQueryAccessMode q = fromMaybe Q.ReadOnly <$> getQueryAccessMode' q
             throw400 BadRequest $
             "incompatible access mode requirements in bulk query, " <>
             "expected access mode: " <>
-            T.pack (maybe "ANY" show expectedMode) <>
+            maybe "ANY" tshow expectedMode <>
             " but " <>
             "$.args[" <>
-            T.pack (show i) <>
+            tshow i <>
             "] forces " <>
-            T.pack (show errMode)
+            tshow errMode
     getQueryAccessMode' (RQV2 _) = pure $ Just Q.ReadWrite
 
 -- | onRight, return reconciled access mode. onLeft, return conflicting access mode
@@ -351,8 +358,8 @@ reconcileAccessModes (Just mode1) (Just mode2)
 runQueryM
   :: ( HasVersion, QErrM m, CacheRWM m, UserInfoM m, MonadTx m
      , MonadIO m, MonadUnique m, HasHttpManager m, HasSQLGenCtx m
-     , HasSystemDefined m
      , Tracing.MonadTrace m
+     , MetadataM m
      )
   => Env.Environment
   -> RQLQuery

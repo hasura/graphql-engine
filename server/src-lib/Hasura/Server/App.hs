@@ -249,13 +249,13 @@ newtype ResourceLimits = ResourceLimits
 -- | Monads which support resource (memory, CPU time, etc.) limiting
 class Monad m => HasResourceLimits m where
   askResourceLimits :: m ResourceLimits
-  
+
   -- A default for monad transformer instances
   default askResourceLimits
     :: (m ~ t n, MonadTrans t, HasResourceLimits n)
     => m ResourceLimits
   askResourceLimits = lift askResourceLimits
-  
+
 instance HasResourceLimits m => HasResourceLimits (ReaderT r m)
 instance HasResourceLimits m => HasResourceLimits (ExceptT e m)
 instance HasResourceLimits m => HasResourceLimits (Tracing.TraceT m)
@@ -306,8 +306,8 @@ mkSpockAction serverCtx qErrEncoder qErrModifier apiHandler = do
           includeInternal = shouldIncludeInternal (_uiRole userInfo) $
                             scResponseInternalErrorsConfig serverCtx
 
-      limits <- lift askResourceLimits 
-      
+      limits <- lift askResourceLimits
+
       (serviceTime, (result, q)) <- withElapsedTime $ case apiHandler of
         AHGet handler -> do
           res <- lift $ runReaderT (runExceptT (runResourceLimits limits handler)) handlerState
@@ -385,7 +385,7 @@ v1QueryHandler query = do
       pgExecCtx   <- asks (scPGExecCtx . hcServerCtx)
       instanceId  <- asks (scInstanceId . hcServerCtx)
       env         <- asks (scEnvironment . hcServerCtx)
-      runQuery env pgExecCtx instanceId userInfo schemaCache httpMgr sqlGenCtx (SystemDefined False) query
+      runQuery env pgExecCtx instanceId userInfo schemaCache httpMgr sqlGenCtx  query
 
 v1Alpha1GQHandler
   :: ( HasVersion
@@ -494,7 +494,7 @@ consoleAssetsHandler logger dir path = do
       mapM_ setHeader headers
       Spock.lazyBytes c
     onError :: (MonadIO m, HttpLog m) => [HTTP.Header] -> IOException -> Spock.ActionT m ()
-    onError hdrs = raiseGenericApiError logger hdrs . err404 NotFound . T.pack . show
+    onError hdrs = raiseGenericApiError logger hdrs . err404 NotFound . tshow
     fn = T.pack $ takeFileName path
     -- set gzip header if the filename ends with .gz
     (fileName, encHeader) = case T.stripSuffix ".gz" fn of

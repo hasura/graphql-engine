@@ -1,7 +1,7 @@
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 
 module Network.URI.Extended
-  (module Network.URI
+  ( module Network.URI
   )
   where
 
@@ -20,10 +20,10 @@ instance {-# INCOHERENT #-} FromJSON URI where
   parseJSON _ = fail "not a valid URI"
 
 instance {-# INCOHERENT #-} ToJSON URI where
-  toJSON = String . T.pack . show
+  toJSON = String . tshow
 
 instance {-# INCOHERENT #-} ToJSONKey URI where
-  toJSONKey = toJSONKeyText (T.pack . show)
+  toJSONKey = toJSONKeyText tshow
 
 instance Hashable URI where
-  hashWithSalt i = hashWithSalt i . (T.pack . show)
+  hashWithSalt i = hashWithSalt i . tshow
