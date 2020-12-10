@@ -129,7 +129,7 @@ parseGraphQLName txt = onNothing (G.mkName txt) (throw400 RemoteSchemaError $ er
 pathToAlias :: (MonadError QErr m) => FieldPath -> Counter -> m Alias
 pathToAlias path counter =
   parseGraphQLName $ T.intercalate "_" (map getFieldNameTxt $ unFieldPath path)
-                 <> "__" <> (T.pack . show . unCounter) counter
+                 <> "__" <> (tshow . unCounter) counter
 
 type RemoteJoins b = NE.NonEmpty (FieldPath, NE.NonEmpty (RemoteJoin b))
 type RemoteJoinMap b = Map.HashMap FieldPath (NE.NonEmpty (RemoteJoin b))
@@ -567,7 +567,7 @@ replaceRemoteFields compositeJson remoteServerResponse =
         Nothing          -> pure v
         Just (h :| rest) -> case v of
           AO.Object o   -> maybe
-                           (throw500 $ "cannnot find value in remote response at path " <> T.pack (show path))
+                           (throw500 $ "cannnot find value in remote response at path " <> tshow path)
                            (extractAtPath rest)
                            (AO.lookup (G.unName h) o)
           AO.Array arr -> AO.array <$> mapM (extractAtPath path) (toList arr)

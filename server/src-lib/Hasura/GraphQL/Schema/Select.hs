@@ -1122,7 +1122,7 @@ functionArgs functionName (toList -> inputArgs) = do
       in (positionalIndex, ([argName], [(argName, sessionPlaceholder)], [], []))
     splitArguments positionalIndex (IAUserProvided arg) =
       let (argName, newIndex) = case faName arg of
-                                  Nothing   -> ("arg_" <> T.pack (show positionalIndex), positionalIndex + 1)
+                                  Nothing   -> ("arg_" <> (tshow positionalIndex), positionalIndex + 1)
                                   Just name -> (getFuncArgNameTxt name, positionalIndex)
       in if unHasDefault $ faHasDefault arg
          then (newIndex, ([argName], [], [parseArgument arg argName], []))

@@ -33,7 +33,6 @@ import qualified Data.ByteString                             as B
 import qualified Data.HashMap.Strict                         as Map
 import qualified Data.HashMap.Strict.InsOrd                  as OMap
 import qualified Data.HashSet                                as Set
-import qualified Data.Text                                   as T
 import qualified Data.UUID.V4                                as UUID
 import qualified Database.PG.Query                           as Q
 import qualified Database.PG.Query.PTI                       as PTI
@@ -298,7 +297,7 @@ resolveMultiplexedValue = \case
       Nothing -> do
         syntheticVarIndex <- use (qpiSyntheticVariableValues . to length)
         modifying qpiSyntheticVariableValues (|> colVal)
-        pure ["synthetic", T.pack $ show syntheticVarIndex]
+        pure ["synthetic", tshow syntheticVarIndex]
     pure $ fromResVars (CollectableTypeScalar $ unsafePGColumnToBackend $ cvType colVal) varJsonPath
   UVSessionVar ty sessVar -> do
     modifying qpiReferencedSessionVariables (Set.insert sessVar)

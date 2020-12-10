@@ -68,7 +68,7 @@ mkMutFldExp cteAlias preCalAffRows strfyNum = \case
           { S.selExtr = [S.Extractor S.countStar Nothing]
           , S.selFrom = Just $ S.FromExp $ pure $ S.FIIdentifier cteAlias
           }
-    in maybe countExp (S.SEUnsafe . T.pack . show) preCalAffRows
+    in maybe countExp (S.SEUnsafe . tshow) preCalAffRows
   MExp t -> S.SELit t
   MRet selFlds ->
     let tabFrom = FromIdentifier cteAlias

@@ -65,7 +65,7 @@ askPermInfo' pa tableInfo = do
   perms <-
     sequenceA <$>
     for (toList roles) (\roleName -> return $ getPermInfoMaybe roleName pa tableInfo)
-  return $ join $ NE.nonEmpty <$> perms
+  pure $ NE.nonEmpty =<< perms
 
 getPermInfoMaybe :: RoleName -> PermAccessor 'Postgres c -> TableInfo 'Postgres -> Maybe c
 getPermInfoMaybe roleName pa tableInfo =
