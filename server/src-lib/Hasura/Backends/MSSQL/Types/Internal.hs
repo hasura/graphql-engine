@@ -13,6 +13,10 @@ import qualified Database.ODBC.SQLServer as ODBC
 import           Data.List.NonEmpty (NonEmpty (..))
 import           Data.Text (Text)
 
+data Delete = Delete
+  { deleteTable :: !(Aliased TableName)
+  , deleteWhere :: !Where
+  }
 
 data Select = Select
   { selectTop         :: !Top

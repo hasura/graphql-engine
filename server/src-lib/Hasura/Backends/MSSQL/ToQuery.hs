@@ -8,16 +8,17 @@ module Hasura.Backends.MSSQL.ToQuery
   , fromReselect
   , toQueryFlat
   , toQueryPretty
+  , fromDelete
   , Printer(..)
   ) where
 
 import           Hasura.Prelude
 
-import qualified Data.Text                   as T
-import qualified Data.Text.Lazy              as LT
-import qualified Data.Text.Lazy.Builder      as LT
+import qualified Data.Text as T
+import qualified Data.Text.Lazy as LT
+import qualified Data.Text.Lazy.Builder as LT
 
-import           Data.List                   (intersperse)
+import           Data.List (intersperse)
 import           Data.String
 import           Database.ODBC.SQLServer
 
@@ -110,6 +111,15 @@ fromPath path =
 fromFieldName :: FieldName -> Printer
 fromFieldName (FieldName {..}) =
   fromNameText fieldNameEntity <+> "." <+> fromNameText fieldName
+
+fromDelete :: Delete -> Printer
+fromDelete Delete {deleteTable, deleteWhere} =
+  SepByPrinter
+    NewlinePrinter
+    [ "DELETE " <+> fromNameText (aliasedAlias deleteTable)
+    , "FROM " <+> fromAliased (fmap fromTableName deleteTable)
+    , fromWhere deleteWhere
+    ]
 
 fromSelect :: Select -> Printer
 fromSelect Select {..} =

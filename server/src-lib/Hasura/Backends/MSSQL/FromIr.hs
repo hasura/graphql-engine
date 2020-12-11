@@ -5,10 +5,12 @@ module Hasura.Backends.MSSQL.FromIr
   , mkSQLSelect
   , fromRootField
   , fromSelectAggregate
+  , fromAnnBoolExp
   , Error(..)
   , runFromIr
   , FromIr
   , jsonFieldName
+  , fromDelete
   ) where
 
 import           Hasura.Prelude
@@ -29,6 +31,7 @@ import qualified Hasura.GraphQL.Context             as GraphQL
 import qualified Hasura.RQL.IR.BoolExp              as IR
 import qualified Hasura.RQL.IR.OrderBy              as IR
 import qualified Hasura.RQL.IR.Select               as IR
+import qualified Hasura.RQL.IR.Delete               as IR
 import qualified Hasura.RQL.Types.Column            as IR
 import qualified Hasura.RQL.Types.Common            as IR
 
@@ -405,6 +408,11 @@ fromQualifiedTable schemadTableName@(TableName{tableName}) = do
     --                      -- TODO: Consider many x.y.z. in schema name.
     --                     , qName = PG.TableName qname
     --                     } = qualifiedObject
+
+fromTableName :: TableName -> FromIr EntityAlias
+fromTableName TableName{tableName} = do
+  alias <- generateEntityAlias (TableTemplate tableName)
+  pure (EntityAlias alias)
 
 fromAnnBoolExp ::
      IR.GBoolExp 'MSSQL (IR.AnnBoolExpFld 'MSSQL Expression)
@@ -890,6 +898,26 @@ fromGBoolExp =
     IR.BoolNot expression -> fmap NotExpression (fromGBoolExp expression)
     IR.BoolExists gExists -> fmap ExistsExpression (fromGExists gExists)
     IR.BoolFld expression -> pure expression
+
+--------------------------------------------------------------------------------
+-- Delete
+
+fromDelete :: IR.AnnDel 'MSSQL -> FromIr Delete
+fromDelete (IR.AnnDel tableName (permFilter, whereClause) _ _) = do
+  tableAlias <- fromTableName tableName
+  runReaderT
+    (do permissionsFilter <- fromAnnBoolExp permFilter
+        whereExpression <- fromAnnBoolExp whereClause
+        pure
+          Delete
+            { deleteTable =
+                Aliased
+                  { aliasedAlias = entityAliasText tableAlias
+                  , aliasedThing = tableName
+                  }
+            , deleteWhere = Where [permissionsFilter, whereExpression]
+            })
+    tableAlias
 
 --------------------------------------------------------------------------------
 -- Misc combinators
