@@ -102,11 +102,11 @@ const Permissions = ({ allRoles, ...props }: any) => {
     setDatasource([
       {
         name: 'query_root',
-        children: getTree(schema, 'QUERY'),
+        children: getTree(schema, permissionsSchema, 'QUERY'),
       },
       {
         name: 'mutation_root',
-        children: getTree(schema, 'MUTATION'),
+        children: getTree(schema, permissionsSchema, 'MUTATION'),
       },
       ...types,
     ]);
