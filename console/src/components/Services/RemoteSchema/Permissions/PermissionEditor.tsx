@@ -8,7 +8,7 @@ import React, {
 } from 'react';
 import * as GQL from 'graphql';
 import _ from 'lodash';
-import { generateSDL, getChildArgument } from './utils';
+import { generateSDL, generateConstantTypes, getChildArgument } from './utils';
 import Button from '../../../Common/Button/Button';
 import styles from '../../../Common/Permissions/PermissionStyles.scss';
 import { DatasourceObject, FieldType } from './types';
@@ -149,7 +149,6 @@ const Field: React.FC<FieldProps> = ({ i, setItem = e => console.log(e) }) => {
     e.preventDefault();
     const selectedTypeName = e.target.id;
     const selectedUrl = e.target.href;
-    console.log('selected url: ', selectedUrl);
   };
 
   if (!i.checked) return <CollapsedField field={i} onClick={handleClick} />;
@@ -280,18 +279,18 @@ const PermissionEditor = ({ ...props }: any) => {
   const { isNewRole, isNewPerm } = permissionEdit;
 
   useEffect(() => {
-    // window.SCHEMA = schema;
-    // window.GQL = GQL;
+    window.SCHEMA = schema;
+    window.GQL = GQL;
 
     console.log('changed--->', state);
     if (!state) return;
-    // TODO make this a utility
-    setResultString(generateSDL(state, argTree, schema));
-    setSchemaDefinition(resultString);
+    setResultString(generateSDL(state, argTree));
+    // setSchemaDefinition(resultString);
   }, [state, argTree]);
 
   useEffect(() => {
     setState(datasource);
+    setResultString(schemaDefinition);
   }, [datasource]);
 
   if (!isEditing) return null;
@@ -325,7 +324,8 @@ const PermissionEditor = ({ ...props }: any) => {
   };
 
   const saveFunc = () => {
-    setSchemaDefinition(resultString);
+    const finalString = resultString + generateConstantTypes(schema);
+    setSchemaDefinition(finalString);
     save();
   };
 
@@ -338,7 +338,7 @@ const PermissionEditor = ({ ...props }: any) => {
       <div className={styles.tree}>
         <RootContext.Provider value={{ argTree, setArgTree }}>
           <MemoisedTree list={state} setState={setState} />
-          {/* <code style={{ whiteSpace: 'pre-wrap' }}>{resultString}</code> */}
+          <code style={{ whiteSpace: 'pre-wrap' }}>{resultString}</code>
         </RootContext.Provider>
       </div>
       <Button

@@ -21,7 +21,7 @@ const state: SchemaPermissionsState = {
   //   timer: null,
   //   ast: null,
   // },
-  schemaDefinition: defaultSchemaDefSdl,
+  schemaDefinition: '',
   bulkSelect: [],
 };
 

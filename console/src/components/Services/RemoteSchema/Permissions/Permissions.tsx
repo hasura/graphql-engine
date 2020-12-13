@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import Helmet from 'react-helmet';
 import * as GQL from 'graphql';
-// import { buildClientSchema, GraphQLObjectType } from 'graphql';
 import PermissionsTable from './PermissionsTable';
 import PermissionEditor from './PermissionEditor';
 import { getConfirmation } from '../../../Common/utils/jsUtils';
@@ -72,14 +71,14 @@ const Permissions = ({ allRoles, ...props }: any) => {
     permSetRoleName,
   } = props;
 
+  const [datasource, setDatasource] = useState<DatasourceObject[]>([]);
+
   React.useEffect(() => {
     fetchRoleList();
     return () => {
       setDefaults();
     };
   }, [fetchRoleList, setDefaults]);
-
-  const [datasource, setDatasource] = useState<DatasourceObject[]>([]);
 
   const { loading, error, schema, introspect } = useIntrospectionSchemaRemote(
     currentRemoteSchema.name,
@@ -91,8 +90,15 @@ const Permissions = ({ allRoles, ...props }: any) => {
 
   useEffect(() => {
     if (!schema) return;
+    const isNewRole: boolean = permissionEdit.isNewRole;
+    let permissionsSchema: any = null;
 
-    const types = getType(schema, false);
+    if (!isNewRole && !!schemaDefinition) {
+      permissionsSchema = GQL.buildSchema(schemaDefinition);
+    }
+
+    const types = getType(schema, permissionsSchema);
+
     setDatasource([
       {
         name: 'query_root',
@@ -104,7 +110,7 @@ const Permissions = ({ allRoles, ...props }: any) => {
       },
       ...types,
     ]);
-  }, [schema]);
+  }, [schema, permissionEdit.isNewRole, schemaDefinition]);
 
   if (error || !schema) {
     return (

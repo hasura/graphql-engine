@@ -36,10 +36,6 @@ export const permSetRoleName = (rolename: string) => ({
 export const setDefaults = () => ({
   type: SET_DEFAULTS,
 });
-// export const setSchemaDefinition = (definition: SchemaDefinition) => ({
-//   type: SET_SCHEMA_DEFINITION,
-//   definition,
-// });
 export const setSchemaDefinition = (definition: string) => ({
   type: SET_SCHEMA_DEFINITION,
   definition,
@@ -99,17 +95,6 @@ const reducer = (state = defaultState, action: any) => {
         isEditing: false,
         permissionEdit: { ...defaultState.permissionEdit },
       };
-    // case SET_SCHEMA_DEFINITION:
-    //   return {
-    //     ...state,
-    //     schemaDefinition: {
-    //       ...action.definition,
-    //       value:
-    //         action.definition.value !== null
-    //           ? action.definition.value
-    //           : state.schemaDefinition.value,
-    //     },
-    //   };
     case SET_SCHEMA_DEFINITION:
       return {
         ...state,

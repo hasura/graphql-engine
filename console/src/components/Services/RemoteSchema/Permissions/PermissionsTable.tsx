@@ -73,7 +73,7 @@ const PermissionsTable = ({ ...props }: any) => {
     return queryTypes.map(queryType => {
       const dispatchOpenEdit = () => () => {
         if (isNewRole && !!role) {
-          setSchemaDefinition({ value: defaultSchemaDefSdl });
+          setSchemaDefinition('');
           permOpenEdit(role, isNewRole, true);
         } else if (role) {
           const existingPerm = findRemoteSchemaPermission(allPermissions, role);
@@ -81,12 +81,10 @@ const PermissionsTable = ({ ...props }: any) => {
 
           if (existingPerm) {
             const schemaDefinitionSdl = existingPerm.definition.schema;
-            setSchemaDefinition({
-              value: schemaDefinitionSdl,
-              ast: sdlParse(schemaDefinitionSdl),
-            });
+            // console.log('>>shema', schemaDefinitionSdl);
+            setSchemaDefinition(schemaDefinitionSdl);
           } else {
-            setSchemaDefinition({ value: defaultSchemaDefSdl });
+            setSchemaDefinition('');
           }
         } else {
           // FIXME: probably best if we handle the React way.
@@ -99,7 +97,7 @@ const PermissionsTable = ({ ...props }: any) => {
 
       const dispatchCloseEdit = () => {
         permCloseEdit();
-        setSchemaDefinition({ value: defaultSchemaDefSdl });
+        setSchemaDefinition('');
       };
 
       const isCurrEdit =

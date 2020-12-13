@@ -63,6 +63,7 @@ const fetchRemoteSchemas = () => {
     dispatch({ type: FETCH_REMOTE_SCHEMAS });
     return dispatch(requestAction(url, options)).then(
       data => {
+        window.DATA = data;
         dispatch({
           type: REMOTE_SCHEMAS_FETCH_SUCCESS,
           data,

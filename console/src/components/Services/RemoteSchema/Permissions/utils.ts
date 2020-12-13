@@ -6,7 +6,7 @@ import {
   GraphQLScalarType,
   GraphQLSchema,
 } from 'graphql';
-import { add } from 'lodash';
+// import { add, result } from 'lodash';
 import { findRemoteSchemaPermission } from '../utils';
 import { PermissionEdit, SchemaDefinition } from './types';
 
@@ -128,22 +128,77 @@ export const getTree = (schema: any, typeS: any) => {
   );
 };
 
-export const getType = (schema: any, isEnumType: boolean) => {
+export const getScalarTypes = (schema: any) => {
+  const fields = schema.getTypeMap();
+  const types: string[] = [];
+  const gqlDefaultTypes = ['Boolean', 'Float', 'String', 'Int', 'ID'];
+  Object.entries(fields).forEach(([key, value]: any) => {
+    if (!(value instanceof GraphQLScalarType)) return;
+    const name = value.inspect();
+    if (gqlDefaultTypes.indexOf(name) > -1) return; // Check if type belongs to default gql scalar types
+
+    const type = `scalar ${name}`;
+    types.push(type);
+  });
+  return types;
+};
+
+const getEnumTypes = (schema: any) => {
   const fields = schema.getTypeMap();
   const types: any[] = [];
   Object.entries(fields).forEach(([key, value]: any) => {
+    if (!(value instanceof GraphQLEnumType)) return;
+    const name = value.inspect();
+
+    if (name.includes('__')) return; // TODO change this check
+
+    const type: any = {};
+    type.name = `enum ${name}`;
+
+    const childArray: any[] = [];
+    const fieldVal = value.getValues();
+
+    Object.entries(fieldVal).forEach(([k, v]) => {
+      childArray.push({
+        name: v.name,
+        checked: true,
+        return: v.value.toString(),
+      });
+    });
+
+    type.children = childArray;
+    types.push(type);
+  });
+  return types;
+};
+
+export const getType = (
+  introspectionSchema: GraphQLSchema | null,
+  permissionsSchema: GraphQLSchema | null
+) => {
+  const introspectionSchemaFields = introspectionSchema!.getTypeMap();
+  let permissionsSchemaFields: any = null;
+  if (permissionsSchema !== null) {
+    permissionsSchemaFields = permissionsSchema!.getTypeMap();
+  }
+  const types: any[] = [];
+
+  Object.entries(introspectionSchemaFields).forEach(([key, value]: any) => {
     if (
-      (!isEnumType &&
-        !(
-          value instanceof GraphQLObjectType ||
-          value instanceof GraphQLInputObjectType
-        )) ||
-      (isEnumType && !(value instanceof GraphQLEnumType))
+      !(
+        value instanceof GraphQLObjectType ||
+        value instanceof GraphQLInputObjectType
+      )
     )
       return;
 
     const name = value.inspect();
-    if (name === 'query_root' || name === 'mutation_root' || name === 'subscription_root') return;
+    if (
+      name === 'query_root' ||
+      name === 'mutation_root' ||
+      name === 'subscription_root'
+    )
+      return;
 
     if (name.includes('__')) return; // TODO change this check
 
@@ -153,34 +208,38 @@ export const getType = (schema: any, isEnumType: boolean) => {
       type.name = `type ${name}`;
     } else if (value instanceof GraphQLInputObjectType) {
       type.name = `input ${name}`;
-    } else if (value instanceof GraphQLEnumType) {
-      type.name = `enum ${name}`;
     }
 
     const childArray: any[] = [];
-    let fieldVal;
+    const fieldVal = value.getFields();
+    let permissionsFieldVal: any = {};
+    let isField = true;
 
-    if (isEnumType) fieldVal = value.getValues();
-    else fieldVal = value.getFields();
+    if (permissionsSchema !== null) {
+      if (key in permissionsSchemaFields) {
+        permissionsFieldVal = permissionsSchemaFields[key].getFields();
+      } else {
+        isField = false;
+      }
+    }
 
     Object.entries(fieldVal).forEach(([k, v]) => {
-      if (isEnumType)
-        childArray.push({
-          name: v.name,
-          checked: true,
-          return: v.value.toString(),
-        });
-      else
-        childArray.push({
-          name: v.name,
-          checked: true,
-          return: v.type.toString(),
-        });
+      let checked = true;
+      if (
+        permissionsSchema !== null &&
+        (!(k in permissionsFieldVal) || !isField)
+      ) {
+        checked = false;
+      }
+      childArray.push({
+        name: v.name,
+        checked,
+        return: v.type.toString(),
+      });
     });
 
     type.children = childArray;
     types.push(type);
-    // console.log({ types });
   });
   return types;
 };
@@ -192,7 +251,14 @@ export const getGqlTypeName = typeObj => {
   return typeObj.name;
 };
 
+const checkNullType = type => {
+  const isChecked = element => element.checked;
+  return type.children.some(isChecked);
+};
+
 const getSDLField = (type, argTree) => {
+  if (!checkNullType(type)) return '';
+
   let result: any;
   const typeName: string = type.name;
   if (type.name === 'query_root' || type.name === 'mutation_root')
@@ -203,7 +269,6 @@ const getSDLField = (type, argTree) => {
     // TODO filter selected fields
     if (!f.checked) return null;
 
-    // TODO handle types, this will handle only query and mutations, ie: it adds the brackets
     let fieldStr = f.name;
 
     if (!typeName.includes('enum')) {
@@ -233,22 +298,7 @@ const getSDLField = (type, argTree) => {
   return `${result}\n}`;
 };
 
-export const getScalarFields = (schema: any) => {
-  const fields = schema.getTypeMap();
-  let types = '';
-  const gqlDefaultTypes = ['Boolean', 'Float', 'String', 'Int', 'ID'];
-  Object.entries(fields).forEach(([key, value]: any) => {
-    const name = value.inspect();
-    if(!(value instanceof GraphQLScalarType)) return;
-    if(gqlDefaultTypes.indexOf(name) > -1) return;
-
-    const type = `scalar ${name}`;
-    types = `${types}\n${type}`;
-  })
-  return types;
-}
-
-export const generateSDL = (types, argTree, schema) => {
+export const generateSDL = (types, argTree) => {
   let result = `schema{
     query: query_root
     mutation: mutation_root
@@ -256,13 +306,20 @@ export const generateSDL = (types, argTree, schema) => {
   types.forEach(type => {
     result = `${result}\n${getSDLField(type, argTree)}\n`;
   });
-  const otherTypes = getType(schema, true);
-  otherTypes.forEach(type => {
+
+  return result;
+};
+
+export const generateConstantTypes = (schema: GraphQLSchema) => {
+  let result = ``;
+  const enumTypes = getEnumTypes(schema);
+  enumTypes.forEach(type => {
     result = `${result}\n${getSDLField(type, null)}`;
   });
-  const scalarFields = getScalarFields(schema);
-  // result = `${result}\nscalar timestamptz`
-  result = `${result}\n${scalarFields}`;
+  const scalarTypes = getScalarTypes(schema);
+  scalarTypes.forEach(type => {
+    result = `${result}\n${type}`;
+  });
 
   return result;
 };
