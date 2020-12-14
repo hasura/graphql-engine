@@ -94,7 +94,18 @@ const Permissions = ({ allRoles, ...props }: any) => {
     let permissionsSchema: any = null;
 
     if (!isNewRole && !!schemaDefinition) {
-      permissionsSchema = GQL.buildSchema(schemaDefinition);
+      try {
+        const directive = `scalar PresetValue\n
+           directive @preset(
+               value: PresetValue
+           ) on INPUT_FIELD_DEFINITION | ARGUMENT_DEFINITION\n
+         `;
+        const newDef = directive + schemaDefinition;
+        permissionsSchema = GQL.buildSchema(newDef);
+        // console.log('>><<', permissionsSchema, schemaDefinition);
+      } catch (err) {
+        console.log(err);
+      }
     }
 
     const types = getType(schema, permissionsSchema);
