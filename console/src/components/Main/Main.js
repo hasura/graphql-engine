@@ -48,6 +48,9 @@ import { ProPopup } from './components/ProPopup';
 import LoveSection from './LoveSection';
 import { HASURA_COLLABORATOR_TOKEN } from '../../constants';
 import { UPDATE_CONSOLE_NOTIFICATIONS } from '../../telemetry/Actions';
+import { getLSItem, LS_KEYS, setLSItem } from '../../utils/localStorage';
+import { versionGT } from '../../helpers/versionUtils';
+import { UpdateVersion } from './components/UpdateVersion';
 
 const updateRequestHeaders = props => {
   const { requestHeaders, dispatch } = props;
@@ -103,7 +106,10 @@ class Main extends React.Component {
         }
       );
 
-      dispatch(loadLatestServerVersion());
+      dispatch(loadLatestServerVersion()).then(() => {
+        this.setShowUpdateNotification();
+      });
+
       dispatch(fetchConsoleNotifications());
     });
 
@@ -250,6 +256,55 @@ class Main extends React.Component {
       isLoveSectionOpen: !prevState.isLoveSectionOpen,
     }));
   };
+
+  closeUpdateBanner = () => {
+    const { updateNotificationVersion } = this.state;
+    setLSItem(LS_KEYS.versionUpdateCheckLastClosed, updateNotificationVersion);
+    this.setState({ updateNotificationVersion: null });
+  };
+
+  setShowUpdateNotification() {
+    const {
+      latestStableServerVersion,
+      latestPreReleaseServerVersion,
+      serverVersion,
+      console_opts,
+    } = this.props;
+
+    const allowPreReleaseNotifications =
+      !console_opts || !console_opts.disablePreReleaseUpdateNotifications;
+
+    let latestServerVersionToCheck;
+    if (
+      allowPreReleaseNotifications &&
+      versionGT(latestPreReleaseServerVersion, latestStableServerVersion)
+    ) {
+      latestServerVersionToCheck = latestPreReleaseServerVersion;
+    } else {
+      latestServerVersionToCheck = latestStableServerVersion;
+    }
+
+    try {
+      const lastUpdateCheckClosed = getLSItem(
+        LS_KEYS.versionUpdateCheckLastClosed
+      );
+
+      if (lastUpdateCheckClosed !== latestServerVersionToCheck) {
+        const isUpdateAvailable = versionGT(
+          latestServerVersionToCheck,
+          serverVersion
+        );
+
+        if (isUpdateAvailable) {
+          this.setState({
+            updateNotificationVersion: latestServerVersionToCheck,
+          });
+        }
+      }
+    } catch (e) {
+      console.error(e);
+    }
+  }
 
   render() {
     const {
@@ -477,6 +532,11 @@ class Main extends React.Component {
           <div className={styles.main + ' container-fluid'}>
             {getMainContent()}
           </div>
+          <UpdateVersion
+            closeUpdateBanner={this.closeUpdateBanner}
+            dispatch={this.props.dispatch}
+            updateNotificationVersion={this.state.updateNotificationVersion}
+          />
         </div>
       </div>
     );
