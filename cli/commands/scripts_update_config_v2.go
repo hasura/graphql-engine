@@ -347,7 +347,7 @@ func newScriptsUpdateConfigV2Cmd(ec *cli.ExecutionContext) *cobra.Command {
 			if _, err = os.Stat(filepath.Join(ec.MigrationDir, "metadata.yaml")); err == nil || os.IsExist(err) {
 				err = os.Remove(filepath.Join(ec.MigrationDir, "metadata.yaml"))
 				if err != nil {
-					ec.Logger.Infoln("Warning: cannot remove metadata.yaml file")
+					ec.Logger.Warnln("Warning: cannot remove metadata.yaml file")
 				}
 			}
 
