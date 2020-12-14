@@ -11,7 +11,6 @@ import { getPathRoot } from '../Common/utils/urlUtils';
 import Spinner from '../Common/Spinner/Spinner';
 import WarningSymbol from '../Common/WarningSymbol/WarningSymbol';
 import logo from './images/white-logo.svg';
-import { versionGT } from '../../helpers/versionUtils';
 
 import NotificationSection from './NotificationSection';
 
@@ -43,12 +42,12 @@ import {
   getLocalStorageItem,
   LS_VERSION_UPDATE_CHECK_LAST_CLOSED,
   setLocalStorageItem,
+  LS_KEYS,
 } from '../Common/utils/localStorageUtils';
 import { ProPopup } from './components/ProPopup';
 import LoveSection from './LoveSection';
 import { HASURA_COLLABORATOR_TOKEN } from '../../constants';
 import { UPDATE_CONSOLE_NOTIFICATIONS } from '../../telemetry/Actions';
-import { getLSItem, LS_KEYS, setLSItem } from '../../utils/localStorage';
 import { versionGT } from '../../helpers/versionUtils';
 import { UpdateVersion } from './components/UpdateVersion';
 
@@ -134,49 +133,6 @@ class Main extends React.Component {
     this.setState({ isPopUpOpen: !this.state.isPopUpOpen });
   };
 
-  setShowUpdateNotification() {
-    const {
-      latestStableServerVersion,
-      latestPreReleaseServerVersion,
-      serverVersion,
-      console_opts,
-    } = this.props;
-
-    const allowPreReleaseNotifications =
-      !console_opts || !console_opts.disablePreReleaseUpdateNotifications;
-
-    let latestServerVersionToCheck;
-    if (
-      allowPreReleaseNotifications &&
-      versionGT(latestPreReleaseServerVersion, latestStableServerVersion)
-    ) {
-      latestServerVersionToCheck = latestPreReleaseServerVersion;
-    } else {
-      latestServerVersionToCheck = latestStableServerVersion;
-    }
-
-    try {
-      const lastUpdateCheckClosed = getLocalStorageItem(
-        LS_VERSION_UPDATE_CHECK_LAST_CLOSED
-      );
-
-      if (lastUpdateCheckClosed !== latestServerVersionToCheck) {
-        const isUpdateAvailable = versionGT(
-          latestServerVersionToCheck,
-          serverVersion
-        );
-
-        if (isUpdateAvailable) {
-          this.setState({
-            updateNotificationVersion: latestServerVersionToCheck,
-          });
-        }
-      }
-    } catch (e) {
-      console.error(e);
-    }
-  }
-
   handleBodyClick(e) {
     const heartDropDown = document.getElementById('dropdown_wrapper');
     const heartDropDownOpen = document.querySelectorAll(
@@ -259,7 +215,10 @@ class Main extends React.Component {
 
   closeUpdateBanner = () => {
     const { updateNotificationVersion } = this.state;
-    setLSItem(LS_KEYS.versionUpdateCheckLastClosed, updateNotificationVersion);
+    setLocalStorageItem(
+      LS_KEYS.versionUpdateCheckLastClosed,
+      updateNotificationVersion
+    );
     this.setState({ updateNotificationVersion: null });
   };
 
@@ -285,7 +244,7 @@ class Main extends React.Component {
     }
 
     try {
-      const lastUpdateCheckClosed = getLSItem(
+      const lastUpdateCheckClosed = getLocalStorageItem(
         LS_KEYS.versionUpdateCheckLastClosed
       );
 
