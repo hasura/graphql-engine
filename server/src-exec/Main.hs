@@ -10,6 +10,7 @@ import           Data.Time.Clock.POSIX      (getPOSIXTime)
 
 import           Hasura.App
 import           Hasura.Logging             (Hasura, LogLevel (..), defaultEnabledEngineLogTypes)
+import           Hasura.Metadata.Class
 import           Hasura.Prelude
 import           Hasura.RQL.DDL.Schema
 import           Hasura.RQL.Types
@@ -85,14 +86,16 @@ runApp env (HGEOptionsG rci hgeCmd) = do
       queryBs <- liftIO BL.getContents
       let sqlGenCtx = SQLGenCtx False
       pool <- mkMinimalPool _gcConnInfo
-      res <- runAsAdmin pool sqlGenCtx _gcHttpManager $ do
-        schemaCache <- buildRebuildableSchemaCache env
-        metadata <- liftTx fetchMetadataFromCatalog
-        execQuery env queryBs
-          & Tracing.runTraceTWithReporter Tracing.noReporter "execute"
-          & runMetadataT metadata
-          & runCacheRWT schemaCache
-          & fmap (\((res, _), _, _) -> res)
+      res <- flip runPGMetadataStorageApp pool $
+        runMetadataStorageT $ liftEitherM $
+        runAsAdmin pool sqlGenCtx _gcHttpManager $ do
+          metadata <- liftTx fetchMetadataFromCatalog
+          schemaCache <- buildRebuildableSchemaCache env metadata
+          execQuery env queryBs
+            & Tracing.runTraceTWithReporter Tracing.noReporter "execute"
+            & runMetadataT metadata
+            & runCacheRWT schemaCache
+            & fmap (\((res, _), _, _) -> res)
       either (printErrJExit ExecuteProcessError) (liftIO . BLC.putStrLn) res
 
     HCDowngrade opts -> do

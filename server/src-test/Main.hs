@@ -86,7 +86,7 @@ buildPostgresSpecs pgConnOptions = do
         httpManager <- HTTP.newManager HTTP.tlsManagerSettings
         let runContext = RunCtx adminUserInfo httpManager (SQLGenCtx False)
 
-            runAsAdmin :: Run a -> IO a
+            runAsAdmin :: RunT IO a -> IO a
             runAsAdmin =
                   peelRun runContext pgContext Q.ReadWrite Nothing
               >>> runExceptT

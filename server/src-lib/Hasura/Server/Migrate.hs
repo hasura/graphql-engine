@@ -32,7 +32,6 @@ import qualified Database.PG.Query.Connection        as Q
 import qualified Language.Haskell.TH.Lib             as TH
 import qualified Language.Haskell.TH.Syntax          as TH
 
-import           Control.Monad.Unique
 import           Data.Time.Clock                     (UTCTime)
 import           System.Directory                    (doesFileExist)
 
@@ -85,22 +84,24 @@ migrateCatalog
    . ( HasVersion
      , MonadIO m
      , MonadTx m
-     , MonadUnique m
      , HasHttpManager m
      , HasSQLGenCtx m
      )
   => Env.Environment
   -> UTCTime
-  -> m (MigrationResult, RebuildableSchemaCache m)
+  -> m (MigrationResult, RebuildableSchemaCache)
 migrateCatalog env migrationTime = do
-  doesSchemaExist (SchemaName "hdb_catalog") >>= \case
+  migrationResult <- doesSchemaExist (SchemaName "hdb_catalog") >>= \case
     False -> initialize True
     True  -> doesTableExist (SchemaName "hdb_catalog") (TableName "hdb_version") >>= \case
       False -> initialize False
       True  -> migrateFrom =<< getCatalogVersion
+  metadata <- liftTx fetchMetadataFromCatalog
+  schemaCache <- buildRebuildableSchemaCache env metadata
+  pure (migrationResult, schemaCache)
   where
     -- initializes the catalog, creating the schema if necessary
-    initialize :: Bool -> m (MigrationResult, RebuildableSchemaCache m)
+    initialize :: Bool -> m MigrationResult
     initialize createSchema =  do
       liftTx $ Q.catchE defaultTxErrorHandler $
         when createSchema $ Q.unitQ "CREATE SCHEMA hdb_catalog" () False
@@ -114,9 +115,8 @@ migrateCatalog env migrationTime = do
           <> "PostgreSQL server. Please make sure this extension is available."
 
       runTx $(Q.sqlFromFile "src-rsr/initialise.sql")
-      schemaCache <- buildRebuildableSchemaCache env
       updateCatalogVersion
-      pure (MRInitialized, schemaCache)
+      pure MRInitialized
       where
         needsPGCryptoError e@(Q.PGTxErr _ _ _ err) =
           case err of
@@ -136,11 +136,9 @@ migrateCatalog env migrationTime = do
               <> " https://hasura.io/docs/1.0/graphql/manual/deployment/postgres-permissions.html"
 
     -- migrates an existing catalog to the latest version from an existing verion
-    migrateFrom :: Text -> m (MigrationResult, RebuildableSchemaCache m)
+    migrateFrom :: Text -> m MigrationResult
     migrateFrom previousVersion
-      | previousVersion == latestCatalogVersionString = do
-          schemaCache <- buildRebuildableSchemaCache env
-          pure (MRNothingToDo, schemaCache)
+      | previousVersion == latestCatalogVersionString = pure MRNothingToDo
       | [] <- neededMigrations =
           throw400 NotSupported $
             "Cannot use database previously used with a newer version of graphql-engine (expected"
@@ -148,9 +146,8 @@ migrateCatalog env migrationTime = do
               <> " is " <> previousVersion <> ")."
       | otherwise = do
           traverse_ (mpMigrate . snd) neededMigrations
-          schemaCache <- buildRebuildableSchemaCache env
           updateCatalogVersion
-          pure (MRMigrated previousVersion, schemaCache)
+          pure $ MRMigrated previousVersion
       where
         neededMigrations =
           dropWhile ((/= previousVersion) . fst) (migrations False)

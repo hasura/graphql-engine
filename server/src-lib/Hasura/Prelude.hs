@@ -11,6 +11,7 @@ module Hasura.Prelude
   , choice
   , afold
   , bsToTxt
+  , lbsToTxt
   , txtToBs
   , base64Decode
   , spanMaybeM
@@ -118,6 +119,9 @@ afold = getAlt . foldMap pure
 
 bsToTxt :: B.ByteString -> Text
 bsToTxt = TE.decodeUtf8With TE.lenientDecode
+
+lbsToTxt :: BL.ByteString -> Text
+lbsToTxt = bsToTxt . BL.toStrict
 
 txtToBs :: Text -> B.ByteString
 txtToBs = TE.encodeUtf8
