@@ -1,7 +1,6 @@
 module Hasura.RQL.DDL.Permission
     ( CreatePerm
     , runCreatePerm
-    , purgePerm
     , PermDef(..)
 
     , InsPerm(..)
@@ -25,10 +24,10 @@ module Hasura.RQL.DDL.Permission
     , buildDelPermInfo
 
     , IsPerm(..)
-    , addPermP2
 
     , DropPerm
     , runDropPerm
+    , dropPermissionInMetadata
 
     , SetPermComment(..)
     , runSetPermComment
@@ -39,6 +38,7 @@ module Hasura.RQL.DDL.Permission
 import           Hasura.Prelude
 
 import qualified Data.HashMap.Strict                as HM
+import qualified Data.HashMap.Strict.InsOrd         as OMap
 import qualified Data.HashSet                       as HS
 import qualified Database.PG.Query                  as Q
 
@@ -46,14 +46,13 @@ import           Data.Aeson
 import           Data.Aeson.Casing
 import           Data.Aeson.TH
 import           Data.Text.Extended
-import           Language.Haskell.TH.Syntax         (Lift)
 
 import           Hasura.Backends.Postgres.SQL.Types
 import           Hasura.EncJSON
-import           Hasura.Incremental                 (Cacheable)
 import           Hasura.RQL.DDL.Permission.Internal
 import           Hasura.RQL.DML.Internal            hiding (askPermInfo)
 import           Hasura.RQL.Types
+import           Hasura.SQL.Types
 import           Hasura.Session
 
 
@@ -87,21 +86,6 @@ TRUE            TRUE (OR NOT-SET)         FALSE                                 
 TRUE            TRUE (OR NOT-SET)         TRUE                                   Mutation is shown
 -}
 
--- Insert permission
-data InsPerm (b :: Backend)
-  = InsPerm
-  { ipCheck       :: !(BoolExp b)
-  , ipSet         :: !(Maybe (ColumnValues Value))
-  , ipColumns     :: !(Maybe PermColSpec)
-  , ipBackendOnly :: !(Maybe Bool) -- see Note [Backend only permissions]
-  } deriving (Show, Eq, Lift, Generic)
-instance Cacheable (InsPerm 'Postgres)
-instance FromJSON (InsPerm 'Postgres) where
-  parseJSON = genericParseJSON $ aesonDrop 2 snakeCase
-instance ToJSON (InsPerm 'Postgres) where
-  toJSON = genericToJSON (aesonDrop 2 snakeCase) {omitNothingFields=True}
-
-type InsPermDef    b = PermDef    (InsPerm b)
 type CreateInsPerm b = CreatePerm (InsPerm b)
 
 procSetObj
@@ -115,7 +99,7 @@ procSetObj tn fieldInfoMap mObj = do
     fmap unzip $ forM (HM.toList setObj) $ \(pgCol, val) -> do
       ty <- askPGType fieldInfoMap pgCol $
         "column " <> pgCol <<> " not found in table " <>> tn
-      sqlExp <- valueParser (PGTypeScalar ty) val
+      sqlExp <- valueParser (CollectableTypeScalar ty) val
       let dep = mkColDep (getDepReason sqlExp) tn pgCol
       return ((pgCol, sqlExp), dep)
   return (HM.fromList setColTups, depHeaders, deps)
@@ -125,6 +109,62 @@ procSetObj tn fieldInfoMap mObj = do
       HM.fromList $ map (first getPGColTxt) $ HM.toList setObj
 
     getDepReason = bool DRSessionVariable DROnType . isStaticValue
+
+class (ToJSON a) => IsPerm a where
+
+  permAccessor
+    :: PermAccessor 'Postgres (PermInfo a)
+
+  buildPermInfo
+    :: (QErrM m, TableCoreInfoRM m)
+    => QualifiedTable
+    -> FieldInfoMap (FieldInfo 'Postgres)
+    -> PermDef a
+    -> m (WithDeps (PermInfo a))
+
+  getPermAcc1
+    :: PermDef a -> PermAccessor 'Postgres (PermInfo a)
+  getPermAcc1 _ = permAccessor
+
+  getPermAcc2
+    :: DropPerm a -> PermAccessor 'Postgres (PermInfo a)
+  getPermAcc2 _ = permAccessor
+
+  addPermToMetadata
+    :: PermDef a -> TableMetadata -> TableMetadata
+
+runCreatePerm
+  :: (UserInfoM m, CacheRWM m, IsPerm a, MonadError QErr m, MetadataM m)
+  => CreatePerm a -> m EncJSON
+runCreatePerm (WithTable tn pd) = do
+  let pt = permAccToType $ getPermAcc1 pd
+      role = _pdRole pd
+      metadataObject = MOTableObj tn $ MTOPerm role pt
+  buildSchemaCacheFor metadataObject
+    $ MetadataModifier
+    $ metaTables.ix tn %~ addPermToMetadata pd
+  pure successMsg
+
+runDropPerm
+  :: (IsPerm a, UserInfoM m, CacheRWM m, MonadTx m, MetadataM m)
+  => DropPerm a -> m EncJSON
+runDropPerm dp@(DropPerm table role) = do
+  tabInfo <- askTabInfo table
+  let permType = permAccToType $ getPermAcc2 dp
+  askPermInfo tabInfo role $ getPermAcc2 dp
+  withNewInconsistentObjsCheck
+    $ buildSchemaCache
+    $ MetadataModifier
+    $ metaTables.ix table %~ dropPermissionInMetadata role permType
+  return successMsg
+
+dropPermissionInMetadata
+  :: RoleName -> PermType -> TableMetadata -> TableMetadata
+dropPermissionInMetadata rn = \case
+  PTInsert -> tmInsertPermissions %~ OMap.delete rn
+  PTSelect -> tmSelectPermissions %~ OMap.delete rn
+  PTDelete -> tmDeletePermissions %~ OMap.delete rn
+  PTUpdate -> tmUpdatePermissions %~ OMap.delete rn
 
 buildInsPermInfo
   :: (QErrM m, TableCoreInfoRM m)
@@ -158,27 +198,8 @@ instance IsPerm (InsPerm 'Postgres) where
   permAccessor = PAInsert
   buildPermInfo = buildInsPermInfo
 
--- Select constraint
-data SelPerm (b :: Backend)
-  = SelPerm
-  { spColumns           :: !PermColSpec         -- ^ Allowed columns
-  , spFilter            :: !(BoolExp b)         -- ^ Filter expression
-  , spLimit             :: !(Maybe Int)         -- ^ Limit value
-  , spAllowAggregations :: !Bool                -- ^ Allow aggregation
-  , spComputedFields    :: ![ComputedFieldName] -- ^ Allowed computed fields
-  } deriving (Show, Eq, Lift, Generic)
-instance Cacheable (SelPerm 'Postgres)
-instance ToJSON (SelPerm 'Postgres) where
-  toJSON = genericToJSON (aesonDrop 2 snakeCase) {omitNothingFields=True}
-
-instance FromJSON (SelPerm 'Postgres) where
-  parseJSON = withObject "SelPerm" $ \o ->
-    SelPerm
-    <$> o .: "columns"
-    <*> o .: "filter"
-    <*> o .:? "limit"
-    <*> o .:? "allow_aggregations" .!= False
-    <*> o .:? "computed_fields" .!= []
+  addPermToMetadata permDef =
+    tmInsertPermissions %~ OMap.insert (_pdRole permDef) permDef
 
 buildSelPermInfo
   :: (QErrM m, TableCoreInfoRM m)
@@ -223,7 +244,6 @@ buildSelPermInfo tn fieldInfoMap sp = withPathK "permission" $ do
     computedFields = spComputedFields sp
     autoInferredErr = "permissions for relationships are automatically inferred"
 
-type SelPermDef    b = PermDef    (SelPerm b)
 type CreateSelPerm b = CreatePerm (SelPerm b)
 
 -- TODO see TODO for PermInfo above.
@@ -234,27 +254,10 @@ instance IsPerm (SelPerm 'Postgres) where
   buildPermInfo tn fieldInfoMap (PermDef _ a _) =
     buildSelPermInfo tn fieldInfoMap a
 
--- Update constraint
-data UpdPerm b
-  = UpdPerm
-  { ucColumns :: !PermColSpec -- Allowed columns
-  , ucSet     :: !(Maybe (ColumnValues Value)) -- Preset columns
-  , ucFilter  :: !(BoolExp b) -- Filter expression (applied before update)
-  , ucCheck   :: !(Maybe (BoolExp b))
-  -- ^ Check expression, which must be true after update.
-  -- This is optional because we don't want to break the v1 API
-  -- but Nothing should be equivalent to the expression which always
-  -- returns true.
-  } deriving (Show, Eq, Lift, Generic)
-instance Cacheable (UpdPerm 'Postgres)
-instance FromJSON (UpdPerm 'Postgres) where
-  parseJSON = genericParseJSON $ aesonDrop 2 snakeCase
-instance ToJSON (UpdPerm 'Postgres) where
-  toJSON = genericToJSON (aesonDrop 2 snakeCase) {omitNothingFields=True}
+  addPermToMetadata permDef =
+    tmSelectPermissions %~ OMap.insert (_pdRole permDef) permDef
 
-type UpdPermDef    b = PermDef    (UpdPerm b)
 type CreateUpdPerm b = CreatePerm (UpdPerm b)
-
 
 buildUpdPermInfo
   :: (QErrM m, TableCoreInfoRM m)
@@ -294,17 +297,9 @@ instance IsPerm (UpdPerm 'Postgres) where
   buildPermInfo tn fieldInfoMap (PermDef _ a _) =
     buildUpdPermInfo tn fieldInfoMap a
 
--- Delete permission
-data DelPerm (b :: Backend)
-  = DelPerm { dcFilter :: !(BoolExp b) }
-  deriving (Show, Eq, Lift, Generic)
-instance Cacheable (DelPerm 'Postgres)
-instance FromJSON (DelPerm 'Postgres) where
-  parseJSON = genericParseJSON $ aesonDrop 2 snakeCase
-instance ToJSON (DelPerm 'Postgres) where
-  toJSON = genericToJSON (aesonDrop 2 snakeCase) {omitNothingFields=True}
+  addPermToMetadata permDef =
+    tmUpdatePermissions %~ OMap.insert (_pdRole permDef) permDef
 
-type DelPermDef    b = PermDef    (DelPerm b)
 type CreateDelPerm b = CreatePerm (DelPerm b)
 
 buildDelPermInfo
@@ -328,13 +323,16 @@ instance IsPerm (DelPerm 'Postgres) where
   buildPermInfo tn fieldInfoMap (PermDef _ a _) =
     buildDelPermInfo tn fieldInfoMap a
 
+  addPermToMetadata permDef =
+    tmDeletePermissions %~ OMap.insert (_pdRole permDef) permDef
+
 data SetPermComment
   = SetPermComment
   { apTable      :: !QualifiedTable
   , apRole       :: !RoleName
   , apPermission :: !PermType
   , apComment    :: !(Maybe Text)
-  } deriving (Show, Eq, Lift)
+  } deriving (Show, Eq)
 
 $(deriveJSON (aesonDrop 2 snakeCase) ''SetPermComment)
 
@@ -373,17 +371,6 @@ setPermCommentTx (SetPermComment (QualifiedObject sn tn) rn pt comment) =
              AND role_name = $4
              AND perm_type = $5
                 |] (comment, sn, tn, rn, permTypeToCode pt) True
-
-purgePerm :: MonadTx m => QualifiedTable -> RoleName -> PermType -> m ()
-purgePerm qt rn pt =
-    case pt of
-      PTInsert -> dropPermP2 @(InsPerm 'Postgres) dp
-      PTSelect -> dropPermP2 @(SelPerm 'Postgres) dp
-      PTUpdate -> dropPermP2 @(UpdPerm 'Postgres) dp
-      PTDelete -> dropPermP2 @(DelPerm 'Postgres) dp
-  where
-    dp :: DropPerm a
-    dp = DropPerm qt rn
 
 fetchPermDef
   :: QualifiedTable

@@ -17,37 +17,40 @@ module Hasura.GraphQL.Transport.HTTP
   , ResultsFragment(..)
   ) where
 
-import           Control.Monad.Morph                    (hoist)
+import           Control.Monad.Morph                         (hoist)
 
 import           Hasura.EncJSON
 import           Hasura.GraphQL.Context
-import           Hasura.GraphQL.Logging                 (MonadQueryLog (..))
-import           Hasura.GraphQL.Parser.Column           (UnpreparedValue)
+import           Hasura.GraphQL.Execute.Prepare              (ExecutionPlan)
+import           Hasura.GraphQL.Logging                      (MonadQueryLog (..))
+import           Hasura.GraphQL.Parser.Column                (UnpreparedValue)
 import           Hasura.GraphQL.Transport.HTTP.Protocol
 import           Hasura.HTTP
+import           Hasura.Metadata.Class
 import           Hasura.Prelude
 import           Hasura.RQL.Types
 import           Hasura.Server.Init.Config
-import           Hasura.Server.Utils                    (RequestId)
-import           Hasura.Server.Version                  (HasVersion)
+import           Hasura.Server.Types                         (RequestId)
+import           Hasura.Server.Version                       (HasVersion)
 import           Hasura.Session
-import           Hasura.Tracing                         (MonadTrace, TraceT, trace)
+import           Hasura.Tracing                              (MonadTrace, TraceT, trace)
 
-import qualified Data.Aeson                             as J
-import qualified Data.Aeson.Ordered                     as JO
-import qualified Data.ByteString.Lazy                   as LBS
-import qualified Data.Environment                       as Env
-import qualified Data.HashMap.Strict.InsOrd             as OMap
-import qualified Data.Text                              as T
-import qualified Database.PG.Query                      as Q
-import qualified Hasura.GraphQL.Execute                 as E
-import qualified Hasura.GraphQL.Execute.Query           as EQ
-import qualified Hasura.Logging                         as L
-import qualified Hasura.Server.Telemetry.Counters       as Telem
-import qualified Hasura.Tracing                         as Tracing
-import qualified Language.GraphQL.Draft.Syntax          as G
-import qualified Network.HTTP.Types                     as HTTP
-import qualified Network.Wai.Extended                   as Wai
+import qualified Data.Aeson                                  as J
+import qualified Data.Aeson.Ordered                          as JO
+import qualified Data.ByteString.Lazy                        as LBS
+import qualified Data.Environment                            as Env
+import qualified Data.HashMap.Strict.InsOrd                  as OMap
+import qualified Data.Text                                   as T
+import qualified Database.PG.Query                           as Q
+import qualified Hasura.Backends.Postgres.Execute.RemoteJoin as RJ
+import qualified Hasura.GraphQL.Execute                      as E
+import qualified Hasura.GraphQL.Execute.Query                as EQ
+import qualified Hasura.Logging                              as L
+import qualified Hasura.Server.Telemetry.Counters            as Telem
+import qualified Hasura.Tracing                              as Tracing
+import qualified Language.GraphQL.Draft.Syntax               as G
+import qualified Network.HTTP.Types                          as HTTP
+import qualified Network.Wai.Extended                        as Wai
 
 data QueryCacheKey = QueryCacheKey
   { qckQueryString :: !GQLReqParsed
@@ -65,11 +68,13 @@ class Monad m => MonadExecuteQuery m where
   -- headers that can instruct a client how long a response can be cached
   -- locally (i.e. client-side).
   cacheLookup
-    :: [QueryRootField UnpreparedValue]
+    :: [QueryRootField (UnpreparedValue 'Postgres)]
     -- ^ Used to check that the query is cacheable
+    -> ExecutionPlan (Maybe (Maybe (RJ.RemoteJoins 'Postgres)))
+    -- ^ Used to check if the elaborated query supports caching
     -> QueryCacheKey
     -- ^ Key that uniquely identifies the result of a query execution
-    -> TraceT m (HTTP.ResponseHeaders, Maybe EncJSON)
+    -> TraceT (ExceptT QErr m) (HTTP.ResponseHeaders, Maybe EncJSON)
     -- ^ HTTP headers to be sent back to the caller for this GraphQL request,
     -- containing e.g. time-to-live information, and a cached value if found and
     -- within time-to-live.  So a return value (non-empty-ttl-headers, Nothing)
@@ -89,20 +94,24 @@ class Monad m => MonadExecuteQuery m where
     -- ^ Key under which to store the result of a query execution
     -> EncJSON
     -- ^ Result of a query execution
-    -> TraceT m ()
+    -> TraceT (ExceptT QErr m) ()
     -- ^ Always succeeds
 
 instance MonadExecuteQuery m => MonadExecuteQuery (ReaderT r m) where
-  cacheLookup a b = hoist lift $ cacheLookup a b
-  cacheStore  a b = hoist lift $ cacheStore  a b
+  cacheLookup a b c = hoist (hoist lift) $ cacheLookup a b c
+  cacheStore  a b = hoist (hoist lift) $ cacheStore  a b
 
 instance MonadExecuteQuery m => MonadExecuteQuery (ExceptT r m) where
-  cacheLookup a b = hoist lift $ cacheLookup a b
-  cacheStore  a b = hoist lift $ cacheStore  a b
+  cacheLookup a b c = hoist (hoist lift) $ cacheLookup a b c
+  cacheStore  a b = hoist (hoist lift) $ cacheStore  a b
 
 instance MonadExecuteQuery m => MonadExecuteQuery (TraceT m) where
-  cacheLookup a b = hoist lift $ cacheLookup a b
-  cacheStore  a b = hoist lift $ cacheStore  a b
+  cacheLookup a b c = hoist (hoist lift) $ cacheLookup a b c
+  cacheStore  a b = hoist (hoist lift) $ cacheStore  a b
+
+instance MonadExecuteQuery m => MonadExecuteQuery (MetadataStorageT m) where
+  cacheLookup a b c = hoist (hoist lift) $ cacheLookup a b c
+  cacheStore  a b = hoist (hoist lift) $ cacheStore  a b
 
 data ResultsFragment = ResultsFragment
   { rfTimeIO   :: DiffTime
@@ -123,6 +132,7 @@ runGQ
      , MonadTrace m
      , MonadExecuteQuery m
      , EQ.MonadQueryInstrumentation m
+     , MonadMetadataStorage (MetadataStorageT m)
      )
   => Env.Environment
   -> L.Logger L.Hasura
@@ -147,7 +157,8 @@ runGQ env logger reqId userInfo ipAddress reqHeaders queryType reqUnparsed = do
     (telemCacheHit,) <$> case execPlan of
       E.QueryExecutionPlan queryPlans asts -> trace "Query" $ do
         let cacheKey = QueryCacheKey reqParsed $ _uiRole userInfo
-        (responseHeaders, cachedValue) <- Tracing.interpTraceT id $ cacheLookup asts cacheKey
+            redactedPlan = fmap (fmap (fmap EQ._psRemoteJoins . snd)) queryPlans
+        (responseHeaders, cachedValue) <- Tracing.interpTraceT (liftEitherM . runExceptT) $ cacheLookup asts redactedPlan cacheKey
         case cachedValue of
           Just cachedResponseData ->
             pure (Telem.Query, 0, Telem.Local, HttpResponse cachedResponseData responseHeaders)
@@ -162,7 +173,7 @@ runGQ env logger reqId userInfo ipAddress reqHeaders queryType reqUnparsed = do
               E.ExecStepRaw json ->
                 buildRaw json
             out@(_, _, _, HttpResponse responseData _) <- buildResult Telem.Query conclusion responseHeaders
-            Tracing.interpTraceT id $ cacheStore cacheKey responseData
+            Tracing.interpTraceT (liftEitherM . runExceptT) $ cacheStore cacheKey responseData
             pure out
 
       E.MutationExecutionPlan mutationPlans -> do
@@ -249,6 +260,7 @@ runGQBatched
      , MonadTrace m
      , MonadExecuteQuery m
      , EQ.MonadQueryInstrumentation m
+     , MonadMetadataStorage (MetadataStorageT m)
      )
   => Env.Environment
   -> L.Logger L.Hasura

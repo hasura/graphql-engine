@@ -6,3 +6,41 @@ args:
 - type: track_table
   args:
     name: test
+- type: run_sql
+  args:
+    sql: |
+      create table articles(
+        id serial primary key,
+        user_id int,
+        content text,
+        title text,
+        is_public bool default false
+      );
+- type: track_table
+  args:
+    name: articles
+- type: create_select_permission
+  args:
+    table:
+      name: articles
+    role: public
+    permission:
+      columns:
+        - title
+        - content
+      filter:
+        is_public: true
+- type: create_select_permission
+  args:
+    table:
+      name: articles
+    role: user
+    permission:
+      columns:
+        - user_id
+        - title
+        - content
+        - is_public
+      filter:
+        id:
+          _eq: X-Hasura-User-Id

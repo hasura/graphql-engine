@@ -7,6 +7,7 @@ module Hasura.Session
   , SessionVariable
   , mkSessionVariable
   , SessionVariables
+  , filterSessionVariables
   , SessionVariableValue
   , sessionVariableToText
   , mkSessionVariablesText
@@ -39,8 +40,6 @@ import           Data.Aeson
 import           Data.Aeson.Types           (Parser, toJSONKeyText)
 import           Data.Text.Extended
 import           Data.Text.NonEmpty
-import           Instances.TH.Lift          ()
-import           Language.Haskell.TH.Syntax (Lift)
 
 import           Hasura.Incremental         (Cacheable)
 import           Hasura.RQL.Types.Common    (adminText)
@@ -51,7 +50,7 @@ import           Hasura.Server.Utils
 newtype RoleName
   = RoleName {getRoleTxt :: NonEmptyText}
   deriving ( Show, Eq, Ord, Hashable, FromJSONKey, ToJSONKey, FromJSON
-           , ToJSON, Q.FromCol, Q.ToPrepArg, Lift, Generic, Arbitrary, NFData, Cacheable )
+           , ToJSON, Q.FromCol, Q.ToPrepArg, Generic, Arbitrary, NFData, Cacheable )
 
 instance ToTxt RoleName where
   toTxt = roleNameToTxt
@@ -99,6 +98,11 @@ type SessionVariableValue = Text
 newtype SessionVariables =
   SessionVariables { unSessionVariables :: Map.HashMap SessionVariable SessionVariableValue}
   deriving (Show, Eq, Hashable, Semigroup, Monoid)
+
+filterSessionVariables
+  :: (SessionVariable -> SessionVariableValue -> Bool)
+  -> SessionVariables -> SessionVariables
+filterSessionVariables f = SessionVariables . Map.filterWithKey f . unSessionVariables
 
 instance ToJSON SessionVariables where
   toJSON (SessionVariables varMap) =

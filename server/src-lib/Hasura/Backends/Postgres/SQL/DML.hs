@@ -2,17 +2,17 @@ module Hasura.Backends.Postgres.SQL.DML where
 
 import           Hasura.Prelude
 
-import qualified Data.Aeson                     as J
-import qualified Data.HashMap.Strict            as HM
-import qualified Data.Text                      as T
-import qualified Text.Builder                   as TB
+import qualified Data.Aeson                         as J
+import qualified Data.Aeson.Casing                  as J
+import qualified Data.HashMap.Strict                as HM
+import qualified Data.Text                          as T
+import qualified Text.Builder                       as TB
 
-import           Data.String                    (fromString)
+import           Data.String                        (fromString)
 import           Data.Text.Extended
-import           Language.Haskell.TH.Syntax     (Lift)
 
 import           Hasura.Backends.Postgres.SQL.Types
-import           Hasura.Incremental             (Cacheable)
+import           Hasura.Incremental                 (Cacheable)
 import           Hasura.SQL.Types
 
 
@@ -75,7 +75,7 @@ instance ToSQL OrderByItem where
     toSQL e <~> toSQL ot <~> toSQL no
 
 data OrderType = OTAsc | OTDesc
-  deriving (Show, Eq, Lift, Generic, Data)
+  deriving (Show, Eq, Generic, Data)
 instance NFData OrderType
 instance Cacheable OrderType
 instance Hashable OrderType
@@ -84,10 +84,16 @@ instance ToSQL OrderType where
   toSQL OTAsc  = "ASC"
   toSQL OTDesc = "DESC"
 
+instance J.FromJSON OrderType where
+  parseJSON = J.genericParseJSON $ J.defaultOptions{J.constructorTagModifier = J.snakeCase . drop 2}
+
+instance J.ToJSON OrderType where
+  toJSON = J.genericToJSON $ J.defaultOptions{J.constructorTagModifier = J.snakeCase . drop 2}
+
 data NullsOrder
   = NFirst
   | NLast
-  deriving (Show, Eq, Lift, Generic, Data)
+  deriving (Show, Eq, Generic, Data)
 instance NFData NullsOrder
 instance Cacheable NullsOrder
 instance Hashable NullsOrder
@@ -95,6 +101,12 @@ instance Hashable NullsOrder
 instance ToSQL NullsOrder where
   toSQL NFirst = "NULLS FIRST"
   toSQL NLast  = "NULLS LAST"
+
+instance J.FromJSON NullsOrder where
+  parseJSON = J.genericParseJSON $ J.defaultOptions{J.constructorTagModifier = J.snakeCase . drop 1}
+
+instance J.ToJSON NullsOrder where
+  toJSON = J.genericToJSON $ J.defaultOptions{J.constructorTagModifier = J.snakeCase . drop 1}
 
 instance ToSQL OrderByExp where
   toSQL (OrderByExp l) =
@@ -206,6 +218,9 @@ instance ToSQL Qual where
 mkQIdentifier :: (IsIdentifier a, IsIdentifier b) => a -> b -> QIdentifier
 mkQIdentifier q t = QIdentifier (QualifiedIdentifier (toIdentifier q) Nothing) (toIdentifier t)
 
+mkQIdentifierTable :: (IsIdentifier a) => QualifiedTable -> a -> QIdentifier
+mkQIdentifierTable q = QIdentifier (mkQual q) . toIdentifier
+
 data QIdentifier
   = QIdentifier !Qual !Identifier
   deriving (Show, Eq, Generic, Data)
@@ -246,29 +261,29 @@ newtype TypeAnn
 instance ToSQL TypeAnn where
   toSQL (TypeAnn ty) = "::" <> TB.text ty
 
-mkTypeAnn :: PGType PGScalarType -> TypeAnn
+mkTypeAnn :: CollectableType PGScalarType -> TypeAnn
 mkTypeAnn = TypeAnn . toSQLTxt
 
 intTypeAnn :: TypeAnn
-intTypeAnn = mkTypeAnn $ PGTypeScalar PGInteger
+intTypeAnn = mkTypeAnn $ CollectableTypeScalar PGInteger
 
 numericTypeAnn :: TypeAnn
-numericTypeAnn = mkTypeAnn $ PGTypeScalar PGNumeric
+numericTypeAnn = mkTypeAnn $ CollectableTypeScalar PGNumeric
 
 textTypeAnn :: TypeAnn
-textTypeAnn = mkTypeAnn $ PGTypeScalar PGText
+textTypeAnn = mkTypeAnn $ CollectableTypeScalar PGText
 
 textArrTypeAnn :: TypeAnn
-textArrTypeAnn = mkTypeAnn $ PGTypeArray PGText
+textArrTypeAnn = mkTypeAnn $ CollectableTypeArray PGText
 
 jsonTypeAnn :: TypeAnn
-jsonTypeAnn = mkTypeAnn $ PGTypeScalar PGJSON
+jsonTypeAnn = mkTypeAnn $ CollectableTypeScalar PGJSON
 
 jsonbTypeAnn :: TypeAnn
-jsonbTypeAnn = mkTypeAnn $ PGTypeScalar PGJSONB
+jsonbTypeAnn = mkTypeAnn $ CollectableTypeScalar PGJSONB
 
 boolTypeAnn :: TypeAnn
-boolTypeAnn = mkTypeAnn $ PGTypeScalar PGBoolean
+boolTypeAnn = mkTypeAnn $ CollectableTypeScalar PGBoolean
 
 data CountType
   = CTStar
@@ -324,7 +339,7 @@ instance Cacheable SQLExp
 instance Hashable SQLExp
 
 withTyAnn :: PGScalarType -> SQLExp -> SQLExp
-withTyAnn colTy v = SETyAnn v . mkTypeAnn $ PGTypeScalar colTy
+withTyAnn colTy v = SETyAnn v . mkTypeAnn $ CollectableTypeScalar colTy
 
 instance J.ToJSON SQLExp where
   toJSON = J.toJSON . toSQLTxt
@@ -710,15 +725,19 @@ data CompareOp
   | SLT
   | SIN
   | SNE
+  | SGTE
+  | SLTE
+  | SNIN
   | SLIKE
   | SNLIKE
   | SILIKE
   | SNILIKE
   | SSIMILAR
   | SNSIMILAR
-  | SGTE
-  | SLTE
-  | SNIN
+  | SREGEX
+  | SIREGEX
+  | SNREGEX
+  | SNIREGEX
   | SContains
   | SContainedIn
   | SHasKey
@@ -745,6 +764,10 @@ instance Show CompareOp where
     SNILIKE      -> "NOT ILIKE"
     SSIMILAR     -> "SIMILAR TO"
     SNSIMILAR    -> "NOT SIMILAR TO"
+    SREGEX    -> "~"
+    SIREGEX    -> "~*"
+    SNREGEX    -> "!~"
+    SNIREGEX    -> "!~*"
     SContains    -> "@>"
     SContainedIn -> "<@"
     SHasKey      -> "?"

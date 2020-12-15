@@ -104,7 +104,7 @@ module Hasura.RQL.Types.SchemaCache
   , getDependentObjs
   , getDependentObjsWith
 
-  , FunctionType(..)
+  , FunctionVolatility(..)
   , FunctionArg(..)
   , FunctionArgName(..)
   , FunctionName(..)
@@ -136,21 +136,20 @@ import           Hasura.GraphQL.Context              (GQLContext, RemoteField, R
 import           Hasura.Incremental                  (Dependency, MonadDepend (..), selectKeyD)
 import           Hasura.RQL.IR.BoolExp
 import           Hasura.RQL.Types.Action
-import           Hasura.RQL.Types.Common
+import           Hasura.RQL.Types.Common             hiding (FunctionName)
 import           Hasura.RQL.Types.ComputedField
 import           Hasura.RQL.Types.CustomTypes
 import           Hasura.RQL.Types.Error
 import           Hasura.RQL.Types.EventTrigger
 import           Hasura.RQL.Types.Function
 import           Hasura.RQL.Types.Metadata
---import           Hasura.RQL.Types.Permission
 import           Hasura.RQL.Types.QueryCollection
 import           Hasura.RQL.Types.RemoteSchema
 import           Hasura.RQL.Types.ScheduledTrigger
 import           Hasura.RQL.Types.SchemaCacheTypes
 import           Hasura.RQL.Types.Table
-import           Hasura.SQL.Backend
 import           Hasura.Session
+import           Hasura.SQL.Backend
 import           Hasura.Tracing                      (TraceT)
 
 
@@ -226,12 +225,11 @@ incSchemaCacheVer :: SchemaCacheVer -> SchemaCacheVer
 incSchemaCacheVer (SchemaCacheVer prev) =
   SchemaCacheVer $ prev + 1
 
-type FunctionCache = M.HashMap QualifiedFunction FunctionInfo -- info of all functions
 type ActionCache = M.HashMap ActionName (ActionInfo 'Postgres) -- info of all actions
 
 data SchemaCache
   = SchemaCache
-  { scTables                      :: !TableCache
+  { scTables                      :: !(TableCache 'Postgres)
   , scActions                     :: !ActionCache
   , scFunctions                   :: !FunctionCache
   , scRemoteSchemas               :: !RemoteSchemaMap
@@ -276,10 +274,10 @@ instance (TableCoreInfoRM m) => TableCoreInfoRM (TraceT m) where
   lookupTableCoreInfo = lift . lookupTableCoreInfo
 
 newtype TableCoreCacheRT m a
-  = TableCoreCacheRT { runTableCoreCacheRT :: Dependency TableCoreCache -> m a }
+  = TableCoreCacheRT { runTableCoreCacheRT :: Dependency (TableCoreCache 'Postgres) -> m a }
   deriving (Functor, Applicative, Monad, MonadIO, MonadError e, MonadState s, MonadWriter w, MonadTx)
-    via (ReaderT (Dependency TableCoreCache) m)
-  deriving (MonadTrans) via (ReaderT (Dependency TableCoreCache))
+    via (ReaderT (Dependency (TableCoreCache 'Postgres)) m)
+  deriving (MonadTrans) via (ReaderT (Dependency (TableCoreCache 'Postgres)))
 
 instance (MonadReader r m) => MonadReader r (TableCoreCacheRT m) where
   ask = lift ask

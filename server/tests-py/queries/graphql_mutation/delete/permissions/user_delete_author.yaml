@@ -1,0 +1,60 @@
+- description: Delete an author
+  url: /v1/graphql
+  status: 200
+  headers:
+    X-Hasura-Role: user
+    X-Hasura-User-Id: '4'
+  response:
+    data:
+      delete_author:
+        affected_rows: 1
+        returning:
+        - id: 4
+          name: Author 4
+          articles: []
+  query:
+    query: |
+      mutation {
+        delete_author(
+          where: {id: {_eq: 4}}
+        ){
+          affected_rows
+          returning{
+            id
+            name
+            articles {
+              id
+              title
+              content
+            }
+          }
+        }
+      }
+
+- description: Delete an author by pk
+  url: /v1/graphql
+  status: 200
+  headers:
+    X-Hasura-Role: user
+    X-Hasura-User-Id: '5'
+  response:
+    data:
+      delete_author_by_pk:
+        id: 5
+        name: Author 5
+        articles: []
+  query:
+    query: |
+      mutation {
+        delete_author_by_pk(
+          id: 5
+        ){
+          id
+          name
+          articles {
+            id
+            title
+            content
+          }
+        }
+      }

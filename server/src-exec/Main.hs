@@ -5,12 +5,13 @@ module Main where
 import           Control.Exception
 import           Data.Int                   (Int64)
 import           Data.Text.Conversions      (convertText)
+import           Data.Time.Clock            (getCurrentTime)
 import           Data.Time.Clock.POSIX      (getPOSIXTime)
 
 import           Hasura.App
-import           Hasura.Logging             (Hasura)
+import           Hasura.Logging             (Hasura, LogLevel (..), defaultEnabledEngineLogTypes)
+import           Hasura.Metadata.Class
 import           Hasura.Prelude
-import           Hasura.RQL.DDL.Metadata    (fetchMetadata)
 import           Hasura.RQL.DDL.Schema
 import           Hasura.RQL.Types
 import           Hasura.Server.Init
@@ -24,8 +25,8 @@ import qualified Data.Environment           as Env
 import qualified Database.PG.Query          as Q
 import qualified Hasura.Tracing             as Tracing
 import qualified System.Exit                as Sys
-import qualified System.Posix.Signals       as Signals
 import qualified System.Metrics             as EKG
+import qualified System.Posix.Signals       as Signals
 
 
 main :: IO ()
@@ -33,28 +34,31 @@ main = do
   tryExit $ do
     args <- parseArgs
     env  <- Env.getEnvironment
-    unAppM (runApp env args)
+    runApp env args
   where
     tryExit io = try io >>= \case
       Left (ExitException _code msg) -> BC.putStrLn msg >> Sys.exitFailure
       Right r -> return r
 
-runApp :: Env.Environment -> HGEOptions Hasura -> AppM ()
-runApp env (HGEOptionsG rci hgeCmd) =
+runApp :: Env.Environment -> HGEOptions Hasura -> IO ()
+runApp env (HGEOptionsG rci hgeCmd) = do
+  initTime <- liftIO getCurrentTime
+  globalCtx@GlobalCtx{..} <- initGlobalCtx rci
+
   withVersion $$(getVersionFromEnvironment) $ case hgeCmd of
     HCServe serveOptions -> do
-      (initCtx, initTime) <- initialiseCtx env hgeCmd rci
-      
+      serveCtx <- initialiseServeCtx env globalCtx serveOptions
+
       ekgStore <- liftIO do
         s <- EKG.newStore
         EKG.registerGcMetrics s
-        
+
         let getTimeMs :: IO Int64
             getTimeMs = (round . (* 1000)) `fmap` getPOSIXTime
 
         EKG.registerCounter "ekg.server_timestamp_ms" getTimeMs s
         pure s
-        
+
       let shutdownApp = return ()
       -- Catches the SIGTERM signal and initiates a graceful shutdown.
       -- Graceful shutdown for regular HTTP requests is already implemented in
@@ -63,43 +67,51 @@ runApp env (HGEOptionsG rci hgeCmd) =
       -- once again, we terminate the process immediately.
       _ <- liftIO $ Signals.installHandler
         Signals.sigTERM
-        (Signals.CatchOnce (shutdownGracefully initCtx))
+        (Signals.CatchOnce (shutdownGracefully $ _scShutdownLatch serveCtx))
         Nothing
-      runHGEServer env serveOptions initCtx Nothing initTime shutdownApp Nothing ekgStore
+      serverMetrics <- liftIO $ createServerMetrics ekgStore
+      flip runPGMetadataStorageApp (_scPgPool serveCtx) $
+        runHGEServer env serveOptions serveCtx Nothing initTime shutdownApp Nothing serverMetrics ekgStore
 
     HCExport -> do
-      (initCtx, _) <- initialiseCtx env hgeCmd rci
-      res <- runTx' initCtx fetchMetadata Q.ReadCommitted
+      res <- runTxWithMinimalPool _gcConnInfo fetchMetadataFromCatalog
       either (printErrJExit MetadataExportError) printJSON res
 
     HCClean -> do
-      (initCtx, _) <- initialiseCtx env hgeCmd rci
-      res <- runTx' initCtx dropCatalog Q.ReadCommitted
-      either (printErrJExit MetadataCleanError) (const cleanSuccess) res
+      res <- runTxWithMinimalPool _gcConnInfo dropCatalog
+      let cleanSuccessMsg = "successfully cleaned graphql-engine related data"
+      either (printErrJExit MetadataCleanError) (const $ liftIO $ putStrLn cleanSuccessMsg) res
 
     HCExecute -> do
-      (InitCtx{..}, _) <- initialiseCtx env hgeCmd rci
       queryBs <- liftIO BL.getContents
       let sqlGenCtx = SQLGenCtx False
-      res <- runAsAdmin _icPgPool sqlGenCtx _icHttpManager $ do
-        schemaCache <- buildRebuildableSchemaCache env
-        execQuery env queryBs
-          & Tracing.runTraceTWithReporter Tracing.noReporter "execute"
-          & runHasSystemDefinedT (SystemDefined False)
-          & runCacheRWT schemaCache
-          & fmap (\(res, _, _) -> res)
+      pool <- mkMinimalPool _gcConnInfo
+      res <- flip runPGMetadataStorageApp pool $
+        runMetadataStorageT $ liftEitherM $
+        runAsAdmin pool sqlGenCtx _gcHttpManager $ do
+          metadata <- liftTx fetchMetadataFromCatalog
+          schemaCache <- buildRebuildableSchemaCache env metadata
+          execQuery env queryBs
+            & Tracing.runTraceTWithReporter Tracing.noReporter "execute"
+            & runMetadataT metadata
+            & runCacheRWT schemaCache
+            & fmap (\((res, _), _, _) -> res)
       either (printErrJExit ExecuteProcessError) (liftIO . BLC.putStrLn) res
 
     HCDowngrade opts -> do
-      (InitCtx{..}, initTime) <- initialiseCtx env hgeCmd rci
-      let sqlGenCtx = SQLGenCtx False
-      res <- downgradeCatalog opts initTime
-             & runAsAdmin _icPgPool sqlGenCtx _icHttpManager
+      res <- runTxWithMinimalPool _gcConnInfo $ downgradeCatalog opts initTime
       either (printErrJExit DowngradeProcessError) (liftIO . print) res
 
     HCVersion -> liftIO $ putStrLn $ "Hasura GraphQL Engine: " ++ convertText currentVersion
   where
-    runTx' initCtx tx txIso =
-      liftIO $ runExceptT $ Q.runTx (_icPgPool initCtx) (txIso, Nothing) tx
+    runTxWithMinimalPool connInfo tx = do
+      minimalPool <- mkMinimalPool connInfo
+      liftIO $ runExceptT $ Q.runTx minimalPool (Q.ReadCommitted, Nothing) tx
 
-    cleanSuccess = liftIO $ putStrLn "successfully cleaned graphql-engine related data"
+    -- | Generate Postgres pool with single connection.
+    -- It is useful when graphql-engine executes a transaction on database
+    -- and exits in commands other than 'serve'.
+    mkMinimalPool connInfo = do
+      pgLogger <- _lsPgLogger <$> mkLoggers defaultEnabledEngineLogTypes LevelInfo
+      let connParams = Q.defaultConnParams { Q.cpConns = 1 }
+      liftIO $ Q.initPGPool connInfo connParams pgLogger

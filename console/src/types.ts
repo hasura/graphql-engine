@@ -2,7 +2,7 @@ import { MapStateToProps as ReduxMapStateToProps } from 'react-redux';
 import { Store } from 'redux';
 import { ThunkAction, ThunkDispatch } from 'redux-thunk';
 import { RouterAction } from 'react-router-redux';
-import { Table, Schema } from './components/Common/utils/pgUtils';
+import { Table, Schema, PGFunction } from './components/Common/utils/pgUtils';
 import { EventsState } from './components/Services/Events/state';
 import { RAEvents } from './components/Services/Events/types';
 import { ConsoleNotification } from './components/Main/ConsoleNotification';
@@ -27,12 +27,49 @@ export type ConsoleState = {
   hasura_uuid: string;
 };
 
+export type ApiExplorer = {
+  authApiExpanded: string;
+  currentTab: number;
+  headerFocus: boolean;
+  loading: boolean;
+  mode: string;
+  modalState: Record<string, string>;
+  explorerData: Record<string, string>;
+  displayedApi: DisplayedApiState;
+};
+
+export type DisplayedApiState = {
+  details: Record<string, string>;
+  id: string;
+  request: ApiExplorerRequest;
+};
+
+export type ApiExplorerRequest = {
+  bodyType: string;
+  headers: ApiExplorerHeader[];
+  headersInitialised: boolean;
+  method: string;
+  params: string;
+  url: string;
+};
+
+export type ApiExplorerHeader = {
+  key: string;
+  value: string;
+  isActive: boolean;
+  isNewHeader: boolean;
+  isDisabled: boolean;
+};
+
 // Redux Utils
 export type ReduxState = {
   tables: {
     schemaList: Schema[];
     allSchemas: Table[];
     dataHeaders: Record<string, string>;
+    nonTrackablePostgresFunctions: Array<PGFunction>;
+    postgresFunctions: Array<PGFunction>;
+    currentSchema: string;
   };
   events: EventsState;
   main: {
@@ -43,6 +80,7 @@ export type ReduxState = {
     consoleNotifications: ConsoleNotification[];
   };
   telemetry: ConsoleState;
+  apiexplorer: ApiExplorer;
 };
 
 export type ReduxAction = RAEvents | RouterAction;

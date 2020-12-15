@@ -28,8 +28,8 @@ import qualified Data.Environment                       as Env
 import qualified Data.HashMap.Strict                    as Map
 
 import qualified Data.HashSet                           as HS
-import qualified Language.GraphQL.Draft.Syntax          as G
 import qualified Language.GraphQL.Draft.Printer         as G
+import qualified Language.GraphQL.Draft.Syntax          as G
 import qualified Network.HTTP.Client                    as HTTP
 import qualified Network.HTTP.Types                     as HTTP
 import qualified Network.Wai.Extended                   as Wai
@@ -41,8 +41,9 @@ import           Hasura.GraphQL.RemoteServer            (execRemoteGQ')
 import           Hasura.GraphQL.Transport.HTTP.Protocol
 import           Hasura.GraphQL.Utils                   (showName)
 import           Hasura.HTTP
+import           Hasura.Metadata.Class
 import           Hasura.RQL.Types
-import           Hasura.Server.Utils                    (RequestId)
+import           Hasura.Server.Types                    (RequestId)
 import           Hasura.Server.Version                  (HasVersion)
 import           Hasura.Session
 
@@ -107,6 +108,10 @@ instance MonadGQLExecutionCheck m => MonadGQLExecutionCheck (Tracing.TraceT m) w
   checkGQLExecution ui det enableAL sc req =
     lift $ checkGQLExecution ui det enableAL sc req
 
+instance MonadGQLExecutionCheck m => MonadGQLExecutionCheck (MetadataStorageT m) where
+  checkGQLExecution ui det enableAL sc req =
+    lift $ checkGQLExecution ui det enableAL sc req
+
 getExecPlanPartial
   :: (MonadError QErr m)
   => UserInfo
@@ -166,7 +171,7 @@ getExecPlanPartial userInfo sc queryType req =
 -- The graphql query is resolved into a sequence of execution operations
 data ResolvedExecutionPlan tx
   = QueryExecutionPlan
-      (EPr.ExecutionPlan (tx EncJSON, Maybe EQ.PreparedSql)) [C.QueryRootField UnpreparedValue]
+      (EPr.ExecutionPlan (tx EncJSON, Maybe EQ.PreparedSql)) [C.QueryRootField (UnpreparedValue 'Postgres)]
   -- ^ query execution; remote schemas and introspection possible
   | MutationExecutionPlan (EPr.ExecutionPlan (tx EncJSON, HTTP.ResponseHeaders))
   -- ^ mutation execution; only __typename introspection supported
@@ -177,11 +182,11 @@ validateSubscriptionRootField
   :: MonadError QErr m
   => C.QueryRootField v -> m (C.SubscriptionRootField v)
 validateSubscriptionRootField = \case
-  C.RFDB x -> pure $ C.RFDB x
+  C.RFDB x                 -> pure $ C.RFDB x
   C.RFAction (C.AQAsync s) -> pure $ C.RFAction s
   C.RFAction (C.AQQuery _) -> throw400 NotSupported "query actions cannot be run as a subscription"
-  C.RFRemote _ -> throw400 NotSupported "subscription to remote server is not supported"
-  C.RFRaw _ -> throw400 NotSupported "Introspection not supported over subscriptions"
+  C.RFRemote _             -> throw400 NotSupported "subscription to remote server is not supported"
+  C.RFRaw _                -> throw400 NotSupported "Introspection not supported over subscriptions"
 
 
 checkQueryInAllowlist
@@ -208,6 +213,7 @@ getResolvedExecPlan
   :: forall m tx
    . ( HasVersion
      , MonadError QErr m
+     , MonadMetadataStorage (MetadataStorageT m)
      , MonadIO m
      , Tracing.MonadTrace m
      , EQ.MonadQueryInstrumentation m

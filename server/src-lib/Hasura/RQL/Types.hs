@@ -4,7 +4,6 @@ module Hasura.RQL.Types
   , UserInfoM(..)
 
   , HasHttpManager (..)
-  -- , HasGCtxMap (..)
 
   , SQLGenCtx(..)
   , HasSQLGenCtx(..)
@@ -51,16 +50,16 @@ import           Hasura.Backends.Postgres.SQL.Types
 import           Hasura.RQL.IR.BoolExp               as R
 import           Hasura.RQL.Types.Action             as R
 import           Hasura.RQL.Types.Column             as R
-import           Hasura.RQL.Types.Common             as R
+import           Hasura.RQL.Types.Common             as R hiding (FunctionName)
 import           Hasura.RQL.Types.ComputedField      as R
 import           Hasura.RQL.Types.CustomTypes        as R
-import           Hasura.RQL.Types.DML                as R
 import           Hasura.RQL.Types.Error              as R
 import           Hasura.RQL.Types.EventTrigger       as R
 import           Hasura.RQL.Types.Function           as R
 import           Hasura.RQL.Types.Metadata           as R
 import           Hasura.RQL.Types.Permission         as R
 import           Hasura.RQL.Types.QueryCollection    as R
+import           Hasura.RQL.Types.Relationship       as R
 import           Hasura.RQL.Types.RemoteRelationship as R
 import           Hasura.RQL.Types.RemoteSchema       as R
 import           Hasura.RQL.Types.ScheduledTrigger   as R
@@ -68,8 +67,9 @@ import           Hasura.RQL.Types.SchemaCache        as R
 import           Hasura.RQL.Types.SchemaCache.Build  as R
 import           Hasura.RQL.Types.Table              as R
 import           Hasura.SQL.Backend                  as R
+
 import           Hasura.Session
-import           Hasura.Tracing                      (TraceT)
+import           Hasura.Tracing
 
 data QCtx
   = QCtx
@@ -95,6 +95,8 @@ instance (UserInfoM m) => UserInfoM (ReaderT r m) where
 instance (UserInfoM m) => UserInfoM (StateT s m) where
   askUserInfo = lift askUserInfo
 instance (UserInfoM m) => UserInfoM (TraceT m) where
+  askUserInfo = lift askUserInfo
+instance (UserInfoM m) => UserInfoM (MetadataT m) where
   askUserInfo = lift askUserInfo
 
 askTabInfo
@@ -143,19 +145,8 @@ instance (Monoid w, HasHttpManager m) => HasHttpManager (WriterT w m) where
   askHttpManager = lift askHttpManager
 instance (HasHttpManager m) => HasHttpManager (TraceT m) where
   askHttpManager = lift askHttpManager
-
--- class (Monad m) => HasGCtxMap m where
---   askGCtxMap :: m GC.GCtxMap
-
--- instance (HasGCtxMap m) => HasGCtxMap (ReaderT r m) where
---   askGCtxMap = lift askGCtxMap
--- instance (Monoid w, HasGCtxMap m) => HasGCtxMap (WriterT w m) where
---   askGCtxMap = lift askGCtxMap
-
-newtype SQLGenCtx
-  = SQLGenCtx
-  { stringifyNum :: Bool
-  } deriving (Show, Eq)
+instance (HasHttpManager m) => HasHttpManager (MetadataT m) where
+  askHttpManager = lift askHttpManager
 
 class (Monad m) => HasSQLGenCtx m where
   askSQLGenCtx :: m SQLGenCtx
@@ -169,6 +160,8 @@ instance (Monoid w, HasSQLGenCtx m) => HasSQLGenCtx (WriterT w m) where
 instance (HasSQLGenCtx m) => HasSQLGenCtx (TableCoreCacheRT m) where
   askSQLGenCtx = lift askSQLGenCtx
 instance (HasSQLGenCtx m) => HasSQLGenCtx (TraceT m) where
+  askSQLGenCtx = lift askSQLGenCtx
+instance (HasSQLGenCtx m) => HasSQLGenCtx (MetadataT m) where
   askSQLGenCtx = lift askSQLGenCtx
 
 class (Monad m) => HasSystemDefined m where
@@ -186,7 +179,7 @@ instance (HasSystemDefined m) => HasSystemDefined (TraceT m) where
 newtype HasSystemDefinedT m a
   = HasSystemDefinedT { unHasSystemDefinedT :: ReaderT SystemDefined m a }
   deriving ( Functor, Applicative, Monad, MonadTrans, MonadIO, MonadUnique, MonadError e, MonadTx
-           , HasHttpManager, HasSQLGenCtx, TableCoreInfoRM, CacheRM, CacheRWM, UserInfoM )
+           , HasHttpManager, HasSQLGenCtx, TableCoreInfoRM, CacheRM, UserInfoM)
 
 runHasSystemDefinedT :: SystemDefined -> HasSystemDefinedT m a -> m a
 runHasSystemDefinedT systemDefined = flip runReaderT systemDefined . unHasSystemDefinedT
@@ -216,7 +209,7 @@ askPGType
   => FieldInfoMap (FieldInfo 'Postgres)
   -> PGCol
   -> Text
-  -> m PGColumnType
+  -> m (ColumnType 'Postgres)
 askPGType m c msg =
   pgiType <$> askPGColInfo m c msg
 
@@ -275,7 +268,7 @@ askRelType :: (MonadError QErr m)
            => FieldInfoMap (FieldInfo backend)
            -> RelName
            -> Text
-           -> m RelInfo
+           -> m (RelInfo backend)
 askRelType m r msg = do
   colInfo <- modifyErr ("relationship " <>) $
              askFieldInfo m (fromRel r)
@@ -293,12 +286,7 @@ askFieldInfo :: (MonadError QErr m)
              -> FieldName
              -> m fieldInfo
 askFieldInfo m f =
-  case M.lookup f m of
-  Just colInfo -> return colInfo
-  Nothing ->
-    throw400 NotExists $ mconcat
-    [ f <<> " does not exist"
-    ]
+  onNothing (M.lookup f m) $ throw400 NotExists (f <<> " does not exist")
 
 askRemoteRel :: (MonadError QErr m)
            => FieldInfoMap (FieldInfo backend)

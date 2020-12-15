@@ -1,6 +1,6 @@
-FROM golang:1.13
+FROM golang:1.14
 
-ARG upx_version="3.94"
+ARG upx_version="3.96"
 
 # install go dependencies
 RUN	go get github.com/mitchellh/gox \

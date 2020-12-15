@@ -1,6 +1,8 @@
 {-# LANGUAGE UndecidableInstances #-}
 module Hasura.RQL.IR.BoolExp
-       ( GBoolExp(..)
+       ( BoolExp(..)
+       , ColExp(..)
+       , GBoolExp(..)
        , gBoolExpTrue
        , gBoolExpToJSON
        , parseGBoolExp
@@ -28,7 +30,6 @@ module Hasura.RQL.IR.BoolExp
        , AnnBoolExpFldSQL
        , AnnBoolExpSQL
        , PartialSQLExp(..)
-       , mkTypedSessionVar
        , isStaticValue
        , AnnBoolExpFldPartialSQL
        , AnnBoolExpPartialSQL
@@ -42,8 +43,6 @@ import           Hasura.Prelude
 import qualified Data.Aeson.Types                   as J
 import qualified Data.HashMap.Strict                as M
 
-import qualified Hasura.Backends.Postgres.SQL.DML   as S
-
 import           Control.Lens.Plated
 import           Control.Lens.TH
 import           Data.Aeson
@@ -51,10 +50,8 @@ import           Data.Aeson.Casing
 import           Data.Aeson.Internal
 import           Data.Aeson.TH
 import           Data.Typeable
-import           Instances.TH.Lift                  ()
-import           Language.Haskell.TH.Syntax         (Lift)
+import           Data.Text.Extended
 
-import           Hasura.Backends.Postgres.SQL.Types
 import           Hasura.Incremental                 (Cacheable)
 import           Hasura.RQL.Types.Column
 import           Hasura.RQL.Types.Common
@@ -63,15 +60,27 @@ import           Hasura.SQL.Types
 import           Hasura.Session
 
 
-data GExists (b :: Backend) a
+data ColExp
+  = ColExp
+  { ceCol :: !FieldName
+  , ceVal :: !Value
+  } deriving (Show, Eq, Data, Generic)
+instance NFData ColExp
+instance Cacheable ColExp
+
+
+data GExists (b :: BackendType) a
   = GExists
-  { _geTable :: !QualifiedTable
+  { _geTable :: !(TableName b)
   , _geWhere :: !(GBoolExp b a)
-  } deriving (Show, Eq, Lift, Functor, Foldable, Traversable, Data, Generic)
-instance (NFData a) => NFData (GExists b a)
-instance (Data a, Typeable b) => Plated (GExists b a)
-instance (Cacheable a) => Cacheable (GExists b a)
-instance (Hashable a) => Hashable (GExists b a)
+  } deriving (Functor, Foldable, Traversable, Generic)
+deriving instance (Backend b, Show a) => Show (GExists b a)
+deriving instance (Backend b, Eq a) => Eq (GExists b a)
+deriving instance (Backend b, Typeable a, Data a) => Data (GExists b a)
+instance (Backend b, NFData a) => NFData (GExists b a)
+instance (Backend b, Data a) => Plated (GExists b a)
+instance (Backend b, Cacheable a) => Cacheable (GExists b a)
+instance (Backend b, Hashable a) => Hashable (GExists b a)
 
 gExistsToJSON :: (a -> (Text, Value)) -> GExists 'Postgres a -> Value
 gExistsToJSON f (GExists qt wh) =
@@ -88,17 +97,18 @@ parseGExists f = \case
     GExists qt <$> parseGBoolExp f wh
   _ -> fail "expecting an Object for _exists expression"
 
-data GBoolExp (b :: Backend) a
+
+data GBoolExp (b :: BackendType) a
   = BoolAnd ![GBoolExp b a]
   | BoolOr  ![GBoolExp b a]
   | BoolNot !(GBoolExp b a)
   | BoolExists !(GExists b a)
   | BoolFld !a
-  deriving (Show, Eq, Lift, Functor, Foldable, Traversable, Data, Generic)
-instance (NFData a) => NFData (GBoolExp b a)
-instance (Data a, Typeable b) => Plated (GBoolExp b a)
-instance (Cacheable a) => Cacheable (GBoolExp b a)
-instance (Hashable a) => Hashable (GBoolExp b a)
+  deriving (Show, Eq, Functor, Foldable, Traversable, Data, Generic)
+instance (Backend b, NFData a) => NFData (GBoolExp b a)
+instance (Backend b, Data a) => Plated (GBoolExp b a)
+instance (Backend b, Cacheable a) => Cacheable (GBoolExp b a)
+instance (Backend b, Hashable a) => Hashable (GBoolExp b a)
 
 gBoolExpTrue :: GBoolExp b a
 gBoolExpTrue = BoolAnd []
@@ -122,7 +132,6 @@ gBoolExpToJSON f be = case be of
       BoolExists bExists -> "_exists" .= gExistsToJSON f bExists
       BoolFld a          ->  f a
 
-
 parseGBoolExp
   :: ((Text, Value) -> J.Parser a) -> Value -> J.Parser (GBoolExp 'Postgres a)
 parseGBoolExp f = \case
@@ -142,6 +151,27 @@ parseGBoolExp f = \case
   where
     parseGBoolExpL v =
       parseJSON v >>= mapM (parseGBoolExp f)
+
+
+newtype BoolExp (b :: BackendType)
+  = BoolExp { unBoolExp :: GBoolExp b ColExp }
+  deriving (Show, Eq, Generic, NFData, Cacheable)
+
+$(makeWrapped ''BoolExp)
+
+instance ToJSON (BoolExp 'Postgres) where
+  toJSON (BoolExp gBoolExp) =
+    gBoolExpToJSON f gBoolExp
+    where
+      f (ColExp k v) =
+        (getFieldNameTxt k,  v)
+
+instance FromJSON (BoolExp 'Postgres) where
+  parseJSON =
+    fmap BoolExp . parseGBoolExp f
+    where
+      f (k, v) = ColExp (FieldName k) <$> parseJSON v
+
 
 data DWithinGeomOp a =
   DWithinGeomOp
@@ -186,7 +216,7 @@ $(deriveJSON (aesonDrop 4 snakeCase) ''STIntersectsGeomminNband)
 
 type CastExp b a = M.HashMap (ScalarType b) [OpExpG b a]
 
-data OpExpG (b :: Backend) a
+data OpExpG (b :: BackendType) a
   = ACast !(CastExp b a)
 
   | AEQ !Bool !a
@@ -208,6 +238,15 @@ data OpExpG (b :: Backend) a
 
   | ASIMILAR !a -- similar, regex
   | ANSIMILAR !a-- not similar, regex
+
+  -- Now that in the RQL code we've started to take a "trees that grow"
+  -- approach (see PR #6003), we may eventually want to move these
+  -- recently added constructors, which correspond to newly supported
+  -- Postgres operators, to the backend-specific extensions of this type.
+  | AREGEX !a -- match POSIX case sensitive, regex
+  | AIREGEX !a -- match POSIX case insensitive, regex
+  | ANREGEX !a -- dont match POSIX case sensitive, regex
+  | ANIREGEX !a -- dont match POSIX case insensitive, regex
 
   | AContains !a
   | AContainedIn !a
@@ -239,16 +278,11 @@ data OpExpG (b :: Backend) a
   | CGTE !(Column b)
   | CLTE !(Column b)
   deriving (Functor, Foldable, Traversable, Generic)
-deriving instance (Eq a) => Eq (OpExpG 'Postgres a)
-instance (NFData a) => NFData (OpExpG 'Postgres a)
-instance (Cacheable a) => Cacheable (OpExpG 'Postgres a)
-instance (Hashable a) => Hashable (OpExpG 'Postgres a)
-type family XAILIKE (b :: Backend) where
-  XAILIKE 'Postgres = ()
-  XAILIKE 'MySQL = Void
-type family XANILIKE (b :: Backend) where
-  XANILIKE 'Postgres = ()
-  XANILIKE 'MySQL = Void
+deriving instance (Backend b, Eq a) => Eq (OpExpG b a)
+instance (Backend b, NFData a) => NFData (OpExpG b a)
+instance (Backend b, Cacheable a) => Cacheable (OpExpG b a)
+instance (Backend b, Hashable a) => Hashable (OpExpG b a)
+
 
 opExpDepCol :: OpExpG backend a -> Maybe (Column backend)
 opExpDepCol = \case
@@ -284,6 +318,11 @@ opExpToJPair f = \case
   ASIMILAR a               -> ("_similar", f a)
   ANSIMILAR a              -> ("_nsimilar", f a)
 
+  AREGEX a                 -> ("_regex", f a)
+  AIREGEX a                -> ("_iregex", f a)
+  ANREGEX a                -> ("_nregex", f a)
+  ANIREGEX a               -> ("_niregex", f a)
+
   AContains a              -> ("_contains", f a)
   AContainedIn a           -> ("_contained_in", f a)
   AHasKey a                -> ("_has_key", f a)
@@ -316,14 +355,14 @@ opExpToJPair f = \case
   where
     opExpsToJSON = object . map (opExpToJPair f)
 
-data AnnBoolExpFld (b :: Backend) a
-  = AVCol !(ColumnInfo b) ![OpExpG 'Postgres a]
-  | AVRel !RelInfo !(AnnBoolExp b a)
+data AnnBoolExpFld (b :: BackendType) a
+  = AVCol !(ColumnInfo b) ![OpExpG b a]
+  | AVRel !(RelInfo b) !(AnnBoolExp b a)
   deriving (Functor, Foldable, Traversable, Generic)
-deriving instance Eq a => Eq (AnnBoolExpFld 'Postgres a)
-instance (NFData a) => NFData (AnnBoolExpFld 'Postgres a)
-instance (Cacheable a) => Cacheable (AnnBoolExpFld 'Postgres a)
-instance (Hashable a) => Hashable (AnnBoolExpFld 'Postgres a)
+deriving instance (Backend b, Eq (ColumnInfo b), Eq a) => Eq (AnnBoolExpFld b a)
+instance (Backend b, NFData (ColumnInfo b), NFData a) => NFData (AnnBoolExpFld b a)
+instance (Backend b, Cacheable (ColumnInfo b), Cacheable a) => Cacheable (AnnBoolExpFld b a)
+instance (Backend b, Hashable (ColumnInfo b), Hashable a) => Hashable (AnnBoolExpFld b a)
 
 type AnnBoolExp b a
   = GBoolExp b (AnnBoolExpFld b a)
@@ -354,8 +393,8 @@ andAnnBoolExps :: AnnBoolExp backend a -> AnnBoolExp backend a -> AnnBoolExp bac
 andAnnBoolExps l r =
   BoolAnd [l, r]
 
-type AnnBoolExpFldSQL b = AnnBoolExpFld b S.SQLExp
-type AnnBoolExpSQL b = AnnBoolExp b S.SQLExp
+type AnnBoolExpFldSQL b = AnnBoolExpFld b (SQLExpression b)
+type AnnBoolExpSQL    b = AnnBoolExp    b (SQLExpression b)
 
 type AnnBoolExpFldPartialSQL b = AnnBoolExpFld b (PartialSQLExp b)
 type AnnBoolExpPartialSQL b = AnnBoolExp b (PartialSQLExp b)
@@ -364,18 +403,14 @@ type PreSetColsG b v = M.HashMap (Column b) v
 type PreSetColsPartial b = M.HashMap (Column b) (PartialSQLExp b)
 
 -- doesn't resolve the session variable
-data PartialSQLExp (b :: Backend)
-  = PSESessVar !(PGType (ScalarType b)) !SessionVariable
-  | PSESQLExp !S.SQLExp
+data PartialSQLExp (b :: BackendType)
+  = PSESessVar !(SessionVarType b) !SessionVariable
+  | PSESQLExp !(SQLExpression b)
   deriving (Generic)
-deriving instance Eq (PartialSQLExp 'Postgres)
-deriving instance (Typeable backend, Data (ScalarType backend)) => Data (PartialSQLExp backend)
-instance NFData (PartialSQLExp 'Postgres)
-instance Cacheable (PartialSQLExp 'Postgres)
-
-mkTypedSessionVar :: PGType PGColumnType -> SessionVariable -> PartialSQLExp 'Postgres
-mkTypedSessionVar columnType =
-  PSESessVar (unsafePGColumnToRepresentation <$> columnType)
+deriving instance Backend b => Eq (PartialSQLExp b)
+deriving instance Backend b => Data (PartialSQLExp b)
+instance Backend b => NFData (PartialSQLExp b)
+instance Backend b => Cacheable (PartialSQLExp b)
 
 instance ToJSON (PartialSQLExp 'Postgres) where
   toJSON = \case
@@ -387,7 +422,7 @@ instance ToJSON (AnnBoolExpPartialSQL 'Postgres) where
     where
       f annFld = case annFld of
         AVCol pci opExps ->
-          ( getPGColTxt $ pgiColumn pci
+          ( toTxt $ pgiColumn pci
           , toJSON (pci, map opExpSToJSON opExps)
           )
         AVRel ri relBoolExp ->
