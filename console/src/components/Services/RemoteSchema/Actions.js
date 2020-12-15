@@ -358,13 +358,9 @@ const permRemoveMultipleRoles = () => {
     const errorMsg = 'Removing permission failed';
 
     const customOnSuccess = () => {
-      // reset new role name
       dispatch(permSetRoleName(''));
-      // close edit box
       dispatch(permCloseEdit());
-      // reset checkbox selections
       dispatch(permResetBulkSelect());
-      // fetch all roles
       dispatch(fetchRoleList());
     };
     const customOnError = () => {};

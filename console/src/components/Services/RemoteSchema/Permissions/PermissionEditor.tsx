@@ -14,7 +14,7 @@ import styles from '../../../Common/Permissions/PermissionStyles.scss';
 import { DatasourceObject, FieldType } from './types';
 import RSPInput from './RSPInput';
 
-const RootContext = createContext({});
+const PermissionEditorContext = createContext({});
 interface RSPTreeComponentProps {
   list: FieldType[];
   setState: (d: FieldType[]) => void;
@@ -136,10 +136,10 @@ const Field: React.FC<FieldProps> = ({ i, setItem = e => console.log(e) }) => {
     },
     [setItem, i]
   );
-  const cntxt: any = useContext(RootContext);
+  const context: any = useContext(PermissionEditorContext);
   useEffect(() => {
     if (fieldVal && fieldVal !== {} && Object.keys(fieldVal).length > 0) {
-      cntxt.setArgTree(argTree => {
+      context.setArgTree(argTree => {
         return { ...argTree, [i.name]: fieldVal };
       });
     }
@@ -222,7 +222,7 @@ const ArgSelect = ({ k, v, value, level, setArg = e => console.log(e) }) => {
   if (children) {
     return (
       <ul>
-        <button onClick={toggleExpandMode} style={{marginLeft:'-1em'}}>
+        <button onClick={toggleExpandMode} style={{ marginLeft: '-1em' }}>
           {expanded ? '-' : '+'}
         </button>
         <label style={{ cursor: 'pointer' }} htmlFor={k}>
@@ -336,10 +336,10 @@ const PermissionEditor = ({ ...props }: any) => {
   return (
     <div className={styles.activeEdit}>
       <div className={styles.tree}>
-        <RootContext.Provider value={{ argTree, setArgTree }}>
+        <PermissionEditorContext.Provider value={{ argTree, setArgTree }}>
           <MemoisedTree list={state} setState={setState} />
           <code style={{ whiteSpace: 'pre-wrap' }}>{resultString}</code>
-        </RootContext.Provider>
+        </PermissionEditorContext.Provider>
       </div>
       <Button
         onClick={saveFunc}

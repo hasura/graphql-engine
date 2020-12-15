@@ -1,10 +1,21 @@
 import React from 'react';
 import CommonTabLayout from '../../../Common/Layout/CommonTabLayout/CommonTabLayout';
-import tabInfo from './remoteSchemaTabs';
 import { NotFoundError } from '../../../Error/PageNotFound';
 import { appPrefix } from '../constants';
 import { findRemoteSchema } from '../utils';
 import styles from '../RemoteSchema.scss';
+
+const tabInfo = {
+  details: {
+    display_text: 'Details',
+  },
+  modify: {
+    display_text: 'Modify',
+  },
+  permissions: {
+    display_text: 'Permissions',
+  },
+};
 
 // TODO : types
 const RemoteSchemaContainer = ({
@@ -55,7 +66,7 @@ const RemoteSchemaContainer = ({
   );
 
   return (
-    <div>
+    <>
       <CommonTabLayout
         appPrefix={appPrefix}
         currentTab={tabName}
@@ -67,7 +78,7 @@ const RemoteSchemaContainer = ({
         testPrefix="remote-schema-container-tabs"
       />
       <div className={styles.add_pad_top}>{childrenWithProps}</div>
-    </div>
+    </>
   );
 };
 
