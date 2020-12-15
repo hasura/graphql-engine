@@ -1,4 +1,4 @@
-@import '../../../../Common/Common.scss';
+@import "../../../../Common/Common.scss";
 
 .inputWidthLarge {
   width: 300px;
@@ -18,6 +18,10 @@
 
 .errorMarker {
   background-color: red;
+}
+
+.errorMessage {
+  color: red;
 }
 
 .sdlEditorContainer {

@@ -19,7 +19,7 @@ import { createAction } from '../ServerIO';
 import { getActionDefinitionFromSdl } from '../../../../shared/utils/sdlUtils';
 import ToolTip from '../../../Common/Tooltip/Tooltip';
 import { showWarningNotification } from '../../Common/Notification';
-import GraphQLEditorWrapper from '../Common/components/GraphQLEditorWrapper';
+import GraphQLEditor from '../Common/components/GraphQLEditor';
 import { actionDefinitionInfo } from '../Modify/ActionEditor';
 
 export const typeDefinitionInfo = {
@@ -115,7 +115,7 @@ const AddAction = ({
     <div>
       <Helmet title={'Add Action - Actions | Hasura'} />
       <div className={styles.heading_text}>Add a new action</div>
-      <GraphQLEditorWrapper
+      <GraphQLEditor
         value={actionDefinitionSdl}
         error={actionDefinitionError}
         onChange={actionDefinitionOnChange}
@@ -125,7 +125,7 @@ const AddAction = ({
         tooltip={actionDefinitionInfo.tooltip}
       />
       <hr />
-      <GraphQLEditorWrapper
+      <GraphQLEditor
         value={typesDefinitionSdl}
         error={typesDefinitionError}
         timer={typedefParseTimer}
