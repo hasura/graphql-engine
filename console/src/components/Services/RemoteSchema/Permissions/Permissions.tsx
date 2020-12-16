@@ -8,7 +8,7 @@ import { useIntrospectionSchemaRemote } from '../graphqlUtils';
 import globals from '../../../../Globals';
 import Button from '../../../Common/Button/Button';
 import styles from '../../../Common/Permissions/PermissionStyles.scss';
-import { getTree, getType } from './utils';
+import { getTree, getType, addPresetDefinition } from './utils';
 import { DatasourceObject } from './types';
 
 const BulkSelectSection = ({ bulkSelect, permRemoveMultipleRoles }: any) => {
@@ -95,15 +95,10 @@ const Permissions = ({ allRoles, ...props }: any) => {
 
     if (!isNewRole && !!schemaDefinition) {
       try {
-        const directive = `scalar PresetValue\n
-           directive @preset(
-               value: PresetValue
-           ) on INPUT_FIELD_DEFINITION | ARGUMENT_DEFINITION\n
-         `;
-        const newDef = directive + schemaDefinition;
+        const newDef = addPresetDefinition(schemaDefinition);
         permissionsSchema = GQL.buildSchema(newDef);
-        // console.log('>><<', permissionsSchema, schemaDefinition);
       } catch (err) {
+        // TODO test all posibilities that can reach this catch block
         console.log(err);
       }
     }
