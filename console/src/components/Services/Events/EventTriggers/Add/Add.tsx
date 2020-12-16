@@ -35,6 +35,10 @@ const Add: React.FC<Props> = props => {
   } = state;
   const { dispatch, readOnlyMode, dataSourcesList, currentDataSource } = props;
 
+  useEffect(() => {
+    setState.source(currentDataSource);
+  }, [currentDataSource]);
+
   const [databaseInfo, setDatabaseInfo] = useState<{
     [schema_name: string]: { [table_name: string]: string[] };
   }>({});
@@ -120,7 +124,7 @@ const Add: React.FC<Props> = props => {
         });
         setState.operationColumns(newCols);
       };
-      const { name: colName, type: colType, enabled: colEnabled } = opCol;
+      const { name: colName, enabled: colEnabled } = opCol;
 
       return (
         <div
@@ -136,7 +140,7 @@ const Add: React.FC<Props> = props => {
                 className={styles.cursorPointer}
               />
               {colName}
-              <small> ({colType})</small>
+              {/* <small> ({colType})</small> TODO */}
             </label>
           </div>
         </div>
