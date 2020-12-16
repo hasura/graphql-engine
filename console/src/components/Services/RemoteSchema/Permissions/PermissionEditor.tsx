@@ -8,11 +8,12 @@ import React, {
 } from 'react';
 import * as GQL from 'graphql';
 import _ from 'lodash';
-import { generateSDL, generateConstantTypes, getChildArgument } from './utils';
+import { generateSDL, generateConstantTypes, getChildArgument, getArgTreeFromPermissionSDL } from './utils';
 import Button from '../../../Common/Button/Button';
 import styles from '../../../Common/Permissions/PermissionStyles.scss';
 import { DatasourceObject, FieldType } from './types';
 import RSPInput from './RSPInput';
+import { isEmpty } from '../../../Common/utils/jsUtils';
 
 const PermissionEditorContext = createContext({});
 interface RSPTreeComponentProps {
@@ -80,7 +81,7 @@ const Tree: React.FC<RSPTreeComponentProps> = ({ list, setState }) => {
           )}
           <Field i={i} setItem={setItem(ix)} key={i.name} />
           {i.children && expandedItems[ix] && (
-            <MemoisedTree list={i.children} setState={setValue(ix)} />
+            <MemoizedTree list={i.children} setState={setValue(ix)} />
           )}
         </li>
       ))}
@@ -88,7 +89,7 @@ const Tree: React.FC<RSPTreeComponentProps> = ({ list, setState }) => {
   );
 };
 
-const MemoisedTree = React.memo(Tree);
+const MemoizedTree = React.memo(Tree);
 // TODO seperate components
 interface CollapsedFieldProps {
   field: any;
@@ -99,22 +100,22 @@ const CollapsedField: React.FC<CollapsedFieldProps> = ({
   field: i,
   onClick,
 }) => (
-  <>
-    <b id={i.name}>{i.name}</b>
-    {i.return && (
-      <b>
-        :
-        <a
-          onClick={onClick}
-          id={`${i.return.replace(/[^\w\s]/gi, '')}`}
-          href={`${i.return.replace(/[^\w\s]/gi, '')}`}
-        >
-          {i.return}
-        </a>
-      </b>
-    )}
-  </>
-);
+    <>
+      <b id={i.name}>{i.name}</b>
+      {i.return && (
+        <b>
+          :
+          <a
+            onClick={onClick}
+            id={`${i.return.replace(/[^\w\s]/gi, '')}`}
+            href={`${i.return.replace(/[^\w\s]/gi, '')}`}
+          >
+            {i.return}
+          </a>
+        </b>
+      )}
+    </>
+  );
 
 // TODO seperate components
 interface FieldProps {
@@ -123,7 +124,9 @@ interface FieldProps {
 }
 
 const Field: React.FC<FieldProps> = ({ i, setItem = e => console.log(e) }) => {
-  const [fieldVal, setfieldVal] = useState({});
+  const context: any = useContext(PermissionEditorContext);
+  const initState = context.argTree && context.argTree[i.name] ? { ...context.argTree[i.name] } : {}
+  const [fieldVal, setfieldVal] = useState(initState);
   const setArg = useCallback(
     (k, v) => (vStr: Record<string, unknown>) => {
       setfieldVal(oldVal => {
@@ -136,9 +139,8 @@ const Field: React.FC<FieldProps> = ({ i, setItem = e => console.log(e) }) => {
     },
     [setItem, i]
   );
-  const context: any = useContext(PermissionEditorContext);
   useEffect(() => {
-    if (fieldVal && fieldVal !== {} && Object.keys(fieldVal).length > 0) {
+    if (fieldVal && fieldVal !== {} && Object.keys(fieldVal).length > 0 && !isEmpty(fieldVal)) {
       context.setArgTree(argTree => {
         return { ...argTree, [i.name]: fieldVal };
       });
@@ -193,7 +195,7 @@ const Field: React.FC<FieldProps> = ({ i, setItem = e => console.log(e) }) => {
 const ArgSelect = ({ k, v, value, level, setArg = e => console.log(e) }) => {
   const [expanded, setExpanded] = useState(false);
   const [editMode, setEditMode] = useState(
-    value && typeof value === 'string' && value.length > 0
+    value && (typeof value === 'string' && value.length > 0 || typeof value === 'number')
   );
   const prevState = useRef();
   useEffect(() => {
@@ -257,6 +259,7 @@ const ArgSelect = ({ k, v, value, level, setArg = e => console.log(e) }) => {
 
 declare const window: any;
 
+
 const PermissionEditor = ({ ...props }: any) => {
   const {
     permissionEdit,
@@ -292,6 +295,17 @@ const PermissionEditor = ({ ...props }: any) => {
     setState(datasource);
     setResultString(schemaDefinition);
   }, [datasource]);
+
+  useEffect(() => {
+    if (!!schemaDefinition) {
+      try {
+        const newArgTree = getArgTreeFromPermissionSDL(schemaDefinition)
+        setArgTree(newArgTree)
+      } catch (e) {
+        console.error(e)
+      }
+    }
+  }, [schemaDefinition])
 
   if (!isEditing) return null;
 
@@ -337,7 +351,7 @@ const PermissionEditor = ({ ...props }: any) => {
     <div className={styles.activeEdit}>
       <div className={styles.tree}>
         <PermissionEditorContext.Provider value={{ argTree, setArgTree }}>
-          <MemoisedTree list={state} setState={setState} />
+          <MemoizedTree list={state} setState={setState} />
           <code style={{ whiteSpace: 'pre-wrap' }}>{resultString}</code>
         </PermissionEditorContext.Provider>
       </div>

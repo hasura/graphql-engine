@@ -5,10 +5,12 @@ import {
   GraphQLObjectType,
   GraphQLScalarType,
   GraphQLSchema,
+  parse,
+  DocumentNode,
 } from 'graphql';
 // import { add, result } from 'lodash';
 import { findRemoteSchemaPermission } from '../utils';
-import { PermissionEdit, SchemaDefinition } from './types';
+import { PermissionEdit} from './types';
 
 export const getCreateRemoteSchemaPermissionQuery = (
   def: { role: string },
@@ -363,3 +365,54 @@ export const getChildArgument = v => {
   }
   return {};
 };
+
+// TODO request to add this change on the server.
+export const addPresetDefinition = (schema: string) => (`scalar PresetValue\n
+  directive @preset(
+      value: PresetValue
+  ) on INPUT_FIELD_DEFINITION | ARGUMENT_DEFINITION\n
+${schema}`)
+
+const getDirectives = (field) => {
+  let res; 
+  const preset = field.directives.find(dir => dir?.name?.value === 'preset');
+  if(preset.arguments[0])res=preset.arguments[0]?.value?.value
+  return JSON.parse(res)
+
+}
+const getPresets = (field) => {
+  const res = {}
+  field.arguments.forEach(arg => {
+    if (arg.directives && arg.directives.length > 0)
+      res[arg?.name?.value] = getDirectives(arg)
+  });
+  return res
+
+}
+
+const getFieldsMap = (fields) => {
+  const res = {}
+  fields.forEach(field => {
+    res[field?.name?.value] = getPresets(field)
+  });
+  return res
+}
+
+export const getArgTreeFromPermissionSDL = (definition: string) => {
+  const roots = ['query_root', 'mutation_root']
+  try {
+    const schema: DocumentNode = parse(definition)
+    const defs = schema.definitions
+    const argTree = defs && defs.reduce((acc = [], i) => {
+      if (roots.includes(i?.name?.value)) {
+        const res = getFieldsMap(i.fields)
+        return {...acc, ...res}
+      }
+      return acc
+    }, {})
+    return argTree
+  } catch (e) {
+    console.error(e)
+    return null
+  }
+}
