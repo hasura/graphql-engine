@@ -82,6 +82,7 @@ module Hasura.Eventing.ScheduledTrigger
   , unlockScheduledEventsTx
   , unlockAllLockedScheduledEventsTx
   , insertScheduledEventTx
+  , dropFutureCronEventsTx
   ) where
 
 import           Hasura.Prelude
@@ -147,7 +148,7 @@ runCronEventsGenerator logger getSC = do
       insertCronEventsFor cronTriggersForHydrationWithStats
 
     onLeft eitherRes $ L.unLogger logger .
-      ScheduledTriggerInternalErr . err500 Unexpected . T.pack . show
+      ScheduledTriggerInternalErr . err500 Unexpected . tshow
 
     liftIO $ sleep (minutes 1)
     where
@@ -659,6 +660,15 @@ insertScheduledEventTx = \case
         where
           toArr (CronEventSeed n t) = [(triggerNameToTxt n), (formatTime' t)]
           toTupleExp = TupleExp . map SELit
+
+dropFutureCronEventsTx :: TriggerName -> Q.TxE QErr ()
+dropFutureCronEventsTx name =
+  Q.unitQE defaultTxErrorHandler
+   [Q.sql|
+    DELETE FROM hdb_catalog.hdb_cron_events
+    WHERE trigger_name = $1 AND scheduled_time > now() AND tries = 0
+   |] (Identity name) False
+
 
 cronEventsTable :: QualifiedTable
 cronEventsTable =

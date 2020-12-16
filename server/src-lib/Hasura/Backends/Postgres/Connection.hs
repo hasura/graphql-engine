@@ -47,8 +47,8 @@ import           Hasura.Backends.Postgres.SQL.Error
 import           Hasura.Backends.Postgres.SQL.Types
 import           Hasura.EncJSON
 import           Hasura.RQL.Types.Error
-import           Hasura.SQL.Types
 import           Hasura.Session
+import           Hasura.SQL.Types
 
 type RunTx =
   forall m a. (MonadIO m, MonadBaseControl IO m) => Q.TxET QErr m a -> ExceptT QErr m a

@@ -13,7 +13,6 @@ import           Control.Monad.Stateless
 import           Control.Monad.STM                         (atomically)
 import           Control.Monad.Trans.Control               (MonadBaseControl (..))
 import           Control.Monad.Unique
-import           Data.Aeson                                ((.=))
 import           Data.Time.Clock                           (UTCTime)
 #ifndef PROFILING
 import           GHC.AssertNF
@@ -26,6 +25,7 @@ import           System.Mem                                (performMajorGC)
 import qualified Control.Concurrent.Async.Lifted.Safe      as LA
 import qualified Control.Concurrent.Extended               as C
 import qualified Control.Immortal                          as Immortal
+import qualified Data.Aeson                                as J
 import qualified Data.Aeson                                as A
 import qualified Data.ByteString.Char8                     as BC
 import qualified Data.ByteString.Lazy.Char8                as BLC
@@ -48,7 +48,7 @@ import           Hasura.Eventing.EventTrigger
 import           Hasura.Eventing.ScheduledTrigger
 import           Hasura.GraphQL.Execute                    (MonadGQLExecutionCheck (..),
                                                             checkQueryInAllowlist)
-import           Hasura.GraphQL.Execute.Action             (asyncActionsProcessor)
+import           Hasura.GraphQL.Execute.Action
 import           Hasura.GraphQL.Execute.Query              (MonadQueryInstrumentation (..),
                                                             noProfile)
 import           Hasura.GraphQL.Logging                    (MonadQueryLog (..), QueryLog (..))
@@ -58,6 +58,7 @@ import           Hasura.Logging
 import           Hasura.Metadata.Class
 import           Hasura.Prelude
 import           Hasura.RQL.DDL.Schema.Cache
+import           Hasura.RQL.DDL.Schema.Catalog
 import           Hasura.RQL.Types
 import           Hasura.RQL.Types.Run
 import           Hasura.Server.API.Query                   (requiresAdmin, runQueryM)
@@ -178,7 +179,7 @@ data ServeCtx
   , _scConnInfo      :: !Q.ConnInfo
   , _scPgPool        :: !Q.PGPool
   , _scShutdownLatch :: !ShutdownLatch
-  , _scSchemaCache   :: !(RebuildableSchemaCache Run)
+  , _scSchemaCache   :: !RebuildableSchemaCache
   , _scSchemaSyncCtx :: !SchemaSyncCtx
   }
 
@@ -202,7 +203,7 @@ newtype PGMetadataStorageApp a
 
 -- | Initializes or migrates the catalog and returns the context required to start the server.
 initialiseServeCtx
-  :: (HasVersion, MonadIO m, MonadCatch m)
+  :: (HasVersion, MonadIO m, MonadBaseControl IO m, MonadCatch m)
   => Env.Environment
   -> GlobalCtx
   -> ServeOptions Hasura
@@ -243,9 +244,9 @@ mkLoggers enabledLogs logLevel = do
 
 -- | helper function to initialize or migrate the @hdb_catalog@ schema (used by pro as well)
 migrateCatalogSchema
-  :: (HasVersion, MonadIO m)
+  :: (HasVersion, MonadIO m, MonadBaseControl IO m)
   => Env.Environment -> Logger Hasura -> Q.PGPool -> HTTP.Manager -> SQLGenCtx
-  -> m (RebuildableSchemaCache Run, UTCTime)
+  -> m (RebuildableSchemaCache, UTCTime)
 migrateCatalogSchema env logger pool httpManager sqlGenCtx = do
   let pgExecCtx = mkPGExecCtx Q.Serializable pool
       adminRunCtx = RunCtx adminUserInfo httpManager sqlGenCtx
@@ -413,7 +414,7 @@ runHGEServer env ServeOptions{..} ServeCtx{..} pgExecCtx initTime shutdownApp po
 
   -- start a backgroud thread to handle async actions
   asyncActionsThread <- C.forkImmortal "asyncActionsProcessor" logger $
-    asyncActionsProcessor env logger (_scrCache cacheRef) _scPgPool _scHttpManager
+    asyncActionsProcessor env logger (_scrCache cacheRef) _scHttpManager
 
   -- start a background thread to create new cron events
   cronEventsThread <- C.forkImmortal "runCronEventsGenerator" logger $
@@ -461,16 +462,16 @@ runHGEServer env ServeOptions{..} ServeCtx{..} pgExecCtx initTime shutdownApp po
   shutdownHandler' <- liftWithStateless $ \lowerIO ->
     pure $ shutdownHandler _scLoggers immortalThreads stopWsServer lockedEventsCtx _scPgPool $
            \a b -> hoist lowerIO $ unlockScheduledEvents a b
-           
+
   -- Install a variant of forkIOWithUnmask which tracks Warp threads using an EKG metric
   let setForkIOWithMetrics :: Warp.Settings -> Warp.Settings
       setForkIOWithMetrics = Warp.setFork \f -> do
         void $ C.forkIOWithUnmask (\unmask ->
-          bracket_ 
+          bracket_
             (EKG.Gauge.inc $ smWarpThreads serverMetrics)
             (EKG.Gauge.dec $ smWarpThreads serverMetrics)
               (f unmask))
-  
+
   let warpSettings = Warp.setPort soPort
                      . Warp.setHost soHost
                      . Warp.setGracefulShutdownTimeout (Just 30) -- 30s graceful shutdown
@@ -625,11 +626,11 @@ ourIdleGC (Logger logger) idleInterval minGCInterval maxNoGCInterval =
              go gcs major_gcs timerSinceLastMajorGC
 
 runAsAdmin
-  :: (MonadIO m)
+  :: (MonadIO m, MonadBaseControl IO m)
   => Q.PGPool
   -> SQLGenCtx
   -> HTTP.Manager
-  -> Run a
+  -> RunT m a
   -> m (Either QErr a)
 runAsAdmin pool sqlGenCtx httpManager m = do
   let runCtx = RunCtx adminUserInfo httpManager sqlGenCtx
@@ -647,6 +648,7 @@ execQuery
      , UserInfoM m
      , Tracing.MonadTrace m
      , MetadataM m
+     , MonadScheduledEvents m
      )
   => Env.Environment
   -> BLC.ByteString
@@ -684,8 +686,8 @@ instance UserAuthentication (Tracing.TraceT PGMetadataStorageApp) where
     runExceptT $ getUserInfoWithExpTime logger manager headers authMode
 
 instance MetadataApiAuthorization PGMetadataStorageApp where
-  authorizeMetadataApi query userInfo = do
-    let currRole = _uiRole userInfo
+  authorizeMetadataApi query handlerCtx = runExceptT do
+    let currRole = _uiRole $ hcUser handlerCtx
     when (requiresAdmin query && currRole /= adminRoleName) $
       withPathK "args" $ throw400 AccessDenied errMsg
     where
@@ -716,10 +718,32 @@ runInSeparateTx tx = do
   pool <- lift ask
   liftEitherM $ liftIO $ runExceptT $ Q.runTx pool (Q.RepeatableRead, Nothing) tx
 
+-- | Using @pg_notify@ function to publish schema sync events to other server
+-- instances via 'hasura_schema_update' channel.
+-- See Note [Schema Cache Sync]
+notifySchemaCacheSyncTx :: InstanceId -> CacheInvalidations -> Q.TxE QErr ()
+notifySchemaCacheSyncTx instanceId invalidations = do
+  Q.Discard () <- Q.withQE defaultTxErrorHandler [Q.sql|
+      SELECT pg_notify('hasura_schema_update', json_build_object(
+        'instance_id', $1,
+        'occurred_at', NOW(),
+        'invalidations', $2
+        )::text
+      )
+    |] (instanceId, Q.AltJ invalidations) True
+  pure ()
+
 -- | Each of the function in the type class is executed in a totally separate transaction.
 --
 -- To learn more about why the instance is derived as following, see Note [Generic MetadataStorageT transformer]
 instance MonadMetadataStorage (MetadataStorageT PGMetadataStorageApp) where
+
+  fetchMetadata             = runInSeparateTx fetchMetadataFromCatalog
+  setMetadata               = runInSeparateTx . setMetadataInCatalog
+  notifySchemaCacheSync a b = runInSeparateTx $ notifySchemaCacheSyncTx a b
+  processSchemaSyncEventPayload instanceId payload = do
+    EventPayload{..} <- decodeValue payload
+    pure $ SchemaSyncEventProcessResult (instanceId /= _epInstanceId) _epInvalidations
 
   getDeprivedCronTriggerStats        = runInSeparateTx getDeprivedCronTriggerStatsTx
   getScheduledEventsForDelivery      = runInSeparateTx getScheduledEventsForDeliveryTx
@@ -728,6 +752,12 @@ instance MonadMetadataStorage (MetadataStorageT PGMetadataStorageApp) where
   setScheduledEventOp a b c          = runInSeparateTx $ setScheduledEventOpTx a b c
   unlockScheduledEvents a b          = runInSeparateTx $ unlockScheduledEventsTx a b
   unlockAllLockedScheduledEvents     = runInSeparateTx unlockAllLockedScheduledEventsTx
+  clearFutureCronEvents              = runInSeparateTx . dropFutureCronEventsTx
+
+  insertAction a b c d         = runInSeparateTx $ insertActionTx a b c d
+  fetchUndeliveredActionEvents = runInSeparateTx fetchUndeliveredActionEventsTx
+  setActionStatus a b          = runInSeparateTx $ setActionStatusTx a b
+  fetchActionResponse          = runInSeparateTx . fetchActionResponseTx
 
 --- helper functions ---
 
@@ -735,12 +765,12 @@ mkConsoleHTML :: HasVersion => Text -> AuthMode -> Bool -> Maybe Text -> Either 
 mkConsoleHTML path authMode enableTelemetry consoleAssetsDir =
   renderHtmlTemplate consoleTmplt $
       -- variables required to render the template
-      A.object [ "isAdminSecretSet" .= isAdminSecretSet authMode
-               , "consolePath" .= consolePath
-               , "enableTelemetry" .= boolToText enableTelemetry
-               , "cdnAssets" .= boolToText (isNothing consoleAssetsDir)
-               , "assetsVersion" .= consoleAssetsVersion
-               , "serverVersion" .= currentVersion
+      A.object [ "isAdminSecretSet" J..= isAdminSecretSet authMode
+               , "consolePath"      J..= consolePath
+               , "enableTelemetry"  J..= boolToText enableTelemetry
+               , "cdnAssets"        J..= boolToText (isNothing consoleAssetsDir)
+               , "assetsVersion"    J..= consoleAssetsVersion
+               , "serverVersion"    J..= currentVersion
                ]
     where
       consolePath = case path of

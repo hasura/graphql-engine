@@ -28,11 +28,11 @@ import           Hasura.Server.Version               (HasVersion)
 -- -- NOTE: downgrade test disabled for now (see #5273)
 
 newtype CacheRefT m a
-  = CacheRefT { runCacheRefT :: MVar (RebuildableSchemaCache m) -> m a }
+  = CacheRefT { runCacheRefT :: MVar RebuildableSchemaCache -> m a }
   deriving
     ( Functor, Applicative, Monad, MonadIO, MonadError e, MonadBase b, MonadBaseControl b
     , MonadTx, MonadUnique, UserInfoM, HasHttpManager, HasSQLGenCtx )
-    via (ReaderT (MVar (RebuildableSchemaCache m)) m)
+    via (ReaderT (MVar RebuildableSchemaCache) m)
 
 instance MonadTrans CacheRefT where
   lift = CacheRefT . const
@@ -41,7 +41,7 @@ instance (MonadBase IO m) => TableCoreInfoRM (CacheRefT m)
 instance (MonadBase IO m) => CacheRM (CacheRefT m) where
   askSchemaCache = CacheRefT (fmap lastBuiltSchemaCache . readMVar)
 
-instance (MonadIO m, MonadBaseControl IO m, MonadTx m) => CacheRWM (CacheRefT m) where
+instance (MonadIO m, MonadBaseControl IO m, MonadTx m, HasHttpManager m, HasSQLGenCtx m) => CacheRWM (CacheRefT m) where
   buildSchemaCacheWithOptions reason invalidations metadata = CacheRefT $ flip modifyMVar \schemaCache -> do
     ((), cache, _) <- runCacheRWT schemaCache (buildSchemaCacheWithOptions reason invalidations metadata)
     pure (cache, ())
@@ -60,7 +60,6 @@ spec
      , MonadIO m
      , MonadBaseControl IO m
      , MonadTx m
-     , MonadUnique m
      , HasHttpManager m
      , HasSQLGenCtx m
      )

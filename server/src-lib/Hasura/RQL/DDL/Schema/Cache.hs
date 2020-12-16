@@ -38,6 +38,7 @@ import           Hasura.Backends.Postgres.Connection
 import           Hasura.Backends.Postgres.SQL.Types
 import           Hasura.GraphQL.Execute.Types
 import           Hasura.GraphQL.Schema                    (buildGQLContext)
+import           Hasura.Metadata.Class
 import           Hasura.RQL.DDL.Action
 import           Hasura.RQL.DDL.CustomTypes
 import           Hasura.RQL.DDL.Deps
@@ -48,7 +49,6 @@ import           Hasura.RQL.DDL.Schema.Cache.Common
 import           Hasura.RQL.DDL.Schema.Cache.Dependencies
 import           Hasura.RQL.DDL.Schema.Cache.Fields
 import           Hasura.RQL.DDL.Schema.Cache.Permission
-import           Hasura.RQL.DDL.Schema.Catalog
 import           Hasura.RQL.DDL.Schema.Common
 import           Hasura.RQL.DDL.Schema.Diff
 import           Hasura.RQL.DDL.Schema.Function
@@ -57,12 +57,12 @@ import           Hasura.RQL.Types                         hiding (fmFunction, tm
 import           Hasura.Server.Version                    (HasVersion)
 
 buildRebuildableSchemaCache
-  :: (HasVersion, MonadIO m, MonadUnique m, MonadTx m, HasHttpManager m, HasSQLGenCtx m)
+  :: (HasVersion, MonadIO m, MonadTx m, HasHttpManager m, HasSQLGenCtx m)
   => Env.Environment
-  -> m (RebuildableSchemaCache m)
-buildRebuildableSchemaCache env = do
-  metadata <- liftTx fetchMetadataFromCatalog
-  result <- flip runReaderT CatalogSync $
+  -> Metadata
+  -> m RebuildableSchemaCache
+buildRebuildableSchemaCache env metadata = do
+  result <-  runCacheBuild $ flip runReaderT CatalogSync $
     Inc.build (buildSchemaCacheRule env) (metadata, initialInvalidationKeys)
   pure $ RebuildableSchemaCache (Inc.result result) initialInvalidationKeys (Inc.rebuildRule result)
 
@@ -70,14 +70,15 @@ newtype CacheRWT m a
   -- The CacheInvalidations component of the state could actually be collected using WriterT, but
   -- WriterT implementations prior to transformers-0.5.6.0 (which added
   -- Control.Monad.Trans.Writer.CPS) are leaky, and we don’t have that yet.
-  = CacheRWT (StateT (RebuildableSchemaCache m, CacheInvalidations) m a)
+  = CacheRWT (StateT (RebuildableSchemaCache, CacheInvalidations) m a)
   deriving
     ( Functor, Applicative, Monad, MonadIO, MonadUnique, MonadReader r, MonadError e, MonadTx
-    , UserInfoM, HasHttpManager, HasSQLGenCtx, HasSystemDefined)
+    , UserInfoM, HasHttpManager, HasSQLGenCtx, HasSystemDefined, MonadMetadataStorage
+    , MonadScheduledEvents)
 
 runCacheRWT
   :: Functor m
-  => RebuildableSchemaCache m -> CacheRWT m a -> m (a, RebuildableSchemaCache m, CacheInvalidations)
+  => RebuildableSchemaCache -> CacheRWT m a -> m (a, RebuildableSchemaCache, CacheInvalidations)
 runCacheRWT cache (CacheRWT m) =
   runStateT m (cache, mempty) <&> \(v, (newCache, invalidations)) -> (v, newCache, invalidations)
 
@@ -88,11 +89,12 @@ instance (Monad m) => TableCoreInfoRM (CacheRWT m)
 instance (Monad m) => CacheRM (CacheRWT m) where
   askSchemaCache = CacheRWT $ gets (lastBuiltSchemaCache . fst)
 
-instance (MonadIO m, MonadTx m) => CacheRWM (CacheRWT m) where
+instance (MonadIO m, MonadTx m, HasHttpManager m, HasSQLGenCtx m) => CacheRWM (CacheRWT m) where
   buildSchemaCacheWithOptions buildReason invalidations metadata = CacheRWT do
     (RebuildableSchemaCache _ invalidationKeys rule, oldInvalidations) <- get
     let newInvalidationKeys = invalidateKeys invalidations invalidationKeys
-    result <- lift $ flip runReaderT buildReason $ Inc.build rule (metadata, newInvalidationKeys)
+    result <- lift $ runCacheBuild $ flip runReaderT buildReason $
+      Inc.build rule (metadata, newInvalidationKeys)
     let schemaCache = Inc.result result
         prunedInvalidationKeys = pruneInvalidationKeys schemaCache newInvalidationKeys
         !newCache = RebuildableSchemaCache schemaCache prunedInvalidationKeys (Inc.rebuildRule result)

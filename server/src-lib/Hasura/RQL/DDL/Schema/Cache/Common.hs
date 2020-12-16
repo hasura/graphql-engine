@@ -1,5 +1,6 @@
-{-# LANGUAGE Arrows          #-}
-{-# LANGUAGE RecordWildCards #-}
+{-# LANGUAGE Arrows               #-}
+{-# LANGUAGE RecordWildCards      #-}
+{-# LANGUAGE UndecidableInstances #-}
 
 -- | Types/functions shared between modules that implement "Hasura.RQL.DDL.Schema.Cache". Other
 -- modules should not import this module directly.
@@ -11,16 +12,18 @@ import qualified Data.HashMap.Strict.Extended       as M
 import qualified Data.HashMap.Strict.InsOrd         as OMap
 import qualified Data.HashSet                       as HS
 import qualified Data.Sequence                      as Seq
+import qualified Network.HTTP.Client                as HTTP
 
 import           Control.Arrow.Extended
 import           Control.Lens
+import           Control.Monad.Trans.Control        (MonadBaseControl)
+import           Control.Monad.Unique
 import           Data.Text.Extended
 
 import qualified Hasura.Incremental                 as Inc
 
 import           Hasura.Backends.Postgres.SQL.Types
 import           Hasura.RQL.Types
-import           Hasura.RQL.Types.Run
 
 -- | 'InvalidationKeys' used to apply requested 'CacheInvalidations'.
 data InvalidationKeys = InvalidationKeys
@@ -105,16 +108,52 @@ data BuildOutputs
   }
 $(makeLenses ''BuildOutputs)
 
-data RebuildableSchemaCache m
+-- | Parameters required for schema cache build
+data CacheBuildParams
+  = CacheBuildParams
+  { _cbpManager   :: !HTTP.Manager
+  , _cbpSqlGenCtx :: !SQLGenCtx
+  }
+
+-- | The monad in which @'RebuildableSchemaCache' is being run
+newtype CacheBuild a
+  = CacheBuild {unCacheBuild :: ReaderT CacheBuildParams (LazyTxT QErr IO) a}
+  deriving ( Functor, Applicative, Monad
+           , MonadError QErr
+           , MonadReader CacheBuildParams
+           , MonadIO
+           , MonadTx
+           , MonadBase IO
+           , MonadBaseControl IO
+           , MonadUnique
+           )
+
+instance HasHttpManager CacheBuild where
+  askHttpManager = asks _cbpManager
+
+instance HasSQLGenCtx CacheBuild where
+  askSQLGenCtx = asks _cbpSqlGenCtx
+
+runCacheBuild
+  :: ( MonadIO m
+     , HasHttpManager m
+     , HasSQLGenCtx m
+     , MonadTx m
+     )
+  => CacheBuild a -> m a
+runCacheBuild (CacheBuild m) = do
+  httpManager <- askHttpManager
+  sqlGenCtx   <- askSQLGenCtx
+  let params = CacheBuildParams httpManager sqlGenCtx
+  liftTx $ lazyTxToQTx (runReaderT m params)
+
+data RebuildableSchemaCache
   = RebuildableSchemaCache
   { lastBuiltSchemaCache :: !SchemaCache
   , _rscInvalidationMap :: !InvalidationKeys
-  , _rscRebuild :: !(Inc.Rule (ReaderT BuildReason m) (Metadata, InvalidationKeys) SchemaCache)
+  , _rscRebuild :: !(Inc.Rule (ReaderT BuildReason CacheBuild) (Metadata, InvalidationKeys) SchemaCache)
   }
 $(makeLenses ''RebuildableSchemaCache)
-
-type CacheBuildM = ReaderT BuildReason Run
-type CacheBuildA = WriterA (Seq CollectedInfo) (Inc.Rule CacheBuildM)
 
 bindErrorA
   :: (ArrowChoice arr, ArrowKleisli m arr, ArrowError e arr, MonadError e m)
