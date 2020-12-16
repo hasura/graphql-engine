@@ -1,25 +1,23 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { connect, ConnectedProps } from 'react-redux';
 import OverlayTrigger from 'react-bootstrap/lib/OverlayTrigger';
 import Helmet from 'react-helmet';
 import { MapStateToProps } from '../../../../../types';
-import { findTable } from '../../../../../dataSources';
 import { useEventTrigger } from '../state';
 import styles from '../TableCommon/EventTable.scss';
 import DropdownButton from '../../../../Common/DropdownButton/DropdownButton';
 import Headers from '../../../../Common/Headers/Headers';
 import CollapsibleToggle from '../../../../Common/CollapsibleToggle/CollapsibleToggle';
 import Button from '../../../../Common/Button/Button';
-import { updateSchemaInfo } from '../../../Data/DataActions';
 import { createEventTrigger } from '../../ServerIO';
 import Operations from '../Common/Operations';
 import RetryConfEditor from '../../Common/Components/RetryConfEditor';
 import * as tooltip from '../Common/Tooltips';
 import { EVENTS_SERVICE_HEADING } from '../../constants';
 import { mapDispatchToPropsEmpty } from '../../../../Common/utils/reactUtils';
-import { Table } from '../../../../../dataSources/types';
 import { getDataSources } from '../../../../../metadata/selector';
 import { DataSource } from '../../../../../metadata/types';
+import { getDatabaseSchemasInfo } from '../../../Data/DataActions';
 
 interface Props extends InjectedProps {}
 
@@ -33,40 +31,33 @@ const Add: React.FC<Props> = props => {
     webhook,
     retryConf,
     headers,
-    // source,
+    source,
   } = state;
-  const {
-    dispatch,
-    allSchemas,
-    schemaList,
-    readOnlyMode,
-    // dataSourcesList,
-    currentDataSource,
-  } = props;
+  const { dispatch, readOnlyMode, dataSourcesList, currentDataSource } = props;
 
-  const selectedTableSchema = findTable(allSchemas, table);
+  const [databaseInfo, setDatabaseInfo] = useState<{
+    [schema_name: string]: { [table_name: string]: string[] };
+  }>({});
 
-  React.useEffect(() => {
-    dispatch(updateSchemaInfo({ schemas: [table.schema] }));
-  }, [table.schema]);
+  useEffect(() => {
+    dispatch(
+      getDatabaseSchemasInfo('postgres', source || currentDataSource) as any
+    ).then(setDatabaseInfo);
+  }, [currentDataSource, source, dispatch]);
 
-  React.useEffect(() => {
-    if (selectedTableSchema) {
+  useEffect(() => {
+    if (source && table.schema && table.name) {
       setState.operationColumns(
-        selectedTableSchema.columns.map(c => {
+        databaseInfo[table.schema][table.name].map(c => {
           return {
-            name: c.column_name,
-            type: c.data_type,
+            name: c,
             enabled: true,
+            type: '', // todo — updated types, make it optional
           };
         })
       );
     }
-  }, [table.name, allSchemas]);
-
-  React.useEffect(() => {
-    setState.source(currentDataSource);
-  }, []);
+  }, [table.name, source, table.schema, databaseInfo]);
 
   const createBtnText = 'Create Event Trigger';
 
@@ -78,6 +69,14 @@ const Add: React.FC<Props> = props => {
   const handleTriggerNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const triggerName = e.target.value;
     setState.name(triggerName);
+  };
+
+  const handleDatabaseChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const database = e.target.value;
+    setState.source(database);
+    dispatch(getDatabaseSchemasInfo('postgres', database) as any).then(
+      setDatabaseInfo
+    );
   };
 
   const handleSchemaChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
@@ -107,7 +106,7 @@ const Add: React.FC<Props> = props => {
   };
 
   const getColumnList = () => {
-    if (!selectedTableSchema) {
+    if (!table.name) {
       return <i>Select a table first to get column list</i>;
     }
 
@@ -211,6 +210,28 @@ const Add: React.FC<Props> = props => {
             />
             <hr />
             <h4 className={styles.subheading_text}>
+              Database &nbsp; &nbsp;
+              <OverlayTrigger
+                placement="right"
+                overlay={tooltip.triggerNameSource}
+              >
+                <i className="fa fa-question-circle" aria-hidden="true" />
+              </OverlayTrigger>
+            </h4>
+            <select
+              className={`${styles.select} form-control ${styles.add_pad_left}`}
+              onChange={handleDatabaseChange}
+              value={source}
+            >
+              <option value="">Select database</option>
+              {dataSourcesList.map(s => (
+                <option key={s.name} value={s.name}>
+                  {s.name} ({s.driver})
+                </option>
+              ))}
+            </select>
+            <hr />
+            <h4 className={styles.subheading_text}>
               Schema/Table &nbsp; &nbsp;
               <OverlayTrigger
                 placement="right"
@@ -224,7 +245,8 @@ const Add: React.FC<Props> = props => {
               data-test="select-schema"
               className={`${styles.selectTrigger} form-control`}
             >
-              {schemaList.map(s => (
+              <option value="">Select schema</option>
+              {Object.keys(databaseInfo).map(s => (
                 <option value={s} key={s} selected={s === table.schema}>
                   {s}
                 </option>
@@ -237,13 +259,11 @@ const Add: React.FC<Props> = props => {
               className={`${styles.selectTrigger} form-control ${styles.add_mar_left}`}
             >
               <option value="">Select table</option>
-              {allSchemas
-                .filter(t => t.table_schema === table.schema)
-                .map(t => {
-                  const tName = t.table_name;
+              {databaseInfo[table.schema] &&
+                Object.keys(databaseInfo[table.schema]).map(t => {
                   return (
-                    <option key={tName} value={tName}>
-                      {tName}
+                    <option key={t} value={t}>
+                      {t}
                     </option>
                   );
                 })}
@@ -356,8 +376,6 @@ const Add: React.FC<Props> = props => {
 };
 
 type PropsFromState = {
-  allSchemas: Table[];
-  schemaList: string[];
   readOnlyMode: boolean;
   dataSourcesList: DataSource[];
   currentDataSource: string;
@@ -365,8 +383,6 @@ type PropsFromState = {
 
 const mapStateToProps: MapStateToProps<PropsFromState> = state => {
   return {
-    allSchemas: state.tables.allSchemas,
-    schemaList: state.tables.schemaList,
     readOnlyMode: state.main.readOnlyMode,
     dataSourcesList: getDataSources(state),
     currentDataSource: state.tables.currentDataSource,

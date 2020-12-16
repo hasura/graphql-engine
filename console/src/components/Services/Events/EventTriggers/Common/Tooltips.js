@@ -14,6 +14,10 @@ export const triggerNameDescription = (
   </Tooltip>
 );
 
+export const triggerNameSource = (
+  <Tooltip id="tooltip-trigger-source">Select the database</Tooltip>
+);
+
 export const operationsDescription = (
   <Tooltip id="tooltip-operations-description">
     Trigger event on these table operations

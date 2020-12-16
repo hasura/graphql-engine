@@ -18,9 +18,7 @@ const CollapsibleItems: React.FC<CollapsibleItemsProps> = ({
   items,
   icon,
 }) => {
-  const [isOpen, setIsOpen] = useState(
-    (currentItem && currentItem.source === source) || false
-  );
+  const [isOpen, setIsOpen] = useState(true);
 
   return (
     <div className={styles.padd_bottom_small}>
@@ -84,8 +82,6 @@ export const TreeView: React.FC<TreeViewProps> = ({
       </li>
     );
   }
-
-  console.log({ itemsBySource });
 
   return (
     <div className={styles.treeNav}>

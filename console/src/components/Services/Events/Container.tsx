@@ -1,4 +1,4 @@
-import React, { ChangeEvent } from 'react';
+import React from 'react';
 import { Link, RouteComponentProps } from 'react-router';
 import { connect, ConnectedProps } from 'react-redux';
 
@@ -24,13 +24,7 @@ import { findEventTrigger, findScheduledTrigger } from './utils';
 import { ReduxState } from '../../../types';
 
 import { mapDispatchToPropsEmpty } from '../../Common/utils/reactUtils';
-import {
-  getEventTriggers,
-  getCronTriggers,
-  getDataSources,
-} from '../../../metadata/selector';
-import { currentDriver, setDriver } from '../../../dataSources';
-import { fetchDataInit, UPDATE_CURRENT_DATA_SOURCE } from '../Data/DataActions';
+import { getEventTriggers, getCronTriggers } from '../../../metadata/selector';
 
 interface Props extends InjectedProps {}
 
@@ -41,9 +35,6 @@ const Container: React.FC<Props> = props => {
     triggerName: currentTriggerName,
     eventTriggers,
     cronTriggers,
-    dataSources,
-    currentDataSource,
-    dispatch,
   } = props;
 
   let currentEventTrigger;
@@ -59,23 +50,6 @@ const Container: React.FC<Props> = props => {
       );
     }
   }
-
-  const onDatabaseChange = (e: ChangeEvent<HTMLSelectElement>) => {
-    const value = e.target.value;
-    let newName;
-    let newDriver;
-    try {
-      [newName, newDriver] = JSON.parse(value);
-    } catch {
-      return;
-    }
-    setDriver(newDriver);
-    dispatch({
-      type: UPDATE_CURRENT_DATA_SOURCE,
-      source: newName,
-    });
-    dispatch(fetchDataInit());
-  };
 
   const sidebarContent = (
     <ul>
@@ -98,37 +72,11 @@ const Container: React.FC<Props> = props => {
         </Link>
 
         {isDataEventsRoute(currentLocation) ? (
-          <>
-            <div
-              style={{
-                padding: '15px 20px',
-                color: '#767e93',
-              }}
-            >
-              Database:
-              <select
-                className="form-control"
-                style={{ marginTop: 10 }}
-                onChange={onDatabaseChange}
-                value={JSON.stringify([currentDataSource, currentDriver])}
-              >
-                {dataSources.map(s => (
-                  <option
-                    key={s.name}
-                    value={JSON.stringify([s.name, s.driver])}
-                  >
-                    {s.name} ({s.driver})
-                  </option>
-                ))}
-              </select>
-            </div>
-            <hr />
-            <LeftSidebar
-              triggers={eventTriggers}
-              service="data"
-              currentTrigger={currentEventTrigger}
-            />
-          </>
+          <LeftSidebar
+            triggers={eventTriggers}
+            service="data"
+            currentTrigger={currentEventTrigger}
+          />
         ) : null}
       </li>
       <li
@@ -190,8 +138,6 @@ const mapStateToProps = (state: ReduxState, ownProps: ExternalProps) => {
     cronTriggers: getCronTriggers(state),
     pathname: ownProps.location.pathname,
     triggerName: ownProps.params.triggerName,
-    dataSources: getDataSources(state),
-    currentDataSource: state.tables.currentDataSource,
   };
 };
 

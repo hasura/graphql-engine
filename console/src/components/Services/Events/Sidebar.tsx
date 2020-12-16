@@ -42,7 +42,7 @@ const LeftSidebar: React.FC<Props> = props => {
     }
   };
 
-  const { getSearchInput, count, items } = getLeftSidebarSection({
+  const { getSearchInput, count, items, getChildList } = getLeftSidebarSection({
     getServiceEntityLink: getEntityLink,
     items: triggers,
     currentItem: currentTrigger,
@@ -65,13 +65,17 @@ const LeftSidebar: React.FC<Props> = props => {
       addTestString={`${service}-sidebar-add`}
       childListTestString={`${service}-links`}
     >
-      <TreeView
-        items={items as EventTrigger[]}
-        icon={getSidebarIcon()}
-        service="triggers"
-        currentItem={currentTrigger as EventTrigger}
-        getServiceEntityLink={getEntityLink}
-      />
+      {service === 'data' ? (
+        <TreeView
+          items={items as EventTrigger[]}
+          icon={getSidebarIcon()}
+          service="triggers"
+          currentItem={currentTrigger as EventTrigger}
+          getServiceEntityLink={getEntityLink}
+        />
+      ) : (
+        getChildList()
+      )}
     </LeftSubSidebar>
   );
 };

@@ -292,14 +292,12 @@ export const createEventTrigger = (
       );
     }
 
-    const currentSource = getState().tables.currentDataSource;
-
     const migrationName = `create_event_trigger_${state.name.trim()}`;
 
     const migration = new Migration();
     migration.add(
-      generateCreateEventTriggerQuery(state, currentSource),
-      getDropEventTriggerQuery(state.name, currentSource)
+      generateCreateEventTriggerQuery(state, state.source),
+      getDropEventTriggerQuery(state.name, state.source)
     );
 
     const requestMsg = 'Creating event trigger...';
