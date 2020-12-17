@@ -4,7 +4,6 @@ import { testMode } from '../../../helpers/common';
 import { setMetaData } from '../../validators/validators';
 
 import {
-  passPTCreateTable,
   checkCreateTriggerRoute,
   failCTWithoutData,
   passCT,
@@ -12,6 +11,7 @@ import {
   insertTableRow,
   deleteCTTestTrigger,
   deleteCTTestTable,
+  passPTCreateTable,
 } from './spec';
 import { getIndexRoute } from '../../../helpers/dataHelpers';
 
@@ -38,8 +38,8 @@ export const runCreateTriggerTests = () => {
     it('Successfuly creates trigger', passCT);
     it('Fails to create duplicate trigger', failCTDuplicateTrigger);
     it('Insert a row and invoke trigger', insertTableRow);
-    it('Delete\'s the test trigger', deleteCTTestTrigger);
-    it('Delete\'s the test table', deleteCTTestTable);
+    it("Delete's the test trigger", deleteCTTestTrigger);
+    it("Delete's the test table", deleteCTTestTable);
   });
 };
 

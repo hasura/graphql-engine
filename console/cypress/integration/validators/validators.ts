@@ -1,4 +1,8 @@
-import { makeDataAPIOptions, getColName, QueryEndpoint } from '../../helpers/dataHelpers';
+import {
+  makeDataAPIOptions,
+  getColName,
+  QueryEndpoint,
+} from '../../helpers/dataHelpers';
 import { migrateModeUrl } from '../../helpers/common';
 import { toggleOnMigrationMode } from '../data/migration-mode/utils';
 import {
@@ -67,9 +71,14 @@ export const validateRS = (
 ): void => {
   const reqBody = {
     type: 'export_metadata',
-    args: {}
+    args: {},
   };
-  const requestOptions = makeDataAPIOptions(dataApiUrl, adminSecret, reqBody, 'metadata');
+  const requestOptions = makeDataAPIOptions(
+    dataApiUrl,
+    adminSecret,
+    reqBody,
+    'metadata'
+  );
   cy.request(requestOptions).then(response => {
     const remoteSchemas = response.body?.remote_schemas ?? [];
     if (result === ResultType.SUCCESS) {
@@ -95,17 +104,25 @@ export const validateCFunc = (
 ): void => {
   const reqBody = {
     type: 'export_metadata',
-    args: {}
+    args: {},
   };
-  const requestOptions = makeDataAPIOptions(dataApiUrl, adminSecret, reqBody, 'metadata');
+  const requestOptions = makeDataAPIOptions(
+    dataApiUrl,
+    adminSecret,
+    reqBody,
+    'metadata'
+  );
   cy.request(requestOptions).then(response => {
     const defaultSourceData = response.body.sources.find(
-      (source: { name: string; }) => source.name === 'default'
+      (source: { name: string }) => source.name === 'default'
     );
     const functionData = defaultSourceData.functions;
-    const foundFunction = functionData.filter((fn: { function: { name: string; schema: string; }; }) =>
-      fn.function.name === functionName && fn.function.schema === functionSchema
-    ).length === 1;
+    const foundFunction =
+      functionData.filter(
+        (fn: { function: { name: string; schema: string } }) =>
+          fn.function.name === functionName &&
+          fn.function.schema === functionSchema
+      ).length === 1;
     if (result === ResultType.SUCCESS) {
       expect(functionData.length && foundFunction).to.be.true;
     } else {
@@ -128,17 +145,25 @@ export const validateUntrackedFunc = (
 ): void => {
   const reqBody = {
     type: 'export_metadata',
-    args: {}
+    args: {},
   };
-  const requestOptions = makeDataAPIOptions(dataApiUrl, adminSecret, reqBody, 'metadata');
+  const requestOptions = makeDataAPIOptions(
+    dataApiUrl,
+    adminSecret,
+    reqBody,
+    'metadata'
+  );
   cy.request(requestOptions).then(response => {
     const defaultSourceData = response.body.sources.find(
-      (source: { name: string; }) => source.name === 'default'
+      (source: { name: string }) => source.name === 'default'
     );
     const functionData = defaultSourceData?.functions ?? [];
-    const foundFunction = functionData.filter((fn: { function: { name: string; schema: string; }; }) =>
-      fn?.function?.name === functionName && fn?.function?.schema === functionSchema
-    ).length === 1;
+    const foundFunction =
+      functionData.filter(
+        (fn: { function: { name: string; schema: string } }) =>
+          fn?.function?.name === functionName &&
+          fn?.function?.schema === functionSchema
+      ).length === 1;
     if (result === ResultType.SUCCESS) {
       expect(!functionData.length || !foundFunction).to.be.true;
     } else {
@@ -153,18 +178,29 @@ export const validateUntrackedFunc = (
  * @param reqBody
  * @param result
  */
-export const dataRequest = (reqBody: RequestBody, result: ResultType, queryType: QueryEndpoint = 'query') => {
-  const requestOptions = makeDataAPIOptions(dataApiUrl, adminSecret, reqBody, queryType);
+export const dataRequest = (
+  reqBody: RequestBody,
+  result: ResultType,
+  queryType: QueryEndpoint = 'query'
+) => {
+  const requestOptions = makeDataAPIOptions(
+    dataApiUrl,
+    adminSecret,
+    reqBody,
+    queryType
+  );
   cy.request(requestOptions).then(response => {
     if (result === ResultType.SUCCESS) {
       expect(
         (response.body.result_type === 'CommandOk' &&
-          response.body.result === null) || response.body.message === 'success'
+          response.body.result === null) ||
+          response.body.message === 'success'
       ).to.be.true;
     } else {
       expect(
         (response.body.result_type === 'CommandOk' &&
-          response.body.result === null) || response.body.message === 'success'
+          response.body.result === null) ||
+          response.body.message === 'success'
       ).to.be.false;
     }
   });
@@ -174,16 +210,17 @@ export const createFunctionRequest = (
   reqBody: RequestBody,
   result: ResultType
 ) => {
-  const requestOptions = makeDataAPIOptions(dataApiUrl, adminSecret, reqBody, 'query');
+  const requestOptions = makeDataAPIOptions(
+    dataApiUrl,
+    adminSecret,
+    reqBody,
+    'query'
+  );
   cy.request(requestOptions).then(response => {
     if (result === ResultType.SUCCESS) {
-      expect(
-        response.body.result_type === 'CommandOk'
-      ).to.be.true;
+      expect(response.body.result_type === 'CommandOk').to.be.true;
     } else {
-      expect(
-        response.body.result_type === 'CommandOk'
-      ).to.be.false;
+      expect(response.body.result_type === 'CommandOk').to.be.false;
     }
   });
 };
@@ -192,7 +229,12 @@ export const trackFunctionRequest = (
   reqBody: RequestBody,
   result: ResultType
 ) => {
-  const requestOptions = makeDataAPIOptions(dataApiUrl, adminSecret, reqBody, 'metadata');
+  const requestOptions = makeDataAPIOptions(
+    dataApiUrl,
+    adminSecret,
+    reqBody,
+    'metadata'
+  );
   cy.request(requestOptions).then(response => {
     if (result === ResultType.SUCCESS) {
       expect(response.body.message === ResultType.SUCCESS).to.be.true;
@@ -301,8 +343,10 @@ export const validateColumnWhere = (
 export const validateInsert = (tableName: string, rows: number) => {
   const reqBody = {
     type: 'count',
+    source: 'default',
     args: {
       table: tableName,
+      schema: 'public',
     },
   };
   const requestOptions = makeDataAPIOptions(dataApiUrl, adminSecret, reqBody);
@@ -400,15 +444,20 @@ export const validatePermission = (
 ) => {
   const reqBody = {
     type: 'export_metadata',
-    args: {}
+    args: {},
   };
-  const requestOptions = makeDataAPIOptions(dataApiUrl, adminSecret, reqBody, 'metadata');
+  const requestOptions = makeDataAPIOptions(
+    dataApiUrl,
+    adminSecret,
+    reqBody,
+    'metadata'
+  );
   cy.request(requestOptions).then(response => {
-    const sourceInfo = response.body.sources.find((source: { name: string; }) =>
-      source.name === 'default'
+    const sourceInfo = response.body.sources.find(
+      (source: { name: string }) => source.name === 'default'
     );
-    const tableSchema = sourceInfo.tables.find((table: { table: { name: string; }; }) =>
-      table.table.name === tableName
+    const tableSchema = sourceInfo.tables.find(
+      (table: { table: { name: string } }) => table.table.name === tableName
     );
     handlePermValidationResponse(
       tableSchema,
@@ -441,47 +490,54 @@ export const validateMigrationMode = (mode: boolean) => {
  * @param triggerName
  * @param result
  */
-export const validateCTrigger = (triggerName: string, tableName: string, schemaName = 'public', result: ResultType) => {
+export const validateCTrigger = (
+  triggerName: string,
+  tableName: string,
+  schemaName = 'public',
+  result: ResultType
+) => {
   const reqBody = {
     type: 'export_metadata',
     args: {},
   };
-  const requestOptions = makeDataAPIOptions(dataApiUrl, adminSecret, reqBody, 'metadata');
+  const requestOptions = makeDataAPIOptions(
+    dataApiUrl,
+    adminSecret,
+    reqBody,
+    'metadata'
+  );
   cy.request(requestOptions).then(response => {
-    const sourceInfo = response.body.sources.find((source: { name: string; }) =>
-      source.name === 'default'
+    const sourceInfo = response.body.sources.find(
+      (source: { name: string }) => source.name === 'default'
     );
-    const tableInfo = sourceInfo?.tables?.find((table: { table: { schema: string; name: string; }; }) =>
-      table.table.schema === schemaName && table.table.name === tableName
-    ) ?? {};
-    const trigger = tableInfo?.event_triggers?.find(
-      (trig: { name: string; }) => trig.name === triggerName
-    ) ?? {};
+    const tableInfo =
+      sourceInfo?.tables?.find(
+        (table: { table: { schema: string; name: string } }) =>
+          table.table.schema === schemaName && table.table.name === tableName
+      ) ?? {};
+    const trigger =
+      tableInfo?.event_triggers?.find(
+        (trig: { name: string }) => trig.name === triggerName
+      ) ?? {};
 
     if (result === ResultType.SUCCESS && Object.keys(tableInfo).length) {
       expect(response.status === 200).to.be.true;
-      expect(trigger.definition.insert.columns === '*').to.be
-        .true;
-      expect(trigger.definition.delete.columns === '*').to.be
-        .true;
-      expect(trigger.definition.update.columns.length === 3).to.be
-        .true;
+      expect(trigger.definition.insert.columns === '*').to.be.true;
+      expect(trigger.definition.delete.columns === '*').to.be.true;
+      expect(trigger.definition.update.columns.length === 3).to.be.true;
       expect(
-        trigger.retry_conf.interval_sec ===
-        parseInt(getIntervalSeconds(), 10)
+        trigger.retry_conf.interval_sec === parseInt(getIntervalSeconds(), 10)
       ).to.be.true;
+      expect(trigger.retry_conf.num_retries === parseInt(getNoOfRetries(), 10))
+        .to.be.true;
       expect(
-        trigger.retry_conf.num_retries ===
-        parseInt(getNoOfRetries(), 10)
-      ).to.be.true;
-      expect(
-        trigger.retry_conf.timeout_sec ===
-        parseInt(getTimeoutSeconds(), 10)
+        trigger.retry_conf.timeout_sec === parseInt(getTimeoutSeconds(), 10)
       ).to.be.true;
       expect(schemaName === 'public').to.be.true;
       expect(tableName === 'Apic_test_table_ctr_0').to.be.true;
     } else {
-      expect(!Object.keys(tableInfo).length || !Object.keys(trigger).length).to.be.true;
+      expect(!Object.keys(tableInfo).length || !Object.keys(trigger).length).to
+        .be.true;
     }
   });
 };

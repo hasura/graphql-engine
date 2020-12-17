@@ -225,6 +225,7 @@ const Add: React.FC<Props> = props => {
             <select
               className={`${styles.select} form-control ${styles.add_pad_left}`}
               onChange={handleDatabaseChange}
+              data-test="select-source"
               value={source}
             >
               <option value="">Select database</option>
@@ -248,6 +249,7 @@ const Add: React.FC<Props> = props => {
               onChange={handleSchemaChange}
               data-test="select-schema"
               className={`${styles.selectTrigger} form-control`}
+              value={table.schema}
             >
               <option value="">Select schema</option>
               {Object.keys(databaseInfo).map(s => (
@@ -261,6 +263,7 @@ const Add: React.FC<Props> = props => {
               data-test="select-table"
               required
               className={`${styles.selectTrigger} form-control ${styles.add_mar_left}`}
+              value={table.name}
             >
               <option value="">Select table</option>
               {databaseInfo[table.schema] &&

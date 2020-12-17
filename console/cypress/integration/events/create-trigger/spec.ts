@@ -61,7 +61,10 @@ export const passPTCreateTable = () => {
   cy.wait(7000);
   cy.url().should(
     'eq',
-    `${baseUrl}/data/default/schema/public/tables/${getTableName(0, testName)}/modify`
+    `${baseUrl}/data/default/schema/public/tables/${getTableName(
+      0,
+      testName
+    )}/modify`
   );
 };
 
@@ -92,6 +95,7 @@ export const passCT = () => {
   cy.get(getElementFromAlias('trigger-name'))
     .clear()
     .type(getTriggerName(0, testName));
+  cy.get(getElementFromAlias('select-source')).select('default');
   cy.get(getElementFromAlias('select-table')).select(getTableName(0, testName));
 
   // operations
@@ -128,7 +132,10 @@ export const passCT = () => {
   cy.get(getElementFromAlias(getTriggerName(0, testName)));
   //   Validate
   validateCTrigger(
-    getTriggerName(0, testName), getTableName(0, testName), 'public',ResultType.SUCCESS
+    getTriggerName(0, testName),
+    getTableName(0, testName),
+    'public',
+    ResultType.SUCCESS
   );
 };
 
@@ -139,6 +146,7 @@ export const failCTDuplicateTrigger = () => {
   cy.get(getElementFromAlias('trigger-name'))
     .clear()
     .type(getTriggerName(0, testName));
+  cy.get(getElementFromAlias('select-source')).select('default');
   cy.get(getElementFromAlias('select-table')).select(getTableName(0, testName));
 
   // operations
@@ -157,12 +165,14 @@ export const failCTDuplicateTrigger = () => {
   //  should be on the same URL
   // cy.url().should('eq', `${baseUrl}${EVENT_TRIGGER_INDEX_ROUTE}/add`);
   cy.visit(`${baseUrl}${EVENT_TRIGGER_INDEX_ROUTE}/add`);
-  cy.wait(4000)
+  cy.wait(4000);
 };
 
 export const insertTableRow = () => {
   // visit insert row page
-  cy.visit(`/data/default/schema/public/tables/${getTableName(0, testName)}/insert`);
+  cy.visit(
+    `/data/default/schema/public/tables/${getTableName(0, testName)}/insert`
+  );
   // one serial column. so insert a row directly.
   cy.get(getElementFromAlias(`typed-input-${1}`)).type('123');
   cy.get(getElementFromAlias(`typed-input-${2}`)).type('Some text');
@@ -196,13 +206,18 @@ export const deleteCTTestTrigger = () => {
   cy.url().should('eq', `${baseUrl}${EVENT_TRIGGER_INDEX_ROUTE}/manage`);
   //  Validate
   validateCTrigger(
-    getTriggerName(0, testName), getTableName(0, testName),'public',ResultType.FAILURE
+    getTriggerName(0, testName),
+    getTableName(0, testName),
+    'public',
+    ResultType.FAILURE
   );
 };
 
 export const deleteCTTestTable = () => {
   //   Go to the modify section of the table
-  cy.visit(`/data/default/schema/public/tables/${getTableName(0, testName)}/browse`);
+  cy.visit(
+    `/data/default/schema/public/tables/${getTableName(0, testName)}/browse`
+  );
   cy.get(getElementFromAlias('table-modify')).click();
   //   Click on delete
   setPromptValue(getTableName(0, testName));
