@@ -2,6 +2,7 @@ import { Table, FrequentlyUsedColumn } from '../../types';
 import { isColTypeString } from '.';
 import { FunctionState } from './types';
 import { QualifiedTable } from '../../../metadata/types';
+import { quoteDefault } from '../../../components/Services/Data/utils';
 
 const sqlEscapeText = (rawText: string) => {
   let text = rawText;
@@ -587,14 +588,7 @@ export const getAddColumnSql = (
     sql += ' unique';
   }
   if (options.default) {
-    let defWithQuotes = '';
-
-    if (isColTypeString(columnType) && !isSQLFunction(options.default)) {
-      defWithQuotes = `'${options.default}'`;
-    } else {
-      defWithQuotes = options.default;
-    }
-
+    const defWithQuotes = quoteDefault(options.default);
     sql += ` default ${defWithQuotes}`;
   }
 
