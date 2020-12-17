@@ -42,7 +42,7 @@ assertPermDefined
   -> m ()
 assertPermDefined roleName pa tableInfo =
   unless (permissionIsDefined rpi pa) $ throw400 PermissionDenied $ mconcat
-  [ "'" <> T.pack (show $ permAccToType pa) <> "'"
+  [ "'" <> tshow (permAccToType pa) <> "'"
   , " permission on " <>> _tciName (_tiCoreInfo tableInfo)
   , " for role " <>> roleName
   , " does not exist"
@@ -124,7 +124,7 @@ data CreatePermP1Res a
   } deriving (Show, Eq)
 
 procBoolExp
-  :: (QErrM m, TableCoreInfoRM m)
+  :: (QErrM m, TableCoreInfoRM 'Postgres m)
   => QualifiedTable
   -> FieldInfoMap (FieldInfo 'Postgres)
   -> BoolExp 'Postgres

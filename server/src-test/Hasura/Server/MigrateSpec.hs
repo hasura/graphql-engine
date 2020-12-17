@@ -37,7 +37,7 @@ newtype CacheRefT m a
 instance MonadTrans CacheRefT where
   lift = CacheRefT . const
 
-instance (MonadBase IO m) => TableCoreInfoRM (CacheRefT m)
+instance (MonadBase IO m) => TableCoreInfoRM 'Postgres (CacheRefT m)
 instance (MonadBase IO m) => CacheRM (CacheRefT m) where
   askSchemaCache = CacheRefT (fmap lastBuiltSchemaCache . readMVar)
 

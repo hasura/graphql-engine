@@ -74,10 +74,10 @@ data RemoteFieldInfo (b :: BackendType)
   , _rfiRemoteSchemaName :: !RemoteSchemaName
   -- ^ Name of the remote schema, that's used for joining
   } deriving (Generic)
-deriving instance Eq (RemoteFieldInfo 'Postgres)
-instance Cacheable (RemoteFieldInfo 'Postgres)
+deriving instance Backend b => Eq (RemoteFieldInfo b)
+instance Backend b => Cacheable (RemoteFieldInfo b)
 
-instance ToJSON (RemoteFieldInfo 'Postgres) where
+instance Backend b => ToJSON (RemoteFieldInfo b) where
   toJSON RemoteFieldInfo{..} = object
     [ "name" .= _rfiName
     , "param_map" .= fmap toJsonInpValInfo _rfiParamMap

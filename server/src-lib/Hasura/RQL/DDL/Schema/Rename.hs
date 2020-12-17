@@ -108,7 +108,7 @@ renameColumnInMetadata oCol nCol qt fieldInfo = do
   where
     errMsg = "cannot rename column " <> oCol <<> " to " <>> nCol
     assertFldNotExists =
-      case M.lookup (fromPGCol oCol) fieldInfo of
+      case M.lookup (fromCol @'Postgres oCol) fieldInfo of
         Just (FIRelationship _) ->
           throw400 AlreadyExists $ "cannot rename column " <> oCol
           <<> " to " <> nCol <<> " in table " <> qt <<>
@@ -332,7 +332,7 @@ updateColExp qt rf (ColExp fld val) =
           FIRemoteRelationship{} -> pure val
 
     (oFld, nFld, opQT) = case rf of
-      RFCol (RenameItem tn oCol nCol) -> (fromPGCol oCol, fromPGCol nCol, tn)
+      RFCol (RenameItem tn oCol nCol) -> (fromCol @'Postgres oCol, fromCol @'Postgres nCol, tn)
       RFRel (RenameItem tn oRel nRel) -> (fromRel oRel, fromRel nRel, tn)
 
 -- rename columns in relationship definitions
@@ -365,7 +365,7 @@ updateColInRemoteRelationship remoteRelationshipName renameCol = do
       (rrdRemoteField %~ modifyFieldCalls oldColName newColName)
   where
     (RenameItem qt oldCol newCol) = renameCol
-    modifyHasuraFields = Set.insert (fromPGCol newCol) . Set.delete (fromPGCol oldCol)
+    modifyHasuraFields = Set.insert (fromCol @'Postgres newCol) . Set.delete (fromCol @'Postgres oldCol)
     modifyFieldCalls oldColName newColName =
       RemoteFields
       . NE.map (\(FieldCall name args) ->

@@ -2,7 +2,7 @@ SELECT
   schema.nspname AS table_schema,
   "table".relname AS table_name,
 
-  -- This field corresponds to the `PGTableMetadata` Haskell type
+  -- This field corresponds to the `DBTableMetadata` Haskell type
   jsonb_build_object(
     'oid', "table".oid :: integer,
     'columns', coalesce(columns.info, '[]'),

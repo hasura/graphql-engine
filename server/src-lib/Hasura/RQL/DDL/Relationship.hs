@@ -82,7 +82,7 @@ dropRelationshipInMetadata relName =
 objRelP2Setup
   :: (QErrM m)
   => QualifiedTable
-  -> HashSet ForeignKey
+  -> HashSet (ForeignKey 'Postgres)
   -> RelDef ObjRelUsing
   -> m (RelInfo 'Postgres, [SchemaDependency])
 objRelP2Setup qt foreignKeys (RelDef rn ru _) = case ru of
@@ -109,7 +109,7 @@ objRelP2Setup qt foreignKeys (RelDef rn ru _) = case ru of
 
 arrRelP2Setup
   :: (QErrM m)
-  => HashMap QualifiedTable (HashSet ForeignKey)
+  => HashMap QualifiedTable (HashSet (ForeignKey 'Postgres))
   -> QualifiedTable
   -> ArrRelDef
   -> m (RelInfo 'Postgres, [SchemaDependency])
@@ -160,8 +160,8 @@ runSetRelComment defn = do
 getRequiredFkey
   :: (QErrM m)
   => PGCol
-  -> [ForeignKey]
-  -> m ForeignKey
+  -> [ForeignKey 'Postgres]
+  -> m (ForeignKey 'Postgres)
 getRequiredFkey col fkeys =
   case filteredFkeys of
     []  -> throw400 ConstraintError

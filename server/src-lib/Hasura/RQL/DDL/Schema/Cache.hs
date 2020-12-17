@@ -85,7 +85,7 @@ runCacheRWT cache (CacheRWT m) =
 instance MonadTrans CacheRWT where
   lift = CacheRWT . lift
 
-instance (Monad m) => TableCoreInfoRM (CacheRWT m)
+instance (Monad m) => TableCoreInfoRM 'Postgres (CacheRWT m)
 instance (Monad m) => CacheRM (CacheRWT m) where
   askSchemaCache = CacheRWT $ gets (lastBuiltSchemaCache . fst)
 

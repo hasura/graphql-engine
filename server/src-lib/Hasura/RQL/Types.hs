@@ -157,7 +157,7 @@ instance (HasSQLGenCtx m) => HasSQLGenCtx (StateT s m) where
   askSQLGenCtx = lift askSQLGenCtx
 instance (Monoid w, HasSQLGenCtx m) => HasSQLGenCtx (WriterT w m) where
   askSQLGenCtx = lift askSQLGenCtx
-instance (HasSQLGenCtx m) => HasSQLGenCtx (TableCoreCacheRT m) where
+instance (HasSQLGenCtx m) => HasSQLGenCtx (TableCoreCacheRT b m) where
   askSQLGenCtx = lift askSQLGenCtx
 instance (HasSQLGenCtx m) => HasSQLGenCtx (TraceT m) where
   askSQLGenCtx = lift askSQLGenCtx
@@ -179,7 +179,7 @@ instance (HasSystemDefined m) => HasSystemDefined (TraceT m) where
 newtype HasSystemDefinedT m a
   = HasSystemDefinedT { unHasSystemDefinedT :: ReaderT SystemDefined m a }
   deriving ( Functor, Applicative, Monad, MonadTrans, MonadIO, MonadUnique, MonadError e, MonadTx
-           , HasHttpManager, HasSQLGenCtx, TableCoreInfoRM, CacheRM, UserInfoM)
+           , HasHttpManager, HasSQLGenCtx, TableCoreInfoRM b, CacheRM, UserInfoM)
 
 runHasSystemDefinedT :: SystemDefined -> HasSystemDefinedT m a -> m a
 runHasSystemDefinedT systemDefined = flip runReaderT systemDefined . unHasSystemDefinedT
@@ -197,11 +197,11 @@ getTableInfo :: (QErrM m) => QualifiedTable -> HashMap QualifiedTable a -> m a
 getTableInfo tableName infoMap =
   M.lookup tableName infoMap `onNothing` throwTableDoesNotExist tableName
 
-askTableCoreInfo :: (QErrM m, TableCoreInfoRM m) => QualifiedTable -> m (TableCoreInfo 'Postgres)
+askTableCoreInfo :: (QErrM m, TableCoreInfoRM 'Postgres m) => QualifiedTable -> m (TableCoreInfo 'Postgres)
 askTableCoreInfo tableName =
   lookupTableCoreInfo tableName >>= (`onNothing` throwTableDoesNotExist tableName)
 
-askFieldInfoMap :: (QErrM m, TableCoreInfoRM m) => QualifiedTable -> m (FieldInfoMap (FieldInfo 'Postgres))
+askFieldInfoMap :: (QErrM m, TableCoreInfoRM 'Postgres m) => QualifiedTable -> m (FieldInfoMap (FieldInfo 'Postgres))
 askFieldInfoMap = fmap _tciFieldInfoMap . askTableCoreInfo
 
 askPGType
@@ -221,7 +221,7 @@ askPGColInfo
   -> m (ColumnInfo backend)
 askPGColInfo m c msg = do
   fieldInfo <- modifyErr ("column " <>) $
-             askFieldInfo m (fromPGCol c)
+             askFieldInfo m (fromCol @'Postgres c)
   case fieldInfo of
     (FIColumn pgColInfo)     -> pure pgColInfo
     (FIRelationship   _)     -> throwErr "relationship"

@@ -51,10 +51,10 @@ data ComputedFieldMeta
   } deriving (Show, Eq)
 $(deriveJSON (aesonDrop 3 snakeCase){omitNothingFields=True} ''ComputedFieldMeta)
 
-data TableMeta
+data TableMeta (b :: BackendType)
   = TableMeta
   { tmTable          :: !QualifiedTable
-  , tmInfo           :: !PGTableMetadata
+  , tmInfo           :: !(DBTableMetadata b)
   , tmComputedFields :: ![ComputedFieldMeta]
   } deriving (Show, Eq)
 
@@ -62,7 +62,7 @@ fetchMeta
   :: (MonadTx m)
   => TableCache 'Postgres
   -> FunctionCache
-  -> m ([TableMeta], [FunctionMeta])
+  -> m ([TableMeta 'Postgres], [FunctionMeta])
 fetchMeta tables functions = do
   tableMetaInfos <- fetchTableMetadata
   functionMetaInfos <- fetchFunctionMetadata
@@ -121,7 +121,7 @@ data TableDiff (b :: BackendType)
   , _tdNewDescription  :: !(Maybe PGDescription)
   }
 
-getTableDiff :: TableMeta -> TableMeta -> TableDiff 'Postgres
+getTableDiff :: TableMeta 'Postgres -> TableMeta 'Postgres -> TableDiff 'Postgres
 getTableDiff oldtm newtm =
   TableDiff mNewName droppedCols addedCols alteredCols
   droppedFKeyConstraints computedFieldDiff uniqueOrPrimaryCons mNewDesc
@@ -145,7 +145,7 @@ getTableDiff oldtm newtm =
     -- and (ref-table, column mapping) are changed
     droppedFKeyConstraints = map (_cName . _fkConstraint) $ HS.toList $
       droppedFKeysWithOid `HS.intersection` droppedFKeysWithUniq
-    tmForeignKeys = fmap unPGForeignKeyMetadata . toList . _ptmiForeignKeys . tmInfo
+    tmForeignKeys = fmap unForeignKeyMetadata . toList . _ptmiForeignKeys . tmInfo
     droppedFKeysWithOid = HS.fromList $
       (getDifference (_cOid . _fkConstraint) `on` tmForeignKeys) oldtm newtm
     droppedFKeysWithUniq = HS.fromList $
@@ -196,7 +196,7 @@ data SchemaDiff (b :: BackendType)
   , _sdAlteredTables :: ![(QualifiedTable, TableDiff b)]
   }
 
-getSchemaDiff :: [TableMeta] -> [TableMeta] -> SchemaDiff 'Postgres
+getSchemaDiff :: [TableMeta 'Postgres] -> [TableMeta 'Postgres] -> SchemaDiff 'Postgres
 getSchemaDiff oldMeta newMeta =
   SchemaDiff droppedTables survivingTables
   where
