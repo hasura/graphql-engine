@@ -11,7 +11,6 @@ import qualified Database.PG.Query                            as Q
 
 import           Data.Aeson.Types
 import           Data.Text.Extended
-import           Instances.TH.Lift                            ()
 
 import qualified Hasura.Backends.Postgres.SQL.DML             as S
 import qualified Hasura.Tracing                               as Tracing
@@ -25,7 +24,6 @@ import           Hasura.RQL.DML.Internal
 import           Hasura.RQL.DML.Types
 import           Hasura.RQL.IR.BoolExp
 import           Hasura.RQL.IR.Update
-import           Hasura.RQL.Instances                         ()
 import           Hasura.RQL.Types
 import           Hasura.Server.Version                        (HasVersion)
 import           Hasura.Session
@@ -33,9 +31,9 @@ import           Hasura.Session
 
 convInc
   :: (QErrM m)
-  => (PGColumnType -> Value -> m S.SQLExp)
+  => (ColumnType 'Postgres -> Value -> m S.SQLExp)
   -> PGCol
-  -> PGColumnType
+  -> ColumnType 'Postgres
   -> Value
   -> m (PGCol, S.SQLExp)
 convInc f col colType val = do
@@ -44,9 +42,9 @@ convInc f col colType val = do
 
 convMul
   :: (QErrM m)
-  => (PGColumnType -> Value -> m S.SQLExp)
+  => (ColumnType 'Postgres -> Value -> m S.SQLExp)
   -> PGCol
-  -> PGColumnType
+  -> ColumnType 'Postgres
   -> Value
   -> m (PGCol, S.SQLExp)
 convMul f col colType val = do
@@ -55,16 +53,16 @@ convMul f col colType val = do
 
 convSet
   :: (QErrM m)
-  => (PGColumnType -> Value -> m S.SQLExp)
+  => (ColumnType 'Postgres -> Value -> m S.SQLExp)
   -> PGCol
-  -> PGColumnType
+  -> ColumnType 'Postgres
   -> Value
   -> m (PGCol, S.SQLExp)
 convSet f col colType val = do
   prepExp <- f colType val
   return (col, prepExp)
 
-convDefault :: (Monad m) => PGCol -> PGColumnType -> () -> m (PGCol, S.SQLExp)
+convDefault :: (Monad m) => PGCol -> ColumnType 'Postgres -> () -> m (PGCol, S.SQLExp)
 convDefault col _ _ = return (col, S.SEUnsafe "DEFAULT")
 
 convOp
@@ -73,7 +71,7 @@ convOp
   -> [PGCol]
   -> UpdPermInfo 'Postgres
   -> [(PGCol, a)]
-  -> (PGCol -> PGColumnType -> a -> m (PGCol, S.SQLExp))
+  -> (PGCol -> ColumnType 'Postgres -> a -> m (PGCol, S.SQLExp))
   -> m [(PGCol, S.SQLExp)]
 convOp fieldInfoMap preSetCols updPerm objs conv =
   forM objs $ \(pgCol, a) -> do
@@ -95,7 +93,7 @@ convOp fieldInfoMap preSetCols updPerm objs conv =
 validateUpdateQueryWith
   :: (UserInfoM m, QErrM m, CacheRM m)
   => SessVarBldr 'Postgres m
-  -> (PGColumnType -> Value -> m S.SQLExp)
+  -> (ColumnType 'Postgres -> Value -> m S.SQLExp)
   -> UpdateQuery
   -> m (AnnUpd 'Postgres)
 validateUpdateQueryWith sessVarBldr prepValBldr uq = do

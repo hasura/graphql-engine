@@ -71,9 +71,9 @@ initPlanningSt :: PlanningSt
 initPlanningSt =
   PlanningSt 2 Map.empty IntMap.empty Set.empty
 
-prepareWithPlan :: (MonadState PlanningSt m) => UnpreparedValue -> m S.SQLExp
+prepareWithPlan :: (MonadState PlanningSt m) => UnpreparedValue 'Postgres -> m S.SQLExp
 prepareWithPlan = \case
-  UVParameter PGColumnValue{ pcvValue = colVal } varInfoM -> do
+  UVParameter ColumnValue{ cvValue = colVal } varInfoM -> do
     argNum <- maybe getNextArgNum (getVarArgNum . getName) varInfoM
     addPrepArg argNum (toBinaryValue colVal, pstValue colVal)
     return $ toPrepParam argNum (pstType colVal)
@@ -91,9 +91,9 @@ prepareWithPlan = \case
     insertSessionVariable sessVar plan =
       plan { _psSessionVariables = Set.insert sessVar $ _psSessionVariables plan }
 
-prepareWithoutPlan :: (MonadState (Set.HashSet SessionVariable) m) => UnpreparedValue -> m S.SQLExp
+prepareWithoutPlan :: (MonadState (Set.HashSet SessionVariable) m) => UnpreparedValue 'Postgres -> m S.SQLExp
 prepareWithoutPlan = \case
-  UVParameter pgValue _   -> pure $ toTxtValue $ pcvValue pgValue
+  UVParameter pgValue _   -> pure $ toTxtValue $ cvValue pgValue
   UVLiteral sqlExp        -> pure sqlExp
   UVSession               -> pure currentSession
   UVSessionVar ty sessVar -> do
@@ -130,11 +130,9 @@ validateSessionVariables requiredVariables sessionVariables = do
 getVarArgNum :: (MonadState PlanningSt m) => G.Name -> m Int
 getVarArgNum var = do
   PlanningSt curArgNum vars prepped sessionVariables <- get
-  case Map.lookup var vars of
-    Just argNum -> pure argNum
-    Nothing     -> do
-      put $ PlanningSt (curArgNum + 1) (Map.insert var curArgNum vars) prepped sessionVariables
-      pure curArgNum
+  Map.lookup var vars `onNothing` do
+    put $ PlanningSt (curArgNum + 1) (Map.insert var curArgNum vars) prepped sessionVariables
+    pure curArgNum
 
 addPrepArg
   :: (MonadState PlanningSt m)

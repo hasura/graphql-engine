@@ -46,7 +46,6 @@ import           Data.Aeson
 import           Data.Aeson.Casing
 import           Data.Aeson.TH
 import           Data.Text.Extended
-import           Language.Haskell.TH.Syntax         (Lift)
 
 import           Hasura.Backends.Postgres.SQL.Types
 import           Hasura.EncJSON
@@ -322,7 +321,7 @@ data SetPermComment
   , apRole       :: !RoleName
   , apPermission :: !PermType
   , apComment    :: !(Maybe Text)
-  } deriving (Show, Eq, Lift)
+  } deriving (Show, Eq)
 
 $(deriveJSON (aesonDrop 2 snakeCase) ''SetPermComment)
 

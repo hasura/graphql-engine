@@ -94,7 +94,6 @@ import           Data.Aeson
 import           Data.Aeson.Casing
 import           Data.Aeson.TH
 import           Data.Text.Extended
-import           Language.Haskell.TH.Syntax          (Lift)
 
 import           Hasura.Backends.Postgres.SQL.Types
 import           Hasura.Incremental                  (Cacheable)
@@ -122,7 +121,7 @@ data TableCustomRootFields
   , _tcrfUpdateByPk      :: !(Maybe G.Name)
   , _tcrfDelete          :: !(Maybe G.Name)
   , _tcrfDeleteByPk      :: !(Maybe G.Name)
-  } deriving (Show, Eq, Lift, Generic)
+  } deriving (Show, Eq, Generic)
 instance NFData TableCustomRootFields
 instance Cacheable TableCustomRootFields
 $(deriveToJSON (aesonDrop 5 snakeCase){omitNothingFields=True} ''TableCustomRootFields)
@@ -167,7 +166,7 @@ emptyCustomRootFields =
 
 data FieldInfo (b :: BackendType)
   = FIColumn !(ColumnInfo b)
-  | FIRelationship !RelInfo
+  | FIRelationship !(RelInfo b)
   | FIComputedField !(ComputedFieldInfo b)
   | FIRemoteRelationship !(RemoteFieldInfo b)
   deriving (Generic)
@@ -217,7 +216,7 @@ getCols = mapMaybe (^? _FIColumn) . M.elems
 sortCols :: [ColumnInfo backend] -> [ColumnInfo backend]
 sortCols = sortBy (\l r -> compare (pgiPosition l) (pgiPosition r))
 
-getRels :: FieldInfoMap (FieldInfo backend) -> [RelInfo]
+getRels :: FieldInfoMap (FieldInfo backend) -> [RelInfo backend]
 getRels = mapMaybe (^? _FIRelationship) . M.elems
 
 getComputedFieldInfos :: FieldInfoMap (FieldInfo backend) -> [ComputedFieldInfo backend]
@@ -393,7 +392,7 @@ data TableConfig
   { _tcCustomRootFields  :: !TableCustomRootFields
   , _tcCustomColumnNames :: !CustomColumnNames
   , _tcCustomName        :: !(Maybe G.Name)
-  } deriving (Show, Eq, Lift, Generic)
+  } deriving (Show, Eq, Generic)
 instance NFData TableConfig
 instance Cacheable TableConfig
 $(deriveToJSON (aesonDrop 3 snakeCase){omitNothingFields=True} ''TableConfig)

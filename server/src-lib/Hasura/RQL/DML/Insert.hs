@@ -11,7 +11,6 @@ import qualified Database.PG.Query                            as Q
 
 import           Data.Aeson.Types
 import           Data.Text.Extended
-import           Instances.TH.Lift                            ()
 
 import qualified Hasura.Backends.Postgres.SQL.DML             as S
 

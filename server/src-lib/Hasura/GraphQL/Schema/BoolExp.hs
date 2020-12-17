@@ -20,7 +20,7 @@ import           Hasura.GraphQL.Parser.Class
 import           Hasura.GraphQL.Schema.Table
 import           Hasura.RQL.Types
 
-type ComparisonExp b = OpExpG b UnpreparedValue
+type ComparisonExp b = OpExpG b (UnpreparedValue b)
 
 -- |
 -- > input type_bool_exp {
@@ -34,7 +34,7 @@ boolExp
   :: forall m n r. (MonadSchema n m, MonadTableInfo r m, MonadRole r m)
   => QualifiedTable
   -> Maybe (SelPermInfo 'Postgres)
-  -> m (Parser 'Input n (AnnBoolExp 'Postgres UnpreparedValue))
+  -> m (Parser 'Input n (AnnBoolExp 'Postgres (UnpreparedValue 'Postgres)))
 boolExp table selectPermissions = memoizeOn 'boolExp table $ do
   tableGQLName <- getTableGQLName table
   let name = tableGQLName <> $$(G.litName "_bool_exp")
@@ -61,7 +61,7 @@ boolExp table selectPermissions = memoizeOn 'boolExp table $ do
     pure (tableFields ++ specialFields)
   where
     mkField
-      :: FieldInfo 'Postgres -> m (Maybe (InputFieldsParser n (Maybe (AnnBoolExpFld 'Postgres UnpreparedValue))))
+      :: FieldInfo 'Postgres -> m (Maybe (InputFieldsParser n (Maybe (AnnBoolExpFld 'Postgres (UnpreparedValue 'Postgres)))))
     mkField fieldInfo = runMaybeT do
       fieldName <- MaybeT $ pure $ fieldInfoGraphQLName fieldInfo
       P.fieldOptional fieldName Nothing <$> case fieldInfo of
@@ -83,7 +83,7 @@ boolExp table selectPermissions = memoizeOn 'boolExp table $ do
 
 comparisonExps
   :: forall m n. (MonadSchema n m, MonadError QErr m)
-  => PGColumnType -> m (Parser 'Input n [ComparisonExp 'Postgres])
+  => ColumnType 'Postgres -> m (Parser 'Input n [ComparisonExp 'Postgres])
 comparisonExps = P.memoize 'comparisonExps \columnType -> do
   geogInputParser <- geographyWithinDistanceInput
   geomInputParser <- geometryWithinDistanceInput
@@ -91,8 +91,8 @@ comparisonExps = P.memoize 'comparisonExps \columnType -> do
   ingInputParser  <- intersectsNbandGeomInput
   -- see Note [Columns in comparison expression are never nullable]
   columnParser       <- P.column columnType (G.Nullability False)
-  nullableTextParser <- P.column (PGColumnScalar PGText) (G.Nullability True)
-  textParser         <- P.column (PGColumnScalar PGText) (G.Nullability False)
+  nullableTextParser <- P.column (ColumnScalar PGText) (G.Nullability True)
+  textParser         <- P.column (ColumnScalar PGText) (G.Nullability False)
   maybeCastParser    <- castExp columnType
   let name = P.getName columnParser <> $$(G.litName "_comparison_exp")
       desc = G.Description $ "Boolean expression to compare columns of type "
@@ -164,10 +164,10 @@ comparisonExps = P.memoize 'comparisonExps \columnType -> do
         (AHasKey      . mkParameter <$> nullableTextParser)
       , P.fieldOptional $$(G.litName "_has_keys_any")
         (Just "do any of these strings exist as top-level keys in the column")
-        (AHasKeysAny . mkListLiteral (PGColumnScalar PGText) <$> textListParser)
+        (AHasKeysAny . mkListLiteral (ColumnScalar PGText) <$> textListParser)
       , P.fieldOptional $$(G.litName "_has_keys_all")
         (Just "do all of these strings exist as top-level keys in the column")
-        (AHasKeysAll . mkListLiteral (PGColumnScalar PGText) <$> textListParser)
+        (AHasKeysAll . mkListLiteral (ColumnScalar PGText) <$> textListParser)
       ]
     -- Ops for Geography type
     , guard (isScalarColumnWhere (== PGGeography) columnType) *>
@@ -207,38 +207,38 @@ comparisonExps = P.memoize 'comparisonExps \columnType -> do
       ]
     ]
   where
-    mkListLiteral :: PGColumnType -> [P.PGColumnValue] -> UnpreparedValue
+    mkListLiteral :: ColumnType 'Postgres -> [P.ColumnValue 'Postgres] -> UnpreparedValue 'Postgres
     mkListLiteral columnType columnValues = P.UVLiteral $ SETyAnn
-      (SEArray $ txtEncoder . pstValue . P.pcvValue <$> columnValues)
-      (mkTypeAnn $ PGTypeArray $ unsafePGColumnToRepresentation columnType)
+      (SEArray $ txtEncoder . pstValue . P.cvValue <$> columnValues)
+      (mkTypeAnn $ PGTypeArray $ unsafePGColumnToBackend columnType)
 
-    castExp :: PGColumnType -> m (Maybe (Parser 'Input n (CastExp 'Postgres UnpreparedValue)))
+    castExp :: ColumnType 'Postgres -> m (Maybe (Parser 'Input n (CastExp 'Postgres (UnpreparedValue 'Postgres))))
     castExp sourceType = do
       let maybeScalars = case sourceType of
-            PGColumnScalar PGGeography -> Just (PGGeography, PGGeometry)
-            PGColumnScalar PGGeometry  -> Just (PGGeometry, PGGeography)
-            _                          -> Nothing
+            ColumnScalar PGGeography -> Just (PGGeography, PGGeometry)
+            ColumnScalar PGGeometry  -> Just (PGGeometry, PGGeography)
+            _                        -> Nothing
 
       forM maybeScalars $ \(sourceScalar, targetScalar) -> do
         sourceName   <- P.mkScalarTypeName sourceScalar <&> (<> $$(G.litName "_cast_exp"))
         targetName   <- P.mkScalarTypeName targetScalar
-        targetOpExps <- comparisonExps $ PGColumnScalar targetScalar
+        targetOpExps <- comparisonExps $ ColumnScalar targetScalar
         let field = P.fieldOptional targetName Nothing $ (targetScalar, ) <$> targetOpExps
         pure $ P.object sourceName Nothing $ M.fromList . maybeToList <$> field
 
 geographyWithinDistanceInput
   :: forall m n. (MonadSchema n m, MonadError QErr m)
-  => m (Parser 'Input n (DWithinGeogOp UnpreparedValue))
+  => m (Parser 'Input n (DWithinGeogOp (UnpreparedValue 'Postgres)))
 geographyWithinDistanceInput = do
-  geographyParser <- P.column (PGColumnScalar PGGeography) (G.Nullability False)
+  geographyParser <- P.column (ColumnScalar PGGeography) (G.Nullability False)
   -- FIXME
   -- It doesn't make sense for this value to be nullable; it only is for
   -- backwards compatibility; if an explicit Null value is given, it will be
   -- forwarded to the underlying SQL function, that in turns treat a null value
   -- as an error. We can fix this by rejecting explicit null values, by marking
   -- this field non-nullable in a future release.
-  booleanParser   <- P.column (PGColumnScalar PGBoolean)   (G.Nullability True)
-  floatParser     <- P.column (PGColumnScalar PGFloat)     (G.Nullability False)
+  booleanParser   <- P.column (ColumnScalar PGBoolean)   (G.Nullability True)
+  floatParser     <- P.column (ColumnScalar PGFloat)     (G.Nullability False)
   pure $ P.object $$(G.litName "st_d_within_geography_input") Nothing $
     DWithinGeogOp <$> (mkParameter <$> P.field $$(G.litName "distance") Nothing floatParser)
                   <*> (mkParameter <$> P.field $$(G.litName "from")     Nothing geographyParser)
@@ -246,30 +246,30 @@ geographyWithinDistanceInput = do
 
 geometryWithinDistanceInput
   :: forall m n. (MonadSchema n m, MonadError QErr m)
-  => m (Parser 'Input n (DWithinGeomOp UnpreparedValue))
+  => m (Parser 'Input n (DWithinGeomOp (UnpreparedValue 'Postgres)))
 geometryWithinDistanceInput = do
-  geometryParser <- P.column (PGColumnScalar PGGeometry) (G.Nullability False)
-  floatParser    <- P.column (PGColumnScalar PGFloat)    (G.Nullability False)
+  geometryParser <- P.column (ColumnScalar PGGeometry) (G.Nullability False)
+  floatParser    <- P.column (ColumnScalar PGFloat)    (G.Nullability False)
   pure $ P.object $$(G.litName "st_d_within_input") Nothing $
     DWithinGeomOp <$> (mkParameter <$> P.field $$(G.litName "distance") Nothing floatParser)
                   <*> (mkParameter <$> P.field $$(G.litName "from")     Nothing geometryParser)
 
 intersectsNbandGeomInput
   :: forall m n. (MonadSchema n m, MonadError QErr m)
-  => m (Parser 'Input n (STIntersectsNbandGeommin UnpreparedValue))
+  => m (Parser 'Input n (STIntersectsNbandGeommin (UnpreparedValue 'Postgres)))
 intersectsNbandGeomInput = do
-  geometryParser <- P.column (PGColumnScalar PGGeometry) (G.Nullability False)
-  integerParser  <- P.column (PGColumnScalar PGInteger)  (G.Nullability False)
+  geometryParser <- P.column (ColumnScalar PGGeometry) (G.Nullability False)
+  integerParser  <- P.column (ColumnScalar PGInteger)  (G.Nullability False)
   pure $ P.object $$(G.litName "st_intersects_nband_geom_input") Nothing $
     STIntersectsNbandGeommin <$> (mkParameter <$> P.field $$(G.litName "nband")   Nothing integerParser)
                              <*> (mkParameter <$> P.field $$(G.litName "geommin") Nothing geometryParser)
 
 intersectsGeomNbandInput
   :: forall m n. (MonadSchema n m, MonadError QErr m)
-  => m (Parser 'Input n (STIntersectsGeomminNband UnpreparedValue))
+  => m (Parser 'Input n (STIntersectsGeomminNband (UnpreparedValue 'Postgres)))
 intersectsGeomNbandInput = do
-  geometryParser <- P.column (PGColumnScalar PGGeometry) (G.Nullability False)
-  integerParser  <- P.column (PGColumnScalar PGInteger)  (G.Nullability False)
+  geometryParser <- P.column (ColumnScalar PGGeometry) (G.Nullability False)
+  integerParser  <- P.column (ColumnScalar PGInteger)  (G.Nullability False)
   pure $ P.object $$(G.litName "st_intersects_geom_nband_input") Nothing $ STIntersectsGeomminNband
     <$> (     mkParameter <$> P.field         $$(G.litName "geommin") Nothing geometryParser)
     <*> (fmap mkParameter <$> P.fieldOptional $$(G.litName "nband")   Nothing integerParser)

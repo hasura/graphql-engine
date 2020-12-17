@@ -19,7 +19,6 @@ import qualified Database.PG.Query                  as Q
 
 import           Data.Aeson.Types
 import           Data.Tuple                         (swap)
-import           Instances.TH.Lift                  ()
 
 import           Hasura.Backends.Postgres.SQL.Types
 import           Hasura.EncJSON
@@ -87,7 +86,7 @@ objRelP2Setup
   => QualifiedTable
   -> HashSet ForeignKey
   -> RelDef ObjRelUsing
-  -> m (RelInfo, [SchemaDependency])
+  -> m (RelInfo 'Postgres, [SchemaDependency])
 objRelP2Setup qt foreignKeys (RelDef rn ru _) = case ru of
   RUManual rm -> do
     let refqt = rmTable rm
@@ -115,7 +114,7 @@ arrRelP2Setup
   => HashMap QualifiedTable (HashSet ForeignKey)
   -> QualifiedTable
   -> ArrRelDef
-  -> m (RelInfo, [SchemaDependency])
+  -> m (RelInfo 'Postgres, [SchemaDependency])
 arrRelP2Setup foreignKeys qt (RelDef rn ru _) = case ru of
   RUManual rm -> do
     let refqt = rmTable rm
@@ -144,7 +143,7 @@ purgeRelDep d = throw500 $ "unexpected dependency of relationship : "
 
 validateRelP1
   :: (UserInfoM m, QErrM m, TableCoreInfoRM m)
-  => QualifiedTable -> RelName -> m RelInfo
+  => QualifiedTable -> RelName -> m (RelInfo 'Postgres)
 validateRelP1 qt rn = do
   tabInfo <- askTableCoreInfo qt
   askRelType (_tciFieldInfoMap tabInfo) rn ""
