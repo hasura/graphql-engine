@@ -56,6 +56,7 @@ import           Hasura.GraphQL.Transport.HTTP               (MonadExecuteQuery 
 import           Hasura.GraphQL.Transport.HTTP.Protocol
 import           Hasura.GraphQL.Transport.WebSocket.Protocol
 import           Hasura.HTTP
+import           Hasura.Metadata.Class
 import           Hasura.Prelude
 import           Hasura.RQL.Types
 import           Hasura.Server.Auth                          (AuthMode, UserAuthentication,
@@ -72,9 +73,9 @@ import qualified Hasura.GraphQL.Execute.LiveQuery.Poll       as LQ
 import qualified Hasura.GraphQL.Execute.Query                as EQ
 import qualified Hasura.GraphQL.Transport.WebSocket.Server   as WS
 import qualified Hasura.Logging                              as L
+import           Hasura.Server.Init.Config                   (KeepAliveDelay (..))
 import qualified Hasura.Server.Telemetry.Counters            as Telem
 import qualified Hasura.Tracing                              as Tracing
-import           Hasura.Server.Init.Config (KeepAliveDelay (..))
 
 -- | 'LQ.LiveQueryId' comes from 'Hasura.GraphQL.Execute.LiveQuery.State.addLiveQuery'. We use
 -- this to track a connection's operations so we can remove them from 'LiveQueryState', and
@@ -332,6 +333,7 @@ onStart
   , Tracing.MonadTrace m
   , MonadExecuteQuery m
   , EQ.MonadQueryInstrumentation m
+  , MonadMetadataStorage (MetadataStorageT m)
   )
   => Env.Environment -> WSServerEnv -> WSConn -> StartMsg -> m ()
 onStart env serverEnv wsConn (StartMsg opId q) = catchAndIgnore $ do
@@ -531,6 +533,7 @@ onMessage
      , Tracing.HasReporter m
      , MonadExecuteQuery m
      , EQ.MonadQueryInstrumentation m
+     , MonadMetadataStorage (MetadataStorageT m)
      )
   => Env.Environment
   -> AuthMode
@@ -722,6 +725,7 @@ createWSServerApp
      , Tracing.HasReporter m
      , MonadExecuteQuery m
      , EQ.MonadQueryInstrumentation m
+     , MonadMetadataStorage (MetadataStorageT m)
      )
   => Env.Environment
   -> AuthMode

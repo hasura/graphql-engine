@@ -18,38 +18,32 @@ module Hasura.Server.Migrate
   ( MigrationResult(..)
   , migrateCatalog
   , latestCatalogVersion
-  , recreateSystemMetadata
   , dropCatalog
   , downgradeCatalog
   ) where
 
 import           Hasura.Prelude
 
-import qualified Data.Aeson                         as A
-import qualified Data.Environment                   as Env
-import qualified Data.HashMap.Strict                as HM
-import qualified Data.Text                          as T
-import qualified Data.Text.IO                       as TIO
-import qualified Database.PG.Query                  as Q
-import qualified Database.PG.Query.Connection       as Q
-import qualified Language.Haskell.TH.Lib            as TH
-import qualified Language.Haskell.TH.Syntax         as TH
+import qualified Data.Aeson                          as A
+import qualified Data.Environment                    as Env
+import qualified Data.Text.IO                        as TIO
+import qualified Database.PG.Query                   as Q
+import qualified Database.PG.Query.Connection        as Q
+import qualified Language.Haskell.TH.Lib             as TH
+import qualified Language.Haskell.TH.Syntax          as TH
 
-import           Control.Lens                       (view, _2)
-import           Control.Monad.Unique
-import           Data.Text.NonEmpty
-import           Data.Time.Clock                    (UTCTime)
-import           System.Directory                   (doesFileExist)
+import           Data.Time.Clock                     (UTCTime)
+import           System.Directory                    (doesFileExist)
 
 import           Hasura.Backends.Postgres.SQL.Types
-import           Hasura.Logging                     (Hasura, LogLevel (..), ToEngineLog (..))
-import           Hasura.RQL.DDL.Relationship
+import           Hasura.Logging                      (Hasura, LogLevel (..), ToEngineLog (..))
 import           Hasura.RQL.DDL.Schema
+import           Hasura.RQL.DDL.Schema.LegacyCatalog
 import           Hasura.RQL.Types
-import           Hasura.Server.Init                 (DowngradeOptions (..))
-import           Hasura.Server.Logging              (StartupLog (..))
-import           Hasura.Server.Migrate.Version      (latestCatalogVersion,
-                                                     latestCatalogVersionString)
+import           Hasura.Server.Init                  (DowngradeOptions (..))
+import           Hasura.Server.Logging               (StartupLog (..))
+import           Hasura.Server.Migrate.Version       (latestCatalogVersion,
+                                                      latestCatalogVersionString)
 import           Hasura.Server.Version
 
 dropCatalog :: (MonadTx m) => m ()
@@ -90,22 +84,24 @@ migrateCatalog
    . ( HasVersion
      , MonadIO m
      , MonadTx m
-     , MonadUnique m
      , HasHttpManager m
      , HasSQLGenCtx m
      )
   => Env.Environment
   -> UTCTime
-  -> m (MigrationResult, RebuildableSchemaCache m)
+  -> m (MigrationResult, RebuildableSchemaCache)
 migrateCatalog env migrationTime = do
-  doesSchemaExist (SchemaName "hdb_catalog") >>= \case
+  migrationResult <- doesSchemaExist (SchemaName "hdb_catalog") >>= \case
     False -> initialize True
     True  -> doesTableExist (SchemaName "hdb_catalog") (TableName "hdb_version") >>= \case
       False -> initialize False
       True  -> migrateFrom =<< getCatalogVersion
+  metadata <- liftTx fetchMetadataFromCatalog
+  schemaCache <- buildRebuildableSchemaCache env metadata
+  pure (migrationResult, schemaCache)
   where
     -- initializes the catalog, creating the schema if necessary
-    initialize :: Bool -> m (MigrationResult, RebuildableSchemaCache m)
+    initialize :: Bool -> m MigrationResult
     initialize createSchema =  do
       liftTx $ Q.catchE defaultTxErrorHandler $
         when createSchema $ Q.unitQ "CREATE SCHEMA hdb_catalog" () False
@@ -119,9 +115,8 @@ migrateCatalog env migrationTime = do
           <> "PostgreSQL server. Please make sure this extension is available."
 
       runTx $(Q.sqlFromFile "src-rsr/initialise.sql")
-      schemaCache <- buildCacheAndRecreateSystemMetadata
       updateCatalogVersion
-      pure (MRInitialized, schemaCache)
+      pure MRInitialized
       where
         needsPGCryptoError e@(Q.PGTxErr _ _ _ err) =
           case err of
@@ -141,11 +136,9 @@ migrateCatalog env migrationTime = do
               <> " https://hasura.io/docs/1.0/graphql/manual/deployment/postgres-permissions.html"
 
     -- migrates an existing catalog to the latest version from an existing verion
-    migrateFrom :: Text -> m (MigrationResult, RebuildableSchemaCache m)
+    migrateFrom :: Text -> m MigrationResult
     migrateFrom previousVersion
-      | previousVersion == latestCatalogVersionString = do
-          schemaCache <- buildRebuildableSchemaCache env
-          pure (MRNothingToDo, schemaCache)
+      | previousVersion == latestCatalogVersionString = pure MRNothingToDo
       | [] <- neededMigrations =
           throw400 NotSupported $
             "Cannot use database previously used with a newer version of graphql-engine (expected"
@@ -153,20 +146,17 @@ migrateCatalog env migrationTime = do
               <> " is " <> previousVersion <> ")."
       | otherwise = do
           traverse_ (mpMigrate . snd) neededMigrations
-          schemaCache <- buildCacheAndRecreateSystemMetadata
           updateCatalogVersion
-          pure (MRMigrated previousVersion, schemaCache)
+          pure $ MRMigrated previousVersion
       where
-        neededMigrations = dropWhile ((/= previousVersion) . fst) (migrations False)
+        neededMigrations =
+          dropWhile ((/= previousVersion) . fst) (migrations False)
 
     updateCatalogVersion = setCatalogVersion latestCatalogVersionString migrationTime
 
-    buildCacheAndRecreateSystemMetadata :: m (RebuildableSchemaCache m)
-    buildCacheAndRecreateSystemMetadata = do
-      schemaCache <- buildRebuildableSchemaCache env
-      view _2 <$> runCacheRWT schemaCache recreateSystemMetadata
-
-downgradeCatalog :: forall m. (MonadIO m, MonadTx m) => DowngradeOptions -> UTCTime -> m MigrationResult
+downgradeCatalog
+  :: forall m. (MonadIO m, MonadTx m)
+  => DowngradeOptions -> UTCTime -> m MigrationResult
 downgradeCatalog opts time = do
     downgradeFrom =<< getCatalogVersion
   where
@@ -234,7 +224,9 @@ setCatalogVersion ver time = liftTx $ Q.unitQE defaultTxErrorHandler [Q.sql|
     DO UPDATE SET version = $1, upgraded_on = $2
   |] (ver, time) False
 
-migrations :: forall m. (MonadIO m, MonadTx m) => Bool -> [(Text, MigrationPair m)]
+migrations
+  :: forall m. (MonadIO m, MonadTx m)
+  => Bool -> [(Text, MigrationPair m)]
 migrations dryRun =
     -- We need to build the list of migrations at compile-time so that we can compile the SQL
     -- directly into the executable using `Q.sqlFromFile`. The GHC stage restriction makes
@@ -252,7 +244,7 @@ migrations dryRun =
 
           migrationsFromFile = map $ \(to :: Integer) ->
             let from = to - 1
-            in [| ( $(TH.lift $ T.pack (show from))
+            in [| ( $(TH.lift $ tshow from)
                   , MigrationPair
                       $(migrationFromFile (show from) (show to))
                       $(migrationFromFileMaybe (show to) (show from))
@@ -262,7 +254,9 @@ migrations dryRun =
         $  [| ("0.8", MigrationPair $(migrationFromFile "08" "1") Nothing) |]
         :  migrationsFromFile [2..3]
         ++ [| ("3", MigrationPair from3To4 Nothing) |]
-        :  migrationsFromFile [5..latestCatalogVersion])
+        :  migrationsFromFile [5..42]
+        ++ [[| ("42", MigrationPair from42To43 (Just from43To42)) |]]
+     )
   where
     runTxOrPrint :: Q.Query -> m ()
     runTxOrPrint
@@ -296,139 +290,23 @@ migrations dryRun =
                                              WHERE name = $2
                                              |] (Q.AltJ $ A.toJSON etc, name) True
 
--- | Drops and recreates all “system-defined” metadata, aka metadata for tables and views in the
--- @information_schema@ and @hdb_catalog@ schemas. These tables and views are tracked to expose them
--- to the console, which allows us to reuse the same functionality we use to implement user-defined
--- APIs to expose the catalog.
---
--- This process has a long and storied history.
---
--- In the past, we reused the same machinery we use for CLI migrations to define our own internal
--- metadata migrations. This caused trouble, however, as we’d have to run those migrations in
--- lockstep with our SQL migrations to ensure the two didn’t get out of sync. This in turn caused
--- trouble because those migrations would hit code paths inside @graphql-engine@ to add or remove
--- things from the @pg_catalog@ tables, and /that/ in turn would fail because we hadn’t finished
--- running the SQL migrations, so we were running a new version of the code against an old version
--- of the schema! That caused #2826.
---
--- To fix that, #2379 switched to the approach of just dropping and recreating all system metadata
--- every time we run any SQL migrations. But /that/ in turn caused trouble due to the way we were
--- constantly rebuilding the schema cache (#3354), causing us to switch to incremental schema cache
--- construction (#3394). However, although that mostly resolved the problem, we still weren’t
--- totally out of the woods, as the incremental construction was still too slow on slow Postgres
--- instances (#3654).
---
--- To sidestep the whole issue, as of #3686 we now just create all the system metadata in code here,
--- and we only rebuild the schema cache once, at the very end. This is a little unsatisfying, since
--- it means our internal migrations are “blessed” compared to user-defined CLI migrations. If we
--- improve CLI migrations further in the future, maybe we can switch back to using that approach,
--- instead.
-recreateSystemMetadata :: (MonadTx m, CacheRWM m) => m ()
-recreateSystemMetadata = do
-  runTx $(Q.sqlFromFile "src-rsr/clear_system_metadata.sql")
-  runHasSystemDefinedT (SystemDefined True) $ for_ systemMetadata \(tableName, tableRels) -> do
-    saveTableToCatalog tableName False emptyTableConfig
-    for_ tableRels \case
-      Left relDef  -> insertRelationshipToCatalog tableName ObjRel relDef
-      Right relDef -> insertRelationshipToCatalog tableName ArrRel relDef
-  buildSchemaCacheStrict
-  where
-    systemMetadata :: [(QualifiedTable, [Either ObjRelDef ArrRelDef])]
-    systemMetadata =
-      [ table "information_schema" "tables" []
-      , table "information_schema" "schemata" []
-      , table "information_schema" "views" []
-      , table "information_schema" "columns" []
-      , table "hdb_catalog" "hdb_table"
-        [ objectRel $$(nonEmptyText "detail") $
-          manualConfig "information_schema" "tables" tableNameMapping
-        , objectRel $$(nonEmptyText "primary_key") $
-          manualConfig "hdb_catalog" "hdb_primary_key" tableNameMapping
-        , arrayRel $$(nonEmptyText "columns") $
-          manualConfig "information_schema" "columns" tableNameMapping
-        , arrayRel $$(nonEmptyText "foreign_key_constraints") $
-          manualConfig "hdb_catalog" "hdb_foreign_key_constraint" tableNameMapping
-        , arrayRel $$(nonEmptyText "relationships") $
-          manualConfig "hdb_catalog" "hdb_relationship" tableNameMapping
-        , arrayRel $$(nonEmptyText "permissions") $
-          manualConfig "hdb_catalog" "hdb_permission_agg" tableNameMapping
-        , arrayRel $$(nonEmptyText "computed_fields") $
-          manualConfig "hdb_catalog" "hdb_computed_field" tableNameMapping
-        , arrayRel $$(nonEmptyText "check_constraints") $
-          manualConfig "hdb_catalog" "hdb_check_constraint" tableNameMapping
-        , arrayRel $$(nonEmptyText "unique_constraints") $
-          manualConfig "hdb_catalog" "hdb_unique_constraint" tableNameMapping
-        ]
-      , table "hdb_catalog" "hdb_primary_key" []
-      , table "hdb_catalog" "hdb_foreign_key_constraint" []
-      , table "hdb_catalog" "hdb_relationship" []
-      , table "hdb_catalog" "hdb_permission_agg" []
-      , table "hdb_catalog" "hdb_computed_field" []
-      , table "hdb_catalog" "hdb_check_constraint" []
-      , table "hdb_catalog" "hdb_unique_constraint" []
-      , table "hdb_catalog" "hdb_remote_relationship" []
-      , table "hdb_catalog" "event_triggers"
-        [ arrayRel $$(nonEmptyText "events") $
-          manualConfig "hdb_catalog" "event_log" [("name", "trigger_name")] ]
-      , table "hdb_catalog" "event_log"
-        [ objectRel $$(nonEmptyText "trigger") $
-          manualConfig "hdb_catalog" "event_triggers" [("trigger_name", "name")]
-        , arrayRel $$(nonEmptyText "logs") $ RUFKeyOn $
-          ArrRelUsingFKeyOn (QualifiedObject "hdb_catalog" "event_invocation_logs") "event_id" ]
-      , table "hdb_catalog" "event_invocation_logs"
-        [ objectRel $$(nonEmptyText "event") $ RUFKeyOn "event_id" ]
-      , table "hdb_catalog" "hdb_function" []
-      , table "hdb_catalog" "hdb_function_agg"
-        [ objectRel $$(nonEmptyText "return_table_info") $ manualConfig "hdb_catalog" "hdb_table"
-          [ ("return_type_schema", "table_schema")
-          , ("return_type_name", "table_name") ] ]
-      , table "hdb_catalog" "remote_schemas" []
-      , table "hdb_catalog" "hdb_version" []
-      , table "hdb_catalog" "hdb_query_collection" []
-      , table "hdb_catalog" "hdb_allowlist" []
-      , table "hdb_catalog" "hdb_custom_types" []
-      , table "hdb_catalog" "hdb_action_permission" []
-      , table "hdb_catalog" "hdb_action"
-        [ arrayRel $$(nonEmptyText "permissions") $ manualConfig "hdb_catalog" "hdb_action_permission"
-          [("action_name", "action_name")]
-        ]
-      , table "hdb_catalog" "hdb_action_log" []
-      , table "hdb_catalog" "hdb_role"
-        [ arrayRel $$(nonEmptyText "action_permissions") $ manualConfig "hdb_catalog" "hdb_action_permission"
-          [("role_name", "role_name")]
-        , arrayRel $$(nonEmptyText "permissions") $ manualConfig "hdb_catalog" "hdb_permission_agg"
-          [("role_name", "role_name")]
-        ]
-      , table "hdb_catalog" "hdb_cron_triggers"
-        [ arrayRel $$(nonEmptyText "cron_events") $ RUFKeyOn $
-          ArrRelUsingFKeyOn (QualifiedObject "hdb_catalog" "hdb_cron_events") "trigger_name"
-        ]
-      , table "hdb_catalog" "hdb_cron_events"
-        [ objectRel $$(nonEmptyText "cron_trigger") $ RUFKeyOn "trigger_name"
-        , arrayRel $$(nonEmptyText "cron_event_logs") $ RUFKeyOn $
-          ArrRelUsingFKeyOn (QualifiedObject "hdb_catalog" "hdb_cron_event_invocation_logs") "event_id"
-        ]
-      , table "hdb_catalog" "hdb_cron_event_invocation_logs"
-        [ objectRel $$(nonEmptyText "cron_event") $ RUFKeyOn "event_id"
-        ]
-      , table "hdb_catalog" "hdb_scheduled_events"
-        [ arrayRel $$(nonEmptyText "scheduled_event_logs") $ RUFKeyOn $
-          ArrRelUsingFKeyOn (QualifiedObject "hdb_catalog" "hdb_scheduled_event_invocation_logs") "event_id"
-        ]
-      , table "hdb_catalog" "hdb_scheduled_event_invocation_logs"
-        [ objectRel $$(nonEmptyText "scheduled_event")  $ RUFKeyOn "event_id"
-        ]
-      ]
+    from42To43 = do
+      let query = $(Q.sqlFromFile "src-rsr/migrations/42_to_43.sql")
+      if dryRun then (liftIO . TIO.putStrLn . Q.getQueryText) query
+        else do
+        metadata <- fetchMetadataFromHdbTables
+        runTx query
+        liftTx $ setMetadataInCatalog metadata
 
-    tableNameMapping =
-      [ ("table_schema", "table_schema")
-      , ("table_name", "table_name") ]
+    from43To42 = do
+      let query = $(Q.sqlFromFile "src-rsr/migrations/43_to_42.sql")
+      if dryRun then (liftIO . TIO.putStrLn . Q.getQueryText) query
+        else do
+        metadata <- liftTx fetchMetadataFromCatalog
+        runTx query
+        liftTx $ runHasSystemDefinedT (SystemDefined False) $ saveMetadataToHdbTables metadata
+        recreateSystemMetadata
 
-    table schemaName tableName relationships = (QualifiedObject schemaName tableName, relationships)
-    objectRel name using = Left $ RelDef (RelName name) using Nothing
-    arrayRel name using = Right $ RelDef (RelName name) using Nothing
-    manualConfig schemaName tableName columns =
-      RUManual $ RelManualConfig (QualifiedObject schemaName tableName) (HM.fromList columns)
 
 runTx :: (MonadTx m) => Q.Query -> m ()
 runTx = liftTx . Q.multiQE defaultTxErrorHandler

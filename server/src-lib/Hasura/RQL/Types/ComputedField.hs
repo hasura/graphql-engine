@@ -26,7 +26,8 @@ import           Hasura.SQL.Backend
 
 newtype ComputedFieldName =
   ComputedFieldName { unComputedFieldName :: NonEmptyText}
-  deriving (Show, Eq, NFData, FromJSON, ToJSON, ToJSONKey, Q.ToPrepArg, ToTxt, Hashable, Q.FromCol, Generic, Arbitrary, Cacheable)
+  deriving (Show, Eq, Ord, NFData, FromJSON, ToJSON, ToJSONKey
+           , Q.ToPrepArg, ToTxt, Hashable, Q.FromCol, Generic, Arbitrary, Cacheable)
 
 computedFieldNameToText :: ComputedFieldName -> Text
 computedFieldNameToText = unNonEmptyText . unComputedFieldName
@@ -74,15 +75,11 @@ data ComputedFieldReturn (b :: BackendType)
   = CFRScalar !(ScalarType b)
   | CFRSetofTable !(TableName b)
   deriving (Generic)
-deriving instance Show (ComputedFieldReturn 'Postgres)
-deriving instance Eq (ComputedFieldReturn 'Postgres)
-instance Cacheable (ComputedFieldReturn 'Postgres)
-instance ToJSON (ComputedFieldReturn 'Postgres) where
+deriving instance Backend b => Show (ComputedFieldReturn b)
+deriving instance Backend b => Eq (ComputedFieldReturn b)
+instance Backend b => Cacheable (ComputedFieldReturn b)
+instance Backend b => ToJSON (ComputedFieldReturn b) where
   toJSON = genericToJSON $
-    defaultOptions { constructorTagModifier = snakeCase . drop 3
-                   , sumEncoding = TaggedObject "type" "info"
-                   }
-  toEncoding = genericToEncoding $
     defaultOptions { constructorTagModifier = snakeCase . drop 3
                    , sumEncoding = TaggedObject "type" "info"
                    }
@@ -107,11 +104,12 @@ data ComputedFieldInfo (b :: BackendType)
   , _cfiReturnType :: !(ComputedFieldReturn b)
   , _cfiComment    :: !(Maybe Text)
   } deriving (Generic)
-deriving instance Eq (ComputedFieldInfo 'Postgres)
-instance Cacheable (ComputedFieldInfo 'Postgres)
-instance ToJSON (ComputedFieldInfo 'Postgres) where
-  toJSON = genericToJSON $ aesonDrop 4 snakeCase
-  toEncoding = genericToEncoding $ aesonDrop 4 snakeCase
+deriving instance (Backend b) => Eq (ComputedFieldInfo b)
+instance (Backend b) => Cacheable (ComputedFieldInfo b)
+instance Backend b => ToJSON (ComputedFieldInfo b) where
+  -- spelling out the JSON instance in order to skip the Trees That Grow field
+  toJSON (ComputedFieldInfo _ name func tp comment) =
+    object ["name" .= name, "function" .= func, "return_type" .= tp, "comment" .= comment]
 $(makeLenses ''ComputedFieldInfo)
 
 onlyScalarComputedFields :: [ComputedFieldInfo backend] -> [ComputedFieldInfo backend]

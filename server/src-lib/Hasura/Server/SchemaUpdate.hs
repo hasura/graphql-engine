@@ -2,12 +2,14 @@
 module Hasura.Server.SchemaUpdate
   ( startSchemaSyncListenerThread
   , startSchemaSyncProcessorThread
+  , EventPayload(..)
   , SchemaSyncCtx(..)
   )
 where
 
 import           Hasura.Backends.Postgres.Connection
 import           Hasura.Logging
+import           Hasura.Metadata.Class
 import           Hasura.Prelude
 import           Hasura.RQL.DDL.Schema               (runCacheRWT)
 import           Hasura.RQL.Types
@@ -17,6 +19,7 @@ import           Hasura.Server.Logging
 import           Hasura.Server.Types                 (InstanceId (..))
 import           Hasura.Session
 
+import           Control.Monad.Trans.Control         (MonadBaseControl)
 import           Data.Aeson
 import           Data.Aeson.Casing
 import           Data.Aeson.TH
@@ -74,15 +77,15 @@ $(deriveJSON (aesonDrop 3 snakeCase) ''EventPayload)
 
 data SchemaSyncEvent
   = SSEListenStart !UTC.UTCTime
-  | SSEPayload !EventPayload
+  | SSEPayload !Value
 
 instance ToJSON SchemaSyncEvent where
   toJSON = \case
-    SSEListenStart time -> String $ "event listening started at " <> T.pack (show time)
+    SSEListenStart time -> String $ "event listening started at " <> tshow time
     SSEPayload payload -> toJSON payload
 
 data ThreadError
-  = TEJsonParse !Text
+  = TEPayloadParse !Text
   | TEQueryError !QErr
 $(deriveToJSON
   defaultOptions { constructorTagModifier = snakeCase . drop 2
@@ -105,7 +108,7 @@ logThreadStarted
   :: (MonadIO m)
   => Logger Hasura -> InstanceId -> ThreadType -> Immortal.Thread -> m ()
 logThreadStarted logger instanceId threadType thread =
-  let msg = T.pack (show threadType) <> " thread started"
+  let msg = tshow threadType <> " thread started"
   in unLogger logger $
      StartupLog LevelInfo "schema-sync" $
        object [ "instance_id" .= getInstanceId instanceId
@@ -177,7 +180,7 @@ startSchemaSyncListenerThread pool logger instanceId = do
 -- | An async thread which processes the schema sync events
 -- See Note [Schema Cache Sync]
 startSchemaSyncProcessorThread
-  :: (MonadIO m)
+  :: (C.ForkableMonadIO m, MonadMetadataStorage (MetadataStorageT m))
   => SQLGenCtx
   -> PG.PGPool
   -> Logger Hasura
@@ -190,7 +193,7 @@ startSchemaSyncProcessorThread
 startSchemaSyncProcessorThread sqlGenCtx pool logger httpMgr
   schemaSyncEventRef cacheRef instanceId cacheInitStartTime = do
   -- Start processor thread
-  processorThread <- liftIO $ C.forkImmortal "SchemeUpdate.processor" logger $
+  processorThread <- C.forkImmortal "SchemeUpdate.processor" logger $
     processor sqlGenCtx pool logger httpMgr schemaSyncEventRef cacheRef instanceId cacheInitStartTime
   logThreadStarted logger instanceId TTProcessor processorThread
   pure processorThread
@@ -220,7 +223,7 @@ listener pool logger updateEventRef =
         STM.atomically $ STM.writeTVar updateEventRef $ Just $ SSEListenStart time
       PG.PNEPQNotify notif ->
         case eitherDecodeStrict $ PQ.notifyExtra notif of
-          Left e -> logError logger threadType $ TEJsonParse $ T.pack e
+          Left e -> logError logger threadType $ TEPayloadParse $ T.pack e
           Right payload -> do
             logInfo logger threadType $ object ["received_event" .= payload]
 #ifndef PROFILING
@@ -239,7 +242,11 @@ listener pool logger updateEventRef =
 
 -- | An IO action that processes events from Queue, in a loop forever.
 processor
-  :: SQLGenCtx
+  :: forall m void.
+     ( C.ForkableMonadIO m
+     , MonadMetadataStorage (MetadataStorageT m)
+     )
+  => SQLGenCtx
   -> PG.PGPool
   -> Logger Hasura
   -> HTTP.Manager
@@ -247,15 +254,29 @@ processor
   -> SchemaCacheRef
   -> InstanceId
   -> UTC.UTCTime
-  -> IO void
+  -> m void
 processor sqlGenCtx pool logger httpMgr updateEventRef
   cacheRef instanceId cacheInitStartTime =
   -- Never exits
   forever $ do
-    event <- STM.atomically getLatestEvent
+    event <- liftIO $ STM.atomically getLatestEvent
     logInfo logger threadType $ object ["processed_event" .= event]
-    when (shouldReload event) $
-      refreshSchemaCache sqlGenCtx pool logger httpMgr cacheRef (getCacheInvalidations event)
+    (shouldReload, cacheInvalidations) <- case event of
+      SSEListenStart time ->
+        -- If listening started after cache initialization, just refresh the schema cache unconditionally.
+        -- See Note [Schema Cache Sync]
+        pure $ (time > cacheInitStartTime, mempty)
+      SSEPayload payload -> do
+        eitherResult <- runMetadataStorageT $ processSchemaSyncEventPayload instanceId payload
+        case eitherResult of
+          Left e -> do
+            logError logger threadType $ TEPayloadParse $ qeError e
+            pure (False, mempty)
+          Right SchemaSyncEventProcessResult{..} ->
+            pure (_sseprShouldReload, _sseprCacheInvalidations)
+
+    when shouldReload $
+      refreshSchemaCache sqlGenCtx pool logger httpMgr cacheRef cacheInvalidations
         threadType "schema cache reloaded"
   where
     -- checks if there is an event
@@ -269,36 +290,30 @@ processor sqlGenCtx pool logger httpMgr updateEventRef
         Nothing -> STM.retry
     threadType = TTProcessor
 
-    shouldReload = \case
-      SSEListenStart time ->
-        -- If listening started after cache initialization, just refresh the schema cache unconditionally.
-        -- See Note [Schema Cache Sync]
-        time > cacheInitStartTime
-      SSEPayload payload  ->
-        -- When event is from other sever instance
-        _epInstanceId payload /= instanceId
-
-    getCacheInvalidations = \case
-      SSEListenStart _   -> mempty
-      SSEPayload payload -> _epInvalidations payload
-
 refreshSchemaCache
-  :: SQLGenCtx
+  :: ( MonadIO m
+     , MonadBaseControl IO m
+     , MonadMetadataStorage (MetadataStorageT m)
+     )
+  => SQLGenCtx
   -> PG.PGPool
   -> Logger Hasura
   -> HTTP.Manager
   -> SchemaCacheRef
   -> CacheInvalidations
   -> ThreadType
-  -> Text -> IO ()
+  -> Text -> m ()
 refreshSchemaCache sqlGenCtx pool logger httpManager cacheRef invalidations threadType msg = do
   -- Reload schema cache from catalog
-  resE <- liftIO $ runExceptT $ withSCUpdate cacheRef logger do
-    rebuildableCache <- fst <$> liftIO (readIORef $ _scrCache cacheRef)
-    ((), cache, _) <- buildSchemaCacheWithOptions CatalogSync invalidations
-      & runCacheRWT rebuildableCache
-      & peelRun runCtx pgCtx PG.ReadWrite Nothing
-    pure ((), cache)
+  eitherMetadata <- runMetadataStorageT fetchMetadata
+  resE <- runExceptT $ do
+    metadata <- liftEither eitherMetadata
+    withSCUpdate cacheRef logger do
+      rebuildableCache <- fst <$> liftIO (readIORef $ _scrCache cacheRef)
+      ((), cache, _) <- buildSchemaCacheWithOptions CatalogSync invalidations metadata
+        & runCacheRWT rebuildableCache
+        & peelRun runCtx pgCtx PG.ReadWrite Nothing
+      pure ((), cache)
   case resE of
     Left e   -> logError logger threadType $ TEQueryError e
     Right () -> logInfo logger threadType $ object ["message" .= msg]
@@ -306,11 +321,11 @@ refreshSchemaCache sqlGenCtx pool logger httpManager cacheRef invalidations thre
   runCtx = RunCtx adminUserInfo httpManager sqlGenCtx
   pgCtx = mkPGExecCtx PG.Serializable pool
 
-logInfo :: Logger Hasura -> ThreadType -> Value -> IO ()
+logInfo :: (MonadIO m) => Logger Hasura -> ThreadType -> Value -> m ()
 logInfo logger threadType val = unLogger logger $
   SchemaSyncThreadLog LevelInfo threadType val
 
-logError :: ToJSON a => Logger Hasura -> ThreadType -> a -> IO ()
+logError :: (MonadIO m, ToJSON a) => Logger Hasura -> ThreadType -> a -> m ()
 logError logger threadType err =
   unLogger logger $ SchemaSyncThreadLog LevelError threadType $
     object ["error" .= toJSON err]

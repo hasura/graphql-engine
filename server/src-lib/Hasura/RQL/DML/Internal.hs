@@ -31,7 +31,7 @@ newtype DMLP1T m a
   = DMLP1T { unDMLP1T :: StateT (DS.Seq Q.PrepArg) m a }
   deriving ( Functor, Applicative, Monad, MonadTrans
            , MonadState (DS.Seq Q.PrepArg), MonadError e
-           , TableCoreInfoRM, CacheRM, UserInfoM, HasSQLGenCtx
+           , TableCoreInfoRM b, CacheRM, UserInfoM, HasSQLGenCtx
            )
 
 runDMLP1T :: DMLP1T m a -> m (a, DS.Seq Q.PrepArg)

@@ -12,7 +12,7 @@ module Hasura.RQL.Types.Common
        , SessionVarType
 
        , FieldName(..)
-       , fromPGCol
+       , fromCol
        , fromRel
 
        , ToAesonPairs(..)
@@ -35,6 +35,8 @@ module Hasura.RQL.Types.Common
 
        , SystemDefined(..)
        , isSystemDefined
+
+       , SQLGenCtx(..)
 
        , successMsg
        , NonNegativeDiffTime
@@ -121,6 +123,8 @@ class
   , Representable (XANILIKE b)
   , Representable (XRelay b)
   , Representable (XNodesAgg b)
+  , Representable (XRemoteField b)
+  , Representable (XComputedField b)
   , Ord (XRelay b)
   , Ord (TableName b)
   , Ord (ScalarType b)
@@ -160,6 +164,7 @@ class
   type XAILIKE        b :: Type
   type XANILIKE       b :: Type
   type XComputedField b :: Type
+  type XRemoteField   b :: Type
   type XRelay         b :: Type
   type XNodesAgg      b :: Type
   isComparableType :: ScalarType b -> Bool
@@ -182,6 +187,7 @@ instance Backend 'Postgres where
   type XAILIKE        'Postgres = ()
   type XANILIKE       'Postgres = ()
   type XComputedField 'Postgres = ()
+  type XRemoteField   'Postgres = ()
   type XRelay         'Postgres = ()
   type XNodesAgg      'Postgres = ()
   isComparableType              = PG.isComparableType
@@ -204,6 +210,7 @@ instance Backend 'MSSQL where
   type XAILIKE        'MSSQL = ()
   type XANILIKE       'MSSQL = ()
   type XComputedField 'MSSQL = Void
+  type XRemoteField   'MSSQL = Void -- To be supported later
   type XRelay         'MSSQL = Void
   type XNodesAgg      'MSSQL = Void
   isComparableType           = MSSQL.isComparableType
@@ -223,7 +230,8 @@ rootText = mkNonEmptyTextUnsafe "root"
 
 newtype RelName
   = RelName { getRelTxt :: NonEmptyText }
-  deriving (Show, Eq, Hashable, FromJSON, ToJSON, ToJSONKey, Q.ToPrepArg, Q.FromCol, Generic, Arbitrary, NFData, Cacheable)
+  deriving (Show, Eq, Ord, Hashable, FromJSON, ToJSON, ToJSONKey
+           , Q.ToPrepArg, Q.FromCol, Generic, Arbitrary, NFData, Cacheable)
 
 instance PG.IsIdentifier RelName where
   toIdentifier rn = PG.Identifier $ relNameToTxt rn
@@ -300,8 +308,8 @@ instance PG.IsIdentifier FieldName where
 instance ToTxt FieldName where
   toTxt (FieldName c) = c
 
-fromPGCol :: PG.PGCol -> FieldName
-fromPGCol c = FieldName $ PG.getPGColTxt c
+fromCol :: Backend b => Column b -> FieldName
+fromCol = FieldName . toTxt
 
 fromRel :: RelName -> FieldName
 fromRel = FieldName . relNameToTxt
@@ -334,9 +342,6 @@ data MutateResp a
   } deriving (Show, Eq)
 $(deriveJSON (aesonDrop 3 snakeCase) ''MutateResp)
 
-
-type ColMapping = HM.HashMap PG.PGCol PG.PGCol
-
 -- | Postgres OIDs. <https://www.postgresql.org/docs/12/datatype-oid.html>
 newtype OID = OID { unOID :: Int }
   deriving (Show, Eq, NFData, Hashable, ToJSON, FromJSON, Q.FromCol, Cacheable)
@@ -361,16 +366,21 @@ instance (Cacheable a) => Cacheable (PrimaryKey a)
 $(makeLenses ''PrimaryKey)
 $(deriveJSON (aesonDrop 3 snakeCase) ''PrimaryKey)
 
-data ForeignKey
+data ForeignKey (b :: BackendType)
   = ForeignKey
   { _fkConstraint    :: !Constraint
-  , _fkForeignTable  :: !PG.QualifiedTable
-  , _fkColumnMapping :: !ColMapping
-  } deriving (Show, Eq, Generic)
-instance NFData ForeignKey
-instance Hashable ForeignKey
-instance Cacheable ForeignKey
-$(deriveJSON (aesonDrop 3 snakeCase) ''ForeignKey)
+  , _fkForeignTable  :: !(TableName b)
+  , _fkColumnMapping :: !(HM.HashMap (Column b) (Column b))
+  } deriving (Generic)
+deriving instance Backend b => Eq (ForeignKey b)
+deriving instance Backend b => Show (ForeignKey b)
+instance Backend b => NFData (ForeignKey b)
+instance Backend b => Hashable (ForeignKey b)
+instance Backend b => Cacheable (ForeignKey b)
+instance Backend b => ToJSON (ForeignKey b) where
+  toJSON = genericToJSON $ aesonDrop 3 snakeCase
+instance Backend b => FromJSON (ForeignKey b) where
+  parseJSON = genericParseJSON $ aesonDrop 3 snakeCase
 
 data InpValInfo
   = InpValInfo
@@ -397,6 +407,11 @@ newtype SystemDefined = SystemDefined { unSystemDefined :: Bool }
 
 isSystemDefined :: SystemDefined -> Bool
 isSystemDefined = unSystemDefined
+
+newtype SQLGenCtx
+  = SQLGenCtx
+  { stringifyNum :: Bool
+  } deriving (Show, Eq)
 
 successMsg :: EncJSON
 successMsg = "{\"message\":\"success\"}"

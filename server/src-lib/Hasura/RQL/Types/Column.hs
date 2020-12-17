@@ -4,7 +4,6 @@ module Hasura.RQL.Types.Column
   , _ColumnEnumReference
   , isScalarColumnWhere
 
-  , onlyIntCols
   , onlyNumCols
   , onlyJSONBCols
   , onlyComparableCols
@@ -168,12 +167,13 @@ data RawColumnInfo (b :: BackendType)
   , prciIsNullable  :: !Bool
   , prciDescription :: !(Maybe G.Description)
   } deriving (Generic)
-deriving instance Eq (RawColumnInfo 'Postgres)
-instance NFData (RawColumnInfo 'Postgres)
-instance Cacheable (RawColumnInfo 'Postgres)
-instance ToJSON (RawColumnInfo 'Postgres) where
+deriving instance Backend b => Eq (RawColumnInfo b)
+deriving instance Backend b => Show (RawColumnInfo b)
+instance Backend b => NFData (RawColumnInfo b)
+instance Backend b => Cacheable (RawColumnInfo b)
+instance Backend b => ToJSON (RawColumnInfo b) where
   toJSON = genericToJSON $ aesonDrop 4 snakeCase
-instance FromJSON (RawColumnInfo 'Postgres) where
+instance Backend b => FromJSON (RawColumnInfo b) where
   parseJSON = genericParseJSON $ aesonDrop 4 snakeCase
 
 -- | “Resolved” column info, produced from a 'RawColumnInfo' value that has been combined with
@@ -188,18 +188,15 @@ data ColumnInfo (b :: BackendType)
   , pgiIsNullable  :: !Bool
   , pgiDescription :: !(Maybe G.Description)
   } deriving (Generic)
-deriving instance Eq (ColumnInfo 'Postgres)
-instance NFData (ColumnInfo 'Postgres)
-instance Cacheable (ColumnInfo 'Postgres)
-instance Hashable (ColumnInfo 'Postgres)
-instance ToJSON (ColumnInfo 'Postgres) where
+deriving instance Backend b => Eq (ColumnInfo b)
+instance Backend b => Cacheable (ColumnInfo b)
+instance Backend b => NFData (ColumnInfo b)
+instance Backend b => Hashable (ColumnInfo b)
+instance Backend b => ToJSON (ColumnInfo b) where
   toJSON = genericToJSON $ aesonDrop 3 snakeCase
   toEncoding = genericToEncoding $ aesonDrop 3 snakeCase
 
 type PrimaryKeyColumns b = NESeq (ColumnInfo b)
-
-onlyIntCols :: [ColumnInfo 'Postgres] -> [ColumnInfo 'Postgres]
-onlyIntCols = filter (isScalarColumnWhere isIntegerType . pgiType)
 
 onlyNumCols :: forall b . Backend b => [ColumnInfo b] -> [ColumnInfo b]
 onlyNumCols = filter (isScalarColumnWhere (isNumType @b) . pgiType)

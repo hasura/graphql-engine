@@ -190,7 +190,7 @@ data AnnFieldG (b :: BackendType) v
   | AFObjectRelation !(ObjectRelationSelectG b v)
   | AFArrayRelation !(ArraySelectG b v)
   | AFComputedField (XComputedField b) !(ComputedFieldSelect b v)
-  | AFRemote (XRemoteFieldInfo b) !(RemoteSelect b)
+  | AFRemote (XRemoteField b) !(RemoteSelect b)
   | AFNodeId (XRelay b) !(TableName b) !(PrimaryKeyColumns b)
   | AFExpression !Text
 

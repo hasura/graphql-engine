@@ -287,7 +287,7 @@ notEqualsBoolExpBuilder qualColExp rhsExp =
       (S.BENull rhsExp))
 
 annBoolExp
-  :: (QErrM m, TableCoreInfoRM m)
+  :: (QErrM m, TableCoreInfoRM 'Postgres m)
   => OpRhsParser m v
   -> FieldInfoMap (FieldInfo 'Postgres)
   -> GBoolExp 'Postgres ColExp
@@ -308,7 +308,7 @@ annBoolExp rhsParser fim boolExp =
     procExps = mapM (annBoolExp rhsParser fim)
 
 annColExp
-  :: (QErrM m, TableCoreInfoRM m)
+  :: (QErrM m, TableCoreInfoRM 'Postgres m)
   => OpRhsParser m v
   -> FieldInfoMap (FieldInfo 'Postgres)
   -> ColExp
@@ -346,7 +346,7 @@ convColRhs
   :: S.Qual -> AnnBoolExpFldSQL 'Postgres -> State Word64 S.BoolExp
 convColRhs tableQual = \case
   AVCol colInfo opExps -> do
-    let colFld = fromPGCol $ pgiColumn colInfo
+    let colFld = fromCol @'Postgres $ pgiColumn colInfo
         bExps = map (mkFieldCompExp tableQual colFld) opExps
     return $ foldr (S.BEBin S.AndOp) (S.BELit True) bExps
 
@@ -354,7 +354,7 @@ convColRhs tableQual = \case
     -- Convert the where clause on the relationship
     curVarNum <- get
     put $ curVarNum + 1
-    let newIdentifier  = Identifier $ "_be_" <> T.pack (show curVarNum) <> "_"
+    let newIdentifier  = Identifier $ "_be_" <> tshow curVarNum <> "_"
                    <> snakeCaseQualifiedObject relTN
         newIdenQ = S.QualifiedIdentifier newIdentifier Nothing
     annRelBoolExp <- convBoolRhs' newIdenQ nesAnn

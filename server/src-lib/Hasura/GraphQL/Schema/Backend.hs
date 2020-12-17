@@ -89,4 +89,8 @@ class Backend b => BackendSchema (b :: BackendType) where
 
 type ComparisonExp b = OpExpG b (UnpreparedValue b)
 
+-- This datatype is an ugly hack to make sure that code that uses relay resp
+-- "nodes" aggregation compiles for Postgres.  We should eventually get rid of
+-- this type by passing around the fields of this record through the schema
+-- cache in the right places.
 data BackendSupport b = BackendSupport { backendRelay :: XRelay b, backendNodesAgg :: XNodesAgg b }

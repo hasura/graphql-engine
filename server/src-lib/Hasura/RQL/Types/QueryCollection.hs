@@ -1,7 +1,11 @@
 module Hasura.RQL.Types.QueryCollection
   ( CollectionName
   , CollectionDef(..)
+  , cdQueries
   , CreateCollection(..)
+  , ccName
+  , ccDefinition
+  , ccComment
   , AddQueryToCollection(..)
   , DropQueryFromCollection(..)
   , DropCollection(..)
@@ -20,6 +24,7 @@ import           Hasura.Prelude
 import qualified Database.PG.Query             as Q
 import qualified Language.GraphQL.Draft.Syntax as G
 
+import           Control.Lens
 import           Data.Aeson
 import           Data.Aeson.Casing
 import           Data.Aeson.TH
@@ -114,6 +119,7 @@ newtype CollectionDef
   { _cdQueries :: QueryList }
   deriving (Show, Eq, Generic, NFData, Cacheable)
 $(deriveJSON (aesonDrop 3 snakeCase) ''CollectionDef)
+$(makeLenses ''CollectionDef)
 
 data CreateCollection
   = CreateCollection
@@ -122,6 +128,7 @@ data CreateCollection
   , _ccComment    :: !(Maybe Text)
   } deriving (Show, Eq, Generic)
 $(deriveJSON (aesonDrop 3 snakeCase) ''CreateCollection)
+$(makeLenses ''CreateCollection)
 
 data DropCollection
   = DropCollection

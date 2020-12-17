@@ -504,9 +504,9 @@ collectTypes
   => a
   -> m (HashMap G.Name (P.Definition P.SomeTypeInfo))
 collectTypes x = case P.collectTypeDefinitions x of
-  Left (P.ConflictingDefinitions type1 _) -> throw500 $
-    "found conflicting definitions for " <> P.getName type1
-    <<> " when collecting types from the schema"
+  Left (P.ConflictingDefinitions (type1, origin1) (_type2, origins)) -> throw500 $
+    "Found conflicting definitions for " <> P.getName type1
+    <<> ".  The definition at " <> origin1 <<> " differs from the the definition at " <>> commaSeparated origins
   Right tps -> pure tps
 
 queryWithIntrospectionHelper
