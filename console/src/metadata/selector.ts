@@ -46,7 +46,7 @@ const getCurrentTable = (state: ReduxState) => {
   return state.tables.currentTable;
 };
 
-const getCurrentSource = (state: ReduxState) => {
+export const getCurrentSource = (state: ReduxState) => {
   return state.tables.currentDataSource;
 };
 
@@ -312,7 +312,10 @@ export const getCronTriggers = createSelector(getMetadata, metadata => {
       name: cron.name,
       payload: cron.payload,
       retry_conf: {
-        ...cron.retry_conf,
+        num_retries: cron.retry_conf?.num_retries,
+        retry_interval_seconds: cron.retry_conf?.retry_interval_seconds,
+        timeout_seconds: cron.retry_conf?.timeout_seconds,
+        tolerance_seconds: cron.retry_conf?.tolerance_seconds,
       },
       header_conf: cron.headers,
       webhook_conf: cron.webhook,
