@@ -1,3 +1,5 @@
+{-# LANGUAGE AllowAmbiguousTypes #-}
+
 module Hasura.RQL.Types.Common
        ( RelName(..)
        , relNameToTxt
@@ -7,9 +9,10 @@ module Hasura.RQL.Types.Common
        , RelInfo(..)
 
        , Backend (..)
+       , SessionVarType
 
        , FieldName(..)
-       , fromPGCol
+       , fromCol
        , fromRel
 
        , ToAesonPairs(..)
@@ -32,6 +35,8 @@ module Hasura.RQL.Types.Common
 
        , SystemDefined(..)
        , isSystemDefined
+
+       , SQLGenCtx(..)
 
        , successMsg
        , NonNegativeDiffTime
@@ -85,6 +90,7 @@ import           Hasura.Incremental                 (Cacheable)
 import           Hasura.RQL.DDL.Headers             ()
 import           Hasura.RQL.Types.Error
 import           Hasura.SQL.Backend
+import           Hasura.SQL.Types
 
 
 type Representable a = (Show a, Eq a, Hashable a, Cacheable a, NFData a)
@@ -110,8 +116,14 @@ class
   , Representable (ScalarType b)
   , Representable (SQLExpression b)
   , Representable (SQLOperator b)
+  -- TODO define sufficiently many synonyms to get rid of these 4 lines for SessionVarType:
+  , Eq (SessionVarType b)
+  , Data (SessionVarType b)
+  , NFData (SessionVarType b)
+  , Cacheable (SessionVarType b)
   , Representable (XAILIKE b)
   , Representable (XANILIKE b)
+  , Representable (XComputedFieldInfo b)
   , Ord (TableName b)
   , Ord (ScalarType b)
   , Data (TableName b)
@@ -131,47 +143,53 @@ class
   , ToJSONKey (Column b)
   , ToTxt (TableName b)
   , ToTxt (ScalarType b)
+  , ToTxt (Column b)
   , Typeable b
   ) => Backend (b :: BackendType) where
-  type Identifier      b :: Type
-  type Alias           b :: Type
-  type TableName       b :: Type
-  type FunctionName    b :: Type
-  type ConstraintName  b :: Type
-  type BasicOrderType  b :: Type
-  type NullsOrderType  b :: Type
-  type CountType       b :: Type
-  type Column          b :: Type
-  type ColumnValueType b :: Type
-  type ScalarType      b :: Type
-  type SQLExpression   b :: Type
-  type SQLOperator     b :: Type
-  type SessionVarType  b :: Type
-  type XAILIKE         b :: Type
-  type XANILIKE        b :: Type
+  type Identifier     b :: Type
+  type Alias          b :: Type
+  type TableName      b :: Type
+  type FunctionName   b :: Type
+  type ConstraintName b :: Type
+  type BasicOrderType b :: Type
+  type NullsOrderType b :: Type
+  type CountType      b :: Type
+  type Column         b :: Type
+  type ScalarValue    b :: Type
+  type ScalarType     b :: Type
+  type SQLExpression  b :: Type
+  type SQLOperator    b :: Type
+  type XAILIKE        b :: Type
+  type XANILIKE       b :: Type
+  type XComputedFieldInfo b :: Type
+  isComparableType :: ScalarType b -> Bool
+  isNumType :: ScalarType b -> Bool
 
 instance Backend 'Postgres where
-  type Identifier      'Postgres = PG.Identifier
-  type Alias           'Postgres = PG.Alias
-  type TableName       'Postgres = PG.QualifiedTable
-  type FunctionName    'Postgres = PG.QualifiedFunction
-  type ConstraintName  'Postgres = PG.ConstraintName
-  type BasicOrderType  'Postgres = PG.OrderType
-  type NullsOrderType  'Postgres = PG.NullsOrder
-  type CountType       'Postgres = PG.CountType
-  type Column          'Postgres = PG.PGCol
-  type ColumnValueType 'Postgres = PG.WithScalarType PG.PGScalarValue
-  type ScalarType      'Postgres = PG.PGScalarType
-  type SQLExpression   'Postgres = PG.SQLExp
-  type SQLOperator     'Postgres = PG.SQLOp
-  type SessionVarType  'Postgres = PG.PGType PG.PGScalarType
-  type XAILIKE         'Postgres = ()
-  type XANILIKE        'Postgres = ()
+  type Identifier     'Postgres = PG.Identifier
+  type Alias          'Postgres = PG.Alias
+  type TableName      'Postgres = PG.QualifiedTable
+  type FunctionName   'Postgres = PG.QualifiedFunction
+  type ConstraintName 'Postgres = PG.ConstraintName
+  type BasicOrderType 'Postgres = PG.OrderType
+  type NullsOrderType 'Postgres = PG.NullsOrder
+  type CountType      'Postgres = PG.CountType
+  type Column         'Postgres = PG.PGCol
+  type ScalarValue    'Postgres = PG.PGScalarValue
+  type ScalarType     'Postgres = PG.PGScalarType
+  type SQLExpression  'Postgres = PG.SQLExp
+  type SQLOperator    'Postgres = PG.SQLOp
+  type XAILIKE        'Postgres = ()
+  type XANILIKE       'Postgres = ()
+  type XComputedFieldInfo 'Postgres = ()
+  isComparableType = PG.isComparableType
+  isNumType = PG.isNumType
 
 -- instance Backend 'Mysql where
 --   type XAILIKE 'MySQL = Void
 --   type XANILIKE 'MySQL = Void
 
+type SessionVarType b = CollectableType (ScalarType b)
 
 adminText :: NonEmptyText
 adminText = mkNonEmptyTextUnsafe "admin"
@@ -181,7 +199,8 @@ rootText = mkNonEmptyTextUnsafe "root"
 
 newtype RelName
   = RelName { getRelTxt :: NonEmptyText }
-  deriving (Show, Eq, Hashable, FromJSON, ToJSON, ToJSONKey, Q.ToPrepArg, Q.FromCol, Generic, Arbitrary, NFData, Cacheable)
+  deriving (Show, Eq, Ord, Hashable, FromJSON, ToJSON, ToJSONKey
+           , Q.ToPrepArg, Q.FromCol, Generic, Arbitrary, NFData, Cacheable)
 
 instance PG.IsIdentifier RelName where
   toIdentifier rn = PG.Identifier $ relNameToTxt rn
@@ -258,8 +277,8 @@ instance PG.IsIdentifier FieldName where
 instance ToTxt FieldName where
   toTxt (FieldName c) = c
 
-fromPGCol :: PG.PGCol -> FieldName
-fromPGCol c = FieldName $ PG.getPGColTxt c
+fromCol :: Backend b => Column b -> FieldName
+fromCol = FieldName . toTxt
 
 fromRel :: RelName -> FieldName
 fromRel = FieldName . relNameToTxt
@@ -292,9 +311,6 @@ data MutateResp a
   } deriving (Show, Eq)
 $(deriveJSON (aesonDrop 3 snakeCase) ''MutateResp)
 
-
-type ColMapping = HM.HashMap PG.PGCol PG.PGCol
-
 -- | Postgres OIDs. <https://www.postgresql.org/docs/12/datatype-oid.html>
 newtype OID = OID { unOID :: Int }
   deriving (Show, Eq, NFData, Hashable, ToJSON, FromJSON, Q.FromCol, Cacheable)
@@ -319,16 +335,21 @@ instance (Cacheable a) => Cacheable (PrimaryKey a)
 $(makeLenses ''PrimaryKey)
 $(deriveJSON (aesonDrop 3 snakeCase) ''PrimaryKey)
 
-data ForeignKey
+data ForeignKey (b :: BackendType)
   = ForeignKey
   { _fkConstraint    :: !Constraint
-  , _fkForeignTable  :: !PG.QualifiedTable
-  , _fkColumnMapping :: !ColMapping
-  } deriving (Show, Eq, Generic)
-instance NFData ForeignKey
-instance Hashable ForeignKey
-instance Cacheable ForeignKey
-$(deriveJSON (aesonDrop 3 snakeCase) ''ForeignKey)
+  , _fkForeignTable  :: !(TableName b)
+  , _fkColumnMapping :: !(HM.HashMap (Column b) (Column b))
+  } deriving (Generic)
+deriving instance Backend b => Eq (ForeignKey b)
+deriving instance Backend b => Show (ForeignKey b)
+instance Backend b => NFData (ForeignKey b)
+instance Backend b => Hashable (ForeignKey b)
+instance Backend b => Cacheable (ForeignKey b)
+instance Backend b => ToJSON (ForeignKey b) where
+  toJSON = genericToJSON $ aesonDrop 3 snakeCase
+instance Backend b => FromJSON (ForeignKey b) where
+  parseJSON = genericParseJSON $ aesonDrop 3 snakeCase
 
 data InpValInfo
   = InpValInfo
@@ -355,6 +376,11 @@ newtype SystemDefined = SystemDefined { unSystemDefined :: Bool }
 
 isSystemDefined :: SystemDefined -> Bool
 isSystemDefined = unSystemDefined
+
+newtype SQLGenCtx
+  = SQLGenCtx
+  { stringifyNum :: Bool
+  } deriving (Show, Eq)
 
 successMsg :: EncJSON
 successMsg = "{\"message\":\"success\"}"

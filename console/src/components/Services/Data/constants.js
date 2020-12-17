@@ -28,6 +28,27 @@ export const Operators = [
   },
   { name: 'similar', value: '$similar', graphqlOp: '_similar' },
   { name: 'not similar', value: '$nsimilar', graphqlOp: '_nsimilar' },
+
+  {
+    name: '~',
+    value: '$regex',
+    graphqlOp: '_regex',
+  },
+  {
+    name: '~*',
+    value: '$iregex',
+    graphqlOp: '_iregex',
+  },
+  {
+    name: '!~',
+    value: '$nregex',
+    graphqlOp: '_nregex',
+  },
+  {
+    name: '!~*',
+    value: '$niregex',
+    graphqlOp: '_niregex',
+  },
 ];
 
 export const Integers = [

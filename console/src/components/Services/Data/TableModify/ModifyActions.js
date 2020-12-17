@@ -25,6 +25,7 @@ import {
   getUniqueConstraintName,
 } from '../Common/Components/utils';
 
+import { quoteDefault } from '../utils';
 import { getConfirmation, capitalize } from '../../../Common/utils/jsUtils';
 import {
   findTable,
@@ -1250,6 +1251,8 @@ const addColSql = (
   colDependentSQLGenerator,
   callback
 ) => {
+  const defWithQuotes = quoteDefault(colDefault);
+
   return (dispatch, getState) => {
     const currentSchema = getState().tables.currentSchema;
     const source = getState().tables.currentDataSource;
@@ -1261,7 +1264,7 @@ const addColSql = (
       {
         nullable: colNull,
         unique: colUnique,
-        default: colDefault,
+        default: defWithQuotes,
         sqlGenerator: colDependentSQLGenerator,
       }
     );

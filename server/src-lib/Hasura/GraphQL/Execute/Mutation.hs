@@ -34,6 +34,7 @@ import           Hasura.GraphQL.Execute.Prepare
 import           Hasura.GraphQL.Execute.Remote
 import           Hasura.GraphQL.Execute.Resolve
 import           Hasura.GraphQL.Parser
+import           Hasura.Metadata.Class
 import           Hasura.RQL.Types
 import           Hasura.Server.Version                     (HasVersion)
 import           Hasura.Session
@@ -102,6 +103,7 @@ convertMutationAction
   ::( HasVersion
     , MonadIO m
     , MonadError QErr m
+    , MonadMetadataStorage (MetadataStorageT m)
     , Tracing.MonadTrace m
     , Tracing.MonadTrace tx
     , MonadIO tx
@@ -115,9 +117,10 @@ convertMutationAction
   -> ActionMutation 'Postgres (UnpreparedValue 'Postgres)
   -> m (tx EncJSON, HTTP.ResponseHeaders)
 convertMutationAction env logger userInfo manager reqHeaders = \case
-  AMSync s  -> (_aerTransaction &&& _aerHeaders) <$>
+  AMSync s  -> ((unActionExecuteTx . _aerExecution) &&& _aerHeaders) <$>
     resolveActionExecution env logger userInfo s actionExecContext
-  AMAsync s -> noResponseHeaders <$> resolveActionMutationAsync s reqHeaders userSession
+  AMAsync s -> (noResponseHeaders . unActionExecuteTx) <$>
+               liftEitherM (runMetadataStorageT $ resolveActionMutationAsync s reqHeaders userSession)
   where
     userSession = _uiSession userInfo
     actionExecContext = ActionExecContext manager reqHeaders $ _uiSession userInfo
@@ -128,6 +131,7 @@ convertMutationSelectionSet
      , Tracing.MonadTrace m
      , MonadIO m
      , MonadError QErr m
+     , MonadMetadataStorage (MetadataStorageT m)
      , MonadTx tx
      , Tracing.MonadTrace tx
      , MonadIO tx

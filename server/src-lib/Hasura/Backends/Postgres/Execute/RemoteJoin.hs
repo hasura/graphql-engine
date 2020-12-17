@@ -129,7 +129,7 @@ parseGraphQLName txt = onNothing (G.mkName txt) (throw400 RemoteSchemaError $ er
 pathToAlias :: (MonadError QErr m) => FieldPath -> Counter -> m Alias
 pathToAlias path counter =
   parseGraphQLName $ T.intercalate "_" (map getFieldNameTxt $ unFieldPath path)
-                 <> "__" <> (T.pack . show . unCounter) counter
+                 <> "__" <> (tshow . unCounter) counter
 
 type RemoteJoins b = NE.NonEmpty (FieldPath, NE.NonEmpty (RemoteJoin b))
 type RemoteJoinMap b = Map.HashMap FieldPath (NE.NonEmpty (RemoteJoin b))
@@ -229,8 +229,8 @@ transformAnnFields path fields = do
       remoteJoins = flip map remoteSelects $ \(fieldName, remoteSelect) ->
         let RemoteSelect argsMap selSet hasuraColumns remoteFields rsi = remoteSelect
             hasuraColumnL = toList hasuraColumns
-            hasuraColumnFields = HS.fromList $ map (fromPGCol . pgiColumn) hasuraColumnL
-            phantomColumns = filter ((`notElem` pgColumnFields) . fromPGCol . pgiColumn) hasuraColumnL
+            hasuraColumnFields = HS.fromList $ map (fromCol @'Postgres . pgiColumn) hasuraColumnL
+            phantomColumns = filter ((`notElem` pgColumnFields) . fromCol @'Postgres . pgiColumn) hasuraColumnL
         in RemoteJoin fieldName argsMap selSet hasuraColumnFields remoteFields rsi phantomColumns
 
   transformedFields <- forM fields $ \(fieldName, field') -> do
@@ -256,7 +256,7 @@ transformAnnFields path fields = do
   case NE.nonEmpty remoteJoins of
     Nothing -> pure transformedFields
     Just nonEmptyRemoteJoins -> do
-      let phantomColumns = map (\ci -> (fromPGCol $ pgiColumn ci, AFColumn $ AnnColumnField ci False Nothing)) $
+      let phantomColumns = map (\ci -> (fromCol @'Postgres $ pgiColumn ci, AFColumn $ AnnColumnField ci False Nothing)) $
                            concatMap _rjPhantomFields remoteJoins
       modify (Map.insert path nonEmptyRemoteJoins)
       pure $ transformedFields <> phantomColumns
@@ -409,7 +409,7 @@ traverseQueryResponseJSON rjm =
                 Nothing -> Just <$> traverseValue fieldPath value
                 Just nonEmptyRemoteJoins -> do
                   let remoteJoins = toList nonEmptyRemoteJoins
-                      phantomColumnFields = map (fromPGCol . pgiColumn) $
+                      phantomColumnFields = map (fromCol @'Postgres . pgiColumn) $
                                             concatMap _rjPhantomFields remoteJoins
                   if | fieldName `elem` phantomColumnFields -> pure Nothing
                      | otherwise -> do
@@ -567,11 +567,11 @@ replaceRemoteFields compositeJson remoteServerResponse =
         Nothing          -> pure v
         Just (h :| rest) -> case v of
           AO.Object o   -> maybe
-                           (throw500 $ "cannnot find value in remote response at path " <> T.pack (show path))
+                           (throw500 $ "cannnot find value in remote response at path " <> tshow path)
                            (extractAtPath rest)
                            (AO.lookup (G.unName h) o)
           AO.Array arr -> AO.array <$> mapM (extractAtPath path) (toList arr)
-          _            -> throw500 $ "expecting array or object in remote response at path " <> T.pack (show path)
+          _            -> throw500 $ "expecting array or object in remote response at path " <> tshow path
 
 -- | Fold nested 'FieldCall's into a bare 'Field', inserting the passed
 -- selection set at the leaf of the tree we construct.

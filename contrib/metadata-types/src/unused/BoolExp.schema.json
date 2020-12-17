@@ -82,6 +82,22 @@
                     "type": "string",
                     "title": "_similar"
                 },
+                "_regex": {
+                    "type": "string",
+                    "title": "_regex"
+                },
+                "_iregex": {
+                    "type": "string",
+                    "title": "_iregex"
+                },
+                "_nregex": {
+                    "type": "string",
+                    "title": "_nregex"
+                },
+                "_niregex": {
+                    "type": "string",
+                    "title": "_niregex"
+                },
                 "_eq": {
                     "type": "string",
                     "title": "_eq"

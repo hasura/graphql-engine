@@ -92,7 +92,7 @@ validateRemoteRelationship remoteRelationship remoteSchemaMap pgColumns = do
   let remoteSchemaName = rtrRemoteSchema remoteRelationship
       table = rtrTable remoteRelationship
   hasuraFields <- forM (toList $ rtrHasuraFields remoteRelationship) $
-    \fieldName -> onNothing (find ((==) fieldName . fromPGCol . pgiColumn) pgColumns) $
+    \fieldName -> onNothing (find ((==) fieldName . fromCol @'Postgres . pgiColumn) pgColumns) $
       throwError $ TableFieldNonexistent table fieldName
   pgColumnsVariables <- mapM (\(k,v) -> do
                                   variableName <- pgColumnToVariable k

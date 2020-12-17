@@ -38,6 +38,7 @@ import           Hasura.GraphQL.Execute.Prepare
 import           Hasura.GraphQL.Execute.Remote
 import           Hasura.GraphQL.Execute.Resolve
 import           Hasura.GraphQL.Parser
+import           Hasura.Metadata.Class
 import           Hasura.RQL.Types
 import           Hasura.Server.Version                     (HasVersion)
 import           Hasura.Session
@@ -82,7 +83,7 @@ actionQueryToRootFieldPlan prepped = \case
 --       let varName = G.unName var
 --       colVal <- onNothing (Map.lookup var annVars) $
 --         throw500 $ "missing variable in annVars : " <> varName
---       let prepVal = (toBinaryValue colVal, pstValue colVal)
+--       let prepVal = (binEncoder colVal, pstValue colVal)
 --       return $ IntMap.insert prepNo prepVal accum
 
 
@@ -146,10 +147,12 @@ class Monad m => MonadQueryInstrumentation m where
 instance MonadQueryInstrumentation m => MonadQueryInstrumentation (ReaderT r m)
 instance MonadQueryInstrumentation m => MonadQueryInstrumentation (ExceptT e m)
 instance MonadQueryInstrumentation m => MonadQueryInstrumentation (Tracing.TraceT m)
+instance MonadQueryInstrumentation m => MonadQueryInstrumentation (MetadataStorageT m)
 
 convertQuerySelSet
   :: forall m tx .
      ( MonadError QErr m
+     , MonadMetadataStorage (MetadataStorageT m)
      , HasVersion
      , MonadIO m
      , Tracing.MonadTrace m
@@ -208,13 +211,16 @@ convertQuerySelSet env logger gqlContext userInfo manager reqHeaders directives 
     usrVars = _uiSession userInfo
 
     convertActionQuery
-      :: ActionQuery 'Postgres (UnpreparedValue 'Postgres) -> StateT PlanningSt m (ActionQueryPlan 'Postgres)
+      :: ActionQuery 'Postgres (UnpreparedValue 'Postgres)
+      -> StateT PlanningSt m (ActionQueryPlan 'Postgres)
     convertActionQuery = \case
       AQQuery s -> lift $ do
         result <- resolveActionExecution env logger userInfo s $ ActionExecContext manager reqHeaders usrVars
-        pure $ AQPQuery $ _aerTransaction result
-      AQAsync s -> AQPAsyncQuery <$>
-        DS.traverseAnnSimpleSelect prepareWithPlan (resolveAsyncActionQuery userInfo s)
+        pure $ AQPQuery $ _aerExecution result
+      AQAsync s -> do
+        unpreparedAst <- lift $ liftEitherM $ runMetadataStorageT $
+                         resolveAsyncActionQuery userInfo s
+        AQPAsyncQuery <$> DS.traverseAnnSimpleSelect prepareWithPlan unpreparedAst
 
 -- See Note [Temporarily disabling query plan caching]
 -- use the existing plan and new variables to create a pg query

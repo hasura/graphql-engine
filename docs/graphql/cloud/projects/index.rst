@@ -58,6 +58,7 @@ Dig deeper
    Project Domains <domains>
    Securing projects <secure>
    Switching pricing plans <pricing>
+   Deployment regions <regions>
    Heroku database URL Sync <heroku-url-sync>
    Deleting projects <delete>
    

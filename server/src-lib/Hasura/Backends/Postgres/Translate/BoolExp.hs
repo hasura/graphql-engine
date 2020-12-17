@@ -18,9 +18,10 @@ import qualified Hasura.Backends.Postgres.SQL.DML   as S
 
 import           Hasura.Backends.Postgres.SQL.Types
 import           Hasura.RQL.Types
+import           Hasura.SQL.Types
 
 type OpRhsParser m v =
-  PGType (ColumnType 'Postgres) -> Value -> m v
+  CollectableType (ColumnType 'Postgres) -> Value -> m v
 
 -- | Represents a reference to a Postgres column, possibly casted an arbitrary
 -- number of times. Used within 'parseOperationsExpression' for bookkeeping.
@@ -56,7 +57,7 @@ parseOperationsExpression rhsParser fim columnInfo =
       Object o -> mapM (parseOperation column) (M.toList o)
       val      -> pure . AEQ False <$> rhsParser columnType val
       where
-        columnType = PGTypeScalar $ columnReferenceType column
+        columnType = CollectableTypeScalar $ columnReferenceType column
 
     parseOperation :: ColumnReference 'Postgres -> (Text, Value) -> m (OpExpG 'Postgres v)
     parseOperation column (opStr, val) = withPathK opStr $
@@ -106,6 +107,15 @@ parseOperationsExpression rhsParser fim columnInfo =
         "_similar"       -> parseSimilar
         "$nsimilar"      -> parseNsimilar
         "_nsimilar"      -> parseNsimilar
+
+        "$regex"         -> parseRegex
+        "_regex"         -> parseRegex
+        "$iregex"        -> parseIRegex
+        "_iregex"        -> parseIRegex
+        "$nregex"        -> parseNRegex
+        "_nregex"        -> parseNRegex
+        "$niregex"       -> parseNIRegex
+        "_niregex"       -> parseNIRegex
 
         "$is_null"       -> parseIsNull
         "_is_null"       -> parseIsNull
@@ -180,6 +190,10 @@ parseOperationsExpression rhsParser fim columnInfo =
         parseNilike   = guardType stringTypes >> ANILIKE () <$> parseOne
         parseSimilar  = guardType stringTypes >> ASIMILAR <$> parseOne
         parseNsimilar = guardType stringTypes >> ANSIMILAR <$> parseOne
+        parseRegex    = guardType stringTypes >> AREGEX <$> parseOne
+        parseIRegex   = guardType stringTypes >> AIREGEX <$> parseOne
+        parseNRegex   = guardType stringTypes >> ANREGEX <$> parseOne
+        parseNIRegex  = guardType stringTypes >> ANIREGEX <$> parseOne
 
         parseIsNull   = bool ANISNOTNULL ANISNULL -- is null
                         <$> parseVal
@@ -239,13 +253,13 @@ parseOperationsExpression rhsParser fim columnInfo =
                  "incompatible column types : " <> column <<> ", " <>> rhsCol
             else return rhsCol
 
-        parseWithTy ty = rhsParser (PGTypeScalar ty) val
+        parseWithTy ty = rhsParser (CollectableTypeScalar ty) val
 
         -- parse one with the column's type
         parseOne = parseWithTy colTy
-        parseOneNoSess ty = rhsParser (PGTypeScalar ty)
+        parseOneNoSess ty = rhsParser (CollectableTypeScalar ty)
 
-        parseManyWithType ty = rhsParser (PGTypeArray ty) val
+        parseManyWithType ty = rhsParser (CollectableTypeArray ty) val
 
         guardType validTys = unless (isScalarColumnWhere (`elem` validTys) colTy) $
           throwError $ buildMsg colTy validTys
@@ -273,7 +287,7 @@ notEqualsBoolExpBuilder qualColExp rhsExp =
       (S.BENull rhsExp))
 
 annBoolExp
-  :: (QErrM m, TableCoreInfoRM m)
+  :: (QErrM m, TableCoreInfoRM 'Postgres m)
   => OpRhsParser m v
   -> FieldInfoMap (FieldInfo 'Postgres)
   -> GBoolExp 'Postgres ColExp
@@ -294,7 +308,7 @@ annBoolExp rhsParser fim boolExp =
     procExps = mapM (annBoolExp rhsParser fim)
 
 annColExp
-  :: (QErrM m, TableCoreInfoRM m)
+  :: (QErrM m, TableCoreInfoRM 'Postgres m)
   => OpRhsParser m v
   -> FieldInfoMap (FieldInfo 'Postgres)
   -> ColExp
@@ -332,7 +346,7 @@ convColRhs
   :: S.Qual -> AnnBoolExpFldSQL 'Postgres -> State Word64 S.BoolExp
 convColRhs tableQual = \case
   AVCol colInfo opExps -> do
-    let colFld = fromPGCol $ pgiColumn colInfo
+    let colFld = fromCol @'Postgres $ pgiColumn colInfo
         bExps = map (mkFieldCompExp tableQual colFld) opExps
     return $ foldr (S.BEBin S.AndOp) (S.BELit True) bExps
 
@@ -340,7 +354,7 @@ convColRhs tableQual = \case
     -- Convert the where clause on the relationship
     curVarNum <- get
     put $ curVarNum + 1
-    let newIdentifier  = Identifier $ "_be_" <> T.pack (show curVarNum) <> "_"
+    let newIdentifier  = Identifier $ "_be_" <> tshow curVarNum <> "_"
                    <> snakeCaseQualifiedObject relTN
         newIdenQ = S.QualifiedIdentifier newIdentifier Nothing
     annRelBoolExp <- convBoolRhs' newIdenQ nesAnn
@@ -404,6 +418,10 @@ mkFieldCompExp qual lhsField = mkCompExp (mkQField lhsField)
       ANILIKE _ val    -> S.BECompare S.SNILIKE lhs val
       ASIMILAR val     -> S.BECompare S.SSIMILAR lhs val
       ANSIMILAR val    -> S.BECompare S.SNSIMILAR lhs val
+      AREGEX val       -> S.BECompare S.SREGEX lhs val
+      AIREGEX val      -> S.BECompare S.SIREGEX lhs val
+      ANREGEX val      -> S.BECompare S.SNREGEX lhs val
+      ANIREGEX val     -> S.BECompare S.SNIREGEX lhs val
       AContains val    -> S.BECompare S.SContains lhs val
       AContainedIn val -> S.BECompare S.SContainedIn lhs val
       AHasKey val      -> S.BECompare S.SHasKey lhs val
@@ -449,7 +467,7 @@ mkFieldCompExp qual lhsField = mkCompExp (mkQField lhsField)
 
         mkCastsExp casts =
           sqlAll . flip map (M.toList casts) $ \(targetType, operations) ->
-            let targetAnn = S.mkTypeAnn $ PGTypeScalar targetType
+            let targetAnn = S.mkTypeAnn $ CollectableTypeScalar targetType
             in sqlAll $ map (mkCompExp (S.SETyAnn lhs targetAnn)) operations
 
         sqlAll = foldr (S.BEBin S.AndOp) (S.BELit True)

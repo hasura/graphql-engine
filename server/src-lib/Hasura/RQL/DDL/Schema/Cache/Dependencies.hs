@@ -92,7 +92,7 @@ pruneDanglingDependents cache = fmap (M.filter (not . null)) . traverse do
         tableInfo <- resolveTable tableName
         case tableObjectId of
           TOCol columnName ->
-            void $ resolveField tableInfo (fromPGCol columnName) _FIColumn "column"
+            void $ resolveField tableInfo (fromCol @'Postgres columnName) _FIColumn "column"
           TORel relName ->
             void $ resolveField tableInfo (fromRel relName) _FIRelationship "relationship"
           TOComputedField fieldName ->

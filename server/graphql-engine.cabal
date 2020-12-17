@@ -308,6 +308,7 @@ library
                      , Hasura.Backends.Postgres.Execute.Mutation
                      , Hasura.Backends.Postgres.Execute.RemoteJoin
                      , Hasura.Backends.Postgres.Translate.BoolExp
+                     , Hasura.Backends.Postgres.Translate.Column
                      , Hasura.Backends.Postgres.Translate.Delete
                      , Hasura.Backends.Postgres.Translate.Insert
                      , Hasura.Backends.Postgres.Translate.Mutation
@@ -376,7 +377,6 @@ library
                      , Hasura.RQL.Instances
                      , Hasura.RQL.Types
                      , Hasura.RQL.Types.Action
-                     , Hasura.RQL.Types.Catalog
                      , Hasura.RQL.Types.Column
                      , Hasura.RQL.Types.Common
                      , Hasura.RQL.Types.ComputedField
@@ -418,6 +418,8 @@ library
                      , Hasura.RQL.DDL.Schema.Cache.Fields
                      , Hasura.RQL.DDL.Schema.Cache.Permission
                      , Hasura.RQL.DDL.Schema.Catalog
+                     , Hasura.RQL.DDL.Schema.LegacyCatalog
+                     , Hasura.RQL.DDL.Schema.Common
                      , Hasura.RQL.DDL.Schema.Diff
                      , Hasura.RQL.DDL.Schema.Enum
                      , Hasura.RQL.DDL.Schema.Function
@@ -468,11 +470,13 @@ library
                      , Hasura.GraphQL.Parser.Schema
                      , Hasura.GraphQL.Schema
                      , Hasura.GraphQL.Schema.Action
+                     , Hasura.GraphQL.Schema.Backend
                      , Hasura.GraphQL.Schema.BoolExp
                      , Hasura.GraphQL.Schema.Common
                      , Hasura.GraphQL.Schema.Introspect
                      , Hasura.GraphQL.Schema.Mutation
                      , Hasura.GraphQL.Schema.OrderBy
+                     , Hasura.GraphQL.Schema.Postgres
                      , Hasura.GraphQL.Schema.Remote
                      , Hasura.GraphQL.Schema.Select
                      , Hasura.GraphQL.Schema.Table

@@ -199,7 +199,11 @@ def check_query(hge_ctx, conf, transport='http', add_auth=True, claims_namespace
     assert transport in ['http', 'websocket', 'subscription'], "Unknown transport type " + transport
     if transport == 'http':
         print('running on http')
-        return validate_http_anyq(hge_ctx, conf['url'], conf['query'], headers,
+        if 'allowed_responses' in conf:
+            return validate_http_anyq_with_allowed_responses(hge_ctx, conf['url'], conf['query'], headers,
+                                  conf['status'], conf.get('allowed_responses'))
+        else:
+            return validate_http_anyq(hge_ctx, conf['url'], conf['query'], headers,
                                   conf['status'], conf.get('response'))
     elif transport == 'websocket':
         print('running on websocket')
@@ -274,18 +278,44 @@ def validate_http_anyq(hge_ctx, url, query, headers, exp_code, exp_response):
     else:
         return resp, True
 
+def validate_http_anyq_with_allowed_responses(hge_ctx, url, query, headers, exp_code, allowed_responses):
+    code, resp, resp_hdrs = hge_ctx.anyq(url, query, headers)
+    print(headers)
+    assert code == exp_code, resp
+    print('http resp: ', resp)
+    if isinstance(allowed_responses, list) and len(allowed_responses) > 0:
+        resp_res = {}
+        test_passed = False
+
+        for response in allowed_responses:
+            dict_resp = json.loads(json.dumps(response))
+            exp_resp = dict_resp['response']
+            resp_result, pass_test = assert_graphql_resp_expected(resp, exp_resp, query, resp_hdrs, hge_ctx.avoid_err_msg_checks, True)
+            if pass_test == True:
+                test_passed = True
+                resp_res = resp_result
+                break
+
+        if test_passed == True:
+            return resp_res, test_passed
+        else:
+            # test should fail if none of the allowed responses work
+            raise Exception("allowed_responses did not contain the response that was expected. Please check your allowed_responses")
+    else:
+        raise Exception("allowed_responses was not a list of permissible responses")
+
 # Check the actual graphql response is what we expected, also taking into
 # consideration the ordering of keys that we expect to be preserved, based on
 # 'query'.
 #
 # Returns 'resp' and a bool indicating whether the test passed or not (this
 # will always be True unless we are `--accepting`)
-def assert_graphql_resp_expected(resp_orig, exp_response_orig, query, resp_hdrs={}, skip_if_err_msg=False):
-    # Prepare actual and respected responses so comparison takes into
+def assert_graphql_resp_expected(resp_orig, exp_response_orig, query, resp_hdrs={}, skip_if_err_msg=False, skip_assertion=False):
+    # Prepare actual and expected responses so comparison takes into
     # consideration only the ordering that we care about:
     resp         = collapse_order_not_selset(resp_orig,         query)
     exp_response = collapse_order_not_selset(exp_response_orig, query)
-    matched = equal_CommentedMap(resp, exp_response)
+    matched      = equal_CommentedMap(resp, exp_response)
 
     if PytestConf.config.getoption("--accept"):
         print('skipping assertion since we chose to --accept new output')
@@ -307,7 +337,10 @@ def assert_graphql_resp_expected(resp_orig, exp_response_orig, query, resp_hdrs=
             test_output['request id'] = resp_hdrs['x-request-id']
         yml.dump(test_output, stream=dump_str)
         if not skip_if_err_msg:
-            assert matched, '\n' + dump_str.getvalue()
+            if skip_assertion:
+                return resp, matched
+            else:
+                assert matched, '\n' + dump_str.getvalue()
         elif matched:
             return resp, matched
         else:
@@ -323,7 +356,10 @@ def assert_graphql_resp_expected(resp_orig, exp_response_orig, query, resp_hdrs=
                         warnings.warn("Response does not have the expected error message\n" + dump_str.getvalue())
                         return resp, matched
                 else:
-                    assert matched_, '\n' + dump_str.getvalue()
+                    if skip_assertion:
+                        return resp, matched_
+                    else:
+                        assert matched_, '\n' + dump_str.getvalue()
     return resp, matched  # matched always True unless --accept
 
 # This really sucks; newer ruamel made __eq__ ignore ordering:

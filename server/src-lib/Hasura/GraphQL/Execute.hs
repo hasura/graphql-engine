@@ -41,6 +41,7 @@ import           Hasura.GraphQL.RemoteServer            (execRemoteGQ')
 import           Hasura.GraphQL.Transport.HTTP.Protocol
 import           Hasura.GraphQL.Utils                   (showName)
 import           Hasura.HTTP
+import           Hasura.Metadata.Class
 import           Hasura.RQL.Types
 import           Hasura.Server.Types                    (RequestId)
 import           Hasura.Server.Version                  (HasVersion)
@@ -104,6 +105,10 @@ instance MonadGQLExecutionCheck m => MonadGQLExecutionCheck (ReaderT r m) where
     lift $ checkGQLExecution ui det enableAL sc req
 
 instance MonadGQLExecutionCheck m => MonadGQLExecutionCheck (Tracing.TraceT m) where
+  checkGQLExecution ui det enableAL sc req =
+    lift $ checkGQLExecution ui det enableAL sc req
+
+instance MonadGQLExecutionCheck m => MonadGQLExecutionCheck (MetadataStorageT m) where
   checkGQLExecution ui det enableAL sc req =
     lift $ checkGQLExecution ui det enableAL sc req
 
@@ -208,6 +213,7 @@ getResolvedExecPlan
   :: forall m tx
    . ( HasVersion
      , MonadError QErr m
+     , MonadMetadataStorage (MetadataStorageT m)
      , MonadIO m
      , Tracing.MonadTrace m
      , EQ.MonadQueryInstrumentation m

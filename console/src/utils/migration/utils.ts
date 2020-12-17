@@ -1,4 +1,5 @@
 import { isColumnUnique } from '../../components/Services/Data/TableModify/ModifyActions';
+import { quoteDefault } from '../../components/Services/Data/utils';
 import gqlPattern from '../../components/Services/Data/Common/GraphQLValidation';
 import Migration from './Migration';
 import { RunSqlType } from '../../types';
@@ -127,7 +128,7 @@ export const getColumnUpdateMigration = (
       tableName,
       currentSchema,
       colName,
-      colDefault,
+      quoteDefault(colDefault),
       source
     );
   } else {
@@ -144,7 +145,7 @@ export const getColumnUpdateMigration = (
       tableName,
       currentSchema,
       colName,
-      originalColDefault,
+      quoteDefault(originalColDefault),
       source
     );
   } else {

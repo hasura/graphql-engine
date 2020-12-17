@@ -100,6 +100,18 @@ export const fetchTableListQuery = (options, source) => {
   );
 };
 
+// TODO: move to postgres service
+const postgresFunctionTester = /.*\(\)$/gm;
+export const isPostgresFunction = str =>
+  new RegExp(postgresFunctionTester).test(str);
+export const isTypeCast = (str = '') => str.split('::').length > 1;
+export const quoteDefault = colDefault => {
+  if (isPostgresFunction(colDefault) || isTypeCast(colDefault)) {
+    return colDefault;
+  }
+  return `'${colDefault}'`;
+};
+
 export const cascadeUpQueries = (upQueries = [], isCascade = false) =>
   upQueries.map((i = {}) => {
     if (i.type === 'run_sql' || i.type.includes('untrack_table')) {

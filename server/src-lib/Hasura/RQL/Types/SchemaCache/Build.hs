@@ -1,4 +1,5 @@
-{-# LANGUAGE Arrows #-}
+{-# LANGUAGE Arrows               #-}
+{-# LANGUAGE UndecidableInstances #-}
 
 -- | Types and functions used in the process of building the schema cache from metadata information
 -- stored in the @hdb_catalog@ schema in Postgres.
@@ -14,6 +15,9 @@ module Hasura.RQL.Types.SchemaCache.Build
   , CacheRWM(..)
   , BuildReason(..)
   , CacheInvalidations(..)
+  , MetadataM(..)
+  , MetadataT(..)
+  , runMetadataT
   , buildSchemaCache
   , buildSchemaCacheFor
   , buildSchemaCacheStrict
@@ -22,22 +26,24 @@ module Hasura.RQL.Types.SchemaCache.Build
 
 import           Hasura.Prelude
 
-import qualified Data.HashMap.Strict.Extended  as M
-import qualified Data.Sequence                 as Seq
+import qualified Data.HashMap.Strict.Extended        as M
+import qualified Data.Sequence                       as Seq
 
 import           Control.Arrow.Extended
 import           Control.Lens
-import           Data.Aeson                    (toJSON)
+import           Control.Monad.Unique
+import           Data.Aeson                          (toJSON)
 import           Data.Aeson.Casing
 import           Data.Aeson.TH
-import           Data.List                     (nub)
+import           Data.List                           (nub)
 import           Data.Text.Extended
 
+import           Hasura.Backends.Postgres.Connection
 import           Hasura.RQL.Types.Error
 import           Hasura.RQL.Types.Metadata
-import           Hasura.RQL.Types.RemoteSchema (RemoteSchemaName)
+import           Hasura.RQL.Types.RemoteSchema       (RemoteSchemaName)
 import           Hasura.RQL.Types.SchemaCache
-import           Hasura.Tracing                (TraceT)
+import           Hasura.Tracing                      (TraceT)
 
 -- ----------------------------------------------------------------------------
 -- types used during schema cache construction
@@ -100,7 +106,8 @@ withRecordInconsistency f = proc (e, (metadataObject, s)) -> do
 -- operations for triggering a schema cache rebuild
 
 class (CacheRM m) => CacheRWM m where
-  buildSchemaCacheWithOptions :: BuildReason -> CacheInvalidations -> m ()
+  buildSchemaCacheWithOptions
+    :: BuildReason -> CacheInvalidations -> Metadata -> m ()
 
 data BuildReason
   -- | The build was triggered by an update this instance made to the catalog (in the
@@ -129,19 +136,61 @@ instance Monoid CacheInvalidations where
   mempty = CacheInvalidations False mempty
 
 instance (CacheRWM m) => CacheRWM (ReaderT r m) where
-  buildSchemaCacheWithOptions a b = lift $ buildSchemaCacheWithOptions a b
+  buildSchemaCacheWithOptions a b c = lift $ buildSchemaCacheWithOptions a b c
+instance (CacheRWM m) => CacheRWM (StateT s m) where
+  buildSchemaCacheWithOptions a b c = lift $ buildSchemaCacheWithOptions a b c
 instance (CacheRWM m) => CacheRWM (TraceT m) where
-  buildSchemaCacheWithOptions a b = lift $ buildSchemaCacheWithOptions a b
+  buildSchemaCacheWithOptions a b c = lift $ buildSchemaCacheWithOptions a b c
 
-buildSchemaCache :: (CacheRWM m) => m ()
-buildSchemaCache = buildSchemaCacheWithOptions CatalogUpdate mempty
+-- | A simple monad class which enables fetching and setting @'Metadata'
+-- in the state.
+class (Monad m) => MetadataM m where
+  getMetadata :: m Metadata
+  putMetadata :: Metadata -> m ()
 
--- | Rebuilds the schema cache. If an object with the given object id became newly inconsistent,
+instance (MetadataM m) => MetadataM (ReaderT r m) where
+  getMetadata = lift getMetadata
+  putMetadata = lift . putMetadata
+
+instance (MetadataM m) => MetadataM (StateT r m) where
+  getMetadata = lift getMetadata
+  putMetadata = lift . putMetadata
+
+instance (MetadataM m) => MetadataM (TraceT m) where
+  getMetadata = lift getMetadata
+  putMetadata = lift . putMetadata
+
+newtype MetadataT m a
+  = MetadataT {unMetadataT :: StateT Metadata m a}
+  deriving
+    ( Functor, Applicative, Monad, MonadTrans
+    , MonadIO, MonadUnique, MonadReader r, MonadError e, MonadTx
+    , TableCoreInfoRM b, CacheRM, CacheRWM
+    )
+
+instance (Monad m) => MetadataM (MetadataT m) where
+  getMetadata = MetadataT get
+  putMetadata = MetadataT . put
+
+runMetadataT :: Metadata -> MetadataT m a -> m (a, Metadata)
+runMetadataT metadata (MetadataT m) =
+  runStateT m metadata
+
+buildSchemaCache :: (MetadataM m, CacheRWM m) => MetadataModifier -> m ()
+buildSchemaCache metadataModifier = do
+  metadata <- getMetadata
+  let modifiedMetadata = unMetadataModifier metadataModifier $ metadata
+  buildSchemaCacheWithOptions CatalogUpdate mempty modifiedMetadata
+  putMetadata modifiedMetadata
+
+-- | Rebuilds the schema cache after modifying metadata. If an object with the given object id became newly inconsistent,
 -- raises an error about it specifically. Otherwise, raises a generic metadata inconsistency error.
-buildSchemaCacheFor :: (QErrM m, CacheRWM m) => MetadataObjId -> m ()
-buildSchemaCacheFor objectId = do
+buildSchemaCacheFor
+  :: (QErrM m, CacheRWM m, MetadataM m)
+  => MetadataObjId -> MetadataModifier -> m ()
+buildSchemaCacheFor objectId metadataModifier = do
   oldSchemaCache <- askSchemaCache
-  buildSchemaCache
+  buildSchemaCache metadataModifier
   newSchemaCache <- askSchemaCache
 
   let diffInconsistentObjects = M.difference `on` (groupInconsistentMetadataById . scInconsistentObjs)
@@ -156,9 +205,9 @@ buildSchemaCacheFor objectId = do
       { qeInternal = Just $ toJSON (nub . concatMap toList $ M.elems newInconsistentObjects) }
 
 -- | Like 'buildSchemaCache', but fails if there is any inconsistent metadata.
-buildSchemaCacheStrict :: (QErrM m, CacheRWM m) => m ()
+buildSchemaCacheStrict :: (QErrM m, CacheRWM m, MetadataM m) => m ()
 buildSchemaCacheStrict = do
-  buildSchemaCache
+  buildSchemaCache noMetadataModify
   sc <- askSchemaCache
   let inconsObjs = scInconsistentObjs sc
   unless (null inconsObjs) $ do

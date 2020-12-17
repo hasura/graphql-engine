@@ -32,13 +32,14 @@ const LeftSidebar: React.FC<Props> = props => {
   };
 
   const getEntityLink = (entityName: string) => {
+    const encodedEntityName = encodeURIComponent(entityName);
     switch (service) {
       case 'data':
-        return getETModifyRoute({ name: entityName });
+        return getETModifyRoute({ name: encodedEntityName });
       case 'cron':
-        return getSTModifyRoute(entityName);
+        return getSTModifyRoute(encodedEntityName);
       default:
-        return getSTModifyRoute(entityName);
+        return getSTModifyRoute(encodedEntityName);
     }
   };
 

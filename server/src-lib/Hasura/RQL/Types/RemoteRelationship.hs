@@ -9,6 +9,9 @@ module Hasura.RQL.Types.RemoteRelationship
   , RemoteFieldInfo(..)
   , RemoteRelationship(..)
   , RemoteRelationshipDef(..)
+  , rrdRemoteSchema
+  , rrdHasuraFields
+  , rrdRemoteField
   , FieldCall(..)
   , RemoteArguments(..)
   , DeleteRemoteRelationship(..)
@@ -21,6 +24,7 @@ import qualified Data.Text                          as T
 import qualified Database.PG.Query                  as Q
 import qualified Language.GraphQL.Draft.Syntax      as G
 
+import           Control.Lens                       (makeLenses)
 import           Data.Aeson
 import           Data.Aeson.Casing
 import           Data.Aeson.TH
@@ -40,7 +44,7 @@ import           Hasura.SQL.Backend
 newtype RemoteRelationshipName
   = RemoteRelationshipName
   { unRemoteRelationshipName :: NonEmptyText}
-  deriving ( Show, Eq, Hashable, ToJSON, ToJSONKey, FromJSON
+  deriving ( Show, Eq, Ord, Hashable, ToJSON, ToJSONKey, FromJSON
            , Q.ToPrepArg, Q.FromCol, ToTxt, Cacheable, NFData, Arbitrary
            )
 
@@ -70,10 +74,10 @@ data RemoteFieldInfo (b :: BackendType)
   , _rfiRemoteSchemaName :: !RemoteSchemaName
   -- ^ Name of the remote schema, that's used for joining
   } deriving (Generic)
-deriving instance Eq (RemoteFieldInfo 'Postgres)
-instance Cacheable (RemoteFieldInfo 'Postgres)
+deriving instance Backend b => Eq (RemoteFieldInfo b)
+instance Backend b => Cacheable (RemoteFieldInfo b)
 
-instance ToJSON (RemoteFieldInfo 'Postgres) where
+instance Backend b => ToJSON (RemoteFieldInfo b) where
   toJSON RemoteFieldInfo{..} = object
     [ "name" .= _rfiName
     , "param_map" .= fmap toJsonInpValInfo _rfiParamMap
@@ -265,6 +269,7 @@ data RemoteRelationshipDef
   } deriving (Show, Eq, Generic)
 instance Cacheable RemoteRelationshipDef
 $(deriveJSON (aesonDrop 4 snakeCase) ''RemoteRelationshipDef)
+$(makeLenses ''RemoteRelationshipDef)
 
 data DeleteRemoteRelationship =
   DeleteRemoteRelationship
