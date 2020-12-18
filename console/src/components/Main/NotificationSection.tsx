@@ -768,7 +768,9 @@ const HasuraNotifications: React.FC<
         </Flex>
         <Box className={styles.notificationsContainer}>
           {dataShown.length > 0 &&
-            dataShown.map(payload => <NotificationsListItem {...payload} />)}
+            dataShown.map((payload, i) => (
+              <NotificationsListItem key={i} {...payload} />
+            ))}
           {shouldDisplayViewMore && (
             <ViewMoreOptions
               onClickViewMore={pagination.showMore}

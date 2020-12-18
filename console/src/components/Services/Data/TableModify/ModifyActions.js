@@ -1251,8 +1251,6 @@ const addColSql = (
   colDependentSQLGenerator,
   callback
 ) => {
-  const defWithQuotes = quoteDefault(colDefault);
-
   return (dispatch, getState) => {
     const currentSchema = getState().tables.currentSchema;
     const source = getState().tables.currentDataSource;
@@ -1264,7 +1262,7 @@ const addColSql = (
       {
         nullable: colNull,
         unique: colUnique,
-        default: defWithQuotes,
+        default: colDefault,
         sqlGenerator: colDependentSQLGenerator,
       }
     );

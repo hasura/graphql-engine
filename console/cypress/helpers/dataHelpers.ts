@@ -51,13 +51,15 @@ export const tableColumnTypeSelector = (alias: string) => {
     .focus();
 };
 
-export const makeDataAPIUrl = (dataApiUrl: string, queryEndpoint: QueryEndpoint = 'query') => {
+export const makeDataAPIUrl = (
+  dataApiUrl: string,
+  queryEndpoint: QueryEndpoint = 'query'
+) => {
   if (queryEndpoint === 'query') {
-    return `${dataApiUrl}/v2/query`;   
+    return `${dataApiUrl}/v2/query`;
   }
   return `${dataApiUrl}/v1/metadata`;
-}
-  
+};
 
 interface APIPayload {
   [key: string]: any;
@@ -69,7 +71,7 @@ export const makeDataAPIOptions = (
   dataApiUrl: string,
   key: string,
   body: APIPayload,
-  queryType: QueryEndpoint = 'query',
+  queryType: QueryEndpoint = 'query'
 ) => ({
   method: 'POST',
   url: makeDataAPIUrl(dataApiUrl, queryType),
@@ -125,7 +127,7 @@ export const testCustomFunctionSQLWithSessArg = (
                 (hasura_session ->> 'x-hasura-role')
             ) q $$`,
       cascade: false,
-    }
+    },
   };
 };
 
@@ -135,7 +137,7 @@ export const getTrackFnPayload = (name = 'customfunctionwithsessionarg') => ({
     function: name,
     source: 'default',
     schema: 'public',
-  }
+  },
 });
 
 // has to go to query
@@ -143,21 +145,20 @@ export const createFunctionTable = () => {
   return {
     type: 'run_sql',
     args: {
-      sql:
-        'create table post (id serial PRIMARY KEY,title TEXT,content TEXT);',
+      sql: 'create table post (id serial PRIMARY KEY,title TEXT,content TEXT);',
       cascade: false,
-    }
+    },
   };
 };
 // has to go to metadata
 export const trackCreateFunctionTable = () => {
-  // FIXME: has to be dynamic based on the database driver
   return {
     type: 'pg_track_table',
     args: {
-      name: 'post',
-      schema: 'public',
-      source: 'default',
+      table: {
+        name: 'post',
+        schema: 'public',
+      },
     },
   };
 };
@@ -180,8 +181,10 @@ export const getTrackSessionVarTestTableQuery = () => {
     type: 'pg_track_table',
     source: 'default',
     args: {
-      name: 'text_result',
-      schema: 'public',
+      table: {
+        name: 'text_result',
+        schema: 'public',
+      },
     },
   };
 };

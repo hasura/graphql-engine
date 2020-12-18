@@ -43,7 +43,9 @@ export const createCustomFunctionSuccess = () => {
 };
 
 export const unTrackFunction = () => {
-  cy.visit(`data/default/schema/public/functions/${getCustomFunctionName(1)}/modify`);
+  cy.visit(
+    `data/default/schema/public/functions/${getCustomFunctionName(1)}/modify`
+  );
   cy.wait(5000);
   cy.get(getElementFromAlias('custom-function-edit-untrack-btn')).click();
   cy.wait(5000);
@@ -73,7 +75,11 @@ export const testSessVariable = () => {
 
   dataRequest(createTableForSessionVarTest(), ResultType.SUCCESS, 'query');
   cy.wait(5000);
-  dataRequest(getTrackSessionVarTestTableQuery(), ResultType.SUCCESS, 'metadata');
+  dataRequest(
+    getTrackSessionVarTestTableQuery(),
+    ResultType.SUCCESS,
+    'metadata'
+  );
   cy.wait(5000);
 
   createFunctionRequest(
@@ -81,10 +87,10 @@ export const testSessVariable = () => {
     ResultType.SUCCESS
   );
   cy.wait(1500);
-  
+
   trackFunctionRequest(getTrackFnPayload(fN), ResultType.SUCCESS);
   cy.wait(1500);
-  
+
   cy.visit(`data/default/schema/public/functions/${fN}/modify`);
   cy.get(getElementFromAlias(`${fN}-session-argument-btn`), {
     timeout: 5000,

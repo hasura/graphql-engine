@@ -566,9 +566,9 @@ export const getAddColumnSql = (
   columnName: string,
   columnType: string,
   options?: {
-    nullable: boolean;
-    unique: boolean;
-    default: any;
+    nullable?: boolean;
+    unique?: boolean;
+    default?: any;
     sqlGenerator?: FrequentlyUsedColumn['dependentSQLGenerator'];
   }
 ) => {
