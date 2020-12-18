@@ -1,11 +1,11 @@
-import React, {
-  useCallback,
-  useEffect,
-  useState,
-} from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import * as GQL from 'graphql';
 import _ from 'lodash';
-import { generateSDL, generateConstantTypes,  getArgTreeFromPermissionSDL } from './utils';
+import {
+  generateSDL,
+  generateConstantTypes,
+  getArgTreeFromPermissionSDL,
+} from './utils';
 import Button from '../../../Common/Button/Button';
 import styles from '../../../Common/Permissions/PermissionStyles.scss';
 import { DatasourceObject, FieldType } from './types';
@@ -86,14 +86,8 @@ const Tree: React.FC<RSPTreeComponentProps> = ({ list, setState }) => {
 };
 
 const MemoizedTree = React.memo(Tree);
-// TODO seperate components
-
-
-// TODO seperate components
-
 
 declare const window: any;
-
 
 const PermissionEditor = ({ ...props }: any) => {
   const {
@@ -134,33 +128,15 @@ const PermissionEditor = ({ ...props }: any) => {
   useEffect(() => {
     if (!!schemaDefinition) {
       try {
-        const newArgTree = getArgTreeFromPermissionSDL(schemaDefinition)
-        setArgTree(newArgTree)
+        const newArgTree = getArgTreeFromPermissionSDL(schemaDefinition);
+        setArgTree(newArgTree);
       } catch (e) {
-        console.error(e)
+        console.error(e);
       }
     }
-  }, [schemaDefinition])
+  }, [schemaDefinition]);
 
   if (!isEditing) return null;
-
-  // const {
-  //   value: schemaDefinitionSdl,
-  //   error: schemaDefinitionError,
-  //   timer: schemaParseTimer,
-  // } = schemaDefinition;
-
-  // console.log('in perm editor: ', schemaDefinitionSdl);
-
-  // // TODO : types
-  // const schemaDefinitionOnChange = (
-  //   value: any,
-  //   error: any,
-  //   timer: any,
-  //   ast: any
-  // ) => {
-  //   setSchemaDefinition({ value, error, timer, ast });
-  // };
 
   const buttonStyle = styles.add_mar_right;
 

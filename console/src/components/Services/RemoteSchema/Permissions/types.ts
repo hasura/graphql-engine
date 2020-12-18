@@ -1,4 +1,4 @@
-import {  GraphQLField } from 'graphql';
+import { GraphQLField } from 'graphql';
 import { Dispatch } from '../../../../types';
 import { Nullable } from '../../../Common/utils/tsUtils';
 
@@ -23,13 +23,6 @@ export const REQUEST_FAILURE = 'RemoteSchemas/Permissions/REQUEST_FAILURE';
  * Common types for remote schema permissions
  */
 
-export type SchemaDefinition = {
-  value: Nullable<string>;
-  error?: Nullable<Error>;
-  timer?: Nullable<NodeJS.Timeout>;
-  ast?: Nullable<Record<string, any>>;
-};
-
 export type PermissionEdit = {
   isNew: boolean;
   newRole: string;
@@ -41,12 +34,12 @@ export type SchemaPermissionsState = {
   isEditing: false;
   isFetching: false;
   permissionEdit: PermissionEdit;
-  // schemaDefinition: SchemaDefinition;
   schemaDefinition: string;
   bulkSelect: string[];
 };
 
 export type PermissionsProps = {
+  allRoles: string[];
   currentRemoteSchema: {
     name: string;
     permissions: Record<string, string>;
@@ -55,10 +48,23 @@ export type PermissionsProps = {
   dispatch: Dispatch;
   isEditing: boolean;
   isFetching: boolean;
-  allRoles: string[];
   bulkSelect: string[];
   permissionEdit: { isNewRole: boolean; role: string; newRole: string };
-  schemaDefinition: any; // TODO: provide the right type here
+  schemaDefinition: string;
+  fetchRoleList: () => void;
+  setDefaults: () => void;
+  permCloseEdit: () => void;
+  saveRemoteSchemaPermission: (data: any) => void;
+  removeRemoteSchemaPermission: (data: any) => void;
+  setSchemaDefinition: (data: any) => void;
+  permRemoveMultipleRoles: () => void;
+  permOpenEdit: (
+    role: string,
+    newRole: boolean,
+    existingPerms: boolean
+  ) => void;
+  permSetBulkSelect: (checked: boolean, role: string) => void;
+  permSetRoleName: (name: string) => void;
 };
 
 export type RolePermissions = {
@@ -68,18 +74,31 @@ export type RolePermissions = {
   isNewRole?: boolean;
 };
 
+// TODO generic types -> seperate this
 
-// TODO generic types -> seperate this 
-
-export interface CustomFieldType {
+export type CustomFieldType = {
   args: any[];
   name: string;
   checked?: boolean;
   return?: string;
-  children?: FieldType[]
-}
-export type FieldType = CustomFieldType & GraphQLField<any, any>
-export interface DatasourceObject {
+  children?: FieldType[];
+};
+
+export type FieldType = CustomFieldType & GraphQLField<any, any>;
+
+export type DatasourceObject = {
   name: string;
-  children: FieldType[] // TODO extend type 
-}
+  children: FieldType[]; // TODO extend type
+};
+
+export type PermWrapperProps = {
+  allRoles: string[];
+  allRemoteSchemas: any[];
+  params: { [key: string]: string };
+  viewRemoteSchema: (data: string) => void;
+};
+
+export type BulkSelectProps = {
+  bulkSelect: any[];
+  permRemoveMultipleRoles: () => void;
+};

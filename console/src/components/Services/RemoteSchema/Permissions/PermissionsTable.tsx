@@ -1,10 +1,8 @@
 import React, { ChangeEvent } from 'react';
-import { parse as sdlParse } from 'graphql';
 import styles from '../../../Common/Permissions/PermissionStyles.scss';
 import PermTableHeader from '../../../Common/Permissions/TableHeader';
 import PermTableBody from '../../../Common/Permissions/TableBody';
 import { permissionsSymbols } from '../../../Common/Permissions/PermissionSymbols';
-import { defaultSchemaDefSdl } from './state';
 import {
   getRemoteSchemaPermissions,
   findRemoteSchemaPermission,
@@ -81,7 +79,6 @@ const PermissionsTable = ({ ...props }: any) => {
 
           if (existingPerm) {
             const schemaDefinitionSdl = existingPerm.definition.schema;
-            // console.log('>>shema', schemaDefinitionSdl);
             setSchemaDefinition(schemaDefinitionSdl);
           } else {
             setSchemaDefinition('');

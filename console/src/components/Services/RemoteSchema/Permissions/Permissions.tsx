@@ -9,9 +9,12 @@ import globals from '../../../../Globals';
 import Button from '../../../Common/Button/Button';
 import styles from '../../../Common/Permissions/PermissionStyles.scss';
 import { getTree, getType, addPresetDefinition } from './utils';
-import { DatasourceObject } from './types';
+import { DatasourceObject, PermissionsProps, BulkSelectProps } from './types';
 
-const BulkSelectSection = ({ bulkSelect, permRemoveMultipleRoles }: any) => {
+const BulkSelect: React.FC<BulkSelectProps> = ({
+  bulkSelect,
+  permRemoveMultipleRoles,
+}) => {
   const getSelectedRoles = () => {
     return bulkSelect.map((r: any) => {
       return (
@@ -47,9 +50,7 @@ const BulkSelectSection = ({ bulkSelect, permRemoveMultipleRoles }: any) => {
   );
 };
 
-declare const window: any;
-
-const Permissions = ({ allRoles, ...props }: any) => {
+const Permissions: React.FC<PermissionsProps> = ({ allRoles, ...props }) => {
   const {
     currentRemoteSchema,
     permissionEdit,
@@ -80,7 +81,7 @@ const Permissions = ({ allRoles, ...props }: any) => {
     };
   }, [fetchRoleList, setDefaults]);
 
-  const { loading, error, schema, introspect } = useIntrospectionSchemaRemote(
+  const { error, schema, introspect } = useIntrospectionSchemaRemote(
     currentRemoteSchema.name,
     {
       'x-hasura-admin-secret': globals.adminSecret,
@@ -149,7 +150,7 @@ const Permissions = ({ allRoles, ...props }: any) => {
         permCloseEdit={permCloseEdit}
       />
       {!!bulkSelect.length && (
-        <BulkSelectSection
+        <BulkSelect
           bulkSelect={bulkSelect}
           permRemoveMultipleRoles={permRemoveMultipleRoles}
         />

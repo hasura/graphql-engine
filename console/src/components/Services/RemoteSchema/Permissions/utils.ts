@@ -10,7 +10,7 @@ import {
 } from 'graphql';
 // import { add, result } from 'lodash';
 import { findRemoteSchemaPermission } from '../utils';
-import { PermissionEdit} from './types';
+import { PermissionEdit } from './types';
 
 export const getCreateRemoteSchemaPermissionQuery = (
   def: { role: string },
@@ -122,29 +122,32 @@ export const getTree = (
 ) => {
   const introspectionSchemaFields =
     typeS === 'QUERY'
-      ? introspectionSchema!.getQueryType()!.getFields()
-      : introspectionSchema!.getMutationType()!.getFields();
+      ? introspectionSchema!.getQueryType()?.getFields()
+      : introspectionSchema!.getMutationType()?.getFields();
 
   let permissionsSchemaFields: any = null; // TODO use ternary operator
   if (permissionsSchema !== null) {
     permissionsSchemaFields =
       typeS === 'QUERY'
-        ? permissionsSchema!.getQueryType()!.getFields()
-        : permissionsSchema!.getMutationType()!.getFields();
+        ? permissionsSchema!.getQueryType()?.getFields()
+        : permissionsSchema!.getMutationType()?.getFields();
   }
 
-  return Object.values(introspectionSchemaFields).map(
-    ({ name, args: argArray, type, ...rest }: any) => {
-      let checked = true;
-      const args = argArray.reduce((p, c, cIx) => {
-        return { ...p, [c.name]: { ...c } };
-      }, {});
-      if (permissionsSchema !== null && !(name in permissionsSchemaFields)) {
-        checked = false;
+  if (introspectionSchemaFields) {
+    return Object.values(introspectionSchemaFields).map(
+      ({ name, args: argArray, type, ...rest }: any) => {
+        let checked = true;
+        const args = argArray.reduce((p, c, cIx) => {
+          return { ...p, [c.name]: { ...c } };
+        }, {});
+        if (permissionsSchema !== null && !(name in permissionsSchemaFields)) {
+          checked = false;
+        }
+        return { name, checked, args, return: type.toString(), ...rest };
       }
-      return { name, checked, args, return: type.toString(), ...rest };
-    }
-  );
+    );
+  }
+  return [];
 };
 
 export const getType = (
@@ -367,52 +370,52 @@ export const getChildArgument = v => {
 };
 
 // TODO request to add this change on the server.
-export const addPresetDefinition = (schema: string) => (`scalar PresetValue\n
+export const addPresetDefinition = (schema: string) => `scalar PresetValue\n
   directive @preset(
       value: PresetValue
   ) on INPUT_FIELD_DEFINITION | ARGUMENT_DEFINITION\n
-${schema}`)
+${schema}`;
 
-const getDirectives = (field) => {
-  let res; 
+const getDirectives = field => {
+  let res;
   const preset = field.directives.find(dir => dir?.name?.value === 'preset');
-  if(preset.arguments[0])res=preset.arguments[0]?.value?.value
-  return JSON.parse(res)
-
-}
-const getPresets = (field) => {
-  const res = {}
+  if (preset.arguments[0]) res = preset.arguments[0]?.value?.value;
+  return JSON.parse(res);
+};
+const getPresets = field => {
+  const res = {};
   field.arguments.forEach(arg => {
     if (arg.directives && arg.directives.length > 0)
-      res[arg?.name?.value] = getDirectives(arg)
+      res[arg?.name?.value] = getDirectives(arg);
   });
-  return res
+  return res;
+};
 
-}
-
-const getFieldsMap = (fields) => {
-  const res = {}
+const getFieldsMap = fields => {
+  const res = {};
   fields.forEach(field => {
-    res[field?.name?.value] = getPresets(field)
+    res[field?.name?.value] = getPresets(field);
   });
-  return res
-}
+  return res;
+};
 
 export const getArgTreeFromPermissionSDL = (definition: string) => {
-  const roots = ['query_root', 'mutation_root']
+  const roots = ['query_root', 'mutation_root'];
   try {
-    const schema: DocumentNode = parse(definition)
-    const defs = schema.definitions
-    const argTree = defs && defs.reduce((acc = [], i) => {
-      if (roots.includes(i?.name?.value)) {
-        const res = getFieldsMap(i.fields)
-        return {...acc, ...res}
-      }
-      return acc
-    }, {})
-    return argTree
+    const schema: DocumentNode = parse(definition);
+    const defs = schema.definitions;
+    const argTree =
+      defs &&
+      defs.reduce((acc = [], i) => {
+        if (roots.includes(i?.name?.value)) {
+          const res = getFieldsMap(i.fields);
+          return { ...acc, ...res };
+        }
+        return acc;
+      }, {});
+    return argTree;
   } catch (e) {
-    console.error(e)
-    return null
+    console.error(e);
+    return null;
   }
-}
+};

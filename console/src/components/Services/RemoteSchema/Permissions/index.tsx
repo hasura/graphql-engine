@@ -16,11 +16,15 @@ import {
   permSetBulkSelect,
 } from './reducer';
 import { fetchRoleList } from '../../Data/DataActions';
-import { Dispatch } from '../../../../types';
+import { PermWrapperProps } from './types';
+import { Dispatch, ReduxState } from '../../../../types';
 
 // TODO : types
-const PermWrapper = ({ allRoles, allRemoteSchemas, ...props }: any) => {
-  console.log(props);
+const PermWrapper: React.FC<PermWrapperProps> = ({
+  allRoles,
+  allRemoteSchemas,
+  ...props
+}) => {
   const { params, viewRemoteSchema } = props;
   return (
     <RemoteSchemaContainer
@@ -35,7 +39,7 @@ const PermWrapper = ({ allRoles, allRemoteSchemas, ...props }: any) => {
 };
 
 // TODO : types
-const mapStateToProps = (state: any) => {
+const mapStateToProps = (state: ReduxState) => {
   return {
     ...state.remoteSchemas.permissions,
     allRoles: state.tables.allRoles,
