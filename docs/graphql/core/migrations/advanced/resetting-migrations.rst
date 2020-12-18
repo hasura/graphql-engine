@@ -21,11 +21,18 @@ This can be useful if the current migration state on your local machine is corru
 Step 1: Delete the local migrations
 -----------------------------------
 
-Before deleting the local migrations, you might consider storing them in a backup folder in case you need them later using this command:
+Storing all your migrations in a backup folder is recommended before deleting them, especially if you need them later.
+You can use the following command:
 
 .. code-block:: bash
 
    mv -r migrations migrations_bckup
+
+After all the migrations have been moved into a backup folder, you can use the following command to delete all the contents in the migrations folder:
+
+.. code-block:: bash
+
+   rm -r migrations/*
 
 Step 2: Reset the migration history on the server
 -------------------------------------------------
