@@ -231,7 +231,7 @@ const Add: React.FC<Props> = props => {
               <option value="">Select database</option>
               {dataSourcesList.map(s => (
                 <option key={s.name} value={s.name}>
-                  {s.name} ({s.driver})
+                  {s.name}
                 </option>
               ))}
             </select>

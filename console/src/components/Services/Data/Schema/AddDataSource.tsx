@@ -1,43 +1,40 @@
 import React, { useState } from 'react';
 
 import ExpandableEditor from '../../../Common/Layout/ExpandableEditor/Editor';
-import SearchableSelect from '../../../Common/SearchableSelect/SearchableSelect';
 import styles from '../../../Common/Common.scss';
-import { drivers, Driver } from '../../../../dataSources';
 import DropdownButton from '../../../Common/DropdownButton/DropdownButton';
 import CollapsibleToggle from '../../../Common/CollapsibleToggle/CollapsibleToggle';
 import { DataSource } from '../../../../metadata/types';
 
-const customSelectBoxStyles = {
-  control: {
-    height: '34px',
-    minHeight: '34px !important',
-  },
-  container: {
-    width: '156px',
-    height: '34px',
-    minHeight: '34px !important',
-  },
-  dropdownIndicator: {
-    padding: '5px',
-  },
-  placeholder: {
-    top: '50%',
-    fontSize: '12px',
-  },
-  singleValue: {
-    fontSize: '12px',
-    top: '44%',
-    color: '#555555',
-  },
-};
+// const customSelectBoxStyles = {
+//   control: {
+//     height: '34px',
+//     minHeight: '34px !important',
+//   },
+//   container: {
+//     width: '156px',
+//     height: '34px',
+//     minHeight: '34px !important',
+//   },
+//   dropdownIndicator: {
+//     padding: '5px',
+//   },
+//   placeholder: {
+//     top: '50%',
+//     fontSize: '12px',
+//   },
+//   singleValue: {
+//     fontSize: '12px',
+//     top: '44%',
+//     color: '#555555',
+//   },
+// };
 
 type AddDataSourceProps = {
   onSubmit(data: DataSource, successCallback: () => void): void;
 };
 const AddDataSource = ({ onSubmit }: AddDataSourceProps) => {
   const [databaseName, setDatabaseName] = useState('');
-  const [databaseType, setDatabaseType] = useState<Driver | null>(null);
   const [databaseUrl, setDatabaseUrl] = useState('');
   const [urlType, setUrlType] = useState<'static' | 'from-env'>('static');
   const [retryConf, setRetryConf] = useState<{
@@ -48,11 +45,10 @@ const AddDataSource = ({ onSubmit }: AddDataSourceProps) => {
   const [settingsOpen, setSettingsOpen] = useState(false);
 
   const handleSubmit = () => {
-    if (databaseType === null) return;
     onSubmit(
       {
         name: databaseName.trim(),
-        driver: databaseType,
+        driver: 'postgres',
         fromEnv: urlType === 'from-env',
         connection_pool_settings: retryConf,
         url: databaseUrl.trim(),
@@ -60,7 +56,6 @@ const AddDataSource = ({ onSubmit }: AddDataSourceProps) => {
       () => {
         setDatabaseUrl('');
         setDatabaseName('');
-        setDatabaseType(null);
         setUrlType('static');
         setRetryConf({});
         setSettingsOpen(false);
@@ -71,7 +66,7 @@ const AddDataSource = ({ onSubmit }: AddDataSourceProps) => {
   const expandedContent = () => (
     <div style={{ width: '100%' }}>
       <form className={`form-inline ${styles.display_flex}`}>
-        <span className={styles.add_mar_right_mid}>
+        {/* <span className={styles.add_mar_right_mid}>
           <SearchableSelect
             options={drivers}
             onChange={(opt: any) =>
@@ -83,7 +78,7 @@ const AddDataSource = ({ onSubmit }: AddDataSourceProps) => {
             filterOption="prefix"
             placeholder="database type"
           />
-        </span>
+        </span> */}
         <input
           placeholder="database name"
           type="text"
@@ -107,7 +102,7 @@ const AddDataSource = ({ onSubmit }: AddDataSourceProps) => {
           inputVal={databaseUrl}
           inputPlaceHolder="database url"
           testId="database-url"
-          inputStyle={{ width: '220px', fontSize: '12px' }}
+          inputStyle={{ width: '300px', fontSize: '12px' }}
         />
       </form>
       <div style={{ marginTop: '20px' }}>
