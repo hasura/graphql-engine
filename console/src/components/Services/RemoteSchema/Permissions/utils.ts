@@ -8,14 +8,12 @@ import {
   parse,
   DocumentNode,
 } from 'graphql';
-// import { add, result } from 'lodash';
 import { findRemoteSchemaPermission } from '../utils';
 import { PermissionEdit } from './types';
 
 export const getCreateRemoteSchemaPermissionQuery = (
   def: { role: string },
   remoteSchemaName: string,
-  // schemaDefinition: SchemaDefinition
   schemaDefinition: string
 ) => {
   return {
@@ -324,16 +322,6 @@ const getSDLField = (type, argTree) => {
 };
 
 export const generateSDL = (types, argTree) => {
-  //   let result = `schema{
-  //       query: query_root
-  //       mutation: mutation_root
-  //   }\n
-  //   scalar PresetValue
-  //   \n
-  //   directive @preset(
-  //       value: PresetValue
-  //   ) on INPUT_FIELD_DEFINITION | ARGUMENT_DEFINITION\n
-  // `;
   let result = `schema{
   query: query_root
   mutation: mutation_root

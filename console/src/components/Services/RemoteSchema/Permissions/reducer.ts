@@ -13,48 +13,65 @@ import {
   MAKE_REQUEST,
   REQUEST_FAILURE,
   REQUEST_SUCCESS,
-  SchemaDefinition,
+  PermOpenEdit,
+  PermCloseEdit,
+  PermSetRoleName,
+  SetDefaults,
+  SetSchemaDefinition,
+  PermSelectBulk,
+  PermDeslectBulk,
+  PermResetBulkSelect,
+  MakeRequest,
+  SetRequestFailure,
+  SetRequestSuccess,
+  RSPEvents,
 } from './types';
 
 export const permOpenEdit = (
   role: string,
   isNewRole: boolean,
   isNewPerm: boolean
-) => ({
+): PermOpenEdit => ({
   type: PERMISSIONS_OPEN_EDIT,
   role,
   isNewRole,
   isNewPerm,
 });
-export const permCloseEdit = () => ({
+export const permCloseEdit = (): PermCloseEdit => ({
   type: PERMISSIONS_CLOSE_EDIT,
 });
-export const permSetRoleName = (rolename: string) => ({
+export const permSetRoleName = (rolename: string): PermSetRoleName => ({
   type: SET_ROLE_NAME,
   rolename,
 });
-export const setDefaults = () => ({
+export const setDefaults = (): SetDefaults => ({
   type: SET_DEFAULTS,
 });
-export const setSchemaDefinition = (definition: string) => ({
+export const setSchemaDefinition = (
+  definition: string
+): SetSchemaDefinition => ({
   type: SET_SCHEMA_DEFINITION,
   definition,
 });
-export const permSelectBulk = (selectedRole: string) => ({
+export const permSelectBulk = (selectedRole: string): PermSelectBulk => ({
   type: PERM_SELECT_BULK,
   selectedRole,
 });
-export const permDeslectBulk = (selectedRole: string) => ({
+export const permDeslectBulk = (selectedRole: string): PermDeslectBulk => ({
   type: PERM_DESELECT_BULK,
   selectedRole,
 });
-export const permResetBulkSelect = () => ({
+export const permResetBulkSelect = (): PermResetBulkSelect => ({
   type: PERM_RESET_BULK_SELECT,
 });
-export const makeRequest = () => ({ type: MAKE_REQUEST });
-export const setRequestSuccess = () => ({ type: REQUEST_SUCCESS });
-export const setRequestFailure = () => ({ type: REQUEST_FAILURE });
-export const permSetBulkSelect = (isChecked: boolean, selectedRole: any) => {
+export const makeRequest = (): MakeRequest => ({ type: MAKE_REQUEST });
+export const setRequestSuccess = (): SetRequestSuccess => ({
+  type: REQUEST_SUCCESS,
+});
+export const setRequestFailure = (): SetRequestFailure => ({
+  type: REQUEST_FAILURE,
+});
+export const permSetBulkSelect = (isChecked: boolean, selectedRole: string) => {
   return (dispatch: Dispatch) => {
     if (isChecked) {
       dispatch(permSelectBulk(selectedRole));
@@ -64,7 +81,7 @@ export const permSetBulkSelect = (isChecked: boolean, selectedRole: any) => {
   };
 };
 
-const reducer = (state = defaultState, action: any) => {
+const reducer = (state = defaultState, action: RSPEvents) => {
   switch (action.type) {
     case MAKE_REQUEST:
       return {

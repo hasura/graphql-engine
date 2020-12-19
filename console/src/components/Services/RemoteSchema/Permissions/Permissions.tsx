@@ -161,14 +161,13 @@ const Permissions: React.FC<PermissionsProps> = ({ allRoles, ...props }) => {
             permissionEdit={permissionEdit}
             isFetching={isFetching}
             isEditing={isEditing}
-            readOnlyMode={readOnlyMode}
             schemaDefinition={schemaDefinition}
+            datasource={datasource}
+            schema={schema}
             permCloseEdit={permCloseEdit}
             saveRemoteSchemaPermission={saveRemoteSchemaPermission}
             removeRemoteSchemaPermission={removeRemoteSchemaPermission}
             setSchemaDefinition={setSchemaDefinition}
-            datasource={datasource}
-            schema={schema}
           />
         )}
       </div>

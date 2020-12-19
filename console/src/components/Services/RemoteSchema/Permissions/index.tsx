@@ -17,9 +17,8 @@ import {
 } from './reducer';
 import { fetchRoleList } from '../../Data/DataActions';
 import { PermWrapperProps } from './types';
-import { Dispatch, ReduxState } from '../../../../types';
+import { Dispatch } from '../../../../types';
 
-// TODO : types
 const PermWrapper: React.FC<PermWrapperProps> = ({
   allRoles,
   allRemoteSchemas,
@@ -38,8 +37,7 @@ const PermWrapper: React.FC<PermWrapperProps> = ({
   );
 };
 
-// TODO : types
-const mapStateToProps = (state: ReduxState) => {
+const mapStateToProps = (state: any) => {
   return {
     ...state.remoteSchemas.permissions,
     allRoles: state.tables.allRoles,
@@ -48,7 +46,6 @@ const mapStateToProps = (state: ReduxState) => {
   };
 };
 
-// TODO : types
 const mapDispatchToProps = (dispatch: Dispatch) => {
   return {
     dispatch,
@@ -59,7 +56,7 @@ const mapDispatchToProps = (dispatch: Dispatch) => {
       dispatch(saveRemoteSchemaPermission(data)),
     removeRemoteSchemaPermission: (data: any) =>
       dispatch(removeRemoteSchemaPermission(data)),
-    setSchemaDefinition: (data: any) => dispatch(setSchemaDefinition(data)),
+    setSchemaDefinition: (data: string) => dispatch(setSchemaDefinition(data)),
     fetchRoleList: () => dispatch(fetchRoleList()),
     setDefaults: () => dispatch(setDefaults()),
     permCloseEdit: () => dispatch(permCloseEdit()),

@@ -7,12 +7,11 @@ import {
   getRemoteSchemaPermissions,
   findRemoteSchemaPermission,
 } from '../utils';
-import { RolePermissions } from './types';
+import { RolePermissions, PermissionsTableProps } from './types';
 
 const queryTypes = ['Permission'];
 
-// TODO : Types
-const PermissionsTable = ({ ...props }: any) => {
+const PermissionsTable: React.FC<PermissionsTableProps> = ({ ...props }) => {
   const {
     allRoles,
     currentRemoteSchema,
@@ -84,7 +83,6 @@ const PermissionsTable = ({ ...props }: any) => {
             setSchemaDefinition('');
           }
         } else {
-          // FIXME: probably best if we handle the React way.
           const inputFocusElem = document.getElementById('new-role-input');
           if (inputFocusElem) {
             inputFocusElem.focus();

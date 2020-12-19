@@ -8,17 +8,15 @@ import {
 } from './utils';
 import Button from '../../../Common/Button/Button';
 import styles from '../../../Common/Permissions/PermissionStyles.scss';
-import { DatasourceObject, FieldType } from './types';
+import {
+  DatasourceObject,
+  FieldType,
+  RSPTreeComponentProps,
+  ExpandedItems,
+  PermissionEditorProps,
+} from './types';
 import { Field } from './Field';
 import { PermissionEditorContext } from './context';
-
-interface RSPTreeComponentProps {
-  list: FieldType[];
-  setState: (d: FieldType[]) => void;
-}
-type ExpandedItems = {
-  [key: string]: boolean;
-};
 
 const Tree: React.FC<RSPTreeComponentProps> = ({ list, setState }) => {
   // TODO add checkbox
@@ -89,13 +87,12 @@ const MemoizedTree = React.memo(Tree);
 
 declare const window: any;
 
-const PermissionEditor = ({ ...props }: any) => {
+const PermissionEditor: React.FC<PermissionEditorProps> = ({ ...props }) => {
   const {
     permissionEdit,
     isEditing,
     isFetching,
     schemaDefinition,
-    // readOnlyMode,
     permCloseEdit,
     saveRemoteSchemaPermission,
     removeRemoteSchemaPermission,

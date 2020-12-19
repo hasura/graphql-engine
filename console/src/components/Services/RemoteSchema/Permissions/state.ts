@@ -4,8 +4,9 @@ const state: SchemaPermissionsState = {
   isEditing: false,
   isFetching: false,
   permissionEdit: {
-    isNew: false,
     newRole: '',
+    isNewRole: false,
+    isNewPerm: false,
     role: '',
     filter: '',
   },

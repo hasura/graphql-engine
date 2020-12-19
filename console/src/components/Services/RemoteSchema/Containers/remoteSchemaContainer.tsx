@@ -17,14 +17,20 @@ const tabInfo = {
   },
 };
 
-// TODO : types
-const RemoteSchemaContainer = ({
+type RemoteSchemaContainerProps = {
+  params: { [key: string]: string };
+  allRemoteSchemas: { [key: string]: any }[];
+  tabName: string;
+  viewRemoteSchema: (data: any) => void;
+};
+
+const RemoteSchemaContainer: React.FC<RemoteSchemaContainerProps> = ({
   params: { remoteSchemaName },
-  children,
   allRemoteSchemas,
   tabName,
   viewRemoteSchema,
-}: any) => {
+  children,
+}) => {
   React.useEffect(() => {
     viewRemoteSchema(remoteSchemaName);
     return () => {

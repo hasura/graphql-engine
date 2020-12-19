@@ -1,6 +1,6 @@
-import { GraphQLField } from 'graphql';
+import { GraphQLField, GraphQLSchema } from 'graphql';
+import { Action as ReduxAction } from 'redux';
 import { Dispatch } from '../../../../types';
-import { Nullable } from '../../../Common/utils/tsUtils';
 
 export const PERMISSIONS_OPEN_EDIT =
   'RemoteSchemas/Permissions/PERMISSIONS_OPEN_EDIT';
@@ -19,13 +19,16 @@ export const MAKE_REQUEST = 'RemoteSchemas/Permissions/MAKE_REQUEST';
 export const REQUEST_SUCCESS = 'RemoteSchemas/Permissions/REQUEST_SUCCESS';
 export const REQUEST_FAILURE = 'RemoteSchemas/Permissions/REQUEST_FAILURE';
 
-/*
- * Common types for remote schema permissions
- */
+type permOpenEdit = (
+  role: string,
+  newRole: boolean,
+  existingPerms: boolean
+) => void;
 
 export type PermissionEdit = {
-  isNew: boolean;
   newRole: string;
+  isNewRole: boolean;
+  isNewPerm: boolean;
   role: string;
   filter: string;
 };
@@ -38,33 +41,73 @@ export type SchemaPermissionsState = {
   bulkSelect: string[];
 };
 
+export type Actions = {
+  setSchemaDefinition: (data: string) => void;
+  permOpenEdit: permOpenEdit;
+  permCloseEdit: () => void;
+  permSetBulkSelect: (checked: boolean, role: string) => void;
+  permSetRoleName: (name: string) => void;
+  dispatch: Dispatch;
+  fetchRoleList: () => void;
+  setDefaults: () => void;
+  saveRemoteSchemaPermission: (data: any) => void;
+  removeRemoteSchemaPermission: (data: any) => void;
+  permRemoveMultipleRoles: () => void;
+};
+
 export type PermissionsProps = {
   allRoles: string[];
   currentRemoteSchema: {
     name: string;
     permissions: Record<string, string>;
   };
+  bulkSelect: string[];
   readOnlyMode: boolean;
-  dispatch: Dispatch;
+  permissionEdit: PermissionEdit;
   isEditing: boolean;
   isFetching: boolean;
-  bulkSelect: string[];
-  permissionEdit: { isNewRole: boolean; role: string; newRole: string };
   schemaDefinition: string;
+  setSchemaDefinition: (data: string) => void;
+  permOpenEdit: permOpenEdit;
+  permCloseEdit: () => void;
+  permSetBulkSelect: (checked: boolean, role: string) => void;
+  permSetRoleName: (name: string) => void;
+  dispatch: Dispatch;
   fetchRoleList: () => void;
   setDefaults: () => void;
+  saveRemoteSchemaPermission: (data: any) => void;
+  removeRemoteSchemaPermission: (data: any) => void;
+  permRemoveMultipleRoles: () => void;
+};
+
+export type PermissionsTableProps = {
+  setSchemaDefinition: (data: string) => void;
+  permOpenEdit: permOpenEdit;
+  permCloseEdit: () => void;
+  permSetBulkSelect: (checked: boolean, role: string) => void;
+  permSetRoleName: (name: string) => void;
+  allRoles: string[];
+  currentRemoteSchema: {
+    name: string;
+    permissions: Record<string, string>;
+  };
+  bulkSelect: string[];
+  readOnlyMode: boolean;
+  permissionEdit: PermissionEdit;
+  isEditing: boolean;
+};
+
+export type PermissionEditorProps = {
+  permissionEdit: PermissionEdit;
+  isEditing: boolean;
+  isFetching: boolean;
+  schemaDefinition: string;
+  datasource: any;
+  schema: GraphQLSchema | null;
+  setSchemaDefinition: (data: string) => void;
   permCloseEdit: () => void;
   saveRemoteSchemaPermission: (data: any) => void;
   removeRemoteSchemaPermission: (data: any) => void;
-  setSchemaDefinition: (data: any) => void;
-  permRemoveMultipleRoles: () => void;
-  permOpenEdit: (
-    role: string,
-    newRole: boolean,
-    existingPerms: boolean
-  ) => void;
-  permSetBulkSelect: (checked: boolean, role: string) => void;
-  permSetRoleName: (name: string) => void;
 };
 
 export type RolePermissions = {
@@ -93,7 +136,7 @@ export type DatasourceObject = {
 
 export type PermWrapperProps = {
   allRoles: string[];
-  allRemoteSchemas: any[];
+  allRemoteSchemas: { [key: string]: any }[];
   params: { [key: string]: string };
   viewRemoteSchema: (data: string) => void;
 };
@@ -102,3 +145,70 @@ export type BulkSelectProps = {
   bulkSelect: any[];
   permRemoveMultipleRoles: () => void;
 };
+
+export type RSPTreeComponentProps = {
+  list: FieldType[];
+  setState: (d: FieldType[]) => void;
+};
+
+export type ExpandedItems = {
+  [key: string]: boolean;
+};
+
+/*
+ * Redux Action types
+ */
+
+export interface PermOpenEdit extends ReduxAction {
+  type: typeof PERMISSIONS_OPEN_EDIT;
+  role: string;
+  isNewRole: boolean;
+  isNewPerm: boolean;
+}
+export interface PermCloseEdit extends ReduxAction {
+  type: typeof PERMISSIONS_CLOSE_EDIT;
+}
+export interface PermSetRoleName extends ReduxAction {
+  type: typeof SET_ROLE_NAME;
+  rolename: string;
+}
+export interface SetDefaults extends ReduxAction {
+  type: typeof SET_DEFAULTS;
+}
+export interface SetSchemaDefinition extends ReduxAction {
+  type: typeof SET_SCHEMA_DEFINITION;
+  definition: string;
+}
+export interface PermSelectBulk extends ReduxAction {
+  type: typeof PERM_SELECT_BULK;
+  selectedRole: string;
+}
+export interface PermDeslectBulk extends ReduxAction {
+  type: typeof PERM_DESELECT_BULK;
+  selectedRole: string;
+}
+export interface PermResetBulkSelect extends ReduxAction {
+  type: typeof PERM_RESET_BULK_SELECT;
+}
+export interface MakeRequest extends ReduxAction {
+  type: typeof MAKE_REQUEST;
+}
+export interface SetRequestSuccess extends ReduxAction {
+  type: typeof REQUEST_SUCCESS;
+}
+export interface SetRequestFailure extends ReduxAction {
+  type: typeof REQUEST_FAILURE;
+}
+
+export type RSPEvents =
+  | PermOpenEdit
+  | PermCloseEdit
+  | PermSetRoleName
+  | SetDefaults
+  | SetSchemaDefinition
+  | PermSelectBulk
+  | PermDeslectBulk
+  | PermResetBulkSelect
+  | MakeRequest
+  | SetRequestFailure
+  | SetRequestSuccess;
