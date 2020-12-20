@@ -1,7 +1,7 @@
 {
-  "name": "",
+  "name": "@hasura/metadata",
   "version": "1.0.2",
-  "main": "index.js",
+  "main": "dist/HasuraMetadataV2.js",
   "private": false,
   "license": "MIT",
   "source": "lib/index.ts",
@@ -11,6 +11,11 @@
     "v2",
     "dist"
   ],
+  "homepage": "https://github.com/hasura/graphql-engine/blob/master/contrib/metadata-types/README.md",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/hasura/graphql-engine.git"
+  },
   "scripts": {
     "generate-types": "ts-node ./src/generateTypes.ts",
     "test": "./node_modules/.bin/ava --verbose",
