@@ -29,8 +29,9 @@ buildExecStepRemote
   -> G.SelectionSet G.NoFragments G.Name
   -> Maybe GH.VariableValues
   -> ExecutionStep db
-buildExecStepRemote remoteSchemaInfo tp varDefs selSet varValsM =
-  let requiredVars = collectVariables selSet
-      restrictedDefs = filter (\varDef -> G._vdName varDef `Set.member` requiredVars) varDefs
-      restrictedValsM = flip Map.intersection (Set.toMap requiredVars) <$> varValsM
-  in ExecStepRemote (remoteSchemaInfo, G.TypedOperationDefinition tp Nothing restrictedDefs [] selSet, restrictedValsM)
+buildExecStepRemote remoteSchemaInfo _todType varDefs _todSelectionSet varValsM =
+  let requiredVars = collectVariables _todSelectionSet
+      _todVariableDefinitions = filter (\varDef -> G._vdName varDef `Set.member` requiredVars) varDefs
+      _grVariables = flip Map.intersection (Set.toMap requiredVars) <$> varValsM
+      _grQuery = G.TypedOperationDefinition{_todName = Nothing, _todDirectives = [], ..}
+  in ExecStepRemote remoteSchemaInfo GH.GQLReq{_grOperationName = Nothing, ..}

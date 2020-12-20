@@ -19,6 +19,11 @@ import           Hasura.RQL.Types.Error
 
 type UrlFromEnv = Text
 
+-- | Remote schema identifier.
+--
+-- NOTE: no validation on the character set is done here; it's likely there is
+-- a bug (FIXME) where this interacts with remote relationships and some name
+-- mangling needs to happen.
 newtype RemoteSchemaName
   = RemoteSchemaName
   { unRemoteSchemaName :: NonEmptyText }
@@ -27,6 +32,7 @@ newtype RemoteSchemaName
            , Generic, Cacheable, Arbitrary
            )
 
+-- | 'RemoteSchemaDef' after validation and baking-in of defaults in 'validateRemoteSchemaDef'.
 data RemoteSchemaInfo
   = RemoteSchemaInfo
   { rsUrl              :: !N.URI
@@ -40,6 +46,7 @@ instance Hashable RemoteSchemaInfo
 
 $(J.deriveJSON (J.aesonDrop 2 J.snakeCase) ''RemoteSchemaInfo)
 
+-- | From the user's API request
 data RemoteSchemaDef
   = RemoteSchemaDef
   { _rsdUrl                  :: !(Maybe InputWebhook)
@@ -61,9 +68,11 @@ instance J.FromJSON RemoteSchemaDef where
       <*> o J..:? "forward_client_headers" J..!= False
       <*> o J..:? "timeout_seconds"
 
+-- | The payload for 'add_remote_schema', and a component of 'Metadata'.
 data AddRemoteSchemaQuery
   = AddRemoteSchemaQuery
   { _arsqName       :: !RemoteSchemaName
+  -- ^ An internal identifier for this remote schema.
   , _arsqDefinition :: !RemoteSchemaDef
   , _arsqComment    :: !(Maybe Text)
   } deriving (Show, Eq, Generic)

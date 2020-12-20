@@ -184,12 +184,15 @@ data ParsedIntrospection
   , piSubscription :: Maybe [P.FieldParser (P.ParseT Identity) RemoteField]
   }
 
+-- | See 'fetchRemoteSchema'.
 data RemoteSchemaCtx
   = RemoteSchemaCtx
   { rscName                   :: !RemoteSchemaName
   , rscIntro                  :: !IntrospectionResult
   , rscInfo                   :: !RemoteSchemaInfo
   , rscRawIntrospectionResult :: !BL.ByteString
+  -- ^ The raw response from the introspection query against the remote server.
+  -- We store this so we can efficiently service 'introspect_remote_schema'.
   , rscParsed                 :: ParsedIntrospection
   }
 

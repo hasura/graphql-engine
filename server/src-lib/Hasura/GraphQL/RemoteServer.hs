@@ -1,7 +1,7 @@
 module Hasura.GraphQL.RemoteServer
   ( fetchRemoteSchema
   , IntrospectionResult
-  , execRemoteGQ'
+  , execRemoteGQ
   ) where
 
 import           Control.Exception                      (try)
@@ -301,7 +301,7 @@ instance J.FromJSON (FromIntrospection IntrospectionResult) where
             queryRoot mutationRoot subsRoot
     return $ FromIntrospection r
 
-execRemoteGQ'
+execRemoteGQ
   :: ( HasVersion
      , MonadIO m
      , MonadError QErr m
@@ -311,12 +311,15 @@ execRemoteGQ'
   -> HTTP.Manager
   -> UserInfo
   -> [N.Header]
-  -> GQLReqUnparsed
   -> RemoteSchemaInfo
-  -> G.OperationType
+  -> GQLReqOutgoing
   -> m (DiffTime, [N.Header], BL.ByteString)
-execRemoteGQ' env manager userInfo reqHdrs q rsi opType =  do
-  when (opType == G.OperationTypeSubscription) $
+  -- ^ Returns the response body and headers, along with the time taken for the
+  -- HTTP request to complete
+execRemoteGQ env manager userInfo reqHdrs rsi gqlReq@GQLReq{..} =  do
+  let gqlReqUnparsed = renderGQLReqOutgoing gqlReq
+
+  when (G._todType _grQuery == G.OperationTypeSubscription) $
     throw400 NotSupported "subscription to remote server is not supported"
   confHdrs <- makeHeadersFromConf env hdrConf
   let clientHdrs = bool [] (mkClientHeadersForward reqHdrs) fwdClientHdrs
@@ -333,7 +336,7 @@ execRemoteGQ' env manager userInfo reqHdrs q rsi opType =  do
   let req = initReq
            { HTTP.method = "POST"
            , HTTP.requestHeaders = finalHeaders
-           , HTTP.requestBody = HTTP.RequestBodyLBS (J.encode q)
+           , HTTP.requestBody = HTTP.RequestBodyLBS (J.encode gqlReqUnparsed)
            , HTTP.responseTimeout = HTTP.responseTimeoutMicro (timeout * 1000000)
            }
   Tracing.tracedHttpRequest req \req' -> do

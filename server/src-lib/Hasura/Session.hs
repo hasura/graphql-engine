@@ -106,14 +106,13 @@ filterSessionVariables f = SessionVariables . Map.filterWithKey f . unSessionVar
 
 instance ToJSON SessionVariables where
   toJSON (SessionVariables varMap) =
-    toJSON $ Map.fromList $ map (first sessionVariableToText) $ Map.toList varMap
+    toJSON $ mapKeys sessionVariableToText varMap
 
 instance FromJSON SessionVariables where
-  parseJSON v = mkSessionVariablesText . Map.toList <$> parseJSON v
+  parseJSON v = mkSessionVariablesText <$> parseJSON v
 
-mkSessionVariablesText :: [(Text, Text)] -> SessionVariables
-mkSessionVariablesText =
-  SessionVariables . Map.fromList . map (first mkSessionVariable)
+mkSessionVariablesText :: Map.HashMap Text Text -> SessionVariables
+mkSessionVariablesText = SessionVariables . mapKeys mkSessionVariable
 
 mkSessionVariablesHeaders :: [HTTP.Header] -> SessionVariables
 mkSessionVariablesHeaders =

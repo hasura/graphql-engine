@@ -52,6 +52,7 @@ data MetadataObjId
   = MOTable !QualifiedTable
   | MOFunction !QualifiedFunction
   | MORemoteSchema !RemoteSchemaName
+  -- ^ Originates from user-defined '_arsqName'
   | MOTableObj !QualifiedTable !TableMetadataObjId
   | MOCustomTypes
   | MOAction !ActionName
@@ -368,9 +369,17 @@ noMetadataModify = mempty
 
 -- | Encode 'Metadata' to JSON with deterministic ordering. Ordering of object keys and array
 -- elements should  remain consistent across versions of graphql-engine if possible!
+-- Rakesh says the consistency is really what's important here, rather than any particular
+-- ordering (e.g. "version" being at the top).
 --
 -- Note: While modifying any part of the code below, make sure the encoded JSON of each type is
 -- parsable via its 'FromJSON' instance.
+--
+-- TODO: we can use 'aeson-pretty' to serialize in a consistent way, and to specify a (partial)
+-- order of keys, while getting the benefits of auto-generated To/FromJSON instances. 
+-- `FromJSON TableMetadata` complicates this though...
+--
+-- See: https://github.com/hasura/graphql-engine/issues/6348
 metadataToOrdJSON :: Metadata -> AO.Value
 metadataToOrdJSON ( Metadata
                     tables
