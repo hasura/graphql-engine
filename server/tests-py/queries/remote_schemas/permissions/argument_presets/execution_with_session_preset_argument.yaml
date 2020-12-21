@@ -1,0 +1,92 @@
+- description:
+    "query the remote schema with a field with a preset argument, the 'messages' field here has a preset argument ({id: {eq: 1}})"
+  url: /v1/graphql
+  status: 200
+  headers:
+    X-Hasura-Role: user
+  query:
+    query: |
+      {
+        messages {
+          id
+          name
+          msg
+        }
+      }
+  response:
+    data:
+      messages:
+        - id: 1
+          name: alice
+          msg: You win!
+
+- description: "query the remote schema with a field with a preset argument, the user should not be able to access the
+  argument of 'messages' because it has a preset argument set"
+  url: /v1/graphql
+  status: 200
+  headers:
+    X-Hasura-Role: user
+  query:
+    query: |
+      {
+        messages(where: {id: {eq: 2}}) {
+          id
+          name
+          msg
+        }
+      }
+  response:
+    errors:
+    - extensions:
+        path: $.selectionSet.messages
+        code: validation-failed
+      message: '"messages" has no argument named "where"'
+
+- description: "query with field having input object argument and one of the fields of the input object is a preset argument"
+  url: /v1/graphql
+  status: 200
+  headers:
+    X-Hasura-Role: user
+  query:
+    query: |
+      {
+        user {
+          user_id
+          userMessages(whered: {}) {
+            id
+            msg
+          }
+          gimmeText
+        }
+      }
+  response:
+    data:
+      user:
+        user_id: 2
+        userMessages:
+          - id: 2
+            msg: You lose!
+        gimmeText: world
+
+- description: "query with field having input object argument and one of the fields of the input object is a preset argument.
+  The other input object field doesn't have a preset, so the user should be able to provide values to it"
+  url: /v1/graphql
+  status: 200
+  headers:
+    X-Hasura-Role: user
+  query:
+    query: |
+      {
+        user {
+          userMessages(whered: {name: {eq: "bob"}}) {
+            id
+            msg
+          }
+        }
+      }
+  response:
+    data:
+      user:
+        userMessages:
+          - id: 2
+            msg: You lose!

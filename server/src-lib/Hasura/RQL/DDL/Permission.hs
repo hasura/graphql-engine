@@ -105,8 +105,7 @@ procSetObj tn fieldInfoMap mObj = do
   return (HM.fromList setColTups, depHeaders, deps)
   where
     setObj = fromMaybe mempty mObj
-    depHeaders = getDepHeadersFromVal $ Object $
-      HM.fromList $ map (first getPGColTxt) $ HM.toList setObj
+    depHeaders = getDepHeadersFromVal $ Object $ mapKeys getPGColTxt setObj
 
     getDepReason = bool DRSessionVariable DROnType . isStaticValue
 

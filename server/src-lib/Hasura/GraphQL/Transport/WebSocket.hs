@@ -55,7 +55,6 @@ import           Hasura.GraphQL.Transport.HTTP               (MonadExecuteQuery 
                                                               extractFieldFromResponse)
 import           Hasura.GraphQL.Transport.HTTP.Protocol
 import           Hasura.GraphQL.Transport.WebSocket.Protocol
-import           Hasura.HTTP
 import           Hasura.Metadata.Class
 import           Hasura.Prelude
 import           Hasura.RQL.Types
@@ -364,7 +363,6 @@ onStart env serverEnv wsConn (StartMsg opId q) = catchAndIgnore $ do
                {- planCache -} userInfo sqlGenCtx sc scVer queryType httpMgr reqHdrs (q, reqParsed)
 
   (telemCacheHit, execPlan) <- onLeft execPlanE (withComplete . preExecErr requestId)
-  let execCtx = E.ExecutionCtx logger sqlGenCtx pgExecCtx {- planCache -} sc scVer httpMgr enableAL
 
   case execPlan of
     E.QueryExecutionPlan queryPlan asts -> Tracing.trace "Query" $ do
@@ -383,8 +381,8 @@ onStart env serverEnv wsConn (StartMsg opId q) = catchAndIgnore $ do
               (telemTimeIO_DT, resp) <- Tracing.interpTraceT id $ withElapsedTime $
                 hoist (runQueryTx pgExecCtx) tx
               return $ ResultsFragment telemTimeIO_DT Telem.Local resp []
-            E.ExecStepRemote (rsi, opDef, varValsM) -> do
-              runRemoteGQ fieldName execCtx requestId userInfo reqHdrs opDef rsi varValsM
+            E.ExecStepRemote rsi gqlReq -> do
+              runRemoteGQ fieldName userInfo reqHdrs rsi gqlReq
             E.ExecStepRaw json ->
               buildRaw json
           buildResult Telem.Query telemCacheHit timerTot requestId conclusion
@@ -406,8 +404,8 @@ onStart env serverEnv wsConn (StartMsg opId q) = catchAndIgnore $ do
              . withTraceContext ctx . withUserInfo userInfo
             ) $ withElapsedTime tx
           return $ ResultsFragment telemTimeIO_DT Telem.Local resp []
-        E.ExecStepRemote (rsi, opDef, varValsM) -> do
-          runRemoteGQ fieldName execCtx requestId userInfo reqHdrs opDef rsi varValsM
+        E.ExecStepRemote rsi gqlReq -> do
+          runRemoteGQ fieldName userInfo reqHdrs rsi gqlReq
         E.ExecStepRaw json ->
           buildRaw json
       buildResult Telem.Query telemCacheHit timerTot requestId conclusion
@@ -449,10 +447,10 @@ onStart env serverEnv wsConn (StartMsg opId q) = catchAndIgnore $ do
       -- Telemetry. NOTE: don't time network IO:
       Telem.recordTimingMetric Telem.RequestDimensions{..} Telem.RequestTimings{..}
 
-    runRemoteGQ fieldName execCtx reqId userInfo reqHdrs opDef rsi varValsM = do
-      (telemTimeIO_DT, HttpResponse resp _respHdrs) <-
-        doQErr $ flip runReaderT execCtx $ E.execRemoteGQ env reqId userInfo reqHdrs rsi opDef varValsM
-      value <- mapExceptT lift $ extractFieldFromResponse (G.unName fieldName) (encJToLBS resp)
+    runRemoteGQ fieldName userInfo reqHdrs rsi gqlReq = do
+      (telemTimeIO_DT, _respHdrs, resp) <-
+        doQErr $ E.execRemoteGQ env httpMgr userInfo reqHdrs rsi gqlReq
+      value <- mapExceptT lift $ extractFieldFromResponse (G.unName fieldName) resp
       return $ ResultsFragment telemTimeIO_DT Telem.Remote (JO.toEncJSON value) []
 
     WSServerEnv logger pgExecCtx lqMap getSchemaCache httpMgr _ sqlGenCtx {- planCache -}

@@ -185,6 +185,7 @@ convertQuerySelSet env logger gqlContext userInfo manager reqHeaders directives 
       <- flip runStateT initPlanningSt
          $ traverseQueryRootField prepareWithPlan unpreparedQuery
            >>= traverseAction convertActionQuery
+           >>= traverseRemoteField (resolveRemoteField userInfo)
     validateSessionVariables expectedVariables $ _uiSession userInfo
     traverseDB (pure . irToRootFieldPlan planVals) preparedQuery
       >>= traverseAction (pure . actionQueryToRootFieldPlan planVals)
@@ -193,13 +194,11 @@ convertQuerySelSet env logger gqlContext userInfo manager reqHeaders directives 
 
   -- Transform the query plans into an execution plan
   let executionPlan = queryPlan <&> \case
-        RFRemote (remoteSchemaInfo, remoteField) ->
-          buildExecStepRemote
-            remoteSchemaInfo
-            G.OperationTypeQuery
-            varDefs
-            [G.SelectionField remoteField]
-            varValsM
+        RFRemote (RemoteFieldG remoteSchemaInfo remoteField) -> do
+            buildExecStepRemote
+              remoteSchemaInfo
+              G.OperationTypeQuery
+              [G.SelectionField remoteField]
         RFDB db      -> ExecStepDB $ mkCurPlanTx env manager reqHeaders userInfo instrument ep (RFPPostgres db)
         RFAction rfp -> ExecStepDB $ mkCurPlanTx env manager reqHeaders userInfo instrument ep rfp
         RFRaw r      -> ExecStepRaw r

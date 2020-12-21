@@ -86,8 +86,6 @@ module Hasura.RQL.Types.Table
 
        ) where
 
--- import qualified Hasura.GraphQL.Context            as GC
-
 import           Hasura.Prelude
 
 import qualified Data.HashMap.Strict                 as M
@@ -101,6 +99,7 @@ import           Data.Aeson
 import           Data.Aeson.Casing
 import           Data.Aeson.TH
 import           Data.Text.Extended
+import           Data.List.Extended                  (duplicates)
 
 import qualified Hasura.Backends.Postgres.SQL.Types  as PG
 import           Hasura.Incremental                  (Cacheable)
@@ -112,7 +111,7 @@ import           Hasura.RQL.Types.Error
 import           Hasura.RQL.Types.EventTrigger
 import           Hasura.RQL.Types.Permission
 import           Hasura.RQL.Types.RemoteRelationship
-import           Hasura.Server.Utils                 (duplicates, englishList)
+import           Hasura.Server.Utils                 (englishList)
 import           Hasura.Session
 import           Hasura.SQL.Backend
 
@@ -145,7 +144,7 @@ instance FromJSON TableCustomRootFields where
     delete <- obj .:? "delete"
     deleteByPk <- obj .:? "delete_by_pk"
 
-    let duplicateRootFields = duplicates $
+    let duplicateRootFields = HS.toList $ duplicates $
                               catMaybes [ select, selectByPk, selectAggregate
                                         , insert, insertOne
                                         , update, updateByPk

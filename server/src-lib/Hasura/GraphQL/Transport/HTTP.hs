@@ -113,6 +113,10 @@ instance MonadExecuteQuery m => MonadExecuteQuery (MetadataStorageT m) where
   cacheLookup a b c = hoist (hoist lift) $ cacheLookup a b c
   cacheStore  a b = hoist (hoist lift) $ cacheStore  a b
 
+-- | A partial result, e.g. from a remote schema or postgres, which we'll
+-- assemble into the final result for the client. 
+--
+-- Nothing to do with graphql fragments...
 data ResultsFragment = ResultsFragment
   { rfTimeIO   :: DiffTime
   , rfLocality :: Telem.Locality
@@ -168,8 +172,8 @@ runGQ env logger reqId userInfo ipAddress reqHeaders queryType reqUnparsed = do
                 (telemTimeIO_DT, resp) <-
                   runQueryDB reqId reqUnparsed fieldName tx genSql
                 return $ ResultsFragment telemTimeIO_DT Telem.Local resp []
-              E.ExecStepRemote (rsi, opDef, varValsM) ->
-                runRemoteGQ fieldName rsi opDef varValsM
+              E.ExecStepRemote rsi gqlReq ->
+                runRemoteGQ httpManager fieldName rsi gqlReq
               E.ExecStepRaw json ->
                 buildRaw json
             out@(_, _, _, HttpResponse responseData _) <- buildResult Telem.Query conclusion responseHeaders
@@ -181,8 +185,8 @@ runGQ env logger reqId userInfo ipAddress reqHeaders queryType reqUnparsed = do
           E.ExecStepDB (tx, responseHeaders) -> doQErr $ do
             (telemTimeIO_DT, resp) <- runMutationDB reqId reqUnparsed userInfo tx
             return $ ResultsFragment telemTimeIO_DT Telem.Local resp responseHeaders
-          E.ExecStepRemote (rsi, opDef, varValsM) ->
-            runRemoteGQ fieldName rsi opDef varValsM
+          E.ExecStepRemote rsi gqlReq ->
+            runRemoteGQ httpManager fieldName rsi gqlReq
           E.ExecStepRaw json ->
             buildRaw json
         buildResult Telem.Mutation conclusion []
@@ -200,10 +204,10 @@ runGQ env logger reqId userInfo ipAddress reqHeaders queryType reqUnparsed = do
 
     forWithKey = flip OMap.traverseWithKey
 
-    runRemoteGQ fieldName rsi opDef varValsM = do
-      (telemTimeIO_DT, HttpResponse resp remoteResponseHeaders) <-
-        doQErr $ E.execRemoteGQ env reqId userInfo reqHeaders rsi opDef varValsM
-      value <- extractFieldFromResponse (G.unName fieldName) $ encJToLBS resp
+    runRemoteGQ httpManager fieldName rsi gqlReq = do
+      (telemTimeIO_DT, remoteResponseHeaders, resp) <-
+        doQErr $ E.execRemoteGQ env httpManager userInfo reqHeaders rsi gqlReq
+      value <- extractFieldFromResponse (G.unName fieldName) resp
       let filteredHeaders = filter ((== "Set-Cookie") . fst) remoteResponseHeaders
       pure $ ResultsFragment telemTimeIO_DT Telem.Remote (JO.toEncJSON value) filteredHeaders
 

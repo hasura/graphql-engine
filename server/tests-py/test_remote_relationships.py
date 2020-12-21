@@ -222,11 +222,11 @@ class TestExecution:
         assert st_code == 200, resp
         check_query_f(hge_ctx, self.dir() + 'remote_rel_variables.yaml')
 
-    # def test_with_fragments(self, hge_ctx):
-    #     check_query_f(hge_ctx, self.dir() + 'mixed_fragments.yaml')
-    #     st_code, resp = hge_ctx.v1q_f(self.dir() + 'setup_remote_rel_basic.yaml')
-    #     assert st_code == 200, resp
-    #     check_query_f(hge_ctx, self.dir() + 'remote_rel_fragments.yaml')
+    def test_with_fragments(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + 'mixed_fragments.yaml')
+        st_code, resp = hge_ctx.v1q_f(self.dir() + 'setup_remote_rel_basic.yaml')
+        assert st_code == 200, resp
+        check_query_f(hge_ctx, self.dir() + 'remote_rel_fragments.yaml')
 
     def test_with_interface(self, hge_ctx):
         st_code, resp = hge_ctx.v1q_f(self.dir() + 'setup_remote_rel_with_interface.yaml')

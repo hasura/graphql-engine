@@ -70,10 +70,9 @@ addNonColumnFields = proc ( rawTableInfo
          buildRemoteRelationship
     -< ((M.elems columns, remoteSchemaMap), map (_nctiTable,) _nctiRemoteRelationships)
 
-  let mapKey f = M.fromList . map (first f) . M.toList
-      relationshipFields = mapKey fromRel relationshipInfos
-      computedFieldFields = mapKey fromComputedField computedFieldInfos
-      remoteRelationshipFields = mapKey fromRemoteRelationship rawRemoteRelationshipInfos
+  let relationshipFields = mapKeys fromRel relationshipInfos
+      computedFieldFields = mapKeys fromComputedField computedFieldInfos
+      remoteRelationshipFields = mapKeys fromRemoteRelationship rawRemoteRelationshipInfos
 
   -- First, check for conflicts between non-column fields, since we can raise a better error
   -- message in terms of the two metadata objects that define them.

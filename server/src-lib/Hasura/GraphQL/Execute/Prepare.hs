@@ -2,7 +2,6 @@ module Hasura.GraphQL.Execute.Prepare
   ( PlanVariables
   , PrepArgMap
   , PlanningSt(..)
-  , RemoteCall
   , ExecutionPlan
   , ExecutionStep(..)
   , initPlanningSt
@@ -48,15 +47,13 @@ type PrepArgMap = IntMap.IntMap (Q.PrepArg, PGScalarValue)
 -- database and things to run on remote schemas.
 type ExecutionPlan db = InsOrdHashMap G.Name (ExecutionStep db)
 
-type RemoteCall = (RemoteSchemaInfo, G.TypedOperationDefinition G.NoFragments G.Name, Maybe GH.VariableValues)
-
 -- | One execution step to processing a GraphQL query (e.g. one root field).
 -- Polymorphic to allow the SQL to be generated in stages.
 data ExecutionStep db
   = ExecStepDB db
   -- ^ A query to execute against the database
-  | ExecStepRemote RemoteCall  -- !RemoteSchemaInfo !(G.Selection G.NoFragments G.Name)
-  -- ^ A query to execute against a remote schema
+  | ExecStepRemote !RemoteSchemaInfo !GH.GQLReqOutgoing
+  -- ^ A graphql query to execute against a remote schema
   | ExecStepRaw J.Value
   -- ^ Output a plain JSON object
   deriving (Functor, Foldable, Traversable)

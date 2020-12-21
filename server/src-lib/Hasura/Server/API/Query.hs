@@ -95,6 +95,10 @@ data RQLQueryV1
   | RQReloadRemoteSchema !RemoteSchemaNameQuery
   | RQIntrospectRemoteSchema !RemoteSchemaNameQuery
 
+  -- remote-schema permissions
+  | RQAddRemoteSchemaPermissions !AddRemoteSchemaPermissions
+  | RQDropRemoteSchemaPermissions !DropRemoteSchemaPermissions
+
   | RQCreateEventTrigger !CreateEventTriggerQuery
   | RQDeleteEventTrigger !DeleteEventTriggerQuery
   | RQRedeliverEvent     !RedeliverEventQuery
@@ -183,8 +187,8 @@ runQuery
      )
   => Env.Environment -> PGExecCtx -> InstanceId
   -> UserInfo -> RebuildableSchemaCache -> HTTP.Manager
-  -> SQLGenCtx -> RQLQuery -> m (EncJSON, RebuildableSchemaCache)
-runQuery env pgExecCtx instanceId userInfo sc hMgr sqlGenCtx query = do
+  -> SQLGenCtx -> RemoteSchemaPermsCtx -> RQLQuery -> m (EncJSON, RebuildableSchemaCache)
+runQuery env pgExecCtx instanceId userInfo sc hMgr sqlGenCtx remoteSchemaPermsCtx query = do
   accessMode <- getQueryAccessMode query
   traceCtx <- Tracing.currentContext
   metadata <- fetchMetadata
@@ -198,7 +202,7 @@ runQuery env pgExecCtx instanceId userInfo sc hMgr sqlGenCtx query = do
     pure ((js, rsc, ci, meta), tracemeta)
   withReload result
   where
-    runCtx = RunCtx userInfo hMgr sqlGenCtx
+    runCtx = RunCtx userInfo hMgr sqlGenCtx remoteSchemaPermsCtx
 
     withReload (result, updatedCache, invalidations, updatedMetadata) = do
       when (queryModifiesSchemaCache query) $ do
@@ -261,6 +265,9 @@ queryModifiesSchemaCache (RQV1 qi) = case qi of
   RQRemoveRemoteSchema _          -> True
   RQReloadRemoteSchema _          -> True
   RQIntrospectRemoteSchema _      -> False
+
+  RQAddRemoteSchemaPermissions _  -> True
+  RQDropRemoteSchemaPermissions _ -> True
 
   RQCreateEventTrigger _          -> True
   RQDeleteEventTrigger _          -> True
@@ -341,6 +348,7 @@ reconcileAccessModes (Just mode1) (Just mode2)
 runQueryM
   :: ( HasVersion, QErrM m, CacheRWM m, UserInfoM m, MonadTx m
      , MonadIO m, MonadUnique m, HasHttpManager m, HasSQLGenCtx m
+     , HasRemoteSchemaPermsCtx m
      , Tracing.MonadTrace m
      , MetadataM m
      , MonadScheduledEvents m
@@ -394,6 +402,9 @@ runQueryM env rq = withPathK "args" $ case rq of
       RQRemoveRemoteSchema q          -> runRemoveRemoteSchema q
       RQReloadRemoteSchema q          -> runReloadRemoteSchema q
       RQIntrospectRemoteSchema q      -> runIntrospectRemoteSchema q
+
+      RQAddRemoteSchemaPermissions q  -> runAddRemoteSchemaPermissions q
+      RQDropRemoteSchemaPermissions q -> runDropRemoteSchemaPermissions q
 
       RQCreateRemoteRelationship q    -> runCreateRemoteRelationship q
       RQUpdateRemoteRelationship q    -> runUpdateRemoteRelationship q
@@ -490,6 +501,9 @@ requiresAdmin = \case
     RQRemoveRemoteSchema _          -> True
     RQReloadRemoteSchema _          -> True
     RQIntrospectRemoteSchema _      -> True
+
+    RQAddRemoteSchemaPermissions _  -> True
+    RQDropRemoteSchemaPermissions _ -> True
 
     RQCreateEventTrigger _          -> True
     RQDeleteEventTrigger _          -> True
