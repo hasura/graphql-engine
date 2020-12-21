@@ -225,7 +225,7 @@ initialiseServeCtx env GlobalCtx{..} so@ServeOptions{..} = do
   (schemaSyncListenerThread, schemaSyncEventRef) <- startSchemaSyncListenerThread pool logger instanceId
 
   (rebuildableSchemaCache, cacheInitStartTime) <-
-    flip onException (flushLogger loggerCtx) $ migrateCatalogSchema env logger pool _gcHttpManager sqlGenCtx
+    flip onException (flushLogger loggerCtx) $ migrateCatalogSchema env logger pool _gcHttpManager sqlGenCtx soEnableRemoteSchemaPermissions
 
   let schemaSyncCtx = SchemaSyncCtx schemaSyncListenerThread schemaSyncEventRef cacheInitStartTime
       initCtx = ServeCtx _gcHttpManager instanceId loggers _gcConnInfo pool latch
@@ -246,10 +246,11 @@ mkLoggers enabledLogs logLevel = do
 migrateCatalogSchema
   :: (HasVersion, MonadIO m, MonadBaseControl IO m)
   => Env.Environment -> Logger Hasura -> Q.PGPool -> HTTP.Manager -> SQLGenCtx
+  -> RemoteSchemaPermsCtx
   -> m (RebuildableSchemaCache, UTCTime)
-migrateCatalogSchema env logger pool httpManager sqlGenCtx = do
+migrateCatalogSchema env logger pool httpManager sqlGenCtx remoteSchemaPermsCtx = do
   let pgExecCtx = mkPGExecCtx Q.Serializable pool
-      adminRunCtx = RunCtx adminUserInfo httpManager sqlGenCtx
+      adminRunCtx = RunCtx adminUserInfo httpManager sqlGenCtx remoteSchemaPermsCtx
   currentTime <- liftIO Clock.getCurrentTime
   initialiseResult <- runExceptT $
                       peelRun adminRunCtx pgExecCtx Q.ReadWrite Nothing $
@@ -385,6 +386,7 @@ runHGEServer env ServeOptions{..} ServeCtx{..} pgExecCtx initTime shutdownApp po
              postPollHook
              _scSchemaCache
              ekgStore
+             soEnableRemoteSchemaPermissions
              soConnectionOptions
              soWebsocketKeepAlive
 
@@ -395,7 +397,7 @@ runHGEServer env ServeOptions{..} ServeCtx{..} pgExecCtx initTime shutdownApp po
   -- Start a background thread for processing schema sync event present in the '_sscSyncEventRef'
   schemaSyncProcessorThread <- startSchemaSyncProcessorThread sqlGenCtx _scPgPool
                                logger _scHttpManager _sscSyncEventRef
-                               cacheRef _scInstanceId _sscCacheInitStartTime
+                               cacheRef _scInstanceId _sscCacheInitStartTime soEnableRemoteSchemaPermissions
 
   let
     maxEvThrds    = fromMaybe defaultMaxEventThreads soEventsHttpPoolSize
@@ -629,11 +631,12 @@ runAsAdmin
   :: (MonadIO m, MonadBaseControl IO m)
   => Q.PGPool
   -> SQLGenCtx
+  -> RemoteSchemaPermsCtx
   -> HTTP.Manager
   -> RunT m a
   -> m (Either QErr a)
-runAsAdmin pool sqlGenCtx httpManager m = do
-  let runCtx = RunCtx adminUserInfo httpManager sqlGenCtx
+runAsAdmin pool sqlGenCtx remoteSchemaPermsCtx httpManager m = do
+  let runCtx = RunCtx adminUserInfo httpManager sqlGenCtx remoteSchemaPermsCtx
       pgCtx = mkPGExecCtx Q.Serializable pool
   runExceptT $ peelRun runCtx pgCtx Q.ReadWrite Nothing m
 
@@ -647,6 +650,7 @@ execQuery
      , HasSQLGenCtx m
      , UserInfoM m
      , Tracing.MonadTrace m
+     , HasRemoteSchemaPermsCtx m
      , MetadataM m
      , MonadScheduledEvents m
      )

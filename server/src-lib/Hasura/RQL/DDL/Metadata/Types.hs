@@ -20,7 +20,6 @@ import           Data.Aeson.TH
 
 import           Hasura.RQL.Types
 
-
 data ClearMetadata
   = ClearMetadata
   deriving (Show, Eq)

@@ -21,9 +21,10 @@ import qualified Hasura.Tracing              as Tracing
 
 data RunCtx
   = RunCtx
-  { _rcUserInfo  :: !UserInfo
-  , _rcHttpMgr   :: !HTTP.Manager
-  , _rcSqlGenCtx :: !SQLGenCtx
+  { _rcUserInfo             :: !UserInfo
+  , _rcHttpMgr              :: !HTTP.Manager
+  , _rcSqlGenCtx            :: !SQLGenCtx
+  , _rcRemoteSchemaPermsCtx :: !RemoteSchemaPermsCtx
   }
 
 newtype RunT m a
@@ -50,6 +51,9 @@ instance (Monad m) => HasHttpManager (RunT m) where
 
 instance (Monad m) => HasSQLGenCtx (RunT m) where
   askSQLGenCtx = asks _rcSqlGenCtx
+
+instance (Monad m) => HasRemoteSchemaPermsCtx (RunT m) where
+  askRemoteSchemaPermsCtx = asks _rcRemoteSchemaPermsCtx
 
 peelRun
   :: ( MonadIO m

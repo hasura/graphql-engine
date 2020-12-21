@@ -189,12 +189,13 @@ startSchemaSyncProcessorThread
   -> SchemaCacheRef
   -> InstanceId
   -> UTC.UTCTime
+  -> RemoteSchemaPermsCtx
   -> m Immortal.Thread
 startSchemaSyncProcessorThread sqlGenCtx pool logger httpMgr
-  schemaSyncEventRef cacheRef instanceId cacheInitStartTime = do
+  schemaSyncEventRef cacheRef instanceId cacheInitStartTime remoteSchemaPermsCtx = do
   -- Start processor thread
   processorThread <- C.forkImmortal "SchemeUpdate.processor" logger $
-    processor sqlGenCtx pool logger httpMgr schemaSyncEventRef cacheRef instanceId cacheInitStartTime
+    processor sqlGenCtx pool logger httpMgr schemaSyncEventRef cacheRef instanceId cacheInitStartTime remoteSchemaPermsCtx
   logThreadStarted logger instanceId TTProcessor processorThread
   pure processorThread
 
@@ -254,9 +255,10 @@ processor
   -> SchemaCacheRef
   -> InstanceId
   -> UTC.UTCTime
+  -> RemoteSchemaPermsCtx
   -> m void
 processor sqlGenCtx pool logger httpMgr updateEventRef
-  cacheRef instanceId cacheInitStartTime =
+  cacheRef instanceId cacheInitStartTime remoteSchemaPermsCtx =
   -- Never exits
   forever $ do
     event <- liftIO $ STM.atomically getLatestEvent
@@ -277,7 +279,7 @@ processor sqlGenCtx pool logger httpMgr updateEventRef
 
     when shouldReload $
       refreshSchemaCache sqlGenCtx pool logger httpMgr cacheRef cacheInvalidations
-        threadType "schema cache reloaded"
+        threadType "schema cache reloaded" remoteSchemaPermsCtx
   where
     -- checks if there is an event
     -- and replaces it with Nothing
@@ -302,8 +304,11 @@ refreshSchemaCache
   -> SchemaCacheRef
   -> CacheInvalidations
   -> ThreadType
-  -> Text -> m ()
-refreshSchemaCache sqlGenCtx pool logger httpManager cacheRef invalidations threadType msg = do
+  -> Text
+  -> RemoteSchemaPermsCtx
+  -> m ()
+refreshSchemaCache sqlGenCtx pool logger httpManager
+    cacheRef invalidations threadType msg remoteSchemaPermsCtx = do
   -- Reload schema cache from catalog
   eitherMetadata <- runMetadataStorageT fetchMetadata
   resE <- runExceptT $ do
@@ -318,7 +323,7 @@ refreshSchemaCache sqlGenCtx pool logger httpManager cacheRef invalidations thre
     Left e   -> logError logger threadType $ TEQueryError e
     Right () -> logInfo logger threadType $ object ["message" .= msg]
  where
-  runCtx = RunCtx adminUserInfo httpManager sqlGenCtx
+  runCtx = RunCtx adminUserInfo httpManager sqlGenCtx remoteSchemaPermsCtx
   pgCtx = mkPGExecCtx PG.Serializable pool
 
 logInfo :: (MonadIO m) => Logger Hasura -> ThreadType -> Value -> m ()

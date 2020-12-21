@@ -2,20 +2,26 @@ module Hasura.RQL.Types.RemoteSchema where
 
 import           Hasura.Prelude
 
-import qualified Data.Aeson                 as J
-import qualified Data.Aeson.Casing          as J
-import qualified Data.Aeson.TH              as J
-import qualified Data.Environment           as Env
-import qualified Data.Text                  as T
+import qualified Data.Aeson                     as J
+import qualified Data.Aeson.Casing              as J
+import qualified Data.Aeson.TH                  as J
+import qualified Data.Environment               as Env
+import qualified Data.HashSet                   as Set
+import qualified Data.Text                      as T
+import qualified Text.Builder                   as TB
 import           Data.Text.Extended
 import           Data.Text.NonEmpty
-import qualified Database.PG.Query          as Q
-import qualified Network.URI.Extended       as N
+import qualified Database.PG.Query              as Q
+import qualified Network.URI.Extended           as N
+import qualified Language.GraphQL.Draft.Syntax  as G
+import qualified Language.GraphQL.Draft.Printer as G
 
 import           Hasura.Incremental         (Cacheable)
 import           Hasura.RQL.DDL.Headers     (HeaderConf (..))
 import           Hasura.RQL.Types.Common
 import           Hasura.RQL.Types.Error
+import           Hasura.Session
+import           Hasura.GraphQL.Parser.Schema      (Variable)
 
 type UrlFromEnv = Text
 
@@ -119,3 +125,72 @@ validateRemoteSchemaDef env (RemoteSchemaDef mUrl mUrlEnv hdrC fwdHdrs mTimeout)
     hdrs = fromMaybe [] hdrC
 
     timeout = fromMaybe 60 mTimeout
+
+newtype RemoteSchemaPermissionDefinition
+  = RemoteSchemaPermissionDefinition
+  { _rspdSchema    :: G.SchemaDocument
+  }  deriving (Show, Eq, Generic)
+instance NFData RemoteSchemaPermissionDefinition
+instance Cacheable RemoteSchemaPermissionDefinition
+instance Hashable RemoteSchemaPermissionDefinition
+
+instance J.FromJSON RemoteSchemaPermissionDefinition where
+  parseJSON = J.withObject "RemoteSchemaPermissionDefinition" $ \obj -> do
+    fmap RemoteSchemaPermissionDefinition $ obj J..: "schema"
+
+instance J.ToJSON RemoteSchemaPermissionDefinition where
+  toJSON (RemoteSchemaPermissionDefinition schema) =
+    J.object $ [ "schema" J..= J.String (TB.run . G.schemaDocument $ schema)]
+
+data AddRemoteSchemaPermissions
+  = AddRemoteSchemaPermissions
+  { _arspRemoteSchema :: !RemoteSchemaName
+  , _arspRole         :: !RoleName
+  , _arspDefinition   :: !RemoteSchemaPermissionDefinition
+  , _arspComment      :: !(Maybe Text)
+  } deriving (Show, Eq, Generic)
+instance NFData AddRemoteSchemaPermissions
+instance Cacheable AddRemoteSchemaPermissions
+$(J.deriveJSON (J.aesonDrop 5 J.snakeCase) ''AddRemoteSchemaPermissions)
+
+data DropRemoteSchemaPermissions
+  = DropRemoteSchemaPermissions
+  { _drspRemoteSchema :: !RemoteSchemaName
+  , _drspRole         :: !RoleName
+  } deriving (Show, Eq, Generic)
+instance NFData DropRemoteSchemaPermissions
+instance Cacheable DropRemoteSchemaPermissions
+$(J.deriveJSON (J.aesonDrop 5 J.snakeCase) ''DropRemoteSchemaPermissions)
+
+-- | See `resolveRemoteVariable` function. This data type is used
+--   for validation of the session variable value
+data SessionArgumentPresetInfo
+  = SessionArgumentPresetScalar
+  | SessionArgumentPresetEnum !(Set.HashSet G.EnumValue)
+  deriving (Show, Eq, Generic, Ord)
+instance Hashable SessionArgumentPresetInfo
+instance Cacheable SessionArgumentPresetInfo
+
+-- | RemoteSchemaVariable is used to capture all the details required
+--   to resolve a session preset variable.
+--   See Note [Remote Schema Permissions Architecture]
+data RemoteSchemaVariable
+  = SessionPresetVariable !SessionVariable !G.Name !SessionArgumentPresetInfo
+  | QueryVariable !Variable
+  deriving (Show, Eq, Generic, Ord)
+instance Hashable RemoteSchemaVariable
+instance Cacheable RemoteSchemaVariable
+
+-- | This data type is an extension of the `G.InputValueDefinition`, it
+--   may contain a preset with it.
+data RemoteSchemaInputValueDefinition
+  = RemoteSchemaInputValueDefinition
+  { _rsitdDefinition      :: !G.InputValueDefinition
+  , _rsitdPresetArgument  :: !(Maybe (G.Value RemoteSchemaVariable))
+  } deriving (Show, Eq, Generic, Ord)
+instance Hashable RemoteSchemaInputValueDefinition
+instance Cacheable RemoteSchemaInputValueDefinition
+
+newtype RemoteSchemaIntrospection
+  = RemoteSchemaIntrospection [(G.TypeDefinition [G.Name] RemoteSchemaInputValueDefinition)]
+  deriving (Show, Eq, Generic, Hashable, Cacheable, Ord)

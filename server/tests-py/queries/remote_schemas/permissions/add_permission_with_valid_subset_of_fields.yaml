@@ -1,0 +1,18 @@
+type: add_remote_schema_permissions
+args:
+  remote_schema: my-remote-schema
+  role: user
+  definition:
+    schema: |
+      type User {
+        user_id: Int
+      }
+
+      type Query {
+        hello: String
+        user(user_id: Int!): User
+      }
+
+      schema {
+        query: Query
+      }

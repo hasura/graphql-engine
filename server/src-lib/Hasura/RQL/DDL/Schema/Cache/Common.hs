@@ -113,6 +113,7 @@ data CacheBuildParams
   = CacheBuildParams
   { _cbpManager   :: !HTTP.Manager
   , _cbpSqlGenCtx :: !SQLGenCtx
+  , _cbpRemoteSchemaPermsCtx :: !RemoteSchemaPermsCtx
   }
 
 -- | The monad in which @'RebuildableSchemaCache' is being run
@@ -134,17 +135,23 @@ instance HasHttpManager CacheBuild where
 instance HasSQLGenCtx CacheBuild where
   askSQLGenCtx = asks _cbpSqlGenCtx
 
+instance HasRemoteSchemaPermsCtx CacheBuild where
+  askRemoteSchemaPermsCtx = asks _cbpRemoteSchemaPermsCtx
+
+
 runCacheBuild
   :: ( MonadIO m
      , HasHttpManager m
      , HasSQLGenCtx m
+     , HasRemoteSchemaPermsCtx m
      , MonadTx m
      )
   => CacheBuild a -> m a
 runCacheBuild (CacheBuild m) = do
   httpManager <- askHttpManager
   sqlGenCtx   <- askSQLGenCtx
-  let params = CacheBuildParams httpManager sqlGenCtx
+  remoteSchemaPermsCtx <- askRemoteSchemaPermsCtx
+  let params = CacheBuildParams httpManager sqlGenCtx remoteSchemaPermsCtx
   liftTx $ lazyTxToQTx (runReaderT m params)
 
 data RebuildableSchemaCache

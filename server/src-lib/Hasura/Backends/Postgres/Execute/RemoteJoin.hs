@@ -8,6 +8,7 @@ module Hasura.Backends.Postgres.Execute.RemoteJoin
   , FieldPath(..)
   , RemoteJoin(..)
   , executeQueryWithRemoteJoins
+  , graphQLValueToJSON
   , processRemoteJoins
   ) where
 
@@ -424,17 +425,6 @@ inputValueToJSON :: InputValue Void -> A.Value
 inputValueToJSON = \case
   JSONValue    j -> j
   GraphQLValue g -> graphQLValueToJSON g
-  where
-    graphQLValueToJSON :: G.Value Void -> A.Value
-    graphQLValueToJSON = \case
-      G.VNull                 -> A.Null
-      G.VInt i                -> A.toJSON i
-      G.VFloat f              -> A.toJSON f
-      G.VString t             -> A.toJSON t
-      G.VBoolean b            -> A.toJSON b
-      G.VEnum (G.EnumValue n) -> A.toJSON n
-      G.VList values          -> A.toJSON $ graphQLValueToJSON <$> values
-      G.VObject objects       -> A.toJSON $ graphQLValueToJSON <$> objects
 
 defaultValue :: InputValue Void -> Maybe (G.Value Void)
 defaultValue = \case

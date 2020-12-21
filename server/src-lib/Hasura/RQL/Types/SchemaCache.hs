@@ -45,6 +45,12 @@ module Hasura.RQL.Types.SchemaCache
   , IntrospectionResult(..)
   , ParsedIntrospection(..)
   , RemoteSchemaCtx(..)
+  , rscName
+  , rscInfo
+  , rscIntro
+  , rscParsed
+  , rscRawIntrospectionResult
+  , rscPermissions
   , RemoteSchemaMap
 
   , DepMap
@@ -114,6 +120,8 @@ module Hasura.RQL.Types.SchemaCache
   , CronTriggerInfo(..)
   ) where
 
+import           Control.Lens                      (makeLenses)
+
 import           Hasura.Prelude
 
 import qualified Data.ByteString.Lazy                as BL
@@ -132,7 +140,7 @@ import qualified Hasura.GraphQL.Parser               as P
 import           Hasura.Backends.Postgres.Connection
 import           Hasura.Backends.Postgres.SQL.Types  (QualifiedTable, QualifiedFunction, PGCol)
 import           Hasura.GraphQL.Context              (GQLContext, RemoteField, RoleContext)
-import           Hasura.Incremental                  (Dependency, MonadDepend (..), selectKeyD)
+import           Hasura.Incremental                  (Dependency, MonadDepend (..), selectKeyD, Cacheable)
 import           Hasura.RQL.IR.BoolExp
 import           Hasura.RQL.Types.Action
 import           Hasura.RQL.Types.Common             hiding (FunctionName)
@@ -171,11 +179,12 @@ type WithDeps a = (a, [SchemaDependency])
 
 data IntrospectionResult
   = IntrospectionResult
-  { irDoc              :: G.SchemaIntrospection
+  { irDoc              :: RemoteSchemaIntrospection
   , irQueryRoot        :: G.Name
   , irMutationRoot     :: Maybe G.Name
   , irSubscriptionRoot :: Maybe G.Name
-  }
+  } deriving (Show, Eq, Generic)
+instance Cacheable IntrospectionResult
 
 data ParsedIntrospection
   = ParsedIntrospection
@@ -187,17 +196,23 @@ data ParsedIntrospection
 -- | See 'fetchRemoteSchema'.
 data RemoteSchemaCtx
   = RemoteSchemaCtx
-  { rscName                   :: !RemoteSchemaName
-  , rscIntro                  :: !IntrospectionResult
-  , rscInfo                   :: !RemoteSchemaInfo
-  , rscRawIntrospectionResult :: !BL.ByteString
+  { _rscName                   :: !RemoteSchemaName
+  , _rscIntro                  :: !IntrospectionResult
+  , _rscInfo                   :: !RemoteSchemaInfo
+  , _rscRawIntrospectionResult :: !BL.ByteString
   -- ^ The raw response from the introspection query against the remote server.
   -- We store this so we can efficiently service 'introspect_remote_schema'.
-  , rscParsed                 :: ParsedIntrospection
+  , _rscParsed                 ::  ParsedIntrospection
+  , _rscPermissions            :: !(M.HashMap RoleName IntrospectionResult)
   }
+$(makeLenses ''RemoteSchemaCtx)
 
 instance ToJSON RemoteSchemaCtx where
-  toJSON = toJSON . rscInfo
+  toJSON (RemoteSchemaCtx name _ info _ _ _) =
+    object $
+      [ "name" .= name
+      , "info" .= toJSON info
+      ]
 
 type RemoteSchemaMap = M.HashMap RemoteSchemaName RemoteSchemaCtx
 
@@ -234,7 +249,7 @@ data SchemaCache
   { scTables                      :: !(TableCache 'Postgres)
   , scActions                     :: !ActionCache
   , scFunctions                   :: !FunctionCache
-  , scRemoteSchemas               :: !RemoteSchemaMap
+  , scRemoteSchemas               :: !(M.HashMap RemoteSchemaName RemoteSchemaCtx)
   , scAllowlist                   :: !(HS.HashSet GQLQuery)
   , scGQLContext                  :: !(HashMap RoleName (RoleContext GQLContext))
   , scUnauthenticatedGQLContext   :: !GQLContext

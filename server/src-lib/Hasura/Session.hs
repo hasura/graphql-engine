@@ -10,6 +10,7 @@ module Hasura.Session
   , filterSessionVariables
   , SessionVariableValue
   , sessionVariableToText
+  , sessionVariableToGraphQLName
   , mkSessionVariablesText
   , mkSessionVariablesHeaders
   , sessionVariablesToHeaders
@@ -29,20 +30,21 @@ module Hasura.Session
 
 import           Hasura.Prelude
 
-import qualified Data.CaseInsensitive       as CI
-import qualified Data.HashMap.Strict        as Map
-import qualified Data.HashSet               as Set
-import qualified Data.Text                  as T
-import qualified Database.PG.Query          as Q
-import qualified Network.HTTP.Types         as HTTP
+import qualified Data.CaseInsensitive          as CI
+import qualified Data.HashMap.Strict           as Map
+import qualified Data.HashSet                  as Set
+import qualified Data.Text                     as T
+import qualified Database.PG.Query             as Q
+import qualified Language.GraphQL.Draft.Syntax as G
+import qualified Network.HTTP.Types            as HTTP
 
 import           Data.Aeson
-import           Data.Aeson.Types           (Parser, toJSONKeyText)
+import           Data.Aeson.Types              (Parser, toJSONKeyText)
 import           Data.Text.Extended
 import           Data.Text.NonEmpty
 
-import           Hasura.Incremental         (Cacheable)
-import           Hasura.RQL.Types.Common    (adminText)
+import           Hasura.Incremental            (Cacheable)
+import           Hasura.RQL.Types.Common       (adminText)
 import           Hasura.RQL.Types.Error
 import           Hasura.Server.Utils
 
@@ -68,13 +70,20 @@ isAdmin :: RoleName -> Bool
 isAdmin = (adminRoleName ==)
 
 newtype SessionVariable = SessionVariable {unSessionVariable :: CI.CI Text}
-  deriving (Show, Eq, Hashable, IsString, Cacheable, Data, NFData)
+  deriving (Show, Eq, Hashable, IsString, Cacheable, Data, NFData, Ord)
 
 instance ToJSON SessionVariable where
   toJSON = toJSON . CI.original . unSessionVariable
 
 instance ToJSONKey SessionVariable where
   toJSONKey = toJSONKeyText sessionVariableToText
+
+instance ToTxt SessionVariable where
+  toTxt = sessionVariableToText
+
+-- | converts a `SessionVariable` value to a GraphQL name
+sessionVariableToGraphQLName :: SessionVariable -> G.Name
+sessionVariableToGraphQLName = G.unsafeMkName . T.replace "-" "_" . sessionVariableToText
 
 parseSessionVariable :: Text -> Parser SessionVariable
 parseSessionVariable t =

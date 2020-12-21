@@ -41,7 +41,7 @@ instance (MonadBase IO m) => TableCoreInfoRM 'Postgres (CacheRefT m)
 instance (MonadBase IO m) => CacheRM (CacheRefT m) where
   askSchemaCache = CacheRefT (fmap lastBuiltSchemaCache . readMVar)
 
-instance (MonadIO m, MonadBaseControl IO m, MonadTx m, HasHttpManager m, HasSQLGenCtx m) => CacheRWM (CacheRefT m) where
+instance (MonadIO m, MonadBaseControl IO m, MonadTx m, HasHttpManager m, HasSQLGenCtx m, HasRemoteSchemaPermsCtx m) => CacheRWM (CacheRefT m) where
   buildSchemaCacheWithOptions reason invalidations metadata = CacheRefT $ flip modifyMVar \schemaCache -> do
     ((), cache, _) <- runCacheRWT schemaCache (buildSchemaCacheWithOptions reason invalidations metadata)
     pure (cache, ())
@@ -62,6 +62,7 @@ spec
      , MonadTx m
      , HasHttpManager m
      , HasSQLGenCtx m
+     , HasRemoteSchemaPermsCtx m
      )
   => Q.ConnInfo -> SpecWithCache m
 spec pgConnInfo = do

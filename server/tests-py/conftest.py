@@ -142,6 +142,13 @@ This option may result in test failures if the schema has to change between the 
         help="Run testcases for unauthorized role",
     )
 
+    parser.addoption(
+        "--enable-remote-schema-permissions",
+        action="store_true",
+        default=False,
+        help="Flag to indicate if the graphql-engine has enabled remote schema permissions",
+    )
+
 #By default,
 #1) Set default parallelism to one
 #2) Set test grouping to by filename (--dist=loadfile)

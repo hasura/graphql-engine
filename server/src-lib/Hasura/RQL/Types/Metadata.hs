@@ -53,6 +53,7 @@ data MetadataObjId
   | MOFunction !QualifiedFunction
   | MORemoteSchema !RemoteSchemaName
   -- ^ Originates from user-defined '_arsqName'
+  | MORemoteSchemaPermissions !RemoteSchemaName !RoleName
   | MOTableObj !QualifiedTable !TableMetadataObjId
   | MOCustomTypes
   | MOAction !ActionName
@@ -67,6 +68,7 @@ moiTypeName = \case
   MOTable _ -> "table"
   MOFunction _ -> "function"
   MORemoteSchema _ -> "remote_schema"
+  MORemoteSchemaPermissions _ _ -> "remote_schema_permission"
   MOCronTrigger _ -> "cron_trigger"
   MOTableObj _ tableObjectId -> case tableObjectId of
     MTORel _ relType        -> relTypeToTxt relType <> "_relation"
@@ -83,6 +85,8 @@ moiName objectId = moiTypeName objectId <> " " <> case objectId of
   MOTable name -> toTxt name
   MOFunction name -> toTxt name
   MORemoteSchema name -> toTxt name
+  MORemoteSchemaPermissions name roleName ->
+    toTxt roleName <> " permission in remote schema " <> toTxt name
   MOCronTrigger name -> toTxt name
   MOTableObj tableName tableObjectId ->
     let tableObjectName = case tableObjectId of
@@ -200,6 +204,35 @@ instance Cacheable RemoteRelationshipMetadata
 $(deriveJSON (aesonDrop 4 snakeCase) ''RemoteRelationshipMetadata)
 $(makeLenses ''RemoteRelationshipMetadata)
 
+data RemoteSchemaPermissionMetadata
+  = RemoteSchemaPermissionMetadata
+  { _rspmRole       :: !RoleName
+  , _rspmDefinition :: !RemoteSchemaPermissionDefinition
+  , _rspmComment    :: !(Maybe Text)
+  } deriving (Show, Eq, Generic)
+instance Cacheable RemoteSchemaPermissionMetadata
+$(deriveJSON (aesonDrop 5 snakeCase){omitNothingFields=True} ''RemoteSchemaPermissionMetadata)
+$(makeLenses ''RemoteSchemaPermissionMetadata)
+
+data RemoteSchemaMetadata
+  = RemoteSchemaMetadata
+  { _rsmName        :: !RemoteSchemaName
+  , _rsmDefinition  :: !RemoteSchemaDef
+  , _rsmComment     :: !(Maybe Text)
+  , _rsmPermissions :: ![RemoteSchemaPermissionMetadata]
+  } deriving (Show, Eq, Generic)
+instance Cacheable RemoteSchemaMetadata
+
+instance FromJSON RemoteSchemaMetadata where
+  parseJSON = withObject "RemoteSchemaMetadata" $ \obj ->
+    RemoteSchemaMetadata
+    <$> obj .: "name"
+    <*> obj .: "definition"
+    <*> obj .:? "comment"
+    <*> obj .:? "permissions" .!= mempty
+$(deriveToJSON (aesonDrop 4 snakeCase) ''RemoteSchemaMetadata)
+$(makeLenses ''RemoteSchemaMetadata)
+
 type Relationships a = InsOrdHashMap RelName a
 type ComputedFields = InsOrdHashMap ComputedFieldName ComputedFieldMetadata
 type RemoteRelationships = InsOrdHashMap RemoteRelationshipName RemoteRelationshipMetadata
@@ -290,7 +323,7 @@ instance FromJSON FunctionMetadata where
 
 type Tables = InsOrdHashMap QualifiedTable TableMetadata
 type Functions = InsOrdHashMap QualifiedFunction FunctionMetadata
-type RemoteSchemas = InsOrdHashMap RemoteSchemaName AddRemoteSchemaQuery
+type RemoteSchemas = InsOrdHashMap RemoteSchemaName RemoteSchemaMetadata
 type QueryCollections = InsOrdHashMap CollectionName CreateCollection
 type Allowlist = HSIns.InsOrdHashSet CollectionReq
 type Actions = InsOrdHashMap ActionName ActionMetadata
@@ -307,7 +340,7 @@ parseNonPostgresMetadata
      , CronTriggers
      )
 parseNonPostgresMetadata o = do
-  remoteSchemas <- parseListAsMap "remote schemas" _arsqName $
+  remoteSchemas <- parseListAsMap "remote schemas" _rsmName $
                    o .:? "remote_schemas" .!= []
   queryCollections <- parseListAsMap "query collections" _ccName $
                       o .:? "query_collections" .!= []
@@ -324,14 +357,14 @@ parseNonPostgresMetadata o = do
 -- exported/replaced via metadata queries.
 data Metadata
   = Metadata
-  { _metaTables           :: !Tables
-  , _metaFunctions        :: !Functions
-  , _metaRemoteSchemas    :: !RemoteSchemas
-  , _metaQueryCollections :: !QueryCollections
-  , _metaAllowlist        :: !Allowlist
-  , _metaCustomTypes      :: !CustomTypes
-  , _metaActions          :: !Actions
-  , _metaCronTriggers     :: !CronTriggers
+  { _metaTables                  :: !Tables
+  , _metaFunctions               :: !Functions
+  , _metaRemoteSchemas           :: !RemoteSchemas
+  , _metaQueryCollections        :: !QueryCollections
+  , _metaAllowlist               :: !Allowlist
+  , _metaCustomTypes             :: !CustomTypes
+  , _metaActions                 :: !Actions
+  , _metaCronTriggers            :: !CronTriggers
   } deriving (Show, Eq)
 $(makeLenses ''Metadata)
 
@@ -376,7 +409,7 @@ noMetadataModify = mempty
 -- parsable via its 'FromJSON' instance.
 --
 -- TODO: we can use 'aeson-pretty' to serialize in a consistent way, and to specify a (partial)
--- order of keys, while getting the benefits of auto-generated To/FromJSON instances. 
+-- order of keys, while getting the benefits of auto-generated To/FromJSON instances.
 -- `FromJSON TableMetadata` complicates this though...
 --
 -- See: https://github.com/hasura/graphql-engine/issues/6348
@@ -403,7 +436,7 @@ metadataToOrdJSON ( Metadata
     versionPair          = ("version", AO.toOrdered currentMetadataVersion)
     tablesPair           = ("tables", AO.array $ map tableMetaToOrdJSON $ sortOn _tmTable $ OM.elems tables)
     functionsPair        = listToMaybeOrdPairSort "functions" functionMetadataToOrdJSON _fmFunction functions
-    remoteSchemasPair    = listToMaybeOrdPairSort "remote_schemas" remoteSchemaQToOrdJSON _arsqName remoteSchemas
+    remoteSchemasPair    = listToMaybeOrdPairSort "remote_schemas" remoteSchemaQToOrdJSON _rsmName remoteSchemas
     queryCollectionsPair = listToMaybeOrdPairSort "query_collections" createCollectionToOrdJSON _ccName queryCollections
     allowlistPair        = listToMaybeOrdPairSort "allowlist" AO.toOrdered _crCollection allowlist
     customTypesPair      = if customTypes == emptyCustomTypes then Nothing
@@ -535,12 +568,21 @@ metadataToOrdJSON ( Metadata
       <> if _fmConfiguration == emptyFunctionConfig then []
          else pure ("configuration", AO.toOrdered _fmConfiguration)
 
-    remoteSchemaQToOrdJSON :: AddRemoteSchemaQuery -> AO.Value
-    remoteSchemaQToOrdJSON (AddRemoteSchemaQuery name definition comment) =
+    remoteSchemaQToOrdJSON :: RemoteSchemaMetadata -> AO.Value
+    remoteSchemaQToOrdJSON (RemoteSchemaMetadata name definition comment permissions) =
       AO.object $ [ ("name", AO.toOrdered name)
                   , ("definition", remoteSchemaDefToOrdJSON definition)
-                  ] <> catMaybes [maybeCommentToMaybeOrdPair comment]
+                  ]
+                  <> (catMaybes [ maybeCommentToMaybeOrdPair comment
+                                , listToMaybeOrdPair "permissions" permsToMaybeOrdJSON permissions
+                                ])
       where
+        permsToMaybeOrdJSON :: RemoteSchemaPermissionMetadata -> AO.Value
+        permsToMaybeOrdJSON (RemoteSchemaPermissionMetadata role defn permComment) =
+          AO.object $ [("role", AO.toOrdered role)
+                      ,("definition", AO.toOrdered defn)
+                      ] <> catMaybes [maybeCommentToMaybeOrdPair permComment]
+
         remoteSchemaDefToOrdJSON :: RemoteSchemaDef -> AO.Value
         remoteSchemaDefToOrdJSON (RemoteSchemaDef url urlFromEnv headers frwrdClientHdrs timeout) =
           AO.object $ catMaybes [ maybeToPair "url" url
