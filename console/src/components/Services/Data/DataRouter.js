@@ -139,8 +139,6 @@ const dataRouterUtils = (connect, store, composeOnEnterHooks) => {
           type: UPDATE_CURRENT_DATA_SOURCE,
           source: sources[0].name,
         });
-      } else if (!sources.length) {
-        replaceState('/data/manage');
       }
       return cb();
     });
