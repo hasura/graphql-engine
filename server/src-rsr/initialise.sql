@@ -170,13 +170,13 @@ CREATE INDEX hdb_scheduled_event_status ON hdb_catalog.hdb_scheduled_events (sta
 
 CREATE TABLE hdb_catalog.hdb_scheduled_event_invocation_logs
 (
-id TEXT DEFAULT hdb_catalog.gen_hasura_uuid() PRIMARY KEY,
-event_id TEXT,
-status INTEGER,
-request JSON,
-response JSON,
-created_at TIMESTAMPTZ DEFAULT NOW(),
+  id TEXT DEFAULT hdb_catalog.gen_hasura_uuid() PRIMARY KEY,
+  event_id TEXT,
+  status INTEGER,
+  request JSON,
+  response JSON,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
 
-FOREIGN KEY (event_id) REFERENCES hdb_catalog.hdb_scheduled_events (id)
-   ON DELETE CASCADE ON UPDATE CASCADE
+  FOREIGN KEY (event_id) REFERENCES hdb_catalog.hdb_scheduled_events (id)
+     ON DELETE CASCADE ON UPDATE CASCADE
 );

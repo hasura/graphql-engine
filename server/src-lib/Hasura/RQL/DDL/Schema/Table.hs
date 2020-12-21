@@ -464,7 +464,7 @@ buildTableCache = Inc.cache proc (pgTables, tableBuildInputs, reloadMetadataInva
       -> CustomColumnNames
       -> n (FieldInfoMap (RawColumnInfo b, G.Name))
     alignCustomColumnNames columns customNames = do
-      let customNamesByFieldName = Map.fromList $ map (first (fromCol @'Postgres)) $ Map.toList customNames
+      let customNamesByFieldName = mapKeys (fromCol @'Postgres) customNames
       flip Map.traverseWithKey (align columns customNamesByFieldName) \columnName -> \case
         This column -> (column,) <$> textToName (getFieldNameTxt columnName)
         These column customName -> pure (column, customName)

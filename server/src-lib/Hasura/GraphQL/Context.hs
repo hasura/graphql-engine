@@ -7,7 +7,7 @@ module Hasura.GraphQL.Context
   , RootField(..)
   , traverseDB
   , traverseAction
-  , RemoteField
+  , traverseRemoteField
   , QueryDB(..)
   , ActionQuery(..)
   , QueryRootField
@@ -16,6 +16,8 @@ module Hasura.GraphQL.Context
   , MutationRootField
   , SubscriptionRootField
   , SubscriptionRootFieldResolved
+  , RemoteFieldG (..)
+  , RemoteField
   ) where
 
 import           Hasura.Prelude
@@ -25,6 +27,7 @@ import qualified Language.GraphQL.Draft.Syntax    as G
 
 import           Data.Aeson.Casing
 import           Data.Aeson.TH
+import           Hasura.SQL.Backend
 
 import qualified Hasura.Backends.Postgres.SQL.DML as PG
 import qualified Hasura.RQL.IR.Delete             as IR
@@ -35,7 +38,6 @@ import qualified Hasura.RQL.Types.Action          as RQL
 import qualified Hasura.RQL.Types.RemoteSchema    as RQL
 
 import           Hasura.GraphQL.Parser
-import           Hasura.SQL.Backend
 
 -- | For storing both a normal GQLContext and one for the backend variant.
 -- Currently, this is to enable the backend variant to have certain insert
@@ -88,6 +90,17 @@ traverseAction f = \case
   RFAction x -> RFAction <$> f x
   RFRaw x    -> pure $ RFRaw x
 
+traverseRemoteField :: forall db remote remote' action raw f
+        . Applicative f
+       => (remote -> f remote')
+       -> RootField db remote action raw
+       -> f (RootField db remote' action raw)
+traverseRemoteField f = \case
+  RFDB x -> pure $ RFDB x
+  RFRemote x -> RFRemote <$> f x
+  RFAction x -> pure $ RFAction x
+  RFRaw x -> pure $ RFRaw x
+
 data QueryDB b v
   = QDBSimple      (IR.AnnSimpleSelG       b v)
   | QDBPrimaryKey  (IR.AnnSimpleSelG       b v)
@@ -98,7 +111,13 @@ data ActionQuery (b :: BackendType) v
   = AQQuery !(RQL.AnnActionExecution b v)
   | AQAsync !(RQL.AnnActionAsyncQuery b v)
 
-type RemoteField = (RQL.RemoteSchemaInfo, G.Field G.NoFragments G.Name)
+data RemoteFieldG var
+  = RemoteFieldG
+  { _rfRemoteSchemaInfo :: !RQL.RemoteSchemaInfo
+  , _rfField            :: !(G.Field G.NoFragments var)
+  } deriving (Functor, Foldable, Traversable)
+
+type RemoteField = RemoteFieldG RQL.RemoteSchemaVariable
 
 type QueryRootField v = RootField (QueryDB 'Postgres v) RemoteField (ActionQuery 'Postgres v) J.Value
 

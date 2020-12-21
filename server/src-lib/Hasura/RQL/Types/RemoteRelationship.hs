@@ -15,6 +15,7 @@ module Hasura.RQL.Types.RemoteRelationship
   , FieldCall(..)
   , RemoteArguments(..)
   , DeleteRemoteRelationship(..)
+  , graphQLValueToJSON
   ) where
 
 import           Hasura.Prelude
@@ -69,13 +70,24 @@ data RemoteFieldInfo (b :: BackendType)
   -- ^ Hasura fields used to join the remote schema node
   , _rfiRemoteFields     :: !RemoteFields
   , _rfiRemoteSchema     :: !RemoteSchemaInfo
-  , _rfiSchemaIntrospect :: G.SchemaIntrospection
+  , _rfiSchemaIntrospect :: RemoteSchemaIntrospection
   -- ^ The introspection data is used to make parsers for the arguments and the selection set
   , _rfiRemoteSchemaName :: !RemoteSchemaName
   -- ^ Name of the remote schema, that's used for joining
   } deriving (Generic)
 deriving instance Backend b => Eq (RemoteFieldInfo b)
 instance Backend b => Cacheable (RemoteFieldInfo b)
+
+graphQLValueToJSON :: G.Value Void -> Value
+graphQLValueToJSON = \case
+  G.VNull                 -> Null
+  G.VInt i                -> toJSON i
+  G.VFloat f              -> toJSON f
+  G.VString t             -> toJSON t
+  G.VBoolean b            -> toJSON b
+  G.VEnum (G.EnumValue n) -> toJSON n
+  G.VList values          -> toJSON $ graphQLValueToJSON <$> values
+  G.VObject objects       -> toJSON $ graphQLValueToJSON <$> objects
 
 instance Backend b => ToJSON (RemoteFieldInfo b) where
   toJSON RemoteFieldInfo{..} = object
@@ -86,33 +98,13 @@ instance Backend b => ToJSON (RemoteFieldInfo b) where
     , "remote_schema" .= _rfiRemoteSchema
     ]
     where
-      toJsonInpValInfo (G.InputValueDefinition desc name type' defVal)  =
+      toJsonInpValInfo (G.InputValueDefinition desc name type' defVal _directives)  =
         object
           [ "desc" .= desc
           , "name" .= name
-          , "def_val" .= fmap gValueToJSONValue defVal
+          , "def_val" .= fmap graphQLValueToJSON defVal
           , "type" .= type'
           ]
-
-      gValueToJSONValue :: G.Value Void -> Value
-      gValueToJSONValue =
-        \case
-          G.VNull       -> Null
-          G.VInt i      -> toJSON i
-          G.VFloat f    -> toJSON f
-          G.VString s   -> toJSON s
-          G.VBoolean b  -> toJSON b
-          G.VEnum s     -> toJSON s
-          G.VList list  -> toJSON (map gValueToJSONValue list)
-          G.VObject obj -> fieldsToObject obj
-
-      fieldsToObject =
-        Object .
-        HM.fromList .
-        map
-          (\(name, val) ->
-             (G.unName name, gValueToJSONValue val)) .
-        HM.toList
 
 -- | For some 'FieldCall', for instance, associates a field argument name with
 -- either a list of either scalar values or some 'G.Variable' we are closed

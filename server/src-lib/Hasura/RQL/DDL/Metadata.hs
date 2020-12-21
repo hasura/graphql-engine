@@ -12,10 +12,21 @@ module Hasura.RQL.DDL.Metadata
 
 import           Hasura.Prelude
 
+-- <<<<<<< HEAD TODO: karthikeyan
+-- import qualified Data.Aeson.Ordered                 as AO
+-- import qualified Data.HashMap.Strict                as HM
+-- import qualified Data.HashMap.Strict.InsOrd         as HMIns
+-- import qualified Data.HashSet                       as HS
+-- import qualified Data.HashSet.InsOrd                as HSIns
+-- import qualified Data.List                          as L
+-- import qualified Database.PG.Query                  as Q
+-- import           Data.Text.NonEmpty
+-- =======
 import qualified Data.Aeson.Ordered                as AO
 import qualified Data.HashMap.Strict.InsOrd        as OMap
 import qualified Data.HashSet                      as HS
 import qualified Data.List                         as L
+-- >>>>>>> main
 
 import           Data.Aeson
 
@@ -137,6 +148,7 @@ purgeMetadataObj = \case
         MTORemoteRelationship rn -> dropRemoteRelationshipInMetadata rn
   MOFunction qf                              -> dropFunctionInMetadata qf
   MORemoteSchema rsn                         -> dropRemoteSchemaInMetadata rsn
+  MORemoteSchemaPermissions rsName role      -> dropRemoteSchemaPermissionInMetadata rsName role
   MOCustomTypes                              -> clearCustomTypesInMetadata
   MOAction action                            -> dropActionInMetadata action
   MOActionPermission action role             -> dropActionPermissionInMetadata action role

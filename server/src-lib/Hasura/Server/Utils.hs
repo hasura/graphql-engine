@@ -107,12 +107,6 @@ runScript fp = do
     ++ show exitCode ++ " and with error : " ++ stdErr
   [|| stdOut ||]
 
--- find duplicates
-duplicates :: Ord a => [a] -> [a]
-duplicates = mapMaybe greaterThanOne . group . sort
-  where
-    greaterThanOne l = bool Nothing (Just $ head l) $ length l > 1
-
 -- | Quotes a regex using Template Haskell so syntax errors can be reported at compile-time.
 quoteRegex :: TDFA.CompOption -> TDFA.ExecOption -> String -> Q (TExp TDFA.Regex)
 quoteRegex compOption execOption regexText = do
@@ -146,7 +140,7 @@ httpExceptToJSON e = case e of
   _        -> toJSON $ show e
   where
     showProxy (HC.Proxy h p) =
-      "host: " <> bsToTxt h <> " port: " <> T.pack (show p)
+      "host: " <> bsToTxt h <> " port: " <> tshow p
 
 -- ignore the following request headers from the client
 commonClientHeadersIgnored :: (IsString a) => [a]

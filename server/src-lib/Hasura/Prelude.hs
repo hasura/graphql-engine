@@ -21,7 +21,9 @@ module Hasura.Prelude
   -- * Efficient coercions
   , coerce
   , findWithIndex
+  -- * Map-related utilities
   , mapFromL
+  , mapKeys
   , oMapFromL
   -- * Measuring and working with moments and durations
   , withElapsedTime
@@ -154,6 +156,13 @@ findWithIndex p l = do
 -- TODO (from master): Move to Data.HashMap.Strict.Extended; rename to fromListWith?
 mapFromL :: (Eq k, Hashable k) => (a -> k) -> [a] -> Map.HashMap k a
 mapFromL f = Map.fromList . map (\v -> (f v, v))
+
+-- | re-key a map. In the case that @f@ is not injective you may end up with a
+-- smaller map than what you started with.
+--
+-- This may be a code smell.
+mapKeys :: (Eq k2, Hashable k2) => (k1 -> k2) -> Map.HashMap k1 a -> Map.HashMap k2 a
+mapKeys f = Map.fromList . map (first f) . Map.toList
 
 oMapFromL :: (Eq k, Hashable k) => (a -> k) -> [a] -> InsOrdHashMap k a
 oMapFromL f = OMap.fromList . map (\v -> (f v, v))

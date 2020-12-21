@@ -88,7 +88,7 @@ runApp env (HGEOptionsG rci hgeCmd) = do
       pool <- mkMinimalPool _gcConnInfo
       res <- flip runPGMetadataStorageApp pool $
         runMetadataStorageT $ liftEitherM $
-        runAsAdmin pool sqlGenCtx _gcHttpManager $ do
+        runAsAdmin pool sqlGenCtx RemoteSchemaPermsDisabled _gcHttpManager $ do
           metadata <- liftTx fetchMetadataFromCatalog
           schemaCache <- buildRebuildableSchemaCache env metadata
           execQuery env queryBs

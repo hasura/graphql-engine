@@ -44,6 +44,7 @@ import           Hasura.RQL.DDL.CustomTypes
 import           Hasura.RQL.DDL.Deps
 import           Hasura.RQL.DDL.EventTrigger
 import           Hasura.RQL.DDL.RemoteSchema
+import           Hasura.RQL.DDL.RemoteSchema.Permission     (resolveRoleBasedRemoteSchema)
 import           Hasura.RQL.DDL.ScheduledTrigger
 import           Hasura.RQL.DDL.Schema.Cache.Common
 import           Hasura.RQL.DDL.Schema.Cache.Dependencies
@@ -56,8 +57,16 @@ import           Hasura.RQL.DDL.Schema.Table
 import           Hasura.RQL.Types                         hiding (fmFunction, tmTable)
 import           Hasura.Server.Version                    (HasVersion)
 
+import           Hasura.Session
+
 buildRebuildableSchemaCache
-  :: (HasVersion, MonadIO m, MonadTx m, HasHttpManager m, HasSQLGenCtx m)
+  :: ( HasVersion
+     , MonadIO m
+     , MonadTx m
+     , HasHttpManager m
+     , HasSQLGenCtx m
+     , HasRemoteSchemaPermsCtx m
+     )
   => Env.Environment
   -> Metadata
   -> m RebuildableSchemaCache
@@ -74,7 +83,7 @@ newtype CacheRWT m a
   deriving
     ( Functor, Applicative, Monad, MonadIO, MonadUnique, MonadReader r, MonadError e, MonadTx
     , UserInfoM, HasHttpManager, HasSQLGenCtx, HasSystemDefined, MonadMetadataStorage
-    , MonadScheduledEvents)
+    , HasRemoteSchemaPermsCtx, MonadScheduledEvents)
 
 runCacheRWT
   :: Functor m
@@ -89,7 +98,7 @@ instance (Monad m) => TableCoreInfoRM 'Postgres (CacheRWT m)
 instance (Monad m) => CacheRM (CacheRWT m) where
   askSchemaCache = CacheRWT $ gets (lastBuiltSchemaCache . fst)
 
-instance (MonadIO m, MonadTx m, HasHttpManager m, HasSQLGenCtx m) => CacheRWM (CacheRWT m) where
+instance (MonadIO m, MonadTx m, HasHttpManager m, HasSQLGenCtx m, HasRemoteSchemaPermsCtx m) => CacheRWM (CacheRWT m) where
   buildSchemaCacheWithOptions buildReason invalidations metadata = CacheRWT do
     (RebuildableSchemaCache _ invalidationKeys rule, oldInvalidations) <- get
     let newInvalidationKeys = invalidateKeys invalidations invalidationKeys
@@ -112,7 +121,7 @@ buildSchemaCacheRule
   -- what we want!
   :: ( HasVersion, ArrowChoice arr, Inc.ArrowDistribute arr, Inc.ArrowCache m arr
      , MonadIO m, MonadUnique m, MonadTx m
-     , MonadReader BuildReason m, HasHttpManager m, HasSQLGenCtx m )
+     , MonadReader BuildReason m, HasHttpManager m, HasSQLGenCtx m, HasRemoteSchemaPermsCtx m)
   => Env.Environment
   -> (Metadata, InvalidationKeys) `arr` SchemaCache
 buildSchemaCacheRule env = proc (metadata, invalidationKeys) -> do
@@ -183,6 +192,13 @@ buildSchemaCacheRule env = proc (metadata, invalidationKeys) -> do
           eventTriggers = map (_tmTable &&& (OMap.elems . _tmEventTriggers)) (OMap.elems tables)
           -- HashMap k a -> HashMap k b -> HashMap k (a, b)
           alignTableMap = M.intersectionWith (,)
+          remoteSchemaPermissions =
+            let remoteSchemaPermsList = OMap.toList $ _rsmPermissions <$> remoteSchemas
+            in concat $ flip map remoteSchemaPermsList $
+                 (\(remoteSchemaName, remoteSchemaPerms) ->
+                    flip map remoteSchemaPerms $ \(RemoteSchemaPermissionMetadata role defn comment) ->
+                     AddRemoteSchemaPermissions remoteSchemaName role defn comment
+                 )
 
       pgTables <- bindA -< fetchTableMetadata
       pgFunctions <- bindA -< fetchFunctionMetadata
@@ -194,6 +210,20 @@ buildSchemaCacheRule env = proc (metadata, invalidationKeys) -> do
       -- remote schemas
       let remoteSchemaInvalidationKeys = Inc.selectD #_ikRemoteSchemas invalidationKeys
       remoteSchemaMap <- buildRemoteSchemas -< (remoteSchemaInvalidationKeys, (OMap.elems remoteSchemas))
+
+      -- remote schema permissions
+      remoteSchemaCache <- (remoteSchemaMap >- returnA)
+        >-> (\info -> (info, M.groupOn _arspRemoteSchema remoteSchemaPermissions)
+                     >- alignExtraRemoteSchemaInfo mkRemoteSchemaPermissionMetadataObject)
+        >-> (| Inc.keyed (\_ ((remoteSchemaCtx, metadataObj), remoteSchemaPerms) -> do
+                   permissionInfo <-
+                     buildRemoteSchemaPermissions -< (remoteSchemaCtx, remoteSchemaPerms)
+                   returnA -< (remoteSchemaCtx
+                               { _rscPermissions = permissionInfo
+                               }
+                              , metadataObj)
+                   )
+             |)
 
       -- relationships and computed fields
       let nonColumnsByTable = mapFromL _nctiTable nonColumnInputs
@@ -269,7 +299,7 @@ buildSchemaCacheRule env = proc (metadata, invalidationKeys) -> do
         { _boTables = tableCache
         , _boActions = actionCache
         , _boFunctions = functionCache
-        , _boRemoteSchemas = remoteSchemaMap
+        , _boRemoteSchemas = remoteSchemaCache
         , _boAllowlist = allowList
         , _boCustomTypes = annotatedCustomTypes
         , _boCronTriggers = cronTriggersMap
@@ -289,7 +319,52 @@ buildSchemaCacheRule env = proc (metadata, invalidationKeys) -> do
       MetadataObject (MOAction name) (toJSON $ CreateAction name defn comment)
 
     mkRemoteSchemaMetadataObject remoteSchema =
-      MetadataObject (MORemoteSchema (_arsqName remoteSchema)) (toJSON remoteSchema)
+      MetadataObject (MORemoteSchema (_rsmName remoteSchema)) (toJSON remoteSchema)
+
+    alignExtraRemoteSchemaInfo
+      :: forall a b arr
+       . (ArrowChoice arr, Inc.ArrowDistribute arr, ArrowWriter (Seq CollectedInfo) arr)
+      => (b -> MetadataObject)
+      -> ( M.HashMap RemoteSchemaName a
+         , M.HashMap RemoteSchemaName [b]
+         ) `arr` M.HashMap RemoteSchemaName (a, [b])
+    alignExtraRemoteSchemaInfo mkMetadataObject = proc (baseInfo, extraInfo) -> do
+      combinedInfo <-
+        (| Inc.keyed (\remoteSchemaName infos -> combine -< (remoteSchemaName, infos))
+        |) (align baseInfo extraInfo)
+      returnA -< M.catMaybes combinedInfo
+      where
+        combine :: (RemoteSchemaName, These a [b]) `arr` Maybe (a, [b])
+        combine = proc (remoteSchemaName, infos) -> case infos of
+          This  base        -> returnA -< Just (base, [])
+          These base extras -> returnA -< Just (base, extras)
+          That       extras -> do
+            let errorMessage = "remote schema  " <> unRemoteSchemaName remoteSchemaName <<> " does not exist"
+            recordInconsistencies -< (map mkMetadataObject extras, errorMessage)
+            returnA -< Nothing
+
+    buildRemoteSchemaPermissions
+      :: ( ArrowChoice arr, Inc.ArrowDistribute arr, ArrowWriter (Seq CollectedInfo) arr
+         , Inc.ArrowCache m arr, MonadTx m)
+      => (RemoteSchemaCtx, [AddRemoteSchemaPermissions]) `arr` (M.HashMap RoleName IntrospectionResult)
+    buildRemoteSchemaPermissions = buildInfoMap _arspRole mkRemoteSchemaPermissionMetadataObject buildRemoteSchemaPermission
+      where
+        buildRemoteSchemaPermission = proc (remoteSchemaCtx, remoteSchemaPerm) -> do
+          let AddRemoteSchemaPermissions rsName roleName defn _ = remoteSchemaPerm
+              metadataObject = mkRemoteSchemaPermissionMetadataObject remoteSchemaPerm
+              schemaObject = SORemoteSchemaPermission rsName roleName
+              providedSchemaDoc = _rspdSchema defn
+              addPermContext err = "in remote schema permission for role " <> roleName <<> ": " <> err
+          (| withRecordInconsistency (
+             (| modifyErrA (do
+                 bindErrorA -< when (roleName == adminRoleName) $
+                   throw400 ConstraintViolation $ "cannot define permission for admin role"
+                 (resolvedSchemaIntrospection, dependencies) <-
+                    bindErrorA -< resolveRoleBasedRemoteSchema providedSchemaDoc remoteSchemaCtx
+                 recordDependencies -< (metadataObject, schemaObject, dependencies)
+                 returnA -< resolvedSchemaIntrospection)
+             |) addPermContext)
+           |) metadataObject
 
     buildTableEventTriggers
       :: ( ArrowChoice arr, Inc.ArrowDistribute arr, ArrowWriter (Seq CollectedInfo) arr
@@ -364,17 +439,18 @@ buildSchemaCacheRule env = proc (metadata, invalidationKeys) -> do
       :: ( ArrowChoice arr, Inc.ArrowDistribute arr, ArrowWriter (Seq CollectedInfo) arr
          , Inc.ArrowCache m arr , MonadIO m, MonadUnique m, HasHttpManager m )
       => ( Inc.Dependency (HashMap RemoteSchemaName Inc.InvalidationKey)
-         , [AddRemoteSchemaQuery]
+         , [RemoteSchemaMetadata]
          ) `arr` HashMap RemoteSchemaName (RemoteSchemaCtx, MetadataObject)
     buildRemoteSchemas =
-      buildInfoMapPreservingMetadata _arsqName mkRemoteSchemaMetadataObject buildRemoteSchema
+      buildInfoMapPreservingMetadata _rsmName mkRemoteSchemaMetadataObject buildRemoteSchema
       where
         -- We want to cache this call because it fetches the remote schema over HTTP, and we don’t
         -- want to re-run that if the remote schema definition hasn’t changed.
-        buildRemoteSchema = Inc.cache proc (invalidationKeys, remoteSchema) -> do
-          Inc.dependOn -< Inc.selectKeyD (_arsqName remoteSchema) invalidationKeys
+        buildRemoteSchema = Inc.cache proc (invalidationKeys, remoteSchema@(RemoteSchemaMetadata name defn comment _)) -> do
+          let addRemoteSchemaQuery = AddRemoteSchemaQuery name defn comment
+          Inc.dependOn -< Inc.selectKeyD name invalidationKeys
           (| withRecordInconsistency (liftEitherA <<< bindA -<
-               runExceptT $ addRemoteSchemaP2Setup env remoteSchema)
+               runExceptT $ addRemoteSchemaP2Setup env addRemoteSchemaQuery)
            |) (mkRemoteSchemaMetadataObject remoteSchema)
 
 -- | @'withMetadataCheck' cascade action@ runs @action@ and checks if the schema changed as a

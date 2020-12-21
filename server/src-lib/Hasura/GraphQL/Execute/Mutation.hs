@@ -166,13 +166,12 @@ convertMutationSelectionSet env logger gqlContext SQLGenCtx{stringifyNum} userIn
       MDBDelete s   -> convertDelete env userSession remoteJoinCtx s stringifyNum
       MDBFunction s -> convertFunction env userInfo manager reqHeaders s
 
-    RFRemote (remoteSchemaInfo, remoteField) ->
+    RFRemote remoteField -> do
+      RemoteFieldG remoteSchemaInfo resolvedRemoteField <- resolveRemoteField userInfo remoteField
       pure $ buildExecStepRemote
-             remoteSchemaInfo
-             G.OperationTypeMutation
-             varDefs
-             [G.SelectionField remoteField]
-             varValsM
+        remoteSchemaInfo
+        G.OperationTypeMutation
+        $ [G.SelectionField resolvedRemoteField]
     RFAction action     -> ExecStepDB <$> convertMutationAction env logger userInfo manager reqHeaders action
     RFRaw s             -> pure $ ExecStepRaw s
 

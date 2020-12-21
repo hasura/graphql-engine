@@ -16,6 +16,7 @@ import qualified Data.HashMap.Strict.InsOrd                    as OM
 import qualified Data.HashSet.InsOrd                           as SetIns
 import qualified Data.Text                                     as T
 import qualified Data.Vector                                   as V
+import qualified Data.HashMap.Strict                           as Map
 import qualified Language.GraphQL.Draft.Parser                 as G
 import qualified Language.GraphQL.Draft.Syntax                 as G
 import qualified Language.Haskell.TH.Syntax                    as TH
@@ -309,9 +310,6 @@ instance Arbitrary ActionMetadata where
 
 deriving instance Arbitrary RemoteArguments
 
-instance Arbitrary a => Arbitrary (G.Value a) where
-  arbitrary = genericArbitrary
-
 instance Arbitrary FieldCall where
   arbitrary = genericArbitrary
 
@@ -338,6 +336,69 @@ instance Arbitrary NonNegativeDiffTime where
 instance Arbitrary CronSchedule where
   arbitrary = elements sampleCronSchedules
 
+instance Arbitrary (G.Directive Void) where
+  arbitrary = elements sampleDirectives
+
+instance Arbitrary (G.Value Void) where
+  arbitrary = elements sampleGraphQLValues
+
+instance Arbitrary (G.Value G.Name) where
+  arbitrary = genericArbitrary
+
+instance (Arbitrary a) => Arbitrary (G.FieldDefinition a) where
+  arbitrary = genericArbitrary
+
+instance Arbitrary G.ScalarTypeDefinition where
+  arbitrary = genericArbitrary
+
+instance Arbitrary G.InputValueDefinition where
+  arbitrary = genericArbitrary
+
+instance (Arbitrary a) => Arbitrary (G.InputObjectTypeDefinition a) where
+  arbitrary = genericArbitrary
+
+instance (Arbitrary a) => Arbitrary (G.ObjectTypeDefinition a) where
+  arbitrary = genericArbitrary
+
+instance Arbitrary G.RootOperationTypeDefinition where
+  arbitrary = genericArbitrary
+
+instance Arbitrary G.OperationType where
+  arbitrary = genericArbitrary
+
+instance Arbitrary G.UnionTypeDefinition where
+  arbitrary = genericArbitrary
+
+instance Arbitrary G.EnumValueDefinition where
+  arbitrary = genericArbitrary
+
+instance Arbitrary G.EnumTypeDefinition where
+  arbitrary = genericArbitrary
+
+instance (Arbitrary a, Arbitrary b) => Arbitrary (G.InterfaceTypeDefinition a b) where
+  arbitrary = genericArbitrary
+
+instance (Arbitrary a, Arbitrary b) => Arbitrary (G.TypeDefinition a b) where
+  arbitrary = genericArbitrary
+
+instance Arbitrary G.TypeSystemDefinition where
+  arbitrary = genericArbitrary
+
+instance Arbitrary G.SchemaDefinition where
+  arbitrary = genericArbitrary
+
+instance Arbitrary G.SchemaDocument where
+  arbitrary = genericArbitrary
+
+instance Arbitrary RemoteSchemaPermissionDefinition where
+  arbitrary = genericArbitrary
+
+instance Arbitrary RemoteSchemaPermissionMetadata where
+  arbitrary = genericArbitrary
+
+instance Arbitrary RemoteSchemaMetadata where
+  arbitrary = genericArbitrary
+
 sampleCronSchedules :: [CronSchedule]
 sampleCronSchedules = rights $ map Cr.parseCronSchedule
   [ "* * * * *"
@@ -357,3 +418,21 @@ sampleCronSchedules = rights $ map Cr.parseCronSchedule
   , "0 0 * * 0"
   -- Every sunday at 00:00
   ]
+
+-- Hardcoding the values of `sampleDirectives` and `sampleGraphQLValues` because
+-- there's no `Arbitrary` instance of `Void`
+sampleDirectives :: [G.Directive Void]
+sampleDirectives = [ (G.Directive $$(G.litName "directive_1") mempty)
+                   , (G.Directive $$(G.litName "directive_2") $
+                        (Map.singleton $$(G.litName "value") (G.VInt 1)))
+                   , (G.Directive $$(G.litName "directive_3") $
+                        (Map.singleton $$(G.litName "value") (G.VBoolean True)))
+                   ]
+
+sampleGraphQLValues :: [G.Value Void]
+sampleGraphQLValues = [ G.VInt 1
+                      , G.VNull
+                      , G.VFloat 2.5
+                      , G.VString "article"
+                      , G.VBoolean True
+                      ]

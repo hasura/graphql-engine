@@ -158,7 +158,7 @@ instance J.FromJSON JWTCustomClaimsMap where
     allowedRoles <- withNotFoundError allowedRolesClaim  >>= J.parseJSON
     defaultRole <- withNotFoundError defaultRoleClaim  >>= J.parseJSON
     let filteredClaims = Map.delete allowedRolesClaim $ Map.delete defaultRoleClaim
-                          $ Map.fromList $ map (first mkSessionVariable) $ Map.toList obj
+                          $ mapKeys mkSessionVariable obj
     customClaims <- flip Map.traverseWithKey filteredClaims $ const $ J.parseJSON
     pure $ JWTCustomClaimsMap defaultRole allowedRoles customClaims
 
@@ -363,11 +363,10 @@ processJwt_ processAuthZHeader_ jwtCtx headers mUnAuthRole =
       let finalClaims =
             Map.delete defaultRoleClaim . Map.delete allowedRolesClaim $ claimsMap
 
-      -- transform the map of text:aeson-value -> text:text
-      let finalClaimsObject = Map.fromList . map (first sessionVariableToText) . Map.toList $ finalClaims
+      let finalClaimsObject = mapKeys sessionVariableToText finalClaims
       metadata <- parseJwtClaim (J.Object $ finalClaimsObject) "x-hasura-* claims"
       userInfo <- mkUserInfo (URBPreDetermined requestedRole) UAdminSecretNotSent $
-                  mkSessionVariablesText $ Map.toList metadata
+                  mkSessionVariablesText metadata
       pure (userInfo, expTimeM)
 
     withoutAuthZHeader = do
@@ -437,10 +436,8 @@ parseClaimsMap unregisteredClaims jcxClaims =
       claimsObject <- parseObjectFromString namespace claimsFormat claimsV
 
       -- filter only x-hasura claims
-      let claimsMap = Map.fromList
-                      $ map (first mkSessionVariable)
-                      $ filter (\(k, _) -> isSessionVariable k)
-                      $ Map.toList claimsObject
+      let claimsMap = mapKeys mkSessionVariable $ 
+            Map.filterWithKey (const . isSessionVariable) claimsObject
 
       pure claimsMap
 

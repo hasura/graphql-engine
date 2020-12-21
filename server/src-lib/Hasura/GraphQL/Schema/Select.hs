@@ -1007,7 +1007,9 @@ remoteRelationshipField remoteFieldInfo = runMaybeT do
   remoteFieldsArgumentsParser <-
     sequenceA <$> for (Map.toList $ _rfiParamMap remoteFieldInfo) \(name, inpValDefn) -> do
       parser <- lift $ inputValueDefinitionParser (_rfiSchemaIntrospect remoteFieldInfo) inpValDefn
-      pure $ parser `mapField` IR.RemoteFieldArgument name
+      -- The preset part are ignored for remote relationships because
+      -- the argument value comes from the parent query
+      pure $ (fmap fst parser) `mapField` IR.RemoteFieldArgument name
 
   -- This selection set parser, should be of the remote node's selection set parser, which comes
   -- from the fieldCall
@@ -1119,7 +1121,7 @@ functionArgs functionName (toList -> inputArgs) = do
       in (positionalIndex, ([argName], [(argName, sessionPlaceholder)], [], []))
     splitArguments positionalIndex (IAUserProvided arg) =
       let (argName, newIndex) = case faName arg of
-                                  Nothing   -> ("arg_" <> T.pack (show positionalIndex), positionalIndex + 1)
+                                  Nothing   -> ("arg_" <> tshow positionalIndex, positionalIndex + 1)
                                   Just name -> (getFuncArgNameTxt name, positionalIndex)
       in if unHasDefault $ faHasDefault arg
          then (newIndex, ([argName], [], [parseArgument arg argName], []))

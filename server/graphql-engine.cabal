@@ -117,7 +117,7 @@ library
                      , mtl
                      , aeson
                      , aeson-casing
-                     , unordered-containers
+                     , unordered-containers >= 0.2.12
                      , template-haskell
                      , hashable
                      , transformers
@@ -224,6 +224,7 @@ library
 
                      -- pretty printer
                      , ansi-wl-pprint
+                     , pretty-simple
 
                      -- for capturing various metrics
                      , ekg-core
@@ -411,6 +412,7 @@ library
                      , Hasura.RQL.DDL.RemoteRelationship
                      , Hasura.RQL.DDL.RemoteRelationship.Validate
                      , Hasura.RQL.DDL.RemoteSchema
+                     , Hasura.RQL.DDL.RemoteSchema.Permission
                      , Hasura.RQL.DDL.Schema
                      , Hasura.RQL.DDL.Schema.Cache
                      , Hasura.RQL.DDL.Schema.Cache.Common

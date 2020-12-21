@@ -62,9 +62,7 @@ getUserInfoWithExpTimeTests = describe "getUserInfo" $ do
                            (mkSessionVariablesHeaders mempty)
           processJwt = processJwt_ $
             -- processAuthZHeader:
-            \_jwtCtx _authzHeader -> return (claimsObjToClaimsMap claims , Nothing)
-            where
-              claimsObjToClaimsMap = Map.fromList . map (first mkSessionVariable) . Map.toList
+            \_jwtCtx _authzHeader -> return (mapKeys mkSessionVariable claims, Nothing)
 
   let setupAuthMode'E a b c d =
         either (const $ error "fixme") id <$> setupAuthMode' a b c d
