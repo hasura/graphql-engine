@@ -44,8 +44,7 @@ import           Hasura.SQL.Backend
 
 -- | Most of these errors should be checked for legitimacy.
 data Error
-  = FromTypeUnsupported (IR.SelectFromG 'MSSQL Expression)
-  | MalformedAgg
+  = MalformedAgg
   | NoProjectionFields
   | NoAggregatesMustBeABug
   | UnsupportedOpExpG (IR.OpExpG 'MSSQL Expression)
@@ -120,7 +119,6 @@ fromSelectRows annSelectG = do
   selectFrom <-
     case from of
       IR.FromTable qualifiedObject -> fromQualifiedTable qualifiedObject
-      _                            -> refute (pure (FromTypeUnsupported from))
   Args { argsOrderBy
        , argsWhere
        , argsJoins
@@ -174,7 +172,6 @@ fromSelectAggregate annSelectG = do
   selectFrom <-
     case from of
       IR.FromTable qualifiedObject -> fromQualifiedTable qualifiedObject
-      _                            -> refute (pure (FromTypeUnsupported from))
   fieldSources <-
     runReaderT (traverse fromTableAggregateFieldG fields) (fromAlias selectFrom)
   filterExpression <-

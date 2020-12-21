@@ -194,10 +194,10 @@ instance Backend 'Postgres where
   isNumType                     = PG.isNumType
 
 instance Backend 'MSSQL where
-  type Identifier     'MSSQL = ()
+  type Identifier     'MSSQL = Void
   type Alias          'MSSQL = MSSQL.EntityAlias
   type TableName      'MSSQL = MSSQL.TableName
-  type FunctionName   'MSSQL = ()
+  type FunctionName   'MSSQL = Void
   type ConstraintName 'MSSQL = ()
   type BasicOrderType 'MSSQL = MSSQL.Order
   type NullsOrderType 'MSSQL = MSSQL.NullsOrder
