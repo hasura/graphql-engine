@@ -61,6 +61,7 @@ instance BackendSchema 'Postgres where
   aggregateOrderByCountType = PG.PGInteger
   computedField             = computedFieldPG
   node                      = nodePG
+  tableDistinctOn           = PGS.tableDistinctOn
 
 -- | Whether the request is sent with `x-hasura-use-backend-only-permissions` set to `true`.
 data Scenario = Backend | Frontend deriving (Enum, Show, Eq)

@@ -125,6 +125,7 @@ class
   , Representable (XNodesAgg b)
   , Representable (XRemoteField b)
   , Representable (XComputedField b)
+  , Representable (XDistinct b)
   , Ord (XRelay b)
   , Ord (TableName b)
   , Ord (ScalarType b)
@@ -167,6 +168,7 @@ class
   type XRemoteField   b :: Type
   type XRelay         b :: Type
   type XNodesAgg      b :: Type
+  type XDistinct      b :: Type
   isComparableType :: ScalarType b -> Bool
   isNumType :: ScalarType b -> Bool
 
@@ -190,6 +192,7 @@ instance Backend 'Postgres where
   type XRemoteField   'Postgres = ()
   type XRelay         'Postgres = ()
   type XNodesAgg      'Postgres = ()
+  type XDistinct      'Postgres = ()
   isComparableType              = PG.isComparableType
   isNumType                     = PG.isNumType
 
@@ -213,6 +216,7 @@ instance Backend 'MSSQL where
   type XRemoteField   'MSSQL = Void -- To be supported later
   type XRelay         'MSSQL = Void
   type XNodesAgg      'MSSQL = Void
+  type XDistinct      'MSSQL = Void
   isComparableType           = MSSQL.isComparableType
   isNumType                  = MSSQL.isNumType
 

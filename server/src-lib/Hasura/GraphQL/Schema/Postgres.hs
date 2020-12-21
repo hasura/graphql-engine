@@ -7,6 +7,7 @@ module Hasura.GraphQL.Schema.Postgres
   , comparisonExps
   , offsetParser
   , mkCountType
+  , tableDistinctOn
   ) where
 
 import           Hasura.Prelude
@@ -35,6 +36,7 @@ import           Hasura.GraphQL.Parser.Class
 import           Hasura.GraphQL.Parser.Internal.Parser (Parser (..), peelVariable, typeCheck,
                                                         typeMismatch, valueToJSON)
 import           Hasura.GraphQL.Schema.Backend         (BackendSchema, ComparisonExp)
+import           Hasura.GraphQL.Schema.Table           (tableSelectColumnsEnum)
 import           Hasura.RQL.Types
 import           Hasura.SQL.Types
 
@@ -385,3 +387,20 @@ mkCountType :: Maybe Bool -> Maybe [Column 'Postgres] -> CountType 'Postgres
 mkCountType _           Nothing     = PG.CTStar
 mkCountType (Just True) (Just cols) = PG.CTDistinct cols
 mkCountType _           (Just cols) = PG.CTSimple cols
+
+-- | Argument to distinct select on columns returned from table selection
+-- > distinct_on: [table_select_column!]
+tableDistinctOn
+  :: forall m n r. (BackendSchema 'Postgres, MonadSchema n m, MonadTableInfo 'Postgres r m, MonadRole r m)
+  => TableName 'Postgres
+  -> SelPermInfo 'Postgres
+  -> m (InputFieldsParser n (Maybe (XDistinct 'Postgres, NonEmpty (Column 'Postgres))))
+tableDistinctOn table selectPermissions = do
+  columnsEnum   <- tableSelectColumnsEnum table selectPermissions
+  pure $ do
+    maybeDistinctOnColumns <- join.join <$> for columnsEnum
+      (P.fieldOptional distinctOnName distinctOnDesc . P.nullable . P.list)
+    pure $ maybeDistinctOnColumns >>= NE.nonEmpty <&> ((),)
+  where
+    distinctOnName = $$(G.litName "distinct_on")
+    distinctOnDesc = Just $ G.Description "distinct select on columns"

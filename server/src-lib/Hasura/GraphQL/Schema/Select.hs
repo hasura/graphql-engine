@@ -550,23 +550,6 @@ tableOrderBy table selectPermissions = do
     orderByName = $$(G.litName "order_by")
     orderByDesc = Just $ G.Description "sort the rows by one or more columns"
 
--- | Argument to distinct select on columns returned from table selection
--- > distinct_on: [table_select_column!]
-tableDistinctOn
-  :: forall m n r b. (BackendSchema b, MonadSchema n m, MonadTableInfo b r m, MonadRole r m)
-  => TableName b
-  -> SelPermInfo b
-  -> m (InputFieldsParser n (Maybe (NonEmpty (Column b))))
-tableDistinctOn table selectPermissions = do
-  columnsEnum   <- tableSelectColumnsEnum table selectPermissions
-  pure $ do
-    maybeDistinctOnColumns <- join.join <$> for columnsEnum
-      (P.fieldOptional distinctOnName distinctOnDesc . P.nullable . P.list)
-    pure $ maybeDistinctOnColumns >>= NE.nonEmpty
-  where
-    distinctOnName = $$(G.litName "distinct_on")
-    distinctOnDesc = Just $ G.Description "distinct select on columns"
-
 -- | Arguments for a table selection
 --
 -- > distinct_on: [table_select_column!]
@@ -598,7 +581,7 @@ tableArgs table selectPermissions = do
           }
   pure $ selectArgs `P.bindFields`
    \args -> do
-      traverse_ (validateDistinctOn $ IR._saOrderBy args) $ IR._saDistinct args
+      traverse_ (validateDistinctOn $ IR._saOrderBy args) $ fmap snd $ IR._saDistinct args
       pure args
   where
     -- TH splices mess up ApplicativeDo

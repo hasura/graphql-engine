@@ -86,6 +86,13 @@ class Backend b => BackendSchema (b :: BackendType) where
        , Has (BackendSupport b) r
        )
     => m (Parser 'Output n (HashMap (TableName b) (SelPermInfo b, PrimaryKeyColumns b, AnnotatedFields b)))
+  -- | Argument to distinct select on columns returned from table selection
+  -- > distinct_on: [table_select_column!]
+  tableDistinctOn
+    :: forall m n r. (BackendSchema b, MonadSchema n m, MonadTableInfo b r m, MonadRole r m)
+    => TableName b
+    -> SelPermInfo b
+    -> m (InputFieldsParser n (Maybe (XDistinct b, NonEmpty (Column b))))
 
 type ComparisonExp b = OpExpG b (UnpreparedValue b)
 

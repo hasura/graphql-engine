@@ -48,7 +48,6 @@ data Error
   | NoProjectionFields
   | NoAggregatesMustBeABug
   | UnsupportedOpExpG (IR.OpExpG 'MSSQL Expression)
-  | DistinctIsn'tSupported
   -- deriving (Show, Eq)
 
 -- | The base monad used throughout this module for all conversion
@@ -237,8 +236,6 @@ fromSelectArgsG selectArgsG = do
   argsTop <- maybe (pure mempty) (pure . Top) mlimit
   argsOffset <-
     maybe (pure Nothing) (fmap Just . lift . fromSQLExpAsInt) moffset
-  argsDistinct' <-
-    maybe (pure Nothing) (fmap Just . traverse fromPGCol) mdistinct
   -- Not supported presently, per Vamshi:
   --
   -- > It is hardly used and we don't have to go to great lengths to support it.
@@ -246,9 +243,9 @@ fromSelectArgsG selectArgsG = do
   -- But placeholdering the code so that when it's ready to be used,
   -- you can just drop the Proxy wrapper.
   argsDistinct <-
-    case argsDistinct' of
+    case mdistinct of
       Nothing -> pure Proxy
-      Just {} -> refute (pure DistinctIsn'tSupported)
+      Just (x, _) -> case x of {}
   (argsOrderBy, joins) <-
     runWriterT (traverse fromAnnOrderByItemG (maybe [] toList orders))
   -- Any object-relation joins that we generated, we record their
