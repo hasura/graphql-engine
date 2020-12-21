@@ -18,7 +18,7 @@ import           Language.Haskell.TH.Syntax (Lift, Q, TExp)
 
 
 newtype NonEmptyText = NonEmptyText { unNonEmptyText :: Text }
-  deriving (Show, Eq, Ord, Hashable, ToJSON, ToJSONKey, Lift, Q.ToPrepArg, ToTxt, Generic, NFData)
+  deriving (Show, Eq, Ord, Hashable, ToJSON, ToJSONKey, Lift, Q.ToPrepArg, ToTxt, Generic, NFData, Data)
 
 instance Arbitrary NonEmptyText where
   arbitrary = NonEmptyText . T.pack <$> QC.listOf1 (QC.elements alphaNumerics)

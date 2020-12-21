@@ -1,0 +1,110 @@
+{
+  "functions": [],
+  "remote_schemas": [],
+  "query_collections": [],
+  "allowlist": [],
+  "tables": [
+    {
+      "table": {"schema":"dbo","name":"Album"},
+      "is_enum": false,
+      "object_relationships": [
+        {
+          "using": {
+            "foreign_key_constraint_on": { "column":"ArtistId", "table": {"schema":"dbo","name":"Artist"} }
+          },
+          "name": "Artist",
+          "comment": null
+        }
+      ],
+      "array_relationships": [
+        {
+          "using": {
+            "foreign_key_constraint_on": {
+              "column": "AlbumId",
+              "table": {"schema":"dbo","name":"Track"}
+            }
+          },
+          "name": "Track",
+          "comment": null
+        }
+      ],
+      "insert_permissions": [],
+      "select_permissions": [],
+      "update_permissions": [],
+      "delete_permissions": [],
+      "event_triggers": []
+    },
+    {
+      "table": {"schema":"dbo","name":"Genre"},
+      "is_enum": false,
+      "object_relationships": [],
+      "array_relationships": [
+        {
+          "using": {
+            "foreign_key_constraint_on": {
+              "column": "GenreId",
+              "table": {"schema":"dbo","name":"Track"}
+            }
+          },
+          "name": "Track",
+          "comment": null
+        }
+      ],
+      "insert_permissions": [],
+      "select_permissions": [],
+      "update_permissions": [],
+      "delete_permissions": [],
+      "event_triggers": []
+    },
+    {
+      "table": {"schema":"dbo","name":"Track"},
+      "is_enum": false,
+      "object_relationships": [
+        {
+          "using": {
+            "foreign_key_constraint_on": {"column":"AlbumId","table":{"schema":"dbo","name":"Album"}}
+          },
+          "name": "album",
+          "comment": null
+        },
+        {
+          "using": {
+            "foreign_key_constraint_on": {"column":"GenreId","table":{"schema":"dbo","name":"Genre"}}
+          },
+          "name": "genre",
+          "comment": null
+        }
+      ],
+      "array_relationships": [
+
+      ],
+      "insert_permissions": [],
+      "select_permissions": [],
+      "update_permissions": [],
+      "delete_permissions": [],
+      "event_triggers": []
+    },
+    {
+      "table": {"schema":"dbo","name":"Artist"},
+      "is_enum": false,
+      "object_relationships": [],
+      "array_relationships": [
+        {
+          "using": {
+            "foreign_key_constraint_on": {
+              "column": "ArtistId",
+              "table": {"schema":"dbo","name":"Album"}
+            }
+          },
+          "name": "Album",
+          "comment": null
+        }
+      ],
+      "insert_permissions": [],
+      "select_permissions": [],
+      "update_permissions": [],
+      "delete_permissions": [],
+      "event_triggers": []
+    }
+  ]
+}
