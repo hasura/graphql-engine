@@ -37,7 +37,7 @@ import           Data.Aeson.Casing
 import           Data.Aeson.TH
 import           Data.Text.Extended
 
-import           Hasura.Backends.Postgres.SQL.Types hiding (TableName, isNumType, isComparableType)
+import           Hasura.Backends.Postgres.SQL.Types hiding (TableName, isComparableType, isNumType)
 import           Hasura.Backends.Postgres.SQL.Value
 import           Hasura.Incremental                 (Cacheable)
 import           Hasura.RQL.Instances               ()

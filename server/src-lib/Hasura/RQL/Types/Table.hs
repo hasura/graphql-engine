@@ -98,8 +98,8 @@ import           Control.Lens
 import           Data.Aeson
 import           Data.Aeson.Casing
 import           Data.Aeson.TH
-import           Data.Text.Extended
 import           Data.List.Extended                  (duplicates)
+import           Data.Text.Extended
 
 import qualified Hasura.Backends.Postgres.SQL.Types  as PG
 import           Hasura.Incremental                  (Cacheable)
@@ -111,9 +111,9 @@ import           Hasura.RQL.Types.Error
 import           Hasura.RQL.Types.EventTrigger
 import           Hasura.RQL.Types.Permission
 import           Hasura.RQL.Types.RemoteRelationship
+import           Hasura.SQL.Backend
 import           Hasura.Server.Utils                 (englishList)
 import           Hasura.Session
-import           Hasura.SQL.Backend
 
 
 data TableCustomRootFields
@@ -423,8 +423,8 @@ data TableCoreInfoG (b :: BackendType) field primaryKeyColumn
   , _tciDescription       :: !(Maybe PG.PGDescription) -- TODO make into type family?
   , _tciSystemDefined     :: !SystemDefined
   , _tciFieldInfoMap      :: !(FieldInfoMap field)
-  , _tciPrimaryKey        :: !(Maybe (PrimaryKey primaryKeyColumn))
-  , _tciUniqueConstraints :: !(HashSet Constraint)
+  , _tciPrimaryKey        :: !(Maybe (PrimaryKey b primaryKeyColumn))
+  , _tciUniqueConstraints :: !(HashSet (Constraint b))
   -- ^ Does /not/ include the primary key; use 'tciUniqueOrPrimaryKeyConstraints' if you need both.
   , _tciForeignKeys       :: !(HashSet (ForeignKey b))
   , _tciViewInfo          :: !(Maybe ViewInfo)
@@ -432,15 +432,15 @@ data TableCoreInfoG (b :: BackendType) field primaryKeyColumn
   , _tciCustomConfig      :: !TableConfig
   } deriving (Generic)
 deriving instance (Eq field, Eq pkCol, Backend b) => Eq (TableCoreInfoG b field pkCol)
-instance (Cacheable field, Cacheable pkCol, Backend b) => Cacheable (TableCoreInfoG b field pkCol)
-instance (Backend b, ToJSON field, ToJSON pkCol) => ToJSON (TableCoreInfoG b field pkCol) where
+instance (Cacheable field, Cacheable pkCol, Generic pkCol, Backend b) => Cacheable (TableCoreInfoG b field pkCol)
+instance (Backend b, Generic pkCol, ToJSON field, ToJSON pkCol) => ToJSON (TableCoreInfoG b field pkCol) where
   toJSON = genericToJSON $ aesonDrop 4 snakeCase
 $(makeLenses ''TableCoreInfoG)
 
 -- | Fully-processed table info that includes non-column fields.
 type TableCoreInfo b = TableCoreInfoG b (FieldInfo b) (ColumnInfo b)
 
-tciUniqueOrPrimaryKeyConstraints :: TableCoreInfoG b f pkCol -> Maybe (NonEmpty Constraint)
+tciUniqueOrPrimaryKeyConstraints :: TableCoreInfoG b f pkCol -> Maybe (NonEmpty (Constraint b))
 tciUniqueOrPrimaryKeyConstraints info = NE.nonEmpty $
   maybeToList (_pkConstraint <$> _tciPrimaryKey info)
   <> toList (_tciUniqueConstraints info)
@@ -487,8 +487,8 @@ data DBTableMetadata (b :: BackendType)
   = DBTableMetadata
   { _ptmiOid               :: !OID
   , _ptmiColumns           :: ![RawColumnInfo b]
-  , _ptmiPrimaryKey        :: !(Maybe (PrimaryKey (Column b)))
-  , _ptmiUniqueConstraints :: !(HashSet Constraint)
+  , _ptmiPrimaryKey        :: !(Maybe (PrimaryKey b (Column b)))
+  , _ptmiUniqueConstraints :: !(HashSet (Constraint b))
   -- ^ Does /not/ include the primary key!
   , _ptmiForeignKeys       :: !(HashSet (ForeignKeyMetadata b))
   , _ptmiViewInfo          :: !(Maybe ViewInfo)

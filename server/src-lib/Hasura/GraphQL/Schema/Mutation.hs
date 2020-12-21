@@ -247,7 +247,7 @@ conflictObject table selectPerms updatePerms = runMaybeT $ do
 
 conflictConstraint
   :: forall m n r. (BackendSchema 'Postgres, MonadSchema n m, MonadTableInfo 'Postgres r m)
-  => NonEmpty Constraint
+  => NonEmpty (Constraint 'Postgres)
   -> QualifiedTable
   -> m (Parser 'Both n ConstraintName)
 conflictConstraint constraints table = memoizeOn 'conflictConstraint table $ do

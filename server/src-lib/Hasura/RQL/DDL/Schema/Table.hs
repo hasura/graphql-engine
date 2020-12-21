@@ -1,5 +1,5 @@
-{-# LANGUAGE Arrows #-}
 {-# LANGUAGE AllowAmbiguousTypes #-}
+{-# LANGUAGE Arrows              #-}
 
 -- | Description: Create/delete SQL tables to/from Hasura metadata.
 module Hasura.RQL.DDL.Schema.Table
@@ -42,7 +42,8 @@ import           Data.Text.Extended
 
 import qualified Hasura.Incremental                 as Inc
 
-import           Hasura.Backends.Postgres.SQL.Types (QualifiedTable, snakeCaseQualifiedObject, FunctionName(..))
+import           Hasura.Backends.Postgres.SQL.Types (FunctionName (..), QualifiedTable,
+                                                     snakeCaseQualifiedObject)
 import           Hasura.EncJSON
 import           Hasura.GraphQL.Context
 import           Hasura.GraphQL.Schema.Common       (textToName)
@@ -435,7 +436,7 @@ buildTableCache = Inc.cache proc (pgTables, tableBuildInputs, reloadMetadataInva
       :: forall b
        . Backend b
       => ErrorA QErr arr
-       ( Map.HashMap (TableName b) (PrimaryKey (Column b), EnumValues)
+       ( Map.HashMap (TableName b) (PrimaryKey b (Column b), EnumValues)
        , TableCoreInfoG b (RawColumnInfo b) (Column b)
        ) (TableCoreInfoG b (ColumnInfo b) (ColumnInfo b))
     processTableInfo = proc (enumTables, rawInfo) -> liftEitherA -< do
@@ -453,7 +454,7 @@ buildTableCache = Inc.cache proc (pgTables, tableBuildInputs, reloadMetadataInva
         }
 
     resolvePrimaryKeyColumns
-      :: forall b n a . (Backend b, QErrM n) => HashMap FieldName a -> PrimaryKey (Column b) -> n (PrimaryKey a)
+      :: forall b n a . (Backend b, QErrM n) => HashMap FieldName a -> PrimaryKey b (Column b) -> n (PrimaryKey b a)
     resolvePrimaryKeyColumns columnMap = traverseOf (pkColumns.traverse) \columnName ->
       Map.lookup (FieldName (toTxt columnName)) columnMap
         `onNothing` throw500 "column in primary key not in table!"

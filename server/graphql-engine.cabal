@@ -290,6 +290,7 @@ library
     build-depends:     odbc
     exposed-modules:   Hasura.Backends.MSSQL.FromIr
                      , Hasura.Backends.MSSQL.Plan
+                     , Hasura.Backends.MSSQL.Meta
                      , Hasura.Backends.MSSQL.ToQuery
                      , Hasura.Backends.MSSQL.Types
                      , Hasura.Backends.MSSQL.Types.Internal

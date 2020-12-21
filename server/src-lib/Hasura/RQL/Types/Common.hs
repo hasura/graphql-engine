@@ -85,8 +85,8 @@ import qualified Hasura.Backends.Postgres.SQL.DML   as PG
 import qualified Hasura.Backends.Postgres.SQL.Types as PG
 import qualified Hasura.Backends.Postgres.SQL.Value as PG
 
-import qualified Hasura.Backends.MSSQL.Types        as MSSQL
 import qualified Database.ODBC.SQLServer            as MSSQL
+import qualified Hasura.Backends.MSSQL.Types        as MSSQL
 
 import           Hasura.EncJSON
 import           Hasura.Incremental                 (Cacheable)
@@ -148,6 +148,12 @@ class
   , ToTxt (ScalarType b)
   , ToTxt (Column b)
   , Typeable b
+  -- FIXME
+  , Generic (Column b)
+  , FromJSON (ConstraintName b)
+  , ToJSON (ConstraintName b)
+  , Show (ConstraintName b)
+  , Eq (ConstraintName b)
   ) => Backend (b :: BackendType) where
   type Identifier     b :: Type
   type Alias          b :: Type
@@ -350,29 +356,40 @@ $(deriveJSON (aesonDrop 3 snakeCase) ''MutateResp)
 newtype OID = OID { unOID :: Int }
   deriving (Show, Eq, NFData, Hashable, ToJSON, FromJSON, Q.FromCol, Cacheable)
 
-data Constraint
+data Constraint (b :: BackendType)
   = Constraint
-  { _cName :: !PG.ConstraintName
+  { _cName :: !(ConstraintName b)
   , _cOid  :: !OID
-  } deriving (Show, Eq, Generic)
-instance NFData Constraint
-instance Hashable Constraint
-instance Cacheable Constraint
-$(deriveJSON (aesonDrop 2 snakeCase) ''Constraint)
+  } deriving (Generic)
+deriving instance Backend b => Eq (Constraint b)
+deriving instance Backend b => Show (Constraint b)
+instance Backend b => NFData (Constraint b)
+instance Backend b => Hashable (Constraint b)
+instance Backend b => Cacheable (Constraint b)
+instance (Backend b) => FromJSON (Constraint b) where
+  parseJSON = genericParseJSON (aesonDrop 2 snakeCase)
+instance (Backend b) => ToJSON (Constraint b) where
+  toJSON = genericToJSON (aesonDrop 2 snakeCase)
 
-data PrimaryKey a
+data PrimaryKey (b :: BackendType) a
   = PrimaryKey
-  { _pkConstraint :: !Constraint
+  { _pkConstraint :: !(Constraint b)
   , _pkColumns    :: !(NESeq a)
-  } deriving (Show, Eq, Generic, Foldable)
-instance (NFData a) => NFData (PrimaryKey a)
-instance (Cacheable a) => Cacheable (PrimaryKey a)
+  } deriving (Generic)
+deriving instance (Backend b, Eq a) => Eq (PrimaryKey b a)
+deriving instance (Backend b, Show a) => Show (PrimaryKey b a)
+deriving instance Foldable (PrimaryKey b)
+instance (Backend b, Generic a, NFData a) => NFData (PrimaryKey b a)
+instance (Backend b, Generic a, Cacheable a) => Cacheable (PrimaryKey b a)
 $(makeLenses ''PrimaryKey)
-$(deriveJSON (aesonDrop 3 snakeCase) ''PrimaryKey)
+instance (Backend b, Generic a, FromJSON a) => FromJSON (PrimaryKey b a) where
+  parseJSON = genericParseJSON (aesonDrop 3 snakeCase)
+instance (Backend b, Generic a, ToJSON a) => ToJSON (PrimaryKey b a) where
+  toJSON = genericToJSON (aesonDrop 3 snakeCase)
 
 data ForeignKey (b :: BackendType)
   = ForeignKey
-  { _fkConstraint    :: !Constraint
+  { _fkConstraint    :: !(Constraint b)
   , _fkForeignTable  :: !(TableName b)
   , _fkColumnMapping :: !(HM.HashMap (Column b) (Column b))
   } deriving (Generic)

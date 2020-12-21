@@ -27,10 +27,12 @@ import           Control.Monad.Validate
 import           Data.List                           (delete)
 import           Data.Text.Extended
 
-import qualified Hasura.Backends.Postgres.SQL.DML    as S (Extractor(..), SQLExp(SENull), mkExtr, mkSelect, selFrom, mkSimpleFromExp, selExtr)
+import qualified Hasura.Backends.Postgres.SQL.DML    as S (Extractor (..), SQLExp (SENull), mkExtr,
+                                                           mkSelect, mkSimpleFromExp, selExtr,
+                                                           selFrom)
 
-import           Hasura.Backends.Postgres.Connection (MonadTx(..), defaultTxErrorHandler)
-import           Hasura.Backends.Postgres.SQL.Types  (PGScalarType(PGText))
+import           Hasura.Backends.Postgres.Connection (MonadTx (..), defaultTxErrorHandler)
+import           Hasura.Backends.Postgres.SQL.Types  (PGScalarType (PGText))
 import           Hasura.RQL.Types.Column
 import           Hasura.RQL.Types.Common
 import           Hasura.RQL.Types.Error
@@ -48,7 +50,7 @@ import           Hasura.Server.Utils                 (makeReasonMessage)
 resolveEnumReferences
   :: forall b
    . Backend b
-  => HashMap (TableName b) (PrimaryKey (Column b), EnumValues)
+  => HashMap (TableName b) (PrimaryKey b (Column b), EnumValues)
   -> HashSet (ForeignKey b)
   -> HashMap (Column b) (NonEmpty (EnumReference b))
 resolveEnumReferences enumTables =
@@ -73,7 +75,7 @@ data EnumTableIntegrityError (b :: BackendType)
 fetchAndValidateEnumValues
   :: (MonadTx m)
   => TableName 'Postgres
-  -> Maybe (PrimaryKey (RawColumnInfo 'Postgres))
+  -> Maybe (PrimaryKey b (RawColumnInfo 'Postgres))
   -> [RawColumnInfo 'Postgres]
   -> m EnumValues
 fetchAndValidateEnumValues tableName maybePrimaryKey columnInfos =
