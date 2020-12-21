@@ -296,12 +296,21 @@ const getSDLField = (type, argTree) => {
 
     if (!typeName.includes('enum')) {
       if (f?.args) {
+        // console.log('>>', f.args);
         fieldStr = `${fieldStr}(`;
         Object.values(f.args).map((arg: any) => {
           let valueStr = ``;
           if (argTree && argTree[f.name] && argTree[f.name][arg.name]) {
-            const jsonStr = JSON.stringify(argTree[f.name][arg.name]);
-            const unquoted = jsonStr.replace(/"([^"]+)":/g, '$1:');
+            const typeOfArg = getGqlTypeName(arg.type);
+            let unquoted;
+            if (typeOfArg !== 'Int') {
+              const jsonStr = JSON.stringify(argTree[f.name][arg.name]);
+              unquoted = jsonStr.replace(/"([^"]+)":/g, '$1:');
+            } else unquoted = argTree[f.name][arg.name];
+
+            // console.log('typename : ', getGqlTypeName(arg.type));
+            // console.log('<><> jsonstr', jsonStr);
+            // console.log('>><< unquoted', unquoted);
             valueStr = `${arg.name} : ${getGqlTypeName(
               arg.type
             )} @preset(value: ${unquoted})`;
