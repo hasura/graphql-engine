@@ -7,6 +7,11 @@ import {
   GraphQLSchema,
   parse,
   DocumentNode,
+  ObjectFieldNode,
+  FieldDefinitionNode,
+  InputValueDefinitionNode,
+  ArgumentNode,
+  ObjectTypeDefinitionNode,
 } from 'graphql';
 import { findRemoteSchemaPermission } from '../utils';
 import { PermissionEdit } from './types';
@@ -373,23 +378,43 @@ export const addPresetDefinition = (schema: string) => `scalar PresetValue\n
   ) on INPUT_FIELD_DEFINITION | ARGUMENT_DEFINITION\n
 ${schema}`;
 
-const getDirectives = field => {
-  let res;
-  const preset = field.directives.find(dir => dir?.name?.value === 'preset');
-  if (preset.arguments[0]) res = preset.arguments[0]?.value?.value;
-  return JSON.parse(res);
+const parseObjectField = (arg: ArgumentNode | ObjectFieldNode) => {
+  if (arg?.value?.kind === "IntValue" && arg?.value?.value) return arg?.value?.value;
+  if (arg?.value?.kind === "FloatValue" && arg?.value?.value) return arg?.value?.value;
+  if (arg?.value?.kind === "StringValue" && arg?.value?.value) return arg?.value?.value;
+  if (arg?.value?.kind === "BooleanValue" && arg?.value?.value) return arg?.value?.value;
+  if (arg?.value?.kind === "EnumValue" && arg?.value?.value) return arg?.value?.value;
+
+  if (arg?.value?.kind === "NullValue") return null;
+
+  // nested values
+  if (arg?.value?.kind === "ObjectValue" && arg?.value?.fields && arg?.value?.fields?.length > 0) {
+    const res: Record<string, any> = {}
+    arg?.value?.fields.forEach((f: ObjectFieldNode) => {
+      res[f.name.value] = parseObjectField(f)
+    })
+    return res
+  }
+}
+const getDirectives = (field: InputValueDefinitionNode) => {
+  let res: unknown | Record<string, any>;
+  const preset = field?.directives?.find(dir => dir?.name?.value === 'preset');
+  if (preset?.arguments && preset?.arguments[0]) res = parseObjectField(preset.arguments[0]);
+  if (typeof res === 'object') return res
+  if (typeof res === 'string') return JSON.parse(res);
+  return res
 };
-const getPresets = field => {
-  const res = {};
-  field.arguments.forEach(arg => {
+const getPresets = (field: FieldDefinitionNode) => {
+  const res: Record<string, any> = {};
+  field?.arguments?.forEach(arg => {
     if (arg.directives && arg.directives.length > 0)
       res[arg?.name?.value] = getDirectives(arg);
   });
   return res;
 };
 
-const getFieldsMap = fields => {
-  const res = {};
+const getFieldsMap = (fields: FieldDefinitionNode[]) => {
+  const res: Record<string, any> = {};
   fields.forEach(field => {
     res[field?.name?.value] = getPresets(field);
   });
@@ -400,12 +425,12 @@ export const getArgTreeFromPermissionSDL = (definition: string) => {
   const roots = ['query_root', 'mutation_root'];
   try {
     const schema: DocumentNode = parse(definition);
-    const defs = schema.definitions;
+    const defs = schema.definitions as ObjectTypeDefinitionNode[];
     const argTree =
       defs &&
       defs.reduce((acc = [], i) => {
-        if (roots.includes(i?.name?.value)) {
-          const res = getFieldsMap(i.fields);
+        if (i.name && i.fields && roots.includes(i?.name?.value)) {
+          const res = getFieldsMap(i.fields as FieldDefinitionNode[]);
           return { ...acc, ...res };
         }
         return acc;
