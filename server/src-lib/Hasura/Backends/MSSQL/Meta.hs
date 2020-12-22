@@ -1,6 +1,4 @@
-{-# LANGUAGE ApplicativeDo         #-}
-{-# LANGUAGE DuplicateRecordFields #-}
-{-# LANGUAGE EmptyDataDeriving     #-}
+{-# LANGUAGE ApplicativeDo #-}
 
 -- |
 
@@ -17,13 +15,13 @@ import qualified Data.Text.Encoding          as T
 
 import           Control.Monad.Validate
 import           Data.Aeson                  as Aeson
+import           Data.Aeson.Casing
 import           Data.Aeson.Types            (parseEither)
 import           Data.Attoparsec.ByteString
 import           Data.String
-import           Database.ODBC.SQLServer     as Odbc
+import           Database.ODBC.SQLServer
 
-import qualified Hasura.Backends.MSSQL.Types as T
-
+import           Hasura.Backends.MSSQL.Types
 import           Hasura.RQL.Types.Column
 import           Hasura.RQL.Types.Common     (Constraint (..), ForeignKey (..), OID (..))
 import           Hasura.RQL.Types.Table
@@ -34,10 +32,7 @@ import           Hasura.SQL.Backend
 -- Loader
 
 data MetadataError
-  = MissingTable T.UserTableName
-  | MissingTableForRelationship T.UserUsing
-  | MissingColumnForRelationship T.UserUsing
-  | UnknownScalarType Text
+  = UnknownScalarType Text
   deriving (Show)
 
 loadDBMetadata :: Text -> IO (DBTablesMetadata 'MSSQL, [MetadataError])
@@ -53,59 +48,70 @@ loadDBMetadata connStr = do
 -- Local types
 
 data SysTable = SysTable
-  { name              :: Text
-  , object_id         :: Int
-  , joined_sys_column :: [SysColumn]
-  , joined_sys_schema :: SysSchema
+  { staName            :: Text
+  , staObjectId        :: Int
+  , staJoinedSysColumn :: [SysColumn]
+  , staJoinedSysSchema :: SysSchema
   } deriving (Show, Generic)
-instance FromJSON SysTable
+
+instance FromJSON (SysTable) where
+  parseJSON = genericParseJSON (aesonPrefix snakeCase)
+
 
 data SysSchema = SysSchema
-  { name      :: Text
-  , schema_id :: Int
+  { ssName     :: Text
+  , ssSchemaId :: Int
   } deriving (Show, Generic)
-instance FromJSON SysSchema
+
+instance FromJSON (SysSchema) where
+  parseJSON = genericParseJSON (aesonPrefix snakeCase)
+
 
 data SysColumn = SysColumn
-  { name                       :: Text
-  , column_id                  :: Int
-  , system_type_id             :: Int
-  , is_nullable                :: Bool
-  , joined_sys_type            :: SysType
-  , joined_foreign_key_columns :: [SysForeignKeyColumn]
+  { scName                    :: Text
+  , scColumnId                :: Int
+  , scSystemTypeId            :: Int
+  , scIsNullable              :: Bool
+  , scJoinedSysType           :: SysType
+  , scJoinedForeignKeyColumns :: [SysForeignKeyColumn]
   } deriving (Show, Generic)
 instance FromJSON SysColumn
 
 data SysType = SysType
-  { name           :: Text
-  , schema_id      :: Int
-  , system_type_id :: Int
+  { styName         :: Text
+  , stySchemaId     :: Int
+  , stySystemTypeId :: Int
   } deriving (Show, Generic)
-instance FromJSON SysType
+
+instance FromJSON (SysType) where
+  parseJSON = genericParseJSON (aesonPrefix snakeCase)
+
 
 data SysForeignKeyColumn = SysForeignKeyColumn
-  { constraint_object_id          :: Int
-  , constraint_column_id          :: Int
-  , parent_object_id              :: Int
-  , parent_column_id              :: Int
-  , referenced_object_id          :: Int
-  , referenced_column_id          :: Int
-  , joined_referenced_table_name  :: Text
-  , joined_referenced_column_name :: Text
-  , joined_referenced_sys_schema  :: SysSchema
+  { sfkcConstraintObjectId         :: Int
+  , sfkcConstraintColumnId         :: Int
+  , sfkcParentObjectId             :: Int
+  , sfkcParentColumnId             :: Int
+  , sfkcReferencedObjectId         :: Int
+  , sfkcReferencedColumnId         :: Int
+  , sfkcJoinedReferencedTableName  :: Text
+  , sfkcJoinedReferencedColumnName :: Text
+  , sfkcJoinedReferencedSysSchema  :: SysSchema
   } deriving (Show, Generic)
-instance FromJSON SysForeignKeyColumn
+
+instance FromJSON (SysForeignKeyColumn) where
+  parseJSON = genericParseJSON (aesonPrefix snakeCase)
 
 
 --------------------------------------------------------------------------------
 -- Transform
 
-transformTable :: SysTable -> Either [MetadataError] (T.TableName, DBTableMetadata 'MSSQL)
+transformTable :: SysTable -> Either [MetadataError] (TableName, DBTableMetadata 'MSSQL)
 transformTable tableInfo = runValidate $ do
-  let schemaName   = name (joined_sys_schema tableInfo :: SysSchema)
-      tableName    = T.TableName (name (tableInfo :: SysTable)) schemaName
-      tableOID     = OID $ object_id tableInfo
-  (columns, foreignKeys) <- fmap unzip $ traverse transformColumn $ joined_sys_column tableInfo
+  let schemaName   = ssName $ staJoinedSysSchema tableInfo
+      tableName    = TableName (staName tableInfo) schemaName
+      tableOID     = OID $ staObjectId tableInfo
+  (columns, foreignKeys) <- fmap unzip $ traverse transformColumn $ staJoinedSysColumn tableInfo
   pure ( tableName
        , DBTableMetadata
          tableOID
@@ -121,35 +127,38 @@ transformColumn
   :: SysColumn
   -> Validate [MetadataError] (RawColumnInfo 'MSSQL, [ForeignKey 'MSSQL])
 transformColumn columnInfo = do
-  let prciName        = T.ColumnName $ name (columnInfo :: SysColumn)
-      prciPosition    = column_id columnInfo
+  let prciName        = ColumnName $ scName columnInfo
+      prciPosition    = scColumnId columnInfo
       -- ^ the IR uses this to uniquely identify columns, as Postgres will
       -- keep a unique position for a column even when columns are added
       -- or dropped. We assume here that this arbitrary column id can
       -- serve the same purpose.
-      prciIsNullable  = is_nullable columnInfo
+      prciIsNullable  = scIsNullable columnInfo
       prciDescription = Nothing
-  prciType <- parseScalarType $ name (joined_sys_type columnInfo :: SysType)
-  let foreignKeys = joined_foreign_key_columns columnInfo <&> \foreignKeyColumn ->
-        let _fkConstraint    = Constraint () {- FIXME -} $ OID $ constraint_object_id foreignKeyColumn
+  prciType <- parseScalarType $ styName $ scJoinedSysType columnInfo
+  let foreignKeys = scJoinedForeignKeyColumns columnInfo <&> \foreignKeyColumn ->
+        let _fkConstraint    = Constraint () {- FIXME -} $ OID $ sfkcConstraintObjectId foreignKeyColumn
             -- ^ there's currently no ConstraintName type in our MSSQL code?
-            schemaName       = name (joined_referenced_sys_schema foreignKeyColumn :: SysSchema)
-            _fkForeignTable  = T.TableName (joined_referenced_table_name foreignKeyColumn) schemaName
-            _fkColumnMapping = HM.singleton prciName $ T.ColumnName $ joined_referenced_column_name foreignKeyColumn
+            schemaName       = ssName $ sfkcJoinedReferencedSysSchema foreignKeyColumn
+            _fkForeignTable  = TableName (sfkcJoinedReferencedTableName foreignKeyColumn) schemaName
+            _fkColumnMapping = HM.singleton prciName $ ColumnName $ sfkcJoinedReferencedColumnName foreignKeyColumn
         in ForeignKey {..}
   pure (RawColumnInfo{..}, foreignKeys)
 
-coalesceKeys :: [ForeignKey 'MSSQL] -> HM.HashMap T.TableName (ForeignKey 'MSSQL)
+
+--------------------------------------------------------------------------------
+-- Helpers
+
+coalesceKeys :: [ForeignKey 'MSSQL] -> HM.HashMap TableName (ForeignKey 'MSSQL)
 coalesceKeys = foldl' coalesce HM.empty
   where coalesce mapping fk@(ForeignKey _ tableName _) = HM.insertWith combine tableName fk mapping
         -- is it ok to assume we can coalesce only on table name?
         combine oldFK newFK = oldFK { _fkColumnMapping = (HM.union `on` _fkColumnMapping) oldFK newFK }
 
-
-parseScalarType :: Text -> Validate [MetadataError] T.ScalarType
+parseScalarType :: Text -> Validate [MetadataError] ScalarType
 parseScalarType = \case
-  "int"      -> pure T.IntegerType
-  "nvarchar" -> pure T.VarcharType
+  "int"      -> pure IntegerType
+  "nvarchar" -> pure VarcharType
   t          -> refute $ pure (UnknownScalarType t)
 
 
@@ -175,116 +184,3 @@ queryJson conn query' = do
             Right as -> pure as
         Partial {} -> error "Incomplete output from SQL Server."
         Fail _ _ctx err -> error ("JSON parser error: " <> err)
-
-
-{-
---------------------------------------------------------------------------------
--- Schema loaders
-
-loadMetadata :: FilePath -> IO (Either String UserMetadata)
-loadMetadata fp = fmap eitherDecode $ L.readFile fp
-
-loadCatalogMetadata :: Text -> UserMetadata -> IO ()
-loadCatalogMetadata connStr UserMetadata{tables} = do
-  conn <- connect connStr
-  sql <- readFile "sql.sql"
-  sysTables :: [SysTable] <- queryJson conn (fromString sql)
-  print (runValidate (unifyTables tables sysTables))
-  pure ()
-
---------------------------------------------------------------------------------
--- Unification
-
-unifyTables ::
-     [UserTableMetadata]
-  -> [SysTable]
-  -> Validate (NonEmpty UnifyProblem) [UnifiedTableMetadata]
-unifyTables userTableMetadatas sysTables = do
-  let indexedSysTables =
-        HM.fromList
-          (map
-             (\sysTable@(SysTable { name
-                                  , joined_sys_schema = SysSchema {name = schema}
-                                  }) -> (UserTableName {..}, sysTable))
-             sysTables)
-  tablesStage1 <- traverse (unifyTable indexedSysTables) userTableMetadatas
-  let indexedValidTables =
-        HM.fromList
-          (map
-             (\(UserTableMetadata {table}, sysTable) -> (table, sysTable))
-             tablesStage1)
-  traverse (unifyRelationships indexedValidTables) tablesStage1
-
-unifyTable ::
-     HashMap UserTableName SysTable
-  -> UserTableMetadata
-  -> Validate (NonEmpty UnifyProblem) (UserTableMetadata, SysTable)
-unifyTable indexedSysTables userMetaTable@UserTableMetadata {table} = do
-  case HM.lookup table indexedSysTables of
-    Nothing       -> refute (pure (MissingTable table))
-    Just sysTable -> pure (userMetaTable, sysTable)
-
-unifyRelationships ::
-     HashMap UserTableName SysTable
-  -> (UserTableMetadata, SysTable)
-  -> Validate (NonEmpty UnifyProblem) UnifiedTableMetadata
-unifyRelationships indexedValidTables (UserTableMetadata {..}, SysTable {joined_sys_column}) = do
-  object_relationships' <-
-    traverse
-      (\UserObjectRelationship {using = using0, ..} -> do
-         using <- checkUsing using0
-         pure UnifiedObjectRelationship {..})
-      object_relationships
-  array_relationships' <-
-    traverse
-      (\UserArrayRelationship {using = using0, ..} -> do
-         using <- checkUsing using0
-         pure UnifiedArrayRelationship {..})
-      array_relationships
-  columns <-
-    traverse
-      (\SysColumn {..} -> do
-         let SysType {name = typeName} = joined_sys_type
-         type' <- parseScalarType typeName
-         pure UnifiedColumn {type', ..})
-      joined_sys_column
-  pure
-    UnifiedTableMetadata
-      { table =
-          let UserTableName {..} = table
-           in UnifiedTableName {..}
-      , object_relationships = object_relationships'
-      , array_relationships = array_relationships'
-      , columns
-      }
-  where
-    checkUsing using@UserUsing {foreign_key_constraint_on} =
-      case HM.lookup referencedTable indexedValidTables of
-        Nothing -> refute (pure (MissingTableForRelationship using))
-        Just SysTable {joined_sys_column = columns} ->
-          case find
-                 (\SysColumn {name = referencedColumn} ->
-                    referencedColumn == column)
-                 columns of
-            Nothing -> refute (pure (MissingColumnForRelationship using))
-            Just {} ->
-              pure
-                (UnifiedUsing
-                   { foreign_key_constraint_on =
-                       UnifiedOn
-                         { table =
-                             let UserTableName {..} = referencedTable
-                              in UnifiedTableName {..}
-                         , ..
-                         }
-                   })
-      where
-        UserOn {table = referencedTable, column} = foreign_key_constraint_on
-
-parseScalarType :: Text -> Validate (NonEmpty UnifyProblem) ScalarType
-parseScalarType =
-  \case
-    "int"      -> pure IntType
-    "nvarchar" -> pure NVarCharType
-    t          -> refute (pure (UnknownScalarType t))
--}
