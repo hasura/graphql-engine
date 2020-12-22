@@ -120,6 +120,7 @@ library
                      , unordered-containers >= 0.2.12
                      , template-haskell
                      , hashable
+                     , kan-extensions
                      , transformers
                      , transformers-base
                      , http-types
@@ -286,6 +287,7 @@ library
                      , Control.Concurrent.Extended
                      , Control.Lens.Extended
                      , Control.Monad.Stateless
+                     , Control.Monad.Trans.Managed
                      , Control.Monad.Unique
                      , Data.Aeson.Extended
                      , Data.Aeson.Ordered
@@ -356,6 +358,7 @@ library
                      -- Exposed for testing:
                      , Hasura.Server.Telemetry.Counters
                      , Hasura.Server.Auth.JWT
+                     , Hasura.GC
                      , Hasura.GraphQL.Execute
                      , Hasura.GraphQL.Execute.LiveQuery
                      , Hasura.GraphQL.Transport.HTTP
@@ -505,6 +508,7 @@ executable graphql-engine
   build-depends:     base
                    , graphql-engine
                    , bytestring
+                   , kan-extensions
                    , pg-client
                    , text
                    , text-conversions
@@ -528,6 +532,7 @@ test-suite graphql-engine-tests
     , http-client-tls
     , jose
     , lifted-base
+    , kan-extensions
     , monad-control
     , mtl
     , natural-transformation >=0.4 && <0.5
