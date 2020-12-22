@@ -8,25 +8,24 @@ module Hasura.GraphQL.Parser.Class
 
 import                          Hasura.Prelude
 
-import                qualified Data.HashMap.Strict                   as Map
-import                qualified Language.Haskell.TH                   as TH
-import                qualified Language.GraphQL.Draft.Syntax         as G
+import qualified Data.HashMap.Strict                  as Map
+import qualified Language.Haskell.TH                  as TH
 
-import                          Data.Has
-import                          Data.Text.Extended
-import                          Data.Tuple.Extended
-import                          GHC.Stack                             (HasCallStack)
-import                          Type.Reflection                       (Typeable)
+import                Data.Has
+import                Data.Text.Extended
+import                Data.Tuple.Extended
+import                GHC.Stack                             (HasCallStack)
+import                Type.Reflection                       (Typeable)
 
-import                          Hasura.Backends.Postgres.SQL.Types
-import                          Hasura.GraphQL.Parser.Class.Parse
-import                          Hasura.GraphQL.Parser.Internal.Types
-import                          Hasura.RQL.Types.Error
-import                          Hasura.RQL.Types.Table
-import                          Hasura.RQL.Types.RemoteSchema
-import {-# SOURCE #-}           Hasura.RQL.Types.SchemaCache          (RemoteSchemaMap, RemoteSchemaCtx)
-import                          Hasura.SQL.Backend
-import                          Hasura.Session                        (RoleName)
+import                Hasura.GraphQL.Parser.Class.Parse
+import                Hasura.GraphQL.Parser.Internal.Types
+import                Hasura.RQL.Types.Common
+import                Hasura.RQL.Types.Error
+import                Hasura.RQL.Types.Table
+import                Hasura.RQL.Types.RemoteSchema
+import {-# SOURCE #-} Hasura.RQL.Types.SchemaCache          (RemoteSchemaMap, RemoteSchemaCtx)
+import                Hasura.Session                       (RoleName)
+
 
 {- Note [Tying the knot]
 ~~~~~~~~~~~~~~~~~~~~~~~~
@@ -117,51 +116,20 @@ askRoleName
   => m RoleName
 askRoleName = asks getter
 
--- FIXME: rename this type to something agonostic of the remote schema thing
-type MonadTableInfo r m = (MonadReader r m, Has TableCache r, MonadError QErr m, Has RemoteSchemaMap r)
+type MonadTableInfo b r m = (MonadReader r m, Has (TableCache b) r, MonadError QErr m)
 
 -- | Looks up table information for the given table name. This function
 -- should never fail, since the schema cache construction process is
 -- supposed to ensure all dependencies are resolved.
 askTableInfo
-  :: MonadTableInfo r m
-  => QualifiedTable
-  -> m (TableInfo 'Postgres)
+  :: (Backend b, MonadTableInfo b r m)
+  => TableName b
+  -> m (TableInfo b)
 askTableInfo tableName = do
   tableInfo <- asks $ Map.lookup tableName . getter
   -- This should never fail, since the schema cache construction process is
   -- supposed to ensure that all dependencies are resolved.
   tableInfo `onNothing` throw500 ("askTableInfo: no info for " <>> tableName)
-
--- | Looks up remote schema information for the given remote schema. This function
--- should never fail, since the schema cache construction process is
--- supposed to ensure all dependencies are resolved.
-askRemoteSchemaInfo
-  :: MonadTableInfo r m
-  => RemoteSchemaName
-  -> m RemoteSchemaCtx
-askRemoteSchemaInfo remoteSchemaName = do
-  remoteSchemaInfo <- asks $ Map.lookup remoteSchemaName . getter
-  -- This should never fail, since the schema cache construction process is
-  -- supposed to ensure that all dependencies are resolved.
-  remoteSchemaInfo `onNothing` throw500 ("askRemoteSchemaInfo: no info for " <>> remoteSchemaName)
-
--- | Helper function to get the table GraphQL name. A table may have an
--- identifier configured with it. When the identifier exists, the GraphQL nodes
--- that are generated according to the identifier. For example: Let's say,
--- we have a table called `users address`, the name of the table is not GraphQL
--- compliant so we configure the table with a GraphQL compliant name,
--- say `users_address`
--- The generated top-level nodes of this table will be like `users_address`,
--- `insert_users_address` etc
-getTableGQLName
-  :: MonadTableInfo r m
-  => QualifiedTable
-  -> m G.Name
-getTableGQLName table = do
-  tableInfo <- askTableInfo table
-  let tableCustomName = _tcCustomName . _tciCustomConfig . _tiCoreInfo $ tableInfo
-  tableCustomName `onNothing` qualifiedObjectToName table
 
 -- | A wrapper around 'memoizeOn' that memoizes a function by using its argument
 -- as the key.

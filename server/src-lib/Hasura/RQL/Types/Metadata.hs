@@ -19,8 +19,6 @@ import           Control.Lens                        hiding (set, (.=))
 import           Data.Aeson.Casing
 import           Data.Aeson.TH
 import           Data.Aeson.Types
-import           Language.Haskell.TH.Syntax          (Lift)
-
 
 import           Hasura.Backends.Postgres.SQL.Types
 import           Hasura.Incremental                  (Cacheable)
@@ -54,6 +52,7 @@ data MetadataObjId
   = MOTable !QualifiedTable
   | MOFunction !QualifiedFunction
   | MORemoteSchema !RemoteSchemaName
+  -- ^ Originates from user-defined '_arsqName'
   | MORemoteSchemaPermissions !RemoteSchemaName !RoleName
   | MOTableObj !QualifiedTable !TableMetadataObjId
   | MOCustomTypes
@@ -163,13 +162,13 @@ parseListAsMap t mapFn listP = do
   let duplicates = toList $ L.duplicates $ map mapFn list
   unless (null duplicates) $ fail $ T.unpack $
     "multiple declarations exist for the following " <> t <> " : "
-    <> T.pack (show duplicates)
+    <> tshow duplicates
   pure $ oMapFromL mapFn list
 
 data MetadataVersion
   = MVVersion1
   | MVVersion2
-  deriving (Show, Eq, Lift, Generic)
+  deriving (Show, Eq, Generic)
 
 instance ToJSON MetadataVersion where
   toJSON = \case
@@ -192,7 +191,7 @@ data ComputedFieldMetadata
   { _cfmName       :: !ComputedFieldName
   , _cfmDefinition :: !ComputedFieldDefinition
   , _cfmComment    :: !(Maybe Text)
-  } deriving (Show, Eq, Lift, Generic)
+  } deriving (Show, Eq, Generic)
 instance Cacheable ComputedFieldMetadata
 $(deriveJSON (aesonDrop 4 snakeCase) ''ComputedFieldMetadata)
 
@@ -200,7 +199,7 @@ data RemoteRelationshipMetadata
   = RemoteRelationshipMetadata
   { _rrmName       :: !RemoteRelationshipName
   , _rrmDefinition :: !RemoteRelationshipDef
-  } deriving (Show, Eq, Lift, Generic)
+  } deriving (Show, Eq, Generic)
 instance Cacheable RemoteRelationshipMetadata
 $(deriveJSON (aesonDrop 4 snakeCase) ''RemoteRelationshipMetadata)
 $(makeLenses ''RemoteRelationshipMetadata)
@@ -210,18 +209,29 @@ data RemoteSchemaPermissionMetadata
   { _rspmRole       :: !RoleName
   , _rspmDefinition :: !RemoteSchemaPermissionDefinition
   , _rspmComment    :: !(Maybe Text)
-  } deriving (Show, Eq, Lift, Generic)
+  } deriving (Show, Eq, Generic)
+instance Cacheable RemoteSchemaPermissionMetadata
 $(deriveJSON (aesonDrop 5 snakeCase){omitNothingFields=True} ''RemoteSchemaPermissionMetadata)
+$(makeLenses ''RemoteSchemaPermissionMetadata)
 
 data RemoteSchemaMetadata
   = RemoteSchemaMetadata
   { _rsmName        :: !RemoteSchemaName
   , _rsmDefinition  :: !RemoteSchemaDef
   , _rsmComment     :: !(Maybe Text)
-  , _rsmPermissions :: !(Maybe [RemoteSchemaPermissionMetadata])
-  } deriving (Show, Eq, Lift, Generic)
-$(deriveJSON (aesonDrop 4 snakeCase) ''RemoteSchemaMetadata)
+  , _rsmPermissions :: ![RemoteSchemaPermissionMetadata]
+  } deriving (Show, Eq, Generic)
+instance Cacheable RemoteSchemaMetadata
 
+instance FromJSON RemoteSchemaMetadata where
+  parseJSON = withObject "RemoteSchemaMetadata" $ \obj ->
+    RemoteSchemaMetadata
+    <$> obj .: "name"
+    <*> obj .: "definition"
+    <*> obj .:? "comment"
+    <*> obj .:? "permissions" .!= mempty
+$(deriveToJSON (aesonDrop 4 snakeCase) ''RemoteSchemaMetadata)
+$(makeLenses ''RemoteSchemaMetadata)
 
 type Relationships a = InsOrdHashMap RelName a
 type ComputedFields = InsOrdHashMap ComputedFieldName ComputedFieldMetadata
@@ -300,7 +310,7 @@ data FunctionMetadata
   = FunctionMetadata
   { _fmFunction      :: !QualifiedFunction
   , _fmConfiguration :: !FunctionConfig
-  } deriving (Show, Eq, Lift, Generic)
+  } deriving (Show, Eq, Generic)
 instance Cacheable FunctionMetadata
 $(makeLenses ''FunctionMetadata)
 $(deriveToJSON (aesonDrop 3 snakeCase) ''FunctionMetadata)
@@ -347,15 +357,16 @@ parseNonPostgresMetadata o = do
 -- exported/replaced via metadata queries.
 data Metadata
   = Metadata
-  { _mnsTables           :: !Tables
-  , _mnsFunctions        :: !Functions
-  , _mnsRemoteSchemas    :: !RemoteSchemas
-  , _mnsQueryCollections :: !QueryCollections
-  , _mnsAllowlist        :: !Allowlist
-  , _mnsCustomTypes      :: !CustomTypes
-  , _mnsActions          :: !Actions
-  , _mnsCronTriggers     :: !CronTriggers
+  { _metaTables                  :: !Tables
+  , _metaFunctions               :: !Functions
+  , _metaRemoteSchemas           :: !RemoteSchemas
+  , _metaQueryCollections        :: !QueryCollections
+  , _metaAllowlist               :: !Allowlist
+  , _metaCustomTypes             :: !CustomTypes
+  , _metaActions                 :: !Actions
+  , _metaCronTriggers            :: !CronTriggers
   } deriving (Show, Eq)
+$(makeLenses ''Metadata)
 
 instance FromJSON Metadata where
   parseJSON = withObject "Object" $ \o -> do
@@ -391,9 +402,17 @@ noMetadataModify = mempty
 
 -- | Encode 'Metadata' to JSON with deterministic ordering. Ordering of object keys and array
 -- elements should  remain consistent across versions of graphql-engine if possible!
+-- Rakesh says the consistency is really what's important here, rather than any particular
+-- ordering (e.g. "version" being at the top).
 --
 -- Note: While modifying any part of the code below, make sure the encoded JSON of each type is
 -- parsable via its 'FromJSON' instance.
+--
+-- TODO: we can use 'aeson-pretty' to serialize in a consistent way, and to specify a (partial)
+-- order of keys, while getting the benefits of auto-generated To/FromJSON instances.
+-- `FromJSON TableMetadata` complicates this though...
+--
+-- See: https://github.com/hasura/graphql-engine/issues/6348
 metadataToOrdJSON :: Metadata -> AO.Value
 metadataToOrdJSON ( Metadata
                     tables
@@ -415,15 +434,15 @@ metadataToOrdJSON ( Metadata
                                 ]
   where
     versionPair          = ("version", AO.toOrdered currentMetadataVersion)
-    tablesPair           = ("tables", AO.array $ map tableMetaToOrdJSON $ OM.elems tables)
-    functionsPair        = listToMaybeOrdPair "functions" functionMetadataToOrdJSON functions
-    remoteSchemasPair    = listToMaybeOrdPair "remote_schemas" remoteSchemaQToOrdJSON remoteSchemas
-    queryCollectionsPair = listToMaybeOrdPair "query_collections" createCollectionToOrdJSON queryCollections
-    allowlistPair        = listToMaybeOrdPair "allowlist" AO.toOrdered allowlist
+    tablesPair           = ("tables", AO.array $ map tableMetaToOrdJSON $ sortOn _tmTable $ OM.elems tables)
+    functionsPair        = listToMaybeOrdPairSort "functions" functionMetadataToOrdJSON _fmFunction functions
+    remoteSchemasPair    = listToMaybeOrdPairSort "remote_schemas" remoteSchemaQToOrdJSON _rsmName remoteSchemas
+    queryCollectionsPair = listToMaybeOrdPairSort "query_collections" createCollectionToOrdJSON _ccName queryCollections
+    allowlistPair        = listToMaybeOrdPairSort "allowlist" AO.toOrdered _crCollection allowlist
     customTypesPair      = if customTypes == emptyCustomTypes then Nothing
                            else Just ("custom_types", customTypesToOrdJSON customTypes)
-    actionsPair          = listToMaybeOrdPair "actions" actionMetadataToOrdJSON actions
-    cronTriggersPair     = listToMaybeOrdPair "cron_triggers" crontriggerQToOrdJSON cronTriggers
+    actionsPair          = listToMaybeOrdPairSort "actions" actionMetadataToOrdJSON _amName actions
+    cronTriggersPair     = listToMaybeOrdPairSort "cron_triggers" crontriggerQToOrdJSON ctName cronTriggers
 
     tableMetaToOrdJSON :: TableMetadata -> AO.Value
     tableMetaToOrdJSON ( TableMetadata
@@ -456,24 +475,24 @@ metadataToOrdJSON ( Metadata
         isEnumPair = if isEnum then Just ("is_enum", AO.toOrdered isEnum) else Nothing
         configPair = if config == emptyTableConfig then Nothing
                      else Just ("configuration" , AO.toOrdered config)
-        objectRelationshipsPair = listToMaybeOrdPair "object_relationships"
-                                  relDefToOrdJSON objectRelationships
-        arrayRelationshipsPair = listToMaybeOrdPair "array_relationships"
-                                 relDefToOrdJSON arrayRelationships
-        computedFieldsPair = listToMaybeOrdPair "computed_fields"
-                             computedFieldMetaToOrdJSON computedFields
-        remoteRelationshipsPair = listToMaybeOrdPair "remote_relationships"
-                                  AO.toOrdered remoteRelationships
-        insertPermissionsPair = listToMaybeOrdPair "insert_permissions"
-                                insPermDefToOrdJSON insertPermissions
-        selectPermissionsPair = listToMaybeOrdPair "select_permissions"
-                                selPermDefToOrdJSON selectPermissions
-        updatePermissionsPair = listToMaybeOrdPair "update_permissions"
-                                updPermDefToOrdJSON updatePermissions
-        deletePermissionsPair = listToMaybeOrdPair "delete_permissions"
-                                delPermDefToOrdJSON deletePermissions
-        eventTriggersPair = listToMaybeOrdPair "event_triggers"
-                            eventTriggerConfToOrdJSON eventTriggers
+        objectRelationshipsPair = listToMaybeOrdPairSort "object_relationships"
+                                  relDefToOrdJSON _rdName objectRelationships
+        arrayRelationshipsPair = listToMaybeOrdPairSort "array_relationships"
+                                 relDefToOrdJSON _rdName arrayRelationships
+        computedFieldsPair = listToMaybeOrdPairSort "computed_fields"
+                             computedFieldMetaToOrdJSON _cfmName computedFields
+        remoteRelationshipsPair = listToMaybeOrdPairSort "remote_relationships"
+                                  AO.toOrdered _rrmName remoteRelationships
+        insertPermissionsPair = listToMaybeOrdPairSort "insert_permissions"
+                                insPermDefToOrdJSON _pdRole insertPermissions
+        selectPermissionsPair = listToMaybeOrdPairSort "select_permissions"
+                                selPermDefToOrdJSON _pdRole selectPermissions
+        updatePermissionsPair = listToMaybeOrdPairSort "update_permissions"
+                                updPermDefToOrdJSON _pdRole updatePermissions
+        deletePermissionsPair = listToMaybeOrdPairSort "delete_permissions"
+                                delPermDefToOrdJSON _pdRole deletePermissions
+        eventTriggersPair = listToMaybeOrdPairSort "event_triggers"
+                            eventTriggerConfToOrdJSON etcName eventTriggers
 
         relDefToOrdJSON :: (ToJSON a) => RelDef a -> AO.Value
         relDefToOrdJSON (RelDef name using comment) =
@@ -555,13 +574,14 @@ metadataToOrdJSON ( Metadata
                   , ("definition", remoteSchemaDefToOrdJSON definition)
                   ]
                   <> (catMaybes [ maybeCommentToMaybeOrdPair comment
-                                , permsToMaybeOrdJSON permissions
+                                , listToMaybeOrdPair "permissions" permsToMaybeOrdJSON permissions
                                 ])
       where
-        permsToMaybeOrdJSON :: Maybe [RemoteSchemaPermissionMetadata] -> Maybe (Text, AO.Value)
-        permsToMaybeOrdJSON Nothing = Nothing
-        permsToMaybeOrdJSON (Just []) = Nothing
-        permsToMaybeOrdJSON (Just perms) = Just $ ("permissions", AO.toOrdered perms)
+        permsToMaybeOrdJSON :: RemoteSchemaPermissionMetadata -> AO.Value
+        permsToMaybeOrdJSON (RemoteSchemaPermissionMetadata role defn permComment) =
+          AO.object $ [("role", AO.toOrdered role)
+                      ,("definition", AO.toOrdered defn)
+                      ] <> catMaybes [maybeCommentToMaybeOrdPair permComment]
 
         remoteSchemaDefToOrdJSON :: RemoteSchemaDef -> AO.Value
         remoteSchemaDefToOrdJSON (RemoteSchemaDef url urlFromEnv headers frwrdClientHdrs timeout) =
@@ -693,7 +713,18 @@ metadataToOrdJSON ( Metadata
           AO.object $ [("role", AO.toOrdered role)] <> catMaybes [maybeCommentToMaybeOrdPair permComment]
 
     -- Utility functions
-    listToMaybeOrdPair :: (Foldable t) => Text -> (a -> AO.Value) -> t a -> Maybe (Text, AO.Value)
+
+    -- Sort list before encoding to JSON value
+    listToMaybeOrdPairSort
+      :: (Foldable t, Ord b)
+      => Text -> (a -> AO.Value) -> (a -> b) -> t a -> Maybe (Text, AO.Value)
+    listToMaybeOrdPairSort name f sortF ta = case toList ta of
+      []   -> Nothing
+      list -> Just $ (name,) $ AO.array $ map f $ sortOn sortF list
+
+    listToMaybeOrdPair
+      :: (Foldable t)
+      => Text -> (a -> AO.Value) -> t a -> Maybe (Text, AO.Value)
     listToMaybeOrdPair name f ta = case toList ta of
       []   -> Nothing
       list -> Just $ (name,) $ AO.array $ map f list

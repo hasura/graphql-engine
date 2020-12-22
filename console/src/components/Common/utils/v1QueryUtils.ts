@@ -795,47 +795,34 @@ export const getConsoleNotificationQuery = (
   time: Date | string | number,
   userType?: Nullable<ConsoleScope>
 ) => {
-  let consoleUserScope = {
-    $ilike: `%${userType}%`,
-  };
+  let consoleUserScopeVar = `%${userType}%`;
   if (!userType) {
-    consoleUserScope = {
-      $ilike: '%OSS%',
-    };
+    consoleUserScopeVar = '%OSS%';
   }
 
-  return {
-    args: {
-      table: 'console_notification',
-      columns: ['*'],
-      where: {
-        $or: [
-          {
-            expiry_date: {
-              $gte: time,
-            },
-          },
-          {
-            expiry_date: {
-              $eq: null,
-            },
-          },
-        ],
-        scope: consoleUserScope,
-        start_date: { $lte: time },
-      },
-      order_by: [
-        {
-          type: 'asc',
-          nulls: 'last',
-          column: 'priority',
-        },
-        {
-          type: 'desc',
-          column: 'start_date',
-        },
-      ],
-    },
-    type: 'select',
+  const query = `query fetchNotifications($currentTime: timestamptz, $userScope: String) {
+    console_notifications(
+      where: {start_date: {_lte: $currentTime}, scope: {_ilike: $userScope}, _or: [{expiry_date: {_gte: $currentTime}}, {expiry_date: {_eq: null}}]},
+      order_by: {priority: asc_nulls_last, start_date: desc}
+    ) {
+      content
+      created_at
+      external_link
+      expiry_date
+      id
+      is_active
+      priority
+      scope
+      start_date
+      subject
+      type
+    }
+  }`;
+
+  const variables = {
+    userScope: consoleUserScopeVar,
+    currentTime: time,
   };
+
+  return { query, variables };
 };

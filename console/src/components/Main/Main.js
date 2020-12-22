@@ -35,10 +35,43 @@ import {
   setProClickState,
   getLoveConsentState,
   setLoveConsentState,
+  getUserType,
 } from './utils';
 import { getSchemaBaseRoute } from '../Common/utils/routesUtils';
 import LoveSection from './LoveSection';
 import { Help, ProPopup } from './components/';
+import { HASURA_COLLABORATOR_TOKEN } from '../../constants';
+import { UPDATE_CONSOLE_NOTIFICATIONS } from '../../telemetry/Actions';
+import { getLSItem, LS_KEYS, setLSItem } from '../../utils/localStorage';
+import { versionGT } from '../../helpers/versionUtils';
+import { UpdateVersion } from './components/UpdateVersion';
+
+const updateRequestHeaders = props => {
+  const { requestHeaders, dispatch } = props;
+
+  const collabTokenKey = Object.keys(requestHeaders).find(
+    hdr => hdr.toLowerCase() === HASURA_COLLABORATOR_TOKEN
+  );
+
+  if (collabTokenKey) {
+    const userID = getUserType(requestHeaders[collabTokenKey]);
+    if (props.console_opts && props.console_opts.console_notifications) {
+      if (!props.console_opts.console_notifications[userID]) {
+        dispatch({
+          type: UPDATE_CONSOLE_NOTIFICATIONS,
+          data: {
+            ...props.console_opts.console_notifications,
+            [userID]: {
+              read: [],
+              date: null,
+              showBadge: true,
+            },
+          },
+        });
+      }
+    }
+  }
+};
 
 class Main extends React.Component {
   constructor(props) {
@@ -57,6 +90,7 @@ class Main extends React.Component {
   componentDidMount() {
     const { dispatch } = this.props;
 
+    updateRequestHeaders(this.props);
     dispatch(loadServerVersion()).then(() => {
       dispatch(featureCompatibilityInit());
 
@@ -66,12 +100,27 @@ class Main extends React.Component {
         }
       );
 
-      dispatch(loadLatestServerVersion());
+      dispatch(loadLatestServerVersion()).then(() => {
+        this.setShowUpdateNotification();
+      });
+
       dispatch(fetchConsoleNotifications());
     });
 
     dispatch(fetchPostgresVersion);
     dispatch(fetchServerConfig);
+  }
+
+  componentDidUpdate(prevProps) {
+    const prevHeaders = Object.keys(prevProps.requestHeaders);
+    const currHeaders = Object.keys(this.props.requestHeaders);
+
+    if (
+      prevHeaders.length !== currHeaders.length ||
+      prevHeaders.filter(hdr => !currHeaders.includes(hdr)).length
+    ) {
+      updateRequestHeaders(this.props);
+    }
   }
 
   toggleProPopup = () => {
@@ -132,6 +181,55 @@ class Main extends React.Component {
       isLoveSectionOpen: !prevState.isLoveSectionOpen,
     }));
   };
+
+  closeUpdateBanner = () => {
+    const { updateNotificationVersion } = this.state;
+    setLSItem(LS_KEYS.versionUpdateCheckLastClosed, updateNotificationVersion);
+    this.setState({ updateNotificationVersion: null });
+  };
+
+  setShowUpdateNotification() {
+    const {
+      latestStableServerVersion,
+      latestPreReleaseServerVersion,
+      serverVersion,
+      console_opts,
+    } = this.props;
+
+    const allowPreReleaseNotifications =
+      !console_opts || !console_opts.disablePreReleaseUpdateNotifications;
+
+    let latestServerVersionToCheck;
+    if (
+      allowPreReleaseNotifications &&
+      versionGT(latestPreReleaseServerVersion, latestStableServerVersion)
+    ) {
+      latestServerVersionToCheck = latestPreReleaseServerVersion;
+    } else {
+      latestServerVersionToCheck = latestStableServerVersion;
+    }
+
+    try {
+      const lastUpdateCheckClosed = getLSItem(
+        LS_KEYS.versionUpdateCheckLastClosed
+      );
+
+      if (lastUpdateCheckClosed !== latestServerVersionToCheck) {
+        const isUpdateAvailable = versionGT(
+          latestServerVersionToCheck,
+          serverVersion
+        );
+
+        if (isUpdateAvailable) {
+          this.setState({
+            updateNotificationVersion: latestServerVersionToCheck,
+          });
+        }
+      }
+    } catch (e) {
+      console.error(e);
+    }
+  }
 
   render() {
     const {
@@ -354,6 +452,11 @@ class Main extends React.Component {
           <div className={styles.main + ' container-fluid'}>
             {getMainContent()}
           </div>
+          <UpdateVersion
+            closeUpdateBanner={this.closeUpdateBanner}
+            dispatch={this.props.dispatch}
+            updateNotificationVersion={this.state.updateNotificationVersion}
+          />
         </div>
       </div>
     );
@@ -368,6 +471,7 @@ const mapStateToProps = (state, ownProps) => {
     currentSchema: state.tables.currentSchema,
     metadata: state.metadata,
     console_opts: state.telemetry.console_opts,
+    requestHeaders: state.tables.dataHeaders,
   };
 };
 

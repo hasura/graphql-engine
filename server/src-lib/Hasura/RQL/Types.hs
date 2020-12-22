@@ -4,13 +4,12 @@ module Hasura.RQL.Types
   , UserInfoM(..)
 
   , HasHttpManager (..)
-  -- , HasGCtxMap (..)
 
   , SQLGenCtx(..)
   , HasSQLGenCtx(..)
 
-  , EnableRemoteSchemaPermsCtx(..)
-  , HasEnableRemoteSchemaPermsCtx(..)
+  , RemoteSchemaPermsCtx(..)
+  , HasRemoteSchemaPermsCtx(..)
 
   , HasSystemDefined(..)
   , HasSystemDefinedT
@@ -43,7 +42,9 @@ module Hasura.RQL.Types
 
 import           Hasura.Prelude
 
+import           Data.Aeson
 import qualified Data.HashMap.Strict                 as M
+import qualified Data.Text                           as T
 import qualified Network.HTTP.Client                 as HTTP
 
 import           Control.Monad.Unique
@@ -54,10 +55,9 @@ import           Hasura.Backends.Postgres.SQL.Types
 import           Hasura.RQL.IR.BoolExp               as R
 import           Hasura.RQL.Types.Action             as R
 import           Hasura.RQL.Types.Column             as R
-import           Hasura.RQL.Types.Common             as R
+import           Hasura.RQL.Types.Common             as R hiding (FunctionName)
 import           Hasura.RQL.Types.ComputedField      as R
 import           Hasura.RQL.Types.CustomTypes        as R
-import           Hasura.RQL.Types.DML                as R
 import           Hasura.RQL.Types.Error              as R
 import           Hasura.RQL.Types.EventTrigger       as R
 import           Hasura.RQL.Types.Function           as R
@@ -71,9 +71,10 @@ import           Hasura.RQL.Types.ScheduledTrigger   as R
 import           Hasura.RQL.Types.SchemaCache        as R
 import           Hasura.RQL.Types.SchemaCache.Build  as R
 import           Hasura.RQL.Types.Table              as R
-import           Hasura.Session
 import           Hasura.SQL.Backend                  as R
-import           Hasura.Tracing                      (TraceT)
+
+import           Hasura.Session
+import           Hasura.Tracing
 
 data QCtx
   = QCtx
@@ -99,6 +100,8 @@ instance (UserInfoM m) => UserInfoM (ReaderT r m) where
 instance (UserInfoM m) => UserInfoM (StateT s m) where
   askUserInfo = lift askUserInfo
 instance (UserInfoM m) => UserInfoM (TraceT m) where
+  askUserInfo = lift askUserInfo
+instance (UserInfoM m) => UserInfoM (MetadataT m) where
   askUserInfo = lift askUserInfo
 
 askTabInfo
@@ -147,43 +150,47 @@ instance (Monoid w, HasHttpManager m) => HasHttpManager (WriterT w m) where
   askHttpManager = lift askHttpManager
 instance (HasHttpManager m) => HasHttpManager (TraceT m) where
   askHttpManager = lift askHttpManager
+instance (HasHttpManager m) => HasHttpManager (MetadataT m) where
+  askHttpManager = lift askHttpManager
 
--- class (Monad m) => HasGCtxMap m where
---   askGCtxMap :: m GC.GCtxMap
+data RemoteSchemaPermsCtx
+  = RemoteSchemaPermsEnabled
+  | RemoteSchemaPermsDisabled
+  deriving (Show, Eq)
 
--- instance (HasGCtxMap m) => HasGCtxMap (ReaderT r m) where
---   askGCtxMap = lift askGCtxMap
--- instance (Monoid w, HasGCtxMap m) => HasGCtxMap (WriterT w m) where
---   askGCtxMap = lift askGCtxMap
+instance FromJSON RemoteSchemaPermsCtx where
+  parseJSON = withText "RemoteSchemaPermsCtx" $ \t ->
+    case T.toLower t of
+      "true"  -> pure RemoteSchemaPermsEnabled
+      "false" -> pure RemoteSchemaPermsDisabled
+      _       -> fail "enable_remote_schema_permissions should be a boolean value"
 
-newtype EnableRemoteSchemaPermsCtx
-  = EnableRemoteSchemaPermsCtx
-  { enableRemoteSchemaPerms :: Bool
-  } deriving (Show, Eq)
+instance ToJSON RemoteSchemaPermsCtx where
+  toJSON = \case
+    RemoteSchemaPermsEnabled  -> "true"
+    RemoteSchemaPermsDisabled -> "false"
 
-class (Monad m) => HasEnableRemoteSchemaPermsCtx m where
-  askEnableRemoteSchemaPermsCtx :: m EnableRemoteSchemaPermsCtx
+class (Monad m) => HasRemoteSchemaPermsCtx m where
+  askRemoteSchemaPermsCtx :: m RemoteSchemaPermsCtx
 
-instance (HasEnableRemoteSchemaPermsCtx m)
-         => HasEnableRemoteSchemaPermsCtx (ReaderT r m) where
-  askEnableRemoteSchemaPermsCtx = lift askEnableRemoteSchemaPermsCtx
-instance (HasEnableRemoteSchemaPermsCtx m)
-         => HasEnableRemoteSchemaPermsCtx (StateT s m) where
-  askEnableRemoteSchemaPermsCtx = lift askEnableRemoteSchemaPermsCtx
-instance (Monoid w, HasEnableRemoteSchemaPermsCtx m)
-         => HasEnableRemoteSchemaPermsCtx (WriterT w m) where
-  askEnableRemoteSchemaPermsCtx = lift askEnableRemoteSchemaPermsCtx
-instance (HasEnableRemoteSchemaPermsCtx m)
-         => HasEnableRemoteSchemaPermsCtx (TableCoreCacheRT m) where
-  askEnableRemoteSchemaPermsCtx = lift askEnableRemoteSchemaPermsCtx
-instance (HasEnableRemoteSchemaPermsCtx m)
-         => HasEnableRemoteSchemaPermsCtx (TraceT m) where
-  askEnableRemoteSchemaPermsCtx = lift askEnableRemoteSchemaPermsCtx
-
-newtype SQLGenCtx
-  = SQLGenCtx
-  { stringifyNum :: Bool
-  } deriving (Show, Eq)
+instance (HasRemoteSchemaPermsCtx m)
+         => HasRemoteSchemaPermsCtx (ReaderT r m) where
+  askRemoteSchemaPermsCtx = lift askRemoteSchemaPermsCtx
+instance (HasRemoteSchemaPermsCtx m)
+         => HasRemoteSchemaPermsCtx (StateT s m) where
+  askRemoteSchemaPermsCtx = lift askRemoteSchemaPermsCtx
+instance (Monoid w, HasRemoteSchemaPermsCtx m)
+         => HasRemoteSchemaPermsCtx (WriterT w m) where
+  askRemoteSchemaPermsCtx = lift askRemoteSchemaPermsCtx
+instance (HasRemoteSchemaPermsCtx m)
+         => HasRemoteSchemaPermsCtx (TableCoreCacheRT b m) where
+  askRemoteSchemaPermsCtx = lift askRemoteSchemaPermsCtx
+instance (HasRemoteSchemaPermsCtx m)
+         => HasRemoteSchemaPermsCtx (TraceT m) where
+  askRemoteSchemaPermsCtx = lift askRemoteSchemaPermsCtx
+instance (HasRemoteSchemaPermsCtx m)
+         => HasRemoteSchemaPermsCtx (MetadataT m) where
+  askRemoteSchemaPermsCtx = lift askRemoteSchemaPermsCtx
 
 class (Monad m) => HasSQLGenCtx m where
   askSQLGenCtx :: m SQLGenCtx
@@ -194,9 +201,11 @@ instance (HasSQLGenCtx m) => HasSQLGenCtx (StateT s m) where
   askSQLGenCtx = lift askSQLGenCtx
 instance (Monoid w, HasSQLGenCtx m) => HasSQLGenCtx (WriterT w m) where
   askSQLGenCtx = lift askSQLGenCtx
-instance (HasSQLGenCtx m) => HasSQLGenCtx (TableCoreCacheRT m) where
+instance (HasSQLGenCtx m) => HasSQLGenCtx (TableCoreCacheRT b m) where
   askSQLGenCtx = lift askSQLGenCtx
 instance (HasSQLGenCtx m) => HasSQLGenCtx (TraceT m) where
+  askSQLGenCtx = lift askSQLGenCtx
+instance (HasSQLGenCtx m) => HasSQLGenCtx (MetadataT m) where
   askSQLGenCtx = lift askSQLGenCtx
 
 class (Monad m) => HasSystemDefined m where
@@ -214,8 +223,7 @@ instance (HasSystemDefined m) => HasSystemDefined (TraceT m) where
 newtype HasSystemDefinedT m a
   = HasSystemDefinedT { unHasSystemDefinedT :: ReaderT SystemDefined m a }
   deriving ( Functor, Applicative, Monad, MonadTrans, MonadIO, MonadUnique, MonadError e, MonadTx
-           , HasHttpManager, HasSQLGenCtx, TableCoreInfoRM, CacheRM, CacheRWM, UserInfoM
-           , HasEnableRemoteSchemaPermsCtx)
+           , HasHttpManager, HasSQLGenCtx, TableCoreInfoRM b, CacheRM, UserInfoM, HasRemoteSchemaPermsCtx)
 
 runHasSystemDefinedT :: SystemDefined -> HasSystemDefinedT m a -> m a
 runHasSystemDefinedT systemDefined = flip runReaderT systemDefined . unHasSystemDefinedT
@@ -233,11 +241,11 @@ getTableInfo :: (QErrM m) => QualifiedTable -> HashMap QualifiedTable a -> m a
 getTableInfo tableName infoMap =
   M.lookup tableName infoMap `onNothing` throwTableDoesNotExist tableName
 
-askTableCoreInfo :: (QErrM m, TableCoreInfoRM m) => QualifiedTable -> m (TableCoreInfo 'Postgres)
+askTableCoreInfo :: (QErrM m, TableCoreInfoRM 'Postgres m) => QualifiedTable -> m (TableCoreInfo 'Postgres)
 askTableCoreInfo tableName =
   lookupTableCoreInfo tableName >>= (`onNothing` throwTableDoesNotExist tableName)
 
-askFieldInfoMap :: (QErrM m, TableCoreInfoRM m) => QualifiedTable -> m (FieldInfoMap (FieldInfo 'Postgres))
+askFieldInfoMap :: (QErrM m, TableCoreInfoRM 'Postgres m) => QualifiedTable -> m (FieldInfoMap (FieldInfo 'Postgres))
 askFieldInfoMap = fmap _tciFieldInfoMap . askTableCoreInfo
 
 askPGType
@@ -245,7 +253,7 @@ askPGType
   => FieldInfoMap (FieldInfo 'Postgres)
   -> PGCol
   -> Text
-  -> m PGColumnType
+  -> m (ColumnType 'Postgres)
 askPGType m c msg =
   pgiType <$> askPGColInfo m c msg
 
@@ -257,7 +265,7 @@ askPGColInfo
   -> m (ColumnInfo backend)
 askPGColInfo m c msg = do
   fieldInfo <- modifyErr ("column " <>) $
-             askFieldInfo m (fromPGCol c)
+             askFieldInfo m (fromCol @'Postgres c)
   case fieldInfo of
     (FIColumn pgColInfo)     -> pure pgColInfo
     (FIRelationship   _)     -> throwErr "relationship"
@@ -304,7 +312,7 @@ askRelType :: (MonadError QErr m)
            => FieldInfoMap (FieldInfo backend)
            -> RelName
            -> Text
-           -> m RelInfo
+           -> m (RelInfo backend)
 askRelType m r msg = do
   colInfo <- modifyErr ("relationship " <>) $
              askFieldInfo m (fromRel r)
@@ -322,12 +330,7 @@ askFieldInfo :: (MonadError QErr m)
              -> FieldName
              -> m fieldInfo
 askFieldInfo m f =
-  case M.lookup f m of
-  Just colInfo -> return colInfo
-  Nothing ->
-    throw400 NotExists $ mconcat
-    [ f <<> " does not exist"
-    ]
+  onNothing (M.lookup f m) $ throw400 NotExists (f <<> " does not exist")
 
 askRemoteRel :: (MonadError QErr m)
            => FieldInfoMap (FieldInfo backend)

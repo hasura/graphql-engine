@@ -3,19 +3,19 @@
 module Hasura.Server.API.Query where
 
 import           Control.Lens
+import           Control.Monad.Trans.Control        (MonadBaseControl)
 import           Control.Monad.Unique
 import           Data.Aeson
 import           Data.Aeson.Casing
 import           Data.Aeson.TH
-import           Data.Time                          (UTCTime)
 
 import qualified Data.Environment                   as Env
 import qualified Data.HashMap.Strict                as HM
-import qualified Data.Text                          as T
 import qualified Database.PG.Query                  as Q
 import qualified Network.HTTP.Client                as HTTP
 
 import           Hasura.EncJSON
+import           Hasura.Metadata.Class
 import           Hasura.Prelude
 import           Hasura.RQL.DDL.Action
 import           Hasura.RQL.DDL.ComputedField
@@ -34,10 +34,11 @@ import           Hasura.RQL.DML.Count
 import           Hasura.RQL.DML.Delete
 import           Hasura.RQL.DML.Insert
 import           Hasura.RQL.DML.Select
+import           Hasura.RQL.DML.Types
 import           Hasura.RQL.DML.Update
 import           Hasura.RQL.Types
 import           Hasura.RQL.Types.Run
-import           Hasura.Server.Init                 (InstanceId (..))
+import           Hasura.Server.Types                (InstanceId (..))
 import           Hasura.Server.Utils
 import           Hasura.Server.Version              (HasVersion)
 import           Hasura.Session
@@ -180,49 +181,36 @@ $(deriveJSON
   ''RQLQueryV2
  )
 
-fetchLastUpdate :: Q.TxE QErr (Maybe (InstanceId, UTCTime, CacheInvalidations))
-fetchLastUpdate = over (_Just._3) Q.getAltJ <$> Q.withQE defaultTxErrorHandler [Q.sql|
-  SELECT instance_id::text, occurred_at, invalidations
-  FROM hdb_catalog.hdb_schema_update_event
-  ORDER BY occurred_at DESC LIMIT 1
-  |] () True
-
-recordSchemaUpdate :: InstanceId -> CacheInvalidations -> Q.TxE QErr ()
-recordSchemaUpdate instanceId invalidations =
-  liftTx $ Q.unitQE defaultTxErrorHandler [Q.sql|
-             INSERT INTO hdb_catalog.hdb_schema_update_event
-               (instance_id, occurred_at, invalidations) VALUES ($1::uuid, DEFAULT, $2::json)
-             ON CONFLICT ((occurred_at IS NOT NULL))
-             DO UPDATE SET instance_id = $1::uuid, occurred_at = DEFAULT, invalidations = $2::json
-            |] (instanceId, Q.AltJ invalidations) True
-
 runQuery
-  :: (HasVersion, MonadIO m, MonadError QErr m, Tracing.MonadTrace m)
+  :: ( HasVersion, MonadIO m, Tracing.MonadTrace m
+     , MonadBaseControl IO m, MonadMetadataStorage m
+     )
   => Env.Environment -> PGExecCtx -> InstanceId
-  -> UserInfo -> RebuildableSchemaCache Run -> HTTP.Manager
-  -> SQLGenCtx -> EnableRemoteSchemaPermsCtx -> SystemDefined
-  -> RQLQuery -> m (EncJSON, RebuildableSchemaCache Run)
-runQuery env pgExecCtx instanceId userInfo sc hMgr sqlGenCtx enableRSPermsCtx systemDefined query = do
+  -> UserInfo -> RebuildableSchemaCache -> HTTP.Manager
+  -> SQLGenCtx -> RemoteSchemaPermsCtx -> RQLQuery -> m (EncJSON, RebuildableSchemaCache)
+runQuery env pgExecCtx instanceId userInfo sc hMgr sqlGenCtx remoteSchemaPermsCtx query = do
   accessMode <- getQueryAccessMode query
   traceCtx <- Tracing.currentContext
-  resE <- runQueryM env query & Tracing.interpTraceT \x -> do
-    a <- x & runHasSystemDefinedT systemDefined
+  metadata <- fetchMetadata
+  result <- runQueryM env query & Tracing.interpTraceT \x -> do
+    (((js, tracemeta), meta), rsc, ci) <-
+         x & runMetadataT metadata
            & runCacheRWT sc
            & peelRun runCtx pgExecCtx accessMode (Just traceCtx)
            & runExceptT
-           & liftIO
-    pure (either
-      ((, mempty) . Left)
-      (\((js, meta), rsc, ci) -> (Right (js, rsc, ci), meta)) a)
-  either throwError withReload resE
+           & liftEitherM
+    pure ((js, rsc, ci, meta), tracemeta)
+  withReload result
   where
-    runCtx = RunCtx userInfo hMgr sqlGenCtx enableRSPermsCtx
-    withReload (result, updatedCache, invalidations) = do
+    runCtx = RunCtx userInfo hMgr sqlGenCtx remoteSchemaPermsCtx
+
+    withReload (result, updatedCache, invalidations, updatedMetadata) = do
       when (queryModifiesSchemaCache query) $ do
-        e <- liftIO $ runExceptT $ runLazyTx pgExecCtx Q.ReadWrite $ liftTx $
-          recordSchemaUpdate instanceId invalidations
-        liftEither e
-      return (result, updatedCache)
+        -- set modified metadata in storage
+        setMetadata updatedMetadata
+        -- notify schema cache sync
+        notifySchemaCacheSync instanceId invalidations
+      pure (result, updatedCache)
 
 -- | A predicate that determines whether the given query might modify/rebuild the schema cache. If
 -- so, it needs to acquire the global lock on the schema cache so that other queries do not modify
@@ -341,12 +329,12 @@ getQueryAccessMode q = fromMaybe Q.ReadOnly <$> getQueryAccessMode' q
             throw400 BadRequest $
             "incompatible access mode requirements in bulk query, " <>
             "expected access mode: " <>
-            T.pack (maybe "ANY" show expectedMode) <>
+            maybe "ANY" tshow expectedMode <>
             " but " <>
             "$.args[" <>
-            T.pack (show i) <>
+            tshow i <>
             "] forces " <>
-            T.pack (show errMode)
+            tshow errMode
     getQueryAccessMode' (RQV2 _) = pure $ Just Q.ReadWrite
 
 -- | onRight, return reconciled access mode. onLeft, return conflicting access mode
@@ -360,9 +348,10 @@ reconcileAccessModes (Just mode1) (Just mode2)
 runQueryM
   :: ( HasVersion, QErrM m, CacheRWM m, UserInfoM m, MonadTx m
      , MonadIO m, MonadUnique m, HasHttpManager m, HasSQLGenCtx m
-     , HasEnableRemoteSchemaPermsCtx m
-     , HasSystemDefined m
+     , HasRemoteSchemaPermsCtx m
      , Tracing.MonadTrace m
+     , MetadataM m
+     , MonadScheduledEvents m
      )
   => Env.Environment
   -> RQLQuery

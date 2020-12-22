@@ -30,20 +30,15 @@ import qualified Hasura.Logging                      as L
 
 import           Hasura.Backends.Postgres.Connection
 import           Hasura.Prelude
-import           Hasura.RQL.Types                    (QErr, SchemaCache (..))
+import           Hasura.RQL.Types                    (QErr, SchemaCache (..), RemoteSchemaPermsCtx (..))
 import           Hasura.Server.Auth
 import           Hasura.Server.Cors
 import           Hasura.Server.Init.Config
 import           Hasura.Server.Logging
+import           Hasura.Server.Types
 import           Hasura.Server.Utils
 import           Hasura.Session
 import           Network.URI                         (parseURI)
-
-newtype DbUid
-  = DbUid { getDbUid :: Text }
-  deriving (Show, Eq, J.ToJSON, J.FromJSON)
-
-newtype PGVersion = PGVersion { unPGVersion :: Int } deriving (Show, Eq, J.ToJSON)
 
 getDbId :: Q.TxE QErr Text
 getDbId =
@@ -55,10 +50,6 @@ getDbId =
 
 getPgVersion :: Q.TxE QErr PGVersion
 getPgVersion = PGVersion <$> Q.serverVersion
-
-newtype InstanceId
-  = InstanceId { getInstanceId :: Text }
-  deriving (Show, Eq, J.ToJSON, J.FromJSON, Q.FromCol, Q.ToPrepArg)
 
 generateInstanceId :: IO InstanceId
 generateInstanceId = InstanceId <$> generateFingerprint
@@ -171,8 +162,9 @@ mkServeOptions rso = do
   eventsFetchInterval <- withEnv (rsoEventsFetchInterval rso) (fst eventsFetchIntervalEnv)
   logHeadersFromEnv <- withEnvBool (rsoLogHeadersFromEnv rso) (fst logHeadersFromEnvEnv)
   enableRemoteSchemaPerms <-
-    withEnvBool (rsoEnableRemoteSchemaPermissions rso) $
-                (fst enableRemoteSchemaPermsEnv)
+    bool RemoteSchemaPermsDisabled RemoteSchemaPermsEnabled <$>
+    (withEnvBool (rsoEnableRemoteSchemaPermissions rso) $
+                (fst enableRemoteSchemaPermsEnv))
 
   webSocketCompressionFromEnv <- withEnvBool (rsoWebSocketCompression rso) $
                                  fst webSocketCompressionEnv
@@ -960,7 +952,7 @@ serveOptsToLog so =
       , "enabled_log_types" J..= soEnabledLogTypes so
       , "log_level" J..= soLogLevel so
       , "plan_cache_options" J..= soPlanCacheOptions so
-      , "enable_remote_schema_permissions" J..= soEnableRemoteSchemaPermissions so
+      , "remote_schema_permissions" J..= soEnableRemoteSchemaPermissions so
       , "websocket_compression_options" J..= show (WS.connectionCompressionOptions . soConnectionOptions $ so)
       , "websocket_keep_alive" J..= show (soWebsocketKeepAlive so)
       ]

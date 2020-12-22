@@ -31,7 +31,7 @@ response:
   path: $.args
   error:
     "validation for the given role-based schema failed for the following reasons:\n\
-    \ • expected type of \"eq\"(\"Input object argument\") to be Boolean but recieved\
-    \ Int\n • expected type of \"gt\"(\"Input object argument\") to be Boolean but\
-    \ recieved Int\n"
-  code: invalid-custom-remote-schema-document
+    \ • expected type of \"eq\"(\"Input object argument\") to be Int but recieved\
+    \ Boolean\n • expected type of \"gt\"(\"Input object argument\") to be Int but\
+    \ recieved Boolean\n"
+  code: validation-failed

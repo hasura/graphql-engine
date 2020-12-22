@@ -255,7 +255,7 @@ if [ "$MODE" = "graphql-engine" ]; then
     echo_pretty ""
     echo_pretty "  If the console was modified since your last build (re)build assets with:"
     echo_pretty "      $ cd \"$PROJECT_ROOT/console\""
-    echo_pretty "      $ npm ci && npm run server-build "
+    echo_pretty "      $ npm ci && make server-build "
     echo_pretty ""
     echo_pretty "Useful endpoints when compiling with 'graphql-engine:developer' and running with '+RTS -T'"
     echo_pretty "   http://127.0.0.1:$HASURA_GRAPHQL_SERVER_PORT/dev/subscriptions"
@@ -282,10 +282,20 @@ fi
 # setting 'port' in container is a workaround for the pg_dump endpoint (see tests)
 # log_hostname=off to avoid timeout failures when running offline due to:
 #   https://forums.aws.amazon.com/thread.jspa?threadID=291285
+#
+# All lines up to log_error_verbosity are to support pgBadger:
+#   https://github.com/darold/pgbadger#LOG-STATEMENTS 
+#
+# Also useful:
+#   log_autovacuum_min_duration=0
 CONF=$(cat <<-EOF
-log_statement=all
+log_min_duration_statement=0
+log_checkpoints=on
 log_connections=on
 log_disconnections=on
+log_lock_waits=on
+log_temp_files=0
+log_error_verbosity=default
 log_hostname=off
 log_duration=on
 port=$PG_PORT

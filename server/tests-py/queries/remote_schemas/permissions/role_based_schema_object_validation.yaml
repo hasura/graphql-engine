@@ -28,7 +28,7 @@
       "validation for the given role-based schema failed for the following reasons:\n\
       \ • expected type of \"user_id\"(\"Object field\") to be Int but recieved Int!\n\
       \ • field \"created_at\" does not exist in the \"Object\": \"User\"\n"
-    code: invalid-custom-remote-schema-document
+    code: validation-failed
 
 - description:
     The 'Person' object is implementing the interface 'FullName' which doesn't exist in the
@@ -63,9 +63,11 @@
   response:
     path: $.args
     error:
-      'validation for the given role-based schema failed because "Interface": "FullName"
-      does not exist in the upstream remote schema'
-    code: invalid-custom-remote-schema-document
+      "validation for the given role-based schema failed for the following reasons:\n\
+       \ • \"Interface\": \"FullName\" does not exist in the upstream remote schema\n\
+       \ • custom interfaces are not supported. Object\"Person\" implements the following\
+       \ custom interfaces: \"FullName\"\n"
+    code: validation-failed
 
 - description:
     The 'user' field in the 'Query' object doesn't have all the non-nullable arguments
@@ -96,4 +98,4 @@
     error:
       "validation for the given role-based schema failed because field: \"user\"
       expects the following non nullable arguments to be present: \"user_id\""
-    code: invalid-custom-remote-schema-document
+    code: validation-failed

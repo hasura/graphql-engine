@@ -5,6 +5,10 @@ module Hasura.GraphQL.Schema.Remote
   , lookupType
   , lookupScalar
   , remoteField
+  , lookupInterface
+  , lookupUnion
+  , lookupEnum
+  , lookupInputObject
   ) where
 
 import           Hasura.Prelude
@@ -19,15 +23,16 @@ import           Data.Type.Equality
 import           Language.GraphQL.Draft.Syntax         as G
 
 import qualified Hasura.GraphQL.Parser.Internal.Parser as P
-import           Hasura.GraphQL.Context                (RemoteField(..))
+import           Hasura.GraphQL.Context                (RemoteFieldG (..), RemoteField)
 
 import           Hasura.GraphQL.Parser                 as P
 import           Hasura.RQL.Types
 
-type RemoteSchemaObjectDefinition = G.ObjectTypeDefinition RemoteSchemaInputValueDefinition
-type RemoteSchemaInterfaceDefinition = G.InterfaceTypeDefinition [G.Name] RemoteSchemaInputValueDefinition
-type RemoteSchemaFieldDefinition = G.FieldDefinition RemoteSchemaInputValueDefinition
-type RemoteSchemaTypeDefinition = G.TypeDefinition [G.Name] RemoteSchemaInputValueDefinition
+type RemoteSchemaObjectDefinition      = G.ObjectTypeDefinition RemoteSchemaInputValueDefinition
+type RemoteSchemaInputObjectDefinition = G.InputObjectTypeDefinition RemoteSchemaInputValueDefinition
+type RemoteSchemaInterfaceDefinition   = G.InterfaceTypeDefinition [G.Name] RemoteSchemaInputValueDefinition
+type RemoteSchemaFieldDefinition       = G.FieldDefinition RemoteSchemaInputValueDefinition
+type RemoteSchemaTypeDefinition        = G.TypeDefinition [G.Name] RemoteSchemaInputValueDefinition
 
 buildRemoteParser
   :: forall m n
@@ -46,7 +51,7 @@ buildRemoteParser (IntrospectionResult sdoc queryRoot mutationRoot subscriptionR
     makeFieldParser :: RemoteSchemaFieldDefinition -> m (P.FieldParser n RemoteField)
     makeFieldParser fieldDef = do
       fldParser <- remoteField' sdoc fieldDef
-      pure $ (RemoteField info) <$> fldParser
+      pure $ (RemoteFieldG info) <$> fldParser
     makeParsers :: G.Name -> m [P.FieldParser n RemoteField]
     makeParsers rootName =
       case lookupType sdoc rootName of
@@ -425,6 +430,36 @@ lookupScalar (RemoteSchemaIntrospection types) name = go types
     go (_:tps) = go tps
     go [] = Nothing
 
+lookupUnion :: RemoteSchemaIntrospection -> G.Name -> Maybe G.UnionTypeDefinition
+lookupUnion (RemoteSchemaIntrospection types) name = go types
+  where
+    go :: [TypeDefinition possibleTypes RemoteSchemaInputValueDefinition] -> Maybe G.UnionTypeDefinition
+    go ((G.TypeDefinitionUnion t):tps)
+      | G._utdName t == name = Just t
+      | otherwise = go tps
+    go (_:tps) = go tps
+    go [] = Nothing
+
+lookupEnum :: RemoteSchemaIntrospection -> G.Name -> Maybe G.EnumTypeDefinition
+lookupEnum (RemoteSchemaIntrospection types) name = go types
+  where
+    go :: [TypeDefinition possibleTypes RemoteSchemaInputValueDefinition] -> Maybe G.EnumTypeDefinition
+    go ((G.TypeDefinitionEnum t):tps)
+      | G._etdName t == name = Just t
+      | otherwise = go tps
+    go (_:tps) = go tps
+    go [] = Nothing
+
+lookupInputObject :: RemoteSchemaIntrospection -> G.Name -> Maybe RemoteSchemaInputObjectDefinition
+lookupInputObject (RemoteSchemaIntrospection types) name = go types
+  where
+    go :: [TypeDefinition possibleTypes RemoteSchemaInputValueDefinition] -> Maybe RemoteSchemaInputObjectDefinition
+    go ((G.TypeDefinitionInputObject t):tps)
+      | G._iotdName t == name = Just t
+      | otherwise = go tps
+    go (_:tps) = go tps
+    go [] = Nothing
+
 -- | 'remoteFieldFromName' accepts a GraphQL name and searches for its definition
 --   in the 'RemoteSchemaIntrospection'.
 remoteFieldFromName
@@ -692,7 +727,7 @@ remoteField sdoc fieldName description argsDefn typeDefn = do
       -> SelectionSet NoFragments RemoteSchemaVariable
       -> Maybe (G.Field NoFragments RemoteSchemaVariable)
     makeField alias fldName userProvidedArgs presetArgs selSet = do
-      let userProvidedArgs' = fmap RawVariable <$> userProvidedArgs
+      let userProvidedArgs' = fmap QueryVariable <$> userProvidedArgs
       resolvedArgs <-
         case presetArgs of
           Just presetArg' -> mergeArgs userProvidedArgs' presetArg'

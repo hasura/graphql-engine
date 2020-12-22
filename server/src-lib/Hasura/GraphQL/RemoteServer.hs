@@ -1,7 +1,7 @@
 module Hasura.GraphQL.RemoteServer
   ( fetchRemoteSchema
   , IntrospectionResult
-  , execRemoteGQ'
+  , execRemoteGQ
   ) where
 
 import           Control.Exception                      (try)
@@ -52,7 +52,7 @@ fetchRemoteSchema
   -> HTTP.Manager
   -> RemoteSchemaName
   -> RemoteSchemaInfo
-  -> m PartialRemoteSchemaCtx
+  -> m RemoteSchemaCtx
 fetchRemoteSchema env manager schemaName schemaInfo@(RemoteSchemaInfo url headerConf _ timeout) = do
   headers <- makeHeadersFromConf env headerConf
   let hdrsWithDefaults = addDefaultHeaders headers
@@ -80,12 +80,13 @@ fetchRemoteSchema env manager schemaName schemaInfo@(RemoteSchemaInfo url header
   (queryParsers, mutationParsers, subscriptionParsers) <-
     P.runSchemaT @m @(P.ParseT Identity) $ buildRemoteParser introspectRes schemaInfo
 
+  let parsedIntrospection = ParsedIntrospection queryParsers mutationParsers subscriptionParsers
+
   -- The 'rawIntrospectionResult' contains the 'Bytestring' response of
   -- the introspection result of the remote server. We store this in the
   -- 'RemoteSchemaCtx' because we can use this when the 'introspect_remote_schema'
   -- is called by simple encoding the result to JSON.
-  return $ PartialRemoteSchemaCtx schemaName introspectRes schemaInfo respData $
-    ParsedIntrospection queryParsers mutationParsers subscriptionParsers
+  return $ RemoteSchemaCtx schemaName introspectRes schemaInfo respData parsedIntrospection mempty
   where
     remoteSchemaErr :: Text -> m a
     remoteSchemaErr = throw400 RemoteSchemaError
@@ -189,7 +190,7 @@ instance J.FromJSON (FromIntrospection G.InputValueDefinition) where
     let desc' = fmap fromIntrospection desc
     let defVal' = fmap fromIntrospection defVal
         r = G.InputValueDefinition desc' name (fromIntrospection _type) defVal' []
-    return $ FromIntrospection $ r
+    return $ FromIntrospection r
 
 instance J.FromJSON (FromIntrospection (G.Value Void)) where
    parseJSON = J.withText "Value Void" $ \t ->
@@ -312,7 +313,7 @@ instance J.FromJSON (FromIntrospection IntrospectionResult) where
             queryRoot mutationRoot subsRoot
     return $ FromIntrospection r
 
-execRemoteGQ'
+execRemoteGQ
   :: ( HasVersion
      , MonadIO m
      , MonadError QErr m
@@ -322,12 +323,15 @@ execRemoteGQ'
   -> HTTP.Manager
   -> UserInfo
   -> [N.Header]
-  -> GQLReqUnparsed
   -> RemoteSchemaInfo
-  -> G.OperationType
+  -> GQLReqOutgoing
   -> m (DiffTime, [N.Header], BL.ByteString)
-execRemoteGQ' env manager userInfo reqHdrs q rsi opType =  do
-  when (opType == G.OperationTypeSubscription) $
+  -- ^ Returns the response body and headers, along with the time taken for the
+  -- HTTP request to complete
+execRemoteGQ env manager userInfo reqHdrs rsi gqlReq@GQLReq{..} =  do
+  let gqlReqUnparsed = renderGQLReqOutgoing gqlReq
+
+  when (G._todType _grQuery == G.OperationTypeSubscription) $
     throw400 NotSupported "subscription to remote server is not supported"
   confHdrs <- makeHeadersFromConf env hdrConf
   let clientHdrs = bool [] (mkClientHeadersForward reqHdrs) fwdClientHdrs
@@ -344,7 +348,7 @@ execRemoteGQ' env manager userInfo reqHdrs q rsi opType =  do
   let req = initReq
            { HTTP.method = "POST"
            , HTTP.requestHeaders = finalHeaders
-           , HTTP.requestBody = HTTP.RequestBodyLBS (J.encode q)
+           , HTTP.requestBody = HTTP.RequestBodyLBS (J.encode gqlReqUnparsed)
            , HTTP.responseTimeout = HTTP.responseTimeoutMicro (timeout * 1000000)
            }
   Tracing.tracedHttpRequest req \req' -> do
@@ -355,7 +359,7 @@ execRemoteGQ' env manager userInfo reqHdrs q rsi opType =  do
     RemoteSchemaInfo url hdrConf fwdClientHdrs timeout = rsi
     httpThrow :: (MonadError QErr m) => HTTP.HttpException -> m a
     httpThrow = \case
-      HTTP.HttpExceptionRequest _req content -> throw500 $ T.pack . show $ content
-      HTTP.InvalidUrlException _url reason -> throw500 $ T.pack . show $ reason
+      HTTP.HttpExceptionRequest _req content -> throw500 $ tshow content
+      HTTP.InvalidUrlException _url reason -> throw500 $ tshow reason
 
     userInfoToHdrs = sessionVariablesToHeaders $ _uiSession userInfo

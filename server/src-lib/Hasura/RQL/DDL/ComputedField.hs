@@ -6,35 +6,33 @@ module Hasura.RQL.DDL.ComputedField
   , ComputedFieldDefinition(..)
   , runAddComputedField
   , addComputedFieldP2Setup
-  , addComputedFieldToCatalog
   , DropComputedField
-  , dropComputedFieldFromCatalog
   , runDropComputedField
+  , dropComputedFieldInMetadata
   ) where
 
 import           Hasura.Prelude
 
 import qualified Control.Monad.Validate             as MV
+import qualified Data.HashMap.Strict.InsOrd         as OMap
 import qualified Data.HashSet                       as S
 import qualified Data.Sequence                      as Seq
-import qualified Database.PG.Query                  as Q
 import qualified Language.GraphQL.Draft.Syntax      as G
 
 import           Data.Aeson
 import           Data.Aeson.Casing
 import           Data.Aeson.TH
 import           Data.Text.Extended
-import           Language.Haskell.TH.Syntax         (Lift)
 
 import           Hasura.Backends.Postgres.SQL.Types
 import           Hasura.EncJSON
 import           Hasura.Incremental                 (Cacheable)
 import           Hasura.RQL.DDL.Deps
-import           Hasura.RQL.DDL.Permission.Internal
+import           Hasura.RQL.DDL.Permission
 import           Hasura.RQL.DDL.Schema.Function     (mkFunctionArgs)
 import           Hasura.RQL.Types
-import           Hasura.SQL.Types
 import           Hasura.Server.Utils                (makeReasonMessage)
+import           Hasura.SQL.Types
 
 
 data AddComputedField
@@ -43,17 +41,24 @@ data AddComputedField
   , _afcName       :: !ComputedFieldName
   , _afcDefinition :: !ComputedFieldDefinition
   , _afcComment    :: !(Maybe Text)
-  } deriving (Show, Eq, Lift, Generic)
+  } deriving (Show, Eq, Generic)
 instance NFData AddComputedField
 instance Cacheable AddComputedField
 $(deriveJSON (aesonDrop 4 snakeCase) ''AddComputedField)
 
-runAddComputedField :: (MonadTx m, CacheRWM m) => AddComputedField -> m EncJSON
+runAddComputedField :: (MonadError QErr m, CacheRWM m, MetadataM m) => AddComputedField -> m EncJSON
 runAddComputedField q = do
-  withPathK "table" $ askTabInfo (_afcTable q)
-  addComputedFieldToCatalog q
-  buildSchemaCacheFor $ MOTableObj (_afcTable q) (MTOComputedField $ _afcName q)
+  withPathK "table" $ askTabInfo table
+  let metadataObj = MOTableObj table $ MTOComputedField computedFieldName
+      metadata = ComputedFieldMetadata computedFieldName (_afcDefinition q) (_afcComment q)
+  buildSchemaCacheFor metadataObj
+    $ MetadataModifier
+    $ metaTables.ix table.tmComputedFields
+      %~ OMap.insert computedFieldName metadata
   pure successMsg
+  where
+    table = _afcTable q
+    computedFieldName = _afcName q
 
 data ComputedFieldValidateError
   = CFVENotValidGraphQLName !ComputedFieldName
@@ -189,7 +194,7 @@ addComputedFieldP2Setup trackedTables table computedField definition rawFunction
             ComputedFieldFunction function inputArgSeq tableArgument maybePGSessionArg $
             rfiDescription rawFunctionInfo
 
-      pure $ ComputedFieldInfo computedField computedFieldFunction returnType comment
+      pure $ ComputedFieldInfo () computedField computedFieldFunction returnType comment
 
     validateTableArgumentType :: (MV.MonadValidate [ComputedFieldValidateError] m)
                               => FunctionTableArgument
@@ -231,27 +236,12 @@ addComputedFieldP2Setup trackedTables table computedField definition rawFunction
               filter ((/=) (Just name) . faName) withoutTable
       in alsoWithoutSession
 
-
-addComputedFieldToCatalog
-  :: MonadTx m
-  => AddComputedField -> m ()
-addComputedFieldToCatalog q =
-  liftTx $ Q.withQE defaultTxErrorHandler
-    [Q.sql|
-     INSERT INTO hdb_catalog.hdb_computed_field
-       (table_schema, table_name, computed_field_name, definition, comment)
-     VALUES ($1, $2, $3, $4, $5)
-    |] (schemaName, tableName, computedField, Q.AltJ definition, comment) True
-  where
-    QualifiedObject schemaName tableName = table
-    AddComputedField table computedField definition comment = q
-
 data DropComputedField
   = DropComputedField
   { _dccTable   :: !QualifiedTable
   , _dccName    :: !ComputedFieldName
   , _dccCascade :: !Bool
-  } deriving (Show, Eq, Lift)
+  } deriving (Show, Eq)
 $(deriveToJSON (aesonDrop 4 snakeCase) ''DropComputedField)
 
 instance FromJSON DropComputedField where
@@ -262,7 +252,7 @@ instance FromJSON DropComputedField where
       <*> o .:? "cascade" .!= False
 
 runDropComputedField
-  :: (MonadTx m, CacheRWM m)
+  :: (QErrM m, CacheRWM m, MetadataM m)
   => DropComputedField -> m EncJSON
 runDropComputedField (DropComputedField table computedField cascade) = do
   -- Validation
@@ -275,25 +265,19 @@ runDropComputedField (DropComputedField table computedField cascade) = do
   when (not cascade && not (null deps)) $ reportDeps deps
 
   withNewInconsistentObjsCheck do
-    mapM_ purgeComputedFieldDependency deps
-    dropComputedFieldFromCatalog table computedField
-    buildSchemaCache
+    metadataModifiers <- mapM purgeComputedFieldDependency deps
+    buildSchemaCache $ MetadataModifier $
+      metaTables.ix table
+      %~ (dropComputedFieldInMetadata computedField) . foldl' (.) id metadataModifiers
   pure successMsg
   where
     purgeComputedFieldDependency = \case
-      SOTableObj qt (TOPerm roleName permType) | qt == table ->
-        liftTx $ dropPermFromCatalog qt roleName permType
+      (SOTableObj qt (TOPerm roleName permType)) | qt == table ->
+        pure $ dropPermissionInMetadata roleName permType
       d -> throw500 $ "unexpected dependency for computed field "
            <> computedField <<> "; " <> reportSchemaObj d
 
-dropComputedFieldFromCatalog
-  :: MonadTx m
-  => QualifiedTable -> ComputedFieldName -> m ()
-dropComputedFieldFromCatalog (QualifiedObject schema table) computedField =
-  liftTx $ Q.withQE defaultTxErrorHandler
-    [Q.sql|
-     DELETE FROM hdb_catalog.hdb_computed_field
-      WHERE table_schema = $1
-        AND table_name = $2
-        AND computed_field_name = $3
-    |] (schema, table, computedField) True
+dropComputedFieldInMetadata
+  :: ComputedFieldName -> TableMetadata -> TableMetadata
+dropComputedFieldInMetadata name =
+  tmComputedFields %~ OMap.delete name

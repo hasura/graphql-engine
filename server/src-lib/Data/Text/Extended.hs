@@ -34,10 +34,6 @@ instance ToTxt G.Name where
 
 deriving instance ToTxt G.EnumValue
 
-instance (ToTxt a) => ToTxt (Maybe a) where
-  toTxt Nothing = ""
-  toTxt (Just v) = toTxt v
-
 instance ToTxt (G.Value Void) where
   toTxt = TB.run . G.value
 

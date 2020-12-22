@@ -17,13 +17,12 @@ import           Hasura.Prelude
 import           Data.Aeson
 import           Data.Aeson.Casing
 import           Data.Aeson.TH
-import           Language.Haskell.TH.Syntax   (Lift)
 
 import           Hasura.RQL.Types
 
 data ClearMetadata
   = ClearMetadata
-  deriving (Show, Eq, Lift)
+  deriving (Show, Eq)
 $(deriveToJSON defaultOptions ''ClearMetadata)
 
 instance FromJSON ClearMetadata where
@@ -31,7 +30,7 @@ instance FromJSON ClearMetadata where
 
 data ExportMetadata
   = ExportMetadata
-  deriving (Show, Eq, Lift)
+  deriving (Show, Eq)
 $(deriveToJSON defaultOptions ''ExportMetadata)
 
 instance FromJSON ExportMetadata where
@@ -40,7 +39,7 @@ instance FromJSON ExportMetadata where
 data ReloadMetadata
   = ReloadMetadata
   { _rmReloadRemoteSchemas :: !Bool
-  } deriving (Show, Eq, Lift)
+  } deriving (Show, Eq)
 $(deriveToJSON (aesonDrop 3 snakeCase) ''ReloadMetadata)
 
 instance FromJSON ReloadMetadata where
@@ -51,7 +50,7 @@ instance FromJSON ReloadMetadata where
 
 data DumpInternalState
   = DumpInternalState
-  deriving (Show, Eq, Lift)
+  deriving (Show, Eq)
 $(deriveToJSON defaultOptions ''DumpInternalState)
 
 instance FromJSON DumpInternalState where
@@ -59,7 +58,7 @@ instance FromJSON DumpInternalState where
 
 data GetInconsistentMetadata
   = GetInconsistentMetadata
-  deriving (Show, Eq, Lift)
+  deriving (Show, Eq)
 $(deriveToJSON defaultOptions ''GetInconsistentMetadata)
 
 instance FromJSON GetInconsistentMetadata where
@@ -67,7 +66,7 @@ instance FromJSON GetInconsistentMetadata where
 
 data DropInconsistentMetadata
  = DropInconsistentMetadata
- deriving(Show, Eq, Lift)
+ deriving(Show, Eq)
 $(deriveToJSON defaultOptions ''DropInconsistentMetadata)
 
 instance FromJSON DropInconsistentMetadata where

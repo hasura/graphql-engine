@@ -19,7 +19,6 @@ import           Control.DeepSeq               (NFData (..))
 import           Data.Functor.Product
 import           Data.GADT.Compare
 import           Data.Text
-import           Instances.TH.Lift             ()
 import           System.Cron.Parser
 import           System.Cron.Types
 

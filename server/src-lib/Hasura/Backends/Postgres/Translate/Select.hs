@@ -18,18 +18,19 @@ import qualified Database.PG.Query                          as Q
 import           Control.Lens                               hiding (op)
 import           Control.Monad.Writer.Strict
 import           Data.Text.Extended
-import           Instances.TH.Lift                          ()
 
 import qualified Hasura.Backends.Postgres.SQL.DML           as S
 
 import           Hasura.Backends.Postgres.SQL.Rewrite
 import           Hasura.Backends.Postgres.SQL.Types
 import           Hasura.Backends.Postgres.Translate.BoolExp
+import           Hasura.Backends.Postgres.Translate.Types
 import           Hasura.EncJSON
-import           Hasura.GraphQL.Schema.Common
+import           Hasura.GraphQL.Schema.Common               (nodeIdVersionInt, currentNodeIdVersion)
 import           Hasura.RQL.DML.Internal
+import           Hasura.RQL.IR.OrderBy
 import           Hasura.RQL.IR.Select
-import           Hasura.RQL.Types
+import           Hasura.RQL.Types                           hiding (Identifier)
 import           Hasura.SQL.Types
 
 
@@ -155,7 +156,7 @@ withJsonAggExtr permLimitSubQuery ordBy alias =
     (newOBItems, obCols, newOBAliases) = maybe ([], [], []) transformOrderBy ordBy
     transformOrderBy (S.OrderByExp l) = unzip3 $
       flip map (zip (toList l) [1..]) $ \(obItem, i::Int) ->
-                 let iden = Identifier $ "ob_col_" <> T.pack (show i)
+                 let iden = Identifier $ "ob_col_" <> tshow i
                  in ( obItem{S.oColumn = S.SEIdentifier iden}
                     , S.oColumn obItem
                     , iden
@@ -228,7 +229,7 @@ mkArrayRelationAlias parentFieldName similarFieldsMap fieldName =
   HM.lookupDefault [fieldName] fieldName similarFieldsMap
 
 fromTableRowArgs
-  :: Identifier -> FunctionArgsExpTableRow S.SQLExp -> S.FunctionArgs
+  :: Identifier -> FunctionArgsExpTableRow 'Postgres S.SQLExp -> S.FunctionArgs
 fromTableRowArgs pfx = toFunctionArgs . fmap toSQLExp
   where
     toFunctionArgs (FunctionArgsExp positional named) =
@@ -271,7 +272,7 @@ mkAggregateOrderByExtractorAndFields annAggOrderBy =
     AAOOp opText pgColumnInfo ->
       let pgColumn = pgiColumn pgColumnInfo
       in ( S.Extractor (S.SEFnApp opText [S.SEIdentifier $ toIdentifier pgColumn] Nothing) alias
-         , [(FieldName opText, AFOp $ AggregateOp opText [(fromPGCol pgColumn, CFCol pgColumn)])]
+         , [(FieldName opText, AFOp $ AggregateOp opText [(fromCol @'Postgres pgColumn, CFCol pgColumn)])]
          )
   where
     alias = Just $ mkAggregateOrderByAlias annAggOrderBy
@@ -696,8 +697,7 @@ processOrderByItems sourcePrefix' fieldAlias' similarArrayFields orderByItems = 
     toOrderByExp :: OrderByItemExp 'Postgres -> S.OrderByItem
     toOrderByExp orderByItemExp =
       let OrderByItemG obTyM expAlias obNullsM = fst . snd <$> orderByItemExp
-      in S.OrderByItem (S.SEIdentifier $ toIdentifier expAlias)
-         (unOrderType <$> obTyM) (unNullsOrder <$> obNullsM)
+      in S.OrderByItem (S.SEIdentifier $ toIdentifier expAlias) obTyM obNullsM
 
     mkCursorExp :: [OrderByItemExp 'Postgres] -> S.SQLExp
     mkCursorExp orderByItemExps =
@@ -826,7 +826,7 @@ processAnnFields sourcePrefix fieldAlias similarArrFields annFields = do
     fromScalarComputedField :: ComputedFieldScalarSelect 'Postgres S.SQLExp -> m S.SQLExp
     fromScalarComputedField computedFieldScalar = do
       strfyNum <- ask
-      pure $ toJSONableExp strfyNum (PGColumnScalar ty) False $ withColumnOp colOpM $
+      pure $ toJSONableExp strfyNum (ColumnScalar ty) False $ withColumnOp colOpM $
              S.SEFunction $ S.FunctionExp fn (fromTableRowArgs sourcePrefix args) Nothing
       where
         ComputedFieldScalarSelect fn args ty colOpM = computedFieldScalar
@@ -1125,7 +1125,7 @@ processConnectionSelect sourcePrefixes fieldAlias relAlias colMapping connection
 
         mkSplitCompareExp (ConnectionSplit kind v (OrderByItemG obTyM obCol _)) =
           let obAlias = mkAnnOrderByAlias thisPrefix fieldAlias similarArrayFields obCol
-              obTy = maybe S.OTAsc unOrderType obTyM
+              obTy = fromMaybe S.OTAsc obTyM
               compareOp = case (kind, obTy) of
                 (CSKAfter, S.OTAsc)   -> S.SGT
                 (CSKAfter, S.OTDesc)  -> S.SLT

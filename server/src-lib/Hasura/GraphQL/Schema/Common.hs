@@ -11,17 +11,28 @@ import           Language.GraphQL.Draft.Syntax      as G
 import qualified Data.Text                          as T
 import qualified Hasura.GraphQL.Execute.Types       as ET (GraphQLQueryType)
 import qualified Hasura.GraphQL.Parser              as P
-import qualified Hasura.RQL.IR.Select               as RQL (Fields)
+import qualified Hasura.RQL.IR.Select               as IR
 
 import           Hasura.Backends.Postgres.SQL.Types
 import           Hasura.RQL.Types
+import           Hasura.GraphQL.Parser                 (UnpreparedValue)
+
+
+type SelectExp           b = IR.AnnSimpleSelG       b (UnpreparedValue b)
+type AggSelectExp        b = IR.AnnAggregateSelectG b (UnpreparedValue b)
+type ConnectionSelectExp b = IR.ConnectionSelect    b (UnpreparedValue b)
+type SelectArgs          b = IR.SelectArgsG         b (UnpreparedValue b)
+type TablePerms          b = IR.TablePermG          b (UnpreparedValue b)
+type AnnotatedFields     b = IR.AnnFieldsG          b (UnpreparedValue b)
+type AnnotatedField      b = IR.AnnFieldG           b (UnpreparedValue b)
 
 data QueryContext =
   QueryContext
-  { qcStringifyNum            :: !Bool
-  , qcQueryType               :: !ET.GraphQLQueryType
-  , qcRemoteFields            :: !(HashMap RemoteSchemaName [P.Definition P.FieldInfo])
-  , qcRemoteSchemaPermissions :: !Bool
+  { qcStringifyNum               :: !Bool
+  , qcQueryType                  :: !ET.GraphQLQueryType
+  , qcRemoteFields               :: !(HashMap RemoteSchemaName [P.Definition P.FieldInfo])
+  , qcRemoteSchemaPermissionsCtx :: !RemoteSchemaPermsCtx
+  , qcRemoteSchemaMap            :: !(HashMap RemoteSchemaName RemoteSchemaCtx)
   }
 
 textToName :: MonadError QErr m => Text -> m G.Name
@@ -29,7 +40,7 @@ textToName textName = G.mkName textName `onNothing` throw400 ValidationFailed
                       ("cannot include " <> textName <<> " in the GraphQL schema because "
                        <> " it is not a valid GraphQL identifier")
 
-partialSQLExpToUnpreparedValue :: PartialSQLExp 'Postgres -> P.UnpreparedValue
+partialSQLExpToUnpreparedValue :: PartialSQLExp b -> P.UnpreparedValue b
 partialSQLExpToUnpreparedValue (PSESessVar pftype var) = P.UVSessionVar pftype var
 partialSQLExpToUnpreparedValue (PSESQLExp sqlExp)      = P.UVLiteral sqlExp
 
@@ -43,7 +54,7 @@ mapField fp f = fmap (fmap f) fp
 parsedSelectionsToFields
   :: (Text -> a) -- ^ how to handle @__typename@ fields
   -> OMap.InsOrdHashMap G.Name (P.ParsedSelection a)
-  -> RQL.Fields a
+  -> IR.Fields a
 parsedSelectionsToFields mkTypename = OMap.toList
   >>> map (FieldName . G.unName *** P.handleTypename (mkTypename . G.unName))
 

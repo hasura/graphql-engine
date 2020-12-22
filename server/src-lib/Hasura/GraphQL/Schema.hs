@@ -1,5 +1,6 @@
+{-# LANGUAGE Arrows       #-}
 {-# LANGUAGE ViewPatterns #-}
-{-# LANGUAGE Arrows #-}
+{-# OPTIONS_GHC -fno-warn-orphans #-}
 module Hasura.GraphQL.Schema
   ( buildGQLContext
   ) where
@@ -18,10 +19,11 @@ import           Control.Monad.Unique
 import           Data.Has
 import           Data.List.Extended                    (duplicates)
 
+import qualified Hasura.Backends.Postgres.SQL.Types    as PG
 import qualified Hasura.GraphQL.Parser                 as P
+import qualified Hasura.GraphQL.Schema.Postgres        as PGS
 
 import           Data.Text.Extended
-import           Hasura.Backends.Postgres.SQL.Types
 import           Hasura.GraphQL.Context
 import           Hasura.GraphQL.Execute.Types
 import           Hasura.GraphQL.Parser                 (Kind (..), Parser, Schema (..),
@@ -29,6 +31,7 @@ import           Hasura.GraphQL.Parser                 (Kind (..), Parser, Schem
 import           Hasura.GraphQL.Parser.Class
 import           Hasura.GraphQL.Parser.Internal.Parser (FieldParser (..))
 import           Hasura.GraphQL.Schema.Action
+import           Hasura.GraphQL.Schema.Backend
 import           Hasura.GraphQL.Schema.Common
 import           Hasura.GraphQL.Schema.Introspect
 import           Hasura.GraphQL.Schema.Mutation
@@ -38,6 +41,27 @@ import           Hasura.GraphQL.Schema.Table
 import           Hasura.RQL.DDL.Schema.Cache.Common
 import           Hasura.RQL.Types
 import           Hasura.Session
+
+
+-- Mapping from backend to schema.
+-- Those instances are orphan by design: generic parsers must be written with the knowledge of the
+-- BackendSchema typeclass, and the backend-specific parsers that we specify here do in turn rely on
+-- those generic parsers. To avoid a include loop, we split the definition of the typeclass and of
+-- its instance.
+
+instance BackendSchema 'Postgres where
+  columnParser              = PGS.columnParser
+  jsonPathArg               = PGS.jsonPathArg
+  getTableGQLName           = PGS.getTableGQLName
+  orderByOperators          = PGS.orderByOperators
+  comparisonExps            = PGS.comparisonExps
+  parseScalarValue          = parsePGScalarValue
+  offsetParser              = PGS.offsetParser
+  mkCountType               = PGS.mkCountType
+  aggregateOrderByCountType = PG.PGInteger
+  computedField             = computedFieldPG
+  node                      = nodePG
+  remoteRelationshipField   = remoteRelationshipFieldPG
 
 -- | Whether the request is sent with `x-hasura-use-backend-only-permissions` set to `true`.
 data Scenario = Backend | Frontend deriving (Enum, Show, Eq)
@@ -53,10 +77,10 @@ buildGQLContext
      , MonadIO m
      , MonadUnique m
      , HasSQLGenCtx m
-     , HasEnableRemoteSchemaPermsCtx m
+     , HasRemoteSchemaPermsCtx m
      )
   => ( GraphQLQueryType
-     , TableCache
+     , TableCache 'Postgres
      , FunctionCache
      , RemoteSchemaCache
      , ActionCache
@@ -70,25 +94,27 @@ buildGQLContext =
   proc (queryType, allTables, allFunctions, allRemoteSchemas, allActions, nonObjectCustomTypes) -> do
 
     SQLGenCtx{ stringifyNum } <- bindA -< askSQLGenCtx
-    isEnabledRemoteSchemaPerms <-
-      bindA -< enableRemoteSchemaPerms <$> askEnableRemoteSchemaPermsCtx
+    remoteSchemaPermsCtx <- bindA -< askRemoteSchemaPermsCtx
 
-    let remoteSchemasRoles = concatMap (Map.keys . _rscpPermissions . fst . snd) $ Map.toList allRemoteSchemas
+    let remoteSchemasRoles = concatMap (Map.keys . _rscPermissions . fst . snd) $ Map.toList allRemoteSchemas
 
     let allRoles = Set.insert adminRoleName $
              (allTables ^.. folded.tiRolePermInfoMap.to Map.keys.folded)
           <> (allActionInfos ^.. folded.aiPermissions.to Map.keys.folded)
-          <> (Set.fromList $ (bool mempty remoteSchemasRoles $ isEnabledRemoteSchemaPerms))
+          <> Set.fromList (bool mempty remoteSchemasRoles $ remoteSchemaPermsCtx == RemoteSchemaPermsEnabled)
         allActionInfos = Map.elems allActions
         queryRemotesMap =
-          fmap (map fDefinition . piQuery . rscParsed . _rscpContext . fst) allRemoteSchemas
-        queryContext = QueryContext stringifyNum queryType queryRemotesMap isEnabledRemoteSchemaPerms
+          fmap (map fDefinition . piQuery . _rscParsed . fst) allRemoteSchemas
+        remoteSchemaCtxMap = fmap fst allRemoteSchemas
+        queryContext =
+          QueryContext stringifyNum queryType queryRemotesMap remoteSchemaPermsCtx remoteSchemaCtxMap
 
     -- build the admin DB-only context so that we can check against name clashes with remotes
     -- TODO: Is there a better way to check for conflicts without actually building the admin schema?
     adminHasuraDBContext <- bindA -<
       buildFullestDBSchema queryContext allTables allFunctions allRemoteSchemas allActionInfos nonObjectCustomTypes
 
+    -- TODO factor out the common function; throw500 in both cases:
     queryFieldNames :: [G.Name] <- bindA -<
       case P.discardNullability $ P.parserType $ fst adminHasuraDBContext of
         -- It really ought to be this case; anything else is a programming error.
@@ -116,24 +142,24 @@ buildGQLContext =
           case queryType of
             QueryHasura ->
               buildRoleContext queryContext allTables allFunctions allRemoteSchemas allActionInfos
-              nonObjectCustomTypes remotes roleName isEnabledRemoteSchemaPerms
+              nonObjectCustomTypes remotes roleName remoteSchemaPermsCtx
             QueryRelay ->
               buildRelayRoleContext queryContext allTables allFunctions allRemoteSchemas allActionInfos
               nonObjectCustomTypes adminMutationRemotes roleName
       )
-    unauthenticated <- bindA -< unauthenticatedContext adminQueryRemotes adminMutationRemotes isEnabledRemoteSchemaPerms
+    unauthenticated <- bindA -< unauthenticatedContext adminQueryRemotes adminMutationRemotes remoteSchemaPermsCtx
     returnA -< (roleContexts, unauthenticated)
 
 runMonadSchema
   :: (Monad m)
   => RoleName
   -> QueryContext
-  -> Map.HashMap QualifiedTable (TableInfo 'Postgres)
+  -> Map.HashMap PG.QualifiedTable (TableInfo 'Postgres)
   -> RemoteSchemaCache
   -> P.SchemaT
        (P.ParseT Identity)
        (ReaderT ( RoleName
-                , Map.HashMap QualifiedTable (TableInfo 'Postgres)
+                , Map.HashMap PG.QualifiedTable (TableInfo 'Postgres)
                 , QueryContext
                 , (HashMap RemoteSchemaName RemoteSchemaCtx)
                 ) m
@@ -151,46 +177,44 @@ buildRoleBasedRemoteSchemaParser
 buildRoleBasedRemoteSchemaParser role remoteSchemaCache = do
   let remoteSchemaIntroInfos = map fst $ toList remoteSchemaCache
   remoteSchemaPerms <-
-    for remoteSchemaIntroInfos $ \(RemoteSchemaCtx remoteSchemaName ctx perms) ->
-      for (Map.lookup role perms) $ \introspectRes -> do
+    for remoteSchemaIntroInfos $ \(RemoteSchemaCtx remoteSchemaName _ remoteSchemaInfo _ _ permissions) ->
+      for (Map.lookup role permissions) $ \introspectRes -> do
         (queryParsers, mutationParsers, subscriptionParsers) <-
-             P.runSchemaT @m @(P.ParseT Identity) $ buildRemoteParser introspectRes $ rscInfo ctx
+             P.runSchemaT @m @(P.ParseT Identity) $ buildRemoteParser introspectRes remoteSchemaInfo
         let parsedIntrospection = ParsedIntrospection queryParsers mutationParsers subscriptionParsers
         return $ (remoteSchemaName, parsedIntrospection)
   return $ catMaybes remoteSchemaPerms
 
 -- TODO: Integrate relay schema
 buildRoleContext
-  :: (MonadError QErr m, MonadIO m, MonadUnique m )
-  => QueryContext -> TableCache -> FunctionCache -> RemoteSchemaCache
+  :: (MonadError QErr m, MonadIO m, MonadUnique m)
+  => QueryContext -> TableCache 'Postgres -> FunctionCache -> RemoteSchemaCache
   -> [ActionInfo 'Postgres] -> NonObjectTypeMap
   -> [( RemoteSchemaName , ParsedIntrospection)]
   -> RoleName
-  -> Bool
+  -> RemoteSchemaPermsCtx
   -> m (RoleContext GQLContext)
 buildRoleContext queryContext (takeValidTables -> allTables) (takeValidFunctions -> allFunctions)
-  allRemoteSchemas allActionInfos nonObjectCustomTypes remotes roleName isEnabledRemoteSchemaPerms = do
+  allRemoteSchemas allActionInfos nonObjectCustomTypes remotes roleName remoteSchemaPermsCtx = do
 
   roleBasedRemoteSchemas <-
-    if | roleName == adminRoleName  -> pure remotes
-       | isEnabledRemoteSchemaPerms -> buildRoleBasedRemoteSchemaParser roleName allRemoteSchemas
+    if | roleName == adminRoleName                        -> pure remotes
+       | remoteSchemaPermsCtx == RemoteSchemaPermsEnabled -> buildRoleBasedRemoteSchemaParser roleName allRemoteSchemas
        -- when remote schema permissions are not enabled, then remote schemas
        -- are a public entity which is accesible to all the roles
-       | otherwise                  -> pure remotes
+       | otherwise                                        -> pure remotes
 
   let queryRemotes    = getQueryRemotes $ snd <$> roleBasedRemoteSchemas
       mutationRemotes = getMutationRemotes $ snd <$> roleBasedRemoteSchemas
 
   runMonadSchema roleName queryContext allTables allRemoteSchemas $ do
-
-
     mutationParserFrontend <-
       buildPGMutationFields Frontend tableNames >>=
-      buildMutationParser mutationRemotes allActionInfos nonObjectCustomTypes
+      buildMutationParser mutationRemotes allActionInfos nonObjectCustomTypes allFunctions
 
     mutationParserBackend <-
       buildPGMutationFields Backend tableNames >>=
-      buildMutationParser mutationRemotes allActionInfos nonObjectCustomTypes
+      buildMutationParser mutationRemotes allActionInfos nonObjectCustomTypes allFunctions
 
     queryPGFields <- buildPostgresQueryFields tableNames allFunctions
     subscriptionParser <- buildSubscriptionParser queryPGFields allActionInfos
@@ -219,34 +243,48 @@ buildRoleContext queryContext (takeValidTables -> allTables) (takeValidFunctions
         -> [P.FieldParser (P.ParseT Identity) RemoteField]
       getMutationRemotes = concatMap (concat . piMutation)
 
-takeValidTables :: TableCache -> TableCache
+-- TODO why do we do these validations at this point? What does it mean to track
+--      a function but not add it to the schema...?
+--      Auke:
+--        I believe the intention is simply to allow the console to do postgres data management
+--      Karthikeyan: Yes, this is correct. We allowed this pre PDV but somehow
+--        got removed in PDV. OTOH, I’m not sure how prevalent this feature
+--        actually is
+takeValidTables :: TableCache 'Postgres -> TableCache 'Postgres
 takeValidTables = Map.filterWithKey graphQLTableFilter . Map.filter tableFilter
   where
     tableFilter = not . isSystemDefined . _tciSystemDefined . _tiCoreInfo
     graphQLTableFilter tableName tableInfo =
       -- either the table name should be GraphQL compliant
       -- or it should have a GraphQL custom name set with it
-      isGraphQLCompliantTableName tableName
+      PG.isGraphQLCompliantTableName tableName
       || (isJust . _tcCustomName . _tciCustomConfig . _tiCoreInfo $ tableInfo)
 
+-- TODO and what about graphql-compliant function names here too?
 takeValidFunctions :: FunctionCache -> [FunctionInfo]
 takeValidFunctions = Map.elems . Map.filter functionFilter
   where
     functionFilter = not . isSystemDefined . fiSystemDefined
 
+takeExposedAs :: FunctionExposedAs -> [FunctionInfo] -> [FunctionInfo]
+takeExposedAs x = filter ((== x) . fiExposedAs)
+
+
 buildFullestDBSchema
   :: (MonadError QErr m, MonadIO m, MonadUnique m)
-  => QueryContext -> TableCache -> FunctionCache -> RemoteSchemaCache
+  => QueryContext -> TableCache 'Postgres -> FunctionCache -> RemoteSchemaCache
   -> [ActionInfo 'Postgres] -> NonObjectTypeMap
-  -> m ( Parser 'Output (P.ParseT Identity) (OMap.InsOrdHashMap G.Name (QueryRootField UnpreparedValue))
-       , Maybe (Parser 'Output (P.ParseT Identity) (OMap.InsOrdHashMap G.Name (MutationRootField UnpreparedValue)))
+  -> m ( Parser 'Output (P.ParseT Identity) (OMap.InsOrdHashMap G.Name (QueryRootField (UnpreparedValue 'Postgres)))
+       , Maybe (Parser 'Output (P.ParseT Identity) (OMap.InsOrdHashMap G.Name (MutationRootField (UnpreparedValue 'Postgres))))
        )
 buildFullestDBSchema queryContext (takeValidTables -> allTables) (takeValidFunctions -> allFunctions)
   allRemoteSchemas allActionInfos nonObjectCustomTypes = do
   runMonadSchema adminRoleName queryContext allTables allRemoteSchemas $ do
     mutationParserFrontend <-
       buildPGMutationFields Frontend tableNames >>=
-      buildMutationParser mempty allActionInfos nonObjectCustomTypes
+      -- NOTE: we omit remotes here on purpose since we're trying to check name
+      -- clashes with remotes:
+      buildMutationParser mempty allActionInfos nonObjectCustomTypes allFunctions
 
     queryPGFields <- buildPostgresQueryFields tableNames allFunctions
     subscriptionParser <- buildSubscriptionParser queryPGFields allActionInfos
@@ -261,7 +299,7 @@ buildFullestDBSchema queryContext (takeValidTables -> allTables) (takeValidFunct
 
 buildRelayRoleContext
   :: (MonadError QErr m, MonadIO m, MonadUnique m)
-  => QueryContext -> TableCache -> FunctionCache -> RemoteSchemaCache
+  => QueryContext -> TableCache 'Postgres -> FunctionCache -> RemoteSchemaCache
   -> [ActionInfo 'Postgres] -> NonObjectTypeMap
   -> [P.FieldParser (P.ParseT Identity) RemoteField]
   -> RoleName
@@ -274,11 +312,11 @@ buildRelayRoleContext queryContext (takeValidTables -> allTables) (takeValidFunc
   runMonadSchema roleName queryContext allTables allRemoteSchemas $ do
     mutationParserFrontend <-
       buildPGMutationFields Frontend tableNames >>=
-      buildMutationParser mutationRemotes allActionInfos nonObjectCustomTypes
+      buildMutationParser mutationRemotes allActionInfos nonObjectCustomTypes allFunctions
 
     mutationParserBackend <-
       buildPGMutationFields Backend tableNames >>=
-      buildMutationParser mutationRemotes allActionInfos nonObjectCustomTypes
+      buildMutationParser mutationRemotes allActionInfos nonObjectCustomTypes allFunctions
 
     queryPGFields <- buildRelayPostgresQueryFields tableNames allFunctions
     subscriptionParser <- P.safeSelectionSet subscriptionRoot Nothing queryPGFields
@@ -311,11 +349,12 @@ unauthenticatedContext
      )
   => [P.FieldParser (P.ParseT Identity) RemoteField]
   -> [P.FieldParser (P.ParseT Identity) RemoteField]
-  -> Bool
+  -> RemoteSchemaPermsCtx
   -> m GQLContext
-unauthenticatedContext adminQueryRemotes adminMutationRemotes isEnabledRemoteSchemaPerms = P.runSchemaT $ do
-  let queryFields = bool (fmap (fmap RFRemote) adminQueryRemotes) [] isEnabledRemoteSchemaPerms
-      mutationFields = bool (fmap (fmap RFRemote) adminMutationRemotes) [] isEnabledRemoteSchemaPerms
+unauthenticatedContext adminQueryRemotes adminMutationRemotes remoteSchemaPermsCtx = P.runSchemaT $ do
+  let isRemoteSchemaPermsEnabled = remoteSchemaPermsCtx == RemoteSchemaPermsEnabled
+      queryFields = bool (fmap (fmap RFRemote) adminQueryRemotes) [] isRemoteSchemaPermsEnabled
+      mutationFields = bool (fmap (fmap RFRemote) adminMutationRemotes) [] isRemoteSchemaPermsEnabled
   mutationParser <-
     if null adminMutationRemotes
     then pure Nothing
@@ -348,7 +387,7 @@ remoteSchemaFields = proc (queryFieldNames, mutationFieldNames, allRemoteSchemas
          let (queryOld, mutationOld) =
                unzip $ fmap ((\case ParsedIntrospection q m _ -> (q,m)) . snd) okSchemas
          let ParsedIntrospection queryNew mutationNew _subscriptionNew
-               = rscParsed $ _rscpContext newSchemaContext
+               = _rscParsed newSchemaContext
          -- Check for conflicts between remotes
          bindErrorA -<
            for_ (duplicates (fmap (P.getName . fDefinition) (queryNew ++ concat queryOld))) $
@@ -373,25 +412,25 @@ remoteSchemaFields = proc (queryFieldNames, mutationFieldNames, allRemoteSchemas
          ) |) newMetadataObject
        case checkedDuplicates of
          Nothing -> returnA -< okSchemas
-         Just _  -> returnA -< (newSchemaName, rscParsed $ _rscpContext newSchemaContext):okSchemas
+         Just _  -> returnA -< (newSchemaName, _rscParsed newSchemaContext):okSchemas
      ) |) [] (Map.toList allRemoteSchemas)
 
 buildPostgresQueryFields
   :: forall m n r
    . ( MonadSchema n m
-     , MonadTableInfo r m
+     , MonadTableInfo 'Postgres r m
      , MonadRole r m
      , Has QueryContext r
      )
-  => HashSet QualifiedTable
+  => HashSet PG.QualifiedTable
   -> [FunctionInfo]
-  -> m [P.FieldParser n (QueryRootField UnpreparedValue)]
-buildPostgresQueryFields allTables allFunctions = do
+  -> m [P.FieldParser n (QueryRootField (UnpreparedValue 'Postgres))]
+buildPostgresQueryFields allTables (takeExposedAs FEAQuery -> queryFunctions) = do
   tableSelectExpParsers <- for (toList allTables) \table -> do
     selectPerms <- tableSelectPermissions table
-    customRootFields <- _tcCustomRootFields . _tciCustomConfig . _tiCoreInfo <$> askTableInfo table
+    customRootFields <- _tcCustomRootFields . _tciCustomConfig . _tiCoreInfo <$> askTableInfo @'Postgres table
     for selectPerms \perms -> do
-      tableGQLName <- getTableGQLName table
+      tableGQLName <- getTableGQLName @'Postgres table
       let fieldsDesc = G.Description $ "fetch data from the table: " <>> table
           aggName = tableGQLName <> $$(G.litName "_aggregate")
           aggDesc = G.Description $ "fetch aggregated fields from the table: " <>> table
@@ -402,12 +441,12 @@ buildPostgresQueryFields allTables allFunctions = do
         , mapMaybeFieldParser (RFDB . QDBPrimaryKey)  $ selectTableByPk      table (fromMaybe pkName       $ _tcrfSelectByPk      customRootFields) (Just pkDesc)     perms
         , mapMaybeFieldParser (RFDB . QDBAggregation) $ selectTableAggregate table (fromMaybe aggName      $ _tcrfSelectAggregate customRootFields) (Just aggDesc)    perms
         ]
-  functionSelectExpParsers <- for allFunctions \function -> do
+  functionSelectExpParsers <- for queryFunctions \function -> do
     let targetTable = fiReturnType function
         functionName = fiName function
     selectPerms <- tableSelectPermissions targetTable
     for selectPerms \perms -> do
-      displayName <- qualifiedObjectToName functionName
+      displayName <- PG.qualifiedObjectToName functionName
       let functionDesc = G.Description $ "execute function " <> functionName <<> " which returns " <>> targetTable
           aggName = displayName <> $$(G.litName "_aggregate")
           aggDesc = G.Description $ "execute function " <> functionName <<> " and query aggregates on result of table type " <>> targetTable
@@ -417,23 +456,25 @@ buildPostgresQueryFields allTables allFunctions = do
         ]
   pure $ (concat . catMaybes) (tableSelectExpParsers <> functionSelectExpParsers)
   where
-    requiredFieldParser :: (a -> b) -> m (P.FieldParser n a) -> m (Maybe (P.FieldParser n b))
-    requiredFieldParser f = fmap $ Just . fmap f
-
     mapMaybeFieldParser :: (a -> b) -> m (Maybe (P.FieldParser n a)) -> m (Maybe (P.FieldParser n b))
     mapMaybeFieldParser f = fmap $ fmap $ fmap f
+
+requiredFieldParser
+  :: (Functor n, Functor m)=> (a -> b) -> m (P.FieldParser n a) -> m (Maybe (P.FieldParser n b))
+requiredFieldParser f = fmap $ Just . fmap f
+
 
 -- | Includes remote schema fields and actions
 buildActionQueryFields
   :: forall m n r
    . ( MonadSchema n m
-     , MonadTableInfo r m
+     , MonadTableInfo 'Postgres r m
      , MonadRole r m
      , Has QueryContext r
      )
   => [ActionInfo 'Postgres]
   -> NonObjectTypeMap
-  -> m [P.FieldParser n (QueryRootField UnpreparedValue)]
+  -> m [P.FieldParser n (QueryRootField (UnpreparedValue 'Postgres))]
 buildActionQueryFields allActions nonObjectCustomTypes = do
   actionParsers <- for allActions $ \actionInfo ->
     case _adType (_aiDefinition actionInfo) of
@@ -447,12 +488,12 @@ buildActionQueryFields allActions nonObjectCustomTypes = do
 buildActionSubscriptionFields
   :: forall m n r
    . ( MonadSchema n m
-     , MonadTableInfo r m
+     , MonadTableInfo 'Postgres r m
      , MonadRole r m
      , Has QueryContext r
      )
   => [ActionInfo 'Postgres]
-  -> m [P.FieldParser n (QueryRootField UnpreparedValue)]
+  -> m [P.FieldParser n (QueryRootField (UnpreparedValue 'Postgres))]
 buildActionSubscriptionFields allActions = do
   actionParsers <- for allActions $ \actionInfo ->
     case _adType (_aiDefinition actionInfo) of
@@ -465,30 +506,30 @@ buildActionSubscriptionFields allActions = do
 buildRelayPostgresQueryFields
   :: forall m n r
    . ( MonadSchema n m
-     , MonadTableInfo r m
+     , MonadTableInfo 'Postgres r m
      , MonadRole r m
      , Has QueryContext r
      )
-  => HashSet QualifiedTable
+  => HashSet PG.QualifiedTable
   -> [FunctionInfo]
-  -> m [P.FieldParser n (QueryRootField UnpreparedValue)]
-buildRelayPostgresQueryFields allTables allFunctions = do
+  -> m [P.FieldParser n (QueryRootField (UnpreparedValue 'Postgres))]
+buildRelayPostgresQueryFields allTables (takeExposedAs FEAQuery -> queryFunctions) = do
   tableConnectionFields <- for (toList allTables) $ \table -> runMaybeT do
     pkeyColumns <- MaybeT $ (^? tiCoreInfo.tciPrimaryKey._Just.pkColumns)
                    <$> askTableInfo table
     selectPerms <- MaybeT $ tableSelectPermissions table
-    tableGQLName <- getTableGQLName table
+    tableGQLName <- getTableGQLName @'Postgres table
     let fieldName = tableGQLName <> $$(G.litName "_connection")
         fieldDesc = Just $ G.Description $ "fetch data from the table: " <>> table
     lift $ selectTableConnection table fieldName fieldDesc pkeyColumns selectPerms
 
-  functionConnectionFields <- for allFunctions $ \function -> runMaybeT do
+  functionConnectionFields <- for queryFunctions $ \function -> runMaybeT do
     let returnTable = fiReturnType function
         functionName = fiName function
     pkeyColumns <- MaybeT $ (^? tiCoreInfo.tciPrimaryKey._Just.pkColumns)
                    <$> askTableInfo returnTable
     selectPerms <- MaybeT $ tableSelectPermissions returnTable
-    displayName <- qualifiedObjectToName functionName
+    displayName <- PG.qualifiedObjectToName functionName
     let fieldName = displayName <> $$(G.litName "_connection")
         fieldDesc = Just $ G.Description $ "execute function " <> functionName
                     <<> " which returns " <>> returnTable
@@ -501,8 +542,8 @@ buildRelayPostgresQueryFields allTables allFunctions = do
 queryRootFromFields
   :: forall n m
    . (MonadError QErr m, MonadParse n)
-  => [P.FieldParser n (QueryRootField UnpreparedValue)]
-  -> m (Parser 'Output n (OMap.InsOrdHashMap G.Name (QueryRootField UnpreparedValue)))
+  => [P.FieldParser n (QueryRootField (UnpreparedValue 'Postgres))]
+  -> m (Parser 'Output n (OMap.InsOrdHashMap G.Name (QueryRootField (UnpreparedValue 'Postgres))))
 queryRootFromFields fps =
   P.safeSelectionSet queryRoot Nothing fps
     <&> fmap (fmap (P.handleTypename (RFRaw . J.String . G.unName)))
@@ -510,7 +551,7 @@ queryRootFromFields fps =
 emptyIntrospection
   :: forall m n
    . (MonadSchema n m, MonadError QErr m)
-  => m [P.FieldParser n (QueryRootField UnpreparedValue)]
+  => m [P.FieldParser n (QueryRootField (UnpreparedValue 'Postgres))]
 emptyIntrospection = do
   emptyQueryP <- queryRootFromFields @n []
   introspectionTypes <- collectTypes (P.parserType emptyQueryP)
@@ -530,17 +571,17 @@ collectTypes
   => a
   -> m (HashMap G.Name (P.Definition P.SomeTypeInfo))
 collectTypes x = case P.collectTypeDefinitions x of
-  Left (P.ConflictingDefinitions type1 _) -> throw500 $
-    "found conflicting definitions for " <> P.getName type1
-    <<> " when collecting types from the schema"
+  Left (P.ConflictingDefinitions (type1, origin1) (_type2, origins)) -> throw500 $
+    "Found conflicting definitions for " <> P.getName type1
+    <<> ".  The definition at " <> origin1 <<> " differs from the the definition at " <>> commaSeparated origins
   Right tps -> pure tps
 
 queryWithIntrospectionHelper
   :: (MonadSchema n m, MonadError QErr m)
-  => [P.FieldParser n (QueryRootField UnpreparedValue)]
-  -> Maybe (Parser 'Output n (OMap.InsOrdHashMap G.Name (MutationRootField UnpreparedValue)))
-  -> Parser 'Output n (OMap.InsOrdHashMap G.Name (QueryRootField UnpreparedValue))
-  -> m (Parser 'Output n (OMap.InsOrdHashMap G.Name (QueryRootField UnpreparedValue)))
+  => [P.FieldParser n (QueryRootField (UnpreparedValue 'Postgres))]
+  -> Maybe (Parser 'Output n (OMap.InsOrdHashMap G.Name (MutationRootField (UnpreparedValue 'Postgres))))
+  -> Parser 'Output n (OMap.InsOrdHashMap G.Name (QueryRootField (UnpreparedValue 'Postgres)))
+  -> m (Parser 'Output n (OMap.InsOrdHashMap G.Name (QueryRootField (UnpreparedValue 'Postgres))))
 queryWithIntrospectionHelper basicQueryFP mutationP subscriptionP = do
   basicQueryP <- queryRootFromFields basicQueryFP
   emptyIntro <- emptyIntrospection
@@ -572,17 +613,17 @@ queryWithIntrospectionHelper basicQueryFP mutationP subscriptionP = do
 buildQueryParser
   :: forall m n r
    . ( MonadSchema n m
-     , MonadTableInfo r m
+     , MonadTableInfo 'Postgres r m
      , MonadRole r m
      , Has QueryContext r
      )
-  => [P.FieldParser n (QueryRootField UnpreparedValue)]
+  => [P.FieldParser n (QueryRootField (UnpreparedValue 'Postgres))]
   -> [P.FieldParser n RemoteField]
   -> [ActionInfo 'Postgres]
   -> NonObjectTypeMap
-  -> Maybe (Parser 'Output n (OMap.InsOrdHashMap G.Name (MutationRootField UnpreparedValue)))
-  -> Parser 'Output n (OMap.InsOrdHashMap G.Name (QueryRootField UnpreparedValue))
-  -> m (Parser 'Output n (OMap.InsOrdHashMap G.Name (QueryRootField UnpreparedValue)))
+  -> Maybe (Parser 'Output n (OMap.InsOrdHashMap G.Name (MutationRootField (UnpreparedValue 'Postgres))))
+  -> Parser 'Output n (OMap.InsOrdHashMap G.Name (QueryRootField (UnpreparedValue 'Postgres)))
+  -> m (Parser 'Output n (OMap.InsOrdHashMap G.Name (QueryRootField (UnpreparedValue 'Postgres))))
 buildQueryParser pgQueryFields remoteFields allActions nonObjectCustomTypes mutationParser subscriptionParser = do
   actionQueryFields <- buildActionQueryFields allActions nonObjectCustomTypes
   let allQueryFields = pgQueryFields <> actionQueryFields <> map (fmap RFRemote) remoteFields
@@ -594,13 +635,13 @@ buildQueryParser pgQueryFields remoteFields allActions nonObjectCustomTypes muta
 buildSubscriptionParser
   :: forall m n r
    . ( MonadSchema n m
-     , MonadTableInfo r m
+     , MonadTableInfo 'Postgres r m
      , MonadRole r m
      , Has QueryContext r
      )
-  => [P.FieldParser n (QueryRootField UnpreparedValue)]
+  => [P.FieldParser n (QueryRootField (UnpreparedValue 'Postgres))]
   -> [ActionInfo 'Postgres]
-  -> m (Parser 'Output n (OMap.InsOrdHashMap G.Name (QueryRootField UnpreparedValue)))
+  -> m (Parser 'Output n (OMap.InsOrdHashMap G.Name (QueryRootField (UnpreparedValue 'Postgres))))
 buildSubscriptionParser pgQueryFields allActions = do
   actionSubscriptionFields <- buildActionSubscriptionFields allActions
   let subscriptionFields = pgQueryFields <> actionSubscriptionFields
@@ -609,13 +650,13 @@ buildSubscriptionParser pgQueryFields allActions = do
 
 buildPGMutationFields
   :: forall m n r
-   . (MonadSchema n m, MonadTableInfo r m, MonadRole r m, Has QueryContext r)
-  => Scenario -> HashSet QualifiedTable
-  -> m [P.FieldParser n (MutationRootField UnpreparedValue)]
+   . (MonadSchema n m, MonadTableInfo 'Postgres r m, MonadRole r m, Has QueryContext r)
+  => Scenario -> HashSet PG.QualifiedTable
+  -> m [P.FieldParser n (MutationRootField (UnpreparedValue 'Postgres))]
 buildPGMutationFields scenario allTables = do
   concat . catMaybes <$> for (toList allTables) \table -> do
-    tableCoreInfo <- _tiCoreInfo <$> askTableInfo table
-    tableGQLName   <- getTableGQLName table
+    tableCoreInfo <- _tiCoreInfo <$> askTableInfo @'Postgres table
+    tableGQLName   <- getTableGQLName @'Postgres table
     tablePerms    <- tablePermissions table
     for tablePerms \RolePermInfo{..} -> do
       let customRootFields = _tcCustomRootFields $ _tciCustomConfig tableCoreInfo
@@ -692,13 +733,31 @@ queryRoot = $$(G.litName "query_root")
 
 buildMutationParser
   :: forall m n r
-   . (MonadSchema n m, MonadTableInfo r m, MonadRole r m, Has QueryContext r)
+   . (MonadSchema n m, MonadTableInfo 'Postgres r m, MonadRole r m, Has QueryContext r)
   => [P.FieldParser n RemoteField]
   -> [ActionInfo 'Postgres]
   -> NonObjectTypeMap
-  -> [P.FieldParser n (MutationRootField UnpreparedValue)]
-  -> m (Maybe (Parser 'Output n (OMap.InsOrdHashMap G.Name (MutationRootField UnpreparedValue))))
-buildMutationParser allRemotes allActions nonObjectCustomTypes pgMutationFields = do
+  -> [FunctionInfo]
+  -- ^ all "valid" functions
+  -> [P.FieldParser n (MutationRootField (UnpreparedValue 'Postgres))]
+  -> m (Maybe (Parser 'Output n (OMap.InsOrdHashMap G.Name (MutationRootField (UnpreparedValue 'Postgres)))))
+buildMutationParser allRemotes allActions nonObjectCustomTypes
+    (takeExposedAs FEAMutation -> mutationFunctions) pgMutationFields = do
+
+   -- NOTE: this is basically copied from functionSelectExpParsers body
+  functionMutationExpParsers <- for mutationFunctions \function@FunctionInfo{..} -> do
+    selectPerms <- tableSelectPermissions fiReturnType
+    for selectPerms \perms -> do
+      displayName <- PG.qualifiedObjectToName fiName
+      let functionDesc = G.Description $
+            "execute VOLATILE function " <> fiName <<> " which returns " <>> fiReturnType
+      catMaybes <$> sequenceA
+        [ requiredFieldParser (RFDB . MDBFunction) $
+            selectFunction function displayName (Just functionDesc) perms
+        -- FWIW: The equivalent of this is possible for mutations; do we want that?:
+        -- , mapMaybeFieldParser (RFDB . QDBAggregation) $ selectFunctionAggregate function aggName     (Just aggDesc)      perms
+        ]
+
   actionParsers <- for allActions $ \actionInfo ->
     case _adType (_aiDefinition actionInfo) of
       ActionMutation ActionSynchronous ->
@@ -706,7 +765,12 @@ buildMutationParser allRemotes allActions nonObjectCustomTypes pgMutationFields 
       ActionMutation ActionAsynchronous ->
         fmap (fmap (RFAction . AMAsync)) <$> actionAsyncMutation nonObjectCustomTypes actionInfo
       ActionQuery -> pure Nothing
-  let mutationFieldsParser = pgMutationFields <> catMaybes actionParsers <> fmap (fmap RFRemote) allRemotes
+
+  let mutationFieldsParser =
+        pgMutationFields <>
+        concat (catMaybes functionMutationExpParsers) <>
+        catMaybes actionParsers <>
+        fmap (fmap RFRemote) allRemotes
   if null mutationFieldsParser
   then pure Nothing
   else P.safeSelectionSet mutationRoot (Just $ G.Description "mutation root") mutationFieldsParser

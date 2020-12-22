@@ -20,6 +20,7 @@ import qualified Hasura.GraphQL.Execute.Plan      as E
 import qualified Hasura.Logging                   as L
 
 import           Hasura.Prelude
+import           Hasura.RQL.Types                 (RemoteSchemaPermsCtx (..))
 import           Hasura.Server.Auth
 import           Hasura.Server.Cors
 import           Hasura.Session
@@ -39,35 +40,35 @@ type RawAuthHook = AuthHookG (Maybe Text) (Maybe AuthHookType)
 
 data RawServeOptions impl
   = RawServeOptions
-  { rsoPort                  :: !(Maybe Int)
-  , rsoHost                  :: !(Maybe HostPreference)
-  , rsoConnParams            :: !RawConnParams
-  , rsoTxIso                 :: !(Maybe Q.TxIsolation)
-  , rsoAdminSecret           :: !(Maybe AdminSecretHash)
-  , rsoAuthHook              :: !RawAuthHook
-  , rsoJwtSecret             :: !(Maybe JWTConfig)
-  , rsoUnAuthRole            :: !(Maybe RoleName)
-  , rsoCorsConfig            :: !(Maybe CorsConfig)
-  , rsoEnableConsole         :: !Bool
-  , rsoConsoleAssetsDir      :: !(Maybe Text)
-  , rsoEnableTelemetry       :: !(Maybe Bool)
-  , rsoWsReadCookie          :: !Bool
-  , rsoStringifyNum          :: !Bool
-  , rsoEnabledAPIs           :: !(Maybe [API])
-  , rsoMxRefetchInt          :: !(Maybe LQ.RefetchInterval)
-  , rsoMxBatchSize           :: !(Maybe LQ.BatchSize)
-  , rsoEnableAllowlist       :: !Bool
-  , rsoEnabledLogTypes       :: !(Maybe [L.EngineLogType impl])
-  , rsoLogLevel              :: !(Maybe L.LogLevel)
-  , rsoPlanCacheSize         :: !(Maybe Cache.CacheSize)
-  , rsoDevMode               :: !Bool
-  , rsoAdminInternalErrors   :: !(Maybe Bool)
-  , rsoEventsHttpPoolSize    :: !(Maybe Int)
-  , rsoEventsFetchInterval   :: !(Maybe Milliseconds)
-  , rsoLogHeadersFromEnv     :: !Bool
+  { rsoPort                          :: !(Maybe Int)
+  , rsoHost                          :: !(Maybe HostPreference)
+  , rsoConnParams                    :: !RawConnParams
+  , rsoTxIso                         :: !(Maybe Q.TxIsolation)
+  , rsoAdminSecret                   :: !(Maybe AdminSecretHash)
+  , rsoAuthHook                      :: !RawAuthHook
+  , rsoJwtSecret                     :: !(Maybe JWTConfig)
+  , rsoUnAuthRole                    :: !(Maybe RoleName)
+  , rsoCorsConfig                    :: !(Maybe CorsConfig)
+  , rsoEnableConsole                 :: !Bool
+  , rsoConsoleAssetsDir              :: !(Maybe Text)
+  , rsoEnableTelemetry               :: !(Maybe Bool)
+  , rsoWsReadCookie                  :: !Bool
+  , rsoStringifyNum                  :: !Bool
+  , rsoEnabledAPIs                   :: !(Maybe [API])
+  , rsoMxRefetchInt                  :: !(Maybe LQ.RefetchInterval)
+  , rsoMxBatchSize                   :: !(Maybe LQ.BatchSize)
+  , rsoEnableAllowlist               :: !Bool
+  , rsoEnabledLogTypes               :: !(Maybe [L.EngineLogType impl])
+  , rsoLogLevel                      :: !(Maybe L.LogLevel)
+  , rsoPlanCacheSize                 :: !(Maybe Cache.CacheSize)
+  , rsoDevMode                       :: !Bool
+  , rsoAdminInternalErrors           :: !(Maybe Bool)
+  , rsoEventsHttpPoolSize            :: !(Maybe Int)
+  , rsoEventsFetchInterval           :: !(Maybe Milliseconds)
+  , rsoLogHeadersFromEnv             :: !Bool
   , rsoEnableRemoteSchemaPermissions :: !Bool
-  , rsoWebSocketCompression  :: !Bool
-  , rsoWebSocketKeepAlive    :: !(Maybe Int)
+  , rsoWebSocketCompression          :: !Bool
+  , rsoWebSocketKeepAlive            :: !(Maybe Int)
   }
 
 -- | @'ResponseInternalErrorsConfig' represents the encoding of the internal
@@ -115,9 +116,9 @@ data ServeOptions impl
   , soEventsHttpPoolSize            :: !(Maybe Int)
   , soEventsFetchInterval           :: !(Maybe Milliseconds)
   , soLogHeadersFromEnv             :: !Bool
-  , soEnableRemoteSchemaPermissions :: !Bool
-  , soConnectionOptions            :: !WS.ConnectionOptions
-  , soWebsocketKeepAlive           :: !KeepAliveDelay
+  , soEnableRemoteSchemaPermissions :: !RemoteSchemaPermsCtx
+  , soConnectionOptions             :: !WS.ConnectionOptions
+  , soWebsocketKeepAlive            :: !KeepAliveDelay
   }
 
 data DowngradeOptions

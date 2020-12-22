@@ -7,7 +7,8 @@ import           Data.Aeson
 import           Data.Aeson.Internal
 import           Data.Char
 import           Data.Text.Extended
-import           Language.Haskell.TH.Syntax (Lift, Q, TExp)
+import           Hasura.Server.Types
+import           Language.Haskell.TH.Syntax (Q, TExp)
 import           System.Environment
 import           System.Exit
 import           System.Process
@@ -30,10 +31,6 @@ import qualified Text.Regex.TDFA.ReadRegex  as TDFA
 import qualified Text.Regex.TDFA.TDFA       as TDFA
 
 import           Hasura.RQL.Instances       ()
-
-newtype RequestId
-  = RequestId { unRequestId :: Text }
-  deriving (Show, Eq, ToJSON, FromJSON)
 
 jsonHeader :: HTTP.Header
 jsonHeader = ("Content-Type", "application/json; charset=utf-8")
@@ -110,12 +107,6 @@ runScript fp = do
     ++ show exitCode ++ " and with error : " ++ stdErr
   [|| stdOut ||]
 
--- find duplicates
-duplicates :: Ord a => [a] -> [a]
-duplicates = mapMaybe greaterThanOne . group . sort
-  where
-    greaterThanOne l = bool Nothing (Just $ head l) $ length l > 1
-
 -- | Quotes a regex using Template Haskell so syntax errors can be reported at compile-time.
 quoteRegex :: TDFA.CompOption -> TDFA.ExecOption -> String -> Q (TExp TDFA.Regex)
 quoteRegex compOption execOption regexText = do
@@ -149,7 +140,7 @@ httpExceptToJSON e = case e of
   _        -> toJSON $ show e
   where
     showProxy (HC.Proxy h p) =
-      "host: " <> bsToTxt h <> " port: " <> T.pack (show p)
+      "host: " <> bsToTxt h <> " port: " <> tshow p
 
 -- ignore the following request headers from the client
 commonClientHeadersIgnored :: (IsString a) => [a]
@@ -216,7 +207,7 @@ applyFirst f (x:xs) = f x: xs
 data APIVersion
   = VIVersion1
   | VIVersion2
-  deriving (Show, Eq, Lift)
+  deriving (Show, Eq)
 
 instance ToJSON APIVersion where
   toJSON VIVersion1 = toJSON @Int 1

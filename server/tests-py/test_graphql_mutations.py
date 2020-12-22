@@ -379,9 +379,6 @@ class TestGraphqlUpdateBasic:
     def test_column_in_multiple_operators(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + "/article_column_multiple_operators.yaml")
 
-    def test_column_in_multiple_operators(self, hge_ctx):
-        check_query_f(hge_ctx, self.dir() + "/article_column_multiple_operators.yaml")
-
     def test_author_by_pk(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + "/author_by_pk.yaml")
 
@@ -514,6 +511,9 @@ class TestGraphqlDeletePermissions:
     def test_agent_delete_perm_arr_sess_var_fail(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + "/agent_delete_perm_arr_sess_var_fail.yaml")
 
+    def test_user_delete_author(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + "/user_delete_author.yaml")
+
     def test_user_delete_account_success(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + "/user_delete_account_success.yaml")
 
@@ -587,3 +587,29 @@ class TestGraphQLMutateEnums:
 
     def test_delete_where_enum_field(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + '/delete_where_enum_field.yaml', transport)
+
+# Tracking VOLATILE SQL functions as mutations, or queries (#1514)
+@pytest.mark.parametrize('transport', ['http', 'websocket'])
+@use_mutation_fixtures
+class TestGraphQLMutationFunctions:
+    @classmethod
+    def dir(cls):
+        return 'queries/graphql_mutation/functions'
+
+    # basic test that functions are added in the right places in the schema:
+    def test_smoke(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/smoke.yaml', transport)
+
+    # separate file since we this only works over http transport:
+    def test_smoke_errs(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/smoke_errs.yaml', 'http')
+
+    # Test tracking a VOLATILE function as top-level field of mutation root
+    # field, also smoke testing basic permissions on the table return type.
+    def test_functions_as_mutations(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/function_as_mutations.yaml', transport)
+
+    # Ensure select permissions on the corresponding SETOF table apply to
+    # the return set of the mutation field backed by the tracked function.
+    def test_functions_as_mutations_permissions(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/function_as_mutations_permissions.yaml', transport)

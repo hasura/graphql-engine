@@ -76,6 +76,9 @@ class TestRemoteSchemaPermissionsExecution:
         assert st_code == 200, resp
         check_query_f(hge_ctx, self.dir() + 'execution_with_partial_args_exposed_to_role.yaml')
 
+    def test_execution_with_unknown_role(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + 'unknown_role_execution.yaml')
+
 @use_test_fixtures
 class TestRemoteSchemaPermissionsArgumentPresets:
 

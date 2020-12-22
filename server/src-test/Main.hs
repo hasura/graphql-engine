@@ -18,8 +18,9 @@ import qualified Network.HTTP.Client                 as HTTP
 import qualified Network.HTTP.Client.TLS             as HTTP
 import qualified Test.Hspec.Runner                   as Hspec
 
-import           Hasura.Backends.Postgres.Connection (mkPGExecCtx)
-import           Hasura.RQL.Types                    (SQLGenCtx (..), EnableRemoteSchemaPermsCtx(..))
+import           Hasura.Backends.Postgres.Connection (liftTx, mkPGExecCtx)
+import           Hasura.RQL.DDL.Schema.Catalog       (fetchMetadataFromCatalog)
+import           Hasura.RQL.Types                    (SQLGenCtx (..), runMetadataT, RemoteSchemaPermsCtx (..))
 import           Hasura.RQL.Types.Run
 import           Hasura.Server.Init                  (RawConnInfo, mkConnInfo, mkRawConnInfo,
                                                       parseRawConnInfo, runWithEnv)
@@ -83,17 +84,20 @@ buildPostgresSpecs pgConnOptions = do
         pgPool <- Q.initPGPool pgConnInfo Q.defaultConnParams { Q.cpConns = 1 } print
         let pgContext = mkPGExecCtx Q.Serializable pgPool
         httpManager <- HTTP.newManager HTTP.tlsManagerSettings
-        let runContext = RunCtx adminUserInfo httpManager (SQLGenCtx False) (EnableRemoteSchemaPermsCtx False)
+        let runContext = RunCtx adminUserInfo httpManager (SQLGenCtx False) RemoteSchemaPermsDisabled
 
-            runAsAdmin :: Run a -> IO a
+            runAsAdmin :: RunT IO a -> IO a
             runAsAdmin =
                   peelRun runContext pgContext Q.ReadWrite Nothing
               >>> runExceptT
               >=> flip onLeft printErrJExit
 
-        schemaCache <- snd <$> runAsAdmin (migrateCatalog (Env.mkEnvironment env) =<< liftIO getCurrentTime)
+        (schemaCache, metadata) <- runAsAdmin do
+          sc <- snd <$> (migrateCatalog (Env.mkEnvironment env) =<< liftIO getCurrentTime)
+          metadata <- liftTx fetchMetadataFromCatalog
+          pure (sc, metadata)
         cacheRef <- newMVar schemaCache
-        pure $ NT (runAsAdmin . flip MigrateSpec.runCacheRefT cacheRef)
+        pure $ NT (runAsAdmin . flip MigrateSpec.runCacheRefT cacheRef . fmap fst . runMetadataT metadata)
 
   pure $ beforeAll setupCacheRef $
     describe "Hasura.Server.Migrate" $ MigrateSpec.spec pgConnInfo

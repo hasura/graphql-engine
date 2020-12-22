@@ -5,53 +5,54 @@ module Hasura.Server.MigrateSpec (CacheRefT(..), spec) where
 import           Hasura.Prelude
 
 import           Control.Concurrent.MVar.Lifted
-import           Control.Monad.Trans.Control    (MonadBaseControl)
+import           Control.Monad.Trans.Control         (MonadBaseControl)
 import           Control.Monad.Unique
-import           Control.Natural                ((:~>) (..))
-import           Data.Time.Clock                (getCurrentTime)
-import           Data.Tuple                     (swap)
+import           Control.Natural                     ((:~>) (..))
+import           Data.Time.Clock                     (getCurrentTime)
+import           Data.Tuple                          (swap)
 import           Test.Hspec.Core.Spec
 import           Test.Hspec.Expectations.Lifted
 
-import qualified Database.PG.Query              as Q
-import qualified Data.Environment as Env
+import qualified Data.Environment                    as Env
+import qualified Database.PG.Query                   as Q
 
-import           Hasura.RQL.DDL.Metadata        (ClearMetadata (..), runClearMetadata)
+import           Hasura.RQL.DDL.Metadata             (ClearMetadata (..), runClearMetadata)
 import           Hasura.RQL.DDL.Schema
+import           Hasura.RQL.DDL.Schema.LegacyCatalog
 import           Hasura.RQL.Types
 import           Hasura.Server.API.PGDump
-import           Hasura.Server.Init             (DowngradeOptions (..))
+import           Hasura.Server.Init                  (DowngradeOptions (..))
 import           Hasura.Server.Migrate
-import           Hasura.Server.Version          (HasVersion)
+import           Hasura.Server.Version               (HasVersion)
 
 -- -- NOTE: downgrade test disabled for now (see #5273)
 
 newtype CacheRefT m a
-  = CacheRefT { runCacheRefT :: MVar (RebuildableSchemaCache m) -> m a }
+  = CacheRefT { runCacheRefT :: MVar RebuildableSchemaCache -> m a }
   deriving
     ( Functor, Applicative, Monad, MonadIO, MonadError e, MonadBase b, MonadBaseControl b
     , MonadTx, MonadUnique, UserInfoM, HasHttpManager, HasSQLGenCtx )
-    via (ReaderT (MVar (RebuildableSchemaCache m)) m)
+    via (ReaderT (MVar RebuildableSchemaCache) m)
 
 instance MonadTrans CacheRefT where
   lift = CacheRefT . const
 
-instance (MonadBase IO m) => TableCoreInfoRM (CacheRefT m)
+instance (MonadBase IO m) => TableCoreInfoRM 'Postgres (CacheRefT m)
 instance (MonadBase IO m) => CacheRM (CacheRefT m) where
   askSchemaCache = CacheRefT (fmap lastBuiltSchemaCache . readMVar)
 
-instance (MonadIO m, MonadBaseControl IO m, MonadTx m) => CacheRWM (CacheRefT m) where
-  buildSchemaCacheWithOptions reason invalidations = CacheRefT $ flip modifyMVar \schemaCache -> do
-    ((), cache, _) <- runCacheRWT schemaCache (buildSchemaCacheWithOptions reason invalidations)
+instance (MonadIO m, MonadBaseControl IO m, MonadTx m, HasHttpManager m, HasSQLGenCtx m, HasRemoteSchemaPermsCtx m) => CacheRWM (CacheRefT m) where
+  buildSchemaCacheWithOptions reason invalidations metadata = CacheRefT $ flip modifyMVar \schemaCache -> do
+    ((), cache, _) <- runCacheRWT schemaCache (buildSchemaCacheWithOptions reason invalidations metadata)
     pure (cache, ())
 
-instance Example (CacheRefT m ()) where
-  type Arg (CacheRefT m ()) = CacheRefT m :~> IO
+instance Example (MetadataT (CacheRefT m) ()) where
+  type Arg (MetadataT (CacheRefT m) ()) = MetadataT (CacheRefT m) :~> IO
   evaluateExample m params action = evaluateExample (action ($$ m)) params ($ ())
 
-type SpecWithCache m = SpecWith (CacheRefT m :~> IO)
+type SpecWithCache m = SpecWith (MetadataT (CacheRefT m) :~> IO)
 
-singleTransaction :: CacheRefT m () -> CacheRefT m ()
+singleTransaction :: MetadataT (CacheRefT m) () -> MetadataT (CacheRefT m) ()
 singleTransaction = id
 
 spec
@@ -59,15 +60,15 @@ spec
      , MonadIO m
      , MonadBaseControl IO m
      , MonadTx m
-     , MonadUnique m
      , HasHttpManager m
      , HasSQLGenCtx m
-     , HasEnableRemoteSchemaPermsCtx m
+     , HasRemoteSchemaPermsCtx m
      )
   => Q.ConnInfo -> SpecWithCache m
 spec pgConnInfo = do
-  let dropAndInit env time = CacheRefT $ flip modifyMVar \_ ->
+  let dropAndInit env time = lift $ CacheRefT $ flip modifyMVar \_ ->
         dropCatalog *> (swap <$> migrateCatalog env time)
+      downgradeTo v = downgradeCatalog DowngradeOptions{ dgoDryRun = False, dgoTargetVersion = v }
 
   describe "migrateCatalog" $ do
     it "initializes the catalog" $ singleTransaction do
@@ -86,8 +87,7 @@ spec pgConnInfo = do
       secondDump `shouldBe` firstDump
 
     it "supports upgrades after downgrade to version 12" \(NT transact) -> do
-      let downgradeTo v = downgradeCatalog DowngradeOptions{ dgoDryRun = False, dgoTargetVersion = v }
-          upgradeToLatest env time = CacheRefT $ flip modifyMVar \_ ->
+      let upgradeToLatest env time = lift $ CacheRefT $ flip modifyMVar \_ ->
             swap <$> migrateCatalog env time
       env <- Env.getEnvironment
       time <- getCurrentTime
@@ -118,6 +118,11 @@ spec pgConnInfo = do
       env <- Env.getEnvironment
       time <- getCurrentTime
       transact (dropAndInit env time) `shouldReturn` MRInitialized
+      -- Downgrade to catalog version before metadata separation
+      downgradeResult <- (transact . lift) (downgradeTo "42" time)
+      downgradeResult `shouldSatisfy` \case
+        MRMigrated{} -> True
+        _ -> False
       firstDump <- transact dumpMetadata
       transact recreateSystemMetadata
       secondDump <- transact dumpMetadata

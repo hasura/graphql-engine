@@ -17,9 +17,6 @@ import qualified Database.PG.Query                            as Q
 import qualified Network.HTTP.Client                          as HTTP
 import qualified Network.HTTP.Types                           as N
 
-
-import           Instances.TH.Lift                            ()
-
 import qualified Hasura.Backends.Postgres.SQL.DML             as S
 import qualified Hasura.Tracing                               as Tracing
 
@@ -49,10 +46,10 @@ import           Hasura.Session
 
 type MutationRemoteJoinCtx = (HTTP.Manager, [N.Header], UserInfo)
 
-data Mutation (b :: Backend)
+data Mutation (b :: BackendType)
   = Mutation
   { _mTable       :: !QualifiedTable
-  , _mQuery       :: !(S.CTE, DS.Seq Q.PrepArg)
+  , _mQuery       :: !(MutationCTE, DS.Seq Q.PrepArg)
   , _mOutput      :: !(MutationOutput b)
   , _mCols        :: ![ColumnInfo b]
   , _mRemoteJoins :: !(Maybe (RemoteJoins b, MutationRemoteJoinCtx))
@@ -62,7 +59,7 @@ data Mutation (b :: Backend)
 mkMutation
   :: Maybe MutationRemoteJoinCtx
   -> QualifiedTable
-  -> (S.CTE, DS.Seq Q.PrepArg)
+  -> (MutationCTE, DS.Seq Q.PrepArg)
   -> MutationOutput 'Postgres
   -> [ColumnInfo 'Postgres]
   -> Bool
@@ -97,10 +94,7 @@ mutateAndReturn
   -> Mutation 'Postgres
   -> m EncJSON
 mutateAndReturn env (Mutation qt (cte, p) mutationOutput allCols remoteJoins strfyNum) =
-  executeMutationOutputQuery env sqlQuery (toList p) remoteJoins
-  where
-    sqlQuery = Q.fromBuilder $ toSQL $
-               mkMutationOutputExp qt allCols Nothing cte mutationOutput strfyNum
+  executeMutationOutputQuery env qt allCols Nothing cte mutationOutput strfyNum (toList p) remoteJoins
 
 
 execUpdateQuery
@@ -116,7 +110,7 @@ execUpdateQuery
   -> (AnnUpd 'Postgres, DS.Seq Q.PrepArg)
   -> m EncJSON
 execUpdateQuery env strfyNum remoteJoinCtx (u, p) =
-  runMutation env $ mkMutation remoteJoinCtx (uqp1Table u) (updateCTE, p)
+  runMutation env $ mkMutation remoteJoinCtx (uqp1Table u) (MCCheckConstraint updateCTE, p)
                 (uqp1Output u) (uqp1AllCols u) strfyNum
   where
     updateCTE = mkUpdateCTE u
@@ -134,10 +128,10 @@ execDeleteQuery
   -> (AnnDel 'Postgres, DS.Seq Q.PrepArg)
   -> m EncJSON
 execDeleteQuery env strfyNum remoteJoinCtx (u, p) =
-  runMutation env $ mkMutation remoteJoinCtx (dqp1Table u) (deleteCTE, p)
+  runMutation env $ mkMutation remoteJoinCtx (dqp1Table u) (MCDelete delete, p)
                 (dqp1Output u) (dqp1AllCols u) strfyNum
   where
-    deleteCTE = mkDeleteCTE u
+    delete = mkDelete u
 
 execInsertQuery
   :: ( HasVersion
@@ -152,7 +146,7 @@ execInsertQuery
   -> m EncJSON
 execInsertQuery env strfyNum remoteJoinCtx (u, p) =
   runMutation env
-     $ mkMutation remoteJoinCtx (iqp1Table u) (insertCTE, p)
+     $ mkMutation remoteJoinCtx (iqp1Table u) (MCCheckConstraint insertCTE, p)
                 (iqp1Output u) (iqp1AllCols u) strfyNum
   where
     insertCTE = mkInsertCTE u
@@ -186,51 +180,80 @@ mutateAndSel
 mutateAndSel env (Mutation qt q mutationOutput allCols remoteJoins strfyNum) = do
   -- Perform mutation and fetch unique columns
   MutateResp _ columnVals <- liftTx $ mutateAndFetchCols qt allCols q strfyNum
-  selCTE <- mkSelCTEFromColVals qt allCols columnVals
-  let selWith = mkMutationOutputExp qt allCols Nothing selCTE mutationOutput strfyNum
+  select <- mkSelectExpFromColumnValues qt allCols columnVals
   -- Perform select query and fetch returning fields
-  executeMutationOutputQuery env (Q.fromBuilder $ toSQL selWith) [] remoteJoins
+  executeMutationOutputQuery env qt allCols Nothing
+    (MCSelectValues select) mutationOutput strfyNum [] remoteJoins
+
+withCheckPermission :: (MonadError QErr m) => m (a, Bool) -> m a
+withCheckPermission sqlTx = do
+  (rawResponse, checkConstraint) <- sqlTx
+  unless checkConstraint $ throw400 PermissionError $
+    "check constraint of an insert/update permission has failed"
+  pure rawResponse
 
 executeMutationOutputQuery
-  ::
+  :: forall m.
   ( HasVersion
   , MonadTx m
   , MonadIO m
   , Tracing.MonadTrace m
   )
   => Env.Environment
-  -> Q.Query -- ^ SQL query
+  -> QualifiedTable
+  -> [ColumnInfo 'Postgres]
+  -> Maybe Int
+  -> MutationCTE
+  -> MutationOutput 'Postgres
+  -> Bool
   -> [Q.PrepArg] -- ^ Prepared params
   -> Maybe (RemoteJoins 'Postgres, MutationRemoteJoinCtx)  -- ^ Remote joins context
   -> m EncJSON
-executeMutationOutputQuery env query prepArgs = \case
-  Nothing ->
-    runIdentity . Q.getRow
-      -- See Note [Prepared statements in Mutations]
-      <$> liftTx (Q.rawQE dmlTxErrorHandler query prepArgs False)
-  Just (remoteJoins, (httpManager, reqHeaders, userInfo)) ->
-    executeQueryWithRemoteJoins env httpManager reqHeaders userInfo query prepArgs remoteJoins
+executeMutationOutputQuery env qt allCols preCalAffRows cte mutOutput strfyNum prepArgs maybeRJ = do
+  let queryTx :: Q.FromRes a => m a
+      queryTx = do
+        let selectWith = mkMutationOutputExp qt allCols preCalAffRows cte mutOutput strfyNum
+            query = Q.fromBuilder $ toSQL selectWith
+        -- See Note [Prepared statements in Mutations]
+        liftTx (Q.rawQE dmlTxErrorHandler query prepArgs False)
+
+  rawResponse <-
+    if checkPermissionRequired cte
+      then withCheckPermission $ Q.getRow <$> queryTx
+      else (runIdentity . Q.getRow) <$> queryTx
+  case maybeRJ of
+    Nothing -> pure $ encJFromLBS rawResponse
+    Just (remoteJoins, (httpManager, reqHeaders, userInfo)) ->
+      processRemoteJoins env httpManager reqHeaders userInfo rawResponse remoteJoins
 
 mutateAndFetchCols
   :: QualifiedTable
   -> [ColumnInfo 'Postgres]
-  -> (S.CTE, DS.Seq Q.PrepArg)
+  -> (MutationCTE, DS.Seq Q.PrepArg)
   -> Bool
   -> Q.TxE QErr (MutateResp TxtEncodedPGVal)
-mutateAndFetchCols qt cols (cte, p) strfyNum =
-  Q.getAltJ . runIdentity . Q.getRow
-    -- See Note [Prepared statements in Mutations]
-    <$> Q.rawQE dmlTxErrorHandler (Q.fromBuilder sql) (toList p) False
+mutateAndFetchCols qt cols (cte, p) strfyNum = do
+  let mutationTx :: Q.FromRes a => Q.TxE QErr a
+      mutationTx =
+        -- See Note [Prepared statements in Mutations]
+        Q.rawQE dmlTxErrorHandler sqlText (toList p) False
+
+  if checkPermissionRequired cte
+    then withCheckPermission $ (first Q.getAltJ . Q.getRow) <$> mutationTx
+    else (Q.getAltJ . runIdentity . Q.getRow) <$> mutationTx
   where
     aliasIdentifier = Identifier $ qualifiedObjectToText qt <> "__mutation_result"
     tabFrom = FromIdentifier aliasIdentifier
     tabPerm = TablePerm annBoolExpTrue Nothing
     selFlds = flip map cols $
-              \ci -> (fromPGCol $ pgiColumn ci, mkAnnColumnFieldAsText ci)
+              \ci -> (fromCol @'Postgres $ pgiColumn ci, mkAnnColumnFieldAsText ci)
 
-    sql = toSQL selectWith
-    selectWith = S.SelectWith [(S.Alias aliasIdentifier, cte)] select
-    select = S.mkSelect {S.selExtr = [S.Extractor extrExp Nothing]}
+    sqlText = Q.fromBuilder $ toSQL selectWith
+    selectWith = S.SelectWith [(S.Alias aliasIdentifier, getMutationCTE cte)] select
+    select = S.mkSelect { S.selExtr = S.Extractor extrExp Nothing
+                                      : bool [] [S.Extractor checkErrExp Nothing] (checkPermissionRequired cte)
+                        }
+    checkErrExp = mkCheckErrorExp aliasIdentifier
     extrExp = S.applyJsonBuildObj
               [ S.SELit "affected_rows", affRowsSel
               , S.SELit "returning_columns", colSel

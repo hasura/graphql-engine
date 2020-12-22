@@ -1,3 +1,5 @@
+-- TODO (Karthikeyan): This file should be removed. This file hasn't been removed to help with the
+-- conflict resolution
 -- | Types that represent the raw data stored in the catalog. See also: the module documentation for
 -- "Hasura.RQL.DDL.Schema".
 module Hasura.RQL.Types.Catalog
@@ -147,7 +149,7 @@ instance NFData CatalogFunction
 instance Cacheable CatalogFunction
 $(deriveFromJSON (aesonDrop 3 snakeCase) ''CatalogFunction)
 
-data CatalogCustomTypes (b :: Backend)
+data CatalogCustomTypes (b :: BackendType)
   = CatalogCustomTypes
   { _cctCustomTypes :: !CustomTypes
   , _cctPgScalars   :: !(HashSet (ScalarType b))

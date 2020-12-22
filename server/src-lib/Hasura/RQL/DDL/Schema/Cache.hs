@@ -22,24 +22,24 @@ import           Hasura.Prelude
 
 import qualified Data.Environment                         as Env
 import qualified Data.HashMap.Strict.Extended             as M
+import qualified Data.HashMap.Strict.InsOrd               as OMap
 import qualified Data.HashSet                             as HS
-import qualified Database.PG.Query                        as Q
+import qualified Data.HashSet.InsOrd                      as HSIns
 
 import           Control.Arrow.Extended
 import           Control.Lens                             hiding ((.=))
 import           Control.Monad.Unique
 import           Data.Aeson
-import           Data.List                                (nub)
+import           Data.Text.Extended
 
 import qualified Hasura.Incremental                       as Inc
 
-import           Data.Text.Extended
 import           Hasura.Backends.Postgres.Connection
 import           Hasura.Backends.Postgres.SQL.Types
 import           Hasura.GraphQL.Execute.Types
 import           Hasura.GraphQL.Schema                    (buildGQLContext)
+import           Hasura.Metadata.Class
 import           Hasura.RQL.DDL.Action
-import           Hasura.RQL.DDL.ComputedField
 import           Hasura.RQL.DDL.CustomTypes
 import           Hasura.RQL.DDL.Deps
 import           Hasura.RQL.DDL.EventTrigger
@@ -50,13 +50,11 @@ import           Hasura.RQL.DDL.Schema.Cache.Common
 import           Hasura.RQL.DDL.Schema.Cache.Dependencies
 import           Hasura.RQL.DDL.Schema.Cache.Fields
 import           Hasura.RQL.DDL.Schema.Cache.Permission
-import           Hasura.RQL.DDL.Schema.Catalog
+import           Hasura.RQL.DDL.Schema.Common
 import           Hasura.RQL.DDL.Schema.Diff
 import           Hasura.RQL.DDL.Schema.Function
 import           Hasura.RQL.DDL.Schema.Table
-import           Hasura.RQL.DDL.Utils                     (clearHdbViews)
 import           Hasura.RQL.Types                         hiding (fmFunction, tmTable)
-import           Hasura.RQL.Types.Catalog
 import           Hasura.Server.Version                    (HasVersion)
 
 import           Hasura.Session
@@ -64,49 +62,48 @@ import           Hasura.Session
 buildRebuildableSchemaCache
   :: ( HasVersion
      , MonadIO m
-     , MonadUnique m
      , MonadTx m
      , HasHttpManager m
      , HasSQLGenCtx m
-     , HasEnableRemoteSchemaPermsCtx m
+     , HasRemoteSchemaPermsCtx m
      )
   => Env.Environment
-  -> m (RebuildableSchemaCache m)
-buildRebuildableSchemaCache env = do
-  catalogMetadata <- liftTx fetchCatalogData
-  result <- flip runReaderT CatalogSync $
-    Inc.build (buildSchemaCacheRule env) (catalogMetadata, initialInvalidationKeys)
+  -> Metadata
+  -> m RebuildableSchemaCache
+buildRebuildableSchemaCache env metadata = do
+  result <-  runCacheBuild $ flip runReaderT CatalogSync $
+    Inc.build (buildSchemaCacheRule env) (metadata, initialInvalidationKeys)
   pure $ RebuildableSchemaCache (Inc.result result) initialInvalidationKeys (Inc.rebuildRule result)
 
 newtype CacheRWT m a
   -- The CacheInvalidations component of the state could actually be collected using WriterT, but
   -- WriterT implementations prior to transformers-0.5.6.0 (which added
   -- Control.Monad.Trans.Writer.CPS) are leaky, and we don’t have that yet.
-  = CacheRWT (StateT (RebuildableSchemaCache m, CacheInvalidations) m a)
+  = CacheRWT (StateT (RebuildableSchemaCache, CacheInvalidations) m a)
   deriving
     ( Functor, Applicative, Monad, MonadIO, MonadUnique, MonadReader r, MonadError e, MonadTx
-    , UserInfoM, HasHttpManager, HasSQLGenCtx, HasSystemDefined, HasEnableRemoteSchemaPermsCtx )
+    , UserInfoM, HasHttpManager, HasSQLGenCtx, HasSystemDefined, MonadMetadataStorage
+    , HasRemoteSchemaPermsCtx, MonadScheduledEvents)
 
 runCacheRWT
   :: Functor m
-  => RebuildableSchemaCache m -> CacheRWT m a -> m (a, RebuildableSchemaCache m, CacheInvalidations)
+  => RebuildableSchemaCache -> CacheRWT m a -> m (a, RebuildableSchemaCache, CacheInvalidations)
 runCacheRWT cache (CacheRWT m) =
   runStateT m (cache, mempty) <&> \(v, (newCache, invalidations)) -> (v, newCache, invalidations)
 
 instance MonadTrans CacheRWT where
   lift = CacheRWT . lift
 
-instance (Monad m) => TableCoreInfoRM (CacheRWT m)
+instance (Monad m) => TableCoreInfoRM 'Postgres (CacheRWT m)
 instance (Monad m) => CacheRM (CacheRWT m) where
   askSchemaCache = CacheRWT $ gets (lastBuiltSchemaCache . fst)
 
-instance (MonadIO m, MonadTx m) => CacheRWM (CacheRWT m) where
-  buildSchemaCacheWithOptions buildReason invalidations = CacheRWT do
+instance (MonadIO m, MonadTx m, HasHttpManager m, HasSQLGenCtx m, HasRemoteSchemaPermsCtx m) => CacheRWM (CacheRWT m) where
+  buildSchemaCacheWithOptions buildReason invalidations metadata = CacheRWT do
     (RebuildableSchemaCache _ invalidationKeys rule, oldInvalidations) <- get
     let newInvalidationKeys = invalidateKeys invalidations invalidationKeys
-    catalogMetadata <- liftTx fetchCatalogData
-    result <- lift $ flip runReaderT buildReason $
-      Inc.build rule (catalogMetadata, newInvalidationKeys)
+    result <- lift $ runCacheBuild $ flip runReaderT buildReason $
+      Inc.build rule (metadata, newInvalidationKeys)
     let schemaCache = Inc.result result
         prunedInvalidationKeys = pruneInvalidationKeys schemaCache newInvalidationKeys
         !newCache = RebuildableSchemaCache schemaCache prunedInvalidationKeys (Inc.rebuildRule result)
@@ -124,15 +121,15 @@ buildSchemaCacheRule
   -- what we want!
   :: ( HasVersion, ArrowChoice arr, Inc.ArrowDistribute arr, Inc.ArrowCache m arr
      , MonadIO m, MonadUnique m, MonadTx m
-     , MonadReader BuildReason m, HasHttpManager m, HasSQLGenCtx m, HasEnableRemoteSchemaPermsCtx m)
+     , MonadReader BuildReason m, HasHttpManager m, HasSQLGenCtx m, HasRemoteSchemaPermsCtx m)
   => Env.Environment
-  -> (CatalogMetadata, InvalidationKeys) `arr` SchemaCache
-buildSchemaCacheRule env = proc (catalogMetadata, invalidationKeys) -> do
+  -> (Metadata, InvalidationKeys) `arr` SchemaCache
+buildSchemaCacheRule env = proc (metadata, invalidationKeys) -> do
   invalidationKeysDep <- Inc.newDependency -< invalidationKeys
 
   -- Step 1: Process metadata and collect dependency information.
   (outputs, collectedInfo) <-
-    runWriterA buildAndCollectInfo -< (catalogMetadata, invalidationKeysDep)
+    runWriterA buildAndCollectInfo -< (metadata, invalidationKeysDep)
   let (inconsistentObjects, unresolvedDependencies) = partitionCollectedInfo collectedInfo
 
   -- Step 2: Resolve dependency information and drop dangling dependents.
@@ -187,19 +184,32 @@ buildSchemaCacheRule env = proc (catalogMetadata, invalidationKeys) -> do
       :: ( ArrowChoice arr, Inc.ArrowDistribute arr, Inc.ArrowCache m arr
          , ArrowWriter (Seq CollectedInfo) arr, MonadIO m, MonadUnique m, MonadTx m, MonadReader BuildReason m
          , HasHttpManager m, HasSQLGenCtx m )
-      => (CatalogMetadata, Inc.Dependency InvalidationKeys) `arr` BuildOutputs
-    buildAndCollectInfo = proc (catalogMetadata, invalidationKeys) -> do
-      let CatalogMetadata tables relationships permissions
-            eventTriggers remoteSchemas functions allowlistDefs
-            computedFields catalogCustomTypes actions remoteRelationships
-            cronTriggers remoteSchemaPermissions = catalogMetadata
+      => (Metadata, Inc.Dependency InvalidationKeys) `arr` BuildOutputs
+    buildAndCollectInfo = proc (metadata, invalidationKeys) -> do
+      let Metadata tables functions remoteSchemas collections allowlists
+            customTypes actions cronTriggers = metadata
+          (tableInputs, nonColumnInputs, permissions) = unzip3 $ map mkTableInputs $ OMap.elems tables
+          eventTriggers = map (_tmTable &&& (OMap.elems . _tmEventTriggers)) (OMap.elems tables)
+          -- HashMap k a -> HashMap k b -> HashMap k (a, b)
+          alignTableMap = M.intersectionWith (,)
+          remoteSchemaPermissions =
+            let remoteSchemaPermsList = OMap.toList $ _rsmPermissions <$> remoteSchemas
+            in concat $ flip map remoteSchemaPermsList $
+                 (\(remoteSchemaName, remoteSchemaPerms) ->
+                    flip map remoteSchemaPerms $ \(RemoteSchemaPermissionMetadata role defn comment) ->
+                     AddRemoteSchemaPermissions remoteSchemaName role defn comment
+                 )
+
+      pgTables <- bindA -< fetchTableMetadata
+      pgFunctions <- bindA -< fetchFunctionMetadata
+      pgScalars <- bindA -< fetchPgScalars
 
       -- tables
-      tableRawInfos <- buildTableCache -< (tables, Inc.selectD #_ikMetadata invalidationKeys)
+      tableRawInfos <- buildTableCache -< (pgTables, tableInputs, Inc.selectD #_ikMetadata invalidationKeys)
 
       -- remote schemas
       let remoteSchemaInvalidationKeys = Inc.selectD #_ikRemoteSchemas invalidationKeys
-      remoteSchemaMap <- buildRemoteSchemas -< (remoteSchemaInvalidationKeys, remoteSchemas)
+      remoteSchemaMap <- buildRemoteSchemas -< (remoteSchemaInvalidationKeys, (OMap.elems remoteSchemas))
 
       -- remote schema permissions
       remoteSchemaCache <- (remoteSchemaMap >- returnA)
@@ -208,54 +218,44 @@ buildSchemaCacheRule env = proc (catalogMetadata, invalidationKeys) -> do
         >-> (| Inc.keyed (\_ ((remoteSchemaCtx, metadataObj), remoteSchemaPerms) -> do
                    permissionInfo <-
                      buildRemoteSchemaPermissions -< (remoteSchemaCtx, remoteSchemaPerms)
-                   returnA -< (RemoteSchemaCtx
-                     { _rscpName = rscName remoteSchemaCtx
-                     , _rscpContext = remoteSchemaCtx
-                     , _rscpPermissions = permissionInfo
-                     }, metadataObj)
+                   returnA -< (remoteSchemaCtx
+                               { _rscPermissions = permissionInfo
+                               }
+                              , metadataObj)
                    )
              |)
 
       -- relationships and computed fields
-      let relationshipsByTable = M.groupOn _crTable relationships
-          computedFieldsByTable = M.groupOn (_afcTable . _cccComputedField) computedFields
-          remoteRelationshipsByTable = M.groupOn rtrTable remoteRelationships
-      tableCoreInfos <- (tableRawInfos >- returnA)
-        >-> (\info -> (info, relationshipsByTable) >- alignExtraTableInfo mkRelationshipMetadataObject)
-        >-> (\info -> (info, computedFieldsByTable) >- alignExtraTableInfo mkComputedFieldMetadataObject)
-        >-> (\info -> (info, remoteRelationshipsByTable) >- alignExtraTableInfo mkRemoteRelationshipMetadataObject)
-        >-> (| Inc.keyed (\_ (((tableRawInfo, tableRelationships), tableComputedFields), tableRemoteRelationships) -> do
-                 let columns = _tciFieldInfoMap tableRawInfo
-                 allFields <- addNonColumnFields -<
-                   (tableRawInfos, columns, M.map fst remoteSchemaCache, tableRelationships, tableComputedFields, tableRemoteRelationships)
-                 returnA -< (tableRawInfo { _tciFieldInfoMap = allFields })) |)
+      let nonColumnsByTable = mapFromL _nctiTable nonColumnInputs
+      tableCoreInfos <-
+        (| Inc.keyed (\_ (tableRawInfo, nonColumnInput) -> do
+             let columns = _tciFieldInfoMap tableRawInfo
+             allFields <- addNonColumnFields -< (tableRawInfos, columns, M.map fst remoteSchemaMap, pgFunctions, nonColumnInput)
+             returnA -< (tableRawInfo {_tciFieldInfoMap = allFields}))
+         |) (tableRawInfos `alignTableMap` nonColumnsByTable)
 
       -- permissions and event triggers
       tableCoreInfosDep <- Inc.newDependency -< tableCoreInfos
-      tableCache <- (tableCoreInfos >- returnA)
-        >-> (\info -> (info, M.groupOn _cpTable permissions) >- alignExtraTableInfo mkPermissionMetadataObject)
-        >-> (\info -> (info, M.groupOn _cetTable eventTriggers) >- alignExtraTableInfo mkEventTriggerMetadataObject)
-        >-> (| Inc.keyed (\_ ((tableCoreInfo, tablePermissions), tableEventTriggers) -> do
-                 let tableName = _tciName tableCoreInfo
-                     tableFields = _tciFieldInfoMap tableCoreInfo
-                 permissionInfos <- buildTablePermissions -<
-                   (tableCoreInfosDep, tableName, tableFields, HS.fromList tablePermissions)
-                 eventTriggerInfos <- buildTableEventTriggers -< (tableCoreInfo, tableEventTriggers)
-                 returnA -< TableInfo
-                   { _tiCoreInfo = tableCoreInfo
-                   , _tiRolePermInfoMap = permissionInfos
-                   , _tiEventTriggerInfoMap = eventTriggerInfos
-                   }) |)
+      tableCache <-
+        (| Inc.keyed (\_ ((tableCoreInfo, permissionInputs), (_, eventTriggerConfs)) -> do
+             let tableFields = _tciFieldInfoMap tableCoreInfo
+             permissionInfos <- buildTablePermissions -< (tableCoreInfosDep, tableFields, permissionInputs)
+             eventTriggerInfos <- buildTableEventTriggers -< (tableCoreInfo, eventTriggerConfs)
+             returnA -< TableInfo tableCoreInfo permissionInfos eventTriggerInfos
+            )
+         |) (tableCoreInfos `alignTableMap` mapFromL _tpiTable permissions `alignTableMap` mapFromL fst eventTriggers)
 
       -- sql functions
-      functionCache <- (mapFromL _cfFunction functions >- returnA)
-        >-> (| Inc.keyed (\_ (CatalogFunction qf systemDefined config funcDefs) -> do
-                 let definition = toJSON $ TrackFunction qf
+      functionCache <- (mapFromL _fmFunction (OMap.elems functions) >- returnA)
+        >-> (| Inc.keyed (\_ (FunctionMetadata qf config) -> do
+                 let systemDefined = SystemDefined False
+                     definition = toJSON $ TrackFunction qf
                      metadataObject = MetadataObject (MOFunction qf) definition
                      schemaObject = SOFunction qf
                      addFunctionContext e = "in function " <> qf <<> ": " <> e
                  (| withRecordInconsistency (
                     (| modifyErrA (do
+                         let funcDefs = fromMaybe [] $ M.lookup qf pgFunctions
                          rawfi <- bindErrorA -< handleMultipleFunctions qf funcDefs
                          (fi, dep) <- bindErrorA -< mkFunctionInfo qf systemDefined config rawfi
                          recordDependencies -< (metadataObject, schemaObject, [dep])
@@ -265,32 +265,35 @@ buildSchemaCacheRule env = proc (catalogMetadata, invalidationKeys) -> do
         >-> (\infos -> M.catMaybes infos >- returnA)
 
       -- allow list
-      let allowList = allowlistDefs
-            & concatMap _cdQueries
+      let allowList = allowlists
+            & HSIns.toList
+            & map _crCollection
+            & map (\cn -> maybe [] (_cdQueries . _ccDefinition) $ OMap.lookup cn collections)
+            & concat
             & map (queryWithoutTypeNames . getGQLQuery . _lqQuery)
             & HS.fromList
 
       -- custom types
-      let CatalogCustomTypes customTypes pgScalars = catalogCustomTypes
       maybeResolvedCustomTypes <-
         (| withRecordInconsistency
              (bindErrorA -< resolveCustomTypes tableCache customTypes pgScalars)
          |) (MetadataObject MOCustomTypes $ toJSON customTypes)
 
       -- -- actions
+      let actionList = OMap.elems actions
       (actionCache, annotatedCustomTypes) <- case maybeResolvedCustomTypes of
         Just resolvedCustomTypes -> do
-          actionCache' <- buildActions -< ((resolvedCustomTypes, pgScalars), actions)
+          actionCache' <- buildActions -< ((resolvedCustomTypes, pgScalars), actionList)
           returnA -< (actionCache', resolvedCustomTypes)
 
         -- If the custom types themselves are inconsistent, we can’t really do
         -- anything with actions, so just mark them all inconsistent.
         Nothing -> do
-          recordInconsistencies -< ( map mkActionMetadataObject actions
+          recordInconsistencies -< ( map mkActionMetadataObject actionList
                                    , "custom types are inconsistent" )
           returnA -< (M.empty, emptyAnnotatedCustomTypes)
 
-      cronTriggersMap <- buildCronTriggers -< ((),cronTriggers)
+      cronTriggersMap <- buildCronTriggers -< ((), OMap.elems cronTriggers)
 
       returnA -< BuildOutputs
         { _boTables = tableCache
@@ -302,47 +305,21 @@ buildSchemaCacheRule env = proc (catalogMetadata, invalidationKeys) -> do
         , _boCronTriggers = cronTriggersMap
         }
 
-    mkEventTriggerMetadataObject (CatalogEventTrigger qt trn configuration) =
-      let objectId = MOTableObj qt $ MTOTrigger trn
-          definition = object ["table" .= qt, "configuration" .= configuration]
+    mkEventTriggerMetadataObject (table, eventTriggerConf) =
+      let objectId = MOTableObj table $ MTOTrigger $ etcName eventTriggerConf
+          definition = object ["table" .= table, "configuration" .= eventTriggerConf]
       in MetadataObject objectId definition
 
     mkCronTriggerMetadataObject catalogCronTrigger =
       let definition = toJSON catalogCronTrigger
-      in MetadataObject (MOCronTrigger (_cctName catalogCronTrigger))
+      in MetadataObject (MOCronTrigger (ctName catalogCronTrigger))
                         definition
 
     mkActionMetadataObject (ActionMetadata name comment defn _) =
       MetadataObject (MOAction name) (toJSON $ CreateAction name defn comment)
 
     mkRemoteSchemaMetadataObject remoteSchema =
-      MetadataObject (MORemoteSchema (_arsqName remoteSchema)) (toJSON remoteSchema)
-
-    -- Given a map of table info, “folds in” another map of information, accumulating inconsistent
-    -- metadata objects for any entries in the second map that don’t appear in the first map. This
-    -- is used to “line up” the metadata for relationships, computed fields, permissions, etc. with
-    -- the tracked table info.
-    alignExtraTableInfo
-      :: forall a b arr
-       . (ArrowChoice arr, Inc.ArrowDistribute arr, ArrowWriter (Seq CollectedInfo) arr)
-      => (b -> MetadataObject)
-      -> ( M.HashMap QualifiedTable a
-         , M.HashMap QualifiedTable [b]
-         ) `arr` M.HashMap QualifiedTable (a, [b])
-    alignExtraTableInfo mkMetadataObject = proc (baseInfo, extraInfo) -> do
-      combinedInfo <-
-        (| Inc.keyed (\tableName infos -> combine -< (tableName, infos))
-        |) (align baseInfo extraInfo)
-      returnA -< M.catMaybes combinedInfo
-      where
-        combine :: (QualifiedTable, These a [b]) `arr` Maybe (a, [b])
-        combine = proc (tableName, infos) -> case infos of
-          This  base        -> returnA -< Just (base, [])
-          These base extras -> returnA -< Just (base, extras)
-          That       extras -> do
-            let errorMessage = "table " <> tableName <<> " does not exist"
-            recordInconsistencies -< (map mkMetadataObject extras, errorMessage)
-            returnA -< Nothing
+      MetadataObject (MORemoteSchema (_rsmName remoteSchema)) (toJSON remoteSchema)
 
     alignExtraRemoteSchemaInfo
       :: forall a b arr
@@ -369,7 +346,7 @@ buildSchemaCacheRule env = proc (catalogMetadata, invalidationKeys) -> do
     buildRemoteSchemaPermissions
       :: ( ArrowChoice arr, Inc.ArrowDistribute arr, ArrowWriter (Seq CollectedInfo) arr
          , Inc.ArrowCache m arr, MonadTx m)
-      => (PartialRemoteSchemaCtx, [CatalogRemoteSchemaPermission]) `arr` (M.HashMap RoleName IntrospectionResult)
+      => (RemoteSchemaCtx, [AddRemoteSchemaPermissions]) `arr` (M.HashMap RoleName IntrospectionResult)
     buildRemoteSchemaPermissions = buildInfoMap _arspRole mkRemoteSchemaPermissionMetadataObject buildRemoteSchemaPermission
       where
         buildRemoteSchemaPermission = proc (remoteSchemaCtx, remoteSchemaPerm) -> do
@@ -392,23 +369,24 @@ buildSchemaCacheRule env = proc (catalogMetadata, invalidationKeys) -> do
     buildTableEventTriggers
       :: ( ArrowChoice arr, Inc.ArrowDistribute arr, ArrowWriter (Seq CollectedInfo) arr
          , Inc.ArrowCache m arr, MonadTx m, MonadReader BuildReason m, HasSQLGenCtx m )
-      => (TableCoreInfo 'Postgres, [CatalogEventTrigger]) `arr` EventTriggerInfoMap
-    buildTableEventTriggers = buildInfoMap _cetName mkEventTriggerMetadataObject buildEventTrigger
+      => (TableCoreInfo 'Postgres, [EventTriggerConf]) `arr` EventTriggerInfoMap
+    buildTableEventTriggers = proc (tableInfo, eventTriggerConfs) ->
+      buildInfoMap (etcName . snd) mkEventTriggerMetadataObject buildEventTrigger
+        -< (tableInfo, map (_tciName tableInfo,) eventTriggerConfs)
       where
-        buildEventTrigger = proc (tableInfo, eventTrigger) -> do
-          let CatalogEventTrigger qt trn configuration = eventTrigger
-              metadataObject = mkEventTriggerMetadataObject eventTrigger
-              schemaObjectId = SOTableObj qt $ TOTrigger trn
-              addTriggerContext e = "in event trigger " <> trn <<> ": " <> e
+        buildEventTrigger = proc (tableInfo, (table, eventTriggerConf)) -> do
+          let triggerName = etcName eventTriggerConf
+              metadataObject = mkEventTriggerMetadataObject (table, eventTriggerConf)
+              schemaObjectId = SOTableObj table $ TOTrigger triggerName
+              addTriggerContext e = "in event trigger " <> triggerName <<> ": " <> e
           (| withRecordInconsistency (
              (| modifyErrA (do
-                  etc <- bindErrorA -< decodeValue configuration
-                  (info, dependencies) <- bindErrorA -< subTableP2Setup env qt etc
+                  (info, dependencies) <- bindErrorA -< mkEventTriggerInfo env table eventTriggerConf
                   let tableColumns = M.mapMaybe (^? _FIColumn) (_tciFieldInfoMap tableInfo)
-                  recreateViewIfNeeded -< (qt, tableColumns, trn, etcDefinition etc)
+                  recreateViewIfNeeded -< (table, tableColumns, triggerName, etcDefinition eventTriggerConf)
                   recordDependencies -< (metadataObject, schemaObjectId, dependencies)
                   returnA -< info)
-             |) (addTableContext qt . addTriggerContext))
+             |) (addTableContext table . addTriggerContext))
            |) metadataObject
 
         recreateViewIfNeeded = Inc.cache $
@@ -424,12 +402,12 @@ buildSchemaCacheRule env = proc (catalogMetadata, invalidationKeys) -> do
          , ArrowWriter (Seq CollectedInfo) arr
          , Inc.ArrowCache m arr
          , MonadTx m)
-      => ((),[CatalogCronTrigger])
+      => ((),[CronTriggerMetadata])
          `arr` HashMap TriggerName CronTriggerInfo
-    buildCronTriggers = buildInfoMap _cctName mkCronTriggerMetadataObject buildCronTrigger
+    buildCronTriggers = buildInfoMap ctName mkCronTriggerMetadataObject buildCronTrigger
       where
         buildCronTrigger = proc (_,cronTrigger) -> do
-          let triggerName = triggerNameToTxt $ _cctName cronTrigger
+          let triggerName = triggerNameToTxt $ ctName cronTrigger
               addCronTriggerContext e = "in cron trigger " <> triggerName <> ": " <> e
           (| withRecordInconsistency (
             (| modifyErrA (bindErrorA -< resolveCronTrigger env cronTrigger)
@@ -461,46 +439,48 @@ buildSchemaCacheRule env = proc (catalogMetadata, invalidationKeys) -> do
       :: ( ArrowChoice arr, Inc.ArrowDistribute arr, ArrowWriter (Seq CollectedInfo) arr
          , Inc.ArrowCache m arr , MonadIO m, MonadUnique m, HasHttpManager m )
       => ( Inc.Dependency (HashMap RemoteSchemaName Inc.InvalidationKey)
-         , [AddRemoteSchemaQuery]
-         ) `arr` HashMap RemoteSchemaName (PartialRemoteSchemaCtx, MetadataObject)
+         , [RemoteSchemaMetadata]
+         ) `arr` HashMap RemoteSchemaName (RemoteSchemaCtx, MetadataObject)
     buildRemoteSchemas =
-      buildInfoMapPreservingMetadata _arsqName mkRemoteSchemaMetadataObject buildRemoteSchema
+      buildInfoMapPreservingMetadata _rsmName mkRemoteSchemaMetadataObject buildRemoteSchema
       where
         -- We want to cache this call because it fetches the remote schema over HTTP, and we don’t
         -- want to re-run that if the remote schema definition hasn’t changed.
-        buildRemoteSchema = Inc.cache proc (invalidationKeys, remoteSchema) -> do
-          Inc.dependOn -< Inc.selectKeyD (_arsqName remoteSchema) invalidationKeys
+        buildRemoteSchema = Inc.cache proc (invalidationKeys, remoteSchema@(RemoteSchemaMetadata name defn comment _)) -> do
+          let addRemoteSchemaQuery = AddRemoteSchemaQuery name defn comment
+          Inc.dependOn -< Inc.selectKeyD name invalidationKeys
           (| withRecordInconsistency (liftEitherA <<< bindA -<
-               runExceptT $ addRemoteSchemaP2Setup env remoteSchema)
+               runExceptT $ addRemoteSchemaP2Setup env addRemoteSchemaQuery)
            |) (mkRemoteSchemaMetadataObject remoteSchema)
 
 -- | @'withMetadataCheck' cascade action@ runs @action@ and checks if the schema changed as a
 -- result. If it did, it checks to ensure the changes do not violate any integrity constraints, and
 -- if not, incorporates them into the schema cache.
-withMetadataCheck :: (MonadTx m, CacheRWM m, HasSQLGenCtx m) => Bool -> m a -> m a
+withMetadataCheck
+  :: (MonadTx m, CacheRWM m, HasSQLGenCtx m, MetadataM m)
+  => Bool -> m a -> m a
 withMetadataCheck cascade action = do
-  -- Drop hdb_views so no interference is caused to the sql query
-  liftTx $ Q.catchE defaultTxErrorHandler clearHdbViews
+  sc <- askSchemaCache
+  let preActionTables = scTables sc
+      preActionFunctions = scFunctions sc
+  -- Drop event triggers so no interference is caused to the sql query
+  forM_ (M.elems preActionTables) $ \tableInfo -> do
+    let eventTriggers = _tiEventTriggerInfoMap tableInfo
+    forM_ (M.keys eventTriggers) (liftTx . delTriggerQ)
 
   -- Get the metadata before the sql query, everything, need to filter this
-  oldMetaU <- liftTx $ Q.catchE defaultTxErrorHandler fetchTableMeta
-  oldFuncMetaU <- liftTx $ Q.catchE defaultTxErrorHandler fetchFunctionMeta
+  (preActionTableMeta, preActionFunctionMeta) <- fetchMeta preActionTables preActionFunctions
 
   -- Run the action
-  res <- action
+  actionResult <- action
 
   -- Get the metadata after the sql query
-  newMeta <- liftTx $ Q.catchE defaultTxErrorHandler fetchTableMeta
-  newFuncMeta <- liftTx $ Q.catchE defaultTxErrorHandler fetchFunctionMeta
-  sc <- askSchemaCache
-  let existingInconsistentObjs = scInconsistentObjs sc
-      existingTables = M.keys $ scTables sc
-      oldMeta = flip filter oldMetaU $ \tm -> tmTable tm `elem` existingTables
-      schemaDiff = getSchemaDiff oldMeta newMeta
-      existingFuncs = M.keys $ scFunctions sc
-      oldFuncMeta = flip filter oldFuncMetaU $ \fm -> fmFunction fm `elem` existingFuncs
-      FunctionDiff droppedFuncs alteredFuncs = getFuncDiff oldFuncMeta newFuncMeta
-      overloadedFuncs = getOverloadedFuncs existingFuncs newFuncMeta
+  (postActionTableMeta, postActionFunctionMeta) <- fetchMeta preActionTables preActionFunctions
+
+  let preActionTableMeta' = filter (flip M.member preActionTables . tmTable) preActionTableMeta
+      schemaDiff = getSchemaDiff preActionTableMeta' postActionTableMeta
+      FunctionDiff droppedFuncs alteredFuncs = getFuncDiff preActionFunctionMeta postActionFunctionMeta
+      overloadedFuncs = getOverloadedFuncs (M.keys preActionFunctions) postActionFunctionMeta
 
   -- Do not allow overloading functions
   unless (null overloadedFuncs) $
@@ -512,67 +492,59 @@ withMetadataCheck cascade action = do
   -- Report back with an error if cascade is not set
   when (indirectDeps /= [] && not cascade) $ reportDepsExt indirectDeps []
 
-  -- Purge all the indirect dependents from state
-  mapM_ purgeDependentObject indirectDeps
+  metadataUpdater <- execWriterT $ do
+    -- Purge all the indirect dependents from state
+    mapM_ (purgeDependentObject >=> tell) indirectDeps
 
-  -- Purge all dropped functions
-  let purgedFuncs = flip mapMaybe indirectDeps $ \case
-        SOFunction qf -> Just qf
-        _             -> Nothing
+    -- Purge all dropped functions
+    let purgedFuncs = flip mapMaybe indirectDeps $ \case
+            SOFunction qf -> Just qf
+            _             -> Nothing
 
-  forM_ (droppedFuncs \\ purgedFuncs) $ \qf -> do
-    liftTx $ delFunctionFromCatalog qf
+    forM_ (droppedFuncs \\ purgedFuncs) $ tell . dropFunctionInMetadata
 
-  -- Process altered functions
-  forM_ alteredFuncs $ \(qf, newTy) -> do
-    when (newTy == FTVOLATILE) $
-      throw400 NotSupported $
-      "type of function " <> qf <<> " is altered to \"VOLATILE\" which is not supported now"
+    -- Process altered functions
+    forM_ alteredFuncs $ \(qf, newTy) -> do
+      when (newTy == FTVOLATILE) $
+        throw400 NotSupported $
+        "type of function " <> qf <<> " is altered to \"VOLATILE\" which is not supported now"
 
-  -- update the schema cache and hdb_catalog with the changes
-  processSchemaChanges schemaDiff
+    -- update the metadata with the changes
+    processSchemaChanges preActionTables schemaDiff
 
-  buildSchemaCache
-  postSc <- askSchemaCache
+  withNewInconsistentObjsCheck $ buildSchemaCache metadataUpdater
 
-  -- Recreate event triggers in hdb_views
-  forM_ (M.elems $ scTables postSc) $ \(TableInfo coreInfo _ eventTriggers) -> do
+  postActionSchemaCache <- askSchemaCache
+
+  -- Recreate event triggers in hdb_catalog
+  let postActionTables = scTables postActionSchemaCache
+  forM_ (M.elems postActionTables) $ \(TableInfo coreInfo _ eventTriggers) -> do
           let table = _tciName coreInfo
               columns = getCols $ _tciFieldInfoMap coreInfo
           forM_ (M.toList eventTriggers) $ \(triggerName, eti) -> do
             let opsDefinition = etiOpsDef eti
             mkAllTriggersQ triggerName table columns opsDefinition
 
-  let currentInconsistentObjs = scInconsistentObjs postSc
-  checkNewInconsistentMeta existingInconsistentObjs currentInconsistentObjs
-
-  return res
+  pure actionResult
   where
-    processSchemaChanges :: (MonadTx m, CacheRM m) => SchemaDiff 'Postgres -> m ()
-    processSchemaChanges schemaDiff = do
+    processSchemaChanges
+      :: ( MonadError QErr m
+         , CacheRM m
+         , MonadWriter MetadataModifier m
+         )
+      => TableCache 'Postgres -> SchemaDiff 'Postgres -> m ()
+    processSchemaChanges preActionTables schemaDiff = do
       -- Purge the dropped tables
-      mapM_ delTableAndDirectDeps droppedTables
+      forM_ droppedTables $
+        \tn -> tell $ MetadataModifier $ metaTables %~ OMap.delete tn
 
-      sc <- askSchemaCache
       for_ alteredTables $ \(oldQtn, tableDiff) -> do
-        ti <- case M.lookup oldQtn $ scTables sc of
-          Just ti -> return ti
-          Nothing -> throw500 $ "old table metadata not found in cache : " <>> oldQtn
+        ti <- onNothing
+          (M.lookup oldQtn preActionTables)
+          (throw500 $ "old table metadata not found in cache : " <>> oldQtn)
         processTableChanges (_tiCoreInfo ti) tableDiff
       where
         SchemaDiff droppedTables alteredTables = schemaDiff
-
-    checkNewInconsistentMeta
-      :: (QErrM m)
-      => [InconsistentMetadata] -> [InconsistentMetadata] -> m ()
-    checkNewInconsistentMeta originalInconsMeta currentInconsMeta =
-      unless (null newInconsistentObjects) $
-        throwError (err500 Unexpected "cannot continue due to newly found inconsistent metadata")
-          { qeInternal = Just $ toJSON newInconsistentObjects }
-      where
-        diffInconsistentObjects = M.difference `on` groupInconsistentMetadataById
-        newInconsistentObjects = nub $ concatMap toList $
-          M.elems (currentInconsMeta `diffInconsistentObjects` originalInconsMeta)
 
 {- Note [Keep invalidation keys for inconsistent objects]
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

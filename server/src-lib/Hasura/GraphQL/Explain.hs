@@ -25,13 +25,15 @@ import qualified Hasura.GraphQL.Execute.Query                as E
 import qualified Hasura.GraphQL.Transport.HTTP.Protocol      as GH
 import qualified Hasura.RQL.IR.Select                        as DS
 
-import           Hasura.Backends.Postgres.SQL.Types
 import           Hasura.Backends.Postgres.SQL.Value
+import           Hasura.Backends.Postgres.Translate.Column   (toTxtValue)
 import           Hasura.EncJSON
 import           Hasura.GraphQL.Context
 import           Hasura.GraphQL.Parser
+import           Hasura.Metadata.Class
 import           Hasura.RQL.DML.Internal
 import           Hasura.RQL.Types
+import           Hasura.SQL.Types
 import           Hasura.Session
 
 
@@ -57,9 +59,9 @@ $(J.deriveJSON (J.aesonDrop 3 J.camelCase) ''FieldPlan)
 
 resolveUnpreparedValue
   :: (MonadError QErr m)
-  => UserInfo -> UnpreparedValue -> m S.SQLExp
+  => UserInfo -> UnpreparedValue 'Postgres -> m S.SQLExp
 resolveUnpreparedValue userInfo = \case
-  UVParameter pgValue _ -> pure $ toTxtValue $ pcvValue pgValue
+  UVParameter _ cv      -> pure $ toTxtValue cv
   UVLiteral sqlExp      -> pure sqlExp
   UVSession             -> pure $ sessionInfoJsonExp $ _uiSession userInfo
   UVSessionVar ty sessionVariable -> do
@@ -71,8 +73,8 @@ resolveUnpreparedValue userInfo = \case
       <> _uiRole userInfo <<> " : " <> sessionVariableToText sessionVariable
 
     pure $ flip S.SETyAnn (S.mkTypeAnn ty) $ case ty of
-      PGTypeScalar colTy -> withConstructorFn colTy sessionVariableValue
-      PGTypeArray _      -> sessionVariableValue
+      CollectableTypeScalar colTy -> withConstructorFn colTy sessionVariableValue
+      CollectableTypeArray _      -> sessionVariableValue
 
 -- NOTE: This function has a 'MonadTrace' constraint in master, but we don't need it
 -- here. We should evaluate if we need it here.
@@ -80,7 +82,7 @@ explainQueryField
   :: (MonadError QErr m, MonadTx m)
   => UserInfo
   -> G.Name
-  -> QueryRootField UnpreparedValue
+  -> QueryRootField (UnpreparedValue 'Postgres)
   -> m FieldPlan
 explainQueryField userInfo fieldName rootField = do
   resolvedRootField <- E.traverseQueryRootField (resolveUnpreparedValue userInfo) rootField
@@ -110,6 +112,7 @@ explainGQLQuery
   :: forall m
   . ( MonadError QErr m
     , MonadIO m
+    , MonadMetadataStorage (MetadataStorageT m)
     )
   => PGExecCtx
   -> SchemaCache
@@ -144,7 +147,7 @@ explainGQLQuery pgExecCtx sc (GQLExplain query userVarsRaw maybeIsRelay) = do
       runInTx $ encJFromJValue <$> E.explainLiveQueryPlan plan
   where
     queryType = bool E.QueryHasura E.QueryRelay $ Just True == maybeIsRelay
-    sessionVariables = mkSessionVariablesText $ maybe [] Map.toList userVarsRaw
+    sessionVariables = mkSessionVariablesText $ fromMaybe mempty userVarsRaw
 
     runInTx :: LazyTx QErr EncJSON -> m EncJSON
     runInTx = liftEither <=< liftIO . runExceptT . runLazyTx pgExecCtx Q.ReadOnly

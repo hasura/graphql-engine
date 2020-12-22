@@ -95,7 +95,6 @@ data Code
   -- Remote schemas
   | RemoteSchemaError
   | RemoteSchemaConflicts
-  | InvalidCustomRemoteSchemaDocument
   | CoercionError
   -- Websocket/Subscription errors
   | StartFailed
@@ -141,7 +140,6 @@ instance Show Code where
     JWTInvalidKey                     -> "invalid-jwt-key"
     RemoteSchemaError                 -> "remote-schema-error"
     RemoteSchemaConflicts             -> "remote-schema-conflicts"
-    InvalidCustomRemoteSchemaDocument -> "invalid-custom-remote-schema-document"
     CoercionError                     -> "coercion-error"
     StartFailed                       -> "start-failed"
     InvalidCustomTypes                -> "invalid-custom-types"

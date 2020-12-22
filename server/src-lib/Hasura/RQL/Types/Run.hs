@@ -1,7 +1,7 @@
 {-# LANGUAGE UndecidableInstances #-}
 
 module Hasura.RQL.Types.Run
-  ( Run(..)
+  ( RunT(..)
   , RunCtx(..)
   , peelRun
   ) where
@@ -14,49 +14,59 @@ import qualified Network.HTTP.Client         as HTTP
 
 import           Control.Monad.Trans.Control (MonadBaseControl)
 import           Control.Monad.Unique
+import           Hasura.Metadata.Class
 
 import           Hasura.RQL.Types
 import qualified Hasura.Tracing              as Tracing
 
 data RunCtx
   = RunCtx
-  { _rcUserInfo                   :: !UserInfo
-  , _rcHttpMgr                    :: !HTTP.Manager
-  , _rcSqlGenCtx                  :: !SQLGenCtx
-  , _rcEnableRemoteSchemaPermsCtx :: !EnableRemoteSchemaPermsCtx
+  { _rcUserInfo             :: !UserInfo
+  , _rcHttpMgr              :: !HTTP.Manager
+  , _rcSqlGenCtx            :: !SQLGenCtx
+  , _rcRemoteSchemaPermsCtx :: !RemoteSchemaPermsCtx
   }
 
-newtype Run a
-  = Run { unRun :: ReaderT RunCtx (LazyTxT QErr IO) a }
+newtype RunT m a
+  = RunT { unRunT :: ReaderT RunCtx (LazyTxT QErr m) a }
   deriving ( Functor, Applicative, Monad
            , MonadError QErr
            , MonadReader RunCtx
            , MonadTx
            , MonadIO
-           , MonadBase IO
-           , MonadBaseControl IO
            , MonadUnique
+           , MonadMetadataStorage
            )
 
-instance UserInfoM Run where
+instance (MonadMetadataStorage m) => MonadScheduledEvents (RunT m)
+
+deriving instance (MonadIO m, MonadBase IO m) => MonadBase IO (RunT m)
+deriving instance (MonadIO m, MonadBaseControl IO m) => MonadBaseControl IO (RunT m)
+
+instance (Monad m) => UserInfoM (RunT m) where
   askUserInfo = asks _rcUserInfo
 
-instance HasHttpManager Run where
+instance (Monad m) => HasHttpManager (RunT m) where
   askHttpManager = asks _rcHttpMgr
 
-instance HasSQLGenCtx Run where
+instance (Monad m) => HasSQLGenCtx (RunT m) where
   askSQLGenCtx = asks _rcSqlGenCtx
 
-instance HasEnableRemoteSchemaPermsCtx Run where
-  askEnableRemoteSchemaPermsCtx = asks _rcEnableRemoteSchemaPermsCtx
+instance (Monad m) => HasRemoteSchemaPermsCtx (RunT m) where
+  askRemoteSchemaPermsCtx = asks _rcRemoteSchemaPermsCtx
 
 peelRun
-  :: (MonadIO m)
+  :: ( MonadIO m
+     , MonadBaseControl IO m
+     )
   => RunCtx
   -> PGExecCtx
   -> Q.TxAccess
   -> Maybe Tracing.TraceContext
-  -> Run a
+  -> RunT m a
   -> ExceptT QErr m a
-peelRun runCtx@(RunCtx userInfo _ _ _) pgExecCtx txAccess ctx (Run m) =
-  mapExceptT liftIO $ runLazyTx pgExecCtx txAccess $ maybe id withTraceContext ctx $ withUserInfo userInfo $ runReaderT m runCtx
+peelRun runCtx pgExecCtx txAccess ctx (RunT m) =
+  runLazyTx pgExecCtx txAccess $
+  maybe id withTraceContext ctx $ withUserInfo userInfo $ runReaderT m runCtx
+  where
+    userInfo = _rcUserInfo runCtx

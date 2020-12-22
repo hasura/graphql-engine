@@ -1,3 +1,5 @@
+-- TODO (karthikeyan): This file should be removed, this file has been kept for now to help with
+-- the conflict resolution
 select
   json_build_object(
     'tables', tables.items :: json,

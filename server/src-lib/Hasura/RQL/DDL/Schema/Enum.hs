@@ -20,7 +20,6 @@ import qualified Data.HashMap.Strict                 as M
 import qualified Data.List.NonEmpty                  as NE
 import qualified Data.Sequence                       as Seq
 import qualified Data.Sequence.NonEmpty              as NESeq
-import qualified Data.Text                           as T
 import qualified Database.PG.Query                   as Q
 import qualified Language.GraphQL.Draft.Syntax       as G
 
@@ -28,10 +27,10 @@ import           Control.Monad.Validate
 import           Data.List                           (delete)
 import           Data.Text.Extended
 
-import qualified Hasura.Backends.Postgres.SQL.DML    as S
+import qualified Hasura.Backends.Postgres.SQL.DML    as S (Extractor(..), SQLExp(SENull), mkExtr, mkSelect, selFrom, mkSimpleFromExp, selExtr)
 
-import           Hasura.Backends.Postgres.Connection
-import           Hasura.Backends.Postgres.SQL.Types
+import           Hasura.Backends.Postgres.Connection (MonadTx(..), defaultTxErrorHandler)
+import           Hasura.Backends.Postgres.SQL.Types  (PGScalarType(PGText))
 import           Hasura.RQL.Types.Column
 import           Hasura.RQL.Types.Common
 import           Hasura.RQL.Types.Error
@@ -47,38 +46,40 @@ import           Hasura.Server.Utils                 (makeReasonMessage)
 --   2. The referenced column is the table’s primary key.
 --   3. The referenced table is, in fact, an enum table.
 resolveEnumReferences
-  :: HashMap QualifiedTable (PrimaryKey PGCol, EnumValues)
-  -> HashSet ForeignKey
-  -> HashMap PGCol (NonEmpty EnumReference)
+  :: forall b
+   . Backend b
+  => HashMap (TableName b) (PrimaryKey (Column b), EnumValues)
+  -> HashSet (ForeignKey b)
+  -> HashMap (Column b) (NonEmpty (EnumReference b))
 resolveEnumReferences enumTables =
   M.fromListWith (<>) . map (fmap (:|[])) . mapMaybe resolveEnumReference . toList
   where
-    resolveEnumReference :: ForeignKey -> Maybe (PGCol, EnumReference)
+    resolveEnumReference :: ForeignKey b -> Maybe (Column b, EnumReference b)
     resolveEnumReference foreignKey = do
-      [(localColumn, foreignColumn)] <- pure $ M.toList (_fkColumnMapping foreignKey)
+      [(localColumn, foreignColumn)] <- pure $ M.toList (_fkColumnMapping @b foreignKey)
       (primaryKey, enumValues) <- M.lookup (_fkForeignTable foreignKey) enumTables
       guard (_pkColumns primaryKey == foreignColumn NESeq.:<|| Seq.Empty)
       pure (localColumn, EnumReference (_fkForeignTable foreignKey) enumValues)
 
-data EnumTableIntegrityError
+data EnumTableIntegrityError (b :: BackendType)
   = EnumTableMissingPrimaryKey
-  | EnumTableMultiColumnPrimaryKey ![PGCol]
-  | EnumTableNonTextualPrimaryKey !(RawColumnInfo 'Postgres)
+  | EnumTableMultiColumnPrimaryKey ![Column b]
+  | EnumTableNonTextualPrimaryKey !(RawColumnInfo b)
   | EnumTableNoEnumValues
   | EnumTableInvalidEnumValueNames !(NE.NonEmpty Text)
-  | EnumTableNonTextualCommentColumn !(RawColumnInfo 'Postgres)
-  | EnumTableTooManyColumns ![PGCol]
+  | EnumTableNonTextualCommentColumn !(RawColumnInfo b)
+  | EnumTableTooManyColumns ![Column b]
 
 fetchAndValidateEnumValues
   :: (MonadTx m)
-  => QualifiedTable
+  => TableName 'Postgres
   -> Maybe (PrimaryKey (RawColumnInfo 'Postgres))
   -> [RawColumnInfo 'Postgres]
   -> m EnumValues
 fetchAndValidateEnumValues tableName maybePrimaryKey columnInfos =
   either (throw400 ConstraintViolation . showErrors) pure =<< runValidateT fetchAndValidate
   where
-    fetchAndValidate :: (MonadTx m, MonadValidate [EnumTableIntegrityError] m) => m EnumValues
+    fetchAndValidate :: (MonadTx m, MonadValidate [EnumTableIntegrityError 'Postgres] m) => m EnumValues
     fetchAndValidate = do
       primaryKeyColumn <- tolerate validatePrimaryKey
       maybeCommentColumn <- validateColumns primaryKeyColumn
@@ -126,13 +127,13 @@ fetchAndValidateEnumValues tableName maybePrimaryKey columnInfos =
           if name `elem` ["true", "false", "null"] then Nothing
           else G.mkName name
 
-    showErrors :: [EnumTableIntegrityError] -> Text
+    showErrors :: [EnumTableIntegrityError 'Postgres] -> Text
     showErrors allErrors =
       "the table " <> tableName <<> " cannot be used as an enum " <> reasonsMessage
       where
         reasonsMessage = makeReasonMessage allErrors showOne
 
-        showOne :: EnumTableIntegrityError -> Text
+        showOne :: EnumTableIntegrityError 'Postgres -> Text
         showOne = \case
           EnumTableMissingPrimaryKey -> "the table must have a primary key"
           EnumTableMultiColumnPrimaryKey cols ->
@@ -152,7 +153,7 @@ fetchAndValidateEnumValues tableName maybePrimaryKey columnInfos =
           EnumTableNonTextualCommentColumn colInfo -> typeMismatch "comment column" colInfo PGText
           EnumTableTooManyColumns cols ->
             "the table must have exactly one primary key and optionally one comment column, not "
-              <> T.pack (show $ length cols) <> " columns ("
+              <> tshow (length cols) <> " columns ("
               <> commaSeparated (sort cols) <> ")"
           where
             typeMismatch description colInfo expected =

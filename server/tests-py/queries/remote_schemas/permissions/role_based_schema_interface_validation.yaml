@@ -30,4 +30,4 @@ response:
   error:
     'validation for the given role-based schema failed because field "timestamp"
     does not exist in the "Interface": "Communication"'
-  code: invalid-custom-remote-schema-document
+  code: validation-failed
