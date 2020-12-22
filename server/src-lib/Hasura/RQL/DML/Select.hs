@@ -203,7 +203,7 @@ convSelectQ table fieldInfoMap selPermInfo selQ sessVarBldr prepValBldr = do
     indexedForM (sqColumns selQ) $ \case
     (ECSimple pgCol) -> do
       colInfo <- convExtSimple fieldInfoMap selPermInfo pgCol
-      return (fromPGCol pgCol, mkAnnColumnField colInfo Nothing)
+      return (fromCol @'Postgres pgCol, mkAnnColumnField colInfo Nothing)
     (ECRel relName mAlias relSelQ) -> do
       annRel <- convExtRel fieldInfoMap relName mAlias
                 relSelQ sessVarBldr prepValBldr

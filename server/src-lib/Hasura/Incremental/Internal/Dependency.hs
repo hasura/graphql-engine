@@ -219,14 +219,14 @@ instance Cacheable G.OperationType
 instance Cacheable G.VariableDefinition
 instance Cacheable G.InputValueDefinition
 instance Cacheable G.EnumValueDefinition
-instance Cacheable G.FieldDefinition
+instance (Cacheable a) => Cacheable (G.FieldDefinition a)
 instance Cacheable G.ScalarTypeDefinition
 instance Cacheable G.UnionTypeDefinition
-instance Cacheable possibleTypes => Cacheable (G.InterfaceTypeDefinition possibleTypes)
+instance (Cacheable possibleTypes, Cacheable a) => Cacheable (G.InterfaceTypeDefinition a possibleTypes)
 instance Cacheable G.EnumTypeDefinition
-instance Cacheable G.InputObjectTypeDefinition
-instance Cacheable G.ObjectTypeDefinition
-instance Cacheable possibleTypes => Cacheable (G.TypeDefinition possibleTypes)
+instance (Cacheable a) => Cacheable (G.InputObjectTypeDefinition a)
+instance (Cacheable a) => Cacheable (G.ObjectTypeDefinition a)
+instance (Cacheable a, Cacheable possibleTypes) => Cacheable (G.TypeDefinition a possibleTypes)
 instance Cacheable N.URI
 instance Cacheable UT.Variable
 instance Cacheable UT.TemplateItem
@@ -251,6 +251,9 @@ deriving instance Cacheable G.Description
 deriving instance Cacheable G.EnumValue
 deriving instance Cacheable a => Cacheable (G.ExecutableDocument a)
 
+instance Cacheable G.RootOperationTypeDefinition
+instance Cacheable G.SchemaDefinition
+instance Cacheable G.TypeSystemDefinition
 instance Cacheable G.SchemaDocument
 instance Cacheable G.SchemaIntrospection
 

@@ -1,0 +1,56 @@
+- description: query the remote schema with only fields that have been exposed to the role 'user'
+  url: /v1/graphql
+  status: 200
+  headers:
+    X-Hasura-Role: user
+  query:
+    query: |
+       query {
+         user (user_id: 1) {
+           user_id
+         }
+       }
+  response:
+    data:
+      user:
+        user_id: 1
+
+- description: query the remote schema with fields that have not been exposed to the role 'user'
+  url: /v1/graphql
+  status: 200
+  headers:
+    X-Hasura-Role: user
+  query:
+    query: |
+       query {
+         hello
+         user (user_id: 1) {
+           user_id
+           gimmeText(text: "hello")
+         }
+       }
+  response:
+    errors:
+    - extensions:
+        path: $.selectionSet.user.selectionSet.gimmeText
+        code: validation-failed
+      message: "field \"gimmeText\" not found in type: 'User'"
+
+- description: run the above query as admin
+  url: /v1/graphql
+  status: 200
+  query:
+    query: |
+       query {
+         hello
+         user (user_id: 1) {
+           user_id
+           gimmeText(text: "hello")
+         }
+       }
+  response:
+    data:
+      hello: world
+      user:
+        user_id: 1
+        gimmeText: hello

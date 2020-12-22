@@ -208,14 +208,11 @@ word64ToHex randNum = bsToTxt $ Hex.encode numInBytes
   where numInBytes = BL.toStrict (Bin.encode  randNum)
 
 -- | Decode 16 character hex string to Word64
--- | Hex.Decode returns two tuples: (properly decoded data, string starts at the first invalid base16 sequence)
 hexToWord64 :: Text -> Maybe Word64
 hexToWord64 randText = do
-  let (decoded, leftovers) = Hex.decode $ txtToBs randText
-      decodedWord64 = Bin.decode $ BL.fromStrict decoded
-  guard (BS.null leftovers)
-  pure decodedWord64
-
+  case Hex.decode $ txtToBs randText of
+    Left _ -> Nothing
+    Right decoded -> Just $ Bin.decode $ BL.fromStrict decoded
 
 -- | Inject the trace context as a set of HTTP headers.
 injectHttpContext :: TraceContext -> [HTTP.Header]

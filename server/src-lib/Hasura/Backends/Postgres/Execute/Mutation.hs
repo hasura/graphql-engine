@@ -246,7 +246,7 @@ mutateAndFetchCols qt cols (cte, p) strfyNum = do
     tabFrom = FromIdentifier aliasIdentifier
     tabPerm = TablePerm annBoolExpTrue Nothing
     selFlds = flip map cols $
-              \ci -> (fromPGCol $ pgiColumn ci, mkAnnColumnFieldAsText ci)
+              \ci -> (fromCol @'Postgres $ pgiColumn ci, mkAnnColumnFieldAsText ci)
 
     sqlText = Q.fromBuilder $ toSQL selectWith
     selectWith = S.SelectWith [(S.Alias aliasIdentifier, getMutationCTE cte)] select

@@ -156,7 +156,7 @@ withJsonAggExtr permLimitSubQuery ordBy alias =
     (newOBItems, obCols, newOBAliases) = maybe ([], [], []) transformOrderBy ordBy
     transformOrderBy (S.OrderByExp l) = unzip3 $
       flip map (zip (toList l) [1..]) $ \(obItem, i::Int) ->
-                 let iden = Identifier $ "ob_col_" <> T.pack (show i)
+                 let iden = Identifier $ "ob_col_" <> tshow i
                  in ( obItem{S.oColumn = S.SEIdentifier iden}
                     , S.oColumn obItem
                     , iden
@@ -272,7 +272,7 @@ mkAggregateOrderByExtractorAndFields annAggOrderBy =
     AAOOp opText pgColumnInfo ->
       let pgColumn = pgiColumn pgColumnInfo
       in ( S.Extractor (S.SEFnApp opText [S.SEIdentifier $ toIdentifier pgColumn] Nothing) alias
-         , [(FieldName opText, AFOp $ AggregateOp opText [(fromPGCol pgColumn, CFCol pgColumn)])]
+         , [(FieldName opText, AFOp $ AggregateOp opText [(fromCol @'Postgres pgColumn, CFCol pgColumn)])]
          )
   where
     alias = Just $ mkAggregateOrderByAlias annAggOrderBy

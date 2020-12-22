@@ -1,0 +1,61 @@
+- description: query the remote schema with only args and fields that have been exposed to the role 'user'
+  url: /v1/graphql
+  status: 200
+  headers:
+    X-Hasura-Role: user
+  query:
+    query: |
+      {
+        messages(where: {id: {eq: 1}}) {
+          id
+          name
+          msg
+        }
+      }
+  response:
+    data:
+      messages:
+        - id: 1
+          name: alice
+          msg: You win!
+
+- description: query the remote schema with argument that has not been exposed to the role 'user'
+  url: /v1/graphql
+  status: 200
+  headers:
+    X-Hasura-Role: user
+  query:
+    query: |
+      {
+        messages(where: {id: { eq: 1}}, includes: {name: "alice"}) {
+          id
+          name
+          msg
+        }
+      }
+
+  response:
+    errors:
+    - extensions:
+        path: $.selectionSet.messages
+        code: validation-failed
+      message: '"messages" has no argument named "includes"'
+
+- description: run the above query as the admin role
+  url: /v1/graphql
+  status: 200
+  query:
+    query: |
+      {
+        messages(where: {id : {eq: 1}}, includes: {name:"alice"}) {
+          id
+          name
+          msg
+        }
+      }
+  response:
+    data:
+      messages:
+        - id: 1
+          name: alice
+          msg: You win!

@@ -88,11 +88,18 @@ pruneDanglingDependents cache = fmap (M.filter (not . null)) . traverse do
         Left $ "function " <> functionName <<> " is not tracked"
       SORemoteSchema remoteSchemaName -> unless (remoteSchemaName `M.member` _boRemoteSchemas cache) $
         Left $ "remote schema " <> remoteSchemaName <<> " is not found"
+      SORemoteSchemaPermission remoteSchemaName roleName -> do
+        remoteSchema <-
+          onNothing (M.lookup remoteSchemaName $ _boRemoteSchemas cache)
+            $ Left $ "remote schema " <> remoteSchemaName <<> " is not found"
+        unless (roleName `M.member` _rscPermissions (fst remoteSchema)) $
+          Left $ "no permission defined on remote schema " <> remoteSchemaName
+                  <<> " for role " <>> roleName
       SOTableObj tableName tableObjectId -> do
         tableInfo <- resolveTable tableName
         case tableObjectId of
           TOCol columnName ->
-            void $ resolveField tableInfo (fromPGCol columnName) _FIColumn "column"
+            void $ resolveField tableInfo (fromCol @'Postgres columnName) _FIColumn "column"
           TORel relName ->
             void $ resolveField tableInfo (fromRel relName) _FIRelationship "relationship"
           TOComputedField fieldName ->
@@ -130,6 +137,7 @@ deleteMetadataObject objectId = case objectId of
   MOTable        name -> boTables        %~ M.delete name
   MOFunction     name -> boFunctions     %~ M.delete name
   MORemoteSchema name -> boRemoteSchemas %~ M.delete name
+  MORemoteSchemaPermissions name role -> boRemoteSchemas.ix name._1.rscPermissions %~ M.delete role
   MOCronTrigger name  -> boCronTriggers %~ M.delete name
   MOTableObj tableName tableObjectId -> boTables.ix tableName %~ case tableObjectId of
     MTORel           name _ -> tiCoreInfo.tciFieldInfoMap %~ M.delete (fromRel name)

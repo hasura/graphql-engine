@@ -194,9 +194,9 @@ addFunctionToCatalog (QualifiedObject sn fn) config = do
                  |] (sn, fn, Q.AltJ config, systemDefined) False
 
 addRemoteSchemaToCatalog
-  :: AddRemoteSchemaQuery
+  :: RemoteSchemaMetadata
   -> Q.TxE QErr ()
-addRemoteSchemaToCatalog (AddRemoteSchemaQuery name def comment) =
+addRemoteSchemaToCatalog (RemoteSchemaMetadata name def comment _) =
   Q.unitQE defaultTxErrorHandler [Q.sql|
     INSERT into hdb_catalog.remote_schemas
       (name, definition, comment)
@@ -327,7 +327,7 @@ fetchMetadataFromHdbTables = liftTx do
   functions <- Q.catchE defaultTxErrorHandler fetchFunctions
 
   -- fetch all remote schemas
-  remoteSchemas <- oMapFromL _arsqName <$> fetchRemoteSchemas
+  remoteSchemas <- oMapFromL _rsmName <$> fetchRemoteSchemas
 
   -- fetch all collections
   collections <- oMapFromL _ccName <$> fetchCollections
@@ -417,7 +417,7 @@ fetchMetadataFromHdbTables = liftTx do
          |] () True
       where
         fromRow (name, Q.AltJ def, comment) =
-          AddRemoteSchemaQuery name def comment
+          RemoteSchemaMetadata name def comment mempty
 
 
     fetchCollections =

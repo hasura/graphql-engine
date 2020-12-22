@@ -105,8 +105,7 @@ procSetObj tn fieldInfoMap mObj = do
   return (HM.fromList setColTups, depHeaders, deps)
   where
     setObj = fromMaybe mempty mObj
-    depHeaders = getDepHeadersFromVal $ Object $
-      HM.fromList $ map (first getPGColTxt) $ HM.toList setObj
+    depHeaders = getDepHeadersFromVal $ Object $ mapKeys getPGColTxt setObj
 
     getDepReason = bool DRSessionVariable DROnType . isStaticValue
 
@@ -116,7 +115,7 @@ class (ToJSON a) => IsPerm a where
     :: PermAccessor 'Postgres (PermInfo a)
 
   buildPermInfo
-    :: (QErrM m, TableCoreInfoRM m)
+    :: (QErrM m, TableCoreInfoRM 'Postgres m)
     => QualifiedTable
     -> FieldInfoMap (FieldInfo 'Postgres)
     -> PermDef a
@@ -167,7 +166,7 @@ dropPermissionInMetadata rn = \case
   PTUpdate -> tmUpdatePermissions %~ OMap.delete rn
 
 buildInsPermInfo
-  :: (QErrM m, TableCoreInfoRM m)
+  :: (QErrM m, TableCoreInfoRM 'Postgres m)
   => QualifiedTable
   -> FieldInfoMap (FieldInfo 'Postgres)
   -> PermDef (InsPerm 'Postgres)
@@ -202,7 +201,7 @@ instance IsPerm (InsPerm 'Postgres) where
     tmInsertPermissions %~ OMap.insert (_pdRole permDef) permDef
 
 buildSelPermInfo
-  :: (QErrM m, TableCoreInfoRM m)
+  :: (QErrM m, TableCoreInfoRM 'Postgres m)
   => QualifiedTable
   -> FieldInfoMap (FieldInfo 'Postgres)
   -> SelPerm 'Postgres
@@ -260,7 +259,7 @@ instance IsPerm (SelPerm 'Postgres) where
 type CreateUpdPerm b = CreatePerm (UpdPerm b)
 
 buildUpdPermInfo
-  :: (QErrM m, TableCoreInfoRM m)
+  :: (QErrM m, TableCoreInfoRM 'Postgres m)
   => QualifiedTable
   -> FieldInfoMap (FieldInfo 'Postgres)
   -> UpdPerm 'Postgres
@@ -303,7 +302,7 @@ instance IsPerm (UpdPerm 'Postgres) where
 type CreateDelPerm b = CreatePerm (DelPerm b)
 
 buildDelPermInfo
-  :: (QErrM m, TableCoreInfoRM m)
+  :: (QErrM m, TableCoreInfoRM 'Postgres m)
   => QualifiedTable
   -> FieldInfoMap (FieldInfo 'Postgres)
   -> DelPerm 'Postgres

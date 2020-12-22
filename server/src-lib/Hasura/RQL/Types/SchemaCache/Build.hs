@@ -165,7 +165,7 @@ newtype MetadataT m a
   deriving
     ( Functor, Applicative, Monad, MonadTrans
     , MonadIO, MonadUnique, MonadReader r, MonadError e, MonadTx
-    , TableCoreInfoRM, CacheRM, CacheRWM
+    , TableCoreInfoRM b, CacheRM, CacheRWM
     )
 
 instance (Monad m) => MetadataM (MetadataT m) where

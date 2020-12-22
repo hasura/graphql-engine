@@ -3,29 +3,33 @@
 module Main where
 
 import           Control.Exception
-import           Data.Int                   (Int64)
-import           Data.Text.Conversions      (convertText)
-import           Data.Time.Clock            (getCurrentTime)
-import           Data.Time.Clock.POSIX      (getPOSIXTime)
+import           Control.Monad.Trans.Managed (ManagedT(..), lowerManagedT)
+import           Data.Int                    (Int64)
+import           Data.Text.Conversions       (convertText)
+import           Data.Time.Clock             (getCurrentTime)
+import           Data.Time.Clock.POSIX       (getPOSIXTime)
 
 import           Hasura.App
-import           Hasura.Logging             (Hasura, LogLevel (..), defaultEnabledEngineLogTypes)
+import           Hasura.Logging              (Hasura, LogLevel (..), defaultEnabledEngineLogTypes)
+import           Hasura.Metadata.Class
 import           Hasura.Prelude
 import           Hasura.RQL.DDL.Schema
 import           Hasura.RQL.Types
 import           Hasura.Server.Init
-import           Hasura.Server.Migrate      (downgradeCatalog, dropCatalog)
+import           Hasura.Server.Migrate       (downgradeCatalog, dropCatalog)
 import           Hasura.Server.Version
 
-import qualified Data.ByteString.Char8      as BC
-import qualified Data.ByteString.Lazy       as BL
-import qualified Data.ByteString.Lazy.Char8 as BLC
-import qualified Data.Environment           as Env
-import qualified Database.PG.Query          as Q
-import qualified Hasura.Tracing             as Tracing
-import qualified System.Exit                as Sys
-import qualified System.Metrics             as EKG
-import qualified System.Posix.Signals       as Signals
+import qualified Control.Concurrent.Extended as C
+import qualified Data.ByteString.Char8       as BC
+import qualified Data.ByteString.Lazy        as BL
+import qualified Data.ByteString.Lazy.Char8  as BLC
+import qualified Data.Environment            as Env
+import qualified Database.PG.Query           as Q
+import qualified Hasura.GC                   as GC
+import qualified Hasura.Tracing              as Tracing
+import qualified System.Exit                 as Sys
+import qualified System.Metrics              as EKG
+import qualified System.Posix.Signals        as Signals
 
 
 main :: IO ()
@@ -46,8 +50,6 @@ runApp env (HGEOptionsG rci hgeCmd) = do
 
   withVersion $$(getVersionFromEnvironment) $ case hgeCmd of
     HCServe serveOptions -> do
-      serveCtx <- initialiseServeCtx env globalCtx serveOptions
-
       ekgStore <- liftIO do
         s <- EKG.newStore
         EKG.registerGcMetrics s
@@ -58,19 +60,27 @@ runApp env (HGEOptionsG rci hgeCmd) = do
         EKG.registerCounter "ekg.server_timestamp_ms" getTimeMs s
         pure s
 
-      let shutdownApp = return ()
-      -- Catches the SIGTERM signal and initiates a graceful shutdown.
-      -- Graceful shutdown for regular HTTP requests is already implemented in
-      -- Warp, and is triggered by invoking the 'closeSocket' callback.
-      -- We only catch the SIGTERM signal once, that is, if the user hits CTRL-C
-      -- once again, we terminate the process immediately.
-      _ <- liftIO $ Signals.installHandler
-        Signals.sigTERM
-        (Signals.CatchOnce (shutdownGracefully $ _scShutdownLatch serveCtx))
-        Nothing
-      serverMetrics <- liftIO $ createServerMetrics ekgStore
-      flip runPGMetadataStorageApp (_scPgPool serveCtx) $
-        runHGEServer env serveOptions serveCtx Nothing initTime shutdownApp Nothing serverMetrics ekgStore
+      -- It'd be nice if we didn't have to call runManagedT twice here, but
+      -- there is a data dependency problem since the call to runPGMetadataStorageApp
+      -- below depends on serveCtx.
+      runManagedT (initialiseServeCtx env globalCtx serveOptions) $ \serveCtx -> do
+        -- Catches the SIGTERM signal and initiates a graceful shutdown.
+        -- Graceful shutdown for regular HTTP requests is already implemented in
+        -- Warp, and is triggered by invoking the 'closeSocket' callback.
+        -- We only catch the SIGTERM signal once, that is, if the user hits CTRL-C
+        -- once again, we terminate the process immediately.
+        _ <- liftIO $ Signals.installHandler
+          Signals.sigTERM
+          (Signals.CatchOnce (shutdownGracefully $ _scShutdownLatch serveCtx))
+          Nothing
+          
+        let Loggers _ logger _ = _scLoggers serveCtx
+        _idleGCThread <- C.forkImmortal "ourIdleGC" logger $
+          GC.ourIdleGC logger (seconds 0.3) (seconds 10) (seconds 60)
+        
+        serverMetrics <- liftIO $ createServerMetrics ekgStore
+        flip runPGMetadataStorageApp (_scPgPool serveCtx) . lowerManagedT $ do
+          runHGEServer env serveOptions serveCtx Nothing initTime Nothing serverMetrics ekgStore
 
     HCExport -> do
       res <- runTxWithMinimalPool _gcConnInfo fetchMetadataFromCatalog
@@ -84,16 +94,18 @@ runApp env (HGEOptionsG rci hgeCmd) = do
     HCExecute -> do
       queryBs <- liftIO BL.getContents
       let sqlGenCtx = SQLGenCtx False
-      pool <- mkMinimalPool _gcConnInfo
-      res <- runAsAdmin pool sqlGenCtx _gcHttpManager $ do
-        schemaCache <- buildRebuildableSchemaCache env
-        metadata <- liftTx fetchMetadataFromCatalog
-        execQuery env queryBs
-          & Tracing.runTraceTWithReporter Tracing.noReporter "execute"
-          & runMetadataT metadata
-          & runCacheRWT schemaCache
-          & fmap (\((res, _), _, _) -> res)
-      either (printErrJExit ExecuteProcessError) (liftIO . BLC.putStrLn) res
+      runManagedT (mkMinimalPool _gcConnInfo) $ \pool -> do
+        res <- flip runPGMetadataStorageApp pool $
+          runMetadataStorageT $ liftEitherM $
+          runAsAdmin pool sqlGenCtx RemoteSchemaPermsDisabled _gcHttpManager $ do
+            metadata <- liftTx fetchMetadataFromCatalog
+            schemaCache <- buildRebuildableSchemaCache env metadata
+            execQuery env queryBs
+              & Tracing.runTraceTWithReporter Tracing.noReporter "execute"
+              & runMetadataT metadata
+              & runCacheRWT schemaCache
+              & fmap (\((res, _), _, _) -> res)
+        either (printErrJExit ExecuteProcessError) (liftIO . BLC.putStrLn) res
 
     HCDowngrade opts -> do
       res <- runTxWithMinimalPool _gcConnInfo $ downgradeCatalog opts initTime
@@ -101,7 +113,7 @@ runApp env (HGEOptionsG rci hgeCmd) = do
 
     HCVersion -> liftIO $ putStrLn $ "Hasura GraphQL Engine: " ++ convertText currentVersion
   where
-    runTxWithMinimalPool connInfo tx = do
+    runTxWithMinimalPool connInfo tx = lowerManagedT $ do
       minimalPool <- mkMinimalPool connInfo
       liftIO $ runExceptT $ Q.runTx minimalPool (Q.ReadCommitted, Nothing) tx
 

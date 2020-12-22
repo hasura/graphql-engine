@@ -20,7 +20,6 @@ module Hasura.RQL.Types.SchemaCache
   , TypeRelationship(..)
   , trName, trType, trRemoteTable, trFieldMapping
   , TableCoreInfoG(..)
-  , TableRawInfo
   , TableCoreInfo
   , tciName
   , tciDescription
@@ -46,6 +45,12 @@ module Hasura.RQL.Types.SchemaCache
   , IntrospectionResult(..)
   , ParsedIntrospection(..)
   , RemoteSchemaCtx(..)
+  , rscName
+  , rscInfo
+  , rscIntro
+  , rscParsed
+  , rscRawIntrospectionResult
+  , rscPermissions
   , RemoteSchemaMap
 
   , DepMap
@@ -107,13 +112,15 @@ module Hasura.RQL.Types.SchemaCache
   , FunctionVolatility(..)
   , FunctionArg(..)
   , FunctionArgName(..)
-  , FunctionName(..)
+--  , FunctionName(..)
   , FunctionInfo(..)
   , FunctionCache
   , getFuncsOfTable
   , askFunctionInfo
   , CronTriggerInfo(..)
   ) where
+
+import           Control.Lens                      (makeLenses)
 
 import           Hasura.Prelude
 
@@ -131,9 +138,9 @@ import           System.Cron.Types
 import qualified Hasura.GraphQL.Parser               as P
 
 import           Hasura.Backends.Postgres.Connection
-import           Hasura.Backends.Postgres.SQL.Types
+import           Hasura.Backends.Postgres.SQL.Types  (QualifiedTable, QualifiedFunction, PGCol)
 import           Hasura.GraphQL.Context              (GQLContext, RemoteField, RoleContext)
-import           Hasura.Incremental                  (Dependency, MonadDepend (..), selectKeyD)
+import           Hasura.Incremental                  (Dependency, MonadDepend (..), selectKeyD, Cacheable)
 import           Hasura.RQL.IR.BoolExp
 import           Hasura.RQL.Types.Action
 import           Hasura.RQL.Types.Common             hiding (FunctionName)
@@ -172,11 +179,12 @@ type WithDeps a = (a, [SchemaDependency])
 
 data IntrospectionResult
   = IntrospectionResult
-  { irDoc              :: G.SchemaIntrospection
+  { irDoc              :: RemoteSchemaIntrospection
   , irQueryRoot        :: G.Name
   , irMutationRoot     :: Maybe G.Name
   , irSubscriptionRoot :: Maybe G.Name
-  }
+  } deriving (Show, Eq, Generic)
+instance Cacheable IntrospectionResult
 
 data ParsedIntrospection
   = ParsedIntrospection
@@ -185,17 +193,26 @@ data ParsedIntrospection
   , piSubscription :: Maybe [P.FieldParser (P.ParseT Identity) RemoteField]
   }
 
+-- | See 'fetchRemoteSchema'.
 data RemoteSchemaCtx
   = RemoteSchemaCtx
-  { rscName                   :: !RemoteSchemaName
-  , rscIntro                  :: !IntrospectionResult
-  , rscInfo                   :: !RemoteSchemaInfo
-  , rscRawIntrospectionResult :: !BL.ByteString
-  , rscParsed                 :: ParsedIntrospection
+  { _rscName                   :: !RemoteSchemaName
+  , _rscIntro                  :: !IntrospectionResult
+  , _rscInfo                   :: !RemoteSchemaInfo
+  , _rscRawIntrospectionResult :: !BL.ByteString
+  -- ^ The raw response from the introspection query against the remote server.
+  -- We store this so we can efficiently service 'introspect_remote_schema'.
+  , _rscParsed                 ::  ParsedIntrospection
+  , _rscPermissions            :: !(M.HashMap RoleName IntrospectionResult)
   }
+$(makeLenses ''RemoteSchemaCtx)
 
 instance ToJSON RemoteSchemaCtx where
-  toJSON = toJSON . rscInfo
+  toJSON (RemoteSchemaCtx name _ info _ _ _) =
+    object $
+      [ "name" .= name
+      , "info" .= toJSON info
+      ]
 
 type RemoteSchemaMap = M.HashMap RemoteSchemaName RemoteSchemaCtx
 
@@ -232,7 +249,7 @@ data SchemaCache
   { scTables                      :: !(TableCache 'Postgres)
   , scActions                     :: !ActionCache
   , scFunctions                   :: !FunctionCache
-  , scRemoteSchemas               :: !RemoteSchemaMap
+  , scRemoteSchemas               :: !(M.HashMap RemoteSchemaName RemoteSchemaCtx)
   , scAllowlist                   :: !(HS.HashSet GQLQuery)
   , scGQLContext                  :: !(HashMap RoleName (RoleContext GQLContext))
   , scUnauthenticatedGQLContext   :: !GQLContext
@@ -259,33 +276,33 @@ getAllRemoteSchemas sc =
 
 -- | A more limited version of 'CacheRM' that is used when building the schema cache, since the
 -- entire schema cache has not been built yet.
-class (Monad m) => TableCoreInfoRM m where
-  lookupTableCoreInfo :: QualifiedTable -> m (Maybe (TableCoreInfo 'Postgres))
-  default lookupTableCoreInfo :: (CacheRM m) => QualifiedTable -> m (Maybe (TableCoreInfo 'Postgres))
+class (Monad m) => TableCoreInfoRM b m where
+  lookupTableCoreInfo :: TableName b -> m (Maybe (TableCoreInfo b))
+  default lookupTableCoreInfo :: (CacheRM m, b ~ 'Postgres) => TableName b -> m (Maybe (TableCoreInfo b))
   lookupTableCoreInfo tableName = fmap _tiCoreInfo . M.lookup tableName . scTables <$> askSchemaCache
 
-instance (TableCoreInfoRM m) => TableCoreInfoRM (ReaderT r m) where
+instance (TableCoreInfoRM b m) => TableCoreInfoRM b (ReaderT r m) where
   lookupTableCoreInfo = lift . lookupTableCoreInfo
-instance (TableCoreInfoRM m) => TableCoreInfoRM (StateT s m) where
+instance (TableCoreInfoRM b m) => TableCoreInfoRM b (StateT s m) where
   lookupTableCoreInfo = lift . lookupTableCoreInfo
-instance (Monoid w, TableCoreInfoRM m) => TableCoreInfoRM (WriterT w m) where
+instance (Monoid w, TableCoreInfoRM b m) => TableCoreInfoRM b (WriterT w m) where
   lookupTableCoreInfo = lift . lookupTableCoreInfo
-instance (TableCoreInfoRM m) => TableCoreInfoRM (TraceT m) where
+instance (TableCoreInfoRM b m) => TableCoreInfoRM b (TraceT m) where
   lookupTableCoreInfo = lift . lookupTableCoreInfo
 
-newtype TableCoreCacheRT m a
-  = TableCoreCacheRT { runTableCoreCacheRT :: Dependency (TableCoreCache 'Postgres) -> m a }
+newtype TableCoreCacheRT b m a
+  = TableCoreCacheRT { runTableCoreCacheRT :: Dependency (TableCoreCache b) -> m a }
   deriving (Functor, Applicative, Monad, MonadIO, MonadError e, MonadState s, MonadWriter w, MonadTx)
-    via (ReaderT (Dependency (TableCoreCache 'Postgres)) m)
-  deriving (MonadTrans) via (ReaderT (Dependency (TableCoreCache 'Postgres)))
+    via (ReaderT (Dependency (TableCoreCache b)) m)
+  deriving (MonadTrans) via (ReaderT (Dependency (TableCoreCache b)))
 
-instance (MonadReader r m) => MonadReader r (TableCoreCacheRT m) where
+instance (MonadReader r m) => MonadReader r (TableCoreCacheRT b m) where
   ask = lift ask
   local f m = TableCoreCacheRT (local f . runTableCoreCacheRT m)
-instance (MonadDepend m) => TableCoreInfoRM (TableCoreCacheRT m) where
+instance (MonadDepend m, Backend b) => TableCoreInfoRM b (TableCoreCacheRT b m) where
   lookupTableCoreInfo tableName = TableCoreCacheRT (dependOnM . selectKeyD tableName)
 
-class (TableCoreInfoRM m) => CacheRM m where
+class (TableCoreInfoRM 'Postgres m) => CacheRM m where
   askSchemaCache :: m SchemaCache
 
 instance (CacheRM m) => CacheRM (ReaderT r m) where
@@ -300,7 +317,7 @@ instance (CacheRM m) => CacheRM (TraceT m) where
 newtype CacheRT m a = CacheRT { runCacheRT :: SchemaCache -> m a }
   deriving (Functor, Applicative, Monad, MonadError e, MonadWriter w) via (ReaderT SchemaCache m)
   deriving (MonadTrans) via (ReaderT SchemaCache)
-instance (Monad m) => TableCoreInfoRM (CacheRT m)
+instance (Monad m) => TableCoreInfoRM 'Postgres (CacheRT m)
 instance (Monad m) => CacheRM (CacheRT m) where
   askSchemaCache = CacheRT pure
 

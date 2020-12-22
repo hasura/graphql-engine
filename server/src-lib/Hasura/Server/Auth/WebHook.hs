@@ -125,7 +125,7 @@ mkUserInfoFromResp (Logger logger) url method statusCode respBody
   where
     getUserInfoFromHdrs rawHeaders = do
       userInfo <- mkUserInfo URBFromSessionVariables UAdminSecretNotSent $
-                  mkSessionVariablesText $ Map.toList rawHeaders
+                  mkSessionVariablesText rawHeaders
       logWebHookResp LevelInfo Nothing Nothing
       expiration <- runMaybeT $ timeFromCacheControl rawHeaders <|> timeFromExpires rawHeaders
       pure (userInfo, expiration)

@@ -1,0 +1,29 @@
+description: Provide a member type 'Message' in the 'SearchResult' which doesn't exist in the upstream remote
+url: /v1/query
+status: 400
+query:
+  type: add_remote_schema_permissions
+  args:
+    remote_schema: my-remote-schema
+    role: user
+    definition:
+      schema: |
+          type User {
+            user_id: Int
+          }
+
+          union SearchResult = Photo | Message
+
+          type Query {
+            hello: String
+          }
+
+          schema {
+            query: Query
+          }
+response:
+  path: $.args
+  error:
+    'validation for the given role-based schema failed because union "SearchResult"
+    contains members which do not exist in the members of the remote schema union :"Message"'
+  code: validation-failed

@@ -3,6 +3,7 @@
 module Hasura.Server.API.Query where
 
 import           Control.Lens
+import           Control.Monad.Trans.Control        (MonadBaseControl)
 import           Control.Monad.Unique
 import           Data.Aeson
 import           Data.Aeson.Casing
@@ -14,6 +15,7 @@ import qualified Database.PG.Query                  as Q
 import qualified Network.HTTP.Client                as HTTP
 
 import           Hasura.EncJSON
+import           Hasura.Metadata.Class
 import           Hasura.Prelude
 import           Hasura.RQL.DDL.Action
 import           Hasura.RQL.DDL.ComputedField
@@ -92,6 +94,10 @@ data RQLQueryV1
   | RQRemoveRemoteSchema !RemoteSchemaNameQuery
   | RQReloadRemoteSchema !RemoteSchemaNameQuery
   | RQIntrospectRemoteSchema !RemoteSchemaNameQuery
+
+  -- remote-schema permissions
+  | RQAddRemoteSchemaPermissions !AddRemoteSchemaPermissions
+  | RQDropRemoteSchemaPermissions !DropRemoteSchemaPermissions
 
   | RQCreateEventTrigger !CreateEventTriggerQuery
   | RQDeleteEventTrigger !DeleteEventTriggerQuery
@@ -175,55 +181,36 @@ $(deriveJSON
   ''RQLQueryV2
  )
 
--- | Using @pg_notify@ function to publish schema sync events to other server
--- instances via 'hasura_schema_update' channel.
--- See Note [Schema Cache Sync]
-notifySchemaCacheSync :: InstanceId -> CacheInvalidations -> Q.TxE QErr ()
-notifySchemaCacheSync instanceId invalidations = do
-  Q.Discard () <- Q.withQE defaultTxErrorHandler [Q.sql|
-      SELECT pg_notify('hasura_schema_update', json_build_object(
-        'instance_id', $1,
-        'occurred_at', NOW(),
-        'invalidations', $2
-        )::text
-      )
-    |] (instanceId, Q.AltJ invalidations) True
-  pure ()
-
 runQuery
-  :: (HasVersion, MonadIO m, MonadError QErr m, Tracing.MonadTrace m)
+  :: ( HasVersion, MonadIO m, Tracing.MonadTrace m
+     , MonadBaseControl IO m, MonadMetadataStorage m
+     )
   => Env.Environment -> PGExecCtx -> InstanceId
-  -> UserInfo -> RebuildableSchemaCache Run -> HTTP.Manager
-  -> SQLGenCtx -> RQLQuery -> m (EncJSON, RebuildableSchemaCache Run)
-runQuery env pgExecCtx instanceId userInfo sc hMgr sqlGenCtx query = do
+  -> UserInfo -> RebuildableSchemaCache -> HTTP.Manager
+  -> SQLGenCtx -> RemoteSchemaPermsCtx -> RQLQuery -> m (EncJSON, RebuildableSchemaCache)
+runQuery env pgExecCtx instanceId userInfo sc hMgr sqlGenCtx remoteSchemaPermsCtx query = do
   accessMode <- getQueryAccessMode query
   traceCtx <- Tracing.currentContext
+  metadata <- fetchMetadata
   result <- runQueryM env query & Tracing.interpTraceT \x -> do
-    ((js, meta), rsc, ci) <-
-         x & withMetadata
+    (((js, tracemeta), meta), rsc, ci) <-
+         x & runMetadataT metadata
            & runCacheRWT sc
            & peelRun runCtx pgExecCtx accessMode (Just traceCtx)
            & runExceptT
            & liftEitherM
-    pure ((js, rsc, ci), meta)
+    pure ((js, rsc, ci, meta), tracemeta)
   withReload result
   where
-    runCtx = RunCtx userInfo hMgr sqlGenCtx
+    runCtx = RunCtx userInfo hMgr sqlGenCtx remoteSchemaPermsCtx
 
-    withMetadata :: (MonadTx m) => MetadataT m a -> m a
-    withMetadata m = do
-      metadata <- liftTx fetchMetadataFromCatalog
-      (r, modifiedMetadata) <- runMetadataT metadata m
-      when (queryModifiesSchemaCache query) $
-        liftTx $ setMetadataInCatalog modifiedMetadata
-      pure r
-
-    withReload (result, updatedCache, invalidations) = do
+    withReload (result, updatedCache, invalidations, updatedMetadata) = do
       when (queryModifiesSchemaCache query) $ do
-        e <- liftIO $ runExceptT $ runLazyTx pgExecCtx Q.ReadWrite $ liftTx $
-          notifySchemaCacheSync instanceId invalidations
-        liftEither e
-      return (result, updatedCache)
+        -- set modified metadata in storage
+        setMetadata updatedMetadata
+        -- notify schema cache sync
+        notifySchemaCacheSync instanceId invalidations
+      pure (result, updatedCache)
 
 -- | A predicate that determines whether the given query might modify/rebuild the schema cache. If
 -- so, it needs to acquire the global lock on the schema cache so that other queries do not modify
@@ -278,6 +265,9 @@ queryModifiesSchemaCache (RQV1 qi) = case qi of
   RQRemoveRemoteSchema _          -> True
   RQReloadRemoteSchema _          -> True
   RQIntrospectRemoteSchema _      -> False
+
+  RQAddRemoteSchemaPermissions _  -> True
+  RQDropRemoteSchemaPermissions _ -> True
 
   RQCreateEventTrigger _          -> True
   RQDeleteEventTrigger _          -> True
@@ -358,8 +348,10 @@ reconcileAccessModes (Just mode1) (Just mode2)
 runQueryM
   :: ( HasVersion, QErrM m, CacheRWM m, UserInfoM m, MonadTx m
      , MonadIO m, MonadUnique m, HasHttpManager m, HasSQLGenCtx m
+     , HasRemoteSchemaPermsCtx m
      , Tracing.MonadTrace m
      , MetadataM m
+     , MonadScheduledEvents m
      )
   => Env.Environment
   -> RQLQuery
@@ -410,6 +402,9 @@ runQueryM env rq = withPathK "args" $ case rq of
       RQRemoveRemoteSchema q          -> runRemoveRemoteSchema q
       RQReloadRemoteSchema q          -> runReloadRemoteSchema q
       RQIntrospectRemoteSchema q      -> runIntrospectRemoteSchema q
+
+      RQAddRemoteSchemaPermissions q  -> runAddRemoteSchemaPermissions q
+      RQDropRemoteSchemaPermissions q -> runDropRemoteSchemaPermissions q
 
       RQCreateRemoteRelationship q    -> runCreateRemoteRelationship q
       RQUpdateRemoteRelationship q    -> runUpdateRemoteRelationship q
@@ -506,6 +501,9 @@ requiresAdmin = \case
     RQRemoveRemoteSchema _          -> True
     RQReloadRemoteSchema _          -> True
     RQIntrospectRemoteSchema _      -> True
+
+    RQAddRemoteSchemaPermissions _  -> True
+    RQDropRemoteSchemaPermissions _ -> True
 
     RQCreateEventTrigger _          -> True
     RQDeleteEventTrigger _          -> True

@@ -29,7 +29,7 @@ purgeDependentObject = \case
       throw500 $ "unexpected dependent object: " <> reportSchemaObj schemaObjId
 
 -- | Fetch Postgres metadata of all user tables
-fetchTableMetadata :: (MonadTx m) => m PostgresTablesMetadata
+fetchTableMetadata :: (MonadTx m) => m (DBTablesMetadata 'Postgres)
 fetchTableMetadata = do
   results <- liftTx $ Q.withQE defaultTxErrorHandler
              $(Q.sqlFromFile "src-rsr/pg_table_metadata.sql") () True

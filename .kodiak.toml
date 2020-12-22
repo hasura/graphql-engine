@@ -83,17 +83,17 @@ title = "pull_request_title" # default: "github_default", options: "github_defau
 # to create the body text of a merge commit. `"pull_request_body"` uses the
 # content of the PR to generate the body content while `"empty"` sets an empty
 # body.
-body = "empty" # default: "github_default", options: "github_default", "pull_request_body", "empty"
+body = "pull_request_body" # default: "github_default", options: "github_default", "pull_request_body", "empty"
 
 # Append the Pull Request URL to the merge message. Makes navigating to the PR
 # from the commit easier.
-include_pull_request_url = true # default: false
+include_pull_request_url = false # default: false
 
 # Add the PR number to the merge commit title. This setting replicates GitHub's
 # behavior of automatically adding the PR number to the title of merges created
 # through the UI. This option only applies when `merge.message.title` does not
 # equal `"github_default"`.
-include_pr_number = true # default: true
+include_pr_number = false # default: true
 
 # Control the text used in the merge commit. The GitHub default is markdown, but
 # `"plain_text"` or `"html"` can be used to render the pull request body as text
@@ -104,7 +104,15 @@ body_type = "markdown" # default: "markdown", options: "plain_text", "markdown",
 # Strip HTML comments (`<!-- some HTML comment -->`) from merge commit body.
 # This setting is useful for stripping HTML comments created by PR templates.
 # This option only applies when `merge.message.body_type = "markdown"`.
-strip_html_comments = false # default: false
+strip_html_comments = true # default: false
+
+# Remove all content before the configured string in the pull request body.
+# This setting is useful when we want to include only a part of the pull request
+# description as the commit message.
+# This option only applies when `merge.message.body_type = "markdown"`.
+cut_body_before = "<!-- kodiak-commit-message-body-start: do not remove/edit this line -->"
+
+include_coauthors = true
 
 [update]
 
