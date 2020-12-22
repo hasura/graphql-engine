@@ -1,4 +1,5 @@
 {-# LANGUAGE Arrows #-}
+{-# LANGUAGE AllowAmbiguousTypes #-}
 
 -- | Description: Create/delete SQL tables to/from Hasura metadata.
 module Hasura.RQL.DDL.Schema.Table
@@ -41,7 +42,7 @@ import           Data.Text.Extended
 
 import qualified Hasura.Incremental                 as Inc
 
-import           Hasura.Backends.Postgres.SQL.Types
+import           Hasura.Backends.Postgres.SQL.Types (QualifiedTable, snakeCaseQualifiedObject, FunctionName(..))
 import           Hasura.EncJSON
 import           Hasura.GraphQL.Context
 import           Hasura.GraphQL.Schema.Common       (textToName)
@@ -96,7 +97,7 @@ trackExistingTableOrViewP1 qt = do
   rawSchemaCache <- askSchemaCache
   when (Map.member qt $ scTables rawSchemaCache) $
     throw400 AlreadyTracked $ "view/table already tracked : " <>> qt
-  let qf = fmap (FunctionName . getTableTxt) qt
+  let qf = fmap (FunctionName . toTxt) qt
   when (Map.member qf $ scFunctions rawSchemaCache) $
     throw400 NotSupported $ "function with name " <> qt <<> " already exists"
 
@@ -360,10 +361,10 @@ buildTableCache
    . ( ArrowChoice arr, Inc.ArrowDistribute arr, ArrowWriter (Seq CollectedInfo) arr
      , Inc.ArrowCache m arr, MonadTx m
      )
-  => ( PostgresTablesMetadata
+  => ( DBTablesMetadata 'Postgres
      , [TableBuildInput]
      , Inc.Dependency Inc.InvalidationKey
-     ) `arr` Map.HashMap QualifiedTable (TableRawInfo 'Postgres)
+     ) `arr` Map.HashMap (TableName 'Postgres) (TableCoreInfoG 'Postgres (ColumnInfo 'Postgres) (ColumnInfo 'Postgres))
 buildTableCache = Inc.cache proc (pgTables, tableBuildInputs, reloadMetadataInvalidationKey) -> do
   rawTableInfos <-
     (| Inc.keyed (| withTable (\tables -> do
@@ -381,7 +382,7 @@ buildTableCache = Inc.cache proc (pgTables, tableBuildInputs, reloadMetadataInva
     |) rawTableCache
   returnA -< Map.catMaybes tableInfos
   where
-    withTable :: ErrorA QErr arr (e, s) a -> arr (e, (QualifiedTable, s)) (Maybe a)
+    withTable :: ErrorA QErr arr (e, s) a -> arr (e, ((TableName 'Postgres), s)) (Maybe a)
     withTable f = withRecordInconsistency f <<<
       second (first $ arr \name -> MetadataObject (MOTable name) (toJSON name))
 
@@ -393,9 +394,9 @@ buildTableCache = Inc.cache proc (pgTables, tableBuildInputs, reloadMetadataInva
     buildRawTableInfo
       :: ErrorA QErr arr
        ( TableBuildInput
-       , Maybe PGTableMetadata
+       , Maybe (DBTableMetadata 'Postgres)
        , Inc.Dependency Inc.InvalidationKey
-       ) (TableCoreInfoG 'Postgres (RawColumnInfo 'Postgres) PGCol)
+       ) (TableCoreInfoG 'Postgres (RawColumnInfo 'Postgres) (Column 'Postgres))
     buildRawTableInfo = Inc.cache proc (tableBuildInput, maybeInfo, reloadMetadataInvalidationKey) -> do
       let TableBuildInput name isEnum config = tableBuildInput
       metadataTable <-
@@ -404,9 +405,9 @@ buildTableCache = Inc.cache proc (pgTables, tableBuildInputs, reloadMetadataInva
         |) maybeInfo
 
       let columns = _ptmiColumns metadataTable
-          columnMap = mapFromL (fromPGCol . prciName) columns
+          columnMap = mapFromL (FieldName . toTxt . prciName) columns
           primaryKey = _ptmiPrimaryKey metadataTable
-      rawPrimaryKey <- liftEitherA -< traverse (resolvePrimaryKeyColumns columnMap) primaryKey
+      rawPrimaryKey <- liftEitherA -< traverse (resolvePrimaryKeyColumns @'Postgres columnMap) primaryKey
       enumValues <- if isEnum
         then do
           -- We want to make sure we reload enum values whenever someone explicitly calls
@@ -421,7 +422,7 @@ buildTableCache = Inc.cache proc (pgTables, tableBuildInputs, reloadMetadataInva
         , _tciFieldInfoMap = columnMap
         , _tciPrimaryKey = primaryKey
         , _tciUniqueConstraints = _ptmiUniqueConstraints metadataTable
-        , _tciForeignKeys = S.map unPGForeignKeyMetadata $ _ptmiForeignKeys metadataTable
+        , _tciForeignKeys = S.map unForeignKeyMetadata $ _ptmiForeignKeys metadataTable
         , _tciViewInfo = _ptmiViewInfo metadataTable
         , _tciEnumValues = enumValues
         , _tciCustomConfig = config
@@ -431,10 +432,12 @@ buildTableCache = Inc.cache proc (pgTables, tableBuildInputs, reloadMetadataInva
     -- Step 2: Process the raw table cache to replace Postgres column types with logical column
     -- types.
     processTableInfo
-      :: ErrorA QErr arr
-       ( Map.HashMap QualifiedTable (PrimaryKey PGCol, EnumValues)
-       , TableCoreInfoG 'Postgres (RawColumnInfo 'Postgres) PGCol
-       ) (TableRawInfo 'Postgres)
+      :: forall b
+       . Backend b
+      => ErrorA QErr arr
+       ( Map.HashMap (TableName b) (PrimaryKey (Column b), EnumValues)
+       , TableCoreInfoG b (RawColumnInfo b) (Column b)
+       ) (TableCoreInfoG b (ColumnInfo b) (ColumnInfo b))
     processTableInfo = proc (enumTables, rawInfo) -> liftEitherA -< do
       let columns = _tciFieldInfoMap rawInfo
           enumReferences = resolveEnumReferences enumTables (_tciForeignKeys rawInfo)
@@ -443,25 +446,25 @@ buildTableCache = Inc.cache proc (pgTables, tableBuildInputs, reloadMetadataInva
         >>= traverse (processColumnInfo enumReferences (_tciName rawInfo))
       assertNoDuplicateFieldNames (Map.elems columnInfoMap)
 
-      primaryKey <- traverse (resolvePrimaryKeyColumns columnInfoMap) (_tciPrimaryKey rawInfo)
+      primaryKey <- traverse (resolvePrimaryKeyColumns @b columnInfoMap) (_tciPrimaryKey rawInfo)
       pure rawInfo
         { _tciFieldInfoMap = columnInfoMap
         , _tciPrimaryKey = primaryKey
         }
 
     resolvePrimaryKeyColumns
-      :: (QErrM n) => HashMap FieldName a -> PrimaryKey PGCol -> n (PrimaryKey a)
+      :: forall b n a . (Backend b, QErrM n) => HashMap FieldName a -> PrimaryKey (Column b) -> n (PrimaryKey a)
     resolvePrimaryKeyColumns columnMap = traverseOf (pkColumns.traverse) \columnName ->
-      Map.lookup (fromPGCol columnName) columnMap
+      Map.lookup (FieldName (toTxt columnName)) columnMap
         `onNothing` throw500 "column in primary key not in table!"
 
     alignCustomColumnNames
       :: (QErrM n)
-      => FieldInfoMap (RawColumnInfo 'Postgres)
+      => FieldInfoMap (RawColumnInfo b)
       -> CustomColumnNames
-      -> n (FieldInfoMap (RawColumnInfo 'Postgres, G.Name))
+      -> n (FieldInfoMap (RawColumnInfo b, G.Name))
     alignCustomColumnNames columns customNames = do
-      let customNamesByFieldName = Map.fromList $ map (first fromPGCol) $ Map.toList customNames
+      let customNamesByFieldName = mapKeys (fromCol @'Postgres) customNames
       flip Map.traverseWithKey (align columns customNamesByFieldName) \columnName -> \case
         This column -> (column,) <$> textToName (getFieldNameTxt columnName)
         These column customName -> pure (column, customName)
@@ -471,11 +474,11 @@ buildTableCache = Inc.cache proc (pgTables, tableBuildInputs, reloadMetadataInva
     -- | “Processes” a '(RawColumnInfo 'Postgres)' into a 'PGColumnInfo' by resolving its type using a map of
     -- known enum tables.
     processColumnInfo
-      :: (QErrM n)
-      => Map.HashMap PGCol (NonEmpty (EnumReference 'Postgres))
-      -> QualifiedTable -- ^ the table this column belongs to
-      -> ((RawColumnInfo 'Postgres), G.Name)
-      -> n (ColumnInfo 'Postgres)
+      :: (Backend b, QErrM n)
+      => Map.HashMap (Column b) (NonEmpty (EnumReference b))
+      -> TableName b -- ^ the table this column belongs to
+      -> (RawColumnInfo b, G.Name)
+      -> n (ColumnInfo b)
     processColumnInfo tableEnumReferences tableName (rawInfo, name) = do
       resolvedType <- resolveColumnType
       pure ColumnInfo

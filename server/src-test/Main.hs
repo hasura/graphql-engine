@@ -20,7 +20,7 @@ import qualified Test.Hspec.Runner                   as Hspec
 
 import           Hasura.Backends.Postgres.Connection (liftTx, mkPGExecCtx)
 import           Hasura.RQL.DDL.Schema.Catalog       (fetchMetadataFromCatalog)
-import           Hasura.RQL.Types                    (SQLGenCtx (..), runMetadataT)
+import           Hasura.RQL.Types                    (SQLGenCtx (..), runMetadataT, RemoteSchemaPermsCtx (..))
 import           Hasura.RQL.Types.Run
 import           Hasura.Server.Init                  (RawConnInfo, mkConnInfo, mkRawConnInfo,
                                                       parseRawConnInfo, runWithEnv)
@@ -84,9 +84,9 @@ buildPostgresSpecs pgConnOptions = do
         pgPool <- Q.initPGPool pgConnInfo Q.defaultConnParams { Q.cpConns = 1 } print
         let pgContext = mkPGExecCtx Q.Serializable pgPool
         httpManager <- HTTP.newManager HTTP.tlsManagerSettings
-        let runContext = RunCtx adminUserInfo httpManager (SQLGenCtx False)
+        let runContext = RunCtx adminUserInfo httpManager (SQLGenCtx False) RemoteSchemaPermsDisabled
 
-            runAsAdmin :: Run a -> IO a
+            runAsAdmin :: RunT IO a -> IO a
             runAsAdmin =
                   peelRun runContext pgContext Q.ReadWrite Nothing
               >>> runExceptT

@@ -38,6 +38,7 @@ import           Hasura.GraphQL.Execute.Prepare
 import           Hasura.GraphQL.Execute.Remote
 import           Hasura.GraphQL.Execute.Resolve
 import           Hasura.GraphQL.Parser
+import           Hasura.Metadata.Class
 import           Hasura.RQL.Types
 import           Hasura.Server.Version                     (HasVersion)
 import           Hasura.Session
@@ -146,10 +147,12 @@ class Monad m => MonadQueryInstrumentation m where
 instance MonadQueryInstrumentation m => MonadQueryInstrumentation (ReaderT r m)
 instance MonadQueryInstrumentation m => MonadQueryInstrumentation (ExceptT e m)
 instance MonadQueryInstrumentation m => MonadQueryInstrumentation (Tracing.TraceT m)
+instance MonadQueryInstrumentation m => MonadQueryInstrumentation (MetadataStorageT m)
 
 convertQuerySelSet
   :: forall m tx .
      ( MonadError QErr m
+     , MonadMetadataStorage (MetadataStorageT m)
      , HasVersion
      , MonadIO m
      , Tracing.MonadTrace m
@@ -182,6 +185,7 @@ convertQuerySelSet env logger gqlContext userInfo manager reqHeaders directives 
       <- flip runStateT initPlanningSt
          $ traverseQueryRootField prepareWithPlan unpreparedQuery
            >>= traverseAction convertActionQuery
+           >>= traverseRemoteField (resolveRemoteField userInfo)
     validateSessionVariables expectedVariables $ _uiSession userInfo
     traverseDB (pure . irToRootFieldPlan planVals) preparedQuery
       >>= traverseAction (pure . actionQueryToRootFieldPlan planVals)
@@ -190,13 +194,11 @@ convertQuerySelSet env logger gqlContext userInfo manager reqHeaders directives 
 
   -- Transform the query plans into an execution plan
   let executionPlan = queryPlan <&> \case
-        RFRemote (remoteSchemaInfo, remoteField) ->
-          buildExecStepRemote
-            remoteSchemaInfo
-            G.OperationTypeQuery
-            varDefs
-            [G.SelectionField remoteField]
-            varValsM
+        RFRemote (RemoteFieldG remoteSchemaInfo remoteField) -> do
+            buildExecStepRemote
+              remoteSchemaInfo
+              G.OperationTypeQuery
+              [G.SelectionField remoteField]
         RFDB db      -> ExecStepDB $ mkCurPlanTx env manager reqHeaders userInfo instrument ep (RFPPostgres db)
         RFAction rfp -> ExecStepDB $ mkCurPlanTx env manager reqHeaders userInfo instrument ep rfp
         RFRaw r      -> ExecStepRaw r
@@ -208,13 +210,16 @@ convertQuerySelSet env logger gqlContext userInfo manager reqHeaders directives 
     usrVars = _uiSession userInfo
 
     convertActionQuery
-      :: ActionQuery 'Postgres (UnpreparedValue 'Postgres) -> StateT PlanningSt m (ActionQueryPlan 'Postgres)
+      :: ActionQuery 'Postgres (UnpreparedValue 'Postgres)
+      -> StateT PlanningSt m (ActionQueryPlan 'Postgres)
     convertActionQuery = \case
       AQQuery s -> lift $ do
         result <- resolveActionExecution env logger userInfo s $ ActionExecContext manager reqHeaders usrVars
-        pure $ AQPQuery $ _aerTransaction result
-      AQAsync s -> AQPAsyncQuery <$>
-        DS.traverseAnnSimpleSelect prepareWithPlan (resolveAsyncActionQuery userInfo s)
+        pure $ AQPQuery $ _aerExecution result
+      AQAsync s -> do
+        unpreparedAst <- lift $ liftEitherM $ runMetadataStorageT $
+                         resolveAsyncActionQuery userInfo s
+        AQPAsyncQuery <$> DS.traverseAnnSimpleSelect prepareWithPlan unpreparedAst
 
 -- See Note [Temporarily disabling query plan caching]
 -- use the existing plan and new variables to create a pg query

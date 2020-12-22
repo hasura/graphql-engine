@@ -8,6 +8,7 @@ import           Data.Aeson
 import           Data.Aeson.Casing
 import           Data.Aeson.TH
 import           Data.Aeson.Types
+import           Data.Text.Extended
 import           Data.Text.NonEmpty
 
 import           Hasura.Backends.Postgres.SQL.Types
@@ -35,6 +36,7 @@ data SchemaObjId
   | SOTableObj !QualifiedTable !TableObjId
   | SOFunction !QualifiedFunction
   | SORemoteSchema !RemoteSchemaName
+  | SORemoteSchemaPermission !RemoteSchemaName !RoleName
   deriving (Eq, Generic)
 
 instance Hashable SchemaObjId
@@ -59,6 +61,10 @@ reportSchemaObj (SOTableObj tn (TORemoteRel rn)) =
   "remote relationship " <> qualifiedObjectToText tn <> "." <> remoteRelationshipNameToText rn
 reportSchemaObj (SORemoteSchema remoteSchemaName) =
   "remote schema " <> unNonEmptyText (unRemoteSchemaName remoteSchemaName)
+reportSchemaObj (SORemoteSchemaPermission remoteSchemaName roleName) =
+  "remote schema permission "
+  <> unNonEmptyText (unRemoteSchemaName remoteSchemaName)
+  <> "." <>> roleName
 
 instance Show SchemaObjId where
   show soi = T.unpack $ reportSchemaObj soi

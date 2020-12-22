@@ -1,0 +1,106 @@
+- description: Include Enum Occupation which doesn't exist in the remote schema
+  url: /v1/query
+  status: 400
+  response:
+    path: $.args
+    error:
+      'validation for the given role-based schema failed because "Enum": "Occupation" does not exist in the upstream remote schema'
+    code: validation-failed
+  query:
+    type: add_remote_schema_permissions
+    args:
+      remote_schema: my-remote-schema
+      role: user
+      definition:
+        schema: |
+          type User {
+            user_id: Int
+          }
+
+          enum Occupation {
+             ENGINEER
+             DOCTOR
+             ACTOR
+          }
+
+          type Query {
+            hello: String
+            user(user_id: Int!): User
+          }
+
+          schema {
+            query: Query
+          }
+
+- description: Include unknown enum value "IDLE" in the 'MessageStatus' Enum
+  url: /v1/query
+  status: 400
+  response:
+    path: $.args
+    error:
+      'validation for the given role-based schema failed because enum "MessageStatus"
+      contains the following enum values that do not exist in the corresponding upstream
+      remote enum: "IDLE"'
+    code: validation-failed
+  query:
+    type: add_remote_schema_permissions
+    args:
+      remote_schema: my-remote-schema
+      role: user
+      definition:
+        schema: |
+          type User {
+            user_id: Int
+          }
+
+          enum MessageStatus {
+            READ
+            DELIVERED
+            SENT
+            IDLE
+          }
+
+          type Query {
+            hello: String
+            user(user_id: Int!): User
+          }
+
+          schema {
+            query: Query
+          }
+
+- description: Add duplicate enum value in the `MessageStatus` Enum
+  url: /v1/query
+  status: 400
+  response:
+    path: $.args
+    error:
+      'validation for the given role-based schema failed because duplicate enum
+      values: "SENT" found in the "MessageStatus" enum'
+    code: validation-failed
+  query:
+    type: add_remote_schema_permissions
+    args:
+      remote_schema: my-remote-schema
+      role: user
+      definition:
+        schema: |
+          type User {
+            user_id: Int
+          }
+
+          enum MessageStatus {
+            READ
+            DELIVERED
+            SENT
+            SENT
+          }
+
+          type Query {
+            hello: String
+            user(user_id: Int!): User
+          }
+
+          schema {
+            query: Query
+          }

@@ -17,39 +17,40 @@ module Hasura.GraphQL.Transport.HTTP
   , ResultsFragment(..)
   ) where
 
-import           Control.Monad.Morph                    (hoist)
+import           Control.Monad.Morph                         (hoist)
 
 import           Hasura.EncJSON
 import           Hasura.GraphQL.Context
-import           Hasura.GraphQL.Execute.Prepare         (ExecutionPlan)
-import           Hasura.GraphQL.Logging                 (MonadQueryLog (..))
-import           Hasura.GraphQL.Parser.Column           (UnpreparedValue)
+import           Hasura.GraphQL.Execute.Prepare              (ExecutionPlan)
+import           Hasura.GraphQL.Logging                      (MonadQueryLog (..))
+import           Hasura.GraphQL.Parser.Column                (UnpreparedValue)
 import           Hasura.GraphQL.Transport.HTTP.Protocol
 import           Hasura.HTTP
+import           Hasura.Metadata.Class
 import           Hasura.Prelude
 import           Hasura.RQL.Types
 import           Hasura.Server.Init.Config
-import           Hasura.Server.Types                    (RequestId)
-import           Hasura.Server.Version                  (HasVersion)
+import           Hasura.Server.Types                         (RequestId)
+import           Hasura.Server.Version                       (HasVersion)
 import           Hasura.Session
-import           Hasura.Tracing                         (MonadTrace, TraceT, trace)
+import           Hasura.Tracing                              (MonadTrace, TraceT, trace)
 
-import qualified Data.Aeson                             as J
-import qualified Data.Aeson.Ordered                     as JO
-import qualified Data.ByteString.Lazy                   as LBS
-import qualified Data.Environment                       as Env
-import qualified Data.HashMap.Strict.InsOrd             as OMap
-import qualified Data.Text                              as T
-import qualified Database.PG.Query                      as Q
+import qualified Data.Aeson                                  as J
+import qualified Data.Aeson.Ordered                          as JO
+import qualified Data.ByteString.Lazy                        as LBS
+import qualified Data.Environment                            as Env
+import qualified Data.HashMap.Strict.InsOrd                  as OMap
+import qualified Data.Text                                   as T
+import qualified Database.PG.Query                           as Q
 import qualified Hasura.Backends.Postgres.Execute.RemoteJoin as RJ
-import qualified Hasura.GraphQL.Execute                 as E
-import qualified Hasura.GraphQL.Execute.Query           as EQ
-import qualified Hasura.Logging                         as L
-import qualified Hasura.Server.Telemetry.Counters       as Telem
-import qualified Hasura.Tracing                         as Tracing
-import qualified Language.GraphQL.Draft.Syntax          as G
-import qualified Network.HTTP.Types                     as HTTP
-import qualified Network.Wai.Extended                   as Wai
+import qualified Hasura.GraphQL.Execute                      as E
+import qualified Hasura.GraphQL.Execute.Query                as EQ
+import qualified Hasura.Logging                              as L
+import qualified Hasura.Server.Telemetry.Counters            as Telem
+import qualified Hasura.Tracing                              as Tracing
+import qualified Language.GraphQL.Draft.Syntax               as G
+import qualified Network.HTTP.Types                          as HTTP
+import qualified Network.Wai.Extended                        as Wai
 
 data QueryCacheKey = QueryCacheKey
   { qckQueryString :: !GQLReqParsed
@@ -108,6 +109,14 @@ instance MonadExecuteQuery m => MonadExecuteQuery (TraceT m) where
   cacheLookup a b c = hoist (hoist lift) $ cacheLookup a b c
   cacheStore  a b = hoist (hoist lift) $ cacheStore  a b
 
+instance MonadExecuteQuery m => MonadExecuteQuery (MetadataStorageT m) where
+  cacheLookup a b c = hoist (hoist lift) $ cacheLookup a b c
+  cacheStore  a b = hoist (hoist lift) $ cacheStore  a b
+
+-- | A partial result, e.g. from a remote schema or postgres, which we'll
+-- assemble into the final result for the client. 
+--
+-- Nothing to do with graphql fragments...
 data ResultsFragment = ResultsFragment
   { rfTimeIO   :: DiffTime
   , rfLocality :: Telem.Locality
@@ -127,6 +136,7 @@ runGQ
      , MonadTrace m
      , MonadExecuteQuery m
      , EQ.MonadQueryInstrumentation m
+     , MonadMetadataStorage (MetadataStorageT m)
      )
   => Env.Environment
   -> L.Logger L.Hasura
@@ -162,8 +172,8 @@ runGQ env logger reqId userInfo ipAddress reqHeaders queryType reqUnparsed = do
                 (telemTimeIO_DT, resp) <-
                   runQueryDB reqId reqUnparsed fieldName tx genSql
                 return $ ResultsFragment telemTimeIO_DT Telem.Local resp []
-              E.ExecStepRemote (rsi, opDef, varValsM) ->
-                runRemoteGQ fieldName rsi opDef varValsM
+              E.ExecStepRemote rsi gqlReq ->
+                runRemoteGQ httpManager fieldName rsi gqlReq
               E.ExecStepRaw json ->
                 buildRaw json
             out@(_, _, _, HttpResponse responseData _) <- buildResult Telem.Query conclusion responseHeaders
@@ -175,8 +185,8 @@ runGQ env logger reqId userInfo ipAddress reqHeaders queryType reqUnparsed = do
           E.ExecStepDB (tx, responseHeaders) -> doQErr $ do
             (telemTimeIO_DT, resp) <- runMutationDB reqId reqUnparsed userInfo tx
             return $ ResultsFragment telemTimeIO_DT Telem.Local resp responseHeaders
-          E.ExecStepRemote (rsi, opDef, varValsM) ->
-            runRemoteGQ fieldName rsi opDef varValsM
+          E.ExecStepRemote rsi gqlReq ->
+            runRemoteGQ httpManager fieldName rsi gqlReq
           E.ExecStepRaw json ->
             buildRaw json
         buildResult Telem.Mutation conclusion []
@@ -194,10 +204,10 @@ runGQ env logger reqId userInfo ipAddress reqHeaders queryType reqUnparsed = do
 
     forWithKey = flip OMap.traverseWithKey
 
-    runRemoteGQ fieldName rsi opDef varValsM = do
-      (telemTimeIO_DT, HttpResponse resp remoteResponseHeaders) <-
-        doQErr $ E.execRemoteGQ env reqId userInfo reqHeaders rsi opDef varValsM
-      value <- extractFieldFromResponse (G.unName fieldName) $ encJToLBS resp
+    runRemoteGQ httpManager fieldName rsi gqlReq = do
+      (telemTimeIO_DT, remoteResponseHeaders, resp) <-
+        doQErr $ E.execRemoteGQ env httpManager userInfo reqHeaders rsi gqlReq
+      value <- extractFieldFromResponse (G.unName fieldName) resp
       let filteredHeaders = filter ((== "Set-Cookie") . fst) remoteResponseHeaders
       pure $ ResultsFragment telemTimeIO_DT Telem.Remote (JO.toEncJSON value) filteredHeaders
 
@@ -254,6 +264,7 @@ runGQBatched
      , MonadTrace m
      , MonadExecuteQuery m
      , EQ.MonadQueryInstrumentation m
+     , MonadMetadataStorage (MetadataStorageT m)
      )
   => Env.Environment
   -> L.Logger L.Hasura

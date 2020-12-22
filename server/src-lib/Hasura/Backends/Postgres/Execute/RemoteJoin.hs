@@ -8,6 +8,7 @@ module Hasura.Backends.Postgres.Execute.RemoteJoin
   , FieldPath(..)
   , RemoteJoin(..)
   , executeQueryWithRemoteJoins
+  , graphQLValueToJSON
   , processRemoteJoins
   ) where
 
@@ -24,7 +25,6 @@ import qualified Data.HashSet                           as HS
 import qualified Data.List.NonEmpty                     as NE
 import qualified Data.Text                              as T
 import qualified Database.PG.Query                      as Q
-import qualified Language.GraphQL.Draft.Printer         as G
 import qualified Language.GraphQL.Draft.Syntax          as G
 import qualified Network.HTTP.Client                    as HTTP
 import qualified Network.HTTP.Types                     as N
@@ -39,7 +39,7 @@ import qualified Hasura.Tracing                         as Tracing
 import           Hasura.Backends.Postgres.Connection
 import           Hasura.EncJSON
 import           Hasura.GraphQL.Parser                  hiding (field)
-import           Hasura.GraphQL.RemoteServer            (execRemoteGQ')
+import           Hasura.GraphQL.RemoteServer            (execRemoteGQ)
 import           Hasura.GraphQL.Transport.HTTP.Protocol
 import           Hasura.RQL.DML.Internal
 import           Hasura.RQL.IR.RemoteJoin
@@ -129,7 +129,7 @@ parseGraphQLName txt = onNothing (G.mkName txt) (throw400 RemoteSchemaError $ er
 pathToAlias :: (MonadError QErr m) => FieldPath -> Counter -> m Alias
 pathToAlias path counter =
   parseGraphQLName $ T.intercalate "_" (map getFieldNameTxt $ unFieldPath path)
-                 <> "__" <> (T.pack . show . unCounter) counter
+                 <> "__" <> (tshow . unCounter) counter
 
 type RemoteJoins b = NE.NonEmpty (FieldPath, NE.NonEmpty (RemoteJoin b))
 type RemoteJoinMap b = Map.HashMap FieldPath (NE.NonEmpty (RemoteJoin b))
@@ -229,8 +229,8 @@ transformAnnFields path fields = do
       remoteJoins = flip map remoteSelects $ \(fieldName, remoteSelect) ->
         let RemoteSelect argsMap selSet hasuraColumns remoteFields rsi = remoteSelect
             hasuraColumnL = toList hasuraColumns
-            hasuraColumnFields = HS.fromList $ map (fromPGCol . pgiColumn) hasuraColumnL
-            phantomColumns = filter ((`notElem` pgColumnFields) . fromPGCol . pgiColumn) hasuraColumnL
+            hasuraColumnFields = HS.fromList $ map (fromCol @'Postgres . pgiColumn) hasuraColumnL
+            phantomColumns = filter ((`notElem` pgColumnFields) . fromCol @'Postgres . pgiColumn) hasuraColumnL
         in RemoteJoin fieldName argsMap selSet hasuraColumnFields remoteFields rsi phantomColumns
 
   transformedFields <- forM fields $ \(fieldName, field') -> do
@@ -256,7 +256,7 @@ transformAnnFields path fields = do
   case NE.nonEmpty remoteJoins of
     Nothing -> pure transformedFields
     Just nonEmptyRemoteJoins -> do
-      let phantomColumns = map (\ci -> (fromPGCol $ pgiColumn ci, AFColumn $ AnnColumnField ci False Nothing)) $
+      let phantomColumns = map (\ci -> (fromCol @'Postgres $ pgiColumn ci, AFColumn $ AnnColumnField ci False Nothing)) $
                            concatMap _rjPhantomFields remoteJoins
       modify (Map.insert path nonEmptyRemoteJoins)
       pure $ transformedFields <> phantomColumns
@@ -409,7 +409,7 @@ traverseQueryResponseJSON rjm =
                 Nothing -> Just <$> traverseValue fieldPath value
                 Just nonEmptyRemoteJoins -> do
                   let remoteJoins = toList nonEmptyRemoteJoins
-                      phantomColumnFields = map (fromPGCol . pgiColumn) $
+                      phantomColumnFields = map (fromCol @'Postgres . pgiColumn) $
                                             concatMap _rjPhantomFields remoteJoins
                   if | fieldName `elem` phantomColumnFields -> pure Nothing
                      | otherwise -> do
@@ -425,17 +425,6 @@ inputValueToJSON :: InputValue Void -> A.Value
 inputValueToJSON = \case
   JSONValue    j -> j
   GraphQLValue g -> graphQLValueToJSON g
-  where
-    graphQLValueToJSON :: G.Value Void -> A.Value
-    graphQLValueToJSON = \case
-      G.VNull                 -> A.Null
-      G.VInt i                -> A.toJSON i
-      G.VFloat f              -> A.toJSON f
-      G.VString t             -> A.toJSON t
-      G.VBoolean b            -> A.toJSON b
-      G.VEnum (G.EnumValue n) -> A.toJSON n
-      G.VList values          -> A.toJSON $ graphQLValueToJSON <$> values
-      G.VObject objects       -> A.toJSON $ graphQLValueToJSON <$> objects
 
 defaultValue :: InputValue Void -> Maybe (G.Value Void)
 defaultValue = \case
@@ -473,10 +462,9 @@ fetchRemoteJoinFields
   -> m AO.Object
 fetchRemoteJoinFields env manager reqHdrs userInfo remoteJoins = do
   results <- forM (Map.toList remoteSchemaBatch) $ \(rsi, batch) -> do
-    let gqlReq = fieldsToRequest G.OperationTypeQuery $ _rjfField <$> batch
-        gqlReqUnparsed = GQLQueryText . G.renderExecutableDoc . G.ExecutableDocument . unGQLExecDoc <$> gqlReq
+    let gqlReq = fieldsToRequest $ _rjfField <$> batch
     -- NOTE: discard remote headers (for now):
-    (_, _, respBody) <- execRemoteGQ' env manager userInfo reqHdrs gqlReqUnparsed rsi G.OperationTypeQuery
+    (_, _, respBody) <- execRemoteGQ env manager userInfo reqHdrs rsi gqlReq
     case AO.eitherDecode respBody of
       Left e -> throw500 $ "Remote server response is not valid JSON: " <> T.pack e
       Right r -> do
@@ -494,9 +482,9 @@ fetchRemoteJoinFields env manager reqHdrs userInfo remoteJoins = do
   where
     remoteSchemaBatch = Map.groupOnNE _rjfRemoteSchema remoteJoins
 
-    fieldsToRequest :: G.OperationType -> NonEmpty (G.Field G.NoFragments Variable) -> GQLReqParsed
-    fieldsToRequest opType gFields@(headField :| _) =
-      let variableInfos =
+    fieldsToRequest :: NonEmpty (G.Field G.NoFragments Variable) -> GQLReqOutgoing
+    fieldsToRequest gFields@(headField :| _) =
+      let variableInfos = 
             -- only the `headField` is used for collecting the variables here because
             -- the variable information of all the fields will be the same.
             -- For example:
@@ -509,40 +497,21 @@ fetchRemoteJoinFields env manager reqHdrs userInfo remoteJoins = do
             --
             -- If there are 10 authors, then there are 10 fields that will be requested
             -- each containing exactly the same variable info.
-            foldl Map.union mempty $ Map.elems $ fmap collectVariables $ G._fArguments $ headField
-          gFields' = NE.toList $ NE.map (G.fmapFieldFragment G.inline . convertFieldWithVariablesToName) gFields
-      in mkGQLRequest gFields' variableInfos
-      where
-        emptyOperationDefinition =
-          G.TypedOperationDefinition {
-             G._todType = opType
-           , G._todName = Nothing
-           , G._todVariableDefinitions = []
-           , G._todDirectives = []
-           , G._todSelectionSet = []
-           }
-
-        mkGQLRequest fields variableInfos =
-          let variableValues =
-                if (Map.null variableInfos)
-                then Nothing
-                else Just $ Map.fromList (map (\(varDef, val) -> (G._vdName varDef, val)) $ Map.toList variableInfos)
-          in
-          GQLReq
+            foldMap collectVariables $ G._fArguments headField
+       in GQLReq
             { _grOperationName = Nothing
-            , _grQuery =
-               GQLExecDoc
-                 [ G.ExecutableDefinitionOperation
-                     (G.OperationDefinitionTyped
-                       ( emptyOperationDefinition
-                           { G._todSelectionSet        = map G.SelectionField fields
-                           , G._todVariableDefinitions = map fst $ Map.toList variableInfos
-                           }
-                       )
-                     )
-                  ]
-             , _grVariables = variableValues
+            , _grVariables =
+                mapKeys G._vdName variableInfos <$ guard (not $ Map.null variableInfos)
+            , _grQuery = G.TypedOperationDefinition
+               { G._todSelectionSet =
+                   NE.toList $ G.SelectionField . convertFieldWithVariablesToName <$> gFields
+               , G._todVariableDefinitions = Map.keys variableInfos
+               , G._todType = G.OperationTypeQuery
+               , G._todName = Nothing
+               , G._todDirectives = []
+               }
             }
+
 
 -- | Replace 'RemoteJoinField' in composite JSON with it's json value from remote server response.
 replaceRemoteFields
@@ -567,11 +536,11 @@ replaceRemoteFields compositeJson remoteServerResponse =
         Nothing          -> pure v
         Just (h :| rest) -> case v of
           AO.Object o   -> maybe
-                           (throw500 $ "cannnot find value in remote response at path " <> T.pack (show path))
+                           (throw500 $ "cannnot find value in remote response at path " <> tshow path)
                            (extractAtPath rest)
                            (AO.lookup (G.unName h) o)
           AO.Array arr -> AO.array <$> mapM (extractAtPath path) (toList arr)
-          _            -> throw500 $ "expecting array or object in remote response at path " <> T.pack (show path)
+          _            -> throw500 $ "expecting array or object in remote response at path " <> tshow path
 
 -- | Fold nested 'FieldCall's into a bare 'Field', inserting the passed
 -- selection set at the leaf of the tree we construct.

@@ -1,4 +1,4 @@
-description: Simple GraphQL object query on author
+description: Simple GraphQL object query on author, excercising multiple operations
 url: /v1/graphql
 status: 200
 response:
@@ -9,8 +9,15 @@ response:
     - id: 2
       name: Author 2
 query:
+  # https://graphql.org/learn/serving-over-http/#post-request
+  operationName: chooseThisOne
   query: |
-    query {
+    query ignoreThisOne {
+      author {
+        name
+      }
+    }
+    query chooseThisOne {
       author {
         id
         name

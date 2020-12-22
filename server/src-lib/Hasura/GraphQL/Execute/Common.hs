@@ -85,7 +85,7 @@ mkCurPlanTx env manager reqHdrs userInfo instrument ep = \case
                asSingleRowJsonResp (instrument q) prepArgs
            Just remoteJoins ->
              executeQueryWithRemoteJoins env manager reqHdrs userInfo q prepArgs remoteJoins
-    RFPActionQuery atx -> (atx, Nothing)
+    RFPActionQuery atx -> (unActionExecuteTx atx, Nothing)
 
 -- convert a query from an intermediate representation to... another
 irToRootFieldPlan

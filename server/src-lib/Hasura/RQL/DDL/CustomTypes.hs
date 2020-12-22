@@ -203,7 +203,7 @@ validateCustomTypeDefinitions tableCache customTypes allPGScalars = do
                   objectTypeName _trName fieldName
 
             -- the column should be a column of the table
-            onNothing (getColumnInfoM remoteTableInfo (fromPGCol columnName)) $ refute $ pure $
+            onNothing (getColumnInfoM remoteTableInfo (fromCol @'Postgres columnName)) $ refute $ pure $
               ObjectRelationshipColumnDoesNotExist objectTypeName _trName _trRemoteTable columnName
 
         pure $ TypeRelationship _trName _trType remoteTableInfo annotatedFieldMapping

@@ -30,6 +30,7 @@ import           Hasura.Backends.Postgres.Translate.Column   (toTxtValue)
 import           Hasura.EncJSON
 import           Hasura.GraphQL.Context
 import           Hasura.GraphQL.Parser
+import           Hasura.Metadata.Class
 import           Hasura.RQL.DML.Internal
 import           Hasura.RQL.Types
 import           Hasura.SQL.Types
@@ -111,6 +112,7 @@ explainGQLQuery
   :: forall m
   . ( MonadError QErr m
     , MonadIO m
+    , MonadMetadataStorage (MetadataStorageT m)
     )
   => PGExecCtx
   -> SchemaCache
@@ -145,7 +147,7 @@ explainGQLQuery pgExecCtx sc (GQLExplain query userVarsRaw maybeIsRelay) = do
       runInTx $ encJFromJValue <$> E.explainLiveQueryPlan plan
   where
     queryType = bool E.QueryHasura E.QueryRelay $ Just True == maybeIsRelay
-    sessionVariables = mkSessionVariablesText $ maybe [] Map.toList userVarsRaw
+    sessionVariables = mkSessionVariablesText $ fromMaybe mempty userVarsRaw
 
     runInTx :: LazyTx QErr EncJSON -> m EncJSON
     runInTx = liftEither <=< liftIO . runExceptT . runLazyTx pgExecCtx Q.ReadOnly
