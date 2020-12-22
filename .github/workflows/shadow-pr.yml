@@ -66,6 +66,7 @@ jobs:
     - uses: actions/checkout@v2
       with:
         fetch-depth: 0
+        token: ${{secrets.HASURA_BOT_GH_TOKEN}}
         repository: hasura/graphql-engine-mono
         path: graphql-engine-mono
 
