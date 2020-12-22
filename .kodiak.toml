@@ -112,6 +112,8 @@ strip_html_comments = true # default: false
 # This option only applies when `merge.message.body_type = "markdown"`.
 cut_body_before = "<!-- kodiak-commit-message-body-start: do not remove/edit this line -->"
 
+include_coauthors = true
+
 [update]
 
 # Update a PR whenever out of date with the base branch. The PR will be updated
