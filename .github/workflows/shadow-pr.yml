@@ -5,6 +5,7 @@ on:
 
 jobs:
   open-pr:
+    if: ${{ startsWith(github.event.pull_request.body, '<!-- from mono -->') != true }}
     runs-on: ubuntu-latest
     steps:
     - name: Get pull request
@@ -35,7 +36,7 @@ jobs:
 
           let kodiakCommitMessage = `<!-- kodiak-commit-message-body-start: do not remove/edit this line -->\n`;
           kodiakCommitMessage += `GITHUB_PR_NUMBER: ${pullRequestNumber}\nGITHUB_PR_URL: ${pr.data.html_url}`;
-          fs.writeFileSync('kodiak-commit-message-body.txt');
+          fs.writeFileSync('kodiak-commit-message-body.txt', kodiakCommitMessage);
 
     - name: Get all authors of the pull request
       uses: actions/github-script@v3
@@ -43,7 +44,7 @@ jobs:
       with:
         github-token: ${{secrets.HASURA_BOT_GH_TOKEN}}
         script: |
-          const pullRequestNumber = ${{ github.event.inputs.ossPrNumber }};
+          const pullRequestNumber = context.payload.number;
 
           const commits = await github.pulls.listCommits({
             owner: 'hasura',
@@ -65,25 +66,29 @@ jobs:
     - uses: actions/checkout@v2
       with:
         fetch-depth: 0
+        repository: hasura/graphql-engine-mono
         path: graphql-engine-mono
+
+    - uses: actions/checkout@v2
+      with:
+        fetch-depth: 0
+        repository: hasura/graphql-engine
+        path: graphql-engine
 
     - name: "Merge and push pr branch"
       env:
-        PR_NUMBER: ${{ github.event.inputs.ossPrNumber }}
+        PR_NUMBER: ${{ github.event.number }}
         PR_TITLE: ${{ steps.pr.outputs.ossPrTitle }}
         PR_URL: ${{ steps.pr.outputs.ossPrUrl }}
         PR_CO_AUTHORS: ${{ steps.commit-authors.outputs.coAuthoredBy }}
         COMMIT_AUTHOR: ${{ steps.commit-authors.outputs.firstCommitAuthor }}
       run: |
-        cp -r .ssh $HOME/.ssh
         cp graphql-engine-mono/bot.gitconfig $HOME/.gitconfig
 
         COMMIT_MESSAGE=$(printf "$PR_TITLE\n\n$PR_CO_AUTHORS\nGITHUB_PR_NUMBER: $PR_NUMBER\nGITHUB_PR_URL: $PR_URL")
 
         mkdir -p graphql-engine-transforms
 
-        # TODO clone mono instead of oss
-        git clone git@github.com:hasura/graphql-engine.git
         pushd graphql-engine
           git fetch origin pull/$PR_NUMBER/head:migration-source
           git checkout migration-source
@@ -115,16 +120,27 @@ jobs:
           const kodiakCommitMessage = fs.readFileSync('kodiak-commit-message-body.txt', 'utf-8');
 
           let body = `This PR was migrated from ${{ steps.pr.outputs.ossPrUrl }} \n\n---\n`;
-          body += `${prBody} \n\n---\n`;
-          body += `# Kodiak commit message\n The commit message body used by [Kodiak bot](https://kodiakhq.com/)\n\n ${kodiakCommitMessage}`
+          body += `${prBody} \n\n---\n\n`;
+          body += `### Kodiak commit message\nInformation used by [Kodiak bot](https://kodiakhq.com/) while merging this PR.\n\n`;
+          body += `#### Commit title\nSame as the title of this pull request\n\n`;
+          body += `#### Commit body\n(Append below if you want to add something to the commit body)\n\n${kodiakCommitMessage}`
 
-          const pr = await github.pulls.create({
-            owner: 'hasura',
-            repo: 'graphql-engine-mono',
-            head: 'oss_pr_refs/pull/${{ github.event.inputs.ossPrNumber }}/head',
-            base: 'main',
-            title: '${{ steps.pr.outputs.ossPrTitle }}',
-            body,
-          });
+          try {
+            const pr = await github.pulls.create({
+              owner: 'hasura',
+              repo: 'graphql-engine-mono',
+              head: 'oss_pr_refs/pull/${{ github.event.inputs.ossPrNumber }}/head',
+              base: 'main',
+              title: '${{ steps.pr.outputs.ossPrTitle }}',
+              body,
+            });
 
-          console.log('Migrated PR in graphql-engine-mono = ', pr.data.html_url);
+            console.log('Migrated PR in graphql-engine-mono = ', pr.data.html_url);
+          } catch (err) {
+            if (err.message.includes('pull request already exists')) {
+              console.log(`Skipping pull request creation: ${err.message}`);
+            } else {
+              console.error(err);
+              core.setFailed(`Failed to create pull request: ${err.message}`);
+            }
+          }
