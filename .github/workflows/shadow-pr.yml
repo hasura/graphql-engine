@@ -130,7 +130,7 @@ jobs:
             const pr = await github.pulls.create({
               owner: 'hasura',
               repo: 'graphql-engine-mono',
-              head: 'oss_pr_refs/pull/${{ github.event.inputs.ossPrNumber }}/head',
+              head: 'oss_pr_refs/pull/${{ github.event.number }}/head',
               base: 'main',
               title: '${{ steps.pr.outputs.ossPrTitle }}',
               body,
