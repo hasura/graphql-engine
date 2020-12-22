@@ -72,6 +72,7 @@ and be accessible according to the permissions that were configured for the role
 
 (Add entries here in the order of: server, console, cli, docs, others)
 
+- server: fix a regression where variables in fragments weren't accepted (fix #6303)
 - server: output stack traces when encountering conflicting GraphQL types in the schema
 - server: add `--websocket-compression` command-line flag for enabling websocket compression (fix #3292)
 - server: some mutations that cannot be performed will no longer be in the schema (for instance, `delete_by_pk` mutations won't be shown to users that do not have select permissions on all primary keys) (#4111)
