@@ -12,6 +12,7 @@ import           Hasura.Prelude
 import qualified Data.HashMap.Strict         as HM
 import qualified Data.HashSet                as HS
 import qualified Data.Text.Encoding          as T
+import qualified Database.PG.Query           as Q (sqlFromFile)
 
 import           Control.Monad.Validate
 import           Data.Aeson                  as Aeson
@@ -37,8 +38,8 @@ data MetadataError
 
 loadDBMetadata :: Text -> IO (DBTablesMetadata 'MSSQL, [MetadataError])
 loadDBMetadata connStr = do
-  conn      <- connect connStr
-  sql       <- readFile "sql.sql"
+  conn <- connect connStr
+  let sql = $(Q.sqlFromFile "src-rsr/mssql_table_metadata.sql")
   sysTables <- queryJson conn (fromString sql)
   let (errors, tables) = partitionEithers $ transformTable <$> sysTables
   pure (HM.fromList tables, concat errors)
