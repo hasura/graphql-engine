@@ -13,6 +13,7 @@ import { getHeadersAsJSON, getGraphQLEndpoint } from './utils';
 import { saveAppState, clearState } from '../../AppState';
 import { ADMIN_SECRET_HEADER_KEY } from '../../../constants';
 import requestActionPlain from '../../../utils/requestActionPlain';
+import { showErrorNotification } from '../Common/Notification';
 
 const CHANGE_TAB = 'ApiExplorer/CHANGE_TAB';
 const CHANGE_API_SELECTION = 'ApiExplorer/CHANGE_API_SELECTION';
@@ -259,13 +260,23 @@ const analyzeFetcher = (headers, mode) => {
     editedQuery.user = user;
 
     return dispatch(
-      requestAction(`${Endpoints.graphQLUrl}/explain`, {
+      requestActionPlain(`${Endpoints.graphQLUrl}/explain`, {
         method: 'post',
         headers: reqHeaders,
         body: JSON.stringify(editedQuery),
         credentials: 'include',
       })
-    );
+    )
+      .then(JSON.parse)
+      .catch(errorPayload => {
+        let error;
+        try {
+          error = JSON.parse(errorPayload).error;
+        } catch {
+          error = 'Analyze query error';
+        }
+        dispatch(showErrorNotification(error));
+      });
   };
 };
 /* End of it */
