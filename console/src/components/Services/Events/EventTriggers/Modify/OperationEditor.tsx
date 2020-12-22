@@ -12,8 +12,10 @@ import {
   parseEventTriggerOperations,
   getETOperationColumns,
 } from '../../utils';
+import styles from './ModifyEvent.scss';
 
 import Operations from '../Common/Operations';
+import Button from '../../../../Common/Button/Button';
 
 type OperationEditorProps = {
   currentTrigger: EventTrigger;
@@ -22,14 +24,12 @@ type OperationEditorProps = {
   setOperations: (o: Record<EventTriggerOperation, boolean>) => void;
   operationColumns: ETOperationColumn[];
   setOperationColumns: (operationColumns: ETOperationColumn[]) => void;
-  styles: Record<string, string>;
   save: (success: VoidCallback, error: VoidCallback) => void;
 };
 
 const OperationEditor = (props: OperationEditorProps) => {
   const {
     allTableColumns,
-    styles,
     save,
     currentTrigger,
     operations,
@@ -48,6 +48,17 @@ const OperationEditor = (props: OperationEditorProps) => {
   const reset = () => {
     setOperations(existingOps);
     setOperationColumns(existingOpColumns);
+  };
+
+  const toggleColumns = () => {
+    const allSelected = operationColumns.every(({ enabled }) => enabled);
+    const toggledColumns = operationColumns.map(oc => {
+      return {
+        ...oc,
+        enabled: !allSelected,
+      };
+    });
+    setOperationColumns(toggledColumns);
   };
 
   const renderEditor = (
@@ -69,7 +80,17 @@ const OperationEditor = (props: OperationEditorProps) => {
       </div>
       <div className={styles.modifyOpsCollapsedContent}>
         <div className={`col-md-12 ${styles.padd_remove}`}>
-          Listen columns for update:&nbsp;
+          Listen columns for update:
+          {ops.update && !readOnly ? (
+            <Button
+              className={styles.toggleButton}
+              color="white"
+              size="xs"
+              onClick={toggleColumns}
+            >
+              Toggle All
+            </Button>
+          ) : null}
         </div>
         <div className={`col-md-12 ${styles.padd_remove}`}>
           {ops.update ? (
@@ -118,7 +139,6 @@ const OperationEditor = (props: OperationEditorProps) => {
   const collapsed = () => renderEditor(existingOps, existingOpColumns, true);
 
   const expanded = () => renderEditor(operations, operationColumns, false);
-
   return (
     <div className={`${styles.container} ${styles.borderBottom}`}>
       <div className={styles.modifySection}>
