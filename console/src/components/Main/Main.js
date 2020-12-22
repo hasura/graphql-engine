@@ -21,7 +21,6 @@ import {
   loadLatestServerVersion,
   featureCompatibilityInit,
   emitProClickedEvent,
-  fetchPostgresVersion,
   fetchConsoleNotifications,
 } from './Actions';
 
@@ -107,7 +106,6 @@ class Main extends React.Component {
       dispatch(fetchConsoleNotifications());
     });
 
-    dispatch(fetchPostgresVersion);
     dispatch(fetchServerConfig);
   }
 

@@ -17,6 +17,7 @@ import styles from '../../Common/TableCommon/Table.scss';
 import { currentDriver, useDataSource } from '../../../dataSources';
 import { getDataSources } from '../../../metadata/selector';
 import { push } from 'react-router-redux';
+import { fetchPostgresVersion } from '../../Main/Actions';
 
 const DataPageContainer = ({
   currentSchema,
@@ -35,6 +36,12 @@ const DataPageContainer = ({
       });
     }
   }, [currentDataSource, dataSources, dispatch]);
+
+  useEffect(() => {
+    if (currentDataSource) {
+      dispatch(fetchPostgresVersion);
+    }
+  }, [dispatch, currentDataSource]);
 
   const { setDriver } = useDataSource();
   const [loadingSchemas, setLoadingSchemas] = useState(false);
@@ -127,9 +134,10 @@ const DataPageContainer = ({
               <label style={{ width: '70px' }}>Schema:</label>
               <select
                 onChange={handleSchemaChange}
-                value={currentSchema}
+                value={currentDataSource ? currentSchema : ''}
                 className={styles.changeSchema + ' form-control'}
               >
+                <option value="" />
                 {!loadingSchemas && getSchemaOptions()}
               </select>
               {currentSchema && (
@@ -143,18 +151,20 @@ const DataPageContainer = ({
         </section>
         <DataSubSidebar location={location} />
       </li>
-      <li
-        role="presentation"
-        className={currentLocation.includes('/sql') ? styles.active : ''}
-      >
-        <Link
-          className={styles.linkBorder}
-          to={`/data/${currentDataSource}/sql`}
-          data-test="sql-link"
+      {currentDataSource && (
+        <li
+          role="presentation"
+          className={currentLocation.includes('/sql') ? styles.active : ''}
         >
-          SQL
-        </Link>
-      </li>
+          <Link
+            className={styles.linkBorder}
+            to={`/data/${currentDataSource}/sql`}
+            data-test="sql-link"
+          >
+            SQL
+          </Link>
+        </li>
+      )}
       {migrationTab}
     </ul>
   );

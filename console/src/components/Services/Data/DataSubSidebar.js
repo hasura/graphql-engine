@@ -187,7 +187,7 @@ class DataSubSidebar extends React.Component {
 
     return (
       <LeftSubSidebar
-        showAddBtn={migrationMode}
+        showAddBtn={migrationMode && currentSource}
         searchInput={getSearchInput()}
         heading={`Tables/Views/Functions (${tablesViewsFunctionsCount})`}
         addLink={getSchemaAddTableRoute(currentSchema, currentSource)}
