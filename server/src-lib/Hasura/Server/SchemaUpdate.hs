@@ -14,6 +14,7 @@ import           Hasura.Server.App           (SchemaCacheRef (..), withSCUpdate)
 import           Hasura.Server.Init          (InstanceId (..))
 import           Hasura.Server.Logging
 
+import           Control.Monad.Trans.Managed (ManagedT)
 import           Data.Aeson
 import           Data.Aeson.Casing
 import           Data.Aeson.TH
@@ -78,7 +79,7 @@ $(deriveToJSON
 
 -- | An IO action that enables metadata syncing
 startSchemaSyncThreads
-  :: (MonadIO m)
+  :: C.ForkableMonadIO m
   => SQLGenCtx
   -> PG.PGPool
   -> Logger Hasura
@@ -86,7 +87,7 @@ startSchemaSyncThreads
   -> SchemaCacheRef
   -> InstanceId
   -> Maybe UTC.UTCTime
-  -> m (Immortal.Thread, Immortal.Thread)
+  -> ManagedT m (Immortal.Thread, Immortal.Thread)
   -- ^ Returns: (listener handle, processor handle)
 startSchemaSyncThreads sqlGenCtx pool logger httpMgr cacheRef instanceId cacheInitTime = do
   -- only the latest event is recorded here
@@ -94,12 +95,12 @@ startSchemaSyncThreads sqlGenCtx pool logger httpMgr cacheRef instanceId cacheIn
   updateEventRef <- liftIO $ STM.newTVarIO Nothing
 
   -- Start listener thread
-  lTId <- liftIO $ C.forkImmortal "SchemeUpdate.listener" logger $
+  lTId <- C.forkManagedT "SchemeUpdate.listener" logger . liftIO $
     listener sqlGenCtx pool logger httpMgr updateEventRef cacheRef instanceId cacheInitTime
   logThreadStarted TTListener lTId
 
   -- Start processor thread
-  pTId <- liftIO $ C.forkImmortal "SchemeUpdate.processor" logger $
+  pTId <- C.forkManagedT "SchemeUpdate.processor" logger . liftIO $
     processor sqlGenCtx pool logger httpMgr updateEventRef cacheRef instanceId
   logThreadStarted TTProcessor pTId
 
