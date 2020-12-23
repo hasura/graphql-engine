@@ -60,7 +60,6 @@ const fetchCustomFunction = (functionName, schema, source) => {
     dispatch({ type: FETCHING_INDIV_CUSTOM_FUNCTION });
     return dispatch(requestAction(url, options)).then(
       ({ result }) => {
-        console.log({ result });
         if (result.length > 1) {
           let funDefinition = {};
           try {

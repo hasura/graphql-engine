@@ -1,4 +1,8 @@
-import { baseUrl, getElementFromAlias, getElementFromClassName } from '../../helpers/dataHelpers';
+import {
+  baseUrl,
+  getElementFromAlias,
+  getElementFromClassName,
+} from '../../helpers/dataHelpers';
 import { setPromptValue } from '../../helpers/common';
 
 const statements = {
@@ -86,7 +90,7 @@ const typeIntoHandler = (content: string) => {
 };
 
 const clickOnCreateAction = () => {
-  cy.get(getElementFromAlias('create-action-btn')).click();
+  cy.get(getElementFromAlias('create-action-btn')).click({ force: true });
   cy.wait(5000);
 };
 
@@ -135,7 +139,7 @@ export const verifyMutation = () => {
     .eq(1)
     .type(`{enter}{uparrow}${statements.createMutationQueryVars}`, {
       force: true,
-    })
+    });
   cy.wait(3000);
   cy.get(getElementFromClassName('execute-button')).click();
   // FIXME: NOT GOOD!

@@ -275,8 +275,7 @@ export const reloadDataSource = (
   };
 
   return dispatch(requestAction(Endpoints.metadata, options))
-    .then(res => {
-      console.log({ res });
+    .then(() => {
       dispatch(showSuccessNotification('Data source reloaded successfully!'));
       dispatch(exportMetadata());
       return getState();
