@@ -19,6 +19,7 @@ import           Hasura.Server.Logging
 import           Hasura.Server.Types                 (InstanceId (..))
 import           Hasura.Session
 
+import           Control.Monad.Trans.Managed             (ManagedT)
 import           Control.Monad.Trans.Control         (MonadBaseControl)
 import           Data.Aeson
 import           Data.Aeson.Casing
@@ -161,18 +162,18 @@ if listen started after schema cache init start time.
 -- | An async thread which listen to Postgres notify to enable schema syncing
 -- See Note [Schema Cache Sync]
 startSchemaSyncListenerThread
-  :: (MonadIO m)
+  :: C.ForkableMonadIO m
   => PG.PGPool
   -> Logger Hasura
   -> InstanceId
-  -> m (Immortal.Thread, SchemaSyncEventRef)
+  -> ManagedT m (Immortal.Thread, SchemaSyncEventRef)
 startSchemaSyncListenerThread pool logger instanceId = do
   -- only the latest event is recorded here
   -- we don't want to store and process all the events, only the latest event
   schemaSyncEventRef <- liftIO $ STM.newTVarIO Nothing
 
   -- Start listener thread
-  listenerThread <- liftIO $ C.forkImmortal "SchemeUpdate.listener" logger $
+  listenerThread <- C.forkManagedT "SchemeUpdate.listener" logger . liftIO $
                     listener pool logger schemaSyncEventRef
   logThreadStarted logger instanceId TTListener listenerThread
   pure (listenerThread, schemaSyncEventRef)
@@ -190,11 +191,11 @@ startSchemaSyncProcessorThread
   -> InstanceId
   -> UTC.UTCTime
   -> RemoteSchemaPermsCtx
-  -> m Immortal.Thread
+  -> ManagedT m Immortal.Thread
 startSchemaSyncProcessorThread sqlGenCtx pool logger httpMgr
   schemaSyncEventRef cacheRef instanceId cacheInitStartTime remoteSchemaPermsCtx = do
   -- Start processor thread
-  processorThread <- C.forkImmortal "SchemeUpdate.processor" logger $
+  processorThread <- C.forkManagedT "SchemeUpdate.processor" logger $
     processor sqlGenCtx pool logger httpMgr schemaSyncEventRef cacheRef instanceId cacheInitStartTime remoteSchemaPermsCtx
   logThreadStarted logger instanceId TTProcessor processorThread
   pure processorThread

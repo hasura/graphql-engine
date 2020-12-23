@@ -72,6 +72,7 @@ and be accessible according to the permissions that were configured for the role
 
 (Add entries here in the order of: server, console, cli, docs, others)
 
+- server: fix a regression where variables in fragments weren't accepted (fix #6303)
 - server: output stack traces when encountering conflicting GraphQL types in the schema
 - server: add `--websocket-compression` command-line flag for enabling websocket compression (fix #3292)
 - server: some mutations that cannot be performed will no longer be in the schema (for instance, `delete_by_pk` mutations won't be shown to users that do not have select permissions on all primary keys) (#4111)
@@ -83,6 +84,8 @@ and be accessible according to the permissions that were configured for the role
 - server: support joining Int or String scalar types to ID scalar type in remote relationship
 - server: add support for POSIX operators (close #4317) (#6172)
 - server: do not block catalog migration on inconsistent metadata
+- server: update `forkImmortal` function to log more information, i.e log starting of threads and log asynchronous and synchronous exception.
+- server: various changes to ensure timely cleanup of background threads and other resources in the event of a SIGTERM signal.
 - console: allow user to cascade Postgres dependencies when dropping Postgres objects (close #5109) (#5248)
 - console: mark inconsistent remote schemas in the UI (close #5093) (#5181)
 - console: remove ONLY as default for ALTER TABLE in column alter operations (close #5512) #5706
@@ -90,6 +93,8 @@ and be accessible according to the permissions that were configured for the role
 - console: down migrations improvements (close #3503, #4988) (#4790)
 - console: allow setting computed fields for views (close #6168) (#6174)
 - console: select first operator by default on the browse rows screen (close #5729) (#6032)
+- console: fix allow-list not getting added to metadata/allow_list.yaml in CLI mode (close #6374)
+- console: misc bug fixes (close #4785, #6330, #6288)
 - cli: add missing global flags for seed command (#5565)
 - cli: allow seeds as alias for seed command (#5693)
 - build: add `test_server_pg_13` to the CI to run the server tests on Postgres v13 (#6070)

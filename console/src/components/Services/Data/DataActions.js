@@ -537,19 +537,14 @@ const makeMigrationCall = (
     args: upQueries,
   };
 
-  const downQuery = {
-    type: 'bulk',
-    source,
-    args:
-      downQueries.length > 0
-        ? downQueries
-        : getDownQueryComments(upQueries, source),
-  };
+  if (downQueries && downQueries.length === 0) {
+    downQueries = getDownQueryComments(upQueries);
+  }
 
   const migrationBody = {
     name: sanitize(migrationName),
     up: upQuery.args,
-    down: downQuery.args,
+    down: downQueries || [],
     skip_execution: skipExecution,
   };
 

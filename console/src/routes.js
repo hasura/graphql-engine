@@ -102,16 +102,17 @@ const routes = store => {
     <Route
       path="/"
       component={App}
-      onEnter={composeOnEnterHooks([
-        validateLogin(store),
-        requireAsyncGlobals(store),
-      ])}
+      onEnter={composeOnEnterHooks([validateLogin(store)])}
     >
       <Route path="login" component={generatedLoginConnector(connect)} />
       <Route
         path=""
         component={Main}
-        onEnter={composeOnEnterHooks([requireSource, requireMigrationStatus])}
+        onEnter={composeOnEnterHooks([
+          requireSource,
+          requireMigrationStatus,
+          requireAsyncGlobals(store),
+        ])}
       >
         <IndexRoute component={generatedApiExplorer(connect)} />
         <Route path="api-explorer" component={generatedApiExplorer(connect)} />

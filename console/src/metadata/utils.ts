@@ -24,11 +24,9 @@ const addAllowedQuery = (query: { name: string; query: string }) => ({
 
 export const updateAllowedQueryQuery = (
   queryName: string,
-  newQuery: { name: string; query: string },
-  source: string
+  newQuery: { name: string; query: string }
 ) => ({
   type: 'bulk',
-  source,
   args: [deleteAllowedQueryQuery(queryName), addAllowedQuery(newQuery)],
 });
 

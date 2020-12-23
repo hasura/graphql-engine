@@ -100,6 +100,9 @@ class TestGraphQLQueryFragments:
     def test_select_query_fragment_cycles(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + '/select_query_fragment_cycles.yaml', transport)
 
+    def test_select_query_fragment_with_variable(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/select_query_fragment_with_variable.yaml', transport)
+
     @classmethod
     def dir(cls):
         return 'queries/graphql_query/basic'
