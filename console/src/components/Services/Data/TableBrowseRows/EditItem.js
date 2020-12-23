@@ -13,6 +13,7 @@ import { findTable, generateTableDef } from '../../../Common/utils/pgUtils';
 import { getTableBrowseRoute } from '../../../Common/utils/routesUtils';
 import { fetchEnumOptions } from './EditActions';
 import { TableRow } from '../Common/Components/TableRow';
+import { isEmpty } from 'lodash';
 
 class EditItem extends Component {
   constructor() {
@@ -91,8 +92,8 @@ class EditItem extends Component {
         const textValue = e.target.value;
         if (
           textValue === undefined ||
-          textValue === null ||
-          textValue.length === 0
+          isEmpty(textValue) ||
+          textValue === null
         ) {
           const radioToSelectWhenEmpty = prevValue
             ? refs[colName].defaultNode

@@ -14,6 +14,7 @@ import { TableRow } from '../Common/Components/TableRow';
 import MigrationCheckbox from './MigrationCheckbox';
 import globals from '../../../../Globals';
 import { CLI_CONSOLE_MODE } from '../../../../constants';
+import { isEmpty } from '../../../Common/utils/jsUtils';
 
 class InsertItem extends Component {
   constructor() {
@@ -105,7 +106,7 @@ class InsertItem extends Component {
         if (
           textValue === undefined ||
           textValue === null ||
-          textValue.length === 0
+          isEmpty(textValue)
         ) {
           const radioToSelectWhenEmpty = hasDefault
             ? refs[colName].defaultNode
