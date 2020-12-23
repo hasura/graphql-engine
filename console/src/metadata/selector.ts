@@ -26,9 +26,6 @@ export const getInitDataSource = (
   state: ReduxState
 ): { source: string; driver: Driver } => {
   const dataSources = state.metadata.metadataObject?.sources || [];
-  // .filter(
-  //   source => source.name !== 'default'
-  // );
   if (dataSources.length) {
     return {
       source: dataSources[0].name,
@@ -335,10 +332,12 @@ export const getDataSources = createSelector(getMetadata, metadata => {
   metadata?.sources.forEach(source => {
     sources.push({
       name: source.name,
-      url: source.configuration?.database_url || 'HASURA_GRAPHQL_DATABASE_URL',
-      fromEnv: false, // todo
-      connection_pool_settings: source.configuration
-        ?.connection_pool_settings || {
+      url:
+        source.configuration?.connection_info.database_url ||
+        'HASURA_GRAPHQL_DATABASE_URL',
+      fromEnv: false,
+      connection_pool_settings: source.configuration?.connection_info
+        ?.pool_settings || {
         retries: 1,
         idle_timeout: 180,
         max_connections: 50,
@@ -347,7 +346,6 @@ export const getDataSources = createSelector(getMetadata, metadata => {
     });
   });
   return sources;
-  // .filter(source => source.name !== 'default');
 });
 
 export const getTablesBySource = createSelector(getMetadata, metadata => {

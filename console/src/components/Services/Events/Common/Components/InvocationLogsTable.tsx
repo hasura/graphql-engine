@@ -92,7 +92,7 @@ const InvocationLogsTable: React.FC<Props> = props => {
         <RedeliverEvent
           eventId={redeliveredEventId}
           dispatch={dispatch}
-          eventDataSource={props.tableSource ?? 'default'}
+          eventDataSource={props.tableSource ?? ''}
         />
       </Modal>
     );

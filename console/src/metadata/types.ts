@@ -851,11 +851,13 @@ export interface MetadataDataSource {
   name: string;
   kind?: 'postgres' | 'mysql';
   configuration?: {
-    database_url: string;
-    connection_pool_settings?: {
-      max_connections: number;
-      idle_timeout: number;
-      retries: number;
+    connection_info: {
+      database_url: string;
+      pool_settings?: {
+        max_connections: number;
+        idle_timeout: number;
+        retries: number;
+      };
     };
   };
   tables: TableEntry[];

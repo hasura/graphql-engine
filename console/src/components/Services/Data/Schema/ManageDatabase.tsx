@@ -32,7 +32,7 @@ const DatabaseListItem: React.FC<DatabaseListItemProps> = ({
 }) => {
   const [reloading, setReloading] = useState(false);
   const [removing, setRemoving] = useState(false);
-  const [showUrl, setShowUrl] = useState(dataSource.name === 'default');
+  const [showUrl, setShowUrl] = useState(false);
 
   return (
     <div className={styles.db_list_item}>
@@ -88,7 +88,7 @@ const DatabaseListItem: React.FC<DatabaseListItemProps> = ({
               />
             </ToolTip>
           )}
-          {showUrl && dataSource.name !== 'default' && (
+          {showUrl && (
             <ToolTip
               id="connection-string-hide"
               placement="right"

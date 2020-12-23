@@ -19,7 +19,7 @@ export const addSource = (
     args: {
       name: payload.name,
       database_url: payload.dbUrl,
-      connection_pool_settingss: payload.connection_pool_settings,
+      connection_pool_settings: payload.connection_pool_settings,
     },
   };
 };
