@@ -230,8 +230,6 @@ class Main extends React.Component {
       console_opts,
     } = this.props;
 
-    console.log('HERE');
-
     const allowPreReleaseNotifications =
       !console_opts || !console_opts.disablePreReleaseUpdateNotifications;
 
