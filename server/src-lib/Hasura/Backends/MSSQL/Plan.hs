@@ -122,11 +122,8 @@ envObjectExpression =
 -- Resolving values
 
 data PrepareError
-  = {-UVLiteralNotSupported-}
-   SessionVarNotSupported
-  -- | UnsupportedPgType ODBC.Value -- PG.PGScalarValue
+  = SessionVarNotSupported
   | FromIrError (NonEmpty TSQL.Error)
-  -- deriving (Show, Eq)
 
 data PrepareState = PrepareState
   { positionalArguments :: !Integer
