@@ -93,6 +93,15 @@ class InvokeManualTrigger extends React.PureComponent {
       if (status.length === 0) {
         return <div>Fetching invocation info {loader()}</div>;
       }
+      let request;
+      let response;
+      try {
+        request = JSON.parse(status[0].request);
+        response = JSON.parse(status[0].response);
+      } catch {
+        request = "Can't parse request";
+        response = "Can't parse response";
+      }
       return (
         <div className={styles.displayFlexContainer}>
           <div className={`${styles.padd_left_remove} col-md-6`}>
@@ -101,7 +110,7 @@ class InvokeManualTrigger extends React.PureComponent {
               mode="json"
               theme="github"
               name="event_payload"
-              value={JSON.stringify(status[0].request, null, 2)}
+              value={JSON.stringify(request, null, 2)}
               minLines={8}
               maxLines={15}
               width="100%"
@@ -116,7 +125,7 @@ class InvokeManualTrigger extends React.PureComponent {
               mode="json"
               theme="github"
               name="event_payload"
-              value={JSON.stringify(status[0].response, null, 2)}
+              value={JSON.stringify(response, null, 2)}
               minLines={8}
               maxLines={15}
               width="100%"
