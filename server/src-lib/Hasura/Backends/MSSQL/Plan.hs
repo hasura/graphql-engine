@@ -10,6 +10,7 @@ import           Hasura.Prelude                     hiding (first)
 
 import qualified Data.HashMap.Strict                as HM
 import qualified Data.HashMap.Strict.InsOrd         as OMap
+import qualified Data.HashSet                           as Set
 import qualified Data.List.NonEmpty                 as NE
 import qualified Data.Text                          as T
 import qualified Database.ODBC.SQLServer            as ODBC
@@ -17,16 +18,16 @@ import qualified Language.GraphQL.Draft.Syntax      as G
 
 import           Control.Monad.Validate
 import           Data.Bifunctor                     (first)
-
+import           Data.Text.Extended
 
 import qualified Hasura.GraphQL.Execute.Query       as EQ
 import qualified Hasura.GraphQL.Parser              as GraphQL
+import qualified Hasura.RQL.Types.Column            as RQL
+
 import           Hasura.Backends.MSSQL.FromIr       as TSQL
 import           Hasura.Backends.MSSQL.Types        as TSQL
-import           Hasura.Prelude ()
--- import qualified Hasura.RQL.Types.Action            as RQL
-import qualified Hasura.RQL.Types.Column            as RQL
 import           Hasura.GraphQL.Context
+import           Hasura.Session
 import           Hasura.SQL.Backend
 
 type SubscriptionRootFieldMSSQL v = RootField (QueryDB 'MSSQL v) Void Void {-(RQL.AnnActionAsyncQuery 'MSSQL v)-} Void
@@ -40,7 +41,7 @@ planNoPlan ::
      SubscriptionRootFieldMSSQL (GraphQL.UnpreparedValue 'MSSQL)
   -> Either PrepareError Select
 planNoPlan unpreparedRoot = do
-  rootField <- EQ.traverseQueryRootField prepareValueNoPlan unpreparedRoot
+  let rootField = runIdentity $ EQ.traverseQueryRootField (pure . prepareValueNoPlan) unpreparedRoot
   select <-
     first
       FromIrError
@@ -57,12 +58,12 @@ planMultiplex ::
      OMap.InsOrdHashMap G.Name (SubscriptionRootFieldMSSQL (GraphQL.UnpreparedValue 'MSSQL))
   -> Either PrepareError Select
 planMultiplex unpreparedMap = do
-  rootFieldMap <-
-    evalStateT
-      (traverse
-         (EQ.traverseQueryRootField prepareValueMultiplex)
-         unpreparedMap)
-      emptyPrepareState
+  let rootFieldMap =
+        evalState
+          (traverse
+             (EQ.traverseQueryRootField prepareValueMultiplex)
+             unpreparedMap)
+          emptyPrepareState
   selectMap <-
     first
       FromIrError
@@ -74,8 +75,8 @@ planNoPlanMap ::
      OMap.InsOrdHashMap G.Name (SubscriptionRootFieldMSSQL (GraphQL.UnpreparedValue 'MSSQL))
   -> Either PrepareError Reselect
 planNoPlanMap unpreparedMap = do
-  rootFieldMap <-
-    traverse (EQ.traverseQueryRootField prepareValueNoPlan) unpreparedMap
+  let rootFieldMap = runIdentity $
+        traverse (EQ.traverseQueryRootField (pure . prepareValueNoPlan)) unpreparedMap
   selectMap <-
     first
       FromIrError
@@ -122,38 +123,41 @@ envObjectExpression =
 -- Resolving values
 
 data PrepareError
-  = SessionVarNotSupported
-  | FromIrError (NonEmpty TSQL.Error)
+  = FromIrError (NonEmpty TSQL.Error)
 
 data PrepareState = PrepareState
   { positionalArguments :: !Integer
   , namedArguments      :: !(HashMap G.Name (RQL.ColumnValue 'MSSQL))
+  , sessionVariables :: !(Set.HashSet SessionVariable)
   }
 
 emptyPrepareState :: PrepareState
 emptyPrepareState =
-  PrepareState {positionalArguments = 0, namedArguments = mempty}
+  PrepareState {positionalArguments = 0, namedArguments = mempty, sessionVariables = mempty}
 
 -- | Prepare a value without any query planning; we just execute the
 -- query with the values embedded.
-prepareValueNoPlan :: GraphQL.UnpreparedValue 'MSSQL -> Either PrepareError TSQL.Expression
+prepareValueNoPlan :: GraphQL.UnpreparedValue 'MSSQL -> TSQL.Expression
 prepareValueNoPlan =
   \case
-    GraphQL.UVLiteral x -> pure x
-    GraphQL.UVSession -> pure (JsonQueryExpression globalSessionExpression)
-    GraphQL.UVSessionVar _typ _text -> Left SessionVarNotSupported
-    GraphQL.UVParameter _ RQL.ColumnValue{..} -> pure $ ValueExpression cvValue
+    GraphQL.UVLiteral x -> x
+    GraphQL.UVSession -> JsonQueryExpression globalSessionExpression
+    -- To be honest, I'm not sure if it's indeed the JSON_VALUE operator we need here...
+    GraphQL.UVSessionVar _typ text -> JsonValueExpression globalSessionExpression (FieldPath RootPath (toTxt text))
+    GraphQL.UVParameter _ RQL.ColumnValue{..} -> ValueExpression cvValue
 
 -- | Prepare a value for multiplexed queries.
 prepareValueMultiplex ::
      GraphQL.UnpreparedValue 'MSSQL
-  -> StateT PrepareState (Either PrepareError) TSQL.Expression
+  -> State PrepareState TSQL.Expression
 prepareValueMultiplex =
   \case
     GraphQL.UVLiteral x -> pure x
     GraphQL.UVSession ->
       pure (JsonQueryExpression globalSessionExpression)
-    GraphQL.UVSessionVar _typ _text -> lift (Left SessionVarNotSupported)
+    GraphQL.UVSessionVar _typ text -> do
+      modify' (\s -> s {sessionVariables = text `Set.insert` sessionVariables s})
+      pure $ JsonValueExpression globalSessionExpression (FieldPath RootPath (toTxt text))
     GraphQL.UVParameter mVariableInfo pgcolumnvalue ->
       case fmap GraphQL.getName mVariableInfo of
         Nothing -> do
