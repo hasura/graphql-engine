@@ -617,15 +617,10 @@ const makeMigrationCall = (
     args: upQueries,
   };
 
-  const downQuery = {
-    type: 'bulk',
-    args: downQueries,
-  };
-
   const migrationBody = {
     name: sanitize(migrationName),
     up: upQuery.args,
-    down: downQuery.args,
+    down: downQueries || [],
     skip_execution: skipExecution,
   };
 
