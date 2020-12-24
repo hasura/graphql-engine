@@ -15,13 +15,13 @@ export const ArgSelect = ({ k, v, value, level, setArg = e => console.log(e) }) 
       setEditMode(true);
     }
   }, [value, editMode]);
-  
+
   useEffect(() => {
     // auto expand args when there is prefilled values
     // happens only first time when the node is created 
-    if (value && k && !expanded&&!autoExpanded.current) {
+    if (value && k && !expanded && !autoExpanded.current) {
       setExpanded(true)
-      autoExpanded.current=true
+      autoExpanded.current = true
     }
   }, [value, k, expanded])
 
