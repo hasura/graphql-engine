@@ -97,6 +97,7 @@ and be accessible according to the permissions that were configured for the role
 - console: misc bug fixes (close #4785, #6330, #6288)
 - cli: add missing global flags for seed command (#5565)
 - cli: allow seeds as alias for seed command (#5693)
+- cli: fix action timeouts not being picked up in metadata operations (#6220)
 - build: add `test_server_pg_13` to the CI to run the server tests on Postgres v13 (#6070)
 
 ## v1.3.3
