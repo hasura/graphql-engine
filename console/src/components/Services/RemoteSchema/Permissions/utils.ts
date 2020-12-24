@@ -272,13 +272,6 @@ export const getScalarTypes = (schema: GraphQLSchema) => {
   return types;
 };
 
-export const getGqlTypeName = typeObj => {
-  if (typeObj.ofType) {
-    return getGqlTypeName(typeObj.ofType);
-  }
-  return typeObj.name;
-};
-
 const checkNullType = type => {
   const isChecked = element => element.checked;
   return type.children.some(isChecked);
@@ -301,24 +294,19 @@ const getSDLField = (type, argTree) => {
 
     if (!typeName.includes('enum')) {
       if (f?.args) {
-        // console.log('>>', f.args);
         fieldStr = `${fieldStr}(`;
         Object.values(f.args).map((arg: any) => {
           let valueStr = ``;
           if (argTree && argTree[f.name] && argTree[f.name][arg.name]) {
-            const typeOfArg = getGqlTypeName(arg.type);
+            const typeOfArg = arg.type.inspect();
             let unquoted;
             if (typeOfArg !== 'Int') {
               const jsonStr = JSON.stringify(argTree[f.name][arg.name]);
               unquoted = jsonStr.replace(/"([^"]+)":/g, '$1:');
             } else unquoted = argTree[f.name][arg.name];
 
-            // console.log('typename : ', getGqlTypeName(arg.type));
-            // console.log('<><> jsonstr', jsonStr);
-            // console.log('>><< unquoted', unquoted);
-            valueStr = `${arg.name} : ${getGqlTypeName(
-              arg.type
-            )} @preset(value: ${unquoted})`;
+            valueStr = `${arg.name} : ${arg.type.inspect()}
+            @preset(value: ${unquoted})`;
           } else {
             valueStr = `${arg.name} : ${arg.type.inspect()}`;
           }
@@ -335,18 +323,6 @@ const getSDLField = (type, argTree) => {
   return `${result}\n}`;
 };
 
-export const generateSDL = (types, argTree) => {
-  let result = `schema{
-  query: query_root
-  mutation: mutation_root
-}\n`;
-  types.forEach(type => {
-    result = `${result}\n${getSDLField(type, argTree)}\n`;
-  });
-
-  return result;
-};
-
 export const generateConstantTypes = (schema: GraphQLSchema) => {
   let result = ``;
   const enumTypes = getEnumTypes(schema);
@@ -356,6 +332,18 @@ export const generateConstantTypes = (schema: GraphQLSchema) => {
   const scalarTypes = getScalarTypes(schema);
   scalarTypes.forEach(type => {
     result = `${result}\n${type}`;
+  });
+
+  return result;
+};
+
+export const generateSDL = (types, argTree) => {
+  let result = `schema{
+  query: query_root
+  mutation: mutation_root
+}\n`;
+  types.forEach(type => {
+    result = `${result}\n${getSDLField(type, argTree)}\n`;
   });
 
   return result;
@@ -379,30 +367,40 @@ export const addPresetDefinition = (schema: string) => `scalar PresetValue\n
 ${schema}`;
 
 const parseObjectField = (arg: ArgumentNode | ObjectFieldNode) => {
-  if (arg?.value?.kind === "IntValue" && arg?.value?.value) return arg?.value?.value;
-  if (arg?.value?.kind === "FloatValue" && arg?.value?.value) return arg?.value?.value;
-  if (arg?.value?.kind === "StringValue" && arg?.value?.value) return arg?.value?.value;
-  if (arg?.value?.kind === "BooleanValue" && arg?.value?.value) return arg?.value?.value;
-  if (arg?.value?.kind === "EnumValue" && arg?.value?.value) return arg?.value?.value;
+  if (arg?.value?.kind === 'IntValue' && arg?.value?.value)
+    return arg?.value?.value;
+  if (arg?.value?.kind === 'FloatValue' && arg?.value?.value)
+    return arg?.value?.value;
+  if (arg?.value?.kind === 'StringValue' && arg?.value?.value)
+    return arg?.value?.value;
+  if (arg?.value?.kind === 'BooleanValue' && arg?.value?.value)
+    return arg?.value?.value;
+  if (arg?.value?.kind === 'EnumValue' && arg?.value?.value)
+    return arg?.value?.value;
 
-  if (arg?.value?.kind === "NullValue") return null;
+  if (arg?.value?.kind === 'NullValue') return null;
 
   // nested values
-  if (arg?.value?.kind === "ObjectValue" && arg?.value?.fields && arg?.value?.fields?.length > 0) {
-    const res: Record<string, any> = {}
+  if (
+    arg?.value?.kind === 'ObjectValue' &&
+    arg?.value?.fields &&
+    arg?.value?.fields?.length > 0
+  ) {
+    const res: Record<string, any> = {};
     arg?.value?.fields.forEach((f: ObjectFieldNode) => {
-      res[f.name.value] = parseObjectField(f)
-    })
-    return res
+      res[f.name.value] = parseObjectField(f);
+    });
+    return res;
   }
-}
+};
 const getDirectives = (field: InputValueDefinitionNode) => {
   let res: unknown | Record<string, any>;
   const preset = field?.directives?.find(dir => dir?.name?.value === 'preset');
-  if (preset?.arguments && preset?.arguments[0]) res = parseObjectField(preset.arguments[0]);
-  if (typeof res === 'object') return res
+  if (preset?.arguments && preset?.arguments[0])
+    res = parseObjectField(preset.arguments[0]);
+  if (typeof res === 'object') return res;
   if (typeof res === 'string') return JSON.parse(res);
-  return res
+  return res;
 };
 const getPresets = (field: FieldDefinitionNode) => {
   const res: Record<string, any> = {};
