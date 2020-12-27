@@ -14,7 +14,7 @@ import {
   ObjectTypeDefinitionNode,
 } from 'graphql';
 import { findRemoteSchemaPermission } from '../utils';
-import { PermissionEdit } from './types';
+import { PermissionEdit, DatasourceObject, FieldType } from './types';
 
 export const getCreateRemoteSchemaPermissionQuery = (
   def: { role: string },
@@ -186,7 +186,7 @@ export const getType = (
 
     if (name.includes('__')) return; // TODO change this check
 
-    const type: any = {};
+    const type: DatasourceObject = { name: ``, children: [] };
 
     if (value instanceof GraphQLObjectType) {
       type.name = `type ${name}`;
@@ -272,15 +272,15 @@ export const getScalarTypes = (schema: GraphQLSchema) => {
   return types;
 };
 
-const checkNullType = type => {
-  const isChecked = element => element.checked;
+const checkNullType = (type: DatasourceObject) => {
+  const isChecked = (element: FieldType) => element.checked;
   return type.children.some(isChecked);
 };
 
-const getSDLField = (type, argTree) => {
+const getSDLField = (type: DatasourceObject, argTree) => {
   if (!checkNullType(type)) return '';
 
-  let result: any;
+  let result = ``;
   const typeName: string = type.name;
   if (type.name === 'query_root' || type.name === 'mutation_root')
     result = `type ${typeName}{`;
@@ -298,12 +298,21 @@ const getSDLField = (type, argTree) => {
         Object.values(f.args).map((arg: any) => {
           let valueStr = ``;
           if (argTree && argTree[f.name] && argTree[f.name][arg.name]) {
+            const argName = argTree[f.name][arg.name];
             const typeOfArg = arg.type.inspect();
             let unquoted;
-            if (typeOfArg !== 'Int') {
-              const jsonStr = JSON.stringify(argTree[f.name][arg.name]);
+            let isSessionVar = true;
+
+            if (typeof argName !== 'object') {
+              isSessionVar = argName.startsWith('x-hasura');
+            }
+
+            if (typeOfArg === 'string' || isSessionVar) {
+              const jsonStr = JSON.stringify(argName);
               unquoted = jsonStr.replace(/"([^"]+)":/g, '$1:');
-            } else unquoted = argTree[f.name][arg.name];
+            } else {
+              unquoted = argName;
+            }
 
             valueStr = `${arg.name} : ${arg.type.inspect()}
             @preset(value: ${unquoted})`;
@@ -337,7 +346,7 @@ export const generateConstantTypes = (schema: GraphQLSchema) => {
   return result;
 };
 
-export const generateSDL = (types, argTree) => {
+export const generateSDL = (types: DatasourceObject[], argTree) => {
   let result = `schema{
   query: query_root
   mutation: mutation_root
@@ -393,15 +402,19 @@ const parseObjectField = (arg: ArgumentNode | ObjectFieldNode) => {
     return res;
   }
 };
+
 const getDirectives = (field: InputValueDefinitionNode) => {
   let res: unknown | Record<string, any>;
   const preset = field?.directives?.find(dir => dir?.name?.value === 'preset');
   if (preset?.arguments && preset?.arguments[0])
     res = parseObjectField(preset.arguments[0]);
-  if (typeof res === 'object') return res;
-  if (typeof res === 'string') return JSON.parse(res);
+  console.log('>>>>', res, typeof res);
+
+  // if (typeof res === 'object') return res;
+  // if (typeof res === 'string') return JSON.parse(res);
   return res;
 };
+
 const getPresets = (field: FieldDefinitionNode) => {
   const res: Record<string, any> = {};
   field?.arguments?.forEach(arg => {
