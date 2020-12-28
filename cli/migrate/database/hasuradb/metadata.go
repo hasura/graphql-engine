@@ -11,7 +11,6 @@ import (
 	gyaml "github.com/ghodss/yaml"
 	"github.com/hasura/graphql-engine/cli/metadata/types"
 	"github.com/hasura/graphql-engine/cli/migrate/database"
-	"github.com/mitchellh/mapstructure"
 	"github.com/pkg/errors"
 	"gopkg.in/yaml.v2"
 
@@ -250,53 +249,4 @@ func (h *HasuraDB) Query(data interface{}) error {
 		return NewHasuraError(body, h.config.isCMD)
 	}
 	return nil
-}
-
-func (h *HasuraDB) GetDatasources() ([]string, error) {
-	if !h.hasuraOpts.ServerFeatureFlags.HasDatasources {
-		return nil, fmt.Errorf("server version does not support datasources")
-	}
-	query := HasuraInterfaceQuery{
-		Type: "export_metadata",
-		Args: map[string]interface{}{},
-	}
-
-	resp, body, err := h.SendMetadataOrQueryRequest(query, client.MetadataOrQueryClientFuncOpts{MetadataRequestOpts: &client.MetadataRequestOpts{}})
-	if err != nil {
-		h.logger.Debug(err)
-		return nil, err
-	}
-	h.logger.Debug("response: ", string(body))
-
-	if resp.StatusCode != http.StatusOK {
-		return nil, NewHasuraError(body, h.config.isCMD)
-	}
-
-	var bodyAsMap = map[string]interface{}{}
-	if err = json.Unmarshal(body, &bodyAsMap); err != nil {
-		return nil, errors.Wrap(err, "unmarshalling response from API")
-	}
-
-	sources, ok := bodyAsMap["sources"]
-	if !ok {
-		return nil, fmt.Errorf("no sources found")
-	}
-
-	var sourcesList []map[string]interface{}
-	if err := mapstructure.Decode(sources, &sourcesList); err != nil {
-		return nil, errors.Wrap(err, "error unmarshalling sources list")
-	}
-	var sourceNames []string
-	for _, source := range sourcesList {
-		v, ok := source["name"]
-		if !ok {
-			return nil, fmt.Errorf("error getting source name")
-		}
-		sourceName, ok := v.(string)
-		if !ok {
-			return nil, fmt.Errorf("error getting source name")
-		}
-		sourceNames = append(sourceNames, sourceName)
-	}
-	return sourceNames, nil
 }

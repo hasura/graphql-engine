@@ -81,6 +81,7 @@ const (
 	V1 ConfigVersion = iota + 1
 	// V2 represents config version 2
 	V2
+	V3
 )
 
 // ServerAPIPaths has the custom paths defined for server api
@@ -97,16 +98,16 @@ type ServerAPIPaths struct {
 
 // SetDefaults will set default config values for API Paths
 // This function depends on server feature flags and will panic
-func (s *ServerAPIPaths) SetDefaults(serverFeatureFlags *version.ServerFeatureFlags) {
+func (s *ServerAPIPaths) SetDefaults(configVersion ConfigVersion) {
 	if s.Query == "" {
-		if !serverFeatureFlags.HasDatasources {
-			s.Query = "v1/query"
-		} else {
+		if configVersion >= V3 {
 			s.Query = "v2/query"
+		} else {
+			s.Query = "v1/query"
 		}
 	}
 
-	if s.Metadata == "" && serverFeatureFlags.HasDatasources {
+	if s.Metadata == "" && configVersion >= V3 {
 		s.Metadata = "v1/metadata"
 	}
 }
@@ -165,7 +166,7 @@ func (c *ConfigVersion) String() string {
 
 // IsValid returns if its a valid config version
 func (c ConfigVersion) IsValid() bool {
-	return c != 0 && c <= V2
+	return c != 0 && c <= V3
 }
 
 // ServerConfig has the config values required to contact the server
@@ -303,6 +304,12 @@ func (s *ServerConfig) SetHTTPClient() error {
 	return nil
 }
 
+type DatasourceConfig struct {
+	Name                string `yaml:"name,omitempty"`
+	Type                string `yaml:"type,omitempty"`
+	MigrationsDirectory string `yaml:"migrations_directory,omitempty"`
+}
+
 // Config represents configuration required for the CLI to function
 type Config struct {
 	// Version of the config.
@@ -318,7 +325,8 @@ type Config struct {
 	// SeedsDirectory defines the directory where seed files will be stored
 	SeedsDirectory string `yaml:"seeds_directory,omitempty"`
 	// ActionConfig defines the config required to create or generate codegen for an action.
-	ActionConfig *types.ActionExecutionConfig `yaml:"actions,omitempty"`
+	ActionConfig      *types.ActionExecutionConfig `yaml:"actions,omitempty"`
+	DatasourcesConfig []DatasourceConfig           `yaml:"datasources,omitempty"`
 }
 
 // ExecutionContext contains various contextual information required by the cli
@@ -614,7 +622,7 @@ func (ec *ExecutionContext) Validate() error {
 		return errors.Wrap(err, "error in getting server feature flags")
 	}
 	// set default API Paths w.r.t to server feature flags
-	ec.Config.ServerConfig.APIPaths.SetDefaults(ec.Version.ServerFeatureFlags)
+	ec.Config.ServerConfig.APIPaths.SetDefaults(ec.Config.Version)
 
 	state := util.GetServerState(ec.Config.ServerConfig.GetQueryEndpoint(), ec.Config.ServerConfig.AdminSecret, ec.Config.ServerConfig.TLSConfig, ec.Version.ServerSemver, ec.Logger)
 	ec.ServerUUID = state.UUID

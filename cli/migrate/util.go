@@ -7,6 +7,8 @@ import (
 	"runtime"
 	"strings"
 
+	"github.com/hasura/graphql-engine/cli/internal/client"
+
 	"github.com/hasura/graphql-engine/cli/migrate/database"
 
 	crontriggers "github.com/hasura/graphql-engine/cli/metadata/cron_triggers"
@@ -137,6 +139,11 @@ func NewMigrate(ec *cli.ExecutionContext, isCmd bool, datasource string) (*Migra
 			Client:             ec.APIClient,
 		},
 	}
+	if ec.Config.Version >= cli.V3 {
+		opts.hasuraOpts.APIVersion = client.V2API
+	} else {
+		opts.hasuraOpts.APIVersion = client.V1API
+	}
 	t, err := New(opts)
 	if err != nil {
 		return nil, errors.Wrap(err, "cannot create migrate instance")
@@ -188,7 +195,7 @@ func SetMetadataPluginsWithDir(ec *cli.ExecutionContext, drv *Migrate, dir ...st
 		plugins = append(plugins, remoteschemas.New(ec, metadataDir))
 		plugins = append(plugins, actions.New(ec, metadataDir))
 		plugins = append(plugins, crontriggers.New(ec, metadataDir))
-    
+
 		if ec.Version.ServerFeatureFlags.HasDatasources {
 			plugins = append(plugins, sources.New(ec, metadataDir))
 		} else {

@@ -109,7 +109,7 @@ func WithInstance(config *Config, logger *log.Logger, hasuraOpts *database.Hasur
 		client:     hasuraOpts.Client,
 	}
 	switch {
-	case hasuraOpts.ServerFeatureFlags.HasDatasources:
+	case hasuraOpts.APIVersion == client.V2API:
 		hx.CLICatalogState = new(client.CLICatalogState)
 		hx.CLICatalogState.Migrations = client.MigrationsState{}
 		hx.migrationStateStore = NewMigrationsStateWithCatalogStateAPI(hx)
@@ -241,7 +241,7 @@ func (h *HasuraDB) UnLock() error {
 	}
 	// can have both metadata and query api requests in h.migrationQuery
 	// this has to
-	if h.hasuraOpts.ServerFeatureFlags.HasDatasources {
+	if h.hasuraOpts.APIVersion >= client.V2API {
 		var reqs []interface{}
 		var metadataAPIRequests []interface{}
 		var queryAPIRequests []interface{}
@@ -499,9 +499,9 @@ func (h *HasuraDB) sendv1Query(m interface{}, _ client.MetadataOrQueryClientFunc
 func (h *HasuraDB) sendV2QueryOrV1Metadata(m interface{}, opts client.MetadataOrQueryClientFuncOpts) (resp *http.Response, body []byte, err error) {
 	var endpoint string
 	switch {
-	case !h.hasuraOpts.ServerFeatureFlags.HasDatasources:
+	case h.hasuraOpts.APIVersion == client.V1API:
 		endpoint = h.config.queryURL.String()
-	case h.hasuraOpts.ServerFeatureFlags.HasDatasources:
+	default:
 		// TODO: Make this better
 		if opts.MetadataRequestOpts != nil {
 			endpoint = h.config.metadataURL.String()

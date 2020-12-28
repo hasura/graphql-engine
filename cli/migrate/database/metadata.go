@@ -25,8 +25,6 @@ type MetadataDriver interface {
 	ApplyMetadata() error
 
 	Query(data interface{}) error
-
-	GetDatasources() ([]string, error)
 }
 
 type InconsistentMetadataInterface interface {

@@ -23,15 +23,45 @@ type UpgradeToMuUpgradeProjectToMultipleSourcesOpts struct {
 	ProjectDirectory string
 	// Directory in which migrations are stored
 	MigrationsDirectory string
-	// Name of the datasource which the current migrations belong to
-	TargetDatasourceName string
-	Logger               *logrus.Logger
+	Logger              *logrus.Logger
 }
 
 // UpgradeProjectToMultipleSources will help a project directory move from a single
 // datasource structure to multiple datasource
 // The project is expected to be in Config V2
 func UpgradeProjectToMultipleSources(opts UpgradeToMuUpgradeProjectToMultipleSourcesOpts) error {
+	hasuraAPIClient, err := client.NewHasuraRestAPIClient(client.NewHasuraRestAPIClientOpts{
+		Headers:        opts.EC.HGEHeaders,
+		QueryAPIURL:    fmt.Sprintf("%s/%s", opts.EC.Config.Endpoint, "v2/query"),
+		MetadataAPIURL: fmt.Sprintf("%s/%s", opts.EC.Config.Endpoint, "v1/metadata"),
+		TLSConfig:      opts.EC.Config.TLSConfig,
+	})
+
+	if err != nil {
+		return err
+	}
+	//get the list of data sources
+	datasourcesNameAndType, err := hasuraAPIClient.GetDatasources()
+	if err != nil {
+		return err
+	}
+	var datasourceNames []string
+	var datasourceConfigs []cli.DatasourceConfig
+	for sourceName, sourceType := range datasourcesNameAndType {
+		ds := cli.DatasourceConfig{
+			Name:                sourceName,
+			Type:                sourceType,
+			MigrationsDirectory: filepath.Join(filepath.Dir(opts.EC.MigrationDir), sourceName),
+		}
+		datasourceNames = append(datasourceNames, sourceName)
+		datasourceConfigs = append(datasourceConfigs, ds)
+	}
+	fmt.Println(datasourceNames)
+
+	targetDatasource, err := util.GetSelectPrompt("select datasource for which current migrations belong to", datasourceNames)
+	if err != nil {
+		return err
+	}
 	// create backup of project
 	var projectBackupPath = fmt.Sprintf("%s_%s", opts.ProjectDirectory, "backup")
 	if err := util.CopyDirAfero(opts.Fs, opts.ProjectDirectory, projectBackupPath); err != nil {
@@ -45,7 +75,7 @@ func UpgradeProjectToMultipleSources(opts UpgradeToMuUpgradeProjectToMultipleSou
 		return errors.Wrap(err, "getting list of migrations to move")
 	}
 	// create a new directory for TargetDatasource
-	targetDatasourceDirectoryName := filepath.Join(opts.MigrationsDirectory, opts.TargetDatasourceName)
+	targetDatasourceDirectoryName := filepath.Join(opts.MigrationsDirectory, targetDatasource)
 	if err = opts.Fs.Mkdir(targetDatasourceDirectoryName, 0755); err != nil {
 		errors.Wrap(err, "creating target datasource name")
 	}
@@ -54,16 +84,13 @@ func UpgradeProjectToMultipleSources(opts UpgradeToMuUpgradeProjectToMultipleSou
 	if err := moveMigrationsToDatasourceDirectory(opts.Fs, directoriesToMove, opts.MigrationsDirectory, targetDatasourceDirectoryName); err != nil {
 		return errors.Wrap(err, "moving migrations to target datasource directory")
 	}
-
-	hasuraAPIClient, err := client.NewHasuraRestAPIClient(client.NewHasuraRestAPIClientOpts{
-		Headers:        opts.EC.HGEHeaders,
-		QueryAPIURL:    fmt.Sprintf("%s/%s", opts.EC.Config.Endpoint, "v1/query"),
-		MetadataAPIURL: fmt.Sprintf("%s/%s", opts.EC.Config.Endpoint, "v1/metadata"),
-		TLSConfig:      opts.EC.Config.TLSConfig,
-	})
-	if err != nil {
-		return err
+	// create new directories for all other datasources
+	for _, source := range datasourceNames {
+		if err := opts.Fs.MkdirAll(filepath.Join(opts.MigrationsDirectory, source), 0755); err != nil {
+			return err
+		}
 	}
+
 	migrations, err := hasuraAPIClient.GetMigrationVersions(hasuradb.DefaultSchema, hasuradb.DefaultMigrationsTable)
 	if err != nil {
 		return err
@@ -72,7 +99,16 @@ func UpgradeProjectToMultipleSources(opts UpgradeToMuUpgradeProjectToMultipleSou
 	if err != nil {
 		return err
 	}
-	if err := hasuraAPIClient.MoveMigrationsAndSettingsToCatalogState(opts.TargetDatasourceName, migrations, settings); err != nil {
+	if err := hasuraAPIClient.MoveMigrationsAndSettingsToCatalogState(targetDatasource, migrations, settings); err != nil {
+		return err
+	}
+
+	// write new config file
+	newConfig := *opts.EC.Config
+	newConfig.Version = cli.V3
+	newConfig.DatasourcesConfig = datasourceConfigs
+	newConfig.ServerConfig.APIPaths.SetDefaults(cli.V3)
+	if err := opts.EC.WriteConfig(&newConfig); err != nil {
 		return err
 	}
 

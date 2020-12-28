@@ -3,8 +3,9 @@ package database
 import (
 	"sort"
 
-	"github.com/hasura/graphql-engine/cli/internal/client"
 	"github.com/hasura/graphql-engine/cli/version"
+
+	"github.com/hasura/graphql-engine/cli/internal/client"
 )
 
 // Migrations wraps Migration and has an internal index
@@ -98,4 +99,5 @@ type HasuraOpts struct {
 	ServerFeatureFlags version.ServerFeatureFlags
 	Datasource         string
 	Client             *client.Client
+	APIVersion         client.APIVersion
 }

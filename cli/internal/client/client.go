@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"crypto/tls"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -14,11 +13,20 @@ import (
 	"strings"
 	"sync"
 
+	"github.com/pkg/errors"
+
 	"github.com/hasura/graphql-engine/cli/version"
 
 	"github.com/parnurzeal/gorequest"
 
 	"github.com/mitchellh/mapstructure"
+)
+
+type APIVersion int
+
+const (
+	V1API = iota + 1
+	V2API
 )
 
 var (
@@ -145,7 +153,7 @@ func (c *HasuraRestAPIClient) GetMigrationVersions(schemaName, tableName string)
 		ResultType string     `json:"result_type"`
 		Result     [][]string `json:"result"`
 	}{}
-	resp, respBody, err := c.SendV1QueryRequest(requestBody)
+	resp, respBody, err := c.SendQueryRequest(requestBody)
 	if err != nil {
 		return nil, err
 	}
@@ -245,7 +253,7 @@ func (c *HasuraRestAPIClient) Do(request *http.Request) (*http.Response, error) 
 }
 
 // send a hasura v1/query request
-func (c *HasuraRestAPIClient) SendV1QueryRequest(body io.Reader) (*http.Response, []byte, error) {
+func (c *HasuraRestAPIClient) SendQueryRequest(body io.Reader) (*http.Response, []byte, error) {
 	req, err := c.NewRequest(c.queryAPIURL.String(), body)
 	if err != nil {
 		return nil, nil, err
@@ -292,7 +300,7 @@ func (c *HasuraRestAPIClient) GetCLISettingsFromSQLTable(schemaName string, tabl
 		ResultType string     `json:"result_type"`
 		Result     [][]string `json:"result"`
 	}{}
-	resp, respBody, err := c.SendV1QueryRequest(requestBody)
+	resp, respBody, err := c.SendQueryRequest(requestBody)
 	if err != nil {
 		return nil, err
 	}
@@ -360,4 +368,65 @@ func (c *HasuraRestAPIClient) MoveMigrationsAndSettingsToCatalogState(datasource
 	}
 
 	return nil
+}
+
+func (c *HasuraRestAPIClient) GetDatasources() (map[string]string, error) {
+	request := struct {
+		Type string                 `json:"type"`
+		Args map[string]interface{} `json:"args"`
+	}{
+		Type: "export_metadata",
+		Args: map[string]interface{}{},
+	}
+
+	b, err := json.Marshal(request)
+	if err != nil {
+		return nil, err
+	}
+	resp, body, err := c.SendV1MetadataRequest(bytes.NewReader(b))
+	if err != nil {
+		return nil, err
+	}
+	if resp.StatusCode != http.StatusOK {
+		return nil, errors.New(string(body))
+	}
+
+	var bodyAsMap = map[string]interface{}{}
+	if err = json.Unmarshal(body, &bodyAsMap); err != nil {
+		return nil, errors.Wrap(err, "unmarshalling response from API")
+	}
+
+	sources, ok := bodyAsMap["sources"]
+	if !ok {
+		return nil, fmt.Errorf("no sources found")
+	}
+
+	var sourcesList []map[string]interface{}
+	if err := mapstructure.Decode(sources, &sourcesList); err != nil {
+		return nil, errors.Wrap(err, "error unmarshalling sources list")
+	}
+	// name: type
+	datasourcesList := map[string]string{}
+	fmt.Println(sourcesList)
+	for _, source := range sourcesList {
+		sourceNameValue, ok := source["name"]
+		if !ok {
+			return nil, fmt.Errorf("error getting source name")
+		}
+		sourceName, ok := sourceNameValue.(string)
+		if !ok {
+			return nil, fmt.Errorf("error getting source name")
+		}
+		//sourceTypeValue, ok := source["type"]
+		//if !ok {
+		//	return nil, fmt.Errorf("error getting source type")
+		//}
+		//sourceType, ok := sourceTypeValue.(string)
+		//if !ok {
+		//	return nil, fmt.Errorf("error getting source type")
+		//}
+		// TODO: fill in source type too
+		datasourcesList[sourceName] = ""
+	}
+	return datasourcesList, nil
 }

@@ -1900,7 +1900,3 @@ func printDryRunStatus(migrations []*Migration) *bytes.Buffer {
 	out.Flush()
 	return buf
 }
-
-func (m *Migrate) GetDatasources() ([]string, error) {
-	return m.databaseDrv.GetDatasources()
-}

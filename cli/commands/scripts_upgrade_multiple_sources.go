@@ -3,10 +3,6 @@ package commands
 import (
 	"fmt"
 
-	"github.com/hasura/graphql-engine/cli/util"
-
-	"github.com/hasura/graphql-engine/cli/migrate"
-
 	"github.com/hasura/graphql-engine/cli/internal/scripts"
 	"github.com/spf13/afero"
 
@@ -18,8 +14,8 @@ import (
 func newUpdateMultipleSources(ec *cli.ExecutionContext) *cobra.Command {
 	v := viper.New()
 	cmd := &cobra.Command{
-		Use:   "update-project-multiple-sources",
-		Short: "update project to use multiple datasources",
+		Use:   "update-project-v3",
+		Short: "update project to use config v2 to config v3",
 		Long: `
 `,
 		Example:      `  `,
@@ -42,27 +38,13 @@ func newUpdateMultipleSources(ec *cli.ExecutionContext) *cobra.Command {
 			case !ec.Version.ServerFeatureFlags.HasDatasources:
 				return fmt.Errorf("server doesn't support multiple data sources")
 			}
-			//get the list of data sources
-			migrateDrv, err := migrate.NewMigrate(ec, true, "")
-			if err != nil {
-				return err
-			}
-			datasources, err := migrateDrv.GetDatasources()
-			if err != nil {
-				return err
-			}
-			targetDatasource, err := util.GetSelectPrompt("select datasource for which current migrations belong to", datasources)
-			if err != nil {
-				return err
-			}
-			fmt.Println(datasources)
+
 			opts := scripts.UpgradeToMuUpgradeProjectToMultipleSourcesOpts{
-				Fs:                   afero.NewOsFs(),
-				ProjectDirectory:     ec.ExecutionDirectory,
-				MigrationsDirectory:  ec.MigrationDir,
-				TargetDatasourceName: targetDatasource,
-				Logger:               ec.Logger,
-				EC:                   ec,
+				Fs:                  afero.NewOsFs(),
+				ProjectDirectory:    ec.ExecutionDirectory,
+				MigrationsDirectory: ec.MigrationDir,
+				Logger:              ec.Logger,
+				EC:                  ec,
 			}
 			if err := scripts.UpgradeProjectToMultipleSources(opts); err != nil {
 				return err
