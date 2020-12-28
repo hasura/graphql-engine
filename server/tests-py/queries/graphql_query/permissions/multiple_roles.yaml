@@ -1,0 +1,102 @@
+- description: column not accessible to any of the roles should not be accessible to the derived role
+  url: /v1/graphql
+  status: 200
+  headers:
+    X-Hasura-Role: manager_is_employee_too
+    X-Hasura-User-Id: '1'
+    X-Hasura-Manager-Id: '2'
+  response:
+    errors:
+    - extensions:
+        path: "$.selectionSet.employee.selectionSet.hr_remarks"
+        code: validation-failed
+      message: "field \"hr_remarks\" not found in type: 'employee'"
+  query:
+    query: |
+      query {
+        employee {
+          name
+          title
+          manager_remarks
+          hr_remarks
+        }
+      }
+
+- description: check when a role doesn't have access to a certain column in a row, it should be `null`
+  url: /v1/graphql
+  status: 200
+  headers:
+    X-Hasura-Role: manager_is_employee_too
+    X-Hasura-User-Id: '1'
+    X-Hasura-Manager-Id: '1'
+  response:
+    data:
+      employee:
+        # All the roles have access all the columns that
+        # are queried, hence no null values
+        - id: 1
+          name: employee 1
+          title: Sales representative
+          salary: 10000
+          manager_remarks: good
+        # Only the manager role has access to this row
+        # and the manager can only access the name, title
+        # and the manager_remarks fields
+        - id: null
+          name: employee 2
+          title: Sales representative
+          salary: null
+          manager_remarks: good
+  query:
+    query: |
+      query {
+        employee {
+          id
+          name
+          title
+          salary
+          manager_remarks
+        }
+      }
+
+- description: check when a role doesn't have access to a certain column in a row, it should be `null`
+  url: /v1/graphql
+  status: 200
+  headers:
+    X-Hasura-Role: manager_is_employee_too
+    X-Hasura-User-Id: '1'
+    X-Hasura-Manager-Id: '2'
+  response:
+    data:
+      employee:
+        - name: employee 1
+          title: Sales representative
+          salary: 10000
+          manager_remarks: null
+          manager:
+            name: sales manager 1
+            phone: '9988998822'
+            address: null
+        - name: employee 4
+          title: Sales representative
+          salary: null
+          manager_remarks: hard working
+          manager:
+            name: sales manager 2
+            phone: '9977223344'
+            address: buena vista
+  query:
+    query: |
+      query {
+        employee {
+          name
+          title
+          salary
+          manager_remarks
+          manager {
+            name
+            phone
+            address
+          }
+        }
+      }
