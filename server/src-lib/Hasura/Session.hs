@@ -3,6 +3,7 @@ module Hasura.Session
   , mkRoleName
   , adminRoleName
   , isAdmin
+  , isAdminRoleSet
   , roleNameToTxt
   , SessionVariable
   , mkSessionVariable
@@ -25,6 +26,7 @@ module Hasura.Session
   , mkUserInfo
   , adminUserInfo
   , BackendOnlyFieldAccess(..)
+  , RoleSet(..)
   ) where
 
 import           Hasura.Prelude
@@ -40,6 +42,8 @@ import           Data.Aeson
 import           Data.Aeson.Types           (Parser, toJSONKeyText)
 import           Data.Text.Extended
 import           Data.Text.NonEmpty
+import           Data.List                  (intersperse)
+
 
 import           Hasura.Incremental         (Cacheable)
 import           Hasura.RQL.Types.Common    (adminText)
@@ -55,6 +59,24 @@ newtype RoleName
 instance ToTxt RoleName where
   toTxt = roleNameToTxt
 
+newtype RoleSet = RoleSet { unRoleSet :: HashSet RoleName }
+  deriving (Show, Eq, ToJSON, FromJSON, Hashable)
+
+instance ToTxt RoleSet where
+  toTxt (RoleSet roleSet) = T.concat $ intersperse "," (toTxt <$> toList roleSet)
+
+instance ToJSONKey RoleSet where
+  toJSONKey  = toJSONKeyText toTxt
+
+parseRoleSet :: Text -> Parser RoleSet
+parseRoleSet t = do
+  let rolesTxt = T.split (==',') t
+  roleNames <- mapM (flip onNothing (fail "invalid role name, a role name cannot be empty") . mkRoleName) rolesTxt
+  pure $ RoleSet (Set.fromList roleNames)
+
+instance FromJSONKey RoleSet where
+  fromJSONKey = FromJSONKeyTextParser parseRoleSet
+
 roleNameToTxt :: RoleName -> Text
 roleNameToTxt = unNonEmptyText . getRoleTxt
 
@@ -66,6 +88,9 @@ adminRoleName = RoleName adminText
 
 isAdmin :: RoleName -> Bool
 isAdmin = (adminRoleName ==)
+
+isAdminRoleSet :: RoleSet -> Bool
+isAdminRoleSet = (RoleSet (Set.singleton adminRoleName) ==)
 
 newtype SessionVariable = SessionVariable {unSessionVariable :: CI.CI Text}
   deriving (Show, Eq, Hashable, IsString, Cacheable, Data, NFData)
@@ -188,7 +213,6 @@ mkUserInfo roleBuild userAdminSecret sessionVariables = do
   pure $ UserInfo roleName modifiedSession backendOnlyFieldAccess
   where
     maybeSessionRole = maybeRoleFromSessionVariables sessionVariables
-
     -- | Add x-hasura-role header and remove admin secret headers
     modifySessionVariables :: RoleName -> SessionVariables -> SessionVariables
     modifySessionVariables roleName =

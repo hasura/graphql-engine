@@ -117,7 +117,10 @@ getExecPlanPartial
 getExecPlanPartial userInfo sc queryType req =
   (getGCtx ,) <$> getQueryParts req
   where
-    roleName = _uiRole userInfo
+    roleSet =
+      case Map.lookup (_uiRole userInfo) (scDerivedRoles sc) of
+        Just multipleRoleSet -> multipleRoleSet
+        Nothing              -> RoleSet (HS.singleton $ _uiRole userInfo)
 
     contextMap =
       case queryType of
@@ -131,7 +134,7 @@ getExecPlanPartial userInfo sc queryType req =
 
     getGCtx :: C.GQLContext
     getGCtx =
-      case Map.lookup roleName contextMap of
+      case Map.lookup roleSet contextMap of
         Nothing  -> defaultContext
         Just (C.RoleContext frontend backend) ->
           case _uiBackendOnlyFieldAccess userInfo of
@@ -296,7 +299,7 @@ getResolvedExecPlan env logger pgExecCtx {- planCache-} userInfo sqlGenCtx
               unless (multipleAllowed || null rst) $
                 throw400 ValidationFailed "subscriptions must select one top level field"
           validSubscriptionAST <- for unpreparedAST validateSubscriptionRootField
-          (lqOp, _plan) <- EL.buildLiveQueryPlan pgExecCtx userInfo validSubscriptionAST
+          (lqOp, _plan) <- EL.buildLiveQueryPlan pgExecCtx userInfo (scDerivedRoles sc) validSubscriptionAST
           return $ SubscriptionExecutionPlan lqOp
 
 execRemoteGQ

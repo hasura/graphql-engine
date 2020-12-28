@@ -1,5 +1,9 @@
 type: bulk
 args:
+- type: drop_derived_role
+  args:
+    role_name: manager_is_employee_too
+
 - type: run_sql
   args:
     sql: |
@@ -12,4 +16,7 @@ args:
       DROP TABLE jsonb_table;
       DROP TABLE gpa cascade;
       DROP TABLE auction;
+      DROP TABLE team CASCADE;
+      DROP TABLE manager CASCADE;
+      DROP TABLE employee;
     cascade: true

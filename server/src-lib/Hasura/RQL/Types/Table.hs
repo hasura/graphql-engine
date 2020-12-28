@@ -76,6 +76,7 @@ module Hasura.RQL.Types.Table
        , InsPermInfo(..)
        , SelPermInfo(..)
        , getSelectPermissionInfoM
+       , CombinedSelPermInfo(..)
        , UpdPermInfo(..)
        , DelPermInfo(..)
        , PreSetColsPartial
@@ -262,6 +263,19 @@ deriving instance Eq (SelPermInfo 'Postgres)
 instance Cacheable (SelPermInfo 'Postgres)
 instance ToJSON (SelPermInfo 'Postgres) where
   toJSON = genericToJSON $ aesonDrop 3 snakeCase
+
+data CombinedSelPermInfo (b :: BackendType)
+  = CombinedSelPermInfo
+  { cspiCols                 :: !(M.HashMap (Column b) (Maybe (AnnColumnCaseBoolExpPartialSQL b)))
+  , cspiScalarComputedFields :: !(M.HashMap ComputedFieldName (Maybe (AnnColumnCaseBoolExpPartialSQL b)))
+  , cspiFilter               :: !(AnnBoolExpPartialSQL b)
+  , cspiLimit                :: !(Maybe Int)
+  , cspiAllowAgg             :: !Bool
+  , cspiRequiredHeaders      :: ![Text]
+  } deriving (Generic)
+instance NFData (CombinedSelPermInfo 'Postgres)
+deriving instance Eq (CombinedSelPermInfo 'Postgres)
+instance Cacheable (CombinedSelPermInfo 'Postgres)
 
 data UpdPermInfo (b :: BackendType)
   = UpdPermInfo

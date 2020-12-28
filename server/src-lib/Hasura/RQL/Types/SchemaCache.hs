@@ -16,6 +16,7 @@ module Hasura.RQL.Types.SchemaCache
   , TableCoreCache
   , TableCache
   , ActionCache
+  , DerivedRolesCache
 
   , TypeRelationship(..)
   , trName, trType, trRemoteTable, trFieldMapping
@@ -227,6 +228,8 @@ incSchemaCacheVer (SchemaCacheVer prev) =
 
 type ActionCache = M.HashMap ActionName (ActionInfo 'Postgres) -- info of all actions
 
+type DerivedRolesCache = M.HashMap RoleName RoleSet
+
 data SchemaCache
   = SchemaCache
   { scTables                      :: !(TableCache 'Postgres)
@@ -234,14 +237,15 @@ data SchemaCache
   , scFunctions                   :: !FunctionCache
   , scRemoteSchemas               :: !RemoteSchemaMap
   , scAllowlist                   :: !(HS.HashSet GQLQuery)
-  , scGQLContext                  :: !(HashMap RoleName (RoleContext GQLContext))
+  , scGQLContext                  :: !(HashMap RoleSet (RoleContext GQLContext))
   , scUnauthenticatedGQLContext   :: !GQLContext
-  , scRelayContext                :: !(HashMap RoleName (RoleContext GQLContext))
+  , scRelayContext                :: !(HashMap RoleSet (RoleContext GQLContext))
   , scUnauthenticatedRelayContext :: !GQLContext
   -- , scCustomTypes       :: !(NonObjectTypeMap, AnnotatedObjects)
   , scDepMap                      :: !DepMap
   , scInconsistentObjs            :: ![InconsistentMetadata]
   , scCronTriggers                :: !(M.HashMap TriggerName CronTriggerInfo)
+  , scDerivedRoles                :: !DerivedRolesCache
   }
 $(deriveToJSON (aesonDrop 2 snakeCase) ''SchemaCache)
 

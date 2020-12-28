@@ -33,7 +33,6 @@ import qualified Data.ByteString                             as B
 import qualified Data.HashMap.Strict                         as Map
 import qualified Data.HashMap.Strict.InsOrd                  as OMap
 import qualified Data.HashSet                                as Set
-import qualified Data.Text                                   as T
 import qualified Data.UUID.V4                                as UUID
 import qualified Database.PG.Query                           as Q
 import qualified Database.PG.Query.PTI                       as PTI
@@ -298,7 +297,7 @@ resolveMultiplexedValue = \case
       Nothing -> do
         syntheticVarIndex <- use (qpiSyntheticVariableValues . to length)
         modifying qpiSyntheticVariableValues (|> colVal)
-        pure ["synthetic", T.pack $ show syntheticVarIndex]
+        pure ["synthetic", tshow syntheticVarIndex]
     pure $ fromResVars (CollectableTypeScalar $ unsafePGColumnToBackend $ cvType colVal) varJsonPath
   UVSessionVar ty sessVar -> do
     modifying qpiReferencedSessionVariables (Set.insert sessVar)
@@ -328,7 +327,7 @@ data LiveQueryPlan
 
 data ParameterizedLiveQueryPlan
   = ParameterizedLiveQueryPlan
-  { _plqpRole  :: !RoleName
+  { _plqpRole  :: !RoleSet
   , _plqpQuery :: !MultiplexedQuery
   } deriving (Show)
 $(J.deriveToJSON (J.aesonDrop 4 J.snakeCase) ''ParameterizedLiveQueryPlan)
@@ -350,9 +349,10 @@ buildLiveQueryPlan
      )
   => PGExecCtx
   -> UserInfo
+  -> DerivedRolesCache
   -> InsOrdHashMap G.Name (SubscriptionRootField (UnpreparedValue 'Postgres))
   -> m (LiveQueryPlan, Maybe ReusableLiveQueryPlan)
-buildLiveQueryPlan pgExecCtx userInfo unpreparedAST = do
+buildLiveQueryPlan pgExecCtx userInfo derivedRoles unpreparedAST = do
   (preparedAST, QueryParametersInfo{..}) <- flip runStateT mempty $
     for unpreparedAST \unpreparedQuery -> do
       resolvedRootField <- traverseQueryRootField resolveMultiplexedValue unpreparedQuery
@@ -369,8 +369,9 @@ buildLiveQueryPlan pgExecCtx userInfo unpreparedAST = do
       traverseAction (DS.traverseAnnSimpleSelect resolveMultiplexedValue . resolveAsyncActionQuery userInfo) resolvedRootField
 
   let multiplexedQuery = mkMultiplexedQuery preparedAST
-      roleName = _uiRole userInfo
-      parameterizedPlan = ParameterizedLiveQueryPlan roleName multiplexedQuery
+      userProvidedRoleName = _uiRole userInfo
+      roleSet = fromMaybe (RoleSet $ Set.singleton userProvidedRoleName) (Map.lookup userProvidedRoleName derivedRoles)
+      parameterizedPlan = ParameterizedLiveQueryPlan roleSet multiplexedQuery
 
   -- We need to ensure that the values provided for variables are correct according to Postgres.
   -- Without this check an invalid value for a variable for one instance of the subscription will

@@ -18,6 +18,7 @@ import           Hasura.Prelude
 import           Hasura.RQL.DDL.Action
 import           Hasura.RQL.DDL.ComputedField
 import           Hasura.RQL.DDL.CustomTypes
+import           Hasura.RQL.DDL.DerivedRoles
 import           Hasura.RQL.DDL.EventTrigger
 import           Hasura.RQL.DDL.Metadata
 import           Hasura.RQL.DDL.Permission
@@ -129,6 +130,9 @@ data RQLQueryV1
 
   | RQSetCustomTypes !CustomTypes
   | RQSetTableCustomization !SetTableCustomization
+
+  | RQAddDerivedRole !AddDerivedRole
+  | RQDropDerivedRole !DropDerivedRole
   deriving (Show, Eq)
 
 data RQLQueryV2
@@ -313,6 +317,9 @@ queryModifiesSchemaCache (RQV1 qi) = case qi of
   RQSetCustomTypes _              -> True
   RQSetTableCustomization _       -> True
 
+  RQAddDerivedRole _              -> True
+  RQDropDerivedRole _             -> True
+
   RQBulk qs                       -> any queryModifiesSchemaCache qs
 
 queryModifiesSchemaCache (RQV2 qi) = case qi of
@@ -450,6 +457,9 @@ runQueryM env rq = withPathK "args" $ case rq of
       RQSetCustomTypes q              -> runSetCustomTypes q
       RQSetTableCustomization q       -> runSetTableCustomization q
 
+      RQAddDerivedRole q              -> runAddDerivedRole q
+      RQDropDerivedRole q             -> runDropDerivedRole q
+
       RQBulk qs                       -> encJFromList <$> indexedMapM (runQueryM env) qs
 
     runQueryV2M = \case
@@ -538,6 +548,9 @@ requiresAdmin = \case
     RQDumpInternalState _           -> True
     RQSetCustomTypes _              -> True
     RQSetTableCustomization _       -> True
+
+    RQAddDerivedRole _              -> True
+    RQDropDerivedRole _             -> True
 
     RQRunSql _                      -> True
 

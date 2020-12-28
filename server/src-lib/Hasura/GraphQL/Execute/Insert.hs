@@ -287,8 +287,8 @@ mkInsertQ table onConflictM insCols defVals (insCheck, updCheck) = do
           $ PG.RetExp
             [ PG.selectStar
             , PGT.insertOrUpdateCheckExpr table onConflictM
-              (PGT.toSQLBoolExp (PG.QualTable table) insCheck)
-              (fmap (PGT.toSQLBoolExp (PG.QualTable table)) updCheck)
+              (PGT.toSQLBoolExp (Just (PG.QualTable table)) insCheck)
+              (fmap (PGT.toSQLBoolExp (Just (PG.QualTable table))) updCheck)
             ]
   pure $ PG.CTEInsert sqlInsert
 

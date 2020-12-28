@@ -33,7 +33,6 @@ import           Hasura.RQL.IR.Select
 import           Hasura.RQL.Types                           hiding (Identifier)
 import           Hasura.SQL.Types
 
-
 selectQuerySQL :: JsonAggSelect -> AnnSimpleSel 'Postgres -> Q.Query
 selectQuerySQL jsonAggSelect sel =
   Q.fromBuilder $ toSQL $ mkSQLSelect jsonAggSelect sel
@@ -156,7 +155,7 @@ withJsonAggExtr permLimitSubQuery ordBy alias =
     (newOBItems, obCols, newOBAliases) = maybe ([], [], []) transformOrderBy ordBy
     transformOrderBy (S.OrderByExp l) = unzip3 $
       flip map (zip (toList l) [1..]) $ \(obItem, i::Int) ->
-                 let iden = Identifier $ "ob_col_" <> T.pack (show i)
+                 let iden = Identifier $ "ob_col_" <> (tshow i)
                  in ( obItem{S.oColumn = S.SEIdentifier iden}
                     , S.oColumn obItem
                     , iden
@@ -601,8 +600,8 @@ processSelectParams sourcePrefixes fieldAlias similarArrFields selectFrom
                   orderByM
   let fromItem = selectFromToFromItem (_pfBase sourcePrefixes) selectFrom
       (maybeDistinct, distinctExtrs) =
-        maybe (Nothing, []) (first Just) $ processDistinctOnColumns thisSourcePrefix <$> distM
-      finalWhere = toSQLBoolExp (selectFromToQual selectFrom) $
+          maybe (Nothing, []) (first Just) $ processDistinctOnColumns thisSourcePrefix <$> distM
+      finalWhere = toSQLBoolExp (Just (selectFromToQual selectFrom)) $
                    maybe permFilter (andAnnBoolExps permFilter) whereM
       selectSource = SelectSource thisSourcePrefix fromItem maybeDistinct finalWhere
                      ((^. _2) <$> maybeOrderBy) finalLimit offsetM
@@ -669,7 +668,7 @@ processOrderByItems sourcePrefix' fieldAlias' similarArrayFields orderByItems = 
             processAnnOrderByElement relSourcePrefix fieldName rest
           let selectSource = ObjectSelectSource relSourcePrefix
                              (S.FISimple relTable Nothing)
-                             (toSQLBoolExp (S.QualTable relTable) relFilter)
+                             (toSQLBoolExp (Just (S.QualTable relTable)) relFilter)
               relSource = ObjectRelationSource relName colMapping selectSource
           pure ( relSource
                , HM.singleton relOrderByAlias relOrdByExp
@@ -685,7 +684,7 @@ processOrderByItems sourcePrefix' fieldAlias' similarArrayFields orderByItems = 
               (topExtractor, fields) = mkAggregateOrderByExtractorAndFields aggOrderBy
               selectSource = SelectSource relSourcePrefix
                              (S.FISimple relTable Nothing) Nothing
-                             (toSQLBoolExp (S.QualTable relTable) relFilter)
+                             (toSQLBoolExp (Just (S.QualTable relTable)) relFilter)
                              Nothing Nothing Nothing
               relSource = ArrayRelationSource relAlias colMapping selectSource
           pure ( relSource
@@ -744,10 +743,34 @@ aggregateFieldsToExtractorExps sourcePrefix aggregateFields =
       in Just (S.Alias colAls, qualCol)
     mkColExp _ = Nothing
 
+{- Note: [SQL generation for multiple roles]
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+When a query is executed with multiple roles, each column may contain a predicate
+(AnnColumnCaseBoolExp 'Postgres SQLExp) along with it. The predicate is then
+converted to a BoolExp, which will be used to check if the said column should
+be nullified. For example,
+
+Suppose there are two roles, role1 gives access only to the `addr` column with
+row filter P1 and role2 gives access to both addr and phone column with row
+filter P2. The `OR`ing of the predicates will have already been done while
+the schema has been generated. The SQL generated will look like this:
+
+ select
+    (case when (P1 or P2) then addr else null end) as addr,
+    (case when P2 then phone else null end) as phone
+ from employee
+ where (P1 or P2)
+
+At the time of writing this note, the nullability of the column
+has been ignored i.e. null can be outputted for a non-nullable
+column as well.
+-}
+
 processAnnFields
-  :: forall m . ( MonadReader Bool m
-               , MonadWriter (JoinTree 'Postgres) m
-               )
+  :: forall m
+   . ( MonadReader Bool m
+     , MonadWriter (JoinTree 'Postgres) m
+     )
   => Identifier
   -> FieldName
   -> SimilarArrayFields
@@ -773,7 +796,7 @@ processAnnFields sourcePrefix fieldAlias similarArrFields annFields = do
         annFieldsExtr <- processAnnFields (_pfThis sourcePrefixes) fieldName HM.empty objAnnFields
         let selectSource = ObjectSelectSource (_pfThis sourcePrefixes)
                            (S.FISimple tableFrom Nothing)
-                           (toSQLBoolExp (S.QualTable tableFrom) tableFilter)
+                           (toSQLBoolExp (Just (S.QualTable tableFrom)) tableFilter)
             objRelSource = ObjectRelationSource relName relMapping selectSource
         pure ( objRelSource
              , HM.fromList [annFieldsExtr]
@@ -786,7 +809,14 @@ processAnnFields sourcePrefix fieldAlias similarArrFields annFields = do
         processArrayRelation (mkSourcePrefixes arrRelSourcePrefix) fieldName arrRelAlias arrSel
         pure $ S.mkQIdenExp arrRelSourcePrefix fieldName
 
-      AFComputedField (CFSScalar scalar) -> fromScalarComputedField scalar
+      AFComputedField (CFSScalar scalar caseBoolExpMaybe) -> do
+        computedFieldSQLExp <- fromScalarComputedField scalar
+        -- Check out [SQL generation for multiple roles]
+        case caseBoolExpMaybe of
+          Nothing -> pure computedFieldSQLExp
+          Just caseBoolExp ->
+            let boolExp = S.simplifyBoolExp $ toSQLBoolExp Nothing $ _accColCaseBoolExpField <$> caseBoolExp
+            in pure $ S.SECond boolExp computedFieldSQLExp S.SENull
 
       AFComputedField (CFSTable selectTy sel) -> withWriteComputedFieldTableSet $ do
         let computedFieldSourcePrefix =
@@ -802,7 +832,7 @@ processAnnFields sourcePrefix fieldAlias similarArrFields annFields = do
              )
 
   pure $
-    -- posttgres ignores anything beyond 63 chars for an iden
+    -- postgres ignores anything beyond 63 chars for an iden
     -- in this case, we'll need to use json_build_object function
     -- json_build_object is slower than row_to_json hence it is only
     -- used when needed
@@ -817,11 +847,21 @@ processAnnFields sourcePrefix fieldAlias similarArrFields annFields = do
     toRowToJsonExtr (fieldName, fieldExp) =
       S.Extractor fieldExp $ Just $ S.toAlias fieldName
 
-    toSQLCol :: AnnColumnField 'Postgres -> m S.SQLExp
-    toSQLCol (AnnColumnField col asText colOpM) = do
+    toSQLCol :: AnnColumnField 'Postgres S.SQLExp -> m S.SQLExp
+    toSQLCol (AnnColumnField col asText colOpM caseBoolExpMaybe) = do
       strfyNum <- ask
-      pure $ toJSONableExp strfyNum (pgiType col) asText $ withColumnOp colOpM $
-             S.mkQIdenExp (mkBaseTableAlias sourcePrefix) $ pgiColumn col
+      let sqlExpression =
+            withColumnOp colOpM $
+            S.mkQIdenExp (mkBaseTableAlias sourcePrefix) $ pgiColumn col
+          finalSQLExpression =
+            -- Check out [SQL generation for multiple roles]
+            case caseBoolExpMaybe of
+              Nothing          -> sqlExpression
+              Just caseBoolExp ->
+                let boolExp =
+                      S.simplifyBoolExp $ toSQLBoolExp Nothing $ _accColCaseBoolExpField <$> caseBoolExp
+                in S.SECond boolExp sqlExpression S.SENull
+      pure $ toJSONableExp strfyNum (pgiType col) asText finalSQLExpression
 
     fromScalarComputedField :: ComputedFieldScalarSelect 'Postgres S.SQLExp -> m S.SQLExp
     fromScalarComputedField computedFieldScalar = do

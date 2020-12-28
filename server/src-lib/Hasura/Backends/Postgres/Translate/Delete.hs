@@ -15,4 +15,4 @@ mkDelete (AnnDel tn (fltr, wc) _ _) =
   S.SQLDelete tn Nothing tableFltr $ Just S.returningStar
   where
     tableFltr = Just $ S.WhereFrag $
-                toSQLBoolExp (S.QualTable tn) $ andAnnBoolExps fltr wc
+                toSQLBoolExp (Just (S.QualTable tn)) $ andAnnBoolExps fltr wc

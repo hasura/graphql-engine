@@ -22,6 +22,7 @@ import           Data.Aeson
 import           Hasura.RQL.DDL.Action
 import           Hasura.RQL.DDL.ComputedField
 import           Hasura.RQL.DDL.CustomTypes
+import           Hasura.RQL.DDL.DerivedRoles
 import           Hasura.RQL.DDL.EventTrigger
 import           Hasura.RQL.DDL.Permission
 import           Hasura.RQL.DDL.Relationship
@@ -141,3 +142,4 @@ purgeMetadataObj = \case
   MOAction action                            -> dropActionInMetadata action
   MOActionPermission action role             -> dropActionPermissionInMetadata action role
   MOCronTrigger ctName                       -> dropCronTriggerInMetadata ctName
+  MODerivedRole role                         -> dropDerivedRoleInMetadata role

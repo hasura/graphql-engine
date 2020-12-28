@@ -461,16 +461,16 @@ runHGEServer env ServeOptions{..} ServeCtx{..} pgExecCtx initTime shutdownApp po
   shutdownHandler' <- liftWithStateless $ \lowerIO ->
     pure $ shutdownHandler _scLoggers immortalThreads stopWsServer lockedEventsCtx _scPgPool $
            \a b -> hoist lowerIO $ unlockScheduledEvents a b
-           
+
   -- Install a variant of forkIOWithUnmask which tracks Warp threads using an EKG metric
   let setForkIOWithMetrics :: Warp.Settings -> Warp.Settings
       setForkIOWithMetrics = Warp.setFork \f -> do
         void $ C.forkIOWithUnmask (\unmask ->
-          bracket_ 
+          bracket_
             (EKG.Gauge.inc $ smWarpThreads serverMetrics)
             (EKG.Gauge.dec $ smWarpThreads serverMetrics)
               (f unmask))
-  
+
   let warpSettings = Warp.setPort soPort
                      . Warp.setHost soHost
                      . Warp.setGracefulShutdownTimeout (Just 30) -- 30s graceful shutdown
@@ -686,7 +686,7 @@ instance UserAuthentication (Tracing.TraceT PGMetadataStorageApp) where
 instance MetadataApiAuthorization PGMetadataStorageApp where
   authorizeMetadataApi query userInfo = do
     let currRole = _uiRole userInfo
-    when (requiresAdmin query && currRole /= adminRoleName) $
+    when (requiresAdmin query && (not (isAdmin currRole))) $
       withPathK "args" $ throw400 AccessDenied errMsg
     where
       errMsg = "restricted access : admin only"

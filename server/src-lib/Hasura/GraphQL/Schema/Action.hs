@@ -41,12 +41,12 @@ import           Hasura.Session
 -- >   col2: col2_type
 -- > }
 actionExecute
-  :: forall m n r. (BackendSchema 'Postgres, MonadSchema n m, MonadTableInfo 'Postgres r m, MonadRole r m, Has QueryContext r)
+  :: forall m n r. (BackendSchema 'Postgres, MonadSchema n m, MonadTableInfo 'Postgres r m, MonadRoleSet r m, Has QueryContext r)
   => NonObjectTypeMap
   -> ActionInfo 'Postgres
   -> m (Maybe (FieldParser n (AnnActionExecution 'Postgres (UnpreparedValue 'Postgres))))
 actionExecute nonObjectTypeMap actionInfo = runMaybeT do
-  roleName <- lift askRoleName
+  roleName <- lift $ getSingleRoleName =<< askRoleSet
   guard $ roleName == adminRoleName || roleName `Map.member` permissions
   let fieldName = unActionName actionName
       description = G.Description <$> comment
@@ -77,12 +77,12 @@ actionExecute nonObjectTypeMap actionInfo = runMaybeT do
 --
 -- > action_name(action_input_arguments)
 actionAsyncMutation
-  :: forall m n r. (BackendSchema 'Postgres, MonadSchema n m, MonadTableInfo 'Postgres r m, MonadRole r m)
+  :: forall m n r. (BackendSchema 'Postgres, MonadSchema n m, MonadTableInfo 'Postgres r m, MonadRoleSet r m)
   => NonObjectTypeMap
   -> ActionInfo 'Postgres
   -> m (Maybe (FieldParser n AnnActionMutationAsync))
 actionAsyncMutation nonObjectTypeMap actionInfo = runMaybeT do
-  roleName <- lift askRoleName
+  roleName <- lift $ getSingleRoleName =<< askRoleSet
   guard $ roleName == adminRoleName || roleName `Map.member` permissions
   inputArguments <- lift $ actionInputArguments nonObjectTypeMap $ _adArguments definition
   actionId <- lift actionIdParser
@@ -107,11 +107,11 @@ actionAsyncMutation nonObjectTypeMap actionInfo = runMaybeT do
 -- >   output: user_defined_type!
 -- > }
 actionAsyncQuery
-  :: forall m n r. (BackendSchema 'Postgres, MonadSchema n m, MonadTableInfo 'Postgres r m, MonadRole r m, Has QueryContext r)
+  :: forall m n r. (BackendSchema 'Postgres, MonadSchema n m, MonadTableInfo 'Postgres r m, MonadRoleSet r m, Has QueryContext r)
   => ActionInfo 'Postgres
   -> m (Maybe (FieldParser n (AnnActionAsyncQuery 'Postgres (UnpreparedValue 'Postgres))))
 actionAsyncQuery actionInfo = runMaybeT do
-  roleName <- lift askRoleName
+  roleName <- lift $ getSingleRoleName =<< askRoleSet
   guard $ roleName == adminRoleName || roleName `Map.member` permissions
   actionId <- lift actionIdParser
   actionOutputParser <- lift $ actionOutputFields outputObject
@@ -165,7 +165,7 @@ actionIdParser =
   fmap P.mkParameter <$> columnParser (ColumnScalar PGUUID) (G.Nullability False)
 
 actionOutputFields
-  :: forall m n r. (BackendSchema 'Postgres, MonadSchema n m, MonadTableInfo 'Postgres r m, MonadRole r m, Has QueryContext r)
+  :: forall m n r. (BackendSchema 'Postgres, MonadSchema n m, MonadTableInfo 'Postgres r m, MonadRoleSet r m, Has QueryContext r)
   => AnnotatedObjectType 'Postgres
   -> m (Parser 'Output n (RQL.AnnFieldsG 'Postgres (UnpreparedValue 'Postgres)))
 actionOutputFields outputObject = do
@@ -192,7 +192,8 @@ actionOutputFields outputObject = do
             AOFTEnum def   -> customEnumParser def
       in bool P.nonNullableField id (G.isNullable gType) $
          P.selection_ (unObjectFieldName name) description fieldParser
-         $> RQL.mkAnnColumnField pgColumnInfo Nothing
+         -- TODO: check if the last argument here should be `Nothing`
+         $> RQL.mkAnnColumnField pgColumnInfo Nothing Nothing
 
     relationshipFieldParser
       :: TypeRelationship (TableInfo 'Postgres) (ColumnInfo 'Postgres)
@@ -201,9 +202,9 @@ actionOutputFields outputObject = do
       let TypeRelationship relName relType tableInfo fieldMapping = typeRelationship
           tableName = _tciName $ _tiCoreInfo tableInfo
           fieldName = unRelationshipName relName
-      roleName <- lift askRoleName
+      roleName <- lift $ getSingleRoleName =<< askRoleSet
       tablePerms <- MaybeT $ pure $ RQL.getPermInfoMaybe roleName PASelect tableInfo
-      tableParser <- lift $ selectTable tableName fieldName Nothing tablePerms
+      tableParser <- lift $ selectTable tableName fieldName Nothing $ convertSelPermToCombinedSelPerm tablePerms
       pure $ tableParser <&> \selectExp ->
         let tableRelName = RelName $ mkNonEmptyTextUnsafe $ G.unName fieldName
             columnMapping = Map.fromList $

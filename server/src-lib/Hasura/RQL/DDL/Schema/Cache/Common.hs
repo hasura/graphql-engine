@@ -102,6 +102,7 @@ data BuildOutputs
   , _boAllowlist     :: !(HS.HashSet GQLQuery)
   , _boCustomTypes   :: !(AnnotatedCustomTypes 'Postgres)
   , _boCronTriggers  :: !(M.HashMap TriggerName CronTriggerInfo)
+  , _boDerivedRoles  :: !DerivedRolesCache
   }
 $(makeLenses ''BuildOutputs)
 

@@ -346,10 +346,12 @@ class TestGraphqlQueryPermissions:
     def test_author_articles_without_required_headers_set(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + '/select_articles_without_required_headers.yaml', transport)
 
+    def test_derived_multiple_roles(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/multiple_roles.yaml', transport)
+
     @classmethod
     def dir(cls):
         return 'queries/graphql_query/permissions'
-
 
 @pytest.mark.parametrize("transport", ['http', 'websocket'])
 @usefixtures('per_class_tests_db_state')

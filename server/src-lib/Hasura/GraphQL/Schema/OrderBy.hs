@@ -34,9 +34,9 @@ import           Hasura.RQL.Types
 -- >   obj-rel: <remote-table>_order_by
 -- > }
 orderByExp
-  :: forall m n r b. (BackendSchema b, MonadSchema n m, MonadTableInfo b r m, MonadRole r m)
+  :: forall m n r b. (BackendSchema b, MonadSchema n m, MonadTableInfo b r m, MonadRoleSet r m)
   => TableName b
-  -> SelPermInfo b
+  -> CombinedSelPermInfo b
   -> m (Parser 'Input n [IR.AnnOrderByItemG b (UnpreparedValue b)])
 orderByExp table selectPermissions = memoizeOn 'orderByExp table $ do
   tableGQLName <- getTableGQLName @b table
@@ -60,7 +60,7 @@ orderByExp table selectPermissions = memoizeOn 'orderByExp table $ do
           let remoteTable = riRTable relationshipInfo
           fieldName <- MaybeT $ pure $ G.mkName $ relNameToTxt $ riName relationshipInfo
           perms <- MaybeT $ tableSelectPermissions remoteTable
-          let newPerms = fmapAnnBoolExp partialSQLExpToUnpreparedValue $ spiFilter perms
+          let newPerms = fmapAnnBoolExp partialSQLExpToUnpreparedValue $ cspiFilter perms
           case riType relationshipInfo of
             ObjRel -> do
               otherTableParser <- lift $ orderByExp remoteTable perms
@@ -82,9 +82,9 @@ orderByExp table selectPermissions = memoizeOn 'orderByExp table $ do
 -- order, rather than using a general intermediary representation
 
 orderByAggregation
-  :: forall m n r b. (BackendSchema b, MonadSchema n m, MonadTableInfo b r m, MonadRole r m)
+  :: forall m n r b. (BackendSchema b, MonadSchema n m, MonadTableInfo b r m, MonadRoleSet r m)
   => TableName b
-  -> SelPermInfo b
+  -> CombinedSelPermInfo b
   -> m (Parser 'Input n [IR.OrderByItemG b (IR.AnnAggregateOrderBy b)])
 orderByAggregation table selectPermissions = do
   -- WIP NOTE

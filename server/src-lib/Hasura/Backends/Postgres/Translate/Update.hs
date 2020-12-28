@@ -29,8 +29,8 @@ mkUpdateCTE (AnnUpd tn opExps (permFltr, wc) chk _ columnsInfo) =
           ]
     setExp    = S.SetExp $ map (expandOperator columnsInfo) opExps
     tableFltr = Just $ S.WhereFrag tableFltrExpr
-    tableFltrExpr = toSQLBoolExp (S.QualTable tn) $ andAnnBoolExps permFltr wc
-    checkExpr = toSQLBoolExp (S.QualTable tn) chk
+    tableFltrExpr = toSQLBoolExp (Just (S.QualTable tn)) $ andAnnBoolExps permFltr wc
+    checkExpr = toSQLBoolExp (Just (S.QualTable tn)) chk
 
 expandOperator :: [ColumnInfo 'Postgres] -> (PGCol, UpdOpExpG S.SQLExp) -> S.SetExpItem
 expandOperator infos (column, op) = S.SetExpItem $ (column,) $ case op of

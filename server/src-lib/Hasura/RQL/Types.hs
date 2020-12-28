@@ -27,9 +27,10 @@ module Hasura.RQL.Types
   , askPGColInfo
   , askComputedFieldInfo
   , askRemoteRel
-  , askCurRole
+  , askCurRoles
   , askEventTriggerInfo
   , askTabInfoFromTrigger
+  , combineSelectPermInfos
 
   , HeaderObj
 
@@ -40,13 +41,16 @@ module Hasura.RQL.Types
 import           Hasura.Prelude
 
 import qualified Data.HashMap.Strict                 as M
+import qualified Data.HashSet                        as Set
+import qualified Data.List.NonEmpty                  as NE
 import qualified Network.HTTP.Client                 as HTTP
 
 import           Control.Monad.Unique
+import           Data.List                           (nub)
 import           Data.Text.Extended
 
 import           Hasura.Backends.Postgres.Connection as R
-import           Hasura.Backends.Postgres.SQL.Types
+import           Hasura.Backends.Postgres.SQL.Types       hiding (TableName)
 import           Hasura.RQL.IR.BoolExp               as R
 import           Hasura.RQL.Types.Action             as R
 import           Hasura.RQL.Types.Column             as R
@@ -66,6 +70,7 @@ import           Hasura.RQL.Types.ScheduledTrigger   as R
 import           Hasura.RQL.Types.SchemaCache        as R
 import           Hasura.RQL.Types.SchemaCache.Build  as R
 import           Hasura.RQL.Types.Table              as R
+import           Hasura.RQL.Types.DerivedRoles       as R
 import           Hasura.SQL.Backend                  as R
 
 import           Hasura.Session
@@ -299,7 +304,88 @@ askRemoteRel fieldInfoMap relName = do
     _                                      ->
       throw400 UnexpectedPayload "expecting a remote relationship"
 
-askCurRole :: (UserInfoM m) => m RoleName
-askCurRole = _uiRole <$> askUserInfo
+askCurRoles :: (UserInfoM m, CacheRM m) => m RoleSet
+askCurRoles = do
+  derivedRoles     <- scDerivedRoles <$> askSchemaCache
+  incomingRoleName <- _uiRole <$> askUserInfo
+  -- if the incoming role name is not a derived role, then
+  -- treat it as a single role name
+  onNothing (M.lookup incomingRoleName derivedRoles) $
+    pure $ RoleSet $ Set.singleton incomingRoleName
 
 type HeaderObj = M.HashMap Text Text
+
+-- | combineSelectPermInfos combines multiple `SelPermInfo`s
+--   into one `CombinedSelPermInfo`. Two `SelPermInfo` will
+--   be combined in the following manner:
+--
+--   1. Columns - The `SelPermInfo` contains a hashset of the columns that are
+--      accessible to the role. To combine two `SelPermInfo`s, every column of the
+--      hashset is coupled with the boolean expression (filter) of the `SelPermInfo`
+--      and a hash map of all the columns is created out of it, this hashmap is
+--      generated for the `SelPermInfo`s that are going to be combined. These hashmaps
+--      are then unioned and the values of these hashmaps are `OR`ed.
+--   2. Scalar computed fields - Scalar computed fields work the same as Columns (#1)
+--   3. Filter / Boolean expression - The filters are combined using a `BoolOr`
+--   4. Limit - Limits are combined by taking the minimum of the two limits
+--   5. Allow Aggregation - Aggregation is allowed, if any of the permissions allow it.
+--   6. Request Headers - Request headers are concatenated
+--
+--   To maintain backwards compatibility, we handle the case of single select permission
+--   differently i.e. we don't want the case statements that always evaluate to true with
+--   the columns
+combineSelectPermInfos
+  :: forall m b
+   . (Backend b, MonadError QErr m)
+  => NE.NonEmpty (SelPermInfo b)
+  -> m (CombinedSelPermInfo b)
+combineSelectPermInfos (headSelPermInfo NE.:| []) = do
+  -- when there's only a single select perm info in the list, we want to keep the old
+  -- behaviour i.e. there should be no case boolean expressions on the columns
+  let SelPermInfo cols scalarComputedFields filter' limit allowAgg reqHdrs = headSelPermInfo
+      colsWithFilter = M.fromList $ map (, Nothing) $ Set.toList cols
+      scalarComputedFieldsWithFilter = Set.toMap scalarComputedFields $> Nothing
+  pure $ CombinedSelPermInfo colsWithFilter scalarComputedFieldsWithFilter filter' limit allowAgg reqHdrs
+combineSelectPermInfos (headSelPermInfo NE.:| restSelPermInfos) = do
+  headCombinedSelPermInfo <- do
+    let headCaseBoolExp = fmap AnnColumnCaseBoolExpField (spiFilter headSelPermInfo)
+        SelPermInfo cols scalarComputedFields filter' limit allowAgg reqHdrs = headSelPermInfo
+        colsWithFilter = M.fromList $ map (, Just headCaseBoolExp) $ Set.toList cols
+        scalarComputedFieldsWithFilter =
+          M.fromList $
+          map (, Just headCaseBoolExp) $
+          Set.toList scalarComputedFields
+    pure $ CombinedSelPermInfo colsWithFilter scalarComputedFieldsWithFilter filter' limit allowAgg reqHdrs
+  foldrM combine headCombinedSelPermInfo restSelPermInfos
+  where
+    combine :: SelPermInfo b -> CombinedSelPermInfo b -> m (CombinedSelPermInfo b)
+    combine selPermInfo combinedSelPermInfo = do
+      let CombinedSelPermInfo combinedCols combinedScalarComputedFields
+           combinedFilter combinedLimit combinedAllowAgg combinedReqHdrs = combinedSelPermInfo
+          columnCaseBoolExp = fmap AnnColumnCaseBoolExpField (spiFilter selPermInfo)
+          colsWithFilter = M.fromList $ map (, Just columnCaseBoolExp) $ Set.toList (spiCols selPermInfo)
+          scalarComputedFieldsWithFilter =
+            M.fromList $
+            map (, Just columnCaseBoolExp) $
+            Set.toList $ spiScalarComputedFields selPermInfo
+      pure $ CombinedSelPermInfo
+            { cspiCols = M.unionWith combineCaseBoolExps combinedCols colsWithFilter
+            , cspiScalarComputedFields =
+              M.unionWith combineCaseBoolExps combinedScalarComputedFields scalarComputedFieldsWithFilter
+            , cspiFilter = BoolOr [combinedFilter, (spiFilter selPermInfo)]
+            , cspiLimit =
+                case (combinedLimit, spiLimit selPermInfo) of
+                  (Nothing, Nothing) -> Nothing
+                  (Just l, Nothing)  -> Just l
+                  (Nothing, Just r)  -> Just r
+                  (Just l , Just r)  -> Just $ min l r
+            , cspiAllowAgg = combinedAllowAgg || (spiAllowAgg selPermInfo)
+            , cspiRequiredHeaders = nub $ combinedReqHdrs <> (spiRequiredHeaders selPermInfo)
+            }
+      where
+        combineCaseBoolExps l r =
+          case (l, r) of
+            (Nothing, Nothing)                     -> Nothing
+            (Just caseBoolExp, Nothing)            -> Just caseBoolExp
+            (Nothing, Just caseBoolExp)            -> Just caseBoolExp
+            (Just caseBoolExpL, Just caseBoolExpR) -> Just $ BoolOr [caseBoolExpL, caseBoolExpR]

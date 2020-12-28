@@ -129,7 +129,7 @@ parseGraphQLName txt = onNothing (G.mkName txt) (throw400 RemoteSchemaError $ er
 pathToAlias :: (MonadError QErr m) => FieldPath -> Counter -> m Alias
 pathToAlias path counter =
   parseGraphQLName $ T.intercalate "_" (map getFieldNameTxt $ unFieldPath path)
-                 <> "__" <> (T.pack . show . unCounter) counter
+                 <> "__" <> (tshow . unCounter) counter
 
 type RemoteJoins b = NE.NonEmpty (FieldPath, NE.NonEmpty (RemoteJoin b))
 type RemoteJoinMap b = Map.HashMap FieldPath (NE.NonEmpty (RemoteJoin b))
@@ -246,9 +246,10 @@ transformAnnFields path fields = do
         AFArrayRelation . ASAggregate <$> transformAnnAggregateRelation fieldPath aggRel
       AFArrayRelation (ASConnection annRel) ->
         AFArrayRelation . ASConnection <$> transformArrayConnection fieldPath annRel
-      AFComputedField computedField ->
-        AFComputedField <$> case computedField of
-          CFSScalar _         -> pure computedField
+      AFComputedField computedField  ->
+        AFComputedField <$>
+        case computedField of
+          CFSScalar _ _       -> pure computedField
           CFSTable jas annSel -> CFSTable jas <$> transformSelect fieldPath annSel
       AFRemote rs -> pure $ AFRemote rs
       AFExpression t     -> pure $ AFExpression t
@@ -256,7 +257,7 @@ transformAnnFields path fields = do
   case NE.nonEmpty remoteJoins of
     Nothing -> pure transformedFields
     Just nonEmptyRemoteJoins -> do
-      let phantomColumns = map (\ci -> (fromPGCol $ pgiColumn ci, AFColumn $ AnnColumnField ci False Nothing)) $
+      let phantomColumns = map (\ci -> (fromPGCol $ pgiColumn ci, AFColumn $ AnnColumnField ci False Nothing Nothing)) $
                            concatMap _rjPhantomFields remoteJoins
       modify (Map.insert path nonEmptyRemoteJoins)
       pure $ transformedFields <> phantomColumns
@@ -567,11 +568,11 @@ replaceRemoteFields compositeJson remoteServerResponse =
         Nothing          -> pure v
         Just (h :| rest) -> case v of
           AO.Object o   -> maybe
-                           (throw500 $ "cannnot find value in remote response at path " <> T.pack (show path))
+                           (throw500 $ "cannnot find value in remote response at path " <> tshow path)
                            (extractAtPath rest)
                            (AO.lookup (G.unName h) o)
           AO.Array arr -> AO.array <$> mapM (extractAtPath path) (toList arr)
-          _            -> throw500 $ "expecting array or object in remote response at path " <> T.pack (show path)
+          _            -> throw500 $ "expecting array or object in remote response at path " <> (tshow path)
 
 -- | Fold nested 'FieldCall's into a bare 'Field', inserting the passed
 -- selection set at the leaf of the tree we construct.

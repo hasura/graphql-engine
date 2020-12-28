@@ -66,7 +66,7 @@ convDefault :: (Monad m) => PGCol -> ColumnType 'Postgres -> () -> m (PGCol, S.S
 convDefault col _ _ = return (col, S.SEUnsafe "DEFAULT")
 
 convOp
-  :: (UserInfoM m, QErrM m)
+  :: (UserInfoM m, QErrM m, CacheRM m)
   => FieldInfoMap (FieldInfo 'Postgres)
   -> [PGCol]
   -> UpdPermInfo 'Postgres

@@ -197,7 +197,7 @@ parseBody reqBody =
 onlyAdmin :: (Monad m) => Handler m ()
 onlyAdmin = do
   uRole <- asks (_uiRole . hcUser)
-  when (uRole /= adminRoleName) $
+  unless (isAdmin uRole) $
     throw400 AccessDenied "You have to be an admin to access this endpoint"
 
 buildQCtx :: (MonadIO m) => Handler m QCtx

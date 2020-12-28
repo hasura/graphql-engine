@@ -7,6 +7,7 @@ import           Hasura.Prelude
 
 import qualified Data.HashMap.Strict                        as M
 import qualified Data.HashSet                               as HS
+import qualified Data.List.NonEmpty                         as NE
 import qualified Data.Sequence                              as DS
 import qualified Data.Text                                  as T
 import qualified Database.PG.Query                          as Q
@@ -25,6 +26,7 @@ import           Hasura.Backends.Postgres.Translate.Column
 import           Hasura.RQL.Types
 import           Hasura.SQL.Types
 import           Hasura.Session
+import qualified Data.HashSet as Set
 
 
 newtype DMLP1T m a
@@ -54,13 +56,16 @@ mkAdminRolePermInfo ti =
     d = DelPermInfo tn annBoolExpTrue []
 
 askPermInfo'
-  :: (UserInfoM m)
+  :: (UserInfoM m, CacheRM m)
   => PermAccessor 'Postgres c
   -> TableInfo 'Postgres
-  -> m (Maybe c)
+  -> m (Maybe (NonEmpty c))
 askPermInfo' pa tableInfo = do
-  roleName <- askCurRole
-  return $ getPermInfoMaybe roleName pa tableInfo
+  RoleSet roles <- askCurRoles
+  perms <-
+    sequenceA <$>
+    for (toList roles) (\roleName -> return $ getPermInfoMaybe roleName pa tableInfo)
+  pure $ NE.nonEmpty =<< perms
 
 getPermInfoMaybe :: RoleName -> PermAccessor 'Postgres c -> TableInfo 'Postgres -> Maybe c
 getPermInfoMaybe roleName pa tableInfo =
@@ -74,16 +79,16 @@ getRolePermInfo roleName tableInfo
     M.lookup roleName (_tiRolePermInfoMap tableInfo)
 
 askPermInfo
-  :: (UserInfoM m, QErrM m)
+  :: (UserInfoM m, QErrM m, CacheRM m)
   => PermAccessor 'Postgres c
   -> TableInfo 'Postgres
-  -> m c
+  -> m (NonEmpty c)
 askPermInfo pa tableInfo = do
-  roleName  <- askCurRole
+  roleSet   <- askCurRoles
   mPermInfo <- askPermInfo' pa tableInfo
   onNothing mPermInfo $ throw400 PermissionDenied $ mconcat
     [ pt <> " on " <>> _tciName (_tiCoreInfo tableInfo)
-    , " for role " <>> roleName
+    , " for role " <>> roleSet
     , " is not allowed. "
     ]
   where
@@ -97,48 +102,60 @@ isTabUpdatable role ti
     rpim = _tiRolePermInfoMap ti
 
 askInsPermInfo
-  :: (UserInfoM m, QErrM m)
+  :: (UserInfoM m, QErrM m, CacheRM m)
   => TableInfo 'Postgres -> m (InsPermInfo 'Postgres)
-askInsPermInfo = askPermInfo PAInsert
+askInsPermInfo tableInfo = do
+  insPermInfo <- askPermInfo PAInsert tableInfo
+  case insPermInfo of
+    insPerm NE.:| [] -> pure insPerm
+    _                -> throw500 "unexpected: got multiple insert permissions"
 
 askSelPermInfo
-  :: (UserInfoM m, QErrM m)
-  => TableInfo 'Postgres -> m (SelPermInfo 'Postgres)
-askSelPermInfo = askPermInfo PASelect
+  :: (UserInfoM m, QErrM m, CacheRM m)
+  => TableInfo 'Postgres -> m (CombinedSelPermInfo 'Postgres)
+askSelPermInfo tableInfo = askPermInfo PASelect tableInfo >>= combineSelectPermInfos
 
 askUpdPermInfo
-  :: (UserInfoM m, QErrM m)
+  :: (UserInfoM m, QErrM m, CacheRM m)
   => TableInfo 'Postgres -> m (UpdPermInfo 'Postgres)
-askUpdPermInfo = askPermInfo PAUpdate
+askUpdPermInfo tableInfo = do
+  updPermInfo <- askPermInfo PAUpdate tableInfo
+  case updPermInfo of
+    updPerm NE.:| [] -> pure updPerm
+    _                -> throw500 "unexpected: got multiple update permissions"
 
 askDelPermInfo
-  :: (UserInfoM m, QErrM m)
+  :: (UserInfoM m, QErrM m, CacheRM m)
   => TableInfo 'Postgres -> m (DelPermInfo 'Postgres)
-askDelPermInfo = askPermInfo PADelete
+askDelPermInfo tableInfo = do
+  delPermInfo <- askPermInfo PADelete tableInfo
+  case delPermInfo of
+    delPerm NE.:| [] -> pure delPerm
+    _                -> throw500 "unexpected: got multiple delete permissions"
 
 verifyAsrns :: (MonadError QErr m) => [a -> m ()] -> [a] -> m ()
 verifyAsrns preds xs = indexedForM_ xs $ \a -> mapM_ ($ a) preds
 
-checkSelOnCol :: (UserInfoM m, QErrM m)
-              => SelPermInfo 'Postgres -> PGCol -> m ()
+checkSelOnCol :: (UserInfoM m, QErrM m, CacheRM m)
+              => CombinedSelPermInfo 'Postgres -> PGCol -> m ()
 checkSelOnCol selPermInfo =
-  checkPermOnCol PTSelect (spiCols selPermInfo)
+  checkPermOnCol PTSelect (HS.fromList $ M.keys $ cspiCols selPermInfo)
 
 checkPermOnCol
-  :: (UserInfoM m, QErrM m)
+  :: (UserInfoM m, QErrM m, CacheRM m)
   => PermType
   -> HS.HashSet PGCol
   -> PGCol
   -> m ()
 checkPermOnCol pt allowedCols pgCol = do
-  roleName <- askCurRole
+  roleSet <- askCurRoles
   unless (HS.member pgCol allowedCols) $
-    throw400 PermissionDenied $ permErrMsg roleName
+    throw400 PermissionDenied $ permErrMsg roleSet
   where
-    permErrMsg roleName
-      | roleName == adminRoleName = "no such column exists : " <>> pgCol
+    permErrMsg roleSet
+      | unRoleSet roleSet == Set.singleton adminRoleName = "no such column exists : " <>> pgCol
       | otherwise = mconcat
-        [ "role " <>> roleName
+        [ "role " <>> roleSet
         , " does not have permission to "
         , permTypeToCode pt <> " column " <>> pgCol
         ]
@@ -163,20 +180,20 @@ type SessVarBldr b m = SessionVarType b -> SessionVariable -> m (SQLExpression b
 fetchRelDet
   :: (UserInfoM m, QErrM m, CacheRM m)
   => RelName -> QualifiedTable
-  -> m (FieldInfoMap (FieldInfo 'Postgres), SelPermInfo 'Postgres)
+  -> m (FieldInfoMap (FieldInfo 'Postgres), CombinedSelPermInfo 'Postgres)
 fetchRelDet relName refTabName = do
-  roleName <- askCurRole
+  roleSet <- askCurRoles
   -- Internal error
   refTabInfo <- fetchRelTabInfo refTabName
   -- Get the correct constraint that applies to the given relationship
-  refSelPerm <- modifyErr (relPermErr refTabName roleName) $
+  refSelPerm <- modifyErr (relPermErr refTabName roleSet) $
                 askSelPermInfo refTabInfo
 
   return (_tciFieldInfoMap $ _tiCoreInfo refTabInfo, refSelPerm)
   where
-    relPermErr rTable roleName _ =
+    relPermErr rTable roleSet _ =
       mconcat
-      [ "role " <>> roleName
+      [ "role " <>> roleSet
       , " does not have permission to read relationship " <>> relName
       , "; no permission on"
       , " table " <>> rTable
@@ -184,7 +201,7 @@ fetchRelDet relName refTabName = do
 
 checkOnColExp
   :: (UserInfoM m, QErrM m, CacheRM m)
-  => SelPermInfo 'Postgres
+  => CombinedSelPermInfo 'Postgres
   -> SessVarBldr 'Postgres m
   -> AnnBoolExpFldSQL 'Postgres
   -> m (AnnBoolExpFldSQL 'Postgres)
@@ -196,7 +213,7 @@ checkOnColExp spi sessVarBldr annFld = case annFld of
   AVRel relInfo nesAnn -> do
     relSPI <- snd <$> fetchRelDet (riName relInfo) (riRTable relInfo)
     modAnn <- checkSelPerm relSPI sessVarBldr nesAnn
-    resolvedFltr <- convAnnBoolExpPartialSQL sessVarBldr $ spiFilter relSPI
+    resolvedFltr <- convAnnBoolExpPartialSQL sessVarBldr $ cspiFilter relSPI
     return $ AVRel relInfo $ andAnnBoolExps modAnn resolvedFltr
 
 convAnnBoolExpPartialSQL
@@ -206,6 +223,14 @@ convAnnBoolExpPartialSQL
   -> f (AnnBoolExpSQL backend)
 convAnnBoolExpPartialSQL f =
   traverseAnnBoolExp (convPartialSQLExp f)
+
+convAnnColumnCaseBoolExpPartialSQL
+  :: (Applicative f)
+  => SessVarBldr backend f
+  -> AnnColumnCaseBoolExpPartialSQL backend
+  -> f (AnnColumnCaseBoolExp backend (SQLExpression backend))
+convAnnColumnCaseBoolExpPartialSQL f =
+  traverseAnnColumnCaseBoolExp (convPartialSQLExp f)
 
 convPartialSQLExp
   :: (Applicative f)
@@ -236,7 +261,7 @@ currentSession = S.SEUnsafe "current_setting('hasura.user')::json"
 
 checkSelPerm
   :: (UserInfoM m, QErrM m, CacheRM m)
-  => SelPermInfo 'Postgres
+  => CombinedSelPermInfo 'Postgres
   -> SessVarBldr 'Postgres m
   -> AnnBoolExpSQL 'Postgres
   -> m (AnnBoolExpSQL 'Postgres)
@@ -246,7 +271,7 @@ checkSelPerm spi sessVarBldr =
 convBoolExp
   :: (UserInfoM m, QErrM m, CacheRM m)
   => FieldInfoMap (FieldInfo 'Postgres)
-  -> SelPermInfo 'Postgres
+  -> CombinedSelPermInfo 'Postgres
   -> BoolExp 'Postgres
   -> SessVarBldr 'Postgres m
   -> (ColumnType 'Postgres -> Value -> m S.SQLExp)

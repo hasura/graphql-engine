@@ -141,7 +141,7 @@ explainGQLQuery pgExecCtx sc (GQLExplain query userVarsRaw maybeIsRelay) = do
       inlinedSelSet <- E.inlineSelectionSet fragments selSet
       (unpreparedQueries, _) <- E.parseGraphQLQuery graphQLContext varDefs (GH._grVariables query) inlinedSelSet
       validSubscriptionQueries <- for unpreparedQueries E.validateSubscriptionRootField
-      (plan, _) <- E.buildLiveQueryPlan pgExecCtx userInfo validSubscriptionQueries
+      (plan, _) <- E.buildLiveQueryPlan pgExecCtx userInfo (scDerivedRoles sc) validSubscriptionQueries
       runInTx $ encJFromJValue <$> E.explainLiveQueryPlan plan
   where
     queryType = bool E.QueryHasura E.QueryRelay $ Just True == maybeIsRelay

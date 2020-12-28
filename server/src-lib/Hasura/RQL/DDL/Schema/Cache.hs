@@ -56,6 +56,8 @@ import           Hasura.RQL.DDL.Schema.Table
 import           Hasura.RQL.Types                         hiding (fmFunction, tmTable)
 import           Hasura.Server.Version                    (HasVersion)
 
+import           Hasura.Session
+
 buildRebuildableSchemaCache
   :: (HasVersion, MonadIO m, MonadUnique m, MonadTx m, HasHttpManager m, HasSQLGenCtx m)
   => Env.Environment
@@ -133,6 +135,7 @@ buildSchemaCacheRule env = proc (metadata, invalidationKeys) -> do
     , _boRemoteSchemas resolvedOutputs
     , _boActions resolvedOutputs
     , _actNonObjects $ _boCustomTypes resolvedOutputs
+    , _boDerivedRoles resolvedOutputs
     )
 
   -- Step 4: Build the relay GraphQL schema
@@ -143,6 +146,7 @@ buildSchemaCacheRule env = proc (metadata, invalidationKeys) -> do
     , _boRemoteSchemas resolvedOutputs
     , _boActions resolvedOutputs
     , _actNonObjects $ _boCustomTypes resolvedOutputs
+    , _boDerivedRoles resolvedOutputs
     )
 
   returnA -< SchemaCache
@@ -167,6 +171,7 @@ buildSchemaCacheRule env = proc (metadata, invalidationKeys) -> do
         <> dependencyInconsistentObjects
         <> toList gqlSchemaInconsistentObjects
         <> toList relaySchemaInconsistentObjects
+    , scDerivedRoles = _boDerivedRoles resolvedOutputs
     }
   where
     buildAndCollectInfo
@@ -176,7 +181,7 @@ buildSchemaCacheRule env = proc (metadata, invalidationKeys) -> do
       => (Metadata, Inc.Dependency InvalidationKeys) `arr` BuildOutputs
     buildAndCollectInfo = proc (metadata, invalidationKeys) -> do
       let Metadata tables functions remoteSchemas collections allowlists
-            customTypes actions cronTriggers = metadata
+            customTypes actions cronTriggers experimentalFeatures = metadata
           (tableInputs, nonColumnInputs, permissions) = unzip3 $ map mkTableInputs $ OMap.elems tables
           eventTriggers = map (_tmTable &&& (OMap.elems . _tmEventTriggers)) (OMap.elems tables)
           -- HashMap k a -> HashMap k b -> HashMap k (a, b)
@@ -263,6 +268,11 @@ buildSchemaCacheRule env = proc (metadata, invalidationKeys) -> do
 
       cronTriggersMap <- buildCronTriggers -< ((), OMap.elems cronTriggers)
 
+      let derivedRolesCache =
+            case experimentalFeatures of
+              Just (ExperimentalFeatures derivedRolesMap) -> OMap.toHashMap $ fmap _adrRoleSet derivedRolesMap
+              Nothing                                     -> mempty
+
       returnA -< BuildOutputs
         { _boTables = tableCache
         , _boActions = actionCache
@@ -271,6 +281,7 @@ buildSchemaCacheRule env = proc (metadata, invalidationKeys) -> do
         , _boAllowlist = allowList
         , _boCustomTypes = annotatedCustomTypes
         , _boCronTriggers = cronTriggersMap
+        , _boDerivedRoles = RoleSet <$> derivedRolesCache
         }
 
     mkEventTriggerMetadataObject (table, eventTriggerConf) =

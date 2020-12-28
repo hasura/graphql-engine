@@ -117,7 +117,7 @@ deriving instance (Backend b, Show v) => Show (ComputedFieldScalarSelect b v)
 deriving instance (Backend b, Eq   v) => Eq   (ComputedFieldScalarSelect b v)
 
 data ComputedFieldSelect (b :: BackendType) v
-  = CFSScalar !(ComputedFieldScalarSelect b v)
+  = CFSScalar !(ComputedFieldScalarSelect b v) !(Maybe (AnnColumnCaseBoolExp b v))
   | CFSTable !JsonAggSelect !(AnnSimpleSelG b v)
 
 traverseComputedFieldSelect
@@ -125,7 +125,8 @@ traverseComputedFieldSelect
   => (v -> f w)
   -> ComputedFieldSelect backend v -> f (ComputedFieldSelect backend w)
 traverseComputedFieldSelect fv = \case
-  CFSScalar scalarSel -> CFSScalar <$> traverse fv scalarSel
+  CFSScalar scalarSel caseBoolExpMaybe ->
+    CFSScalar <$> traverse fv scalarSel <*> traverse (traverseAnnColumnCaseBoolExp fv) caseBoolExpMaybe
   CFSTable b tableSel -> CFSTable b <$> traverseAnnSimpleSelect fv tableSel
 
 type Fields a = [(FieldName, a)]
@@ -160,15 +161,30 @@ data ColumnOp (b :: BackendType)
 deriving instance Backend b => Show (ColumnOp b)
 deriving instance Backend b => Eq   (ColumnOp b)
 
-data AnnColumnField (b :: BackendType)
+type ColumnBoolExpression b = Either (AnnBoolExpPartialSQL b) (AnnBoolExpSQL b)
+
+data AnnColumnField (b :: BackendType) v
   = AnnColumnField
-  { _acfInfo   :: !(ColumnInfo b)
-  , _acfAsText :: !Bool
+  { _acfInfo               :: !(ColumnInfo b)
+  , _acfAsText             :: !Bool
   -- ^ If this field is 'True', columns are explicitly casted to @text@ when fetched, which avoids
   -- an issue that occurs because we don’t currently have proper support for array types. See
   -- https://github.com/hasura/graphql-engine/pull/3198 for more details.
-  , _acfOp     :: !(Maybe (ColumnOp b))
+  , _acfOp                 :: !(Maybe (ColumnOp b))
+  , _acfCaseBoolExpression :: !(Maybe (AnnColumnCaseBoolExp b v))
   }
+
+traverseAnnColumnField
+  :: (Applicative f)
+  => (a -> f b)
+  -> AnnColumnField backend a
+  -> f (AnnColumnField backend b)
+traverseAnnColumnField f (AnnColumnField info asText op caseBoolExpMaybe) =
+  AnnColumnField
+  <$> pure info
+  <*> pure asText
+  <*> pure op
+  <*> (traverse (traverseAnnColumnCaseBoolExp f) caseBoolExpMaybe)
 
 data RemoteFieldArgument
   = RemoteFieldArgument
@@ -186,7 +202,7 @@ data RemoteSelect (b :: BackendType)
   }
 
 data AnnFieldG (b :: BackendType) v
-  = AFColumn !(AnnColumnField b)
+  = AFColumn !(AnnColumnField b v)
   | AFObjectRelation !(ObjectRelationSelectG b v)
   | AFArrayRelation !(ArraySelectG b v)
   | AFComputedField !(ComputedFieldSelect b v)
@@ -194,19 +210,25 @@ data AnnFieldG (b :: BackendType) v
   | AFNodeId !(TableName b) !(PrimaryKeyColumns b)
   | AFExpression !Text
 
-mkAnnColumnField :: ColumnInfo backend -> Maybe (ColumnOp backend) -> AnnFieldG backend v
-mkAnnColumnField ci colOpM =
-  AFColumn $ AnnColumnField ci False colOpM
+mkAnnColumnField
+  :: ColumnInfo backend
+  -> Maybe (AnnColumnCaseBoolExp backend v)
+  -> Maybe (ColumnOp backend)
+  -> AnnFieldG backend v
+mkAnnColumnField ci caseBoolExp colOpM =
+  AFColumn (AnnColumnField ci False colOpM caseBoolExp)
 
-mkAnnColumnFieldAsText :: ColumnInfo backend -> AnnFieldG backend v
+mkAnnColumnFieldAsText
+  :: ColumnInfo backend
+  -> AnnFieldG backend v
 mkAnnColumnFieldAsText ci =
-  AFColumn $ AnnColumnField ci True Nothing
+  AFColumn (AnnColumnField ci True Nothing Nothing)
 
 traverseAnnField
   :: (Applicative f)
   => (a -> f b) -> AnnFieldG backend a -> f (AnnFieldG backend b)
 traverseAnnField f = \case
-  AFColumn colFld      -> pure $ AFColumn colFld
+  AFColumn colFld      -> AFColumn <$> traverseAnnColumnField f colFld
   AFObjectRelation sel -> AFObjectRelation <$> traverse (traverseAnnObjectSelect f) sel
   AFArrayRelation sel  -> AFArrayRelation <$> traverseArraySelect f sel
   AFComputedField sel  -> AFComputedField <$> traverseComputedFieldSelect f sel
@@ -409,6 +431,42 @@ traverseAnnSelect f1 f2 (AnnSelectG flds tabFrom perm args strfyNum) =
   <*> traverseTablePerm f2 perm
   <*> traverseSelectArgs f2 args
   <*> pure strfyNum
+
+-- data SelectFromG (b :: BackendType) v
+--   = FromTable !(TableName b)
+--   | FromIdentifier !PG.Identifier
+--   | FromFunction !PG.QualifiedFunction
+--                  !(FunctionArgsExpTableRow v)
+--                  -- a definition list
+--                  !(Maybe [(Column b, ScalarType b)])
+
+-- data TablePermG (b :: BackendType) v
+--   = TablePerm
+--   { _tpFilter :: !(AnnBoolExp b v)
+--   , _tpLimit  :: !(Maybe Int)
+--   } deriving (Generic)
+
+-- data AnnSelectG (b :: BackendType) a v
+--   = AnnSelectG
+--   { _asnFields   :: !a
+--   , _asnFrom     :: !(SelectFromG b v)
+--   , _asnPerm     :: !(TablePermG b v)
+--   , _asnArgs     :: !(SelectArgsG b v)
+--   , _asnStrfyNum :: !Bool
+--   }
+
+-- type Fields a = [(FieldName, a)]
+
+-- data AnnFieldG (b :: BackendType) v
+--   = AFColumn !(AnnColumnField b)
+--   | AFObjectRelation !(ObjectRelationSelectG b v)
+--   | AFArrayRelation !(ArraySelectG b v)
+--   | AFComputedField !(ComputedFieldSelect b v)
+--   | AFRemote !(RemoteSelect b)
+--   | AFNodeId !(TableName b) !(PrimaryKeyColumns b)
+--   | AFExpression !Text
+
+-- type AnnFieldsG b v = Fields (AnnFieldG b v)
 
 type AnnSimpleSelG b v = AnnSelectG    b (AnnFieldsG b v) v
 type AnnSimpleSel  b   = AnnSimpleSelG b (SQLExpression b)

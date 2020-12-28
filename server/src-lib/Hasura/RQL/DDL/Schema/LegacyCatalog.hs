@@ -26,7 +26,7 @@ import           Hasura.RQL.Types
 
 saveMetadataToHdbTables :: (MonadTx m, HasSystemDefined m) => Metadata -> m ()
 saveMetadataToHdbTables (Metadata tables functions schemas collections
-                         allowlist customTypes actions cronTriggers) = do
+                         allowlist customTypes actions cronTriggers _) = do
 
   withPathK "tables" $ do
     indexedForM_ tables $ \TableMetadata{..} -> do
@@ -340,8 +340,11 @@ fetchMetadataFromHdbTables = liftTx do
   -- fetch actions
   actions <- oMapFromL _amName <$> fetchActions
 
-  Metadata fullTableMetaMap functions remoteSchemas collections
-           allowlist customTypes actions <$> fetchCronTriggers
+  -- cron triggers
+  cronTriggers <- fetchCronTriggers
+
+  pure $ Metadata fullTableMetaMap functions remoteSchemas collections
+                  allowlist customTypes actions cronTriggers Nothing
 
   where
     modMetaMap l f xs = do

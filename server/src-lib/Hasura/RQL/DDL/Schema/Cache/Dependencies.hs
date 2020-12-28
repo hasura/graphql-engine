@@ -141,3 +141,4 @@ deleteMetadataObject objectId = case objectId of
   MOCustomTypes                -> boCustomTypes %~ const emptyAnnotatedCustomTypes
   MOAction           name      -> boActions %~ M.delete name
   MOActionPermission name role -> boActions.ix name.aiPermissions %~ M.delete role
+  MODerivedRole name           -> boDerivedRoles %~ M.delete name

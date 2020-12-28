@@ -4,6 +4,7 @@ import           Hasura.Prelude
 
 import qualified Data.Aeson                         as J
 import qualified Data.HashMap.Strict.InsOrd         as OMap
+import qualified Data.HashSet                       as Set
 
 import           Data.Text.Extended
 import           Language.GraphQL.Draft.Syntax      as G
@@ -16,7 +17,7 @@ import qualified Hasura.RQL.IR.Select               as IR
 import           Hasura.Backends.Postgres.SQL.Types
 import           Hasura.RQL.Types
 import           Hasura.GraphQL.Parser                 (UnpreparedValue)
-
+import           Hasura.Session
 
 type SelectExp           b = IR.AnnSimpleSelG       b (UnpreparedValue b)
 type AggSelectExp        b = IR.AnnAggregateSelectG b (UnpreparedValue b)
@@ -41,6 +42,12 @@ textToName textName = G.mkName textName `onNothing` throw400 ValidationFailed
 partialSQLExpToUnpreparedValue :: PartialSQLExp b -> P.UnpreparedValue b
 partialSQLExpToUnpreparedValue (PSESessVar pftype var) = P.UVSessionVar pftype var
 partialSQLExpToUnpreparedValue (PSESQLExp sqlExp)      = P.UVLiteral sqlExp
+
+getSingleRoleName :: MonadError QErr m => RoleSet -> m RoleName
+getSingleRoleName (RoleSet roleSet) = do
+  case toList roleSet of
+    [role] -> pure role
+    _      -> throw500 "unexpected: expected only a single role but got multiple roles"
 
 mapField
   :: Functor m
@@ -105,3 +112,16 @@ defaultDirectives =
       [G.EDLFIELD, G.EDLFRAGMENT_SPREAD, G.EDLINLINE_FRAGMENT]
     mkDirective name =
       P.DirectiveInfo name Nothing [ifInputField] dirLocs
+
+-- This function is used to convert a select permission to
+-- a combined select permission to be able to call the
+-- parsers defined in `Hasura.GraphQL.Schema.Query`
+-- *NOTE*: This function should not be called for mutations and actions
+-- which do *not* support multiple roles
+convertSelPermToCombinedSelPerm
+  :: SelPermInfo 'Postgres
+  -> CombinedSelPermInfo 'Postgres
+convertSelPermToCombinedSelPerm (SelPermInfo cols scalarCompFields filter' limit allowAgg reqHdrs) =
+  let combinedCols = Set.toMap cols $> Nothing
+      combinedScalarComputedFields = Set.toMap scalarCompFields $> Nothing
+  in CombinedSelPermInfo combinedCols combinedScalarComputedFields filter' limit allowAgg reqHdrs

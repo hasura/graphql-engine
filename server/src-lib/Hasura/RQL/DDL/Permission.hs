@@ -140,6 +140,9 @@ runCreatePerm (WithTable tn pd) = do
   let pt = permAccToType $ getPermAcc1 pd
       role = _pdRole pd
       metadataObject = MOTableObj tn $ MTOPerm role pt
+  derivedRoles <- HM.keys . scDerivedRoles <$> askSchemaCache
+  when (role `elem` derivedRoles) $
+    throw400 AlreadyExists $ "a derived role with name " <> role <<> " already exists"
   buildSchemaCacheFor metadataObject
     $ MetadataModifier
     $ metaTables.ix tn %~ addPermToMetadata pd
@@ -210,7 +213,7 @@ buildSelPermInfo
 buildSelPermInfo tn fieldInfoMap sp = withPathK "permission" $ do
   let pgCols     = convColSpec fieldInfoMap $ spColumns sp
 
-  (be, beDeps) <- withPathK "filter" $
+  (boolExp, boolExpDeps) <- withPathK "filter" $
     procBoolExp tn fieldInfoMap  $ spFilter sp
 
   -- check if the columns exist
@@ -228,7 +231,7 @@ buildSelPermInfo tn fieldInfoMap sp = withPathK "permission" $ do
           <<> " are auto-derived from the permissions on its returning table "
           <> returnTable <<> " and cannot be specified manually"
 
-  let deps = mkParentDep tn : beDeps ++ map (mkColDep DRUntyped tn) pgCols
+  let deps = mkParentDep tn : boolExpDeps ++ map (mkColDep DRUntyped tn) pgCols
              ++ map (mkComputedFieldDep DRUntyped tn) scalarComputedFields
       depHeaders = getDependentHeaders $ spFilter sp
       mLimit = spLimit sp
@@ -236,7 +239,7 @@ buildSelPermInfo tn fieldInfoMap sp = withPathK "permission" $ do
   withPathK "limit" $ mapM_ onlyPositiveInt mLimit
 
   return ( SelPermInfo (HS.fromList pgCols) (HS.fromList computedFields)
-                        be mLimit allowAgg depHeaders
+                        boolExp mLimit allowAgg depHeaders
          , deps
          )
   where

@@ -30,7 +30,7 @@ mkInsertCTE (InsertQueryP1 tn cols vals conflict (insCheck, updCheck) _ _) =
             (toSQLBool insCheck)
             (fmap toSQLBool updCheck)
           ]
-    toSQLBool = toSQLBoolExp $ S.QualTable tn
+    toSQLBool = toSQLBoolExp $ Just $ S.QualTable tn
 
 
 toSQLConflict :: QualifiedTable -> ConflictClauseP1 'Postgres S.SQLExp -> S.SQLConflict
@@ -38,7 +38,7 @@ toSQLConflict tableName = \case
   CP1DoNothing ct -> S.DoNothing $ toSQLCT <$> ct
   CP1Update ct inpCols preSet filtr -> S.Update
     (toSQLCT ct) (S.buildUpsertSetExp inpCols preSet) $
-    Just $ S.WhereFrag $ toSQLBoolExp (S.QualTable tableName) filtr
+    Just $ S.WhereFrag $ toSQLBoolExp (Just $ S.QualTable tableName) filtr
   where
     toSQLCT ct = case ct of
       CTColumn pgCols -> S.SQLColumn pgCols

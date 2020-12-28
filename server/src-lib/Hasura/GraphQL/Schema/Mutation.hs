@@ -39,13 +39,11 @@ import           Hasura.GraphQL.Schema.Select
 import           Hasura.GraphQL.Schema.Table
 import           Hasura.RQL.Types                    hiding (ConstraintName)
 
-
-
 -- insert
 
 -- | Construct a root field, normally called insert_tablename, that can be used to add several rows to a DB table
 insertIntoTable
-  :: forall m n r. (BackendSchema 'Postgres, MonadSchema n m, MonadTableInfo 'Postgres r m, MonadRole r m, Has QueryContext r)
+  :: forall m n r. (BackendSchema 'Postgres, MonadSchema n m, MonadTableInfo 'Postgres r m, MonadRoleSet r m, Has QueryContext r)
   => QualifiedTable       -- ^ qualified name of the table
   -> G.Name               -- ^ field display name
   -> Maybe G.Description  -- ^ field description, if any
@@ -82,7 +80,7 @@ mkConflictClause conflictParser
 
 -- | Variant of 'insertIntoTable' that inserts a single row
 insertOneIntoTable
-  :: forall m n r. (BackendSchema 'Postgres, MonadSchema n m, MonadTableInfo 'Postgres r m, MonadRole r m, Has QueryContext r)
+  :: forall m n r. (BackendSchema 'Postgres, MonadSchema n m, MonadTableInfo 'Postgres r m, MonadRoleSet r m, Has QueryContext r)
   => QualifiedTable       -- ^ qualified name of the table
   -> G.Name               -- ^ field display name
   -> Maybe G.Description  -- ^ field description, if any
@@ -92,7 +90,7 @@ insertOneIntoTable
   -> m (FieldParser n (IR.AnnInsert 'Postgres (UnpreparedValue 'Postgres)))
 insertOneIntoTable table fieldName description insertPerms selectPerms updatePerms  = do
   columns         <- tableColumns table
-  selectionParser <- tableSelectionSet table selectPerms
+  selectionParser <- tableSelectionSet table $ convertSelPermToCombinedSelPerm selectPerms
   objectParser    <- tableFieldsInput table insertPerms
   conflictParser  <- fmap join $ sequenceA $ conflictObject table (Just selectPerms) <$> updatePerms
   let objectName    = $$(G.litName "object")
@@ -109,12 +107,21 @@ insertOneIntoTable table fieldName description insertPerms selectPerms updatePer
 
 -- | We specify the data of an individual row to insert through this input parser.
 tableFieldsInput
-  :: forall m n r. (BackendSchema 'Postgres, MonadSchema n m, MonadTableInfo 'Postgres r m, MonadRole r m)
+  :: forall m n r. (BackendSchema 'Postgres, MonadSchema n m, MonadTableInfo 'Postgres r m, MonadRoleSet r m)
   => QualifiedTable -- ^ qualified name of the table
   -> InsPermInfo 'Postgres    -- ^ insert permissions of the table
   -> m (Parser 'Input n (IR.AnnInsObj 'Postgres (UnpreparedValue 'Postgres)))
 tableFieldsInput table insertPerms = memoizeOn 'tableFieldsInput table do
   tableGQLName <- getTableGQLName @'Postgres table
+  roleSet      <- askRoleSet
+  -- FIXME: This is ugly, but at the time of writing the code, mutations
+  -- are not supported for multiple roles. Refactoring this function
+  -- to not have the `MonadRoleSet` will take a lot of effort because
+  -- this module uses lots of functions from the `Schema/Select.hs` function
+  -- and those functions use `MonadRoleSet`. A good solution here maybe to
+  -- build a `RoleSet` from a single role and then call the query parsers
+  -- which require the `MonadRoleSet` constraint
+  roleName <- getSingleRoleName =<< askRoleSet
   allFields    <- _tciFieldInfoMap . _tiCoreInfo <$> askTableInfo table
   objectFields <- catMaybes <$> for (Map.elems allFields) \case
     FIComputedField _ -> pure Nothing
@@ -129,7 +136,7 @@ tableFieldsInput table insertPerms = memoizeOn 'tableFieldsInput table do
     FIRelationship relationshipInfo -> runMaybeT $ do
       let otherTable = riRTable  relationshipInfo
           relName    = riName    relationshipInfo
-      permissions  <- MaybeT $ tablePermissions otherTable
+      permissions  <- MaybeT $ tablePermissions otherTable roleName
       relFieldName <- lift $ textToName $ relNameToTxt relName
       insPerms     <- MaybeT $ pure $ _permIns permissions
       let selPerms = _permSel permissions
@@ -151,7 +158,7 @@ tableFieldsInput table insertPerms = memoizeOn 'tableFieldsInput table do
 
 -- | Used by 'tableFieldsInput' for object data that is nested through object relationships
 objectRelationshipInput
-  :: forall m n r. (BackendSchema 'Postgres, MonadSchema n m, MonadTableInfo 'Postgres r m, MonadRole r m)
+  :: forall m n r. (BackendSchema 'Postgres, MonadSchema n m, MonadTableInfo 'Postgres r m, MonadRoleSet r m)
   => QualifiedTable
   -> InsPermInfo 'Postgres
   -> Maybe (SelPermInfo 'Postgres)
@@ -174,7 +181,7 @@ objectRelationshipInput table insertPerms selectPerms updatePerms =
 
 -- | Used by 'tableFieldsInput' for object data that is nested through object relationships
 arrayRelationshipInput
-  :: forall m n r. (BackendSchema 'Postgres, MonadSchema n m, MonadTableInfo 'Postgres r m, MonadRole r m)
+  :: forall m n r. (BackendSchema 'Postgres, MonadSchema n m, MonadTableInfo 'Postgres r m, MonadRoleSet r m)
   => QualifiedTable
   -> InsPermInfo 'Postgres
   -> Maybe (SelPermInfo 'Postgres)
@@ -218,7 +225,7 @@ mkInsertObject objects table columns conflictClause insertPerms updatePerms =
 
 -- | Specifies the "ON CONFLICT" SQL clause
 conflictObject
-  :: forall m n r. (BackendSchema 'Postgres, MonadSchema n m, MonadTableInfo 'Postgres r m, MonadRole r m)
+  :: forall m n r. (BackendSchema 'Postgres, MonadSchema n m, MonadTableInfo 'Postgres r m, MonadRoleSet r m)
   => TableName 'Postgres
   -> Maybe (SelPermInfo 'Postgres)
   -> UpdPermInfo 'Postgres
@@ -228,7 +235,7 @@ conflictObject table selectPerms updatePerms = runMaybeT $ do
   columnsEnum      <- MaybeT $ tableUpdateColumnsEnum table updatePerms
   constraints      <- MaybeT $ tciUniqueOrPrimaryKeyConstraints . _tiCoreInfo <$> askTableInfo @'Postgres table
   constraintParser <- lift $ conflictConstraint constraints table
-  whereExpParser   <- lift $ boolExp table selectPerms
+  whereExpParser   <- lift $ boolExp table $ convertSelPermToCombinedSelPerm <$> selectPerms
   let objectName = tableGQLName <> $$(G.litName "_on_conflict")
       objectDesc = G.Description $ "on conflict condition type for table " <>> table
       constraintName = $$(G.litName "constraint")
@@ -268,7 +275,7 @@ conflictConstraint constraints table = memoizeOn 'conflictConstraint table $ do
 -- to update rows in a DB table specified by filters. Only returns a parser if
 -- there are columns the user is allowed to update; otherwise returns Nothing.
 updateTable
-  :: forall m n r. (BackendSchema 'Postgres, MonadSchema n m, MonadTableInfo 'Postgres r m, MonadRole r m, Has QueryContext r)
+  :: forall m n r. (BackendSchema 'Postgres, MonadSchema n m, MonadTableInfo 'Postgres r m, MonadRoleSet r m, Has QueryContext r)
   => QualifiedTable       -- ^ qualified name of the table
   -> G.Name               -- ^ field display name
   -> Maybe G.Description  -- ^ field description, if any
@@ -280,7 +287,7 @@ updateTable table fieldName description updatePerms selectPerms = runMaybeT $ do
       whereDesc = "filter the rows which have to be updated"
   opArgs    <- MaybeT $ updateOperators table updatePerms
   columns   <- lift $ tableColumns table
-  whereArg  <- lift $ P.field whereName (Just whereDesc) <$> boolExp table selectPerms
+  whereArg  <- lift $ P.field whereName (Just whereDesc) <$> boolExp table (convertSelPermToCombinedSelPerm <$> selectPerms)
   selection <- lift $ mutationSelectionSet table selectPerms
   let argsParser = liftA2 (,) opArgs whereArg
   pure $ P.subselection fieldName description argsParser selection
@@ -291,7 +298,7 @@ updateTable table fieldName description updatePerms selectPerms = runMaybeT $ do
 -- parser if there are columns the user is allowed to update and if the user has
 -- select permissions on all primary keys; otherwise returns Nothing.
 updateTableByPk
-  :: forall m n r. (BackendSchema 'Postgres, MonadSchema n m, MonadTableInfo 'Postgres r m, MonadRole r m, Has QueryContext r)
+  :: forall m n r. (BackendSchema 'Postgres, MonadSchema n m, MonadTableInfo 'Postgres r m, MonadRoleSet r m, Has QueryContext r)
   => QualifiedTable       -- ^ qualified name of the table
   -> G.Name               -- ^ field display name
   -> Maybe G.Description  -- ^ field description, if any
@@ -299,11 +306,12 @@ updateTableByPk
   -> SelPermInfo 'Postgres          -- ^ select permissions of the table
   -> m (Maybe (FieldParser n (IR.AnnUpdG 'Postgres (UnpreparedValue 'Postgres))))
 updateTableByPk table fieldName description updatePerms selectPerms = runMaybeT $ do
+  let combinedSelectPerms = convertSelPermToCombinedSelPerm selectPerms
   tableGQLName <- getTableGQLName @'Postgres table
   columns      <- lift $ tableColumns table
   pkArgs       <- MaybeT $ primaryKeysArguments table selectPerms
   opArgs       <- MaybeT $ updateOperators table updatePerms
-  selection    <- lift $ tableSelectionSet table selectPerms
+  selection    <- lift $ tableSelectionSet table combinedSelectPerms
   let pkFieldName  = $$(G.litName "pk_columns")
       pkObjectName = tableGQLName <> $$(G.litName "_pk_columns_input")
       pkObjectDesc = G.Description $ "primary key columns input for table: " <> G.unName tableGQLName
@@ -434,7 +442,7 @@ updateOperators table updatePermissions = do
 -- | Construct a root field, normally called delete_tablename, that can be used
 -- to delete several rows from a DB table
 deleteFromTable
-  :: forall m n r. (BackendSchema 'Postgres, MonadSchema n m, MonadTableInfo 'Postgres r m, MonadRole r m, Has QueryContext r)
+  :: forall m n r. (BackendSchema 'Postgres, MonadSchema n m, MonadTableInfo 'Postgres r m, MonadRoleSet r m, Has QueryContext r)
   => QualifiedTable       -- ^ qualified name of the table
   -> G.Name               -- ^ field display name
   -> Maybe G.Description  -- ^ field description, if any
@@ -444,7 +452,7 @@ deleteFromTable
 deleteFromTable table fieldName description deletePerms selectPerms = do
   let whereName = $$(G.litName "where")
       whereDesc = "filter the rows which have to be deleted"
-  whereArg  <- P.field whereName (Just whereDesc) <$> boolExp table selectPerms
+  whereArg  <- P.field whereName (Just whereDesc) <$> boolExp table (convertSelPermToCombinedSelPerm <$> selectPerms)
   selection <- mutationSelectionSet table selectPerms
   columns   <- tableColumns table
   pure $ P.subselection fieldName description whereArg selection
@@ -453,7 +461,7 @@ deleteFromTable table fieldName description deletePerms selectPerms = do
 -- | Construct a root field, normally called delete_tablename, that can be used
 -- to delete an individual rows from a DB table, specified by primary key
 deleteFromTableByPk
-  :: forall m n r. (BackendSchema 'Postgres, MonadSchema n m, MonadTableInfo 'Postgres r m, MonadRole r m, Has QueryContext r)
+  :: forall m n r. (BackendSchema 'Postgres, MonadSchema n m, MonadTableInfo 'Postgres r m, MonadRoleSet r m, Has QueryContext r)
   => QualifiedTable       -- ^ qualified name of the table
   -> G.Name               -- ^ field display name
   -> Maybe G.Description  -- ^ field description, if any
@@ -461,9 +469,10 @@ deleteFromTableByPk
   -> SelPermInfo 'Postgres  -- ^ select permissions of the table
   -> m (Maybe (FieldParser n (IR.AnnDelG 'Postgres (UnpreparedValue 'Postgres))))
 deleteFromTableByPk table fieldName description deletePerms selectPerms = runMaybeT $ do
+  let combinedSelectPerms = convertSelPermToCombinedSelPerm selectPerms
   columns   <- lift $ tableColumns table
   pkArgs    <- MaybeT $ primaryKeysArguments table selectPerms
-  selection <- lift $ tableSelectionSet table selectPerms
+  selection <- lift $ tableSelectionSet table combinedSelectPerms
   pure $ P.subselection fieldName description pkArgs selection
     <&> mkDeleteObject table columns deletePerms . fmap IR.MOutSinglerowObject
 
@@ -489,7 +498,7 @@ mkDeleteObject table columns deletePerms (whereExp, mutationOutput) =
 -- | All mutations allow returning results, such as what the updated database
 -- rows look like.  This parser allows a query to specify what data to fetch.
 mutationSelectionSet
-  :: forall m n r. (BackendSchema 'Postgres, MonadSchema n m, MonadTableInfo 'Postgres r m, MonadRole r m, Has QueryContext r)
+  :: forall m n r. (BackendSchema 'Postgres, MonadSchema n m, MonadTableInfo 'Postgres r m, MonadRoleSet r m, Has QueryContext r)
   => QualifiedTable
   -> Maybe (SelPermInfo 'Postgres)
   -> m (Parser 'Output n (IR.MutFldsG 'Postgres (UnpreparedValue 'Postgres)))
@@ -497,7 +506,7 @@ mutationSelectionSet table selectPerms =
   memoizeOn 'mutationSelectionSet table do
   tableGQLName <- getTableGQLName @'Postgres table
   returning <- runMaybeT do
-    permissions <- MaybeT $ pure selectPerms
+    permissions <- MaybeT $ pure $ convertSelPermToCombinedSelPerm <$> selectPerms
     tableSet    <- lift $ tableSelectionList table permissions
     let returningName = $$(G.litName "returning")
         returningDesc = "data from the rows affected by the mutation"

@@ -333,44 +333,49 @@ annColExp rhsParser colInfoMap (ColExp fieldName colVal) = do
       throw400 UnexpectedPayload "remote field unsupported"
 
 toSQLBoolExp
-  :: S.Qual -> AnnBoolExpSQL 'Postgres -> S.BoolExp
+  :: Maybe S.Qual -> AnnBoolExpSQL 'Postgres -> S.BoolExp
 toSQLBoolExp tq e =
   evalState (convBoolRhs' tq e) 0
 
 convBoolRhs'
-  :: S.Qual -> AnnBoolExpSQL 'Postgres -> State Word64 S.BoolExp
+  :: Maybe S.Qual -> AnnBoolExpSQL 'Postgres -> State Word64 S.BoolExp
 convBoolRhs' tq =
   foldBoolExp (convColRhs tq)
 
 convColRhs
-  :: S.Qual -> AnnBoolExpFldSQL 'Postgres -> State Word64 S.BoolExp
-convColRhs tableQual = \case
+  :: Maybe S.Qual -> AnnBoolExpFldSQL 'Postgres -> State Word64 S.BoolExp
+convColRhs tableQualMaybe = \case
   AVCol colInfo opExps -> do
     let colFld = fromPGCol $ pgiColumn colInfo
-        bExps = map (mkFieldCompExp tableQual colFld) opExps
+        bExps = map (mkFieldCompExp tableQualMaybe colFld) opExps
     return $ foldr (S.BEBin S.AndOp) (S.BELit True) bExps
 
   AVRel (RelInfo _ _ colMapping relTN _ _) nesAnn -> do
-    -- Convert the where clause on the relationship
-    curVarNum <- get
-    put $ curVarNum + 1
-    let newIdentifier  = Identifier $ "_be_" <> T.pack (show curVarNum) <> "_"
-                   <> snakeCaseQualifiedObject relTN
-        newIdenQ = S.QualifiedIdentifier newIdentifier Nothing
-    annRelBoolExp <- convBoolRhs' newIdenQ nesAnn
+    (newIdentifier, annRelBoolExp) <- getRelBoolExpAndIdentifier tableQualMaybe relTN nesAnn
     let backCompExp = foldr (S.BEBin S.AndOp) (S.BELit True) $
           flip map (M.toList colMapping) $ \(lCol, rCol) ->
             S.BECompare S.SEQ
             (mkQCol (S.QualifiedIdentifier newIdentifier Nothing) rCol)
-            (mkQCol tableQual lCol)
+            (maybe (S.SEIdentifier (Identifier (getPGColTxt lCol))) (flip mkQCol lCol) tableQualMaybe)
         innerBoolExp = S.BEBin S.AndOp backCompExp annRelBoolExp
     return $ S.mkExists (S.FISimple relTN $ Just $ S.Alias newIdentifier) innerBoolExp
   where
     mkQCol q = S.SEQIdentifier . S.QIdentifier q . toIdentifier
 
+    getRelBoolExpAndIdentifier (Just _) relTN nesAnn = do
+      curVarNum <- get
+      put $ curVarNum + 1
+      let newIdentifier =
+            Identifier $ "_be_" <> (tshow curVarNum) <> "_" <> snakeCaseQualifiedObject relTN
+          newIdenQ = S.QualifiedIdentifier newIdentifier Nothing
+      (newIdentifier,) <$> convBoolRhs' (Just newIdenQ) nesAnn
+    getRelBoolExpAndIdentifier Nothing relTN nesAnn = do
+      let newIdentifier = Identifier $ snakeCaseQualifiedObject relTN
+      (newIdentifier, ) <$> convBoolRhs' Nothing nesAnn
+
 foldExists :: GExists 'Postgres (AnnBoolExpFldSQL 'Postgres) -> State Word64 S.BoolExp
 foldExists (GExists qt wh) = do
-  whereExp <- foldBoolExp (convColRhs (S.QualTable qt)) wh
+  whereExp <- foldBoolExp (convColRhs (Just (S.QualTable qt))) wh
   return $ S.mkExists (S.FISimple qt Nothing) whereExp
 
 foldBoolExp
@@ -391,13 +396,22 @@ foldBoolExp f = \case
   BoolFld ce           -> f ce
 
 mkFieldCompExp
-  :: S.Qual -> FieldName -> OpExpG 'Postgres (SQLExpression 'Postgres) -> S.BoolExp
-mkFieldCompExp qual lhsField = mkCompExp (mkQField lhsField)
+  :: Maybe S.Qual -> FieldName -> OpExpG 'Postgres (SQLExpression 'Postgres) -> S.BoolExp
+mkFieldCompExp qualMaybe lhsField = mkCompExp (mkQField lhsField)
   where
-    mkQCol = S.SEQIdentifier . S.QIdentifier qual . toIdentifier
-    mkQField = S.SEQIdentifier . S.QIdentifier qual . Identifier . getFieldNameTxt
+    mkQCol =
+      case qualMaybe of
+        Just qual -> S.SEQIdentifier . S.QIdentifier qual . toIdentifier
+        Nothing   -> S.SEIdentifier . toIdentifier
+    mkQField =
+      case qualMaybe of
+        Just qual -> S.SEQIdentifier . S.QIdentifier qual . Identifier . getFieldNameTxt
+        Nothing   -> S.SEIdentifier . Identifier . getFieldNameTxt
 
-    mkCompExp :: SQLExpression 'Postgres -> OpExpG 'Postgres (SQLExpression 'Postgres) -> S.BoolExp
+    mkCompExp
+      :: SQLExpression 'Postgres
+      -> OpExpG 'Postgres (SQLExpression 'Postgres)
+      -> S.BoolExp
     mkCompExp lhs = \case
       ACast casts      -> mkCastsExp casts
       AEQ False val    -> equalsBoolExpBuilder lhs val

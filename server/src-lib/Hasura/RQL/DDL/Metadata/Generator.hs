@@ -48,6 +48,7 @@ genMetadata = do
     <*> arbitrary
     <*> arbitrary
     <*> arbitrary
+    <*> arbitrary
   where
     genFunctionsMetadata :: MetadataVersion -> Gen Functions
     genFunctionsMetadata = \case
@@ -94,6 +95,9 @@ instance Arbitrary ArrRelUsingFKeyOn where
   arbitrary = genericArbitrary
 
 instance (Arbitrary a) => Arbitrary (PermDef a) where
+  arbitrary = genericArbitrary
+
+instance Arbitrary AddDerivedRole where
   arbitrary = genericArbitrary
 
 instance Arbitrary ComputedFieldDefinition where
@@ -337,6 +341,9 @@ instance Arbitrary NonNegativeDiffTime where
 
 instance Arbitrary CronSchedule where
   arbitrary = elements sampleCronSchedules
+
+instance Arbitrary ExperimentalFeatures where
+  arbitrary = genericArbitrary
 
 sampleCronSchedules :: [CronSchedule]
 sampleCronSchedules = rights $ map Cr.parseCronSchedule

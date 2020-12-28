@@ -22,7 +22,8 @@ import           Hasura.GraphQL.Parser.Internal.Types
 import           Hasura.RQL.Types.Common
 import           Hasura.RQL.Types.Error
 import           Hasura.RQL.Types.Table
-import           Hasura.Session                       (RoleName)
+-- import           Hasura.SQL.Backend
+import           Hasura.Session                       (RoleName, RoleSet)
 
 {- Note [Tying the knot]
 ~~~~~~~~~~~~~~~~~~~~~~~~
@@ -105,13 +106,20 @@ class (Monad m, MonadParse n) => MonadSchema n m | m -> n where
     -- the same key.
     -> m (Parser k n b) -> m (Parser k n b)
 
-type MonadRole r m = (MonadReader r m, Has RoleName r)
+type MonadRole    r m = (MonadReader r m, Has RoleName r) -- TODO: this may be redundant
+type MonadRoleSet r m = (MonadReader r m, Has RoleSet r)
 
 -- | Gets the current role the schema is being built for.
 askRoleName
   :: MonadRole r m
   => m RoleName
 askRoleName = asks getter
+
+-- | Gets the current role the schema is being built for.
+askRoleSet
+  :: MonadRoleSet r m
+  => m RoleSet
+askRoleSet = asks getter
 
 type MonadTableInfo b r m = (MonadReader r m, Has (TableCache b) r, MonadError QErr m)
 

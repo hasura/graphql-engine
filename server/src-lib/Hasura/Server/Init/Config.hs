@@ -79,9 +79,9 @@ data ResponseInternalErrorsConfig
   deriving (Show, Eq)
 
 shouldIncludeInternal :: RoleName -> ResponseInternalErrorsConfig -> Bool
-shouldIncludeInternal role = \case
+shouldIncludeInternal roleName = \case
   InternalErrorsAllRequests -> True
-  InternalErrorsAdminOnly   -> isAdmin role
+  InternalErrorsAdminOnly   -> isAdmin roleName
   InternalErrorsDisabled    -> False
 
 newtype KeepAliveDelay

@@ -26,6 +26,7 @@ import           Hasura.RQL.Types.Action
 import           Hasura.RQL.Types.Common
 import           Hasura.RQL.Types.ComputedField
 import           Hasura.RQL.Types.CustomTypes
+import           Hasura.RQL.Types.DerivedRoles
 import           Hasura.RQL.Types.EventTrigger
 import           Hasura.RQL.Types.Function
 import           Hasura.RQL.Types.Permission
@@ -57,32 +58,34 @@ data MetadataObjId
   | MOAction !ActionName
   | MOActionPermission !ActionName !RoleName
   | MOCronTrigger !TriggerName
+  | MODerivedRole !RoleName
   deriving (Show, Eq, Generic)
 $(makePrisms ''MetadataObjId)
 instance Hashable MetadataObjId
 
 moiTypeName :: MetadataObjId -> Text
 moiTypeName = \case
-  MOTable _ -> "table"
-  MOFunction _ -> "function"
-  MORemoteSchema _ -> "remote_schema"
-  MOCronTrigger _ -> "cron_trigger"
+  MOTable _                  -> "table"
+  MOFunction _               -> "function"
+  MORemoteSchema _           -> "remote_schema"
+  MOCronTrigger _            -> "cron_trigger"
   MOTableObj _ tableObjectId -> case tableObjectId of
-    MTORel _ relType        -> relTypeToTxt relType <> "_relation"
-    MTOPerm _ permType      -> permTypeToCode permType <> "_permission"
-    MTOTrigger _            -> "event_trigger"
-    MTOComputedField _      -> "computed_field"
-    MTORemoteRelationship _ -> "remote_relationship"
-  MOCustomTypes -> "custom_types"
-  MOAction _ -> "action"
-  MOActionPermission _ _ -> "action_permission"
+    MTORel _ relType         -> relTypeToTxt relType <> "_relation"
+    MTOPerm _ permType       -> permTypeToCode permType <> "_permission"
+    MTOTrigger _             -> "event_trigger"
+    MTOComputedField _       -> "computed_field"
+    MTORemoteRelationship _  -> "remote_relationship"
+  MOCustomTypes              -> "custom_types"
+  MOAction _                 -> "action"
+  MOActionPermission _ _     -> "action_permission"
+  MODerivedRole _            -> "derived_role"
 
 moiName :: MetadataObjId -> Text
 moiName objectId = moiTypeName objectId <> " " <> case objectId of
-  MOTable name -> toTxt name
-  MOFunction name -> toTxt name
-  MORemoteSchema name -> toTxt name
-  MOCronTrigger name -> toTxt name
+  MOTable name                       -> toTxt name
+  MOFunction name                    -> toTxt name
+  MORemoteSchema name                -> toTxt name
+  MOCronTrigger name                 -> toTxt name
   MOTableObj tableName tableObjectId ->
     let tableObjectName = case tableObjectId of
           MTORel name _              -> toTxt name
@@ -91,9 +94,10 @@ moiName objectId = moiTypeName objectId <> " " <> case objectId of
           MTOPerm name _             -> toTxt name
           MTOTrigger name            -> toTxt name
     in tableObjectName <> " in " <> moiName (MOTable tableName)
-  MOCustomTypes -> "custom_types"
-  MOAction name -> toTxt name
-  MOActionPermission name roleName -> toTxt roleName <> " permission in " <> toTxt name
+  MOCustomTypes                      -> "custom_types"
+  MOAction name                      -> toTxt name
+  MOActionPermission name roleName   -> toTxt roleName <> " permission in " <> toTxt name
+  MODerivedRole derivedRoleName      -> "derived role " <> toTxt derivedRoleName
 
 data MetadataObject
   = MetadataObject
@@ -294,6 +298,7 @@ type QueryCollections = InsOrdHashMap CollectionName CreateCollection
 type Allowlist = HSIns.InsOrdHashSet CollectionReq
 type Actions = InsOrdHashMap ActionName ActionMetadata
 type CronTriggers = InsOrdHashMap TriggerName CronTriggerMetadata
+type DerivedRoles = InsOrdHashMap RoleName AddDerivedRole
 
 parseNonPostgresMetadata
   :: Object
@@ -304,6 +309,7 @@ parseNonPostgresMetadata
      , CustomTypes
      , Actions
      , CronTriggers
+     , Maybe ExperimentalFeatures
      )
 parseNonPostgresMetadata o = do
   remoteSchemas <- parseListAsMap "remote schemas" _arsqName $
@@ -315,22 +321,34 @@ parseNonPostgresMetadata o = do
   actions <- parseListAsMap "actions" _amName $ o .:? "actions" .!= []
   cronTriggers <- parseListAsMap "cron triggers" ctName $
                   o .:? "cron_triggers" .!= []
+  experimentalFeatures <- o .:? "experimental_features"
   pure ( remoteSchemas, queryCollections, allowlist, customTypes
-       , actions, cronTriggers
+       , actions, cronTriggers, experimentalFeatures
        )
+
+newtype ExperimentalFeatures
+  = ExperimentalFeatures
+  { _efDerivedRoles :: DerivedRoles
+  } deriving (Show, Eq, Generic)
+$(makeLenses ''ExperimentalFeatures)
+
+instance FromJSON ExperimentalFeatures where
+  parseJSON = withObject "ExperimentalFeatures" $ \obj ->
+    ExperimentalFeatures <$> parseListAsMap "derived roles" _adrRoleName (obj .:? "derived_roles" .!= [])
 
 -- | A complete GraphQL Engine metadata representation to be stored,
 -- exported/replaced via metadata queries.
 data Metadata
   = Metadata
-  { _metaTables           :: !Tables
-  , _metaFunctions        :: !Functions
-  , _metaRemoteSchemas    :: !RemoteSchemas
-  , _metaQueryCollections :: !QueryCollections
-  , _metaAllowlist        :: !Allowlist
-  , _metaCustomTypes      :: !CustomTypes
-  , _metaActions          :: !Actions
-  , _metaCronTriggers     :: !CronTriggers
+  { _metaTables               :: !Tables
+  , _metaFunctions            :: !Functions
+  , _metaRemoteSchemas        :: !RemoteSchemas
+  , _metaQueryCollections     :: !QueryCollections
+  , _metaAllowlist            :: !Allowlist
+  , _metaCustomTypes          :: !CustomTypes
+  , _metaActions              :: !Actions
+  , _metaCronTriggers         :: !CronTriggers
+  , _metaExperimentalFeatures :: !(Maybe ExperimentalFeatures)
   } deriving (Show, Eq)
 $(makeLenses ''Metadata)
 
@@ -346,13 +364,13 @@ instance FromJSON Metadata where
             \function -> FunctionMetadata function emptyFunctionConfig
         MVVersion2 -> parseListAsMap "functions" _fmFunction $ o .:? "functions" .!= []
     (remoteSchemas, queryCollections, allowlist, customTypes,
-     actions, cronTriggers) <- parseNonPostgresMetadata o
+     actions, cronTriggers, experimentalFeatures) <- parseNonPostgresMetadata o
     pure $ Metadata tables functions remoteSchemas queryCollections
-                    allowlist customTypes actions cronTriggers
+                    allowlist customTypes actions cronTriggers experimentalFeatures
 
 emptyMetadata :: Metadata
 emptyMetadata =
-  Metadata mempty mempty mempty mempty mempty emptyCustomTypes mempty mempty
+  Metadata mempty mempty mempty mempty mempty emptyCustomTypes mempty mempty Nothing
 
 newtype MetadataModifier =
   MetadataModifier {unMetadataModifier :: Metadata -> Metadata}
@@ -381,6 +399,7 @@ metadataToOrdJSON ( Metadata
                     customTypes
                     actions
                     cronTriggers
+                    experimentalFeatures
                   ) = AO.object $ [versionPair, tablesPair] <>
                       catMaybes [ functionsPair
                                 , remoteSchemasPair
@@ -389,6 +408,7 @@ metadataToOrdJSON ( Metadata
                                 , actionsPair
                                 , customTypesPair
                                 , cronTriggersPair
+                                , experimentalFeaturesPair
                                 ]
   where
     versionPair          = ("version", AO.toOrdered currentMetadataVersion)
@@ -401,6 +421,10 @@ metadataToOrdJSON ( Metadata
                            else Just ("custom_types", customTypesToOrdJSON customTypes)
     actionsPair          = listToMaybeOrdPairSort "actions" actionMetadataToOrdJSON _amName actions
     cronTriggersPair     = listToMaybeOrdPairSort "cron_triggers" crontriggerQToOrdJSON ctName cronTriggers
+    experimentalFeaturesPair =
+      experimentalFeatures >>= \(ExperimentalFeatures derivedRoles) ->
+        let derivedRolesPair = listToMaybeOrdPairSort "derived_roles" derivedRolesQToOrdJSON _adrRoleName derivedRoles
+        in maybe Nothing (\derivedRolesJSON -> Just ("experimental_features",AO.object [derivedRolesJSON])) derivedRolesPair
 
     tableMetaToOrdJSON :: TableMetadata -> AO.Value
     tableMetaToOrdJSON ( TableMetadata
@@ -525,6 +549,12 @@ metadataToOrdJSON ( Metadata
       AO.object $ [("function", AO.toOrdered _fmFunction)]
       <> if _fmConfiguration == emptyFunctionConfig then []
          else pure ("configuration", AO.toOrdered _fmConfiguration)
+
+    derivedRolesQToOrdJSON :: AddDerivedRole -> AO.Value
+    derivedRolesQToOrdJSON AddDerivedRole{..} =
+      AO.object $ [ ("role_name", AO.toOrdered _adrRoleName)
+                  , ("role_set", AO.toOrdered _adrRoleSet)
+                  ]
 
     remoteSchemaQToOrdJSON :: AddRemoteSchemaQuery -> AO.Value
     remoteSchemaQToOrdJSON (AddRemoteSchemaQuery name definition comment) =

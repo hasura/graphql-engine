@@ -71,7 +71,6 @@ getUserInfoWithExpTimeTests = describe "getUserInfo" $ do
 
   let ourUnauthRole = mkRoleNameE "an0nymous"
 
-
   describe "started without admin secret" $ do
     it "gives admin by default" $ do
       mode <- setupAuthMode'E Nothing Nothing Nothing Nothing
@@ -568,7 +567,6 @@ mkRoleNameE = fromMaybe (error "fixme") . mkRoleName
 
 mkJSONPathE :: Text -> JSONPath
 mkJSONPathE = either error id . parseJSONPath
-
 
 newtype NoReporter a = NoReporter { runNoReporter :: IO a }
   deriving newtype (Functor, Applicative, Monad, MonadIO, MonadBase IO, MonadBaseControl IO)

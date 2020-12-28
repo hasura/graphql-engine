@@ -4,8 +4,6 @@ module Hasura.GraphQL.Schema.Table
   , tableUpdateColumnsEnum
   , tablePermissions
   , tableSelectPermissions
-  , tableUpdatePermissions
-  , tableDeletePermissions
   , tableSelectFields
   , tableColumns
   , tableSelectColumns
@@ -16,6 +14,7 @@ import           Hasura.Prelude
 
 import qualified Data.HashMap.Strict                as Map
 import qualified Data.HashSet                       as Set
+import qualified Data.List.NonEmpty                 as NE
 import qualified Language.GraphQL.Draft.Syntax      as G
 
 import           Data.Text.Extended
@@ -28,6 +27,8 @@ import           Hasura.GraphQL.Schema.Backend
 import           Hasura.RQL.DML.Internal            (getRolePermInfo)
 import           Hasura.RQL.Types
 
+import           Hasura.Session
+
 -- | Table select columns enum
 --
 -- Parser for an enum type that matches the columns of the given
@@ -38,9 +39,9 @@ import           Hasura.RQL.Types
 -- permissions for.
 tableSelectColumnsEnum
   :: forall m n r b
-   . (BackendSchema b, MonadSchema n m, MonadRole r m, MonadTableInfo b r m)
+   . (BackendSchema b, MonadSchema n m, MonadRoleSet r m, MonadTableInfo b r m)
   => TableName b
-  -> SelPermInfo b
+  -> CombinedSelPermInfo b
   -> m (Maybe (Parser 'Both n (Column b)))
 tableSelectColumnsEnum table selectPermissions = do
   tableGQLName <- getTableGQLName @b table
@@ -68,7 +69,7 @@ tableSelectColumnsEnum table selectPermissions = do
 -- permissions for.
 tableUpdateColumnsEnum
   :: forall m n r b
-   . (BackendSchema b, MonadSchema n m, MonadRole r m, MonadTableInfo b r m)
+   . (BackendSchema b, MonadSchema n m, MonadRoleSet r m, MonadTableInfo b r m)
   => TableName b
   -> UpdPermInfo b
   -> m (Maybe (Parser 'Both n (Column b)))
@@ -89,49 +90,43 @@ tableUpdateColumnsEnum table updatePermissions = do
       P.mkDefinition name (Just $ G.Description "column name") P.EnumValueInfo
 
 tablePermissions
-  :: forall m n r b. (Backend b, MonadSchema n m, MonadTableInfo b r m, MonadRole r m)
+  :: forall m n r b. (Backend b, MonadSchema n m, MonadTableInfo b r m)
   => TableName b
+  -> RoleName
   -> m (Maybe (RolePermInfo b))
-tablePermissions table = do
-  roleName  <- askRoleName
+tablePermissions table roleName = do
   tableInfo <- askTableInfo table
   pure $ getRolePermInfo roleName tableInfo
 
 tableSelectPermissions
-  :: forall m n r b. (Backend b, MonadSchema n m, MonadTableInfo b r m, MonadRole r m)
+  :: forall m n r b. (Backend b, MonadSchema n m, MonadTableInfo b r m, MonadRoleSet r m)
   => TableName b
-  -> m (Maybe (SelPermInfo b))
-tableSelectPermissions table = (_permSel =<<) <$> tablePermissions table
-
-tableUpdatePermissions
-  :: forall m n r b. (Backend b, MonadSchema n m, MonadTableInfo b r m, MonadRole r m)
-  => TableName b
-  -> m (Maybe (UpdPermInfo b))
-tableUpdatePermissions table = (_permUpd =<<) <$> tablePermissions table
-
-tableDeletePermissions
-  :: forall m n r b. (Backend b, MonadSchema n m, MonadTableInfo b r m, MonadRole r m)
-  => TableName b
-  -> m (Maybe (DelPermInfo b))
-tableDeletePermissions table = (_permDel =<<) <$> tablePermissions table
+  -> m (Maybe (CombinedSelPermInfo b))
+tableSelectPermissions table = do
+  RoleSet roleSet <- askRoleSet
+  roleSetPermissions <-
+    for (toList roleSet) $ \roleName ->
+      (_permSel =<<) <$> tablePermissions table roleName
+  let nonEmptySelPerms = NE.nonEmpty =<< sequenceA (filter isJust roleSetPermissions)
+  traverse combineSelectPermInfos nonEmptySelPerms
 
 tableSelectFields
-  :: forall m n r b. (Backend b, MonadSchema n m, MonadTableInfo b r m, MonadRole r m)
+  :: forall m n r b. (Backend b, MonadSchema n m, MonadTableInfo b r m, MonadRoleSet r m)
   => TableName b
-  -> SelPermInfo b
+  -> CombinedSelPermInfo b
   -> m [FieldInfo b]
 tableSelectFields table permissions = do
   tableFields <- _tciFieldInfoMap . _tiCoreInfo <$> askTableInfo table
   filterM canBeSelected $ Map.elems tableFields
   where
     canBeSelected (FIColumn columnInfo) =
-      pure $ Set.member (pgiColumn columnInfo) (spiCols permissions)
+      pure $ Map.member (pgiColumn columnInfo) (cspiCols permissions)
     canBeSelected (FIRelationship relationshipInfo) =
       isJust <$> tableSelectPermissions @_ @_ @_ @b (riRTable relationshipInfo)
     canBeSelected (FIComputedField computedFieldInfo) =
       case _cfiReturnType computedFieldInfo of
         CFRScalar _ ->
-          pure $ Set.member (_cfiName computedFieldInfo) $ spiScalarComputedFields permissions
+          pure $ Map.member (_cfiName computedFieldInfo) $ cspiScalarComputedFields permissions
         CFRSetofTable tableName ->
           isJust <$> tableSelectPermissions @_ @_ @_ @b tableName
     -- TODO (from master): Derive permissions for remote relationships
@@ -148,9 +143,9 @@ tableColumns table =
     columnInfo _             = Nothing
 
 tableSelectColumns
-  :: forall m n r b. (Backend b, MonadSchema n m, MonadTableInfo b r m, MonadRole r m)
+  :: forall m n r b. (Backend b, MonadSchema n m, MonadTableInfo b r m, MonadRoleSet r m)
   => TableName b
-  -> SelPermInfo b
+  -> CombinedSelPermInfo b
   -> m [ColumnInfo b]
 tableSelectColumns table permissions =
   mapMaybe columnInfo <$> tableSelectFields table permissions

@@ -44,7 +44,7 @@ mkSQLCount (CountQueryP1 tn (permFltr, mWc) mDistCols) =
   where
 
     finalWC =
-      toSQLBoolExp (S.QualTable tn) $
+      toSQLBoolExp (Just (S.QualTable tn)) $
       maybe permFltr (andAnnBoolExps permFltr) mWc
 
     innerSel = partSel
@@ -90,7 +90,7 @@ validateCountQWith sessVarBldr prepValBldr (CountQuery qt mDistCols mWhere) = do
     convBoolExp colInfoMap selPerm be sessVarBldr prepValBldr
 
   resolvedSelFltr <- convAnnBoolExpPartialSQL sessVarBldr $
-                     spiFilter selPerm
+                     cspiFilter selPerm
 
   return $ CountQueryP1
     qt
