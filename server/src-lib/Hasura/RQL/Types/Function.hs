@@ -130,7 +130,8 @@ emptyFunctionConfig = FunctionConfig Nothing Nothing
 -- https://hasura.io/docs/1.0/graphql/core/api-reference/schema-metadata-api/custom-functions.html#track-function-v2
 data TrackFunctionV2
   = TrackFunctionV2
-  { _tfv2Function      :: !QualifiedFunction
+  { _tfv2Source        :: !SourceName
+  , _tfv2Function      :: !QualifiedFunction
   , _tfv2Configuration :: !FunctionConfig
   } deriving (Show, Eq, Generic)
 $(deriveToJSON (aesonDrop 5 snakeCase) ''TrackFunctionV2)
@@ -138,7 +139,8 @@ $(deriveToJSON (aesonDrop 5 snakeCase) ''TrackFunctionV2)
 instance FromJSON TrackFunctionV2 where
   parseJSON = withObject "Object" $ \o ->
     TrackFunctionV2
-    <$> o .: "function"
+    <$> o .:? "source" .!= defaultSource
+    <*> o .: "function"
     <*> o .:? "configuration" .!= emptyFunctionConfig
 
 -- | Raw SQL function metadata from postgres

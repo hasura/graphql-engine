@@ -1,21 +1,21 @@
-{-# LANGUAGE AllowAmbiguousTypes #-} -- TODO avoid this language feature
+{-# LANGUAGE AllowAmbiguousTypes #-}
 
 module Hasura.GraphQL.Schema.Backend where
 
 import           Hasura.Prelude
 
-import           Data.Has
 import           Data.Aeson
+import           Data.Has
 
-import qualified Hasura.RQL.IR.Select         as IR
+import qualified Hasura.RQL.IR.Select          as IR
 
-import           Language.GraphQL.Draft.Syntax         (Nullability, Name)
-import           Hasura.GraphQL.Parser        ( InputFieldsParser, Kind (..), Parser
-                                              , UnpreparedValue (..), Opaque
-                                              , Definition, EnumValueInfo, FieldParser)
+import           Hasura.GraphQL.Parser         (Definition, EnumValueInfo, FieldParser,
+                                                InputFieldsParser, Kind (..), Opaque, Parser,
+                                                UnpreparedValue (..))
 import           Hasura.GraphQL.Parser.Class
 import           Hasura.GraphQL.Schema.Common
-import           Hasura.RQL.Types             hiding (EnumValueInfo)
+import           Hasura.RQL.Types              hiding (EnumValueInfo)
+import           Language.GraphQL.Draft.Syntax (Name, Nullability)
 
 
 class Backend b => BackendSchema (b :: BackendType) where
@@ -78,6 +78,6 @@ class Backend b => BackendSchema (b :: BackendType) where
        , MonadRole r m
        , Has QueryContext r
        )
-    => m (Parser 'Output n (HashMap (TableName b) (SelPermInfo b, PrimaryKeyColumns b, AnnotatedFields b)))
+    => m (Parser 'Output n (HashMap (TableName b) (SourceName, SourceConfig b, SelPermInfo b, PrimaryKeyColumns b, AnnotatedFields b)))
 
 type ComparisonExp b = OpExpG b (UnpreparedValue b)

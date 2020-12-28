@@ -10,6 +10,7 @@ module Hasura.RQL.DDL.Metadata.Types
   , DumpInternalState(..)
   , GetInconsistentMetadata(..)
   , DropInconsistentMetadata(..)
+  , ReplaceMetadata(..)
   ) where
 
 import           Hasura.Prelude
@@ -71,3 +72,20 @@ $(deriveToJSON defaultOptions ''DropInconsistentMetadata)
 
 instance FromJSON DropInconsistentMetadata where
   parseJSON _ = return DropInconsistentMetadata
+
+data ReplaceMetadata
+  = RMWithSources !Metadata
+  | RMWithoutSources !MetadataNoSources
+  deriving (Show, Eq)
+
+instance FromJSON ReplaceMetadata where
+  parseJSON = withObject "Object" $ \o -> do
+    version <- o .:? "version" .!= MVVersion1
+    case version of
+      MVVersion3 -> RMWithSources <$> parseJSON (Object o)
+      _          -> RMWithoutSources <$> parseJSON (Object o)
+
+instance ToJSON ReplaceMetadata where
+  toJSON = \case
+    RMWithSources v -> toJSON v
+    RMWithoutSources v -> toJSON v

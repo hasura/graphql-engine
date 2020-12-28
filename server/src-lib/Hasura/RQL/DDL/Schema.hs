@@ -42,6 +42,7 @@ import qualified Database.PG.Query              as Q
 import qualified Database.PostgreSQL.LibPQ      as PQ
 import qualified Text.Regex.TDFA                as TDFA
 
+import           Control.Monad.Trans.Control    (MonadBaseControl)
 import           Data.Aeson
 import           Data.Aeson.Casing
 import           Data.Aeson.TH
@@ -102,13 +103,16 @@ isSchemaCacheBuildRequiredRunSQL RunSQL {..} =
         { TDFA.captureGroups = False }
         "\\balter\\b|\\bdrop\\b|\\breplace\\b|\\bcreate function\\b|\\bcomment on\\b")
 
-runRunSQL :: (MonadTx m, CacheRWM m, HasSQLGenCtx m, MetadataM m) => RunSQL -> m EncJSON
-runRunSQL q@RunSQL {..}
+runRunSQL :: (MonadIO m, MonadBaseControl IO m, MonadError QErr m, CacheRWM m, HasSQLGenCtx m, MetadataM m)
+  => SourceName -> RunSQL -> m EncJSON
+runRunSQL source q@RunSQL {..}
   -- see Note [Checking metadata consistency in run_sql]
   | isSchemaCacheBuildRequiredRunSQL q
-  = withMetadataCheck rCascade $ execRawSQL rSql
+  = withMetadataCheck source rCascade rTxAccessMode $ execRawSQL rSql
   | otherwise
-  = execRawSQL rSql
+  = (_pcConfiguration <$> askPGSourceCache source) >>= \sourceConfig ->
+      liftEitherM $ runExceptT $
+      runLazyTx (_pscExecCtx sourceConfig) rTxAccessMode $ execRawSQL rSql
   where
     execRawSQL :: (MonadTx m) => Text -> m EncJSON
     execRawSQL =

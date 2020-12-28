@@ -18,6 +18,7 @@ module Hasura.GraphQL.Transport.HTTP
   ) where
 
 import           Control.Monad.Morph                         (hoist)
+import           Control.Monad.Trans.Control                 (MonadBaseControl)
 
 import           Hasura.EncJSON
 import           Hasura.GraphQL.Context
@@ -44,6 +45,7 @@ import qualified Data.Text                                   as T
 import qualified Database.PG.Query                           as Q
 import qualified Hasura.Backends.Postgres.Execute.RemoteJoin as RJ
 import qualified Hasura.GraphQL.Execute                      as E
+import qualified Hasura.GraphQL.Execute.Action               as EA
 import qualified Hasura.GraphQL.Execute.Query                as EQ
 import qualified Hasura.Logging                              as L
 import qualified Hasura.Server.Telemetry.Counters            as Telem
@@ -70,7 +72,7 @@ class Monad m => MonadExecuteQuery m where
   cacheLookup
     :: [QueryRootField (UnpreparedValue 'Postgres)]
     -- ^ Used to check that the query is cacheable
-    -> ExecutionPlan (Maybe (Maybe (RJ.RemoteJoins 'Postgres)))
+    -> ExecutionPlan action (Maybe (Maybe (RJ.RemoteJoins 'Postgres)))
     -- ^ Used to check if the elaborated query supports caching
     -> QueryCacheKey
     -- ^ Key that uniquely identifies the result of a query execution
@@ -114,7 +116,7 @@ instance MonadExecuteQuery m => MonadExecuteQuery (MetadataStorageT m) where
   cacheStore  a b = hoist (hoist lift) $ cacheStore  a b
 
 -- | A partial result, e.g. from a remote schema or postgres, which we'll
--- assemble into the final result for the client. 
+-- assemble into the final result for the client.
 --
 -- Nothing to do with graphql fragments...
 data ResultsFragment = ResultsFragment
@@ -129,6 +131,7 @@ runGQ
   :: forall m
    . ( HasVersion
      , MonadIO m
+     , MonadBaseControl IO m
      , MonadError QErr m
      , MonadReader E.ExecutionCtx m
      , E.MonadGQLExecutionCheck m
@@ -149,13 +152,13 @@ runGQ
   -> m (HttpResponse EncJSON)
 runGQ env logger reqId userInfo ipAddress reqHeaders queryType reqUnparsed = do
   (telemTimeTot_DT, (telemCacheHit, (telemQueryType, telemTimeIO_DT, telemLocality, resp))) <- withElapsedTime $ do
-    E.ExecutionCtx _ sqlGenCtx pgExecCtx {- planCache -} sc scVer httpManager enableAL <- ask
+    E.ExecutionCtx _ sqlGenCtx {- planCache -} sc scVer httpManager enableAL <- ask
 
     -- run system authorization on the GraphQL API
     reqParsed <- E.checkGQLExecution userInfo (reqHeaders, ipAddress) enableAL sc reqUnparsed
                  >>= flip onLeft throwError
 
-    (telemCacheHit, execPlan) <- E.getResolvedExecPlan env logger pgExecCtx {- planCache -}
+    (telemCacheHit, execPlan) <- E.getResolvedExecPlan env logger {- planCache -}
                                  userInfo sqlGenCtx sc scVer queryType
                                  httpManager reqHeaders (reqUnparsed, reqParsed)
     (telemCacheHit,) <$> case execPlan of
@@ -168,12 +171,15 @@ runGQ env logger reqId userInfo ipAddress reqHeaders queryType reqUnparsed = do
             pure (Telem.Query, 0, Telem.Local, HttpResponse cachedResponseData responseHeaders)
           Nothing -> do
             conclusion <- runExceptT $ forWithKey queryPlans $ \fieldName -> \case
-              E.ExecStepDB (tx, genSql) -> doQErr $ do
+              E.ExecStepDB pgExecCtx (tx, genSql) -> doQErr $ do
                 (telemTimeIO_DT, resp) <-
-                  runQueryDB reqId reqUnparsed fieldName tx genSql
+                  runQueryDB reqId reqUnparsed fieldName pgExecCtx tx genSql
                 return $ ResultsFragment telemTimeIO_DT Telem.Local resp []
               E.ExecStepRemote rsi gqlReq ->
                 runRemoteGQ httpManager fieldName rsi gqlReq
+              E.ExecStepAction aep -> do
+                (time, r) <- doQErr $ EA.runActionExecution aep
+                pure $ ResultsFragment time Telem.Empty r []
               E.ExecStepRaw json ->
                 buildRaw json
             out@(_, _, _, HttpResponse responseData _) <- buildResult Telem.Query conclusion responseHeaders
@@ -182,11 +188,14 @@ runGQ env logger reqId userInfo ipAddress reqHeaders queryType reqUnparsed = do
 
       E.MutationExecutionPlan mutationPlans -> do
         conclusion <- runExceptT $ forWithKey mutationPlans $ \fieldName -> \case
-          E.ExecStepDB (tx, responseHeaders) -> doQErr $ do
-            (telemTimeIO_DT, resp) <- runMutationDB reqId reqUnparsed userInfo tx
+          E.ExecStepDB pgExecCtx (tx, responseHeaders) -> doQErr $ do
+            (telemTimeIO_DT, resp) <- runMutationDB reqId reqUnparsed userInfo pgExecCtx tx
             return $ ResultsFragment telemTimeIO_DT Telem.Local resp responseHeaders
           E.ExecStepRemote rsi gqlReq ->
             runRemoteGQ httpManager fieldName rsi gqlReq
+          E.ExecStepAction (aep, hdrs) -> do
+            (time, r) <- doQErr $ EA.runActionExecution aep
+            pure $ ResultsFragment time Telem.Empty r hdrs
           E.ExecStepRaw json ->
             buildRaw json
         buildResult Telem.Mutation conclusion []
@@ -257,6 +266,7 @@ buildRaw json = do
 runGQBatched
   :: ( HasVersion
      , MonadIO m
+     , MonadBaseControl IO m
      , MonadError QErr m
      , MonadReader E.ExecutionCtx m
      , E.MonadGQLExecutionCheck m
@@ -306,13 +316,14 @@ runQueryDB
   => RequestId
   -> GQLReqUnparsed
   -> G.Name -- ^ name of the root field we're fetching
+  -> PGExecCtx
   -> Tracing.TraceT (LazyTxT QErr IO) EncJSON
   -> Maybe EQ.PreparedSql
   -> m (DiffTime, EncJSON)
   -- ^ Also return the time spent in the PG query; for telemetry.
-runQueryDB reqId query fieldName tx genSql =  do
+runQueryDB reqId query fieldName pgExecCtx tx genSql =  do
   -- log the generated SQL and the graphql query
-  E.ExecutionCtx logger _ pgExecCtx _ _ _ _ <- ask
+  E.ExecutionCtx logger _ _ _ _ _ <- ask
   logQueryLog logger query ((fieldName,) <$> genSql) reqId
   withElapsedTime $ trace ("Postgres Query for root field " <> G.unName fieldName) $
     Tracing.interpTraceT id $ hoist (runQueryTx pgExecCtx) tx
@@ -327,12 +338,13 @@ runMutationDB
   => RequestId
   -> GQLReqUnparsed
   -> UserInfo
+  -> PGExecCtx
   -> Tracing.TraceT (LazyTxT QErr IO) EncJSON
   -> m (DiffTime, EncJSON)
   -- ^ Also return 'Mutation' when the operation was a mutation, and the time
   -- spent in the PG query; for telemetry.
-runMutationDB reqId query userInfo tx =  do
-  E.ExecutionCtx logger _ pgExecCtx _ _ _ _ <- ask
+runMutationDB reqId query userInfo pgExecCtx tx =  do
+  E.ExecutionCtx logger _ _ _ _ _ <- ask
   -- log the graphql query
   logQueryLog logger query Nothing reqId
   ctx <- Tracing.currentContext

@@ -18,11 +18,15 @@ module Hasura.RQL.Types
   , QCtx(..)
   , HasQCtx(..)
   , mkAdminQCtx
+  , askPGSourceCache
+  , askTableCache
   , askTabInfo
-  , isTableTracked
-  , getTableInfo
+  , askTabInfoSource
   , askTableCoreInfo
+  , askTableCoreInfoSource
+  , getTableInfo
   , askFieldInfoMap
+  , askFieldInfoMapSource
   , askPGType
   , assertPGCol
   , askRelType
@@ -45,13 +49,14 @@ import           Hasura.Prelude
 import           Data.Aeson
 import qualified Data.HashMap.Strict                 as M
 import qualified Data.Text                           as T
+import qualified Database.PG.Query                   as Q
 import qualified Network.HTTP.Client                 as HTTP
 
 import           Control.Monad.Unique
 import           Data.Text.Extended
 
 import           Hasura.Backends.Postgres.Connection as R
-import           Hasura.Backends.Postgres.SQL.Types
+import           Hasura.Backends.Postgres.SQL.Types  hiding (TableName)
 import           Hasura.RQL.IR.BoolExp               as R
 import           Hasura.RQL.Types.Action             as R
 import           Hasura.RQL.Types.Column             as R
@@ -70,6 +75,8 @@ import           Hasura.RQL.Types.RemoteSchema       as R
 import           Hasura.RQL.Types.ScheduledTrigger   as R
 import           Hasura.RQL.Types.SchemaCache        as R
 import           Hasura.RQL.Types.SchemaCache.Build  as R
+import           Hasura.RQL.Types.SchemaCacheTypes   as R
+import           Hasura.RQL.Types.Source             as R
 import           Hasura.RQL.Types.Table              as R
 import           Hasura.SQL.Backend                  as R
 
@@ -97,41 +104,58 @@ class (Monad m) => UserInfoM m where
 
 instance (UserInfoM m) => UserInfoM (ReaderT r m) where
   askUserInfo = lift askUserInfo
+instance (UserInfoM m) => UserInfoM (ExceptT r m) where
+  askUserInfo = lift askUserInfo
 instance (UserInfoM m) => UserInfoM (StateT s m) where
   askUserInfo = lift askUserInfo
 instance (UserInfoM m) => UserInfoM (TraceT m) where
   askUserInfo = lift askUserInfo
 instance (UserInfoM m) => UserInfoM (MetadataT m) where
   askUserInfo = lift askUserInfo
+instance (UserInfoM m) => UserInfoM (TableCacheRT b m) where
+  askUserInfo = lift askUserInfo
+
+askPGSourceCache
+  :: (CacheRM m, MonadError QErr m)
+  => SourceName -> m (SourceInfo 'Postgres)
+askPGSourceCache source = do
+  pgSources <- scPostgres <$> askSchemaCache
+  onNothing (M.lookup source pgSources) $
+    throw400 NotExists $ "source with name " <> source <<> " not exists"
 
 askTabInfo
   :: (QErrM m, CacheRM m)
-  => QualifiedTable -> m (TableInfo 'Postgres)
-askTabInfo tabName = do
+  => SourceName -> QualifiedTable -> m (TableInfo 'Postgres)
+askTabInfo sourceName tabName = do
   rawSchemaCache <- askSchemaCache
-  liftMaybe (err400 NotExists errMsg) $ M.lookup tabName $ scTables rawSchemaCache
+  liftMaybe (err400 NotExists errMsg) $ do
+    sourceCache <- M.lookup sourceName $ scPostgres rawSchemaCache
+    M.lookup tabName $ _pcTables sourceCache
   where
-    errMsg = "table " <> tabName <<> " does not exist"
+    errMsg = "table " <> tabName <<> " does not exist " <> "in source: "
+              <> sourceNameToText sourceName
 
-isTableTracked :: SchemaCache -> QualifiedTable -> Bool
-isTableTracked sc qt =
-  isJust $ M.lookup qt $ scTables sc
+askTabInfoSource
+  :: (QErrM m, TableInfoRM 'Postgres m)
+  => QualifiedTable -> m (TableInfo 'Postgres)
+askTabInfoSource tableName = do
+  lookupTableInfo tableName >>= (`onNothing` throwTableDoesNotExist tableName)
 
 askTabInfoFromTrigger
   :: (QErrM m, CacheRM m)
-  => TriggerName -> m (TableInfo 'Postgres)
-askTabInfoFromTrigger trn = do
+  => SourceName -> TriggerName -> m (TableInfo 'Postgres)
+askTabInfoFromTrigger sourceName trn = do
   sc <- askSchemaCache
-  let tabInfos = M.elems $ scTables sc
+  let tabInfos = M.elems $ maybe mempty _pcTables $ M.lookup sourceName $ scPostgres sc
   liftMaybe (err400 NotExists errMsg) $ find (isJust.M.lookup trn._tiEventTriggerInfoMap) tabInfos
   where
     errMsg = "event trigger " <> triggerNameToTxt trn <<> " does not exist"
 
 askEventTriggerInfo
   :: (QErrM m, CacheRM m)
-  => TriggerName -> m EventTriggerInfo
-askEventTriggerInfo trn = do
-  ti <- askTabInfoFromTrigger trn
+  => SourceName -> TriggerName -> m EventTriggerInfo
+askEventTriggerInfo sourceName trn = do
+  ti <- askTabInfoFromTrigger sourceName trn
   let etim = _tiEventTriggerInfoMap ti
   liftMaybe (err400 NotExists errMsg) $ M.lookup trn etim
   where
@@ -151,6 +175,8 @@ instance (Monoid w, HasHttpManager m) => HasHttpManager (WriterT w m) where
 instance (HasHttpManager m) => HasHttpManager (TraceT m) where
   askHttpManager = lift askHttpManager
 instance (HasHttpManager m) => HasHttpManager (MetadataT m) where
+  askHttpManager = lift askHttpManager
+instance (HasHttpManager m) => HasHttpManager (LazyTxT QErr m) where
   askHttpManager = lift askHttpManager
 
 
@@ -192,6 +218,9 @@ instance (HasRemoteSchemaPermsCtx m)
 instance (HasRemoteSchemaPermsCtx m)
          => HasRemoteSchemaPermsCtx (MetadataT m) where
   askRemoteSchemaPermsCtx = lift askRemoteSchemaPermsCtx
+instance (HasRemoteSchemaPermsCtx m)
+         => HasRemoteSchemaPermsCtx (LazyTxT QErr m) where
+  askRemoteSchemaPermsCtx = lift askRemoteSchemaPermsCtx
 
 class (Monad m) => HasSQLGenCtx m where
   askSQLGenCtx :: m SQLGenCtx
@@ -207,6 +236,12 @@ instance (HasSQLGenCtx m) => HasSQLGenCtx (TableCoreCacheRT b m) where
 instance (HasSQLGenCtx m) => HasSQLGenCtx (TraceT m) where
   askSQLGenCtx = lift askSQLGenCtx
 instance (HasSQLGenCtx m) => HasSQLGenCtx (MetadataT m) where
+  askSQLGenCtx = lift askSQLGenCtx
+instance (HasSQLGenCtx m) => HasSQLGenCtx (Q.TxET QErr m) where
+  askSQLGenCtx = lift askSQLGenCtx
+instance (HasSQLGenCtx m) => HasSQLGenCtx (LazyTxT QErr m) where
+  askSQLGenCtx = lift askSQLGenCtx
+instance (HasSQLGenCtx m) => HasSQLGenCtx (TableCacheRT b m) where
   askSQLGenCtx = lift askSQLGenCtx
 
 class (Monad m) => HasSystemDefined m where
@@ -224,7 +259,7 @@ instance (HasSystemDefined m) => HasSystemDefined (TraceT m) where
 newtype HasSystemDefinedT m a
   = HasSystemDefinedT { unHasSystemDefinedT :: ReaderT SystemDefined m a }
   deriving ( Functor, Applicative, Monad, MonadTrans, MonadIO, MonadUnique, MonadError e, MonadTx
-           , HasHttpManager, HasSQLGenCtx, TableCoreInfoRM b, CacheRM, UserInfoM, HasRemoteSchemaPermsCtx)
+           , HasHttpManager, HasSQLGenCtx, SourceM, TableCoreInfoRM b, CacheRM, UserInfoM, HasRemoteSchemaPermsCtx)
 
 runHasSystemDefinedT :: SystemDefined -> HasSystemDefinedT m a -> m a
 runHasSystemDefinedT systemDefined = flip runReaderT systemDefined . unHasSystemDefinedT
@@ -242,12 +277,41 @@ getTableInfo :: (QErrM m) => QualifiedTable -> HashMap QualifiedTable a -> m a
 getTableInfo tableName infoMap =
   M.lookup tableName infoMap `onNothing` throwTableDoesNotExist tableName
 
-askTableCoreInfo :: (QErrM m, TableCoreInfoRM 'Postgres m) => QualifiedTable -> m (TableCoreInfo 'Postgres)
-askTableCoreInfo tableName =
+askTableCache
+  :: (QErrM m, CacheRM m) => SourceName -> m (TableCache 'Postgres)
+askTableCache sourceName = do
+  schemaCache <- askSchemaCache
+  case M.lookup sourceName (scPostgres schemaCache) of
+    Just tableCache -> pure $ _pcTables tableCache
+    Nothing         -> throw400 NotExists $ "source " <> sourceName <<> " does not exist"
+
+askTableCoreInfo
+  :: (QErrM m, CacheRM m) => SourceName -> TableName 'Postgres -> m (TableCoreInfo 'Postgres)
+askTableCoreInfo sourceName tableName =
+  _tiCoreInfo <$> askTabInfo sourceName tableName
+
+-- | Asking for a table core info without explicit @'SourceName' argument.
+-- The source name is implicitly inferred from @'SourceM' via @'TableCoreInfoRM'.
+-- This is useful in RQL DML queries which are executed in a particular source database.
+askTableCoreInfoSource
+  :: (QErrM m, TableCoreInfoRM 'Postgres m) => QualifiedTable -> m (TableCoreInfo 'Postgres)
+askTableCoreInfoSource tableName =
   lookupTableCoreInfo tableName >>= (`onNothing` throwTableDoesNotExist tableName)
 
-askFieldInfoMap :: (QErrM m, TableCoreInfoRM 'Postgres m) => QualifiedTable -> m (FieldInfoMap (FieldInfo 'Postgres))
-askFieldInfoMap = fmap _tciFieldInfoMap . askTableCoreInfo
+askFieldInfoMap
+  :: (QErrM m, CacheRM m)
+  => SourceName -> TableName 'Postgres -> m (FieldInfoMap (FieldInfo 'Postgres))
+askFieldInfoMap sourceName tableName =
+  _tciFieldInfoMap . _tiCoreInfo <$> askTabInfo sourceName tableName
+
+-- | Asking for a table's fields info without explicit @'SourceName' argument.
+-- The source name is implicitly inferred from @'SourceM' via @'TableCoreInfoRM'.
+-- This is useful in RQL DML queries which are executed in a particular source database.
+askFieldInfoMapSource
+  :: (QErrM m, TableCoreInfoRM 'Postgres m)
+  => QualifiedTable -> m (FieldInfoMap (FieldInfo 'Postgres))
+askFieldInfoMapSource tableName =
+  _tciFieldInfoMap <$> askTableCoreInfoSource tableName
 
 askPGType
   :: (MonadError QErr m)

@@ -8,11 +8,13 @@ import qualified Data.HashSet                     as Set
 import qualified Data.String                      as DataString
 import qualified Data.Text                        as T
 import qualified Database.PG.Query                as Q
+import qualified Network.WebSockets               as WS
+
 
 import           Data.Char                        (toLower)
 import           Data.Time
+import           Data.URL.Template
 import           Network.Wai.Handler.Warp         (HostPreference)
-import qualified Network.WebSockets               as WS
 
 import qualified Hasura.Cache.Bounded             as Cache
 import qualified Hasura.GraphQL.Execute.LiveQuery as LQ
@@ -20,7 +22,7 @@ import qualified Hasura.GraphQL.Execute.Plan      as E
 import qualified Hasura.Logging                   as L
 
 import           Hasura.Prelude
-import           Hasura.RQL.Types                 (RemoteSchemaPermsCtx (..))
+import           Hasura.RQL.Types
 import           Hasura.Server.Auth
 import           Hasura.Server.Cors
 import           Hasura.Session
@@ -127,17 +129,40 @@ data DowngradeOptions
   , dgoDryRun        :: !Bool
   } deriving (Show, Eq)
 
-data RawConnInfo =
-  RawConnInfo
-  { connHost     :: !(Maybe String)
-  , connPort     :: !(Maybe Int)
-  , connUser     :: !(Maybe String)
+data PostgresConnInfo a
+  = PostgresConnInfo
+  { _pciDatabaseConn :: !a
+  , _pciRetries      :: !(Maybe Int)
+  } deriving (Show, Eq, Functor, Foldable, Traversable)
+
+data PostgresRawConnDetails =
+  PostgresRawConnDetails
+  { connHost     :: !String
+  , connPort     :: !Int
+  , connUser     :: !String
   , connPassword :: !String
-  , connUrl      :: !(Maybe String)
-  , connDatabase :: !(Maybe String)
+  , connDatabase :: !String
   , connOptions  :: !(Maybe String)
-  , connRetries  :: !(Maybe Int)
   } deriving (Eq, Read, Show)
+
+data PostgresRawConnInfo
+  = PGConnDatabaseUrl !URLTemplate
+  | PGConnDetails !PostgresRawConnDetails
+  deriving (Show, Eq)
+
+rawConnDetailsToUrl :: PostgresRawConnDetails -> URLTemplate
+rawConnDetailsToUrl =
+  mkPlainURLTemplate . rawConnDetailsToUrlText
+
+rawConnDetailsToUrlText :: PostgresRawConnDetails -> Text
+rawConnDetailsToUrlText PostgresRawConnDetails{..} =
+  T.pack $
+    "postgresql://" <> connUser <>
+    ":" <> connPassword <>
+    "@" <> connHost <>
+    ":" <> show connPort <>
+    "/" <> connDatabase <>
+    maybe "" ("?options=" <>) connOptions
 
 data HGECommandG a
   = HCServe !a
@@ -161,19 +186,20 @@ $(J.deriveJSON (J.defaultOptions { J.constructorTagModifier = map toLower })
 
 instance Hashable API
 
-$(J.deriveJSON (J.aesonDrop 4 J.camelCase){J.omitNothingFields=True} ''RawConnInfo)
+$(J.deriveJSON (J.aesonDrop 4 J.camelCase){J.omitNothingFields=True} ''PostgresRawConnDetails)
 
 type HGECommand impl = HGECommandG (ServeOptions impl)
 type RawHGECommand impl = HGECommandG (RawServeOptions impl)
 
-data HGEOptionsG a
+data HGEOptionsG a b
   = HGEOptionsG
-  { hoConnInfo :: !RawConnInfo
-  , hoCommand  :: !(HGECommandG a)
+  { hoConnInfo      :: !(PostgresConnInfo a)
+  , hoMetadataDbUrl :: !(Maybe String)
+  , hoCommand       :: !(HGECommandG b)
   } deriving (Show, Eq)
 
-type RawHGEOptions impl = HGEOptionsG (RawServeOptions impl)
-type HGEOptions impl = HGEOptionsG (ServeOptions impl)
+type RawHGEOptions impl = HGEOptionsG (Maybe PostgresRawConnInfo) (RawServeOptions impl)
+type HGEOptions impl = HGEOptionsG UrlConf (ServeOptions impl)
 
 type Env = [(String, String)]
 
@@ -293,6 +319,9 @@ instance FromEnv L.LogLevel where
 
 instance FromEnv Cache.CacheSize where
   fromEnv = Cache.parseCacheSize
+
+instance FromEnv URLTemplate where
+  fromEnv = parseURLTemplate . T.pack
 
 type WithEnv a = ReaderT Env (ExceptT String Identity) a
 

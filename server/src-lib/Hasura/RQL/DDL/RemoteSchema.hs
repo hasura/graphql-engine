@@ -14,10 +14,10 @@ module Hasura.RQL.DDL.RemoteSchema
 import           Hasura.Prelude
 import           Hasura.RQL.DDL.RemoteSchema.Permission
 
-import qualified Data.Environment            as Env
-import qualified Data.HashMap.Strict         as Map
-import qualified Data.HashMap.Strict.InsOrd  as OMap
-import qualified Data.HashSet                as S
+import qualified Data.Environment                       as Env
+import qualified Data.HashMap.Strict                    as Map
+import qualified Data.HashMap.Strict.InsOrd             as OMap
+import qualified Data.HashSet                           as S
 
 import           Control.Monad.Unique
 import           Data.Text.Extended
@@ -26,7 +26,7 @@ import           Hasura.EncJSON
 import           Hasura.GraphQL.RemoteServer
 import           Hasura.RQL.DDL.Deps
 import           Hasura.RQL.Types
-import           Hasura.Server.Version       (HasVersion)
+import           Hasura.Server.Version                  (HasVersion)
 
 import           Hasura.Session
 
@@ -34,7 +34,6 @@ runAddRemoteSchema
   :: ( HasVersion
      , QErrM m
      , CacheRWM m
-     , MonadTx m
      , MonadIO m
      , MonadUnique m
      , HasHttpManager m
@@ -56,7 +55,6 @@ runAddRemoteSchema env q@(AddRemoteSchemaQuery name defn comment) = do
 runAddRemoteSchemaPermissions
   :: ( QErrM m
      , CacheRWM m
-     , MonadTx m
      , HasRemoteSchemaPermsCtx m
      , MetadataM m
      )
@@ -89,7 +87,6 @@ runAddRemoteSchemaPermissions q = do
 runDropRemoteSchemaPermissions
   :: ( QErrM m
      , CacheRWM m
-     , MonadTx m
      , MetadataM m
      )
   => DropRemoteSchemaPermissions

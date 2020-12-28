@@ -12,11 +12,11 @@ where
 import           Hasura.Prelude
 
 import qualified Data.Aeson                                    as J
+import qualified Data.HashMap.Strict                           as Map
 import qualified Data.HashMap.Strict.InsOrd                    as OM
 import qualified Data.HashSet.InsOrd                           as SetIns
 import qualified Data.Text                                     as T
 import qualified Data.Vector                                   as V
-import qualified Data.HashMap.Strict                           as Map
 import qualified Language.GraphQL.Draft.Parser                 as G
 import qualified Language.GraphQL.Draft.Syntax                 as G
 import qualified Language.Haskell.TH.Syntax                    as TH
@@ -38,22 +38,15 @@ import           Hasura.RQL.DDL.Metadata.Types
 import           Hasura.RQL.Types
 
 genMetadata :: Gen Metadata
-genMetadata = do
-  version <- arbitrary
+genMetadata =
   Metadata
     <$> arbitrary
-    <*> genFunctionsMetadata version
     <*> arbitrary
     <*> arbitrary
     <*> arbitrary
     <*> arbitrary
     <*> arbitrary
     <*> arbitrary
-  where
-    genFunctionsMetadata :: MetadataVersion -> Gen Functions
-    genFunctionsMetadata = \case
-      MVVersion1 -> OM.fromList . map (\qf -> (qf, FunctionMetadata qf emptyFunctionConfig)) <$> arbitrary
-      MVVersion2 -> arbitrary
 
 instance (Arbitrary k, Eq k, Hashable k, Arbitrary v) => Arbitrary (InsOrdHashMap k v) where
   arbitrary = OM.fromList <$> arbitrary
@@ -68,6 +61,18 @@ instance Arbitrary MetadataVersion where
   arbitrary = genericArbitrary
 
 instance Arbitrary FunctionMetadata where
+  arbitrary = genericArbitrary
+
+instance Arbitrary PostgresPoolSettings where
+  arbitrary = genericArbitrary
+
+instance Arbitrary PostgresSourceConnInfo where
+  arbitrary = genericArbitrary
+
+instance Arbitrary SourceConfiguration where
+  arbitrary = genericArbitrary
+
+instance Arbitrary SourceMetadata where
   arbitrary = genericArbitrary
 
 instance Arbitrary TableCustomRootFields where
