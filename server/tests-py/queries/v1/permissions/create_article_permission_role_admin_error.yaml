@@ -2,26 +2,9 @@ description: Create permission with admin as role (error)
 url: /v1/query
 status: 400
 response:
-  internal:
-  - definition:
-      role: admin
-      comment:
-      permission:
-        allow_aggregations: false
-        computed_fields: []
-        columns: '*'
-        filter:
-          id: X-Hasura-User-Id
-      table:
-        schema: public
-        name: author
-    reason: 'in table "author": in permission for role "admin": cannot define permission
-      for admin role'
-    type: select_permission
   path: $.args
-  error: 'in table "author": in permission for role "admin": cannot define permission
-    for admin role'
-  code: constraint-violation
+  error: select permission already defined on table "author" with role "admin"
+  code: already-exists
 query:
   type: create_select_permission
   args:

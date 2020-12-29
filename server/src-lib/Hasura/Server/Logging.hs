@@ -15,29 +15,30 @@ module Hasura.Server.Logging
   , HttpLog (..)
   ) where
 
+import           Hasura.Prelude
+
+import qualified Data.ByteString.Lazy      as BL
+import qualified Network.HTTP.Types        as HTTP
+import qualified Network.Wai.Extended      as Wai
+
 import           Data.Aeson
 import           Data.Aeson.Casing
 import           Data.Aeson.TH
 import           Data.Int                  (Int64)
 
-import qualified Data.ByteString.Lazy      as BL
-import qualified Data.Text                 as T
-import qualified Network.HTTP.Types        as HTTP
-import qualified Network.Wai.Extended      as Wai
-
 import           Hasura.HTTP
 import           Hasura.Logging
-import           Hasura.Prelude
 import           Hasura.RQL.Types
 import           Hasura.Server.Compression
-import           Hasura.Server.Utils
+import           Hasura.Server.Types
 import           Hasura.Session
 import           Hasura.Tracing            (TraceT)
+
 
 data StartupLog
   = StartupLog
   { slLogLevel :: !LogLevel
-  , slKind     :: !T.Text
+  , slKind     :: !Text
   , slInfo     :: !Value
   } deriving (Show, Eq)
 
@@ -54,7 +55,7 @@ instance ToEngineLog StartupLog Hasura where
 data PGLog
   = PGLog
   { plLogLevel :: !LogLevel
-  , plMessage  :: !T.Text
+  , plMessage  :: !Text
   } deriving (Show, Eq)
 
 instance ToJSON PGLog where
@@ -68,7 +69,7 @@ instance ToEngineLog PGLog Hasura where
 data MetadataLog
   = MetadataLog
   { mlLogLevel :: !LogLevel
-  , mlMessage  :: !T.Text
+  , mlMessage  :: !Text
   , mlInfo     :: !Value
   } deriving (Show, Eq)
 
@@ -91,11 +92,11 @@ data WebHookLog
   = WebHookLog
   { whlLogLevel   :: !LogLevel
   , whlStatusCode :: !(Maybe HTTP.Status)
-  , whlUrl        :: !T.Text
+  , whlUrl        :: !Text
   , whlMethod     :: !HTTP.StdMethod
   , whlError      :: !(Maybe HttpException)
-  , whlResponse   :: !(Maybe T.Text)
-  , whlMessage    :: !(Maybe T.Text)
+  , whlResponse   :: !(Maybe Text)
+  , whlMessage    :: !(Maybe Text)
   } deriving (Show)
 
 instance ToEngineLog WebHookLog Hasura where
@@ -162,9 +163,9 @@ instance HttpLog m => HttpLog (TraceT m) where
 data HttpInfoLog
   = HttpInfoLog
   { hlStatus      :: !HTTP.Status
-  , hlMethod      :: !T.Text
+  , hlMethod      :: !Text
   , hlSource      :: !Wai.IpAddress
-  , hlPath        :: !T.Text
+  , hlPath        :: !Text
   , hlHttpVersion :: !HTTP.HttpVersion
   , hlCompression :: !(Maybe CompressionType)
   , hlHeaders     :: ![HTTP.Header]

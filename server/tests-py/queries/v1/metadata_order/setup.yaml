@@ -191,6 +191,7 @@ args:
 - type: add_collection_to_allowlist
   args:
     collection: collection_1
+
 - type: add_collection_to_allowlist
   args:
     collection: collection_2

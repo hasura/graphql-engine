@@ -1,3 +1,5 @@
+-- TODO (karthikeyan): This file should be removed, this file has been kept for now to help with
+-- the conflict resolution
 select
   json_build_object(
     'tables', tables.items :: json,
@@ -11,7 +13,8 @@ select
     'custom_types', custom_types.item,
     'actions', actions.items,
     'remote_relationships', remote_relationships.items,
-    'cron_triggers', cron_triggers.items
+    'cron_triggers', cron_triggers.items,
+    'remote_schema_permissions', remote_schema_permissions.items
   )
 from
   (
@@ -247,4 +250,20 @@ from
       ) as items
       from
           hdb_catalog.hdb_cron_triggers
-  ) as cron_triggers
+  ) as cron_triggers,
+  (
+    select
+      coalesce(
+        json_agg(
+          json_build_object(
+            'remote_schema', remote_schema_name,
+            'role', role_name,
+            'definition', definition :: json,
+            'comment', comment
+          )
+        ),
+        '[]'
+      ) as items
+  from
+      hdb_catalog.hdb_remote_schema_permission
+  ) as remote_schema_permissions

@@ -1,0 +1,20 @@
+description: When remote schema permissions are enabled, it should not be accesible to unknown roles
+url: /v1/graphql
+status: 200
+headers:
+  X-Hasura-Role: unknown_role
+query:
+  query: |
+    {
+      messages(where: {id: {eq: 1}}) {
+        id
+        name
+        msg
+      }
+    }
+response:
+  errors:
+    - extensions:
+        path: $.selectionSet.messages
+        code: validation-failed
+      message: "field \"messages\" not found in type: 'query_root'"

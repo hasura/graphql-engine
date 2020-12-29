@@ -26,18 +26,29 @@ const getColumnInfo = (
 
   const isDisabled = isAutoIncrement || isGenerated || isIdentity;
 
-  let columnValueType;
+  let columnValueType: 'default' | 'null' | 'value' | '';
   switch (true) {
+    case isEditing:
+      columnValueType = '';
+      break;
+
     case !isEditing && !clone && (isIdentity || hasDefault || isGenerated):
     case clone && isDisabled:
     case identityGeneration === 'ALWAYS':
       columnValueType = 'default';
       break;
 
+    case clone &&
+      clone[col.column_name] !== undefined &&
+      clone[col.column_name] !== null:
+      columnValueType = 'value';
+      break;
+
     case prevValue === null:
     case !prevValue && isNullable:
       columnValueType = 'null';
       break;
+
     default:
       columnValueType = 'value';
       break;

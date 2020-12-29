@@ -3,6 +3,8 @@ module Hasura.GraphQL.Transport.HTTP.Protocol
   , GQLBatchedReqs(..)
   , GQLReqUnparsed
   , GQLReqParsed
+  , GQLReqOutgoing
+  , renderGQLReqOutgoing 
   , toParsed
   , GQLQueryText(..)
   , GQLExecDoc(..)
@@ -29,11 +31,13 @@ import qualified Data.Aeson.TH                 as J
 import qualified Data.ByteString.Lazy          as BL
 import qualified Data.HashMap.Strict           as Map
 import qualified Language.GraphQL.Draft.Parser as G
+import qualified Language.GraphQL.Draft.Printer as G
 import qualified Language.GraphQL.Draft.Syntax as G
 
+-- TODO: why not just `G.ExecutableDocument G.Name`?
 newtype GQLExecDoc
   = GQLExecDoc { unGQLExecDoc :: [G.ExecutableDefinition G.Name] }
-  deriving (Ord, Show, Eq, Hashable,Lift)
+  deriving (Ord, Show, Eq, Hashable, Lift)
 
 instance J.FromJSON GQLExecDoc where
   parseJSON v = GQLExecDoc . G.getExecutableDefinitions <$> J.parseJSON v
@@ -50,6 +54,9 @@ instance J.FromJSON OperationName where
 
 type VariableValues = Map.HashMap G.Name J.Value
 
+-- | https://graphql.org/learn/serving-over-http/#post-request
+--
+-- See 'GQLReqParsed' for invariants.
 data GQLReq a
   = GQLReq
   { _grOperationName :: !(Maybe OperationName)
@@ -82,10 +89,43 @@ instance J.FromJSON a => J.FromJSON (GQLBatchedReqs a) where
 newtype GQLQueryText
   = GQLQueryText
   { _unGQLQueryText :: Text
-  } deriving (Show, Eq, Ord, J.FromJSON, J.ToJSON, Hashable, Lift, IsString)
+  } deriving (Show, Eq, Ord, J.FromJSON, J.ToJSON, Hashable, IsString)
 
+-- | We've not yet parsed the graphql query string parameter of the POST.
 type GQLReqUnparsed = GQLReq GQLQueryText
+
+-- | Invariants:
+--
+--    - when '_grOperationName' is @Nothing@, '_grQuery' contains exactly one 
+--      'ExecutableDefinitionOperation' (and zero or more 'ExecutableDefinitionFragment')
+--
+--    - when '_grOperationName' is present, there is a corresponding 
+--      'ExecutableDefinitionOperation' in '_grQuery'
 type GQLReqParsed = GQLReq GQLExecDoc
+
+-- | A simplified form of 'GQLReqParsed' which is more ergonomic in particular
+-- for APIs that act as graphql /clients/ (e.g. in remote relationship
+-- execution). This is a "desugared" request in which fragments have been
+-- inlined (see 'inlineSelectionSet'), and the operation ('_grOperationName')
+-- to be executed is the only payload (in contrast to a 'G.ExecutableDocument'
+-- with possibly many named operations).
+--
+-- '_grOperationName' is essentially ignored here, but should correspond with
+-- '_todName' if present.
+--
+-- These could maybe benefit from an HKD refactoring.
+type GQLReqOutgoing = GQLReq (G.TypedOperationDefinition G.NoFragments G.Name)
+
+renderGQLReqOutgoing :: GQLReqOutgoing -> GQLReqUnparsed
+renderGQLReqOutgoing = fmap (GQLQueryText . G.renderExecutableDoc . toExecDoc . inlineFrags)
+  where
+    -- This is essentially a 'coerce' (TODO unsafeCoerce optimization possible)?
+    inlineFrags :: G.TypedOperationDefinition G.NoFragments var 
+                -> G.TypedOperationDefinition G.FragmentSpread var 
+    inlineFrags opDef = 
+      opDef { G._todSelectionSet = G.fmapSelectionSetFragment G.inline $ G._todSelectionSet opDef }
+    toExecDoc = 
+      G.ExecutableDocument . pure . G.ExecutableDefinitionOperation . G.OperationDefinitionTyped
 
 toParsed :: (MonadError QErr m ) => GQLReqUnparsed -> m GQLReqParsed
 toParsed req = case G.parseExecutableDoc gqlText of

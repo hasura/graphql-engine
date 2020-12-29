@@ -7,6 +7,7 @@ response:
       using:
         foreign_key_constraint_on: published_on
       name: author
+      source: default
       comment:
       table:
         schema: public

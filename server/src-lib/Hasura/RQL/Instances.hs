@@ -19,7 +19,6 @@ import           Control.DeepSeq               (NFData (..))
 import           Data.Functor.Product
 import           Data.GADT.Compare
 import           Data.Text
-import           Instances.TH.Lift             ()
 import           System.Cron.Parser
 import           System.Cron.Types
 
@@ -27,6 +26,10 @@ instance NFData G.FragmentDefinition
 instance NFData G.GType
 instance NFData G.OperationType
 instance NFData G.VariableDefinition
+instance NFData G.SchemaDefinition
+instance NFData G.RootOperationTypeDefinition
+instance NFData G.TypeSystemDefinition
+instance NFData G.SchemaDocument
 instance NFData UT.Variable
 instance NFData UT.TemplateItem
 instance NFData UT.URLTemplate
@@ -42,6 +45,16 @@ instance (NFData (a b), NFData b) => NFData (G.InlineFragment a b)
 instance (NFData (a b), NFData b) => NFData (G.OperationDefinition a b)
 instance (NFData (a b), NFData b) => NFData (G.Selection a b)
 instance (NFData (a b), NFData b) => NFData (G.TypedOperationDefinition a b)
+instance NFData G.InputValueDefinition
+instance NFData a => NFData (G.InputObjectTypeDefinition a)
+instance (NFData a) => NFData (G.ObjectTypeDefinition a)
+instance NFData G.UnionTypeDefinition
+instance NFData G.EnumTypeDefinition
+instance NFData G.EnumValueDefinition
+instance (NFData a) => NFData (G.FieldDefinition a)
+instance NFData G.ScalarTypeDefinition
+instance (NFData a, NFData b) => NFData (G.InterfaceTypeDefinition a b)
+instance (NFData a, NFData b) => NFData (G.TypeDefinition a b)
 instance NFData a => NFData (G.Value a)
 
 deriving instance NFData G.Description
@@ -95,7 +108,7 @@ instance (GCompare f, GCompare g) => GCompare (Product f g) where
 
 instance J.FromJSON CronSchedule where
   parseJSON = J.withText "CronSchedule" $ \t ->
-    either fail pure $ parseCronSchedule t
+    onLeft (parseCronSchedule t) fail
 
 instance J.ToJSON CronSchedule where
   toJSON = J.String . serializeCronSchedule
