@@ -10,7 +10,8 @@ log() {
 }
 
 DEFAULT_MIGRATIONS_DIR="/hasura-migrations"
-TEMP_MIGRATIONS_DIR="/tmp/hasura-migrations"
+DEFAULT_SEEDS_DIR="/hasura-seeds"
+TEMP_PROJECT_DIR="/tmp/hasura-migrations"
 
 # configure the target database for migrations
 if [ ${HASURA_GRAPHQL_MIGRATIONS_DATABASE_ENV_VAR} ]; then
@@ -66,12 +67,12 @@ if [ -z ${HASURA_GRAPHQL_MIGRATIONS_DIR+x} ]; then
     HASURA_GRAPHQL_MIGRATIONS_DIR="$DEFAULT_MIGRATIONS_DIR"
 fi
 
-# apply migrations if the directory exist
+# apply migrations if the directory exists
 if [ -d "$HASURA_GRAPHQL_MIGRATIONS_DIR" ]; then
     log "migrations-apply" "applying migrations from $HASURA_GRAPHQL_MIGRATIONS_DIR"
-    mkdir -p "$TEMP_MIGRATIONS_DIR"
-    cp -a "$HASURA_GRAPHQL_MIGRATIONS_DIR/." "$TEMP_MIGRATIONS_DIR/migrations/"
-    cd "$TEMP_MIGRATIONS_DIR"
+    mkdir -p "$TEMP_PROJECT_DIR"
+    cp -a "$HASURA_GRAPHQL_MIGRATIONS_DIR/." "$TEMP_PROJECT_DIR/migrations/"
+    cd "$TEMP_PROJECT_DIR"
     echo "endpoint: http://localhost:$HASURA_GRAPHQL_MIGRATIONS_SERVER_PORT" > config.yaml
     hasura-cli migrate apply
     # check if metadata.[yaml|json] exist and apply
@@ -84,6 +85,18 @@ if [ -d "$HASURA_GRAPHQL_MIGRATIONS_DIR" ]; then
     fi
 else
     log "migrations-apply" "directory $HASURA_GRAPHQL_MIGRATIONS_DIR does not exist, skipping migrations"
+fi
+
+# apply seeds if the directory exists
+if [ -d "$HASURA_GRAPHQL_SEEDS_DIR" ]; then
+ log "migrations-apply" "applying seeds from $HASURA_GRAPHQL_SEEDS_DIR"
+ mkdir -p "$TEMP_PROJECT_DIR"
+ cp -a "$HASURA_GRAPHQL_SEEDS_DIR/." "$TEMP_PROJECT_DIR/seeds/"
+ cd "$TEMP_PROJECT_DIR"
+ echo "endpoint: http://localhost:$HASURA_GRAPHQL_MIGRATIONS_SERVER_PORT" > config.yaml
+ hasura-cli seeds apply
+else
+ log "migrations-apply" "directory $HASURA_GRAPHQL_SEEDS_DIR does not exist, skipping seeds"
 fi
 
 # kill graphql engine that we started earlier

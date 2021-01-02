@@ -86,6 +86,14 @@ If it has been stored in a directory other than the default then it can be confi
 
   A path to the migrations directory.
 
+### Seeds Directory (Optional)
+
+Seeds again are either mounted or built into the image.
+
+- `HASURA_GRAPHQL_SEEDS_DIR` (default=`/hasura-seeds`)
+
+  A path to the seeds directory.
+
 ### Database (One of them required)
 
 The following are listed in order of evaluation, therefore if setting the first, the latter will not be evaluated.

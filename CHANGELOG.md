@@ -223,6 +223,7 @@ arguments.
 - docs: add tabs for console / cli / api workflows (close #3593) (#4948)
 - docs: add postgres concepts page to docs (close #4440) (#4471)
 - docs: add guides on connecting hasura cloud to pg databases of different cloud vendors (#5948)
+- cli: apply seeds in cli-migrations image (#6413)
 
 ## `v1.3.2`
 

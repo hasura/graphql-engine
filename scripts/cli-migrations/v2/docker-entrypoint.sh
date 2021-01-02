@@ -84,7 +84,7 @@ if [ -z ${HASURA_GRAPHQL_SEEDS_DIR+x} ]; then
     HASURA_GRAPHQL_SEEDS_DIR="$DEFAULT_SEEDS_DIR"
 fi
 
-# apply migrations if the directory exist
+# apply migrations if the directory exists
 if [ -d "$HASURA_GRAPHQL_MIGRATIONS_DIR" ]; then
     log "migrations-apply" "applying migrations from $HASURA_GRAPHQL_MIGRATIONS_DIR"
     mkdir -p "$TEMP_PROJECT_DIR"
@@ -97,7 +97,7 @@ else
     log "migrations-apply" "directory $HASURA_GRAPHQL_MIGRATIONS_DIR does not exist, skipping migrations"
 fi
 
-# apply metadata if the directory exist
+# apply metadata if the directory exists
 if [ -d "$HASURA_GRAPHQL_METADATA_DIR" ]; then
     rm -rf "TEMP_PROJECT_DIR"
     log "migrations-apply" "applying metadata from $HASURA_GRAPHQL_METADATA_DIR"
@@ -112,7 +112,7 @@ else
     log "migrations-apply" "directory $HASURA_GRAPHQL_METADATA_DIR does not exist, skipping metadata"
 fi
 
-# apply seeds if the directory exist
+# apply seeds if the directory exists
 if [ -d "$HASURA_GRAPHQL_SEEDS_DIR" ]; then
     log "migrations-apply" "applying seeds from $HASURA_GRAPHQL_SEEDS_DIR"
     mkdir -p "$TEMP_PROJECT_DIR"
