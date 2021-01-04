@@ -6,7 +6,7 @@ interface RSPInputProps {
   k: string;
   editMode: boolean;
   value: string | Record<string, any>;
-  v: Record<string, string>|unknown;
+  v: Record<string, string>;
   setArgVal: (v: Record<string, unknown>) => void;
   setEditMode: any;
 }
@@ -18,10 +18,12 @@ const RSPInput: React.FC<RSPInputProps> = ({
   v,
   setEditMode,
 }) => {
-  const [localValue, setLocalValue] = useState<string>(value);
+  const [localValue, setLocalValue] = useState<string>(value as string);
 
   // TODO check more on the browser console error message
-  useDebouncedEffect(() => setArgVal({ [v?.name]: localValue }), 500, [localValue]);// ignore continues onChange events till the user finish typing 
+  useDebouncedEffect(() => setArgVal({ [v?.name]: localValue }), 500, [
+    localValue,
+  ]); // ignore continues onChange events till the user finish typing
   // TODO support different input types :?
   return (
     <>
@@ -30,7 +32,11 @@ const RSPInput: React.FC<RSPInputProps> = ({
         <>
           <input
             value={localValue}
-            style={{ border: 0, borderBottom: '2px dotted black', borderRadius:0 }}
+            style={{
+              border: 0,
+              borderBottom: '2px dotted black',
+              borderRadius: 0,
+            }}
             onChange={e => setLocalValue(e.target.value)}
           />
         </>

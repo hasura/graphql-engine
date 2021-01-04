@@ -1,4 +1,4 @@
-import React, { useCallback, useContext, useEffect, useState } from 'react';
+import React, { useCallback, useContext, useEffect, useState, MouseEvent } from 'react';
 import { FieldType } from './types';
 import { PermissionEditorContext } from './context';
 import { CollapsedField } from './CollapsedField';
@@ -29,23 +29,24 @@ export const Field: React.FC<FieldProps> = ({ i, setItem = e => console.log(e) }
     },
     [setItem, i]
   );
-  useEffect((...args) => {
+  useEffect(() => {
     if (
       fieldVal &&
       fieldVal !== {} &&
       Object.keys(fieldVal).length > 0 &&
       !isEmpty(fieldVal)
     ) {
-      context.setArgTree(argTree => {
+      context.setArgTree((argTree:Record<string,any>) => {
         return { ...argTree, [i.name]: fieldVal };
       });
     }
   }, [fieldVal]);
 
-  const handleClick = e => {
+  const handleClick = (e:MouseEvent<HTMLAnchorElement>) => {
     e.preventDefault();
-    const selectedTypeName = e.target.id;
-    const selectedUrl = e.target.href;
+    const target = e.target as HTMLAnchorElement;
+    const selectedTypeName = target.id;
+    const selectedUrl = target.href;
     console.log(selectedTypeName,selectedUrl)
   };
 
