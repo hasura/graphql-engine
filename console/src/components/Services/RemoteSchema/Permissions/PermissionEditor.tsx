@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import * as GQL from 'graphql';
+import { GraphQLSchema } from 'graphql';
 import {
   generateSDL,
   generateConstantTypes,
@@ -31,17 +31,14 @@ const PermissionEditor: React.FC<PermissionEditorProps> = ({ ...props }) => {
     schema,
   } = props;
 
-  const [state, setState] = useState<DatasourceObject[]>(datasource); // TODO - low priority:  a copy of datasource, could be able to remove this after evaluation
-  const [argTree, setArgTree] = useState({}); // all @presets as an object tree
+  const [state, setState] = useState<DatasourceObject[] | FieldType[]>(datasource); // TODO - low priority:  a copy of datasource, could be able to remove this after evaluation
+  const [argTree, setArgTree] = useState<Record<string, any> | null>({}); // all @presets as an object tree
   const [resultString, setResultString] = useState(''); // Generated SDL
 
   const { isNewRole, isNewPerm } = permissionEdit;
 
   useEffect(() => {
-    window.SCHEMA = schema;
-    window.GQL = GQL;
-
-    console.log('changed--->', state);
+    // console.log('changed--->', state);
     if (!state) return;
     setResultString(generateSDL(state, argTree));
     // setSchemaDefinition(resultString);
@@ -76,7 +73,7 @@ const PermissionEditor: React.FC<PermissionEditorProps> = ({ ...props }) => {
   };
 
   const saveFunc = () => {
-    const finalString = resultString + generateConstantTypes(schema);
+    const finalString = resultString + generateConstantTypes(schema as GraphQLSchema);
     setSchemaDefinition(finalString);
     save();
   };

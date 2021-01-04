@@ -5,8 +5,8 @@ import { useDebouncedEffect } from '../../../../hooks/useDebounceEffect';
 interface RSPInputProps {
   k: string;
   editMode: boolean;
-  value: string;
-  v: Record<string, string>;
+  value: string | Record<string, any>;
+  v: Record<string, string>|unknown;
   setArgVal: (v: Record<string, unknown>) => void;
   setEditMode: any;
 }

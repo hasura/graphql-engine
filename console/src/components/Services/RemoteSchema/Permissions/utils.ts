@@ -12,9 +12,11 @@ import {
   InputValueDefinitionNode,
   ArgumentNode,
   ObjectTypeDefinitionNode,
+  GraphQLInputField,
 } from 'graphql';
 import { findRemoteSchemaPermission } from '../utils';
 import { PermissionEdit } from './types';
+import { isJsonString } from '../../../Common/utils/jsUtils';
 
 export const getCreateRemoteSchemaPermissionQuery = (
   def: { role: string },
@@ -323,7 +325,7 @@ const getSDLField = (type, argTree) => {
   return `${result}\n}`;
 };
 
-export const generateConstantTypes = (schema: GraphQLSchema) => {
+export const generateConstantTypes = (schema: GraphQLSchema):string => {
   let result = ``;
   const enumTypes = getEnumTypes(schema);
   enumTypes.forEach(type => {
@@ -349,7 +351,7 @@ export const generateSDL = (types, argTree) => {
   return result;
 };
 
-export const getChildArgument = v => {
+export const getChildArgument = (v:GraphQLInputField):Record<string,any> => {
   if (typeof v === 'string') return { children: null }; // value field
   if (v?.type instanceof GraphQLInputObjectType && v?.type?.getFields)
     return { children: v?.type?.getFields(), path: 'type._fields' };
@@ -399,7 +401,7 @@ const getDirectives = (field: InputValueDefinitionNode) => {
   if (preset?.arguments && preset?.arguments[0])
     res = parseObjectField(preset.arguments[0]);
   if (typeof res === 'object') return res;
-  if (typeof res === 'string') return JSON.parse(res);
+  if (typeof res === 'string' && isJsonString(res)) return JSON.parse(res);
   return res;
 };
 const getPresets = (field: FieldDefinitionNode) => {

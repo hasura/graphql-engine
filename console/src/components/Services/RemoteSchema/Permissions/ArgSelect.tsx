@@ -1,8 +1,17 @@
 import React, { useRef, useEffect, useState } from 'react'
+import merge from 'lodash.merge';
 import { getChildArgument } from './utils';
 import RSPInput from './RSPInput';
 
-export const ArgSelect = ({ k, v, value, level, setArg = e => console.log(e) }) => {
+interface ArgSelectProps {
+  v: Record<string, any>|unknown;
+  k: string;
+  value: string | Record<string, any>;
+  level: number;
+  setArg: (e: Record<string, unknown>) => void;
+}
+
+export const ArgSelect: React.FC<ArgSelectProps> = ({ k, v, value, level, setArg = e => console.log(e) }) => {
   const [expanded, setExpanded] = useState(false);
   const autoExpanded = useRef(false)
   const [editMode, setEditMode] = useState(
@@ -25,12 +34,12 @@ export const ArgSelect = ({ k, v, value, level, setArg = e => console.log(e) }) 
     }
   }, [value, k, expanded])
 
-  const { children, path } = getChildArgument(v);
+  const { children } = getChildArgument(v);
 
-  const setArgVal = val => {
+  const setArgVal = (val) => {
     const prevVal = prevState.current;
     if (prevVal) {
-      const newState = _.merge(prevVal, val);
+      const newState = merge(prevVal, val);
       setArg(newState);
       prevState.current = newState;
     } else {
@@ -51,14 +60,14 @@ export const ArgSelect = ({ k, v, value, level, setArg = e => console.log(e) }) 
           {k}:
         </label>
         {expanded &&
-          Object.values(children).map(i => {
+          Object.values(children).map((i) => {
             const childVal = value ? value[i?.name] : undefined;
             return (
               <li>
                 <ArgSelect
                   {...{
                     k: i.name,
-                    setArg: v => setArgVal({ [k]: v }),
+                    setArg: val => setArgVal({ [k]: val }),
                     v: i,
                     value: childVal,
                     level: level + 1,

@@ -2,8 +2,7 @@ import React from 'react';
 import { FieldType } from './types';
 
 interface CollapsedFieldProps {
-  field: any;
-  i: FieldType;
+  field: FieldType;
   onClick: (e: React.MouseEvent<HTMLAnchorElement>) => void;
 }
 export const CollapsedField: React.FC<CollapsedFieldProps> = ({

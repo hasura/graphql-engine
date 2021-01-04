@@ -16,7 +16,7 @@ export const Field: React.FC<FieldProps> = ({ i, setItem = e => console.log(e) }
     context.argTree && context.argTree[i.name]
       ? { ...context.argTree[i.name] }
       : {};
-  const [fieldVal, setfieldVal] = useState(initState);
+  const [fieldVal, setfieldVal] = useState<Record<string,any>>(initState);
   const setArg = useCallback(
     (vStr: Record<string, unknown>) => {
       setfieldVal(oldVal => {
@@ -29,7 +29,7 @@ export const Field: React.FC<FieldProps> = ({ i, setItem = e => console.log(e) }
     },
     [setItem, i]
   );
-  useEffect(() => {
+  useEffect((...args) => {
     if (
       fieldVal &&
       fieldVal !== {} &&
@@ -46,6 +46,7 @@ export const Field: React.FC<FieldProps> = ({ i, setItem = e => console.log(e) }
     e.preventDefault();
     const selectedTypeName = e.target.id;
     const selectedUrl = e.target.href;
+    console.log(selectedTypeName,selectedUrl)
   };
 
   if (!i.checked) return <CollapsedField field={i} onClick={handleClick} />;
