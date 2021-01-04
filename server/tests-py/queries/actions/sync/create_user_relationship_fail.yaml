@@ -1,0 +1,48 @@
+- description: Run create_user sync action mutation with valid email
+  url: /v1/graphql
+  status: 200
+  query:
+    query: |
+      mutation {
+        create_user(email: "clarke@gmail.com", name: "Clarke"){
+          __typename
+          id
+          user {
+            __typename
+            name
+            email
+            is_admin
+          }
+        }
+      }
+  response:
+    data:
+      create_user:
+        __typename: UserId
+        id: 1
+        user:
+          __typename: user
+          name: Clarke
+          email: clarke@gmail.com
+          is_admin: false
+
+- description: Use user_by_email to get our user and test object relationship
+  url: /v1/graphql
+  status: 200
+  query:
+    query: |
+      query {
+        get_user_by_email(email: "clarke@gmail.com"){
+          __typename
+          id
+          user(limit: 4) {
+            name
+          }
+        }
+      }
+  response:
+    errors:
+    - extensions:
+        path: $.selectionSet.get_user_by_email.selectionSet.user
+        code: validation-failed
+      message: '"user" has no argument named "limit"'
