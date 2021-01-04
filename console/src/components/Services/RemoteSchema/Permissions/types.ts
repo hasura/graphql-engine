@@ -84,7 +84,7 @@ export type PermissionsTableProps = {
   setSchemaDefinition: (data: string) => void;
   permOpenEdit: permOpenEdit;
   permCloseEdit: () => void;
-  permSetBulkSelect: (checked: boolean, role: string) => void;
+  permSetBulkSelect: (checked: boolean, role: string | null) => void;
   permSetRoleName: (name: string) => void;
   allRoles: string[];
   currentRemoteSchema: {

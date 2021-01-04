@@ -12,8 +12,11 @@ import {
   InputValueDefinitionNode,
   ArgumentNode,
   ObjectTypeDefinitionNode,
+  GraphQLInputField,
+  GraphQLList,
 } from 'graphql';
 import { findRemoteSchemaPermission } from '../utils';
+import { isJsonString } from '../../../Common/utils/jsUtils';
 import { PermissionEdit, DatasourceObject, FieldType } from './types';
 
 export const getCreateRemoteSchemaPermissionQuery = (
@@ -140,7 +143,7 @@ export const getTree = (
     return Object.values(introspectionSchemaFields).map(
       ({ name, args: argArray, type, ...rest }: any) => {
         let checked = true;
-        const args = argArray.reduce((p, c, cIx) => {
+        const args = argArray.reduce((p, c) => {
           return { ...p, [c.name]: { ...c } };
         }, {});
         if (permissionsSchema !== null && !(name in permissionsSchemaFields)) {
@@ -231,7 +234,7 @@ export const getType = (
 const getEnumTypes = (schema: GraphQLSchema) => {
   const fields = schema.getTypeMap();
   const types: any[] = [];
-  Object.entries(fields).forEach(([key, value]: any) => {
+  Object.entries(fields).forEach(([, value]: any) => {
     if (!(value instanceof GraphQLEnumType)) return;
     const name = value.inspect();
 
@@ -243,7 +246,7 @@ const getEnumTypes = (schema: GraphQLSchema) => {
     const childArray: any[] = [];
     const fieldVal = value.getValues();
 
-    Object.entries(fieldVal).forEach(([k, v]) => {
+    Object.entries(fieldVal).forEach(([, v]) => {
       childArray.push({
         name: v.name,
         checked: true,
@@ -261,7 +264,7 @@ export const getScalarTypes = (schema: GraphQLSchema) => {
   const fields = schema.getTypeMap();
   const types: string[] = [];
   const gqlDefaultTypes = ['Boolean', 'Float', 'String', 'Int', 'ID'];
-  Object.entries(fields).forEach(([key, value]: any) => {
+  Object.entries(fields).forEach(([, value]: any) => {
     if (!(value instanceof GraphQLScalarType)) return;
     const name = value.inspect();
     if (gqlDefaultTypes.indexOf(name) > -1) return; // Check if type belongs to default gql scalar types
@@ -277,7 +280,10 @@ const checkNullType = (type: DatasourceObject) => {
   return type.children.some(isChecked);
 };
 
-const getSDLField = (type: DatasourceObject, argTree) => {
+const getSDLField = (
+  type: DatasourceObject,
+  argTree: Record<string, any> | null
+) => {
   if (!checkNullType(type)) return '';
 
   let result = ``;
@@ -286,7 +292,7 @@ const getSDLField = (type: DatasourceObject, argTree) => {
     result = `type ${typeName}{`;
   else result = `${typeName}{`;
 
-  type.children.map(f => {
+  type.children.forEach(f => {
     // TODO filter selected fields
     if (!f.checked) return null;
 
@@ -295,7 +301,7 @@ const getSDLField = (type: DatasourceObject, argTree) => {
     if (!typeName.includes('enum')) {
       if (f?.args) {
         fieldStr = `${fieldStr}(`;
-        Object.values(f.args).map((arg: any) => {
+        Object.values(f.args).forEach((arg: any) => {
           let valueStr = ``;
           if (argTree && argTree[f.name] && argTree[f.name][arg.name]) {
             const argName = argTree[f.name][arg.name];
@@ -332,7 +338,7 @@ const getSDLField = (type: DatasourceObject, argTree) => {
   return `${result}\n}`;
 };
 
-export const generateConstantTypes = (schema: GraphQLSchema) => {
+export const generateConstantTypes = (schema: GraphQLSchema): string => {
   let result = ``;
   const enumTypes = getEnumTypes(schema);
   enumTypes.forEach(type => {
@@ -346,7 +352,10 @@ export const generateConstantTypes = (schema: GraphQLSchema) => {
   return result;
 };
 
-export const generateSDL = (types: DatasourceObject[], argTree) => {
+export const generateSDL = (
+  types: DatasourceObject[],
+  argTree: Record<string, any>
+) => {
   let result = `schema{
   query: query_root
   mutation: mutation_root
@@ -358,11 +367,14 @@ export const generateSDL = (types: DatasourceObject[], argTree) => {
   return result;
 };
 
-export const getChildArgument = v => {
+export const getChildArgument = (v: GraphQLInputField): Record<string, any> => {
   if (typeof v === 'string') return { children: null }; // value field
   if (v?.type instanceof GraphQLInputObjectType && v?.type?.getFields)
     return { children: v?.type?.getFields(), path: 'type._fields' };
-  if (v?.type instanceof GraphQLNonNull || v?.type?.ofType) {
+  if (
+    (v?.type instanceof GraphQLNonNull || v?.type instanceof GraphQLList) &&
+    v?.type?.ofType
+  ) {
     return { children: v?.type?.ofType?._fields, path: 'type.ofType._fields' };
   }
   return {};
@@ -408,10 +420,8 @@ const getDirectives = (field: InputValueDefinitionNode) => {
   const preset = field?.directives?.find(dir => dir?.name?.value === 'preset');
   if (preset?.arguments && preset?.arguments[0])
     res = parseObjectField(preset.arguments[0]);
-  console.log('>>>>', res, typeof res);
-
-  // if (typeof res === 'object') return res;
-  // if (typeof res === 'string') return JSON.parse(res);
+  if (typeof res === 'object') return res;
+  if (typeof res === 'string' && isJsonString(res)) return JSON.parse(res);
   return res;
 };
 

@@ -1,11 +1,6 @@
 import React, { useCallback, useState } from 'react';
-import {
-  FieldType,
-  RSPTreeComponentProps,
-  ExpandedItems,
-} from './types';
+import { FieldType, RSPTreeComponentProps, ExpandedItems } from './types';
 import { Field } from './Field';
-
 
 const Tree: React.FC<RSPTreeComponentProps> = ({ list, setState }) => {
   // TODO add checkbox
@@ -73,4 +68,4 @@ const Tree: React.FC<RSPTreeComponentProps> = ({ list, setState }) => {
 };
 
 const MemoizedTree = React.memo(Tree);
-export default MemoizedTree
+export default MemoizedTree;
