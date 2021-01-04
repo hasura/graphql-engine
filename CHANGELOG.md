@@ -87,6 +87,8 @@ and be accessible according to the permissions that were configured for the role
 - server: update `forkImmortal` function to log more information, i.e log starting of threads and log asynchronous and synchronous exception.
 - server: various changes to ensure timely cleanup of background threads and other resources in the event of a SIGTERM signal.
 - server: fix issue when the `relationships` field in `objects` field is passed `[]` in the `set_custom_types` API (fix #6357)
+- server: action array relationships now support the same input arguments (such as where or distinct_on) as usual relationships
+- server: action array relationships now support aggregate relationships
 - console: allow user to cascade Postgres dependencies when dropping Postgres objects (close #5109) (#5248)
 - console: mark inconsistent remote schemas in the UI (close #5093) (#5181)
 - console: remove ONLY as default for ALTER TABLE in column alter operations (close #5512) #5706
