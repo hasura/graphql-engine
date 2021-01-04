@@ -18,7 +18,7 @@ const Tree: React.FC<RSPTreeComponentProps> = ({ list, setState }) => {
   );
 
   const setItem = useCallback(
-    (ix:number) => (newState :FieldType) => {
+    (ix: number) => (newState: FieldType) => {
       const newList = [...list];
       newList[ix] = { ...newState };
       setState([...newList]);

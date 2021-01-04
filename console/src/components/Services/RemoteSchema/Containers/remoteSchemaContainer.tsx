@@ -68,7 +68,7 @@ const RemoteSchemaContainer: React.FC<RemoteSchemaContainerProps> = ({
   ];
 
   const childrenWithProps = React.Children.map(children, child =>
-    React.cloneElement(child as ReactElement<any,any>, { currentRemoteSchema })
+    React.cloneElement(child as ReactElement<any, any>, { currentRemoteSchema })
   );
 
   return (

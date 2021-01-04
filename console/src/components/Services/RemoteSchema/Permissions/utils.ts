@@ -18,7 +18,12 @@ import {
 } from 'graphql';
 import { findRemoteSchemaPermission } from '../utils';
 import { isJsonString } from '../../../Common/utils/jsUtils';
-import { PermissionEdit, DatasourceObject, FieldType, argTreeType } from './types';
+import {
+  PermissionEdit,
+  DatasourceObject,
+  FieldType,
+  argTreeType,
+} from './types';
 
 export const getCreateRemoteSchemaPermissionQuery = (
   def: { role: string },
