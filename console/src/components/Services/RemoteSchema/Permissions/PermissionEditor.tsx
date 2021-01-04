@@ -7,11 +7,7 @@ import {
 } from './utils';
 import Button from '../../../Common/Button/Button';
 import styles from '../../../Common/Permissions/PermissionStyles.scss';
-import {
-  DatasourceObject,
-  FieldType,
-  PermissionEditorProps,
-} from './types';
+import { DatasourceObject, FieldType, PermissionEditorProps } from './types';
 import { PermissionEditorContext } from './context';
 import Tree from './Tree';
 
@@ -87,7 +83,7 @@ const PermissionEditor: React.FC<PermissionEditorProps> = ({ ...props }) => {
       <div className={styles.tree}>
         <PermissionEditorContext.Provider value={{ argTree, setArgTree }}>
           <Tree list={state as FieldType[]} setState={setState} />
-          {/* <code s tyle={{ whiteSpace: 'pre-wrap' }}>{resultString}</code> */}
+          {/* <code style={{ whiteSpace: 'pre-wrap' }}>{resultString}</code> */}
         </PermissionEditorContext.Provider>
       </div>
       <Button

@@ -120,8 +120,8 @@ export type RolePermissions = {
 // TODO generic types -> seperate this
 
 export type CustomFieldType = {
-  args: any[];
   name: string;
+  args?: any[];
   checked?: boolean;
   return?: string;
   children?: FieldType[];
