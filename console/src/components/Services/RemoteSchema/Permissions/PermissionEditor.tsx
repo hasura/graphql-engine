@@ -10,6 +10,7 @@ import styles from '../../../Common/Permissions/PermissionStyles.scss';
 import { DatasourceObject, FieldType, PermissionEditorProps } from './types';
 import { PermissionEditorContext } from './context';
 import Tree from './Tree';
+import { isEmpty } from '../../../Common/utils/jsUtils';
 
 
 
@@ -46,7 +47,7 @@ const PermissionEditor: React.FC<PermissionEditorProps> = ({ ...props }) => {
   }, [datasource]);
 
   useEffect(() => {
-    if (!!schemaDefinition) {
+    if (!isEmpty(schemaDefinition)) {
       try {
         const newArgTree = getArgTreeFromPermissionSDL(schemaDefinition);
         setArgTree(newArgTree);
