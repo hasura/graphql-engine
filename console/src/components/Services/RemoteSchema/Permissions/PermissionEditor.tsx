@@ -12,8 +12,6 @@ import { PermissionEditorContext } from './context';
 import Tree from './Tree';
 import { isEmpty } from '../../../Common/utils/jsUtils';
 
-
-
 const PermissionEditor: React.FC<PermissionEditorProps> = ({ ...props }) => {
   const {
     permissionEdit,
@@ -28,7 +26,9 @@ const PermissionEditor: React.FC<PermissionEditorProps> = ({ ...props }) => {
     schema,
   } = props;
 
-  const [state, setState] = useState<DatasourceObject[] | FieldType[]>(datasource); // TODO - low priority:  a copy of datasource, could be able to remove this after evaluation
+  const [state, setState] = useState<DatasourceObject[] | FieldType[]>(
+    datasource
+  ); // TODO - low priority:  a copy of datasource, could be able to remove this after evaluation
   const [argTree, setArgTree] = useState<Record<string, any> | null>({}); // all @presets as an object tree
   const [resultString, setResultString] = useState(''); // Generated SDL
 
@@ -70,7 +70,8 @@ const PermissionEditor: React.FC<PermissionEditorProps> = ({ ...props }) => {
   };
 
   const saveFunc = () => {
-    const finalString = resultString + generateConstantTypes(schema as GraphQLSchema);
+    const finalString =
+      resultString + generateConstantTypes(schema as GraphQLSchema);
     setSchemaDefinition(finalString);
     save();
   };
