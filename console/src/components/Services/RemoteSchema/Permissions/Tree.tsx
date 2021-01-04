@@ -10,14 +10,15 @@ const Tree: React.FC<RSPTreeComponentProps> = ({ list, setState }) => {
   const onCheck = useCallback(
     ix => (e: React.FormEvent<HTMLInputElement>) => {
       const newList = [...list] as FieldType[];
-      newList[ix] = { ...list[ix], checked: e.target.checked };
+      const target = e.target as HTMLInputElement;
+      newList[ix] = { ...list[ix], checked: target.checked };
       setState([...newList]);
     },
     [setState, list]
   );
 
   const setItem = useCallback(
-    ix => newState => {
+    (ix:number) => (newState :FieldType) => {
       const newList = [...list];
       newList[ix] = { ...newState };
       setState([...newList]);

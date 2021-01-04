@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { ReactElement } from 'react';
 import CommonTabLayout from '../../../Common/Layout/CommonTabLayout/CommonTabLayout';
 import { NotFoundError } from '../../../Error/PageNotFound';
 import { appPrefix } from '../constants';
@@ -68,7 +68,7 @@ const RemoteSchemaContainer: React.FC<RemoteSchemaContainerProps> = ({
   ];
 
   const childrenWithProps = React.Children.map(children, child =>
-    React.cloneElement(child, { currentRemoteSchema })
+    React.cloneElement(child as ReactElement<any,any>, { currentRemoteSchema })
   );
 
   return (
