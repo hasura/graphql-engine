@@ -5,7 +5,7 @@ module Hasura.Metadata.Class
   , MetadataStorageT(..)
   , runMetadataStorageT
   , MonadMetadataStorage(..)
-  , MonadScheduledEvents(..)
+  , MonadMetadataStorageQueryAPI(..)
   )
 where
 
@@ -84,6 +84,8 @@ class (MonadError QErr m) => MonadMetadataStorage m where
   notifySchemaCacheSync :: InstanceId -> CacheInvalidations -> m ()
   processSchemaSyncEventPayload :: InstanceId -> Value -> m SchemaSyncEventProcessResult
 
+  checkMetadataStorageHealth  :: m Bool
+
   -- Scheduled triggers
   -- TODO:-
   -- Ideally we would've liked to avoid having functions that are specific to
@@ -107,6 +109,7 @@ class (MonadError QErr m) => MonadMetadataStorage m where
   fetchUndeliveredActionEvents :: m [ActionLogItem]
   setActionStatus :: ActionId -> AsyncActionStatus -> m ()
   fetchActionResponse :: ActionId -> m ActionLogResponse
+  clearActionData :: ActionName -> m ()
 
 instance (MonadMetadataStorage m) => MonadMetadataStorage (ReaderT r m) where
   fetchMetadata                     = lift fetchMetadata
@@ -114,6 +117,8 @@ instance (MonadMetadataStorage m) => MonadMetadataStorage (ReaderT r m) where
   notifySchemaCacheSync a b         = lift $ notifySchemaCacheSync a b
   processSchemaSyncEventPayload a b = lift $ processSchemaSyncEventPayload a b
 
+  checkMetadataStorageHealth = lift checkMetadataStorageHealth
+
   getDeprivedCronTriggerStats        = lift getDeprivedCronTriggerStats
   getScheduledEventsForDelivery      = lift getScheduledEventsForDelivery
   insertScheduledEvent               = lift . insertScheduledEvent
@@ -127,6 +132,7 @@ instance (MonadMetadataStorage m) => MonadMetadataStorage (ReaderT r m) where
   fetchUndeliveredActionEvents = lift fetchUndeliveredActionEvents
   setActionStatus a b          = lift $ setActionStatus a b
   fetchActionResponse          = lift . fetchActionResponse
+  clearActionData              = lift . clearActionData
 
 instance (MonadMetadataStorage m) => MonadMetadataStorage (StateT s m) where
   fetchMetadata                     = lift fetchMetadata
@@ -134,6 +140,8 @@ instance (MonadMetadataStorage m) => MonadMetadataStorage (StateT s m) where
   notifySchemaCacheSync a b         = lift $ notifySchemaCacheSync a b
   processSchemaSyncEventPayload a b = lift $ processSchemaSyncEventPayload a b
 
+  checkMetadataStorageHealth = lift checkMetadataStorageHealth
+
   getDeprivedCronTriggerStats        = lift getDeprivedCronTriggerStats
   getScheduledEventsForDelivery      = lift getScheduledEventsForDelivery
   insertScheduledEvent               = lift . insertScheduledEvent
@@ -147,6 +155,7 @@ instance (MonadMetadataStorage m) => MonadMetadataStorage (StateT s m) where
   fetchUndeliveredActionEvents = lift fetchUndeliveredActionEvents
   setActionStatus a b          = lift $ setActionStatus a b
   fetchActionResponse          = lift . fetchActionResponse
+  clearActionData              = lift . clearActionData
 
 instance (MonadMetadataStorage m) => MonadMetadataStorage (Tracing.TraceT m) where
   fetchMetadata                     = lift fetchMetadata
@@ -154,6 +163,8 @@ instance (MonadMetadataStorage m) => MonadMetadataStorage (Tracing.TraceT m) whe
   notifySchemaCacheSync a b         = lift $ notifySchemaCacheSync a b
   processSchemaSyncEventPayload a b = lift $ processSchemaSyncEventPayload a b
 
+  checkMetadataStorageHealth = lift checkMetadataStorageHealth
+
   getDeprivedCronTriggerStats        = lift getDeprivedCronTriggerStats
   getScheduledEventsForDelivery      = lift getScheduledEventsForDelivery
   insertScheduledEvent               = lift . insertScheduledEvent
@@ -167,13 +178,16 @@ instance (MonadMetadataStorage m) => MonadMetadataStorage (Tracing.TraceT m) whe
   fetchUndeliveredActionEvents = lift fetchUndeliveredActionEvents
   setActionStatus a b          = lift $ setActionStatus a b
   fetchActionResponse          = lift . fetchActionResponse
+  clearActionData              = lift . clearActionData
 
-instance (MonadMetadataStorage m) => MonadMetadataStorage (LazyTxT QErr m) where
+instance (MonadMetadataStorage m) => MonadMetadataStorage (ExceptT QErr m) where
   fetchMetadata                     = lift fetchMetadata
   setMetadata                       = lift . setMetadata
   notifySchemaCacheSync a b         = lift $ notifySchemaCacheSync a b
   processSchemaSyncEventPayload a b = lift $ processSchemaSyncEventPayload a b
 
+  checkMetadataStorageHealth = lift checkMetadataStorageHealth
+
   getDeprivedCronTriggerStats        = lift getDeprivedCronTriggerStats
   getScheduledEventsForDelivery      = lift getScheduledEventsForDelivery
   insertScheduledEvent               = lift . insertScheduledEvent
@@ -187,6 +201,7 @@ instance (MonadMetadataStorage m) => MonadMetadataStorage (LazyTxT QErr m) where
   fetchUndeliveredActionEvents = lift fetchUndeliveredActionEvents
   setActionStatus a b          = lift $ setActionStatus a b
   fetchActionResponse          = lift . fetchActionResponse
+  clearActionData              = lift . clearActionData
 
 instance (MonadMetadataStorage m) => MonadMetadataStorage (MetadataT m) where
   fetchMetadata                     = lift fetchMetadata
@@ -194,6 +209,8 @@ instance (MonadMetadataStorage m) => MonadMetadataStorage (MetadataT m) where
   notifySchemaCacheSync a b         = lift $ notifySchemaCacheSync a b
   processSchemaSyncEventPayload a b = lift $ processSchemaSyncEventPayload a b
 
+  checkMetadataStorageHealth = lift checkMetadataStorageHealth
+
   getDeprivedCronTriggerStats        = lift getDeprivedCronTriggerStats
   getScheduledEventsForDelivery      = lift getScheduledEventsForDelivery
   insertScheduledEvent               = lift . insertScheduledEvent
@@ -207,6 +224,7 @@ instance (MonadMetadataStorage m) => MonadMetadataStorage (MetadataT m) where
   fetchUndeliveredActionEvents = lift fetchUndeliveredActionEvents
   setActionStatus a b          = lift $ setActionStatus a b
   fetchActionResponse          = lift . fetchActionResponse
+  clearActionData              = lift . clearActionData
 
 {- Note [Generic MetadataStorageT transformer]
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -266,6 +284,7 @@ newtype MetadataStorageT m a
            , MFunctor
            , Tracing.HasReporter
            , Tracing.MonadTrace
+           , MonadResolveSource
            )
 
 deriving instance (MonadBase IO m) => MonadBase IO (MetadataStorageT m)
@@ -284,6 +303,8 @@ instance (Monad m, Monad (t m), MonadTrans t, MonadMetadataStorage (MetadataStor
   notifySchemaCacheSync a b         = hoist lift $ notifySchemaCacheSync a b
   processSchemaSyncEventPayload a b = hoist lift $ processSchemaSyncEventPayload a b
 
+  checkMetadataStorageHealth = hoist lift checkMetadataStorageHealth
+
   getDeprivedCronTriggerStats        = hoist lift getDeprivedCronTriggerStats
   getScheduledEventsForDelivery      = hoist lift getScheduledEventsForDelivery
   insertScheduledEvent               = hoist lift . insertScheduledEvent
@@ -297,8 +318,10 @@ instance (Monad m, Monad (t m), MonadTrans t, MonadMetadataStorage (MetadataStor
   fetchUndeliveredActionEvents = hoist lift fetchUndeliveredActionEvents
   setActionStatus a b          = hoist lift $ setActionStatus a b
   fetchActionResponse          = hoist lift . fetchActionResponse
+  clearActionData              = hoist lift . clearActionData
 
-class (MonadMetadataStorage m) => MonadScheduledEvents m where
+-- | Operations from @'MonadMetadataStorage' used in '/v1/query' and '/v1/metadata' APIs
+class (MonadMetadataStorage m) => MonadMetadataStorageQueryAPI m where
   -- | Record a cron/one-off event
   createScheduledEvent :: ScheduledEventSeed -> m ()
   createScheduledEvent = insertScheduledEvent
@@ -307,7 +330,12 @@ class (MonadMetadataStorage m) => MonadScheduledEvents m where
   dropFutureCronEvents :: TriggerName -> m ()
   dropFutureCronEvents = clearFutureCronEvents
 
-instance (MonadScheduledEvents m) => MonadScheduledEvents (ReaderT r m)
-instance (MonadScheduledEvents m) => MonadScheduledEvents (StateT s m)
-instance (MonadScheduledEvents m) => MonadScheduledEvents (Tracing.TraceT m)
-instance (MonadScheduledEvents m) => MonadScheduledEvents (MetadataT m)
+  -- | Delete async action logs
+  deleteActionData :: ActionName -> m ()
+  deleteActionData = clearActionData
+
+instance (MonadMetadataStorageQueryAPI m) => MonadMetadataStorageQueryAPI (ReaderT r m)
+instance (MonadMetadataStorageQueryAPI m) => MonadMetadataStorageQueryAPI (StateT s m)
+instance (MonadMetadataStorageQueryAPI m) => MonadMetadataStorageQueryAPI (Tracing.TraceT m)
+instance (MonadMetadataStorageQueryAPI m) => MonadMetadataStorageQueryAPI (MetadataT m)
+-- instance (MonadMetadataStorageQueryAPI m) => MonadMetadataStorageQueryAPI (LazyTxT QErr m)

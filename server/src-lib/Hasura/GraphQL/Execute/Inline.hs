@@ -61,8 +61,8 @@ data InlineEnv = InlineEnv
   }
 
 -- | Internal bookkeeping used during inlining.
-newtype InlineState var = InlineState
-  { _isFragmentCache :: HashMap Name (InlineFragment NoFragments var)
+newtype InlineState = InlineState
+  { _isFragmentCache :: HashMap Name (InlineFragment NoFragments Name)
   -- ^ A cache of fragment definitions we’ve already inlined, so we don’t need
   -- to inline them again.
   }
@@ -70,10 +70,10 @@ newtype InlineState var = InlineState
 $(makeLensesFor [("_ieFragmentStack", "ieFragmentStack")] ''InlineEnv)
 $(makeLenses ''InlineState)
 
-type MonadInline var m =
+type MonadInline m =
   ( MonadError QErr m
   , MonadReader InlineEnv m
-  , MonadState (InlineState var) m
+  , MonadState InlineState m
   )
 
 -- | Inlines all fragment spreads in a 'SelectionSet'; see the module
@@ -81,8 +81,8 @@ type MonadInline var m =
 inlineSelectionSet
   :: (MonadError QErr m, Foldable t)
   => t FragmentDefinition
-  -> SelectionSet FragmentSpread var
-  -> m (SelectionSet NoFragments var)
+  -> SelectionSet FragmentSpread Name
+  -> m (SelectionSet NoFragments Name)
 inlineSelectionSet fragmentDefinitions selectionSet = do
   let fragmentDefinitionMap = Map.groupOnNE _fdName fragmentDefinitions
   uniqueFragmentDefinitions <- flip Map.traverseWithKey fragmentDefinitionMap
@@ -109,19 +109,19 @@ inlineSelectionSet fragmentDefinitions selectionSet = do
     { _ieFragmentDefinitions = uniqueFragmentDefinitions
     , _ieFragmentStack = [] }
   where
-    fragmentsInSelectionSet :: SelectionSet FragmentSpread var -> [Name]
+    fragmentsInSelectionSet :: SelectionSet FragmentSpread Name -> [Name]
     fragmentsInSelectionSet selectionSet' = concatMap getFragFromSelection selectionSet'
 
-    getFragFromSelection :: Selection FragmentSpread var -> [Name]
+    getFragFromSelection :: Selection FragmentSpread Name -> [Name]
     getFragFromSelection = \case
       SelectionField fld -> fragmentsInSelectionSet $ _fSelectionSet fld
       SelectionFragmentSpread fragmentSpread -> [_fsName fragmentSpread]
       SelectionInlineFragment inlineFragment -> fragmentsInSelectionSet $ _ifSelectionSet inlineFragment
 
 inlineSelection
-  :: MonadInline var m
-  => Selection FragmentSpread var
-  -> m (Selection NoFragments var)
+  :: MonadInline m
+  => Selection FragmentSpread Name
+  -> m (Selection NoFragments Name)
 inlineSelection (SelectionField field@Field{ _fSelectionSet }) =
   withPathK "selectionSet" $ withPathK (unName $ _fName field) $ do
     selectionSet <- traverse inlineSelection _fSelectionSet
@@ -134,9 +134,9 @@ inlineSelection (SelectionInlineFragment fragment@InlineFragment{ _ifSelectionSe
   pure $! SelectionInlineFragment fragment{ _ifSelectionSet = selectionSet }
 
 inlineFragmentSpread
-  :: MonadInline var m
-  => FragmentSpread var
-  -> m (InlineFragment NoFragments var)
+  :: MonadInline m
+  => FragmentSpread Name
+  -> m (InlineFragment NoFragments Name)
 inlineFragmentSpread FragmentSpread{ _fsName, _fsDirectives } = do
   InlineEnv{ _ieFragmentDefinitions, _ieFragmentStack } <- ask
   InlineState{ _isFragmentCache } <- get
@@ -158,7 +158,7 @@ inlineFragmentSpread FragmentSpread{ _fsName, _fsDirectives } = do
          <- Map.lookup _fsName _ieFragmentDefinitions -> withPathK (unName _fsName) $ do
 
        selectionSet <- locally ieFragmentStack (_fsName :) $
-         traverse inlineSelection (fmap absurd <$> _fdSelectionSet)
+         traverse inlineSelection _fdSelectionSet
 
        let fragment = InlineFragment
              { _ifTypeCondition = Just _fdTypeCondition

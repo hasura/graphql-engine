@@ -12,7 +12,7 @@ module Hasura.RQL.Types.Common
        , SessionVarType
 
        , FieldName(..)
-       , fromPGCol
+       , fromCol
        , fromRel
 
        , ToAesonPairs(..)
@@ -56,42 +56,46 @@ module Hasura.RQL.Types.Common
        , UrlConf(..)
        , resolveUrlConf
        , getEnv
+
+       , SourceName(..)
+       , defaultSource
+       , sourceNameToText
        ) where
 
 import           Hasura.Prelude
 
-import qualified Data.Environment                   as Env
-import qualified Data.HashMap.Strict                as HM
-import qualified Data.Text                          as T
-import qualified Database.PG.Query                  as Q
-import qualified Language.GraphQL.Draft.Syntax      as G
-import qualified Language.Haskell.TH.Syntax         as TH
-import qualified PostgreSQL.Binary.Decoding         as PD
-import qualified Test.QuickCheck                    as QC
+import qualified Data.Environment                       as Env
+import qualified Data.HashMap.Strict                    as HM
+import qualified Data.Text                              as T
+import qualified Database.PG.Query                      as Q
+import qualified Language.GraphQL.Draft.Syntax          as G
+import qualified Language.Haskell.TH.Syntax             as TH
+import qualified PostgreSQL.Binary.Decoding             as PD
+import qualified Test.QuickCheck                        as QC
 
-import           Control.Lens                       (makeLenses)
+import           Control.Lens                           (makeLenses)
 import           Data.Aeson
 import           Data.Aeson.Casing
 import           Data.Aeson.TH
-import           Data.Bifunctor                     (bimap)
-import           Data.Kind                          (Type)
-import           Data.Scientific                    (toBoundedInteger)
+import           Data.Bifunctor                         (bimap)
+import           Data.Kind                              (Type)
+import           Data.Scientific                        (toBoundedInteger)
 import           Data.Text.Extended
 import           Data.Text.NonEmpty
 import           Data.Typeable
 import           Data.URL.Template
 
-import qualified Hasura.Backends.Postgres.SQL.DML   as PG
-import qualified Hasura.Backends.Postgres.SQL.Types as PG
-import qualified Hasura.Backends.Postgres.SQL.Value as PG
+import qualified Hasura.Backends.Postgres.Execute.Types as PG
+import qualified Hasura.Backends.Postgres.SQL.DML       as PG
+import qualified Hasura.Backends.Postgres.SQL.Types     as PG
+import qualified Hasura.Backends.Postgres.SQL.Value     as PG
 
 import           Hasura.EncJSON
-import           Hasura.Incremental                 (Cacheable)
-import           Hasura.RQL.DDL.Headers             ()
+import           Hasura.Incremental                     (Cacheable)
+import           Hasura.RQL.DDL.Headers                 ()
 import           Hasura.RQL.Types.Error
 import           Hasura.SQL.Backend
 import           Hasura.SQL.Types
-
 
 type Representable a = (Show a, Eq a, Hashable a, Cacheable a, NFData a)
 
@@ -123,6 +127,7 @@ class
   , Cacheable (SessionVarType b)
   , Representable (XAILIKE b)
   , Representable (XANILIKE b)
+  , Representable (XComputedFieldInfo b)
   , Ord (TableName b)
   , Ord (ScalarType b)
   , Data (TableName b)
@@ -160,6 +165,8 @@ class
   type SQLOperator    b :: Type
   type XAILIKE        b :: Type
   type XANILIKE       b :: Type
+  type XComputedFieldInfo b :: Type
+  type SourceConfig   b :: Type
   isComparableType :: ScalarType b -> Bool
   isNumType :: ScalarType b -> Bool
 
@@ -179,6 +186,8 @@ instance Backend 'Postgres where
   type SQLOperator    'Postgres = PG.SQLOp
   type XAILIKE        'Postgres = ()
   type XANILIKE       'Postgres = ()
+  type XComputedFieldInfo 'Postgres = ()
+  type SourceConfig   'Postgres = PG.PGSourceConfig
   isComparableType = PG.isComparableType
   isNumType = PG.isNumType
 
@@ -274,8 +283,8 @@ instance PG.IsIdentifier FieldName where
 instance ToTxt FieldName where
   toTxt (FieldName c) = c
 
-fromPGCol :: PG.PGCol -> FieldName
-fromPGCol c = FieldName $ PG.getPGColTxt c
+fromCol :: Backend b => Column b -> FieldName
+fromCol = FieldName . toTxt
 
 fromRel :: RelName -> FieldName
 fromRel = FieldName . relNameToTxt
@@ -283,21 +292,57 @@ fromRel = FieldName . relNameToTxt
 class ToAesonPairs a where
   toAesonPairs :: (KeyValue v) => a -> [v]
 
+data SourceName
+  = SNDefault
+  | SNName !NonEmptyText
+  deriving (Show, Eq, Ord, Generic)
+
+instance FromJSON SourceName where
+  parseJSON = withText "String" $ \case
+    "default" -> pure SNDefault
+    t         -> SNName <$> parseJSON (String t)
+
+sourceNameToText :: SourceName -> Text
+sourceNameToText = \case
+  SNDefault -> "default"
+  SNName t  -> unNonEmptyText t
+
+instance ToJSON SourceName where
+  toJSON = String . sourceNameToText
+
+instance ToTxt SourceName where
+  toTxt = sourceNameToText
+
+instance ToJSONKey SourceName
+instance Hashable SourceName
+instance NFData SourceName
+instance Cacheable SourceName
+
+instance Arbitrary SourceName where
+  arbitrary = SNName <$> arbitrary
+
+defaultSource :: SourceName
+defaultSource = SNDefault
+
 data WithTable a
   = WithTable
-  { wtName :: !PG.QualifiedTable
-  , wtInfo :: !a
+  { wtSource :: !SourceName
+  , wtName   :: !PG.QualifiedTable
+  , wtInfo   :: !a
   } deriving (Show, Eq)
 
 instance (FromJSON a) => FromJSON (WithTable a) where
   parseJSON v@(Object o) =
-    WithTable <$> o .: "table" <*> parseJSON v
+    WithTable
+    <$> o .:? "source" .!= defaultSource
+    <*> o .: "table"
+    <*> parseJSON v
   parseJSON _ =
     fail "expecting an Object with key 'table'"
 
 instance (ToAesonPairs a) => ToJSON (WithTable a) where
-  toJSON (WithTable tn rel) =
-    object $ ("table" .= tn):toAesonPairs rel
+  toJSON (WithTable sourceName tn rel) =
+    object $ ("source" .= sourceName):("table" .= tn):toAesonPairs rel
 
 type ColumnValues a = HM.HashMap PG.PGCol a
 
@@ -307,9 +352,6 @@ data MutateResp a
   , _mrReturningColumns :: ![ColumnValues a]
   } deriving (Show, Eq)
 $(deriveJSON (aesonDrop 3 snakeCase) ''MutateResp)
-
-
-type ColMapping = HM.HashMap PG.PGCol PG.PGCol
 
 -- | Postgres OIDs. <https://www.postgresql.org/docs/12/datatype-oid.html>
 newtype OID = OID { unOID :: Int }
@@ -335,16 +377,21 @@ instance (Cacheable a) => Cacheable (PrimaryKey a)
 $(makeLenses ''PrimaryKey)
 $(deriveJSON (aesonDrop 3 snakeCase) ''PrimaryKey)
 
-data ForeignKey
+data ForeignKey (b :: BackendType)
   = ForeignKey
   { _fkConstraint    :: !Constraint
-  , _fkForeignTable  :: !PG.QualifiedTable
-  , _fkColumnMapping :: !ColMapping
-  } deriving (Show, Eq, Generic)
-instance NFData ForeignKey
-instance Hashable ForeignKey
-instance Cacheable ForeignKey
-$(deriveJSON (aesonDrop 3 snakeCase) ''ForeignKey)
+  , _fkForeignTable  :: !(TableName b)
+  , _fkColumnMapping :: !(HM.HashMap (Column b) (Column b))
+  } deriving (Generic)
+deriving instance Backend b => Eq (ForeignKey b)
+deriving instance Backend b => Show (ForeignKey b)
+instance Backend b => NFData (ForeignKey b)
+instance Backend b => Hashable (ForeignKey b)
+instance Backend b => Cacheable (ForeignKey b)
+instance Backend b => ToJSON (ForeignKey b) where
+  toJSON = genericToJSON $ aesonDrop 3 snakeCase
+instance Backend b => FromJSON (ForeignKey b) where
+  parseJSON = genericParseJSON $ aesonDrop 3 snakeCase
 
 data InpValInfo
   = InpValInfo

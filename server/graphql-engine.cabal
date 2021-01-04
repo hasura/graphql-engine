@@ -117,9 +117,10 @@ library
                      , mtl
                      , aeson
                      , aeson-casing
-                     , unordered-containers
+                     , unordered-containers >= 0.2.12
                      , template-haskell
                      , hashable
+                     , kan-extensions
                      , transformers
                      , transformers-base
                      , http-types
@@ -224,6 +225,7 @@ library
 
                      -- pretty printer
                      , ansi-wl-pprint
+                     , pretty-simple
 
                      -- for capturing various metrics
                      , ekg-core
@@ -263,17 +265,6 @@ library
                      , cron >= 0.6.2
                      -- needed for deriving via
                      , semigroups >= 0.19
-
-                     , random
-                     , mmorph
-                     , http-api-data
-                     , lens-aeson
-                     , safe
-
-                     , semigroups >= 0.19.1
-
-                     -- scheduled triggers
-                     , cron >= 0.6.2
   if !flag(profiling)
     build-depends:
       -- 0.6.1 is supposedly not okay for ghc 8.6:
@@ -285,6 +276,7 @@ library
                      , Control.Concurrent.Extended
                      , Control.Lens.Extended
                      , Control.Monad.Stateless
+                     , Control.Monad.Trans.Managed
                      , Control.Monad.Unique
                      , Data.Aeson.Extended
                      , Data.Aeson.Ordered
@@ -307,6 +299,7 @@ library
                      , Hasura.Backends.Postgres.Connection
                      , Hasura.Backends.Postgres.Execute.Mutation
                      , Hasura.Backends.Postgres.Execute.RemoteJoin
+                     , Hasura.Backends.Postgres.Execute.Types
                      , Hasura.Backends.Postgres.Translate.BoolExp
                      , Hasura.Backends.Postgres.Translate.Column
                      , Hasura.Backends.Postgres.Translate.Delete
@@ -355,6 +348,7 @@ library
                      -- Exposed for testing:
                      , Hasura.Server.Telemetry.Counters
                      , Hasura.Server.Auth.JWT
+                     , Hasura.GC
                      , Hasura.GraphQL.Execute
                      , Hasura.GraphQL.Execute.LiveQuery
                      , Hasura.GraphQL.Transport.HTTP
@@ -394,6 +388,7 @@ library
                      , Hasura.RQL.Types.SchemaCache
                      , Hasura.RQL.Types.SchemaCache.Build
                      , Hasura.RQL.Types.SchemaCacheTypes
+                     , Hasura.RQL.Types.Source
                      , Hasura.RQL.Types.Table
                      , Hasura.RQL.DDL.Action
                      , Hasura.RQL.DDL.ComputedField
@@ -411,6 +406,7 @@ library
                      , Hasura.RQL.DDL.RemoteRelationship
                      , Hasura.RQL.DDL.RemoteRelationship.Validate
                      , Hasura.RQL.DDL.RemoteSchema
+                     , Hasura.RQL.DDL.RemoteSchema.Permission
                      , Hasura.RQL.DDL.Schema
                      , Hasura.RQL.DDL.Schema.Cache
                      , Hasura.RQL.DDL.Schema.Cache.Common
@@ -425,6 +421,7 @@ library
                      , Hasura.RQL.DDL.Schema.Function
                      , Hasura.RQL.DDL.Schema.Rename
                      , Hasura.RQL.DDL.Schema.Table
+                     , Hasura.RQL.DDL.Schema.Source
                      , Hasura.RQL.DDL.EventTrigger
                      , Hasura.RQL.DDL.ScheduledTrigger
                      , Hasura.RQL.DML.Count
@@ -503,6 +500,7 @@ executable graphql-engine
   build-depends:     base
                    , graphql-engine
                    , bytestring
+                   , kan-extensions
                    , pg-client
                    , text
                    , text-conversions
@@ -526,6 +524,7 @@ test-suite graphql-engine-tests
     , http-client-tls
     , jose
     , lifted-base
+    , kan-extensions
     , monad-control
     , mtl
     , natural-transformation >=0.4 && <0.5
@@ -540,6 +539,7 @@ test-suite graphql-engine-tests
     , transformers-base
     , unordered-containers
     , text
+    , mmorph
   hs-source-dirs: src-test
   main-is: Main.hs
   other-modules:

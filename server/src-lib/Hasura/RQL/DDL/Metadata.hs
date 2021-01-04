@@ -16,7 +16,9 @@ import qualified Data.Aeson.Ordered                as AO
 import qualified Data.HashMap.Strict.InsOrd        as OMap
 import qualified Data.HashSet                      as HS
 import qualified Data.List                         as L
+import qualified Database.PG.Query                 as Q
 
+import           Control.Lens                      ((.~), (^?))
 import           Data.Aeson
 
 import           Hasura.RQL.DDL.Action
@@ -35,10 +37,24 @@ import           Hasura.RQL.DDL.Metadata.Types
 import           Hasura.RQL.Types
 
 runClearMetadata
-  :: (CacheRWM m, MetadataM m, MonadTx m)
+  :: (CacheRWM m, MetadataM m, MonadIO m, QErrM m)
   => ClearMetadata -> m EncJSON
 runClearMetadata _ = do
-  runReplaceMetadata emptyMetadata
+  metadata <- getMetadata
+  -- We can infer whether the server is started with `--database-url` option
+  -- (or corresponding env variable) by checking the existence of @'defaultSource'
+  -- in current metadata.
+  let maybeDefaultSourceMetadata = metadata ^? metaSources.ix defaultSource
+      emptyMetadata' = case maybeDefaultSourceMetadata of
+          Nothing -> emptyMetadata
+          Just defaultSourceMetadata ->
+            -- If default postgres source is defined, we need to set metadata
+            -- which contains only default source without any tables and functions.
+            let emptyDefaultSource = SourceMetadata defaultSource mempty mempty
+                                     $ _smConfiguration defaultSourceMetadata
+            in emptyMetadata
+               & metaSources %~ OMap.insert defaultSource emptyDefaultSource
+  runReplaceMetadata $ RMWithSources emptyMetadata'
 
 {- Note [Clear postgres schema for dropped triggers]
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -56,19 +72,35 @@ runReplaceMetadata
   :: ( QErrM m
      , CacheRWM m
      , MetadataM m
-     , MonadTx m
+     , MonadIO m
      )
-  => Metadata -> m EncJSON
-runReplaceMetadata metadata = do
+  => ReplaceMetadata -> m EncJSON
+runReplaceMetadata replaceMetadata = do
   oldMetadata <- getMetadata
+  metadata <- case replaceMetadata of
+    RMWithSources m -> pure m
+    RMWithoutSources MetadataNoSources{..} -> do
+      defaultSourceMetadata <- onNothing (OMap.lookup defaultSource $ _metaSources oldMetadata) $
+        throw400 NotSupported $ "cannot import metadata without sources since no default source is defined"
+      let newDefaultSourceMetadata = defaultSourceMetadata
+                                     { _smTables = _mnsTables
+                                     , _smFunctions = _mnsFunctions
+                                     }
+      pure $ (metaSources.ix defaultSource .~ newDefaultSourceMetadata) oldMetadata
   putMetadata metadata
   buildSchemaCacheStrict
   -- See Note [Clear postgres schema for dropped triggers]
-  let getTriggersMap = OMap.unions . map _tmEventTriggers . OMap.elems . _metaTables
-      oldTriggersMap = getTriggersMap oldMetadata
-      newTriggersMap = getTriggersMap metadata
-      droppedTriggers = OMap.keys $ oldTriggersMap `OMap.difference` newTriggersMap
-  for_ droppedTriggers $ \name -> liftTx $ delTriggerQ name >> archiveEvents name
+  for_ (OMap.toList $ _metaSources metadata) $ \(source, newSourceCache) ->
+    onJust (OMap.lookup source $ _metaSources oldMetadata) $ \oldSourceCache -> do
+      let getTriggersMap = OMap.unions . map _tmEventTriggers . OMap.elems . _smTables
+          oldTriggersMap = getTriggersMap oldSourceCache
+          newTriggersMap = getTriggersMap newSourceCache
+          droppedTriggers = OMap.keys $ oldTriggersMap `OMap.difference` newTriggersMap
+      sourceConfig <- _pcConfiguration <$> askPGSourceCache source
+      for_ droppedTriggers $
+        \name -> liftEitherM $ liftIO $ runExceptT $
+                 runLazyTx (_pscExecCtx sourceConfig) Q.ReadWrite $
+                 liftTx $ delTriggerQ name >> archiveEvents name
 
   pure successMsg
 
@@ -86,6 +118,7 @@ runReloadMetadata (ReloadMetadata reloadRemoteSchemas) = do
       cacheInvalidations = CacheInvalidations
                            { ciMetadata = True
                            , ciRemoteSchemas = remoteSchemaInvalidations
+                           , ciSources = HS.singleton defaultSource
                            }
   metadata <- getMetadata
   buildSchemaCacheWithOptions CatalogUpdate cacheInvalidations metadata
@@ -126,18 +159,20 @@ runDropInconsistentMetadata _ = do
 
 purgeMetadataObj :: MetadataObjId -> MetadataModifier
 purgeMetadataObj = \case
-  MOTable qt                                 -> dropTableInMetadata qt
-  MOTableObj qt tableObj                     ->
-    MetadataModifier $
-    metaTables.ix qt %~ case tableObj of
+  MOSource source -> MetadataModifier $ metaSources %~ OMap.delete source
+  MOSourceObjId source sourceObjId -> case sourceObjId of
+    SMOTable qt                                 -> dropTableInMetadata source qt
+    SMOTableObj qt tableObj -> MetadataModifier $
+      tableMetadataSetter source qt %~ case tableObj of
         MTORel rn _              -> dropRelationshipInMetadata rn
         MTOPerm rn pt            -> dropPermissionInMetadata rn pt
         MTOTrigger trn           -> dropEventTriggerInMetadata trn
         MTOComputedField ccn     -> dropComputedFieldInMetadata ccn
         MTORemoteRelationship rn -> dropRemoteRelationshipInMetadata rn
-  MOFunction qf                              -> dropFunctionInMetadata qf
+    SMOFunction qf                              -> dropFunctionInMetadata source qf
   MORemoteSchema rsn                         -> dropRemoteSchemaInMetadata rsn
+  MORemoteSchemaPermissions rsName role      -> dropRemoteSchemaPermissionInMetadata rsName role
   MOCustomTypes                              -> clearCustomTypesInMetadata
-  MOAction action                            -> dropActionInMetadata action
+  MOAction action                            -> dropActionInMetadata action -- Nothing
   MOActionPermission action role             -> dropActionPermissionInMetadata action role
   MOCronTrigger ctName                       -> dropCronTriggerInMetadata ctName

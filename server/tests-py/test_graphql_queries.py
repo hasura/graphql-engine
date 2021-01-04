@@ -11,6 +11,7 @@ usefixtures = pytest.mark.usefixtures
 @usefixtures('per_class_tests_db_state')
 class TestGraphQLQueryBasic:
 
+    # This also excercises support for multiple operations in a document:
     def test_select_query_author(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + '/select_query_author.yaml', transport)
 
@@ -98,6 +99,9 @@ class TestGraphQLQueryFragments:
 
     def test_select_query_fragment_cycles(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + '/select_query_fragment_cycles.yaml', transport)
+
+    def test_select_query_fragment_with_variable(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/select_query_fragment_with_variable.yaml', transport)
 
     @classmethod
     def dir(cls):

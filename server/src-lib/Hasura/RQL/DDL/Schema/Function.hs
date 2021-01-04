@@ -7,7 +7,6 @@ module Hasura.RQL.DDL.Schema.Function where
 import           Hasura.Prelude
 
 import qualified Control.Monad.Validate             as MV
-import qualified Data.HashMap.Strict                as M
 import qualified Data.HashMap.Strict.InsOrd         as OMap
 import qualified Data.Sequence                      as Seq
 import qualified Data.Text                          as T
@@ -15,6 +14,8 @@ import qualified Database.PG.Query                  as Q
 
 import           Control.Lens                       hiding ((.=))
 import           Data.Aeson
+import           Data.Aeson.Casing
+import           Data.Aeson.TH
 import           Data.Text.Extended
 
 import qualified Language.GraphQL.Draft.Syntax      as G
@@ -65,12 +66,13 @@ data FunctionIntegrityError
 
 mkFunctionInfo
   :: (QErrM m)
-  => QualifiedFunction
+  => SourceName
+  -> QualifiedFunction
   -> SystemDefined
   -> FunctionConfig
   -> RawFunctionInfo
   -> m (FunctionInfo, SchemaDependency)
-mkFunctionInfo qf systemDefined FunctionConfig{..} rawFuncInfo =
+mkFunctionInfo source qf systemDefined FunctionConfig{..} rawFuncInfo =
   either (throw400 NotSupported . showErrors) pure
     =<< MV.runValidateT validateFunction
   where
@@ -114,7 +116,7 @@ mkFunctionInfo qf systemDefined FunctionConfig{..} rawFuncInfo =
       let retTable = typeToTable returnType
 
       pure ( FunctionInfo qf systemDefined funVol exposeAs inputArguments retTable descM
-           , SchemaDependency (SOTable retTable) DRTable
+           , SchemaDependency (SOSourceObj source $ SOITable retTable) DRTable
            )
 
     validateFunctionArgNames = do
@@ -166,22 +168,23 @@ newtype TrackFunction
 -- Validate function tracking operation. Fails if function is already being
 -- tracked, or if a table with the same name is being tracked.
 trackFunctionP1
-  :: (CacheRM m, QErrM m) => QualifiedFunction -> m ()
-trackFunctionP1 qf = do
+  :: (CacheRM m, QErrM m) => SourceName -> QualifiedFunction -> m ()
+trackFunctionP1 sourceName qf = do
   rawSchemaCache <- askSchemaCache
-  when (M.member qf $ scFunctions rawSchemaCache) $
+  when (isJust $ getPGFunctionInfo sourceName qf $ scPostgres rawSchemaCache) $
     throw400 AlreadyTracked $ "function already tracked : " <>> qf
   let qt = fmap (TableName . getFunctionTxt) qf
-  when (M.member qt $ scTables rawSchemaCache) $
+  when (isJust $ getPGTableInfo sourceName qt $ scPostgres rawSchemaCache) $
     throw400 NotSupported $ "table with name " <> qf <<> " already exists"
 
 trackFunctionP2
   :: (MonadError QErr m, CacheRWM m, MetadataM m)
-  => QualifiedFunction -> FunctionConfig -> m EncJSON
-trackFunctionP2 qf config = do
-  buildSchemaCacheFor (MOFunction qf)
+  => SourceName -> QualifiedFunction -> FunctionConfig -> m EncJSON
+trackFunctionP2 sourceName qf config = do
+  buildSchemaCacheFor (MOSourceObjId sourceName $ SMOFunction qf)
     $ MetadataModifier
-    $ metaFunctions %~ OMap.insert qf (FunctionMetadata qf config)
+    $ metaSources.ix sourceName.smFunctions
+      %~ OMap.insert qf (FunctionMetadata qf config)
   pure successMsg
 
 handleMultipleFunctions :: (QErrM m) => QualifiedFunction -> [a] -> m a
@@ -206,38 +209,49 @@ fetchRawFunctionInfo qf@(QualifiedObject sn fn) =
           |] (sn, fn) True
 
 runTrackFunc
-  :: (MonadTx m, CacheRWM m, MetadataM m)
+  :: (MonadError QErr m, CacheRWM m, MetadataM m)
   => TrackFunction -> m EncJSON
 runTrackFunc (TrackFunction qf)= do
-  trackFunctionP1 qf
-  trackFunctionP2 qf emptyFunctionConfig
+  -- v1 track_function lacks a means to take extra arguments
+  trackFunctionP1 defaultSource qf
+  trackFunctionP2 defaultSource qf emptyFunctionConfig
 
 runTrackFunctionV2
   :: (QErrM m, CacheRWM m, MetadataM m)
   => TrackFunctionV2 -> m EncJSON
-runTrackFunctionV2 (TrackFunctionV2 qf config) = do
-  trackFunctionP1 qf
-  trackFunctionP2 qf config
+runTrackFunctionV2 (TrackFunctionV2 source qf config) = do
+  trackFunctionP1 source qf
+  trackFunctionP2 source qf config
 
 -- | JSON API payload for 'untrack_function':
 --
 -- https://hasura.io/docs/1.0/graphql/core/api-reference/schema-metadata-api/custom-functions.html#untrack-function
-newtype UnTrackFunction
+data UnTrackFunction
   = UnTrackFunction
-  { utfName :: QualifiedFunction }
-  deriving (Show, Eq, FromJSON, ToJSON)
+  { _utfFunction :: !QualifiedFunction
+  , _utfSource   :: !SourceName
+  } deriving (Show, Eq)
+$(deriveToJSON (aesonDrop 4 snakeCase) ''UnTrackFunction)
+
+instance FromJSON UnTrackFunction where
+  parseJSON v = withSource <|> withoutSource
+    where
+      withoutSource = UnTrackFunction <$> parseJSON v <*> pure defaultSource
+      withSource = flip (withObject "Object") v \o ->
+                   UnTrackFunction <$> o .: "table"
+                                   <*> o .:? "source" .!= defaultSource
 
 runUntrackFunc
   :: (CacheRWM m, MonadError QErr m, MetadataM m)
   => UnTrackFunction -> m EncJSON
-runUntrackFunc (UnTrackFunction qf) = do
-  void $ askFunctionInfo qf
+runUntrackFunc (UnTrackFunction qf source) = do
+  void $ askFunctionInfo source qf
   -- Delete function from metadata
   withNewInconsistentObjsCheck
     $ buildSchemaCache
-    $ dropFunctionInMetadata qf
+    $ dropFunctionInMetadata defaultSource qf
   pure successMsg
 
-dropFunctionInMetadata :: QualifiedFunction -> MetadataModifier
-dropFunctionInMetadata function = MetadataModifier $
-  metaFunctions %~ OMap.delete function
+dropFunctionInMetadata :: SourceName -> QualifiedFunction -> MetadataModifier
+dropFunctionInMetadata source function = MetadataModifier $
+  metaSources.ix source.smFunctions %~ OMap.delete function

@@ -287,7 +287,7 @@ notEqualsBoolExpBuilder qualColExp rhsExp =
       (S.BENull rhsExp))
 
 annBoolExp
-  :: (QErrM m, TableCoreInfoRM m)
+  :: (QErrM m, TableCoreInfoRM 'Postgres m)
   => OpRhsParser m v
   -> FieldInfoMap (FieldInfo 'Postgres)
   -> GBoolExp 'Postgres ColExp
@@ -299,7 +299,7 @@ annBoolExp rhsParser fim boolExp =
     BoolNot e    -> BoolNot <$> annBoolExp rhsParser fim e
     BoolExists (GExists refqt whereExp) ->
       withPathK "_exists" $ do
-        refFields <- withPathK "_table" $ askFieldInfoMap refqt
+        refFields <- withPathK "_table" $ askFieldInfoMapSource refqt
         annWhereExp <- withPathK "_where" $
                        annBoolExp rhsParser refFields whereExp
         return $ BoolExists $ GExists refqt annWhereExp
@@ -308,7 +308,7 @@ annBoolExp rhsParser fim boolExp =
     procExps = mapM (annBoolExp rhsParser fim)
 
 annColExp
-  :: (QErrM m, TableCoreInfoRM m)
+  :: (QErrM m, TableCoreInfoRM 'Postgres m)
   => OpRhsParser m v
   -> FieldInfoMap (FieldInfo 'Postgres)
   -> ColExp
@@ -322,7 +322,7 @@ annColExp rhsParser colInfoMap (ColExp fieldName colVal) = do
       AVCol pgi <$> parseOperationsExpression rhsParser colInfoMap pgi colVal
     FIRelationship relInfo -> do
       relBoolExp      <- decodeValue colVal
-      relFieldInfoMap <- askFieldInfoMap $ riRTable relInfo
+      relFieldInfoMap <- askFieldInfoMapSource $ riRTable relInfo
       annRelBoolExp   <- annBoolExp rhsParser relFieldInfoMap $
                          unBoolExp relBoolExp
       return $ AVRel relInfo annRelBoolExp
@@ -346,7 +346,7 @@ convColRhs
   :: S.Qual -> AnnBoolExpFldSQL 'Postgres -> State Word64 S.BoolExp
 convColRhs tableQual = \case
   AVCol colInfo opExps -> do
-    let colFld = fromPGCol $ pgiColumn colInfo
+    let colFld = fromCol @'Postgres $ pgiColumn colInfo
         bExps = map (mkFieldCompExp tableQual colFld) opExps
     return $ foldr (S.BEBin S.AndOp) (S.BELit True) bExps
 
@@ -354,7 +354,7 @@ convColRhs tableQual = \case
     -- Convert the where clause on the relationship
     curVarNum <- get
     put $ curVarNum + 1
-    let newIdentifier  = Identifier $ "_be_" <> T.pack (show curVarNum) <> "_"
+    let newIdentifier  = Identifier $ "_be_" <> tshow curVarNum <> "_"
                    <> snakeCaseQualifiedObject relTN
         newIdenQ = S.QualifiedIdentifier newIdentifier Nothing
     annRelBoolExp <- convBoolRhs' newIdenQ nesAnn
@@ -476,29 +476,29 @@ hasStaticExp :: OpExpG backend (PartialSQLExp backend) -> Bool
 hasStaticExp = getAny . foldMap (coerce isStaticValue)
 
 getColExpDeps
-  :: QualifiedTable -> AnnBoolExpFldPartialSQL 'Postgres -> [SchemaDependency]
-getColExpDeps tn = \case
+  :: SourceName -> QualifiedTable -> AnnBoolExpFldPartialSQL 'Postgres -> [SchemaDependency]
+getColExpDeps source tn = \case
   AVCol colInfo opExps ->
     let cn = pgiColumn colInfo
         colDepReason = bool DRSessionVariable DROnType $ any hasStaticExp opExps
-        colDep = mkColDep colDepReason tn cn
+        colDep = mkColDep colDepReason source tn cn
         depColsInOpExp = mapMaybe opExpDepCol opExps
-        colDepsInOpExp = map (mkColDep DROnType tn) depColsInOpExp
+        colDepsInOpExp = map (mkColDep DROnType source tn) depColsInOpExp
     in colDep:colDepsInOpExp
   AVRel relInfo relBoolExp ->
     let rn = riName relInfo
         relTN = riRTable relInfo
-        pd = SchemaDependency (SOTableObj tn (TORel rn)) DROnType
-    in pd : getBoolExpDeps relTN relBoolExp
+        pd = SchemaDependency (SOSourceObj source $ SOITableObj tn (TORel rn)) DROnType
+    in pd : getBoolExpDeps source relTN relBoolExp
 
-getBoolExpDeps :: QualifiedTable -> AnnBoolExpPartialSQL 'Postgres -> [SchemaDependency]
-getBoolExpDeps tn = \case
+getBoolExpDeps :: SourceName -> QualifiedTable -> AnnBoolExpPartialSQL 'Postgres -> [SchemaDependency]
+getBoolExpDeps source tn = \case
   BoolAnd exps -> procExps exps
   BoolOr exps  -> procExps exps
-  BoolNot e    -> getBoolExpDeps tn e
+  BoolNot e    -> getBoolExpDeps source tn e
   BoolExists (GExists refqt whereExp) ->
-    let tableDep = SchemaDependency (SOTable refqt) DRRemoteTable
-    in tableDep:getBoolExpDeps refqt whereExp
-  BoolFld fld  -> getColExpDeps tn fld
+    let tableDep = SchemaDependency (SOSourceObj source $ SOITable refqt) DRRemoteTable
+    in tableDep:getBoolExpDeps source refqt whereExp
+  BoolFld fld  -> getColExpDeps source tn fld
   where
-    procExps = concatMap (getBoolExpDeps tn)
+    procExps = concatMap (getBoolExpDeps source tn)

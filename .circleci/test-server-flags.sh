@@ -72,7 +72,7 @@ echoInfo "Test we didn't compile in the deveoper-only APIs"
 run_hge_with_flags
 
 code=$(curl -s -o /dev/null -w "%{http_code}"  http://localhost:8080/dev/plan_cache)
-if [ "$code" != "404" ]; then  
+if [ "$code" != "404" ]; then
   echo "Expected a dev endpoint to return 404, but got: $code"
   exit 1
 fi

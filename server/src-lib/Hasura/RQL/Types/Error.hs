@@ -95,6 +95,7 @@ data Code
   -- Remote schemas
   | RemoteSchemaError
   | RemoteSchemaConflicts
+  | CoercionError
   -- Websocket/Subscription errors
   | StartFailed
   | InvalidCustomTypes
@@ -106,43 +107,44 @@ data Code
 
 instance Show Code where
   show = \case
-    NotNullViolation      -> "not-null-violation"
-    DataException         -> "data-exception"
-    BadRequest            -> "bad-request"
-    ConstraintViolation   -> "constraint-violation"
-    PermissionDenied      -> "permission-denied"
-    NotExists             -> "not-exists"
-    AlreadyExists         -> "already-exists"
-    AlreadyTracked        -> "already-tracked"
-    AlreadyUntracked      -> "already-untracked"
-    PostgresError         -> "postgres-error"
-    NotSupported          -> "not-supported"
-    DependencyError       -> "dependency-error"
-    InvalidHeaders        -> "invalid-headers"
-    InvalidJSON           -> "invalid-json"
-    AccessDenied          -> "access-denied"
-    ParseFailed           -> "parse-failed"
-    ConstraintError       -> "constraint-error"
-    PermissionError       -> "permission-error"
-    NotFound              -> "not-found"
-    Unexpected            -> "unexpected"
-    UnexpectedPayload     -> "unexpected-payload"
-    NoUpdate              -> "no-update"
-    InvalidParams         -> "invalid-params"
-    AlreadyInit           -> "already-initialised"
-    NoTables              -> "no-tables"
-    ValidationFailed      -> "validation-failed"
-    Busy                  -> "busy"
-    JWTRoleClaimMissing   -> "jwt-missing-role-claims"
-    JWTInvalidClaims      -> "jwt-invalid-claims"
-    JWTInvalid            -> "invalid-jwt"
-    JWTInvalidKey         -> "invalid-jwt-key"
-    RemoteSchemaError     -> "remote-schema-error"
-    RemoteSchemaConflicts -> "remote-schema-conflicts"
-    StartFailed           -> "start-failed"
-    InvalidCustomTypes    -> "invalid-custom-types"
-    ActionWebhookCode t   -> T.unpack t
-    CustomCode t          -> T.unpack t
+    NotNullViolation                  -> "not-null-violation"
+    DataException                     -> "data-exception"
+    BadRequest                        -> "bad-request"
+    ConstraintViolation               -> "constraint-violation"
+    PermissionDenied                  -> "permission-denied"
+    NotExists                         -> "not-exists"
+    AlreadyExists                     -> "already-exists"
+    AlreadyTracked                    -> "already-tracked"
+    AlreadyUntracked                  -> "already-untracked"
+    PostgresError                     -> "postgres-error"
+    NotSupported                      -> "not-supported"
+    DependencyError                   -> "dependency-error"
+    InvalidHeaders                    -> "invalid-headers"
+    InvalidJSON                       -> "invalid-json"
+    AccessDenied                      -> "access-denied"
+    ParseFailed                       -> "parse-failed"
+    ConstraintError                   -> "constraint-error"
+    PermissionError                   -> "permission-error"
+    NotFound                          -> "not-found"
+    Unexpected                        -> "unexpected"
+    UnexpectedPayload                 -> "unexpected-payload"
+    NoUpdate                          -> "no-update"
+    InvalidParams                     -> "invalid-params"
+    AlreadyInit                       -> "already-initialised"
+    NoTables                          -> "no-tables"
+    ValidationFailed                  -> "validation-failed"
+    Busy                              -> "busy"
+    JWTRoleClaimMissing               -> "jwt-missing-role-claims"
+    JWTInvalidClaims                  -> "jwt-invalid-claims"
+    JWTInvalid                        -> "invalid-jwt"
+    JWTInvalidKey                     -> "invalid-jwt-key"
+    RemoteSchemaError                 -> "remote-schema-error"
+    RemoteSchemaConflicts             -> "remote-schema-conflicts"
+    CoercionError                     -> "coercion-error"
+    StartFailed                       -> "start-failed"
+    InvalidCustomTypes                -> "invalid-custom-types"
+    ActionWebhookCode t               -> T.unpack t
+    CustomCode t                      -> T.unpack t
 
 data QErr
   = QErr

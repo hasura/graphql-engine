@@ -493,127 +493,126 @@ export const addAllowedQueries = (queries, isEmptyList, callback) => {
       return;
     }
 
-    const headers = getState().tables.dataHeaders;
-
-    const addQuery = isEmptyList
+    const upQuery = isEmptyList
       ? createAllowListQuery(queries)
       : addAllowedQueriesQuery(queries);
 
-    return dispatch(
-      requestAction(endpoints.query, {
-        method: 'POST',
-        headers,
-        body: JSON.stringify(addQuery),
-      })
-    ).then(
-      () => {
-        dispatch(
-          showSuccessNotification(
-            `${queries.length > 1 ? 'Queries' : 'Query'} added to allow-list`
-          )
-        );
-        dispatch({ type: ADD_ALLOWED_QUERIES, data: queries });
-        callback();
-      },
-      error => {
-        console.error(error);
-        dispatch(
-          showErrorNotification(
-            'Adding query to allow-list failed',
-            null,
-            error
-          )
-        );
-      }
+    const migrationName = `add_allowed_queries`;
+    const requestMsg = 'Adding allowed queries...';
+    const successMsg = `${
+      queries.length > 1 ? 'Queries' : 'Query'
+    } added to allow-list`;
+    const errorMsg = 'Adding query to allow-list failed';
+
+    const onSuccess = () => {
+      dispatch({ type: ADD_ALLOWED_QUERIES, data: queries });
+      callback();
+    };
+
+    const onError = () => {};
+
+    makeMigrationCall(
+      dispatch,
+      getState,
+      [upQuery],
+      null,
+      migrationName,
+      onSuccess,
+      onError,
+      requestMsg,
+      successMsg,
+      errorMsg
     );
   };
 };
 
 export const deleteAllowList = () => {
   return (dispatch, getState) => {
-    const headers = getState().tables.dataHeaders;
+    const upQuery = deleteAllowListQuery();
+    const migrationName = 'delete_allow_list';
+    const requestMsg = 'Deleting allow list...';
+    const successMsg = 'Deleted all queries from allow-list';
+    const errorMsg = 'Deleting queries from allow-list failed';
 
-    return dispatch(
-      requestAction(endpoints.query, {
-        method: 'POST',
-        headers,
-        body: JSON.stringify(deleteAllowListQuery()),
-      })
-    ).then(
-      () => {
-        dispatch(
-          showSuccessNotification('Deleted all queries from allow-list')
-        );
-        dispatch({ type: DELETE_ALLOW_LIST });
-      },
-      error => {
-        console.error(error);
-        dispatch(
-          showErrorNotification(
-            'Deleting queries from allow-list failed',
-            null,
-            error
-          )
-        );
-      }
+    const onSuccess = () => {
+      dispatch({ type: DELETE_ALLOW_LIST });
+    };
+
+    const onError = () => {};
+
+    makeMigrationCall(
+      dispatch,
+      getState,
+      [upQuery],
+      null,
+      migrationName,
+      onSuccess,
+      onError,
+      requestMsg,
+      successMsg,
+      errorMsg
     );
   };
 };
 
 export const deleteAllowedQuery = (queryName, isLastQuery) => {
   return (dispatch, getState) => {
-    const headers = getState().tables.dataHeaders;
-
-    const deleteQuery = isLastQuery
+    const upQuery = isLastQuery
       ? deleteAllowListQuery()
       : deleteAllowedQueryQuery(queryName);
 
-    return dispatch(
-      requestAction(endpoints.query, {
-        method: 'POST',
-        headers,
-        body: JSON.stringify(deleteQuery),
-      })
-    ).then(
-      () => {
-        dispatch(showSuccessNotification('Deleted query from allow-list'));
-        dispatch({ type: DELETE_ALLOWED_QUERY, data: queryName });
-      },
-      error => {
-        console.error(error);
-        dispatch(
-          showErrorNotification(
-            'Deleting query from allow-list failed',
-            null,
-            error
-          )
-        );
-      }
+    const migrationName = `delete_allowed_query`;
+    const requestMsg = 'Deleting allowed query...';
+    const successMsg = 'Deleted query from allow-list';
+    const errorMsg = 'Deleting query from allow-list failed';
+
+    const onSuccess = () => {
+      dispatch({ type: DELETE_ALLOWED_QUERY, data: queryName });
+    };
+
+    const onError = () => {};
+
+    makeMigrationCall(
+      dispatch,
+      getState,
+      [upQuery],
+      null,
+      migrationName,
+      onSuccess,
+      onError,
+      requestMsg,
+      successMsg,
+      errorMsg
     );
   };
 };
 
 export const updateAllowedQuery = (queryName, newQuery) => {
   return (dispatch, getState) => {
-    const headers = getState().tables.dataHeaders;
+    const upQuery = updateAllowedQueryQuery(queryName, newQuery);
 
-    return dispatch(
-      requestAction(endpoints.query, {
-        method: 'POST',
-        headers,
-        body: JSON.stringify(updateAllowedQueryQuery(queryName, newQuery)),
-      })
-    ).then(
-      () => {
-        dispatch(showSuccessNotification('Updated allow-list query'));
-        dispatch({ type: UPDATE_ALLOWED_QUERY, data: { queryName, newQuery } });
-      },
-      error => {
-        console.error(error);
-        dispatch(
-          showErrorNotification('Updating allow-list query failed', null, error)
-        );
-      }
+    const migrationName = `update_allowed_query`;
+    const requestMsg = 'Updating allowed query...';
+    const successMsg = 'Updated allow-list query';
+    const errorMsg = 'Updating allow-list query failed';
+
+    const onSuccess = () => {
+      dispatch({ type: UPDATE_ALLOWED_QUERY, data: { queryName, newQuery } });
+    };
+
+    const onError = () => {};
+
+    makeMigrationCall(
+      dispatch,
+      getState,
+      [upQuery],
+      null,
+      migrationName,
+      onSuccess,
+      onError,
+      requestMsg,
+      successMsg,
+      errorMsg
     );
   };
 };

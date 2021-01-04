@@ -8,6 +8,7 @@ import           Data.Aeson
 import           Data.Aeson.Casing
 import           Data.Aeson.TH
 import           Data.Aeson.Types
+import           Data.Text.Extended
 import           Data.Text.NonEmpty
 
 import           Hasura.Backends.Postgres.SQL.Types
@@ -30,35 +31,51 @@ data TableObjId
   deriving (Show, Eq, Generic)
 instance Hashable TableObjId
 
+data SourceObjId
+  = SOITable !QualifiedTable
+  | SOITableObj !QualifiedTable !TableObjId
+  | SOIFunction !QualifiedFunction
+  deriving (Show, Eq, Generic)
+instance Hashable SourceObjId
+
 data SchemaObjId
-  = SOTable !QualifiedTable
-  | SOTableObj !QualifiedTable !TableObjId
-  | SOFunction !QualifiedFunction
+  = SOSource !SourceName
+  | SOSourceObj !SourceName !SourceObjId
   | SORemoteSchema !RemoteSchemaName
+  | SORemoteSchemaPermission !RemoteSchemaName !RoleName
   deriving (Eq, Generic)
 
 instance Hashable SchemaObjId
 
-reportSchemaObj :: SchemaObjId -> Text
-reportSchemaObj (SOTable tn) = "table " <> qualifiedObjectToText tn
-reportSchemaObj (SOFunction fn) = "function " <> qualifiedObjectToText fn
-reportSchemaObj (SOTableObj tn (TOCol cn)) =
-  "column " <> qualifiedObjectToText tn <> "." <> getPGColTxt cn
-reportSchemaObj (SOTableObj tn (TORel cn)) =
-  "relationship " <> qualifiedObjectToText tn <> "." <> relNameToTxt cn
-reportSchemaObj (SOTableObj tn (TOForeignKey cn)) =
-  "constraint " <> qualifiedObjectToText tn <> "." <> getConstraintTxt cn
-reportSchemaObj (SOTableObj tn (TOPerm rn pt)) =
-  "permission " <> qualifiedObjectToText tn <> "." <> roleNameToTxt rn
-  <> "." <> permTypeToCode pt
-reportSchemaObj (SOTableObj tn (TOTrigger trn )) =
-  "event-trigger " <> qualifiedObjectToText tn <> "." <> triggerNameToTxt trn
-reportSchemaObj (SOTableObj tn (TOComputedField ccn)) =
-  "computed field " <> qualifiedObjectToText tn <> "." <> computedFieldNameToText ccn
-reportSchemaObj (SOTableObj tn (TORemoteRel rn)) =
-  "remote relationship " <> qualifiedObjectToText tn <> "." <> remoteRelationshipNameToText rn
-reportSchemaObj (SORemoteSchema remoteSchemaName) =
-  "remote schema " <> unNonEmptyText (unRemoteSchemaName remoteSchemaName)
+reportSchemaObj :: SchemaObjId -> T.Text
+reportSchemaObj = \case
+  SOSource source -> "source " <> sourceNameToText source
+  SOSourceObj source sourceObjId -> inSource source $
+    case sourceObjId of
+      SOITable tn -> "table " <> qualifiedObjectToText tn
+      SOIFunction fn -> "function " <> qualifiedObjectToText fn
+      SOITableObj tn (TOCol cn) ->
+        "column " <> qualifiedObjectToText tn <> "." <> getPGColTxt cn
+      SOITableObj tn (TORel cn) ->
+        "relationship " <> qualifiedObjectToText tn <> "." <> relNameToTxt cn
+      SOITableObj tn (TOForeignKey cn) ->
+        "constraint " <> qualifiedObjectToText tn <> "." <> getConstraintTxt cn
+      SOITableObj tn (TOPerm rn pt) ->
+        "permission " <> qualifiedObjectToText tn <> "." <> roleNameToTxt rn <> "." <> permTypeToCode pt
+      SOITableObj tn (TOTrigger trn ) ->
+        "event-trigger " <> qualifiedObjectToText tn <> "." <> triggerNameToTxt trn
+      SOITableObj tn (TOComputedField ccn) ->
+        "computed field " <> qualifiedObjectToText tn <> "." <> computedFieldNameToText ccn
+      SOITableObj tn (TORemoteRel rn) ->
+        "remote relationship " <> qualifiedObjectToText tn <> "." <> remoteRelationshipNameToText rn
+  SORemoteSchema remoteSchemaName ->
+    "remote schema " <> unNonEmptyText (unRemoteSchemaName remoteSchemaName)
+  SORemoteSchemaPermission remoteSchemaName roleName ->
+    "remote schema permission "
+    <> unNonEmptyText (unRemoteSchemaName remoteSchemaName)
+    <> "." <>> roleName
+  where
+    inSource s t = t <> " in source " <>> s
 
 instance Show SchemaObjId where
   show soi = T.unpack $ reportSchemaObj soi

@@ -45,6 +45,8 @@ module Hasura.RQL.Types.Action
   , amPermissions
   , ActionPermissionMetadata(..)
 
+  , ActionSourceInfo(..)
+  , getActionSourceInfo
   , AnnActionExecution(..)
   , AnnActionMutationAsync(..)
   , ActionExecContext(..)
@@ -194,7 +196,7 @@ type ActionOutputFields = Map.HashMap G.Name G.GType
 
 getActionOutputFields :: AnnotatedObjectType backend -> ActionOutputFields
 getActionOutputFields =
-  Map.fromList . map ( (unObjectFieldName . _ofdName) &&& (fst . _ofdType)) . toList . _otdFields
+  Map.fromList . map ( (unObjectFieldName . _ofdName) &&& (fst . _ofdType)) . toList . _otdFields . _aotDefinition
 
 data ActionInfo (b :: BackendType)
   = ActionInfo
@@ -275,6 +277,13 @@ instance J.FromJSON ActionMetadata where
 
 ----------------- Resolve Types ----------------
 
+data ActionSourceInfo b
+  = ASINoSource -- ^ No relationships defined on the action output object
+  | ASISource !(SourceConfig b) -- ^ All relationships refer to tables in one source
+
+getActionSourceInfo :: AnnotatedObjectType b -> ActionSourceInfo b
+getActionSourceInfo = maybe ASINoSource ASISource . _aotSource
+
 data AnnActionExecution (b :: BackendType) v
   = AnnActionExecution
   { _aaeName                 :: !ActionName
@@ -289,6 +298,7 @@ data AnnActionExecution (b :: BackendType) v
   , _aaeForwardClientHeaders :: !Bool
   , _aaeStrfyNum             :: !Bool
   , _aaeTimeOut              :: !Timeout
+  , _aaeSource               :: !(ActionSourceInfo b)
   }
 
 data AnnActionMutationAsync
@@ -314,6 +324,7 @@ data AnnActionAsyncQuery (b :: BackendType) v
   , _aaaqFields         :: !(AsyncActionQueryFieldsG b v)
   , _aaaqDefinitionList :: ![(Column b, ScalarType b)]
   , _aaaqStringifyNum   :: !Bool
+  , _aaaqSource         :: !(ActionSourceInfo b)
   }
 
 data ActionExecContext

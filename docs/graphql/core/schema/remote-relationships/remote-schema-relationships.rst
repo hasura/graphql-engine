@@ -26,7 +26,7 @@ Because Hasura is meant to be a GraphQL server that you can expose directly to y
   To see example use cases, check out this `blog post <https://hasura.io/blog/remote-joins-a-graphql-api-to-join-database-and-other-data-sources/>`__.
 
 .. admonition:: Supported from
-  
+
   Remote schema relationships are supported from versions ``v.1.3.0`` and above.
 
 Create remote schema relationships
@@ -126,7 +126,7 @@ For this example, we assume that our schema has a ``users`` table with the field
         }
       }
 
-In this example, we've added a remote schema which is a wrapper around `Auth0 <https://auth0.com/>`__'s REST API (see example 
+In this example, we've added a remote schema which is a wrapper around `Auth0 <https://auth0.com/>`__'s REST API (see example
 `here <https://github.com/hasura/graphql-engine/tree/master/community/boilerplates/remote-schemas/auth0-wrapper>`__).
 
 1. We name the relationship ``auth0_profile``.
@@ -166,3 +166,24 @@ In the GraphiQL tab, test out your remote schema relationship.
         ]
       }
     }
+
+.. _remote_schema_relationship_permissions:
+
+Remote schema relationship permissions
+--------------------------------------
+
+Remote schema relationship permissions are derived from the
+:ref:`remote schema permissions <remote_schema_permissions>` defined for the role.
+When a remote relationship cannot be derived, the remote relationship field will
+not be added to the schema for the role.
+
+Some of the cases in which a remote relationship cannot be derived are:
+
+1. There are no remote schema permissions defined for the role.
+2. The role doesn't have access to the field or types that are used by the
+   remote relationship.
+
+.. note::
+
+   Remote relationship permissions apply only if remote schema permissions
+   are enabled in graphql-engine.

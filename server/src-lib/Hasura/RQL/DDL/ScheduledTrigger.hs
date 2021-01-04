@@ -23,7 +23,7 @@ import qualified Data.Time.Clock                  as C
 --   be created
 runCreateCronTrigger
   :: ( CacheRWM m, MonadIO m
-     , MetadataM m, MonadScheduledEvents m
+     , MetadataM m, MonadMetadataStorageQueryAPI m
      )
   => CreateCronTrigger ->  m EncJSON
 runCreateCronTrigger CreateCronTrigger {..} = do
@@ -79,7 +79,7 @@ updateCronTrigger
   :: ( CacheRWM m
      , MonadIO m
      , MetadataM m
-     , MonadScheduledEvents m
+     , MonadMetadataStorageQueryAPI m
      )
   => CronTriggerMetadata -> m EncJSON
 updateCronTrigger cronTriggerMetadata = do
@@ -97,7 +97,7 @@ updateCronTrigger cronTriggerMetadata = do
 runDeleteCronTrigger
   :: ( CacheRWM m
      , MetadataM m
-     , MonadScheduledEvents m
+     , MonadMetadataStorageQueryAPI m
      )
   => ScheduledTriggerName -> m EncJSON
 runDeleteCronTrigger (ScheduledTriggerName stName) = do
@@ -113,7 +113,7 @@ dropCronTriggerInMetadata name =
   MetadataModifier $ metaCronTriggers %~ OMap.delete name
 
 runCreateScheduledEvent
-  :: (MonadScheduledEvents m) => CreateScheduledEvent -> m EncJSON
+  :: (MonadMetadataStorageQueryAPI m) => CreateScheduledEvent -> m EncJSON
 runCreateScheduledEvent =
   (createScheduledEvent . SESOneOff) >=> \() -> pure successMsg
 

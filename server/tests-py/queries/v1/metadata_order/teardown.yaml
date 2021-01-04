@@ -5,7 +5,6 @@ args:
     sql: |
       DROP TABLE test1 cascade;
       DROP TABLE test2 cascade;
-      DROP TABLE "user address" cascade;
     cascade: true
 - type: clear_metadata
   args: {}
