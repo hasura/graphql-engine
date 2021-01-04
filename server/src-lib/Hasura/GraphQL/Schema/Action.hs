@@ -11,14 +11,14 @@ import qualified Data.HashMap.Strict                   as Map
 import qualified Language.GraphQL.Draft.Syntax         as G
 
 import           Data.Has
+import           Data.Text.Extended
+import           Data.Text.NonEmpty
 
 import qualified Hasura.GraphQL.Parser                 as P
 import qualified Hasura.GraphQL.Parser.Internal.Parser as P
 import qualified Hasura.RQL.DML.Internal               as RQL
 import qualified Hasura.RQL.IR.Select                  as RQL
 
-import           Data.Text.Extended
-import           Data.Text.NonEmpty
 import           Hasura.Backends.Postgres.SQL.Types
 import           Hasura.Backends.Postgres.SQL.Value
 import           Hasura.GraphQL.Parser                 (FieldParser, InputFieldsParser, Kind (..),
@@ -28,8 +28,6 @@ import           Hasura.GraphQL.Schema.Backend
 import           Hasura.GraphQL.Schema.Common
 import           Hasura.GraphQL.Schema.Select
 import           Hasura.RQL.Types
-import           Hasura.SQL.Types
-import           Hasura.SQL.Value
 import           Hasura.Session
 
 
