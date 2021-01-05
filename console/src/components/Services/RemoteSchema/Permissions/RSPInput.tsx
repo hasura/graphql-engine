@@ -8,7 +8,7 @@ interface RSPInputProps {
   value: string | Record<string, any>;
   v: Record<string, string>;
   setArgVal: (v: Record<string, unknown>) => void;
-  setEditMode: any;
+  setEditMode: (b: boolean) => void;
 }
 const RSPInput: React.FC<RSPInputProps> = ({
   k,

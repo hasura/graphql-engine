@@ -16,10 +16,10 @@ import {
   permSetBulkSelect,
 } from './reducer';
 import { fetchRoleList } from '../../Data/DataActions';
-import { PermWrapperProps } from './types';
+import { PermWrapperProps, PermissionsProps } from './types';
 import { Dispatch } from '../../../../types';
 
-const PermWrapper: React.FC<PermWrapperProps> = ({
+const PermWrapper: React.FC<PermWrapperProps & PermissionsProps> = ({
   allRoles,
   allRemoteSchemas,
   ...props

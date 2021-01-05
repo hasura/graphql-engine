@@ -41,6 +41,9 @@ export type SchemaPermissionsState = {
   bulkSelect: string[];
 };
 
+export type argTreeType = {
+  [key: string]: string | number | argTreeType;
+};
 export type Actions = {
   setSchemaDefinition: (data: string) => void;
   permOpenEdit: permOpenEdit;
@@ -84,7 +87,7 @@ export type PermissionsTableProps = {
   setSchemaDefinition: (data: string) => void;
   permOpenEdit: permOpenEdit;
   permCloseEdit: () => void;
-  permSetBulkSelect: (checked: boolean, role: string | null) => void;
+  permSetBulkSelect: (checked: boolean, role: string) => void;
   permSetRoleName: (name: string) => void;
   allRoles: string[];
   currentRemoteSchema: {
