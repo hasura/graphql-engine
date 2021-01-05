@@ -37,7 +37,9 @@ const PermissionEditor: React.FC<PermissionEditorProps> = ({ ...props }) => {
   useEffect(() => {
     // console.log('changed--->', state);
     if (!state) return;
-    setResultString(generateSDL(state, argTree));
+    setResultString(
+      generateSDL(state as DatasourceObject[], argTree as Record<string, any>)
+    );
     // setSchemaDefinition(resultString);
   }, [state, argTree]);
 

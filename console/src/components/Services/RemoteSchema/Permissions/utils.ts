@@ -14,10 +14,16 @@ import {
   ObjectTypeDefinitionNode,
   GraphQLInputField,
   GraphQLList,
+  GraphQLInputFieldMap,
 } from 'graphql';
 import { findRemoteSchemaPermission } from '../utils';
 import { isJsonString } from '../../../Common/utils/jsUtils';
-import { PermissionEdit, DatasourceObject, FieldType } from './types';
+import {
+  PermissionEdit,
+  DatasourceObject,
+  FieldType,
+  argTreeType,
+} from './types';
 
 export const getCreateRemoteSchemaPermissionQuery = (
   def: { role: string },
@@ -143,7 +149,7 @@ export const getTree = (
     return Object.values(introspectionSchemaFields).map(
       ({ name, args: argArray, type, ...rest }: any) => {
         let checked = true;
-        const args = argArray.reduce((p, c) => {
+        const args = argArray.reduce((p: argTreeType, c: FieldType) => {
           return { ...p, [c.name]: { ...c } };
         }, {});
         if (permissionsSchema !== null && !(name in permissionsSchemaFields)) {
@@ -366,8 +372,12 @@ export const generateSDL = (
 
   return result;
 };
+type childArgumentType = {
+  children?: GraphQLInputFieldMap | null;
+  path?: string;
+};
 
-export const getChildArgument = (v: GraphQLInputField): Record<string, any> => {
+export const getChildArgument = (v: GraphQLInputField): childArgumentType => {
   if (typeof v === 'string') return { children: null }; // value field
   if (v?.type instanceof GraphQLInputObjectType && v?.type?.getFields)
     return { children: v?.type?.getFields(), path: 'type._fields' };
@@ -375,7 +385,10 @@ export const getChildArgument = (v: GraphQLInputField): Record<string, any> => {
     (v?.type instanceof GraphQLNonNull || v?.type instanceof GraphQLList) &&
     v?.type?.ofType
   ) {
-    return { children: v?.type?.ofType?._fields, path: 'type.ofType._fields' };
+    return {
+      children: v?.type?.ofType?._fields as GraphQLInputFieldMap,
+      path: 'type.ofType._fields',
+    };
   }
   return {};
 };

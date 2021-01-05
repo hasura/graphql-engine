@@ -1,10 +1,11 @@
 import React, { useRef, useEffect, useState } from 'react';
 import merge from 'lodash.merge';
+import { GraphQLInputField } from 'graphql';
 import { getChildArgument } from './utils';
 import RSPInput from './RSPInput';
 
 interface ArgSelectProps {
-  v: Record<string, any> | unknown;
+  v: Record<string, any>;
   k: string;
   value: string | Record<string, any>;
   level: number;
@@ -20,12 +21,14 @@ export const ArgSelect: React.FC<ArgSelectProps> = ({
 }) => {
   const [expanded, setExpanded] = useState(false);
   const autoExpanded = useRef(false);
-  const [editMode, setEditMode] = useState(
-    value &&
-      ((typeof value === 'string' && value.length > 0) ||
-        typeof value === 'number')
+  const [editMode, setEditMode] = useState<boolean>(
+    Boolean(
+      value &&
+        ((typeof value === 'string' && value.length > 0) ||
+          typeof value === 'number')
+    )
   );
-  const prevState = useRef();
+  const prevState = useRef<Record<string, any>>();
   useEffect(() => {
     if (value && typeof value === 'string' && value.length > 0 && !editMode) {
       // show value instead of pen icon, if the value is defined in the prop
@@ -42,9 +45,9 @@ export const ArgSelect: React.FC<ArgSelectProps> = ({
     }
   }, [value, k, expanded]);
 
-  const { children } = getChildArgument(v);
+  const { children } = getChildArgument(v as GraphQLInputField);
 
-  const setArgVal = val => {
+  const setArgVal = (val: Record<string, any>) => {
     const prevVal = prevState.current;
     if (prevVal) {
       const newState = merge(prevVal, val);
@@ -69,6 +72,7 @@ export const ArgSelect: React.FC<ArgSelectProps> = ({
         </label>
         {expanded &&
           Object.values(children).map(i => {
+            if (typeof value === 'string') return undefined;
             const childVal = value ? value[i?.name] : undefined;
             return (
               <li>

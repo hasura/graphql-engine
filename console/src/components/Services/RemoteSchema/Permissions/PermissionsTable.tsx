@@ -46,7 +46,7 @@ const PermissionsTable: React.FC<PermissionsTableProps> = ({ ...props }) => {
     const dispatchBulkSelect = (e: ChangeEvent<HTMLInputElement>) => {
       const isChecked = e.target.checked;
       const selectedRole = e.target.getAttribute('data-role');
-      permSetBulkSelect(isChecked, selectedRole);
+      permSetBulkSelect(isChecked, selectedRole as string);
     };
 
     const disableCheckbox = !findRemoteSchemaPermission(allPermissions, role);

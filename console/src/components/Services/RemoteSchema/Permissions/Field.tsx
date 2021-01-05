@@ -13,7 +13,7 @@ import { isEmpty } from '../../../Common/utils/jsUtils';
 
 interface FieldProps {
   i: FieldType;
-  setItem: (e?: FieldType) => void;
+  setItem: (e: FieldType) => void;
 }
 
 export const Field: React.FC<FieldProps> = ({
