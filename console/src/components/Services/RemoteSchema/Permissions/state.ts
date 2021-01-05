@@ -1,6 +1,6 @@
-import { SchemaPermissionsState } from './types';
+import { RemoteSchemaPermissionsState } from './types';
 
-const state: SchemaPermissionsState = {
+const state: RemoteSchemaPermissionsState = {
   isEditing: false,
   isFetching: false,
   permissionEdit: {
