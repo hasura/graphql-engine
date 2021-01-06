@@ -35,13 +35,11 @@ export const removeSource = (driver: Driver, name: string) => {
   };
 };
 
-export const reloadSource = (driver: Driver, name: string) => {
-  const typePrefix = driver === 'postgres' ? 'pg_' : 'mysql_';
-
+export const reloadSource = (name: string) => {
   return {
-    type: `${typePrefix}reload_source`,
+    type: 'reload_metadata',
     args: {
-      name,
+      reload_sources: [name],
     },
   };
 };

@@ -266,7 +266,7 @@ export const reloadDataSource = (
 ) => {
   const { dataHeaders } = getState().tables;
 
-  const query = reloadSource(data.driver, data.name);
+  const query = reloadSource(data.name);
 
   const options = {
     method: 'POST',
