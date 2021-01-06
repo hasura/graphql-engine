@@ -475,3 +475,5 @@ export const getArgTreeFromPermissionSDL = (definition: string) => {
     return null;
   }
 };
+
+export const generateTypeString = (str: string) => str.replace(/[^\w\s]/gi, '');
