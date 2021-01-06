@@ -15,6 +15,7 @@ import {
   GraphQLInputField,
   GraphQLList,
   GraphQLInputFieldMap,
+  GraphQLEnumValue,
 } from 'graphql';
 import { findRemoteSchemaPermission } from '../utils';
 import { isJsonString } from '../../../Common/utils/jsUtils';
@@ -373,7 +374,7 @@ export const generateSDL = (
   return result;
 };
 type childArgumentType = {
-  children?: GraphQLInputFieldMap | null;
+  children?: GraphQLInputFieldMap | GraphQLEnumValue[] | null;
   path?: string;
 };
 
@@ -383,15 +384,38 @@ export const getChildArgument = (v: GraphQLInputField): childArgumentType => {
   if (typeof v === 'string') return { children: null }; // value field
   if (v?.type instanceof GraphQLInputObjectType && v?.type?.getFields)
     return { children: v?.type?.getFields(), path: 'type._fields' };
+
+  // either list or nonNull
   if (
     (v?.type instanceof GraphQLNonNull || v?.type instanceof GraphQLList) &&
-    v?.type?.ofType
+    v?.type?.ofType &&
+    v?.type?.ofType?._fields
   ) {
     return {
       children: v?.type?.ofType?._fields as GraphQLInputFieldMap,
       path: 'type.ofType._fields',
     };
   }
+
+  // nonNull inside a GQL list
+  if (v?.type instanceof GraphQLList && v?.type?.ofType)
+    if (
+      v?.type?.ofType instanceof GraphQLNonNull &&
+      v?.type?.ofType &&
+      v?.type?.ofType?.ofType
+    ) {
+      const type = v?.type?.ofType;
+      if (type?.ofType instanceof GraphQLEnumType)
+        return {
+          children: type?.ofType?.getValues() as GraphQLEnumValue[],
+          path: 'type.ofType._fields',
+        };
+      if (type?.ofType instanceof GraphQLInputObjectType)
+        return {
+          children: type?.ofType?.getFields() as GraphQLInputFieldMap,
+          path: 'type.ofType._fields',
+        };
+    }
   return {};
 };
 
