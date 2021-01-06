@@ -308,23 +308,24 @@ const getSDLField = (
     if (!typeName.includes('enum')) {
       if (f?.args) {
         fieldStr = `${fieldStr}(`;
+        // console.log('f.args >>>'   ,f.args);
         Object.values(f.args).forEach((arg: any) => {
           let valueStr = ``;
           if (argTree && argTree[f.name] && argTree[f.name][arg.name]) {
             const argName = argTree[f.name][arg.name];
             const typeOfArg = arg.type.inspect();
             let unquoted;
-            let isSessionVar = true;
+            let isSessionVar = false;
 
-            if (typeof argName === 'string') {
-              isSessionVar = argName.startsWith('x-hasura');
-            }
-
-            if (typeOfArg === 'string' || isSessionVar) {
-              const jsonStr = JSON.stringify(argName);
-              unquoted = jsonStr.replace(/"([^"]+)":/g, '$1:');
-            } else {
-              unquoted = argName;
+              if (typeof argName === 'string') {
+                isSessionVar = argName.startsWith('x-hasura');
+              }
+              if (typeOfArg === 'string' || isSessionVar) {
+                const jsonStr = JSON.stringify(argName);
+                unquoted = jsonStr.replace(/"([^"]+)":/g, '$1:');
+              } else {
+                unquoted = argName;
+              }
             }
 
             valueStr = `${arg.name} : ${arg.type.inspect()}
