@@ -1,9 +1,23 @@
-@import "../../Services/Data/TableModify/ModifyTable.scss";
+@import '../../Services/Data/TableModify/ModifyTable.scss';
+
+.permissionColumns {
+  display: flex;
+  flex-wrap: wrap;
+}
+
+.permissionColumn {
+  margin-right: 50px;
+}
+
+.permissionColumnText {
+  font-style: italic;
+}
 
 .permissionsTable {
-width: 85%;
+  width: 85%;
 
-  td, th {
+  td,
+  th {
     text-align: center;
     vertical-align: middle !important;
     position: relative;
@@ -13,27 +27,23 @@ width: 85%;
     font-weight: bold;
   }
 
-  td:first-child, th:first-child {
+  td:first-child,
+  th:first-child {
     overflow: auto;
     border-right: 4px double #ddd;
     max-width: 250px;
     width: 250px;
   }
 
- //.permissionDelete {
-//  cursor: pointer;
-//  margin-left: 10px;
-//}
-
   .bulkSelect {
     margin-right: 10px !important;
   }
 
-   // TODO: make common with Roles page
+  // TODO: make common with Roles page
   .clickableCell {
     cursor: pointer;
 
-     .editPermsIcon {
+    .editPermsIcon {
       font-size: 12px;
       position: absolute;
       right: 10px;
@@ -46,16 +56,17 @@ width: 85%;
   .clickableCell:hover {
     background-color: #ebf7de;
 
-     .editPermsIcon {
+    .editPermsIcon {
       display: inline-block;
     }
   }
 
-  .currEdit, .currEdit:hover {
-    background-color: #FFF3D5;
-    color: #FD9540;
+  .currEdit,
+  .currEdit:hover {
+    background-color: #fff3d5;
+    color: #fd9540;
 
-     .editPermsIcon {
+    .editPermsIcon {
       display: inline-block;
     }
   }
@@ -117,34 +128,34 @@ width: 85%;
           margin-top: 10px;
           margin-bottom: 10px;
 
-           label {
+          label {
             cursor: pointer;
             min-height: 20px;
             font-weight: normal;
 
-             input:not([disabled]) {
+            input:not([disabled]) {
               cursor: pointer;
             }
           }
         }
 
-         .insertSetConfigRow {
+        .insertSetConfigRow {
           margin: 10px 0px;
           display: flex;
           align-items: center;
 
-           .input_element_wrapper {
+          .input_element_wrapper {
             width: 20%;
 
-             i {
+            i {
               cursor: pointer;
             }
 
-             select {
+            select {
               width: 100%;
             }
 
-             input {
+            input {
               width: 100%;
             }
           }
@@ -155,7 +166,7 @@ width: 85%;
 }
 
 .permissionSymbolNA {
-color: firebrick;
+  color: firebrick;
 }
 
 .permissionSymbolFA {
