@@ -477,7 +477,7 @@ func (c *HasuraRestAPIClient) MarkCLIStateTablesAsMovedToCatalogState() error {
 {
 	"type": "run_sql",
 	"args":{
-		"sql": "INSERT INTO hdb_catalog.migration_settings (setting, value) VALUES ('migrated_settings_to_catalog_state', 'true'); INSERT INTO hdb_catalog.schema_migrations  (version, dirty) VALUES (-5, 'f');"
+		"sql": "INSERT INTO hdb_catalog.migration_settings (setting, value) VALUES ('migrated_settings_to_catalog_state', 'true'); INSERT INTO hdb_catalog.schema_migrations  (version, dirty) VALUES ('-5', 'f');"
 	}
 }
 `)))

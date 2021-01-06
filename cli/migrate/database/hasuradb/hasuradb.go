@@ -34,6 +34,8 @@ func init() {
 const (
 	DefaultMigrationsTable = "schema_migrations"
 	DefaultSchema          = "hdb_catalog"
+
+	DefaultDatasourceName = "default"
 )
 
 var (
@@ -110,6 +112,9 @@ func WithInstance(config *Config, logger *log.Logger, hasuraOpts *database.Hasur
 	}
 	switch {
 	case hasuraOpts.APIVersion == client.V2API:
+		if hx.hasuraOpts.Datasource == "" {
+			hx.hasuraOpts.Datasource = DefaultDatasourceName
+		}
 		hx.CLICatalogState = new(client.CLICatalogState)
 		hx.CLICatalogState.Migrations = client.MigrationsState{}
 		hx.migrationStateStore = NewMigrationsStateWithCatalogStateAPI(hx)

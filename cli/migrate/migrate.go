@@ -1213,7 +1213,7 @@ func (m *Migrate) runMigrations(ret <-chan interface{}) error {
 	case MigrationExecutionStrategySequential:
 		return m.runMigrationsSeq(ret)
 	case MigrationExecutionStrategyTransactional:
-		return m.runMigrations(ret)
+		return m.runMigrationsInTransaction(ret)
 	}
 	return fmt.Errorf("exection strategy for running migrations is not identified")
 }

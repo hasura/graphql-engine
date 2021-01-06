@@ -116,7 +116,7 @@ type MigrateApplyOptions struct {
 	GotoVersion   string
 	SkipExecution bool
 	dryRun        bool
-	Datasource string
+	Datasource    string
 }
 
 func (o *MigrateApplyOptions) Run() error {

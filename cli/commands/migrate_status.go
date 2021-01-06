@@ -44,7 +44,7 @@ func newMigrateStatusCmd(ec *cli.ExecutionContext) *cobra.Command {
 }
 
 type MigrateStatusOptions struct {
-	EC *cli.ExecutionContext
+	EC         *cli.ExecutionContext
 	Datasource string
 }
 
