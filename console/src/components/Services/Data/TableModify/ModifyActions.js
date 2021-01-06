@@ -25,7 +25,6 @@ import {
   getUniqueConstraintName,
 } from '../Common/Components/utils';
 
-import { quoteDefault } from '../utils';
 import { getConfirmation, capitalize } from '../../../Common/utils/jsUtils';
 import {
   findTable,
