@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { GraphQLInputField } from 'graphql';
 import Pen from './Pen';
 import { useDebouncedEffect } from '../../../../hooks/useDebounceEffect';
 
@@ -6,7 +7,7 @@ interface RSPInputProps {
   k: string;
   editMode: boolean;
   value: string | Record<string, any>;
-  v: Record<string, string>;
+  v: GraphQLInputField;
   setArgVal: (v: Record<string, unknown>) => void;
   setEditMode: (b: boolean) => void;
 }
@@ -21,9 +22,19 @@ const RSPInput: React.FC<RSPInputProps> = ({
   const [localValue, setLocalValue] = useState<string>(value as string);
 
   // TODO check more on the browser console error message
-  useDebouncedEffect(() => setArgVal({ [v?.name]: localValue }), 500, [
-    localValue,
-  ]); // ignore continues onChange events till the user finish typing
+  useDebouncedEffect(
+    () => {
+      if (
+        (v?.type?.inspect() === 'Int' || v?.type?.inspect() === 'Int!') &&
+        !Number.isNaN(Number(localValue))
+      )
+        return setArgVal({ [v?.name]: Number(localValue) });
+
+      setArgVal({ [v?.name]: localValue });
+    },
+    500,
+    [localValue]
+  ); // ignore continues onChange events till the user finish typing
   // TODO support different input types :?
   return (
     <>
