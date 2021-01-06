@@ -73,7 +73,7 @@ mkTriggerQ
   -> Ops
   -> SubscribeOpSpec
   -> m ()
-mkTriggerQ trn qt allCols op (SubscribeOpSpec columns payload) = do
+mkTriggerQ trn qt@(QualifiedObject schema table) allCols op (SubscribeOpSpec columns payload) = do
   strfyNum <- stringifyNum <$> askSQLGenCtx
   liftTx $ Q.multiQE defaultTxErrorHandler $ Q.fromText . TL.toStrict $
     let payloadColumns = fromMaybe SubCStar payload
@@ -105,6 +105,8 @@ mkTriggerQ trn qt allCols op (SubscribeOpSpec columns payload) = do
         name = triggerNameToTxt trn
         qualifiedTriggerName = pgIdenTrigger op trn
         qualifiedTable = toSQLTxt qt
+        schemaName = pgFmtLit $ getSchemaTxt schema
+        tableName  = pgFmtLit $ getTableTxt table
 
         operation = tshow op
         oldRow = toSQLTxt $ renderRow OLD

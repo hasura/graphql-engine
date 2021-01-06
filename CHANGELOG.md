@@ -87,6 +87,7 @@ and be accessible according to the permissions that were configured for the role
 - server: update `forkImmortal` function to log more information, i.e log starting of threads and log asynchronous and synchronous exception.
 - server: various changes to ensure timely cleanup of background threads and other resources in the event of a SIGTERM signal.
 - server: fix issue when the `relationships` field in `objects` field is passed `[]` in the `set_custom_types` API (fix #6357)
+- server: fix issue with event triggers defined on a table which is partitioned (fixes #6261)
 - server: fix issue with non-optional fields of the remote schema being added as optional in the graphql-engine (fix #6401)
 - console: allow user to cascade Postgres dependencies when dropping Postgres objects (close #5109) (#5248)
 - console: mark inconsistent remote schemas in the UI (close #5093) (#5181)
