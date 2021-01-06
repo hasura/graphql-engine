@@ -138,6 +138,146 @@ func (c *Client) SendV2QueryOrV1Metadata(m interface{}, opts MetadataOrQueryClie
 
 	return resp, body, err
 }
+func (c *HasuraRestAPIClient) CheckIfMigrationStateStoreWasMovedToCatalogState() (bool, error) {
+	requestBody := strings.NewReader(fmt.Sprintf(`
+{
+	"type": "run_sql",
+	"args":{
+		"sql": "SELECT COUNT(1) FROM information_schema.tables WHERE table_name = 'schema_migrations' AND table_schema = 'hdb_catalog' LIMIT 1"
+	}
+}
+`))
+
+	var response = struct {
+		ResultType string     `json:"result_type"`
+		Result     [][]string `json:"result"`
+	}{}
+	resp, respBody, err := c.SendQueryRequest(requestBody)
+	if err != nil {
+		return false, err
+	}
+	if resp.StatusCode != http.StatusOK {
+		return false, errors.New(string(respBody))
+	}
+	if err := json.Unmarshal(respBody, &response); err != nil {
+		return false, err
+	}
+
+	TuplesOK := "TuplesOk"
+	if response.ResultType != TuplesOK {
+		return false, fmt.Errorf("invalid result Type %s", response.ResultType)
+	}
+
+	if response.Result[1][0] == "0" {
+		// table doesn't exist, so no need to anything
+		return true, nil
+	} else {
+		// check if was migrated bit is set
+		requestBody := strings.NewReader(fmt.Sprintf(`
+{
+	"type": "run_sql",
+	"args":{
+		"sql": "SELECT version FROM hdb_catalog.schema_migrations WHERE version='-5'"
+	}
+}
+`))
+
+		var response = struct {
+			ResultType string     `json:"result_type"`
+			Result     [][]string `json:"result"`
+		}{}
+		resp, respBody, err := c.SendQueryRequest(requestBody)
+		if err != nil {
+			return false, err
+		}
+		if resp.StatusCode != http.StatusOK {
+			return false, errors.New(string(respBody))
+		}
+		if err := json.Unmarshal(respBody, &response); err != nil {
+			return false, err
+		}
+
+		TuplesOK := "TuplesOk"
+		if response.ResultType != TuplesOK {
+			return false, fmt.Errorf("invalid result Type %s", response.ResultType)
+		}
+		if len(response.Result) == 2 {
+			return true, nil
+		}
+	}
+
+	return false, nil
+}
+
+func (c *HasuraRestAPIClient) CheckIfSettingsStateWasMovedToCatalogState() (bool, error) {
+	requestBody := strings.NewReader(fmt.Sprintf(`
+{
+	"type": "run_sql",
+	"args":{
+		"sql": "SELECT COUNT(1) FROM information_schema.tables WHERE table_name = 'migration_settings' AND table_schema = 'hdb_catalog' LIMIT 1"
+	}
+}
+`))
+
+	var response = struct {
+		ResultType string     `json:"result_type"`
+		Result     [][]string `json:"result"`
+	}{}
+	resp, respBody, err := c.SendQueryRequest(requestBody)
+	if err != nil {
+		return false, err
+	}
+	if resp.StatusCode != http.StatusOK {
+		return false, errors.New(string(respBody))
+	}
+	if err := json.Unmarshal(respBody, &response); err != nil {
+		return false, err
+	}
+
+	TuplesOK := "TuplesOk"
+	if response.ResultType != TuplesOK {
+		return false, fmt.Errorf("invalid result Type %s", response.ResultType)
+	}
+
+	if response.Result[1][0] == "0" {
+		return true, nil
+	} else {
+		// check if the migrated entry is set
+		requestBody := strings.NewReader(fmt.Sprintf(`
+{
+	"type": "run_sql",
+	"args":{
+			"sql": "SELECT value from hdb_catalog.migration_settings where setting='migrated_settings_to_catalog_state' LIMIT 1"
+	}
+}
+`))
+
+		var response = struct {
+			ResultType string     `json:"result_type"`
+			Result     [][]string `json:"result"`
+		}{}
+		resp, respBody, err := c.SendQueryRequest(requestBody)
+		if err != nil {
+			return false, err
+		}
+		if resp.StatusCode != http.StatusOK {
+			return false, errors.New(string(respBody))
+		}
+		if err := json.Unmarshal(respBody, &response); err != nil {
+			return false, err
+		}
+
+		TuplesOK := "TuplesOk"
+		if response.ResultType != TuplesOK {
+			return false, fmt.Errorf("invalid result Type %s", response.ResultType)
+		}
+		if len(response.Result) == 2 {
+			return true, nil
+		}
+	}
+
+	return false, nil
+}
 
 func (c *HasuraRestAPIClient) GetMigrationVersions(schemaName, tableName string) (map[uint64]bool, error) {
 	requestBody := strings.NewReader(fmt.Sprintf(`
@@ -330,6 +470,26 @@ func (c *HasuraRestAPIClient) GetCLISettingsFromSQLTable(schemaName string, tabl
 		}
 	}
 	return settings, nil
+}
+
+func (c *HasuraRestAPIClient) MarkCLIStateTablesAsMovedToCatalogState() error {
+	requestBody := bytes.NewReader([]byte(fmt.Sprintf(`
+{
+	"type": "run_sql",
+	"args":{
+		"sql": "INSERT INTO hdb_catalog.migration_settings (setting, value) VALUES ('migrated_settings_to_catalog_state', 'true'); INSERT INTO hdb_catalog.schema_migrations  (version, dirty) VALUES (-5, 'f');"
+	}
+}
+`)))
+
+	resp, respBody, err := c.SendQueryRequest(requestBody)
+	if err != nil {
+		return err
+	}
+	if resp.StatusCode != http.StatusOK {
+		return errors.New(string(respBody))
+	}
+	return nil
 }
 func (c *HasuraRestAPIClient) MoveMigrationsAndSettingsToCatalogState(datasource string, migrations map[uint64]bool, settings map[string]string) error {
 	catalogStateMigrations := MigrationsState{}

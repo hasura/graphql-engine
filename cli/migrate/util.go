@@ -1,11 +1,14 @@
 package migrate
 
+import "C"
 import (
 	"fmt"
 	nurl "net/url"
 	"path/filepath"
 	"runtime"
 	"strings"
+
+	"github.com/hasura/graphql-engine/cli/migrate/database/hasuradb"
 
 	"github.com/hasura/graphql-engine/cli/internal/client"
 
@@ -139,7 +142,46 @@ func NewMigrate(ec *cli.ExecutionContext, isCmd bool, datasource string) (*Migra
 			Client:             ec.APIClient,
 		},
 	}
-	if ec.Config.Version >= cli.V3 {
+
+	if ec.Version.ServerFeatureFlags.HasDatasources {
+		defaultDatasourceName := "default"
+		// check if migration table exists and migrate state to catalog state API
+		hasuraAPIClient, err := client.NewHasuraRestAPIClient(client.NewHasuraRestAPIClientOpts{
+			Headers:        ec.HGEHeaders,
+			QueryAPIURL:    fmt.Sprintf("%s/%s", ec.Config.Endpoint, "v2/query"),
+			MetadataAPIURL: fmt.Sprintf("%s/%s", ec.Config.Endpoint, "v1/metadata"),
+			TLSConfig:      ec.Config.TLSConfig,
+		})
+		shouldMigrateStateToCatalogState := false
+		isSettingsStateMoved, err := hasuraAPIClient.CheckIfSettingsStateWasMovedToCatalogState()
+		if err != nil {
+			ec.Logger.Debug("checking if settings state was moved: ", err)
+		}
+		isMigrationStateMoved, err := hasuraAPIClient.CheckIfMigrationStateStoreWasMovedToCatalogState()
+		if err != nil {
+			ec.Logger.Debug("checking if migration state was moved: ", err)
+		}
+		shouldMigrateStateToCatalogState = !isSettingsStateMoved && !isMigrationStateMoved
+		if shouldMigrateStateToCatalogState {
+			migrations, err := hasuraAPIClient.GetMigrationVersions(hasuradb.DefaultSchema, hasuradb.DefaultMigrationsTable)
+			if err != nil {
+				ec.Logger.Debug("getting migration versions from schema_migrations table: ", err)
+			}
+			settings, err := hasuraAPIClient.GetCLISettingsFromSQLTable(hasuradb.DefaultSchema, hasuradb.DefaultSettingsTable)
+			if err != nil {
+				ec.Logger.Debug("getting migration settings: ", err)
+			}
+			if err := hasuraAPIClient.MoveMigrationsAndSettingsToCatalogState(defaultDatasourceName, migrations, settings); err != nil {
+				ec.Logger.Debug("migrating CLI state to catalog API: ", err)
+			}
+
+			// mark both these tables as moved
+			if err := hasuraAPIClient.MarkCLIStateTablesAsMovedToCatalogState(); err != nil {
+				ec.Logger.Debug("marking cli state was moved from tables to catalog state API: ", err)
+			}
+		}
+	}
+	if ec.Version.ServerFeatureFlags.HasDatasources {
 		opts.hasuraOpts.APIVersion = client.V2API
 	} else {
 		opts.hasuraOpts.APIVersion = client.V1API

@@ -61,9 +61,12 @@ type Driver interface {
 	// Unlock should release the lock. Migrate will call this function after
 	// all migrations have been run.
 	UnLock() error
+	UnLockSeq() error
 
 	// Run applies a migration to the database. migration is guaranteed to be not nil.
 	Run(migration io.Reader, fileType, fileName string) error
+	// RunSeq applies a migration to the database in a sequential fashion. migration is guaranteed to be not nil.
+	RunSeq(migration io.Reader, fileType, fileName string) error
 
 	// Reset Migration Query Args
 	ResetQuery()
@@ -72,6 +75,11 @@ type Driver interface {
 	// Migrate will call this function before and after each call to Run.
 	// version must be >= -1. -1 means NilVersion.
 	InsertVersion(version int64) error
+
+	// SetVersion saves version and dirty state.
+	// Migrate will call this function before and after each call to Run.
+	// version must be >= -1. -1 means NilVersion.
+	SetVersion(version int64, dirty bool) error
 
 	// SetVersion saves version and dirty state.
 	// Migrate will call this function before and after each call to Run.

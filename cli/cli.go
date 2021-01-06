@@ -98,16 +98,16 @@ type ServerAPIPaths struct {
 
 // SetDefaults will set default config values for API Paths
 // This function depends on server feature flags and will panic
-func (s *ServerAPIPaths) SetDefaults(configVersion ConfigVersion) {
+func (s *ServerAPIPaths) SetDefaults(featureFlags *version.ServerFeatureFlags) {
 	if s.Query == "" {
-		if configVersion >= V3 {
+		if featureFlags.HasDatasources {
 			s.Query = "v2/query"
 		} else {
 			s.Query = "v1/query"
 		}
 	}
 
-	if s.Metadata == "" && configVersion >= V3 {
+	if s.Metadata == "" {
 		s.Metadata = "v1/metadata"
 	}
 }
@@ -622,7 +622,7 @@ func (ec *ExecutionContext) Validate() error {
 		return errors.Wrap(err, "error in getting server feature flags")
 	}
 	// set default API Paths w.r.t to server feature flags
-	ec.Config.ServerConfig.APIPaths.SetDefaults(ec.Config.Version)
+	ec.Config.ServerConfig.APIPaths.SetDefaults(ec.Version.ServerFeatureFlags)
 
 	state := util.GetServerState(ec.Config.ServerConfig.GetQueryEndpoint(), ec.Config.ServerConfig.AdminSecret, ec.Config.ServerConfig.TLSConfig, ec.Version.ServerSemver, ec.Logger)
 	ec.ServerUUID = state.UUID

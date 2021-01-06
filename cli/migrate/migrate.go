@@ -68,6 +68,13 @@ func (e ErrDirty) Error() string {
 	return fmt.Sprintf("Dirty database version %v. Fix and force version.", e.Version)
 }
 
+type MigrationExecutionStrategy int
+
+const (
+	MigrationExecutionStrategyTransactional MigrationExecutionStrategy = iota
+	MigrationExecutionStrategySequential
+)
+
 type Migrate struct {
 	sourceName string
 	sourceURL  string
@@ -102,8 +109,9 @@ type Migrate struct {
 
 	status *Status
 
-	SkipExecution bool
-	DryRun        bool
+	SkipExecution     bool
+	DryRun            bool
+	ExecutionStrategy MigrationExecutionStrategy
 }
 
 type NewMigrateOpts struct {
@@ -119,6 +127,11 @@ type NewMigrateOpts struct {
 // The URL scheme is defined by each driver.
 func New(opts NewMigrateOpts) (*Migrate, error) {
 	m := newCommon(opts.cmd)
+	if opts.hasuraOpts.ServerFeatureFlags.HasDatasources {
+		m.ExecutionStrategy = MigrationExecutionStrategySequential
+	} else {
+		m.ExecutionStrategy = MigrationExecutionStrategyTransactional
+	}
 
 	sourceName, err := schemeFromUrl(opts.sourceUrl)
 	if err != nil {
@@ -1196,6 +1209,16 @@ func (m *Migrate) readDown(limit int64, ret chan<- interface{}) {
 // to stop execution because it might have received a stop signal on the
 // GracefulStop channel.
 func (m *Migrate) runMigrations(ret <-chan interface{}) error {
+	switch m.ExecutionStrategy {
+	case MigrationExecutionStrategySequential:
+		return m.runMigrationsSeq(ret)
+	case MigrationExecutionStrategyTransactional:
+		return m.runMigrations(ret)
+	}
+	return fmt.Errorf("exection strategy for running migrations is not identified")
+}
+
+func (m *Migrate) runMigrationsInTransaction(ret <-chan interface{}) error {
 	var lastInsertVersion int64
 	for r := range ret {
 		if m.stop() {
@@ -1231,6 +1254,36 @@ func (m *Migrate) runMigrations(ret <-chan interface{}) error {
 						return err
 					}
 				}
+			}
+		}
+	}
+	return nil
+}
+func (m *Migrate) runMigrationsSeq(ret <-chan interface{}) error {
+	for r := range ret {
+		if m.stop() {
+			return nil
+		}
+
+		switch r.(type) {
+		case error:
+			// Clear Migration query
+			m.databaseDrv.ResetQuery()
+			return r.(error)
+		case *Migration:
+			migr := r.(*Migration)
+			if err := m.databaseDrv.SetVersion(migr.TargetVersion, true); err != nil {
+				return err
+			}
+			if migr.Body != nil {
+				if !m.SkipExecution {
+					if err := m.databaseDrv.RunSeq(migr.BufferedBody, migr.FileType, migr.FileName); err != nil {
+						return err
+					}
+				}
+			}
+			if err := m.databaseDrv.SetVersion(migr.TargetVersion, false); err != nil {
+				return err
 			}
 		}
 	}

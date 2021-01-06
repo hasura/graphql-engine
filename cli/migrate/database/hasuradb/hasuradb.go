@@ -227,6 +227,82 @@ func (h *HasuraDB) Lock() error {
 	return nil
 }
 
+func (h *HasuraDB) UnLockSeq() error {
+	if !h.isLocked {
+		return nil
+	}
+
+	defer func() {
+		h.isLocked = false
+	}()
+	return nil
+}
+
+func (h *HasuraDB) RunSeq(migration io.Reader, fileType, fileName string) error {
+	migr, err := ioutil.ReadAll(migration)
+	if err != nil {
+		return err
+	}
+	body := string(migr[:])
+	switch fileType {
+	case "sql":
+		if body == "" {
+			break
+		}
+		sqlInput := RunSQLInput{
+			SQL: string(body),
+		}
+		if h.config.enableCheckMetadataConsistency {
+			sqlInput.CheckMetadataConsistency = func() *bool { b := false; return &b }()
+		}
+		t := HasuraInterfaceQuery{
+			Type: RunSQL,
+			Args: sqlInput,
+		}
+		resp, body, err := h.SendMetadataOrQueryRequest(t, client.MetadataOrQueryClientFuncOpts{QueryRequestOpts: &client.QueryRequestOpts{}})
+		if err != nil {
+			return err
+		}
+		if resp.StatusCode != http.StatusOK {
+			return errors.New(string(body))
+		}
+	case "meta":
+		var metadataRequests []interface{}
+		err := yaml.Unmarshal(migr, &metadataRequests)
+		if err != nil {
+			h.migrationQuery.ResetArgs()
+			return err
+		}
+		return sendMetadataMigrations(h, metadataRequests)
+	}
+	return nil
+}
+
+func sendMetadataMigrations(hasuradb *HasuraDB, metadataRequests []interface{}) error {
+	for _, v := range metadataRequests {
+		type bulkQuery struct {
+			Type string        `mapstructure:"type"`
+			Args []interface{} `mapstructure:"args"`
+		}
+		var bulk = new(bulkQuery)
+		if _ = mapstructure.Decode(v, bulk); bulk.Type == "bulk" {
+			if err := sendMetadataMigrations(hasuradb, bulk.Args); err != nil {
+				return err
+			}
+			// was a bulk query and was already handled above so skip this iteration
+			continue
+		}
+		resp, body, err := hasuradb.SendMetadataOrQueryRequest(v, client.MetadataOrQueryClientFuncOpts{QueryRequestOpts: &client.QueryRequestOpts{}})
+		if err != nil {
+			return err
+		}
+		if resp.StatusCode != http.StatusOK {
+			return errors.New(string(body))
+		}
+	}
+	return nil
+}
+
 func (h *HasuraDB) UnLock() error {
 	if !h.isLocked {
 		return nil
@@ -409,8 +485,8 @@ func (h *HasuraDB) UnLock() error {
 	}
 	return nil
 }
-
 func (h *HasuraDB) Run(migration io.Reader, fileType, fileName string) error {
+	// have 2 cases
 	migr, err := ioutil.ReadAll(migration)
 	if err != nil {
 		return err
@@ -455,6 +531,10 @@ func (h *HasuraDB) ResetQuery() {
 
 func (h *HasuraDB) InsertVersion(version int64) error {
 	return h.migrationStateStore.InsertVersion(version)
+}
+
+func (h *HasuraDB) SetVersion(version int64, dirty bool) error {
+	return h.migrationStateStore.SetVersion(version, dirty)
 }
 
 func (h *HasuraDB) RemoveVersion(version int64) error {

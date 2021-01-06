@@ -107,7 +107,7 @@ func UpgradeProjectToMultipleSources(opts UpgradeToMuUpgradeProjectToMultipleSou
 	newConfig := *opts.EC.Config
 	newConfig.Version = cli.V3
 	newConfig.DatasourcesConfig = datasourceConfigs
-	newConfig.ServerConfig.APIPaths.SetDefaults(cli.V3)
+	newConfig.ServerConfig.APIPaths.SetDefaults(opts.EC.Version.ServerFeatureFlags)
 	if err := opts.EC.WriteConfig(&newConfig); err != nil {
 		return err
 	}
