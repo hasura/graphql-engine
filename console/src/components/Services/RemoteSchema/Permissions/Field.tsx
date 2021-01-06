@@ -55,7 +55,7 @@ export const Field: React.FC<FieldProps> = ({
     const selectedTypeName = target.id;
 
     // context from PermissionEditor.tsx
-    context.goToElement(selectedTypeName);
+    context.scrollToElement(selectedTypeName);
   };
 
   if (!i.checked)
