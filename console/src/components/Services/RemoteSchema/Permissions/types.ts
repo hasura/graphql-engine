@@ -33,7 +33,7 @@ export type PermissionEdit = {
   filter: string;
 };
 
-export type SchemaPermissionsState = {
+export type RemoteSchemaPermissionsState = {
   isEditing: false;
   isFetching: false;
   permissionEdit: PermissionEdit;

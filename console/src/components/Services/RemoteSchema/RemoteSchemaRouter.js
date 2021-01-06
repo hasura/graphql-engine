@@ -110,7 +110,7 @@ const getRemoteSchemaRouter = (connect, store, composeOnEnterHooks) => {
         />
         <Route
           path=":remoteSchemaName/permissions"
-          component={permissionsConnector(connect)}
+          component={permissionsConnector}
         />
       </Route>
     </Route>

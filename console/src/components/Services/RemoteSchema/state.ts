@@ -1,11 +1,13 @@
-const asyncState = {
+import { AsyncState, ListState, AddState } from './types';
+
+const asyncState: AsyncState = {
   isRequesting: false,
   isError: false,
   isFetching: false,
   isFetchError: null,
 };
 
-const listState = {
+const listState: ListState = {
   remoteSchemas: [],
   filtered: [],
   searchQuery: '',
@@ -13,7 +15,7 @@ const listState = {
   ...asyncState,
 };
 
-const addState = {
+const addState: AddState = {
   manualUrl: '',
   envName: null,
   headers: [],

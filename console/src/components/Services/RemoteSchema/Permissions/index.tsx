@@ -1,4 +1,5 @@
 import React from 'react';
+import { connect } from 'react-redux';
 import Permissions from './Permissions';
 import RemoteSchemaContainer from '../Containers/remoteSchemaContainer';
 import {
@@ -17,7 +18,7 @@ import {
 } from './reducer';
 import { fetchRoleList } from '../../Data/DataActions';
 import { PermWrapperProps, PermissionsProps } from './types';
-import { Dispatch } from '../../../../types';
+import { Dispatch, ReduxState } from '../../../../types';
 
 const PermWrapper: React.FC<PermWrapperProps & PermissionsProps> = ({
   allRoles,
@@ -37,7 +38,7 @@ const PermWrapper: React.FC<PermWrapperProps & PermissionsProps> = ({
   );
 };
 
-const mapStateToProps = (state: any) => {
+const mapStateToProps = (state: ReduxState) => {
   return {
     ...state.remoteSchemas.permissions,
     allRoles: state.tables.allRoles,
@@ -68,5 +69,4 @@ const mapDispatchToProps = (dispatch: Dispatch) => {
   };
 };
 
-export default (connect: any) =>
-  connect(mapStateToProps, mapDispatchToProps)(PermWrapper);
+export default connect(mapStateToProps, mapDispatchToProps)(PermWrapper);

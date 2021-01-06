@@ -7,6 +7,7 @@ import { EventsState } from './components/Services/Events/state';
 import { RAEvents } from './components/Services/Events/types';
 import { ConsoleNotification } from './components/Main/ConsoleNotification';
 import { Nullable } from './components/Common/utils/tsUtils';
+import { RemoteSchemaState } from './components/Services/RemoteSchema/types';
 
 export type UserTypes = 'admin' | string;
 
@@ -33,6 +34,7 @@ export type ReduxState = {
     schemaList: Schema[];
     allSchemas: Table[];
     dataHeaders: Record<string, string>;
+    allRoles: string[];
   };
   events: EventsState;
   main: {
@@ -43,6 +45,7 @@ export type ReduxState = {
     consoleNotifications: ConsoleNotification[];
   };
   telemetry: ConsoleState;
+  remoteSchemas: RemoteSchemaState;
 };
 
 export type ReduxAction = RAEvents | RouterAction;
