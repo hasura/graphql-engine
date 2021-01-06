@@ -2,6 +2,7 @@ type: bulk
 args:
 
 #Create required extensions, tables and insert test data
+
 - type: run_sql
   args:
     sql: |
@@ -22,6 +23,7 @@ args:
         (ST_AsRaster(ST_Buffer(ST_GeomFromEWKT('SRID=4326;POINT(1 2)'),2), 5, 5))
       , (ST_AsRaster(ST_Buffer(ST_GeomFromEWKT('SRID=4326;LINESTRING(0 0, 0.5 1, 1 2, 1.5 3)'), 2), 5, 5))
       ;
+
 - type: track_table
   args:
     name: dummy_rast

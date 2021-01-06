@@ -1,5 +1,6 @@
 type: bulk
 args:
+
 - type: run_sql
   args:
     sql: |
@@ -7,3 +8,4 @@ args:
           c1 int,
           c2 text
       );
+

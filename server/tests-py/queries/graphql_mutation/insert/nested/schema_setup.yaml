@@ -2,6 +2,7 @@ type: bulk
 args:
 
 #Author table
+
 - type: run_sql
   args:
     sql: |
@@ -11,15 +12,6 @@ args:
           is_registered boolean not null default false,
           emails text[] not null default '{}'::text[]
       );
-- type: track_table
-  args:
-    schema: public
-    name: author
-
-#Article table
-- type: run_sql
-  args:
-    sql: |
       CREATE TABLE article (
         id SERIAL PRIMARY KEY,
         title TEXT,
@@ -40,6 +32,12 @@ args:
           ) AND author_id = author_row.id
       $$ LANGUAGE sql STABLE;
 
+- type: track_table
+  args:
+    schema: public
+    name: author
+
+#Article table
 - type: track_table
   args:
     schema: public

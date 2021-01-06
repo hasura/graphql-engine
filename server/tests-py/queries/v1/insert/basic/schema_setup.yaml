@@ -2,6 +2,7 @@ type: bulk
 args:
 
 #Author table
+
 - type: run_sql
   args:
     sql: |
@@ -9,15 +10,6 @@ args:
           id serial primary key,
           name text unique
       );
-- type: track_table
-  args:
-    schema: public
-    name: author
-
-#Article table
-- type: run_sql
-  args:
-    sql: |
       CREATE TABLE article (
         id SERIAL PRIMARY KEY,
         title TEXT,
@@ -25,7 +17,35 @@ args:
         author_id INTEGER REFERENCES author(id),
         is_published BOOLEAN,
         published_on TIMESTAMP
-      )
+      );
+      CREATE TABLE orders (
+        id SERIAL PRIMARY KEY,
+        placed TIMESTAMPTZ NOT NULL,
+        shipped TIMESTAMPTZ
+      );
+      CREATE TABLE colors
+        ( value text PRIMARY KEY
+        , comment text );
+      INSERT INTO colors (value, comment) VALUES
+        ('red',    '#FF0000'),
+        ('green',  '#00FF00'),
+        ('blue',   '#0000FF'),
+        ('orange', '#FFFF00'),
+        ('yellow', '#00FFFF'),
+        ('purple', '#FF00FF');
+
+      CREATE TABLE posts
+        ( id serial PRIMARY KEY
+        , title text NOT NULL
+        , custom_color text REFERENCES colors );
+      SET TIME ZONE 'UTC';
+
+- type: track_table
+  args:
+    schema: public
+    name: author
+
+#Article table
 - type: track_table
   args:
     schema: public
@@ -33,14 +53,6 @@ args:
 
 
 #Order table
-- type: run_sql
-  args:
-    sql: |
-      CREATE TABLE orders (
-        id SERIAL PRIMARY KEY,
-        placed TIMESTAMPTZ NOT NULL,
-        shipped TIMESTAMPTZ
-      )
 - type: track_table
   args:
     schema: public
@@ -66,24 +78,6 @@ args:
         column: author_id
 
 # Enum table
-- type: run_sql
-  args:
-    sql: |
-      CREATE TABLE colors
-        ( value text PRIMARY KEY
-        , comment text );
-      INSERT INTO colors (value, comment) VALUES
-        ('red',    '#FF0000'),
-        ('green',  '#00FF00'),
-        ('blue',   '#0000FF'),
-        ('orange', '#FFFF00'),
-        ('yellow', '#00FFFF'),
-        ('purple', '#FF00FF');
-
-      CREATE TABLE posts
-        ( id serial PRIMARY KEY
-        , title text NOT NULL
-        , custom_color text REFERENCES colors );
 - type: track_table
   args:
     table: colors
@@ -92,7 +86,3 @@ args:
   args: posts
 
 #Set timezone
-- type: run_sql
-  args:
-    sql: |
-      SET TIME ZONE 'UTC';

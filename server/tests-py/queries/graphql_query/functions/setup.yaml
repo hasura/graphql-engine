@@ -2,6 +2,7 @@ type: bulk
 args:
 
 #Article table
+
 - type: run_sql
   args:
     sql: |
@@ -9,16 +10,7 @@ args:
         id serial PRIMARY KEY,
         title TEXT,
         content TEXT
-      )
-- type: track_table
-  args:
-    schema: public
-    name: post
-
-#Search post function
-- type: run_sql
-  args:
-    sql: |
+      );
       create function search_posts(search text)
       returns setof post as $$
           select *
@@ -27,24 +19,10 @@ args:
           title ilike ('%' || search || '%') or
           content ilike ('%' || search || '%')
       $$ language sql stable;
-- type: track_function
-  args:
-    name: search_posts
-    schema: public
-
-#Insert values
-- type: run_sql
-  args:
-    sql: |
       insert into post (title, content)
       values
       ('post by hasura', 'content for post'),
-      ('post by another', 'content for another post')
-
-# Table with uuid column
-- type: run_sql
-  args:
-    sql: |
+      ('post by another', 'content for another post');
       create table test(
         id serial primary key,
         name text not null,
@@ -65,29 +43,6 @@ args:
       returns setof test as $$
       select * from test where id = (hasura_session ->> 'x-hasura-user-id')::Int
       $$ language sql stable;
-
-- type: track_table
-  args:
-    name: test
-    schema: public
-
-- type: track_function
-  args:
-    name: get_test
-    schema: public
-- type: track_function
-  version: 2
-  args:
-    function:
-      name: get_test_session_id
-      schema: public
-    configuration:
-      session_argument: hasura_session
-
-# custom add sql function
-- type: run_sql
-  args:
-    sql: |
       CREATE TABLE integer_column
       (
         result integer
@@ -97,39 +52,16 @@ args:
       RETURNS SETOF integer_column as $$
         SELECT q.* FROM (VALUES (first + second)) as q
       $$ LANGUAGE SQL STABLE;
-
-- type: track_table
-  args:
-    name: integer_column
-    schema: public
-
-- type: track_function
-  args:
-    name: my_add
-    schema: public
-
-# test functions having multiple defaults
-- type: run_sql
-  args:
-    sql: |
        CREATE TABLE "user" (
          id SERIAL PRIMARY KEY,
          name TEXT NOT NULL,
          is_admin BOOLEAN DEFAULT FALSE
        );
-
-- type: run_sql
-  args:
-    sql: |
        INSERT INTO "user" (name, is_admin) VALUES
          ('Starke Blake', true)
        , ('Bellamy Blake', true)
        , ('Dora Blake', true)
        ;
-
-- type: run_sql
-  args:
-    sql: |
       CREATE FUNCTION get_users(search text, integer default 10, boolean default false)
       RETURNS SETOF "user" AS $$
           SELECT *
@@ -139,21 +71,6 @@ args:
             AND is_admin = $3
           LIMIT $2
       $$ LANGUAGE sql STABLE;
-
-- type: track_table
-  args:
-    name: user
-    schema: public
-
-- type: track_function
-  args:
-    name: get_users
-    schema: public
-
-# V2 Functions
-- type: run_sql
-  args:
-    sql: |
       CREATE TABLE text_result(
         result text
       );
@@ -162,25 +79,6 @@ args:
       RETURNS SETOF text_result AS $$
           SELECT q.* FROM (VALUES (hasura_session ->> session_var)) q
       $$ LANGUAGE sql STABLE;
-
-- type: track_table
-  args:
-    name: text_result
-    schema: public
-
-- type: track_function
-  version: 2
-  args:
-    function:
-      schema: public
-      name: get_session_var
-    configuration:
-      session_argument: hasura_session
-
-# track & query functions that return SETOF materialized views
-- type: run_sql
-  args:
-    sql: |
       CREATE TABLE author(
         id SERIAL PRIMARY KEY,
         first_name TEXT,
@@ -202,6 +100,74 @@ args:
             last_name = query
       $FUNCTION$ LANGUAGE sql STABLE;
 
+- type: track_table
+  args:
+    schema: public
+    name: post
+
+#Search post function
+- type: track_function
+  args:
+    name: search_posts
+    schema: public
+
+#Insert values
+- type: track_table
+  args:
+    name: test
+    schema: public
+
+- type: track_function
+  args:
+    name: get_test
+    schema: public
+- type: track_function
+  version: 2
+  args:
+    function:
+      name: get_test_session_id
+      schema: public
+    configuration:
+      session_argument: hasura_session
+
+# custom add sql function
+- type: track_table
+  args:
+    name: integer_column
+    schema: public
+
+- type: track_function
+  args:
+    name: my_add
+    schema: public
+
+# test functions having multiple defaults
+- type: track_table
+  args:
+    name: user
+    schema: public
+
+- type: track_function
+  args:
+    name: get_users
+    schema: public
+
+# V2 Functions
+- type: track_table
+  args:
+    name: text_result
+    schema: public
+
+- type: track_function
+  version: 2
+  args:
+    function:
+      schema: public
+      name: get_session_var
+    configuration:
+      session_argument: hasura_session
+
+# track & query functions that return SETOF materialized views
 - type: track_table
   args:
     name: author

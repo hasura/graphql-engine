@@ -2,6 +2,9 @@ type: bulk
 args:
 
 #Author table
+
+  #test table
+
 - type: run_sql
   args:
     sql: |

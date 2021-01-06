@@ -2,6 +2,7 @@ type: bulk
 args:
 
 #Author table
+
 - type: run_sql
   args:
     sql: |
@@ -9,15 +10,6 @@ args:
           id serial primary key,
           name text unique
       );
-- type: track_table
-  args:
-    schema: public
-    name: author
-
-#Article table
-- type: run_sql
-  args:
-    sql: |
       CREATE TABLE article (
         id SERIAL PRIMARY KEY,
         title TEXT,
@@ -26,21 +18,29 @@ args:
         is_published BOOLEAN,
         published_on TIMESTAMP,
         tags JSONB
-      )
-- type: track_table
-  args:
-    schema: public
-    name: article
-
-- type: run_sql
-  args:
-    sql: |
+      );
       CREATE TABLE product (
         id          SERIAL  PRIMARY KEY,
         name        TEXT    NOT NULL,
         category    TEXT    NOT NULL,
         spec        JSONB   NOT NULL
       );
+      insert into author (name)
+      values
+      ('Author 1'),
+      ('Author 2');
+
+- type: track_table
+  args:
+    schema: public
+    name: author
+
+#Article table
+- type: track_table
+  args:
+    schema: public
+    name: article
+
 - type: track_table
   args:
     schema: public
@@ -67,14 +67,6 @@ args:
 
 
 #Insert values
-- type: run_sql
-  args:
-    sql: |
-      insert into author (name)
-      values
-      ('Author 1'),
-      ('Author 2')
-
 - type: insert
   args:
     table: article

@@ -1,5 +1,6 @@
 type: bulk
 args:
+
 - type: run_sql
   args:
     sql: |
@@ -7,6 +8,7 @@ args:
           c1 int,
           c2 text
       );
+
 - type: track_table
   args:
     schema: hge_tests
@@ -18,11 +20,11 @@ args:
       schema: hge_tests
       name: test_t1
     insert:
-      columns: "*"
+      columns: '*'
     update:
-      columns: "*"
+      columns: '*'
     delete:
-      columns: "*"
+      columns: '*'
     enable_manual: true
     webhook: http://127.0.0.1:5592
 - type: create_event_trigger
@@ -32,10 +34,10 @@ args:
       schema: hge_tests
       name: test_t1
     insert:
-      columns: "*"
+      columns: '*'
     update:
-      columns: "*"
+      columns: '*'
     delete:
-      columns: "*"
+      columns: '*'
     enable_manual: false
     webhook: http://127.0.0.1:5592

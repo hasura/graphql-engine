@@ -1,21 +1,26 @@
 type: bulk
 args:
 
+
 - type: run_sql
   args:
     sql: |
-     CREATE EXTENSION IF NOT EXISTS postgis;
-
-
-# Author table
-- type: run_sql
-  args:
-    sql: |
+      CREATE EXTENSION IF NOT EXISTS postgis;
       create table author(
           id       SERIAL PRIMARY KEY,
           name     TEXT UNIQUE,
           location GEOGRAPHY(Point)
       );
+      create table article(
+          id       SERIAL PRIMARY KEY,
+          body     JSONB
+      );
+      create table misgivings(
+          i INTEGER,
+          f REAL
+      );
+      insert into misgivings values (43, 102);
+
 - type: track_table
   args:
     schema: public
@@ -23,13 +28,6 @@ args:
 
 
 # Article table
-- type: run_sql
-  args:
-    sql: |
-      create table article(
-          id       SERIAL PRIMARY KEY,
-          body     JSONB
-      );
 - type: track_table
   args:
     schema: public
@@ -37,17 +35,6 @@ args:
 
 
 # Some other table
-- type: run_sql
-  args:
-    sql: |
-      create table misgivings(
-          i INTEGER,
-          f REAL
-      );
-- type: run_sql
-  args:
-    sql: |
-      insert into misgivings values (43, 102);
 - type: track_table
   args:
     schema: public

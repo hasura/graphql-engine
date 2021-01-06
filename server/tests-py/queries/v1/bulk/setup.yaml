@@ -1,5 +1,6 @@
 type: bulk
 args:
+
 - type: run_sql
   args:
     sql: |
@@ -8,6 +9,7 @@ args:
         name text unique,
         is_registered boolean
         );
+
 - type: track_table
   args:
     schema: public

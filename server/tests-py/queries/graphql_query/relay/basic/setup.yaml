@@ -1,5 +1,6 @@
 type: bulk
 args:
+
 - type: run_sql
   args:
     sql: |
@@ -80,7 +81,6 @@ args:
         ('first_1', 'last_1', 24, null),
         ('first_2', 'last_2', null, 'Bangalore');
 
-# Track tables and define relationships
 - type: track_table
   args:
     name: author

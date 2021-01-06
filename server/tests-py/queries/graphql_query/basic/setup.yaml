@@ -1,6 +1,7 @@
 type: bulk
 args:
 
+
 - type: run_sql
   args:
     sql: |
@@ -8,32 +9,13 @@ args:
           r       double precision,
           i       double precision
       );
-
-- type: run_sql
-  args:
-    sql: |
       CREATE TYPE inventory_item AS (
           name            text,
           supplier_id     integer,
           price           numeric
       );
-
-#Set timezone
-- type: run_sql
-  args:
-    sql: |
       SET TIME ZONE 'UTC';
-
-#Set money locale
-- type: run_sql
-  args:
-    sql: |
       SET lc_monetary TO "en_US.utf-8";
-
-#Test table with different types
-- type: run_sql
-  args:
-    sql: |
       create table test_types (
           c1_smallint smallint,
           c2_integer integer,
@@ -81,30 +63,11 @@ args:
           c44_xml xml,
           c45_money money
       );
-- type: track_table
-  args:
-    schema: public
-    name: test_types
-
-
-#Author table
-- type: run_sql
-  args:
-    sql: |
       create table author(
           id serial primary key,
           name text unique,
           "createdAt" timestamptz
       );
-- type: track_table
-  args:
-    schema: public
-    name: author
-
-#Article table
-- type: run_sql
-  args:
-    sql: |
       CREATE TABLE article (
         id SERIAL PRIMARY KEY,
         title TEXT,
@@ -112,36 +75,7 @@ args:
         author_id INTEGER REFERENCES author(id),
         is_published BOOLEAN,
         published_on TIMESTAMP
-      )
-- type: track_table
-  args:
-    schema: public
-    name: article
-
-
-
-#Object relationship
-- type: create_object_relationship
-  args:
-    table: article
-    name: author
-    using:
-      foreign_key_constraint_on: author_id
-
-#Array relationship
-- type: create_array_relationship
-  args:
-    table: author
-    name: articles
-    using:
-      foreign_key_constraint_on:
-        table: article
-        column: author_id
-
-#Insert values
-- type: run_sql
-  args:
-    sql: |
+      );
       insert into test_types
       ( c1_smallint
       , c2_integer
@@ -229,20 +163,11 @@ args:
       , '(2011-02-05T12:03:00+00:00, 2012-03-04T16:40:04+00:00]' -- c43_range_timestamptz
       , '<foo>bar</foo>'                            -- c44_xml
       ,  123.45                                     -- c45_money
-      )
-
-#Insert values
-- type: run_sql
-  args:
-    sql: |
+      );
       insert into author (name, "createdAt")
       values
       ('Author 1', '2017-09-21T09:39:44Z'),
-      ('Author 2', '2017-09-21T09:50:44Z')
-
-- type: run_sql
-  args:
-    sql: |
+      ('Author 2', '2017-09-21T09:50:44Z');
       insert into article (title,content,author_id,is_published)
       values
       (
@@ -262,17 +187,57 @@ args:
         'Sample article content 3',
         2,
         true
-      )
-
-#User table with bigserial and bigint columns
-- type: run_sql
-  args:
-    sql: |
+      );
       CREATE TABLE "user" (
         id BIGSERIAL PRIMARY KEY,
         name TEXT NOT NULL,
         number BIGINT
       );
+      create extension if not exists citext;
+      create table person (
+          id serial primary key,
+          name citext
+      );
+
+- type: track_table
+  args:
+    schema: public
+    name: test_types
+
+
+#Author table
+- type: track_table
+  args:
+    schema: public
+    name: author
+
+#Article table
+- type: track_table
+  args:
+    schema: public
+    name: article
+
+
+
+#Object relationship
+- type: create_object_relationship
+  args:
+    table: article
+    name: author
+    using:
+      foreign_key_constraint_on: author_id
+
+#Array relationship
+- type: create_array_relationship
+  args:
+    table: author
+    name: articles
+    using:
+      foreign_key_constraint_on:
+        table: article
+        column: author_id
+
+#Insert values
 - type: track_table
   args:
     schema: public
@@ -286,14 +251,6 @@ args:
     - name: User 2
       number: '123456780'
 
-- type: run_sql
-  args:
-    sql: |
-      create extension if not exists citext;
-      create table person (
-          id serial primary key,
-          name citext
-      );
 - type: track_table
   args:
     schema: public
@@ -302,6 +259,6 @@ args:
   args:
     table: person
     objects:
-    - name: "John\\"
-    - name: "Clarke"
-    - name: "clarke"
+    - name: John\
+    - name: Clarke
+    - name: clarke

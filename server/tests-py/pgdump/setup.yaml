@@ -1,5 +1,6 @@
 type: bulk
 args:
+
 - type: run_sql
   args:
     sql: |
@@ -13,6 +14,7 @@ args:
           title text NOT NULL,
           body text NOT NULL
       );
+
 - args:
     name: authors
     schema: public

@@ -1,6 +1,9 @@
 type: bulk
 args:
 
+
+  # A user can query only code but not country
+
 - type: run_sql
   args:
     sql: |

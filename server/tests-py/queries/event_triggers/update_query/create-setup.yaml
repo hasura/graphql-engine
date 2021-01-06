@@ -1,5 +1,6 @@
 type: bulk
 args:
+
 - type: run_sql
   args:
     sql: |
@@ -8,6 +9,7 @@ args:
           c2 text,
           c3 json
       );
+
 - type: track_table
   args:
     schema: hge_tests
@@ -19,7 +21,7 @@ args:
       schema: hge_tests
       name: test_t1
     insert:
-      columns: "*"
+      columns: '*'
     update:
-      columns: ["c2", "c3"]
+      columns: [c2, c3]
     webhook: http://127.0.0.1:5592
