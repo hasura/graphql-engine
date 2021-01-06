@@ -30,7 +30,6 @@ export type PermissionEdit = {
   isNewRole: boolean;
   isNewPerm: boolean;
   role: string;
-  filter: string;
 };
 
 export type RemoteSchemaPermissionsState = {

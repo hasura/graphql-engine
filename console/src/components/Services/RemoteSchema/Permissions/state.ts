@@ -8,7 +8,6 @@ const state: RemoteSchemaPermissionsState = {
     isNewRole: false,
     isNewPerm: false,
     role: '',
-    filter: '',
   },
   schemaDefinition: '',
   bulkSelect: [],

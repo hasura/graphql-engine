@@ -87,7 +87,7 @@ const PermissionEditor: React.FC<PermissionEditorProps> = ({ ...props }) => {
       <div className={styles.tree}>
         <PermissionEditorContext.Provider value={{ argTree, setArgTree }}>
           <Tree list={state as FieldType[]} setState={setState} />
-          {/* <code style={{ whiteSpace: 'pre-wrap' }}>{resultString}</code> */}
+          <code style={{ whiteSpace: 'pre-wrap' }}>{resultString}</code>
         </PermissionEditorContext.Provider>
       </div>
       <Button
