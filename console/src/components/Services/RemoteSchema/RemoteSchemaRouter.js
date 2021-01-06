@@ -18,17 +18,11 @@ import { fetchRemoteSchemas, FILTER_REMOTE_SCHEMAS } from './Actions';
 // Whenever any operation happens like add remoteSchema/delete remoteSchema, this state should update automatically.
 
 import { appPrefix } from './constants';
+import { prioritySearch } from '../../Common/utils/jsUtils';
 
 const filterItem = dispatch => {
   return (dataList, searchVal) => {
-    // form new schema
-    const matchedTables = dataList.filter(data => {
-      return (
-        data.name
-          .toLowerCase()
-          .indexOf(searchVal ? searchVal.toLowerCase() : '') !== -1
-      );
-    });
+    const matchedTables = prioritySearch(searchVal, dataList, 'name');
     dispatch({
       type: FILTER_REMOTE_SCHEMAS,
       data: {

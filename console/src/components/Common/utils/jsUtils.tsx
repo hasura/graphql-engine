@@ -357,3 +357,38 @@ export const getCurrTimeForFileName = () => {
 export const convertDateTimeToLocale = (dateTime: string) => {
   return moment(dateTime, moment.ISO_8601).format('ddd, MMM Do HH:mm:ss Z');
 };
+
+export const prioritySearch = (
+  searchText: string,
+  searchList: Record<string, any>[],
+  searchProp: string
+) => {
+  let searchResults = searchList;
+  if (searchText) {
+    const primarySameCaseResults: Record<string, any>[] = [];
+    const secondarySameCaseResults: Record<string, any>[] = [];
+    const primaryOppCaseResults: Record<string, any>[] = [];
+    const secondaryOppCaseResults: Record<string, any>[] = [];
+    searchList.forEach(term => {
+      const currentTerm = term[searchProp];
+      const lowerCurrentTerm = currentTerm.toLowerCase();
+      const lowerSearchText = searchText.toLowerCase();
+      if (currentTerm.startsWith(searchText)) {
+        primarySameCaseResults.push(term);
+      } else if (currentTerm.includes(searchText)) {
+        secondarySameCaseResults.push(term);
+      } else if (lowerCurrentTerm.startsWith(lowerSearchText)) {
+        primaryOppCaseResults.push(term);
+      } else if (lowerCurrentTerm.includes(lowerSearchText)) {
+        secondaryOppCaseResults.push(term);
+      }
+    });
+    searchResults = [
+      ...primarySameCaseResults,
+      ...secondarySameCaseResults,
+      ...primaryOppCaseResults,
+      ...secondaryOppCaseResults,
+    ];
+  }
+  return searchResults;
+};

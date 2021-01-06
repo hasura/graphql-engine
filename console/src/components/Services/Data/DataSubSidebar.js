@@ -12,7 +12,7 @@ import {
   checkIfTable,
   getFunctionSchema,
 } from '../../Common/utils/pgUtils';
-import { isEmpty } from '../../Common/utils/jsUtils';
+import { isEmpty, prioritySearch } from '../../Common/utils/jsUtils';
 import {
   getFunctionModifyRoute,
   getSchemaAddTableRoute,
@@ -67,12 +67,16 @@ class DataSubSidebar extends React.Component {
       currentSchema
     ).filter(table => table.is_table_tracked);
 
-    const filteredTableList = trackedTablesInSchema.filter(t =>
-      getTableName(t).includes(searchInput)
+    const filteredTableList = prioritySearch(
+      searchInput,
+      trackedTablesInSchema,
+      'table_name'
     );
 
-    const filteredFunctionsList = trackedFunctions.filter(f =>
-      getFunctionName(f).includes(searchInput)
+    const filteredFunctionsList = prioritySearch(
+      searchInput,
+      trackedFunctions,
+      'function_name'
     );
 
     const getSearchInput = () => {
@@ -99,9 +103,9 @@ class DataSubSidebar extends React.Component {
           filteredTablesObject[getTableName(t)] = t;
         });
 
-        const sortedTableNames = Object.keys(filteredTablesObject).sort();
+        const tableNames = Object.keys(filteredTablesObject);
 
-        tableLinks = sortedTableNames.map((tableName, i) => {
+        tableLinks = tableNames.map((tableName, i) => {
           const table = filteredTablesObject[tableName];
 
           const isActive =
