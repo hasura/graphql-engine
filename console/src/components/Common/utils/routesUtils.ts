@@ -2,60 +2,97 @@
 
 /*** DATA ROUTES ***/
 
-export const getSchemaBaseRoute = schemaName => {
+export const getSchemaBaseRoute = (schemaName: string) => {
   // return `${globals.urlPrefix}/data/schema/${schemaName}`;
   return `/data/schema/${encodeURIComponent(schemaName)}`;
 };
 
-export const getSchemaAddTableRoute = schemaName => {
+export const getSchemaAddTableRoute = (schemaName: string) => {
   return `${getSchemaBaseRoute(schemaName)}/table/add`;
 };
 
-export const getSchemaPermissionsRoute = schemaName => {
+export const getSchemaPermissionsRoute = (schemaName: string) => {
   return `${getSchemaBaseRoute(schemaName)}/permissions`;
 };
 
-const getTableBaseRoute = (schemaName, tableName, isTable) => {
+const getTableBaseRoute = (
+  schemaName: string,
+  tableName: string,
+  isTable: boolean
+) => {
   return `${getSchemaBaseRoute(schemaName)}/${
     isTable ? 'tables' : 'views'
   }/${encodeURIComponent(tableName)}`;
 };
 
-export const getTableBrowseRoute = (schemaName, tableName, isTable) => {
+export const getTableBrowseRoute = (
+  schemaName: string,
+  tableName: string,
+  isTable: boolean
+) => {
   return `${getTableBaseRoute(schemaName, tableName, isTable)}/browse`;
 };
 
-export const getTableInsertRowRoute = (schemaName, tableName, isTable) => {
+export const getTableInsertRowRoute = (
+  schemaName: string,
+  tableName: string,
+  isTable: boolean
+) => {
   return `${getTableBaseRoute(schemaName, tableName, isTable)}/insert`;
 };
 
-export const getTableEditRowRoute = (schemaName, tableName, isTable) => {
+export const getTableEditRowRoute = (
+  schemaName: string,
+  tableName: string,
+  isTable: boolean
+) => {
   return `${getTableBaseRoute(schemaName, tableName, isTable)}/edit`;
 };
 
-export const getTableModifyRoute = (schemaName, tableName, isTable) => {
+export const getTableModifyRoute = (
+  schemaName: string,
+  tableName: string,
+  isTable: boolean
+) => {
   return `${getTableBaseRoute(schemaName, tableName, isTable)}/modify`;
 };
 
-export const getTableRelationshipsRoute = (schemaName, tableName, isTable) => {
+export const getTableRelationshipsRoute = (
+  schemaName: string,
+  tableName: string,
+  isTable: boolean
+) => {
   return `${getTableBaseRoute(schemaName, tableName, isTable)}/relationships`;
 };
 
-export const getTablePermissionsRoute = (schemaName, tableName, isTable) => {
+export const getTablePermissionsRoute = (
+  schemaName: string,
+  tableName: string,
+  isTable: boolean
+) => {
   return `${getTableBaseRoute(schemaName, tableName, isTable)}/permissions`;
 };
 
-export const getFunctionBaseRoute = (schemaName, functionName) => {
+export const getFunctionBaseRoute = (
+  schemaName: string,
+  functionName: string
+) => {
   return `${getSchemaBaseRoute(schemaName)}/functions/${encodeURIComponent(
     functionName
   )}`;
 };
 
-export const getFunctionModifyRoute = (schemaName, functionName) => {
+export const getFunctionModifyRoute = (
+  schemaName: string,
+  functionName: string
+) => {
   return `${getFunctionBaseRoute(schemaName, functionName)}/modify`;
 };
 
-export const getFunctionPermissionsRoute = (schemaName, functionName) => {
+export const getFunctionPermissionsRoute = (
+  schemaName: string,
+  functionName: string
+) => {
   return `${getFunctionBaseRoute(schemaName, functionName)}/permissions`;
 };
 
@@ -75,84 +112,96 @@ export const eventsPrefix = 'events';
 export const scheduledEventsPrefix = 'cron';
 export const adhocEventsPrefix = 'one-off-scheduled-events';
 export const dataEventsPrefix = 'data';
-export const routeType = 'absolute' | 'relative';
+export type RouteType = 'absolute' | 'relative';
 
-export const getSTRoute = (type, relativeRoute) => {
+export const getSTRoute = (
+  type: RouteType = 'absolute',
+  relativeRoute: string
+) => {
   if (type === 'relative') {
     return `${relativeRoute}`;
   }
   return `/${eventsPrefix}/${scheduledEventsPrefix}/${relativeRoute}`;
 };
-export const getETRoute = (type, relativeRoute) => {
+export const getETRoute = (
+  type: RouteType = 'absolute',
+  relativeRoute: string
+) => {
   if (type === 'relative') {
     return `${relativeRoute}`;
   }
   return `/${eventsPrefix}/${dataEventsPrefix}/${relativeRoute}`;
 };
-export const getAdhocEventsRoute = (type, relativeRoute) => {
+export const getAdhocEventsRoute = (
+  type: RouteType = 'absolute',
+  relativeRoute = ''
+) => {
   if (type === 'relative') {
     return `${relativeRoute}`;
   }
   return `/${eventsPrefix}/${adhocEventsPrefix}/${relativeRoute}`;
 };
 
-export const isDataEventsRoute = route => {
+export const isDataEventsRoute = (route: string) => {
   return route.includes(`/${eventsPrefix}/${dataEventsPrefix}`);
 };
-export const isScheduledEventsRoute = route => {
+export const isScheduledEventsRoute = (route: string) => {
   return route.includes(`/${eventsPrefix}/${scheduledEventsPrefix}`);
 };
-export const isAdhocScheduledEventRoute = route => {
+export const isAdhocScheduledEventRoute = (route: string) => {
   return route.includes(`/${eventsPrefix}/${adhocEventsPrefix}`);
 };
-export const getAddSTRoute = type => {
+
+export const getAddSTRoute = (type?: RouteType) => {
   return getSTRoute(type, 'add');
 };
-export const getScheduledEventsLandingRoute = type => {
+export const getScheduledEventsLandingRoute = (type?: RouteType) => {
   return getSTRoute(type, 'manage');
 };
-export const getSTModifyRoute = (stName, type) => {
+export const getSTModifyRoute = (stName: string, type?: RouteType) => {
   return getSTRoute(type, `${stName}/modify`);
 };
-export const getSTPendingEventsRoute = (stName, type) => {
+export const getSTPendingEventsRoute = (stName: string, type?: RouteType) => {
   return getSTRoute(type, `${stName}/pending`);
 };
-export const getSTProcessedEventsRoute = (stName, type) => {
+export const getSTProcessedEventsRoute = (stName: string, type?: RouteType) => {
   return getSTRoute(type, `${stName}/processed`);
 };
-export const getSTInvocationLogsRoute = (stName, type) => {
+export const getSTInvocationLogsRoute = (stName: string, type?: RouteType) => {
   return getSTRoute(type, `${stName}/logs`);
 };
-export const getAddETRoute = type => {
+export const getAddETRoute = (type?: any) => {
   return getETRoute(type, 'add');
 };
-export const getDataEventsLandingRoute = type => {
+
+export const getDataEventsLandingRoute = (type?: RouteType) => {
   return getETRoute(type, 'manage');
 };
-export const getETModifyRoute = (etName, type) => {
+export const getETModifyRoute = (etName: string, type?: RouteType) => {
   return getETRoute(type, `${etName}/modify`);
 };
-export const getETPendingEventsRoute = (etName, type) => {
+export const getETPendingEventsRoute = (etName: string, type?: RouteType) => {
   return getETRoute(type, `${etName}/pending`);
 };
-export const getETProcessedEventsRoute = (etName, type) => {
+export const getETProcessedEventsRoute = (etName: string, type?: RouteType) => {
   return getETRoute(type, `${etName}/processed`);
 };
-export const getETInvocationLogsRoute = (etName, type) => {
+export const getETInvocationLogsRoute = (etName: string, type?: RouteType) => {
   return getETRoute(type, `${etName}/logs`);
 };
-export const getAddAdhocEventRoute = type => {
+
+export const getAddAdhocEventRoute = (type: RouteType) => {
   return getAdhocEventsRoute(type, 'add');
 };
-export const getAdhocEventsLogsRoute = type => {
+export const getAdhocEventsLogsRoute = (type: RouteType) => {
   return getAdhocEventsRoute(type, 'logs');
 };
-export const getAdhocPendingEventsRoute = type => {
+export const getAdhocPendingEventsRoute = (type: RouteType) => {
   return getAdhocEventsRoute(type, 'pending');
 };
-export const getAdhocProcessedEventsRoute = type => {
+export const getAdhocProcessedEventsRoute = (type: RouteType) => {
   return getAdhocEventsRoute(type, 'processed');
 };
-export const getAdhocEventsInfoRoute = type => {
+export const getAdhocEventsInfoRoute = (type: RouteType) => {
   return getAdhocEventsRoute(type, 'info');
 };
