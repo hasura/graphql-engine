@@ -86,6 +86,8 @@ and be accessible according to the permissions that were configured for the role
 - server: do not block catalog migration on inconsistent metadata
 - server: update `forkImmortal` function to log more information, i.e log starting of threads and log asynchronous and synchronous exception.
 - server: various changes to ensure timely cleanup of background threads and other resources in the event of a SIGTERM signal.
+- server: fix issue when the `relationships` field in `objects` field is passed `[]` in the `set_custom_types` API (fix #6357)
+- server: fix issue with non-optional fields of the remote schema being added as optional in the graphql-engine (fix #6401)
 - console: allow user to cascade Postgres dependencies when dropping Postgres objects (close #5109) (#5248)
 - console: mark inconsistent remote schemas in the UI (close #5093) (#5181)
 - console: remove ONLY as default for ALTER TABLE in column alter operations (close #5512) #5706
@@ -97,6 +99,7 @@ and be accessible according to the permissions that were configured for the role
 - console: misc bug fixes (close #4785, #6330, #6288)
 - cli: add missing global flags for seed command (#5565)
 - cli: allow seeds as alias for seed command (#5693)
+- cli: fix action timeouts not being picked up in metadata operations (#6220)
 - build: add `test_server_pg_13` to the CI to run the server tests on Postgres v13 (#6070)
 
 ## v1.3.3

@@ -445,6 +445,9 @@ class TestSetCustomTypes:
     def test_list_type_relationship(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + '/list_type_relationship.yaml')
 
+    def test_drop_relationship(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/drop_relationship.yaml')
+
 @pytest.mark.usefixtures('per_class_tests_db_state')
 class TestActionsMetadata:
 

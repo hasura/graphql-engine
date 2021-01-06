@@ -245,6 +245,9 @@ class TestAddRemoteSchemaTbls:
         st_code, resp = hge_ctx.v1q_f(self.dir + '/create_conflicting_table.yaml')
         assert st_code == 400
         assert resp['code'] == 'remote-schema-conflicts'
+        # Drop "user" table which is created in the previous test
+        st_code, resp = hge_ctx.v1q_f(self.dir + '/drop_user_table.yaml')
+        assert st_code == 200, resp
 
     def test_introspection(self, hge_ctx):
         with open('queries/graphql_introspection/introspection.yaml') as f:

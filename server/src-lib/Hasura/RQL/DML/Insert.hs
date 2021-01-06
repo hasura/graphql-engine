@@ -9,6 +9,7 @@ import qualified Data.HashSet                                 as HS
 import qualified Data.Sequence                                as DS
 import qualified Database.PG.Query                            as Q
 
+import           Control.Monad.Trans.Control                  (MonadBaseControl)
 import           Data.Aeson.Types
 import           Data.Text.Extended
 
@@ -23,6 +24,7 @@ import           Hasura.RQL.DML.Internal
 import           Hasura.RQL.DML.Types
 import           Hasura.RQL.IR.Insert
 import           Hasura.RQL.Types
+import           Hasura.RQL.Types.Run
 import           Hasura.Server.Version                        (HasVersion)
 import           Hasura.Session
 
@@ -126,7 +128,7 @@ buildConflictClause sessVarBldr tableInfo inpCols (OnConflict mTCol mTCons act) 
 
 
 convInsertQuery
-  :: (UserInfoM m, QErrM m, CacheRM m)
+  :: (UserInfoM m, QErrM m, TableInfoRM 'Postgres m)
   => (Value -> m [InsObj])
   -> SessVarBldr 'Postgres m
   -> (ColumnType 'Postgres -> Value -> m S.SQLExp)
@@ -137,7 +139,7 @@ convInsertQuery objsParser sessVarBldr prepFn (InsertQuery tableName val oC mRet
   insObjs <- objsParser val
 
   -- Get the current table information
-  tableInfo <- askTabInfo tableName
+  tableInfo <- askTabInfoSource tableName
   let coreInfo = _tiCoreInfo tableInfo
 
   -- If table is view then check if it is insertable
@@ -195,24 +197,27 @@ convInsertQuery objsParser sessVarBldr prepFn (InsertQuery tableName val oC mRet
 
 convInsQ
   :: (QErrM m, UserInfoM m, CacheRM m)
-  => InsertQuery
+  => SourceName -> InsertQuery
   -> m (InsertQueryP1 'Postgres, DS.Seq Q.PrepArg)
-convInsQ =
-  runDMLP1T .
-  convInsertQuery (withPathK "objects" . decodeInsObjs)
-  sessVarFromCurrentSetting
-  binRHSBuilder
+convInsQ source query = do
+  tableCache <- askTableCache source
+  flip runTableCacheRT (source, tableCache) $ runDMLP1T $
+    convInsertQuery (withPathK "objects" . decodeInsObjs)
+    sessVarFromCurrentSetting binRHSBuilder query
 
 runInsert
   :: ( HasVersion, QErrM m, UserInfoM m
-     , CacheRM m, MonadTx m, HasSQLGenCtx m, MonadIO m
-     , Tracing.MonadTrace m
+     , CacheRM m, HasSQLGenCtx m, MonadIO m
+     , MonadBaseControl IO m, Tracing.MonadTrace m
      )
-  => Env.Environment -> InsertQuery -> m EncJSON
-runInsert env q = do
-  res <- convInsQ q
+  => Env.Environment -> SourceName -> InsertQuery -> m EncJSON
+runInsert env source q = do
+  sourceConfig <- _pcConfiguration <$> askPGSourceCache source
+  res <- convInsQ source q
   strfyNum <- stringifyNum <$> askSQLGenCtx
-  execInsertQuery env strfyNum Nothing res
+  liftEitherM $ runExceptT $
+    runQueryLazyTx (_pscExecCtx sourceConfig) Q.ReadWrite $
+    execInsertQuery env strfyNum Nothing res
 
 decodeInsObjs :: (UserInfoM m, QErrM m) => Value -> m [InsObj]
 decodeInsObjs v = do

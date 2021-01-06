@@ -66,6 +66,7 @@ actionExecute nonObjectTypeMap actionInfo = runMaybeT do
                , _aaeForwardClientHeaders = _adForwardClientHeaders definition
                , _aaeStrfyNum = stringifyNum
                , _aaeTimeOut = _adTimeout definition
+               , _aaeSource  = getActionSourceInfo (_aiOutputObject actionInfo)
                }
   where
     ActionInfo actionName outputObject definition permissions comment = actionInfo
@@ -149,6 +150,7 @@ actionAsyncQuery actionInfo = runMaybeT do
               , _aaaqFields = fields
               , _aaaqDefinitionList = mkDefinitionList outputObject
               , _aaaqStringifyNum = stringifyNum
+              , _aaaqSource  = getActionSourceInfo (_aiOutputObject actionInfo)
               }
   where
     ActionInfo actionName outputObject definition permissions comment = actionInfo
@@ -164,8 +166,9 @@ actionOutputFields
   :: forall m n r. (BackendSchema 'Postgres, MonadSchema n m, MonadTableInfo 'Postgres r m, MonadRole r m, Has QueryContext r)
   => AnnotatedObjectType 'Postgres
   -> m (Parser 'Output n (RQL.AnnFieldsG 'Postgres (UnpreparedValue 'Postgres)))
-actionOutputFields outputObject = do
-  let scalarOrEnumFields = map scalarOrEnumFieldParser $ toList $ _otdFields outputObject
+actionOutputFields annotatedObject = do
+  let outputObject = _aotDefinition annotatedObject
+      scalarOrEnumFields = map scalarOrEnumFieldParser $ toList $ _otdFields outputObject
   relationshipFields <- forM (_otdRelationships outputObject) $ traverse relationshipFieldParser
   let allFieldParsers = scalarOrEnumFields <>
                         maybe [] (catMaybes . toList) relationshipFields
@@ -194,7 +197,7 @@ actionOutputFields outputObject = do
       :: TypeRelationship (TableInfo 'Postgres) (ColumnInfo 'Postgres)
       -> m (Maybe (FieldParser n (RQL.AnnFieldG 'Postgres (UnpreparedValue 'Postgres))))
     relationshipFieldParser typeRelationship = runMaybeT do
-      let TypeRelationship relName relType tableInfo fieldMapping = typeRelationship
+      let TypeRelationship relName relType _ tableInfo fieldMapping = typeRelationship
           tableName = _tciName $ _tiCoreInfo tableInfo
           fieldName = unRelationshipName relName
       roleName <- lift askRoleName
@@ -214,13 +217,14 @@ actionOutputFields outputObject = do
                         RQL.AnnRelationSelectG tableRelName columnMapping selectExp
 
 mkDefinitionList :: AnnotatedObjectType 'Postgres -> [(PGCol, ScalarType 'Postgres)]
-mkDefinitionList ObjectTypeDefinition{..} =
+mkDefinitionList AnnotatedObjectType{..} =
   flip map (toList _otdFields) $ \ObjectFieldDefinition{..} ->
     (unsafePGCol . G.unName . unObjectFieldName $ _ofdName,) $
     case Map.lookup _ofdName fieldReferences of
       Nothing         -> fieldTypeToScalarType $ snd _ofdType
       Just columnInfo -> unsafePGColumnToBackend $ pgiType columnInfo
   where
+    ObjectTypeDefinition{..} = _aotDefinition
     fieldReferences =
       Map.unions $ map _trFieldMapping $ maybe [] toList _otdRelationships
 

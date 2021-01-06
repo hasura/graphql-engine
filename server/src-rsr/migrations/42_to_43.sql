@@ -47,3 +47,22 @@ CREATE TABLE hdb_catalog.hdb_metadata
 
 -- DROP hdb_views schema (https://github.com/hasura/graphql-engine/pull/6135)
 DROP SCHEMA IF EXISTS hdb_views CASCADE;
+
+-- Note [Migration of schema related to table event triggers log]
+
+-- Table event triggers log related schema is
+-- - TABLE hdb_catalog.event_log
+-- - TABLE hdb_catalog.event_invocation_logs
+-- - PROCEDURE hdb_catalog.insert_event_log
+
+-- We define this schema in any pg source to support table event triggers.
+-- There's a possibility of using metadata storage database as a source
+-- (more likely if server is started with only --database-url option).
+-- In this case, dropping the schema in this up (42 to 43) migration and re-creating the
+-- same while defining as a pg source causes loss of event trigger logs.
+-- To avoid this we won't drop the schema in this migration. While defining
+-- a pg source we will define this schema only if this doesn't exist. This also
+-- raises a question, "What happens if old database is only used as metadata storage?".
+-- Then, definitely, this schema will be of no use. But, this helps a lot in down
+-- migration (opposite to this migration, 43 to 42) as we create this schema only if this
+-- doesn't exist.

@@ -4,6 +4,7 @@ module Data.URL.Template
   , TemplateItem
   , Variable
   , printURLTemplate
+  , mkPlainURLTemplate
   , parseURLTemplate
   , renderURLTemplate
   , genURLTemplate
@@ -43,6 +44,10 @@ newtype URLTemplate = URLTemplate {unURLTemplate :: [TemplateItem]}
 
 printURLTemplate :: URLTemplate -> Text
 printURLTemplate = T.concat . map printTemplateItem . unURLTemplate
+
+mkPlainURLTemplate :: Text -> URLTemplate
+mkPlainURLTemplate =
+  URLTemplate . pure . TIText
 
 parseURLTemplate :: Text -> Either String URLTemplate
 parseURLTemplate t = parseOnly parseTemplate t

@@ -31,6 +31,8 @@ import qualified Data.Sequence                       as Seq
 
 import           Control.Arrow.Extended
 import           Control.Lens
+import           Control.Monad.Morph
+import           Control.Monad.Trans.Control         (MonadBaseControl)
 import           Control.Monad.Unique
 import           Data.Aeson                          (toJSON)
 import           Data.Aeson.Casing
@@ -39,6 +41,7 @@ import           Data.List                           (nub)
 import           Data.Text.Extended
 
 import           Hasura.Backends.Postgres.Connection
+import           Hasura.RQL.Types.Common
 import           Hasura.RQL.Types.Error
 import           Hasura.RQL.Types.Metadata
 import           Hasura.RQL.Types.RemoteSchema       (RemoteSchemaName)
@@ -118,7 +121,7 @@ data BuildReason
   -- updated the catalog. Since that instance already updated table event triggers in @hdb_catalog@,
   -- this build should be read-only.
   | CatalogSync
-  deriving (Show, Eq)
+  deriving (Eq)
 
 data CacheInvalidations = CacheInvalidations
   { ciMetadata      :: !Bool
@@ -127,19 +130,25 @@ data CacheInvalidations = CacheInvalidations
   , ciRemoteSchemas :: !(HashSet RemoteSchemaName)
   -- ^ Force refetching of the given remote schemas, even if their definition has not changed. Set
   -- by the @reload_remote_schema@ API.
+  , ciSources       :: !(HashSet SourceName)
+  -- ^ Force re-establishing connections of the given data sources, even if their configuration has not changed. Set
+  -- by the @pg_reload_source@ API.
   }
 $(deriveJSON (aesonDrop 2 snakeCase) ''CacheInvalidations)
 
 instance Semigroup CacheInvalidations where
-  CacheInvalidations a1 b1 <> CacheInvalidations a2 b2 = CacheInvalidations (a1 || a2) (b1 <> b2)
+  CacheInvalidations a1 b1 c1 <> CacheInvalidations a2 b2 c2 =
+    CacheInvalidations (a1 || a2) (b1 <> b2) (c1 <> c2)
 instance Monoid CacheInvalidations where
-  mempty = CacheInvalidations False mempty
+  mempty = CacheInvalidations False mempty mempty
 
 instance (CacheRWM m) => CacheRWM (ReaderT r m) where
   buildSchemaCacheWithOptions a b c = lift $ buildSchemaCacheWithOptions a b c
 instance (CacheRWM m) => CacheRWM (StateT s m) where
   buildSchemaCacheWithOptions a b c = lift $ buildSchemaCacheWithOptions a b c
 instance (CacheRWM m) => CacheRWM (TraceT m) where
+  buildSchemaCacheWithOptions a b c = lift $ buildSchemaCacheWithOptions a b c
+instance (CacheRWM m) => CacheRWM (LazyTxT QErr m) where
   buildSchemaCacheWithOptions a b c = lift $ buildSchemaCacheWithOptions a b c
 
 -- | A simple monad class which enables fetching and setting @'Metadata'
@@ -165,8 +174,11 @@ newtype MetadataT m a
   deriving
     ( Functor, Applicative, Monad, MonadTrans
     , MonadIO, MonadUnique, MonadReader r, MonadError e, MonadTx
-    , TableCoreInfoRM b, CacheRM, CacheRWM
+    , SourceM, TableCoreInfoRM b, CacheRM, CacheRWM, MFunctor
     )
+
+deriving instance (MonadBase IO m) => MonadBase IO (MetadataT m)
+deriving instance (MonadBaseControl IO m) => MonadBaseControl IO (MetadataT m)
 
 instance (Monad m) => MetadataM (MetadataT m) where
   getMetadata = MetadataT get

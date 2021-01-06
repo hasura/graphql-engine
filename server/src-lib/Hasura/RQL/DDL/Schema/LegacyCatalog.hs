@@ -24,8 +24,9 @@ import           Hasura.RQL.DDL.ComputedField
 import           Hasura.RQL.DDL.Permission
 import           Hasura.RQL.Types
 
-saveMetadataToHdbTables :: (MonadTx m, HasSystemDefined m) => Metadata -> m ()
-saveMetadataToHdbTables (Metadata tables functions schemas collections
+saveMetadataToHdbTables
+  :: (MonadTx m, HasSystemDefined m) => MetadataNoSources -> m ()
+saveMetadataToHdbTables (MetadataNoSources tables functions schemas collections
                          allowlist customTypes actions cronTriggers) = do
 
   withPathK "tables" $ do
@@ -46,7 +47,7 @@ saveMetadataToHdbTables (Metadata tables functions schemas collections
         indexedForM_ _tmComputedFields $
           \(ComputedFieldMetadata name definition comment) ->
             addComputedFieldToCatalog $
-              AddComputedField _tmTable name definition comment
+              AddComputedField defaultSource _tmTable name definition comment
 
       -- Remote Relationships
       withPathK "remote_relationships" $
@@ -54,7 +55,7 @@ saveMetadataToHdbTables (Metadata tables functions schemas collections
           \(RemoteRelationshipMetadata name def) -> do
              let RemoteRelationshipDef rs hf rf = def
              addRemoteRelationshipToCatalog $
-               RemoteRelationship name _tmTable hf rs rf
+               RemoteRelationship name defaultSource _tmTable hf rs rf
 
       -- Permissions
       withPathK "insert_permissions" $ processPerms _tmTable _tmInsertPermissions
@@ -167,7 +168,7 @@ addComputedFieldToCatalog q =
     |] (schemaName, tableName, computedField, Q.AltJ definition, comment) True
   where
     QualifiedObject schemaName tableName = table
-    AddComputedField table computedField definition comment = q
+    AddComputedField _ table computedField definition comment = q
 
 addRemoteRelationshipToCatalog :: MonadTx m => RemoteRelationship -> m ()
 addRemoteRelationshipToCatalog remoteRelationship = liftTx $
@@ -278,7 +279,7 @@ addCronTriggerToCatalog CronTriggerMetadata {..} = liftTx $ do
   let scheduleTimes = generateScheduleTimes currentTime 100 ctSchedule -- generate next 100 events
   insertScheduledEventTx $ SESCron $ map (CronEventSeed ctName) scheduleTimes
 
-fetchMetadataFromHdbTables :: MonadTx m => m Metadata
+fetchMetadataFromHdbTables :: MonadTx m => m MetadataNoSources
 fetchMetadataFromHdbTables = liftTx do
   tables <- Q.catchE defaultTxErrorHandler fetchTables
   let tableMetaMap = OMap.fromList . flip map tables $
@@ -340,7 +341,7 @@ fetchMetadataFromHdbTables = liftTx do
   -- fetch actions
   actions <- oMapFromL _amName <$> fetchActions
 
-  Metadata fullTableMetaMap functions remoteSchemas collections
+  MetadataNoSources fullTableMetaMap functions remoteSchemas collections
            allowlist customTypes actions <$> fetchCronTriggers
 
   where

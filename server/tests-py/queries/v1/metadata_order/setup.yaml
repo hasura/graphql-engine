@@ -195,20 +195,3 @@ args:
 - type: add_collection_to_allowlist
   args:
     collection: collection_2
-
-- type: run_sql
-  args:
-    sql: |
-      CREATE TABLE "user address" (
-        id serial primary key,
-        name text,
-        address text
-      );
-      ALTER INDEX "user address_pkey" RENAME TO user_address_pkey;
-
-- type: track_table
-  version: 2
-  args:
-    table: user address
-    configuration:
-      custom_name: user_address

@@ -14,6 +14,7 @@ import qualified Data.Environment                             as Env
 import qualified Data.Sequence                                as DS
 import qualified Database.PG.Query                            as Q
 
+import           Control.Monad.Trans.Control                  (MonadBaseControl)
 import           Data.Aeson
 
 import qualified Hasura.Backends.Postgres.SQL.DML             as S
@@ -27,18 +28,19 @@ import           Hasura.RQL.DML.Internal
 import           Hasura.RQL.DML.Types
 import           Hasura.RQL.IR.Delete
 import           Hasura.RQL.Types
+import           Hasura.RQL.Types.Run
 import           Hasura.Server.Version                        (HasVersion)
 
 
 validateDeleteQWith
-  :: (UserInfoM m, QErrM m, CacheRM m)
+  :: (UserInfoM m, QErrM m, TableInfoRM 'Postgres m)
   => SessVarBldr 'Postgres m
   -> (ColumnType 'Postgres -> Value -> m S.SQLExp)
   -> DeleteQuery
   -> m (AnnDel 'Postgres)
 validateDeleteQWith sessVarBldr prepValBldr
   (DeleteQuery tableName rqlBE mRetCols) = do
-  tableInfo <- askTabInfo tableName
+  tableInfo <- askTabInfoSource tableName
   let coreInfo = _tiCoreInfo tableInfo
 
   -- If table is view then check if it deletable
@@ -81,18 +83,23 @@ validateDeleteQWith sessVarBldr prepValBldr
 
 validateDeleteQ
   :: (QErrM m, UserInfoM m, CacheRM m)
-  => DeleteQuery -> m (AnnDel 'Postgres, DS.Seq Q.PrepArg)
-validateDeleteQ =
-  runDMLP1T . validateDeleteQWith sessVarFromCurrentSetting binRHSBuilder
+  => SourceName -> DeleteQuery -> m (AnnDel 'Postgres, DS.Seq Q.PrepArg)
+validateDeleteQ source query = do
+  tableCache <- askTableCache source
+  flip runTableCacheRT (source, tableCache) $ runDMLP1T $
+    validateDeleteQWith sessVarFromCurrentSetting binRHSBuilder query
 
 runDelete
   :: ( HasVersion, QErrM m, UserInfoM m, CacheRM m
-     , MonadTx m, HasSQLGenCtx m, MonadIO m
-     , Tracing.MonadTrace m
+     , HasSQLGenCtx m, MonadIO m
+     , MonadBaseControl IO m, Tracing.MonadTrace m
      )
   => Env.Environment
+  -> SourceName
   -> DeleteQuery
   -> m EncJSON
-runDelete env q = do
+runDelete env source q = do
+  sourceConfig <- _pcConfiguration <$> askPGSourceCache source
   strfyNum <- stringifyNum <$> askSQLGenCtx
-  validateDeleteQ q >>= execDeleteQuery env strfyNum Nothing
+  validateDeleteQ source q >>= liftEitherM . runExceptT .
+    runQueryLazyTx (_pscExecCtx sourceConfig) Q.ReadWrite . execDeleteQuery env strfyNum Nothing

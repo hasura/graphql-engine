@@ -13,21 +13,20 @@ module Hasura.GraphQL.Execute.Query
 
 import           Hasura.Prelude
 
-import qualified Data.Aeson                                as J
-import qualified Data.Environment                          as Env
-import qualified Data.HashMap.Strict                       as Map
-import qualified Data.HashMap.Strict.InsOrd                as OMap
-import qualified Data.Sequence.NonEmpty                    as NESeq
-import qualified Database.PG.Query                         as Q
-import qualified Language.GraphQL.Draft.Syntax             as G
-import qualified Network.HTTP.Client                       as HTTP
-import qualified Network.HTTP.Types                        as HTTP
+import qualified Data.Aeson                             as J
+import qualified Data.Environment                       as Env
+import qualified Data.HashMap.Strict                    as Map
+import qualified Data.HashMap.Strict.InsOrd             as OMap
+import qualified Data.Sequence.NonEmpty                 as NESeq
+import qualified Database.PG.Query                      as Q
+import qualified Language.GraphQL.Draft.Syntax          as G
+import qualified Network.HTTP.Client                    as HTTP
+import qualified Network.HTTP.Types                     as HTTP
 
-import qualified Hasura.Backends.Postgres.Translate.Select as DS
-import qualified Hasura.GraphQL.Transport.HTTP.Protocol    as GH
-import qualified Hasura.Logging                            as L
-import qualified Hasura.RQL.IR.Select                      as DS
-import qualified Hasura.Tracing                            as Tracing
+import qualified Hasura.GraphQL.Transport.HTTP.Protocol as GH
+import qualified Hasura.Logging                         as L
+import qualified Hasura.RQL.IR.Select                   as DS
+import qualified Hasura.Tracing                         as Tracing
 
 import           Hasura.Backends.Postgres.Connection
 import           Hasura.EncJSON
@@ -40,20 +39,9 @@ import           Hasura.GraphQL.Execute.Resolve
 import           Hasura.GraphQL.Parser
 import           Hasura.Metadata.Class
 import           Hasura.RQL.Types
-import           Hasura.Server.Version                     (HasVersion)
+import           Hasura.Server.Version                  (HasVersion)
 import           Hasura.Session
 
-
-data ActionQueryPlan (b :: BackendType)
-  = AQPAsyncQuery !(DS.AnnSimpleSel b) -- ^ Cacheable plan
-  | AQPQuery !ActionExecuteTx -- ^ Non cacheable transaction
-
-actionQueryToRootFieldPlan
-  :: PrepArgMap -> ActionQueryPlan 'Postgres -> RootFieldPlan
-actionQueryToRootFieldPlan prepped = \case
-  AQPAsyncQuery s -> RFPPostgres $
-    PreparedSql (DS.selectQuerySQL DS.JASSingleObject s) prepped Nothing
-  AQPQuery tx     -> RFPActionQuery tx
 
 -- See Note [Temporarily disabling query plan caching]
 -- data ReusableVariableTypes
@@ -152,7 +140,6 @@ instance MonadQueryInstrumentation m => MonadQueryInstrumentation (MetadataStora
 convertQuerySelSet
   :: forall m tx .
      ( MonadError QErr m
-     , MonadMetadataStorage (MetadataStorageT m)
      , HasVersion
      , MonadIO m
      , Tracing.MonadTrace m
@@ -171,7 +158,7 @@ convertQuerySelSet
   -> G.SelectionSet G.NoFragments G.Name
   -> [G.VariableDefinition]
   -> Maybe GH.VariableValues
-  -> m ( ExecutionPlan (tx EncJSON, Maybe PreparedSql)
+  -> m ( ExecutionPlan ActionExecutionPlan (tx EncJSON, Maybe PreparedSql)
        -- , Maybe ReusableQueryPlan
        , [QueryRootField (UnpreparedValue 'Postgres)]
        )
@@ -184,42 +171,30 @@ convertQuerySelSet env logger gqlContext userInfo manager reqHeaders directives 
     (preparedQuery, PlanningSt _ _ planVals expectedVariables)
       <- flip runStateT initPlanningSt
          $ traverseQueryRootField prepareWithPlan unpreparedQuery
-           >>= traverseAction convertActionQuery
            >>= traverseRemoteField (resolveRemoteField userInfo)
     validateSessionVariables expectedVariables $ _uiSession userInfo
     traverseDB (pure . irToRootFieldPlan planVals) preparedQuery
-      >>= traverseAction (pure . actionQueryToRootFieldPlan planVals)
 
   (instrument, ep) <- askInstrumentQuery directives
 
   -- Transform the query plans into an execution plan
-  let executionPlan = queryPlan <&> \case
-        RFRemote (RemoteFieldG remoteSchemaInfo remoteField) -> do
-            buildExecStepRemote
-              remoteSchemaInfo
-              G.OperationTypeQuery
-              [G.SelectionField remoteField]
-        RFDB db      -> ExecStepDB $ mkCurPlanTx env manager reqHeaders userInfo instrument ep (RFPPostgres db)
-        RFAction rfp -> ExecStepDB $ mkCurPlanTx env manager reqHeaders userInfo instrument ep rfp
-        RFRaw r      -> ExecStepRaw r
+  executionPlan <- forM queryPlan  \case
+        RFRemote (RemoteFieldG remoteSchemaInfo remoteField) -> pure $
+          buildExecStepRemote
+            remoteSchemaInfo
+            G.OperationTypeQuery
+            [G.SelectionField remoteField]
+        RFDB _ e db          -> pure $ ExecStepDB e $ mkCurPlanTx env manager reqHeaders userInfo instrument ep (RFPPostgres db)
+        RFAction (AQQuery s) -> ExecStepAction . AEPSync . _aerExecution <$>
+                                resolveActionExecution env logger userInfo s (ActionExecContext manager reqHeaders usrVars)
+        RFAction (AQAsync s) -> pure $ ExecStepAction $ AEPAsyncQuery (_aaaqActionId s) $ resolveAsyncActionQuery userInfo s
+        RFRaw r              -> pure $ ExecStepRaw r
 
   let asts :: [QueryRootField (UnpreparedValue 'Postgres)]
       asts = OMap.elems unpreparedQueries
   pure (executionPlan, asts)  -- See Note [Temporarily disabling query plan caching]
   where
     usrVars = _uiSession userInfo
-
-    convertActionQuery
-      :: ActionQuery 'Postgres (UnpreparedValue 'Postgres)
-      -> StateT PlanningSt m (ActionQueryPlan 'Postgres)
-    convertActionQuery = \case
-      AQQuery s -> lift $ do
-        result <- resolveActionExecution env logger userInfo s $ ActionExecContext manager reqHeaders usrVars
-        pure $ AQPQuery $ _aerExecution result
-      AQAsync s -> do
-        unpreparedAst <- lift $ liftEitherM $ runMetadataStorageT $
-                         resolveAsyncActionQuery userInfo s
-        AQPAsyncQuery <$> DS.traverseAnnSimpleSelect prepareWithPlan unpreparedAst
 
 -- See Note [Temporarily disabling query plan caching]
 -- use the existing plan and new variables to create a pg query
