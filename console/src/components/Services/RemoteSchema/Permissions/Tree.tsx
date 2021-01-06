@@ -58,7 +58,12 @@ const Tree: React.FC<RSPTreeComponentProps> = ({ list, setState }) => {
               {expandedItems[ix] ? '-' : '+'}
             </button>
           )}
-          <Field i={i} setItem={setItem(ix)} key={i.name} />
+          <Field
+            i={i}
+            setItem={setItem(ix)}
+            key={i.name}
+            onExpand={toggleExpand(ix)}
+          />
           {i.children && expandedItems[ix] && (
             <MemoizedTree list={i.children} setState={setValue(ix)} />
           )}

@@ -316,17 +316,6 @@ const getSDLField = (
             let unquoted;
             let isSessionVar = false;
 
-            console.log('arg >>>', arg, arg.type.inspect());
-            console.log('>>> argname', argName, typeof argName);
-
-            if (arg.name === 'where') {
-              // for object types
-              console.log(arg);
-
-              // if(typeof argName === 'string'){
-
-              // }
-            } else {
               if (typeof argName === 'string') {
                 isSessionVar = argName.startsWith('x-hasura');
               }
@@ -389,7 +378,9 @@ type childArgumentType = {
   path?: string;
 };
 
+// method that tells whether the field is nested or not, if nested it returns the children
 export const getChildArgument = (v: GraphQLInputField): childArgumentType => {
+  // TODO check if there are any more possible types with children / expandable views
   if (typeof v === 'string') return { children: null }; // value field
   if (v?.type instanceof GraphQLInputObjectType && v?.type?.getFields)
     return { children: v?.type?.getFields(), path: 'type._fields' };
@@ -487,3 +478,5 @@ export const getArgTreeFromPermissionSDL = (definition: string) => {
     return null;
   }
 };
+
+export const generateTypeString = (str: string) => str.replace(/[^\w\s]/gi, '');

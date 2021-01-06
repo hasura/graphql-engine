@@ -5,7 +5,7 @@ import { getChildArgument } from './utils';
 import RSPInput from './RSPInput';
 
 interface ArgSelectProps {
-  v: Record<string, any>;
+  v: GraphQLInputField;
   k: string;
   value: string | Record<string, any>;
   level: number;
@@ -93,7 +93,14 @@ export const ArgSelect: React.FC<ArgSelectProps> = ({
   }
   return (
     <li>
-      <RSPInput {...{ k, editMode, value, setArgVal, v, setEditMode }} />
+      <RSPInput
+        v={v as GraphQLInputField}
+        k={k}
+        editMode={editMode}
+        setArgVal={setArgVal}
+        value={value}
+        setEditMode={setEditMode}
+      />
     </li>
   );
 };

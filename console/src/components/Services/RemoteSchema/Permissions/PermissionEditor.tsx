@@ -81,11 +81,37 @@ const PermissionEditor: React.FC<PermissionEditorProps> = ({ ...props }) => {
   const removeFunc = () => {
     removeRemoteSchemaPermission(closeEditor);
   };
+  const scrollToElement = (path: string) => {
+    let id = `type ${path}`;
+    let el = document.getElementById(id);
+
+    if (!el) {
+      // input types
+      id = `input ${path}`;
+      el = document.getElementById(id);
+    }
+
+    if (el) {
+      el.scrollIntoView({
+        behavior: 'smooth',
+        block: 'center',
+        inline: 'nearest',
+      });
+      setTimeout(() => {
+        // focusing element with css outline
+        // there is no callback for scrollIntoView, this is a hack to make UX better,
+        // simple implementation compared to adding another onscroll listener
+        if (el) el.focus();
+      }, 800);
+    }
+  };
 
   return (
     <div className={styles.activeEdit}>
       <div className={styles.tree}>
-        <PermissionEditorContext.Provider value={{ argTree, setArgTree }}>
+        <PermissionEditorContext.Provider
+          value={{ argTree, setArgTree, scrollToElement }}
+        >
           <Tree list={state as FieldType[]} setState={setState} />
           <code style={{ whiteSpace: 'pre-wrap' }}>{resultString}</code>
         </PermissionEditorContext.Provider>

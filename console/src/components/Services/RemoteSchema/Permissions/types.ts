@@ -151,11 +151,18 @@ export type BulkSelectProps = {
 export type RSPTreeComponentProps = {
   list: FieldType[];
   setState: (d: FieldType[]) => void;
+  onExpand?: () => void;
 };
 
 export type ExpandedItems = {
   [key: string]: boolean;
 };
+
+export interface FieldProps {
+  i: FieldType;
+  setItem: (e: FieldType) => void;
+  onExpand?: () => void;
+}
 
 /*
  * Redux Action types
