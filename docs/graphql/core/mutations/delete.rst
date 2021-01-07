@@ -115,8 +115,8 @@ row object or ``null`` if the row does not exist.
    and above.
 
 
-Delete objects based on an their fields
----------------------------------------
+Delete objects based on their fields
+------------------------------------
 **Example:** Delete all articles rated less than 3:
 
 .. graphiql::
