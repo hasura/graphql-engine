@@ -11,7 +11,7 @@ import (
 )
 
 type CatalogStateAPIClient interface {
-	SendMetadataOrQueryRequest(m interface{}, opts MetadataOrQueryClientFuncOpts) (*http.Response, []byte, error)
+	SendMetadataOrQueryRequest(m interface{}, opts *MetadataOrQueryClientFuncOpts) (*http.Response, []byte, error)
 }
 
 //
@@ -58,7 +58,7 @@ func (c *CatalogStateAPI) GetCLICatalogState(client CatalogStateAPIClient) (*CLI
 		Type: "get_catalog_state",
 		Args: map[string]string{},
 	}
-	resp, body, err := client.SendMetadataOrQueryRequest(q, MetadataOrQueryClientFuncOpts{MetadataRequestOpts: &MetadataRequestOpts{}})
+	resp, body, err := client.SendMetadataOrQueryRequest(q, &MetadataOrQueryClientFuncOpts{MetadataRequestOpts: &MetadataRequestOpts{}})
 	if err != nil {
 		return nil, err
 	}
@@ -102,7 +102,7 @@ func (c *CatalogStateAPI) SetCLICatalogState(client CatalogStateAPIClient, cliSt
 			State: cliState,
 		},
 	}
-	resp, body, err := client.SendMetadataOrQueryRequest(q, MetadataOrQueryClientFuncOpts{MetadataRequestOpts: &MetadataRequestOpts{}})
+	resp, body, err := client.SendMetadataOrQueryRequest(q, &MetadataOrQueryClientFuncOpts{MetadataRequestOpts: &MetadataRequestOpts{}})
 	if err != nil {
 		return err
 	}

@@ -48,7 +48,7 @@ type MetadataOrQueryClientFuncOpts struct {
 	QueryRequestOpts    *QueryRequestOpts
 	MetadataRequestOpts *MetadataRequestOpts
 }
-type MetadataOrQueryClientFunc func(m interface{}, opts MetadataOrQueryClientFuncOpts, config Config) (*http.Response, []byte, error)
+type MetadataOrQueryClientFunc func(m interface{}, opts *MetadataOrQueryClientFuncOpts, config Config) (*http.Response, []byte, error)
 
 type Config struct {
 	QueryURL    *url.URL
@@ -67,7 +67,7 @@ func NewClient(flags *version.ServerFeatureFlags) *Client {
 	return &Client{serverFeatureFlags: flags}
 }
 
-func (c *Client) Sendv1Query(m interface{}, _ MetadataOrQueryClientFuncOpts, config Config) (resp *http.Response, body []byte, err error) {
+func (c *Client) Sendv1Query(m interface{}, _ *MetadataOrQueryClientFuncOpts, config Config) (resp *http.Response, body []byte, err error) {
 	c.mutex.Lock()
 	defer c.mutex.Unlock()
 
@@ -88,7 +88,7 @@ func (c *Client) Sendv1Query(m interface{}, _ MetadataOrQueryClientFuncOpts, con
 	return resp, body, err
 }
 
-func (c *Client) SendV2QueryOrV1Metadata(m interface{}, opts MetadataOrQueryClientFuncOpts, config Config) (resp *http.Response, body []byte, err error) {
+func (c *Client) SendV2QueryOrV1Metadata(m interface{}, opts *MetadataOrQueryClientFuncOpts, config Config) (resp *http.Response, body []byte, err error) {
 	c.mutex.Lock()
 	defer c.mutex.Unlock()
 
@@ -98,20 +98,28 @@ func (c *Client) SendV2QueryOrV1Metadata(m interface{}, opts MetadataOrQueryClie
 		endpoint = config.QueryURL.String()
 	case c.serverFeatureFlags.HasDatasources:
 		// TODO: Make this better
-		if opts.MetadataRequestOpts != nil {
-			endpoint = config.MetadataURL.String()
-			break
-		}
-		if opts.QueryRequestOpts != nil {
-			endpoint = config.QueryURL.String()
-			break
+		if opts != nil {
+			if opts.MetadataRequestOpts != nil {
+				endpoint = config.MetadataURL.String()
+				break
+			}
+			if opts.QueryRequestOpts != nil {
+				endpoint = config.QueryURL.String()
+				break
+			}
 		}
 		if endpoint == "" {
 			var v map[string]interface{}
 			if err := mapstructure.Decode(m, &v); err != nil {
 				return nil, nil, fmt.Errorf("unmarshalling request body failed")
 			} else {
-				requestType := fmt.Sprintf("%v", v["Type"])
+				var requestType string
+				if val, ok := v["Type"]; ok {
+					requestType = fmt.Sprintf("%v", val)
+				}
+				if val, ok := v["type"]; ok {
+					requestType = fmt.Sprintf("%v", val)
+				}
 				if _, ok := queryTypesMap[requestType]; ok {
 					endpoint = config.QueryURL.String()
 				} else {

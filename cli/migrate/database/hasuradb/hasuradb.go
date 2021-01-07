@@ -86,7 +86,7 @@ type HasuraDB struct {
 	client                *client.Client
 }
 
-func (h *HasuraDB) SendMetadataOrQueryRequest(m interface{}, opts client.MetadataOrQueryClientFuncOpts) (*http.Response, []byte, error) {
+func (h *HasuraDB) SendMetadataOrQueryRequest(m interface{}, opts *client.MetadataOrQueryClientFuncOpts) (*http.Response, []byte, error) {
 	return h.MetadataOrQueryClient(m, opts, client.Config{
 		QueryURL:    h.config.queryURL,
 		MetadataURL: h.config.metadataURL,
@@ -264,7 +264,7 @@ func (h *HasuraDB) RunSeq(migration io.Reader, fileType, fileName string) error 
 			Type: RunSQL,
 			Args: sqlInput,
 		}
-		resp, body, err := h.SendMetadataOrQueryRequest(t, client.MetadataOrQueryClientFuncOpts{QueryRequestOpts: &client.QueryRequestOpts{}})
+		resp, body, err := h.SendMetadataOrQueryRequest(t, &client.MetadataOrQueryClientFuncOpts{QueryRequestOpts: &client.QueryRequestOpts{}})
 		if err != nil {
 			return err
 		}
@@ -297,7 +297,7 @@ func sendMetadataMigrations(hasuradb *HasuraDB, metadataRequests []interface{}) 
 			// was a bulk query and was already handled above so skip this iteration
 			continue
 		}
-		resp, body, err := hasuradb.SendMetadataOrQueryRequest(v, client.MetadataOrQueryClientFuncOpts{QueryRequestOpts: &client.QueryRequestOpts{}})
+		resp, body, err := hasuradb.SendMetadataOrQueryRequest(v, nil)
 		if err != nil {
 			return err
 		}
@@ -352,7 +352,7 @@ func (h *HasuraDB) UnLock() error {
 			Type:   "bulk",
 			Source: h.hasuraOpts.Datasource,
 			Args:   queryAPIRequests,
-		}, client.MetadataOrQueryClientFuncOpts{QueryRequestOpts: &client.QueryRequestOpts{}})
+		}, &client.MetadataOrQueryClientFuncOpts{QueryRequestOpts: &client.QueryRequestOpts{}})
 		if err != nil {
 			return err
 		}
@@ -398,7 +398,7 @@ func (h *HasuraDB) UnLock() error {
 		resp, body, err = h.SendMetadataOrQueryRequest(HasuraInterfaceQuery{
 			Type: "bulk",
 			Args: metadataAPIRequests,
-		}, client.MetadataOrQueryClientFuncOpts{MetadataRequestOpts: &client.MetadataRequestOpts{}})
+		}, &client.MetadataOrQueryClientFuncOpts{MetadataRequestOpts: &client.MetadataRequestOpts{}})
 		if err != nil {
 			return err
 		}
@@ -443,7 +443,7 @@ func (h *HasuraDB) UnLock() error {
 		}
 
 	} else {
-		resp, body, err := h.SendMetadataOrQueryRequest(h.migrationQuery, client.MetadataOrQueryClientFuncOpts{MetadataRequestOpts: &client.MetadataRequestOpts{}})
+		resp, body, err := h.SendMetadataOrQueryRequest(h.migrationQuery, &client.MetadataOrQueryClientFuncOpts{MetadataRequestOpts: &client.MetadataRequestOpts{}})
 		if err != nil {
 			return err
 		}

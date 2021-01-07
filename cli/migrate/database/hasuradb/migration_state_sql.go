@@ -65,7 +65,7 @@ func (m *migrationStateWithSQL) PrepareMigrationsStateStore() error {
 		},
 	}
 
-	resp, body, err := m.hasuraDB.SendMetadataOrQueryRequest(query, client.MetadataOrQueryClientFuncOpts{QueryRequestOpts: &client.QueryRequestOpts{}})
+	resp, body, err := m.hasuraDB.SendMetadataOrQueryRequest(query, &client.MetadataOrQueryClientFuncOpts{QueryRequestOpts: &client.QueryRequestOpts{}})
 	if err != nil {
 		m.hasuraDB.logger.Debug(err)
 		return err
@@ -99,7 +99,7 @@ func (m *migrationStateWithSQL) PrepareMigrationsStateStore() error {
 		},
 	}
 
-	resp, body, err = m.hasuraDB.SendMetadataOrQueryRequest(query, client.MetadataOrQueryClientFuncOpts{QueryRequestOpts: &client.QueryRequestOpts{}})
+	resp, body, err = m.hasuraDB.SendMetadataOrQueryRequest(query, &client.MetadataOrQueryClientFuncOpts{QueryRequestOpts: &client.QueryRequestOpts{}})
 	if err != nil {
 		return err
 	}
@@ -129,7 +129,7 @@ func (m *migrationStateWithSQL) GetVersions() error {
 	}
 
 	// Send Query
-	resp, body, err := m.hasuraDB.SendMetadataOrQueryRequest(query, client.MetadataOrQueryClientFuncOpts{QueryRequestOpts: &client.QueryRequestOpts{}})
+	resp, body, err := m.hasuraDB.SendMetadataOrQueryRequest(query, &client.MetadataOrQueryClientFuncOpts{QueryRequestOpts: &client.QueryRequestOpts{}})
 	if err != nil {
 		return err
 	}

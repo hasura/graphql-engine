@@ -52,7 +52,7 @@ func (m *migrationsStateWithCatalogStateAPI) InsertVersion(version int64) error 
 	return m.makeMetadataAPICall(q)
 }
 func (m *migrationsStateWithCatalogStateAPI) makeMetadataAPICall(body interface{}) error {
-	if resp, body, err := m.hasuradb.SendMetadataOrQueryRequest(body, client.MetadataOrQueryClientFuncOpts{MetadataRequestOpts: &client.MetadataRequestOpts{}}); err != nil {
+	if resp, body, err := m.hasuradb.SendMetadataOrQueryRequest(body, &client.MetadataOrQueryClientFuncOpts{MetadataRequestOpts: &client.MetadataRequestOpts{}}); err != nil {
 		return err
 	} else if resp.StatusCode != http.StatusOK {
 		return fmt.Errorf("hasura api error: %s", errors.New(string(body)))
