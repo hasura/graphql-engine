@@ -2,7 +2,6 @@ import React, { ReactElement } from 'react';
 import CommonTabLayout from '../../../Common/Layout/CommonTabLayout/CommonTabLayout';
 import { NotFoundError } from '../../../Error/PageNotFound';
 import { appPrefix } from '../constants';
-import { findRemoteSchema } from '../utils';
 import styles from '../RemoteSchema.scss';
 
 const tabInfo = {
@@ -38,9 +37,8 @@ const RemoteSchemaContainer: React.FC<RemoteSchemaContainerProps> = ({
     };
   }, [remoteSchemaName]);
 
-  const currentRemoteSchema = findRemoteSchema(
-    allRemoteSchemas,
-    remoteSchemaName
+  const currentRemoteSchema = allRemoteSchemas.find(
+    rs => rs.name === remoteSchemaName
   );
 
   if (!currentRemoteSchema) {

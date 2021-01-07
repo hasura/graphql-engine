@@ -16,7 +16,6 @@ import {
   GraphQLList,
   GraphQLInputFieldMap,
 } from 'graphql';
-import { findRemoteSchemaPermission } from '../utils';
 import { isJsonString } from '../../../Common/utils/jsUtils';
 import {
   PermissionEdit,
@@ -24,6 +23,10 @@ import {
   FieldType,
   argTreeType,
 } from './types';
+
+export const findRemoteSchemaPermission = (perms, role) => {
+  return perms.find(p => p.role_name === role);
+};
 
 export const getCreateRemoteSchemaPermissionQuery = (
   def: { role: string },
@@ -59,7 +62,6 @@ export const getRemoteSchemaPermissionQueries = (
   permissionEdit: PermissionEdit,
   allPermissions: any,
   remoteSchemaName: string,
-  // schemaDefinition: SchemaDefinition
   schemaDefinition: string
 ) => {
   const { role, newRole } = permissionEdit;

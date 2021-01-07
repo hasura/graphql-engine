@@ -18,7 +18,6 @@ import {
   permCloseEdit,
   permResetBulkSelect,
 } from './Permissions/reducer';
-import { findRemoteSchema, getRemoteSchemaPermissions } from './utils';
 import {
   getRemoteSchemaPermissionQueries,
   getCreateRemoteSchemaPermissionQuery,
@@ -204,14 +203,15 @@ const saveRemoteSchemaPermission = (successCb, errorCb) => {
     const {
       listData: {
         remoteSchemas: allRemoteSchemas,
-        viewRemoteSchema: currentRemoteSchema,
+        viewRemoteSchema: currentRemoteSchemaName,
       },
       permissions: { permissionEdit, schemaDefinition },
     } = getState().remoteSchemas;
 
-    const allPermissions = getRemoteSchemaPermissions(
-      findRemoteSchema(allRemoteSchemas, currentRemoteSchema)
+    const currentRemoteSchema = allRemoteSchemas.find(
+      rs => rs.name === currentRemoteSchemaName
     );
+    const allPermissions = currentRemoteSchema.permissions;
 
     const { upQueries, downQueries } = getRemoteSchemaPermissionQueries(
       permissionEdit,
@@ -321,14 +321,16 @@ const permRemoveMultipleRoles = () => {
     const {
       listData: {
         remoteSchemas: allRemoteSchemas,
-        viewRemoteSchema: currentRemoteSchema,
+        viewRemoteSchema: currentRemoteSchemaName,
       },
       permissions: { bulkSelect },
     } = getState().remoteSchemas;
 
-    const currentPermissions = getRemoteSchemaPermissions(
-      findRemoteSchema(allRemoteSchemas, currentRemoteSchema)
+    const currentRemoteSchema = allRemoteSchemas.find(
+      rs => rs.name === currentRemoteSchemaName
     );
+    const currentPermissions = currentRemoteSchema.permissions;
+
     const roles = bulkSelect;
     const migration = new Migration();
 

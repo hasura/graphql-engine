@@ -1,6 +1,33 @@
 import { HeaderState } from '../../Common/Layout/ReusableHeader/types';
 import { RemoteSchemaPermissionsState } from './Permissions/types';
 
+type Permissions = {
+  definition: { schema: string };
+  role_name: string;
+  remote_schema_name: string;
+  comment: string | null;
+};
+
+type RemoteSchemaHeaders = {
+  value: string;
+  name: string;
+};
+
+type RemoteSchemaDefinition = {
+  timeout_seconds: number;
+  url: string;
+  headers: RemoteSchemaHeaders[];
+  forward_client_headers: boolean;
+};
+
+export type RemoteSchema = {
+  definition: RemoteSchemaDefinition;
+  name: string;
+  id: number;
+  comment: string | null;
+  permissions: Permissions[];
+};
+
 export type AsyncState = {
   isRequesting: boolean;
   isError: boolean;
@@ -30,7 +57,7 @@ export type AddState = AsyncState & {
 };
 
 export type ListState = AsyncState & {
-  remoteSchemas: any[];
+  remoteSchemas: RemoteSchema[];
   filtered: any[];
   searchQuery: string;
   viewRemoteSchema: string;
