@@ -556,7 +556,7 @@ func (h *HasuraDB) Version() (version int64, dirty bool, err error) {
 		return database.NilVersion, false, nil
 	}
 
-	return int64(tmpVersion), false, nil
+	return int64(tmpVersion.Version), tmpVersion.Dirty, nil
 }
 
 func (h *HasuraDB) Drop() error {
@@ -668,19 +668,19 @@ func (h *HasuraDB) sendSchemaDumpQuery(m interface{}) (resp *http.Response, body
 	return resp, body, err
 }
 
-func (h *HasuraDB) First() (version uint64, ok bool) {
+func (h *HasuraDB) First() (migrationVersion *database.MigrationVersion, ok bool) {
 	return h.migrations.First()
 }
 
-func (h *HasuraDB) Last() (version uint64, ok bool) {
+func (h *HasuraDB) Last() (*database.MigrationVersion, bool) {
 	return h.migrations.Last()
 }
 
-func (h *HasuraDB) Prev(version uint64) (prevVersion uint64, ok bool) {
+func (h *HasuraDB) Prev(version uint64) (prevVersion *database.MigrationVersion, ok bool) {
 	return h.migrations.Prev(version)
 }
 
-func (h *HasuraDB) Next(version uint64) (nextVersion uint64, ok bool) {
+func (h *HasuraDB) Next(version uint64) (migrationVersion *database.MigrationVersion, ok bool) {
 	return h.migrations.Next(version)
 }
 

@@ -237,14 +237,14 @@ func (m *Migrate) readStatusFromSource() (err error) {
 		}
 		return err
 	}
-	m.status.Append(m.newMigrationStatus(firstVersion, "source"))
+	m.status.Append(m.newMigrationStatus(firstVersion, "source", false))
 	from := int64(firstVersion)
 
 	lastVersion, err := m.sourceDrv.GetLocalVersion()
 	if err != nil {
 		return err
 	}
-	m.status.Append(m.newMigrationStatus(lastVersion, "source"))
+	m.status.Append(m.newMigrationStatus(lastVersion, "source", false))
 	to := int64(lastVersion)
 
 	for from < to {
@@ -252,7 +252,7 @@ func (m *Migrate) readStatusFromSource() (err error) {
 		if err != nil {
 			return err
 		}
-		m.status.Append(m.newMigrationStatus(next, "source"))
+		m.status.Append(m.newMigrationStatus(next, "source", false))
 		from = int64(next)
 	}
 
@@ -264,34 +264,35 @@ func (m *Migrate) readStatusFromDatabase() (err error) {
 	if !ok {
 		return nil
 	}
-	m.status.Append(m.newMigrationStatus(firstVersion, "database"))
-	from := int64(firstVersion)
+	m.status.Append(m.newMigrationStatus(firstVersion.Version, "database", firstVersion.Dirty))
+	from := int64(firstVersion.Version)
 
 	lastVersion, ok := m.databaseDrv.Last()
 	if !ok {
 		return nil
 	}
-	m.status.Append(m.newMigrationStatus(lastVersion, "database"))
-	to := int64(lastVersion)
+	m.status.Append(m.newMigrationStatus(lastVersion.Version, "database", lastVersion.Dirty))
+	to := int64(lastVersion.Version)
 
 	for from < to {
 		next, ok := m.databaseDrv.Next(suint64(from))
 		if !ok {
 			return nil
 		}
-		m.status.Append(m.newMigrationStatus(next, "database"))
-		from = int64(next)
+		m.status.Append(m.newMigrationStatus(next.Version, "database", next.Dirty))
+		from = int64(next.Version)
 	}
 	return err
 }
 
-func (m *Migrate) newMigrationStatus(version uint64, driverType string) *MigrationStatus {
+func (m *Migrate) newMigrationStatus(version uint64, driverType string, dirty bool) *MigrationStatus {
 	var migrStatus *MigrationStatus
 	migrStatus, ok := m.status.Read(version)
 	if !ok {
 		migrStatus = &MigrationStatus{
 			Version: version,
 			Name:    m.sourceDrv.ReadName(version),
+			IsDirty: dirty,
 		}
 	}
 
@@ -300,6 +301,7 @@ func (m *Migrate) newMigrationStatus(version uint64, driverType string) *Migrati
 		migrStatus.IsPresent = true
 	case "database":
 		migrStatus.IsApplied = true
+		migrStatus.IsDirty = dirty
 	default:
 		return nil
 	}
@@ -1180,7 +1182,7 @@ func (m *Migrate) readDown(limit int64, ret chan<- interface{}) {
 			return
 		}
 
-		migr, err := m.metanewMigration(suint64(from), int64(prev))
+		migr, err := m.metanewMigration(suint64(from), int64(prev.Version))
 		if err != nil {
 			ret <- err
 			return
@@ -1189,7 +1191,7 @@ func (m *Migrate) readDown(limit int64, ret chan<- interface{}) {
 		ret <- migr
 		go migr.Buffer()
 
-		migr, err = m.newMigration(suint64(from), int64(prev))
+		migr, err = m.newMigration(suint64(from), int64(prev.Version))
 		if err != nil {
 			ret <- err
 			return
@@ -1197,7 +1199,7 @@ func (m *Migrate) readDown(limit int64, ret chan<- interface{}) {
 
 		ret <- migr
 		go migr.Buffer()
-		from = int64(prev)
+		from = int64(prev.Version)
 		count++
 	}
 }
@@ -1851,7 +1853,7 @@ func (m *Migrate) readDownFromVersion(from int64, to int64, ret chan<- interface
 		prev, ok := m.databaseDrv.Prev(suint64(from))
 		if !ok {
 			// Check if any prev version available in source
-			prev, err = m.sourceDrv.Prev(suint64(from))
+			prev.Version, err = m.sourceDrv.Prev(suint64(from))
 			if os.IsNotExist(err) && to == -1 {
 				// apply nil migration
 				migr, err := m.metanewMigration(suint64(from), -1)
@@ -1883,7 +1885,7 @@ func (m *Migrate) readDownFromVersion(from int64, to int64, ret chan<- interface
 			return
 		}
 
-		migr, err := m.metanewMigration(suint64(from), int64(prev))
+		migr, err := m.metanewMigration(suint64(from), int64(prev.Version))
 		if err != nil {
 			ret <- err
 			return
@@ -1892,7 +1894,7 @@ func (m *Migrate) readDownFromVersion(from int64, to int64, ret chan<- interface
 		ret <- migr
 		go migr.Buffer()
 
-		migr, err = m.newMigration(suint64(from), int64(prev))
+		migr, err = m.newMigration(suint64(from), int64(prev.Version))
 		if err != nil {
 			ret <- err
 			return
@@ -1900,7 +1902,7 @@ func (m *Migrate) readDownFromVersion(from int64, to int64, ret chan<- interface
 
 		ret <- migr
 		go migr.Buffer()
-		from = int64(prev)
+		from = int64(prev.Version)
 		noOfAppliedMigrations++
 	}
 }

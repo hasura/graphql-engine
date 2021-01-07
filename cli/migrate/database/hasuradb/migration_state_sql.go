@@ -163,7 +163,7 @@ func (m *migrationStateWithSQL) GetVersions() error {
 			return err
 		}
 
-		m.hasuraDB.migrations.Append(version)
+		m.hasuraDB.migrations.Append(database.MigrationVersion{Version: version, Dirty: false})
 	}
 
 	return nil

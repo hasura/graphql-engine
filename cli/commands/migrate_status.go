@@ -65,13 +65,14 @@ func printStatus(status *migrate.Status) *bytes.Buffer {
 	buf := &bytes.Buffer{}
 	out.Init(buf, 0, 8, 2, ' ', 0)
 	w := util.NewPrefixWriter(out)
-	w.Write(util.LEVEL_0, "VERSION\tNAME\tSOURCE STATUS\tDATABASE STATUS\n")
+	w.Write(util.LEVEL_0, "VERSION\tNAME\tSOURCE STATUS\tDATABASE STATUS\tDIRTY\n")
 	for _, version := range status.Index {
-		w.Write(util.LEVEL_0, "%d\t%s\t%s\t%s\n",
+		w.Write(util.LEVEL_0, "%d\t%s\t%s\t%s\t%t\n",
 			version,
 			status.Migrations[version].Name,
 			convertBool(status.Migrations[version].IsPresent),
 			convertBool(status.Migrations[version].IsApplied),
+			status.Migrations[version].IsDirty,
 		)
 	}
 	out.Flush()

@@ -93,20 +93,20 @@ type Driver interface {
 
 	// First returns the very first migration version available to the driver.
 	// Migrate will call this function multiple times
-	First() (version uint64, ok bool)
+	First() (migrationVersion *MigrationVersion, ok bool)
 
 	// Last returns the latest version available in database
-	Last() (version uint64, ok bool)
+	Last() (*MigrationVersion, bool)
 
 	// Prev returns the previous version for a given version available to the driver.
 	// Migrate will call this function multiple times.
 	// If there is no previous version available, it must return os.ErrNotExist.
-	Prev(version uint64) (prevVersion uint64, ok bool)
+	Prev(version uint64) (prevVersion *MigrationVersion, ok bool)
 
 	// Next returns the next version for a given version available to the driver.
 	// Migrate will call this function multiple times.
 	// If there is no next version available, it must return os.ErrNotExist.
-	Next(version uint64) (nextVersion uint64, ok bool)
+	Next(version uint64) (migrationVersion *MigrationVersion, ok bool)
 
 	Read(version uint64) (ok bool)
 

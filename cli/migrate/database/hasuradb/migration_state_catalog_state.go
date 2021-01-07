@@ -5,6 +5,8 @@ import (
 	"net/http"
 	"strconv"
 
+	"github.com/hasura/graphql-engine/cli/migrate/database"
+
 	"github.com/hasura/graphql-engine/cli/internal/client"
 	"github.com/pkg/errors"
 )
@@ -117,12 +119,12 @@ func (m *migrationsStateWithCatalogStateAPI) GetVersions() error {
 	if !ok {
 		return nil
 	}
-	for version, _ := range v {
-		n, err := strconv.ParseInt(version, 10, 64)
+	for version, dirty := range v {
+		parsedVersion, err := strconv.ParseUint(version, 10, 64)
 		if err != nil {
 			return errors.Wrap(err, "parsing migration version")
 		}
-		m.hasuradb.migrations.Append(uint64(n))
+		m.hasuradb.migrations.Append(database.MigrationVersion{Version: parsedVersion, Dirty: dirty})
 	}
 	return nil
 }
