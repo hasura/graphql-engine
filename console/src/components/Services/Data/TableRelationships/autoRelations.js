@@ -1,5 +1,3 @@
-import { getTableName } from '../utils';
-
 const sameRelCols = (currCols, existingCols) => {
   return currCols.sort().join(',') === existingCols.sort().join(',');
 };
@@ -54,10 +52,7 @@ const isExistingArrRel = (currentArrRels, relCols, relTable) => {
       currRCol = Object.values(arrRelDef.manual_configuration.column_mapping);
     }
 
-    if (
-      getTableName(currTable) === relTable &&
-      sameRelCols(currRCol, relCols)
-    ) {
+    if (currTable.name === relTable && sameRelCols(currRCol, relCols)) {
       _isExistingArrRel = true;
       break;
     }

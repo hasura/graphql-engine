@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { showErrorNotification } from '../../Common/Notification';
 import gqlPattern, { gqlColumnErrorNotif } from '../Common/GraphQLValidation';
-import { commonDataTypes } from '../utils';
 import ExpandableEditor from '../../../Common/Layout/ExpandableEditor/Editor';
 import CustomInputAutoSuggest from '../../../Common/CustomInputAutoSuggest/CustomInputAutoSuggest';
 
@@ -16,6 +15,7 @@ import { addColSql } from '../TableModify/ModifyActions';
 import styles from './ModifyTable.scss';
 import FrequentlyUsedColumnSelector from '../Common/Components/FrequentlyUsedColumnSelector';
 import { ColumnTypeSelector } from '../Common/Components/ColumnTypeSelector';
+import { dataSource } from '../../../../dataSources';
 
 const useColumnEditor = (dispatch, tableName) => {
   const initialState = {
@@ -152,7 +152,7 @@ const ColumnCreator = ({
 
   const getColumnTypeInput = () => {
     const { columnDataTypes, columnTypeValueMap } = getDataOptions(
-      commonDataTypes,
+      dataSource.commonDataTypes,
       restTypes,
       0
     );

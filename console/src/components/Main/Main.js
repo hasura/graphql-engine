@@ -21,14 +21,8 @@ import {
   loadLatestServerVersion,
   featureCompatibilityInit,
   emitProClickedEvent,
-  fetchPostgresVersion,
   fetchConsoleNotifications,
 } from './Actions';
-
-import {
-  loadInconsistentObjects,
-  redirectToMetadataStatus,
-} from '../Services/Settings/Actions';
 
 import {
   getProClickState,
@@ -37,9 +31,14 @@ import {
   setLoveConsentState,
   getUserType,
 } from './utils';
-import { getSchemaBaseRoute } from '../Common/utils/routesUtils';
+
+import {
+  getSchemaBaseRoute,
+  redirectToMetadataStatus,
+} from '../Common/utils/routesUtils';
 import LoveSection from './LoveSection';
 import { Help, ProPopup } from './components/';
+import { loadInconsistentObjects } from '../../metadata/actions';
 import { HASURA_COLLABORATOR_TOKEN } from '../../constants';
 import { UPDATE_CONSOLE_NOTIFICATIONS } from '../../telemetry/Actions';
 import { getLSItem, LS_KEYS, setLSItem } from '../../utils/localStorage';
@@ -107,7 +106,6 @@ class Main extends React.Component {
       dispatch(fetchConsoleNotifications());
     });
 
-    dispatch(fetchPostgresVersion);
     dispatch(fetchServerConfig);
   }
 
@@ -239,6 +237,7 @@ class Main extends React.Component {
       currentSchema,
       serverVersion,
       metadata,
+      currentSource,
     } = this.props;
 
     const {
@@ -382,7 +381,9 @@ class Main extends React.Component {
                   'Data',
                   'fa-database',
                   tooltips.data,
-                  getSchemaBaseRoute(currentSchema)
+                  currentSource
+                    ? getSchemaBaseRoute(currentSchema, currentSource)
+                    : '/data'
                 )}
                 {getSidebarItem(
                   'Actions',
@@ -469,6 +470,7 @@ const mapStateToProps = (state, ownProps) => {
     header: { ...state.header },
     pathname: ownProps.location.pathname,
     currentSchema: state.tables.currentSchema,
+    currentSource: state.tables.currentDataSource,
     metadata: state.metadata,
     console_opts: state.telemetry.console_opts,
     requestHeaders: state.tables.dataHeaders,

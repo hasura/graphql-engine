@@ -99,10 +99,10 @@ withEnvJwtConf jVal envVar =
 
 mkHGEOptions
   :: L.EnabledLogTypes impl => RawHGEOptions impl -> WithEnv (HGEOptions impl)
-mkHGEOptions (HGEOptionsG rawConnInfo rawMetadataDbUrl rawCmd) =
-  HGEOptionsG <$> connInfo <*> metadataDbUrl <*> cmd
+mkHGEOptions (HGEOptionsG rawDbUrl rawMetadataDbUrl rawCmd) =
+  HGEOptionsG <$> dbUrl <*> metadataDbUrl <*> cmd
   where
-    connInfo = processPostgresConnInfo rawConnInfo
+    dbUrl = processPostgresConnInfo rawDbUrl
     metadataDbUrl = withEnv rawMetadataDbUrl $ fst metadataDbUrlEnv
     cmd = case rawCmd of
       HCServe rso     -> HCServe <$> mkServeOptions rso
@@ -114,29 +114,28 @@ mkHGEOptions (HGEOptionsG rawConnInfo rawMetadataDbUrl rawCmd) =
 
 processPostgresConnInfo
   :: PostgresConnInfo (Maybe PostgresRawConnInfo)
-  -> WithEnv (PostgresConnInfo UrlConf)
+  -> WithEnv (PostgresConnInfo (Maybe UrlConf))
 processPostgresConnInfo PostgresConnInfo{..} = do
   withEnvRetries <- withEnv _pciRetries $ fst retriesNumEnv
   databaseUrl <- rawConnInfoToUrlConf _pciDatabaseConn
   pure $ PostgresConnInfo databaseUrl withEnvRetries
 
-rawConnInfoToUrlConf :: Maybe PostgresRawConnInfo -> WithEnv UrlConf
+rawConnInfoToUrlConf :: Maybe PostgresRawConnInfo -> WithEnv (Maybe UrlConf)
 rawConnInfoToUrlConf maybeRawConnInfo = do
   env <- ask
   let databaseUrlEnvVar = fst databaseUrlEnv
       hasDatabaseUrlEnv = any ((== databaseUrlEnvVar) . fst) env
 
-  case maybeRawConnInfo of
+  pure $ case maybeRawConnInfo of
     -- If no --database-url or connection options provided in CLI command
     Nothing -> if hasDatabaseUrlEnv then
                  -- Consider env variable as is in order to store it as @`UrlConf`
                  -- in default source configuration in metadata
-                 pure $ UrlFromEnv $ T.pack databaseUrlEnvVar
-               else throwError $
-                    "Fatal Error: Required --database-url or connection options or env var "
-                    <> databaseUrlEnvVar
+                 Just $ UrlFromEnv $ T.pack databaseUrlEnvVar
+               else Nothing
+
     Just databaseConn ->
-        pure $ UrlValue . InputWebhook $ case databaseConn of
+        Just . UrlValue . InputWebhook $ case databaseConn of
           PGConnDatabaseUrl urlTemplate -> urlTemplate
           PGConnDetails connDetails     -> rawConnDetailsToUrl connDetails
 

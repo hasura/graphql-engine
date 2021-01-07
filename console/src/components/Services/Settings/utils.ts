@@ -45,10 +45,10 @@ export const getTableNameFromDef = (
 };
 
 const filterInconsistentMetadataObject = (
-  objects: MetadataObject[],
-  inconsistentObject: MetadataObject,
+  objects: Record<string, any>[],
+  inconsistentObject: Record<string, any>,
   type: string
-): MetadataObject[] => {
+) => {
   switch (type) {
     case 'tables':
       const schemas = objects;
@@ -67,7 +67,7 @@ const filterInconsistentMetadataObject = (
           if (schema.table_name === getTableNameFromDef(table)) {
             return {
               ...schema,
-              relationships: schema.relationships.filter(r => {
+              relationships: schema.relationships.filter((r: any) => {
                 return r.rel_name !== inconsistentObject.definition.name;
               }),
             };
@@ -82,7 +82,7 @@ const filterInconsistentMetadataObject = (
           if (schema.table_name === getTableNameFromDef(table)) {
             return {
               ...schema,
-              permissions: schema.permissions.filter(p => {
+              permissions: schema.permissions.filter((p: any) => {
                 return p.role_name !== inconsistentObject.definition.role;
               }),
             };
@@ -140,10 +140,10 @@ const filterInconsistentMetadataObject = (
 };
 
 export const filterInconsistentMetadataObjects = (
-  metadataObjects: MetadataObject[],
-  inconsistentObjects: MetadataObject[],
+  metadataObjects: any[],
+  inconsistentObjects: Record<string, any>[],
   type: string
-): MetadataObject[] => {
+) => {
   let filteredMetadataObjects = JSON.parse(JSON.stringify(metadataObjects));
 
   inconsistentObjects.forEach(object => {

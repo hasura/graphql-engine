@@ -5,10 +5,8 @@ import RootFieldsEditor from './RootFieldsEditor';
 import Tooltip from '../../../Common/Tooltip/Tooltip';
 
 import styles from './ModifyTable.scss';
-import {
-  getTableCustomRootFields,
-  getTableName,
-} from '../../../Common/utils/pgUtils';
+import { getTableCustomRootFields } from '../../../../dataSources';
+import { getTableName } from '../utils';
 
 const RootFields = props => {
   const { tableSchema, rootFieldsEdit, dispatch } = props;

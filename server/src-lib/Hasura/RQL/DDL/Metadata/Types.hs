@@ -6,6 +6,7 @@ module Hasura.RQL.DDL.Metadata.Types
   , MetadataVersion(..)
   , ExportMetadata(..)
   , ClearMetadata(..)
+  , ReloadSpec(..)
   , ReloadMetadata(..)
   , DumpInternalState(..)
   , GetInconsistentMetadata(..)
@@ -37,17 +38,45 @@ $(deriveToJSON defaultOptions ''ExportMetadata)
 instance FromJSON ExportMetadata where
   parseJSON _ = return ExportMetadata
 
+data ReloadSpec a
+  = RSReloadAll
+  | RSReloadList !(HashSet a)
+  deriving (Show, Eq)
+
+instance (ToJSON a) => ToJSON (ReloadSpec a) where
+  toJSON = \case
+    RSReloadAll    -> Bool True
+    RSReloadList l -> toJSON l
+
+instance (FromJSON a, Eq a, Hashable a) => FromJSON (ReloadSpec a) where
+  parseJSON (Bool b) = pure $ if b then RSReloadAll else RSReloadList mempty
+  parseJSON v        = RSReloadList <$> parseJSON v
+
+type ReloadRemoteSchemas = ReloadSpec RemoteSchemaName
+type ReloadSources       = ReloadSpec SourceName
+
+noReloadRemoteSchemas :: ReloadRemoteSchemas
+noReloadRemoteSchemas = RSReloadList mempty
+
+reloadAllSources :: ReloadSources
+reloadAllSources = RSReloadAll
+
 data ReloadMetadata
   = ReloadMetadata
-  { _rmReloadRemoteSchemas :: !Bool
+  { _rmReloadRemoteSchemas :: !ReloadRemoteSchemas
+  , _rmReloadSources       :: !ReloadSources
   } deriving (Show, Eq)
 $(deriveToJSON (aesonDrop 3 snakeCase) ''ReloadMetadata)
 
 instance FromJSON ReloadMetadata where
   parseJSON = \case
     Object o -> ReloadMetadata
-                <$> o .:? "reload_remote_schemas" .!= False
-    _        -> pure $ ReloadMetadata False
+                -- To maintain backwards compatibility of the API behaviour,
+                -- we choose not to reload any remote schema in absence of
+                -- 'reload_remote_schemas' field.
+                <$> o .:? "reload_remote_schemas" .!= noReloadRemoteSchemas
+                <*> o .:? "reload_sources" .!= reloadAllSources
+    _        -> pure $ ReloadMetadata noReloadRemoteSchemas reloadAllSources
 
 data DumpInternalState
   = DumpInternalState

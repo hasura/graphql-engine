@@ -114,6 +114,8 @@ instance (UserInfoM m) => UserInfoM (MetadataT m) where
   askUserInfo = lift askUserInfo
 instance (UserInfoM m) => UserInfoM (TableCacheRT b m) where
   askUserInfo = lift askUserInfo
+instance (UserInfoM m) => UserInfoM (LazyTxT QErr m) where
+  askUserInfo = lift askUserInfo
 
 askPGSourceCache
   :: (CacheRM m, MonadError QErr m)

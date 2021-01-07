@@ -9,12 +9,13 @@ import {
   verifyPermissionTab,
   testSessVariable,
 } from './spec';
+import { getIndexRoute } from '../../../helpers/dataHelpers';
 
 const setup = () => {
   describe('Setup route', () => {
     it('Visit the index route', () => {
       // Visit the index route
-      cy.visit('/data');
+      cy.visit(getIndexRoute());
       cy.wait(5000);
       // Get and set validation metadata
       setMetaData();
@@ -23,7 +24,7 @@ const setup = () => {
 };
 
 export const runCreateCustomFunctionsTableTests = () => {
-  describe('Create Custom Function', () => {
+  describe('Custom Function Tests', () => {
     it('Create a custom function and track', createCustomFunctionSuccess);
     it('Untrack custom function', unTrackFunction);
     it('Track custom function', trackFunction);

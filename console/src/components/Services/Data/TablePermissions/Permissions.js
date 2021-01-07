@@ -44,12 +44,7 @@ import TableHeader from '../TableCommon/TableHeader';
 import CollapsibleToggle from '../../../Common/CollapsibleToggle/CollapsibleToggle';
 import Toggle from '../../../Common/Toggle/Toggle';
 import EnhancedInput from '../../../Common/InputChecker/InputChecker';
-import {
-  fetchFunctionInit,
-  setTable,
-  updateSchemaInfo,
-  fetchRoleList,
-} from '../DataActions';
+import { fetchFunctionInit, setTable, updateSchemaInfo } from '../DataActions';
 import { getIngForm, getEdForm } from '../utils';
 import {
   getPermissionFilterString,
@@ -72,14 +67,9 @@ import {
 import {
   findTable,
   generateTableDef,
-  getColumnName,
-  getComputedFieldName,
-  getTableColumns,
-  getGroupedTableComputedFields,
-  getColumnType,
-  getTableSupportedQueries,
   QUERY_TYPES,
-} from '../../../Common/utils/pgUtils';
+  dataSource,
+} from '../../../../dataSources';
 import KnowMoreLink from '../../../Common/KnowMoreLink/KnowMoreLink';
 import {
   getFilterQueries,
@@ -88,8 +78,11 @@ import {
   getDefaultFilterType,
   getUpdateTooltip,
   getQuerySingleRowMutation,
+  getPermissionsIcon,
 } from './utils';
 import PermButtonSection from './PermButtonsSection';
+import { rolesSelector } from '../../../../metadata/selector';
+import { RightContainer } from '../../../Common/Layout/RightContainer';
 
 class Permissions extends Component {
   constructor() {
@@ -118,7 +111,6 @@ class Permissions extends Component {
 
     dispatch({ type: RESET });
     dispatch(setTable(this.props.tableName));
-    dispatch(fetchRoleList());
     dispatch(fetchFunctionInit());
   }
 
@@ -197,6 +189,7 @@ class Permissions extends Component {
       allRoles,
       nonTrackableFunctions,
       trackableFunctions,
+      currentSource,
     } = this.props;
 
     const { localFilterString, presetsOrdered } = this.state;
@@ -212,7 +205,7 @@ class Permissions extends Component {
     }
 
     const allFunctions = nonTrackableFunctions.concat(trackableFunctions);
-    const groupedComputedFields = getGroupedTableComputedFields(
+    const groupedComputedFields = dataSource.getGroupedTableComputedFields(
       currentTableSchema,
       allFunctions
     );
@@ -264,6 +257,7 @@ class Permissions extends Component {
         <TableHeader
           dispatch={dispatch}
           table={tableSchema}
+          source={currentSource}
           tabName="permissions"
           migrationMode={migrationMode}
           readOnlyMode={readOnlyMode}
@@ -372,66 +366,16 @@ class Permissions extends Component {
             );
           };
 
-          const getRoleQueryPermission = queryType => {
-            let _permission;
-
-            if (role === 'admin') {
-              _permission = permissionsSymbols.fullAccess;
-            } else if (!Object.keys(rolePermissions).includes(role)) {
-              _permission = permissionsSymbols.noAccess;
-            } else {
-              const permissions = rolePermissions[role][queryType];
-
-              if (permissions) {
-                let checkColumns;
-                let checkComputedFields;
-                let filterKey;
-
-                if (queryType === 'select') {
-                  checkColumns = true;
-                  checkComputedFields = true;
-                  filterKey = 'filter';
-                } else if (queryType === 'update') {
-                  checkColumns = true;
-                  checkComputedFields = false;
-                  filterKey = 'filter';
-                } else if (queryType === 'insert') {
-                  checkColumns = true;
-                  checkComputedFields = false;
-                  filterKey = 'check';
-                } else if (queryType === 'delete') {
-                  checkColumns = false;
-                  checkComputedFields = false;
-                  filterKey = 'filter';
-                }
-
-                if (JSON.stringify(permissions[filterKey]) === '{}') {
-                  if (
-                    (checkColumns &&
-                      (!permissions.columns ||
-                        (!permissions.columns.includes('*') &&
-                          permissions.columns.length !==
-                            tableSchema.columns.length))) ||
-                    (checkComputedFields &&
-                      (!permissions.computed_fields ||
-                        (!permissions.computed_fields.includes('*') &&
-                          permissions.computed_fields.length !==
-                            groupedComputedFields.scalar.length)))
-                  ) {
-                    _permission = permissionsSymbols.partialAccess;
-                  } else {
-                    _permission = permissionsSymbols.fullAccess;
-                  }
-                } else {
-                  _permission = permissionsSymbols.partialAccess;
-                }
-              } else {
-                _permission = permissionsSymbols.noAccess;
-              }
-            }
-
-            return _permission;
-          };
+          const getRoleQueryPermission = queryType =>
+            permissionsSymbols[
+              getPermissionsIcon(
+                role,
+                rolePermissions,
+                queryType,
+                tableSchema.columns,
+                groupedComputedFields
+              )
+            ];
           return supportedQueryTypes.map(queryType => {
             const isEditAllowed = role !== 'admin';
             const isCurrEdit =
@@ -1003,9 +947,7 @@ class Permissions extends Component {
 
           if (query === 'select') {
             groupedComputedFields.scalar.forEach(scalarComputedField => {
-              const computedFieldName = getComputedFieldName(
-                scalarComputedField
-              );
+              const computedFieldName = scalarComputedField.computed_field_name;
 
               _columnList.push(
                 getFieldCheckbox('computed_fields', computedFieldName)
@@ -1048,13 +990,13 @@ class Permissions extends Component {
           const dispatchToggleAllColumns = () => {
             const allFields = {};
 
-            allFields.columns = getTableColumns(tableSchema).map(c =>
-              getColumnName(c)
+            allFields.columns = (tableSchema.columns || []).map(
+              c => c.column_name
             );
 
             if (query === 'select') {
-              allFields.computed_fields = groupedComputedFields.scalar.map(cf =>
-                getComputedFieldName(cf)
+              allFields.computed_fields = groupedComputedFields.scalar.map(
+                cf => cf.computed_field_name
               );
             }
 
@@ -1100,7 +1042,7 @@ class Permissions extends Component {
           const colSectionTitle = 'Column ' + query + ' permissions';
 
           const tableFields = {};
-          tableFields.columns = getTableColumns(tableSchema);
+          tableFields.columns = tableSchema.columns || [];
           if (query === 'select') {
             tableFields.computed_fields = groupedComputedFields.scalar;
           }
@@ -1319,7 +1261,7 @@ class Permissions extends Component {
 
               if (columns && columns.length > 0) {
                 columns.forEach((c, i) => {
-                  const columnName = getColumnName(c);
+                  const columnName = c.column_name;
                   if (
                     columnName === preset.column ||
                     !presetColumns.includes(columnName)
@@ -1384,9 +1326,11 @@ class Permissions extends Component {
             const presetInputDisabled = !preset.column;
 
             const columnInfo = columns.find(
-              c => getColumnName(c) === preset.column
+              c => c.column_name === preset.column
             );
-            const columnType = columnInfo ? getColumnType(columnInfo) : '';
+            const columnType = columnInfo
+              ? dataSource.getColumnType(columnInfo)
+              : '';
 
             if (presetType === 'session') {
               _presetInput = (
@@ -1814,7 +1758,6 @@ class Permissions extends Component {
             {getRowSection()}
             {getColumnSection()}
             {getAggregationSection()}
-            {/*{getUpsertSection()}*/}
             {getPresetsSection('insert')}
             {getPresetsSection('update')}
             {getBackendOnlySection()}
@@ -1835,28 +1778,41 @@ class Permissions extends Component {
 
     /********************/
 
-    const supportedQueryTypes = getTableSupportedQueries(currentTableSchema);
+    const supportedQueryTypes = dataSource.getTableSupportedQueries(
+      currentTableSchema
+    );
 
     return (
-      <div className={styles.container}>
-        {getHeader(currentTableSchema)}
-        <br />
-        <div className={styles.padd_left_remove}>
-          <div className={`${styles.padd_remove} col-xs-12`}>
-            <h4 className={styles.subheading_text}>Permissions</h4>
-            {getPermissionsTable(
-              currentTableSchema,
-              supportedQueryTypes,
-              allRoles
+      <RightContainer>
+        <div className={styles.container}>
+          {getHeader(currentTableSchema)}
+          <br />
+          <div className={styles.padd_left_remove}>
+            <div className={`${styles.padd_remove} col-xs-12`}>
+              <h4 className={styles.subheading_text}>Permissions</h4>
+              {getPermissionsTable(
+                currentTableSchema,
+                supportedQueryTypes,
+                allRoles
+              )}
+              {getBulkSection(currentTableSchema)}
+              {getEditSection(
+                currentTableSchema,
+                supportedQueryTypes,
+                allRoles
+              )}
+            </div>
+          </div>
+          <div className={`${styles.fixed} hidden`}>
+            {getAlertHtml(
+              ongoingRequest,
+              lastError,
+              lastSuccess,
+              lastFormError
             )}
-            {getBulkSection(currentTableSchema)}
-            {getEditSection(currentTableSchema, supportedQueryTypes, allRoles)}
           </div>
         </div>
-        <div className={`${styles.fixed} hidden`}>
-          {getAlertHtml(ongoingRequest, lastError, lastSuccess, lastFormError)}
-        </div>
-      </div>
+      </RightContainer>
     );
   }
 }
@@ -1882,7 +1838,7 @@ const mapStateToProps = (state, ownProps) => ({
   tableName: ownProps.params.table,
   tableType: ownProps.route.tableType,
   allSchemas: state.tables.allSchemas,
-  allRoles: state.tables.allRoles,
+  allRoles: rolesSelector(state),
   schemaList: state.tables.schemaList,
   migrationMode: state.main.migrationMode,
   nonTrackableFunctions: state.tables.nonTrackablePostgresFunctions || [],
@@ -1890,6 +1846,7 @@ const mapStateToProps = (state, ownProps) => ({
   readOnlyMode: state.main.readOnlyMode,
   currentSchema: state.tables.currentSchema,
   serverVersion: state.main.serverVersion ? state.main.serverVersion : '',
+  currentSource: state.tables.currentDataSource,
   ...state.tables.modify,
 });
 

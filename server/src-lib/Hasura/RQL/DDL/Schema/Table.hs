@@ -206,7 +206,13 @@ data TrackTableV2
   { ttv2Table         :: !TrackTable
   , ttv2Configuration :: !TableConfig
   } deriving (Show, Eq)
-$(deriveJSON (aesonDrop 4 snakeCase) ''TrackTableV2)
+$(deriveToJSON (aesonDrop 4 snakeCase) ''TrackTableV2)
+
+instance FromJSON TrackTableV2 where
+  parseJSON = withObject "Object" $ \o -> do
+    table <- parseJSON $ Object o
+    configuration <- o .:? "configuration" .!= emptyTableConfig
+    pure $ TrackTableV2 table configuration
 
 runTrackTableV2Q
   :: (MonadError QErr m, CacheRWM m, MetadataM m) => TrackTableV2 -> m EncJSON

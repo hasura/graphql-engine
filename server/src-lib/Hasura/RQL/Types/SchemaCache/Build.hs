@@ -18,6 +18,7 @@ module Hasura.RQL.Types.SchemaCache.Build
   , MetadataM(..)
   , MetadataT(..)
   , runMetadataT
+  , buildSchemaCacheWithInvalidations
   , buildSchemaCache
   , buildSchemaCacheFor
   , buildSchemaCacheStrict
@@ -47,6 +48,8 @@ import           Hasura.RQL.Types.Metadata
 import           Hasura.RQL.Types.RemoteSchema       (RemoteSchemaName)
 import           Hasura.RQL.Types.SchemaCache
 import           Hasura.Tracing                      (TraceT)
+
+import qualified Hasura.Tracing                      as Tracing
 
 -- ----------------------------------------------------------------------------
 -- types used during schema cache construction
@@ -175,6 +178,7 @@ newtype MetadataT m a
     ( Functor, Applicative, Monad, MonadTrans
     , MonadIO, MonadUnique, MonadReader r, MonadError e, MonadTx
     , SourceM, TableCoreInfoRM b, CacheRM, CacheRWM, MFunctor
+    , Tracing.MonadTrace
     )
 
 deriving instance (MonadBase IO m) => MonadBase IO (MetadataT m)
@@ -188,12 +192,15 @@ runMetadataT :: Metadata -> MetadataT m a -> m (a, Metadata)
 runMetadataT metadata (MetadataT m) =
   runStateT m metadata
 
-buildSchemaCache :: (MetadataM m, CacheRWM m) => MetadataModifier -> m ()
-buildSchemaCache metadataModifier = do
+buildSchemaCacheWithInvalidations :: (MetadataM m, CacheRWM m) => CacheInvalidations -> MetadataModifier -> m ()
+buildSchemaCacheWithInvalidations cacheInvalidations metadataModifier = do
   metadata <- getMetadata
   let modifiedMetadata = unMetadataModifier metadataModifier $ metadata
-  buildSchemaCacheWithOptions CatalogUpdate mempty modifiedMetadata
+  buildSchemaCacheWithOptions CatalogUpdate cacheInvalidations modifiedMetadata
   putMetadata modifiedMetadata
+
+buildSchemaCache :: (MetadataM m, CacheRWM m) => MetadataModifier -> m ()
+buildSchemaCache = buildSchemaCacheWithInvalidations mempty
 
 -- | Rebuilds the schema cache after modifying metadata. If an object with the given object id became newly inconsistent,
 -- raises an error about it specifically. Otherwise, raises a generic metadata inconsistency error.

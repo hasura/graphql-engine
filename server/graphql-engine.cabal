@@ -325,6 +325,8 @@ library
                      , Hasura.Server.Init
                      , Hasura.Server.Init.Config
                      , Hasura.Server.API.Query
+                     , Hasura.Server.API.V2Query
+                     , Hasura.Server.API.Metadata
                      , Hasura.Server.Utils
                      , Hasura.Server.Version
                      , Hasura.Server.Logging

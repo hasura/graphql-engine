@@ -19,7 +19,7 @@ import           Hasura.RQL.DDL.Schema.Cache.Common
 import           Hasura.RQL.DDL.Schema.Source
 import           Hasura.RQL.Types
 import           Hasura.Server.Init
-import           Hasura.Server.Migrate              (downgradeCatalog, dropCatalog)
+import           Hasura.Server.Migrate              (downgradeCatalog)
 import           Hasura.Server.Version
 
 import qualified Control.Concurrent.Extended        as C
@@ -50,8 +50,7 @@ runApp :: Env.Environment -> HGEOptions Hasura -> IO ()
 runApp env (HGEOptionsG rci metadataDbUrl hgeCmd) = do
   initTime <- liftIO getCurrentTime
   globalCtx@GlobalCtx{..} <- initGlobalCtx env metadataDbUrl rci
-
-  let (dbUrlConf, defaultPgConnInfo, maybeRetries) = _gcDefaultPostgresConnInfo
+  let (maybeDefaultPgConnInfo, maybeRetries) = _gcDefaultPostgresConnInfo
 
   withVersion $$(getVersionFromEnvironment) $ case hgeCmd of
     HCServe serveOptions -> do
@@ -88,11 +87,11 @@ runApp env (HGEOptionsG rci metadataDbUrl hgeCmd) = do
           runHGEServer env serveOptions serveCtx initTime Nothing serverMetrics ekgStore
 
     HCExport -> do
-      res <- runTxWithMinimalPool defaultPgConnInfo fetchMetadataFromCatalog
+      res <- runTxWithMinimalPool _gcMetadataDbConnInfo fetchMetadataFromCatalog
       either (printErrJExit MetadataExportError) printJSON res
 
     HCClean -> do
-      res <- runTxWithMinimalPool _gcMetadataDbConnInfo dropCatalog
+      res <- runTxWithMinimalPool _gcMetadataDbConnInfo dropHdbCatalogSchema
       let cleanSuccessMsg = "successfully cleaned graphql-engine related data"
       either (printErrJExit MetadataCleanError) (const $ liftIO $ putStrLn cleanSuccessMsg) res
 
@@ -118,9 +117,10 @@ runApp env (HGEOptionsG rci metadataDbUrl hgeCmd) = do
         either (printErrJExit ExecuteProcessError) (liftIO . BLC.putStrLn) res
 
     HCDowngrade opts -> do
-      let pgSourceConnInfo = PostgresSourceConnInfo dbUrlConf
-                             defaultPostgresPoolSettings{_ppsRetries = fromMaybe 1 maybeRetries}
-          defaultSourceConfig = SourceConfiguration pgSourceConnInfo Nothing
+      let defaultSourceConfig = maybeDefaultPgConnInfo <&> \(dbUrlConf, _) ->
+            let pgSourceConnInfo = PostgresSourceConnInfo dbUrlConf
+                                   defaultPostgresPoolSettings{_ppsRetries = fromMaybe 1 maybeRetries}
+            in SourceConfiguration pgSourceConnInfo Nothing
       res <- runTxWithMinimalPool _gcMetadataDbConnInfo $ downgradeCatalog defaultSourceConfig opts initTime
       either (printErrJExit DowngradeProcessError) (liftIO . print) res
 

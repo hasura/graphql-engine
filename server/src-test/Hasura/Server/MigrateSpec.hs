@@ -16,6 +16,7 @@ import           Test.Hspec.Expectations.Lifted
 import qualified Data.Environment                    as Env
 import qualified Database.PG.Query                   as Q
 
+import           Hasura.Backends.Postgres.Connection
 import           Hasura.RQL.DDL.Metadata             (ClearMetadata (..), runClearMetadata)
 import           Hasura.RQL.DDL.Schema
 import           Hasura.RQL.DDL.Schema.Cache.Common
@@ -74,12 +75,12 @@ spec
   => SourceConfiguration -> PGExecCtx -> Q.ConnInfo -> SpecWithCache m
 spec srcConfig pgExecCtx pgConnInfo = do
   let migrateCatalogAndBuildCache env time = do
-        (migrationResult, metadata) <- runTx pgExecCtx $ migrateCatalog srcConfig time
+        (migrationResult, metadata) <- runTx pgExecCtx $ migrateCatalog (Just srcConfig) time
         (,migrationResult) <$> runCacheBuildM (buildRebuildableSchemaCache env metadata)
 
       dropAndInit env time = lift $ CacheRefT $ flip modifyMVar \_ ->
-        (runTx pgExecCtx dropCatalog) *> (migrateCatalogAndBuildCache env time)
-      downgradeTo v = runTx pgExecCtx . downgradeCatalog srcConfig DowngradeOptions{ dgoDryRun = False, dgoTargetVersion = v }
+        (runTx pgExecCtx dropHdbCatalogSchema) *> (migrateCatalogAndBuildCache env time)
+      downgradeTo v = runTx pgExecCtx . downgradeCatalog (Just srcConfig) DowngradeOptions{ dgoDryRun = False, dgoTargetVersion = v }
 
   describe "migrateCatalog" $ do
     it "initializes the catalog" $ singleTransaction do

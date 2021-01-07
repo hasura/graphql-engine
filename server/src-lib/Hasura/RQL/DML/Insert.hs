@@ -134,7 +134,7 @@ convInsertQuery
   -> (ColumnType 'Postgres -> Value -> m S.SQLExp)
   -> InsertQuery
   -> m (InsertQueryP1 'Postgres)
-convInsertQuery objsParser sessVarBldr prepFn (InsertQuery tableName val oC mRetCols) = do
+convInsertQuery objsParser sessVarBldr prepFn (InsertQuery tableName _ val oC mRetCols) = do
 
   insObjs <- objsParser val
 
@@ -197,9 +197,10 @@ convInsertQuery objsParser sessVarBldr prepFn (InsertQuery tableName val oC mRet
 
 convInsQ
   :: (QErrM m, UserInfoM m, CacheRM m)
-  => SourceName -> InsertQuery
+  => InsertQuery
   -> m (InsertQueryP1 'Postgres, DS.Seq Q.PrepArg)
-convInsQ source query = do
+convInsQ query = do
+  let source = iqSource query
   tableCache <- askTableCache source
   flip runTableCacheRT (source, tableCache) $ runDMLP1T $
     convInsertQuery (withPathK "objects" . decodeInsObjs)
@@ -207,16 +208,16 @@ convInsQ source query = do
 
 runInsert
   :: ( HasVersion, QErrM m, UserInfoM m
-     , CacheRM m, HasSQLGenCtx m, MonadIO m
-     , MonadBaseControl IO m, Tracing.MonadTrace m
+     , CacheRM m, HasSQLGenCtx m
+     , MonadIO m, Tracing.MonadTrace m
+     , MonadBaseControl IO m
      )
-  => Env.Environment -> SourceName -> InsertQuery -> m EncJSON
-runInsert env source q = do
-  sourceConfig <- _pcConfiguration <$> askPGSourceCache source
-  res <- convInsQ source q
+  => Env.Environment -> InsertQuery -> m EncJSON
+runInsert env q = do
+  sourceConfig <- _pcConfiguration <$> askPGSourceCache (iqSource q)
+  res <- convInsQ q
   strfyNum <- stringifyNum <$> askSQLGenCtx
-  liftEitherM $ runExceptT $
-    runQueryLazyTx (_pscExecCtx sourceConfig) Q.ReadWrite $
+  runQueryLazyTx (_pscExecCtx sourceConfig) Q.ReadWrite $
     execInsertQuery env strfyNum Nothing res
 
 decodeInsObjs :: (UserInfoM m, QErrM m) => Value -> m [InsObj]

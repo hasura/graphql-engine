@@ -48,6 +48,7 @@ import qualified Hasura.GraphQL.Transport.WebSocket        as WS
 import qualified Hasura.GraphQL.Transport.WebSocket.Server as WS
 import qualified Hasura.Logging                            as L
 import qualified Hasura.Server.API.PGDump                  as PGD
+import qualified Hasura.Server.API.V2Query                 as V2Q
 import qualified Hasura.Tracing                            as Tracing
 
 import           Hasura.Backends.Postgres.Execute.Types
@@ -58,6 +59,7 @@ import           Hasura.Metadata.Class
 import           Hasura.RQL.DDL.Schema
 import           Hasura.RQL.Types
 import           Hasura.Server.API.Config                  (runGetConfig)
+import           Hasura.Server.API.Metadata
 import           Hasura.Server.API.Query
 import           Hasura.Server.Auth                        (AuthMode (..), UserAuthentication (..))
 import           Hasura.Server.Compression
@@ -211,18 +213,30 @@ setHeader (headerName, headerValue) =
   Spock.setHeader (bsToTxt $ CI.original headerName) (bsToTxt headerValue)
 
 -- | Typeclass representing the metadata API authorization effect
-class (Monad m) => MetadataApiAuthorization m where
-  authorizeMetadataApi
+class (Monad m) => MonadMetadataApiAuthorization m where
+  authorizeV1QueryApi
     :: HasVersion => RQLQuery -> HandlerCtx -> m (Either QErr ())
 
-instance MetadataApiAuthorization m => MetadataApiAuthorization (ReaderT r m) where
-  authorizeMetadataApi q hc = lift $ authorizeMetadataApi q hc
+  authorizeV1MetadataApi
+    :: HasVersion => RQLMetadata -> HandlerCtx -> m (Either QErr ())
 
-instance MetadataApiAuthorization m => MetadataApiAuthorization (MetadataStorageT m) where
-  authorizeMetadataApi q hc = lift $ authorizeMetadataApi q hc
+  authorizeV2QueryApi
+    :: HasVersion => V2Q.RQLQuery -> HandlerCtx -> m (Either QErr ())
 
-instance MetadataApiAuthorization m => MetadataApiAuthorization (Tracing.TraceT m) where
-  authorizeMetadataApi q hc = lift $ authorizeMetadataApi q hc
+instance MonadMetadataApiAuthorization m => MonadMetadataApiAuthorization (ReaderT r m) where
+  authorizeV1QueryApi q hc    = lift $ authorizeV1QueryApi q hc
+  authorizeV1MetadataApi q hc = lift $ authorizeV1MetadataApi q hc
+  authorizeV2QueryApi q hc    = lift $ authorizeV2QueryApi q hc
+
+instance MonadMetadataApiAuthorization m => MonadMetadataApiAuthorization (MetadataStorageT m) where
+  authorizeV1QueryApi q hc    = lift $ authorizeV1QueryApi q hc
+  authorizeV1MetadataApi q hc = lift $ authorizeV1MetadataApi q hc
+  authorizeV2QueryApi q hc    = lift $ authorizeV2QueryApi q hc
+
+instance MonadMetadataApiAuthorization m => MonadMetadataApiAuthorization (Tracing.TraceT m) where
+  authorizeV1QueryApi q hc    = lift $ authorizeV1QueryApi q hc
+  authorizeV1MetadataApi q hc = lift $ authorizeV1MetadataApi q hc
+  authorizeV2QueryApi q hc    = lift $ authorizeV2QueryApi q hc
 
 -- | The config API (/v1alpha1/config) handler
 class Monad m => MonadConfigApiHandler m where
@@ -368,15 +382,14 @@ mkSpockAction serverCtx qErrEncoder qErrModifier apiHandler = do
         mapM_ setHeader allRespHeaders
         Spock.lazyBytes compressedResp
 
-
 v1QueryHandler
-  :: ( HasVersion, MonadIO m, MonadBaseControl IO m, MetadataApiAuthorization m, Tracing.MonadTrace m
-     , MonadReader HandlerCtx m , MonadMetadataStorage m, MonadResolveSource m
+  :: ( HasVersion, MonadIO m, MonadBaseControl IO m, MonadMetadataApiAuthorization m, Tracing.MonadTrace m
+     , MonadReader HandlerCtx m, MonadMetadataStorage m, MonadResolveSource m
      )
   => RQLQuery
   -> m (HttpResponse EncJSON)
 v1QueryHandler query = do
-  (liftEitherM . authorizeMetadataApi query) =<< ask
+  (liftEitherM . authorizeV1QueryApi query) =<< ask
   scRef  <- asks (scCacheRef . hcServerCtx)
   logger <- asks (scLogger . hcServerCtx)
   res    <- bool (fst <$> action) (withSCUpdate scRef logger action) $ queryModifiesSchemaCache query
@@ -392,6 +405,60 @@ v1QueryHandler query = do
       env         <- asks (scEnvironment . hcServerCtx)
       remoteSchemaPermsCtx <- asks (scRemoteSchemaPermsCtx . hcServerCtx)
       runQuery env instanceId userInfo schemaCache httpMgr sqlGenCtx remoteSchemaPermsCtx query
+
+v1MetadataHandler
+  :: ( HasVersion
+     , MonadIO m
+     , MonadBaseControl IO m
+     , MonadReader HandlerCtx m
+     , Tracing.MonadTrace m
+     , MonadMetadataStorage m
+     , MonadResolveSource m
+     , MonadMetadataApiAuthorization m
+     )
+  => RQLMetadata -> m (HttpResponse EncJSON)
+v1MetadataHandler query = do
+  (liftEitherM . authorizeV1MetadataApi query) =<< ask
+  userInfo     <- asks hcUser
+  scRef        <- asks (scCacheRef . hcServerCtx)
+  schemaCache  <- fmap fst $ liftIO $ readIORef $ _scrCache scRef
+  httpMgr      <- asks (scManager . hcServerCtx)
+  sqlGenCtx    <- asks (scSQLGenCtx . hcServerCtx)
+  env          <- asks (scEnvironment . hcServerCtx)
+  instanceId   <- asks (scInstanceId . hcServerCtx)
+  logger       <- asks (scLogger . hcServerCtx)
+  remoteSchemaPermsCtx <- asks (scRemoteSchemaPermsCtx . hcServerCtx)
+  r <- withSCUpdate scRef logger $
+       runMetadataQuery env instanceId userInfo httpMgr sqlGenCtx remoteSchemaPermsCtx schemaCache query
+  pure $ HttpResponse r []
+
+v2QueryHandler
+  :: ( HasVersion, MonadIO m, MonadBaseControl IO m, MonadMetadataApiAuthorization m, Tracing.MonadTrace m
+     , MonadReader HandlerCtx m
+     , MonadMetadataStorage m
+     , MonadResolveSource m
+     )
+  => V2Q.RQLQuery
+  -> m (HttpResponse EncJSON)
+v2QueryHandler query = do
+  (liftEitherM . authorizeV2QueryApi query) =<< ask
+  scRef  <- asks (scCacheRef . hcServerCtx)
+  logger <- asks (scLogger . hcServerCtx)
+  res    <- bool (fst <$> dbAction) (withSCUpdate scRef logger dbAction) $
+            V2Q.queryModifiesSchema query
+  return $ HttpResponse res []
+  where
+    -- Hit postgres
+    dbAction = do
+      userInfo    <- asks hcUser
+      scRef       <- asks (scCacheRef . hcServerCtx)
+      schemaCache <- fmap fst $ liftIO $ readIORef $ _scrCache scRef
+      httpMgr     <- asks (scManager . hcServerCtx)
+      sqlGenCtx   <- asks (scSQLGenCtx . hcServerCtx)
+      instanceId  <- asks (scInstanceId . hcServerCtx)
+      env         <- asks (scEnvironment . hcServerCtx)
+      remoteSchemaPermsCtx <- asks (scRemoteSchemaPermsCtx . hcServerCtx)
+      V2Q.runQuery env instanceId userInfo schemaCache httpMgr sqlGenCtx remoteSchemaPermsCtx query
 
 v1Alpha1GQHandler
   :: ( HasVersion
@@ -563,7 +630,7 @@ queryParsers =
       return $ f q
 
 legacyQueryHandler
-  :: ( HasVersion, MonadIO m, MonadBaseControl IO m, MetadataApiAuthorization m, Tracing.MonadTrace m
+  :: ( HasVersion, MonadIO m, MonadBaseControl IO m, MonadMetadataApiAuthorization m, Tracing.MonadTrace m
      , MonadReader HandlerCtx m
      , MonadMetadataStorage m
      , MonadResolveSource m
@@ -608,7 +675,7 @@ mkWaiApp
      , ConsoleRenderer m
      , HttpLog m
      , UserAuthentication (Tracing.TraceT m)
-     , MetadataApiAuthorization m
+     , MonadMetadataApiAuthorization m
      , E.MonadGQLExecutionCheck m
      , MonadConfigApiHandler m
      , MonadQueryLog m
@@ -719,7 +786,7 @@ httpApp
      , HttpLog m
      -- , UserAuthentication m
      , UserAuthentication (Tracing.TraceT m)
-     , MetadataApiAuthorization m
+     , MonadMetadataApiAuthorization m
      , E.MonadGQLExecutionCheck m
      , MonadConfigApiHandler m
      , MonadQueryLog m
@@ -768,6 +835,12 @@ httpApp corsCfg serverCtx enableConsole consoleAssetsDir enableTelemetry = do
 
       Spock.post "v1/query" $ spockAction encodeQErr id $
         mkPostHandler $ mkAPIRespHandler v1QueryHandler
+
+      Spock.post "v1/metadata" $ spockAction encodeQErr id $
+        mkPostHandler $ mkAPIRespHandler v1MetadataHandler
+
+      Spock.post "v2/query" $ spockAction encodeQErr id $
+        mkPostHandler $ mkAPIRespHandler v2QueryHandler
 
       Spock.post ("api/1/table" <//> Spock.var <//> Spock.var) $ \tableName queryType ->
         mkSpockAction serverCtx encodeQErr id $ mkPostHandler $

@@ -354,6 +354,6 @@ export const getCurrTimeForFileName = () => {
   return [year, month, day, hours, minutes, seconds, milliSeconds].join('_');
 };
 
-export const convertDateTimeToLocale = (dateTime: string) => {
+export const convertDateTimeToLocale = (dateTime: string | Date | number) => {
   return moment(dateTime, moment.ISO_8601).format('ddd, MMM Do HH:mm:ss Z');
 };

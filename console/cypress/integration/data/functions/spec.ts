@@ -3,12 +3,15 @@ import {
   baseUrl,
   getCustomFunctionName,
   getSchema,
-  testCustomFunctionSQL,
-  createTable,
   dropTable,
-  createTableSessVar,
   testCustomFunctionSQLWithSessArg,
   getTrackFnPayload,
+  createFunctionTable,
+  trackCreateFunctionTable,
+  getCreateTestFunctionQuery,
+  getTrackTestFunctionQuery,
+  createTableForSessionVarTest,
+  getTrackSessionVarTestTableQuery,
 } from '../../../helpers/dataHelpers';
 
 import {
@@ -24,17 +27,25 @@ import { setPromptValue } from '../../../helpers/common';
 
 export const createCustomFunctionSuccess = () => {
   // Round about way to create a function
-  dataRequest(createTable(), ResultType.SUCCESS);
+  dataRequest(createFunctionTable(), ResultType.SUCCESS, 'query');
   cy.wait(5000);
-  dataRequest(testCustomFunctionSQL(1), ResultType.SUCCESS);
+  dataRequest(trackCreateFunctionTable(), ResultType.SUCCESS, 'metadata');
   cy.wait(5000);
+
+  dataRequest(getCreateTestFunctionQuery(1), ResultType.SUCCESS, 'query');
+  cy.wait(5000);
+  dataRequest(getTrackTestFunctionQuery(1), ResultType.SUCCESS, 'metadata');
+  cy.wait(5000);
+
   // Check if the track checkbox is clicked or not
   validateCFunc(getCustomFunctionName(1), getSchema(), ResultType.SUCCESS);
   cy.wait(5000);
 };
 
 export const unTrackFunction = () => {
-  cy.visit(`data/schema/public/functions/${getCustomFunctionName(1)}/modify`);
+  cy.visit(
+    `data/default/schema/public/functions/${getCustomFunctionName(1)}/modify`
+  );
   cy.wait(5000);
   cy.get(getElementFromAlias('custom-function-edit-untrack-btn')).click();
   cy.wait(5000);
@@ -57,18 +68,30 @@ export const trackFunction = () => {
   validateCFunc(getCustomFunctionName(1), getSchema(), ResultType.SUCCESS);
   cy.wait(5000);
 };
+
 export const testSessVariable = () => {
   // Round about way to create a function
   const fN = 'customFunctionWithSessionArg'.toLowerCase(); // for reading
-  dataRequest(createTableSessVar(), ResultType.SUCCESS);
+
+  dataRequest(createTableForSessionVarTest(), ResultType.SUCCESS, 'query');
+  cy.wait(5000);
+  dataRequest(
+    getTrackSessionVarTestTableQuery(),
+    ResultType.SUCCESS,
+    'metadata'
+  );
+  cy.wait(5000);
+
   createFunctionRequest(
     testCustomFunctionSQLWithSessArg(fN),
     ResultType.SUCCESS
   );
   cy.wait(1500);
+
   trackFunctionRequest(getTrackFnPayload(fN), ResultType.SUCCESS);
   cy.wait(1500);
-  cy.visit(`data/schema/public/functions/${fN}/modify`);
+
+  cy.visit(`data/default/schema/public/functions/${fN}/modify`);
   cy.get(getElementFromAlias(`${fN}-session-argument-btn`), {
     timeout: 5000,
   }).click();
@@ -91,7 +114,7 @@ export const testSessVariable = () => {
   cy.get(getElementFromAlias(`${fN}-session-argument-save`)).click();
   cy.wait(2000);
   cy.get(getElementFromAlias(fN)).should('be.visible');
-  cy.visit(`data/schema/public/functions/${fN}/modify`);
+  cy.visit(`data/default/schema/public/functions/${fN}/modify`);
   cy.wait(3000);
   cy.get(getElementFromAlias(`${fN}-session-argument`)).should(
     'contain',
@@ -102,7 +125,7 @@ export const testSessVariable = () => {
 };
 
 export const verifyPermissionTab = () => {
-  cy.get(getElementFromAlias('functions-data-permissions')).click();
+  cy.get(getElementFromAlias('functions-data/default-permissions')).click();
   cy.wait(5000);
   cy.get(getElementFromAlias('custom-function-permission-link')).should(
     'exist'
@@ -111,7 +134,7 @@ export const verifyPermissionTab = () => {
 };
 
 export const deleteCustomFunction = () => {
-  cy.get(getElementFromAlias('functions-data-modify')).click();
+  cy.get(getElementFromAlias('functions-data/default-modify')).click();
 
   setPromptValue(getCustomFunctionName(1));
 
@@ -119,7 +142,7 @@ export const deleteCustomFunction = () => {
   cy.window().its('prompt').should('be.called');
   cy.wait(5000);
   cy.get(getElementFromAlias('delete-confirmation-error')).should('not.exist');
-  cy.url().should('eq', `${baseUrl}/data/schema/public`);
+  cy.url().should('eq', `${baseUrl}/data/default/schema/public`);
   cy.wait(5000);
 
   dropTableRequest(dropTable(), ResultType.SUCCESS);

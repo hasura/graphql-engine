@@ -1,10 +1,6 @@
 import defaultState from './State';
 import Endpoints, { globalCookiePolicy } from '../../../../Endpoints';
-import {
-  handleMigrationErrors,
-  fetchTrackedFunctions,
-  fetchDataInit,
-} from '../DataActions';
+import { handleMigrationErrors, fetchDataInit } from '../DataActions';
 import {
   showErrorNotification,
   showSuccessNotification,
@@ -13,12 +9,19 @@ import {
   loadMigrationStatus,
   UPDATE_MIGRATION_STATUS_ERROR,
 } from '../../../Main/Actions';
-import { getStatementTimeoutSql, parseCreateSQL } from './utils';
+import { parseCreateSQL } from './utils';
 import dataHeaders from '../Common/Headers';
 import returnMigrateUrl from '../Common/getMigrateUrl';
-import { getRunSqlQuery } from '../../../Common/utils/v1QueryUtils';
 import requestAction from '../../../../utils/requestAction';
+import { dataSource } from '../../../../dataSources';
+import { getRunSqlQuery } from '../../../Common/utils/v1QueryUtils';
 import { getDownQueryComments } from '../../../../utils/migration/utils';
+import {
+  getTrackFunctionV2Query,
+  getTrackTableQuery,
+} from '../../../../metadata/queryUtils';
+import globals from '../../../../Globals';
+import { CLI_CONSOLE_MODE } from '../../../../constants';
 
 const MAKING_REQUEST = 'RawSQL/MAKING_REQUEST';
 const SET_SQL = 'RawSQL/SET_SQL';
@@ -34,6 +37,62 @@ const MODAL_OPEN = 'EditItem/MODAL_OPEN';
 const modalOpen = () => ({ type: MODAL_OPEN });
 const modalClose = () => ({ type: MODAL_CLOSE });
 
+const trackAllItems = (sql, isMigration, migrationName) => (
+  dispatch,
+  getState
+) => {
+  const currMigrationMode = getState().main.migrationMode;
+  const source = getState().tables.currentDataSource;
+
+  const objects = parseCreateSQL(sql);
+  const changes = [];
+  objects.forEach(({ type, name, schema }) => {
+    let req = {};
+    if (type === 'function') {
+      req = getTrackFunctionV2Query(name, schema, {}, source);
+    } else {
+      req = getTrackTableQuery({ name, schema }, source);
+    }
+    changes.push(req);
+  });
+
+  let url = Endpoints.metadata;
+  let request;
+  if (isMigration) {
+    if (globals.consoleMode === CLI_CONSOLE_MODE) {
+      url = currMigrationMode
+        ? Endpoints.hasuractlMigrate
+        : Endpoints.hasuractlMetadata;
+    }
+    request = {
+      name: migrationName,
+      up: changes,
+      down: [],
+    };
+  } else {
+    request = {
+      type: 'bulk',
+      args: changes,
+    };
+  }
+
+  const options = {
+    method: 'POST',
+    credentials: globalCookiePolicy,
+    headers: dataHeaders(getState),
+    body: JSON.stringify(request),
+  };
+
+  return dispatch(requestAction(url, options)).then(
+    () => {
+      dispatch(showSuccessNotification('Items were tracked successfuly'));
+    },
+    err => {
+      dispatch(showErrorNotification('Tracking items failed', err.code, err));
+    }
+  );
+};
+
 const executeSQL = (isMigration, migrationName, statementTimeout) => (
   dispatch,
   getState
@@ -43,65 +102,37 @@ const executeSQL = (isMigration, migrationName, statementTimeout) => (
 
   const { isTableTrackChecked, isCascadeChecked, sql } = getState().rawSQL;
   const { migrationMode, readOnlyMode } = getState().main;
-  const isStatementTimeout = statementTimeout && !isMigration;
 
+  const isStatementTimeout = statementTimeout && !isMigration;
   const migrateUrl = returnMigrateUrl(migrationMode);
 
-  let url = Endpoints.rawSQL;
-
+  let url = Endpoints.query;
+  const source = getState().tables.currentDataSource;
   const schemaChangesUp = [];
-  let schemaChangesDown = [];
 
   if (isStatementTimeout) {
     schemaChangesUp.push(
       getRunSqlQuery(
-        getStatementTimeoutSql(statementTimeout),
+        dataSource.getStatementTimeoutSql(statementTimeout),
+        source,
         false,
         readOnlyMode
       )
     );
   }
 
-  const runSQLQuery = getRunSqlQuery(sql, isCascadeChecked, readOnlyMode);
-  schemaChangesUp.push(runSQLQuery);
-  schemaChangesDown = [...getDownQueryComments([runSQLQuery])];
+  schemaChangesUp.push(
+    getRunSqlQuery(sql, source, isCascadeChecked, readOnlyMode)
+  );
 
-  if (isTableTrackChecked) {
-    const objects = parseCreateSQL(sql);
-
-    objects.forEach(object => {
-      const trackQuery = {
-        type: '',
-        args: {},
-      };
-      const unTrackQuery = {
-        type: '',
-        args: {},
-      };
-
-      if (object.type === 'function') {
-        trackQuery.type = 'track_function';
-        unTrackQuery.type = 'untrack_function';
-      } else {
-        trackQuery.type = 'add_existing_table_or_view';
-        unTrackQuery.type = 'untrack_table';
-      }
-
-      trackQuery.args.name = object.name;
-      trackQuery.args.schema = object.schema;
-
-      unTrackQuery.args.name = object.name;
-      unTrackQuery.args.schema = object.schema;
-
-      schemaChangesUp.push(trackQuery);
-      schemaChangesDown.unshift(unTrackQuery);
-    });
-  }
+  const schemaChangesDown = getDownQueryComments(schemaChangesUp, source);
 
   let requestBody = {
     type: 'bulk',
+    source,
     args: schemaChangesUp,
   };
+
   // check if its a migration and send to hasuractl migrate
   if (isMigration) {
     url = migrateUrl;
@@ -118,20 +149,29 @@ const executeSQL = (isMigration, migrationName, statementTimeout) => (
     body: JSON.stringify(requestBody),
   };
 
+  const callback = data => {
+    if (isMigration) {
+      dispatch(loadMigrationStatus());
+    }
+    dispatch(showSuccessNotification('SQL executed!'));
+    dispatch(fetchDataInit()).then(() => {
+      dispatch({
+        type: REQUEST_SUCCESS,
+        data: data && (isStatementTimeout ? data[1] : data[0]),
+      });
+    });
+  };
+
   return dispatch(requestAction(url, options))
     .then(
       data => {
-        if (isMigration) {
-          dispatch(loadMigrationStatus());
+        if (isTableTrackChecked) {
+          dispatch(trackAllItems(sql, isMigration, migrationName)).then(
+            callback(data)
+          );
+          return;
         }
-        dispatch(showSuccessNotification('SQL executed!'));
-        dispatch(fetchDataInit()).then(() => {
-          dispatch({
-            type: REQUEST_SUCCESS,
-            data: data && (isStatementTimeout ? data[1] : data[0]),
-          });
-        });
-        dispatch(fetchTrackedFunctions());
+        callback(data);
       },
       err => {
         const title = 'SQL Execution Failed';

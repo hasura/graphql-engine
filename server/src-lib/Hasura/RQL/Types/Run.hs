@@ -35,6 +35,7 @@ newtype RunT m a
            , MonadReader RunCtx
            , MonadIO
            , MonadMetadataStorage
+           , Tracing.MonadTrace
            )
 
 instance (MonadIO m) => MonadUnique (RunT m) where

@@ -80,7 +80,6 @@ import           Hasura.RQL.DDL.Headers
 import           Hasura.RQL.Types
 import           Hasura.Server.Version                  (HasVersion)
 
-
 data TriggerMetadata
   = TriggerMetadata { tmName :: TriggerName }
   deriving (Show, Eq)

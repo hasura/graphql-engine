@@ -301,7 +301,7 @@ convSelectQuery
   -> (ColumnType 'Postgres -> Value -> m S.SQLExp)
   -> SelectQuery
   -> m (AnnSimpleSel  'Postgres)
-convSelectQuery sessVarBldr prepArgBuilder (DMLQuery qt selQ) = do
+convSelectQuery sessVarBldr prepArgBuilder (DMLQuery _ qt selQ) = do
   tabInfo     <- withPathK "table" $ askTabInfoSource qt
   selPermInfo <- askSelPermInfo tabInfo
   let fieldInfo = _tciFieldInfoMap $ _tiCoreInfo tabInfo
@@ -318,8 +318,9 @@ selectP2 jsonAggSelect (sel, p) =
 
 phaseOne
   :: (QErrM m, UserInfoM m, CacheRM m, HasSQLGenCtx m)
-  => SourceName -> SelectQuery -> m (AnnSimpleSel  'Postgres, DS.Seq Q.PrepArg)
-phaseOne sourceName query = do
+  => SelectQuery -> m (AnnSimpleSel  'Postgres, DS.Seq Q.PrepArg)
+phaseOne query = do
+  let sourceName = getSourceDMLQuery query
   tableCache <- askTableCache sourceName
   flip runTableCacheRT (sourceName, tableCache) $ runDMLP1T $
     convSelectQuery sessVarFromCurrentSetting binRHSBuilder query
@@ -329,13 +330,11 @@ phaseTwo =
   liftTx . selectP2 JASMultipleRows
 
 runSelect
-  :: (QErrM m, UserInfoM m, CacheRM m
+  :: ( QErrM m, UserInfoM m, CacheRM m
      , HasSQLGenCtx m, MonadIO m, MonadBaseControl IO m
      , Tracing.MonadTrace m
      )
-  => SourceName -> SelectQuery -> m EncJSON
-runSelect source q = do
-  sourceConfig <- _pcConfiguration <$> askPGSourceCache source
-  p1Result <- phaseOne source q
-  liftEitherM $ runExceptT $
-    runQueryLazyTx (_pscExecCtx sourceConfig) Q.ReadWrite $ phaseTwo p1Result
+  => SelectQuery -> m EncJSON
+runSelect q = do
+  sourceConfig <- _pcConfiguration <$> askPGSourceCache (getSourceDMLQuery q)
+  phaseOne q >>= runQueryLazyTx (_pscExecCtx sourceConfig) Q.ReadOnly . phaseTwo

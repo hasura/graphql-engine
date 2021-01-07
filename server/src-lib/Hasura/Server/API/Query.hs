@@ -192,14 +192,7 @@ runQuery
   -> SQLGenCtx -> RemoteSchemaPermsCtx -> RQLQuery -> m (EncJSON, RebuildableSchemaCache)
 runQuery env instanceId userInfo sc hMgr sqlGenCtx remoteSchemaPermsCtx query = do
   metadata <- fetchMetadata
-  let sources = scPostgres $ lastBuiltSchemaCache sc
-
-  (sourceName, _) <- case HM.toList sources of
-    []  -> throw400 NotSupported "no postgres source exist"
-    [s] -> pure $ second _pcConfiguration s
-    _   -> throw400 NotSupported "multiple postgres sources found"
-
-  result <- runQueryM env sourceName query & Tracing.interpTraceT \x -> do
+  result <- runQueryM env query & Tracing.interpTraceT \x -> do
     (((js, tracemeta), meta), rsc, ci) <-
          x & runMetadataT metadata
            & runCacheRWT sc
@@ -362,10 +355,9 @@ runQueryM
      , MonadMetadataStorageQueryAPI m
      )
   => Env.Environment
-  -> SourceName
   -> RQLQuery
   -> m EncJSON
-runQueryM env source rq = withPathK "args" $ case rq of
+runQueryM env rq = withPathK "args" $ case rq of
   RQV1 q -> runQueryV1M q
   RQV2 q -> runQueryV2M q
   where
@@ -401,11 +393,11 @@ runQueryM env source rq = withPathK "args" $ case rq of
       RQGetInconsistentMetadata q     -> runGetInconsistentMetadata q
       RQDropInconsistentMetadata q    -> runDropInconsistentMetadata q
 
-      RQInsert q                      -> runInsert env source q
-      RQSelect q                      -> runSelect source q
-      RQUpdate q                      -> runUpdate env source q
-      RQDelete q                      -> runDelete env source q
-      RQCount  q                      -> runCount source q
+      RQInsert q                      -> runInsert env q
+      RQSelect q                      -> runSelect q
+      RQUpdate q                      -> runUpdate env q
+      RQDelete q                      -> runDelete env q
+      RQCount  q                      -> runCount q
 
       RQAddRemoteSchema    q          -> runAddRemoteSchema env q
       RQRemoveRemoteSchema q          -> runRemoveRemoteSchema q
@@ -449,12 +441,12 @@ runQueryM env source rq = withPathK "args" $ case rq of
 
       RQDumpInternalState q           -> runDumpInternalState q
 
-      RQRunSql q                      -> runRunSQL defaultSource q
+      RQRunSql q                      -> runRunSQL q
 
       RQSetCustomTypes q              -> runSetCustomTypes q
       RQSetTableCustomization q       -> runSetTableCustomization q
 
-      RQBulk qs                       -> encJFromList <$> indexedMapM (runQueryM env source) qs
+      RQBulk qs                       -> encJFromList <$> indexedMapM (runQueryM env) qs
 
     runQueryV2M = \case
       RQV2TrackTable q           -> runTrackTableV2Q q

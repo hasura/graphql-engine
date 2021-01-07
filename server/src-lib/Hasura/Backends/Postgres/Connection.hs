@@ -21,6 +21,7 @@ module Hasura.Backends.Postgres.Connection
   , doesSchemaExist
   , doesTableExist
   , enablePgcryptoExtension
+  , dropHdbCatalogSchema
 
   , module ET
   ) where
@@ -256,3 +257,10 @@ enablePgcryptoExtension = do
               "pgcrypto extension is required, but the current user doesn’t have permission to"
               <> " create it. Please grant superuser permission, or setup the initial schema via"
               <> " https://hasura.io/docs/1.0/graphql/manual/deployment/postgres-permissions.html"
+
+dropHdbCatalogSchema :: (MonadTx m) => m ()
+dropHdbCatalogSchema = liftTx $ Q.catchE defaultTxErrorHandler $
+  -- This is where
+  -- 1. Metadata storage:- Metadata and its stateful information stored
+  -- 2. Postgres source:- Table event trigger related stuff & insert permission check function stored
+  Q.unitQ "DROP SCHEMA IF EXISTS hdb_catalog CASCADE" () False

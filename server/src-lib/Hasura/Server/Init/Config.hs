@@ -193,13 +193,13 @@ type RawHGECommand impl = HGECommandG (RawServeOptions impl)
 
 data HGEOptionsG a b
   = HGEOptionsG
-  { hoConnInfo      :: !(PostgresConnInfo a)
+  { hoDatabaseUrl   :: !(PostgresConnInfo a)
   , hoMetadataDbUrl :: !(Maybe String)
   , hoCommand       :: !(HGECommandG b)
   } deriving (Show, Eq)
 
 type RawHGEOptions impl = HGEOptionsG (Maybe PostgresRawConnInfo) (RawServeOptions impl)
-type HGEOptions impl = HGEOptionsG UrlConf (ServeOptions impl)
+type HGEOptions impl = HGEOptionsG (Maybe UrlConf) (ServeOptions impl)
 
 type Env = [(String, String)]
 
