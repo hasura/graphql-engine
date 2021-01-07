@@ -16,6 +16,7 @@ import {
   GraphQLList,
   GraphQLInputFieldMap,
   GraphQLEnumValue,
+  GraphQLType,
 } from 'graphql';
 import { findRemoteSchemaPermission } from '../utils';
 import { isJsonString } from '../../../Common/utils/jsUtils';
@@ -287,6 +288,46 @@ const checkNullType = (type: DatasourceObject) => {
   return type.children.some(isChecked);
 };
 
+// arg => {id:{_eq:1}}
+// argDef => GQL type
+const serialiseArgs = (args, argDef) => {
+  // console.log(args, argDef);
+  let res = '{';
+  const { children } = getChildArguments(argDef);
+  Object.entries(args).forEach(([key, value]) => {
+    if (!value) return;
+
+    // console.log({ key, value, children, childrenType });
+    if (value && typeof value === 'string') {
+      let val;
+      if (
+        children[key] &&
+        children[key].type instanceof GraphQLEnumType &&
+        !value.startsWith('x-hasura')
+      ) {
+        val = `${key}:${value}`; // no double quotes
+      } else {
+        val = `${key}:"${value}"`;
+      }
+      
+      if(res==='{'){
+        res=`${res} ${val}`
+      }else{
+        res=`${res} , ${val}`
+      }
+
+    } else if (value && typeof value === 'object') {
+      if (children && typeof children === 'object' && children[key])
+        res=`${res} ${key}: ${serialiseArgs(value, children[key])}`;
+    }
+  });
+  return `${res}}`
+  // // console.log(args)
+  // window.getChildArguments = getChildArguments;
+  // // console.log(getChildArguments(argDef))
+  // return JSON.stringify(args);
+};
+
 const getSDLField = (
   type: DatasourceObject,
   argTree: Record<string, any> | null
@@ -305,6 +346,7 @@ const getSDLField = (
 
     let fieldStr = f.name;
 
+    // this will process all types except enums, enums are processed seperately
     if (!typeName.includes('enum')) {
       if (f?.args) {
         fieldStr = `${fieldStr}(`;
@@ -321,9 +363,15 @@ const getSDLField = (
               isSessionVar = argName.startsWith('x-hasura');
             }
 
-            if (typeOfArg === 'string' || isSessionVar) {
-              const jsonStr = JSON.stringify(argName);
-              unquoted = jsonStr.replace(/"([^"]+)":/g, '$1:');
+            if (
+              typeOfArg === 'string' ||
+              isSessionVar ||
+              typeof argName === 'object'
+            ) {
+              unquoted=serialiseArgs(argName, arg);
+              // const jsonStr = JSON.stringify(argName);
+              // unquoted = jsonStr.replace(/"([^"]+)":/g, '$1:');
+              // console.log(argTree, f, arg, f.name, arg.name);
             } else {
               unquoted = argName;
             }
@@ -374,18 +422,24 @@ export const generateSDL = (
 
   return result;
 };
-type childArgumentType = {
+type ChildArgumentType = {
   children?: GraphQLInputFieldMap | GraphQLEnumValue[] | null;
   path?: string;
+  childrenType?: GraphQLType;
 };
 
 // method that tells whether the field is nested or not, if nested it returns the children
-export const getChildArgument = (v: GraphQLInputField): childArgumentType => {
+export const getChildArguments = (v: GraphQLInputField): ChildArgumentType => {
   // TODO check if there are any more possible types with children / expandable views
   if (typeof v === 'string') return { children: null }; // value field
   if (v?.type instanceof GraphQLInputObjectType && v?.type?.getFields)
-    return { children: v?.type?.getFields(), path: 'type._fields' };
+    return {
+      children: v?.type?.getFields(),
+      path: 'type._fields',
+      childrenType: v?.type,
+    };
 
+  // 1st order
   // either list or nonNull
   if (
     (v?.type instanceof GraphQLNonNull || v?.type instanceof GraphQLList) &&
@@ -394,14 +448,20 @@ export const getChildArgument = (v: GraphQLInputField): childArgumentType => {
   ) {
     return {
       children: v?.type?.ofType?._fields as GraphQLInputFieldMap,
-      path: 'type.ofType._fields',
+      path: 'type.ofType',
+      childrenType: v?.type?.ofType,
     };
   }
 
-  // nonNull inside a GQL list
-  if (v?.type instanceof GraphQLList && v?.type?.ofType)
+  // 2nd Order
+  // nonNull inside a GQL list or list inside a nonNull
+  if (
+    (v?.type instanceof GraphQLList || v?.type instanceof GraphQLNonNull) &&
+    v?.type?.ofType
+  )
     if (
-      v?.type?.ofType instanceof GraphQLNonNull &&
+      (v?.type?.ofType instanceof GraphQLNonNull ||
+        v?.type?.ofType instanceof GraphQLList) &&
       v?.type?.ofType &&
       v?.type?.ofType?.ofType
     ) {
@@ -409,14 +469,48 @@ export const getChildArgument = (v: GraphQLInputField): childArgumentType => {
       if (type?.ofType instanceof GraphQLEnumType)
         return {
           children: type?.ofType?.getValues() as GraphQLEnumValue[],
-          path: 'type.ofType._fields',
+          path: 'type.ofType.ofType',
+          childrenType: type?.ofType,
         };
       if (type?.ofType instanceof GraphQLInputObjectType)
         return {
           children: type?.ofType?.getFields() as GraphQLInputFieldMap,
-          path: 'type.ofType._fields',
+          childrenType: type?.ofType,
+          path: 'type.ofType.ofType',
         };
     }
+
+  // 3rd Order example: ![!user_type]
+  if (
+    (v?.type instanceof GraphQLList || v?.type instanceof GraphQLNonNull) &&
+    v?.type?.ofType
+  )
+    if (
+      (v?.type?.ofType instanceof GraphQLNonNull ||
+        v?.type?.ofType instanceof GraphQLList) &&
+      v?.type?.ofType &&
+      v?.type?.ofType?.ofType
+    )
+      if (
+        (v?.type?.ofType?.ofType instanceof GraphQLNonNull ||
+          v?.type?.ofType?.ofType instanceof GraphQLList) &&
+        v?.type?.ofType?.ofType &&
+        v?.type?.ofType?.ofType?.ofType
+      ) {
+        const type = v?.type?.ofType?.ofType;
+        if (type?.ofType instanceof GraphQLEnumType)
+          return {
+            children: type?.ofType?.getValues() as GraphQLEnumValue[],
+            path: 'type.ofType.ofType.ofType',
+            childrenType: type?.ofType,
+          };
+        if (type?.ofType instanceof GraphQLInputObjectType)
+          return {
+            children: type?.ofType?.getFields() as GraphQLInputFieldMap,
+            childrenType: type?.ofType,
+            path: 'type.ofType.ofType.ofType',
+          };
+      }
   return {};
 };
 

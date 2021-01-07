@@ -1,7 +1,7 @@
 import React, { useRef, useEffect, useState } from 'react';
 import merge from 'lodash.merge';
 import { GraphQLInputField } from 'graphql';
-import { getChildArgument } from './utils';
+import { getChildArguments } from './utils';
 import RSPInput from './RSPInput';
 
 interface ArgSelectProps {
@@ -45,7 +45,7 @@ export const ArgSelect: React.FC<ArgSelectProps> = ({
     }
   }, [value, k, expanded]);
 
-  const { children } = getChildArgument(v as GraphQLInputField);
+  const { children } = getChildArguments(v as GraphQLInputField);
 
   const setArgVal = (val: Record<string, any>) => {
     const prevVal = prevState.current;
@@ -75,7 +75,7 @@ export const ArgSelect: React.FC<ArgSelectProps> = ({
             if (typeof value === 'string') return undefined;
             const childVal = value ? value[i?.name] : undefined;
             return (
-              <li>
+              <li key={i.name}>
                 <ArgSelect
                   {...{
                     k: i.name,
