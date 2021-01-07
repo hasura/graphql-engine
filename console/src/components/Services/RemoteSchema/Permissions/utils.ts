@@ -290,146 +290,6 @@ const checkNullType = (type: DatasourceObject) => {
   return type.children.some(isChecked);
 };
 
-// arg => {id:{_eq:1}}
-// argDef => GQL type
-const serialiseArgs = (args, argDef) => {
-  // console.log(args, argDef);
-  let res = '{';
-  const { children } = getChildArguments(argDef);
-  Object.entries(args).forEach(([key, value]) => {
-    if (!value) return;
-
-    // console.log({ key, value, children, childrenType });
-    if (value && typeof value === 'string') {
-      let val;
-      if (
-        children[key] &&
-        children[key].type instanceof GraphQLEnumType &&
-        !value.startsWith('x-hasura')
-      ) {
-        val = `${key}:${value}`; // no double quotes
-      } else {
-        val = `${key}:"${value}"`;
-      }
-      
-      if(res==='{'){
-        res=`${res} ${val}`
-      }else{
-        res=`${res} , ${val}`
-      }
-
-    } else if (value && typeof value === 'object') {
-      if (children && typeof children === 'object' && children[key])
-        res=`${res} ${key}: ${serialiseArgs(value, children[key])}`;
-    }
-  });
-  return `${res}}`
-  // // console.log(args)
-  // window.getChildArguments = getChildArguments;
-  // // console.log(getChildArguments(argDef))
-  // return JSON.stringify(args);
-};
-
-const getSDLField = (
-  type: DatasourceObject,
-  argTree: Record<string, any> | null
-) => {
-  if (!checkNullType(type)) return '';
-
-  let result = ``;
-  const typeName: string = type.name;
-  if (type.name === 'query_root' || type.name === 'mutation_root')
-    result = `type ${typeName}{`;
-  else result = `${typeName}{`;
-
-  type.children.forEach(f => {
-    // TODO filter selected fields
-    if (!f.checked) return null;
-
-    let fieldStr = f.name;
-
-    // this will process all types except enums, enums are processed seperately
-    if (!typeName.includes('enum')) {
-      if (f?.args) {
-        fieldStr = `${fieldStr}(`;
-        // console.log('f.args >>>'   ,f.args);
-        Object.values(f.args).forEach((arg: any) => {
-          let valueStr = ``;
-          if (argTree && argTree[f.name] && argTree[f.name][arg.name]) {
-            const argName = argTree[f.name][arg.name];
-            const typeOfArg = arg.type.inspect();
-            let unquoted;
-            let isSessionVar = false;
-
-            if (typeof argName === 'string') {
-              isSessionVar = argName.startsWith('x-hasura');
-            }
-
-            if (
-              typeOfArg === 'string' ||
-              isSessionVar ||
-              typeof argName === 'object'
-            ) {
-              unquoted=serialiseArgs(argName, arg);
-              // const jsonStr = JSON.stringify(argName);
-              // unquoted = jsonStr.replace(/"([^"]+)":/g, '$1:');
-              // console.log(argTree, f, arg, f.name, arg.name);
-            } else {
-              unquoted = argName;
-            }
-
-            valueStr = `${arg.name} : ${arg.type.inspect()}
-            @preset(value: ${unquoted})`;
-          } else {
-            valueStr = `${arg.name} : ${arg.type.inspect()}`;
-          }
-          fieldStr = `${fieldStr + valueStr} `;
-        });
-        fieldStr = `${fieldStr})`;
-        fieldStr = `${fieldStr}: ${f.return}`;
-      } else fieldStr = `${fieldStr} : ${f.return}`; // normal data type - ie: without arguments/ presets
-    }
-
-    result = `${result}
-      ${fieldStr}`;
-  });
-  return `${result}\n}`;
-};
-
-export const generateConstantTypes = (schema: GraphQLSchema): string => {
-  let result = ``;
-  const enumTypes = getEnumTypes(schema);
-  enumTypes.forEach(type => {
-    result = `${result}\n${getSDLField(type, null)}`;
-  });
-  const scalarTypes = getScalarTypes(schema);
-  scalarTypes.forEach(type => {
-    result = `${result}\n${type}`;
-  });
-
-  return result;
-};
-
-export const generateSDL = (
-  types: DatasourceObject[],
-  argTree: Record<string, any>
-) => {
-  let result = `schema{
-  query: query_root
-  mutation: mutation_root
-}\n`;
-  types.forEach(type => {
-    result = `${result}\n${getSDLField(type, argTree)}\n`;
-  });
-
-  return result;
-};
-type ChildArgumentType = {
-  children?: GraphQLInputFieldMap | GraphQLEnumValue[] | null;
-  path?: string;
-  childrenType?: GraphQLType;
-};
-
 // method that tells whether the field is nested or not, if nested it returns the children
 export const getChildArguments = (v: GraphQLInputField): ChildArgumentType => {
   // TODO check if there are any more possible types with children / expandable views
@@ -514,6 +374,145 @@ export const getChildArguments = (v: GraphQLInputField): ChildArgumentType => {
           };
       }
   return {};
+};
+
+// arg => {id:{_eq:1}}
+// argDef => GQL type
+const serialiseArgs = (args, argDef) => {
+  // console.log(args, argDef);
+  let res = '{';
+  const { children } = getChildArguments(argDef);
+  Object.entries(args).forEach(([key, value]) => {
+    if (!value) return;
+
+    // console.log({ key, value, children, childrenType });
+    if (value && typeof value === 'string') {
+      let val;
+      if (
+        children[key] &&
+        children[key].type instanceof GraphQLEnumType &&
+        !value.startsWith('x-hasura')
+      ) {
+        val = `${key}:${value}`; // no double quotes
+      } else {
+        val = `${key}:"${value}"`;
+      }
+
+      if (res === '{') {
+        res = `${res} ${val}`;
+      } else {
+        res = `${res} , ${val}`;
+      }
+    } else if (value && typeof value === 'object') {
+      if (children && typeof children === 'object' && children[key])
+        res = `${res} ${key}: ${serialiseArgs(value, children[key])}`;
+    }
+  });
+  return `${res}}`;
+  // // console.log(args)
+  // window.getChildArguments = getChildArguments;
+  // // console.log(getChildArguments(argDef))
+  // return JSON.stringify(args);
+};
+
+const getSDLField = (
+  type: DatasourceObject,
+  argTree: Record<string, any> | null
+) => {
+  if (!checkNullType(type)) return '';
+
+  let result = ``;
+  const typeName: string = type.name;
+  if (type.name === 'query_root' || type.name === 'mutation_root')
+    result = `type ${typeName}{`;
+  else result = `${typeName}{`;
+
+  type.children.forEach(f => {
+    // TODO filter selected fields
+    if (!f.checked) return null;
+
+    let fieldStr = f.name;
+
+    // this will process all types except enums, enums are processed seperately
+    if (!typeName.includes('enum')) {
+      if (f?.args) {
+        fieldStr = `${fieldStr}(`;
+        // console.log('f.args >>>'   ,f.args);
+        Object.values(f.args).forEach((arg: any) => {
+          let valueStr = ``;
+          if (argTree && argTree[f.name] && argTree[f.name][arg.name]) {
+            const argName = argTree[f.name][arg.name];
+            const typeOfArg = arg.type.inspect();
+            let unquoted;
+            let isSessionVar = false;
+
+            if (typeof argName === 'string') {
+              isSessionVar = argName.startsWith('x-hasura');
+            }
+
+            if (
+              typeOfArg === 'string' ||
+              isSessionVar ||
+              typeof argName === 'object'
+            ) {
+              unquoted = serialiseArgs(argName, arg);
+              // const jsonStr = JSON.stringify(argName);
+              // unquoted = jsonStr.replace(/"([^"]+)":/g, '$1:');
+              // console.log(argTree, f, arg, f.name, arg.name);
+            } else {
+              unquoted = argName;
+            }
+
+            valueStr = `${arg.name} : ${arg.type.inspect()}
+            @preset(value: ${unquoted})`;
+          } else {
+            valueStr = `${arg.name} : ${arg.type.inspect()}`;
+          }
+          fieldStr = `${fieldStr + valueStr} `;
+        });
+        fieldStr = `${fieldStr})`;
+        fieldStr = `${fieldStr}: ${f.return}`;
+      } else fieldStr = `${fieldStr} : ${f.return}`; // normal data type - ie: without arguments/ presets
+    }
+
+    result = `${result}
+      ${fieldStr}`;
+  });
+  return `${result}\n}`;
+};
+
+export const generateConstantTypes = (schema: GraphQLSchema): string => {
+  let result = ``;
+  const enumTypes = getEnumTypes(schema);
+  enumTypes.forEach(type => {
+    result = `${result}\n${getSDLField(type, null)}`;
+  });
+  const scalarTypes = getScalarTypes(schema);
+  scalarTypes.forEach(type => {
+    result = `${result}\n${type}`;
+  });
+
+  return result;
+};
+
+export const generateSDL = (
+  types: DatasourceObject[],
+  argTree: Record<string, any>
+) => {
+  let result = `schema{
+  query: query_root
+  mutation: mutation_root
+}\n`;
+  types.forEach(type => {
+    result = `${result}\n${getSDLField(type, argTree)}\n`;
+  });
+
+  return result;
+};
+type ChildArgumentType = {
+  children?: GraphQLInputFieldMap | GraphQLEnumValue[] | null;
+  path?: string;
+  childrenType?: GraphQLType;
 };
 
 // TODO request to add this change on the server.

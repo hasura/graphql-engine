@@ -164,6 +164,13 @@ export interface FieldProps {
   onExpand?: () => void;
 }
 
+export type RSPContainerProps = {
+  params: { [key: string]: string };
+  allRemoteSchemas: { [key: string]: any }[];
+  tabName: string;
+  viewRemoteSchema: (data: any) => void;
+};
+
 /*
  * Redux Action types
  */

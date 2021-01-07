@@ -9,15 +9,16 @@ type Permissions = {
 };
 
 type RemoteSchemaHeaders = {
-  value: string;
   name: string;
+  value?: string;
+  value_from_env?: string;
 };
 
 type RemoteSchemaDefinition = {
+  forward_client_headers: boolean;
+  headers: RemoteSchemaHeaders[];
   timeout_seconds: number;
   url: string;
-  headers: RemoteSchemaHeaders[];
-  forward_client_headers: boolean;
 };
 
 export type RemoteSchema = {
@@ -30,7 +31,7 @@ export type RemoteSchema = {
 
 export type AsyncState = {
   isRequesting: boolean;
-  isError: boolean;
+  isError: any;
   isFetching: boolean;
   isFetchError: any;
 };

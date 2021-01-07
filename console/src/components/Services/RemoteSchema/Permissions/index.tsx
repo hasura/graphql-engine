@@ -1,7 +1,7 @@
 import React from 'react';
 import { connect } from 'react-redux';
 import Permissions from './Permissions';
-import RemoteSchemaContainer from '../Containers/remoteSchemaContainer';
+import RemoteSchemaContainer from './Container';
 import {
   permRemoveMultipleRoles,
   VIEW_REMOTE_SCHEMA,
