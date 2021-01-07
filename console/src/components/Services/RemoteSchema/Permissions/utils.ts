@@ -317,15 +317,15 @@ const getSDLField = (
             let unquoted;
             let isSessionVar = false;
 
-              if (typeof argName === 'string') {
-                isSessionVar = argName.startsWith('x-hasura');
-              }
-              if (typeOfArg === 'string' || isSessionVar) {
-                const jsonStr = JSON.stringify(argName);
-                unquoted = jsonStr.replace(/"([^"]+)":/g, '$1:');
-              } else {
-                unquoted = argName;
-              }
+            if (typeof argName === 'string') {
+              isSessionVar = argName.startsWith('x-hasura');
+            }
+
+            if (typeOfArg === 'string' || isSessionVar) {
+              const jsonStr = JSON.stringify(argName);
+              unquoted = jsonStr.replace(/"([^"]+)":/g, '$1:');
+            } else {
+              unquoted = argName;
             }
 
             valueStr = `${arg.name} : ${arg.type.inspect()}
