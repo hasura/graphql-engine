@@ -48,7 +48,7 @@ func Test_checkIfDirectoryIsMigration(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := isHasuraCLIGeneratedDirectory(tt.args.dirPath)
+			got, err := isHasuraCLIGeneratedMigrationDirectory(tt.args.dirPath)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("getMigrationDirectoryNames() error = %v, wantErr %v", err, tt.wantErr)
 				return

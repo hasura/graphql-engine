@@ -31,7 +31,7 @@ type UpgradeToMuUpgradeProjectToMultipleSourcesOpts struct {
 func UpgradeProjectToMultipleSources(opts UpgradeToMuUpgradeProjectToMultipleSourcesOpts) error {
 	/* New flow
 	Config V2 -> Config V3
-	- Create a backup project directory
+	- Warn user about creating a backup directory
 	- Ask user for the name of datasource to migrate to
 	- Move current migration directories to a new source directory
 	- Move seeds belonging to the source to a new directory
@@ -40,51 +40,57 @@ func UpgradeProjectToMultipleSources(opts UpgradeToMuUpgradeProjectToMultipleSou
 
 	// Validate config version is
 	if opts.EC.Config.Version != cli.V2 {
-		return fmt.Errorf("project should be using config V2 to be able to use multiple datasources")
+		return fmt.Errorf("project should be using config V2 to be able to update to V3")
 	}
 
+	opts.Logger.Warn("The upgrade process will make some changes to your project directory, It is advised to create a backup project directory before continuing")
+	response, err := util.GetYesNoPrompt("continue?")
+	if err != nil {
+		return err
+	}
+	if response == "n" {
+		return nil
+	}
+	if err != nil {
+		return err
+	}
+	// move migration child directories
+	// get directory names to move
 	targetDatasource, err := util.GetInputPrompt("what datasource does the current migrations belong to?")
 	if err != nil {
 		return err
 	}
-	// create backup of project
-	var projectBackupPath = fmt.Sprintf("%s_%s", opts.ProjectDirectory, "backup")
-	if err := util.CopyDirAfero(opts.Fs, opts.ProjectDirectory, projectBackupPath); err != nil {
-		return errors.Wrap(err, "creating project backup directory")
-	}
-	opts.Logger.Debugf("created project backup at %s", projectBackupPath)
-
 	// move migration child directories
 	// get directory names to move
 	migrationDirectoriesToMove, err := getMigrationDirectoryNames(opts.Fs, opts.MigrationsAbsDirectoryPath)
 	if err != nil {
 		return errors.Wrap(err, "getting list of migrations to move")
 	}
+	// move seed child directories
+	// get directory names to move
+	seedFilesToMove, err := getSeedFiles(opts.Fs, opts.SeedsAbsDirectoryPath)
+	if err != nil {
+		return errors.Wrap(err, "getting list of seed files to move")
+	}
+
 	// create a new directory for TargetDatasource
-	targetDatasourceDirectoryName := filepath.Join(opts.MigrationsAbsDirectoryPath, targetDatasource)
-	if err = opts.Fs.Mkdir(targetDatasourceDirectoryName, 0755); err != nil {
+	targetMigrationsDirectoryName := filepath.Join(opts.MigrationsAbsDirectoryPath, targetDatasource)
+	if err = opts.Fs.Mkdir(targetMigrationsDirectoryName, 0755); err != nil {
+		errors.Wrap(err, "creating target datasource name")
+	}
+
+	// create a new directory for TargetDatasource
+	targetSeedsDirectoryName := filepath.Join(opts.SeedsAbsDirectoryPath, targetDatasource)
+	if err = opts.Fs.Mkdir(targetSeedsDirectoryName, 0755); err != nil {
 		errors.Wrap(err, "creating target datasource name")
 	}
 
 	// move migration directories to target datasource directory
-	if err := copyDirectories(opts.Fs, migrationDirectoriesToMove, opts.MigrationsAbsDirectoryPath, targetDatasourceDirectoryName); err != nil {
+	if err := copyDirectories(opts.Fs, migrationDirectoriesToMove, opts.MigrationsAbsDirectoryPath, targetMigrationsDirectoryName); err != nil {
 		return errors.Wrap(err, "moving migrations to target datasource directory")
 	}
-
-	// move seed child directories
-	// get directory names to move
-	seedDirectoriesToMove, err := getMigrationDirectoryNames(opts.Fs, opts.SeedsAbsDirectoryPath)
-	if err != nil {
-		return errors.Wrap(err, "getting list of seed files to move")
-	}
-	// create a new directory for TargetDatasource
-	targetDatasourceDirectoryName = filepath.Join(opts.SeedsAbsDirectoryPath, targetDatasource)
-	if err = opts.Fs.Mkdir(targetDatasourceDirectoryName, 0755); err != nil {
-		errors.Wrap(err, "creating target datasource name")
-	}
-
 	// move seed directories to target datasource directory
-	if err := copyDirectories(opts.Fs, seedDirectoriesToMove, opts.MigrationsAbsDirectoryPath, targetDatasourceDirectoryName); err != nil {
+	if err := copyFiles(opts.Fs, seedFilesToMove, opts.SeedsAbsDirectoryPath, targetSeedsDirectoryName); err != nil {
 		return errors.Wrap(err, "moving seeds to target datasource directory")
 	}
 
@@ -108,7 +114,7 @@ func UpgradeProjectToMultipleSources(opts UpgradeToMuUpgradeProjectToMultipleSou
 		return errors.Wrap(err, "removing up original migrations")
 	}
 	// delete original seeds
-	if err := removeDirectories(opts.Fs, opts.SeedsAbsDirectoryPath, seedDirectoriesToMove); err != nil {
+	if err := removeDirectories(opts.Fs, opts.SeedsAbsDirectoryPath, seedFilesToMove); err != nil {
 		return errors.Wrap(err, "removing up original migrations")
 	}
 
@@ -124,21 +130,44 @@ func removeDirectories(fs afero.Fs, parentDirectory string, dirNames []string) e
 	return nil
 }
 
-func copyDirectories(fs afero.Fs, dirs []string, parentMigrationsDirectory, target string) error {
+func copyDirectories(fs afero.Fs, dirs []string, parentDir, target string) error {
 	for _, dir := range dirs {
-		err := util.CopyDirAfero(fs, filepath.Join(parentMigrationsDirectory, dir), filepath.Join(target, dir))
+		err := util.CopyDirAfero(fs, filepath.Join(parentDir, dir), filepath.Join(target, dir))
 		if err != nil {
 			return errors.Wrapf(err, "moving %s to %s", dir, target)
 		}
 	}
 	return nil
 }
-func getMigrationDirectoryNames(fs afero.Fs, rootMigrationsDir string) ([]string, error) {
-	return getChildDirectories(fs, rootMigrationsDir, isHasuraCLIGeneratedDirectory)
+
+func copyFiles(fs afero.Fs, files []string, parentDir, target string) error {
+	for _, dir := range files {
+		err := util.CopyFileAfero(fs, filepath.Join(parentDir, dir), filepath.Join(target, dir))
+		if err != nil {
+			return errors.Wrapf(err, "moving %s to %s", dir, target)
+		}
+	}
+	return nil
 }
 
-func getSeedDirectories(fs afero.Fs, rootSeedDir string) ([]string, error) {
-	return getChildDirectories(fs, rootSeedDir, isHasuraCLIGeneratedDirectory)
+func getMigrationDirectoryNames(fs afero.Fs, rootMigrationsDir string) ([]string, error) {
+	return getChildDirectories(fs, rootMigrationsDir, isHasuraCLIGeneratedMigrationDirectory)
+}
+
+func getSeedFiles(fs afero.Fs, rootSeedDir string) ([]string, error) {
+	// find migrations which are in the format <timestamp>_name
+	var seedFiles []string
+	dirs, err := afero.ReadDir(fs, rootSeedDir)
+	if err != nil {
+		return nil, err
+	}
+	for _, info := range dirs {
+		if !info.IsDir() {
+			seedFiles = append(seedFiles, filepath.Join(info.Name()))
+		}
+
+	}
+	return seedFiles, nil
 }
 
 func getChildDirectories(fs afero.Fs, parentDir string, childDirectoryValidator func(string) (bool, error)) ([]string, error) {
@@ -162,7 +191,8 @@ func getChildDirectories(fs afero.Fs, parentDir string, childDirectoryValidator 
 	}
 	return migrationDirectories, nil
 }
-func isHasuraCLIGeneratedDirectory(dirPath string) (bool, error) {
+
+func isHasuraCLIGeneratedMigrationDirectory(dirPath string) (bool, error) {
 	const regex = `^([0-9]{13})_(.*)$`
 	return regexp.MatchString(regex, filepath.Base(dirPath))
 }

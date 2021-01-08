@@ -31,6 +31,7 @@ func newUpdateMultipleSources(ec *cli.ExecutionContext) *cobra.Command {
 				Fs:                         afero.NewOsFs(),
 				ProjectDirectory:           ec.ExecutionDirectory,
 				MigrationsAbsDirectoryPath: ec.MigrationDir,
+				SeedsAbsDirectoryPath:      ec.SeedsDirectory,
 				Logger:                     ec.Logger,
 				EC:                         ec,
 			}
