@@ -56,6 +56,7 @@ instance BackendSchema 'Postgres where
   getTableGQLName           = PGS.getTableGQLName
   orderByOperators          = PGS.orderByOperators
   comparisonExps            = PGS.comparisonExps
+  updateOperators           = PGS.updateOperators
   parseScalarValue          = parsePGScalarValue
   offsetParser              = PGS.offsetParser
   mkCountType               = PGS.mkCountType

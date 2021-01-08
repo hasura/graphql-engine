@@ -8,6 +8,7 @@ import           Data.Aeson
 import           Data.Has
 
 import qualified Hasura.RQL.IR.Select          as IR
+import qualified Hasura.RQL.IR.Update          as IR
 
 import           Hasura.GraphQL.Parser         (Definition, EnumValueInfo, FieldParser,
                                                 InputFieldsParser, Kind (..), Opaque, Parser,
@@ -47,6 +48,11 @@ class Backend b => BackendSchema (b :: BackendType) where
     :: (MonadSchema n m, MonadError QErr m)
     => ColumnType b
     -> m (Parser 'Input n [ComparisonExp b])
+  updateOperators
+    :: (MonadSchema n m, MonadTableInfo b r m)
+    => TableName b
+    -> UpdPermInfo b
+    -> m (Maybe (InputFieldsParser n [(Column b, IR.UpdOpExpG (UnpreparedValue b))]))
   parseScalarValue
     :: (MonadError QErr m)
     => ColumnType b
