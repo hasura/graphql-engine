@@ -50,6 +50,7 @@ data RQLQueryV1
   | RQTrackTable !TrackTable
   | RQUntrackTable !UntrackTable
   | RQSetTableIsEnum !SetTableIsEnum
+  | RQSetTableCustomization !SetTableCustomization
 
   | RQTrackFunction !TrackFunction
   | RQUntrackFunction !UnTrackFunction
@@ -134,7 +135,6 @@ data RQLQueryV1
   | RQDumpInternalState !DumpInternalState
 
   | RQSetCustomTypes !CustomTypes
-  | RQSetTableCustomization !SetTableCustomization
   deriving (Show, Eq)
 
 data RQLQueryV2
@@ -366,6 +366,7 @@ runQueryM env rq = withPathK "args" $ case rq of
       RQTrackTable q                  -> runTrackTableQ q
       RQUntrackTable q                -> runUntrackTableQ q
       RQSetTableIsEnum q              -> runSetExistingTableIsEnumQ q
+      RQSetTableCustomization q       -> runSetTableCustomization q
 
       RQTrackFunction q               -> runTrackFunc q
       RQUntrackFunction q             -> runUntrackFunc q
@@ -444,7 +445,6 @@ runQueryM env rq = withPathK "args" $ case rq of
       RQRunSql q                      -> runRunSQL q
 
       RQSetCustomTypes q              -> runSetCustomTypes q
-      RQSetTableCustomization q       -> runSetTableCustomization q
 
       RQBulk qs                       -> encJFromList <$> indexedMapM (runQueryM env) qs
 
@@ -460,6 +460,7 @@ requiresAdmin = \case
     RQTrackTable _                  -> True
     RQUntrackTable _                -> True
     RQSetTableIsEnum _              -> True
+    RQSetTableCustomization _       -> True
 
     RQTrackFunction _               -> True
     RQUntrackFunction _             -> True
@@ -535,7 +536,6 @@ requiresAdmin = \case
 
     RQDumpInternalState _           -> True
     RQSetCustomTypes _              -> True
-    RQSetTableCustomization _       -> True
 
     RQRunSql _                      -> True
 

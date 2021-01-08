@@ -43,7 +43,7 @@ data RQLMetadata
   | RMPgTrackTable !TrackTableV2
   | RMPgUntrackTable !UntrackTable
   | RMPgSetTableIsEnum !SetTableIsEnum
-  | RMPgSetTableCustomFields !SetTableCustomFields
+  | RMPgSetTableCustomization !SetTableCustomization
 
   -- Postgres functions
   | RMPgTrackFunction !TrackFunctionV2
@@ -192,10 +192,10 @@ runMetadataQueryM env = \case
   RMPgAddSource q    -> runAddPgSource q
   RMPgDropSource q   -> runDropPgSource q
 
-  RMPgTrackTable q           -> runTrackTableV2Q q
-  RMPgUntrackTable q         -> runUntrackTableQ q
-  RMPgSetTableIsEnum q       -> runSetExistingTableIsEnumQ q
-  RMPgSetTableCustomFields q -> runSetTableCustomFieldsQV2 q
+  RMPgTrackTable q            -> runTrackTableV2Q q
+  RMPgUntrackTable q          -> runUntrackTableQ q
+  RMPgSetTableIsEnum q        -> runSetExistingTableIsEnumQ q
+  RMPgSetTableCustomization q -> runSetTableCustomization q
 
   RMPgTrackFunction q   -> runTrackFunctionV2 q
   RMPgUntrackFunction q -> runUntrackFunc q
