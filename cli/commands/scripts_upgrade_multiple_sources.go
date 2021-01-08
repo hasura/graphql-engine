@@ -1,8 +1,6 @@
 package commands
 
 import (
-	"fmt"
-
 	"github.com/hasura/graphql-engine/cli/internal/scripts"
 	"github.com/spf13/afero"
 
@@ -29,27 +27,14 @@ func newUpdateMultipleSources(ec *cli.ExecutionContext) *cobra.Command {
 			return ec.Validate()
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
-			switch {
-			// preconditions
-			// project should be using Config V2
-			// server should be >= v1.4
-			case ec.Config.Version != cli.V2:
-				return fmt.Errorf("project should be using config V2 to be able to use multiple datasources")
-			case !ec.Version.ServerFeatureFlags.HasDatasources:
-				return fmt.Errorf("server doesn't support multiple data sources")
-			}
-
 			opts := scripts.UpgradeToMuUpgradeProjectToMultipleSourcesOpts{
-				Fs:                  afero.NewOsFs(),
-				ProjectDirectory:    ec.ExecutionDirectory,
-				MigrationsDirectory: ec.MigrationDir,
-				Logger:              ec.Logger,
-				EC:                  ec,
+				Fs:                         afero.NewOsFs(),
+				ProjectDirectory:           ec.ExecutionDirectory,
+				MigrationsAbsDirectoryPath: ec.MigrationDir,
+				Logger:                     ec.Logger,
+				EC:                         ec,
 			}
-			if err := scripts.UpgradeProjectToMultipleSources(opts); err != nil {
-				return err
-			}
-			return nil
+			return scripts.UpgradeProjectToMultipleSources(opts)
 		},
 	}
 	return cmd

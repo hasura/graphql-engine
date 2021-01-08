@@ -48,7 +48,7 @@ func Test_checkIfDirectoryIsMigration(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := checkIfDirectoryIsMigration(tt.args.dirPath)
+			got, err := isHasuraCLIGeneratedDirectory(tt.args.dirPath)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("getMigrationDirectoryNames() error = %v, wantErr %v", err, tt.wantErr)
 				return
@@ -154,7 +154,7 @@ func Test_moveMigrationsToDatasourceDirectory(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if err := moveMigrationsToDatasourceDirectory(tt.args.fs, tt.args.dirs, tt.args.parentMigrationsDirectory, tt.args.target); (err != nil) != tt.wantErr {
+			if err := copyDirectories(tt.args.fs, tt.args.dirs, tt.args.parentMigrationsDirectory, tt.args.target); (err != nil) != tt.wantErr {
 				assert.NoError(t, err)
 			}
 			for _, want := range tt.want {
@@ -238,10 +238,10 @@ func TestUpgradeProjectToMultipleSources(t *testing.T) {
 						}
 						return fs
 					}(),
-					ProjectDirectory:     "hasura",
-					MigrationsDirectory:  "hasura/migrations",
-					TargetDatasourceName: "ds",
-					Logger:               logrus.New(),
+					ProjectDirectory:           "hasura",
+					MigrationsAbsDirectoryPath: "hasura/migrations",
+					TargetDatasourceName:       "ds",
+					Logger:                     logrus.New(),
 				},
 			},
 			false,

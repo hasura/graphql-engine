@@ -308,6 +308,7 @@ type DatasourceConfig struct {
 	Name                string `yaml:"name,omitempty"`
 	Type                string `yaml:"type,omitempty"`
 	MigrationsDirectory string `yaml:"migrations_directory,omitempty"`
+	SeedsDirectory      string `yaml:"seeds_directory,omitempty"`
 }
 
 // Config represents configuration required for the CLI to function
