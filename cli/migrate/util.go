@@ -143,7 +143,7 @@ func NewMigrate(ec *cli.ExecutionContext, isCmd bool, datasource string) (*Migra
 		},
 	}
 
-	if ec.Version.ServerFeatureFlags.HasDatasources {
+	if ec.Version.ServerFeatureFlags.HasDatasources && (ec.Config.Version > cli.V1) {
 		defaultDatasourceName := "default"
 		// check if migration table exists and migrate state to catalog state API
 		hasuraAPIClient, err := client.NewHasuraRestAPIClient(client.NewHasuraRestAPIClientOpts{
@@ -181,7 +181,7 @@ func NewMigrate(ec *cli.ExecutionContext, isCmd bool, datasource string) (*Migra
 			}
 		}
 	}
-	if ec.Version.ServerFeatureFlags.HasDatasources {
+	if ec.Version.ServerFeatureFlags.HasDatasources && (ec.Config.Version > cli.V1) {
 		opts.hasuraOpts.APIVersion = client.V2API
 	} else {
 		opts.hasuraOpts.APIVersion = client.V1API
@@ -192,7 +192,7 @@ func NewMigrate(ec *cli.ExecutionContext, isCmd bool, datasource string) (*Migra
 	}
 	// Set Plugins
 	SetMetadataPluginsWithDir(ec, t)
-	if ec.Config.Version == cli.V2 {
+	if ec.Config.Version >= cli.V2 {
 		t.EnableCheckMetadataConsistency(true)
 	}
 	return t, nil

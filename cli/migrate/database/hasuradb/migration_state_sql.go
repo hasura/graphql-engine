@@ -162,8 +162,12 @@ func (m *migrationStateWithSQL) GetVersions() error {
 		if err != nil {
 			return err
 		}
+		dirty, err := strconv.ParseBool(val[1])
+		if err != nil {
+			return err
+		}
 
-		m.hasuraDB.migrations.Append(database.MigrationVersion{Version: version, Dirty: false})
+		m.hasuraDB.migrations.Append(database.MigrationVersion{Version: version, Dirty: dirty})
 	}
 
 	return nil
