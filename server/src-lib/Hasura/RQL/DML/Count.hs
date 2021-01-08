@@ -27,6 +27,7 @@ import           Hasura.RQL.IR.BoolExp
 import           Hasura.RQL.Types
 import           Hasura.RQL.Types.Run
 import           Hasura.SQL.Types
+import           Hasura.Session
 
 
 data CountQueryP1

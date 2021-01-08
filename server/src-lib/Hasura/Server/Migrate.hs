@@ -46,6 +46,7 @@ import           Hasura.Server.Logging               (StartupLog (..))
 import           Hasura.Server.Migrate.Version       (latestCatalogVersion,
                                                       latestCatalogVersionString)
 
+
 data MigrationResult
   = MRNothingToDo
   | MRInitialized

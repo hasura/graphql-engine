@@ -29,6 +29,7 @@ import           Hasura.RQL.IR.Select
 import           Hasura.RQL.Types
 import           Hasura.RQL.Types.Run
 import           Hasura.SQL.Types
+import           Hasura.Session
 
 
 type SelectQExt b = SelectG (ExtCol b) (BoolExp b) Int

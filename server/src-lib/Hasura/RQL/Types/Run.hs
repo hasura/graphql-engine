@@ -8,17 +8,19 @@ module Hasura.RQL.Types.Run
   ) where
 
 import           Hasura.Prelude
-import           Hasura.Session
 
-import qualified Database.PG.Query           as Q
-import qualified Network.HTTP.Client         as HTTP
+import qualified Database.PG.Query            as Q
+import qualified Network.HTTP.Client.Extended as HTTP
 
-import           Control.Monad.Trans.Control (MonadBaseControl)
+import           Control.Monad.Trans.Control  (MonadBaseControl)
 import           Control.Monad.Unique
 import           Hasura.Metadata.Class
 
+import qualified Hasura.Tracing               as Tracing
+
 import           Hasura.RQL.Types
-import qualified Hasura.Tracing              as Tracing
+import           Hasura.Session
+
 
 data RunCtx
   = RunCtx
@@ -49,7 +51,7 @@ deriving instance (MonadIO m, MonadBaseControl IO m) => MonadBaseControl IO (Run
 instance (Monad m) => UserInfoM (RunT m) where
   askUserInfo = asks _rcUserInfo
 
-instance (Monad m) => HasHttpManager (RunT m) where
+instance (Monad m) => HTTP.HasHttpManagerM (RunT m) where
   askHttpManager = asks _rcHttpMgr
 
 instance (Monad m) => HasSQLGenCtx (RunT m) where

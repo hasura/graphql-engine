@@ -3,23 +3,7 @@
 
 module Hasura.App where
 
-import           Control.Concurrent.STM.TVar               (TVar, readTVarIO)
-import           Control.Exception                         (bracket_, throwIO)
-import           Control.Monad.Base
-import           Control.Monad.Catch                       (Exception, MonadCatch, MonadMask,
-                                                            MonadThrow, onException)
-import           Control.Monad.Morph                       (hoist)
-import           Control.Monad.Stateless
-import           Control.Monad.STM                         (atomically)
-import           Control.Monad.Trans.Control               (MonadBaseControl (..))
-import           Control.Monad.Trans.Managed               (ManagedT (..), allocate)
-import           Control.Monad.Unique
-import           Data.Time.Clock                           (UTCTime)
-#ifndef PROFILING
-import           GHC.AssertNF
-#endif
-import           Options.Applicative
-import           System.Environment                        (getEnvironment)
+import           Hasura.Prelude
 
 import qualified Control.Concurrent.Async.Lifted.Safe      as LA
 import qualified Control.Concurrent.Extended               as C
@@ -38,7 +22,32 @@ import qualified Network.HTTP.Client                       as HTTP
 import qualified Network.HTTP.Client.TLS                   as HTTP
 import qualified Network.Wai.Handler.Warp                  as Warp
 import qualified System.Log.FastLogger                     as FL
+import qualified System.Metrics                            as EKG
+import qualified System.Metrics.Gauge                      as EKG.Gauge
 import qualified Text.Mustache.Compile                     as M
+
+import           Control.Concurrent.STM.TVar               (TVar, readTVarIO)
+import           Control.Exception                         (bracket_, throwIO)
+import           Control.Monad.Catch                       (Exception, MonadCatch, MonadMask,
+                                                            MonadThrow, onException)
+import           Control.Monad.Morph                       (hoist)
+import           Control.Monad.STM                         (atomically)
+import           Control.Monad.Stateless
+import           Control.Monad.Trans.Control               (MonadBaseControl (..))
+import           Control.Monad.Trans.Managed               (ManagedT (..), allocate)
+import           Control.Monad.Unique
+import           Data.Time.Clock                           (UTCTime)
+#ifndef PROFILING
+import           GHC.AssertNF
+#endif
+import           Network.HTTP.Client.Extended
+import           Options.Applicative
+import           System.Environment                        (getEnvironment)
+
+import qualified Hasura.GraphQL.Execute.LiveQuery.Poll     as EL
+import qualified Hasura.GraphQL.Transport.WebSocket.Server as WS
+import qualified Hasura.Server.API.V2Query                 as V2Q
+import qualified Hasura.Tracing                            as Tracing
 
 import           Hasura.Backends.Postgres.Connection
 import           Hasura.EncJSON
@@ -55,7 +64,6 @@ import           Hasura.GraphQL.Transport.HTTP             (MonadExecuteQuery (.
 import           Hasura.GraphQL.Transport.HTTP.Protocol    (toParsed)
 import           Hasura.Logging
 import           Hasura.Metadata.Class
-import           Hasura.Prelude
 import           Hasura.RQL.DDL.Schema.Cache
 import           Hasura.RQL.DDL.Schema.Cache.Common
 import           Hasura.RQL.DDL.Schema.Catalog
@@ -74,13 +82,6 @@ import           Hasura.Server.Telemetry
 import           Hasura.Server.Types
 import           Hasura.Server.Version
 import           Hasura.Session
-
-import qualified Hasura.GraphQL.Execute.LiveQuery.Poll     as EL
-import qualified Hasura.GraphQL.Transport.WebSocket.Server as WS
-import qualified Hasura.Server.API.V2Query                 as V2Q
-import qualified Hasura.Tracing                            as Tracing
-import qualified System.Metrics                            as EKG
-import qualified System.Metrics.Gauge                      as EKG.Gauge
 
 
 data ExitCode
@@ -635,7 +636,7 @@ execQuery
      , MonadIO m
      , MonadBaseControl IO m
      , MonadUnique m
-     , HasHttpManager m
+     , HasHttpManagerM m
      , HasSQLGenCtx m
      , UserInfoM m
      , Tracing.MonadTrace m

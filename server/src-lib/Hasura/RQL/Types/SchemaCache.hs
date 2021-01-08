@@ -162,8 +162,8 @@ import           Hasura.RQL.Types.ScheduledTrigger
 import           Hasura.RQL.Types.SchemaCacheTypes
 import           Hasura.RQL.Types.Source
 import           Hasura.RQL.Types.Table
-import           Hasura.Session
 import           Hasura.SQL.Backend
+import           Hasura.Session
 import           Hasura.Tracing                      (TraceT)
 
 
@@ -361,6 +361,9 @@ newtype TableCacheRT b m a
   deriving (Functor, Applicative, Monad, MonadIO, MonadError e, MonadState s, MonadWriter w, MonadTx)
     via (ReaderT (SourceName, TableCache b) m)
   deriving (MonadTrans) via (ReaderT (SourceName, TableCache b))
+
+instance (UserInfoM m) => UserInfoM (TableCacheRT b m) where
+  askUserInfo = lift askUserInfo
 
 instance (Monad m) => SourceM (TableCacheRT b m) where
   askCurrentSource =

@@ -2,21 +2,24 @@
 {-# LANGUAGE NamedFieldPuns #-}
 module Hasura.Server.API.Query where
 
-import           Control.Lens
-import           Control.Monad.Trans.Control        (MonadBaseControl)
-import           Control.Monad.Unique
-import           Data.Aeson
-import           Data.Aeson.Casing
-import           Data.Aeson.TH
+import           Hasura.Prelude
 
 import qualified Data.Environment                   as Env
 import qualified Data.HashMap.Strict                as HM
 import qualified Database.PG.Query                  as Q
 import qualified Network.HTTP.Client                as HTTP
 
+import           Control.Monad.Trans.Control        (MonadBaseControl)
+import           Control.Monad.Unique
+import           Data.Aeson
+import           Data.Aeson.Casing
+import           Data.Aeson.TH
+import           Network.HTTP.Client.Extended
+
+import qualified Hasura.Tracing                     as Tracing
+
 import           Hasura.EncJSON
 import           Hasura.Metadata.Class
-import           Hasura.Prelude
 import           Hasura.RQL.DDL.Action
 import           Hasura.RQL.DDL.ComputedField
 import           Hasura.RQL.DDL.CustomTypes
@@ -43,7 +46,6 @@ import           Hasura.Server.Utils
 import           Hasura.Server.Version              (HasVersion)
 import           Hasura.Session
 
-import qualified Hasura.Tracing                     as Tracing
 
 data RQLQueryV1
   = RQAddExistingTableOrView !TrackTable
@@ -348,7 +350,7 @@ reconcileAccessModes (Just mode1) (Just mode2)
 runQueryM
   :: ( HasVersion, CacheRWM m, UserInfoM m
      , MonadBaseControl IO m, MonadIO m, MonadUnique m
-     , HasHttpManager m, HasSQLGenCtx m
+     , HasHttpManagerM m, HasSQLGenCtx m
      , HasRemoteSchemaPermsCtx m
      , Tracing.MonadTrace m
      , MetadataM m

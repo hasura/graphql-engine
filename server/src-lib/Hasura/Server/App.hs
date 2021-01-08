@@ -200,14 +200,6 @@ onlyAdmin = do
   when (uRole /= adminRoleName) $
     throw400 AccessDenied "You have to be an admin to access this endpoint"
 
-buildQCtx :: (MonadIO m, MonadReader HandlerCtx m) => m QCtx
-buildQCtx = do
-  scRef     <- asks (scCacheRef . hcServerCtx)
-  userInfo  <- asks hcUser
-  cache     <- getSCFromRef scRef
-  sqlGenCtx <- asks (scSQLGenCtx . hcServerCtx)
-  return $ QCtx userInfo cache sqlGenCtx
-
 setHeader :: MonadIO m => HTTP.Header -> Spock.ActionT m ()
 setHeader (headerName, headerValue) =
   Spock.setHeader (bsToTxt $ CI.original headerName) (bsToTxt headerValue)

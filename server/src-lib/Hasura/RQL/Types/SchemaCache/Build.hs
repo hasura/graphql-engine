@@ -40,6 +40,9 @@ import           Data.Aeson.Casing
 import           Data.Aeson.TH
 import           Data.List                           (nub)
 import           Data.Text.Extended
+import           Network.HTTP.Client.Extended
+
+import qualified Hasura.Tracing                      as Tracing
 
 import           Hasura.Backends.Postgres.Connection
 import           Hasura.RQL.Types.Common
@@ -47,9 +50,9 @@ import           Hasura.RQL.Types.Error
 import           Hasura.RQL.Types.Metadata
 import           Hasura.RQL.Types.RemoteSchema       (RemoteSchemaName)
 import           Hasura.RQL.Types.SchemaCache
+import           Hasura.Session
 import           Hasura.Tracing                      (TraceT)
 
-import qualified Hasura.Tracing                      as Tracing
 
 -- ----------------------------------------------------------------------------
 -- types used during schema cache construction
@@ -187,6 +190,12 @@ deriving instance (MonadBaseControl IO m) => MonadBaseControl IO (MetadataT m)
 instance (Monad m) => MetadataM (MetadataT m) where
   getMetadata = MetadataT get
   putMetadata = MetadataT . put
+
+instance (HasHttpManagerM m) => HasHttpManagerM (MetadataT m) where
+  askHttpManager = lift askHttpManager
+
+instance (UserInfoM m) => UserInfoM (MetadataT m) where
+  askUserInfo = lift askUserInfo
 
 runMetadataT :: Metadata -> MetadataT m a -> m (a, Metadata)
 runMetadataT metadata (MetadataT m) =

@@ -1,19 +1,21 @@
 -- | The RQL metadata query ('/v1/metadata')
 module Hasura.Server.API.Metadata where
 
-import           Control.Lens
+import           Hasura.Prelude
+
+import qualified Data.Environment                   as Env
+import qualified Network.HTTP.Client.Extended       as HTTP
+
 import           Control.Monad.Trans.Control        (MonadBaseControl)
 import           Control.Monad.Unique
 import           Data.Aeson
 import           Data.Aeson.Casing
 import           Data.Aeson.TH
 
-import qualified Data.Environment                   as Env
-import qualified Network.HTTP.Client                as HTTP
+import qualified Hasura.Tracing                     as Tracing
 
 import           Hasura.EncJSON
 import           Hasura.Metadata.Class
-import           Hasura.Prelude
 import           Hasura.RQL.DDL.Action
 import           Hasura.RQL.DDL.ComputedField
 import           Hasura.RQL.DDL.CustomTypes
@@ -34,7 +36,6 @@ import           Hasura.Server.Types                (InstanceId (..))
 import           Hasura.Server.Version              (HasVersion)
 import           Hasura.Session
 
-import qualified Hasura.Tracing                     as Tracing
 
 data RQLMetadata
   = RMPgAddSource !AddPgSource
@@ -181,7 +182,7 @@ runMetadataQueryM
      , Tracing.MonadTrace m
      , UserInfoM m
      , MonadUnique m
-     , HasHttpManager m
+     , HTTP.HasHttpManagerM m
      , MetadataM m
      , MonadMetadataStorageQueryAPI m
      )
@@ -189,84 +190,84 @@ runMetadataQueryM
   -> RQLMetadata
   -> m EncJSON
 runMetadataQueryM env = \case
-  RMPgAddSource q    -> runAddPgSource q
-  RMPgDropSource q   -> runDropPgSource q
+  RMPgAddSource q                 -> runAddPgSource q
+  RMPgDropSource q                -> runDropPgSource q
 
-  RMPgTrackTable q            -> runTrackTableV2Q q
-  RMPgUntrackTable q          -> runUntrackTableQ q
-  RMPgSetTableIsEnum q        -> runSetExistingTableIsEnumQ q
-  RMPgSetTableCustomization q -> runSetTableCustomization q
+  RMPgTrackTable q                -> runTrackTableV2Q q
+  RMPgUntrackTable q              -> runUntrackTableQ q
+  RMPgSetTableIsEnum q            -> runSetExistingTableIsEnumQ q
+  RMPgSetTableCustomization q     -> runSetTableCustomization q
 
-  RMPgTrackFunction q   -> runTrackFunctionV2 q
-  RMPgUntrackFunction q -> runUntrackFunc q
+  RMPgTrackFunction q             -> runTrackFunctionV2 q
+  RMPgUntrackFunction q           -> runUntrackFunc q
 
-  RMPgCreateObjectRelationship q -> runCreateRelationship ObjRel q
-  RMPgCreateArrayRelationship q  -> runCreateRelationship ArrRel q
-  RMPgDropRelationship q         -> runDropRel q
-  RMPgSetRelationshipComment q   -> runSetRelComment q
-  RMPgRenameRelationship q       -> runRenameRel q
+  RMPgCreateObjectRelationship q  -> runCreateRelationship ObjRel q
+  RMPgCreateArrayRelationship q   -> runCreateRelationship ArrRel q
+  RMPgDropRelationship q          -> runDropRel q
+  RMPgSetRelationshipComment q    -> runSetRelComment q
+  RMPgRenameRelationship q        -> runRenameRel q
 
-  RMPgAddComputedField q  -> runAddComputedField q
-  RMPgDropComputedField q -> runDropComputedField q
+  RMPgAddComputedField q          -> runAddComputedField q
+  RMPgDropComputedField q         -> runDropComputedField q
 
-  RMPgCreateRemoteRelationship q -> runCreateRemoteRelationship q
-  RMPgUpdateRemoteRelationship q -> runUpdateRemoteRelationship q
-  RMPgDeleteRemoteRelationship q -> runDeleteRemoteRelationship q
+  RMPgCreateRemoteRelationship q  -> runCreateRemoteRelationship q
+  RMPgUpdateRemoteRelationship q  -> runUpdateRemoteRelationship q
+  RMPgDeleteRemoteRelationship q  -> runDeleteRemoteRelationship q
 
-  RMPgCreateInsertPermission q -> runCreatePerm q
-  RMPgCreateSelectPermission q -> runCreatePerm q
-  RMPgCreateUpdatePermission q -> runCreatePerm q
-  RMPgCreateDeletePermission q -> runCreatePerm q
+  RMPgCreateInsertPermission q    -> runCreatePerm q
+  RMPgCreateSelectPermission q    -> runCreatePerm q
+  RMPgCreateUpdatePermission q    -> runCreatePerm q
+  RMPgCreateDeletePermission q    -> runCreatePerm q
 
-  RMPgDropInsertPermission q -> runDropPerm q
-  RMPgDropSelectPermission q -> runDropPerm q
-  RMPgDropUpdatePermission q -> runDropPerm q
-  RMPgDropDeletePermission q -> runDropPerm q
-  RMPgSetPermissionComment q -> runSetPermComment q
+  RMPgDropInsertPermission q      -> runDropPerm q
+  RMPgDropSelectPermission q      -> runDropPerm q
+  RMPgDropUpdatePermission q      -> runDropPerm q
+  RMPgDropDeletePermission q      -> runDropPerm q
+  RMPgSetPermissionComment q      -> runSetPermComment q
 
-  RMPgCreateEventTrigger q -> runCreateEventTriggerQuery q
-  RMPgDeleteEventTrigger q -> runDeleteEventTriggerQuery q
-  RMPgRedeliverEvent     q -> runRedeliverEvent q
-  RMPgInvokeEventTrigger q -> runInvokeEventTrigger q
+  RMPgCreateEventTrigger q        -> runCreateEventTriggerQuery q
+  RMPgDeleteEventTrigger q        -> runDeleteEventTriggerQuery q
+  RMPgRedeliverEvent     q        -> runRedeliverEvent q
+  RMPgInvokeEventTrigger q        -> runInvokeEventTrigger q
 
-  RMGetInconsistentMetadata q -> runGetInconsistentMetadata q
-  RMDropInconsistentMetadata q -> runDropInconsistentMetadata q
+  RMGetInconsistentMetadata q     -> runGetInconsistentMetadata q
+  RMDropInconsistentMetadata q    -> runDropInconsistentMetadata q
 
-  RMAddRemoteSchema q -> runAddRemoteSchema env q
-  RMRemoveRemoteSchema q -> runRemoveRemoteSchema q
-  RMReloadRemoteSchema q -> runReloadRemoteSchema q
-  RMIntrospectRemoteSchema q -> runIntrospectRemoteSchema q
+  RMAddRemoteSchema q             -> runAddRemoteSchema env q
+  RMRemoveRemoteSchema q          -> runRemoveRemoteSchema q
+  RMReloadRemoteSchema q          -> runReloadRemoteSchema q
+  RMIntrospectRemoteSchema q      -> runIntrospectRemoteSchema q
 
-  RMCreateCronTrigger q    -> runCreateCronTrigger q
-  RMDeleteCronTrigger q    -> runDeleteCronTrigger q
-  RMCreateScheduledEvent q -> runCreateScheduledEvent q
-  RMDeleteScheduledEvent q -> runDeleteScheduledEvent q
-  RMGetScheduledEvents q   -> runGetScheduledEvents q
-  RMGetEventInvocations q  -> runGetEventInvocations q
+  RMCreateCronTrigger q           -> runCreateCronTrigger q
+  RMDeleteCronTrigger q           -> runDeleteCronTrigger q
+  RMCreateScheduledEvent q        -> runCreateScheduledEvent q
+  RMDeleteScheduledEvent q        -> runDeleteScheduledEvent q
+  RMGetScheduledEvents q          -> runGetScheduledEvents q
+  RMGetEventInvocations q         -> runGetEventInvocations q
 
-  RMCreateQueryCollection q -> runCreateCollection q
-  RMDropQueryCollection q -> runDropCollection q
-  RMAddQueryToCollection q -> runAddQueryToCollection q
-  RMDropQueryFromCollection q -> runDropQueryFromCollection q
-  RMAddCollectionToAllowlist q -> runAddCollectionToAllowlist q
+  RMCreateQueryCollection q       -> runCreateCollection q
+  RMDropQueryCollection q         -> runDropCollection q
+  RMAddQueryToCollection q        -> runAddQueryToCollection q
+  RMDropQueryFromCollection q     -> runDropQueryFromCollection q
+  RMAddCollectionToAllowlist q    -> runAddCollectionToAllowlist q
   RMDropCollectionFromAllowlist q -> runDropCollectionFromAllowlist q
 
-  RMReplaceMetadata q -> runReplaceMetadata q
-  RMExportMetadata q -> runExportMetadata q
-  RMClearMetadata q -> runClearMetadata q
-  RMReloadMetadata q -> runReloadMetadata q
+  RMReplaceMetadata q             -> runReplaceMetadata q
+  RMExportMetadata q              -> runExportMetadata q
+  RMClearMetadata q               -> runClearMetadata q
+  RMReloadMetadata q              -> runReloadMetadata q
 
-  RMCreateAction q -> runCreateAction q
-  RMDropAction q -> runDropAction q
-  RMUpdateAction q -> runUpdateAction q
-  RMCreateActionPermission q -> runCreateActionPermission q
-  RMDropActionPermission q -> runDropActionPermission q
+  RMCreateAction q                -> runCreateAction q
+  RMDropAction q                  -> runDropAction q
+  RMUpdateAction q                -> runUpdateAction q
+  RMCreateActionPermission q      -> runCreateActionPermission q
+  RMDropActionPermission q        -> runDropActionPermission q
 
-  RMSetCustomTypes q -> runSetCustomTypes q
+  RMSetCustomTypes q              -> runSetCustomTypes q
 
-  RMDumpInternalState q -> runDumpInternalState q
+  RMDumpInternalState q           -> runDumpInternalState q
 
-  RMGetCatalogState q -> runGetCatalogState q
-  RMSetCatalogState q -> runSetCatalogState q
+  RMGetCatalogState q             -> runGetCatalogState q
+  RMSetCatalogState q             -> runSetCatalogState q
 
-  RMBulk q -> encJFromList <$> indexedMapM (runMetadataQueryM env) q
+  RMBulk q                        -> encJFromList <$> indexedMapM (runMetadataQueryM env) q

@@ -35,6 +35,7 @@ import           Control.Monad.Trans.Control              (MonadBaseControl)
 import           Control.Monad.Unique
 import           Data.Aeson
 import           Data.Text.Extended
+import           Network.HTTP.Client.Extended
 
 import qualified Hasura.Incremental                       as Inc
 import qualified Hasura.Tracing                           as Tracing
@@ -62,8 +63,8 @@ import           Hasura.RQL.DDL.Schema.Source
 import           Hasura.RQL.DDL.Schema.Table
 import           Hasura.RQL.Types                         hiding (fmFunction, tmTable)
 import           Hasura.Server.Version                    (HasVersion)
-
 import           Hasura.Session
+
 
 buildRebuildableSchemaCache
   :: (HasVersion)
@@ -91,7 +92,7 @@ newtype CacheRWT m a
   = CacheRWT (StateT (RebuildableSchemaCache, CacheInvalidations) m a)
   deriving
     ( Functor, Applicative, Monad, MonadIO, MonadUnique, MonadReader r, MonadError e, MonadTx
-    , UserInfoM, HasHttpManager, HasSQLGenCtx, HasSystemDefined, MonadMetadataStorage
+    , UserInfoM, HasHttpManagerM, HasSQLGenCtx, HasSystemDefined, MonadMetadataStorage
     , MonadMetadataStorageQueryAPI, HasRemoteSchemaPermsCtx, Tracing.MonadTrace)
 
 deriving instance (MonadBase IO m) => MonadBase IO (CacheRWT m)
@@ -109,7 +110,7 @@ instance MonadTrans CacheRWT where
 instance (Monad m) => CacheRM (CacheRWT m) where
   askSchemaCache = CacheRWT $ gets (lastBuiltSchemaCache . (^. _1))
 
-instance (MonadIO m, MonadError QErr m, HasHttpManager m, HasSQLGenCtx m
+instance (MonadIO m, MonadError QErr m, HasHttpManagerM m, HasSQLGenCtx m
          , HasRemoteSchemaPermsCtx m, MonadResolveSource m) => CacheRWM (CacheRWT m) where
   buildSchemaCacheWithOptions buildReason invalidations metadata = CacheRWT do
     (RebuildableSchemaCache _ invalidationKeys rule, oldInvalidations) <- get
@@ -133,7 +134,7 @@ buildSchemaCacheRule
   -- what we want!
   :: ( HasVersion, ArrowChoice arr, Inc.ArrowDistribute arr, Inc.ArrowCache m arr
      , MonadIO m, MonadUnique m, MonadBaseControl IO m, MonadError QErr m
-     , MonadReader BuildReason m, HasHttpManager m, HasSQLGenCtx m , HasRemoteSchemaPermsCtx m, MonadResolveSource m)
+     , MonadReader BuildReason m, HasHttpManagerM m, HasSQLGenCtx m , HasRemoteSchemaPermsCtx m, MonadResolveSource m)
   => Env.Environment
   -> (Metadata, InvalidationKeys) `arr` SchemaCache
 buildSchemaCacheRule env = proc (metadata, invalidationKeys) -> do
@@ -275,7 +276,7 @@ buildSchemaCacheRule env = proc (metadata, invalidationKeys) -> do
       :: ( ArrowChoice arr, Inc.ArrowDistribute arr, Inc.ArrowCache m arr
          , ArrowWriter (Seq CollectedInfo) arr, MonadIO m, MonadUnique m, MonadError QErr m
          , MonadReader BuildReason m, MonadBaseControl IO m
-         , HasHttpManager m, HasSQLGenCtx m, MonadResolveSource m)
+         , HasHttpManagerM m, HasSQLGenCtx m, MonadResolveSource m)
       => (Metadata, Inc.Dependency InvalidationKeys) `arr` BuildOutputs
     buildAndCollectInfo = proc (metadata, invalidationKeys) -> do
       let Metadata sources remoteSchemas collections allowlists
@@ -504,7 +505,7 @@ buildSchemaCacheRule env = proc (metadata, invalidationKeys) -> do
 
     buildRemoteSchemas
       :: ( ArrowChoice arr, Inc.ArrowDistribute arr, ArrowWriter (Seq CollectedInfo) arr
-         , Inc.ArrowCache m arr , MonadIO m, MonadUnique m, HasHttpManager m )
+         , Inc.ArrowCache m arr , MonadIO m, MonadUnique m, HasHttpManagerM m )
       => ( Inc.Dependency (HashMap RemoteSchemaName Inc.InvalidationKey)
          , [RemoteSchemaMetadata]
          ) `arr` HashMap RemoteSchemaName (RemoteSchemaCtx, MetadataObject)

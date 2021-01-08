@@ -42,6 +42,7 @@ import           Hasura.RQL.DDL.Headers
 import           Hasura.RQL.DML.Internal
 import           Hasura.RQL.Types
 import           Hasura.SQL.Types
+import           Hasura.Session
 
 
 data OpVar = OLD | NEW deriving (Show)
@@ -80,13 +81,13 @@ mkTriggerQ trn qt@(QualifiedObject schema table) allCols op (SubscribeOpSpec col
         mkQId opVar colInfo = toJSONableExp strfyNum (pgiType colInfo) False $
           S.SEQIdentifier $ S.QIdentifier (opToQual opVar) $ toIdentifier $ pgiColumn colInfo
         getRowExpression opVar = case payloadColumns of
-          SubCStar -> applyRowToJson $ S.SEUnsafe $ opToTxt opVar
+          SubCStar -> applyRowToJson $ S.SEUnsafe $ tshow opVar
           SubCArray cols -> applyRowToJson $
             S.mkRowExp $ map (toExtr . mkQId opVar) $
             getColInfos cols allCols
 
         renderRow opVar = case columns of
-          SubCStar -> applyRow $ S.SEUnsafe $ opToTxt opVar
+          SubCStar -> applyRow $ S.SEUnsafe $ tshow opVar
           SubCArray cols -> applyRow $
             S.mkRowExp $ map (toExtr . mkQId opVar) $
             getColInfos cols allCols
@@ -119,8 +120,7 @@ mkTriggerQ trn qt@(QualifiedObject schema table) allCols op (SubscribeOpSpec col
     applyRowToJson e = S.SEFnApp "row_to_json" [e] Nothing
     applyRow e = S.SEFnApp "row" [e] Nothing
     toExtr = flip S.Extractor Nothing
-    opToQual = S.QualVar . opToTxt
-    opToTxt = tshow
+    opToQual = S.QualVar . tshow
 
 delTriggerQ :: TriggerName -> Q.TxE QErr ()
 delTriggerQ trn =
@@ -378,3 +378,24 @@ getEventTriggerDef triggerName = do
      FROM hdb_catalog.event_triggers e where e.name = $1
            |] (Identity triggerName) False
   return (QualifiedObject sn tn, etc)
+
+askTabInfoFromTrigger
+  :: (QErrM m, CacheRM m)
+  => SourceName -> TriggerName -> m (TableInfo 'Postgres)
+askTabInfoFromTrigger sourceName trn = do
+  sc <- askSchemaCache
+  let tabInfos = HM.elems $ maybe mempty _pcTables $ HM.lookup sourceName $ scPostgres sc
+  find (isJust . HM.lookup trn . _tiEventTriggerInfoMap) tabInfos
+    `onNothing` throw400 NotExists errMsg
+  where
+    errMsg = "event trigger " <> triggerNameToTxt trn <<> " does not exist"
+
+askEventTriggerInfo
+  :: (QErrM m, CacheRM m)
+  => SourceName -> TriggerName -> m EventTriggerInfo
+askEventTriggerInfo sourceName trn = do
+  ti <- askTabInfoFromTrigger sourceName trn
+  let etim = _tiEventTriggerInfoMap ti
+  HM.lookup trn etim `onNothing` throw400 NotExists errMsg
+  where
+    errMsg = "event trigger " <> triggerNameToTxt trn <<> " does not exist"

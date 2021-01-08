@@ -30,6 +30,7 @@ import           Hasura.RQL.IR.Delete
 import           Hasura.RQL.Types
 import           Hasura.RQL.Types.Run
 import           Hasura.Server.Version                        (HasVersion)
+import           Hasura.Session
 
 
 validateDeleteQWith

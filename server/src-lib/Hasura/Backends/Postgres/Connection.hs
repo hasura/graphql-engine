@@ -36,6 +36,7 @@ import           Control.Monad.Morph                    (hoist)
 import           Control.Monad.Trans.Control            (MonadBaseControl (..))
 import           Control.Monad.Unique
 import           Control.Monad.Validate
+import           Network.HTTP.Client.Extended           (HasHttpManagerM (..))
 
 import qualified Hasura.Backends.Postgres.SQL.DML       as S
 import qualified Hasura.Tracing                         as Tracing
@@ -44,8 +45,8 @@ import           Hasura.Backends.Postgres.Execute.Types as ET
 import           Hasura.Backends.Postgres.SQL.Types
 import           Hasura.EncJSON
 import           Hasura.RQL.Types.Error
-import           Hasura.Session
 import           Hasura.SQL.Types
+import           Hasura.Session
 
 class (MonadError QErr m) => MonadTx m where
   liftTx :: Q.TxE QErr a -> m a
@@ -183,6 +184,12 @@ instance (Tracing.MonadTrace m) => Tracing.MonadTrace (LazyTxT e m) where
   currentContext  = lift Tracing.currentContext
   currentReporter = lift Tracing.currentReporter
   attachMetadata  = lift . Tracing.attachMetadata
+
+instance UserInfoM m => UserInfoM (LazyTxT e m) where
+  askUserInfo = lift askUserInfo
+
+instance HasHttpManagerM m => HasHttpManagerM (LazyTxT e m) where
+  askHttpManager = lift askHttpManager
 
 instance (MonadIO m) => MonadTx (LazyTxT QErr m) where
   liftTx = LTTx . (hoist liftIO)

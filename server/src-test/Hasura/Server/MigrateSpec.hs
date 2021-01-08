@@ -4,6 +4,10 @@ module Hasura.Server.MigrateSpec (CacheRefT(..), spec) where
 
 import           Hasura.Prelude
 
+import qualified Data.Environment                    as Env
+import qualified Database.PG.Query                   as Q
+import qualified Network.HTTP.Client.Extended        as HTTP
+
 import           Control.Concurrent.MVar.Lifted
 import           Control.Monad.Morph
 import           Control.Monad.Trans.Control         (MonadBaseControl)
@@ -12,9 +16,6 @@ import           Control.Natural                     ((:~>) (..))
 import           Data.Time.Clock                     (getCurrentTime)
 import           Test.Hspec.Core.Spec
 import           Test.Hspec.Expectations.Lifted
-
-import qualified Data.Environment                    as Env
-import qualified Database.PG.Query                   as Q
 
 import           Hasura.Backends.Postgres.Connection
 import           Hasura.RQL.DDL.Metadata             (ClearMetadata (..), runClearMetadata)
@@ -26,6 +27,9 @@ import           Hasura.Server.API.PGDump
 import           Hasura.Server.Init                  (DowngradeOptions (..))
 import           Hasura.Server.Migrate
 import           Hasura.Server.Version               (HasVersion)
+import           Hasura.Session
+
+
 
 -- -- NOTE: downgrade test disabled for now (see #5273)
 
@@ -33,7 +37,7 @@ newtype CacheRefT m a
   = CacheRefT { runCacheRefT :: MVar RebuildableSchemaCache -> m a }
   deriving
     ( Functor, Applicative, Monad, MonadIO, MonadError e, MonadBase b, MonadBaseControl b
-    , MonadTx, MonadUnique, UserInfoM, HasHttpManager, HasSQLGenCtx)
+    , MonadTx, MonadUnique, UserInfoM, HTTP.HasHttpManagerM, HasSQLGenCtx)
     via (ReaderT (MVar RebuildableSchemaCache) m)
 
 instance MonadTrans CacheRefT where
@@ -46,7 +50,7 @@ instance MFunctor CacheRefT where
 instance (MonadBase IO m) => CacheRM (CacheRefT m) where
   askSchemaCache = CacheRefT (fmap lastBuiltSchemaCache . readMVar)
 
-instance (MonadIO m, MonadBaseControl IO m, MonadTx m, HasHttpManager m
+instance (MonadIO m, MonadBaseControl IO m, MonadTx m, HTTP.HasHttpManagerM m
          , HasSQLGenCtx m, HasRemoteSchemaPermsCtx m, MonadResolveSource m) => CacheRWM (CacheRefT m) where
   buildSchemaCacheWithOptions reason invalidations metadata = CacheRefT $ flip modifyMVar \schemaCache -> do
     ((), cache, _) <- runCacheRWT schemaCache (buildSchemaCacheWithOptions reason invalidations metadata)
@@ -67,7 +71,7 @@ spec
      , MonadIO m
      , MonadBaseControl IO m
      , MonadError QErr m
-     , HasHttpManager m
+     , HTTP.HasHttpManagerM m
      , HasSQLGenCtx m
      , HasRemoteSchemaPermsCtx m
      , MonadResolveSource m
@@ -107,7 +111,7 @@ spec srcConfig pgExecCtx pgConnInfo = do
       downgradeResult <- (transact . lift) (downgradeTo "12" time)
       downgradeResult `shouldSatisfy` \case
         MRMigrated{} -> True
-        _ -> False
+        _            -> False
       transact (upgradeToLatest env time) `shouldReturn` MRMigrated "12"
 
     -- -- NOTE: this has been problematic in CI and we're not quite sure how to
@@ -134,7 +138,7 @@ spec srcConfig pgExecCtx pgConnInfo = do
       downgradeResult <- (transact . lift) (downgradeTo "42" time)
       downgradeResult `shouldSatisfy` \case
         MRMigrated{} -> True
-        _ -> False
+        _            -> False
       firstDump <- transact dumpMetadata
       transact (runTx pgExecCtx recreateSystemMetadata)
       secondDump <- transact dumpMetadata
