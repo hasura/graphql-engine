@@ -21,7 +21,18 @@ func NewSeedCmd(ec *cli.ExecutionContext) *cobra.Command {
 			if err != nil {
 				return err
 			}
-			return ec.Validate()
+			if err := ec.Validate(); err != nil {
+				return err
+			}
+			if ec.Config.Version >= cli.V3 {
+				cmd.PersistentFlags().StringVar(&ec.Datasource, "datasource", "", "datasource name which operation should be applied")
+				cmd.MarkFlagRequired("datasource")
+			} else {
+				if err := checkIfUpdateToConfigV3IsRequired(ec); err != nil {
+					return err
+				}
+			}
+			return nil
 		},
 	}
 

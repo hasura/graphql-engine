@@ -416,6 +416,9 @@ type ExecutionContext struct {
 
 	// instance of API client which communicates with Hasura API
 	APIClient *client.Client
+
+	// current datasource on which operation is being done
+	Datasource string
 }
 
 // NewExecutionContext returns a new instance of execution context
@@ -637,6 +640,7 @@ func (ec *ExecutionContext) Validate() error {
 		ec.SetHGEHeaders(headers)
 	}
 	ec.APIClient = client.NewClient(ec.Version.ServerFeatureFlags)
+
 	return nil
 }
 

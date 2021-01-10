@@ -31,7 +31,7 @@ type UpgradeToMuUpgradeProjectToMultipleSourcesOpts struct {
 func UpgradeProjectToMultipleSources(opts UpgradeToMuUpgradeProjectToMultipleSourcesOpts) error {
 	/* New flow
 	Config V2 -> Config V3
-	- Warn user about creating a backup directory
+	- Warn user about creating a backup
 	- Ask user for the name of datasource to migrate to
 	- Move current migration directories to a new source directory
 	- Move seeds belonging to the source to a new directory
@@ -56,7 +56,7 @@ func UpgradeProjectToMultipleSources(opts UpgradeToMuUpgradeProjectToMultipleSou
 	}
 	// move migration child directories
 	// get directory names to move
-	targetDatasource, err := util.GetInputPrompt("what datasource does the current migrations belong to?")
+	targetDatasource, err := util.GetInputPrompt("what datasource does the current migrations / seeds belong to?")
 	if err != nil {
 		return err
 	}

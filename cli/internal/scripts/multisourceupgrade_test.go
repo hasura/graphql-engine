@@ -2,10 +2,7 @@ package scripts
 
 import (
 	"os"
-	"path/filepath"
 	"testing"
-
-	"github.com/sirupsen/logrus"
 
 	"github.com/spf13/afero"
 	"github.com/stretchr/testify/assert"
@@ -206,56 +203,6 @@ func Test_removeDirectories(t *testing.T) {
 			for _, d := range tt.args.dirs {
 				_, err := tt.args.fs.Stat(d)
 				assert.Error(t, err)
-			}
-		})
-	}
-}
-
-func TestUpgradeProjectToMultipleSources(t *testing.T) {
-	type args struct {
-		opts UpgradeToMuUpgradeProjectToMultipleSourcesOpts
-	}
-	tests := []struct {
-		name    string
-		args    args
-		wantErr bool
-		want    []string
-	}{
-		{
-			"can upgrade a project in Config V2 to work with multiple sources",
-			args{
-				opts: UpgradeToMuUpgradeProjectToMultipleSourcesOpts{
-					Fs: func() afero.Fs {
-						fs := afero.NewMemMapFs()
-						if err := fs.MkdirAll("hasura/migrations/1604855964903_test", 0755); err != nil {
-							t.Fatal(err)
-						}
-						if err := fs.MkdirAll("hasura/migrations/1604856103380_!test", 0755); err != nil {
-							t.Fatal(err)
-						}
-						if err := fs.MkdirAll("hasura/migrations/notamigration", 0755); err != nil {
-							t.Fatal(err)
-						}
-						return fs
-					}(),
-					ProjectDirectory:           "hasura",
-					MigrationsAbsDirectoryPath: "hasura/migrations",
-					TargetDatasourceName:       "ds",
-					Logger:                     logrus.New(),
-				},
-			},
-			false,
-			[]string{"1604855964903_test", "1604856103380_!test"},
-		},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			if err := UpgradeProjectToMultipleSources(tt.args.opts); (err != nil) != tt.wantErr {
-				t.Errorf("UpgradeProjectToMultipleSources() error = %v, wantErr %v", err, tt.wantErr)
-				for _, want := range tt.want {
-					_, err := tt.args.opts.Fs.Stat(filepath.Join(tt.args.opts.TargetDatasourceName, want))
-					assert.NoError(t, err)
-				}
 			}
 		})
 	}

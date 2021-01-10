@@ -13,7 +13,8 @@ type SeedApplyOptions struct {
 	EC *cli.ExecutionContext
 
 	// seed file to apply
-	FileNames []string
+	FileNames  []string
+	Datasource string
 }
 
 func newSeedApplyCmd(ec *cli.ExecutionContext) *cobra.Command {
@@ -34,6 +35,7 @@ func newSeedApplyCmd(ec *cli.ExecutionContext) *cobra.Command {
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
 			opts.EC.Spin("Applying seeds...")
+			opts.Datasource = ec.Datasource
 			err := opts.Run()
 			opts.EC.Spinner.Stop()
 			if err != nil {

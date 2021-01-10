@@ -29,6 +29,7 @@ func newMigrateStatusCmd(ec *cli.ExecutionContext) *cobra.Command {
 		SilenceUsage: true,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			opts.EC.Spin("Fetching migration status...")
+			opts.Datasource = ec.Datasource
 			status, err := opts.Run()
 			opts.EC.Spinner.Stop()
 			if err != nil {

@@ -22,7 +22,8 @@ type SeedNewOptions struct {
 	FromTableNames []string
 
 	// seed file that was created
-	FilePath string
+	FilePath   string
+	Datasource string
 }
 
 func newSeedCreateCmd(ec *cli.ExecutionContext) *cobra.Command {
@@ -47,6 +48,7 @@ func newSeedCreateCmd(ec *cli.ExecutionContext) *cobra.Command {
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
 			opts.SeedName = args[0]
+			opts.Datasource = ec.Datasource
 			err := opts.Run()
 			if err != nil {
 				return err

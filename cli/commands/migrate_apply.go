@@ -61,6 +61,7 @@ func newMigrateApplyCmd(ec *cli.ExecutionContext) *cobra.Command {
 			return ec.Validate()
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
+			opts.Datasource = ec.Datasource
 			if opts.dryRun && opts.SkipExecution {
 				return errors.New("both --skip-execution and --dry-run flags cannot be used together")
 			}
@@ -101,7 +102,6 @@ func newMigrateApplyCmd(ec *cli.ExecutionContext) *cobra.Command {
 	f.StringVar(&opts.MigrationType, "type", "up", "type of migration (up, down) to be used with version flag")
 
 	f.BoolVar(&opts.dryRun, "dry-run", false, "print the names of migrations which are going to be applied")
-	f.StringVar(&opts.Datasource, "datasource", "", "name of database to apply migrations on")
 	return migrateApplyCmd
 }
 

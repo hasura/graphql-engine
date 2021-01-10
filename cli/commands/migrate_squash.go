@@ -37,6 +37,7 @@ func newMigrateSquashCmd(ec *cli.ExecutionContext) *cobra.Command {
 		SilenceUsage: true,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			opts.newVersion = getTime()
+			opts.Datasource = ec.Datasource
 			return opts.run()
 		},
 	}
@@ -61,7 +62,7 @@ type migrateSquashOptions struct {
 	newVersion int64
 
 	deleteSource bool
-	Datasource string
+	Datasource   string
 }
 
 func (o *migrateSquashOptions) run() error {

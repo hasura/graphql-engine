@@ -435,6 +435,7 @@ func (c *HasuraRestAPIClient) SendV1MetadataRequest(body io.Reader) (*http.Respo
 	}
 	return resp, b, nil
 }
+
 func (c *HasuraRestAPIClient) GetCLISettingsFromSQLTable(schemaName string, tableName string) (map[string]string, error) {
 	requestBody := strings.NewReader(fmt.Sprintf(`
 {
@@ -597,4 +598,75 @@ func (c *HasuraRestAPIClient) GetDatasources() (map[string]string, error) {
 		datasourcesList[sourceName] = ""
 	}
 	return datasourcesList, nil
+}
+
+func (c *HasuraRestAPIClient) HasNoDefaultDatasource() (bool, error) {
+	request := struct {
+		Type string            `json:"type"`
+		Args map[string]string `json:"args"`
+	}{
+		Type: "run_sql",
+		Args: map[string]string{
+			"sql": "select 1",
+		},
+	}
+
+	b, err := json.Marshal(request)
+	if err != nil {
+		return false, err
+	}
+	resp, body, err := c.SendQueryRequest(bytes.NewReader(b))
+	if err != nil {
+		return false, err
+	}
+	if resp.StatusCode != http.StatusOK {
+		return false, errors.New(string(body))
+	}
+
+	if resp.StatusCode == http.StatusBadRequest {
+		return true, nil
+	}
+	return false, nil
+}
+
+func (c *HasuraRestAPIClient) HasMultipleDatasources() (bool, error) {
+	request := struct {
+		Type string                 `json:"type"`
+		Args map[string]interface{} `json:"args"`
+	}{
+		Type: "export_metadata",
+		Args: map[string]interface{}{},
+	}
+
+	b, err := json.Marshal(request)
+	if err != nil {
+		return false, err
+	}
+	resp, body, err := c.SendV1MetadataRequest(bytes.NewReader(b))
+	if err != nil {
+		return false, err
+	}
+	if resp.StatusCode != http.StatusOK {
+		return false, errors.New(string(body))
+	}
+
+	var bodyAsMap = map[string]interface{}{}
+	if err = json.Unmarshal(body, &bodyAsMap); err != nil {
+		return false, errors.Wrap(err, "unmarshalling response from API")
+	}
+
+	sources, ok := bodyAsMap["sources"]
+	if !ok {
+		return false, fmt.Errorf("no sources found")
+	}
+
+	var sourcesList []interface{}
+	if err := mapstructure.Decode(sources, &sourcesList); err != nil {
+		return false, errors.Wrap(err, "error unmarshalling sources list")
+	}
+	if len(sourcesList) <= 1 {
+		return false, nil
+	}
+
+	return true, nil
 }

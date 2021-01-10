@@ -51,6 +51,7 @@ func newMigrateCreateCmd(ec *cli.ExecutionContext) *cobra.Command {
 		RunE: func(cmd *cobra.Command, args []string) error {
 			opts.name = args[0]
 			opts.EC.Spin("Creating migration files...")
+			opts.Datasource = ec.Datasource
 			version, err := opts.run()
 			opts.EC.Spinner.Stop()
 			if err != nil {
