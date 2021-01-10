@@ -3,10 +3,12 @@ package commands
 import (
 	"fmt"
 
+	"github.com/hasura/graphql-engine/cli/util"
+	"github.com/pkg/errors"
+
 	"github.com/hasura/graphql-engine/cli"
 	"github.com/hasura/graphql-engine/cli/migrate"
 	mig "github.com/hasura/graphql-engine/cli/migrate/cmd"
-	"github.com/hasura/graphql-engine/cli/util"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
@@ -33,8 +35,9 @@ func NewMigrateCmd(ec *cli.ExecutionContext) *cobra.Command {
 				return err
 			}
 			if ec.Config.Version >= cli.V3 {
-				cmd.PersistentFlags().StringVar(&ec.Datasource, "datasource", "", "datasource name which operation should be applied")
-				cmd.MarkFlagRequired("datasource")
+				if !cmd.Flags().Changed("datasource") {
+					return errors.New("datasource flag is required")
+				}
 			} else {
 				if err := checkIfUpdateToConfigV3IsRequired(ec); err != nil {
 					return err
@@ -45,14 +48,8 @@ func NewMigrateCmd(ec *cli.ExecutionContext) *cobra.Command {
 		},
 	}
 
-	migrateCmd.AddCommand(
-		newMigrateApplyCmd(ec),
-		newMigrateStatusCmd(ec),
-		newMigrateCreateCmd(ec),
-		newMigrateSquashCmd(ec),
-	)
-
 	f := migrateCmd.PersistentFlags()
+	f.StringVar(&ec.Datasource, "datasource", "", "datasource name which operation should be applied")
 
 	f.String("endpoint", "", "http(s) endpoint for Hasura GraphQL Engine")
 	f.String("admin-secret", "", "admin secret for Hasura GraphQL Engine")
@@ -66,6 +63,13 @@ func NewMigrateCmd(ec *cli.ExecutionContext) *cobra.Command {
 	util.BindPFlag(v, "access_key", f.Lookup("access-key"))
 	util.BindPFlag(v, "insecure_skip_tls_verify", f.Lookup("insecure-skip-tls-verify"))
 	util.BindPFlag(v, "certificate_authority", f.Lookup("certificate-authority"))
+
+	migrateCmd.AddCommand(
+		newMigrateApplyCmd(ec),
+		newMigrateStatusCmd(ec),
+		newMigrateCreateCmd(ec),
+		newMigrateSquashCmd(ec),
+	)
 
 	return migrateCmd
 }
@@ -91,7 +95,7 @@ func ExecuteMigration(cmd string, t *migrate.Migrate, stepOrVersion int64) error
 		}
 		err = mig.GotoCmd(t, uint64(stepOrVersion), direction)
 	default:
-		err = fmt.Errorf("Invalid command")
+		err = fmt.Errorf("invalid command")
 	}
 
 	return err

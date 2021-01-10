@@ -40,7 +40,6 @@ func newMigrateStatusCmd(ec *cli.ExecutionContext) *cobra.Command {
 			return nil
 		},
 	}
-	migrateStatusCmd.Flags().StringVar(&opts.Datasource, "datasource", "", "name of datasource to show the status of")
 	return migrateStatusCmd
 }
 

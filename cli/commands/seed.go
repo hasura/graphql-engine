@@ -3,6 +3,7 @@ package commands
 import (
 	"github.com/hasura/graphql-engine/cli"
 	"github.com/hasura/graphql-engine/cli/util"
+	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
@@ -25,8 +26,9 @@ func NewSeedCmd(ec *cli.ExecutionContext) *cobra.Command {
 				return err
 			}
 			if ec.Config.Version >= cli.V3 {
-				cmd.PersistentFlags().StringVar(&ec.Datasource, "datasource", "", "datasource name which operation should be applied")
-				cmd.MarkFlagRequired("datasource")
+				if !cmd.Flags().Changed("datasource") {
+					return errors.New("datasource flag is required")
+				}
 			} else {
 				if err := checkIfUpdateToConfigV3IsRequired(ec); err != nil {
 					return err
@@ -42,6 +44,7 @@ func NewSeedCmd(ec *cli.ExecutionContext) *cobra.Command {
 	)
 
 	f := seedCmd.PersistentFlags()
+	f.StringVar(&ec.Datasource, "datasource", "", "datasource name which operation should be applied")
 
 	f.String("endpoint", "", "http(s) endpoint for Hasura GraphQL Engine")
 	f.String("admin-secret", "", "admin secret for Hasura GraphQL Engine")
