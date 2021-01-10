@@ -216,7 +216,7 @@ const saveRemoteSchemaPermission = (successCb, errorCb) => {
     const { upQueries, downQueries } = getRemoteSchemaPermissionQueries(
       permissionEdit,
       allPermissions,
-      currentRemoteSchema,
+      currentRemoteSchemaName,
       schemaDefinition
     );
 
@@ -341,11 +341,11 @@ const permRemoveMultipleRoles = () => {
 
       const upQuery = getDropRemoteSchemaPermissionQuery(
         role,
-        currentRemoteSchema
+        currentRemoteSchemaName
       );
       const downQuery = getCreateRemoteSchemaPermissionQuery(
         { role },
-        currentRemoteSchema,
+        currentRemoteSchemaName,
         currentRolePermission[0].definition.schema
       );
       migration.add(upQuery, downQuery);
