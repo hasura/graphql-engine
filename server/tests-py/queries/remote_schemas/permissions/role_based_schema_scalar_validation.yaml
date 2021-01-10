@@ -1,0 +1,30 @@
+description: Include Enum Occupation which doesn't exist in the remote schema
+url: /v1/query
+status: 400
+query:
+  type: add_remote_schema_permissions
+  args:
+    remote_schema: my-remote-schema
+    role: user
+    definition:
+      schema: |
+          type User {
+            user_id: Int
+          }
+
+          scalar Time
+
+          type Query {
+            hello: String
+            user(user_id: Int!): User
+          }
+
+          schema {
+            query: Query
+          }
+response:
+  path: $.args
+  error:
+    'validation for the given role-based schema failed because "Scalar": "Time"
+     does not exist in the upstream remote schema'
+  code: validation-failed

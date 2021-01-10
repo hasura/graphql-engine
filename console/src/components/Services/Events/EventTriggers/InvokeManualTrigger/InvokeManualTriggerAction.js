@@ -1,11 +1,10 @@
-/* */
 import Endpoints from '../../../../../Endpoints';
 import requestAction from '../../../../../utils/requestAction';
 import dataHeaders from '../../../Data/Common/Headers';
 import defaultState from './State';
-/* */
+import { getEventLogs } from '../../ServerIO';
+import { invokeManualTriggerQuery } from '../../../../../metadata/queryUtils';
 
-/* */
 const INVOKING_EVENT_TRIGGER = '@invokeManualTrigger/INVOKING_EVENT_TRIGGER';
 const INVOKE_SUCCESS = '@invokeManualTrigger/INVOKE_SUCCESS';
 const INVOKE_FAIL = '@invokeManualTrigger/INVOKE_FAIL';
@@ -14,28 +13,21 @@ const FETCH_EVENT_STATUS_SUCCESS =
   '@invokeManualTrigger/FETCH_EVENT_STATUS_SUCCESS';
 const FETCH_EVENT_STATUS_FAIL = '@invokeManualTrigger/FETCH_EVENT_STATUS_FAIL';
 const RESET = '@invokeManualTrigger/RESET';
-/* */
 
-/* */
-
-const invokeManualTrigger = (name, args) => (dispatch, getState) => {
-  const url = Endpoints.getSchema;
-  const manualTriggerObj = {
-    type: 'invoke_event_trigger',
-    args: {
-      name: name,
-      payload: {
-        new: args,
-        old: null,
-      },
-    },
-  };
+const invokeManualTrigger = (name, args, source) => (dispatch, getState) => {
   dispatch({ type: INVOKING_EVENT_TRIGGER });
+
+  const url = Endpoints.metadata;
+  const query = invokeManualTriggerQuery(
+    { name, source, payload: { row: args } },
+    source
+  );
   const options = {
     method: 'POST',
     headers: dataHeaders(getState),
-    body: JSON.stringify(manualTriggerObj),
+    body: JSON.stringify(query),
   };
+
   return dispatch(requestAction(url, options))
     .then(data => {
       dispatch({ type: INVOKE_SUCCESS, data: data });
@@ -47,48 +39,25 @@ const invokeManualTrigger = (name, args) => (dispatch, getState) => {
     });
 };
 
-const loadEventInvocations = eventId => (dispatch, getState) => {
-  const url = Endpoints.getSchema;
-  const options = {
-    method: 'POST',
-    headers: dataHeaders(getState),
-    body: JSON.stringify({
-      type: 'select',
-      args: {
-        table: {
-          name: 'event_invocation_logs',
-          schema: 'hdb_catalog',
-        },
-        columns: [
-          '*',
-          {
-            name: 'event',
-            columns: ['*'],
-          },
-        ],
-        where: {
-          event_id: eventId,
-        },
-        order_by: ['-created_at'],
-      },
-    }),
-  };
+const loadEventInvocations = (eventId, eventDataSource) => dispatch => {
+  const successCallback = data =>
+    dispatch({ type: FETCH_EVENT_STATUS_SUCCESS, data: data });
+  const errorCallback = err =>
+    dispatch({ type: FETCH_EVENT_STATUS_FAIL, data: err });
+
   dispatch({ type: FETCHING_EVENT_STATUS });
-  return dispatch(requestAction(url, options)).then(
-    data => {
-      dispatch({ type: FETCH_EVENT_STATUS_SUCCESS, data: data });
-      return Promise.resolve(data);
-    },
-    err => {
-      dispatch({ type: FETCH_EVENT_STATUS_FAIL, data: err });
-      return Promise.reject(err);
-    }
+
+  return dispatch(
+    getEventLogs(
+      eventId,
+      'data',
+      eventDataSource,
+      successCallback,
+      errorCallback
+    )
   );
 };
 
-/* */
-
-/* */
 const invokeManualTriggerReducer = (state = defaultState, action) => {
   switch (action.type) {
     case INVOKING_EVENT_TRIGGER:
@@ -131,13 +100,9 @@ const invokeManualTriggerReducer = (state = defaultState, action) => {
         statusFetchingErr: action.data,
       };
     case RESET:
-      return {
-        ...defaultState,
-      };
+      return defaultState;
     default:
-      return {
-        ...state,
-      };
+      return state;
   }
 };
 

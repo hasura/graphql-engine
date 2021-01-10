@@ -18,18 +18,19 @@ import qualified Database.PG.Query                          as Q
 import           Control.Lens                               hiding (op)
 import           Control.Monad.Writer.Strict
 import           Data.Text.Extended
-import           Instances.TH.Lift                          ()
 
 import qualified Hasura.Backends.Postgres.SQL.DML           as S
 
 import           Hasura.Backends.Postgres.SQL.Rewrite
 import           Hasura.Backends.Postgres.SQL.Types
 import           Hasura.Backends.Postgres.Translate.BoolExp
+import           Hasura.Backends.Postgres.Translate.Types
 import           Hasura.EncJSON
-import           Hasura.GraphQL.Schema.Common
+import           Hasura.GraphQL.Schema.Common               (nodeIdVersionInt, currentNodeIdVersion)
 import           Hasura.RQL.DML.Internal
+import           Hasura.RQL.IR.OrderBy
 import           Hasura.RQL.IR.Select
-import           Hasura.RQL.Types
+import           Hasura.RQL.Types                           hiding (Identifier)
 import           Hasura.SQL.Types
 
 
@@ -71,7 +72,7 @@ selectFromToFromItem pfx = \case
 -- from the FromItem generated with selectFromToFromItem
 -- however given from S.FromItem is modelled, it is not
 -- possible currently
-selectFromToQual :: SelectFrom backend -> S.Qual
+selectFromToQual :: SelectFrom 'Postgres -> S.Qual
 selectFromToQual = \case
   FromTable tn        -> S.QualTable tn
   FromIdentifier i    -> S.QualifiedIdentifier i Nothing
@@ -155,7 +156,7 @@ withJsonAggExtr permLimitSubQuery ordBy alias =
     (newOBItems, obCols, newOBAliases) = maybe ([], [], []) transformOrderBy ordBy
     transformOrderBy (S.OrderByExp l) = unzip3 $
       flip map (zip (toList l) [1..]) $ \(obItem, i::Int) ->
-                 let iden = Identifier $ "ob_col_" <> T.pack (show i)
+                 let iden = Identifier $ "ob_col_" <> tshow i
                  in ( obItem{S.oColumn = S.SEIdentifier iden}
                     , S.oColumn obItem
                     , iden
@@ -228,7 +229,7 @@ mkArrayRelationAlias parentFieldName similarFieldsMap fieldName =
   HM.lookupDefault [fieldName] fieldName similarFieldsMap
 
 fromTableRowArgs
-  :: Identifier -> FunctionArgsExpTableRow S.SQLExp -> S.FunctionArgs
+  :: Identifier -> FunctionArgsExpTableRow 'Postgres S.SQLExp -> S.FunctionArgs
 fromTableRowArgs pfx = toFunctionArgs . fmap toSQLExp
   where
     toFunctionArgs (FunctionArgsExp positional named) =
@@ -271,7 +272,7 @@ mkAggregateOrderByExtractorAndFields annAggOrderBy =
     AAOOp opText pgColumnInfo ->
       let pgColumn = pgiColumn pgColumnInfo
       in ( S.Extractor (S.SEFnApp opText [S.SEIdentifier $ toIdentifier pgColumn] Nothing) alias
-         , [(FieldName opText, AFOp $ AggregateOp opText [(fromPGCol pgColumn, CFCol pgColumn)])]
+         , [(FieldName opText, AFOp $ AggregateOp opText [(fromCol @'Postgres pgColumn, CFCol pgColumn)])]
          )
   where
     alias = Just $ mkAggregateOrderByAlias annAggOrderBy
@@ -340,13 +341,13 @@ mkSimilarArrayFields annFields maybeOrderBys =
       Just (riName ri, mkOrderByFieldName $ riName ri)
     fetchAggOrderByRels _               = Nothing
 
-getArrayRelNameAndSelectArgs :: ArraySelectG backend v -> (RelName, SelectArgsG backend v)
+getArrayRelNameAndSelectArgs :: ArraySelectG 'Postgres v -> (RelName, SelectArgsG 'Postgres v)
 getArrayRelNameAndSelectArgs = \case
   ASSimple r     -> (aarRelationshipName r, _asnArgs $ aarAnnSelect r)
   ASAggregate r  -> (aarRelationshipName r, _asnArgs $ aarAnnSelect r)
   ASConnection r -> (aarRelationshipName r, _asnArgs $ _csSelect $ aarAnnSelect r)
 
-getAnnArr :: (a, AnnFieldG backend v) -> Maybe (a, ArraySelectG backend v)
+getAnnArr :: (a, AnnFieldG 'Postgres v) -> Maybe (a, ArraySelectG 'Postgres v)
 getAnnArr (f, annFld) = case annFld of
   AFArrayRelation (ASConnection _) -> Nothing
   AFArrayRelation ar               -> Just (f, ar)
@@ -354,8 +355,8 @@ getAnnArr (f, annFld) = case annFld of
 
 
 withWriteJoinTree
-  :: (MonadWriter (JoinTree backend) m)
-  => (JoinTree backend -> b -> JoinTree backend)
+  :: (MonadWriter (JoinTree 'Postgres) m)
+  => (JoinTree 'Postgres -> b -> JoinTree 'Postgres)
   -> m (a, b)
   -> m a
 withWriteJoinTree joinTreeUpdater action =
@@ -366,8 +367,8 @@ withWriteJoinTree joinTreeUpdater action =
     pure (out, fromJoinTree)
 
 withWriteObjectRelation
-  :: (MonadWriter (JoinTree backend) m, Hashable (ObjectRelationSource backend))
-  => m ( ObjectRelationSource backend
+  :: (MonadWriter (JoinTree 'Postgres) m)
+  => m ( ObjectRelationSource 'Postgres
        , HM.HashMap S.Alias S.SQLExp
        , a
        )
@@ -418,8 +419,8 @@ withWriteArrayConnection action =
       in mempty{_jtArrayConnections = HM.singleton source arraySelectNode}
 
 withWriteComputedFieldTableSet
-  :: (MonadWriter (JoinTree backend) m)
-  => m ( ComputedFieldTableSetSource
+  :: (MonadWriter (JoinTree 'Postgres) m)
+  => m ( ComputedFieldTableSetSource 'Postgres
        , HM.HashMap S.Alias S.SQLExp
        , a
        )
@@ -442,7 +443,7 @@ processAnnSimpleSelect
   -> FieldName
   -> PermissionLimitSubQuery
   -> AnnSimpleSel 'Postgres
-  -> m ( SelectSource
+  -> m ( SelectSource 'Postgres
        , HM.HashMap S.Alias S.SQLExp
        )
 processAnnSimpleSelect sourcePrefixes fieldAlias permLimitSubQuery annSimpleSel = do
@@ -464,7 +465,7 @@ processAnnAggregateSelect
   => SourcePrefixes
   -> FieldName
   -> AnnAggregateSelect 'Postgres
-  -> m ( SelectSource
+  -> m ( SelectSource 'Postgres
        , HM.HashMap S.Alias S.SQLExp
        , S.Extractor
        )
@@ -513,8 +514,8 @@ processAnnAggregateSelect sourcePrefixes fieldAlias annAggSel = do
 
 mkPermissionLimitSubQuery
   :: Maybe Int
-  -> TableAggregateFields backend
-  -> Maybe (NE.NonEmpty (AnnOrderByItem backend))
+  -> TableAggregateFields 'Postgres
+  -> Maybe (NE.NonEmpty (AnnOrderByItem 'Postgres))
   -> PermissionLimitSubQuery
 mkPermissionLimitSubQuery permLimit aggFields orderBys =
   case permLimit of
@@ -589,7 +590,7 @@ processSelectParams
   -> PermissionLimitSubQuery
   -> TablePerm 'Postgres
   -> SelectArgs 'Postgres
-  -> m ( SelectSource
+  -> m ( SelectSource 'Postgres
        , [(S.Alias, S.SQLExp)]
        , Maybe S.SQLExp -- Order by cursor
        )
@@ -696,8 +697,7 @@ processOrderByItems sourcePrefix' fieldAlias' similarArrayFields orderByItems = 
     toOrderByExp :: OrderByItemExp 'Postgres -> S.OrderByItem
     toOrderByExp orderByItemExp =
       let OrderByItemG obTyM expAlias obNullsM = fst . snd <$> orderByItemExp
-      in S.OrderByItem (S.SEIdentifier $ toIdentifier expAlias)
-         (unOrderType <$> obTyM) (unNullsOrder <$> obNullsM)
+      in S.OrderByItem (S.SEIdentifier $ toIdentifier expAlias) obTyM obNullsM
 
     mkCursorExp :: [OrderByItemExp 'Postgres] -> S.SQLExp
     mkCursorExp orderByItemExps =
@@ -823,15 +823,15 @@ processAnnFields sourcePrefix fieldAlias similarArrFields annFields = do
       pure $ toJSONableExp strfyNum (pgiType col) asText $ withColumnOp colOpM $
              S.mkQIdenExp (mkBaseTableAlias sourcePrefix) $ pgiColumn col
 
-    fromScalarComputedField :: ComputedFieldScalarSelect S.SQLExp -> m S.SQLExp
+    fromScalarComputedField :: ComputedFieldScalarSelect 'Postgres S.SQLExp -> m S.SQLExp
     fromScalarComputedField computedFieldScalar = do
       strfyNum <- ask
-      pure $ toJSONableExp strfyNum (PGColumnScalar ty) False $ withColumnOp colOpM $
+      pure $ toJSONableExp strfyNum (ColumnScalar ty) False $ withColumnOp colOpM $
              S.SEFunction $ S.FunctionExp fn (fromTableRowArgs sourcePrefix args) Nothing
       where
         ComputedFieldScalarSelect fn args ty colOpM = computedFieldScalar
 
-    withColumnOp :: Maybe ColumnOp -> S.SQLExp -> S.SQLExp
+    withColumnOp :: Maybe (ColumnOp 'Postgres) -> S.SQLExp -> S.SQLExp
     withColumnOp colOpM sqlExp = case colOpM of
       Nothing                     -> sqlExp
       Just (ColumnOp opText cExp) -> S.mkSQLOpExp opText sqlExp cExp
@@ -862,7 +862,7 @@ mkJoinCond baseTablepfx colMapn =
 
 generateSQLSelect
   :: S.BoolExp -- ^ Pre join condition
-  -> SelectSource
+  -> SelectSource 'Postgres
   -> SelectNode 'Postgres
   -> S.Select
 generateSQLSelect joinCondition selectSource selectNode =
@@ -928,7 +928,7 @@ generateSQLSelect joinCondition selectSource selectNode =
       in S.FISelectWith (S.Lateral True) selectWith alias
 
     computedFieldToFromItem
-      :: (ComputedFieldTableSetSource, SelectNode 'Postgres) -> S.FromItem
+      :: (ComputedFieldTableSetSource 'Postgres, SelectNode 'Postgres) -> S.FromItem
     computedFieldToFromItem (computedFieldTableSource, node) =
       let ComputedFieldTableSetSource fieldName selectTy source = computedFieldTableSource
           internalSelect = generateSQLSelect (S.BELit True) source node
@@ -942,7 +942,7 @@ generateSQLSelect joinCondition selectSource selectNode =
       in S.mkLateralFromItem select alias
 
 generateSQLSelectFromArrayNode
-  :: SelectSource
+  :: SelectSource 'Postgres
   -> ArraySelectNode 'Postgres
   -> S.BoolExp
   -> S.Select
@@ -1125,7 +1125,7 @@ processConnectionSelect sourcePrefixes fieldAlias relAlias colMapping connection
 
         mkSplitCompareExp (ConnectionSplit kind v (OrderByItemG obTyM obCol _)) =
           let obAlias = mkAnnOrderByAlias thisPrefix fieldAlias similarArrayFields obCol
-              obTy = maybe S.OTAsc unOrderType obTyM
+              obTy = fromMaybe S.OTAsc obTyM
               compareOp = case (kind, obTy) of
                 (CSKAfter, S.OTAsc)   -> S.SGT
                 (CSKAfter, S.OTDesc)  -> S.SLT

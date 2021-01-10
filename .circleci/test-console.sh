@@ -20,7 +20,7 @@ cd "$CONSOLE_ROOT"
 
 mkdir -p /build/_console_output
 touch /build/_console_output/server.log
-touch /build/_console_output/cli.log
+# touch /build/_console_output/cli.log
 
 # start graphql-engine
 /build/_server_output/graphql-engine \
@@ -29,19 +29,19 @@ touch /build/_console_output/cli.log
 wait_for_port 8080
 
 # start cli
-/build/_cli_output/binaries/cli-hasura-linux-amd64 init --directory gql-test && cd gql-test
-/build/_cli_output/binaries/cli-hasura-linux-amd64 console --no-browser > /build/_console_output/cli.log 2>&1 &
+# /build/_cli_output/binaries/cli-hasura-linux-amd64 init --directory gql-test && cd gql-test
+# /build/_cli_output/binaries/cli-hasura-linux-amd64 console --no-browser > /build/_console_output/cli.log 2>&1 &
 
-cd ..
+# cd ..
 
-wait_for_port 9693
+# wait_for_port 9693
 
 export PORT=3000
 export NODE_ENV=development
 export DATA_API_URL=http://localhost:8080
-export API_HOST=http://localhost
-export API_PORT=9693
-export CONSOLE_MODE=cli
+# export API_HOST=http://localhost
+# export API_PORT=9693
+export CONSOLE_MODE=server
 export DEV_DATA_API_URL=http://localhost:8080
 export URL_PREFIX=/
 export SERVER_VERSION=$(cat /build/_server_output/version.txt)

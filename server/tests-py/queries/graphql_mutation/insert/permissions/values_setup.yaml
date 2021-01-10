@@ -26,13 +26,18 @@ args:
 
 
 #Create blog table
+
+  #Insert Author table data
+
 - type: run_sql
   args:
     sql: |
       INSERT INTO blog (id, title, author_id) VALUES
         (1, 'first blog', 1), (2, 'second blog', 2);
+      insert into "user" (name, is_admin)
+        values ('user_1', false), ('user_2', true)
+      ;
 
-#Insert residents
 - type: insert
   args:
     table: resident
@@ -45,9 +50,3 @@ args:
       age: 22
 
 #Insert users
-- type: run_sql
-  args:
-    sql: |
-      insert into "user" (name, is_admin)
-        values ('user_1', false), ('user_2', true)
-      ;

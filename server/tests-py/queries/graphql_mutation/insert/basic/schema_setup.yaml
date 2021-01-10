@@ -2,28 +2,15 @@ type: bulk
 args:
 
 #Set timezone
+
 - type: run_sql
   args:
     sql: |
       SET TIME ZONE 'UTC';
-
-#Author table
-- type: run_sql
-  args:
-    sql: |
       create table author(
           id serial primary key,
           name text unique
       );
-- type: track_table
-  args:
-    schema: public
-    name: author
-
-#Article table
-- type: run_sql
-  args:
-    sql: |
       CREATE TABLE article (
         id SERIAL PRIMARY KEY,
         title TEXT,
@@ -31,96 +18,27 @@ args:
         author_id INTEGER REFERENCES author(id),
         is_published BOOLEAN,
         published_on TIMESTAMP
-      )
-- type: track_table
-  args:
-    schema: public
-    name: article
-
-#Person table
-- type: run_sql
-  args:
-    sql: |
+      );
       CREATE TABLE person (
         id SERIAL PRIMARY KEY,
         details JSONB NOT NULL
-      )
-- type: track_table
-  args:
-    schema: public
-    name: person
-
-#Person views
-- type: run_sql
-  args:
-    sql: |
+      );
       CREATE VIEW person_const_view AS select * from person LIMIT 600;
       CREATE VIEW person_mut_view AS select * from person;
-
-- type: track_table
-  args:
-    schema: public
-    name: person_const_view
-
-- type: track_table
-  args:
-    schema: public
-    name: person_mut_view
-
-#Order table
-- type: run_sql
-  args:
-    sql: |
       CREATE TABLE orders (
         id SERIAL PRIMARY KEY,
         placed TIMESTAMPTZ NOT NULL,
         shipped TIMESTAMPTZ
-      )
-- type: track_table
-  args:
-    schema: public
-    name: orders
-
-
-#Object relationship
-- type: create_object_relationship
-  args:
-    table: article
-    name: author
-    using:
-      foreign_key_constraint_on: author_id
-
-#Array relationship
-- type: create_array_relationship
-  args:
-    table: author
-    name: articles
-    using:
-      foreign_key_constraint_on:
-        table: article
-        column: author_id
-
-- type: run_sql
-  args:
-    sql: |
+      );
       CREATE TYPE complex AS (
           r       double precision,
           i       double precision
       );
-
-- type: run_sql
-  args:
-    sql: |
       CREATE TYPE inventory_item AS (
           name            text,
           supplier_id     integer,
           price           numeric
       );
-
-#Test table with different types
-- type: run_sql
-  args:
-    sql: |
       create table test_types (
           c1_smallint smallint,
           c2_integer integer,
@@ -167,6 +85,60 @@ args:
           c43_range_timestamptz tstzrange,
           c44_xml xml
       );
+
+- type: track_table
+  args:
+    schema: public
+    name: author
+
+#Article table
+- type: track_table
+  args:
+    schema: public
+    name: article
+
+#Person table
+- type: track_table
+  args:
+    schema: public
+    name: person
+
+#Person views
+- type: track_table
+  args:
+    schema: public
+    name: person_const_view
+
+- type: track_table
+  args:
+    schema: public
+    name: person_mut_view
+
+#Order table
+- type: track_table
+  args:
+    schema: public
+    name: orders
+
+
+#Object relationship
+- type: create_object_relationship
+  args:
+    table: article
+    name: author
+    using:
+      foreign_key_constraint_on: author_id
+
+#Array relationship
+- type: create_array_relationship
+  args:
+    table: author
+    name: articles
+    using:
+      foreign_key_constraint_on:
+        table: article
+        column: author_id
+
 - type: track_table
   args:
     schema: public

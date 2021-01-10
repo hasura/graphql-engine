@@ -43,7 +43,7 @@ withNumPfx :: Identifier -> Int -> Identifier
 withNumPfx iden i =
   Identifier pfx <> iden
   where
-    pfx = T.pack $ "_" <> show i <> "_"
+    pfx = "_" <> T.pack (show i) <> "_"
 
 addAlias :: S.Alias -> Uniq S.Alias
 addAlias (S.Alias iden) = do

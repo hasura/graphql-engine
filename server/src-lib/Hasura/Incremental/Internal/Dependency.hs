@@ -7,6 +7,8 @@ module Hasura.Incremental.Internal.Dependency where
 import           Hasura.Prelude
 
 import qualified Data.Dependent.Map            as DM
+import qualified Data.HashMap.Strict           as Map
+import qualified Data.HashMap.Strict.InsOrd    as OMap
 import qualified Data.URL.Template             as UT
 import qualified Language.GraphQL.Draft.Syntax as G
 import qualified Network.URI.Extended          as N
@@ -21,8 +23,8 @@ import           Data.Set                      (Set)
 import           Data.Text.NonEmpty
 import           Data.Time.Clock
 import           Data.Vector                   (Vector)
-import           GHC.Generics                  (Generic (..), K1 (..), M1 (..), U1 (..), V1,
-                                                (:*:) (..), (:+:) (..))
+import           GHC.Generics                  ((:*:) (..), (:+:) (..), Generic (..), K1 (..),
+                                                M1 (..), U1 (..), V1)
 import           System.Cron.Types
 
 import           Hasura.Incremental.Select
@@ -196,12 +198,17 @@ instance (Cacheable a) => Cacheable (CI a) where
   unchanged _ = (==)
 instance (Cacheable a) => Cacheable (Set a) where
   unchanged = liftEq . unchanged
+instance (Hashable k, Cacheable k, Cacheable v) => Cacheable (InsOrdHashMap k v) where
+  unchanged accesses l r = unchanged accesses (toHashMap l) (toHashMap r)
+    where
+      toHashMap = Map.fromList . OMap.toList
 
 instance Cacheable ()
 instance (Cacheable a, Cacheable b) => Cacheable (a, b)
 instance (Cacheable a, Cacheable b, Cacheable c) => Cacheable (a, b, c)
 instance (Cacheable a, Cacheable b, Cacheable c, Cacheable d) => Cacheable (a, b, c, d)
 instance (Cacheable a, Cacheable b, Cacheable c, Cacheable d, Cacheable e) => Cacheable (a, b, c, d, e)
+instance (Cacheable a, Cacheable b, Cacheable c, Cacheable d, Cacheable e, Cacheable f) => Cacheable (a, b, c, d, e, f)
 
 instance Cacheable Bool
 instance Cacheable Void
@@ -213,14 +220,14 @@ instance Cacheable G.OperationType
 instance Cacheable G.VariableDefinition
 instance Cacheable G.InputValueDefinition
 instance Cacheable G.EnumValueDefinition
-instance Cacheable G.FieldDefinition
+instance (Cacheable a) => Cacheable (G.FieldDefinition a)
 instance Cacheable G.ScalarTypeDefinition
 instance Cacheable G.UnionTypeDefinition
-instance Cacheable possibleTypes => Cacheable (G.InterfaceTypeDefinition possibleTypes)
+instance (Cacheable possibleTypes, Cacheable a) => Cacheable (G.InterfaceTypeDefinition a possibleTypes)
 instance Cacheable G.EnumTypeDefinition
-instance Cacheable G.InputObjectTypeDefinition
-instance Cacheable G.ObjectTypeDefinition
-instance Cacheable possibleTypes => Cacheable (G.TypeDefinition possibleTypes)
+instance (Cacheable a) => Cacheable (G.InputObjectTypeDefinition a)
+instance (Cacheable a) => Cacheable (G.ObjectTypeDefinition a)
+instance (Cacheable a, Cacheable possibleTypes) => Cacheable (G.TypeDefinition a possibleTypes)
 instance Cacheable N.URI
 instance Cacheable UT.Variable
 instance Cacheable UT.TemplateItem
@@ -245,6 +252,9 @@ deriving instance Cacheable G.Description
 deriving instance Cacheable G.EnumValue
 deriving instance Cacheable a => Cacheable (G.ExecutableDocument a)
 
+instance Cacheable G.RootOperationTypeDefinition
+instance Cacheable G.SchemaDefinition
+instance Cacheable G.TypeSystemDefinition
 instance Cacheable G.SchemaDocument
 instance Cacheable G.SchemaIntrospection
 

@@ -1,5 +1,5 @@
 const defaultCurFilter = {
-  where: { $and: [{ '': { '': '' } }] },
+  where: { $and: [{ '': { $eq: '' } }] },
   limit: 10,
   offset: 0,
   order_by: [{ column: '', type: 'asc', nulls: 'last' }],
@@ -20,8 +20,6 @@ const defaultViewState = {
   lastError: {},
   lastSuccess: {},
   manualTriggers: [],
-  triggeredRow: -1,
-  triggeredFunction: null,
   estimatedCount: 0,
   isCountEstimated: 0,
 };
@@ -167,14 +165,13 @@ const defaultState = {
     lastSuccess: null,
   },
   allSchemas: [],
-  allRoles: [],
   postgresFunctions: [],
   nonTrackablePostgresFunctions: [],
-  trackedFunctions: [],
   listingSchemas: [],
   untrackedRelations: [],
   schemaList: ['public'],
   currentSchema: 'public',
+  currentDataSource: '',
   adminSecretError: false,
   dataHeaders: {
     'content-type': 'application/json',

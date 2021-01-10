@@ -138,4 +138,4 @@ If you'd like to stay informed about the status of MySQL support, subscribe here
 Give us feedback
 ----------------
 
-We appreciate any feedback. Please open a new `Github discussion <https://github.com/hasura/graphql-engine/discussions>`__, and we can discuss there.
+We appreciate any feedback. Please open a new `GitHub discussion <https://github.com/hasura/graphql-engine/discussions>`__, and we can discuss there.

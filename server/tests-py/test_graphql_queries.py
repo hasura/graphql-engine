@@ -11,6 +11,7 @@ usefixtures = pytest.mark.usefixtures
 @usefixtures('per_class_tests_db_state')
 class TestGraphQLQueryBasic:
 
+    # This also excercises support for multiple operations in a document:
     def test_select_query_author(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + '/select_query_author.yaml', transport)
 
@@ -98,6 +99,9 @@ class TestGraphQLQueryFragments:
 
     def test_select_query_fragment_cycles(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + '/select_query_fragment_cycles.yaml', transport)
+
+    def test_select_query_fragment_with_variable(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/select_query_fragment_with_variable.yaml', transport)
 
     @classmethod
     def dir(cls):
@@ -337,6 +341,9 @@ class TestGraphqlQueryPermissions:
     def test_in_and_nin(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + '/in_and_nin.yaml', transport)
 
+    def test_iregex(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/iregex.yaml', transport)
+
     def test_user_accessing_books_by_pk_should_fail(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + '/user_should_not_be_able_to_access_books_by_pk.yaml')
 
@@ -369,6 +376,18 @@ class TestGraphQLQueryBoolExpSearch:
 
     def test_city_where_not_similar(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + '/select_city_where_not_similar.yaml', transport)
+
+    def test_city_where_regex(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/select_city_where_regex.yaml', transport)
+
+    def test_city_where_nregex(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/select_city_where_nregex.yaml', transport)
+
+    def test_city_where_iregex(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/select_city_where_iregex.yaml', transport)
+
+    def test_city_where_niregex(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/select_city_where_niregex.yaml', transport)
 
     @classmethod
     def dir(cls):

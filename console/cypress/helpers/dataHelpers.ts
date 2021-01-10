@@ -3,6 +3,9 @@ import { ADMIN_SECRET_HEADER_KEY } from '../../src/constants';
 
 export const baseUrl = Cypress.config('baseUrl');
 
+export const getIndexRoute = (sourceName = 'default', schemaName = 'public') =>
+  `/data/${sourceName}/schema/${schemaName}/`;
+
 export const dataTypes = [
   'serial',
   'bigserial',
@@ -36,7 +39,7 @@ export const getColName = (i: number) => `Apic_test_column_${i}`;
 export const getTableName = (i: number, testName = '') =>
   `Apic_test_table_${testName}_${i}`;
 
-export const getElementFromAlias = (alias: string) => `[data-test=${alias}]`;
+export const getElementFromAlias = (alias: string) => `[data-test="${alias}"]`;
 
 export const getElementFromClassName = (cn: string) => `.${cn}`;
 
@@ -48,19 +51,30 @@ export const tableColumnTypeSelector = (alias: string) => {
     .focus();
 };
 
-export const makeDataAPIUrl = (dataApiUrl: string) => `${dataApiUrl}/v1/query`;
+export const makeDataAPIUrl = (
+  dataApiUrl: string,
+  queryEndpoint: QueryEndpoint = 'query'
+) => {
+  if (queryEndpoint === 'query') {
+    return `${dataApiUrl}/v2/query`;
+  }
+  return `${dataApiUrl}/v1/metadata`;
+};
 
 interface APIPayload {
   [key: string]: any;
 }
 
+export type QueryEndpoint = 'query' | 'metadata';
+
 export const makeDataAPIOptions = (
   dataApiUrl: string,
   key: string,
-  body: APIPayload
+  body: APIPayload,
+  queryType: QueryEndpoint = 'query'
 ) => ({
   method: 'POST',
-  url: makeDataAPIUrl(dataApiUrl),
+  url: makeDataAPIUrl(dataApiUrl, queryType),
   headers: {
     [ADMIN_SECRET_HEADER_KEY]: key,
   },
@@ -75,25 +89,24 @@ export const testCustomFunctionDefinition = (
 
 export const getCustomFunctionName = (i: number) => `search_posts${`_${i}`}`;
 
-export const testCustomFunctionSQL = (i: number) => {
+export const getCreateTestFunctionQuery = (i: number) => {
   return {
-    type: 'bulk',
-    args: [
-      {
-        type: 'run_sql',
-        args: {
-          sql: `CREATE OR REPLACE FUNCTION public.search_posts_${i}(search text)\n RETURNS SETOF post\n LANGUAGE sql\n STABLE\nAS $function$\n          select *\n          from post\n          where\n          title ilike ('%' || search || '%') or\n          content ilike ('%' || search || '%')\n      $function$\n`,
-          cascade: false,
-        },
-      },
-      {
-        type: 'track_function',
-        args: {
-          name: `search_posts_${i}`,
-          schema: 'public',
-        },
-      },
-    ],
+    type: 'run_sql',
+    args: {
+      sql: `CREATE OR REPLACE FUNCTION public.search_posts_${i}(search text)\n RETURNS SETOF post\n LANGUAGE sql\n STABLE\nAS $function$\n          select *\n          from post\n          where\n          title ilike ('%' || search || '%') or\n          content ilike ('%' || search || '%')\n      $function$\n`,
+      cascade: false,
+    },
+  };
+};
+
+export const getTrackTestFunctionQuery = (i: number) => {
+  return {
+    type: 'pg_track_function',
+    args: {
+      function: `search_posts_${i}`,
+      schema: 'public',
+      source: 'default',
+    },
   };
 };
 
@@ -101,12 +114,9 @@ export const testCustomFunctionSQLWithSessArg = (
   name = 'customFunctionWithSessionArg'
 ) => {
   return {
-    type: 'bulk',
-    args: [
-      {
-        type: 'run_sql',
-        args: {
-          sql: `CREATE OR REPLACE FUNCTION ${name}(
+    type: 'run_sql',
+    args: {
+      sql: `CREATE OR REPLACE FUNCTION ${name}(
             hasura_session json, name text
           ) RETURNS SETOF text_result LANGUAGE sql STABLE AS $$
           SELECT
@@ -116,72 +126,72 @@ export const testCustomFunctionSQLWithSessArg = (
               VALUES
                 (hasura_session ->> 'x-hasura-role')
             ) q $$`,
-          cascade: false,
-        },
-      },
-    ],
+      cascade: false,
+    },
   };
 };
+
 export const getTrackFnPayload = (name = 'customfunctionwithsessionarg') => ({
-  type: 'bulk',
-  args: [
-    {
-      type: 'track_function',
-      args: {
-        name,
+  type: 'pg_track_function',
+  args: {
+    function: name,
+    source: 'default',
+    schema: 'public',
+  },
+});
+
+// has to go to query
+export const createFunctionTable = () => {
+  return {
+    type: 'run_sql',
+    args: {
+      sql: 'create table post (id serial PRIMARY KEY,title TEXT,content TEXT);',
+      cascade: false,
+    },
+  };
+};
+// has to go to metadata
+export const trackCreateFunctionTable = () => {
+  return {
+    type: 'pg_track_table',
+    args: {
+      table: {
+        name: 'post',
         schema: 'public',
       },
     },
-  ],
-});
-export const createTable = () => {
-  return {
-    type: 'bulk',
-    args: [
-      {
-        type: 'run_sql',
-        args: {
-          sql:
-            'create table post (\n        id serial PRIMARY KEY,\n        title TEXT,\n        content TEXT\n )',
-          cascade: false,
-        },
-      },
-      {
-        type: 'add_existing_table_or_view',
-        args: {
-          name: 'post',
-          schema: 'public',
-        },
-      },
-    ],
   };
 };
-export const createTableSessVar = () => {
+
+export const createTableForSessionVarTest = () => {
   return {
-    type: 'bulk',
-    args: [
-      {
-        type: 'run_sql',
-        args: {
-          sql: `CREATE TABLE text_result(
-              result text
-            );`,
-          cascade: false,
-        },
+    type: 'run_sql',
+    source: 'default',
+    args: {
+      sql: `CREATE TABLE text_result(
+          result text
+        );`,
+      cascade: false,
+    },
+  };
+};
+
+export const getTrackSessionVarTestTableQuery = () => {
+  return {
+    type: 'pg_track_table',
+    source: 'default',
+    args: {
+      table: {
+        name: 'text_result',
+        schema: 'public',
       },
-      {
-        type: 'add_existing_table_or_view',
-        args: {
-          name: 'text_result',
-          schema: 'public',
-        },
-      },
-    ],
+    },
   };
 };
 export const dropTable = (table = 'post', cascade = false) => {
   return {
     type: 'bulk',
+    source: 'default',
     args: [
       {
         type: 'run_sql',

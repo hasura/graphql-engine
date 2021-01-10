@@ -18,14 +18,14 @@ export const getActionPermissionMigration = (
   const migration = new Migration();
   if (newRole || (!newRole && !existingPerm)) {
     migration.add(
-      (getCreateActionPermissionQuery(
+      getCreateActionPermissionQuery(
         {
           role: permRole,
           filter,
         },
         actionName
       ),
-      getDropActionPermissionQuery(permRole, actionName))
+      getDropActionPermissionQuery(permRole, actionName)
     );
   }
 

@@ -133,7 +133,7 @@ func newScriptsUpdateConfigV2Cmd(ec *cli.ExecutionContext) *cobra.Command {
 					}
 				}
 				// check if up.sql file exists
-				if string(sqlUp.Bytes()) != "" {
+				if sqlUp.String() != "" {
 					upMigration, ok := fileCfg.Migrations.Migrations[version][source.Up]
 					if !ok {
 						// if up.sql doesn't exists, create a up.sql file and upMigration
@@ -207,7 +207,7 @@ func newScriptsUpdateConfigV2Cmd(ec *cli.ExecutionContext) *cobra.Command {
 					}
 				}
 				// check if up.sql file exists
-				if string(sqlDown.Bytes()) != "" {
+				if sqlDown.String() != "" {
 					downMigration, ok := fileCfg.Migrations.Migrations[version][source.Down]
 					if !ok {
 						// if up.sql doesn't exists, create a up.sql file and upMigration

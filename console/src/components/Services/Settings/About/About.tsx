@@ -9,9 +9,9 @@ import globals from '../../../../Globals';
 import styles from '../Settings.scss';
 import requestAction from '../../../../utils/requestAction';
 import { showErrorNotification } from '../../Common/Notification';
-import { getRunSqlQuery } from '../../../Common/utils/v1QueryUtils';
 import { versionGT } from '../../../../helpers/versionUtils';
 import { ReduxState, ConnectInjectedProps } from '../../../../types';
+import { getRunSqlQuery } from '../../../Common/utils/v1QueryUtils';
 
 type AboutState = {
   consoleAssetVersion?: string;
@@ -27,14 +27,16 @@ class About extends Component<ConnectInjectedProps & StateProps> {
 
   componentDidMount() {
     const fetchPgVersion = () => {
-      const { dispatch, dataHeaders } = this.props;
+      const { dispatch, dataHeaders, source } = this.props;
 
       const url = Endpoints.query;
       const options: RequestInit = {
         method: 'POST',
         credentials: globalCookiePolicy,
         headers: dataHeaders,
-        body: JSON.stringify(getRunSqlQuery('SELECT version();', false, true)),
+        body: JSON.stringify(
+          getRunSqlQuery('SELECT version();', source, false, true)
+        ),
       };
 
       dispatch(requestAction(url, options)).then(
@@ -130,7 +132,7 @@ class About extends Component<ConnectInjectedProps & StateProps> {
     const getPgVersionSection = () => {
       return (
         <div>
-          <b>Postgres version: </b>
+          <b>Postgres version ({this.props.source}): </b>
           <span className={styles.add_mar_left_mid}>
             {pgVersion || spinner}
           </span>
@@ -163,6 +165,7 @@ const mapStateToProps = (state: ReduxState) => {
   return {
     dataHeaders: state.tables.dataHeaders,
     serverVersion: state.main.serverVersion,
+    source: state.tables.currentDataSource,
     latestStableServerVersion: state.main.latestStableServerVersion,
   };
 };

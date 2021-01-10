@@ -333,6 +333,15 @@ Operator
      - ``SIMILAR TO``
    * - ``"$nsimilar"``
      - ``NOT SIMILAR TO``
+   * - ``$regex``
+     - ``~``
+   * - ``$iregex``
+     - ``~*``
+   * - ``$nregex``
+     - ``!~``
+   * - ``$niregex``
+     - ``!~*``
+  
 
 (For more details on text related operators, refer to the `Postgres docs <https://www.postgresql.org/docs/current/functions-matching.html>`__.)
 

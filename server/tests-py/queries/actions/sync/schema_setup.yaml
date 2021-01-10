@@ -1,5 +1,6 @@
 type: bulk
 args:
+
 - type: run_sql
   args:
     sql: |
@@ -84,8 +85,8 @@ args:
       kind: synchronous
       arguments:
       - name: arg
-        type: 'InObject!'
-      output_type: 'OutObject'
+        type: InObject!
+      output_type: OutObject
       handler: http://127.0.0.1:5593/mirror-action
 
 - type: create_action
@@ -95,8 +96,8 @@ args:
       type: query
       arguments:
       - name: email
-        type: 'String!'
-      output_type: 'UserId!'
+        type: String!
+      output_type: UserId!
       handler: http://127.0.0.1:5593/get-user-by-email
 
 - type: create_action
@@ -106,6 +107,6 @@ args:
       type: query
       arguments:
       - name: email
-        type: 'String!'
+        type: String!
       output_type: '[UserId]!'
       handler: http://127.0.0.1:5593/get-users-by-email

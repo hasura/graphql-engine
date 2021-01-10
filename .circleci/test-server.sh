@@ -529,6 +529,19 @@ pytest -n 1 -vv --hge-urls "$HGE_URL" --pg-urls "$HASURA_GRAPHQL_DATABASE_URL" -
 
 kill_hge_servers
 
+echo -e "\n$(time_elapsed): <########## TEST GRAPHQL-ENGINE WITH REMOTE SCHEMA PERMISSIONS ENABLED ########>\n"
+TEST_TYPE="remote-schema-permissions"
+export HASURA_GRAPHQL_ENABLE_REMOTE_SCHEMA_PERMISSIONS=true
+
+run_hge_with_args serve
+wait_for_port 8080
+
+pytest -n 1 -vv --hge-urls "$HGE_URL" --pg-urls "$HASURA_GRAPHQL_DATABASE_URL" --hge-key="$HASURA_GRAPHQL_ADMIN_SECRET"  --enable-remote-schema-permissions test_remote_schema_permissions.py
+
+unset HASURA_GRAPHQL_ENABLE_REMOTE_SCHEMA_PERMISSIONS
+
+kill_hge_servers
+
 echo -e "\n$(time_elapsed): <########## TEST GRAPHQL-ENGINE QUERY CACHING #####################################>\n"
 TEST_TYPE="query-caching"
 

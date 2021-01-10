@@ -1,0 +1,33 @@
+description: Include unknown field "timestamp" in the "Communication" interface
+url: /v1/query
+status: 400
+query:
+  type: add_remote_schema_permissions
+  args:
+    remote_schema: my-remote-schema
+    role: user
+    definition:
+      schema: |
+          type User {
+            user_id: Int
+          }
+
+          interface Communication {
+            id: Int!
+            msg: String!
+            timestamp: String!
+          }
+
+          type Query {
+            hello: String
+          }
+
+          schema {
+            query: Query
+          }
+response:
+  path: $.args
+  error:
+    'validation for the given role-based schema failed because field "timestamp"
+    does not exist in the "Interface": "Communication"'
+  code: validation-failed
