@@ -600,7 +600,7 @@ func (ec *ExecutionContext) Validate() error {
 		}
 	}
 
-	if ec.Config.Version == V2 && ec.Config.MetadataDirectory != "" {
+	if ec.Config.Version >= V2 && ec.Config.MetadataDirectory != "" {
 		// set name of metadata directory
 		ec.MetadataDir = filepath.Join(ec.ExecutionDirectory, ec.Config.MetadataDirectory)
 		if _, err := os.Stat(ec.MetadataDir); os.IsNotExist(err) {

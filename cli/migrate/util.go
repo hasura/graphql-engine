@@ -230,7 +230,7 @@ func SetMetadataPluginsWithDir(ec *cli.ExecutionContext, drv *Migrate, dir ...st
 	}
 	ec.Version.GetServerFeatureFlags()
 	plugins := make(types.MetadataPlugins, 0)
-	if ec.Config.Version == cli.V2 && metadataDir != "" {
+	if ec.Config.Version >= cli.V2 && metadataDir != "" {
 		plugins = append(plugins, version.New(ec, metadataDir))
 		plugins = append(plugins, querycollections.New(ec, metadataDir))
 		plugins = append(plugins, allowlist.New(ec, metadataDir))

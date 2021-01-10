@@ -2,7 +2,10 @@ package sources
 
 import (
 	"io/ioutil"
+	"os"
 	"path/filepath"
+
+	"github.com/hasura/graphql-engine/cli/metadata/tables"
 
 	"github.com/sirupsen/logrus"
 
@@ -77,6 +80,15 @@ func (t *SourceConfig) Export(metadata yaml.MapSlice) (map[string][]byte, error)
 	if err != nil {
 		return nil, err
 	}
+
+	// clear old tables.yaml and functions.yaml files if exists
+	if f, _ := os.Stat(filepath.Join(t.MetadataDir, tables.MetadataFilename)); f != nil {
+		os.Remove(filepath.Join(t.MetadataDir, tables.MetadataFilename))
+	}
+	if f, _ := os.Stat(filepath.Join(t.MetadataDir, tables.MetadataFilename)); f != nil {
+		os.Remove(filepath.Join(t.MetadataDir, tables.MetadataFilename))
+	}
+
 	return map[string][]byte{
 		filepath.Join(t.MetadataDir, fileName): data,
 	}, nil

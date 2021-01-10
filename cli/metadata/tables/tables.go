@@ -11,7 +11,7 @@ import (
 )
 
 const (
-	fileName string = "tables.yaml"
+	MetadataFilename string = "tables.yaml"
 )
 
 type TableConfig struct {
@@ -37,7 +37,7 @@ func (t *TableConfig) CreateFiles() error {
 	if err != nil {
 		return err
 	}
-	err = ioutil.WriteFile(filepath.Join(t.MetadataDir, fileName), data, 0644)
+	err = ioutil.WriteFile(filepath.Join(t.MetadataDir, MetadataFilename), data, 0644)
 	if err != nil {
 		return err
 	}
@@ -45,7 +45,7 @@ func (t *TableConfig) CreateFiles() error {
 }
 
 func (t *TableConfig) Build(metadata *yaml.MapSlice) error {
-	data, err := ioutil.ReadFile(filepath.Join(t.MetadataDir, fileName))
+	data, err := ioutil.ReadFile(filepath.Join(t.MetadataDir, MetadataFilename))
 	if err != nil {
 		return err
 	}
@@ -78,7 +78,7 @@ func (t *TableConfig) Export(metadata yaml.MapSlice) (map[string][]byte, error) 
 		return nil, err
 	}
 	return map[string][]byte{
-		filepath.Join(t.MetadataDir, fileName): data,
+		filepath.Join(t.MetadataDir, MetadataFilename): data,
 	}, nil
 }
 
