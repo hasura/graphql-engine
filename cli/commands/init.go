@@ -72,7 +72,7 @@ func NewInitCmd(ec *cli.ExecutionContext) *cobra.Command {
 	}
 
 	f := initCmd.Flags()
-	f.Var(cli.NewConfigVersionValue(cli.V2, &opts.Version), "version", "config version to be used")
+	f.Var(cli.NewConfigVersionValue(cli.V3, &opts.Version), "version", "config version to be used")
 	f.StringVar(&opts.InitDir, "directory", "", "name of directory where files will be created")
 	f.StringVar(&opts.Endpoint, "endpoint", "", "http(s) endpoint for Hasura GraphQL Engine")
 	f.StringVar(&opts.AdminSecret, "admin-secret", "", "admin secret for Hasura GraphQL Engine")
