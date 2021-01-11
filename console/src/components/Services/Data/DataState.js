@@ -118,6 +118,7 @@ const defaultModifyState = {
   remoteRelationships: {
     remoteSchema: {},
   },
+  custom_name: '',
   rootFieldsEdit: {
     select: '',
     select_by_pk: '',

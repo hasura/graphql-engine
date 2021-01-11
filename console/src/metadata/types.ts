@@ -48,6 +48,8 @@ export interface QualifiedTable {
  * https://hasura.io/docs/1.0/graphql/manual/api-reference/schema-metadata-api/table-view.html#table-config
  */
 export interface TableConfig {
+  /** Customise the table name */
+  custom_name: string;
   /** Customise the root fields */
   custom_root_fields?: CustomRootFields;
   /** Customise the column names */

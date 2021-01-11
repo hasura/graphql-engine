@@ -78,7 +78,7 @@ export const metadataQueryTypes = [
   'bulk',
   'get_catalog_state',
   'set_catalog_state',
-  'set_table_custom_fields',
+  'set_table_customization',
   'get_event_invocations',
   'get_scheduled_events',
   'delete_scheduled_event',
@@ -203,16 +203,22 @@ export const getSetCustomRootFieldsQuery = (
   tableDef: QualifiedTable,
   rootFields: CustomRootFields,
   customColumnNames: Record<string, string>,
+  customTableName: string | null,
   source: string
 ) => {
+  const customNameValue = customTableName || null;
+
   return getMetadataQuery(
-    'set_table_custom_fields',
+    'set_table_customization',
     source,
     {
       source,
       table: tableDef,
-      custom_root_fields: rootFields,
-      custom_column_names: customColumnNames,
+      configuration: {
+        custom_name: customNameValue,
+        custom_root_fields: rootFields,
+        custom_column_names: customColumnNames,
+      },
     },
     {
       version: 2,

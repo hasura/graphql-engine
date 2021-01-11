@@ -10,6 +10,7 @@ import {
   generateTableDef,
   getTableCustomColumnNames,
   getTableCustomRootFields,
+  getTableCustomName,
 } from '../../dataSources';
 import { getRunSqlQuery } from '../../components/Common/utils/v1QueryUtils';
 import { getSetCustomRootFieldsQuery } from '../../metadata/queryUtils';
@@ -299,6 +300,7 @@ export const getColumnUpdateMigration = (
 
   const metadataMigration = new Migration();
   /* column custom field up/down migration */
+  const existingCustomTableName = getTableCustomName(table);
   const existingCustomColumnNames = getTableCustomColumnNames(table);
   const existingRootFields = getTableCustomRootFields(table);
   const newCustomColumnNames = { ...existingCustomColumnNames };
@@ -318,12 +320,14 @@ export const getColumnUpdateMigration = (
         tableDef,
         existingRootFields,
         newCustomColumnNames,
+        existingCustomTableName,
         source
       ),
       getSetCustomRootFieldsQuery(
         tableDef,
         existingRootFields,
         existingCustomColumnNames,
+        existingCustomTableName,
         source
       )
     );

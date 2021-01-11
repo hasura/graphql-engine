@@ -124,6 +124,7 @@ export interface Table extends BaseTable {
       delete?: Nullable<string>;
       delete_by_pk?: Nullable<string>;
     };
+    custom_name: string;
   };
   computed_fields: ComputedField[];
   is_enum: boolean;

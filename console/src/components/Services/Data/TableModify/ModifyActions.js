@@ -32,9 +32,14 @@ import {
   getTableCustomRootFields,
   getTableCustomColumnNames,
   getTableDef,
+  getTableCustomName,
   generateTableDef,
   dataSource,
 } from '../../../../dataSources';
+import {
+  getRunSqlQuery,
+  getSetTableEnumQuery,
+} from '../../../Common/utils/v1QueryUtils';
 import {
   convertArrayToJson,
   sanitiseRootFields,
@@ -46,14 +51,12 @@ import {
 } from '../../../Common/utils/routesUtils';
 import { exportMetadata } from '../../../../metadata/actions';
 import {
-  getSetTableEnumQuery,
   getTrackTableQuery,
   getUntrackTableQuery,
   getAddComputedFieldQuery,
   getDropComputedFieldQuery,
   getSetCustomRootFieldsQuery,
 } from '../../../../metadata/queryUtils';
-import { getRunSqlQuery } from '../../../Common/utils/v1QueryUtils';
 import { getColumnUpdateMigration } from '../../../../utils/migration/utils';
 import Migration from '../../../../utils/migration/Migration';
 
@@ -91,6 +94,7 @@ const TOGGLE_ENUM = 'ModifyTable/TOGGLE_ENUM';
 const TOGGLE_ENUM_SUCCESS = 'ModifyTable/TOGGLE_ENUM_SUCCESS';
 const TOGGLE_ENUM_FAILURE = 'ModifyTable/TOGGLE_ENUM_FAILURE';
 
+const MODIFY_TABLE_CUSTOM_NAME = 'ModifyTable/MODIFY_TABLE_CUSTOM_NAME';
 const MODIFY_ROOT_FIELD = 'ModifyTable/MODIFY_ROOT_FIELD';
 const SET_CUSTOM_ROOT_FIELDS = 'ModifyTable/SET_CUSTOM_ROOT_FIELDS';
 
@@ -118,6 +122,11 @@ const setForeignKeys = fks => ({
 const modifyRootFields = rootFields => ({
   type: MODIFY_ROOT_FIELD,
   data: rootFields,
+});
+
+const modifyTableCustomName = customName => ({
+  type: MODIFY_TABLE_CUSTOM_NAME,
+  data: customName,
 });
 
 const editColumn = (column, key, value) => ({
@@ -282,9 +291,9 @@ export const setCustomRootFields = successCb => (dispatch, getState) => {
     allSchemas: allTables,
     currentTable: tableName,
     currentSchema: schemaName,
-    currentDataSource,
-    modify: { rootFieldsEdit: newRootFields },
+    modify: { rootFieldsEdit: newRootFields, custom_name: customName },
   } = getState().tables;
+  const { currentDataSource } = getState().tables;
 
   dispatch({ type: SET_CUSTOM_ROOT_FIELDS });
 
@@ -292,6 +301,7 @@ export const setCustomRootFields = successCb => (dispatch, getState) => {
 
   const table = findTable(allTables, tableDef);
 
+  const existingCustomName = getTableCustomName(table);
   const existingRootFields = getTableCustomRootFields(table);
   const existingCustomColumnNames = getTableCustomColumnNames(table);
   const migration = new Migration();
@@ -301,12 +311,14 @@ export const setCustomRootFields = successCb => (dispatch, getState) => {
       tableDef,
       sanitiseRootFields(newRootFields),
       existingCustomColumnNames,
+      customName,
       currentDataSource
     ),
     getSetCustomRootFieldsQuery(
       tableDef,
       existingRootFields,
       existingCustomColumnNames,
+      existingCustomName,
       currentDataSource
     )
   );
@@ -1969,6 +1981,7 @@ export const setViewCustomColumnNames = (
   const viewDef = generateTableDef(viewName, schemaName);
   const view = findTable(getState().tables.allSchemas, viewDef);
 
+  const existingCustomName = getTableCustomName(view);
   const existingCustomRootFields = getTableCustomRootFields(view);
   const existingColumnNames = getTableCustomColumnNames(view);
 
@@ -1979,12 +1992,14 @@ export const setViewCustomColumnNames = (
       viewDef,
       existingCustomRootFields,
       sanitiseColumnNames(customColumnNames),
+      existingCustomName || null,
       source
     ),
     getSetCustomRootFieldsQuery(
       viewDef,
       existingCustomRootFields,
       existingColumnNames,
+      existingCustomName,
       source
     )
   );
@@ -2045,6 +2060,7 @@ export {
   TOGGLE_ENUM_FAILURE,
   MODIFY_ROOT_FIELD,
   SET_CHECK_CONSTRAINTS,
+  MODIFY_TABLE_CUSTOM_NAME,
   changeTableName,
   fetchViewDefinition,
   handleMigrationErrors,
@@ -2079,4 +2095,5 @@ export {
   toggleEnumFailure,
   modifyRootFields,
   setCheckConstraints,
+  modifyTableCustomName,
 };
