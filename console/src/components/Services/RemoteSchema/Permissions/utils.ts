@@ -19,7 +19,6 @@ import {
   GraphQLType,
   GraphQLFieldMap,
 } from 'graphql';
-import { TypeMap } from 'graphql/type/schema';
 import { isJsonString } from '../../../Common/utils/jsUtils';
 import {
   PermissionEdit,
@@ -27,7 +26,6 @@ import {
   FieldType,
   argTreeType,
   Permissions,
-  CustomFieldType,
 } from './types';
 
 export const findRemoteSchemaPermission = (
@@ -328,7 +326,7 @@ export const getScalarTypes = (schema: GraphQLSchema) => {
 // method that tells whether the field is nested or not, if nested it returns the children
 export const getChildArguments = (v: GraphQLInputField): ChildArgumentType => {
   // TODO check if there are any more possible types with children / expandable views
-  if (typeof v === 'string') return { children: null }; // value field
+  if (typeof v === 'string') return {}; // value field
   if (v?.type instanceof GraphQLInputObjectType && v?.type?.getFields)
     return {
       children: v?.type?.getFields(),
@@ -413,19 +411,22 @@ export const getChildArguments = (v: GraphQLInputField): ChildArgumentType => {
 
 // arg => {id:{_eq:1}}
 // argDef => GQL type
-const serialiseArgs = (args, argDef) => {
+
+const serialiseArgs = (args: argTreeType, argDef: GraphQLInputField) => {
   // console.log(args, argDef);
   let res = '{';
   const { children } = getChildArguments(argDef);
   Object.entries(args).forEach(([key, value]) => {
     if (!value) return;
+    const gqlArgs = children as GraphQLInputFieldMap;
+    const gqlArg = gqlArgs[key];
 
     // console.log({ key, value, children, childrenType });
     if (value && typeof value === 'string') {
       let val;
       if (
-        children[key] &&
-        children[key].type instanceof GraphQLEnumType &&
+        gqlArg &&
+        gqlArg.type instanceof GraphQLEnumType &&
         !value.startsWith('x-hasura')
       ) {
         val = `${key}:${value}`; // no double quotes
@@ -439,15 +440,11 @@ const serialiseArgs = (args, argDef) => {
         res = `${res} , ${val}`;
       }
     } else if (value && typeof value === 'object') {
-      if (children && typeof children === 'object' && children[key])
-        res = `${res} ${key}: ${serialiseArgs(value, children[key])}`;
+      if (children && typeof children === 'object' && gqlArg)
+        res = `${res} ${key}: ${serialiseArgs(value, gqlArg)}`;
     }
   });
   return `${res}}`;
-  // // console.log(args)
-  // window.getChildArguments = getChildArguments;
-  // // console.log(getChildArguments(argDef))
-  // return JSON.stringify(args);
 };
 
 /**
@@ -486,7 +483,7 @@ const getSDLField = (
     if (!typeName.includes('enum')) {
       if (f?.args) {
         fieldStr = `${fieldStr}(`;
-        Object.values(f.args).forEach((arg: Record<string, any>) => {
+        Object.values(f.args).forEach((arg: GraphQLInputField) => {
           let valueStr = ``;
           if (argTree && argTree[f.name] && argTree[f.name][arg.name]) {
             const argName = argTree[f.name][arg.name];
@@ -569,7 +566,7 @@ export const generateSDL = (
 };
 
 type ChildArgumentType = {
-  children?: GraphQLInputFieldMap | GraphQLEnumValue[] | null;
+  children?: GraphQLInputFieldMap | GraphQLEnumValue[];
   path?: string;
   childrenType?: GraphQLType;
 };

@@ -4,7 +4,7 @@ import PermTableHeader from '../../../Common/Permissions/TableHeader';
 import PermTableBody from '../../../Common/Permissions/TableBody';
 import { permissionsSymbols } from '../../../Common/Permissions/PermissionSymbols';
 import { findRemoteSchemaPermission } from './utils';
-import { RolePermissions, PermissionsTableProps } from './types';
+import { RolePermissions, PermissionsTableProps, Permissions } from './types';
 
 const queryTypes = ['Permission'];
 
@@ -23,7 +23,7 @@ const PermissionsTable: React.FC<PermissionsTableProps> = ({ ...props }) => {
     permCloseEdit,
   } = props;
 
-  const allPermissions = currentRemoteSchema.permissions;
+  const allPermissions = currentRemoteSchema.permissions as Permissions[];
 
   const headings = ['Role', ...queryTypes];
 
