@@ -91,7 +91,7 @@ export type PermissionsTableProps = {
   allRoles: string[];
   currentRemoteSchema: {
     name: string;
-    permissions: Record<string, string>;
+    permissions: Permissions[];
   };
   bulkSelect: string[];
   readOnlyMode: boolean;
