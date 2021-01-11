@@ -421,15 +421,17 @@ const serialiseArgs = (args: argTreeType, argDef: GraphQLInputField) => {
     const gqlArgs = children as GraphQLInputFieldMap;
     const gqlArg = gqlArgs[key];
 
-    // console.log({ key, value, children, childrenType });
-    if (value && typeof value === 'string') {
+    if (value && (typeof value === 'string' || typeof value === 'number')) {
       let val;
       if (
         gqlArg &&
         gqlArg.type instanceof GraphQLEnumType &&
+        typeof value === 'string' &&
         !value.startsWith('x-hasura')
       ) {
         val = `${key}:${value}`; // no double quotes
+      } else if (typeof value === 'number') {
+        val = `${key}: ${value} `;
       } else {
         val = `${key}:"${value}"`;
       }
@@ -440,8 +442,10 @@ const serialiseArgs = (args: argTreeType, argDef: GraphQLInputField) => {
         res = `${res} , ${val}`;
       }
     } else if (value && typeof value === 'object') {
-      if (children && typeof children === 'object' && gqlArg)
-        res = `${res} ${key}: ${serialiseArgs(value, gqlArg)}`;
+      if (children && typeof children === 'object' && gqlArg) {
+        if (res === '{') res = `${res} ${key}: ${serialiseArgs(value, gqlArg)}`;
+        else res = `${res} , ${key}: ${serialiseArgs(value, gqlArg)}`;
+      }
     }
   });
   return `${res}}`;
