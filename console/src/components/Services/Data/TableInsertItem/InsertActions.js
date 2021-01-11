@@ -37,16 +37,20 @@ const insertItemAsMigration = (
   columns,
   callback
 ) => (dispatch, getState) => {
+  const source = getState().tables.currentDataSource;
+
   const upQuery = getInsertUpQuery(
     { name: tableInfo.name, schema: tableInfo.schema },
     insertedData,
-    columns
+    columns,
+    source
   );
   const downQuery = getInsertDownQuery(
     { name: tableInfo.name, schema: tableInfo.schema },
     insertedData,
     primaryKeyInfo,
-    columns
+    columns,
+    source
   );
 
   const migrationName = `insert_into_${tableInfo.schema}_${tableInfo.name}`;
@@ -153,8 +157,8 @@ const insertItem = (tableName, colValues, isMigration = false) => {
     }
     const reqBody = {
       type: 'insert',
-      source: currentDataSource,
       args: {
+        source: currentDataSource,
         table: tableDef,
         objects: [insertObject],
         returning,

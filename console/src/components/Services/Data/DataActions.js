@@ -469,13 +469,20 @@ export const getDatabaseSchemasInfo = (sourceType = 'postgres', sourceName) => (
         return {};
       }
 
-      const allTrackedTables = getTablesFromAllSources(getState()).map(
-        t => t.table.name
+      const trackedTables = getTablesFromAllSources(getState()).filter(
+        ({ source }) => source === sourceName
       );
       const schemasInfo = {};
 
       JSON.parse(result[1]).forEach(i => {
-        if (!allTrackedTables.includes(i.table_name)) return;
+        if (
+          !trackedTables.some(
+            t =>
+              t.table.name === i.table_name && t.table.schema === i.table_schema
+          )
+        ) {
+          return;
+        }
         schemasInfo[i.table_schema] = {
           ...schemasInfo[i.table_schema],
           [i.table_name]: i.columns,

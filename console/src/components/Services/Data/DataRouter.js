@@ -131,8 +131,8 @@ const makeDataRouter = (
 const dataRouterUtils = (connect, store, composeOnEnterHooks) => {
   const requireSource = (nextState, replaceState, cb) => {
     store.dispatch(exportMetadata()).then(state => {
-      const sources = state?.metadata?.metadataObject?.sources;
-      const currentSource = state.tables?.currentDataSource;
+      const sources = state?.metadata?.metadataObject?.sources || [];
+      const currentSource = state?.tables?.currentDataSource || '';
 
       if (sources.length && !currentSource) {
         store.dispatch({

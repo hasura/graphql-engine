@@ -105,12 +105,8 @@ export const verifyCustomFnResult = () => {
   cy.get('.execute-button').click();
   // verify if article is present
 
-  // article 1
   cy.get('.cm-property').contains('title');
-  cy.get('.cm-string').contains('hasura is awesome');
-  // article 2
   cy.get('.cm-property').contains('content');
-  cy.get('.cm-string').contains('hasura <3 the cloud');
 
   cy.wait(2000);
 };

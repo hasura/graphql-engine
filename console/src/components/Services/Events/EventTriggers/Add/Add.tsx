@@ -56,7 +56,7 @@ const Add: React.FC<Props> = props => {
           return {
             name: c,
             enabled: true,
-            type: '', // todo — updated types, make it optional
+            type: '', // todo — update types, make it optional
           };
         })
       );
@@ -251,9 +251,8 @@ const Add: React.FC<Props> = props => {
               className={`${styles.selectTrigger} form-control`}
               value={table.schema}
             >
-              <option value="">Select schema</option>
               {Object.keys(databaseInfo).map(s => (
-                <option value={s} key={s} selected={s === table.schema}>
+                <option value={s} key={s}>
                   {s}
                 </option>
               ))}

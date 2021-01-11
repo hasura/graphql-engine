@@ -16,8 +16,8 @@ export const getRunSqlQuery = (
 ) => {
   return {
     type: 'run_sql',
-    source,
     args: {
+      source,
       sql: terminateSql(sql),
       cascade,
       read_only,
@@ -92,7 +92,8 @@ export const createPKClause = (
 export const getInsertUpQuery = (
   tableDef: FixMe,
   insertion: Record<string, any>,
-  columns: BaseTableColumn[]
+  columns: BaseTableColumn[],
+  source: string
 ) => {
   const columnValues = Object.keys(insertion)
     .map(key => `"${key}"`)
@@ -104,7 +105,7 @@ export const getInsertUpQuery = (
 
   const sql = `INSERT INTO "${tableDef.schema}"."${tableDef.name}"(${columnValues}) VALUES (${values});`;
 
-  return getRunSqlQuery(sql, '' /** TODO: data-sources */);
+  return getRunSqlQuery(sql, source);
 };
 
 export const convertPGPrimaryKeyValue = (value: any, pk: string): string => {
@@ -127,7 +128,8 @@ export const getInsertDownQuery = (
   tableDef: FixMe,
   insertion: Record<string, any>,
   primaryKeyInfo: any,
-  columns: BaseTableColumn[]
+  columns: BaseTableColumn[],
+  source: string
 ) => {
   const whereClause = createPKClause(primaryKeyInfo, insertion, columns);
   const clauses = Object.keys(whereClause).map(pk =>
@@ -136,7 +138,7 @@ export const getInsertDownQuery = (
   const condition = clauses.join(' AND ');
   const sql = `DELETE FROM "${tableDef.schema}"."${tableDef.name}" WHERE ${condition};`;
 
-  return getRunSqlQuery(sql, '' /** TODO */);
+  return getRunSqlQuery(sql, source);
 };
 
 type validOperators =
@@ -175,8 +177,8 @@ export const getDeleteQuery = (
 ) => {
   return {
     type: 'delete',
-    source,
     args: {
+      source,
       table: {
         name: tableName,
         schema: schemaName,
@@ -202,8 +204,8 @@ export const getEnumOptionsQuery = (
   currentSource: string
 ) => ({
   type: 'select',
-  source: currentSource,
   args: {
+    source: currentSource,
     table: {
       name: request.enumTableName,
       schema: currentSchema,
@@ -226,8 +228,8 @@ export const getSelectQuery = (
 ) => {
   return {
     type,
-    source: currentDataSource,
     args: {
+      source: currentDataSource,
       table,
       columns,
       where,

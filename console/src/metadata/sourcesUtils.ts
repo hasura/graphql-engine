@@ -7,7 +7,7 @@ export const addSource = (
     dbUrl: string;
     connection_pool_settings?: {
       max_connections?: number;
-      idle_timeout?: number; // in seconds
+      idle_timeout?: number;
       retries?: number;
     };
   }
@@ -18,8 +18,12 @@ export const addSource = (
     type: `${typePrefix}add_source`,
     args: {
       name: payload.name,
-      database_url: payload.dbUrl,
-      connection_pool_settings: payload.connection_pool_settings,
+      configuration: {
+        connection_info: {
+          database_url: payload.dbUrl,
+          pool_settings: payload.connection_pool_settings,
+        },
+      },
     },
   };
 };

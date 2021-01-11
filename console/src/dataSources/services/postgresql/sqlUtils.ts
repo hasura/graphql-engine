@@ -1183,16 +1183,15 @@ SELECT
 	COALESCE(json_agg(row_to_json(info)), '[]'::JSON)
 FROM (
 	SELECT
-		table_name,
-		table_schema,
-		ARRAY_AGG("column_name") as columns
+		table_name::text,
+		table_schema::text,
+		ARRAY_AGG("column_name"::text) as columns
 	FROM
 		information_schema.columns
 	WHERE
-		table_schema NOT in('information_schema', 'pg_catalog')
+		table_schema NOT in('information_schema', 'pg_catalog', 'hdb_catalog')
 		AND table_schema NOT LIKE 'pg_toast%'
 		AND table_schema NOT LIKE 'pg_temp_%'
-		AND table_schema NOT LIKE 'hdb_catalog'
 	GROUP BY
 		table_name,
 		table_schema) AS info;
