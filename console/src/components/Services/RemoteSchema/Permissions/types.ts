@@ -119,6 +119,13 @@ export type RolePermissions = {
   isNewRole?: boolean;
 };
 
+export type Permissions = {
+  definition: { schema: string };
+  role_name: string;
+  remote_schema_name: string;
+  comment: string | null;
+};
+
 // TODO generic types -> seperate this
 
 export type CustomFieldType = {
@@ -144,7 +151,7 @@ export type PermWrapperProps = {
 };
 
 export type BulkSelectProps = {
-  bulkSelect: any[];
+  bulkSelect: string[];
   permRemoveMultipleRoles: () => void;
 };
 

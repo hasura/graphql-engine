@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import Helmet from 'react-helmet';
-import * as GQL from 'graphql';
+import { buildSchema, GraphQLSchema } from 'graphql';
 import PermissionsTable from './PermissionsTable';
 import PermissionEditor from './PermissionEditor';
 import { getConfirmation } from '../../../Common/utils/jsUtils';
@@ -16,10 +16,10 @@ const BulkSelect: React.FC<BulkSelectProps> = ({
   permRemoveMultipleRoles,
 }) => {
   const getSelectedRoles = () => {
-    return bulkSelect.map((r: any) => {
+    return bulkSelect.map((role: string) => {
       return (
-        <span key={r} className={styles.add_pad_right}>
-          <b>{r}</b>{' '}
+        <span key={role} className={styles.add_pad_right}>
+          <b>{role}</b>{' '}
         </span>
       );
     });
@@ -92,12 +92,12 @@ const Permissions: React.FC<PermissionsProps> = ({ allRoles, ...props }) => {
   useEffect(() => {
     if (!schema) return;
     const isNewRole: boolean = permissionEdit.isNewRole;
-    let permissionsSchema: any = null;
+    let permissionsSchema: GraphQLSchema | null = null;
 
     if (!isNewRole && !!schemaDefinition) {
       try {
         const newDef = addPresetDefinition(schemaDefinition);
-        permissionsSchema = GQL.buildSchema(newDef);
+        permissionsSchema = buildSchema(newDef);
       } catch (err) {
         // TODO test all posibilities that can reach this catch block
         console.log(err);

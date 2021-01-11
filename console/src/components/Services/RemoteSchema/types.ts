@@ -1,12 +1,5 @@
 import { HeaderState } from '../../Common/Layout/ReusableHeader/types';
-import { RemoteSchemaPermissionsState } from './Permissions/types';
-
-type Permissions = {
-  definition: { schema: string };
-  role_name: string;
-  remote_schema_name: string;
-  comment: string | null;
-};
+import { RemoteSchemaPermissionsState, Permissions } from './Permissions/types';
 
 type RemoteSchemaHeaders = {
   name: string;

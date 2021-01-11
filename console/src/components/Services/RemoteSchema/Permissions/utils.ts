@@ -17,16 +17,23 @@ import {
   GraphQLInputFieldMap,
   GraphQLEnumValue,
   GraphQLType,
+  GraphQLFieldMap,
 } from 'graphql';
+import { TypeMap } from 'graphql/type/schema';
 import { isJsonString } from '../../../Common/utils/jsUtils';
 import {
   PermissionEdit,
   DatasourceObject,
   FieldType,
   argTreeType,
+  Permissions,
+  CustomFieldType,
 } from './types';
 
-export const findRemoteSchemaPermission = (perms, role) => {
+export const findRemoteSchemaPermission = (
+  perms: Permissions[],
+  role: string
+) => {
   return perms.find(p => p.role_name === role);
 };
 
@@ -62,7 +69,7 @@ export const getDropRemoteSchemaPermissionQuery = (
 
 export const getRemoteSchemaPermissionQueries = (
   permissionEdit: PermissionEdit,
-  allPermissions: any,
+  allPermissions: Permissions[],
   remoteSchemaName: string,
   schemaDefinition: string
 ) => {
@@ -109,7 +116,7 @@ export const getRemoteSchemaPermissionQueries = (
       getCreateRemoteSchemaPermissionQuery(
         { role: permRole },
         remoteSchemaName,
-        existingPerm.definition
+        existingPerm.definition.schema
       )
     );
   }
@@ -131,6 +138,13 @@ export const updateBulkSelect = (
   return bulkRes;
 };
 
+/**
+ * Sets query_root and mutation_root in UI tree.
+ * @param introspectionSchema Remote Schema introspection schema.
+ * @param permissionsSchema Permissions coming from saved role.
+ * @param typeS Type of args.
+ * @returns Array of schema fields (query_root and mutation_root)
+ */
 export const getTree = (
   introspectionSchema: GraphQLSchema | null,
   permissionsSchema: GraphQLSchema | null,
@@ -141,7 +155,10 @@ export const getTree = (
       ? introspectionSchema!.getQueryType()?.getFields()
       : introspectionSchema!.getMutationType()?.getFields();
 
-  let permissionsSchemaFields: any = null; // TODO use ternary operator
+  let permissionsSchemaFields:
+    | GraphQLFieldMap<any, any, Record<string, any>>
+    | null
+    | undefined = null; // TODO use ternary operator
   if (permissionsSchema !== null) {
     permissionsSchemaFields =
       typeS === 'QUERY'
@@ -152,12 +169,17 @@ export const getTree = (
   if (introspectionSchemaFields) {
     return Object.values(introspectionSchemaFields).map(
       ({ name, args: argArray, type, ...rest }: any) => {
-        let checked = true;
+        let checked = false;
         const args = argArray.reduce((p: argTreeType, c: FieldType) => {
+          console.log({ ...p, [c.name]: { ...c } });
           return { ...p, [c.name]: { ...c } };
         }, {});
-        if (permissionsSchema !== null && !(name in permissionsSchemaFields)) {
-          checked = false;
+        if (
+          permissionsSchema !== null &&
+          permissionsSchemaFields &&
+          name in permissionsSchemaFields
+        ) {
+          checked = true;
         }
         return { name, checked, args, return: type.toString(), ...rest };
       }
@@ -166,19 +188,24 @@ export const getTree = (
   return [];
 };
 
+/**
+ * Sets input and object types in UI tree.
+ * @param introspectionSchema - Remote schema introspection schema.
+ * @param permissionsSchema - Permissions coming from saved role.
+ * @returns Array of all input types and object types
+ */
 export const getType = (
   introspectionSchema: GraphQLSchema | null,
   permissionsSchema: GraphQLSchema | null
 ) => {
   const introspectionSchemaFields = introspectionSchema!.getTypeMap();
-  // const permissionsSchemaFields =
-  //   permissionsSchema !== null ? permissionsSchema!.getTypeMap() : null;
+
   let permissionsSchemaFields: any = null; // TODO use ternary operator
   if (permissionsSchema !== null) {
     permissionsSchemaFields = permissionsSchema!.getTypeMap();
   }
 
-  const types: any[] = [];
+  const types: DatasourceObject[] = [];
 
   Object.entries(introspectionSchemaFields).forEach(([key, value]: any) => {
     if (
@@ -209,24 +236,27 @@ export const getType = (
 
     const childArray: any[] = [];
     const fieldVal = value.getFields();
-    let permissionsFieldVal: any = {};
-    let isField = true;
+    let permissionsFieldVal: GraphQLFieldMap<any, any, any> = {};
+    let isFieldPresent = true;
 
-    if (permissionsSchema !== null) {
+    // Check if the type is present in the permission schema coming from user.
+    if (permissionsSchema !== null && permissionsSchemaFields !== null) {
       if (key in permissionsSchemaFields) {
         permissionsFieldVal = permissionsSchemaFields[key].getFields();
       } else {
-        isField = false;
+        isFieldPresent = false;
       }
     }
 
+    // checked is true when type is present and the fields are present in type
     Object.entries(fieldVal).forEach(([k, v]) => {
-      let checked = true;
+      let checked = false;
       if (
         permissionsSchema !== null &&
-        (!(k in permissionsFieldVal) || !isField)
+        isFieldPresent &&
+        k in permissionsFieldVal
       ) {
-        checked = false;
+        checked = true;
       }
       childArray.push({
         name: v.name,
@@ -241,16 +271,21 @@ export const getType = (
   return types;
 };
 
+/**
+ * Gets all enum types from introspection schema
+ * @param schema - Remote schema introspection schema.
+ * @returns Array of all enum types.
+ */
 const getEnumTypes = (schema: GraphQLSchema) => {
   const fields = schema.getTypeMap();
-  const types: any[] = [];
+  const types: DatasourceObject[] = [];
   Object.entries(fields).forEach(([, value]: any) => {
     if (!(value instanceof GraphQLEnumType)) return;
     const name = value.inspect();
 
     if (name.includes('__')) return; // TODO change this check
 
-    const type: any = {};
+    const type: DatasourceObject = { name: ``, children: [] };
     type.name = `enum ${name}`;
 
     const childArray: any[] = [];
@@ -270,6 +305,11 @@ const getEnumTypes = (schema: GraphQLSchema) => {
   return types;
 };
 
+/**
+ * Gets all scalar types from introspection schema
+ * @param schema - Remote schema introspection schema.
+ * @returns Array of all scalar types.
+ */
 export const getScalarTypes = (schema: GraphQLSchema) => {
   const fields = schema.getTypeMap();
   const types: string[] = [];
@@ -283,11 +323,6 @@ export const getScalarTypes = (schema: GraphQLSchema) => {
     types.push(type);
   });
   return types;
-};
-
-const checkNullType = (type: DatasourceObject) => {
-  const isChecked = (element: FieldType) => element.checked;
-  return type.children.some(isChecked);
 };
 
 // method that tells whether the field is nested or not, if nested it returns the children
@@ -415,10 +450,24 @@ const serialiseArgs = (args, argDef) => {
   // return JSON.stringify(args);
 };
 
+/**
+ * Checks if the checkbox is checked / unchecked.
+ */
+const checkNullType = (type: DatasourceObject) => {
+  const isChecked = (element: FieldType) => element.checked;
+  return type.children.some(isChecked);
+};
+
+/**
+ * Builds the SDL string for each field / type.
+ * @param type - Data source object containing a schema field.
+ * @param argTree - Arguments tree in case of types with argument presets.
+ * @returns SDL string for passed field.
+ */
 const getSDLField = (
   type: DatasourceObject,
   argTree: Record<string, any> | null
-) => {
+): string => {
   if (!checkNullType(type)) return '';
 
   let result = ``;
@@ -437,8 +486,7 @@ const getSDLField = (
     if (!typeName.includes('enum')) {
       if (f?.args) {
         fieldStr = `${fieldStr}(`;
-        // console.log('f.args >>>'   ,f.args);
-        Object.values(f.args).forEach((arg: any) => {
+        Object.values(f.args).forEach((arg: Record<string, any>) => {
           let valueStr = ``;
           if (argTree && argTree[f.name] && argTree[f.name][arg.name]) {
             const argName = argTree[f.name][arg.name];
@@ -481,6 +529,11 @@ const getSDLField = (
   return `${result}\n}`;
 };
 
+/**
+ * Gets enum types and scalar types SDL string from introspection schema.
+ * @param schema - Remote schema introspection schema.
+ * @returns String having all enum types and scalar types.
+ */
 export const generateConstantTypes = (schema: GraphQLSchema): string => {
   let result = ``;
   const enumTypes = getEnumTypes(schema);
@@ -495,6 +548,11 @@ export const generateConstantTypes = (schema: GraphQLSchema): string => {
   return result;
 };
 
+/**
+ * Generate SDL string having input types and object types.
+ * @param types - Remote schema introspection schema.
+ * @returns String having all enum types and scalar types.
+ */
 export const generateSDL = (
   types: DatasourceObject[],
   argTree: Record<string, any>
@@ -509,6 +567,7 @@ export const generateSDL = (
 
   return result;
 };
+
 type ChildArgumentType = {
   children?: GraphQLInputFieldMap | GraphQLEnumValue[] | null;
   path?: string;
