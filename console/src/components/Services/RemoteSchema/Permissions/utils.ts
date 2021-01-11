@@ -169,7 +169,6 @@ export const getTree = (
       ({ name, args: argArray, type, ...rest }: any) => {
         let checked = false;
         const args = argArray.reduce((p: argTreeType, c: FieldType) => {
-          console.log({ ...p, [c.name]: { ...c } });
           return { ...p, [c.name]: { ...c } };
         }, {});
         if (
@@ -361,12 +360,6 @@ export const getChildArguments = (v: GraphQLInputField): ChildArgumentType => {
       v?.type?.ofType?.ofType
     ) {
       const type = v?.type?.ofType;
-      if (type?.ofType instanceof GraphQLEnumType)
-        return {
-          children: type?.ofType?.getValues() as GraphQLEnumValue[],
-          path: 'type.ofType.ofType',
-          childrenType: type?.ofType,
-        };
       if (type?.ofType instanceof GraphQLInputObjectType)
         return {
           children: type?.ofType?.getFields() as GraphQLInputFieldMap,
@@ -393,12 +386,6 @@ export const getChildArguments = (v: GraphQLInputField): ChildArgumentType => {
         v?.type?.ofType?.ofType?.ofType
       ) {
         const type = v?.type?.ofType?.ofType;
-        if (type?.ofType instanceof GraphQLEnumType)
-          return {
-            children: type?.ofType?.getValues() as GraphQLEnumValue[],
-            path: 'type.ofType.ofType.ofType',
-            childrenType: type?.ofType,
-          };
         if (type?.ofType instanceof GraphQLInputObjectType)
           return {
             children: type?.ofType?.getFields() as GraphQLInputFieldMap,
@@ -417,7 +404,10 @@ const serialiseArgs = (args: argTreeType, argDef: GraphQLInputField) => {
   let res = '{';
   const { children } = getChildArguments(argDef);
   Object.entries(args).forEach(([key, value]) => {
-    if (!value) return;
+    if (!value || !children) {
+      // if(!children)console.log(key, value, children, argDef,args);
+      return;
+    }
     const gqlArgs = children as GraphQLInputFieldMap;
     const gqlArg = gqlArgs[key];
 
@@ -491,23 +481,9 @@ const getSDLField = (
           let valueStr = ``;
           if (argTree && argTree[f.name] && argTree[f.name][arg.name]) {
             const argName = argTree[f.name][arg.name];
-            const typeOfArg = arg.type.inspect();
             let unquoted;
-            let isSessionVar = false;
-
-            if (typeof argName === 'string') {
-              isSessionVar = argName.startsWith('x-hasura');
-            }
-
-            if (
-              typeOfArg === 'string' ||
-              isSessionVar ||
-              typeof argName === 'object'
-            ) {
+            if (typeof argName === 'object') {
               unquoted = serialiseArgs(argName, arg);
-              // const jsonStr = JSON.stringify(argName);
-              // unquoted = jsonStr.replace(/"([^"]+)":/g, '$1:');
-              // console.log(argTree, f, arg, f.name, arg.name);
             } else {
               unquoted = argName;
             }
