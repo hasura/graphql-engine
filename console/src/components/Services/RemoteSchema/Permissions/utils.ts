@@ -213,7 +213,7 @@ export const getType = (
     )
       return;
 
-    if (name.includes('__')) return; // TODO change this check
+    // if (name.includes('__')) return; // TODO change this check
 
     const type: DatasourceObject = {
       name: ``,
@@ -421,6 +421,7 @@ const getSDLField = (
   let result = ``;
   const typeName: string = type.name;
   result = `${typeName}{`;
+
   // if (type.name === 'query_root' || type.name === 'mutation_root')
   //   result = `type ${typeName}{`;
   // else result = `${typeName}{`;
@@ -490,8 +491,11 @@ export const generateConstantTypes = (schema: GraphQLSchema): string => {
  */
 export const generateSDL = (
   types: DatasourceObject[],
-  argTree: Record<string, any>
+  argTree: Record<string, any>,
+  schema: GraphQLSchema
 ) => {
+  console.log('>> called');
+
   let result = `schema{
   query: query_root
   mutation: mutation_root
@@ -500,6 +504,7 @@ export const generateSDL = (
     result = `${result}\n${getSDLField(type, argTree)}\n`;
   });
 
+  result += generateConstantTypes(schema);
   return result;
 };
 

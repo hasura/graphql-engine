@@ -38,7 +38,11 @@ const PermissionEditor: React.FC<PermissionEditorProps> = ({ ...props }) => {
     // console.log('changed--->', state);
     if (!state) return;
     setResultString(
-      generateSDL(state as DatasourceObject[], argTree as Record<string, any>)
+      generateSDL(
+        state as DatasourceObject[],
+        argTree as Record<string, any>,
+        schema as GraphQLSchema
+      )
     );
     // setSchemaDefinition(resultString);
   }, [state, argTree]);
@@ -72,9 +76,10 @@ const PermissionEditor: React.FC<PermissionEditorProps> = ({ ...props }) => {
   };
 
   const saveFunc = () => {
-    const finalString =
-      resultString + generateConstantTypes(schema as GraphQLSchema);
-    setSchemaDefinition(finalString);
+    // const finalString =
+    //   resultString + generateConstantTypes(schema as GraphQLSchema);
+    // setSchemaDefinition(finalString);
+    setSchemaDefinition(resultString);
     save();
   };
 
