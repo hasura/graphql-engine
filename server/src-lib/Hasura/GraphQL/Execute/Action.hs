@@ -26,6 +26,7 @@ import qualified Data.CaseInsensitive                        as CI
 import qualified Data.Environment                            as Env
 import qualified Data.HashMap.Strict                         as Map
 import qualified Data.HashSet                                as Set
+import qualified Data.IntMap                                 as IntMap
 import qualified Data.Text                                   as T
 import qualified Database.PG.Query                           as Q
 import qualified Language.GraphQL.Draft.Syntax               as G
@@ -202,8 +203,9 @@ resolveActionExecution env logger userInfo annAction execContext = do
             toTxtValue $ ColumnValue (ColumnScalar PGJSONB) $ PGValJSONB $ Q.JSONB $ J.toJSON webhookRes
           selectAstUnresolved = processOutputSelectionSet webhookResponseExpression
                                 outputType definitionList annFields stringifyNum
-      (astResolved, _expectedVariables) <- flip runStateT Set.empty $ RS.traverseAnnSimpleSelect prepareWithoutPlan selectAstUnresolved
-      pure $ executeActionInDb sourceConfig astResolved
+      (astResolved, finalPlanningSt) <- flip runStateT initPlanningSt $ RS.traverseAnnSimpleSelect prepareWithPlan selectAstUnresolved
+      let prepArgs = fmap fst $ IntMap.elems $ withUserVars (_uiSession userInfo) $ _psPrepped finalPlanningSt
+      pure $ executeActionInDb sourceConfig astResolved prepArgs
   where
     AnnActionExecution actionName outputType annFields inputPayload
       outputFields definitionList resolvedWebhook confHeaders
@@ -211,8 +213,8 @@ resolveActionExecution env logger userInfo annAction execContext = do
     ActionExecContext manager reqHeaders sessionVariables = execContext
 
 
-    executeActionInDb :: SourceConfig 'Postgres -> RS.AnnSimpleSel 'Postgres -> ActionExecution
-    executeActionInDb sourceConfig astResolved = ActionExecution do
+    executeActionInDb :: SourceConfig 'Postgres -> RS.AnnSimpleSel 'Postgres -> [Q.PrepArg] -> ActionExecution
+    executeActionInDb sourceConfig astResolved prepArgs = ActionExecution do
       let (astResolvedWithoutRemoteJoins,maybeRemoteJoins) = RJ.getRemoteJoins astResolved
           jsonAggType = mkJsonAggSelect outputType
       liftEitherM $ runExceptT $ runLazyTx (_pscExecCtx sourceConfig) Q.ReadOnly $
@@ -220,9 +222,9 @@ resolveActionExecution env logger userInfo annAction execContext = do
           Just remoteJoins ->
             let query = Q.fromBuilder $ toSQL $
                         RS.mkSQLSelect jsonAggType astResolvedWithoutRemoteJoins
-            in RJ.executeQueryWithRemoteJoins env manager reqHeaders userInfo query [] remoteJoins
+            in RJ.executeQueryWithRemoteJoins env manager reqHeaders userInfo query prepArgs remoteJoins
           Nothing ->
-            liftTx $ asSingleRowJsonResp (Q.fromBuilder $ toSQL $ RS.mkSQLSelect jsonAggType astResolved) []
+            liftTx $ asSingleRowJsonResp (Q.fromBuilder $ toSQL $ RS.mkSQLSelect jsonAggType astResolved) prepArgs
 
 
 -- | Build action response from the Webhook JSON response when there are no relationships defined
