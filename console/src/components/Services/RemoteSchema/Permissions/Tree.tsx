@@ -1,12 +1,56 @@
 import React, { useCallback, useState } from 'react';
+import { GraphQLScalarType, GraphQLInputObjectType } from 'graphql';
 import { FieldType, RSPTreeComponentProps, ExpandedItems } from './types';
 import { Field } from './Field';
-import { checkTypesRecursively } from './utils';
+import { getTrimmedReturnType } from './utils';
+
+const getDeps = (field: FieldType, res = new Set<string>([])) => {
+  console.log(field);
+  if (field.return) res.add(getTrimmedReturnType(field.return));
+
+  // args
+  if (field.args)
+    Object.values(field.args).forEach(arg => {
+      // TODO filtering logic
+      if (!(arg.type instanceof GraphQLScalarType)) {
+        const subType = getTrimmedReturnType(arg.type.inspect());
+        res.add(subType);
+      }
+      console.log(arg);
+    });
+
+  if (field.type && field?.type instanceof GraphQLInputObjectType)
+    Object.values(field.type.getFields()).forEach(arg => {
+      console.log(arg)
+      // TODO filtering logic
+      if (!(arg.type instanceof GraphQLScalarType)) {
+        const subType = getTrimmedReturnType(arg.type.inspect());
+        res.add(subType);
+      }
+    });
+
+  return res;
+};
+
+const addDepFields = (list: FieldType[], field: FieldType) => {
+  const deps = getDeps(field);
+  const newList = list.map((fld: FieldType) => {
+    const newField = { ...fld };
+    if (fld.typeName && deps.has(fld.typeName))
+      if (newField.children)
+        newField.children = newField.children.map(ch => ({
+          ...ch,
+          checked: true,
+        }));
+    return newField;
+  });
+  return newList;
+};
 
 const Tree: React.FC<RSPTreeComponentProps> = ({
   list,
   setState,
-  checkTypes,
+  depth = 1,
 }) => {
   // TODO add checkbox
   // TODO create and sync tree
@@ -17,10 +61,7 @@ const Tree: React.FC<RSPTreeComponentProps> = ({
       const newList = [...list] as FieldType[];
       const target = e.target as HTMLInputElement;
       newList[ix] = { ...list[ix], checked: target.checked };
-      console.log(newList[ix]);
-      const field = newList[ix];
-      checkTypes(field.checked as boolean, field.return as string);
-      setState([...newList]);
+      setState([...newList], newList[ix]);
     },
     [setState, list]
   );
@@ -34,9 +75,12 @@ const Tree: React.FC<RSPTreeComponentProps> = ({
     [setState, list]
   );
   const setValue = useCallback(
-    ix => (newState: FieldType[]) => {
-      const newList = [...list];
+    ix => (newState: FieldType[], field?: FieldType) => {
+      console.log(newState, depth, list, field);
+      let newList = [...list];
       newList[ix] = { ...list[ix], children: [...newState] };
+      if (field) newList = addDepFields(newList, field);
+
       setState([...newList]);
     },
     [setState, list]
@@ -75,8 +119,8 @@ const Tree: React.FC<RSPTreeComponentProps> = ({
           {i.children && expandedItems[ix] && (
             <MemoizedTree
               list={i.children}
+              depth={depth + 1}
               setState={setValue(ix)}
-              checkTypes={checkTypes}
             />
           )}
         </li>

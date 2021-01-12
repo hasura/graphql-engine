@@ -133,6 +133,7 @@ export type CustomFieldType = {
   args?: GraphQLArgument[];
   checked?: boolean;
   return?: string;
+  typeName?: string;
   children?: FieldType[];
 };
 
@@ -158,8 +159,8 @@ export type BulkSelectProps = {
 
 export type RSPTreeComponentProps = {
   list: FieldType[];
-  setState: (d: FieldType[]) => void;
-  checkTypes: (isChecked: boolean, returnType: string) => void;
+  depth?: number;
+  setState: (d: FieldType[], t?: FieldType) => void;
   onExpand?: () => void;
 };
 
