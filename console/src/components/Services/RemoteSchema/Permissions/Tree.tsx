@@ -1,8 +1,13 @@
 import React, { useCallback, useState } from 'react';
 import { FieldType, RSPTreeComponentProps, ExpandedItems } from './types';
 import { Field } from './Field';
+import { checkTypesRecursively } from './utils';
 
-const Tree: React.FC<RSPTreeComponentProps> = ({ list, setState }) => {
+const Tree: React.FC<RSPTreeComponentProps> = ({
+  list,
+  setState,
+  checkTypes,
+}) => {
   // TODO add checkbox
   // TODO create and sync tree
   // TODO check actual gql schema structure and change, if required
@@ -12,6 +17,9 @@ const Tree: React.FC<RSPTreeComponentProps> = ({ list, setState }) => {
       const newList = [...list] as FieldType[];
       const target = e.target as HTMLInputElement;
       newList[ix] = { ...list[ix], checked: target.checked };
+      console.log(newList[ix]);
+      const field = newList[ix];
+      checkTypes(field.checked as boolean, field.return as string);
       setState([...newList]);
     },
     [setState, list]
@@ -65,7 +73,11 @@ const Tree: React.FC<RSPTreeComponentProps> = ({ list, setState }) => {
             onExpand={toggleExpand(ix)}
           />
           {i.children && expandedItems[ix] && (
-            <MemoizedTree list={i.children} setState={setValue(ix)} />
+            <MemoizedTree
+              list={i.children}
+              setState={setValue(ix)}
+              checkTypes={checkTypes}
+            />
           )}
         </li>
       ))}
