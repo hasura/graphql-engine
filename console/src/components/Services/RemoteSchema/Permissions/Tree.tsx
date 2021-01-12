@@ -96,7 +96,7 @@ const Tree: React.FC<RSPTreeComponentProps> = ({
       let newList = [...list];
       newList[ix] = { ...list[ix], children: [...newState] };
 
-      if (field) newList = addDepFields(newList, field);
+      if (field && field.checked) newList = addDepFields(newList, field);
 
       setState([...newList]);
     },
