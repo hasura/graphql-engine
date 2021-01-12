@@ -333,7 +333,7 @@ export const getDataSources = createSelector(getMetadata, metadata => {
     sources.push({
       name: source.name,
       url:
-        source.configuration?.connection_info.database_url ||
+        source.configuration?.connection_info?.database_url ||
         'HASURA_GRAPHQL_DATABASE_URL',
       fromEnv: false,
       connection_pool_settings: source.configuration?.connection_info

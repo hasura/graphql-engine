@@ -853,8 +853,8 @@ export interface MetadataDataSource {
   name: string;
   kind?: 'postgres' | 'mysql';
   configuration?: {
-    connection_info: {
-      database_url: string;
+    connection_info?: {
+      database_url?: string;
       pool_settings?: {
         max_connections: number;
         idle_timeout: number;
