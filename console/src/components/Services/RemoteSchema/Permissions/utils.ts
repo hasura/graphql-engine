@@ -447,8 +447,10 @@ const getSDLField = (
               unquoted = argName;
             }
 
+            const presetsStr = unquoted && `@preset(value: ${unquoted})`;
+
             valueStr = `${arg.name} : ${arg.type.inspect()}
-            @preset(value: ${unquoted})`;
+            ${presetsStr || ''}}`;
           } else {
             valueStr = `${arg.name} : ${arg.type.inspect()}`;
           }
@@ -494,18 +496,26 @@ export const generateSDL = (
   argTree: Record<string, any>,
   schema: GraphQLSchema
 ) => {
-  console.log('>> called');
+  let result = '';
+  const rootsMap: Record<string, any> = {
+    'type query_root': false,
+    'type mutation_root': false,
+  };
+  const roots = Object.keys(rootsMap);
 
-  let result = `schema{
-  query: query_root
-  mutation: mutation_root
-}\n`;
   types.forEach(type => {
-    result = `${result}\n${getSDLField(type, argTree)}\n`;
+    const fieldDef = getSDLField(type, argTree);
+    if (roots.includes(type.name) && fieldDef) rootsMap[type.name] = true;
+    if (fieldDef) result = `${result}\n${fieldDef}\n`;
   });
 
+  const prefix = `schema{
+    ${rootsMap['type query_root'] ? 'query: query_root' : ''}
+    ${rootsMap['type mutation_root'] ? 'mutation: mutation_root' : ''}
+  }
+  `;
   result += generateConstantTypes(schema);
-  return result;
+  return `${prefix} ${result}`;
 };
 
 type ChildArgumentType = {
