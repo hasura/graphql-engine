@@ -159,6 +159,7 @@ const Permissions: React.FC<PermissionsProps> = ({ allRoles, ...props }) => {
       <div className={`${styles.add_mar_bottom}`}>
         {!readOnlyMode && (
           <PermissionEditor
+            key={permissionEdit?.role}
             permissionEdit={permissionEdit}
             isFetching={isFetching}
             isEditing={isEditing}
