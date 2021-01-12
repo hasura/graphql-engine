@@ -1,4 +1,4 @@
-import { GraphQLField, GraphQLSchema } from 'graphql';
+import { GraphQLField, GraphQLSchema, GraphQLArgument } from 'graphql';
 import { Action as ReduxAction } from 'redux';
 import { Dispatch } from '../../../../types';
 
@@ -130,7 +130,7 @@ export type Permissions = {
 
 export type CustomFieldType = {
   name: string;
-  args?: any[];
+  args?: GraphQLArgument[];
   checked?: boolean;
   return?: string;
   children?: FieldType[];

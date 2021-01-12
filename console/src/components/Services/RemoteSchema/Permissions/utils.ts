@@ -19,7 +19,7 @@ import {
   GraphQLType,
   GraphQLFieldMap,
 } from 'graphql';
-import { isJsonString } from '../../../Common/utils/jsUtils';
+import { isJsonString, isEmpty } from '../../../Common/utils/jsUtils';
 import {
   PermissionEdit,
   DatasourceObject,
@@ -112,8 +112,8 @@ export const getRemoteSchemaPermissionQueries = (
   }
 
   return {
-    upQueries:migration.upMigration,
-    downQueries:migration.downMigration,
+    upQueries: migration.upMigration,
+    downQueries: migration.downMigration,
   };
 };
 
@@ -326,65 +326,19 @@ export const getChildArguments = (v: GraphQLInputField): ChildArgumentType => {
     };
 
   // 1st order
-  // either list or nonNull
-  if (
-    (v?.type instanceof GraphQLNonNull || v?.type instanceof GraphQLList) &&
-    v?.type?.ofType &&
-    v?.type?.ofType?._fields
-  ) {
+  if (v?.type instanceof GraphQLNonNull || v?.type instanceof GraphQLList) {
+    const children = getChildArguments({
+      type: v?.type.ofType,
+    } as GraphQLInputField).children;
+    if (isEmpty(children)) return {};
+
     return {
-      children: v?.type?.ofType?._fields as GraphQLInputFieldMap,
+      children,
       path: 'type.ofType',
       childrenType: v?.type?.ofType,
     };
   }
 
-  // 2nd Order
-  // nonNull inside a GQL list or list inside a nonNull
-  if (
-    (v?.type instanceof GraphQLList || v?.type instanceof GraphQLNonNull) &&
-    v?.type?.ofType
-  )
-    if (
-      (v?.type?.ofType instanceof GraphQLNonNull ||
-        v?.type?.ofType instanceof GraphQLList) &&
-      v?.type?.ofType &&
-      v?.type?.ofType?.ofType
-    ) {
-      const type = v?.type?.ofType;
-      if (type?.ofType instanceof GraphQLInputObjectType)
-        return {
-          children: type?.ofType?.getFields() as GraphQLInputFieldMap,
-          childrenType: type?.ofType,
-          path: 'type.ofType.ofType',
-        };
-    }
-
-  // 3rd Order example: ![!user_type]
-  if (
-    (v?.type instanceof GraphQLList || v?.type instanceof GraphQLNonNull) &&
-    v?.type?.ofType
-  )
-    if (
-      (v?.type?.ofType instanceof GraphQLNonNull ||
-        v?.type?.ofType instanceof GraphQLList) &&
-      v?.type?.ofType &&
-      v?.type?.ofType?.ofType
-    )
-      if (
-        (v?.type?.ofType?.ofType instanceof GraphQLNonNull ||
-          v?.type?.ofType?.ofType instanceof GraphQLList) &&
-        v?.type?.ofType?.ofType &&
-        v?.type?.ofType?.ofType?.ofType
-      ) {
-        const type = v?.type?.ofType?.ofType;
-        if (type?.ofType instanceof GraphQLInputObjectType)
-          return {
-            children: type?.ofType?.getFields() as GraphQLInputFieldMap,
-            childrenType: type?.ofType,
-            path: 'type.ofType.ofType.ofType',
-          };
-      }
   return {};
 };
 
@@ -430,6 +384,7 @@ const serialiseArgs = (args: argTreeType, argDef: GraphQLInputField) => {
       }
     }
   });
+  if (res === `{`) return; // dont return string when there is no value
   return `${res}}`;
 };
 
