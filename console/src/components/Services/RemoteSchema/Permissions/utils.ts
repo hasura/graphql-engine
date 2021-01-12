@@ -223,8 +223,13 @@ export const getType = (
 
     if (name.includes('__')) return; // TODO change this check
 
-    const type: DatasourceObject = { name: ``, children: [] };
+    const type: DatasourceObject = {
+      name: ``,
+      typeName: ``,
+      children: [],
+    };
 
+    type.typeName = name;
     if (value instanceof GraphQLObjectType) {
       type.name = `type ${name}`;
     } else if (value instanceof GraphQLInputObjectType) {
@@ -282,7 +287,12 @@ const getEnumTypes = (schema: GraphQLSchema) => {
 
     if (name.includes('__')) return; // TODO change this check
 
-    const type: DatasourceObject = { name: ``, children: [] };
+    const type: DatasourceObject = {
+      name: ``,
+      typeName: ``,
+      children: [],
+    };
+    type.typeName = name;
     type.name = `enum ${name}`;
 
     const childArray: any[] = [];
@@ -463,9 +473,10 @@ const getSDLField = (
 
   let result = ``;
   const typeName: string = type.name;
-  if (type.name === 'query_root' || type.name === 'mutation_root')
-    result = `type ${typeName}{`;
-  else result = `${typeName}{`;
+  result = `${typeName}{`;
+  // if (type.name === 'query_root' || type.name === 'mutation_root')
+  //   result = `type ${typeName}{`;
+  // else result = `${typeName}{`;
 
   type.children.forEach(f => {
     // TODO filter selected fields
@@ -635,3 +646,23 @@ export const getArgTreeFromPermissionSDL = (definition: string) => {
 };
 
 export const generateTypeString = (str: string) => str.replace(/[^\w\s]/gi, '');
+
+// Removes [,],! from params, and returns a new string
+export const getTrimmedReturnType = (value: string): string => {
+  const typeName = value.replace(/[[\]!]+/g, '');
+  return typeName;
+};
+
+/**
+ * Recursively select all the types of the current selection.
+ * @param isChecked - Checkbox selected or unselected.
+ * @returns
+ */
+export const checkTypesRecursively = (
+  isChecked: boolean,
+  returnType: string
+) => {
+  if (!isChecked) return;
+  // returnType.replace('!');
+  console.log(returnType);
+};

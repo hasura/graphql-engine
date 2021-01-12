@@ -140,6 +140,7 @@ export type FieldType = CustomFieldType & GraphQLField<any, any>;
 
 export type DatasourceObject = {
   name: string;
+  typeName: string;
   children: FieldType[]; // TODO extend type
 };
 
@@ -158,6 +159,7 @@ export type BulkSelectProps = {
 export type RSPTreeComponentProps = {
   list: FieldType[];
   setState: (d: FieldType[]) => void;
+  checkTypes: (isChecked: boolean, returnType: string) => void;
   onExpand?: () => void;
 };
 

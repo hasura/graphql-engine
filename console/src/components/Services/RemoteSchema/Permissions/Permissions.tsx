@@ -103,16 +103,18 @@ const Permissions: React.FC<PermissionsProps> = ({ allRoles, ...props }) => {
         console.log(err);
       }
     }
-
+    console.log('>>> schema ', schema);
     const types = getType(schema, permissionsSchema);
 
     setDatasource([
       {
-        name: 'query_root',
+        name: 'type query_root',
+        typeName: 'query_root',
         children: getTree(schema, permissionsSchema, 'QUERY'),
       },
       {
-        name: 'mutation_root',
+        name: 'type mutation_root',
+        typeName: 'mutation_root',
         children: getTree(schema, permissionsSchema, 'MUTATION'),
       },
       ...types,
