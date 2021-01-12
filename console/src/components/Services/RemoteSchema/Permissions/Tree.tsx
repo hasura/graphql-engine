@@ -1,11 +1,10 @@
 import React, { useCallback, useState } from 'react';
-import { GraphQLScalarType, GraphQLInputObjectType } from 'graphql';
+import { GraphQLScalarType } from 'graphql';
 import { FieldType, RSPTreeComponentProps, ExpandedItems } from './types';
 import { Field } from './Field';
 import { getTrimmedReturnType } from './utils';
 
 const getDeps = (field: FieldType, res = new Set<string>([])) => {
-  console.log(field);
   if (field.return) res.add(getTrimmedReturnType(field.return));
 
   // args
@@ -16,34 +15,52 @@ const getDeps = (field: FieldType, res = new Set<string>([])) => {
         const subType = getTrimmedReturnType(arg.type.inspect());
         res.add(subType);
       }
-      console.log(arg);
-    });
-
-  if (field.type && field?.type instanceof GraphQLInputObjectType)
-    Object.values(field.type.getFields()).forEach(arg => {
-      console.log(arg)
-      // TODO filtering logic
-      if (!(arg.type instanceof GraphQLScalarType)) {
-        const subType = getTrimmedReturnType(arg.type.inspect());
-        res.add(subType);
-      }
     });
 
   return res;
 };
 
-const addDepFields = (list: FieldType[], field: FieldType) => {
-  const deps = getDeps(field);
+const addTypesRecursively = (
+  list: FieldType[],
+  typeList: Set<string>,
+  alreadyChecked: Array<string>
+): FieldType[] => {
+  // if alreadychecked has then remove from typelist, if not then add to alreadychecked
+  alreadyChecked.forEach(key => {
+    if (typeList.has(key)) {
+      typeList.delete(key);
+    }
+  });
+  typeList.forEach(value => {
+    alreadyChecked.push(value);
+  });
+
+  // exit condition
+  // if typelist is empty
+  if (typeList.size === 0) return list;
+
   const newList = list.map((fld: FieldType) => {
     const newField = { ...fld };
-    if (fld.typeName && deps.has(fld.typeName))
-      if (newField.children)
-        newField.children = newField.children.map(ch => ({
-          ...ch,
-          checked: true,
-        }));
+    if (fld.typeName && typeList.has(fld.typeName)) {
+      if (newField.children) {
+        newField.children = newField.children.map(ch => {
+          if (ch.return) typeList.add(getTrimmedReturnType(ch.return));
+          return {
+            ...ch,
+            checked: true,
+          };
+        });
+      }
+    }
     return newField;
   });
+  return addTypesRecursively(newList, typeList, alreadyChecked);
+};
+
+const addDepFields = (list: FieldType[], field: FieldType) => {
+  const deps = getDeps(field);
+  const alreadyChecked: Array<string> = [];
+  const newList = addTypesRecursively(list, deps, alreadyChecked);
   return newList;
 };
 
@@ -76,9 +93,9 @@ const Tree: React.FC<RSPTreeComponentProps> = ({
   );
   const setValue = useCallback(
     ix => (newState: FieldType[], field?: FieldType) => {
-      console.log(newState, depth, list, field);
       let newList = [...list];
       newList[ix] = { ...list[ix], children: [...newState] };
+
       if (field) newList = addDepFields(newList, field);
 
       setState([...newList]);

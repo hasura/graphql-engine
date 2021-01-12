@@ -1,15 +1,9 @@
 import React, { useEffect, useState } from 'react';
-import {
-  GraphQLEnumType,
-  GraphQLObjectType,
-  GraphQLScalarType,
-  GraphQLSchema,
-} from 'graphql';
+import { GraphQLSchema } from 'graphql';
 import {
   generateSDL,
   generateConstantTypes,
   getArgTreeFromPermissionSDL,
-  getTrimmedReturnType,
 } from './utils';
 import Button from '../../../Common/Button/Button';
 import styles from '../../../Common/Permissions/PermissionStyles.scss';
@@ -32,7 +26,6 @@ const PermissionEditor: React.FC<PermissionEditorProps> = ({ ...props }) => {
     schema,
   } = props;
 
-  const [checked, setChecked] = useState<Record<string, boolean>>({});
   const [state, setState] = useState<DatasourceObject[] | FieldType[]>(
     datasource
   ); // TODO - low priority:  a copy of datasource, could be able to remove this after evaluation
@@ -113,47 +106,13 @@ const PermissionEditor: React.FC<PermissionEditorProps> = ({ ...props }) => {
     }
   };
 
-  const checkTypes = (isChecked: boolean, returnType: string) => {
-    const type = getTrimmedReturnType(returnType);
-    if (!isChecked) return;
-    // check from the map if the current type is ticked
-    if (checked[type]) return;
-
-    // TODO : type: isChecked
-    setChecked({ ...checked, type: true });
-    const typeDef = schema?.getType(type);
-    if (typeDef instanceof GraphQLEnumType) {
-      // add this to state tree and check.
-    }
-    if (typeDef instanceof GraphQLScalarType) {
-      // add it to state tree if non default scalar.
-    }
-    if (typeDef instanceof GraphQLObjectType) {
-      
-
-      const fields = typeDef?.getFields();
-      // check for the fields recursively
-      Object.values(fields).forEach(name => {
-        console.log('foreach > ', name);
-      });
-    }
-    // other type instances...
-
-    console.log('>>>> typedef ', typeDef);
-    console.log('state >>> ', state);
-  };
-
   return (
     <div className={styles.activeEdit}>
       <div className={styles.tree}>
         <PermissionEditorContext.Provider
           value={{ argTree, setArgTree, scrollToElement }}
         >
-          <Tree
-            list={state as FieldType[]}
-            setState={setState}
-            checkTypes={checkTypes}
-          />
+          <Tree list={state as FieldType[]} setState={setState} />
           <code style={{ whiteSpace: 'pre-wrap' }}>{resultString}</code>
         </PermissionEditorContext.Provider>
       </div>

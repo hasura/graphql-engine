@@ -599,17 +599,3 @@ export const getTrimmedReturnType = (value: string): string => {
   const typeName = value.replace(/[[\]!]+/g, '');
   return typeName;
 };
-
-/**
- * Recursively select all the types of the current selection.
- * @param isChecked - Checkbox selected or unselected.
- * @returns
- */
-export const checkTypesRecursively = (
-  isChecked: boolean,
-  returnType: string
-) => {
-  if (!isChecked) return;
-  // returnType.replace('!');
-  console.log(returnType);
-};

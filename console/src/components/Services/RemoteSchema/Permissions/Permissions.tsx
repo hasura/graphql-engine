@@ -103,7 +103,6 @@ const Permissions: React.FC<PermissionsProps> = ({ allRoles, ...props }) => {
         console.log(err);
       }
     }
-    console.log('>>> schema ', schema);
     const types = getType(schema, permissionsSchema);
 
     setDatasource([
