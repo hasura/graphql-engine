@@ -27,6 +27,7 @@ import {
   argTreeType,
   Permissions,
 } from './types';
+import Migration from '../../../../utils/migration/Migration';
 
 export const findRemoteSchemaPermission = (
   perms: Permissions[],
@@ -73,44 +74,35 @@ export const getRemoteSchemaPermissionQueries = (
 ) => {
   const { role, newRole } = permissionEdit;
 
-  const upQueries = [];
-  const downQueries = [];
-
   const permRole = (newRole || role).trim();
 
   const existingPerm = findRemoteSchemaPermission(allPermissions, permRole);
-  // const existingPerm = allPermissions.find(p => p.role_name === permRole);
+  const migration = new Migration();
 
   if (newRole || (!newRole && !existingPerm)) {
-    upQueries.push(
+    migration.add(
       getCreateRemoteSchemaPermissionQuery(
         {
           role: permRole,
         },
         remoteSchemaName,
         schemaDefinition
-      )
-    );
-    downQueries.push(
+      ),
       getDropRemoteSchemaPermissionQuery(permRole, remoteSchemaName)
     );
   }
 
   if (existingPerm) {
-    upQueries.push(
+    migration.add(
+      getDropRemoteSchemaPermissionQuery(permRole, remoteSchemaName),
       getDropRemoteSchemaPermissionQuery(permRole, remoteSchemaName)
     );
-    upQueries.push(
+    migration.add(
       getCreateRemoteSchemaPermissionQuery(
         { role: permRole },
         remoteSchemaName,
         schemaDefinition
-      )
-    );
-    downQueries.push(
-      getDropRemoteSchemaPermissionQuery(permRole, remoteSchemaName)
-    );
-    downQueries.push(
+      ),
       getCreateRemoteSchemaPermissionQuery(
         { role: permRole },
         remoteSchemaName,
@@ -120,8 +112,8 @@ export const getRemoteSchemaPermissionQueries = (
   }
 
   return {
-    upQueries,
-    downQueries,
+    upQueries:migration.upMigration,
+    downQueries:migration.downMigration,
   };
 };
 
