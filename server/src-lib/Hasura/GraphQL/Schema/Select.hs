@@ -1248,7 +1248,7 @@ nodePG = memoizeOn 'nodePG () do
       nodeInterfaceDescription = G.Description "An object with globally unique ID"
   sources :: SourceCache 'Postgres <- asks getter
   let allTables = Map.fromList $ flip concatMap (Map.toList sources) $ -- FIXME? When source name is used in type generation?
-        \(source, sourceCache) -> map (, (source, _pcConfiguration sourceCache)) $ Map.keys $ _pcTables sourceCache
+        \(source, sourceCache) -> map (, (source, _pcConfiguration sourceCache)) $ Map.keys $ takeValidTables $ _pcTables sourceCache
   tables <-
     Map.mapMaybe id <$> flip Map.traverseWithKey allTables \table (source, sourceConfig) -> runMaybeT do
       tablePkeyColumns <- MaybeT $ (^? tiCoreInfo.tciPrimaryKey._Just.pkColumns) <$> askTableInfo table

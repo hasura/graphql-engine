@@ -681,6 +681,12 @@ class TestTrackTables:
     def test_track_untrack_table_as_not_admin_error(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + '/track_untrack_table_as_not_admin_error.yaml')
 
+    # We allow tracking of tables with non-compliant graphql names but we don't
+    # add such tables in the GraphQL schema, but these tables can be used with
+    # RQL queries (CRUD) and event triggers
+    def test_track_table_with_non_graphql_compliant_name(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/track_non_graphql_compliant_table.yaml')
+
     @classmethod
     def dir(cls):
         return "queries/v1/track_table"

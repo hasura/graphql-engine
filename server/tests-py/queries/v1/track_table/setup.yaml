@@ -57,3 +57,8 @@ args:
           SELECT * FROM test2
       $$ LANGUAGE sql STABLE;
 
+      CREATE TABLE "users address" (
+        id serial primary key,
+        user_id int,
+        address text
+      );
