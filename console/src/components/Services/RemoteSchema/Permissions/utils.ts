@@ -446,8 +446,10 @@ const getSDLField = (
               unquoted = argName;
             }
 
+            const presetsStr = unquoted && `@preset(value: ${unquoted})`;
+
             valueStr = `${arg.name} : ${arg.type.inspect()}
-            @preset(value: ${unquoted})`;
+            ${presetsStr || ''}}`;
           } else {
             valueStr = `${arg.name} : ${arg.type.inspect()}`;
           }

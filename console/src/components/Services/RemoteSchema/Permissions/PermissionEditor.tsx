@@ -141,4 +141,4 @@ const PermissionEditor: React.FC<PermissionEditorProps> = ({ ...props }) => {
   );
 };
 
-export default React.memo(PermissionEditor);
+export default PermissionEditor;
