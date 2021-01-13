@@ -1,10 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { GraphQLSchema } from 'graphql';
-import {
-  generateSDL,
-  generateConstantTypes,
-  getArgTreeFromPermissionSDL,
-} from './utils';
+import { generateSDL, getArgTreeFromPermissionSDL } from './utils';
 import Button from '../../../Common/Button/Button';
 import styles from '../../../Common/Permissions/PermissionStyles.scss';
 import { DatasourceObject, FieldType, PermissionEditorProps } from './types';

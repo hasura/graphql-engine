@@ -1,4 +1,11 @@
-import { GraphQLField, GraphQLSchema, GraphQLArgument } from 'graphql';
+import {
+  GraphQLField,
+  GraphQLSchema,
+  GraphQLArgument,
+  GraphQLInputFieldMap,
+  GraphQLEnumValue,
+  GraphQLType,
+} from 'graphql';
 import { Action as ReduxAction } from 'redux';
 import { Dispatch } from '../../../../types';
 
@@ -126,10 +133,16 @@ export type Permissions = {
   comment: string | null;
 };
 
+export type ChildArgumentType = {
+  children?: GraphQLInputFieldMap | GraphQLEnumValue[];
+  path?: string;
+  childrenType?: GraphQLType;
+};
+
 export type CustomFieldType = {
   name: string;
+  checked: boolean;
   args?: GraphQLArgument[];
-  checked?: boolean;
   return?: string;
   typeName?: string;
   children?: FieldType[];
@@ -140,7 +153,7 @@ export type FieldType = CustomFieldType & GraphQLField<any, any>;
 export type DatasourceObject = {
   name: string;
   typeName: string;
-  children: FieldType[];
+  children: FieldType[] | CustomFieldType[];
 };
 
 export type PermWrapperProps = {
