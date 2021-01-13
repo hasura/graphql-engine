@@ -309,6 +309,13 @@ const getEnumTypes = (schema: GraphQLSchema) => {
   return types;
 };
 
+// Check if type belongs to default gql scalar types
+const checkDefaultGQLScalarType = (typeName: string): boolean => {
+  const gqlDefaultTypes = ['Boolean', 'Float', 'String', 'Int', 'ID'];
+  if (gqlDefaultTypes.indexOf(typeName) > -1) return true;
+  return false;
+};
+
 /**
  * Gets all scalar types from introspection schema
  * @param schema - Remote schema introspection schema.
@@ -317,11 +324,10 @@ const getEnumTypes = (schema: GraphQLSchema) => {
 export const getScalarTypes = (schema: GraphQLSchema) => {
   const fields = schema.getTypeMap();
   const types: string[] = [];
-  const gqlDefaultTypes = ['Boolean', 'Float', 'String', 'Int', 'ID'];
   Object.entries(fields).forEach(([, value]: any) => {
     if (!(value instanceof GraphQLScalarType)) return;
     const name = value.inspect();
-    if (gqlDefaultTypes.indexOf(name) > -1) return; // Check if type belongs to default gql scalar types
+    if (checkDefaultGQLScalarType(name)) return;
 
     const type = `scalar ${name}`;
     types.push(type);
