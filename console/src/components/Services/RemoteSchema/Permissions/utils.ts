@@ -360,16 +360,14 @@ const serialiseArgs = (args: argTreeType, argDef: GraphQLInputField) => {
   let res = '{';
   const { children } = getChildArguments(argDef);
   Object.entries(args).forEach(([key, value]) => {
-    console.log(value, typeof value);
     if (isEmpty(value) || isEmpty(children)) {
-      // if(!children)console.log(key, value, children, argDef,args);
+      // if (!children) console.log(key, value, children, argDef, args);
       return;
     }
     const gqlArgs = children as GraphQLInputFieldMap;
     const gqlArg = gqlArgs[key];
 
     if (typeof value === 'string' || typeof value === 'number') {
-      console.log(value, typeof value);
       let val;
       if (
         gqlArg &&
@@ -440,11 +438,11 @@ const getSDLField = (
       if (f?.args) {
         fieldStr = `${fieldStr}(`;
         Object.values(f.args).forEach((arg: GraphQLInputField) => {
-          let valueStr = ``;
+          let valueStr = `${arg.name} : ${arg.type.inspect()}`;
+
           if (argTree && argTree[f.name] && argTree[f.name][arg.name]) {
             const argName = argTree[f.name][arg.name];
             let unquoted;
-            console.log(argName, arg);
             if (typeof argName === 'object') {
               unquoted = serialiseArgs(argName, arg);
             } else if (typeof argName === 'number') {
@@ -453,11 +451,10 @@ const getSDLField = (
               unquoted = `"${argName}"`;
             }
 
-            valueStr = `${arg.name} : ${arg.type.inspect()}
-            @preset(value: ${unquoted})`;
-          } else {
-            valueStr = `${arg.name} : ${arg.type.inspect()}`;
+            if (!isEmpty(unquoted))
+              valueStr = `${valueStr} @preset(value: ${unquoted})`;
           }
+
           fieldStr = `${fieldStr + valueStr} `;
         });
         fieldStr = `${fieldStr})`;
