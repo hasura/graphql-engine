@@ -18,8 +18,13 @@ import {
   GraphQLEnumValue,
   GraphQLType,
   GraphQLFieldMap,
+  ValueNode,
 } from 'graphql';
-import { isJsonString, isEmpty } from '../../../Common/utils/jsUtils';
+import {
+  isJsonString,
+  isEmpty,
+  isArrayString,
+} from '../../../Common/utils/jsUtils';
 import {
   PermissionEdit,
   DatasourceObject,
@@ -352,6 +357,13 @@ export const getChildArguments = (v: GraphQLInputField): ChildArgumentType => {
   return {};
 };
 
+const isList = (gqlArg: GraphQLInputField, value: string) =>
+  gqlArg &&
+  gqlArg.type instanceof GraphQLList &&
+  typeof value === 'string' &&
+  isArrayString(value) &&
+  !value.startsWith('x-hasura');
+
 // arg => {id:{_eq:1}}
 // argDef => GQL type
 
@@ -369,17 +381,28 @@ const serialiseArgs = (args: argTreeType, argDef: GraphQLInputField) => {
 
     if (typeof value === 'string' || typeof value === 'number') {
       let val;
-      if (
+
+      const isEnum =
         gqlArg &&
         gqlArg.type instanceof GraphQLEnumType &&
         typeof value === 'string' &&
-        !value.startsWith('x-hasura')
-      ) {
-        val = `${key}:${value}`; // no double quotes
-      } else if (typeof value === 'number') {
-        val = `${key}: ${value} `;
-      } else {
-        val = `${key}:"${value}"`;
+        !value.startsWith('x-hasura');
+
+      switch (true) {
+        case isEnum:
+          val = `${key}:${value}`; // no double quotes
+          break;
+        case typeof value === 'number':
+          val = `${key}: ${value} `;
+          break;
+
+        case typeof value === 'string' && isList(gqlArg, value):
+          val = `${key}: ${value} `;
+          break;
+
+        default:
+          val = `${key}:"${value}"`;
+          break;
       }
 
       if (res === '{') {
@@ -532,6 +555,14 @@ export const addPresetDefinition = (schema: string) => `scalar PresetValue\n
   ) on INPUT_FIELD_DEFINITION | ARGUMENT_DEFINITION\n
 ${schema}`;
 
+const addToArrayString = (acc: string, newStr: unknown, withQuotes = false) => {
+  if (acc !== '') {
+    if (withQuotes) acc = `${acc}, "${newStr}"`;
+    else acc = `${acc}, ${newStr}`;
+  } else acc = `[${newStr}`;
+  return acc;
+};
+
 const parseObjectField = (arg: ArgumentNode | ObjectFieldNode) => {
   if (arg?.value?.kind === 'IntValue' && arg?.value?.value)
     return arg?.value?.value;
@@ -557,6 +588,25 @@ const parseObjectField = (arg: ArgumentNode | ObjectFieldNode) => {
       res[f.name.value] = parseObjectField(f);
     });
     return res;
+  }
+
+  // Array values
+  if (
+    arg?.value?.kind === 'ListValue' &&
+    arg?.value?.values &&
+    arg?.value?.values?.length > 0
+  ) {
+    let res = '';
+    arg.value.values.forEach((v: ValueNode) => {
+      if (v.kind === 'IntValue' || v.kind === 'FloatValue') {
+        res = addToArrayString(res, v.value);
+      } else if (v.kind === 'BooleanValue') {
+        res = addToArrayString(res, v.value);
+      } else if (v.kind === 'StringValue') {
+        res = addToArrayString(res, v.value);
+      }
+    });
+    return `${res}]`;
   }
 };
 

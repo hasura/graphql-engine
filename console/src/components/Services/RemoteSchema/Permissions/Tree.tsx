@@ -69,9 +69,6 @@ const Tree: React.FC<RSPTreeComponentProps> = ({
   setState,
   depth = 1,
 }) => {
-  // TODO add checkbox
-  // TODO create and sync tree
-  // TODO check actual gql schema structure and change, if required
   const [expandedItems, setExpandedItems] = useState<ExpandedItems>({});
   const onCheck = useCallback(
     ix => (e: React.FormEvent<HTMLInputElement>) => {
