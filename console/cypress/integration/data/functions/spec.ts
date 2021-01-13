@@ -10,8 +10,9 @@ import {
   trackCreateFunctionTable,
   getCreateTestFunctionQuery,
   getTrackTestFunctionQuery,
-  createTableForSessionVarTest,
-  getTrackSessionVarTestTableQuery,
+  createSampleTable,
+  getTrackSampleTableQuery,
+  createVolatileFunction,
 } from '../../../helpers/dataHelpers';
 
 import {
@@ -20,7 +21,6 @@ import {
   validateCFunc,
   validateUntrackedFunc,
   ResultType,
-  createFunctionRequest,
   trackFunctionRequest,
 } from '../../validators/validators';
 import { setPromptValue } from '../../../helpers/common';
@@ -73,19 +73,12 @@ export const testSessVariable = () => {
   // Round about way to create a function
   const fN = 'customFunctionWithSessionArg'.toLowerCase(); // for reading
 
-  dataRequest(createTableForSessionVarTest(), ResultType.SUCCESS, 'query');
+  dataRequest(createSampleTable(), ResultType.SUCCESS, 'query');
   cy.wait(5000);
-  dataRequest(
-    getTrackSessionVarTestTableQuery(),
-    ResultType.SUCCESS,
-    'metadata'
-  );
+  dataRequest(getTrackSampleTableQuery(), ResultType.SUCCESS, 'metadata');
   cy.wait(5000);
 
-  createFunctionRequest(
-    testCustomFunctionSQLWithSessArg(fN),
-    ResultType.SUCCESS
-  );
+  dataRequest(testCustomFunctionSQLWithSessArg(fN), ResultType.SUCCESS);
   cy.wait(1500);
 
   trackFunctionRequest(getTrackFnPayload(fN), ResultType.SUCCESS);
@@ -122,6 +115,7 @@ export const testSessVariable = () => {
   );
   dropTableRequest(dropTable('text_result', true), ResultType.SUCCESS);
   cy.wait(2000);
+  cy.visit(`data/default/schema/public/`);
 };
 
 export const verifyPermissionTab = () => {
@@ -147,4 +141,42 @@ export const deleteCustomFunction = () => {
 
   dropTableRequest(dropTable(), ResultType.SUCCESS);
   cy.wait(5000);
+};
+
+export const trackVolatileFunction = () => {
+  const fN = 'customVolatileFunc'.toLowerCase();
+  dataRequest(createSampleTable(), ResultType.SUCCESS);
+  cy.wait(1500);
+  dataRequest(getTrackSampleTableQuery(), ResultType.SUCCESS, 'metadata');
+  dataRequest(createVolatileFunction(fN), ResultType.SUCCESS);
+  cy.wait(1500);
+  cy.visit(`data/default/schema/public`);
+  cy.get(getElementFromAlias(`add-track-function-${fN}`)).click();
+  cy.get(getElementFromAlias('track-as-mutation')).click();
+  cy.wait(500);
+  cy.url().should(
+    'eq',
+    `${baseUrl}/data/default/schema/public/functions/${fN}/modify`
+  );
+  dropTableRequest(dropTable('text_result', true), ResultType.SUCCESS);
+};
+
+export const trackVolatileFunctionAsQuery = () => {
+  const fN = 'customVolatileFunc'.toLowerCase();
+  dataRequest(createSampleTable(), ResultType.SUCCESS);
+  cy.wait(1500);
+  dataRequest(getTrackSampleTableQuery(), ResultType.SUCCESS, 'metadata');
+  dataRequest(createVolatileFunction(fN), ResultType.SUCCESS);
+  cy.wait(1500);
+  cy.visit(`data/default/schema/public`);
+  cy.get(getElementFromAlias(`add-track-function-${fN}`)).click();
+  cy.get(getElementFromAlias('track-as-query')).click();
+  cy.wait(100);
+  cy.get(getElementFromAlias('track-as-query-confirm')).click();
+  cy.wait(500);
+  cy.url().should(
+    'eq',
+    `${baseUrl}/data/default/schema/public/functions/${fN}/modify`
+  );
+  dropTableRequest(dropTable('text_result', true), ResultType.SUCCESS);
 };

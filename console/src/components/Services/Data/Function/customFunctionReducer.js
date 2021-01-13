@@ -15,7 +15,6 @@ import { getRunSqlQuery } from '../../../Common/utils/v1QueryUtils';
 import {
   getUntrackFunctionQuery,
   getTrackFunctionQuery,
-  getTrackFunctionV2Query,
 } from '../../../../metadata/queryUtils';
 import { makeRequest } from '../../RemoteSchema/Actions';
 
@@ -127,7 +126,7 @@ const unTrackCustomFunction = () => {
   return (dispatch, getState) => {
     const currentSchema = getState().tables.currentSchema;
     const currentDataSource = getState().tables.currentDataSource;
-    const functionName = getState().functions.functionName;
+    const { functionName, configuration } = getState().functions;
 
     const migrationName = 'remove_custom_function_' + functionName;
     const payload = getUntrackFunctionQuery(
@@ -138,7 +137,8 @@ const unTrackCustomFunction = () => {
     const downPayload = getTrackFunctionQuery(
       functionName,
       currentSchema,
-      currentDataSource
+      currentDataSource,
+      configuration
     );
 
     const requestMsg = 'Deleting custom function...';
@@ -186,25 +186,25 @@ const updateSessVar = session_argument => {
       currentSchema,
       currentDataSource
     );
-    const retrackPayloadDown = getTrackFunctionV2Query(
+    const retrackPayloadDown = getTrackFunctionQuery(
       functionName,
       currentSchema,
+      currentDataSource,
       {
         ...(oldConfiguration && oldConfiguration),
-      },
-      currentDataSource
+      }
     );
 
     // retrack with sess arg config
-    const retrackPayloadUp = getTrackFunctionV2Query(
+    const retrackPayloadUp = getTrackFunctionQuery(
       functionName,
       currentSchema,
+      currentDataSource,
       {
         ...(session_argument && {
           session_argument,
         }),
-      },
-      currentDataSource
+      }
     );
 
     const untrackPayloadDown = getUntrackFunctionQuery(

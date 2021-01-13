@@ -17,7 +17,7 @@ import { dataSource } from '../../../../dataSources';
 import { getRunSqlQuery } from '../../../Common/utils/v1QueryUtils';
 import { getDownQueryComments } from '../../../../utils/migration/utils';
 import {
-  getTrackFunctionV2Query,
+  getTrackFunctionQuery,
   getTrackTableQuery,
 } from '../../../../metadata/queryUtils';
 import globals from '../../../../Globals';
@@ -49,7 +49,7 @@ const trackAllItems = (sql, isMigration, migrationName) => (
   objects.forEach(({ type, name, schema }) => {
     let req = {};
     if (type === 'function') {
-      req = getTrackFunctionV2Query(name, schema, {}, source);
+      req = getTrackFunctionQuery(name, schema, source, {});
     } else {
       req = getTrackTableQuery({ name, schema }, source);
     }

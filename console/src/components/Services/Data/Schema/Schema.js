@@ -9,7 +9,6 @@ import {
   setTableName,
   addExistingTableSql,
   addAllUntrackedTablesSql,
-  addExistingFunction,
 } from '../Add/AddExistingTableViewActions';
 import {
   updateSchemaInfo,
@@ -50,6 +49,7 @@ import {
   getDataSources,
 } from '../../../../metadata/selector';
 import { RightContainer } from '../../../Common/Layout/RightContainer';
+import { TrackableFunctionsList } from './FunctionsList';
 
 const DeleteSchemaButton = ({ dispatch, migrationMode, currentDataSource }) => {
   const successCb = () => {
@@ -635,74 +635,6 @@ class Schema extends Component {
     };
 
     const getUntrackedFunctionsSection = () => {
-      const noTrackableFunctions = isEmpty(trackableFuncs);
-
-      const getTrackableFunctionsList = () => {
-        const trackableFunctionList = [];
-
-        if (noTrackableFunctions) {
-          trackableFunctionList.push(
-            <div key="no-untracked-fns">
-              <div>There are no untracked functions</div>
-            </div>
-          );
-        } else {
-          trackableFuncs.forEach((p, i) => {
-            const getTrackBtn = () => {
-              if (readOnlyMode) {
-                return null;
-              }
-
-              const handleTrackFn = e => {
-                e.preventDefault();
-
-                dispatch(addExistingFunction(p.function_name));
-              };
-
-              return (
-                <div className={styles.display_inline}>
-                  <Button
-                    data-test={`add-track-function-${p.function_name}`}
-                    className={`${styles.display_inline} btn btn-xs btn-default`}
-                    onClick={handleTrackFn}
-                  >
-                    Track
-                  </Button>
-                </div>
-              );
-            };
-
-            trackableFunctionList.push(
-              <div
-                className={styles.padd_bottom}
-                key={`untracked-function-${i}`}
-              >
-                {getTrackBtn()}
-                <div
-                  className={`${styles.display_inline} ${styles.add_mar_left_mid}`}
-                >
-                  <RawSqlButton
-                    dataTestId={`view-function-${p.function_name}`}
-                    customStyles={styles.display_inline}
-                    sql={p.function_definition}
-                    dispatch={dispatch}
-                  >
-                    View
-                  </RawSqlButton>
-                </div>
-                <div
-                  className={`${styles.display_inline} ${styles.add_mar_left}`}
-                >
-                  <span>{p.function_name}</span>
-                </div>
-              </div>
-            );
-          });
-        }
-
-        return trackableFunctionList;
-      };
-
       const heading = getSectionHeading(
         'Untracked custom functions',
         'Custom functions that are not exposed over the GraphQL API',
@@ -717,7 +649,12 @@ class Schema extends Component {
             testId={'toggle-trackable-functions'}
           >
             <div className={`${styles.padd_left_remove} col-xs-12`}>
-              {getTrackableFunctionsList()}
+              <TrackableFunctionsList
+                dispatch={dispatch}
+                funcs={trackableFuncs}
+                readOnlyMode={readOnlyMode}
+                source={currentDataSource}
+              />
             </div>
             <div className={styles.clear_fix} />
           </CollapsibleToggle>
@@ -752,6 +689,7 @@ class Schema extends Component {
                     customStyles={styles.display_inline}
                     sql={p.function_definition}
                     dispatch={dispatch}
+                    source={currentDataSource}
                   >
                     View
                   </RawSqlButton>

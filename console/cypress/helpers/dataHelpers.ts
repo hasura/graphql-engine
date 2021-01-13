@@ -6,6 +6,21 @@ export const baseUrl = Cypress.config('baseUrl');
 export const getIndexRoute = (sourceName = 'default', schemaName = 'public') =>
   `/data/${sourceName}/schema/${schemaName}/`;
 
+export const createVolatileFunction = (name: string) => {
+  return {
+    type: 'run_sql',
+    args: {
+      sql: `CREATE OR REPLACE  FUNCTION public.${name}()
+            RETURNS SETOF text_result
+            LANGUAGE sql
+            AS $function$
+              SELECT * FROM text_result;
+            $function$`,
+      cascade: false,
+    },
+  };
+};
+
 export const dataTypes = [
   'serial',
   'bigserial',
@@ -163,7 +178,7 @@ export const trackCreateFunctionTable = () => {
   };
 };
 
-export const createTableForSessionVarTest = () => {
+export const createSampleTable = () => {
   return {
     type: 'run_sql',
     source: 'default',
@@ -176,7 +191,7 @@ export const createTableForSessionVarTest = () => {
   };
 };
 
-export const getTrackSessionVarTestTableQuery = () => {
+export const getTrackSampleTableQuery = () => {
   return {
     type: 'pg_track_table',
     source: 'default',
@@ -196,7 +211,7 @@ export const dropTable = (table = 'post', cascade = false) => {
       {
         type: 'run_sql',
         args: {
-          sql: `DROP table ${table}${cascade ? ' CASCADE;' : ';'}`,
+          sql: `DROP table "public"."${table}"${cascade ? ' CASCADE;' : ';'}`,
           cascade,
         },
       },

@@ -17,6 +17,7 @@ const ComputedFieldsEditor = ({
   functions,
   schemaList,
   dispatch,
+  source,
 }) => {
   const computedFields = table.computed_fields;
 
@@ -162,6 +163,7 @@ const ComputedFieldsEditor = ({
             customStyles={`${styles.display_inline} ${styles.add_mar_left}`}
             sql={computedFieldFunctionDefinition}
             dispatch={dispatch}
+            source={source}
           >
             Modify
           </RawSqlButton>
@@ -304,6 +306,7 @@ const ComputedFieldsEditor = ({
                 customStyles={`${styles.display_inline} ${styles.add_mar_left}`}
                 sql={''}
                 dispatch={dispatch}
+                source={source}
               >
                 Create new
               </RawSqlButton>

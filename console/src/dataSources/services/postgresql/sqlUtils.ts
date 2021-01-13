@@ -785,8 +785,6 @@ const trackableFunctionsWhere = `
 AND has_variadic = FALSE
 AND returns_set = TRUE
 AND return_type_type = 'c'
-AND(function_type ILIKE '%STABLE%'
-  OR function_type ILIKE '%IMMUTABLE%')
 `;
 
 const nonTrackableFunctionsWhere = `
@@ -794,10 +792,6 @@ AND NOT (
   has_variadic = false
   AND returns_set = TRUE
   AND return_type_type = 'c'
-  AND (
-    function_type ilike '%stable%'
-    OR function_type ilike '%immutable%'
-  )
 )
 `;
 

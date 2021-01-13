@@ -103,10 +103,14 @@ const addExistingTableSql = (name, customSchema, skipRouting = false) => {
   };
 };
 
-const addExistingFunction = (name, customSchema, skipRouting = false) => {
+const addExistingFunction = (
+  name,
+  config,
+  customSchema,
+  skipRouting = false
+) => {
   return (dispatch, getState) => {
     dispatch({ type: MAKING_REQUEST });
-    dispatch(showSuccessNotification('Adding an function...'));
     const currentSchema = customSchema
       ? customSchema
       : getState().tables.currentSchema;
@@ -115,7 +119,8 @@ const addExistingFunction = (name, customSchema, skipRouting = false) => {
     const requestBodyUp = getTrackFunctionQuery(
       name,
       currentSchema,
-      currentDataSource
+      currentDataSource,
+      config
     );
     const requestBodyDown = getUntrackFunctionQuery(
       name,

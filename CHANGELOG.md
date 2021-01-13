@@ -100,6 +100,7 @@ and be accessible according to the permissions that were configured for the role
 - console: fix allow-list not getting added to metadata/allow_list.yaml in CLI mode (close #6374)
 - console: misc bug fixes (close #4785, #6330, #6288)
 - console: allow setting table custom name (#212)
+- console: support tracking VOLATILE functions as mutations or queries (close #6228)
 - cli: add missing global flags for seed command (#5565)
 - cli: allow seeds as alias for seed command (#5693)
 - cli: fix action timeouts not being picked up in metadata operations (#6220)

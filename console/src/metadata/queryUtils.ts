@@ -536,24 +536,24 @@ export const addExistingTableOrView = (
 export const getTrackFunctionQuery = (
   name: string,
   schema: string,
-  source: string
-) => getMetadataQuery('track_function', source, { function: { name, schema } });
-
-export const getTrackFunctionV2Query = (
-  name: string,
-  schema: string,
-  configuration: Record<string, string>,
-  source: string
-) =>
-  getMetadataQuery(
-    'track_function',
-    source,
-    {
-      function: { name, schema },
-      configuration,
-    },
-    { version: 2 }
-  );
+  source: string,
+  configuration?: Record<string, any>
+) => {
+  if (configuration) {
+    return getMetadataQuery(
+      'track_function',
+      source,
+      {
+        function: { name, schema },
+        configuration,
+      },
+      { version: 2 }
+    );
+  }
+  return getMetadataQuery('track_function', source, {
+    function: { name, schema },
+  });
+};
 
 export const getUntrackFunctionQuery = (
   name: string,
