@@ -213,7 +213,7 @@ export const getType = (
     )
       return;
 
-    // if (name.includes('__')) return; // TODO change this check
+    if (name.includes('__')) return; // TODO change this check
 
     const type: DatasourceObject = {
       name: ``,
@@ -360,14 +360,16 @@ const serialiseArgs = (args: argTreeType, argDef: GraphQLInputField) => {
   let res = '{';
   const { children } = getChildArguments(argDef);
   Object.entries(args).forEach(([key, value]) => {
-    if (!value || !children) {
+    console.log(value, typeof value);
+    if (isEmpty(value) || isEmpty(children)) {
       // if(!children)console.log(key, value, children, argDef,args);
       return;
     }
     const gqlArgs = children as GraphQLInputFieldMap;
     const gqlArg = gqlArgs[key];
 
-    if (value && (typeof value === 'string' || typeof value === 'number')) {
+    if (typeof value === 'string' || typeof value === 'number') {
+      console.log(value, typeof value);
       let val;
       if (
         gqlArg &&
@@ -389,8 +391,9 @@ const serialiseArgs = (args: argTreeType, argDef: GraphQLInputField) => {
       }
     } else if (value && typeof value === 'object') {
       if (children && typeof children === 'object' && gqlArg) {
-        if (res === '{') res = `${res} ${key}: ${serialiseArgs(value, gqlArg)}`;
-        else res = `${res} , ${key}: ${serialiseArgs(value, gqlArg)}`;
+        const valString = serialiseArgs(value, gqlArg);
+        if (valString && res === '{') res = `${res} ${key}: ${valString}`;
+        else if (valString) res = `${res} , ${key}: ${valString}`;
       }
     }
   });
@@ -441,16 +444,17 @@ const getSDLField = (
           if (argTree && argTree[f.name] && argTree[f.name][arg.name]) {
             const argName = argTree[f.name][arg.name];
             let unquoted;
+            console.log(argName, arg);
             if (typeof argName === 'object') {
               unquoted = serialiseArgs(argName, arg);
+            } else if (typeof argName === 'number') {
+              unquoted = `${argName}`;
             } else {
-              unquoted = argName;
+              unquoted = `"${argName}"`;
             }
 
-            const presetsStr = unquoted && `@preset(value: ${unquoted})`;
-
             valueStr = `${arg.name} : ${arg.type.inspect()}
-            ${presetsStr || ''}}`;
+            @preset(value: ${unquoted})`;
           } else {
             valueStr = `${arg.name} : ${arg.type.inspect()}`;
           }
