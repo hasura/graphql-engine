@@ -126,8 +126,6 @@ export type Permissions = {
   comment: string | null;
 };
 
-// TODO generic types -> seperate this
-
 export type CustomFieldType = {
   name: string;
   args?: GraphQLArgument[];
@@ -142,7 +140,7 @@ export type FieldType = CustomFieldType & GraphQLField<any, any>;
 export type DatasourceObject = {
   name: string;
   typeName: string;
-  children: FieldType[]; // TODO extend type
+  children: FieldType[];
 };
 
 export type PermWrapperProps = {

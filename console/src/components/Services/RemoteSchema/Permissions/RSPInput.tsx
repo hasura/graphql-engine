@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { GraphQLInputField } from 'graphql';
 import Pen from './Pen';
 import { useDebouncedEffect } from '../../../../hooks/useDebounceEffect';
+import { isNumberString } from '../../../Common/utils/jsUtils';
 
 interface RSPInputProps {
   k: string;
@@ -27,9 +28,8 @@ const RSPInput: React.FC<RSPInputProps> = ({
       if (
         (v?.type?.inspect() === 'Int' || v?.type?.inspect() === 'Int!') &&
         localValue &&
-        !Number.isNaN(Number(localValue))
+        isNumberString(localValue)
       ) {
-        console.log(Number(localValue), Number.isNaN(Number(localValue)));
         if (localValue === '0') return setArgVal({ [v?.name]: 0 });
         return setArgVal({ [v?.name]: Number(localValue) });
       }
