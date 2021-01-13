@@ -43,13 +43,18 @@ const addTypesRecursively = (
     const newField = { ...fld };
     if (fld.typeName && typeList.has(fld.typeName)) {
       if (newField.children) {
-        newField.children = newField.children.map(ch => {
-          if (ch.return) typeList.add(getTrimmedReturnType(ch.return));
-          return {
-            ...ch,
-            checked: true,
-          };
+        const partiallyChecked = newField.children.find(({ checked }) => {
+          if (checked) return true;
+          return false;
         });
+        if (!partiallyChecked)
+          newField.children = newField.children.map(ch => {
+            if (ch.return) typeList.add(getTrimmedReturnType(ch.return));
+            return {
+              ...ch,
+              checked: true,
+            };
+          });
       }
     }
     return newField;
