@@ -19,6 +19,7 @@ import {
   GraphQLType,
   GraphQLFieldMap,
   ValueNode,
+  GraphQLInputType,
 } from 'graphql';
 import {
   isJsonString,
@@ -422,6 +423,13 @@ const serialiseArgs = (args: argTreeType, argDef: GraphQLInputField) => {
   return `${res}}`;
 };
 
+const isEnumType = (type: GraphQLInputType): boolean => {
+  if (type instanceof GraphQLList || type instanceof GraphQLNonNull)
+    return isEnumType(type.ofType);
+  else if (type instanceof GraphQLEnumType) return true;
+  return false;
+};
+
 /**
  * Checks if the checkbox is checked / unchecked.
  */
@@ -466,9 +474,17 @@ const getSDLField = (
           if (argTree && argTree[f.name] && argTree[f.name][arg.name]) {
             const argName = argTree[f.name][arg.name];
             let unquoted;
+            const isEnum =
+              typeof argName === 'string' &&
+              argName &&
+              !argName.startsWith('x-hasura') &&
+              isEnumType(arg.type);
+
             if (typeof argName === 'object') {
               unquoted = serialiseArgs(argName, arg);
             } else if (typeof argName === 'number') {
+              unquoted = `${argName}`;
+            } else if (isEnum) {
               unquoted = `${argName}`;
             } else {
               unquoted = `"${argName}"`;
