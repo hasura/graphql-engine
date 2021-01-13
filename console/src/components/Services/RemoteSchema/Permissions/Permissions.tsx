@@ -165,7 +165,6 @@ const Permissions: React.FC<PermissionsProps> = ({ allRoles, ...props }) => {
             isEditing={isEditing}
             schemaDefinition={schemaDefinition}
             datasource={datasource}
-            schema={schema}
             permCloseEdit={permCloseEdit}
             saveRemoteSchemaPermission={saveRemoteSchemaPermission}
             removeRemoteSchemaPermission={removeRemoteSchemaPermission}

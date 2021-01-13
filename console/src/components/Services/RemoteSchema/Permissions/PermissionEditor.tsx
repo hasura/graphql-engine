@@ -1,5 +1,4 @@
 import React, { useEffect, useState } from 'react';
-import { GraphQLSchema } from 'graphql';
 import { generateSDL, getArgTreeFromPermissionSDL } from './utils';
 import Button from '../../../Common/Button/Button';
 import styles from '../../../Common/Permissions/PermissionStyles.scss';
@@ -19,7 +18,6 @@ const PermissionEditor: React.FC<PermissionEditorProps> = ({ ...props }) => {
     removeRemoteSchemaPermission,
     setSchemaDefinition,
     datasource,
-    schema,
   } = props;
 
   const [state, setState] = useState<DatasourceObject[] | FieldType[]>(
@@ -34,13 +32,8 @@ const PermissionEditor: React.FC<PermissionEditorProps> = ({ ...props }) => {
     // console.log('changed--->', state);
     if (!state) return;
     setResultString(
-      generateSDL(
-        state as DatasourceObject[],
-        argTree as Record<string, any>,
-        schema as GraphQLSchema
-      )
+      generateSDL(state as DatasourceObject[], argTree as Record<string, any>)
     );
-    // setSchemaDefinition(resultString);
   }, [state, argTree]);
 
   useEffect(() => {
@@ -72,9 +65,6 @@ const PermissionEditor: React.FC<PermissionEditorProps> = ({ ...props }) => {
   };
 
   const saveFunc = () => {
-    // const finalString =
-    //   resultString + generateConstantTypes(schema as GraphQLSchema);
-    // setSchemaDefinition(finalString);
     setSchemaDefinition(resultString);
     save();
   };

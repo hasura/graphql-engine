@@ -1,6 +1,5 @@
 import {
   GraphQLField,
-  GraphQLSchema,
   GraphQLArgument,
   GraphQLInputFieldMap,
   GraphQLEnumValue,
@@ -112,7 +111,6 @@ export type PermissionEditorProps = {
   isFetching: boolean;
   schemaDefinition: string;
   datasource: any;
-  schema: GraphQLSchema | null;
   setSchemaDefinition: (data: string) => void;
   permCloseEdit: () => void;
   saveRemoteSchemaPermission: (data: any) => void;

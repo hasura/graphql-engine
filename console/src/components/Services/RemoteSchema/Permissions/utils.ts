@@ -154,7 +154,7 @@ export const getTree = (
   let permissionsSchemaFields:
     | GraphQLFieldMap<any, any, Record<string, any>>
     | null
-    | undefined = null; // TODO use ternary operator
+    | undefined = null;
   if (permissionsSchema !== null) {
     permissionsSchemaFields =
       typeS === 'QUERY'
@@ -220,7 +220,7 @@ export const getType = (
       name === 'subscription_root'
     )
       return;
-    if (name.includes('__')) return;
+    if (name.startsWith('__')) return;
 
     const type: DatasourceObject = {
       name: ``,
@@ -233,7 +233,13 @@ export const getType = (
       type.name = `enum ${name}`;
       const values = value.getValues();
       const childArray: CustomFieldType[] = [];
-      const checked = false; // TODO change this logic. Checked should change according to what comes.
+      let checked = false;
+      if (
+        permissionsSchema !== null &&
+        permissionsSchemaFields !== null &&
+        key in permissionsSchemaFields
+      )
+        checked = true;
       values.forEach(val => {
         childArray.push({
           name: val.name,
@@ -244,8 +250,16 @@ export const getType = (
       types.push(type);
     } else if (value instanceof GraphQLScalarType) {
       type.name = `scalar ${name}`;
+      let checked = false;
+      if (
+        permissionsSchema !== null &&
+        permissionsSchemaFields !== null &&
+        key in permissionsSchemaFields
+      )
+        checked = true;
+      const childArray: CustomFieldType[] = [{ name: type.name, checked }];
+      type.children = childArray;
       types.push(type);
-      return;
     } else if (value instanceof GraphQLObjectType) {
       type.name = `type ${name}`;
     } else if (value instanceof GraphQLInputObjectType) {
@@ -290,32 +304,6 @@ export const getType = (
       type.children = childArray;
       types.push(type);
     }
-  });
-  return types;
-};
-
-// Check if type belongs to default gql scalar types
-const checkDefaultGQLScalarType = (typeName: string): boolean => {
-  const gqlDefaultTypes = ['Boolean', 'Float', 'String', 'Int', 'ID'];
-  if (gqlDefaultTypes.indexOf(typeName) > -1) return true;
-  return false;
-};
-
-/**
- * Gets all scalar types from introspection schema
- * @param schema - Remote schema introspection schema.
- * @returns Array of all scalar types.
- */
-export const getScalarTypes = (schema: GraphQLSchema) => {
-  const fields = schema.getTypeMap();
-  const types: string[] = [];
-  Object.entries(fields).forEach(([, value]: any) => {
-    if (!(value instanceof GraphQLScalarType)) return;
-    const name = value.inspect();
-    if (checkDefaultGQLScalarType(name)) return;
-
-    const type = `scalar ${name}`;
-    types.push(type);
   });
   return types;
 };
@@ -409,7 +397,6 @@ const serialiseArgs = (args: argTreeType, argDef: GraphQLInputField) => {
   return `${res}}`;
 };
 
-// utility function for getSDLField
 const isEnumType = (type: GraphQLInputType): boolean => {
   if (type instanceof GraphQLList || type instanceof GraphQLNonNull)
     return isEnumType(type.ofType);
@@ -417,8 +404,14 @@ const isEnumType = (type: GraphQLInputType): boolean => {
   return false;
 };
 
-// utility function for getSDLField
-const checkNullType = (type: DatasourceObject) => {
+// Check if type belongs to default gql scalar types
+const checkDefaultGQLScalarType = (typeName: string): boolean => {
+  const gqlDefaultTypes = ['Boolean', 'Float', 'String', 'Int', 'ID'];
+  if (gqlDefaultTypes.indexOf(typeName) > -1) return true;
+  return false;
+};
+
+const checkEmptyType = (type: DatasourceObject) => {
   const isChecked = (element: FieldType | CustomFieldType) => element.checked;
   return type.children.some(isChecked);
 };
@@ -433,10 +426,19 @@ const getSDLField = (
   type: DatasourceObject,
   argTree: Record<string, any> | null
 ): string => {
-  if (!checkNullType(type)) return ''; // TODO add condition for scalars
+  if (!checkEmptyType(type)) return ''; // check if no child is selected for a type
 
   let result = ``;
   const typeName: string = type.name;
+
+  // add scalar fields to SDL
+  if (typeName.startsWith('scalar')) {
+    if (checkDefaultGQLScalarType(type.typeName)) return result; // if default GQL scalar type, return empty string
+    result = `${typeName}`;
+    return `${result}\n`;
+  }
+
+  // add other fields to SDL
   result = `${typeName}{`;
 
   type.children.forEach(f => {
@@ -445,8 +447,8 @@ const getSDLField = (
 
     let fieldStr = f.name;
 
-    // enum types doesn't have args
-    if (!typeName.includes('enum')) {
+    // enum types don't have args
+    if (!typeName.startsWith('enum')) {
       if (f.args) {
         fieldStr = `${fieldStr}(`;
         Object.values(f.args).forEach((arg: GraphQLInputField) => {
@@ -489,33 +491,13 @@ const getSDLField = (
 };
 
 /**
- * Gets enum types and scalar types SDL string from introspection schema.
- * @param schema - Remote schema introspection schema.
- * @returns String having all enum types and scalar types.
- */
-export const generateConstantTypes = (schema: GraphQLSchema): string => {
-  let result = ``;
-  // const enumTypes = getEnumTypes(schema);
-  // enumTypes.forEach(type => {
-  //   result = `${result}\n${getSDLField(type, null)}`;
-  // });
-  const scalarTypes = getScalarTypes(schema);
-  scalarTypes.forEach(type => {
-    result = `${result}\n${type}`;
-  });
-
-  return result;
-};
-
-/**
  * Generate SDL string having input types and object types.
  * @param types - Remote schema introspection schema.
  * @returns String having all enum types and scalar types.
  */
 export const generateSDL = (
   types: DatasourceObject[],
-  argTree: Record<string, any>,
-  schema: GraphQLSchema
+  argTree: Record<string, any>
 ) => {
   let result = '';
   const rootsMap: Record<string, any> = {
@@ -535,7 +517,7 @@ export const generateSDL = (
     ${rootsMap['type mutation_root'] ? 'mutation: mutation_root' : ''}
   }
   `;
-  result += generateConstantTypes(schema);
+
   return `${prefix} ${result}`;
 };
 
