@@ -83,7 +83,6 @@ import           Hasura.Server.Types
 import           Hasura.Server.Version
 import           Hasura.Session
 
-
 data ExitCode
 -- these are used during server initialization:
   = InvalidEnvironmentVariableOptionsError
@@ -358,15 +357,6 @@ shutdownGracefully = flip C.putMVar () . unShutdownLatch
 flushLogger :: MonadIO m => LoggerCtx impl -> m ()
 flushLogger = liftIO . FL.flushLogStr . _lcLoggerSet
 
-data ServerMetrics
-  = ServerMetrics
-  { smWarpThreads :: !EKG.Gauge.Gauge
-  }
-
-createServerMetrics :: EKG.Store -> IO ServerMetrics
-createServerMetrics store = do
-  smWarpThreads <- EKG.createGauge "warp_threads" store
-  pure ServerMetrics { .. }
 
 -- | This function acts as the entrypoint for the graphql-engine webserver.
 --
