@@ -134,7 +134,8 @@ JSON object:
      "claims_format": "json|stringified_json",
      "audience": <optional-string-or-list-of-strings-to-verify-audience>,
      "issuer": "<optional-string-to-verify-issuer>",
-     "claims_map": "<optional-object-of-session-variable-to-claim-jsonpath-or-literal-value>"
+     "claims_map": "<optional-object-of-session-variable-to-claim-jsonpath-or-literal-value>",
+     "allowed_skew": "<optional-number-of-seconds-in-integer>"
    }
 
 (``type``, ``key``) pair or ``jwk_url``, **one of them has to be present**.
@@ -493,6 +494,12 @@ The corresponding JWT config should be:
 
 In the above example, the ``x-hasura-allowed-roles`` and ``x-hasura-default-role`` values are set in the JWT
 config and the value of the ``x-hasura-user-id`` is a JSON path to the value in the JWT token.
+
+``allowed_skew``
+^^^^^^^^^^^^^^^^
+
+``allowed_skew`` is an optional field to provide some leeway (to account for clock skews) while comparing the JWT expiry time. This field
+expects an integer value which will be the number of seconds of the skew value.
 
 
 Examples
