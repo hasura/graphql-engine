@@ -1,0 +1,37 @@
+type: bulk
+args:
+
+- type: run_sql
+  args:
+    sql: |
+      CREATE TABLE hge_tests.measurement (
+          city_id         int not null,
+          logdate         date not null,
+          peaktemp        int,
+          unitsales       int
+      ) PARTITION BY RANGE (logdate);
+
+      CREATE TABLE hge_tests.measurement_y2006m02 PARTITION OF hge_tests.measurement
+          FOR VALUES FROM ('2006-02-01') TO ('2006-03-01');
+
+      CREATE TABLE hge_tests.measurement_y2006m03 PARTITION OF hge_tests.measurement
+          FOR VALUES FROM ('2006-03-01') TO ('2006-04-01');
+
+- type: track_table
+  args:
+    schema: hge_tests
+    name: measurement
+
+- type: create_event_trigger
+  args:
+    name: measurement_all
+    table:
+      schema: hge_tests
+      name: measurement
+    insert:
+      columns: "*"
+    update:
+      columns: "*"
+    delete:
+      columns: "*"
+    webhook: http://127.0.0.1:5592

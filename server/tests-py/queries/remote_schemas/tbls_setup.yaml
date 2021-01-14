@@ -1,5 +1,6 @@
 type: bulk
 args:
+
 - type: run_sql
   args:
     sql: |
@@ -19,5 +20,5 @@ args:
     name: simple2-graphql
     comment: testing
     definition:
-      url: "{{REMOTE_SCHEMAS_WEBHOOK_DOMAIN}}/user-graphql"
+      url: '{{REMOTE_SCHEMAS_WEBHOOK_DOMAIN}}/user-graphql'
       forward_client_headers: false

@@ -1,10 +1,11 @@
 import Permissions from './Main';
+import { rolesSelector, actionsSelector } from '../../../../metadata/selector';
 
 const mapStateToProps = state => {
   return {
     ...state.actions.permissions,
-    allRoles: state.tables.allRoles,
-    allActions: state.actions.common.actions,
+    allRoles: rolesSelector(state),
+    allActions: actionsSelector(state),
     readOnlyMode: state.main.readOnlyMode,
   };
 };

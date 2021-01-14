@@ -27,7 +27,7 @@ class Add extends React.Component {
             dispatch(addRemoteSchema());
           }}
         >
-          <Common {...this.props} />
+          <Common isNew {...this.props} />
           <div className={styles.commonBtn}>
             <Button
               type="submit"

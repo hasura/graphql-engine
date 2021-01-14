@@ -12,12 +12,13 @@ import {
 } from './spec';
 import { testMode } from '../../../helpers/common';
 import { setMetaData } from '../../validators/validators';
+import { getIndexRoute } from '../../../helpers/dataHelpers';
 
 const setup = () => {
   describe('Check Data Tab', () => {
     it('Clicking on Data tab opens the correct route', () => {
       // Visit the index route
-      cy.visit('/data/schema/public');
+      cy.visit(getIndexRoute());
       cy.wait(7000);
       // Get and set validation metadata
       setMetaData();
@@ -35,8 +36,8 @@ export const runPermissionsTests = () => {
     it('Table Permissions removal works as expected', passPTRemovePerms);
     it('View permissions work as expected', passPVPermissions);
     it('View Permissions removal works as expected', passPVRemovePerms);
-    it('Delete off the views', passPVDeleteView);
-    it('Delete off the test table', passPTDeleteTable);
+    it('Delete the views', passPVDeleteView);
+    it('Delete the test table', passPTDeleteTable);
   });
 };
 

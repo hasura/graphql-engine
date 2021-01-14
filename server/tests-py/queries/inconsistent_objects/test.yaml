@@ -54,22 +54,13 @@ inconsistent_objects:
   type: table
 - definition:
     using:
-      foreign_key_constraint_on: author_id
-    name: author
-    comment:
-    table:
-      schema: public
-      name: article
-  reason: 'table "article" does not exist'
-  type: object_relation
-- definition:
-    using:
       foreign_key_constraint_on:
         column: author_id
         table:
           schema: public
           name: article
     name: articles
+    source: default
     comment:
     table:
       schema: public

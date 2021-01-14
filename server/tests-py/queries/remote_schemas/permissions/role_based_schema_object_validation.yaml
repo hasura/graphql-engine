@@ -1,0 +1,101 @@
+- description:
+    The types of the fields of the 'User' object have been changed, 'user_id' has the type 'Int' in the upstream
+    remote schema and the field 'created_at' doesn't exist in the upstream remote schema.
+  url: /v1/query
+  status: 400
+  query:
+    type: add_remote_schema_permissions
+    args:
+      remote_schema: my-remote-schema
+      role: user
+      definition:
+        schema: |
+            type User {
+              user_id: Int!
+              created_at: String
+            }
+
+            type Query {
+              hello: String
+            }
+
+            schema {
+              query: Query
+            }
+  response:
+    path: $.args
+    error:
+      "validation for the given role-based schema failed for the following reasons:\n\
+      \ • expected type of \"user_id\"(\"Object field\") to be Int but recieved Int!\n\
+      \ • field \"created_at\" does not exist in the \"Object\": \"User\"\n"
+    code: validation-failed
+
+- description:
+    The 'Person' object is implementing the interface 'FullName' which doesn't exist in the
+    remote schema
+  url: /v1/query
+  status: 400
+  query:
+    type: add_remote_schema_permissions
+    args:
+      remote_schema: my-remote-schema
+      role: user
+      definition:
+        schema: |
+            type Query {
+              hello: String
+            }
+
+            interface FullName {
+              firstName: String!
+              lastName: String!
+            }
+
+            type Person implements FullName {
+              firstName: String
+              lastName: String
+              age: Int
+            }
+
+            schema {
+              query: Query
+            }
+  response:
+    path: $.args
+    error:
+      "validation for the given role-based schema failed for the following reasons:\n\
+       \ • \"Interface\": \"FullName\" does not exist in the upstream remote schema\n\
+       \ • custom interfaces are not supported. Object\"Person\" implements the following\
+       \ custom interfaces: \"FullName\"\n"
+    code: validation-failed
+
+- description:
+    The 'user' field in the 'Query' object doesn't have all the non-nullable arguments
+    that the corresponding remote 'user' field implements.
+  url: /v1/query
+  status: 400
+  query:
+    type: add_remote_schema_permissions
+    args:
+      remote_schema: my-remote-schema
+      role: user
+      definition:
+        schema: |
+            type User {
+              user_id: Int
+            }
+
+            type Query {
+              hello: String
+              user: User
+            }
+
+            schema {
+              query: Query
+            }
+  response:
+    path: $.args
+    error:
+      "validation for the given role-based schema failed because field: \"user\"
+      expects the following non nullable arguments to be present: \"user_id\""
+    code: validation-failed

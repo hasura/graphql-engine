@@ -4,19 +4,22 @@ import ReactTable, {
   ComponentPropsGetter0,
 } from 'react-table';
 import 'react-table/react-table.css';
-import { FilterTableProps } from './types';
+
+import { FilterTableProps, GridHeadingProps } from './types';
 import { ordinalColSort } from '../../../Data/utils';
 import styles from '../../Events.scss';
 import EventsSubTable from './EventsSubTable';
+import ExpanderButton from './ExpanderButton';
 import { sanitiseRow } from '../../utils';
 import { makeOrderBy } from '../../../../Common/utils/v1QueryUtils';
 import { convertDateTimeToLocale } from '../../../../Common/utils/jsUtils';
 import { getEventStatusIcon, getEventDeliveryIcon } from './utils';
 import Button from '../../../../Common/Button';
+import { SupportedEvents } from '../../../../../metadata/queryUtils';
 
 type CancelButtonProps = {
   id: string;
-  onClickHandler: () => void;
+  onClickHandler: (e: React.MouseEvent) => void;
 };
 
 const CancelEventButton: React.FC<CancelButtonProps> = ({
@@ -25,10 +28,14 @@ const CancelEventButton: React.FC<CancelButtonProps> = ({
 }) => (
   <Button
     key={id}
+    className={styles.add_mar_right_small}
     onClick={onClickHandler}
     color="white"
     size="xs"
     title="Cancel Event"
+    onMouseDown={e => {
+      e.preventDefault();
+    }}
   >
     <i className="fa fa-close" />
   </Button>
@@ -37,9 +44,10 @@ const CancelEventButton: React.FC<CancelButtonProps> = ({
 interface Props extends FilterTableProps {
   onCancelEvent?: (
     id: string,
-    scheduledAt: string,
+    scheduled_at: string | Date | number,
     onSuccess: () => void
   ) => void;
+  triggerType?: SupportedEvents;
 }
 
 const EventsTable: React.FC<Props> = props => {
@@ -51,9 +59,13 @@ const EventsTable: React.FC<Props> = props => {
     columns,
     identifier,
     onCancelEvent,
+    triggerType,
   } = props;
 
-  if (rows.length === 0) {
+  const [currentPage, setCurrentPage] = React.useState(0);
+  const [pageSize, setPageSize] = React.useState(filterState.limit ?? 10);
+
+  if (!rows.length) {
     return <div className={styles.add_mar_top}>No data available</div>;
   }
 
@@ -78,6 +90,7 @@ const EventsTable: React.FC<Props> = props => {
 
   const changePage = (page: number) => {
     if (filterState.offset !== page * filterState.limit) {
+      setCurrentPage(page);
       runQuery({
         offset: page * filterState.limit,
       });
@@ -86,36 +99,78 @@ const EventsTable: React.FC<Props> = props => {
 
   const changePageSize = (size: number) => {
     if (filterState.limit !== size) {
+      setPageSize(size);
       runQuery({
         limit: size,
       });
     }
   };
 
-  const gridHeadings = sortedColumns.map(column => {
-    if (column === 'actions') {
-      return { Header: '', accessor: column, width: 50 };
-    }
-    return {
-      Header: column,
-      accessor: column,
-    };
-  });
-
-  const invocationColumns = ['status', 'id', 'created_at'];
-
-  const invocationGridHeadings = invocationColumns.map(column => {
-    return {
-      Header: column,
-      accessor: column,
-    };
-  });
-
-  const onCancelHandler = (id: string, scheduledAt: string) => {
-    if (onCancelEvent) {
-      onCancelEvent(id, scheduledAt, runQuery);
+  const onCancelHandler = (
+    id: string,
+    scheduled_time: string | Date | number
+  ) => {
+    if (onCancelEvent && triggerType) {
+      onCancelEvent(id, scheduled_time, runQuery);
     }
   };
+
+  const expanderActions: GridHeadingProps = {
+    expander: true,
+    Header: '',
+    accessor: 'expander',
+    Expander: ({ isExpanded, viewIndex }) => {
+      const row = rows[viewIndex];
+      return (
+        <>
+          {columns.includes('actions') && (
+            <CancelEventButton
+              id={row.id}
+              onClickHandler={event => {
+                onCancelHandler(row.id, row.scheduled_time);
+                event.stopPropagation();
+              }}
+            />
+          )}
+          <ExpanderButton isExpanded={isExpanded} />
+        </>
+      );
+    },
+  };
+
+  const gridHeadings = [expanderActions];
+
+  sortedColumns.forEach(column => {
+    if (column !== 'actions') {
+      gridHeadings.push({
+        Header: column,
+        accessor: column,
+      });
+    }
+  });
+
+  const invocationColumns = ['status', 'invoid', 'created_at'];
+  const invocationDataTriggerColumns = [
+    'status',
+    'invocation_id',
+    'created_at',
+  ];
+
+  const invocationGridHeadings: GridHeadingProps[] = [expanderActions];
+  const addToGridHeadings = (headAccArr: string[]) => {
+    headAccArr.forEach(column => {
+      invocationGridHeadings.push({
+        Header: column,
+        accessor: column,
+      });
+    });
+  };
+
+  if (triggerType) {
+    addToGridHeadings(invocationColumns);
+  } else {
+    addToGridHeadings(invocationDataTriggerColumns);
+  }
 
   const rowsFormatted = rows.map(row => {
     const formattedRow = Object.keys(row).reduce((fr, col) => {
@@ -126,12 +181,6 @@ const EventsTable: React.FC<Props> = props => {
     }, {});
     return {
       ...formattedRow,
-      actions: columns.includes('actions') ? (
-        <CancelEventButton
-          id={row.id}
-          onClickHandler={() => onCancelHandler(row.id, row.scheduled_time)}
-        />
-      ) : undefined,
       delivered: getEventDeliveryIcon(row.delivered),
       status: getEventStatusIcon(row.status),
       scheduled_time: row.scheduled_time ? (
@@ -173,6 +222,17 @@ const EventsTable: React.FC<Props> = props => {
     },
   });
 
+  const getNumOfPages = (
+    currentPageSize: number,
+    currentCount: number | undefined,
+    currentRowData: Record<string, any>[]
+  ) => {
+    if (currentCount) {
+      return Math.ceil(currentCount / currentPageSize);
+    }
+    return Math.ceil(currentRowData.length / currentPageSize);
+  };
+
   return (
     <ReactTable
       className="-highlight"
@@ -182,7 +242,8 @@ const EventsTable: React.FC<Props> = props => {
       resizable
       manual
       onPageChange={changePage}
-      pages={count ? Math.ceil(count / filterState.limit) : 1}
+      page={currentPage}
+      pages={getNumOfPages(pageSize, count, rowsFormatted)}
       showPagination={count ? count > 10 : false}
       onPageSizeChange={changePageSize}
       sortable={false}
@@ -192,15 +253,23 @@ const EventsTable: React.FC<Props> = props => {
       defaultPageSize={10}
       SubComponent={row => {
         const currentRow = rows[row.index];
-        const logs =
-          currentRow.cron_event_logs ||
-          currentRow.scheduled_event_logs ||
-          currentRow.logs ||
-          [];
+        if (triggerType) {
+          return (
+            <EventsSubTable
+              event={currentRow}
+              rows={[]}
+              rowsFormatted={[]}
+              headings={invocationGridHeadings}
+              makeAPICall
+              triggerType={triggerType}
+            />
+          );
+        }
+        const logs = [currentRow];
         const invocationRows = logs.map((r: any) => {
           const newRow: Record<string, JSX.Element> = {};
           // Insert cells corresponding to all rows
-          invocationColumns.forEach(col => {
+          invocationDataTriggerColumns.forEach(col => {
             newRow[col] = (
               <div
                 className={styles.tableCellCenterAlignedOverflow}

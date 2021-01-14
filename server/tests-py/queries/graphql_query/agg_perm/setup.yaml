@@ -1,6 +1,7 @@
 type: bulk
 args:
 
+
 - type: run_sql
   args:
     sql: |
@@ -173,7 +174,7 @@ args:
     table: article
     role: role_with_access_to_cols
     permission:
-      columns: "*"
+      columns: '*'
       filter: {}
       allow_aggregations: true
       limit: 1
