@@ -54,7 +54,7 @@ instance FromJSON AddComputedField where
       <*> o .: "table"
       <*> o .: "name"
       <*> o .: "definition"
-      <*> o .:? "commment"
+      <*> o .:? "comment"
 
 runAddComputedField :: (MonadError QErr m, CacheRWM m, MetadataM m) => AddComputedField -> m EncJSON
 runAddComputedField q = do
