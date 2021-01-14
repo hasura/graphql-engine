@@ -101,9 +101,14 @@ const Permissions: React.FC<PermissionsProps> = ({ allRoles, ...props }) => {
       } catch (err) {
         // TODO test all posibilities that can reach this catch block
         console.log(err);
+        return
       }
     }
     const types = getType(schema, permissionsSchema);
+
+    // when server throws error while saving new role, do not reset the datasource
+    // persist the user defined schema in th UI
+    if (isNewRole && schemaDefinition) return;
 
     setDatasource([
       {
@@ -159,7 +164,7 @@ const Permissions: React.FC<PermissionsProps> = ({ allRoles, ...props }) => {
       <div className={`${styles.add_mar_bottom}`}>
         {!readOnlyMode && (
           <PermissionEditor
-            key={permissionEdit?.role}
+            key="test"
             permissionEdit={permissionEdit}
             isFetching={isFetching}
             isEditing={isEditing}
