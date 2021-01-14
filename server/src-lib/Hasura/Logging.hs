@@ -29,6 +29,9 @@ module Hasura.Logging
 
 import           Hasura.Prelude
 
+import           Control.Monad.Trans.Managed (ManagedT(..), allocate)
+import           Control.Monad.Trans.Control
+
 import qualified Control.AutoUpdate         as Auto
 import qualified Data.Aeson                 as J
 import qualified Data.Aeson.Casing          as J
@@ -247,12 +250,15 @@ getFormattedTime tzM = do
     -- format = Format.iso8601DateFormat (Just "%H:%M:%S")
 
 mkLoggerCtx
-  :: LoggerSettings
+  :: (MonadIO io, MonadBaseControl IO io)
+  => LoggerSettings
   -> Set.HashSet (EngineLogType impl)
-  -> IO (LoggerCtx impl)
+  -> ManagedT io (LoggerCtx impl)
 mkLoggerCtx (LoggerSettings cacheTime tzM logLevel) enabledLogs = do
-  loggerSet <- FL.newStdoutLoggerSet FL.defaultBufSize
-  timeGetter <- bool (return $ getFormattedTime tzM) cachedTimeGetter cacheTime
+  loggerSet <- allocate
+    (liftIO $ FL.newStdoutLoggerSet FL.defaultBufSize)
+    (liftIO . FL.rmLoggerSet)
+  timeGetter <- liftIO $ bool (return $ getFormattedTime tzM) cachedTimeGetter cacheTime
   return $ LoggerCtx loggerSet logLevel timeGetter enabledLogs
   where
     cachedTimeGetter =

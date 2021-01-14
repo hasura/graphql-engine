@@ -9,7 +9,6 @@ module Hasura.GraphQL.Parser.Class
 import           Hasura.Prelude
 
 import qualified Data.HashMap.Strict                  as Map
-import qualified Language.GraphQL.Draft.Syntax        as G
 import qualified Language.Haskell.TH                  as TH
 
 import           Data.Has
@@ -18,12 +17,12 @@ import           Data.Tuple.Extended
 import           GHC.Stack                            (HasCallStack)
 import           Type.Reflection                      (Typeable)
 
-import           Hasura.Backends.Postgres.SQL.Types
 import           Hasura.GraphQL.Parser.Class.Parse
 import           Hasura.GraphQL.Parser.Internal.Types
+import           Hasura.RQL.Types.Common
 import           Hasura.RQL.Types.Error
+import           Hasura.RQL.Types.Source
 import           Hasura.RQL.Types.Table
-import           Hasura.SQL.Backend
 import           Hasura.Session                       (RoleName)
 
 {- Note [Tying the knot]
@@ -115,37 +114,22 @@ askRoleName
   => m RoleName
 askRoleName = asks getter
 
-type MonadTableInfo r m = (MonadReader r m, Has TableCache r, MonadError QErr m)
+type MonadTableInfo b r m = (MonadReader r m, Has (SourceCache b) r, MonadError QErr m)
 
 -- | Looks up table information for the given table name. This function
 -- should never fail, since the schema cache construction process is
 -- supposed to ensure all dependencies are resolved.
 askTableInfo
-  :: MonadTableInfo r m
-  => QualifiedTable
-  -> m (TableInfo 'Postgres)
+  :: forall b r m. (Backend b, MonadTableInfo b r m)
+  => TableName b
+  -> m (TableInfo b)
 askTableInfo tableName = do
-  tableInfo <- asks $ Map.lookup tableName . getter
+  let getTableInfo :: SourceCache b -> Maybe (TableInfo b)
+      getTableInfo sc = Map.lookup tableName $ Map.unions $ map _pcTables $ Map.elems sc
+  tableInfo <- asks $ getTableInfo . getter
   -- This should never fail, since the schema cache construction process is
   -- supposed to ensure that all dependencies are resolved.
   tableInfo `onNothing` throw500 ("askTableInfo: no info for " <>> tableName)
-
--- | Helper function to get the table GraphQL name. A table may have an
--- identifier configured with it. When the identifier exists, the GraphQL nodes
--- that are generated according to the identifier. For example: Let's say,
--- we have a table called `users address`, the name of the table is not GraphQL
--- compliant so we configure the table with a GraphQL compliant name,
--- say `users_address`
--- The generated top-level nodes of this table will be like `users_address`,
--- `insert_users_address` etc
-getTableGQLName
-  :: MonadTableInfo r m
-  => QualifiedTable
-  -> m G.Name
-getTableGQLName table = do
-  tableInfo <- askTableInfo table
-  let tableCustomName = _tcCustomName . _tciCustomConfig . _tiCoreInfo $ tableInfo
-  tableCustomName `onNothing` qualifiedObjectToName table
 
 -- | A wrapper around 'memoizeOn' that memoizes a function by using its argument
 -- as the key.

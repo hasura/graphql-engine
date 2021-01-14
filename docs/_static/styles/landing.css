@@ -144,7 +144,9 @@
   width: 50%;
   float: left;
 }
-
+.marketoFormWrapper {
+  width: 100% !important;
+}
 @media (max-width: 1024px) {
   .hcl_half {
     width: 100%;

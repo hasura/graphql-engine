@@ -20,6 +20,9 @@ export default class QueryAnalyser extends React.Component {
     this.props
       .analyzeFetcher(analyseQuery.query, dispatch)
       .then(data => {
+        if (!data) {
+          return;
+        }
         this.setState({
           analyseData: Array.isArray(data) ? data : [data],
           activeNode: 0,

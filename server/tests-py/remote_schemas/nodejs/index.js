@@ -74,12 +74,12 @@ const typeDefs = gql`
   type Query {
     hello: String
     messages(where: MessageWhereInpObj, includes: IncludeInpObj): [Message]
-    user(user_id: Int!): User
-    users(user_ids: [Int]!): [User]
+    user(user_id: ID!): User
+    users(user_ids: [ID]!): [User]
     message(id: Int!) : Message
     communications(id: Int): [Communication]
     search(id: Int!): SearchResult
-    getOccupation(name: String!): Occupation!
+    getOccupation(name: ID!): Occupation!
   }
 `;
 

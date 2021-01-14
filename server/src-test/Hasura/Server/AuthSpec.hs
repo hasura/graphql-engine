@@ -6,6 +6,7 @@ import           Hasura.Logging
 import           Hasura.Prelude
 import           Hasura.Server.Version
 
+import           Control.Monad.Trans.Managed     (lowerManagedT)
 import           Control.Monad.Trans.Control
 import qualified Crypto.JOSE.JWK             as Jose
 import           Data.Aeson                  ((.=))
@@ -62,9 +63,7 @@ getUserInfoWithExpTimeTests = describe "getUserInfo" $ do
                            (mkSessionVariablesHeaders mempty)
           processJwt = processJwt_ $
             -- processAuthZHeader:
-            \_jwtCtx _authzHeader -> return (claimsObjToClaimsMap claims , Nothing)
-            where
-              claimsObjToClaimsMap = Map.fromList . map (first mkSessionVariable) . Map.toList
+            \_jwtCtx _authzHeader -> return (mapKeys mkSessionVariable claims, Nothing)
 
   let setupAuthMode'E a b c d =
         either (const $ error "fixme") id <$> setupAuthMode' a b c d
@@ -558,6 +557,7 @@ fakeJWTConfig =
       jcAudience = Nothing
       jcIssuer = Nothing
       jcClaims = JCNamespace (ClaimNs "") JCFJson
+      jcAllowedSkew = Nothing
    in JWTConfig{..}
 
 fakeAuthHook :: AuthHook
@@ -586,6 +586,7 @@ setupAuthMode'  mAdminSecretHash mWebHook mJwtSecret mUnAuthRole =
   -- just throw away the error message for ease of testing:
   fmap (either (const $ Left ()) Right)
     $ runNoReporter
+    $ lowerManagedT
     $ runExceptT
     $ setupAuthMode mAdminSecretHash mWebHook mJwtSecret mUnAuthRole
       -- NOTE: this won't do any http or launch threads if we don't specify JWT URL:

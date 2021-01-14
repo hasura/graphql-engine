@@ -1,17 +1,16 @@
 import React from 'react';
 import AceEditor from 'react-ace';
+
 import ExpandableEditor from '../../../Common/Layout/ExpandableEditor/Editor';
-
 import styles from './AllowedQueries.scss';
+import Button from '../../../Common/Button/Button';
 
+import { getConfirmation } from '../../../Common/utils/jsUtils';
 import {
   updateAllowedQuery,
   deleteAllowedQuery,
   deleteAllowList,
-} from '../Actions';
-import Button from '../../../Common/Button/Button';
-
-import { getConfirmation } from '../../../Common/utils/jsUtils';
+} from '../../../../metadata/actions';
 
 class AllowedQueriesList extends React.Component {
   constructor(props) {

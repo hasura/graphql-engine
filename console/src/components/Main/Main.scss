@@ -1367,7 +1367,7 @@
   position: absolute;
   width: 17px;
   top: 16px;
-  right: 8px;
+  right: 0.8rem;
   border-radius: 50%;
   user-select: none;
   visibility: visible;
@@ -1534,10 +1534,6 @@
 
 @media (max-width: 1250px) {
   .secureSectionText {
-    display: none;
-  }
-
-  .shareSection {
     display: none;
   }
 }

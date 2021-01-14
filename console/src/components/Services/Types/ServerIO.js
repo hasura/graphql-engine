@@ -1,52 +1,13 @@
-import Endpoints, { globalCookiePolicy } from '../../../Endpoints';
-import requestAction from '../../../utils/requestAction';
-import dataHeaders from '../Data/Common/Headers';
 import { makeMigrationCall } from '../Data/DataActions';
 import {
-  LOADING_TYPES,
-  LOADING_TYPES_FAILURE,
-  LOADING_TYPES_SUCCESS,
-} from './reducer';
-import {
-  parseCustomTypes,
   reformCustomTypes,
   hydrateTypeRelationships,
 } from '../../../shared/utils/hasuraCustomTypeUtils';
-import {
-  getFetchCustomTypesQuery,
-  generateSetCustomTypesQuery,
-} from '../../Common/utils/v1QueryUtils';
 import { getConfirmation } from '../../Common/utils/jsUtils';
+import { exportMetadata } from '../../../metadata/actions';
+import { customTypesSelector } from '../../../metadata/selector';
+import { generateSetCustomTypesQuery } from '../../../metadata/queryUtils';
 import Migration from '../../../utils/migration/Migration';
-
-export const setCustomTypes = (dispatch, response) => {
-  dispatch({
-    type: LOADING_TYPES_SUCCESS,
-    types: response.length ? parseCustomTypes(response[0].custom_types) : [],
-  });
-};
-
-export const fetchCustomTypes = () => (dispatch, getState) => {
-  const url = Endpoints.getSchema;
-  const options = {
-    credentials: globalCookiePolicy,
-    method: 'POST',
-    headers: dataHeaders(getState),
-    body: JSON.stringify(getFetchCustomTypesQuery()),
-  };
-  dispatch({ type: LOADING_TYPES });
-  return dispatch(requestAction(url, options)).then(
-    data => {
-      setCustomTypes(dispatch, data);
-      return Promise.resolve();
-    },
-    error => {
-      console.error('Failed to load custom types' + JSON.stringify(error));
-      dispatch({ type: LOADING_TYPES_FAILURE, error });
-      return Promise.reject();
-    }
-  );
-};
 
 export const setCustomGraphQLTypes = (types, successCb, errorCb) => (
   dispatch,
@@ -60,7 +21,7 @@ export const setCustomGraphQLTypes = (types, successCb, errorCb) => (
     return;
   }
 
-  const existingTypes = getState().types.types;
+  const existingTypes = customTypesSelector(getState());
 
   const hydratedTypes = hydrateTypeRelationships(types, existingTypes);
 
@@ -72,15 +33,11 @@ export const setCustomGraphQLTypes = (types, successCb, errorCb) => (
 
   const migrationName = 'set_custom_types';
   const requestMsg = 'Setting custom types...';
-  const successMsg = 'Setting custom types successfull';
+  const successMsg = 'Setting custom types successful';
   const errorMsg = 'Setting custom types failed';
 
   const customOnSuccess = () => {
-    dispatch(fetchCustomTypes()).then(() => {
-      if (successCb) {
-        successCb();
-      }
-    });
+    dispatch(exportMetadata(successCb));
   };
   const customOnError = () => {
     if (errorCb) {

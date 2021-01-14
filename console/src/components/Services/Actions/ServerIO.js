@@ -1,24 +1,5 @@
-import Endpoints, { globalCookiePolicy } from '../../../Endpoints';
 import globals from '../../../Globals';
-import requestAction from '../../../utils/requestAction';
-import dataHeaders from '../Data/Common/Headers';
-import {
-  LOADING_ACTIONS,
-  LOADING_ACTIONS_SUCCESS,
-  LOADING_ACTIONS_FAILURE,
-} from './reducer';
-import { filterInconsistentMetadataObjects } from '../Settings/utils';
-import { makeMigrationCall, fetchRoleList } from '../Data/DataActions';
-import {
-  generateSetCustomTypesQuery,
-  generateCreateActionQuery,
-  generateDropActionQuery,
-  getFetchActionsQuery,
-  getFetchCustomTypesQuery,
-  getCreateActionPermissionQuery,
-  getDropActionPermissionQuery,
-  getUpdateActionQuery,
-} from '../../Common/utils/v1QueryUtils';
+import { makeMigrationCall } from '../Data/DataActions';
 import {
   injectTypeRelationship,
   removeTypeRelationship,
@@ -46,7 +27,6 @@ import {
   setFetching as createActionRequestInProgress,
   unsetFetching as createActionRequestComplete,
 } from './Add/reducer';
-import { fetchCustomTypes, setCustomTypes } from '../Types/ServerIO';
 import {
   setFetching as modifyActionRequestInProgress,
   unsetFetching as modifyActionRequestComplete,
@@ -57,6 +37,19 @@ import {
   setRequestSuccess as setPermRequestSuccess,
   setRequestFailure as setPermRequestFailure,
 } from './Permissions/reducer';
+import { exportMetadata } from '../../../metadata/actions';
+import {
+  customTypesSelector,
+  actionsSelector,
+} from '../../../metadata/selector';
+import {
+  generateSetCustomTypesQuery,
+  generateCreateActionQuery,
+  generateDropActionQuery,
+  getCreateActionPermissionQuery,
+  getUpdateActionQuery,
+  getDropActionPermissionQuery,
+} from '../../../metadata/queryUtils';
 import { getActionPermissionMigration } from './Permissions/utils';
 import Migration from '../../../utils/migration/Migration';
 import {
@@ -67,54 +60,10 @@ import {
   updatePersistedDerivation,
 } from './utils';
 
-export const fetchActions = () => {
-  return (dispatch, getState) => {
-    const url = Endpoints.getSchema;
-    const options = {
-      credentials: globalCookiePolicy,
-      method: 'POST',
-      headers: dataHeaders(getState),
-      body: JSON.stringify({
-        type: 'bulk',
-        args: [getFetchActionsQuery(), getFetchCustomTypesQuery()],
-      }),
-    };
-    dispatch({ type: LOADING_ACTIONS });
-    return dispatch(requestAction(url, options)).then(
-      data => {
-        setCustomTypes(dispatch, data[1]);
-
-        let consistentActions = data[0];
-        const { inconsistentObjects } = getState().metadata;
-
-        if (inconsistentObjects.length > 0) {
-          consistentActions = filterInconsistentMetadataObjects(
-            data[0],
-            inconsistentObjects,
-            'actions'
-          );
-        }
-
-        dispatch({ type: LOADING_ACTIONS_SUCCESS, data: consistentActions });
-
-        return Promise.resolve();
-      },
-      error => {
-        console.error('Failed to load actions' + JSON.stringify(error));
-        dispatch({ type: LOADING_ACTIONS_FAILURE, error });
-        return Promise.reject();
-      }
-    );
-  };
-};
-
 export const createAction = () => (dispatch, getState) => {
-  const {
-    add: rawState,
-    common: { actions: allActions },
-  } = getState().actions;
-  const { types: existingTypesList } = getState().types;
-
+  const { add: rawState } = getState().actions;
+  const existingTypesList = customTypesSelector(getState());
+  const allActions = actionsSelector(getState());
   const {
     name: actionName,
     arguments: args,
@@ -209,7 +158,7 @@ export const createAction = () => (dispatch, getState) => {
     if (rawState.derive.operation) {
       persistDerivedAction(state.name, rawState.derive.operation);
     }
-    dispatch(fetchActions()).then(() => {
+    dispatch(exportMetadata()).then(() => {
       dispatch(createActionRequestComplete());
       dispatch(
         push(`${globals.urlPrefix}${appPrefix}/manage/${state.name}/modify`)
@@ -236,8 +185,7 @@ export const createAction = () => (dispatch, getState) => {
 
 export const saveAction = currentAction => (dispatch, getState) => {
   const { modify: rawState } = getState().actions;
-  const { types: existingTypesList } = getState().types;
-
+  const existingTypesList = customTypesSelector(getState());
   const {
     name: actionName,
     arguments: args,
@@ -291,7 +239,7 @@ export const saveAction = currentAction => (dispatch, getState) => {
     existingTypesList
   );
 
-  const isActionNameChange = currentAction.action_name !== state.name;
+  const isActionNameChange = currentAction.name !== state.name;
 
   const customFieldsQueryUp = generateSetCustomTypesQuery(
     reformCustomTypes(mergedTypes)
@@ -301,18 +249,16 @@ export const saveAction = currentAction => (dispatch, getState) => {
     reformCustomTypes(existingTypesList)
   );
 
-  const dropCurrentActionQuery = generateDropActionQuery(
-    currentAction.action_name
-  );
+  const dropCurrentActionQuery = generateDropActionQuery(currentAction.name);
 
   const updateCurrentActionQuery = getUpdateActionQuery(
     generateActionDefinition(state),
-    currentAction.action_name,
+    currentAction.name,
     actionDescription
   );
   const rollbackActionQuery = getUpdateActionQuery(
-    currentAction.action_defn,
-    currentAction.action_name,
+    currentAction.definition,
+    currentAction.name,
     currentAction.comment
   );
 
@@ -324,8 +270,8 @@ export const saveAction = currentAction => (dispatch, getState) => {
 
   const actionQueryDown = generateDropActionQuery(state.name);
   const oldActionQueryUp = generateCreateActionQuery(
-    currentAction.action_name,
-    currentAction.action_defn,
+    currentAction.name,
+    currentAction.definition,
     currentAction.comment
   );
 
@@ -344,21 +290,21 @@ export const saveAction = currentAction => (dispatch, getState) => {
     migration.add(createNewActionQuery, actionQueryDown);
   }
 
-  const migrationName = `modify_action_${currentAction.action_name}_to_${state.name}`;
+  const migrationName = `modify_action_${currentAction.name}_to_${state.name}`;
   const requestMsg = 'Saving action...';
   const successMsg = 'Action saved successfully';
   const errorMsg = 'Saving action failed';
   const customOnSuccess = () => {
     dispatch(modifyActionRequestComplete());
     if (isActionNameChange) {
-      updatePersistedDerivation(currentAction.action_name, state.name);
+      updatePersistedDerivation(currentAction.name, state.name);
       const newHref = window.location.href.replace(
-        `/manage/${currentAction.action_name}/modify`,
+        `/manage/${currentAction.name}/modify`,
         `/manage/${state.name}/modify`
       );
       window.location.replace(newHref);
     } else {
-      dispatch(fetchActions());
+      dispatch(exportMetadata());
     }
   };
   const customOnError = () => {
@@ -381,8 +327,8 @@ export const saveAction = currentAction => (dispatch, getState) => {
 };
 
 export const deleteAction = currentAction => (dispatch, getState) => {
-  const confirmMessage = `This will permanently delete the action "${currentAction.action_name}" from this table`;
-  const isOk = getConfirmation(confirmMessage, true, currentAction.action_name);
+  const confirmMessage = `This will permanently delete the action "${currentAction.name}" from this table`;
+  const isOk = getConfirmation(confirmMessage, true, currentAction.name);
   if (!isOk) {
     return;
   }
@@ -391,23 +337,23 @@ export const deleteAction = currentAction => (dispatch, getState) => {
   const migration = new Migration();
 
   migration.add(
-    generateDropActionQuery(currentAction.action_name),
+    generateDropActionQuery(currentAction.name),
     generateCreateActionQuery(
-      currentAction.action_name,
-      currentAction.action_defn,
+      currentAction.name,
+      currentAction.definition,
       currentAction.comment
     )
   );
 
-  const migrationName = `delete_action_${currentAction.action_name}`;
+  const migrationName = `delete_action_${currentAction.name}`;
   const requestMsg = 'Deleting action...';
   const successMsg = 'Action deleted successfully';
   const errorMsg = 'Deleting action failed';
   const customOnSuccess = () => {
     dispatch(modifyActionRequestComplete());
     dispatch(push(`${globals.urlPrefix}${appPrefix}/manage`));
-    dispatch(fetchActions());
-    removePersistedDerivedAction(currentAction.action_name);
+    dispatch(exportMetadata());
+    removePersistedDerivedAction(currentAction.name);
   };
   const customOnError = () => {
     dispatch(modifyActionRequestComplete());
@@ -432,8 +378,7 @@ export const addActionRel = (relConfig, successCb, existingRelConfig) => (
   dispatch,
   getState
 ) => {
-  const { types: existingTypes } = getState().types;
-
+  const existingTypes = customTypesSelector(getState());
   let typesWithRels = [...existingTypes];
 
   let validationError;
@@ -478,47 +423,38 @@ export const addActionRel = (relConfig, successCb, existingRelConfig) => (
     relConfig
   );
 
-  const customTypesQueryUp = generateSetCustomTypesQuery(
-    reformCustomTypes(typesWithRels)
-  );
+  const customTypesQueryUp = generateSetCustomTypesQuery({
+    ...reformCustomTypes(typesWithRels),
+    source: relConfig.refDb,
+  });
 
-  const customTypesQueryDown = generateSetCustomTypesQuery(
-    reformCustomTypes(existingTypes)
-  );
-  // Migration queries start
+  const customTypesQueryDown = generateSetCustomTypesQuery({
+    ...reformCustomTypes(existingTypes),
+    source: relConfig.refDb,
+  });
+
   const migration = new Migration();
   migration.add(customTypesQueryUp, customTypesQueryDown);
 
   const migrationName = `save_rel_${relConfig.name}_on_${relConfig.typename}`;
   const requestMsg = 'Saving relationship...';
   const successMsg = 'Relationship saved successfully';
-  const customOnSuccess = () => {
-    // dispatch(createActionRequestComplete());
-    dispatch(fetchCustomTypes());
-    if (successCb) {
-      successCb();
-    }
-  };
 
-  const customOnError = () => {
-    // dispatch(createActionRequestComplete());
-  };
-  // dispatch(createActionRequestInProgress());
   makeMigrationCall(
     dispatch,
     getState,
     migration.upMigration,
     migration.downMigration,
     migrationName,
-    customOnSuccess,
-    customOnError,
+    () => dispatch(exportMetadata(successCb)),
+    () => {},
     requestMsg,
     successMsg,
     errorMsg
   );
 };
 
-export const removeActionRel = (relName, typename, successCb) => (
+export const removeActionRel = (relName, source, typename, successCb) => (
   dispatch,
   getState
 ) => {
@@ -529,7 +465,7 @@ export const removeActionRel = (relName, typename, successCb) => (
     return;
   }
 
-  const { types: existingTypes } = getState().types;
+  const existingTypes = customTypesSelector(getState());
 
   const typesWithoutRel = removeTypeRelationship(
     existingTypes,
@@ -537,40 +473,31 @@ export const removeActionRel = (relName, typename, successCb) => (
     relName
   );
 
-  const customTypesQueryUp = generateSetCustomTypesQuery(
-    reformCustomTypes(typesWithoutRel)
-  );
+  const customTypesQueryUp = generateSetCustomTypesQuery({
+    ...reformCustomTypes(typesWithoutRel),
+    source,
+  });
 
-  const customTypesQueryDown = generateSetCustomTypesQuery(
-    reformCustomTypes(existingTypes)
-  );
+  const customTypesQueryDown = generateSetCustomTypesQuery({
+    ...reformCustomTypes(existingTypes),
+    source,
+  });
   const migration = new Migration();
   migration.add(customTypesQueryUp, customTypesQueryDown);
 
-  const migrationName = 'remove_action_rel'; // TODO: better migration name
-  const requestMsg = 'Removing relationship...';
+  const migrationName = `remove_action_relationship_${relName}_from_${typename}`;
+  const requestMsg = `Removing relationship ${relName}...`;
   const successMsg = 'Relationship removed successfully';
-  const errorMsg = 'Removing relationship failed';
-  const customOnSuccess = () => {
-    // dispatch(createActionRequestComplete());
-    dispatch(fetchCustomTypes());
-    if (successCb) {
-      successCb();
-    }
-  };
+  const errorMsg = `Failed to remove the relationship: "${relName}"`;
 
-  const customOnError = () => {
-    // dispatch(createActionRequestComplete());
-  };
-  // dispatch(createActionRequestInProgress());
   makeMigrationCall(
     dispatch,
     getState,
     migration.upMigration,
     migration.downMigration,
     migrationName,
-    customOnSuccess,
-    customOnError,
+    () => dispatch(exportMetadata(successCb)),
+    () => {},
     requestMsg,
     successMsg,
     errorMsg
@@ -582,9 +509,10 @@ export const saveActionPermission = (successCb, errorCb) => (
   getState
 ) => {
   const {
-    common: { actions: allActions, currentAction },
+    common: { currentAction },
     permissions: { permissionEdit },
   } = getState().actions;
+  const allActions = actionsSelector(getState());
 
   const allPermissions = getActionPermissions(
     findAction(allActions, currentAction)
@@ -596,14 +524,16 @@ export const saveActionPermission = (successCb, errorCb) => (
     currentAction
   );
 
-  const migrationName = 'save_action_perm';
+  const { role, newRole } = permissionEdit;
+  const roleName = (newRole || role).trim();
+
+  const migrationName = `save_action_permission_${currentAction}_${roleName}`;
   const requestMsg = 'Saving permission...';
   const successMsg = 'Permission saved successfully';
-  const errorMsg = 'Saving permission failed';
+  const errorMsg = `Failed to save permissions for role "${roleName}"`;
 
   const customOnSuccess = () => {
-    dispatch(fetchActions());
-    dispatch(fetchRoleList());
+    dispatch(exportMetadata());
     dispatch(setPermRequestSuccess());
     if (successCb) {
       successCb();
@@ -657,8 +587,7 @@ export const removeActionPermission = (successCb, errorCb) => (
   const errorMsg = 'Removing permission failed';
 
   const customOnSuccess = () => {
-    dispatch(fetchActions());
-    dispatch(fetchRoleList());
+    dispatch(exportMetadata());
     dispatch(setPermRequestSuccess());
     if (successCb) {
       successCb();

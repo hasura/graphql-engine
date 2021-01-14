@@ -23,11 +23,12 @@ import {
 } from './spec';
 
 import { setMetaData } from '../../validators/validators';
+import { getIndexRoute } from '../../../helpers/dataHelpers';
 
 const setup = () => {
   describe('Setup route', () => {
     it('Visit the index route', () => {
-      cy.visit('/data/schema/public');
+      cy.visit(getIndexRoute());
       cy.wait(7000);
       setMetaData();
     });

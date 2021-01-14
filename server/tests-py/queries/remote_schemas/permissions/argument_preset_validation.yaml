@@ -1,0 +1,136 @@
+- description: adding preset directive at the wrong location
+  url: /v1/query
+  status: 400
+  query:
+    type: add_remote_schema_permissions
+    args:
+      remote_schema: my-remote-schema
+      role: user
+      definition:
+        schema: |
+            type User {
+              user_id: Int @preset(value: 2)
+            }
+
+            type Query {
+              hello: String
+            }
+  response:
+    path: $.args
+    error: "validation for the given role-based schema failed because Preset directives can be defined only on INPUT_FIELD_DEFINITION or ARGUMENT_DEFINITION"
+    code: validation-failed
+
+- description: adding an invalid directive preset value
+  url: /v1/query
+  status: 400
+  query:
+    type: add_remote_schema_permissions
+    args:
+      remote_schema: my-remote-schema
+      role: user
+      definition:
+        schema: |
+          type User {
+            user_id: Int
+            userMessages(whered: MessageWhereInpObj): [Message]
+            gimmeText(text: String @preset(value: "world")): String
+          }
+
+          interface Communication {
+            id: Int!
+            msg: String!
+          }
+
+          type Message implements Communication {
+            id: Int!
+            name: String!
+            msg: String!
+            errorMsg: String
+          }
+
+          input MessageWhereInpObj {
+            # the below preset is set to a Int value, on purpose
+            id: IntCompareObj @preset(value: 2)
+            name: StringCompareObj
+          }
+
+          input IntCompareObj {
+            eq : Int
+            gt : Int
+            lt : Int
+          }
+
+          input StringCompareObj {
+            eq : String
+          }
+
+          type Query {
+            hello: String
+            messages(where: MessageWhereInpObj @preset(value: {id: {eq: 1}})): [Message]
+            user(user_id: Int! @preset(value: 2)): User
+            users(user_ids: [Int]!): [User]
+            message(id: Int!) : Message
+            communications(id: Int): [Communication]
+          }
+  response:
+    path: $.args
+    error:
+      'validation for the given role-based schema failed because expected preset
+       value "2" of type "IntCompareObj" to be an input object value'
+    code: validation-failed
+
+- description: adding an invalid directive preset value
+  url: /v1/query
+  status: 400
+  query:
+    type: add_remote_schema_permissions
+    args:
+      remote_schema: my-remote-schema
+      role: user
+      definition:
+        schema: |
+          type User {
+            user_id: Int
+            userMessages(whered: MessageWhereInpObj): [Message]
+            gimmeText(text: String @preset(value: "world")): String
+          }
+
+          interface Communication {
+            id: Int!
+            msg: String!
+          }
+
+          type Message implements Communication {
+            id: Int!
+            name: String!
+            msg: String!
+            errorMsg: String
+          }
+
+          input MessageWhereInpObj {
+            # `lte` doesn't exist in `IntCompareObj`
+            id: IntCompareObj @preset(value: {lte: 2})
+            name: StringCompareObj
+          }
+
+          input IntCompareObj {
+            eq : Int
+            gt : Int
+            lt : Int
+          }
+
+          input StringCompareObj {
+            eq : String
+          }
+
+          type Query {
+            messages(where: MessageWhereInpObj): [Message]
+            user(user_id: Int!): User
+            message(id: Int!) : Message
+          }
+  response:
+    path: $.args
+    error:
+      'validation for the given role-based schema failed because "lte" does not
+       exist in the input object "IntCompareObj"'
+    code: validation-failed

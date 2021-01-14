@@ -12,7 +12,7 @@ import           Hasura.RQL.Types
 
 
 -- | A 'RemoteJoin' represents the context of remote relationship to be extracted from 'AnnFieldG's.
-data RemoteJoin (b :: Backend)
+data RemoteJoin (b :: BackendType)
   = RemoteJoin
   { _rjName          :: !FieldName -- ^ The remote join field name.
   , _rjArgs          :: ![RemoteFieldArgument] -- ^ User-provided arguments with variables.

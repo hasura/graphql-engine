@@ -2,9 +2,9 @@ import React from 'react';
 import { ValueFilter, Operator } from './types';
 import { allOperators } from './utils';
 
-import { BaseTable } from '../utils/pgUtils';
 import { isNotDefined } from '../utils/jsUtils';
 import styles from './FilterQuery.scss';
+import { BaseTable } from '../../../dataSources/types';
 
 type Props = {
   filters: ValueFilter[];

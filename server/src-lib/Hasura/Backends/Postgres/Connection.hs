@@ -8,8 +8,6 @@ module Hasura.Backends.Postgres.Connection
   , LazyTxT
   , LazyTx
 
-  , PGExecCtx(..)
-  , mkPGExecCtx
   , runLazyTx
   , runQueryTx
   , withUserInfo
@@ -18,71 +16,37 @@ module Hasura.Backends.Postgres.Connection
 
   , RespTx
   , LazyRespTx
-  , defaultTxErrorHandler
-  , mkTxErrorHandler
   , lazyTxToQTx
 
   , doesSchemaExist
   , doesTableExist
-  , isExtensionAvailable
+  , enablePgcryptoExtension
+  , dropHdbCatalogSchema
+
+  , module ET
   ) where
 
 import           Hasura.Prelude
 
-import qualified Data.Aeson.Extended                as J
-import qualified Database.PG.Query                  as Q
-import qualified Database.PG.Query.Connection       as Q
+import qualified Data.Aeson.Extended                    as J
+import qualified Database.PG.Query                      as Q
+import qualified Database.PG.Query.Connection           as Q
 
-import           Control.Lens
-import           Control.Monad.Morph                (hoist)
-import           Control.Monad.Trans.Control        (MonadBaseControl (..))
+import           Control.Monad.Morph                    (hoist)
+import           Control.Monad.Trans.Control            (MonadBaseControl (..))
 import           Control.Monad.Unique
 import           Control.Monad.Validate
-import           Data.Either                        (isRight)
+import           Network.HTTP.Client.Extended           (HasHttpManagerM (..))
 
-import qualified Hasura.Backends.Postgres.SQL.DML   as S
-import qualified Hasura.Tracing                     as Tracing
+import qualified Hasura.Backends.Postgres.SQL.DML       as S
+import qualified Hasura.Tracing                         as Tracing
 
-import           Hasura.Backends.Postgres.SQL.Error
+import           Hasura.Backends.Postgres.Execute.Types as ET
 import           Hasura.Backends.Postgres.SQL.Types
 import           Hasura.EncJSON
 import           Hasura.RQL.Types.Error
 import           Hasura.SQL.Types
 import           Hasura.Session
-
-type RunTx =
-  forall m a. (MonadIO m, MonadBaseControl IO m) => Q.TxET QErr m a -> ExceptT QErr m a
-
-data PGExecCtx
-  = PGExecCtx
-  { _pecRunReadOnly  :: RunTx
-  -- ^ Run a Q.ReadOnly transaction
-  , _pecRunReadNoTx  :: RunTx
-  -- ^ Run a read only statement without an explicit transaction block
-  , _pecRunReadWrite :: RunTx
-  -- ^ Run a Q.ReadWrite transaction
-  , _pecCheckHealth  :: (IO Bool)
-  -- ^ Checks the health of this execution context
-  }
-
--- | Creates a Postgres execution context for a single Postgres master pool
-mkPGExecCtx :: Q.TxIsolation -> Q.PGPool -> PGExecCtx
-mkPGExecCtx isoLevel pool =
-  PGExecCtx
-  { _pecRunReadOnly       = (Q.runTx pool (isoLevel, Just Q.ReadOnly))
-  , _pecRunReadNoTx       = (Q.runTx' pool)
-  , _pecRunReadWrite      = (Q.runTx pool (isoLevel, Just Q.ReadWrite))
-  , _pecCheckHealth       = checkDbConnection
-  }
-  where
-    checkDbConnection = do
-      e <- liftIO $ runExceptT $ Q.runTx' pool select1Query
-      pure $ isRight e
-      where
-        select1Query :: Q.TxE QErr Int
-        select1Query =
-          runIdentity . Q.getRow <$>
-          Q.withQE defaultTxErrorHandler [Q.sql| SELECT 1 |] () False
 
 class (MonadError QErr m) => MonadTx m where
   liftTx :: Q.TxE QErr a -> m a
@@ -162,41 +126,6 @@ setHeadersTx session = do
 sessionInfoJsonExp :: SessionVariables -> S.SQLExp
 sessionInfoJsonExp = S.SELit . J.encodeToStrictText
 
-defaultTxErrorHandler :: Q.PGTxErr -> QErr
-defaultTxErrorHandler = mkTxErrorHandler (const False)
-
--- | Constructs a transaction error handler given a predicate that determines which errors are
--- expected and should be reported to the user. All other errors are considered internal errors.
-mkTxErrorHandler :: (PGErrorType -> Bool) -> Q.PGTxErr -> QErr
-mkTxErrorHandler isExpectedError txe = fromMaybe unexpectedError expectedError
-  where
-    unexpectedError = (internalError "database query error") { qeInternal = Just $ J.toJSON txe }
-    expectedError = uncurry err400 <$> do
-      errorDetail <- Q.getPGStmtErr txe
-      message <- Q.edMessage errorDetail
-      errorType <- pgErrorType errorDetail
-      guard $ isExpectedError errorType
-      pure $ case errorType of
-        PGIntegrityConstraintViolation code ->
-          let cv = (ConstraintViolation,)
-              customMessage = (code ^? _Just._PGErrorSpecific) <&> \case
-                PGRestrictViolation   -> cv "Can not delete or update due to data being referred. "
-                PGNotNullViolation    -> cv "Not-NULL violation. "
-                PGForeignKeyViolation -> cv "Foreign key violation. "
-                PGUniqueViolation     -> cv "Uniqueness violation. "
-                PGCheckViolation      -> (PermissionError, "Check constraint violation. ")
-                PGExclusionViolation  -> cv "Exclusion violation. "
-          in maybe (ConstraintViolation, message) (fmap (<> message)) customMessage
-
-        PGDataException code -> case code of
-          Just (PGErrorSpecific PGInvalidEscapeSequence) -> (BadRequest, message)
-          _                                              -> (DataException, message)
-
-        PGSyntaxErrorOrAccessRuleViolation code -> (ConstraintError,) $ case code of
-          Just (PGErrorSpecific PGInvalidColumnReference) ->
-            "there is no unique or exclusion constraint on target column(s)"
-          _ -> message
-
 withUserInfo :: (MonadIO m) => UserInfo -> LazyTxT QErr m a -> LazyTxT QErr m a
 withUserInfo uInfo = \case
   LTErr e  -> LTErr e
@@ -256,6 +185,12 @@ instance (Tracing.MonadTrace m) => Tracing.MonadTrace (LazyTxT e m) where
   currentReporter = lift Tracing.currentReporter
   attachMetadata  = lift . Tracing.attachMetadata
 
+instance UserInfoM m => UserInfoM (LazyTxT e m) where
+  askUserInfo = lift askUserInfo
+
+instance HasHttpManagerM m => HasHttpManagerM (LazyTxT e m) where
+  askHttpManager = lift askHttpManager
+
 instance (MonadIO m) => MonadTx (LazyTxT QErr m) where
   liftTx = LTTx . (hoist liftIO)
 
@@ -299,3 +234,40 @@ isExtensionAvailable extensionName =
     ( SELECT 1 FROM pg_catalog.pg_available_extensions
       WHERE name = $1
     ) |] (Identity extensionName) False
+
+enablePgcryptoExtension :: forall m. MonadTx m => m ()
+enablePgcryptoExtension = do
+  pgcryptoAvailable <- isExtensionAvailable "pgcrypto"
+  if pgcryptoAvailable then createPgcryptoExtension
+    else throw400 Unexpected $
+      "pgcrypto extension is required, but could not find the extension in the "
+      <> "PostgreSQL server. Please make sure this extension is available."
+  where
+    createPgcryptoExtension :: m ()
+    createPgcryptoExtension =
+      liftTx $ Q.unitQE needsPGCryptoError
+      "CREATE EXTENSION IF NOT EXISTS pgcrypto SCHEMA public" () False
+      where
+        needsPGCryptoError e@(Q.PGTxErr _ _ _ err) =
+          case err of
+            Q.PGIUnexpected _ -> requiredError
+            Q.PGIStatement pgErr -> case Q.edStatusCode pgErr of
+              Just "42501" -> err500 PostgresError permissionsMessage
+              _            -> requiredError
+          where
+            requiredError =
+              (err500 PostgresError requiredMessage) { qeInternal = Just $ J.toJSON e }
+            requiredMessage =
+              "pgcrypto extension is required, but it could not be created;"
+              <> " encountered unknown postgres error"
+            permissionsMessage =
+              "pgcrypto extension is required, but the current user doesn’t have permission to"
+              <> " create it. Please grant superuser permission, or setup the initial schema via"
+              <> " https://hasura.io/docs/1.0/graphql/manual/deployment/postgres-permissions.html"
+
+dropHdbCatalogSchema :: (MonadTx m) => m ()
+dropHdbCatalogSchema = liftTx $ Q.catchE defaultTxErrorHandler $
+  -- This is where
+  -- 1. Metadata storage:- Metadata and its stateful information stored
+  -- 2. Postgres source:- Table event trigger related stuff & insert permission check function stored
+  Q.unitQ "DROP SCHEMA IF EXISTS hdb_catalog CASCADE" () False

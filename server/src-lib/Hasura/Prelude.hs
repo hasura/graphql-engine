@@ -11,15 +11,19 @@ module Hasura.Prelude
   , choice
   , afold
   , bsToTxt
+  , lbsToTxt
   , txtToBs
   , base64Decode
   , spanMaybeM
   , liftEitherM
+  , hoistMaybe
+  , tshow
   -- * Efficient coercions
   , coerce
-  , coerceSet
   , findWithIndex
+  -- * Map-related utilities
   , mapFromL
+  , mapKeys
   , oMapFromL
   -- * Measuring and working with moments and durations
   , withElapsedTime
@@ -30,7 +34,7 @@ module Hasura.Prelude
 import           Control.Applicative               as M (Alternative (..), liftA2)
 import           Control.Arrow                     as M (first, second, (&&&), (***), (<<<), (>>>))
 import           Control.DeepSeq                   as M (NFData, deepseq, force)
-import           Control.Lens                      as M ((%~))
+import           Control.Lens                      as M (ix, (%~))
 import           Control.Monad.Base                as M
 import           Control.Monad.Except              as M
 import           Control.Monad.Identity            as M
@@ -81,13 +85,11 @@ import qualified Data.ByteString.Lazy              as BL
 import           Data.Coerce
 import qualified Data.HashMap.Strict               as Map
 import qualified Data.HashMap.Strict.InsOrd        as OMap
-import qualified Data.Set                          as Set
 import qualified Data.Text                         as T
 import qualified Data.Text.Encoding                as TE
 import qualified Data.Text.Encoding.Error          as TE
 import qualified GHC.Clock                         as Clock
 import qualified Test.QuickCheck                   as QC
-import           Unsafe.Coerce
 
 alphabet :: String
 alphabet = ['a'..'z'] ++ ['A'..'Z']
@@ -120,6 +122,9 @@ afold = getAlt . foldMap pure
 bsToTxt :: B.ByteString -> Text
 bsToTxt = TE.decodeUtf8With TE.lenientDecode
 
+lbsToTxt :: BL.ByteString -> Text
+lbsToTxt = bsToTxt . BL.toStrict
+
 txtToBs :: Text -> B.ByteString
 txtToBs = TE.encodeUtf8
 
@@ -142,16 +147,6 @@ spanMaybeM f = go . toList
       Just y  -> first (y:) <$> go xs
       Nothing -> pure ([], l)
 
--- | Efficiently coerce a set from one type to another.
---
--- This has the same safety properties as 'Set.mapMonotonic', and is equivalent
--- to @Set.mapMonotonic coerce@ but is more efficient. This is safe to use when
--- both @a@ and @b@ have automatically derived @Ord@ instances.
---
--- https://stackoverflow.com/q/57963881/176841
-coerceSet :: Coercible a b=> Set.Set a -> Set.Set b
-coerceSet = unsafeCoerce
-
 findWithIndex :: (a -> Bool) -> [a] -> Maybe (a, Int)
 findWithIndex p l = do
   v <- find p l
@@ -161,6 +156,13 @@ findWithIndex p l = do
 -- TODO (from master): Move to Data.HashMap.Strict.Extended; rename to fromListWith?
 mapFromL :: (Eq k, Hashable k) => (a -> k) -> [a] -> Map.HashMap k a
 mapFromL f = Map.fromList . map (\v -> (f v, v))
+
+-- | re-key a map. In the case that @f@ is not injective you may end up with a
+-- smaller map than what you started with.
+--
+-- This may be a code smell.
+mapKeys :: (Eq k2, Hashable k2) => (k1 -> k2) -> Map.HashMap k1 a -> Map.HashMap k2 a
+mapKeys f = Map.fromList . map (first f) . Map.toList
 
 oMapFromL :: (Eq k, Hashable k) => (a -> k) -> [a] -> InsOrdHashMap k a
 oMapFromL f = OMap.fromList . map (\v -> (f v, v))
@@ -192,3 +194,10 @@ startTimer = do
   return $ do
     aft <- liftIO Clock.getMonotonicTimeNSec
     return $ nanoseconds $ fromIntegral (aft - bef)
+
+-- copied from http://hackage.haskell.org/package/errors-2.3.0/docs/src/Control.Error.Util.html#hoistMaybe
+hoistMaybe :: (Monad m) => Maybe b -> MaybeT m b
+hoistMaybe = MaybeT . return
+
+tshow :: Show a => a -> Text
+tshow = T.pack . show

@@ -101,6 +101,20 @@
     - warn: {lhs: "onNothing x (pure y)", rhs: "pure (fromMaybe y x)"}
     - warn: {lhs: "onLeft x (return . f)", rhs: "return (either f id x)"}
     - warn: {lhs: "onLeft x (pure . f)", rhs: "pure (either f id x)"}
+    - warn: {lhs: "case x of {Right a -> pure a; Left c -> d}", rhs: "onLeft x (\\ c -> d)"}
+    - warn: {lhs: "case x of {Left c -> d; Right a -> pure a}", rhs: "onLeft x (\\ c -> d)"}
+    - warn: {lhs: "case x of {Right a -> return a; Left c -> d}", rhs: "onLeft x (\\ c -> d)"}
+    - warn: {lhs: "case x of {Left c -> d; Right a -> return a}", rhs: "onLeft x (\\ c -> d)"}
+    - warn: {lhs: "case x of {Nothing -> a; Just b -> pure b}", rhs: "onNothing x a"}
+    - warn: {lhs: "case x of {Just b -> pure b; Nothing -> a}", rhs: "onNothing x a"}
+    - warn: {lhs: "case x of {Nothing -> a; Just b -> return b}", rhs: "onNothing x a"}
+    - warn: {lhs: "case x of {Just b -> return b; Nothing -> a}", rhs: "onNothing x a"}
+    - warn: {lhs: "Data.Text.pack (Prelude.show x)", rhs: "Hasura.Prelude.tshow x"}
+    # mapKeys:
+    - warn: {lhs: "Data.HashMap.Strict.Extended.fromList . map (first f) . Data.HashMap.Strict.Extended.toList", rhs: "mapKeys f"}
+    - warn: {lhs: "Data.HashMap.Strict.fromList . map (first f) . Data.HashMap.Strict.toList", rhs: "mapKeys f"}
+    - warn: {lhs: "Data.HashMap.Strict.Extended.fromList $ map (first f) $ Data.HashMap.Strict.Extended.toList x", rhs: "mapKeys f x"}
+    - warn: {lhs: "Data.HashMap.Strict.fromList $ map (first f) $ Data.HashMap.Strict.toList x", rhs: "mapKeys f x"}
 
 - group:
     name: data-text-extended

@@ -1,7 +1,11 @@
 module Hasura.RQL.Types.QueryCollection
   ( CollectionName
   , CollectionDef(..)
+  , cdQueries
   , CreateCollection(..)
+  , ccName
+  , ccDefinition
+  , ccComment
   , AddQueryToCollection(..)
   , DropQueryFromCollection(..)
   , DropCollection(..)
@@ -20,12 +24,12 @@ import           Hasura.Prelude
 import qualified Database.PG.Query             as Q
 import qualified Language.GraphQL.Draft.Syntax as G
 
+import           Control.Lens
 import           Data.Aeson
 import           Data.Aeson.Casing
 import           Data.Aeson.TH
 import           Data.Text.Extended
 import           Data.Text.NonEmpty
-import           Language.Haskell.TH.Syntax    (Lift)
 
 import           Hasura.Incremental            (Cacheable)
 import           Hasura.RQL.Instances          ()
@@ -34,22 +38,22 @@ import           Hasura.RQL.Instances          ()
 
 newtype CollectionName
   = CollectionName {unCollectionName :: NonEmptyText}
-  deriving ( Show, Eq, Ord, Hashable, ToJSON, ToJSONKey, Lift
+  deriving ( Show, Eq, Ord, Hashable, ToJSON, ToJSONKey
            , FromJSON, Q.FromCol, Q.ToPrepArg, ToTxt
            , Generic, Arbitrary
            )
 
 newtype QueryName
   = QueryName {unQueryName :: NonEmptyText}
-  deriving (Show, Eq, Ord, NFData, Hashable, Lift, ToJSON, ToJSONKey, FromJSON, ToTxt, Generic, Arbitrary, Cacheable)
+  deriving (Show, Eq, Ord, NFData, Hashable, ToJSON, ToJSONKey, FromJSON, ToTxt, Generic, Arbitrary, Cacheable)
 
 newtype GQLQuery
   = GQLQuery { unGQLQuery :: G.ExecutableDocument G.Name }
-  deriving (Show, Eq, NFData, Hashable, Lift, ToJSON, FromJSON, Cacheable)
+  deriving (Show, Eq, NFData, Hashable, ToJSON, FromJSON, Cacheable)
 
 newtype GQLQueryWithText
   = GQLQueryWithText (Text, GQLQuery)
-  deriving (Show, Eq, NFData, Lift, Generic, Cacheable)
+  deriving (Show, Eq, NFData, Generic, Cacheable)
 
 instance FromJSON GQLQueryWithText where
   parseJSON v@(String t) = GQLQueryWithText . (t, ) <$> parseJSON v
@@ -103,7 +107,7 @@ data ListedQuery
   = ListedQuery
   { _lqName  :: !QueryName
   , _lqQuery :: !GQLQueryWithText
-  } deriving (Show, Eq, Lift, Generic)
+  } deriving (Show, Eq, Generic)
 instance NFData ListedQuery
 instance Cacheable ListedQuery
 $(deriveJSON (aesonDrop 3 snakeCase) ''ListedQuery)
@@ -113,22 +117,24 @@ type QueryList = [ListedQuery]
 newtype CollectionDef
   = CollectionDef
   { _cdQueries :: QueryList }
-  deriving (Show, Eq, Lift, Generic, NFData, Cacheable)
+  deriving (Show, Eq, Generic, NFData, Cacheable)
 $(deriveJSON (aesonDrop 3 snakeCase) ''CollectionDef)
+$(makeLenses ''CollectionDef)
 
 data CreateCollection
   = CreateCollection
   { _ccName       :: !CollectionName
   , _ccDefinition :: !CollectionDef
   , _ccComment    :: !(Maybe Text)
-  } deriving (Show, Eq, Lift, Generic)
+  } deriving (Show, Eq, Generic)
 $(deriveJSON (aesonDrop 3 snakeCase) ''CreateCollection)
+$(makeLenses ''CreateCollection)
 
 data DropCollection
   = DropCollection
   { _dcCollection :: !CollectionName
   , _dcCascade    :: !Bool
-  } deriving (Show, Eq, Lift)
+  } deriving (Show, Eq)
 $(deriveJSON (aesonDrop 3 snakeCase) ''DropCollection)
 
 data AddQueryToCollection
@@ -136,18 +142,18 @@ data AddQueryToCollection
   { _aqtcCollectionName :: !CollectionName
   , _aqtcQueryName      :: !QueryName
   , _aqtcQuery          :: !GQLQueryWithText
-  } deriving (Show, Eq, Lift)
+  } deriving (Show, Eq)
 $(deriveJSON (aesonDrop 5 snakeCase) ''AddQueryToCollection)
 
 data DropQueryFromCollection
   = DropQueryFromCollection
   { _dqfcCollectionName :: !CollectionName
   , _dqfcQueryName      :: !QueryName
-  } deriving (Show, Eq, Lift)
+  } deriving (Show, Eq)
 $(deriveJSON (aesonDrop 5 snakeCase) ''DropQueryFromCollection)
 
 newtype CollectionReq
   = CollectionReq
   {_crCollection :: CollectionName}
-  deriving (Show, Eq, Lift, Generic, Hashable)
+  deriving (Show, Eq, Generic, Hashable)
 $(deriveJSON (aesonDrop 3 snakeCase) ''CollectionReq)

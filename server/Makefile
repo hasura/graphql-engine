@@ -5,7 +5,7 @@ export VERSION
 
 registry := hasura
 packager_ver := 20190731
-pg_dump_ver := 12
+pg_dump_ver := 13
 build_output := /build/_server_output
 
 # Getting access to the built products with the `cabal v2-*` commands is really awkward; see

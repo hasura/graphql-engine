@@ -51,9 +51,9 @@ export const runCreateRemoteSchemaTableTests = () => {
       deleteSimpleRemoteSchemaFailUserConfirmationError
     );
     it('Delete simple remote schema', deleteSimpleRemoteSchema);
-    it('Create remote schema with url from env', failWithRemoteSchemaEnvUrl);
+    it('Fails to create remote schema with url from env', failWithRemoteSchemaEnvUrl);
     it(
-      'Create remote schema with headers from env',
+      'Fails to create remote schema with headers from env',
       failWithRemoteSchemaEnvHeader
     );
     it('Create remote schema with headers', passWithRemoteSchemaHeader);
