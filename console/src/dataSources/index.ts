@@ -31,7 +31,12 @@ export interface DataSourcesAPI {
   // todo: replace with function type
   getFunctionSchema(func: PGFunction): string;
   getFunctionDefinition(func: PGFunction): string;
-  getSchemaFunctions(func: PGFunction[], schemaName: string): PGFunction[];
+  getSchemaFunctions(
+    func: PGFunction[],
+    schemaName: string,
+    tableName: string,
+    tableSchema: string
+  ): PGFunction[];
   findFunction(
     func: PGFunction[],
     fName: string,

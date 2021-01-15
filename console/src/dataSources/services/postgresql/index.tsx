@@ -135,11 +135,42 @@ export const getFunctionDefinition = (pgFunction: PGFunction) => {
   return pgFunction.function_definition;
 };
 
+export const isFunctionCompatibleToTable = (
+  pgFunction: PGFunction,
+  tableName: string,
+  tableSchema: string
+) => {
+  const inputArgTypes = pgFunction?.input_arg_types || [];
+
+  let hasTableRowInArguments = false;
+  let hasUnsupportedArguments = false;
+
+  inputArgTypes.forEach(inputArgType => {
+    if (!hasTableRowInArguments) {
+      hasTableRowInArguments =
+        inputArgType.name === tableName && inputArgType.schema === tableSchema;
+    }
+
+    if (!hasUnsupportedArguments) {
+      hasUnsupportedArguments =
+        inputArgType.type !== 'c' && inputArgType.type !== 'b';
+    }
+  });
+
+  return hasTableRowInArguments && !hasUnsupportedArguments;
+};
+
 export const getSchemaFunctions = (
   allFunctions: PGFunction[],
-  fnSchema: string
+  fnSchema: string,
+  tableName: string,
+  tableSchema: string
 ) => {
-  return allFunctions.filter(fn => getFunctionSchema(fn) === fnSchema);
+  return allFunctions.filter(
+    fn =>
+      getFunctionSchema(fn) === fnSchema &&
+      isFunctionCompatibleToTable(fn, tableName, tableSchema)
+  );
 };
 
 export const findFunction = (

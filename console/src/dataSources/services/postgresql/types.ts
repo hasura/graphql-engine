@@ -1,9 +1,16 @@
+export type PGInputArgType = {
+  schema: string;
+  name: string;
+  type: string;
+};
+
 export type PGFunction = {
   function_name: string;
   function_schema: string;
   function_definition: string;
   return_type_type: string;
   function_type: string;
+  input_arg_types?: PGInputArgType[];
 };
 
 export interface PostgresTable {
