@@ -1,4 +1,4 @@
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 import math
 import json
 import time
@@ -37,6 +37,69 @@ def mk_claims(conf, claims):
         return json.dumps(claims)
     else:
         return claims
+
+@pytest.mark.parametrize('endpoint', ['/v1/graphql', '/v1alpha1/graphql'])
+class TestJWTExpirySkew():
+
+    def test_jwt_expiry_leeway(self, hge_ctx, endpoint):
+        hasura_claims = mk_claims(hge_ctx.hge_jwt_conf, {
+            'x-hasura-user-id': '1',
+            'x-hasura-default-role': 'user',
+            'x-hasura-allowed-roles': ['user'],
+        })
+        claims_namespace_path = None
+        if 'claims_namespace_path' in hge_ctx.hge_jwt_conf_dict:
+            claims_namespace_path = hge_ctx.hge_jwt_conf_dict['claims_namespace_path']
+
+        if not 'allowed_skew' in hge_ctx.hge_jwt_conf_dict:
+            pytest.skip("This test expects 'allowed_skew' to be set in the JWT config" )
+
+        self.claims = mk_claims_with_namespace_path(self.claims,hasura_claims,claims_namespace_path)
+        exp = datetime.now(timezone.utc) - timedelta(seconds = 30)
+        self.claims['exp'] = round(exp.timestamp())
+        token = jwt.encode(self.claims, hge_ctx.hge_jwt_key, algorithm='RS512').decode('utf-8')
+        self.conf['headers']['Authorization'] = 'Bearer ' + token
+        self.conf['response'] = {
+            'data': {
+                'article': [{
+                    'id': 1,
+                    'title': 'Article 1',
+                    'content': 'Sample article content 1',
+                    'is_published': False,
+                    'author': {
+                        'id': 1,
+                        'name': 'Author 1'
+                    }
+                }]
+            }
+        }
+        self.conf['url'] = endpoint
+        self.conf['status'] = 200
+        print ("conf is ", self.conf)
+        check_query(hge_ctx, self.conf, add_auth=False,claims_namespace_path=claims_namespace_path)
+
+    @pytest.fixture(autouse=True)
+    def transact(self, setup):
+        self.dir = 'queries/graphql_query/permissions'
+        with open(self.dir + '/user_select_query_unpublished_articles.yaml') as c:
+            self.conf = yaml.safe_load(c)
+        curr_time = datetime.utcnow()
+        exp_time = curr_time + timedelta(hours=10)
+        self.claims = {
+            'sub': '1234567890',
+            'name': 'John Doe',
+            'iat': math.floor(curr_time.timestamp()),
+            'exp': math.floor(exp_time.timestamp())
+        }
+
+    @pytest.fixture(scope='class')
+    def setup(self, request, hge_ctx):
+        self.dir = 'queries/graphql_query/permissions'
+        st_code, resp = hge_ctx.v1q_f(self.dir + '/setup.yaml')
+        assert st_code == 200, resp
+        yield
+        st_code, resp = hge_ctx.v1q_f(self.dir + '/teardown.yaml')
+        assert st_code == 200, resp
 
 @pytest.mark.parametrize('endpoint', ['/v1/graphql', '/v1alpha1/graphql'])
 class TestJWTBasic():
@@ -133,7 +196,7 @@ class TestJWTBasic():
                     'code': 'jwt-invalid-claims',
                     'path': '$'
                 },
-                'message': 'invalid x-hasura-allowed-roles; should be a list of roles: parsing [] failed, expected Array, but encountered String' 
+                'message': 'invalid x-hasura-allowed-roles; should be a list of roles: parsing [] failed, expected Array, but encountered String'
             }]
         }
         self.conf['url'] = endpoint

@@ -1,14 +1,16 @@
 import React from 'react';
-import {
-  loadInconsistentObjects,
-  redirectToMetadataStatus,
-  isMetadataStatusPage,
-} from '../Services/Settings/Actions';
 import Spinner from '../Common/Spinner/Spinner';
 
 import PageNotFound, { NotFoundError } from './PageNotFound';
 import RuntimeError from './RuntimeError';
 import { registerRunTimeError } from '../Main/Actions';
+import { redirectToMetadataStatus } from '../Common/utils/routesUtils';
+import { loadInconsistentObjects } from '../../metadata/actions';
+import { Dispatch, FixMe } from '../../types';
+
+const isMetadataStatusPage = () => {
+  return window.location.pathname.includes('/settings/metadata-status');
+};
 
 export interface Metadata {
   inconsistentObjects: Record<string, unknown>[];
@@ -18,7 +20,7 @@ export interface Metadata {
 
 export interface ErrorBoundaryProps {
   metadata: Metadata;
-  dispatch: (arg: unknown) => Promise<unknown>; // TODO update when Redux is migrated to TS;
+  dispatch: Dispatch;
 }
 
 interface ErrorBoundaryState {
@@ -60,18 +62,18 @@ class ErrorBoundary extends React.Component<
       registerRunTimeError({ message: error.message, stack: error.stack })
     );
 
-    dispatch(loadInconsistentObjects({ shouldReloadMetadata: true })).then(
-      () => {
-        if (this.props.metadata.inconsistentObjects.length > 0) {
-          if (!isMetadataStatusPage()) {
-            this.resetState();
-            this.props.dispatch(redirectToMetadataStatus());
-          }
-        } else {
-          console.error(error);
+    dispatch(
+      loadInconsistentObjects({ shouldReloadMetadata: true }) as FixMe
+    ).then(() => {
+      if (this.props.metadata.inconsistentObjects.length > 0) {
+        if (!isMetadataStatusPage()) {
+          this.resetState();
+          this.props.dispatch(redirectToMetadataStatus());
         }
+      } else {
+        console.error(error);
       }
-    );
+    });
   }
 
   resetState = () => {

@@ -12,19 +12,18 @@ module Hasura.GraphQL.Parser.Collect
   ( collectFields
   ) where
 
-import                          Hasura.Prelude
+import           Hasura.Prelude
 
-import                qualified Data.HashMap.Strict.Extended          as Map
-import                qualified Data.HashMap.Strict.InsOrd            as OMap
+import qualified Data.HashMap.Strict.Extended  as Map
+import qualified Data.HashMap.Strict.InsOrd    as OMap
 
-import                          Data.List.Extended                    (duplicates)
-import                          Language.GraphQL.Draft.Syntax
+import           Data.List.Extended            (duplicates)
+import           Language.GraphQL.Draft.Syntax
 
-import                          Data.Text.Extended
-import                          Hasura.GraphQL.Parser.Class
-import {-# SOURCE #-}           Hasura.GraphQL.Parser.Internal.Parser (boolean, runParser)
-import                          Hasura.GraphQL.Parser.Schema
-import                          Hasura.GraphQL.Utils                  (showNames)
+import           Data.Text.Extended
+import           Hasura.GraphQL.Parser.Class
+import           Hasura.GraphQL.Parser.Schema
+import           Hasura.GraphQL.Utils          (showNames)
 
 -- | Collects the effective set of fields queried by a selection set by
 -- flattening fragments and merging duplicate fields.
@@ -33,10 +32,12 @@ collectFields
   => t Name
   -- ^ The names of the object types and interface types the 'SelectionSet' is
   -- selecting against.
+  -> (InputValue Variable -> m Bool)
+  -- ^ Please pass 'runParser boolean' here (passed explicitly to avoid cyclic imports)
   -> SelectionSet NoFragments Variable
   -> m (InsOrdHashMap Name (Field NoFragments Variable))
-collectFields objectTypeNames selectionSet =
-  mergeFields =<< flattenSelectionSet objectTypeNames selectionSet
+collectFields objectTypeNames boolParser selectionSet =
+  mergeFields =<< flattenSelectionSet objectTypeNames boolParser selectionSet
 
 -- | Flattens inline fragments in a selection set. For example,
 --
@@ -92,9 +93,11 @@ flattenSelectionSet
   :: (MonadParse m, Foldable t)
   => t Name
   -- ^ The name of the object type the 'SelectionSet' is selecting against.
+  -> (InputValue Variable -> m Bool)
+  -- ^ Please pass 'runParser boolean' here (passed explicitly to avoid cyclic imports)
   -> SelectionSet NoFragments Variable
   -> m [Field NoFragments Variable]
-flattenSelectionSet objectTypeNames = fmap concat . traverse flattenSelection
+flattenSelectionSet objectTypeNames boolParser = fmap concat . traverse flattenSelection
   where
     -- The easy case: just a single field.
     flattenSelection (SelectionField field) = do
@@ -130,7 +133,7 @@ flattenSelectionSet objectTypeNames = fmap concat . traverse flattenSelection
 
     flattenInlineFragment InlineFragment{ _ifDirectives, _ifSelectionSet  } = do
       validateDirectives _ifDirectives
-      flattenSelectionSet objectTypeNames _ifSelectionSet
+      flattenSelectionSet objectTypeNames boolParser _ifSelectionSet
 
     applyInclusionDirectives directives continue
       | Just directive <- find ((== $$(litName "include")) . _dName) directives
@@ -142,7 +145,7 @@ flattenSelectionSet objectTypeNames = fmap concat . traverse flattenSelection
     applyInclusionDirective adjust Directive{ _dName, _dArguments } continue = do
       ifArgument <- Map.lookup $$(litName "if") _dArguments `onNothing`
         parseError ("missing \"if\" argument for " <> _dName <<> " directive")
-      value <- runParser boolean $ GraphQLValue ifArgument
+      value <- boolParser $ GraphQLValue ifArgument
       if adjust value then continue else pure []
 
     validateDirectives directives =

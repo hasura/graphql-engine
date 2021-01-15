@@ -89,6 +89,10 @@ When you're done, at the bottom, click the ``Create database`` button:
    :alt: Create RDS instance on AWS
    :width: 700px
 
+.. note::
+
+   If you're using a database user other than the default one, make sure to give it the right :ref:`Postgres permissions <cloud_postgres_permissions>`.
+
 Step 3: Allow connections to your DB from Hasura Cloud
 ------------------------------------------------------
 

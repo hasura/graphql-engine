@@ -2,6 +2,7 @@ type: bulk
 args:
 
 #Author table
+
 - type: run_sql
   args:
     sql: |
@@ -10,15 +11,13 @@ args:
           name text unique,
           is_registered boolean not null default false
       );
-- type: track_table
-  args:
-    schema: public
-    name: author
 
-#Article table
-- type: run_sql
-  args:
-    sql: |
+      INSERT INTO author(name, is_registered)
+        VALUES
+        ('Author 1', true),
+        ('Author 2', true),
+        ('Author 3', false);
+
       CREATE TABLE article (
         id SERIAL PRIMARY KEY,
         title TEXT,
@@ -26,142 +25,72 @@ args:
         author_id INTEGER REFERENCES author(id),
         is_published BOOLEAN,
         published_on TIMESTAMP
-      )
-- type: track_table
-  args:
-    schema: public
-    name: article
+      );
 
-
-#Article table
-- type: run_sql
-  args:
-    sql: |
       CREATE TABLE city (
         id SERIAL PRIMARY KEY,
         name TEXT NOT NULL,
         country TEXT NOT NULL
-      )
-- type: track_table
-  args:
-    schema: public
-    name: city
+      );
 
-#Set timezone
-- type: run_sql
-  args:
-    sql: |
+      INSERT INTO city (name, country)
+        VALUES
+        ('Durham', 'USA'),
+        ('New York', 'USA'),
+        ('Framlingham', 'UK'),
+        ('New Orleans', 'USA');
+
       SET TIME ZONE 'UTC';
 
-#Article order
-- type: run_sql
-  args:
-    sql: |
       CREATE TABLE orders (
         id SERIAL PRIMARY KEY,
         received_at TIMESTAMP WITH TIME ZONE NOT NULL,
         delivered_at TIMESTAMP WITH TIME ZONE
-      )
-- type: track_table
-  args:
-    schema: public
-    name: orders
+      );
 
-#Object relationship
-- type: create_object_relationship
-  args:
-    table: article
-    name: author
-    using:
-      foreign_key_constraint_on: author_id
-
-#Array relationship
-- type: create_array_relationship
-  args:
-    table: author
-    name: articles
-    using:
-      foreign_key_constraint_on:
-        table: article
-        column: author_id
-
-
-#Message table
-- type: run_sql
-  args:
-    sql: |
       CREATE TABLE message (
         id int PRIMARY KEY,
         content TEXT NOT NULL,
         parent_id INT NULL
       );
+
+      INSERT INTO message (id, content, parent_id)
+        VALUES
+        (
+          1,
+          'hello world',
+          default
+        ),
+        (
+          2,
+          'content 2',
+          1
+        ),
+        (
+          3,
+          'content 3',
+          1
+        ),
+        (
+          4,
+          'ahoy',
+          default
+        ),
+        (
+          5,
+          'content 5',
+          4
+        ),
+        (
+          6,
+          'hello three',
+          4
+        );
+
       alter table message
       add constraint parent_fk foreign key (parent_id)
-      references message(id)
+      references message(id);
 
-- type: track_table
-  args:
-    schema: public
-    name: message
-
-# parent obj rel
-- type: create_object_relationship
-  args:
-    table: message
-    name: parent
-    using:
-      foreign_key_constraint_on: parent_id
-
-# children array rel
-- type: create_array_relationship
-  args:
-    table: message
-    name: children
-    using:
-      foreign_key_constraint_on:
-        table: message
-        column: parent_id
-
-#Insert messages
-- type: insert
-  args:
-    table: message
-    objects:
-    - id: 1
-      content: "hello world"
-      parent_id: null
-    - id: 2
-      content: "content 2"
-      parent_id: 1
-    - id: 3
-      content: "content 3"
-      parent_id: 1
-    - id: 4
-      content: "ahoy"
-      parent_id: null
-    - id: 5
-      content: "content 5"
-      parent_id: 4
-    - id: 6
-      content: "hello there"
-      parent_id: 4
-
-#Insert Authors
-- type: insert
-  args:
-    table: author
-    objects:
-    - name: Author 1
-      is_registered: true
-    - name: Author 2
-      is_registered: true
-    - name: Author 3
-      is_registered: false
-
-
-- type: run_sql
-  args:
-    sql: |
       insert into article (title,content,author_id,is_published)
       values
       (
@@ -187,53 +116,12 @@ args:
         'Sample article content 4',
         3,
         true
-      )
+      );
 
-- type: insert
-  args:
-    table: city
-    objects:
-    - name: Durham
-      country: USA
-    - name:  New York
-      country: USA
-    - name: Framlingham
-      country: UK
-    - name: New Orleans
-      country: USA
-
-- type: insert
-  args:
-    table: orders
-    objects:
-      - received_at: '2018-09-21T09:39:44Z'
-      - received_at: '2018-09-21T09:40:44Z'
-        delivered_at: '2018-09-21T09:50:44Z'
-
-- type: run_sql
-  args:
-    sql: |
       CREATE TABLE "uuid_test" (
         id serial primary key,
         uuid_col UUID NOT NULL
-      )
-- type: track_table
-  args:
-    name: uuid_test
-    schema: public
-
-- type: insert
-  args:
-    table: uuid_test
-    objects:
-    - uuid_col: 28d6d683-1317-49f7-b1cf-7d195242e4e5
-    - uuid_col: 28d6d683-1317-49f7-b1cf-7d195242e4e6
-    - uuid_col: 28d6d683-1317-49f7-b1cf-7d195242e4e7
-
-# Tables to test '_exist' field
-- type: run_sql
-  args:
-    sql: |
+      );
       create table "user" (
         id serial primary key,
         name text not null unique,
@@ -250,7 +138,101 @@ args:
       );
 
       insert into account (account_no) values (1), (2) ;
+      CREATE TABLE table_with_sql_identifier
+        ( id serial PRIMARY KEY
+        , sql_id information_schema.sql_identifier );
+      INSERT INTO table_with_sql_identifier (sql_id)
+        VALUES ('one'), ('one'), ('two'), ('three'), ('four'), ('one'), ('two');
 
+- type: track_table
+  args:
+    schema: public
+    name: author
+
+#Article table
+- type: track_table
+  args:
+    schema: public
+    name: article
+
+
+#Article table
+- type: track_table
+  args:
+    schema: public
+    name: city
+
+#Set timezone
+- type: track_table
+  args:
+    schema: public
+    name: orders
+
+#Object relationship
+- type: create_object_relationship
+  args:
+    table: article
+    name: author
+    using:
+      foreign_key_constraint_on: author_id
+
+#Array relationship
+- type: create_array_relationship
+  args:
+    table: author
+    name: articles
+    using:
+      foreign_key_constraint_on:
+        table: article
+        column: author_id
+
+
+#Message table
+- type: track_table
+  args:
+    schema: public
+    name: message
+
+# parent obj rel
+- type: create_object_relationship
+  args:
+    table: message
+    name: parent
+    using:
+      foreign_key_constraint_on: parent_id
+
+# children array rel
+- type: create_array_relationship
+  args:
+    table: message
+    name: children
+    using:
+      foreign_key_constraint_on:
+        table: message
+        column: parent_id
+
+- type: insert
+  args:
+    table: orders
+    objects:
+      - received_at: '2018-09-21T09:39:44Z'
+      - received_at: '2018-09-21T09:40:44Z'
+        delivered_at: '2018-09-21T09:50:44Z'
+
+- type: track_table
+  args:
+    name: uuid_test
+    schema: public
+
+- type: insert
+  args:
+    table: uuid_test
+    objects:
+    - uuid_col: 28d6d683-1317-49f7-b1cf-7d195242e4e5
+    - uuid_col: 28d6d683-1317-49f7-b1cf-7d195242e4e6
+    - uuid_col: 28d6d683-1317-49f7-b1cf-7d195242e4e7
+
+# Tables to test '_exist' field
 - type: track_table
   args:
     name: user
@@ -276,13 +258,5 @@ args:
             id: X-Hasura-User-Id
             is_admin: true
 
-- type: run_sql
-  args:
-    sql: |
-      CREATE TABLE table_with_sql_identifier
-        ( id serial PRIMARY KEY
-        , sql_id information_schema.sql_identifier );
-      INSERT INTO table_with_sql_identifier (sql_id)
-        VALUES ('one'), ('one'), ('two'), ('three'), ('four'), ('one'), ('two');
 - type: track_table
   args: table_with_sql_identifier

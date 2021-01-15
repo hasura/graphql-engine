@@ -1,24 +1,23 @@
 type: bulk
 args:
+
 - type: run_sql
   args:
     sql: |
       CREATE TABLE crust (name text NOT NULL PRIMARY KEY);
       INSERT INTO crust VALUES ('thin');
-- type: add_existing_table_or_view
-  args: crust
-- type: set_table_is_enum
-  args:
-    table: crust
-    is_enum: true
-- type: run_sql
-  args:
-    sql: |
       CREATE TABLE pizza
         ( id serial NOT NULL PRIMARY KEY
         , name text NOT NULL
         , crust text NOT NULL REFERENCES crust );
 
       INSERT INTO pizza (name, crust) VALUES ('margarita', 'thin');
+
+- type: add_existing_table_or_view
+  args: crust
+- type: set_table_is_enum
+  args:
+    table: crust
+    is_enum: true
 - type: add_existing_table_or_view
   args: pizza

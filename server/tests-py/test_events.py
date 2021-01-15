@@ -112,7 +112,7 @@ class TestEventFlood(object):
         assert ns == list(payload)
 
 
-@usefixtures("per_method_tests_db_state")
+@usefixtures("per_class_tests_db_state")
 class TestCreateEvtQuery(object):
 
     @classmethod
@@ -148,6 +148,26 @@ class TestCreateEvtQuery(object):
         st_code, resp = delete(hge_ctx, table, where_exp)
         assert st_code == 200, resp
         check_event(hge_ctx, evts_webhook, "t1_all", table, "DELETE", exp_ev_data)
+
+    def test_partitioned_table_basic_insert(self, hge_ctx, evts_webhook):
+        if hge_ctx.pg_version < 110000:
+            pytest.skip('Event triggers on partioned tables are not supported in Postgres versions < 11')
+            return
+        st_code, resp = hge_ctx.v1q_f(self.dir() + '/partition_table_setup.yaml')
+        assert st_code == 200, resp
+        table = { "schema":"hge_tests", "name": "measurement"}
+
+        init_row = { "city_id": 1, "logdate": "2006-02-02", "peaktemp": 1, "unitsales": 1}
+
+        exp_ev_data = {
+            "old": None,
+            "new": init_row
+        }
+        st_code, resp = insert(hge_ctx, table, init_row)
+        assert st_code == 200, resp
+        check_event(hge_ctx, evts_webhook, "measurement_all", table, "INSERT", exp_ev_data)
+        st_code, resp = hge_ctx.v1q_f(self.dir() + '/partition_table_teardown.yaml')
+        assert st_code == 200, resp
 
 @usefixtures('per_method_tests_db_state')
 class TestRetryConf(object):
@@ -226,7 +246,7 @@ class TestUpdateEvtQuery(object):
         assert st_code == 200, resp
         st_code, resp = hge_ctx.v1q_f('queries/event_triggers/update_query/update-setup.yaml')
         assert st_code == 200, '{}'.format(resp)
-        assert resp[1][0]["configuration"]["webhook"] == 'http://127.0.0.1:5592/new'
+        assert resp[1]["sources"][0]["tables"][0]["event_triggers"][0]["webhook"] == 'http://127.0.0.1:5592/new'
         yield
         st_code, resp = hge_ctx.v1q_f('queries/event_triggers/update_query/teardown.yaml')
         assert st_code == 200, resp

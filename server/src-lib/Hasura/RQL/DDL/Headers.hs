@@ -5,7 +5,6 @@ import           Hasura.Incremental         (Cacheable)
 import           Hasura.Prelude
 import           Hasura.RQL.Instances       ()
 import           Hasura.RQL.Types.Error
-import           Language.Haskell.TH.Syntax (Lift)
 
 import qualified Data.CaseInsensitive       as CI
 import qualified Data.Environment           as Env
@@ -14,7 +13,7 @@ import qualified Network.HTTP.Types         as HTTP
 
 
 data HeaderConf = HeaderConf HeaderName HeaderValue
-   deriving (Show, Eq, Lift, Generic)
+   deriving (Show, Eq, Generic)
 instance NFData HeaderConf
 instance Hashable HeaderConf
 instance Cacheable HeaderConf
@@ -22,7 +21,7 @@ instance Cacheable HeaderConf
 type HeaderName  = Text
 
 data HeaderValue = HVValue Text | HVEnv Text
-   deriving (Show, Eq, Lift, Generic)
+   deriving (Show, Eq, Generic)
 instance NFData HeaderValue
 instance Hashable HeaderValue
 instance Cacheable HeaderValue

@@ -7,13 +7,13 @@ import {
   ETOperationColumn,
   VoidCallback,
 } from '../../types';
-import { TableColumn } from '../../../../Common/utils/pgUtils';
 import {
   parseEventTriggerOperations,
   getETOperationColumns,
 } from '../../utils';
 
 import Operations from '../Common/Operations';
+import { TableColumn } from '../../../../../dataSources/types';
 
 type OperationEditorProps = {
   currentTrigger: EventTrigger;
