@@ -2,10 +2,27 @@ import React, { useEffect, useState } from 'react';
 import { generateSDL, getArgTreeFromPermissionSDL } from './utils';
 import Button from '../../../Common/Button/Button';
 import styles from '../../../Common/Permissions/PermissionStyles.scss';
-import { DatasourceObject, FieldType, PermissionEditorProps } from './types';
+import {
+  DatasourceObject,
+  FieldType,
+  ArgTreeType,
+  PermissionEdit,
+} from './types';
 import { PermissionEditorContext } from './context';
 import Tree from './Tree';
 import { isEmpty } from '../../../Common/utils/jsUtils';
+
+type PermissionEditorProps = {
+  permissionEdit: PermissionEdit;
+  isEditing: boolean;
+  isFetching: boolean;
+  schemaDefinition: string;
+  datasource: any;
+  setSchemaDefinition: (data: string) => void;
+  permCloseEdit: () => void;
+  saveRemoteSchemaPermission: (data: any) => void;
+  removeRemoteSchemaPermission: (data: any) => void;
+};
 
 const PermissionEditor: React.FC<PermissionEditorProps> = ({ ...props }) => {
   const {
@@ -22,8 +39,8 @@ const PermissionEditor: React.FC<PermissionEditorProps> = ({ ...props }) => {
 
   const [state, setState] = useState<DatasourceObject[] | FieldType[]>(
     datasource
-  ); // TODO - low priority:  a copy of datasource, could be able to remove this after evaluation
-  const [argTree, setArgTree] = useState<Record<string, any> | null>({}); // all @presets as an object tree
+  );
+  const [argTree, setArgTree] = useState<ArgTreeType>({}); // all @presets as an object tree
   const [resultString, setResultString] = useState(''); // Generated SDL
 
   const { isNewRole, isNewPerm } = permissionEdit;
@@ -96,7 +113,7 @@ const PermissionEditor: React.FC<PermissionEditorProps> = ({ ...props }) => {
       }, 800);
     }
   };
-  const isSaveDisabled=isEmpty(resultString)||isFetching
+  const isSaveDisabled = isEmpty(resultString) || isFetching;
 
   return (
     <div className={styles.activeEdit}>

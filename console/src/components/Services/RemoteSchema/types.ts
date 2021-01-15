@@ -1,5 +1,6 @@
 import { HeaderState } from '../../Common/Layout/ReusableHeader/types';
-import { RemoteSchemaPermissionsState, Permissions } from './Permissions/types';
+import { PermissionsType } from './Permissions/types';
+import { RemoteSchemaPermissionsState } from './Permissions/state';
 
 type RemoteSchemaHeaders = {
   name: string;
@@ -19,7 +20,7 @@ export type RemoteSchema = {
   name: string;
   id: number;
   comment: string | null;
-  permissions: Permissions[];
+  permissions: PermissionsType[];
 };
 
 export type AsyncState = {

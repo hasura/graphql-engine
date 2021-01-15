@@ -12,15 +12,17 @@ interface RSPInputProps {
   setArgVal: (v: Record<string, unknown>) => void;
   setEditMode: (b: boolean) => void;
 }
-const RSPInput: React.FC<RSPInputProps> = ({
+const RSPInputComponent: React.FC<RSPInputProps> = ({
   k,
   editMode,
-  value,
+  value = '',
   setArgVal,
   v,
   setEditMode,
 }) => {
-  const [localValue, setLocalValue] = useState<string>(value as string);
+  const [localValue, setLocalValue] = useState<string>(
+    typeof value === 'object' ? '' : value
+  );
 
   const inputRef = React.useRef<HTMLInputElement>(null);
 
@@ -29,7 +31,6 @@ const RSPInput: React.FC<RSPInputProps> = ({
     if (editMode && inputRef && inputRef.current) inputRef.current.focus();
   }, [editMode]);
 
-  // TODO check more on the browser console error message
   useDebouncedEffect(
     () => {
       if (
@@ -45,8 +46,7 @@ const RSPInput: React.FC<RSPInputProps> = ({
     },
     500,
     [localValue]
-  ); // ignore continues onChange events till the user finish typing
-  // TODO support different input types :?
+  );
   return (
     <>
       <label htmlFor={k}> {k}:</label>
@@ -72,4 +72,5 @@ const RSPInput: React.FC<RSPInputProps> = ({
   );
 };
 
-export default React.memo(RSPInput);
+const RSPInput = React.memo(RSPInputComponent);
+export default RSPInput;

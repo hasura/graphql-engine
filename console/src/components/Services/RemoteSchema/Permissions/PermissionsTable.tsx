@@ -4,26 +4,42 @@ import PermTableHeader from '../../../Common/Permissions/TableHeader';
 import PermTableBody from '../../../Common/Permissions/TableBody';
 import { permissionsSymbols } from '../../../Common/Permissions/PermissionSymbols';
 import { findRemoteSchemaPermission } from './utils';
-import { RolePermissions, PermissionsTableProps, Permissions } from './types';
+import { RolePermissions, PermOpenEditType, PermissionsType, PermissionEdit } from './types';
+
+export type PermissionsTableProps = {
+  setSchemaDefinition: (data: string) => void;
+  permOpenEdit: PermOpenEditType;
+  permCloseEdit: () => void;
+  permSetBulkSelect: (checked: boolean, role: string) => void;
+  permSetRoleName: (name: string) => void;
+  allRoles: string[];
+  currentRemoteSchema: {
+    name: string;
+    permissions: PermissionsType[];
+  };
+  bulkSelect: string[];
+  readOnlyMode: boolean;
+  permissionEdit: PermissionEdit;
+  isEditing: boolean;
+};
+
 
 const queryTypes = ['Permission'];
 
-const PermissionsTable: React.FC<PermissionsTableProps> = ({ ...props }) => {
-  const {
-    allRoles,
-    currentRemoteSchema,
-    permissionEdit,
-    isEditing,
-    bulkSelect,
-    readOnlyMode,
-    permSetRoleName,
-    permSetBulkSelect,
-    setSchemaDefinition,
-    permOpenEdit,
-    permCloseEdit,
-  } = props;
-
-  const allPermissions = currentRemoteSchema?.permissions||[] as Permissions[];
+const PermissionsTable: React.FC<PermissionsTableProps> = ({
+  allRoles,
+  currentRemoteSchema,
+  permissionEdit,
+  isEditing,
+  bulkSelect,
+  readOnlyMode,
+  permSetRoleName,
+  permSetBulkSelect,
+  setSchemaDefinition,
+  permOpenEdit,
+  permCloseEdit,
+}) => {
+  const allPermissions = currentRemoteSchema?.permissions;
 
   const headings = ['Role', ...queryTypes];
 

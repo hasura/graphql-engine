@@ -7,10 +7,8 @@ import { getTrimmedReturnType } from './utils';
 const getDeps = (field: FieldType, res = new Set<string>([])) => {
   if (field.return) res.add(getTrimmedReturnType(field.return));
 
-  // args
   if (field.args)
     Object.values(field.args).forEach(arg => {
-      // TODO filtering logic
       if (!(arg.type instanceof GraphQLScalarType)) {
         const subType = getTrimmedReturnType(arg.type.inspect());
         res.add(subType);
@@ -25,7 +23,7 @@ const addTypesRecursively = (
   typeList: Set<string>,
   alreadyChecked: Array<string>
 ): FieldType[] => {
-  // if alreadychecked has then remove from typelist, if not then add to alreadychecked
+  // if "alreadychecked" has then remove from typelist, if not then add to alreadychecked
   alreadyChecked.forEach(key => {
     if (typeList.has(key)) {
       typeList.delete(key);

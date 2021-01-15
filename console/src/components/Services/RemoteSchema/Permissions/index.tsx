@@ -1,6 +1,6 @@
 import React from 'react';
 import { connect } from 'react-redux';
-import Permissions from './Permissions';
+import Permissions, { PermissionsProps } from './Permissions';
 import RSPWrapper from './RSPWrapper';
 import {
   permRemoveMultipleRoles,
@@ -16,7 +16,6 @@ import {
   permSetRoleName,
   permSetBulkSelect,
 } from './reducer';
-import {  PermissionsProps } from './types';
 import { Dispatch, ReduxState } from '../../../../types';
 import {
   getRemoteSchemas,
@@ -24,14 +23,14 @@ import {
   getRemoteSchemaPermissions,
 } from '../../../../metadata/selector';
 
-export type RSPProps = {
+export type RSPContainerProps = {
   allRoles: string[];
   allRemoteSchemas: { [key: string]: any }[];
   params: { [key: string]: string };
   viewRemoteSchema: (data: string) => void;
 };
 
-const RSP: React.FC<RSPProps & PermissionsProps> = ({
+const RSP: React.FC<RSPContainerProps & PermissionsProps> = ({
   allRoles,
   allRemoteSchemas,
   ...props
@@ -80,4 +79,5 @@ const mapDispatchToProps = (dispatch: Dispatch) => {
   };
 };
 
-export default connect(mapStateToProps, mapDispatchToProps)(RSP);
+const RSPContainer=connect(mapStateToProps, mapDispatchToProps)(RSP);
+export default RSPContainer
