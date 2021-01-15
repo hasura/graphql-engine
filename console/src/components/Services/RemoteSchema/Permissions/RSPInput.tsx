@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { GraphQLInputField } from 'graphql';
 import Pen from './Pen';
 import { useDebouncedEffect } from '../../../../hooks/useDebounceEffect';
@@ -21,6 +21,13 @@ const RSPInput: React.FC<RSPInputProps> = ({
   setEditMode,
 }) => {
   const [localValue, setLocalValue] = useState<string>(value as string);
+
+  const inputRef = React.useRef<HTMLInputElement>(null);
+
+  // focus the input element; onClick of Pen Icon
+  useEffect(() => {
+    if (editMode && inputRef && inputRef.current) inputRef.current.focus();
+  }, [editMode]);
 
   // TODO check more on the browser console error message
   useDebouncedEffect(
@@ -47,6 +54,7 @@ const RSPInput: React.FC<RSPInputProps> = ({
         <>
           <input
             value={localValue}
+            ref={inputRef}
             style={{
               border: 0,
               borderBottom: '2px dotted black',
