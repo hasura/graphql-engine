@@ -18,7 +18,8 @@ type Props = {
 
 const InvocationLogs: React.FC<Props> = props => {
   const { dispatch, currentTrigger } = props;
-  const triggerName = currentTrigger ? currentTrigger.name : '';
+
+  const triggerName = currentTrigger?.name ?? '';
 
   const renderRows: FilterRenderProp = (
     rows,
@@ -54,6 +55,9 @@ const InvocationLogs: React.FC<Props> = props => {
           ),
         ],
       }}
+      triggerName={triggerName}
+      triggerOp="invocation"
+      triggerType="cron"
     />
   );
 };

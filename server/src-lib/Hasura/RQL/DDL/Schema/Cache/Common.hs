@@ -12,7 +12,7 @@ import qualified Data.HashMap.Strict.Extended       as M
 import qualified Data.HashMap.Strict.InsOrd         as OMap
 import qualified Data.HashSet                       as HS
 import qualified Data.Sequence                      as Seq
-import qualified Network.HTTP.Client                as HTTP
+import qualified Network.HTTP.Client.Extended       as HTTP
 
 import           Control.Arrow.Extended
 import           Control.Lens
@@ -134,7 +134,7 @@ newtype CacheBuild a
            , MonadUnique
            )
 
-instance HasHttpManager CacheBuild where
+instance HTTP.HasHttpManagerM CacheBuild where
   askHttpManager = asks _cbpManager
 
 instance HasSQLGenCtx CacheBuild where
@@ -158,7 +158,7 @@ runCacheBuild params (CacheBuild m) = do
 runCacheBuildM
   :: ( MonadIO m
      , MonadError QErr m
-     , HasHttpManager m
+     , HTTP.HasHttpManagerM m
      , HasSQLGenCtx m
      , HasRemoteSchemaPermsCtx m
      , MonadResolveSource m
@@ -166,7 +166,7 @@ runCacheBuildM
   => CacheBuild a -> m a
 runCacheBuildM m = do
   params <- CacheBuildParams
-            <$> askHttpManager
+            <$> HTTP.askHttpManager
             <*> askSQLGenCtx
             <*> askRemoteSchemaPermsCtx
             <*> getSourceResolver

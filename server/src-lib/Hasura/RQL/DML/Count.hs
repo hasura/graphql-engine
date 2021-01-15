@@ -27,6 +27,7 @@ import           Hasura.RQL.IR.BoolExp
 import           Hasura.RQL.Types
 import           Hasura.RQL.Types.Run
 import           Hasura.SQL.Types
+import           Hasura.Session
 
 
 data CountQueryP1
@@ -73,7 +74,7 @@ validateCountQWith
   -> (ColumnType 'Postgres -> Value -> m S.SQLExp)
   -> CountQuery
   -> m CountQueryP1
-validateCountQWith sessVarBldr prepValBldr (CountQuery qt mDistCols mWhere) = do
+validateCountQWith sessVarBldr prepValBldr (CountQuery qt _ mDistCols mWhere) = do
   tableInfo <- askTabInfoSource qt
 
   -- Check if select is allowed
@@ -108,8 +109,9 @@ validateCountQWith sessVarBldr prepValBldr (CountQuery qt mDistCols mWhere) = do
 
 validateCountQ
   :: (QErrM m, UserInfoM m, CacheRM m)
-  => SourceName -> CountQuery -> m (CountQueryP1, DS.Seq Q.PrepArg)
-validateCountQ source query = do
+  => CountQuery -> m (CountQueryP1, DS.Seq Q.PrepArg)
+validateCountQ query = do
+  let source = cqSource query
   tableCache <- askTableCache source
   flip runTableCacheRT (source, tableCache) $ runDMLP1T $
     validateCountQWith sessVarFromCurrentSetting binRHSBuilder query
@@ -131,7 +133,7 @@ runCount
      , MonadIO m, MonadBaseControl IO m
      , Tracing.MonadTrace m
      )
-  => SourceName -> CountQuery -> m EncJSON
-runCount source q = do
-  sourceConfig <- _pcConfiguration <$> askPGSourceCache source
-  validateCountQ source q >>=  liftEitherM . runExceptT . runQueryLazyTx (_pscExecCtx sourceConfig) Q.ReadOnly . countQToTx
+  => CountQuery -> m EncJSON
+runCount q = do
+  sourceConfig <- _pcConfiguration <$> askPGSourceCache (cqSource q)
+  validateCountQ q >>= runQueryLazyTx (_pscExecCtx sourceConfig) Q.ReadOnly . countQToTx

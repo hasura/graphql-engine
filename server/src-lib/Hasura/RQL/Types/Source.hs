@@ -71,7 +71,13 @@ data PostgresSourceConnInfo
   , _psciPoolSettings :: !PostgresPoolSettings
   } deriving (Show, Eq, Generic)
 instance Cacheable PostgresSourceConnInfo
-$(deriveJSON (aesonDrop 5 snakeCase) ''PostgresSourceConnInfo)
+$(deriveToJSON (aesonDrop 5 snakeCase) ''PostgresSourceConnInfo)
+
+instance FromJSON PostgresSourceConnInfo where
+  parseJSON = withObject "Object" $ \o ->
+    PostgresSourceConnInfo
+      <$> o .: "database_url"
+      <*> o .:? "pool_settings" .!= defaultPostgresPoolSettings
 
 data SourceConfiguration
   = SourceConfiguration
@@ -82,7 +88,7 @@ instance Cacheable SourceConfiguration
 $(deriveJSON (aesonDrop 3 snakeCase){omitNothingFields = True} ''SourceConfiguration)
 
 type SourceResolver =
-  SourceConfiguration -> IO (Either QErr (SourceConfig 'Postgres))
+  SourceName -> SourceConfiguration -> IO (Either QErr (SourceConfig 'Postgres))
 
 class (Monad m) => MonadResolveSource m where
   getSourceResolver :: m SourceResolver
@@ -98,3 +104,27 @@ instance (MonadResolveSource m) => MonadResolveSource (Tracing.TraceT m) where
 
 instance (MonadResolveSource m) => MonadResolveSource (LazyTxT QErr m) where
   getSourceResolver = lift getSourceResolver
+
+-- Metadata API related types
+data AddPgSource
+  = AddPgSource
+  { _apsName          :: !SourceName
+  , _apsConfiguration :: !SourceConfiguration
+  } deriving (Show, Eq)
+$(deriveJSON (aesonDrop 4 snakeCase) ''AddPgSource)
+
+data DropPgSource
+  = DropPgSource
+  { _dpsName    :: !SourceName
+  , _dpsCascade :: !Bool
+  } deriving (Show, Eq)
+$(deriveToJSON (aesonDrop 4 snakeCase) ''DropPgSource)
+
+instance FromJSON DropPgSource where
+  parseJSON = withObject "Object" $ \o ->
+    DropPgSource <$> o .: "name" <*> o .:? "cascade" .!= False
+
+newtype PostgresSourceName =
+  PostgresSourceName {_psnName :: SourceName}
+  deriving (Show, Eq)
+$(deriveJSON (aesonDrop 4 snakeCase) ''PostgresSourceName)

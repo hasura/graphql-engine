@@ -6,6 +6,8 @@ module Hasura.RQL.DDL.Metadata
   , runDumpInternalState
   , runGetInconsistentMetadata
   , runDropInconsistentMetadata
+  , runGetCatalogState
+  , runSetCatalogState
 
   , module Hasura.RQL.DDL.Metadata.Types
   ) where
@@ -13,14 +15,15 @@ module Hasura.RQL.DDL.Metadata
 import           Hasura.Prelude
 
 import qualified Data.Aeson.Ordered                as AO
+import qualified Data.HashMap.Strict               as HM
 import qualified Data.HashMap.Strict.InsOrd        as OMap
 import qualified Data.HashSet                      as HS
 import qualified Data.List                         as L
-import qualified Database.PG.Query                 as Q
 
-import           Control.Lens                      ((.~), (^?))
+import           Control.Lens                      ((^?))
 import           Data.Aeson
 
+import           Hasura.Metadata.Class
 import           Hasura.RQL.DDL.Action
 import           Hasura.RQL.DDL.ComputedField
 import           Hasura.RQL.DDL.CustomTypes
@@ -37,7 +40,7 @@ import           Hasura.RQL.DDL.Metadata.Types
 import           Hasura.RQL.Types
 
 runClearMetadata
-  :: (CacheRWM m, MetadataM m, MonadIO m, QErrM m)
+  :: (MonadIO m, CacheRWM m, MetadataM m, MonadError QErr m)
   => ClearMetadata -> m EncJSON
 runClearMetadata _ = do
   metadata <- getMetadata
@@ -86,7 +89,9 @@ runReplaceMetadata replaceMetadata = do
                                      { _smTables = _mnsTables
                                      , _smFunctions = _mnsFunctions
                                      }
-      pure $ (metaSources.ix defaultSource .~ newDefaultSourceMetadata) oldMetadata
+      pure $ Metadata (OMap.singleton defaultSource newDefaultSourceMetadata)
+                        _mnsRemoteSchemas _mnsQueryCollections _mnsAllowlist
+                        _mnsCustomTypes _mnsActions _mnsCronTriggers
   putMetadata metadata
   buildSchemaCacheStrict
   -- See Note [Clear postgres schema for dropped triggers]
@@ -98,9 +103,7 @@ runReplaceMetadata replaceMetadata = do
           droppedTriggers = OMap.keys $ oldTriggersMap `OMap.difference` newTriggersMap
       sourceConfig <- _pcConfiguration <$> askPGSourceCache source
       for_ droppedTriggers $
-        \name -> liftEitherM $ liftIO $ runExceptT $
-                 runLazyTx (_pscExecCtx sourceConfig) Q.ReadWrite $
-                 liftTx $ delTriggerQ name >> archiveEvents name
+        \name -> liftIO $ runPgSourceWriteTx sourceConfig $ delTriggerQ name >> archiveEvents name
 
   pure successMsg
 
@@ -111,14 +114,18 @@ runExportMetadata _ =
   AO.toEncJSON . metadataToOrdJSON <$> getMetadata
 
 runReloadMetadata :: (QErrM m, CacheRWM m, MetadataM m) => ReloadMetadata -> m EncJSON
-runReloadMetadata (ReloadMetadata reloadRemoteSchemas) = do
+runReloadMetadata (ReloadMetadata reloadRemoteSchemas reloadSources) = do
   sc <- askSchemaCache
-  let remoteSchemaInvalidations =
-        if reloadRemoteSchemas then HS.fromList (getAllRemoteSchemas sc) else mempty
+  let remoteSchemaInvalidations = case reloadRemoteSchemas of
+        RSReloadAll    -> HS.fromList $ getAllRemoteSchemas sc
+        RSReloadList l -> l
+      pgSourcesInvalidations = case reloadSources of
+        RSReloadAll    -> HS.fromList $ HM.keys $ scPostgres sc
+        RSReloadList l -> l
       cacheInvalidations = CacheInvalidations
                            { ciMetadata = True
                            , ciRemoteSchemas = remoteSchemaInvalidations
-                           , ciSources = HS.singleton defaultSource
+                           , ciSources = pgSourcesInvalidations
                            }
   metadata <- getMetadata
   buildSchemaCacheWithOptions CatalogUpdate cacheInvalidations metadata
@@ -176,3 +183,14 @@ purgeMetadataObj = \case
   MOAction action                            -> dropActionInMetadata action -- Nothing
   MOActionPermission action role             -> dropActionPermissionInMetadata action role
   MOCronTrigger ctName                       -> dropCronTriggerInMetadata ctName
+
+runGetCatalogState
+  :: (MonadMetadataStorageQueryAPI m) => GetCatalogState -> m EncJSON
+runGetCatalogState _ =
+  encJFromJValue <$> fetchCatalogState
+
+runSetCatalogState
+  :: (MonadMetadataStorageQueryAPI m) => SetCatalogState -> m EncJSON
+runSetCatalogState SetCatalogState{..} = do
+  updateCatalogState _scsType _scsState
+  pure successMsg

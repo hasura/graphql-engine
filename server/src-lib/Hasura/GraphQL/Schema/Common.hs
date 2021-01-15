@@ -3,15 +3,18 @@ module Hasura.GraphQL.Schema.Common where
 import           Hasura.Prelude
 
 import qualified Data.Aeson                         as J
+import qualified Data.HashMap.Strict                as Map
 import qualified Data.HashMap.Strict.InsOrd         as OMap
 
 import           Data.Text.Extended
 import           Language.GraphQL.Draft.Syntax      as G
 
 import qualified Data.Text                          as T
-import qualified Hasura.GraphQL.Execute.Types       as ET (GraphQLQueryType)
-import qualified Hasura.GraphQL.Parser              as P
-import qualified Hasura.RQL.IR.Select               as IR
+
+import qualified Hasura.Backends.Postgres.SQL.Types     as PG
+import qualified Hasura.GraphQL.Execute.Types           as ET (GraphQLQueryType)
+import qualified Hasura.GraphQL.Parser                  as P
+import qualified Hasura.RQL.IR.Select                   as IR
 
 import           Hasura.Backends.Postgres.SQL.Types
 import           Hasura.RQL.Types
@@ -105,3 +108,20 @@ defaultDirectives =
       [G.EDLFIELD, G.EDLFRAGMENT_SPREAD, G.EDLINLINE_FRAGMENT]
     mkDirective name =
       P.DirectiveInfo name Nothing [ifInputField] dirLocs
+
+-- TODO why do we do these validations at this point? What does it mean to track
+--      a function but not add it to the schema...?
+--      Auke:
+--        I believe the intention is simply to allow the console to do postgres data management
+--      Karthikeyan: Yes, this is correct. We allowed this pre PDV but somehow
+--        got removed in PDV. OTOH, I’m not sure how prevalent this feature
+--        actually is
+takeValidTables :: TableCache 'Postgres -> TableCache 'Postgres
+takeValidTables = Map.filterWithKey graphQLTableFilter . Map.filter tableFilter
+  where
+    tableFilter = not . isSystemDefined . _tciSystemDefined . _tiCoreInfo
+    graphQLTableFilter tableName tableInfo =
+      -- either the table name should be GraphQL compliant
+      -- or it should have a GraphQL custom name set with it
+      PG.isGraphQLCompliantTableName tableName
+      || (isJust . _tcCustomName . _tciCustomConfig . _tiCoreInfo $ tableInfo)

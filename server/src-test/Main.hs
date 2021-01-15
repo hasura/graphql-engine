@@ -106,7 +106,7 @@ buildPostgresSpecs maybeUrlTemplate = do
 
         (metadata, schemaCache) <- run do
           metadata <- snd <$> (liftEitherM . runExceptT . runLazyTx pgContext Q.ReadWrite)
-                      (migrateCatalog sourceConfig =<< liftIO getCurrentTime)
+                      (migrateCatalog (Just sourceConfig) =<< liftIO getCurrentTime)
           schemaCache <- buildRebuildableSchemaCache envMap metadata
           pure (metadata, schemaCache)
 

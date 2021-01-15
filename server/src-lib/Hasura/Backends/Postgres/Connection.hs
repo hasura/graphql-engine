@@ -21,6 +21,7 @@ module Hasura.Backends.Postgres.Connection
   , doesSchemaExist
   , doesTableExist
   , enablePgcryptoExtension
+  , dropHdbCatalogSchema
 
   , module ET
   ) where
@@ -35,6 +36,7 @@ import           Control.Monad.Morph                    (hoist)
 import           Control.Monad.Trans.Control            (MonadBaseControl (..))
 import           Control.Monad.Unique
 import           Control.Monad.Validate
+import           Network.HTTP.Client.Extended           (HasHttpManagerM (..))
 
 import qualified Hasura.Backends.Postgres.SQL.DML       as S
 import qualified Hasura.Tracing                         as Tracing
@@ -43,8 +45,8 @@ import           Hasura.Backends.Postgres.Execute.Types as ET
 import           Hasura.Backends.Postgres.SQL.Types
 import           Hasura.EncJSON
 import           Hasura.RQL.Types.Error
-import           Hasura.Session
 import           Hasura.SQL.Types
+import           Hasura.Session
 
 class (MonadError QErr m) => MonadTx m where
   liftTx :: Q.TxE QErr a -> m a
@@ -183,6 +185,12 @@ instance (Tracing.MonadTrace m) => Tracing.MonadTrace (LazyTxT e m) where
   currentReporter = lift Tracing.currentReporter
   attachMetadata  = lift . Tracing.attachMetadata
 
+instance UserInfoM m => UserInfoM (LazyTxT e m) where
+  askUserInfo = lift askUserInfo
+
+instance HasHttpManagerM m => HasHttpManagerM (LazyTxT e m) where
+  askHttpManager = lift askHttpManager
+
 instance (MonadIO m) => MonadTx (LazyTxT QErr m) where
   liftTx = LTTx . (hoist liftIO)
 
@@ -256,3 +264,10 @@ enablePgcryptoExtension = do
               "pgcrypto extension is required, but the current user doesn’t have permission to"
               <> " create it. Please grant superuser permission, or setup the initial schema via"
               <> " https://hasura.io/docs/1.0/graphql/manual/deployment/postgres-permissions.html"
+
+dropHdbCatalogSchema :: (MonadTx m) => m ()
+dropHdbCatalogSchema = liftTx $ Q.catchE defaultTxErrorHandler $
+  -- This is where
+  -- 1. Metadata storage:- Metadata and its stateful information stored
+  -- 2. Postgres source:- Table event trigger related stuff & insert permission check function stored
+  Q.unitQ "DROP SCHEMA IF EXISTS hdb_catalog CASCADE" () False

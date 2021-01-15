@@ -824,3 +824,32 @@ metadataToOrdJSON ( Metadata
 
 instance ToJSON Metadata where
   toJSON = AO.fromOrdered . metadataToOrdJSON
+
+data CatalogStateType
+  = CSTCli
+  | CSTConsole
+  deriving (Show, Eq)
+$(deriveJSON defaultOptions{constructorTagModifier = snakeCase . drop 3} ''CatalogStateType)
+
+data SetCatalogState
+  = SetCatalogState
+  { _scsType  :: !CatalogStateType
+  , _scsState :: !Value
+  } deriving (Show, Eq)
+$(deriveJSON (aesonDrop 4 snakeCase) ''SetCatalogState)
+
+data CatalogState
+  = CatalogState
+  { _csId           :: !Text
+  , _csCliState     :: !Value
+  , _csConsoleState :: !Value
+  } deriving (Show, Eq)
+$(deriveToJSON (aesonDrop 3 snakeCase) ''CatalogState)
+
+data GetCatalogState
+  = GetCatalogState
+  deriving (Show, Eq)
+$(deriveToJSON defaultOptions ''GetCatalogState)
+
+instance FromJSON GetCatalogState where
+  parseJSON _ = pure GetCatalogState

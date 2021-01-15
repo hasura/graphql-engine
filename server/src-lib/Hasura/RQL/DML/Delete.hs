@@ -30,6 +30,7 @@ import           Hasura.RQL.IR.Delete
 import           Hasura.RQL.Types
 import           Hasura.RQL.Types.Run
 import           Hasura.Server.Version                        (HasVersion)
+import           Hasura.Session
 
 
 validateDeleteQWith
@@ -39,7 +40,7 @@ validateDeleteQWith
   -> DeleteQuery
   -> m (AnnDel 'Postgres)
 validateDeleteQWith sessVarBldr prepValBldr
-  (DeleteQuery tableName rqlBE mRetCols) = do
+  (DeleteQuery tableName _ rqlBE mRetCols) = do
   tableInfo <- askTabInfoSource tableName
   let coreInfo = _tiCoreInfo tableInfo
 
@@ -83,8 +84,9 @@ validateDeleteQWith sessVarBldr prepValBldr
 
 validateDeleteQ
   :: (QErrM m, UserInfoM m, CacheRM m)
-  => SourceName -> DeleteQuery -> m (AnnDel 'Postgres, DS.Seq Q.PrepArg)
-validateDeleteQ source query = do
+  => DeleteQuery -> m (AnnDel 'Postgres, DS.Seq Q.PrepArg)
+validateDeleteQ query = do
+  let source = doSource query
   tableCache <- askTableCache source
   flip runTableCacheRT (source, tableCache) $ runDMLP1T $
     validateDeleteQWith sessVarFromCurrentSetting binRHSBuilder query
@@ -92,14 +94,14 @@ validateDeleteQ source query = do
 runDelete
   :: ( HasVersion, QErrM m, UserInfoM m, CacheRM m
      , HasSQLGenCtx m, MonadIO m
-     , MonadBaseControl IO m, Tracing.MonadTrace m
+     , Tracing.MonadTrace m, MonadBaseControl IO m
      )
   => Env.Environment
-  -> SourceName
   -> DeleteQuery
   -> m EncJSON
-runDelete env source q = do
-  sourceConfig <- _pcConfiguration <$> askPGSourceCache source
+runDelete env q = do
+  sourceConfig <- _pcConfiguration <$> askPGSourceCache (doSource q)
   strfyNum <- stringifyNum <$> askSQLGenCtx
-  validateDeleteQ source q >>= liftEitherM . runExceptT .
-    runQueryLazyTx (_pscExecCtx sourceConfig) Q.ReadWrite . execDeleteQuery env strfyNum Nothing
+  validateDeleteQ q
+    >>= runQueryLazyTx (_pscExecCtx sourceConfig) Q.ReadWrite
+        . execDeleteQuery env strfyNum Nothing

@@ -152,15 +152,17 @@ data DropAction
 $(J.deriveJSON (J.aesonDrop 3 J.snakeCase) ''DropAction)
 
 runDropAction
-  :: (QErrM m, CacheRWM m, MetadataM m, MonadMetadataStorageQueryAPI m)
+  :: ( CacheRWM m
+     , MetadataM m
+     , MonadMetadataStorageQueryAPI m
+     )
   => DropAction -> m EncJSON
 runDropAction (DropAction actionName clearDataM)= do
   void $ getActionInfo actionName
   withNewInconsistentObjsCheck
     $ buildSchemaCache
     $ dropActionInMetadata actionName
-  when (shouldClearActionData clearData) $
-    deleteActionData actionName
+  when (shouldClearActionData clearData) $ deleteActionData actionName
   return successMsg
   where
     -- When clearData is not present we assume that

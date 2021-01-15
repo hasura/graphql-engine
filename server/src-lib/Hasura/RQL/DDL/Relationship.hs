@@ -27,6 +27,7 @@ import           Hasura.RQL.DDL.Deps
 import           Hasura.RQL.DDL.Permission
 import           Hasura.RQL.Types
 
+
 runCreateRelationship
   :: (MonadError QErr m, CacheRWM m, ToJSON a, MetadataM m)
   => RelType -> WithTable (RelDef a) -> m EncJSON

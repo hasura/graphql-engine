@@ -2,11 +2,7 @@
 import { addState } from '../state';
 /* */
 
-import Endpoints, { globalCookiePolicy } from '../../../../Endpoints';
-import requestAction from '../../../../utils/requestAction';
-import dataHeaders from '../../Data/Common/Headers';
 import { push } from 'react-router-redux';
-import { fetchRemoteSchemas } from '../Actions';
 
 import { generateHeaderSyms } from '../../../Common/Layout/ReusableHeader/HeaderReducer';
 import { makeRequest } from '../Actions';
@@ -15,6 +11,8 @@ import { appPrefix } from '../constants';
 
 import globals from '../../../../Globals';
 import { clearIntrospectionSchemaCache } from '../graphqlUtils';
+import { exportMetadata } from '../../../../metadata/actions';
+import { getRemoteSchemaSelector } from '../../../../metadata/selector';
 import Migration from '../../../../utils/migration/Migration';
 
 const prefixUrl = globals.urlPrefix + appPrefix;
@@ -88,63 +86,36 @@ const getReqHeader = headers => {
 
 const fetchRemoteSchema = remoteSchema => {
   return (dispatch, getState) => {
-    const url = Endpoints.getSchema;
-    const options = {
-      credentials: globalCookiePolicy,
-      method: 'POST',
-      headers: dataHeaders(getState),
-      body: JSON.stringify({
-        type: 'select',
-        args: {
-          table: {
-            name: 'remote_schemas',
-            schema: 'hdb_catalog',
-          },
-          columns: ['*'],
-          where: {
-            name: remoteSchema,
-          },
-        },
-      }),
-    };
-    dispatch({ type: FETCHING_INDIV_REMOTE_SCHEMA });
-    return dispatch(requestAction(url, options)).then(
-      data => {
-        if (data.length > 0) {
-          dispatch({ type: REMOTE_SCHEMA_FETCH_SUCCESS, data: data });
-          const headerObj = [];
-          data[0].definition.headers.forEach(d => {
-            headerObj.push({
-              name: d.name,
-              value: d.value ? d.value : d.value_from_env,
-              type: d.value ? 'static' : 'env',
-            });
-          });
-          headerObj.push({
-            name: '',
-            type: 'static',
-            value: '',
-          });
-          dispatch({
-            type: getHeaderEvents.UPDATE_HEADERS,
-            data: [...headerObj],
-          });
-          return Promise.resolve();
-        }
-        return dispatch(push(`${prefixUrl}`));
-      },
-      error => {
-        console.error('Failed to fetch remoteSchema' + JSON.stringify(error));
-        return dispatch({ type: REMOTE_SCHEMA_FETCH_FAIL, data: error });
-      }
-    );
+    const schema = getRemoteSchemaSelector(getState())(remoteSchema);
+
+    if (schema) {
+      dispatch({ type: REMOTE_SCHEMA_FETCH_SUCCESS, data: schema });
+      const headerObj = [];
+      (schema.definition.headers || []).forEach(d => {
+        headerObj.push({
+          name: d.name,
+          value: d.value ? d.value : d.value_from_env,
+          type: d.value ? 'static' : 'env',
+        });
+      });
+      headerObj.push({
+        name: '',
+        type: 'static',
+        value: '',
+      });
+      dispatch({
+        type: getHeaderEvents.UPDATE_HEADERS,
+        data: headerObj,
+      });
+    } else {
+      dispatch(push(`${prefixUrl}`));
+    }
   };
 };
 
 const addRemoteSchema = () => {
   return (dispatch, getState) => {
     const currState = getState().remoteSchemas.addData;
-    // const url = Endpoints.getSchema;
 
     let timeoutSeconds = parseInt(currState.timeoutConf, 10);
     if (isNaN(timeoutSeconds)) timeoutSeconds = 60;
@@ -198,7 +169,7 @@ const addRemoteSchema = () => {
     const customOnSuccess = data => {
       Promise.all([
         dispatch({ type: RESET }),
-        dispatch(fetchRemoteSchemas()).then(() => {
+        dispatch(exportMetadata()).then(() => {
           dispatch(push(`${prefixUrl}/manage/${resolveObj.name}/details`));
         }),
         dispatch({ type: getHeaderEvents.RESET_HEADER, data: data }),
@@ -207,10 +178,9 @@ const addRemoteSchema = () => {
     const customOnError = err => {
       console.error('Failed to create remote schema' + JSON.stringify(err));
       dispatch({ type: ADD_REMOTE_SCHEMA_FAIL, data: err });
-      // dispatch({ type: UPDATE_MIGRATION_STATUS_ERROR, data: err });
-      // alert(JSON.stringify(err));
     };
     dispatch({ type: ADDING_REMOTE_SCHEMA });
+
     return dispatch(
       makeRequest(
         migration.upMigration,
@@ -229,7 +199,6 @@ const addRemoteSchema = () => {
 const deleteRemoteSchema = () => {
   return (dispatch, getState) => {
     const currState = getState().remoteSchemas.addData;
-    // const url = Endpoints.getSchema;
     const resolveObj = {
       name: currState.editState.originalName,
     };
@@ -271,7 +240,7 @@ const deleteRemoteSchema = () => {
       Promise.all([
         dispatch({ type: RESET }),
         dispatch(push(prefixUrl)),
-        dispatch(fetchRemoteSchemas()),
+        dispatch(exportMetadata()),
       ]);
       clearIntrospectionSchemaCache();
     };
@@ -388,13 +357,12 @@ const modifyRemoteSchema = () => {
     const errorMsg = 'Modify remote schema failed';
 
     const customOnSuccess = data => {
-      // dispatch({ type: REQUEST_SUCCESS });
       dispatch({ type: RESET, data: data });
       dispatch(push(`${prefixUrl}/manage/schemas`)); // to avoid 404
-      dispatch(fetchRemoteSchemas()).then(() => {
+      dispatch(exportMetadata()).then(() => {
         dispatch(push(`${prefixUrl}/manage/${remoteSchemaName}/details`));
+        dispatch(fetchRemoteSchema(remoteSchemaName));
       });
-      dispatch(fetchRemoteSchema(remoteSchemaName));
       clearIntrospectionSchemaCache();
     };
     const customOnError = error => {
@@ -476,24 +444,23 @@ const addRemoteSchemaReducer = (state = addState, action) => {
     case REMOTE_SCHEMA_FETCH_SUCCESS:
       return {
         ...state,
-        name: action.data[0].name,
-        manualUrl: action.data[0].definition.url || null,
-        envName: action.data[0].definition.url_from_env || null,
-        headers: action.data[0].definition.headers || [],
-        timeoutConf: action.data[0].definition.timeout_seconds
-          ? action.data[0].definition.timeout_seconds.toString()
+        name: action.data.name,
+        manualUrl: action.data.definition.url || null,
+        envName: action.data.definition.url_from_env || null,
+        headers: action.data.definition.headers || [],
+        timeoutConf: action.data.definition.timeout_seconds
+          ? action.data.definition.timeout_seconds.toString()
           : '60',
-        forwardClientHeaders: action.data[0].definition.forward_client_headers,
+        forwardClientHeaders: action.data.definition.forward_client_headers,
         editState: {
           ...state,
-          id: action.data[0].id,
           isModify: false,
-          originalName: action.data[0].name,
-          originalHeaders: action.data[0].definition.headers || [],
-          originalUrl: action.data[0].definition.url || null,
-          originalEnvUrl: action.data[0].definition.url_from_env || null,
+          originalName: action.data.name,
+          originalHeaders: action.data.definition.headers || [],
+          originalUrl: action.data.definition.url || null,
+          originalEnvUrl: action.data.definition.url_from_env || null,
           originalForwardClientHeaders:
-            action.data[0].definition.forward_client_headers || false,
+            action.data.definition.forward_client_headers || false,
         },
         isFetching: false,
         isFetchError: null,

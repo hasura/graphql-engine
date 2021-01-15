@@ -87,6 +87,10 @@ and be accessible according to the permissions that were configured for the role
 - server: update `forkImmortal` function to log more information, i.e log starting of threads and log asynchronous and synchronous exception.
 - server: various changes to ensure timely cleanup of background threads and other resources in the event of a SIGTERM signal.
 - server: fix issue when the `relationships` field in `objects` field is passed `[]` in the `set_custom_types` API (fix #6357)
+- server: fix issue with event triggers defined on a table which is partitioned (fixes #6261)
+- server: fix issue with non-optional fields of the remote schema being added as optional in the graphql-engine (fix #6401)
+- server: accept new config `allowed_skew` in JWT config to provide leeway for JWT expiry (fixes #2109)
+- server: fix issue with query actions with relationship with permissions configured on the remote table (fix #6385)
 - console: allow user to cascade Postgres dependencies when dropping Postgres objects (close #5109) (#5248)
 - console: mark inconsistent remote schemas in the UI (close #5093) (#5181)
 - console: remove ONLY as default for ALTER TABLE in column alter operations (close #5512) #5706
@@ -96,6 +100,8 @@ and be accessible according to the permissions that were configured for the role
 - console: select first operator by default on the browse rows screen (close #5729) (#6032)
 - console: fix allow-list not getting added to metadata/allow_list.yaml in CLI mode (close #6374)
 - console: misc bug fixes (close #4785, #6330, #6288)
+- console: allow setting table custom name (#212)
+- console: support tracking VOLATILE functions as mutations or queries (close #6228)
 - cli: add missing global flags for seed command (#5565)
 - cli: allow seeds as alias for seed command (#5693)
 - cli: fix action timeouts not being picked up in metadata operations (#6220)

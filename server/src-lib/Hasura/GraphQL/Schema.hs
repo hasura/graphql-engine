@@ -56,6 +56,7 @@ instance BackendSchema 'Postgres where
   getTableGQLName           = PGS.getTableGQLName
   orderByOperators          = PGS.orderByOperators
   comparisonExps            = PGS.comparisonExps
+  updateOperators           = PGS.updateOperators
   parseScalarValue          = parsePGScalarValue
   offsetParser              = PGS.offsetParser
   mkCountType               = PGS.mkCountType
@@ -237,23 +238,6 @@ buildRoleContext queryContext pgSources
         :: [ParsedIntrospection]
         -> [P.FieldParser (P.ParseT Identity) RemoteField]
       getMutationRemotes = concatMap (concat . piMutation)
-
--- TODO why do we do these validations at this point? What does it mean to track
---      a function but not add it to the schema...?
---      Auke:
---        I believe the intention is simply to allow the console to do postgres data management
---      Karthikeyan: Yes, this is correct. We allowed this pre PDV but somehow
---        got removed in PDV. OTOH, I’m not sure how prevalent this feature
---        actually is
-takeValidTables :: TableCache 'Postgres -> TableCache 'Postgres
-takeValidTables = Map.filterWithKey graphQLTableFilter . Map.filter tableFilter
-  where
-    tableFilter = not . isSystemDefined . _tciSystemDefined . _tiCoreInfo
-    graphQLTableFilter tableName tableInfo =
-      -- either the table name should be GraphQL compliant
-      -- or it should have a GraphQL custom name set with it
-      PG.isGraphQLCompliantTableName tableName
-      || (isJust . _tcCustomName . _tciCustomConfig . _tiCoreInfo $ tableInfo)
 
 -- TODO and what about graphql-compliant function names here too?
 takeValidFunctions :: FunctionCache -> [FunctionInfo]

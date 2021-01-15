@@ -177,20 +177,22 @@ validateUpdateQueryWith sessVarBldr prepValBldr uq = do
 
 validateUpdateQuery
   :: (QErrM m, UserInfoM m, CacheRM m)
-  => SourceName -> UpdateQuery -> m (AnnUpd 'Postgres, DS.Seq Q.PrepArg)
-validateUpdateQuery source query = do
+  => UpdateQuery -> m (AnnUpd 'Postgres, DS.Seq Q.PrepArg)
+validateUpdateQuery query = do
+  let source = uqSource query
   tableCache <- askTableCache source
   flip runTableCacheRT (source, tableCache) $ runDMLP1T $
     validateUpdateQueryWith sessVarFromCurrentSetting binRHSBuilder query
 
 runUpdate
   :: ( HasVersion, QErrM m, UserInfoM m, CacheRM m
-     , HasSQLGenCtx m, MonadIO m, MonadBaseControl IO m
-     , Tracing.MonadTrace m
+     , HasSQLGenCtx m, MonadBaseControl IO m
+     , MonadIO m, Tracing.MonadTrace m
      )
-  => Env.Environment -> SourceName -> UpdateQuery -> m EncJSON
-runUpdate env source q = do
-  sourceConfig <- _pcConfiguration <$> askPGSourceCache source
+  => Env.Environment -> UpdateQuery -> m EncJSON
+runUpdate env q = do
+  sourceConfig <- _pcConfiguration <$> askPGSourceCache (uqSource q)
   strfyNum <- stringifyNum <$> askSQLGenCtx
-  validateUpdateQuery source q >>= liftEitherM . runExceptT .
-    runQueryLazyTx (_pscExecCtx sourceConfig) Q.ReadWrite . execUpdateQuery env strfyNum Nothing
+  validateUpdateQuery q
+    >>= runQueryLazyTx (_pscExecCtx sourceConfig) Q.ReadWrite
+        . execUpdateQuery env strfyNum Nothing

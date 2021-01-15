@@ -16,9 +16,9 @@
 -- the @graphql-engine@ executable.
 module Hasura.Server.Migrate
   ( MigrationResult(..)
+  , getMigratedFrom
   , migrateCatalog
   , latestCatalogVersion
-  , dropCatalog
   , downgradeCatalog
   ) where
 
@@ -26,6 +26,7 @@ import           Hasura.Prelude
 
 import qualified Data.Aeson                          as A
 import qualified Data.HashMap.Strict.InsOrd          as OMap
+import qualified Data.Text                           as T
 import qualified Data.Text.IO                        as TIO
 import qualified Database.PG.Query                   as Q
 import qualified Language.Haskell.TH.Lib             as TH
@@ -40,14 +41,11 @@ import           Hasura.Logging                      (Hasura, LogLevel (..), ToE
 import           Hasura.RQL.DDL.Schema
 import           Hasura.RQL.DDL.Schema.LegacyCatalog
 import           Hasura.RQL.Types
-import           Hasura.Server.Init                  (DowngradeOptions (..))
+import           Hasura.Server.Init                  (DowngradeOptions (..), databaseUrlEnv)
 import           Hasura.Server.Logging               (StartupLog (..))
 import           Hasura.Server.Migrate.Version       (latestCatalogVersion,
                                                       latestCatalogVersionString)
 
-dropCatalog :: (MonadTx m) => m ()
-dropCatalog = liftTx $ Q.catchE defaultTxErrorHandler $
-  Q.unitQ "DROP SCHEMA IF EXISTS hdb_catalog CASCADE" () False
 
 data MigrationResult
   = MRNothingToDo
@@ -70,6 +68,14 @@ instance ToEngineLog MigrationResult Hasura where
             <> latestCatalogVersionString <> "."
     }
 
+getMigratedFrom
+  :: MigrationResult
+  -> Maybe Float -- ^ We have version 0.8 as non integral catalog version
+getMigratedFrom = \case
+  MRNothingToDo -> Nothing
+  MRInitialized -> Nothing
+  MRMigrated t  -> readMaybe (T.unpack t)
+
 -- A migration and (hopefully) also its inverse if we have it.
 -- Polymorphic because `m` can be any `MonadTx`, `MonadIO` when
 -- used in the `migrations` function below.
@@ -84,10 +90,10 @@ migrateCatalog
      , MonadIO m
      , MonadBaseControl IO m
      )
-  => SourceConfiguration
+  => Maybe SourceConfiguration
   -> UTCTime
   -> m (MigrationResult, Metadata)
-migrateCatalog defaultSourceConfig migrationTime = do
+migrateCatalog maybeDefaultSourceConfig migrationTime = do
   migrationResult <- doesSchemaExist (SchemaName "hdb_catalog") >>= \case
     False -> initialize True
     True  -> doesTableExist (SchemaName "hdb_catalog") (TableName "hdb_version") >>= \case
@@ -104,11 +110,17 @@ migrateCatalog defaultSourceConfig migrationTime = do
       enablePgcryptoExtension
       runTx $(Q.sqlFromFile "src-rsr/initialise.sql")
       updateCatalogVersion
-      -- insert metadata with default source
-      let defaultSourceMetadata =
-            SourceMetadata defaultSource mempty mempty defaultSourceConfig
-          sources = OMap.singleton defaultSource defaultSourceMetadata
-      liftTx $ setMetadataInCatalog emptyMetadata{_metaSources = sources}
+
+      let emptyMetadata' = case maybeDefaultSourceConfig of
+            Nothing -> emptyMetadata
+            Just defaultSourceConfig ->
+              -- insert metadata with default source
+              let defaultSourceMetadata =
+                    SourceMetadata defaultSource mempty mempty defaultSourceConfig
+                  sources = OMap.singleton defaultSource defaultSourceMetadata
+              in emptyMetadata{_metaSources = sources}
+
+      liftTx $ setMetadataInCatalog emptyMetadata'
       pure MRInitialized
 
     -- migrates an existing catalog to the latest version from an existing verion
@@ -126,13 +138,13 @@ migrateCatalog defaultSourceConfig migrationTime = do
           pure $ MRMigrated previousVersion
       where
         neededMigrations =
-          dropWhile ((/= previousVersion) . fst) (migrations defaultSourceConfig False)
+          dropWhile ((/= previousVersion) . fst) (migrations maybeDefaultSourceConfig False)
 
     updateCatalogVersion = setCatalogVersion latestCatalogVersionString migrationTime
 
 downgradeCatalog
   :: forall m. (MonadIO m, MonadTx m)
-  => SourceConfiguration -> DowngradeOptions -> UTCTime -> m MigrationResult
+  => Maybe SourceConfiguration -> DowngradeOptions -> UTCTime -> m MigrationResult
 downgradeCatalog defaultSourceConfig opts time = do
     downgradeFrom =<< getCatalogVersion
   where
@@ -202,8 +214,8 @@ setCatalogVersion ver time = liftTx $ Q.unitQE defaultTxErrorHandler [Q.sql|
 
 migrations
   :: forall m. (MonadIO m, MonadTx m)
-  => SourceConfiguration -> Bool -> [(Text, MigrationPair m)]
-migrations defaultSourceConfig dryRun =
+  => Maybe SourceConfiguration -> Bool -> [(Text, MigrationPair m)]
+migrations maybeDefaultSourceConfig dryRun =
     -- We need to build the list of migrations at compile-time so that we can compile the SQL
     -- directly into the executable using `Q.sqlFromFile`. The GHC stage restriction makes
     -- doing this a little bit awkward (we can’t use any definitions in this module at
@@ -272,6 +284,8 @@ migrations defaultSourceConfig dryRun =
         else do
         metadataV2 <- fetchMetadataFromHdbTables
         runTx query
+        defaultSourceConfig <- onNothing maybeDefaultSourceConfig $ throw400 NotSupported $
+          "cannot migrate to catalog version 43 without --database-url or env var " <> tshow (fst databaseUrlEnv)
         let metadataV3 =
               let MetadataNoSources{..} = metadataV2
                   defaultSourceMetadata =

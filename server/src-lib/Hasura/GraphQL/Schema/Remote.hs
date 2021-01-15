@@ -98,7 +98,7 @@ remoteField' schemaDoc (G.FieldDefinition description name argsDefinition gType 
           G.TypeList (Nullability True) gType'' ->
             addNullableList <$> convertType gType''
           G.TypeNamed (Nullability False) fieldTypeName -> do
-            P.nullableField <$> remoteFieldFromName schemaDoc name description fieldTypeName argsDefinition
+            P.nonNullableField <$> remoteFieldFromName schemaDoc name description fieldTypeName argsDefinition
           G.TypeList (Nullability False) gType'' ->
             addNonNullableList <$> convertType gType''
   in convertType gType

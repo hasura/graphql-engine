@@ -20,6 +20,9 @@ import qualified Hasura.Cache.Bounded             as Cache
 import qualified Hasura.GraphQL.Execute.LiveQuery as LQ
 import qualified Hasura.GraphQL.Execute.Plan      as E
 import qualified Hasura.Logging                   as L
+import qualified System.Metrics                   as EKG
+import qualified System.Metrics.Gauge             as EKG.Gauge
+
 
 import           Hasura.Prelude
 import           Hasura.RQL.Types
@@ -193,13 +196,13 @@ type RawHGECommand impl = HGECommandG (RawServeOptions impl)
 
 data HGEOptionsG a b
   = HGEOptionsG
-  { hoConnInfo      :: !(PostgresConnInfo a)
+  { hoDatabaseUrl   :: !(PostgresConnInfo a)
   , hoMetadataDbUrl :: !(Maybe String)
   , hoCommand       :: !(HGECommandG b)
   } deriving (Show, Eq)
 
 type RawHGEOptions impl = HGEOptionsG (Maybe PostgresRawConnInfo) (RawServeOptions impl)
-type HGEOptions impl = HGEOptionsG UrlConf (ServeOptions impl)
+type HGEOptions impl = HGEOptionsG (Maybe UrlConf) (ServeOptions impl)
 
 type Env = [(String, String)]
 
@@ -327,3 +330,13 @@ type WithEnv a = ReaderT Env (ExceptT String Identity) a
 
 runWithEnv :: Env -> WithEnv a -> Either String a
 runWithEnv env m = runIdentity $ runExceptT $ runReaderT m env
+
+data ServerMetrics
+  = ServerMetrics
+  { smWarpThreads :: !EKG.Gauge.Gauge
+  }
+
+createServerMetrics :: EKG.Store -> IO ServerMetrics
+createServerMetrics store = do
+  smWarpThreads <- EKG.createGauge "warp_threads" store
+  pure ServerMetrics { .. }

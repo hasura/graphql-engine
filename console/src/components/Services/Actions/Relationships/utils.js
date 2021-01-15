@@ -1,8 +1,9 @@
-import { generateTableDef } from '../../../Common/utils/pgUtils';
 import { defaultRelFieldMapping } from '../Common/stateDefaults';
+import { generateTableDef } from '../../../../dataSources';
 
 const reformRelationship = relConfig => {
   return {
+    source: relConfig.source || relConfig.refDb,
     name: relConfig.name,
     type: relConfig.type,
     remote_table: generateTableDef(relConfig.refTable, relConfig.refSchema),
@@ -23,6 +24,7 @@ export const parseCustomTypeRelationship = relConfig => {
     ...relConfig,
     refSchema: relConfig.remote_table.schema,
     refTable: relConfig.remote_table.name,
+    refDb: relConfig.source,
     fieldMapping: Object.keys(relConfig.field_mapping).map(field => {
       return {
         field,
@@ -56,6 +58,7 @@ export const getRelValidationError = relConfig => {
   }
   if (!relConfig.refSchema) return 'please select a reference schema';
   if (!relConfig.refTable) return 'please select a reference table';
+  if (!relConfig.refDb) return 'please select a reference data source';
   if (relConfig.fieldMapping.length < 2) {
     return 'please choose the mapping between table column(s) and type field(s)';
   }
@@ -76,15 +79,18 @@ export const getRelDef = relMeta => {
     ? `${relMeta.remote_table.schema}.${relMeta.remote_table.name}`
     : relMeta.remote_table;
 
-  return `${relMeta.typename} . ${lcol} → ${tableLabel} . ${rcol}`;
+  const sourceDef = relMeta.source ? `${relMeta.source} . ` : '';
+
+  return `${relMeta.typename} . ${lcol} → ${sourceDef}${tableLabel} . ${rcol}`;
 };
 
 export const removeTypeRelationship = (types, typename, relName) => {
   return types.map(t => {
     if (t.name === typename && t.kind === 'object') {
+      const newRel = (t.relationships || []).filter(r => r.name !== relName);
       return {
         ...t,
-        relationships: (t.relationships || []).filter(r => r.name !== relName),
+        relationships: newRel.length ? newRel : undefined,
       };
     }
     return t;

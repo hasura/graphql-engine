@@ -5,6 +5,7 @@ import requestActionPlain from '../../utils/requestActionPlain';
 import Endpoints, { globalCookiePolicy } from '../../Endpoints';
 import { getFeaturesCompatibility } from '../../helpers/versionUtils';
 import { getRunSqlQuery } from '../Common/utils/v1QueryUtils';
+import { currentDriver } from '../../dataSources';
 import { defaultNotification, errorNotification } from './ConsoleNotification';
 import { updateConsoleNotificationsState } from '../../telemetry/Actions';
 import { getConsoleNotificationQuery } from '../Common/utils/v1QueryUtils';
@@ -272,7 +273,12 @@ const setReadOnlyMode = data => ({
 });
 
 export const fetchPostgresVersion = (dispatch, getState) => {
-  const req = getRunSqlQuery('SELECT version()');
+  if (currentDriver !== 'postgres') return;
+
+  const req = getRunSqlQuery(
+    'SELECT version()',
+    getState().tables.currentDataSource
+  );
   const options = {
     method: 'POST',
     credentials: globalCookiePolicy,

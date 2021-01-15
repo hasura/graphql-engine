@@ -36,7 +36,7 @@ Here is a sample ``nginx.conf`` to proxy requests to Hasura:
 
    server {
      listen 80;
-     server_name hasura.my-domain.com;
+     server_name hasura.<my-domain.com>;
 
      location / {
        proxy_pass http://localhost:8080/;
@@ -60,7 +60,7 @@ Here is a sample ``Caddyfile`` to proxy requests to Hasura:
 
 .. code-block:: bash
 
-   hasura.my-domain.com {
+   hasura.<my-domain.com> {
      proxy / http://localhost:8080
      websocket
    }
@@ -69,7 +69,7 @@ The sample ``Caddyfile`` for Caddy 2:
 
 .. code-block:: bash
 
-   hasura.my-domain.com {
+   hasura.<my-domain.com> {
      reverse_proxy localhost:8080
    }
 
@@ -80,7 +80,7 @@ In order to serve at a URL prefix, use the following configuration:
 
 .. code-block:: bash
 
-   my-domain.com {
+   <my-domain.com> {
      proxy /hasura http://localhost:8080
      websocket
      without /hasura
