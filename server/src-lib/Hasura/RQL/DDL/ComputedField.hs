@@ -37,26 +37,38 @@ import           Hasura.SQL.Types
 
 data AddComputedField
   = AddComputedField
-  { _afcTable      :: !QualifiedTable
+  { _afcSource     :: !SourceName
+  , _afcTable      :: !QualifiedTable
   , _afcName       :: !ComputedFieldName
   , _afcDefinition :: !ComputedFieldDefinition
   , _afcComment    :: !(Maybe Text)
   } deriving (Show, Eq, Generic)
 instance NFData AddComputedField
 instance Cacheable AddComputedField
-$(deriveJSON (aesonDrop 4 snakeCase) ''AddComputedField)
+$(deriveToJSON (aesonDrop 4 snakeCase) ''AddComputedField)
+
+instance FromJSON AddComputedField where
+  parseJSON = withObject "Object" $ \o ->
+    AddComputedField
+      <$> o .:? "source" .!= defaultSource
+      <*> o .: "table"
+      <*> o .: "name"
+      <*> o .: "definition"
+      <*> o .:? "comment"
 
 runAddComputedField :: (MonadError QErr m, CacheRWM m, MetadataM m) => AddComputedField -> m EncJSON
 runAddComputedField q = do
-  withPathK "table" $ askTabInfo table
-  let metadataObj = MOTableObj table $ MTOComputedField computedFieldName
+  withPathK "table" $ askTabInfo source table
+  let metadataObj = MOSourceObjId source $
+                    SMOTableObj table $ MTOComputedField computedFieldName
       metadata = ComputedFieldMetadata computedFieldName (_afcDefinition q) (_afcComment q)
   buildSchemaCacheFor metadataObj
     $ MetadataModifier
-    $ metaTables.ix table.tmComputedFields
+    $ tableMetadataSetter source table.tmComputedFields
       %~ OMap.insert computedFieldName metadata
   pure successMsg
   where
+    source = _afcSource q
     table = _afcTable q
     computedFieldName = _afcName q
 
@@ -238,7 +250,8 @@ addComputedFieldP2Setup trackedTables table computedField definition rawFunction
 
 data DropComputedField
   = DropComputedField
-  { _dccTable   :: !QualifiedTable
+  { _dccSource  :: !SourceName
+  , _dccTable   :: !QualifiedTable
   , _dccName    :: !ComputedFieldName
   , _dccCascade :: !Bool
   } deriving (Show, Eq)
@@ -247,32 +260,34 @@ $(deriveToJSON (aesonDrop 4 snakeCase) ''DropComputedField)
 instance FromJSON DropComputedField where
   parseJSON = withObject "Object" $ \o ->
     DropComputedField
-      <$> o .: "table"
+      <$> o .:? "source" .!= defaultSource
+      <*> o .: "table"
       <*> o .: "name"
       <*> o .:? "cascade" .!= False
 
 runDropComputedField
   :: (QErrM m, CacheRWM m, MetadataM m)
   => DropComputedField -> m EncJSON
-runDropComputedField (DropComputedField table computedField cascade) = do
+runDropComputedField (DropComputedField source table computedField cascade) = do
   -- Validation
-  fields <- withPathK "table" $ _tciFieldInfoMap <$> askTableCoreInfo table
+  fields <- withPathK "table" $ _tciFieldInfoMap <$> askTableCoreInfo source table
   void $ withPathK "name" $ askComputedFieldInfo fields computedField
 
   -- Dependencies check
   sc <- askSchemaCache
-  let deps = getDependentObjs sc $ SOTableObj table $ TOComputedField computedField
+  let deps = getDependentObjs sc $ SOSourceObj source $
+             SOITableObj table $ TOComputedField computedField
   when (not cascade && not (null deps)) $ reportDeps deps
 
   withNewInconsistentObjsCheck do
     metadataModifiers <- mapM purgeComputedFieldDependency deps
     buildSchemaCache $ MetadataModifier $
-      metaTables.ix table
+      tableMetadataSetter source table
       %~ (dropComputedFieldInMetadata computedField) . foldl' (.) id metadataModifiers
   pure successMsg
   where
     purgeComputedFieldDependency = \case
-      (SOTableObj qt (TOPerm roleName permType)) | qt == table ->
+      (SOSourceObj _ (SOITableObj qt (TOPerm roleName permType))) | qt == table ->
         pure $ dropPermissionInMetadata roleName permType
       d -> throw500 $ "unexpected dependency for computed field "
            <> computedField <<> "; " <> reportSchemaObj d

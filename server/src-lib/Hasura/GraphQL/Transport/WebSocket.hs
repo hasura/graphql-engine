@@ -67,6 +67,7 @@ import           Hasura.Server.Version                       (HasVersion)
 import           Hasura.Session
 
 import qualified Hasura.GraphQL.Execute                      as E
+import qualified Hasura.GraphQL.Execute.Action               as EA
 import qualified Hasura.GraphQL.Execute.LiveQuery            as LQ
 import qualified Hasura.GraphQL.Execute.LiveQuery.Poll       as LQ
 import qualified Hasura.GraphQL.Execute.Query                as EQ
@@ -220,7 +221,6 @@ mkWsErrorLog uv ci ev =
 data WSServerEnv
   = WSServerEnv
   { _wseLogger          :: !(L.Logger L.Hasura)
-  , _wseRunTx           :: !PGExecCtx
   , _wseLiveQMap        :: !LQ.LiveQueriesState
   , _wseGCtxMap         :: !(IO (SchemaCache, SchemaCacheVer))
   -- ^ an action that always returns the latest version of the schema cache. See 'SchemaCacheRef'.
@@ -332,6 +332,7 @@ onStart
   , Tracing.MonadTrace m
   , MonadExecuteQuery m
   , EQ.MonadQueryInstrumentation m
+  , MC.MonadBaseControl IO m
   , MonadMetadataStorage (MetadataStorageT m)
   )
   => Env.Environment -> WSServerEnv -> WSConn -> StartMsg -> m ()
@@ -359,8 +360,8 @@ onStart env serverEnv wsConn (StartMsg opId q) = catchAndIgnore $ do
 
   reqParsedE <- lift $ E.checkGQLExecution userInfo (reqHdrs, ipAddress) enableAL sc q
   reqParsed <- onLeft reqParsedE (withComplete . preExecErr requestId)
-  execPlanE <- runExceptT $ E.getResolvedExecPlan env logger pgExecCtx
-               {- planCache -} userInfo sqlGenCtx sc scVer queryType httpMgr reqHdrs (q, reqParsed)
+  execPlanE <- runExceptT $ E.getResolvedExecPlan env logger {- planCache -}
+                            userInfo sqlGenCtx sc scVer queryType httpMgr reqHdrs (q, reqParsed)
 
   (telemCacheHit, execPlan) <- onLeft execPlanE (withComplete . preExecErr requestId)
 
@@ -376,13 +377,16 @@ onStart env serverEnv wsConn (StartMsg opId q) = catchAndIgnore $ do
           sendSuccResp cachedResponseData $ LQ.LiveQueryMetadata 0
         Nothing -> do
           conclusion <- runExceptT $ forWithKey queryPlan $ \fieldName -> \case
-            E.ExecStepDB (tx, genSql) -> doQErr $ Tracing.trace "Postgres Query" $ do
+            E.ExecStepDB pgExecCtx (tx, genSql) -> doQErr $ Tracing.trace "Postgres Query" $ do
               logQueryLog logger q ((fieldName,) <$> genSql) requestId
               (telemTimeIO_DT, resp) <- Tracing.interpTraceT id $ withElapsedTime $
                 hoist (runQueryTx pgExecCtx) tx
               return $ ResultsFragment telemTimeIO_DT Telem.Local resp []
             E.ExecStepRemote rsi gqlReq -> do
               runRemoteGQ fieldName userInfo reqHdrs rsi gqlReq
+            E.ExecStepAction actionExecPlan -> do
+              (time, r) <- doQErr $ EA.runActionExecution actionExecPlan
+              pure $ ResultsFragment time Telem.Empty r []
             E.ExecStepRaw json ->
               buildRaw json
           buildResult Telem.Query telemCacheHit timerTot requestId conclusion
@@ -395,7 +399,7 @@ onStart env serverEnv wsConn (StartMsg opId q) = catchAndIgnore $ do
     E.MutationExecutionPlan mutationPlan -> do
       conclusion <- runExceptT $ forWithKey mutationPlan $ \fieldName -> \case
         -- Ignoring response headers since we can't send them over WebSocket
-        E.ExecStepDB (tx, _responseHeaders) -> doQErr $ Tracing.trace "Mutate" do
+        E.ExecStepDB pgExecCtx (tx, _responseHeaders) -> doQErr $ Tracing.trace "Mutate" do
           logQueryLog logger q Nothing requestId
           ctx <- Tracing.currentContext
           (telemTimeIO_DT, resp) <- Tracing.interpTraceT
@@ -404,6 +408,9 @@ onStart env serverEnv wsConn (StartMsg opId q) = catchAndIgnore $ do
              . withTraceContext ctx . withUserInfo userInfo
             ) $ withElapsedTime tx
           return $ ResultsFragment telemTimeIO_DT Telem.Local resp []
+        E.ExecStepAction (actionExecPlan, hdrs) -> do
+          (time, r) <- doQErr $ EA.runActionExecution actionExecPlan
+          pure $ ResultsFragment time Telem.Empty r hdrs
         E.ExecStepRemote rsi gqlReq -> do
           runRemoteGQ fieldName userInfo reqHdrs rsi gqlReq
         E.ExecStepRaw json ->
@@ -453,7 +460,7 @@ onStart env serverEnv wsConn (StartMsg opId q) = catchAndIgnore $ do
       value <- mapExceptT lift $ extractFieldFromResponse (G.unName fieldName) resp
       return $ ResultsFragment telemTimeIO_DT Telem.Remote (JO.toEncJSON value) []
 
-    WSServerEnv logger pgExecCtx lqMap getSchemaCache httpMgr _ sqlGenCtx {- planCache -}
+    WSServerEnv logger lqMap getSchemaCache httpMgr _ sqlGenCtx {- planCache -}
       _ enableAL _keepAliveDelay = serverEnv
 
     WSConnData userInfoR opMap errRespTy queryType = WS.getData wsConn
@@ -531,6 +538,7 @@ onMessage
      , Tracing.HasReporter m
      , MonadExecuteQuery m
      , EQ.MonadQueryInstrumentation m
+     , MC.MonadBaseControl IO m
      , MonadMetadataStorage (MetadataStorageT m)
      )
   => Env.Environment
@@ -694,7 +702,6 @@ onClose logger lqMap wsConn = do
 createWSServerEnv
   :: (MonadIO m)
   => L.Logger L.Hasura
-  -> PGExecCtx
   -> LQ.LiveQueriesState
   -> IO (SchemaCache, SchemaCacheVer)
   -> H.Manager
@@ -704,11 +711,11 @@ createWSServerEnv
   -> KeepAliveDelay
   -- -> E.PlanCache
   -> m WSServerEnv
-createWSServerEnv logger isPgCtx lqState getSchemaCache httpManager
+createWSServerEnv logger lqState getSchemaCache httpManager
   corsPolicy sqlGenCtx enableAL keepAliveDelay {- planCache -} = do
   wsServer <- liftIO $ STM.atomically $ WS.createWSServer logger
   return $
-    WSServerEnv logger isPgCtx lqState getSchemaCache httpManager corsPolicy
+    WSServerEnv logger lqState getSchemaCache httpManager corsPolicy
     sqlGenCtx {- planCache -} wsServer enableAL keepAliveDelay
 
 createWSServerApp

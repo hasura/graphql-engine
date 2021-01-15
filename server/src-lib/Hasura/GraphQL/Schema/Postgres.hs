@@ -7,24 +7,27 @@ module Hasura.GraphQL.Schema.Postgres
   , comparisonExps
   , offsetParser
   , mkCountType
+  , updateOperators
   ) where
 
 import           Hasura.Prelude
 
 import qualified Data.Aeson                            as J
 import qualified Data.HashMap.Strict                   as Map
+import qualified Data.HashMap.Strict.Extended          as M
+import qualified Data.HashMap.Strict.InsOrd.Extended   as OMap
 import qualified Data.List.NonEmpty                    as NE
 import qualified Data.Text                             as T
 import qualified Database.PG.Query                     as Q
 import qualified Language.GraphQL.Draft.Syntax         as G
 
 import           Data.Parser.JSONPath
+import           Data.Text.Extended
 
-import qualified Data.HashMap.Strict.Extended          as M
 import qualified Hasura.GraphQL.Parser                 as P
 import qualified Hasura.RQL.IR.Select                  as IR
+import qualified Hasura.RQL.IR.Update                  as IR
 
-import           Data.Text.Extended
 import           Hasura.Backends.Postgres.SQL.DML      as PG hiding (CountType)
 import           Hasura.Backends.Postgres.SQL.Types    as PG hiding (TableName)
 import           Hasura.Backends.Postgres.SQL.Value    as PG
@@ -35,6 +38,8 @@ import           Hasura.GraphQL.Parser.Class
 import           Hasura.GraphQL.Parser.Internal.Parser (Parser (..), peelVariable, typeCheck,
                                                         typeMismatch, valueToJSON)
 import           Hasura.GraphQL.Schema.Backend         (BackendSchema, ComparisonExp)
+import           Hasura.GraphQL.Schema.Common
+import           Hasura.GraphQL.Schema.Table
 import           Hasura.RQL.Types
 import           Hasura.SQL.Types
 
@@ -57,7 +62,7 @@ columnParser columnType (G.Nullability isNullable) =
       PGVarchar -> pure (PGValVarchar <$> P.string)
       PGJSON    -> pure (PGValJSON  . Q.JSON  <$> P.json)
       PGJSONB   -> pure (PGValJSONB . Q.JSONB <$> P.jsonb)
-     -- For all other scalars, we convert the value to JSON and use the
+      -- For all other scalars, we convert the value to JSON and use the
       -- FromJSON instance. The major upside is that this avoids having to wri`te
       -- a new parsers for each custom type: if the JSON parser is sound, so
       -- will this one, and it avoids the risk of having two separate ways of
@@ -126,7 +131,7 @@ jsonPathArg columnType
       Right []     -> pure Nothing
       Right jPaths -> pure $ Just $ IR.ColumnOp PG.jsonbPathOp $ PG.SEArray $ map elToColExp jPaths
     elToColExp (Key k)   = PG.SELit k
-    elToColExp (Index i) = PG.SELit $ T.pack (show i)
+    elToColExp (Index i) = PG.SELit $ tshow i
 
 getTableGQLName
   :: MonadTableInfo 'Postgres r m
@@ -385,3 +390,95 @@ mkCountType :: Maybe Bool -> Maybe [Column 'Postgres] -> CountType 'Postgres
 mkCountType _           Nothing     = PG.CTStar
 mkCountType (Just True) (Just cols) = PG.CTDistinct cols
 mkCountType _           (Just cols) = PG.CTSimple cols
+
+
+-- | Various update operators
+updateOperators
+  :: forall m n r. (MonadSchema n m, MonadTableInfo 'Postgres r m)
+  => QualifiedTable         -- ^ qualified name of the table
+  -> UpdPermInfo 'Postgres  -- ^ update permissions of the table
+  -> m (Maybe (InputFieldsParser n [(Column 'Postgres, IR.UpdOpExpG (UnpreparedValue 'Postgres))]))
+updateOperators table updatePermissions = do
+  tableGQLName <- getTableGQLName table
+  columns      <- tableUpdateColumns table updatePermissions
+  let numericCols = onlyNumCols   columns
+      jsonCols    = onlyJSONBCols columns
+  parsers <- catMaybes <$> sequenceA
+    [ updateOperator tableGQLName $$(G.litName "_set")
+        typedParser IR.UpdSet columns
+        "sets the columns of the filtered rows to the given values"
+        (G.Description $ "input type for updating data in table " <>> table)
+
+    , updateOperator tableGQLName $$(G.litName "_inc")
+        typedParser IR.UpdInc numericCols
+        "increments the numeric columns with given value of the filtered values"
+        (G.Description $"input type for incrementing numeric columns in table " <>> table)
+
+    , let desc = "prepend existing jsonb value of filtered columns with new jsonb value"
+      in updateOperator tableGQLName $$(G.litName "_prepend")
+         typedParser IR.UpdPrepend jsonCols desc desc
+
+    , let desc = "append existing jsonb value of filtered columns with new jsonb value"
+      in updateOperator tableGQLName $$(G.litName "_append")
+         typedParser IR.UpdAppend jsonCols desc desc
+
+    , let desc = "delete key/value pair or string element. key/value pairs are matched based on their key value"
+      in updateOperator tableGQLName $$(G.litName "_delete_key")
+         nullableTextParser IR.UpdDeleteKey jsonCols desc desc
+
+    , let desc = "delete the array element with specified index (negative integers count from the end). "
+                 <> "throws an error if top level container is not an array"
+      in updateOperator tableGQLName $$(G.litName "_delete_elem")
+         nonNullableIntParser IR.UpdDeleteElem jsonCols desc desc
+
+    , let desc = "delete the field or element with specified path (for JSON arrays, negative integers count from the end)"
+      in updateOperator tableGQLName $$(G.litName "_delete_at_path")
+         (fmap P.list . nonNullableTextParser) IR.UpdDeleteAtPath jsonCols desc desc
+    ]
+  whenMaybe (not $ null parsers) do
+    let allowedOperators = fst <$> parsers
+    pure $ fmap catMaybes (sequenceA $ snd <$> parsers)
+      `P.bindFields` \opExps -> do
+        -- there needs to be at least one operator in the update, even if it is empty
+        let presetColumns = Map.toList $ IR.UpdSet . partialSQLExpToUnpreparedValue <$> upiSet updatePermissions
+        when (null opExps && null presetColumns) $ parseError $
+          "at least any one of " <> commaSeparated allowedOperators <> " is expected"
+
+        -- no column should appear twice
+        let flattenedExps = concat opExps
+            erroneousExps = OMap.filter ((>1) . length) $ OMap.groupTuples flattenedExps
+        unless (OMap.null erroneousExps) $ parseError $
+          "column found in multiple operators; " <>
+          T.intercalate ". " [ dquote columnName <> " in " <> commaSeparated (IR.updateOperatorText <$> ops)
+                             | (columnName, ops) <- OMap.toList erroneousExps
+                             ]
+
+        pure $ presetColumns <> flattenedExps
+  where
+    typedParser columnInfo  = fmap P.mkParameter <$> columnParser (pgiType columnInfo) (G.Nullability $ pgiIsNullable columnInfo)
+    nonNullableTextParser _ = fmap P.mkParameter <$> columnParser (ColumnScalar PGText)    (G.Nullability False)
+    nullableTextParser    _ = fmap P.mkParameter <$> columnParser (ColumnScalar PGText)    (G.Nullability True)
+    nonNullableIntParser  _ = fmap P.mkParameter <$> columnParser (ColumnScalar PGInteger) (G.Nullability False)
+
+    updateOperator
+      :: G.Name
+      -> G.Name
+      -> (ColumnInfo b -> m (Parser 'Both n a))
+      -> (a -> IR.UpdOpExpG (UnpreparedValue b))
+      -> [ColumnInfo b]
+      -> G.Description
+      -> G.Description
+      -> m (Maybe (Text, InputFieldsParser n (Maybe [(Column b, IR.UpdOpExpG (UnpreparedValue b))])))
+    updateOperator tableGQLName opName mkParser updOpExp columns opDesc objDesc =
+      whenMaybe (not $ null columns) do
+        fields <- for columns \columnInfo -> do
+          let fieldName = pgiName columnInfo
+              fieldDesc = pgiDescription columnInfo
+          fieldParser <- mkParser columnInfo
+          pure $ P.fieldOptional fieldName fieldDesc fieldParser
+            `mapField` \value -> (pgiColumn columnInfo, updOpExp value)
+        let objName = tableGQLName <> opName <> $$(G.litName "_input")
+        pure $ (G.unName opName,)
+             $ P.fieldOptional opName (Just opDesc)
+             $ P.object objName (Just objDesc)
+             $ catMaybes <$> sequenceA fields

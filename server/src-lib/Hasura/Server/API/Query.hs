@@ -2,21 +2,24 @@
 {-# LANGUAGE NamedFieldPuns #-}
 module Hasura.Server.API.Query where
 
-import           Control.Lens
-import           Control.Monad.Trans.Control        (MonadBaseControl)
-import           Control.Monad.Unique
-import           Data.Aeson
-import           Data.Aeson.Casing
-import           Data.Aeson.TH
+import           Hasura.Prelude
 
 import qualified Data.Environment                   as Env
 import qualified Data.HashMap.Strict                as HM
 import qualified Database.PG.Query                  as Q
 import qualified Network.HTTP.Client                as HTTP
 
+import           Control.Monad.Trans.Control        (MonadBaseControl)
+import           Control.Monad.Unique
+import           Data.Aeson
+import           Data.Aeson.Casing
+import           Data.Aeson.TH
+import           Network.HTTP.Client.Extended
+
+import qualified Hasura.Tracing                     as Tracing
+
 import           Hasura.EncJSON
 import           Hasura.Metadata.Class
-import           Hasura.Prelude
 import           Hasura.RQL.DDL.Action
 import           Hasura.RQL.DDL.ComputedField
 import           Hasura.RQL.DDL.CustomTypes
@@ -43,13 +46,13 @@ import           Hasura.Server.Utils
 import           Hasura.Server.Version              (HasVersion)
 import           Hasura.Session
 
-import qualified Hasura.Tracing                     as Tracing
 
 data RQLQueryV1
   = RQAddExistingTableOrView !TrackTable
   | RQTrackTable !TrackTable
   | RQUntrackTable !UntrackTable
   | RQSetTableIsEnum !SetTableIsEnum
+  | RQSetTableCustomization !SetTableCustomization
 
   | RQTrackFunction !TrackFunction
   | RQUntrackFunction !UnTrackFunction
@@ -120,7 +123,7 @@ data RQLQueryV1
 
   | RQRunSql !RunSQL
 
-  | RQReplaceMetadata !Metadata
+  | RQReplaceMetadata !ReplaceMetadata
   | RQExportMetadata !ExportMetadata
   | RQClearMetadata !ClearMetadata
   | RQReloadMetadata !ReloadMetadata
@@ -134,7 +137,6 @@ data RQLQueryV1
   | RQDumpInternalState !DumpInternalState
 
   | RQSetCustomTypes !CustomTypes
-  | RQSetTableCustomization !SetTableCustomization
   deriving (Show, Eq)
 
 data RQLQueryV2
@@ -184,19 +186,19 @@ $(deriveJSON
 runQuery
   :: ( HasVersion, MonadIO m, Tracing.MonadTrace m
      , MonadBaseControl IO m, MonadMetadataStorage m
+     , MonadResolveSource m
      )
-  => Env.Environment -> PGExecCtx -> InstanceId
+  => Env.Environment
+  -> InstanceId
   -> UserInfo -> RebuildableSchemaCache -> HTTP.Manager
   -> SQLGenCtx -> RemoteSchemaPermsCtx -> RQLQuery -> m (EncJSON, RebuildableSchemaCache)
-runQuery env pgExecCtx instanceId userInfo sc hMgr sqlGenCtx remoteSchemaPermsCtx query = do
-  accessMode <- getQueryAccessMode query
-  traceCtx <- Tracing.currentContext
+runQuery env instanceId userInfo sc hMgr sqlGenCtx remoteSchemaPermsCtx query = do
   metadata <- fetchMetadata
   result <- runQueryM env query & Tracing.interpTraceT \x -> do
     (((js, tracemeta), meta), rsc, ci) <-
          x & runMetadataT metadata
            & runCacheRWT sc
-           & peelRun runCtx pgExecCtx accessMode (Just traceCtx)
+           & peelRun runCtx
            & runExceptT
            & liftEitherM
     pure ((js, rsc, ci, meta), tracemeta)
@@ -346,12 +348,13 @@ reconcileAccessModes (Just mode1) (Just mode2)
   | otherwise = Left mode2
 
 runQueryM
-  :: ( HasVersion, QErrM m, CacheRWM m, UserInfoM m, MonadTx m
-     , MonadIO m, MonadUnique m, HasHttpManager m, HasSQLGenCtx m
+  :: ( HasVersion, CacheRWM m, UserInfoM m
+     , MonadBaseControl IO m, MonadIO m, MonadUnique m
+     , HasHttpManagerM m, HasSQLGenCtx m
      , HasRemoteSchemaPermsCtx m
      , Tracing.MonadTrace m
      , MetadataM m
-     , MonadScheduledEvents m
+     , MonadMetadataStorageQueryAPI m
      )
   => Env.Environment
   -> RQLQuery
@@ -365,6 +368,7 @@ runQueryM env rq = withPathK "args" $ case rq of
       RQTrackTable q                  -> runTrackTableQ q
       RQUntrackTable q                -> runUntrackTableQ q
       RQSetTableIsEnum q              -> runSetExistingTableIsEnumQ q
+      RQSetTableCustomization q       -> runSetTableCustomization q
 
       RQTrackFunction q               -> runTrackFunc q
       RQUntrackFunction q             -> runUntrackFunc q
@@ -443,7 +447,6 @@ runQueryM env rq = withPathK "args" $ case rq of
       RQRunSql q                      -> runRunSQL q
 
       RQSetCustomTypes q              -> runSetCustomTypes q
-      RQSetTableCustomization q       -> runSetTableCustomization q
 
       RQBulk qs                       -> encJFromList <$> indexedMapM (runQueryM env) qs
 
@@ -452,7 +455,6 @@ runQueryM env rq = withPathK "args" $ case rq of
       RQV2SetTableCustomFields q -> runSetTableCustomFieldsQV2 q
       RQV2TrackFunction q        -> runTrackFunctionV2 q
 
-
 requiresAdmin :: RQLQuery -> Bool
 requiresAdmin = \case
   RQV1 q -> case q of
@@ -460,6 +462,7 @@ requiresAdmin = \case
     RQTrackTable _                  -> True
     RQUntrackTable _                -> True
     RQSetTableIsEnum _              -> True
+    RQSetTableCustomization _       -> True
 
     RQTrackFunction _               -> True
     RQUntrackFunction _             -> True
@@ -535,7 +538,6 @@ requiresAdmin = \case
 
     RQDumpInternalState _           -> True
     RQSetCustomTypes _              -> True
-    RQSetTableCustomization _       -> True
 
     RQRunSql _                      -> True
 

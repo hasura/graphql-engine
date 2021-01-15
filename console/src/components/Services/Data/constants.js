@@ -151,7 +151,6 @@ export const ERROR_CODES = {
     ERRORS: ['No such resource exists'],
     httpCode: '404',
   },
-  // todo update this, this happens on bulk request failed
   dataApiError: {
     code: 'data_api_error',
   },

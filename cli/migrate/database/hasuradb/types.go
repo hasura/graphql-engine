@@ -148,6 +148,8 @@ func (h *newHasuraIntefaceQuery) UnmarshalJSON(b []byte) error {
 		}
 	case setTableCustomFields:
 		q.Args = &setTableCustomFieldsV2Input{}
+	case setTableCustomization:
+		q.Args = &setTableCustomizationInput{}
 	case setTableIsEnum:
 		q.Args = &setTableIsEnumInput{}
 	case untrackTable:
@@ -414,6 +416,7 @@ const (
 	trackTable                  requestTypes = "track_table"
 	addExistingTableOrView                   = "add_existing_table_or_view"
 	setTableCustomFields                     = "set_table_custom_fields"
+	setTableCustomization                    = "set_table_customization"
 	setTableIsEnum                           = "set_table_is_enum"
 	untrackTable                             = "untrack_table"
 	trackFunction                            = "track_function"
@@ -527,8 +530,9 @@ func (t *trackTableInput) UnmarshalJSON(b []byte) error {
 }
 
 type tableConfiguration struct {
-	CustomRootFields  map[string]string `json:"custom_root_fields" yaml:"custom_root_fields"`
-	CustomColumnNames map[string]string `json:"custom_column_names" yaml:"custom_column_names"`
+	CustomName        string            `json:"custom_name,omitempty" yaml:"custom_name,omitempty"`
+	CustomRootFields  map[string]string `json:"custom_root_fields,omitempty" yaml:"custom_root_fields,omitempty"`
+	CustomColumnNames map[string]string `json:"custom_column_names,omitempty" yaml:"custom_column_names,omitempty"`
 }
 
 type trackTableV2Input struct {
@@ -539,6 +543,11 @@ type trackTableV2Input struct {
 type setTableCustomFieldsV2Input struct {
 	Table tableSchema `json:"table" yaml:"table"`
 	tableConfiguration
+}
+
+type setTableCustomizationInput struct {
+	Table              tableSchema `json:"table" yaml:"table"`
+	tableConfiguration `json:"configuration,omitempty" yaml:"configuration,omitempty"`
 }
 
 type setTableIsEnumInput struct {

@@ -27,7 +27,6 @@ import qualified Data.Aeson.TH                      as J
 import qualified Data.Environment                   as Env
 import qualified Data.HashMap.Strict                as Map
 import qualified Data.HashMap.Strict.InsOrd         as OMap
-import qualified Database.PG.Query                  as Q
 import qualified Language.GraphQL.Draft.Syntax      as G
 
 import           Control.Lens                       ((.~))
@@ -36,6 +35,7 @@ import           Data.Text.Extended
 import           Hasura.Backends.Postgres.SQL.Types
 import           Hasura.EncJSON
 import           Hasura.GraphQL.Utils
+import           Hasura.Metadata.Class
 import           Hasura.RQL.DDL.CustomTypes         (lookupPGScalar)
 import           Hasura.RQL.Types
 import           Hasura.Session
@@ -152,15 +152,17 @@ data DropAction
 $(J.deriveJSON (J.aesonDrop 3 J.snakeCase) ''DropAction)
 
 runDropAction
-  :: (QErrM m, CacheRWM m, MonadTx m, MetadataM m)
+  :: ( CacheRWM m
+     , MetadataM m
+     , MonadMetadataStorageQueryAPI m
+     )
   => DropAction -> m EncJSON
 runDropAction (DropAction actionName clearDataM)= do
   void $ getActionInfo actionName
   withNewInconsistentObjsCheck
     $ buildSchemaCache
     $ dropActionInMetadata actionName
-  when (shouldClearActionData clearData) $
-    liftTx $ clearActionDataFromCatalog actionName
+  when (shouldClearActionData clearData) $ deleteActionData actionName
   return successMsg
   where
     -- When clearData is not present we assume that
@@ -170,13 +172,6 @@ runDropAction (DropAction actionName clearDataM)= do
 dropActionInMetadata :: ActionName -> MetadataModifier
 dropActionInMetadata name =
   MetadataModifier $ metaActions %~ OMap.delete name
-
-clearActionDataFromCatalog :: ActionName -> Q.TxE QErr ()
-clearActionDataFromCatalog actionName =
-  Q.unitQE defaultTxErrorHandler [Q.sql|
-      DELETE FROM hdb_catalog.hdb_action_log
-        WHERE action_name = $1
-      |] (Identity actionName) True
 
 newtype ActionMetadataField
   = ActionMetadataField { unActionMetadataField :: Text }

@@ -9,6 +9,7 @@ import qualified Data.HashMap.Strict                          as M
 import qualified Data.Sequence                                as DS
 import qualified Database.PG.Query                            as Q
 
+import           Control.Monad.Trans.Control                  (MonadBaseControl)
 import           Data.Aeson.Types
 import           Data.Text.Extended
 
@@ -25,6 +26,7 @@ import           Hasura.RQL.DML.Types
 import           Hasura.RQL.IR.BoolExp
 import           Hasura.RQL.IR.Update
 import           Hasura.RQL.Types
+import           Hasura.RQL.Types.Run
 import           Hasura.Server.Version                        (HasVersion)
 import           Hasura.Session
 
@@ -91,14 +93,14 @@ convOp fieldInfoMap preSetCols updPerm objs conv =
         <> " for role " <> roleName <<> "; its value is predefined in permission"
 
 validateUpdateQueryWith
-  :: (UserInfoM m, QErrM m, CacheRM m)
+  :: (UserInfoM m, QErrM m, TableInfoRM 'Postgres m)
   => SessVarBldr 'Postgres m
   -> (ColumnType 'Postgres -> Value -> m S.SQLExp)
   -> UpdateQuery
   -> m (AnnUpd 'Postgres)
 validateUpdateQueryWith sessVarBldr prepValBldr uq = do
   let tableName = uqTable uq
-  tableInfo <- withPathK "table" $ askTabInfo tableName
+  tableInfo <- withPathK "table" $ askTabInfoSource tableName
   let coreInfo = _tiCoreInfo tableInfo
 
   -- If it is view then check if it is updatable
@@ -176,15 +178,21 @@ validateUpdateQueryWith sessVarBldr prepValBldr uq = do
 validateUpdateQuery
   :: (QErrM m, UserInfoM m, CacheRM m)
   => UpdateQuery -> m (AnnUpd 'Postgres, DS.Seq Q.PrepArg)
-validateUpdateQuery =
-  runDMLP1T . validateUpdateQueryWith sessVarFromCurrentSetting binRHSBuilder
+validateUpdateQuery query = do
+  let source = uqSource query
+  tableCache <- askTableCache source
+  flip runTableCacheRT (source, tableCache) $ runDMLP1T $
+    validateUpdateQueryWith sessVarFromCurrentSetting binRHSBuilder query
 
 runUpdate
   :: ( HasVersion, QErrM m, UserInfoM m, CacheRM m
-     , MonadTx m, HasSQLGenCtx m, MonadIO m
-     , Tracing.MonadTrace m
+     , HasSQLGenCtx m, MonadBaseControl IO m
+     , MonadIO m, Tracing.MonadTrace m
      )
   => Env.Environment -> UpdateQuery -> m EncJSON
 runUpdate env q = do
+  sourceConfig <- _pcConfiguration <$> askPGSourceCache (uqSource q)
   strfyNum <- stringifyNum <$> askSQLGenCtx
-  validateUpdateQuery q >>= execUpdateQuery env strfyNum Nothing
+  validateUpdateQuery q
+    >>= runQueryLazyTx (_pscExecCtx sourceConfig) Q.ReadWrite
+        . execUpdateQuery env strfyNum Nothing

@@ -265,17 +265,6 @@ library
                      , cron >= 0.6.2
                      -- needed for deriving via
                      , semigroups >= 0.19
-
-                     , random
-                     , mmorph
-                     , http-api-data
-                     , lens-aeson
-                     , safe
-
-                     , semigroups >= 0.19.1
-
-                     -- scheduled triggers
-                     , cron >= 0.6.2
   if !flag(profiling)
     build-depends:
       -- 0.6.1 is supposedly not okay for ghc 8.6:
@@ -310,6 +299,7 @@ library
                      , Hasura.Backends.Postgres.Connection
                      , Hasura.Backends.Postgres.Execute.Mutation
                      , Hasura.Backends.Postgres.Execute.RemoteJoin
+                     , Hasura.Backends.Postgres.Execute.Types
                      , Hasura.Backends.Postgres.Translate.BoolExp
                      , Hasura.Backends.Postgres.Translate.Column
                      , Hasura.Backends.Postgres.Translate.Delete
@@ -335,6 +325,8 @@ library
                      , Hasura.Server.Init
                      , Hasura.Server.Init.Config
                      , Hasura.Server.API.Query
+                     , Hasura.Server.API.V2Query
+                     , Hasura.Server.API.Metadata
                      , Hasura.Server.Utils
                      , Hasura.Server.Version
                      , Hasura.Server.Logging
@@ -398,6 +390,7 @@ library
                      , Hasura.RQL.Types.SchemaCache
                      , Hasura.RQL.Types.SchemaCache.Build
                      , Hasura.RQL.Types.SchemaCacheTypes
+                     , Hasura.RQL.Types.Source
                      , Hasura.RQL.Types.Table
                      , Hasura.RQL.DDL.Action
                      , Hasura.RQL.DDL.ComputedField
@@ -430,6 +423,7 @@ library
                      , Hasura.RQL.DDL.Schema.Function
                      , Hasura.RQL.DDL.Schema.Rename
                      , Hasura.RQL.DDL.Schema.Table
+                     , Hasura.RQL.DDL.Schema.Source
                      , Hasura.RQL.DDL.EventTrigger
                      , Hasura.RQL.DDL.ScheduledTrigger
                      , Hasura.RQL.DML.Count
@@ -497,6 +491,7 @@ library
                      , Hasura.SQL.Time
                      , Hasura.SQL.Types
                      , Hasura.Tracing
+                     , Network.HTTP.Client.Extended
                      , Network.URI.Extended
                      , Network.Wai.Extended
                      , Network.Wai.Handler.WebSockets.Custom
@@ -547,6 +542,7 @@ test-suite graphql-engine-tests
     , transformers-base
     , unordered-containers
     , text
+    , mmorph
   hs-source-dirs: src-test
   main-is: Main.hs
   other-modules:

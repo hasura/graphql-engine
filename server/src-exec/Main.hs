@@ -3,33 +3,36 @@
 module Main where
 
 import           Control.Exception
-import           Control.Monad.Trans.Managed (ManagedT(..), lowerManagedT)
-import           Data.Int                    (Int64)
-import           Data.Text.Conversions       (convertText)
-import           Data.Time.Clock             (getCurrentTime)
-import           Data.Time.Clock.POSIX       (getPOSIXTime)
+import           Control.Monad.Trans.Managed        (ManagedT (..), lowerManagedT)
+import           Data.Int                           (Int64)
+import           Data.Text.Conversions              (convertText)
+import           Data.Time.Clock                    (getCurrentTime)
+import           Data.Time.Clock.POSIX              (getPOSIXTime)
 
 import           Hasura.App
-import           Hasura.Logging              (Hasura, LogLevel (..), defaultEnabledEngineLogTypes)
+import           Hasura.Logging                     (Hasura, LogLevel (..),
+                                                     defaultEnabledEngineLogTypes)
 import           Hasura.Metadata.Class
 import           Hasura.Prelude
 import           Hasura.RQL.DDL.Schema
+import           Hasura.RQL.DDL.Schema.Cache.Common
+import           Hasura.RQL.DDL.Schema.Source
 import           Hasura.RQL.Types
 import           Hasura.Server.Init
-import           Hasura.Server.Migrate       (downgradeCatalog, dropCatalog)
+import           Hasura.Server.Migrate              (downgradeCatalog)
 import           Hasura.Server.Version
 
-import qualified Control.Concurrent.Extended as C
-import qualified Data.ByteString.Char8       as BC
-import qualified Data.ByteString.Lazy        as BL
-import qualified Data.ByteString.Lazy.Char8  as BLC
-import qualified Data.Environment            as Env
-import qualified Database.PG.Query           as Q
-import qualified Hasura.GC                   as GC
-import qualified Hasura.Tracing              as Tracing
-import qualified System.Exit                 as Sys
-import qualified System.Metrics              as EKG
-import qualified System.Posix.Signals        as Signals
+import qualified Control.Concurrent.Extended        as C
+import qualified Data.ByteString.Char8              as BC
+import qualified Data.ByteString.Lazy               as BL
+import qualified Data.ByteString.Lazy.Char8         as BLC
+import qualified Data.Environment                   as Env
+import qualified Database.PG.Query                  as Q
+import qualified Hasura.GC                          as GC
+import qualified Hasura.Tracing                     as Tracing
+import qualified System.Exit                        as Sys
+import qualified System.Metrics                     as EKG
+import qualified System.Posix.Signals               as Signals
 
 
 main :: IO ()
@@ -44,9 +47,10 @@ main = do
       Right r -> return r
 
 runApp :: Env.Environment -> HGEOptions Hasura -> IO ()
-runApp env (HGEOptionsG rci hgeCmd) = do
+runApp env (HGEOptionsG rci metadataDbUrl hgeCmd) = do
   initTime <- liftIO getCurrentTime
-  globalCtx@GlobalCtx{..} <- initGlobalCtx rci
+  globalCtx@GlobalCtx{..} <- initGlobalCtx env metadataDbUrl rci
+  let (maybeDefaultPgConnInfo, maybeRetries) = _gcDefaultPostgresConnInfo
 
   withVersion $$(getVersionFromEnvironment) $ case hgeCmd of
     HCServe serveOptions -> do
@@ -73,33 +77,38 @@ runApp env (HGEOptionsG rci hgeCmd) = do
           Signals.sigTERM
           (Signals.CatchOnce (shutdownGracefully $ _scShutdownLatch serveCtx))
           Nothing
-          
-        let Loggers _ logger _ = _scLoggers serveCtx
+
+        let Loggers _ logger pgLogger = _scLoggers serveCtx
         _idleGCThread <- C.forkImmortal "ourIdleGC" logger $
           GC.ourIdleGC logger (seconds 0.3) (seconds 10) (seconds 60)
-        
+
         serverMetrics <- liftIO $ createServerMetrics ekgStore
-        flip runPGMetadataStorageApp (_scPgPool serveCtx) . lowerManagedT $ do
-          runHGEServer env serveOptions serveCtx Nothing initTime Nothing serverMetrics ekgStore
+        flip runPGMetadataStorageApp (_scMetadataDbPool serveCtx, pgLogger) . lowerManagedT $ do
+          runHGEServer env serveOptions serveCtx initTime Nothing serverMetrics ekgStore
 
     HCExport -> do
-      res <- runTxWithMinimalPool _gcConnInfo fetchMetadataFromCatalog
+      res <- runTxWithMinimalPool _gcMetadataDbConnInfo fetchMetadataFromCatalog
       either (printErrJExit MetadataExportError) printJSON res
 
     HCClean -> do
-      res <- runTxWithMinimalPool _gcConnInfo dropCatalog
+      res <- runTxWithMinimalPool _gcMetadataDbConnInfo dropHdbCatalogSchema
       let cleanSuccessMsg = "successfully cleaned graphql-engine related data"
       either (printErrJExit MetadataCleanError) (const $ liftIO $ putStrLn cleanSuccessMsg) res
 
     HCExecute -> do
       queryBs <- liftIO BL.getContents
       let sqlGenCtx = SQLGenCtx False
-      runManagedT (mkMinimalPool _gcConnInfo) $ \pool -> do
-        res <- flip runPGMetadataStorageApp pool $
-          runMetadataStorageT $ liftEitherM $
-          runAsAdmin pool sqlGenCtx RemoteSchemaPermsDisabled _gcHttpManager $ do
-            metadata <- liftTx fetchMetadataFromCatalog
-            schemaCache <- buildRebuildableSchemaCache env metadata
+          remoteSchemaPermsCtx = RemoteSchemaPermsDisabled
+          pgLogger = print
+          pgSourceResolver = mkPgSourceResolver pgLogger
+          cacheBuildParams = CacheBuildParams _gcHttpManager sqlGenCtx remoteSchemaPermsCtx pgSourceResolver
+      runManagedT (mkMinimalPool _gcMetadataDbConnInfo) $ \metadataDbPool -> do
+        res <- flip runPGMetadataStorageApp (metadataDbPool, pgLogger) $
+          runMetadataStorageT $ liftEitherM do
+          metadata <- fetchMetadata
+          runAsAdmin sqlGenCtx _gcHttpManager remoteSchemaPermsCtx $ do
+            schemaCache <- runCacheBuild cacheBuildParams $
+                           buildRebuildableSchemaCache env metadata
             execQuery env queryBs
               & Tracing.runTraceTWithReporter Tracing.noReporter "execute"
               & runMetadataT metadata
@@ -108,7 +117,11 @@ runApp env (HGEOptionsG rci hgeCmd) = do
         either (printErrJExit ExecuteProcessError) (liftIO . BLC.putStrLn) res
 
     HCDowngrade opts -> do
-      res <- runTxWithMinimalPool _gcConnInfo $ downgradeCatalog opts initTime
+      let defaultSourceConfig = maybeDefaultPgConnInfo <&> \(dbUrlConf, _) ->
+            let pgSourceConnInfo = PostgresSourceConnInfo dbUrlConf
+                                   defaultPostgresPoolSettings{_ppsRetries = fromMaybe 1 maybeRetries}
+            in SourceConfiguration pgSourceConnInfo Nothing
+      res <- runTxWithMinimalPool _gcMetadataDbConnInfo $ downgradeCatalog defaultSourceConfig opts initTime
       either (printErrJExit DowngradeProcessError) (liftIO . print) res
 
     HCVersion -> liftIO $ putStrLn $ "Hasura GraphQL Engine: " ++ convertText currentVersion

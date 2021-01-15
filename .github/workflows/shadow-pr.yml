@@ -98,10 +98,10 @@ jobs:
           mv .circleci ../graphql-engine-transforms/oss-.circleci
           mv .github ../graphql-engine-transforms/oss-.github
           mv .gitignore ../graphql-engine-transforms/oss-.gitignore
-          rsync -av . ../graphql-engine-mono --exclude .git
+          rsync -av --delete ./* ../graphql-engine-mono --exclude .git
         popd
 
-        rsync -av graphql-engine-transforms/ graphql-engine-mono/
+        rsync -av --delete graphql-engine-transforms/* graphql-engine-mono/
 
         pushd graphql-engine-mono
           git status

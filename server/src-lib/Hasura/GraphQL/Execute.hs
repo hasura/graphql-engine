@@ -49,6 +49,7 @@ import qualified Hasura.GraphQL.Execute.Inline          as EI
 import qualified Hasura.GraphQL.Execute.LiveQuery       as EL
 import qualified Hasura.GraphQL.Execute.Mutation        as EM
 -- import qualified Hasura.GraphQL.Execute.Plan            as EP
+import qualified Hasura.GraphQL.Execute.Action          as EA
 import qualified Hasura.GraphQL.Execute.Prepare         as EPr
 import qualified Hasura.GraphQL.Execute.Query           as EQ
 import qualified Hasura.GraphQL.Execute.Types           as ET
@@ -65,7 +66,6 @@ data ExecutionCtx
   = ExecutionCtx
   { _ecxLogger          :: !(L.Logger L.Hasura)
   , _ecxSqlGenCtx       :: !SQLGenCtx
-  , _ecxPgExecCtx       :: !PGExecCtx
   -- , _ecxPlanCache       :: !EP.PlanCache
   , _ecxSchemaCache     :: !SchemaCache
   , _ecxSchemaCacheVer  :: !SchemaCacheVer
@@ -167,22 +167,35 @@ getExecPlanPartial userInfo sc queryType req =
 -- The graphql query is resolved into a sequence of execution operations
 data ResolvedExecutionPlan tx
   = QueryExecutionPlan
-      (EPr.ExecutionPlan (tx EncJSON, Maybe EQ.PreparedSql)) [C.QueryRootField (UnpreparedValue 'Postgres)]
+      (EPr.ExecutionPlan EA.ActionExecutionPlan (tx EncJSON, Maybe EQ.PreparedSql)) [C.QueryRootField (UnpreparedValue 'Postgres)]
   -- ^ query execution; remote schemas and introspection possible
-  | MutationExecutionPlan (EPr.ExecutionPlan (tx EncJSON, HTTP.ResponseHeaders))
+  | MutationExecutionPlan (EPr.ExecutionPlan (EA.ActionExecutionPlan, HTTP.ResponseHeaders) (tx EncJSON, HTTP.ResponseHeaders))
   -- ^ mutation execution; only __typename introspection supported
   | SubscriptionExecutionPlan EL.LiveQueryPlan
   -- ^ live query execution; remote schemas and introspection not supported
 
 validateSubscriptionRootField
-  :: MonadError QErr m
-  => C.QueryRootField v -> m (C.SubscriptionRootField v)
-validateSubscriptionRootField = \case
-  C.RFDB x                 -> pure $ C.RFDB x
-  C.RFAction (C.AQAsync s) -> pure $ C.RFAction s
-  C.RFAction (C.AQQuery _) -> throw400 NotSupported "query actions cannot be run as a subscription"
-  C.RFRemote _             -> throw400 NotSupported "subscription to remote server is not supported"
-  C.RFRaw _                -> throw400 NotSupported "Introspection not supported over subscriptions"
+  :: (MonadError QErr m, Traversable t)
+  => t (C.QueryRootField v) -> m (PGExecCtx, t (C.SubscriptionRootField v))
+validateSubscriptionRootField rootFields = do
+  subscriptionRootFields <- for rootFields \case
+    C.RFDB src e x           -> pure $ C.RFDB src e x
+    C.RFAction (C.AQAsync _) -> throw400 NotSupported "async action queries are temporarily not supported in subscription"
+    C.RFAction (C.AQQuery _) -> throw400 NotSupported "query actions cannot be run as a subscription"
+    C.RFRemote _             -> throw400 NotSupported "subscription to remote server is not supported"
+    C.RFRaw _                -> throw400 NotSupported "Introspection not supported over subscriptions"
+
+  pgExecCtx <- case toList subscriptionRootFields of
+    [] -> throw500 "empty selset for subscription"
+    [C.RFDB _ e _]                    -> pure e
+    ((C.RFDB headSrc e _):restFields) -> do
+      let getSource (C.RFDB s _ _) = s
+          getSource _              = defaultSource
+      unless (all ((headSrc ==) . getSource) restFields) $ throw400 NotSupported ""
+      pure e
+
+  pure (pgExecCtx, subscriptionRootFields)
+
 
 
 checkQueryInAllowlist
@@ -219,7 +232,6 @@ getResolvedExecPlan
      )
   => Env.Environment
   -> L.Logger L.Hasura
-  -> PGExecCtx
   -- -> EP.PlanCache
   -> UserInfo
   -> SQLGenCtx
@@ -230,7 +242,7 @@ getResolvedExecPlan
   -> [HTTP.Header]
   -> (GQLReqUnparsed, GQLReqParsed)
   -> m (Telem.CacheHit, ResolvedExecutionPlan tx)
-getResolvedExecPlan env logger pgExecCtx {- planCache-} userInfo sqlGenCtx
+getResolvedExecPlan env logger {- planCache-} userInfo sqlGenCtx
   sc scVer queryType httpManager reqHeaders (reqUnparsed, reqParsed) = -- do
 
   -- See Note [Temporarily disabling query plan caching]
@@ -261,6 +273,7 @@ getResolvedExecPlan env logger pgExecCtx {- planCache-} userInfo sqlGenCtx
           fragments =
             mapMaybe takeFragment $ unGQLExecDoc $ _grQuery reqParsed
       (gCtx, queryParts) <- getExecPlanPartial userInfo sc queryType reqParsed
+
       case queryParts of
         G.TypedOperationDefinition G.OperationTypeQuery _ varDefs dirs selSet -> do
           -- (Here the above fragment inlining is actually executed.)
@@ -297,6 +310,8 @@ getResolvedExecPlan env logger pgExecCtx {- planCache-} userInfo sqlGenCtx
               in
               unless (multipleAllowed || null rst) $
                 throw400 ValidationFailed "subscriptions must select one top level field"
-          validSubscriptionAST <- for unpreparedAST validateSubscriptionRootField
+
+          (pgExecCtx, validSubscriptionAST) <- validateSubscriptionRootField unpreparedAST
+
           (lqOp, _plan) <- EL.buildLiveQueryPlan pgExecCtx userInfo validSubscriptionAST
           return $ SubscriptionExecutionPlan lqOp

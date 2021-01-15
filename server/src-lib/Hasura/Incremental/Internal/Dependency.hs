@@ -208,6 +208,7 @@ instance (Cacheable a, Cacheable b) => Cacheable (a, b)
 instance (Cacheable a, Cacheable b, Cacheable c) => Cacheable (a, b, c)
 instance (Cacheable a, Cacheable b, Cacheable c, Cacheable d) => Cacheable (a, b, c, d)
 instance (Cacheable a, Cacheable b, Cacheable c, Cacheable d, Cacheable e) => Cacheable (a, b, c, d, e)
+instance (Cacheable a, Cacheable b, Cacheable c, Cacheable d, Cacheable e, Cacheable f) => Cacheable (a, b, c, d, e, f)
 
 instance Cacheable Bool
 instance Cacheable Void

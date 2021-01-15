@@ -12,7 +12,7 @@ import qualified Data.HashMap.Strict.Extended       as M
 import qualified Data.HashMap.Strict.InsOrd         as OMap
 import qualified Data.HashSet                       as HS
 import qualified Data.Sequence                      as Seq
-import qualified Network.HTTP.Client                as HTTP
+import qualified Network.HTTP.Client.Extended       as HTTP
 
 import           Control.Arrow.Extended
 import           Control.Lens
@@ -29,20 +29,26 @@ import           Hasura.RQL.Types
 data InvalidationKeys = InvalidationKeys
   { _ikMetadata      :: !Inc.InvalidationKey
   , _ikRemoteSchemas :: !(HashMap RemoteSchemaName Inc.InvalidationKey)
+  , _ikSources       :: !(HashMap SourceName Inc.InvalidationKey)
   } deriving (Show, Eq, Generic)
 instance Inc.Cacheable InvalidationKeys
 instance Inc.Select InvalidationKeys
 $(makeLenses ''InvalidationKeys)
 
 initialInvalidationKeys :: InvalidationKeys
-initialInvalidationKeys = InvalidationKeys Inc.initialInvalidationKey mempty
+initialInvalidationKeys = InvalidationKeys Inc.initialInvalidationKey mempty mempty
 
 invalidateKeys :: CacheInvalidations -> InvalidationKeys -> InvalidationKeys
 invalidateKeys CacheInvalidations{..} InvalidationKeys{..} = InvalidationKeys
   { _ikMetadata = if ciMetadata then Inc.invalidate _ikMetadata else _ikMetadata
-  , _ikRemoteSchemas = foldl' (flip invalidateRemoteSchema) _ikRemoteSchemas ciRemoteSchemas }
+  , _ikRemoteSchemas = foldl' (flip invalidate) _ikRemoteSchemas ciRemoteSchemas
+  , _ikSources = foldl' (flip invalidate) _ikSources ciSources
+  }
   where
-    invalidateRemoteSchema = M.alter $ Just . maybe Inc.initialInvalidationKey Inc.invalidate
+    invalidate
+      :: (Eq a, Hashable a)
+      => a -> HashMap a Inc.InvalidationKey -> HashMap a Inc.InvalidationKey
+    invalidate = M.alter $ Just . maybe Inc.initialInvalidationKey Inc.invalidate
 
 data TableBuildInput
   = TableBuildInput
@@ -95,9 +101,8 @@ mkTableInputs TableMetadata{..} =
 -- 'MonadWriter' side channel.
 data BuildOutputs
   = BuildOutputs
-  { _boTables        :: !(TableCache 'Postgres)
+  { _boSources       :: !(SourceCache 'Postgres)
   , _boActions       :: !ActionCache
-  , _boFunctions     :: !FunctionCache
   , _boRemoteSchemas :: !(HashMap RemoteSchemaName (RemoteSchemaCtx, MetadataObject))
   -- ^ We preserve the 'MetadataObject' from the original catalog metadata in the output so we can
   -- reuse it later if we need to mark the remote schema inconsistent during GraphQL schema
@@ -111,25 +116,25 @@ $(makeLenses ''BuildOutputs)
 -- | Parameters required for schema cache build
 data CacheBuildParams
   = CacheBuildParams
-  { _cbpManager   :: !HTTP.Manager
-  , _cbpSqlGenCtx :: !SQLGenCtx
+  { _cbpManager              :: !HTTP.Manager
+  , _cbpSqlGenCtx            :: !SQLGenCtx
   , _cbpRemoteSchemaPermsCtx :: !RemoteSchemaPermsCtx
+  , _cbpSourceResolver       :: !SourceResolver
   }
 
 -- | The monad in which @'RebuildableSchemaCache' is being run
 newtype CacheBuild a
-  = CacheBuild {unCacheBuild :: ReaderT CacheBuildParams (LazyTxT QErr IO) a}
+  = CacheBuild {unCacheBuild :: ReaderT CacheBuildParams (ExceptT QErr IO) a}
   deriving ( Functor, Applicative, Monad
            , MonadError QErr
            , MonadReader CacheBuildParams
            , MonadIO
-           , MonadTx
            , MonadBase IO
            , MonadBaseControl IO
            , MonadUnique
            )
 
-instance HasHttpManager CacheBuild where
+instance HTTP.HasHttpManagerM CacheBuild where
   askHttpManager = asks _cbpManager
 
 instance HasSQLGenCtx CacheBuild where
@@ -138,21 +143,34 @@ instance HasSQLGenCtx CacheBuild where
 instance HasRemoteSchemaPermsCtx CacheBuild where
   askRemoteSchemaPermsCtx = asks _cbpRemoteSchemaPermsCtx
 
+instance MonadResolveSource CacheBuild where
+  getSourceResolver = asks _cbpSourceResolver
+
 
 runCacheBuild
   :: ( MonadIO m
-     , HasHttpManager m
+     , MonadError QErr m
+     )
+  => CacheBuildParams -> CacheBuild a -> m a
+runCacheBuild params (CacheBuild m) = do
+  liftEitherM $ liftIO $ runExceptT (runReaderT m params)
+
+runCacheBuildM
+  :: ( MonadIO m
+     , MonadError QErr m
+     , HTTP.HasHttpManagerM m
      , HasSQLGenCtx m
      , HasRemoteSchemaPermsCtx m
-     , MonadTx m
+     , MonadResolveSource m
      )
   => CacheBuild a -> m a
-runCacheBuild (CacheBuild m) = do
-  httpManager <- askHttpManager
-  sqlGenCtx   <- askSQLGenCtx
-  remoteSchemaPermsCtx <- askRemoteSchemaPermsCtx
-  let params = CacheBuildParams httpManager sqlGenCtx remoteSchemaPermsCtx
-  liftTx $ lazyTxToQTx (runReaderT m params)
+runCacheBuildM m = do
+  params <- CacheBuildParams
+            <$> HTTP.askHttpManager
+            <*> askSQLGenCtx
+            <*> askRemoteSchemaPermsCtx
+            <*> getSourceResolver
+  runCacheBuild params m
 
 data RebuildableSchemaCache
   = RebuildableSchemaCache

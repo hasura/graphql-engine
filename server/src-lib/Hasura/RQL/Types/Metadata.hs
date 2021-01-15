@@ -34,6 +34,7 @@ import           Hasura.RQL.Types.Relationship
 import           Hasura.RQL.Types.RemoteRelationship
 import           Hasura.RQL.Types.RemoteSchema
 import           Hasura.RQL.Types.ScheduledTrigger
+import           Hasura.RQL.Types.Source
 import           Hasura.RQL.Types.Table
 import           Hasura.Session
 import           Hasura.SQL.Backend
@@ -48,13 +49,19 @@ data TableMetadataObjId
   deriving (Show, Eq, Generic)
 instance Hashable TableMetadataObjId
 
+data SourceMetadataObjId
+  = SMOTable !QualifiedTable
+  | SMOFunction !QualifiedFunction
+  | SMOTableObj !QualifiedTable !TableMetadataObjId
+  deriving (Show, Eq, Generic)
+instance Hashable SourceMetadataObjId
+
 data MetadataObjId
-  = MOTable !QualifiedTable
-  | MOFunction !QualifiedFunction
+  = MOSource !SourceName
+  | MOSourceObjId !SourceName !SourceMetadataObjId
   | MORemoteSchema !RemoteSchemaName
   -- ^ Originates from user-defined '_arsqName'
   | MORemoteSchemaPermissions !RemoteSchemaName !RoleName
-  | MOTableObj !QualifiedTable !TableMetadataObjId
   | MOCustomTypes
   | MOAction !ActionName
   | MOActionPermission !ActionName !RoleName
@@ -65,37 +72,41 @@ instance Hashable MetadataObjId
 
 moiTypeName :: MetadataObjId -> Text
 moiTypeName = \case
-  MOTable _ -> "table"
-  MOFunction _ -> "function"
+  MOSource _ -> "source"
+  MOSourceObjId _ sourceObjId -> case sourceObjId of
+    SMOTable _  -> "table"
+    SMOFunction _ -> "function"
+    SMOTableObj _ tableObjectId -> case tableObjectId of
+      MTORel _ relType        -> relTypeToTxt relType <> "_relation"
+      MTOPerm _ permType      -> permTypeToCode permType <> "_permission"
+      MTOTrigger _            -> "event_trigger"
+      MTOComputedField _      -> "computed_field"
+      MTORemoteRelationship _ -> "remote_relationship"
   MORemoteSchema _ -> "remote_schema"
   MORemoteSchemaPermissions _ _ -> "remote_schema_permission"
   MOCronTrigger _ -> "cron_trigger"
-  MOTableObj _ tableObjectId -> case tableObjectId of
-    MTORel _ relType        -> relTypeToTxt relType <> "_relation"
-    MTOPerm _ permType      -> permTypeToCode permType <> "_permission"
-    MTOTrigger _            -> "event_trigger"
-    MTOComputedField _      -> "computed_field"
-    MTORemoteRelationship _ -> "remote_relationship"
   MOCustomTypes -> "custom_types"
   MOAction _ -> "action"
   MOActionPermission _ _ -> "action_permission"
 
 moiName :: MetadataObjId -> Text
 moiName objectId = moiTypeName objectId <> " " <> case objectId of
-  MOTable name -> toTxt name
-  MOFunction name -> toTxt name
+  MOSource name -> toTxt name
+  MOSourceObjId source sourceObjId -> case sourceObjId of
+    SMOTable name -> toTxt name <> " in source " <> toTxt source
+    SMOFunction name -> toTxt name <> " in source " <> toTxt source
+    SMOTableObj tableName tableObjectId ->
+      let tableObjectName = case tableObjectId of
+            MTORel name _              -> toTxt name
+            MTOComputedField name      -> toTxt name
+            MTORemoteRelationship name -> toTxt name
+            MTOPerm name _             -> toTxt name
+            MTOTrigger name            -> toTxt name
+      in tableObjectName <> " in " <> moiName (MOSourceObjId source $ SMOTable tableName)
   MORemoteSchema name -> toTxt name
   MORemoteSchemaPermissions name roleName ->
     toTxt roleName <> " permission in remote schema " <> toTxt name
   MOCronTrigger name -> toTxt name
-  MOTableObj tableName tableObjectId ->
-    let tableObjectName = case tableObjectId of
-          MTORel name _              -> toTxt name
-          MTOComputedField name      -> toTxt name
-          MTORemoteRelationship name -> toTxt name
-          MTOPerm name _             -> toTxt name
-          MTOTrigger name            -> toTxt name
-    in tableObjectName <> " in " <> moiName (MOTable tableName)
   MOCustomTypes -> "custom_types"
   MOAction name -> toTxt name
   MOActionPermission name roleName -> toTxt roleName <> " permission in " <> toTxt name
@@ -168,12 +179,14 @@ parseListAsMap t mapFn listP = do
 data MetadataVersion
   = MVVersion1
   | MVVersion2
+  | MVVersion3
   deriving (Show, Eq, Generic)
 
 instance ToJSON MetadataVersion where
   toJSON = \case
     MVVersion1 -> toJSON @Int 1
     MVVersion2 -> toJSON @Int 2
+    MVVersion3 -> toJSON @Int 3
 
 instance FromJSON MetadataVersion where
   parseJSON v = do
@@ -181,10 +194,11 @@ instance FromJSON MetadataVersion where
     case version of
       1 -> pure MVVersion1
       2 -> pure MVVersion2
-      i -> fail $ "expected 1 or 2, encountered " ++ show i
+      3 -> pure MVVersion3
+      i -> fail $ "expected 1, 2 or 3, encountered " ++ show i
 
 currentMetadataVersion :: MetadataVersion
-currentMetadataVersion = MVVersion2
+currentMetadataVersion = MVVersion3
 
 data ComputedFieldMetadata
   = ComputedFieldMetadata
@@ -329,7 +343,32 @@ type Allowlist = HSIns.InsOrdHashSet CollectionReq
 type Actions = InsOrdHashMap ActionName ActionMetadata
 type CronTriggers = InsOrdHashMap TriggerName CronTriggerMetadata
 
-parseNonPostgresMetadata
+data SourceMetadata
+  = SourceMetadata
+  { _smName          :: !SourceName
+  , _smTables        :: !Tables
+  , _smFunctions     :: !Functions
+  , _smConfiguration :: !SourceConfiguration
+  } deriving (Show, Eq, Generic)
+instance Cacheable SourceMetadata
+$(makeLenses ''SourceMetadata)
+instance FromJSON SourceMetadata where
+  parseJSON = withObject "Object" $ \o -> do
+    _smName          <- o .: "name"
+    _smTables        <- oMapFromL _tmTable <$> o .: "tables"
+    _smFunctions     <- oMapFromL _fmFunction <$> o .:? "functions" .!= []
+    _smConfiguration <- o .: "configuration"
+    pure SourceMetadata{..}
+
+mkSourceMetadata
+  :: SourceName -> UrlConf -> PostgresPoolSettings -> SourceMetadata
+mkSourceMetadata name urlConf connSettings =
+  SourceMetadata name mempty mempty $
+  SourceConfiguration (PostgresSourceConnInfo urlConf connSettings) Nothing
+
+type Sources = InsOrdHashMap SourceName SourceMetadata
+
+parseNonSourcesMetadata
   :: Object
   -> Parser
      ( RemoteSchemas
@@ -339,7 +378,7 @@ parseNonPostgresMetadata
      , Actions
      , CronTriggers
      )
-parseNonPostgresMetadata o = do
+parseNonSourcesMetadata o = do
   remoteSchemas <- parseListAsMap "remote schemas" _rsmName $
                    o .:? "remote_schemas" .!= []
   queryCollections <- parseListAsMap "query collections" _ccName $
@@ -357,36 +396,69 @@ parseNonPostgresMetadata o = do
 -- exported/replaced via metadata queries.
 data Metadata
   = Metadata
-  { _metaTables                  :: !Tables
-  , _metaFunctions               :: !Functions
-  , _metaRemoteSchemas           :: !RemoteSchemas
-  , _metaQueryCollections        :: !QueryCollections
-  , _metaAllowlist               :: !Allowlist
-  , _metaCustomTypes             :: !CustomTypes
-  , _metaActions                 :: !Actions
-  , _metaCronTriggers            :: !CronTriggers
+  { _metaSources          :: !Sources
+  , _metaRemoteSchemas    :: !RemoteSchemas
+  , _metaQueryCollections :: !QueryCollections
+  , _metaAllowlist        :: !Allowlist
+  , _metaCustomTypes      :: !CustomTypes
+  , _metaActions          :: !Actions
+  , _metaCronTriggers     :: !CronTriggers
   } deriving (Show, Eq)
 $(makeLenses ''Metadata)
 
 instance FromJSON Metadata where
   parseJSON = withObject "Object" $ \o -> do
     version <- o .:? "version" .!= MVVersion1
-    tables  <- parseListAsMap "tables" _tmTable $ o .: "tables"
-    functions <-
-      case version of
-        MVVersion1 -> do
-          functions <- parseListAsMap "functions" id $ o .:? "functions" .!= []
-          pure $ flip OM.map functions $
-            \function -> FunctionMetadata function emptyFunctionConfig
-        MVVersion2 -> parseListAsMap "functions" _fmFunction $ o .:? "functions" .!= []
+    when (version /= MVVersion3) $ fail $
+      "unexpected metadata version from storage: " <> show version
+    sources <- oMapFromL _smName <$> o .: "sources"
     (remoteSchemas, queryCollections, allowlist, customTypes,
-     actions, cronTriggers) <- parseNonPostgresMetadata o
-    pure $ Metadata tables functions remoteSchemas queryCollections
-                    allowlist customTypes actions cronTriggers
+     actions, cronTriggers) <- parseNonSourcesMetadata o
+    pure $ Metadata sources remoteSchemas queryCollections allowlist
+           customTypes actions cronTriggers
 
 emptyMetadata :: Metadata
 emptyMetadata =
-  Metadata mempty mempty mempty mempty mempty emptyCustomTypes mempty mempty
+  Metadata mempty mempty mempty mempty emptyCustomTypes mempty mempty
+
+tableMetadataSetter
+  :: SourceName -> QualifiedTable -> ASetter' Metadata TableMetadata
+tableMetadataSetter source table =
+  metaSources.ix source.smTables.ix table
+
+data MetadataNoSources
+  = MetadataNoSources
+  { _mnsTables           :: !Tables
+  , _mnsFunctions        :: !Functions
+  , _mnsRemoteSchemas    :: !RemoteSchemas
+  , _mnsQueryCollections :: !QueryCollections
+  , _mnsAllowlist        :: !Allowlist
+  , _mnsCustomTypes      :: !CustomTypes
+  , _mnsActions          :: !Actions
+  , _mnsCronTriggers     :: !CronTriggers
+  } deriving (Show, Eq)
+$(deriveToJSON (aesonDrop 4 snakeCase) ''MetadataNoSources)
+
+instance FromJSON MetadataNoSources where
+  parseJSON = withObject "Object" $ \o -> do
+    version <- o .:? "version" .!= MVVersion1
+    (tables, functions) <-
+      case version of
+        MVVersion1 -> do
+          tables       <- oMapFromL _tmTable <$> o .: "tables"
+          functionList <- o .:? "functions" .!= []
+          let functions = OM.fromList $ flip map functionList $
+                \function -> (function, FunctionMetadata function emptyFunctionConfig)
+          pure (tables, functions)
+        MVVersion2 -> do
+          tables    <- oMapFromL _tmTable <$> o .: "tables"
+          functions <- oMapFromL _fmFunction <$> o .:? "functions" .!= []
+          pure (tables, functions)
+        MVVersion3 -> fail "unexpected version for metadata without sources: 3"
+    (remoteSchemas, queryCollections, allowlist, customTypes,
+     actions, cronTriggers) <- parseNonSourcesMetadata o
+    pure $ MetadataNoSources tables functions remoteSchemas queryCollections
+                             allowlist customTypes actions cronTriggers
 
 newtype MetadataModifier =
   MetadataModifier {unMetadataModifier :: Metadata -> Metadata}
@@ -415,17 +487,15 @@ noMetadataModify = mempty
 -- See: https://github.com/hasura/graphql-engine/issues/6348
 metadataToOrdJSON :: Metadata -> AO.Value
 metadataToOrdJSON ( Metadata
-                    tables
-                    functions
+                    sources
                     remoteSchemas
                     queryCollections
                     allowlist
                     customTypes
                     actions
                     cronTriggers
-                  ) = AO.object $ [versionPair, tablesPair] <>
-                      catMaybes [ functionsPair
-                                , remoteSchemasPair
+                  ) = AO.object $ [versionPair, sourcesPair] <>
+                      catMaybes [ remoteSchemasPair
                                 , queryCollectionsPair
                                 , allowlistPair
                                 , actionsPair
@@ -434,8 +504,7 @@ metadataToOrdJSON ( Metadata
                                 ]
   where
     versionPair          = ("version", AO.toOrdered currentMetadataVersion)
-    tablesPair           = ("tables", AO.array $ map tableMetaToOrdJSON $ sortOn _tmTable $ OM.elems tables)
-    functionsPair        = listToMaybeOrdPairSort "functions" functionMetadataToOrdJSON _fmFunction functions
+    sourcesPair          = ("sources", AO.array $ map sourceMetaToOrdJSON $ sortOn _smName $ OM.elems sources)
     remoteSchemasPair    = listToMaybeOrdPairSort "remote_schemas" remoteSchemaQToOrdJSON _rsmName remoteSchemas
     queryCollectionsPair = listToMaybeOrdPairSort "query_collections" createCollectionToOrdJSON _ccName queryCollections
     allowlistPair        = listToMaybeOrdPairSort "allowlist" AO.toOrdered _crCollection allowlist
@@ -443,6 +512,16 @@ metadataToOrdJSON ( Metadata
                            else Just ("custom_types", customTypesToOrdJSON customTypes)
     actionsPair          = listToMaybeOrdPairSort "actions" actionMetadataToOrdJSON _amName actions
     cronTriggersPair     = listToMaybeOrdPairSort "cron_triggers" crontriggerQToOrdJSON ctName cronTriggers
+
+    sourceMetaToOrdJSON :: SourceMetadata -> AO.Value
+    sourceMetaToOrdJSON SourceMetadata{..} =
+      let sourceNamePair = ("name", AO.toOrdered _smName)
+          tablesPair     = ("tables", AO.array $ map tableMetaToOrdJSON $ sortOn _tmTable $ OM.elems _smTables)
+          functionsPair  = listToMaybeOrdPairSort "functions" functionMetadataToOrdJSON _fmFunction _smFunctions
+
+          configurationPair = [("configuration", AO.toOrdered _smConfiguration)]
+
+      in AO.object $ [sourceNamePair, tablesPair] <> maybeToList functionsPair <> configurationPair
 
     tableMetaToOrdJSON :: TableMetadata -> AO.Value
     tableMetaToOrdJSON ( TableMetadata
@@ -745,3 +824,32 @@ metadataToOrdJSON ( Metadata
 
 instance ToJSON Metadata where
   toJSON = AO.fromOrdered . metadataToOrdJSON
+
+data CatalogStateType
+  = CSTCli
+  | CSTConsole
+  deriving (Show, Eq)
+$(deriveJSON defaultOptions{constructorTagModifier = snakeCase . drop 3} ''CatalogStateType)
+
+data SetCatalogState
+  = SetCatalogState
+  { _scsType  :: !CatalogStateType
+  , _scsState :: !Value
+  } deriving (Show, Eq)
+$(deriveJSON (aesonDrop 4 snakeCase) ''SetCatalogState)
+
+data CatalogState
+  = CatalogState
+  { _csId           :: !Text
+  , _csCliState     :: !Value
+  , _csConsoleState :: !Value
+  } deriving (Show, Eq)
+$(deriveToJSON (aesonDrop 3 snakeCase) ''CatalogState)
+
+data GetCatalogState
+  = GetCatalogState
+  deriving (Show, Eq)
+$(deriveToJSON defaultOptions ''GetCatalogState)
+
+instance FromJSON GetCatalogState where
+  parseJSON _ = pure GetCatalogState

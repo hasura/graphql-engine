@@ -161,7 +161,7 @@ Also change it to some unique secret:
 
    ...
    # un-comment next line to add an admin secret key
-   HASURA_GRAPHQL_ADMIN_SECRET: myadminsecretkey
+   HASURA_GRAPHQL_ADMIN_SECRET: <myadminsecretkey>
    ...
 
    # type ESC followed by :wq to save and quit
@@ -180,7 +180,7 @@ following header:
 
 .. code-block:: bash
 
-   X-Hasura-Admin-Secret: myadminsecretkey
+   X-Hasura-Admin-Secret: <myadminsecretkey>
 
 
 Adding a domain & enabling HTTPS

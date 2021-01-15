@@ -241,7 +241,10 @@ data RemoteRelationship =
     { rtrName         :: !RemoteRelationshipName
     -- ^ Field name to which we'll map the remote in hasura; this becomes part
     -- of the hasura schema.
+    , rtrSource       :: !SourceName
     , rtrTable        :: !QualifiedTable
+    -- ^ (SourceName, QualifiedTable) determines the table on which the relationship
+    -- is defined
     , rtrHasuraFields :: !(Set FieldName) -- TODO (from master)? change to PGCol
     -- ^ The hasura fields from 'rtrTable' that will be in scope when resolving
     -- the remote objects in 'rtrRemoteField'.
@@ -251,7 +254,17 @@ data RemoteRelationship =
     }  deriving (Show, Eq, Generic)
 instance NFData RemoteRelationship
 instance Cacheable RemoteRelationship
-$(deriveJSON (aesonDrop 3 snakeCase) ''RemoteRelationship)
+$(deriveToJSON (aesonDrop 3 snakeCase) ''RemoteRelationship)
+
+instance FromJSON RemoteRelationship where
+  parseJSON = withObject "Object" $ \o ->
+    RemoteRelationship
+      <$> o .: "name"
+      <*> o .:? "source" .!= defaultSource
+      <*> o .: "table"
+      <*> o .: "hasura_fields"
+      <*> o .: "remote_schema"
+      <*> o .: "remote_field"
 
 data RemoteRelationshipDef
   = RemoteRelationshipDef
@@ -263,10 +276,17 @@ instance Cacheable RemoteRelationshipDef
 $(deriveJSON (aesonDrop 4 snakeCase) ''RemoteRelationshipDef)
 $(makeLenses ''RemoteRelationshipDef)
 
-data DeleteRemoteRelationship =
-  DeleteRemoteRelationship
-    { drrTable :: QualifiedTable
-    , drrName  :: RemoteRelationshipName
-    }  deriving (Show, Eq)
+data DeleteRemoteRelationship
+  = DeleteRemoteRelationship
+  { drrSource :: !SourceName
+  , drrTable  :: !QualifiedTable
+  , drrName   :: !RemoteRelationshipName
+  } deriving (Show, Eq)
+instance FromJSON DeleteRemoteRelationship where
+  parseJSON = withObject "Object" $ \o ->
+    DeleteRemoteRelationship
+      <$> o .:? "source" .!= defaultSource
+      <*> o .: "table"
+      <*> o .: "name"
 
-$(deriveJSON (aesonDrop 3 snakeCase){omitNothingFields=True} ''DeleteRemoteRelationship)
+$(deriveToJSON (aesonDrop 3 snakeCase){omitNothingFields=True} ''DeleteRemoteRelationship)

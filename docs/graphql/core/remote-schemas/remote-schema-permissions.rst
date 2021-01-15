@@ -37,8 +37,6 @@ Remote schema permissions can be defined to:
    considered to be a public entity i.e. all roles will have unrestricted access to the
    remote schema.
 
-.. note::
-
 Role based remote schemas
 -------------------------
 

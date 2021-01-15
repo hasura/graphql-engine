@@ -37,10 +37,10 @@ const App = ({
       telemetry.console_opts &&
       !telemetry.console_opts.telemetryNotificationShown
     ) {
-      dispatch(telemetryNotificationShown());
       dispatch(showTelemetryNotification());
+      dispatch(telemetryNotificationShown());
     }
-  }, [telemetry]);
+  }, [dispatch, telemetry]);
 
   let connectionFailMsg = null;
   if (connectionFailed) {

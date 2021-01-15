@@ -22,35 +22,37 @@ module Hasura.GraphQL.Schema.Select
 
 import           Hasura.Prelude
 
-import qualified Data.Aeson                            as J
-import qualified Data.Aeson.Extended                   as J
-import qualified Data.Aeson.Internal                   as J
-import qualified Data.ByteString.Lazy                  as BL
-import qualified Data.HashMap.Strict                   as Map
-import qualified Data.HashSet                          as Set
-import qualified Data.List.NonEmpty                    as NE
-import qualified Data.Sequence                         as Seq
-import qualified Data.Sequence.NonEmpty                as NESeq
-import qualified Data.Text                             as T
-import qualified Language.GraphQL.Draft.Syntax         as G
+import qualified Data.Aeson                             as J
+import qualified Data.Aeson.Extended                    as J
+import qualified Data.Aeson.Internal                    as J
+import qualified Data.ByteString.Lazy                   as BL
+import qualified Data.HashMap.Strict                    as Map
+import qualified Data.HashSet                           as Set
+import qualified Data.List.NonEmpty                     as NE
+import qualified Data.Sequence                          as Seq
+import qualified Data.Sequence.NonEmpty                 as NESeq
+import qualified Data.Text                              as T
+import qualified Language.GraphQL.Draft.Syntax          as G
 
-import           Control.Lens                          hiding (index)
+import           Control.Lens                           hiding (index)
 import           Data.Has
-import           Data.Int                              (Int32)
+import           Data.Int                               (Int32)
 import           Data.Parser.JSONPath
 import           Data.Text.Extended
-import           Data.Traversable                      (mapAccumL)
+import           Data.Traversable                       (mapAccumL)
 
-import qualified Hasura.Backends.Postgres.SQL.Types    as PG
-import qualified Hasura.GraphQL.Execute.Types          as ET
-import qualified Hasura.GraphQL.Parser                 as P
-import qualified Hasura.GraphQL.Parser.Internal.Parser as P
-import qualified Hasura.RQL.IR.BoolExp                 as IR
-import qualified Hasura.RQL.IR.OrderBy                 as IR
-import qualified Hasura.RQL.IR.Select                  as IR
+import qualified Hasura.Backends.Postgres.Execute.Types as PG
+import qualified Hasura.Backends.Postgres.SQL.Types     as PG
+import qualified Hasura.GraphQL.Execute.Types           as ET
+import qualified Hasura.GraphQL.Parser                  as P
+import qualified Hasura.GraphQL.Parser.Internal.Parser  as P
+import qualified Hasura.RQL.IR.BoolExp                  as IR
+import qualified Hasura.RQL.IR.OrderBy                  as IR
+import qualified Hasura.RQL.IR.Select                   as IR
 
-import           Hasura.GraphQL.Parser                 (FieldParser, InputFieldsParser, Kind (..),
-                                                        Parser, UnpreparedValue (..), mkParameter)
+import           Hasura.GraphQL.Context
+import           Hasura.GraphQL.Parser                  (FieldParser, InputFieldsParser, Kind (..),
+                                                         Parser, UnpreparedValue (..), mkParameter)
 import           Hasura.GraphQL.Parser.Class
 import           Hasura.GraphQL.Schema.Backend
 import           Hasura.GraphQL.Schema.BoolExp
@@ -59,7 +61,7 @@ import           Hasura.GraphQL.Schema.OrderBy
 import           Hasura.GraphQL.Schema.Remote
 import           Hasura.GraphQL.Schema.Table
 import           Hasura.RQL.Types
-import           Hasura.Server.Utils                   (executeJSONPath)
+import           Hasura.Server.Utils                    (executeJSONPath)
 
 
 -- 1. top level selection functions
@@ -1230,18 +1232,29 @@ nodePG
      , MonadRole r m
      , Has QueryContext r
      )
-  => m (P.Parser 'Output n (HashMap (TableName 'Postgres) (SelPermInfo 'Postgres, PrimaryKeyColumns 'Postgres, AnnotatedFields 'Postgres)))
+  => m (P.Parser 'Output n
+         ( HashMap (TableName 'Postgres)
+           ( SourceName
+           , SourceConfig 'Postgres
+           , SelPermInfo 'Postgres
+           , PrimaryKeyColumns 'Postgres
+           , AnnotatedFields 'Postgres
+           )
+         )
+       )
 nodePG = memoizeOn 'nodePG () do
   let idDescription = G.Description "A globally unique identifier"
       idField = P.selection_ $$(G.litName "id") (Just idDescription) P.identifier
       nodeInterfaceDescription = G.Description "An object with globally unique ID"
-  allTables :: TableCache 'Postgres <- asks getter
-  tables :: HashMap (TableName 'Postgres) (Parser 'Output n (SelPermInfo 'Postgres, NESeq (ColumnInfo 'Postgres), AnnotatedFields 'Postgres)) <-
-    Map.mapMaybe id <$> flip Map.traverseWithKey allTables \table _ -> runMaybeT do
+  sources :: SourceCache 'Postgres <- asks getter
+  let allTables = Map.fromList $ flip concatMap (Map.toList sources) $ -- FIXME? When source name is used in type generation?
+        \(source, sourceCache) -> map (, (source, _pcConfiguration sourceCache)) $ Map.keys $ takeValidTables $ _pcTables sourceCache
+  tables <-
+    Map.mapMaybe id <$> flip Map.traverseWithKey allTables \table (source, sourceConfig) -> runMaybeT do
       tablePkeyColumns <- MaybeT $ (^? tiCoreInfo.tciPrimaryKey._Just.pkColumns) <$> askTableInfo table
       selectPermissions <- MaybeT $ tableSelectPermissions table
       annotatedFieldsParser <- lift $ tableSelectionSet table selectPermissions
-      pure $ (selectPermissions, tablePkeyColumns,) <$> annotatedFieldsParser
+      pure $ (source, sourceConfig, selectPermissions, tablePkeyColumns,) <$> annotatedFieldsParser
   pure $ P.selectionSetInterface $$(G.litName "Node")
          (Just nodeInterfaceDescription) [idField] tables
 
@@ -1253,7 +1266,7 @@ nodeField
      , MonadRole r m
      , Has QueryContext r
      )
-  => m (P.FieldParser n (SelectExp 'Postgres))
+  => m (P.FieldParser n (QueryRootField (UnpreparedValue 'Postgres)))
 nodeField = do
   let idDescription = G.Description "A globally unique id"
       idArgument = P.field $$(G.litName "id") (Just idDescription) P.identifier
@@ -1262,11 +1275,12 @@ nodeField = do
   return $ P.subselection $$(G.litName "node") Nothing idArgument nodeObject `P.bindField`
     \(ident, parseds) -> do
       NodeIdV1 (V1NodeId table columnValues) <- parseNodeId ident
-      (perms, pkeyColumns, fields) <-
+      (source, sourceConfig, perms, pkeyColumns, fields) <-
         onNothing (Map.lookup table parseds) $
         withArgsPath $  throwInvalidNodeId $ "the table " <>> ident
       whereExp <- buildNodeIdBoolExp columnValues pkeyColumns
-      return $ IR.AnnSelectG
+      let pgExecCtx = PG._pscExecCtx sourceConfig
+      return $ RFDB source pgExecCtx $ QDBPrimaryKey $ IR.AnnSelectG
         { IR._asnFields   = fields
         , IR._asnFrom     = IR.FromTable table
         , IR._asnPerm     = tablePermissionsInfo perms
