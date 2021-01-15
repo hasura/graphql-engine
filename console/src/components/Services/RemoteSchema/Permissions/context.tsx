@@ -1,3 +1,11 @@
 import React from 'react';
+import { ArgTreeType } from './types';
 
-export const PermissionEditorContext = React.createContext({});
+interface PermissionEditorContextType {
+  argTree?: ArgTreeType;
+  setArgTree?: React.Dispatch<React.SetStateAction<ArgTreeType>>;
+  scrollToElement?: (s: string) => void;
+}
+export const PermissionEditorContext = React.createContext<
+  PermissionEditorContextType
+>({});

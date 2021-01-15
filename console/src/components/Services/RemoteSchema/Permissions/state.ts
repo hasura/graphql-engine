@@ -1,4 +1,12 @@
-import { RemoteSchemaPermissionsState } from './types';
+import { PermissionEdit } from './types';
+
+export type RemoteSchemaPermissionsState = {
+  isEditing: false;
+  isFetching: false;
+  permissionEdit: PermissionEdit;
+  schemaDefinition: string;
+  bulkSelect: string[];
+};
 
 const state: RemoteSchemaPermissionsState = {
   isEditing: false,

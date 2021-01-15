@@ -3,55 +3,47 @@ import Helmet from 'react-helmet';
 import { buildSchema, GraphQLSchema } from 'graphql';
 import PermissionsTable from './PermissionsTable';
 import PermissionEditor from './PermissionEditor';
-import { getConfirmation } from '../../../Common/utils/jsUtils';
 import { useIntrospectionSchemaRemote } from '../graphqlUtils';
 import globals from '../../../../Globals';
-import Button from '../../../Common/Button/Button';
 import styles from '../../../Common/Permissions/PermissionStyles.scss';
 import { getTree, getType, addPresetDefinition } from './utils';
-import { DatasourceObject, PermissionsProps, BulkSelectProps } from './types';
+import {
+  DatasourceObject,
+  PermissionEdit,
+  PermOpenEditType,
+  PermissionsType,
+} from './types';
+import BulkSelect from './BulkSelect';
+import { Dispatch } from '../../../../types';
 
-const BulkSelect: React.FC<BulkSelectProps> = ({
-  bulkSelect,
-  permRemoveMultipleRoles,
-}) => {
-  const getSelectedRoles = () => {
-    return bulkSelect.map((role: string) => {
-      return (
-        <span key={role} className={styles.add_pad_right}>
-          <b>{role}</b>{' '}
-        </span>
-      );
-    });
+export type PermissionsProps = {
+  allRoles: string[];
+  currentRemoteSchema: {
+    name: string;
+    permissions: PermissionsType[];
   };
-
-  const handleBulkRemoveClick = () => {
-    const confirmMessage =
-      'This will remove all currently set permissions for the selected role(s)';
-    const isOk = getConfirmation(confirmMessage);
-    if (isOk) {
-      permRemoveMultipleRoles();
-    }
-  };
-
-  return (
-    <div id="bulk-section" className={styles.activeEdit}>
-      <div className={styles.editPermsHeading}>Apply Bulk Actions</div>
-      <div>
-        <span className={styles.add_pad_right}>Selected Roles</span>
-        {getSelectedRoles()}
-      </div>
-      <div className={`${styles.add_mar_top} ${styles.add_mar_bottom_mid}`}>
-        <Button onClick={handleBulkRemoveClick} color="red" size="sm">
-          Remove All Permissions
-        </Button>
-      </div>
-    </div>
-  );
+  bulkSelect: string[];
+  readOnlyMode: boolean;
+  permissionEdit: PermissionEdit;
+  isEditing: boolean;
+  isFetching: boolean;
+  schemaDefinition: string;
+  setSchemaDefinition: (data: string) => void;
+  permOpenEdit: PermOpenEditType;
+  permCloseEdit: () => void;
+  permSetBulkSelect: (checked: boolean, role: string) => void;
+  permSetRoleName: (name: string) => void;
+  dispatch: Dispatch;
+  fetchRoleList: () => void;
+  setDefaults: () => void;
+  saveRemoteSchemaPermission: (data: any) => void;
+  removeRemoteSchemaPermission: (data: any) => void;
+  permRemoveMultipleRoles: () => void;
 };
 
-const Permissions: React.FC<PermissionsProps> = ({ allRoles, ...props }) => {
+const Permissions: React.FC<PermissionsProps> = props => {
   const {
+    allRoles,
     currentRemoteSchema,
     permissionEdit,
     isEditing,
@@ -97,9 +89,8 @@ const Permissions: React.FC<PermissionsProps> = ({ allRoles, ...props }) => {
         const newDef = addPresetDefinition(schemaDefinition);
         permissionsSchema = buildSchema(newDef);
       } catch (err) {
-        // TODO test all posibilities that can reach this catch block
         console.log(err);
-        return
+        return;
       }
     }
     const types = getType(schema, permissionsSchema);

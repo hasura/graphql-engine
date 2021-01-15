@@ -28,15 +28,15 @@ import {
   PermissionEdit,
   DatasourceObject,
   FieldType,
-  argTreeType,
-  Permissions,
+  ArgTreeType,
+  PermissionsType,
   CustomFieldType,
   ChildArgumentType,
 } from './types';
 import Migration from '../../../../utils/migration/Migration';
 
 export const findRemoteSchemaPermission = (
-  perms: Permissions[],
+  perms: PermissionsType[],
   role: string
 ) => {
   return perms.find(p => p.role === role);
@@ -74,7 +74,7 @@ export const getDropRemoteSchemaPermissionQuery = (
 
 export const getRemoteSchemaPermissionQueries = (
   permissionEdit: PermissionEdit,
-  allPermissions: Permissions[],
+  allPermissions: PermissionsType[],
   remoteSchemaName: string,
   schemaDefinition: string
 ) => {
@@ -166,7 +166,7 @@ export const getTree = (
     return Object.values(introspectionSchemaFields).map(
       ({ name, args: argArray, type, ...rest }: any) => {
         let checked = false;
-        const args = argArray.reduce((p: argTreeType, c: FieldType) => {
+        const args = argArray.reduce((p: ArgTreeType, c: FieldType) => {
           return { ...p, [c.name]: { ...c } };
         }, {});
         if (
@@ -310,7 +310,6 @@ export const getType = (
 
 // method that tells whether the field is nested or not, if nested it returns the children
 export const getChildArguments = (v: GraphQLInputField): ChildArgumentType => {
-  // TODO check if there are any more possible types with children / expandable views
   if (typeof v === 'string') return {}; // value field
   if (v?.type instanceof GraphQLInputObjectType && v?.type?.getFields)
     return {
@@ -344,7 +343,7 @@ const isList = (gqlArg: GraphQLInputField, value: string) =>
   !value.startsWith('x-hasura');
 
 // utility function for getSDLField
-const serialiseArgs = (args: argTreeType, argDef: GraphQLInputField) => {
+const serialiseArgs = (args: ArgTreeType, argDef: GraphQLInputField) => {
   let res = '{';
   const { children } = getChildArguments(argDef);
   Object.entries(args).forEach(([key, value]) => {
@@ -442,7 +441,6 @@ const getSDLField = (
   result = `${typeName}{`;
 
   type.children.forEach(f => {
-    // TODO filter selected fields
     if (!f.checked) return null;
 
     let fieldStr = f.name;
@@ -524,7 +522,6 @@ export const generateSDL = (
   return `${prefix} ${result}`;
 };
 
-// TODO request to add this change on the server.
 export const addPresetDefinition = (schema: string) => `scalar PresetValue\n
   directive @preset(
       value: PresetValue
@@ -630,7 +627,7 @@ export const getArgTreeFromPermissionSDL = (definition: string) => {
     return argTree;
   } catch (e) {
     console.error(e);
-    return null;
+    return {};
   }
 };
 

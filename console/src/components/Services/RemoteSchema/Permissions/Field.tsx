@@ -5,13 +5,20 @@ import React, {
   useState,
   MouseEvent,
 } from 'react';
-import { FieldProps } from './types';
+import { FieldType } from './types';
 import { PermissionEditorContext } from './context';
 import { CollapsedField } from './CollapsedField';
 import { ArgSelect } from './ArgSelect';
 import { isEmpty } from '../../../Common/utils/jsUtils';
 import styles from '../../../Common/Permissions/PermissionStyles.scss';
 import { generateTypeString } from './utils';
+
+export interface FieldProps {
+  i: FieldType;
+  setItem: (e: FieldType) => void;
+  onExpand?: () => void;
+}
+
 
 export const Field: React.FC<FieldProps> = ({
   i,
