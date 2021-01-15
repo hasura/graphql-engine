@@ -512,6 +512,9 @@ export const generateSDL = (
     if (fieldDef) result = `${result}\n${fieldDef}\n`;
   });
 
+  if (isEmpty(result))
+    return '';
+
   const prefix = `schema{
     ${rootsMap['type query_root'] ? 'query: query_root' : ''}
     ${rootsMap['type mutation_root'] ? 'mutation: mutation_root' : ''}

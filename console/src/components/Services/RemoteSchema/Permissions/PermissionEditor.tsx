@@ -96,6 +96,7 @@ const PermissionEditor: React.FC<PermissionEditorProps> = ({ ...props }) => {
       }, 800);
     }
   };
+  const isSaveDisabled=isEmpty(resultString)||isFetching
 
   return (
     <div className={styles.activeEdit}>
@@ -111,7 +112,7 @@ const PermissionEditor: React.FC<PermissionEditorProps> = ({ ...props }) => {
         onClick={saveFunc}
         color="yellow"
         className={buttonStyle}
-        disabled={isFetching}
+        disabled={isSaveDisabled}
       >
         Save Permissions
       </Button>
