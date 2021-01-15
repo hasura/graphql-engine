@@ -6,14 +6,7 @@ import { getConfirmation } from '../../../Common/utils/jsUtils';
 import ExpandableEditor from '../../../Common/Layout/ExpandableEditor/Editor';
 import RawSqlButton from '../Common/Components/RawSqlButton';
 import Tooltip from '../../../Common/Tooltip/Tooltip';
-import {
-  findFunction,
-  getFunctionDefinition,
-  getFunctionName,
-  getQualifiedTableDef,
-  getSchemaFunctions,
-  getSchemaName,
-} from '../../../Common/utils/pgUtils';
+import { getQualifiedTableDef, dataSource } from '../../../../dataSources';
 import { deleteComputedField, saveComputedField } from './ModifyActions';
 import { fetchFunctionInit } from '../DataActions';
 import SearchableSelectBox from '../../../Common/SearchableSelect/SearchableSelect';
@@ -24,6 +17,7 @@ const ComputedFieldsEditor = ({
   functions,
   schemaList,
   dispatch,
+  source,
 }) => {
   const computedFields = table.computed_fields;
 
@@ -84,14 +78,14 @@ const ComputedFieldsEditor = ({
     let computedFieldFunction = null;
     let computedFieldFunctionDefinition = null;
     if (functions) {
-      computedFieldFunction = findFunction(
+      computedFieldFunction = dataSource.findFunction(
         functions,
         computedFieldFunctionName,
         computedFieldFunctionSchema
       );
 
       if (computedFieldFunction) {
-        computedFieldFunctionDefinition = getFunctionDefinition(
+        computedFieldFunctionDefinition = dataSource.getFunctionDefinition(
           computedFieldFunction
         );
       }
@@ -131,7 +125,10 @@ const ComputedFieldsEditor = ({
 
       return (
         <div>
-          <b>{origComputedFieldName}</b>&nbsp;-&nbsp;
+          <b data-test={`computed-field-${origComputedFieldName}`}>
+            {origComputedFieldName}
+          </b>
+          &nbsp;-&nbsp;
           <i>{origComputedFieldFunctionName}</i>
           <br />
           <span key={'comment'} className={styles.text_gray}>
@@ -166,6 +163,7 @@ const ComputedFieldsEditor = ({
             customStyles={`${styles.display_inline} ${styles.add_mar_left}`}
             sql={computedFieldFunctionDefinition}
             dispatch={dispatch}
+            source={source}
           >
             Modify
           </RawSqlButton>
@@ -277,6 +275,7 @@ const ComputedFieldsEditor = ({
               value={computedFieldName}
               onChange={handleNameChange}
               className={`form-control ${styles.wd50percent}`}
+              data-test="computed-field-name-input"
             />
           </div>
           <div className={`${styles.add_mar_top}`}>
@@ -285,7 +284,7 @@ const ComputedFieldsEditor = ({
             </div>
             <div className={styles.wd50percent}>
               <SearchableSelectBox
-                options={schemaList.map(s => getSchemaName(s))}
+                options={schemaList}
                 onChange={handleFnSchemaChange}
                 value={computedFieldFunctionSchema}
                 bsClass={'function-schema-select'}
@@ -307,16 +306,16 @@ const ComputedFieldsEditor = ({
                 customStyles={`${styles.display_inline} ${styles.add_mar_left}`}
                 sql={''}
                 dispatch={dispatch}
+                source={source}
               >
                 Create new
               </RawSqlButton>
             </div>
             <div className={styles.wd50percent}>
               <SearchableSelectBox
-                options={getSchemaFunctions(
-                  functions,
-                  computedFieldFunctionSchema
-                ).map(fn => getFunctionName(fn))}
+                options={dataSource
+                  .getSchemaFunctions(functions, computedFieldFunctionSchema)
+                  .map(fn => fn.function_name)}
                 onChange={handleFnNameChange}
                 value={computedFieldFunctionName}
                 bsClass={'function-name-select'}
@@ -344,6 +343,7 @@ const ComputedFieldsEditor = ({
               placeholder={'default: first argument'}
               onChange={handleTableRowArgChange}
               className={`form-control ${styles.wd50percent}`}
+              data-test="computed-field-first-arg-input"
             />
           </div>
           <div className={`${styles.add_mar_top}`}>
@@ -355,6 +355,7 @@ const ComputedFieldsEditor = ({
               value={computedFieldComment}
               onChange={handleCommentChange}
               className={`form-control ${styles.wd50percent}`}
+              data-test="computed-field-comment-input"
             />
           </div>
         </div>

@@ -18,7 +18,7 @@ export const passPTCreateTable = () => {
   // Click on create table
   cy.get(getElementFromAlias('data-create-table')).click();
   // Match the URL
-  cy.url().should('eq', `${baseUrl}/data/schema/public/table/add`);
+  cy.url().should('eq', `${baseUrl}/data/default/schema/public/table/add`);
   // Type table name
   cy.get(getElementFromAlias('tableName')).type(getTableName(0, testName));
   // Set first column
@@ -47,7 +47,7 @@ export const passPTCreateTable = () => {
   cy.wait(7000);
   cy.url().should(
     'eq',
-    `${baseUrl}/data/schema/public/tables/${getTableName(0, testName)}/modify`
+    `${baseUrl}/data/default/schema/public/tables/${getTableName(0, testName)}/modify`
   );
 };
 
@@ -57,7 +57,7 @@ export const passPTCheckRoute = () => {
   // Match the URL
   cy.url().should(
     'eq',
-    `${baseUrl}/data/schema/public/tables/${getTableName(
+    `${baseUrl}/data/default/schema/public/tables/${getTableName(
       0,
       testName
     )}/permissions`
@@ -102,10 +102,14 @@ export const passPVRemovePerms = () => {
 };
 
 export const passPVDeleteView = () => {
-  // Go to modify table
+  // Go to modify view
   cy.get(getElementFromAlias('table-modify')).click();
-  // Delete table
+  // Delete view
+  setPromptValue(getTableName(1, testName));
   cy.get(getElementFromAlias('delete-view')).click();
+  cy.window()
+    .its('prompt')
+    .should('be.called');
   cy.wait(7000);
 };
 

@@ -12,8 +12,8 @@ func NewSeedCmd(ec *cli.ExecutionContext) *cobra.Command {
 	v := viper.New()
 	ec.Viper = v
 	seedCmd := &cobra.Command{
-		Use:          "seeds",
-		Aliases:      []string{"sd"},
+		Use:          "seed",
+		Aliases:      []string{"sd", "seeds"},
 		Short:        "Manage seed data",
 		SilenceUsage: true,
 		PersistentPreRunE: func(cmd *cobra.Command, args []string) error {

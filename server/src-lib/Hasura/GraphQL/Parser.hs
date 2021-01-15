@@ -13,6 +13,8 @@ module Hasura.GraphQL.Parser
   , int
   , float
   , string
+  , json
+  , jsonb
   , identifier
   , unsafeRawScalar
 
@@ -21,6 +23,7 @@ module Hasura.GraphQL.Parser
   , list
   , object
   , selectionSet
+  , safeSelectionSet
   , selectionSetObject
 
   , InputFieldsParser
@@ -32,8 +35,10 @@ module Hasura.GraphQL.Parser
   , ParsedSelection(..)
   , handleTypename
   , selection
+  , rawSelection
   , selection_
   , subselection
+  , rawSubselection
   , subselection_
 
   , jsonToGraphQL

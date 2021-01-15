@@ -28,7 +28,7 @@ field under the ``query_root`` root level type.
 Auto-generated query field schema
 ---------------------------------
 
-**For example**, the auto-generated schema for the query field for a table ``author`` looks like this:
+**For example**, the auto-generated schema for the query field for a table ``author`` looks like the following:
 
 .. code-block:: graphql
 

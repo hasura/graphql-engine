@@ -28,7 +28,7 @@ Postgres constructs.
 .. toctree::
   :maxdepth: 1
 
-  Basics <basics>
+  Tables basics <tables>
   Table relationships <table-relationships/index>
   Remote relationships <remote-relationships/index>
   Extend with views <views>

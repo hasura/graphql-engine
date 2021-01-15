@@ -178,13 +178,15 @@ To make variables non-nullable, add a ``!`` at the end of the type, like here:
       }
    }
 
-If the ``!`` is not added and the variable is nullable, the generated query will be different depending if an ``id`` is passed or if the variables is ``null``
+If the ``!`` is not added and the variable is nullable, the generated query will be different depending on whether an ``id`` is passed or whether the variable is ``null``
 (for the latter, there is no ``where`` statement present). Therefore, it's not possible for Hasura to create a reusable plan for a query in this case.
 
 .. note::
 
    Hasura is fast even for queries which cannot have a reusable plan.
    This should concern you only if you face a high volume of traffic (thousands of requests per second).
+
+.. _data_validation_pg_indexes:
 
 Using PG indexes
 ^^^^^^^^^^^^^^^^
@@ -206,22 +208,46 @@ Let's say we know that ``authors`` table is frequently queried by ``name``:
 We've seen in the :ref:`above example <analysing_query_performance>` that by default Postgres conducts a sequential scan i.e. going through all the rows.
 Whenever there is a sequential scan, it can be optimized by adding an index.
 
-.. rst-class:: api_tabs
-.. tabs::
-
-  .. tab:: Console
-
-      An index can be added in the ``SQL -> Data`` tab in the Hasura console:
-
-  .. tab:: API
-
-      An index can be added via the :ref:`run_sql <run_sql>` metadata API.
-
 The following statement sets an index on ``name`` in the ``authors`` table.
 
 .. code-block:: plpgsql
 
   CREATE INDEX ON authors (name);
+
+.. rst-class:: api_tabs
+.. tabs::
+
+  .. tab:: Console
+
+   An index can be added in the ``Data -> SQL`` tab in the Hasura console.
+
+  .. tab:: CLI
+
+   :ref:`Create a migration manually <manual_migrations>` and add your create index statement to the ``up.sql`` file. 
+   Also, add an SQL statement to revert that statement to the ``down.sql`` file in case you need to :ref:`roll back <roll_back_migrations>` the migration.
+
+   Apply the migration by running:
+
+   .. code-block:: bash
+
+      hasura migrate apply  
+
+  .. tab:: API
+
+   You can add an index by making an API call to the :ref:`run_sql metadata API <run_sql>`:
+
+   .. code-block:: http
+
+      POST /v1/query HTTP/1.1
+      Content-Type: application/json
+      X-Hasura-Role: admin
+
+      {
+         "type": "run_sql",
+         "args": {
+            "sql": "<create index statement>"
+         }
+      }
 
 Let's compare the performance analysis to :ref:`the one before adding the index <analysing_query_performance>`.
 What was a ``sequential scan`` in the example earlier is now an ``index scan``. ``Index scans`` are usually more performant than ``sequential scans``.

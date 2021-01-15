@@ -134,7 +134,8 @@ JSON object:
      "claims_format": "json|stringified_json",
      "audience": <optional-string-or-list-of-strings-to-verify-audience>,
      "issuer": "<optional-string-to-verify-issuer>",
-     "claims_map": "<optional-object-of-session-variable-to-claim-jsonpath-or-literal-value>"
+     "claims_map": "<optional-object-of-session-variable-to-claim-jsonpath-or-literal-value>",
+     "allowed_skew": "<optional-number-of-seconds-in-integer>"
    }
 
 (``type``, ``key``) pair or ``jwk_url``, **one of them has to be present**.
@@ -146,7 +147,7 @@ Valid values are : ``HS256``, ``HS384``, ``HS512``, ``RS256``,
 
 ``HS*`` is for HMAC-SHA based algorithms. ``RS*`` is for RSA based signing. For
 example, if your auth server is using HMAC-SHA256 for signing the JWTs, then
-use ``HS256``. If it is using RSA with 512-bit keys, then use ``RS512``. EC
+use ``HS256``. If it is using RSA with SHA-512, then use ``RS512``. EC
 public keys are not yet supported.
 
 This is an optional field. This is required only if you are using ``key`` in the config.
@@ -494,6 +495,12 @@ The corresponding JWT config should be:
 In the above example, the ``x-hasura-allowed-roles`` and ``x-hasura-default-role`` values are set in the JWT
 config and the value of the ``x-hasura-user-id`` is a JSON path to the value in the JWT token.
 
+``allowed_skew``
+^^^^^^^^^^^^^^^^
+
+``allowed_skew`` is an optional field to provide some leeway (to account for clock skews) while comparing the JWT expiry time. This field
+expects an integer value which will be the number of seconds of the skew value.
+
 
 Examples
 ^^^^^^^^
@@ -553,9 +560,9 @@ Using the flag:
   $ docker run -p 8080:8080 \
       hasura/graphql-engine:latest \
       graphql-engine \
-      --database-url postgres://username:password@hostname:port/dbname \
+      --database-url postgres://<username>:<password>@<hostname>:<port>/<dbname> \
       serve \
-      --admin-secret myadminsecretkey \
+      --admin-secret <myadminsecretkey> \
       --jwt-secret '{"type":"HS256", "key": "3EK6FD+o0+c7tzBNVfjpMkNDi2yARAAKzQlk8O2IKoxQu4nF7EdAh8s3TwpHwrdWT6R"}'
 
 Using env vars:
@@ -563,11 +570,11 @@ Using env vars:
 .. code-block:: shell
 
   $ docker run -p 8080:8080 \
-      -e HASURA_GRAPHQL_ADMIN_SECRET="myadminsecretkey" \
+      -e HASURA_GRAPHQL_ADMIN_SECRET="<myadminsecretkey>" \
       -e HASURA_GRAPHQL_JWT_SECRET='{"type":"RS512", "key": "-----BEGIN PUBLIC KEY-----\nMIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQDdlatRjRjogo3WojgGHFHYLugd\nUWAY9iR3fy4arWNA1KoS8kVw33cJibXr8bvwUAUparCwlvdbH6dvEOfou0/gCFQs\nHUfQrSDv+MuSUMAe8jzKE4qW+jK+xQU9a03GUnKHkkle+Q0pX/g6jXZ7r1/xAK5D\no2kQ+X5xK9cipRgEKwIDAQAB\n-----END PUBLIC KEY-----\n"}' \
       hasura/graphql-engine:latest \
       graphql-engine \
-      --database-url postgres://username:password@hostname:port/dbname \
+      --database-url postgres://<username>:<password>@<hostname>:<port>/<dbname> \
       serve
 
 
@@ -659,7 +666,7 @@ Generating JWT Config
 ---------------------
 
 The JWT Config to be used in env ``HASURA_GRAPHQL_JWT_SECRET`` or ``--jwt-secret`` flag can be generated using:
-https://hasura.io/jwt-config.
+https://hasura.io/jwt-config/.
 
 **Currently the UI supports generating config for Auth0 and Firebase**.
 

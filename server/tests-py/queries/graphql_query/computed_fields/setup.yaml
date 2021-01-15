@@ -1,5 +1,9 @@
 type: bulk
 args:
+
+
+
+
 - type: run_sql
   args:
     sql: |
@@ -135,6 +139,27 @@ args:
         id: X-Hasura-User-Id
       computed_fields:
       - full_name
+
+- type: create_select_permission
+  args:
+    table: author
+    role: public_role
+    permission:
+      columns:
+        - first_name
+        - last_name
+      filter: {}
+      computed_fields: []
+
+- type: create_select_permission
+  args:
+    table: article
+    role: public_role
+    permission:
+      columns:
+        - title
+        - content
+      filter: {}
 
 - type: track_table
   args:

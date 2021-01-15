@@ -5,27 +5,38 @@ module Hasura.Server.API.PGDump
   ) where
 
 import           Control.Exception      (IOException, try)
+import           Data.Aeson
 import           Data.Aeson.Casing
 import           Data.Aeson.TH
-import qualified Data.ByteString.Lazy    as BL
-import           Data.Char               (isSpace)
-import qualified Data.List               as L
-import qualified Data.Text               as T
+import           Data.Char              (isSpace)
 import           Data.Text.Conversions
-import qualified Database.PG.Query       as Q
 import           Hasura.Prelude
-import qualified Hasura.RQL.Types.Error as RTE
+import           Hasura.RQL.Types       (SourceName, defaultSource)
 import           System.Exit
 import           System.Process
+
+import qualified Data.ByteString.Lazy   as BL
+import qualified Data.List              as L
+import qualified Data.Text              as T
+import qualified Database.PG.Query      as Q
+import qualified Hasura.RQL.Types.Error as RTE
 import qualified Text.Regex.TDFA        as TDFA
 
 data PGDumpReqBody =
   PGDumpReqBody
-  { prbOpts        :: ![String]
-  , prbCleanOutput :: !(Maybe Bool)
+  { prbSource      :: !SourceName
+  , prbOpts        :: ![String]
+  , prbCleanOutput :: !Bool
   } deriving (Show, Eq)
 
-$(deriveJSON (aesonDrop 3 snakeCase) ''PGDumpReqBody)
+$(deriveToJSON (aesonDrop 3 snakeCase) ''PGDumpReqBody)
+
+instance FromJSON PGDumpReqBody where
+  parseJSON = withObject "Object" $ \o ->
+    PGDumpReqBody
+      <$> o .:? "source" .!= defaultSource
+      <*> o .: "opts"
+      <*> o .:? "clean_output" .!= False
 
 execPGDump
   :: (MonadError RTE.QErr m, MonadIO m)
@@ -34,11 +45,9 @@ execPGDump
   -> m BL.ByteString
 execPGDump b ci = do
   eOutput <- liftIO $ try execProcess
-  output <- either throwException return eOutput
-  case output of
-    Left err ->
-      RTE.throw500 $ "error while executing pg_dump: " <> err
-    Right dump -> return dump
+  output <- onLeft eOutput throwException
+  onLeft output $ \err ->
+    RTE.throw500 $ "error while executing pg_dump: " <> err
   where
     throwException :: (MonadError RTE.QErr m) => IOException -> m a
     throwException _ = RTE.throw500 "internal exception while executing pg_dump"
@@ -53,7 +62,7 @@ execPGDump b ci = do
     opts = connString : "--encoding=utf8" : prbOpts b
 
     clean str
-      | fromMaybe False (prbCleanOutput b) =
+      | prbCleanOutput b =
           unlines $ filter (not . shouldDropLine) (lines str)
       | otherwise = str
 
@@ -65,7 +74,7 @@ execPGDump b ci = do
         -- delete front matter
         || line `elem` preambleLines
         -- delete notify triggers
-        || notifyTriggerRegex `TDFA.match` line
+        || eventTriggerRegex `TDFA.match` line
 
     preambleLines =
       [ "SET statement_timeout = 0;"
@@ -85,9 +94,11 @@ execPGDump b ci = do
       , "COMMENT ON SCHEMA public IS 'standard public schema';"
       ]
 
-    notifyTriggerRegex =
+    eventTriggerRegex =
       let regexStr :: String =
+        -- pg functions created by hasura for event triggers used "notify_hasura"
+        -- These changes are also documented on the method pgIdenTrigger
             "^CREATE TRIGGER \"?notify_hasura_.+\"? AFTER [[:alnum:]]+ "
               <> "ON .+ FOR EACH ROW EXECUTE (FUNCTION|PROCEDURE) "
-              <> "\"?hdb_views\"?\\.\"?notify_hasura_.+\"?\\(\\);$"
+              <> "\"?hdb_catalog\"?\\.\"?notify_hasura_.+\"?\\(\\);$"
       in TDFA.makeRegex regexStr :: TDFA.Regex

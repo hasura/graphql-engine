@@ -66,10 +66,11 @@ import           Control.Lens
 import qualified Hasura.GraphQL.Execute.LiveQuery.TMap    as TMap
 import qualified Hasura.Logging                           as L
 
-import           Hasura.Db
+import           Hasura.Backends.Postgres.Connection
 import           Hasura.GraphQL.Execute.LiveQuery.Options
 import           Hasura.GraphQL.Execute.LiveQuery.Plan
 import           Hasura.GraphQL.Transport.HTTP.Protocol
+import           Hasura.RQL.Types.Common                  (getNonNegativeInt)
 import           Hasura.RQL.Types.Error
 import           Hasura.Session
 
@@ -417,7 +418,7 @@ pollQuery pollerId lqOpts pgExecCtx pgQuery cohortMap postPollHook = do
       cohorts <- STM.atomically $ TMap.toList cohortMap
       cohortSnapshots <- mapM (STM.atomically . getCohortSnapshot) cohorts
       -- cohorts are broken down into batches specified by the batch size
-      pure $ chunksOf (unBatchSize batchSize) cohortSnapshots
+      pure $ chunksOf (getNonNegativeInt (unBatchSize batchSize)) cohortSnapshots
 
     -- concurrently process each batch
     batchesDetails <- A.forConcurrently cohortBatches $ \cohorts -> do
@@ -467,7 +468,7 @@ pollQuery pollerId lqOpts pgExecCtx pgQuery cohortMap postPollHook = do
     getCohortOperations cohorts = \case
       Left e ->
         -- TODO: this is internal error
-        let resp = GQExecError [encodeGQLErr False e]
+        let resp = throwError $ GQExecError [encodeGQLErr False e]
         in [(resp, cohortId, Nothing, snapshot) | (cohortId, snapshot) <- cohorts]
       Right responses -> do
         let cohortSnapshotMap = Map.fromList cohorts
@@ -478,5 +479,5 @@ pollQuery pollerId lqOpts pgExecCtx pgQuery cohortMap postPollHook = do
           -- Postgres response is not present in the cohort map of this batch
           -- (this shouldn't happen but if it happens it means a logic error and
           -- we should log it)
-          in (GQSuccess respBS, cohortId, Just $!(respHash, respSize),) <$>
+          in (pure respBS, cohortId, Just (respHash, respSize),) <$>
              Map.lookup cohortId cohortSnapshotMap

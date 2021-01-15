@@ -39,13 +39,14 @@ Available COMMANDs:
     Launch a postgres container suitable for use with graphql-engine, watch its logs,
     clean up nicely after
 
-  test [--integration [pytest_args...] | --unit]
+  test [--integration [pytest_args...] | --unit | --hlint]
     Run the unit and integration tests, handling spinning up all dependencies.
     This will force a recompile. A combined code coverage report will be
     generated for all test suites.
         Either integration or unit tests can be run individually with their
     respective flags. With '--integration' any arguments that follow will be
-    passed to the pytest invocation
+    passed to the pytest invocation. Run the hlint code linter individually using
+    '--hlint'.
 
 EOL
 exit 1
@@ -85,15 +86,23 @@ case "${1-}" in
       --unit)
       RUN_INTEGRATION_TESTS=false
       RUN_UNIT_TESTS=true
+      RUN_HLINT=false
       ;;
       --integration)
       PYTEST_ARGS="${@:3}"
       RUN_INTEGRATION_TESTS=true
       RUN_UNIT_TESTS=false
+      RUN_HLINT=false
+      ;;
+      --hlint)
+      RUN_INTEGRATION_TESTS=false
+      RUN_UNIT_TESTS=false
+      RUN_HLINT=true
       ;;
       "")
       RUN_INTEGRATION_TESTS=true
       RUN_UNIT_TESTS=true
+      RUN_HLINT=true
       ;;
       *)
       die_usage
@@ -215,7 +224,7 @@ if [ "$MODE" = "graphql-engine" ]; then
   echo_pretty "    $ $0 postgres"
   echo_pretty ""
 
-  RUN_INVOCATION=(cabal new-run --project-file=cabal.project.dev-sh --RTS -- 
+  RUN_INVOCATION=(cabal new-run --project-file=cabal.project.dev-sh --RTS --
     exe:graphql-engine +RTS -N -T -s -RTS serve
     --enable-console --console-assets-dir "$PROJECT_ROOT/console/static/dist"
     )
@@ -246,7 +255,7 @@ if [ "$MODE" = "graphql-engine" ]; then
     echo_pretty ""
     echo_pretty "  If the console was modified since your last build (re)build assets with:"
     echo_pretty "      $ cd \"$PROJECT_ROOT/console\""
-    echo_pretty "      $ npm ci && npm run server-build "
+    echo_pretty "      $ npm ci && make server-build "
     echo_pretty ""
     echo_pretty "Useful endpoints when compiling with 'graphql-engine:developer' and running with '+RTS -T'"
     echo_pretty "   http://127.0.0.1:$HASURA_GRAPHQL_SERVER_PORT/dev/subscriptions"
@@ -273,10 +282,20 @@ fi
 # setting 'port' in container is a workaround for the pg_dump endpoint (see tests)
 # log_hostname=off to avoid timeout failures when running offline due to:
 #   https://forums.aws.amazon.com/thread.jspa?threadID=291285
+#
+# All lines up to log_error_verbosity are to support pgBadger:
+#   https://github.com/darold/pgbadger#LOG-STATEMENTS 
+#
+# Also useful:
+#   log_autovacuum_min_duration=0
 CONF=$(cat <<-EOF
-log_statement=all
+log_min_duration_statement=0
+log_checkpoints=on
 log_connections=on
 log_disconnections=on
+log_lock_waits=on
+log_temp_files=0
+log_error_verbosity=default
 log_hostname=off
 log_duration=on
 port=$PG_PORT
@@ -371,9 +390,11 @@ elif [ "$MODE" = "test" ]; then
   # We'll get an hpc error if these exist; they will be deleted below too:
   rm -f graphql-engine-tests.tix graphql-engine.tix graphql-engine-combined.tix
 
+  # Various tests take some configuration from the environment; set these up here:
   export EVENT_WEBHOOK_HEADER="MyEnvValue"
   export WEBHOOK_FROM_ENV="http://127.0.0.1:5592"
   export SCHEDULED_TRIGGERS_WEBHOOK_DOMAIN="http://127.0.0.1:5594"
+  export REMOTE_SCHEMAS_WEBHOOK_DOMAIN="http://127.0.0.1:5000"
 
   # It's better UX to build first (possibly failing) before trying to launch
   # PG, but make sure that new-run uses the exact same build plan, else we risk
@@ -469,6 +490,13 @@ elif [ "$MODE" = "test" ]; then
     wait "$GRAPHQL_ENGINE_PID" || true
     echo
   fi  # RUN_INTEGRATION_TESTS
+
+  if [ "$RUN_HLINT" = true ]; then
+
+    cd "$PROJECT_ROOT/server"
+    hlint src-*
+
+  fi # RUN_HLINT
 
   # If hpc available, combine any tix from haskell/unit tests:
   if command -v hpc >/dev/null; then

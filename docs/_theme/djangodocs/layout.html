@@ -27,7 +27,11 @@
 {# TODO: replace react & graphiql imports with a custom directive #}
 {# b/c we're not using any graphiql functionality, only styles #}
 
-{% set deferred_script_files = ['_static/react/react.min.js', '_static/react/react-dom.min.js', '_static/graphiql/graphiql.min.js', '_static/scripts/hdocs.js', '_static/scripts/newsletter.js'] %}
+{% set deferred_script_files = ['_static/react/react.min.js', '_static/react/react-dom.min.js', '_static/graphiql/graphiql.min.js', '_static/scripts/hdocs.js'] %}
+
+{%- if pagename.endswith('mysql-preview') %}
+  {% set deferred_script_files = deferred_script_files + ['_static/scripts/mysql-subscribe.js'] %}
+{%- endif %}
 
 {%- macro secondnav() %}
   {%- if prev %}
@@ -77,7 +81,7 @@
               </a>
               <a id="gitHubBtn" class='socialBtn gitHubBtn hide' href="https://github.com/hasura/graphql-engine/" target="_blank" rel="noopener noreferrer">
                 <div class='gitHubStars'>
-                  <img src="{{ pathto('_images/layout/github-header.svg', 1) }}" alt='Github'/>
+                  <img src="{{ pathto('_images/layout/github-header.svg', 1) }}" alt='GitHub'/>
                   <span>Star</span>
                 </div>
                 <div id="gitHubCount" class='gitHubCount'></div>
@@ -162,8 +166,8 @@
                     </a>
                   </li>
                   <li>
-                    <a class="menuLink" href="https://hasura.io/hasura-pro/">
-                      Hasura Pro
+                    <a class="menuLink" href="https://hasura.io/cloud/">
+                      Hasura Cloud
                     </a>
                   </li>
                   <li>
@@ -236,7 +240,7 @@
                   </div>
                   <div class="edit-github-btn-wrap inline-block mobile-hide">
                     <a class="edit-github-btn" target="_blank" rel="noopener" href="https://github.com/hasura/graphql-engine/blob/master/docs/{{ pagename }}.rst">
-                      <img src="{{ pathto('_images/layout/github-32.png', 1) }}" alt='Github'/>
+                      <img src="{{ pathto('_images/layout/github-32.png', 1) }}" alt='GitHub'/>
                       <span>Edit on GitHub</span>
                     </a>
                   </div>
@@ -290,29 +294,34 @@
                 </div>
               </div>
               <div class="subscribe-form-wrapper">
-                <div id="mc_embed_signup">
+                <div class="mc_embed_signup">
                   <div class="subscribe-form-content">
                     Stay up to date with product & security news
-                    <!-- <a target="_blank" class="newsletter-link" href="https://us13.campaign-archive.com/home/?u=9b63e92a98ecdc99732456b0e&id=f5c4f66bcf" rel="noopener">See past editions</a> -->
                   </div>
-                  <form id="mc-embedded-subscribe-form" name="mc-embedded-subscribe-form" class="validate post-subscription-form newsletter-form" target="_blank" rel="noopener" novalidate>
+                  <form id="mktoForm_1011" class="marketoFormWrapper"></form>
+                  <div id='marketo-success' class='subscribeNewsletterSuccess hide'>
+                    <img src="{{ pathto('_images/layout/newsletter-success.svg', 1) }}" alt='Success' />
+                    Thank you for subscribing to our newsletter!
+                  </div>
+                  <!--
+                  <form id="mc-embedded-subscribe-form" name="mc-embedded-subscribe-form" class="validate post-subscription-form mc-embedded-subscribe-form newsletter-form" target="_blank" rel="noopener" novalidate>
                     <div class="full-width">
                       <div class="input-box">
-                        <input type="email" name="EMAIL" id="mce-EMAIL" aria-label="Email" placeholder="Your Email Address" pattern="^([^\x00-\x20\x22\x28\x29\x2c\x2e\x3a-\x3c\x3e\x40\x5b-\x5d\x7f-\xff]+|\x22([^\x0d\x22\x5c\x80-\xff]|\x5c[\x00-\x7f])*\x22)(\x2e([^\x00-\x20\x22\x28\x29\x2c\x2e\x3a-\x3c\x3e\x40\x5b-\x5d\x7f-\xff]+|\x22([^\x0d\x22\x5c\x80-\xff]|\x5c[\x00-\x7f])*\x22))*\x40([^\x00-\x20\x22\x28\x29\x2c\x2e\x3a-\x3c\x3e\x40\x5b-\x5d\x7f-\xff]+|\x5b([^\x0d\x5b-\x5d\x80-\xff]|\x5c[\x00-\x7f])*\x5d)(\x2e([^\x00-\x20\x22\x28\x29\x2c\x2e\x3a-\x3c\x3e\x40\x5b-\x5d\x7f-\xff]+|\x5b([^\x0d\x5b-\x5d\x80-\xff]|\x5c[\x00-\x7f])*\x5d))*(\.\w{2,})+$" required>
+                        <input type="email" name="EMAIL" id="mce-EMAIL" class="mce-EMAIL" aria-label="Email" placeholder="Your Email Address" pattern="^([^\x00-\x20\x22\x28\x29\x2c\x2e\x3a-\x3c\x3e\x40\x5b-\x5d\x7f-\xff]+|\x22([^\x0d\x22\x5c\x80-\xff]|\x5c[\x00-\x7f])*\x22)(\x2e([^\x00-\x20\x22\x28\x29\x2c\x2e\x3a-\x3c\x3e\x40\x5b-\x5d\x7f-\xff]+|\x22([^\x0d\x22\x5c\x80-\xff]|\x5c[\x00-\x7f])*\x22))*\x40([^\x00-\x20\x22\x28\x29\x2c\x2e\x3a-\x3c\x3e\x40\x5b-\x5d\x7f-\xff]+|\x5b([^\x0d\x5b-\x5d\x80-\xff]|\x5c[\x00-\x7f])*\x5d)(\x2e([^\x00-\x20\x22\x28\x29\x2c\x2e\x3a-\x3c\x3e\x40\x5b-\x5d\x7f-\xff]+|\x5b([^\x0d\x5b-\x5d\x80-\xff]|\x5c[\x00-\x7f])*\x5d))*(\.\w{2,})+$" required>
                       </div>
-                      <div id="mce-responses" class="clear display-inline">
-                        <div class="mce-error-response response error-message hide">
+                      <div id="mce-responses" class="clear display-inline mce-responses">
+                        <div id="mce-error-response" class="mce-error-response response error-message hide">
                         </div>
-                        <div class="mce-success-response response success-message hide">
+                        <div id="mce-success-response" class="mce-success-response response success-message hide">
                         </div>
                       </div>
                     </div>
                     <div style="position: absolute; left: -5000px;" aria-hidden="true"><input type="text" name="b_9b63e92a98ecdc99732456b0e_f5c4f66bcf" tabindex="-1" value=""></div>
                     <div class="clear submit-box">
-                      <input type="submit" disabled="true" value="Subscribe" name="subscribe" id="mc-embedded-subscribe" class="button">
+                      <input type="submit" disabled="true" value="Subscribe" name="subscribe" id="mc-embedded-subscribe" class="button mc-embedded-subscribe">
                     </div>
                   </form>
-
+                  -->
                 </div>
               </div>
               <div class="footer-hasura-custom">
@@ -350,7 +359,8 @@
 {% block footer %}
 
   <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/docsearch.js@2/dist/cdn/docsearch.min.js"></script>
-
+  <script src="https://page.hasura.io/js/forms2/js/forms2.min.js"></script>
+  <script>MktoForms2.loadForm("https://page.hasura.io", "631-HMN-492", 1011);</script>
   <script type="text/javascript">
     const HDOCS_BASE_DOMAIN = "{{ BASE_DOMAIN }}";
     const HDOCS_GRAPHIQL_DEFAULT_ENDPOINT = "{{ GRAPHIQL_DEFAULT_ENDPOINT }}";

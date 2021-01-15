@@ -73,6 +73,7 @@ export const defaultRelFieldMapping = {
 export const defaultRelConfig = {
   name: '',
   type: '',
+  refDb: '',
   refSchema: '',
   refTable: '',
   fieldMapping: [defaultRelFieldMapping],

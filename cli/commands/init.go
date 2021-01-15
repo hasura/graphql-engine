@@ -131,9 +131,9 @@ func (o *InitOptions) Run() error {
 			return errors.Errorf("current working directory is already a hasura project directory")
 		}
 		o.EC.ExecutionDirectory = cwdir
-		infoMsg = fmt.Sprintf(`hasura project initialised. execute the following command to continue:
+		infoMsg = `hasura project initialised. execute the following command to continue:
   hasura console
-`)
+`
 	} else {
 		// create execution directory
 		err := o.createExecutionDirectory()
@@ -241,7 +241,7 @@ func (o *InitOptions) createFiles() error {
 		o.EC.MetadataDir = filepath.Join(o.EC.ExecutionDirectory, cli.DefaultMetadataDirectory)
 		err = os.MkdirAll(o.EC.MetadataDir, os.ModePerm)
 		if err != nil {
-			return errors.Wrap(err, "cannot write migration directory")
+			return errors.Wrap(err, "cannot write metadata directory")
 		}
 
 		// create metadata files

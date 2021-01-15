@@ -12,8 +12,9 @@ import           Hasura.Prelude
 
 import qualified Data.HashMap.Strict           as Map
 import qualified Data.List.NonEmpty            as NE
-import qualified Data.Text                     as T
 import qualified Language.GraphQL.Draft.Syntax as G
+
+import           Data.Text.Extended
 
 showName :: G.Name -> Text
 showName name = "\"" <> G.unName name <> "\""
@@ -25,7 +26,7 @@ getBaseTyWithNestedLevelsCount ty = go ty 0
     go gType ctr =
       case gType of
         G.TypeNamed _ n      -> (n, ctr)
-        G.TypeList  _ gType' -> flip go (ctr + 1) gType'
+        G.TypeList  _ gType' -> go gType' (ctr + 1)
 
 groupListWith
   :: (Eq k, Hashable k, Foldable t, Functor t)
@@ -55,9 +56,8 @@ mkMapWith f l =
     mapG = groupListWith f l
     dups = Map.keys $ Map.filter ((> 1) . length) mapG
 
-showNames :: (Foldable t) => t G.Name -> Text
-showNames names =
-  T.intercalate ", " $ map G.unName $ toList names
+showNames :: (Functor t, Foldable t) => t G.Name -> Text
+showNames = commaSeparated . fmap G.unName
 
 -- A simple graphql query to be used in generators
 simpleGraphQLQuery :: Text

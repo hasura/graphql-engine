@@ -15,9 +15,9 @@ Computed fields
 What are computed fields?
 -------------------------
 
-Computed fields are virtual values or objects that are dynamically computed and can be queried along with a table's
+Computed fields are virtual values or objects that are dynamically computed and can be queried along with a table/view's
 columns. Computed fields are computed when requested for via `custom SQL functions <https://www.postgresql.org/docs/current/sql-createfunction.html>`__
-using other columns of the table and other custom inputs if needed.
+(a.k.a. stored procedures) using other columns of the table/view and other custom inputs if needed.
 
 .. note::
 
@@ -27,7 +27,7 @@ using other columns of the table and other custom inputs if needed.
 Supported SQL functions
 ***********************
 
-Only functions which satisfy the following constraints can be added as a computed field to a table.
+Only functions which satisfy the following constraints can be added as a computed field to a table/view.
 (*terminology from* `Postgres docs <https://www.postgresql.org/docs/current/sql-createfunction.html>`__):
 
 - **Function behaviour**: ONLY ``STABLE`` or ``IMMUTABLE``
@@ -54,9 +54,13 @@ Computed fields whose associated SQL function returns a
 
 **Example:**
 
-The ``author`` table has two ``text`` columns: ``first_name`` and ``last_name``.
+Let's say we have the following schema:
 
-Define an SQL function called ``author_full_name``:
+.. code-block:: plpgsql
+  
+  author(id integer, first_name text, last_name text)
+
+:ref:`Define an SQL function <create_sql_functions>` called ``author_full_name``:
 
 .. code-block:: plpgsql
 
@@ -102,12 +106,20 @@ The return table must be tracked to define such a computed field.
 
 **Example:**
 
-In a simple ``author <-> article`` schema, we can define a :ref:`table relationship <table_relationships>` on the ``author``
+Let's say we have the following schema:
+
+.. code-block:: plpgsql
+  
+  author(id integer, first_name text, last_name text)
+                                                      
+  article(id integer, title text, content text, author_id integer)
+
+Now we can define a :ref:`table relationship <table_relationships>` on the ``author``
 table to fetch authors along with their articles.
 
 We can make use of computed fields to fetch the author's articles with a search parameter.
 
-Define an SQL function called ``filter_author_articles``:
+:ref:`Define an SQL function <create_sql_functions>` called ``filter_author_articles``:
 
 .. code-block:: plpgsql
 
@@ -162,27 +174,76 @@ Query data from the ``author`` table:
 
 .. _add-computed-field:
 
-Adding a computed field to a table
-----------------------------------
+Adding a computed field to a table/view
+---------------------------------------
 
 .. rst-class:: api_tabs
 .. tabs::
 
   .. tab:: Console
 
-     Head to the ``Modify`` tab of the table and click on the ``Add`` button in the ``Computed fields``
+     Head to the ``Modify`` tab of the table/view and click on the ``Add`` button in the ``Computed fields``
      section:
 
      .. thumbnail:: /img/graphql/core/schema/computed-field-create.png
 
      .. admonition:: Supported from
 
-       Console support is available in ``v1.1.0`` and above
+       - Console support for tables is available in ``v1.1.0`` and above
+       - Console support for views is available in ``v1.3.0`` and above
+
+  .. tab:: CLI
+
+    You can add a computed field in the ``tables.yaml`` file inside the ``metadata`` directory:
+
+    .. code-block:: yaml
+       :emphasize-lines: 4-11
+
+        - table:
+            schema: public
+            name: author
+          computed_fields:
+          - name: full_name
+            definition:
+              function:
+                schema: public
+                name: author_full_name
+              table_argument: null
+            comment: ""
+
+    Apply the metadata by running:
+
+    .. code-block:: bash
+
+      hasura metadata apply
 
   .. tab:: API
 
-     A computed field can be added to a table using the :ref:`add_computed_field <api_computed_field>`
-     metadata API
+     A computed field can be added to a table/view using the :ref:`add_computed_field metadata API <api_computed_field>`:
+
+     .. code-block:: http
+
+      POST /v1/query HTTP/1.1
+      Content-Type: application/json
+      X-Hasura-Role: admin
+
+      {
+        "type": "add_computed_field",
+        "args": {
+          "table": {
+            "name": "author",
+            "schema": "public"
+          },
+          "name": "full_name",
+          "definition": {
+            "function": {
+              "name": "author_full_name",
+              "schema": "public"
+            },
+            "table_argument": "author_row"
+          }
+        }
+      }
 
 Computed fields permissions
 ---------------------------
@@ -274,9 +335,7 @@ as shown in the following example.
 
 .. admonition:: Supported from
 
-   This feature is available in ``v1.3.0-beta.1`` and above
-
-   .. This feature is available in ``v1.3.0`` and above
+   This feature is available in ``v1.3.0`` and above
 
 Computed fields vs. Postgres generated columns
 ----------------------------------------------

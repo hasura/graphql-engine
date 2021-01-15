@@ -70,7 +70,7 @@ instance J.FromJSON ClientMsg where
 data DataMsg
   = DataMsg
   { _dmId      :: !OperationId
-  , _dmPayload :: !GraphqlResponse
+  , _dmPayload :: !GQResponse
   }
 
 data ErrorMsg
@@ -142,7 +142,7 @@ encodeServerMsg msg =
   SMData (DataMsg opId payload) ->
     [ encTy SMT_GQL_DATA
     , ("id", encJFromJValue opId)
-    , ("payload", encodeGraphqlResponse payload)
+    , ("payload", encodeGQResp payload)
     ]
 
   SMErr (ErrorMsg opId payload) ->

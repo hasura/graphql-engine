@@ -1,16 +1,26 @@
 import { Nullable } from '../components/Common/utils/tsUtils';
 
-export type TelemetryState = {
+export type NotificationsState = {
+  read: 'all' | 'default' | 'error' | string[];
+  date: string | null; // ISO String
+  showBadge: boolean;
+};
+
+export type UserTypes = 'admin' | string;
+export type TelemetryNotificationsState = Record<UserTypes, NotificationsState>;
+
+export type ConsoleState = {
   console_opts: Nullable<{
     telemetryNotificationShown?: boolean;
     disablePreReleaseUpdateNotifications?: boolean;
+    console_notifications?: TelemetryNotificationsState;
   }>;
   hasura_uuid: string;
 };
 
-const defaultTelemetryState: TelemetryState = {
+export const defaultConsoleState: ConsoleState = {
   console_opts: null,
   hasura_uuid: '',
 };
 
-export default defaultTelemetryState;
+export default defaultConsoleState;

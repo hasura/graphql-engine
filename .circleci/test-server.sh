@@ -178,7 +178,7 @@ cd $PYTEST_ROOT
 
 RUN_WEBHOOK_TESTS=true
 
-for port in 8080 8081 9876 5592
+for port in 8080 8081 9876 5592 5000 5594
 do
 	fail_if_port_busy $port
 done
@@ -205,6 +205,7 @@ fi
 export WEBHOOK_FROM_ENV="http://127.0.0.1:5592"
 export SCHEDULED_TRIGGERS_WEBHOOK_DOMAIN="http://127.0.0.1:5594"
 export HASURA_GRAPHQL_STRINGIFY_NUMERIC_TYPES=true
+export REMOTE_SCHEMAS_WEBHOOK_DOMAIN="http://127.0.0.1:5000"
 
 HGE_PIDS=""
 WH_PID=""
@@ -427,6 +428,21 @@ kill_hge_servers
 
 unset HASURA_GRAPHQL_JWT_SECRET
 
+echo -e "\n$(time_elapsed): <########## TEST GRAPHQL-ENGINE WITH ADMIN SECRET AND JWT (with JWT config allowing for leeway) #####################################>\n"
+TEST_TYPE="jwt-with-expiry-time-leeway"
+
+export HASURA_GRAPHQL_JWT_SECRET="$(jq -n --arg key "$(cat $OUTPUT_FOLDER/ssl/jwt_public.key)" '{ type: "RS512", key: $key , allowed_skew: 60}')"
+
+run_hge_with_args serve
+wait_for_port 8080
+
+pytest -n 1 -vv --hge-urls "$HGE_URL" --pg-urls "$HASURA_GRAPHQL_DATABASE_URL" --hge-key="$HASURA_GRAPHQL_ADMIN_SECRET" --hge-jwt-key-file="$OUTPUT_FOLDER/ssl/jwt_private.key" --hge-jwt-conf="$HASURA_GRAPHQL_JWT_SECRET" test_jwt.py::TestJWTExpirySkew
+
+kill_hge_servers
+
+unset HASURA_GRAPHQL_JWT_SECRET
+
+
 
 # test with CORS modes
 
@@ -525,6 +541,19 @@ run_hge_with_args serve --enabled-apis graphql
 wait_for_port 8080
 
 pytest -n 1 -vv --hge-urls "$HGE_URL" --pg-urls "$HASURA_GRAPHQL_DATABASE_URL" --hge-key="$HASURA_GRAPHQL_ADMIN_SECRET" --test-metadata-disabled test_apis_disabled.py
+
+kill_hge_servers
+
+echo -e "\n$(time_elapsed): <########## TEST GRAPHQL-ENGINE WITH REMOTE SCHEMA PERMISSIONS ENABLED ########>\n"
+TEST_TYPE="remote-schema-permissions"
+export HASURA_GRAPHQL_ENABLE_REMOTE_SCHEMA_PERMISSIONS=true
+
+run_hge_with_args serve
+wait_for_port 8080
+
+pytest -n 1 -vv --hge-urls "$HGE_URL" --pg-urls "$HASURA_GRAPHQL_DATABASE_URL" --hge-key="$HASURA_GRAPHQL_ADMIN_SECRET"  --enable-remote-schema-permissions test_remote_schema_permissions.py
+
+unset HASURA_GRAPHQL_ENABLE_REMOTE_SCHEMA_PERMISSIONS
 
 kill_hge_servers
 

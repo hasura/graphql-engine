@@ -233,7 +233,6 @@ Using Auth0 Rules again, add the following rule which will insert a new user eve
 
    function (user, context, callback) {
      const userId = user.user_id;
-     const hasuraAdminSecret = "xxxx";
      const url = "https://my-hasura-app.hasura.app/v1/graphql";
      const upsertUserQuery = `
        mutation($userId: String!){
@@ -244,7 +243,7 @@ Using Auth0 Rules again, add the following rule which will insert a new user eve
      const graphqlReq = { "query": upsertUserQuery, "variables": { "userId": userId } }
 
      request.post({
-         headers: {'content-type' : 'application/json', 'x-hasura-admin-secret': hasuraAdminSecret},
+         headers: {'content-type' : 'application/json', 'x-hasura-admin-secret': configuration.HASURA_ADMIN_SECRET},
          url:   url,
          body:  JSON.stringify(graphqlReq)
      }, function(error, response, body){
@@ -252,6 +251,8 @@ Using Auth0 Rules again, add the following rule which will insert a new user eve
           callback(null, user, context);
      });
    }
+
+Make sure to specify the ``HASURA_ADMIN_SECRET`` variable in the "Rules > Settings" section of Auth0. 
 
 That’s it! This rule will be triggered on every successful signup/login and sync your Auth0 user into your postgres database.
 

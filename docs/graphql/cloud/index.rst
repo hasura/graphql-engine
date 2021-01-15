@@ -25,7 +25,10 @@ realtime monitoring, caching, tracing, and rate-limiting. It supports both new a
     .. container:: toc-list-content
 
       - :ref:`cloud_getting_started`
-      - :ref:`projects`
+      - :ref:`create_project`
+      - :ref:`manage_project_collaborators`
+      - :ref:`manage_project_env_vars`
+      - :ref:`secure_project`
 
   .. container:: toc-list-section
 

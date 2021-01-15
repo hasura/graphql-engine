@@ -36,7 +36,7 @@ create_event_trigger
            "name": "sample_trigger",
            "table": {
               "name": "users",
-              "schema": "public",
+              "schema": "public"
            },
            "webhook": "https://httpbin.org/post",
            "insert": {
@@ -116,6 +116,10 @@ Args syntax
      - false
      - Boolean
      - If set to true, the event trigger is replaced with the new definition
+   * - enable_manual
+     - false
+     - Boolean
+     - If set to true, the event trigger can be invoked manually 
 
 (*) Either ``webhook`` or ``webhook_from_env`` are required.
 

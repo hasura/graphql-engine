@@ -15,7 +15,7 @@ Delete mutation
 Auto-generated delete mutation schema
 -------------------------------------
 
-**For example**, the auto-generated schema for the delete mutation field for a table ``article`` looks like this:
+**For example**, the auto-generated schema for the delete mutation field for a table ``article`` looks like the following:
 
 .. code-block:: graphql
 
@@ -115,8 +115,8 @@ row object or ``null`` if the row does not exist.
    and above.
 
 
-Delete objects based on an their fields
----------------------------------------
+Delete objects based on their fields
+------------------------------------
 **Example:** Delete all articles rated less than 3:
 
 .. graphiql::

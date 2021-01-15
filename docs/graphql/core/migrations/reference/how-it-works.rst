@@ -12,6 +12,9 @@ How Hasura migrations work
   :depth: 1
   :local:
 
+Introduction
+------------
+
 This is an explanation on how the Hasura migration system works. To understand how
 to use the system, refer to :ref:`Migrations & Metadata <migrations>`.
 

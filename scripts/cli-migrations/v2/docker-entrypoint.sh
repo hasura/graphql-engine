@@ -13,6 +13,11 @@ DEFAULT_MIGRATIONS_DIR="/hasura-migrations"
 DEFAULT_METADATA_DIR="/hasura-metadata"
 TEMP_PROJECT_DIR="/tmp/hasura-project"
 
+# install cli-ext plugin
+log "installing cli-ext plugin"
+hasura-cli plugins install cli-ext --manifest-file /opt/manifest.yaml
+cp -r /opt/hasura-home-directory/plugins/index ~/.hasura/plugins/index
+
 # configure the target database for migrations
 if [ ${HASURA_GRAPHQL_MIGRATIONS_DATABASE_ENV_VAR} ]; then
     log "migrations-startup" "database url for migrations is set by $HASURA_GRAPHQL_MIGRATIONS_DATABASE_ENV_VAR"
@@ -95,7 +100,7 @@ if [ -d "$HASURA_GRAPHQL_METADATA_DIR" ]; then
     echo "version: 2" > config.yaml
     echo "endpoint: http://localhost:$HASURA_GRAPHQL_MIGRATIONS_SERVER_PORT" >> config.yaml
     echo "metadata_directory: metadata" >> config.yaml
-    hasura-cli metadata apply
+    hasura-cli metadata apply 
 else
     log "migrations-apply" "directory $HASURA_GRAPHQL_METADATA_DIR does not exist, skipping metadata"
 fi

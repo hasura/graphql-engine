@@ -1,9 +1,6 @@
 @import '~bootstrap-sass/assets/stylesheets/bootstrap/variables';
 @import '../../Common.scss';
 
-.container {
-}
-
 .displayFlexContainer {
   display: flex;
 }
@@ -187,4 +184,33 @@
 .floatRight {
   float: right;
   margin-right: 20px;
+}
+
+.treeNav {
+  color: #767e93;
+  font-size: 15px;
+  padding: 0;
+  margin: 0;
+  list-style-type: none;
+
+  i {
+    margin-right: 4px;
+    font-size: 14px;
+  }
+
+  li {
+    font-size: 14px !important;
+    padding-left: 10px !important;
+  }
+}
+.title::before {
+  font-family: FontAwesome;
+  font-size: 10px;
+  content: '\f078';
+  display: inline-block;
+  margin-right: 6px;
+}
+
+.titleClosed::before {
+  transform: rotate(-90deg);
 }

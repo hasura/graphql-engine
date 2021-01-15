@@ -34,14 +34,12 @@ import qualified Network.HTTP.Types                     as HTTP
 import qualified Network.Wai.Extended                   as Wai
 
 import           Hasura.EncJSON
-import           Hasura.GraphQL.Logging
 import           Hasura.GraphQL.Parser.Column           (UnpreparedValue)
-import           Hasura.GraphQL.RemoteServer            (execRemoteGQ')
+import           Hasura.GraphQL.RemoteServer            (execRemoteGQ)
 import           Hasura.GraphQL.Transport.HTTP.Protocol
 import           Hasura.GraphQL.Utils                   (showName)
-import           Hasura.HTTP
+import           Hasura.Metadata.Class
 import           Hasura.RQL.Types
-import           Hasura.Server.Utils                    (RequestId)
 import           Hasura.Server.Version                  (HasVersion)
 import           Hasura.Session
 
@@ -51,6 +49,7 @@ import qualified Hasura.GraphQL.Execute.Inline          as EI
 import qualified Hasura.GraphQL.Execute.LiveQuery       as EL
 import qualified Hasura.GraphQL.Execute.Mutation        as EM
 -- import qualified Hasura.GraphQL.Execute.Plan            as EP
+import qualified Hasura.GraphQL.Execute.Action          as EA
 import qualified Hasura.GraphQL.Execute.Prepare         as EPr
 import qualified Hasura.GraphQL.Execute.Query           as EQ
 import qualified Hasura.GraphQL.Execute.Types           as ET
@@ -67,7 +66,6 @@ data ExecutionCtx
   = ExecutionCtx
   { _ecxLogger          :: !(L.Logger L.Hasura)
   , _ecxSqlGenCtx       :: !SQLGenCtx
-  , _ecxPgExecCtx       :: !PGExecCtx
   -- , _ecxPlanCache       :: !EP.PlanCache
   , _ecxSchemaCache     :: !SchemaCache
   , _ecxSchemaCacheVer  :: !SchemaCacheVer
@@ -103,6 +101,10 @@ instance MonadGQLExecutionCheck m => MonadGQLExecutionCheck (ReaderT r m) where
     lift $ checkGQLExecution ui det enableAL sc req
 
 instance MonadGQLExecutionCheck m => MonadGQLExecutionCheck (Tracing.TraceT m) where
+  checkGQLExecution ui det enableAL sc req =
+    lift $ checkGQLExecution ui det enableAL sc req
+
+instance MonadGQLExecutionCheck m => MonadGQLExecutionCheck (MetadataStorageT m) where
   checkGQLExecution ui det enableAL sc req =
     lift $ checkGQLExecution ui det enableAL sc req
 
@@ -163,24 +165,37 @@ getExecPlanPartial userInfo sc queryType req =
           "in the document when operationName is not specified"
 
 -- The graphql query is resolved into a sequence of execution operations
-data ResolvedExecutionPlan m
+data ResolvedExecutionPlan tx
   = QueryExecutionPlan
-      (EPr.ExecutionPlan (m EncJSON, EQ.GeneratedSqlMap) EPr.RemoteCall (G.Name, J.Value)) [C.QueryRootField UnpreparedValue]
+      (EPr.ExecutionPlan EA.ActionExecutionPlan (tx EncJSON, Maybe EQ.PreparedSql)) [C.QueryRootField (UnpreparedValue 'Postgres)]
   -- ^ query execution; remote schemas and introspection possible
-  | MutationExecutionPlan (EPr.ExecutionPlan (m EncJSON, HTTP.ResponseHeaders) EPr.RemoteCall (G.Name, J.Value))
+  | MutationExecutionPlan (EPr.ExecutionPlan (EA.ActionExecutionPlan, HTTP.ResponseHeaders) (tx EncJSON, HTTP.ResponseHeaders))
   -- ^ mutation execution; only __typename introspection supported
   | SubscriptionExecutionPlan EL.LiveQueryPlan
   -- ^ live query execution; remote schemas and introspection not supported
 
 validateSubscriptionRootField
-  :: MonadError QErr m
-  => C.QueryRootField v -> m (C.SubscriptionRootField v)
-validateSubscriptionRootField = \case
-  C.RFDB x -> pure $ C.RFDB x
-  C.RFAction (C.AQAsync s) -> pure $ C.RFAction s
-  C.RFAction (C.AQQuery _) -> throw400 NotSupported "query actions cannot be run as a subscription"
-  C.RFRemote _ -> throw400 NotSupported "subscription to remote server is not supported"
-  C.RFRaw _ -> throw400 NotSupported "Introspection not supported over subscriptions"
+  :: (MonadError QErr m, Traversable t)
+  => t (C.QueryRootField v) -> m (PGExecCtx, t (C.SubscriptionRootField v))
+validateSubscriptionRootField rootFields = do
+  subscriptionRootFields <- for rootFields \case
+    C.RFDB src e x           -> pure $ C.RFDB src e x
+    C.RFAction (C.AQAsync _) -> throw400 NotSupported "async action queries are temporarily not supported in subscription"
+    C.RFAction (C.AQQuery _) -> throw400 NotSupported "query actions cannot be run as a subscription"
+    C.RFRemote _             -> throw400 NotSupported "subscription to remote server is not supported"
+    C.RFRaw _                -> throw400 NotSupported "Introspection not supported over subscriptions"
+
+  pgExecCtx <- case toList subscriptionRootFields of
+    [] -> throw500 "empty selset for subscription"
+    [C.RFDB _ e _]                    -> pure e
+    ((C.RFDB headSrc e _):restFields) -> do
+      let getSource (C.RFDB s _ _) = s
+          getSource _              = defaultSource
+      unless (all ((headSrc ==) . getSource) restFields) $ throw400 NotSupported ""
+      pure e
+
+  pure (pgExecCtx, subscriptionRootFields)
+
 
 
 checkQueryInAllowlist
@@ -207,15 +222,16 @@ getResolvedExecPlan
   :: forall m tx
    . ( HasVersion
      , MonadError QErr m
+     , MonadMetadataStorage (MetadataStorageT m)
      , MonadIO m
      , Tracing.MonadTrace m
+     , EQ.MonadQueryInstrumentation m
      , MonadIO tx
      , MonadTx tx
      , Tracing.MonadTrace tx
      )
   => Env.Environment
   -> L.Logger L.Hasura
-  -> PGExecCtx
   -- -> EP.PlanCache
   -> UserInfo
   -> SQLGenCtx
@@ -226,7 +242,7 @@ getResolvedExecPlan
   -> [HTTP.Header]
   -> (GQLReqUnparsed, GQLReqParsed)
   -> m (Telem.CacheHit, ResolvedExecutionPlan tx)
-getResolvedExecPlan env logger pgExecCtx {- planCache-} userInfo sqlGenCtx
+getResolvedExecPlan env logger {- planCache-} userInfo sqlGenCtx
   sc scVer queryType httpManager reqHeaders (reqUnparsed, reqParsed) = -- do
 
   -- See Note [Temporarily disabling query plan caching]
@@ -253,19 +269,17 @@ getResolvedExecPlan env logger pgExecCtx {- planCache-} userInfo sqlGenCtx
       -- part of a GraphQL query. Here we make sure to remember those
       -- pre-defined sections, so that when we encounter a fragment spread
       -- later, we can inline it instead.
-      -- req <- toParsed reqUnparsed
       let takeFragment = \case G.ExecutableDefinitionFragment f -> Just f; _ -> Nothing
           fragments =
             mapMaybe takeFragment $ unGQLExecDoc $ _grQuery reqParsed
       (gCtx, queryParts) <- getExecPlanPartial userInfo sc queryType reqParsed
+
       case queryParts of
-        G.TypedOperationDefinition G.OperationTypeQuery _ varDefs _ selSet -> do
+        G.TypedOperationDefinition G.OperationTypeQuery _ varDefs dirs selSet -> do
           -- (Here the above fragment inlining is actually executed.)
           inlinedSelSet <- EI.inlineSelectionSet fragments selSet
-          -- (unpreparedQueries, _) <-
-          --   E.parseGraphQLQuery gCtx varDefs
           (execPlan,asts) {-, plan-} <-
-            EQ.convertQuerySelSet env logger gCtx userInfo httpManager reqHeaders inlinedSelSet varDefs (_grVariables reqUnparsed)
+            EQ.convertQuerySelSet env logger gCtx userInfo httpManager reqHeaders dirs inlinedSelSet varDefs (_grVariables reqUnparsed)
           -- See Note [Temporarily disabling query plan caching]
           -- traverse_ (addPlanToCache . EP.RPQuery) plan
           return $ QueryExecutionPlan execPlan asts
@@ -296,48 +310,8 @@ getResolvedExecPlan env logger pgExecCtx {- planCache-} userInfo sqlGenCtx
               in
               unless (multipleAllowed || null rst) $
                 throw400 ValidationFailed "subscriptions must select one top level field"
-          validSubscriptionAST <- for unpreparedAST validateSubscriptionRootField
+
+          (pgExecCtx, validSubscriptionAST) <- validateSubscriptionRootField unpreparedAST
+
           (lqOp, _plan) <- EL.buildLiveQueryPlan pgExecCtx userInfo validSubscriptionAST
-          -- getSubsOpM pgExecCtx userInfo inlinedSelSet
           return $ SubscriptionExecutionPlan lqOp
-
-      -- forM partialExecPlan $ \(gCtx, rootSelSet) ->
-      --   case rootSelSet of
-      --     VQ.RMutation selSet -> do
-      --       (tx, respHeaders) <- getMutOp gCtx sqlGenCtx userInfo httpManager reqHeaders selSet
-      --       pure $ ExOpMutation respHeaders tx
-      --     VQ.RQuery selSet -> do
-      --       (queryTx, plan, genSql) <- getQueryOp gCtx sqlGenCtx userInfo queryReusability (allowQueryActionExecuter httpManager reqHeaders) selSet
-      --       traverse_ (addPlanToCache . EP.RPQuery) plan
-      --       return $ ExOpQuery queryTx (Just genSql)
-      --     VQ.RSubscription fld -> do
-      --       (lqOp, plan) <- getSubsOp pgExecCtx gCtx sqlGenCtx userInfo queryReusability (restrictActionExecuter "query actions cannot be run as a subscription") fld
-      --       traverse_ (addPlanToCache . EP.RPSubs) plan
-      --       return $ ExOpSubs lqOp
-
-execRemoteGQ
-  :: ( HasVersion
-     , MonadIO m
-     , MonadError QErr m
-     , MonadReader ExecutionCtx m
-     , MonadQueryLog m
-     , Tracing.MonadTrace m
-     )
-  => Env.Environment
-  -> RequestId
-  -> UserInfo
-  -> [HTTP.Header]
-  -> GQLReqUnparsed
-  -> RemoteSchemaInfo
-  -> G.TypedOperationDefinition G.NoFragments G.Name
-  -> m (DiffTime, HttpResponse EncJSON)
-  -- ^ Also returns time spent in http request, for telemetry.
-execRemoteGQ env reqId userInfo reqHdrs q rsi opDef = do
-  execCtx <- ask
-  let logger  = _ecxLogger execCtx
-      manager = _ecxHttpManager execCtx
-      opType  = G._todType opDef
-  logQueryLog logger q Nothing reqId
-  (time, respHdrs, resp) <- execRemoteGQ' env manager userInfo reqHdrs q rsi opType
-  let !httpResp = HttpResponse (encJFromLBS resp) respHdrs
-  return (time, httpResp)

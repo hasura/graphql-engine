@@ -1,7 +1,7 @@
   #Create object relationship
 - description: Create object relationship using manual method
   url: /v1/query
-  status: 200  
+  status: 200
   response:
     message: success
   query:
@@ -12,9 +12,9 @@
       using:
         manual_configuration:
           remote_table: author_view
-          column_mapping: 
+          column_mapping:
             author_id : id
-  
+
 - description: Nested select on article
   url: /v1/query
   status: 200
@@ -48,7 +48,7 @@
         - name: author
           columns:
           - id
-          - name 
+          - name
 
   #Rename object relationship
 - description: Rename object relationship author to author_obj
@@ -98,7 +98,43 @@
         - name: author_obj
           columns:
           - id
-          - name 
+          - name
+
+- description: Rename the remote table
+  url: /v1/query
+  status: 200
+  query:
+    type: run_sql
+    args:
+      sql: |
+        ALTER TABLE author_view RENAME TO authors_view;
+
+- description: Rename the original table/view
+  url: /v1/query
+  status: 200
+  query:
+    type: run_sql
+    args:
+      sql: |
+        ALTER TABLE article_view RENAME TO articles_view;
+
+- description: Rename tables back to the original name for the teardown process
+  url: /v1/query
+  status: 200
+  query:
+    type: run_sql
+    args:
+      sql: |
+        ALTER VIEW authors_view RENAME TO author_view;
+
+- description: Rename tables back to the original name for the teardown process
+  url: /v1/query
+  status: 200
+  query:
+    type: run_sql
+    args:
+      sql: |
+        ALTER VIEW articles_view RENAME TO article_view;
 
   #Drop object relationship
 - description: Drop object relationship

@@ -144,19 +144,70 @@ we need to tell Hasura that this table represents an enum.
 
   .. tab:: Console
 
-    Head to the ``Modify`` tab of the table and toggle the switch in the
+    Head to the ``Data -> [table-name] -> Modify`` tab in the console and toggle the switch in the
     ``Set table as enum`` section:
 
     .. thumbnail:: /img/graphql/core/schema/enum-set.png
        :alt: Set table as enum
 
+  .. tab:: CLI
+
+    To set a table as an enum, change the ``tables.yaml`` file in the ``metadata`` directory as follows:
+
+    .. code-block:: yaml
+       :emphasize-lines: 4
+
+        - table:
+            schema: public
+            name: user_role
+          is_enum: true
+
+    Apply the metadata by running:
+
+    .. code-block:: bash
+
+      hasura metadata apply
+
   .. tab:: API
 
     A table can be set as an enum via the following 2 methods:
 
-    - passing ``true`` for the ``is_enum`` option of the :ref:`track_table` API while tracking a table
-    - using the :ref:`set_table_is_enum` API to change whether or not an already-tracked table should be used as
-      an enum
+    1. Passing ``true`` for the ``is_enum`` option of the :ref:`track_table metadata API <track_table>` while tracking a table:
+
+       .. code-block:: http
+         :emphasize-lines: 10
+
+         POST /v1/query HTTP/1.1
+         Content-Type: application/json
+         X-Hasura-Role: admin
+
+         {
+           "type": "track_table",
+           "args": {
+             "schema": "public",
+             "name": "user_role",
+             "is_enum": true
+           }
+         }
+
+    2. Using the :ref:`set_table_is_enum metadata API<set_table_is_enum>` to change whether or not an already-tracked table should be used as an enum:
+
+       .. code-block:: http
+
+         POST /v1/query HTTP/1.1
+         Content-Type: application/json
+         X-Hasura-Role: admin
+
+         {
+           "type": "set_table_is_enum",
+           "args": {
+             "table": {
+               "schema": "public",
+               "name": "user_role"
+             },
+             "is_enum": true
+           }
+         }
 
 Using an enum table
 ^^^^^^^^^^^^^^^^^^^

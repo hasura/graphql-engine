@@ -3,6 +3,8 @@ module Hasura.GraphQL.Transport.HTTP.Protocol
   , GQLBatchedReqs(..)
   , GQLReqUnparsed
   , GQLReqParsed
+  , GQLReqOutgoing
+  , renderGQLReqOutgoing 
   , toParsed
   , GQLQueryText(..)
   , GQLExecDoc(..)
@@ -10,19 +12,18 @@ module Hasura.GraphQL.Transport.HTTP.Protocol
   , VariableValues
   , encodeGQErr
   , encodeGQResp
-  , GQResult(..)
+  , GQResult
+  , GQExecError(..)
   , GQResponse
   , isExecError
-  , RemoteGqlResp(..)
-  , GraphqlResponse(..)
-  , encodeGraphqlResponse
   ) where
 
 import           Hasura.EncJSON
 import           Hasura.Prelude
 import           Hasura.RQL.Types
 
-import           Language.Haskell.TH.Syntax       (Lift)
+import           Data.Either                   (isLeft)
+import           Language.Haskell.TH.Syntax    (Lift)
 
 import qualified Data.Aeson                    as J
 import qualified Data.Aeson.Casing             as J
@@ -30,11 +31,13 @@ import qualified Data.Aeson.TH                 as J
 import qualified Data.ByteString.Lazy          as BL
 import qualified Data.HashMap.Strict           as Map
 import qualified Language.GraphQL.Draft.Parser as G
+import qualified Language.GraphQL.Draft.Printer as G
 import qualified Language.GraphQL.Draft.Syntax as G
 
+-- TODO: why not just `G.ExecutableDocument G.Name`?
 newtype GQLExecDoc
   = GQLExecDoc { unGQLExecDoc :: [G.ExecutableDefinition G.Name] }
-  deriving (Ord, Show, Eq, Hashable,Lift)
+  deriving (Ord, Show, Eq, Hashable, Lift)
 
 instance J.FromJSON GQLExecDoc where
   parseJSON v = GQLExecDoc . G.getExecutableDefinitions <$> J.parseJSON v
@@ -51,6 +54,9 @@ instance J.FromJSON OperationName where
 
 type VariableValues = Map.HashMap G.Name J.Value
 
+-- | https://graphql.org/learn/serving-over-http/#post-request
+--
+-- See 'GQLReqParsed' for invariants.
 data GQLReq a
   = GQLReq
   { _grOperationName :: !(Maybe OperationName)
@@ -83,10 +89,43 @@ instance J.FromJSON a => J.FromJSON (GQLBatchedReqs a) where
 newtype GQLQueryText
   = GQLQueryText
   { _unGQLQueryText :: Text
-  } deriving (Show, Eq, Ord, J.FromJSON, J.ToJSON, Hashable, Lift, IsString)
+  } deriving (Show, Eq, Ord, J.FromJSON, J.ToJSON, Hashable, IsString)
 
+-- | We've not yet parsed the graphql query string parameter of the POST.
 type GQLReqUnparsed = GQLReq GQLQueryText
+
+-- | Invariants:
+--
+--    - when '_grOperationName' is @Nothing@, '_grQuery' contains exactly one 
+--      'ExecutableDefinitionOperation' (and zero or more 'ExecutableDefinitionFragment')
+--
+--    - when '_grOperationName' is present, there is a corresponding 
+--      'ExecutableDefinitionOperation' in '_grQuery'
 type GQLReqParsed = GQLReq GQLExecDoc
+
+-- | A simplified form of 'GQLReqParsed' which is more ergonomic in particular
+-- for APIs that act as graphql /clients/ (e.g. in remote relationship
+-- execution). This is a "desugared" request in which fragments have been
+-- inlined (see 'inlineSelectionSet'), and the operation ('_grOperationName')
+-- to be executed is the only payload (in contrast to a 'G.ExecutableDocument'
+-- with possibly many named operations).
+--
+-- '_grOperationName' is essentially ignored here, but should correspond with
+-- '_todName' if present.
+--
+-- These could maybe benefit from an HKD refactoring.
+type GQLReqOutgoing = GQLReq (G.TypedOperationDefinition G.NoFragments G.Name)
+
+renderGQLReqOutgoing :: GQLReqOutgoing -> GQLReqUnparsed
+renderGQLReqOutgoing = fmap (GQLQueryText . G.renderExecutableDoc . toExecDoc . inlineFrags)
+  where
+    -- This is essentially a 'coerce' (TODO unsafeCoerce optimization possible)?
+    inlineFrags :: G.TypedOperationDefinition G.NoFragments var 
+                -> G.TypedOperationDefinition G.FragmentSpread var 
+    inlineFrags opDef = 
+      opDef { G._todSelectionSet = G.fmapSelectionSetFragment G.inline $ G._todSelectionSet opDef }
+    toExecDoc = 
+      G.ExecutableDocument . pure . G.ExecutableDefinitionOperation . G.OperationDefinitionTyped
 
 toParsed :: (MonadError QErr m ) => GQLReqUnparsed -> m GQLReqParsed
 toParsed req = case G.parseExecutableDoc gqlText of
@@ -99,48 +138,18 @@ encodeGQErr :: Bool -> QErr -> J.Value
 encodeGQErr includeInternal qErr =
   J.object [ "errors" J..= [encodeGQLErr includeInternal qErr]]
 
-data GQResult a
-  = GQSuccess !a
-  | GQPreExecError ![J.Value]
-  | GQExecError ![J.Value]
-  deriving (Show, Eq, Functor, Foldable, Traversable)
+type GQResult a = Either GQExecError a
+
+newtype GQExecError = GQExecError [J.Value]
+  deriving (Show, Eq, J.ToJSON)
 
 type GQResponse = GQResult BL.ByteString
 
 isExecError :: GQResult a -> Bool
-isExecError = \case
-  GQExecError _ -> True
-  _             -> False
+isExecError = isLeft
 
 encodeGQResp :: GQResponse -> EncJSON
 encodeGQResp gqResp =
   encJFromAssocList $ case gqResp of
-    GQSuccess r      -> [("data", encJFromLBS r)]
-    GQPreExecError e -> [("errors", encJFromJValue e)]
-    GQExecError e    -> [("data", "null"), ("errors", encJFromJValue e)]
-
--- | Represents GraphQL response from a remote server
-data RemoteGqlResp
-  = RemoteGqlResp
-  { _rgqrData       :: !(Maybe J.Value)
-  , _rgqrErrors     :: !(Maybe [J.Value])
-  , _rgqrExtensions :: !(Maybe J.Value)
-  } deriving (Show, Eq)
-$(J.deriveFromJSON (J.aesonDrop 5 J.camelCase) ''RemoteGqlResp)
-
-encodeRemoteGqlResp :: RemoteGqlResp -> EncJSON
-encodeRemoteGqlResp (RemoteGqlResp d e ex) =
-  encJFromAssocList [ ("data", encJFromJValue d)
-                    , ("errors", encJFromJValue e)
-                    , ("extensions", encJFromJValue ex)
-                    ]
-
--- | Represents a proper GraphQL response
-data GraphqlResponse
-  = GRHasura !GQResponse
-  | GRRemote !RemoteGqlResp
-
-encodeGraphqlResponse :: GraphqlResponse -> EncJSON
-encodeGraphqlResponse = \case
-  GRHasura resp -> encodeGQResp resp
-  GRRemote resp -> encodeRemoteGqlResp resp
+    Right r -> [("data", encJFromLBS r)]
+    Left e  -> [("data", "null"), ("errors", encJFromJValue e)]

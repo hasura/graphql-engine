@@ -1,6 +1,6 @@
 .. meta::
    :description: Customise the Hasura GraphQL schema with SQL functions
-   :keywords: hasura, docs, schema, custom function
+   :keywords: hasura, docs, schema, sql functions, stored procedures
 
 .. _custom_sql_functions:
 
@@ -15,11 +15,12 @@ Extend schema with SQL functions
 What are custom SQL functions?
 ------------------------------
 
-Custom SQL functions are `user-defined SQL functions <https://www.postgresql.org/docs/current/sql-createfunction.html>`_
-that can be used to either encapsulate some custom business logic or extend the built-in SQL functions and operators.
+Custom SQL functions are `user-defined SQL functions <https://www.postgresql.org/docs/current/sql-createfunction.html>`__
+that can be used to either encapsulate some custom business logic or extend the built-in SQL functions and operators. SQL functions
+are also referred to as **stored procedures**.
 
 Hasura GraphQL engine lets you expose certain types of custom functions as top level fields in the GraphQL API to allow
-querying them using both ``queries`` and ``subscriptions``.
+querying them as either ``queries`` or ``subscriptions``, or (for ``VOLATILE`` functions) as ``mutations``.
 
 .. note::
 
@@ -33,19 +34,108 @@ Supported SQL functions
 Currently, only functions which satisfy the following constraints can be exposed as top level fields in the GraphQL API
 (*terminology from* `Postgres docs <https://www.postgresql.org/docs/current/sql-createfunction.html>`__):
 
-- **Function behaviour**: ONLY ``STABLE`` or ``IMMUTABLE``
-- **Return type**: MUST be ``SETOF <table-name>``
+- **Function behaviour**: ``STABLE`` or ``IMMUTABLE`` functions may *only* be exposed as queries (i.e. with ``exposed_as: query``)
+- **Return type**: MUST be ``SETOF <table-name>`` where ``<table-name>`` is already tracked
 - **Argument modes**: ONLY ``IN``
 
-Creating & exposing SQL functions
----------------------------------
+.. _create_sql_functions:
 
-Custom SQL functions can be created using SQL which can be run in the Hasura console:
+Creating SQL functions
+----------------------
 
-- Head to the ``Data -> SQL`` section of the Hasura console
-- Enter your `create function SQL statement <https://www.postgresql.org/docs/current/sql-createfunction.html>`__
-- Select the ``Track this`` checkbox to expose the new function over the GraphQL API
-- Hit the ``Run`` button
+SQL functions can be created using SQL statements which can be executed as follows:
+
+.. rst-class:: api_tabs
+.. tabs::
+
+  .. tab:: Console
+
+    - Head to the ``Data -> SQL`` section of the Hasura console
+    - Enter your `create function SQL statement <https://www.postgresql.org/docs/current/sql-createfunction.html>`__
+    - Hit the ``Run`` button
+
+  .. tab:: CLI
+
+    1. :ref:`Create a migration manually <manual_migrations>` and add your `create function SQL statement <https://www.postgresql.org/docs/current/sql-createfunction.html>`__ to the ``up.sql`` file. Also, add an SQL statement that reverts the previous statement to the ``down.sql`` file in case you need to :ref:`roll back <roll_back_migrations>` the migrations.
+
+    2. Apply the migration by running:
+
+       .. code-block:: bash
+
+         hasura migrate apply
+
+  .. tab:: API
+
+    You can add a function by making an API call to the :ref:`run_sql metadata API <run_sql>`:
+
+    .. code-block:: http
+
+      POST /v1/query HTTP/1.1
+      Content-Type: application/json
+      X-Hasura-Role: admin
+
+      {
+        "type": "run_sql",
+        "args": {
+          "sql": "<create function statement>"
+        }
+      }
+
+.. _track_custom_sql_functions:
+
+Track SQL functions
+-------------------
+
+Functions can be present in the underlying Postgres database without being exposed over the GraphQL API.
+In order to expose a function over the GraphQL API, it needs to be **tracked**.
+
+.. rst-class:: api_tabs
+.. tabs::
+
+  .. tab:: Console
+
+    While creating functions from the ``Data -> SQL`` page, selecting the ``Track this`` checkbox
+    will expose the new function over the GraphQL API right after creation if it is supported.
+
+    You can track any existing supported functions in your database from the ``Data -> Schema`` page:
+
+    .. thumbnail:: /img/graphql/core/schema/schema-track-functions.png
+      :alt: Track functions
+
+  .. tab:: CLI
+
+    1. To track the function and expose it over the GraphQL API, edit the ``functions.yaml`` file in the ``metadata`` directory as follows:
+
+       .. code-block:: yaml
+         :emphasize-lines: 1-3
+
+          - function:
+              schema: public
+              name: <function name>
+
+    2. Apply the metadata by running:
+
+       .. code-block:: bash
+
+         hasura metadata apply
+
+  .. tab:: API
+
+    To track the function and expose it over the GraphQL API, make the following API call to the :ref:`track_function metadata API <track_function>`:
+
+    .. code-block:: http
+
+      POST /v1/query HTTP/1.1
+      Content-Type: application/json
+      X-Hasura-Role: admin
+
+      {
+        "type": "track_function",
+        "args": {
+          "schema": "public",
+          "name": "<name of function>"
+        }
+      }
 
 .. note::
 
@@ -65,10 +155,13 @@ Let's see a few example use cases for custom functions:
 Example: Text-search functions
 ******************************
 
-Let's take a look at an example where the ``SETOF`` table is already part of the existing schema.
+Let's take a look at an example where the ``SETOF`` table is already part of the existing schema:
 
-In our article/author schema, let's say we've created and tracked a custom function, ``search_articles``,
-with the following definition:
+.. code-block:: plpgsql
+
+  article(id integer, title text, content text)
+
+Let's say we've created and tracked a custom function, ``search_articles``, with the following definition:
 
 .. code-block:: plpgsql
 
@@ -457,6 +550,30 @@ following example.
 .. note::
 
    The specified session argument will not be included in the ``<function-name>_args`` input object in the GraphQL schema.
+
+
+Tracking functions with side effects
+************************************
+
+You can also use the :ref:`track_function_v2 <track_function_v2>` API to track
+`VOLATILE functions <https://www.postgresql.org/docs/current/xfunc-volatility.html>`__
+as mutations.
+
+Aside from showing up under the ``mutation`` root (and presumably having
+side-effects), these tracked functions behave the same as described above for
+``queries``.
+
+We also permit tracking ``VOLATILE`` functions under the ``query`` root, in
+which case the user needs to guarantee that the field is idempotent and
+side-effect free, in the context of the resulting GraphQL API. One such use
+case might be a function that wraps a simple query and performs some logging
+visible only to administrators.
+
+.. note::
+
+   It's easy to accidentally give an SQL function the wrong volatility (or for a
+   function to end up with ``VOLATILE`` mistakenly, since it's the default).
+
 
 Permissions for custom function queries
 ---------------------------------------
