@@ -114,42 +114,41 @@ const Tree: React.FC<RSPTreeComponentProps> = ({
 
   return (
     <ul>
-      {list
-        .filter(
-          value =>
-            !value.name.startsWith('enum') && !value.name.startsWith('scalar')
-        )
-        .map((i: FieldType, ix) => (
-          <li key={i.name}>
-            {i.checked !== undefined && (
-              <input
-                type="checkbox"
-                id={i.name}
-                name={i.name}
-                checked={i.checked}
-                onChange={onCheck(ix)}
+      {list.map(
+        (i: FieldType, ix) =>
+          !i.name.startsWith('enum') &&
+          !i.name.startsWith('scalar') && (
+            <li key={i.name}>
+              {i.checked !== undefined && (
+                <input
+                  type="checkbox"
+                  id={i.name}
+                  name={i.name}
+                  checked={i.checked}
+                  onChange={onCheck(ix)}
+                />
+              )}
+              {i.children && (
+                <button onClick={toggleExpand(ix)}>
+                  {expandedItems[ix] ? '-' : '+'}
+                </button>
+              )}
+              <Field
+                i={i}
+                setItem={setItem(ix)}
+                key={i.name}
+                onExpand={toggleExpand(ix)}
               />
-            )}
-            {i.children && (
-              <button onClick={toggleExpand(ix)}>
-                {expandedItems[ix] ? '-' : '+'}
-              </button>
-            )}
-            <Field
-              i={i}
-              setItem={setItem(ix)}
-              key={i.name}
-              onExpand={toggleExpand(ix)}
-            />
-            {i.children && expandedItems[ix] && (
-              <MemoizedTree
-                list={i.children}
-                depth={depth + 1}
-                setState={setValue(ix)}
-              />
-            )}
-          </li>
-        ))}
+              {i.children && expandedItems[ix] && (
+                <MemoizedTree
+                  list={i.children}
+                  depth={depth + 1}
+                  setState={setValue(ix)}
+                />
+              )}
+            </li>
+          )
+      )}
     </ul>
   );
 };
