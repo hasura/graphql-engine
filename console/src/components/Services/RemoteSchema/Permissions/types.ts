@@ -154,13 +154,6 @@ export type DatasourceObject = {
   children: FieldType[] | CustomFieldType[];
 };
 
-export type PermWrapperProps = {
-  allRoles: string[];
-  allRemoteSchemas: { [key: string]: any }[];
-  params: { [key: string]: string };
-  viewRemoteSchema: (data: string) => void;
-};
-
 export type BulkSelectProps = {
   bulkSelect: string[];
   permRemoveMultipleRoles: () => void;
@@ -183,12 +176,6 @@ export interface FieldProps {
   onExpand?: () => void;
 }
 
-export type RSPContainerProps = {
-  params: { [key: string]: string };
-  allRemoteSchemas: { [key: string]: any }[];
-  tabName: string;
-  viewRemoteSchema: (data: any) => void;
-};
 
 /*
  * Redux Action types

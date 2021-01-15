@@ -5,7 +5,6 @@ import addReducer from './Add/addRemoteSchemaReducer';
 import permissionsReducer from './Permissions/reducer';
 import headerReducer from '../../Common/Layout/ReusableHeader/HeaderReducer';
 
-// remote schema root reducer
 const remoteSchemaReducer = combineReducers({
   addData: addReducer,
   listData: listReducer,

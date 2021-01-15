@@ -1,7 +1,7 @@
 import React from 'react';
 import { connect } from 'react-redux';
 import Permissions from './Permissions';
-import RemoteSchemaContainer from './Container';
+import RSPWrapper from './RSPWrapper';
 import {
   permRemoveMultipleRoles,
   VIEW_REMOTE_SCHEMA,
@@ -16,7 +16,7 @@ import {
   permSetRoleName,
   permSetBulkSelect,
 } from './reducer';
-import { PermWrapperProps, PermissionsProps } from './types';
+import {  PermissionsProps } from './types';
 import { Dispatch, ReduxState } from '../../../../types';
 import {
   getRemoteSchemas,
@@ -24,21 +24,28 @@ import {
   getRemoteSchemaPermissions,
 } from '../../../../metadata/selector';
 
-const PermWrapper: React.FC<PermWrapperProps & PermissionsProps> = ({
+export type RSPProps = {
+  allRoles: string[];
+  allRemoteSchemas: { [key: string]: any }[];
+  params: { [key: string]: string };
+  viewRemoteSchema: (data: string) => void;
+};
+
+const RSP: React.FC<RSPProps & PermissionsProps> = ({
   allRoles,
   allRemoteSchemas,
   ...props
 }) => {
   const { params, viewRemoteSchema } = props;
   return (
-    <RemoteSchemaContainer
+    <RSPWrapper
       params={params}
       allRemoteSchemas={allRemoteSchemas}
       tabName="permissions"
       viewRemoteSchema={viewRemoteSchema}
     >
       <Permissions allRoles={allRoles} {...props} />
-    </RemoteSchemaContainer>
+    </RSPWrapper>
   );
 };
 
@@ -73,4 +80,4 @@ const mapDispatchToProps = (dispatch: Dispatch) => {
   };
 };
 
-export default connect(mapStateToProps, mapDispatchToProps)(PermWrapper);
+export default connect(mapStateToProps, mapDispatchToProps)(RSP);

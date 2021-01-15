@@ -3,7 +3,6 @@ import CommonTabLayout from '../../../Common/Layout/CommonTabLayout/CommonTabLay
 import { NotFoundError } from '../../../Error/PageNotFound';
 import { appPrefix } from '../constants';
 import styles from '../RemoteSchema.scss';
-import { RSPContainerProps } from './types';
 
 const tabInfo = {
   details: {
@@ -16,8 +15,14 @@ const tabInfo = {
     display_text: 'Permissions',
   },
 };
+export type RSPWrapperProps = {
+  params: { [key: string]: string };
+  allRemoteSchemas: { [key: string]: string }[];
+  tabName: string;
+  viewRemoteSchema: (data: string) => void;
+};
 
-const RSPContainer: React.FC<RSPContainerProps> = ({
+const RSPWrapper: React.FC<RSPWrapperProps> = ({
   params: { remoteSchemaName },
   allRemoteSchemas,
   tabName,
@@ -80,4 +85,4 @@ const RSPContainer: React.FC<RSPContainerProps> = ({
   );
 };
 
-export default RSPContainer;
+export default RSPWrapper;
