@@ -73,6 +73,7 @@ type ActionDef struct {
 	OutputType           string          `json:"output_type" yaml:"output_type,omitempty"`
 	ForwardClientHeaders bool            `json:"-" yaml:"forward_client_headers,omitempty"`
 	Headers              []yaml.MapSlice `json:"-" yaml:"headers,omitempty"`
+	Timeout              int             `json:"-" yaml:"timeout,omitempty"`
 }
 
 type CustomTypes struct {

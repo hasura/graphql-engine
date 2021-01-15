@@ -1,0 +1,147 @@
+name: shadow pr
+on:
+  pull_request_target:
+    types: [opened, synchronize, reopened]
+
+jobs:
+  open-pr:
+    if: ${{ startsWith(github.event.pull_request.body, '<!-- from mono -->') != true }}
+    runs-on: ubuntu-latest
+    steps:
+    - name: Get pull request
+      uses: actions/github-script@v3
+      id: pr
+      with:
+        github-token: ${{secrets.HASURA_BOT_GH_TOKEN}}
+        script: |
+          const pullRequestNumber = context.payload.number;
+
+          const pr = await github.pulls.get({
+            owner: 'hasura',
+            repo: 'graphql-engine',
+            pull_number: pullRequestNumber
+          });
+
+          if (pr.status != 200) {
+            core.setFailed('API request to get pull request returned non-success status code ' + pr.status);
+            return;
+          }
+
+          core.setOutput('ossPrBaseSha', pr.data.base.sha);
+          core.setOutput('ossPrTitle', pr.data.title);
+          core.setOutput('ossPrUrl', pr.data.html_url);
+
+          const fs = require('fs');
+          fs.writeFileSync('pr-body.txt', pr.data.body);
+
+          let kodiakCommitMessage = `<!-- kodiak-commit-message-body-start: do not remove/edit this line -->\n`;
+          kodiakCommitMessage += `GITHUB_PR_NUMBER: ${pullRequestNumber}\nGITHUB_PR_URL: ${pr.data.html_url}`;
+          fs.writeFileSync('kodiak-commit-message-body.txt', kodiakCommitMessage);
+
+    - name: Get all authors of the pull request
+      uses: actions/github-script@v3
+      id: commit-authors
+      with:
+        github-token: ${{secrets.HASURA_BOT_GH_TOKEN}}
+        script: |
+          const pullRequestNumber = context.payload.number;
+
+          const commits = await github.pulls.listCommits({
+            owner: 'hasura',
+            repo: 'graphql-engine',
+            pull_number: pullRequestNumber
+          });
+
+          if (commits.status != 200) {
+            core.setFailed('API request to get commits of pull request returned non-success status code ' + commits.status);
+            return;
+          }
+
+          let authors = commits.data.map(c => `${c.commit.author.name} <${c.commit.author.email}>`);
+          authors = Array.from(new Set(authors));
+          core.setOutput('allCommitAuthors', authors.join(','));
+          core.setOutput('coAuthoredBy', authors.map(author => `Co-authored-by: ${author}`).join('\n'));
+          core.setOutput('firstCommitAuthor', authors[0]);
+
+    - uses: actions/checkout@v2
+      with:
+        fetch-depth: 0
+        token: ${{secrets.HASURA_BOT_GH_TOKEN}}
+        repository: hasura/graphql-engine-mono
+        path: graphql-engine-mono
+
+    - uses: actions/checkout@v2
+      with:
+        fetch-depth: 0
+        repository: hasura/graphql-engine
+        path: graphql-engine
+
+    - name: "Merge and push pr branch"
+      env:
+        PR_NUMBER: ${{ github.event.number }}
+        PR_TITLE: ${{ steps.pr.outputs.ossPrTitle }}
+        PR_URL: ${{ steps.pr.outputs.ossPrUrl }}
+        PR_CO_AUTHORS: ${{ steps.commit-authors.outputs.coAuthoredBy }}
+        COMMIT_AUTHOR: ${{ steps.commit-authors.outputs.firstCommitAuthor }}
+      run: |
+        cp graphql-engine-mono/bot.gitconfig $HOME/.gitconfig
+
+        COMMIT_MESSAGE=$(printf "$PR_TITLE\n\n$PR_CO_AUTHORS\nGITHUB_PR_NUMBER: $PR_NUMBER\nGITHUB_PR_URL: $PR_URL")
+
+        mkdir -p graphql-engine-transforms
+
+        pushd graphql-engine
+          git fetch origin pull/$PR_NUMBER/head:migration-source
+          git checkout migration-source
+          git merge master
+
+          mv .circleci ../graphql-engine-transforms/oss-.circleci
+          mv .github ../graphql-engine-transforms/oss-.github
+          mv .gitignore ../graphql-engine-transforms/oss-.gitignore
+          rsync -av --delete ./* ../graphql-engine-mono --exclude .git
+        popd
+
+        rsync -av --delete graphql-engine-transforms/* graphql-engine-mono/
+
+        pushd graphql-engine-mono
+          git status
+          git add .
+          git commit --author="$COMMIT_AUTHOR" -m "$COMMIT_MESSAGE"
+          git checkout -b oss_pr_refs/pull/$PR_NUMBER/head
+          git push origin oss_pr_refs/pull/$PR_NUMBER/head -f
+        popd
+
+    - name: "Open pull request"
+      uses: actions/github-script@v3
+      with:
+        github-token: ${{secrets.HASURA_BOT_GH_TOKEN}}
+        script: |
+          const fs = require('fs');
+          const prBody = fs.readFileSync('pr-body.txt', 'utf-8');
+          const kodiakCommitMessage = fs.readFileSync('kodiak-commit-message-body.txt', 'utf-8');
+
+          let body = `This PR was migrated from ${{ steps.pr.outputs.ossPrUrl }} \n\n---\n`;
+          body += `${prBody} \n\n---\n\n`;
+          body += `### Kodiak commit message\nInformation used by [Kodiak bot](https://kodiakhq.com/) while merging this PR.\n\n`;
+          body += `#### Commit title\nSame as the title of this pull request\n\n`;
+          body += `#### Commit body\n(Append below if you want to add something to the commit body)\n\n${kodiakCommitMessage}`
+
+          try {
+            const pr = await github.pulls.create({
+              owner: 'hasura',
+              repo: 'graphql-engine-mono',
+              head: 'oss_pr_refs/pull/${{ github.event.number }}/head',
+              base: 'main',
+              title: '${{ steps.pr.outputs.ossPrTitle }}',
+              body,
+            });
+
+            console.log('Migrated PR in graphql-engine-mono = ', pr.data.html_url);
+          } catch (err) {
+            if (err.message.includes('pull request already exists')) {
+              console.log(`Skipping pull request creation: ${err.message}`);
+            } else {
+              console.error(err);
+              core.setFailed(`Failed to create pull request: ${err.message}`);
+            }
+          }

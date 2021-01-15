@@ -1,0 +1,1457 @@
+$schema: 'http://json-schema.org/draft-07/schema#'
+definitions:
+  PGColumn:
+    type: string
+  ComputedFieldName:
+    type: string
+  RoleName:
+    type: string
+  TriggerName:
+    type: string
+  RemoteRelationshipName:
+    type: string
+  RemoteSchemaName:
+    type: string
+  CollectionName:
+    type: string
+  GraphQLName:
+    type: string
+  GraphQLType:
+    type: string
+  RelationshipName:
+    type: string
+  ActionName:
+    type: string
+  WebhookURL:
+    description: >-
+      A String value which supports templating environment variables enclosed in
+      {{ and }}.
+
+      Template example: https://{{ACTION_API_DOMAIN}}/create-user
+    type: string
+  TableName:
+    anyOf:
+      - $ref: '#/definitions/QualifiedTable'
+      - type: string
+  QualifiedTable:
+    title: QualifiedTable
+    type: object
+    properties:
+      name:
+        type: string
+        title: name
+      schema:
+        type: string
+        title: schema
+    required:
+      - name
+      - schema
+  TableConfig:
+    description: >-
+      Configuration for the table/view
+
+      https://hasura.io/docs/1.0/graphql/manual/api-reference/schema-metadata-api/table-view.html#table-config
+    title: TableConfig
+    type: object
+    properties:
+      custom_root_fields:
+        description: Customise the root fields
+        $ref: '#/definitions/CustomRootFields'
+        title: custom_root_fields
+      custom_column_names:
+        description: Customise the column names
+        $ref: '#/definitions/CustomColumnNames'
+        title: custom_column_names
+  TableEntry:
+    description: 'Representation of a table in metadata, ''tables.yaml'' and ''metadata.json'''
+    title: TableEntry
+    type: object
+    properties:
+      table:
+        $ref: '#/definitions/QualifiedTable'
+        title: table
+      is_enum:
+        type: boolean
+        title: is_enum
+      configuration:
+        description: >-
+          Configuration for the table/view
+
+          https://hasura.io/docs/1.0/graphql/manual/api-reference/schema-metadata-api/table-view.html#table-config
+        $ref: '#/definitions/TableConfig'
+        title: configuration
+      event_triggers:
+        type: array
+        items:
+          $ref: '#/definitions/EventTrigger'
+        title: event_triggers
+      computed_fields:
+        type: array
+        items:
+          $ref: '#/definitions/ComputedField'
+        title: computed_fields
+      object_relationships:
+        type: array
+        items:
+          $ref: '#/definitions/ObjectRelationship'
+        title: object_relationships
+      array_relationships:
+        type: array
+        items:
+          $ref: '#/definitions/ArrayRelationship'
+        title: array_relationships
+      remote_relationships:
+        type: array
+        items:
+          $ref: '#/definitions/RemoteRelationship'
+        title: remote_relationships
+      insert_permissions:
+        type: array
+        items:
+          $ref: '#/definitions/InsertPermissionEntry'
+        title: insert_permissions
+      select_permissions:
+        type: array
+        items:
+          $ref: '#/definitions/SelectPermissionEntry'
+        title: select_permissions
+      update_permissions:
+        type: array
+        items:
+          $ref: '#/definitions/UpdatePermissionEntry'
+        title: update_permissions
+      delete_permissions:
+        type: array
+        items:
+          $ref: '#/definitions/DeletePermissionEntry'
+        title: delete_permissions
+    required:
+      - table
+  CustomRootFields:
+    description: >-
+      Customise the root fields
+
+      https://hasura.io/docs/1.0/graphql/manual/api-reference/schema-metadata-api/table-view.html#custom-root-fields
+    title: CustomRootFields
+    type: object
+    properties:
+      select:
+        description: Customise the `<table-name>` root field
+        type: string
+        title: select
+      select_by_pk:
+        description: Customise the `<table-name>_by_pk` root field
+        type: string
+        title: select_by_pk
+      select_aggregate:
+        description: Customise the `<table-name>_aggregate` root field
+        type: string
+        title: select_aggregate
+      insert:
+        description: Customise the `insert_<table-name>` root field
+        type: string
+        title: insert
+      insert_one:
+        description: Customise the `insert_<table-name>_one` root field
+        type: string
+        title: insert_one
+      update:
+        description: Customise the `update_<table-name>` root field
+        type: string
+        title: update
+      update_by_pk:
+        description: Customise the `update_<table-name>_by_pk` root field
+        type: string
+        title: update_by_pk
+      delete:
+        description: Customise the `delete_<table-name>` root field
+        type: string
+        title: delete
+      delete_by_pk:
+        description: Customise the `delete_<table-name>_by_pk` root field
+        type: string
+        title: delete_by_pk
+  CustomColumnNames:
+    description: A JSON Object of Postgres column name to GraphQL name mapping
+    title: CustomColumnNames
+    type: object
+    additionalProperties:
+      type: string
+  FunctionName:
+    anyOf:
+      - $ref: '#/definitions/QualifiedFunction'
+      - type: string
+  QualifiedFunction:
+    title: QualifiedFunction
+    type: object
+    properties:
+      name:
+        type: string
+        title: name
+      schema:
+        type: string
+        title: schema
+    required:
+      - name
+      - schema
+  CustomFunction:
+    description: >-
+      A custom SQL function to add to the GraphQL schema with configuration.
+
+      https://hasura.io/docs/1.0/graphql/manual/api-reference/schema-metadata-api/custom-functions.html#args-syntax
+    title: CustomFunction
+    type: object
+    properties:
+      function:
+        description: Name of the SQL function
+        anyOf:
+          - $ref: '#/definitions/QualifiedFunction'
+          - type: string
+        title: function
+      configuration:
+        description: Configuration for the SQL function
+        $ref: '#/definitions/FunctionConfiguration'
+        title: configuration
+    required:
+      - function
+  FunctionConfiguration:
+    description: >-
+      Configuration for a CustomFunction
+
+      https://hasura.io/docs/1.0/graphql/manual/api-reference/schema-metadata-api/custom-functions.html#function-configuration
+    title: FunctionConfiguration
+    type: object
+    properties:
+      session_argument:
+        description: >-
+          Function argument which accepts session info JSON
+
+          Currently, only functions which satisfy the following constraints can
+          be exposed over the GraphQL API (terminology from Postgres docs):
+
+          - Function behaviour: ONLY `STABLE` or `IMMUTABLE`
+
+          - Return type: MUST be `SETOF <table-name>`
+
+          - Argument modes: ONLY `IN`
+        type: string
+        title: session_argument
+  ObjectRelationship:
+    description: >-
+      https://hasura.io/docs/1.0/graphql/manual/api-reference/schema-metadata-api/relationship.html#args-syntax
+    title: ObjectRelationship
+    type: object
+    properties:
+      name:
+        description: Name of the new relationship
+        type: string
+        title: name
+      using:
+        $ref: '#/definitions/ObjRelUsing'
+        description: Use one of the available ways to define an object relationship
+        title: using
+      comment:
+        description: Comment
+        type: string
+        title: comment
+    required:
+      - name
+      - using
+  ObjRelUsing:
+    description: >-
+      Use one of the available ways to define an object relationship
+
+      https://hasura.io/docs/1.0/graphql/manual/api-reference/schema-metadata-api/relationship.html#objrelusing
+    title: ObjRelUsing
+    type: object
+    properties:
+      foreign_key_constraint_on:
+        description: The column with foreign key constraint
+        type: string
+        title: foreign_key_constraint_on
+      manual_configuration:
+        description: Manual mapping of table and columns
+        $ref: '#/definitions/ObjRelUsingManualMapping'
+        title: manual_configuration
+  ObjRelUsingManualMapping:
+    description: >-
+      Manual mapping of table and columns
+
+      https://hasura.io/docs/1.0/graphql/manual/api-reference/schema-metadata-api/relationship.html#objrelusingmanualmapping
+    title: ObjRelUsingManualMapping
+    type: object
+    properties:
+      remote_table:
+        description: The table to which the relationship has to be established
+        anyOf:
+          - $ref: '#/definitions/QualifiedTable'
+          - type: string
+        title: remote_table
+      column_mapping:
+        description: Mapping of columns from current table to remote table
+        type: object
+        additionalProperties:
+          type: string
+        title: column_mapping
+    required:
+      - column_mapping
+      - remote_table
+  ArrayRelationship:
+    description: >-
+      https://hasura.io/docs/1.0/graphql/manual/api-reference/schema-metadata-api/relationship.html#create-array-relationship-syntax
+    title: ArrayRelationship
+    type: object
+    properties:
+      name:
+        description: Name of the new relationship
+        type: string
+        title: name
+      using:
+        $ref: '#/definitions/ArrRelUsing'
+        description: Use one of the available ways to define an array relationship
+        title: using
+      comment:
+        description: Comment
+        type: string
+        title: comment
+    required:
+      - name
+      - using
+  ArrRelUsing:
+    description: >-
+      Use one of the available ways to define an object relationship
+
+      https://hasura.io/docs/1.0/graphql/manual/api-reference/schema-metadata-api/relationship.html#arrrelusing
+    title: ArrRelUsing
+    type: object
+    properties:
+      foreign_key_constraint_on:
+        description: The column with foreign key constraint
+        $ref: '#/definitions/ArrRelUsingFKeyOn'
+        title: foreign_key_constraint_on
+      manual_configuration:
+        description: Manual mapping of table and columns
+        $ref: '#/definitions/ArrRelUsingManualMapping'
+        title: manual_configuration
+  ArrRelUsingFKeyOn:
+    description: >-
+      The column with foreign key constraint
+
+      https://hasura.io/docs/1.0/graphql/manual/api-reference/schema-metadata-api/relationship.html#arrrelusingfkeyon
+    title: ArrRelUsingFKeyOn
+    type: object
+    properties:
+      column:
+        type: string
+        title: column
+      table:
+        anyOf:
+          - $ref: '#/definitions/QualifiedTable'
+          - type: string
+        title: table
+    required:
+      - column
+      - table
+  ArrRelUsingManualMapping:
+    description: >-
+      Manual mapping of table and columns
+
+      https://hasura.io/docs/1.0/graphql/manual/api-reference/schema-metadata-api/relationship.html#arrrelusingmanualmapping
+    title: ArrRelUsingManualMapping
+    type: object
+    properties:
+      remote_table:
+        description: The table to which the relationship has to be established
+        anyOf:
+          - $ref: '#/definitions/QualifiedTable'
+          - type: string
+        title: remote_table
+      column_mapping:
+        description: Mapping of columns from current table to remote table
+        type: object
+        additionalProperties:
+          type: string
+        title: column_mapping
+    required:
+      - column_mapping
+      - remote_table
+  ColumnPresetsExpression:
+    description: >-
+      Preset values for columns that can be sourced from session variables or
+      static values.
+
+      https://hasura.io/docs/1.0/graphql/manual/api-reference/schema-metadata-api/syntax-defs.html#columnpresetexp
+    title: ColumnPresetsExpression
+    type: object
+    additionalProperties:
+      type: string
+  InsertPermissionEntry:
+    description: >-
+      https://hasura.io/docs/1.0/graphql/manual/api-reference/schema-metadata-api/permission.html#args-syntax
+    title: InsertPermissionEntry
+    type: object
+    properties:
+      role:
+        description: Role
+        type: string
+        title: role
+      permission:
+        $ref: '#/definitions/InsertPermission'
+        description: The permission definition
+        title: permission
+      comment:
+        description: Comment
+        type: string
+        title: comment
+    required:
+      - permission
+      - role
+  InsertPermission:
+    description: >-
+      https://hasura.io/docs/1.0/graphql/manual/api-reference/schema-metadata-api/permission.html#insertpermission
+    title: InsertPermission
+    type: object
+    properties:
+      check:
+        description: This expression has to hold true for every new row that is inserted
+        type: object
+        additionalProperties:
+          anyOf:
+            - type: object
+              properties: {}
+              additionalProperties: true
+            - type:
+                - string
+                - number
+        title: check
+      set:
+        description: >-
+          Preset values for columns that can be sourced from session variables
+          or static values
+        $ref: '#/definitions/ColumnPresetsExpression'
+        title: set
+      columns:
+        description: Can insert into only these columns (or all when '*' is specified)
+        anyOf:
+          - type: array
+            items:
+              type: string
+          - enum:
+              - '*'
+            type: string
+        title: columns
+      backend_only:
+        description: >-
+          When set to true the mutation is accessible only if
+          x-hasura-use-backend-only-permissions session variable exists
+
+          and is set to true and request is made with x-hasura-admin-secret set
+          if any auth is configured
+        type: boolean
+        title: backend_only
+    required:
+      - columns
+  SelectPermissionEntry:
+    description: >-
+      https://hasura.io/docs/1.0/graphql/manual/api-reference/schema-metadata-api/permission.html#create-select-permission-syntax
+    title: SelectPermissionEntry
+    type: object
+    properties:
+      role:
+        description: Role
+        type: string
+        title: role
+      permission:
+        $ref: '#/definitions/SelectPermission'
+        description: The permission definition
+        title: permission
+      comment:
+        description: Comment
+        type: string
+        title: comment
+    required:
+      - permission
+      - role
+  SelectPermission:
+    description: >-
+      https://hasura.io/docs/1.0/graphql/manual/api-reference/schema-metadata-api/permission.html#selectpermission
+    title: SelectPermission
+    type: object
+    properties:
+      columns:
+        description: Only these columns are selectable (or all when '*' is specified)
+        anyOf:
+          - type: array
+            items:
+              type: string
+          - enum:
+              - '*'
+            type: string
+        title: columns
+      computed_fields:
+        description: Only these computed fields are selectable
+        type: array
+        items:
+          type: string
+        title: computed_fields
+      limit:
+        description: The maximum number of rows that can be returned
+        type: integer
+        title: limit
+      allow_aggregations:
+        description: Toggle allowing aggregate queries
+        type: boolean
+        title: allow_aggregations
+      filter:
+        description: Only the rows where this precondition holds true are selectable
+        type: object
+        additionalProperties:
+          anyOf:
+            - type: object
+              properties: {}
+              additionalProperties: true
+            - type:
+                - string
+                - number
+        title: filter
+    required:
+      - columns
+  UpdatePermissionEntry:
+    description: >-
+      https://hasura.io/docs/1.0/graphql/manual/api-reference/schema-metadata-api/permission.html#create-update-permission-syntax
+    title: UpdatePermissionEntry
+    type: object
+    properties:
+      role:
+        description: Role
+        type: string
+        title: role
+      permission:
+        $ref: '#/definitions/UpdatePermission'
+        description: The permission definition
+        title: permission
+      comment:
+        description: Comment
+        type: string
+        title: comment
+    required:
+      - permission
+      - role
+  UpdatePermission:
+    description: >-
+      https://hasura.io/docs/1.0/graphql/manual/api-reference/schema-metadata-api/permission.html#updatepermission
+    title: UpdatePermission
+    type: object
+    properties:
+      check:
+        description: Postcondition which must be satisfied by rows which have been updated
+        type: object
+        additionalProperties:
+          anyOf:
+            - type: object
+              properties: {}
+              additionalProperties: true
+            - type:
+                - string
+                - number
+        title: check
+      set:
+        description: >-
+          Preset values for columns that can be sourced from session variables
+          or static values
+        $ref: '#/definitions/ColumnPresetsExpression'
+        title: set
+      columns:
+        description: Only these columns are selectable (or all when '*' is specified)
+        anyOf:
+          - type: array
+            items:
+              type: string
+          - enum:
+              - '*'
+            type: string
+        title: columns
+      filter:
+        description: Only the rows where this precondition holds true are updatable
+        type: object
+        additionalProperties:
+          anyOf:
+            - type: object
+              properties: {}
+              additionalProperties: true
+            - type:
+                - string
+                - number
+        title: filter
+    required:
+      - columns
+  DeletePermissionEntry:
+    description: >-
+      https://hasura.io/docs/1.0/graphql/manual/api-reference/schema-metadata-api/permission.html#create-delete-permission-syntax
+    title: DeletePermissionEntry
+    type: object
+    properties:
+      role:
+        description: Role
+        type: string
+        title: role
+      permission:
+        $ref: '#/definitions/DeletePermission'
+        description: The permission definition
+        title: permission
+      comment:
+        description: Comment
+        type: string
+        title: comment
+    required:
+      - permission
+      - role
+  DeletePermission:
+    description: >-
+      https://hasura.io/docs/1.0/graphql/manual/api-reference/schema-metadata-api/permission.html#deletepermission
+    title: DeletePermission
+    type: object
+    properties:
+      filter:
+        description: Only the rows where this precondition holds true are updatable
+        type: object
+        additionalProperties:
+          anyOf:
+            - type: object
+              properties: {}
+              additionalProperties: true
+            - type:
+                - string
+                - number
+        title: filter
+  ComputedField:
+    description: >-
+      https://hasura.io/docs/1.0/graphql/manual/api-reference/schema-metadata-api/computed-field.html#args-syntax
+    title: ComputedField
+    type: object
+    properties:
+      name:
+        description: Name of the new computed field
+        type: string
+        title: name
+      definition:
+        $ref: '#/definitions/ComputedFieldDefinition'
+        description: The computed field definition
+        title: definition
+      comment:
+        description: Comment
+        type: string
+        title: comment
+    required:
+      - definition
+      - name
+  ComputedFieldDefinition:
+    description: >-
+      https://hasura.io/docs/1.0/graphql/manual/api-reference/schema-metadata-api/computed-field.html#computedfielddefinition
+    title: ComputedFieldDefinition
+    type: object
+    properties:
+      function:
+        description: The SQL function
+        anyOf:
+          - $ref: '#/definitions/QualifiedFunction'
+          - type: string
+        title: function
+      table_argument:
+        description: >-
+          Name of the argument which accepts a table row type. If omitted, the
+          first argument is considered a table argument
+        type: string
+        title: table_argument
+      session_argument:
+        description: >-
+          Name of the argument which accepts the Hasura session object as a
+          JSON/JSONB value. If omitted, the Hasura session object is not passed
+          to the function
+        type: string
+        title: session_argument
+    required:
+      - function
+  EventTrigger:
+    description: >-
+      NOTE: The metadata type doesn't QUITE match the 'create' arguments here
+
+      https://hasura.io/docs/1.0/graphql/manual/api-reference/schema-metadata-api/event-triggers.html#create-event-trigger
+    title: EventTrigger
+    type: object
+    properties:
+      name:
+        description: Name of the event trigger
+        type: string
+        title: name
+      definition:
+        $ref: '#/definitions/EventTriggerDefinition'
+        description: The SQL function
+        title: definition
+      retry_conf:
+        $ref: '#/definitions/RetryConf'
+        description: The SQL function
+        title: retry_conf
+      webhook:
+        description: The SQL function
+        type: string
+        title: webhook
+      webhook_from_env:
+        type: string
+        title: webhook_from_env
+      headers:
+        description: The SQL function
+        type: array
+        items:
+          anyOf:
+            - $ref: '#/definitions/HeaderFromValue'
+            - $ref: '#/definitions/HeaderFromEnv'
+        title: headers
+    required:
+      - definition
+      - name
+      - retry_conf
+  EventTriggerDefinition:
+    title: EventTriggerDefinition
+    type: object
+    properties:
+      enable_manual:
+        type: boolean
+        title: enable_manual
+      insert:
+        description: >-
+          https://hasura.io/docs/1.0/graphql/manual/api-reference/schema-metadata-api/event-triggers.html#operationspec
+        $ref: '#/definitions/OperationSpec'
+        title: insert
+      delete:
+        description: >-
+          https://hasura.io/docs/1.0/graphql/manual/api-reference/schema-metadata-api/event-triggers.html#operationspec
+        $ref: '#/definitions/OperationSpec'
+        title: delete
+      update:
+        description: >-
+          https://hasura.io/docs/1.0/graphql/manual/api-reference/schema-metadata-api/event-triggers.html#operationspec
+        $ref: '#/definitions/OperationSpec'
+        title: update
+    required:
+      - enable_manual
+  EventTriggerColumns:
+    anyOf:
+      - type: array
+        items:
+          type: string
+      - enum:
+          - '*'
+        type: string
+  OperationSpec:
+    description: >-
+      https://hasura.io/docs/1.0/graphql/manual/api-reference/schema-metadata-api/event-triggers.html#operationspec
+    title: OperationSpec
+    type: object
+    properties:
+      columns:
+        description: >-
+          https://hasura.io/docs/1.0/graphql/manual/api-reference/schema-metadata-api/event-triggers.html#eventtriggercolumns
+        anyOf:
+          - type: array
+            items:
+              type: string
+          - enum:
+              - '*'
+            type: string
+        title: columns
+      payload:
+        description: >-
+          https://hasura.io/docs/1.0/graphql/manual/api-reference/schema-metadata-api/event-triggers.html#eventtriggercolumns
+        anyOf:
+          - type: array
+            items:
+              type: string
+          - enum:
+              - '*'
+            type: string
+        title: payload
+    required:
+      - columns
+  HeaderFromValue:
+    description: >-
+      https://hasura.io/docs/1.0/graphql/manual/api-reference/schema-metadata-api/syntax-defs.html#headerfromvalue
+    title: HeaderFromValue
+    type: object
+    properties:
+      name:
+        description: Name of the header
+        type: string
+        title: name
+      value:
+        description: Value of the header
+        type: string
+        title: value
+    required:
+      - name
+      - value
+  HeaderFromEnv:
+    description: >-
+      https://hasura.io/docs/1.0/graphql/manual/api-reference/schema-metadata-api/syntax-defs.html#headerfromenv
+    title: HeaderFromEnv
+    type: object
+    properties:
+      name:
+        description: Name of the header
+        type: string
+        title: name
+      value_from_env:
+        description: Name of the environment variable which holds the value of the header
+        type: string
+        title: value_from_env
+    required:
+      - name
+      - value_from_env
+  RetryConf:
+    description: >-
+      https://hasura.io/docs/1.0/graphql/manual/api-reference/schema-metadata-api/event-triggers.html#retryconf
+    title: RetryConf
+    type: object
+    properties:
+      num_retries:
+        description: |-
+          Number of times to retry delivery.
+          Default: 0
+        type: integer
+        title: num_retries
+      interval_sec:
+        description: |-
+          Number of seconds to wait between each retry.
+          Default: 10
+        type: integer
+        title: interval_sec
+      timeout_sec:
+        description: |-
+          Number of seconds to wait for response before timing out.
+          Default: 60
+        type: integer
+        title: timeout_sec
+  CronTrigger:
+    description: >-
+      https://hasura.io/docs/1.0/graphql/manual/api-reference/schema-metadata-api/scheduled-triggers.html#create-cron-trigger
+    title: CronTrigger
+    type: object
+    properties:
+      name:
+        description: Name of the cron trigger
+        type: string
+        title: name
+      webhook:
+        description: URL of the webhook
+        type: string
+        title: webhook
+      schedule:
+        description: Cron expression at which the trigger should be invoked.
+        type: string
+        title: schedule
+      payload:
+        description: Any JSON payload which will be sent when the webhook is invoked.
+        type: object
+        properties: {}
+        additionalProperties: true
+        title: payload
+      headers:
+        description: List of headers to be sent with the webhook
+        type: array
+        items:
+          anyOf:
+            - $ref: '#/definitions/HeaderFromValue'
+            - $ref: '#/definitions/HeaderFromEnv'
+        title: headers
+      retry_conf:
+        description: Retry configuration if scheduled invocation delivery fails
+        $ref: '#/definitions/RetryConfST'
+        title: retry_conf
+      include_in_metadata:
+        description: >-
+          Flag to indicate whether a trigger should be included in the metadata.
+          When a cron trigger is included in the metadata, the user will be able
+          to export it when the metadata of the graphql-engine is exported.
+        type: boolean
+        title: include_in_metadata
+      comment:
+        description: Custom comment.
+        type: string
+        title: comment
+    required:
+      - headers
+      - include_in_metadata
+      - name
+      - schedule
+      - webhook
+  RetryConfST:
+    description: >-
+      https://hasura.io/docs/1.0/graphql/manual/api-reference/schema-metadata-api/scheduled-triggers.html#retryconfst
+    title: RetryConfST
+    type: object
+    properties:
+      num_retries:
+        description: |-
+          Number of times to retry delivery.
+          Default: 0
+        type: integer
+        title: num_retries
+      retry_interval_seconds:
+        description: |-
+          Number of seconds to wait between each retry.
+          Default: 10
+        type: integer
+        title: retry_interval_seconds
+      timeout_seconds:
+        description: |-
+          Number of seconds to wait for response before timing out.
+          Default: 60
+        type: integer
+        title: timeout_seconds
+      tolerance_seconds:
+        description: >-
+          Number of seconds between scheduled time and actual delivery time that
+          is acceptable. If the time difference is more than this, then the
+          event is dropped.
+
+          Default: 21600 (6 hours)
+        type: integer
+        title: tolerance_seconds
+  RemoteSchema:
+    description: >-
+      https://hasura.io/docs/1.0/graphql/manual/api-reference/schema-metadata-api/remote-schemas.html#add-remote-schema
+    title: RemoteSchema
+    type: object
+    properties:
+      name:
+        description: Name of the remote schema
+        type: string
+        title: name
+      definition:
+        $ref: '#/definitions/RemoteSchemaDef'
+        description: Name of the remote schema
+        title: definition
+      comment:
+        description: Comment
+        type: string
+        title: comment
+    required:
+      - definition
+      - name
+  RemoteSchemaDef:
+    description: >-
+      https://hasura.io/docs/1.0/graphql/manual/api-reference/schema-metadata-api/syntax-defs.html#remoteschemadef
+    title: RemoteSchemaDef
+    type: object
+    properties:
+      url:
+        type: string
+        title: url
+      url_from_env:
+        type: string
+        title: url_from_env
+      headers:
+        type: array
+        items:
+          anyOf:
+            - $ref: '#/definitions/HeaderFromValue'
+            - $ref: '#/definitions/HeaderFromEnv'
+        title: headers
+      forward_client_headers:
+        type: boolean
+        title: forward_client_headers
+      timeout_seconds:
+        type: number
+        title: timeout_seconds
+  RemoteRelationship:
+    description: >-
+      https://hasura.io/docs/1.0/graphql/manual/api-reference/schema-metadata-api/remote-relationships.html#args-syntax
+    title: RemoteRelationship
+    type: object
+    properties:
+      name:
+        description: Name of the remote relationship
+        type: string
+        title: name
+      definition:
+        $ref: '#/definitions/RemoteRelationshipDef'
+        description: Definition object
+        title: definition
+    required:
+      - definition
+      - name
+  RemoteRelationshipDef:
+    title: RemoteRelationshipDef
+    type: object
+    properties:
+      hasura_fields:
+        description: >-
+          Column(s) in the table that is used for joining with remote schema
+          field.
+
+          All join keys in remote_field must appear here.
+        type: array
+        items:
+          type: string
+        title: hasura_fields
+      remote_schema:
+        description: Name of the remote schema to join with
+        type: string
+        title: remote_schema
+      remote_field:
+        $ref: '#/definitions/RemoteField'
+        description: >-
+          The schema tree ending at the field in remote schema which needs to be
+          joined with.
+        title: remote_field
+    required:
+      - hasura_fields
+      - remote_field
+      - remote_schema
+  RemoteField:
+    description: >-
+      A recursive tree structure that points to the field in the remote schema
+      that needs to be joined with.
+
+      It is recursive because the remote field maybe nested deeply in the remote
+      schema.
+
+      https://hasura.io/docs/1.0/graphql/manual/api-reference/schema-metadata-api/remote-relationships.html#remotefield
+    title: RemoteField
+    type: object
+    additionalProperties:
+      type: object
+      properties:
+        arguments:
+          $ref: '#/definitions/InputArguments'
+          title: arguments
+        field:
+          description: >-
+            A recursive tree structure that points to the field in the remote
+            schema that needs to be joined with.
+
+            It is recursive because the remote field maybe nested deeply in the
+            remote schema.
+
+            https://hasura.io/docs/1.0/graphql/manual/api-reference/schema-metadata-api/remote-relationships.html#remotefield
+          $ref: '#/definitions/RemoteField'
+          title: field
+      required:
+        - arguments
+  InputArguments:
+    description: >-
+      Note: Table columns can be referred by prefixing $ e.g $id.
+
+      https://hasura.io/docs/1.0/graphql/manual/api-reference/schema-metadata-api/remote-relationships.html#inputarguments
+    title: InputArguments
+    type: object
+    additionalProperties:
+      type: string
+  QueryCollectionEntry:
+    description: >-
+      https://hasura.io/docs/1.0/graphql/manual/api-reference/schema-metadata-api/query-collections.html#args-syntax
+    title: QueryCollectionEntry
+    type: object
+    properties:
+      name:
+        description: Name of the query collection
+        type: string
+        title: name
+      definition:
+        description: List of queries
+        type: object
+        properties:
+          queries:
+            type: array
+            items:
+              $ref: '#/definitions/QueryCollection'
+            title: queries
+        required:
+          - queries
+        title: definition
+      comment:
+        description: Comment
+        type: string
+        title: comment
+    required:
+      - definition
+      - name
+  QueryCollection:
+    description: >-
+      https://hasura.io/docs/1.0/graphql/manual/api-reference/schema-metadata-api/syntax-defs.html#collectionquery
+    title: QueryCollection
+    type: object
+    properties:
+      name:
+        type: string
+        title: name
+      query:
+        type: string
+        title: query
+    required:
+      - name
+      - query
+  AllowList:
+    description: >-
+      https://hasura.io/docs/1.0/graphql/manual/api-reference/schema-metadata-api/query-collections.html#add-collection-to-allowlist-syntax
+    title: AllowList
+    type: object
+    properties:
+      collection:
+        description: Name of a query collection to be added to the allow-list
+        type: string
+        title: collection
+    required:
+      - collection
+  CustomTypes:
+    title: CustomTypes
+    type: object
+    properties:
+      input_objects:
+        type: array
+        items:
+          $ref: '#/definitions/InputObjectType'
+        title: input_objects
+      objects:
+        type: array
+        items:
+          $ref: '#/definitions/ObjectType'
+        title: objects
+      scalars:
+        type: array
+        items:
+          $ref: '#/definitions/ScalarType'
+        title: scalars
+      enums:
+        type: array
+        items:
+          $ref: '#/definitions/EnumType'
+        title: enums
+  InputObjectType:
+    description: >-
+      https://hasura.io/docs/1.0/graphql/manual/api-reference/schema-metadata-api/custom-types.html#inputobjecttype
+    title: InputObjectType
+    type: object
+    properties:
+      name:
+        description: Name of the Input object type
+        type: string
+        title: name
+      description:
+        description: Description of the Input object type
+        type: string
+        title: description
+      fields:
+        description: Fields of the Input object type
+        type: array
+        items:
+          $ref: '#/definitions/InputObjectField'
+        title: fields
+    required:
+      - fields
+      - name
+  InputObjectField:
+    description: >-
+      https://hasura.io/docs/1.0/graphql/manual/api-reference/schema-metadata-api/custom-types.html#inputobjectfield
+    title: InputObjectField
+    type: object
+    properties:
+      name:
+        description: Name of the Input object type
+        type: string
+        title: name
+      description:
+        description: Description of the Input object type
+        type: string
+        title: description
+      type:
+        description: GraphQL type of the Input object type
+        type: string
+        title: type
+    required:
+      - name
+      - type
+  ObjectType:
+    description: >-
+      https://hasura.io/docs/1.0/graphql/manual/api-reference/schema-metadata-api/custom-types.html#objecttype
+    title: ObjectType
+    type: object
+    properties:
+      name:
+        description: Name of the Input object type
+        type: string
+        title: name
+      description:
+        description: Description of the Input object type
+        type: string
+        title: description
+      fields:
+        description: Fields of the Input object type
+        type: array
+        items:
+          $ref: '#/definitions/InputObjectField'
+        title: fields
+      relationships:
+        description: Relationships of the Object type to tables
+        type: array
+        items:
+          $ref: '#/definitions/CustomTypeObjectRelationship'
+        title: relationships
+    required:
+      - fields
+      - name
+  ObjectField:
+    description: >-
+      https://hasura.io/docs/1.0/graphql/manual/api-reference/schema-metadata-api/custom-types.html#objectfield
+    title: ObjectField
+    type: object
+    properties:
+      name:
+        description: Name of the Input object type
+        type: string
+        title: name
+      description:
+        description: Description of the Input object type
+        type: string
+        title: description
+      type:
+        description: GraphQL type of the Input object type
+        type: string
+        title: type
+    required:
+      - name
+      - type
+  CustomTypeObjectRelationship:
+    description: >-
+      https://hasura.io/docs/1.0/graphql/manual/api-reference/schema-metadata-api/custom-types.html#objectrelationship
+    title: CustomTypeObjectRelationship
+    type: object
+    properties:
+      name:
+        description: 'Name of the relationship, shouldn’t conflict with existing field names'
+        type: string
+        title: name
+      type:
+        description: Type of the relationship
+        enum:
+          - array
+          - object
+        type: string
+        title: type
+      remote_table:
+        description: The table to which relationship is defined
+        anyOf:
+          - $ref: '#/definitions/QualifiedTable'
+          - type: string
+        title: remote_table
+      field_mapping:
+        description: Mapping of fields of object type to columns of remote table
+        type: object
+        additionalProperties:
+          type: string
+        title: field_mapping
+    required:
+      - field_mapping
+      - name
+      - remote_table
+      - type
+  ScalarType:
+    description: >-
+      https://hasura.io/docs/1.0/graphql/manual/api-reference/schema-metadata-api/custom-types.html#scalartype
+    title: ScalarType
+    type: object
+    properties:
+      name:
+        description: Name of the Scalar type
+        type: string
+        title: name
+      description:
+        description: Description of the Scalar type
+        type: string
+        title: description
+    required:
+      - name
+  EnumType:
+    description: >-
+      https://hasura.io/docs/1.0/graphql/manual/api-reference/schema-metadata-api/custom-types.html#enumtype
+    title: EnumType
+    type: object
+    properties:
+      name:
+        description: Name of the Enum type
+        type: string
+        title: name
+      description:
+        description: Description of the Enum type
+        type: string
+        title: description
+      values:
+        description: Values of the Enum type
+        type: array
+        items:
+          $ref: '#/definitions/EnumValue'
+        title: values
+    required:
+      - name
+      - values
+  EnumValue:
+    description: >-
+      https://hasura.io/docs/1.0/graphql/manual/api-reference/schema-metadata-api/custom-types.html#enumvalue
+    title: EnumValue
+    type: object
+    properties:
+      value:
+        description: Value of the Enum type
+        type: string
+        title: value
+      description:
+        description: Description of the Enum value
+        type: string
+        title: description
+      is_deprecated:
+        description: 'If set to true, the enum value is marked as deprecated'
+        type: boolean
+        title: is_deprecated
+    required:
+      - value
+  Action:
+    description: >-
+      https://hasura.io/docs/1.0/graphql/manual/api-reference/schema-metadata-api/actions.html#args-syntax
+    title: Action
+    type: object
+    properties:
+      name:
+        description: Name of the action
+        type: string
+        title: name
+      definition:
+        $ref: '#/definitions/ActionDefinition'
+        description: Definition of the action
+        title: definition
+      comment:
+        description: Comment
+        type: string
+        title: comment
+      permissions:
+        description: Permissions of the action
+        type: object
+        properties:
+          role:
+            type: string
+            title: role
+        required:
+          - role
+        title: permissions
+    required:
+      - definition
+      - name
+  ActionDefinition:
+    description: >-
+      https://hasura.io/docs/1.0/graphql/manual/api-reference/schema-metadata-api/actions.html#actiondefinition
+    title: ActionDefinition
+    type: object
+    properties:
+      arguments:
+        type: array
+        items:
+          $ref: '#/definitions/InputArgument'
+        title: arguments
+      output_type:
+        type: string
+        title: output_type
+      kind:
+        type: string
+        title: kind
+      headers:
+        type: array
+        items:
+          anyOf:
+            - $ref: '#/definitions/HeaderFromValue'
+            - $ref: '#/definitions/HeaderFromEnv'
+        title: headers
+      forward_client_headers:
+        type: boolean
+        title: forward_client_headers
+      handler:
+        description: >-
+          A String value which supports templating environment variables
+          enclosed in {{ and }}.
+
+          Template example: https://{{ACTION_API_DOMAIN}}/create-user
+        type: string
+        title: handler
+      type:
+        enum:
+          - mutation
+          - query
+        type: string
+        title: type
+    required:
+      - handler
+  InputArgument:
+    description: >-
+      https://hasura.io/docs/1.0/graphql/manual/api-reference/schema-metadata-api/actions.html#inputargument
+    title: InputArgument
+    type: object
+    properties:
+      name:
+        type: string
+        title: name
+      type:
+        type: string
+        title: type
+    required:
+      - name
+      - type
+  HasuraMetadataV2:
+    description: >-
+      Type used in exported 'metadata.json' and replace metadata endpoint
+
+      https://hasura.io/docs/1.0/graphql/manual/api-reference/schema-metadata-api/manage-metadata.html#replace-metadata
+    title: HasuraMetadataV2
+    type: object
+    properties:
+      version:
+        type: number
+        title: version
+      tables:
+        type: array
+        items:
+          $ref: '#/definitions/TableEntry'
+        title: tables
+      actions:
+        type: array
+        items:
+          $ref: '#/definitions/Action'
+        title: actions
+      custom_types:
+        $ref: '#/definitions/CustomTypes'
+        title: custom_types
+      functions:
+        type: array
+        items:
+          $ref: '#/definitions/CustomFunction'
+        title: functions
+      remote_schemas:
+        type: array
+        items:
+          $ref: '#/definitions/RemoteSchema'
+        title: remote_schemas
+      query_collections:
+        type: array
+        items:
+          $ref: '#/definitions/QueryCollectionEntry'
+        title: query_collections
+      allowlist:
+        type: array
+        items:
+          $ref: '#/definitions/AllowList'
+        title: allowlist
+      cron_triggers:
+        type: array
+        items:
+          $ref: '#/definitions/CronTrigger'
+        title: cron_triggers
+    required:
+      - tables
+      - version

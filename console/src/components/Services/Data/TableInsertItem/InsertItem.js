@@ -8,9 +8,11 @@ import { ordinalColSort } from '../utils';
 import { insertItem, I_RESET, fetchEnumOptions } from './InsertActions';
 import { setTable } from '../DataActions';
 import { NotFoundError } from '../../../Error/PageNotFound';
-import { findTable, generateTableDef } from '../../../Common/utils/pgUtils';
+import { findTable } from '../../../../dataSources';
 import styles from '../../../Common/TableCommon/Table.scss';
 import { TableRow } from '../Common/Components/TableRow';
+import { generateTableDef } from '../../../../dataSources';
+import { RightContainer } from '../../../Common/Layout/RightContainer';
 import MigrationCheckbox from './MigrationCheckbox';
 import globals from '../../../../Globals';
 import { CLI_CONSOLE_MODE } from '../../../../constants';
@@ -58,6 +60,7 @@ class InsertItem extends Component {
       count,
       dispatch,
       enumOptions,
+      currentSource,
     } = this.props;
 
     const currentTable = findTable(
@@ -78,9 +81,12 @@ class InsertItem extends Component {
     const refs = {};
 
     const elements = columns.map((col, i) => {
-      const { column_name: colName, is_identity, column_default } = col;
+      const {
+        column_name: colName,
+        is_identity: isIdentity,
+        column_default,
+      } = col;
       const hasDefault = column_default && column_default.trim() !== '';
-      const isIdentity = is_identity && is_identity !== 'NO';
 
       refs[colName] = {
         valueNode: null,
@@ -194,56 +200,59 @@ class InsertItem extends Component {
     };
 
     return (
-      <div className={styles.container + ' container-fluid'}>
-        <TableHeader
-          count={count}
-          dispatch={dispatch}
-          table={currentTable}
-          tabName="insert"
-          migrationMode={migrationMode}
-          readOnlyMode={readOnlyMode}
-        />
-        <br />
-        <div className={styles.insertContainer + ' container-fluid'}>
-          <div className="col-xs-9">
-            <form id="insertForm" className="form-horizontal">
-              <div className={styles.form_flex}>
-                {elements}
-                <MigrationCheckbox
-                  onChange={this.toggleMigrationCheckBox}
-                  isChecked={this.state.isMigration}
-                  isCLIMode={isCLIMode}
-                />
-              </div>
-              <div className={styles.display_flex}>
-                <Button
-                  type="submit"
-                  color="yellow"
-                  size="sm"
-                  onClick={onClickSave}
-                  data-test="insert-save-button"
-                >
-                  {buttonText}
-                </Button>
-                <Button
-                  color="white"
-                  size="sm"
-                  onClick={onClickClear}
-                  data-test="clear-button"
-                >
-                  Clear
-                </Button>
-                {currentTable.is_enum ? (
-                  <ReloadEnumValuesButton dispatch={dispatch} />
-                ) : null}
-              </div>
-            </form>
+      <RightContainer>
+        <div className={styles.container + ' container-fluid'}>
+          <TableHeader
+            count={count}
+            dispatch={dispatch}
+            table={currentTable}
+            source={currentSource}
+            tabName="insert"
+            migrationMode={migrationMode}
+            readOnlyMode={readOnlyMode}
+          />
+          <br />
+          <div className={styles.insertContainer + ' container-fluid'}>
+            <div className="col-xs-9">
+              <form id="insertForm" className="form-horizontal">
+                <div className={styles.form_flex}>
+                  {elements}
+                  <MigrationCheckbox
+                    onChange={this.toggleMigrationCheckBox}
+                    isChecked={this.state.isMigration}
+                    isCLIMode={isCLIMode}
+                  />
+                </div>
+                <div className={styles.display_flex}>
+                  <Button
+                    type="submit"
+                    color="yellow"
+                    size="sm"
+                    onClick={onClickSave}
+                    data-test="insert-save-button"
+                  >
+                    {buttonText}
+                  </Button>
+                  <Button
+                    color="white"
+                    size="sm"
+                    onClick={onClickClear}
+                    data-test="clear-button"
+                  >
+                    Clear
+                  </Button>
+                  {currentTable.is_enum ? (
+                    <ReloadEnumValuesButton dispatch={dispatch} />
+                  ) : null}
+                </div>
+              </form>
+            </div>
+            <div className="col-xs-3">{alert}</div>
           </div>
-          <div className="col-xs-3">{alert}</div>
+          <br />
+          <br />
         </div>
-        <br />
-        <br />
-      </div>
+      </RightContainer>
     );
   }
 }
@@ -272,6 +281,7 @@ const mapStateToProps = (state, ownProps) => {
     migrationMode: state.main.migrationMode,
     readOnlyMode: state.main.readOnlyMode,
     currentSchema: state.tables.currentSchema,
+    currentSource: state.tables.currentDataSource,
   };
 };
 

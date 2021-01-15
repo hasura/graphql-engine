@@ -1,0 +1,41 @@
+# Accepts "Typescript" or "JsonSchema"
+# Override this with --typescript or --jsonschema from CLI
+selected_input_language: Typescript
+
+# Glob patterns for the target input files of selected language
+input_files:
+  # Paths can be either a string, or an array of strings
+  JsonSchema: './src/types/**.schema.json'
+  Typescript: './src/types/**.ts'
+
+# Output file directory
+output_directory: './generated'
+
+# Quicktype config per-language
+# Config is an object of type "rendererOptions"
+# See: https://github.com/quicktype/quicktype/blob/master/src/quicktype-core/language/TypeScriptFlow.ts#L20
+quicktype_config:
+  # c++: ~
+  # crystal: ~
+  # csharp: ~
+  # dart: ~
+  # elm: ~
+  # flow: ~
+  go:
+    package: hasura_metadata
+  haskell: ~
+  # java:
+  #   package: org.hasura.metadata
+  # kotlin:
+  #   framework: kotlinx
+  #   package: org.hasura.metadata
+  # objective-c: ~
+  # pike: ~
+  python:
+    python-version: '3.7'
+  # ruby: ~
+  # rust: ~
+  schema: ~
+  # swift: ~
+  typescript:
+    # just-types: true

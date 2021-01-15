@@ -16,9 +16,13 @@ import {
   permSetRoleName,
   permSetBulkSelect,
 } from './reducer';
-import { fetchRoleList } from '../../Data/DataActions';
 import { PermWrapperProps, PermissionsProps } from './types';
 import { Dispatch, ReduxState } from '../../../../types';
+import {
+  getRemoteSchemas,
+  rolesSelector,
+  getRemoteSchemaPermissions,
+} from '../../../../metadata/selector';
 
 const PermWrapper: React.FC<PermWrapperProps & PermissionsProps> = ({
   allRoles,
@@ -40,9 +44,10 @@ const PermWrapper: React.FC<PermWrapperProps & PermissionsProps> = ({
 
 const mapStateToProps = (state: ReduxState) => {
   return {
-    ...state.remoteSchemas.permissions,
-    allRoles: state.tables.allRoles,
-    allRemoteSchemas: state.remoteSchemas.listData.remoteSchemas,
+    ...getRemoteSchemaPermissions(state),
+    ...state.remoteSchemas,
+    allRoles: rolesSelector(state),
+    allRemoteSchemas: getRemoteSchemas(state),
     readOnlyMode: state.main.readOnlyMode,
   };
 };
@@ -58,7 +63,6 @@ const mapDispatchToProps = (dispatch: Dispatch) => {
     removeRemoteSchemaPermission: (data: any) =>
       dispatch(removeRemoteSchemaPermission(data)),
     setSchemaDefinition: (data: string) => dispatch(setSchemaDefinition(data)),
-    fetchRoleList: () => dispatch(fetchRoleList()),
     setDefaults: () => dispatch(setDefaults()),
     permCloseEdit: () => dispatch(permCloseEdit()),
     permOpenEdit: (role: string, newRole: boolean, existingPerms: boolean) =>

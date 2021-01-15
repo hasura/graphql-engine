@@ -17,7 +17,7 @@ import {
   isNumber,
 } from '../../../../Common/utils/jsUtils';
 import { getUnderlyingType } from '../../../../../shared/utils/graphqlSchemaUtils';
-import { TableDefinition } from '../../../../Common/utils/v1QueryUtils';
+import { QualifiedTable } from '../../../../../metadata/types';
 
 export type ArgValueKind = 'column' | 'static';
 export type ArgValue = {
@@ -270,7 +270,7 @@ export type RemoteRelationshipPayload = {
   remote_schema: string;
   remote_field: Record<string, RemoteRelationshipFieldServer>;
   hasura_fields: string[];
-  table: TableDefinition;
+  table: QualifiedTable;
 };
 
 export const getRemoteRelPayload = (

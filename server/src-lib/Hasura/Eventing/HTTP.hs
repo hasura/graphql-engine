@@ -66,14 +66,14 @@ import           Hasura.Tracing
 
 type LogEnvHeaders = Bool
 
-retryAfterHeader :: CI.CI T.Text
+retryAfterHeader :: CI.CI Text
 retryAfterHeader = "Retry-After"
 
 data WebhookRequest
   = WebhookRequest
   { _rqPayload :: Value
   , _rqHeaders :: [HeaderConf]
-  , _rqVersion :: T.Text
+  , _rqVersion :: Text
   }
 $(deriveToJSON (aesonDrop 3 snakeCase){omitNothingFields=True} ''WebhookRequest)
 
@@ -88,7 +88,7 @@ $(deriveToJSON (aesonDrop 4 snakeCase){omitNothingFields=True} ''WebhookResponse
 newtype ClientError =  ClientError { _ceMessage :: TBS.TByteString}
 $(deriveToJSON (aesonDrop 3 snakeCase){omitNothingFields=True} ''ClientError)
 
-type InvocationVersion = T.Text
+type InvocationVersion = Text
 
 invocationVersionET :: InvocationVersion
 invocationVersionET = "2"
@@ -132,7 +132,7 @@ data Invocation (a :: TriggerTypes)
   { iEventId  :: EventId
   , iStatus   :: Int
   , iRequest  :: WebhookRequest
-  , iResponse :: (Response a)
+  , iResponse :: Response a
   }
 
 data ExtraLogContext
@@ -177,7 +177,7 @@ instance ToJSON (HTTPErr a) where
       ("status", toJSON resp)
     (HOther e) -> ("internal", toJSON $ show e)
     where
-      toObj :: (T.Text, Value) -> Value
+      toObj :: (Text, Value) -> Value
       toObj (k, v) = object [ "type" .= k
                             , "detail" .= v]
 
@@ -383,7 +383,7 @@ getRetryAfterHeaderFromResp resp =
         Just (HeaderConf _ (HVValue value)) -> Just value
         _                                   -> Nothing
 
-parseRetryHeaderValue :: T.Text -> Maybe Int
+parseRetryHeaderValue :: Text -> Maybe Int
 parseRetryHeaderValue hValue =
   let seconds = readMaybe $ T.unpack hValue
    in case seconds of

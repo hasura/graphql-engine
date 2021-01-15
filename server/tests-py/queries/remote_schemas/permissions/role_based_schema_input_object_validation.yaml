@@ -1,0 +1,37 @@
+description:
+  The types of the fields of the input 'IntCompareObj'
+  object in the upstream remote schema is 'Int', so a different
+  type should throw an error
+url: /v1/query
+status: 400
+query:
+  type: add_remote_schema_permissions
+  args:
+    remote_schema: my-remote-schema
+    role: user
+    definition:
+      schema: |
+          type User {
+            user_id: Int
+          }
+
+          input IntCompareObj {
+            eq : Boolean
+            gt : Boolean
+           }
+
+          type Query {
+            hello: String
+          }
+
+          schema {
+            query: Query
+          }
+response:
+  path: $.args
+  error:
+    "validation for the given role-based schema failed for the following reasons:\n\
+    \ • expected type of \"eq\"(\"Input object argument\") to be Int but recieved\
+    \ Boolean\n • expected type of \"gt\"(\"Input object argument\") to be Int but\
+    \ recieved Boolean\n"
+  code: validation-failed

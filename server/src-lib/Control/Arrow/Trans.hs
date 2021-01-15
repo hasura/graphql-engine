@@ -38,7 +38,7 @@ liftEitherA :: (ArrowChoice arr, ArrowError e arr) => arr (Either e a) a
 liftEitherA = throwA ||| returnA
 {-# INLINE liftEitherA #-}
 
-mapErrorA :: (ArrowError e arr) => arr (a, s) b -> arr (a, ((e -> e), s)) b
+mapErrorA :: (ArrowError e arr) => arr (a, s) b -> arr (a, (e -> e, s)) b
 mapErrorA f = proc (a, (g, s)) -> (f -< (a, s)) `catchA` \e -> throwA -< g e
 {-# INLINE mapErrorA #-}
 
@@ -178,7 +178,7 @@ newtype WriterA w arr a b
   = MkWriterA (arr (a, w) (b, w))
 
 pattern WriterA :: (Monoid w, Arrow arr) => arr a (b, w) -> WriterA w arr a b
-pattern WriterA { runWriterA } <- MkWriterA ((\f -> f . arr (, mempty)) -> runWriterA)
+pattern WriterA { runWriterA } <- MkWriterA (\f -> f . arr (, mempty) -> runWriterA)
   where
     WriterA f = MkWriterA (arr (\((b, w), w1) -> let !w2 = w1 <> w in (b, w2)) . first f)
 {-# COMPLETE WriterA #-}

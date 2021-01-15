@@ -18,8 +18,8 @@ import           Hasura.HTTP
 import           Hasura.Logging
 import           Hasura.Prelude
 import           Hasura.RQL.Types
-import           Hasura.Server.Init
 import           Hasura.Server.Telemetry.Counters
+import           Hasura.Server.Types
 import           Hasura.Server.Version
 import           Hasura.Session
 
@@ -165,19 +165,23 @@ computeMetrics sc _mtServiceTimings _mtPgVersion =
       _mtEventTriggers = Map.size $ Map.filter (not . Map.null)
                     $ Map.map _tiEventTriggerInfoMap userTables
       _mtRemoteSchemas   = Map.size $ scRemoteSchemas sc
-      _mtFunctions = Map.size $ Map.filter (not . isSystemDefined . fiSystemDefined) $ scFunctions sc
+      -- TODO: multiple sources
+      _mtFunctions = Map.size $ Map.filter (not . isSystemDefined . fiSystemDefined) $ maybe mempty _pcFunctions $ Map.lookup defaultSource $ scPostgres sc
       _mtActions = computeActionsMetrics $ scActions sc
 
   in Metrics{..}
 
   where
-    userTables = Map.filter (not . isSystemDefined . _tciSystemDefined . _tiCoreInfo) $ scTables sc
+    userTables =
+      Map.filter (not . isSystemDefined . _tciSystemDefined . _tiCoreInfo) $
+        -- TODO: multiple sources
+        maybe mempty _pcTables $ Map.lookup defaultSource $ scPostgres sc
     countUserTables predicate = length . filter predicate $ Map.elems userTables
 
-    calcPerms :: (RolePermInfo -> Maybe a) -> [RolePermInfo] -> Int
+    calcPerms :: (RolePermInfo 'Postgres -> Maybe a) -> [RolePermInfo 'Postgres] -> Int
     calcPerms fn perms = length $ mapMaybe fn perms
 
-    permsOfTbl :: TableInfo -> [(RoleName, RolePermInfo)]
+    permsOfTbl :: TableInfo 'Postgres -> [(RoleName, RolePermInfo 'Postgres)]
     permsOfTbl = Map.toList . _tiRolePermInfoMap
 
 computeActionsMetrics :: ActionCache -> ActionMetric
@@ -194,7 +198,7 @@ computeActionsMetrics actionCache =
 
         typeRelationships =
           length . L.nub . concatMap
-          (map _trName . maybe [] toList . _otdRelationships . _aiOutputObject) $
+          (map _trName . maybe [] toList . _otdRelationships . _aotDefinition . _aiOutputObject) $
           actions
 
 -- | Logging related
@@ -210,9 +214,9 @@ data TelemetryLog
 data TelemetryHttpError
   = TelemetryHttpError
   { tlheStatus        :: !(Maybe HTTP.Status)
-  , tlheUrl           :: !T.Text
+  , tlheUrl           :: !Text
   , tlheHttpException :: !(Maybe HttpException)
-  , tlheResponse      :: !(Maybe T.Text)
+  , tlheResponse      :: !(Maybe Text)
   } deriving (Show)
 
 instance A.ToJSON TelemetryLog where

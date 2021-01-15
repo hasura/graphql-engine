@@ -1,6 +1,6 @@
 import { LocalEventTriggerState } from './state';
-import { isValidURL } from '../../../Common/utils/jsUtils';
-import { makeBaseTable } from '../../../Common/utils/pgUtils';
+import { BaseTable } from '../../../../dataSources/types';
+import { isURLTemplated, isValidURL } from '../../../Common/utils/jsUtils';
 
 // check 2xx success status codes
 
@@ -78,35 +78,42 @@ export const validateETState = (state: LocalEventTriggerState) => {
   if (!state.webhook.value) {
     return 'Webhook URL cannot be empty';
   }
-  if (state.webhook.type === 'static' && !isValidURL(state.webhook.value)) {
+  if (
+    state.webhook.type === 'static' &&
+    !(isValidURL(state.webhook.value) || isURLTemplated(state.webhook.value))
+  ) {
     return 'Invalid webhook URL';
   }
 
   return null;
 };
 
-export const etEventsTable = makeBaseTable('event_log', 'hdb_catalog', [
-  { column_name: 'id', data_type: 'uuid' },
-  { column_name: 'trigger_name', data_type: 'text' },
-  { column_name: 'payload', data_type: 'jsonb' },
-  { column_name: 'delivered', data_type: 'text' },
-  { column_name: 'error', data_type: 'boolean' },
-  { column_name: 'tries', data_type: 'int' },
-  { column_name: 'created_at', data_type: 'timestamptz' },
-  { column_name: 'locked', data_type: 'boolean' },
-  { column_name: 'next_retry_at', data_type: 'timestamptz' },
-  { column_name: 'archived', data_type: 'boolean' },
-]);
+export const etEventsTable: BaseTable = {
+  table_name: 'event_log',
+  table_schema: 'hdb_catalog',
+  columns: [
+    { column_name: 'id', data_type: 'uuid' },
+    { column_name: 'trigger_name', data_type: 'text' },
+    { column_name: 'payload', data_type: 'jsonb' },
+    { column_name: 'delivered', data_type: 'text' },
+    { column_name: 'error', data_type: 'boolean' },
+    { column_name: 'tries', data_type: 'int' },
+    { column_name: 'created_at', data_type: 'timestamptz' },
+    { column_name: 'locked', data_type: 'boolean' },
+    { column_name: 'next_retry_at', data_type: 'timestamptz' },
+    { column_name: 'archived', data_type: 'boolean' },
+  ],
+};
 
-export const etInvocationLogsTable = makeBaseTable(
-  'event_invocation_logs',
-  'hdb_catalog',
-  [
+export const etInvocationLogsTable: BaseTable = {
+  table_name: 'event_invocation_logs',
+  table_schema: 'hdb_catalog',
+  columns: [
     { column_name: 'id', data_type: 'uuid' },
     { column_name: 'event_id', data_type: 'uuid' },
     { column_name: 'status', data_type: 'int' },
     { column_name: 'request', data_type: 'text' },
     { column_name: 'response', data_type: 'text' },
     { column_name: 'created_at', data_type: 'timestamptz' },
-  ]
-);
+  ],
+};

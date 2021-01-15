@@ -126,7 +126,7 @@ export type RolePermissions = {
 
 export type Permissions = {
   definition: { schema: string };
-  role_name: string;
+  role: string;
   remote_schema_name: string;
   comment: string | null;
 };

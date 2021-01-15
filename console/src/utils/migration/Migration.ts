@@ -1,7 +1,6 @@
 import { getDownQueryComments } from './utils';
 import { RunSqlType } from '../../types';
 
-// TODO use well typed interface after generating
 export interface RunSQLQueryType {
   type: string;
   args: unknown;
@@ -25,7 +24,7 @@ export default class Migration {
     else if (up.type === 'run_sql')
       // ensures the pg comments are generated only for run_sql up migrations
       this.downMigration = [
-        getDownQueryComments([up as RunSqlType])[0], // reusing the method which works with array
+        getDownQueryComments([up as RunSqlType], '')[0], // reusing the method which works with array
         ...this.downMigration,
       ];
   };

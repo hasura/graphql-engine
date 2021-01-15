@@ -42,10 +42,11 @@ class Common extends React.Component {
       envName,
       timeoutConf,
       forwardClientHeaders,
+      isNew = false,
     } = this.props;
-    const { isModify, id } = this.props.editState;
+    const { isModify } = this.props.editState;
 
-    const isDisabled = id >= 0 && !isModify;
+    const isDisabled = !isNew && !isModify;
     const urlRequired = !manualUrl && !envName;
 
     const tooltips = {

@@ -89,6 +89,7 @@ export GHCRTS='-N1'
 # Required for event trigger tests
 export WEBHOOK_FROM_ENV="http://127.0.0.1:5592"
 export EVENT_WEBHOOK_HEADER="MyEnvValue"
+export REMOTE_SCHEMAS_WEBHOOK_DOMAIN="http://127.0.0.1:5000"
 
 # graphql-engine will be run on this port
 fail_if_port_busy ${HASURA_GRAPHQL_SERVER_PORT}
@@ -161,7 +162,7 @@ get_server_upgrade_tests() {
 	cd $RELEASE_PYTEST_DIR
 	tmpfile="$(mktemp --dry-run)"
 	set -x
-	# FIX ME: Deselecting some introspection tests from the previous test suite
+	# FIX ME: Deselecting some introspection tests and event trigger tests from the previous test suite
 	# which throw errors on the latest build. Even when the output of the current build is more accurate.
 	# Remove these deselects after the next stable release
 	python3 -m pytest -q --collect-only --collect-upgrade-tests-to-file "$tmpfile" \
@@ -173,6 +174,7 @@ get_server_upgrade_tests() {
                 --deselect test_graphql_mutations.py::TestGraphqlMutationCustomSchema::test_update_article \
                 --deselect test_graphql_queries.py::TestGraphQLQueryEnums::test_introspect_user_role \
                 --deselect test_schema_stitching.py::TestRemoteSchemaQueriesOverWebsocket::test_remote_query_error \
+                --deselect test_events.py::TestCreateAndDelete::test_create_reset \
 		"${args[@]}" 1>/dev/null 2>/dev/null
 	set +x
 	cat "$tmpfile"

@@ -5,7 +5,7 @@ module Hasura.RQL.Types.EventTrigger
   , TriggerName(..)
   , triggerNameToTxt
   , Ops(..)
-  , EventId
+  , EventId(..)
   , TriggerOpsDef(..)
   , EventTriggerConf(..)
   , RetryConf(..)
@@ -24,24 +24,28 @@ module Hasura.RQL.Types.EventTrigger
   , defaultTimeoutSeconds
   ) where
 
+import           Hasura.Prelude
+
+import qualified Data.ByteString.Lazy               as LBS
+import qualified Data.Text                          as T
+import qualified Database.PG.Query                  as Q
+import qualified Text.Regex.TDFA                    as TDFA
+
 import           Data.Aeson
 import           Data.Aeson.Casing
 import           Data.Aeson.TH
-import           Hasura.Incremental         (Cacheable)
-import           Hasura.Prelude
-import           Hasura.RQL.DDL.Headers
-import           Hasura.RQL.Types.Common    (NonEmptyText(..), InputWebhook)
-import           Hasura.SQL.Types
-import           Language.Haskell.TH.Syntax (Lift)
+import           Data.Text.Extended
+import           Data.Text.NonEmpty
 
-import qualified Data.ByteString.Lazy       as LBS
-import qualified Data.Text                  as T
-import qualified Database.PG.Query          as Q
-import qualified Text.Regex.TDFA            as TDFA
+import           Hasura.Backends.Postgres.SQL.Types
+import           Hasura.Incremental                 (Cacheable)
+import           Hasura.RQL.DDL.Headers
+import           Hasura.RQL.Types.Common            (InputWebhook, SourceName, defaultSource)
+
 
 -- This change helps us create functions for the event triggers
 -- without the function name being truncated by PG, since PG allows
--- for only 63 chars for identifiers. 
+-- for only 63 chars for identifiers.
 -- Reasoning for the 42 characters:
 -- 63 - (notify_hasura_) - (_INSERT | _UPDATE | _DELETE)
 maxTriggerNameLength :: Int
@@ -49,17 +53,19 @@ maxTriggerNameLength = 42
 
 -- | Unique name for event trigger.
 newtype TriggerName = TriggerName { unTriggerName :: NonEmptyText }
-  deriving (Show, Eq, Hashable, Lift, DQuote, FromJSON, ToJSON, ToJSONKey, Q.ToPrepArg, Generic, NFData, Cacheable, Arbitrary, Q.FromCol)
+  deriving (Show, Eq, Ord, Hashable, ToTxt, FromJSON, ToJSON, ToJSONKey
+           , Q.ToPrepArg, Generic, NFData, Cacheable, Arbitrary, Q.FromCol)
 
 triggerNameToTxt :: TriggerName -> Text
 triggerNameToTxt = unNonEmptyText . unTriggerName
 
-type EventId = T.Text
+newtype EventId = EventId {unEventId :: Text}
+  deriving (Show, Eq, Ord, Hashable, ToTxt, FromJSON, ToJSON, ToJSONKey, Q.FromCol, Q.ToPrepArg, Generic, Arbitrary, NFData, Cacheable)
 
 data Ops = INSERT | UPDATE | DELETE | MANUAL deriving (Show)
 
 data SubscribeColumns = SubCStar | SubCArray [PGCol]
-  deriving (Show, Eq, Generic, Lift)
+  deriving (Show, Eq, Generic)
 instance NFData SubscribeColumns
 instance Cacheable SubscribeColumns
 
@@ -78,7 +84,7 @@ data SubscribeOpSpec
   = SubscribeOpSpec
   { sosColumns :: !SubscribeColumns
   , sosPayload :: !(Maybe SubscribeColumns)
-  } deriving (Show, Eq, Generic, Lift)
+  } deriving (Show, Eq, Generic)
 instance NFData SubscribeOpSpec
 instance Cacheable SubscribeOpSpec
 $(deriveJSON (aesonDrop 3 snakeCase){omitNothingFields=True} ''SubscribeOpSpec)
@@ -100,20 +106,21 @@ data RetryConf
   { rcNumRetries  :: !Int
   , rcIntervalSec :: !Int
   , rcTimeoutSec  :: !(Maybe Int)
-  } deriving (Show, Eq, Generic, Lift)
+  } deriving (Show, Eq, Generic)
 instance NFData RetryConf
+instance Cacheable RetryConf
 $(deriveJSON (aesonDrop 2 snakeCase){omitNothingFields=True} ''RetryConf)
 
 data EventHeaderInfo
   = EventHeaderInfo
   { ehiHeaderConf  :: !HeaderConf
-  , ehiCachedValue :: !T.Text
-  } deriving (Show, Eq, Generic, Lift)
+  , ehiCachedValue :: !Text
+  } deriving (Show, Eq, Generic)
 instance NFData EventHeaderInfo
 $(deriveToJSON (aesonDrop 3 snakeCase){omitNothingFields=True} ''EventHeaderInfo)
 
-data WebhookConf = WCValue InputWebhook | WCEnv T.Text
-  deriving (Show, Eq, Generic, Lift)
+data WebhookConf = WCValue InputWebhook | WCEnv Text
+  deriving (Show, Eq, Generic)
 instance NFData WebhookConf
 instance Cacheable WebhookConf
 
@@ -132,14 +139,15 @@ instance FromJSON WebhookConf where
 data WebhookConfInfo
   = WebhookConfInfo
   { wciWebhookConf :: !WebhookConf
-  , wciCachedValue :: !T.Text
-  } deriving (Show, Eq, Generic, Lift)
+  , wciCachedValue :: !Text
+  } deriving (Show, Eq, Generic)
 instance NFData WebhookConfInfo
 $(deriveToJSON (aesonDrop 3 snakeCase){omitNothingFields=True} ''WebhookConfInfo)
 
 data CreateEventTriggerQuery
   = CreateEventTriggerQuery
-  { cetqName           :: !TriggerName
+  { cetqSource         :: !SourceName
+  , cetqName           :: !TriggerName
   , cetqTable          :: !QualifiedTable
   , cetqInsert         :: !(Maybe SubscribeOpSpec)
   , cetqUpdate         :: !(Maybe SubscribeOpSpec)
@@ -147,13 +155,14 @@ data CreateEventTriggerQuery
   , cetqEnableManual   :: !(Maybe Bool)
   , cetqRetryConf      :: !(Maybe RetryConf)
   , cetqWebhook        :: !(Maybe InputWebhook)
-  , cetqWebhookFromEnv :: !(Maybe T.Text)
+  , cetqWebhookFromEnv :: !(Maybe Text)
   , cetqHeaders        :: !(Maybe [HeaderConf])
   , cetqReplace        :: !Bool
-  } deriving (Show, Eq, Lift)
+  } deriving (Show, Eq)
 
 instance FromJSON CreateEventTriggerQuery where
   parseJSON (Object o) = do
+    sourceName      <- o .:? "source" .!= defaultSource
     name            <- o .:  "name"
     table           <- o .:  "table"
     insert          <- o .:? "insert"
@@ -180,7 +189,7 @@ instance FromJSON CreateEventTriggerQuery where
       (Just _, Just _)  -> fail "only one of webhook or webhook_from_env should be given"
       _                 ->   fail "must provide webhook or webhook_from_env"
     mapM_ checkEmptyCols [insert, update, delete]
-    return $ CreateEventTriggerQuery name table insert update delete (Just enableManual) retryConf webhook webhookFromEnv headers replace
+    return $ CreateEventTriggerQuery sourceName name table insert update delete (Just enableManual) retryConf webhook webhookFromEnv headers replace
     where
       checkEmptyCols spec
         = case spec of
@@ -198,39 +207,63 @@ data TriggerOpsDef
   , tdUpdate       :: !(Maybe SubscribeOpSpec)
   , tdDelete       :: !(Maybe SubscribeOpSpec)
   , tdEnableManual :: !(Maybe Bool)
-  } deriving (Show, Eq, Generic, Lift)
+  } deriving (Show, Eq, Generic)
 instance NFData TriggerOpsDef
 instance Cacheable TriggerOpsDef
 $(deriveJSON (aesonDrop 2 snakeCase){omitNothingFields=True} ''TriggerOpsDef)
 
-newtype DeleteEventTriggerQuery = DeleteEventTriggerQuery { detqName :: TriggerName }
-  deriving (Show, Eq, Lift)
+data DeleteEventTriggerQuery
+  = DeleteEventTriggerQuery
+  { detqSource :: !SourceName
+  , detqName   :: !TriggerName
+  } deriving (Show, Eq)
 
-$(deriveJSON (aesonDrop 4 snakeCase){omitNothingFields=True} ''DeleteEventTriggerQuery)
+instance FromJSON DeleteEventTriggerQuery where
+  parseJSON = withObject "Object" $ \o ->
+    DeleteEventTriggerQuery
+      <$> o .:? "source" .!= defaultSource
+      <*> o .: "name"
+
+$(deriveToJSON (aesonDrop 4 snakeCase){omitNothingFields=True} ''DeleteEventTriggerQuery)
 
 data EventTriggerConf
   = EventTriggerConf
   { etcName           :: !TriggerName
   , etcDefinition     :: !TriggerOpsDef
   , etcWebhook        :: !(Maybe InputWebhook)
-  , etcWebhookFromEnv :: !(Maybe T.Text)
+  , etcWebhookFromEnv :: !(Maybe Text)
   , etcRetryConf      :: !RetryConf
   , etcHeaders        :: !(Maybe [HeaderConf])
-  } deriving (Show, Eq, Lift, Generic)
-
+  } deriving (Show, Eq, Generic)
+instance Cacheable EventTriggerConf
 $(deriveJSON (aesonDrop 3 snakeCase){omitNothingFields=True} ''EventTriggerConf)
 
-newtype RedeliverEventQuery
+data RedeliverEventQuery
   = RedeliverEventQuery
-  { rdeqEventId :: EventId
-  } deriving (Show, Eq, Lift)
+  { rdeqEventId :: !EventId
+  , rdeqSource  :: !SourceName
+  } deriving (Show, Eq)
 
-$(deriveJSON (aesonDrop 4 snakeCase){omitNothingFields=True} ''RedeliverEventQuery)
+$(deriveToJSON (aesonDrop 4 snakeCase){omitNothingFields=True} ''RedeliverEventQuery)
+
+instance FromJSON RedeliverEventQuery where
+  parseJSON = withObject "Object" $ \o ->
+    RedeliverEventQuery
+      <$> o .: "event_id"
+      <*> o .:? "source" .!= defaultSource
 
 data InvokeEventTriggerQuery
   = InvokeEventTriggerQuery
   { ietqName    :: !TriggerName
+  , ietqSource  :: !SourceName
   , ietqPayload :: !Value
-  } deriving (Show, Eq, Lift)
+  } deriving (Show, Eq)
 
-$(deriveJSON (aesonDrop 4 snakeCase){omitNothingFields=True} ''InvokeEventTriggerQuery)
+$(deriveToJSON (aesonDrop 4 snakeCase){omitNothingFields=True} ''InvokeEventTriggerQuery)
+
+instance FromJSON InvokeEventTriggerQuery where
+  parseJSON = withObject "Object" $ \o ->
+    InvokeEventTriggerQuery
+      <$> o .: "name"
+      <*> o .:? "source" .!= defaultSource
+      <*> o .: "payload"

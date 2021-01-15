@@ -57,8 +57,14 @@ class TestCreateRemoteRelationship:
         st_code, resp = hge_ctx.v1q_f(self.dir() + 'setup_remote_rel_joining_singleton_with_array.yaml')
         assert st_code == 200, resp
 
-        # st_code, resp = hge_ctx.v1q_f(self.dir() + 'setup_remote_rel_with_interface.yaml')
-        # assert st_code == 200, resp
+        st_code, resp = hge_ctx.v1q_f(self.dir() + 'setup_remote_rel_with_interface.yaml')
+        assert st_code == 200, resp
+
+        st_code, resp = hge_ctx.v1q_f(self.dir() + 'setup_remote_rel_with_union.yaml')
+        assert st_code == 200, resp
+
+        st_code, resp = hge_ctx.v1q_f(self.dir() + 'setup_remote_rel_with_enum.yaml')
+        assert st_code == 200, resp
 
     def test_create_invalid(self, hge_ctx):
         st_code, resp = hge_ctx.v1q_f(self.dir() + 'setup_invalid_remote_rel_hasura_field.yaml')
@@ -118,9 +124,23 @@ class TestDeleteRemoteRelationship:
 
     def test_deleting_column_with_remote_relationship_dependency(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + 'drop_col_with_remote_rel_dependency.yaml')
+        self._check_no_remote_relationships(hge_ctx, 'profiles')
 
     def test_deleting_table_with_remote_relationship_dependency(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + 'drop_table_with_remote_rel_dependency.yaml')
+        self._check_no_remote_relationships(hge_ctx, 'profiles')
+
+    def _check_no_remote_relationships(self, hge_ctx, table):
+        export_metadata_q = {
+            'type': 'export_metadata',
+            'args': {}
+        }
+        status_code, resp = hge_ctx.v1q(export_metadata_q)
+        assert status_code == 200, resp
+        tables = resp['sources'][0]['tables']
+        for t in tables:
+            if t['table']['name'] == table:
+                assert 'event_triggers' not in t
 
 @use_test_fixtures
 class TestUpdateRemoteRelationship:
@@ -180,6 +200,12 @@ class TestExecution:
         assert st_code == 200, resp
         check_query_f(hge_ctx, self.dir() + 'basic_multiple_fields.yaml')
 
+    # https://github.com/hasura/graphql-engine/issues/5448
+    def test_remote_join_fields_with_null_joining_fields(self, hge_ctx):
+        st_code, resp = hge_ctx.v1q_f(self.dir() + 'setup_remote_rel_null_joining_fields.yaml')
+        assert st_code == 200, resp
+        check_query_f(hge_ctx, self.dir() + 'remote_rel_with_null_joining_fields.yaml')
+
     def test_nested_fields(self, hge_ctx):
         st_code, resp = hge_ctx.v1q_f(self.dir() + 'setup_remote_rel_nested_fields.yaml')
         assert st_code == 200, resp
@@ -196,16 +222,27 @@ class TestExecution:
         assert st_code == 200, resp
         check_query_f(hge_ctx, self.dir() + 'remote_rel_variables.yaml')
 
-    # def test_with_fragments(self, hge_ctx):
-    #     check_query_f(hge_ctx, self.dir() + 'mixed_fragments.yaml')
-    #     st_code, resp = hge_ctx.v1q_f(self.dir() + 'setup_remote_rel_basic.yaml')
-    #     assert st_code == 200, resp
-    #     check_query_f(hge_ctx, self.dir() + 'remote_rel_fragments.yaml')
+    def test_with_fragments(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + 'mixed_fragments.yaml')
+        st_code, resp = hge_ctx.v1q_f(self.dir() + 'setup_remote_rel_basic.yaml')
+        assert st_code == 200, resp
+        check_query_f(hge_ctx, self.dir() + 'remote_rel_fragments.yaml')
 
-    # TODO: Support interface in remote relationships
-    # def test_with_interface(self, hge_ctx):
-    #     check_query_f(hge_ctx, self.dir() + 'mixed_interface.yaml')
-    #     check_query_f(hge_ctx, self.dir() + 'remote_rel_interface.yaml')
+    def test_with_interface(self, hge_ctx):
+        st_code, resp = hge_ctx.v1q_f(self.dir() + 'setup_remote_rel_with_interface.yaml')
+        assert st_code == 200, resp
+        check_query_f(hge_ctx, self.dir() + 'mixed_interface.yaml')
+        check_query_f(hge_ctx, self.dir() + 'remote_rel_interface.yaml')
+
+    def test_with_union(self, hge_ctx):
+        st_code, resp = hge_ctx.v1q_f(self.dir() + 'setup_remote_rel_with_union.yaml')
+        assert st_code == 200, resp
+        check_query_f(hge_ctx, self.dir() + 'remote_rel_union.yaml')
+
+    def test_with_enum(self, hge_ctx):
+        st_code, resp = hge_ctx.v1q_f(self.dir() + 'setup_remote_rel_with_enum.yaml')
+        assert st_code == 200, resp
+        check_query_f(hge_ctx, self.dir() + 'remote_rel_enum.yaml')
 
     def test_with_errors(self, hge_ctx):
         st_code, resp = hge_ctx.v1q_f(self.dir() + 'setup_remote_rel_basic.yaml')

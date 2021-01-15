@@ -7,15 +7,11 @@ import {
   ScheduledTrigger,
   EventKind,
 } from './types';
-import {
-  TableColumn,
-  findTable,
-  Table,
-  generateTableDef,
-} from '../../Common/utils/pgUtils';
-import { TableDefinition } from '../../Common/utils/v1QueryUtils';
 import { convertDateTimeToLocale } from '../../Common/utils/jsUtils';
 import { Nullable } from '../../Common/utils/tsUtils';
+import { TableColumn, Table } from '../../../dataSources/types';
+import { generateTableDef, findTable } from '../../../dataSources';
+import { QualifiedTable } from '../../../metadata/types';
 
 export const parseServerWebhook = (
   webhook: Nullable<string>,
@@ -81,7 +77,7 @@ export const sanitiseRow = (column: string, row: Record<string, string>) => {
   return content;
 };
 
-export const getLogsTableDef = (kind: EventKind): TableDefinition => {
+export const getLogsTableDef = (kind: EventKind): QualifiedTable => {
   let tableName: string;
   switch (kind) {
     case 'data':

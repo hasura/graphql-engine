@@ -4,9 +4,9 @@ import {
   isValidURL,
   isValidTemplateLiteral,
 } from '../../../Common/utils/jsUtils';
-import { makeBaseTable } from '../../../Common/utils/pgUtils';
 import { Triggers, ScheduledTrigger } from '../types';
 import { parseServerHeaders } from '../../../Common/Headers/utils';
+import { BaseTable } from '../../../../dataSources/types';
 
 export const validateAddState = (state: LocalScheduledTriggerState) => {
   if (!state.name) {
@@ -36,7 +36,7 @@ export const findScheduledTrigger = (
   triggers: Triggers,
   triggerName: string
 ) => {
-  return triggers.scheduled.find(t => t.name === triggerName);
+  return triggers.find(t => t.name === triggerName);
 };
 
 export const parseServerScheduledTrigger = (
@@ -57,32 +57,35 @@ export const parseServerScheduledTrigger = (
       timeout_sec: trigger.retry_conf.timeout_seconds,
       interval_sec: trigger.retry_conf.retry_interval_seconds,
       num_retries: trigger.retry_conf.num_retries,
-      tolerance_sec: trigger.retry_conf.tolerance_seconds,
     },
     comment: trigger.comment,
     includeInMetadata: trigger.include_in_metadata,
   };
 };
 
-export const stEventsTable = makeBaseTable('hdb_cron_events', 'hdb_catalog', [
-  { column_name: 'id', data_type: 'uuid' },
-  { column_name: 'name', data_type: 'text' },
-  { column_name: 'scheduled_time', data_type: 'timestamptz' },
-  { column_name: 'status', data_type: 'boolean' },
-  { column_name: 'tries', data_type: 'int' },
-  { column_name: 'created_at', data_type: 'timestamptz' },
-  { column_name: 'next_retry_at', data_type: 'timestamptz' },
-]);
+export const stEventsTable: BaseTable = {
+  table_name: 'hdb_cron_events',
+  table_schema: 'hdb_catalog',
+  columns: [
+    { column_name: 'id', data_type: 'uuid' },
+    { column_name: 'name', data_type: 'text' },
+    { column_name: 'scheduled_time', data_type: 'timestamptz' },
+    { column_name: 'status', data_type: 'boolean' },
+    { column_name: 'tries', data_type: 'int' },
+    { column_name: 'created_at', data_type: 'timestamptz' },
+    { column_name: 'next_retry_at', data_type: 'timestamptz' },
+  ],
+};
 
-export const stInvocationLogsTable = makeBaseTable(
-  'hdb_cron_event_invocation_logs',
-  'hdb_catalog',
-  [
+export const stInvocationLogsTable: BaseTable = {
+  table_name: 'hdb_cron_event_invocation_logs',
+  table_schema: 'hdb_catalog',
+  columns: [
     { column_name: 'id', data_type: 'uuid' },
     { column_name: 'event_id', data_type: 'uuid' },
     { column_name: 'status', data_type: 'int' },
     { column_name: 'request', data_type: 'text' },
     { column_name: 'response', data_type: 'text' },
     { column_name: 'created_at', data_type: 'timestamptz' },
-  ]
-);
+  ],
+};
