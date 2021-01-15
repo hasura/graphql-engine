@@ -114,7 +114,11 @@ const AddAction = ({
   return (
     <div>
       <Helmet title={'Add Action - Actions | Hasura'} />
-      <div className={styles.heading_text}>Add a new action</div>
+      <h2
+        className={`${styles.headerText} ${styles.display_inline} ${styles.add_mar_bottom_mid}`}
+      >
+        Add a new action
+      </h2>
       <GraphQLEditor
         value={actionDefinitionSdl}
         error={actionDefinitionError}
@@ -170,6 +174,7 @@ const AddAction = ({
         type="submit"
         disabled={!allowSave}
         onClick={onSubmit}
+        data-test="create-action-btn"
       >
         Create
       </Button>

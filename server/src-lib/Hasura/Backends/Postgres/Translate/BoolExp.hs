@@ -18,9 +18,10 @@ import qualified Hasura.Backends.Postgres.SQL.DML   as S
 
 import           Hasura.Backends.Postgres.SQL.Types
 import           Hasura.RQL.Types
+import           Hasura.SQL.Types
 
 type OpRhsParser m v =
-  PGType PGColumnType -> Value -> m v
+  CollectableType (ColumnType 'Postgres) -> Value -> m v
 
 -- | Represents a reference to a Postgres column, possibly casted an arbitrary
 -- number of times. Used within 'parseOperationsExpression' for bookkeeping.
@@ -56,7 +57,7 @@ parseOperationsExpression rhsParser fim columnInfo =
       Object o -> mapM (parseOperation column) (M.toList o)
       val      -> pure . AEQ False <$> rhsParser columnType val
       where
-        columnType = PGTypeScalar $ columnReferenceType column
+        columnType = CollectableTypeScalar $ columnReferenceType column
 
     parseOperation :: ColumnReference 'Postgres -> (Text, Value) -> m (OpExpG 'Postgres v)
     parseOperation column (opStr, val) = withPathK opStr $
@@ -107,6 +108,15 @@ parseOperationsExpression rhsParser fim columnInfo =
         "$nsimilar"      -> parseNsimilar
         "_nsimilar"      -> parseNsimilar
 
+        "$regex"         -> parseRegex
+        "_regex"         -> parseRegex
+        "$iregex"        -> parseIRegex
+        "_iregex"        -> parseIRegex
+        "$nregex"        -> parseNRegex
+        "_nregex"        -> parseNRegex
+        "$niregex"       -> parseNIRegex
+        "_niregex"       -> parseNIRegex
+
         "$is_null"       -> parseIsNull
         "_is_null"       -> parseIsNull
 
@@ -115,13 +125,13 @@ parseOperationsExpression rhsParser fim columnInfo =
         "$contains"      -> guardType [PGJSONB] >> AContains <$> parseOne
         "_contained_in"  -> guardType [PGJSONB] >> AContainedIn <$> parseOne
         "$contained_in"  -> guardType [PGJSONB] >> AContainedIn <$> parseOne
-        "_has_key"       -> guardType [PGJSONB] >> AHasKey <$> parseWithTy (PGColumnScalar PGText)
-        "$has_key"       -> guardType [PGJSONB] >> AHasKey <$> parseWithTy (PGColumnScalar PGText)
+        "_has_key"       -> guardType [PGJSONB] >> AHasKey <$> parseWithTy (ColumnScalar PGText)
+        "$has_key"       -> guardType [PGJSONB] >> AHasKey <$> parseWithTy (ColumnScalar PGText)
 
-        "_has_keys_any"  -> guardType [PGJSONB] >> AHasKeysAny <$> parseManyWithType (PGColumnScalar PGText)
-        "$has_keys_any"  -> guardType [PGJSONB] >> AHasKeysAny <$> parseManyWithType (PGColumnScalar PGText)
-        "_has_keys_all"  -> guardType [PGJSONB] >> AHasKeysAll <$> parseManyWithType (PGColumnScalar PGText)
-        "$has_keys_all"  -> guardType [PGJSONB] >> AHasKeysAll <$> parseManyWithType (PGColumnScalar PGText)
+        "_has_keys_any"  -> guardType [PGJSONB] >> AHasKeysAny <$> parseManyWithType (ColumnScalar PGText)
+        "$has_keys_any"  -> guardType [PGJSONB] >> AHasKeysAny <$> parseManyWithType (ColumnScalar PGText)
+        "_has_keys_all"  -> guardType [PGJSONB] >> AHasKeysAll <$> parseManyWithType (ColumnScalar PGText)
+        "$has_keys_all"  -> guardType [PGJSONB] >> AHasKeysAll <$> parseManyWithType (ColumnScalar PGText)
 
         -- geometry types
         "_st_contains"   -> parseGeometryOp ASTContains
@@ -180,6 +190,10 @@ parseOperationsExpression rhsParser fim columnInfo =
         parseNilike   = guardType stringTypes >> ANILIKE () <$> parseOne
         parseSimilar  = guardType stringTypes >> ASIMILAR <$> parseOne
         parseNsimilar = guardType stringTypes >> ANSIMILAR <$> parseOne
+        parseRegex    = guardType stringTypes >> AREGEX <$> parseOne
+        parseIRegex   = guardType stringTypes >> AIREGEX <$> parseOne
+        parseNRegex   = guardType stringTypes >> ANREGEX <$> parseOne
+        parseNIRegex  = guardType stringTypes >> ANIREGEX <$> parseOne
 
         parseIsNull   = bool ANISNOTNULL ANISNULL -- is null
                         <$> parseVal
@@ -196,7 +210,7 @@ parseOperationsExpression rhsParser fim columnInfo =
           parsedCastOperations <-
             forM (M.toList castOperations) $ \(targetTypeName, castedComparisons) -> do
               let targetType = textToPGScalarType targetTypeName
-                  castedColumn = ColumnReferenceCast column (PGColumnScalar targetType)
+                  castedColumn = ColumnReferenceCast column (ColumnScalar targetType)
               checkValidCast targetType
               parsedCastedComparisons <- withPathK targetTypeName $
                 parseOperations castedColumn castedComparisons
@@ -204,8 +218,8 @@ parseOperationsExpression rhsParser fim columnInfo =
           return . ACast $ M.fromList parsedCastOperations
 
         checkValidCast targetType = case (colTy, targetType) of
-          (PGColumnScalar PGGeometry, PGGeography) -> return ()
-          (PGColumnScalar PGGeography, PGGeometry) -> return ()
+          (ColumnScalar PGGeometry, PGGeography) -> return ()
+          (ColumnScalar PGGeography, PGGeometry) -> return ()
           _ -> throw400 UnexpectedPayload $
             "cannot cast column of type " <> colTy <<> " to type " <>> targetType
 
@@ -215,16 +229,16 @@ parseOperationsExpression rhsParser fim columnInfo =
           guardType geoTypes >> f <$> parseOneNoSess colTy val
 
         parseSTDWithinObj = case colTy of
-          PGColumnScalar PGGeometry -> do
+          ColumnScalar PGGeometry -> do
             DWithinGeomOp distVal fromVal <- parseVal
-            dist <- withPathK "distance" $ parseOneNoSess (PGColumnScalar PGFloat) distVal
+            dist <- withPathK "distance" $ parseOneNoSess (ColumnScalar PGFloat) distVal
             from <- withPathK "from" $ parseOneNoSess colTy fromVal
             return $ ASTDWithinGeom $ DWithinGeomOp dist from
-          PGColumnScalar PGGeography -> do
+          ColumnScalar PGGeography -> do
             DWithinGeogOp distVal fromVal sphVal <- parseVal
-            dist <- withPathK "distance" $ parseOneNoSess (PGColumnScalar PGFloat) distVal
+            dist <- withPathK "distance" $ parseOneNoSess (ColumnScalar PGFloat) distVal
             from <- withPathK "from" $ parseOneNoSess colTy fromVal
-            useSpheroid <- withPathK "use_spheroid" $ parseOneNoSess (PGColumnScalar PGBoolean) sphVal
+            useSpheroid <- withPathK "use_spheroid" $ parseOneNoSess (ColumnScalar PGBoolean) sphVal
             return $ ASTDWithinGeog $ DWithinGeogOp dist from useSpheroid
           _ -> throwError $ buildMsg colTy [PGGeometry, PGGeography]
 
@@ -239,13 +253,13 @@ parseOperationsExpression rhsParser fim columnInfo =
                  "incompatible column types : " <> column <<> ", " <>> rhsCol
             else return rhsCol
 
-        parseWithTy ty = rhsParser (PGTypeScalar ty) val
+        parseWithTy ty = rhsParser (CollectableTypeScalar ty) val
 
         -- parse one with the column's type
         parseOne = parseWithTy colTy
-        parseOneNoSess ty = rhsParser (PGTypeScalar ty)
+        parseOneNoSess ty = rhsParser (CollectableTypeScalar ty)
 
-        parseManyWithType ty = rhsParser (PGTypeArray ty) val
+        parseManyWithType ty = rhsParser (CollectableTypeArray ty) val
 
         guardType validTys = unless (isScalarColumnWhere (`elem` validTys) colTy) $
           throwError $ buildMsg colTy validTys
@@ -258,14 +272,14 @@ parseOperationsExpression rhsParser fim columnInfo =
 
 -- This convoluted expression instead of col = val
 -- to handle the case of col : null
-equalsBoolExpBuilder :: SQLExp 'Postgres -> SQLExp 'Postgres -> S.BoolExp
+equalsBoolExpBuilder :: SQLExpression 'Postgres -> SQLExpression 'Postgres -> S.BoolExp
 equalsBoolExpBuilder qualColExp rhsExp =
   S.BEBin S.OrOp (S.BECompare S.SEQ qualColExp rhsExp)
     (S.BEBin S.AndOp
       (S.BENull qualColExp)
       (S.BENull rhsExp))
 
-notEqualsBoolExpBuilder :: SQLExp 'Postgres -> SQLExp 'Postgres -> S.BoolExp
+notEqualsBoolExpBuilder :: SQLExpression 'Postgres -> SQLExpression 'Postgres -> S.BoolExp
 notEqualsBoolExpBuilder qualColExp rhsExp =
   S.BEBin S.OrOp (S.BECompare S.SNE qualColExp rhsExp)
     (S.BEBin S.AndOp
@@ -273,7 +287,7 @@ notEqualsBoolExpBuilder qualColExp rhsExp =
       (S.BENull rhsExp))
 
 annBoolExp
-  :: (QErrM m, TableCoreInfoRM m)
+  :: (QErrM m, TableCoreInfoRM 'Postgres m)
   => OpRhsParser m v
   -> FieldInfoMap (FieldInfo 'Postgres)
   -> GBoolExp 'Postgres ColExp
@@ -285,7 +299,7 @@ annBoolExp rhsParser fim boolExp =
     BoolNot e    -> BoolNot <$> annBoolExp rhsParser fim e
     BoolExists (GExists refqt whereExp) ->
       withPathK "_exists" $ do
-        refFields <- withPathK "_table" $ askFieldInfoMap refqt
+        refFields <- withPathK "_table" $ askFieldInfoMapSource refqt
         annWhereExp <- withPathK "_where" $
                        annBoolExp rhsParser refFields whereExp
         return $ BoolExists $ GExists refqt annWhereExp
@@ -294,7 +308,7 @@ annBoolExp rhsParser fim boolExp =
     procExps = mapM (annBoolExp rhsParser fim)
 
 annColExp
-  :: (QErrM m, TableCoreInfoRM m)
+  :: (QErrM m, TableCoreInfoRM 'Postgres m)
   => OpRhsParser m v
   -> FieldInfoMap (FieldInfo 'Postgres)
   -> ColExp
@@ -302,13 +316,13 @@ annColExp
 annColExp rhsParser colInfoMap (ColExp fieldName colVal) = do
   colInfo <- askFieldInfo colInfoMap fieldName
   case colInfo of
-    FIColumn (ColumnInfo _ _ _ (PGColumnScalar PGJSON) _ _) ->
+    FIColumn (ColumnInfo _ _ _ (ColumnScalar PGJSON) _ _) ->
       throwError (err400 UnexpectedPayload "JSON column can not be part of where clause")
     FIColumn pgi ->
       AVCol pgi <$> parseOperationsExpression rhsParser colInfoMap pgi colVal
     FIRelationship relInfo -> do
       relBoolExp      <- decodeValue colVal
-      relFieldInfoMap <- askFieldInfoMap $ riRTable relInfo
+      relFieldInfoMap <- askFieldInfoMapSource $ riRTable relInfo
       annRelBoolExp   <- annBoolExp rhsParser relFieldInfoMap $
                          unBoolExp relBoolExp
       return $ AVRel relInfo annRelBoolExp
@@ -332,7 +346,7 @@ convColRhs
   :: S.Qual -> AnnBoolExpFldSQL 'Postgres -> State Word64 S.BoolExp
 convColRhs tableQual = \case
   AVCol colInfo opExps -> do
-    let colFld = fromPGCol $ pgiColumn colInfo
+    let colFld = fromCol @'Postgres $ pgiColumn colInfo
         bExps = map (mkFieldCompExp tableQual colFld) opExps
     return $ foldr (S.BEBin S.AndOp) (S.BELit True) bExps
 
@@ -340,7 +354,7 @@ convColRhs tableQual = \case
     -- Convert the where clause on the relationship
     curVarNum <- get
     put $ curVarNum + 1
-    let newIdentifier  = Identifier $ "_be_" <> T.pack (show curVarNum) <> "_"
+    let newIdentifier  = Identifier $ "_be_" <> tshow curVarNum <> "_"
                    <> snakeCaseQualifiedObject relTN
         newIdenQ = S.QualifiedIdentifier newIdentifier Nothing
     annRelBoolExp <- convBoolRhs' newIdenQ nesAnn
@@ -377,13 +391,13 @@ foldBoolExp f = \case
   BoolFld ce           -> f ce
 
 mkFieldCompExp
-  :: S.Qual -> FieldName -> OpExpG 'Postgres (SQLExp 'Postgres) -> S.BoolExp
+  :: S.Qual -> FieldName -> OpExpG 'Postgres (SQLExpression 'Postgres) -> S.BoolExp
 mkFieldCompExp qual lhsField = mkCompExp (mkQField lhsField)
   where
     mkQCol = S.SEQIdentifier . S.QIdentifier qual . toIdentifier
     mkQField = S.SEQIdentifier . S.QIdentifier qual . Identifier . getFieldNameTxt
 
-    mkCompExp :: SQLExp 'Postgres -> OpExpG 'Postgres (SQLExp 'Postgres) -> S.BoolExp
+    mkCompExp :: SQLExpression 'Postgres -> OpExpG 'Postgres (SQLExpression 'Postgres) -> S.BoolExp
     mkCompExp lhs = \case
       ACast casts      -> mkCastsExp casts
       AEQ False val    -> equalsBoolExpBuilder lhs val
@@ -404,6 +418,10 @@ mkFieldCompExp qual lhsField = mkCompExp (mkQField lhsField)
       ANILIKE _ val    -> S.BECompare S.SNILIKE lhs val
       ASIMILAR val     -> S.BECompare S.SSIMILAR lhs val
       ANSIMILAR val    -> S.BECompare S.SNSIMILAR lhs val
+      AREGEX val       -> S.BECompare S.SREGEX lhs val
+      AIREGEX val      -> S.BECompare S.SIREGEX lhs val
+      ANREGEX val      -> S.BECompare S.SNREGEX lhs val
+      ANIREGEX val     -> S.BECompare S.SNIREGEX lhs val
       AContains val    -> S.BECompare S.SContains lhs val
       AContainedIn val -> S.BECompare S.SContainedIn lhs val
       AHasKey val      -> S.BECompare S.SHasKey lhs val
@@ -449,7 +467,7 @@ mkFieldCompExp qual lhsField = mkCompExp (mkQField lhsField)
 
         mkCastsExp casts =
           sqlAll . flip map (M.toList casts) $ \(targetType, operations) ->
-            let targetAnn = S.mkTypeAnn $ PGTypeScalar targetType
+            let targetAnn = S.mkTypeAnn $ CollectableTypeScalar targetType
             in sqlAll $ map (mkCompExp (S.SETyAnn lhs targetAnn)) operations
 
         sqlAll = foldr (S.BEBin S.AndOp) (S.BELit True)
@@ -458,29 +476,29 @@ hasStaticExp :: OpExpG backend (PartialSQLExp backend) -> Bool
 hasStaticExp = getAny . foldMap (coerce isStaticValue)
 
 getColExpDeps
-  :: QualifiedTable -> AnnBoolExpFldPartialSQL 'Postgres -> [SchemaDependency]
-getColExpDeps tn = \case
+  :: SourceName -> QualifiedTable -> AnnBoolExpFldPartialSQL 'Postgres -> [SchemaDependency]
+getColExpDeps source tn = \case
   AVCol colInfo opExps ->
     let cn = pgiColumn colInfo
         colDepReason = bool DRSessionVariable DROnType $ any hasStaticExp opExps
-        colDep = mkColDep colDepReason tn cn
+        colDep = mkColDep colDepReason source tn cn
         depColsInOpExp = mapMaybe opExpDepCol opExps
-        colDepsInOpExp = map (mkColDep DROnType tn) depColsInOpExp
+        colDepsInOpExp = map (mkColDep DROnType source tn) depColsInOpExp
     in colDep:colDepsInOpExp
   AVRel relInfo relBoolExp ->
     let rn = riName relInfo
         relTN = riRTable relInfo
-        pd = SchemaDependency (SOTableObj tn (TORel rn)) DROnType
-    in pd : getBoolExpDeps relTN relBoolExp
+        pd = SchemaDependency (SOSourceObj source $ SOITableObj tn (TORel rn)) DROnType
+    in pd : getBoolExpDeps source relTN relBoolExp
 
-getBoolExpDeps :: QualifiedTable -> AnnBoolExpPartialSQL 'Postgres -> [SchemaDependency]
-getBoolExpDeps tn = \case
+getBoolExpDeps :: SourceName -> QualifiedTable -> AnnBoolExpPartialSQL 'Postgres -> [SchemaDependency]
+getBoolExpDeps source tn = \case
   BoolAnd exps -> procExps exps
   BoolOr exps  -> procExps exps
-  BoolNot e    -> getBoolExpDeps tn e
+  BoolNot e    -> getBoolExpDeps source tn e
   BoolExists (GExists refqt whereExp) ->
-    let tableDep = SchemaDependency (SOTable refqt) DRRemoteTable
-    in tableDep:getBoolExpDeps refqt whereExp
-  BoolFld fld  -> getColExpDeps tn fld
+    let tableDep = SchemaDependency (SOSourceObj source $ SOITable refqt) DRRemoteTable
+    in tableDep:getBoolExpDeps source refqt whereExp
+  BoolFld fld  -> getColExpDeps source tn fld
   where
-    procExps = concatMap (getBoolExpDeps tn)
+    procExps = concatMap (getBoolExpDeps source tn)

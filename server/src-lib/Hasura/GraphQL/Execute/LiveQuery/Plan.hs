@@ -28,21 +28,21 @@ import           Hasura.Prelude
 
 import qualified Data.Aeson.Casing                           as J
 import qualified Data.Aeson.Extended                         as J
-import qualified Data.ByteString                             as B
-import qualified Data.HashSet                                as Set
 import qualified Data.Aeson.TH                               as J
+import qualified Data.ByteString                             as B
 import qualified Data.HashMap.Strict                         as Map
 import qualified Data.HashMap.Strict.InsOrd                  as OMap
-import qualified Data.Text                                   as T
+import qualified Data.HashSet                                as Set
 import qualified Data.UUID.V4                                as UUID
 import qualified Database.PG.Query                           as Q
-import qualified Language.GraphQL.Draft.Syntax               as G
 import qualified Database.PG.Query.PTI                       as PTI
+import qualified Language.GraphQL.Draft.Syntax               as G
 import qualified PostgreSQL.Binary.Encoding                  as PE
 
 import           Control.Lens
-import           Data.UUID                                   (UUID)
+import           Control.Monad.Trans.Control                 (MonadBaseControl)
 import           Data.Semigroup.Generic
+import           Data.UUID                                   (UUID)
 
 import qualified Hasura.Backends.Postgres.Execute.RemoteJoin as RR
 import qualified Hasura.Backends.Postgres.SQL.DML            as S
@@ -54,13 +54,13 @@ import           Hasura.Backends.Postgres.Connection
 import           Hasura.Backends.Postgres.SQL.Error
 import           Hasura.Backends.Postgres.SQL.Types
 import           Hasura.Backends.Postgres.SQL.Value
+import           Hasura.Backends.Postgres.Translate.Column   (toTxtValue)
 import           Hasura.GraphQL.Context
-import           Hasura.GraphQL.Execute.Action
 import           Hasura.GraphQL.Execute.Query
 import           Hasura.GraphQL.Parser.Column
 import           Hasura.RQL.Types
-import           Hasura.SQL.Types
 import           Hasura.Session
+import           Hasura.SQL.Types
 
 
 -- -------------------------------------------------------------------------------------------------
@@ -71,11 +71,11 @@ newtype MultiplexedQuery = MultiplexedQuery { unMultiplexedQuery :: Q.Query }
 
 toSQLFromItem :: S.Alias -> SubscriptionRootFieldResolved -> S.FromItem
 toSQLFromItem alias = \case
-  RFDB (QDBPrimaryKey s)  -> fromSelect $ DS.mkSQLSelect DS.JASSingleObject s
-  RFDB (QDBSimple s)      -> fromSelect $ DS.mkSQLSelect DS.JASMultipleRows s
-  RFDB (QDBAggregation s) -> fromSelect $ DS.mkAggregateSelect s
-  RFDB (QDBConnection s)  -> S.mkSelectWithFromItem (DS.mkConnectionSelect s) alias
-  RFAction s              -> fromSelect $ DS.mkSQLSelect DS.JASSingleObject s
+  RFDB _ _ (QDBPrimaryKey s)  -> fromSelect $ DS.mkSQLSelect DS.JASSingleObject s
+  RFDB _ _ (QDBSimple s)      -> fromSelect $ DS.mkSQLSelect DS.JASMultipleRows s
+  RFDB _ _ (QDBAggregation s) -> fromSelect $ DS.mkAggregateSelect s
+  RFDB _ _ (QDBConnection s)  -> S.mkSelectWithFromItem (DS.mkConnectionSelect s) alias
+  -- RFAction s              -> fromSelect $ DS.mkSQLSelect DS.JASSingleObject s
   where
     fromSelect s = S.mkSelFromItem s alias
 
@@ -248,17 +248,17 @@ type ValidatedSyntheticVariables = ValidatedVariables []
 validateVariables
   :: (Traversable f, MonadError QErr m, MonadIO m)
   => PGExecCtx
-  -> f (WithScalarType PGScalarValue)
+  -> f (ColumnValue 'Postgres)
   -> m (ValidatedVariables f)
 validateVariables pgExecCtx variableValues = do
   let valSel = mkValidationSel $ toList variableValues
   Q.Discard () <- runQueryTx_ $ liftTx $
     Q.rawQE dataExnErrHandler (Q.fromBuilder $ toSQL valSel) [] False
-  pure . ValidatedVariables $ fmap (txtEncodedPGVal . pstValue) variableValues
+  pure . ValidatedVariables $ fmap (txtEncodedPGVal . cvValue) variableValues
   where
-    mkExtrs = map (flip S.Extractor Nothing . toTxtValue)
+    mkExtr = flip S.Extractor Nothing . toTxtValue
     mkValidationSel vars =
-      S.mkSelect { S.selExtr = mkExtrs vars }
+      S.mkSelect { S.selExtr = map mkExtr vars }
     runQueryTx_ tx = do
       res <- liftIO $ runExceptT (runQueryTx pgExecCtx tx)
       liftEither res
@@ -271,8 +271,8 @@ validateVariables pgExecCtx variableValues = do
 -- of a subscription field's AST as we resolve them to SQL expressions.
 data QueryParametersInfo
   = QueryParametersInfo
-  { _qpiReusableVariableValues     :: !(HashMap G.Name PGColumnValue)
-  , _qpiSyntheticVariableValues    :: !(Seq PGColumnValue)
+  { _qpiReusableVariableValues     :: !(HashMap G.Name (ColumnValue 'Postgres))
+  , _qpiSyntheticVariableValues    :: !(Seq (ColumnValue 'Postgres))
   , _qpiReferencedSessionVariables :: !(Set.HashSet SessionVariable)
   -- ^ The session variables that are referenced in the query root fld's AST.
   -- This information is used to determine a cohort's required session
@@ -287,9 +287,9 @@ makeLenses ''QueryParametersInfo
 -- about various parameters of the query along the way.
 resolveMultiplexedValue
   :: (MonadState QueryParametersInfo m)
-  => UnpreparedValue -> m S.SQLExp
+  => UnpreparedValue 'Postgres -> m S.SQLExp
 resolveMultiplexedValue = \case
-  UVParameter colVal varM -> do
+  UVParameter varM colVal -> do
     varJsonPath <- case fmap PS.getName varM of
       Just varName -> do
         modifying qpiReusableVariableValues $ Map.insert varName colVal
@@ -297,21 +297,21 @@ resolveMultiplexedValue = \case
       Nothing -> do
         syntheticVarIndex <- use (qpiSyntheticVariableValues . to length)
         modifying qpiSyntheticVariableValues (|> colVal)
-        pure ["synthetic", T.pack $ show syntheticVarIndex]
-    pure $ fromResVars (PGTypeScalar $ pstType $ pcvValue colVal) varJsonPath
+        pure ["synthetic", tshow syntheticVarIndex]
+    pure $ fromResVars (CollectableTypeScalar $ unsafePGColumnToBackend $ cvType colVal) varJsonPath
   UVSessionVar ty sessVar -> do
     modifying qpiReferencedSessionVariables (Set.insert sessVar)
     pure $ fromResVars ty ["session", sessionVariableToText sessVar]
   UVLiteral sqlExp -> pure sqlExp
-  UVSession -> pure $ fromResVars (PGTypeScalar PGJSON) ["session"]
+  UVSession -> pure $ fromResVars (CollectableTypeScalar PGJSON) ["session"]
   where
     fromResVars pgType jPath = addTypeAnnotation pgType $ S.SEOpApp (S.SQLOp "#>>")
       [ S.SEQIdentifier $ S.QIdentifier (S.QualifiedIdentifier (Identifier "_subs") Nothing) (Identifier "result_vars")
       , S.SEArray $ map S.SELit jPath
       ]
     addTypeAnnotation pgType = flip S.SETyAnn (S.mkTypeAnn pgType) . case pgType of
-      PGTypeScalar scalarType -> withConstructorFn scalarType
-      PGTypeArray _           -> id
+      CollectableTypeScalar scalarType -> withConstructorFn scalarType
+      CollectableTypeArray _           -> id
 
 -- -----------------------------------------------------------------------------------
 -- Live query plans
@@ -323,6 +323,7 @@ data LiveQueryPlan
   = LiveQueryPlan
   { _lqpParameterizedPlan :: !ParameterizedLiveQueryPlan
   , _lqpVariables         :: !CohortVariables
+  , _lqpPGExecCtx         :: !PGExecCtx
   }
 
 data ParameterizedLiveQueryPlan
@@ -337,7 +338,7 @@ data ReusableLiveQueryPlan
   { _rlqpParameterizedPlan        :: !ParameterizedLiveQueryPlan
   , _rlqpRequiredSessionVariables :: !(Set.HashSet SessionVariable)
   , _rlqpSyntheticVariableValues  :: !ValidatedSyntheticVariables
-  , _rlqpQueryVariableTypes       :: HashMap G.Name PGColumnType
+  , _rlqpQueryVariableTypes       :: HashMap G.Name (ColumnType 'Postgres)
   } deriving (Show)
 $(J.deriveToJSON (J.aesonDrop 4 J.snakeCase) ''ReusableLiveQueryPlan)
 
@@ -349,14 +350,14 @@ buildLiveQueryPlan
      )
   => PGExecCtx
   -> UserInfo
-  -> InsOrdHashMap G.Name (SubscriptionRootField UnpreparedValue)
+  -> InsOrdHashMap G.Name (SubscriptionRootField (UnpreparedValue 'Postgres))
   -> m (LiveQueryPlan, Maybe ReusableLiveQueryPlan)
 buildLiveQueryPlan pgExecCtx userInfo unpreparedAST = do
   (preparedAST, QueryParametersInfo{..}) <- flip runStateT mempty $
     for unpreparedAST \unpreparedQuery -> do
       resolvedRootField <- traverseQueryRootField resolveMultiplexedValue unpreparedQuery
       case resolvedRootField of
-        RFDB qDB   -> do
+        RFDB _ _ qDB   -> do
           let remoteJoins = case qDB of
                 QDBSimple s      -> snd $ RR.getRemoteJoins s
                 QDBPrimaryKey s  -> snd $ RR.getRemoteJoins s
@@ -364,8 +365,7 @@ buildLiveQueryPlan pgExecCtx userInfo unpreparedAST = do
                 QDBConnection s  -> snd $ RR.getRemoteJoinsConnectionSelect s
           when (remoteJoins /= mempty)
             $ throw400 NotSupported "Remote relationships are not allowed in subscriptions"
-        _ -> pure ()
-      traverseAction (DS.traverseAnnSimpleSelect resolveMultiplexedValue . resolveAsyncActionQuery userInfo) resolvedRootField
+      pure resolvedRootField
 
   let multiplexedQuery = mkMultiplexedQuery preparedAST
       roleName = _uiRole userInfo
@@ -374,14 +374,14 @@ buildLiveQueryPlan pgExecCtx userInfo unpreparedAST = do
   -- We need to ensure that the values provided for variables are correct according to Postgres.
   -- Without this check an invalid value for a variable for one instance of the subscription will
   -- take down the entire multiplexed query.
-  validatedQueryVars <- validateVariables pgExecCtx $ fmap pcvValue _qpiReusableVariableValues
-  validatedSyntheticVars <- validateVariables pgExecCtx $ map pcvValue $ toList _qpiSyntheticVariableValues
+  validatedQueryVars <- validateVariables pgExecCtx _qpiReusableVariableValues
+  validatedSyntheticVars <- validateVariables pgExecCtx $ toList _qpiSyntheticVariableValues
 
   let -- TODO validatedQueryVars validatedSyntheticVars
       cohortVariables = mkCohortVariables _qpiReferencedSessionVariables
                         (_uiSession userInfo) validatedQueryVars validatedSyntheticVars
 
-      plan = LiveQueryPlan parameterizedPlan cohortVariables
+      plan = LiveQueryPlan parameterizedPlan cohortVariables pgExecCtx
       -- See Note [Temporarily disabling query plan caching]
       -- varTypes = finalReusability ^? GV._Reusable
       reusablePlan =
@@ -400,15 +400,19 @@ data LiveQueryPlanExplanation
 $(J.deriveToJSON (J.aesonDrop 5 J.snakeCase) ''LiveQueryPlanExplanation)
 
 explainLiveQueryPlan
-  :: (MonadTx m, MonadIO m)
+  :: ( MonadError QErr m
+     , MonadIO m
+     , MonadBaseControl IO m
+     )
   => LiveQueryPlan -> m LiveQueryPlanExplanation
 explainLiveQueryPlan plan = do
   let parameterizedPlan = _lqpParameterizedPlan plan
+      pgExecCtx = _lqpPGExecCtx plan
       queryText = Q.getQueryText . unMultiplexedQuery $ _plqpQuery parameterizedPlan
       -- CAREFUL!: an `EXPLAIN ANALYZE` here would actually *execute* this
       -- query, maybe resulting in privilege escalation:
       explainQuery = Q.fromText $ "EXPLAIN (FORMAT TEXT) " <> queryText
   cohortId <- newCohortId
-  explanationLines <- map runIdentity <$> executeQuery explainQuery
-                      [(cohortId, _lqpVariables plan)]
+  explanationLines <- liftEitherM $ runExceptT $ runLazyTx pgExecCtx Q.ReadOnly $
+                      map runIdentity <$> executeQuery explainQuery [(cohortId, _lqpVariables plan)]
   pure $ LiveQueryPlanExplanation queryText explanationLines $ _lqpVariables plan

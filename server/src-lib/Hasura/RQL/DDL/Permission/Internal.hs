@@ -15,15 +15,14 @@ import           Data.Aeson.Casing
 import           Data.Aeson.TH
 import           Data.Aeson.Types
 import           Data.Text.Extended
-import           Instances.TH.Lift                          ()
-import           Language.Haskell.TH.Syntax                 (Lift)
 
 import           Hasura.Backends.Postgres.SQL.Types
-import           Hasura.Backends.Postgres.SQL.Value
 import           Hasura.Backends.Postgres.Translate.BoolExp
+import           Hasura.Backends.Postgres.Translate.Column
 import           Hasura.RQL.Types
 import           Hasura.Server.Utils
 import           Hasura.Session
+import           Hasura.SQL.Types
 
 
 convColSpec :: FieldInfoMap (FieldInfo 'Postgres) -> PermColSpec -> [PGCol]
@@ -36,14 +35,14 @@ permissionIsDefined rpi pa =
   isJust $ join $ rpi ^? _Just.permAccToLens pa
 
 assertPermDefined
-  :: (MonadError QErr m)
+  :: (Backend backend, MonadError QErr m)
   => RoleName
   -> PermAccessor backend a
   -> TableInfo backend
   -> m ()
 assertPermDefined roleName pa tableInfo =
   unless (permissionIsDefined rpi pa) $ throw400 PermissionDenied $ mconcat
-  [ "'" <> T.pack (show $ permAccToType pa) <> "'"
+  [ "'" <> tshow (permAccToType pa) <> "'"
   , " permission on " <>> _tciName (_tiCoreInfo tableInfo)
   , " for role " <>> roleName
   , " does not exist"
@@ -52,21 +51,21 @@ assertPermDefined roleName pa tableInfo =
     rpi = M.lookup roleName $ _tiRolePermInfoMap tableInfo
 
 askPermInfo
-  :: (MonadError QErr m)
+  :: (Backend backend, MonadError QErr m)
   => TableInfo backend
   -> RoleName
   -> PermAccessor backend c
   -> m c
 askPermInfo tabInfo roleName pa =
-  case M.lookup roleName rpim >>= (^. paL) of
-    Just c  -> return c
-    Nothing -> throw400 PermissionDenied $ mconcat
-               [ pt <> " permission on " <>> _tciName (_tiCoreInfo tabInfo)
-               , " for role " <>> roleName
-               , " does not exist"
-               ]
+  (M.lookup roleName rpim >>= (^. permAccToLens pa))
+  `onNothing`
+  throw400 PermissionDenied
+  (mconcat
+    [ pt <> " permission on " <>> _tciName (_tiCoreInfo tabInfo)
+    , " for role " <>> roleName
+    , " does not exist"
+    ])
   where
-    paL = permAccToLens pa
     pt = permTypeToCode $ permAccToType pa
     rpim = _tiRolePermInfoMap tabInfo
 
@@ -125,14 +124,15 @@ data CreatePermP1Res a
   } deriving (Show, Eq)
 
 procBoolExp
-  :: (QErrM m, TableCoreInfoRM m)
-  => QualifiedTable
+  :: (QErrM m, TableCoreInfoRM 'Postgres m)
+  => SourceName
+  -> QualifiedTable
   -> FieldInfoMap (FieldInfo 'Postgres)
   -> BoolExp 'Postgres
   -> m (AnnBoolExpPartialSQL 'Postgres, [SchemaDependency])
-procBoolExp tn fieldInfoMap be = do
+procBoolExp source tn fieldInfoMap be = do
   abe <- annBoolExp valueParser fieldInfoMap $ unBoolExp be
-  let deps = getBoolExpDeps tn abe
+  let deps = getBoolExpDeps source tn abe
   return (abe, deps)
 
 isReqUserId :: Text -> Bool
@@ -158,21 +158,26 @@ getDependentHeaders (BoolExp boolExp) =
 
 valueParser
   :: (MonadError QErr m)
-  => PGType (ColumnType 'Postgres) -> Value -> m (PartialSQLExp 'Postgres)
+  => CollectableType (ColumnType 'Postgres) -> Value -> m (PartialSQLExp 'Postgres)
 valueParser pgType = \case
   -- When it is a special variable
   String t
-    | isSessionVariable t   -> return $ mkTypedSessionVar pgType $ mkSessionVariable t
-    | isReqUserId t -> return $ mkTypedSessionVar pgType userIdHeader
+    | isSessionVariable t -> return $ mkTypedSessionVar pgType $ mkSessionVariable t
+    | isReqUserId t       -> return $ mkTypedSessionVar pgType userIdHeader
   -- Typical value as Aeson's value
   val -> case pgType of
-    PGTypeScalar columnType -> PSESQLExp . toTxtValue <$> parsePGScalarValue columnType val
-    PGTypeArray ofType -> do
+    CollectableTypeScalar cvType ->
+      PSESQLExp . toTxtValue . ColumnValue cvType <$> parsePGScalarValue cvType val
+    CollectableTypeArray ofType -> do
       vals <- runAesonParser parseJSON val
-      WithScalarType scalarType scalarValues <- parsePGScalarValues ofType vals
+      scalarValues <- parsePGScalarValues ofType vals
       return . PSESQLExp $ S.SETyAnn
-        (S.SEArray $ map (toTxtValue . WithScalarType scalarType) scalarValues)
-        (S.mkTypeAnn $ PGTypeArray scalarType)
+        (S.SEArray $ map (toTxtValue . ColumnValue ofType) scalarValues)
+        (S.mkTypeAnn $ CollectableTypeArray (unsafePGColumnToBackend ofType))
+
+mkTypedSessionVar :: CollectableType (ColumnType 'Postgres) -> SessionVariable -> PartialSQLExp 'Postgres
+mkTypedSessionVar columnType =
+  PSESessVar (unsafePGColumnToBackend <$> columnType)
 
 injectDefaults :: QualifiedTable -> QualifiedTable -> Q.Query
 injectDefaults qv qt =
@@ -194,10 +199,18 @@ injectDefaults qv qt =
 
 data DropPerm a
   = DropPerm
-  { dipTable :: !QualifiedTable
-  , dipRole  :: !RoleName
-  } deriving (Show, Eq, Lift)
+  { dipSource :: !SourceName
+  , dipTable  :: !QualifiedTable
+  , dipRole   :: !RoleName
+  } deriving (Show, Eq)
 
-$(deriveJSON (aesonDrop 3 snakeCase){omitNothingFields=True} ''DropPerm)
+$(deriveToJSON (aesonDrop 3 snakeCase){omitNothingFields=True} ''DropPerm)
+
+instance FromJSON (DropPerm a) where
+  parseJSON = withObject "DropPerm" $ \o ->
+    DropPerm
+    <$> o .:? "source" .!= defaultSource
+    <*> o .: "table"
+    <*> o .: "role"
 
 type family PermInfo a = r | r -> a

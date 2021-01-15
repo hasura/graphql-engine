@@ -9,8 +9,6 @@ import           Data.Aeson.Casing
 import           Data.Aeson.TH
 import           Data.Aeson.Types
 import           Hasura.RQL.Types.Common
-import           Instances.TH.Lift                  ()
-import           Language.Haskell.TH.Syntax         (Lift)
 
 import qualified Data.HashMap.Strict                as HM
 import qualified Data.Text                          as T
@@ -20,7 +18,7 @@ data RelDef a
   { _rdName    :: !RelName
   , _rdUsing   :: !a
   , _rdComment :: !(Maybe T.Text)
-  } deriving (Show, Eq, Lift, Generic)
+  } deriving (Show, Eq, Generic)
 instance (Cacheable a) => Cacheable (RelDef a)
 $(deriveFromJSON (aesonDrop 3 snakeCase){omitNothingFields=True} ''RelDef)
 $(makeLenses ''RelDef)
@@ -39,7 +37,7 @@ data RelManualConfig
   = RelManualConfig
   { rmTable   :: !QualifiedTable
   , rmColumns :: !(HashMap PGCol PGCol)
-  } deriving (Show, Eq, Lift, Generic)
+  } deriving (Show, Eq, Generic)
 instance Cacheable RelManualConfig
 
 instance FromJSON RelManualConfig where
@@ -60,7 +58,7 @@ instance ToJSON RelManualConfig where
 data RelUsing a
   = RUFKeyOn !a
   | RUManual !RelManualConfig
-  deriving (Show, Eq, Lift, Generic)
+  deriving (Show, Eq, Generic)
 instance (Cacheable a) => Cacheable (RelUsing a)
 
 instance (ToJSON a) => ToJSON (RelUsing a) where
@@ -86,7 +84,7 @@ data ArrRelUsingFKeyOn
   = ArrRelUsingFKeyOn
   { arufTable  :: !QualifiedTable
   , arufColumn :: !PGCol
-  } deriving (Show, Eq, Lift, Generic)
+  } deriving (Show, Eq, Generic)
 instance Cacheable ArrRelUsingFKeyOn
 
 $(deriveJSON (aesonDrop 4 snakeCase){omitNothingFields=True} ''ArrRelUsingFKeyOn)
@@ -101,44 +99,50 @@ type CreateObjRel = WithTable ObjRelDef
 
 data DropRel
   = DropRel
-  { drTable        :: !QualifiedTable
+  { drSource       :: !SourceName
+  , drTable        :: !QualifiedTable
   , drRelationship :: !RelName
   , drCascade      :: !Bool
-  } deriving (Show, Eq, Lift)
+  } deriving (Show, Eq)
 $(deriveToJSON (aesonDrop 2 snakeCase){omitNothingFields=True} ''DropRel)
 
 instance FromJSON DropRel where
   parseJSON = withObject "Object" $ \o ->
     DropRel
-      <$> o .: "table"
+      <$> o .:? "source" .!= defaultSource
+      <*> o .: "table"
       <*> o .: "relationship"
       <*> o .:? "cascade" .!= False
 
 data SetRelComment
   = SetRelComment
-  { arTable        :: !QualifiedTable
+  { arSource       :: !SourceName
+  , arTable        :: !QualifiedTable
   , arRelationship :: !RelName
   , arComment      :: !(Maybe T.Text)
-  } deriving (Show, Eq, Lift)
+  } deriving (Show, Eq)
 $(deriveToJSON (aesonDrop 2 snakeCase){omitNothingFields=True} ''SetRelComment)
 instance FromJSON SetRelComment where
   parseJSON = withObject "Object" $ \o ->
     SetRelComment
-      <$> o .: "table"
+      <$> o .:? "source" .!= defaultSource
+      <*> o .: "table"
       <*> o .: "relationship"
       <*> o .:? "comment"
 
 data RenameRel
   = RenameRel
-  { rrTable   :: !QualifiedTable
+  { rrSource  :: !SourceName
+  , rrTable   :: !QualifiedTable
   , rrName    :: !RelName
   , rrNewName :: !RelName
-  } deriving (Show, Eq, Lift)
+  } deriving (Show, Eq)
 $(deriveToJSON (aesonDrop 2 snakeCase) ''RenameRel)
 
 instance FromJSON RenameRel where
   parseJSON = withObject "Object" $ \o ->
     RenameRel
-      <$> o .: "table"
+      <$> o .:? "source" .!= defaultSource
+      <*> o .: "table"
       <*> o .: "name"
       <*> o .: "new_name"

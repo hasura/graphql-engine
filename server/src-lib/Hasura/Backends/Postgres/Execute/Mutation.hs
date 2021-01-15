@@ -17,9 +17,6 @@ import qualified Database.PG.Query                            as Q
 import qualified Network.HTTP.Client                          as HTTP
 import qualified Network.HTTP.Types                           as N
 
-
-import           Instances.TH.Lift                            ()
-
 import qualified Hasura.Backends.Postgres.SQL.DML             as S
 import qualified Hasura.Tracing                               as Tracing
 
@@ -249,7 +246,7 @@ mutateAndFetchCols qt cols (cte, p) strfyNum = do
     tabFrom = FromIdentifier aliasIdentifier
     tabPerm = TablePerm annBoolExpTrue Nothing
     selFlds = flip map cols $
-              \ci -> (fromPGCol $ pgiColumn ci, mkAnnColumnFieldAsText ci)
+              \ci -> (fromCol @'Postgres $ pgiColumn ci, mkAnnColumnFieldAsText ci)
 
     sqlText = Q.fromBuilder $ toSQL selectWith
     selectWith = S.SelectWith [(S.Alias aliasIdentifier, getMutationCTE cte)] select

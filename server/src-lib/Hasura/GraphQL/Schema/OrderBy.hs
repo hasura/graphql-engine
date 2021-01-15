@@ -1,23 +1,23 @@
+{-# LANGUAGE AllowAmbiguousTypes #-}
+
 module Hasura.GraphQL.Schema.OrderBy
   ( orderByExp
   ) where
 
 import           Hasura.Prelude
 
-import qualified Data.List.NonEmpty                 as NE
 import qualified Language.GraphQL.Draft.Syntax      as G
 
 import           Data.Text.Extended
 
-import qualified Hasura.Backends.Postgres.SQL.DML   as PG
 import qualified Hasura.GraphQL.Parser              as P
 import qualified Hasura.RQL.IR.OrderBy              as IR
 import qualified Hasura.RQL.IR.Select               as IR
 
-import           Hasura.Backends.Postgres.SQL.Types
 import           Hasura.GraphQL.Parser              (InputFieldsParser, Kind (..), Parser,
                                                      UnpreparedValue)
 import           Hasura.GraphQL.Parser.Class
+import           Hasura.GraphQL.Schema.Backend
 import           Hasura.GraphQL.Schema.Common
 import           Hasura.GraphQL.Schema.Table
 import           Hasura.RQL.Types
@@ -34,12 +34,12 @@ import           Hasura.RQL.Types
 -- >   obj-rel: <remote-table>_order_by
 -- > }
 orderByExp
-  :: forall m n r. (MonadSchema n m, MonadTableInfo r m, MonadRole r m)
-  => QualifiedTable
-  -> SelPermInfo 'Postgres
-  -> m (Parser 'Input n [IR.AnnOrderByItemG 'Postgres UnpreparedValue])
+  :: forall m n r b. (BackendSchema b, MonadSchema n m, MonadTableInfo b r m, MonadRole r m)
+  => TableName b
+  -> SelPermInfo b
+  -> m (Parser 'Input n [IR.AnnOrderByItemG b (UnpreparedValue b)])
 orderByExp table selectPermissions = memoizeOn 'orderByExp table $ do
-  tableGQLName <- getTableGQLName table
+  tableGQLName <- getTableGQLName @b table
   let name = tableGQLName <> $$(G.litName "_order_by")
   let description = G.Description $
         "Ordering options when selecting data from " <> table <<> "."
@@ -48,14 +48,14 @@ orderByExp table selectPermissions = memoizeOn 'orderByExp table $ do
   pure $ concat . catMaybes <$> P.object name (Just description) fieldParsers
   where
     mkField
-      :: FieldInfo 'Postgres
-      -> m (Maybe (InputFieldsParser n (Maybe [IR.AnnOrderByItemG 'Postgres UnpreparedValue])))
+      :: FieldInfo b
+      -> m (Maybe (InputFieldsParser n (Maybe [IR.AnnOrderByItemG b (UnpreparedValue b)])))
     mkField fieldInfo = runMaybeT $
       case fieldInfo of
         FIColumn columnInfo -> do
           let fieldName = pgiName columnInfo
-          pure $ P.fieldOptional fieldName Nothing orderByOperator
-            <&> fmap (pure . mkOrderByItemG (IR.AOCColumn columnInfo)) . join
+          pure $ P.fieldOptional fieldName Nothing (orderByOperator @b)
+            <&> fmap (pure . mkOrderByItemG @b (IR.AOCColumn columnInfo)) . join
         FIRelationship relationshipInfo -> do
           let remoteTable = riRTable relationshipInfo
           fieldName <- MaybeT $ pure $ G.mkName $ relNameToTxt $ riName relationshipInfo
@@ -77,27 +77,21 @@ orderByExp table selectPermissions = memoizeOn 'orderByExp table $ do
         FIRemoteRelationship _ -> empty
 
 
-
--- local definitions
-
-type OrderInfo = (PG.OrderType, PG.NullsOrder)
-
-
 -- FIXME!
 -- those parsers are directly using Postgres' SQL representation of
 -- order, rather than using a general intermediary representation
 
 orderByAggregation
-  :: forall m n r. (MonadSchema n m, MonadTableInfo r m, MonadRole r m)
-  => QualifiedTable
-  -> SelPermInfo 'Postgres
-  -> m (Parser 'Input n [IR.OrderByItemG 'Postgres (IR.AnnAggregateOrderBy 'Postgres)])
+  :: forall m n r b. (BackendSchema b, MonadSchema n m, MonadTableInfo b r m, MonadRole r m)
+  => TableName b
+  -> SelPermInfo b
+  -> m (Parser 'Input n [IR.OrderByItemG b (IR.AnnAggregateOrderBy b)])
 orderByAggregation table selectPermissions = do
   -- WIP NOTE
   -- there is heavy duplication between this and Select.tableAggregationFields
   -- it might be worth putting some of it in common, just to avoid issues when
   -- we change one but not the other?
-  tableGQLName <- getTableGQLName table
+  tableGQLName <- getTableGQLName @b table
   allColumns   <- tableSelectColumns table selectPermissions
   let numColumns  = onlyNumCols allColumns
       compColumns = onlyComparableCols allColumns
@@ -105,8 +99,8 @@ orderByAggregation table selectPermissions = do
       compFields  = catMaybes <$> traverse mkField compColumns
       aggFields   = fmap (concat . catMaybes . concat) $ sequenceA $ catMaybes
         [ -- count
-          Just $ P.fieldOptional $$(G.litName "count") Nothing orderByOperator
-            <&> pure . fmap (pure . mkOrderByItemG IR.AAOCount) . join
+          Just $ P.fieldOptional $$(G.litName "count") Nothing (orderByOperator @b)
+            <&> pure . fmap (pure . mkOrderByItemG @b IR.AAOCount) . join
         , -- operators on numeric columns
           if null numColumns then Nothing else Just $
           for numericAggOperators \operator ->
@@ -120,16 +114,16 @@ orderByAggregation table selectPermissions = do
       description = G.Description $ "order by aggregate values of table " <>> table
   pure $ P.object objectName (Just description) aggFields
   where
-    mkField :: ColumnInfo 'Postgres -> InputFieldsParser n (Maybe (ColumnInfo 'Postgres, OrderInfo))
+    mkField :: ColumnInfo b -> InputFieldsParser n (Maybe (ColumnInfo b, (BasicOrderType b, NullsOrderType b)))
     mkField columnInfo =
-      P.fieldOptional (pgiName columnInfo) (pgiDescription columnInfo) orderByOperator
+      P.fieldOptional (pgiName columnInfo) (pgiDescription columnInfo) (orderByOperator @b)
         <&> fmap (columnInfo,) . join
 
     parseOperator
       :: G.Name
       -> G.Name
-      -> InputFieldsParser n [(ColumnInfo 'Postgres, OrderInfo)]
-      -> InputFieldsParser n (Maybe [IR.OrderByItemG 'Postgres (IR.AnnAggregateOrderBy 'Postgres)])
+      -> InputFieldsParser n [(ColumnInfo b, (BasicOrderType b, NullsOrderType b))]
+      -> InputFieldsParser n (Maybe [IR.OrderByItemG b (IR.AnnAggregateOrderBy b)])
     parseOperator operator tableGQLName columns =
       let opText     = G.unName operator
           objectName = tableGQLName <> $$(G.litName "_") <> operator <> $$(G.litName "_order_by")
@@ -137,41 +131,16 @@ orderByAggregation table selectPermissions = do
       in  P.fieldOptional operator Nothing (P.object objectName objectDesc columns)
         `mapField` map (\(col, info) -> mkOrderByItemG (IR.AAOOp opText col) info)
 
-orderByOperator :: MonadParse m => Parser 'Both m (Maybe OrderInfo)
+orderByOperator
+  :: forall b n
+   . (BackendSchema b, MonadParse n)
+  => Parser 'Both n (Maybe (BasicOrderType b, NullsOrderType b))
 orderByOperator =
-  P.nullable $ P.enum $$(G.litName "order_by") (Just "column ordering options") $ NE.fromList
-    [ ( define $$(G.litName "asc") "in ascending order, nulls last"
-      , (PG.OTAsc, PG.NLast)
-      )
-    , ( define $$(G.litName "asc_nulls_first") "in ascending order, nulls first"
-      , (PG.OTAsc, PG.NFirst)
-      )
-    , ( define $$(G.litName "asc_nulls_last") "in ascending order, nulls last"
-      , (PG.OTAsc, PG.NLast)
-      )
-    , ( define $$(G.litName "desc") "in descending order, nulls first"
-      , (PG.OTDesc, PG.NFirst)
-      )
-    , ( define $$(G.litName "desc_nulls_first") "in descending order, nulls first"
-      , (PG.OTDesc, PG.NFirst)
-      )
-    , ( define $$(G.litName "desc_nulls_last") "in descending order, nulls last"
-      , (PG.OTDesc, PG.NLast)
-      )
-    ]
-  where
-    define name desc = P.mkDefinition name (Just desc) P.EnumValueInfo
+  P.nullable $ P.enum $$(G.litName "order_by") (Just "column ordering options") $ orderByOperators @b
 
-
-
--- local helpers
-
-mkOrderByItemG :: a -> OrderInfo -> IR.OrderByItemG 'Postgres a
+mkOrderByItemG :: forall b a . a -> (BasicOrderType b, NullsOrderType b) -> IR.OrderByItemG b a
 mkOrderByItemG column (orderType, nullsOrder) =
   IR.OrderByItemG { obiType   = Just orderType
                   , obiColumn = column
                   , obiNulls  = Just  nullsOrder
                   }
-
-aliasToName :: G.Name -> FieldName
-aliasToName = FieldName . G.unName

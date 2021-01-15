@@ -109,6 +109,12 @@
     - warn: {lhs: "case x of {Just b -> pure b; Nothing -> a}", rhs: "onNothing x a"}
     - warn: {lhs: "case x of {Nothing -> a; Just b -> return b}", rhs: "onNothing x a"}
     - warn: {lhs: "case x of {Just b -> return b; Nothing -> a}", rhs: "onNothing x a"}
+    - warn: {lhs: "Data.Text.pack (Prelude.show x)", rhs: "Hasura.Prelude.tshow x"}
+    # mapKeys:
+    - warn: {lhs: "Data.HashMap.Strict.Extended.fromList . map (first f) . Data.HashMap.Strict.Extended.toList", rhs: "mapKeys f"}
+    - warn: {lhs: "Data.HashMap.Strict.fromList . map (first f) . Data.HashMap.Strict.toList", rhs: "mapKeys f"}
+    - warn: {lhs: "Data.HashMap.Strict.Extended.fromList $ map (first f) $ Data.HashMap.Strict.Extended.toList x", rhs: "mapKeys f x"}
+    - warn: {lhs: "Data.HashMap.Strict.fromList $ map (first f) $ Data.HashMap.Strict.toList x", rhs: "mapKeys f x"}
 
 - group:
     name: data-text-extended

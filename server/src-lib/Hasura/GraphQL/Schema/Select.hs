@@ -11,64 +11,57 @@ module Hasura.GraphQL.Schema.Select
   , selectFunction
   , selectFunctionAggregate
   , selectFunctionConnection
+  , computedFieldPG
+  , tableArgs
   , tableSelectionSet
   , tableSelectionList
+  , nodePG
   , nodeField
   ) where
 
 
 import           Hasura.Prelude
 
-import qualified Data.Aeson                            as J
-import qualified Data.Aeson.Extended                   as J
-import qualified Data.Aeson.Internal                   as J
-import qualified Data.ByteString.Lazy                  as BL
-import qualified Data.HashMap.Strict                   as Map
-import qualified Data.HashSet                          as Set
-import qualified Data.List.NonEmpty                    as NE
-import qualified Data.Sequence                         as Seq
-import qualified Data.Sequence.NonEmpty                as NESeq
-import qualified Data.Text                             as T
-import qualified Language.GraphQL.Draft.Syntax         as G
+import qualified Data.Aeson                             as J
+import qualified Data.Aeson.Extended                    as J
+import qualified Data.Aeson.Internal                    as J
+import qualified Data.ByteString.Lazy                   as BL
+import qualified Data.HashMap.Strict                    as Map
+import qualified Data.HashSet                           as Set
+import qualified Data.List.NonEmpty                     as NE
+import qualified Data.Sequence                          as Seq
+import qualified Data.Sequence.NonEmpty                 as NESeq
+import qualified Data.Text                              as T
+import qualified Language.GraphQL.Draft.Syntax          as G
 
-import           Control.Lens                          hiding (index)
+import           Control.Lens                           hiding (index)
 import           Data.Has
-import           Data.Int                              (Int32)
+import           Data.Int                               (Int32)
 import           Data.Parser.JSONPath
 import           Data.Text.Extended
-import           Data.Traversable                      (mapAccumL)
+import           Data.Traversable                       (mapAccumL)
 
-import qualified Hasura.Backends.Postgres.SQL.DML      as PG
-import qualified Hasura.GraphQL.Execute.Types          as ET
-import qualified Hasura.GraphQL.Parser                 as P
-import qualified Hasura.GraphQL.Parser.Internal.Parser as P
-import qualified Hasura.RQL.IR.BoolExp                 as IR
-import qualified Hasura.RQL.IR.OrderBy                 as IR
-import qualified Hasura.RQL.IR.Select                  as IR
+import qualified Hasura.Backends.Postgres.Execute.Types as PG
+import qualified Hasura.Backends.Postgres.SQL.Types     as PG
+import qualified Hasura.GraphQL.Execute.Types           as ET
+import qualified Hasura.GraphQL.Parser                  as P
+import qualified Hasura.GraphQL.Parser.Internal.Parser  as P
+import qualified Hasura.RQL.IR.BoolExp                  as IR
+import qualified Hasura.RQL.IR.OrderBy                  as IR
+import qualified Hasura.RQL.IR.Select                   as IR
 
-import           Hasura.Backends.Postgres.SQL.Types
-import           Hasura.Backends.Postgres.SQL.Value
-import           Hasura.GraphQL.Parser                 (FieldParser, InputFieldsParser, Kind (..),
-                                                        Parser, UnpreparedValue (..), mkParameter)
+import           Hasura.GraphQL.Context
+import           Hasura.GraphQL.Parser                  (FieldParser, InputFieldsParser, Kind (..),
+                                                         Parser, UnpreparedValue (..), mkParameter)
 import           Hasura.GraphQL.Parser.Class
-import           Hasura.GraphQL.Parser.Schema          (toGraphQLType)
+import           Hasura.GraphQL.Schema.Backend
 import           Hasura.GraphQL.Schema.BoolExp
 import           Hasura.GraphQL.Schema.Common
 import           Hasura.GraphQL.Schema.OrderBy
 import           Hasura.GraphQL.Schema.Remote
 import           Hasura.GraphQL.Schema.Table
 import           Hasura.RQL.Types
-import           Hasura.Server.Utils                   (executeJSONPath)
-
-
-type SelectExp           b = IR.AnnSimpleSelG b UnpreparedValue
-type AggSelectExp        b = IR.AnnAggregateSelectG b UnpreparedValue
-type ConnectionSelectExp b = IR.ConnectionSelect b UnpreparedValue
-type SelectArgs          b = IR.SelectArgsG b UnpreparedValue
-type TablePerms          b = IR.TablePermG b UnpreparedValue
-type AnnotatedFields     b = IR.AnnFieldsG b UnpreparedValue
-type AnnotatedField      b = IR.AnnFieldG b UnpreparedValue
-
+import           Hasura.Server.Utils                    (executeJSONPath)
 
 
 -- 1. top level selection functions
@@ -84,12 +77,12 @@ type AnnotatedField      b = IR.AnnFieldG b UnpreparedValue
 -- >   col2: col2_type
 -- > }: [table!]!
 selectTable
-  :: forall m n r. (MonadSchema n m, MonadTableInfo r m, MonadRole r m, Has QueryContext r)
-  => QualifiedTable       -- ^ qualified name of the table
-  -> G.Name               -- ^ field display name
-  -> Maybe G.Description  -- ^ field description, if any
-  -> SelPermInfo 'Postgres          -- ^ select permissions of the table
-  -> m (FieldParser n (SelectExp 'Postgres))
+  :: forall b m n r. (BackendSchema b, MonadSchema n m, MonadTableInfo b r m, MonadRole r m, Has QueryContext r)
+  => TableName b            -- ^ full name of the table
+  -> G.Name                 -- ^ field display name
+  -> Maybe G.Description    -- ^ field description, if any
+  -> SelPermInfo b          -- ^ select permissions of the table
+  -> m (FieldParser n (SelectExp b))
 selectTable table fieldName description selectPermissions = do
   stringifyNum <- asks $ qcStringifyNum . getter
   tableArgsParser    <- tableArgs table selectPermissions
@@ -123,13 +116,13 @@ selectTable table fieldName description selectPermissions = do
 -- >   }
 -- > }: table_nameConnection!
 selectTableConnection
-  :: forall m n r. (MonadSchema n m, MonadTableInfo r m, MonadRole r m, Has QueryContext r)
-  => QualifiedTable         -- ^ qualified name of the table
-  -> G.Name                 -- ^ field display name
-  -> Maybe G.Description    -- ^ field description, if any
-  -> PrimaryKeyColumns 'Postgres      -- ^ primary key columns
-  -> SelPermInfo 'Postgres            -- ^ select permissions of the table
-  -> m (FieldParser n (ConnectionSelectExp 'Postgres))
+  :: forall m n r b. (BackendSchema b, MonadSchema n m, MonadTableInfo b r m, MonadRole r m, Has QueryContext r)
+  => TableName b              -- ^ qualified name of the table
+  -> G.Name                      -- ^ field display name
+  -> Maybe G.Description         -- ^ field description, if any
+  -> PrimaryKeyColumns b -- ^ primary key columns
+  -> SelPermInfo b       -- ^ select permissions of the table
+  -> m (FieldParser n (ConnectionSelectExp b))
 selectTableConnection table fieldName description pkeyColumns selectPermissions = do
   stringifyNum       <- asks $ qcStringifyNum . getter
   selectArgsParser   <- tableConnectionArgs pkeyColumns table selectPermissions
@@ -160,18 +153,18 @@ selectTableConnection table fieldName description pkeyColumns selectPermissions 
 -- current permissions or if there are primary keys the user
 -- doesn't have select permissions for.
 selectTableByPk
-  :: forall m n r. (MonadSchema n m, MonadTableInfo r m, MonadRole r m, Has QueryContext r)
-  => QualifiedTable       -- ^ qualified name of the table
+  :: forall m n r b. (BackendSchema b, MonadSchema n m, MonadTableInfo b r m, MonadRole r m, Has QueryContext r)
+  => TableName b          -- ^ qualified name of the table
   -> G.Name               -- ^ field display name
   -> Maybe G.Description  -- ^ field description, if any
-  -> SelPermInfo 'Postgres          -- ^ select permissions of the table
-  -> m (Maybe (FieldParser n (SelectExp 'Postgres)))
+  -> SelPermInfo b        -- ^ select permissions of the table
+  -> m (Maybe (FieldParser n (SelectExp b)))
 selectTableByPk table fieldName description selectPermissions = runMaybeT do
   stringifyNum <- asks $ qcStringifyNum . getter
   primaryKeys <- MaybeT $ fmap _pkColumns . _tciPrimaryKey . _tiCoreInfo <$> askTableInfo table
   guard $ all (\c -> pgiColumn c `Set.member` spiCols selectPermissions) primaryKeys
   argsParser <- lift $ sequenceA <$> for primaryKeys \columnInfo -> do
-    field <- P.column (pgiType columnInfo) (G.Nullability $ pgiIsNullable columnInfo)
+    field <- columnParser (pgiType columnInfo) (G.Nullability $ pgiIsNullable columnInfo)
     pure $ BoolFld . AVCol columnInfo . pure . AEQ True . mkParameter <$>
       P.field (pgiName columnInfo) (pgiDescription columnInfo) field
   selectionSetParser <- lift $ tableSelectionSet table selectPermissions
@@ -200,16 +193,16 @@ selectTableByPk table fieldName description selectPermissions = runMaybeT do
 -- Returns Nothing if there's nothing that can be selected with
 -- current permissions.
 selectTableAggregate
-  :: forall m n r. (MonadSchema n m, MonadTableInfo r m, MonadRole r m, Has QueryContext r)
-  => QualifiedTable       -- ^ qualified name of the table
+  :: forall m n r b. (BackendSchema b, MonadSchema n m, MonadTableInfo b r m, MonadRole r m, Has QueryContext r)
+  => TableName b       -- ^ qualified name of the table
   -> G.Name               -- ^ field display name
   -> Maybe G.Description  -- ^ field description, if any
-  -> SelPermInfo 'Postgres          -- ^ select permissions of the table
-  -> m (Maybe (FieldParser n (AggSelectExp 'Postgres)))
+  -> SelPermInfo b          -- ^ select permissions of the table
+  -> m (Maybe (FieldParser n (AggSelectExp b)))
 selectTableAggregate table fieldName description selectPermissions = runMaybeT do
   guard $ spiAllowAgg selectPermissions
   stringifyNum    <- asks $ qcStringifyNum . getter
-  tableGQLName    <- lift $ getTableGQLName table
+  tableGQLName    <- lift $ getTableGQLName @b table
   tableArgsParser <- lift $ tableArgs table selectPermissions
   aggregateParser <- lift $ tableAggregationFields table selectPermissions
   nodesParser     <- lift $ tableSelectionList table selectPermissions
@@ -292,17 +285,19 @@ cause errors on the client side, for the following reasons:
 -- >   remote_field: field_type
 -- > }
 tableSelectionSet
-  :: ( MonadSchema n m
-     , MonadTableInfo r m
+  :: forall m n r b
+   . ( BackendSchema b
+     , MonadSchema n m
+     , MonadTableInfo b r m
      , MonadRole r m
      , Has QueryContext r
      )
-  => QualifiedTable
-  -> SelPermInfo 'Postgres
-  -> m (Parser 'Output n (AnnotatedFields 'Postgres))
+  => TableName b
+  -> SelPermInfo b
+  -> m (Parser 'Output n (AnnotatedFields b))
 tableSelectionSet table selectPermissions = memoizeOn 'tableSelectionSet table do
   tableInfo <- _tiCoreInfo <$> askTableInfo table
-  tableGQLName <- getTableGQLName table
+  tableGQLName <- getTableGQLName @b table
   let tableFields = Map.elems  $ _tciFieldInfoMap tableInfo
       tablePkeyColumns = _pkColumns <$> _tciPrimaryKey tableInfo
       description  = Just $ mkDescriptionWith (_tciDescription tableInfo) $
@@ -325,7 +320,7 @@ tableSelectionSet table selectPermissions = memoizeOn 'tableSelectionSet table d
       let nodeIdFieldParser =
             P.selection_ $$(G.litName "id") Nothing P.identifier $> IR.AFNodeId table pkeyColumns
           allFieldParsers = fieldParsers <> [nodeIdFieldParser]
-      nodeInterface <- node
+      nodeInterface <- node @b
       pure $ P.selectionSetObject tableGQLName description allFieldParsers [nodeInterface]
             <&> parsedSelectionsToFields IR.AFExpression
     _                                 ->
@@ -336,14 +331,15 @@ tableSelectionSet table selectPermissions = memoizeOn 'tableSelectionSet table d
 -- Just a @'nonNullableObjectList' wrapper over @'tableSelectionSet'.
 -- > table_name: [table!]!
 tableSelectionList
-  :: ( MonadSchema n m
-     , MonadTableInfo r m
+  :: ( BackendSchema b
+     , MonadSchema n m
+     , MonadTableInfo b r m
      , MonadRole r m
      , Has QueryContext r
      )
-  => QualifiedTable
-  -> SelPermInfo 'Postgres
-  -> m (Parser 'Output n (AnnotatedFields 'Postgres))
+  => TableName b
+  -> SelPermInfo b
+  -> m (Parser 'Output n (AnnotatedFields b))
 tableSelectionList table selectPermissions =
   nonNullableObjectList <$> tableSelectionSet table selectPermissions
 
@@ -371,17 +367,18 @@ nonNullableObjectList =
 -- >   node: table!
 -- > }
 tableConnectionSelectionSet
-  :: forall m n r. ( MonadSchema n m
-                   , MonadTableInfo r m
+  :: forall m n r b. ( BackendSchema b
+                   , MonadSchema n m
+                   , MonadTableInfo b r m
                    , MonadRole r m
                    , Has QueryContext r
                    )
-  => QualifiedTable
-  -> SelPermInfo 'Postgres
-  -> m (Parser 'Output n (IR.ConnectionFields 'Postgres UnpreparedValue))
+  => TableName b
+  -> SelPermInfo b
+  -> m (Parser 'Output n (IR.ConnectionFields b (UnpreparedValue b)))
 tableConnectionSelectionSet table selectPermissions = do
   edgesParser  <- tableEdgesSelectionSet
-  tableGQLName <- getTableGQLName table
+  tableGQLName <- getTableGQLName @b table
   let connectionTypeName = tableGQLName <> $$(G.litName "Connection")
       pageInfo = P.subselection_ $$(G.litName "pageInfo") Nothing
                  pageInfoSelectionSet <&> IR.ConnectionPageInfo
@@ -411,9 +408,9 @@ tableConnectionSelectionSet table selectPermissions = do
 
 
     tableEdgesSelectionSet
-      :: m (Parser 'Output n (IR.EdgeFields 'Postgres UnpreparedValue))
+      :: m (Parser 'Output n (IR.EdgeFields b (UnpreparedValue b)))
     tableEdgesSelectionSet = do
-      tableGQLName        <- getTableGQLName table
+      tableGQLName        <- getTableGQLName @b table
       edgeNodeParser      <- P.nonNullableParser <$> tableSelectionSet table selectPermissions
       let edgesType = tableGQLName <> $$(G.litName "Edge")
           cursor    = P.selection_ $$(G.litName "cursor") Nothing
@@ -425,7 +422,7 @@ tableConnectionSelectionSet table selectPermissions = do
 
 -- | User-defined function (AKA custom function)
 selectFunction
-  :: (MonadSchema n m, MonadTableInfo r m, MonadRole r m, Has QueryContext r)
+  :: (BackendSchema 'Postgres, MonadSchema n m, MonadTableInfo 'Postgres r m, MonadRole r m, Has QueryContext r)
   => FunctionInfo         -- ^ SQL function info
   -> G.Name               -- ^ field display name
   -> Maybe G.Description  -- ^ field description, if any
@@ -448,7 +445,7 @@ selectFunction function fieldName description selectPermissions = do
       }
 
 selectFunctionAggregate
-  :: (MonadSchema n m, MonadTableInfo r m, MonadRole r m, Has QueryContext r)
+  :: (BackendSchema 'Postgres, MonadSchema n m, MonadTableInfo 'Postgres r m, MonadRole r m, Has QueryContext r)
   => FunctionInfo         -- ^ SQL function info
   -> G.Name               -- ^ field display name
   -> Maybe G.Description  -- ^ field description, if any
@@ -458,7 +455,7 @@ selectFunctionAggregate function fieldName description selectPermissions = runMa
   let table = fiReturnType function
   stringifyNum <- asks $ qcStringifyNum . getter
   guard $ spiAllowAgg selectPermissions
-  tableGQLName <- getTableGQLName table
+  tableGQLName <- getTableGQLName @'Postgres table
   tableArgsParser    <- lift $ tableArgs table selectPermissions
   functionArgsParser <- lift $ customSQLFunctionArgs function
   aggregateParser    <- lift $ tableAggregationFields table selectPermissions
@@ -481,7 +478,7 @@ selectFunctionAggregate function fieldName description selectPermissions = runMa
       }
 
 selectFunctionConnection
-  :: (MonadSchema n m, MonadTableInfo r m, MonadRole r m, Has QueryContext r)
+  :: (BackendSchema 'Postgres, MonadSchema n m, MonadTableInfo 'Postgres r m, MonadRole r m, Has QueryContext r)
   => FunctionInfo           -- ^ SQL function info
   -> G.Name                 -- ^ field display name
   -> Maybe G.Description    -- ^ field description, if any
@@ -517,10 +514,10 @@ selectFunctionConnection function fieldName description pkeyColumns selectPermis
 -- | Argument to filter rows returned from table selection
 -- > where: table_bool_exp
 tableWhere
-  :: forall m n r. (MonadSchema n m, MonadTableInfo r m, MonadRole r m)
-  => QualifiedTable
-  -> SelPermInfo 'Postgres
-  -> m (InputFieldsParser n (Maybe (IR.AnnBoolExp 'Postgres UnpreparedValue)))
+  :: forall m n r b. (BackendSchema b, MonadSchema n m, MonadTableInfo b r m, MonadRole r m)
+  => TableName b
+  -> SelPermInfo b
+  -> m (InputFieldsParser n (Maybe (IR.AnnBoolExp b (UnpreparedValue b))))
 tableWhere table selectPermissions = do
   boolExpParser <- boolExp table (Just selectPermissions)
   pure $ fmap join $
@@ -532,10 +529,10 @@ tableWhere table selectPermissions = do
 -- | Argument to sort rows returned from table selection
 -- > order_by: [table_order_by!]
 tableOrderBy
-  :: forall m n r. (MonadSchema n m, MonadTableInfo r m, MonadRole r m)
-  => QualifiedTable
-  -> SelPermInfo 'Postgres
-  -> m (InputFieldsParser n (Maybe (NonEmpty (IR.AnnOrderByItemG 'Postgres UnpreparedValue))))
+  :: forall m n r b. (BackendSchema b, MonadSchema n m, MonadTableInfo b r m, MonadRole r m)
+  => TableName b
+  -> SelPermInfo b
+  -> m (InputFieldsParser n (Maybe (NonEmpty (IR.AnnOrderByItemG b (UnpreparedValue b)))))
 tableOrderBy table selectPermissions = do
   orderByParser <- orderByExp table selectPermissions
   pure $ do
@@ -549,10 +546,10 @@ tableOrderBy table selectPermissions = do
 -- | Argument to distinct select on columns returned from table selection
 -- > distinct_on: [table_select_column!]
 tableDistinctOn
-  :: forall m n r. (MonadSchema n m, MonadTableInfo r m, MonadRole r m)
-  => QualifiedTable
-  -> SelPermInfo 'Postgres
-  -> m (InputFieldsParser n (Maybe (NonEmpty PGCol)))
+  :: forall m n r b. (BackendSchema b, MonadSchema n m, MonadTableInfo b r m, MonadRole r m)
+  => TableName b
+  -> SelPermInfo b
+  -> m (InputFieldsParser n (Maybe (NonEmpty (Column b))))
 tableDistinctOn table selectPermissions = do
   columnsEnum   <- tableSelectColumnsEnum table selectPermissions
   pure $ do
@@ -571,10 +568,10 @@ tableDistinctOn table selectPermissions = do
 -- > order_by: [table_order_by!]
 -- > where: table_bool_exp
 tableArgs
-  :: forall m n r. (MonadSchema n m, MonadTableInfo r m, MonadRole r m)
-  => QualifiedTable
-  -> SelPermInfo 'Postgres
-  -> m (InputFieldsParser n (SelectArgs 'Postgres))
+  :: forall m n r b. (BackendSchema b, MonadSchema n m, MonadTableInfo b r m, MonadRole r m)
+  => TableName b
+  -> SelPermInfo b
+  -> m (InputFieldsParser n (SelectArgs b))
 tableArgs table selectPermissions = do
   whereParser   <- tableWhere table selectPermissions
   orderByParser <- tableOrderBy table selectPermissions
@@ -583,13 +580,13 @@ tableArgs table selectPermissions = do
         whereF   <- whereParser
         orderBy  <- orderByParser
         limit    <- fmap join $ P.fieldOptional limitName   limitDesc   $ P.nullable positiveInt
-        offset   <- fmap join $ P.fieldOptional offsetName  offsetDesc  $ P.nullable fakeBigInt
+        offset   <- fmap join $ P.fieldOptional offsetName  offsetDesc  $ P.nullable (offsetParser @b)
         distinct <- distinctParser
         pure $ IR.SelectArgs
           { IR._saWhere    = whereF
           , IR._saOrderBy  = orderBy
           , IR._saLimit    = fromIntegral <$> limit
-          , IR._saOffset   = txtEncoder <$> offset
+          , IR._saOffset   = offset
           , IR._saDistinct = distinct
           }
   pure $ selectArgs `P.bindFields`
@@ -597,28 +594,6 @@ tableArgs table selectPermissions = do
       traverse_ (validateDistinctOn $ IR._saOrderBy args) $ IR._saDistinct args
       pure args
   where
-    -- TODO: THIS IS A TEMPORARY FIX
-    -- while offset is exposed in the schema as a GraphQL Int, which
-    -- is a bounded Int32, previous versions of the code used to also
-    -- silently accept a string as an input for the offset as a way to
-    -- support int64 values (postgres bigint)
-    -- a much better way of supporting this would be to expose the
-    -- offset in the code as a postgres bigint, but for now, to avoid
-    -- a breaking change, we are defining a custom parser that also
-    -- accepts a string
-    fakeBigInt :: Parser 'Both n PGScalarValue
-    fakeBigInt = P.Parser
-      { pType = fakeBigIntSchemaType
-      , pParser = P.peelVariable (Just $ toGraphQLType fakeBigIntSchemaType) >=> \case
-          P.GraphQLValue (G.VInt    i) -> PGValBigInt <$> convertWith scientificToInteger (fromInteger i)
-          P.JSONValue    (J.Number  n) -> PGValBigInt <$> convertWith scientificToInteger n
-          P.GraphQLValue (G.VString s) -> pure $ PGValUnknown s
-          P.JSONValue    (J.String  s) -> pure $ PGValUnknown s
-          v ->  P.typeMismatch $$(G.litName "Int") "a 32-bit integer, or a 64-bit integer represented as a string" v
-      }
-    fakeBigIntSchemaType = P.NonNullable $ P.TNamed $ P.mkDefinition $$(G.litName "Int") Nothing P.TIScalar
-    convertWith f = either (parseErrorWith ParseFailed . qeError) pure . runAesonParser f
-
     -- TH splices mess up ApplicativeDo
     -- see (FIXME: link to bug here)
     limitName  = $$(G.litName "limit")
@@ -657,13 +632,13 @@ positiveInt = P.int `P.bind` \value -> do
 -- > before: String
 -- > after: String
 tableConnectionArgs
-  :: forall m n r. (MonadSchema n m, MonadTableInfo r m, MonadRole r m)
-  => PrimaryKeyColumns 'Postgres
-  -> QualifiedTable
-  -> SelPermInfo 'Postgres
+  :: forall m n r b. (BackendSchema b, MonadSchema n m, MonadTableInfo b r m, MonadRole r m)
+  => PrimaryKeyColumns b
+  -> TableName b
+  -> SelPermInfo b
   -> m ( InputFieldsParser n
-         ( SelectArgs 'Postgres
-         , Maybe (NonEmpty (IR.ConnectionSplit 'Postgres UnpreparedValue))
+         ( SelectArgs b
+         , Maybe (NonEmpty (IR.ConnectionSplit b (UnpreparedValue b)))
          , Maybe IR.ConnectionSlice
          )
        )
@@ -707,7 +682,7 @@ tableConnectionArgs pkeyColumns table selectPermissions = do
   where
     base64Text = base64Decode <$> P.string
 
-    appendPrimaryKeyOrderBy :: NonEmpty (IR.AnnOrderByItemG 'Postgres v) -> NonEmpty (IR.AnnOrderByItemG 'Postgres v)
+    appendPrimaryKeyOrderBy :: NonEmpty (IR.AnnOrderByItemG b v) -> NonEmpty (IR.AnnOrderByItemG b v)
     appendPrimaryKeyOrderBy orderBys@(h NE.:| t) =
       let orderByColumnNames =
             orderBys ^.. traverse . to IR.obiColumn . IR._AOCColumn . to pgiColumn
@@ -717,21 +692,21 @@ tableConnectionArgs pkeyColumns table selectPermissions = do
       in h NE.:| (t <> pkeyOrderBys)
 
     parseConnectionSplit
-      :: Maybe (NonEmpty (IR.AnnOrderByItemG 'Postgres UnpreparedValue))
+      :: Maybe (NonEmpty (IR.AnnOrderByItemG b (UnpreparedValue b)))
       -> IR.ConnectionSplitKind
       -> BL.ByteString
-      -> n (NonEmpty (IR.ConnectionSplit 'Postgres UnpreparedValue))
+      -> n (NonEmpty (IR.ConnectionSplit b (UnpreparedValue b)))
     parseConnectionSplit maybeOrderBys splitKind cursorSplit = do
       cursorValue <- J.eitherDecode cursorSplit `onLeft` const throwInvalidCursor
       case maybeOrderBys of
         Nothing -> forM (NESeq.toNonEmpty pkeyColumns) $
           \pgColumnInfo -> do
-            let columnJsonPath = [J.Key $ getPGColTxt $ pgiColumn pgColumnInfo]
+            let columnJsonPath = [J.Key $ toTxt $ pgiColumn pgColumnInfo]
                 columnType = pgiType pgColumnInfo
             pgColumnValue <- iResultToMaybe (executeJSONPath columnJsonPath cursorValue)
               `onNothing` throwInvalidCursor
-            pgValue <- liftQErr $ parsePGScalarValue columnType pgColumnValue
-            let unresolvedValue = flip UVParameter Nothing $ P.PGColumnValue columnType pgValue
+            pgValue <- liftQErr $ parseScalarValue columnType pgColumnValue
+            let unresolvedValue = UVParameter Nothing $ ColumnValue columnType pgValue
             pure $ IR.ConnectionSplit splitKind unresolvedValue $
                    IR.OrderByItemG Nothing (IR.AOCColumn pgColumnInfo) Nothing
         Just orderBys ->
@@ -740,8 +715,8 @@ tableConnectionArgs pkeyColumns table selectPermissions = do
                 columnType = getOrderByColumnType annObCol
             orderByItemValue <- iResultToMaybe (executeJSONPath (getPathFromOrderBy annObCol) cursorValue)
               `onNothing` throwInvalidCursor
-            pgValue <- liftQErr $ parsePGScalarValue columnType orderByItemValue
-            let unresolvedValue = flip UVParameter Nothing $ P.PGColumnValue columnType pgValue
+            pgValue <- liftQErr $ parseScalarValue columnType orderByItemValue
+            let unresolvedValue = UVParameter Nothing $ ColumnValue columnType pgValue
             pure $ IR.ConnectionSplit splitKind unresolvedValue $
                    IR.OrderByItemG orderType (() <$ annObCol) nullsOrder
       where
@@ -750,7 +725,7 @@ tableConnectionArgs pkeyColumns table selectPermissions = do
 
         getPathFromOrderBy = \case
           IR.AOCColumn pgColInfo ->
-            let pathElement = J.Key $ getPGColTxt $ pgiColumn pgColInfo
+            let pathElement = J.Key $ toTxt $ pgiColumn pgColInfo
             in [pathElement]
           IR.AOCObjectRelation relInfo _ obCol ->
             let pathElement = J.Key $ relNameToTxt $ riName relInfo
@@ -759,14 +734,14 @@ tableConnectionArgs pkeyColumns table selectPermissions = do
             let fieldName = J.Key $ relNameToTxt (riName relInfo) <> "_aggregate"
             in fieldName : case aggOb of
                  IR.AAOCount    -> [J.Key "count"]
-                 IR.AAOOp t col -> [J.Key t, J.Key $ getPGColTxt $ pgiColumn col]
+                 IR.AAOOp t col -> [J.Key t, J.Key $ toTxt $ pgiColumn col]
 
         getOrderByColumnType = \case
           IR.AOCColumn pgColInfo -> pgiType pgColInfo
           IR.AOCObjectRelation _ _ obCol -> getOrderByColumnType obCol
           IR.AOCArrayAggregation _ _ aggOb ->
             case aggOb of
-              IR.AAOCount        -> PGColumnScalar PGInteger
+              IR.AAOCount        -> ColumnScalar (aggregateOrderByCountType @b)
               IR.AAOOp _ colInfo -> pgiType colInfo
 
 -- | Aggregation fields
@@ -783,12 +758,12 @@ tableConnectionArgs pkeyColumns table selectPermissions = do
 -- >   min: table_min_fields
 -- > }
 tableAggregationFields
-  :: forall m n r. (MonadSchema n m, MonadTableInfo r m, MonadRole r m)
-  => QualifiedTable
-  -> SelPermInfo 'Postgres
-  -> m (Parser 'Output n (IR.AggregateFields 'Postgres))
+  :: forall m n r b. (BackendSchema b, MonadSchema n m, MonadTableInfo b r m, MonadRole r m)
+  => TableName b
+  -> SelPermInfo b
+  -> m (Parser 'Output n (IR.AggregateFields b))
 tableAggregationFields table selectPermissions = do
-  tableGQLName  <- getTableGQLName table
+  tableGQLName  <- getTableGQLName @b table
   allColumns <- tableSelectColumns table selectPermissions
   let numericColumns   = onlyNumCols allColumns
       comparableColumns  = onlyComparableCols allColumns
@@ -811,20 +786,20 @@ tableAggregationFields table selectPermissions = do
   pure $ P.selectionSet selectName (Just description) aggregateFields
         <&> parsedSelectionsToFields IR.AFExp
   where
-    mkNumericAggFields :: G.Name -> [ColumnInfo 'Postgres] -> m [FieldParser n (IR.ColFld 'Postgres)]
+    mkNumericAggFields :: G.Name -> [ColumnInfo b] -> m [FieldParser n (IR.ColFld b)]
     mkNumericAggFields name
       | name == $$(G.litName "sum") = traverse mkColumnAggField
       | otherwise                   = traverse \columnInfo ->
           pure $ P.selection_ (pgiName columnInfo) (pgiDescription columnInfo)
                  (P.nullable P.float) $> IR.CFCol (pgiColumn columnInfo)
 
-    mkColumnAggField :: ColumnInfo 'Postgres -> m (FieldParser n (IR.ColFld 'Postgres))
+    mkColumnAggField :: ColumnInfo b -> m (FieldParser n (IR.ColFld b))
     mkColumnAggField columnInfo = do
-      field <- P.column (pgiType columnInfo) (G.Nullability True)
+      field <- columnParser (pgiType columnInfo) (G.Nullability True)
       pure $ P.selection_ (pgiName columnInfo) (pgiDescription columnInfo) field
         $> IR.CFCol (pgiColumn columnInfo)
 
-    countField :: m (FieldParser n (IR.AggregateField 'Postgres))
+    countField :: m (FieldParser n (IR.AggregateField b))
     countField = do
       columnsEnum <- tableSelectColumnsEnum table selectPermissions
       let columnsName  = $$(G.litName "columns")
@@ -832,18 +807,14 @@ tableAggregationFields table selectPermissions = do
           args = do
             distinct <- P.fieldOptional distinctName Nothing P.boolean
             columns  <- maybe (pure Nothing) (P.fieldOptional columnsName Nothing . P.list) columnsEnum
-            pure $ case columns of
-                     Nothing   -> PG.CTStar
-                     Just cols -> if Just True == distinct
-                                  then PG.CTDistinct cols
-                                  else PG.CTSimple   cols
+            pure $ mkCountType @b distinct columns
       pure $ IR.AFCount <$> P.selection $$(G.litName "count") Nothing args P.int
 
     parseAggOperator
       :: G.Name
       -> G.Name
-      -> [FieldParser n (IR.ColFld 'Postgres)]
-      -> FieldParser n (IR.AggregateField 'Postgres)
+      -> [FieldParser n (IR.ColFld b)]
+      -> FieldParser n (IR.AggregateField b)
     parseAggOperator operator tableGQLName columns =
       let opText  = G.unName operator
           setName = tableGQLName <> $$(G.litName "_") <> operator <> $$(G.litName "_fields")
@@ -854,7 +825,7 @@ tableAggregationFields table selectPermissions = do
          <&> (IR.AFOp . IR.AggregateOp opText)
 
 lookupRemoteField'
-  :: (MonadSchema n m, MonadTableInfo r m)
+  :: (MonadSchema n m, MonadError QErr m)
   => [P.Definition P.FieldInfo]
   -> FieldCall
   -> m P.FieldInfo
@@ -864,7 +835,7 @@ lookupRemoteField' fieldInfos (FieldCall fcName _) =
     Just (P.Definition _ _ _ fieldInfo) -> pure fieldInfo
 
 lookupRemoteField
-  :: (MonadSchema n m, MonadTableInfo r m, MonadRole r m)
+  :: (MonadSchema n m, MonadError QErr m, MonadRole r m)
   => [P.Definition P.FieldInfo]
   -> NonEmpty FieldCall
   -> m P.FieldInfo
@@ -882,12 +853,12 @@ lookupRemoteField fieldInfos (fieldCall :| rest) =
 --
 -- > field_name(arg_name: arg_type, ...): field_type
 fieldSelection
-  :: (MonadSchema n m, MonadTableInfo r m, MonadRole r m, Has QueryContext r)
-  => QualifiedTable
-  -> Maybe (PrimaryKeyColumns 'Postgres)
-  -> FieldInfo 'Postgres
-  -> SelPermInfo 'Postgres
-  -> m [FieldParser n (AnnotatedField 'Postgres)]
+  :: (BackendSchema b, MonadSchema n m, MonadTableInfo b r m, MonadRole r m, Has QueryContext r)
+  => TableName b
+  -> Maybe (PrimaryKeyColumns b)
+  -> FieldInfo b
+  -> SelPermInfo b
+  -> m [FieldParser n (AnnotatedField b)]
 fieldSelection table maybePkeyColumns fieldInfo selectPermissions =
   case fieldInfo of
     FIColumn columnInfo -> maybeToList <$> runMaybeT do
@@ -901,7 +872,7 @@ fieldSelection table maybePkeyColumns fieldInfo selectPermissions =
          | otherwise -> do
              guard $ Set.member columnName (spiCols selectPermissions)
              let pathArg = jsonPathArg $ pgiType columnInfo
-             field <- lift $ P.column (pgiType columnInfo) (G.Nullability $ pgiIsNullable columnInfo)
+             field <- lift $ columnParser (pgiType columnInfo) (G.Nullability $ pgiIsNullable columnInfo)
              pure $ P.selection fieldName (pgiDescription columnInfo) pathArg field
                <&> IR.mkAnnColumnField columnInfo
 
@@ -916,8 +887,8 @@ fieldSelection table maybePkeyColumns fieldInfo selectPermissions =
 
 -- | Field parsers for a table relationship
 relationshipField
-  :: (MonadSchema n m, MonadTableInfo r m, MonadRole r m, Has QueryContext r)
-  => RelInfo -> m (Maybe [FieldParser n (AnnotatedField 'Postgres)])
+  :: (BackendSchema b, MonadSchema n m, MonadTableInfo b r m, MonadRole r m, Has QueryContext r)
+  => RelInfo b -> m (Maybe [FieldParser n (AnnotatedField b)])
 relationshipField relationshipInfo = runMaybeT do
   let otherTable = riRTable  relationshipInfo
       colMapping = riMapping relationshipInfo
@@ -958,13 +929,13 @@ relationshipField relationshipInfo = runMaybeT do
                        ]
 
 -- | Computed field parser
-computedField
+computedFieldPG
   :: forall m n r
-  . (MonadSchema n m, MonadTableInfo r m, MonadRole r m, Has QueryContext r)
+   . (BackendSchema 'Postgres, MonadSchema n m, MonadTableInfo 'Postgres r m, MonadRole r m, Has QueryContext r)
   => ComputedFieldInfo 'Postgres
   -> SelPermInfo 'Postgres
   -> m (Maybe (FieldParser n (AnnotatedField 'Postgres)))
-computedField ComputedFieldInfo{..} selectPermissions = runMaybeT do
+computedFieldPG ComputedFieldInfo{..} selectPermissions = runMaybeT do
   stringifyNum <- asks $ qcStringifyNum . getter
   fieldName <- lift $ textToName $ computedFieldNameToText _cfiName
   functionArgsParser <- lift $ computedFieldFunctionArgs _cfiFunction
@@ -973,14 +944,14 @@ computedField ComputedFieldInfo{..} selectPermissions = runMaybeT do
       guard $ _cfiName `Set.member` spiScalarComputedFields selectPermissions
       let fieldArgsParser = do
             args  <- functionArgsParser
-            colOp <- jsonPathArg $ PGColumnScalar scalarReturnType
+            colOp <- jsonPathArg $ ColumnScalar scalarReturnType
             pure $ IR.AFComputedField $ IR.CFSScalar $ IR.ComputedFieldScalarSelect
               { IR._cfssFunction  = _cffName _cfiFunction
               , IR._cfssType      = scalarReturnType
               , IR._cfssColumnOp  = colOp
               , IR._cfssArguments = args
               }
-      dummyParser <- lift $ P.column (PGColumnScalar scalarReturnType) (G.Nullability True)
+      dummyParser <- lift $ columnParser @'Postgres (ColumnScalar scalarReturnType) (G.Nullability True)
       pure $ P.selection fieldName (Just fieldDescription) fieldArgsParser dummyParser
     CFRSetofTable tableName -> do
       remotePerms        <- MaybeT $ tableSelectPermissions tableName
@@ -1002,7 +973,7 @@ computedField ComputedFieldInfo{..} selectPermissions = runMaybeT do
       in mkDescriptionWith (_cffDescription _cfiFunction) defaultDescription
 
     computedFieldFunctionArgs
-      :: ComputedFieldFunction -> m (InputFieldsParser n (IR.FunctionArgsExpTableRow UnpreparedValue))
+      :: ComputedFieldFunction -> m (InputFieldsParser n (IR.FunctionArgsExpTableRow 'Postgres (UnpreparedValue 'Postgres)))
     computedFieldFunctionArgs ComputedFieldFunction{..} =
       functionArgs _cffName (IAUserProvided <$> _cffInputArgs) <&> fmap addTableAndSessionArgument
       where
@@ -1021,8 +992,8 @@ computedField ComputedFieldInfo{..} selectPermissions = runMaybeT do
 
 -- | Remote relationship field parsers
 remoteRelationshipField
-  :: (MonadSchema n m, MonadTableInfo r m, MonadRole r m, Has QueryContext r)
-  => RemoteFieldInfo 'Postgres -> m (Maybe [FieldParser n (AnnotatedField 'Postgres)])
+  :: (MonadSchema n m, MonadError QErr m, MonadRole r m, Has QueryContext r)
+  => RemoteFieldInfo b -> m (Maybe [FieldParser n (AnnotatedField b)])
 remoteRelationshipField remoteFieldInfo = runMaybeT do
   queryType <- asks $ qcQueryType . getter
   -- https://github.com/hasura/graphql-engine/issues/5144
@@ -1031,18 +1002,16 @@ remoteRelationshipField remoteFieldInfo = runMaybeT do
   remoteSchemasFieldDefns <- asks $ qcRemoteFields . getter
   let remoteSchemaName = _rfiRemoteSchemaName remoteFieldInfo
   fieldDefns <-
-    case Map.lookup remoteSchemaName remoteSchemasFieldDefns of
-      Nothing ->
-        throw500 $ "unexpected: remote schema "
-        <> remoteSchemaName
-        <<> " not found"
-      Just fieldDefns -> pure fieldDefns
+    Map.lookup remoteSchemaName remoteSchemasFieldDefns
+    `onNothing` throw500 ("unexpected: remote schema " <> remoteSchemaName <<> " not found")
 
   fieldName <- textToName $ remoteRelationshipNameToText $ _rfiName remoteFieldInfo
   remoteFieldsArgumentsParser <-
     sequenceA <$> for (Map.toList $ _rfiParamMap remoteFieldInfo) \(name, inpValDefn) -> do
       parser <- lift $ inputValueDefinitionParser (_rfiSchemaIntrospect remoteFieldInfo) inpValDefn
-      pure $ parser `mapField` IR.RemoteFieldArgument name
+      -- The preset part are ignored for remote relationships because
+      -- the argument value comes from the parent query
+      pure $ (fmap fst parser) `mapField` IR.RemoteFieldArgument name
 
   -- This selection set parser, should be of the remote node's selection set parser, which comes
   -- from the fieldCall
@@ -1067,9 +1036,9 @@ remoteRelationshipField remoteFieldInfo = runMaybeT do
 -- | The custom SQL functions' input "args" field parser
 -- > function_name(args: function_args)
 customSQLFunctionArgs
-  :: (MonadSchema n m, MonadTableInfo r m)
+  :: (BackendSchema 'Postgres, MonadSchema n m, MonadTableInfo 'Postgres r m)
   => FunctionInfo
-  -> m (InputFieldsParser n (IR.FunctionArgsExpTableRow UnpreparedValue))
+  -> m (InputFieldsParser n (IR.FunctionArgsExpTableRow 'Postgres (UnpreparedValue 'Postgres)))
 customSQLFunctionArgs FunctionInfo{..} = functionArgs fiName fiInputArgs
 
 -- | Parses the arguments to the underlying sql function of a computed field or
@@ -1084,10 +1053,10 @@ customSQLFunctionArgs FunctionInfo{..} = functionArgs fiName fiInputArgs
 --   table row argument in the case of computed fields), the args object will
 --   be omitted.
 functionArgs
-  :: forall m n r. (MonadSchema n m, MonadTableInfo r m)
-  => QualifiedFunction
+  :: forall m n r. (BackendSchema 'Postgres, MonadSchema n m, MonadTableInfo 'Postgres r m)
+  => PG.QualifiedFunction
   -> Seq.Seq FunctionInputArgument
-  -> m (InputFieldsParser n (IR.FunctionArgsExpTableRow UnpreparedValue))
+  -> m (InputFieldsParser n (IR.FunctionArgsExpTableRow 'Postgres (UnpreparedValue 'Postgres)))
 functionArgs functionName (toList -> inputArgs) = do
   -- First, we iterate through the original sql arguments in order, to find the
   -- corresponding graphql names. At the same time, we create the input field
@@ -1108,7 +1077,7 @@ functionArgs functionName (toList -> inputArgs) = do
      | otherwise -> do
          -- There are user-provided arguments: we need to parse an args object.
          argumentParsers <- sequenceA $ optional <> mandatory
-         objectName <- qualifiedObjectToName functionName <&> (<> $$(G.litName "_args"))
+         objectName <- PG.qualifiedObjectToName functionName <&> (<> $$(G.litName "_args"))
          let fieldName    = $$(G.litName "args")
              fieldDesc    = G.Description $ "input parameters for function " <>> functionName
              objectParser = P.object objectName Nothing (sequenceA argumentParsers) `P.bind` \arguments -> do
@@ -1137,16 +1106,16 @@ functionArgs functionName (toList -> inputArgs) = do
          pure $ P.field fieldName (Just fieldDesc) objectParser
 
   where
-    sessionPlaceholder :: IR.ArgumentExp UnpreparedValue
+    sessionPlaceholder :: IR.ArgumentExp 'Postgres (UnpreparedValue 'Postgres)
     sessionPlaceholder = IR.AEInput P.UVSession
 
     splitArguments
       :: Int
       -> FunctionInputArgument
       -> (Int, ( [Text] -- graphql names, in order
-               , [(Text, IR.ArgumentExp UnpreparedValue)] -- session argument
-               , [m (InputFieldsParser n (Maybe (Text, IR.ArgumentExp UnpreparedValue)))] -- optional argument
-               , [m (InputFieldsParser n (Maybe (Text, IR.ArgumentExp UnpreparedValue)))] -- mandatory argument
+               , [(Text, IR.ArgumentExp 'Postgres (UnpreparedValue 'Postgres))] -- session argument
+               , [m (InputFieldsParser n (Maybe (Text, IR.ArgumentExp 'Postgres (UnpreparedValue 'Postgres))))] -- optional argument
+               , [m (InputFieldsParser n (Maybe (Text, IR.ArgumentExp 'Postgres (UnpreparedValue 'Postgres))))] -- mandatory argument
                )
          )
     splitArguments positionalIndex (IASessionVariables name) =
@@ -1154,15 +1123,15 @@ functionArgs functionName (toList -> inputArgs) = do
       in (positionalIndex, ([argName], [(argName, sessionPlaceholder)], [], []))
     splitArguments positionalIndex (IAUserProvided arg) =
       let (argName, newIndex) = case faName arg of
-                                  Nothing   -> ("arg_" <> T.pack (show positionalIndex), positionalIndex + 1)
+                                  Nothing   -> ("arg_" <> tshow positionalIndex, positionalIndex + 1)
                                   Just name -> (getFuncArgNameTxt name, positionalIndex)
       in if unHasDefault $ faHasDefault arg
          then (newIndex, ([argName], [], [parseArgument arg argName], []))
          else (newIndex, ([argName], [], [], [parseArgument arg argName]))
 
-    parseArgument :: FunctionArg -> Text -> m (InputFieldsParser n (Maybe (Text, IR.ArgumentExp UnpreparedValue)))
+    parseArgument :: FunctionArg -> Text -> m (InputFieldsParser n (Maybe (Text, IR.ArgumentExp 'Postgres (UnpreparedValue 'Postgres))))
     parseArgument arg name = do
-      columnParser <- P.column (PGColumnScalar $ _qptName $ faType arg) (G.Nullability True)
+      typedParser  <- columnParser (ColumnScalar $ PG._qptName $ faType arg) (G.Nullability True)
       fieldName    <- textToName name
 
       -- While some arguments are "mandatory" (i.e. they don't have a default
@@ -1175,13 +1144,13 @@ functionArgs functionName (toList -> inputArgs) = do
       -- argument. For backwards compatibility reasons, and also to avoid
       -- surprises, we prefer to reject the query if a mandatory argument is
       -- missing rather than filling the blanks for the user.
-      let argParser = P.fieldOptional fieldName Nothing columnParser
+      let argParser = P.fieldOptional fieldName Nothing typedParser
       pure $ argParser `mapField` ((name,) . IR.AEInput . mkParameter)
 
     namedArgument
-      :: HashMap Text (IR.ArgumentExp UnpreparedValue)
+      :: HashMap Text (IR.ArgumentExp 'Postgres (UnpreparedValue 'Postgres))
       -> (Text, InputArgument FunctionArg)
-      -> n (Maybe (Text, IR.ArgumentExp UnpreparedValue))
+      -> n (Maybe (Text, IR.ArgumentExp 'Postgres (UnpreparedValue 'Postgres)))
     namedArgument dictionary (name, inputArgument) = case inputArgument of
       IASessionVariables _ -> pure $ Just (name, sessionPlaceholder)
       IAUserProvided arg   -> case Map.lookup name dictionary of
@@ -1191,24 +1160,7 @@ functionArgs functionName (toList -> inputArgs) = do
         Nothing -> whenMaybe (not $ unHasDefault $ faHasDefault arg) $
           parseErrorWith NotSupported "Non default arguments cannot be omitted"
 
-
--- | The "path" argument for json column fields
-jsonPathArg :: MonadParse n => PGColumnType -> InputFieldsParser n (Maybe (IR.ColumnOp 'Postgres))
-jsonPathArg columnType
-  | isScalarColumnWhere isJSONType columnType =
-      P.fieldOptional fieldName description P.string `P.bindFields` fmap join . traverse toColExp
-  | otherwise = pure Nothing
-  where
-    fieldName = $$(G.litName "path")
-    description = Just "JSON select path"
-    toColExp textValue = case parseJSONPath textValue of
-      Left err     -> parseError $ T.pack $ "parse json path error: " ++ err
-      Right []     -> pure Nothing
-      Right jPaths -> pure $ Just $ IR.ColumnOp PG.jsonbPathOp $ PG.SEArray $ map elToColExp jPaths
-    elToColExp (Key k)   = PG.SELit k
-    elToColExp (Index i) = PG.SELit $ T.pack (show i)
-
-tablePermissionsInfo :: SelPermInfo 'Postgres -> TablePerms 'Postgres
+tablePermissionsInfo :: SelPermInfo b -> TablePerms b
 tablePermissionsInfo selectPermissions = IR.TablePerm
   { IR._tpFilter = fmapAnnBoolExp partialSQLExpToUnpreparedValue $ spiFilter selectPermissions
   , IR._tpLimit  = spiLimit selectPermissions
@@ -1243,7 +1195,7 @@ base64 encoded JSON string is accepted for 'node' field resolver's 'id' input.
 
 data V1NodeId
   = V1NodeId
-  { _nidTable   :: !QualifiedTable
+  { _nidTable   :: !(TableName 'Postgres)
   , _nidColumns :: !(NESeq.NESeq J.Value)
   } deriving (Show, Eq)
 
@@ -1264,7 +1216,7 @@ instance J.FromJSON NodeId where
     where
       parseNodeIdV1 (schemaValue:(nameValue:(firstColumn:remainingColumns))) =
         V1NodeId
-        <$> (QualifiedObject <$> J.parseJSON schemaValue <*> J.parseJSON nameValue)
+        <$> (PG.QualifiedObject <$> J.parseJSON schemaValue <*> J.parseJSON nameValue)
         <*> pure (firstColumn NESeq.:<|| Seq.fromList remainingColumns)
       parseNodeIdV1 _ = fail "GUID version 1: expecting schema name, table name and at least one column value"
 
@@ -1272,36 +1224,49 @@ throwInvalidNodeId :: MonadParse n => Text -> n a
 throwInvalidNodeId t = parseError $ "the node id is invalid: " <> t
 
 -- | The 'node' root field of a Relay request.
-node
+nodePG
   :: forall m n r
-   . ( MonadSchema n m
-     , MonadTableInfo r m
+   . ( BackendSchema 'Postgres
+     , MonadSchema n m
+     , MonadTableInfo 'Postgres r m
      , MonadRole r m
      , Has QueryContext r
      )
-  => m (P.Parser 'Output n (HashMap QualifiedTable (SelPermInfo 'Postgres, PrimaryKeyColumns 'Postgres, AnnotatedFields 'Postgres)))
-node = memoizeOn 'node () do
+  => m (P.Parser 'Output n
+         ( HashMap (TableName 'Postgres)
+           ( SourceName
+           , SourceConfig 'Postgres
+           , SelPermInfo 'Postgres
+           , PrimaryKeyColumns 'Postgres
+           , AnnotatedFields 'Postgres
+           )
+         )
+       )
+nodePG = memoizeOn 'nodePG () do
   let idDescription = G.Description "A globally unique identifier"
       idField = P.selection_ $$(G.litName "id") (Just idDescription) P.identifier
       nodeInterfaceDescription = G.Description "An object with globally unique ID"
-  allTables :: TableCache <- asks getter
-  tables :: HashMap QualifiedTable (Parser 'Output n (SelPermInfo 'Postgres, NESeq (ColumnInfo 'Postgres), AnnotatedFields 'Postgres)) <-
-    Map.mapMaybe id <$> flip Map.traverseWithKey allTables \table _ -> runMaybeT do
+  sources :: SourceCache 'Postgres <- asks getter
+  let allTables = Map.fromList $ flip concatMap (Map.toList sources) $ -- FIXME? When source name is used in type generation?
+        \(source, sourceCache) -> map (, (source, _pcConfiguration sourceCache)) $ Map.keys $ takeValidTables $ _pcTables sourceCache
+  tables <-
+    Map.mapMaybe id <$> flip Map.traverseWithKey allTables \table (source, sourceConfig) -> runMaybeT do
       tablePkeyColumns <- MaybeT $ (^? tiCoreInfo.tciPrimaryKey._Just.pkColumns) <$> askTableInfo table
       selectPermissions <- MaybeT $ tableSelectPermissions table
       annotatedFieldsParser <- lift $ tableSelectionSet table selectPermissions
-      pure $ (selectPermissions, tablePkeyColumns,) <$> annotatedFieldsParser
+      pure $ (source, sourceConfig, selectPermissions, tablePkeyColumns,) <$> annotatedFieldsParser
   pure $ P.selectionSetInterface $$(G.litName "Node")
          (Just nodeInterfaceDescription) [idField] tables
 
 nodeField
   :: forall m n r
-   . ( MonadSchema n m
-     , MonadTableInfo r m
+   . ( BackendSchema 'Postgres
+     , MonadSchema n m
+     , MonadTableInfo 'Postgres r m
      , MonadRole r m
      , Has QueryContext r
      )
-  => m (P.FieldParser n (SelectExp 'Postgres))
+  => m (P.FieldParser n (QueryRootField (UnpreparedValue 'Postgres)))
 nodeField = do
   let idDescription = G.Description "A globally unique id"
       idArgument = P.field $$(G.litName "id") (Just idDescription) P.identifier
@@ -1310,11 +1275,12 @@ nodeField = do
   return $ P.subselection $$(G.litName "node") Nothing idArgument nodeObject `P.bindField`
     \(ident, parseds) -> do
       NodeIdV1 (V1NodeId table columnValues) <- parseNodeId ident
-      (perms, pkeyColumns, fields) <-
+      (source, sourceConfig, perms, pkeyColumns, fields) <-
         onNothing (Map.lookup table parseds) $
         withArgsPath $  throwInvalidNodeId $ "the table " <>> ident
       whereExp <- buildNodeIdBoolExp columnValues pkeyColumns
-      return $ IR.AnnSelectG
+      let pgExecCtx = PG._pscExecCtx sourceConfig
+      return $ RFDB source pgExecCtx $ QDBPrimaryKey $ IR.AnnSelectG
         { IR._asnFields   = fields
         , IR._asnFrom     = IR.FromTable table
         , IR._asnPerm     = tablePermissionsInfo perms
@@ -1336,7 +1302,7 @@ nodeField = do
     buildNodeIdBoolExp
       :: NESeq.NESeq J.Value
       -> NESeq.NESeq (ColumnInfo 'Postgres)
-      -> n (IR.AnnBoolExp 'Postgres UnpreparedValue)
+      -> n (IR.AnnBoolExp 'Postgres (UnpreparedValue 'Postgres))
     buildNodeIdBoolExp columnValues pkeyColumns = do
         let firstPkColumn NESeq.:<|| remainingPkColumns = pkeyColumns
             firstColumnValue NESeq.:<|| remainingColumns = columnValues
@@ -1356,6 +1322,6 @@ nodeField = do
             let modifyErrFn t = "value of column " <> pgiColumn columnInfo
                                 <<> " in node id: " <> t
                 pgColumnType = pgiType columnInfo
-            pgValue <- modifyErr modifyErrFn $ parsePGScalarValue pgColumnType columnValue
-            let unpreparedValue = flip UVParameter Nothing $ P.PGColumnValue pgColumnType pgValue
+            pgValue <- modifyErr modifyErrFn $ parseScalarValue pgColumnType columnValue
+            let unpreparedValue = UVParameter Nothing $ ColumnValue pgColumnType pgValue
             pure $ IR.BoolFld $ IR.AVCol columnInfo [IR.AEQ True unpreparedValue]

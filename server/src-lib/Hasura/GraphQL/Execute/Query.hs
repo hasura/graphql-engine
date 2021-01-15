@@ -4,7 +4,6 @@ module Hasura.GraphQL.Execute.Query
   -- , ReusableQueryPlan
   , PreparedSql(..)
   , traverseQueryRootField -- for live query planning
-  , irToRootFieldPlan
   , parseGraphQLQuery
 
   , MonadQueryInstrumentation(..)
@@ -14,73 +13,35 @@ module Hasura.GraphQL.Execute.Query
 
 import           Hasura.Prelude
 
-import qualified Data.Aeson                                  as J
-import qualified Data.Environment                            as Env
-import qualified Data.HashMap.Strict                         as Map
-import qualified Data.HashMap.Strict.InsOrd                  as OMap
-import qualified Data.IntMap                                 as IntMap
-import qualified Data.Sequence.NonEmpty                      as NESeq
-import qualified Database.PG.Query                           as Q
-import qualified Language.GraphQL.Draft.Syntax               as G
-import qualified Network.HTTP.Client                         as HTTP
-import qualified Network.HTTP.Types                          as HTTP
+import qualified Data.Aeson                             as J
+import qualified Data.Environment                       as Env
+import qualified Data.HashMap.Strict                    as Map
+import qualified Data.HashMap.Strict.InsOrd             as OMap
+import qualified Data.Sequence.NonEmpty                 as NESeq
+import qualified Database.PG.Query                      as Q
+import qualified Language.GraphQL.Draft.Syntax          as G
+import qualified Network.HTTP.Client                    as HTTP
+import qualified Network.HTTP.Types                     as HTTP
 
-import qualified Hasura.Backends.Postgres.SQL.DML            as S
-import qualified Hasura.Backends.Postgres.Translate.Select   as DS
-import qualified Hasura.GraphQL.Transport.HTTP.Protocol      as GH
-import qualified Hasura.Logging                              as L
-import qualified Hasura.RQL.IR.Select                        as DS
-import qualified Hasura.Tracing                              as Tracing
+import qualified Hasura.GraphQL.Transport.HTTP.Protocol as GH
+import qualified Hasura.Logging                         as L
+import qualified Hasura.RQL.IR.Select                   as DS
+import qualified Hasura.Tracing                         as Tracing
 
 import           Hasura.Backends.Postgres.Connection
-import           Hasura.Backends.Postgres.Execute.RemoteJoin
-import           Hasura.Backends.Postgres.SQL.Value
-import           Hasura.Backends.Postgres.Translate.Select   (asSingleRowJsonResp)
 import           Hasura.EncJSON
 import           Hasura.GraphQL.Context
 import           Hasura.GraphQL.Execute.Action
+import           Hasura.GraphQL.Execute.Common
 import           Hasura.GraphQL.Execute.Prepare
 import           Hasura.GraphQL.Execute.Remote
 import           Hasura.GraphQL.Execute.Resolve
 import           Hasura.GraphQL.Parser
+import           Hasura.Metadata.Class
 import           Hasura.RQL.Types
-import           Hasura.Server.Version                       (HasVersion)
+import           Hasura.Server.Version                  (HasVersion)
 import           Hasura.Session
 
-
-data PreparedSql
-  = PreparedSql
-  { _psQuery       :: !Q.Query
-  , _psPrepArgs    :: !PrepArgMap
-  , _psRemoteJoins :: !(Maybe (RemoteJoins 'Postgres))
-  }
-
--- | Required to log in `query-log`
-instance J.ToJSON PreparedSql where
-  toJSON (PreparedSql q prepArgs _) =
-    J.object [ "query" J..= Q.getQueryText q
-             , "prepared_arguments" J..= fmap (pgScalarValueToJson . snd) prepArgs
-             ]
-
-data RootFieldPlan
-  = RFPPostgres !PreparedSql
-  | RFPActionQuery !ActionExecuteTx
-
-instance J.ToJSON RootFieldPlan where
-  toJSON = \case
-    RFPPostgres pgPlan -> J.toJSON pgPlan
-    RFPActionQuery _   -> J.String "Action Execution Tx"
-
-data ActionQueryPlan (b :: BackendType)
-  = AQPAsyncQuery !(DS.AnnSimpleSel b) -- ^ Cacheable plan
-  | AQPQuery !ActionExecuteTx -- ^ Non cacheable transaction
-
-actionQueryToRootFieldPlan
-  :: PrepArgMap -> ActionQueryPlan 'Postgres -> RootFieldPlan
-actionQueryToRootFieldPlan prepped = \case
-  AQPAsyncQuery s -> RFPPostgres $
-    PreparedSql (DS.selectQuerySQL DS.JASSingleObject s) prepped Nothing
-  AQPQuery tx     -> RFPActionQuery tx
 
 -- See Note [Temporarily disabling query plan caching]
 -- data ReusableVariableTypes
@@ -110,52 +71,9 @@ actionQueryToRootFieldPlan prepped = \case
 --       let varName = G.unName var
 --       colVal <- onNothing (Map.lookup var annVars) $
 --         throw500 $ "missing variable in annVars : " <> varName
---       let prepVal = (toBinaryValue colVal, pstValue colVal)
+--       let prepVal = (binEncoder colVal, pstValue colVal)
 --       return $ IntMap.insert prepNo prepVal accum
 
--- turn the current plan into a transaction
-mkCurPlanTx
-  :: ( HasVersion
-     , MonadIO tx
-     , MonadTx tx
-     , Tracing.MonadTrace tx
-     )
-  => Env.Environment
-  -> HTTP.Manager
-  -> [HTTP.Header]
-  -> UserInfo
-  -> (Q.Query -> Q.Query)
-  -> ExtractProfile
-  -> RootFieldPlan
-  -> (tx EncJSON, Maybe PreparedSql)
-mkCurPlanTx env manager reqHdrs userInfo instrument ep = \case
-  -- generate the SQL and prepared vars or the bytestring
-    RFPPostgres ps@(PreparedSql q prepMap remoteJoinsM) ->
-      let args = withUserVars (_uiSession userInfo) prepMap
-          -- WARNING: this quietly assumes the intmap keys are contiguous
-          prepArgs = fst <$> IntMap.elems args
-      in (, Just ps) $ case remoteJoinsM of
-           Nothing -> do
-             Tracing.trace "Postgres" $ runExtractProfile ep =<< liftTx do
-               asSingleRowJsonResp (instrument q) prepArgs
-           Just remoteJoins ->
-             executeQueryWithRemoteJoins env manager reqHdrs userInfo q prepArgs remoteJoins
-    RFPActionQuery atx -> (atx, Nothing)
-
--- convert a query from an intermediate representation to... another
-irToRootFieldPlan
-  :: PrepArgMap
-  -> QueryDB 'Postgres S.SQLExp -> PreparedSql
-irToRootFieldPlan prepped = \case
-  QDBSimple s      -> mkPreparedSql getRemoteJoins (DS.selectQuerySQL DS.JASMultipleRows) s
-  QDBPrimaryKey s  -> mkPreparedSql getRemoteJoins (DS.selectQuerySQL DS.JASSingleObject) s
-  QDBAggregation s -> mkPreparedSql getRemoteJoinsAggregateSelect DS.selectAggregateQuerySQL s
-  QDBConnection s  -> mkPreparedSql getRemoteJoinsConnectionSelect DS.connectionSelectQuerySQL s
-  where
-    mkPreparedSql :: (s -> (t, Maybe (RemoteJoins 'Postgres))) -> (t -> Q.Query) -> s -> PreparedSql
-    mkPreparedSql getJoins f simpleSel =
-      let (simpleSel',remoteJoins) = getJoins simpleSel
-      in PreparedSql (f simpleSel') prepped remoteJoins
 
 traverseQueryRootField
   :: forall f a b c d h backend
@@ -175,7 +93,7 @@ parseGraphQLQuery
   -> [G.VariableDefinition]
   -> Maybe (HashMap G.Name J.Value)
   -> G.SelectionSet G.NoFragments G.Name
-  -> m ( InsOrdHashMap G.Name (QueryRootField UnpreparedValue)
+  -> m ( InsOrdHashMap G.Name (QueryRootField (UnpreparedValue 'Postgres))
        , QueryReusability
        )
 parseGraphQLQuery gqlContext varDefs varValsM fields =
@@ -188,15 +106,6 @@ parseGraphQLQuery gqlContext varDefs varValsM fields =
       -- here. It would be nice to report all of them!
       ParseError{ pePath, peMessage, peCode } ->
         throwError (err400 peCode peMessage){ qePath = pePath }
-
--- | A method for extracting profiling data from instrumented query results.
-newtype ExtractProfile = ExtractProfile
-  { runExtractProfile :: forall m. (MonadIO m, Tracing.MonadTrace m) => EncJSON -> m EncJSON
-  }
-
--- | A default implementation for queries with no instrumentation
-noProfile :: ExtractProfile
-noProfile = ExtractProfile pure
 
 -- | Monads which support query instrumentation
 class Monad m => MonadQueryInstrumentation m where
@@ -226,6 +135,7 @@ class Monad m => MonadQueryInstrumentation m where
 instance MonadQueryInstrumentation m => MonadQueryInstrumentation (ReaderT r m)
 instance MonadQueryInstrumentation m => MonadQueryInstrumentation (ExceptT e m)
 instance MonadQueryInstrumentation m => MonadQueryInstrumentation (Tracing.TraceT m)
+instance MonadQueryInstrumentation m => MonadQueryInstrumentation (MetadataStorageT m)
 
 convertQuerySelSet
   :: forall m tx .
@@ -248,9 +158,9 @@ convertQuerySelSet
   -> G.SelectionSet G.NoFragments G.Name
   -> [G.VariableDefinition]
   -> Maybe GH.VariableValues
-  -> m ( ExecutionPlan (tx EncJSON, Maybe PreparedSql)
+  -> m ( ExecutionPlan ActionExecutionPlan (tx EncJSON, Maybe PreparedSql)
        -- , Maybe ReusableQueryPlan
-       , [QueryRootField UnpreparedValue]
+       , [QueryRootField (UnpreparedValue 'Postgres)]
        )
 convertQuerySelSet env logger gqlContext userInfo manager reqHeaders directives fields varDefs varValsM = do
   -- Parse the GraphQL query into the RQL AST
@@ -261,40 +171,30 @@ convertQuerySelSet env logger gqlContext userInfo manager reqHeaders directives 
     (preparedQuery, PlanningSt _ _ planVals expectedVariables)
       <- flip runStateT initPlanningSt
          $ traverseQueryRootField prepareWithPlan unpreparedQuery
-           >>= traverseAction convertActionQuery
+           >>= traverseRemoteField (resolveRemoteField userInfo)
     validateSessionVariables expectedVariables $ _uiSession userInfo
     traverseDB (pure . irToRootFieldPlan planVals) preparedQuery
-      >>= traverseAction (pure . actionQueryToRootFieldPlan planVals)
 
   (instrument, ep) <- askInstrumentQuery directives
 
   -- Transform the query plans into an execution plan
-  let executionPlan = queryPlan <&> \case
-        RFRemote (remoteSchemaInfo, remoteField) ->
+  executionPlan <- forM queryPlan  \case
+        RFRemote (RemoteFieldG remoteSchemaInfo remoteField) -> pure $
           buildExecStepRemote
             remoteSchemaInfo
             G.OperationTypeQuery
-            varDefs
             [G.SelectionField remoteField]
-            varValsM
-        RFDB db      -> ExecStepDB $ mkCurPlanTx env manager reqHeaders userInfo instrument ep (RFPPostgres db)
-        RFAction rfp -> ExecStepDB $ mkCurPlanTx env manager reqHeaders userInfo instrument ep rfp
-        RFRaw r      -> ExecStepRaw r
+        RFDB _ e db          -> pure $ ExecStepDB e $ mkCurPlanTx env manager reqHeaders userInfo instrument ep (RFPPostgres db)
+        RFAction (AQQuery s) -> ExecStepAction . AEPSync . _aerExecution <$>
+                                resolveActionExecution env logger userInfo s (ActionExecContext manager reqHeaders usrVars)
+        RFAction (AQAsync s) -> pure $ ExecStepAction $ AEPAsyncQuery (_aaaqActionId s) $ resolveAsyncActionQuery userInfo s
+        RFRaw r              -> pure $ ExecStepRaw r
 
-  let asts :: [QueryRootField UnpreparedValue]
+  let asts :: [QueryRootField (UnpreparedValue 'Postgres)]
       asts = OMap.elems unpreparedQueries
   pure (executionPlan, asts)  -- See Note [Temporarily disabling query plan caching]
   where
     usrVars = _uiSession userInfo
-
-    convertActionQuery
-      :: ActionQuery 'Postgres UnpreparedValue -> StateT PlanningSt m (ActionQueryPlan 'Postgres)
-    convertActionQuery = \case
-      AQQuery s -> lift $ do
-        result <- resolveActionExecution env logger userInfo s $ ActionExecContext manager reqHeaders usrVars
-        pure $ AQPQuery $ _aerTransaction result
-      AQAsync s -> AQPAsyncQuery <$>
-        DS.traverseAnnSimpleSelect prepareWithPlan (resolveAsyncActionQuery userInfo s)
 
 -- See Note [Temporarily disabling query plan caching]
 -- use the existing plan and new variables to create a pg query

@@ -7,8 +7,6 @@ module Hasura.Backends.Postgres.Translate.Insert
 
 import           Hasura.Prelude
 
-import           Instances.TH.Lift                            ()
-
 import qualified Hasura.Backends.Postgres.SQL.DML             as S
 
 import           Hasura.Backends.Postgres.SQL.Types

@@ -117,9 +117,10 @@ library
                      , mtl
                      , aeson
                      , aeson-casing
-                     , unordered-containers
+                     , unordered-containers >= 0.2.12
                      , template-haskell
                      , hashable
+                     , kan-extensions
                      , transformers
                      , transformers-base
                      , http-types
@@ -224,6 +225,7 @@ library
 
                      -- pretty printer
                      , ansi-wl-pprint
+                     , pretty-simple
 
                      -- for capturing various metrics
                      , ekg-core
@@ -263,17 +265,6 @@ library
                      , cron >= 0.6.2
                      -- needed for deriving via
                      , semigroups >= 0.19
-
-                     , random
-                     , mmorph
-                     , http-api-data
-                     , lens-aeson
-                     , safe
-
-                     , semigroups >= 0.19.1
-
-                     -- scheduled triggers
-                     , cron >= 0.6.2
   if !flag(profiling)
     build-depends:
       -- 0.6.1 is supposedly not okay for ghc 8.6:
@@ -285,6 +276,7 @@ library
                      , Control.Concurrent.Extended
                      , Control.Lens.Extended
                      , Control.Monad.Stateless
+                     , Control.Monad.Trans.Managed
                      , Control.Monad.Unique
                      , Data.Aeson.Extended
                      , Data.Aeson.Ordered
@@ -302,16 +294,20 @@ library
                      , Data.Time.Clock.Units
                      , Data.URL.Template
                      , Hasura.App
+                     , Hasura.Metadata.Class
 
                      , Hasura.Backends.Postgres.Connection
                      , Hasura.Backends.Postgres.Execute.Mutation
                      , Hasura.Backends.Postgres.Execute.RemoteJoin
+                     , Hasura.Backends.Postgres.Execute.Types
                      , Hasura.Backends.Postgres.Translate.BoolExp
+                     , Hasura.Backends.Postgres.Translate.Column
                      , Hasura.Backends.Postgres.Translate.Delete
                      , Hasura.Backends.Postgres.Translate.Insert
                      , Hasura.Backends.Postgres.Translate.Mutation
                      , Hasura.Backends.Postgres.Translate.Returning
                      , Hasura.Backends.Postgres.Translate.Select
+                     , Hasura.Backends.Postgres.Translate.Types
                      , Hasura.Backends.Postgres.Translate.Update
                      , Hasura.Backends.Postgres.SQL.DML
                      , Hasura.Backends.Postgres.SQL.Error
@@ -329,11 +325,14 @@ library
                      , Hasura.Server.Init
                      , Hasura.Server.Init.Config
                      , Hasura.Server.API.Query
+                     , Hasura.Server.API.V2Query
+                     , Hasura.Server.API.Metadata
                      , Hasura.Server.Utils
                      , Hasura.Server.Version
                      , Hasura.Server.Logging
                      , Hasura.Server.Migrate
                      , Hasura.Server.Compression
+                     , Hasura.Server.Types
                      , Hasura.Server.API.PGDump
                      , Hasura.Prelude
 
@@ -351,6 +350,7 @@ library
                      -- Exposed for testing:
                      , Hasura.Server.Telemetry.Counters
                      , Hasura.Server.Auth.JWT
+                     , Hasura.GC
                      , Hasura.GraphQL.Execute
                      , Hasura.GraphQL.Execute.LiveQuery
                      , Hasura.GraphQL.Transport.HTTP
@@ -373,7 +373,6 @@ library
                      , Hasura.RQL.Instances
                      , Hasura.RQL.Types
                      , Hasura.RQL.Types.Action
-                     , Hasura.RQL.Types.Catalog
                      , Hasura.RQL.Types.Column
                      , Hasura.RQL.Types.Common
                      , Hasura.RQL.Types.ComputedField
@@ -391,6 +390,7 @@ library
                      , Hasura.RQL.Types.SchemaCache
                      , Hasura.RQL.Types.SchemaCache.Build
                      , Hasura.RQL.Types.SchemaCacheTypes
+                     , Hasura.RQL.Types.Source
                      , Hasura.RQL.Types.Table
                      , Hasura.RQL.DDL.Action
                      , Hasura.RQL.DDL.ComputedField
@@ -408,6 +408,7 @@ library
                      , Hasura.RQL.DDL.RemoteRelationship
                      , Hasura.RQL.DDL.RemoteRelationship.Validate
                      , Hasura.RQL.DDL.RemoteSchema
+                     , Hasura.RQL.DDL.RemoteSchema.Permission
                      , Hasura.RQL.DDL.Schema
                      , Hasura.RQL.DDL.Schema.Cache
                      , Hasura.RQL.DDL.Schema.Cache.Common
@@ -415,11 +416,14 @@ library
                      , Hasura.RQL.DDL.Schema.Cache.Fields
                      , Hasura.RQL.DDL.Schema.Cache.Permission
                      , Hasura.RQL.DDL.Schema.Catalog
+                     , Hasura.RQL.DDL.Schema.LegacyCatalog
+                     , Hasura.RQL.DDL.Schema.Common
                      , Hasura.RQL.DDL.Schema.Diff
                      , Hasura.RQL.DDL.Schema.Enum
                      , Hasura.RQL.DDL.Schema.Function
                      , Hasura.RQL.DDL.Schema.Rename
                      , Hasura.RQL.DDL.Schema.Table
+                     , Hasura.RQL.DDL.Schema.Source
                      , Hasura.RQL.DDL.EventTrigger
                      , Hasura.RQL.DDL.ScheduledTrigger
                      , Hasura.RQL.DML.Count
@@ -443,6 +447,7 @@ library
                      , Hasura.GraphQL.Execute.Plan
                      , Hasura.GraphQL.Execute.Types
                      , Hasura.GraphQL.Execute.Mutation
+                     , Hasura.GraphQL.Execute.Common
                      , Hasura.GraphQL.Execute.Remote
                      , Hasura.GraphQL.Execute.Resolve
                      , Hasura.GraphQL.Execute.Prepare
@@ -464,17 +469,20 @@ library
                      , Hasura.GraphQL.Parser.Schema
                      , Hasura.GraphQL.Schema
                      , Hasura.GraphQL.Schema.Action
+                     , Hasura.GraphQL.Schema.Backend
                      , Hasura.GraphQL.Schema.BoolExp
                      , Hasura.GraphQL.Schema.Common
                      , Hasura.GraphQL.Schema.Introspect
                      , Hasura.GraphQL.Schema.Mutation
                      , Hasura.GraphQL.Schema.OrderBy
+                     , Hasura.GraphQL.Schema.Postgres
                      , Hasura.GraphQL.Schema.Remote
                      , Hasura.GraphQL.Schema.Select
                      , Hasura.GraphQL.Schema.Table
                      , Hasura.Eventing.HTTP
                      , Hasura.Eventing.EventTrigger
                      , Hasura.Eventing.ScheduledTrigger
+                     , Hasura.Eventing.ScheduledTrigger.Types
                      , Hasura.Eventing.Common
                      , Data.GADT.Compare.Extended
                      , Data.Tuple.Extended
@@ -483,6 +491,7 @@ library
                      , Hasura.SQL.Time
                      , Hasura.SQL.Types
                      , Hasura.Tracing
+                     , Network.HTTP.Client.Extended
                      , Network.URI.Extended
                      , Network.Wai.Extended
                      , Network.Wai.Handler.WebSockets.Custom
@@ -494,6 +503,7 @@ executable graphql-engine
   build-depends:     base
                    , graphql-engine
                    , bytestring
+                   , kan-extensions
                    , pg-client
                    , text
                    , text-conversions
@@ -517,6 +527,7 @@ test-suite graphql-engine-tests
     , http-client-tls
     , jose
     , lifted-base
+    , kan-extensions
     , monad-control
     , mtl
     , natural-transformation >=0.4 && <0.5
@@ -531,6 +542,7 @@ test-suite graphql-engine-tests
     , transformers-base
     , unordered-containers
     , text
+    , mmorph
   hs-source-dirs: src-test
   main-is: Main.hs
   other-modules:

@@ -3,41 +3,46 @@ module Hasura.RQL.DDL.EventTrigger
   , runCreateEventTriggerQuery
   , DeleteEventTriggerQuery
   , runDeleteEventTriggerQuery
+  , dropEventTriggerInMetadata
   , RedeliverEventQuery
   , runRedeliverEvent
   , runInvokeEventTrigger
+  , createPostgresTableEventTrigger
 
   -- TODO(from master): review
-  , delEventTriggerFromCatalog
   , mkEventTriggerInfo
   , mkAllTriggersQ
   , delTriggerQ
+  , archiveEvents
   , getEventTriggerDef
   , getWebhookInfoFromConf
   , getHeaderInfosFromConf
-  , updateEventTriggerInCatalog
-  , replaceEventTriggersInCatalog
   ) where
 
 import           Hasura.Prelude
 
-import qualified Data.Environment                   as Env
-import qualified Data.HashMap.Strict.Extended       as Map
-import qualified Data.Text                          as T
-import qualified Data.Text.Lazy                     as TL
-import qualified Database.PG.Query                  as Q
-import qualified Text.Shakespeare.Text              as ST
+import qualified Data.Environment                       as Env
+import qualified Data.HashMap.Strict                    as HM
+import qualified Data.HashMap.Strict.InsOrd             as OMap
+import qualified Data.Text                              as T
+import qualified Data.Text.Lazy                         as TL
+import qualified Database.PG.Query                      as Q
+import qualified Text.Shakespeare.Text                  as ST
 
+import           Control.Lens                           ((.~))
 import           Data.Aeson
+import           Data.Text.Extended
 
-import qualified Hasura.Backends.Postgres.SQL.DML   as S
+import qualified Hasura.Backends.Postgres.SQL.DML       as S
 
+import           Hasura.Backends.Postgres.Execute.Types
 import           Hasura.Backends.Postgres.SQL.Types
 import           Hasura.EncJSON
 import           Hasura.RQL.DDL.Headers
 import           Hasura.RQL.DML.Internal
 import           Hasura.RQL.Types
 import           Hasura.SQL.Types
+import           Hasura.Session
 
 
 data OpVar = OLD | NEW deriving (Show)
@@ -47,7 +52,7 @@ data OpVar = OLD | NEW deriving (Show)
 pgIdenTrigger:: Ops -> TriggerName -> Text
 pgIdenTrigger op trn = pgFmtIdentifier . qualifyTriggerName op $ triggerNameToTxt trn
   where
-    qualifyTriggerName op' trn' = "notify_hasura_" <> trn' <> "_" <> T.pack (show op')
+    qualifyTriggerName op' trn' = "notify_hasura_" <> trn' <> "_" <> tshow op'
 
 mkAllTriggersQ
   :: (MonadTx m, HasSQLGenCtx m)
@@ -69,20 +74,20 @@ mkTriggerQ
   -> Ops
   -> SubscribeOpSpec
   -> m ()
-mkTriggerQ trn qt allCols op (SubscribeOpSpec columns payload) = do
+mkTriggerQ trn qt@(QualifiedObject schema table) allCols op (SubscribeOpSpec columns payload) = do
   strfyNum <- stringifyNum <$> askSQLGenCtx
   liftTx $ Q.multiQE defaultTxErrorHandler $ Q.fromText . TL.toStrict $
     let payloadColumns = fromMaybe SubCStar payload
         mkQId opVar colInfo = toJSONableExp strfyNum (pgiType colInfo) False $
           S.SEQIdentifier $ S.QIdentifier (opToQual opVar) $ toIdentifier $ pgiColumn colInfo
         getRowExpression opVar = case payloadColumns of
-          SubCStar -> applyRowToJson $ S.SEUnsafe $ opToTxt opVar
+          SubCStar -> applyRowToJson $ S.SEUnsafe $ tshow opVar
           SubCArray cols -> applyRowToJson $
             S.mkRowExp $ map (toExtr . mkQId opVar) $
             getColInfos cols allCols
 
         renderRow opVar = case columns of
-          SubCStar -> applyRow $ S.SEUnsafe $ opToTxt opVar
+          SubCStar -> applyRow $ S.SEUnsafe $ tshow opVar
           SubCArray cols -> applyRow $
             S.mkRowExp $ map (toExtr . mkQId opVar) $
             getColInfos cols allCols
@@ -101,8 +106,10 @@ mkTriggerQ trn qt allCols op (SubscribeOpSpec columns payload) = do
         name = triggerNameToTxt trn
         qualifiedTriggerName = pgIdenTrigger op trn
         qualifiedTable = toSQLTxt qt
+        schemaName = pgFmtLit $ getSchemaTxt schema
+        tableName  = pgFmtLit $ getTableTxt table
 
-        operation = T.pack $ show op
+        operation = tshow op
         oldRow = toSQLTxt $ renderRow OLD
         newRow = toSQLTxt $ renderRow NEW
         oldPayloadExpression = toSQLTxt oldDataExp
@@ -113,8 +120,7 @@ mkTriggerQ trn qt allCols op (SubscribeOpSpec columns payload) = do
     applyRowToJson e = S.SEFnApp "row_to_json" [e] Nothing
     applyRow e = S.SEFnApp "row" [e] Nothing
     toExtr = flip S.Extractor Nothing
-    opToQual = S.QualVar . opToTxt
-    opToTxt = T.pack . show
+    opToQual = S.QualVar . tshow
 
 delTriggerQ :: TriggerName -> Q.TxE QErr ()
 delTriggerQ trn =
@@ -128,57 +134,29 @@ delTriggerQ trn =
       <> " hdb_catalog." <> pgIdenTrigger op trn <> "()"
       <> " CASCADE"
 
-addEventTriggerToCatalog
-  :: QualifiedTable
-  -> EventTriggerConf
-  -> Q.TxE QErr ()
-addEventTriggerToCatalog qt etc = do
-  Q.unitQE defaultTxErrorHandler
-         [Q.sql|
-           INSERT into hdb_catalog.event_triggers
-                       (name, type, schema_name, table_name, configuration)
-           VALUES ($1, 'table', $2, $3, $4)
-         |] (name, sn, tn, Q.AltJ $ toJSON etc) False
-  where
-    QualifiedObject sn tn = qt
-    (EventTriggerConf name _ _ _ _ _) = etc
-
-delEventTriggerFromCatalog :: TriggerName -> Q.TxE QErr ()
-delEventTriggerFromCatalog trn = do
-  Q.unitQE defaultTxErrorHandler [Q.sql|
-           DELETE FROM
-                  hdb_catalog.event_triggers
-           WHERE name = $1
-                |] (Identity trn) False
-  delTriggerQ trn
-  archiveEvents trn
-
 archiveEvents :: TriggerName -> Q.TxE QErr ()
-archiveEvents trn = do
+archiveEvents trn =
   Q.unitQE defaultTxErrorHandler [Q.sql|
            UPDATE hdb_catalog.event_log
            SET archived = 't'
            WHERE trigger_name = $1
                 |] (Identity trn) False
 
-fetchEvent :: EventId -> Q.TxE QErr (EventId, Bool)
-fetchEvent eid = do
+checkEvent :: EventId -> Q.TxE QErr ()
+checkEvent eid = do
   events <- Q.listQE defaultTxErrorHandler
             [Q.sql|
-              SELECT l.id, l.locked IS NOT NULL AND l.locked >= (NOW() - interval '30 minute')
+              SELECT l.locked IS NOT NULL AND l.locked >= (NOW() - interval '30 minute')
               FROM hdb_catalog.event_log l
-              JOIN hdb_catalog.event_triggers e
-              ON l.trigger_name = e.name
               WHERE l.id = $1
               |] (Identity eid) True
   event <- getEvent events
   assertEventUnlocked event
-  return event
   where
     getEvent []    = throw400 NotExists "event not found"
     getEvent (x:_) = return x
 
-    assertEventUnlocked (_, locked) = when locked $
+    assertEventUnlocked (Identity locked) = when locked $
       throw400 Busy "event is already being processed"
 
 markForDelivery :: EventId -> Q.TxE QErr ()
@@ -192,12 +170,12 @@ markForDelivery eid =
           WHERE id = $1
           |] (Identity eid) True
 
-subTableP1 :: (UserInfoM m, QErrM m, CacheRM m) => CreateEventTriggerQuery -> m (QualifiedTable, Bool, EventTriggerConf)
-subTableP1 (CreateEventTriggerQuery name qt insert update delete enableManual retryConf webhook webhookFromEnv mheaders replace) = do
-  ti <- askTableCoreInfo qt
+resolveEventTriggerQuery :: (UserInfoM m, QErrM m, CacheRM m) => CreateEventTriggerQuery -> m (TableCoreInfo 'Postgres, Bool, EventTriggerConf)
+resolveEventTriggerQuery (CreateEventTriggerQuery source name qt insert update delete enableManual retryConf webhook webhookFromEnv mheaders replace) = do
+  ti <- askTableCoreInfo source qt
   -- can only replace for same table
   when replace $ do
-    ti' <- _tiCoreInfo <$> askTabInfoFromTrigger name
+    ti' <- _tiCoreInfo <$> askTabInfoFromTrigger source name
     when (_tciName ti' /= _tciName ti) $ throw400 NotSupported "cannot replace table or schema for trigger"
 
   assertCols ti insert
@@ -205,7 +183,7 @@ subTableP1 (CreateEventTriggerQuery name qt insert update delete enableManual re
   assertCols ti delete
 
   let rconf = fromMaybe defaultRetryConf retryConf
-  return (qt, replace, EventTriggerConf name (TriggerOpsDef insert update delete enableManual) webhook webhookFromEnv rconf mheaders)
+  return (ti, replace, EventTriggerConf name (TriggerOpsDef insert update delete enableManual) webhook webhookFromEnv rconf mheaders)
   where
     assertCols _ Nothing = return ()
     assertCols ti (Just sos) = do
@@ -217,10 +195,11 @@ subTableP1 (CreateEventTriggerQuery name qt insert update delete enableManual re
 mkEventTriggerInfo
   :: QErrM m
   => Env.Environment
+  -> SourceName
   -> QualifiedTable
   -> EventTriggerConf
   -> m (EventTriggerInfo, [SchemaDependency])
-mkEventTriggerInfo env qt (EventTriggerConf name def webhook webhookFromEnv rconf mheaders) = do
+mkEventTriggerInfo env source qt (EventTriggerConf name def webhook webhookFromEnv rconf mheaders) = do
   webhookConf <- case (webhook, webhookFromEnv) of
     (Just w, Nothing)    -> return $ WCValue w
     (Nothing, Just wEnv) -> return $ WCEnv wEnv
@@ -229,11 +208,11 @@ mkEventTriggerInfo env qt (EventTriggerConf name def webhook webhookFromEnv rcon
   webhookInfo <- getWebhookInfoFromConf env webhookConf
   headerInfos <- getHeaderInfosFromConf env headerConfs
   let eTrigInfo = EventTriggerInfo name def rconf webhookInfo headerInfos
-      tabDep = SchemaDependency (SOTable qt) DRParent
-  pure (eTrigInfo, tabDep:getTrigDefDeps qt def)
+      tabDep = SchemaDependency (SOSourceObj source $ SOITable qt) DRParent
+  pure (eTrigInfo, tabDep:getTrigDefDeps source qt def)
 
-getTrigDefDeps :: QualifiedTable -> TriggerOpsDef -> [SchemaDependency]
-getTrigDefDeps qt (TriggerOpsDef mIns mUpd mDel _) =
+getTrigDefDeps :: SourceName -> QualifiedTable -> TriggerOpsDef -> [SchemaDependency]
+getTrigDefDeps source qt (TriggerOpsDef mIns mUpd mDel _) =
   mconcat $ catMaybes [ subsOpSpecDeps <$> mIns
                       , subsOpSpecDeps <$> mUpd
                       , subsOpSpecDeps <$> mDel
@@ -243,46 +222,92 @@ getTrigDefDeps qt (TriggerOpsDef mIns mUpd mDel _) =
     subsOpSpecDeps os =
       let cols = getColsFromSub $ sosColumns os
           colDeps = flip map cols $ \col ->
-            SchemaDependency (SOTableObj qt (TOCol col)) DRColumn
+            SchemaDependency (SOSourceObj source $ SOITableObj qt (TOCol col)) DRColumn
           payload = maybe [] getColsFromSub (sosPayload os)
           payloadDeps = flip map payload $ \col ->
-            SchemaDependency (SOTableObj qt (TOCol col)) DRPayload
+            SchemaDependency (SOSourceObj source $ SOITableObj qt (TOCol col)) DRPayload
         in colDeps <> payloadDeps
     getColsFromSub sc = case sc of
       SubCStar         -> []
       SubCArray pgcols -> pgcols
 
+createEventTriggerQueryMetadata
+  :: (QErrM m, UserInfoM m, CacheRWM m, MetadataM m)
+  => CreateEventTriggerQuery -> m (TableCoreInfo 'Postgres, EventTriggerConf)
+createEventTriggerQueryMetadata q = do
+  (tableCoreInfo, replace, triggerConf) <- resolveEventTriggerQuery q
+  let table = cetqTable q
+      source = cetqSource q
+      triggerName = etcName triggerConf
+      metadataObj = MOSourceObjId source $ SMOTableObj table $ MTOTrigger triggerName
+  buildSchemaCacheFor metadataObj
+    $ MetadataModifier
+    $ tableMetadataSetter source table.tmEventTriggers %~
+      if replace then ix triggerName .~ triggerConf
+      else OMap.insert triggerName triggerConf
+  pure (tableCoreInfo, triggerConf)
+
 runCreateEventTriggerQuery
-  :: (QErrM m, UserInfoM m, CacheRWM m, MonadTx m)
+  :: (QErrM m, UserInfoM m, CacheRWM m, MetadataM m)
   => CreateEventTriggerQuery -> m EncJSON
 runCreateEventTriggerQuery q = do
-  (qt, replace, etc) <- subTableP1 q
-  liftTx if replace
-    then updateEventTriggerInCatalog etc
-    else addEventTriggerToCatalog qt etc
-  buildSchemaCacheFor $ MOTableObj qt (MTOTrigger $ etcName etc)
-  return successMsg
-
-runDeleteEventTriggerQuery
-  :: (MonadTx m, CacheRWM m)
-  => DeleteEventTriggerQuery -> m EncJSON
-runDeleteEventTriggerQuery (DeleteEventTriggerQuery name) = do
-  liftTx $ delEventTriggerFromCatalog name
-  withNewInconsistentObjsCheck buildSchemaCache
+  void $ createEventTriggerQueryMetadata q
   pure successMsg
 
-deliverEvent
-  :: (QErrM m, MonadTx m)
-  => RedeliverEventQuery -> m EncJSON
-deliverEvent (RedeliverEventQuery eventId) = do
-  _ <- liftTx $ fetchEvent eventId
-  liftTx $ markForDelivery eventId
-  return successMsg
+-- | Create the table event trigger in the database in a @'/v1/query' API
+-- transaction as soon as after @'runCreateEventTriggerQuery' is called and
+-- in building schema cache.
+createPostgresTableEventTrigger
+  :: (MonadTx m, HasSQLGenCtx m)
+  => QualifiedTable
+  -> [ColumnInfo 'Postgres]
+  -> TriggerName
+  -> TriggerOpsDef
+  -> m ()
+createPostgresTableEventTrigger table columns triggerName opsDefinition = do
+  -- Clean all existing triggers
+  liftTx $ delTriggerQ triggerName -- executes DROP IF EXISTS.. sql
+  -- Create the given triggers
+  mkAllTriggersQ triggerName table columns opsDefinition
+
+runDeleteEventTriggerQuery
+  :: (MonadError QErr m, CacheRWM m, MonadIO m, MetadataM m)
+  => DeleteEventTriggerQuery -> m EncJSON
+runDeleteEventTriggerQuery (DeleteEventTriggerQuery source name) = do
+  -- liftTx $ delEventTriggerFromCatalog name
+  SourceInfo _ tables _ sourceConfig <- askPGSourceCache source
+  let maybeTable = HM.lookup name $ HM.unions $
+                   flip map (HM.toList tables) $ \(table, tableInfo) ->
+                   HM.map (const table) $ _tiEventTriggerInfoMap tableInfo
+  table <- onNothing maybeTable $ throw400 NotExists $
+           "event trigger with name " <> name <<> " not exists"
+
+  withNewInconsistentObjsCheck
+    $ buildSchemaCache
+    $ MetadataModifier
+    $ tableMetadataSetter source table %~ dropEventTriggerInMetadata name
+
+  liftEitherM $ liftIO $ runPgSourceWriteTx sourceConfig $ do
+    delTriggerQ name
+    archiveEvents name
+  pure successMsg
+
+dropEventTriggerInMetadata :: TriggerName -> TableMetadata -> TableMetadata
+dropEventTriggerInMetadata name =
+  tmEventTriggers %~ OMap.delete name
+
+deliverEvent ::EventId -> Q.TxE QErr ()
+deliverEvent eventId = do
+  checkEvent eventId
+  markForDelivery eventId
 
 runRedeliverEvent
-  :: (MonadTx m)
+  :: (MonadIO m, CacheRM m, QErrM m)
   => RedeliverEventQuery -> m EncJSON
-runRedeliverEvent = deliverEvent
+runRedeliverEvent (RedeliverEventQuery eventId source) = do
+  sourceConfig <- _pcConfiguration <$> askPGSourceCache source
+  liftEitherM $ liftIO $ runPgSourceWriteTx sourceConfig $ deliverEvent eventId
+  pure successMsg
 
 insertManualEvent
   :: QualifiedTable
@@ -290,7 +315,7 @@ insertManualEvent
   -> Value
   -> Q.TxE QErr EventId
 insertManualEvent qt trn rowData = do
-  let op = T.pack $ show MANUAL
+  let op = tshow MANUAL
   eids <- map runIdentity <$> Q.listQE defaultTxErrorHandler [Q.sql|
            SELECT hdb_catalog.insert_event_log($1, $2, $3, $4, $5)
                 |] (sn, tn, trn, op, Q.AltJ $ toJSON rowData) True
@@ -301,13 +326,15 @@ insertManualEvent qt trn rowData = do
     getEid (x:_) = return x
 
 runInvokeEventTrigger
-  :: (QErrM m, CacheRM m, MonadTx m)
+  :: (MonadIO m, QErrM m, CacheRM m)
   => InvokeEventTriggerQuery -> m EncJSON
-runInvokeEventTrigger (InvokeEventTriggerQuery name payload) = do
-  trigInfo <- askEventTriggerInfo name
+runInvokeEventTrigger (InvokeEventTriggerQuery name source payload) = do
+  trigInfo <- askEventTriggerInfo source name
   assertManual $ etiOpsDef trigInfo
-  ti  <- askTabInfoFromTrigger name
-  eid <- liftTx $ insertManualEvent (_tciName $ _tiCoreInfo ti) name payload
+  ti  <- askTabInfoFromTrigger source name
+  sourceConfig <- _pcConfiguration <$> askPGSourceCache source
+  eid <- liftEitherM $ liftIO $ runPgSourceWriteTx sourceConfig $
+         insertManualEvent (_tciName $ _tiCoreInfo ti) name payload
   return $ encJFromJValue $ object ["event_id" .= eid]
   where
     assertManual (TriggerOpsDef _ _ _ man) = case man of
@@ -352,44 +379,23 @@ getEventTriggerDef triggerName = do
            |] (Identity triggerName) False
   return (QualifiedObject sn tn, etc)
 
-updateEventTriggerInCatalog :: EventTriggerConf -> Q.TxE QErr ()
-updateEventTriggerInCatalog trigConf =
-  Q.unitQE defaultTxErrorHandler
-    [Q.sql|
-      UPDATE hdb_catalog.event_triggers
-      SET
-      configuration = $1
-      WHERE name = $2
-    |] (Q.AltJ $ toJSON trigConf, etcName trigConf) True
-
--- | Replaces /all/ event triggers in the catalog with new ones, taking care to
--- drop SQL trigger functions and archive events for any deleted event triggers.
---
--- See Note [Diff-and-patch event triggers on replace] for more details.
-replaceEventTriggersInCatalog
-  :: MonadTx m
-  => HashMap TriggerName (QualifiedTable, EventTriggerConf)
-  -> m ()
-replaceEventTriggersInCatalog triggerConfs = do
-  existingTriggers <- Map.fromListOn id <$> fetchExistingTriggers
-  liftTx $ for_ (align existingTriggers triggerConfs) \case
-    This triggerName              -> delEventTriggerFromCatalog triggerName
-    That (tableName, triggerConf) -> addEventTriggerToCatalog tableName triggerConf
-    These _ (_, triggerConf)      -> updateEventTriggerInCatalog triggerConf
+askTabInfoFromTrigger
+  :: (QErrM m, CacheRM m)
+  => SourceName -> TriggerName -> m (TableInfo 'Postgres)
+askTabInfoFromTrigger sourceName trn = do
+  sc <- askSchemaCache
+  let tabInfos = HM.elems $ maybe mempty _pcTables $ HM.lookup sourceName $ scPostgres sc
+  find (isJust . HM.lookup trn . _tiEventTriggerInfoMap) tabInfos
+    `onNothing` throw400 NotExists errMsg
   where
-    fetchExistingTriggers = liftTx $ map runIdentity <$>
-      Q.listQE defaultTxErrorHandler
-        [Q.sql|SELECT name FROM hdb_catalog.event_triggers|] () True
+    errMsg = "event trigger " <> triggerNameToTxt trn <<> " does not exist"
 
-{- Note [Diff-and-patch event triggers on replace]
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-When executing a replace_metadata API call, we usually just drop everything in
-the catalog and recreate it from scratch, then rebuild the schema cache. This
-works fine for most things, but it’s a bad idea for event triggers, because
-delEventTriggerFromCatalog does extra work: it deletes the SQL trigger functions
-and archives all associated events.
-
-Therefore, we have to be more careful about which event triggers we drop. We
-diff the new metadata against the old metadata, and we only drop triggers that
-are actually absent in the new metadata. The replaceEventTriggersInCatalog
-function implements this diff-and-patch operation. -}
+askEventTriggerInfo
+  :: (QErrM m, CacheRM m)
+  => SourceName -> TriggerName -> m EventTriggerInfo
+askEventTriggerInfo sourceName trn = do
+  ti <- askTabInfoFromTrigger sourceName trn
+  let etim = _tiEventTriggerInfoMap ti
+  HM.lookup trn etim `onNothing` throw400 NotExists errMsg
+  where
+    errMsg = "event trigger " <> triggerNameToTxt trn <<> " does not exist"

@@ -1,7 +1,6 @@
 type: bulk
 args:
 
-#Author table
 - type: run_sql
   args:
     sql: |
@@ -11,15 +10,13 @@ args:
           is_registered boolean not null default false,
           remarks_internal text
       );
-- type: track_table
-  args:
-    schema: public
-    name: author
 
-#Article table
-- type: run_sql
-  args:
-    sql: |
+      INSERT INTO author (name, remarks_internal)
+        VALUES
+        ('Author 1', 'remark 1'),
+        ('Author 2', 'remark 2'),
+        ('Author 3', 'remark 3');
+
       CREATE TABLE article (
         id SERIAL PRIMARY KEY,
         title TEXT,
@@ -27,7 +24,126 @@ args:
         author_id INTEGER NOT NULL REFERENCES author(id),
         is_published BOOLEAN NOT NULL default FALSE,
         published_on TIMESTAMP
-      )
+      );
+
+      INSERT INTO article (title, content, author_id, is_published)
+        VALUES
+        ('Article 1', 'Sample article content 1', 1, false),
+        ('Article 2', 'Sample article content 2', 1, true),
+        ('Article 3', 'Sample article content 3', 2, true),
+        ('Article 4', 'Sample article content 4', 3, false);
+
+      CREATE TABLE "Artist" (
+        id serial PRIMARY KEY ,
+        name text NOT NULL
+      );
+
+      INSERT INTO "Artist" (id, name)
+        VALUES
+        (1, 'Camilla'),
+        (2, 'DSP'),
+        (3, 'Akon');
+
+      CREATE TABLE "Track" (
+        id serial PRIMARY KEY,
+        name text NOT NULL,
+        artist_id integer REFERENCES "Artist"("id")
+      );
+
+      INSERT INTO "Track" (id, name, artist_id)
+        VALUES
+        (1, 'Keepup', 1),
+        (2, 'Keepdown', 1),
+        (3, 'Happy', 2);
+
+      create function search_tracks(search text)
+      returns setof "Track" as $$
+          select *
+          from "Track"
+          where
+          name ilike ('%' || search || '%')
+      $$ language sql stable;
+
+      CREATE TABLE books (
+        id int,
+        author_name text,
+        book_name text,
+        published_on timestamptz,
+        PRIMARY KEY (id,book_name)
+      );
+
+      INSERT INTO books (id, author_name, book_name, published_on)
+        VALUES (1, 'J.K. Rowling', 'Harry Porter', '1997-06-26');
+
+      CREATE EXTENSION IF NOT EXISTS postgis;
+
+      DO $$
+      BEGIN
+        IF PostGIS_lib_version() ~ '^3.*' THEN
+          CREATE EXTENSION IF NOT EXISTS postgis_raster;
+        END IF;
+      END$$;
+
+      CREATE EXTENSION IF NOT EXISTS postgis_topology;
+
+      CREATE TABLE geom_table(
+        id SERIAL PRIMARY KEY,
+        type TEXT NOT NULL,
+        geom_col geometry NOT NULL
+      );
+
+      INSERT INTO geom_table (type, geom_col)
+      VALUES
+      ('point', ST_GeomFromEWKT('SRID=4326;POINT(1 2)')),
+      ('linestring', ST_GeomFromEWKT('SRID=4326;LINESTRING(0 0, 0.5 1, 1 2, 1.5 3)')),
+      ('linestring', ST_GeomFromEWKT('SRID=4326;LINESTRING(1 0, 0.5 0.5, 0 1)')),
+      ('polygon', ST_GeomFromEWKT('SRID=4326;POLYGON((0 0, 0 1, 1 1, 1 0, 0 0))')),
+      ('polygon', ST_GeomFromEWKT('SRID=4326;POLYGON((2 0, 2 1, 3 1, 3 0, 2 0))'))
+      ;
+
+      CREATE TABLE jsonb_table(
+        id INTEGER NOT NULL PRIMARY KEY,
+        jsonb_col jsonb NOT NULL
+      );
+
+      INSERT INTO jsonb_table (id, jsonb_col)
+        VALUES
+        (1, '{"name": "Hasura", "age": 7}'),
+        (2, '{"name": "Cross"}');
+
+      CREATE TABLE gpa (
+        id serial primary key,
+        student_name text not null,
+        gpa_score double precision not null
+        );
+
+      INSERT INTO gpa (student_name, gpa_score) VALUES
+        ('clarke', 9.24), ('george', 8.32),
+        ('blake', 7.34), ('leonel', 9.56);
+
+      CREATE FUNCTION passed_students (pass_gpa double precision)
+      RETURNS SETOF gpa as $$
+        SELECT * FROM gpa WHERE
+          gpa_score >= pass_gpa
+      $$ language SQL STABLE;
+      CREATE TABLE auction (
+      id serial primary key,
+      price integer not null DEFAULT 250,
+      bid_price integer
+      );
+
+      INSERT INTO auction
+      (bid_price)
+      VALUES
+      (100), (120), (300), (260)
+      ;
+
+- type: track_table
+  args:
+    schema: public
+    name: author
+
+#Article table
 - type: track_table
   args:
     schema: public
@@ -132,97 +248,17 @@ args:
       check:
         id: X-HASURA-USER-ID
 
-#Insert Author values
-- type: insert
-  args:
-    table: author
-    objects:
-    - name: Author 1
-      remarks_internal: remark 1
-    - name: Author 2
-      remarks_internal: remark 2
-    - name: Author 3
-      remarks_internal: remark 3
-
-#Insert Article values
-- type: insert
-  args:
-    table: article
-    objects:
-    - title: Article 1
-      content: Sample article content 1
-      author_id: 1
-      is_published: false
-
-    - title: Article 2
-      content: Sample article content 2
-      author_id: 1
-      is_published: true
-
-    - title: Article 3
-      content: Sample article content 3
-      author_id: 2
-      is_published: true
-
-    - title: Article 4
-      content: Sample article content 4
-      author_id: 3
-      is_published: false
-
 #Create Artist table
-- type: run_sql
-  args:
-    sql: |
-      CREATE TABLE "Artist" (
-        id serial PRIMARY KEY ,
-        name text NOT NULL
-      );
-
 - type: track_table
   args:
     schema: public
     name: Artist
 
 #Crete Track table
-- type: run_sql
-  args:
-    sql: |
-      CREATE TABLE "Track" (
-        id serial PRIMARY KEY,
-        name text NOT NULL,
-        artist_id integer REFERENCES "Artist"("id")
-      );
-
 - type: track_table
   args:
     schema: public
     name: Track
-
-# Insert data into Artist and Track table
-- type: insert
-  args:
-    table: Artist
-    objects:
-    - name: Camilla
-      id: 1
-    - name: DSP
-      id: 2
-    - name: Akon
-      id: 3
-
-- type: insert
-  args:
-    table: Track
-    objects:
-    - name: Keepup
-      artist_id: 1
-      id: 1
-    - name: Keepdown
-      artist_id: 1
-      id: 2
-    - name: Happy
-      artist_id: 2
-      id: 3
 
 #Object relationship Track::artist_id -> Artist::id
 - type: create_object_relationship
@@ -266,49 +302,28 @@ args:
         name:
           _nin: X-Hasura-Premium-Artists
 
-# Create search_track function
-- type: run_sql
+#Create select permission on Track using _iregex operator
+- type: create_select_permission
   args:
-    sql: |
-      create function search_tracks(search text)
-      returns setof "Track" as $$
-          select *
-          from "Track"
-          where
-          name ilike ('%' || search || '%')
-      $$ language sql stable;
+    table: Artist
+    role: user_iregex
+    permission:
+      columns: '*'
+      filter:
+        name:
+          _iregex: X-Hasura-IRegex-Artists
 
+# Create search_track function
 - type: track_function
   args:
     name: search_tracks
     schema: public
 
 #Create Books table
-- type: run_sql
-  args:
-    sql: |
-      CREATE TABLE books (
-        id int,
-        author_name text,
-        book_name text,
-        published_on timestamptz,
-        PRIMARY KEY (id,book_name)
-      );
-
-# Track table Books
 - type: track_table
   args:
     schema: public
     name: books
-
-- type: insert
-  args:
-    table: books
-    objects:
-      - id: 1
-        author_name: J.K. Rowling
-        book_name: Harry Porter
-        published_on: "1997-06-26"
 
 #Create select permission on books, granting permission only to one of the columns of the primary key
 - type: create_select_permission
@@ -316,40 +331,8 @@ args:
     table: books
     role: user
     permission:
-      columns: ["author_name","book_name","published_on"]
+      columns: [author_name, book_name, published_on]
       filter: {}
-
-#Permission based on PostGIS operators
-- type: run_sql
-  args:
-    sql: |
-      CREATE EXTENSION IF NOT EXISTS postgis;
-
-- type: run_sql
-  args:
-    sql: |
-      DO $$
-      BEGIN
-        IF PostGIS_lib_version() ~ '^3.*' THEN
-          CREATE EXTENSION IF NOT EXISTS postgis_raster;
-        END IF;
-      END$$;
-
-- type: run_sql
-  args:
-    sql: |
-      CREATE EXTENSION IF NOT EXISTS postgis_topology;
-
-#Create table
-- type: run_sql
-  args:
-    sql: |
-      CREATE TABLE geom_table(
-        id SERIAL PRIMARY KEY,
-        type TEXT NOT NULL,
-        geom_col geometry NOT NULL
-      );
-
 - type: track_table
   args:
     name: geom_table
@@ -402,44 +385,10 @@ args:
             distance: X-Hasura-Geom-Dist
             from: X-Hasura-Geom-Val
 #Insert data
-- type: run_sql
-  args:
-    sql: |
-      INSERT INTO geom_table (type, geom_col)
-      VALUES
-      ('point', ST_GeomFromEWKT('SRID=4326;POINT(1 2)')),
-      ('linestring', ST_GeomFromEWKT('SRID=4326;LINESTRING(0 0, 0.5 1, 1 2, 1.5 3)')),
-      ('linestring', ST_GeomFromEWKT('SRID=4326;LINESTRING(1 0, 0.5 0.5, 0 1)')),
-      ('polygon', ST_GeomFromEWKT('SRID=4326;POLYGON((0 0, 0 1, 1 1, 1 0, 0 0))')),
-      ('polygon', ST_GeomFromEWKT('SRID=4326;POLYGON((2 0, 2 1, 3 1, 3 0, 2 0))'))
-      ;
-
-
-#Permission based on JSONB operators
-- type: run_sql
-  args:
-    sql: |
-       CREATE TABLE jsonb_table(
-         id INTEGER NOT NULL PRIMARY KEY,
-         jsonb_col jsonb NOT NULL
-       );
 - type: track_table
   args:
     name: jsonb_table
     schema: public
-
-#Insert data
-- type: insert
-  args:
-    table: jsonb_table
-    objects:
-    - id: 1
-      jsonb_col:
-        name: Hasura
-        age: 7
-    - id: 2
-      jsonb_col:
-        name: Cross
 
 #Create select permission using jsonb operator
 - type: create_select_permission
@@ -493,25 +442,6 @@ args:
           $has_keys_all: X-Hasura-Json-Required-Keys
 
 #Create grade_point table
-- type: run_sql
-  args:
-    sql: |
-      CREATE TABLE gpa (
-        id serial primary key,
-        student_name text not null,
-        gpa_score double precision not null
-        );
-
-      INSERT INTO gpa (student_name, gpa_score) VALUES
-        ('clarke', 9.24), ('george', 8.32),
-        ('blake', 7.34), ('leonel', 9.56);
-
-      CREATE FUNCTION passed_students (pass_gpa double precision)
-      RETURNS SETOF gpa as $$
-        SELECT * FROM gpa WHERE
-          gpa_score >= pass_gpa
-      $$ language SQL STABLE;
-
 - type: track_table
   args:
     name: gpa
@@ -529,21 +459,6 @@ args:
       - id
       - student_name
       filter: {}
-
-#Auction table
-- type: run_sql
-  args:
-    sql: |
-      CREATE TABLE auction (
-      id serial primary key,
-      price integer not null DEFAULT 250,
-      bid_price integer
-      );
-      INSERT INTO auction
-      (bid_price)
-      VALUES
-      (100), (120), (300), (260)
-      ;
 - type: track_table
   args:
     name: auction
@@ -578,5 +493,5 @@ args:
     table: author
     role: critic
     permission:
-      columns: ["name"]
+      columns: [name]
       filter: {}

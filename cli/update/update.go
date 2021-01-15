@@ -39,7 +39,7 @@ func getLatestVersion() (*semver.Version, *semver.Version, error) {
 		return nil, nil, errors.Wrap(err, "decoding update check response")
 	}
 	if response.Latest == nil && response.PreRelease == nil {
-		return nil,nil, fmt.Errorf("expected version info not found at %s", updateCheckURL)
+		return nil, nil, fmt.Errorf("expected version info not found at %s", updateCheckURL)
 	}
 
 	return response.Latest, response.PreRelease, nil

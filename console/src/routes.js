@@ -21,7 +21,7 @@ import { getRemoteSchemaRouter } from './components/Services/RemoteSchema';
 
 import { getActionsRouter } from './components/Services/Actions';
 
-import { getEventsRouter } from './components/Services/Events';
+import { eventsRoutes } from './components/Services/Events';
 
 import generatedApiExplorer from './components/Services/ApiExplorer/ApiExplorer';
 
@@ -74,7 +74,7 @@ const routes = store => {
     return;
   };
   const _dataRouterUtils = dataRouterUtils(connect, store, composeOnEnterHooks);
-  const requireSchema = _dataRouterUtils.requireSchema;
+  const requireSource = _dataRouterUtils.requireSource;
   const dataRouter = _dataRouterUtils.makeDataRouter;
 
   const remoteSchemaRouter = getRemoteSchemaRouter(
@@ -84,8 +84,6 @@ const routes = store => {
   );
 
   const actionsRouter = getActionsRouter(connect, store, composeOnEnterHooks);
-
-  const eventsRouter = getEventsRouter(connect, store, composeOnEnterHooks);
 
   const uiKitRouter = globals.isProduction ? null : (
     <Route
@@ -104,52 +102,48 @@ const routes = store => {
     <Route
       path="/"
       component={App}
-      onEnter={composeOnEnterHooks([
-        validateLogin(store),
-        requireAsyncGlobals(store),
-      ])}
+      onEnter={composeOnEnterHooks([validateLogin(store)])}
     >
       <Route path="login" component={generatedLoginConnector(connect)} />
       <Route
         path=""
         component={Main}
-        onEnter={composeOnEnterHooks([requireSchema, requireMigrationStatus])}
+        onEnter={composeOnEnterHooks([
+          requireSource,
+          requireMigrationStatus,
+          requireAsyncGlobals(store),
+        ])}
       >
-        <Route path="">
-          <IndexRoute component={generatedApiExplorer(connect)} />
+        <IndexRoute component={generatedApiExplorer(connect)} />
+        <Route path="api-explorer" component={generatedApiExplorer(connect)} />
+        <Route
+          path="voyager-view"
+          component={generatedVoyagerConnector(connect)}
+        />
+        <Route path="settings" component={settingsContainer(connect)}>
+          <IndexRedirect to="metadata-actions" />
           <Route
-            path="api-explorer"
-            component={generatedApiExplorer(connect)}
+            path="metadata-actions"
+            component={metadataOptionsConnector(connect)}
           />
           <Route
-            path="voyager-view"
-            component={generatedVoyagerConnector(connect)}
+            path="metadata-status"
+            component={metadataStatusConnector(connect)}
           />
-          <Route path="settings" component={settingsContainer(connect)}>
-            <IndexRedirect to="metadata-actions" />
-            <Route
-              path="metadata-actions"
-              component={metadataOptionsConnector(connect)}
-            />
-            <Route
-              path="metadata-status"
-              component={metadataStatusConnector(connect)}
-            />
-            <Route
-              path="allow-list"
-              component={allowedQueriesConnector(connect)}
-            />
-            <Route path="logout" component={logoutConnector(connect)} />
-            <Route path="about" component={aboutConnector(connect)} />
-          </Route>
-          {dataRouter}
-          {remoteSchemaRouter}
-          {actionsRouter}
-          {eventsRouter}
-          {uiKitRouter}
-          <Route path="support" component={SupportContainer}>
-            <Route path="forums" component={HelpPage} />
-          </Route>
+          <Route
+            path="allow-list"
+            component={allowedQueriesConnector(connect)}
+          />
+          <Route path="logout" component={logoutConnector(connect)} />
+          <Route path="about" component={aboutConnector(connect)} />
+        </Route>
+        {dataRouter}
+        {remoteSchemaRouter}
+        {actionsRouter}
+        {eventsRoutes}
+        {uiKitRouter}
+        <Route path="support" component={SupportContainer}>
+          <Route path="forums" component={HelpPage} />
         </Route>
       </Route>
       <Route path="404" component={PageNotFound} status="404" />

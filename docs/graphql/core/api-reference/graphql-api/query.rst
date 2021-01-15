@@ -410,7 +410,7 @@ AndExp
 
   You can simplify an ``_and`` expression by passing the sub-expressions separated by a ``,``.
 
-  **For example:**
+  **First example: _and expression with different fields**
 
   .. code-block:: graphql
 
@@ -427,6 +427,30 @@ AndExp
       rating: { _gte: 4 },
       published_on: { _gte: "2018-01-01" }
     }
+
+  **Second example: _and expression with same field**
+
+  .. code-block:: graphql
+
+      _and: [
+        {
+          rating: {
+            _gt: 1
+          }
+        },
+        {
+          rating: {
+            _lt: 5
+          }
+        }
+      ]
+
+      # can be simplified to:
+
+      rating: {
+        _gt: 1,
+        _lt: 5
+      }  
 
 .. _OrExp:
 
@@ -605,6 +629,14 @@ Operator
      - ``SIMILAR TO``
    * - ``_nsimilar``
      - ``NOT SIMILAR TO``
+   * - ``_regex``
+     - ``~``
+   * - ``_iregex``
+     - ``~*``
+   * - ``_nregex``
+     - ``!~``
+   * - ``_niregex``
+     - ``!~*``
 
 (For more details on text related operators, refer to the `Postgres docs <https://www.postgresql.org/docs/current/functions-matching.html>`__.)
 

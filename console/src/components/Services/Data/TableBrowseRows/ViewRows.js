@@ -44,10 +44,8 @@ import {
 import {
   findTable,
   getRelationshipRefTable,
-  getTableName,
-  getTableSchema,
-  arrayToPostgresArray,
-} from '../../../Common/utils/pgUtils';
+  dataSource,
+} from '../../../../dataSources';
 import { updateSchemaInfo } from '../DataActions';
 import {
   persistColumnCollapseChange,
@@ -59,34 +57,34 @@ import {
 import { compareRows, isTableWithPK } from './utils';
 import styles from '../../../Common/TableCommon/Table.scss';
 
-const ViewRows = ({
-  curTableName,
-  currentSchema,
-  curQuery,
-  curFilter,
-  curRows,
-  curPath,
-  parentTableName,
-  curDepth,
-  activePath,
-  schemas,
-  dispatch,
-  ongoingRequest,
-  isProgressing,
-  lastError,
-  lastSuccess,
-  isView,
-  count,
-  expandedRow,
-  manualTriggers = [],
-  updateInvocationRow,
-  updateInvocationFunction,
-  triggeredRow,
-  triggeredFunction,
-  location,
-  readOnlyMode,
-  shouldHidePagination,
-}) => {
+const ViewRows = props => {
+  const {
+    curTableName,
+    currentSchema,
+    curQuery,
+    curFilter,
+    curRows,
+    curPath = [],
+    parentTableName,
+    curDepth,
+    activePath,
+    schemas,
+    dispatch,
+    ongoingRequest,
+    isProgressing,
+    lastError,
+    lastSuccess,
+    isView,
+    count,
+    expandedRow,
+    manualTriggers = [],
+    location,
+    readOnlyMode,
+    shouldHidePagination,
+    currentSource,
+  } = props;
+  const [invokedRow, setInvokedRow] = useState(null);
+  const [invocationFunc, setInvocationFunc] = useState(null);
   const [selectedRows, setSelectedRows] = useState([]);
   useEffect(() => {
     setSelectedRows([]);
@@ -96,13 +94,13 @@ const ViewRows = ({
 
   // Invoke manual trigger status
   const invokeTrigger = (trigger, row) => {
-    updateInvocationRow(row);
-    updateInvocationFunction(trigger);
+    setInvokedRow(row);
+    setInvocationFunc(trigger);
   };
 
   const onCloseInvokeTrigger = () => {
-    updateInvocationRow(-1);
-    updateInvocationFunction(null);
+    setInvokedRow(null);
+    setInvokedRow(null);
   };
 
   const handleAllCheckboxChange = e => {
@@ -239,7 +237,7 @@ const ViewRows = ({
 
     Object.keys(pkClause).forEach(key => {
       if (Array.isArray(pkClause[key])) {
-        pkClause[key] = arrayToPostgresArray(pkClause[key]);
+        pkClause[key] = dataSource.arrayToPostgresArray(pkClause[key]);
       }
     });
 
@@ -265,7 +263,6 @@ const ViewRows = ({
         let cloneButton;
         let deleteButton;
         let expandButton;
-        let manualTriggersButton;
 
         const getActionButton = (
           type,
@@ -329,7 +326,14 @@ const ViewRows = ({
           const handleEditClick = () => {
             dispatch({ type: E_SET_EDITITEM, oldItem: row, pkClause });
             dispatch(
-              _push(getTableEditRowRoute(currentSchema, curTableName, true))
+              _push(
+                getTableEditRowRoute(
+                  currentSchema,
+                  currentSource,
+                  curTableName,
+                  true
+                )
+              )
             );
           };
 
@@ -371,7 +375,14 @@ const ViewRows = ({
           const handleCloneClick = () => {
             dispatch({ type: I_SET_CLONE, clone: row });
             dispatch(
-              _push(getTableInsertRowRoute(currentSchema, curTableName, true))
+              _push(
+                getTableInsertRowRoute(
+                  currentSchema,
+                  currentSource,
+                  curTableName,
+                  true
+                )
+              )
             );
           };
 
@@ -399,13 +410,11 @@ const ViewRows = ({
                     color="white"
                     size="xs"
                     data-test={`run_manual_trigger_${m.name}`}
-                    onClick={() =>
-                      invokeTrigger.apply(undefined, [m.name, rowIndex])
-                    }
+                    onClick={() => invokeTrigger(m.name, rowIndex)}
                   >
                     Invoke
                   </Button>
-                  {`${m.name}`}
+                  {m.name}
                 </div>
               ),
             };
@@ -421,29 +430,25 @@ const ViewRows = ({
             () => {}
           );
 
-          const invokeManualTrigger = r =>
-            triggeredRow === rowIndex && (
-              <InvokeManualTrigger
-                args={r}
-                name={`${triggeredFunction}`}
-                onClose={onCloseInvokeTrigger}
-                key={`invoke_function_${triggeredFunction}`}
-                identifier={`invoke_function_${triggeredFunction}`}
-              />
-            );
-
           return (
             <div className={styles.display_inline}>
               <Dropdown
                 testId={`data_browse_rows_trigger_${rowIndex}`}
                 options={triggerOptions}
                 position="right"
-                key={`invoke_data_dropdown_${rowIndex}`}
                 keyPrefix={`invoke_data_dropdown_${rowIndex}`}
               >
                 {triggerBtn}
               </Dropdown>
-              {invokeManualTrigger(row)}
+              {invokedRow === rowIndex && (
+                <InvokeManualTrigger
+                  source={currentSource}
+                  args={row}
+                  name={`${invocationFunc}`}
+                  onClose={onCloseInvokeTrigger}
+                  identifier={`invoke_function_${invocationFunc}`}
+                />
+              )}
             </div>
           );
         };
@@ -460,8 +465,6 @@ const ViewRows = ({
 
         // eslint-disable-next-line prefer-const
         expandButton = getExpandButton();
-        // eslint-disable-next-line prefer-const
-        manualTriggersButton = getManualTriggersButton();
 
         return (
           <div
@@ -472,7 +475,7 @@ const ViewRows = ({
             {editButton}
             {deleteButton}
             {expandButton}
-            {manualTriggersButton}
+            {getManualTriggersButton()}
           </div>
         );
       };
@@ -769,8 +772,8 @@ const ViewRows = ({
           return (
             <ViewRows
               key={i}
-              curTableName={getTableName(childTable)}
-              currentSchema={getTableSchema(childTable)}
+              curTableName={childTable.table_name}
+              currentSchema={childTable.table_schema}
               curQuery={cq}
               curFilter={curFilter}
               curPath={[...curPath, rel.rel_name]}
@@ -785,6 +788,7 @@ const ViewRows = ({
               dispatch={dispatch}
               expandedRow={expandedRow}
               readOnlyMode={readOnlyMode}
+              currentSource={currentSource}
             />
           );
         }

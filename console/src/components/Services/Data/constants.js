@@ -28,6 +28,27 @@ export const Operators = [
   },
   { name: 'similar', value: '$similar', graphqlOp: '_similar' },
   { name: 'not similar', value: '$nsimilar', graphqlOp: '_nsimilar' },
+
+  {
+    name: '~',
+    value: '$regex',
+    graphqlOp: '_regex',
+  },
+  {
+    name: '~*',
+    value: '$iregex',
+    graphqlOp: '_iregex',
+  },
+  {
+    name: '!~',
+    value: '$nregex',
+    graphqlOp: '_nregex',
+  },
+  {
+    name: '!~*',
+    value: '$niregex',
+    graphqlOp: '_niregex',
+  },
 ];
 
 export const Integers = [
@@ -130,7 +151,6 @@ export const ERROR_CODES = {
     ERRORS: ['No such resource exists'],
     httpCode: '404',
   },
-  // todo update this, this happens on bulk request failed
   dataApiError: {
     code: 'data_api_error',
   },

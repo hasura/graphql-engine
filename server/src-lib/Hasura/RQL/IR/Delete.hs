@@ -17,7 +17,7 @@ data AnnDelG (b :: BackendType) v
   , dqp1AllCols :: ![ColumnInfo b]
   }
 
-type AnnDel b = AnnDelG b (SQLExp b)
+type AnnDel b = AnnDelG b (SQLExpression b)
 
 traverseAnnDel
   :: (Applicative f)

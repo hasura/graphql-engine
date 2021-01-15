@@ -10,7 +10,6 @@ import qualified Text.Builder                       as TB
 
 import           Data.String                        (fromString)
 import           Data.Text.Extended
-import           Language.Haskell.TH.Syntax         (Lift)
 
 import           Hasura.Backends.Postgres.SQL.Types
 import           Hasura.Incremental                 (Cacheable)
@@ -76,7 +75,7 @@ instance ToSQL OrderByItem where
     toSQL e <~> toSQL ot <~> toSQL no
 
 data OrderType = OTAsc | OTDesc
-  deriving (Show, Eq, Lift, Generic, Data)
+  deriving (Show, Eq, Generic, Data)
 instance NFData OrderType
 instance Cacheable OrderType
 instance Hashable OrderType
@@ -94,7 +93,7 @@ instance J.ToJSON OrderType where
 data NullsOrder
   = NFirst
   | NLast
-  deriving (Show, Eq, Lift, Generic, Data)
+  deriving (Show, Eq, Generic, Data)
 instance NFData NullsOrder
 instance Cacheable NullsOrder
 instance Hashable NullsOrder
@@ -219,6 +218,9 @@ instance ToSQL Qual where
 mkQIdentifier :: (IsIdentifier a, IsIdentifier b) => a -> b -> QIdentifier
 mkQIdentifier q t = QIdentifier (QualifiedIdentifier (toIdentifier q) Nothing) (toIdentifier t)
 
+mkQIdentifierTable :: (IsIdentifier a) => QualifiedTable -> a -> QIdentifier
+mkQIdentifierTable q = QIdentifier (mkQual q) . toIdentifier
+
 data QIdentifier
   = QIdentifier !Qual !Identifier
   deriving (Show, Eq, Generic, Data)
@@ -259,29 +261,29 @@ newtype TypeAnn
 instance ToSQL TypeAnn where
   toSQL (TypeAnn ty) = "::" <> TB.text ty
 
-mkTypeAnn :: PGType PGScalarType -> TypeAnn
+mkTypeAnn :: CollectableType PGScalarType -> TypeAnn
 mkTypeAnn = TypeAnn . toSQLTxt
 
 intTypeAnn :: TypeAnn
-intTypeAnn = mkTypeAnn $ PGTypeScalar PGInteger
+intTypeAnn = mkTypeAnn $ CollectableTypeScalar PGInteger
 
 numericTypeAnn :: TypeAnn
-numericTypeAnn = mkTypeAnn $ PGTypeScalar PGNumeric
+numericTypeAnn = mkTypeAnn $ CollectableTypeScalar PGNumeric
 
 textTypeAnn :: TypeAnn
-textTypeAnn = mkTypeAnn $ PGTypeScalar PGText
+textTypeAnn = mkTypeAnn $ CollectableTypeScalar PGText
 
 textArrTypeAnn :: TypeAnn
-textArrTypeAnn = mkTypeAnn $ PGTypeArray PGText
+textArrTypeAnn = mkTypeAnn $ CollectableTypeArray PGText
 
 jsonTypeAnn :: TypeAnn
-jsonTypeAnn = mkTypeAnn $ PGTypeScalar PGJSON
+jsonTypeAnn = mkTypeAnn $ CollectableTypeScalar PGJSON
 
 jsonbTypeAnn :: TypeAnn
-jsonbTypeAnn = mkTypeAnn $ PGTypeScalar PGJSONB
+jsonbTypeAnn = mkTypeAnn $ CollectableTypeScalar PGJSONB
 
 boolTypeAnn :: TypeAnn
-boolTypeAnn = mkTypeAnn $ PGTypeScalar PGBoolean
+boolTypeAnn = mkTypeAnn $ CollectableTypeScalar PGBoolean
 
 data CountType
   = CTStar
@@ -337,7 +339,7 @@ instance Cacheable SQLExp
 instance Hashable SQLExp
 
 withTyAnn :: PGScalarType -> SQLExp -> SQLExp
-withTyAnn colTy v = SETyAnn v . mkTypeAnn $ PGTypeScalar colTy
+withTyAnn colTy v = SETyAnn v . mkTypeAnn $ CollectableTypeScalar colTy
 
 instance J.ToJSON SQLExp where
   toJSON = J.toJSON . toSQLTxt
@@ -723,15 +725,19 @@ data CompareOp
   | SLT
   | SIN
   | SNE
+  | SGTE
+  | SLTE
+  | SNIN
   | SLIKE
   | SNLIKE
   | SILIKE
   | SNILIKE
   | SSIMILAR
   | SNSIMILAR
-  | SGTE
-  | SLTE
-  | SNIN
+  | SREGEX
+  | SIREGEX
+  | SNREGEX
+  | SNIREGEX
   | SContains
   | SContainedIn
   | SHasKey
@@ -758,6 +764,10 @@ instance Show CompareOp where
     SNILIKE      -> "NOT ILIKE"
     SSIMILAR     -> "SIMILAR TO"
     SNSIMILAR    -> "NOT SIMILAR TO"
+    SREGEX    -> "~"
+    SIREGEX    -> "~*"
+    SNREGEX    -> "!~"
+    SNIREGEX    -> "!~*"
     SContains    -> "@>"
     SContainedIn -> "<@"
     SHasKey      -> "?"

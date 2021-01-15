@@ -16,7 +16,7 @@ data MutFldG (b :: BackendType) v
   | MExp !Text
   | MRet !(AnnFieldsG b v)
 
-type MutFld b = MutFldG b (SQLExp b)
+type MutFld b = MutFldG b (SQLExpression b)
 
 type MutFldsG b v = Fields (MutFldG b v)
 
@@ -24,9 +24,9 @@ data MutationOutputG (b :: BackendType) v
   = MOutMultirowFields !(MutFldsG b v)
   | MOutSinglerowObject !(AnnFieldsG b v)
 
-type MutationOutput b = MutationOutputG b (SQLExp b)
+type MutationOutput b = MutationOutputG b (SQLExpression b)
 
-type MutFlds b = MutFldsG b (SQLExp b)
+type MutFlds b = MutFldsG b (SQLExpression b)
 
 buildEmptyMutResp :: MutationOutput backend -> EncJSON
 buildEmptyMutResp = \case

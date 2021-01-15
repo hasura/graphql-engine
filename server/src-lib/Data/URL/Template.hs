@@ -4,6 +4,7 @@ module Data.URL.Template
   , TemplateItem
   , Variable
   , printURLTemplate
+  , mkPlainURLTemplate
   , parseURLTemplate
   , renderURLTemplate
   , genURLTemplate
@@ -18,12 +19,10 @@ import qualified Data.Text                  as T
 import           Data.Attoparsec.Combinator (lookAhead)
 import           Data.Attoparsec.Text
 import           Data.Text.Extended
-import           Instances.TH.Lift          ()
-import           Language.Haskell.TH.Syntax (Lift)
 import           Test.QuickCheck
 
 newtype Variable = Variable {unVariable :: Text}
-  deriving (Show, Eq, Lift, Generic)
+  deriving (Show, Eq, Generic)
 
 printVariable :: Variable -> Text
 printVariable var = "{{" <> unVariable var <> "}}"
@@ -31,7 +30,7 @@ printVariable var = "{{" <> unVariable var <> "}}"
 data TemplateItem
   = TIText !Text
   | TIVariable !Variable
-  deriving (Show, Eq, Lift, Generic)
+  deriving (Show, Eq, Generic)
 
 printTemplateItem :: TemplateItem -> Text
 printTemplateItem = \case
@@ -41,10 +40,14 @@ printTemplateItem = \case
 -- | A String with environment variables enclosed in '{{' and '}}'
 -- http://{{APP_HOST}}:{{APP_PORT}}/v1/api
 newtype URLTemplate = URLTemplate {unURLTemplate :: [TemplateItem]}
-  deriving (Show, Eq, Lift, Generic)
+  deriving (Show, Eq, Generic)
 
 printURLTemplate :: URLTemplate -> Text
 printURLTemplate = T.concat . map printTemplateItem . unURLTemplate
+
+mkPlainURLTemplate :: Text -> URLTemplate
+mkPlainURLTemplate =
+  URLTemplate . pure . TIText
 
 parseURLTemplate :: Text -> Either String URLTemplate
 parseURLTemplate t = parseOnly parseTemplate t

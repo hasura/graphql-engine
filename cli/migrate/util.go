@@ -59,7 +59,7 @@ func suint64(n int64) uint64 {
 	return uint64(n)
 }
 
-/* 
+/*
 // newSlowReader turns an io.ReadCloser into a slow io.ReadCloser.
 // Use this to simulate a slow internet connection.
 func newSlowReader(r io.ReadCloser) io.ReadCloser {
