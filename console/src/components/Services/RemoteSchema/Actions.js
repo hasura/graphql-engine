@@ -25,6 +25,7 @@ import {
 } from './Permissions/utils';
 import Migration from '../../../utils/migration/Migration';
 import { exportMetadata } from '../../../metadata/actions';
+import { getRemoteSchemas } from '../../../metadata/selector';
 
 /* Action constants */
 
@@ -136,9 +137,10 @@ const makeRequest = (
 
 const saveRemoteSchemaPermission = (successCb, errorCb) => {
   return (dispatch, getState) => {
+    const allRemoteSchemas=getRemoteSchemas(getState())
+
     const {
       listData: {
-        remoteSchemas: allRemoteSchemas,
         viewRemoteSchema: currentRemoteSchemaName,
       },
       permissions: { permissionEdit, schemaDefinition },
@@ -147,7 +149,7 @@ const saveRemoteSchemaPermission = (successCb, errorCb) => {
     const currentRemoteSchema = allRemoteSchemas.find(
       rs => rs.name === currentRemoteSchemaName
     );
-    const allPermissions = currentRemoteSchema.permissions;
+    const allPermissions = currentRemoteSchema?.permissions||[];
 
     const { upQueries, downQueries } = getRemoteSchemaPermissionQueries(
       permissionEdit,
@@ -255,9 +257,9 @@ const removeRemoteSchemaPermission = (successCb, errorCb) => {
 
 const permRemoveMultipleRoles = () => {
   return (dispatch, getState) => {
+    const allRemoteSchemas=getRemoteSchemas(getState())
     const {
       listData: {
-        remoteSchemas: allRemoteSchemas,
         viewRemoteSchema: currentRemoteSchemaName,
       },
       permissions: { bulkSelect },
@@ -273,7 +275,7 @@ const permRemoveMultipleRoles = () => {
 
     roles.map(role => {
       const currentRolePermission = currentPermissions.filter(el => {
-        return el.role_name === role;
+        return el.role === role;
       });
 
       const upQuery = getDropRemoteSchemaPermissionQuery(

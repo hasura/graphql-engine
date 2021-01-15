@@ -60,7 +60,6 @@ const Permissions: React.FC<PermissionsProps> = ({ allRoles, ...props }) => {
     schemaDefinition,
     readOnlyMode = false,
     dispatch,
-    fetchRoleList,
     setDefaults,
     permCloseEdit,
     saveRemoteSchemaPermission,
@@ -75,11 +74,10 @@ const Permissions: React.FC<PermissionsProps> = ({ allRoles, ...props }) => {
   const [datasource, setDatasource] = useState<DatasourceObject[]>([]);
 
   React.useEffect(() => {
-    fetchRoleList();
     return () => {
       setDefaults();
     };
-  }, [fetchRoleList, setDefaults]);
+  }, [setDefaults]);
 
   const { error, schema, introspect } = useIntrospectionSchemaRemote(
     currentRemoteSchema.name,
@@ -123,7 +121,7 @@ const Permissions: React.FC<PermissionsProps> = ({ allRoles, ...props }) => {
       },
       ...types,
     ]);
-  }, [schema, permissionEdit.isNewRole, schemaDefinition]);
+  }, [schema, permissionEdit?.isNewRole, schemaDefinition]);
 
   if (error || !schema) {
     return (

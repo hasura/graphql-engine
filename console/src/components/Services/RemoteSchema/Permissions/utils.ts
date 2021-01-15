@@ -39,7 +39,7 @@ export const findRemoteSchemaPermission = (
   perms: Permissions[],
   role: string
 ) => {
-  return perms.find(p => p.role_name === role);
+  return perms.find(p => p.role === role);
 };
 
 export const getCreateRemoteSchemaPermissionQuery = (
