@@ -151,12 +151,9 @@ export const createUntrackedFunctionSQL = (
   tableName: string
 ) => {
   return {
-    type: 'bulk',
-    args: [
-      {
-        type: 'run_sql',
-        args: {
-          sql: `
+    type: 'run_sql',
+    args: {
+      sql: `
           CREATE OR REPLACE FUNCTION ${fnName}(table_row "${tableName}")
            RETURNS int
            LANGUAGE sql
@@ -165,10 +162,20 @@ export const createUntrackedFunctionSQL = (
             SELECT table_row.id
           $function$
           `,
-          cascade: false,
-        },
-      },
-    ],
+      cascade: false,
+    },
+  };
+};
+
+export const dropUntrackedFunctionSQL = (fnName: string) => {
+  return {
+    type: 'run_sql',
+    args: {
+      sql: `
+          DROP FUNCTION public.${fnName};
+          `,
+      cascade: false,
+    },
   };
 };
 
