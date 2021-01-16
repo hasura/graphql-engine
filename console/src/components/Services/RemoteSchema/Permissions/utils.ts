@@ -26,7 +26,7 @@ import {
 } from '../../../Common/utils/jsUtils';
 import {
   PermissionEdit,
-  DatasourceObject,
+  RemoteSchemaFields,
   FieldType,
   ArgTreeType,
   PermissionsType,
@@ -200,7 +200,7 @@ export const getType = (
     permissionsSchemaFields = permissionsSchema!.getTypeMap();
   }
 
-  const types: DatasourceObject[] = [];
+  const types: RemoteSchemaFields[] = [];
 
   Object.entries(introspectionSchemaFields).forEach(([key, value]: any) => {
     if (
@@ -222,7 +222,7 @@ export const getType = (
       return;
     if (name.startsWith('__')) return;
 
-    const type: DatasourceObject = {
+    const type: RemoteSchemaFields = {
       name: ``,
       typeName: ``,
       children: [],
@@ -410,7 +410,7 @@ const checkDefaultGQLScalarType = (typeName: string): boolean => {
   return false;
 };
 
-const checkEmptyType = (type: DatasourceObject) => {
+const checkEmptyType = (type: RemoteSchemaFields) => {
   const isChecked = (element: FieldType | CustomFieldType) => element.checked;
   return type.children.some(isChecked);
 };
@@ -422,7 +422,7 @@ const checkEmptyType = (type: DatasourceObject) => {
  * @returns SDL string for passed field.
  */
 const getSDLField = (
-  type: DatasourceObject,
+  type: RemoteSchemaFields,
   argTree: Record<string, any> | null
 ): string => {
   if (!checkEmptyType(type)) return ''; // check if no child is selected for a type
@@ -494,7 +494,7 @@ const getSDLField = (
  * @returns String having all enum types and scalar types.
  */
 export const generateSDL = (
-  types: DatasourceObject[],
+  types: RemoteSchemaFields[],
   argTree: Record<string, any>
 ) => {
   let result = '';

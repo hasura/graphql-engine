@@ -39,7 +39,7 @@ const PermissionsTable: React.FC<PermissionsTableProps> = ({
   permOpenEdit,
   permCloseEdit,
 }) => {
-  const allPermissions = currentRemoteSchema?.permissions;
+  const allPermissions = currentRemoteSchema?.permissions || [];
 
   const headings = ['Role', ...queryTypes];
 

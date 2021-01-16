@@ -8,7 +8,7 @@ import globals from '../../../../Globals';
 import styles from '../../../Common/Permissions/PermissionStyles.scss';
 import { getTree, getType, addPresetDefinition } from './utils';
 import {
-  DatasourceObject,
+  RemoteSchemaFields,
   PermissionEdit,
   PermOpenEditType,
   PermissionsType,
@@ -36,8 +36,14 @@ export type PermissionsProps = {
   dispatch: Dispatch;
   fetchRoleList: () => void;
   setDefaults: () => void;
-  saveRemoteSchemaPermission: (data: any) => void;
-  removeRemoteSchemaPermission: (data: any) => void;
+  saveRemoteSchemaPermission: (
+    successCb?: () => void,
+    errorCb?: () => void
+  ) => void;
+  removeRemoteSchemaPermission: (
+    successCb?: () => void,
+    errorCb?: () => void
+  ) => void;
   permRemoveMultipleRoles: () => void;
 };
 
@@ -63,7 +69,7 @@ const Permissions: React.FC<PermissionsProps> = props => {
     permSetRoleName,
   } = props;
 
-  const [datasource, setDatasource] = useState<DatasourceObject[]>([]);
+  const [remoteSchemaFields, setRemoteSchemaFields] = useState<RemoteSchemaFields[]>([]);
 
   React.useEffect(() => {
     return () => {
@@ -95,11 +101,11 @@ const Permissions: React.FC<PermissionsProps> = props => {
     }
     const types = getType(schema, permissionsSchema);
 
-    // when server throws error while saving new role, do not reset the datasource
+    // when server throws error while saving new role, do not reset the remoteSchemaFields
     // persist the user defined schema in th UI
     if (isNewRole && schemaDefinition) return;
 
-    setDatasource([
+    setRemoteSchemaFields([
       {
         name: 'type query_root',
         typeName: 'query_root',
@@ -157,7 +163,7 @@ const Permissions: React.FC<PermissionsProps> = props => {
             isFetching={isFetching}
             isEditing={isEditing}
             schemaDefinition={schemaDefinition}
-            datasource={datasource}
+            remoteSchemaFields={remoteSchemaFields}
             permCloseEdit={permCloseEdit}
             saveRemoteSchemaPermission={saveRemoteSchemaPermission}
             removeRemoteSchemaPermission={removeRemoteSchemaPermission}

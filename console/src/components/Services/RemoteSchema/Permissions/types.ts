@@ -86,7 +86,7 @@ export type CustomFieldType = {
 
 export type FieldType = CustomFieldType & GraphQLField<any, any>;
 
-export type DatasourceObject = {
+export type RemoteSchemaFields = {
   name: string;
   typeName: string;
   children: FieldType[] | CustomFieldType[];

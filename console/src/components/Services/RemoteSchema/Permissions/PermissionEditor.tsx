@@ -3,7 +3,7 @@ import { generateSDL, getArgTreeFromPermissionSDL } from './utils';
 import Button from '../../../Common/Button/Button';
 import styles from '../../../Common/Permissions/PermissionStyles.scss';
 import {
-  DatasourceObject,
+  RemoteSchemaFields,
   FieldType,
   ArgTreeType,
   PermissionEdit,
@@ -17,11 +17,17 @@ type PermissionEditorProps = {
   isEditing: boolean;
   isFetching: boolean;
   schemaDefinition: string;
-  datasource: any;
+  remoteSchemaFields: any;
   setSchemaDefinition: (data: string) => void;
   permCloseEdit: () => void;
-  saveRemoteSchemaPermission: (data: any) => void;
-  removeRemoteSchemaPermission: (data: any) => void;
+  saveRemoteSchemaPermission: (
+    successCb?: () => void,
+    errorCb?: () => void
+  ) => void;
+  removeRemoteSchemaPermission: (
+    successCb?: () => void,
+    errorCb?: () => void
+  ) => void;
 };
 
 const PermissionEditor: React.FC<PermissionEditorProps> = ({ ...props }) => {
@@ -34,11 +40,11 @@ const PermissionEditor: React.FC<PermissionEditorProps> = ({ ...props }) => {
     saveRemoteSchemaPermission,
     removeRemoteSchemaPermission,
     setSchemaDefinition,
-    datasource,
+    remoteSchemaFields,
   } = props;
 
-  const [state, setState] = useState<DatasourceObject[] | FieldType[]>(
-    datasource
+  const [state, setState] = useState<RemoteSchemaFields[] | FieldType[]>(
+    remoteSchemaFields
   );
   const [argTree, setArgTree] = useState<ArgTreeType>({}); // all @presets as an object tree
   const [resultString, setResultString] = useState(''); // Generated SDL
@@ -49,14 +55,14 @@ const PermissionEditor: React.FC<PermissionEditorProps> = ({ ...props }) => {
     // console.log('changed--->', state);
     if (!state) return;
     setResultString(
-      generateSDL(state as DatasourceObject[], argTree as Record<string, any>)
+      generateSDL(state as RemoteSchemaFields[], argTree as Record<string, any>)
     );
   }, [state, argTree]);
 
   useEffect(() => {
-    setState(datasource);
+    setState(remoteSchemaFields);
     setResultString(schemaDefinition);
-  }, [datasource]);
+  }, [remoteSchemaFields]);
 
   useEffect(() => {
     if (!isEmpty(schemaDefinition)) {

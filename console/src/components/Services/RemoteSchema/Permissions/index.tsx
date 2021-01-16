@@ -64,10 +64,14 @@ const mapDispatchToProps = (dispatch: Dispatch) => {
     permRemoveMultipleRoles: () => dispatch(permRemoveMultipleRoles()),
     viewRemoteSchema: (data: string) =>
       dispatch({ type: VIEW_REMOTE_SCHEMA, data }),
-    saveRemoteSchemaPermission: (data: any) =>
-      dispatch(saveRemoteSchemaPermission(data)),
-    removeRemoteSchemaPermission: (data: any) =>
-      dispatch(removeRemoteSchemaPermission(data)),
+    saveRemoteSchemaPermission: (
+      successCb?: () => void,
+      errorCb?: () => void
+    ) => dispatch(saveRemoteSchemaPermission(successCb, errorCb)),
+    removeRemoteSchemaPermission: (
+      successCb?: () => void,
+      errorCb?: () => void
+    ) => dispatch(removeRemoteSchemaPermission(successCb, errorCb)),
     setSchemaDefinition: (data: string) => dispatch(setSchemaDefinition(data)),
     setDefaults: () => dispatch(setDefaults()),
     permCloseEdit: () => dispatch(permCloseEdit()),
@@ -79,5 +83,5 @@ const mapDispatchToProps = (dispatch: Dispatch) => {
   };
 };
 
-const RSPContainer=connect(mapStateToProps, mapDispatchToProps)(RSP);
-export default RSPContainer
+const RSPContainer = connect(mapStateToProps, mapDispatchToProps)(RSP);
+export default RSPContainer;
