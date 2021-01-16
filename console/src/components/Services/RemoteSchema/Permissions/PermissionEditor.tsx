@@ -17,7 +17,7 @@ type PermissionEditorProps = {
   isEditing: boolean;
   isFetching: boolean;
   schemaDefinition: string;
-  remoteSchemaFields: any;
+  remoteSchemaFields: RemoteSchemaFields[];
   setSchemaDefinition: (data: string) => void;
   permCloseEdit: () => void;
   saveRemoteSchemaPermission: (
@@ -30,7 +30,7 @@ type PermissionEditorProps = {
   ) => void;
 };
 
-const PermissionEditor: React.FC<PermissionEditorProps> = ({ ...props }) => {
+const PermissionEditor: React.FC<PermissionEditorProps> = props => {
   const {
     permissionEdit,
     isEditing,
@@ -52,7 +52,6 @@ const PermissionEditor: React.FC<PermissionEditorProps> = ({ ...props }) => {
   const { isNewRole, isNewPerm } = permissionEdit;
 
   useEffect(() => {
-    // console.log('changed--->', state);
     if (!state) return;
     setResultString(
       generateSDL(state as RemoteSchemaFields[], argTree as Record<string, any>)

@@ -137,19 +137,17 @@ const makeRequest = (
 
 const saveRemoteSchemaPermission = (successCb, errorCb) => {
   return (dispatch, getState) => {
-    const allRemoteSchemas=getRemoteSchemas(getState())
+    const allRemoteSchemas = getRemoteSchemas(getState());
 
     const {
-      listData: {
-        viewRemoteSchema: currentRemoteSchemaName,
-      },
+      listData: { viewRemoteSchema: currentRemoteSchemaName },
       permissions: { permissionEdit, schemaDefinition },
     } = getState().remoteSchemas;
 
     const currentRemoteSchema = allRemoteSchemas.find(
       rs => rs.name === currentRemoteSchemaName
     );
-    const allPermissions = currentRemoteSchema?.permissions||[];
+    const allPermissions = currentRemoteSchema?.permissions || [];
 
     const { upQueries, downQueries } = getRemoteSchemaPermissionQueries(
       permissionEdit,
@@ -164,9 +162,7 @@ const saveRemoteSchemaPermission = (successCb, errorCb) => {
     const errorMsg = 'Saving permission failed';
 
     const customOnSuccess = () => {
-      dispatch(exportMetadata())
-      // dispatch(fetchRemoteSchemas());
-      // dispatch(fetchRoleList());
+      dispatch(exportMetadata());
       dispatch(setPermRequestSuccess());
       if (successCb) {
         successCb();
@@ -226,7 +222,6 @@ const removeRemoteSchemaPermission = (successCb, errorCb) => {
 
     const customOnSuccess = () => {
       dispatch(exportMetadata());
-      // dispatch(fetchRoleList());
       dispatch(setPermRequestSuccess());
       if (successCb) {
         successCb();
@@ -257,11 +252,9 @@ const removeRemoteSchemaPermission = (successCb, errorCb) => {
 
 const permRemoveMultipleRoles = () => {
   return (dispatch, getState) => {
-    const allRemoteSchemas=getRemoteSchemas(getState())
+    const allRemoteSchemas = getRemoteSchemas(getState());
     const {
-      listData: {
-        viewRemoteSchema: currentRemoteSchemaName,
-      },
+      listData: { viewRemoteSchema: currentRemoteSchemaName },
       permissions: { bulkSelect },
     } = getState().remoteSchemas;
 
