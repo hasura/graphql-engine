@@ -91,6 +91,7 @@ and be accessible according to the permissions that were configured for the role
 - server: fix issue with non-optional fields of the remote schema being added as optional in the graphql-engine (fix #6401)
 - server: accept new config `allowed_skew` in JWT config to provide leeway for JWT expiry (fixes #2109)
 - server: fix issue with query actions with relationship with permissions configured on the remote table (fix #6385)
+- server: always log the `request_id` at the `detail.request_id` path for both `query-log` and `http-log` (#6244)
 - console: allow user to cascade Postgres dependencies when dropping Postgres objects (close #5109) (#5248)
 - console: mark inconsistent remote schemas in the UI (close #5093) (#5181)
 - console: remove ONLY as default for ALTER TABLE in column alter operations (close #5512) #5706
