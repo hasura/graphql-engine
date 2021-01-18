@@ -790,14 +790,19 @@ tableAggregationFields table selectPermissions = do
     mkNumericAggFields name
       | name == $$(G.litName "sum") = traverse mkColumnAggField
       | otherwise                   = traverse \columnInfo ->
-          pure $ P.selection_ (pgiName columnInfo) (pgiDescription columnInfo)
-                 (P.nullable P.float) $> IR.CFCol (pgiColumn columnInfo)
+          pure $ P.selection_
+            (pgiName columnInfo)
+            (pgiDescription columnInfo)
+            (P.nullable P.float)
+            $> IR.CFCol (pgiColumn columnInfo) (pgiType columnInfo)
 
     mkColumnAggField :: ColumnInfo b -> m (FieldParser n (IR.ColFld b))
     mkColumnAggField columnInfo = do
       field <- columnParser (pgiType columnInfo) (G.Nullability True)
-      pure $ P.selection_ (pgiName columnInfo) (pgiDescription columnInfo) field
-        $> IR.CFCol (pgiColumn columnInfo)
+      pure $ P.selection_
+        (pgiName columnInfo)
+        (pgiDescription columnInfo) field
+        $> IR.CFCol (pgiColumn columnInfo) (pgiType columnInfo)
 
     countField :: m (FieldParser n (IR.AggregateField b))
     countField = do
