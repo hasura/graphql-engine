@@ -4,20 +4,21 @@ module Hasura.GraphQL.Schema.Action
   , actionAsyncQuery
   ) where
 
-import           Data.Has
 import           Hasura.Prelude
 
 import qualified Data.Aeson                            as J
 import qualified Data.HashMap.Strict                   as Map
 import qualified Language.GraphQL.Draft.Syntax         as G
 
+import           Data.Has
+import           Data.Text.Extended
+import           Data.Text.NonEmpty
+
 import qualified Hasura.GraphQL.Parser                 as P
 import qualified Hasura.GraphQL.Parser.Internal.Parser as P
 import qualified Hasura.RQL.DML.Internal               as RQL
 import qualified Hasura.RQL.IR.Select                  as RQL
 
-import           Data.Text.Extended
-import           Data.Text.NonEmpty
 import           Hasura.Backends.Postgres.SQL.Types
 import           Hasura.Backends.Postgres.SQL.Value
 import           Hasura.GraphQL.Parser                 (FieldParser, InputFieldsParser, Kind (..),
@@ -171,7 +172,7 @@ actionOutputFields annotatedObject = do
       scalarOrEnumFields = map scalarOrEnumFieldParser $ toList $ _otdFields outputObject
   relationshipFields <- forM (_otdRelationships outputObject) $ traverse relationshipFieldParser
   let allFieldParsers = scalarOrEnumFields <>
-                        maybe [] (catMaybes . toList) relationshipFields
+                        maybe [] (concat . catMaybes . toList) relationshipFields
       outputTypeName = unObjectTypeName $ _otdName outputObject
       outputTypeDescription = _otdDescription outputObject
   pure $ P.selectionSet outputTypeName outputTypeDescription allFieldParsers
@@ -195,26 +196,37 @@ actionOutputFields annotatedObject = do
 
     relationshipFieldParser
       :: TypeRelationship (TableInfo 'Postgres) (ColumnInfo 'Postgres)
-      -> m (Maybe (FieldParser n (RQL.AnnFieldG 'Postgres (UnpreparedValue 'Postgres))))
-    relationshipFieldParser typeRelationship = runMaybeT do
-      let TypeRelationship relName relType _ tableInfo fieldMapping = typeRelationship
-          tableName = _tciName $ _tiCoreInfo tableInfo
-          fieldName = unRelationshipName relName
-      roleName <- lift askRoleName
+      -> m (Maybe [FieldParser n (RQL.AnnFieldG 'Postgres (UnpreparedValue 'Postgres))])
+    relationshipFieldParser (TypeRelationship relName relType _ tableInfo fieldMapping) = runMaybeT do
+      let tableName     = _tciName $ _tiCoreInfo tableInfo
+          fieldName     = unRelationshipName relName
+          tableRelName  = RelName $ mkNonEmptyTextUnsafe $ G.unName fieldName
+          columnMapping = Map.fromList $ do
+            (k, v) <- Map.toList fieldMapping
+            pure (unsafePGCol $ G.unName $ unObjectFieldName k, pgiColumn v)
+      roleName   <- lift askRoleName
       tablePerms <- MaybeT $ pure $ RQL.getPermInfoMaybe roleName PASelect tableInfo
-      tableParser <- lift $ selectTable tableName fieldName Nothing tablePerms
-      pure $ tableParser <&> \selectExp ->
-        let tableRelName = RelName $ mkNonEmptyTextUnsafe $ G.unName fieldName
-            columnMapping = Map.fromList $
-              [ (unsafePGCol $ G.unName $ unObjectFieldName k, pgiColumn v)
-              | (k, v) <- Map.toList fieldMapping
-              ]
-        in case relType of
-              ObjRel -> RQL.AFObjectRelation $ RQL.AnnRelationSelectG tableRelName columnMapping $
-                        RQL.AnnObjectSelectG (RQL._asnFields selectExp) tableName $
-                        RQL._tpFilter $ RQL._asnPerm selectExp
-              ArrRel -> RQL.AFArrayRelation $ RQL.ASSimple $
-                        RQL.AnnRelationSelectG tableRelName columnMapping selectExp
+      case relType of
+        ObjRel -> do
+          let desc = Just $ G.Description "An object relationship"
+          selectionSetParser <- lift $ tableSelectionSet tableName tablePerms
+          pure $ pure $ P.nonNullableField $
+            P.subselection_ fieldName desc selectionSetParser
+              <&> \fields -> RQL.AFObjectRelation $ RQL.AnnRelationSelectG tableRelName columnMapping $
+                             RQL.AnnObjectSelectG fields tableName $
+                             fmapAnnBoolExp partialSQLExpToUnpreparedValue $ spiFilter tablePerms
+        ArrRel -> do
+          let desc = Just $ G.Description "An array relationship"
+          otherTableParser <- lift $ selectTable tableName fieldName desc tablePerms
+          let arrayRelField = otherTableParser <&> \selectExp -> RQL.AFArrayRelation $
+                RQL.ASSimple $ RQL.AnnRelationSelectG tableRelName columnMapping selectExp
+              relAggFieldName = fieldName <> $$(G.litName "_aggregate")
+              relAggDesc      = Just $ G.Description "An aggregate relationship"
+          tableAggField <- lift $ selectTableAggregate tableName relAggFieldName relAggDesc tablePerms
+          pure $ catMaybes [ Just arrayRelField
+                           , fmap (RQL.AFArrayRelation . RQL.ASAggregate . RQL.AnnRelationSelectG tableRelName columnMapping) <$> tableAggField
+                           ]
+
 
 mkDefinitionList :: AnnotatedObjectType 'Postgres -> [(PGCol, ScalarType 'Postgres)]
 mkDefinitionList AnnotatedObjectType{..} =
