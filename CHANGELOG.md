@@ -104,6 +104,7 @@ and be accessible according to the permissions that were configured for the role
 - console: misc bug fixes (close #4785, #6330, #6288)
 - console: allow setting table custom name (#212)
 - console: support tracking VOLATILE functions as mutations or queries (close #6228)
+- console: added export data option on data module (close #1438 #5158)
 - cli: add missing global flags for seed command (#5565)
 - cli: allow seeds as alias for seed command (#5693)
 - cli: fix action timeouts not being picked up in metadata operations (#6220)
@@ -252,7 +253,6 @@ If you do have such headers configured, then you must update the header configur
 ### Bug fixes and improvements
 
 (Add entries here in the order of: server, console, cli, docs, others)
-- console: added export data option on data module (close #1438 #5158)
 
 - server: fix failing introspection query when an enum column is part of a primary key (fixes #5200)
 - server: disallow headers from env variables starting with `HASURA_GRAPHQL_` in actions, event triggers & remote schemas (#5519)
