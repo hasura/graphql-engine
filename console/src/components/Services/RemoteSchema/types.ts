@@ -1,26 +1,14 @@
-import { HeaderState } from '../../Common/Layout/ReusableHeader/types';
-import { PermissionsType } from './Permissions/types';
 import { RemoteSchemaPermissionsState } from './Permissions/state';
+import { RemoteSchema } from '../../../metadata/types';
 
-type RemoteSchemaHeaders = {
-  name: string;
-  value?: string;
-  value_from_env?: string;
-};
-
-type RemoteSchemaDefinition = {
-  forward_client_headers: boolean;
-  headers: RemoteSchemaHeaders[];
-  timeout_seconds: number;
-  url: string;
-};
-
-export type RemoteSchema = {
-  definition: RemoteSchemaDefinition;
-  name: string;
-  id: number;
-  comment: string | null;
-  permissions: PermissionsType[];
+type HeaderState = {
+  headers: [
+    {
+      name: string;
+      type: string;
+      value: string;
+    }
+  ];
 };
 
 export type AsyncState = {
