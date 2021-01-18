@@ -34,6 +34,7 @@ import {
   ChildArgumentType,
 } from './types';
 import Migration from '../../../../utils/migration/Migration';
+import { RemoteSchema } from '../../../../metadata/types';
 
 export const findRemoteSchemaPermission = (
   perms: PermissionsType[],
@@ -412,7 +413,7 @@ const checkDefaultGQLScalarType = (typeName: string): boolean => {
 
 const checkEmptyType = (type: RemoteSchemaFields) => {
   const isChecked = (element: FieldType | CustomFieldType) => element.checked;
-  return type.children.some(isChecked);
+  if (type.children) return type.children.some(isChecked);
 };
 
 /**
@@ -432,7 +433,8 @@ const getSDLField = (
 
   // add scalar fields to SDL
   if (typeName.startsWith('scalar')) {
-    if (checkDefaultGQLScalarType(type.typeName)) return result; // if default GQL scalar type, return empty string
+    if (type.typeName && checkDefaultGQLScalarType(type.typeName))
+      return result; // if default GQL scalar type, return empty string
     result = `${typeName}`;
     return `${result}\n`;
   }
@@ -440,51 +442,52 @@ const getSDLField = (
   // add other fields to SDL
   result = `${typeName}{`;
 
-  type.children.forEach(f => {
-    if (!f.checked) return null;
+  if (type.children)
+    type.children.forEach(f => {
+      if (!f.checked) return null;
 
-    let fieldStr = f.name;
+      let fieldStr = f.name;
 
-    // enum types don't have args
-    if (!typeName.startsWith('enum')) {
-      if (f.args) {
-        fieldStr = `${fieldStr}(`;
-        Object.values(f.args).forEach((arg: GraphQLInputField) => {
-          let valueStr = `${arg.name} : ${arg.type.inspect()}`;
+      // enum types don't have args
+      if (!typeName.startsWith('enum')) {
+        if (f.args) {
+          fieldStr = `${fieldStr}(`;
+          Object.values(f.args).forEach((arg: GraphQLInputField) => {
+            let valueStr = `${arg.name} : ${arg.type.inspect()}`;
 
-          if (argTree && argTree[f.name] && argTree[f.name][arg.name]) {
-            const argName = argTree[f.name][arg.name];
-            let unquoted;
-            const isEnum =
-              typeof argName === 'string' &&
-              argName &&
-              !argName.startsWith('x-hasura') &&
-              isEnumType(arg.type);
+            if (argTree && argTree[f.name] && argTree[f.name][arg.name]) {
+              const argName = argTree[f.name][arg.name];
+              let unquoted;
+              const isEnum =
+                typeof argName === 'string' &&
+                argName &&
+                !argName.startsWith('x-hasura') &&
+                isEnumType(arg.type);
 
-            if (typeof argName === 'object') {
-              unquoted = serialiseArgs(argName, arg);
-            } else if (typeof argName === 'number') {
-              unquoted = `${argName}`;
-            } else if (isEnum) {
-              unquoted = `${argName}`;
-            } else {
-              unquoted = `"${argName}"`;
+              if (typeof argName === 'object') {
+                unquoted = serialiseArgs(argName, arg);
+              } else if (typeof argName === 'number') {
+                unquoted = `${argName}`;
+              } else if (isEnum) {
+                unquoted = `${argName}`;
+              } else {
+                unquoted = `"${argName}"`;
+              }
+
+              if (!isEmpty(unquoted))
+                valueStr = `${valueStr} @preset(value: ${unquoted})`;
             }
 
-            if (!isEmpty(unquoted))
-              valueStr = `${valueStr} @preset(value: ${unquoted})`;
-          }
+            fieldStr = `${fieldStr + valueStr} `;
+          });
+          fieldStr = `${fieldStr})`;
+          fieldStr = `${fieldStr}: ${f.return}`;
+        } else fieldStr = `${fieldStr} : ${f.return}`; // normal data type - ie: without arguments/ presets
+      }
 
-          fieldStr = `${fieldStr + valueStr} `;
-        });
-        fieldStr = `${fieldStr})`;
-        fieldStr = `${fieldStr}: ${f.return}`;
-      } else fieldStr = `${fieldStr} : ${f.return}`; // normal data type - ie: without arguments/ presets
-    }
-
-    result = `${result}
+      result = `${result}
       ${fieldStr}`;
-  });
+    });
   return `${result}\n}`;
 };
 
@@ -494,8 +497,8 @@ const getSDLField = (
  * @returns String having all enum types and scalar types.
  */
 export const generateSDL = (
-  types: RemoteSchemaFields[],
-  argTree: Record<string, any>
+  types: RemoteSchemaFields[] | FieldType[],
+  argTree: ArgTreeType
 ) => {
   let result = '';
   const rootsMap: Record<string, any> = {
@@ -510,8 +513,7 @@ export const generateSDL = (
     if (fieldDef) result = `${result}\n${fieldDef}\n`;
   });
 
-  if (isEmpty(result))
-    return '';
+  if (isEmpty(result)) return '';
 
   const prefix = `schema{
     ${rootsMap['type query_root'] ? 'query: query_root' : ''}

@@ -1,7 +1,7 @@
 import React from 'react';
-import { connect } from 'react-redux';
+import { connect, ConnectedProps } from 'react-redux';
 import Permissions, { PermissionsProps } from './Permissions';
-import RSPWrapper from './RSPWrapper';
+import RSPWrapper, { RSPWrapperProps } from './RSPWrapper';
 import {
   permRemoveMultipleRoles,
   VIEW_REMOTE_SCHEMA,
@@ -22,29 +22,27 @@ import {
   rolesSelector,
   getRemoteSchemaPermissions,
 } from '../../../../metadata/selector';
+import { RemoteSchema } from '../../../../metadata/types';
 
 export type RSPContainerProps = {
   allRoles: string[];
-  allRemoteSchemas: { [key: string]: any }[];
-  params: { [key: string]: string };
+  allRemoteSchemas: RemoteSchema[];
+  params: { remoteSchemaName: string };
   viewRemoteSchema: (data: string) => void;
 };
 
-const RSP: React.FC<RSPContainerProps & PermissionsProps> = ({
-  allRoles,
-  allRemoteSchemas,
-  ...props
-}) => {
-  const { params, viewRemoteSchema } = props;
+const RSP: React.FC<Props> = props => {
+  const { allRoles, allRemoteSchemas, params, viewRemoteSchema } = props;
   return (
     <RSPWrapper
       params={params}
       allRemoteSchemas={allRemoteSchemas}
       tabName="permissions"
       viewRemoteSchema={viewRemoteSchema}
-    >
-      <Permissions allRoles={allRoles} {...props} />
-    </RSPWrapper>
+      permissionRenderer={(currentRemoteSchema) => (
+        <Permissions allRoles={allRoles} {...props} {...{currentRemoteSchema}} />
+      )}
+    />
   );
 };
 
@@ -83,5 +81,12 @@ const mapDispatchToProps = (dispatch: Dispatch) => {
   };
 };
 
-const RSPContainer = connect(mapStateToProps, mapDispatchToProps)(RSP);
+const connector = connect(mapStateToProps, mapDispatchToProps);
+
+type InjectedProps = ConnectedProps<typeof connector>;
+
+type ComponentProps=RSPWrapperProps & PermissionsProps 
+type Props = ComponentProps& InjectedProps
+
+const RSPContainer = connector(RSP);
 export default RSPContainer;

@@ -5,16 +5,16 @@ import { getChildArguments } from './utils';
 import RSPInput from './RSPInput';
 
 interface ArgSelectProps {
-  v: GraphQLInputField;
-  k: string;
+  valueField: GraphQLInputField;
+  keyName: string;
   value: string | Record<string, any>;
   level: number;
   setArg: (e: Record<string, unknown>) => void;
 }
 
 export const ArgSelect: React.FC<ArgSelectProps> = ({
-  k,
-  v,
+  keyName: k,
+  valueField: v,
   value,
   level,
   setArg = e => console.log(e),
@@ -77,13 +77,11 @@ export const ArgSelect: React.FC<ArgSelectProps> = ({
             return (
               <li key={i.name}>
                 <ArgSelect
-                  {...{
-                    k: i.name,
-                    setArg: val => setArgVal({ [k]: val }),
-                    v: i,
-                    value: childVal,
-                    level: level + 1,
-                  }}
+                  keyName={i.name}
+                  setArg={val => setArgVal({ [k]: val })}
+                  valueField={i}
+                  value={childVal}
+                  level={level + 1}
                 />
               </li>
             );

@@ -90,7 +90,7 @@ export type RemoteSchemaFields = {
   name: string;
   typeName: string;
   children: FieldType[] | CustomFieldType[];
-};
+} | FieldType
 
 export type RSPTreeComponentProps = {
   list: FieldType[];

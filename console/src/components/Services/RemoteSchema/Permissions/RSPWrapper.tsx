@@ -1,8 +1,9 @@
-import React, { ReactElement } from 'react';
+import React from 'react';
 import CommonTabLayout from '../../../Common/Layout/CommonTabLayout/CommonTabLayout';
 import { NotFoundError } from '../../../Error/PageNotFound';
 import { appPrefix } from '../constants';
 import styles from '../RemoteSchema.scss';
+import { RemoteSchema } from '../../../../metadata/types';
 
 const tabInfo = {
   details: {
@@ -16,10 +17,11 @@ const tabInfo = {
   },
 };
 export type RSPWrapperProps = {
-  params: { [key: string]: string };
-  allRemoteSchemas: { [key: string]: string }[];
+  params: { remoteSchemaName: string };
+  allRemoteSchemas?: RemoteSchema[];
   tabName: string;
   viewRemoteSchema: (data: string) => void;
+  permissionRenderer: (currentRemoteSchema: RemoteSchema) => React.ReactNode;
 };
 
 const RSPWrapper: React.FC<RSPWrapperProps> = ({
@@ -27,7 +29,7 @@ const RSPWrapper: React.FC<RSPWrapperProps> = ({
   allRemoteSchemas,
   tabName,
   viewRemoteSchema,
-  children,
+  permissionRenderer,
 }) => {
   React.useEffect(() => {
     viewRemoteSchema(remoteSchemaName);
@@ -36,9 +38,9 @@ const RSPWrapper: React.FC<RSPWrapperProps> = ({
     };
   }, [remoteSchemaName]);
 
-  const currentRemoteSchema = allRemoteSchemas.find(
-    rs => rs.name === remoteSchemaName
-  );
+  const currentRemoteSchema =
+    allRemoteSchemas &&
+    allRemoteSchemas.find(rs => rs.name === remoteSchemaName);
 
   if (!currentRemoteSchema) {
     viewRemoteSchema('');
@@ -64,10 +66,6 @@ const RSPWrapper: React.FC<RSPWrapperProps> = ({
     },
   ];
 
-  const childrenWithProps = React.Children.map(children, child =>
-    React.cloneElement(child as ReactElement<any, any>, { currentRemoteSchema })
-  );
-
   return (
     <>
       <CommonTabLayout
@@ -80,7 +78,9 @@ const RSPWrapper: React.FC<RSPWrapperProps> = ({
         showLoader={false}
         testPrefix="remote-schema-container-tabs"
       />
-      <div className={styles.add_pad_top}>{childrenWithProps}</div>
+      <div className={styles.add_pad_top}>
+        {permissionRenderer(currentRemoteSchema)}
+      </div>
     </>
   );
 };
