@@ -50,7 +50,7 @@ instance NFData RemoteSchemaInfo
 instance Cacheable RemoteSchemaInfo
 instance Hashable RemoteSchemaInfo
 
-$(J.deriveJSON (J.aesonPrefix J.snakeCase) ''RemoteSchemaInfo)
+$(J.deriveJSON hasuraJSON ''RemoteSchemaInfo)
 
 -- | From the user's API request
 data RemoteSchemaDef
@@ -63,7 +63,7 @@ data RemoteSchemaDef
   } deriving (Show, Eq, Generic)
 instance NFData RemoteSchemaDef
 instance Cacheable RemoteSchemaDef
-$(J.deriveToJSON (J.aesonPrefix J.snakeCase){J.omitNothingFields=True} ''RemoteSchemaDef)
+$(J.deriveToJSON hasuraJSON{J.omitNothingFields=True} ''RemoteSchemaDef)
 
 instance J.FromJSON RemoteSchemaDef where
   parseJSON = J.withObject "Object" $ \o ->
@@ -84,14 +84,14 @@ data AddRemoteSchemaQuery
   } deriving (Show, Eq, Generic)
 instance NFData AddRemoteSchemaQuery
 instance Cacheable AddRemoteSchemaQuery
-$(J.deriveJSON (J.aesonPrefix J.snakeCase) ''AddRemoteSchemaQuery)
+$(J.deriveJSON hasuraJSON ''AddRemoteSchemaQuery)
 
 newtype RemoteSchemaNameQuery
   = RemoteSchemaNameQuery
   { _rsnqName    :: RemoteSchemaName
   } deriving (Show, Eq)
 
-$(J.deriveJSON (J.aesonPrefix J.snakeCase) ''RemoteSchemaNameQuery)
+$(J.deriveJSON hasuraJSON ''RemoteSchemaNameQuery)
 
 getUrlFromEnv :: (MonadIO m, MonadError QErr m) => Env.Environment -> Text -> m N.URI
 getUrlFromEnv env urlFromEnv = do
@@ -151,7 +151,7 @@ data AddRemoteSchemaPermissions
   } deriving (Show, Eq, Generic)
 instance NFData AddRemoteSchemaPermissions
 instance Cacheable AddRemoteSchemaPermissions
-$(J.deriveJSON (J.aesonPrefix J.snakeCase) ''AddRemoteSchemaPermissions)
+$(J.deriveJSON hasuraJSON ''AddRemoteSchemaPermissions)
 
 data DropRemoteSchemaPermissions
   = DropRemoteSchemaPermissions
@@ -160,7 +160,7 @@ data DropRemoteSchemaPermissions
   } deriving (Show, Eq, Generic)
 instance NFData DropRemoteSchemaPermissions
 instance Cacheable DropRemoteSchemaPermissions
-$(J.deriveJSON (J.aesonPrefix J.snakeCase) ''DropRemoteSchemaPermissions)
+$(J.deriveJSON hasuraJSON ''DropRemoteSchemaPermissions)
 
 -- | See `resolveRemoteVariable` function. This data type is used
 --   for validation of the session variable value

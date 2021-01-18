@@ -130,7 +130,7 @@ data TableCustomRootFields
   } deriving (Show, Eq, Generic)
 instance NFData TableCustomRootFields
 instance Cacheable TableCustomRootFields
-$(deriveToJSON (aesonPrefix snakeCase){omitNothingFields=True} ''TableCustomRootFields)
+$(deriveToJSON hasuraJSON{omitNothingFields=True} ''TableCustomRootFields)
 
 instance FromJSON TableCustomRootFields where
   parseJSON = withObject "Object" $ \obj -> do
@@ -244,7 +244,7 @@ instance NFData (InsPermInfo 'Postgres)
 deriving instance Eq (InsPermInfo 'Postgres)
 instance Cacheable (InsPermInfo 'Postgres)
 instance ToJSON (InsPermInfo 'Postgres) where
-  toJSON = genericToJSON $ aesonPrefix snakeCase
+  toJSON = genericToJSON hasuraJSON
 
 data SelPermInfo (b :: BackendType)
   = SelPermInfo
@@ -259,7 +259,7 @@ instance NFData (SelPermInfo 'Postgres)
 deriving instance Eq (SelPermInfo 'Postgres)
 instance Cacheable (SelPermInfo 'Postgres)
 instance ToJSON (SelPermInfo 'Postgres) where
-  toJSON = genericToJSON $ aesonPrefix snakeCase
+  toJSON = genericToJSON hasuraJSON
 
 data UpdPermInfo (b :: BackendType)
   = UpdPermInfo
@@ -274,7 +274,7 @@ instance NFData (UpdPermInfo 'Postgres)
 deriving instance Eq (UpdPermInfo 'Postgres)
 instance Cacheable (UpdPermInfo 'Postgres)
 instance ToJSON (UpdPermInfo 'Postgres) where
-  toJSON = genericToJSON $ aesonPrefix snakeCase
+  toJSON = genericToJSON hasuraJSON
 
 data DelPermInfo (b :: BackendType)
   = DelPermInfo
@@ -286,7 +286,7 @@ instance NFData (DelPermInfo 'Postgres)
 deriving instance Eq (DelPermInfo 'Postgres)
 instance Cacheable (DelPermInfo 'Postgres)
 instance ToJSON (DelPermInfo 'Postgres) where
-  toJSON = genericToJSON $ aesonPrefix snakeCase
+  toJSON = genericToJSON hasuraJSON
 
 mkRolePermInfo :: RolePermInfo backend
 mkRolePermInfo = RolePermInfo Nothing Nothing Nothing Nothing
@@ -300,7 +300,7 @@ data RolePermInfo (b :: BackendType)
   } deriving (Generic)
 instance NFData (RolePermInfo 'Postgres)
 instance ToJSON (RolePermInfo 'Postgres) where
-  toJSON = genericToJSON $ aesonPrefix snakeCase
+  toJSON = genericToJSON hasuraJSON
 
 makeLenses ''RolePermInfo
 
@@ -321,7 +321,7 @@ data EventTriggerInfo
    -- headers added.
    } deriving (Show, Eq, Generic)
 instance NFData EventTriggerInfo
-$(deriveToJSON (aesonPrefix snakeCase) ''EventTriggerInfo)
+$(deriveToJSON hasuraJSON ''EventTriggerInfo)
 
 type EventTriggerInfoMap = M.HashMap TriggerName EventTriggerInfo
 
@@ -370,7 +370,7 @@ type EventTriggerInfoMap = M.HashMap TriggerName EventTriggerInfo
 --   , tcName :: !ConstraintName
 --   } deriving (Show, Eq)
 
--- $(deriveJSON (aesonPrefix snakeCase) ''TableConstraint)
+-- $(deriveJSON hasuraJSON ''TableConstraint)
 
 data ViewInfo
   = ViewInfo
@@ -380,7 +380,7 @@ data ViewInfo
   } deriving (Show, Eq, Generic)
 instance NFData ViewInfo
 instance Cacheable ViewInfo
-$(deriveJSON (aesonPrefix snakeCase) ''ViewInfo)
+$(deriveJSON hasuraJSON ''ViewInfo)
 
 isMutable :: (ViewInfo -> Bool) -> Maybe ViewInfo -> Bool
 isMutable _ Nothing   = True
@@ -401,7 +401,7 @@ data TableConfig
   } deriving (Show, Eq, Generic)
 instance NFData TableConfig
 instance Cacheable TableConfig
-$(deriveToJSON (aesonPrefix snakeCase){omitNothingFields=True} ''TableConfig)
+$(deriveToJSON hasuraJSON{omitNothingFields=True} ''TableConfig)
 $(makeLenses ''TableConfig)
 
 emptyTableConfig :: TableConfig
@@ -434,7 +434,7 @@ data TableCoreInfoG (b :: BackendType) field primaryKeyColumn
 deriving instance (Eq field, Eq pkCol, Backend b) => Eq (TableCoreInfoG b field pkCol)
 instance (Cacheable field, Cacheable pkCol, Backend b) => Cacheable (TableCoreInfoG b field pkCol)
 instance (Backend b, ToJSON field, ToJSON pkCol) => ToJSON (TableCoreInfoG b field pkCol) where
-  toJSON = genericToJSON $ aesonPrefix snakeCase
+  toJSON = genericToJSON hasuraJSON
 $(makeLenses ''TableCoreInfoG)
 
 -- | Fully-processed table info that includes non-column fields.
@@ -452,7 +452,7 @@ data TableInfo (b :: BackendType)
   , _tiEventTriggerInfoMap :: !EventTriggerInfoMap
   } deriving (Generic)
 instance ToJSON (TableInfo 'Postgres) where
-  toJSON = genericToJSON $ aesonPrefix snakeCase
+  toJSON = genericToJSON hasuraJSON
 $(makeLenses ''TableInfo)
 
 type TableCoreCache b = M.HashMap (TableName b) (TableCoreInfo b)
@@ -499,7 +499,7 @@ deriving instance Backend b => Show (DBTableMetadata b)
 instance Backend b => NFData (DBTableMetadata b)
 instance Backend b => Cacheable (DBTableMetadata b)
 instance Backend b => FromJSON (DBTableMetadata b) where
-  parseJSON = genericParseJSON $ aesonPrefix snakeCase
+  parseJSON = genericParseJSON hasuraJSON
 
 type DBTablesMetadata b = HashMap (TableName b) (DBTableMetadata b)
 

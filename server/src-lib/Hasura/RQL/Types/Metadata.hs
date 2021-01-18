@@ -224,7 +224,7 @@ data RemoteSchemaPermissionMetadata
   , _rspmComment    :: !(Maybe Text)
   } deriving (Show, Eq, Generic)
 instance Cacheable RemoteSchemaPermissionMetadata
-$(deriveJSON (aesonPrefix snakeCase){omitNothingFields=True} ''RemoteSchemaPermissionMetadata)
+$(deriveJSON hasuraJSON{omitNothingFields=True} ''RemoteSchemaPermissionMetadata)
 $(makeLenses ''RemoteSchemaPermissionMetadata)
 
 data RemoteSchemaMetadata
@@ -243,7 +243,7 @@ instance FromJSON RemoteSchemaMetadata where
     <*> obj .: "definition"
     <*> obj .:? "comment"
     <*> obj .:? "permissions" .!= mempty
-$(deriveToJSON (aesonPrefix snakeCase) ''RemoteSchemaMetadata)
+$(deriveToJSON hasuraJSON ''RemoteSchemaMetadata)
 $(makeLenses ''RemoteSchemaMetadata)
 
 type Relationships a = InsOrdHashMap RelName a
@@ -436,7 +436,7 @@ data MetadataNoSources
   , _mnsActions          :: !Actions
   , _mnsCronTriggers     :: !CronTriggers
   } deriving (Show, Eq)
-$(deriveToJSON (aesonPrefix snakeCase) ''MetadataNoSources)
+$(deriveToJSON hasuraJSON ''MetadataNoSources)
 
 instance FromJSON MetadataNoSources where
   parseJSON = withObject "Object" $ \o -> do
@@ -835,7 +835,7 @@ data SetCatalogState
   { _scsType  :: !CatalogStateType
   , _scsState :: !Value
   } deriving (Show, Eq)
-$(deriveJSON (aesonPrefix snakeCase) ''SetCatalogState)
+$(deriveJSON hasuraJSON ''SetCatalogState)
 
 data CatalogState
   = CatalogState
@@ -843,7 +843,7 @@ data CatalogState
   , _csCliState     :: !Value
   , _csConsoleState :: !Value
   } deriving (Show, Eq)
-$(deriveToJSON (aesonPrefix snakeCase) ''CatalogState)
+$(deriveToJSON hasuraJSON ''CatalogState)
 
 data GetCatalogState
   = GetCatalogState

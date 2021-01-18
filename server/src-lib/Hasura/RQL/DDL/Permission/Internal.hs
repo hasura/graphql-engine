@@ -204,7 +204,7 @@ data DropPerm a
   , dipRole   :: !RoleName
   } deriving (Show, Eq)
 
-$(deriveToJSON (aesonPrefix snakeCase){omitNothingFields=True} ''DropPerm)
+$(deriveToJSON hasuraJSON{omitNothingFields=True} ''DropPerm)
 
 instance FromJSON (DropPerm a) where
   parseJSON = withObject "DropPerm" $ \o ->

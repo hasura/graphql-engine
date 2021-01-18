@@ -85,7 +85,7 @@ data SetTableIsEnum
   , stieTable  :: !QualifiedTable
   , stieIsEnum :: !Bool
   } deriving (Show, Eq)
-$(deriveToJSON (aesonPrefix snakeCase) ''SetTableIsEnum)
+$(deriveToJSON hasuraJSON ''SetTableIsEnum)
 
 instance FromJSON SetTableIsEnum where
   parseJSON = withObject "Object" $ \o ->
@@ -100,7 +100,7 @@ data UntrackTable =
   , utTable   :: !QualifiedTable
   , utCascade :: !Bool
   } deriving (Show, Eq)
-$(deriveToJSON (aesonPrefix snakeCase){omitNothingFields=True} ''UntrackTable)
+$(deriveToJSON hasuraJSON{omitNothingFields=True} ''UntrackTable)
 
 instance FromJSON UntrackTable where
   parseJSON = withObject "Object" $ \o ->
@@ -206,7 +206,7 @@ data TrackTableV2
   { ttv2Table         :: !TrackTable
   , ttv2Configuration :: !TableConfig
   } deriving (Show, Eq)
-$(deriveToJSON (aesonPrefix snakeCase) ''TrackTableV2)
+$(deriveToJSON hasuraJSON ''TrackTableV2)
 
 instance FromJSON TrackTableV2 where
   parseJSON = withObject "Object" $ \o -> do
@@ -234,7 +234,7 @@ data SetTableCustomization
   , _stcTable         :: !QualifiedTable
   , _stcConfiguration :: !TableConfig
   } deriving (Show, Eq)
-$(deriveToJSON (aesonPrefix snakeCase) ''SetTableCustomization)
+$(deriveToJSON hasuraJSON ''SetTableCustomization)
 
 instance FromJSON SetTableCustomization where
   parseJSON = withObject "Object" $ \o ->
@@ -250,7 +250,7 @@ data SetTableCustomFields
   , _stcfCustomRootFields  :: !TableCustomRootFields
   , _stcfCustomColumnNames :: !CustomColumnNames
   } deriving (Show, Eq)
-$(deriveToJSON (aesonPrefix snakeCase) ''SetTableCustomFields)
+$(deriveToJSON hasuraJSON ''SetTableCustomFields)
 
 instance FromJSON SetTableCustomFields where
   parseJSON = withObject "SetTableCustomFields" $ \o ->

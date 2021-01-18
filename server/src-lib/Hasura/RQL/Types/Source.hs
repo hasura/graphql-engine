@@ -25,7 +25,7 @@ data SourceInfo b
   } deriving (Generic)
 $(makeLenses ''SourceInfo)
 instance ToJSON (SourceInfo 'Postgres) where
-  toJSON = genericToJSON $ aesonPrefix snakeCase
+  toJSON = genericToJSON hasuraJSON
 
 type SourceCache b = HashMap SourceName (SourceInfo b)
 
@@ -48,7 +48,7 @@ data PostgresPoolSettings
   , _ppsRetries        :: !Int
   } deriving (Show, Eq, Generic)
 instance Cacheable PostgresPoolSettings
-$(deriveToJSON (aesonPrefix snakeCase) ''PostgresPoolSettings)
+$(deriveToJSON hasuraJSON ''PostgresPoolSettings)
 
 instance FromJSON PostgresPoolSettings where
   parseJSON = withObject "Object" $ \o ->
@@ -71,7 +71,7 @@ data PostgresSourceConnInfo
   , _psciPoolSettings :: !PostgresPoolSettings
   } deriving (Show, Eq, Generic)
 instance Cacheable PostgresSourceConnInfo
-$(deriveToJSON (aesonPrefix snakeCase) ''PostgresSourceConnInfo)
+$(deriveToJSON hasuraJSON ''PostgresSourceConnInfo)
 
 instance FromJSON PostgresSourceConnInfo where
   parseJSON = withObject "Object" $ \o ->
@@ -85,7 +85,7 @@ data SourceConfiguration
   , _scReadReplicas   :: !(Maybe (NonEmpty PostgresSourceConnInfo))
   } deriving (Show, Eq, Generic)
 instance Cacheable SourceConfiguration
-$(deriveJSON (aesonPrefix snakeCase){omitNothingFields = True} ''SourceConfiguration)
+$(deriveJSON hasuraJSON{omitNothingFields = True} ''SourceConfiguration)
 
 type SourceResolver =
   SourceName -> SourceConfiguration -> IO (Either QErr (SourceConfig 'Postgres))
@@ -111,14 +111,14 @@ data AddPgSource
   { _apsName          :: !SourceName
   , _apsConfiguration :: !SourceConfiguration
   } deriving (Show, Eq)
-$(deriveJSON (aesonPrefix snakeCase) ''AddPgSource)
+$(deriveJSON hasuraJSON ''AddPgSource)
 
 data DropPgSource
   = DropPgSource
   { _dpsName    :: !SourceName
   , _dpsCascade :: !Bool
   } deriving (Show, Eq)
-$(deriveToJSON (aesonPrefix snakeCase) ''DropPgSource)
+$(deriveToJSON hasuraJSON ''DropPgSource)
 
 instance FromJSON DropPgSource where
   parseJSON = withObject "Object" $ \o ->
@@ -127,4 +127,4 @@ instance FromJSON DropPgSource where
 newtype PostgresSourceName =
   PostgresSourceName {_psnName :: SourceName}
   deriving (Show, Eq)
-$(deriveJSON (aesonPrefix snakeCase) ''PostgresSourceName)
+$(deriveJSON hasuraJSON ''PostgresSourceName)

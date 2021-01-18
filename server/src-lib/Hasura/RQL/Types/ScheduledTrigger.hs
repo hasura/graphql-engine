@@ -84,7 +84,7 @@ instance FromJSON STRetryConf where
     then fail "num_retries cannot be a negative value"
     else pure $ STRetryConf numRetries' retryInterval timeout tolerance
 
-$(deriveToJSON (aesonPrefix snakeCase){omitNothingFields=True} ''STRetryConf)
+$(deriveToJSON hasuraJSON{omitNothingFields=True} ''STRetryConf)
 
 defaultSTRetryConf :: STRetryConf
 defaultSTRetryConf =
@@ -123,7 +123,7 @@ instance FromJSON CronTriggerMetadata where
       ctComment <- o .:? "comment"
       pure CronTriggerMetadata {..}
 
-$(deriveToJSON (aesonPrefix snakeCase){omitNothingFields=True} ''CronTriggerMetadata)
+$(deriveToJSON hasuraJSON{omitNothingFields=True} ''CronTriggerMetadata)
 
 data CreateCronTrigger
   = CreateCronTrigger
@@ -155,13 +155,13 @@ instance FromJSON CreateCronTrigger where
       cctReplace <- o .:? "replace" .!= False
       pure CreateCronTrigger {..}
 
-$(deriveToJSON (aesonPrefix snakeCase){omitNothingFields=True} ''CreateCronTrigger)
+$(deriveToJSON hasuraJSON{omitNothingFields=True} ''CreateCronTrigger)
 
 newtype ScheduledTriggerName
   = ScheduledTriggerName { unName :: TriggerName }
   deriving (Show, Eq)
 
-$(deriveJSON (aesonPrefix snakeCase) ''ScheduledTriggerName)
+$(deriveJSON hasuraJSON ''ScheduledTriggerName)
 
 formatTime' :: UTCTime -> Text
 formatTime'= T.pack . iso8601Show
@@ -189,7 +189,7 @@ instance FromJSON CreateScheduledEvent where
                                    <*> o .:? "retry_conf" .!= defaultSTRetryConf
                                    <*> o .:? "comment"
 
-$(deriveToJSON (aesonPrefix snakeCase) ''CreateScheduledEvent)
+$(deriveToJSON hasuraJSON ''CreateScheduledEvent)
 
 -- | The 'ScheduledEventType' data type is needed to differentiate
 --   between a 'CronScheduledEvent' and 'OneOffScheduledEvent' scheduled
@@ -218,7 +218,7 @@ data ScheduledEventInvocation
   , _seiResponse  :: !(Maybe Value)
   , _seiCreatedAt :: !UTCTime
   } deriving (Show, Eq)
-$(deriveJSON (aesonPrefix snakeCase) ''ScheduledEventInvocation)
+$(deriveJSON hasuraJSON ''ScheduledEventInvocation)
 
 data ScheduledEvent
   = SEOneOff
@@ -300,7 +300,7 @@ data OneOffScheduledEvent
   , _ooseNextRetryAt   :: !(Maybe UTCTime)
   , _ooseComment       :: !(Maybe Text)
   } deriving (Show, Eq)
-$(deriveJSON (aesonPrefix snakeCase) ''OneOffScheduledEvent)
+$(deriveJSON hasuraJSON ''OneOffScheduledEvent)
 
 data CronEvent
   = CronEvent
@@ -313,7 +313,7 @@ data CronEvent
   -- ^ it is the time at which the cron event generator created the event
   , _ceNextRetryAt   :: !(Maybe UTCTime)
   } deriving (Show, Eq)
-$(deriveJSON (aesonPrefix snakeCase) ''CronEvent)
+$(deriveJSON hasuraJSON ''CronEvent)
 
 data ScheduledEventPagination
   = ScheduledEventPagination
@@ -363,7 +363,7 @@ data DeleteScheduledEvent
   { _dseType    :: !ScheduledEventType
   , _dseEventId :: !ScheduledEventId
   } deriving (Show, Eq)
-$(deriveJSON (aesonPrefix snakeCase) ''DeleteScheduledEvent)
+$(deriveJSON hasuraJSON ''DeleteScheduledEvent)
 
 data GetInvocationsBy
   = GIBEventId !EventId !ScheduledEventType

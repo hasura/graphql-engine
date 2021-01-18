@@ -66,7 +66,7 @@ data ReloadMetadata
   { _rmReloadRemoteSchemas :: !ReloadRemoteSchemas
   , _rmReloadSources       :: !ReloadSources
   } deriving (Show, Eq)
-$(deriveToJSON (aesonPrefix snakeCase) ''ReloadMetadata)
+$(deriveToJSON hasuraJSON ''ReloadMetadata)
 
 instance FromJSON ReloadMetadata where
   parseJSON = \case

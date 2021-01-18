@@ -45,7 +45,7 @@ data AddComputedField
   } deriving (Show, Eq, Generic)
 instance NFData AddComputedField
 instance Cacheable AddComputedField
-$(deriveToJSON (aesonPrefix snakeCase) ''AddComputedField)
+$(deriveToJSON hasuraJSON ''AddComputedField)
 
 instance FromJSON AddComputedField where
   parseJSON = withObject "Object" $ \o ->
@@ -255,7 +255,7 @@ data DropComputedField
   , _dccName    :: !ComputedFieldName
   , _dccCascade :: !Bool
   } deriving (Show, Eq)
-$(deriveToJSON (aesonPrefix snakeCase) ''DropComputedField)
+$(deriveToJSON hasuraJSON ''DropComputedField)
 
 instance FromJSON DropComputedField where
   parseJSON = withObject "Object" $ \o ->

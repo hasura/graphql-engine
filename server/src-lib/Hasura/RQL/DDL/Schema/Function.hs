@@ -231,7 +231,7 @@ data UnTrackFunction
   { _utfFunction :: !QualifiedFunction
   , _utfSource   :: !SourceName
   } deriving (Show, Eq)
-$(deriveToJSON (aesonPrefix snakeCase) ''UnTrackFunction)
+$(deriveToJSON hasuraJSON ''UnTrackFunction)
 
 instance FromJSON UnTrackFunction where
   parseJSON v = withSource <|> withoutSource

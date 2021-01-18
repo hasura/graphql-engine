@@ -54,7 +54,7 @@ newtype EnumValueInfo
   = EnumValueInfo
   { evComment :: Maybe Text
   } deriving (Show, Eq, Ord, NFData, Hashable, Cacheable)
-$(deriveJSON (aesonPrefix snakeCase) ''EnumValueInfo)
+$(deriveJSON hasuraJSON ''EnumValueInfo)
 
 type EnumValues = M.HashMap EnumValue EnumValueInfo
 
@@ -73,10 +73,10 @@ instance (Backend b) => Hashable (EnumReference b)
 instance (Backend b) => Cacheable (EnumReference b)
 
 instance Backend b => FromJSON (EnumReference b) where
-  parseJSON = genericParseJSON $ aesonPrefix snakeCase
+  parseJSON = genericParseJSON hasuraJSON
 
 instance Backend b => ToJSON (EnumReference b) where
-  toJSON = genericToJSON $ aesonPrefix snakeCase
+  toJSON = genericToJSON hasuraJSON
 
 -- | The type we use for columns, which are currently always “scalars” (though
 -- see the note about 'CollectableType'). Unlike 'ScalarType', which represents
@@ -172,9 +172,9 @@ deriving instance Backend b => Show (RawColumnInfo b)
 instance Backend b => NFData (RawColumnInfo b)
 instance Backend b => Cacheable (RawColumnInfo b)
 instance Backend b => ToJSON (RawColumnInfo b) where
-  toJSON = genericToJSON $ aesonPrefix snakeCase
+  toJSON = genericToJSON hasuraJSON
 instance Backend b => FromJSON (RawColumnInfo b) where
-  parseJSON = genericParseJSON $ aesonPrefix snakeCase
+  parseJSON = genericParseJSON hasuraJSON
 
 -- | “Resolved” column info, produced from a 'RawColumnInfo' value that has been combined with
 -- other schema information to produce a 'PGColumnType'.
@@ -193,8 +193,8 @@ instance Backend b => Cacheable (ColumnInfo b)
 instance Backend b => NFData (ColumnInfo b)
 instance Backend b => Hashable (ColumnInfo b)
 instance Backend b => ToJSON (ColumnInfo b) where
-  toJSON = genericToJSON $ aesonPrefix snakeCase
-  toEncoding = genericToEncoding $ aesonPrefix snakeCase
+  toJSON = genericToJSON hasuraJSON
+  toEncoding = genericToEncoding hasuraJSON
 
 type PrimaryKeyColumns b = NESeq (ColumnInfo b)
 

@@ -140,7 +140,7 @@ data CacheInvalidations = CacheInvalidations
   -- ^ Force re-establishing connections of the given data sources, even if their configuration has not changed. Set
   -- by the @pg_reload_source@ API.
   }
-$(deriveJSON (aesonPrefix snakeCase) ''CacheInvalidations)
+$(deriveJSON hasuraJSON ''CacheInvalidations)
 
 instance Semigroup CacheInvalidations where
   CacheInvalidations a1 b1 c1 <> CacheInvalidations a2 b2 c2 =

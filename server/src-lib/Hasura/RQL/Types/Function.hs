@@ -49,7 +49,7 @@ data FunctionArg
   , faHasDefault :: !HasDefault
   } deriving (Show, Eq, Generic)
 instance Cacheable FunctionArg
-$(deriveToJSON (aesonPrefix snakeCase) ''FunctionArg)
+$(deriveToJSON hasuraJSON ''FunctionArg)
 
 data InputArgument a
   = IAUserProvided !a
@@ -95,7 +95,7 @@ data FunctionInfo
   -- returns the composite type corresponding to this table".
   , fiDescription   :: !(Maybe PGDescription)
   } deriving (Show, Eq)
-$(deriveToJSON (aesonPrefix snakeCase) ''FunctionInfo)
+$(deriveToJSON hasuraJSON ''FunctionInfo)
 
 getInputArgs :: FunctionInfo -> Seq.Seq FunctionArg
 getInputArgs =
@@ -118,7 +118,7 @@ data FunctionConfig
   } deriving (Show, Eq, Generic)
 instance NFData FunctionConfig
 instance Cacheable FunctionConfig
-$(deriveJSON (aesonPrefix snakeCase){omitNothingFields = True} ''FunctionConfig)
+$(deriveJSON hasuraJSON{omitNothingFields = True} ''FunctionConfig)
 
 -- | The default function config; v1 of the API implies this.
 emptyFunctionConfig :: FunctionConfig
@@ -134,7 +134,7 @@ data TrackFunctionV2
   , _tfv2Function      :: !QualifiedFunction
   , _tfv2Configuration :: !FunctionConfig
   } deriving (Show, Eq, Generic)
-$(deriveToJSON (aesonPrefix snakeCase) ''TrackFunctionV2)
+$(deriveToJSON hasuraJSON ''TrackFunctionV2)
 
 instance FromJSON TrackFunctionV2 where
   parseJSON = withObject "Object" $ \o ->
@@ -161,6 +161,6 @@ data RawFunctionInfo
   } deriving (Show, Eq, Generic)
 instance NFData RawFunctionInfo
 instance Cacheable RawFunctionInfo
-$(deriveJSON (aesonPrefix snakeCase) ''RawFunctionInfo)
+$(deriveJSON hasuraJSON ''RawFunctionInfo)
 
 type PostgresFunctionsMetadata = HashMap QualifiedFunction [RawFunctionInfo]

@@ -50,7 +50,7 @@ data ScheduledEventWebhookPayload
   -- don't send it
   } deriving (Show, Eq)
 
-$(J.deriveToJSON (J.aesonPrefix J.snakeCase) {J.omitNothingFields = True} ''ScheduledEventWebhookPayload)
+$(J.deriveToJSON hasuraJSON {J.omitNothingFields = True} ''ScheduledEventWebhookPayload)
 
 newtype ScheduledEventIdArray =
   ScheduledEventIdArray { unScheduledEventIdArray :: [ScheduledEventId]}

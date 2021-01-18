@@ -331,7 +331,7 @@ data ParameterizedLiveQueryPlan
   { _plqpRole  :: !RoleName
   , _plqpQuery :: !MultiplexedQuery
   } deriving (Show)
-$(J.deriveToJSON (J.aesonPrefix J.snakeCase) ''ParameterizedLiveQueryPlan)
+$(J.deriveToJSON hasuraJSON ''ParameterizedLiveQueryPlan)
 
 data ReusableLiveQueryPlan
   = ReusableLiveQueryPlan
@@ -340,7 +340,7 @@ data ReusableLiveQueryPlan
   , _rlqpSyntheticVariableValues  :: !ValidatedSyntheticVariables
   , _rlqpQueryVariableTypes       :: HashMap G.Name (ColumnType 'Postgres)
   } deriving (Show)
-$(J.deriveToJSON (J.aesonPrefix J.snakeCase) ''ReusableLiveQueryPlan)
+$(J.deriveToJSON hasuraJSON ''ReusableLiveQueryPlan)
 
 -- | Constructs a new execution plan for a live query and returns a reusable version
 -- of the plan if possible.
@@ -397,7 +397,7 @@ data LiveQueryPlanExplanation
   , _lqpePlan      :: ![Text]
   , _lqpeVariables :: !CohortVariables
   } deriving (Show)
-$(J.deriveToJSON (J.aesonPrefix J.snakeCase) ''LiveQueryPlanExplanation)
+$(J.deriveToJSON hasuraJSON ''LiveQueryPlanExplanation)
 
 explainLiveQueryPlan
   :: ( MonadError QErr m

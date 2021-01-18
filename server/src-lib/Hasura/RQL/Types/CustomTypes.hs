@@ -85,7 +85,7 @@ data InputObjectFieldDefinition
   } deriving (Show, Eq, Generic)
 instance NFData InputObjectFieldDefinition
 instance Cacheable InputObjectFieldDefinition
-$(J.deriveJSON (J.aesonPrefix J.snakeCase) ''InputObjectFieldDefinition)
+$(J.deriveJSON hasuraJSON ''InputObjectFieldDefinition)
 
 newtype InputObjectTypeName
   = InputObjectTypeName { unInputObjectTypeName :: G.Name }
@@ -99,7 +99,7 @@ data InputObjectTypeDefinition
   } deriving (Show, Eq, Generic)
 instance NFData InputObjectTypeDefinition
 instance Cacheable InputObjectTypeDefinition
-$(J.deriveJSON (J.aesonPrefix J.snakeCase) ''InputObjectTypeDefinition)
+$(J.deriveJSON hasuraJSON ''InputObjectTypeDefinition)
 
 newtype ObjectFieldName
   = ObjectFieldName { unObjectFieldName :: G.Name }
@@ -119,7 +119,7 @@ data ObjectFieldDefinition a
   } deriving (Show, Eq, Functor, Foldable, Traversable, Generic)
 instance (NFData a) => NFData (ObjectFieldDefinition a)
 instance (Cacheable a) => Cacheable (ObjectFieldDefinition a)
-$(J.deriveJSON (J.aesonPrefix J.snakeCase) ''ObjectFieldDefinition)
+$(J.deriveJSON hasuraJSON ''ObjectFieldDefinition)
 
 newtype RelationshipName
   = RelationshipName { unRelationshipName :: G.Name }
@@ -136,7 +136,7 @@ data TypeRelationship t f
 instance (NFData t, NFData f) => NFData (TypeRelationship t f)
 instance (Cacheable t, Cacheable f) => Cacheable (TypeRelationship t f)
 $(makeLenses ''TypeRelationship)
-$(J.deriveToJSON (J.aesonPrefix J.snakeCase) ''TypeRelationship)
+$(J.deriveToJSON hasuraJSON ''TypeRelationship)
 
 instance (J.FromJSON t, J.FromJSON f) => J.FromJSON (TypeRelationship t f) where
   parseJSON = J.withObject "Object" $ \o ->
@@ -160,7 +160,7 @@ data ObjectTypeDefinition a b c
   } deriving (Show, Eq, Generic)
 instance (NFData a, NFData b, NFData c) => NFData (ObjectTypeDefinition a b c)
 instance (Cacheable a, Cacheable b, Cacheable c) => Cacheable (ObjectTypeDefinition a b c)
-$(J.deriveToJSON (J.aesonPrefix J.snakeCase) ''ObjectTypeDefinition)
+$(J.deriveToJSON hasuraJSON ''ObjectTypeDefinition)
 
 instance (J.FromJSON a, J.FromJSON b, J.FromJSON c) => J.FromJSON (ObjectTypeDefinition a b c) where
   parseJSON = J.withObject "ObjectTypeDefinition" \obj -> do
@@ -184,7 +184,7 @@ data ScalarTypeDefinition
 instance NFData ScalarTypeDefinition
 instance Cacheable ScalarTypeDefinition
 instance Hashable ScalarTypeDefinition
-$(J.deriveJSON (J.aesonPrefix J.snakeCase) ''ScalarTypeDefinition)
+$(J.deriveJSON hasuraJSON ''ScalarTypeDefinition)
 
 -- default scalar names
 intScalar, floatScalar, stringScalar, boolScalar, idScalar :: G.Name
@@ -211,7 +211,7 @@ data EnumValueDefinition
   } deriving (Show, Eq, Generic)
 instance NFData EnumValueDefinition
 instance Cacheable EnumValueDefinition
-$(J.deriveJSON (J.aesonPrefix J.snakeCase) ''EnumValueDefinition)
+$(J.deriveJSON hasuraJSON ''EnumValueDefinition)
 
 data EnumTypeDefinition
   = EnumTypeDefinition
@@ -221,7 +221,7 @@ data EnumTypeDefinition
   } deriving (Show, Eq, Generic)
 instance NFData EnumTypeDefinition
 instance Cacheable EnumTypeDefinition
-$(J.deriveJSON (J.aesonPrefix J.snakeCase) ''EnumTypeDefinition)
+$(J.deriveJSON hasuraJSON ''EnumTypeDefinition)
 
 type ObjectType =
   ObjectTypeDefinition GraphQLType QualifiedTable PGCol
@@ -235,7 +235,7 @@ data CustomTypes
   } deriving (Show, Eq, Generic)
 instance NFData CustomTypes
 instance Cacheable CustomTypes
-$(J.deriveJSON (J.aesonPrefix J.snakeCase) ''CustomTypes)
+$(J.deriveJSON hasuraJSON ''CustomTypes)
 
 emptyCustomTypes :: CustomTypes
 emptyCustomTypes = CustomTypes Nothing Nothing Nothing Nothing

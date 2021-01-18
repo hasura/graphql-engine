@@ -20,7 +20,7 @@ data RelDef a
   , _rdComment :: !(Maybe T.Text)
   } deriving (Show, Eq, Generic)
 instance (Cacheable a) => Cacheable (RelDef a)
-$(deriveFromJSON (aesonPrefix snakeCase){omitNothingFields=True} ''RelDef)
+$(deriveFromJSON hasuraJSON{omitNothingFields=True} ''RelDef)
 $(makeLenses ''RelDef)
 
 instance (ToJSON a) => ToJSON (RelDef a) where
@@ -87,7 +87,7 @@ data ArrRelUsingFKeyOn
   } deriving (Show, Eq, Generic)
 instance Cacheable ArrRelUsingFKeyOn
 
-$(deriveJSON (aesonPrefix snakeCase){omitNothingFields=True} ''ArrRelUsingFKeyOn)
+$(deriveJSON hasuraJSON{omitNothingFields=True} ''ArrRelUsingFKeyOn)
 
 type ArrRelUsing = RelUsing ArrRelUsingFKeyOn
 type ArrRelDef = RelDef ArrRelUsing
@@ -104,7 +104,7 @@ data DropRel
   , drRelationship :: !RelName
   , drCascade      :: !Bool
   } deriving (Show, Eq)
-$(deriveToJSON (aesonPrefix snakeCase){omitNothingFields=True} ''DropRel)
+$(deriveToJSON hasuraJSON{omitNothingFields=True} ''DropRel)
 
 instance FromJSON DropRel where
   parseJSON = withObject "Object" $ \o ->
@@ -121,7 +121,7 @@ data SetRelComment
   , arRelationship :: !RelName
   , arComment      :: !(Maybe T.Text)
   } deriving (Show, Eq)
-$(deriveToJSON (aesonPrefix snakeCase){omitNothingFields=True} ''SetRelComment)
+$(deriveToJSON hasuraJSON{omitNothingFields=True} ''SetRelComment)
 instance FromJSON SetRelComment where
   parseJSON = withObject "Object" $ \o ->
     SetRelComment
@@ -137,7 +137,7 @@ data RenameRel
   , rrName    :: !RelName
   , rrNewName :: !RelName
   } deriving (Show, Eq)
-$(deriveToJSON (aesonPrefix snakeCase) ''RenameRel)
+$(deriveToJSON hasuraJSON ''RenameRel)
 
 instance FromJSON RenameRel where
   parseJSON = withObject "Object" $ \o ->
