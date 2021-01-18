@@ -12,12 +12,14 @@ import qualified Data.List.NonEmpty                        as NE
 import qualified Data.Sequence                             as DS
 import qualified Database.PG.Query                         as Q
 
+import           Control.Monad.Trans.Control               (MonadBaseControl)
 import           Data.Aeson.Types
 import           Data.Text.Extended
 
 import qualified Hasura.Backends.Postgres.SQL.DML          as S
+import qualified Hasura.Tracing                            as Tracing
 
-import           Hasura.Backends.Postgres.SQL.Types
+import           Hasura.Backends.Postgres.SQL.Types        hiding (TableName)
 import           Hasura.Backends.Postgres.Translate.Select
 import           Hasura.EncJSON
 import           Hasura.RQL.DML.Internal
@@ -25,7 +27,9 @@ import           Hasura.RQL.DML.Types
 import           Hasura.RQL.IR.OrderBy
 import           Hasura.RQL.IR.Select
 import           Hasura.RQL.Types
+import           Hasura.RQL.Types.Run
 import           Hasura.SQL.Types
+import           Hasura.Session
 
 
 type SelectQExt b = SelectG (ExtCol b) (BoolExp b) Int
@@ -60,7 +64,7 @@ instance FromJSON (ExtCol 'Postgres) where
     , "object (relationship)"
     ]
 
-convSelCol :: (UserInfoM m, QErrM m, CacheRM m)
+convSelCol :: (UserInfoM m, QErrM m, TableInfoRM 'Postgres m)
            => FieldInfoMap (FieldInfo 'Postgres)
            -> SelPermInfo 'Postgres
            -> SelCol 'Postgres
@@ -80,7 +84,7 @@ convSelCol fieldInfoMap spi (SCStar wildcard) =
   convWildcard fieldInfoMap spi wildcard
 
 convWildcard
-  :: (UserInfoM m, QErrM m, CacheRM m)
+  :: (UserInfoM m, QErrM m, TableInfoRM 'Postgres m)
   => FieldInfoMap (FieldInfo 'Postgres)
   -> SelPermInfo 'Postgres
   -> Wildcard
@@ -109,7 +113,7 @@ convWildcard fieldInfoMap selPermInfo wildcard =
 
     relExtCols wc = mapM (mkRelCol wc) relColInfos
 
-resolveStar :: (UserInfoM m, QErrM m, CacheRM m)
+resolveStar :: (UserInfoM m, QErrM m, TableInfoRM 'Postgres m)
             => FieldInfoMap (FieldInfo 'Postgres)
             -> SelPermInfo 'Postgres
             -> SelectQ 'Postgres
@@ -135,7 +139,7 @@ resolveStar fim spi (SelectG selCols mWh mOb mLt mOf) = do
     equals _ _                         = False
 
 convOrderByElem
-  :: (UserInfoM m, QErrM m, CacheRM m)
+  :: (UserInfoM m, QErrM m, TableInfoRM 'Postgres m)
   => SessVarBldr 'Postgres m
   -> (FieldInfoMap (FieldInfo 'Postgres), SelPermInfo 'Postgres)
   -> OrderByCol
@@ -189,8 +193,8 @@ convOrderByElem sessVarBldr (flds, spi) = \case
         throw400 UnexpectedPayload (mconcat [ fldName <<> " is a remote field" ])
 
 convSelectQ
-  :: (UserInfoM m, QErrM m, CacheRM m, HasSQLGenCtx m)
-  => QualifiedTable
+  :: (UserInfoM m, QErrM m, TableInfoRM 'Postgres m, HasSQLGenCtx m)
+  => TableName 'Postgres
   -> FieldInfoMap (FieldInfo 'Postgres)  -- Table information of current table
   -> SelPermInfo 'Postgres   -- Additional select permission info
   -> SelectQExt 'Postgres     -- Given Select Query
@@ -255,7 +259,7 @@ convExtSimple fieldInfoMap selPermInfo pgCol = do
     relWhenPGErr = "relationships have to be expanded"
 
 convExtRel
-  :: (UserInfoM m, QErrM m, CacheRM m, HasSQLGenCtx m)
+  :: (UserInfoM m, QErrM m, TableInfoRM 'Postgres m, HasSQLGenCtx m)
   => FieldInfoMap (FieldInfo 'Postgres)
   -> RelName
   -> Maybe RelName
@@ -293,13 +297,13 @@ convExtRel fieldInfoMap relName mAlias selQ sessVarBldr prepValBldr = do
               ]
 
 convSelectQuery
-  :: (UserInfoM m, QErrM m, CacheRM m, HasSQLGenCtx m)
+  :: (UserInfoM m, QErrM m, TableInfoRM 'Postgres m, HasSQLGenCtx m)
   => SessVarBldr 'Postgres m
   -> (ColumnType 'Postgres -> Value -> m S.SQLExp)
   -> SelectQuery
   -> m (AnnSimpleSel  'Postgres)
-convSelectQuery sessVarBldr prepArgBuilder (DMLQuery qt selQ) = do
-  tabInfo     <- withPathK "table" $ askTabInfo qt
+convSelectQuery sessVarBldr prepArgBuilder (DMLQuery _ qt selQ) = do
+  tabInfo     <- withPathK "table" $ askTabInfoSource qt
   selPermInfo <- askSelPermInfo tabInfo
   let fieldInfo = _tciFieldInfoMap $ _tiCoreInfo tabInfo
   extSelQ <- resolveStar fieldInfo selPermInfo selQ
@@ -316,15 +320,22 @@ selectP2 jsonAggSelect (sel, p) =
 phaseOne
   :: (QErrM m, UserInfoM m, CacheRM m, HasSQLGenCtx m)
   => SelectQuery -> m (AnnSimpleSel  'Postgres, DS.Seq Q.PrepArg)
-phaseOne =
-  runDMLP1T . convSelectQuery sessVarFromCurrentSetting binRHSBuilder
+phaseOne query = do
+  let sourceName = getSourceDMLQuery query
+  tableCache <- askTableCache sourceName
+  flip runTableCacheRT (sourceName, tableCache) $ runDMLP1T $
+    convSelectQuery sessVarFromCurrentSetting binRHSBuilder query
 
 phaseTwo :: (MonadTx m) => (AnnSimpleSel 'Postgres, DS.Seq Q.PrepArg) -> m EncJSON
 phaseTwo =
   liftTx . selectP2 JASMultipleRows
 
 runSelect
-  :: (QErrM m, UserInfoM m, CacheRM m, HasSQLGenCtx m, MonadTx m)
+  :: ( QErrM m, UserInfoM m, CacheRM m
+     , HasSQLGenCtx m, MonadIO m, MonadBaseControl IO m
+     , Tracing.MonadTrace m
+     )
   => SelectQuery -> m EncJSON
-runSelect q =
-  phaseOne q >>= phaseTwo
+runSelect q = do
+  sourceConfig <- _pcConfiguration <$> askPGSourceCache (getSourceDMLQuery q)
+  phaseOne q >>= runQueryLazyTx (_pscExecCtx sourceConfig) Q.ReadOnly . phaseTwo

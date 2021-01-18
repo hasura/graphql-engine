@@ -13,9 +13,9 @@ import qualified Data.HashMap.Strict                as Map
 
 renameRelP2
   :: (QErrM m, CacheRM m)
-  => QualifiedTable -> RelName -> RelInfo 'Postgres -> m MetadataModifier
-renameRelP2 qt newRN relInfo = withNewInconsistentObjsCheck $ do
-  tabInfo <- askTableCoreInfo qt
+  => SourceName -> QualifiedTable -> RelName -> RelInfo 'Postgres -> m MetadataModifier
+renameRelP2 source qt newRN relInfo = withNewInconsistentObjsCheck $ do
+  tabInfo <- askTableCoreInfo source qt
   -- check for conflicts in fieldInfoMap
   case Map.lookup (fromRel newRN) $ _tciFieldInfoMap tabInfo of
     Nothing -> return ()
@@ -24,16 +24,16 @@ renameRelP2 qt newRN relInfo = withNewInconsistentObjsCheck $ do
       <<> " to " <> newRN <<> " in table " <> qt <<>
       " as a column/relationship with the name already exists"
   -- update metadata
-  execWriterT $ renameRelationshipInMetadata qt oldRN (riType relInfo) newRN
+  execWriterT $ renameRelationshipInMetadata source qt oldRN (riType relInfo) newRN
   where
     oldRN = riName relInfo
 
 runRenameRel
   :: (MonadError QErr m, CacheRWM m, MetadataM m)
   => RenameRel -> m EncJSON
-runRenameRel (RenameRel qt rn newRN) = do
-  tabInfo <- askTableCoreInfo qt
+runRenameRel (RenameRel source qt rn newRN) = do
+  tabInfo <- askTableCoreInfo source qt
   ri <- askRelType (_tciFieldInfoMap tabInfo) rn ""
   withNewInconsistentObjsCheck $
-    renameRelP2 qt newRN ri >>= buildSchemaCache
+    renameRelP2 source qt newRN ri >>= buildSchemaCache
   pure successMsg

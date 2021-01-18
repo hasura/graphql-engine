@@ -16,7 +16,7 @@ import (
 
 // ApplySeedsToDatabase will read all .sql files in the given
 // directory and apply it to hasura
-func ApplySeedsToDatabase(ec *cli.ExecutionContext, fs afero.Fs, m *migrate.Migrate, filenames []string) error {
+func ApplySeedsToDatabase(ec *cli.ExecutionContext, fs afero.Fs, m *migrate.Migrate, filenames []string, datasource string) error {
 	seedQuery := hasuradb.HasuraInterfaceBulk{
 		Type: "bulk",
 		Args: make([]interface{}, 0),
@@ -31,7 +31,8 @@ func ApplySeedsToDatabase(ec *cli.ExecutionContext, fs afero.Fs, m *migrate.Migr
 			}
 			q := hasuradb.HasuraInterfaceQuery{
 				Type: "run_sql",
-				Args: hasuradb.HasuraArgs{
+				Args: hasuradb.RunSQLInput{
+					Source: datasource,
 					SQL: string(b),
 				},
 			}
@@ -49,8 +50,9 @@ func ApplySeedsToDatabase(ec *cli.ExecutionContext, fs afero.Fs, m *migrate.Migr
 				}
 				q := hasuradb.HasuraInterfaceQuery{
 					Type: "run_sql",
-					Args: hasuradb.HasuraArgs{
+					Args: hasuradb.RunSQLInput{
 						SQL: string(b),
+						Source: datasource,
 					},
 				}
 				seedQuery.Args = append(seedQuery.Args, q)

@@ -4,26 +4,32 @@ module Hasura.Server.MigrateSpec (CacheRefT(..), spec) where
 
 import           Hasura.Prelude
 
+import qualified Data.Environment                    as Env
+import qualified Database.PG.Query                   as Q
+import qualified Network.HTTP.Client.Extended        as HTTP
+
 import           Control.Concurrent.MVar.Lifted
+import           Control.Monad.Morph
 import           Control.Monad.Trans.Control         (MonadBaseControl)
 import           Control.Monad.Unique
 import           Control.Natural                     ((:~>) (..))
 import           Data.Time.Clock                     (getCurrentTime)
-import           Data.Tuple                          (swap)
 import           Test.Hspec.Core.Spec
 import           Test.Hspec.Expectations.Lifted
 
-import qualified Data.Environment                    as Env
-import qualified Database.PG.Query                   as Q
-
+import           Hasura.Backends.Postgres.Connection
 import           Hasura.RQL.DDL.Metadata             (ClearMetadata (..), runClearMetadata)
 import           Hasura.RQL.DDL.Schema
+import           Hasura.RQL.DDL.Schema.Cache.Common
 import           Hasura.RQL.DDL.Schema.LegacyCatalog
 import           Hasura.RQL.Types
 import           Hasura.Server.API.PGDump
 import           Hasura.Server.Init                  (DowngradeOptions (..))
 import           Hasura.Server.Migrate
 import           Hasura.Server.Version               (HasVersion)
+import           Hasura.Session
+
+
 
 -- -- NOTE: downgrade test disabled for now (see #5273)
 
@@ -31,17 +37,21 @@ newtype CacheRefT m a
   = CacheRefT { runCacheRefT :: MVar RebuildableSchemaCache -> m a }
   deriving
     ( Functor, Applicative, Monad, MonadIO, MonadError e, MonadBase b, MonadBaseControl b
-    , MonadTx, MonadUnique, UserInfoM, HasHttpManager, HasSQLGenCtx )
+    , MonadTx, MonadUnique, UserInfoM, HTTP.HasHttpManagerM, HasSQLGenCtx)
     via (ReaderT (MVar RebuildableSchemaCache) m)
 
 instance MonadTrans CacheRefT where
   lift = CacheRefT . const
 
-instance (MonadBase IO m) => TableCoreInfoRM 'Postgres (CacheRefT m)
+instance MFunctor CacheRefT where
+  hoist f (CacheRefT m) = CacheRefT (f . m)
+
+-- instance (MonadBase IO m) => TableCoreInfoRM 'Postgres (CacheRefT m)
 instance (MonadBase IO m) => CacheRM (CacheRefT m) where
   askSchemaCache = CacheRefT (fmap lastBuiltSchemaCache . readMVar)
 
-instance (MonadIO m, MonadBaseControl IO m, MonadTx m, HasHttpManager m, HasSQLGenCtx m, HasRemoteSchemaPermsCtx m) => CacheRWM (CacheRefT m) where
+instance (MonadIO m, MonadBaseControl IO m, MonadTx m, HTTP.HasHttpManagerM m
+         , HasSQLGenCtx m, HasRemoteSchemaPermsCtx m, MonadResolveSource m) => CacheRWM (CacheRefT m) where
   buildSchemaCacheWithOptions reason invalidations metadata = CacheRefT $ flip modifyMVar \schemaCache -> do
     ((), cache, _) <- runCacheRWT schemaCache (buildSchemaCacheWithOptions reason invalidations metadata)
     pure (cache, ())
@@ -56,19 +66,25 @@ singleTransaction :: MetadataT (CacheRefT m) () -> MetadataT (CacheRefT m) ()
 singleTransaction = id
 
 spec
-  :: ( HasVersion
+  :: forall m
+   . ( HasVersion
      , MonadIO m
      , MonadBaseControl IO m
-     , MonadTx m
-     , HasHttpManager m
+     , MonadError QErr m
+     , HTTP.HasHttpManagerM m
      , HasSQLGenCtx m
      , HasRemoteSchemaPermsCtx m
+     , MonadResolveSource m
      )
-  => Q.ConnInfo -> SpecWithCache m
-spec pgConnInfo = do
-  let dropAndInit env time = lift $ CacheRefT $ flip modifyMVar \_ ->
-        dropCatalog *> (swap <$> migrateCatalog env time)
-      downgradeTo v = downgradeCatalog DowngradeOptions{ dgoDryRun = False, dgoTargetVersion = v }
+  => SourceConfiguration -> PGExecCtx -> Q.ConnInfo -> SpecWithCache m
+spec srcConfig pgExecCtx pgConnInfo = do
+  let migrateCatalogAndBuildCache env time = do
+        (migrationResult, metadata) <- runTx pgExecCtx $ migrateCatalog (Just srcConfig) time
+        (,migrationResult) <$> runCacheBuildM (buildRebuildableSchemaCache env metadata)
+
+      dropAndInit env time = lift $ CacheRefT $ flip modifyMVar \_ ->
+        (runTx pgExecCtx dropHdbCatalogSchema) *> (migrateCatalogAndBuildCache env time)
+      downgradeTo v = runTx pgExecCtx . downgradeCatalog (Just srcConfig) DowngradeOptions{ dgoDryRun = False, dgoTargetVersion = v }
 
   describe "migrateCatalog" $ do
     it "initializes the catalog" $ singleTransaction do
@@ -77,7 +93,7 @@ spec pgConnInfo = do
       dropAndInit env time `shouldReturn` MRInitialized
 
     it "is idempotent" \(NT transact) -> do
-      let dumpSchema = execPGDump (PGDumpReqBody ["--schema-only"] (Just False)) pgConnInfo
+      let dumpSchema = execPGDump (PGDumpReqBody defaultSource ["--schema-only"] False) pgConnInfo
       env <- Env.getEnvironment
       time <- getCurrentTime
       transact (dropAndInit env time) `shouldReturn` MRInitialized
@@ -88,14 +104,14 @@ spec pgConnInfo = do
 
     it "supports upgrades after downgrade to version 12" \(NT transact) -> do
       let upgradeToLatest env time = lift $ CacheRefT $ flip modifyMVar \_ ->
-            swap <$> migrateCatalog env time
+            migrateCatalogAndBuildCache env time
       env <- Env.getEnvironment
       time <- getCurrentTime
       transact (dropAndInit env time) `shouldReturn` MRInitialized
       downgradeResult <- (transact . lift) (downgradeTo "12" time)
       downgradeResult `shouldSatisfy` \case
         MRMigrated{} -> True
-        _ -> False
+        _            -> False
       transact (upgradeToLatest env time) `shouldReturn` MRMigrated "12"
 
     -- -- NOTE: this has been problematic in CI and we're not quite sure how to
@@ -112,7 +128,7 @@ spec pgConnInfo = do
     --     t `shouldSatisfy` (`elem` supportedDowngrades)
 
   describe "recreateSystemMetadata" $ do
-    let dumpMetadata = execPGDump (PGDumpReqBody ["--schema=hdb_catalog"] (Just False)) pgConnInfo
+    let dumpMetadata = execPGDump (PGDumpReqBody defaultSource ["--schema=hdb_catalog"] False) pgConnInfo
 
     it "is idempotent" \(NT transact) -> do
       env <- Env.getEnvironment
@@ -122,9 +138,9 @@ spec pgConnInfo = do
       downgradeResult <- (transact . lift) (downgradeTo "42" time)
       downgradeResult `shouldSatisfy` \case
         MRMigrated{} -> True
-        _ -> False
+        _            -> False
       firstDump <- transact dumpMetadata
-      transact recreateSystemMetadata
+      transact (runTx pgExecCtx recreateSystemMetadata)
       secondDump <- transact dumpMetadata
       secondDump `shouldBe` firstDump
 
@@ -133,6 +149,11 @@ spec pgConnInfo = do
       time <- getCurrentTime
       transact (dropAndInit env time) `shouldReturn` MRInitialized
       firstDump <- transact dumpMetadata
-      transact (runClearMetadata ClearMetadata) `shouldReturn` successMsg
+      transact (hoist (hoist (runTx pgExecCtx)) $ runClearMetadata ClearMetadata) `shouldReturn` successMsg
       secondDump <- transact dumpMetadata
       secondDump `shouldBe` firstDump
+
+runTx
+  :: (MonadError QErr m, MonadIO m, MonadBaseControl IO m)
+  => PGExecCtx -> LazyTxT QErr m a -> m a
+runTx pgExecCtx = liftEitherM . runExceptT . runLazyTx pgExecCtx Q.ReadWrite

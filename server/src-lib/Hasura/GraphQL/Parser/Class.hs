@@ -21,6 +21,7 @@ import           Hasura.GraphQL.Parser.Class.Parse
 import           Hasura.GraphQL.Parser.Internal.Types
 import           Hasura.RQL.Types.Common
 import           Hasura.RQL.Types.Error
+import           Hasura.RQL.Types.Source
 import           Hasura.RQL.Types.Table
 import           Hasura.Session                       (RoleName)
 
@@ -113,17 +114,19 @@ askRoleName
   => m RoleName
 askRoleName = asks getter
 
-type MonadTableInfo b r m = (MonadReader r m, Has (TableCache b) r, MonadError QErr m)
+type MonadTableInfo b r m = (MonadReader r m, Has (SourceCache b) r, MonadError QErr m)
 
 -- | Looks up table information for the given table name. This function
 -- should never fail, since the schema cache construction process is
 -- supposed to ensure all dependencies are resolved.
 askTableInfo
-  :: (Backend b, MonadTableInfo b r m)
+  :: forall b r m. (Backend b, MonadTableInfo b r m)
   => TableName b
   -> m (TableInfo b)
 askTableInfo tableName = do
-  tableInfo <- asks $ Map.lookup tableName . getter
+  let getTableInfo :: SourceCache b -> Maybe (TableInfo b)
+      getTableInfo sc = Map.lookup tableName $ Map.unions $ map _pcTables $ Map.elems sc
+  tableInfo <- asks $ getTableInfo . getter
   -- This should never fail, since the schema cache construction process is
   -- supposed to ensure that all dependencies are resolved.
   tableInfo `onNothing` throw500 ("askTableInfo: no info for " <>> tableName)

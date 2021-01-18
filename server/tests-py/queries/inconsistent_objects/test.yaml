@@ -60,6 +60,7 @@ inconsistent_objects:
           schema: public
           name: article
     name: articles
+    source: default
     comment:
     table:
       schema: public

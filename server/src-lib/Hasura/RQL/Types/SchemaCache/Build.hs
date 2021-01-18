@@ -18,6 +18,7 @@ module Hasura.RQL.Types.SchemaCache.Build
   , MetadataM(..)
   , MetadataT(..)
   , runMetadataT
+  , buildSchemaCacheWithInvalidations
   , buildSchemaCache
   , buildSchemaCacheFor
   , buildSchemaCacheStrict
@@ -31,19 +32,27 @@ import qualified Data.Sequence                       as Seq
 
 import           Control.Arrow.Extended
 import           Control.Lens
+import           Control.Monad.Morph
+import           Control.Monad.Trans.Control         (MonadBaseControl)
 import           Control.Monad.Unique
 import           Data.Aeson                          (toJSON)
 import           Data.Aeson.Casing
 import           Data.Aeson.TH
 import           Data.List                           (nub)
 import           Data.Text.Extended
+import           Network.HTTP.Client.Extended
+
+import qualified Hasura.Tracing                      as Tracing
 
 import           Hasura.Backends.Postgres.Connection
+import           Hasura.RQL.Types.Common
 import           Hasura.RQL.Types.Error
 import           Hasura.RQL.Types.Metadata
 import           Hasura.RQL.Types.RemoteSchema       (RemoteSchemaName)
 import           Hasura.RQL.Types.SchemaCache
+import           Hasura.Session
 import           Hasura.Tracing                      (TraceT)
+
 
 -- ----------------------------------------------------------------------------
 -- types used during schema cache construction
@@ -118,7 +127,7 @@ data BuildReason
   -- updated the catalog. Since that instance already updated table event triggers in @hdb_catalog@,
   -- this build should be read-only.
   | CatalogSync
-  deriving (Show, Eq)
+  deriving (Eq)
 
 data CacheInvalidations = CacheInvalidations
   { ciMetadata      :: !Bool
@@ -127,19 +136,25 @@ data CacheInvalidations = CacheInvalidations
   , ciRemoteSchemas :: !(HashSet RemoteSchemaName)
   -- ^ Force refetching of the given remote schemas, even if their definition has not changed. Set
   -- by the @reload_remote_schema@ API.
+  , ciSources       :: !(HashSet SourceName)
+  -- ^ Force re-establishing connections of the given data sources, even if their configuration has not changed. Set
+  -- by the @pg_reload_source@ API.
   }
 $(deriveJSON (aesonDrop 2 snakeCase) ''CacheInvalidations)
 
 instance Semigroup CacheInvalidations where
-  CacheInvalidations a1 b1 <> CacheInvalidations a2 b2 = CacheInvalidations (a1 || a2) (b1 <> b2)
+  CacheInvalidations a1 b1 c1 <> CacheInvalidations a2 b2 c2 =
+    CacheInvalidations (a1 || a2) (b1 <> b2) (c1 <> c2)
 instance Monoid CacheInvalidations where
-  mempty = CacheInvalidations False mempty
+  mempty = CacheInvalidations False mempty mempty
 
 instance (CacheRWM m) => CacheRWM (ReaderT r m) where
   buildSchemaCacheWithOptions a b c = lift $ buildSchemaCacheWithOptions a b c
 instance (CacheRWM m) => CacheRWM (StateT s m) where
   buildSchemaCacheWithOptions a b c = lift $ buildSchemaCacheWithOptions a b c
 instance (CacheRWM m) => CacheRWM (TraceT m) where
+  buildSchemaCacheWithOptions a b c = lift $ buildSchemaCacheWithOptions a b c
+instance (CacheRWM m) => CacheRWM (LazyTxT QErr m) where
   buildSchemaCacheWithOptions a b c = lift $ buildSchemaCacheWithOptions a b c
 
 -- | A simple monad class which enables fetching and setting @'Metadata'
@@ -165,23 +180,36 @@ newtype MetadataT m a
   deriving
     ( Functor, Applicative, Monad, MonadTrans
     , MonadIO, MonadUnique, MonadReader r, MonadError e, MonadTx
-    , TableCoreInfoRM b, CacheRM, CacheRWM
+    , SourceM, TableCoreInfoRM b, CacheRM, CacheRWM, MFunctor
+    , Tracing.MonadTrace
     )
+
+deriving instance (MonadBase IO m) => MonadBase IO (MetadataT m)
+deriving instance (MonadBaseControl IO m) => MonadBaseControl IO (MetadataT m)
 
 instance (Monad m) => MetadataM (MetadataT m) where
   getMetadata = MetadataT get
   putMetadata = MetadataT . put
 
+instance (HasHttpManagerM m) => HasHttpManagerM (MetadataT m) where
+  askHttpManager = lift askHttpManager
+
+instance (UserInfoM m) => UserInfoM (MetadataT m) where
+  askUserInfo = lift askUserInfo
+
 runMetadataT :: Metadata -> MetadataT m a -> m (a, Metadata)
 runMetadataT metadata (MetadataT m) =
   runStateT m metadata
 
-buildSchemaCache :: (MetadataM m, CacheRWM m) => MetadataModifier -> m ()
-buildSchemaCache metadataModifier = do
+buildSchemaCacheWithInvalidations :: (MetadataM m, CacheRWM m) => CacheInvalidations -> MetadataModifier -> m ()
+buildSchemaCacheWithInvalidations cacheInvalidations metadataModifier = do
   metadata <- getMetadata
   let modifiedMetadata = unMetadataModifier metadataModifier $ metadata
-  buildSchemaCacheWithOptions CatalogUpdate mempty modifiedMetadata
+  buildSchemaCacheWithOptions CatalogUpdate cacheInvalidations modifiedMetadata
   putMetadata modifiedMetadata
+
+buildSchemaCache :: (MetadataM m, CacheRWM m) => MetadataModifier -> m ()
+buildSchemaCache = buildSchemaCacheWithInvalidations mempty
 
 -- | Rebuilds the schema cache after modifying metadata. If an object with the given object id became newly inconsistent,
 -- raises an error about it specifically. Otherwise, raises a generic metadata inconsistency error.

@@ -12,32 +12,30 @@ module Hasura.GraphQL.Schema.Mutation
 
 import           Hasura.Prelude
 
-import qualified Data.HashMap.Strict                 as Map
-import qualified Data.HashMap.Strict.InsOrd.Extended as OMap
-import qualified Data.HashSet                        as Set
-import qualified Data.Text                           as T
-import qualified Language.GraphQL.Draft.Syntax       as G
+import qualified Data.HashMap.Strict                as Map
+import qualified Data.HashSet                       as Set
+import qualified Language.GraphQL.Draft.Syntax      as G
 
 import           Data.Has
 import           Data.Text.Extended
 
-import qualified Hasura.Backends.Postgres.SQL.DML    as PG
-import qualified Hasura.GraphQL.Parser               as P
-import qualified Hasura.RQL.IR.Delete                as IR
-import qualified Hasura.RQL.IR.Insert                as IR
-import qualified Hasura.RQL.IR.Returning             as IR
-import qualified Hasura.RQL.IR.Update                as IR
+import qualified Hasura.Backends.Postgres.SQL.DML   as PG
+import qualified Hasura.GraphQL.Parser              as P
+import qualified Hasura.RQL.IR.Delete               as IR
+import qualified Hasura.RQL.IR.Insert               as IR
+import qualified Hasura.RQL.IR.Returning            as IR
+import qualified Hasura.RQL.IR.Update               as IR
 
-import           Hasura.Backends.Postgres.SQL.Types  hiding (TableName)
-import           Hasura.GraphQL.Parser               (FieldParser, InputFieldsParser, Kind (..),
-                                                      Parser, UnpreparedValue (..), mkParameter)
+import           Hasura.Backends.Postgres.SQL.Types hiding (TableName)
+import           Hasura.GraphQL.Parser              (FieldParser, InputFieldsParser, Kind (..),
+                                                     Parser, UnpreparedValue (..), mkParameter)
 import           Hasura.GraphQL.Parser.Class
 import           Hasura.GraphQL.Schema.Backend
 import           Hasura.GraphQL.Schema.BoolExp
 import           Hasura.GraphQL.Schema.Common
 import           Hasura.GraphQL.Schema.Select
 import           Hasura.GraphQL.Schema.Table
-import           Hasura.RQL.Types                    hiding (ConstraintName)
+import           Hasura.RQL.Types                   hiding (ConstraintName)
 
 
 
@@ -268,13 +266,13 @@ conflictConstraint constraints table = memoizeOn 'conflictConstraint table $ do
 -- to update rows in a DB table specified by filters. Only returns a parser if
 -- there are columns the user is allowed to update; otherwise returns Nothing.
 updateTable
-  :: forall m n r. (BackendSchema 'Postgres, MonadSchema n m, MonadTableInfo 'Postgres r m, MonadRole r m, Has QueryContext r, Has (BackendSupport 'Postgres) r)
-  => QualifiedTable       -- ^ qualified name of the table
-  -> G.Name               -- ^ field display name
-  -> Maybe G.Description  -- ^ field description, if any
-  -> UpdPermInfo 'Postgres          -- ^ update permissions of the table
-  -> Maybe (SelPermInfo 'Postgres)    -- ^ select permissions of the table (if any)
-  -> m (Maybe (FieldParser n (IR.AnnUpdG 'Postgres (UnpreparedValue 'Postgres))))
+  :: forall b m n r. (BackendSchema b, MonadSchema n m, MonadTableInfo b r m, MonadRole r m, Has (BackendSupport b) r, Has QueryContext r)
+  => TableName b            -- ^ qualified name of the table
+  -> G.Name                 -- ^ field display name
+  -> Maybe G.Description    -- ^ field description, if any
+  -> UpdPermInfo b          -- ^ update permissions of the table
+  -> Maybe (SelPermInfo b)  -- ^ select permissions of the table (if any)
+  -> m (Maybe (FieldParser n (IR.AnnUpdG b (UnpreparedValue b))))
 updateTable table fieldName description updatePerms selectPerms = runMaybeT $ do
   let whereName = $$(G.litName "where")
       whereDesc = "filter the rows which have to be updated"
@@ -291,15 +289,15 @@ updateTable table fieldName description updatePerms selectPerms = runMaybeT $ do
 -- parser if there are columns the user is allowed to update and if the user has
 -- select permissions on all primary keys; otherwise returns Nothing.
 updateTableByPk
-  :: forall m n r. (BackendSchema 'Postgres, MonadSchema n m, MonadTableInfo 'Postgres r m, MonadRole r m, Has QueryContext r, Has (BackendSupport 'Postgres) r)
-  => QualifiedTable       -- ^ qualified name of the table
+  :: forall b m n r. (BackendSchema b, MonadSchema n m, MonadTableInfo b r m, MonadRole r m, Has (BackendSupport b) r, Has QueryContext r)
+  => TableName b          -- ^ qualified name of the table
   -> G.Name               -- ^ field display name
   -> Maybe G.Description  -- ^ field description, if any
-  -> UpdPermInfo 'Postgres          -- ^ update permissions of the table
-  -> SelPermInfo 'Postgres          -- ^ select permissions of the table
-  -> m (Maybe (FieldParser n (IR.AnnUpdG 'Postgres (UnpreparedValue 'Postgres))))
+  -> UpdPermInfo b        -- ^ update permissions of the table
+  -> SelPermInfo b        -- ^ select permissions of the table
+  -> m (Maybe (FieldParser n (IR.AnnUpdG b (UnpreparedValue b))))
 updateTableByPk table fieldName description updatePerms selectPerms = runMaybeT $ do
-  tableGQLName <- getTableGQLName @'Postgres table
+  tableGQLName <- getTableGQLName @b table
   columns      <- lift $ tableColumns table
   pkArgs       <- MaybeT $ primaryKeysArguments table selectPerms
   opArgs       <- MaybeT $ updateOperators table updatePerms
@@ -315,15 +313,15 @@ updateTableByPk table fieldName description updatePerms selectPerms = runMaybeT 
     <&> mkUpdateObject table columns updatePerms . fmap IR.MOutSinglerowObject
 
 mkUpdateObject
-  :: QualifiedTable
-  -> [ColumnInfo 'Postgres]
-  -> UpdPermInfo 'Postgres
-  -> ( ( [(PGCol, IR.UpdOpExpG (UnpreparedValue 'Postgres))]
-       , AnnBoolExp 'Postgres (UnpreparedValue 'Postgres)
+  :: TableName b
+  -> [ColumnInfo b]
+  -> UpdPermInfo b
+  -> ( ( [(Column b, IR.UpdOpExpG (UnpreparedValue b))]
+       , AnnBoolExp b (UnpreparedValue b)
        )
-     , IR.MutationOutputG 'Postgres (UnpreparedValue 'Postgres)
+     , IR.MutationOutputG b (UnpreparedValue b)
      )
-  -> IR.AnnUpdG 'Postgres (UnpreparedValue 'Postgres)
+  -> IR.AnnUpdG b (UnpreparedValue b)
 mkUpdateObject table columns updatePerms ((opExps, whereExp), mutationOutput) =
   IR.AnnUpd { IR.uqp1Table   = table
             , IR.uqp1OpExps  = opExps
@@ -336,97 +334,6 @@ mkUpdateObject table columns updatePerms ((opExps, whereExp), mutationOutput) =
     permissionFilter = fmapAnnBoolExp partialSQLExpToUnpreparedValue $ upiFilter updatePerms
     checkExp = maybe annBoolExpTrue (fmapAnnBoolExp partialSQLExpToUnpreparedValue) $ upiCheck updatePerms
 
--- | Various update operators
-updateOperators
-  :: forall m n r. (BackendSchema 'Postgres, MonadSchema n m, MonadTableInfo 'Postgres r m)
-  => QualifiedTable -- ^ qualified name of the table
-  -> UpdPermInfo 'Postgres    -- ^ update permissions of the table
-  -> m (Maybe (InputFieldsParser n [(PGCol, IR.UpdOpExpG (UnpreparedValue 'Postgres))]))
-updateOperators table updatePermissions = do
-  tableGQLName <- getTableGQLName @'Postgres table
-  columns      <- tableUpdateColumns table updatePermissions
-  let numericCols = onlyNumCols   columns
-      jsonCols    = onlyJSONBCols columns
-  parsers <- catMaybes <$> sequenceA
-    [ updateOperator tableGQLName $$(G.litName "_set")
-        typedParser IR.UpdSet columns
-        "sets the columns of the filtered rows to the given values"
-        (G.Description $ "input type for updating data in table " <>> table)
-
-    , updateOperator tableGQLName $$(G.litName "_inc")
-        typedParser IR.UpdInc numericCols
-        "increments the numeric columns with given value of the filtered values"
-        (G.Description $"input type for incrementing numeric columns in table " <>> table)
-
-    , let desc = "prepend existing jsonb value of filtered columns with new jsonb value"
-      in updateOperator tableGQLName $$(G.litName "_prepend")
-         typedParser IR.UpdPrepend jsonCols desc desc
-
-    , let desc = "append existing jsonb value of filtered columns with new jsonb value"
-      in updateOperator tableGQLName $$(G.litName "_append")
-         typedParser IR.UpdAppend jsonCols desc desc
-
-    , let desc = "delete key/value pair or string element. key/value pairs are matched based on their key value"
-      in updateOperator tableGQLName $$(G.litName "_delete_key")
-         nullableTextParser IR.UpdDeleteKey jsonCols desc desc
-
-    , let desc = "delete the array element with specified index (negative integers count from the end). "
-                 <> "throws an error if top level container is not an array"
-      in updateOperator tableGQLName $$(G.litName "_delete_elem")
-         nonNullableIntParser IR.UpdDeleteElem jsonCols desc desc
-
-    , let desc = "delete the field or element with specified path (for JSON arrays, negative integers count from the end)"
-      in updateOperator tableGQLName $$(G.litName "_delete_at_path")
-         (fmap P.list . nonNullableTextParser) IR.UpdDeleteAtPath jsonCols desc desc
-    ]
-  whenMaybe (not $ null parsers) do
-    let allowedOperators = fst <$> parsers
-    pure $ fmap catMaybes (sequenceA $ snd <$> parsers)
-      `P.bindFields` \opExps -> do
-        -- there needs to be at least one operator in the update, even if it is empty
-        let presetColumns = Map.toList $ IR.UpdSet . partialSQLExpToUnpreparedValue <$> upiSet updatePermissions
-        when (null opExps && null presetColumns) $ parseError $
-          "at least any one of " <> commaSeparated allowedOperators <> " is expected"
-
-        -- no column should appear twice
-        let flattenedExps = concat opExps
-            erroneousExps = OMap.filter ((>1) . length) $ OMap.groupTuples flattenedExps
-        unless (OMap.null erroneousExps) $ parseError $
-          "column found in multiple operators; " <>
-          T.intercalate ". " [ dquote columnName <> " in " <> commaSeparated (IR.updateOperatorText <$> ops)
-                             | (columnName, ops) <- OMap.toList erroneousExps
-                             ]
-
-        pure $ presetColumns <> flattenedExps
-  where
-    typedParser columnInfo  = fmap P.mkParameter <$> columnParser (pgiType columnInfo) (G.Nullability $ pgiIsNullable columnInfo)
-    nonNullableTextParser _ = fmap P.mkParameter <$> columnParser (ColumnScalar PGText)    (G.Nullability False)
-    nullableTextParser    _ = fmap P.mkParameter <$> columnParser (ColumnScalar PGText)    (G.Nullability True)
-    nonNullableIntParser  _ = fmap P.mkParameter <$> columnParser (ColumnScalar PGInteger) (G.Nullability False)
-
-    updateOperator
-      :: G.Name
-      -> G.Name
-      -> (ColumnInfo 'Postgres -> m (Parser 'Both n a))
-      -> (a -> IR.UpdOpExpG (UnpreparedValue 'Postgres))
-      -> [ColumnInfo 'Postgres]
-      -> G.Description
-      -> G.Description
-      -> m (Maybe (Text, InputFieldsParser n (Maybe [(PGCol, IR.UpdOpExpG (UnpreparedValue 'Postgres))])))
-    updateOperator tableGQLName opName mkParser updOpExp columns opDesc objDesc =
-      whenMaybe (not $ null columns) do
-        fields <- for columns \columnInfo -> do
-          let fieldName = pgiName columnInfo
-              fieldDesc = pgiDescription columnInfo
-          fieldParser <- mkParser columnInfo
-          pure $ P.fieldOptional fieldName fieldDesc fieldParser
-            `mapField` \value -> (pgiColumn columnInfo, updOpExp value)
-        let objName = tableGQLName <> opName <> $$(G.litName "_input")
-        pure $ (G.unName opName,)
-             $ P.fieldOptional opName (Just opDesc)
-             $ P.object objName (Just objDesc)
-             $ catMaybes <$> sequenceA fields
-
 
 
 -- delete
@@ -434,12 +341,12 @@ updateOperators table updatePermissions = do
 -- | Construct a root field, normally called delete_tablename, that can be used
 -- to delete several rows from a DB table
 deleteFromTable
-  :: forall b m n r. (BackendSchema b, MonadSchema n m, MonadTableInfo b r m, MonadRole r m, Has QueryContext r, Has (BackendSupport b) r)
-  => TableName b       -- ^ qualified name of the table
-  -> G.Name               -- ^ field display name
-  -> Maybe G.Description  -- ^ field description, if any
-  -> DelPermInfo b -- ^ delete permissions of the table
-  -> Maybe (SelPermInfo b)    -- ^ select permissions of the table (if any)
+  :: forall b m n r. (BackendSchema b, MonadSchema n m, MonadTableInfo b r m, MonadRole r m, Has (BackendSupport b) r, Has QueryContext r)
+  => TableName b            -- ^ qualified name of the table
+  -> G.Name                 -- ^ field display name
+  -> Maybe G.Description    -- ^ field description, if any
+  -> DelPermInfo b          -- ^ delete permissions of the table
+  -> Maybe (SelPermInfo b)  -- ^ select permissions of the table (if any)
   -> m (FieldParser n (IR.AnnDelG b (UnpreparedValue b)))
 deleteFromTable table fieldName description deletePerms selectPerms = do
   let whereName = $$(G.litName "where")
@@ -457,8 +364,8 @@ deleteFromTableByPk
   => TableName b          -- ^ qualified name of the table
   -> G.Name               -- ^ field display name
   -> Maybe G.Description  -- ^ field description, if any
-  -> DelPermInfo b  -- ^ delete permissions of the table
-  -> SelPermInfo b  -- ^ select permissions of the table
+  -> DelPermInfo b        -- ^ delete permissions of the table
+  -> SelPermInfo b        -- ^ select permissions of the table
   -> m (Maybe (FieldParser n (IR.AnnDelG b (UnpreparedValue b))))
 deleteFromTableByPk table fieldName description deletePerms selectPerms = runMaybeT $ do
   columns   <- lift $ tableColumns table

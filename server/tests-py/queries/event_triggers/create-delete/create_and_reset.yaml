@@ -30,8 +30,13 @@
         - c1: 1
           c2: world
         returning: []
-    - type: clear_metadata
-      args: {}
+
+- description: Clear metadata
+  url: /v1/query
+  status: 200
+  query:
+    type: clear_metadata
+    args: {}
 
 - description: ensure the event was archived
   url: /v1/query

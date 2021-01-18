@@ -12,6 +12,7 @@ module Hasura.RQL.DDL.Schema.Enum (
   -- * Loading table info
   , resolveEnumReferences
   , fetchAndValidateEnumValues
+  , fetchEnumValuesFromDb
   ) where
 
 import           Hasura.Prelude
@@ -23,6 +24,7 @@ import qualified Data.Sequence.NonEmpty              as NESeq
 import qualified Database.PG.Query                   as Q
 import qualified Language.GraphQL.Draft.Syntax       as G
 
+import           Control.Monad.Trans.Control         (MonadBaseControl)
 import           Control.Monad.Validate
 import           Data.List                           (delete)
 import           Data.Text.Extended
@@ -31,8 +33,8 @@ import qualified Hasura.Backends.Postgres.SQL.DML    as S (Extractor (..), SQLEx
                                                            mkSelect, mkSimpleFromExp, selExtr,
                                                            selFrom)
 
-import           Hasura.Backends.Postgres.Connection (MonadTx (..), defaultTxErrorHandler)
-import           Hasura.Backends.Postgres.SQL.Types  (PGScalarType (PGText))
+import           Hasura.Backends.Postgres.Connection
+import           Hasura.Backends.Postgres.SQL.Types  hiding (TableName)
 import           Hasura.RQL.Types.Column
 import           Hasura.RQL.Types.Common
 import           Hasura.RQL.Types.Error
@@ -64,7 +66,8 @@ resolveEnumReferences enumTables =
       pure (localColumn, EnumReference (_fkForeignTable foreignKey) enumValues)
 
 data EnumTableIntegrityError (b :: BackendType)
-  = EnumTableMissingPrimaryKey
+  = EnumTablePostgresError !Text
+  | EnumTableMissingPrimaryKey
   | EnumTableMultiColumnPrimaryKey ![Column b]
   | EnumTableNonTextualPrimaryKey !(RawColumnInfo b)
   | EnumTableNoEnumValues
@@ -73,19 +76,30 @@ data EnumTableIntegrityError (b :: BackendType)
   | EnumTableTooManyColumns ![Column b]
 
 fetchAndValidateEnumValues
-  :: (MonadTx m)
-  => TableName 'Postgres
+  :: (MonadIO m, MonadBaseControl IO m)
+  => SourceConfig 'Postgres
+  -> TableName 'Postgres
   -> Maybe (PrimaryKey b (RawColumnInfo 'Postgres))
   -> [RawColumnInfo 'Postgres]
-  -> m EnumValues
-fetchAndValidateEnumValues tableName maybePrimaryKey columnInfos =
+  -> m (Either QErr EnumValues)
+fetchAndValidateEnumValues pgSourceConfig tableName maybePrimaryKey columnInfos = runExceptT $
   either (throw400 ConstraintViolation . showErrors) pure =<< runValidateT fetchAndValidate
   where
-    fetchAndValidate :: (MonadTx m, MonadValidate [EnumTableIntegrityError 'Postgres] m) => m EnumValues
+    fetchAndValidate
+      :: (MonadIO m, MonadBaseControl IO m, MonadValidate [EnumTableIntegrityError 'Postgres] m)
+      => m EnumValues
     fetchAndValidate = do
-      primaryKeyColumn <- tolerate validatePrimaryKey
-      maybeCommentColumn <- validateColumns primaryKeyColumn
-      maybe (refute mempty) (fetchEnumValues maybeCommentColumn) primaryKeyColumn
+      maybePrimaryKeyColumn <- tolerate validatePrimaryKey
+      maybeCommentColumn <- validateColumns maybePrimaryKeyColumn
+      case maybePrimaryKeyColumn of
+        Nothing               -> refute mempty
+        Just primaryKeyColumn -> do
+          result <- runPgSourceReadTx pgSourceConfig $ runValidateT $
+                    fetchEnumValuesFromDb tableName primaryKeyColumn maybeCommentColumn
+          case result of
+            Left e             -> (refute . pure . EnumTablePostgresError . qeError) e
+            Right (Left vErrs) -> refute vErrs
+            Right (Right r)    -> pure r
       where
         validatePrimaryKey = case maybePrimaryKey of
           Nothing -> refute [EnumTableMissingPrimaryKey]
@@ -104,31 +118,6 @@ fetchAndValidateEnumValues tableName maybePrimaryKey columnInfos =
               _      -> dispute [EnumTableNonTextualCommentColumn column] $> Nothing
             columns -> dispute [EnumTableTooManyColumns $ map prciName columns] $> Nothing
 
-        fetchEnumValues maybeCommentColumn primaryKeyColumn = do
-          let nullExtr = S.Extractor S.SENull Nothing
-              commentExtr = maybe nullExtr (S.mkExtr . prciName) maybeCommentColumn
-              -- FIXME: postgres-specific sql generation
-              query = Q.fromBuilder $ toSQL S.mkSelect
-                { S.selFrom = Just $ S.mkSimpleFromExp tableName
-                , S.selExtr = [S.mkExtr (prciName primaryKeyColumn), commentExtr] }
-          rawEnumValues <- liftTx $ Q.withQE defaultTxErrorHandler query () True
-          when (null rawEnumValues) $ dispute [EnumTableNoEnumValues]
-          let enumValues = flip map rawEnumValues $
-                \(enumValueText, comment) ->
-                  case mkValidEnumValueName enumValueText of
-                    Nothing        -> Left enumValueText
-                    Just enumValue -> Right (EnumValue enumValue, EnumValueInfo comment)
-              badNames = lefts enumValues
-              validEnums = rights enumValues
-          case NE.nonEmpty badNames of
-            Just someBadNames -> refute [EnumTableInvalidEnumValueNames someBadNames]
-            Nothing           -> pure $ M.fromList validEnums
-
-        -- https://graphql.github.io/graphql-spec/June2018/#EnumValue
-        mkValidEnumValueName name =
-          if name `elem` ["true", "false", "null"] then Nothing
-          else G.mkName name
-
     showErrors :: [EnumTableIntegrityError 'Postgres] -> Text
     showErrors allErrors =
       "the table " <> tableName <<> " cannot be used as an enum " <> reasonsMessage
@@ -137,6 +126,7 @@ fetchAndValidateEnumValues tableName maybePrimaryKey columnInfos =
 
         showOne :: EnumTableIntegrityError 'Postgres -> Text
         showOne = \case
+          EnumTablePostgresError err -> "postgres error: " <> err
           EnumTableMissingPrimaryKey -> "the table must have a primary key"
           EnumTableMultiColumnPrimaryKey cols ->
             "the table’s primary key must not span multiple columns ("
@@ -161,3 +151,33 @@ fetchAndValidateEnumValues tableName maybePrimaryKey columnInfos =
             typeMismatch description colInfo expected =
               "the table’s " <> description <> " (" <> prciName colInfo <<> ") must have type "
                 <> expected <<> ", not type " <>> prciType colInfo
+
+fetchEnumValuesFromDb
+  :: (MonadTx m, MonadValidate [EnumTableIntegrityError 'Postgres] m)
+  => TableName 'Postgres
+  -> RawColumnInfo 'Postgres
+  -> Maybe (RawColumnInfo 'Postgres)
+  -> m EnumValues
+fetchEnumValuesFromDb tableName primaryKeyColumn maybeCommentColumn = do
+  let nullExtr = S.Extractor S.SENull Nothing
+      commentExtr = maybe nullExtr (S.mkExtr . prciName) maybeCommentColumn
+      query = Q.fromBuilder $ toSQL S.mkSelect
+        { S.selFrom = Just $ S.mkSimpleFromExp tableName
+        , S.selExtr = [S.mkExtr (prciName primaryKeyColumn), commentExtr] }
+  rawEnumValues <- liftTx $ Q.withQE defaultTxErrorHandler query () True
+  when (null rawEnumValues) $ dispute [EnumTableNoEnumValues]
+  let enumValues = flip map rawEnumValues $
+        \(enumValueText, comment) ->
+          case mkValidEnumValueName enumValueText of
+            Nothing        -> Left enumValueText
+            Just enumValue -> Right (EnumValue enumValue, EnumValueInfo comment)
+      badNames = lefts enumValues
+      validEnums = rights enumValues
+  case NE.nonEmpty badNames of
+    Just someBadNames -> refute [EnumTableInvalidEnumValueNames someBadNames]
+    Nothing           -> pure $ M.fromList validEnums
+  where
+    -- https://graphql.github.io/graphql-spec/June2018/#EnumValue
+    mkValidEnumValueName name =
+      if name `elem` ["true", "false", "null"] then Nothing
+      else G.mkName name

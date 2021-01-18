@@ -22,20 +22,22 @@ module Hasura.GraphQL.Context
 
 import           Hasura.Prelude
 
-import qualified Data.Aeson                       as J
-import qualified Language.GraphQL.Draft.Syntax    as G
+import qualified Data.Aeson                          as J
+import qualified Language.GraphQL.Draft.Syntax       as G
 
 import           Data.Aeson.Casing
 import           Data.Aeson.TH
 import           Hasura.SQL.Backend
 
-import qualified Hasura.Backends.Postgres.SQL.DML as PG
-import qualified Hasura.RQL.IR.Delete             as IR
-import qualified Hasura.RQL.IR.Insert             as IR
-import qualified Hasura.RQL.IR.Select             as IR
-import qualified Hasura.RQL.IR.Update             as IR
-import qualified Hasura.RQL.Types.Action          as RQL
-import qualified Hasura.RQL.Types.RemoteSchema    as RQL
+import qualified Hasura.Backends.Postgres.Connection as PG
+import qualified Hasura.Backends.Postgres.SQL.DML    as PG
+import qualified Hasura.RQL.IR.Delete                as IR
+import qualified Hasura.RQL.IR.Insert                as IR
+import qualified Hasura.RQL.IR.Select                as IR
+import qualified Hasura.RQL.IR.Update                as IR
+import qualified Hasura.RQL.Types.Action             as RQL
+import qualified Hasura.RQL.Types.Common             as RQL
+import qualified Hasura.RQL.Types.RemoteSchema       as RQL
 
 import           Hasura.GraphQL.Parser
 
@@ -63,7 +65,7 @@ type ParserFn a
   -> Either (NESeq ParseError) (a, QueryReusability)
 
 data RootField db remote action raw
-  = RFDB db
+  = RFDB !RQL.SourceName !PG.PGExecCtx db
   | RFRemote remote
   | RFAction action
   | RFRaw raw
@@ -74,7 +76,7 @@ traverseDB :: forall db db' remote action raw f
        -> RootField db remote action raw
        -> f (RootField db' remote action raw)
 traverseDB f = \case
-  RFDB x     -> RFDB <$> f x
+  RFDB s e x -> RFDB s e <$> f x
   RFRemote x -> pure $ RFRemote x
   RFAction x -> pure $ RFAction x
   RFRaw x    -> pure $ RFRaw x
@@ -85,7 +87,7 @@ traverseAction :: forall db remote action action' raw f
        -> RootField db remote action raw
        -> f (RootField db remote action' raw)
 traverseAction f = \case
-  RFDB x     -> pure $ RFDB x
+  RFDB s e x -> pure $ RFDB s e x
   RFRemote x -> pure $ RFRemote x
   RFAction x -> RFAction <$> f x
   RFRaw x    -> pure $ RFRaw x
@@ -96,7 +98,7 @@ traverseRemoteField :: forall db remote remote' action raw f
        -> RootField db remote action raw
        -> f (RootField db remote' action raw)
 traverseRemoteField f = \case
-  RFDB x -> pure $ RFDB x
+  RFDB s e x -> pure $ RFDB s e x
   RFRemote x -> RFRemote <$> f x
   RFAction x -> pure $ RFAction x
   RFRaw x -> pure $ RFRaw x
@@ -136,5 +138,5 @@ data ActionMutation (b :: BackendType) v
 type MutationRootField v =
   RootField (MutationDB 'Postgres v) RemoteField (ActionMutation 'Postgres v) J.Value
 
-type SubscriptionRootField v = RootField (QueryDB 'Postgres v) Void (RQL.AnnActionAsyncQuery 'Postgres v) Void
-type SubscriptionRootFieldResolved = RootField (QueryDB 'Postgres PG.SQLExp) Void (IR.AnnSimpleSel 'Postgres) Void
+type SubscriptionRootField v = RootField (QueryDB 'Postgres v) Void Void Void
+type SubscriptionRootFieldResolved = RootField (QueryDB 'Postgres PG.SQLExp) Void Void Void

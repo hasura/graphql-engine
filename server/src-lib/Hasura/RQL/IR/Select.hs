@@ -245,7 +245,7 @@ noSelectArgs :: SelectArgsG backend v
 noSelectArgs = SelectArgs Nothing Nothing Nothing Nothing Nothing
 
 data ColFld (b :: BackendType)
-  = CFCol !(Column b)
+  = CFCol !(Column b) !(ColumnType b)
   | CFExp !Text
 {-
 deriving instance Eq (Column b) => Eq (ColFld b)

@@ -20,9 +20,9 @@ import           Hasura.Backends.Postgres.SQL.Types
 import           Hasura.Backends.Postgres.Translate.BoolExp
 import           Hasura.Backends.Postgres.Translate.Column
 import           Hasura.RQL.Types
-import           Hasura.SQL.Types
 import           Hasura.Server.Utils
 import           Hasura.Session
+import           Hasura.SQL.Types
 
 
 convColSpec :: FieldInfoMap (FieldInfo 'Postgres) -> PermColSpec -> [PGCol]
@@ -125,13 +125,14 @@ data CreatePermP1Res a
 
 procBoolExp
   :: (QErrM m, TableCoreInfoRM 'Postgres m)
-  => QualifiedTable
+  => SourceName
+  -> QualifiedTable
   -> FieldInfoMap (FieldInfo 'Postgres)
   -> BoolExp 'Postgres
   -> m (AnnBoolExpPartialSQL 'Postgres, [SchemaDependency])
-procBoolExp tn fieldInfoMap be = do
+procBoolExp source tn fieldInfoMap be = do
   abe <- annBoolExp valueParser fieldInfoMap $ unBoolExp be
-  let deps = getBoolExpDeps tn abe
+  let deps = getBoolExpDeps source tn abe
   return (abe, deps)
 
 isReqUserId :: Text -> Bool
@@ -198,10 +199,18 @@ injectDefaults qv qt =
 
 data DropPerm a
   = DropPerm
-  { dipTable :: !QualifiedTable
-  , dipRole  :: !RoleName
+  { dipSource :: !SourceName
+  , dipTable  :: !QualifiedTable
+  , dipRole   :: !RoleName
   } deriving (Show, Eq)
 
-$(deriveJSON (aesonDrop 3 snakeCase){omitNothingFields=True} ''DropPerm)
+$(deriveToJSON (aesonDrop 3 snakeCase){omitNothingFields=True} ''DropPerm)
+
+instance FromJSON (DropPerm a) where
+  parseJSON = withObject "DropPerm" $ \o ->
+    DropPerm
+    <$> o .:? "source" .!= defaultSource
+    <*> o .: "table"
+    <*> o .: "role"
 
 type family PermInfo a = r | r -> a

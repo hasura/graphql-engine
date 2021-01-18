@@ -1,4 +1,4 @@
-const createSQLRegex = /create\s*(?:|or\s*replace)\s*(view|table|function)\s*(?:\s*if*\s*not\s*exists\s*)?((\"?\w+\"?)\.(\"?\w+\"?)|(\"?\w+\"?))/; // eslint-disable-line
+import { dataSource } from '../../../../dataSources';
 
 const getSQLValue = value => {
   const quotedStringRegex = /^".*"$/;
@@ -14,7 +14,7 @@ const getSQLValue = value => {
 export const parseCreateSQL = sql => {
   const _objects = [];
 
-  const regExp = createSQLRegex;
+  const regExp = dataSource.createSQLRegex;
 
   const matches = sql.match(new RegExp(regExp, 'gmi'));
   if (matches) {
@@ -48,8 +48,4 @@ export const parseCreateSQL = sql => {
   }
 
   return _objects;
-};
-
-export const getStatementTimeoutSql = statementTimeoutInSecs => {
-  return `SET LOCAL statement_timeout = ${statementTimeoutInSecs * 1000};`;
 };

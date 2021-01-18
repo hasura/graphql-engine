@@ -16,15 +16,15 @@ import qualified Database.PG.Query                  as Q
 purgeDependentObject
   :: (MonadError QErr m) => SchemaObjId -> m MetadataModifier
 purgeDependentObject = \case
-  SOTableObj tn tableObj -> pure $ MetadataModifier $
-    metaTables.ix tn %~ case tableObj of
+  SOSourceObj source (SOITableObj tn tableObj) -> pure $ MetadataModifier $
+    tableMetadataSetter source tn %~ case tableObj of
       TOPerm rn pt        -> dropPermissionInMetadata rn pt
       TORel rn            -> dropRelationshipInMetadata rn
       TOTrigger trn       -> dropEventTriggerInMetadata trn
       TOComputedField ccn -> dropComputedFieldInMetadata ccn
       TORemoteRel rrn     -> dropRemoteRelationshipInMetadata rrn
       _                   -> id
-  SOFunction qf -> pure $ dropFunctionInMetadata qf
+  SOSourceObj source (SOIFunction qf) -> pure $ dropFunctionInMetadata source qf
   schemaObjId           ->
       throw500 $ "unexpected dependent object: " <> reportSchemaObj schemaObjId
 

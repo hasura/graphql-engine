@@ -137,7 +137,7 @@ class TestDeleteRemoteRelationship:
         }
         status_code, resp = hge_ctx.v1q(export_metadata_q)
         assert status_code == 200, resp
-        tables = resp['tables']
+        tables = resp['sources'][0]['tables']
         for t in tables:
             if t['table']['name'] == table:
                 assert 'event_triggers' not in t

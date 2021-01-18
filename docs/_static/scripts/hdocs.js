@@ -26,6 +26,21 @@ window.hdocs = (function () {
       hdocs.setExternalLinks();
       hdocs.setupIntercom();
       hdocs.setupGraphiQL();
+      hdocs.newsletterForm();
+    },
+    newsletterForm: function () {
+      const searchParams = new URLSearchParams(window.location.search);
+      const searchAliId = searchParams.get("aliId");
+      var marketoForm = document.getElementById("mktoForm_1011");
+      var marketoSuccess = document.getElementById("marketo-success");
+      if (searchAliId || searchAliId === '') {
+        marketoForm.classList.add('hide');
+        marketoSuccess.classList.remove('hide');
+        marketoSuccess.scrollIntoView({ behavior: "smooth", block: "start", inline: "start" });
+      } else {
+        marketoForm.classList.remove('hide');
+        marketoSuccess.classList.add('hide');
+      }
     },
     toggleMenu: function () {
       var x = document.getElementById("navbar")

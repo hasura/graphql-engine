@@ -31,11 +31,11 @@ class TestAddRemoteSchemaPermissions:
         return "queries/remote_schemas/permissions/"
 
     def test_add_permission_with_valid_subset_of_fields(self, hge_ctx):
-        st_code, resp = hge_ctx.v1q_f(self.dir() + 'add_permission_with_valid_subset_of_fields.yaml')
+        st_code, resp = hge_ctx.v1metadataq_f(self.dir() + 'add_permission_with_valid_subset_of_fields.yaml')
         assert st_code == 200, resp
 
     def test_add_permission_with_valid_subset_of_arguments(self, hge_ctx):
-        st_code, resp = hge_ctx.v1q_f(self.dir() + 'add_permission_with_valid_subset_of_arguments.yaml')
+        st_code, resp = hge_ctx.v1metadataq_f(self.dir() + 'add_permission_with_valid_subset_of_arguments.yaml')
         assert st_code == 200, resp
 
     def test_role_based_schema_enums_validation(self, hge_ctx):
@@ -67,12 +67,12 @@ class TestRemoteSchemaPermissionsExecution:
         return "queries/remote_schemas/permissions/"
 
     def test_execution_with_subset_of_fields_exposed_to_role(self, hge_ctx):
-        st_code, resp = hge_ctx.v1q_f(self.dir() + 'add_permission_with_valid_subset_of_fields.yaml')
+        st_code, resp = hge_ctx.v1metadataq_f(self.dir() + 'add_permission_with_valid_subset_of_fields.yaml')
         assert st_code == 200, resp
         check_query_f(hge_ctx, self.dir() + 'execution_with_partial_fields_exposed_to_role.yaml')
 
     def test_execution_with_subset_of_arguments_exposed_to_role(self, hge_ctx):
-        st_code, resp = hge_ctx.v1q_f(self.dir() + 'add_permission_with_valid_subset_of_arguments.yaml')
+        st_code, resp = hge_ctx.v1metadataq_f(self.dir() + 'add_permission_with_valid_subset_of_arguments.yaml')
         assert st_code == 200, resp
         check_query_f(hge_ctx, self.dir() + 'execution_with_partial_args_exposed_to_role.yaml')
 
@@ -88,11 +88,11 @@ class TestRemoteSchemaPermissionsArgumentPresets:
         return "queries/remote_schemas/permissions/argument_presets/"
 
     def test_execution_with_static_argument_preset(self, hge_ctx):
-        st_code, resp = hge_ctx.v1q_f(self.dir() + 'add_permission_with_static_preset_argument.yaml')
+        st_code, resp = hge_ctx.v1metadataq_f(self.dir() + 'add_permission_with_static_preset_argument.yaml')
         assert st_code == 200, resp
         check_query_f(hge_ctx, self.dir() + 'execution_with_static_preset_args.yaml')
 
     def test_execution_with_session_argument_preset(self, hge_ctx):
-        st_code, resp = hge_ctx.v1q_f(self.dir() + 'add_permission_with_session_preset_argument.yaml')
+        st_code, resp = hge_ctx.v1metadataq_f(self.dir() + 'add_permission_with_session_preset_argument.yaml')
         assert st_code == 200, resp
         check_query_f(hge_ctx, self.dir() + 'execution_with_session_preset_args.yaml')

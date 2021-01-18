@@ -163,6 +163,7 @@ const ActionEditor = ({
               onClick={onSave}
               disabled={!allowSave}
               className={styles.add_mar_right}
+              data-test="save-modify-action-changes"
             >
               Save
             </Button>
@@ -172,6 +173,7 @@ const ActionEditor = ({
               type="submit"
               onClick={onDelete}
               disabled={isFetching}
+              data-test="delete-action"
             >
               Delete
             </Button>

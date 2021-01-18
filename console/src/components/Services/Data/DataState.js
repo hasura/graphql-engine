@@ -20,8 +20,6 @@ const defaultViewState = {
   lastError: {},
   lastSuccess: {},
   manualTriggers: [],
-  triggeredRow: -1,
-  triggeredFunction: null,
   estimatedCount: 0,
   isCountEstimated: 0,
 };
@@ -120,6 +118,7 @@ const defaultModifyState = {
   remoteRelationships: {
     remoteSchema: {},
   },
+  custom_name: '',
   rootFieldsEdit: {
     select: '',
     select_by_pk: '',
@@ -167,14 +166,13 @@ const defaultState = {
     lastSuccess: null,
   },
   allSchemas: [],
-  allRoles: [],
   postgresFunctions: [],
   nonTrackablePostgresFunctions: [],
-  trackedFunctions: [],
   listingSchemas: [],
   untrackedRelations: [],
   schemaList: ['public'],
   currentSchema: 'public',
+  currentDataSource: '',
   adminSecretError: false,
   dataHeaders: {
     'content-type': 'application/json',

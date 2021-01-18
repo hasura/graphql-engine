@@ -30,7 +30,7 @@ Navigate to the integrations tab on project settings page to find Datadog integr
    :alt: Configure Datadog Integration
    :width: 1146px
 
-Enter the Datadog API key, host, service name and tags to associate with exported logs. A source tag 
+Select the Datadog API region and enter the Datadog API key (can be retrieved by navigating to Datadog's settings page by clicking the ``Get API Key`` link), host, service name and tags to associate with exported logs. A source tag 
 ``hasura-cloud-metrics`` is added to all exported logs.
 
 .. list-table::
@@ -40,8 +40,11 @@ Enter the Datadog API key, host, service name and tags to associate with exporte
    * - Field
      - Description
 
+   * - Region 
+     - If you are in the Datadog EU site (app.datadoghq.eu), the Region should be EU; otherwise, it should be US.
+
    * - API Key 
-     - API keys are unique to your organization. An API key is required by the Datadog Agent to submit metrics and events to Datadog. You can get the API key from `here <https://app.datadoghq.com/account/settings#api>`__.
+     - API keys are unique to your organization. An API key is required by the Datadog Agent to submit metrics and events to Datadog. You can get the API key from `here <https://app.datadoghq.com/account/settings#api>`__ if you are in Datadog US region and `here <https://app.datadoghq.eu/account/settings#api>`__ if you're in Datadog EU region.
    
    * - Host
      - The name of the originating host of the log.
@@ -54,15 +57,34 @@ Enter the Datadog API key, host, service name and tags to associate with exporte
 
 .. thumbnail:: /img/graphql/cloud/metrics/configure-datadog.png
    :alt: Configure Datadog Integration
-   :width: 1146px
+   :width: 437px
 
-When successfully configured, ``Last Logged`` will be continuously updated as logs are exported to Datadog.
+After adding appropriate values, click ``Save``. 
+
+Checking the status of the integration
+--------------------------------------
+
+The green/red dot signifies the status of the integration. Green signifies successful exporting of logs to datadog. 
+When logs are successfully exported, ``Last Exported`` is continuously updated, indicating the timestamp of the last log line successfully exported to your Datadog dashboard.
 
 .. thumbnail:: /img/graphql/cloud/metrics/configure-datadog-done.png
    :alt: Datadog Integration successfully configured
    :width: 1146px
 
-You can see the logs in you Datadog dashboard in the Logs tabs.
+In case there is an error while exporting logs to datadog, the dot is red and the HTTP status code of the error is displayed right below it.
+
+.. thumbnail:: /img/graphql/cloud/metrics/configure-datadog-fail.png
+   :alt: Datadog Integration successfully configured
+   :width: 1146px
+
+View logs
+---------
+
+The logs can be viewed in your Datadog dashboard, under the ``Logs`` tabs. To navigate to the same, click ``View Logs``.
+
+.. thumbnail:: /img/graphql/cloud/metrics/datadog-view-logs.png
+   :alt: Datadog Integration successfully configured
+   :width: 1146px
 
 .. thumbnail:: /img/graphql/cloud/metrics/datadog-logs.png
    :alt: Logs successfully exported to Datadog

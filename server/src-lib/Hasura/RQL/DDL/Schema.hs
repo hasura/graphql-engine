@@ -42,6 +42,7 @@ import qualified Database.PG.Query              as Q
 import qualified Database.PostgreSQL.LibPQ      as PQ
 import qualified Text.Regex.TDFA                as TDFA
 
+import           Control.Monad.Trans.Control    (MonadBaseControl)
 import           Data.Aeson
 import           Data.Aeson.Casing
 import           Data.Aeson.TH
@@ -59,6 +60,7 @@ import           Hasura.Server.Utils            (quoteRegex)
 data RunSQL
   = RunSQL
   { rSql                      :: Text
+  , rSource                   :: !SourceName
   , rCascade                  :: !Bool
   , rCheckMetadataConsistency :: !(Maybe Bool)
   , rTxAccessMode             :: !Q.TxAccess
@@ -67,6 +69,7 @@ data RunSQL
 instance FromJSON RunSQL where
   parseJSON = withObject "RunSQL" $ \o -> do
     rSql <- o .: "sql"
+    rSource <- o .:? "source" .!= defaultSource
     rCascade <- o .:? "cascade" .!= False
     rCheckMetadataConsistency <- o .:? "check_metadata_consistency"
     isReadOnly <- o .:? "read_only" .!= False
@@ -77,6 +80,7 @@ instance ToJSON RunSQL where
   toJSON RunSQL {..} =
     object
       [ "sql" .= rSql
+      , "source" .= rSource
       , "cascade" .= rCascade
       , "check_metadata_consistency" .= rCheckMetadataConsistency
       , "read_only" .=
@@ -102,13 +106,16 @@ isSchemaCacheBuildRequiredRunSQL RunSQL {..} =
         { TDFA.captureGroups = False }
         "\\balter\\b|\\bdrop\\b|\\breplace\\b|\\bcreate function\\b|\\bcomment on\\b")
 
-runRunSQL :: (MonadTx m, CacheRWM m, HasSQLGenCtx m, MetadataM m) => RunSQL -> m EncJSON
+runRunSQL :: (MonadIO m, MonadBaseControl IO m, MonadError QErr m, CacheRWM m, HasSQLGenCtx m, MetadataM m)
+  => RunSQL -> m EncJSON
 runRunSQL q@RunSQL {..}
   -- see Note [Checking metadata consistency in run_sql]
   | isSchemaCacheBuildRequiredRunSQL q
-  = withMetadataCheck rCascade $ execRawSQL rSql
+  = withMetadataCheck rSource rCascade rTxAccessMode $ execRawSQL rSql
   | otherwise
-  = execRawSQL rSql
+  = (_pcConfiguration <$> askPGSourceCache rSource) >>= \sourceConfig ->
+      liftEitherM $ runExceptT $
+      runLazyTx (_pscExecCtx sourceConfig) rTxAccessMode $ execRawSQL rSql
   where
     execRawSQL :: (MonadTx m) => Text -> m EncJSON
     execRawSQL =

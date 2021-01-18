@@ -15,27 +15,27 @@ module Hasura.Backends.MSSQL.FromIr
 
 import           Hasura.Prelude
 
-import qualified Data.HashMap.Strict                as HM
-import qualified Data.List.NonEmpty                 as NE
-import qualified Data.Map.Strict                    as M
-import qualified Data.Text                          as T
-import qualified Database.ODBC.SQLServer            as ODBC
+import qualified Data.HashMap.Strict         as HM
+import qualified Data.List.NonEmpty          as NE
+import qualified Data.Map.Strict             as M
+import qualified Data.Text                   as T
+import qualified Database.ODBC.SQLServer     as ODBC
 
 --import           Control.Monad.Trans.State.Strict   as S
 import           Control.Monad.Validate
-import           Data.Map.Strict                    (Map)
+import           Data.Map.Strict             (Map)
 import           Data.Proxy
 
 
-import qualified Hasura.GraphQL.Context             as GraphQL
-import qualified Hasura.RQL.IR.BoolExp              as IR
-import qualified Hasura.RQL.IR.OrderBy              as IR
-import qualified Hasura.RQL.IR.Select               as IR
-import qualified Hasura.RQL.IR.Delete               as IR
-import qualified Hasura.RQL.Types.Column            as IR
-import qualified Hasura.RQL.Types.Common            as IR
+import qualified Hasura.GraphQL.Context      as GraphQL
+import qualified Hasura.RQL.IR.BoolExp       as IR
+import qualified Hasura.RQL.IR.Delete        as IR
+import qualified Hasura.RQL.IR.OrderBy       as IR
+import qualified Hasura.RQL.IR.Select        as IR
+import qualified Hasura.RQL.Types.Column     as IR
+import qualified Hasura.RQL.Types.Common     as IR
 
-import           Hasura.Backends.MSSQL.Types        as TSQL
+import           Hasura.Backends.MSSQL.Types as TSQL
 import           Hasura.SQL.Backend
 
 
@@ -105,10 +105,10 @@ fromRootField ::
   -> FromIr Select
 fromRootField =
   \case
-    GraphQL.RFDB (GraphQL.QDBPrimaryKey s) -> mkSQLSelect IR.JASSingleObject s
-    GraphQL.RFDB (GraphQL.QDBSimple s) -> mkSQLSelect IR.JASMultipleRows s
-    GraphQL.RFDB (GraphQL.QDBAggregation s) -> fromSelectAggregate s
-    GraphQL.RFDB (GraphQL.QDBConnection (IR.ConnectionSelect{..})) -> case _csXRelay of {}
+    GraphQL.RFDB _ _ (GraphQL.QDBPrimaryKey s) -> mkSQLSelect IR.JASSingleObject s
+    GraphQL.RFDB _ _ (GraphQL.QDBSimple s) -> mkSQLSelect IR.JASMultipleRows s
+    GraphQL.RFDB _ _ (GraphQL.QDBAggregation s) -> fromSelectAggregate s
+    GraphQL.RFDB _ _ (GraphQL.QDBConnection (IR.ConnectionSelect{..})) -> case _csXRelay of {}
 
 --------------------------------------------------------------------------------
 -- Top-level exported functions
@@ -244,7 +244,7 @@ fromSelectArgsG selectArgsG = do
   -- you can just drop the Proxy wrapper.
   argsDistinct <-
     case mdistinct of
-      Nothing -> pure Proxy
+      Nothing     -> pure Proxy
       Just (x, _) -> case x of {}
   (argsOrderBy, joins) <-
     runWriterT (traverse fromAnnOrderByItemG (maybe [] toList orders))
@@ -547,8 +547,8 @@ fromAggregateField aggregateField =
         traverse
           (\(_fieldName, pgColFld) ->
              case pgColFld of
-               IR.CFCol pgCol -> fmap ColumnExpression (fromPGCol pgCol)
-               IR.CFExp text  -> pure (ValueExpression (ODBC.TextValue text)))
+               IR.CFCol pgCol _pgType -> fmap ColumnExpression (fromPGCol pgCol)
+               IR.CFExp text          -> pure (ValueExpression (ODBC.TextValue text)))
           fs
       pure (OpAggregate op args)
 
