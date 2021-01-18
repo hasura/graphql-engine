@@ -69,7 +69,9 @@ const Permissions: React.FC<PermissionsProps> = props => {
     permSetRoleName,
   } = props;
 
-  const [remoteSchemaFields, setRemoteSchemaFields] = useState<RemoteSchemaFields[]>([]);
+  const [remoteSchemaFields, setRemoteSchemaFields] = useState<
+    RemoteSchemaFields[]
+  >([]);
 
   React.useEffect(() => {
     return () => {
@@ -159,6 +161,7 @@ const Permissions: React.FC<PermissionsProps> = props => {
       <div className={`${styles.add_mar_bottom}`}>
         {!readOnlyMode && (
           <PermissionEditor
+            key={permissionEdit.role}
             permissionEdit={permissionEdit}
             isFetching={isFetching}
             isEditing={isEditing}
