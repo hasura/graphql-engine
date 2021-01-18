@@ -88,6 +88,8 @@ and be accessible according to the permissions that were configured for the role
 - server: various changes to ensure timely cleanup of background threads and other resources in the event of a SIGTERM signal.
 - server: fix issue when the `relationships` field in `objects` field is passed `[]` in the `set_custom_types` API (fix #6357)
 - server: fix issue with event triggers defined on a table which is partitioned (fixes #6261)
+- server: action array relationships now support the same input arguments (such as where or distinct_on) as usual relationships
+- server: action array relationships now support aggregate relationships
 - server: fix issue with non-optional fields of the remote schema being added as optional in the graphql-engine (fix #6401)
 - server: accept new config `allowed_skew` in JWT config to provide leeway for JWT expiry (fixes #2109)
 - server: fix issue with query actions with relationship with permissions configured on the remote table (fix #6385)
