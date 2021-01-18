@@ -124,14 +124,13 @@ const vMakeRowsRequest = () => {
     );
   };
 };
-const vMakeExportRequest = query => {
+const vMakeExportRequest = () => {
   return (dispatch, getState) => {
     const {
       currentTable: originalTable,
       currentSchema,
       view,
     } = getState().tables;
-    console.log(view.query, query);
 
     const url = Endpoints.query;
 
@@ -147,7 +146,9 @@ const vMakeExportRequest = query => {
           null,
           view.query.order_by
         ),
-        getRunSqlQuery(getEstimateCountQuery(currentSchema, originalTable)),
+        getRunSqlQuery(
+          dataSource.getEstimateCountQuery(currentSchema, originalTable)
+        ),
       ],
     };
     const options = {

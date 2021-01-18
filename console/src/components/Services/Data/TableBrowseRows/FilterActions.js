@@ -130,7 +130,6 @@ const exportDataQuery = (tableSchema, type) => {
       }
       return true;
     });
-    console.log(tableSchema);
 
     finalWhereClauses = finalWhereClauses.map(w => {
       const colName = Object.keys(w)[0];
