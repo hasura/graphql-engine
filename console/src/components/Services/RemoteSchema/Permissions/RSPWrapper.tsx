@@ -3,7 +3,7 @@ import CommonTabLayout from '../../../Common/Layout/CommonTabLayout/CommonTabLay
 import { NotFoundError } from '../../../Error/PageNotFound';
 import { appPrefix } from '../constants';
 import styles from '../RemoteSchema.scss';
-import { RemoteSchema } from '../types';
+import { RemoteSchema } from '../../../../metadata/types';
 
 const tabInfo = {
   details: {
@@ -18,10 +18,10 @@ const tabInfo = {
 };
 export type RSPWrapperProps = {
   params: { remoteSchemaName: string };
-  allRemoteSchemas: RemoteSchema[];
+  allRemoteSchemas?: RemoteSchema[];
   tabName: string;
   viewRemoteSchema: (data: string) => void;
-  permissionRenderer: (props: RemoteSchema) => React.ReactNode;
+  permissionRenderer: (currentRemoteSchema: RemoteSchema) => React.ReactNode;
 };
 
 const RSPWrapper: React.FC<RSPWrapperProps> = ({

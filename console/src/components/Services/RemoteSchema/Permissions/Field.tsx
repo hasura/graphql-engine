@@ -80,6 +80,7 @@ export const Field: React.FC<FieldProps> = ({
           {i.args &&
             Object.entries(i.args).map(([k, v]) => (
               <ArgSelect
+                key={k}
                 keyName={k}
                 valueField={v}
                 value={fieldVal[k]}
