@@ -5,7 +5,6 @@ import           Hasura.Prelude
 import qualified Data.Aeson                         as J
 import qualified Data.Aeson.Casing                  as J
 import qualified Data.HashMap.Strict                as HM
-import qualified Data.Text                          as T
 import qualified Text.Builder                       as TB
 
 import           Data.String                        (fromString)
@@ -408,8 +407,7 @@ instance ToSQL SQLExp where
   toSQL (SEFunction funcExp) = toSQL funcExp
 
 intToSQLExp :: Int -> SQLExp
-intToSQLExp =
-  SEUnsafe . T.pack . show
+intToSQLExp = SEUnsafe . tshow
 
 data Extractor = Extractor !SQLExp !(Maybe Alias)
   deriving (Show, Eq, Generic, Data)
@@ -764,10 +762,10 @@ instance Show CompareOp where
     SNILIKE      -> "NOT ILIKE"
     SSIMILAR     -> "SIMILAR TO"
     SNSIMILAR    -> "NOT SIMILAR TO"
-    SREGEX    -> "~"
-    SIREGEX    -> "~*"
-    SNREGEX    -> "!~"
-    SNIREGEX    -> "!~*"
+    SREGEX       -> "~"
+    SIREGEX      -> "~*"
+    SNREGEX      -> "!~"
+    SNIREGEX     -> "!~*"
     SContains    -> "@>"
     SContainedIn -> "<@"
     SHasKey      -> "?"

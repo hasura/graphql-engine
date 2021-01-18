@@ -143,7 +143,7 @@ parseOptWildcardDomain d =
     fqdnParser :: AT.Parser Text
     fqdnParser = do
       (DomainParts scheme host port) <- domainParser Nothing
-      let sPort = maybe "" (\p -> ":" <> T.pack (show p)) port
+      let sPort = maybe "" (\p -> ":" <> tshow p) port
       return $ scheme <> host <> sPort
 
 

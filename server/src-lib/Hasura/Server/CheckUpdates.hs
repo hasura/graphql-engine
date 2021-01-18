@@ -55,7 +55,7 @@ checkForUpdates (LoggerCtx loggerSet _ _ _) manager = do
       ciM <- CI.getCI
       return . buildUrl $ case ciM of
         Nothing -> "server"
-        Just ci -> "server-" <> (T.toLower . T.pack $ show ci)
+        Just ci -> "server-" <> T.toLower (tshow ci)
 
     -- ignoring if there is any error in response and returning the current version
     decodeResp bs = pure $ either (const $ UpdateInfo currentVersion) id $ A.eitherDecode bs

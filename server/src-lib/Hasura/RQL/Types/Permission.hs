@@ -77,7 +77,7 @@ instance Show PermId where
     , "."
     , roleNameToTxt rn
     , "."
-    , T.pack $ show pType
+    , tshow pType
     ]
 
 data PermColSpec
