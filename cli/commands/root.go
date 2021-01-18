@@ -7,6 +7,8 @@ import (
 	"io"
 	"os"
 
+	"github.com/hasura/graphql-engine/cli/internal/client"
+
 	"github.com/hasura/graphql-engine/cli"
 	"github.com/hasura/graphql-engine/cli/update"
 	"github.com/hasura/graphql-engine/cli/version"
@@ -108,6 +110,42 @@ func NewDefaultHasuraCommandWithArgs(pluginHandler PluginHandler, args []string,
 	}
 
 	return cmd
+}
+
+func checkIfUpdateToConfigV3IsRequired(ec *cli.ExecutionContext) error {
+	// see if an update to config V3 is necessary
+	if ec.Config.Version < cli.V3 && ec.HasMetadataV3 {
+		// check if the server is setup using a database-url
+		hasuraAPIClient, err := client.NewHasuraRestAPIClient(client.NewHasuraRestAPIClientOpts{
+			Headers:        ec.HGEHeaders,
+			QueryAPIURL:    fmt.Sprintf("%s/%s", ec.Config.Endpoint, "v2/query"),
+			MetadataAPIURL: fmt.Sprintf("%s/%s", ec.Config.Endpoint, "v1/metadata"),
+			TLSConfig:      ec.Config.TLSConfig,
+		})
+		if err != nil {
+			ec.Logger.Debug(err)
+		}
+		var hasDefaultDatasource bool
+		if yes, err := hasuraAPIClient.HasDefaultDatasource(); yes {
+			hasDefaultDatasource = yes
+		} else if err != nil {
+			ec.Logger.Debug("checking if there is a datasource named default", err)
+		}
+
+		hasMultipleDatasources, err := hasuraAPIClient.HasMultipleDatasources()
+		if err != nil {
+			return err
+		}
+		if (hasDefaultDatasource && hasMultipleDatasources) || !hasDefaultDatasource {
+			// server is configured with a default datasource
+			// and other datasources
+			ec.Logger.Info("Looks like you are trying to use hasura with multiple datasources, which requires some changes on your project directory\n")
+			ec.Logger.Info("please use hasura scripts update-config-v3 to make this change")
+			return errors.New("update to config V3")
+		}
+	}
+
+	return nil
 }
 
 // Execute executes the command and returns the error

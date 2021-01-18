@@ -35,7 +35,7 @@ type metadataInconsistencyDropOptions struct {
 }
 
 func (o *metadataInconsistencyDropOptions) run() error {
-	d, err := migrate.NewMigrate(o.EC, true)
+	d, err := migrate.NewMigrate(o.EC, true, "")
 	if err != nil {
 		return err
 	}

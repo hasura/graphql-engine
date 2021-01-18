@@ -61,6 +61,7 @@ func newMigrateApplyCmd(ec *cli.ExecutionContext) *cobra.Command {
 			return ec.Validate()
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
+			opts.Datasource = ec.Datasource
 			if opts.dryRun && opts.SkipExecution {
 				return errors.New("both --skip-execution and --dry-run flags cannot be used together")
 			}
@@ -115,6 +116,7 @@ type MigrateApplyOptions struct {
 	GotoVersion   string
 	SkipExecution bool
 	dryRun        bool
+	Datasource    string
 }
 
 func (o *MigrateApplyOptions) Run() error {
@@ -123,7 +125,7 @@ func (o *MigrateApplyOptions) Run() error {
 		return errors.Wrap(err, "error validating flags")
 	}
 
-	migrateDrv, err := migrate.NewMigrate(o.EC, true)
+	migrateDrv, err := migrate.NewMigrate(o.EC, true, o.Datasource)
 	if err != nil {
 		return err
 	}
