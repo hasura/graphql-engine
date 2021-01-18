@@ -1,5 +1,5 @@
 description: Include unknown field "timestamp" in the "Communication" interface
-url: /v1/query
+url: /v1/metadata
 status: 400
 query:
   type: add_remote_schema_permissions
