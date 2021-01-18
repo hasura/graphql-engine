@@ -54,7 +54,7 @@ const PermissionEditor: React.FC<PermissionEditorProps> = props => {
   useEffect(() => {
     if (!state) return;
     setResultString(
-      generateSDL(state as RemoteSchemaFields[], argTree as Record<string, any>)
+      generateSDL(state, argTree)
     );
   }, [state, argTree]);
 
