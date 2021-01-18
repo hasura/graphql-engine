@@ -26,9 +26,7 @@ export const passCreateTable = () => {
   cy.get('textarea').type(prevStr, { force: true });
   cy.wait(1000); // debounce
   cy.get(getElementFromAlias('run-sql')).click();
-  cy.get(getElementFromAlias('raw-sql-statement-timeout')).should(
-    'be.disabled'
-  );
+  cy.get(getElementFromAlias('raw-sql-statement-timeout'));
   cy.wait(5000);
 };
 
