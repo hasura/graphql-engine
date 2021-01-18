@@ -58,7 +58,7 @@ checkForUpdates (LoggerCtx loggerSet _ _ _) manager = do
         Just ci -> "server-" <> T.toLower (tshow ci)
 
     -- ignoring if there is any error in response and returning the current version
-    decodeResp bs = pure $ either (const $ UpdateInfo currentVersion) id $ A.eitherDecode bs
+    decodeResp = pure . fromRight (UpdateInfo currentVersion) . A.eitherDecode
 
     ignoreHttpErr :: H.HttpException -> IO ()
     ignoreHttpErr _ = return ()
