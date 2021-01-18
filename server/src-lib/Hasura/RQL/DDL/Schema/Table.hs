@@ -37,7 +37,6 @@ import           Control.Arrow.Extended
 import           Control.Lens.Extended              hiding ((.=))
 import           Control.Monad.Trans.Control        (MonadBaseControl)
 import           Data.Aeson
-import           Data.Aeson.Casing
 import           Data.Aeson.TH
 import           Data.Text.Extended
 

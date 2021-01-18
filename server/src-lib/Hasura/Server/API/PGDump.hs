@@ -6,7 +6,6 @@ module Hasura.Server.API.PGDump
 
 import           Control.Exception      (IOException, try)
 import           Data.Aeson
-import           Data.Aeson.Casing
 import           Data.Aeson.TH
 import           Data.Char              (isSpace)
 import           Data.Text.Conversions

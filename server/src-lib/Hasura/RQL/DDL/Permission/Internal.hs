@@ -11,7 +11,6 @@ import qualified Database.PG.Query                          as Q
 import qualified Hasura.Backends.Postgres.SQL.DML           as S
 
 import           Control.Lens                               hiding ((.=))
-import           Data.Aeson.Casing
 import           Data.Aeson.TH
 import           Data.Aeson.Types
 import           Data.Text.Extended
@@ -20,9 +19,9 @@ import           Hasura.Backends.Postgres.SQL.Types
 import           Hasura.Backends.Postgres.Translate.BoolExp
 import           Hasura.Backends.Postgres.Translate.Column
 import           Hasura.RQL.Types
+import           Hasura.SQL.Types
 import           Hasura.Server.Utils
 import           Hasura.Session
-import           Hasura.SQL.Types
 
 
 convColSpec :: FieldInfoMap (FieldInfo 'Postgres) -> PermColSpec -> [PGCol]

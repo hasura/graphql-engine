@@ -3,6 +3,7 @@ module Hasura.RQL.Types.Metadata where
 
 
 import           Data.Aeson
+import           Data.Aeson.Casing
 import           Data.Text.Extended
 import           Hasura.Prelude
 

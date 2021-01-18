@@ -36,7 +36,6 @@ import           Control.Lens.TH                    (makeLenses)
 import           Data.Text.Extended
 
 import qualified Data.Aeson                         as J
-import qualified Data.Aeson.Casing                  as J
 import qualified Data.Aeson.TH                      as J
 import qualified Data.HashMap.Strict                as Map
 import qualified Data.List.NonEmpty                 as NEList

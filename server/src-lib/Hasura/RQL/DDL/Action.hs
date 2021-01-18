@@ -22,7 +22,6 @@ module Hasura.RQL.DDL.Action
 import           Hasura.Prelude
 
 import qualified Data.Aeson                         as J
-import qualified Data.Aeson.Casing                  as J
 import qualified Data.Aeson.TH                      as J
 import qualified Data.Environment                   as Env
 import qualified Data.HashMap.Strict                as Map

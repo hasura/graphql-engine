@@ -36,7 +36,6 @@ import           Control.Monad.Morph
 import           Control.Monad.Trans.Control         (MonadBaseControl)
 import           Control.Monad.Unique
 import           Data.Aeson                          (toJSON)
-import           Data.Aeson.Casing
 import           Data.Aeson.TH
 import           Data.List                           (nub)
 import           Data.Text.Extended

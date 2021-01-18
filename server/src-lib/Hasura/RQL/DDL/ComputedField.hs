@@ -20,7 +20,6 @@ import qualified Data.Sequence                      as Seq
 import qualified Language.GraphQL.Draft.Syntax      as G
 
 import           Data.Aeson
-import           Data.Aeson.Casing
 import           Data.Aeson.TH
 import           Data.Text.Extended
 

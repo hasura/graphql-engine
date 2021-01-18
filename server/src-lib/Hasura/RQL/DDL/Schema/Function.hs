@@ -14,7 +14,6 @@ import qualified Database.PG.Query                  as Q
 
 import           Control.Lens                       hiding ((.=))
 import           Data.Aeson
-import           Data.Aeson.Casing
 import           Data.Aeson.TH
 import           Data.Text.Extended
 

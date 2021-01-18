@@ -26,7 +26,6 @@ module Hasura.GraphQL.Execute.LiveQuery.Plan
 
 import           Hasura.Prelude
 
-import qualified Data.Aeson.Casing                           as J
 import qualified Data.Aeson.Extended                         as J
 import qualified Data.Aeson.TH                               as J
 import qualified Data.ByteString                             as B
@@ -59,8 +58,8 @@ import           Hasura.GraphQL.Context
 import           Hasura.GraphQL.Execute.Query
 import           Hasura.GraphQL.Parser.Column
 import           Hasura.RQL.Types
-import           Hasura.Session
 import           Hasura.SQL.Types
+import           Hasura.Session
 
 
 -- -------------------------------------------------------------------------------------------------

@@ -17,7 +17,6 @@ module Hasura.RQL.DDL.Metadata.Types
 import           Hasura.Prelude
 
 import           Data.Aeson
-import           Data.Aeson.Casing
 import           Data.Aeson.TH
 
 import           Hasura.RQL.Types

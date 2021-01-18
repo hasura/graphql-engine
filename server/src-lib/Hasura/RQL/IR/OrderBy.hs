@@ -8,12 +8,11 @@ module Hasura.RQL.IR.OrderBy
 
 import           Hasura.Prelude
 
-import qualified Data.Text                  as T
+import qualified Data.Text               as T
 
 import           Data.Aeson
-import           Data.Aeson.Casing
 
-import           Hasura.RQL.Instances       ()
+import           Hasura.RQL.Instances    ()
 import           Hasura.RQL.Types.Common
 import           Hasura.SQL.Backend
 

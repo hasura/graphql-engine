@@ -26,7 +26,6 @@ import qualified Language.GraphQL.Draft.Syntax as G
 
 import           Control.Lens
 import           Data.Aeson
-import           Data.Aeson.Casing
 import           Data.Aeson.TH
 import           Data.Text.Extended
 import           Data.Text.NonEmpty

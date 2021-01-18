@@ -13,7 +13,6 @@ import qualified Hasura.Tracing                      as Tracing
 
 import           Control.Lens
 import           Data.Aeson
-import           Data.Aeson.Casing
 import           Data.Aeson.TH
 
 data SourceInfo b

@@ -5,7 +5,6 @@ import           Hasura.Incremental                 (Cacheable)
 import           Hasura.Prelude
 
 import           Control.Lens                       (makeLenses)
-import           Data.Aeson.Casing
 import           Data.Aeson.TH
 import           Data.Aeson.Types
 import           Hasura.RQL.Types.Common

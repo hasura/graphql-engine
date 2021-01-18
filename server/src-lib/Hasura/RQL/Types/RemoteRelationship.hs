@@ -27,7 +27,6 @@ import qualified Language.GraphQL.Draft.Syntax      as G
 
 import           Control.Lens                       (makeLenses)
 import           Data.Aeson
-import           Data.Aeson.Casing
 import           Data.Aeson.TH
 import           Data.Scientific
 import           Data.Set                           (Set)

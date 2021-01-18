@@ -75,7 +75,6 @@ import qualified Test.QuickCheck                        as QC
 
 import           Control.Lens                           (makeLenses)
 import           Data.Aeson
-import           Data.Aeson.Casing
 import           Data.Aeson.TH
 import           Data.Bifunctor                         (bimap)
 import           Data.Kind                              (Type)

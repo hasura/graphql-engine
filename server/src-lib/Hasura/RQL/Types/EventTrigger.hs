@@ -32,7 +32,6 @@ import qualified Database.PG.Query                  as Q
 import qualified Text.Regex.TDFA                    as TDFA
 
 import           Data.Aeson
-import           Data.Aeson.Casing
 import           Data.Aeson.TH
 import           Data.Text.Extended
 import           Data.Text.NonEmpty

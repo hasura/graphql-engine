@@ -3,25 +3,24 @@ module Hasura.RQL.Types.RemoteSchema where
 import           Hasura.Prelude
 
 import qualified Data.Aeson                     as J
-import qualified Data.Aeson.Casing              as J
 import qualified Data.Aeson.TH                  as J
 import qualified Data.Environment               as Env
 import qualified Data.HashSet                   as Set
 import qualified Data.Text                      as T
-import qualified Text.Builder                   as TB
 import           Data.Text.Extended
 import           Data.Text.NonEmpty
 import qualified Database.PG.Query              as Q
-import qualified Network.URI.Extended           as N
-import qualified Language.GraphQL.Draft.Syntax  as G
 import qualified Language.GraphQL.Draft.Printer as G
+import qualified Language.GraphQL.Draft.Syntax  as G
+import qualified Network.URI.Extended           as N
+import qualified Text.Builder                   as TB
 
-import           Hasura.Incremental         (Cacheable)
-import           Hasura.RQL.DDL.Headers     (HeaderConf (..))
+import           Hasura.GraphQL.Parser.Schema   (Variable)
+import           Hasura.Incremental             (Cacheable)
+import           Hasura.RQL.DDL.Headers         (HeaderConf (..))
 import           Hasura.RQL.Types.Common
 import           Hasura.RQL.Types.Error
 import           Hasura.Session
-import           Hasura.GraphQL.Parser.Schema      (Variable)
 
 type UrlFromEnv = Text
 
@@ -185,8 +184,8 @@ instance Cacheable RemoteSchemaVariable
 --   may contain a preset with it.
 data RemoteSchemaInputValueDefinition
   = RemoteSchemaInputValueDefinition
-  { _rsitdDefinition      :: !G.InputValueDefinition
-  , _rsitdPresetArgument  :: !(Maybe (G.Value RemoteSchemaVariable))
+  { _rsitdDefinition     :: !G.InputValueDefinition
+  , _rsitdPresetArgument :: !(Maybe (G.Value RemoteSchemaVariable))
   } deriving (Show, Eq, Generic, Ord)
 instance Hashable RemoteSchemaInputValueDefinition
 instance Cacheable RemoteSchemaInputValueDefinition

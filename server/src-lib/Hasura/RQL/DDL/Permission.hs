@@ -41,7 +41,6 @@ import qualified Data.HashSet                       as HS
 
 import           Control.Lens                       ((.~))
 import           Data.Aeson
-import           Data.Aeson.Casing
 import           Data.Aeson.TH
 import           Data.Text.Extended
 
@@ -50,8 +49,8 @@ import           Hasura.EncJSON
 import           Hasura.RQL.DDL.Permission.Internal
 import           Hasura.RQL.DML.Internal            hiding (askPermInfo)
 import           Hasura.RQL.Types
-import           Hasura.Session
 import           Hasura.SQL.Types
+import           Hasura.Session
 
 
 

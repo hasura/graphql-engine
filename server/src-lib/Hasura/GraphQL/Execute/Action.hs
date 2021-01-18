@@ -18,7 +18,6 @@ import           Hasura.Prelude
 
 import qualified Control.Concurrent.Async.Lifted.Safe        as LA
 import qualified Data.Aeson                                  as J
-import qualified Data.Aeson.Casing                           as J
 import qualified Data.Aeson.Ordered                          as AO
 import qualified Data.Aeson.TH                               as J
 import qualified Data.ByteString.Lazy                        as BL
@@ -39,8 +38,8 @@ import           Control.Exception                           (try)
 import           Control.Lens
 import           Control.Monad.Trans.Control                 (MonadBaseControl)
 import           Data.Has
-import           Data.Int                                    (Int64)
 import           Data.IORef
+import           Data.Int                                    (Int64)
 import           Data.Text.Extended
 
 import qualified Hasura.Backends.Postgres.Execute.RemoteJoin as RJ
@@ -63,11 +62,11 @@ import           Hasura.Metadata.Class
 import           Hasura.RQL.DDL.Headers
 import           Hasura.RQL.DDL.Schema.Cache
 import           Hasura.RQL.Types
+import           Hasura.SQL.Types
 import           Hasura.Server.Utils                         (mkClientHeadersForward,
                                                               mkSetCookieHeaders)
 import           Hasura.Server.Version                       (HasVersion)
 import           Hasura.Session
-import           Hasura.SQL.Types
 
 
 newtype ActionExecution =
