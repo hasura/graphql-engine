@@ -11,6 +11,7 @@ import {
   CONNECTION_FAILED,
 } from '../components/App/Actions';
 import { globalCookiePolicy } from '../Endpoints';
+import { getClientTypeHeader, requestTagHeader } from './client';
 
 const requestAction = (
   url: string,
@@ -22,6 +23,12 @@ const requestAction = (
 ): Thunk<Promise<any>> => {
   return (dispatch: any, getState: any) => {
     const requestOptions = { ...options };
+
+    const currentClientType = getClientTypeHeader();
+    requestOptions.headers = {
+      ...(options.headers || {}),
+      [requestTagHeader]: currentClientType,
+    };
 
     if (!options.credentials && includeCredentials) {
       requestOptions.credentials = globalCookiePolicy;
