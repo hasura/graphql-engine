@@ -154,7 +154,7 @@ jobs:
   build_server:
     docker:
     - image: *server_builder_image
-    resource_class: large
+    resource_class: xlarge
     working_directory: ~/graphql-engine
     steps:
     - attach_workspace:
@@ -167,6 +167,12 @@ jobs:
         - cabal-store-v3-{{ checksum "server/cabal.project" }}-{{ checksum "server/graphql-engine.cabal" }}-
         - cabal-store-v3-{{ checksum "server/cabal.project" }}-
         - cabal-store-v3-
+    - restore_cache:
+        keys:
+        - cabal-packages-v3-{{ checksum "server/cabal.project" }}-{{ checksum "server/graphql-engine.cabal" }}-{{ checksum "server/cabal.project.freeze" }}
+        - cabal-packages-v3-{{ checksum "server/cabal.project" }}-{{ checksum "server/graphql-engine.cabal" }}-
+        - cabal-packages-v3-{{ checksum "server/cabal.project" }}-
+        - cabal-packages-v3-
     - run:
         name: Install latest postgresql client tools
         command: |
@@ -185,9 +191,12 @@ jobs:
             make enable_coverage=true ci-build
           fi
     - save_cache:
-        key: cabal-store-v3-{{ checksum "server/cabal.project" }}-{{ checksum "server/graphql-engine.cabal" }}-{{ checksum "server/cabal.project.freeze" }}
+        key: cabal-packages-v3-{{ checksum "server/cabal.project" }}-{{ checksum "server/graphql-engine.cabal" }}-{{ checksum "server/cabal.project.freeze" }}
         paths:
         - ~/.cabal/packages
+    - save_cache:
+        key: cabal-store-v3-{{ checksum "server/cabal.project" }}-{{ checksum "server/graphql-engine.cabal" }}-{{ checksum "server/cabal.project.freeze" }}
+        paths:
         - ~/.cabal/store
     - store_artifacts:
         path: /build/_server_output

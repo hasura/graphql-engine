@@ -36,10 +36,7 @@ import {
   generateTableDef,
   dataSource,
 } from '../../../../dataSources';
-import {
-  getRunSqlQuery,
-  getSetTableEnumQuery,
-} from '../../../Common/utils/v1QueryUtils';
+import { getRunSqlQuery } from '../../../Common/utils/v1QueryUtils';
 import {
   convertArrayToJson,
   sanitiseRootFields,
@@ -56,6 +53,7 @@ import {
   getAddComputedFieldQuery,
   getDropComputedFieldQuery,
   getSetCustomRootFieldsQuery,
+  getSetTableEnumQuery,
 } from '../../../../metadata/queryUtils';
 import { getColumnUpdateMigration } from '../../../../utils/migration/utils';
 import Migration from '../../../../utils/migration/Migration';

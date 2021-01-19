@@ -59,7 +59,7 @@ boolExp table selectPermissions = memoizeOn 'boolExp table $ do
       :: FieldInfo b
       -> m (Maybe (InputFieldsParser n (Maybe (AnnBoolExpFld b (UnpreparedValue b)))))
     mkField fieldInfo = runMaybeT do
-      fieldName <- MaybeT $ pure $ fieldInfoGraphQLName fieldInfo
+      fieldName <- hoistMaybe $ fieldInfoGraphQLName fieldInfo
       P.fieldOptional fieldName Nothing <$> case fieldInfo of
         -- field_name: field_type_comparison_exp
         FIColumn columnInfo ->

@@ -129,7 +129,7 @@ tableFieldsInput table insertPerms = memoizeOn 'tableFieldsInput table do
           relName    = riName    relationshipInfo
       permissions  <- MaybeT $ tablePermissions otherTable
       relFieldName <- lift $ textToName $ relNameToTxt relName
-      insPerms     <- MaybeT $ pure $ _permIns permissions
+      insPerms     <- hoistMaybe $ _permIns permissions
       let selPerms = _permSel permissions
           updPerms = _permUpd permissions
       lift $ case riType relationshipInfo of
@@ -404,7 +404,7 @@ mutationSelectionSet table selectPerms =
   memoizeOn 'mutationSelectionSet table do
   tableGQLName <- getTableGQLName @b table
   returning <- runMaybeT do
-    permissions <- MaybeT $ pure selectPerms
+    permissions <- hoistMaybe selectPerms
     tableSet    <- lift $ tableSelectionList table permissions
     let returningName = $$(G.litName "returning")
         returningDesc = "data from the rows affected by the mutation"

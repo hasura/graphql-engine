@@ -6,16 +6,16 @@ module Hasura.GraphQL.Schema.OrderBy
 
 import           Hasura.Prelude
 
-import qualified Language.GraphQL.Draft.Syntax      as G
+import qualified Language.GraphQL.Draft.Syntax as G
 
 import           Data.Text.Extended
 
-import qualified Hasura.GraphQL.Parser              as P
-import qualified Hasura.RQL.IR.OrderBy              as IR
-import qualified Hasura.RQL.IR.Select               as IR
+import qualified Hasura.GraphQL.Parser         as P
+import qualified Hasura.RQL.IR.OrderBy         as IR
+import qualified Hasura.RQL.IR.Select          as IR
 
-import           Hasura.GraphQL.Parser              (InputFieldsParser, Kind (..), Parser,
-                                                     UnpreparedValue)
+import           Hasura.GraphQL.Parser         (InputFieldsParser, Kind (..), Parser,
+                                                UnpreparedValue)
 import           Hasura.GraphQL.Parser.Class
 import           Hasura.GraphQL.Schema.Backend
 import           Hasura.GraphQL.Schema.Common
@@ -58,7 +58,7 @@ orderByExp table selectPermissions = memoizeOn 'orderByExp table $ do
             <&> fmap (pure . mkOrderByItemG @b (IR.AOCColumn columnInfo)) . join
         FIRelationship relationshipInfo -> do
           let remoteTable = riRTable relationshipInfo
-          fieldName <- MaybeT $ pure $ G.mkName $ relNameToTxt $ riName relationshipInfo
+          fieldName <- hoistMaybe $ G.mkName $ relNameToTxt $ riName relationshipInfo
           perms <- MaybeT $ tableSelectPermissions remoteTable
           let newPerms = fmapAnnBoolExp partialSQLExpToUnpreparedValue $ spiFilter perms
           case riType relationshipInfo of
