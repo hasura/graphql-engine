@@ -2,9 +2,7 @@ module Hasura.Server.CheckUpdates
   ( checkForUpdates
   ) where
 
-import           Control.Exception           (try)
-import           Control.Lens
-import           Data.Text.Conversions       (toText)
+import           Hasura.Prelude
 
 import qualified CI
 import qualified Control.Concurrent.Extended as C
@@ -17,9 +15,13 @@ import qualified Network.URI.Encode          as URI
 import qualified Network.Wreq                as Wreq
 import qualified System.Log.FastLogger       as FL
 
+import           Control.Exception           (try)
+import           Control.Lens
+import           Data.Either                 (fromRight)
+import           Data.Text.Conversions       (toText)
+
 import           Hasura.HTTP
 import           Hasura.Logging              (LoggerCtx (..))
-import           Hasura.Prelude
 import           Hasura.Server.Version       (HasVersion, Version, currentVersion)
 
 
