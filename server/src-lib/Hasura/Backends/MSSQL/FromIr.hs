@@ -397,11 +397,11 @@ fromQualifiedTable schemadTableName@(TableName{tableName}) = do
              schemadTableName {-TableName {tableName = qname, tableNameSchema = schemaName}-}
           , aliasedAlias = alias
           }))
-  where
-    -- PG.QualifiedObject { qSchema = PG.SchemaName schemaName
-    --                      -- TODO: Consider many x.y.z. in schema name.
-    --                     , qName = PG.TableName qname
-    --                     } = qualifiedObject
+  -- where
+  --   PG.QualifiedObject { qSchema = PG.SchemaName schemaName
+  --                        -- TODO: Consider many x.y.z. in schema name.
+  --                       , qName = PG.TableName qname
+  --                       } = qualifiedObject
 
 fromTableName :: TableName -> FromIr EntityAlias
 fromTableName TableName{tableName} = do
@@ -945,7 +945,7 @@ generateEntityAlias :: NameTemplate -> FromIr Text
 generateEntityAlias template = do
   FromIr (modify' (M.insertWith (+) prefix start))
   i <- FromIr get
-  pure (prefix <> T.pack (show (fromMaybe start (M.lookup prefix i))))
+  pure (prefix <> tshow (fromMaybe start (M.lookup prefix i)))
   where
     start = 1
     prefix = T.take 20 rendered

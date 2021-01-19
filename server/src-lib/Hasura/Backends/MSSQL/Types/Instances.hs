@@ -7,7 +7,6 @@ module Hasura.Backends.MSSQL.Types.Instances where
 
 import           Hasura.Prelude
 
-import qualified Data.Text                              as T
 import qualified Database.ODBC.SQLServer                as ODBC
 
 import           Data.Aeson
@@ -122,13 +121,13 @@ instance Cacheable ODBC.Binary
 -- Manual instances
 
 instance ToTxt ScalarType where
-  toTxt = T.pack . show -- TODO:
+  toTxt = tshow -- TODO:
 
 instance ToTxt TableName where
-  toTxt = T.pack . show -- TODO:
+  toTxt = tshow -- TODO:
 
 instance ToTxt ColumnName where
-  toTxt = T.pack . show -- TODO:
+  toTxt = tshow -- TODO:
 
 instance Monoid Where where
   mempty = Where mempty

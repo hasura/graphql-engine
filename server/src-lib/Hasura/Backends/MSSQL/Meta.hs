@@ -180,8 +180,6 @@ queryJson conn query' = do
     _ ->
       case iresult of
         Done _ jvalue ->
-          case parseEither parseJSON jvalue of
-            Left e   -> error e
-            Right as -> pure as
+          parseEither parseJSON jvalue `onLeft` error -- FIXME
         Partial {} -> error "Incomplete output from SQL Server."
         Fail _ _ctx err -> error ("JSON parser error: " <> err)
