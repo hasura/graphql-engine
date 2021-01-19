@@ -46,7 +46,6 @@ import qualified Data.HashMap.Strict                as M
 import           Control.Lens.Plated
 import           Control.Lens.TH
 import           Data.Aeson
-import           Data.Aeson.Casing
 import           Data.Aeson.Internal
 import           Data.Aeson.TH
 import           Data.Typeable
@@ -181,7 +180,7 @@ data DWithinGeomOp a =
 instance (NFData a) => NFData (DWithinGeomOp a)
 instance (Cacheable a) => Cacheable (DWithinGeomOp a)
 instance (Hashable a) => Hashable (DWithinGeomOp a)
-$(deriveJSON (aesonDrop 6 snakeCase) ''DWithinGeomOp)
+$(deriveJSON hasuraJSON ''DWithinGeomOp)
 
 data DWithinGeogOp a =
   DWithinGeogOp
@@ -192,7 +191,7 @@ data DWithinGeogOp a =
 instance (NFData a) => NFData (DWithinGeogOp a)
 instance (Cacheable a) => Cacheable (DWithinGeogOp a)
 instance (Hashable a) => Hashable (DWithinGeogOp a)
-$(deriveJSON (aesonDrop 6 snakeCase) ''DWithinGeogOp)
+$(deriveJSON hasuraJSON ''DWithinGeogOp)
 
 data STIntersectsNbandGeommin a =
   STIntersectsNbandGeommin
@@ -202,7 +201,7 @@ data STIntersectsNbandGeommin a =
 instance (NFData a) => NFData (STIntersectsNbandGeommin a)
 instance (Cacheable a) => Cacheable (STIntersectsNbandGeommin a)
 instance (Hashable a) => Hashable (STIntersectsNbandGeommin a)
-$(deriveJSON (aesonDrop 4 snakeCase) ''STIntersectsNbandGeommin)
+$(deriveJSON hasuraJSON ''STIntersectsNbandGeommin)
 
 data STIntersectsGeomminNband a =
   STIntersectsGeomminNband
@@ -212,7 +211,7 @@ data STIntersectsGeomminNband a =
 instance (NFData a) => NFData (STIntersectsGeomminNband a)
 instance (Cacheable a) => Cacheable (STIntersectsGeomminNband a)
 instance (Hashable a) => Hashable (STIntersectsGeomminNband a)
-$(deriveJSON (aesonDrop 4 snakeCase) ''STIntersectsGeomminNband)
+$(deriveJSON hasuraJSON ''STIntersectsGeomminNband)
 
 type CastExp b a = M.HashMap (ScalarType b) [OpExpG b a]
 

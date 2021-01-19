@@ -14,7 +14,6 @@ import qualified Database.PG.Query                  as Q
 
 import           Control.Lens                       hiding ((.=))
 import           Data.Aeson
-import           Data.Aeson.Casing
 import           Data.Aeson.TH
 import           Data.Text.Extended
 
@@ -231,7 +230,7 @@ data UnTrackFunction
   { _utfFunction :: !QualifiedFunction
   , _utfSource   :: !SourceName
   } deriving (Show, Eq)
-$(deriveToJSON (aesonDrop 4 snakeCase) ''UnTrackFunction)
+$(deriveToJSON hasuraJSON ''UnTrackFunction)
 
 instance FromJSON UnTrackFunction where
   parseJSON v = withSource <|> withoutSource

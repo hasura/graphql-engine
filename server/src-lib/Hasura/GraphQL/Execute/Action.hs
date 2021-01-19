@@ -18,7 +18,6 @@ import           Hasura.Prelude
 
 import qualified Control.Concurrent.Async.Lifted.Safe        as LA
 import qualified Data.Aeson                                  as J
-import qualified Data.Aeson.Casing                           as J
 import qualified Data.Aeson.Ordered                          as AO
 import qualified Data.Aeson.TH                               as J
 import qualified Data.ByteString.Lazy                        as BL
@@ -39,8 +38,8 @@ import           Control.Exception                           (try)
 import           Control.Lens
 import           Control.Monad.Trans.Control                 (MonadBaseControl)
 import           Data.Has
-import           Data.Int                                    (Int64)
 import           Data.IORef
+import           Data.Int                                    (Int64)
 import           Data.Text.Extended
 
 import qualified Hasura.Backends.Postgres.Execute.RemoteJoin as RJ
@@ -63,11 +62,11 @@ import           Hasura.Metadata.Class
 import           Hasura.RQL.DDL.Headers
 import           Hasura.RQL.DDL.Schema.Cache
 import           Hasura.RQL.Types
+import           Hasura.SQL.Types
 import           Hasura.Server.Utils                         (mkClientHeadersForward,
                                                               mkSetCookieHeaders)
 import           Hasura.Server.Version                       (HasVersion)
 import           Hasura.Session
-import           Hasura.SQL.Types
 
 
 newtype ActionExecution =
@@ -101,7 +100,7 @@ runActionExecution aep = do
 newtype ActionContext
   = ActionContext {_acName :: ActionName}
   deriving (Show, Eq)
-$(J.deriveJSON (J.aesonDrop 3 J.snakeCase) ''ActionContext)
+$(J.deriveJSON hasuraJSON ''ActionContext)
 
 data ActionWebhookPayload
   = ActionWebhookPayload
@@ -109,14 +108,14 @@ data ActionWebhookPayload
   , _awpSessionVariables :: !SessionVariables
   , _awpInput            :: !J.Value
   } deriving (Show, Eq)
-$(J.deriveJSON (J.aesonDrop 4 J.snakeCase) ''ActionWebhookPayload)
+$(J.deriveJSON hasuraJSON ''ActionWebhookPayload)
 
 data ActionWebhookErrorResponse
   = ActionWebhookErrorResponse
   { _awerMessage :: !Text
   , _awerCode    :: !(Maybe Text)
   } deriving (Show, Eq)
-$(J.deriveJSON (J.aesonDrop 5 J.snakeCase) ''ActionWebhookErrorResponse)
+$(J.deriveJSON hasuraJSON ''ActionWebhookErrorResponse)
 
 data ActionWebhookResponse
   = AWRArray ![Map.HashMap G.Name J.Value]
@@ -139,7 +138,7 @@ data ActionRequestInfo
   , _areqiBody    :: !J.Value
   , _areqiHeaders :: ![HeaderConf]
   } deriving (Show, Eq)
-$(J.deriveToJSON (J.aesonDrop 6 J.snakeCase) ''ActionRequestInfo)
+$(J.deriveToJSON hasuraJSON ''ActionRequestInfo)
 
 data ActionResponseInfo
   = ActionResponseInfo
@@ -147,7 +146,7 @@ data ActionResponseInfo
   , _aresiBody    :: !J.Value
   , _aresiHeaders :: ![HeaderConf]
   } deriving (Show, Eq)
-$(J.deriveToJSON (J.aesonDrop 6 J.snakeCase) ''ActionResponseInfo)
+$(J.deriveToJSON hasuraJSON ''ActionResponseInfo)
 
 data ActionInternalError
   = ActionInternalError
@@ -155,7 +154,7 @@ data ActionInternalError
   , _aieRequest  :: !ActionRequestInfo
   , _aieResponse :: !(Maybe ActionResponseInfo)
   } deriving (Show, Eq)
-$(J.deriveToJSON (J.aesonDrop 4 J.snakeCase) ''ActionInternalError)
+$(J.deriveToJSON hasuraJSON ''ActionInternalError)
 
 -- * Action handler logging related
 data ActionHandlerLog
@@ -163,7 +162,7 @@ data ActionHandlerLog
   { _ahlRequestSize  :: !Int64
   , _ahlResponseSize :: !Int64
   } deriving (Show)
-$(J.deriveJSON (J.aesonDrop 4 J.snakeCase){J.omitNothingFields=True} ''ActionHandlerLog)
+$(J.deriveJSON hasuraJSON{J.omitNothingFields=True} ''ActionHandlerLog)
 
 instance L.ToEngineLog ActionHandlerLog L.Hasura where
   toEngineLog ahl = (L.LevelInfo, L.ELTActionHandler, J.toJSON ahl)

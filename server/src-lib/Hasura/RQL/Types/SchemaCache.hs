@@ -135,7 +135,6 @@ import qualified Data.HashSet                        as HS
 import qualified Language.GraphQL.Draft.Syntax       as G
 
 import           Data.Aeson
-import           Data.Aeson.Casing
 import           Data.Aeson.TH
 import           Data.Text.Extended
 import           System.Cron.Types
@@ -236,7 +235,7 @@ data CronTriggerInfo
    , ctiComment     :: !(Maybe Text)
    } deriving (Show, Eq)
 
-$(deriveToJSON (aesonDrop 3 snakeCase) ''CronTriggerInfo)
+$(deriveToJSON hasuraJSON ''CronTriggerInfo)
 
 newtype SchemaCacheVer
   = SchemaCacheVer { unSchemaCacheVer :: Word64 }
@@ -276,7 +275,7 @@ data SchemaCache
   , scInconsistentObjs            :: ![InconsistentMetadata]
   , scCronTriggers                :: !(M.HashMap TriggerName CronTriggerInfo)
   }
-$(deriveToJSON (aesonDrop 2 snakeCase) ''SchemaCache)
+$(deriveToJSON hasuraJSON ''SchemaCache)
 
 getFuncsOfTable :: QualifiedTable -> FunctionCache -> [FunctionInfo]
 getFuncsOfTable qt fc = flip filter allFuncs $ \f -> qt == fiReturnType f

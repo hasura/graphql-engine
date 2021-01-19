@@ -27,7 +27,6 @@ import qualified Language.GraphQL.Draft.Syntax      as G
 
 import           Control.Lens                       (makeLenses)
 import           Data.Aeson
-import           Data.Aeson.Casing
 import           Data.Aeson.TH
 import           Data.Scientific
 import           Data.Set                           (Set)
@@ -254,7 +253,7 @@ data RemoteRelationship =
     }  deriving (Show, Eq, Generic)
 instance NFData RemoteRelationship
 instance Cacheable RemoteRelationship
-$(deriveToJSON (aesonDrop 3 snakeCase) ''RemoteRelationship)
+$(deriveToJSON hasuraJSON ''RemoteRelationship)
 
 instance FromJSON RemoteRelationship where
   parseJSON = withObject "Object" $ \o ->
@@ -273,7 +272,7 @@ data RemoteRelationshipDef
   , _rrdRemoteField  :: !RemoteFields
   } deriving (Show, Eq, Generic)
 instance Cacheable RemoteRelationshipDef
-$(deriveJSON (aesonDrop 4 snakeCase) ''RemoteRelationshipDef)
+$(deriveJSON hasuraJSON ''RemoteRelationshipDef)
 $(makeLenses ''RemoteRelationshipDef)
 
 data DeleteRemoteRelationship
@@ -289,4 +288,4 @@ instance FromJSON DeleteRemoteRelationship where
       <*> o .: "table"
       <*> o .: "name"
 
-$(deriveToJSON (aesonDrop 3 snakeCase){omitNothingFields=True} ''DeleteRemoteRelationship)
+$(deriveToJSON hasuraJSON{omitNothingFields=True} ''DeleteRemoteRelationship)

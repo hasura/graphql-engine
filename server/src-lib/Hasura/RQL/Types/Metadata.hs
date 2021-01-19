@@ -3,6 +3,7 @@ module Hasura.RQL.Types.Metadata where
 
 
 import           Data.Aeson
+import           Data.Aeson.Casing
 import           Data.Text.Extended
 import           Hasura.Prelude
 
@@ -16,7 +17,6 @@ import qualified Data.Text                           as T
 import qualified Language.GraphQL.Draft.Syntax       as G
 
 import           Control.Lens                        hiding (set, (.=))
-import           Data.Aeson.Casing
 import           Data.Aeson.TH
 import           Data.Aeson.Types
 
@@ -36,8 +36,8 @@ import           Hasura.RQL.Types.RemoteSchema
 import           Hasura.RQL.Types.ScheduledTrigger
 import           Hasura.RQL.Types.Source
 import           Hasura.RQL.Types.Table
-import           Hasura.Session
 import           Hasura.SQL.Backend
+import           Hasura.Session
 
 
 data TableMetadataObjId
@@ -207,7 +207,7 @@ data ComputedFieldMetadata
   , _cfmComment    :: !(Maybe Text)
   } deriving (Show, Eq, Generic)
 instance Cacheable ComputedFieldMetadata
-$(deriveJSON (aesonDrop 4 snakeCase) ''ComputedFieldMetadata)
+$(deriveJSON hasuraJSON ''ComputedFieldMetadata)
 
 data RemoteRelationshipMetadata
   = RemoteRelationshipMetadata
@@ -215,7 +215,7 @@ data RemoteRelationshipMetadata
   , _rrmDefinition :: !RemoteRelationshipDef
   } deriving (Show, Eq, Generic)
 instance Cacheable RemoteRelationshipMetadata
-$(deriveJSON (aesonDrop 4 snakeCase) ''RemoteRelationshipMetadata)
+$(deriveJSON hasuraJSON ''RemoteRelationshipMetadata)
 $(makeLenses ''RemoteRelationshipMetadata)
 
 data RemoteSchemaPermissionMetadata
@@ -225,7 +225,7 @@ data RemoteSchemaPermissionMetadata
   , _rspmComment    :: !(Maybe Text)
   } deriving (Show, Eq, Generic)
 instance Cacheable RemoteSchemaPermissionMetadata
-$(deriveJSON (aesonDrop 5 snakeCase){omitNothingFields=True} ''RemoteSchemaPermissionMetadata)
+$(deriveJSON hasuraJSON{omitNothingFields=True} ''RemoteSchemaPermissionMetadata)
 $(makeLenses ''RemoteSchemaPermissionMetadata)
 
 data RemoteSchemaMetadata
@@ -244,7 +244,7 @@ instance FromJSON RemoteSchemaMetadata where
     <*> obj .: "definition"
     <*> obj .:? "comment"
     <*> obj .:? "permissions" .!= mempty
-$(deriveToJSON (aesonDrop 4 snakeCase) ''RemoteSchemaMetadata)
+$(deriveToJSON hasuraJSON ''RemoteSchemaMetadata)
 $(makeLenses ''RemoteSchemaMetadata)
 
 type Relationships a = InsOrdHashMap RelName a
@@ -269,7 +269,7 @@ data TableMetadata
   , _tmEventTriggers       :: !EventTriggers
   } deriving (Show, Eq, Generic)
 instance Cacheable TableMetadata
-$(deriveToJSON (aesonDrop 3 snakeCase) ''TableMetadata)
+$(deriveToJSON hasuraJSON ''TableMetadata)
 $(makeLenses ''TableMetadata)
 
 mkTableMeta :: QualifiedTable -> Bool -> TableConfig -> TableMetadata
@@ -327,7 +327,7 @@ data FunctionMetadata
   } deriving (Show, Eq, Generic)
 instance Cacheable FunctionMetadata
 $(makeLenses ''FunctionMetadata)
-$(deriveToJSON (aesonDrop 3 snakeCase) ''FunctionMetadata)
+$(deriveToJSON hasuraJSON ''FunctionMetadata)
 
 instance FromJSON FunctionMetadata where
   parseJSON = withObject "Object" $ \o ->
@@ -437,7 +437,7 @@ data MetadataNoSources
   , _mnsActions          :: !Actions
   , _mnsCronTriggers     :: !CronTriggers
   } deriving (Show, Eq)
-$(deriveToJSON (aesonDrop 4 snakeCase) ''MetadataNoSources)
+$(deriveToJSON hasuraJSON ''MetadataNoSources)
 
 instance FromJSON MetadataNoSources where
   parseJSON = withObject "Object" $ \o -> do
@@ -836,7 +836,7 @@ data SetCatalogState
   { _scsType  :: !CatalogStateType
   , _scsState :: !Value
   } deriving (Show, Eq)
-$(deriveJSON (aesonDrop 4 snakeCase) ''SetCatalogState)
+$(deriveJSON hasuraJSON ''SetCatalogState)
 
 data CatalogState
   = CatalogState
@@ -844,7 +844,7 @@ data CatalogState
   , _csCliState     :: !Value
   , _csConsoleState :: !Value
   } deriving (Show, Eq)
-$(deriveToJSON (aesonDrop 3 snakeCase) ''CatalogState)
+$(deriveToJSON hasuraJSON ''CatalogState)
 
 data GetCatalogState
   = GetCatalogState

@@ -28,6 +28,8 @@ module Hasura.Prelude
   -- * Measuring and working with moments and durations
   , withElapsedTime
   , startTimer
+  -- * Aeson options
+  , hasuraJSON
   , module Data.Time.Clock.Units
   ) where
 
@@ -51,10 +53,10 @@ import           Data.Foldable                     as M (asum, fold, foldrM, for
                                                          traverse_)
 import           Data.Function                     as M (on, (&))
 import           Data.Functor                      as M (($>), (<&>))
-import           Data.Hashable                     as M (Hashable)
 import           Data.HashMap.Strict               as M (HashMap)
 import           Data.HashMap.Strict.InsOrd        as M (InsOrdHashMap)
 import           Data.HashSet                      as M (HashSet)
+import           Data.Hashable                     as M (Hashable)
 import           Data.List                         as M (find, findIndex, foldl', group,
                                                          intercalate, intersect, lookup, sort,
                                                          sortBy, sortOn, union, unionBy, (\\))
@@ -79,6 +81,8 @@ import           Prelude                           as M hiding (fail, init, look
 import           Test.QuickCheck.Arbitrary.Generic as M
 import           Text.Read                         as M (readEither, readMaybe)
 
+import qualified Data.Aeson                        as J
+import qualified Data.Aeson.Casing                 as J
 import qualified Data.ByteString                   as B
 import qualified Data.ByteString.Base64.Lazy       as Base64
 import qualified Data.ByteString.Lazy              as BL
@@ -201,3 +205,6 @@ hoistMaybe = MaybeT . return
 
 tshow :: Show a => a -> Text
 tshow = T.pack . show
+
+hasuraJSON :: J.Options
+hasuraJSON = J.aesonPrefix J.snakeCase

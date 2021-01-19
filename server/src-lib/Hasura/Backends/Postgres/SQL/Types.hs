@@ -58,7 +58,6 @@ import qualified PostgreSQL.Binary.Decoding    as PD
 import qualified Text.Builder                  as TB
 
 import           Data.Aeson
-import           Data.Aeson.Casing
 import           Data.Aeson.Encoding           (text)
 import           Data.Aeson.TH
 import           Data.Aeson.Types              (toJSONKeyText)
@@ -478,7 +477,7 @@ data QualifiedPGType
   } deriving (Show, Eq, Generic)
 instance NFData QualifiedPGType
 instance Cacheable QualifiedPGType
-$(deriveJSON (aesonDrop 4 snakeCase) ''QualifiedPGType)
+$(deriveJSON hasuraJSON ''QualifiedPGType)
 
 isBaseType :: QualifiedPGType -> Bool
 isBaseType (QualifiedPGType _ n ty) =

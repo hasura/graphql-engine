@@ -22,7 +22,6 @@ import qualified Network.HTTP.Types        as HTTP
 import qualified Network.Wai.Extended      as Wai
 
 import           Data.Aeson
-import           Data.Aeson.Casing
 import           Data.Aeson.TH
 import           Data.Int                  (Int64)
 
@@ -197,7 +196,7 @@ data OperationLog
   , olError              :: !(Maybe QErr)
   } deriving (Show, Eq)
 
-$(deriveToJSON (aesonDrop 2 snakeCase){omitNothingFields = True} ''OperationLog)
+$(deriveToJSON hasuraJSON{omitNothingFields = True} ''OperationLog)
 
 data HttpLogContext
   = HttpLogContext
@@ -205,7 +204,7 @@ data HttpLogContext
   , hlcOperation :: !OperationLog
   , hlcRequestId :: !RequestId
   } deriving (Show, Eq)
-$(deriveToJSON (aesonDrop 3 snakeCase) ''HttpLogContext)
+$(deriveToJSON hasuraJSON ''HttpLogContext)
 
 mkHttpAccessLogContext
   :: Maybe UserInfo

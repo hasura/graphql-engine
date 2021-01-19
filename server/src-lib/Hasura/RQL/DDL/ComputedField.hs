@@ -20,7 +20,6 @@ import qualified Data.Sequence                      as Seq
 import qualified Language.GraphQL.Draft.Syntax      as G
 
 import           Data.Aeson
-import           Data.Aeson.Casing
 import           Data.Aeson.TH
 import           Data.Text.Extended
 
@@ -31,8 +30,8 @@ import           Hasura.RQL.DDL.Deps
 import           Hasura.RQL.DDL.Permission
 import           Hasura.RQL.DDL.Schema.Function     (mkFunctionArgs)
 import           Hasura.RQL.Types
-import           Hasura.Server.Utils                (makeReasonMessage)
 import           Hasura.SQL.Types
+import           Hasura.Server.Utils                (makeReasonMessage)
 
 
 data AddComputedField
@@ -45,7 +44,7 @@ data AddComputedField
   } deriving (Show, Eq, Generic)
 instance NFData AddComputedField
 instance Cacheable AddComputedField
-$(deriveToJSON (aesonDrop 4 snakeCase) ''AddComputedField)
+$(deriveToJSON hasuraJSON ''AddComputedField)
 
 instance FromJSON AddComputedField where
   parseJSON = withObject "Object" $ \o ->
@@ -255,7 +254,7 @@ data DropComputedField
   , _dccName    :: !ComputedFieldName
   , _dccCascade :: !Bool
   } deriving (Show, Eq)
-$(deriveToJSON (aesonDrop 4 snakeCase) ''DropComputedField)
+$(deriveToJSON hasuraJSON ''DropComputedField)
 
 instance FromJSON DropComputedField where
   parseJSON = withObject "Object" $ \o ->
