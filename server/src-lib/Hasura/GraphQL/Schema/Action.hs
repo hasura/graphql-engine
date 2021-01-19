@@ -205,7 +205,7 @@ actionOutputFields annotatedObject = do
             (k, v) <- Map.toList fieldMapping
             pure (unsafePGCol $ G.unName $ unObjectFieldName k, pgiColumn v)
       roleName   <- lift askRoleName
-      tablePerms <- MaybeT $ pure $ RQL.getPermInfoMaybe roleName PASelect tableInfo
+      tablePerms <- hoistMaybe $ RQL.getPermInfoMaybe roleName PASelect tableInfo
       case relType of
         ObjRel -> do
           let desc = Just $ G.Description "An object relationship"

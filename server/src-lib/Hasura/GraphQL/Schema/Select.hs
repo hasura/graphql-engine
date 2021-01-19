@@ -871,7 +871,7 @@ fieldSelection table maybePkeyColumns fieldInfo selectPermissions =
       let columnName = pgiColumn columnInfo
           fieldName = pgiName columnInfo
       if | fieldName == $$(G.litName "id") && queryType == ET.QueryRelay -> do
-             pkeyColumns <- MaybeT $ pure maybePkeyColumns
+             pkeyColumns <- hoistMaybe maybePkeyColumns
              pure $ P.selection_ fieldName Nothing P.identifier
                     $> IR.AFNodeId table pkeyColumns
          | otherwise -> do
