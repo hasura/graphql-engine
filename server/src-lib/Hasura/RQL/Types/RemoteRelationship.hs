@@ -29,7 +29,6 @@ import           Control.Lens                       (makeLenses)
 import           Data.Aeson
 import           Data.Aeson.TH
 import           Data.Scientific
-import           Data.Set                           (Set)
 import           Data.Text.Extended
 import           Data.Text.NonEmpty
 
@@ -60,7 +59,7 @@ data RemoteFieldInfo (b :: BackendType)
   { _rfiName             :: !RemoteRelationshipName
     -- ^ Field name to which we'll map the remote in hasura; this becomes part
     -- of the hasura schema.
-  , _rfiParamMap         :: !(HashMap G.Name G.InputValueDefinition)
+  , _rfiParamMap         :: !(HashMap G.Name RemoteSchemaInputValueDefinition)
   -- ^ Input arguments to the remote field info; The '_rfiParamMap' will only
   --   include the arguments to the remote field that is being joined. The
   --   names of the arguments here are modified, it will be in the format of
@@ -69,10 +68,12 @@ data RemoteFieldInfo (b :: BackendType)
   -- ^ Hasura fields used to join the remote schema node
   , _rfiRemoteFields     :: !RemoteFields
   , _rfiRemoteSchema     :: !RemoteSchemaInfo
-  , _rfiSchemaIntrospect :: RemoteSchemaIntrospection
-  -- ^ The introspection data is used to make parsers for the arguments and the selection set
+  , _rfiInputValueDefinitions :: ![G.TypeDefinition [G.Name] RemoteSchemaInputValueDefinition]
+  -- ^ The new input value definitions created for this remote field
   , _rfiRemoteSchemaName :: !RemoteSchemaName
   -- ^ Name of the remote schema, that's used for joining
+  , _rfiTable            :: !(QualifiedTable, SourceName)
+  -- ^ Name of the table and its source
   } deriving (Generic)
 deriving instance Backend b => Eq (RemoteFieldInfo b)
 instance Backend b => Cacheable (RemoteFieldInfo b)
@@ -97,7 +98,7 @@ instance Backend b => ToJSON (RemoteFieldInfo b) where
     , "remote_schema" .= _rfiRemoteSchema
     ]
     where
-      toJsonInpValInfo (G.InputValueDefinition desc name type' defVal _directives)  =
+      toJsonInpValInfo (RemoteSchemaInputValueDefinition (G.InputValueDefinition desc name type' defVal _directives) _preset)  =
         object
           [ "desc" .= desc
           , "name" .= name
@@ -142,15 +143,14 @@ instance FromJSON RemoteArguments where
     _              -> fail "Remote arguments should be an object of keys."
     where
       -- Parsing GraphQL input arguments from JSON
-      parseObjectFieldsToGValue hashMap = do
-        bleh <-
-          traverse
+      parseObjectFieldsToGValue hashMap =
+        HM.fromList <$>
+        (traverse
           (\(key, value) -> do
               name <- G.mkName key `onNothing` fail (T.unpack key <> " is an invalid key name")
               parsedValue <- parseValueAsGValue value
               pure (name,parsedValue))
-             (HM.toList hashMap)
-        pure $ HM.fromList bleh
+             (HM.toList hashMap))
 
       parseValueAsGValue =
         \case
@@ -244,7 +244,7 @@ data RemoteRelationship =
     , rtrTable        :: !QualifiedTable
     -- ^ (SourceName, QualifiedTable) determines the table on which the relationship
     -- is defined
-    , rtrHasuraFields :: !(Set FieldName) -- TODO (from master)? change to PGCol
+    , rtrHasuraFields :: !(HashSet FieldName) -- TODO change to PGCol
     -- ^ The hasura fields from 'rtrTable' that will be in scope when resolving
     -- the remote objects in 'rtrRemoteField'.
     , rtrRemoteSchema :: !RemoteSchemaName
@@ -256,7 +256,7 @@ instance Cacheable RemoteRelationship
 $(deriveToJSON hasuraJSON ''RemoteRelationship)
 
 instance FromJSON RemoteRelationship where
-  parseJSON = withObject "Object" $ \o ->
+  parseJSON = withObject "RemoteRelationship" $ \o ->
     RemoteRelationship
       <$> o .: "name"
       <*> o .:? "source" .!= defaultSource
@@ -268,7 +268,7 @@ instance FromJSON RemoteRelationship where
 data RemoteRelationshipDef
   = RemoteRelationshipDef
   { _rrdRemoteSchema :: !RemoteSchemaName
-  , _rrdHasuraFields :: !(Set FieldName)
+  , _rrdHasuraFields :: !(HashSet FieldName)
   , _rrdRemoteField  :: !RemoteFields
   } deriving (Show, Eq, Generic)
 instance Cacheable RemoteRelationshipDef

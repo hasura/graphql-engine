@@ -133,6 +133,14 @@ jsonPathArg columnType
     elToColExp (Key k)   = PG.SELit k
     elToColExp (Index i) = PG.SELit $ tshow i
 
+-- | Helper function to get the table GraphQL name. A table may have a
+-- custom name configured with it. When the custom name exists, the GraphQL nodes
+-- that are generated according to the custom name. For example: Let's say,
+-- we have a table called `users address`, the name of the table is not GraphQL
+-- compliant so we configure the table with a GraphQL compliant name,
+-- say `users_address`
+-- The generated top-level nodes of this table will be like `users_address`,
+-- `insert_users_address` etc
 getTableGQLName
   :: MonadTableInfo 'Postgres r m
   => TableName 'Postgres

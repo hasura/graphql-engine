@@ -14,13 +14,13 @@ module Hasura.GraphQL.Schema.Table
 
 import           Hasura.Prelude
 
-import qualified Data.HashMap.Strict                as Map
-import qualified Data.HashSet                       as Set
-import qualified Language.GraphQL.Draft.Syntax      as G
+import qualified Data.HashMap.Strict                         as Map
+import qualified Data.HashSet                                as Set
+import qualified Language.GraphQL.Draft.Syntax               as G
 
 import           Data.Text.Extended
 
-import qualified Hasura.GraphQL.Parser              as P
+import qualified Hasura.GraphQL.Parser                       as P
 
 import           Hasura.GraphQL.Parser              (Kind (..), Parser)
 import           Hasura.GraphQL.Parser.Class
@@ -134,7 +134,6 @@ tableSelectFields table permissions = do
           pure $ Set.member (_cfiName computedFieldInfo) $ spiScalarComputedFields permissions
         CFRSetofTable tableName ->
           isJust <$> tableSelectPermissions @_ @_ @_ @b tableName
-    -- TODO (from master): Derive permissions for remote relationships
     canBeSelected (FIRemoteRelationship _) = pure True
 
 tableColumns

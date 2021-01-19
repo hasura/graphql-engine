@@ -97,7 +97,6 @@ askTabInfoSource
 askTabInfoSource tableName = do
   lookupTableInfo tableName >>= (`onNothing` throwTableDoesNotExist tableName)
 
-
 data RemoteSchemaPermsCtx
   = RemoteSchemaPermsEnabled
   | RemoteSchemaPermsDisabled

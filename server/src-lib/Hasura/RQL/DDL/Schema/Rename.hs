@@ -22,7 +22,7 @@ import           Data.Text.Extended
 import qualified Data.HashMap.Strict                as M
 import qualified Data.HashMap.Strict.InsOrd         as OMap
 import qualified Data.List.NonEmpty                 as NE
-import qualified Data.Set                           as Set
+import qualified Data.HashSet                       as Set
 import qualified Language.GraphQL.Draft.Syntax      as G
 
 data RenameItem a

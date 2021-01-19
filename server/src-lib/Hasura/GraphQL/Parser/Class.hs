@@ -14,8 +14,8 @@ import qualified Language.Haskell.TH                  as TH
 import           Data.Has
 import           Data.Text.Extended
 import           Data.Tuple.Extended
-import           GHC.Stack                            (HasCallStack)
-import           Type.Reflection                      (Typeable)
+import           GHC.Stack                             (HasCallStack)
+import           Type.Reflection                       (Typeable)
 
 import           Hasura.GraphQL.Parser.Class.Parse
 import           Hasura.GraphQL.Parser.Internal.Types
@@ -24,6 +24,7 @@ import           Hasura.RQL.Types.Error
 import           Hasura.RQL.Types.Source
 import           Hasura.RQL.Types.Table
 import           Hasura.Session                       (RoleName)
+
 
 {- Note [Tying the knot]
 ~~~~~~~~~~~~~~~~~~~~~~~~

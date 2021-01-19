@@ -12,6 +12,7 @@ module Hasura.GraphQL.Schema.Select
   , selectFunctionAggregate
   , selectFunctionConnection
   , computedFieldPG
+  , remoteRelationshipFieldPG
   , tableArgs
   , tableSelectionSet
   , tableSelectionList
@@ -22,19 +23,19 @@ module Hasura.GraphQL.Schema.Select
 
 import           Hasura.Prelude
 
-import qualified Data.Aeson                             as J
-import qualified Data.Aeson.Extended                    as J
-import qualified Data.Aeson.Internal                    as J
-import qualified Data.ByteString.Lazy                   as BL
-import qualified Data.HashMap.Strict                    as Map
-import qualified Data.HashSet                           as Set
-import qualified Data.List.NonEmpty                     as NE
-import qualified Data.Sequence                          as Seq
-import qualified Data.Sequence.NonEmpty                 as NESeq
-import qualified Data.Text                              as T
-import qualified Language.GraphQL.Draft.Syntax          as G
+import qualified Data.Aeson                            as J
+import qualified Data.Aeson.Extended                   as J
+import qualified Data.Aeson.Internal                   as J
+import qualified Data.ByteString.Lazy                  as BL
+import qualified Data.HashMap.Strict                   as Map
+import qualified Data.HashSet                          as Set
+import qualified Data.List.NonEmpty                    as NE
+import qualified Data.Sequence                         as Seq
+import qualified Data.Sequence.NonEmpty                as NESeq
+import qualified Data.Text                             as T
+import qualified Language.GraphQL.Draft.Syntax         as G
 
-import           Control.Lens                           hiding (index)
+import           Control.Lens                          hiding (index)
 import           Data.Has
 import           Data.Int                               (Int32)
 import           Data.Parser.JSONPath
@@ -61,7 +62,10 @@ import           Hasura.GraphQL.Schema.OrderBy
 import           Hasura.GraphQL.Schema.Remote
 import           Hasura.GraphQL.Schema.Table
 import           Hasura.RQL.Types
-import           Hasura.Server.Utils                    (executeJSONPath)
+import           Hasura.RQL.DDL.RemoteRelationship.Validate
+import           Hasura.Server.Utils                         (executeJSONPath)
+
+import           Hasura.Session
 
 
 -- 1. top level selection functions
@@ -77,7 +81,13 @@ import           Hasura.Server.Utils                    (executeJSONPath)
 -- >   col2: col2_type
 -- > }: [table!]!
 selectTable
-  :: forall b m n r. (BackendSchema b, MonadSchema n m, MonadTableInfo b r m, MonadRole r m, Has QueryContext r)
+  :: forall b m n r
+  . ( BackendSchema b
+    , MonadSchema n m
+    , MonadTableInfo b r m
+    , MonadRole r m
+    , Has QueryContext r
+    )
   => TableName b            -- ^ full name of the table
   -> G.Name                 -- ^ field display name
   -> Maybe G.Description    -- ^ field description, if any
@@ -116,7 +126,13 @@ selectTable table fieldName description selectPermissions = do
 -- >   }
 -- > }: table_nameConnection!
 selectTableConnection
-  :: forall m n r b. (BackendSchema b, MonadSchema n m, MonadTableInfo b r m, MonadRole r m, Has QueryContext r)
+  :: forall m n r b
+  . ( BackendSchema b
+    , MonadSchema n m
+    , MonadTableInfo b r m
+    , MonadRole r m
+    , Has QueryContext r
+    )
   => TableName b              -- ^ qualified name of the table
   -> G.Name                      -- ^ field display name
   -> Maybe G.Description         -- ^ field description, if any
@@ -153,7 +169,13 @@ selectTableConnection table fieldName description pkeyColumns selectPermissions 
 -- current permissions or if there are primary keys the user
 -- doesn't have select permissions for.
 selectTableByPk
-  :: forall m n r b. (BackendSchema b, MonadSchema n m, MonadTableInfo b r m, MonadRole r m, Has QueryContext r)
+  :: forall m n r b
+   . ( BackendSchema b
+     , MonadSchema n m
+     , MonadTableInfo b r m
+     , MonadRole r m
+     , Has QueryContext r
+     )
   => TableName b          -- ^ qualified name of the table
   -> G.Name               -- ^ field display name
   -> Maybe G.Description  -- ^ field description, if any
@@ -193,7 +215,13 @@ selectTableByPk table fieldName description selectPermissions = runMaybeT do
 -- Returns Nothing if there's nothing that can be selected with
 -- current permissions.
 selectTableAggregate
-  :: forall m n r b. (BackendSchema b, MonadSchema n m, MonadTableInfo b r m, MonadRole r m, Has QueryContext r)
+  :: forall m n r b
+  . ( BackendSchema b
+    , MonadSchema n m
+    , MonadTableInfo b r m
+    , MonadRole r m
+    , Has QueryContext r
+    )
   => TableName b       -- ^ qualified name of the table
   -> G.Name               -- ^ field display name
   -> Maybe G.Description  -- ^ field description, if any
@@ -368,11 +396,11 @@ nonNullableObjectList =
 -- > }
 tableConnectionSelectionSet
   :: forall m n r b. ( BackendSchema b
-                   , MonadSchema n m
-                   , MonadTableInfo b r m
-                   , MonadRole r m
-                   , Has QueryContext r
-                   )
+                     , MonadSchema n m
+                     , MonadTableInfo b r m
+                     , MonadRole r m
+                     , Has QueryContext r
+                     )
   => TableName b
   -> SelPermInfo b
   -> m (Parser 'Output n (IR.ConnectionFields b (UnpreparedValue b)))
@@ -422,7 +450,12 @@ tableConnectionSelectionSet table selectPermissions = do
 
 -- | User-defined function (AKA custom function)
 selectFunction
-  :: (BackendSchema 'Postgres, MonadSchema n m, MonadTableInfo 'Postgres r m, MonadRole r m, Has QueryContext r)
+  :: ( BackendSchema 'Postgres
+     , MonadSchema n m
+     , MonadTableInfo 'Postgres r m
+     , MonadRole r m
+     , Has QueryContext r
+     )
   => FunctionInfo         -- ^ SQL function info
   -> G.Name               -- ^ field display name
   -> Maybe G.Description  -- ^ field description, if any
@@ -445,7 +478,12 @@ selectFunction function fieldName description selectPermissions = do
       }
 
 selectFunctionAggregate
-  :: (BackendSchema 'Postgres, MonadSchema n m, MonadTableInfo 'Postgres r m, MonadRole r m, Has QueryContext r)
+  :: ( BackendSchema 'Postgres
+     , MonadSchema n m
+     , MonadTableInfo 'Postgres r m
+     , MonadRole r m
+     , Has QueryContext r
+     )
   => FunctionInfo         -- ^ SQL function info
   -> G.Name               -- ^ field display name
   -> Maybe G.Description  -- ^ field description, if any
@@ -478,7 +516,12 @@ selectFunctionAggregate function fieldName description selectPermissions = runMa
       }
 
 selectFunctionConnection
-  :: (BackendSchema 'Postgres, MonadSchema n m, MonadTableInfo 'Postgres r m, MonadRole r m, Has QueryContext r)
+  :: ( BackendSchema 'Postgres
+     , MonadSchema n m
+     , MonadTableInfo 'Postgres r m
+     , MonadRole r m
+     , Has QueryContext r
+     )
   => FunctionInfo           -- ^ SQL function info
   -> G.Name                 -- ^ field display name
   -> Maybe G.Description    -- ^ field description, if any
@@ -858,7 +901,12 @@ lookupRemoteField fieldInfos (fieldCall :| rest) =
 --
 -- > field_name(arg_name: arg_type, ...): field_type
 fieldSelection
-  :: (BackendSchema b, MonadSchema n m, MonadTableInfo b r m, MonadRole r m, Has QueryContext r)
+  :: ( BackendSchema b
+     , MonadSchema n m
+     , MonadTableInfo b r m
+     , MonadRole r m
+     , Has QueryContext r
+     )
   => TableName b
   -> Maybe (PrimaryKeyColumns b)
   -> FieldInfo b
@@ -892,7 +940,12 @@ fieldSelection table maybePkeyColumns fieldInfo selectPermissions =
 
 -- | Field parsers for a table relationship
 relationshipField
-  :: (BackendSchema b, MonadSchema n m, MonadTableInfo b r m, MonadRole r m, Has QueryContext r)
+  :: ( BackendSchema b
+     , MonadSchema n m
+     , MonadTableInfo b r m
+     , MonadRole r m
+     , Has QueryContext r
+     )
   => RelInfo b -> m (Maybe [FieldParser n (AnnotatedField b)])
 relationshipField relationshipInfo = runMaybeT do
   let otherTable = riRTable  relationshipInfo
@@ -936,7 +989,12 @@ relationshipField relationshipInfo = runMaybeT do
 -- | Computed field parser
 computedFieldPG
   :: forall m n r
-   . (BackendSchema 'Postgres, MonadSchema n m, MonadTableInfo 'Postgres r m, MonadRole r m, Has QueryContext r)
+   . ( BackendSchema 'Postgres
+     , MonadSchema n m
+     , MonadTableInfo 'Postgres r m
+     , MonadRole r m
+     , Has QueryContext r
+     )
   => ComputedFieldInfo 'Postgres
   -> SelPermInfo 'Postgres
   -> m (Maybe (FieldParser n (AnnotatedField 'Postgres)))
@@ -996,40 +1054,66 @@ computedFieldPG ComputedFieldInfo{..} selectPermissions = runMaybeT do
                 IR.insertFunctionArg argName index sessionArgVal withTable
 
 -- | Remote relationship field parsers
-remoteRelationshipField
-  :: (MonadSchema n m, MonadError QErr m, MonadRole r m, Has QueryContext r)
-  => RemoteFieldInfo b -> m (Maybe [FieldParser n (AnnotatedField b)])
-remoteRelationshipField remoteFieldInfo = runMaybeT do
-  queryType <- asks $ qcQueryType . getter
+remoteRelationshipFieldPG
+  :: ( MonadSchema n m
+     , MonadRole r m
+     , MonadError QErr m
+     , Has QueryContext r
+     )
+  => RemoteFieldInfo 'Postgres
+  -> m (Maybe [FieldParser n (AnnotatedField 'Postgres)])
+remoteRelationshipFieldPG remoteFieldInfo = runMaybeT do
+  queryType                   <- asks $ qcQueryType . getter
+  remoteRelationshipQueryCtx  <- asks $ qcRemoteRelationshipContext . getter
   -- https://github.com/hasura/graphql-engine/issues/5144
   -- The above issue is easily fixable by removing the following guard and 'MaybeT' monad transformation
   guard $ queryType == ET.QueryHasura
-  remoteSchemasFieldDefns <- asks $ qcRemoteFields . getter
-  let remoteSchemaName = _rfiRemoteSchemaName remoteFieldInfo
-  fieldDefns <-
-    Map.lookup remoteSchemaName remoteSchemasFieldDefns
-    `onNothing` throw500 ("unexpected: remote schema " <> remoteSchemaName <<> " not found")
-
+  let RemoteFieldInfo name _params hasuraFields remoteFields
+        remoteSchemaInfo remoteSchemaInputValueDefns remoteSchemaName (table, source) = remoteFieldInfo
+  (roleIntrospectionResult, parsedIntrospection) <-
+    -- The remote relationship field should not be accessible
+    -- if the remote schema is not accessible to the said role
+    hoistMaybe $ Map.lookup remoteSchemaName remoteRelationshipQueryCtx
+  let fieldDefns = map P.fDefinition (piQuery parsedIntrospection)
+  role <- askRoleName
+  let hasuraFieldNames = Set.map (FieldName . G.unName . pgiName) hasuraFields
+      remoteRelationship = RemoteRelationship name source table hasuraFieldNames remoteSchemaName remoteFields
+  (newInpValDefns, remoteFieldParamMap) <-
+    if | isAdmin role ->
+         -- we don't validate the remote relationship when the role is admin
+         -- because it's already been validated, when the remote relationship
+         -- was created
+         pure (remoteSchemaInputValueDefns, _rfiParamMap remoteFieldInfo)
+       | otherwise -> do
+           roleRemoteField <-
+             afold @(Either _) $
+             validateRemoteRelationship remoteRelationship (remoteSchemaInfo, roleIntrospectionResult) $
+             Set.toList hasuraFields
+           pure $ (_rfiInputValueDefinitions roleRemoteField, _rfiParamMap roleRemoteField)
+  let RemoteSchemaIntrospection typeDefns = irDoc roleIntrospectionResult
+      -- add the new input value definitions created by the remote relationship
+      -- to the existing schema introspection of the role
+      remoteRelationshipIntrospection = RemoteSchemaIntrospection $ typeDefns <> newInpValDefns
   fieldName <- textToName $ remoteRelationshipNameToText $ _rfiName remoteFieldInfo
-  remoteFieldsArgumentsParser <-
-    sequenceA <$> for (Map.toList $ _rfiParamMap remoteFieldInfo) \(name, inpValDefn) -> do
-      parser <- lift $ inputValueDefinitionParser (_rfiSchemaIntrospect remoteFieldInfo) inpValDefn
-      -- The preset part are ignored for remote relationships because
-      -- the argument value comes from the parent query
-      pure $ (fmap fst parser) `mapField` IR.RemoteFieldArgument name
-
   -- This selection set parser, should be of the remote node's selection set parser, which comes
   -- from the fieldCall
   nestedFieldInfo <- lift $ lookupRemoteField fieldDefns $ unRemoteFields $ _rfiRemoteFields remoteFieldInfo
-  let remoteFieldsArgumentsParser' = fmap catMaybes remoteFieldsArgumentsParser
   case nestedFieldInfo of
     P.FieldInfo{ P.fType = fieldType } -> do
-      let fieldInfo' = P.FieldInfo
-            { P.fArguments = P.ifDefinitions remoteFieldsArgumentsParser'
-            , P.fType = fieldType }
-      pure $ pure $ P.unsafeRawField (P.mkDefinition fieldName Nothing fieldInfo')
+      let typeName = P.getName fieldType
+      fieldTypeDefinition <- onNothing (lookupType (irDoc roleIntrospectionResult) typeName)
+                             -- the below case will never happen because we get the type name
+                             -- from the schema document itself i.e. if a field exists for the
+                             -- given role, then it's return type also must exist
+                             $ throw500 $ "unexpected: " <> typeName <<> " not found "
+      -- These are the arguments that are given by the user while executing a query
+      let remoteFieldUserArguments = map snd $ Map.toList remoteFieldParamMap
+      remoteFld <-
+        lift $ remoteField remoteRelationshipIntrospection fieldName Nothing remoteFieldUserArguments fieldTypeDefinition
+      pure $ pure $ remoteFld
         `P.bindField` \G.Field{ G._fArguments = args, G._fSelectionSet = selSet } -> do
-          remoteArgs <- P.ifParser remoteFieldsArgumentsParser' $ P.GraphQLValue <$> args
+          let remoteArgs =
+                Map.toList args <&> \(argName, argVal) -> IR.RemoteFieldArgument argName $ P.GraphQLValue $ argVal
           pure $ IR.AFRemote $ IR.RemoteSelect
             { _rselArgs          = remoteArgs
             , _rselSelection     = selSet

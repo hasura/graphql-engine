@@ -31,9 +31,9 @@ type AnnotatedField      b = IR.AnnFieldG           b (UnpreparedValue b)
 
 data QueryContext =
   QueryContext
-  { qcStringifyNum :: !Bool
-  , qcQueryType    :: !ET.GraphQLQueryType
-  , qcRemoteFields :: !(HashMap RemoteSchemaName [P.Definition P.FieldInfo])
+  { qcStringifyNum              :: !Bool
+  , qcQueryType                 :: !ET.GraphQLQueryType
+  , qcRemoteRelationshipContext :: !(HashMap RemoteSchemaName (IntrospectionResult, ParsedIntrospection))
   }
 
 textToName :: MonadError QErr m => Text -> m G.Name

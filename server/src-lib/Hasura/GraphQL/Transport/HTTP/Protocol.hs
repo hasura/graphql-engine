@@ -4,7 +4,7 @@ module Hasura.GraphQL.Transport.HTTP.Protocol
   , GQLReqUnparsed
   , GQLReqParsed
   , GQLReqOutgoing
-  , renderGQLReqOutgoing 
+  , renderGQLReqOutgoing
   , toParsed
   , GQLQueryText(..)
   , GQLExecDoc(..)
@@ -96,10 +96,10 @@ type GQLReqUnparsed = GQLReq GQLQueryText
 
 -- | Invariants:
 --
---    - when '_grOperationName' is @Nothing@, '_grQuery' contains exactly one 
+--    - when '_grOperationName' is @Nothing@, '_grQuery' contains exactly one
 --      'ExecutableDefinitionOperation' (and zero or more 'ExecutableDefinitionFragment')
 --
---    - when '_grOperationName' is present, there is a corresponding 
+--    - when '_grOperationName' is present, there is a corresponding
 --      'ExecutableDefinitionOperation' in '_grQuery'
 type GQLReqParsed = GQLReq GQLExecDoc
 
@@ -120,11 +120,11 @@ renderGQLReqOutgoing :: GQLReqOutgoing -> GQLReqUnparsed
 renderGQLReqOutgoing = fmap (GQLQueryText . G.renderExecutableDoc . toExecDoc . inlineFrags)
   where
     -- This is essentially a 'coerce' (TODO unsafeCoerce optimization possible)?
-    inlineFrags :: G.TypedOperationDefinition G.NoFragments var 
-                -> G.TypedOperationDefinition G.FragmentSpread var 
-    inlineFrags opDef = 
+    inlineFrags :: G.TypedOperationDefinition G.NoFragments var
+                -> G.TypedOperationDefinition G.FragmentSpread var
+    inlineFrags opDef =
       opDef { G._todSelectionSet = G.fmapSelectionSetFragment G.inline $ G._todSelectionSet opDef }
-    toExecDoc = 
+    toExecDoc =
       G.ExecutableDocument . pure . G.ExecutableDefinitionOperation . G.OperationDefinitionTyped
 
 toParsed :: (MonadError QErr m ) => GQLReqUnparsed -> m GQLReqParsed

@@ -43,7 +43,13 @@ import           Hasura.RQL.Types                   hiding (ConstraintName)
 
 -- | Construct a root field, normally called insert_tablename, that can be used to add several rows to a DB table
 insertIntoTable
-  :: forall m n r. (BackendSchema 'Postgres, MonadSchema n m, MonadTableInfo 'Postgres r m, MonadRole r m, Has QueryContext r)
+  :: forall m n r
+   . ( BackendSchema 'Postgres
+     , MonadSchema n m
+     , MonadTableInfo 'Postgres r m
+     , MonadRole r m
+     , Has QueryContext r
+     )
   => QualifiedTable       -- ^ qualified name of the table
   -> G.Name               -- ^ field display name
   -> Maybe G.Description  -- ^ field description, if any
@@ -80,7 +86,13 @@ mkConflictClause conflictParser
 
 -- | Variant of 'insertIntoTable' that inserts a single row
 insertOneIntoTable
-  :: forall m n r. (BackendSchema 'Postgres, MonadSchema n m, MonadTableInfo 'Postgres r m, MonadRole r m, Has QueryContext r)
+  :: forall m n r
+   . ( BackendSchema 'Postgres
+     , MonadSchema n m
+     , MonadTableInfo 'Postgres r m
+     , MonadRole r m
+     , Has QueryContext r
+     )
   => QualifiedTable       -- ^ qualified name of the table
   -> G.Name               -- ^ field display name
   -> Maybe G.Description  -- ^ field description, if any
@@ -266,12 +278,18 @@ conflictConstraint constraints table = memoizeOn 'conflictConstraint table $ do
 -- to update rows in a DB table specified by filters. Only returns a parser if
 -- there are columns the user is allowed to update; otherwise returns Nothing.
 updateTable
-  :: forall b m n r. (BackendSchema b, MonadSchema n m, MonadTableInfo b r m, MonadRole r m, Has QueryContext r)
-  => TableName b            -- ^ qualified name of the table
-  -> G.Name                 -- ^ field display name
-  -> Maybe G.Description    -- ^ field description, if any
-  -> UpdPermInfo b          -- ^ update permissions of the table
-  -> Maybe (SelPermInfo b)  -- ^ select permissions of the table (if any)
+  :: forall b m n r
+   . ( BackendSchema b
+     , MonadSchema n m
+     , MonadTableInfo b r m
+     , MonadRole r m
+     , Has QueryContext r
+     )
+  => TableName b              -- ^ qualified name of the table
+  -> G.Name                   -- ^ field display name
+  -> Maybe G.Description      -- ^ field description, if any
+  -> UpdPermInfo b            -- ^ update permissions of the table
+  -> Maybe (SelPermInfo b)    -- ^ select permissions of the table (if any)
   -> m (Maybe (FieldParser n (IR.AnnUpdG b (UnpreparedValue b))))
 updateTable table fieldName description updatePerms selectPerms = runMaybeT $ do
   let whereName = $$(G.litName "where")
@@ -289,7 +307,13 @@ updateTable table fieldName description updatePerms selectPerms = runMaybeT $ do
 -- parser if there are columns the user is allowed to update and if the user has
 -- select permissions on all primary keys; otherwise returns Nothing.
 updateTableByPk
-  :: forall b m n r. (BackendSchema b, MonadSchema n m, MonadTableInfo b r m, MonadRole r m, Has QueryContext r)
+  :: forall b m n r
+   . ( BackendSchema b
+     , MonadSchema n m
+     , MonadTableInfo b r m
+     , MonadRole r m
+     , Has QueryContext r
+     )
   => TableName b          -- ^ qualified name of the table
   -> G.Name               -- ^ field display name
   -> Maybe G.Description  -- ^ field description, if any
@@ -341,12 +365,18 @@ mkUpdateObject table columns updatePerms ((opExps, whereExp), mutationOutput) =
 -- | Construct a root field, normally called delete_tablename, that can be used
 -- to delete several rows from a DB table
 deleteFromTable
-  :: forall b m n r. (BackendSchema b, MonadSchema n m, MonadTableInfo b r m, MonadRole r m, Has QueryContext r)
-  => TableName b            -- ^ qualified name of the table
-  -> G.Name                 -- ^ field display name
-  -> Maybe G.Description    -- ^ field description, if any
-  -> DelPermInfo b          -- ^ delete permissions of the table
-  -> Maybe (SelPermInfo b)  -- ^ select permissions of the table (if any)
+  :: forall b m n r
+   . ( BackendSchema b
+     , MonadSchema n m
+     , MonadTableInfo b r m
+     , MonadRole r m
+     , Has QueryContext r
+     )
+  => TableName b       -- ^ qualified name of the table
+  -> G.Name               -- ^ field display name
+  -> Maybe G.Description  -- ^ field description, if any
+  -> DelPermInfo b -- ^ delete permissions of the table
+  -> Maybe (SelPermInfo b)    -- ^ select permissions of the table (if any)
   -> m (FieldParser n (IR.AnnDelG b (UnpreparedValue b)))
 deleteFromTable table fieldName description deletePerms selectPerms = do
   let whereName = $$(G.litName "where")
@@ -360,7 +390,13 @@ deleteFromTable table fieldName description deletePerms selectPerms = do
 -- | Construct a root field, normally called delete_tablename, that can be used
 -- to delete an individual rows from a DB table, specified by primary key
 deleteFromTableByPk
-  :: forall b m n r. (BackendSchema b, MonadSchema n m, MonadTableInfo b r m, MonadRole r m, Has QueryContext r)
+  :: forall b m n r
+   . ( BackendSchema b
+     , MonadSchema n m
+     , MonadTableInfo b r m
+     , MonadRole r m
+     , Has QueryContext r
+     )
   => TableName b          -- ^ qualified name of the table
   -> G.Name               -- ^ field display name
   -> Maybe G.Description  -- ^ field description, if any
@@ -396,7 +432,13 @@ mkDeleteObject table columns deletePerms (whereExp, mutationOutput) =
 -- | All mutations allow returning results, such as what the updated database
 -- rows look like.  This parser allows a query to specify what data to fetch.
 mutationSelectionSet
-  :: forall b m n r. (BackendSchema b, MonadSchema n m, MonadTableInfo b r m, MonadRole r m, Has QueryContext r)
+  :: forall b m n r
+   . ( BackendSchema b
+     , MonadSchema n m
+     , MonadTableInfo b r m
+     , MonadRole r m
+     , Has QueryContext r
+     )
   => TableName b
   -> Maybe (SelPermInfo b)
   -> m (Parser 'Output n (IR.MutFldsG b (UnpreparedValue b)))

@@ -441,9 +441,9 @@ runQueryM env rq = withPathK "args" $ case rq of
       RQBulk qs                       -> encJFromList <$> indexedMapM (runQueryM env) qs
 
     runQueryV2M = \case
-      RQV2TrackTable q           -> runTrackTableV2Q q
-      RQV2SetTableCustomFields q -> runSetTableCustomFieldsQV2 q
-      RQV2TrackFunction q        -> runTrackFunctionV2 q
+      RQV2TrackTable q                -> runTrackTableV2Q q
+      RQV2SetTableCustomFields q      -> runSetTableCustomFieldsQV2 q
+      RQV2TrackFunction q             -> runTrackFunctionV2 q
 
 requiresAdmin :: RQLQuery -> Bool
 requiresAdmin = \case
