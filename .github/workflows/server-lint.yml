@@ -1,13 +1,30 @@
 name: server lint
 on:
-  label:
   pull_request:
     paths:
       - 'server/**'
 
 jobs:
+  stylish-haskell:
+    runs-on: ubuntu-latest
+    env:
+      working-directory: ./server
+      temp-directory: temp-stylish
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+
+      - name: Run stylish-haskell
+        working-directory: ${{env.working-directory}}
+        run: |
+          make format-branch || true
+          for hfile in $(git status --porcelain | sed -n 's/^ M //p'); do
+            echo "::warning file=server/$hfile::This file needs to be formatted using stylish-haskell.\nPlease run `make format-branch`."
+          done
+
   hlint:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
     if: "!contains(github.event.pull_request.labels.*.name, 'ignore-server-hlint-checks') && github.event.label.name != 'ignore-server-hlint-checks'"
     env:
       working-directory: ./server
@@ -38,3 +55,4 @@ jobs:
           then
             echo "$CHANGED_HS_FILES" | xargs ${{env.working-directory}}/hlint --json --hint=${{env.working-directory}}/.hlint.yaml | jq -r "$JQ_SCRIPT"
           fi
+
