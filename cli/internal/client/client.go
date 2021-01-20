@@ -35,7 +35,7 @@ const (
 )
 
 var (
-	queryTypes    = []string{"select", "insert", "select", "update", "delete", "count", "run_sql", "bulk"}
+	queryTypes    = []string{"select", "insert", "select", "update", "delete", "count", "run_sql"}
 	queryTypesMap = func() map[string]bool {
 		var m = map[string]bool{}
 		for _, v := range queryTypes {
@@ -670,3 +670,6 @@ func (c *HasuraRestAPIClient) HasMultipleDatasources() (bool, error) {
 
 	return true, nil
 }
+
+type ErrMetadataRequestsFailed error
+type ErrQueryRequestsFailed error

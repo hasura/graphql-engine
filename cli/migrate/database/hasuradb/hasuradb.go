@@ -123,7 +123,7 @@ func WithInstance(config *Config, logger *log.Logger, hasuraOpts *database.Hasur
 	default:
 		if hasuraOpts.HasMetadataV3 {
 			hx.migrationStateStore = NewMigrationStateStoreWithSQL(hx, hasuraOpts.MigrationExectionStrategy)
-		}else {
+		} else {
 			hx.migrationStateStore = NewMigrationStateStoreWithSQL(hx, hasuraOpts.MigrationExectionStrategy)
 		}
 		hx.settingsStateStore = NewSettingsStateStoreWithSQL(hx)
@@ -259,7 +259,7 @@ func (h *HasuraDB) RunSeq(migration io.Reader, fileType, fileName string) error 
 			break
 		}
 		sqlInput := RunSQLInput{
-			SQL: string(body),
+			SQL:    string(body),
 			Source: h.hasuraOpts.Datasource,
 		}
 		if h.config.enableCheckMetadataConsistency {
@@ -288,26 +288,82 @@ func (h *HasuraDB) RunSeq(migration io.Reader, fileType, fileName string) error 
 	return nil
 }
 
-func sendMetadataMigrations(hasuradb *HasuraDB, metadataRequests []interface{}) error {
-	for _, v := range metadataRequests {
+func sendMetadataMigrations(hasuradb *HasuraDB, requests []interface{}) error {
+	var metadataRequests []interface{}
+	var queryRequests []interface{}
+	isQueryRequest := func(req interface{}) bool {
+		var isIt = false
+		type request struct {
+			Type string        `mapstructure:"type"`
+			Args []interface{} `mapstructure:"args"`
+		}
+		var r = new(request)
+		if err := mapstructure.Decode(req, r); err != nil {
+			if _, ok := queryTypesMap[r.Type]; ok {
+				isIt = true
+			} else {
+				return isIt
+			}
+		}
+		return isIt
+	}
+	for _, v := range requests {
 		type bulkQuery struct {
 			Type string        `mapstructure:"type"`
 			Args []interface{} `mapstructure:"args"`
 		}
 		var bulk = new(bulkQuery)
 		if _ = mapstructure.Decode(v, bulk); bulk.Type == "bulk" {
-			if err := sendMetadataMigrations(hasuradb, bulk.Args); err != nil {
-				return err
+			queryBulk := HasuraInterfaceBulk{
+				Type: "bulk",
+				Args: []interface{}{},
 			}
-			// was a bulk query and was already handled above so skip this iteration
-			continue
+			metadataBulk := HasuraInterfaceBulk{
+				Type: "bulk",
+				Args: []interface{}{},
+			}
+			for _, bulkRequest := range bulk.Args {
+				if ok := isQueryRequest(v); ok {
+					queryBulk.Args = append(queryBulk.Args, bulkRequest)
+				} else {
+					metadataBulk.Args = append(metadataBulk.Args, bulkRequest)
+				}
+			}
+			metadataRequests = append(metadataRequests, metadataBulk)
+			queryRequests = append(queryRequests, queryBulk)
 		}
-		resp, body, err := hasuradb.SendMetadataOrQueryRequest(v, nil)
+		if ok := isQueryRequest(v); ok {
+			queryRequests = append(queryRequests, v)
+		} else {
+			metadataRequests = append(metadataRequests, v)
+		}
+
+	}
+	if len(queryRequests) > 0 {
+		queryBulk := HasuraInterfaceBulk{
+			Type: "bulk",
+			Args: queryRequests,
+		}
+		resp, body, err := hasuradb.SendMetadataOrQueryRequest(queryBulk, &client.MetadataOrQueryClientFuncOpts{QueryRequestOpts: &client.QueryRequestOpts{}})
 		if err != nil {
-			return err
+			return client.ErrQueryRequestsFailed(err)
 		}
 		if resp.StatusCode != http.StatusOK {
-			return errors.New(string(body))
+			return client.ErrQueryRequestsFailed(errors.New(string(body)))
+		}
+
+	}
+	if len(metadataRequests) > 0 {
+		metadataBulk := HasuraInterfaceBulk{
+			Type: "bulk",
+			Args: metadataRequests,
+		}
+		resp, body, err := hasuradb.SendMetadataOrQueryRequest(metadataBulk, &client.MetadataOrQueryClientFuncOpts{MetadataRequestOpts: &client.MetadataRequestOpts{}})
+		if err != nil {
+			return client.ErrMetadataRequestsFailed(err)
+		}
+		if resp.StatusCode != http.StatusOK {
+			return client.ErrMetadataRequestsFailed(errors.New(string(body)))
 		}
 	}
 	return nil

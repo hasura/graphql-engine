@@ -137,6 +137,7 @@ func allowCors() gin.HandlerFunc {
 	config.AddAllowHeaders("X-Hasura-Allowed-Roles")
 	config.AddAllowHeaders("Hasura-Internal-Request-Source")
 	config.AddAllowMethods("DELETE")
+	config.AddAllowHeaders("Hasura-Internal-Request-Source")
 	config.AllowAllOrigins = true
 	config.AllowCredentials = false
 	return cors.New(config)

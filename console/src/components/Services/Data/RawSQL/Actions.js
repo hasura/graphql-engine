@@ -141,6 +141,7 @@ const executeSQL = (isMigration, migrationName, statementTimeout) => (
       name: migrationName,
       up: schemaChangesUp,
       down: schemaChangesDown,
+      datasource: source,
     };
   }
   const options = {

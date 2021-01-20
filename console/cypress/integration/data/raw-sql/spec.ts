@@ -66,10 +66,10 @@ export const delTestTables = () => {
   prevStr = 'DROP TABLE Apic_test_table_rsql CASCADE;';
   cy.get('textarea').type(prevStr, { force: true });
   cy.wait(1000);
-  // cy.get(getElementFromAlias('raw-sql-migration-check')).uncheck();
+  cy.get(getElementFromAlias('raw-sql-migration-check')).uncheck();
   cy.get(getElementFromAlias('run-sql')).click();
   // NOTE: This is only visible, when the console is in CLI mode
-  // cy.get(getElementFromAlias('not-migration-confirm')).click();
+  cy.get(getElementFromAlias('not-migration-confirm')).click();
   cy.get(getElementFromAlias('raw-sql-statement-timeout')).type('20', {
     force: true,
   });
