@@ -199,15 +199,17 @@ processEventQueue logger logenv httpMgr getSchemaCache eeCtx@EventEngineCtx{..} 
         (delivered=t or error=t or archived=t) after a fixed number of tries (assuming it begins with locked='f').
       -}
       pgSources <- scPostgres <$> liftIO getSchemaCache
-      fmap concat $ forM (M.toList pgSources) $ \(sourceName, sourceCache) -> do
-        let sourceConfig = _pcConfiguration sourceCache
-        liftIO $ runPgSourceWriteTx sourceConfig (fetchEvents sourceName fetchBatchSize) >>= \case
-            Left err -> do
-              liftIO $ L.unLogger logger $ EventInternalErr err
-              return []
-            Right events -> do
-              saveLockedEvents (map eId events) leEvents
-              return $ map (, sourceConfig) events
+      fmap concat $ forM (M.toList pgSources) $ \(sourceName, sourceCache) ->
+        case unsafeSourceConfiguration @'Postgres sourceCache of
+          Nothing           -> pure []
+          Just sourceConfig ->
+            liftIO $ runPgSourceWriteTx sourceConfig (fetchEvents sourceName fetchBatchSize) >>= \case
+              Left err -> do
+                liftIO $ L.unLogger logger $ EventInternalErr err
+                return []
+              Right events -> do
+                saveLockedEvents (map eId events) leEvents
+                return $ map (, sourceConfig) events
 
     -- work on this batch of events while prefetching the next. Recurse after we've forked workers
     -- for each in the batch, minding the requested pool size.
@@ -415,7 +417,7 @@ logQErr err = do
 getEventTriggerInfoFromEvent :: SchemaCache -> Event -> Either Text EventTriggerInfo
 getEventTriggerInfoFromEvent sc e = do
   let table = eTable e
-      mTableInfo = getPGTableInfo (eSource e) table $ scPostgres sc
+      mTableInfo = unsafeTableInfo @'Postgres (eSource e) table $ scPostgres sc
   tableInfo <- onNothing mTableInfo $ Left ("table '" <> table <<> "' not found")
   let triggerName = tmName $ eTrigger e
       mEventTriggerInfo = M.lookup triggerName (_tiEventTriggerInfoMap tableInfo)

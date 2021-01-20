@@ -12,9 +12,11 @@ import           Data.Aeson.TH
 import           Data.Char                          (toLower)
 import           Data.Text.Extended
 
-import           Hasura.Backends.Postgres.SQL.Types
+import qualified Hasura.Backends.Postgres.SQL.Types as PG
+
 import           Hasura.Incremental                 (Cacheable)
 import           Hasura.RQL.Types.Common
+import           Hasura.SQL.Backend
 
 
 -- | https://www.postgresql.org/docs/current/xfunc-volatility.html
@@ -45,7 +47,7 @@ newtype HasDefault = HasDefault { unHasDefault :: Bool }
 data FunctionArg
   = FunctionArg
   { faName       :: !(Maybe FunctionArgName)
-  , faType       :: !QualifiedPGType
+  , faType       :: !PG.QualifiedPGType -- FIXME: make generic
   , faHasDefault :: !HasDefault
   } deriving (Show, Eq, Generic)
 instance Cacheable FunctionArg
@@ -79,9 +81,9 @@ $(deriveJSON
 
 
 -- | Tracked SQL function metadata. See 'mkFunctionInfo'.
-data FunctionInfo
+data FunctionInfo (b :: BackendType)
   = FunctionInfo
-  { fiName          :: !QualifiedFunction
+  { fiName          :: !(FunctionName b)
   , fiSystemDefined :: !SystemDefined
   , fiVolatility    :: !FunctionVolatility
   , fiExposedAs     :: !FunctionExposedAs
@@ -89,19 +91,22 @@ data FunctionInfo
   --
   -- See 'mkFunctionInfo' and '_fcExposedAs'.
   , fiInputArgs     :: !(Seq.Seq FunctionInputArgument)
-  , fiReturnType    :: !QualifiedTable
+  , fiReturnType    :: !(TableName b)
   -- ^ NOTE: when a table is created, a new composite type of the same name is
   -- automatically created; so strictly speaking this field means "the function
   -- returns the composite type corresponding to this table".
-  , fiDescription   :: !(Maybe PGDescription)
-  } deriving (Show, Eq)
-$(deriveToJSON hasuraJSON ''FunctionInfo)
+  , fiDescription   :: !(Maybe PG.PGDescription) -- FIXME: make generic
+  } deriving (Generic)
+deriving instance Backend b => Show (FunctionInfo b)
+deriving instance Backend b => Eq   (FunctionInfo b)
+instance (Backend b) => ToJSON (FunctionInfo b) where
+  toJSON = genericToJSON hasuraJSON
 
-getInputArgs :: FunctionInfo -> Seq.Seq FunctionArg
+getInputArgs :: FunctionInfo b -> Seq.Seq FunctionArg
 getInputArgs =
   Seq.fromList . mapMaybe (^? _IAUserProvided) . toList . fiInputArgs
 
-type FunctionCache = HashMap QualifiedFunction FunctionInfo -- info of all functions
+type FunctionCache b = HashMap (FunctionName b) (FunctionInfo b) -- info of all functions
 
 -- Metadata requests related types
 
@@ -131,7 +136,7 @@ emptyFunctionConfig = FunctionConfig Nothing Nothing
 data TrackFunctionV2
   = TrackFunctionV2
   { _tfv2Source        :: !SourceName
-  , _tfv2Function      :: !QualifiedFunction
+  , _tfv2Function      :: !PG.QualifiedFunction
   , _tfv2Configuration :: !FunctionConfig
   } deriving (Show, Eq, Generic)
 $(deriveToJSON hasuraJSON ''TrackFunctionV2)
@@ -149,18 +154,18 @@ data RawFunctionInfo
   { rfiOid              :: !OID
   , rfiHasVariadic      :: !Bool
   , rfiFunctionType     :: !FunctionVolatility
-  , rfiReturnTypeSchema :: !SchemaName
-  , rfiReturnTypeName   :: !PGScalarType
-  , rfiReturnTypeType   :: !PGTypeKind
+  , rfiReturnTypeSchema :: !PG.SchemaName
+  , rfiReturnTypeName   :: !PG.PGScalarType
+  , rfiReturnTypeType   :: !PG.PGTypeKind
   , rfiReturnsSet       :: !Bool
-  , rfiInputArgTypes    :: ![QualifiedPGType]
+  , rfiInputArgTypes    :: ![PG.QualifiedPGType]
   , rfiInputArgNames    :: ![FunctionArgName]
   , rfiDefaultArgs      :: !Int
   , rfiReturnsTable     :: !Bool
-  , rfiDescription      :: !(Maybe PGDescription)
+  , rfiDescription      :: !(Maybe PG.PGDescription)
   } deriving (Show, Eq, Generic)
 instance NFData RawFunctionInfo
 instance Cacheable RawFunctionInfo
 $(deriveJSON hasuraJSON ''RawFunctionInfo)
 
-type PostgresFunctionsMetadata = HashMap QualifiedFunction [RawFunctionInfo]
+type PostgresFunctionsMetadata = HashMap PG.QualifiedFunction [RawFunctionInfo]

@@ -467,8 +467,7 @@ runHGEServer env ServeOptions{..} ServeCtx{..} initTime postPollHook serverMetri
     maxEvThrds    = fromMaybe defaultMaxEventThreads soEventsHttpPoolSize
     fetchI        = milliseconds $ fromMaybe (Milliseconds defaultFetchInterval) soEventsFetchInterval
     logEnvHeaders = soLogHeadersFromEnv
-    allPgSources  = map _pcConfiguration $ HM.elems $ scPostgres $
-                    lastBuiltSchemaCache _scSchemaCache
+    allPgSources  = mapMaybe (unsafeSourceConfiguration @'Postgres) $ HM.elems $ scPostgres $ lastBuiltSchemaCache _scSchemaCache
 
   lockedEventsCtx <- allocate
     (liftIO $ atomically initLockedEventsCtx)

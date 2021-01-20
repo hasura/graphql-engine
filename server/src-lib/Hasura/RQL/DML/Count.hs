@@ -135,5 +135,5 @@ runCount
      )
   => CountQuery -> m EncJSON
 runCount q = do
-  sourceConfig <- _pcConfiguration <$> askPGSourceCache (cqSource q)
+  sourceConfig <- askSourceConfig (cqSource q)
   validateCountQ q >>= runQueryLazyTx (_pscExecCtx sourceConfig) Q.ReadOnly . countQToTx

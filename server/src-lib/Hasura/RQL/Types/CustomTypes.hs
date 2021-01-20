@@ -49,8 +49,8 @@ import           Hasura.Backends.Postgres.SQL.Types
 import           Hasura.Incremental                 (Cacheable)
 import           Hasura.Prelude
 import           Hasura.RQL.Types.Column
-import           Hasura.RQL.Types.Common            (RelType, ScalarType, SourceConfig, SourceName,
-                                                     defaultSource)
+import           Hasura.RQL.Types.Common            (Backend, RelType, ScalarType, SourceConfig,
+                                                     SourceName, defaultSource)
 import           Hasura.RQL.Types.Table
 import           Hasura.SQL.Backend
 
@@ -288,7 +288,7 @@ data AnnotatedObjectType b
   { _aotDefinition :: !(ObjectTypeDefinition (G.GType, AnnotatedObjectFieldType) (TableInfo b) (ColumnInfo b))
   , _aotSource     :: !(Maybe (SourceConfig b))
   } deriving (Generic)
-instance J.ToJSON (AnnotatedObjectType 'Postgres) where
+instance Backend b => J.ToJSON (AnnotatedObjectType b) where
   toJSON = J.toJSON . _aotDefinition
 
 type AnnotatedObjects b = Map.HashMap G.Name (AnnotatedObjectType b)

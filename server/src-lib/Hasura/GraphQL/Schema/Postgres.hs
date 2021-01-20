@@ -142,7 +142,7 @@ jsonPathArg columnType
 -- The generated top-level nodes of this table will be like `users_address`,
 -- `insert_users_address` etc
 getTableGQLName
-  :: MonadTableInfo 'Postgres r m
+  :: MonadTableInfo r m
   => TableName 'Postgres
   -> m G.Name
 getTableGQLName table = do
@@ -402,7 +402,7 @@ mkCountType _           (Just cols) = PG.CTSimple cols
 
 -- | Various update operators
 updateOperators
-  :: forall m n r. (MonadSchema n m, MonadTableInfo 'Postgres r m)
+  :: forall m n r. (MonadSchema n m, MonadTableInfo r m)
   => QualifiedTable         -- ^ qualified name of the table
   -> UpdPermInfo 'Postgres  -- ^ update permissions of the table
   -> m (Maybe (InputFieldsParser n [(Column 'Postgres, IR.UpdOpExpG (UnpreparedValue 'Postgres))]))

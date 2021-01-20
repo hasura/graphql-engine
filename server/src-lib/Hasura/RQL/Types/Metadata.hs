@@ -1,10 +1,6 @@
 {-# LANGUAGE UndecidableInstances #-}
 module Hasura.RQL.Types.Metadata where
 
-
-import           Data.Aeson
-import           Data.Aeson.Casing
-import           Data.Text.Extended
 import           Hasura.Prelude
 
 import qualified Data.Aeson.Ordered                  as AO
@@ -17,8 +13,10 @@ import qualified Data.Text                           as T
 import qualified Language.GraphQL.Draft.Syntax       as G
 
 import           Control.Lens                        hiding (set, (.=))
+import           Data.Aeson.Casing
 import           Data.Aeson.TH
 import           Data.Aeson.Types
+import           Data.Text.Extended
 
 import           Hasura.Backends.Postgres.SQL.Types
 import           Hasura.Incremental                  (Cacheable)

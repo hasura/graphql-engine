@@ -185,7 +185,7 @@ updatePermFlds
      )
   => SourceName -> QualifiedTable -> RoleName -> PermType -> Rename -> m ()
 updatePermFlds source refQT rn pt rename = do
-  tables <- getSourceTables source
+  tables <- askTableCache source
   let withTables :: Reader (TableCache 'Postgres) a -> a
       withTables = flip runReader tables
   tell $ MetadataModifier $
@@ -342,7 +342,7 @@ updateColInRel
   :: (CacheRM m, MonadWriter MetadataModifier m)
   => SourceName -> QualifiedTable -> RelName -> RenameCol -> m ()
 updateColInRel source fromQT rn rnCol = do
-  tables <- getSourceTables source
+  tables <- askSourceTables source
   let maybeRelInfo =
         tables ^? ix fromQT.tiCoreInfo.tciFieldInfoMap.ix (fromRel rn)._FIRelationship
   forM_ maybeRelInfo $ \relInfo ->
@@ -422,7 +422,7 @@ updateColInObjRel
   :: QualifiedTable -> QualifiedTable
   -> RenameCol -> ObjRelUsing -> ObjRelUsing
 updateColInObjRel fromQT toQT rnCol = \case
-  RUFKeyOn col -> RUFKeyOn $ getNewCol rnCol fromQT col
+  RUFKeyOn col       -> RUFKeyOn $ getNewCol rnCol fromQT col
   RUManual manConfig -> RUManual $ updateRelManualConfig fromQT toQT rnCol manConfig
 
 updateColInArrRel
@@ -470,6 +470,3 @@ possiblyUpdateCustomColumnNames source qt oCol nCol = do
   tell $ MetadataModifier $
     tableMetadataSetter source qt.tmConfiguration.tcCustomColumnNames %~ updateCustomColumns
 
-getSourceTables :: CacheRM m => SourceName -> m (TableCache 'Postgres)
-getSourceTables source =
-  (maybe mempty _pcTables . M.lookup source . scPostgres) <$> askSchemaCache

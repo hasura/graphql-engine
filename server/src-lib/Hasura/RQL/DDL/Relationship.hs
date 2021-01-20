@@ -125,7 +125,7 @@ arrRelP2Setup foreignKeys source qt (RelDef rn ru _) = case ru of
                 <> map (\c -> SchemaDependency (SOSourceObj source $ SOITableObj refqt $ TOCol c) DRRightColumn) rCols
     pure (RelInfo rn ArrRel (rmColumns rm) refqt True True, deps)
   RUFKeyOn (ArrRelUsingFKeyOn refqt refCol) -> do
-    foreignTableForeignKeys <- getTableInfo refqt foreignKeys
+    foreignTableForeignKeys <- findTable refqt foreignKeys
     let keysThatReferenceUs = filter ((== qt) . _fkForeignTable) (HS.toList foreignTableForeignKeys)
     ForeignKey constraint _ colMap <- getRequiredFkey refCol keysThatReferenceUs
     let deps = [ SchemaDependency (SOSourceObj source $ SOITableObj refqt $ TOForeignKey (_cName constraint)) DRRemoteFkey

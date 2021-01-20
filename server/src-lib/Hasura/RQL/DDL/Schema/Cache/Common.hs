@@ -99,16 +99,16 @@ mkTableInputs TableMetadata{..} =
 -- | The direct output of 'buildSchemaCacheRule'. Contains most of the things necessary to build a
 -- schema cache, but dependencies and inconsistent metadata objects are collected via a separate
 -- 'MonadWriter' side channel.
-data BuildOutputs
+data BuildOutputs (b :: BackendType)
   = BuildOutputs
-  { _boSources       :: !(SourceCache 'Postgres)
-  , _boActions       :: !ActionCache
+  { _boSources       :: SourceCache
+  , _boActions       :: !(ActionCache b)
   , _boRemoteSchemas :: !(HashMap RemoteSchemaName (RemoteSchemaCtx, MetadataObject))
   -- ^ We preserve the 'MetadataObject' from the original catalog metadata in the output so we can
   -- reuse it later if we need to mark the remote schema inconsistent during GraphQL schema
   -- generation (because of field conflicts).
   , _boAllowlist     :: !(HS.HashSet GQLQuery)
-  , _boCustomTypes   :: !(AnnotatedCustomTypes 'Postgres)
+  , _boCustomTypes   :: !(AnnotatedCustomTypes b)
   , _boCronTriggers  :: !(M.HashMap TriggerName CronTriggerInfo)
   }
 $(makeLenses ''BuildOutputs)

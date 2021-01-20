@@ -14,18 +14,18 @@ module Hasura.GraphQL.Schema.Table
 
 import           Hasura.Prelude
 
-import qualified Data.HashMap.Strict                         as Map
-import qualified Data.HashSet                                as Set
-import qualified Language.GraphQL.Draft.Syntax               as G
+import qualified Data.HashMap.Strict           as Map
+import qualified Data.HashSet                  as Set
+import qualified Language.GraphQL.Draft.Syntax as G
 
 import           Data.Text.Extended
 
-import qualified Hasura.GraphQL.Parser                       as P
+import qualified Hasura.GraphQL.Parser         as P
 
-import           Hasura.GraphQL.Parser              (Kind (..), Parser)
+import           Hasura.GraphQL.Parser         (Kind (..), Parser)
 import           Hasura.GraphQL.Parser.Class
 import           Hasura.GraphQL.Schema.Backend
-import           Hasura.RQL.DML.Internal            (getRolePermInfo)
+import           Hasura.RQL.DML.Internal       (getRolePermInfo)
 import           Hasura.RQL.Types
 
 -- | Table select columns enum
@@ -38,7 +38,7 @@ import           Hasura.RQL.Types
 -- permissions for.
 tableSelectColumnsEnum
   :: forall m n r b
-   . (BackendSchema b, MonadSchema n m, MonadRole r m, MonadTableInfo b r m)
+   . (BackendSchema b, MonadSchema n m, MonadRole r m, MonadTableInfo r m)
   => TableName b
   -> SelPermInfo b
   -> m (Maybe (Parser 'Both n (Column b)))
@@ -68,7 +68,7 @@ tableSelectColumnsEnum table selectPermissions = do
 -- permissions for.
 tableUpdateColumnsEnum
   :: forall m n r b
-   . (BackendSchema b, MonadSchema n m, MonadRole r m, MonadTableInfo b r m)
+   . (BackendSchema b, MonadSchema n m, MonadRole r m, MonadTableInfo r m)
   => TableName b
   -> UpdPermInfo b
   -> m (Maybe (Parser 'Both n (Column b)))
@@ -89,7 +89,7 @@ tableUpdateColumnsEnum table updatePermissions = do
       P.mkDefinition name (Just $ G.Description "column name") P.EnumValueInfo
 
 tablePermissions
-  :: forall m n r b. (Backend b, MonadSchema n m, MonadTableInfo b r m, MonadRole r m)
+  :: forall m n r b. (Backend b, MonadSchema n m, MonadTableInfo r m, MonadRole r m)
   => TableName b
   -> m (Maybe (RolePermInfo b))
 tablePermissions table = do
@@ -98,25 +98,25 @@ tablePermissions table = do
   pure $ getRolePermInfo roleName tableInfo
 
 tableSelectPermissions
-  :: forall m n r b. (Backend b, MonadSchema n m, MonadTableInfo b r m, MonadRole r m)
+  :: forall m n r b. (Backend b, MonadSchema n m, MonadTableInfo r m, MonadRole r m)
   => TableName b
   -> m (Maybe (SelPermInfo b))
 tableSelectPermissions table = (_permSel =<<) <$> tablePermissions table
 
 tableUpdatePermissions
-  :: forall m n r b. (Backend b, MonadSchema n m, MonadTableInfo b r m, MonadRole r m)
+  :: forall m n r b. (Backend b, MonadSchema n m, MonadTableInfo r m, MonadRole r m)
   => TableName b
   -> m (Maybe (UpdPermInfo b))
 tableUpdatePermissions table = (_permUpd =<<) <$> tablePermissions table
 
 tableDeletePermissions
-  :: forall m n r b. (Backend b, MonadSchema n m, MonadTableInfo b r m, MonadRole r m)
+  :: forall m n r b. (Backend b, MonadSchema n m, MonadTableInfo r m, MonadRole r m)
   => TableName b
   -> m (Maybe (DelPermInfo b))
 tableDeletePermissions table = (_permDel =<<) <$> tablePermissions table
 
 tableSelectFields
-  :: forall m n r b. (Backend b, MonadSchema n m, MonadTableInfo b r m, MonadRole r m)
+  :: forall m n r b. (Backend b, MonadSchema n m, MonadTableInfo r m, MonadRole r m)
   => TableName b
   -> SelPermInfo b
   -> m [FieldInfo b]
@@ -137,7 +137,7 @@ tableSelectFields table permissions = do
     canBeSelected (FIRemoteRelationship _) = pure True
 
 tableColumns
-  :: forall m n r b. (Backend b, MonadSchema n m, MonadTableInfo b r m)
+  :: forall m n r b. (Backend b, MonadSchema n m, MonadTableInfo r m)
   => TableName b
   -> m [ColumnInfo b]
 tableColumns table =
@@ -147,7 +147,7 @@ tableColumns table =
     columnInfo _             = Nothing
 
 tableSelectColumns
-  :: forall m n r b. (Backend b, MonadSchema n m, MonadTableInfo b r m, MonadRole r m)
+  :: forall m n r b. (Backend b, MonadSchema n m, MonadTableInfo r m, MonadRole r m)
   => TableName b
   -> SelPermInfo b
   -> m [ColumnInfo b]
@@ -158,7 +158,7 @@ tableSelectColumns table permissions =
     columnInfo _             = Nothing
 
 tableUpdateColumns
-  :: forall m n r b. (Backend b, MonadSchema n m, MonadTableInfo b r m)
+  :: forall m n r b. (Backend b, MonadSchema n m, MonadTableInfo r m)
   => TableName b
   -> UpdPermInfo b
   -> m [ColumnInfo b]

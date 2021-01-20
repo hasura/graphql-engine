@@ -98,8 +98,8 @@ import           Control.Lens
 import           Data.Aeson
 import           Data.Aeson.Casing
 import           Data.Aeson.TH
-import           Data.Text.Extended
 import           Data.List.Extended                  (duplicates)
+import           Data.Text.Extended
 
 import qualified Hasura.Backends.Postgres.SQL.Types  as PG
 import           Hasura.Incremental                  (Cacheable)
@@ -111,9 +111,9 @@ import           Hasura.RQL.Types.Error
 import           Hasura.RQL.Types.EventTrigger
 import           Hasura.RQL.Types.Permission
 import           Hasura.RQL.Types.RemoteRelationship
+import           Hasura.SQL.Backend
 import           Hasura.Server.Utils                 (englishList)
 import           Hasura.Session
-import           Hasura.SQL.Backend
 
 
 data TableCustomRootFields
@@ -240,10 +240,10 @@ data InsPermInfo (b :: BackendType)
   , ipiBackendOnly     :: !Bool
   , ipiRequiredHeaders :: ![Text]
   } deriving (Generic)
-instance NFData (InsPermInfo 'Postgres)
-deriving instance Eq (InsPermInfo 'Postgres)
-instance Cacheable (InsPermInfo 'Postgres)
-instance ToJSON (InsPermInfo 'Postgres) where
+instance Backend b => NFData (InsPermInfo b)
+deriving instance Backend b => Eq (InsPermInfo b)
+instance Backend b => Cacheable (InsPermInfo b)
+instance Backend b => ToJSON (InsPermInfo b) where
   toJSON = genericToJSON hasuraJSON
 
 data SelPermInfo (b :: BackendType)
@@ -255,10 +255,10 @@ data SelPermInfo (b :: BackendType)
   , spiAllowAgg             :: !Bool
   , spiRequiredHeaders      :: ![Text]
   } deriving (Generic)
-instance NFData (SelPermInfo 'Postgres)
-deriving instance Eq (SelPermInfo 'Postgres)
-instance Cacheable (SelPermInfo 'Postgres)
-instance ToJSON (SelPermInfo 'Postgres) where
+instance Backend b => NFData (SelPermInfo b)
+deriving instance Backend b => Eq (SelPermInfo b)
+instance Backend b => Cacheable (SelPermInfo b)
+instance Backend b => ToJSON (SelPermInfo b) where
   toJSON = genericToJSON hasuraJSON
 
 data UpdPermInfo (b :: BackendType)
@@ -270,10 +270,10 @@ data UpdPermInfo (b :: BackendType)
   , upiSet             :: !(PreSetColsPartial b)
   , upiRequiredHeaders :: ![Text]
   } deriving (Generic)
-instance NFData (UpdPermInfo 'Postgres)
-deriving instance Eq (UpdPermInfo 'Postgres)
-instance Cacheable (UpdPermInfo 'Postgres)
-instance ToJSON (UpdPermInfo 'Postgres) where
+instance Backend b => NFData (UpdPermInfo b)
+deriving instance Backend b => Eq (UpdPermInfo b)
+instance Backend b => Cacheable (UpdPermInfo b)
+instance Backend b => ToJSON (UpdPermInfo b) where
   toJSON = genericToJSON hasuraJSON
 
 data DelPermInfo (b :: BackendType)
@@ -282,10 +282,10 @@ data DelPermInfo (b :: BackendType)
   , dpiFilter          :: !(AnnBoolExpPartialSQL b)
   , dpiRequiredHeaders :: ![Text]
   } deriving (Generic)
-instance NFData (DelPermInfo 'Postgres)
-deriving instance Eq (DelPermInfo 'Postgres)
-instance Cacheable (DelPermInfo 'Postgres)
-instance ToJSON (DelPermInfo 'Postgres) where
+instance Backend b => NFData (DelPermInfo b)
+deriving instance Backend b => Eq (DelPermInfo b)
+instance Backend b => Cacheable (DelPermInfo b)
+instance Backend b => ToJSON (DelPermInfo b) where
   toJSON = genericToJSON hasuraJSON
 
 mkRolePermInfo :: RolePermInfo backend
@@ -298,8 +298,8 @@ data RolePermInfo (b :: BackendType)
   , _permUpd :: !(Maybe (UpdPermInfo b))
   , _permDel :: !(Maybe (DelPermInfo b))
   } deriving (Generic)
-instance NFData (RolePermInfo 'Postgres)
-instance ToJSON (RolePermInfo 'Postgres) where
+instance Backend b => NFData (RolePermInfo b)
+instance Backend b => ToJSON (RolePermInfo b) where
   toJSON = genericToJSON hasuraJSON
 
 makeLenses ''RolePermInfo
@@ -451,7 +451,7 @@ data TableInfo (b :: BackendType)
   , _tiRolePermInfoMap     :: !(RolePermInfoMap b)
   , _tiEventTriggerInfoMap :: !EventTriggerInfoMap
   } deriving (Generic)
-instance ToJSON (TableInfo 'Postgres) where
+instance Backend b => ToJSON (TableInfo b) where
   toJSON = genericToJSON hasuraJSON
 $(makeLenses ''TableInfo)
 

@@ -110,7 +110,7 @@ instance FromJSON UntrackTable where
 
 isTableTracked :: SchemaCache -> SourceName -> QualifiedTable -> Bool
 isTableTracked sc source tableName =
-  isJust $ getPGTableInfo source tableName $ scPostgres sc
+  isJust $ unsafeTableInfo @'Postgres source tableName $ scPostgres sc
 
 -- | Track table/view, Phase 1:
 -- Validate table tracking operation. Fails if table is already being tracked,
@@ -121,7 +121,7 @@ trackExistingTableOrViewP1 source qt = do
   when (isTableTracked rawSchemaCache source qt) $
     throw400 AlreadyTracked $ "view/table already tracked : " <>> qt
   let qf = fmap (FunctionName . toTxt) qt
-  when (isJust $ getPGFunctionInfo source qf $ scPostgres rawSchemaCache) $
+  when (isJust $ unsafeFunctionInfo @'Postgres source qf $ scPostgres rawSchemaCache) $
     throw400 NotSupported $ "function with name " <> qt <<> " already exists"
 
 -- | Check whether a given name would conflict with the current schema by doing
@@ -281,14 +281,11 @@ runSetTableCustomization (SetTableCustomization source table config) = do
 unTrackExistingTableOrViewP1
   :: (CacheRM m, QErrM m) => UntrackTable -> m ()
 unTrackExistingTableOrViewP1 (UntrackTable source vn _) = do
-  rawSchemaCache <- askSchemaCache
-  case getPGTableInfo source vn $ scPostgres rawSchemaCache of
-    Just ti ->
-      -- Check if table/view is system defined
-      when (isSystemDefined $ _tciSystemDefined $ _tiCoreInfo ti) $ throw400 NotSupported $
-        vn <<> " is system defined, cannot untrack"
-    Nothing -> throw400 AlreadyUntracked $
-      "view/table already untracked : " <>> vn
+  schemaCache <- askSchemaCache
+  tableInfo   <- unsafeTableInfo @'Postgres source vn (scPostgres schemaCache)
+    `onNothing` throw400 AlreadyUntracked ("view/table already untracked : " <>> vn)
+  when (isSystemDefined $ _tciSystemDefined $ _tiCoreInfo tableInfo) $
+    throw400 NotSupported $ vn <<> " is system defined, cannot untrack"
 
 unTrackExistingTableOrViewP2
   :: (CacheRWM m, QErrM m, MetadataM m)

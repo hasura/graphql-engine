@@ -11,13 +11,14 @@ module Hasura.RQL.Types
   , HasSystemDefinedT
   , runHasSystemDefinedT
 
-  , askPGSourceCache
+  , askSourceInfo
+  , askSourceConfig
+  , askSourceTables
   , askTableCache
   , askTabInfo
   , askTabInfoSource
   , askTableCoreInfo
   , askTableCoreInfoSource
-  , getTableInfo
   , askFieldInfoMap
   , askFieldInfoMapSource
   , askPGType
@@ -27,6 +28,7 @@ module Hasura.RQL.Types
   , askPGColInfo
   , askComputedFieldInfo
   , askRemoteRel
+  , findTable
 
   , module R
   ) where
@@ -66,30 +68,39 @@ import           Hasura.RQL.Types.SchemaCacheTypes   as R
 import           Hasura.RQL.Types.Source             as R
 import           Hasura.RQL.Types.Table              as R
 import           Hasura.SQL.Backend                  as R
-
 import           Hasura.Session
 import           Hasura.Tracing
 
 
-askPGSourceCache
+askSourceInfo
   :: (CacheRM m, MonadError QErr m)
   => SourceName -> m (SourceInfo 'Postgres)
-askPGSourceCache source = do
-  pgSources <- scPostgres <$> askSchemaCache
-  onNothing (M.lookup source pgSources) $
-    throw400 NotExists $ "source with name " <> source <<> " not exists"
+askSourceInfo sourceName = do
+  sources <- scPostgres <$> askSchemaCache
+  onNothing (unsafeSourceInfo =<< M.lookup sourceName sources) $
+    -- FIXME: this error can also happen for a lookup with the wrong type
+    throw400 NotExists $ "source with name " <> sourceName <<> " does not exist"
+
+askSourceConfig
+  :: (CacheRM m, MonadError QErr m)
+  => SourceName -> m (SourceConfig 'Postgres)
+askSourceConfig = fmap _siConfiguration . askSourceInfo
+
+askSourceTables :: CacheRM m => SourceName -> m (TableCache 'Postgres)
+askSourceTables sourceName = do
+  sources <- scPostgres <$> askSchemaCache
+  pure $ fromMaybe mempty $ unsafeSourceTables =<< M.lookup sourceName sources
+
 
 askTabInfo
   :: (QErrM m, CacheRM m)
   => SourceName -> QualifiedTable -> m (TableInfo 'Postgres)
-askTabInfo sourceName tabName = do
+askTabInfo sourceName tableName = do
   rawSchemaCache <- askSchemaCache
-  flip onNothing (throw400 NotExists errMsg) $ do
-    sourceCache <- M.lookup sourceName $ scPostgres rawSchemaCache
-    M.lookup tabName $ _pcTables sourceCache
+  unsafeTableInfo sourceName tableName (scPostgres rawSchemaCache)
+    `onNothing` throw400 NotExists errMsg
   where
-    errMsg = "table " <> tabName <<> " does not exist " <> "in source: "
-              <> sourceNameToText sourceName
+    errMsg = "table " <> tableName <<> " does not exist in source: " <> sourceNameToText sourceName
 
 askTabInfoSource
   :: (QErrM m, TableInfoRM 'Postgres m)
@@ -187,17 +198,18 @@ instance (Monad m) => HasSystemDefined (HasSystemDefinedT m) where
 throwTableDoesNotExist :: (QErrM m) => QualifiedTable -> m a
 throwTableDoesNotExist tableName = throw400 NotExists ("table " <> tableName <<> " does not exist")
 
-getTableInfo :: (QErrM m) => QualifiedTable -> HashMap QualifiedTable a -> m a
-getTableInfo tableName infoMap =
+findTable :: (QErrM m) => QualifiedTable -> HashMap QualifiedTable a -> m a
+findTable tableName infoMap =
   M.lookup tableName infoMap `onNothing` throwTableDoesNotExist tableName
 
 askTableCache
   :: (QErrM m, CacheRM m) => SourceName -> m (TableCache 'Postgres)
 askTableCache sourceName = do
   schemaCache <- askSchemaCache
-  case M.lookup sourceName (scPostgres schemaCache) of
-    Just tableCache -> pure $ _pcTables tableCache
-    Nothing         -> throw400 NotExists $ "source " <> sourceName <<> " does not exist"
+  sourceInfo  <- M.lookup sourceName (scPostgres schemaCache)
+    `onNothing` throw400 NotExists ("source " <> sourceName <<> " does not exist")
+  unsafeSourceTables sourceInfo
+    `onNothing` throw400 NotExists ("source " <> sourceName <<> " is not a PG cache")
 
 askTableCoreInfo
   :: (QErrM m, CacheRM m) => SourceName -> TableName 'Postgres -> m (TableCoreInfo 'Postgres)

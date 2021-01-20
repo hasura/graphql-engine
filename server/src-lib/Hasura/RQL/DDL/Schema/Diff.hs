@@ -60,7 +60,7 @@ data TableMeta (b :: BackendType)
 fetchMeta
   :: (MonadTx m)
   => TableCache 'Postgres
-  -> FunctionCache
+  -> FunctionCache 'Postgres
   -> m ([TableMeta 'Postgres], [FunctionMeta])
 fetchMeta tables functions = do
   tableMetaInfos <- fetchTableMetadata

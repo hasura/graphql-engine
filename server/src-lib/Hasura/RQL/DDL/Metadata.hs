@@ -101,7 +101,7 @@ runReplaceMetadata replaceMetadata = do
           oldTriggersMap = getTriggersMap oldSourceCache
           newTriggersMap = getTriggersMap newSourceCache
           droppedTriggers = OMap.keys $ oldTriggersMap `OMap.difference` newTriggersMap
-      sourceConfig <- _pcConfiguration <$> askPGSourceCache source
+      sourceConfig <- askSourceConfig source
       for_ droppedTriggers $
         \name -> liftIO $ runPgSourceWriteTx sourceConfig $ delTriggerQ name >> archiveEvents name
 

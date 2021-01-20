@@ -115,22 +115,23 @@ askRoleName
   => m RoleName
 askRoleName = asks getter
 
-type MonadTableInfo b r m = (MonadReader r m, Has (SourceCache b) r, MonadError QErr m)
+type MonadTableInfo r m = (MonadReader r m, Has SourceCache r, MonadError QErr m)
 
 -- | Looks up table information for the given table name. This function
 -- should never fail, since the schema cache construction process is
 -- supposed to ensure all dependencies are resolved.
 askTableInfo
-  :: forall b r m. (Backend b, MonadTableInfo b r m)
+  :: forall b r m. (Backend b, MonadTableInfo r m)
   => TableName b
   -> m (TableInfo b)
 askTableInfo tableName = do
-  let getTableInfo :: SourceCache b -> Maybe (TableInfo b)
-      getTableInfo sc = Map.lookup tableName $ Map.unions $ map _pcTables $ Map.elems sc
   tableInfo <- asks $ getTableInfo . getter
   -- This should never fail, since the schema cache construction process is
   -- supposed to ensure that all dependencies are resolved.
   tableInfo `onNothing` throw500 ("askTableInfo: no info for " <>> tableName)
+  where
+    getTableInfo :: SourceCache -> Maybe (TableInfo b)
+    getTableInfo sc = Map.lookup tableName $ Map.unions $ mapMaybe unsafeSourceTables $ Map.elems sc
 
 -- | A wrapper around 'memoizeOn' that memoizes a function by using its argument
 -- as the key.

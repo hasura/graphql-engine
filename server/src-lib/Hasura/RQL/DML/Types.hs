@@ -44,9 +44,9 @@ import           Data.Aeson.TH
 import qualified Hasura.Backends.Postgres.SQL.DML   as PG
 
 import           Hasura.Backends.Postgres.SQL.Types
-import           Hasura.RQL.Instances               ()
 import           Hasura.RQL.IR.BoolExp
 import           Hasura.RQL.IR.OrderBy
+import           Hasura.RQL.Instances               ()
 import           Hasura.RQL.Types.Common            hiding (ConstraintName)
 import           Hasura.SQL.Backend
 
@@ -146,7 +146,7 @@ data SelCol (b :: BackendType)
 deriving instance Eq   (SelCol 'Postgres)
 deriving instance Show (SelCol 'Postgres)
 
-instance FromJSON (SelCol 'Postgres) where
+instance Backend b => FromJSON (SelCol b) where
   parseJSON (String s) =
     case AT.parseOnly parseWildcard s of
     Left _  -> SCExtSimple <$> parseJSON (String s)
@@ -162,7 +162,7 @@ instance FromJSON (SelCol 'Postgres) where
     , "object (relationship)"
     ]
 
-instance ToJSON (SelCol 'Postgres) where
+instance Backend b => ToJSON (SelCol b) where
   toJSON (SCStar wc) = String $ wcToText wc
   toJSON (SCExtSimple s) = toJSON s
   toJSON (SCExtRel rn mrn selq) =

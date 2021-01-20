@@ -34,7 +34,7 @@ import           Hasura.RQL.Types
 -- >   obj-rel: <remote-table>_order_by
 -- > }
 orderByExp
-  :: forall m n r b. (BackendSchema b, MonadSchema n m, MonadTableInfo b r m, MonadRole r m)
+  :: forall m n r b. (BackendSchema b, MonadSchema n m, MonadTableInfo r m, MonadRole r m)
   => TableName b
   -> SelPermInfo b
   -> m (Parser 'Input n [IR.AnnOrderByItemG b (UnpreparedValue b)])
@@ -82,7 +82,7 @@ orderByExp table selectPermissions = memoizeOn 'orderByExp table $ do
 -- order, rather than using a general intermediary representation
 
 orderByAggregation
-  :: forall m n r b. (BackendSchema b, MonadSchema n m, MonadTableInfo b r m, MonadRole r m)
+  :: forall m n r b. (BackendSchema b, MonadSchema n m, MonadTableInfo r m, MonadRole r m)
   => TableName b
   -> SelPermInfo b
   -> m (Parser 'Input n [IR.OrderByItemG b (IR.AnnAggregateOrderBy b)])

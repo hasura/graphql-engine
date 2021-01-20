@@ -70,7 +70,7 @@ mkFunctionInfo
   -> SystemDefined
   -> FunctionConfig
   -> RawFunctionInfo
-  -> m (FunctionInfo, SchemaDependency)
+  -> m (FunctionInfo 'Postgres, SchemaDependency)
 mkFunctionInfo source qf systemDefined FunctionConfig{..} rawFuncInfo =
   either (throw400 NotSupported . showErrors) pure
     =<< MV.runValidateT validateFunction
@@ -170,10 +170,10 @@ trackFunctionP1
   :: (CacheRM m, QErrM m) => SourceName -> QualifiedFunction -> m ()
 trackFunctionP1 sourceName qf = do
   rawSchemaCache <- askSchemaCache
-  when (isJust $ getPGFunctionInfo sourceName qf $ scPostgres rawSchemaCache) $
+  when (isJust $ unsafeFunctionInfo @'Postgres sourceName qf $ scPostgres rawSchemaCache) $
     throw400 AlreadyTracked $ "function already tracked : " <>> qf
   let qt = fmap (TableName . getFunctionTxt) qf
-  when (isJust $ getPGTableInfo sourceName qt $ scPostgres rawSchemaCache) $
+  when (isJust $ unsafeTableInfo @'Postgres sourceName qt $ scPostgres rawSchemaCache) $
     throw400 NotSupported $ "table with name " <> qf <<> " already exists"
 
 trackFunctionP2
@@ -243,12 +243,14 @@ instance FromJSON UnTrackFunction where
 runUntrackFunc
   :: (CacheRWM m, MonadError QErr m, MetadataM m)
   => UnTrackFunction -> m EncJSON
-runUntrackFunc (UnTrackFunction qf source) = do
-  void $ askFunctionInfo source qf
+runUntrackFunc (UnTrackFunction functionName sourceName) = do
+  schemaCache <- askSchemaCache
+  unsafeFunctionInfo @'Postgres sourceName functionName (scPostgres schemaCache)
+    `onNothing` throw400 NotExists ("function not found in cache " <>> functionName)
   -- Delete function from metadata
   withNewInconsistentObjsCheck
     $ buildSchemaCache
-    $ dropFunctionInMetadata defaultSource qf
+    $ dropFunctionInMetadata defaultSource functionName
   pure successMsg
 
 dropFunctionInMetadata :: SourceName -> QualifiedFunction -> MetadataModifier

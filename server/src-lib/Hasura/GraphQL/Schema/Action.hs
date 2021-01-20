@@ -45,7 +45,7 @@ actionExecute
   :: forall m n r
    . ( BackendSchema 'Postgres
      , MonadSchema n m
-     , MonadTableInfo 'Postgres r m
+     , MonadTableInfo r m
      , MonadRole r m
      , Has QueryContext r
      )
@@ -85,7 +85,7 @@ actionExecute nonObjectTypeMap actionInfo = runMaybeT do
 --
 -- > action_name(action_input_arguments)
 actionAsyncMutation
-  :: forall m n r. (MonadSchema n m, MonadTableInfo 'Postgres r m, MonadRole r m)
+  :: forall m n r. (MonadSchema n m, MonadTableInfo r m, MonadRole r m)
   => NonObjectTypeMap
   -> ActionInfo 'Postgres
   -> m (Maybe (FieldParser n AnnActionMutationAsync))
@@ -117,7 +117,7 @@ actionAsyncQuery
   :: forall m n r
    . ( BackendSchema 'Postgres
      , MonadSchema n m
-     , MonadTableInfo 'Postgres r m
+     , MonadTableInfo r m
      , MonadRole r m
      , Has QueryContext r
      )
@@ -179,7 +179,7 @@ actionOutputFields
   :: forall m n r
    . ( BackendSchema 'Postgres
      , MonadSchema n m
-     , MonadTableInfo 'Postgres r m
+     , MonadTableInfo r m
      , MonadRole r m
      , Has QueryContext r
      )
@@ -260,7 +260,7 @@ mkDefinitionList AnnotatedObjectType{..} =
 
 
 actionInputArguments
-  :: forall m n r. (MonadSchema n m, MonadTableInfo 'Postgres r m)
+  :: forall m n r. (MonadSchema n m, MonadTableInfo r m)
   => NonObjectTypeMap
   -> [ArgumentDefinition (G.GType, NonObjectCustomType)]
   -> m (InputFieldsParser n J.Value)

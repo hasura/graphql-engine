@@ -23,37 +23,38 @@ module Hasura.GraphQL.Schema.Select
 
 import           Hasura.Prelude
 
-import qualified Data.Aeson                            as J
-import qualified Data.Aeson.Extended                   as J
-import qualified Data.Aeson.Internal                   as J
-import qualified Data.ByteString.Lazy                  as BL
-import qualified Data.HashMap.Strict                   as Map
-import qualified Data.HashSet                          as Set
-import qualified Data.List.NonEmpty                    as NE
-import qualified Data.Sequence                         as Seq
-import qualified Data.Sequence.NonEmpty                as NESeq
-import qualified Data.Text                             as T
-import qualified Language.GraphQL.Draft.Syntax         as G
+import qualified Data.Aeson                                 as J
+import qualified Data.Aeson.Extended                        as J
+import qualified Data.Aeson.Internal                        as J
+import qualified Data.ByteString.Lazy                       as BL
+import qualified Data.HashMap.Strict                        as Map
+import qualified Data.HashSet                               as Set
+import qualified Data.List.NonEmpty                         as NE
+import qualified Data.Sequence                              as Seq
+import qualified Data.Sequence.NonEmpty                     as NESeq
+import qualified Data.Text                                  as T
+import qualified Language.GraphQL.Draft.Syntax              as G
 
-import           Control.Lens                          hiding (index)
+import           Control.Lens                               hiding (index)
 import           Data.Has
-import           Data.Int                               (Int32)
+import           Data.Int                                   (Int32)
 import           Data.Parser.JSONPath
 import           Data.Text.Extended
-import           Data.Traversable                       (mapAccumL)
+import           Data.Traversable                           (mapAccumL)
 
-import qualified Hasura.Backends.Postgres.Execute.Types as PG
-import qualified Hasura.Backends.Postgres.SQL.Types     as PG
-import qualified Hasura.GraphQL.Execute.Types           as ET
-import qualified Hasura.GraphQL.Parser                  as P
-import qualified Hasura.GraphQL.Parser.Internal.Parser  as P
-import qualified Hasura.RQL.IR.BoolExp                  as IR
-import qualified Hasura.RQL.IR.OrderBy                  as IR
-import qualified Hasura.RQL.IR.Select                   as IR
+import qualified Hasura.Backends.Postgres.Execute.Types     as PG
+import qualified Hasura.Backends.Postgres.SQL.Types         as PG
+import qualified Hasura.GraphQL.Execute.Types               as ET
+import qualified Hasura.GraphQL.Parser                      as P
+import qualified Hasura.GraphQL.Parser.Internal.Parser      as P
+import qualified Hasura.RQL.IR.BoolExp                      as IR
+import qualified Hasura.RQL.IR.OrderBy                      as IR
+import qualified Hasura.RQL.IR.Select                       as IR
 
 import           Hasura.GraphQL.Context
-import           Hasura.GraphQL.Parser                  (FieldParser, InputFieldsParser, Kind (..),
-                                                         Parser, UnpreparedValue (..), mkParameter)
+import           Hasura.GraphQL.Parser                      (FieldParser, InputFieldsParser,
+                                                             Kind (..), Parser,
+                                                             UnpreparedValue (..), mkParameter)
 import           Hasura.GraphQL.Parser.Class
 import           Hasura.GraphQL.Schema.Backend
 import           Hasura.GraphQL.Schema.BoolExp
@@ -61,9 +62,9 @@ import           Hasura.GraphQL.Schema.Common
 import           Hasura.GraphQL.Schema.OrderBy
 import           Hasura.GraphQL.Schema.Remote
 import           Hasura.GraphQL.Schema.Table
-import           Hasura.RQL.Types
 import           Hasura.RQL.DDL.RemoteRelationship.Validate
-import           Hasura.Server.Utils                         (executeJSONPath)
+import           Hasura.RQL.Types
+import           Hasura.Server.Utils                        (executeJSONPath)
 
 import           Hasura.Session
 
@@ -84,7 +85,7 @@ selectTable
   :: forall b m n r
   . ( BackendSchema b
     , MonadSchema n m
-    , MonadTableInfo b r m
+    , MonadTableInfo r m
     , MonadRole r m
     , Has QueryContext r
     )
@@ -129,7 +130,7 @@ selectTableConnection
   :: forall m n r b
   . ( BackendSchema b
     , MonadSchema n m
-    , MonadTableInfo b r m
+    , MonadTableInfo r m
     , MonadRole r m
     , Has QueryContext r
     )
@@ -172,7 +173,7 @@ selectTableByPk
   :: forall m n r b
    . ( BackendSchema b
      , MonadSchema n m
-     , MonadTableInfo b r m
+     , MonadTableInfo r m
      , MonadRole r m
      , Has QueryContext r
      )
@@ -218,7 +219,7 @@ selectTableAggregate
   :: forall m n r b
   . ( BackendSchema b
     , MonadSchema n m
-    , MonadTableInfo b r m
+    , MonadTableInfo r m
     , MonadRole r m
     , Has QueryContext r
     )
@@ -316,7 +317,7 @@ tableSelectionSet
   :: forall m n r b
    . ( BackendSchema b
      , MonadSchema n m
-     , MonadTableInfo b r m
+     , MonadTableInfo r m
      , MonadRole r m
      , Has QueryContext r
      )
@@ -361,7 +362,7 @@ tableSelectionSet table selectPermissions = memoizeOn 'tableSelectionSet table d
 tableSelectionList
   :: ( BackendSchema b
      , MonadSchema n m
-     , MonadTableInfo b r m
+     , MonadTableInfo r m
      , MonadRole r m
      , Has QueryContext r
      )
@@ -397,7 +398,7 @@ nonNullableObjectList =
 tableConnectionSelectionSet
   :: forall m n r b. ( BackendSchema b
                      , MonadSchema n m
-                     , MonadTableInfo b r m
+                     , MonadTableInfo r m
                      , MonadRole r m
                      , Has QueryContext r
                      )
@@ -452,14 +453,14 @@ tableConnectionSelectionSet table selectPermissions = do
 selectFunction
   :: ( BackendSchema 'Postgres
      , MonadSchema n m
-     , MonadTableInfo 'Postgres r m
+     , MonadTableInfo r m
      , MonadRole r m
      , Has QueryContext r
      )
-  => FunctionInfo         -- ^ SQL function info
-  -> G.Name               -- ^ field display name
-  -> Maybe G.Description  -- ^ field description, if any
-  -> SelPermInfo 'Postgres          -- ^ select permissions of the target table
+  => FunctionInfo 'Postgres  -- ^ SQL function info
+  -> G.Name                  -- ^ field display name
+  -> Maybe G.Description     -- ^ field description, if any
+  -> SelPermInfo 'Postgres   -- ^ select permissions of the target table
   -> m (FieldParser n (SelectExp 'Postgres))
 selectFunction function fieldName description selectPermissions = do
   stringifyNum <- asks $ qcStringifyNum . getter
@@ -480,14 +481,14 @@ selectFunction function fieldName description selectPermissions = do
 selectFunctionAggregate
   :: ( BackendSchema 'Postgres
      , MonadSchema n m
-     , MonadTableInfo 'Postgres r m
+     , MonadTableInfo r m
      , MonadRole r m
      , Has QueryContext r
      )
-  => FunctionInfo         -- ^ SQL function info
-  -> G.Name               -- ^ field display name
-  -> Maybe G.Description  -- ^ field description, if any
-  -> SelPermInfo 'Postgres          -- ^ select permissions of the target table
+  => FunctionInfo 'Postgres  -- ^ SQL function info
+  -> G.Name                  -- ^ field display name
+  -> Maybe G.Description     -- ^ field description, if any
+  -> SelPermInfo 'Postgres   -- ^ select permissions of the target table
   -> m (Maybe (FieldParser n (AggSelectExp 'Postgres)))
 selectFunctionAggregate function fieldName description selectPermissions = runMaybeT do
   let table = fiReturnType function
@@ -518,15 +519,15 @@ selectFunctionAggregate function fieldName description selectPermissions = runMa
 selectFunctionConnection
   :: ( BackendSchema 'Postgres
      , MonadSchema n m
-     , MonadTableInfo 'Postgres r m
+     , MonadTableInfo r m
      , MonadRole r m
      , Has QueryContext r
      )
-  => FunctionInfo           -- ^ SQL function info
-  -> G.Name                 -- ^ field display name
-  -> Maybe G.Description    -- ^ field description, if any
-  -> PrimaryKeyColumns 'Postgres      -- ^ primary key columns of the target table
-  -> SelPermInfo 'Postgres            -- ^ select permissions of the target table
+  => FunctionInfo 'Postgres       -- ^ SQL function info
+  -> G.Name                       -- ^ field display name
+  -> Maybe G.Description          -- ^ field description, if any
+  -> PrimaryKeyColumns 'Postgres  -- ^ primary key columns of the target table
+  -> SelPermInfo 'Postgres        -- ^ select permissions of the target table
   -> m (FieldParser n (ConnectionSelectExp 'Postgres))
 selectFunctionConnection function fieldName description pkeyColumns selectPermissions = do
   stringifyNum <- asks $ qcStringifyNum . getter
@@ -557,7 +558,7 @@ selectFunctionConnection function fieldName description pkeyColumns selectPermis
 -- | Argument to filter rows returned from table selection
 -- > where: table_bool_exp
 tableWhere
-  :: forall m n r b. (BackendSchema b, MonadSchema n m, MonadTableInfo b r m, MonadRole r m)
+  :: forall m n r b. (BackendSchema b, MonadSchema n m, MonadTableInfo r m, MonadRole r m)
   => TableName b
   -> SelPermInfo b
   -> m (InputFieldsParser n (Maybe (IR.AnnBoolExp b (UnpreparedValue b))))
@@ -572,7 +573,7 @@ tableWhere table selectPermissions = do
 -- | Argument to sort rows returned from table selection
 -- > order_by: [table_order_by!]
 tableOrderBy
-  :: forall m n r b. (BackendSchema b, MonadSchema n m, MonadTableInfo b r m, MonadRole r m)
+  :: forall m n r b. (BackendSchema b, MonadSchema n m, MonadTableInfo r m, MonadRole r m)
   => TableName b
   -> SelPermInfo b
   -> m (InputFieldsParser n (Maybe (NonEmpty (IR.AnnOrderByItemG b (UnpreparedValue b)))))
@@ -589,7 +590,7 @@ tableOrderBy table selectPermissions = do
 -- | Argument to distinct select on columns returned from table selection
 -- > distinct_on: [table_select_column!]
 tableDistinctOn
-  :: forall m n r b. (BackendSchema b, MonadSchema n m, MonadTableInfo b r m, MonadRole r m)
+  :: forall m n r b. (BackendSchema b, MonadSchema n m, MonadTableInfo r m, MonadRole r m)
   => TableName b
   -> SelPermInfo b
   -> m (InputFieldsParser n (Maybe (NonEmpty (Column b))))
@@ -611,7 +612,7 @@ tableDistinctOn table selectPermissions = do
 -- > order_by: [table_order_by!]
 -- > where: table_bool_exp
 tableArgs
-  :: forall m n r b. (BackendSchema b, MonadSchema n m, MonadTableInfo b r m, MonadRole r m)
+  :: forall m n r b. (BackendSchema b, MonadSchema n m, MonadTableInfo r m, MonadRole r m)
   => TableName b
   -> SelPermInfo b
   -> m (InputFieldsParser n (SelectArgs b))
@@ -675,7 +676,7 @@ positiveInt = P.int `P.bind` \value -> do
 -- > before: String
 -- > after: String
 tableConnectionArgs
-  :: forall m n r b. (BackendSchema b, MonadSchema n m, MonadTableInfo b r m, MonadRole r m)
+  :: forall m n r b. (BackendSchema b, MonadSchema n m, MonadTableInfo r m, MonadRole r m)
   => PrimaryKeyColumns b
   -> TableName b
   -> SelPermInfo b
@@ -801,7 +802,7 @@ tableConnectionArgs pkeyColumns table selectPermissions = do
 -- >   min: table_min_fields
 -- > }
 tableAggregationFields
-  :: forall m n r b. (BackendSchema b, MonadSchema n m, MonadTableInfo b r m, MonadRole r m)
+  :: forall m n r b. (BackendSchema b, MonadSchema n m, MonadTableInfo r m, MonadRole r m)
   => TableName b
   -> SelPermInfo b
   -> m (Parser 'Output n (IR.AggregateFields b))
@@ -903,7 +904,7 @@ lookupRemoteField fieldInfos (fieldCall :| rest) =
 fieldSelection
   :: ( BackendSchema b
      , MonadSchema n m
-     , MonadTableInfo b r m
+     , MonadTableInfo r m
      , MonadRole r m
      , Has QueryContext r
      )
@@ -942,7 +943,7 @@ fieldSelection table maybePkeyColumns fieldInfo selectPermissions =
 relationshipField
   :: ( BackendSchema b
      , MonadSchema n m
-     , MonadTableInfo b r m
+     , MonadTableInfo r m
      , MonadRole r m
      , Has QueryContext r
      )
@@ -991,7 +992,7 @@ computedFieldPG
   :: forall m n r
    . ( BackendSchema 'Postgres
      , MonadSchema n m
-     , MonadTableInfo 'Postgres r m
+     , MonadTableInfo r m
      , MonadRole r m
      , Has QueryContext r
      )
@@ -1125,8 +1126,8 @@ remoteRelationshipFieldPG remoteFieldInfo = runMaybeT do
 -- | The custom SQL functions' input "args" field parser
 -- > function_name(args: function_args)
 customSQLFunctionArgs
-  :: (BackendSchema 'Postgres, MonadSchema n m, MonadTableInfo 'Postgres r m)
-  => FunctionInfo
+  :: (BackendSchema 'Postgres, MonadSchema n m, MonadTableInfo r m)
+  => FunctionInfo 'Postgres
   -> m (InputFieldsParser n (IR.FunctionArgsExpTableRow 'Postgres (UnpreparedValue 'Postgres)))
 customSQLFunctionArgs FunctionInfo{..} = functionArgs fiName fiInputArgs
 
@@ -1142,7 +1143,7 @@ customSQLFunctionArgs FunctionInfo{..} = functionArgs fiName fiInputArgs
 --   table row argument in the case of computed fields), the args object will
 --   be omitted.
 functionArgs
-  :: forall m n r. (BackendSchema 'Postgres, MonadSchema n m, MonadTableInfo 'Postgres r m)
+  :: forall m n r. (BackendSchema 'Postgres, MonadSchema n m, MonadTableInfo r m)
   => PG.QualifiedFunction
   -> Seq.Seq FunctionInputArgument
   -> m (InputFieldsParser n (IR.FunctionArgsExpTableRow 'Postgres (UnpreparedValue 'Postgres)))
@@ -1317,7 +1318,7 @@ nodePG
   :: forall m n r
    . ( BackendSchema 'Postgres
      , MonadSchema n m
-     , MonadTableInfo 'Postgres r m
+     , MonadTableInfo r m
      , MonadRole r m
      , Has QueryContext r
      )
@@ -1335,9 +1336,13 @@ nodePG = memoizeOn 'nodePG () do
   let idDescription = G.Description "A globally unique identifier"
       idField = P.selection_ $$(G.litName "id") (Just idDescription) P.identifier
       nodeInterfaceDescription = G.Description "An object with globally unique ID"
-  sources :: SourceCache 'Postgres <- asks getter
-  let allTables = Map.fromList $ flip concatMap (Map.toList sources) $ -- FIXME? When source name is used in type generation?
-        \(source, sourceCache) -> map (, (source, _pcConfiguration sourceCache)) $ Map.keys $ takeValidTables $ _pcTables sourceCache
+  sources :: SourceCache <- asks getter
+  let allTables = Map.fromList $ do
+        -- FIXME? When source name is used in type generation?
+        (source, sourceInfo) <- Map.toList sources
+        tableName            <- maybe [] (Map.keys . takeValidTables) $ unsafeSourceTables @'Postgres sourceInfo
+        sourceConfig         <- maybeToList $ unsafeSourceConfiguration @'Postgres sourceInfo
+        pure (tableName, (source, sourceConfig))
   tables <-
     Map.mapMaybe id <$> flip Map.traverseWithKey allTables \table (source, sourceConfig) -> runMaybeT do
       tablePkeyColumns <- MaybeT $ (^? tiCoreInfo.tciPrimaryKey._Just.pkColumns) <$> askTableInfo table
@@ -1351,7 +1356,7 @@ nodeField
   :: forall m n r
    . ( BackendSchema 'Postgres
      , MonadSchema n m
-     , MonadTableInfo 'Postgres r m
+     , MonadTableInfo r m
      , MonadRole r m
      , Has QueryContext r
      )

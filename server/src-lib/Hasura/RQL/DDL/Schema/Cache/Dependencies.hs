@@ -22,9 +22,9 @@ import           Hasura.RQL.Types
 -- removed from the cache, and 'InconsistentMetadata's are returned.
 resolveDependencies
   :: (ArrowKleisli m arr, QErrM m)
-  => ( BuildOutputs
+  => ( BuildOutputs 'Postgres
      , [(MetadataObject, SchemaObjId, SchemaDependency)]
-     ) `arr` (BuildOutputs, [InconsistentMetadata], DepMap)
+     ) `arr` (BuildOutputs 'Postgres, [InconsistentMetadata], DepMap)
 resolveDependencies = arrM \(cache, dependencies) -> do
   let dependencyMap = dependencies
         & M.groupOn (view _2)
@@ -48,10 +48,10 @@ resolveDependencies = arrM \(cache, dependencies) -> do
 performIteration
   :: (QErrM m)
   => Int
-  -> BuildOutputs
+  -> BuildOutputs 'Postgres
   -> [InconsistentMetadata]
   -> HashMap SchemaObjId [(MetadataObject, SchemaDependency)]
-  -> m (BuildOutputs, [InconsistentMetadata], DepMap)
+  -> m (BuildOutputs 'Postgres, [InconsistentMetadata], DepMap)
 performIteration iterationNumber cache inconsistencies dependencies = do
   let (newInconsistencies, prunedDependencies) = pruneDanglingDependents cache dependencies
   case newInconsistencies of
@@ -73,7 +73,7 @@ performIteration iterationNumber cache inconsistencies dependencies = do
                 , "pruned_dependencies" .= (map snd <$> prunedDependencies) ] }
 
 pruneDanglingDependents
-  :: BuildOutputs
+  :: BuildOutputs 'Postgres
   -> HashMap SchemaObjId [(MetadataObject, SchemaDependency)]
   -> ([InconsistentMetadata], HashMap SchemaObjId [(MetadataObject, SchemaDependency)])
 pruneDanglingDependents cache = fmap (M.filter (not . null)) . traverse do
@@ -88,7 +88,7 @@ pruneDanglingDependents cache = fmap (M.filter (not . null)) . traverse do
       SOSourceObj source sourceObjId -> case sourceObjId of
         SOITable tableName -> void $ resolveTable source tableName
         SOIFunction functionName -> void $
-          (M.lookup source (_boSources cache) >>= M.lookup functionName . _pcFunctions)
+          unsafeFunctionInfo @'Postgres source functionName (_boSources cache)
           `onNothing` Left ("function " <> functionName <<> " is not tracked")
         SOITableObj tableName tableObjectId -> do
           tableInfo <- resolveTable source tableName
@@ -125,7 +125,7 @@ pruneDanglingDependents cache = fmap (M.filter (not . null)) . traverse do
                   <<> " for role " <>> roleName
 
     resolveTable source tableName =
-      (M.lookup source (_boSources cache) >>= M.lookup tableName . _pcTables)
+      unsafeTableInfo source tableName (_boSources cache)
       `onNothing` Left ("table " <> tableName <<> " is not tracked")
 
     resolveField :: TableInfo 'Postgres -> FieldName -> Getting (First a) (FieldInfo 'Postgres) a -> Text -> Either Text a
@@ -138,22 +138,27 @@ pruneDanglingDependents cache = fmap (M.filter (not . null)) . traverse do
         ("field " <> fieldName <<> "of table " <> tableName <<> " is not a " <> fieldTypeName)
 
 deleteMetadataObject
-  :: MetadataObjId -> BuildOutputs -> BuildOutputs
-deleteMetadataObject objectId = case objectId of
-  MOSource      name             -> boSources %~ M.delete name
-  MOSourceObjId source sourceObjId -> boSources.ix source %~ case sourceObjId of
-    SMOTable        name -> pcTables        %~ M.delete name
-    SMOFunction     name -> pcFunctions     %~ M.delete name
-    SMOTableObj tableName tableObjectId -> pcTables.ix tableName %~ case tableObjectId of
-      MTORel           name _    -> tiCoreInfo.tciFieldInfoMap %~ M.delete (fromRel name)
-      MTOComputedField name      -> tiCoreInfo.tciFieldInfoMap %~ M.delete (fromComputedField name)
-      MTORemoteRelationship name -> tiCoreInfo.tciFieldInfoMap %~ M.delete (fromRemoteRelationship name)
-      MTOPerm roleName permType  -> withPermType permType \accessor ->
-        tiRolePermInfoMap.ix roleName.permAccToLens accessor .~ Nothing
-      MTOTrigger name            -> tiEventTriggerInfoMap %~ M.delete name
-  MORemoteSchema name          -> boRemoteSchemas %~ M.delete name
+  :: MetadataObjId -> BuildOutputs 'Postgres -> BuildOutputs 'Postgres
+deleteMetadataObject = \case
+  MOSource name                       -> boSources %~ M.delete name
+  MOSourceObjId source sourceObjId    -> boSources %~ M.adjust (deleteObjId sourceObjId) source
+  MORemoteSchema name                 -> boRemoteSchemas %~ M.delete name
   MORemoteSchemaPermissions name role -> boRemoteSchemas.ix name._1.rscPermissions %~ M.delete role
-  MOCronTrigger name           -> boCronTriggers %~ M.delete name
-  MOCustomTypes                -> boCustomTypes %~ const emptyAnnotatedCustomTypes
-  MOAction           name      -> boActions %~ M.delete name
-  MOActionPermission name role -> boActions.ix name.aiPermissions %~ M.delete role
+  MOCronTrigger name                  -> boCronTriggers %~ M.delete name
+  MOCustomTypes                       -> boCustomTypes %~ const emptyAnnotatedCustomTypes
+  MOAction name                       -> boActions %~ M.delete name
+  MOActionPermission name role        -> boActions.ix name.aiPermissions %~ M.delete role
+  where
+    deleteObjId :: SourceMetadataObjId -> BackendSourceInfo -> BackendSourceInfo
+    deleteObjId sourceObjId sourceInfo = maybe sourceInfo (BackendSourceInfo . deleteObjFn sourceObjId) $ unsafeSourceInfo sourceInfo
+    deleteObjFn :: SourceMetadataObjId -> SourceInfo 'Postgres -> SourceInfo 'Postgres
+    deleteObjFn = \case
+      SMOTable    name -> siTables    %~ M.delete name
+      SMOFunction name -> siFunctions %~ M.delete name
+      SMOTableObj tableName tableObjectId -> siTables.ix tableName %~ case tableObjectId of
+        MTORel name _              -> tiCoreInfo.tciFieldInfoMap %~ M.delete (fromRel name)
+        MTOComputedField name      -> tiCoreInfo.tciFieldInfoMap %~ M.delete (fromComputedField name)
+        MTORemoteRelationship name -> tiCoreInfo.tciFieldInfoMap %~ M.delete (fromRemoteRelationship name)
+        MTOTrigger  name           -> tiEventTriggerInfoMap %~ M.delete name
+        MTOPerm roleName permType  -> withPermType permType \accessor ->
+          tiRolePermInfoMap.ix roleName.permAccToLens accessor .~ Nothing

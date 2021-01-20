@@ -100,7 +100,7 @@ runDelete
   -> DeleteQuery
   -> m EncJSON
 runDelete env q = do
-  sourceConfig <- _pcConfiguration <$> askPGSourceCache (doSource q)
+  sourceConfig <- askSourceConfig (doSource q)
   strfyNum <- stringifyNum <$> askSQLGenCtx
   validateDeleteQ q
     >>= runQueryLazyTx (_pscExecCtx sourceConfig) Q.ReadWrite

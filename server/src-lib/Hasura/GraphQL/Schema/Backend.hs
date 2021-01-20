@@ -39,7 +39,7 @@ class Backend b => BackendSchema (b :: BackendType) where
   -- The generated top-level nodes of this table will be like `users_address`,
   -- `insert_users_address` etc
   getTableGQLName
-    :: MonadTableInfo b r m
+    :: MonadTableInfo r m
     => TableName b
     -> m Name
   orderByOperators
@@ -49,7 +49,7 @@ class Backend b => BackendSchema (b :: BackendType) where
     => ColumnType b
     -> m (Parser 'Input n [ComparisonExp b])
   updateOperators
-    :: (MonadSchema n m, MonadTableInfo b r m)
+    :: (MonadSchema n m, MonadTableInfo r m)
     => TableName b
     -> UpdPermInfo b
     -> m (Maybe (InputFieldsParser n [(Column b, IR.UpdOpExpG (UnpreparedValue b))]))
@@ -74,7 +74,7 @@ class Backend b => BackendSchema (b :: BackendType) where
   computedField
     :: ( BackendSchema b
        , MonadSchema n m
-       , MonadTableInfo b r m
+       , MonadTableInfo r m
        , MonadRole r m
        , Has QueryContext r
        )
@@ -85,7 +85,7 @@ class Backend b => BackendSchema (b :: BackendType) where
   node
     :: ( BackendSchema b
        , MonadSchema n m
-       , MonadTableInfo b r m
+       , MonadTableInfo r m
        , MonadRole r m
        , Has QueryContext r
        )

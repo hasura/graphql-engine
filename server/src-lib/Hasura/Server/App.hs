@@ -550,13 +550,13 @@ gqlExplainHandler query = do
 v1Alpha1PGDumpHandler :: (MonadIO m, MonadError QErr m, MonadReader HandlerCtx m) => PGD.PGDumpReqBody -> m APIResp
 v1Alpha1PGDumpHandler b = do
   onlyAdmin
-  scRef     <- asks (scCacheRef . hcServerCtx)
-  sc        <- getSCFromRef scRef
-  let sources = scPostgres sc
-      sourceName = PGD.prbSource b
-  ci <- fmap (_pscConnInfo . _pcConfiguration) $
-        onNothing (M.lookup sourceName sources) $
-        throw400 NotFound $ "source " <> sourceName <<> " not found"
+  scRef <- asks (scCacheRef . hcServerCtx)
+  sc    <- getSCFromRef scRef
+  let sources      = scPostgres sc
+      sourceName   = PGD.prbSource b
+      sourceConfig = unsafeSourceConfiguration @'Postgres =<< M.lookup sourceName sources
+  ci <- fmap _pscConnInfo sourceConfig
+        `onNothing` throw400 NotFound ("source " <> sourceName <<> " not found")
   output <- PGD.execPGDump b ci
   return $ RawResp $ HttpResponse output [sqlHeader]
 

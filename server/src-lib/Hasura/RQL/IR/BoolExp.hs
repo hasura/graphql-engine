@@ -40,18 +40,18 @@ module Hasura.RQL.IR.BoolExp
 
 import           Hasura.Prelude
 
-import qualified Data.Aeson.Types                   as J
-import qualified Data.HashMap.Strict                as M
+import qualified Data.Aeson.Types        as J
+import qualified Data.HashMap.Strict     as M
 
 import           Control.Lens.Plated
 import           Control.Lens.TH
 import           Data.Aeson
 import           Data.Aeson.Internal
 import           Data.Aeson.TH
-import           Data.Typeable
 import           Data.Text.Extended
+import           Data.Typeable
 
-import           Hasura.Incremental                 (Cacheable)
+import           Hasura.Incremental      (Cacheable)
 import           Hasura.RQL.Types.Column
 import           Hasura.RQL.Types.Common
 import           Hasura.SQL.Backend
@@ -81,14 +81,14 @@ instance (Backend b, Data a) => Plated (GExists b a)
 instance (Backend b, Cacheable a) => Cacheable (GExists b a)
 instance (Backend b, Hashable a) => Hashable (GExists b a)
 
-gExistsToJSON :: (a -> (Text, Value)) -> GExists 'Postgres a -> Value
+gExistsToJSON :: Backend b => (a -> (Text, Value)) -> GExists b a -> Value
 gExistsToJSON f (GExists qt wh) =
   object [ "_table" .= qt
          , "_where" .= gBoolExpToJSON f wh
          ]
 
 parseGExists
-  :: ((Text, Value) -> J.Parser a) -> Value -> J.Parser (GExists 'Postgres a)
+  :: Backend b => ((Text, Value) -> J.Parser a) -> Value -> J.Parser (GExists b a)
 parseGExists f = \case
   Object o -> do
     qt <- o .: "_table"
@@ -112,7 +112,7 @@ instance (Backend b, Hashable a) => Hashable (GBoolExp b a)
 gBoolExpTrue :: GBoolExp b a
 gBoolExpTrue = BoolAnd []
 
-gBoolExpToJSON :: (a -> (Text, Value)) -> GBoolExp 'Postgres a -> Value
+gBoolExpToJSON :: Backend b => (a -> (Text, Value)) -> GBoolExp b a -> Value
 gBoolExpToJSON f be = case be of
   -- special encoding for _and
   BoolAnd bExps ->
@@ -132,7 +132,7 @@ gBoolExpToJSON f be = case be of
       BoolFld a          ->  f a
 
 parseGBoolExp
-  :: ((Text, Value) -> J.Parser a) -> Value -> J.Parser (GBoolExp 'Postgres a)
+  :: Backend b => ((Text, Value) -> J.Parser a) -> Value -> J.Parser (GBoolExp b a)
 parseGBoolExp f = \case
   Object o -> do
     boolExps <- forM (M.toList o) $ \(k, v) -> if
@@ -158,14 +158,14 @@ newtype BoolExp (b :: BackendType)
 
 $(makeWrapped ''BoolExp)
 
-instance ToJSON (BoolExp 'Postgres) where
+instance Backend b => ToJSON (BoolExp b) where
   toJSON (BoolExp gBoolExp) =
     gBoolExpToJSON f gBoolExp
     where
       f (ColExp k v) =
         (getFieldNameTxt k,  v)
 
-instance FromJSON (BoolExp 'Postgres) where
+instance Backend b => FromJSON (BoolExp b) where
   parseJSON =
     fmap BoolExp . parseGBoolExp f
     where
@@ -293,7 +293,7 @@ opExpDepCol = \case
   CLTE c -> Just c
   _      -> Nothing
 
-opExpToJPair :: (a -> Value) -> OpExpG 'Postgres a -> (Text, Value)
+opExpToJPair :: Backend b => (a -> Value) -> OpExpG b a -> (Text, Value)
 opExpToJPair f = \case
   ACast a                  -> ("_cast", toJSON $ M.map opExpsToJSON a)
 
@@ -411,12 +411,12 @@ deriving instance Backend b => Data (PartialSQLExp b)
 instance Backend b => NFData (PartialSQLExp b)
 instance Backend b => Cacheable (PartialSQLExp b)
 
-instance ToJSON (PartialSQLExp 'Postgres) where
+instance Backend b => ToJSON (PartialSQLExp b) where
   toJSON = \case
     PSESessVar colTy sessVar -> toJSON (colTy, sessVar)
     PSESQLExp e              -> toJSON $ toSQLTxt e
 
-instance ToJSON (AnnBoolExpPartialSQL 'Postgres) where
+instance Backend b => ToJSON (AnnBoolExpPartialSQL b) where
   toJSON = gBoolExpToJSON f
     where
       f annFld = case annFld of
@@ -428,7 +428,7 @@ instance ToJSON (AnnBoolExpPartialSQL 'Postgres) where
           ( relNameToTxt $ riName ri
           , toJSON (ri, toJSON relBoolExp)
           )
-      opExpSToJSON :: OpExpG 'Postgres (PartialSQLExp 'Postgres) -> Value
+      opExpSToJSON :: OpExpG b (PartialSQLExp b) -> Value
       opExpSToJSON =
         object . pure . opExpToJPair toJSON
 

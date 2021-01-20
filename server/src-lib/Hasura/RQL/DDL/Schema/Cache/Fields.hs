@@ -12,7 +12,7 @@ import qualified Data.Sequence                      as Seq
 import qualified Language.GraphQL.Draft.Syntax      as G
 
 import           Control.Arrow.Extended
-import           Control.Lens                       ((^.), _3, _4)
+import           Control.Lens                       (_3, _4, (^.))
 import           Data.Aeson
 import           Data.Text.Extended
 
@@ -145,7 +145,7 @@ buildObjectRelationship
      ) `arr` Maybe (RelInfo 'Postgres)
 buildObjectRelationship = proc (fkeysMap, (source, table, relDef)) -> do
   let buildRelInfo def = do
-        fkeys <- getTableInfo table fkeysMap
+        fkeys <- findTable table fkeysMap
         objRelP2Setup source table fkeys def
   buildRelationship -< (source, table, buildRelInfo, ObjRel, relDef)
 

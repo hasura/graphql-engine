@@ -96,7 +96,7 @@ import           Hasura.RQL.Types.Error
 import           Hasura.SQL.Backend
 import           Hasura.SQL.Types
 
-type Representable a = (Show a, Eq a, Hashable a, Cacheable a, NFData a)
+type Representable a = (Show a, Eq a, Hashable a, Cacheable a, NFData a, Typeable a)
 
 -- | Mapping from abstract types to concrete backend representation
 --
@@ -133,22 +133,32 @@ class
   , Data (ScalarType b)
   , Data (SQLExpression b)
   , FromJSON (TableName b)
+  , FromJSON (FunctionName b)
   , FromJSON (ScalarType b)
   , FromJSON (BasicOrderType b)
   , FromJSON (NullsOrderType b)
   , FromJSON (Column b)
   , ToJSON (TableName b)
+  , ToJSON (FunctionName b)
+  , ToJSON (SourceConfig b)
   , ToJSON (ScalarType b)
   , ToJSON (BasicOrderType b)
   , ToJSON (NullsOrderType b)
   , ToJSON (Column b)
   , FromJSONKey (Column b)
   , ToJSONKey (Column b)
+  , ToJSONKey (TableName b)
+  , ToJSONKey (FunctionName b)
+  , ToJSONKey (ScalarType b)
   , ToTxt (TableName b)
+  , ToTxt (FunctionName b)
   , ToTxt (ScalarType b)
   , ToTxt (Column b)
+  , ToSQL (SQLExpression b)
+  , Typeable (SourceConfig b)
   , Typeable b
   ) => Backend (b :: BackendType) where
+  type SourceConfig   b :: Type
   type Identifier     b :: Type
   type Alias          b :: Type
   type TableName      b :: Type
@@ -165,11 +175,11 @@ class
   type XAILIKE        b :: Type
   type XANILIKE       b :: Type
   type XComputedFieldInfo b :: Type
-  type SourceConfig   b :: Type
   isComparableType :: ScalarType b -> Bool
   isNumType :: ScalarType b -> Bool
 
 instance Backend 'Postgres where
+  type SourceConfig   'Postgres = PG.PGSourceConfig
   type Identifier     'Postgres = PG.Identifier
   type Alias          'Postgres = PG.Alias
   type TableName      'Postgres = PG.QualifiedTable
@@ -186,7 +196,6 @@ instance Backend 'Postgres where
   type XAILIKE        'Postgres = ()
   type XANILIKE       'Postgres = ()
   type XComputedFieldInfo 'Postgres = ()
-  type SourceConfig   'Postgres = PG.PGSourceConfig
   isComparableType = PG.isComparableType
   isNumType = PG.isNumType
 

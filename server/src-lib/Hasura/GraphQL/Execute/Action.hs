@@ -381,7 +381,7 @@ asyncActionsProcessor env logger cacheRef httpManager = forever $ do
   LA.mapConcurrently_ (callHandler actionCache) asyncInvocations
   liftIO $ threadDelay (1 * 1000 * 1000)
   where
-    callHandler :: ActionCache -> ActionLogItem -> m ()
+    callHandler :: ActionCache b -> ActionLogItem -> m ()
     callHandler actionCache actionLogItem = Tracing.runTraceT "async actions processor" do
       let ActionLogItem actionId actionName reqHeaders
             sessionVariables inputPayload = actionLogItem

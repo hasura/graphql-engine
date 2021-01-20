@@ -112,7 +112,7 @@ runRunSQL q@RunSQL {..}
   | isSchemaCacheBuildRequiredRunSQL q
   = withMetadataCheck rSource rCascade rTxAccessMode $ execRawSQL rSql
   | otherwise
-  = (_pcConfiguration <$> askPGSourceCache rSource) >>= \sourceConfig ->
+  = askSourceConfig rSource >>= \sourceConfig ->
       liftEitherM $ runExceptT $
       runLazyTx (_pscExecCtx sourceConfig) rTxAccessMode $ execRawSQL rSql
   where
