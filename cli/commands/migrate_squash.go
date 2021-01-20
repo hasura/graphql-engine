@@ -3,6 +3,10 @@ package commands
 import (
 	"bytes"
 	"fmt"
+<<<<<<< HEAD
+=======
+	"path/filepath"
+>>>>>>> hq-origin/master
 	"strconv"
 	"strings"
 	"text/tabwriter"
@@ -40,6 +44,10 @@ func newMigrateSquashCmd(ec *cli.ExecutionContext) *cobra.Command {
 		SilenceUsage: true,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			opts.newVersion = getTime()
+			opts.Datasource = ec.Datasource
+			if opts.EC.HasMetadataV3 && opts.EC.Config.Version < cli.V2 {
+				return fmt.Errorf("squashing when using metadata V3 is supported from Config V2 only")
+			}
 			return opts.run()
 		},
 	}
@@ -65,6 +73,7 @@ type migrateSquashOptions struct {
 	newVersion int64
 
 	deleteSource bool
+	Datasource   string
 }
 
 func (o *migrateSquashOptions) run() error {
@@ -78,12 +87,16 @@ func (o *migrateSquashOptions) run() error {
 		o.EC.Spin(fmt.Sprintf("Squashing migrations from %d to latest...", o.from))
 	}
 	defer o.EC.Spinner.Stop()
-	migrateDrv, err := migrate.NewMigrate(o.EC, true)
+	migrateDrv, err := migrate.NewMigrate(o.EC, true, o.Datasource)
 	if err != nil {
 		return errors.Wrap(err, "unable to initialize migrations driver")
 	}
 
+<<<<<<< HEAD
 	versions, err := mig.SquashCmd(migrateDrv, o.from, o.to, o.newVersion, o.name, o.EC.MigrationDir)
+=======
+	versions, err := mig.SquashCmd(migrateDrv, o.from, o.newVersion, o.name, filepath.Join(o.EC.MigrationDir, o.Datasource))
+>>>>>>> hq-origin/master
 	o.EC.Spinner.Stop()
 	if err != nil {
 		return errors.Wrap(err, "unable to squash migrations")
@@ -104,7 +117,7 @@ func (o *migrateSquashOptions) run() error {
 	for _, v := range versions {
 		delOptions := mig.CreateOptions{
 			Version:   strconv.FormatInt(v, 10),
-			Directory: o.EC.MigrationDir,
+			Directory: filepath.Join(o.EC.MigrationDir, o.Datasource),
 		}
 		err = delOptions.Delete()
 		if err != nil {

@@ -36,7 +36,7 @@ import { resetValidation } from './AddActions';
 import gqlPattern, {
   gqlTableErrorNotif,
   gqlColumnErrorNotif,
-} from '../Common/GraphQLValidation'; // TODO add the others
+} from '../Common/GraphQLValidation';
 
 import {
   tableNameNullNotif,
@@ -443,6 +443,7 @@ class AddTable extends Component {
       columnDefaultFunctions,
       columnTypeCasts,
       checkConstraints,
+      postgresVersion,
     } = this.props;
 
     const getCreateBtnText = () => {
@@ -493,6 +494,7 @@ class AddTable extends Component {
                 onSelect={setFreqUsedColumn}
                 action={'add'}
                 dispatch={dispatch}
+                postgresVersion={postgresVersion}
               />
             </div>
             <hr />
@@ -586,6 +588,7 @@ const mapStateToProps = state => ({
   columnTypeCasts: state.tables.columnTypeCasts,
   columnDataTypeFetchErr: state.tables.columnDataTypeFetchErr,
   schemaList: state.tables.schemaList,
+  postgresVersion: state.main.postgresVersion,
 });
 
 const addTableConnector = connect => connect(mapStateToProps)(AddTable);

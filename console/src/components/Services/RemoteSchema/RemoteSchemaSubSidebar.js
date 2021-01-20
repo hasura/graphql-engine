@@ -2,6 +2,8 @@ import React from 'react';
 import { Link } from 'react-router';
 
 import LeftSubSidebar from '../../Common/Layout/LeftSubSidebar/LeftSubSidebar';
+import styles from '../../Common/Layout/LeftSubSidebar/LeftSubSidebar.scss';
+import WarningSymbol from '../../Common/WarningSymbol/WarningSymbol';
 
 const RemoteSchemaSubSidebar = ({
   appPrefix,
@@ -12,8 +14,12 @@ const RemoteSchemaSubSidebar = ({
   filterItem,
   viewRemoteSchema,
   main,
+  ...props
 }) => {
-  const styles = require('../../Common/Layout/LeftSubSidebar/LeftSubSidebar.scss');
+  const { inconsistentObjects } = props.metadata;
+  const inconsistentRemoteSchemas = inconsistentObjects.filter(
+    inconObject => inconObject.type === 'remote_schema'
+  );
 
   function tableSearch(e) {
     const searchTerm = e.target.value;
@@ -35,7 +41,7 @@ const RemoteSchemaSubSidebar = ({
   const getChildList = () => {
     const _dataList = searchQuery ? filtered : dataList;
 
-    let childList;
+    let childList = [];
     if (_dataList.length === 0) {
       childList = (
         <li
@@ -46,34 +52,51 @@ const RemoteSchemaSubSidebar = ({
         </li>
       );
     } else {
-      childList = _dataList.map((d, i) => {
-        let activeTableClass = '';
-        if (
-          d.name === viewRemoteSchema &&
-          location.pathname.includes(viewRemoteSchema)
-        ) {
-          activeTableClass = styles.activeLink;
-        }
+      if (_dataList.length > 0) {
+        childList = _dataList.map((d, i) => {
+          let activeTableClass = '';
 
-        return (
-          <li
-            className={activeTableClass}
-            key={i}
-            data-test={`remote-schema-sidebar-links-${i + 1}`}
-          >
-            <Link
-              to={appPrefix + '/manage/' + d.name + '/details'}
-              data-test={d.name}
+          if (
+            d.name === viewRemoteSchema &&
+            location.pathname.includes(viewRemoteSchema)
+          ) {
+            activeTableClass = styles.activeLink;
+          }
+
+          const inconsistentCurrentSchema = inconsistentRemoteSchemas.find(
+            elem => elem.definition.name === d.name
+          );
+
+          return (
+            <li
+              className={activeTableClass}
+              key={i}
+              data-test={`remote-schema-sidebar-links-${i + 1}`}
             >
-              <i
-                className={styles.tableIcon + ' fa fa-code-fork'}
-                aria-hidden="true"
-              />
-              {d.name}
-            </Link>
-          </li>
-        );
-      });
+              <Link
+                to={`${appPrefix}/manage/${d.name}/details`}
+                data-test={d.name}
+              >
+                <i
+                  className={`${styles.tableIcon} fa fa-code-fork`}
+                  aria-hidden="true"
+                />
+                {d.name}
+                {inconsistentCurrentSchema ? (
+                  <WarningSymbol
+                    customStyle={styles.padLeft4}
+                    tooltipText={
+                      'This remote schema is in an inconsistent state. ' +
+                      'Fields from this remote schema are currently not exposed over the GraphQL API'
+                    }
+                    tooltipPlacement="right"
+                  />
+                ) : null}
+              </Link>
+            </li>
+          );
+        });
+      }
     }
 
     return childList;
@@ -83,7 +106,7 @@ const RemoteSchemaSubSidebar = ({
     <LeftSubSidebar
       showAddBtn={!main.readOnlyMode}
       searchInput={getSearchInput()}
-      heading={`Remote Schemas (${dataList.length})`}
+      heading={`Remote Schemas (${dataList.length ?? 0})`}
       addLink={`${appPrefix}/manage/add`}
       addLabel={'Add'}
       addTestString={'remote-schema-sidebar-add-table'}

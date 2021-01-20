@@ -2,6 +2,7 @@ type: bulk
 args:
 
 #Author table
+
 - type: run_sql
   args:
     sql: |
@@ -10,15 +11,6 @@ args:
           name text unique,
           is_registered boolean
       );
-- type: track_table
-  args:
-    schema: public
-    name: author
-
-#Article table
-- type: run_sql
-  args:
-    sql: |
       CREATE TABLE article (
         id SERIAL PRIMARY KEY,
         title TEXT,
@@ -26,33 +18,13 @@ args:
         author_id INTEGER REFERENCES author(id),
         is_published BOOLEAN,
         published_on TIMESTAMP
-      )
-- type: track_table
-  args:
-    schema: public
-    name: article
-#Object relationship
-- type: create_object_relationship
-  args:
-    table: article
-    name: author
-    using:
-      foreign_key_constraint_on: author_id
-
-#Insert values
-- type: run_sql
-  args:
-    sql: |
+      );
       insert into author (name, is_registered)
       values
       ('Author 1', false),
       ('Author 2', true),
       ('Author 3', true),
-      ('Author 4', false)
-
-- type: run_sql
-  args:
-    sql: |
+      ('Author 4', false);
       insert into article (title, content, author_id, is_published)
       values
       (
@@ -90,12 +62,7 @@ args:
         'Sample article content 6',
         3,
         true
-      )
-
-# Search article functions
-- type: run_sql
-  args:
-    sql: |
+      );
       CREATE FUNCTION search_articles(search text)
       RETURNS SETOF article AS $$
             SELECT *
@@ -104,3 +71,23 @@ args:
               title ilike ('%' || search || '%')
               OR content ilike ('%' || search || '%')
       $$ LANGUAGE sql STABLE;
+
+- type: track_table
+  args:
+    schema: public
+    name: author
+
+#Article table
+- type: track_table
+  args:
+    schema: public
+    name: article
+#Object relationship
+- type: create_object_relationship
+  args:
+    table: article
+    name: author
+    using:
+      foreign_key_constraint_on: author_id
+
+#Insert values

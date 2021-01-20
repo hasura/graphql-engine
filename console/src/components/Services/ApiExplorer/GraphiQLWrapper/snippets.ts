@@ -11,14 +11,14 @@ export type OperationData = {
   displayName: string;
   type: OperationTypeNode;
   variableName: string;
-  variables: object;
+  variables: Record<string, unknown>;
   operationDefinition: OperationDefinitionNode;
 };
 
 export type GenerateOptions = {
   serverUrl: string;
   headers: { [name: string]: string };
-  context: object;
+  context: Record<string, unknown>;
   operationDataList: Array<OperationData>;
   options: OptionValues;
 };

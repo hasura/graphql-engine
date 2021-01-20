@@ -1,5 +1,6 @@
 type: bulk
 args:
+
 - type: run_sql
   args:
     sql: |
@@ -14,7 +15,6 @@ args:
         content TEXT,
         author_id INTEGER REFERENCES author(id)
       );
-
 
 - type: track_table
   version: 2

@@ -1,3 +1,4 @@
+{-# LANGUAGE CPP #-}
 -- | Multiplexed live query poller threads; see "Hasura.GraphQL.Execute.LiveQuery" for details.
 module Hasura.GraphQL.Execute.LiveQuery.Poll (
   -- * Pollers
@@ -39,14 +40,15 @@ module Hasura.GraphQL.Execute.LiveQuery.Poll (
   ) where
 
 import           Data.List.Split                          (chunksOf)
+#ifndef PROFILING
 import           GHC.AssertNF
+#endif
 import           Hasura.Prelude
 
 import qualified Control.Concurrent.Async                 as A
 import qualified Control.Concurrent.STM                   as STM
 import qualified Control.Immortal                         as Immortal
 import qualified Crypto.Hash                              as CH
-import qualified Data.Aeson.Casing                        as J
 import qualified Data.Aeson.Extended                      as J
 import qualified Data.Aeson.TH                            as J
 import qualified Data.ByteString                          as BS
@@ -63,10 +65,11 @@ import           Control.Lens
 import qualified Hasura.GraphQL.Execute.LiveQuery.TMap    as TMap
 import qualified Hasura.Logging                           as L
 
-import           Hasura.Db
+import           Hasura.Backends.Postgres.Connection
 import           Hasura.GraphQL.Execute.LiveQuery.Options
 import           Hasura.GraphQL.Execute.LiveQuery.Plan
 import           Hasura.GraphQL.Transport.HTTP.Protocol
+import           Hasura.RQL.Types.Common                  (getNonNegativeInt)
 import           Hasura.RQL.Types.Error
 import           Hasura.Session
 
@@ -215,7 +218,9 @@ pushResultToCohort result !respHashM (LiveQueryMetadata dTime) cohortSnapshot = 
   (subscribersToPush, subscribersToIgnore) <-
     if isExecError result || respHashM /= prevRespHashM
     then do
+#ifndef PROFILING
       $assertNFHere respHashM  -- so we don't write thunks to mutable vars
+#endif
       STM.atomically $ STM.writeTVar respRef respHashM
       return (newSinks <> curSinks, mempty)
     else
@@ -225,6 +230,7 @@ pushResultToCohort result !respHashM (LiveQueryMetadata dTime) cohortSnapshot = 
          (subscribersToPush, subscribersToIgnore)
   where
     CohortSnapshot _ respRef curSinks newSinks = cohortSnapshot
+
     response = result <&> \payload -> LiveQueryResponse payload dTime
     pushResultToSubscribers =
       A.mapConcurrently_ $ \(Subscriber _ _ action) -> action response
@@ -321,7 +327,7 @@ data CohortExecutionDetails
   -- polled cycle
   } deriving (Show, Eq)
 
-$(J.deriveToJSON (J.aesonDrop 4 J.snakeCase) ''CohortExecutionDetails)
+$(J.deriveToJSON hasuraJSON ''CohortExecutionDetails)
 
 -- | Execution information related to a single batched execution
 data BatchExecutionDetails
@@ -341,7 +347,7 @@ batchExecutionDetailMinimal BatchExecutionDetails{..} =
            , "push_time" J..= _bedPushTime
            ]
 
-$(J.deriveToJSON (J.aesonDrop 4 J.snakeCase) ''BatchExecutionDetails)
+$(J.deriveToJSON hasuraJSON ''BatchExecutionDetails)
 
 data PollDetails
   = PollDetails
@@ -361,7 +367,7 @@ data PollDetails
   , _pdLiveQueryOptions :: !LiveQueriesOptions
   } deriving (Show, Eq)
 
-$(J.deriveToJSON (J.aesonDrop 3 J.snakeCase) ''PollDetails)
+$(J.deriveToJSON hasuraJSON ''PollDetails)
 
 {- Note [Minimal LiveQuery Poller Log]
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -375,10 +381,10 @@ they need to.
 
 -- | see Note [Minimal LiveQuery Poller Log]
 pollDetailMinimal :: PollDetails -> J.Value
-pollDetailMinimal (PollDetails{..}) =
+pollDetailMinimal PollDetails{..} =
   J.object [ "poller_id" J..= _pdPollerId
            , "snapshot_time" J..= _pdSnapshotTime
-           , "batches" J..= (map batchExecutionDetailMinimal _pdBatches)
+           , "batches" J..= map batchExecutionDetailMinimal _pdBatches
            , "total_time" J..= _pdTotalTime
            ]
 
@@ -389,7 +395,7 @@ type LiveQueryPostPollHook = PollDetails -> IO ()
 
 -- the default LiveQueryPostPollHook
 defaultLiveQueryPostPollHook :: L.Logger L.Hasura -> LiveQueryPostPollHook
-defaultLiveQueryPostPollHook logger pd = L.unLogger logger pd
+defaultLiveQueryPostPollHook = L.unLogger
 
 -- | Where the magic happens: the top-level action run periodically by each
 -- active 'Poller'. This needs to be async exception safe.
@@ -411,7 +417,7 @@ pollQuery pollerId lqOpts pgExecCtx pgQuery cohortMap postPollHook = do
       cohorts <- STM.atomically $ TMap.toList cohortMap
       cohortSnapshots <- mapM (STM.atomically . getCohortSnapshot) cohorts
       -- cohorts are broken down into batches specified by the batch size
-      pure $ chunksOf (unBatchSize batchSize) cohortSnapshots
+      pure $ chunksOf (getNonNegativeInt (unBatchSize batchSize)) cohortSnapshots
 
     -- concurrently process each batch
     batchesDetails <- A.forConcurrently cohortBatches $ \cohorts -> do
@@ -461,7 +467,7 @@ pollQuery pollerId lqOpts pgExecCtx pgQuery cohortMap postPollHook = do
     getCohortOperations cohorts = \case
       Left e ->
         -- TODO: this is internal error
-        let resp = GQExecError [encodeGQLErr False e]
+        let resp = throwError $ GQExecError [encodeGQLErr False e]
         in [(resp, cohortId, Nothing, snapshot) | (cohortId, snapshot) <- cohorts]
       Right responses -> do
         let cohortSnapshotMap = Map.fromList cohorts
@@ -472,5 +478,5 @@ pollQuery pollerId lqOpts pgExecCtx pgQuery cohortMap postPollHook = do
           -- Postgres response is not present in the cohort map of this batch
           -- (this shouldn't happen but if it happens it means a logic error and
           -- we should log it)
-          in (GQSuccess respBS, cohortId, Just $!(respHash, respSize),) <$>
+          in (pure respBS, cohortId, Just (respHash, respSize),) <$>
              Map.lookup cohortId cohortSnapshotMap

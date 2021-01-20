@@ -88,7 +88,7 @@ const JsonInput = props => {
         theme="github"
         name="jsontoggler"
         minLines={10}
-        maxLines={100}
+        maxLines={30}
         width="100%"
         value={data}
         showPrintMargin={false}

@@ -1,3 +1,4 @@
+{-# LANGUAGE CPP #-}
 -- | Top-level management of live query poller threads. The implementation of the polling itself is
 -- in "Hasura.GraphQL.Execute.LiveQuery.Poll". See "Hasura.GraphQL.Execute.LiveQuery" for high-level
 -- details.
@@ -23,15 +24,17 @@ import qualified StmContainers.Map                        as STMMap
 import           Control.Concurrent.Extended              (forkImmortal, sleep)
 import           Control.Exception                        (mask_)
 import           Data.String
+#ifndef PROFILING
 import           GHC.AssertNF
+#endif
 
 import qualified Hasura.GraphQL.Execute.LiveQuery.TMap    as TMap
 import qualified Hasura.Logging                           as L
 
-import           Hasura.Db
 import           Hasura.GraphQL.Execute.LiveQuery.Options
 import           Hasura.GraphQL.Execute.LiveQuery.Plan
 import           Hasura.GraphQL.Execute.LiveQuery.Poll
+import           Hasura.RQL.Types.Common                  (unNonNegativeDiffTime)
 
 -- | The top-level datatype that holds the state for all active live queries.
 --
@@ -40,18 +43,18 @@ import           Hasura.GraphQL.Execute.LiveQuery.Poll
 data LiveQueriesState
   = LiveQueriesState
   { _lqsOptions      :: !LiveQueriesOptions
-  , _lqsPGExecTx     :: !PGExecCtx
   , _lqsLiveQueryMap :: !PollerMap
   , _lqsPostPollHook :: !LiveQueryPostPollHook
   -- ^ A hook function which is run after each fetch cycle
   }
 
-initLiveQueriesState :: LiveQueriesOptions -> PGExecCtx -> LiveQueryPostPollHook -> IO LiveQueriesState
-initLiveQueriesState options pgCtx pollHook =
-  LiveQueriesState options pgCtx <$> STMMap.newIO <*> pure pollHook
+initLiveQueriesState
+  :: LiveQueriesOptions -> LiveQueryPostPollHook -> IO LiveQueriesState
+initLiveQueriesState options pollHook =
+  LiveQueriesState options <$> STMMap.newIO <*> pure pollHook
 
 dumpLiveQueriesState :: Bool -> LiveQueriesState -> IO J.Value
-dumpLiveQueriesState extended (LiveQueriesState opts _ lqMap _) = do
+dumpLiveQueriesState extended (LiveQueriesState opts lqMap _) = do
   lqMapJ <- dumpPollerMap extended lqMap
   return $ J.object
     [ "options" J..= opts
@@ -83,7 +86,9 @@ addLiveQuery logger subscriberMetadata lqState plan onResultAction = do
 
   let !subscriber = Subscriber subscriberId subscriberMetadata onResultAction
 
+#ifndef PROFILING
   $assertNFHere subscriber  -- so we don't write thunks to mutable vars
+#endif
 
   -- a handler is returned only when it is newly created
   handlerM <- STM.atomically $
@@ -105,16 +110,18 @@ addLiveQuery logger subscriberMetadata lqState plan onResultAction = do
     pollerId <- PollerId <$> UUID.nextRandom
     threadRef <- forkImmortal ("pollQuery." <> show pollerId) logger $ forever $ do
       pollQuery pollerId lqOpts pgExecCtx query (_pCohorts handler) postPollHook
-      sleep $ unRefetchInterval refetchInterval
+      sleep $ unNonNegativeDiffTime $ unRefetchInterval refetchInterval
     let !pState = PollerIOState threadRef pollerId
+#ifndef PROFILING
     $assertNFHere pState  -- so we don't write thunks to mutable vars
+#endif
     STM.atomically $ STM.putTMVar (_pIOState handler) pState
 
   pure $ LiveQueryId handlerId cohortKey subscriberId
   where
-    LiveQueriesState lqOpts pgExecCtx lqMap postPollHook = lqState
+    LiveQueriesState lqOpts lqMap postPollHook = lqState
     LiveQueriesOptions _ refetchInterval = lqOpts
-    LiveQueryPlan (ParameterizedLiveQueryPlan role query) cohortKey = plan
+    LiveQueryPlan (ParameterizedLiveQueryPlan role query) cohortKey pgExecCtx = plan
 
     handlerId = PollerKey role query
 

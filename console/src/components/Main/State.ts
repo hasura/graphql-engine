@@ -1,3 +1,5 @@
+import { ConsoleNotification } from './ConsoleNotification';
+
 export interface MainState {
   migrationError: unknown | null;
   hasuractlEnv: unknown | null;
@@ -9,7 +11,8 @@ export interface MainState {
   loginInProgress: boolean;
   loginError: boolean;
   serverVersion: null;
-  latestStableServerVersion: null;
+  latestStableServerVersion: null | string;
+  latestPreReleaseServerVersion: null | string;
   telemetryEnabled: boolean;
   serverConfig: {
     data: {
@@ -25,7 +28,9 @@ export interface MainState {
     error: Error | null;
     isFetching: boolean;
   };
-  featuresCompatibility: object;
+  featuresCompatibility: Record<string, unknown>;
+  postgresVersion: string | null;
+  consoleNotifications: ConsoleNotification[];
 }
 
 const defaultState: MainState = {
@@ -40,6 +45,7 @@ const defaultState: MainState = {
   loginError: false,
   serverVersion: null,
   latestStableServerVersion: null,
+  latestPreReleaseServerVersion: null,
   telemetryEnabled: true,
   serverConfig: {
     data: {
@@ -56,6 +62,8 @@ const defaultState: MainState = {
     isFetching: false,
   },
   featuresCompatibility: {},
+  postgresVersion: null,
+  consoleNotifications: [],
 };
 
 export default defaultState;

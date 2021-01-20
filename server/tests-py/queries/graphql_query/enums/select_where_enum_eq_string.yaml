@@ -3,7 +3,7 @@ url: /v1/graphql
 status: 200
 response:
   errors:
-  - message: expecting an enum
+  - message: expected an enum value for type "colors_enum", but found a string
     extensions:
       code: validation-failed
       path: $.selectionSet.users.args.where.favorite_color._eq

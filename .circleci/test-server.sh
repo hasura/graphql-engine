@@ -178,7 +178,7 @@ cd $PYTEST_ROOT
 
 RUN_WEBHOOK_TESTS=true
 
-for port in 8080 8081 9876 5592
+for port in 8080 8081 9876 5592 5000 5594
 do
 	fail_if_port_busy $port
 done
@@ -191,9 +191,7 @@ pip3 install -r requirements.txt
 # node js deps
 curl -sL https://deb.nodesource.com/setup_8.x | bash -
 apt-get install -y nodejs
-npm_config_loglevel=error npm install $PYTEST_ROOT/remote_schemas/nodejs/
-
-npm install apollo-server graphql
+(cd remote_schemas/nodejs && npm_config_loglevel=error npm ci)
 
 mkdir -p "$OUTPUT_FOLDER/hpc"
 
@@ -207,6 +205,7 @@ fi
 export WEBHOOK_FROM_ENV="http://127.0.0.1:5592"
 export SCHEDULED_TRIGGERS_WEBHOOK_DOMAIN="http://127.0.0.1:5594"
 export HASURA_GRAPHQL_STRINGIFY_NUMERIC_TYPES=true
+export REMOTE_SCHEMAS_WEBHOOK_DOMAIN="http://127.0.0.1:5000"
 
 HGE_PIDS=""
 WH_PID=""
@@ -385,6 +384,66 @@ kill_hge_servers
 
 unset HASURA_GRAPHQL_JWT_SECRET
 
+# test JWT with Claims map
+echo -e "\n$(time_elapsed): <########## TEST GRAPHQL-ENGINE WITH ADMIN SECRET AND JWT (with claims_map and values are json path) #####################################>\n"
+TEST_TYPE="jwt-claims-map-with-json-path-values"
+
+export HASURA_GRAPHQL_JWT_SECRET="$(jq -n --arg key "$(cat $OUTPUT_FOLDER/ssl/jwt_public.key)" '{ type: "RS512", key: $key , claims_map: {"x-hasura-user-id": {"path":"$.['"'"'https://myapp.com/jwt/claims'"'"'].user.id"}, "x-hasura-allowed-roles": {"path":"$.['"'"'https://myapp.com/jwt/claims'"'"'].role.allowed"}, "x-hasura-default-role": {"path":"$.['"'"'https://myapp.com/jwt/claims'"'"'].role.default"}}}')"
+
+run_hge_with_args serve
+wait_for_port 8080
+
+pytest -n 1 -vv --hge-urls "$HGE_URL" --pg-urls "$HASURA_GRAPHQL_DATABASE_URL" --hge-key="$HASURA_GRAPHQL_ADMIN_SECRET" --hge-jwt-key-file="$OUTPUT_FOLDER/ssl/jwt_private.key" --hge-jwt-conf="$HASURA_GRAPHQL_JWT_SECRET" test_jwt_claims_map.py::TestJWTClaimsMapBasic
+
+kill_hge_servers
+
+unset HASURA_GRAPHQL_JWT_SECRET
+
+echo -e "\n$(time_elapsed): <########## TEST GRAPHQL-ENGINE WITH ADMIN SECRET AND JWT (with claims_map and values are json path with default values set) #####################################>\n"
+TEST_TYPE="jwt-claims-map-with-json-path-values-with-default-values"
+
+export HASURA_GRAPHQL_JWT_SECRET="$(jq -n --arg key "$(cat $OUTPUT_FOLDER/ssl/jwt_public.key)" '{ type: "RS512", key: $key , claims_map: {"x-hasura-user-id": {"path":"$.['"'"'https://myapp.com/jwt/claims'"'"'].user.id", "default":"1"}, "x-hasura-allowed-roles": {"path":"$.['"'"'https://myapp.com/jwt/claims'"'"'].role.allowed", "default":["user","editor"]}, "x-hasura-default-role": {"path":"$.['"'"'https://myapp.com/jwt/claims'"'"'].role.default","default":"user"}}}')"
+
+run_hge_with_args serve
+wait_for_port 8080
+
+pytest -n 1 -vv --hge-urls "$HGE_URL" --pg-urls "$HASURA_GRAPHQL_DATABASE_URL" --hge-key="$HASURA_GRAPHQL_ADMIN_SECRET" --hge-jwt-key-file="$OUTPUT_FOLDER/ssl/jwt_private.key" --hge-jwt-conf="$HASURA_GRAPHQL_JWT_SECRET" test_jwt_claims_map.py::TestJWTClaimsMapBasic
+
+kill_hge_servers
+
+unset HASURA_GRAPHQL_JWT_SECRET
+
+
+echo -e "\n$(time_elapsed): <########## TEST GRAPHQL-ENGINE WITH ADMIN SECRET AND JWT (with claims_map and values are literal values) #####################################>\n"
+TEST_TYPE="jwt-claims-map-with-literal-values"
+
+export HASURA_GRAPHQL_JWT_SECRET="$(jq -n --arg key "$(cat $OUTPUT_FOLDER/ssl/jwt_public.key)" '{ type: "RS512", key: $key , claims_map: {"x-hasura-user-id": {"path":"$.['"'"'https://myapp.com/jwt/claims'"'"'].user.id"}, "x-hasura-allowed-roles": ["user","editor"], "x-hasura-default-role": "user","x-hasura-custom-header":"custom-value"}}')"
+
+run_hge_with_args serve
+wait_for_port 8080
+
+pytest -n 1 -vv --hge-urls "$HGE_URL" --pg-urls "$HASURA_GRAPHQL_DATABASE_URL" --hge-key="$HASURA_GRAPHQL_ADMIN_SECRET" --hge-jwt-key-file="$OUTPUT_FOLDER/ssl/jwt_private.key" --hge-jwt-conf="$HASURA_GRAPHQL_JWT_SECRET" test_jwt_claims_map.py::TestJWTClaimsMapWithStaticHasuraClaimsMapValues
+
+kill_hge_servers
+
+unset HASURA_GRAPHQL_JWT_SECRET
+
+echo -e "\n$(time_elapsed): <########## TEST GRAPHQL-ENGINE WITH ADMIN SECRET AND JWT (with JWT config allowing for leeway) #####################################>\n"
+TEST_TYPE="jwt-with-expiry-time-leeway"
+
+export HASURA_GRAPHQL_JWT_SECRET="$(jq -n --arg key "$(cat $OUTPUT_FOLDER/ssl/jwt_public.key)" '{ type: "RS512", key: $key , allowed_skew: 60}')"
+
+run_hge_with_args serve
+wait_for_port 8080
+
+pytest -n 1 -vv --hge-urls "$HGE_URL" --pg-urls "$HASURA_GRAPHQL_DATABASE_URL" --hge-key="$HASURA_GRAPHQL_ADMIN_SECRET" --hge-jwt-key-file="$OUTPUT_FOLDER/ssl/jwt_private.key" --hge-jwt-conf="$HASURA_GRAPHQL_JWT_SECRET" test_jwt.py::TestJWTExpirySkew
+
+kill_hge_servers
+
+unset HASURA_GRAPHQL_JWT_SECRET
+
+
+
 # test with CORS modes
 
 echo -e "\n$(time_elapsed): <########## TEST GRAPHQL-ENGINE WITH CORS DOMAINS ########>\n"
@@ -482,6 +541,19 @@ run_hge_with_args serve --enabled-apis graphql
 wait_for_port 8080
 
 pytest -n 1 -vv --hge-urls "$HGE_URL" --pg-urls "$HASURA_GRAPHQL_DATABASE_URL" --hge-key="$HASURA_GRAPHQL_ADMIN_SECRET" --test-metadata-disabled test_apis_disabled.py
+
+kill_hge_servers
+
+echo -e "\n$(time_elapsed): <########## TEST GRAPHQL-ENGINE WITH REMOTE SCHEMA PERMISSIONS ENABLED ########>\n"
+TEST_TYPE="remote-schema-permissions"
+export HASURA_GRAPHQL_ENABLE_REMOTE_SCHEMA_PERMISSIONS=true
+
+run_hge_with_args serve
+wait_for_port 8080
+
+pytest -n 1 -vv --hge-urls "$HGE_URL" --pg-urls "$HASURA_GRAPHQL_DATABASE_URL" --hge-key="$HASURA_GRAPHQL_ADMIN_SECRET"  --enable-remote-schema-permissions test_remote_schema_permissions.py
+
+unset HASURA_GRAPHQL_ENABLE_REMOTE_SCHEMA_PERMISSIONS
 
 kill_hge_servers
 

@@ -2,6 +2,7 @@ module Hasura.GraphQL.Execute.Plan
   ( ReusablePlan(..)
   , PlanCache
   , PlanCacheOptions(..)
+  , mkPlanCacheOptions
   , getPlan
   , addPlan
   , initPlanCache
@@ -10,7 +11,6 @@ module Hasura.GraphQL.Execute.Plan
   ) where
 
 import qualified Data.Aeson                             as J
-import qualified Data.Aeson.Casing                      as J
 import qualified Data.Aeson.TH                          as J
 
 import           Hasura.Prelude
@@ -18,10 +18,24 @@ import           Hasura.RQL.Types
 import           Hasura.Session
 
 import qualified Hasura.Cache.Bounded                   as Cache
-import qualified Hasura.GraphQL.Execute.LiveQuery       as LQ
-import qualified Hasura.GraphQL.Execute.Query           as EQ
-import qualified Hasura.GraphQL.Resolve                 as R
+-- import qualified Hasura.GraphQL.Execute.LiveQuery       as LQ
+-- import qualified Hasura.GraphQL.Execute.Query           as EQ
+
+import qualified Hasura.GraphQL.Execute.Types           as ET
 import qualified Hasura.GraphQL.Transport.HTTP.Protocol as GH
+
+{- Note [Temporarily disabling query plan caching]
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Caching the incoming queries for re-usability is *temporarily* disabled.
+This is being done as part of rewriting GraphQL schema generation and
+execution (See https://github.com/hasura/graphql-engine/pull/4111)
+until we figure out if we need query plan caching.
+
+The code related to query caching in GraphQL query execution code path
+is just commented with referring to this note. The relavent variables are
+commented inline (Ex: {- planCache -}) to help authors in re-enabling
+the query caching feature (if needed).
+-}
 
 data PlanId
   = PlanId
@@ -29,7 +43,7 @@ data PlanId
   , _piRole               :: !RoleName
   , _piOperationName      :: !(Maybe GH.OperationName)
   , _piQuery              :: !GH.GQLQueryText
-  , _piQueryType          :: !EQ.GraphQLQueryType
+  , _piQueryType          :: !ET.GraphQLQueryType
   } deriving (Show, Eq, Ord, Generic)
 
 instance Hashable PlanId
@@ -47,19 +61,25 @@ instance J.ToJSON PlanId where
 newtype PlanCache
   = PlanCache {_unPlanCache :: Cache.BoundedCache PlanId ReusablePlan}
 
-data ReusablePlan
-  = RPQuery !EQ.ReusableQueryPlan ![R.QueryRootFldUnresolved]
-  | RPSubs !LQ.ReusableLiveQueryPlan
+data ReusablePlan = ReusablePlan
 
-instance J.ToJSON ReusablePlan where
-  toJSON = \case
-    RPQuery queryPlan _ -> J.toJSON queryPlan
-    RPSubs subsPlan     -> J.toJSON subsPlan
+-- See Note [Temporarily disabling query plan caching]
+-- data ReusablePlan
+--   = RPQuery !EQ.ReusableQueryPlan
+--   | RPSubs !LQ.ReusableLiveQueryPlan
+
+-- instance J.ToJSON ReusablePlan where
+--   toJSON = \case
+--     RPQuery queryPlan  -> J.toJSON queryPlan
+--     RPSubs subsPlan    -> J.toJSON subsPlan
 
 newtype PlanCacheOptions
   = PlanCacheOptions { unPlanCacheSize :: Cache.CacheSize }
   deriving (Show, Eq)
-$(J.deriveJSON (J.aesonDrop 2 J.snakeCase) ''PlanCacheOptions)
+$(J.deriveJSON hasuraJSON ''PlanCacheOptions)
+
+mkPlanCacheOptions :: Cache.CacheSize -> PlanCacheOptions
+mkPlanCacheOptions = PlanCacheOptions
 
 initPlanCache :: PlanCacheOptions -> IO PlanCache
 initPlanCache options =
@@ -67,7 +87,7 @@ initPlanCache options =
 
 getPlan
   :: SchemaCacheVer -> RoleName -> Maybe GH.OperationName -> GH.GQLQueryText
-  -> EQ.GraphQLQueryType -> PlanCache -> IO (Maybe ReusablePlan)
+  -> ET.GraphQLQueryType -> PlanCache -> IO (Maybe ReusablePlan)
 getPlan schemaVer rn opNameM q queryType (PlanCache planCache) =
   Cache.lookup planId planCache
   where
@@ -75,22 +95,28 @@ getPlan schemaVer rn opNameM q queryType (PlanCache planCache) =
 
 addPlan
   :: SchemaCacheVer -> RoleName -> Maybe GH.OperationName -> GH.GQLQueryText
-  -> ReusablePlan -> EQ.GraphQLQueryType -> PlanCache -> IO ()
+  -> ReusablePlan -> ET.GraphQLQueryType -> PlanCache -> IO ()
 addPlan schemaVer rn opNameM q queryPlan queryType (PlanCache planCache) =
   Cache.insert planId queryPlan planCache
   where
     planId = PlanId schemaVer rn opNameM q queryType
 
-clearPlanCache :: PlanCache -> IO ()
-clearPlanCache (PlanCache planCache) =
-  Cache.clear planCache
+-- See Note [Temporarily disabling query plan caching]
+-- clearPlanCache :: PlanCache -> IO ()
+clearPlanCache :: IO ()
+clearPlanCache {- (PlanCache planCache) -} =
+  pure ()
+  -- Cache.clear planCache
 
-dumpPlanCache :: PlanCache -> IO J.Value
-dumpPlanCache (PlanCache cache) =
-  J.toJSON . map (map dumpEntry) <$> Cache.getEntries cache
-  where
-    dumpEntry (planId, plan) =
-      J.object
-      [ "id" J..= planId
-      , "plan" J..= plan
-      ]
+-- See Note [Temporarily disabling query plan caching]
+-- dumpPlanCache :: PlanCache -> IO J.Value
+dumpPlanCache :: IO J.Value
+dumpPlanCache {- (PlanCache cache) -} =
+  pure $ J.String "Plan cache is temporarily disabled"
+  -- J.toJSON . map (map dumpEntry) <$> Cache.getEntries cache
+  -- where
+  --   dumpEntry (planId, plan) =
+  --     J.object
+  --     [ "id" J..= planId
+  --     , "plan" J..= plan
+  --     ]

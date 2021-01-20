@@ -1,0 +1,20 @@
+- description: User cannot access books_by_pk
+  url: /v1/graphql
+  status: 200
+  headers:
+    X-Hasura-Role: user
+  response:
+    errors:
+    - extensions:
+        path: $.selectionSet.books_by_pk
+        code: validation-failed
+      message: "field \"books_by_pk\" not found in type: 'query_root'"
+  query:
+    query: |
+      query {
+        books_by_pk(id:1,book_name:"Harry Porter") {
+          author_name
+          book_name
+          published_on
+        }
+      }

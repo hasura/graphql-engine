@@ -127,7 +127,7 @@ const filterReducer = (state = defaultCurFilter, action) => {
         const newCurFilterQ = {};
         newCurFilterQ.where =
           'where' in q && '$and' in q.where
-            ? { $and: [...q.where.$and, { '': { '': '' } }] }
+            ? { $and: [...q.where.$and, { '': { $eq: '' } }] }
             : { ...defaultCurFilter.where };
         newCurFilterQ.order_by =
           'order_by' in q
@@ -185,7 +185,7 @@ const filterReducer = (state = defaultCurFilter, action) => {
       return {
         ...state,
         where: {
-          $and: [...state.where.$and, { '': { '': '' } }],
+          $and: [...state.where.$and, { '': { $eq: '' } }],
         },
       };
     case REMOVE_FILTER:

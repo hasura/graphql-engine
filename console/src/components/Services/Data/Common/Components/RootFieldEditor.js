@@ -6,6 +6,7 @@ import CollapsibleToggle from '../../../../Common/CollapsibleToggle/CollapsibleT
 const RootFieldEditor = ({
   rootFields,
   disabled,
+  customNameOnChange,
   selectOnChange,
   selectByPkOnChange,
   selectAggOnChange,
@@ -16,6 +17,7 @@ const RootFieldEditor = ({
   deleteOnChange,
   deleteByPkOnChange,
   tableName,
+  customName,
 }) => {
   const {
     select,
@@ -36,14 +38,21 @@ const RootFieldEditor = ({
     if (rfType.includes('one')) {
       return rfType.replace('one', tableName) + '_one';
     }
+    if (rfType === 'custom_name') {
+      return tableName;
+    }
     return `${rfType}_${tableName}`;
   };
 
-  const getRow = (rfType, value, onChange) => (
+  const getRow = (rfType, value, onChange, boldLabel = false) => (
     <div
       className={`${styles.display_flex} row ${styles.add_mar_bottom_small}`}
     >
-      <div className={`${styles.add_mar_right} col-md-3`}>
+      <div
+        className={`${styles.add_mar_right} col-md-3 ${
+          boldLabel ? styles.boldTitle : ''
+        }`}
+      >
         {getRootFieldLabel(rfType)}
       </div>
       <div className={'col-md-5'}>
@@ -92,6 +101,9 @@ const RootFieldEditor = ({
   return (
     <div>
       <div className={styles.add_mar_bottom_mid}>
+        <div className={`${styles.add_pad_left} ${styles.add_pad_right}`}>
+          {getRow('custom_name', customName, customNameOnChange, true)}
+        </div>
         {getSection('query')}
         {getSection('mutation')}
       </div>

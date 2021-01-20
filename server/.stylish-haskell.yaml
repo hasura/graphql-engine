@@ -229,6 +229,7 @@ language_extensions:
 - BangPatterns
 - BlockArguments
 - ConstraintKinds
+- DataKinds
 - DefaultSignatures
 - DeriveDataTypeable
 - DeriveFoldable
@@ -238,9 +239,11 @@ language_extensions:
 - DeriveTraversable
 - DerivingVia
 - EmptyCase
+- ExistentialQuantification
 - FlexibleContexts
 - FlexibleInstances
 - FunctionalDependencies
+- GADTs
 - GeneralizedNewtypeDeriving
 - InstanceSigs
 - LambdaCase
@@ -249,12 +252,16 @@ language_extensions:
 - NamedFieldPuns
 - NoImplicitPrelude
 - OverloadedStrings
+- QuantifiedConstraints
 - QuasiQuotes
 - RankNTypes
+- RecordWildCards
+- RoleAnnotations
 - ScopedTypeVariables
 - StandaloneDeriving
 - TemplateHaskell
 - TupleSections
 - TypeApplications
 - TypeFamilies
+- TypeFamilyDependencies
 - TypeOperators

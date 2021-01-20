@@ -24,19 +24,17 @@ import {
 
 import {
   findTable,
-  generateTableDef,
-  getSchemaName,
   getTrackedTables,
-  getColumnType,
   getTableColumn,
   getRelationshipRefTable,
   getTableColumnNames,
   getTableRelationshipNames,
   getTableRelationship,
-  getTableSchema,
   getQualifiedTableDef,
   getSchemaTableNames,
-} from '../../../../Common/utils/pgUtils';
+  generateTableDef,
+  dataSource,
+} from '../../../../../dataSources';
 
 import {
   isJsonString,
@@ -113,7 +111,7 @@ class PermissionBuilder extends React.Component {
         if (existTableSchema) {
           const { allTableSchemas } = this.props;
 
-          const allSchemaNames = allTableSchemas.map(t => getTableSchema(t));
+          const allSchemaNames = allTableSchemas.map(t => t.table_schema);
 
           if (!allSchemaNames.includes(existTableSchema)) {
             _missingSchemas.push(existTableSchema);
@@ -726,7 +724,7 @@ class PermissionBuilder extends React.Component {
         if (tableSchema && columnName) {
           const column = getTableColumn(tableSchema, columnName);
           if (column) {
-            columnType = getColumnType(column);
+            columnType = dataSource.getColumnType(column);
           }
         }
 
@@ -762,10 +760,8 @@ class PermissionBuilder extends React.Component {
 
       const tableNames = getSchemaTableNames(tableSchemas, selectedSchema);
 
-      const schemaNames = schemaList.map(s => getSchemaName(s));
-
       const schemaSelect = wrapDoubleQuotes(
-        renderSelect(schemaSelectDispatchFunc, selectedSchema, schemaNames)
+        renderSelect(schemaSelectDispatchFunc, selectedSchema, schemaList)
       );
 
       const tableSelect = wrapDoubleQuotes(

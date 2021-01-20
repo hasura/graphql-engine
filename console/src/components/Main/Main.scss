@@ -99,6 +99,7 @@
   border-right: 1px solid #788095;
   display: inline-block;
   width: 20%;
+  min-width: 240px;
 
   .logoParent {
     display: flex;
@@ -150,7 +151,8 @@
 }
 
 .clusterInfoWrapper {
-  width: 35%;
+  width: auto;
+  margin-left: auto;
   display: flex;
   justify-content: flex-end;
   position: relative;
@@ -428,7 +430,6 @@
   align-items: center;
   position: fixed;
   width: 100%;
-  min-width: $minContainerWidth;
   z-index: 100;
 
   hr {
@@ -924,17 +925,15 @@
 .shareSection {
   display: flex;
   align-items: center;
-  background-color: white;
-  padding: 15px;
+  padding: 12px 18px;
   color: white;
   cursor: pointer;
-
+  position: relative;
   &:hover {
     opacity: 0.7;
   }
-
-  img {
-    width: 23px;
+  &.opened {
+    background-color: #2d3242;
   }
 }
 
@@ -1309,9 +1308,191 @@
   }
 }
 
+.markAllAsReadBtn {
+  border: none;
+  color: #717780;
+  background-color: #f2f2f2;
+  border-radius: 4px;
+  font-size: 10px;
+  line-height: 12px;
+  margin-left: 166px;
+  text-transform: uppercase;
+}
+
+.closeNotificationIcon {
+  user-select: none;
+  font-size: 16px;
+  top: 52px;
+  right: 8px;
+  &:hover {
+    cursor: pointer;
+  }
+}
+
+.consoleNotificationPanel {
+  width: 460px;
+  padding: 0;
+  left: auto;
+  border: none;
+  user-select: none;
+  -webkit-box-shadow: -3px 4px 10px 0px rgba(0, 0, 0, 0.1);
+  -moz-box-shadow: -3px 4px 10px 0px rgba(0, 0, 0, 0.1);
+  box-shadow: -3px 4px 10px 0px rgba(0, 0, 0, 0.1);
+}
+
+.notificationsContainer {
+  border: 1px solid #f2f2f2;
+  border-top: none;
+  background-color: white;
+  text-transform: none;
+  overflow: hidden;
+  height: auto;
+  max-height: calc(100vh - 112px);
+  &:hover {
+    overflow-y: scroll;
+  }
+}
+
+.notificationsContainer::-webkit-scrollbar {
+  width: 0px;
+}
+
+.numBadge {
+  background: #f47e7e;
+  font-weight: bold;
+  color: white;
+  text-align: center;
+  font-size: 9px;
+  height: 17px;
+  position: absolute;
+  width: 17px;
+  top: 16px;
+  right: 0.8rem;
+  border-radius: 50%;
+  user-select: none;
+  visibility: visible;
+  &:hover {
+    background-color: #f47e7e;
+  }
+  &.hideBadge {
+    visibility: hidden;
+  }
+}
+
+.bellIcon {
+  font-size: 16px;
+}
+
+.updateBox {
+  padding: 15px 0px;
+  border-bottom: 1px solid #f2f2f2;
+  &:hover {
+    cursor: pointer;
+  }
+  &:last-child {
+    border-bottom: none;
+  }
+  &.unread {
+    background-color: white;
+  }
+  &.read {
+    background-color: #f8f8f8;
+  }
+}
+
+.updateStyleBox {
+  padding: 15px 0px;
+  border-bottom: 1px solid #f2f2f2;
+  &:hover {
+    cursor: pointer;
+  }
+  &.unread {
+    background-color: rgba(202, 246, 215, 0.3);
+  }
+  &.read {
+    background-color: #f8f8f8;
+  }
+}
+
+.linkArrow {
+  font-size: 17px;
+  color: #a8a8a8;
+}
+
+.splitHalf {
+  height: 50%;
+  &.linkPosition {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    justify-content: flex-end;
+    margin-bottom: 8px;
+  }
+}
+
+.unreadDot {
+  border-radius: 50%;
+  width: 6px;
+  height: 6px;
+  background-color: #c4c4c4;
+  position: relative;
+  top: -8px;
+  left: 6px;
+  visibility: visible;
+  &.hideDot {
+    visibility: hidden;
+  }
+}
+
+.unreadStar {
+  position: relative;
+  top: -8px;
+  left: 6px;
+  visibility: visible;
+  &.hideStar {
+    visibility: hidden;
+  }
+}
+
+.consoleLogoNotifications {
+  margin-top: -3px;
+  margin-left: 8px;
+}
+
+.viewMoreNotifications {
+  width: 100%;
+  background-color: #f8f8f8;
+  border: none;
+  outline: none;
+  font-size: medium;
+  height: 40px;
+  border-radius: 0;
+  &:hover {
+    text-decoration: underline;
+    background-color: white;
+  }
+}
+
+.linkContainer {
+  margin-top: 4px;
+  font-weight: 500;
+}
+
+.notificationExternalLink {
+  font-size: 15px;
+  color: rgb(34, 84, 192);
+  &:hover {
+    color: #e53935;
+    text-transform: none;
+    cursor: pointer;
+    text-decoration: underline;
+  }
+}
+
 @media (max-width: 1500px) {
   .header_items {
-    width: 52%;
+    width: auto;
   }
   .iconCenter {
     i {
@@ -1348,5 +1529,43 @@
     a {
       font-size: 12px;
     }
+  }
+}
+
+@media (max-width: 1250px) {
+  .secureSectionText {
+    display: none;
+  }
+}
+
+@media (max-width: 1050px) {
+  .sidebar {
+    .sidebarItems {
+      li {
+        p {
+          display: none;
+        }
+      }
+    }
+  }
+}
+
+@media (max-width: 600px) {
+  .sidebar {
+    min-width: 600px;
+  }
+}
+
+.pixelLoveSection {
+  display: flex;
+  align-items: center;
+  background-color: white;
+  padding: 12px 15px;
+  color: white;
+  cursor: pointer;
+  height: 100%;
+
+  &:hover {
+    opacity: 0.7;
   }
 }

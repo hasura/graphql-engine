@@ -26,7 +26,7 @@ type APIServer struct {
 }
 
 func NewAPIServer(address string, port string, ec *cli.ExecutionContext) (*APIServer, error) {
-	migrate, err := migrate.NewMigrate(ec, false)
+	migrate, err := migrate.NewMigrate(ec, false, "")
 	if err != nil {
 		return nil, errors.Wrap(err, "error creating migrate instance")
 	}
@@ -57,6 +57,7 @@ func (r *APIServer) setRoutes(migrationDir string, logger *logrus.Logger) {
 		apis.Use(r.setLogger(logger))
 		apis.Use(r.setFilePath(migrationDir))
 		apis.Use(r.setMigrate(r.Migrate))
+		apis.Use(r.setEC(r.EC))
 		apis.Use(r.setConfigVersion(r.EC.Config.Version))
 		// Migrate api endpoints and middleware
 		migrateAPIs := apis.Group("/migrate")
@@ -87,6 +88,13 @@ func (r *APIServer) setMigrate(t *migrate.Migrate) gin.HandlerFunc {
 	}
 }
 
+func (r *APIServer) setEC(ec *cli.ExecutionContext) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		c.Set("ec", ec)
+		c.Next()
+	}
+}
+
 func (r *APIServer) setFilePath(dir string) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		host := migrate.GetFilePath(dir)
@@ -102,12 +110,14 @@ func (r *APIServer) setConfigVersion(configVersion cli.ConfigVersion) gin.Handle
 	}
 }
 
+/*
 func (r *APIServer) setMetadataFile(file string) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		c.Set("metadataFile", file)
 		c.Next()
 	}
 }
+*/
 
 func (r *APIServer) setLogger(logger *logrus.Logger) gin.HandlerFunc {
 	return func(c *gin.Context) {

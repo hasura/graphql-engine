@@ -1,0 +1,33 @@
+- description: Insert Person via a GraphQL mutation, the variable used is a valid JSON value but an invalid GraphQL value
+  url: /v1/graphql
+  status: 200
+  query:
+    variables:
+      value:
+        1:
+          name: sherlock holmes
+          address: 221b Baker St, Marlyebone
+    query: |
+      mutation insert_person($value: jsonb) {
+        insert_person(
+          objects: [
+            {
+              details: $value
+            }
+          ]
+         ) {
+           returning {
+             id
+             details
+           }
+        }
+      }
+  response:
+    data:
+      insert_person:
+        returning:
+          - id: 1
+            details:
+              1:
+                name: sherlock holmes
+                address: 221b Baker St, Marlyebone

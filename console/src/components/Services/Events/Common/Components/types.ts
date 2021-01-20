@@ -13,3 +13,14 @@ export type FilterTableProps = {
   columns: string[];
   identifier: string;
 };
+
+export type GridHeadingProps = {
+  Header: string;
+  accessor: string;
+  width?: number;
+  expander?: boolean;
+  Expander?: React.FC<{
+    isExpanded: boolean;
+    viewIndex: number;
+  }>;
+};

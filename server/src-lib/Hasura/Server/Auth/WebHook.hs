@@ -32,7 +32,6 @@ import           Hasura.Server.Utils
 import           Hasura.Session
 import qualified Hasura.Tracing              as Tracing
 
-
 data AuthHookType
   = AHTGet
   | AHTPost
@@ -49,7 +48,7 @@ data AuthHookG a b
   , ahType :: !b
   } deriving (Show, Eq)
 
-type AuthHook = AuthHookG T.Text AuthHookType
+type AuthHook = AuthHookG Text AuthHookType
 
 hookMethod :: AuthHook -> N.StdMethod
 hookMethod authHook = case ahType authHook of
@@ -88,9 +87,9 @@ userInfoFromAuthHook logger manager hook reqHeaders = do
             let contentType = ("Content-Type", "application/json")
                 headersPayload = J.toJSON $ Map.fromList $ hdrsToText reqHeaders
             H.httpLbs (req' { H.method         = "POST"
-                            , H.requestHeaders = addDefaultHeaders [contentType] 
-                            , H.requestBody    = H.RequestBodyLBS . J.encode $ object ["headers" J..= headersPayload]
-                            }) manager
+                           , H.requestHeaders = addDefaultHeaders [contentType]
+                           , H.requestBody    = H.RequestBodyLBS . J.encode $ object ["headers" J..= headersPayload]
+                           }) manager
 
     logAndThrow :: H.HttpException -> m a
     logAndThrow err = do
@@ -103,7 +102,7 @@ userInfoFromAuthHook logger manager hook reqHeaders = do
 mkUserInfoFromResp
   :: (MonadIO m, MonadError QErr m)
   => Logger Hasura
-  -> T.Text
+  -> Text
   -> N.StdMethod
   -> N.Status
   -> BL.ByteString
@@ -126,12 +125,12 @@ mkUserInfoFromResp (Logger logger) url method statusCode respBody
   where
     getUserInfoFromHdrs rawHeaders = do
       userInfo <- mkUserInfo URBFromSessionVariables UAdminSecretNotSent $
-                  mkSessionVariablesText $ Map.toList rawHeaders
+                  mkSessionVariablesText rawHeaders
       logWebHookResp LevelInfo Nothing Nothing
       expiration <- runMaybeT $ timeFromCacheControl rawHeaders <|> timeFromExpires rawHeaders
       pure (userInfo, expiration)
 
-    logWebHookResp :: MonadIO m => LogLevel -> Maybe BL.ByteString -> Maybe T.Text -> m ()
+    logWebHookResp :: MonadIO m => LogLevel -> Maybe BL.ByteString -> Maybe Text -> m ()
     logWebHookResp logLevel mResp message =
       logger $ WebHookLog logLevel (Just statusCode)
         url method Nothing (bsToTxt . BL.toStrict <$> mResp) message

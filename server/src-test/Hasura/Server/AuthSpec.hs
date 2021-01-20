@@ -6,10 +6,13 @@ import           Hasura.Logging
 import           Hasura.Prelude
 import           Hasura.Server.Version
 
+import           Control.Monad.Trans.Managed     (lowerManagedT)
 import           Control.Monad.Trans.Control
 import qualified Crypto.JOSE.JWK             as Jose
 import           Data.Aeson                  ((.=))
 import qualified Data.Aeson                  as J
+import           Data.Parser.JSONPath
+import qualified Data.HashMap.Strict         as Map
 import qualified Network.HTTP.Types          as N
 
 import           Hasura.RQL.Types
@@ -24,6 +27,13 @@ spec :: Spec
 spec = do
   getUserInfoWithExpTimeTests
   setupAuthModeTests
+  parseClaimsMapTests
+
+allowedRolesClaimText :: Text
+allowedRolesClaimText = sessionVariableToText allowedRolesClaim
+
+defaultRoleClaimText :: Text
+defaultRoleClaimText = sessionVariableToText defaultRoleClaim
 
 -- Unit test the core of our authentication code. This doesn't test the details
 -- of resolving roles from JWT or webhook.
@@ -50,10 +60,10 @@ getUserInfoWithExpTimeTests = describe "getUserInfo" $ do
               _UserInfo nm =
                 mkUserInfo (URBFromSessionVariablesFallback $ mkRoleNameE nm)
                            UAdminSecretNotSent
-                           (mkSessionVariables mempty)
+                           (mkSessionVariablesHeaders mempty)
           processJwt = processJwt_ $
             -- processAuthZHeader:
-            \_jwtCtx _authzHeader -> return (claims , Nothing)
+            \_jwtCtx _authzHeader -> return (mapKeys mkSessionVariable claims, Nothing)
 
   let setupAuthMode'E a b c d =
         either (const $ error "fixme") id <$> setupAuthMode' a b c d
@@ -272,18 +282,18 @@ getUserInfoWithExpTimeTests = describe "getUserInfo" $ do
         \(mode, modeMsg) -> describe modeMsg $ do
 
           it "authorizes successfully with JWT when requested role allowed" $ do
-            let claim = unObject [ allowedRolesClaim .= (["editor","user", "mod"] :: [Text])
-                                , defaultRoleClaim .= ("user" :: Text)
+            let claim = unObject [ allowedRolesClaimText .= (["editor","user", "mod"] :: [Text])
+                                , defaultRoleClaimText .= ("user" :: Text)
                                 ]
             getUserInfoWithExpTime claim [("Authorization", "IGNORED"), (userRoleHeader, "editor")] mode
               `shouldReturn` Right (mkRoleNameE "editor")
-            -- Uses the defaultRoleClaim:
+            -- Uses the defaultRoleClaimText:
             getUserInfoWithExpTime claim [("Authorization", "IGNORED")] mode
               `shouldReturn` Right (mkRoleNameE "user")
 
           it "rejects when requested role is not allowed" $ do
-            let claim = unObject [ allowedRolesClaim .= (["editor","user", "mod"] :: [Text])
-                                , defaultRoleClaim .= ("user" :: Text)
+            let claim = unObject [ allowedRolesClaimText .= (["editor","user", "mod"] :: [Text])
+                                , defaultRoleClaimText .= ("user" :: Text)
                                 ]
             getUserInfoWithExpTime claim [("Authorization", "IGNORED"), (userRoleHeader, "r00t")] mode
               `shouldReturn` Left AccessDenied
@@ -291,8 +301,8 @@ getUserInfoWithExpTimeTests = describe "getUserInfo" $ do
               `shouldReturn` Left AccessDenied
 
           -- A corner case, but the behavior seems desirable:
-          it "always rejects when token has empty allowedRolesClaim" $ do
-            let claim = unObject [ allowedRolesClaim .= ([] :: [Text]), defaultRoleClaim .= ("user" :: Text) ]
+          it "always rejects when token has empty allowedRolesClaimText" $ do
+            let claim = unObject [ allowedRolesClaimText .= ([] :: [Text]), defaultRoleClaimText .= ("user" :: Text) ]
             getUserInfoWithExpTime claim [("Authorization", "IGNORED"), (userRoleHeader, "admin")] mode
               `shouldReturn` Left AccessDenied
             getUserInfoWithExpTime claim [("Authorization", "IGNORED"), (userRoleHeader, "user")] mode
@@ -300,9 +310,9 @@ getUserInfoWithExpTimeTests = describe "getUserInfo" $ do
             getUserInfoWithExpTime claim [("Authorization", "IGNORED")] mode
               `shouldReturn` Left AccessDenied
 
-          it "rejects when token doesn't have proper allowedRolesClaim and defaultRoleClaim" $ do
-            let claim0 = unObject [ allowedRolesClaim .= (["editor","user", "mod"] :: [Text]) ]
-                claim1 = unObject [ defaultRoleClaim .= ("user" :: Text) ]
+          it "rejects when token doesn't have proper allowedRolesClaimText and defaultRoleClaimText" $ do
+            let claim0 = unObject [ allowedRolesClaimText .= (["editor","user", "mod"] :: [Text]) ]
+                claim1 = unObject [ defaultRoleClaimText .= ("user" :: Text) ]
                 claim2 = unObject []
             for_ [claim0, claim1, claim2] $ \claim ->
               getUserInfoWithExpTime claim [("Authorization", "IGNORED")] mode
@@ -333,7 +343,7 @@ setupAuthModeTests = describe "setupAuthMode" $ do
   -- These are all various error cases, except for the AMNoAuth mode:
   it "with no admin secret provided" $ do
     setupAuthMode' Nothing       Nothing             Nothing              Nothing
-      `shouldReturn` (Right AMNoAuth)
+      `shouldReturn` Right AMNoAuth
     -- We insist on an admin secret in order to use webhook or JWT auth:
     setupAuthMode' Nothing       Nothing             (Just fakeJWTConfig) Nothing
       `shouldReturn` Left ()
@@ -381,13 +391,173 @@ setupAuthModeTests = describe "setupAuthMode" $ do
     setupAuthMode' (Just secret) (Just fakeAuthHook) (Just fakeJWTConfig) (Just unauthRole)
       `shouldReturn` Left ()
 
+parseClaimsMapTests :: Spec
+parseClaimsMapTests = describe "parseClaimMapTests" $ do
+  let
+    parseClaimsMap_
+      :: J.Object
+      -> JWTClaims
+      -> IO (Either Code ClaimsMap)
+    parseClaimsMap_ obj claims =
+      runExceptT $ withExceptT qeCode $ parseClaimsMap obj claims
+
+    unObject l = case J.object l of
+      J.Object o -> o
+      _          -> error "Impossible!"
+
+    defaultClaimsMap =
+      Map.fromList
+       [ (allowedRolesClaim, J.toJSON (map mkRoleNameE ["user","editor"]))
+       , (defaultRoleClaim, J.toJSON (mkRoleNameE "user"))]
+
+  describe "JWT configured with namespace" $ do
+
+    describe "JWT configured with namespace key, the key is a text value which is expected to be at the root of the JWT token" $ do
+      it "parses claims map from the JWT token with correct namespace " $ do
+        let claimsObj = unObject $
+                        [ "x-hasura-allowed-roles" .= (["user","editor"] :: [Text])
+                        , "x-hasura-default-role"  .= ("user" :: Text)
+                        ]
+        let obj = unObject $ ["claims_map" .= claimsObj]
+        parseClaimsMap_ obj  (JCNamespace (ClaimNs "claims_map") defaultClaimsFormat)
+          `shouldReturn`
+          Right defaultClaimsMap
+
+      it "doesn't parse claims map from the JWT token with wrong namespace " $ do
+        let claimsObj = unObject $
+                        [ "x-hasura-allowed-roles" .= (["user","editor"] :: [Text])
+                        , "x-hasura-default-role"  .= ("user" :: Text)
+                        ]
+        let obj = unObject $ ["claims_map" .= claimsObj]
+        parseClaimsMap_ obj  (JCNamespace (ClaimNs "wrong_claims_map") defaultClaimsFormat)
+          `shouldReturn`
+          Left JWTInvalidClaims
+
+    describe "JWT configured with namespace JSON path, JSON path to the claims map" $ do
+      it "parse claims map from the JWT token using claims namespace JSON Path" $ do
+        let obj = unObject $
+                        [ "x-hasura-allowed-roles" .= (["user","editor"] :: [Text])
+                        , "x-hasura-default-role"  .= ("user" :: Text)
+                        , "sub" .= ("random" :: Text)
+                        , "exp" .= (1626420800 :: Int)        -- we ignore these non session variables, in the response
+                        ]
+        parseClaimsMap_ obj  (JCNamespace (ClaimNsPath (mkJSONPathE "$")) defaultClaimsFormat)
+        -- "$" JSON path signifies the claims are to be found in the root of the JWT token
+          `shouldReturn`
+          Right defaultClaimsMap
+
+      it "throws error while attempting to parse claims map from the JWT token with a wrong namespace JSON Path" $ do
+        let claimsObj = unObject $
+                        [ "x-hasura-allowed-roles" .= (["user","editor"] :: [Text])
+                        , "x-hasura-default-role"  .= ("user" :: Text)
+                        ]
+            obj = unObject $ [ "hasura_claims" .= claimsObj ]
+        parseClaimsMap_ obj  (JCNamespace (ClaimNsPath (mkJSONPathE "$.claims")) defaultClaimsFormat)
+          `shouldReturn`
+          Left JWTInvalidClaims
+
+  describe "JWT configured with custom JWT claims" $ do
+
+    let rolesObj = unObject $
+                    [ "allowed" .= (["user","editor"] :: [Text])
+                    , "default"  .= ("user" :: Text)
+                    ]
+        userId = unObject [ "id" .= ("1" :: Text)]
+        obj = unObject $ [ "roles" .= rolesObj
+                         , "user"  .= userId
+                         ]
+        userIdClaim = mkSessionVariable "x-hasura-user-id"
+
+    describe "custom claims with JSON paths to the claim location in the JWT token" $ do
+
+      it "parse custom claims values, with correct values" $ do
+        let customDefRoleClaim = mkCustomDefaultRoleClaim (Just "$.roles.default") Nothing
+            customAllowedRolesClaim = mkCustomAllowedRoleClaim (Just "$.roles.allowed") Nothing
+            otherClaims = Map.fromList
+                 [(userIdClaim, mkCustomOtherClaim (Just "$.user.id") Nothing)]
+            customClaimsMap = JWTCustomClaimsMap customDefRoleClaim customAllowedRolesClaim otherClaims
+
+        parseClaimsMap_ obj  (JCMap customClaimsMap)
+          `shouldReturn`
+          Right (Map.fromList
+           [ (allowedRolesClaim, J.toJSON (map mkRoleNameE ["user","editor"]))
+           , (defaultRoleClaim, J.toJSON (mkRoleNameE "user"))
+           , (userIdClaim, J.String "1")
+           ])
+
+      it "throws error when a specified custom claim value is missing" $ do
+
+        let customDefRoleClaim = mkCustomDefaultRoleClaim (Just "$.roles.wrong_default") Nothing -- wrong path provided
+            customAllowedRolesClaim = mkCustomAllowedRoleClaim (Just "$.roles.allowed") Nothing
+            customClaimsMap = JWTCustomClaimsMap customDefRoleClaim customAllowedRolesClaim mempty
+        parseClaimsMap_ obj  (JCMap customClaimsMap)
+          `shouldReturn`
+          Left JWTRoleClaimMissing
+
+      it "doesn't throw an error when the specified custom claim is missing, but the default value is provided" $ do
+
+        let customDefRoleClaim = mkCustomDefaultRoleClaim (Just "$.roles.wrong_default") (Just "editor")
+            customAllowedRolesClaim = mkCustomAllowedRoleClaim (Just "$.roles.allowed") Nothing
+            customClaimsMap = JWTCustomClaimsMap customDefRoleClaim customAllowedRolesClaim mempty
+        parseClaimsMap_ obj  (JCMap customClaimsMap)
+          `shouldReturn`
+          Right (Map.fromList
+           [ (allowedRolesClaim, J.toJSON (map mkRoleNameE ["user","editor"]))
+           , (defaultRoleClaim, J.toJSON (mkRoleNameE "editor"))
+           ])
+
+    describe "custom claims with literal values" $ do
+
+      it "uses the literal custom claim value" $ do
+
+        let customDefRoleClaim = mkCustomDefaultRoleClaim Nothing (Just "editor")
+            customAllowedRolesClaim = mkCustomAllowedRoleClaim Nothing (Just ["user", "editor"])
+            customClaimsMap = JWTCustomClaimsMap customDefRoleClaim customAllowedRolesClaim mempty
+        parseClaimsMap_ mempty (JCMap customClaimsMap)
+          `shouldReturn`
+          Right (Map.fromList
+           [ (allowedRolesClaim, J.toJSON (map mkRoleNameE ["user","editor"]))
+           , (defaultRoleClaim, J.toJSON (mkRoleNameE "editor"))
+           ])
+
+mkCustomDefaultRoleClaim :: Maybe Text -> Maybe Text -> JWTCustomClaimsMapDefaultRole
+mkCustomDefaultRoleClaim claimPath defVal =
+  -- check if claimPath is provided, if not then use the default value
+  -- as the literal value by removing the `Maybe` of defVal
+  case claimPath of
+    Just path -> JWTCustomClaimsMapJSONPath (mkJSONPathE path) $ defRoleName
+    Nothing -> JWTCustomClaimsMapStatic $ fromMaybe (mkRoleNameE "user") defRoleName
+  where
+    defRoleName = mkRoleNameE <$> defVal
+
+mkCustomAllowedRoleClaim :: Maybe Text -> Maybe [Text] -> JWTCustomClaimsMapAllowedRoles
+mkCustomAllowedRoleClaim claimPath defVal =
+  -- check if claimPath is provided, if not then use the default value
+  -- as the literal value by removing the `Maybe` of defVal
+  case claimPath of
+    Just path -> JWTCustomClaimsMapJSONPath (mkJSONPathE path) $ defAllowedRoles
+    Nothing ->
+      JWTCustomClaimsMapStatic $
+        fromMaybe (mkRoleNameE <$> ["user", "editor"]) defAllowedRoles
+  where
+    defAllowedRoles = fmap mkRoleNameE <$> defVal
+
+-- use for claims other than `x-hasura-default-role` and `x-hasura-allowed-roles`
+mkCustomOtherClaim :: Maybe Text -> Maybe Text -> JWTCustomClaimsMapValue
+mkCustomOtherClaim claimPath defVal =
+  -- check if claimPath is provided, if not then use the default value
+  -- as the literal value by removing the `Maybe` of defVal
+  case claimPath of
+    Just path -> JWTCustomClaimsMapJSONPath (mkJSONPathE path) $ defVal
+    Nothing -> JWTCustomClaimsMapStatic $ fromMaybe "default claim value" defVal
+
 fakeJWTConfig :: JWTConfig
 fakeJWTConfig =
   let jcKeyOrUrl = Left (Jose.fromOctets [])
-      jcClaimNs = ClaimNs ""
       jcAudience = Nothing
-      jcClaimsFormat = Nothing
       jcIssuer = Nothing
+      jcClaims = JCNamespace (ClaimNs "") JCFJson
+      jcAllowedSkew = Nothing
    in JWTConfig{..}
 
 fakeAuthHook :: AuthHook
@@ -395,6 +565,10 @@ fakeAuthHook = AuthHookG "http://fake" AHTGet
 
 mkRoleNameE :: Text -> RoleName
 mkRoleNameE = fromMaybe (error "fixme") . mkRoleName
+
+mkJSONPathE :: Text -> JSONPath
+mkJSONPathE = either error id . parseJSONPath
+
 
 newtype NoReporter a = NoReporter { runNoReporter :: IO a }
   deriving newtype (Functor, Applicative, Monad, MonadIO, MonadBase IO, MonadBaseControl IO)
@@ -412,7 +586,8 @@ setupAuthMode'  mAdminSecretHash mWebHook mJwtSecret mUnAuthRole =
   -- just throw away the error message for ease of testing:
   fmap (either (const $ Left ()) Right)
     $ runNoReporter
-    $ runExceptT 
+    $ lowerManagedT
+    $ runExceptT
     $ setupAuthMode mAdminSecretHash mWebHook mJwtSecret mUnAuthRole
       -- NOTE: this won't do any http or launch threads if we don't specify JWT URL:
       (error "H.Manager") (Logger $ void . return)

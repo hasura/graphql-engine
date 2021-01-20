@@ -272,16 +272,43 @@ class TestSubscriptionMultiplexing:
             different_sql = self.get_parameterized_sql(hge_ctx, query, vars)
             assert different_sql != representative_sql, (representative_sql, different_sql)
 
-    def get_parameterized_sql(self, hge_ctx, query, variables):
+    def test_extraneous_session_variables_are_discarded_from_query(self, hge_ctx):
+        with open(self.dir() + '/articles_query.yaml') as c:
+            config = yaml.safe_load(c)
+
+        query = config['query']
+        session_variables = {
+                "X-Hasura-Role":"public",
+                "X-Hasura-User-Id":"1"      # extraneous session variable
+        }
+        response = self.get_explain_graphql_query_response(hge_ctx, query, {}, session_variables)
+        # The input session variables should be ignored because the only check for the role is
+        # if `is_public` is `true`
+        assert response["variables"]["session"] == {}, response["variables"]
+
+        session_variables = {
+                "X-Hasura-Role":"user",
+                "X-Hasura-User-Id":"1",
+                "X-Hasura-Allowed-Ids":"{1,3,4}" # extraneous session variable
+        }
+        response = self.get_explain_graphql_query_response(hge_ctx, query, {}, session_variables)
+        # The input session variable should not be ignored because the `user` role can only
+        # select those roles where `user_id = X-Hasura-User-Id`
+        assert response["variables"]["session"] == {'x-hasura-user-id':"1"}, response["variables"]
+
+    def get_explain_graphql_query_response(self, hge_ctx, query, variables, user_headers = {}):
         admin_secret = hge_ctx.hge_key
         headers = {}
         if admin_secret is not None:
             headers['X-Hasura-Admin-Secret'] = admin_secret
 
-        request = { 'query': { 'query': query, 'variables': variables }, 'user': {} }
+        request = { 'query': { 'query': query, 'variables': variables }, 'user': user_headers }
         status_code, response, _ = hge_ctx.anyq('/v1/graphql/explain', request, headers)
         assert status_code == 200, (request, status_code, response)
+        return response
 
+    def get_parameterized_sql(self, hge_ctx, query, variables):
+        response = self.get_explain_graphql_query_response(hge_ctx, query, variables)
         sql = response['sql']
         assert isinstance(sql, str), response
         return sql

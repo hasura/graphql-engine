@@ -1,0 +1,48 @@
+@import '../../../Common/Common';
+
+.btnBlank {
+  background: transparent;
+  border: none;
+  color: #4d4d4d;
+  padding: 5px 10px;
+  font-size: 13px;
+  font-weight: 400;
+  display: inline-block;
+  margin-bottom: 0;
+  text-align: center;
+  white-space: nowrap;
+  vertical-align: middle;
+  border-radius: 4px;
+  user-select: none;
+}
+
+.queryButton {
+  margin-left: auto;
+}
+
+.buttonsSection {
+  display: flex;
+  margin-top: 10px;
+  align-items: center;
+
+  button:first-of-type {
+    margin-right: 10px;
+  }
+}
+
+.nestedBox {
+  background: #fff;
+  width: 100%;
+  border: 1px solid #d7d7d7;
+  padding: 16px;
+  border-radius: 4px;
+
+  margin-top: 16px;
+
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08), 0 1px 4px rgba(0, 0, 0, 0.08);
+}
+
+.volatileNote {
+  width: 420px;
+  padding: 8px 0;
+}

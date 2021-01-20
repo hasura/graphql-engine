@@ -9,51 +9,59 @@ import qualified Data.Aeson                    as J
 import qualified Data.HashMap.Strict           as M
 import qualified Data.HashSet                  as S
 import qualified Data.URL.Template             as UT
+import qualified Database.PG.Query             as Q
 import qualified Language.GraphQL.Draft.Syntax as G
 import qualified Language.Haskell.TH.Syntax    as TH
 import qualified Text.Regex.TDFA               as TDFA
 import qualified Text.Regex.TDFA.Pattern       as TDFA
-import qualified Database.PG.Query             as Q
 
+import           Control.DeepSeq               (NFData (..))
 import           Data.Functor.Product
 import           Data.GADT.Compare
-import           Instances.TH.Lift             ()
+import           Data.Text
 import           System.Cron.Parser
 import           System.Cron.Types
-import           Data.Text
 
-instance NFData G.Argument
-instance NFData G.Directive
-instance NFData G.ExecutableDefinition
-instance NFData G.Field
 instance NFData G.FragmentDefinition
-instance NFData G.FragmentSpread
 instance NFData G.GType
-instance NFData G.InlineFragment
-instance NFData G.OperationDefinition
 instance NFData G.OperationType
-instance NFData G.Selection
-instance NFData G.TypedOperationDefinition
-instance NFData G.Value
-instance NFData G.ValueConst
 instance NFData G.VariableDefinition
-instance (NFData a) => NFData (G.ObjectFieldG a)
+instance NFData G.SchemaDefinition
+instance NFData G.RootOperationTypeDefinition
+instance NFData G.TypeSystemDefinition
+instance NFData G.SchemaDocument
 instance NFData UT.Variable
 instance NFData UT.TemplateItem
 instance NFData UT.URLTemplate
 
-deriving instance NFData G.Alias
-deriving instance NFData G.EnumValue
-deriving instance NFData G.ExecutableDocument
-deriving instance NFData G.ListType
-deriving instance NFData G.Name
-deriving instance NFData G.NamedType
-deriving instance NFData G.Nullability
-deriving instance NFData G.StringValue
-deriving instance NFData G.Variable
+instance NFData G.Name where
+  rnf = rnf . G.unName
+
+instance NFData a => NFData (G.Directive a)
+instance NFData a => NFData (G.ExecutableDefinition a)
+instance (NFData (a b), NFData b) => NFData (G.Field a b)
+instance NFData a => NFData (G.FragmentSpread a)
+instance (NFData (a b), NFData b) => NFData (G.InlineFragment a b)
+instance (NFData (a b), NFData b) => NFData (G.OperationDefinition a b)
+instance (NFData (a b), NFData b) => NFData (G.Selection a b)
+instance (NFData (a b), NFData b) => NFData (G.TypedOperationDefinition a b)
+instance NFData G.InputValueDefinition
+instance NFData a => NFData (G.InputObjectTypeDefinition a)
+instance (NFData a) => NFData (G.ObjectTypeDefinition a)
+instance NFData G.UnionTypeDefinition
+instance NFData G.EnumTypeDefinition
+instance NFData G.EnumValueDefinition
+instance (NFData a) => NFData (G.FieldDefinition a)
+instance NFData G.ScalarTypeDefinition
+instance (NFData a, NFData b) => NFData (G.InterfaceTypeDefinition a b)
+instance (NFData a, NFData b) => NFData (G.TypeDefinition a b)
+instance NFData a => NFData (G.Value a)
+
 deriving instance NFData G.Description
-deriving instance (NFData a) => NFData (G.ListValueG a)
-deriving instance (NFData a) => NFData (G.ObjectValueG a)
+deriving instance NFData G.EnumValue
+deriving instance NFData G.Nullability
+
+deriving instance NFData a => NFData (G.ExecutableDocument a)
 
 -- instances for CronSchedule from package `cron`
 instance NFData StepField
@@ -89,13 +97,6 @@ deriving instance TH.Lift TDFA.PatternSetCharacterClass
 deriving instance TH.Lift TDFA.PatternSetCollatingElement
 deriving instance TH.Lift TDFA.PatternSetEquivalenceClass
 
-instance (GEq f, GEq g) => GEq (Product f g) where
-  Pair a1 a2 `geq` Pair b1 b2
-    | Just Refl <- a1 `geq` b1
-    , Just Refl <- a2 `geq` b2
-    = Just Refl
-    | otherwise = Nothing
-
 instance (GCompare f, GCompare g) => GCompare (Product f g) where
   Pair a1 a2 `gcompare` Pair b1 b2 = case gcompare a1 b1 of
     GLT -> GLT
@@ -107,7 +108,7 @@ instance (GCompare f, GCompare g) => GCompare (Product f g) where
 
 instance J.FromJSON CronSchedule where
   parseJSON = J.withText "CronSchedule" $ \t ->
-    either fail pure $ parseCronSchedule t
+    onLeft (parseCronSchedule t) fail
 
 instance J.ToJSON CronSchedule where
   toJSON = J.String . serializeCronSchedule
@@ -121,5 +122,5 @@ instance Q.FromCol CronSchedule where
       Left err -> Left err
       Right dbCron ->
         case parseCronSchedule dbCron of
-          Left err' -> Left $ "invalid cron schedule " <> pack err'
+          Left err'  -> Left $ "invalid cron schedule " <> pack err'
           Right cron -> Right cron
