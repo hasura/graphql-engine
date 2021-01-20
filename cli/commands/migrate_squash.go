@@ -3,10 +3,7 @@ package commands
 import (
 	"bytes"
 	"fmt"
-<<<<<<< HEAD
-=======
 	"path/filepath"
->>>>>>> hq-origin/master
 	"strconv"
 	"strings"
 	"text/tabwriter"
@@ -92,11 +89,7 @@ func (o *migrateSquashOptions) run() error {
 		return errors.Wrap(err, "unable to initialize migrations driver")
 	}
 
-<<<<<<< HEAD
-	versions, err := mig.SquashCmd(migrateDrv, o.from, o.to, o.newVersion, o.name, o.EC.MigrationDir)
-=======
 	versions, err := mig.SquashCmd(migrateDrv, o.from, o.newVersion, o.name, filepath.Join(o.EC.MigrationDir, o.Datasource))
->>>>>>> hq-origin/master
 	o.EC.Spinner.Stop()
 	if err != nil {
 		return errors.Wrap(err, "unable to squash migrations")
