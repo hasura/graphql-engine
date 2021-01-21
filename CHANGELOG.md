@@ -96,6 +96,7 @@ and be accessible according to the permissions that were configured for the role
 - server: always log the `request_id` at the `detail.request_id` path for both `query-log` and `http-log` (#6244)
 - server: fix issue with `--stringify-numeric-types` not stringifying aggregate fields (fix #5704)
 - server: derive permissions for remote relationship field from the corresponding remote schema's permissions
+- server: fix issue with mapping session variables to standard JWT claims (fix #6449)
 - console: allow user to cascade Postgres dependencies when dropping Postgres objects (close #5109) (#5248)
 - console: mark inconsistent remote schemas in the UI (close #5093) (#5181)
 - console: remove ONLY as default for ALTER TABLE in column alter operations (close #5512) #5706

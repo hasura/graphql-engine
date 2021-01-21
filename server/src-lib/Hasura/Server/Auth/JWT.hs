@@ -399,9 +399,8 @@ processAuthZHeader jwtCtx authzHeader = do
   claims <- liftJWTError invalidJWTError $ verifyJwt jwtCtx $ RawJWT jwt
 
   let expTimeM = fmap (\(Jose.NumericDate t) -> t) $ claims ^. Jose.claimExp
-      unregisteredClaims = claims ^. Jose.unregisteredClaims
 
-  claimsObject <- parseClaimsMap unregisteredClaims claimsConfig
+  claimsObject <- parseClaimsMap claims claimsConfig
 
   pure $ (claimsObject, expTimeM)
 
@@ -426,12 +425,16 @@ processAuthZHeader jwtCtx authzHeader = do
 
 -- | parse the claims map from the JWT token or custom claims from the JWT config
 parseClaimsMap
-  :: (MonadError QErr m)
-  => J.Object -- ^ Unregistered JWT claims
+  :: MonadError QErr m
+  => Jose.ClaimsSet -- ^ Unregistered JWT claims
   -> JWTClaims -- ^ Claims config
   -> m ClaimsMap -- ^ Hasura claims and other claims
-parseClaimsMap unregisteredClaims jcxClaims =
+parseClaimsMap claimsSet jcxClaims = do
+  let claimsJSON = J.toJSON claimsSet
+      unregisteredClaims = claimsSet ^. Jose.unregisteredClaims
   case jcxClaims of
+    -- when the user specifies the namespace of the hasura claims map,
+    -- the hasura claims map *must* be specified in the unregistered claims
     JCNamespace namespace claimsFormat -> do
       claimsV <- flip onNothing (claimsNotFound namespace) $ case namespace of
         ClaimNs k        -> Map.lookup k unregisteredClaims
@@ -447,17 +450,16 @@ parseClaimsMap unregisteredClaims jcxClaims =
 
     JCMap claimsConfig -> do
       let JWTCustomClaimsMap defaultRoleClaimsMap allowedRolesClaimsMap otherClaimsMap = claimsConfig
-          claimsObjValue = J.Object unregisteredClaims
 
       allowedRoles <- case allowedRolesClaimsMap of
         JWTCustomClaimsMapJSONPath allowedRolesJsonPath defaultVal ->
-          parseAllowedRolesClaim defaultVal $ iResultToMaybe $ executeJSONPath allowedRolesJsonPath claimsObjValue
+          parseAllowedRolesClaim defaultVal $ iResultToMaybe $ executeJSONPath allowedRolesJsonPath claimsJSON
         JWTCustomClaimsMapStatic staticAllowedRoles -> pure staticAllowedRoles
 
       defaultRole <- case defaultRoleClaimsMap of
         JWTCustomClaimsMapJSONPath defaultRoleJsonPath defaultVal ->
           parseDefaultRoleClaim defaultVal $ iResultToMaybe $
-          executeJSONPath defaultRoleJsonPath claimsObjValue
+          executeJSONPath defaultRoleJsonPath claimsJSON
         JWTCustomClaimsMapStatic staticDefaultRole -> pure staticDefaultRole
 
       otherClaims <- flip Map.traverseWithKey otherClaimsMap $ \k claimObj -> do
@@ -465,7 +467,7 @@ parseClaimsMap unregisteredClaims jcxClaims =
                             <> sessionVariableToText k <> " not found"
         case claimObj of
           JWTCustomClaimsMapJSONPath path defaultVal ->
-            iResultToMaybe (executeJSONPath path claimsObjValue)
+            iResultToMaybe (executeJSONPath path claimsJSON)
             `onNothing` (J.String <$> defaultVal)
             `onNothing` throwClaimErr
           JWTCustomClaimsMapStatic claimStaticValue -> pure $ J.String claimStaticValue
