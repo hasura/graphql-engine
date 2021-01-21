@@ -107,7 +107,6 @@ and be accessible according to the permissions that were configured for the role
 - console: misc bug fixes (close #4785, #6330, #6288)
 - console: allow setting table custom name (#212)
 - console: support tracking VOLATILE functions as mutations or queries (close #6228)
-- console: add a special header to console requests for better logging (#143)
 - cli: add missing global flags for seed command (#5565)
 - cli: allow seeds as alias for seed command (#5693)
 - cli: fix action timeouts not being picked up in metadata operations (#6220)
