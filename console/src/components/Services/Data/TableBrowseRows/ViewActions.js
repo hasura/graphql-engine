@@ -142,7 +142,8 @@ const vMakeCountRequest = () => {
       view.query.where,
       view.query.offset,
       view.query.limit,
-      view.query.order_by
+      view.query.order_by,
+      currentDataSource
     );
 
     const timeoutQuery = getRunSqlQuery(
