@@ -20,7 +20,7 @@ This Docker Compose setup runs [Hasura GraphQL Engine](https://github.com/hasura
   General - Name: Hasura  
   Connection - Host: `postgres`
   Username: `postgres`
-  Password: leave empty  
+  Password: must be the same as the `POSTGRES_PASSWORD` environment variable defined in the `docker-compose.yaml`, the default is `postgrespassword`
 
 ## Important endpoints
 
