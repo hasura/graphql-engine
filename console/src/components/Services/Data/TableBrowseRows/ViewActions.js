@@ -124,7 +124,48 @@ const vMakeRowsRequest = () => {
     );
   };
 };
+const vMakeExportRequest = () => {
+  return (dispatch, getState) => {
+    const {
+      currentTable: originalTable,
+      currentSchema,
+      view,
+    } = getState().tables;
 
+    const url = Endpoints.query;
+
+    const requestBody = {
+      type: 'bulk',
+      args: [
+        getSelectQuery(
+          'select',
+          generateTableDef(originalTable, currentSchema),
+          view.query.columns,
+          view.query.where,
+          null,
+          null,
+          view.query.order_by
+        ),
+        getRunSqlQuery(
+          dataSource.getEstimateCountQuery(currentSchema, originalTable)
+        ),
+      ],
+    };
+    const options = {
+      method: 'POST',
+      body: JSON.stringify(requestBody),
+      headers: dataHeaders(getState),
+      credentials: globalCookiePolicy,
+    };
+    return new Promise((resolve, reject) => {
+      dispatch(requestAction(url, options))
+        .then(data => {
+          resolve(data);
+        })
+        .catch(reject);
+    });
+  };
+};
 const vMakeCountRequest = () => {
   return (dispatch, getState) => {
     const {
@@ -642,4 +683,5 @@ export {
   deleteItem,
   deleteItems,
   vMakeTableRequests,
+  vMakeExportRequest,
 };
