@@ -88,7 +88,7 @@ $(makePrisms ''ComputedFieldReturn)
 data ComputedFieldFunction
   = ComputedFieldFunction
   { _cffName            :: !QualifiedFunction
-  , _cffInputArgs       :: !(Seq.Seq FunctionArg)
+  , _cffInputArgs       :: !(Seq.Seq (FunctionArg 'Postgres))
   , _cffTableArgument   :: !FunctionTableArgument
   , _cffSessionArgument :: !(Maybe FunctionSessionArgument)
   , _cffDescription     :: !(Maybe PGDescription)
@@ -99,10 +99,10 @@ $(deriveToJSON hasuraJSON ''ComputedFieldFunction)
 data ComputedFieldInfo (b :: BackendType)
   = ComputedFieldInfo
   { _cfiXComputedFieldInfo :: (XComputedFieldInfo b)
-  , _cfiName       :: !ComputedFieldName
-  , _cfiFunction   :: !ComputedFieldFunction
-  , _cfiReturnType :: !(ComputedFieldReturn b)
-  , _cfiComment    :: !(Maybe Text)
+  , _cfiName               :: !ComputedFieldName
+  , _cfiFunction           :: !ComputedFieldFunction
+  , _cfiReturnType         :: !(ComputedFieldReturn b)
+  , _cfiComment            :: !(Maybe Text)
   } deriving (Generic)
 deriving instance (Backend b) => Eq (ComputedFieldInfo b)
 instance (Backend b) => Cacheable (ComputedFieldInfo b)

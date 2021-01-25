@@ -16,7 +16,7 @@ import           Hasura.GraphQL.Parser         (Definition, EnumValueInfo, Field
 import           Hasura.GraphQL.Parser.Class
 import           Hasura.GraphQL.Schema.Common
 import           Hasura.RQL.Types              hiding (EnumValueInfo)
-import           Language.GraphQL.Draft.Syntax (Name, Nullability)
+import           Language.GraphQL.Draft.Syntax (Nullability)
 
 
 class Backend b => BackendSchema (b :: BackendType) where
@@ -30,18 +30,6 @@ class Backend b => BackendSchema (b :: BackendType) where
     :: MonadParse n
     => ColumnType b
     -> InputFieldsParser n (Maybe (IR.ColumnOp b))
-  -- | Helper function to get the table GraphQL name. A table may have an
-  -- identifier configured with it. When the identifier exists, the GraphQL nodes
-  -- that are generated according to the identifier. For example: Let's say,
-  -- we have a table called `users address`, the name of the table is not GraphQL
-  -- compliant so we configure the table with a GraphQL compliant name,
-  -- say `users_address`
-  -- The generated top-level nodes of this table will be like `users_address`,
-  -- `insert_users_address` etc
-  getTableGQLName
-    :: MonadTableInfo r m
-    => TableName b
-    -> m Name
   orderByOperators
     :: NonEmpty (Definition EnumValueInfo, (BasicOrderType b, NullsOrderType b))
   comparisonExps

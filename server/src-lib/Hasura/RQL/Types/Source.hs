@@ -2,21 +2,25 @@
 
 module Hasura.RQL.Types.Source where
 
-import           Hasura.Backends.Postgres.Connection
-import           Hasura.Incremental                  (Cacheable (..))
 import           Hasura.Prelude
-import           Hasura.RQL.Types.Common
-import           Hasura.RQL.Types.Error
-import           Hasura.RQL.Types.Function
-import           Hasura.RQL.Types.Table
-import           Hasura.SQL.Backend
 
-import qualified Hasura.Tracing                      as Tracing
+import qualified Data.HashMap.Strict                 as M
 
 import           Control.Lens
 import           Data.Aeson
 import           Data.Aeson.TH
 import           Data.Typeable                       (cast)
+
+import qualified Hasura.Tracing                      as Tracing
+
+import           Hasura.Backends.Postgres.Connection
+import           Hasura.Incremental                  (Cacheable (..))
+import           Hasura.RQL.Types.Common
+import           Hasura.RQL.Types.Error
+import           Hasura.RQL.Types.Function
+import           Hasura.RQL.Types.Table
+import           Hasura.SQL.Backend
+import           Hasura.Session
 
 
 data SourceInfo b
@@ -58,6 +62,10 @@ unsafeSourceFunctions = fmap _siFunctions . unsafeSourceInfo
 
 unsafeSourceConfiguration :: forall b. Backend b => BackendSourceInfo -> Maybe (SourceConfig b)
 unsafeSourceConfiguration = fmap _siConfiguration . unsafeSourceInfo @b
+
+
+getTableRoles :: BackendSourceInfo -> [RoleName]
+getTableRoles (BackendSourceInfo si) = M.keys . _tiRolePermInfoMap =<< M.elems (_siTables si)
 
 
 -- | Contains Postgres connection configuration and essential metadata from the

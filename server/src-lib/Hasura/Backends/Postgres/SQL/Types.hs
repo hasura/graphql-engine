@@ -37,7 +37,6 @@ module Hasura.Backends.Postgres.SQL.Types
   , qualifiedObjectToText
   , snakeCaseQualifiedObject
   , qualifiedObjectToName
-  , isGraphQLCompliantTableName
 
   , PGScalarType(..)
   , textToPGScalarType
@@ -223,9 +222,6 @@ qualifiedObjectToName objectName = do
   onNothing (G.mkName textName) $ throw400 ValidationFailed $
     "cannot include " <> objectName <<> " in the GraphQL schema because " <> textName
     <<> " is not a valid GraphQL identifier"
-
-isGraphQLCompliantTableName :: ToTxt a => QualifiedObject a -> Bool
-isGraphQLCompliantTableName = isJust . G.mkName . snakeCaseQualifiedObject
 
 type QualifiedTable = QualifiedObject TableName
 
@@ -446,6 +442,7 @@ data PGTypeKind
   | PGKindUnknown !Text
   deriving (Show, Eq, Generic)
 instance NFData PGTypeKind
+instance Hashable PGTypeKind
 instance Cacheable PGTypeKind
 
 instance FromJSON PGTypeKind where
@@ -476,6 +473,7 @@ data QualifiedPGType
   , _qptType   :: !PGTypeKind
   } deriving (Show, Eq, Generic)
 instance NFData QualifiedPGType
+instance Hashable QualifiedPGType
 instance Cacheable QualifiedPGType
 $(deriveJSON hasuraJSON ''QualifiedPGType)
 

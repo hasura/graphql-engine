@@ -1,6 +1,9 @@
+{-# LANGUAGE AllowAmbiguousTypes #-}
+
 -- | Helper functions for generating the schema of database tables
 module Hasura.GraphQL.Schema.Table
-  ( tableSelectColumnsEnum
+  ( getTableGQLName
+  , tableSelectColumnsEnum
   , tableUpdateColumnsEnum
   , tablePermissions
   , tableSelectPermissions
@@ -27,6 +30,26 @@ import           Hasura.GraphQL.Parser.Class
 import           Hasura.GraphQL.Schema.Backend
 import           Hasura.RQL.DML.Internal       (getRolePermInfo)
 import           Hasura.RQL.Types
+
+
+-- | Helper function to get the table GraphQL name. A table may have a
+-- custom name configured with it. When the custom name exists, the GraphQL nodes
+-- that are generated according to the custom name. For example: Let's say,
+-- we have a table called `users address`, the name of the table is not GraphQL
+-- compliant so we configure the table with a GraphQL compliant name,
+-- say `users_address`
+-- The generated top-level nodes of this table will be like `users_address`,
+-- `insert_users_address` etc
+getTableGQLName
+  :: forall b r m. (Backend b, MonadTableInfo r m)
+  => TableName b
+  -> m G.Name
+getTableGQLName table = do
+  tableInfo <- askTableInfo @b table
+  let tableCustomName = _tcCustomName . _tciCustomConfig . _tiCoreInfo $ tableInfo
+  tableCustomName `onNothing`
+    tableGraphQLName @b table `onLeft` throwError
+
 
 -- | Table select columns enum
 --

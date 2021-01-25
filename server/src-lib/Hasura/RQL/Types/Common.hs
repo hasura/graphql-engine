@@ -112,6 +112,7 @@ class
   ( Representable (Identifier b)
   , Representable (TableName b)
   , Representable (FunctionName b)
+  , Representable (FunctionArgType b)
   , Representable (ConstraintName b)
   , Representable (BasicOrderType b)
   , Representable (NullsOrderType b)
@@ -140,6 +141,7 @@ class
   , FromJSON (Column b)
   , ToJSON (TableName b)
   , ToJSON (FunctionName b)
+  , ToJSON (FunctionArgType b)
   , ToJSON (SourceConfig b)
   , ToJSON (ScalarType b)
   , ToJSON (BasicOrderType b)
@@ -158,46 +160,57 @@ class
   , Typeable (SourceConfig b)
   , Typeable b
   ) => Backend (b :: BackendType) where
-  type SourceConfig   b :: Type
-  type Identifier     b :: Type
-  type Alias          b :: Type
-  type TableName      b :: Type
-  type FunctionName   b :: Type
-  type ConstraintName b :: Type
-  type BasicOrderType b :: Type
-  type NullsOrderType b :: Type
-  type CountType      b :: Type
-  type Column         b :: Type
-  type ScalarValue    b :: Type
-  type ScalarType     b :: Type
-  type SQLExpression  b :: Type
-  type SQLOperator    b :: Type
-  type XAILIKE        b :: Type
-  type XANILIKE       b :: Type
+  -- types
+  type SourceConfig    b :: Type
+  type Identifier      b :: Type
+  type Alias           b :: Type
+  type TableName       b :: Type
+  type FunctionName    b :: Type
+  type FunctionArgType b :: Type
+  type ConstraintName  b :: Type
+  type BasicOrderType  b :: Type
+  type NullsOrderType  b :: Type
+  type CountType       b :: Type
+  type Column          b :: Type
+  type ScalarValue     b :: Type
+  type ScalarType      b :: Type
+  type SQLExpression   b :: Type
+  type SQLOperator     b :: Type
+  type XAILIKE         b :: Type
+  type XANILIKE        b :: Type
   type XComputedFieldInfo b :: Type
+  -- functions on types
+  functionArgScalarType :: FunctionArgType b -> ScalarType b
   isComparableType :: ScalarType b -> Bool
   isNumType :: ScalarType b -> Bool
+  -- functions on names
+  tableGraphQLName    :: TableName b    -> Either QErr G.Name
+  functionGraphQLName :: FunctionName b -> Either QErr G.Name
 
 instance Backend 'Postgres where
-  type SourceConfig   'Postgres = PG.PGSourceConfig
-  type Identifier     'Postgres = PG.Identifier
-  type Alias          'Postgres = PG.Alias
-  type TableName      'Postgres = PG.QualifiedTable
-  type FunctionName   'Postgres = PG.QualifiedFunction
-  type ConstraintName 'Postgres = PG.ConstraintName
-  type BasicOrderType 'Postgres = PG.OrderType
-  type NullsOrderType 'Postgres = PG.NullsOrder
-  type CountType      'Postgres = PG.CountType
-  type Column         'Postgres = PG.PGCol
-  type ScalarValue    'Postgres = PG.PGScalarValue
-  type ScalarType     'Postgres = PG.PGScalarType
-  type SQLExpression  'Postgres = PG.SQLExp
-  type SQLOperator    'Postgres = PG.SQLOp
-  type XAILIKE        'Postgres = ()
-  type XANILIKE       'Postgres = ()
+  type SourceConfig    'Postgres = PG.PGSourceConfig
+  type Identifier      'Postgres = PG.Identifier
+  type Alias           'Postgres = PG.Alias
+  type TableName       'Postgres = PG.QualifiedTable
+  type FunctionName    'Postgres = PG.QualifiedFunction
+  type FunctionArgType 'Postgres = PG.QualifiedPGType
+  type ConstraintName  'Postgres = PG.ConstraintName
+  type BasicOrderType  'Postgres = PG.OrderType
+  type NullsOrderType  'Postgres = PG.NullsOrder
+  type CountType       'Postgres = PG.CountType
+  type Column          'Postgres = PG.PGCol
+  type ScalarValue     'Postgres = PG.PGScalarValue
+  type ScalarType      'Postgres = PG.PGScalarType
+  type SQLExpression   'Postgres = PG.SQLExp
+  type SQLOperator     'Postgres = PG.SQLOp
+  type XAILIKE         'Postgres = ()
+  type XANILIKE        'Postgres = ()
   type XComputedFieldInfo 'Postgres = ()
+  functionArgScalarType = PG._qptName
   isComparableType = PG.isComparableType
   isNumType = PG.isNumType
+  tableGraphQLName    = PG.qualifiedObjectToName
+  functionGraphQLName = PG.qualifiedObjectToName
 
 -- instance Backend 'Mysql where
 --   type XAILIKE 'MySQL = Void

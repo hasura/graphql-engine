@@ -25,7 +25,7 @@ import           Hasura.RQL.Types
 import           Hasura.Server.Utils                (englishList, makeReasonMessage)
 
 
-mkFunctionArgs :: Int -> [QualifiedPGType] -> [FunctionArgName] -> [FunctionArg]
+mkFunctionArgs :: Int -> [QualifiedPGType] -> [FunctionArgName] -> [FunctionArg 'Postgres]
 mkFunctionArgs defArgsNo tys argNames =
   bool withNames withNoNames $ null argNames
   where
@@ -41,7 +41,7 @@ mkFunctionArgs defArgsNo tys argNames =
     mkArg "" (ty, hasDef) = FunctionArg Nothing ty hasDef
     mkArg n  (ty, hasDef) = FunctionArg (Just n) ty hasDef
 
-validateFuncArgs :: MonadError QErr m => [FunctionArg] -> m ()
+validateFuncArgs :: MonadError QErr m => [FunctionArg 'Postgres] -> m ()
 validateFuncArgs args =
   for_ (nonEmpty invalidArgs) \someInvalidArgs ->
     throw400 NotSupported $

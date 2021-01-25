@@ -451,17 +451,17 @@ tableConnectionSelectionSet table selectPermissions = do
 
 -- | User-defined function (AKA custom function)
 selectFunction
-  :: ( BackendSchema 'Postgres
+  :: ( BackendSchema b
      , MonadSchema n m
      , MonadTableInfo r m
      , MonadRole r m
      , Has QueryContext r
      )
-  => FunctionInfo 'Postgres  -- ^ SQL function info
-  -> G.Name                  -- ^ field display name
-  -> Maybe G.Description     -- ^ field description, if any
-  -> SelPermInfo 'Postgres   -- ^ select permissions of the target table
-  -> m (FieldParser n (SelectExp 'Postgres))
+  => FunctionInfo b       -- ^ SQL function info
+  -> G.Name               -- ^ field display name
+  -> Maybe G.Description  -- ^ field description, if any
+  -> SelPermInfo b        -- ^ select permissions of the target table
+  -> m (FieldParser n (SelectExp b))
 selectFunction function fieldName description selectPermissions = do
   stringifyNum <- asks $ qcStringifyNum . getter
   let table = fiReturnType function
@@ -479,22 +479,23 @@ selectFunction function fieldName description selectPermissions = do
       }
 
 selectFunctionAggregate
-  :: ( BackendSchema 'Postgres
+  :: forall b m n r
+   . ( BackendSchema b
      , MonadSchema n m
      , MonadTableInfo r m
      , MonadRole r m
      , Has QueryContext r
      )
-  => FunctionInfo 'Postgres  -- ^ SQL function info
-  -> G.Name                  -- ^ field display name
-  -> Maybe G.Description     -- ^ field description, if any
-  -> SelPermInfo 'Postgres   -- ^ select permissions of the target table
-  -> m (Maybe (FieldParser n (AggSelectExp 'Postgres)))
+  => FunctionInfo b       -- ^ SQL function info
+  -> G.Name               -- ^ field display name
+  -> Maybe G.Description  -- ^ field description, if any
+  -> SelPermInfo b        -- ^ select permissions of the target table
+  -> m (Maybe (FieldParser n (AggSelectExp b)))
 selectFunctionAggregate function fieldName description selectPermissions = runMaybeT do
   let table = fiReturnType function
   stringifyNum <- asks $ qcStringifyNum . getter
   guard $ spiAllowAgg selectPermissions
-  tableGQLName <- getTableGQLName @'Postgres table
+  tableGQLName <- getTableGQLName @b table
   tableArgsParser    <- lift $ tableArgs table selectPermissions
   functionArgsParser <- lift $ customSQLFunctionArgs function
   aggregateParser    <- lift $ tableAggregationFields table selectPermissions
@@ -1126,9 +1127,9 @@ remoteRelationshipFieldPG remoteFieldInfo = runMaybeT do
 -- | The custom SQL functions' input "args" field parser
 -- > function_name(args: function_args)
 customSQLFunctionArgs
-  :: (BackendSchema 'Postgres, MonadSchema n m, MonadTableInfo r m)
-  => FunctionInfo 'Postgres
-  -> m (InputFieldsParser n (IR.FunctionArgsExpTableRow 'Postgres (UnpreparedValue 'Postgres)))
+  :: (BackendSchema b, MonadSchema n m, MonadTableInfo r m)
+  => FunctionInfo b
+  -> m (InputFieldsParser n (IR.FunctionArgsExpTableRow b (UnpreparedValue b)))
 customSQLFunctionArgs FunctionInfo{..} = functionArgs fiName fiInputArgs
 
 -- | Parses the arguments to the underlying sql function of a computed field or
@@ -1143,10 +1144,10 @@ customSQLFunctionArgs FunctionInfo{..} = functionArgs fiName fiInputArgs
 --   table row argument in the case of computed fields), the args object will
 --   be omitted.
 functionArgs
-  :: forall m n r. (BackendSchema 'Postgres, MonadSchema n m, MonadTableInfo r m)
-  => PG.QualifiedFunction
-  -> Seq.Seq FunctionInputArgument
-  -> m (InputFieldsParser n (IR.FunctionArgsExpTableRow 'Postgres (UnpreparedValue 'Postgres)))
+  :: forall b m n r. (BackendSchema b, MonadSchema n m, MonadTableInfo r m)
+  => FunctionName b
+  -> Seq.Seq (FunctionInputArgument b)
+  -> m (InputFieldsParser n (IR.FunctionArgsExpTableRow b (UnpreparedValue b)))
 functionArgs functionName (toList -> inputArgs) = do
   -- First, we iterate through the original sql arguments in order, to find the
   -- corresponding graphql names. At the same time, we create the input field
@@ -1167,7 +1168,7 @@ functionArgs functionName (toList -> inputArgs) = do
      | otherwise -> do
          -- There are user-provided arguments: we need to parse an args object.
          argumentParsers <- sequenceA $ optional <> mandatory
-         objectName <- PG.qualifiedObjectToName functionName <&> (<> $$(G.litName "_args"))
+         objectName <- fmap (<> $$(G.litName "_args")) $ functionGraphQLName @b functionName `onLeft` throwError
          let fieldName    = $$(G.litName "args")
              fieldDesc    = G.Description $ "input parameters for function " <>> functionName
              objectParser = P.object objectName Nothing (sequenceA argumentParsers) `P.bind` \arguments -> do
@@ -1196,16 +1197,16 @@ functionArgs functionName (toList -> inputArgs) = do
          pure $ P.field fieldName (Just fieldDesc) objectParser
 
   where
-    sessionPlaceholder :: IR.ArgumentExp 'Postgres (UnpreparedValue 'Postgres)
+    sessionPlaceholder :: IR.ArgumentExp b (UnpreparedValue b)
     sessionPlaceholder = IR.AEInput P.UVSession
 
     splitArguments
       :: Int
-      -> FunctionInputArgument
+      -> FunctionInputArgument b
       -> (Int, ( [Text] -- graphql names, in order
-               , [(Text, IR.ArgumentExp 'Postgres (UnpreparedValue 'Postgres))] -- session argument
-               , [m (InputFieldsParser n (Maybe (Text, IR.ArgumentExp 'Postgres (UnpreparedValue 'Postgres))))] -- optional argument
-               , [m (InputFieldsParser n (Maybe (Text, IR.ArgumentExp 'Postgres (UnpreparedValue 'Postgres))))] -- mandatory argument
+               , [(Text, IR.ArgumentExp b (UnpreparedValue b))] -- session argument
+               , [m (InputFieldsParser n (Maybe (Text, IR.ArgumentExp b (UnpreparedValue b))))] -- optional argument
+               , [m (InputFieldsParser n (Maybe (Text, IR.ArgumentExp b (UnpreparedValue b))))] -- mandatory argument
                )
          )
     splitArguments positionalIndex (IASessionVariables name) =
@@ -1219,9 +1220,9 @@ functionArgs functionName (toList -> inputArgs) = do
          then (newIndex, ([argName], [], [parseArgument arg argName], []))
          else (newIndex, ([argName], [], [], [parseArgument arg argName]))
 
-    parseArgument :: FunctionArg -> Text -> m (InputFieldsParser n (Maybe (Text, IR.ArgumentExp 'Postgres (UnpreparedValue 'Postgres))))
+    parseArgument :: FunctionArg b -> Text -> m (InputFieldsParser n (Maybe (Text, IR.ArgumentExp b (UnpreparedValue b))))
     parseArgument arg name = do
-      typedParser  <- columnParser (ColumnScalar $ PG._qptName $ faType arg) (G.Nullability True)
+      typedParser  <- columnParser (ColumnScalar $ functionArgScalarType @b $ faType arg) (G.Nullability True)
       fieldName    <- textToName name
 
       -- While some arguments are "mandatory" (i.e. they don't have a default
@@ -1238,9 +1239,9 @@ functionArgs functionName (toList -> inputArgs) = do
       pure $ argParser `mapField` ((name,) . IR.AEInput . mkParameter)
 
     namedArgument
-      :: HashMap Text (IR.ArgumentExp 'Postgres (UnpreparedValue 'Postgres))
-      -> (Text, InputArgument FunctionArg)
-      -> n (Maybe (Text, IR.ArgumentExp 'Postgres (UnpreparedValue 'Postgres)))
+      :: HashMap Text (IR.ArgumentExp b (UnpreparedValue b))
+      -> (Text, FunctionInputArgument b)
+      -> n (Maybe (Text, IR.ArgumentExp b (UnpreparedValue b)))
     namedArgument dictionary (name, inputArgument) = case inputArgument of
       IASessionVariables _ -> pure $ Just (name, sessionPlaceholder)
       IAUserProvided arg   -> case Map.lookup name dictionary of

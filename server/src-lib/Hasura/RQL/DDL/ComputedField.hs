@@ -234,8 +234,8 @@ addComputedFieldP2Setup trackedTables table computedField definition rawFunction
         reasonMessage = makeReasonMessage allErrors (showError function)
 
     dropTableAndSessionArgument :: FunctionTableArgument
-                                -> Maybe FunctionSessionArgument -> [FunctionArg]
-                                -> [FunctionArg]
+                                -> Maybe FunctionSessionArgument -> [FunctionArg 'Postgres]
+                                -> [FunctionArg 'Postgres]
     dropTableAndSessionArgument tableArg sessionArg inputArgs =
       let withoutTable = case tableArg of
             FTAFirst  -> tail inputArgs

@@ -53,7 +53,6 @@ import           Hasura.Session
 instance BackendSchema 'Postgres where
   columnParser              = PGS.columnParser
   jsonPathArg               = PGS.jsonPathArg
-  getTableGQLName           = PGS.getTableGQLName
   orderByOperators          = PGS.orderByOperators
   comparisonExps            = PGS.comparisonExps
   updateOperators           = PGS.updateOperators
@@ -104,10 +103,7 @@ buildGQLContext =
           <> (allActionInfos ^.. folded.aiPermissions.to Map.keys.folded)
           <> Set.fromList (bool mempty remoteSchemasRoles $ remoteSchemaPermsCtx == RemoteSchemaPermsEnabled)
         allActionInfos = Map.elems allActions
-        allTableRoles = Set.fromList $ do
-          sourceInfo <- Map.elems pgSources
-          tableInfo  <- maybe [] Map.elems $ unsafeSourceTables @'Postgres sourceInfo
-          Map.keys $ _tiRolePermInfoMap tableInfo
+        allTableRoles = Set.fromList $ getTableRoles =<< Map.elems pgSources
         adminRemoteRelationshipQueryCtx =
           allRemoteSchemas
           <&> (\(remoteSchemaCtx, _metadataObj) ->
@@ -215,16 +211,16 @@ buildRoleContext (SQLGenCtx stringifyNum, queryType) sources
   runMonadSchema roleName roleQueryContext sources $ do
     let pgSources = mapMaybe unsafeSourceInfo $ toList sources
     fieldsList <- forM pgSources $ \(SourceInfo sourceName tables functions sourceConfig) -> do
-      let validTables = takeValidTables tables
-          validFunctions = takeValidFunctions functions
-          tableNames = Map.keysSet validTables
+      let validFunctions = takeValidFunctions functions
+          validTables    = takeValidTables tables
+          tableNames     = Map.keysSet validTables
           functionsWithSourceConfig = map (, (sourceName, sourceConfig)) validFunctions
       (functionsWithSourceConfig,,,)
-        <$> buildPostgresQueryFields sourceName sourceConfig tableNames validFunctions
+        <$> buildQueryFields sourceName sourceConfig (Map.toList validTables) validFunctions
         <*> buildPGMutationFields Frontend sourceName sourceConfig tableNames
         <*> buildPGMutationFields Backend sourceName sourceConfig tableNames
 
-    let (allFunctions, queryPGFields, mutationFrontendFields, mutationBackendFields) = mconcat fieldsList
+    let (allFunctions, queryFields, mutationFrontendFields, mutationBackendFields) = mconcat fieldsList
 
     mutationParserFrontend <-
       buildMutationParser mutationRemotes allActionInfos nonObjectCustomTypes allFunctions mutationFrontendFields
@@ -232,11 +228,11 @@ buildRoleContext (SQLGenCtx stringifyNum, queryType) sources
     mutationParserBackend <-
       buildMutationParser mutationRemotes allActionInfos nonObjectCustomTypes allFunctions mutationBackendFields
 
-    subscriptionParser <- buildSubscriptionParser queryPGFields allActionInfos
+    subscriptionParser <- buildSubscriptionParser queryFields allActionInfos
 
-    queryParserFrontend <- buildQueryParser queryPGFields queryRemotes
+    queryParserFrontend <- buildQueryParser queryFields queryRemotes
       allActionInfos nonObjectCustomTypes mutationParserFrontend subscriptionParser
-    queryParserBackend <- buildQueryParser queryPGFields queryRemotes
+    queryParserBackend <- buildQueryParser queryFields queryRemotes
       allActionInfos nonObjectCustomTypes mutationParserBackend subscriptionParser
 
     let frontendContext = GQLContext (finalizeParser queryParserFrontend)
@@ -256,15 +252,6 @@ buildRoleContext (SQLGenCtx stringifyNum, queryType) sources
         -> [P.FieldParser (P.ParseT Identity) RemoteField]
       getMutationRemotes = concatMap (concat . piMutation)
 
--- TODO and what about graphql-compliant function names here too?
-takeValidFunctions :: FunctionCache b -> [FunctionInfo b]
-takeValidFunctions = Map.elems . Map.filter functionFilter
-  where
-    functionFilter = not . isSystemDefined . fiSystemDefined
-
-takeExposedAs :: FunctionExposedAs -> (a -> FunctionInfo b) -> [a] -> [a]
-takeExposedAs x f = filter ((== x) . fiExposedAs . f)
-
 
 buildFullestDBSchema
   :: (MonadError QErr m, MonadIO m, MonadUnique m)
@@ -276,24 +263,24 @@ buildFullestDBSchema queryContext sources allActionInfos nonObjectCustomTypes =
   runMonadSchema adminRoleName queryContext sources $ do
     let pgSources = mapMaybe unsafeSourceInfo $ toList sources
     fieldsList <- forM pgSources $ \(SourceInfo sourceName tables functions sourceConfig) -> do
-      let validTables = takeValidTables tables
-          validFunctions = takeValidFunctions functions
-          tableNames = Map.keysSet validTables
+      let validFunctions = takeValidFunctions functions
+          validTables    = takeValidTables tables
+          tableNames     = Map.keysSet validTables
           functionsWithSourceConfig = map (, (sourceName, sourceConfig)) validFunctions
       (functionsWithSourceConfig,,)
         <$> buildPGMutationFields Frontend sourceName sourceConfig tableNames
-        <*> buildPostgresQueryFields sourceName sourceConfig tableNames validFunctions
+        <*> buildQueryFields sourceName sourceConfig (Map.toList validTables) validFunctions
 
-    let (allFunctions, mutationPGFields, queryPGFields) = mconcat fieldsList
+    let (allFunctions, mutationPGFields, queryFields) = mconcat fieldsList
 
     mutationParserFrontend <-
       -- NOTE: we omit remotes here on purpose since we're trying to check name
       -- clashes with remotes:
       buildMutationParser mempty allActionInfos nonObjectCustomTypes allFunctions mutationPGFields
 
-    subscriptionParser <- buildSubscriptionParser queryPGFields allActionInfos
+    subscriptionParser <- buildSubscriptionParser queryFields allActionInfos
 
-    queryParserFrontend <- buildQueryParser queryPGFields mempty
+    queryParserFrontend <- buildQueryParser queryFields mempty
       allActionInfos nonObjectCustomTypes mutationParserFrontend subscriptionParser
 
     pure (queryParserFrontend, mutationParserFrontend)
@@ -429,20 +416,23 @@ remoteSchemaFields = proc (queryFieldNames, mutationFieldNames, allRemoteSchemas
          Just _  -> returnA -< (newSchemaName, ( _rscIntro newSchemaContext,_rscParsed newSchemaContext)):okSchemas
      ) |) [] (Map.toList allRemoteSchemas)
 
-buildPostgresQueryFields
-  :: forall m n r
-   . ( MonadSchema n m
+buildQueryFields
+  :: forall b m n r
+   . ( b ~ 'Postgres -- TMP
+     , Backend b
+     , BackendSchema b
+     , MonadSchema n m
      , MonadTableInfo r m
      , MonadRole r m
      , Has QueryContext r
      )
   => SourceName
-  -> SourceConfig 'Postgres
-  -> HashSet PG.QualifiedTable
-  -> [FunctionInfo 'Postgres]
-  -> m [P.FieldParser n (QueryRootField (UnpreparedValue 'Postgres))]
-buildPostgresQueryFields sourceName sourceConfig allTables (takeExposedAs FEAQuery id -> queryFunctions) = do
-  tableSelectExpParsers <- for (toList allTables) \table -> do
+  -> SourceConfig b
+  -> [(TableName b, TableInfo b)]
+  -> [FunctionInfo b]
+  -> m [P.FieldParser n (QueryRootField (UnpreparedValue b))]
+buildQueryFields sourceName sourceConfig tables (takeExposedAs FEAQuery id -> functions) = do
+  tableSelectExpParsers <- for tables \(table, _tableInfo) -> do
     selectPerms <- tableSelectPermissions table
     customRootFields <- _tcCustomRootFields . _tciCustomConfig . _tiCoreInfo <$> askTableInfo @'Postgres table
     for selectPerms \perms -> do
@@ -457,12 +447,12 @@ buildPostgresQueryFields sourceName sourceConfig allTables (takeExposedAs FEAQue
         , mapMaybeFieldParser (asDbRootField . QDBPrimaryKey)  $ selectTableByPk      table (fromMaybe pkName       $ _tcrfSelectByPk      customRootFields) (Just pkDesc)     perms
         , mapMaybeFieldParser (asDbRootField . QDBAggregation) $ selectTableAggregate table (fromMaybe aggName      $ _tcrfSelectAggregate customRootFields) (Just aggDesc)    perms
         ]
-  functionSelectExpParsers <- for queryFunctions \function -> do
+  functionSelectExpParsers <- for functions \function -> do
     let targetTable = fiReturnType function
         functionName = fiName function
     selectPerms <- tableSelectPermissions targetTable
     for selectPerms \perms -> do
-      displayName <- PG.qualifiedObjectToName functionName
+      displayName <- functionGraphQLName @b functionName `onLeft` throwError
       let functionDesc = G.Description $ "execute function " <> functionName <<> " which returns " <>> targetTable
           aggName = displayName <> $$(G.litName "_aggregate")
           aggDesc = G.Description $ "execute function " <> functionName <<> " and query aggregates on result of table type " <>> targetTable
@@ -476,7 +466,7 @@ buildPostgresQueryFields sourceName sourceConfig allTables (takeExposedAs FEAQue
       let pgExecCtx = PG._pscExecCtx sourceConfig
       in RFDB sourceName pgExecCtx
 
-    mapMaybeFieldParser :: (a -> b) -> m (Maybe (P.FieldParser n a)) -> m (Maybe (P.FieldParser n b))
+    mapMaybeFieldParser :: (a -> a') -> m (Maybe (P.FieldParser n a)) -> m (Maybe (P.FieldParser n a'))
     mapMaybeFieldParser f = fmap $ fmap $ fmap f
 
 requiredFieldParser
@@ -755,14 +745,6 @@ buildPGMutationFields scenario sourceName sourceConfig allTables = do
           fieldDescription = G.Description $ "delete single row from the table: " <>> table
       deleteFromTableByPk table (fromMaybe fieldName customName) (Just fieldDescription) deletePermission
 
-subscriptionRoot :: G.Name
-subscriptionRoot = $$(G.litName "subscription_root")
-
-mutationRoot :: G.Name
-mutationRoot = $$(G.litName "mutation_root")
-
-queryRoot :: G.Name
-queryRoot = $$(G.litName "query_root")
 
 buildMutationParser
   :: forall m n r
@@ -816,3 +798,19 @@ buildMutationParser allRemotes allActions nonObjectCustomTypes
   then pure Nothing
   else P.safeSelectionSet mutationRoot (Just $ G.Description "mutation root") mutationFieldsParser
             <&> Just . fmap (fmap (P.handleTypename (RFRaw . J.String . G.unName)))
+
+
+
+-- local helpers
+
+takeExposedAs :: FunctionExposedAs -> (a -> FunctionInfo b) -> [a] -> [a]
+takeExposedAs x f = filter ((== x) . fiExposedAs . f)
+
+subscriptionRoot :: G.Name
+subscriptionRoot = $$(G.litName "subscription_root")
+
+mutationRoot :: G.Name
+mutationRoot = $$(G.litName "mutation_root")
+
+queryRoot :: G.Name
+queryRoot = $$(G.litName "query_root")

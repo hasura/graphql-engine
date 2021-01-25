@@ -44,14 +44,17 @@ newtype FunctionArgName =
 newtype HasDefault = HasDefault { unHasDefault :: Bool }
   deriving (Show, Eq, ToJSON, Cacheable)
 
-data FunctionArg
+data FunctionArg (b :: BackendType)
   = FunctionArg
   { faName       :: !(Maybe FunctionArgName)
-  , faType       :: !PG.QualifiedPGType -- FIXME: make generic
+  , faType       :: !(FunctionArgType b)
   , faHasDefault :: !HasDefault
-  } deriving (Show, Eq, Generic)
-instance Cacheable FunctionArg
-$(deriveToJSON hasuraJSON ''FunctionArg)
+  } deriving (Generic)
+deriving instance Backend b => Show (FunctionArg b)
+deriving instance Backend b => Eq   (FunctionArg b)
+instance Backend b => Cacheable (FunctionArg b)
+instance (Backend b) => ToJSON (FunctionArg b) where
+  toJSON = genericToJSON hasuraJSON
 
 data InputArgument a
   = IAUserProvided !a
@@ -65,7 +68,7 @@ $(deriveToJSON defaultOptions
  )
 $(makePrisms ''InputArgument)
 
-type FunctionInputArgument = InputArgument FunctionArg
+type FunctionInputArgument b = InputArgument (FunctionArg b)
 
 
 -- | Indicates whether the user requested the corresponding function to be
@@ -90,7 +93,7 @@ data FunctionInfo (b :: BackendType)
   -- ^ In which part of the schema should this function be exposed?
   --
   -- See 'mkFunctionInfo' and '_fcExposedAs'.
-  , fiInputArgs     :: !(Seq.Seq FunctionInputArgument)
+  , fiInputArgs     :: !(Seq.Seq (FunctionInputArgument b))
   , fiReturnType    :: !(TableName b)
   -- ^ NOTE: when a table is created, a new composite type of the same name is
   -- automatically created; so strictly speaking this field means "the function
@@ -102,7 +105,7 @@ deriving instance Backend b => Eq   (FunctionInfo b)
 instance (Backend b) => ToJSON (FunctionInfo b) where
   toJSON = genericToJSON hasuraJSON
 
-getInputArgs :: FunctionInfo b -> Seq.Seq FunctionArg
+getInputArgs :: FunctionInfo b -> Seq.Seq (FunctionArg b)
 getInputArgs =
   Seq.fromList . mapMaybe (^? _IAUserProvided) . toList . fiInputArgs
 

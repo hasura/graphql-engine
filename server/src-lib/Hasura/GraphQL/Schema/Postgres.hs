@@ -2,7 +2,6 @@
 module Hasura.GraphQL.Schema.Postgres
   ( columnParser
   , jsonPathArg
-  , getTableGQLName
   , orderByOperators
   , comparisonExps
   , offsetParser
@@ -132,23 +131,6 @@ jsonPathArg columnType
       Right jPaths -> pure $ Just $ IR.ColumnOp PG.jsonbPathOp $ PG.SEArray $ map elToColExp jPaths
     elToColExp (Key k)   = PG.SELit k
     elToColExp (Index i) = PG.SELit $ tshow i
-
--- | Helper function to get the table GraphQL name. A table may have a
--- custom name configured with it. When the custom name exists, the GraphQL nodes
--- that are generated according to the custom name. For example: Let's say,
--- we have a table called `users address`, the name of the table is not GraphQL
--- compliant so we configure the table with a GraphQL compliant name,
--- say `users_address`
--- The generated top-level nodes of this table will be like `users_address`,
--- `insert_users_address` etc
-getTableGQLName
-  :: MonadTableInfo r m
-  => TableName 'Postgres
-  -> m G.Name
-getTableGQLName table = do
-  tableInfo <- askTableInfo @'Postgres table
-  let tableCustomName = _tcCustomName . _tciCustomConfig . _tiCoreInfo $ tableInfo
-  tableCustomName `onNothing` qualifiedObjectToName table
 
 orderByOperators
   :: NonEmpty (Definition P.EnumValueInfo, (BasicOrderType 'Postgres, NullsOrderType 'Postgres))
@@ -407,7 +389,7 @@ updateOperators
   -> UpdPermInfo 'Postgres  -- ^ update permissions of the table
   -> m (Maybe (InputFieldsParser n [(Column 'Postgres, IR.UpdOpExpG (UnpreparedValue 'Postgres))]))
 updateOperators table updatePermissions = do
-  tableGQLName <- getTableGQLName table
+  tableGQLName <- getTableGQLName @'Postgres table
   columns      <- tableUpdateColumns table updatePermissions
   let numericCols = onlyNumCols   columns
       jsonCols    = onlyJSONBCols columns

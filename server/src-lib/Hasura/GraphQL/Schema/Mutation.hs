@@ -256,7 +256,7 @@ conflictObject table selectPerms updatePerms = runMaybeT $ do
   where preSetColumns = partialSQLExpToUnpreparedValue <$> upiSet updatePerms
 
 conflictConstraint
-  :: forall m n r. (BackendSchema 'Postgres, MonadSchema n m, MonadTableInfo r m)
+  :: forall m n r. (MonadSchema n m, MonadTableInfo r m)
   => NonEmpty Constraint
   -> QualifiedTable
   -> m (Parser 'Both n ConstraintName)
