@@ -66,6 +66,7 @@ const trackAllItems = (sql, isMigration, migrationName) => (
     }
     request = {
       name: migrationName,
+      datasource: source,
       up: changes,
       down: [],
     };
@@ -140,6 +141,7 @@ const executeSQL = (isMigration, migrationName, statementTimeout) => (
       name: migrationName,
       up: schemaChangesUp,
       down: schemaChangesDown,
+      datasource: source,
     };
   }
   const options = {

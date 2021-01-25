@@ -31,3 +31,8 @@ func (c *CustomList) Iterate() linq.Iterator {
 		return prevElem, true
 	}
 }
+
+type Datasource struct {
+	Name string
+	Type string
+}

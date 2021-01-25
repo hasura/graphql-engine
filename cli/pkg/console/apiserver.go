@@ -26,7 +26,7 @@ type APIServer struct {
 }
 
 func NewAPIServer(address string, port string, ec *cli.ExecutionContext) (*APIServer, error) {
-	migrate, err := migrate.NewMigrate(ec, false)
+	migrate, err := migrate.NewMigrate(ec, false, "")
 	if err != nil {
 		return nil, errors.Wrap(err, "error creating migrate instance")
 	}
@@ -57,6 +57,7 @@ func (r *APIServer) setRoutes(migrationDir string, logger *logrus.Logger) {
 		apis.Use(r.setLogger(logger))
 		apis.Use(r.setFilePath(migrationDir))
 		apis.Use(r.setMigrate(r.Migrate))
+		apis.Use(r.setEC(r.EC))
 		apis.Use(r.setConfigVersion(r.EC.Config.Version))
 		// Migrate api endpoints and middleware
 		migrateAPIs := apis.Group("/migrate")
@@ -83,6 +84,13 @@ func (r *APIServer) setRoutes(migrationDir string, logger *logrus.Logger) {
 func (r *APIServer) setMigrate(t *migrate.Migrate) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		c.Set("migrate", t)
+		c.Next()
+	}
+}
+
+func (r *APIServer) setEC(ec *cli.ExecutionContext) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		c.Set("ec", ec)
 		c.Next()
 	}
 }
@@ -127,7 +135,9 @@ func allowCors() gin.HandlerFunc {
 	config.AddAllowHeaders("hasura-collaborator-token")
 	config.AddAllowHeaders("X-Hasura-Role")
 	config.AddAllowHeaders("X-Hasura-Allowed-Roles")
+	config.AddAllowHeaders("Hasura-Internal-Request-Source")
 	config.AddAllowMethods("DELETE")
+	config.AddAllowHeaders("Hasura-Internal-Request-Source")
 	config.AllowAllOrigins = true
 	config.AllowCredentials = false
 	return cors.New(config)

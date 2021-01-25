@@ -42,7 +42,13 @@ import           Hasura.Session
 -- >   col2: col2_type
 -- > }
 actionExecute
-  :: forall m n r. (BackendSchema 'Postgres, MonadSchema n m, MonadTableInfo 'Postgres r m, MonadRole r m, Has QueryContext r)
+  :: forall m n r
+   . ( BackendSchema 'Postgres
+     , MonadSchema n m
+     , MonadTableInfo r m
+     , MonadRole r m
+     , Has QueryContext r
+     )
   => NonObjectTypeMap
   -> ActionInfo 'Postgres
   -> m (Maybe (FieldParser n (AnnActionExecution 'Postgres (UnpreparedValue 'Postgres))))
@@ -79,7 +85,7 @@ actionExecute nonObjectTypeMap actionInfo = runMaybeT do
 --
 -- > action_name(action_input_arguments)
 actionAsyncMutation
-  :: forall m n r. (MonadSchema n m, MonadTableInfo 'Postgres r m, MonadRole r m)
+  :: forall m n r. (MonadSchema n m, MonadTableInfo r m, MonadRole r m)
   => NonObjectTypeMap
   -> ActionInfo 'Postgres
   -> m (Maybe (FieldParser n AnnActionMutationAsync))
@@ -108,7 +114,13 @@ actionAsyncMutation nonObjectTypeMap actionInfo = runMaybeT do
 -- >   output: user_defined_type!
 -- > }
 actionAsyncQuery
-  :: forall m n r. (BackendSchema 'Postgres, MonadSchema n m, MonadTableInfo 'Postgres r m, MonadRole r m, Has QueryContext r)
+  :: forall m n r
+   . ( BackendSchema 'Postgres
+     , MonadSchema n m
+     , MonadTableInfo r m
+     , MonadRole r m
+     , Has QueryContext r
+     )
   => ActionInfo 'Postgres
   -> m (Maybe (FieldParser n (AnnActionAsyncQuery 'Postgres (UnpreparedValue 'Postgres))))
 actionAsyncQuery actionInfo = runMaybeT do
@@ -164,7 +176,13 @@ actionIdParser
 actionIdParser = ActionId <$> P.uuid
 
 actionOutputFields
-  :: forall m n r. (BackendSchema 'Postgres, MonadSchema n m, MonadTableInfo 'Postgres r m, MonadRole r m, Has QueryContext r)
+  :: forall m n r
+   . ( BackendSchema 'Postgres
+     , MonadSchema n m
+     , MonadTableInfo r m
+     , MonadRole r m
+     , Has QueryContext r
+     )
   => AnnotatedObjectType 'Postgres
   -> m (Parser 'Output n (RQL.AnnFieldsG 'Postgres (UnpreparedValue 'Postgres)))
 actionOutputFields annotatedObject = do
@@ -205,7 +223,7 @@ actionOutputFields annotatedObject = do
             (k, v) <- Map.toList fieldMapping
             pure (unsafePGCol $ G.unName $ unObjectFieldName k, pgiColumn v)
       roleName   <- lift askRoleName
-      tablePerms <- MaybeT $ pure $ RQL.getPermInfoMaybe roleName PASelect tableInfo
+      tablePerms <- hoistMaybe $ RQL.getPermInfoMaybe roleName PASelect tableInfo
       case relType of
         ObjRel -> do
           let desc = Just $ G.Description "An object relationship"
@@ -242,7 +260,7 @@ mkDefinitionList AnnotatedObjectType{..} =
 
 
 actionInputArguments
-  :: forall m n r. (MonadSchema n m, MonadTableInfo 'Postgres r m)
+  :: forall m n r. (MonadSchema n m, MonadTableInfo r m)
   => NonObjectTypeMap
   -> [ArgumentDefinition (G.GType, NonObjectCustomType)]
   -> m (InputFieldsParser n J.Value)

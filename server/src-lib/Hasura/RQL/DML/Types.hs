@@ -44,9 +44,9 @@ import           Data.Aeson.TH
 import qualified Hasura.Backends.Postgres.SQL.DML   as PG
 
 import           Hasura.Backends.Postgres.SQL.Types
-import           Hasura.RQL.Instances               ()
 import           Hasura.RQL.IR.BoolExp
 import           Hasura.RQL.IR.OrderBy
+import           Hasura.RQL.Instances               ()
 import           Hasura.RQL.Types.Common            hiding (ConstraintName)
 import           Hasura.SQL.Backend
 
@@ -110,7 +110,7 @@ data SelectG a b c
   , sqOffset  :: !(Maybe c)          -- Offset
   } deriving (Show, Eq)
 
-$(deriveJSON (aesonDrop 2 snakeCase){omitNothingFields=True} ''SelectG)
+$(deriveJSON hasuraJSON{omitNothingFields=True} ''SelectG)
 
 selectGToPairs :: (KeyValue kv, ToJSON a, ToJSON b, ToJSON c)
                => SelectG a b c -> [kv]
@@ -146,7 +146,7 @@ data SelCol (b :: BackendType)
 deriving instance Eq   (SelCol 'Postgres)
 deriving instance Show (SelCol 'Postgres)
 
-instance FromJSON (SelCol 'Postgres) where
+instance Backend b => FromJSON (SelCol b) where
   parseJSON (String s) =
     case AT.parseOnly parseWildcard s of
     Left _  -> SCExtSimple <$> parseJSON (String s)
@@ -162,7 +162,7 @@ instance FromJSON (SelCol 'Postgres) where
     , "object (relationship)"
     ]
 
-instance ToJSON (SelCol 'Postgres) where
+instance Backend b => ToJSON (SelCol b) where
   toJSON (SCStar wc) = String $ wcToText wc
   toJSON (SCExtSimple s) = toJSON s
   toJSON (SCExtRel rn mrn selq) =
@@ -215,7 +215,7 @@ data OnConflict
   , ocAction       :: !ConflictAction
   } deriving (Show, Eq)
 
-$(deriveJSON (aesonDrop 2 snakeCase){omitNothingFields=True} ''OnConflict)
+$(deriveJSON hasuraJSON{omitNothingFields=True} ''OnConflict)
 
 data InsertQuery
   = InsertQuery
@@ -226,7 +226,7 @@ data InsertQuery
   , iqReturning  :: !(Maybe [PGCol])
   } deriving (Show, Eq)
 
-$(deriveToJSON (aesonDrop 2 snakeCase){omitNothingFields=True} ''InsertQuery)
+$(deriveToJSON hasuraJSON{omitNothingFields=True} ''InsertQuery)
 
 instance FromJSON InsertQuery where
   parseJSON = withObject "Object" $ \o ->
@@ -243,7 +243,7 @@ data InsertTxConflictCtx
   , itcConstraint    :: !(Maybe ConstraintName)
   , itcSetExpression :: !(Maybe Text)
   } deriving (Show, Eq)
-$(deriveJSON (aesonDrop 3 snakeCase){omitNothingFields=True} ''InsertTxConflictCtx)
+$(deriveJSON hasuraJSON{omitNothingFields=True} ''InsertTxConflictCtx)
 
 type UpdVals = ColumnValues Value
 
@@ -293,7 +293,7 @@ data DeleteQuery
   , doReturning :: !(Maybe [PGCol]) -- columns returning
   } deriving (Show, Eq)
 
-$(deriveToJSON (aesonDrop 2 snakeCase){omitNothingFields=True} ''DeleteQuery)
+$(deriveToJSON hasuraJSON{omitNothingFields=True} ''DeleteQuery)
 
 instance FromJSON DeleteQuery where
   parseJSON = withObject "Object" $ \o ->
@@ -311,7 +311,7 @@ data CountQuery
   , cqWhere    :: !(Maybe (BoolExp 'Postgres))
   } deriving (Show, Eq)
 
-$(deriveToJSON (aesonDrop 2 snakeCase){omitNothingFields=True} ''CountQuery)
+$(deriveToJSON hasuraJSON{omitNothingFields=True} ''CountQuery)
 
 instance FromJSON CountQuery where
   parseJSON = withObject "Object" $ \o ->

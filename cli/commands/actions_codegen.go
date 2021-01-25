@@ -50,7 +50,8 @@ type actionsCodegenOptions struct {
 }
 
 func (o *actionsCodegenOptions) run() (err error) {
-	migrateDrv, err := migrate.NewMigrate(o.EC, true)
+	// TODO
+	migrateDrv, err := migrate.NewMigrate(o.EC, true, "")
 	if err != nil {
 		return err
 	}

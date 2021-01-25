@@ -49,7 +49,8 @@ import           Hasura.Prelude
 import           Hasura.RQL.Types
 import           Hasura.Server.Auth.JWT.Internal (parseHmacKey, parseRsaKey)
 import           Hasura.Server.Auth.JWT.Logging
-import           Hasura.Server.Utils             (executeJSONPath, getRequestHeader, userRoleHeader, isSessionVariable)
+import           Hasura.Server.Utils             (executeJSONPath, getRequestHeader,
+                                                  isSessionVariable, userRoleHeader)
 import           Hasura.Server.Version           (HasVersion)
 import           Hasura.Session
 import qualified Hasura.Tracing                  as Tracing
@@ -153,7 +154,8 @@ instance J.FromJSON JWTCustomClaimsMap where
     let withNotFoundError sessionVariable =
           let errorMsg = T.unpack $
                 sessionVariableToText sessionVariable <> " is expected but not found"
-          in onNothing (Map.lookup (sessionVariableToText sessionVariable) obj) (fail errorMsg)
+          in Map.lookup (sessionVariableToText sessionVariable) obj
+             `onNothing` fail errorMsg
 
     allowedRoles <- withNotFoundError allowedRolesClaim  >>= J.parseJSON
     defaultRole <- withNotFoundError defaultRoleClaim  >>= J.parseJSON
@@ -212,7 +214,7 @@ data HasuraClaims
   { _cmAllowedRoles :: ![RoleName]
   , _cmDefaultRole  :: !RoleName
   } deriving (Show, Eq)
-$(J.deriveJSON (J.aesonDrop 3 J.snakeCase) ''HasuraClaims)
+$(J.deriveJSON hasuraJSON ''HasuraClaims)
 
 -- | An action that refreshes the JWK at intervals in an infinite loop.
 jwkRefreshCtrl
@@ -314,7 +316,7 @@ updateJwkRef (Logger logger) manager url jwkRef = do
 
     getHttpExceptionMsg = \case
       HTTP.HttpExceptionRequest _ reason -> show reason
-      HTTP.InvalidUrlException _ reason -> show reason
+      HTTP.InvalidUrlException _ reason  -> show reason
 
 type ClaimsMap = Map.HashMap SessionVariable J.Value
 
@@ -397,9 +399,8 @@ processAuthZHeader jwtCtx authzHeader = do
   claims <- liftJWTError invalidJWTError $ verifyJwt jwtCtx $ RawJWT jwt
 
   let expTimeM = fmap (\(Jose.NumericDate t) -> t) $ claims ^. Jose.claimExp
-      unregisteredClaims = claims ^. Jose.unregisteredClaims
 
-  claimsObject <- parseClaimsMap unregisteredClaims claimsConfig
+  claimsObject <- parseClaimsMap claims claimsConfig
 
   pure $ (claimsObject, expTimeM)
 
@@ -424,17 +425,20 @@ processAuthZHeader jwtCtx authzHeader = do
 
 -- | parse the claims map from the JWT token or custom claims from the JWT config
 parseClaimsMap
-  :: (MonadError QErr m)
-  => J.Object -- ^ Unregistered JWT claims
+  :: MonadError QErr m
+  => Jose.ClaimsSet -- ^ Unregistered JWT claims
   -> JWTClaims -- ^ Claims config
   -> m ClaimsMap -- ^ Hasura claims and other claims
-parseClaimsMap unregisteredClaims jcxClaims =
+parseClaimsMap claimsSet jcxClaims = do
+  let claimsJSON = J.toJSON claimsSet
+      unregisteredClaims = claimsSet ^. Jose.unregisteredClaims
   case jcxClaims of
+    -- when the user specifies the namespace of the hasura claims map,
+    -- the hasura claims map *must* be specified in the unregistered claims
     JCNamespace namespace claimsFormat -> do
-      claimsV <- flip onNothing (claimsNotFound namespace) $
-        case namespace of
-          ClaimNs k -> Map.lookup k unregisteredClaims
-          ClaimNsPath path -> iResultToMaybe $ executeJSONPath path (J.toJSON unregisteredClaims)
+      claimsV <- flip onNothing (claimsNotFound namespace) $ case namespace of
+        ClaimNs k        -> Map.lookup k unregisteredClaims
+        ClaimNsPath path -> iResultToMaybe $ executeJSONPath path (J.toJSON unregisteredClaims)
       -- get hasura claims value as an object. parse from string possibly
       claimsObject <- parseObjectFromString namespace claimsFormat claimsV
 
@@ -446,17 +450,16 @@ parseClaimsMap unregisteredClaims jcxClaims =
 
     JCMap claimsConfig -> do
       let JWTCustomClaimsMap defaultRoleClaimsMap allowedRolesClaimsMap otherClaimsMap = claimsConfig
-          claimsObjValue = J.Object unregisteredClaims
 
       allowedRoles <- case allowedRolesClaimsMap of
         JWTCustomClaimsMapJSONPath allowedRolesJsonPath defaultVal ->
-          parseAllowedRolesClaim defaultVal $ iResultToMaybe $ executeJSONPath allowedRolesJsonPath claimsObjValue
+          parseAllowedRolesClaim defaultVal $ iResultToMaybe $ executeJSONPath allowedRolesJsonPath claimsJSON
         JWTCustomClaimsMapStatic staticAllowedRoles -> pure staticAllowedRoles
 
       defaultRole <- case defaultRoleClaimsMap of
         JWTCustomClaimsMapJSONPath defaultRoleJsonPath defaultVal ->
           parseDefaultRoleClaim defaultVal $ iResultToMaybe $
-          executeJSONPath defaultRoleJsonPath claimsObjValue
+          executeJSONPath defaultRoleJsonPath claimsJSON
         JWTCustomClaimsMapStatic staticDefaultRole -> pure staticDefaultRole
 
       otherClaims <- flip Map.traverseWithKey otherClaimsMap $ \k claimObj -> do
@@ -464,8 +467,9 @@ parseClaimsMap unregisteredClaims jcxClaims =
                             <> sessionVariableToText k <> " not found"
         case claimObj of
           JWTCustomClaimsMapJSONPath path defaultVal ->
-            onNothing (iResultToMaybe $ executeJSONPath path claimsObjValue) $
-            (onNothing (J.String <$> defaultVal) throwClaimErr)
+            iResultToMaybe (executeJSONPath path claimsJSON)
+            `onNothing` (J.String <$> defaultVal)
+            `onNothing` throwClaimErr
           JWTCustomClaimsMapStatic claimStaticValue -> pure $ J.String claimStaticValue
 
       pure $  Map.fromList [

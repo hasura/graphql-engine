@@ -33,11 +33,10 @@ import qualified Language.GraphQL.Draft.Syntax      as G
 
 import           Control.Lens.TH
 import           Data.Aeson
-import           Data.Aeson.Casing
 import           Data.Aeson.TH
 import           Data.Text.Extended
 
-import           Hasura.Backends.Postgres.SQL.Types hiding (TableName, isNumType, isComparableType)
+import           Hasura.Backends.Postgres.SQL.Types hiding (TableName, isComparableType, isNumType)
 import           Hasura.Backends.Postgres.SQL.Value
 import           Hasura.Incremental                 (Cacheable)
 import           Hasura.RQL.Instances               ()
@@ -54,7 +53,7 @@ newtype EnumValueInfo
   = EnumValueInfo
   { evComment :: Maybe Text
   } deriving (Show, Eq, Ord, NFData, Hashable, Cacheable)
-$(deriveJSON (aesonDrop 2 snakeCase) ''EnumValueInfo)
+$(deriveJSON hasuraJSON ''EnumValueInfo)
 
 type EnumValues = M.HashMap EnumValue EnumValueInfo
 
@@ -73,10 +72,10 @@ instance (Backend b) => Hashable (EnumReference b)
 instance (Backend b) => Cacheable (EnumReference b)
 
 instance Backend b => FromJSON (EnumReference b) where
-  parseJSON = genericParseJSON $ aesonPrefix snakeCase
+  parseJSON = genericParseJSON hasuraJSON
 
 instance Backend b => ToJSON (EnumReference b) where
-  toJSON = genericToJSON $ aesonPrefix snakeCase
+  toJSON = genericToJSON hasuraJSON
 
 -- | The type we use for columns, which are currently always “scalars” (though
 -- see the note about 'CollectableType'). Unlike 'ScalarType', which represents
@@ -172,9 +171,9 @@ deriving instance Backend b => Show (RawColumnInfo b)
 instance Backend b => NFData (RawColumnInfo b)
 instance Backend b => Cacheable (RawColumnInfo b)
 instance Backend b => ToJSON (RawColumnInfo b) where
-  toJSON = genericToJSON $ aesonDrop 4 snakeCase
+  toJSON = genericToJSON hasuraJSON
 instance Backend b => FromJSON (RawColumnInfo b) where
-  parseJSON = genericParseJSON $ aesonDrop 4 snakeCase
+  parseJSON = genericParseJSON hasuraJSON
 
 -- | “Resolved” column info, produced from a 'RawColumnInfo' value that has been combined with
 -- other schema information to produce a 'PGColumnType'.
@@ -193,8 +192,8 @@ instance Backend b => Cacheable (ColumnInfo b)
 instance Backend b => NFData (ColumnInfo b)
 instance Backend b => Hashable (ColumnInfo b)
 instance Backend b => ToJSON (ColumnInfo b) where
-  toJSON = genericToJSON $ aesonDrop 3 snakeCase
-  toEncoding = genericToEncoding $ aesonDrop 3 snakeCase
+  toJSON = genericToJSON hasuraJSON
+  toEncoding = genericToEncoding hasuraJSON
 
 type PrimaryKeyColumns b = NESeq (ColumnInfo b)
 

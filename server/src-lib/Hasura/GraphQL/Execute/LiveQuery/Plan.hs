@@ -26,7 +26,6 @@ module Hasura.GraphQL.Execute.LiveQuery.Plan
 
 import           Hasura.Prelude
 
-import qualified Data.Aeson.Casing                           as J
 import qualified Data.Aeson.Extended                         as J
 import qualified Data.Aeson.TH                               as J
 import qualified Data.ByteString                             as B
@@ -59,8 +58,8 @@ import           Hasura.GraphQL.Context
 import           Hasura.GraphQL.Execute.Query
 import           Hasura.GraphQL.Parser.Column
 import           Hasura.RQL.Types
-import           Hasura.Session
 import           Hasura.SQL.Types
+import           Hasura.Session
 
 
 -- -------------------------------------------------------------------------------------------------
@@ -331,7 +330,7 @@ data ParameterizedLiveQueryPlan
   { _plqpRole  :: !RoleName
   , _plqpQuery :: !MultiplexedQuery
   } deriving (Show)
-$(J.deriveToJSON (J.aesonDrop 4 J.snakeCase) ''ParameterizedLiveQueryPlan)
+$(J.deriveToJSON hasuraJSON ''ParameterizedLiveQueryPlan)
 
 data ReusableLiveQueryPlan
   = ReusableLiveQueryPlan
@@ -340,7 +339,7 @@ data ReusableLiveQueryPlan
   , _rlqpSyntheticVariableValues  :: !ValidatedSyntheticVariables
   , _rlqpQueryVariableTypes       :: HashMap G.Name (ColumnType 'Postgres)
   } deriving (Show)
-$(J.deriveToJSON (J.aesonDrop 4 J.snakeCase) ''ReusableLiveQueryPlan)
+$(J.deriveToJSON hasuraJSON ''ReusableLiveQueryPlan)
 
 -- | Constructs a new execution plan for a live query and returns a reusable version
 -- of the plan if possible.
@@ -397,7 +396,7 @@ data LiveQueryPlanExplanation
   , _lqpePlan      :: ![Text]
   , _lqpeVariables :: !CohortVariables
   } deriving (Show)
-$(J.deriveToJSON (J.aesonDrop 5 J.snakeCase) ''LiveQueryPlanExplanation)
+$(J.deriveToJSON hasuraJSON ''LiveQueryPlanExplanation)
 
 explainLiveQueryPlan
   :: ( MonadError QErr m

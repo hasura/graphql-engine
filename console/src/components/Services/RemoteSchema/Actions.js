@@ -92,6 +92,7 @@ const makeRequest = (
       name: migrationName,
       up: upQuery.args,
       down: downQuery.args,
+      datasource: source,
     };
 
     const currMigrationMode = getState().main.migrationMode;

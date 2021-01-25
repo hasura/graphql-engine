@@ -552,6 +552,7 @@ const makeMigrationCall = (
     name: sanitize(migrationName),
     up: upQuery.args,
     down: downQueries || [],
+    datasource: source,
     skip_execution: skipExecution,
   };
 

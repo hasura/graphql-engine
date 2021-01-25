@@ -43,14 +43,14 @@ data ExtCol (b :: BackendType)
   = ECSimple !(Column b)
   | ECRel !RelName !(Maybe RelName) !(SelectQExt b)
 
-instance ToJSON (ExtCol 'Postgres) where
+instance Backend b => ToJSON (ExtCol b) where
   toJSON (ECSimple s) = toJSON s
   toJSON (ECRel rn mrn selq) =
     object $ [ "name" .= rn
              , "alias" .= mrn
              ] ++ selectGToPairs selq
 
-instance FromJSON (ExtCol 'Postgres) where
+instance Backend b => FromJSON (ExtCol b) where
   parseJSON v@(Object o) =
     ECRel
     <$> o .:  "name"
@@ -337,5 +337,5 @@ runSelect
      )
   => SelectQuery -> m EncJSON
 runSelect q = do
-  sourceConfig <- _pcConfiguration <$> askPGSourceCache (getSourceDMLQuery q)
+  sourceConfig <- askSourceConfig (getSourceDMLQuery q)
   phaseOne q >>= runQueryLazyTx (_pscExecCtx sourceConfig) Q.ReadOnly . phaseTwo

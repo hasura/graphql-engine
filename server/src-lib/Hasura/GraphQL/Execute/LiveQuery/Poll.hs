@@ -49,7 +49,6 @@ import qualified Control.Concurrent.Async                 as A
 import qualified Control.Concurrent.STM                   as STM
 import qualified Control.Immortal                         as Immortal
 import qualified Crypto.Hash                              as CH
-import qualified Data.Aeson.Casing                        as J
 import qualified Data.Aeson.Extended                      as J
 import qualified Data.Aeson.TH                            as J
 import qualified Data.ByteString                          as BS
@@ -328,7 +327,7 @@ data CohortExecutionDetails
   -- polled cycle
   } deriving (Show, Eq)
 
-$(J.deriveToJSON (J.aesonDrop 4 J.snakeCase) ''CohortExecutionDetails)
+$(J.deriveToJSON hasuraJSON ''CohortExecutionDetails)
 
 -- | Execution information related to a single batched execution
 data BatchExecutionDetails
@@ -348,7 +347,7 @@ batchExecutionDetailMinimal BatchExecutionDetails{..} =
            , "push_time" J..= _bedPushTime
            ]
 
-$(J.deriveToJSON (J.aesonDrop 4 J.snakeCase) ''BatchExecutionDetails)
+$(J.deriveToJSON hasuraJSON ''BatchExecutionDetails)
 
 data PollDetails
   = PollDetails
@@ -368,7 +367,7 @@ data PollDetails
   , _pdLiveQueryOptions :: !LiveQueriesOptions
   } deriving (Show, Eq)
 
-$(J.deriveToJSON (J.aesonDrop 3 J.snakeCase) ''PollDetails)
+$(J.deriveToJSON hasuraJSON ''PollDetails)
 
 {- Note [Minimal LiveQuery Poller Log]
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

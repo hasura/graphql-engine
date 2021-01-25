@@ -1,6 +1,7 @@
 package commands
 
 import (
+	"fmt"
 	"os"
 	"sync"
 
@@ -45,7 +46,15 @@ func NewConsoleCmd(ec *cli.ExecutionContext) *cobra.Command {
 			if err != nil {
 				return err
 			}
-			return ec.Validate()
+			if err := ec.Validate(); err != nil {
+				return err
+			}
+			if ec.Config.Version < cli.V2 && ec.HasMetadataV3 {
+				ec.Logger.Errorf("config V1 is not supported with metadata V3 please upgrade to config V2")
+				ec.Logger.Info("upgrade to config V2 using the following command\nhasura scripts update-project-v2")
+				return fmt.Errorf("invalid config version")
+			}
+			return nil
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
 			return opts.Run()

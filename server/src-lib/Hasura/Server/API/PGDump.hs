@@ -6,7 +6,6 @@ module Hasura.Server.API.PGDump
 
 import           Control.Exception      (IOException, try)
 import           Data.Aeson
-import           Data.Aeson.Casing
 import           Data.Aeson.TH
 import           Data.Char              (isSpace)
 import           Data.Text.Conversions
@@ -29,7 +28,7 @@ data PGDumpReqBody =
   , prbCleanOutput :: !Bool
   } deriving (Show, Eq)
 
-$(deriveToJSON (aesonDrop 3 snakeCase) ''PGDumpReqBody)
+$(deriveToJSON hasuraJSON ''PGDumpReqBody)
 
 instance FromJSON PGDumpReqBody where
   parseJSON = withObject "Object" $ \o ->

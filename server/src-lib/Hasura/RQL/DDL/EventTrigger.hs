@@ -185,12 +185,9 @@ resolveEventTriggerQuery (CreateEventTriggerQuery source name qt insert update d
   let rconf = fromMaybe defaultRetryConf retryConf
   return (ti, replace, EventTriggerConf name (TriggerOpsDef insert update delete enableManual) webhook webhookFromEnv rconf mheaders)
   where
-    assertCols _ Nothing = return ()
-    assertCols ti (Just sos) = do
-      let cols = sosColumns sos
-      case cols of
-        SubCStar         -> return ()
-        SubCArray pgcols -> forM_ pgcols (assertPGCol (_tciFieldInfoMap ti) "")
+    assertCols ti opSpec = onJust opSpec \sos -> case sosColumns sos of
+      SubCStar         -> return ()
+      SubCArray pgcols -> forM_ pgcols (assertPGCol (_tciFieldInfoMap ti) "")
 
 mkEventTriggerInfo
   :: QErrM m
@@ -275,10 +272,10 @@ runDeleteEventTriggerQuery
   => DeleteEventTriggerQuery -> m EncJSON
 runDeleteEventTriggerQuery (DeleteEventTriggerQuery source name) = do
   -- liftTx $ delEventTriggerFromCatalog name
-  SourceInfo _ tables _ sourceConfig <- askPGSourceCache source
+  sourceInfo <- askSourceInfo source
   let maybeTable = HM.lookup name $ HM.unions $
-                   flip map (HM.toList tables) $ \(table, tableInfo) ->
-                   HM.map (const table) $ _tiEventTriggerInfoMap tableInfo
+        flip map (HM.toList $ _siTables sourceInfo) $ \(table, tableInfo) ->
+        HM.map (const table) $ _tiEventTriggerInfoMap tableInfo
   table <- onNothing maybeTable $ throw400 NotExists $
            "event trigger with name " <> name <<> " not exists"
 
@@ -287,7 +284,7 @@ runDeleteEventTriggerQuery (DeleteEventTriggerQuery source name) = do
     $ MetadataModifier
     $ tableMetadataSetter source table %~ dropEventTriggerInMetadata name
 
-  liftEitherM $ liftIO $ runPgSourceWriteTx sourceConfig $ do
+  liftEitherM $ liftIO $ runPgSourceWriteTx (_siConfiguration sourceInfo) $ do
     delTriggerQ name
     archiveEvents name
   pure successMsg
@@ -305,7 +302,7 @@ runRedeliverEvent
   :: (MonadIO m, CacheRM m, QErrM m)
   => RedeliverEventQuery -> m EncJSON
 runRedeliverEvent (RedeliverEventQuery eventId source) = do
-  sourceConfig <- _pcConfiguration <$> askPGSourceCache source
+  sourceConfig <- askSourceConfig source
   liftEitherM $ liftIO $ runPgSourceWriteTx sourceConfig $ deliverEvent eventId
   pure successMsg
 
@@ -332,7 +329,7 @@ runInvokeEventTrigger (InvokeEventTriggerQuery name source payload) = do
   trigInfo <- askEventTriggerInfo source name
   assertManual $ etiOpsDef trigInfo
   ti  <- askTabInfoFromTrigger source name
-  sourceConfig <- _pcConfiguration <$> askPGSourceCache source
+  sourceConfig <- askSourceConfig source
   eid <- liftEitherM $ liftIO $ runPgSourceWriteTx sourceConfig $
          insertManualEvent (_tciName $ _tiCoreInfo ti) name payload
   return $ encJFromJValue $ object ["event_id" .= eid]
@@ -384,7 +381,7 @@ askTabInfoFromTrigger
   => SourceName -> TriggerName -> m (TableInfo 'Postgres)
 askTabInfoFromTrigger sourceName trn = do
   sc <- askSchemaCache
-  let tabInfos = HM.elems $ maybe mempty _pcTables $ HM.lookup sourceName $ scPostgres sc
+  let tabInfos = HM.elems $ fromMaybe mempty $ unsafeTableCache sourceName $ scPostgres sc
   find (isJust . HM.lookup trn . _tiEventTriggerInfoMap) tabInfos
     `onNothing` throw400 NotExists errMsg
   where

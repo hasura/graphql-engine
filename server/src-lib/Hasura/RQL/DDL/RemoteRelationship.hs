@@ -9,8 +9,11 @@ module Hasura.RQL.DDL.RemoteRelationship
 
 import           Hasura.Prelude
 
+import qualified Data.HashMap.Strict                        as Map
 import qualified Data.HashMap.Strict.InsOrd                 as OMap
 import qualified Data.HashSet                               as HS
+
+import           Data.Text.Extended
 
 import           Hasura.EncJSON
 import           Hasura.RQL.DDL.RemoteRelationship.Validate
@@ -39,8 +42,12 @@ resolveRemoteRelationship
 resolveRemoteRelationship remoteRelationship
                           pgColumns
                           remoteSchemaMap = do
+  let remoteSchemaName = rtrRemoteSchema remoteRelationship
+  (RemoteSchemaCtx _name introspectionResult remoteSchemaInfo _ _ _permissions) <-
+    onNothing (Map.lookup remoteSchemaName remoteSchemaMap)
+      $ throw400 RemoteSchemaError $ "remote schema with name " <> remoteSchemaName <<> " not found"
   eitherRemoteField <- runExceptT $
-    validateRemoteRelationship remoteRelationship remoteSchemaMap pgColumns
+    validateRemoteRelationship remoteRelationship (remoteSchemaInfo, introspectionResult) pgColumns
   remoteField <- onLeft eitherRemoteField $ throw400 RemoteSchemaError . errorToText
   let table = rtrTable remoteRelationship
       source = rtrSource remoteRelationship
@@ -51,7 +58,7 @@ resolveRemoteRelationship remoteRelationship
                 (flip SchemaDependency DRRemoteRelationship . SOSourceObj source . SOITableObj table . TOCol . pgiColumn)
                 $ HS.toList $ _rfiHasuraFields remoteField
             remoteSchemaDep =
-              SchemaDependency (SORemoteSchema $ rtrRemoteSchema remoteRelationship) DRRemoteSchema
+              SchemaDependency (SORemoteSchema remoteSchemaName) DRRemoteSchema
          in (tableDep : remoteSchemaDep : columnsDep)
 
   pure (remoteField, schemaDependencies)

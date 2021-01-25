@@ -41,6 +41,7 @@ import           Hasura.EncJSON
 import           Hasura.GraphQL.Parser                  hiding (field)
 import           Hasura.GraphQL.RemoteServer            (execRemoteGQ)
 import           Hasura.GraphQL.Transport.HTTP.Protocol
+import           Hasura.GraphQL.Execute.Remote
 import           Hasura.RQL.DML.Internal
 import           Hasura.RQL.IR.RemoteJoin
 import           Hasura.RQL.IR.Returning
@@ -305,7 +306,7 @@ data RemoteJoinField
   = RemoteJoinField
   { _rjfRemoteSchema :: !RemoteSchemaInfo -- ^ The remote schema server info.
   , _rjfAlias        :: !Alias -- ^ Top level alias of the field
-  , _rjfField        :: !(G.Field G.NoFragments Variable) -- ^ The field AST
+  , _rjfField        :: !(G.Field G.NoFragments RemoteSchemaVariable) -- ^ The field AST
   , _rjfFieldCall    :: ![G.Name] -- ^ Path to remote join value
   } deriving (Show, Eq)
 
@@ -431,21 +432,27 @@ defaultValue = \case
   JSONValue    _ -> Nothing
   GraphQLValue g -> Just g
 
-collectVariables :: G.Value Variable -> HashMap G.VariableDefinition A.Value
-collectVariables = \case
+collectVariablesFromValue :: G.Value Variable -> HashMap G.VariableDefinition A.Value
+collectVariablesFromValue = \case
   G.VNull          -> mempty
   G.VInt _         -> mempty
   G.VFloat _       -> mempty
   G.VString _      -> mempty
   G.VBoolean _     -> mempty
   G.VEnum _        -> mempty
-  G.VList values   -> foldl Map.union mempty $ map collectVariables values
-  G.VObject values -> foldl Map.union mempty $ map collectVariables $ Map.elems values
+  G.VList values   -> foldl Map.union mempty $ map collectVariablesFromValue values
+  G.VObject values -> foldl Map.union mempty $ map collectVariablesFromValue $ Map.elems values
   G.VVariable var@(Variable _ gType val) ->
     let name       = getName var
         jsonVal    = inputValueToJSON val
         defaultVal = defaultValue val
     in Map.singleton (G.VariableDefinition name gType defaultVal) jsonVal
+
+collectVariablesFromField :: G.Field G.NoFragments Variable -> HashMap G.VariableDefinition A.Value
+collectVariablesFromField (G.Field _ _ arguments _ selSet) =
+  let argumentVariables = fmap collectVariablesFromValue arguments
+      selSetVariables   = (fmap snd <$> collectVariablesFromSelectionSet selSet)
+  in foldl Map.union mempty (Map.elems argumentVariables) <> Map.fromList selSetVariables
 
 -- | Fetch remote join field value from remote servers by batching respective 'RemoteJoinField's
 fetchRemoteJoinFields
@@ -462,7 +469,8 @@ fetchRemoteJoinFields
   -> m AO.Object
 fetchRemoteJoinFields env manager reqHdrs userInfo remoteJoins = do
   results <- forM (Map.toList remoteSchemaBatch) $ \(rsi, batch) -> do
-    let gqlReq = fieldsToRequest $ _rjfField <$> batch
+    resolvedRemoteFields <- traverse (traverse (resolveRemoteVariable userInfo)) $ _rjfField <$> batch
+    let gqlReq = fieldsToRequest resolvedRemoteFields
     -- NOTE: discard remote headers (for now):
     (_, _, respBody) <- execRemoteGQ env manager userInfo reqHdrs rsi gqlReq
     case AO.eitherDecode respBody of
@@ -484,7 +492,7 @@ fetchRemoteJoinFields env manager reqHdrs userInfo remoteJoins = do
 
     fieldsToRequest :: NonEmpty (G.Field G.NoFragments Variable) -> GQLReqOutgoing
     fieldsToRequest gFields@(headField :| _) =
-      let variableInfos = 
+      let variableInfos =
             -- only the `headField` is used for collecting the variables here because
             -- the variable information of all the fields will be the same.
             -- For example:
@@ -497,21 +505,20 @@ fetchRemoteJoinFields env manager reqHdrs userInfo remoteJoins = do
             --
             -- If there are 10 authors, then there are 10 fields that will be requested
             -- each containing exactly the same variable info.
-            foldMap collectVariables $ G._fArguments headField
-       in GQLReq
-            { _grOperationName = Nothing
-            , _grVariables =
-                mapKeys G._vdName variableInfos <$ guard (not $ Map.null variableInfos)
-            , _grQuery = G.TypedOperationDefinition
-               { G._todSelectionSet =
-                   NE.toList $ G.SelectionField . convertFieldWithVariablesToName <$> gFields
-               , G._todVariableDefinitions = Map.keys variableInfos
-               , G._todType = G.OperationTypeQuery
-               , G._todName = Nothing
-               , G._todDirectives = []
-               }
-            }
-
+            collectVariablesFromField headField
+      in GQLReq
+           { _grOperationName = Nothing
+           , _grVariables =
+               mapKeys G._vdName variableInfos <$ guard (not $ Map.null variableInfos)
+           , _grQuery = G.TypedOperationDefinition
+              { G._todSelectionSet =
+                  NE.toList $ G.SelectionField . convertFieldWithVariablesToName <$> gFields
+              , G._todVariableDefinitions = Map.keys variableInfos
+              , G._todType = G.OperationTypeQuery
+              , G._todName = Nothing
+              , G._todDirectives = []
+              }
+           }
 
 -- | Replace 'RemoteJoinField' in composite JSON with it's json value from remote server response.
 replaceRemoteFields
@@ -546,21 +553,21 @@ replaceRemoteFields compositeJson remoteServerResponse =
 -- selection set at the leaf of the tree we construct.
 fieldCallsToField
   :: forall m. MonadError QErr m
-  => Map.HashMap G.Name (InputValue Variable)
+  => Map.HashMap G.Name (InputValue RemoteSchemaVariable)
   -- ^ user input arguments to the remote join field
   -> Map.HashMap G.Name (G.Value Void)
   -- ^ Contains the values of the variables that have been defined in the remote join definition
-  -> G.SelectionSet G.NoFragments Variable
+  -> G.SelectionSet G.NoFragments RemoteSchemaVariable
   -- ^ Inserted at leaf of nested FieldCalls
   -> Alias
   -- ^ Top-level name to set for this Field
   -> NonEmpty FieldCall
-  -> m (G.Field G.NoFragments Variable)
+  -> m (G.Field G.NoFragments RemoteSchemaVariable)
 fieldCallsToField rrArguments variables finalSelSet topAlias =
   fmap (\f -> f{G._fAlias = Just topAlias}) . nest
   where
     -- almost: `foldr nest finalSelSet`
-    nest :: NonEmpty FieldCall -> m (G.Field G.NoFragments Variable)
+    nest :: NonEmpty FieldCall -> m (G.Field G.NoFragments RemoteSchemaVariable)
     nest ((FieldCall name remoteArgs) :| rest) = do
       templatedArguments <- convert <$> createArguments variables remoteArgs
       graphQLarguments <- traverse peel rrArguments
@@ -577,10 +584,10 @@ fieldCallsToField rrArguments variables finalSelSet topAlias =
               in pure (arguments, finalSelSet)
       pure $ G.Field Nothing name args [] selSet
 
-    convert :: Map.HashMap G.Name (G.Value Void) -> Map.HashMap G.Name (G.Value Variable)
+    convert :: Map.HashMap G.Name (G.Value Void) -> Map.HashMap G.Name (G.Value RemoteSchemaVariable)
     convert = fmap G.literal
 
-    peel :: InputValue Variable -> m (G.Value Variable)
+    peel :: InputValue RemoteSchemaVariable -> m (G.Value RemoteSchemaVariable)
     peel = \case
       GraphQLValue v -> pure v
       JSONValue _ ->
@@ -596,7 +603,7 @@ fieldCallsToField rrArguments variables finalSelSet topAlias =
 -- `where: { id : 1}`
 -- And during execution, client also gives the input arg: `where: {name: "tiru"}`
 -- We need to merge the input argument to where: {id : 1, name: "tiru"}
-mergeValue :: G.Value Variable -> G.Value Variable -> G.Value Variable
+mergeValue :: G.Value RemoteSchemaVariable -> G.Value RemoteSchemaVariable -> G.Value RemoteSchemaVariable
 mergeValue lVal rVal = case (lVal, rVal) of
   (G.VList l, G.VList r) ->
     G.VList $ l <> r

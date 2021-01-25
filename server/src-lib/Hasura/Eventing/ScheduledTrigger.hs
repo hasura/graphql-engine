@@ -134,8 +134,8 @@ import           Hasura.Metadata.Class
 import           Hasura.RQL.DDL.EventTrigger            (getHeaderInfosFromConf)
 import           Hasura.RQL.DDL.Headers
 import           Hasura.RQL.Types
-import           Hasura.Server.Version                  (HasVersion)
 import           Hasura.SQL.Types
+import           Hasura.Server.Version                  (HasVersion)
 
 -- | runCronEventsGenerator makes sure that all the cron triggers
 --   have an adequate buffer of cron events.

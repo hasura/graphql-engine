@@ -118,7 +118,7 @@ runDropPgSource
   :: (MonadError QErr m, CacheRWM m, MonadIO m, MonadBaseControl IO m, MetadataM m)
   => DropPgSource -> m EncJSON
 runDropPgSource (DropPgSource name cascade) = do
-  sourceConfig <- _pcConfiguration <$> askPGSourceCache name
+  sourceConfig <- askSourceConfig name
   sc <- askSchemaCache
   let indirectDeps = filter (not . isDirectDep) $
                      getDependentObjs sc (SOSource name)

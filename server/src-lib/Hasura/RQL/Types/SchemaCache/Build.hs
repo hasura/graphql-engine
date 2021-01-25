@@ -36,7 +36,6 @@ import           Control.Monad.Morph
 import           Control.Monad.Trans.Control         (MonadBaseControl)
 import           Control.Monad.Unique
 import           Data.Aeson                          (toJSON)
-import           Data.Aeson.Casing
 import           Data.Aeson.TH
 import           Data.List                           (nub)
 import           Data.Text.Extended
@@ -140,7 +139,7 @@ data CacheInvalidations = CacheInvalidations
   -- ^ Force re-establishing connections of the given data sources, even if their configuration has not changed. Set
   -- by the @pg_reload_source@ API.
   }
-$(deriveJSON (aesonDrop 2 snakeCase) ''CacheInvalidations)
+$(deriveJSON hasuraJSON ''CacheInvalidations)
 
 instance Semigroup CacheInvalidations where
   CacheInvalidations a1 b1 c1 <> CacheInvalidations a2 b2 c2 =

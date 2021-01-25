@@ -1,5 +1,5 @@
 - description: adding preset directive at the wrong location
-  url: /v1/query
+  url: /v1/metadata
   status: 400
   query:
     type: add_remote_schema_permissions
@@ -21,7 +21,7 @@
     code: validation-failed
 
 - description: adding an invalid directive preset value
-  url: /v1/query
+  url: /v1/metadata
   status: 400
   query:
     type: add_remote_schema_permissions
@@ -80,7 +80,7 @@
     code: validation-failed
 
 - description: adding an invalid directive preset value
-  url: /v1/query
+  url: /v1/metadata
   status: 400
   query:
     type: add_remote_schema_permissions

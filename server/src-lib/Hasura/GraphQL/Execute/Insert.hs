@@ -120,7 +120,7 @@ insertMultipleObjects env multiObjIns additionalColumns remoteJoinCtx mutationOu
             checkCondition
             mutationOutput
             columnInfos
-          rowCount = T.pack . show . length $ IR._aiInsObj multiObjIns
+          rowCount = tshow . length $ IR._aiInsObj multiObjIns
       Tracing.trace ("Insert (" <> rowCount <> ") " <> qualifiedObjectToText table) do
         Tracing.attachMetadata [("count", rowCount)]
         PGE.execInsertQuery env stringifyNum (Just remoteJoinCtx) (insertQuery, planVars)

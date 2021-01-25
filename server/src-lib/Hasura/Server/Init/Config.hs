@@ -189,7 +189,7 @@ $(J.deriveJSON (J.defaultOptions { J.constructorTagModifier = map toLower })
 
 instance Hashable API
 
-$(J.deriveJSON (J.aesonDrop 4 J.camelCase){J.omitNothingFields=True} ''PostgresRawConnDetails)
+$(J.deriveJSON (J.aesonPrefix J.camelCase){J.omitNothingFields=True} ''PostgresRawConnDetails)
 
 type HGECommand impl = HGECommandG (ServeOptions impl)
 type RawHGECommand impl = HGECommandG (RawServeOptions impl)

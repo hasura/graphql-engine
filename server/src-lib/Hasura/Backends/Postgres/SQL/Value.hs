@@ -16,18 +16,18 @@ module Hasura.Backends.Postgres.SQL.Value
 
 import           Hasura.Prelude
 
-import qualified Data.Aeson.Text                as AE
-import qualified Data.Aeson.Types               as AT
-import qualified Data.ByteString                as B
-import qualified Data.Text                      as T
-import qualified Data.Text.Conversions          as TC
-import qualified Data.Text.Encoding             as TE
-import qualified Data.Text.Lazy                 as TL
-import qualified Data.UUID                      as UUID
-import qualified Database.PG.Query              as Q
-import qualified Database.PG.Query.PTI          as PTI
-import qualified Database.PostgreSQL.LibPQ      as PQ
-import qualified PostgreSQL.Binary.Encoding     as PE
+import qualified Data.Aeson.Text                    as AE
+import qualified Data.Aeson.Types                   as AT
+import qualified Data.ByteString                    as B
+import qualified Data.Text                          as T
+import qualified Data.Text.Conversions              as TC
+import qualified Data.Text.Encoding                 as TE
+import qualified Data.Text.Lazy                     as TL
+import qualified Data.UUID                          as UUID
+import qualified Database.PG.Query                  as Q
+import qualified Database.PG.Query.PTI              as PTI
+import qualified Database.PostgreSQL.LibPQ          as PQ
+import qualified PostgreSQL.Binary.Encoding         as PE
 
 import           Data.Aeson
 import           Data.Int
@@ -194,17 +194,17 @@ instance FromJSON TxtEncodedPGVal where
 
 txtEncodedPGVal :: PGScalarValue -> TxtEncodedPGVal
 txtEncodedPGVal = \case
-  PGValInteger i  -> TELit $ T.pack $ show i
-  PGValSmallInt i -> TELit $ T.pack $ show i
-  PGValBigInt i   -> TELit $ T.pack $ show i
-  PGValFloat f    -> TELit $ T.pack $ show f
-  PGValDouble d   -> TELit $ T.pack $ show d
-  PGValNumeric sc -> TELit $ T.pack $ show sc
+  PGValInteger i  -> TELit $ tshow i
+  PGValSmallInt i -> TELit $ tshow i
+  PGValBigInt i   -> TELit $ tshow i
+  PGValFloat f    -> TELit $ tshow f
+  PGValDouble d   -> TELit $ tshow d
+  PGValNumeric sc -> TELit $ tshow sc
   -- PostgreSQL doesn't like scientific notation for money, so pass it
   -- with 2 decimal places.
   PGValMoney m    -> TELit $ T.pack $ formatScientific Fixed (Just 2) m
   PGValBoolean b  -> TELit $ bool "false" "true" b
-  PGValChar t     -> TELit $ T.pack $ show t
+  PGValChar t     -> TELit $ tshow t
   PGValVarchar t  -> TELit t
   PGValText t     -> TELit t
   PGValCitext t   -> TELit t

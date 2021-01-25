@@ -22,12 +22,18 @@ import {
   addOrder,
   removeOrder,
 } from './FilterActions.js';
-import { setDefaultQuery, runQuery, setOffset } from './FilterActions';
+import {
+  setDefaultQuery,
+  runQuery,
+  exportDataQuery,
+  setOffset,
+} from './FilterActions';
 import Button from '../../../Common/Button/Button';
 import ReloadEnumValuesButton from '../Common/Components/ReloadEnumValuesButton';
 import styles from '../../../Common/FilterQuery/FilterQuery.scss';
 import { getPersistedPageSize } from './tableUtils';
 import { isEmpty } from '../../../Common/utils/jsUtils';
+import ExportData from './ExportData';
 
 const history = createHistory();
 
@@ -276,6 +282,9 @@ class FilterQuery extends Component {
 
   render() {
     const { dispatch, whereAnd, tableSchema, orderBy } = this.props; // eslint-disable-line no-unused-vars
+    const exportData = type => {
+      dispatch(exportDataQuery(tableSchema, type));
+    };
 
     return (
       <div className={styles.add_mar_top}>
@@ -311,6 +320,7 @@ class FilterQuery extends Component {
             >
               Run query
             </Button>
+            <ExportData onExport={exportData} />
             {tableSchema.is_enum ? (
               <ReloadEnumValuesButton
                 dispatch={dispatch}
