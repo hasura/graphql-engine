@@ -13,6 +13,10 @@ import http.server
 import traceback
 import sys
 
+# FIXME(swann):
+print("in webhook.py")
+print("__name__ == {}".format(__name__))
+
 class S(http.server.BaseHTTPRequestHandler):
 
 
@@ -70,8 +74,10 @@ def run(keyfile, certfile, server_class=http.server.HTTPServer, handler_class=S,
     httpd.serve_forever()
 
 if __name__ == "__main__":
-
     if len(sys.argv) != 4:
         print("Usage: python webhook.py port keyfile certfile")
         sys.exit(1)
-    run(keyfile=sys.argv[2],certfile=sys.argv[3], port=int(sys.argv[1]))
+    port=int(sys.argv[1])
+    print("Starting webhook on port {}".format(port))
+    run(keyfile=sys.argv[2],certfile=sys.argv[3], port=port)
+    print("Exiting webhook")
