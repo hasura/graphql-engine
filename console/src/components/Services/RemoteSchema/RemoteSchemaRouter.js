@@ -8,6 +8,7 @@ import {
   addConnector,
   editConnector,
   viewConnector,
+  permissionsConnector,
 } from '.';
 import { FILTER_REMOTE_SCHEMAS } from './Actions';
 
@@ -74,6 +75,10 @@ const getRemoteSchemaRouter = connect => {
         <Route
           path=":remoteSchemaName/modify"
           component={editConnector(connect)}
+        />
+        <Route
+          path=":remoteSchemaName/permissions"
+          component={permissionsConnector}
         />
       </Route>
     </Route>
