@@ -2,10 +2,12 @@ package hasuradb
 
 import (
 	"net/http"
+
+	"github.com/hasura/graphql-engine/cli/internal/client"
 )
 
 func (h *HasuraDB) ApplySeed(m interface{}) error {
-	resp, body, err := h.sendv1Query(m)
+	resp, body, err := h.SendMetadataOrQueryRequest(m, &client.MetadataOrQueryClientFuncOpts{QueryRequestOpts: &client.QueryRequestOpts{}})
 	if err != nil {
 		return err
 	}

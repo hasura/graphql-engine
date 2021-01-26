@@ -125,7 +125,7 @@ data ArgumentDefinition a
   } deriving (Show, Eq, Functor, Foldable, Traversable, Generic)
 instance (NFData a) => NFData (ArgumentDefinition a)
 instance (Cacheable a) => Cacheable (ArgumentDefinition a)
-$(J.deriveJSON (J.aesonDrop 4 J.snakeCase) ''ArgumentDefinition)
+$(J.deriveJSON hasuraJSON ''ArgumentDefinition)
 
 data ActionType
   = ActionQuery
@@ -188,7 +188,7 @@ data ActionPermissionInfo
   = ActionPermissionInfo
   { _apiRole   :: !RoleName
   } deriving (Show, Eq)
-$(J.deriveToJSON (J.aesonDrop 4 J.snakeCase) ''ActionPermissionInfo)
+$(J.deriveToJSON hasuraJSON ''ActionPermissionInfo)
 
 type ActionPermissionMap = Map.HashMap RoleName ActionPermissionInfo
 
@@ -207,7 +207,7 @@ data ActionInfo (b :: BackendType)
   , _aiComment      :: !(Maybe Text)
   } deriving (Generic)
 instance J.ToJSON (ActionInfo 'Postgres) where
-  toJSON = J.genericToJSON $ J.aesonDrop 3 J.snakeCase
+  toJSON = J.genericToJSON hasuraJSON
 $(makeLenses ''ActionInfo)
 
 type ActionDefinitionInput =
@@ -221,14 +221,14 @@ data CreateAction
   } deriving (Show, Eq, Generic)
 instance NFData CreateAction
 instance Cacheable CreateAction
-$(J.deriveJSON (J.aesonDrop 3 J.snakeCase) ''CreateAction)
+$(J.deriveJSON hasuraJSON ''CreateAction)
 
 data UpdateAction
   = UpdateAction
   { _uaName       :: !ActionName
   , _uaDefinition :: !ActionDefinitionInput
   } deriving (Show, Eq)
-$(J.deriveJSON (J.aesonDrop 3 J.snakeCase) ''UpdateAction)
+$(J.deriveJSON hasuraJSON ''UpdateAction)
 
 data CreateActionPermission
   = CreateActionPermission
@@ -239,7 +239,7 @@ data CreateActionPermission
   } deriving (Show, Eq, Generic)
 instance NFData CreateActionPermission
 instance Cacheable CreateActionPermission
-$(J.deriveJSON (J.aesonDrop 4 J.snakeCase) ''CreateActionPermission)
+$(J.deriveJSON hasuraJSON ''CreateActionPermission)
 
 -- representation of action permission metadata
 data ActionPermissionMetadata
@@ -251,7 +251,7 @@ instance NFData ActionPermissionMetadata
 instance Cacheable ActionPermissionMetadata
 
 $(J.deriveJSON
-  (J.aesonDrop 4 J.snakeCase){J.omitNothingFields=True}
+  hasuraJSON{J.omitNothingFields=True}
   ''ActionPermissionMetadata)
 
 -- representation of action metadata
@@ -262,7 +262,7 @@ data ActionMetadata
   , _amDefinition  :: !ActionDefinitionInput
   , _amPermissions :: ![ActionPermissionMetadata]
   } deriving (Show, Eq, Generic)
-$(J.deriveToJSON (J.aesonDrop 3 J.snakeCase) ''ActionMetadata)
+$(J.deriveToJSON hasuraJSON ''ActionMetadata)
 $(makeLenses ''ActionMetadata)
 instance NFData ActionMetadata
 instance Cacheable ActionMetadata
@@ -357,7 +357,7 @@ data ActionLogResponse
   , _alrErrors           :: !(Maybe J.Value)
   , _alrSessionVariables :: !SessionVariables
   } deriving (Show, Eq)
-$(J.deriveJSON (J.aesonDrop 4 J.snakeCase) ''ActionLogResponse)
+$(J.deriveJSON hasuraJSON ''ActionLogResponse)
 
 data AsyncActionStatus
   = AASCompleted !J.Value

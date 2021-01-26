@@ -88,9 +88,15 @@ and be accessible according to the permissions that were configured for the role
 - server: various changes to ensure timely cleanup of background threads and other resources in the event of a SIGTERM signal.
 - server: fix issue when the `relationships` field in `objects` field is passed `[]` in the `set_custom_types` API (fix #6357)
 - server: fix issue with event triggers defined on a table which is partitioned (fixes #6261)
+- server: action array relationships now support the same input arguments (such as where or distinct_on) as usual relationships
+- server: action array relationships now support aggregate relationships
 - server: fix issue with non-optional fields of the remote schema being added as optional in the graphql-engine (fix #6401)
 - server: accept new config `allowed_skew` in JWT config to provide leeway for JWT expiry (fixes #2109)
 - server: fix issue with query actions with relationship with permissions configured on the remote table (fix #6385)
+- server: always log the `request_id` at the `detail.request_id` path for both `query-log` and `http-log` (#6244)
+- server: fix issue with `--stringify-numeric-types` not stringifying aggregate fields (fix #5704)
+- server: derive permissions for remote relationship field from the corresponding remote schema's permissions
+- server: fix issue with mapping session variables to standard JWT claims (fix #6449)
 - console: allow user to cascade Postgres dependencies when dropping Postgres objects (close #5109) (#5248)
 - console: mark inconsistent remote schemas in the UI (close #5093) (#5181)
 - console: remove ONLY as default for ALTER TABLE in column alter operations (close #5512) #5706
@@ -103,6 +109,7 @@ and be accessible according to the permissions that were configured for the role
 - console: allow setting table custom name (#212)
 - console: support tracking VOLATILE functions as mutations or queries (close #6228)
 - console: show only compatible postgres functions in computed fields section (close #5155) (#5978)
+- console: added export data option on browse rows page (close #1438 #5158)
 - cli: add missing global flags for seed command (#5565)
 - cli: allow seeds as alias for seed command (#5693)
 - cli: fix action timeouts not being picked up in metadata operations (#6220)

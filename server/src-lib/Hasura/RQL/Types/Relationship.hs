@@ -5,7 +5,6 @@ import           Hasura.Incremental                 (Cacheable)
 import           Hasura.Prelude
 
 import           Control.Lens                       (makeLenses)
-import           Data.Aeson.Casing
 import           Data.Aeson.TH
 import           Data.Aeson.Types
 import           Hasura.RQL.Types.Common
@@ -20,7 +19,7 @@ data RelDef a
   , _rdComment :: !(Maybe T.Text)
   } deriving (Show, Eq, Generic)
 instance (Cacheable a) => Cacheable (RelDef a)
-$(deriveFromJSON (aesonDrop 3 snakeCase){omitNothingFields=True} ''RelDef)
+$(deriveFromJSON hasuraJSON{omitNothingFields=True} ''RelDef)
 $(makeLenses ''RelDef)
 
 instance (ToJSON a) => ToJSON (RelDef a) where
@@ -87,7 +86,7 @@ data ArrRelUsingFKeyOn
   } deriving (Show, Eq, Generic)
 instance Cacheable ArrRelUsingFKeyOn
 
-$(deriveJSON (aesonDrop 4 snakeCase){omitNothingFields=True} ''ArrRelUsingFKeyOn)
+$(deriveJSON hasuraJSON{omitNothingFields=True} ''ArrRelUsingFKeyOn)
 
 type ArrRelUsing = RelUsing ArrRelUsingFKeyOn
 type ArrRelDef = RelDef ArrRelUsing
@@ -104,7 +103,7 @@ data DropRel
   , drRelationship :: !RelName
   , drCascade      :: !Bool
   } deriving (Show, Eq)
-$(deriveToJSON (aesonDrop 2 snakeCase){omitNothingFields=True} ''DropRel)
+$(deriveToJSON hasuraJSON{omitNothingFields=True} ''DropRel)
 
 instance FromJSON DropRel where
   parseJSON = withObject "Object" $ \o ->
@@ -121,7 +120,7 @@ data SetRelComment
   , arRelationship :: !RelName
   , arComment      :: !(Maybe T.Text)
   } deriving (Show, Eq)
-$(deriveToJSON (aesonDrop 2 snakeCase){omitNothingFields=True} ''SetRelComment)
+$(deriveToJSON hasuraJSON{omitNothingFields=True} ''SetRelComment)
 instance FromJSON SetRelComment where
   parseJSON = withObject "Object" $ \o ->
     SetRelComment
@@ -137,7 +136,7 @@ data RenameRel
   , rrName    :: !RelName
   , rrNewName :: !RelName
   } deriving (Show, Eq)
-$(deriveToJSON (aesonDrop 2 snakeCase) ''RenameRel)
+$(deriveToJSON hasuraJSON ''RenameRel)
 
 instance FromJSON RenameRel where
   parseJSON = withObject "Object" $ \o ->

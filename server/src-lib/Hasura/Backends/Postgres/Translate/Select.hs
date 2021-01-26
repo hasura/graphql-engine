@@ -78,8 +78,8 @@ selectFromToQual = \case
   FromIdentifier i    -> S.QualifiedIdentifier i Nothing
   FromFunction qf _ _ -> S.QualifiedIdentifier (functionToIdentifier qf) Nothing
 
-aggregateFieldToExp :: AggregateFields 'Postgres -> S.SQLExp
-aggregateFieldToExp aggFlds = jsonRow
+aggregateFieldToExp :: AggregateFields 'Postgres -> Bool -> S.SQLExp
+aggregateFieldToExp aggFlds strfyNum = jsonRow
   where
     jsonRow = S.applyJsonBuildObj (concatMap aggToFlds aggFlds)
     withAls fldName sqlExp = [S.SELit fldName, sqlExp]
@@ -91,9 +91,10 @@ aggregateFieldToExp aggFlds = jsonRow
     aggOpToObj (AggregateOp opText flds) =
       S.applyJsonBuildObj $ concatMap (colFldsToExtr opText) flds
 
-    colFldsToExtr opText (FieldName t, CFCol col) =
+    colFldsToExtr opText (FieldName t, CFCol col ty) =
       [ S.SELit t
-      , S.SEFnApp opText [S.SEIdentifier $ toIdentifier col] Nothing
+      , toJSONableExp strfyNum ty False
+        $ S.SEFnApp opText [S.SEIdentifier $ toIdentifier col] Nothing
       ]
     colFldsToExtr _ (FieldName t, CFExp e) =
       [ S.SELit t , S.SELit e]
@@ -271,8 +272,16 @@ mkAggregateOrderByExtractorAndFields annAggOrderBy =
       )
     AAOOp opText pgColumnInfo ->
       let pgColumn = pgiColumn pgColumnInfo
+          pgType   = pgiType pgColumnInfo
       in ( S.Extractor (S.SEFnApp opText [S.SEIdentifier $ toIdentifier pgColumn] Nothing) alias
-         , [(FieldName opText, AFOp $ AggregateOp opText [(fromCol @'Postgres pgColumn, CFCol pgColumn)])]
+         , [ ( FieldName opText
+             , AFOp $ AggregateOp opText
+               [ ( fromCol @'Postgres pgColumn
+                 , CFCol pgColumn pgType
+                 )
+               ]
+             )
+           ]
          )
   where
     alias = Just $ mkAggregateOrderByAlias annAggOrderBy
@@ -479,7 +488,7 @@ processAnnAggregateSelect sourcePrefixes fieldAlias annAggSel = do
     case field of
       TAFAgg aggFields ->
         pure ( aggregateFieldsToExtractorExps thisSourcePrefix aggFields
-             , aggregateFieldToExp aggFields
+             , aggregateFieldToExp aggFields strfyNum
              )
       TAFNodes annFields -> do
         annFieldExtr <- processAnnFields thisSourcePrefix fieldName similarArrayFields annFields
@@ -501,7 +510,7 @@ processAnnAggregateSelect sourcePrefixes fieldAlias annAggSel = do
 
   pure (selectSource, nodeExtractors, topLevelExtractor)
   where
-    AnnSelectG aggSelFields tableFrom tablePermissions tableArgs _ = annAggSel
+    AnnSelectG aggSelFields tableFrom tablePermissions tableArgs strfyNum = annAggSel
     permLimit = _tpLimit tablePermissions
     orderBy = _saOrderBy tableArgs
     permLimitSubQuery = mkPermissionLimitSubQuery permLimit aggSelFields orderBy
@@ -735,14 +744,17 @@ aggregateFieldsToExtractorExps sourcePrefix aggregateFields =
       AFOp aggOp  -> aggOpToExps aggOp
       AFExp _     -> []
   where
-    colsToExps = mapMaybe (mkColExp . CFCol)
-    aggOpToExps = mapMaybe (mkColExp . snd) . _aoFields
+    colsToExps = fmap mkColExp
 
-    mkColExp (CFCol c) =
+    aggOpToExps = mapMaybe colToMaybeExp . _aoFields
+    colToMaybeExp = \case
+      (_, CFCol col _) -> Just $ mkColExp col
+      _                -> Nothing
+
+    mkColExp c =
       let qualCol = S.mkQIdenExp (mkBaseTableAlias sourcePrefix) (toIdentifier c)
           colAls = toIdentifier c
-      in Just (S.Alias colAls, qualCol)
-    mkColExp _ = Nothing
+      in (S.Alias colAls, qualCol)
 
 processAnnFields
   :: forall m . ( MonadReader Bool m

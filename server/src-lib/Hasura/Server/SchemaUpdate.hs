@@ -73,7 +73,7 @@ data EventPayload
   , _epOccurredAt    :: !UTC.UTCTime
   , _epInvalidations :: !CacheInvalidations
   }
-$(deriveJSON (aesonDrop 3 snakeCase) ''EventPayload)
+$(deriveJSON hasuraJSON ''EventPayload)
 
 data SchemaSyncEvent
   = SSEListenStart !UTC.UTCTime

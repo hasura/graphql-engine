@@ -1,0 +1,107 @@
+- description: add remote schema permission for the 'user' role
+  url: /v1/metadata
+  status: 200
+  query:
+    type: add_remote_schema_permissions
+    args:
+      remote_schema: my-remote-schema
+      role: user
+      definition:
+        schema: |
+          interface Communication {
+            id: Int!
+            msg: String!
+          }
+
+          type Message implements Communication {
+            id: Int!
+            name: String!
+            msg: String!
+            errorMsg: String
+          }
+
+          type User {
+            user_id: Int
+            gimmeText(text: String @preset(value: "x-hasura-gimme-text")): String
+          }
+
+          type Query {
+            message(id: Int!) : Message
+            user(user_id: Int!): User
+          }
+
+- description: Simple remote relationship query with remote schema permissions configured
+  url: /v1/graphql
+  status: 200
+  headers:
+    X-Hasura-Role: user
+    X-Hasura-User-Id: '1'
+  response:
+    data:
+      profiles:
+        - id: 1
+          messageBasic:
+            name: alice
+  query:
+    query: |
+      query {
+        profiles {
+          id
+          messageBasic {
+            name
+          }
+        }
+      }
+
+- description: Simple remote relationship query with remote schema permissions configured
+  url: /v1/graphql
+  status: 200
+  headers:
+    X-Hasura-Role: user
+    X-Hasura-User-Id: '1'
+    X-Hasura-Gimme-Text: 'world'
+  response:
+    data:
+      profiles:
+        - id: 1
+          userBasic:
+            user_id: 1
+            gimmeText: world
+  query:
+    query: |
+      query {
+        profiles {
+          id
+          userBasic {
+            user_id
+            gimmeText
+          }
+        }
+      }
+
+- description:
+    query for a remote field in the remote relationship selection set to which
+    the role doesn't have access to
+  url: /v1/graphql
+  status: 200
+  headers:
+    X-Hasura-Role: user
+    X-Hasura-User-Id: '1'
+  response:
+    errors:
+      - extensions:
+          path: $.selectionSet.profiles.selectionSet.userBasic.selectionSet.userMessages
+          code: validation-failed
+        message: "field \"userMessages\" not found in type: 'User'"
+  query:
+    query: |
+      query {
+        profiles {
+          id
+          userBasic {
+            user_id
+            # the following field is not accessible to the 'user' role
+            userMessages(includes: {id: [1]})
+          }
+        }
+      }

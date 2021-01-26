@@ -1,4 +1,5 @@
 {-# LANGUAGE RecordWildCards #-}
+
 module Hasura.RQL.DDL.CustomTypes
   ( runSetCustomTypes
   , clearCustomTypesInMetadata
@@ -54,7 +55,7 @@ GraphQL types. To support this, we have to take a few extra steps:
 -- scalars).
 validateCustomTypeDefinitions
   :: (MonadValidate [CustomTypeValidationError] m)
-  => SourceCache 'Postgres
+  => SourceCache
   -> CustomTypes
   -> HashSet (ScalarType 'Postgres)
   -- ^ all Postgres base types. See Note [Postgres scalars in custom types]
@@ -72,7 +73,7 @@ validateCustomTypeDefinitions sources customTypes allPGScalars = do
       nonObjectTypeMap = scalarTypeMap <> enumTypeMap <> inputObjectTypeMap
   pure $ AnnotatedCustomTypes nonObjectTypeMap annotatedObjects
   where
-    sourceTables = Map.map _pcTables sources
+    sourceTables = Map.mapMaybe unsafeSourceTables sources
     inputObjectDefinitions = fromMaybe [] $ _ctInputObjects customTypes
     objectDefinitions = fromMaybe [] $ _ctObjects customTypes
     scalarDefinitions = fromMaybe [] $ _ctScalars customTypes
@@ -214,8 +215,10 @@ validateCustomTypeDefinitions sources customTypes allPGScalars = do
 
           pure $ TypeRelationship _trName _trType _trSource remoteTableInfo annotatedFieldMapping
 
-      let maybeSource = (_trSource . NE.head) <$> annotatedRelationships
-          sourceConfig = maybeSource >>= \source -> _pcConfiguration <$> Map.lookup source sources
+      let sourceConfig = do
+            source     <- _trSource . NE.head <$> annotatedRelationships
+            sourceInfo <- Map.lookup source sources
+            unsafeSourceConfiguration @'Postgres sourceInfo
 
       pure $ flip AnnotatedObjectType sourceConfig $
              ObjectTypeDefinition objectTypeName (_otdDescription objectDefinition)
@@ -335,7 +338,7 @@ clearCustomTypesInMetadata =
 
 resolveCustomTypes
   :: (MonadError QErr m)
-  => SourceCache 'Postgres
+  => SourceCache
   -> CustomTypes
   -> HashSet (ScalarType 'Postgres)
   -> m (AnnotatedCustomTypes 'Postgres)

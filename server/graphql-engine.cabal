@@ -358,7 +358,6 @@ library
                      , Hasura.GraphQL.Transport.WebSocket
                      , Hasura.GraphQL.Transport.WebSocket.Protocol
                      , Hasura.GraphQL.Transport.WebSocket.Server
-                     , Hasura.GraphQL.Utils
                      , Hasura.Incremental.Internal.Cache
                      , Hasura.Incremental.Internal.Dependency
                      , Hasura.Incremental.Internal.Rule
@@ -526,6 +525,7 @@ test-suite graphql-engine-tests
     , http-types
     , http-client-tls
     , jose
+    , lens
     , lifted-base
     , kan-extensions
     , monad-control

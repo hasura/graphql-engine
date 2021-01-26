@@ -191,7 +191,7 @@ runUpdate
      )
   => Env.Environment -> UpdateQuery -> m EncJSON
 runUpdate env q = do
-  sourceConfig <- _pcConfiguration <$> askPGSourceCache (uqSource q)
+  sourceConfig <- askSourceConfig (uqSource q)
   strfyNum <- stringifyNum <$> askSQLGenCtx
   validateUpdateQuery q
     >>= runQueryLazyTx (_pscExecCtx sourceConfig) Q.ReadWrite

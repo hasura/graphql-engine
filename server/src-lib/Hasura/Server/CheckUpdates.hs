@@ -2,9 +2,7 @@ module Hasura.Server.CheckUpdates
   ( checkForUpdates
   ) where
 
-import           Control.Exception     (try)
-import           Control.Lens
-import           Data.Text.Conversions (toText)
+import           Hasura.Prelude
 
 import qualified CI
 import qualified Control.Concurrent.Extended as C
@@ -17,10 +15,14 @@ import qualified Network.URI.Encode          as URI
 import qualified Network.Wreq                as Wreq
 import qualified System.Log.FastLogger       as FL
 
+import           Control.Exception           (try)
+import           Control.Lens
+import           Data.Either                 (fromRight)
+import           Data.Text.Conversions       (toText)
+
 import           Hasura.HTTP
-import           Hasura.Logging        (LoggerCtx (..))
-import           Hasura.Prelude
-import           Hasura.Server.Version (HasVersion, Version, currentVersion)
+import           Hasura.Logging              (LoggerCtx (..))
+import           Hasura.Server.Version       (HasVersion, Version, currentVersion)
 
 
 newtype UpdateInfo
@@ -28,6 +30,8 @@ newtype UpdateInfo
   { _uiLatest :: Version
   } deriving (Show)
 
+-- note that this is erroneous and should drop three characters or use
+-- aesonPrefix, but needs to remain like this for backwards compatibility
 $(A.deriveJSON (A.aesonDrop 2 A.snakeCase) ''UpdateInfo)
 
 checkForUpdates :: HasVersion => LoggerCtx a -> H.Manager -> IO void
@@ -53,12 +57,10 @@ checkForUpdates (LoggerCtx loggerSet _ _ _) manager = do
       ciM <- CI.getCI
       return . buildUrl $ case ciM of
         Nothing -> "server"
-        Just ci -> "server-" <> (T.toLower . T.pack $ show ci)
+        Just ci -> "server-" <> T.toLower (tshow ci)
 
     -- ignoring if there is any error in response and returning the current version
-    decodeResp bs = case A.eitherDecode bs of
-      Left _  -> return $ UpdateInfo currentVersion
-      Right a -> return a
+    decodeResp = pure . fromRight (UpdateInfo currentVersion) . A.eitherDecode
 
     ignoreHttpErr :: H.HttpException -> IO ()
     ignoreHttpErr _ = return ()

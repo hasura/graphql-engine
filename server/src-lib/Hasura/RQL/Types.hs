@@ -11,13 +11,14 @@ module Hasura.RQL.Types
   , HasSystemDefinedT
   , runHasSystemDefinedT
 
-  , askPGSourceCache
+  , askSourceInfo
+  , askSourceConfig
+  , askSourceTables
   , askTableCache
   , askTabInfo
   , askTabInfoSource
   , askTableCoreInfo
   , askTableCoreInfoSource
-  , getTableInfo
   , askFieldInfoMap
   , askFieldInfoMapSource
   , askPGType
@@ -27,6 +28,7 @@ module Hasura.RQL.Types
   , askPGColInfo
   , askComputedFieldInfo
   , askRemoteRel
+  , findTable
 
   , module R
   ) where
@@ -42,12 +44,13 @@ import           Data.Aeson
 import           Data.Text.Extended
 import           Network.HTTP.Client.Extended        (HasHttpManagerM (..))
 
+import qualified Hasura.Backends.Postgres.SQL.Types  as PG
+
 import           Hasura.Backends.Postgres.Connection as R
-import           Hasura.Backends.Postgres.SQL.Types  hiding (TableName)
 import           Hasura.RQL.IR.BoolExp               as R
 import           Hasura.RQL.Types.Action             as R
 import           Hasura.RQL.Types.Column             as R
-import           Hasura.RQL.Types.Common             as R hiding (FunctionName)
+import           Hasura.RQL.Types.Common             as R
 import           Hasura.RQL.Types.ComputedField      as R
 import           Hasura.RQL.Types.CustomTypes        as R
 import           Hasura.RQL.Types.Error              as R
@@ -66,37 +69,45 @@ import           Hasura.RQL.Types.SchemaCacheTypes   as R
 import           Hasura.RQL.Types.Source             as R
 import           Hasura.RQL.Types.Table              as R
 import           Hasura.SQL.Backend                  as R
-
 import           Hasura.Session
 import           Hasura.Tracing
 
 
-askPGSourceCache
+askSourceInfo
   :: (CacheRM m, MonadError QErr m)
   => SourceName -> m (SourceInfo 'Postgres)
-askPGSourceCache source = do
-  pgSources <- scPostgres <$> askSchemaCache
-  onNothing (M.lookup source pgSources) $
-    throw400 NotExists $ "source with name " <> source <<> " not exists"
+askSourceInfo sourceName = do
+  sources <- scPostgres <$> askSchemaCache
+  onNothing (unsafeSourceInfo =<< M.lookup sourceName sources) $
+    -- FIXME: this error can also happen for a lookup with the wrong type
+    throw400 NotExists $ "source with name " <> sourceName <<> " does not exist"
+
+askSourceConfig
+  :: (CacheRM m, MonadError QErr m)
+  => SourceName -> m (SourceConfig 'Postgres)
+askSourceConfig = fmap _siConfiguration . askSourceInfo
+
+askSourceTables :: CacheRM m => SourceName -> m (TableCache 'Postgres)
+askSourceTables sourceName = do
+  sources <- scPostgres <$> askSchemaCache
+  pure $ fromMaybe mempty $ unsafeSourceTables =<< M.lookup sourceName sources
+
 
 askTabInfo
   :: (QErrM m, CacheRM m)
-  => SourceName -> QualifiedTable -> m (TableInfo 'Postgres)
-askTabInfo sourceName tabName = do
+  => SourceName -> PG.QualifiedTable -> m (TableInfo 'Postgres)
+askTabInfo sourceName tableName = do
   rawSchemaCache <- askSchemaCache
-  flip onNothing (throw400 NotExists errMsg) $ do
-    sourceCache <- M.lookup sourceName $ scPostgres rawSchemaCache
-    M.lookup tabName $ _pcTables sourceCache
+  unsafeTableInfo sourceName tableName (scPostgres rawSchemaCache)
+    `onNothing` throw400 NotExists errMsg
   where
-    errMsg = "table " <> tabName <<> " does not exist " <> "in source: "
-              <> sourceNameToText sourceName
+    errMsg = "table " <> tableName <<> " does not exist in source: " <> sourceNameToText sourceName
 
 askTabInfoSource
   :: (QErrM m, TableInfoRM 'Postgres m)
-  => QualifiedTable -> m (TableInfo 'Postgres)
+  => PG.QualifiedTable -> m (TableInfo 'Postgres)
 askTabInfoSource tableName = do
   lookupTableInfo tableName >>= (`onNothing` throwTableDoesNotExist tableName)
-
 
 data RemoteSchemaPermsCtx
   = RemoteSchemaPermsEnabled
@@ -185,20 +196,21 @@ runHasSystemDefinedT systemDefined = flip runReaderT systemDefined . unHasSystem
 instance (Monad m) => HasSystemDefined (HasSystemDefinedT m) where
   askSystemDefined = HasSystemDefinedT ask
 
-throwTableDoesNotExist :: (QErrM m) => QualifiedTable -> m a
+throwTableDoesNotExist :: (QErrM m) => PG.QualifiedTable -> m a
 throwTableDoesNotExist tableName = throw400 NotExists ("table " <> tableName <<> " does not exist")
 
-getTableInfo :: (QErrM m) => QualifiedTable -> HashMap QualifiedTable a -> m a
-getTableInfo tableName infoMap =
+findTable :: (QErrM m) => PG.QualifiedTable -> HashMap PG.QualifiedTable a -> m a
+findTable tableName infoMap =
   M.lookup tableName infoMap `onNothing` throwTableDoesNotExist tableName
 
 askTableCache
   :: (QErrM m, CacheRM m) => SourceName -> m (TableCache 'Postgres)
 askTableCache sourceName = do
   schemaCache <- askSchemaCache
-  case M.lookup sourceName (scPostgres schemaCache) of
-    Just tableCache -> pure $ _pcTables tableCache
-    Nothing         -> throw400 NotExists $ "source " <> sourceName <<> " does not exist"
+  sourceInfo  <- M.lookup sourceName (scPostgres schemaCache)
+    `onNothing` throw400 NotExists ("source " <> sourceName <<> " does not exist")
+  unsafeSourceTables sourceInfo
+    `onNothing` throw400 NotExists ("source " <> sourceName <<> " is not a PG cache")
 
 askTableCoreInfo
   :: (QErrM m, CacheRM m) => SourceName -> TableName 'Postgres -> m (TableCoreInfo 'Postgres)
@@ -209,7 +221,7 @@ askTableCoreInfo sourceName tableName =
 -- The source name is implicitly inferred from @'SourceM' via @'TableCoreInfoRM'.
 -- This is useful in RQL DML queries which are executed in a particular source database.
 askTableCoreInfoSource
-  :: (QErrM m, TableCoreInfoRM 'Postgres m) => QualifiedTable -> m (TableCoreInfo 'Postgres)
+  :: (QErrM m, TableCoreInfoRM 'Postgres m) => PG.QualifiedTable -> m (TableCoreInfo 'Postgres)
 askTableCoreInfoSource tableName =
   lookupTableCoreInfo tableName >>= (`onNothing` throwTableDoesNotExist tableName)
 
@@ -224,14 +236,14 @@ askFieldInfoMap sourceName tableName =
 -- This is useful in RQL DML queries which are executed in a particular source database.
 askFieldInfoMapSource
   :: (QErrM m, TableCoreInfoRM 'Postgres m)
-  => QualifiedTable -> m (FieldInfoMap (FieldInfo 'Postgres))
+  => PG.QualifiedTable -> m (FieldInfoMap (FieldInfo 'Postgres))
 askFieldInfoMapSource tableName =
   _tciFieldInfoMap <$> askTableCoreInfoSource tableName
 
 askPGType
   :: (MonadError QErr m)
   => FieldInfoMap (FieldInfo 'Postgres)
-  -> PGCol
+  -> PG.PGCol
   -> Text
   -> m (ColumnType 'Postgres)
 askPGType m c msg =
@@ -240,7 +252,7 @@ askPGType m c msg =
 askPGColInfo
   :: (MonadError QErr m)
   => FieldInfoMap (FieldInfo backend)
-  -> PGCol
+  -> PG.PGCol
   -> Text
   -> m (ColumnInfo backend)
 askPGColInfo m c msg = do
@@ -282,7 +294,7 @@ askComputedFieldInfo fields computedField = do
 assertPGCol :: (MonadError QErr m)
             => FieldInfoMap (FieldInfo backend)
             -> Text
-            -> PGCol
+            -> PG.PGCol
             -> m ()
 assertPGCol m msg c = do
   _ <- askPGColInfo m c msg

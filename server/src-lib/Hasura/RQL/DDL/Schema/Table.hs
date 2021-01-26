@@ -37,7 +37,6 @@ import           Control.Arrow.Extended
 import           Control.Lens.Extended              hiding ((.=))
 import           Control.Monad.Trans.Control        (MonadBaseControl)
 import           Data.Aeson
-import           Data.Aeson.Casing
 import           Data.Aeson.TH
 import           Data.Text.Extended
 
@@ -85,7 +84,7 @@ data SetTableIsEnum
   , stieTable  :: !QualifiedTable
   , stieIsEnum :: !Bool
   } deriving (Show, Eq)
-$(deriveToJSON (aesonDrop 4 snakeCase) ''SetTableIsEnum)
+$(deriveToJSON hasuraJSON ''SetTableIsEnum)
 
 instance FromJSON SetTableIsEnum where
   parseJSON = withObject "Object" $ \o ->
@@ -100,7 +99,7 @@ data UntrackTable =
   , utTable   :: !QualifiedTable
   , utCascade :: !Bool
   } deriving (Show, Eq)
-$(deriveToJSON (aesonDrop 2 snakeCase){omitNothingFields=True} ''UntrackTable)
+$(deriveToJSON hasuraJSON{omitNothingFields=True} ''UntrackTable)
 
 instance FromJSON UntrackTable where
   parseJSON = withObject "Object" $ \o ->
@@ -111,7 +110,7 @@ instance FromJSON UntrackTable where
 
 isTableTracked :: SchemaCache -> SourceName -> QualifiedTable -> Bool
 isTableTracked sc source tableName =
-  isJust $ getPGTableInfo source tableName $ scPostgres sc
+  isJust $ unsafeTableInfo @'Postgres source tableName $ scPostgres sc
 
 -- | Track table/view, Phase 1:
 -- Validate table tracking operation. Fails if table is already being tracked,
@@ -122,7 +121,7 @@ trackExistingTableOrViewP1 source qt = do
   when (isTableTracked rawSchemaCache source qt) $
     throw400 AlreadyTracked $ "view/table already tracked : " <>> qt
   let qf = fmap (FunctionName . toTxt) qt
-  when (isJust $ getPGFunctionInfo source qf $ scPostgres rawSchemaCache) $
+  when (isJust $ unsafeFunctionInfo @'Postgres source qf $ scPostgres rawSchemaCache) $
     throw400 NotSupported $ "function with name " <> qt <<> " already exists"
 
 -- | Check whether a given name would conflict with the current schema by doing
@@ -206,7 +205,7 @@ data TrackTableV2
   { ttv2Table         :: !TrackTable
   , ttv2Configuration :: !TableConfig
   } deriving (Show, Eq)
-$(deriveToJSON (aesonDrop 4 snakeCase) ''TrackTableV2)
+$(deriveToJSON hasuraJSON ''TrackTableV2)
 
 instance FromJSON TrackTableV2 where
   parseJSON = withObject "Object" $ \o -> do
@@ -234,7 +233,7 @@ data SetTableCustomization
   , _stcTable         :: !QualifiedTable
   , _stcConfiguration :: !TableConfig
   } deriving (Show, Eq)
-$(deriveToJSON (aesonDrop 4 snakeCase) ''SetTableCustomization)
+$(deriveToJSON hasuraJSON ''SetTableCustomization)
 
 instance FromJSON SetTableCustomization where
   parseJSON = withObject "Object" $ \o ->
@@ -250,7 +249,7 @@ data SetTableCustomFields
   , _stcfCustomRootFields  :: !TableCustomRootFields
   , _stcfCustomColumnNames :: !CustomColumnNames
   } deriving (Show, Eq)
-$(deriveToJSON (aesonDrop 5 snakeCase) ''SetTableCustomFields)
+$(deriveToJSON hasuraJSON ''SetTableCustomFields)
 
 instance FromJSON SetTableCustomFields where
   parseJSON = withObject "SetTableCustomFields" $ \o ->
@@ -282,14 +281,11 @@ runSetTableCustomization (SetTableCustomization source table config) = do
 unTrackExistingTableOrViewP1
   :: (CacheRM m, QErrM m) => UntrackTable -> m ()
 unTrackExistingTableOrViewP1 (UntrackTable source vn _) = do
-  rawSchemaCache <- askSchemaCache
-  case getPGTableInfo source vn $ scPostgres rawSchemaCache of
-    Just ti ->
-      -- Check if table/view is system defined
-      when (isSystemDefined $ _tciSystemDefined $ _tiCoreInfo ti) $ throw400 NotSupported $
-        vn <<> " is system defined, cannot untrack"
-    Nothing -> throw400 AlreadyUntracked $
-      "view/table already untracked : " <>> vn
+  schemaCache <- askSchemaCache
+  tableInfo   <- unsafeTableInfo @'Postgres source vn (scPostgres schemaCache)
+    `onNothing` throw400 AlreadyUntracked ("view/table already untracked : " <>> vn)
+  when (isSystemDefined $ _tciSystemDefined $ _tiCoreInfo tableInfo) $
+    throw400 NotSupported $ vn <<> " is system defined, cannot untrack"
 
 unTrackExistingTableOrViewP2
   :: (CacheRWM m, QErrM m, MetadataM m)

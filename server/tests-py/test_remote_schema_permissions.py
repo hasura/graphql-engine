@@ -31,11 +31,11 @@ class TestAddRemoteSchemaPermissions:
         return "queries/remote_schemas/permissions/"
 
     def test_add_permission_with_valid_subset_of_fields(self, hge_ctx):
-        st_code, resp = hge_ctx.v1q_f(self.dir() + 'add_permission_with_valid_subset_of_fields.yaml')
+        st_code, resp = hge_ctx.v1metadataq_f(self.dir() + 'add_permission_with_valid_subset_of_fields.yaml')
         assert st_code == 200, resp
 
     def test_add_permission_with_valid_subset_of_arguments(self, hge_ctx):
-        st_code, resp = hge_ctx.v1q_f(self.dir() + 'add_permission_with_valid_subset_of_arguments.yaml')
+        st_code, resp = hge_ctx.v1metadataq_f(self.dir() + 'add_permission_with_valid_subset_of_arguments.yaml')
         assert st_code == 200, resp
 
     def test_role_based_schema_enums_validation(self, hge_ctx):
@@ -67,18 +67,17 @@ class TestRemoteSchemaPermissionsExecution:
         return "queries/remote_schemas/permissions/"
 
     def test_execution_with_subset_of_fields_exposed_to_role(self, hge_ctx):
-        st_code, resp = hge_ctx.v1q_f(self.dir() + 'add_permission_with_valid_subset_of_fields.yaml')
+        st_code, resp = hge_ctx.v1metadataq_f(self.dir() + 'add_permission_with_valid_subset_of_fields.yaml')
         assert st_code == 200, resp
         check_query_f(hge_ctx, self.dir() + 'execution_with_partial_fields_exposed_to_role.yaml')
 
     def test_execution_with_subset_of_arguments_exposed_to_role(self, hge_ctx):
-        st_code, resp = hge_ctx.v1q_f(self.dir() + 'add_permission_with_valid_subset_of_arguments.yaml')
+        st_code, resp = hge_ctx.v1metadataq_f(self.dir() + 'add_permission_with_valid_subset_of_arguments.yaml')
         assert st_code == 200, resp
         check_query_f(hge_ctx, self.dir() + 'execution_with_partial_args_exposed_to_role.yaml')
 
     def test_execution_with_unknown_role(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + 'unknown_role_execution.yaml')
-
 
 @use_test_fixtures
 class TestRemoteSchemaPermissionsArgumentPresets:
@@ -88,11 +87,50 @@ class TestRemoteSchemaPermissionsArgumentPresets:
         return "queries/remote_schemas/permissions/argument_presets/"
 
     def test_execution_with_static_argument_preset(self, hge_ctx):
-        st_code, resp = hge_ctx.v1q_f(self.dir() + 'add_permission_with_static_preset_argument.yaml')
+        st_code, resp = hge_ctx.v1metadataq_f(self.dir() + 'add_permission_with_static_preset_argument.yaml')
         assert st_code == 200, resp
         check_query_f(hge_ctx, self.dir() + 'execution_with_static_preset_args.yaml')
 
     def test_execution_with_session_argument_preset(self, hge_ctx):
-        st_code, resp = hge_ctx.v1q_f(self.dir() + 'add_permission_with_session_preset_argument.yaml')
+        st_code, resp = hge_ctx.v1metadataq_f(self.dir() + 'add_permission_with_session_preset_argument.yaml')
         assert st_code == 200, resp
         check_query_f(hge_ctx, self.dir() + 'execution_with_session_preset_args.yaml')
+
+class TestRemoteRelationshipPermissions:
+
+    @classmethod
+    def dir(cls):
+        return "queries/remote_schemas/permissions/remote_relationships/"
+
+    @pytest.fixture(autouse=True)
+    def transact(self, hge_ctx, graphql_service):
+        st_code, resp = hge_ctx.v1q_f(self.dir() + 'setup_with_permissions.yaml')
+        assert st_code == 200, resp
+        yield
+        st_code, resp = hge_ctx.v1q_f(self.dir() + 'teardown.yaml')
+        assert st_code == 200, resp
+
+    def test_basic_relationship(self, hge_ctx):
+        st_code, resp = hge_ctx.v1q_f(self.dir() + 'setup_remote_rel_basic.yaml')
+        assert st_code == 200, resp
+        st_code, resp = hge_ctx.v1q_f(self.dir() + 'setup_remote_rel_basic_user.yaml')
+        assert st_code == 200, resp
+        check_query_f(hge_ctx, self.dir() + 'basic_remote_relationship_without_remote_schema_permissions_configured.yaml')
+        check_query_f(hge_ctx, self.dir() + 'basic_remote_relationship_with_remote_schema_permissions_configured.yaml')
+
+    # Test queries that combine several remote relationships, nested in
+    # different ways, variously filtering different bits using permissions.
+    def test_complex_multiple_joins(self, hge_ctx):
+        st_code, resp = hge_ctx.v1q_f(self.dir() + '../../remote_relationships/setup_multiple_remote_rel.yaml')
+        assert st_code == 200, resp
+        check_query_f(hge_ctx, self.dir() + 'complex_multiple_joins.yaml')
+
+    def test_remote_relationship_with_field_containing_preset_argument(self, hge_ctx):
+        st_code, resp = hge_ctx.v1q_f(self.dir() + 'setup_remote_rel_basic.yaml')
+        assert st_code == 200, resp
+        check_query_f(hge_ctx, self.dir() + 'derive_remote_relationship_with_joining_field_containing_preset.yaml')
+
+    def test_partial_arguments_of_remote_relationship_from_preset(self, hge_ctx):
+        st_code, resp = hge_ctx.v1q_f(self.dir() + 'setup_remote_rel_messages_single_field.yaml')
+        assert st_code == 200, resp
+        check_query_f(hge_ctx, self.dir() + 'partial_arguments_from_preset.yaml')

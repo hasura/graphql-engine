@@ -26,37 +26,35 @@ import           Hasura.Prelude
 import qualified Data.Aeson                             as J
 import qualified Data.Environment                       as Env
 import qualified Data.HashMap.Strict                    as Map
-
 import qualified Data.HashSet                           as HS
 import qualified Language.GraphQL.Draft.Syntax          as G
 import qualified Network.HTTP.Client                    as HTTP
 import qualified Network.HTTP.Types                     as HTTP
 import qualified Network.Wai.Extended                   as Wai
 
+import           Data.Text.Extended
+
+import qualified Hasura.GraphQL.Context                 as C
+import qualified Hasura.GraphQL.Execute.Action          as EA
+import qualified Hasura.GraphQL.Execute.Inline          as EI
+import qualified Hasura.GraphQL.Execute.LiveQuery       as EL
+import qualified Hasura.GraphQL.Execute.Mutation        as EM
+import qualified Hasura.GraphQL.Execute.Prepare         as EPr
+import qualified Hasura.GraphQL.Execute.Query           as EQ
+import qualified Hasura.GraphQL.Execute.Types           as ET
+import qualified Hasura.Logging                         as L
+import qualified Hasura.Server.Telemetry.Counters       as Telem
+import qualified Hasura.Tracing                         as Tracing
+
 import           Hasura.EncJSON
 import           Hasura.GraphQL.Parser.Column           (UnpreparedValue)
 import           Hasura.GraphQL.RemoteServer            (execRemoteGQ)
 import           Hasura.GraphQL.Transport.HTTP.Protocol
-import           Hasura.GraphQL.Utils                   (showName)
 import           Hasura.Metadata.Class
 import           Hasura.RQL.Types
 import           Hasura.Server.Version                  (HasVersion)
 import           Hasura.Session
 
-import qualified Hasura.GraphQL.Context                 as C
-import qualified Hasura.GraphQL.Execute.Inline          as EI
-
-import qualified Hasura.GraphQL.Execute.LiveQuery       as EL
-import qualified Hasura.GraphQL.Execute.Mutation        as EM
--- import qualified Hasura.GraphQL.Execute.Plan            as EP
-import qualified Hasura.GraphQL.Execute.Action          as EA
-import qualified Hasura.GraphQL.Execute.Prepare         as EPr
-import qualified Hasura.GraphQL.Execute.Query           as EQ
-import qualified Hasura.GraphQL.Execute.Types           as ET
-
-import qualified Hasura.Logging                         as L
-import qualified Hasura.Server.Telemetry.Counters       as Telem
-import qualified Hasura.Tracing                         as Tracing
 
 
 type QueryParts = G.TypedOperationDefinition G.FragmentSpread G.Name
@@ -152,7 +150,7 @@ getExecPlanPartial userInfo sc queryType req =
           let n = _unOperationName opName
               opDefM = find (\opDef -> G._todName opDef == Just n) opDefs
           onNothing opDefM $ throw400 ValidationFailed $
-            "no such operation found in the document: " <> showName n
+            "no such operation found in the document: " <> dquote n
         (Just _, _, _)  ->
           throw400 ValidationFailed $ "operationName cannot be used when " <>
           "an anonymous operation exists in the document"

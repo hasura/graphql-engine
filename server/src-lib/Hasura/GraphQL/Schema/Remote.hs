@@ -4,6 +4,7 @@ module Hasura.GraphQL.Schema.Remote
   , lookupObject
   , lookupType
   , lookupScalar
+  , remoteField
   , lookupInterface
   , lookupUnion
   , lookupEnum
@@ -27,11 +28,11 @@ import           Hasura.GraphQL.Context                (RemoteFieldG (..), Remot
 import           Hasura.GraphQL.Parser                 as P
 import           Hasura.RQL.Types
 
-type RemoteSchemaObjectDefinition = G.ObjectTypeDefinition RemoteSchemaInputValueDefinition
+type RemoteSchemaObjectDefinition      = G.ObjectTypeDefinition RemoteSchemaInputValueDefinition
 type RemoteSchemaInputObjectDefinition = G.InputObjectTypeDefinition RemoteSchemaInputValueDefinition
-type RemoteSchemaInterfaceDefinition = G.InterfaceTypeDefinition [G.Name] RemoteSchemaInputValueDefinition
-type RemoteSchemaFieldDefinition = G.FieldDefinition RemoteSchemaInputValueDefinition
-type RemoteSchemaTypeDefinition = G.TypeDefinition [G.Name] RemoteSchemaInputValueDefinition
+type RemoteSchemaInterfaceDefinition   = G.InterfaceTypeDefinition [G.Name] RemoteSchemaInputValueDefinition
+type RemoteSchemaFieldDefinition       = G.FieldDefinition RemoteSchemaInputValueDefinition
+type RemoteSchemaTypeDefinition        = G.TypeDefinition [G.Name] RemoteSchemaInputValueDefinition
 
 buildRemoteParser
   :: forall m n

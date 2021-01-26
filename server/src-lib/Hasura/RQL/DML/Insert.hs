@@ -214,7 +214,7 @@ runInsert
      )
   => Env.Environment -> InsertQuery -> m EncJSON
 runInsert env q = do
-  sourceConfig <- _pcConfiguration <$> askPGSourceCache (iqSource q)
+  sourceConfig <- askSourceConfig (iqSource q)
   res <- convInsQ q
   strfyNum <- stringifyNum <$> askSQLGenCtx
   runQueryLazyTx (_pscExecCtx sourceConfig) Q.ReadWrite $

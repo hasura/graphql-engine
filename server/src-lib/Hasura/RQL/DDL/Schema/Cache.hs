@@ -277,7 +277,7 @@ buildSchemaCacheRule env = proc (metadata, invalidationKeys) -> do
          , ArrowWriter (Seq CollectedInfo) arr, MonadIO m, MonadUnique m, MonadError QErr m
          , MonadReader BuildReason m, MonadBaseControl IO m
          , HasHttpManagerM m, HasSQLGenCtx m, MonadResolveSource m)
-      => (Metadata, Inc.Dependency InvalidationKeys) `arr` BuildOutputs
+      => (Metadata, Inc.Dependency InvalidationKeys) `arr` BuildOutputs 'Postgres
     buildAndCollectInfo = proc (metadata, invalidationKeys) -> do
       let Metadata sources remoteSchemas collections allowlists
             customTypes actions cronTriggers = metadata
@@ -318,7 +318,7 @@ buildSchemaCacheRule env = proc (metadata, invalidationKeys) -> do
                  so <- buildSource -< ( sourceMetadata, pgSourceConfig, tablesMeta, functionsMeta
                                       , M.map fst remoteSchemaMap, invalidationKeys
                                       )
-                 returnA -< Just (so, pgScalars))
+                 returnA -< Just (BackendSourceInfo so, pgScalars))
          |) (M.fromList $ OMap.toList sources)
         >-> (\infos -> M.catMaybes infos >- returnA)
 
@@ -339,7 +339,7 @@ buildSchemaCacheRule env = proc (metadata, invalidationKeys) -> do
              (bindErrorA -< resolveCustomTypes sourcesCache customTypes pgScalars)
          |) (MetadataObject MOCustomTypes $ toJSON customTypes)
 
-      -- -- actions
+      -- actions
       let actionList = OMap.elems actions
       (actionCache, annotatedCustomTypes) <- case maybeResolvedCustomTypes of
         Just resolvedCustomTypes -> do
@@ -528,7 +528,7 @@ withMetadataCheck
   :: (MonadIO m, MonadBaseControl IO m, MonadError QErr m, CacheRWM m, HasSQLGenCtx m, MetadataM m)
   => SourceName -> Bool -> Q.TxAccess -> LazyTxT QErr m a -> m a
 withMetadataCheck source cascade txAccess action = do
-  SourceInfo _ preActionTables preActionFunctions sourceConfig <- askPGSourceCache source
+  SourceInfo _ preActionTables preActionFunctions sourceConfig <- askSourceInfo source
 
   (actionResult, metadataUpdater) <-
     liftEitherM $ runExceptT $ runLazyTx (_pscExecCtx sourceConfig) txAccess $ do
@@ -589,7 +589,7 @@ withMetadataCheck source cascade txAccess action = do
   postActionSchemaCache <- askSchemaCache
 
   -- Recreate event triggers in hdb_catalog
-  let postActionTables = maybe mempty _pcTables $ M.lookup source $ scPostgres postActionSchemaCache
+  let postActionTables = fromMaybe mempty $ unsafeTableCache @'Postgres source $ scPostgres postActionSchemaCache
   liftEitherM $ runPgSourceWriteTx sourceConfig $
     forM_ (M.elems postActionTables) $ \(TableInfo coreInfo _ eventTriggers) -> do
       let table = _tciName coreInfo

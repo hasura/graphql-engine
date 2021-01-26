@@ -98,10 +98,6 @@ data RQLQueryV1
   | RQReloadRemoteSchema !RemoteSchemaNameQuery
   | RQIntrospectRemoteSchema !RemoteSchemaNameQuery
 
-  -- remote-schema permissions
-  | RQAddRemoteSchemaPermissions !AddRemoteSchemaPermissions
-  | RQDropRemoteSchemaPermissions !DropRemoteSchemaPermissions
-
   | RQCreateEventTrigger !CreateEventTriggerQuery
   | RQDeleteEventTrigger !DeleteEventTriggerQuery
   | RQRedeliverEvent     !RedeliverEventQuery
@@ -268,9 +264,6 @@ queryModifiesSchemaCache (RQV1 qi) = case qi of
   RQReloadRemoteSchema _          -> True
   RQIntrospectRemoteSchema _      -> False
 
-  RQAddRemoteSchemaPermissions _  -> True
-  RQDropRemoteSchemaPermissions _ -> True
-
   RQCreateEventTrigger _          -> True
   RQDeleteEventTrigger _          -> True
   RQRedeliverEvent _              -> False
@@ -407,9 +400,6 @@ runQueryM env rq = withPathK "args" $ case rq of
       RQReloadRemoteSchema q          -> runReloadRemoteSchema q
       RQIntrospectRemoteSchema q      -> runIntrospectRemoteSchema q
 
-      RQAddRemoteSchemaPermissions q  -> runAddRemoteSchemaPermissions q
-      RQDropRemoteSchemaPermissions q -> runDropRemoteSchemaPermissions q
-
       RQCreateRemoteRelationship q    -> runCreateRemoteRelationship q
       RQUpdateRemoteRelationship q    -> runUpdateRemoteRelationship q
       RQDeleteRemoteRelationship q    -> runDeleteRemoteRelationship q
@@ -451,9 +441,9 @@ runQueryM env rq = withPathK "args" $ case rq of
       RQBulk qs                       -> encJFromList <$> indexedMapM (runQueryM env) qs
 
     runQueryV2M = \case
-      RQV2TrackTable q           -> runTrackTableV2Q q
-      RQV2SetTableCustomFields q -> runSetTableCustomFieldsQV2 q
-      RQV2TrackFunction q        -> runTrackFunctionV2 q
+      RQV2TrackTable q                -> runTrackTableV2Q q
+      RQV2SetTableCustomFields q      -> runSetTableCustomFieldsQV2 q
+      RQV2TrackFunction q             -> runTrackFunctionV2 q
 
 requiresAdmin :: RQLQuery -> Bool
 requiresAdmin = \case
@@ -504,9 +494,6 @@ requiresAdmin = \case
     RQRemoveRemoteSchema _          -> True
     RQReloadRemoteSchema _          -> True
     RQIntrospectRemoteSchema _      -> True
-
-    RQAddRemoteSchemaPermissions _  -> True
-    RQDropRemoteSchemaPermissions _ -> True
 
     RQCreateEventTrigger _          -> True
     RQDeleteEventTrigger _          -> True

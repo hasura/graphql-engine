@@ -94,6 +94,10 @@ data RQLMetadata
   | RMReloadRemoteSchema !RemoteSchemaNameQuery
   | RMIntrospectRemoteSchema !RemoteSchemaNameQuery
 
+  -- remote-schema permissions
+  | RMAddRemoteSchemaPermissions !AddRemoteSchemaPermissions
+  | RMDropRemoteSchemaPermissions !DropRemoteSchemaPermissions
+
   -- scheduled triggers
   | RMCreateCronTrigger !CreateCronTrigger
   | RMDeleteCronTrigger !ScheduledTriggerName
@@ -185,11 +189,12 @@ runMetadataQueryM
      , HTTP.HasHttpManagerM m
      , MetadataM m
      , MonadMetadataStorageQueryAPI m
+     , HasRemoteSchemaPermsCtx m
      )
   => Env.Environment
   -> RQLMetadata
   -> m EncJSON
-runMetadataQueryM env = \case
+runMetadataQueryM env = withPathK "args" . \case
   RMPgAddSource q                 -> runAddPgSource q
   RMPgDropSource q                -> runDropPgSource q
 
@@ -237,6 +242,9 @@ runMetadataQueryM env = \case
   RMRemoveRemoteSchema q          -> runRemoveRemoteSchema q
   RMReloadRemoteSchema q          -> runReloadRemoteSchema q
   RMIntrospectRemoteSchema q      -> runIntrospectRemoteSchema q
+
+  RMAddRemoteSchemaPermissions q  -> runAddRemoteSchemaPermissions q
+  RMDropRemoteSchemaPermissions q -> runDropRemoteSchemaPermissions q
 
   RMCreateCronTrigger q           -> runCreateCronTrigger q
   RMDeleteCronTrigger q           -> runDeleteCronTrigger q

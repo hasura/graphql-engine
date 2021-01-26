@@ -12,9 +12,11 @@ import           Data.Aeson.TH
 import           Data.Char                          (toLower)
 import           Data.Text.Extended
 
-import           Hasura.Backends.Postgres.SQL.Types
+import qualified Hasura.Backends.Postgres.SQL.Types as PG
+
 import           Hasura.Incremental                 (Cacheable)
 import           Hasura.RQL.Types.Common
+import           Hasura.SQL.Backend
 
 
 -- | https://www.postgresql.org/docs/current/xfunc-volatility.html
@@ -42,14 +44,17 @@ newtype FunctionArgName =
 newtype HasDefault = HasDefault { unHasDefault :: Bool }
   deriving (Show, Eq, ToJSON, Cacheable)
 
-data FunctionArg
+data FunctionArg (b :: BackendType)
   = FunctionArg
   { faName       :: !(Maybe FunctionArgName)
-  , faType       :: !QualifiedPGType
+  , faType       :: !(FunctionArgType b)
   , faHasDefault :: !HasDefault
-  } deriving (Show, Eq, Generic)
-instance Cacheable FunctionArg
-$(deriveToJSON (aesonDrop 2 snakeCase) ''FunctionArg)
+  } deriving (Generic)
+deriving instance Backend b => Show (FunctionArg b)
+deriving instance Backend b => Eq   (FunctionArg b)
+instance Backend b => Cacheable (FunctionArg b)
+instance (Backend b) => ToJSON (FunctionArg b) where
+  toJSON = genericToJSON hasuraJSON
 
 data InputArgument a
   = IAUserProvided !a
@@ -63,7 +68,7 @@ $(deriveToJSON defaultOptions
  )
 $(makePrisms ''InputArgument)
 
-type FunctionInputArgument = InputArgument FunctionArg
+type FunctionInputArgument b = InputArgument (FunctionArg b)
 
 
 -- | Indicates whether the user requested the corresponding function to be
@@ -79,29 +84,32 @@ $(deriveJSON
 
 
 -- | Tracked SQL function metadata. See 'mkFunctionInfo'.
-data FunctionInfo
+data FunctionInfo (b :: BackendType)
   = FunctionInfo
-  { fiName          :: !QualifiedFunction
+  { fiName          :: !(FunctionName b)
   , fiSystemDefined :: !SystemDefined
   , fiVolatility    :: !FunctionVolatility
   , fiExposedAs     :: !FunctionExposedAs
   -- ^ In which part of the schema should this function be exposed?
   --
   -- See 'mkFunctionInfo' and '_fcExposedAs'.
-  , fiInputArgs     :: !(Seq.Seq FunctionInputArgument)
-  , fiReturnType    :: !QualifiedTable
+  , fiInputArgs     :: !(Seq.Seq (FunctionInputArgument b))
+  , fiReturnType    :: !(TableName b)
   -- ^ NOTE: when a table is created, a new composite type of the same name is
   -- automatically created; so strictly speaking this field means "the function
   -- returns the composite type corresponding to this table".
-  , fiDescription   :: !(Maybe PGDescription)
-  } deriving (Show, Eq)
-$(deriveToJSON (aesonDrop 2 snakeCase) ''FunctionInfo)
+  , fiDescription   :: !(Maybe PG.PGDescription) -- FIXME: make generic
+  } deriving (Generic)
+deriving instance Backend b => Show (FunctionInfo b)
+deriving instance Backend b => Eq   (FunctionInfo b)
+instance (Backend b) => ToJSON (FunctionInfo b) where
+  toJSON = genericToJSON hasuraJSON
 
-getInputArgs :: FunctionInfo -> Seq.Seq FunctionArg
+getInputArgs :: FunctionInfo b -> Seq.Seq (FunctionArg b)
 getInputArgs =
   Seq.fromList . mapMaybe (^? _IAUserProvided) . toList . fiInputArgs
 
-type FunctionCache = HashMap QualifiedFunction FunctionInfo -- info of all functions
+type FunctionCache b = HashMap (FunctionName b) (FunctionInfo b) -- info of all functions
 
 -- Metadata requests related types
 
@@ -118,7 +126,7 @@ data FunctionConfig
   } deriving (Show, Eq, Generic)
 instance NFData FunctionConfig
 instance Cacheable FunctionConfig
-$(deriveJSON (aesonDrop 3 snakeCase){omitNothingFields = True} ''FunctionConfig)
+$(deriveJSON hasuraJSON{omitNothingFields = True} ''FunctionConfig)
 
 -- | The default function config; v1 of the API implies this.
 emptyFunctionConfig :: FunctionConfig
@@ -131,10 +139,10 @@ emptyFunctionConfig = FunctionConfig Nothing Nothing
 data TrackFunctionV2
   = TrackFunctionV2
   { _tfv2Source        :: !SourceName
-  , _tfv2Function      :: !QualifiedFunction
+  , _tfv2Function      :: !PG.QualifiedFunction
   , _tfv2Configuration :: !FunctionConfig
   } deriving (Show, Eq, Generic)
-$(deriveToJSON (aesonDrop 5 snakeCase) ''TrackFunctionV2)
+$(deriveToJSON hasuraJSON ''TrackFunctionV2)
 
 instance FromJSON TrackFunctionV2 where
   parseJSON = withObject "Object" $ \o ->
@@ -149,18 +157,18 @@ data RawFunctionInfo
   { rfiOid              :: !OID
   , rfiHasVariadic      :: !Bool
   , rfiFunctionType     :: !FunctionVolatility
-  , rfiReturnTypeSchema :: !SchemaName
-  , rfiReturnTypeName   :: !PGScalarType
-  , rfiReturnTypeType   :: !PGTypeKind
+  , rfiReturnTypeSchema :: !PG.SchemaName
+  , rfiReturnTypeName   :: !PG.PGScalarType
+  , rfiReturnTypeType   :: !PG.PGTypeKind
   , rfiReturnsSet       :: !Bool
-  , rfiInputArgTypes    :: ![QualifiedPGType]
+  , rfiInputArgTypes    :: ![PG.QualifiedPGType]
   , rfiInputArgNames    :: ![FunctionArgName]
   , rfiDefaultArgs      :: !Int
   , rfiReturnsTable     :: !Bool
-  , rfiDescription      :: !(Maybe PGDescription)
+  , rfiDescription      :: !(Maybe PG.PGDescription)
   } deriving (Show, Eq, Generic)
 instance NFData RawFunctionInfo
 instance Cacheable RawFunctionInfo
-$(deriveJSON (aesonDrop 3 snakeCase) ''RawFunctionInfo)
+$(deriveJSON hasuraJSON ''RawFunctionInfo)
 
-type PostgresFunctionsMetadata = HashMap QualifiedFunction [RawFunctionInfo]
+type PostgresFunctionsMetadata = HashMap PG.QualifiedFunction [RawFunctionInfo]

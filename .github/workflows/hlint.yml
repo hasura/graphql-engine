@@ -36,5 +36,7 @@ jobs:
           JQ_SCRIPT='.[] | "::" + (if (.severity=="Warning" or .severity=="Error") then "error" else "warning" end) + " file=\(.file),line=\(.startLine),col=\(.startColumn)::\(.severity):" + " \(.hint)%0AFound:%0A  \(.from | gsub("\n";"%0A  "))%0A" + try ("Perhaps:%0A  " + (.to | gsub("\n";"%0A  "))) catch ""'
           if [[ "$CHANGED_HS_FILES" ]]
           then
-            echo "$CHANGED_HS_FILES" | xargs ${{env.working-directory}}/hlint --json --hint=${{env.working-directory}}/.hlint.yaml | jq -r "$JQ_SCRIPT"
+            OUT=$(mktemp)
+            echo "$CHANGED_HS_FILES" | xargs ${{env.working-directory}}/hlint --no-exit-code --json --hint=${{env.working-directory}}/.hlint.yaml | jq -r "$JQ_SCRIPT" | tee $OUT
+            test -z "$(grep -E '^::error' $OUT)"
           fi

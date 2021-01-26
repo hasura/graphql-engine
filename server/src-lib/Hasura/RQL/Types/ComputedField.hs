@@ -43,7 +43,7 @@ data ComputedFieldDefinition
   } deriving (Show, Eq, Generic)
 instance NFData ComputedFieldDefinition
 instance Cacheable ComputedFieldDefinition
-$(deriveJSON (aesonDrop 4 snakeCase){omitNothingFields = True} ''ComputedFieldDefinition)
+$(deriveJSON hasuraJSON{omitNothingFields = True} ''ComputedFieldDefinition)
 
 -- | The function table argument is either the very first argument or the named
 -- argument with an index. The index is 0 if the named argument is the first.
@@ -88,21 +88,21 @@ $(makePrisms ''ComputedFieldReturn)
 data ComputedFieldFunction
   = ComputedFieldFunction
   { _cffName            :: !QualifiedFunction
-  , _cffInputArgs       :: !(Seq.Seq FunctionArg)
+  , _cffInputArgs       :: !(Seq.Seq (FunctionArg 'Postgres))
   , _cffTableArgument   :: !FunctionTableArgument
   , _cffSessionArgument :: !(Maybe FunctionSessionArgument)
   , _cffDescription     :: !(Maybe PGDescription)
   } deriving (Show, Eq, Generic)
 instance Cacheable ComputedFieldFunction
-$(deriveToJSON (aesonDrop 4 snakeCase) ''ComputedFieldFunction)
+$(deriveToJSON hasuraJSON ''ComputedFieldFunction)
 
 data ComputedFieldInfo (b :: BackendType)
   = ComputedFieldInfo
   { _cfiXComputedFieldInfo :: (XComputedFieldInfo b)
-  , _cfiName       :: !ComputedFieldName
-  , _cfiFunction   :: !ComputedFieldFunction
-  , _cfiReturnType :: !(ComputedFieldReturn b)
-  , _cfiComment    :: !(Maybe Text)
+  , _cfiName               :: !ComputedFieldName
+  , _cfiFunction           :: !ComputedFieldFunction
+  , _cfiReturnType         :: !(ComputedFieldReturn b)
+  , _cfiComment            :: !(Maybe Text)
   } deriving (Generic)
 deriving instance (Backend b) => Eq (ComputedFieldInfo b)
 instance (Backend b) => Cacheable (ComputedFieldInfo b)

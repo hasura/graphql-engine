@@ -1,5 +1,6 @@
 module Hasura.GraphQL.Execute.Remote
   ( buildExecStepRemote
+  , collectVariablesFromSelectionSet
   , collectVariables
   , resolveRemoteVariable
   , resolveRemoteField
@@ -57,6 +58,12 @@ collectVariables
   -> Set.HashSet var
 collectVariables =
   Set.unions . fmap (foldMap Set.singleton)
+
+collectVariablesFromSelectionSet
+  :: G.SelectionSet G.NoFragments Variable
+  -> [(G.VariableDefinition, (G.Name, J.Value))]
+collectVariablesFromSelectionSet =
+  map mkVariableDefinitionAndValue . Set.toList . collectVariables
 
 buildExecStepRemote
   :: forall db action

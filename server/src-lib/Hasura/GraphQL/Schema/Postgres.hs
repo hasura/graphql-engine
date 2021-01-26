@@ -2,7 +2,6 @@
 module Hasura.GraphQL.Schema.Postgres
   ( columnParser
   , jsonPathArg
-  , getTableGQLName
   , orderByOperators
   , comparisonExps
   , offsetParser
@@ -132,15 +131,6 @@ jsonPathArg columnType
       Right jPaths -> pure $ Just $ IR.ColumnOp PG.jsonbPathOp $ PG.SEArray $ map elToColExp jPaths
     elToColExp (Key k)   = PG.SELit k
     elToColExp (Index i) = PG.SELit $ tshow i
-
-getTableGQLName
-  :: MonadTableInfo 'Postgres r m
-  => TableName 'Postgres
-  -> m G.Name
-getTableGQLName table = do
-  tableInfo <- askTableInfo @'Postgres table
-  let tableCustomName = _tcCustomName . _tciCustomConfig . _tiCoreInfo $ tableInfo
-  tableCustomName `onNothing` qualifiedObjectToName table
 
 orderByOperators
   :: NonEmpty (Definition P.EnumValueInfo, (BasicOrderType 'Postgres, NullsOrderType 'Postgres))
@@ -394,12 +384,12 @@ mkCountType _           (Just cols) = PG.CTSimple cols
 
 -- | Various update operators
 updateOperators
-  :: forall m n r. (MonadSchema n m, MonadTableInfo 'Postgres r m)
+  :: forall m n r. (MonadSchema n m, MonadTableInfo r m)
   => QualifiedTable         -- ^ qualified name of the table
   -> UpdPermInfo 'Postgres  -- ^ update permissions of the table
   -> m (Maybe (InputFieldsParser n [(Column 'Postgres, IR.UpdOpExpG (UnpreparedValue 'Postgres))]))
 updateOperators table updatePermissions = do
-  tableGQLName <- getTableGQLName table
+  tableGQLName <- getTableGQLName @'Postgres table
   columns      <- tableUpdateColumns table updatePermissions
   let numericCols = onlyNumCols   columns
       jsonCols    = onlyJSONBCols columns

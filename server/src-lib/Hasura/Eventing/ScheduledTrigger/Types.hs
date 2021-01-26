@@ -6,7 +6,6 @@ import           Hasura.Prelude
 import           Hasura.RQL.Types
 
 import qualified Data.Aeson                 as J
-import qualified Data.Aeson.Casing          as J
 import qualified Data.Aeson.TH              as J
 import qualified Database.PG.Query          as Q
 import qualified Database.PG.Query.PTI      as PTI
@@ -50,7 +49,7 @@ data ScheduledEventWebhookPayload
   -- don't send it
   } deriving (Show, Eq)
 
-$(J.deriveToJSON (J.aesonDrop 4 J.snakeCase) {J.omitNothingFields = True} ''ScheduledEventWebhookPayload)
+$(J.deriveToJSON hasuraJSON {J.omitNothingFields = True} ''ScheduledEventWebhookPayload)
 
 newtype ScheduledEventIdArray =
   ScheduledEventIdArray { unScheduledEventIdArray :: [ScheduledEventId]}

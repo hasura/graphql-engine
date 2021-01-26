@@ -44,7 +44,6 @@ import qualified Text.Regex.TDFA                as TDFA
 
 import           Control.Monad.Trans.Control    (MonadBaseControl)
 import           Data.Aeson
-import           Data.Aeson.Casing
 import           Data.Aeson.TH
 
 import           Hasura.EncJSON
@@ -113,7 +112,7 @@ runRunSQL q@RunSQL {..}
   | isSchemaCacheBuildRequiredRunSQL q
   = withMetadataCheck rSource rCascade rTxAccessMode $ execRawSQL rSql
   | otherwise
-  = (_pcConfiguration <$> askPGSourceCache rSource) >>= \sourceConfig ->
+  = askSourceConfig rSource >>= \sourceConfig ->
       liftEitherM $ runExceptT $
       runLazyTx (_pscExecCtx sourceConfig) rTxAccessMode $ execRawSQL rSql
   where
@@ -149,7 +148,7 @@ data RunSQLRes
   { rrResultType :: !Text
   , rrResult     :: !Value
   } deriving (Show, Eq)
-$(deriveJSON (aesonDrop 2 snakeCase) ''RunSQLRes)
+$(deriveJSON hasuraJSON ''RunSQLRes)
 
 instance Q.FromRes RunSQLRes where
   fromRes (Q.ResultOkEmpty _) =
