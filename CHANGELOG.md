@@ -108,6 +108,7 @@ and be accessible according to the permissions that were configured for the role
 - console: misc bug fixes (close #4785, #6330, #6288)
 - console: allow setting table custom name (#212)
 - console: support tracking VOLATILE functions as mutations or queries (close #6228)
+- console: show only compatible postgres functions in computed fields section (close #5155) (#5978)
 - console: added export data option on browse rows page (close #1438 #5158)
 - cli: add missing global flags for seed command (#5565)
 - cli: allow seeds as alias for seed command (#5693)

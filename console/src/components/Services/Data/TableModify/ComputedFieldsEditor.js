@@ -311,10 +311,18 @@ const ComputedFieldsEditor = ({
                 Create new
               </RawSqlButton>
             </div>
-            <div className={styles.wd50percent}>
+            <div
+              className={styles.wd50percent}
+              data-test={'functions-dropdown'}
+            >
               <SearchableSelectBox
                 options={dataSource
-                  .getSchemaFunctions(functions, computedFieldFunctionSchema)
+                  .getSchemaFunctions(
+                    functions,
+                    computedFieldFunctionSchema,
+                    table.table_name,
+                    table.table_schema
+                  )
                   .map(fn => fn.function_name)}
                 onChange={handleFnNameChange}
                 value={computedFieldFunctionName}
