@@ -32,10 +32,10 @@ import           Test.QuickCheck.Instances.Time                ()
 import           Test.QuickCheck.Instances.UnorderedContainers ()
 
 import           Hasura.Backends.Postgres.SQL.Types
-import           Hasura.GraphQL.Utils                          (simpleGraphQLQuery)
 import           Hasura.RQL.DDL.Headers
 import           Hasura.RQL.DDL.Metadata.Types
 import           Hasura.RQL.Types
+
 
 genMetadata :: Gen Metadata
 genMetadata =
@@ -205,11 +205,11 @@ instance Arbitrary AddRemoteSchemaQuery where
 -- FIXME:- The GraphQL AST has 'Gen' by Hedgehog testing package which lacks the
 -- 'Arbitrary' class implementation. For time being, a single query is generated every time.
 instance Arbitrary GQLQueryWithText where
-  arbitrary = pure $ GQLQueryWithText ( simpleGraphQLQuery
+  arbitrary = pure $ GQLQueryWithText ( "query {author {id name}}"
                                       , GQLQuery simpleQuery
                                       )
     where
-      simpleQuery = $(either (fail . T.unpack) TH.lift $ G.parseExecutableDoc simpleGraphQLQuery)
+      simpleQuery = $(either (fail . T.unpack) TH.lift $ G.parseExecutableDoc "query {author {id name}}")
 
 instance Arbitrary ListedQuery where
   arbitrary = genericArbitrary

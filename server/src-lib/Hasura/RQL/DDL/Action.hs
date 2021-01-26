@@ -33,7 +33,6 @@ import           Data.Text.Extended
 
 import           Hasura.Backends.Postgres.SQL.Types
 import           Hasura.EncJSON
-import           Hasura.GraphQL.Utils
 import           Hasura.Metadata.Class
 import           Hasura.RQL.DDL.CustomTypes         (lookupPGScalar)
 import           Hasura.RQL.Types
@@ -105,14 +104,14 @@ resolveAction env AnnotatedCustomTypes{..} ActionDefinition{..} allPGScalars = d
                pure nonObjectType
            | otherwise ->
                throw400 InvalidParams $
-               "the type: " <> showName argumentBaseType
+               "the type: " <> dquote argumentBaseType
                <> " is not defined in custom types or it is not a scalar/enum/input_object"
 
   -- Check if the response type is an object
   let outputType = unGraphQLType _adOutputType
       outputBaseType = G.getBaseType outputType
   outputObject <- onNothing (Map.lookup outputBaseType _actObjects) $
-    throw400 NotExists $ "the type: " <> showName outputBaseType
+    throw400 NotExists $ "the type: " <> dquote outputBaseType
     <> " is not an object type defined in custom types"
   resolvedWebhook <- resolveWebhook env _adHandler
   pure ( ActionDefinition resolvedArguments _adOutputType _adType

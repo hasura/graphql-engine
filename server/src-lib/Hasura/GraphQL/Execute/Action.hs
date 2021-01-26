@@ -56,7 +56,6 @@ import           Hasura.Backends.Postgres.Translate.Select   (asSingleRowJsonRes
 import           Hasura.EncJSON
 import           Hasura.GraphQL.Execute.Prepare
 import           Hasura.GraphQL.Parser
-import           Hasura.GraphQL.Utils                        (showNames)
 import           Hasura.HTTP
 import           Hasura.Metadata.Class
 import           Hasura.RQL.DDL.Headers
@@ -516,7 +515,7 @@ callWebhook env manager outputType outputFields reqHeaders confHeaders
         -- Fields not specified in the output type shouldn't be present in the response
         let extraFields = filter (not . flip Map.member outputFields) $ Map.keys obj
         unless (null extraFields) $ throwUnexpected $
-          "unexpected fields in webhook response: " <> showNames extraFields
+          "unexpected fields in webhook response: " <> commaSeparated extraFields
 
         void $ flip Map.traverseWithKey outputFields $ \fieldName fieldTy ->
           -- When field is non-nullable, it has to present in the response with no null value

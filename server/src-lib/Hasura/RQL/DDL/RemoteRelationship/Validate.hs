@@ -19,7 +19,6 @@ import           Data.Text.Extended
 import           Hasura.Backends.Postgres.SQL.Types
 import           Hasura.GraphQL.Parser.Column
 import           Hasura.GraphQL.Schema.Remote
-import           Hasura.GraphQL.Utils               (getBaseTyWithNestedLevelsCount)
 import           Hasura.RQL.Types
 import           Hasura.SQL.Types
 
@@ -470,3 +469,12 @@ columnInfoToNamedType pci =
   case pgiType pci of
     ColumnScalar scalarType -> getPGScalarTypeName scalarType
     _                       -> throwError UnsupportedEnum
+
+getBaseTyWithNestedLevelsCount :: G.GType -> (G.Name, Int)
+getBaseTyWithNestedLevelsCount ty = go ty 0
+  where
+    go :: G.GType -> Int -> (G.Name, Int)
+    go gType ctr =
+      case gType of
+        G.TypeNamed _ n      -> (n, ctr)
+        G.TypeList  _ gType' -> go gType' (ctr + 1)
