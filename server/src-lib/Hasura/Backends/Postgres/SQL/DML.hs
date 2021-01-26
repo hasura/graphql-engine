@@ -951,3 +951,13 @@ instance (ToSQL v) => ToSQL (SelectWithG v) where
       f (Alias al, q) = toSQL al <~> "AS" <~> parenB (toSQL q)
 
 type SelectWith = SelectWithG CTE
+
+
+-- local helpers
+
+infixr 6 <+>
+(<+>) :: (ToSQL a) => Text -> [a] -> TB.Builder
+(<+>) _ [] = mempty
+(<+>) kat (x:xs) =
+  toSQL x <> mconcat [ TB.text kat <> toSQL x' | x' <- xs ]
+{-# INLINE (<+>) #-}
