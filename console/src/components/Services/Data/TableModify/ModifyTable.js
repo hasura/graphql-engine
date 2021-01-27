@@ -1,9 +1,8 @@
 import PropTypes from 'prop-types';
 import React from 'react';
+
 import TableHeader from '../TableCommon/TableHeader';
-
 import { getAllDataTypeMap } from '../Common/utils';
-
 import {
   deleteTableSql,
   untrackTableSql,
@@ -30,10 +29,8 @@ import UniqueKeyEditor from './UniqueKeyEditor';
 import TriggerEditorList from './TriggerEditorList';
 import CheckConstraints from './CheckConstraints';
 import RootFields from './RootFields';
-import ComputedFields from './ComputedFields';
 import styles from './ModifyTable.scss';
 import { NotFoundError } from '../../../Error/PageNotFound';
-
 import { getConfirmation } from '../../../Common/utils/jsUtils';
 import {
   findTable,
@@ -49,6 +46,7 @@ import {
 } from '../Common/TooltipMessages';
 import { RightContainer } from '../../../Common/Layout/RightContainer';
 import { NotSupportedNote } from '../../../Common/NotSupportedNote';
+import ConnectedComputedFields from './ComputedFields';
 
 class ModifyTable extends React.Component {
   componentDidMount() {
@@ -201,7 +199,7 @@ class ModifyTable extends React.Component {
                 postgresVersion={postgresVersion}
               />
               <hr />
-              <ComputedFields tableSchema={table} />
+              <ConnectedComputedFields tableSchema={table} />
               <hr />
               <h4 className={styles.subheading_text}>
                 Primary Key &nbsp; &nbsp;

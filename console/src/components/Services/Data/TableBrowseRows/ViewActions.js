@@ -130,6 +130,7 @@ const vMakeExportRequest = () => {
       currentTable: originalTable,
       currentSchema,
       view,
+      currentDataSource,
     } = getState().tables;
 
     const url = Endpoints.query;
@@ -144,7 +145,8 @@ const vMakeExportRequest = () => {
           view.query.where,
           null,
           null,
-          view.query.order_by
+          view.query.order_by,
+          currentDataSource
         ),
         getRunSqlQuery(
           dataSource.getEstimateCountQuery(currentSchema, originalTable)

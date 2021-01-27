@@ -118,7 +118,7 @@ export const mergeLoadSchemaData = (
       );
 
       computed_fields = (metadataTable?.computed_fields || []).map(field => ({
-        comment: field.comment,
+        comment: field.comment || '',
         computed_field_name: field.name,
         name: field.name,
         table_name: tableName,

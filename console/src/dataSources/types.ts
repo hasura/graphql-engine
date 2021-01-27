@@ -72,7 +72,10 @@ export type ComputedField = {
   computed_field_name: string;
   definition: {
     function: FunctionDefinition;
+    table_argument: string | null;
+    session_argument: string | null;
   };
+  comment: string | null;
 };
 
 export type Schema = {

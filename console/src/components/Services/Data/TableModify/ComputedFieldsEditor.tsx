@@ -1,17 +1,31 @@
 import React from 'react';
 import AceEditor from 'react-ace';
+import { OptionTypeBase } from 'react-select';
 
 import styles from './ModifyTable.scss';
 import { getConfirmation } from '../../../Common/utils/jsUtils';
 import ExpandableEditor from '../../../Common/Layout/ExpandableEditor/Editor';
 import RawSqlButton from '../Common/Components/RawSqlButton';
 import Tooltip from '../../../Common/Tooltip/Tooltip';
-import { getQualifiedTableDef, dataSource } from '../../../../dataSources';
+import { dataSource } from '../../../../dataSources';
 import { deleteComputedField, saveComputedField } from './ModifyActions';
 import { fetchFunctionInit } from '../DataActions';
 import SearchableSelectBox from '../../../Common/SearchableSelect/SearchableSelect';
+import KnowMoreLink from '../../../Common/KnowMoreLink/KnowMoreLink';
+import { Dispatch } from '../../../../types';
+import { Schema, ComputedField, Table } from '../../../../dataSources/types';
+import { PGFunction } from '../../../../dataSources/services/postgresql/types';
 
-const ComputedFieldsEditor = ({
+interface ComputedFieldsEditorProps {
+  table: Table;
+  currentSchema: string;
+  functions: PGFunction[];
+  schemaList: Schema[];
+  dispatch: Dispatch;
+  source: string;
+}
+
+const ComputedFieldsEditor: React.FC<ComputedFieldsEditorProps> = ({
   table,
   currentSchema,
   functions,
@@ -21,15 +35,17 @@ const ComputedFieldsEditor = ({
 }) => {
   const computedFields = table.computed_fields;
 
-  const emptyComputedField = {
+  const emptyComputedField: ComputedField = {
     computed_field_name: '',
     definition: {
       function: {
         name: '',
         schema: currentSchema,
       },
+      table_argument: null,
+      session_argument: null,
     },
-    comment: '',
+    comment: null,
   };
 
   // State management - start
@@ -44,39 +60,38 @@ const ComputedFieldsEditor = ({
 
   React.useEffect(() => {
     setComputedFieldsState(getStateComputedFields());
-  }, [computedFields]); // Only re-run the effect if computedFields change
+  }, [computedFields]);
 
   // State management - end
 
-  return stateComputedFields.map((computedField, i) => {
+  const fieldsEditor = stateComputedFields.map((computedField, i) => {
     const isLast = computedFields.length <= i;
 
     const origComputedField = isLast ? null : computedFields[i];
     let origComputedFieldName = '';
     let origComputedFieldFunctionName = '';
-    let origComputedFieldComment = '';
+    let origComputedFieldComment: string | null = '';
     if (origComputedField) {
-      const origComputedFieldFunctionDef = getQualifiedTableDef(
-        origComputedField.definition.function
-      );
+      const origComputedFieldFunctionDef =
+        origComputedField.definition.function;
 
       origComputedFieldName = origComputedField.computed_field_name;
       origComputedFieldFunctionName = origComputedFieldFunctionDef.name;
       origComputedFieldComment = origComputedField.comment;
     }
 
-    const computedFieldFunctionDef = getQualifiedTableDef(
-      computedField.definition.function
-    );
+    const computedFieldFunctionDef = computedField.definition.function;
 
     const computedFieldName = computedField.computed_field_name;
     const computedFieldFunctionName = computedFieldFunctionDef.name;
     const computedFieldFunctionSchema = computedFieldFunctionDef.schema;
     const computedFieldTableRowArg = computedField.definition.table_argument;
+    const computedFieldTableSessionArg =
+      computedField.definition.session_argument;
     const computedFieldComment = computedField.comment;
 
     let computedFieldFunction = null;
-    let computedFieldFunctionDefinition = null;
+    let computedFieldFunctionDefinition = '';
     if (functions) {
       computedFieldFunction = dataSource.findFunction(
         functions,
@@ -108,7 +123,7 @@ const ComputedFieldsEditor = ({
 
     let saveFunc;
     if (computedFieldName && computedFieldFunctionDefinition) {
-      saveFunc = toggle => {
+      saveFunc = (toggle: () => void) => {
         dispatch(
           saveComputedField(computedField, table, origComputedField, toggle)
         );
@@ -131,7 +146,7 @@ const ComputedFieldsEditor = ({
           &nbsp;-&nbsp;
           <i>{origComputedFieldFunctionName}</i>
           <br />
-          <span key={'comment'} className={styles.text_gray}>
+          <span key="comment" className={styles.text_gray}>
             {origComputedFieldComment}
           </span>
         </div>
@@ -191,7 +206,7 @@ const ComputedFieldsEditor = ({
         );
       };
 
-      const handleNameChange = e => {
+      const handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const newState = [...stateComputedFields];
 
         newState[i] = {
@@ -202,9 +217,18 @@ const ComputedFieldsEditor = ({
         setComputedFieldsState(newState);
       };
 
-      const handleFnSchemaChange = selectedOption => {
-        // fetch schema fns
-        dispatch(fetchFunctionInit(selectedOption.value));
+      const handleFnSchemaChange = (
+        selectedOption: string | OptionTypeBase | null | undefined
+      ) => {
+        // fetch schema fn
+
+        if (!selectedOption || typeof selectedOption === 'string') {
+          return;
+        }
+
+        if (selectedOption) {
+          dispatch(fetchFunctionInit(selectedOption.value));
+        }
 
         const newState = [...stateComputedFields];
 
@@ -222,8 +246,14 @@ const ComputedFieldsEditor = ({
         setComputedFieldsState(newState);
       };
 
-      const handleFnNameChange = selectedOption => {
+      const handleFnNameChange = (
+        selectedOption: string | OptionTypeBase | null | undefined
+      ) => {
         const newState = [...stateComputedFields];
+
+        if (!selectedOption || typeof selectedOption === 'string') {
+          return;
+        }
 
         newState[i] = {
           ...newState[i],
@@ -239,7 +269,7 @@ const ComputedFieldsEditor = ({
         setComputedFieldsState(newState);
       };
 
-      const handleCommentChange = e => {
+      const handleCommentChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const newState = [...stateComputedFields];
 
         newState[i] = {
@@ -250,14 +280,30 @@ const ComputedFieldsEditor = ({
         setComputedFieldsState(newState);
       };
 
-      const handleTableRowArgChange = e => {
+      const handleTableRowArgChange = (
+        e: React.ChangeEvent<HTMLInputElement>
+      ) => {
+        const newState = [...stateComputedFields];
+        newState[i] = {
+          ...newState[i],
+          definition: {
+            ...newState[i].definition,
+            table_argument: e.target.value || null,
+          },
+        };
+        setComputedFieldsState(newState);
+      };
+
+      const handleTableSesssionArgChange = (
+        e: React.ChangeEvent<HTMLInputElement>
+      ) => {
         const newState = [...stateComputedFields];
 
         newState[i] = {
           ...newState[i],
           definition: {
             ...newState[i].definition,
-            table_argument: e.target.value || null,
+            session_argument: e.target.value || null,
           },
         };
 
@@ -287,13 +333,13 @@ const ComputedFieldsEditor = ({
                 options={schemaList}
                 onChange={handleFnSchemaChange}
                 value={computedFieldFunctionSchema}
-                bsClass={'function-schema-select'}
+                bsClass="function-schema-select"
                 styleOverrides={{
                   menu: {
                     zIndex: 5,
                   },
                 }}
-                filterOption={'prefix'}
+                filterOption="prefix"
                 placeholder="function_name"
               />
             </div>
@@ -302,19 +348,16 @@ const ComputedFieldsEditor = ({
             <div className={`${styles.add_mar_bottom_mid}`}>
               <b>Function name: </b>
               <RawSqlButton
-                dataTestId={'create-function'}
+                dataTestId="create-function"
                 customStyles={`${styles.display_inline} ${styles.add_mar_left}`}
-                sql={''}
+                sql=""
                 dispatch={dispatch}
                 source={source}
               >
                 Create new
               </RawSqlButton>
             </div>
-            <div
-              className={styles.wd50percent}
-              data-test={'functions-dropdown'}
-            >
+            <div className={styles.wd50percent} data-test="functions-dropdown">
               <SearchableSelectBox
                 options={dataSource
                   .getSchemaFunctions(
@@ -326,13 +369,13 @@ const ComputedFieldsEditor = ({
                   .map(fn => fn.function_name)}
                 onChange={handleFnNameChange}
                 value={computedFieldFunctionName}
-                bsClass={'function-name-select'}
+                bsClass="function-name-select"
                 styleOverrides={{
                   menu: {
-                    zIndex: 5,
+                    zIndex: 25,
                   },
                 }}
-                filterOption={'prefix'}
+                filterOption="prefix"
                 placeholder="function_name"
               />
             </div>
@@ -347,11 +390,26 @@ const ComputedFieldsEditor = ({
             </div>
             <input
               type="text"
-              value={computedFieldTableRowArg}
-              placeholder={'default: first argument'}
+              value={computedFieldTableRowArg ?? undefined}
+              placeholder="default: first argument"
               onChange={handleTableRowArgChange}
               className={`form-control ${styles.wd50percent}`}
               data-test="computed-field-first-arg-input"
+            />
+          </div>
+          <div className={`${styles.add_mar_top}`}>
+            <div className={`${styles.add_mar_bottom_mid}`}>
+              <b>Session argument:</b>
+              <Tooltip message="The function argument into which Hasura session variables will be passed" />
+              &nbsp;
+              <KnowMoreLink href="https://hasura.io/docs/1.0/graphql/core/schema/computed-fields.html#accessing-hasura-session-variables-in-computed-fields" />
+            </div>
+            <input
+              type="text"
+              value={computedFieldTableSessionArg ?? ''}
+              placeholder="hasura_session"
+              onChange={handleTableSesssionArgChange}
+              className={`form-control ${styles.wd50percent}`}
             />
           </div>
           <div className={`${styles.add_mar_top}`}>
@@ -360,7 +418,7 @@ const ComputedFieldsEditor = ({
             </div>
             <input
               type="text"
-              value={computedFieldComment}
+              value={computedFieldComment ?? ''}
               onChange={handleCommentChange}
               className={`form-control ${styles.wd50percent}`}
               data-test="computed-field-comment-input"
@@ -405,6 +463,8 @@ const ComputedFieldsEditor = ({
       </div>
     );
   });
+
+  return <>{fieldsEditor}</>;
 };
 
 export default ComputedFieldsEditor;
