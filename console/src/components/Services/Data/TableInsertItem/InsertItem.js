@@ -103,11 +103,7 @@ class InsertItem extends Component {
       };
       const onFocus = e => {
         const textValue = e.target.value;
-        if (
-          textValue === undefined ||
-          textValue === null ||
-          isEmpty(textValue)
-        ) {
+        if (isEmpty(textValue)) {
           const radioToSelectWhenEmpty = hasDefault
             ? refs[colName].defaultNode
             : refs[colName].nullNode;

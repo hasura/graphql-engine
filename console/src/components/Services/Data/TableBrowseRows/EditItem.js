@@ -90,11 +90,7 @@ class EditItem extends Component {
       };
       const onFocus = e => {
         const textValue = e.target.value;
-        if (
-          textValue === undefined ||
-          isEmpty(textValue) ||
-          textValue === null
-        ) {
+        if (isEmpty(textValue)) {
           const radioToSelectWhenEmpty = prevValue
             ? refs[colName].defaultNode
             : refs[colName].nullNode;
