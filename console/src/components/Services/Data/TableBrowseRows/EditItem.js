@@ -1,19 +1,19 @@
 import PropTypes from 'prop-types';
 import React, { Component } from 'react';
+import { isEmpty } from 'lodash';
+import { replace } from 'react-router-redux';
+
 import TableHeader from '../TableCommon/TableHeader';
 import Button from '../../../Common/Button/Button';
 import ReloadEnumValuesButton from '../Common/Components/ReloadEnumValuesButton';
 import { ordinalColSort } from '../utils';
-
 // import RichTextEditor from 'react-rte';
-import { replace } from 'react-router-redux';
 import globals from '../../../../Globals';
 import { E_ONGOING_REQ, editItem } from './EditActions';
 import { findTable, generateTableDef } from '../../../Common/utils/pgUtils';
 import { getTableBrowseRoute } from '../../../Common/utils/routesUtils';
 import { fetchEnumOptions } from './EditActions';
 import { TableRow } from '../Common/Components/TableRow';
-import { isEmpty } from 'lodash';
 
 class EditItem extends Component {
   constructor() {
