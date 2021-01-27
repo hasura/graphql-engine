@@ -2,20 +2,24 @@
 {-# LANGUAGE NamedFieldPuns #-}
 module Hasura.Server.API.Query where
 
-import           Control.Lens
+import           Hasura.Prelude
+
+import qualified Data.Environment                   as Env
+import qualified Data.HashMap.Strict                as HM
+import qualified Database.PG.Query                  as Q
+import qualified Network.HTTP.Client                as HTTP
+
+import           Control.Monad.Trans.Control        (MonadBaseControl)
 import           Control.Monad.Unique
 import           Data.Aeson
 import           Data.Aeson.Casing
 import           Data.Aeson.TH
+import           Network.HTTP.Client.Extended
 
-import qualified Data.Environment                   as Env
-import qualified Data.HashMap.Strict                as HM
-import qualified Data.Text                          as T
-import qualified Database.PG.Query                  as Q
-import qualified Network.HTTP.Client                as HTTP
+import qualified Hasura.Tracing                     as Tracing
 
 import           Hasura.EncJSON
-import           Hasura.Prelude
+import           Hasura.Metadata.Class
 import           Hasura.RQL.DDL.Action
 import           Hasura.RQL.DDL.ComputedField
 import           Hasura.RQL.DDL.CustomTypes
@@ -42,13 +46,13 @@ import           Hasura.Server.Utils
 import           Hasura.Server.Version              (HasVersion)
 import           Hasura.Session
 
-import qualified Hasura.Tracing                     as Tracing
 
 data RQLQueryV1
   = RQAddExistingTableOrView !TrackTable
   | RQTrackTable !TrackTable
   | RQUntrackTable !UntrackTable
   | RQSetTableIsEnum !SetTableIsEnum
+  | RQSetTableCustomization !SetTableCustomization
 
   | RQTrackFunction !TrackFunction
   | RQUntrackFunction !UnTrackFunction
@@ -115,7 +119,7 @@ data RQLQueryV1
 
   | RQRunSql !RunSQL
 
-  | RQReplaceMetadata !Metadata
+  | RQReplaceMetadata !ReplaceMetadata
   | RQExportMetadata !ExportMetadata
   | RQClearMetadata !ClearMetadata
   | RQReloadMetadata !ReloadMetadata
@@ -129,7 +133,6 @@ data RQLQueryV1
   | RQDumpInternalState !DumpInternalState
 
   | RQSetCustomTypes !CustomTypes
-  | RQSetTableCustomization !SetTableCustomization
   deriving (Show, Eq)
 
 data RQLQueryV2
@@ -176,47 +179,36 @@ $(deriveJSON
   ''RQLQueryV2
  )
 
--- | Using @pg_notify@ function to publish schema sync events to other server
--- instances via 'hasura_schema_update' channel.
--- See Note [Schema Cache Sync]
-notifySchemaCacheSync :: InstanceId -> CacheInvalidations -> Q.TxE QErr ()
-notifySchemaCacheSync instanceId invalidations = do
-  Q.Discard () <- Q.withQE defaultTxErrorHandler [Q.sql|
-      SELECT pg_notify('hasura_schema_update', json_build_object(
-        'instance_id', $1,
-        'occurred_at', NOW(),
-        'invalidations', $2
-        )::text
-      )
-    |] (instanceId, Q.AltJ invalidations) True
-  pure ()
-
 runQuery
-  :: (HasVersion, MonadIO m, MonadError QErr m, Tracing.MonadTrace m)
-  => Env.Environment -> PGExecCtx -> InstanceId
-  -> UserInfo -> RebuildableSchemaCache Run -> HTTP.Manager
-  -> SQLGenCtx -> SystemDefined -> RQLQuery -> m (EncJSON, RebuildableSchemaCache Run)
-runQuery env pgExecCtx instanceId userInfo sc hMgr sqlGenCtx systemDefined query = do
-  accessMode <- getQueryAccessMode query
-  traceCtx <- Tracing.currentContext
-  resE <- runQueryM env query & Tracing.interpTraceT \x -> do
-    a <- x & runHasSystemDefinedT systemDefined
+  :: ( HasVersion, MonadIO m, Tracing.MonadTrace m
+     , MonadBaseControl IO m, MonadMetadataStorage m
+     , MonadResolveSource m
+     )
+  => Env.Environment
+  -> InstanceId
+  -> UserInfo -> RebuildableSchemaCache -> HTTP.Manager
+  -> SQLGenCtx -> RemoteSchemaPermsCtx -> RQLQuery -> m (EncJSON, RebuildableSchemaCache)
+runQuery env instanceId userInfo sc hMgr sqlGenCtx remoteSchemaPermsCtx query = do
+  metadata <- fetchMetadata
+  result <- runQueryM env query & Tracing.interpTraceT \x -> do
+    (((js, tracemeta), meta), rsc, ci) <-
+         x & runMetadataT metadata
            & runCacheRWT sc
-           & peelRun runCtx pgExecCtx accessMode (Just traceCtx)
+           & peelRun runCtx
            & runExceptT
-           & liftIO
-    pure (either
-      ((, mempty) . Left)
-      (\((js, meta), rsc, ci) -> (Right (js, rsc, ci), meta)) a)
-  either throwError withReload resE
+           & liftEitherM
+    pure ((js, rsc, ci, meta), tracemeta)
+  withReload result
   where
-    runCtx = RunCtx userInfo hMgr sqlGenCtx
-    withReload (result, updatedCache, invalidations) = do
+    runCtx = RunCtx userInfo hMgr sqlGenCtx remoteSchemaPermsCtx
+
+    withReload (result, updatedCache, invalidations, updatedMetadata) = do
       when (queryModifiesSchemaCache query) $ do
-        e <- liftIO $ runExceptT $ runLazyTx pgExecCtx Q.ReadWrite $ liftTx $
-          notifySchemaCacheSync instanceId invalidations
-        liftEither e
-      return (result, updatedCache)
+        -- set modified metadata in storage
+        setMetadata updatedMetadata
+        -- notify schema cache sync
+        notifySchemaCacheSync instanceId invalidations
+      pure (result, updatedCache)
 
 -- | A predicate that determines whether the given query might modify/rebuild the schema cache. If
 -- so, it needs to acquire the global lock on the schema cache so that other queries do not modify
@@ -332,12 +324,12 @@ getQueryAccessMode q = fromMaybe Q.ReadOnly <$> getQueryAccessMode' q
             throw400 BadRequest $
             "incompatible access mode requirements in bulk query, " <>
             "expected access mode: " <>
-            T.pack (maybe "ANY" show expectedMode) <>
+            maybe "ANY" tshow expectedMode <>
             " but " <>
             "$.args[" <>
-            T.pack (show i) <>
+            tshow i <>
             "] forces " <>
-            T.pack (show errMode)
+            tshow errMode
     getQueryAccessMode' (RQV2 _) = pure $ Just Q.ReadWrite
 
 -- | onRight, return reconciled access mode. onLeft, return conflicting access mode
@@ -349,10 +341,13 @@ reconcileAccessModes (Just mode1) (Just mode2)
   | otherwise = Left mode2
 
 runQueryM
-  :: ( HasVersion, QErrM m, CacheRWM m, UserInfoM m, MonadTx m
-     , MonadIO m, MonadUnique m, HasHttpManager m, HasSQLGenCtx m
-     , HasSystemDefined m
+  :: ( HasVersion, CacheRWM m, UserInfoM m
+     , MonadBaseControl IO m, MonadIO m, MonadUnique m
+     , HasHttpManagerM m, HasSQLGenCtx m
+     , HasRemoteSchemaPermsCtx m
      , Tracing.MonadTrace m
+     , MetadataM m
+     , MonadMetadataStorageQueryAPI m
      )
   => Env.Environment
   -> RQLQuery
@@ -366,6 +361,7 @@ runQueryM env rq = withPathK "args" $ case rq of
       RQTrackTable q                  -> runTrackTableQ q
       RQUntrackTable q                -> runUntrackTableQ q
       RQSetTableIsEnum q              -> runSetExistingTableIsEnumQ q
+      RQSetTableCustomization q       -> runSetTableCustomization q
 
       RQTrackFunction q               -> runTrackFunc q
       RQUntrackFunction q             -> runUntrackFunc q
@@ -441,15 +437,13 @@ runQueryM env rq = withPathK "args" $ case rq of
       RQRunSql q                      -> runRunSQL q
 
       RQSetCustomTypes q              -> runSetCustomTypes q
-      RQSetTableCustomization q       -> runSetTableCustomization q
 
       RQBulk qs                       -> encJFromList <$> indexedMapM (runQueryM env) qs
 
     runQueryV2M = \case
-      RQV2TrackTable q           -> runTrackTableV2Q q
-      RQV2SetTableCustomFields q -> runSetTableCustomFieldsQV2 q
-      RQV2TrackFunction q        -> runTrackFunctionV2 q
-
+      RQV2TrackTable q                -> runTrackTableV2Q q
+      RQV2SetTableCustomFields q      -> runSetTableCustomFieldsQV2 q
+      RQV2TrackFunction q             -> runTrackFunctionV2 q
 
 requiresAdmin :: RQLQuery -> Bool
 requiresAdmin = \case
@@ -458,6 +452,7 @@ requiresAdmin = \case
     RQTrackTable _                  -> True
     RQUntrackTable _                -> True
     RQSetTableIsEnum _              -> True
+    RQSetTableCustomization _       -> True
 
     RQTrackFunction _               -> True
     RQUntrackFunction _             -> True
@@ -530,7 +525,6 @@ requiresAdmin = \case
 
     RQDumpInternalState _           -> True
     RQSetCustomTypes _              -> True
-    RQSetTableCustomization _       -> True
 
     RQRunSql _                      -> True
 

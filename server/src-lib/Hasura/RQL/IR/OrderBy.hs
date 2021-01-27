@@ -8,12 +8,11 @@ module Hasura.RQL.IR.OrderBy
 
 import           Hasura.Prelude
 
-import qualified Data.Text                  as T
+import qualified Data.Text               as T
 
 import           Data.Aeson
-import           Data.Aeson.Casing
 
-import           Hasura.RQL.Instances       ()
+import           Hasura.RQL.Instances    ()
 import           Hasura.RQL.Types.Common
 import           Hasura.SQL.Backend
 
@@ -73,7 +72,7 @@ instance (Backend b, Hashable a) => Hashable (OrderByItemG b a)
 type OrderByItem b = OrderByItemG b OrderByCol
 
 instance (Backend b, FromJSON a) => FromJSON (OrderByItemG b a) where
-  parseJSON = genericParseJSON (aesonPrefix snakeCase){omitNothingFields=True}
+  parseJSON = genericParseJSON hasuraJSON{omitNothingFields=True}
 
 instance (Backend b, ToJSON a) => ToJSON (OrderByItemG b a) where
-  toJSON = genericToJSON (aesonPrefix snakeCase){omitNothingFields=True}
+  toJSON = genericToJSON hasuraJSON{omitNothingFields=True}

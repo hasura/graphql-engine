@@ -55,7 +55,7 @@ import           Hasura.GraphQL.Transport.HTTP               (MonadExecuteQuery 
                                                               extractFieldFromResponse)
 import           Hasura.GraphQL.Transport.HTTP.Protocol
 import           Hasura.GraphQL.Transport.WebSocket.Protocol
-import           Hasura.HTTP
+import           Hasura.Metadata.Class
 import           Hasura.Prelude
 import           Hasura.RQL.Types
 import           Hasura.Server.Auth                          (AuthMode, UserAuthentication,
@@ -67,14 +67,15 @@ import           Hasura.Server.Version                       (HasVersion)
 import           Hasura.Session
 
 import qualified Hasura.GraphQL.Execute                      as E
+import qualified Hasura.GraphQL.Execute.Action               as EA
 import qualified Hasura.GraphQL.Execute.LiveQuery            as LQ
 import qualified Hasura.GraphQL.Execute.LiveQuery.Poll       as LQ
 import qualified Hasura.GraphQL.Execute.Query                as EQ
 import qualified Hasura.GraphQL.Transport.WebSocket.Server   as WS
 import qualified Hasura.Logging                              as L
+import           Hasura.Server.Init.Config                   (KeepAliveDelay (..))
 import qualified Hasura.Server.Telemetry.Counters            as Telem
 import qualified Hasura.Tracing                              as Tracing
-import           Hasura.Server.Init.Config (KeepAliveDelay (..))
 
 -- | 'LQ.LiveQueryId' comes from 'Hasura.GraphQL.Execute.LiveQuery.State.addLiveQuery'. We use
 -- this to track a connection's operations so we can remove them from 'LiveQueryState', and
@@ -168,7 +169,7 @@ data OperationDetails
   , _odOperationType :: !OpDetail
   , _odQuery         :: !(Maybe GQLReqUnparsed)
   } deriving (Show, Eq)
-$(J.deriveToJSON (J.aesonDrop 3 J.snakeCase) ''OperationDetails)
+$(J.deriveToJSON hasuraJSON ''OperationDetails)
 
 data WSEvent
   = EAccepted
@@ -189,7 +190,7 @@ data WsConnInfo
   , _wsciTokenExpiry :: !(Maybe TC.UTCTime)
   , _wsciMsg         :: !(Maybe Text)
   } deriving (Show, Eq)
-$(J.deriveToJSON (J.aesonDrop 5 J.snakeCase) ''WsConnInfo)
+$(J.deriveToJSON hasuraJSON ''WsConnInfo)
 
 data WSLogInfo
   = WSLogInfo
@@ -197,7 +198,7 @@ data WSLogInfo
   , _wsliConnectionInfo :: !WsConnInfo
   , _wsliEvent          :: !WSEvent
   } deriving (Show, Eq)
-$(J.deriveToJSON (J.aesonDrop 5 J.snakeCase) ''WSLogInfo)
+$(J.deriveToJSON hasuraJSON ''WSLogInfo)
 
 data WSLog
   = WSLog
@@ -220,7 +221,6 @@ mkWsErrorLog uv ci ev =
 data WSServerEnv
   = WSServerEnv
   { _wseLogger          :: !(L.Logger L.Hasura)
-  , _wseRunTx           :: !PGExecCtx
   , _wseLiveQMap        :: !LQ.LiveQueriesState
   , _wseGCtxMap         :: !(IO (SchemaCache, SchemaCacheVer))
   -- ^ an action that always returns the latest version of the schema cache. See 'SchemaCacheRef'.
@@ -332,6 +332,8 @@ onStart
   , Tracing.MonadTrace m
   , MonadExecuteQuery m
   , EQ.MonadQueryInstrumentation m
+  , MC.MonadBaseControl IO m
+  , MonadMetadataStorage (MetadataStorageT m)
   )
   => Env.Environment -> WSServerEnv -> WSConn -> StartMsg -> m ()
 onStart env serverEnv wsConn (StartMsg opId q) = catchAndIgnore $ do
@@ -358,11 +360,10 @@ onStart env serverEnv wsConn (StartMsg opId q) = catchAndIgnore $ do
 
   reqParsedE <- lift $ E.checkGQLExecution userInfo (reqHdrs, ipAddress) enableAL sc q
   reqParsed <- onLeft reqParsedE (withComplete . preExecErr requestId)
-  execPlanE <- runExceptT $ E.getResolvedExecPlan env logger pgExecCtx
-               {- planCache -} userInfo sqlGenCtx sc scVer queryType httpMgr reqHdrs (q, reqParsed)
+  execPlanE <- runExceptT $ E.getResolvedExecPlan env logger {- planCache -}
+                            userInfo sqlGenCtx sc scVer queryType httpMgr reqHdrs (q, reqParsed)
 
   (telemCacheHit, execPlan) <- onLeft execPlanE (withComplete . preExecErr requestId)
-  let execCtx = E.ExecutionCtx logger sqlGenCtx pgExecCtx {- planCache -} sc scVer httpMgr enableAL
 
   case execPlan of
     E.QueryExecutionPlan queryPlan asts -> Tracing.trace "Query" $ do
@@ -376,13 +377,16 @@ onStart env serverEnv wsConn (StartMsg opId q) = catchAndIgnore $ do
           sendSuccResp cachedResponseData $ LQ.LiveQueryMetadata 0
         Nothing -> do
           conclusion <- runExceptT $ forWithKey queryPlan $ \fieldName -> \case
-            E.ExecStepDB (tx, genSql) -> doQErr $ Tracing.trace "Postgres Query" $ do
+            E.ExecStepDB pgExecCtx (tx, genSql) -> doQErr $ Tracing.trace "Postgres Query" $ do
               logQueryLog logger q ((fieldName,) <$> genSql) requestId
               (telemTimeIO_DT, resp) <- Tracing.interpTraceT id $ withElapsedTime $
                 hoist (runQueryTx pgExecCtx) tx
               return $ ResultsFragment telemTimeIO_DT Telem.Local resp []
-            E.ExecStepRemote (rsi, opDef, varValsM) -> do
-              runRemoteGQ fieldName execCtx requestId userInfo reqHdrs opDef rsi varValsM
+            E.ExecStepRemote rsi gqlReq -> do
+              runRemoteGQ fieldName userInfo reqHdrs rsi gqlReq
+            E.ExecStepAction actionExecPlan -> do
+              (time, r) <- doQErr $ EA.runActionExecution actionExecPlan
+              pure $ ResultsFragment time Telem.Empty r []
             E.ExecStepRaw json ->
               buildRaw json
           buildResult Telem.Query telemCacheHit timerTot requestId conclusion
@@ -395,7 +399,7 @@ onStart env serverEnv wsConn (StartMsg opId q) = catchAndIgnore $ do
     E.MutationExecutionPlan mutationPlan -> do
       conclusion <- runExceptT $ forWithKey mutationPlan $ \fieldName -> \case
         -- Ignoring response headers since we can't send them over WebSocket
-        E.ExecStepDB (tx, _responseHeaders) -> doQErr $ Tracing.trace "Mutate" do
+        E.ExecStepDB pgExecCtx (tx, _responseHeaders) -> doQErr $ Tracing.trace "Mutate" do
           logQueryLog logger q Nothing requestId
           ctx <- Tracing.currentContext
           (telemTimeIO_DT, resp) <- Tracing.interpTraceT
@@ -404,8 +408,11 @@ onStart env serverEnv wsConn (StartMsg opId q) = catchAndIgnore $ do
              . withTraceContext ctx . withUserInfo userInfo
             ) $ withElapsedTime tx
           return $ ResultsFragment telemTimeIO_DT Telem.Local resp []
-        E.ExecStepRemote (rsi, opDef, varValsM) -> do
-          runRemoteGQ fieldName execCtx requestId userInfo reqHdrs opDef rsi varValsM
+        E.ExecStepAction (actionExecPlan, hdrs) -> do
+          (time, r) <- doQErr $ EA.runActionExecution actionExecPlan
+          pure $ ResultsFragment time Telem.Empty r hdrs
+        E.ExecStepRemote rsi gqlReq -> do
+          runRemoteGQ fieldName userInfo reqHdrs rsi gqlReq
         E.ExecStepRaw json ->
           buildRaw json
       buildResult Telem.Query telemCacheHit timerTot requestId conclusion
@@ -447,13 +454,13 @@ onStart env serverEnv wsConn (StartMsg opId q) = catchAndIgnore $ do
       -- Telemetry. NOTE: don't time network IO:
       Telem.recordTimingMetric Telem.RequestDimensions{..} Telem.RequestTimings{..}
 
-    runRemoteGQ fieldName execCtx reqId userInfo reqHdrs opDef rsi varValsM = do
-      (telemTimeIO_DT, HttpResponse resp _respHdrs) <-
-        doQErr $ flip runReaderT execCtx $ E.execRemoteGQ env reqId userInfo reqHdrs rsi opDef varValsM
-      value <- mapExceptT lift $ extractFieldFromResponse (G.unName fieldName) (encJToLBS resp)
+    runRemoteGQ fieldName userInfo reqHdrs rsi gqlReq = do
+      (telemTimeIO_DT, _respHdrs, resp) <-
+        doQErr $ E.execRemoteGQ env httpMgr userInfo reqHdrs rsi gqlReq
+      value <- mapExceptT lift $ extractFieldFromResponse (G.unName fieldName) resp
       return $ ResultsFragment telemTimeIO_DT Telem.Remote (JO.toEncJSON value) []
 
-    WSServerEnv logger pgExecCtx lqMap getSchemaCache httpMgr _ sqlGenCtx {- planCache -}
+    WSServerEnv logger lqMap getSchemaCache httpMgr _ sqlGenCtx {- planCache -}
       _ enableAL _keepAliveDelay = serverEnv
 
     WSConnData userInfoR opMap errRespTy queryType = WS.getData wsConn
@@ -531,6 +538,8 @@ onMessage
      , Tracing.HasReporter m
      , MonadExecuteQuery m
      , EQ.MonadQueryInstrumentation m
+     , MC.MonadBaseControl IO m
+     , MonadMetadataStorage (MetadataStorageT m)
      )
   => Env.Environment
   -> AuthMode
@@ -693,7 +702,6 @@ onClose logger lqMap wsConn = do
 createWSServerEnv
   :: (MonadIO m)
   => L.Logger L.Hasura
-  -> PGExecCtx
   -> LQ.LiveQueriesState
   -> IO (SchemaCache, SchemaCacheVer)
   -> H.Manager
@@ -703,11 +711,11 @@ createWSServerEnv
   -> KeepAliveDelay
   -- -> E.PlanCache
   -> m WSServerEnv
-createWSServerEnv logger isPgCtx lqState getSchemaCache httpManager
+createWSServerEnv logger lqState getSchemaCache httpManager
   corsPolicy sqlGenCtx enableAL keepAliveDelay {- planCache -} = do
   wsServer <- liftIO $ STM.atomically $ WS.createWSServer logger
   return $
-    WSServerEnv logger isPgCtx lqState getSchemaCache httpManager corsPolicy
+    WSServerEnv logger lqState getSchemaCache httpManager corsPolicy
     sqlGenCtx {- planCache -} wsServer enableAL keepAliveDelay
 
 createWSServerApp
@@ -722,6 +730,7 @@ createWSServerApp
      , Tracing.HasReporter m
      , MonadExecuteQuery m
      , EQ.MonadQueryInstrumentation m
+     , MonadMetadataStorage (MetadataStorageT m)
      )
   => Env.Environment
   -> AuthMode

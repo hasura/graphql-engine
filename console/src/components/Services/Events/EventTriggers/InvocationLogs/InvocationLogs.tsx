@@ -17,7 +17,13 @@ import {
 interface Props extends EventsLogsInjectedProps {}
 
 const InvocationLogs: React.FC<Props> = props => {
-  const { dispatch, triggerName, readOnlyMode } = props;
+  const {
+    dispatch,
+    triggerName,
+    readOnlyMode,
+    currentSource,
+    currentTrigger,
+  } = props;
 
   const renderRows: FilterRenderProp = (
     rows,
@@ -32,16 +38,14 @@ const InvocationLogs: React.FC<Props> = props => {
       count={count}
       setFilterState={setFilterState}
       runQuery={runQuery}
-      columns={[
-        'id',
-        'redeliver',
-        'status',
-        'event_id',
-        // 'operation',
-        'created_at',
-      ]}
+      columns={['id', 'redeliver', 'status', 'event_id', 'created_at']}
       identifier={triggerName}
       dispatch={dispatch}
+      tableDef={{
+        name: currentTrigger.table_name,
+        schema: currentTrigger.schema_name,
+      }}
+      tableSource={currentSource}
     />
   );
 
@@ -68,6 +72,10 @@ const InvocationLogs: React.FC<Props> = props => {
             ),
           ],
         }}
+        triggerName={triggerName}
+        triggerOp="invocation"
+        triggerType="data"
+        currentSource={currentSource}
       />
     </React.Fragment>
   );

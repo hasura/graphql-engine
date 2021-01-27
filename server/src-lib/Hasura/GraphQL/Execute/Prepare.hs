@@ -2,7 +2,6 @@ module Hasura.GraphQL.Execute.Prepare
   ( PlanVariables
   , PrepArgMap
   , PlanningSt(..)
-  , RemoteCall
   , ExecutionPlan
   , ExecutionStep(..)
   , initPlanningSt
@@ -15,26 +14,26 @@ module Hasura.GraphQL.Execute.Prepare
 
 import           Hasura.Prelude
 
-import qualified Data.Aeson                             as J
-import qualified Data.HashMap.Strict                    as Map
-import qualified Data.HashSet                           as Set
-import qualified Data.IntMap                            as IntMap
-import qualified Database.PG.Query                      as Q
-import qualified Language.GraphQL.Draft.Syntax          as G
+import qualified Data.Aeson                                as J
+import qualified Data.HashMap.Strict                       as Map
+import qualified Data.HashSet                              as Set
+import qualified Data.IntMap                               as IntMap
+import qualified Database.PG.Query                         as Q
+import qualified Language.GraphQL.Draft.Syntax             as G
 
 import           Data.Text.Extended
 
-import qualified Hasura.Backends.Postgres.SQL.DML       as S
-import qualified Hasura.GraphQL.Transport.HTTP.Protocol as GH
+import qualified Hasura.Backends.Postgres.SQL.DML          as S
+import qualified Hasura.GraphQL.Transport.HTTP.Protocol    as GH
 
 import           Hasura.Backends.Postgres.SQL.Value
 import           Hasura.Backends.Postgres.Translate.Column
 import           Hasura.GraphQL.Parser.Column
 import           Hasura.GraphQL.Parser.Schema
-import           Hasura.RQL.DML.Internal                (currentSession)
+import           Hasura.RQL.DML.Internal                   (currentSession)
 import           Hasura.RQL.Types
-import           Hasura.SQL.Types
 import           Hasura.Session
+import           Hasura.SQL.Types
 
 
 type PlanVariables = Map.HashMap G.Name Int
@@ -46,17 +45,17 @@ type PrepArgMap = IntMap.IntMap (Q.PrepArg, PGScalarValue)
 -- | Full execution plan to process one GraphQL query.  Once we work on
 -- heterogeneous execution this will contain a mixture of things to run on the
 -- database and things to run on remote schemas.
-type ExecutionPlan db = InsOrdHashMap G.Name (ExecutionStep db)
-
-type RemoteCall = (RemoteSchemaInfo, G.TypedOperationDefinition G.NoFragments G.Name, Maybe GH.VariableValues)
+type ExecutionPlan action db = InsOrdHashMap G.Name (ExecutionStep action db)
 
 -- | One execution step to processing a GraphQL query (e.g. one root field).
 -- Polymorphic to allow the SQL to be generated in stages.
-data ExecutionStep db
-  = ExecStepDB db
+data ExecutionStep action db
+  = ExecStepDB PGExecCtx db
   -- ^ A query to execute against the database
-  | ExecStepRemote RemoteCall  -- !RemoteSchemaInfo !(G.Selection G.NoFragments G.Name)
-  -- ^ A query to execute against a remote schema
+  | ExecStepAction action
+  -- ^ Execute an action
+  | ExecStepRemote !RemoteSchemaInfo !GH.GQLReqOutgoing
+  -- ^ A graphql query to execute against a remote schema
   | ExecStepRaw J.Value
   -- ^ Output a plain JSON object
   deriving (Functor, Foldable, Traversable)

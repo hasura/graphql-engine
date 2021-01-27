@@ -19,6 +19,7 @@ import { convertDateTimeToLocale } from '../../../../Common/utils/jsUtils';
 import { Nullable } from '../../../../Common/utils/tsUtils';
 import { getInvocationLogStatus } from './utils';
 import Button from '../../../../Common/Button/Button';
+import { QualifiedTable } from '../../../../../metadata/types';
 
 type RedeliverButtonProps = {
   onClickHandler: (e: React.MouseEvent) => void;
@@ -40,6 +41,8 @@ const RedliverEventButton: React.FC<RedeliverButtonProps> = ({
 
 interface Props extends FilterTableProps {
   dispatch: Dispatch;
+  tableDef?: QualifiedTable;
+  tableSource?: string;
 }
 
 const InvocationLogsTable: React.FC<Props> = props => {
@@ -48,12 +51,23 @@ const InvocationLogsTable: React.FC<Props> = props => {
     Nullable<string>
   >(null);
   const [isRedelivering, setIsRedelivering] = React.useState(false);
+  const [currentPage, setPage] = React.useState(0);
+  const [pageSize, setPageSize] = React.useState(10);
 
-  const redeliverHandler = (eventId: string) => {
+  const redeliverHandler = (
+    eventId: string,
+    tableDef?: QualifiedTable,
+    tableSource?: string
+  ) => {
+    if (!tableDef || !tableSource) {
+      return;
+    }
     setIsRedelivering(true);
     dispatch(
       redeliverDataEvent(
         eventId,
+        tableDef,
+        tableSource,
         () => {
           setRedeliveredEventId(eventId);
           setIsRedelivering(false);
@@ -75,7 +89,11 @@ const InvocationLogsTable: React.FC<Props> = props => {
         onCancel={() => setRedeliveredEventId(null)}
         customClass={styles.redeliverModal}
       >
-        <RedeliverEvent eventId={redeliveredEventId} dispatch={dispatch} />
+        <RedeliverEvent
+          eventId={redeliveredEventId}
+          dispatch={dispatch}
+          eventDataSource={props.tableSource ?? ''}
+        />
       </Modal>
     );
   };
@@ -105,6 +123,7 @@ const InvocationLogsTable: React.FC<Props> = props => {
 
   const changePage = (page: number) => {
     if (filterState.offset !== page * filterState.limit) {
+      setPage(page);
       runQuery({
         offset: page * filterState.limit,
       });
@@ -113,6 +132,7 @@ const InvocationLogsTable: React.FC<Props> = props => {
 
   const changePageSize = (size: number) => {
     if (filterState.limit !== size) {
+      setPageSize(size);
       runQuery({
         limit: size,
       });
@@ -133,7 +153,11 @@ const InvocationLogsTable: React.FC<Props> = props => {
                 if (isRedelivering) {
                   return;
                 }
-                redeliverHandler(row.event_id);
+                redeliverHandler(
+                  row.event_id,
+                  props.tableDef,
+                  props.tableSource
+                );
                 e.stopPropagation();
               }}
             />
@@ -206,6 +230,17 @@ const InvocationLogsTable: React.FC<Props> = props => {
     },
   });
 
+  const getNumOfPages = (
+    currentPageSize: number,
+    currentCount: number | undefined,
+    currentRowData: Record<string, any>[]
+  ) => {
+    if (currentCount) {
+      return Math.ceil(currentCount / currentPageSize);
+    }
+    return Math.ceil(currentRowData.length / currentPageSize);
+  };
+
   return (
     <ReactTable
       className="-highlight"
@@ -218,14 +253,15 @@ const InvocationLogsTable: React.FC<Props> = props => {
       getTheadThProps={getTheadThProps}
       getResizerProps={getResizerProps}
       onPageChange={changePage}
-      pages={count ? Math.ceil(count / filterState.limit) : 1}
+      page={currentPage}
+      pages={getNumOfPages(pageSize, count, rowsFormatted)}
       showPagination={count ? count > 10 : false}
       onPageSizeChange={changePageSize}
       SubComponent={logRow => {
         const finalIndex = logRow.index;
         const finalRow = rows[finalIndex];
-        const currentPayload = JSON.stringify(finalRow.request, null, 4);
-        const finalResponse = JSON.stringify(finalRow.response, null, 4);
+        const currentPayload = JSON.stringify(finalRow?.request ?? {}, null, 4);
+        const finalResponse = JSON.stringify(finalRow?.response ?? {}, null, 4);
         return (
           <InvocationLogDetails
             requestPayload={currentPayload}

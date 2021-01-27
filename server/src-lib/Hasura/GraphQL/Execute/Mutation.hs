@@ -34,6 +34,7 @@ import           Hasura.GraphQL.Execute.Prepare
 import           Hasura.GraphQL.Execute.Remote
 import           Hasura.GraphQL.Execute.Resolve
 import           Hasura.GraphQL.Parser
+import           Hasura.Metadata.Class
 import           Hasura.RQL.Types
 import           Hasura.Server.Version                     (HasVersion)
 import           Hasura.Session
@@ -102,10 +103,8 @@ convertMutationAction
   ::( HasVersion
     , MonadIO m
     , MonadError QErr m
+    , MonadMetadataStorage (MetadataStorageT m)
     , Tracing.MonadTrace m
-    , Tracing.MonadTrace tx
-    , MonadIO tx
-    , MonadTx tx
     )
   => Env.Environment
   -> L.Logger L.Hasura
@@ -113,11 +112,13 @@ convertMutationAction
   -> HTTP.Manager
   -> HTTP.RequestHeaders
   -> ActionMutation 'Postgres (UnpreparedValue 'Postgres)
-  -> m (tx EncJSON, HTTP.ResponseHeaders)
+  -> m (ActionExecutionPlan, HTTP.ResponseHeaders)
 convertMutationAction env logger userInfo manager reqHeaders = \case
-  AMSync s  -> (_aerTransaction &&& _aerHeaders) <$>
+  AMSync s  -> ((AEPSync . _aerExecution) &&& _aerHeaders) <$>
     resolveActionExecution env logger userInfo s actionExecContext
-  AMAsync s -> noResponseHeaders <$> resolveActionMutationAsync s reqHeaders userSession
+  AMAsync s -> do
+    result <- liftEitherM (runMetadataStorageT $ resolveActionMutationAsync s reqHeaders userSession)
+    pure (AEPAsyncMutation result, [])
   where
     userSession = _uiSession userInfo
     actionExecContext = ActionExecContext manager reqHeaders $ _uiSession userInfo
@@ -128,6 +129,7 @@ convertMutationSelectionSet
      , Tracing.MonadTrace m
      , MonadIO m
      , MonadError QErr m
+     , MonadMetadataStorage (MetadataStorageT m)
      , MonadTx tx
      , Tracing.MonadTrace tx
      , MonadIO tx
@@ -142,7 +144,7 @@ convertMutationSelectionSet
   -> G.SelectionSet G.NoFragments G.Name
   -> [G.VariableDefinition]
   -> Maybe GH.VariableValues
-  -> m (ExecutionPlan (tx EncJSON, HTTP.ResponseHeaders))
+  -> m (ExecutionPlan (ActionExecutionPlan, HTTP.ResponseHeaders) (tx EncJSON, HTTP.ResponseHeaders))
 convertMutationSelectionSet env logger gqlContext SQLGenCtx{stringifyNum} userInfo manager reqHeaders fields varDefs varValsM = do
   mutationParser <- onNothing (gqlMutationParser gqlContext) $
     throw400 ValidationFailed "no mutations exist"
@@ -156,20 +158,19 @@ convertMutationSelectionSet env logger gqlContext SQLGenCtx{stringifyNum} userIn
   let userSession = _uiSession userInfo
       remoteJoinCtx = (manager, reqHeaders, userInfo)
   txs <- for unpreparedQueries \case
-    RFDB db -> ExecStepDB . noResponseHeaders <$> case db of
+    RFDB _ execCtx db -> ExecStepDB execCtx . noResponseHeaders <$> case db of
       MDBInsert s   -> convertInsert env userSession remoteJoinCtx s stringifyNum
       MDBUpdate s   -> convertUpdate env userSession remoteJoinCtx s stringifyNum
       MDBDelete s   -> convertDelete env userSession remoteJoinCtx s stringifyNum
       MDBFunction s -> convertFunction env userInfo manager reqHeaders s
 
-    RFRemote (remoteSchemaInfo, remoteField) ->
+    RFRemote remoteField -> do
+      RemoteFieldG remoteSchemaInfo resolvedRemoteField <- resolveRemoteField userInfo remoteField
       pure $ buildExecStepRemote
-             remoteSchemaInfo
-             G.OperationTypeMutation
-             varDefs
-             [G.SelectionField remoteField]
-             varValsM
-    RFAction action     -> ExecStepDB <$> convertMutationAction env logger userInfo manager reqHeaders action
+        remoteSchemaInfo
+        G.OperationTypeMutation
+        $ [G.SelectionField resolvedRemoteField]
+    RFAction action     -> ExecStepAction <$> convertMutationAction env logger userInfo manager reqHeaders action
     RFRaw s             -> pure $ ExecStepRaw s
 
   return txs

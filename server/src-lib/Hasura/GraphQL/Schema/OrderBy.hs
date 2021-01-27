@@ -6,16 +6,16 @@ module Hasura.GraphQL.Schema.OrderBy
 
 import           Hasura.Prelude
 
-import qualified Language.GraphQL.Draft.Syntax      as G
+import qualified Language.GraphQL.Draft.Syntax as G
 
 import           Data.Text.Extended
 
-import qualified Hasura.GraphQL.Parser              as P
-import qualified Hasura.RQL.IR.OrderBy              as IR
-import qualified Hasura.RQL.IR.Select               as IR
+import qualified Hasura.GraphQL.Parser         as P
+import qualified Hasura.RQL.IR.OrderBy         as IR
+import qualified Hasura.RQL.IR.Select          as IR
 
-import           Hasura.GraphQL.Parser              (InputFieldsParser, Kind (..), Parser,
-                                                     UnpreparedValue)
+import           Hasura.GraphQL.Parser         (InputFieldsParser, Kind (..), Parser,
+                                                UnpreparedValue)
 import           Hasura.GraphQL.Parser.Class
 import           Hasura.GraphQL.Schema.Backend
 import           Hasura.GraphQL.Schema.Common
@@ -34,7 +34,7 @@ import           Hasura.RQL.Types
 -- >   obj-rel: <remote-table>_order_by
 -- > }
 orderByExp
-  :: forall m n r b. (BackendSchema b, MonadSchema n m, MonadTableInfo b r m, MonadRole r m)
+  :: forall m n r b. (BackendSchema b, MonadSchema n m, MonadTableInfo r m, MonadRole r m)
   => TableName b
   -> SelPermInfo b
   -> m (Parser 'Input n [IR.AnnOrderByItemG b (UnpreparedValue b)])
@@ -58,7 +58,7 @@ orderByExp table selectPermissions = memoizeOn 'orderByExp table $ do
             <&> fmap (pure . mkOrderByItemG @b (IR.AOCColumn columnInfo)) . join
         FIRelationship relationshipInfo -> do
           let remoteTable = riRTable relationshipInfo
-          fieldName <- MaybeT $ pure $ G.mkName $ relNameToTxt $ riName relationshipInfo
+          fieldName <- hoistMaybe $ G.mkName $ relNameToTxt $ riName relationshipInfo
           perms <- MaybeT $ tableSelectPermissions remoteTable
           let newPerms = fmapAnnBoolExp partialSQLExpToUnpreparedValue $ spiFilter perms
           case riType relationshipInfo of
@@ -82,7 +82,7 @@ orderByExp table selectPermissions = memoizeOn 'orderByExp table $ do
 -- order, rather than using a general intermediary representation
 
 orderByAggregation
-  :: forall m n r b. (BackendSchema b, MonadSchema n m, MonadTableInfo b r m, MonadRole r m)
+  :: forall m n r b. (BackendSchema b, MonadSchema n m, MonadTableInfo r m, MonadRole r m)
   => TableName b
   -> SelPermInfo b
   -> m (Parser 'Input n [IR.OrderByItemG b (IR.AnnAggregateOrderBy b)])

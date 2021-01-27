@@ -70,6 +70,10 @@ In the end, enter a ``Name`` for the service:
 
 Then click ``Create service``.
 
+.. note::
+
+   If you're using a database user other than the default one, make sure to give it the right :ref:`Postgres permissions <cloud_postgres_permissions>`.
+
 Step 3: Allow connections to your DB from Hasura Cloud
 ------------------------------------------------------
 

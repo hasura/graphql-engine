@@ -1,31 +1,11 @@
 import { MapStateToProps as ReduxMapStateToProps } from 'react-redux';
-import { Store } from 'redux';
+import { Store, AnyAction } from 'redux';
 import { ThunkAction, ThunkDispatch } from 'redux-thunk';
 import { RouterAction } from 'react-router-redux';
-import { Table, Schema, PGFunction } from './components/Common/utils/pgUtils';
-import { EventsState } from './components/Services/Events/state';
 import { RAEvents } from './components/Services/Events/types';
-import { ConsoleNotification } from './components/Main/ConsoleNotification';
-import { Nullable } from './components/Common/utils/tsUtils';
+import reducer from './reducer';
 
-export type UserTypes = 'admin' | string;
-
-export type NotificationsState = {
-  read: 'all' | 'default' | 'error' | string[];
-  date: string | null; // ISO String
-  showBadge: boolean;
-};
-
-export type TelemetryNotificationsState = Record<UserTypes, NotificationsState>;
-
-export type ConsoleState = {
-  console_opts: Nullable<{
-    telemetryNotificationShown?: boolean;
-    disablePreReleaseUpdateNotifications?: boolean;
-    console_notifications?: TelemetryNotificationsState;
-  }>;
-  hasura_uuid: string;
-};
+export type FixMe = any;
 
 export type ApiExplorer = {
   authApiExpanded: string;
@@ -62,26 +42,7 @@ export type ApiExplorerHeader = {
 };
 
 // Redux Utils
-export type ReduxState = {
-  tables: {
-    schemaList: Schema[];
-    allSchemas: Table[];
-    dataHeaders: Record<string, string>;
-    nonTrackablePostgresFunctions: Array<PGFunction>;
-    postgresFunctions: Array<PGFunction>;
-    currentSchema: string;
-  };
-  events: EventsState;
-  main: {
-    readOnlyMode: boolean;
-    serverVersion: string;
-    latestPreReleaseServerVersion: string;
-    latestStableServerVersion: string;
-    consoleNotifications: ConsoleNotification[];
-  };
-  telemetry: ConsoleState;
-  apiexplorer: ApiExplorer;
-};
+export type ReduxState = ReturnType<typeof reducer>;
 
 export type ReduxAction = RAEvents | RouterAction;
 export type MapStateToProps<
@@ -89,12 +50,10 @@ export type MapStateToProps<
   OwnProps = unknown
 > = ReduxMapStateToProps<StateProps, OwnProps, ReduxState>;
 export type GetReduxState = () => ReduxState;
-export type Thunk<ReturnType = void> = ThunkAction<
-  ReturnType,
-  ReduxState,
-  unknown,
-  ReduxAction
->;
+export type Thunk<
+  ReturnType = void,
+  A extends AnyAction = ReduxAction
+> = ThunkAction<ReturnType, ReduxState, unknown, A>;
 export type Dispatch = ThunkDispatch<ReduxState, unknown, ReduxAction>;
 export type ConnectInjectedProps = {
   dispatch: Dispatch;
@@ -103,7 +62,6 @@ export type ReduxStore = Store<ReduxState, ReduxAction>;
 
 // Router Utils
 export type ReplaceRouterState = (route: string) => void;
-
 // HGE common types
 export type RunSqlType = {
   type: string;

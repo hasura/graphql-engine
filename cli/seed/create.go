@@ -20,6 +20,7 @@ type CreateSeedOpts struct {
 	// DirectoryPath in which seed file should be created
 	DirectoryPath string
 	Data          io.Reader
+	Datasource string
 }
 
 // CreateSeedFile creates a .sql file according to the arguments
@@ -33,7 +34,7 @@ func CreateSeedFile(fs afero.Fs, opts CreateSeedOpts) (*string, error) {
 	timestamp := strconv.FormatInt(time.Now().UnixNano()/int64(time.Millisecond), 10)
 	// filename will be in format <timestamp>_<userProvidedSeedName>.sql
 	filenameWithTimeStamp := fmt.Sprintf("%s_%s.%s", timestamp, opts.UserProvidedSeedName, fileExtension)
-	fullFilePath := filepath.Join(opts.DirectoryPath, filenameWithTimeStamp)
+	fullFilePath := filepath.Join(filepath.Join(opts.DirectoryPath, opts.Datasource), filenameWithTimeStamp)
 
 	// Write contents to file
 	file, err := fs.OpenFile(fullFilePath, os.O_WRONLY|os.O_CREATE, 0644)

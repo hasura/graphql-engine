@@ -7,29 +7,22 @@ import { getConfirmation } from '../../../Common/utils/jsUtils';
 import ExpandableEditor from '../../../Common/Layout/ExpandableEditor/Editor';
 import RawSqlButton from '../Common/Components/RawSqlButton';
 import Tooltip from '../../../Common/Tooltip/Tooltip';
-import {
-  findFunction,
-  getFunctionDefinition,
-  getFunctionName,
-  getSchemaFunctions,
-  getSchemaName,
-  Table,
-  PGFunction,
-  PGSchema,
-  ComputedField,
-} from '../../../Common/utils/pgUtils';
+import { dataSource } from '../../../../dataSources';
 import { deleteComputedField, saveComputedField } from './ModifyActions';
 import { fetchFunctionInit } from '../DataActions';
 import SearchableSelectBox from '../../../Common/SearchableSelect/SearchableSelect';
 import KnowMoreLink from '../../../Common/KnowMoreLink/KnowMoreLink';
 import { Dispatch } from '../../../../types';
+import { Table, Schema, ComputedField } from '../../../../dataSources/types';
+import { PGFunction } from '../../../../dataSources/services/postgresql/types';
 
 interface ComputedFieldsEditorProps {
   table: Table;
   currentSchema: string;
   functions: PGFunction[];
-  schemaList: PGSchema[];
+  schemaList: Schema[];
   dispatch: Dispatch;
+  source: string;
 }
 
 const ComputedFieldsEditor: React.FC<ComputedFieldsEditorProps> = ({
@@ -37,9 +30,9 @@ const ComputedFieldsEditor: React.FC<ComputedFieldsEditorProps> = ({
   currentSchema,
   functions,
   schemaList,
-  ...props
+  dispatch,
+  source,
 }) => {
-  const { dispatch } = props;
   const computedFields = table.computed_fields;
 
   const emptyComputedField: ComputedField = {
@@ -100,14 +93,14 @@ const ComputedFieldsEditor: React.FC<ComputedFieldsEditorProps> = ({
     let computedFieldFunction = null;
     let computedFieldFunctionDefinition = '';
     if (functions) {
-      computedFieldFunction = findFunction(
+      computedFieldFunction = dataSource.findFunction(
         functions,
         computedFieldFunctionName,
         computedFieldFunctionSchema
       );
 
       if (computedFieldFunction) {
-        computedFieldFunctionDefinition = getFunctionDefinition(
+        computedFieldFunctionDefinition = dataSource.getFunctionDefinition(
           computedFieldFunction
         );
       }
@@ -147,7 +140,10 @@ const ComputedFieldsEditor: React.FC<ComputedFieldsEditorProps> = ({
 
       return (
         <div>
-          <b>{origComputedFieldName}</b>&nbsp;-&nbsp;
+          <b data-test={`computed-field-${origComputedFieldName}`}>
+            {origComputedFieldName}
+          </b>
+          &nbsp;-&nbsp;
           <i>{origComputedFieldFunctionName}</i>
           <br />
           <span key="comment" className={styles.text_gray}>
@@ -182,6 +178,7 @@ const ComputedFieldsEditor: React.FC<ComputedFieldsEditorProps> = ({
             customStyles={`${styles.display_inline} ${styles.add_mar_left}`}
             sql={computedFieldFunctionDefinition}
             dispatch={dispatch}
+            source={source}
           >
             Modify
           </RawSqlButton>
@@ -313,12 +310,6 @@ const ComputedFieldsEditor: React.FC<ComputedFieldsEditorProps> = ({
         setComputedFieldsState(newState);
       };
 
-      const schemaListOptions = schemaList.map(s => getSchemaName(s));
-      const functionNameOptions = getSchemaFunctions(
-        functions,
-        computedFieldFunctionSchema
-      ).map(fn => getFunctionName(fn));
-
       return (
         <div>
           <div>
@@ -330,6 +321,7 @@ const ComputedFieldsEditor: React.FC<ComputedFieldsEditorProps> = ({
               value={computedFieldName}
               onChange={handleNameChange}
               className={`form-control ${styles.wd50percent}`}
+              data-test="computed-field-name-input"
             />
           </div>
           <div className={`${styles.add_mar_top}`}>
@@ -338,7 +330,7 @@ const ComputedFieldsEditor: React.FC<ComputedFieldsEditorProps> = ({
             </div>
             <div className={styles.wd50percent}>
               <SearchableSelectBox
-                options={schemaListOptions}
+                options={schemaList}
                 onChange={handleFnSchemaChange}
                 value={computedFieldFunctionSchema}
                 bsClass="function-schema-select"
@@ -360,13 +352,21 @@ const ComputedFieldsEditor: React.FC<ComputedFieldsEditorProps> = ({
                 customStyles={`${styles.display_inline} ${styles.add_mar_left}`}
                 sql=""
                 dispatch={dispatch}
+                source={source}
               >
                 Create new
               </RawSqlButton>
             </div>
-            <div className={styles.wd50percent}>
+            <div className={styles.wd50percent} data-test="functions-dropdown">
               <SearchableSelectBox
-                options={functionNameOptions}
+                options={dataSource
+                  .getSchemaFunctions(
+                    functions,
+                    computedFieldFunctionSchema,
+                    table.table_name,
+                    table.table_schema
+                  )
+                  .map(fn => fn.function_name)}
                 onChange={handleFnNameChange}
                 value={computedFieldFunctionName}
                 bsClass="function-name-select"
@@ -394,6 +394,7 @@ const ComputedFieldsEditor: React.FC<ComputedFieldsEditorProps> = ({
               placeholder="default: first argument"
               onChange={handleTableRowArgChange}
               className={`form-control ${styles.wd50percent}`}
+              data-test="computed-field-first-arg-input"
             />
           </div>
           <div className={`${styles.add_mar_top}`}>
@@ -420,6 +421,7 @@ const ComputedFieldsEditor: React.FC<ComputedFieldsEditorProps> = ({
               value={computedFieldComment ?? ''}
               onChange={handleCommentChange}
               className={`form-control ${styles.wd50percent}`}
+              data-test="computed-field-comment-input"
             />
           </div>
         </div>

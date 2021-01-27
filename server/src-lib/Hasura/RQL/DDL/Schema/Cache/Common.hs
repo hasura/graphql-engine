@@ -1,5 +1,6 @@
-{-# LANGUAGE Arrows          #-}
-{-# LANGUAGE RecordWildCards #-}
+{-# LANGUAGE Arrows               #-}
+{-# LANGUAGE RecordWildCards      #-}
+{-# LANGUAGE UndecidableInstances #-}
 
 -- | Types/functions shared between modules that implement "Hasura.RQL.DDL.Schema.Cache". Other
 -- modules should not import this module directly.
@@ -8,74 +9,176 @@ module Hasura.RQL.DDL.Schema.Cache.Common where
 import           Hasura.Prelude
 
 import qualified Data.HashMap.Strict.Extended       as M
+import qualified Data.HashMap.Strict.InsOrd         as OMap
 import qualified Data.HashSet                       as HS
 import qualified Data.Sequence                      as Seq
+import qualified Network.HTTP.Client.Extended       as HTTP
 
 import           Control.Arrow.Extended
 import           Control.Lens
+import           Control.Monad.Trans.Control        (MonadBaseControl)
+import           Control.Monad.Unique
 import           Data.Text.Extended
 
 import qualified Hasura.Incremental                 as Inc
 
 import           Hasura.Backends.Postgres.SQL.Types
 import           Hasura.RQL.Types
-import           Hasura.RQL.Types.Catalog
-import           Hasura.RQL.Types.Run
 
 -- | 'InvalidationKeys' used to apply requested 'CacheInvalidations'.
 data InvalidationKeys = InvalidationKeys
   { _ikMetadata      :: !Inc.InvalidationKey
   , _ikRemoteSchemas :: !(HashMap RemoteSchemaName Inc.InvalidationKey)
+  , _ikSources       :: !(HashMap SourceName Inc.InvalidationKey)
   } deriving (Show, Eq, Generic)
 instance Inc.Cacheable InvalidationKeys
 instance Inc.Select InvalidationKeys
 $(makeLenses ''InvalidationKeys)
 
 initialInvalidationKeys :: InvalidationKeys
-initialInvalidationKeys = InvalidationKeys Inc.initialInvalidationKey mempty
+initialInvalidationKeys = InvalidationKeys Inc.initialInvalidationKey mempty mempty
 
 invalidateKeys :: CacheInvalidations -> InvalidationKeys -> InvalidationKeys
 invalidateKeys CacheInvalidations{..} InvalidationKeys{..} = InvalidationKeys
   { _ikMetadata = if ciMetadata then Inc.invalidate _ikMetadata else _ikMetadata
-  , _ikRemoteSchemas = foldl' (flip invalidateRemoteSchema) _ikRemoteSchemas ciRemoteSchemas }
+  , _ikRemoteSchemas = foldl' (flip invalidate) _ikRemoteSchemas ciRemoteSchemas
+  , _ikSources = foldl' (flip invalidate) _ikSources ciSources
+  }
   where
-    invalidateRemoteSchema = M.alter $ Just . maybe Inc.initialInvalidationKey Inc.invalidate
+    invalidate
+      :: (Eq a, Hashable a)
+      => a -> HashMap a Inc.InvalidationKey -> HashMap a Inc.InvalidationKey
+    invalidate = M.alter $ Just . maybe Inc.initialInvalidationKey Inc.invalidate
 
-data BuildInputs
-  = BuildInputs
-  { _biReason          :: !BuildReason
-  , _biCatalogMetadata :: !CatalogMetadata
-  , _biInvalidationMap :: !InvalidationKeys
-  } deriving (Eq)
+data TableBuildInput
+  = TableBuildInput
+  { _tbiName          :: !QualifiedTable
+  , _tbiIsEnum        :: !Bool
+  , _tbiConfiguration :: !TableConfig
+  } deriving (Show, Eq, Generic)
+instance NFData TableBuildInput
+instance Inc.Cacheable TableBuildInput
+
+data NonColumnTableInputs
+  = NonColumnTableInputs
+  { _nctiTable               :: !QualifiedTable
+  , _nctiObjectRelationships :: ![ObjRelDef]
+  , _nctiArrayRelationships  :: ![ArrRelDef]
+  , _nctiComputedFields      :: ![ComputedFieldMetadata]
+  , _nctiRemoteRelationships :: ![RemoteRelationshipMetadata]
+  } deriving (Show, Eq, Generic)
+-- instance NFData NonColumnTableInputs
+-- instance Inc.Cacheable NonColumnTableInputs
+
+data TablePermissionInputs
+  = TablePermissionInputs
+  { _tpiTable  :: !QualifiedTable
+  , _tpiInsert :: ![InsPermDef 'Postgres]
+  , _tpiSelect :: ![SelPermDef 'Postgres]
+  , _tpiUpdate :: ![UpdPermDef 'Postgres]
+  , _tpiDelete :: ![DelPermDef 'Postgres]
+  } deriving (Show, Eq, Generic)
+instance Inc.Cacheable TablePermissionInputs
+
+mkTableInputs :: TableMetadata -> (TableBuildInput, NonColumnTableInputs, TablePermissionInputs)
+mkTableInputs TableMetadata{..} =
+  (buildInput, nonColumns, permissions)
+  where
+    buildInput = TableBuildInput _tmTable _tmIsEnum _tmConfiguration
+    nonColumns = NonColumnTableInputs _tmTable
+                 (OMap.elems _tmObjectRelationships)
+                 (OMap.elems _tmArrayRelationships)
+                 (OMap.elems _tmComputedFields)
+                 (OMap.elems _tmRemoteRelationships)
+    permissions = TablePermissionInputs _tmTable
+                  (OMap.elems _tmInsertPermissions)
+                  (OMap.elems _tmSelectPermissions)
+                  (OMap.elems _tmUpdatePermissions)
+                  (OMap.elems _tmDeletePermissions)
 
 -- | The direct output of 'buildSchemaCacheRule'. Contains most of the things necessary to build a
 -- schema cache, but dependencies and inconsistent metadata objects are collected via a separate
 -- 'MonadWriter' side channel.
-data BuildOutputs
+data BuildOutputs (b :: BackendType)
   = BuildOutputs
-  { _boTables        :: !(TableCache 'Postgres)
-  , _boActions       :: !ActionCache
-  , _boFunctions     :: !FunctionCache
+  { _boSources       :: SourceCache
+  , _boActions       :: !(ActionCache b)
   , _boRemoteSchemas :: !(HashMap RemoteSchemaName (RemoteSchemaCtx, MetadataObject))
   -- ^ We preserve the 'MetadataObject' from the original catalog metadata in the output so we can
   -- reuse it later if we need to mark the remote schema inconsistent during GraphQL schema
   -- generation (because of field conflicts).
   , _boAllowlist     :: !(HS.HashSet GQLQuery)
-  , _boCustomTypes   :: !(AnnotatedCustomTypes 'Postgres)
+  , _boCustomTypes   :: !(AnnotatedCustomTypes b)
   , _boCronTriggers  :: !(M.HashMap TriggerName CronTriggerInfo)
   }
 $(makeLenses ''BuildOutputs)
 
-data RebuildableSchemaCache m
+-- | Parameters required for schema cache build
+data CacheBuildParams
+  = CacheBuildParams
+  { _cbpManager              :: !HTTP.Manager
+  , _cbpSqlGenCtx            :: !SQLGenCtx
+  , _cbpRemoteSchemaPermsCtx :: !RemoteSchemaPermsCtx
+  , _cbpSourceResolver       :: !SourceResolver
+  }
+
+-- | The monad in which @'RebuildableSchemaCache' is being run
+newtype CacheBuild a
+  = CacheBuild {unCacheBuild :: ReaderT CacheBuildParams (ExceptT QErr IO) a}
+  deriving ( Functor, Applicative, Monad
+           , MonadError QErr
+           , MonadReader CacheBuildParams
+           , MonadIO
+           , MonadBase IO
+           , MonadBaseControl IO
+           , MonadUnique
+           )
+
+instance HTTP.HasHttpManagerM CacheBuild where
+  askHttpManager = asks _cbpManager
+
+instance HasSQLGenCtx CacheBuild where
+  askSQLGenCtx = asks _cbpSqlGenCtx
+
+instance HasRemoteSchemaPermsCtx CacheBuild where
+  askRemoteSchemaPermsCtx = asks _cbpRemoteSchemaPermsCtx
+
+instance MonadResolveSource CacheBuild where
+  getSourceResolver = asks _cbpSourceResolver
+
+
+runCacheBuild
+  :: ( MonadIO m
+     , MonadError QErr m
+     )
+  => CacheBuildParams -> CacheBuild a -> m a
+runCacheBuild params (CacheBuild m) = do
+  liftEitherM $ liftIO $ runExceptT (runReaderT m params)
+
+runCacheBuildM
+  :: ( MonadIO m
+     , MonadError QErr m
+     , HTTP.HasHttpManagerM m
+     , HasSQLGenCtx m
+     , HasRemoteSchemaPermsCtx m
+     , MonadResolveSource m
+     )
+  => CacheBuild a -> m a
+runCacheBuildM m = do
+  params <- CacheBuildParams
+            <$> HTTP.askHttpManager
+            <*> askSQLGenCtx
+            <*> askRemoteSchemaPermsCtx
+            <*> getSourceResolver
+  runCacheBuild params m
+
+data RebuildableSchemaCache
   = RebuildableSchemaCache
   { lastBuiltSchemaCache :: !SchemaCache
   , _rscInvalidationMap :: !InvalidationKeys
-  , _rscRebuild :: !(Inc.Rule (ReaderT BuildReason m) (CatalogMetadata, InvalidationKeys) SchemaCache)
+  , _rscRebuild :: !(Inc.Rule (ReaderT BuildReason CacheBuild) (Metadata, InvalidationKeys) SchemaCache)
   }
 $(makeLenses ''RebuildableSchemaCache)
-
-type CacheBuildM = ReaderT BuildReason Run
-type CacheBuildA = WriterA (Seq CollectedInfo) (Inc.Rule CacheBuildM)
 
 bindErrorA
   :: (ArrowChoice arr, ArrowKleisli m arr, ArrowError e arr, MonadError e m)

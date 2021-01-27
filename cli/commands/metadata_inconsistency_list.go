@@ -49,7 +49,7 @@ type metadataInconsistencyListOptions struct {
 }
 
 func (o *metadataInconsistencyListOptions) read() error {
-	d, err := migrate.NewMigrate(o.EC, true)
+	d, err := migrate.NewMigrate(o.EC, true, "")
 	if err != nil {
 		return err
 	}

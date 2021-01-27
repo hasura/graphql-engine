@@ -22,7 +22,6 @@ import qualified Network.HTTP.Types        as HTTP
 import qualified Network.Wai.Extended      as Wai
 
 import           Data.Aeson
-import           Data.Aeson.Casing
 import           Data.Aeson.TH
 import           Data.Int                  (Int64)
 
@@ -197,14 +196,15 @@ data OperationLog
   , olError              :: !(Maybe QErr)
   } deriving (Show, Eq)
 
-$(deriveToJSON (aesonDrop 2 snakeCase){omitNothingFields = True} ''OperationLog)
+$(deriveToJSON hasuraJSON{omitNothingFields = True} ''OperationLog)
 
 data HttpLogContext
   = HttpLogContext
   { hlcHttpInfo  :: !HttpInfoLog
   , hlcOperation :: !OperationLog
+  , hlcRequestId :: !RequestId
   } deriving (Show, Eq)
-$(deriveToJSON (aesonDrop 3 snakeCase) ''HttpLogContext)
+$(deriveToJSON hasuraJSON ''HttpLogContext)
 
 mkHttpAccessLogContext
   :: Maybe UserInfo
@@ -236,7 +236,7 @@ mkHttpAccessLogContext userInfoM reqId req res mTiming compressTypeM headers =
            , olRawQuery = Nothing
            , olError = Nothing
            }
-  in HttpLogContext http op
+  in HttpLogContext http op reqId
   where
     status = HTTP.status200
     respSize = Just $ BL.length res
@@ -272,7 +272,7 @@ mkHttpErrorLogContext userInfoM reqId waiReq (reqBody, parsedReq) err mTiming co
            , olRawQuery           = maybe (Just $ bsToTxt $ BL.toStrict reqBody) (const Nothing) parsedReq
            , olError              = Just err
            }
-  in HttpLogContext http op
+  in HttpLogContext http op reqId
 
 data HttpLogLine
   = HttpLogLine

@@ -12,7 +12,7 @@ module Hasura.RQL.Types.Common
        , SessionVarType
 
        , FieldName(..)
-       , fromPGCol
+       , fromCol
        , fromRel
 
        , ToAesonPairs(..)
@@ -36,6 +36,8 @@ module Hasura.RQL.Types.Common
        , SystemDefined(..)
        , isSystemDefined
 
+       , SQLGenCtx(..)
+
        , successMsg
        , NonNegativeDiffTime
        , unNonNegativeDiffTime
@@ -54,44 +56,47 @@ module Hasura.RQL.Types.Common
        , UrlConf(..)
        , resolveUrlConf
        , getEnv
+
+       , SourceName(..)
+       , defaultSource
+       , sourceNameToText
        ) where
 
 import           Hasura.Prelude
 
-import qualified Data.Environment                   as Env
-import qualified Data.HashMap.Strict                as HM
-import qualified Data.Text                          as T
-import qualified Database.PG.Query                  as Q
-import qualified Language.GraphQL.Draft.Syntax      as G
-import qualified Language.Haskell.TH.Syntax         as TH
-import qualified PostgreSQL.Binary.Decoding         as PD
-import qualified Test.QuickCheck                    as QC
+import qualified Data.Environment                       as Env
+import qualified Data.HashMap.Strict                    as HM
+import qualified Data.Text                              as T
+import qualified Database.PG.Query                      as Q
+import qualified Language.GraphQL.Draft.Syntax          as G
+import qualified Language.Haskell.TH.Syntax             as TH
+import qualified PostgreSQL.Binary.Decoding             as PD
+import qualified Test.QuickCheck                        as QC
 
-import           Control.Lens                       (makeLenses)
+import           Control.Lens                           (makeLenses)
 import           Data.Aeson
-import           Data.Aeson.Casing
 import           Data.Aeson.TH
-import           Data.Bifunctor                     (bimap)
-import           Data.Kind                          (Type)
-import           Data.Scientific                    (toBoundedInteger)
+import           Data.Bifunctor                         (bimap)
+import           Data.Kind                              (Type)
+import           Data.Scientific                        (toBoundedInteger)
 import           Data.Text.Extended
 import           Data.Text.NonEmpty
 import           Data.Typeable
 import           Data.URL.Template
 
-import qualified Hasura.Backends.Postgres.SQL.DML   as PG
-import qualified Hasura.Backends.Postgres.SQL.Types as PG
-import qualified Hasura.Backends.Postgres.SQL.Value as PG
+import qualified Hasura.Backends.Postgres.Execute.Types as PG
+import qualified Hasura.Backends.Postgres.SQL.DML       as PG
+import qualified Hasura.Backends.Postgres.SQL.Types     as PG
+import qualified Hasura.Backends.Postgres.SQL.Value     as PG
 
 import           Hasura.EncJSON
-import           Hasura.Incremental                 (Cacheable)
-import           Hasura.RQL.DDL.Headers             ()
+import           Hasura.Incremental                     (Cacheable)
+import           Hasura.RQL.DDL.Headers                 ()
 import           Hasura.RQL.Types.Error
 import           Hasura.SQL.Backend
 import           Hasura.SQL.Types
 
-
-type Representable a = (Show a, Eq a, Hashable a, Cacheable a, NFData a)
+type Representable a = (Show a, Eq a, Hashable a, Cacheable a, NFData a, Typeable a)
 
 -- | Mapping from abstract types to concrete backend representation
 --
@@ -107,6 +112,7 @@ class
   ( Representable (Identifier b)
   , Representable (TableName b)
   , Representable (FunctionName b)
+  , Representable (FunctionArgType b)
   , Representable (ConstraintName b)
   , Representable (BasicOrderType b)
   , Representable (NullsOrderType b)
@@ -121,64 +127,90 @@ class
   , Cacheable (SessionVarType b)
   , Representable (XAILIKE b)
   , Representable (XANILIKE b)
+  , Representable (XComputedFieldInfo b)
   , Ord (TableName b)
   , Ord (ScalarType b)
   , Data (TableName b)
   , Data (ScalarType b)
   , Data (SQLExpression b)
   , FromJSON (TableName b)
+  , FromJSON (FunctionName b)
   , FromJSON (ScalarType b)
   , FromJSON (BasicOrderType b)
   , FromJSON (NullsOrderType b)
   , FromJSON (Column b)
   , ToJSON (TableName b)
+  , ToJSON (FunctionName b)
+  , ToJSON (FunctionArgType b)
+  , ToJSON (SourceConfig b)
   , ToJSON (ScalarType b)
   , ToJSON (BasicOrderType b)
   , ToJSON (NullsOrderType b)
   , ToJSON (Column b)
   , FromJSONKey (Column b)
   , ToJSONKey (Column b)
+  , ToJSONKey (TableName b)
+  , ToJSONKey (FunctionName b)
+  , ToJSONKey (ScalarType b)
   , ToTxt (TableName b)
+  , ToTxt (FunctionName b)
   , ToTxt (ScalarType b)
   , ToTxt (Column b)
+  , ToSQL (SQLExpression b)
+  , Typeable (SourceConfig b)
   , Typeable b
   ) => Backend (b :: BackendType) where
-  type Identifier     b :: Type
-  type Alias          b :: Type
-  type TableName      b :: Type
-  type FunctionName   b :: Type
-  type ConstraintName b :: Type
-  type BasicOrderType b :: Type
-  type NullsOrderType b :: Type
-  type CountType      b :: Type
-  type Column         b :: Type
-  type ScalarValue    b :: Type
-  type ScalarType     b :: Type
-  type SQLExpression  b :: Type
-  type SQLOperator    b :: Type
-  type XAILIKE        b :: Type
-  type XANILIKE       b :: Type
+  -- types
+  type SourceConfig    b :: Type
+  type Identifier      b :: Type
+  type Alias           b :: Type
+  type TableName       b :: Type
+  type FunctionName    b :: Type
+  type FunctionArgType b :: Type
+  type ConstraintName  b :: Type
+  type BasicOrderType  b :: Type
+  type NullsOrderType  b :: Type
+  type CountType       b :: Type
+  type Column          b :: Type
+  type ScalarValue     b :: Type
+  type ScalarType      b :: Type
+  type SQLExpression   b :: Type
+  type SQLOperator     b :: Type
+  type XAILIKE         b :: Type
+  type XANILIKE        b :: Type
+  type XComputedFieldInfo b :: Type
+  -- functions on types
+  functionArgScalarType :: FunctionArgType b -> ScalarType b
   isComparableType :: ScalarType b -> Bool
   isNumType :: ScalarType b -> Bool
+  -- functions on names
+  tableGraphQLName    :: TableName b    -> Either QErr G.Name
+  functionGraphQLName :: FunctionName b -> Either QErr G.Name
 
 instance Backend 'Postgres where
-  type Identifier     'Postgres = PG.Identifier
-  type Alias          'Postgres = PG.Alias
-  type TableName      'Postgres = PG.QualifiedTable
-  type FunctionName   'Postgres = PG.QualifiedFunction
-  type ConstraintName 'Postgres = PG.ConstraintName
-  type BasicOrderType 'Postgres = PG.OrderType
-  type NullsOrderType 'Postgres = PG.NullsOrder
-  type CountType      'Postgres = PG.CountType
-  type Column         'Postgres = PG.PGCol
-  type ScalarValue    'Postgres = PG.PGScalarValue
-  type ScalarType     'Postgres = PG.PGScalarType
-  type SQLExpression  'Postgres = PG.SQLExp
-  type SQLOperator    'Postgres = PG.SQLOp
-  type XAILIKE        'Postgres = ()
-  type XANILIKE       'Postgres = ()
+  type SourceConfig    'Postgres = PG.PGSourceConfig
+  type Identifier      'Postgres = PG.Identifier
+  type Alias           'Postgres = PG.Alias
+  type TableName       'Postgres = PG.QualifiedTable
+  type FunctionName    'Postgres = PG.QualifiedFunction
+  type FunctionArgType 'Postgres = PG.QualifiedPGType
+  type ConstraintName  'Postgres = PG.ConstraintName
+  type BasicOrderType  'Postgres = PG.OrderType
+  type NullsOrderType  'Postgres = PG.NullsOrder
+  type CountType       'Postgres = PG.CountType
+  type Column          'Postgres = PG.PGCol
+  type ScalarValue     'Postgres = PG.PGScalarValue
+  type ScalarType      'Postgres = PG.PGScalarType
+  type SQLExpression   'Postgres = PG.SQLExp
+  type SQLOperator     'Postgres = PG.SQLOp
+  type XAILIKE         'Postgres = ()
+  type XANILIKE        'Postgres = ()
+  type XComputedFieldInfo 'Postgres = ()
+  functionArgScalarType = PG._qptName
   isComparableType = PG.isComparableType
   isNumType = PG.isNumType
+  tableGraphQLName    = PG.qualifiedObjectToName
+  functionGraphQLName = PG.qualifiedObjectToName
 
 -- instance Backend 'Mysql where
 --   type XAILIKE 'MySQL = Void
@@ -194,7 +226,8 @@ rootText = mkNonEmptyTextUnsafe "root"
 
 newtype RelName
   = RelName { getRelTxt :: NonEmptyText }
-  deriving (Show, Eq, Hashable, FromJSON, ToJSON, ToJSONKey, Q.ToPrepArg, Q.FromCol, Generic, Arbitrary, NFData, Cacheable)
+  deriving (Show, Eq, Ord, Hashable, FromJSON, ToJSON, ToJSONKey
+           , Q.ToPrepArg, Q.FromCol, Generic, Arbitrary, NFData, Cacheable)
 
 instance PG.IsIdentifier RelName where
   toIdentifier rn = PG.Identifier $ relNameToTxt rn
@@ -251,10 +284,10 @@ instance Backend b => Cacheable (RelInfo b)
 instance Backend b => Hashable (RelInfo b)
 
 instance (Backend b) => FromJSON (RelInfo b) where
-  parseJSON = genericParseJSON $ aesonPrefix snakeCase
+  parseJSON = genericParseJSON hasuraJSON
 
 instance (Backend b) => ToJSON (RelInfo b) where
-  toJSON = genericToJSON $ aesonPrefix snakeCase
+  toJSON = genericToJSON hasuraJSON
 
 
 newtype FieldName
@@ -271,8 +304,8 @@ instance PG.IsIdentifier FieldName where
 instance ToTxt FieldName where
   toTxt (FieldName c) = c
 
-fromPGCol :: PG.PGCol -> FieldName
-fromPGCol c = FieldName $ PG.getPGColTxt c
+fromCol :: Backend b => Column b -> FieldName
+fromCol = FieldName . toTxt
 
 fromRel :: RelName -> FieldName
 fromRel = FieldName . relNameToTxt
@@ -280,21 +313,57 @@ fromRel = FieldName . relNameToTxt
 class ToAesonPairs a where
   toAesonPairs :: (KeyValue v) => a -> [v]
 
+data SourceName
+  = SNDefault
+  | SNName !NonEmptyText
+  deriving (Show, Eq, Ord, Generic)
+
+instance FromJSON SourceName where
+  parseJSON = withText "String" $ \case
+    "default" -> pure SNDefault
+    t         -> SNName <$> parseJSON (String t)
+
+sourceNameToText :: SourceName -> Text
+sourceNameToText = \case
+  SNDefault -> "default"
+  SNName t  -> unNonEmptyText t
+
+instance ToJSON SourceName where
+  toJSON = String . sourceNameToText
+
+instance ToTxt SourceName where
+  toTxt = sourceNameToText
+
+instance ToJSONKey SourceName
+instance Hashable SourceName
+instance NFData SourceName
+instance Cacheable SourceName
+
+instance Arbitrary SourceName where
+  arbitrary = SNName <$> arbitrary
+
+defaultSource :: SourceName
+defaultSource = SNDefault
+
 data WithTable a
   = WithTable
-  { wtName :: !PG.QualifiedTable
-  , wtInfo :: !a
+  { wtSource :: !SourceName
+  , wtName   :: !PG.QualifiedTable
+  , wtInfo   :: !a
   } deriving (Show, Eq)
 
 instance (FromJSON a) => FromJSON (WithTable a) where
   parseJSON v@(Object o) =
-    WithTable <$> o .: "table" <*> parseJSON v
+    WithTable
+    <$> o .:? "source" .!= defaultSource
+    <*> o .: "table"
+    <*> parseJSON v
   parseJSON _ =
     fail "expecting an Object with key 'table'"
 
 instance (ToAesonPairs a) => ToJSON (WithTable a) where
-  toJSON (WithTable tn rel) =
-    object $ ("table" .= tn):toAesonPairs rel
+  toJSON (WithTable sourceName tn rel) =
+    object $ ("source" .= sourceName):("table" .= tn):toAesonPairs rel
 
 type ColumnValues a = HM.HashMap PG.PGCol a
 
@@ -303,10 +372,7 @@ data MutateResp a
   { _mrAffectedRows     :: !Int
   , _mrReturningColumns :: ![ColumnValues a]
   } deriving (Show, Eq)
-$(deriveJSON (aesonDrop 3 snakeCase) ''MutateResp)
-
-
-type ColMapping = HM.HashMap PG.PGCol PG.PGCol
+$(deriveJSON hasuraJSON ''MutateResp)
 
 -- | Postgres OIDs. <https://www.postgresql.org/docs/12/datatype-oid.html>
 newtype OID = OID { unOID :: Int }
@@ -320,7 +386,7 @@ data Constraint
 instance NFData Constraint
 instance Hashable Constraint
 instance Cacheable Constraint
-$(deriveJSON (aesonDrop 2 snakeCase) ''Constraint)
+$(deriveJSON hasuraJSON ''Constraint)
 
 data PrimaryKey a
   = PrimaryKey
@@ -330,18 +396,23 @@ data PrimaryKey a
 instance (NFData a) => NFData (PrimaryKey a)
 instance (Cacheable a) => Cacheable (PrimaryKey a)
 $(makeLenses ''PrimaryKey)
-$(deriveJSON (aesonDrop 3 snakeCase) ''PrimaryKey)
+$(deriveJSON hasuraJSON ''PrimaryKey)
 
-data ForeignKey
+data ForeignKey (b :: BackendType)
   = ForeignKey
   { _fkConstraint    :: !Constraint
-  , _fkForeignTable  :: !PG.QualifiedTable
-  , _fkColumnMapping :: !ColMapping
-  } deriving (Show, Eq, Generic)
-instance NFData ForeignKey
-instance Hashable ForeignKey
-instance Cacheable ForeignKey
-$(deriveJSON (aesonDrop 3 snakeCase) ''ForeignKey)
+  , _fkForeignTable  :: !(TableName b)
+  , _fkColumnMapping :: !(HM.HashMap (Column b) (Column b))
+  } deriving (Generic)
+deriving instance Backend b => Eq (ForeignKey b)
+deriving instance Backend b => Show (ForeignKey b)
+instance Backend b => NFData (ForeignKey b)
+instance Backend b => Hashable (ForeignKey b)
+instance Backend b => Cacheable (ForeignKey b)
+instance Backend b => ToJSON (ForeignKey b) where
+  toJSON = genericToJSON hasuraJSON
+instance Backend b => FromJSON (ForeignKey b) where
+  parseJSON = genericParseJSON hasuraJSON
 
 data InpValInfo
   = InpValInfo
@@ -368,6 +439,11 @@ newtype SystemDefined = SystemDefined { unSystemDefined :: Bool }
 
 isSystemDefined :: SystemDefined -> Bool
 isSystemDefined = unSystemDefined
+
+newtype SQLGenCtx
+  = SQLGenCtx
+  { stringifyNum :: Bool
+  } deriving (Show, Eq)
 
 successMsg :: EncJSON
 successMsg = "{\"message\":\"success\"}"

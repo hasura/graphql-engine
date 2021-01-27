@@ -173,13 +173,13 @@ data AnnColumnField (b :: BackendType)
 data RemoteFieldArgument
   = RemoteFieldArgument
   { _rfaArgument :: !G.Name
-  , _rfaValue    :: !(InputValue Variable)
+  , _rfaValue    :: !(InputValue RemoteSchemaVariable)
   } deriving (Eq,Show)
 
 data RemoteSelect (b :: BackendType)
   = RemoteSelect
   { _rselArgs          :: ![RemoteFieldArgument]
-  , _rselSelection     :: !(G.SelectionSet G.NoFragments Variable)
+  , _rselSelection     :: !(G.SelectionSet G.NoFragments RemoteSchemaVariable)
   , _rselHasuraColumns :: !(HashSet (ColumnInfo b))
   , _rselFieldCall     :: !(NonEmpty FieldCall)
   , _rselRemoteSchema  :: !RemoteSchemaInfo
@@ -245,7 +245,7 @@ noSelectArgs :: SelectArgsG backend v
 noSelectArgs = SelectArgs Nothing Nothing Nothing Nothing Nothing
 
 data ColFld (b :: BackendType)
-  = CFCol !(Column b)
+  = CFCol !(Column b) !(ColumnType b)
   | CFExp !Text
 {-
 deriving instance Eq (Column b) => Eq (ColFld b)

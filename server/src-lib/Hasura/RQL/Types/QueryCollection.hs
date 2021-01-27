@@ -1,7 +1,11 @@
 module Hasura.RQL.Types.QueryCollection
   ( CollectionName
   , CollectionDef(..)
+  , cdQueries
   , CreateCollection(..)
+  , ccName
+  , ccDefinition
+  , ccComment
   , AddQueryToCollection(..)
   , DropQueryFromCollection(..)
   , DropCollection(..)
@@ -20,8 +24,8 @@ import           Hasura.Prelude
 import qualified Database.PG.Query             as Q
 import qualified Language.GraphQL.Draft.Syntax as G
 
+import           Control.Lens
 import           Data.Aeson
-import           Data.Aeson.Casing
 import           Data.Aeson.TH
 import           Data.Text.Extended
 import           Data.Text.NonEmpty
@@ -105,7 +109,7 @@ data ListedQuery
   } deriving (Show, Eq, Generic)
 instance NFData ListedQuery
 instance Cacheable ListedQuery
-$(deriveJSON (aesonDrop 3 snakeCase) ''ListedQuery)
+$(deriveJSON hasuraJSON ''ListedQuery)
 
 type QueryList = [ListedQuery]
 
@@ -113,7 +117,8 @@ newtype CollectionDef
   = CollectionDef
   { _cdQueries :: QueryList }
   deriving (Show, Eq, Generic, NFData, Cacheable)
-$(deriveJSON (aesonDrop 3 snakeCase) ''CollectionDef)
+$(deriveJSON hasuraJSON ''CollectionDef)
+$(makeLenses ''CollectionDef)
 
 data CreateCollection
   = CreateCollection
@@ -121,14 +126,15 @@ data CreateCollection
   , _ccDefinition :: !CollectionDef
   , _ccComment    :: !(Maybe Text)
   } deriving (Show, Eq, Generic)
-$(deriveJSON (aesonDrop 3 snakeCase) ''CreateCollection)
+$(deriveJSON hasuraJSON ''CreateCollection)
+$(makeLenses ''CreateCollection)
 
 data DropCollection
   = DropCollection
   { _dcCollection :: !CollectionName
   , _dcCascade    :: !Bool
   } deriving (Show, Eq)
-$(deriveJSON (aesonDrop 3 snakeCase) ''DropCollection)
+$(deriveJSON hasuraJSON ''DropCollection)
 
 data AddQueryToCollection
   = AddQueryToCollection
@@ -136,17 +142,17 @@ data AddQueryToCollection
   , _aqtcQueryName      :: !QueryName
   , _aqtcQuery          :: !GQLQueryWithText
   } deriving (Show, Eq)
-$(deriveJSON (aesonDrop 5 snakeCase) ''AddQueryToCollection)
+$(deriveJSON hasuraJSON ''AddQueryToCollection)
 
 data DropQueryFromCollection
   = DropQueryFromCollection
   { _dqfcCollectionName :: !CollectionName
   , _dqfcQueryName      :: !QueryName
   } deriving (Show, Eq)
-$(deriveJSON (aesonDrop 5 snakeCase) ''DropQueryFromCollection)
+$(deriveJSON hasuraJSON ''DropQueryFromCollection)
 
 newtype CollectionReq
   = CollectionReq
   {_crCollection :: CollectionName}
   deriving (Show, Eq, Generic, Hashable)
-$(deriveJSON (aesonDrop 3 snakeCase) ''CollectionReq)
+$(deriveJSON hasuraJSON ''CollectionReq)

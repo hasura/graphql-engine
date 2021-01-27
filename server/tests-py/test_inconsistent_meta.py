@@ -45,9 +45,9 @@ class TestInconsistentObjects():
 
         assert resp['is_consistent'] == False, resp
         assert incons_objs_resp == incons_objs_test, yaml.dump({
-            'response': resp,
+            'response': incons_objs_resp,
             'expected': incons_objs_test,
-            'diff': jsondiff.diff(incons_objs_test, resp)
+            'diff': jsondiff.diff(incons_objs_test, incons_objs_resp)
         })
 
         # export metadata

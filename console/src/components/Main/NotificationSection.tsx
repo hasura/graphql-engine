@@ -10,7 +10,7 @@ import {
 } from './ConsoleNotification';
 import styles from './Main.scss';
 import useOnClickOutside from '../../hooks/useOnClickOutside';
-import { ReduxState, NotificationsState, ConsoleState } from '../../types';
+import { ReduxState } from '../../types';
 import { versionGT, checkStableVersion } from '../../helpers/versionUtils';
 import ToolTip from '../Common/Tooltip/Tooltip';
 import {
@@ -28,6 +28,7 @@ import { mapDispatchToPropsEmpty } from '../Common/utils/reactUtils';
 import { HASURA_COLLABORATOR_TOKEN } from '../../constants';
 import { StyledText } from '../UIKit/atoms/Typography/Typography';
 import { LS_KEYS } from '../../utils/localStorage';
+import { ConsoleState, NotificationsState } from '../../telemetry/state';
 
 const getDateString = (date: NotificationDate) => {
   if (!date) {
@@ -327,11 +328,11 @@ const ViewMoreOptions: React.FC<ViewMoreProps> = ({
 };
 
 const checkIsRead = (prevRead?: string | string[], id?: number) => {
-  if (!prevRead || !id) {
-    return false;
-  }
   if (prevRead === 'all' || prevRead === 'default' || prevRead === 'error') {
     return true;
+  }
+  if (!prevRead || !id) {
+    return false;
   }
   return prevRead.indexOf(`${id}`) !== -1;
 };
@@ -690,8 +691,9 @@ const HasuraNotifications: React.FC<
           onClick: onClickUpdate,
         },
       },
-      ...consoleNotifications.slice(0, pagination.shownCount).map(
-        (payload): NotificationsListItemProps => ({
+      ...consoleNotifications
+        .slice(0, pagination.shownCount)
+        .map((payload: any) => ({
           kind: 'default',
           props: {
             id: payload.id,
@@ -700,10 +702,8 @@ const HasuraNotifications: React.FC<
             consoleScope,
             ...payload,
           },
-        })
-      ),
+        })),
     ].filter((x): x is NotificationsListItemProps => Boolean(x));
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
     consoleNotifications,
     consoleScope,
@@ -767,8 +767,10 @@ const HasuraNotifications: React.FC<
           </div>
         </Flex>
         <Box className={styles.notificationsContainer}>
-          {dataShown.length &&
-            dataShown.map(payload => <NotificationsListItem {...payload} />)}
+          {dataShown.length > 0 &&
+            dataShown.map((payload, i) => (
+              <NotificationsListItem key={i} {...payload} />
+            ))}
           {shouldDisplayViewMore && (
             <ViewMoreOptions
               onClickViewMore={pagination.showMore}

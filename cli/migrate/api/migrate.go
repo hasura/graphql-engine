@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
-	"net/url"
+	"path/filepath"
 	"strings"
 	"time"
 
@@ -35,21 +35,23 @@ type Request struct {
 	Up            []requestType `json:"up"`
 	Down          []requestType `json:"down"`
 	SkipExecution bool          `json:"skip_execution"`
+	Datasource    string        `json:"datasource,omitempty"`
 }
 
 type requestType struct {
-	Version int         `json:"version,omitempty"`
-	Type    string      `json:"type"`
-	Args    interface{} `json:"args"`
+	Version    int         `json:"version,omitempty"`
+	Type       string      `json:"type"`
+	Datasource string      `json:"datasource,omitempty"`
+	Args       interface{} `json:"args"`
 }
 
 func MigrateAPI(c *gin.Context) {
-	migratePtr, ok := c.Get("migrate")
+	ecPtr, ok := c.Get("ec")
 	if !ok {
 		return
 	}
 	// Get File url
-	sourcePtr, ok := c.Get("filedir")
+	//sourcePtr, ok := c.Get("filedir")
 	if !ok {
 		return
 	}
@@ -64,15 +66,29 @@ func MigrateAPI(c *gin.Context) {
 	version := c.GetInt("version")
 
 	// Convert to url.URL
-	t := migratePtr.(*migrate.Migrate)
-	sourceURL := sourcePtr.(*url.URL)
+	ec, ok := ecPtr.(*cli.ExecutionContext)
+	if !ok {
+		c.JSON(http.StatusInternalServerError, &Response{Code: "internal_error", Message: "cannot get execution context"})
+		return
+	}
+	//sourceURL := sourcePtr.(*url.URL)
 	logger := loggerPtr.(*logrus.Logger)
 
 	// Switch on request method
 	switch c.Request.Method {
 	case "GET":
+		datasource := c.Query("datasource")
+		if ec.Config.Version >= cli.V3 && datasource == "" {
+			c.JSON(http.StatusInternalServerError, &Response{Code: "internal_error", Message: "datasource query parameter is required"})
+			return
+		}
+		t, err := migrate.NewMigrate(ec, false, datasource)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, &Response{Code: "internal_error", Message: err.Error()})
+			return
+		}
 		// Rescan file system
-		err := t.ReScan()
+		err = t.ReScan()
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, &Response{Code: "internal_error", Message: err.Error()})
 			return
@@ -93,10 +109,23 @@ func MigrateAPI(c *gin.Context) {
 			return
 		}
 
+		if ec.Config.Version >= cli.V3 && request.Datasource == "" {
+			c.JSON(http.StatusInternalServerError, &Response{Code: "internal_error", Message: "datasource key not found in body"})
+			return
+		}
+
 		startTime := time.Now()
 		timestamp := startTime.UnixNano() / int64(time.Millisecond)
-
-		createOptions := cmd.New(timestamp, request.Name, sourceURL.Path)
+		datasource := request.Datasource
+		if ec.Config.Version < cli.V3 {
+			datasource = ""
+		}
+		t, err := migrate.NewMigrate(ec, false, datasource)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, &Response{Code: "internal_error", Message: err.Error()})
+			return
+		}
+		createOptions := cmd.New(timestamp, request.Name, filepath.Join(ec.MigrationDir, datasource))
 		if version != int(cli.V1) {
 			sqlUp := &bytes.Buffer{}
 			sqlDown := &bytes.Buffer{}

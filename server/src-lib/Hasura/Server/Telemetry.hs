@@ -26,7 +26,6 @@ import           Hasura.Session
 import qualified CI
 import qualified Control.Concurrent.Extended      as C
 import qualified Data.Aeson                       as A
-import qualified Data.Aeson.Casing                as A
 import qualified Data.Aeson.TH                    as A
 import qualified Data.ByteString.Lazy             as BL
 import qualified Data.HashMap.Strict              as Map
@@ -41,7 +40,7 @@ data RelationshipMetric
   { _rmManual :: !Int
   , _rmAuto   :: !Int
   } deriving (Show, Eq)
-$(A.deriveToJSON (A.aesonDrop 3 A.snakeCase) ''RelationshipMetric)
+$(A.deriveToJSON hasuraJSON ''RelationshipMetric)
 
 data PermissionMetric
   = PermissionMetric
@@ -51,7 +50,7 @@ data PermissionMetric
   , _pmDelete :: !Int
   , _pmRoles  :: !Int
   } deriving (Show, Eq)
-$(A.deriveToJSON (A.aesonDrop 3 A.snakeCase) ''PermissionMetric)
+$(A.deriveToJSON hasuraJSON ''PermissionMetric)
 
 data ActionMetric
     = ActionMetric
@@ -61,7 +60,7 @@ data ActionMetric
     , _amTypeRelationships :: !Int
     , _amCustomTypes       :: !Int
     } deriving (Show, Eq)
-$(A.deriveToJSON (A.aesonDrop 3 A.snakeCase) ''ActionMetric)
+$(A.deriveToJSON hasuraJSON ''ActionMetric)
 
 data Metrics
   = Metrics
@@ -77,7 +76,7 @@ data Metrics
   , _mtPgVersion      :: !PGVersion
   , _mtActions        :: !ActionMetric
   } deriving (Show, Eq)
-$(A.deriveToJSON (A.aesonDrop 3 A.snakeCase) ''Metrics)
+$(A.deriveToJSON hasuraJSON ''Metrics)
 
 data HasuraTelemetry
   = HasuraTelemetry
@@ -87,14 +86,14 @@ data HasuraTelemetry
   , _htCi          :: !(Maybe CI.CI)
   , _htMetrics     :: !Metrics
   } deriving (Show)
-$(A.deriveToJSON (A.aesonDrop 3 A.snakeCase) ''HasuraTelemetry)
+$(A.deriveToJSON hasuraJSON ''HasuraTelemetry)
 
 data TelemetryPayload
   = TelemetryPayload
   { _tpTopic :: !Text
   , _tpData  :: !HasuraTelemetry
   } deriving (Show)
-$(A.deriveToJSON (A.aesonDrop 3 A.snakeCase) ''TelemetryPayload)
+$(A.deriveToJSON hasuraJSON ''TelemetryPayload)
 
 telemetryUrl :: Text
 telemetryUrl = "https://telemetry.hasura.io/v1/http"
@@ -165,13 +164,16 @@ computeMetrics sc _mtServiceTimings _mtPgVersion =
       _mtEventTriggers = Map.size $ Map.filter (not . Map.null)
                     $ Map.map _tiEventTriggerInfoMap userTables
       _mtRemoteSchemas   = Map.size $ scRemoteSchemas sc
-      _mtFunctions = Map.size $ Map.filter (not . isSystemDefined . fiSystemDefined) $ scFunctions sc
+      _mtFunctions = Map.size $ Map.filter (not . isSystemDefined . fiSystemDefined) pgFunctionCache
       _mtActions = computeActionsMetrics $ scActions sc
 
   in Metrics{..}
 
   where
-    userTables = Map.filter (not . isSystemDefined . _tciSystemDefined . _tiCoreInfo) $ scTables sc
+      -- TODO: multiple sources
+    pgTableCache    = fromMaybe mempty $ unsafeTableCache    @'Postgres defaultSource $ scPostgres sc
+    pgFunctionCache = fromMaybe mempty $ unsafeFunctionCache @'Postgres defaultSource $ scPostgres sc
+    userTables = Map.filter (not . isSystemDefined . _tciSystemDefined . _tiCoreInfo) pgTableCache
     countUserTables predicate = length . filter predicate $ Map.elems userTables
 
     calcPerms :: (RolePermInfo 'Postgres -> Maybe a) -> [RolePermInfo 'Postgres] -> Int
@@ -180,7 +182,7 @@ computeMetrics sc _mtServiceTimings _mtPgVersion =
     permsOfTbl :: TableInfo 'Postgres -> [(RoleName, RolePermInfo 'Postgres)]
     permsOfTbl = Map.toList . _tiRolePermInfoMap
 
-computeActionsMetrics :: ActionCache -> ActionMetric
+computeActionsMetrics :: ActionCache b -> ActionMetric
 computeActionsMetrics actionCache =
   ActionMetric syncActionsLen asyncActionsLen queryActionsLen typeRelationships customTypesLen
   where actions = Map.elems actionCache
@@ -194,7 +196,7 @@ computeActionsMetrics actionCache =
 
         typeRelationships =
           length . L.nub . concatMap
-          (map _trName . maybe [] toList . _otdRelationships . _aiOutputObject) $
+          (map _trName . maybe [] toList . _otdRelationships . _aotDefinition . _aiOutputObject) $
           actions
 
 -- | Logging related

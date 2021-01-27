@@ -14,6 +14,7 @@ import globals from '../../../../Globals';
 import styles from '../RemoteSchema.scss';
 import ToolTip from '../../../Common/Tooltip/Tooltip';
 import WarningSymbol from '../../../Common/WarningSymbol/WarningSymbol';
+import { getRemoteSchemasSelector } from '../../../../metadata/selector';
 
 const prefixUrl = globals.urlPrefix + appPrefix;
 
@@ -206,8 +207,8 @@ const mapStateToProps = state => {
   return {
     ...state.remoteSchemas.addData,
     ...state.remoteSchemas.headerData,
-    allRemoteSchemas: state.remoteSchemas.listData.remoteSchemas,
-    dataHeaders: { ...state.tables.dataHeaders },
+    allRemoteSchemas: getRemoteSchemasSelector(state),
+    dataHeaders: state.tables.dataHeaders,
     readOnlyMode: state.main.readOnlyMode,
     inconsistentObjects: state.metadata.inconsistentObjects,
   };

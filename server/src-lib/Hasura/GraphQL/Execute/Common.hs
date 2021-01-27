@@ -23,7 +23,6 @@ import           Hasura.Backends.Postgres.SQL.Value
 import           Hasura.Backends.Postgres.Translate.Select   (asSingleRowJsonResp)
 import           Hasura.EncJSON
 import           Hasura.GraphQL.Context
-import           Hasura.GraphQL.Execute.Action
 import           Hasura.GraphQL.Execute.Prepare
 import           Hasura.RQL.Types
 import           Hasura.Server.Version                       (HasVersion)
@@ -45,12 +44,12 @@ instance J.ToJSON PreparedSql where
 
 data RootFieldPlan
   = RFPPostgres !PreparedSql
-  | RFPActionQuery !ActionExecuteTx
+  -- | RFPActionQuery !ActionExecution
 
 instance J.ToJSON RootFieldPlan where
   toJSON = \case
     RFPPostgres pgPlan -> J.toJSON pgPlan
-    RFPActionQuery _   -> J.String "Action Execution Tx"
+    -- RFPActionQuery _   -> J.String "Action Execution Tx"
 
 
 -- | A method for extracting profiling data from instrumented query results.
@@ -85,7 +84,7 @@ mkCurPlanTx env manager reqHdrs userInfo instrument ep = \case
                asSingleRowJsonResp (instrument q) prepArgs
            Just remoteJoins ->
              executeQueryWithRemoteJoins env manager reqHdrs userInfo q prepArgs remoteJoins
-    RFPActionQuery atx -> (atx, Nothing)
+    -- RFPActionQuery atx -> (unActionExecution atx, Nothing)
 
 -- convert a query from an intermediate representation to... another
 irToRootFieldPlan

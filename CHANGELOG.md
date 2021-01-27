@@ -41,19 +41,38 @@ mutations:
     }
 ```
 
+### Remote schema permissions
+
+Now, permissions can be configured for remote schemas as well, which works similar
+to the permissions system of the postgres tables. Fields/arguments can be removed from the
+schema and arguments can also be preset to limit the role from having unrestricted
+access over it.
+
+*NOTE*: To enable remote schema permissions, the graphql-engine needs to be started
+either with the server flag ``--enable-remote-schema-permissions`` or the environment
+variable ``HASURA_GRAPHQL_ENABLE_REMOTE_SCHEMA_PERMISSIONS`` set to ``true``.
+
 ### Breaking changes
 
-This release contains the [PDV refactor (#4111)](https://github.com/hasura/graphql-engine/pull/4111), a significant rewrite of the internals of the server, which did include some breaking changes:
+- This release contains the [PDV refactor (#4111)](https://github.com/hasura/graphql-engine/pull/4111), a significant rewrite of the internals of the server, which did include some breaking changes:
 
-- The semantics of explicit `null` values in `where` filters have changed according to the discussion in [issue 704](https://github.com/hasura/graphql-engine/issues/704#issuecomment-635571407): an explicit `null` value in a comparison input object will be treated as an error rather than resulting in the expression being evaluated to `True`. For instance: `delete_users(where: {id: {_eq: $userId}}) { name }` will yield an error if `$userId` is `null` instead of deleting all users.
-- The validation of required headers has been fixed (closing #14 and #3659):
-  - if a query selects table `bar` through table `foo` via a relationship, the required permissions headers will be the union of the required headers of table `foo` and table `bar` (we used to only check the headers of the root table);
-  - if an insert does not have an `on_conflict` clause, it will not require the update permissions headers.
+   - The semantics of explicit `null` values in `where` filters have changed according to the discussion in [issue 704](https://github.com/hasura/graphql-engine/issues/704#issuecomment-635571407): an explicit `null` value in a comparison input object will be treated as an error rather than resulting in the expression being evaluated to `True`. For instance: `delete_users(where: {id: {_eq: $userId}}) { name }` will yield an error if `$userId` is `null` instead of deleting all users.
+   - The validation of required headers has been fixed (closing #14 and #3659):
+     - if a query selects table `bar` through table `foo` via a relationship, the required permissions headers will be the union of the required headers of table `foo` and table `bar` (we used to only check the headers of the root table);
+     - if an insert does not have an `on_conflict` clause, it will not require the update permissions headers.
+
+This release contains the remote schema permissions feature, which introduces a breaking change:
+
+Earlier, remote schemas were considered to be a public entity and all the roles had unrestricted
+access to the remote schema. If remote schema permissions are enabled in the graphql-engine, a given
+remote schema will only be accessible to a role ,if the role has permissions configured for the said remote schema
+and be accessible according to the permissions that were configured for the role.
 
 ### Bug fixes and improvements
 
 (Add entries here in the order of: server, console, cli, docs, others)
 
+- server: fix a regression where variables in fragments weren't accepted (fix #6303)
 - server: output stack traces when encountering conflicting GraphQL types in the schema
 - server: add `--websocket-compression` command-line flag for enabling websocket compression (fix #3292)
 - server: some mutations that cannot be performed will no longer be in the schema (for instance, `delete_by_pk` mutations won't be shown to users that do not have select permissions on all primary keys) (#4111)
@@ -65,6 +84,19 @@ This release contains the [PDV refactor (#4111)](https://github.com/hasura/graph
 - server: support joining Int or String scalar types to ID scalar type in remote relationship
 - server: add support for POSIX operators (close #4317) (#6172)
 - server: do not block catalog migration on inconsistent metadata
+- server: update `forkImmortal` function to log more information, i.e log starting of threads and log asynchronous and synchronous exception.
+- server: various changes to ensure timely cleanup of background threads and other resources in the event of a SIGTERM signal.
+- server: fix issue when the `relationships` field in `objects` field is passed `[]` in the `set_custom_types` API (fix #6357)
+- server: fix issue with event triggers defined on a table which is partitioned (fixes #6261)
+- server: action array relationships now support the same input arguments (such as where or distinct_on) as usual relationships
+- server: action array relationships now support aggregate relationships
+- server: fix issue with non-optional fields of the remote schema being added as optional in the graphql-engine (fix #6401)
+- server: accept new config `allowed_skew` in JWT config to provide leeway for JWT expiry (fixes #2109)
+- server: fix issue with query actions with relationship with permissions configured on the remote table (fix #6385)
+- server: always log the `request_id` at the `detail.request_id` path for both `query-log` and `http-log` (#6244)
+- server: fix issue with `--stringify-numeric-types` not stringifying aggregate fields (fix #5704)
+- server: derive permissions for remote relationship field from the corresponding remote schema's permissions
+- server: fix issue with mapping session variables to standard JWT claims (fix #6449)
 - console: allow user to cascade Postgres dependencies when dropping Postgres objects (close #5109) (#5248)
 - console: mark inconsistent remote schemas in the UI (close #5093) (#5181)
 - console: remove ONLY as default for ALTER TABLE in column alter operations (close #5512) #5706
@@ -72,9 +104,16 @@ This release contains the [PDV refactor (#4111)](https://github.com/hasura/graph
 - console: down migrations improvements (close #3503, #4988) (#4790)
 - console: allow setting computed fields for views (close #6168) (#6174)
 - console: select first operator by default on the browse rows screen (close #5729) (#6032)
+- console: fix allow-list not getting added to metadata/allow_list.yaml in CLI mode (close #6374)
+- console: misc bug fixes (close #4785, #6330, #6288)
+- console: allow setting table custom name (#212)
+- console: support tracking VOLATILE functions as mutations or queries (close #6228)
+- console: show only compatible postgres functions in computed fields section (close #5155) (#5978)
+- console: added export data option on browse rows page (close #1438 #5158)
 - console: add session argument field for computed fields (close #5154) (#5610)
 - cli: add missing global flags for seed command (#5565)
 - cli: allow seeds as alias for seed command (#5693)
+- cli: fix action timeouts not being picked up in metadata operations (#6220)
 - build: add `test_server_pg_13` to the CI to run the server tests on Postgres v13 (#6070)
 
 ## v1.3.3

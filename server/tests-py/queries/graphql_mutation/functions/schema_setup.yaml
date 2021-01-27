@@ -2,46 +2,56 @@
 # (#1514)
 type: bulk
 args:
-   
 # test functions having multiple defaults
-- type: run_sql
-  args:
-    sql: |
-       CREATE TABLE "user" (
-         id SERIAL PRIMARY KEY,
-         name TEXT NOT NULL,
-         score INTEGER,
-         /* We just return the session vars as this column from our function
-          * to show they're passed through properly.
-          *
-          * NOTE: with the addition of function "tracking" we probably want to
-          * logically be defining permissions on composite types (which might 
-          * or might not have been created implicitly in a CREATE TABLE).
-          *
-          * See: https://github.com/hasura/graphql-engine-internal/issues/502
-          */
-         role_echo TEXT DEFAULT ''
-       );
 
-# Adds a value (defaulting to 1) to users matching 'search', returning updated
-# rows and echoing the hasura session vars.
 - type: run_sql
   args:
     sql: |
+      CREATE TABLE "user" (
+        id SERIAL PRIMARY KEY,
+        name TEXT NOT NULL,
+        score INTEGER,
+        /* We just return the session vars as this column from our function
+         * to show they're passed through properly.
+         *
+         * NOTE: with the addition of function "tracking" we probably want to
+         * logically be defining permissions on composite types (which might
+         * or might not have been created implicitly in a CREATE TABLE).
+         *
+         * See: https://github.com/hasura/graphql-engine-internal/issues/502
+         */
+        role_echo TEXT DEFAULT ''
+      );
       CREATE FUNCTION add_to_score(hasura_session json, search text, increment integer default 1)
       RETURNS SETOF "user" AS $$
           UPDATE "user"
           SET score = score + increment
           WHERE name ilike ('%' || search || '%')
-          RETURNING id, 
-                    name, 
-                    score, 
+          RETURNING id,
+                    name,
+                    score,
                     /* NOTE: other fields may be added to hasura_session
                      * depending on the flavor of test run on CI, e.g.
                      * x-hasura-auth-mode: webhook, so filter just x-hasura-role
                      */
                     hasura_session->>'x-hasura-role' AS role_echo
       $$ LANGUAGE sql VOLATILE;
+      CREATE FUNCTION volatile_func1()
+      RETURNS SETOF "user" AS $$
+          SELECT * FROM "user" ORDER BY id
+      $$ LANGUAGE sql VOLATILE;
+      CREATE FUNCTION stable_func1()
+      RETURNS SETOF "user" AS $$
+          SELECT * FROM "user" ORDER BY id
+      $$ LANGUAGE sql STABLE;
+      CREATE FUNCTION volatile_func2()
+      RETURNS SETOF "user" AS $$
+          SELECT * FROM "user" ORDER BY id
+      $$ LANGUAGE sql VOLATILE;
+      CREATE FUNCTION stable_func2()
+      RETURNS SETOF "user" AS $$
+          SELECT * FROM "user" ORDER BY id
+      $$ LANGUAGE sql STABLE;
 
 - type: track_table
   args:
@@ -73,36 +83,6 @@ args:
 
 
 # A few unimportant functions for smoke tests
-- type: run_sql
-  args:
-    sql: |
-      CREATE FUNCTION volatile_func1()
-      RETURNS SETOF "user" AS $$
-          SELECT * FROM "user" ORDER BY id
-      $$ LANGUAGE sql VOLATILE;
-- type: run_sql
-  args:
-    sql: |
-      CREATE FUNCTION stable_func1()
-      RETURNS SETOF "user" AS $$
-          SELECT * FROM "user" ORDER BY id
-      $$ LANGUAGE sql STABLE;
-- type: run_sql
-  args:
-    sql: |
-      CREATE FUNCTION volatile_func2()
-      RETURNS SETOF "user" AS $$
-          SELECT * FROM "user" ORDER BY id
-      $$ LANGUAGE sql VOLATILE;
-- type: run_sql
-  args:
-    sql: |
-      CREATE FUNCTION stable_func2()
-      RETURNS SETOF "user" AS $$
-          SELECT * FROM "user" ORDER BY id
-      $$ LANGUAGE sql STABLE;
-
-# Infer that function should be a mutation from VOLATILE, if exposed_as
 - version: 2
   type: track_function
   args:

@@ -16,15 +16,15 @@ import Button from '../../../Common/Button/Button';
 import { NotFoundError } from '../../../Error/PageNotFound';
 
 import { getConfirmation } from '../../../Common/utils/jsUtils';
-import {
-  findTable,
-  generateTableDef,
-  getColumnName,
-  getTableCustomColumnNames,
-} from '../../../Common/utils/pgUtils';
 import Tooltip from '../../../Common/Tooltip/Tooltip';
 import styles from './ModifyTable.scss';
+import {
+  getTableCustomColumnNames,
+  findTable,
+  generateTableDef,
+} from '../../../../dataSources';
 import ViewDefinitions from './ViewDefinitions';
+import { RightContainer } from '../../../Common/Layout/RightContainer';
 import ComputedFields from './ComputedFields';
 import RootFields from './RootFields';
 
@@ -42,13 +42,14 @@ const ModifyView = props => {
     tableCommentEdit,
     migrationMode,
     readOnlyMode,
+    currentSource,
   } = props;
 
   React.useEffect(() => {
     dispatch({ type: RESET });
     dispatch(setTable(tableName));
     dispatch(fetchViewDefinition(tableName, false));
-  }, []);
+  }, [dispatch, tableName]);
 
   const tableSchema = findTable(
     allSchemas,
@@ -62,8 +63,8 @@ const ModifyView = props => {
   };
 
   React.useEffect(() => {
-    initCustomColumnNames();
-  }, [existingCustomColumnNames]);
+    setCustomColumnNames(tableSchema.configuration.custom_column_names);
+  }, [tableSchema.configuration]);
 
   if (!tableSchema) {
     // throw a 404 exception
@@ -100,7 +101,7 @@ const ModifyView = props => {
     const columns = tableSchema.columns.sort(ordinalColSort);
 
     const columnList = columns.map((c, i) => {
-      const columnName = getColumnName(c);
+      const columnName = c.column_name;
 
       const setCustomColumnName = e => {
         const value = e.target.value;
@@ -221,39 +222,46 @@ const ModifyView = props => {
   );
 
   return (
-    <div className={styles.container + ' container-fluid'}>
-      <TableHeader
-        dispatch={dispatch}
-        table={tableSchema}
-        tabName="modify"
-        migrationMode={migrationMode}
-        readOnlyMode={readOnlyMode}
-      />
-      <br />
-      <div className={'container-fluid ' + styles.padd_left_remove}>
-        <div className={'col-xs-8 ' + styles.padd_left_remove}>
-          <TableCommentEditor
-            tableComment={tableComment}
-            tableCommentEdit={tableCommentEdit}
-            tableType={tableType}
-            dispatch={dispatch}
-          />
-          <ViewDefinitions dispatch={dispatch} sql={viewDefSql} />
-          <hr />
-          {getViewColumnsSection()}
-          <hr />
-          <ComputedFields tableSchema={tableSchema} />
-          <hr />
-          <RootFields tableSchema={tableSchema} />
-          <hr />
-          {untrackBtn}
-          {deleteBtn}
-          <br />
-          <br />
+    <RightContainer>
+      <div className={styles.container + ' container-fluid'}>
+        <TableHeader
+          dispatch={dispatch}
+          table={tableSchema}
+          tabName="modify"
+          migrationMode={migrationMode}
+          readOnlyMode={readOnlyMode}
+          source={currentSource}
+        />
+        <br />
+        <div className={'container-fluid ' + styles.padd_left_remove}>
+          <div className={'col-xs-8 ' + styles.padd_left_remove}>
+            <TableCommentEditor
+              tableComment={tableComment}
+              tableCommentEdit={tableCommentEdit}
+              tableType={tableType}
+              dispatch={dispatch}
+            />
+            <ViewDefinitions
+              dispatch={dispatch}
+              sql={viewDefSql}
+              source={currentSource}
+            />
+            <hr />
+            {getViewColumnsSection()}
+            <hr />
+            <ComputedFields tableSchema={tableSchema} />
+            <hr />
+            <RootFields tableSchema={tableSchema} />
+            <hr />
+            {untrackBtn}
+            {deleteBtn}
+            <br />
+            <br />
+          </div>
+          <div className={styles.fixed + ' col-xs-3 hidden'}>{alert}</div>
         </div>
-        <div className={styles.fixed + ' col-xs-3 hidden'}>{alert}</div>
       </div>
-    </div>
+    </RightContainer>
   );
 };
 
@@ -294,6 +302,7 @@ const mapStateToProps = (state, ownProps) => {
     tableName,
     tableType,
     currentSchema: schemaName,
+    currentSource: state.tables.currentDataSource,
     allSchemas: state.tables.allSchemas,
     migrationMode: state.main.migrationMode,
     readOnlyMode: state.main.readOnlyMode,

@@ -18,20 +18,20 @@ import           Data.Text.Extended
 import qualified Hasura.Backends.Postgres.SQL.DML           as S
 
 import           Hasura.Backends.Postgres.SQL.Error
-import           Hasura.Backends.Postgres.SQL.Types
+import           Hasura.Backends.Postgres.SQL.Types         hiding (TableName)
 import           Hasura.Backends.Postgres.SQL.Value
 import           Hasura.Backends.Postgres.Translate.BoolExp
 import           Hasura.Backends.Postgres.Translate.Column
 import           Hasura.RQL.Types
-import           Hasura.SQL.Types
 import           Hasura.Session
+import           Hasura.SQL.Types
 
 
 newtype DMLP1T m a
   = DMLP1T { unDMLP1T :: StateT (DS.Seq Q.PrepArg) m a }
   deriving ( Functor, Applicative, Monad, MonadTrans
            , MonadState (DS.Seq Q.PrepArg), MonadError e
-           , TableCoreInfoRM, CacheRM, UserInfoM, HasSQLGenCtx
+           , SourceM, TableCoreInfoRM b, TableInfoRM b, CacheRM, UserInfoM, HasSQLGenCtx
            )
 
 runDMLP1T :: DMLP1T m a -> m (a, DS.Seq Q.PrepArg)
@@ -151,18 +151,18 @@ binRHSBuilder colType val = do
   return $ toPrepParam (DS.length preparedArgs + 1) (unsafePGColumnToBackend colType)
 
 fetchRelTabInfo
-  :: (QErrM m, CacheRM m)
-  => QualifiedTable
-  -> m (TableInfo 'Postgres)
+  :: (QErrM m, TableInfoRM 'Postgres m)
+  => TableName 'Postgres -> m (TableInfo 'Postgres)
 fetchRelTabInfo refTabName =
   -- Internal error
-  modifyErrAndSet500 ("foreign " <> ) $ askTabInfo refTabName
+  modifyErrAndSet500 ("foreign " <> ) $
+    askTabInfoSource refTabName
 
 type SessVarBldr b m = SessionVarType b -> SessionVariable -> m (SQLExpression b)
 
 fetchRelDet
-  :: (UserInfoM m, QErrM m, CacheRM m)
-  => RelName -> QualifiedTable
+  :: (UserInfoM m, QErrM m, TableInfoRM 'Postgres m)
+  => RelName -> TableName 'Postgres
   -> m (FieldInfoMap (FieldInfo 'Postgres), SelPermInfo 'Postgres)
 fetchRelDet relName refTabName = do
   roleName <- askCurRole
@@ -183,7 +183,7 @@ fetchRelDet relName refTabName = do
       ]
 
 checkOnColExp
-  :: (UserInfoM m, QErrM m, CacheRM m)
+  :: (UserInfoM m, QErrM m, TableInfoRM 'Postgres m)
   => SelPermInfo 'Postgres
   -> SessVarBldr 'Postgres m
   -> AnnBoolExpFldSQL 'Postgres
@@ -235,7 +235,7 @@ currentSession :: S.SQLExp
 currentSession = S.SEUnsafe "current_setting('hasura.user')::json"
 
 checkSelPerm
-  :: (UserInfoM m, QErrM m, CacheRM m)
+  :: (UserInfoM m, QErrM m, TableInfoRM 'Postgres m)
   => SelPermInfo 'Postgres
   -> SessVarBldr 'Postgres m
   -> AnnBoolExpSQL 'Postgres
@@ -244,7 +244,7 @@ checkSelPerm spi sessVarBldr =
   traverse (checkOnColExp spi sessVarBldr)
 
 convBoolExp
-  :: (UserInfoM m, QErrM m, CacheRM m)
+  :: (UserInfoM m, QErrM m, TableInfoRM 'Postgres m)
   => FieldInfoMap (FieldInfo 'Postgres)
   -> SelPermInfo 'Postgres
   -> BoolExp 'Postgres

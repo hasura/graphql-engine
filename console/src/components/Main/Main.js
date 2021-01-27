@@ -21,14 +21,8 @@ import {
   loadLatestServerVersion,
   featureCompatibilityInit,
   emitProClickedEvent,
-  fetchPostgresVersion,
   fetchConsoleNotifications,
 } from './Actions';
-
-import {
-  loadInconsistentObjects,
-  redirectToMetadataStatus,
-} from '../Services/Settings/Actions';
 
 import {
   getProClickState,
@@ -37,11 +31,19 @@ import {
   setLoveConsentState,
   getUserType,
 } from './utils';
-import { getSchemaBaseRoute } from '../Common/utils/routesUtils';
+
+import {
+  getSchemaBaseRoute,
+  redirectToMetadataStatus,
+} from '../Common/utils/routesUtils';
 import LoveSection from './LoveSection';
 import { Help, ProPopup } from './components/';
+import { loadInconsistentObjects } from '../../metadata/actions';
 import { HASURA_COLLABORATOR_TOKEN } from '../../constants';
 import { UPDATE_CONSOLE_NOTIFICATIONS } from '../../telemetry/Actions';
+import { getLSItem, LS_KEYS, setLSItem } from '../../utils/localStorage';
+import { versionGT } from '../../helpers/versionUtils';
+import { UpdateVersion } from './components/UpdateVersion';
 
 const updateRequestHeaders = props => {
   const { requestHeaders, dispatch } = props;
@@ -97,11 +99,13 @@ class Main extends React.Component {
         }
       );
 
-      dispatch(loadLatestServerVersion());
+      dispatch(loadLatestServerVersion()).then(() => {
+        this.setShowUpdateNotification();
+      });
+
       dispatch(fetchConsoleNotifications());
     });
 
-    dispatch(fetchPostgresVersion);
     dispatch(fetchServerConfig);
   }
 
@@ -176,6 +180,55 @@ class Main extends React.Component {
     }));
   };
 
+  closeUpdateBanner = () => {
+    const { updateNotificationVersion } = this.state;
+    setLSItem(LS_KEYS.versionUpdateCheckLastClosed, updateNotificationVersion);
+    this.setState({ updateNotificationVersion: null });
+  };
+
+  setShowUpdateNotification() {
+    const {
+      latestStableServerVersion,
+      latestPreReleaseServerVersion,
+      serverVersion,
+      console_opts,
+    } = this.props;
+
+    const allowPreReleaseNotifications =
+      !console_opts || !console_opts.disablePreReleaseUpdateNotifications;
+
+    let latestServerVersionToCheck;
+    if (
+      allowPreReleaseNotifications &&
+      versionGT(latestPreReleaseServerVersion, latestStableServerVersion)
+    ) {
+      latestServerVersionToCheck = latestPreReleaseServerVersion;
+    } else {
+      latestServerVersionToCheck = latestStableServerVersion;
+    }
+
+    try {
+      const lastUpdateCheckClosed = getLSItem(
+        LS_KEYS.versionUpdateCheckLastClosed
+      );
+
+      if (lastUpdateCheckClosed !== latestServerVersionToCheck) {
+        const isUpdateAvailable = versionGT(
+          latestServerVersionToCheck,
+          serverVersion
+        );
+
+        if (isUpdateAvailable) {
+          this.setState({
+            updateNotificationVersion: latestServerVersionToCheck,
+          });
+        }
+      }
+    } catch (e) {
+      console.error(e);
+    }
+  }
+
   render() {
     const {
       children,
@@ -184,6 +237,7 @@ class Main extends React.Component {
       currentSchema,
       serverVersion,
       metadata,
+      currentSource,
     } = this.props;
 
     const {
@@ -327,7 +381,9 @@ class Main extends React.Component {
                   'Data',
                   'fa-database',
                   tooltips.data,
-                  getSchemaBaseRoute(currentSchema)
+                  currentSource
+                    ? getSchemaBaseRoute(currentSchema, currentSource)
+                    : '/data'
                 )}
                 {getSidebarItem(
                   'Actions',
@@ -397,6 +453,11 @@ class Main extends React.Component {
           <div className={styles.main + ' container-fluid'}>
             {getMainContent()}
           </div>
+          <UpdateVersion
+            closeUpdateBanner={this.closeUpdateBanner}
+            dispatch={this.props.dispatch}
+            updateNotificationVersion={this.state.updateNotificationVersion}
+          />
         </div>
       </div>
     );
@@ -409,6 +470,7 @@ const mapStateToProps = (state, ownProps) => {
     header: { ...state.header },
     pathname: ownProps.location.pathname,
     currentSchema: state.tables.currentSchema,
+    currentSource: state.tables.currentDataSource,
     metadata: state.metadata,
     console_opts: state.telemetry.console_opts,
     requestHeaders: state.tables.dataHeaders,

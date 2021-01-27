@@ -200,4 +200,5 @@ This helps enforce a uniform style for all committers.
 
 - Compiler warnings are turned on, make sure your code has no warnings.
 - Use [hlint](https://github.com/ndmitchell/hlint) to make sure your code has no warnings.
+  You can use our custom hlint config with `$ hlint --hint=server/.hlint.yaml .`
 - Use [stylish-haskell](https://github.com/jaspervdj/stylish-haskell) to format your code.

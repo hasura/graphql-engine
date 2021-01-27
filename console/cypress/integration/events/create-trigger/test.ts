@@ -4,8 +4,6 @@ import { testMode } from '../../../helpers/common';
 import { setMetaData } from '../../validators/validators';
 
 import {
-  passPTCreateTable,
-  visitEventsManagePage,
   checkCreateTriggerRoute,
   failCTWithoutData,
   passCT,
@@ -13,13 +11,15 @@ import {
   insertTableRow,
   deleteCTTestTrigger,
   deleteCTTestTable,
+  passPTCreateTable,
 } from './spec';
+import { getIndexRoute } from '../../../helpers/dataHelpers';
 
 const setup = () => {
   describe('Check Data Tab', () => {
     it('Clicking on Data tab opens the correct route', () => {
       // Visit the index route
-      cy.visit('/data/schema/public');
+      cy.visit(getIndexRoute());
       cy.wait(7000);
       // Get and set validation metadata
       setMetaData();
@@ -29,8 +29,7 @@ const setup = () => {
 
 export const runCreateTriggerTests = () => {
   describe('Create Trigger', () => {
-    it('Create table to use in triggers', passPTCreateTable);
-    it('Visit events manage page', visitEventsManagePage);
+    it('Create test table', passPTCreateTable);
     it(
       'Create trigger button opens the correct route',
       checkCreateTriggerRoute
@@ -39,8 +38,8 @@ export const runCreateTriggerTests = () => {
     it('Successfuly creates trigger', passCT);
     it('Fails to create duplicate trigger', failCTDuplicateTrigger);
     it('Insert a row and invoke trigger', insertTableRow);
-    it('Delete off the test trigger', deleteCTTestTrigger);
-    it('Delete off the test table', deleteCTTestTable);
+    it("Delete's the test trigger", deleteCTTestTrigger);
+    it("Delete's the test table", deleteCTTestTable);
   });
 };
 

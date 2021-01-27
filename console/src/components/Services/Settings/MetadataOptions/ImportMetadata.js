@@ -2,8 +2,8 @@ import React, { Component } from 'react';
 import PropTypes from 'prop-types';
 import Button from '../../../Common/Button/Button';
 
-import { replaceMetadataFromFile } from '../Actions';
 import { uploadFile } from '../../../Common/utils/jsUtils';
+import { replaceMetadataFromFile } from '../../../../metadata/actions';
 
 class ImportMetadata extends Component {
   constructor() {

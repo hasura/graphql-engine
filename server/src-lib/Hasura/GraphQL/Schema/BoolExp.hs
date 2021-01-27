@@ -26,7 +26,7 @@ import           Hasura.RQL.Types
 -- >   ...
 -- > }
 boolExp
-  :: forall m n r b. (BackendSchema b, MonadSchema n m, MonadTableInfo b r m, MonadRole r m)
+  :: forall m n r b. (BackendSchema b, MonadSchema n m, MonadTableInfo r m, MonadRole r m)
   => TableName b
   -> Maybe (SelPermInfo b)
   -> m (Parser 'Input n (AnnBoolExp b (UnpreparedValue b)))
@@ -59,7 +59,7 @@ boolExp table selectPermissions = memoizeOn 'boolExp table $ do
       :: FieldInfo b
       -> m (Maybe (InputFieldsParser n (Maybe (AnnBoolExpFld b (UnpreparedValue b)))))
     mkField fieldInfo = runMaybeT do
-      fieldName <- MaybeT $ pure $ fieldInfoGraphQLName fieldInfo
+      fieldName <- hoistMaybe $ fieldInfoGraphQLName fieldInfo
       P.fieldOptional fieldName Nothing <$> case fieldInfo of
         -- field_name: field_type_comparison_exp
         FIColumn columnInfo ->

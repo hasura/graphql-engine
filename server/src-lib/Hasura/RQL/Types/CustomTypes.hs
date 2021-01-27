@@ -26,7 +26,7 @@ module Hasura.RQL.Types.CustomTypes
   , NonObjectTypeMap
   , AnnotatedObjectFieldType(..)
   , fieldTypeToScalarType
-  , AnnotatedObjectType
+  , AnnotatedObjectType(..)
   , AnnotatedObjects
   , AnnotatedCustomTypes(..)
   , emptyAnnotatedCustomTypes
@@ -36,7 +36,6 @@ import           Control.Lens.TH                    (makeLenses)
 import           Data.Text.Extended
 
 import qualified Data.Aeson                         as J
-import qualified Data.Aeson.Casing                  as J
 import qualified Data.Aeson.TH                      as J
 import qualified Data.HashMap.Strict                as Map
 import qualified Data.List.NonEmpty                 as NEList
@@ -50,7 +49,8 @@ import           Hasura.Backends.Postgres.SQL.Types
 import           Hasura.Incremental                 (Cacheable)
 import           Hasura.Prelude
 import           Hasura.RQL.Types.Column
-import           Hasura.RQL.Types.Common            (RelType, ScalarType)
+import           Hasura.RQL.Types.Common            (Backend, RelType, ScalarType, SourceConfig,
+                                                     SourceName, defaultSource)
 import           Hasura.RQL.Types.Table
 import           Hasura.SQL.Backend
 
@@ -84,7 +84,7 @@ data InputObjectFieldDefinition
   } deriving (Show, Eq, Generic)
 instance NFData InputObjectFieldDefinition
 instance Cacheable InputObjectFieldDefinition
-$(J.deriveJSON (J.aesonDrop 5 J.snakeCase) ''InputObjectFieldDefinition)
+$(J.deriveJSON hasuraJSON ''InputObjectFieldDefinition)
 
 newtype InputObjectTypeName
   = InputObjectTypeName { unInputObjectTypeName :: G.Name }
@@ -98,7 +98,7 @@ data InputObjectTypeDefinition
   } deriving (Show, Eq, Generic)
 instance NFData InputObjectTypeDefinition
 instance Cacheable InputObjectTypeDefinition
-$(J.deriveJSON (J.aesonDrop 5 J.snakeCase) ''InputObjectTypeDefinition)
+$(J.deriveJSON hasuraJSON ''InputObjectTypeDefinition)
 
 newtype ObjectFieldName
   = ObjectFieldName { unObjectFieldName :: G.Name }
@@ -118,7 +118,7 @@ data ObjectFieldDefinition a
   } deriving (Show, Eq, Functor, Foldable, Traversable, Generic)
 instance (NFData a) => NFData (ObjectFieldDefinition a)
 instance (Cacheable a) => Cacheable (ObjectFieldDefinition a)
-$(J.deriveJSON (J.aesonDrop 4 J.snakeCase) ''ObjectFieldDefinition)
+$(J.deriveJSON hasuraJSON ''ObjectFieldDefinition)
 
 newtype RelationshipName
   = RelationshipName { unRelationshipName :: G.Name }
@@ -128,13 +128,22 @@ data TypeRelationship t f
   = TypeRelationship
   { _trName         :: !RelationshipName
   , _trType         :: !RelType
+  , _trSource       :: !SourceName
   , _trRemoteTable  :: !t
   , _trFieldMapping :: !(Map.HashMap ObjectFieldName f)
   } deriving (Show, Eq, Generic)
 instance (NFData t, NFData f) => NFData (TypeRelationship t f)
 instance (Cacheable t, Cacheable f) => Cacheable (TypeRelationship t f)
 $(makeLenses ''TypeRelationship)
-$(J.deriveJSON (J.aesonDrop 3 J.snakeCase) ''TypeRelationship)
+$(J.deriveToJSON hasuraJSON ''TypeRelationship)
+
+instance (J.FromJSON t, J.FromJSON f) => J.FromJSON (TypeRelationship t f) where
+  parseJSON = J.withObject "Object" $ \o ->
+    TypeRelationship <$> o J..: "name"
+                     <*> o J..: "type"
+                     <*> o J..:? "source" J..!= defaultSource
+                     <*> o J..: "remote_table"
+                     <*> o J..: "field_mapping"
 
 newtype ObjectTypeName
   = ObjectTypeName { unObjectTypeName :: G.Name }
@@ -150,7 +159,21 @@ data ObjectTypeDefinition a b c
   } deriving (Show, Eq, Generic)
 instance (NFData a, NFData b, NFData c) => NFData (ObjectTypeDefinition a b c)
 instance (Cacheable a, Cacheable b, Cacheable c) => Cacheable (ObjectTypeDefinition a b c)
-$(J.deriveJSON (J.aesonDrop 4 J.snakeCase) ''ObjectTypeDefinition)
+$(J.deriveToJSON hasuraJSON ''ObjectTypeDefinition)
+
+instance (J.FromJSON a, J.FromJSON b, J.FromJSON c) => J.FromJSON (ObjectTypeDefinition a b c) where
+  parseJSON = J.withObject "ObjectTypeDefinition" \obj -> do
+    name <- obj J..: "name"
+    desc <- obj J..:? "description"
+    fields <- obj J..: "fields"
+    relationships <- obj J..:? "relationships"
+    -- We need to do the below because pre-PDV, '[]' was a legal value
+    -- for relationships because the type was `(Maybe [TypeRelationshipDefinition])`,
+    -- In PDV, the type was changed to `(Maybe (NonEmpty (TypeRelationship b c)))`
+    -- which breaks on `[]` for the `relationships` field, to be backwards compatible
+    -- this `FromJSON` instance is written by hand and `[]` sets `_otdRelationships`
+    -- to `Nothing`
+    return $ ObjectTypeDefinition name desc fields (nonEmpty =<< relationships)
 
 data ScalarTypeDefinition
   = ScalarTypeDefinition
@@ -160,7 +183,7 @@ data ScalarTypeDefinition
 instance NFData ScalarTypeDefinition
 instance Cacheable ScalarTypeDefinition
 instance Hashable ScalarTypeDefinition
-$(J.deriveJSON (J.aesonDrop 4 J.snakeCase) ''ScalarTypeDefinition)
+$(J.deriveJSON hasuraJSON ''ScalarTypeDefinition)
 
 -- default scalar names
 intScalar, floatScalar, stringScalar, boolScalar, idScalar :: G.Name
@@ -187,7 +210,7 @@ data EnumValueDefinition
   } deriving (Show, Eq, Generic)
 instance NFData EnumValueDefinition
 instance Cacheable EnumValueDefinition
-$(J.deriveJSON (J.aesonDrop 4 J.snakeCase) ''EnumValueDefinition)
+$(J.deriveJSON hasuraJSON ''EnumValueDefinition)
 
 data EnumTypeDefinition
   = EnumTypeDefinition
@@ -197,7 +220,7 @@ data EnumTypeDefinition
   } deriving (Show, Eq, Generic)
 instance NFData EnumTypeDefinition
 instance Cacheable EnumTypeDefinition
-$(J.deriveJSON (J.aesonDrop 4 J.snakeCase) ''EnumTypeDefinition)
+$(J.deriveJSON hasuraJSON ''EnumTypeDefinition)
 
 type ObjectType =
   ObjectTypeDefinition GraphQLType QualifiedTable PGCol
@@ -211,7 +234,7 @@ data CustomTypes
   } deriving (Show, Eq, Generic)
 instance NFData CustomTypes
 instance Cacheable CustomTypes
-$(J.deriveJSON (J.aesonDrop 3 J.snakeCase) ''CustomTypes)
+$(J.deriveJSON hasuraJSON ''CustomTypes)
 
 emptyCustomTypes :: CustomTypes
 emptyCustomTypes = CustomTypes Nothing Nothing Nothing Nothing
@@ -260,8 +283,13 @@ fieldTypeToScalarType = \case
            | _stdName == boolScalar   -> PGBoolean
            | otherwise                -> PGJSON
 
-type AnnotatedObjectType b =
-  ObjectTypeDefinition (G.GType, AnnotatedObjectFieldType) (TableInfo b) (ColumnInfo b)
+data AnnotatedObjectType b
+  = AnnotatedObjectType
+  { _aotDefinition :: !(ObjectTypeDefinition (G.GType, AnnotatedObjectFieldType) (TableInfo b) (ColumnInfo b))
+  , _aotSource     :: !(Maybe (SourceConfig b))
+  } deriving (Generic)
+instance Backend b => J.ToJSON (AnnotatedObjectType b) where
+  toJSON = J.toJSON . _aotDefinition
 
 type AnnotatedObjects b = Map.HashMap G.Name (AnnotatedObjectType b)
 

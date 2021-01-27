@@ -26,14 +26,12 @@ module Hasura.GraphQL.Execute.LiveQuery.Plan
 
 import           Hasura.Prelude
 
-import qualified Data.Aeson.Casing                           as J
 import qualified Data.Aeson.Extended                         as J
 import qualified Data.Aeson.TH                               as J
 import qualified Data.ByteString                             as B
 import qualified Data.HashMap.Strict                         as Map
 import qualified Data.HashMap.Strict.InsOrd                  as OMap
 import qualified Data.HashSet                                as Set
-import qualified Data.Text                                   as T
 import qualified Data.UUID.V4                                as UUID
 import qualified Database.PG.Query                           as Q
 import qualified Database.PG.Query.PTI                       as PTI
@@ -41,6 +39,7 @@ import qualified Language.GraphQL.Draft.Syntax               as G
 import qualified PostgreSQL.Binary.Encoding                  as PE
 
 import           Control.Lens
+import           Control.Monad.Trans.Control                 (MonadBaseControl)
 import           Data.Semigroup.Generic
 import           Data.UUID                                   (UUID)
 
@@ -56,7 +55,6 @@ import           Hasura.Backends.Postgres.SQL.Types
 import           Hasura.Backends.Postgres.SQL.Value
 import           Hasura.Backends.Postgres.Translate.Column   (toTxtValue)
 import           Hasura.GraphQL.Context
-import           Hasura.GraphQL.Execute.Action
 import           Hasura.GraphQL.Execute.Query
 import           Hasura.GraphQL.Parser.Column
 import           Hasura.RQL.Types
@@ -72,11 +70,11 @@ newtype MultiplexedQuery = MultiplexedQuery { unMultiplexedQuery :: Q.Query }
 
 toSQLFromItem :: S.Alias -> SubscriptionRootFieldResolved -> S.FromItem
 toSQLFromItem alias = \case
-  RFDB (QDBPrimaryKey s)  -> fromSelect $ DS.mkSQLSelect DS.JASSingleObject s
-  RFDB (QDBSimple s)      -> fromSelect $ DS.mkSQLSelect DS.JASMultipleRows s
-  RFDB (QDBAggregation s) -> fromSelect $ DS.mkAggregateSelect s
-  RFDB (QDBConnection s)  -> S.mkSelectWithFromItem (DS.mkConnectionSelect s) alias
-  RFAction s              -> fromSelect $ DS.mkSQLSelect DS.JASSingleObject s
+  RFDB _ _ (QDBPrimaryKey s)  -> fromSelect $ DS.mkSQLSelect DS.JASSingleObject s
+  RFDB _ _ (QDBSimple s)      -> fromSelect $ DS.mkSQLSelect DS.JASMultipleRows s
+  RFDB _ _ (QDBAggregation s) -> fromSelect $ DS.mkAggregateSelect s
+  RFDB _ _ (QDBConnection s)  -> S.mkSelectWithFromItem (DS.mkConnectionSelect s) alias
+  -- RFAction s              -> fromSelect $ DS.mkSQLSelect DS.JASSingleObject s
   where
     fromSelect s = S.mkSelFromItem s alias
 
@@ -298,7 +296,7 @@ resolveMultiplexedValue = \case
       Nothing -> do
         syntheticVarIndex <- use (qpiSyntheticVariableValues . to length)
         modifying qpiSyntheticVariableValues (|> colVal)
-        pure ["synthetic", T.pack $ show syntheticVarIndex]
+        pure ["synthetic", tshow syntheticVarIndex]
     pure $ fromResVars (CollectableTypeScalar $ unsafePGColumnToBackend $ cvType colVal) varJsonPath
   UVSessionVar ty sessVar -> do
     modifying qpiReferencedSessionVariables (Set.insert sessVar)
@@ -324,6 +322,7 @@ data LiveQueryPlan
   = LiveQueryPlan
   { _lqpParameterizedPlan :: !ParameterizedLiveQueryPlan
   , _lqpVariables         :: !CohortVariables
+  , _lqpPGExecCtx         :: !PGExecCtx
   }
 
 data ParameterizedLiveQueryPlan
@@ -331,7 +330,7 @@ data ParameterizedLiveQueryPlan
   { _plqpRole  :: !RoleName
   , _plqpQuery :: !MultiplexedQuery
   } deriving (Show)
-$(J.deriveToJSON (J.aesonDrop 4 J.snakeCase) ''ParameterizedLiveQueryPlan)
+$(J.deriveToJSON hasuraJSON ''ParameterizedLiveQueryPlan)
 
 data ReusableLiveQueryPlan
   = ReusableLiveQueryPlan
@@ -340,7 +339,7 @@ data ReusableLiveQueryPlan
   , _rlqpSyntheticVariableValues  :: !ValidatedSyntheticVariables
   , _rlqpQueryVariableTypes       :: HashMap G.Name (ColumnType 'Postgres)
   } deriving (Show)
-$(J.deriveToJSON (J.aesonDrop 4 J.snakeCase) ''ReusableLiveQueryPlan)
+$(J.deriveToJSON hasuraJSON ''ReusableLiveQueryPlan)
 
 -- | Constructs a new execution plan for a live query and returns a reusable version
 -- of the plan if possible.
@@ -357,7 +356,7 @@ buildLiveQueryPlan pgExecCtx userInfo unpreparedAST = do
     for unpreparedAST \unpreparedQuery -> do
       resolvedRootField <- traverseQueryRootField resolveMultiplexedValue unpreparedQuery
       case resolvedRootField of
-        RFDB qDB   -> do
+        RFDB _ _ qDB   -> do
           let remoteJoins = case qDB of
                 QDBSimple s      -> snd $ RR.getRemoteJoins s
                 QDBPrimaryKey s  -> snd $ RR.getRemoteJoins s
@@ -365,8 +364,7 @@ buildLiveQueryPlan pgExecCtx userInfo unpreparedAST = do
                 QDBConnection s  -> snd $ RR.getRemoteJoinsConnectionSelect s
           when (remoteJoins /= mempty)
             $ throw400 NotSupported "Remote relationships are not allowed in subscriptions"
-        _ -> pure ()
-      traverseAction (DS.traverseAnnSimpleSelect resolveMultiplexedValue . resolveAsyncActionQuery userInfo) resolvedRootField
+      pure resolvedRootField
 
   let multiplexedQuery = mkMultiplexedQuery preparedAST
       roleName = _uiRole userInfo
@@ -382,7 +380,7 @@ buildLiveQueryPlan pgExecCtx userInfo unpreparedAST = do
       cohortVariables = mkCohortVariables _qpiReferencedSessionVariables
                         (_uiSession userInfo) validatedQueryVars validatedSyntheticVars
 
-      plan = LiveQueryPlan parameterizedPlan cohortVariables
+      plan = LiveQueryPlan parameterizedPlan cohortVariables pgExecCtx
       -- See Note [Temporarily disabling query plan caching]
       -- varTypes = finalReusability ^? GV._Reusable
       reusablePlan =
@@ -398,18 +396,22 @@ data LiveQueryPlanExplanation
   , _lqpePlan      :: ![Text]
   , _lqpeVariables :: !CohortVariables
   } deriving (Show)
-$(J.deriveToJSON (J.aesonDrop 5 J.snakeCase) ''LiveQueryPlanExplanation)
+$(J.deriveToJSON hasuraJSON ''LiveQueryPlanExplanation)
 
 explainLiveQueryPlan
-  :: (MonadTx m, MonadIO m)
+  :: ( MonadError QErr m
+     , MonadIO m
+     , MonadBaseControl IO m
+     )
   => LiveQueryPlan -> m LiveQueryPlanExplanation
 explainLiveQueryPlan plan = do
   let parameterizedPlan = _lqpParameterizedPlan plan
+      pgExecCtx = _lqpPGExecCtx plan
       queryText = Q.getQueryText . unMultiplexedQuery $ _plqpQuery parameterizedPlan
       -- CAREFUL!: an `EXPLAIN ANALYZE` here would actually *execute* this
       -- query, maybe resulting in privilege escalation:
       explainQuery = Q.fromText $ "EXPLAIN (FORMAT TEXT) " <> queryText
   cohortId <- newCohortId
-  explanationLines <- map runIdentity <$> executeQuery explainQuery
-                      [(cohortId, _lqpVariables plan)]
+  explanationLines <- liftEitherM $ runExceptT $ runLazyTx pgExecCtx Q.ReadOnly $
+                      map runIdentity <$> executeQuery explainQuery [(cohortId, _lqpVariables plan)]
   pure $ LiveQueryPlanExplanation queryText explanationLines $ _lqpVariables plan

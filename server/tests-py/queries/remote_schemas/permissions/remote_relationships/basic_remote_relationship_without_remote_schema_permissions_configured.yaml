@@ -1,0 +1,22 @@
+description: Simple remote relationship query without remote schema permissions configured for the role
+url: /v1/graphql
+status: 200
+headers:
+  X-Hasura-Role: user
+  X-Hasura-User-Id: '1'
+response:
+  errors:
+    - extensions:
+        path: $.selectionSet.profiles.selectionSet.messageBasic
+        code: validation-failed
+      message: "field \"messageBasic\" not found in type: 'profiles'"
+query:
+  query: |
+    query {
+      profiles {
+        id
+        messageBasic {
+          name
+        }
+      }
+    }

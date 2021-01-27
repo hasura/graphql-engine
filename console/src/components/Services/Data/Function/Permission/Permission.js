@@ -1,15 +1,12 @@
 import React from 'react';
-
 import Helmet from 'react-helmet';
-import CommonTabLayout from '../../../../Common/Layout/CommonTabLayout/CommonTabLayout';
 import { Link } from 'react-router';
 import { push } from 'react-router-redux';
+import { connect } from 'react-redux';
 
-import { pageTitle, appPrefix } from '../Modify/constants';
-
+import CommonTabLayout from '../../../../Common/Layout/CommonTabLayout/CommonTabLayout';
 import tabInfo from '../Modify/tabInfo';
 import globals from '../../../../../Globals';
-
 import { fetchCustomFunction } from '../customFunctionReducer';
 import {
   updateSchemaInfo,
@@ -23,35 +20,39 @@ import {
   getFunctionBaseRoute,
   getTablePermissionsRoute,
 } from '../../../../Common/utils/routesUtils';
-
-const prefixUrl = globals.urlPrefix + appPrefix;
+import { pageTitle } from '../Modify/ModifyCustomFunction';
+import styles from '../Modify/ModifyCustomFunction.scss';
 
 class Permission extends React.Component {
-  constructor() {
-    super();
+  constructor(props) {
+    super(props);
 
     this.state = {
       funcFetchCompleted: false,
     };
+    this.urlWithSource = `/data/${props.currentSource}`;
+    this.urlWithSchema = `/data/${props.currentSource}/schema/${props.currentSchema}`;
+    this.prefixUrl = globals.urlPrefix + this.urlWithSource;
   }
 
   componentDidMount() {
     const { functionName, schema } = this.props.params;
 
     if (!functionName) {
-      this.props.dispatch(push(prefixUrl));
+      this.props.dispatch(push(this.prefixUrl));
     }
 
     Promise.all([
       this.props
-        .dispatch(fetchCustomFunction(functionName, schema))
+        .dispatch(
+          fetchCustomFunction(functionName, schema, this.props.currentSource)
+        )
         .then(() => {
           this.setState({ funcFetchCompleted: true });
         }),
     ]);
   }
   render() {
-    const styles = require('../Modify/ModifyCustomFunction.scss');
     const {
       functionSchema: schema,
       functionName,
@@ -64,11 +65,16 @@ class Permission extends React.Component {
       throw new NotFoundError();
     }
 
-    const { dispatch } = this.props;
+    const { dispatch, currentSource } = this.props;
 
-    const functionBaseUrl = getFunctionBaseRoute(schema, functionName);
+    const functionBaseUrl = getFunctionBaseRoute(
+      schema,
+      currentSource,
+      functionName
+    );
     const permissionTableUrl = getTablePermissionsRoute(
       setOffTableSchema,
+      currentSource,
       setOffTable,
       true
     );
@@ -76,11 +82,11 @@ class Permission extends React.Component {
     const breadCrumbs = [
       {
         title: 'Data',
-        url: appPrefix,
+        url: this.urlWithSource,
       },
       {
         title: 'Schema',
-        url: appPrefix + '/schema',
+        url: this.urlWithSchema,
       },
       {
         title: schema,
@@ -118,7 +124,7 @@ class Permission extends React.Component {
           title={`Permission ${pageTitle} - ${functionName} - ${pageTitle}s | Hasura`}
         />
         <CommonTabLayout
-          appPrefix={appPrefix}
+          appPrefix={this.urlWithSource}
           currentTab="permissions"
           heading={functionName}
           tabsInfo={tabInfo}
@@ -148,4 +154,11 @@ class Permission extends React.Component {
   }
 }
 
-export default Permission;
+const mapStateToProps = state => ({
+  currentSchema: state.tables.currentSchema,
+});
+
+const permissionConnector = connect(mapStateToProps);
+const ConnectedPermission = permissionConnector(Permission);
+
+export default ConnectedPermission;
