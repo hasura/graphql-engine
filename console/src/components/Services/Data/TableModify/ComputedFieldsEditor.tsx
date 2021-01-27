@@ -13,7 +13,7 @@ import { fetchFunctionInit } from '../DataActions';
 import SearchableSelectBox from '../../../Common/SearchableSelect/SearchableSelect';
 import KnowMoreLink from '../../../Common/KnowMoreLink/KnowMoreLink';
 import { Dispatch } from '../../../../types';
-import { Table, Schema, ComputedField } from '../../../../dataSources/types';
+import { Schema, ComputedField, Table } from '../../../../dataSources/types';
 import { PGFunction } from '../../../../dataSources/services/postgresql/types';
 
 interface ComputedFieldsEditorProps {

@@ -7,6 +7,7 @@ import styles from './ModifyTable.scss';
 import KnowMoreLink from '../../../Common/KnowMoreLink/KnowMoreLink';
 import ComputedFieldsEditor from './ComputedFieldsEditor';
 import { ReduxState } from '../../../../types';
+import { Table } from '../../../../dataSources/types';
 
 const ComputedFields = (props: ComputedFieldsProps) => {
   const {
@@ -46,7 +47,7 @@ ComputedFields.propTypes = {
 };
 
 type OwnProps = {
-  tableSchema: string;
+  tableSchema: Table;
 };
 
 const mapStateToProps = (state: ReduxState, ownProps: OwnProps) => {
