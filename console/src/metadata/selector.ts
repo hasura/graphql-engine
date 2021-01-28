@@ -21,6 +21,9 @@ export const getDataSourceMetadata = (state: ReduxState) => {
 export const getRemoteSchemas = (state: ReduxState) => {
   return state.metadata.metadataObject?.remote_schemas ?? [];
 };
+export const getRemoteSchemaPermissions = (state: ReduxState) => {
+  return state.remoteSchemas.permissions ?? {};
+};
 
 export const getInitDataSource = (
   state: ReduxState
@@ -90,8 +93,8 @@ const permKeys: Array<keyof PermKeys> = [
   'delete_permissions',
 ];
 export const rolesSelector = createSelector(
-  [getTablesFromAllSources, getActions],
-  (tables, actions) => {
+  [getTablesFromAllSources, getActions, getRemoteSchemas],
+  (tables, actions, remoteSchemas) => {
     const roleNames: string[] = [];
     tables?.forEach(table =>
       permKeys.forEach(key =>
@@ -103,6 +106,9 @@ export const rolesSelector = createSelector(
     actions?.forEach(action =>
       action.permissions?.forEach(p => roleNames.push(p.role))
     );
+    remoteSchemas?.forEach(remoteSchema => {
+      remoteSchema?.permissions?.forEach(p => roleNames.push(p.role));
+    });
     return Array.from(new Set(roleNames));
   }
 );

@@ -33,3 +33,6 @@ export const makeDataAPIOptions = (
   body,
   failOnStatusCode: false,
 });
+
+export const getRemoteSchemaRoleName = (i: number, roleName: string) =>
+  `test-role-${roleName}-${i}`;

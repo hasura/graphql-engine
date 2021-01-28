@@ -126,6 +126,21 @@ export function isJsonString(str: string) {
   }
   return true;
 }
+
+export const isNumberString = (str: string | number) =>
+  !Number.isNaN(Number(str));
+
+export const isArrayString = (str: string) => {
+  try {
+    if (isJsonString(str) && Array.isArray(JSON.parse(str))) {
+      return true;
+    }
+  } catch (e) {
+    return false;
+  }
+  return false;
+};
+
 /* ARRAY utils */
 export const deleteArrayElementAtIndex = (array: unknown[], index: number) => {
   return array.splice(index, 1);
