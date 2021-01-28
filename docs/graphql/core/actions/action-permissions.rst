@@ -54,3 +54,21 @@ Set action permissions
 
      Save the changes and run ``hasura metadata apply`` to set the
      permissions.
+
+  .. tab:: API
+
+    Action permissions can be set by using the :ref:`create_action_permission metadata API <create_action_permission>`:
+
+    .. code-block:: http
+
+      POST /v1/query HTTP/1.1
+      Content-Type: application/json
+      X-Hasura-Role: admin
+
+      {
+        "type": "create_action_permission",
+        "args": {
+          "action": "insertAuthor",
+          "role": "user"
+        }
+      }

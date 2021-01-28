@@ -2,6 +2,8 @@ package commands
 
 import (
 	"bytes"
+	"os"
+	"path/filepath"
 
 	"github.com/hasura/graphql-engine/cli/migrate"
 	"github.com/pkg/errors"
@@ -22,7 +24,8 @@ type SeedNewOptions struct {
 	FromTableNames []string
 
 	// seed file that was created
-	FilePath string
+	FilePath   string
+	Datasource string
 }
 
 func newSeedCreateCmd(ec *cli.ExecutionContext) *cobra.Command {
@@ -47,6 +50,7 @@ func newSeedCreateCmd(ec *cli.ExecutionContext) *cobra.Command {
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
 			opts.SeedName = args[0]
+			opts.Datasource = ec.Datasource
 			err := opts.Run()
 			if err != nil {
 				return err
@@ -62,9 +66,15 @@ func newSeedCreateCmd(ec *cli.ExecutionContext) *cobra.Command {
 }
 
 func (o *SeedNewOptions) Run() error {
+	datasourceDirectory := filepath.Join(o.EC.SeedsDirectory, o.Datasource)
+	if f, _ := os.Stat(datasourceDirectory); f == nil {
+		if err := os.MkdirAll(datasourceDirectory, 0755); err != nil {
+			return err
+		}
+	}
 	createSeedOpts := seed.CreateSeedOpts{
 		UserProvidedSeedName: o.SeedName,
-		DirectoryPath:        o.EC.SeedsDirectory,
+		DirectoryPath:       filepath.Join(o.EC.SeedsDirectory, o.Datasource),
 	}
 
 	// If we are initializing from a database table
@@ -72,7 +82,10 @@ func (o *SeedNewOptions) Run() error {
 	if createSeedOpts.Data == nil {
 		var body []byte
 		if len(o.FromTableNames) > 0 {
-			migrateDriver, err := migrate.NewMigrate(ec, true)
+			if o.EC.Config.Version >= cli.V3 {
+				ec.Logger.Error("this feature is not available in config V3")
+			}
+			migrateDriver, err := migrate.NewMigrate(ec, true, "")
 			if err != nil {
 				return errors.Wrap(err, "cannot initialize migrate driver")
 			}

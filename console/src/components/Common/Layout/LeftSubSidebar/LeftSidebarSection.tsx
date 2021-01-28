@@ -39,7 +39,6 @@ const LeftSidebarSection = ({
     );
   };
 
-  // TODO test search
   let itemList: LeftSidebarItem[] = [];
   if (searchText) {
     const secondaryResults: LeftSidebarItem[] = [];
@@ -97,6 +96,7 @@ const LeftSidebarSection = ({
     getChildList,
     getSearchInput,
     count: itemList.length,
+    items: itemList,
   };
 };
 

@@ -233,7 +233,7 @@ OR
         where: {rating: {_lte: $ratingLimit}},
         _set: {
           rating: $rating,
-          is_published: $isPublished,
+          is_published: $isPublished
         }
       ) {
         affected_rows

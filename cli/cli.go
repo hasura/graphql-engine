@@ -23,6 +23,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/hasura/graphql-engine/cli/internal/client"
+
 	"github.com/Masterminds/semver"
 	"github.com/briandowns/spinner"
 	"github.com/gofrs/uuid"
@@ -63,6 +65,8 @@ const (
 	XHasuraAccessKey   = "X-Hasura-Access-Key"
 )
 
+
+
 // String constants
 const (
 	StrTelemetryNotice = `Help us improve Hasura! The cli collects anonymized usage stats which
@@ -79,15 +83,35 @@ const (
 	V1 ConfigVersion = iota + 1
 	// V2 represents config version 2
 	V2
+	V3
 )
 
 // ServerAPIPaths has the custom paths defined for server api
 type ServerAPIPaths struct {
-	Query   string `yaml:"query,omitempty"`
-	GraphQL string `yaml:"graphql,omitempty"`
-	Config  string `yaml:"config,omitempty"`
-	PGDump  string `yaml:"pg_dump,omitempty"`
-	Version string `yaml:"version,omitempty"`
+	Query string `yaml:"query,omitempty"`
+	// Metadata relevant since v1.4.0-alpha.1
+	// since v1/query is now split into v1/metadata and v2/query to support multiple datasources
+	Metadata string `yaml:"metadata,omitempty"`
+	GraphQL  string `yaml:"graphql,omitempty"`
+	Config   string `yaml:"config,omitempty"`
+	PGDump   string `yaml:"pg_dump,omitempty"`
+	Version  string `yaml:"version,omitempty"`
+}
+
+// SetDefaults will set default config values for API Paths
+// This function depends on server feature flags and will panic
+func (s *ServerAPIPaths) SetDefaults(hasMetadataV3 bool, configVersion ConfigVersion) {
+	if s.Query == "" {
+		if hasMetadataV3 && configVersion > V1 {
+			s.Query = "v2/query"
+		} else {
+			s.Query = "v1/query"
+		}
+	}
+
+	if s.Metadata == "" {
+		s.Metadata = "v1/metadata"
+	}
 }
 
 // GetQueryParams - encodes the values in url
@@ -144,7 +168,7 @@ func (c *ConfigVersion) String() string {
 
 // IsValid returns if its a valid config version
 func (c ConfigVersion) IsValid() bool {
-	return c != 0 && c <= V2
+	return c != 0 && c <= V3
 }
 
 // ServerConfig has the config values required to contact the server
@@ -227,6 +251,13 @@ func (s *ServerConfig) GetQueryEndpoint() string {
 	return nurl.String()
 }
 
+// GetQueryEndpoint provides the url to contact the query API
+func (s *ServerConfig) GetMetadataEndpoint() string {
+	nurl := *s.ParsedEndpoint
+	nurl.Path = path.Join(nurl.Path, s.APIPaths.Metadata)
+	return nurl.String()
+}
+
 // GetVersionEndpoint provides the url to contact the config API
 func (s *ServerConfig) getConfigEndpoint() string {
 	nurl := *s.ParsedEndpoint
@@ -282,6 +313,13 @@ func (s *ServerConfig) SetHTTPClient() error {
 	return nil
 }
 
+type DatasourceConfig struct {
+	Name                string `yaml:"name,omitempty"`
+	Type                string `yaml:"type,omitempty"`
+	MigrationsDirectory string `yaml:"migrations_directory,omitempty"`
+	SeedsDirectory      string `yaml:"seeds_directory,omitempty"`
+}
+
 // Config represents configuration required for the CLI to function
 type Config struct {
 	// Version of the config.
@@ -297,7 +335,8 @@ type Config struct {
 	// SeedsDirectory defines the directory where seed files will be stored
 	SeedsDirectory string `yaml:"seeds_directory,omitempty"`
 	// ActionConfig defines the config required to create or generate codegen for an action.
-	ActionConfig *types.ActionExecutionConfig `yaml:"actions,omitempty"`
+	ActionConfig      *types.ActionExecutionConfig `yaml:"actions,omitempty"`
+	DatasourcesConfig []DatasourceConfig           `yaml:"datasources,omitempty"`
 }
 
 // ExecutionContext contains various contextual information required by the cli
@@ -383,6 +422,13 @@ type ExecutionContext struct {
 
 	// IsTerminal indicates whether the current session is a terminal or not
 	IsTerminal bool
+
+	// instance of API client which communicates with Hasura API
+	APIClient *client.Client
+
+	// current datasource on which operation is being done
+	Datasource    string
+	HasMetadataV3 bool
 }
 
 // NewExecutionContext returns a new instance of execution context
@@ -564,7 +610,7 @@ func (ec *ExecutionContext) Validate() error {
 		}
 	}
 
-	if ec.Config.Version == V2 && ec.Config.MetadataDirectory != "" {
+	if ec.Config.Version >= V2 && ec.Config.MetadataDirectory != "" {
 		// set name of metadata directory
 		ec.MetadataDir = filepath.Join(ec.ExecutionDirectory, ec.Config.MetadataDirectory)
 		if _, err := os.Stat(ec.MetadataDir); os.IsNotExist(err) {
@@ -589,18 +635,67 @@ func (ec *ExecutionContext) Validate() error {
 	if err != nil {
 		return errors.Wrap(err, "error in getting server feature flags")
 	}
-
-	state := util.GetServerState(ec.Config.ServerConfig.GetQueryEndpoint(), ec.Config.ServerConfig.AdminSecret, ec.Config.ServerConfig.TLSConfig, ec.Version.ServerSemver, ec.Logger)
-	ec.ServerUUID = state.UUID
-	ec.Telemetry.ServerUUID = ec.ServerUUID
-	ec.Logger.Debugf("server: uuid: %s", ec.ServerUUID)
-	// Set headers required for communicating with HGE
 	if ec.Config.AdminSecret != "" {
 		headers := map[string]string{
 			GetAdminSecretHeaderName(ec.Version): ec.Config.AdminSecret,
 		}
 		ec.SetHGEHeaders(headers)
 	}
+
+	// check if server is using metadata v3
+	requestUri := ""
+	if ec.Config.GetMetadataEndpoint() != ec.Config.Endpoint {
+		requestUri = ec.Config.GetMetadataEndpoint()
+	}else {
+		requestUri = fmt.Sprintf("%s/%s", ec.Config.Endpoint, "v1/metadata")
+	}
+	req, err := http.NewRequest(http.MethodPost, requestUri, strings.NewReader(`{"type": "export_metadata", "args": {}}`));
+	if err != nil {
+		return err
+	}
+	apiHttpClient := &http.Client{
+		Timeout:       time.Minute * 2,
+	}
+	if ec.Config.TLSConfig != nil {
+		apiHttpClient.Transport = &http.Transport{TLSClientConfig: ec.Config.TLSConfig}
+	}
+	for k,v := range ec.HGEHeaders {
+		req.Header.Set(k,v)
+	}
+	resp, err  := apiHttpClient.Do(req)
+	if resp.StatusCode == http.StatusOK {
+		body,err := ioutil.ReadAll(resp.Body)
+		if err != nil {
+			return err
+		}
+		var v struct {
+			Version int `json:"version"`
+		}
+		if err := json.Unmarshal(body, &v); err != nil {
+			return err
+		}
+		if v.Version == 3 {
+			ec.HasMetadataV3 = true
+		}
+	}else if err != nil {
+		ec.Logger.Warn("checking if server supports metadata v3: ",err)
+	}
+
+	// set default API Paths w.r.t to server feature flags
+	ec.Config.ServerConfig.APIPaths.SetDefaults(ec.HasMetadataV3, ec.Config.Version)
+
+	ec.APIClient = client.NewClient(ec.HasMetadataV3)
+
+	var state *util.ServerState
+	if ec.HasMetadataV3 {
+		state = util.GetServerState(ec.Config.GetMetadataEndpoint(), ec.Config.ServerConfig.AdminSecret, ec.Config.ServerConfig.TLSConfig, ec.HasMetadataV3, ec.Logger)
+	}else {
+		state = util.GetServerState(ec.Config.GetQueryEndpoint(), ec.Config.ServerConfig.AdminSecret, ec.Config.ServerConfig.TLSConfig, ec.HasMetadataV3, ec.Logger)
+	}
+	ec.ServerUUID = state.UUID
+	ec.Telemetry.ServerUUID = ec.ServerUUID
+	ec.Logger.Debugf("server: uuid: %s", ec.ServerUUID)
+	// Set headers required for communicating with HGE
 	return nil
 }
 
@@ -635,6 +730,8 @@ func (ec *ExecutionContext) WriteConfig(config *Config) error {
 	return ioutil.WriteFile(ec.ConfigFile, y, 0644)
 }
 
+type DefaultAPIPath string
+
 // readConfig reads the configuration from config file, flags and env vars,
 // through viper.
 func (ec *ExecutionContext) readConfig() error {
@@ -648,7 +745,8 @@ func (ec *ExecutionContext) readConfig() error {
 	v.SetDefault("endpoint", "http://localhost:8080")
 	v.SetDefault("admin_secret", "")
 	v.SetDefault("access_key", "")
-	v.SetDefault("api_paths.query", "v1/query")
+	v.SetDefault("api_paths.query", "")
+	v.SetDefault("api_paths.metadata", "")
 	v.SetDefault("api_paths.graphql", "v1/graphql")
 	v.SetDefault("api_paths.config", "v1alpha1/config")
 	v.SetDefault("api_paths.pg_dump", "v1alpha1/pg_dump")
@@ -719,7 +817,6 @@ func (ec *ExecutionContext) readConfig() error {
 		return errors.Wrap(err, "setting up TLS config failed")
 	}
 	return ec.Config.ServerConfig.SetHTTPClient()
-	return nil
 }
 
 // setupSpinner creates a default spinner if the context does not already have

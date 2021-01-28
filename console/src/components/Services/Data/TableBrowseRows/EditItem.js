@@ -10,10 +10,11 @@ import { ordinalColSort } from '../utils';
 // import RichTextEditor from 'react-rte';
 import globals from '../../../../Globals';
 import { E_ONGOING_REQ, editItem } from './EditActions';
-import { findTable, generateTableDef } from '../../../Common/utils/pgUtils';
+import { findTable, generateTableDef } from '../../../../dataSources';
 import { getTableBrowseRoute } from '../../../Common/utils/routesUtils';
 import { fetchEnumOptions } from './EditActions';
 import { TableRow } from '../Common/Components/TableRow';
+import { RightContainer } from '../../../Common/Layout/RightContainer';
 
 class EditItem extends Component {
   constructor() {
@@ -39,6 +40,7 @@ class EditItem extends Component {
       count,
       dispatch,
       enumOptions,
+      currentSource,
     } = this.props;
 
     // check if item exists
@@ -47,6 +49,7 @@ class EditItem extends Component {
         replace(
           `${globals.urlPrefix || ''}${getTableBrowseRoute(
             currentSchema,
+            currentSource,
             tableName,
             true
           )}`
@@ -161,39 +164,42 @@ class EditItem extends Component {
     };
 
     return (
-      <div className={styles.container + ' container-fluid'}>
-        <TableHeader
-          count={count}
-          dispatch={dispatch}
-          table={currentTable}
-          tabName="edit"
-          migrationMode={migrationMode}
-          readOnlyMode={readOnlyMode}
-        />
-        <br />
-        <div className={styles.insertContainer + ' container-fluid'}>
-          <div className="col-xs-9">
-            <form id="updateForm" className="form-horizontal">
-              {elements}
-              <Button
-                type="submit"
-                color="yellow"
-                size="sm"
-                onClick={handleSaveClick}
-                data-test="edit-save-button"
-              >
-                {buttonText}
-              </Button>
-              {currentTable.is_enum ? (
-                <ReloadEnumValuesButton dispatch={dispatch} />
-              ) : null}
-            </form>
+      <RightContainer>
+        <div className={styles.container + ' container-fluid'}>
+          <TableHeader
+            count={count}
+            dispatch={dispatch}
+            table={currentTable}
+            source={currentSource}
+            tabName="edit"
+            migrationMode={migrationMode}
+            readOnlyMode={readOnlyMode}
+          />
+          <br />
+          <div className={styles.insertContainer + ' container-fluid'}>
+            <div className="col-xs-9">
+              <form id="updateForm" className="form-horizontal">
+                {elements}
+                <Button
+                  type="submit"
+                  color="yellow"
+                  size="sm"
+                  onClick={handleSaveClick}
+                  data-test="edit-save-button"
+                >
+                  {buttonText}
+                </Button>
+                {currentTable.is_enum ? (
+                  <ReloadEnumValuesButton dispatch={dispatch} />
+                ) : null}
+              </form>
+            </div>
+            <div className="col-xs-3">{alert}</div>
           </div>
-          <div className="col-xs-3">{alert}</div>
+          <br />
+          <br />
         </div>
-        <br />
-        <br />
-      </div>
+      </RightContainer>
     );
   }
 }
@@ -221,6 +227,7 @@ const mapStateToProps = (state, ownProps) => {
     migrationMode: state.main.migrationMode,
     readOnlyMode: state.main.readOnlyMode,
     currentSchema: state.tables.currentSchema,
+    currentSource: state.tables.currentDataSource,
   };
 };
 

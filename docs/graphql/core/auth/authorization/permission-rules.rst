@@ -122,8 +122,64 @@ Using boolean expressions
 The following is an example of a simple boolean expression to restrict access for ``select`` to rows where
 the value in the ``id`` column is greater than 10:
 
-.. thumbnail:: /img/graphql/core/auth/simple-boolean-expression.png
-   :alt: Using boolean expressions to build rules
+.. rst-class:: api_tabs
+.. tabs::
+
+   .. tab:: Console
+
+      You can define permissions using boolean expressions on the Hasura console as follows:
+
+      .. thumbnail:: /img/graphql/core/auth/simple-boolean-expression.png
+         :alt: Using boolean expressions to build rules
+
+   .. tab:: CLI
+
+      You can define permissions using boolean expressions in the ``tables.yaml`` file inside the ``metadata`` directory:
+
+      .. code-block:: yaml
+         :emphasize-lines: 8-10
+
+            - table:
+                schema: public
+                name: author
+              select_permissions:
+              - role: user
+                permission:
+                  columns: []
+                    filter:
+                      id:
+                        _gt: 10
+
+      Apply the metadata by running:
+
+      .. code-block:: bash
+
+         hasura metadata apply
+
+   .. tab:: API
+
+      You can define permissions using boolean expressions when using the :ref:`permissions metadata API <api_permission>`:
+
+      .. code-block:: http
+         :emphasize-lines: 12-14
+
+         POST /v1/query HTTP/1.1
+         Content-Type: application/json
+         X-Hasura-Role: admin
+
+         {
+            "type": "create_select_permission",
+            "args": {
+               "table": "author",
+               "role": "user",
+               "permission": {
+                  "columns": "*",
+                  "filter": {
+                     "id": {"_gt": 10}
+                  }
+               }
+            }
+         }
 
 You can construct more complex boolean expressions using the ``_and``, ``_or`` and ``not`` operators:
 
@@ -134,8 +190,76 @@ You can construct more complex boolean expressions using the ``_and``, ``_or`` a
 the value in the ``id`` column is greater than 10 **and** the value in the ``name`` column starts with "a"
 or "A":
 
-.. thumbnail:: /img/graphql/core/auth/composite-boolean-expression.png
-   :alt: Example of a rule with the _and operator
+.. rst-class:: api_tabs
+.. tabs::
+
+   .. tab:: Console
+
+      You can define permissions using the ``_and`` operator on the Hasura console as follows:
+
+      .. thumbnail:: /img/graphql/core/auth/composite-boolean-expression.png
+         :alt: Example of a rule with the _and operator
+
+   .. tab:: CLI
+
+      You can define permissions using the ``_and`` operator in the ``tables.yaml`` file inside the ``metadata`` directory:
+
+      .. code-block:: yaml
+         :emphasize-lines: 8-11
+
+            - table:
+                schema: public
+                name: author
+              select_permissions:
+              - role: user
+                permission:
+                  columns: []
+                  filter:
+                    _and:
+                      - id: {_gt: 10}
+                      - name: {_ilike: a%}
+
+      Apply the metadata by running:
+
+      .. code-block:: bash
+
+         hasura metadata apply
+
+   .. tab:: API
+
+      You can define permissions using the ``_and`` operator when using the :ref:`permissions metadata API <api_permission>`:
+
+      .. code-block:: http
+         :emphasize-lines: 12-25
+
+         POST /v1/query HTTP/1.1
+         Content-Type: application/json
+         X-Hasura-Role: admin
+
+         {
+            "type": "create_select_permission",
+            "args": {
+               "table": "author",
+               "role": "user",
+               "permission": {
+                  "columns": "*",
+                  "filter": {
+                     "$and": [
+                        {
+                           "id": {
+                              "_gt": 10
+                           }
+                        },
+                        {
+                           "name": {
+                              "_ilike": "a%"
+                           }
+                        }
+                     ]
+                  }
+               }
+            }
+         }
 
 Using session variables
 ***********************
@@ -148,8 +272,66 @@ to construct a rule to restrict access for ``select`` to rows in the ``articles`
 ``id`` column is equal to the value in the session variable (*assuming this variable is being used to indicate
 the author's ID*):
 
-.. thumbnail:: /img/graphql/core/auth/session-variables-in-permissions-simple-example.png
-   :alt: Using session variables to build rules
+.. rst-class:: api_tabs
+.. tabs::
+
+   .. tab:: Console
+
+      You can define session variables in permissions on the Hasura console:
+
+      .. thumbnail:: /img/graphql/core/auth/session-variables-in-permissions-simple-example.png
+         :alt: Using session variables to build rules
+
+   .. tab:: CLI
+
+      You can define session variables in permissions in the ``tables.yaml`` file inside the ``metadata`` directory:
+
+      .. code-block:: yaml
+         :emphasize-lines: 10-12
+
+            - table:
+                schema: public
+                name: article
+              select_permissions:
+              - role: author
+                permission:
+                  columns:
+                  - title
+                  - content
+                filter:
+                  id:
+                    _eq: X-Hasura-User-Id
+
+      Apply the metadata by running:
+
+      .. code-block:: bash
+
+         hasura metadata apply
+
+   .. tab:: API
+
+      You can define session variables in permissions tables when using the :ref:`permissions metadata API <api_permission>`:
+
+      .. code-block:: http
+         :emphasize-lines: 12-14
+
+         POST /v1/query HTTP/1.1
+         Content-Type: application/json
+         X-Hasura-Role: admin
+
+         {
+            "type": "create_select_permission",
+            "args": {
+               "table": "article",
+               "role": "author",
+               "permission": {
+                  "columns": "*",
+                  "filter": {
+                     "id": "X-Hasura-User-Id"
+                  }
+               }
+            }
+         }
 
 .. admonition:: Array session variables in permission rules
 
@@ -173,8 +355,69 @@ called ``agent`` (*an author can have an agent*) and we want to allow users with
 the details of the authors who they manage in ``authors`` table. We can define the following permission rule
 that uses the aforementioned object relationship:
 
-.. thumbnail:: /img/graphql/core/auth/nested-object-permission-simple-example.png
-   :alt: Using a nested object to build rules
+.. rst-class:: api_tabs
+.. tabs::
+
+   .. tab:: Console
+
+      You can use a nested object to build rules on the Hasura console:
+
+      .. thumbnail:: /img/graphql/core/auth/nested-object-permission-simple-example.png
+         :alt: Using a nested object to build rules
+
+   .. tab:: CLI
+
+      You add permissions using relationships or nested objects in the ``tables.yaml`` file inside the ``metadata`` directory:
+
+      .. code-block:: yaml
+         :emphasize-lines: 8-11
+
+            - table:
+                schema: public
+                name: author
+              select_permissions:
+              - role: agent
+                permission:
+                  columns: []
+                  filter:
+                    agent:
+                      agent_id:
+                        _eq: X-Hasura-User-Id
+
+      Apply the metadata by running:
+
+      .. code-block:: bash
+
+         hasura metadata apply
+
+   .. tab:: API
+
+      You add permissions using relationships or nested objects when using the :ref:`permissions metadata API <api_permission>`:
+
+      .. code-block:: http
+         :emphasize-lines: 12-18
+
+         POST /v1/query HTTP/1.1
+         Content-Type: application/json
+         X-Hasura-Role: admin
+
+            {
+               "type": "create_select_permission",
+               "args": {
+                  "table": "author",
+                  "role": "agent",
+                  "permission": {
+                     "columns": "*",
+                     "filter": {
+                        "agent": {
+                           "agent_id": {
+                              "_eq": "X-Hasura-User-Id"
+                           }
+                        }
+                     }
+                  }
+               }
+            }
 
 This permission rule reads as "*if the author's agent's*  ``id``  *is the same as the requesting user's*
 ``id`` *, allow access to the author's details*."
@@ -200,8 +443,85 @@ our table.
 column in the ``users`` table is set to ``true``. Let's assume the user's id is passed in the ``X-Hasura-User-ID``
 session variable.
 
-.. thumbnail:: /img/graphql/core/auth/exists-permission-example.png
-   :alt: Use an unrelated table to build rules
+.. rst-class:: api_tabs
+.. tabs::
+
+   .. tab:: Console
+
+      You can set permissions using unrelated tables on the Hasura console as follows:
+
+      .. thumbnail:: /img/graphql/core/auth/exists-permission-example.png
+         :alt: Use an unrelated table to build rules
+
+   .. tab:: CLI
+
+      You can set permissions using unrelated tables in the ``tables.yaml`` file inside the ``metadata`` directory:
+
+      .. code-block:: yaml
+         :emphasize-lines: 7-15
+
+            - table:
+                schema: public
+                name: article
+              insert_permissions:
+              - role: user
+                permission:
+                  check:
+                    _exists:
+                      _where:
+                        _and:
+                          - id: {_eq: X-Hasura-User-Id}
+                          - allow_article_create: {_eq: true}
+                      _table:
+                        schema: public
+                        name: users
+                  columns:
+                  - content
+                  - id
+                  - title
+
+      Apply the metadata by running:
+
+      .. code-block:: bash
+
+         hasura metadata apply
+
+   .. tab:: API
+
+      You can set permissions for unrelated tables when using the :ref:`permissions metadata API <api_permission>`:
+
+      .. code-block:: http
+         :emphasize-lines: 12-26
+
+         POST /v1/query HTTP/1.1
+         Content-Type: application/json
+         X-Hasura-Role: admin
+
+         {
+            "type": "create_insert_permission",
+            "args": {
+               "table": "article",
+               "role": "user",
+               "permission": {
+                  "columns": "*",
+                  "check": {
+                     "$exists": {
+                        "_table": "users",
+                        "_where": {
+                           "$and": [
+                              {
+                                 "id": "X-Hasura-User-Id"
+                              },
+                              {
+                                 "allow_article_create": true
+                              }
+                           ]
+                        }
+                     }
+                  }
+               }
+            }
+         }
 
 This permission rule reads as "*if there exists a row in the table* ``users`` *whose*  ``id``  *is the same as the requesting user's*
 ``id`` *and has the* ``allow_article_create`` *column set to true, allow access to insert articles*."
@@ -210,11 +530,78 @@ This permission rule reads as "*if there exists a row in the table* ``users`` *w
 
 Column-level permissions
 ^^^^^^^^^^^^^^^^^^^^^^^^
-Column-level permissions determine access to columns in the rows that are accessible based on row-level
-permissions. These permissions are simple selections:
 
-.. thumbnail:: /img/graphql/core/auth/column-level-permissions.png
-   :alt: Column level permissions
+Column-level permissions determine access to columns in the rows that are accessible based on row-level
+permissions. 
+
+.. rst-class:: api_tabs
+.. tabs::
+
+   .. tab:: Console
+
+      Column-level permissions are simple selections on the Hasura console:
+
+      .. thumbnail:: /img/graphql/core/auth/column-level-permissions.png
+         :alt: Column level permissions
+
+   .. tab:: CLI
+
+      You can set column-level permissions in the ``tables.yaml`` file inside the ``metadata`` directory:
+
+      .. code-block:: yaml
+         :emphasize-lines: 7-11
+
+            - table:
+                schema: public
+                name: article
+              select_permissions:
+              - role: author
+                permission:
+                  columns:
+                  - author_id
+                  - id
+                  - content
+                  - title
+                  filter:
+                    author_id:
+                      _eq: X-Hasura-User-Id
+
+
+      Apply the metadata by running:
+
+      .. code-block:: bash
+
+         hasura metadata apply
+
+   .. tab:: API
+
+      You can set column-level permissions when using the :ref:`permissions metadata API <api_permission>`:
+
+      .. code-block:: http
+         :emphasize-lines: 11-16
+
+         POST /v1/query HTTP/1.1
+         Content-Type: application/json
+         X-Hasura-Role: admin
+
+         {
+            "type": "create_select_permission",
+            "args": {
+               "table": "article",
+               "role": "author",
+               "permission": {
+                  "columns": [
+                     "id",
+                     "title",
+                     "content",
+                     "author_id"
+                  ],
+                  "filter": {
+                     "author_id": "X-Hasura-User-Id"
+                  }
+               }
+            }
+         }
 
 In this example, the role ``author`` has only partial access to columns of the accessible rows for
 the ``select`` operation.
@@ -227,8 +614,71 @@ Row fetch limit
 In the case of ``select`` operations, the number of rows to be returned in the response can be limited
 using this configuration:
 
-.. thumbnail:: /img/graphql/core/auth/limit-rows-for-select.png
-   :alt: Row fetch limit
+.. rst-class:: api_tabs
+.. tabs::
+
+   .. tab:: Console
+
+      You can set a row fetch limit on the Hasura console as follows:
+
+      .. thumbnail:: /img/graphql/core/auth/limit-rows-for-select.png
+         :alt: Row fetch limit
+
+   .. tab:: CLI
+
+      You can set a row fetch limit for a table in the ``tables.yaml`` file inside the ``metadata`` directory:
+
+      .. code-block:: yaml
+         :emphasize-lines: 13
+
+            - table:
+                schema: public
+                name: author
+              select_permissions:
+              - role: user
+                permission:
+                  columns:
+                  - id
+                  - name
+                  filter:
+                    user_id:
+                      _gt: 10
+                  limit: 20
+
+      Apply the metadata by running:
+
+      .. code-block:: bash
+
+         hasura metadata apply
+
+   .. tab:: API
+
+      You can a row fetch limit for a table when using the :ref:`permissions metadata API <api_permission>`:
+
+      .. code-block:: http
+         :emphasize-lines: 17
+
+         POST /v1/query HTTP/1.1
+         Content-Type: application/json
+         X-Hasura-Role: admin
+
+         {
+            "type": "create_select_permission",
+            "args": {
+               "table": "author",
+               "role": "user",
+               "permission": {
+                  "columns": "*",
+                  "filter": {
+                     "id": {
+                        "_gt": 10
+                     }
+                  },
+                  "limit": 20
+               }
+            }
+         }
+
 
 In the above example, this configuration  restricts the number of accessible rows (*based on the rule*:
 ``{"id":{"_eq":"X-Hasura-User-Id"}}``) to 20.
@@ -239,10 +689,73 @@ Aggregation queries permissions
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 In the case of ``select`` operations, access to :ref:`aggregation queries <aggregation_queries>`
-can be restricted for a given role using this configuration.
+can be enabled for a given role using this configuration.
 
-.. thumbnail:: /img/graphql/core/auth/aggregation-query-permissions.png
-   :alt: Aggregation queries permissions
+.. rst-class:: api_tabs
+.. tabs::
+
+   .. tab:: Console
+
+      You can enable aggregation queries permissions on the Hasura console as follows:
+
+      .. thumbnail:: /img/graphql/core/auth/aggregation-query-permissions.png
+         :alt: Aggregation queries permissions
+
+   .. tab:: CLI
+
+      You can allow aggregation query permissions in the ``tables.yaml`` file inside the ``metadata`` directory:
+
+      .. code-block:: yaml
+         :emphasize-lines: 13
+
+            - table:
+                schema: public
+                name: author
+              select_permissions:
+              - role: user
+                permission:
+                  columns:
+                  - id
+                  - name
+                  filter: 
+                    user_id:
+                      _gt: 10
+                  allow_aggregations: true
+
+      Apply the metadata by running:
+
+      .. code-block:: bash
+
+         hasura metadata apply
+
+   .. tab:: API
+
+      You can allow aggregation query permissions when using the :ref:`permissions metadata API <api_permission>`
+
+      .. code-block:: http
+         :emphasize-lines: 18
+
+         POST /v1/query HTTP/1.1
+         Content-Type: application/json
+         X-Hasura-Role: admin
+
+         {
+            "type": "create_select_permission",
+            "args": {
+               "table": "author",
+               "role": "user",
+               "permission": {
+                  "columns": [
+                     "id",
+                     "name"
+                  ],
+                  "filter": {
+                     "id": "X-Hasura-User-Id"
+                  },
+                  "allow_aggregations": true
+               }
+            }
+         }
 
 In the above example, the role ``user`` is allowed to make aggregation queries.
 

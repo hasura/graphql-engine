@@ -10,7 +10,7 @@ import (
 )
 
 const (
-	fileName string = "functions.yaml"
+	MetadataFilename string = "functions.yaml"
 )
 
 type FunctionConfig struct {
@@ -36,7 +36,7 @@ func (f *FunctionConfig) CreateFiles() error {
 	if err != nil {
 		return err
 	}
-	err = ioutil.WriteFile(filepath.Join(f.MetadataDir, fileName), data, 0644)
+	err = ioutil.WriteFile(filepath.Join(f.MetadataDir, MetadataFilename), data, 0644)
 	if err != nil {
 		return err
 	}
@@ -44,7 +44,7 @@ func (f *FunctionConfig) CreateFiles() error {
 }
 
 func (f *FunctionConfig) Build(metadata *yaml.MapSlice) error {
-	data, err := ioutil.ReadFile(filepath.Join(f.MetadataDir, fileName))
+	data, err := ioutil.ReadFile(filepath.Join(f.MetadataDir, MetadataFilename))
 	if err != nil {
 		return err
 	}
@@ -80,7 +80,7 @@ func (f *FunctionConfig) Export(metadata yaml.MapSlice) (map[string][]byte, erro
 		return nil, err
 	}
 	return map[string][]byte{
-		filepath.Join(f.MetadataDir, fileName): data,
+		filepath.Join(f.MetadataDir, MetadataFilename): data,
 	}, nil
 }
 

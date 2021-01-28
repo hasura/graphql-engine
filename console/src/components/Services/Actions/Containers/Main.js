@@ -7,6 +7,7 @@ import PageContainer from '../../../Common/Layout/PageContainer/PageContainer';
 import LeftSidebar from '../Sidebar/LeftSidebar';
 import styles from '../../../Common/TableCommon/Table.scss';
 import { appPrefix } from '../constants';
+import { actionsSelector } from '../../../../metadata/selector';
 
 class Container extends React.Component {
   render() {
@@ -59,6 +60,7 @@ Container.propTypes = {
 const mapStateToProps = state => {
   return {
     ...state.actions,
+    actions: actionsSelector(state),
     readOnlyMode: state.main.readOnlyMode,
   };
 };

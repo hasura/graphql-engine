@@ -39,40 +39,58 @@ module Hasura.RQL.Types.Action
   , CreateActionPermission(..)
 
   , ActionMetadata(..)
+  , amName
+  , amComment
+  , amDefinition
+  , amPermissions
   , ActionPermissionMetadata(..)
 
+  , ActionSourceInfo(..)
+  , getActionSourceInfo
   , AnnActionExecution(..)
   , AnnActionMutationAsync(..)
   , ActionExecContext(..)
   , AsyncActionQueryFieldG(..)
   , AnnActionAsyncQuery(..)
+
+  , ActionId(..)
+  , actionIdToText
+  , ActionLogItem(..)
+  , ActionLogResponse(..)
+  , AsyncActionStatus(..)
   ) where
 
 
-import           Control.Lens                  (makeLenses, makePrisms)
-import           Hasura.Incremental            (Cacheable)
 import           Hasura.Prelude
-import           Hasura.RQL.DDL.Headers
-import           Hasura.RQL.DML.Select.Types
-import           Hasura.RQL.Types.Common
-import           Hasura.RQL.Types.CustomTypes
-import           Hasura.Session
-import           Hasura.SQL.Types
-import           Language.Haskell.TH.Syntax    (Lift)
 
 import qualified Data.Aeson                    as J
 import qualified Data.Aeson.Casing             as J
 import qualified Data.Aeson.TH                 as J
 import qualified Data.HashMap.Strict           as Map
+import qualified Data.Time.Clock               as UTC
+import qualified Data.UUID                     as UUID
 import qualified Database.PG.Query             as Q
 import qualified Language.GraphQL.Draft.Syntax as G
 import qualified Network.HTTP.Client           as HTTP
 import qualified Network.HTTP.Types            as HTTP
 
+import           Control.Lens                  (makeLenses, makePrisms)
+import           Data.Text.Extended
+
+import           Hasura.Incremental            (Cacheable)
+import           Hasura.RQL.DDL.Headers
+import           Hasura.RQL.IR.Select
+import           Hasura.RQL.Types.Common
+import           Hasura.RQL.Types.CustomTypes
+import           Hasura.RQL.Types.Error
+import           Hasura.Session
+import           Hasura.SQL.Backend
+
+
 newtype ActionName
   = ActionName { unActionName :: G.Name }
-  deriving ( Show, Eq, J.FromJSON, J.ToJSON, J.FromJSONKey, J.ToJSONKey
-           , Hashable, DQuote, Lift, Generic, NFData, Cacheable)
+  deriving ( Show, Eq, Ord, J.FromJSON, J.ToJSON, J.FromJSONKey, J.ToJSONKey
+           , Hashable, ToTxt, Generic, NFData, Cacheable)
 
 instance Q.FromCol ActionName where
   fromCol bs = do
@@ -86,7 +104,7 @@ instance Q.ToPrepArg ActionName where
 data ActionMutationKind
   = ActionSynchronous
   | ActionAsynchronous
-  deriving (Show, Eq, Lift, Generic)
+  deriving (Show, Eq, Generic)
 instance NFData ActionMutationKind
 instance Cacheable ActionMutationKind
 $(J.deriveJSON
@@ -97,22 +115,22 @@ $(makePrisms ''ActionMutationKind)
 newtype ArgumentName
   = ArgumentName { unArgumentName :: G.Name }
   deriving ( Show, Eq, J.FromJSON, J.ToJSON, J.FromJSONKey, J.ToJSONKey
-           , Hashable, DQuote, Lift, Generic, NFData, Cacheable)
+           , Hashable, ToTxt, Generic, NFData, Cacheable)
 
 data ArgumentDefinition a
   = ArgumentDefinition
   { _argName        :: !ArgumentName
   , _argType        :: !a
   , _argDescription :: !(Maybe G.Description)
-  } deriving (Show, Eq, Functor, Foldable, Traversable, Lift, Generic)
+  } deriving (Show, Eq, Functor, Foldable, Traversable, Generic)
 instance (NFData a) => NFData (ArgumentDefinition a)
 instance (Cacheable a) => Cacheable (ArgumentDefinition a)
-$(J.deriveJSON (J.aesonDrop 4 J.snakeCase) ''ArgumentDefinition)
+$(J.deriveJSON hasuraJSON ''ArgumentDefinition)
 
 data ActionType
   = ActionQuery
   | ActionMutation !ActionMutationKind
-  deriving (Show, Eq, Lift, Generic)
+  deriving (Show, Eq, Generic)
 instance NFData ActionType
 instance Cacheable ActionType
 $(makePrisms ''ActionType)
@@ -128,7 +146,7 @@ data ActionDefinition a b
   -- ^ If the timeout is not provided by the user, then
   -- the default timeout of 30 seconds will be used
   , _adHandler              :: !b
-  } deriving (Show, Eq, Lift, Functor, Foldable, Traversable, Generic)
+  } deriving (Show, Eq, Functor, Foldable, Traversable, Generic)
 instance (NFData a, NFData b) => NFData (ActionDefinition a b)
 instance (Cacheable a, Cacheable b) => Cacheable (ActionDefinition a b)
 $(makeLenses ''ActionDefinition)
@@ -170,25 +188,26 @@ data ActionPermissionInfo
   = ActionPermissionInfo
   { _apiRole   :: !RoleName
   } deriving (Show, Eq)
-$(J.deriveToJSON (J.aesonDrop 4 J.snakeCase) ''ActionPermissionInfo)
+$(J.deriveToJSON hasuraJSON ''ActionPermissionInfo)
 
 type ActionPermissionMap = Map.HashMap RoleName ActionPermissionInfo
 
 type ActionOutputFields = Map.HashMap G.Name G.GType
 
-getActionOutputFields :: AnnotatedObjectType -> ActionOutputFields
+getActionOutputFields :: AnnotatedObjectType backend -> ActionOutputFields
 getActionOutputFields =
-  Map.fromList . map ( (unObjectFieldName . _ofdName) &&& (fst . _ofdType)) . toList . _otdFields
+  Map.fromList . map ( (unObjectFieldName . _ofdName) &&& (fst . _ofdType)) . toList . _otdFields . _aotDefinition
 
-data ActionInfo
+data ActionInfo (b :: BackendType)
   = ActionInfo
   { _aiName         :: !ActionName
-  , _aiOutputObject :: !AnnotatedObjectType
+  , _aiOutputObject :: !(AnnotatedObjectType b)
   , _aiDefinition   :: !ResolvedActionDefinition
   , _aiPermissions  :: !ActionPermissionMap
   , _aiComment      :: !(Maybe Text)
-  } deriving (Show, Eq)
-$(J.deriveToJSON (J.aesonDrop 3 J.snakeCase) ''ActionInfo)
+  } deriving (Generic)
+instance J.ToJSON (ActionInfo 'Postgres) where
+  toJSON = J.genericToJSON hasuraJSON
 $(makeLenses ''ActionInfo)
 
 type ActionDefinitionInput =
@@ -199,17 +218,17 @@ data CreateAction
   { _caName       :: !ActionName
   , _caDefinition :: !ActionDefinitionInput
   , _caComment    :: !(Maybe Text)
-  } deriving (Show, Eq, Lift, Generic)
+  } deriving (Show, Eq, Generic)
 instance NFData CreateAction
 instance Cacheable CreateAction
-$(J.deriveJSON (J.aesonDrop 3 J.snakeCase) ''CreateAction)
+$(J.deriveJSON hasuraJSON ''CreateAction)
 
 data UpdateAction
   = UpdateAction
   { _uaName       :: !ActionName
   , _uaDefinition :: !ActionDefinitionInput
-  } deriving (Show, Eq, Lift)
-$(J.deriveJSON (J.aesonDrop 3 J.snakeCase) ''UpdateAction)
+  } deriving (Show, Eq)
+$(J.deriveJSON hasuraJSON ''UpdateAction)
 
 data CreateActionPermission
   = CreateActionPermission
@@ -217,22 +236,22 @@ data CreateActionPermission
   , _capRole       :: !RoleName
   , _capDefinition :: !(Maybe J.Value)
   , _capComment    :: !(Maybe Text)
-  } deriving (Show, Eq, Lift, Generic)
+  } deriving (Show, Eq, Generic)
 instance NFData CreateActionPermission
 instance Cacheable CreateActionPermission
-$(J.deriveJSON (J.aesonDrop 4 J.snakeCase) ''CreateActionPermission)
+$(J.deriveJSON hasuraJSON ''CreateActionPermission)
 
 -- representation of action permission metadata
 data ActionPermissionMetadata
   = ActionPermissionMetadata
   { _apmRole    :: !RoleName
   , _apmComment :: !(Maybe Text)
-  } deriving (Show, Eq, Lift, Generic)
+  } deriving (Show, Eq, Generic)
 instance NFData ActionPermissionMetadata
 instance Cacheable ActionPermissionMetadata
 
-$(J.deriveFromJSON
-  (J.aesonDrop 4 J.snakeCase){J.omitNothingFields=True}
+$(J.deriveJSON
+  hasuraJSON{J.omitNothingFields=True}
   ''ActionPermissionMetadata)
 
 -- representation of action metadata
@@ -242,7 +261,9 @@ data ActionMetadata
   , _amComment     :: !(Maybe Text)
   , _amDefinition  :: !ActionDefinitionInput
   , _amPermissions :: ![ActionPermissionMetadata]
-  } deriving (Show, Eq, Lift, Generic)
+  } deriving (Show, Eq, Generic)
+$(J.deriveToJSON hasuraJSON ''ActionMetadata)
+$(makeLenses ''ActionMetadata)
 instance NFData ActionMetadata
 instance Cacheable ActionMetadata
 
@@ -256,21 +277,29 @@ instance J.FromJSON ActionMetadata where
 
 ----------------- Resolve Types ----------------
 
-data AnnActionExecution v
+data ActionSourceInfo b
+  = ASINoSource -- ^ No relationships defined on the action output object
+  | ASISource !(SourceConfig b) -- ^ All relationships refer to tables in one source
+
+getActionSourceInfo :: AnnotatedObjectType b -> ActionSourceInfo b
+getActionSourceInfo = maybe ASINoSource ASISource . _aotSource
+
+data AnnActionExecution (b :: BackendType) v
   = AnnActionExecution
   { _aaeName                 :: !ActionName
   , _aaeOutputType           :: !GraphQLType -- ^ output type
-  , _aaeFields               :: !(AnnFieldsG v) -- ^ output selection
+  , _aaeFields               :: !(AnnFieldsG b v) -- ^ output selection
   , _aaePayload              :: !J.Value -- ^ jsonified input arguments
   , _aaeOutputFields         :: !ActionOutputFields
   -- ^ to validate the response fields from webhook
-  , _aaeDefinitionList       :: ![(PGCol, PGScalarType)]
+  , _aaeDefinitionList       :: ![(Column b, ScalarType b)]
   , _aaeWebhook              :: !ResolvedWebhook
   , _aaeHeaders              :: ![HeaderConf]
   , _aaeForwardClientHeaders :: !Bool
   , _aaeStrfyNum             :: !Bool
   , _aaeTimeOut              :: !Timeout
-  } deriving (Show, Eq)
+  , _aaeSource               :: !(ActionSourceInfo b)
+  }
 
 data AnnActionMutationAsync
   = AnnActionMutationAsync
@@ -278,25 +307,25 @@ data AnnActionMutationAsync
   , _aamaPayload :: !J.Value -- ^ jsonified input arguments
   } deriving (Show, Eq)
 
-data AsyncActionQueryFieldG v
+data AsyncActionQueryFieldG (b :: BackendType) v
   = AsyncTypename !Text
-  | AsyncOutput !(AnnFieldsG v)
+  | AsyncOutput !(AnnFieldsG b v)
   | AsyncId
   | AsyncCreatedAt
   | AsyncErrors
-  deriving (Show, Eq)
 
-type AsyncActionQueryFieldsG v = Fields (AsyncActionQueryFieldG v)
+type AsyncActionQueryFieldsG b v = Fields (AsyncActionQueryFieldG b v)
 
-data AnnActionAsyncQuery v
+data AnnActionAsyncQuery (b :: BackendType) v
   = AnnActionAsyncQuery
   { _aaaqName           :: !ActionName
-  , _aaaqActionId       :: !v
+  , _aaaqActionId       :: !ActionId
   , _aaaqOutputType     :: !GraphQLType
-  , _aaaqFields         :: !(AsyncActionQueryFieldsG v)
-  , _aaaqDefinitionList :: ![(PGCol, PGScalarType)]
+  , _aaaqFields         :: !(AsyncActionQueryFieldsG b v)
+  , _aaaqDefinitionList :: ![(Column b, ScalarType b)]
   , _aaaqStringifyNum   :: !Bool
-  } deriving (Show, Eq)
+  , _aaaqSource         :: !(ActionSourceInfo b)
+  }
 
 data ActionExecContext
   = ActionExecContext
@@ -304,3 +333,32 @@ data ActionExecContext
   , _aecHeaders          :: !HTTP.RequestHeaders
   , _aecSessionVariables :: !SessionVariables
   }
+
+newtype ActionId = ActionId {unActionId :: UUID.UUID}
+  deriving (Show, Eq, Q.ToPrepArg, Q.FromCol, J.ToJSON, J.FromJSON)
+
+actionIdToText :: ActionId -> Text
+actionIdToText = UUID.toText . unActionId
+
+data ActionLogItem
+  = ActionLogItem
+  { _aliId               :: !ActionId
+  , _aliActionName       :: !ActionName
+  , _aliRequestHeaders   :: ![HTTP.Header]
+  , _aliSessionVariables :: !SessionVariables
+  , _aliInputPayload     :: !J.Value
+  } deriving (Show, Eq)
+
+data ActionLogResponse
+  = ActionLogResponse
+  { _alrId               :: !ActionId
+  , _alrCreatedAt        :: !UTC.UTCTime
+  , _alrResponsePayload  :: !(Maybe J.Value)
+  , _alrErrors           :: !(Maybe J.Value)
+  , _alrSessionVariables :: !SessionVariables
+  } deriving (Show, Eq)
+$(J.deriveJSON hasuraJSON ''ActionLogResponse)
+
+data AsyncActionStatus
+  = AASCompleted !J.Value
+  | AASError !QErr

@@ -127,3 +127,43 @@ You can create relationships for custom output types by:
 
      Save the changes and run ``hasura metadata apply`` to create the relationship.
 
+  .. tab:: API
+
+    Action relationships can be added while defining custom types via the :ref:`set_custom_types metadata API <set_custom_types>`:
+
+    .. code-block:: http
+      :emphasize-lines: 20-29
+
+      POST /v1/query HTTP/1.1
+      Content-Type: application/json
+      X-Hasura-Role: admin
+
+      {
+        "type": "set_custom_types",
+        "args": {
+          "scalars": [],
+          "enums": [],
+          "input_objects": [],
+          "objects": [
+            {
+              "name": "UpdateAuthorOutput",
+              "fields": [
+                {
+                  "name": "author_id",
+                  "type": "Int!"
+                }
+              ],
+              "relationships": [
+                {
+                  "name": "updatedAuthor",
+                  "type": "object",
+                  "remote_table": "author",
+                  "field_mapping": {
+                    "author_id": "id"
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      }

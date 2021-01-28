@@ -1,0 +1,38 @@
+core.workflow(
+    name = "shadow-pr",
+    origin = git.github_pr_origin(
+      url = "git@github.com:hasura/graphql-engine.git"
+    ),
+
+    destination = git.github_pr_destination(
+      url = "git@github.com:hasura/graphql-engine-mono.git",
+      destination_ref = "main",
+      pr_branch = "oss_pr_${CONTEXT_REFERENCE}",
+      title = "${GITHUB_PR_TITLE}",
+      body = "This PR was migrated from ${GITHUB_PR_URL} \n\n---\n${GITHUB_PR_BODY}",
+    ),
+
+    mode = "CHANGE_REQUEST",
+
+    origin_files = glob(["**"]),
+
+    destination_files = glob(["**"], exclude = [
+        "pro/**", ".circleci/**", ".github/**", ".gitignore",
+        "bot.gitconfig", "copy.bara.sky",
+      ]
+    ),
+
+    authoring = authoring.pass_thru("hasura-bot <accounts@hasura.io>"),
+
+    set_rev_id = False,
+
+    transformations = [
+        core.move(".circleci", "oss-.circleci"),
+        core.move(".github", "oss-.github"),
+        core.move(".gitignore", "oss-.gitignore"),
+        metadata.restore_author("ORIGINAL_AUTHOR", search_all_changes = True),
+        metadata.add_header("${GITHUB_PR_TITLE}"),
+        metadata.expose_label("GITHUB_PR_NUMBER", separator = ': '),
+        metadata.expose_label("GITHUB_PR_URL", separator = ': '),
+    ],
+)

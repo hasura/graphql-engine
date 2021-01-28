@@ -12,6 +12,8 @@ from enum import Enum
 
 import time
 
+from graphql import GraphQLError
+
 HGE_URLS=[]
 
 def mkJSONResp(graphql_result):
@@ -53,6 +55,8 @@ class HelloGraphQL(RequestHandler):
 class User(graphene.ObjectType):
     id = graphene.Int()
     username = graphene.String()
+    generateError = graphene.String()
+
     def __init__(self, id, username):
         self.id = id
         self.username = username
@@ -62,6 +66,9 @@ class User(graphene.ObjectType):
 
     def resolve_username(self, info):
         return self.username
+
+    def resolve_generateError(self, info):
+        return GraphQLError ('Cannot query field "generateError" on type "User".')
 
     @staticmethod
     def get_by_id(_id):
@@ -75,6 +82,25 @@ all_users = [
     User(2, 'john'),
     User(3, 'joe'),
 ]
+
+class UserDetailsInput(graphene.InputObjectType):
+    id = graphene.Int(required=True)
+    username = graphene.String(required=True)
+
+class CreateUserInputObject(graphene.Mutation):
+    class Arguments:
+        user_data = UserDetailsInput(required=True)
+
+    ok = graphene.Boolean()
+    user = graphene.Field(lambda: User)
+
+    def mutate(self, info, user_data=None):
+        user = User(
+            id = user_data.id,
+            username = user_data.username
+        )
+        all_users.append(user)
+        return CreateUserInputObject(ok=True, user = user)
 
 class CreateUser(graphene.Mutation):
     class Arguments:
@@ -101,6 +127,8 @@ class UserQuery(graphene.ObjectType):
 
 class UserMutation(graphene.ObjectType):
     createUser = CreateUser.Field()
+    createUserInputObj = CreateUserInputObject.Field()
+
 user_schema = graphene.Schema(query=UserQuery, mutation=UserMutation)
 
 class UserGraphQL(RequestHandler):

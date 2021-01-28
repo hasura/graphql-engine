@@ -180,7 +180,7 @@ class ActionsWebhookHandler(http.server.BaseHTTPRequestHandler):
             self._send_response(status, resp)
 
         elif req_path == "/create-user-timeout":
-            time.sleep(2)
+            time.sleep(3)
             resp, status = self.create_user()
             self._send_response(status, resp)
 
@@ -521,12 +521,12 @@ class HGECtx:
         conn.close()
         return res
 
-    def v1q(self, q, headers = {}):
+    def execute_query(self, q, url_path, headers = {}):
         h = headers.copy()
         if self.hge_key is not None:
             h['X-Hasura-Admin-Secret'] = self.hge_key
         resp = self.http.post(
-            self.hge_url + "/v1/query",
+            self.hge_url + url_path,
             json=q,
             headers=h
         )
@@ -534,11 +534,24 @@ class HGECtx:
         # properties in the graphql spec properly
         return resp.status_code, resp.json(object_pairs_hook=OrderedDict)
 
+
+    def v1q(self, q, headers = {}):
+        return self.execute_query(q, "/v1/query", headers)
+
     def v1q_f(self, fn):
         with open(fn) as f:
             # NOTE: preserve ordering with ruamel
             yml = yaml.YAML()
             return self.v1q(yml.load(f))
+
+    def v1metadataq(self, q, headers = {}):
+        return self.execute_query(q, "/v1/metadata", headers)
+
+    def v1metadataq_f(self, fn):
+        with open(fn) as f:
+            # NOTE: preserve ordering with ruamel
+            yml = yaml.YAML()
+            return self.v1metadataq(yml.load(f))
 
     def teardown(self):
         self.http.close()

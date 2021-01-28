@@ -678,7 +678,7 @@ or pass it as ``null``:
       insert_author(
         objects: [
           {
-            name: "Jeff",
+            name: "Jeff"
           }
         ]
       ) {

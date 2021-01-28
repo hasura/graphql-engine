@@ -98,7 +98,7 @@ And ``base64`` encoded value is
 
 .. code-block:: none
 
-   WzEsICJwdWJsaWMiLCAiYXV0aG9yIiwgIjI5NmQzMGIxLTQ3NGQtNDAxMS1hOTA3LTI3MDE5OTJiMDRjMSJdCg==
+   WzEsICJwdWJsaWMiLCAiYXV0aG9yIiwgIjI5NmQzMGIxLTQ3NGQtNDAxMS1hOTA3LTI3MDE5OTJiMDRjMSJd
 
 Exporting the Relay schema
 --------------------------

@@ -15,7 +15,7 @@ export WINDOWS_SHA256=$(cat ${ROOT}/cli-ext/bin/cli-ext-hasura-win.zip.sha256 | 
 ) >${ROOT}/cli-ext/bin/tmp.yaml
 . ${ROOT}/cli-ext/bin/tmp.yaml
 
-export BUCKET_URL=https://${CIRCLE_BUILD_NUM}-137724480-gh.circle-artifacts.com/0/cli_ext
+export BUCKET_URL=file:///build/_cli_ext_output
 
 ( echo "cat <<EOF >${ROOT}/cli-ext/bin/manifest-dev.yaml";
   cat ${ROOT}/cli-ext/scripts/manifest.yaml;
