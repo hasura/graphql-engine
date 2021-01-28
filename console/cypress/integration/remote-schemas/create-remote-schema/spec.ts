@@ -5,6 +5,7 @@ import {
   getInvalidRemoteSchemaUrl,
   getRemoteGraphQLURL,
   getRemoteGraphQLURLFromEnv,
+  getRemoteSchemaRoleName,
 } from '../../../helpers/remoteSchemaHelpers';
 
 import { validateRS, ResultType } from '../../validators/validators';
@@ -264,3 +265,45 @@ export const deleteRemoteSchema = () => {
 
   cy.get(getElementFromAlias('delete-confirmation-error')).should('not.exist');
 };
+
+export const visitRemoteSchemaPermissionsTab = () => {
+  cy.visit(
+    `${baseUrl}/remote-schemas/manage/${getRemoteSchemaName(
+      1,
+      testName
+    )}/permissions`
+  );
+  cy.wait(5000);
+};
+
+export const createSimpleRemoteSchemaPermission = () => {
+  cy.get(getElementFromAlias('role-textbox'))
+    .clear()
+    .type(getRemoteSchemaRoleName(1, testName));
+  cy.get(getElementFromAlias(`${getRemoteSchemaRoleName(1, testName)}-Permission`))
+    .click();
+  cy.wait(2000);
+  cy.get(getElementFromAlias('field-__query_root'))
+    .click();
+  cy.get(getElementFromAlias('checkbox-test')).click() 
+  cy.get(getElementFromAlias('pen-limit')).click() 
+  cy.get(getElementFromAlias('input-limit')).type('1') 
+
+  cy.get(getElementFromAlias('save-remote-schema-permissions'))
+    .click({ force: true });
+  cy.wait(15000);
+  cy.url().should(
+    'eq',
+    `${baseUrl}/remote-schemas/manage/${getRemoteSchemaName(
+      1,
+      testName
+    )}/permissions`
+  );
+  cy.wait(5000);
+};
+
+// export const deleteRemoteSchemaPermission = () => {
+//   cy.get(getElementFromAlias('delete-remote-schema-permissions'))
+//     .click();
+
+// }

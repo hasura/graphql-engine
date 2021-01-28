@@ -16,6 +16,8 @@ import {
   passWithRemoteSchemaHeader,
   passWithEditRemoteSchema,
   deleteRemoteSchema,
+  visitRemoteSchemaPermissionsTab,
+  createSimpleRemoteSchemaPermission,
 } from './spec';
 
 const setup = () => {
@@ -33,11 +35,11 @@ const setup = () => {
 export const runCreateRemoteSchemaTableTests = () => {
   describe('Create Remote Schema', () => {
     it(
-      'Create table button opens the correct route',
+      'Add remote schema button opens the correct route',
       checkCreateRemoteSchemaRoute
     );
     it(
-      'Fails to create remote schema without name',
+      'Fails to create remote schema without valid url',
       failRSWithInvalidRemoteUrl
     );
     it('Create a simple remote schema', createSimpleRemoteSchema);
@@ -50,8 +52,19 @@ export const runCreateRemoteSchemaTableTests = () => {
       'Delete simple remote schema fail due to user confirmation error',
       deleteSimpleRemoteSchemaFailUserConfirmationError
     );
+    it(
+      'Visits the remote schema permissions tab',
+      visitRemoteSchemaPermissionsTab
+    );
+    it(
+      'Create a simple remote schema permission role',
+      createSimpleRemoteSchemaPermission
+    );
     it('Delete simple remote schema', deleteSimpleRemoteSchema);
-    it('Fails to create remote schema with url from env', failWithRemoteSchemaEnvUrl);
+    it(
+      'Fails to create remote schema with url from env',
+      failWithRemoteSchemaEnvUrl
+    );
     it(
       'Fails to create remote schema with headers from env',
       failWithRemoteSchemaEnvHeader

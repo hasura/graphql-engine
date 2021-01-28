@@ -72,9 +72,9 @@ const getReqHeader = headers => {
       };
 
       if (h.type === 'static') {
-        reqHead.value = h.value;
+        reqHead.value = h.value?.trim();
       } else {
-        reqHead.value_from_env = h.value;
+        reqHead.value_from_env = h.value?.trim();
       }
 
       requestHeaders.push(reqHead);
@@ -123,8 +123,8 @@ const addRemoteSchema = () => {
     const resolveObj = {
       name: currState.name.trim().replace(/ +/g, ''),
       definition: {
-        url: currState.manualUrl,
-        url_from_env: currState.envName,
+        url: currState.manualUrl?.trim(),
+        url_from_env: currState.envName?.trim(),
         headers: [],
         timeout_seconds: timeoutSeconds,
         forward_client_headers: currState.forwardClientHeaders,

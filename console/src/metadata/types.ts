@@ -1,4 +1,5 @@
 import { Driver } from '../dataSources';
+import { PermissionsType } from '../components/Services/RemoteSchema/Permissions/types';
 
 export type DataSource = {
   name: string;
@@ -552,6 +553,7 @@ export interface RemoteSchema {
   definition: RemoteSchemaDef;
   /** Comment */
   comment?: string;
+  permissions?: PermissionsType[];
 }
 
 /**
