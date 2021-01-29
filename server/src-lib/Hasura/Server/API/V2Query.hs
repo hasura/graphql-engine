@@ -66,9 +66,10 @@ runQuery
   -> HTTP.Manager
   -> SQLGenCtx
   -> RemoteSchemaPermsCtx
+  -> FunctionPermissionsCtx
   -> RQLQuery
   -> m (EncJSON, RebuildableSchemaCache)
-runQuery env instanceId userInfo schemaCache httpManager sqlGenCtx remoteSchemaPermCtx rqlQuery = do
+runQuery env instanceId userInfo schemaCache httpManager sqlGenCtx remoteSchemaPermCtx functionPermsCtx rqlQuery = do
   metadata <- fetchMetadata
   result <- runQueryM env rqlQuery & Tracing.interpTraceT \x -> do
     (((js, tracemeta), meta), rsc, ci) <-
@@ -80,7 +81,8 @@ runQuery env instanceId userInfo schemaCache httpManager sqlGenCtx remoteSchemaP
     pure ((js, rsc, ci, meta), tracemeta)
   withReload result
   where
-    runCtx = RunCtx userInfo httpManager sqlGenCtx remoteSchemaPermCtx
+    runCtx = RunCtx userInfo httpManager
+             $ ServerConfigCtx functionPermsCtx remoteSchemaPermCtx sqlGenCtx
 
     withReload (result, updatedCache, invalidations, updatedMetadata) = do
       when (queryModifiesSchema rqlQuery) $ do
@@ -92,9 +94,9 @@ runQuery env instanceId userInfo schemaCache httpManager sqlGenCtx remoteSchemaP
 
 queryModifiesSchema :: RQLQuery -> Bool
 queryModifiesSchema = \case
-  RQRunSql q  -> isSchemaCacheBuildRequiredRunSQL q
-  RQBulk l    -> any queryModifiesSchema l
-  _           -> False
+  RQRunSql q -> isSchemaCacheBuildRequiredRunSQL q
+  RQBulk l   -> any queryModifiesSchema l
+  _          -> False
 
 runQueryM
   :: ( HasVersion
@@ -103,7 +105,7 @@ runQueryM
      , MonadBaseControl IO m
      , UserInfoM m
      , CacheRWM m
-     , HasSQLGenCtx m
+     , HasServerConfigCtx m
      , Tracing.MonadTrace m
      , MetadataM m
      )

@@ -588,9 +588,14 @@ class TestGraphQLMutateEnums:
     def test_delete_where_enum_field(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + '/delete_where_enum_field.yaml', transport)
 
+use_function_permission_fixtures = usefixtures(
+    'per_class_db_schema_for_mutation_tests',
+    'per_method_db_data_for_mutation_tests',
+    'functions_permissions_fixtures'
+)
 # Tracking VOLATILE SQL functions as mutations, or queries (#1514)
 @pytest.mark.parametrize('transport', ['http', 'websocket'])
-@use_mutation_fixtures
+@use_function_permission_fixtures
 class TestGraphQLMutationFunctions:
     @classmethod
     def dir(cls):
@@ -609,7 +614,17 @@ class TestGraphQLMutationFunctions:
     def test_functions_as_mutations(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + '/function_as_mutations.yaml', transport)
 
+    # When graphql-engine is started with `--infer-function-permissions=false` then
+    # a function is only accessible to a role when the permission is granted through
+    # the `pg_create_function_permission` definition
+    def test_function_as_mutation_without_function_permission(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/function_without_function_permission.yaml')
+
     # Ensure select permissions on the corresponding SETOF table apply to
     # the return set of the mutation field backed by the tracked function.
     def test_functions_as_mutations_permissions(self, hge_ctx, transport):
+        st_code, resp = hge_ctx.v1metadataq_f(self.dir() + '/create_function_permission_add_to_score.yaml')
+        assert st_code == 200, resp
         check_query_f(hge_ctx, self.dir() + '/function_as_mutations_permissions.yaml', transport)
+        st_code, resp = hge_ctx.v1metadataq_f(self.dir() + '/drop_function_permission_add_to_score.yaml')
+        assert st_code == 200, resp

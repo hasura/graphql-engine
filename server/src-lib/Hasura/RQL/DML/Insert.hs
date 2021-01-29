@@ -208,7 +208,7 @@ convInsQ query = do
 
 runInsert
   :: ( HasVersion, QErrM m, UserInfoM m
-     , CacheRM m, HasSQLGenCtx m
+     , CacheRM m, HasServerConfigCtx m
      , MonadIO m, Tracing.MonadTrace m
      , MonadBaseControl IO m
      )
@@ -216,7 +216,7 @@ runInsert
 runInsert env q = do
   sourceConfig <- askSourceConfig (iqSource q)
   res <- convInsQ q
-  strfyNum <- stringifyNum <$> askSQLGenCtx
+  strfyNum <- stringifyNum . _sccSQLGenCtx <$> askServerConfigCtx
   runQueryLazyTx (_pscExecCtx sourceConfig) Q.ReadWrite $
     execInsertQuery env strfyNum Nothing res
 

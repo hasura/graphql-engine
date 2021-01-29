@@ -37,7 +37,7 @@ newtype CacheRefT m a
   = CacheRefT { runCacheRefT :: MVar RebuildableSchemaCache -> m a }
   deriving
     ( Functor, Applicative, Monad, MonadIO, MonadError e, MonadBase b, MonadBaseControl b
-    , MonadTx, MonadUnique, UserInfoM, HTTP.HasHttpManagerM, HasSQLGenCtx)
+    , MonadTx, MonadUnique, UserInfoM, HTTP.HasHttpManagerM, HasServerConfigCtx)
     via (ReaderT (MVar RebuildableSchemaCache) m)
 
 instance MonadTrans CacheRefT where
@@ -51,7 +51,7 @@ instance (MonadBase IO m) => CacheRM (CacheRefT m) where
   askSchemaCache = CacheRefT (fmap lastBuiltSchemaCache . readMVar)
 
 instance (MonadIO m, MonadBaseControl IO m, MonadTx m, HTTP.HasHttpManagerM m
-         , HasSQLGenCtx m, HasRemoteSchemaPermsCtx m, MonadResolveSource m) => CacheRWM (CacheRefT m) where
+         , MonadResolveSource m, HasServerConfigCtx m) => CacheRWM (CacheRefT m) where
   buildSchemaCacheWithOptions reason invalidations metadata = CacheRefT $ flip modifyMVar \schemaCache -> do
     ((), cache, _) <- runCacheRWT schemaCache (buildSchemaCacheWithOptions reason invalidations metadata)
     pure (cache, ())
@@ -72,8 +72,7 @@ spec
      , MonadBaseControl IO m
      , MonadError QErr m
      , HTTP.HasHttpManagerM m
-     , HasSQLGenCtx m
-     , HasRemoteSchemaPermsCtx m
+     , HasServerConfigCtx m
      , MonadResolveSource m
      )
   => SourceConfiguration -> PGExecCtx -> Q.ConnInfo -> SpecWithCache m

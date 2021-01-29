@@ -7,7 +7,9 @@ module Hasura.RQL.DDL.Schema.Function where
 import           Hasura.Prelude
 
 import qualified Control.Monad.Validate             as MV
+import qualified Data.HashMap.Strict                as Map
 import qualified Data.HashMap.Strict.InsOrd         as OMap
+import qualified Data.HashSet                       as Set
 import qualified Data.Sequence                      as Seq
 import qualified Data.Text                          as T
 import qualified Database.PG.Query                  as Q
@@ -24,6 +26,7 @@ import           Hasura.EncJSON
 import           Hasura.RQL.Types
 import           Hasura.Server.Utils                (englishList, makeReasonMessage)
 
+import           Hasura.Session
 
 mkFunctionArgs :: Int -> [QualifiedPGType] -> [FunctionArgName] -> [FunctionArg 'Postgres]
 mkFunctionArgs defArgsNo tys argNames =
@@ -69,9 +72,10 @@ mkFunctionInfo
   -> QualifiedFunction
   -> SystemDefined
   -> FunctionConfig
+  -> [FunctionPermissionMetadata]
   -> RawFunctionInfo
   -> m (FunctionInfo 'Postgres, SchemaDependency)
-mkFunctionInfo source qf systemDefined FunctionConfig{..} rawFuncInfo =
+mkFunctionInfo source qf systemDefined FunctionConfig{..} permissions rawFuncInfo =
   either (throw400 NotSupported . showErrors) pure
     =<< MV.runValidateT validateFunction
   where
@@ -113,8 +117,10 @@ mkFunctionInfo source qf systemDefined FunctionConfig{..} rawFuncInfo =
       inputArguments <- makeInputArguments
 
       let retTable = typeToTable returnType
+          functionInfo =
+            FunctionInfo qf systemDefined funVol exposeAs inputArguments retTable descM (Set.fromList $ _fpmRole <$> permissions)
 
-      pure ( FunctionInfo qf systemDefined funVol exposeAs inputArguments retTable descM
+      pure ( functionInfo
            , SchemaDependency (SOSourceObj source $ SOITable retTable) DRTable
            )
 
@@ -183,7 +189,7 @@ trackFunctionP2 sourceName qf config = do
   buildSchemaCacheFor (MOSourceObjId sourceName $ SMOFunction qf)
     $ MetadataModifier
     $ metaSources.ix sourceName.smFunctions
-      %~ OMap.insert qf (FunctionMetadata qf config)
+      %~ OMap.insert qf (FunctionMetadata qf config mempty)
   pure successMsg
 
 handleMultipleFunctions :: (QErrM m) => QualifiedFunction -> [a] -> m a
@@ -240,14 +246,19 @@ instance FromJSON UnTrackFunction where
                    UnTrackFunction <$> o .: "table"
                                    <*> o .:? "source" .!= defaultSource
 
+askPGFunctionInfo
+  :: (CacheRM m, MonadError QErr m)
+  => SourceName -> QualifiedFunction -> m (FunctionInfo 'Postgres)
+askPGFunctionInfo source functionName = do
+  sourceCache <- scPostgres <$> askSchemaCache
+  unsafeFunctionInfo @'Postgres source functionName sourceCache
+    `onNothing` throw400 NotExists ("function " <> functionName <<> " not found in the cache")
+
 runUntrackFunc
   :: (CacheRWM m, MonadError QErr m, MetadataM m)
   => UnTrackFunction -> m EncJSON
 runUntrackFunc (UnTrackFunction functionName sourceName) = do
-  schemaCache <- askSchemaCache
-  unsafeFunctionInfo @'Postgres sourceName functionName (scPostgres schemaCache)
-    `onNothing` throw400 NotExists ("function not found in cache " <>> functionName)
-  -- Delete function from metadata
+  void $ askPGFunctionInfo sourceName functionName
   withNewInconsistentObjsCheck
     $ buildSchemaCache
     $ dropFunctionInMetadata defaultSource functionName
@@ -256,3 +267,93 @@ runUntrackFunc (UnTrackFunction functionName sourceName) = do
 dropFunctionInMetadata :: SourceName -> QualifiedFunction -> MetadataModifier
 dropFunctionInMetadata source function = MetadataModifier $
   metaSources.ix source.smFunctions %~ OMap.delete function
+
+{- Note [Function Permissions]
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Before we started supporting tracking volatile functions, permissions
+for a function was inferred from the target table of the function.
+The rationale behind this is that a stable/immutable function does not
+modify the database and the data returned by the function is filtered using
+the permissions that are specified precisely for that data.
+Now consider mutable/volatile functions, we can't automatically infer whether or
+not these functions should be exposed for the sole reason that they can modify
+the database. This necessitates a permission system for functions.
+So, we introduce a new API `pg_create_function_permission` which will
+explicitly grant permission to a function to a role. For creating a
+function permission, the role must have select permissions configured
+for the target table.
+Since, this is a breaking change, we enable it only when the graphql-engine
+is started with
+`--infer-function-permissions`/HASURA_GRAPHQL_INFER_FUNCTION_PERMISSIONS set
+to false (by default, it's set to true).
+-}
+
+data CreateFunctionPermission
+  = CreateFunctionPermission
+  { _afpFunction :: !QualifiedFunction
+  , _afpSource   :: !SourceName
+  , _afpRole     :: !RoleName
+  } deriving (Show, Eq)
+$(deriveToJSON hasuraJSON ''CreateFunctionPermission)
+
+instance FromJSON CreateFunctionPermission where
+  parseJSON v =
+    flip (withObject "CreateFunctionPermission") v $ \o ->
+      CreateFunctionPermission
+      <$> o .: "function"
+      <*> o .:? "source" .!= defaultSource
+      <*> o .: "role"
+
+runCreateFunctionPermission
+  :: ( CacheRWM m
+     , MonadError QErr m
+     , MetadataM m
+     , HasServerConfigCtx m
+     )
+  => CreateFunctionPermission
+  -> m EncJSON
+runCreateFunctionPermission (CreateFunctionPermission functionName source role) = do
+  functionPermsCtx <- _sccFunctionPermsCtx <$> askServerConfigCtx
+  unless (functionPermsCtx == FunctionPermissionsManual) $
+    throw400 NotSupported "function permission can only be created when inferring of function permissions is disabled"
+  sourceCache <- scPostgres <$> askSchemaCache
+  functionInfo <- askPGFunctionInfo source functionName
+  when (role `elem` _fiPermissions functionInfo) $
+    throw400 AlreadyExists $
+    "permission of role "
+    <> role <<> " already exists for function " <> functionName <<> " in source: " <>> source
+  functionTableInfo <-
+    unsafeTableInfo @'Postgres source (_fiReturnType functionInfo) sourceCache
+    `onNothing` throw400 NotExists ("function's return table " <> (_fiReturnType functionInfo) <<> " not found in the cache")
+  unless (role `Map.member` _tiRolePermInfoMap functionTableInfo) $
+    throw400 NotSupported $
+    "function permission can only be added when the function's return table "
+    <> _fiReturnType functionInfo <<>  " has select permission configured for role: " <>> role
+  buildSchemaCacheFor (MOSourceObjId source $ SMOFunctionPermission functionName role)
+    $ MetadataModifier
+    $ metaSources.ix source.smFunctions.ix functionName.fmPermissions
+    %~ (:) (FunctionPermissionMetadata role)
+  pure successMsg
+
+dropFunctionPermissionInMetadata :: SourceName -> QualifiedFunction -> RoleName -> MetadataModifier
+dropFunctionPermissionInMetadata source function role = MetadataModifier $
+  metaSources.ix source.smFunctions.ix function.fmPermissions %~ filter ((/=) role . _fpmRole)
+
+type DropFunctionPermission = CreateFunctionPermission
+
+runDropFunctionPermission
+  :: ( CacheRWM m
+     , MonadError QErr m
+     , MetadataM m
+     )
+  => DropFunctionPermission
+  -> m EncJSON
+runDropFunctionPermission (CreateFunctionPermission functionName source role) = do
+  functionInfo <- askPGFunctionInfo source functionName
+  unless (role `elem` _fiPermissions functionInfo) $
+    throw400 NotExists $
+    "permission of role "
+    <> role <<> " does not exist for function " <> functionName <<> " in source: " <>> source
+  buildSchemaCacheFor (MOSourceObjId source $ SMOFunctionPermission functionName role)
+    $ dropFunctionPermissionInMetadata source functionName role
+  pure successMsg

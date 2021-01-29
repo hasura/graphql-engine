@@ -177,7 +177,7 @@ API should be called with the schema document.
    }
 
 Argument Presets
-^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^
 
 Argument presets can be used to automatically inject input values for fields
 during execution. This way the field is executed with limited input values. Argument
@@ -344,7 +344,7 @@ Args syntax
 .. _RemoteSchemaPermission:
 
 RemoteSchemaPermission
-&&&&&&&&&&&&&&&&&&&&&&
+""""""""""""""""""""""
 
 .. list-table::
    :header-rows: 1

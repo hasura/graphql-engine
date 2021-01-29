@@ -191,8 +191,9 @@ runQuery
   => Env.Environment
   -> InstanceId
   -> UserInfo -> RebuildableSchemaCache -> HTTP.Manager
-  -> SQLGenCtx -> RemoteSchemaPermsCtx -> RQLQuery -> m (EncJSON, RebuildableSchemaCache)
-runQuery env instanceId userInfo sc hMgr sqlGenCtx remoteSchemaPermsCtx query = do
+  -> SQLGenCtx -> RemoteSchemaPermsCtx  -> FunctionPermissionsCtx
+  -> RQLQuery -> m (EncJSON, RebuildableSchemaCache)
+runQuery env instanceId userInfo sc hMgr sqlGenCtx remoteSchemaPermsCtx functionPermsCtx query = do
   metadata <- fetchMetadata
   result <- runQueryM env query & Tracing.interpTraceT \x -> do
     (((js, tracemeta), meta), rsc, ci) <-
@@ -204,7 +205,8 @@ runQuery env instanceId userInfo sc hMgr sqlGenCtx remoteSchemaPermsCtx query = 
     pure ((js, rsc, ci, meta), tracemeta)
   withReload result
   where
-    runCtx = RunCtx userInfo hMgr sqlGenCtx remoteSchemaPermsCtx
+    serverConfigCtx = ServerConfigCtx functionPermsCtx remoteSchemaPermsCtx sqlGenCtx
+    runCtx = RunCtx userInfo hMgr serverConfigCtx
 
     withReload (result, updatedCache, invalidations, updatedMetadata) = do
       when (queryModifiesSchemaCache query) $ do
@@ -350,8 +352,8 @@ reconcileAccessModes (Just mode1) (Just mode2)
 runQueryM
   :: ( HasVersion, CacheRWM m, UserInfoM m
      , MonadBaseControl IO m, MonadIO m, MonadUnique m
-     , HasHttpManagerM m, HasSQLGenCtx m
-     , HasRemoteSchemaPermsCtx m
+     , HasHttpManagerM m
+     , HasServerConfigCtx m
      , Tracing.MonadTrace m
      , MetadataM m
      , MonadMetadataStorageQueryAPI m

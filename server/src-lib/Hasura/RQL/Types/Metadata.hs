@@ -51,6 +51,7 @@ instance Hashable TableMetadataObjId
 data SourceMetadataObjId
   = SMOTable !QualifiedTable
   | SMOFunction !QualifiedFunction
+  | SMOFunctionPermission !QualifiedFunction !RoleName
   | SMOTableObj !QualifiedTable !TableMetadataObjId
   deriving (Show, Eq, Generic)
 instance Hashable SourceMetadataObjId
@@ -76,6 +77,7 @@ moiTypeName = \case
   MOSourceObjId _ sourceObjId -> case sourceObjId of
     SMOTable _  -> "table"
     SMOFunction _ -> "function"
+    SMOFunctionPermission _ _ -> "function_permission"
     SMOTableObj _ tableObjectId -> case tableObjectId of
       MTORel _ relType        -> relTypeToTxt relType <> "_relation"
       MTOPerm _ permType      -> permTypeToCode permType <> "_permission"
@@ -96,6 +98,9 @@ moiName objectId = moiTypeName objectId <> " " <> case objectId of
   MOSourceObjId source sourceObjId -> case sourceObjId of
     SMOTable name -> toTxt name <> " in source " <> toTxt source
     SMOFunction name -> toTxt name <> " in source " <> toTxt source
+    SMOFunctionPermission functionName roleName ->
+      toTxt roleName <> " permission for function "
+      <> toTxt functionName <> " in source " <> toTxt source
     SMOTableObj tableName tableObjectId ->
       let tableObjectName = case tableObjectId of
             MTORel name _              -> toTxt name
@@ -322,20 +327,30 @@ instance FromJSON TableMetadata where
                     , cfKey, rrKey
                     ]
 
+newtype FunctionPermissionMetadata
+  = FunctionPermissionMetadata
+  { _fpmRole       :: RoleName
+  } deriving (Show, Eq, Generic)
+instance Cacheable FunctionPermissionMetadata
+$(makeLenses ''FunctionPermissionMetadata)
+$(deriveJSON hasuraJSON ''FunctionPermissionMetadata)
+
 data FunctionMetadata
   = FunctionMetadata
   { _fmFunction      :: !QualifiedFunction
   , _fmConfiguration :: !FunctionConfig
+  , _fmPermissions   :: ![FunctionPermissionMetadata]
   } deriving (Show, Eq, Generic)
 instance Cacheable FunctionMetadata
 $(makeLenses ''FunctionMetadata)
 $(deriveToJSON hasuraJSON ''FunctionMetadata)
 
 instance FromJSON FunctionMetadata where
-  parseJSON = withObject "Object" $ \o ->
+  parseJSON = withObject "FunctionMetadata" $ \o ->
     FunctionMetadata
       <$> o .: "function"
       <*> o .:? "configuration" .!= emptyFunctionConfig
+      <*> o .:? "permissions" .!= []
 
 type Tables = InsOrdHashMap QualifiedTable TableMetadata
 type Functions = InsOrdHashMap QualifiedFunction FunctionMetadata
@@ -454,7 +469,7 @@ instance FromJSON MetadataNoSources where
           tables       <- oMapFromL _tmTable <$> o .: "tables"
           functionList <- o .:? "functions" .!= []
           let functions = OM.fromList $ flip map functionList $
-                \function -> (function, FunctionMetadata function emptyFunctionConfig)
+                \function -> (function, FunctionMetadata function emptyFunctionConfig mempty)
           pure (tables, functions)
         MVVersion2 -> do
           tables    <- oMapFromL _tmTable <$> o .: "tables"
@@ -652,9 +667,13 @@ metadataToOrdJSON ( Metadata
 
     functionMetadataToOrdJSON :: FunctionMetadata -> AO.Value
     functionMetadataToOrdJSON FunctionMetadata{..} =
-      AO.object $ [("function", AO.toOrdered _fmFunction)]
-      <> if _fmConfiguration == emptyFunctionConfig then []
-         else pure ("configuration", AO.toOrdered _fmConfiguration)
+      let confKeyPair =
+            if _fmConfiguration == emptyFunctionConfig then []
+            else pure ("configuration", AO.toOrdered _fmConfiguration)
+          permissionsKeyPair =
+            if (null _fmPermissions) then []
+            else pure ("permissions", AO.toOrdered _fmPermissions)
+      in AO.object $ [("function", AO.toOrdered _fmFunction)] <> confKeyPair <> permissionsKeyPair
 
     remoteSchemaQToOrdJSON :: RemoteSchemaMetadata -> AO.Value
     remoteSchemaQToOrdJSON (RemoteSchemaMetadata name definition comment permissions) =

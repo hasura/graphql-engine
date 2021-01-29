@@ -97,8 +97,8 @@ buildPostgresSpecs maybeUrlTemplate = do
       setupCacheRef = do
         httpManager <- HTTP.newManager HTTP.tlsManagerSettings
         let sqlGenCtx = SQLGenCtx False
-            cacheBuildParams = CacheBuildParams httpManager sqlGenCtx RemoteSchemaPermsDisabled
-                               (mkPgSourceResolver print)
+            serverConfigCtx = ServerConfigCtx FunctionPermissionsInferred RemoteSchemaPermsDisabled sqlGenCtx
+            cacheBuildParams = CacheBuildParams httpManager (mkPgSourceResolver print) serverConfigCtx
 
             run :: CacheBuild a -> IO a
             run =

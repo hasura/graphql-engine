@@ -77,8 +77,7 @@ buildGQLContext
      , MonadError QErr m
      , MonadIO m
      , MonadUnique m
-     , HasSQLGenCtx m
-     , HasRemoteSchemaPermsCtx m
+     , HasServerConfigCtx m
      )
   => ( GraphQLQueryType
      , SourceCache
@@ -92,9 +91,8 @@ buildGQLContext
      )
 buildGQLContext =
   proc (queryType, pgSources, allRemoteSchemas, allActions, nonObjectCustomTypes) -> do
-
-    sqlGenCtx@(SQLGenCtx{ stringifyNum }) <- bindA -< askSQLGenCtx
-    remoteSchemaPermsCtx <- bindA -< askRemoteSchemaPermsCtx
+    ServerConfigCtx functionPermsCtx remoteSchemaPermsCtx sqlGenCtx@(SQLGenCtx stringifyNum) <-
+      bindA -< askServerConfigCtx
 
     let remoteSchemasRoles = concatMap (Map.keys . _rscPermissions . fst . snd) $ Map.toList allRemoteSchemas
 
@@ -108,7 +106,9 @@ buildGQLContext =
           allRemoteSchemas
           <&> (\(remoteSchemaCtx, _metadataObj) ->
                  (_rscIntro remoteSchemaCtx, _rscParsed remoteSchemaCtx))
-        adminQueryContext = QueryContext stringifyNum queryType adminRemoteRelationshipQueryCtx
+        -- The function permissions context doesn't actually matter because the
+        -- admin will have access to the function anyway
+        adminQueryContext = QueryContext stringifyNum queryType adminRemoteRelationshipQueryCtx FunctionPermissionsInferred
 
     -- build the admin DB-only context so that we can check against name clashes with remotes
     -- TODO: Is there a better way to check for conflicts without actually building the admin schema?
@@ -142,10 +142,10 @@ buildGQLContext =
       ( Set.toMap allRoles & Map.traverseWithKey \roleName () ->
           case queryType of
             QueryHasura ->
-              buildRoleContext (sqlGenCtx, queryType) pgSources allRemoteSchemas allActionInfos
+              buildRoleContext (sqlGenCtx, queryType, functionPermsCtx) pgSources allRemoteSchemas allActionInfos
               nonObjectCustomTypes remotes roleName remoteSchemaPermsCtx
             QueryRelay ->
-              buildRelayRoleContext (sqlGenCtx, queryType) pgSources allActionInfos
+              buildRelayRoleContext (sqlGenCtx, queryType, functionPermsCtx) pgSources allActionInfos
               nonObjectCustomTypes adminMutationRemotes roleName
       )
     unauthenticated <- bindA -< unauthenticatedContext adminQueryRemotes adminMutationRemotes remoteSchemaPermsCtx
@@ -187,13 +187,13 @@ buildRoleBasedRemoteSchemaParser role remoteSchemaCache = do
 -- TODO: Integrate relay schema
 buildRoleContext
   :: (MonadError QErr m, MonadIO m, MonadUnique m)
-  => (SQLGenCtx, GraphQLQueryType) -> SourceCache -> RemoteSchemaCache
+  => (SQLGenCtx, GraphQLQueryType, FunctionPermissionsCtx) -> SourceCache -> RemoteSchemaCache
   -> [ActionInfo 'Postgres] -> NonObjectTypeMap
   -> [( RemoteSchemaName , (IntrospectionResult, ParsedIntrospection))]
   -> RoleName
   -> RemoteSchemaPermsCtx
   -> m (RoleContext GQLContext)
-buildRoleContext (SQLGenCtx stringifyNum, queryType) sources
+buildRoleContext (SQLGenCtx stringifyNum, queryType, functionPermsCtx) sources
   allRemoteSchemas allActionInfos nonObjectCustomTypes remotes roleName remoteSchemaPermsCtx = do
 
   roleBasedRemoteSchemas <-
@@ -206,7 +206,7 @@ buildRoleContext (SQLGenCtx stringifyNum, queryType) sources
   let queryRemotes    = getQueryRemotes $ snd . snd <$> roleBasedRemoteSchemas
       mutationRemotes = getMutationRemotes $ snd . snd <$> roleBasedRemoteSchemas
       remoteRelationshipQueryContext = Map.fromList roleBasedRemoteSchemas
-      roleQueryContext = QueryContext stringifyNum queryType remoteRelationshipQueryContext
+      roleQueryContext = QueryContext stringifyNum queryType remoteRelationshipQueryContext functionPermsCtx
 
   runMonadSchema roleName roleQueryContext sources $ do
     let pgSources = mapMaybe unsafeSourceInfo $ toList sources
@@ -252,7 +252,6 @@ buildRoleContext (SQLGenCtx stringifyNum, queryType) sources
         -> [P.FieldParser (P.ParseT Identity) RemoteField]
       getMutationRemotes = concatMap (concat . piMutation)
 
-
 buildFullestDBSchema
   :: (MonadError QErr m, MonadIO m, MonadUnique m)
   => QueryContext -> SourceCache -> [ActionInfo 'Postgres] -> NonObjectTypeMap
@@ -287,16 +286,16 @@ buildFullestDBSchema queryContext sources allActionInfos nonObjectCustomTypes =
 
 buildRelayRoleContext
   :: (MonadError QErr m, MonadIO m, MonadUnique m)
-  => (SQLGenCtx, GraphQLQueryType) -> SourceCache -> [ActionInfo 'Postgres] -> NonObjectTypeMap
+  => (SQLGenCtx, GraphQLQueryType, FunctionPermissionsCtx) -> SourceCache -> [ActionInfo 'Postgres] -> NonObjectTypeMap
   -> [P.FieldParser (P.ParseT Identity) RemoteField]
   -> RoleName
   -> m (RoleContext GQLContext)
-buildRelayRoleContext (SQLGenCtx stringifyNum, queryType) sources
+buildRelayRoleContext (SQLGenCtx stringifyNum, queryType, functionPermsCtx) sources
   allActionInfos nonObjectCustomTypes mutationRemotes roleName =
   -- TODO: At the time of writing this, remote schema queries are not supported in relay.
   -- When they are supported, we should get do what `buildRoleContext` does. Since, they
   -- are not supported yet, we use `mempty` below for `RemoteRelationshipQueryContext`.
-  let roleQueryContext = QueryContext stringifyNum queryType mempty
+  let roleQueryContext = QueryContext stringifyNum queryType mempty functionPermsCtx
   in
 
   runMonadSchema roleName roleQueryContext sources $ do
@@ -432,6 +431,8 @@ buildQueryFields
   -> [FunctionInfo b]
   -> m [P.FieldParser n (QueryRootField (UnpreparedValue b))]
 buildQueryFields sourceName sourceConfig tables (takeExposedAs FEAQuery id -> functions) = do
+  functionPermsCtx <- asks $ qcFunctionPermsContext . getter
+  roleName <- askRoleName
   tableSelectExpParsers <- for tables \(table, _tableInfo) -> do
     selectPerms <- tableSelectPermissions table
     customRootFields <- _tcCustomRootFields . _tciCustomConfig . _tiCoreInfo <$> askTableInfo @'Postgres table
@@ -447,32 +448,38 @@ buildQueryFields sourceName sourceConfig tables (takeExposedAs FEAQuery id -> fu
         , mapMaybeFieldParser (asDbRootField . QDBPrimaryKey)  $ selectTableByPk      table (fromMaybe pkName       $ _tcrfSelectByPk      customRootFields) (Just pkDesc)     perms
         , mapMaybeFieldParser (asDbRootField . QDBAggregation) $ selectTableAggregate table (fromMaybe aggName      $ _tcrfSelectAggregate customRootFields) (Just aggDesc)    perms
         ]
-  functionSelectExpParsers <- for functions \function -> do
-    let targetTable = fiReturnType function
-        functionName = fiName function
-    selectPerms <- tableSelectPermissions targetTable
-    for selectPerms \perms -> do
-      displayName <- functionGraphQLName @b functionName `onLeft` throwError
-      let functionDesc = G.Description $ "execute function " <> functionName <<> " which returns " <>> targetTable
-          aggName = displayName <> $$(G.litName "_aggregate")
-          aggDesc = G.Description $ "execute function " <> functionName <<> " and query aggregates on result of table type " <>> targetTable
-      catMaybes <$> sequenceA
-        [ requiredFieldParser (asDbRootField . QDBSimple)      $ selectFunction          function displayName (Just functionDesc) perms
-        , mapMaybeFieldParser (asDbRootField . QDBAggregation) $ selectFunctionAggregate function aggName     (Just aggDesc)      perms
-        ]
+  functionSelectExpParsers <- for functions \function -> runMaybeT $ do
+    let targetTable = _fiReturnType function
+        functionName = _fiName function
+    selectPerms <- lift $ tableSelectPermissions targetTable
+    perms <- hoistMaybe selectPerms
+    when (functionPermsCtx == FunctionPermissionsManual) $
+      -- see Note [Function Permissions]
+      guard $ roleName == adminRoleName || roleName `elem` (_fiPermissions function)
+    displayName <- functionGraphQLName @b functionName `onLeft` throwError
+    let functionDesc = G.Description $ "execute function " <> functionName <<> " which returns " <>> targetTable
+        aggName = displayName <> $$(G.litName "_aggregate")
+        aggDesc = G.Description $ "execute function " <> functionName <<> " and query aggregates on result of table type " <>> targetTable
+    catMaybes <$> sequenceA
+      [ requiredFieldParser (asDbRootField . QDBSimple)      $ lift $ selectFunction          function displayName (Just functionDesc) perms
+      , mapMaybeFieldParser (asDbRootField . QDBAggregation) $ lift $ selectFunctionAggregate function aggName     (Just aggDesc)      perms
+      ]
   pure $ (concat . catMaybes) (tableSelectExpParsers <> functionSelectExpParsers)
   where
     asDbRootField =
       let pgExecCtx = PG._pscExecCtx sourceConfig
       in RFDB sourceName pgExecCtx
 
-    mapMaybeFieldParser :: (a -> a') -> m (Maybe (P.FieldParser n a)) -> m (Maybe (P.FieldParser n a'))
-    mapMaybeFieldParser f = fmap $ fmap $ fmap f
-
 requiredFieldParser
   :: (Functor n, Functor m)=> (a -> b) -> m (P.FieldParser n a) -> m (Maybe (P.FieldParser n b))
 requiredFieldParser f = fmap $ Just . fmap f
 
+mapMaybeFieldParser
+  :: (Functor n, Functor m)
+  => (a -> b)
+  -> m (Maybe (P.FieldParser n a))
+  -> m (Maybe (P.FieldParser n b))
+mapMaybeFieldParser f = fmap $ fmap $ fmap f
 
 -- | Includes remote schema fields and actions
 buildActionQueryFields
@@ -536,8 +543,8 @@ buildRelayPostgresQueryFields sourceName sourceConfig allTables (takeExposedAs F
     lift $ selectTableConnection table fieldName fieldDesc pkeyColumns selectPerms
 
   functionConnectionFields <- for queryFunctions $ \function -> runMaybeT do
-    let returnTable = fiReturnType function
-        functionName = fiName function
+    let returnTable = _fiReturnType function
+        functionName = _fiName function
     pkeyColumns <- MaybeT $ (^? tiCoreInfo.tciPrimaryKey._Just.pkColumns)
                    <$> askTableInfo returnTable
     selectPerms <- MaybeT $ tableSelectPermissions returnTable
@@ -762,24 +769,34 @@ buildMutationParser
   -> m (Maybe (Parser 'Output n (OMap.InsOrdHashMap G.Name (MutationRootField (UnpreparedValue 'Postgres)))))
 buildMutationParser allRemotes allActions nonObjectCustomTypes
     (takeExposedAs FEAMutation fst -> mutationFunctions) pgMutationFields = do
-
+  roleName <- askRoleName
+  functionPermsCtx <- asks $ qcFunctionPermsContext . getter
    -- NOTE: this is basically copied from functionSelectExpParsers body
-  functionMutationExpParsers <- for mutationFunctions \(function@FunctionInfo{..}, (sourceName, sourceConfig)) -> do
-    selectPerms <- tableSelectPermissions fiReturnType
-    for selectPerms \perms -> do
-      displayName <- PG.qualifiedObjectToName fiName
-      let functionDesc = G.Description $
-            "execute VOLATILE function " <> fiName <<> " which returns " <>> fiReturnType
-          asDbRootField =
-            let pgExecCtx = PG._pscExecCtx sourceConfig
-            in RFDB sourceName pgExecCtx
+  functionMutationExpParsers <-
+    case functionPermsCtx of
+      -- when function permissions are inferred, we don't expose the
+      -- mutation functions. See Note [Function Permissions]
+      FunctionPermissionsInferred -> pure []
+      FunctionPermissionsManual ->
+        for mutationFunctions \(function@FunctionInfo{..}, (sourceName, sourceConfig)) -> runMaybeT do
+          selectPerms <- lift $ tableSelectPermissions _fiReturnType
+          -- A function exposed as mutation must have a function permission
+          -- configured for the role. See Note [Function Permissions]
+          guard $ roleName == adminRoleName || roleName `elem` _fiPermissions
+          perms <- hoistMaybe selectPerms
+          displayName <- PG.qualifiedObjectToName _fiName
+          let functionDesc = G.Description $
+                "execute VOLATILE function " <> _fiName <<> " which returns " <>> _fiReturnType
+              asDbRootField =
+                let pgExecCtx = PG._pscExecCtx sourceConfig
+                in RFDB sourceName pgExecCtx
 
-      catMaybes <$> sequenceA
-        [ requiredFieldParser (asDbRootField . MDBFunction) $
-            selectFunction function displayName (Just functionDesc) perms
-        -- FWIW: The equivalent of this is possible for mutations; do we want that?:
-        -- , mapMaybeFieldParser (asDbRootField . QDBAggregation) $ selectFunctionAggregate function aggName     (Just aggDesc)      perms
-        ]
+          catMaybes <$> sequenceA
+            [ requiredFieldParser (asDbRootField . MDBFunction) $
+                lift $ selectFunction function displayName (Just functionDesc) perms
+            -- FWIW: The equivalent of this is possible for mutations; do we want that?:
+            -- , mapMaybeFieldParser (asDbRootField . QDBAggregation) $ selectFunctionAggregate function aggName     (Just aggDesc)      perms
+            ]
 
   actionParsers <- for allActions $ \actionInfo ->
     case _adType (_aiDefinition actionInfo) of
@@ -804,7 +821,7 @@ buildMutationParser allRemotes allActions nonObjectCustomTypes
 -- local helpers
 
 takeExposedAs :: FunctionExposedAs -> (a -> FunctionInfo b) -> [a] -> [a]
-takeExposedAs x f = filter ((== x) . fiExposedAs . f)
+takeExposedAs x f = filter ((== x) . _fiExposedAs . f)
 
 subscriptionRoot :: G.Name
 subscriptionRoot = $$(G.litName "subscription_root")

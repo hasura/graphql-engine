@@ -117,10 +117,9 @@ $(makeLenses ''BuildOutputs)
 -- | Parameters required for schema cache build
 data CacheBuildParams
   = CacheBuildParams
-  { _cbpManager              :: !HTTP.Manager
-  , _cbpSqlGenCtx            :: !SQLGenCtx
-  , _cbpRemoteSchemaPermsCtx :: !RemoteSchemaPermsCtx
-  , _cbpSourceResolver       :: !SourceResolver
+  { _cbpManager         :: !HTTP.Manager
+  , _cbpSourceResolver  :: !SourceResolver
+  , _cbpServerConfigCtx :: !ServerConfigCtx
   }
 
 -- | The monad in which @'RebuildableSchemaCache' is being run
@@ -138,11 +137,8 @@ newtype CacheBuild a
 instance HTTP.HasHttpManagerM CacheBuild where
   askHttpManager = asks _cbpManager
 
-instance HasSQLGenCtx CacheBuild where
-  askSQLGenCtx = asks _cbpSqlGenCtx
-
-instance HasRemoteSchemaPermsCtx CacheBuild where
-  askRemoteSchemaPermsCtx = asks _cbpRemoteSchemaPermsCtx
+instance HasServerConfigCtx CacheBuild where
+  askServerConfigCtx = asks _cbpServerConfigCtx
 
 instance MonadResolveSource CacheBuild where
   getSourceResolver = asks _cbpSourceResolver
@@ -160,17 +156,15 @@ runCacheBuildM
   :: ( MonadIO m
      , MonadError QErr m
      , HTTP.HasHttpManagerM m
-     , HasSQLGenCtx m
-     , HasRemoteSchemaPermsCtx m
+     , HasServerConfigCtx m
      , MonadResolveSource m
      )
   => CacheBuild a -> m a
 runCacheBuildM m = do
   params <- CacheBuildParams
             <$> HTTP.askHttpManager
-            <*> askSQLGenCtx
-            <*> askRemoteSchemaPermsCtx
             <*> getSourceResolver
+            <*> askServerConfigCtx
   runCacheBuild params m
 
 data RebuildableSchemaCache

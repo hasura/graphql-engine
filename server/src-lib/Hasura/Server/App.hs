@@ -113,6 +113,7 @@ data ServerCtx
   , scResponseInternalErrorsConfig :: !ResponseInternalErrorsConfig
   , scEnvironment                  :: !Env.Environment
   , scRemoteSchemaPermsCtx         :: !RemoteSchemaPermsCtx
+  , scFunctionPermsCtx             :: !FunctionPermissionsCtx
   }
 
 data HandlerCtx
@@ -391,15 +392,16 @@ v1QueryHandler query = do
   return $ HttpResponse res []
   where
     action = do
-      userInfo    <- asks hcUser
-      scRef       <- asks (scCacheRef . hcServerCtx)
-      schemaCache <- fmap fst $ liftIO $ readIORef $ _scrCache scRef
-      httpMgr     <- asks (scManager . hcServerCtx)
-      sqlGenCtx   <- asks (scSQLGenCtx . hcServerCtx)
-      instanceId  <- asks (scInstanceId . hcServerCtx)
-      env         <- asks (scEnvironment . hcServerCtx)
+      userInfo             <- asks hcUser
+      scRef                <- asks (scCacheRef . hcServerCtx)
+      schemaCache          <- fmap fst $ liftIO $ readIORef $ _scrCache scRef
+      httpMgr              <- asks (scManager . hcServerCtx)
+      sqlGenCtx            <- asks (scSQLGenCtx . hcServerCtx)
+      instanceId           <- asks (scInstanceId . hcServerCtx)
+      env                  <- asks (scEnvironment . hcServerCtx)
       remoteSchemaPermsCtx <- asks (scRemoteSchemaPermsCtx . hcServerCtx)
-      runQuery env instanceId userInfo schemaCache httpMgr sqlGenCtx remoteSchemaPermsCtx query
+      functionPermsCtx     <- asks (scFunctionPermsCtx . hcServerCtx)
+      runQuery env instanceId userInfo schemaCache httpMgr sqlGenCtx remoteSchemaPermsCtx functionPermsCtx query
 
 v1MetadataHandler
   :: ( HasVersion
@@ -414,17 +416,19 @@ v1MetadataHandler
   => RQLMetadata -> m (HttpResponse EncJSON)
 v1MetadataHandler query = do
   (liftEitherM . authorizeV1MetadataApi query) =<< ask
-  userInfo     <- asks hcUser
-  scRef        <- asks (scCacheRef . hcServerCtx)
-  schemaCache  <- fmap fst $ liftIO $ readIORef $ _scrCache scRef
-  httpMgr      <- asks (scManager . hcServerCtx)
-  sqlGenCtx    <- asks (scSQLGenCtx . hcServerCtx)
-  env          <- asks (scEnvironment . hcServerCtx)
-  instanceId   <- asks (scInstanceId . hcServerCtx)
-  logger       <- asks (scLogger . hcServerCtx)
+  userInfo             <- asks hcUser
+  scRef                <- asks (scCacheRef . hcServerCtx)
+  schemaCache          <- fmap fst $ liftIO $ readIORef $ _scrCache scRef
+  httpMgr              <- asks (scManager . hcServerCtx)
+  sqlGenCtx            <- asks (scSQLGenCtx . hcServerCtx)
+  env                  <- asks (scEnvironment . hcServerCtx)
+  instanceId           <- asks (scInstanceId . hcServerCtx)
+  logger               <- asks (scLogger . hcServerCtx)
   remoteSchemaPermsCtx <- asks (scRemoteSchemaPermsCtx . hcServerCtx)
+  functionPermsCtx     <- asks (scFunctionPermsCtx . hcServerCtx)
+  let serverConfigCtx = ServerConfigCtx functionPermsCtx remoteSchemaPermsCtx sqlGenCtx
   r <- withSCUpdate scRef logger $
-       runMetadataQuery env instanceId userInfo httpMgr sqlGenCtx remoteSchemaPermsCtx schemaCache query
+       runMetadataQuery env instanceId userInfo httpMgr serverConfigCtx schemaCache query
   pure $ HttpResponse r []
 
 v2QueryHandler
@@ -453,7 +457,8 @@ v2QueryHandler query = do
       instanceId  <- asks (scInstanceId . hcServerCtx)
       env         <- asks (scEnvironment . hcServerCtx)
       remoteSchemaPermsCtx <- asks (scRemoteSchemaPermsCtx . hcServerCtx)
-      V2Q.runQuery env instanceId userInfo schemaCache httpMgr sqlGenCtx remoteSchemaPermsCtx query
+      functionPermsCtx     <- asks (scFunctionPermsCtx . hcServerCtx)
+      V2Q.runQuery env instanceId userInfo schemaCache httpMgr sqlGenCtx remoteSchemaPermsCtx functionPermsCtx query
 
 v1Alpha1GQHandler
   :: ( HasVersion
@@ -727,13 +732,14 @@ mkWaiApp
   -> RebuildableSchemaCache
   -> EKG.Store
   -> RemoteSchemaPermsCtx
+  -> FunctionPermissionsCtx
   -> WS.ConnectionOptions
   -> KeepAliveDelay
   -- ^ Metadata storage connection pool
   -> m HasuraApp
 mkWaiApp env logger sqlGenCtx enableAL httpManager mode corsCfg enableConsole consoleAssetsDir
          enableTelemetry instanceId apis lqOpts _ {- planCacheOptions -} responseErrorsConfig
-         liveQueryHook schemaCache ekgStore enableRSPermsCtx connectionOptions keepAliveDelay = do
+         liveQueryHook schemaCache ekgStore enableRSPermsCtx functionPermsCtx connectionOptions keepAliveDelay = do
 
     -- See Note [Temporarily disabling query plan caching]
     -- (planCache, schemaCacheRef) <- initialiseCache
@@ -762,6 +768,7 @@ mkWaiApp env logger sqlGenCtx enableAL httpManager mode corsCfg enableConsole co
                     , scEnvironment                  =  env
                     , scResponseInternalErrorsConfig = responseErrorsConfig
                     , scRemoteSchemaPermsCtx         = enableRSPermsCtx
+                    , scFunctionPermsCtx             = functionPermsCtx
                     }
 
     spockApp <- liftWithStateless $ \lowerIO ->

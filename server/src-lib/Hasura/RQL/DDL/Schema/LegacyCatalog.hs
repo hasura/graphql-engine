@@ -69,7 +69,7 @@ saveMetadataToHdbTables (MetadataNoSources tables functions schemas collections
 
   -- sql functions
   withPathK "functions" $ indexedForM_ functions $
-    \(FunctionMetadata function config) -> addFunctionToCatalog function config
+    \(FunctionMetadata function config _) -> addFunctionToCatalog function config
 
   -- query collections
   systemDefined <- askSystemDefined
@@ -407,7 +407,10 @@ fetchMetadataFromHdbTables = liftTx do
                     |] () False
       pure $ oMapFromL _fmFunction $
         flip map l $ \(sn, fn, Q.AltJ config) ->
-                       FunctionMetadata (QualifiedObject sn fn) config
+                       -- function permissions were only introduced post 43rd
+                       -- migration, so it's impossible we get any permissions
+                       -- here
+                       FunctionMetadata (QualifiedObject sn fn) config []
 
     fetchRemoteSchemas =
       map fromRow <$> Q.listQE defaultTxErrorHandler

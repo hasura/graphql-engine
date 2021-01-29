@@ -51,6 +51,10 @@ data RQLMetadata
   | RMPgTrackFunction !TrackFunctionV2
   | RMPgUntrackFunction !UnTrackFunction
 
+  -- Postgres function permissions
+  | RMPgCreateFunctionPermission !CreateFunctionPermission
+  | RMPgDropFunctionPermission !DropFunctionPermission
+
   -- Postgres table relationships
   | RMPgCreateObjectRelationship !CreateObjRel
   | RMPgCreateArrayRelationship !CreateArrRel
@@ -160,21 +164,19 @@ runMetadataQuery
   -> InstanceId
   -> UserInfo
   -> HTTP.Manager
-  -> SQLGenCtx
-  -> RemoteSchemaPermsCtx
+  -> ServerConfigCtx
   -> RebuildableSchemaCache
   -> RQLMetadata
   -> m (EncJSON, RebuildableSchemaCache)
-runMetadataQuery env instanceId userInfo httpManager sqlGenCtx remoteSchemaPermsCtx schemaCache query = do
+runMetadataQuery env instanceId userInfo httpManager serverConfigCtx schemaCache query = do
   metadata <- fetchMetadata
   ((r, modMetadata), modSchemaCache, cacheInvalidations) <-
     runMetadataQueryM env query
     & runMetadataT metadata
     & runCacheRWT schemaCache
-    & peelRun (RunCtx userInfo httpManager sqlGenCtx remoteSchemaPermsCtx)
+    & peelRun (RunCtx userInfo httpManager serverConfigCtx)
     & runExceptT
     & liftEitherM
-
   -- set modified metadata in storage
   setMetadata modMetadata
   -- notify schema cache sync
@@ -193,7 +195,7 @@ runMetadataQueryM
      , HTTP.HasHttpManagerM m
      , MetadataM m
      , MonadMetadataStorageQueryAPI m
-     , HasRemoteSchemaPermsCtx m
+     , HasServerConfigCtx m
      )
   => Env.Environment
   -> RQLMetadata
@@ -209,6 +211,9 @@ runMetadataQueryM env = withPathK "args" . \case
 
   RMPgTrackFunction q             -> runTrackFunctionV2 q
   RMPgUntrackFunction q           -> runUntrackFunc q
+
+  RMPgCreateFunctionPermission q  -> runCreateFunctionPermission q
+  RMPgDropFunctionPermission   q  -> runDropFunctionPermission q
 
   RMPgCreateObjectRelationship q  -> runCreateRelationship ObjRel q
   RMPgCreateArrayRelationship q   -> runCreateRelationship ArrRel q

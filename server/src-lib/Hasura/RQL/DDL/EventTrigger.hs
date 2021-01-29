@@ -55,7 +55,7 @@ pgIdenTrigger op trn = pgFmtIdentifier . qualifyTriggerName op $ triggerNameToTx
     qualifyTriggerName op' trn' = "notify_hasura_" <> trn' <> "_" <> tshow op'
 
 mkAllTriggersQ
-  :: (MonadTx m, HasSQLGenCtx m)
+  :: (MonadTx m, HasServerConfigCtx m)
   => TriggerName
   -> QualifiedTable
   -> [ColumnInfo 'Postgres]
@@ -67,7 +67,7 @@ mkAllTriggersQ trn qt allCols fullspec = do
   onJust (tdDelete fullspec) (mkTriggerQ trn qt allCols DELETE)
 
 mkTriggerQ
-  :: (MonadTx m, HasSQLGenCtx m)
+  :: (MonadTx m, HasServerConfigCtx m)
   => TriggerName
   -> QualifiedTable
   -> [ColumnInfo 'Postgres]
@@ -75,7 +75,7 @@ mkTriggerQ
   -> SubscribeOpSpec
   -> m ()
 mkTriggerQ trn qt@(QualifiedObject schema table) allCols op (SubscribeOpSpec columns payload) = do
-  strfyNum <- stringifyNum <$> askSQLGenCtx
+  strfyNum <- stringifyNum . _sccSQLGenCtx <$> askServerConfigCtx
   liftTx $ Q.multiQE defaultTxErrorHandler $ Q.fromText . TL.toStrict $
     let payloadColumns = fromMaybe SubCStar payload
         mkQId opVar colInfo = toJSONableExp strfyNum (pgiType colInfo) False $
@@ -255,7 +255,7 @@ runCreateEventTriggerQuery q = do
 -- transaction as soon as after @'runCreateEventTriggerQuery' is called and
 -- in building schema cache.
 createPostgresTableEventTrigger
-  :: (MonadTx m, HasSQLGenCtx m)
+  :: (MonadTx m, HasServerConfigCtx m)
   => QualifiedTable
   -> [ColumnInfo 'Postgres]
   -> TriggerName

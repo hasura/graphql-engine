@@ -2,6 +2,7 @@ module Hasura.RQL.Types.Function where
 
 import           Hasura.Prelude
 
+import qualified Data.HashSet                       as Set
 import qualified Data.Sequence                      as Seq
 import qualified Data.Text                          as T
 
@@ -17,7 +18,7 @@ import qualified Hasura.Backends.Postgres.SQL.Types as PG
 import           Hasura.Incremental                 (Cacheable)
 import           Hasura.RQL.Types.Common
 import           Hasura.SQL.Backend
-
+import           Hasura.Session
 
 -- | https://www.postgresql.org/docs/current/xfunc-volatility.html
 data FunctionVolatility
@@ -86,28 +87,31 @@ $(deriveJSON
 -- | Tracked SQL function metadata. See 'mkFunctionInfo'.
 data FunctionInfo (b :: BackendType)
   = FunctionInfo
-  { fiName          :: !(FunctionName b)
-  , fiSystemDefined :: !SystemDefined
-  , fiVolatility    :: !FunctionVolatility
-  , fiExposedAs     :: !FunctionExposedAs
+  { _fiName          :: !(FunctionName b)
+  , _fiSystemDefined :: !SystemDefined
+  , _fiVolatility    :: !FunctionVolatility
+  , _fiExposedAs     :: !FunctionExposedAs
   -- ^ In which part of the schema should this function be exposed?
   --
   -- See 'mkFunctionInfo' and '_fcExposedAs'.
-  , fiInputArgs     :: !(Seq.Seq (FunctionInputArgument b))
-  , fiReturnType    :: !(TableName b)
+  , _fiInputArgs     :: !(Seq.Seq (FunctionInputArgument b))
+  , _fiReturnType    :: !(TableName b)
   -- ^ NOTE: when a table is created, a new composite type of the same name is
   -- automatically created; so strictly speaking this field means "the function
   -- returns the composite type corresponding to this table".
-  , fiDescription   :: !(Maybe PG.PGDescription) -- FIXME: make generic
+  , _fiDescription   :: !(Maybe PG.PGDescription) -- FIXME: make generic
+  , _fiPermissions   :: !(Set.HashSet RoleName)
+  -- ^ Roles to which the function is accessible
   } deriving (Generic)
 deriving instance Backend b => Show (FunctionInfo b)
 deriving instance Backend b => Eq   (FunctionInfo b)
 instance (Backend b) => ToJSON (FunctionInfo b) where
   toJSON = genericToJSON hasuraJSON
+$(makeLenses ''FunctionInfo)
 
 getInputArgs :: FunctionInfo b -> Seq.Seq (FunctionArg b)
 getInputArgs =
-  Seq.fromList . mapMaybe (^? _IAUserProvided) . toList . fiInputArgs
+  Seq.fromList . mapMaybe (^? _IAUserProvided) . toList . _fiInputArgs
 
 type FunctionCache b = HashMap (FunctionName b) (FunctionInfo b) -- info of all functions
 
@@ -172,3 +176,20 @@ instance Cacheable RawFunctionInfo
 $(deriveJSON hasuraJSON ''RawFunctionInfo)
 
 type PostgresFunctionsMetadata = HashMap PG.QualifiedFunction [RawFunctionInfo]
+
+data FunctionPermissionsCtx
+  = FunctionPermissionsInferred
+  | FunctionPermissionsManual
+  deriving (Show, Eq)
+
+instance FromJSON FunctionPermissionsCtx where
+  parseJSON = withText "FunctionPermissionsCtx" $ \t ->
+    case T.toLower t of
+      "true"  -> pure FunctionPermissionsInferred
+      "false" -> pure FunctionPermissionsManual
+      _       -> fail "infer_function_permissions should be a boolean value"
+
+instance ToJSON FunctionPermissionsCtx where
+  toJSON = \case
+    FunctionPermissionsInferred -> Bool True
+    FunctionPermissionsManual   -> Bool False

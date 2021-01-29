@@ -156,6 +156,8 @@ deleteMetadataObject = \case
     deleteObjFn = \case
       SMOTable    name -> siTables    %~ M.delete name
       SMOFunction name -> siFunctions %~ M.delete name
+      SMOFunctionPermission functionName role ->
+        siFunctions.ix functionName.fiPermissions %~ HS.delete role
       SMOTableObj tableName tableObjectId -> siTables.ix tableName %~ case tableObjectId of
         MTORel name _              -> tiCoreInfo.tciFieldInfoMap %~ M.delete (fromRel name)
         MTOComputedField name      -> tiCoreInfo.tciFieldInfoMap %~ M.delete (fromComputedField name)

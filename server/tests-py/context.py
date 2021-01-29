@@ -473,6 +473,7 @@ class HGECtx:
         self.webhook_insecure = config.getoption('--test-webhook-insecure')
         self.metadata_disabled = config.getoption('--test-metadata-disabled')
         self.may_skip_test_teardown = False
+        self.function_permissions = config.getoption('--test-function-permissions')
 
         self.engine = create_engine(self.pg_url)
         self.meta = MetaData()

@@ -464,7 +464,7 @@ selectFunction
   -> m (FieldParser n (SelectExp b))
 selectFunction function fieldName description selectPermissions = do
   stringifyNum <- asks $ qcStringifyNum . getter
-  let table = fiReturnType function
+  let table = _fiReturnType function
   tableArgsParser    <- tableArgs table selectPermissions
   functionArgsParser <- customSQLFunctionArgs function
   selectionSetParser <- tableSelectionList table selectPermissions
@@ -472,7 +472,7 @@ selectFunction function fieldName description selectPermissions = do
   pure $ P.subselection fieldName description argsParser selectionSetParser
     <&> \((funcArgs, tableArgs'), fields) -> IR.AnnSelectG
       { IR._asnFields   = fields
-      , IR._asnFrom     = IR.FromFunction (fiName function) funcArgs Nothing
+      , IR._asnFrom     = IR.FromFunction (_fiName function) funcArgs Nothing
       , IR._asnPerm     = tablePermissionsInfo selectPermissions
       , IR._asnArgs     = tableArgs'
       , IR._asnStrfyNum = stringifyNum
@@ -492,7 +492,7 @@ selectFunctionAggregate
   -> SelPermInfo b        -- ^ select permissions of the target table
   -> m (Maybe (FieldParser n (AggSelectExp b)))
 selectFunctionAggregate function fieldName description selectPermissions = runMaybeT do
-  let table = fiReturnType function
+  let table = _fiReturnType function
   stringifyNum <- asks $ qcStringifyNum . getter
   guard $ spiAllowAgg selectPermissions
   tableGQLName <- getTableGQLName @b table
@@ -511,7 +511,7 @@ selectFunctionAggregate function fieldName description selectPermissions = runMa
   pure $ P.subselection fieldName description argsParser aggregationParser
     <&> \((funcArgs, tableArgs'), fields) -> IR.AnnSelectG
       { IR._asnFields   = fields
-      , IR._asnFrom     = IR.FromFunction (fiName function) funcArgs Nothing
+      , IR._asnFrom     = IR.FromFunction (_fiName function) funcArgs Nothing
       , IR._asnPerm     = tablePermissionsInfo selectPermissions
       , IR._asnArgs     = tableArgs'
       , IR._asnStrfyNum = stringifyNum
@@ -532,7 +532,7 @@ selectFunctionConnection
   -> m (FieldParser n (ConnectionSelectExp 'Postgres))
 selectFunctionConnection function fieldName description pkeyColumns selectPermissions = do
   stringifyNum <- asks $ qcStringifyNum . getter
-  let table = fiReturnType function
+  let table = _fiReturnType function
   tableConnectionArgsParser <- tableConnectionArgs pkeyColumns table selectPermissions
   functionArgsParser <- customSQLFunctionArgs function
   selectionSetParser <- tableConnectionSelectionSet table selectPermissions
@@ -544,7 +544,7 @@ selectFunctionConnection function fieldName description pkeyColumns selectPermis
       , IR._csSlice = slice
       , IR._csSelect = IR.AnnSelectG
         { IR._asnFields   = fields
-        , IR._asnFrom     = IR.FromFunction (fiName function) funcArgs Nothing
+        , IR._asnFrom     = IR.FromFunction (_fiName function) funcArgs Nothing
         , IR._asnPerm     = tablePermissionsInfo selectPermissions
         , IR._asnArgs     = args
         , IR._asnStrfyNum = stringifyNum
@@ -1130,7 +1130,7 @@ customSQLFunctionArgs
   :: (BackendSchema b, MonadSchema n m, MonadTableInfo r m)
   => FunctionInfo b
   -> m (InputFieldsParser n (IR.FunctionArgsExpTableRow b (UnpreparedValue b)))
-customSQLFunctionArgs FunctionInfo{..} = functionArgs fiName fiInputArgs
+customSQLFunctionArgs FunctionInfo{..} = functionArgs _fiName _fiInputArgs
 
 -- | Parses the arguments to the underlying sql function of a computed field or
 --   a custom function. All arguments to the underlying sql function are parsed

@@ -227,6 +227,16 @@ For the ``serve`` sub-command these are the available flags and ENV variables:
      - ``HASURA_GRAPHQL_ENABLE_REMOTE_SCHEMA_PERMISSIONS``
      - Enable remote schema permissions (default: ``false``)
 
+   * - ``--infer-function-permissions``
+     - ``HASURA_GRAPHQL_INFER_FUNCTION_PERMISSIONS``
+     - When the ``--infer-function-permissions`` flag is set to ``false``, a function ``f``, stable, immutable or volatile is
+       only exposed for a role ``r`` if there is a permission defined on the function ``f`` for the role ``r``, creating a
+       function permission will only be allowed if there is a select permission on the table type.
+
+       When the ``--infer-function-permissions`` flag is set to ``true`` or the flag is omitted (defaults to ``true``), the
+       permission of the function is inferred from the select permissions from the target table of the function, only for
+       stable/immutable functions. Volatile functions are not exposed to any of the roles in this case.
+
 .. note::
 
   When the equivalent flags for environment variables are used, the flags will take precedence.

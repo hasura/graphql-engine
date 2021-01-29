@@ -2,10 +2,10 @@
    :description: Hasura schema/metadata API reference
    :keywords: hasura, docs, schema/metadata API, API reference
 
-.. _metadata_apis:
+.. _schema_metadata_apis:
 
-Schema / Metadata API Reference
-===============================
+Schema / Metadata API Reference (v1.3 and below)
+================================================
 
 .. contents:: Table of contents
   :backlinks: none

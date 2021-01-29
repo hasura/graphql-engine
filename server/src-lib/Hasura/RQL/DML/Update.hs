@@ -186,13 +186,13 @@ validateUpdateQuery query = do
 
 runUpdate
   :: ( HasVersion, QErrM m, UserInfoM m, CacheRM m
-     , HasSQLGenCtx m, MonadBaseControl IO m
+     , HasServerConfigCtx m, MonadBaseControl IO m
      , MonadIO m, Tracing.MonadTrace m
      )
   => Env.Environment -> UpdateQuery -> m EncJSON
 runUpdate env q = do
   sourceConfig <- askSourceConfig (uqSource q)
-  strfyNum <- stringifyNum <$> askSQLGenCtx
+  strfyNum <- stringifyNum . _sccSQLGenCtx <$> askServerConfigCtx
   validateUpdateQuery q
     >>= runQueryLazyTx (_pscExecCtx sourceConfig) Q.ReadWrite
         . execUpdateQuery env strfyNum Nothing
