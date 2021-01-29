@@ -15,6 +15,7 @@ module Hasura.RQL.Types.QueryCollection
   , QueryName(..)
   , ListedQuery(..)
   , getGQLQuery
+  , getGQLQueryText
   , queryWithoutTypeNames
   , stripTypenames
   ) where
@@ -48,11 +49,11 @@ newtype QueryName
 
 newtype GQLQuery
   = GQLQuery { unGQLQuery :: G.ExecutableDocument G.Name }
-  deriving (Show, Eq, NFData, Hashable, ToJSON, FromJSON, Cacheable)
+  deriving (Show, Eq, Ord, NFData, Hashable, ToJSON, FromJSON, Cacheable)
 
 newtype GQLQueryWithText
   = GQLQueryWithText (Text, GQLQuery)
-  deriving (Show, Eq, NFData, Generic, Cacheable)
+  deriving (Show, Eq, Ord, NFData, Generic, Cacheable)
 
 instance FromJSON GQLQueryWithText where
   parseJSON v@(String t) = GQLQueryWithText . (t, ) <$> parseJSON v
@@ -63,6 +64,9 @@ instance ToJSON GQLQueryWithText where
 
 getGQLQuery :: GQLQueryWithText -> GQLQuery
 getGQLQuery (GQLQueryWithText v) = snd v
+
+getGQLQueryText :: GQLQueryWithText -> Text
+getGQLQueryText (GQLQueryWithText v) = fst v
 
 queryWithoutTypeNames :: GQLQuery -> GQLQuery
 queryWithoutTypeNames =

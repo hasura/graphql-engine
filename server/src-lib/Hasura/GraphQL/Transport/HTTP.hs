@@ -149,7 +149,7 @@ runGQ
   -> [HTTP.Header]
   -> E.GraphQLQueryType
   -> GQLReqUnparsed
-  -> m (HttpResponse EncJSON)
+  -> m (HttpResponse (Maybe GQResponse, EncJSON))
 runGQ env logger reqId userInfo ipAddress reqHeaders queryType reqUnparsed = do
   (telemTimeTot_DT, (telemCacheHit, (telemQueryType, telemTimeIO_DT, telemLocality, resp))) <- withElapsedTime $ do
     E.ExecutionCtx _ sqlGenCtx {- planCache -} sc scVer httpManager enableAL <- ask
@@ -166,7 +166,8 @@ runGQ env logger reqId userInfo ipAddress reqHeaders queryType reqUnparsed = do
         let cacheKey = QueryCacheKey reqParsed $ _uiRole userInfo
             redactedPlan = fmap (fmap (fmap EQ._psRemoteJoins . snd)) queryPlans
         (responseHeaders, cachedValue) <- Tracing.interpTraceT (liftEitherM . runExceptT) $ cacheLookup asts redactedPlan cacheKey
-        case cachedValue of
+
+        case fmap decodeGQResp cachedValue of
           Just cachedResponseData ->
             pure (Telem.Query, 0, Telem.Local, HttpResponse cachedResponseData responseHeaders)
           Nothing -> do
@@ -183,7 +184,7 @@ runGQ env logger reqId userInfo ipAddress reqHeaders queryType reqUnparsed = do
               E.ExecStepRaw json ->
                 buildRaw json
             out@(_, _, _, HttpResponse responseData _) <- buildResult Telem.Query conclusion responseHeaders
-            Tracing.interpTraceT (liftEitherM . runExceptT) $ cacheStore cacheKey responseData
+            Tracing.interpTraceT (liftEitherM . runExceptT) $ cacheStore cacheKey $ snd responseData
             pure out
 
       E.MutationExecutionPlan mutationPlans -> do
@@ -220,21 +221,22 @@ runGQ env logger reqId userInfo ipAddress reqHeaders queryType reqUnparsed = do
       let filteredHeaders = filter ((== "Set-Cookie") . fst) remoteResponseHeaders
       pure $ ResultsFragment telemTimeIO_DT Telem.Remote (JO.toEncJSON value) filteredHeaders
 
+    buildResult
+      :: Telem.QueryType
+      -> Either (Either GQExecError QErr) (InsOrdHashMap G.Name ResultsFragment)
+      -> HTTP.ResponseHeaders
+      -> m (Telem.QueryType, DiffTime, Telem.Locality, HttpResponse (Maybe GQResponse, EncJSON))
     buildResult telemType (Left (Left err)) _ = pure
-      ( telemType
-      , 0
-      , Telem.Remote
-      , HttpResponse (encodeGQResp $ throwError err) []
-      )
+      ( telemType , 0 , Telem.Remote , HttpResponse (Just (Left err), encodeGQResp $ Left err) [])
     buildResult _telemType (Left (Right err)) _ = throwError err
     buildResult telemType (Right results) cacheHeaders = do
-      let responseData = encodeGQResp $ pure $ encJToLBS $ encJFromInsOrdHashMap $ rfResponse <$> OMap.mapKeys G.unName results
+      let responseData = pure $ encJToLBS $ encJFromInsOrdHashMap $ rfResponse <$> OMap.mapKeys G.unName results
       pure
         ( telemType
         , sum (fmap rfTimeIO results)
         , foldMap rfLocality results
         , HttpResponse
-          responseData
+          (Just responseData, encodeGQResp responseData)
           (cacheHeaders <> foldMap rfHeaders results)
         )
 
@@ -290,7 +292,7 @@ runGQBatched
 runGQBatched env logger reqId responseErrorsConfig userInfo ipAddress reqHdrs queryType query =
   case query of
     GQLSingleRequest req ->
-      runGQ env logger reqId userInfo ipAddress reqHdrs queryType req
+      (fmap . fmap) snd (runGQ env logger reqId userInfo ipAddress reqHdrs queryType req)
     GQLBatchedReqs reqs -> do
       -- It's unclear what we should do if we receive multiple
       -- responses with distinct headers, so just do the simplest thing
@@ -301,7 +303,8 @@ runGQBatched env logger reqId responseErrorsConfig userInfo ipAddress reqHdrs qu
             . encJFromList
             . map (either (encJFromJValue . encodeGQErr includeInternal) _hrBody)
 
-      removeHeaders <$> traverse (try . runGQ env logger reqId userInfo ipAddress reqHdrs queryType) reqs
+      removeHeaders <$> traverse (try . (fmap . fmap) snd . runGQ env logger reqId userInfo ipAddress reqHdrs queryType) reqs
+
   where
     try = flip catchError (pure . Left) . fmap Right
 

@@ -291,7 +291,7 @@ migrations maybeDefaultSourceConfig dryRun =
                   defaultSourceMetadata =
                     SourceMetadata defaultSource _mnsTables _mnsFunctions defaultSourceConfig
               in Metadata (OMap.singleton defaultSource defaultSourceMetadata)
-                   _mnsRemoteSchemas _mnsQueryCollections _mnsAllowlist _mnsCustomTypes _mnsActions _mnsCronTriggers
+                   _mnsRemoteSchemas _mnsQueryCollections _mnsAllowlist _mnsCustomTypes _mnsActions _mnsCronTriggers mempty
         liftTx $ setMetadataInCatalog metadataV3
 
     from43To42 = do

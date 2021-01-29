@@ -150,6 +150,7 @@ import           Hasura.RQL.Types.Action
 import           Hasura.RQL.Types.Common
 import           Hasura.RQL.Types.ComputedField
 import           Hasura.RQL.Types.CustomTypes
+import           Hasura.RQL.Types.Endpoint
 import           Hasura.RQL.Types.Error
 import           Hasura.RQL.Types.EventTrigger
 import           Hasura.RQL.Types.Function
@@ -283,6 +284,7 @@ data SchemaCache
   , scDepMap                      :: !DepMap
   , scInconsistentObjs            :: ![InconsistentMetadata]
   , scCronTriggers                :: !(M.HashMap TriggerName CronTriggerInfo)
+  , scEndpoints                   :: !(EndpointTrie GQLQueryWithText)
   }
 $(deriveToJSON hasuraJSON ''SchemaCache)
 

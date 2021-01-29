@@ -167,6 +167,11 @@ buildSchemaCacheRule env = proc (metadata, invalidationKeys) -> do
     , _actNonObjects $ _boCustomTypes resolvedOutputs
     )
 
+  let endpoints = buildEndpointsTrie (M.elems $ _boEndpoints resolvedOutputs)
+
+  bindA -< onJust (nonEmpty $ ambiguousPaths endpoints) $ \ambPaths ->
+      throw409 $ "Ambiguous URL paths in endpoints: " <> commaSeparated (renderPath <$> ambPaths)
+
   returnA -< SchemaCache
     { scPostgres = _boSources resolvedOutputs
     , scActions = _boActions resolvedOutputs
@@ -183,6 +188,7 @@ buildSchemaCacheRule env = proc (metadata, invalidationKeys) -> do
     -- , scDefaultRemoteGCtx = remoteGQLSchema
     , scDepMap = resolvedDependencies
     , scCronTriggers = _boCronTriggers resolvedOutputs
+    , scEndpoints = endpoints
     , scInconsistentObjs =
            inconsistentObjects
         <> dependencyInconsistentObjects
@@ -280,7 +286,7 @@ buildSchemaCacheRule env = proc (metadata, invalidationKeys) -> do
       => (Metadata, Inc.Dependency InvalidationKeys) `arr` BuildOutputs 'Postgres
     buildAndCollectInfo = proc (metadata, invalidationKeys) -> do
       let Metadata sources remoteSchemas collections allowlists
-            customTypes actions cronTriggers = metadata
+            customTypes actions cronTriggers endpoints = metadata
           remoteSchemaPermissions =
             let remoteSchemaPermsList = OMap.toList $ _rsmPermissions <$> remoteSchemas
             in concat $ flip map remoteSchemaPermsList $
@@ -331,6 +337,8 @@ buildSchemaCacheRule env = proc (metadata, invalidationKeys) -> do
             & map (queryWithoutTypeNames . getGQLQuery . _lqQuery)
             & HS.fromList
 
+      resolvedEndpoints <- buildInfoMap fst mkEndpointMetadataObject buildEndpoint -< (collections, OMap.toList endpoints)
+
       -- custom types
       let pgScalars = mconcat $ map snd $ M.elems sourcesOutput
           sourcesCache = M.map fst sourcesOutput
@@ -362,7 +370,36 @@ buildSchemaCacheRule env = proc (metadata, invalidationKeys) -> do
         , _boAllowlist = allowList
         , _boCustomTypes = annotatedCustomTypes
         , _boCronTriggers = cronTriggersMap
+        , _boEndpoints = resolvedEndpoints
         }
+
+    mkEndpointMetadataObject (name, createEndpoint) =
+          let objectId = MOEndpoint name
+          in MetadataObject objectId (toJSON createEndpoint)
+
+    buildEndpoint
+      :: (ArrowChoice arr, ArrowKleisli m arr, MonadError QErr m, ArrowWriter (Seq CollectedInfo) arr)
+      => (InsOrdHashMap CollectionName CreateCollection, (EndpointName, CreateEndpoint)) `arr` Maybe (EndpointMetadata GQLQueryWithText)
+    buildEndpoint = proc (collections, e@(name, createEndpoint)) -> do
+      let endpoint = createEndpoint
+          -- QueryReference collName queryName = _edQuery endpoint
+          addContext err = "in endpoint " <> toTxt (unEndpointName name) <> ": " <> err
+      (| withRecordInconsistency (
+        (| modifyErrA (bindErrorA -< resolveEndpoint collections endpoint)
+         |) addContext)
+       |) (mkEndpointMetadataObject e)
+
+    resolveEndpoint
+      :: QErrM m
+      => InsOrdHashMap CollectionName CreateCollection
+      -> EndpointMetadata QueryReference
+      -> m (EndpointMetadata GQLQueryWithText)
+    resolveEndpoint collections = traverse $ \(QueryReference collName queryName) -> do
+      collection <- maybe (throw400 NotExists $ "collection with name " <> toTxt collName <> " does not exist") pure $
+                      OMap.lookup collName collections
+      listedQuery <- maybe (throw400 NotExists $ "query with name " <> toTxt queryName <> " does not exist in collection " <> toTxt collName) pure $
+                       find ((== queryName) . _lqName) (_cdQueries (_ccDefinition collection))
+      pure (_lqQuery listedQuery)
 
     mkEventTriggerMetadataObject (_, source, _, table, eventTriggerConf) =
       let objectId = MOSourceObjId source $

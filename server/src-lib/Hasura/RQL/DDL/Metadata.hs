@@ -27,6 +27,7 @@ import           Hasura.Metadata.Class
 import           Hasura.RQL.DDL.Action
 import           Hasura.RQL.DDL.ComputedField
 import           Hasura.RQL.DDL.CustomTypes
+import           Hasura.RQL.DDL.Endpoint
 import           Hasura.RQL.DDL.EventTrigger
 import           Hasura.RQL.DDL.Permission
 import           Hasura.RQL.DDL.Relationship
@@ -91,7 +92,7 @@ runReplaceMetadata replaceMetadata = do
                                      }
       pure $ Metadata (OMap.singleton defaultSource newDefaultSourceMetadata)
                         _mnsRemoteSchemas _mnsQueryCollections _mnsAllowlist
-                        _mnsCustomTypes _mnsActions _mnsCronTriggers
+                        _mnsCustomTypes _mnsActions _mnsCronTriggers (_metaRestEndpoints oldMetadata)
   putMetadata metadata
   buildSchemaCacheStrict
   -- See Note [Clear postgres schema for dropped triggers]
@@ -183,6 +184,7 @@ purgeMetadataObj = \case
   MOAction action                            -> dropActionInMetadata action -- Nothing
   MOActionPermission action role             -> dropActionPermissionInMetadata action role
   MOCronTrigger ctName                       -> dropCronTriggerInMetadata ctName
+  MOEndpoint epName                          -> dropEndpointInMetadata epName
 
 runGetCatalogState
   :: (MonadMetadataStorageQueryAPI m) => GetCatalogState -> m EncJSON
