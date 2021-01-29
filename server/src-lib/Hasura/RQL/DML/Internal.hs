@@ -23,15 +23,15 @@ import           Hasura.Backends.Postgres.SQL.Value
 import           Hasura.Backends.Postgres.Translate.BoolExp
 import           Hasura.Backends.Postgres.Translate.Column
 import           Hasura.RQL.Types
-import           Hasura.Session
 import           Hasura.SQL.Types
+import           Hasura.Session
 
 
 newtype DMLP1T m a
   = DMLP1T { unDMLP1T :: StateT (DS.Seq Q.PrepArg) m a }
   deriving ( Functor, Applicative, Monad, MonadTrans
            , MonadState (DS.Seq Q.PrepArg), MonadError e
-           , SourceM, TableCoreInfoRM b, TableInfoRM b, CacheRM, UserInfoM, HasSQLGenCtx
+           , SourceM, TableCoreInfoRM b, TableInfoRM b, CacheRM, UserInfoM, HasServerConfigCtx
            )
 
 runDMLP1T :: DMLP1T m a -> m (a, DS.Seq Q.PrepArg)

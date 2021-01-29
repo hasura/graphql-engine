@@ -74,6 +74,7 @@ data RawServeOptions impl
   , rsoEnableRemoteSchemaPermissions :: !Bool
   , rsoWebSocketCompression          :: !Bool
   , rsoWebSocketKeepAlive            :: !(Maybe Int)
+  , rsoInferFunctionPermissions      :: !(Maybe Bool)
   }
 
 -- | @'ResponseInternalErrorsConfig' represents the encoding of the internal
@@ -124,6 +125,7 @@ data ServeOptions impl
   , soEnableRemoteSchemaPermissions :: !RemoteSchemaPermsCtx
   , soConnectionOptions             :: !WS.ConnectionOptions
   , soWebsocketKeepAlive            :: !KeepAliveDelay
+  , soInferFunctionPermissions      :: !FunctionPermissionsCtx
   }
 
 data DowngradeOptions

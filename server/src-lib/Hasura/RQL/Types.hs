@@ -2,10 +2,10 @@ module Hasura.RQL.Types
   ( MonadTx(..)
 
   , SQLGenCtx(..)
-  , HasSQLGenCtx(..)
-
   , RemoteSchemaPermsCtx(..)
-  , HasRemoteSchemaPermsCtx(..)
+
+  , ServerConfigCtx(..)
+  , HasServerConfigCtx(..)
 
   , HasSystemDefined(..)
   , HasSystemDefinedT
@@ -110,6 +110,42 @@ askTabInfoSource
 askTabInfoSource tableName = do
   lookupTableInfo tableName >>= (`onNothing` throwTableDoesNotExist tableName)
 
+data ServerConfigCtx
+  = ServerConfigCtx
+  { _sccFunctionPermsCtx     :: !FunctionPermissionsCtx
+  , _sccRemoteSchemaPermsCtx :: !RemoteSchemaPermsCtx
+  , _sccSQLGenCtx            :: !SQLGenCtx
+  } deriving (Show, Eq)
+
+class (Monad m) => HasServerConfigCtx m where
+  askServerConfigCtx :: m ServerConfigCtx
+
+instance (HasServerConfigCtx m)
+         => HasServerConfigCtx (ReaderT r m) where
+  askServerConfigCtx = lift askServerConfigCtx
+instance (HasServerConfigCtx m)
+         => HasServerConfigCtx (StateT s m) where
+  askServerConfigCtx = lift askServerConfigCtx
+instance (Monoid w, HasServerConfigCtx m)
+         => HasServerConfigCtx (WriterT w m) where
+  askServerConfigCtx = lift askServerConfigCtx
+instance (HasServerConfigCtx m)
+         => HasServerConfigCtx (TableCoreCacheRT b m) where
+  askServerConfigCtx = lift askServerConfigCtx
+instance (HasServerConfigCtx m)
+         => HasServerConfigCtx (TraceT m) where
+  askServerConfigCtx = lift askServerConfigCtx
+instance (HasServerConfigCtx m)
+         => HasServerConfigCtx (MetadataT m) where
+  askServerConfigCtx = lift askServerConfigCtx
+instance (HasServerConfigCtx m)
+         => HasServerConfigCtx (LazyTxT QErr m) where
+  askServerConfigCtx = lift askServerConfigCtx
+instance (HasServerConfigCtx m) => HasServerConfigCtx (Q.TxET QErr m) where
+  askServerConfigCtx = lift askServerConfigCtx
+instance (HasServerConfigCtx m) => HasServerConfigCtx (TableCacheRT b m) where
+  askServerConfigCtx = lift askServerConfigCtx
+
 data RemoteSchemaPermsCtx
   = RemoteSchemaPermsEnabled
   | RemoteSchemaPermsDisabled
@@ -127,53 +163,6 @@ instance ToJSON RemoteSchemaPermsCtx where
     RemoteSchemaPermsEnabled  -> "true"
     RemoteSchemaPermsDisabled -> "false"
 
-class (Monad m) => HasRemoteSchemaPermsCtx m where
-  askRemoteSchemaPermsCtx :: m RemoteSchemaPermsCtx
-
-instance (HasRemoteSchemaPermsCtx m)
-         => HasRemoteSchemaPermsCtx (ReaderT r m) where
-  askRemoteSchemaPermsCtx = lift askRemoteSchemaPermsCtx
-instance (HasRemoteSchemaPermsCtx m)
-         => HasRemoteSchemaPermsCtx (StateT s m) where
-  askRemoteSchemaPermsCtx = lift askRemoteSchemaPermsCtx
-instance (Monoid w, HasRemoteSchemaPermsCtx m)
-         => HasRemoteSchemaPermsCtx (WriterT w m) where
-  askRemoteSchemaPermsCtx = lift askRemoteSchemaPermsCtx
-instance (HasRemoteSchemaPermsCtx m)
-         => HasRemoteSchemaPermsCtx (TableCoreCacheRT b m) where
-  askRemoteSchemaPermsCtx = lift askRemoteSchemaPermsCtx
-instance (HasRemoteSchemaPermsCtx m)
-         => HasRemoteSchemaPermsCtx (TraceT m) where
-  askRemoteSchemaPermsCtx = lift askRemoteSchemaPermsCtx
-instance (HasRemoteSchemaPermsCtx m)
-         => HasRemoteSchemaPermsCtx (MetadataT m) where
-  askRemoteSchemaPermsCtx = lift askRemoteSchemaPermsCtx
-instance (HasRemoteSchemaPermsCtx m)
-         => HasRemoteSchemaPermsCtx (LazyTxT QErr m) where
-  askRemoteSchemaPermsCtx = lift askRemoteSchemaPermsCtx
-
-class (Monad m) => HasSQLGenCtx m where
-  askSQLGenCtx :: m SQLGenCtx
-
-instance (HasSQLGenCtx m) => HasSQLGenCtx (ReaderT r m) where
-  askSQLGenCtx = lift askSQLGenCtx
-instance (HasSQLGenCtx m) => HasSQLGenCtx (StateT s m) where
-  askSQLGenCtx = lift askSQLGenCtx
-instance (Monoid w, HasSQLGenCtx m) => HasSQLGenCtx (WriterT w m) where
-  askSQLGenCtx = lift askSQLGenCtx
-instance (HasSQLGenCtx m) => HasSQLGenCtx (TableCoreCacheRT b m) where
-  askSQLGenCtx = lift askSQLGenCtx
-instance (HasSQLGenCtx m) => HasSQLGenCtx (TraceT m) where
-  askSQLGenCtx = lift askSQLGenCtx
-instance (HasSQLGenCtx m) => HasSQLGenCtx (MetadataT m) where
-  askSQLGenCtx = lift askSQLGenCtx
-instance (HasSQLGenCtx m) => HasSQLGenCtx (Q.TxET QErr m) where
-  askSQLGenCtx = lift askSQLGenCtx
-instance (HasSQLGenCtx m) => HasSQLGenCtx (LazyTxT QErr m) where
-  askSQLGenCtx = lift askSQLGenCtx
-instance (HasSQLGenCtx m) => HasSQLGenCtx (TableCacheRT b m) where
-  askSQLGenCtx = lift askSQLGenCtx
-
 class (Monad m) => HasSystemDefined m where
   askSystemDefined :: m SystemDefined
 
@@ -189,7 +178,7 @@ instance (HasSystemDefined m) => HasSystemDefined (TraceT m) where
 newtype HasSystemDefinedT m a
   = HasSystemDefinedT { unHasSystemDefinedT :: ReaderT SystemDefined m a }
   deriving ( Functor, Applicative, Monad, MonadTrans, MonadIO, MonadUnique, MonadError e, MonadTx
-           , HasHttpManagerM, HasSQLGenCtx, SourceM, TableCoreInfoRM b, CacheRM, UserInfoM, HasRemoteSchemaPermsCtx)
+           , HasHttpManagerM, SourceM, TableCoreInfoRM b, CacheRM, UserInfoM, HasServerConfigCtx)
 
 runHasSystemDefinedT :: SystemDefined -> HasSystemDefinedT m a -> m a
 runHasSystemDefinedT systemDefined = flip runReaderT systemDefined . unHasSystemDefinedT

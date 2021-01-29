@@ -92,8 +92,8 @@ newtype CacheRWT m a
   = CacheRWT (StateT (RebuildableSchemaCache, CacheInvalidations) m a)
   deriving
     ( Functor, Applicative, Monad, MonadIO, MonadUnique, MonadReader r, MonadError e, MonadTx
-    , UserInfoM, HasHttpManagerM, HasSQLGenCtx, HasSystemDefined, MonadMetadataStorage
-    , MonadMetadataStorageQueryAPI, HasRemoteSchemaPermsCtx, Tracing.MonadTrace)
+    , UserInfoM, HasHttpManagerM, HasSystemDefined, MonadMetadataStorage
+    , MonadMetadataStorageQueryAPI, Tracing.MonadTrace, HasServerConfigCtx)
 
 deriving instance (MonadBase IO m) => MonadBase IO (CacheRWT m)
 deriving instance (MonadBaseControl IO m) => MonadBaseControl IO (CacheRWT m)
@@ -110,8 +110,8 @@ instance MonadTrans CacheRWT where
 instance (Monad m) => CacheRM (CacheRWT m) where
   askSchemaCache = CacheRWT $ gets (lastBuiltSchemaCache . (^. _1))
 
-instance (MonadIO m, MonadError QErr m, HasHttpManagerM m, HasSQLGenCtx m
-         , HasRemoteSchemaPermsCtx m, MonadResolveSource m) => CacheRWM (CacheRWT m) where
+instance (MonadIO m, MonadError QErr m, HasHttpManagerM m
+         , MonadResolveSource m, HasServerConfigCtx m) => CacheRWM (CacheRWT m) where
   buildSchemaCacheWithOptions buildReason invalidations metadata = CacheRWT do
     (RebuildableSchemaCache _ invalidationKeys rule, oldInvalidations) <- get
     let newInvalidationKeys = invalidateKeys invalidations invalidationKeys
@@ -134,7 +134,8 @@ buildSchemaCacheRule
   -- what we want!
   :: ( HasVersion, ArrowChoice arr, Inc.ArrowDistribute arr, Inc.ArrowCache m arr
      , MonadIO m, MonadUnique m, MonadBaseControl IO m, MonadError QErr m
-     , MonadReader BuildReason m, HasHttpManagerM m, HasSQLGenCtx m , HasRemoteSchemaPermsCtx m, MonadResolveSource m)
+     , MonadReader BuildReason m, HasHttpManagerM m, MonadResolveSource m
+     , HasServerConfigCtx m)
   => Env.Environment
   -> (Metadata, InvalidationKeys) `arr` SchemaCache
 buildSchemaCacheRule env = proc (metadata, invalidationKeys) -> do
@@ -216,7 +217,7 @@ buildSchemaCacheRule env = proc (metadata, invalidationKeys) -> do
     buildSource
       :: ( ArrowChoice arr, Inc.ArrowDistribute arr, Inc.ArrowCache m arr
          , ArrowWriter (Seq CollectedInfo) arr, MonadBaseControl IO m
-         , HasSQLGenCtx m, MonadIO m, MonadError QErr m, MonadReader BuildReason m)
+         , HasServerConfigCtx m, MonadIO m, MonadError QErr m, MonadReader BuildReason m)
       => ( SourceMetadata
          , SourceConfig 'Postgres
          , DBTablesMetadata 'Postgres
@@ -259,7 +260,7 @@ buildSchemaCacheRule env = proc (metadata, invalidationKeys) -> do
 
       -- sql functions
       functionCache <- (mapFromL _fmFunction (OMap.elems functions) >- returnA)
-        >-> (| Inc.keyed (\_ (FunctionMetadata qf config) -> do
+        >-> (| Inc.keyed (\_ (FunctionMetadata qf config funcPermissions) -> do
                  let systemDefined = SystemDefined False
                      definition = toJSON $ TrackFunction qf
                      metadataObject = MetadataObject (MOSourceObjId source $ SMOFunction qf) definition
@@ -269,7 +270,7 @@ buildSchemaCacheRule env = proc (metadata, invalidationKeys) -> do
                     (| modifyErrA (do
                          let funcDefs = fromMaybe [] $ M.lookup qf pgFunctions
                          rawfi <- bindErrorA -< handleMultipleFunctions qf funcDefs
-                         (fi, dep) <- bindErrorA -< mkFunctionInfo source qf systemDefined config rawfi
+                         (fi, dep) <- bindErrorA -< mkFunctionInfo source qf systemDefined config funcPermissions rawfi
                          recordDependencies -< (metadataObject, schemaObject, [dep])
                          returnA -< fi)
                     |) addFunctionContext)
@@ -282,7 +283,7 @@ buildSchemaCacheRule env = proc (metadata, invalidationKeys) -> do
       :: ( ArrowChoice arr, Inc.ArrowDistribute arr, Inc.ArrowCache m arr
          , ArrowWriter (Seq CollectedInfo) arr, MonadIO m, MonadUnique m, MonadError QErr m
          , MonadReader BuildReason m, MonadBaseControl IO m
-         , HasHttpManagerM m, HasSQLGenCtx m, MonadResolveSource m)
+         , HasHttpManagerM m, HasServerConfigCtx m, MonadResolveSource m)
       => (Metadata, Inc.Dependency InvalidationKeys) `arr` BuildOutputs 'Postgres
     buildAndCollectInfo = proc (metadata, invalidationKeys) -> do
       let Metadata sources remoteSchemas collections allowlists
@@ -466,7 +467,7 @@ buildSchemaCacheRule env = proc (metadata, invalidationKeys) -> do
     buildTableEventTriggers
       :: ( ArrowChoice arr, Inc.ArrowDistribute arr, ArrowWriter (Seq CollectedInfo) arr
          , Inc.ArrowCache m arr, MonadIO m, MonadError QErr m, MonadBaseControl IO m
-         , MonadReader BuildReason m, HasSQLGenCtx m)
+         , MonadReader BuildReason m, HasServerConfigCtx m)
       => ( SourceName, SourceConfig 'Postgres, TableCoreInfo 'Postgres
          , [EventTriggerConf], Inc.Dependency Inc.InvalidationKey
          ) `arr` EventTriggerInfoMap
@@ -562,7 +563,7 @@ buildSchemaCacheRule env = proc (metadata, invalidationKeys) -> do
 -- result. If it did, it checks to ensure the changes do not violate any integrity constraints, and
 -- if not, incorporates them into the schema cache.
 withMetadataCheck
-  :: (MonadIO m, MonadBaseControl IO m, MonadError QErr m, CacheRWM m, HasSQLGenCtx m, MetadataM m)
+  :: (MonadIO m, MonadBaseControl IO m, MonadError QErr m, CacheRWM m, HasServerConfigCtx m, MetadataM m)
   => SourceName -> Bool -> Q.TxAccess -> LazyTxT QErr m a -> m a
 withMetadataCheck source cascade txAccess action = do
   SourceInfo _ preActionTables preActionFunctions sourceConfig <- askSourceInfo source

@@ -583,3 +583,8 @@ Permissions for custom function queries
 **For example**, in our text-search example above, if the role ``user`` doesn't have the requisite permissions to view
 the table ``article``, a validation error will be thrown if the ``search_articles`` query is run using the ``user``
 role.
+
+.. note::
+
+   When inferring of function permissions is disabled, then there should be a function permission configured for the function to
+   be accessible to a role, otherwise the function is not exposed to the role.

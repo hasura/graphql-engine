@@ -6,7 +6,7 @@ echo "Running tests on node $CIRCLE_NODE_INDEX of $CIRCLE_NODE_TOTAL"
 if [ -z "$SERVER_TEST_TO_RUN" ]; then
   echo 'Please specify $SERVER_TEST_TO_RUN'
   exit 1
-else 
+else
   echo "Running test $SERVER_TEST_TO_RUN"
 fi
 
@@ -522,7 +522,7 @@ case "$SERVER_TEST_TO_RUN" in
 
     unset HASURA_GRAPHQL_CORS_DOMAIN
     ;;
- 
+
   ws-init-cookie-read-cors-enabled)
     # test websocket transport with initial cookie header
 
@@ -660,6 +660,22 @@ case "$SERVER_TEST_TO_RUN" in
     kill_hge_servers
     ;;
 
+  function-permissions)
+      echo -e "\n$(time_elapsed): <########## TEST GRAPHQL-ENGINE WITH FUNCTION PERMISSIONS ENABLED ########>\n"
+      TEST_TYPE="remote-schema-permissions"
+      export HASURA_GRAPHQL_INFER_FUNCTION_PERMISSIONS=false
+
+      run_hge_with_args serve
+      wait_for_port 8080
+
+      pytest -n 1 -vv --hge-urls "$HGE_URL" --pg-urls "$HASURA_GRAPHQL_DATABASE_URL" --hge-key="$HASURA_GRAPHQL_ADMIN_SECRET"  --test_function_permissions test_graphql_queries.py::TestGraphQLQueryFunctionPermissions
+      pytest -n 1 -vv --hge-urls "$HGE_URL" --pg-urls "$HASURA_GRAPHQL_DATABASE_URL" --hge-key="$HASURA_GRAPHQL_ADMIN_SECRET"  --test_function_permissions test_graphql_mutations.py::TestGraphQLMutationFunctions
+
+      unset HASURA_GRAPHQL_INFER_FUNCTION_PERMISSIONS
+
+      kill_hge_servers
+      ;;
+
   query-caching)
     echo -e "\n$(time_elapsed): <########## TEST GRAPHQL-ENGINE QUERY CACHING #####################################>\n"
     TEST_TYPE="query-caching"
@@ -705,18 +721,18 @@ case "$SERVER_TEST_TO_RUN" in
     if [ "$RUN_WEBHOOK_TESTS" == "true" ] ; then
       TEST_TYPE="post-webhook"
       echo -e "\n$(time_elapsed): <########## TEST GRAPHQL-ENGINE WITH ADMIN SECRET & WEBHOOK (POST) #########################>\n"
-      
+
       export HASURA_GRAPHQL_AUTH_HOOK="https://localhost:9090/"
       export HASURA_GRAPHQL_ADMIN_SECRET="HGE$RANDOM$RANDOM"
       init_ssl
-      
+
       start_multiple_hge_servers
-      
+
       python3 webhook.py 9090 "$OUTPUT_FOLDER/ssl/webhook-key.pem" "$OUTPUT_FOLDER/ssl/webhook.pem" > "$OUTPUT_FOLDER/webhook.log" 2>&1  & WH_PID=$!
       wait_for_port 9090
-      
+
       run_pytest_parallel --hge-key="$HASURA_GRAPHQL_ADMIN_SECRET" --hge-webhook="$HASURA_GRAPHQL_AUTH_HOOK"
-      
+
       kill_hge_servers
     fi
     ;;

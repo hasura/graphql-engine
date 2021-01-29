@@ -60,6 +60,14 @@ access over it.
 either with the server flag ``--enable-remote-schema-permissions`` or the environment
 variable ``HASURA_GRAPHQL_ENABLE_REMOTE_SCHEMA_PERMISSIONS`` set to ``true``.
 
+### Function Permissions
+
+Before volatile functions were supported, the permissions for functions were automatically inferred
+from the select permission of the target table. Now, since volatile functions are supported we can't
+do this anymore, so function permissions are introduced which will explicitly grant permission to
+a function for a given role. A pre-requisite to adding a function permission is that the role should
+have select permissions to the target table of the function.
+
 ### Breaking changes
 
 - This release contains the [PDV refactor (#4111)](https://github.com/hasura/graphql-engine/pull/4111), a significant rewrite of the internals of the server, which did include some breaking changes:
@@ -69,12 +77,12 @@ variable ``HASURA_GRAPHQL_ENABLE_REMOTE_SCHEMA_PERMISSIONS`` set to ``true``.
      - if a query selects table `bar` through table `foo` via a relationship, the required permissions headers will be the union of the required headers of table `foo` and table `bar` (we used to only check the headers of the root table);
      - if an insert does not have an `on_conflict` clause, it will not require the update permissions headers.
 
-This release contains the remote schema permissions feature, which introduces a breaking change:
+- This release contains the remote schema permissions feature, which introduces a breaking change:
 
-Earlier, remote schemas were considered to be a public entity and all the roles had unrestricted
-access to the remote schema. If remote schema permissions are enabled in the graphql-engine, a given
-remote schema will only be accessible to a role ,if the role has permissions configured for the said remote schema
-and be accessible according to the permissions that were configured for the role.
+  Earlier, remote schemas were considered to be a public entity and all the roles had unrestricted
+  access to the remote schema. If remote schema permissions are enabled in the graphql-engine, a given
+  remote schema will only be accessible to a role ,if the role has permissions configured for the said remote schema
+  and be accessible according to the permissions that were configured for the role.
 
 ### Bug fixes and improvements
 

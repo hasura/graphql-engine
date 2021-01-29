@@ -101,12 +101,14 @@ runApp env (HGEOptionsG rci metadataDbUrl hgeCmd) = do
           remoteSchemaPermsCtx = RemoteSchemaPermsDisabled
           pgLogger = print
           pgSourceResolver = mkPgSourceResolver pgLogger
-          cacheBuildParams = CacheBuildParams _gcHttpManager sqlGenCtx remoteSchemaPermsCtx pgSourceResolver
+          functionPermsCtx = FunctionPermissionsInferred
+          serverConfigCtx = ServerConfigCtx functionPermsCtx remoteSchemaPermsCtx sqlGenCtx
+          cacheBuildParams = CacheBuildParams _gcHttpManager pgSourceResolver serverConfigCtx
       runManagedT (mkMinimalPool _gcMetadataDbConnInfo) $ \metadataDbPool -> do
         res <- flip runPGMetadataStorageApp (metadataDbPool, pgLogger) $
           runMetadataStorageT $ liftEitherM do
           metadata <- fetchMetadata
-          runAsAdmin sqlGenCtx _gcHttpManager remoteSchemaPermsCtx $ do
+          runAsAdmin sqlGenCtx _gcHttpManager remoteSchemaPermsCtx functionPermsCtx $ do
             schemaCache <- runCacheBuild cacheBuildParams $
                            buildRebuildableSchemaCache env metadata
             execQuery env queryBs

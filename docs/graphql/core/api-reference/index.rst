@@ -15,29 +15,33 @@ API Reference
 Available APIs
 --------------
 
-+-----------------+-----------------------------------------+------------------+
-| API             | Endpoint                                | Access           |
-+=================+=========================================+==================+
-| GraphQL         | :ref:`/v1/graphql <graphql_api>`        | Permission rules |
-+-----------------+-----------------------------------------+------------------+
-| Relay           | :ref:`/v1beta1/relay <relay_api>`       | Permission rules |
-+-----------------+-----------------------------------------+------------------+
-| Legacy GraphQL  | :ref:`/v1alpha1/graphql <graphql_api>`  | Permission rules |
-+-----------------+-----------------------------------------+------------------+
-| Schema/Metadata | :ref:`/v1/query <schema_metadata_api>`  | Admin only       |
-+-----------------+-----------------------------------------+------------------+
-| RESTified GQL   | :ref:`/api/rest <restified_api>`        | GQL REST Routes  |
-+-----------------+-----------------------------------------+------------------+
-| Version         | :ref:`/v1/version <version_api>`        | Public           |
-+-----------------+-----------------------------------------+------------------+
-| Health          | :ref:`/healthz <health_api>`            | Public           |
-+-----------------+-----------------------------------------+------------------+
-| PG Dump         | :ref:`/v1alpha1/pg_dump <pg_dump_api>`  | Admin only       |
-+-----------------+-----------------------------------------+------------------+
-| Config          | :ref:`/v1alpha1/config <config_api>`    | Admin only       |
-+-----------------+-----------------------------------------+------------------+
-| Explain         | :ref:`/v1/graphql/explain <explain_api>`| Admin only       |
-+-----------------+-----------------------------------------+------------------+
++----------------------------------+---------------------------------------------------+------------------+
+| API                              | Endpoint                                          | Access           |
++==================================+===================================================+==================+
+| GraphQL                          | :ref:`/v1/graphql <graphql_api>`                  | Permission rules |
++----------------------------------+---------------------------------------------------+------------------+
+| Relay                            | :ref:`/v1beta1/relay <relay_api>`                 | Permission rules |
++----------------------------------+---------------------------------------------------+------------------+
+| Legacy GraphQL                   | :ref:`/v1alpha1/graphql <graphql_api>`            | Permission rules |
++----------------------------------+---------------------------------------------------+------------------+
+| Schema/Metadata *(< v1.3)*       | :ref:`/v1/query <schema_metadata_api>`            | Admin only       |
++----------------------------------+---------------------------------------------------+------------------+
+| Schema *(> v1.4)*                | :ref:`/v2/query <schema_api>`                     | Admin only       |
++----------------------------------+---------------------------------------------------+------------------+
+| Metadata *(> v1.4)*              | :ref:`/v1/metadata <metadata_api>`                | Admin only       |
++----------------------------------+---------------------------------------------------+------------------+
+| Restified GQL                    | :ref:`/api/rest <restified_api>`                  | GQL REST Routes  |
++----------------------------------+---------------------------------------------------+------------------+
+| Version                          | :ref:`/v1/version <version_api>`                  | Public           |
++----------------------------------+---------------------------------------------------+------------------+
+| Health                           | :ref:`/healthz <health_api>`                      | Public           |
++----------------------------------+---------------------------------------------------+------------------+
+| PG Dump                          | :ref:`/v1alpha1/pg_dump <pg_dump_api>`            | Admin only       |
++----------------------------------+---------------------------------------------------+------------------+
+| Config                           | :ref:`/v1alpha1/config <config_api>`              | Admin only       |
++----------------------------------+---------------------------------------------------+------------------+
+| Explain                          | :ref:`/v1/graphql/explain <explain_api>`          | Admin only       |
++----------------------------------+---------------------------------------------------+------------------+
 
 .. _graphql_api:
 
@@ -61,13 +65,35 @@ See details at :ref:`api_reference_relay_graphql`.
 
 .. _schema_metadata_api:
 
-Schema / metadata API
-^^^^^^^^^^^^^^^^^^^^^
+Schema / metadata API V1 (v1.3 and below)
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Hasura exposes a schema / metadata API for managing metadata for permissions/relationships or for directly
 executing SQL on the underlying Postgres.
 
 This is primarily intended to be used as an ``admin`` API to manage the Hasura schema and metadata.
+
+See details at :ref:`schema_metadata_apis` .
+
+.. _schema_api:
+
+Schema API (v1.4 and above)
+^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Hasura exposes a schema API for directly executing SQL on the underlying Postgres.
+
+This is primarily intended to be used as an ``admin`` API to manage the Hasura schema.
+
+See details at :ref:`schema_apis`.
+
+.. _metadata_api:
+
+Metadata API (v1.4 and above)
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Hasura exposes a metadata API for managing metadata.
+
+This is primarily intended to be used as an ``admin`` API to manage the Hasura metadata.
 
 See details at :ref:`metadata_apis`.
 
@@ -142,7 +168,9 @@ You can refer to the following to know about all PostgreSQL types supported by t
 
   GraphQL API <graphql-api/index>
   Relay GraphQL API <relay-graphql-api/index>
-  Schema / Metadata APIs <schema-metadata-api/index>
+  Schema / Metadata APIs V1 <schema-metadata-api/index>
+  Schema APIs <schema-api/index>
+  Metadata APIs <metadata-api/index>
   RESTified GraphQL Endpoints <restified>
   Version API <version>
   Health check API <health>

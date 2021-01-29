@@ -33,6 +33,7 @@ data QueryContext =
   { qcStringifyNum              :: !Bool
   , qcQueryType                 :: !ET.GraphQLQueryType
   , qcRemoteRelationshipContext :: !(HashMap RemoteSchemaName (IntrospectionResult, ParsedIntrospection))
+  , qcFunctionPermsContext      :: !FunctionPermissionsCtx
   }
 
 textToName :: MonadError QErr m => Text -> m G.Name
@@ -129,4 +130,4 @@ takeValidTables = Map.filterWithKey graphQLTableFilter . Map.filter tableFilter
 takeValidFunctions :: forall b. FunctionCache b -> [FunctionInfo b]
 takeValidFunctions = Map.elems . Map.filter functionFilter
   where
-    functionFilter = not . isSystemDefined . fiSystemDefined
+    functionFilter = not . isSystemDefined . _fiSystemDefined

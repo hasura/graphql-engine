@@ -82,7 +82,7 @@ data SchemaSyncEvent
 instance ToJSON SchemaSyncEvent where
   toJSON = \case
     SSEListenStart time -> String $ "event listening started at " <> tshow time
-    SSEPayload payload -> toJSON payload
+    SSEPayload payload  -> toJSON payload
 
 data ThreadError
   = TEPayloadParse !Text
@@ -192,12 +192,14 @@ startSchemaSyncProcessorThread
   -> InstanceId
   -> UTC.UTCTime
   -> RemoteSchemaPermsCtx
+  -> FunctionPermissionsCtx
   -> ManagedT m Immortal.Thread
 startSchemaSyncProcessorThread sqlGenCtx logger httpMgr
-  schemaSyncEventRef cacheRef instanceId cacheInitStartTime remoteSchemaPermsCtx = do
+  schemaSyncEventRef cacheRef instanceId cacheInitStartTime remoteSchemaPermsCtx functionPermsCtx = do
   -- Start processor thread
   processorThread <- C.forkManagedT "SchemeUpdate.processor" logger $
-    processor sqlGenCtx logger httpMgr schemaSyncEventRef cacheRef instanceId cacheInitStartTime remoteSchemaPermsCtx
+    processor sqlGenCtx logger httpMgr schemaSyncEventRef
+              cacheRef instanceId cacheInitStartTime remoteSchemaPermsCtx  functionPermsCtx
   logThreadStarted logger instanceId TTProcessor processorThread
   pure processorThread
 
@@ -258,9 +260,10 @@ processor
   -> InstanceId
   -> UTC.UTCTime
   -> RemoteSchemaPermsCtx
+  -> FunctionPermissionsCtx
   -> m void
 processor sqlGenCtx logger httpMgr updateEventRef
-  cacheRef instanceId cacheInitStartTime remoteSchemaPermsCtx =
+  cacheRef instanceId cacheInitStartTime remoteSchemaPermsCtx functionPermsCtx =
   -- Never exits
   forever $ do
     event <- liftIO $ STM.atomically getLatestEvent
@@ -281,7 +284,7 @@ processor sqlGenCtx logger httpMgr updateEventRef
 
     when shouldReload $
       refreshSchemaCache sqlGenCtx logger httpMgr cacheRef cacheInvalidations
-        threadType remoteSchemaPermsCtx "schema cache reloaded"
+        threadType remoteSchemaPermsCtx functionPermsCtx "schema cache reloaded"
   where
     -- checks if there is an event
     -- and replaces it with Nothing
@@ -307,10 +310,11 @@ refreshSchemaCache
   -> CacheInvalidations
   -> ThreadType
   -> RemoteSchemaPermsCtx
+  -> FunctionPermissionsCtx
   -> Text
   -> m ()
 refreshSchemaCache sqlGenCtx logger httpManager
-    cacheRef invalidations threadType remoteSchemaPermsCtx msg = do
+    cacheRef invalidations threadType remoteSchemaPermsCtx functionPermsCtx msg = do
   -- Reload schema cache from catalog
   eitherMetadata <- runMetadataStorageT fetchMetadata
   resE <- runExceptT $ do
@@ -325,7 +329,8 @@ refreshSchemaCache sqlGenCtx logger httpManager
     Left e   -> logError logger threadType $ TEQueryError e
     Right () -> logInfo logger threadType $ object ["message" .= msg]
  where
-  runCtx = RunCtx adminUserInfo httpManager sqlGenCtx remoteSchemaPermsCtx
+   serverConfigCtx = ServerConfigCtx functionPermsCtx remoteSchemaPermsCtx sqlGenCtx
+   runCtx = RunCtx adminUserInfo httpManager serverConfigCtx
 
 logInfo :: (MonadIO m) => Logger Hasura -> ThreadType -> Value -> m ()
 logInfo logger threadType val = unLogger logger $

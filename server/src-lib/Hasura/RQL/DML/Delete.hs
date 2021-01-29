@@ -93,7 +93,7 @@ validateDeleteQ query = do
 
 runDelete
   :: ( HasVersion, QErrM m, UserInfoM m, CacheRM m
-     , HasSQLGenCtx m, MonadIO m
+     , HasServerConfigCtx m, MonadIO m
      , Tracing.MonadTrace m, MonadBaseControl IO m
      )
   => Env.Environment
@@ -101,7 +101,7 @@ runDelete
   -> m EncJSON
 runDelete env q = do
   sourceConfig <- askSourceConfig (doSource q)
-  strfyNum <- stringifyNum <$> askSQLGenCtx
+  strfyNum <- stringifyNum . _sccSQLGenCtx <$> askServerConfigCtx
   validateDeleteQ q
     >>= runQueryLazyTx (_pscExecCtx sourceConfig) Q.ReadWrite
         . execDeleteQuery env strfyNum Nothing

@@ -193,7 +193,7 @@ convOrderByElem sessVarBldr (flds, spi) = \case
         throw400 UnexpectedPayload (mconcat [ fldName <<> " is a remote field" ])
 
 convSelectQ
-  :: (UserInfoM m, QErrM m, TableInfoRM 'Postgres m, HasSQLGenCtx m)
+  :: (UserInfoM m, QErrM m, TableInfoRM 'Postgres m, HasServerConfigCtx m)
   => TableName 'Postgres
   -> FieldInfoMap (FieldInfo 'Postgres)  -- Table information of current table
   -> SelPermInfo 'Postgres   -- Additional select permission info
@@ -238,7 +238,7 @@ convSelectQ table fieldInfoMap selPermInfo selQ sessVarBldr prepValBldr = do
       tabArgs = SelectArgs wClause annOrdByM mQueryLimit
                 (S.intToSQLExp <$> mQueryOffset) Nothing
 
-  strfyNum <- stringifyNum <$> askSQLGenCtx
+  strfyNum <- stringifyNum . _sccSQLGenCtx <$> askServerConfigCtx
   return $ AnnSelectG annFlds tabFrom tabPerm tabArgs strfyNum
 
   where
@@ -259,7 +259,7 @@ convExtSimple fieldInfoMap selPermInfo pgCol = do
     relWhenPGErr = "relationships have to be expanded"
 
 convExtRel
-  :: (UserInfoM m, QErrM m, TableInfoRM 'Postgres m, HasSQLGenCtx m)
+  :: (UserInfoM m, QErrM m, TableInfoRM 'Postgres m, HasServerConfigCtx m)
   => FieldInfoMap (FieldInfo 'Postgres)
   -> RelName
   -> Maybe RelName
@@ -297,7 +297,7 @@ convExtRel fieldInfoMap relName mAlias selQ sessVarBldr prepValBldr = do
               ]
 
 convSelectQuery
-  :: (UserInfoM m, QErrM m, TableInfoRM 'Postgres m, HasSQLGenCtx m)
+  :: (UserInfoM m, QErrM m, TableInfoRM 'Postgres m, HasServerConfigCtx m)
   => SessVarBldr 'Postgres m
   -> (ColumnType 'Postgres -> Value -> m S.SQLExp)
   -> SelectQuery
@@ -318,7 +318,7 @@ selectP2 jsonAggSelect (sel, p) =
     selectSQL = toSQL $ mkSQLSelect jsonAggSelect sel
 
 phaseOne
-  :: (QErrM m, UserInfoM m, CacheRM m, HasSQLGenCtx m)
+  :: (QErrM m, UserInfoM m, CacheRM m, HasServerConfigCtx m)
   => SelectQuery -> m (AnnSimpleSel  'Postgres, DS.Seq Q.PrepArg)
 phaseOne query = do
   let sourceName = getSourceDMLQuery query
@@ -332,7 +332,7 @@ phaseTwo =
 
 runSelect
   :: ( QErrM m, UserInfoM m, CacheRM m
-     , HasSQLGenCtx m, MonadIO m, MonadBaseControl IO m
+     , HasServerConfigCtx m, MonadIO m, MonadBaseControl IO m
      , Tracing.MonadTrace m
      )
   => SelectQuery -> m EncJSON

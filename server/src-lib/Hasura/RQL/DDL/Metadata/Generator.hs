@@ -64,6 +64,9 @@ instance Arbitrary MetadataVersion where
 instance Arbitrary FunctionMetadata where
   arbitrary = genericArbitrary
 
+instance Arbitrary FunctionPermissionMetadata where
+  arbitrary = genericArbitrary
+
 instance Arbitrary PostgresPoolSettings where
   arbitrary = genericArbitrary
 

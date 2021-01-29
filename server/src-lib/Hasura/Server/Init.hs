@@ -180,8 +180,7 @@ mkServeOptions rso = do
   logHeadersFromEnv <- withEnvBool (rsoLogHeadersFromEnv rso) (fst logHeadersFromEnvEnv)
   enableRemoteSchemaPerms <-
     bool RemoteSchemaPermsDisabled RemoteSchemaPermsEnabled <$>
-    (withEnvBool (rsoEnableRemoteSchemaPermissions rso) $
-                (fst enableRemoteSchemaPermsEnv))
+    (withEnvBool (rsoEnableRemoteSchemaPermissions rso) (fst enableRemoteSchemaPermsEnv))
 
   webSocketCompressionFromEnv <- withEnvBool (rsoWebSocketCompression rso) $
                                  fst webSocketCompressionEnv
@@ -195,12 +194,17 @@ mkServeOptions rso = do
   webSocketKeepAlive <- KeepAliveDelay . fromIntegral . fromMaybe 5
       <$> withEnv (rsoWebSocketKeepAlive rso) (fst webSocketKeepAliveEnv)
 
+  inferFunctionPerms <-
+    maybe FunctionPermissionsInferred (bool FunctionPermissionsManual FunctionPermissionsInferred) <$>
+    (withEnv (rsoInferFunctionPermissions rso) (fst inferFunctionPermsEnv))
+
   return $ ServeOptions port host connParams txIso adminScrt authHook jwtSecret
                         unAuthRole corsCfg enableConsole consoleAssetsDir
                         enableTelemetry strfyNum enabledAPIs lqOpts enableAL
                         enabledLogs serverLogLevel planCacheOptions
                         internalErrorsConfig eventsHttpPoolSize eventsFetchInterval
                         logHeadersFromEnv enableRemoteSchemaPerms connectionOptions webSocketKeepAlive
+                        inferFunctionPerms
   where
 #ifdef DeveloperAPIs
     defaultAPIs = [METADATA,GRAPHQL,PGDUMP,CONFIG,DEVELOPER]
@@ -544,6 +548,12 @@ enableRemoteSchemaPermsEnv =
   , "Enables remote schema permissions (default: false)"
   )
 
+inferFunctionPermsEnv :: (String, String)
+inferFunctionPermsEnv =
+  ( "HASURA_GRAPHQL_INFER_FUNCTION_PERMISSIONS"
+  , "Infers function permissions (default: true)"
+  )
+
 
 adminInternalErrorsEnv :: (String, String)
 adminInternalErrorsEnv =
@@ -871,6 +881,13 @@ parseEnableRemoteSchemaPerms =
            help (snd enableRemoteSchemaPermsEnv)
          )
 
+parseInferFunctionPerms :: Parser (Maybe Bool)
+parseInferFunctionPerms = optional $
+  option ( eitherReader parseStrAsBool )
+         ( long "infer-function-permissions" <>
+           help (snd inferFunctionPermsEnv)
+         )
+
 mxRefetchDelayEnv :: (String, String)
 mxRefetchDelayEnv =
   ( "HASURA_GRAPHQL_LIVE_QUERIES_MULTIPLEXED_REFETCH_INTERVAL"
@@ -983,6 +1000,7 @@ serveOptsToLog so =
       , "remote_schema_permissions" J..= soEnableRemoteSchemaPermissions so
       , "websocket_compression_options" J..= show (WS.connectionCompressionOptions . soConnectionOptions $ so)
       , "websocket_keep_alive" J..= show (soWebsocketKeepAlive so)
+      , "infer_function_permissions" J..= soInferFunctionPermissions so
       ]
 
 mkGenericStrLog :: L.LogLevel -> Text -> String -> StartupLog
@@ -1031,6 +1049,7 @@ serveOptionsParser =
   <*> parseEnableRemoteSchemaPerms
   <*> parseWebSocketCompression
   <*> parseWebSocketKeepAlive
+  <*> parseInferFunctionPerms
 
 -- | This implements the mapping between application versions
 -- and catalog schema versions.
