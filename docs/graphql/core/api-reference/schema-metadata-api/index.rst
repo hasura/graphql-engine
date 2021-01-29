@@ -380,6 +380,16 @@ The various types of queries are listed in the following table:
      - 1
      - Drop an action permission
 
+   * - :ref:`create_rest_endpoint`
+     - :ref:`create_rest_endpoint_args <create_rest_endpoint_syntax>`
+     - 3
+     - Create a RESTified GraphQL Endpoint
+
+   * - :ref:`drop_rest_endpoint`
+     - :ref:`drop_rest_endpoint_args <drop_rest_endpoint_syntax>`
+     - 3
+     - Drop a RESTified GraphQL Endpoint
+
 **See:**
 
 - :ref:`Run SQL <api_run_sql>`
@@ -481,6 +491,7 @@ See :ref:`server_flag_reference` for info on setting the above flag/env var.
   Remote Schemas <remote-schemas>
   Remote Relationships <remote-relationships>
   Query Collections <query-collections>
+  RESTified GraphQL Endpoints <restified-endpoints>
   Custom Types <custom-types>
   Actions <actions>
   Manage Metadata <manage-metadata>

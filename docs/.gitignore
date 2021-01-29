@@ -56,3 +56,4 @@ env
 
 # Jetbrains folder
 .idea
+.vscode

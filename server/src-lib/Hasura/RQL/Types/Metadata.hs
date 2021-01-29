@@ -24,6 +24,7 @@ import           Hasura.RQL.Types.Action
 import           Hasura.RQL.Types.Common
 import           Hasura.RQL.Types.ComputedField
 import           Hasura.RQL.Types.CustomTypes
+import           Hasura.RQL.Types.Endpoint
 import           Hasura.RQL.Types.EventTrigger
 import           Hasura.RQL.Types.Function
 import           Hasura.RQL.Types.Permission
@@ -64,6 +65,7 @@ data MetadataObjId
   | MOAction !ActionName
   | MOActionPermission !ActionName !RoleName
   | MOCronTrigger !TriggerName
+  | MOEndpoint !EndpointName
   deriving (Show, Eq, Generic)
 $(makePrisms ''MetadataObjId)
 instance Hashable MetadataObjId
@@ -86,6 +88,7 @@ moiTypeName = \case
   MOCustomTypes -> "custom_types"
   MOAction _ -> "action"
   MOActionPermission _ _ -> "action_permission"
+  MOEndpoint _ -> "endpoint"
 
 moiName :: MetadataObjId -> Text
 moiName objectId = moiTypeName objectId <> " " <> case objectId of
@@ -108,6 +111,7 @@ moiName objectId = moiTypeName objectId <> " " <> case objectId of
   MOCustomTypes -> "custom_types"
   MOAction name -> toTxt name
   MOActionPermission name roleName -> toTxt roleName <> " permission in " <> toTxt name
+  MOEndpoint name -> toTxt name
 
 data MetadataObject
   = MetadataObject
@@ -338,6 +342,7 @@ type Functions = InsOrdHashMap QualifiedFunction FunctionMetadata
 type RemoteSchemas = InsOrdHashMap RemoteSchemaName RemoteSchemaMetadata
 type QueryCollections = InsOrdHashMap CollectionName CreateCollection
 type Allowlist = HSIns.InsOrdHashSet CollectionReq
+type Endpoints = InsOrdHashMap EndpointName CreateEndpoint
 type Actions = InsOrdHashMap ActionName ActionMetadata
 type CronTriggers = InsOrdHashMap TriggerName CronTriggerMetadata
 
@@ -401,6 +406,7 @@ data Metadata
   , _metaCustomTypes      :: !CustomTypes
   , _metaActions          :: !Actions
   , _metaCronTriggers     :: !CronTriggers
+  , _metaRestEndpoints    :: !Endpoints
   } deriving (Show, Eq)
 $(makeLenses ''Metadata)
 
@@ -410,14 +416,16 @@ instance FromJSON Metadata where
     when (version /= MVVersion3) $ fail $
       "unexpected metadata version from storage: " <> show version
     sources <- oMapFromL _smName <$> o .: "sources"
+    endpoints <- oMapFromL _ceName <$> o .:? "rest_endpoints" .!= []
+
     (remoteSchemas, queryCollections, allowlist, customTypes,
      actions, cronTriggers) <- parseNonSourcesMetadata o
     pure $ Metadata sources remoteSchemas queryCollections allowlist
-           customTypes actions cronTriggers
+           customTypes actions cronTriggers endpoints
 
 emptyMetadata :: Metadata
 emptyMetadata =
-  Metadata mempty mempty mempty mempty emptyCustomTypes mempty mempty
+  Metadata mempty mempty mempty mempty emptyCustomTypes mempty mempty mempty
 
 tableMetadataSetter
   :: SourceName -> QualifiedTable -> ASetter' Metadata TableMetadata
@@ -492,6 +500,7 @@ metadataToOrdJSON ( Metadata
                     customTypes
                     actions
                     cronTriggers
+                    endpoints
                   ) = AO.object $ [versionPair, sourcesPair] <>
                       catMaybes [ remoteSchemasPair
                                 , queryCollectionsPair
@@ -499,6 +508,7 @@ metadataToOrdJSON ( Metadata
                                 , actionsPair
                                 , customTypesPair
                                 , cronTriggersPair
+                                , endpointsPair
                                 ]
   where
     versionPair          = ("version", AO.toOrdered currentMetadataVersion)
@@ -510,6 +520,7 @@ metadataToOrdJSON ( Metadata
                            else Just ("custom_types", customTypesToOrdJSON customTypes)
     actionsPair          = listToMaybeOrdPairSort "actions" actionMetadataToOrdJSON _amName actions
     cronTriggersPair     = listToMaybeOrdPairSort "cron_triggers" crontriggerQToOrdJSON ctName cronTriggers
+    endpointsPair        = listToMaybeOrdPairSort "rest_endpoints" AO.toOrdered _ceUrl endpoints
 
     sourceMetaToOrdJSON :: SourceMetadata -> AO.Value
     sourceMetaToOrdJSON SourceMetadata{..} =

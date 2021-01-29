@@ -110,6 +110,7 @@ data BuildOutputs (b :: BackendType)
   , _boAllowlist     :: !(HS.HashSet GQLQuery)
   , _boCustomTypes   :: !(AnnotatedCustomTypes b)
   , _boCronTriggers  :: !(M.HashMap TriggerName CronTriggerInfo)
+  , _boEndpoints     :: !(M.HashMap EndpointName (EndpointMetadata GQLQueryWithText))
   }
 $(makeLenses ''BuildOutputs)
 

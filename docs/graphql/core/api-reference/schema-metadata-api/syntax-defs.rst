@@ -555,6 +555,40 @@ CollectionQuery
        "query": String
    }
 
+.. _EndpointUrl:
+
+EndpointUrl
+^^^^^^^^^^^
+
+.. parsed-literal::
+
+  String
+
+.. _EndpointMethods:
+
+EndpointMethods
+^^^^^^^^^^^^^^^
+
+.. parsed-literal::
+
+  [String]
+
+.. _EndpointDef:
+
+EndpointDefinition
+^^^^^^^^^^^^^^^^^^
+
+.. parsed-literal::
+   :class: haskell-pre
+
+   {
+       "query": {
+         "query_name : String,
+         "collection_name" : CollectionName
+       }
+   }
+
+
 .. _CustomColumnNames:
 
 CustomColumnNames

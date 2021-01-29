@@ -504,12 +504,43 @@ class HGECtx:
     def reflect_tables(self):
         self.meta.reflect(bind=self.engine)
 
-    def anyq(self, u, q, h):
-        resp = self.http.post(
-            self.hge_url + u,
-            json=q,
-            headers=h
-        )
+    def anyq(self, u, q, h, b = None, v = None):
+        resp = None
+        if v == 'GET':
+          resp = self.http.get(
+              self.hge_url + u,
+              headers=h
+          )
+        elif v == 'POST' and b:
+          # TODO: Figure out why the requests are failing with a byte object passed in as `data`
+          resp = self.http.post(
+              self.hge_url + u,
+              data=b,
+              headers=h
+           )
+        elif v == 'PATCH' and b:
+          resp = self.http.patch(
+              self.hge_url + u,
+              data=b,
+              headers=h
+           )
+        elif v == 'PUT' and b:
+          resp = self.http.put(
+              self.hge_url + u,
+              data=b,
+              headers=h
+           )
+        elif v == 'DELETE':
+          resp = self.http.delete(
+              self.hge_url + u,
+              headers=h
+           )
+        else:
+          resp = self.http.post(
+              self.hge_url + u,
+              json=q,
+              headers=h
+           )
         # NOTE: make sure we preserve key ordering so we can test the ordering
         # properties in the graphql spec properly
         # Returning response headers to get the request id from response

@@ -334,6 +334,7 @@ library
                      , Hasura.Server.Compression
                      , Hasura.Server.Types
                      , Hasura.Server.API.PGDump
+                     , Hasura.Server.Rest
                      , Hasura.Prelude
 
                      , Hasura.EncJSON
@@ -376,6 +377,8 @@ library
                      , Hasura.RQL.Types.Common
                      , Hasura.RQL.Types.ComputedField
                      , Hasura.RQL.Types.CustomTypes
+                     , Hasura.RQL.Types.Endpoint
+                     , Hasura.RQL.Types.Endpoint.Trie
                      , Hasura.RQL.Types.Error
                      , Hasura.RQL.Types.EventTrigger
                      , Hasura.RQL.Types.Function
@@ -395,6 +398,7 @@ library
                      , Hasura.RQL.DDL.ComputedField
                      , Hasura.RQL.DDL.CustomTypes
                      , Hasura.RQL.DDL.Deps
+                     , Hasura.RQL.DDL.Endpoint
                      , Hasura.RQL.DDL.Headers
                      , Hasura.RQL.DDL.Metadata
                      , Hasura.RQL.DDL.Metadata.Generator
@@ -517,6 +521,7 @@ test-suite graphql-engine-tests
     , aeson
     , base
     , bytestring
+    , containers
     , graphql-engine
     , hspec >=2.6.1 && <3
     , hspec-core >=2.6.1 && <3
@@ -553,6 +558,7 @@ test-suite graphql-engine-tests
     Data.NonNegativeIntSpec
     Hasura.IncrementalSpec
     Hasura.RQL.MetadataSpec
+    Hasura.RQL.Types.EndpointSpec
     Hasura.Server.MigrateSpec
     Hasura.Server.TelemetrySpec
     Hasura.CacheBoundedSpec

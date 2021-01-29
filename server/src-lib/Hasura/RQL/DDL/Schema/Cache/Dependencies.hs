@@ -147,6 +147,7 @@ deleteMetadataObject = \case
   MOCronTrigger name                  -> boCronTriggers %~ M.delete name
   MOCustomTypes                       -> boCustomTypes %~ const emptyAnnotatedCustomTypes
   MOAction name                       -> boActions %~ M.delete name
+  MOEndpoint name                     -> boEndpoints %~ M.delete name
   MOActionPermission name role        -> boActions.ix name.aiPermissions %~ M.delete role
   where
     deleteObjId :: SourceMetadataObjId -> BackendSourceInfo -> BackendSourceInfo

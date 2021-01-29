@@ -2,6 +2,14 @@
 
 ## Next release
 
+### REST Endpoints
+
+The RESTified GraphQL Endpoints API allows for the use of a REST interface to saved GraphQL queries and mutations.
+
+Users specify the query or mutation they wish to make available, as well a URL template. Segments of the URL template can potentially capture data to be used as GraphQL variables.
+
+See the documentation at `graphql/core/api-reference/restified` for more information.
+
 ### Heterogeneous execution
 
 Previous releases have allowed queries to request data from either Postgres or remote schemas, but not both. This release removes that restriction, so multiple data sources may be mixed within a single query. For example, GraphQL Engine can execute a query like

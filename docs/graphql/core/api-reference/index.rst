@@ -26,6 +26,8 @@ Available APIs
 +-----------------+-----------------------------------------+------------------+
 | Schema/Metadata | :ref:`/v1/query <schema_metadata_api>`  | Admin only       |
 +-----------------+-----------------------------------------+------------------+
+| RESTified GQL   | :ref:`/api/rest <restified_api>`        | GQL REST Routes  |
++-----------------+-----------------------------------------+------------------+
 | Version         | :ref:`/v1/version <version_api>`        | Public           |
 +-----------------+-----------------------------------------+------------------+
 | Health          | :ref:`/healthz <health_api>`            | Public           |
@@ -70,6 +72,15 @@ This is primarily intended to be used as an ``admin`` API to manage the Hasura s
 See details at :ref:`metadata_apis`.
 
 .. _version_api:
+
+RESTified GraphQL API
+^^^^^^^^^^^^^^^^^^^^^
+
+Hasura allows saved GraphQL queries and mutations to be accesed through a REST interface.
+
+See details at :ref:`restified_api_reference`.
+
+.. _restified_api:
 
 Version API
 ^^^^^^^^^^^
@@ -132,6 +143,7 @@ You can refer to the following to know about all PostgreSQL types supported by t
   GraphQL API <graphql-api/index>
   Relay GraphQL API <relay-graphql-api/index>
   Schema / Metadata APIs <schema-metadata-api/index>
+  RESTified GraphQL Endpoints <restified>
   Version API <version>
   Health check API <health>
   PG Dump API <pgdump>

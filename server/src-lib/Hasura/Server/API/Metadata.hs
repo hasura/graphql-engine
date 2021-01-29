@@ -19,6 +19,7 @@ import           Hasura.Metadata.Class
 import           Hasura.RQL.DDL.Action
 import           Hasura.RQL.DDL.ComputedField
 import           Hasura.RQL.DDL.CustomTypes
+import           Hasura.RQL.DDL.Endpoint
 import           Hasura.RQL.DDL.EventTrigger
 import           Hasura.RQL.DDL.Metadata
 import           Hasura.RQL.DDL.Permission
@@ -126,6 +127,9 @@ data RQLMetadata
   | RMUpdateAction !UpdateAction
   | RMCreateActionPermission !CreateActionPermission
   | RMDropActionPermission !DropActionPermission
+
+  | RMCreateRestEndpoint !CreateEndpoint
+  | RMDropRestEndpoint !DropEndpoint
 
   | RMSetCustomTypes !CustomTypes
 
@@ -270,6 +274,9 @@ runMetadataQueryM env = withPathK "args" . \case
   RMUpdateAction q                -> runUpdateAction q
   RMCreateActionPermission q      -> runCreateActionPermission q
   RMDropActionPermission q        -> runDropActionPermission q
+
+  RMCreateRestEndpoint q          -> runCreateEndpoint q
+  RMDropRestEndpoint q            -> runDropEndpoint q
 
   RMSetCustomTypes q              -> runSetCustomTypes q
 

@@ -23,6 +23,7 @@ import           Hasura.Metadata.Class
 import           Hasura.RQL.DDL.Action
 import           Hasura.RQL.DDL.ComputedField
 import           Hasura.RQL.DDL.CustomTypes
+import           Hasura.RQL.DDL.Endpoint
 import           Hasura.RQL.DDL.EventTrigger
 import           Hasura.RQL.DDL.Metadata
 import           Hasura.RQL.DDL.Permission
@@ -129,6 +130,9 @@ data RQLQueryV1
   | RQUpdateAction !UpdateAction
   | RQCreateActionPermission !CreateActionPermission
   | RQDropActionPermission !DropActionPermission
+
+  | RQCreateRestEndpoint !CreateEndpoint
+  | RQDropRestEndpoint !DropEndpoint
 
   | RQDumpInternalState !DumpInternalState
 
@@ -288,6 +292,9 @@ queryModifiesSchemaCache (RQV1 qi) = case qi of
   RQClearMetadata _               -> True
   RQReloadMetadata _              -> True
 
+  RQCreateRestEndpoint _          -> True
+  RQDropRestEndpoint _            -> True
+
   RQCreateAction _                -> True
   RQDropAction _                  -> True
   RQUpdateAction _                -> True
@@ -432,6 +439,9 @@ runQueryM env rq = withPathK "args" $ case rq of
       RQCreateActionPermission q      -> runCreateActionPermission q
       RQDropActionPermission q        -> runDropActionPermission q
 
+      RQCreateRestEndpoint q          -> runCreateEndpoint q
+      RQDropRestEndpoint q            -> runDropEndpoint q
+
       RQDumpInternalState q           -> runDumpInternalState q
 
       RQRunSql q                      -> runRunSQL q
@@ -441,9 +451,9 @@ runQueryM env rq = withPathK "args" $ case rq of
       RQBulk qs                       -> encJFromList <$> indexedMapM (runQueryM env) qs
 
     runQueryV2M = \case
-      RQV2TrackTable q                -> runTrackTableV2Q q
-      RQV2SetTableCustomFields q      -> runSetTableCustomFieldsQV2 q
-      RQV2TrackFunction q             -> runTrackFunctionV2 q
+      RQV2TrackTable q           -> runTrackTableV2Q q
+      RQV2SetTableCustomFields q -> runSetTableCustomFieldsQV2 q
+      RQV2TrackFunction q        -> runTrackFunctionV2 q
 
 requiresAdmin :: RQLQuery -> Bool
 requiresAdmin = \case
@@ -516,6 +526,9 @@ requiresAdmin = \case
     RQClearMetadata _               -> True
     RQExportMetadata _              -> True
     RQReloadMetadata _              -> True
+
+    RQCreateRestEndpoint _          -> True
+    RQDropRestEndpoint _            -> True
 
     RQCreateAction _                -> True
     RQDropAction _                  -> True

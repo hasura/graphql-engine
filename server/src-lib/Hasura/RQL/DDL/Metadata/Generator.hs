@@ -47,6 +47,7 @@ genMetadata =
     <*> arbitrary
     <*> arbitrary
     <*> arbitrary
+    <*> arbitrary
 
 instance (Arbitrary k, Eq k, Hashable k, Arbitrary v) => Arbitrary (InsOrdHashMap k v) where
   arbitrary = OM.fromList <$> arbitrary
@@ -221,6 +222,15 @@ instance Arbitrary CreateCollection where
   arbitrary = genericArbitrary
 
 instance Arbitrary CollectionReq where
+  arbitrary = genericArbitrary
+
+instance Arbitrary query => Arbitrary (EndpointMetadata query) where
+  arbitrary = genericArbitrary
+
+instance Arbitrary query => Arbitrary (EndpointDef query) where
+  arbitrary = genericArbitrary
+
+instance Arbitrary QueryReference where
   arbitrary = genericArbitrary
 
 instance Arbitrary G.Description where

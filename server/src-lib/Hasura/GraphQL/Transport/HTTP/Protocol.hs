@@ -12,6 +12,8 @@ module Hasura.GraphQL.Transport.HTTP.Protocol
   , VariableValues
   , encodeGQErr
   , encodeGQResp
+  , decodeGQResp
+  , encodeHTTPResp
   , GQResult
   , GQExecError(..)
   , GQResponse
@@ -22,17 +24,17 @@ import           Hasura.EncJSON
 import           Hasura.Prelude
 import           Hasura.RQL.Types
 
-import           Data.Either                   (isLeft)
-import           Language.Haskell.TH.Syntax    (Lift)
+import           Data.Either                    (isLeft)
+import           Language.Haskell.TH.Syntax     (Lift)
 
-import qualified Data.Aeson                    as J
-import qualified Data.Aeson.Casing             as J
-import qualified Data.Aeson.TH                 as J
-import qualified Data.ByteString.Lazy          as BL
-import qualified Data.HashMap.Strict           as Map
-import qualified Language.GraphQL.Draft.Parser as G
+import qualified Data.Aeson                     as J
+import qualified Data.Aeson.Casing              as J
+import qualified Data.Aeson.TH                  as J
+import qualified Data.ByteString.Lazy           as BL
+import qualified Data.HashMap.Strict            as Map
+import qualified Language.GraphQL.Draft.Parser  as G
 import qualified Language.GraphQL.Draft.Printer as G
-import qualified Language.GraphQL.Draft.Syntax as G
+import qualified Language.GraphQL.Draft.Syntax  as G
 
 -- TODO: why not just `G.ExecutableDocument G.Name`?
 newtype GQLExecDoc
@@ -153,3 +155,22 @@ encodeGQResp gqResp =
   encJFromAssocList $ case gqResp of
     Right r -> [("data", encJFromLBS r)]
     Left e  -> [("data", "null"), ("errors", encJFromJValue e)]
+
+-- We don't want to force the `Maybe GQResponse` unless absolutely necessary
+-- Decode EncJSON from Cache for HTTP endpoints
+decodeGQResp :: EncJSON -> (Maybe GQResponse, EncJSON)
+decodeGQResp encJson =
+  let gqResp =
+        case J.decode @J.Value (encJToLBS encJson) of
+          Just (J.Object v) ->
+            case Map.lookup "error" v of
+              Just err -> Just (Right $ J.encode err)
+              Nothing  -> Right . J.encode <$> Map.lookup "data" v
+          _ -> Nothing
+  in (gqResp, encJson)
+
+-- Encode for HTTP Response without `data` envelope
+encodeHTTPResp :: GQResponse -> EncJSON
+encodeHTTPResp = \case
+  Right r -> encJFromLBS r
+  Left e  -> encJFromJValue e
