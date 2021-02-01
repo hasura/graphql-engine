@@ -183,11 +183,8 @@ data FunctionPermissionsCtx
   deriving (Show, Eq)
 
 instance FromJSON FunctionPermissionsCtx where
-  parseJSON = withText "FunctionPermissionsCtx" $ \t ->
-    case T.toLower t of
-      "true"  -> pure FunctionPermissionsInferred
-      "false" -> pure FunctionPermissionsManual
-      _       -> fail "infer_function_permissions should be a boolean value"
+  parseJSON = withBool "FunctionPermissionsCtx" $
+    pure . bool FunctionPermissionsManual FunctionPermissionsInferred
 
 instance ToJSON FunctionPermissionsCtx where
   toJSON = \case
