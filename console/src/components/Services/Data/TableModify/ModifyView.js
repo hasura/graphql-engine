@@ -20,14 +20,13 @@ import {
   findTable,
   generateTableDef,
   getColumnName,
-  getTableCustomRootFields,
   getTableCustomColumnNames,
 } from '../../../Common/utils/pgUtils';
-import RootFields from './RootFields';
 import Tooltip from '../../../Common/Tooltip/Tooltip';
-import { changeViewRootFields } from '../Common/TooltipMessages';
 import styles from './ModifyTable.scss';
 import ViewDefinitions from './ViewDefinitions';
+import ComputedFields from './ComputedFields';
+import RootFields from './RootFields';
 
 const ModifyView = props => {
   const {
@@ -41,7 +40,6 @@ const ModifyView = props => {
     dispatch,
     currentSchema,
     tableCommentEdit,
-    rootFieldsEdit,
     migrationMode,
     readOnlyMode,
   } = props;
@@ -101,7 +99,7 @@ const ModifyView = props => {
   const getViewColumnsSection = () => {
     const columns = tableSchema.columns.sort(ordinalColSort);
 
-    return columns.map((c, i) => {
+    const columnList = columns.map((c, i) => {
       const columnName = getColumnName(c);
 
       const setCustomColumnName = e => {
@@ -173,24 +171,12 @@ const ModifyView = props => {
         </div>
       );
     });
-  };
 
-  const getViewRootFieldsSection = () => {
-    const existingRootFields = getTableCustomRootFields(tableSchema);
     return (
-      <React.Fragment>
-        <h4 className={styles.subheading_text}>
-          Custom GraphQL Root Fields
-          <Tooltip message={changeViewRootFields} />
-        </h4>
-        <RootFields
-          existingRootFields={existingRootFields}
-          rootFieldsEdit={rootFieldsEdit}
-          dispatch={dispatch}
-          tableName={tableName}
-        />
-        <hr />
-      </React.Fragment>
+      <>
+        <h4 className={styles.subheading_text}>Columns</h4>
+        {columnList}
+      </>
     );
   };
 
@@ -252,13 +238,14 @@ const ModifyView = props => {
             tableType={tableType}
             dispatch={dispatch}
           />
-          <h4 className={styles.subheading_text}>Columns</h4>
-          {getViewColumnsSection()}
-          <br />
           <ViewDefinitions dispatch={dispatch} sql={viewDefSql} />
-
           <hr />
-          {getViewRootFieldsSection()}
+          {getViewColumnsSection()}
+          <hr />
+          <ComputedFields tableSchema={tableSchema} />
+          <hr />
+          <RootFields tableSchema={tableSchema} />
+          <hr />
           {untrackBtn}
           {deleteBtn}
           <br />
