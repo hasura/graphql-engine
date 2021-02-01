@@ -14,6 +14,7 @@ export type ConsoleState = {
     telemetryNotificationShown?: boolean;
     disablePreReleaseUpdateNotifications?: boolean;
     console_notifications?: TelemetryNotificationsState;
+    onboardingShown?: boolean;
   }>;
   hasura_uuid: string;
 };

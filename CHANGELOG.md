@@ -116,6 +116,7 @@ have select permissions to the target table of the function.
 - console: allow user to cascade Postgres dependencies when dropping Postgres objects (close #5109) (#5248)
 - console: mark inconsistent remote schemas in the UI (close #5093) (#5181)
 - console: remove ONLY as default for ALTER TABLE in column alter operations (close #5512) #5706
+- console: add onboarding helper for new users (#355)
 - console: add option to flag an insertion as a migration from `Data` section (close #1766) (#4933)
 - console: down migrations improvements (close #3503, #4988) (#4790)
 - console: allow setting computed fields for views (close #6168) (#6174)
