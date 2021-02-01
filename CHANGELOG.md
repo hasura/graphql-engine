@@ -2,6 +2,14 @@
 
 ## Next release
 
+### Bug fixes and improvements
+
+(Add entries here in the order of: server, console, cli, docs, others)
+
+- server: fix issue of not exposing mutation functions to the admin role when function permissions are inferred (fix #6503)
+
+## v1.4.0-alpha.1
+
 ### REST Endpoints
 
 The RESTified GraphQL Endpoints API allows for the use of a REST interface to saved GraphQL queries and mutations.

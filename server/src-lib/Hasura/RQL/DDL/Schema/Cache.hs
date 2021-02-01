@@ -237,6 +237,8 @@ buildSchemaCacheRule env = proc (metadata, invalidationKeys) -> do
       tableRawInfos <- buildTableCache -< ( source, sourceConfig, pgTables
                                           , tableInputs, metadataInvalidationKey
                                           )
+      -- function permissions context
+      functionPermsCtx <- bindA -< _sccFunctionPermsCtx <$> askServerConfigCtx
 
       -- relationships and computed fields
       let nonColumnsByTable = mapFromL _nctiTable nonColumnInputs
@@ -260,17 +262,21 @@ buildSchemaCacheRule env = proc (metadata, invalidationKeys) -> do
 
       -- sql functions
       functionCache <- (mapFromL _fmFunction (OMap.elems functions) >- returnA)
-        >-> (| Inc.keyed (\_ (FunctionMetadata qf config funcPermissions) -> do
+        >-> (| Inc.keyed (\_ (FunctionMetadata qf config rawFuncPermissions) -> do
                  let systemDefined = SystemDefined False
                      definition = toJSON $ TrackFunction qf
                      metadataObject = MetadataObject (MOSourceObjId source $ SMOFunction qf) definition
                      schemaObject = SOSourceObj source $ SOIFunction qf
                      addFunctionContext e = "in function " <> qf <<> ": " <> e
+                     functionPermissions =
+                       case functionPermsCtx of
+                         FunctionPermissionsInferred -> []
+                         FunctionPermissionsManual   -> rawFuncPermissions
                  (| withRecordInconsistency (
                     (| modifyErrA (do
                          let funcDefs = fromMaybe [] $ M.lookup qf pgFunctions
                          rawfi <- bindErrorA -< handleMultipleFunctions qf funcDefs
-                         (fi, dep) <- bindErrorA -< mkFunctionInfo source qf systemDefined config funcPermissions rawfi
+                         (fi, dep) <- bindErrorA -< mkFunctionInfo source qf systemDefined config functionPermissions rawfi
                          recordDependencies -< (metadataObject, schemaObject, [dep])
                          returnA -< fi)
                     |) addFunctionContext)
@@ -396,10 +402,17 @@ buildSchemaCacheRule env = proc (metadata, invalidationKeys) -> do
       -> EndpointMetadata QueryReference
       -> m (EndpointMetadata GQLQueryWithText)
     resolveEndpoint collections = traverse $ \(QueryReference collName queryName) -> do
-      collection <- maybe (throw400 NotExists $ "collection with name " <> toTxt collName <> " does not exist") pure $
-                      OMap.lookup collName collections
-      listedQuery <- maybe (throw400 NotExists $ "query with name " <> toTxt queryName <> " does not exist in collection " <> toTxt collName) pure $
-                       find ((== queryName) . _lqName) (_cdQueries (_ccDefinition collection))
+      collection <-
+        onNothing
+          (OMap.lookup collName collections)
+          (throw400 NotExists $ "collection with name " <> toTxt collName <> " does not exist")
+      listedQuery <-
+        flip onNothing
+               (throw400 NotExists
+                $ "query with name "
+                <> toTxt queryName
+                <> " does not exist in collection " <> toTxt collName)
+               $ find ((== queryName) . _lqName) (_cdQueries (_ccDefinition collection))
       pure (_lqQuery listedQuery)
 
     mkEventTriggerMetadataObject (_, source, _, table, eventTriggerConf) =

@@ -453,9 +453,11 @@ buildQueryFields sourceName sourceConfig tables (takeExposedAs FEAQuery id -> fu
         functionName = _fiName function
     selectPerms <- lift $ tableSelectPermissions targetTable
     perms <- hoistMaybe selectPerms
-    when (functionPermsCtx == FunctionPermissionsManual) $
-      -- see Note [Function Permissions]
-      guard $ roleName == adminRoleName || roleName `elem` (_fiPermissions function)
+    -- see Note [Function Permissions]
+    guard
+      $ roleName == adminRoleName
+      || roleName `elem` (_fiPermissions function)
+      || functionPermsCtx == FunctionPermissionsInferred
     displayName <- functionGraphQLName @b functionName `onLeft` throwError
     let functionDesc = G.Description $ "execute function " <> functionName <<> " which returns " <>> targetTable
         aggName = displayName <> $$(G.litName "_aggregate")
@@ -770,33 +772,30 @@ buildMutationParser
 buildMutationParser allRemotes allActions nonObjectCustomTypes
     (takeExposedAs FEAMutation fst -> mutationFunctions) pgMutationFields = do
   roleName <- askRoleName
-  functionPermsCtx <- asks $ qcFunctionPermsContext . getter
    -- NOTE: this is basically copied from functionSelectExpParsers body
   functionMutationExpParsers <-
-    case functionPermsCtx of
+    for mutationFunctions \(function@FunctionInfo{..}, (sourceName, sourceConfig)) -> runMaybeT do
+      selectPerms <- lift $ tableSelectPermissions _fiReturnType
+      -- A function exposed as mutation must have a function permission
+      -- configured for the role. See Note [Function Permissions]
+      guard $
       -- when function permissions are inferred, we don't expose the
-      -- mutation functions. See Note [Function Permissions]
-      FunctionPermissionsInferred -> pure []
-      FunctionPermissionsManual ->
-        for mutationFunctions \(function@FunctionInfo{..}, (sourceName, sourceConfig)) -> runMaybeT do
-          selectPerms <- lift $ tableSelectPermissions _fiReturnType
-          -- A function exposed as mutation must have a function permission
-          -- configured for the role. See Note [Function Permissions]
-          guard $ roleName == adminRoleName || roleName `elem` _fiPermissions
-          perms <- hoistMaybe selectPerms
-          displayName <- PG.qualifiedObjectToName _fiName
-          let functionDesc = G.Description $
-                "execute VOLATILE function " <> _fiName <<> " which returns " <>> _fiReturnType
-              asDbRootField =
-                let pgExecCtx = PG._pscExecCtx sourceConfig
-                in RFDB sourceName pgExecCtx
+      -- mutation functions for non-admin roles. See Note [Function Permissions]
+        roleName == adminRoleName || roleName `elem` _fiPermissions
+      perms <- hoistMaybe selectPerms
+      displayName <- PG.qualifiedObjectToName _fiName
+      let functionDesc = G.Description $
+            "execute VOLATILE function " <> _fiName <<> " which returns " <>> _fiReturnType
+          asDbRootField =
+            let pgExecCtx = PG._pscExecCtx sourceConfig
+            in RFDB sourceName pgExecCtx
 
-          catMaybes <$> sequenceA
-            [ requiredFieldParser (asDbRootField . MDBFunction) $
-                lift $ selectFunction function displayName (Just functionDesc) perms
-            -- FWIW: The equivalent of this is possible for mutations; do we want that?:
-            -- , mapMaybeFieldParser (asDbRootField . QDBAggregation) $ selectFunctionAggregate function aggName     (Just aggDesc)      perms
-            ]
+      catMaybes <$> sequenceA
+        [ requiredFieldParser (asDbRootField . MDBFunction) $
+            lift $ selectFunction function displayName (Just functionDesc) perms
+        -- FWIW: The equivalent of this is possible for mutations; do we want that?:
+        -- , mapMaybeFieldParser (asDbRootField . QDBAggregation) $ selectFunctionAggregate function aggName     (Just aggDesc)      perms
+        ]
 
   actionParsers <- for allActions $ \actionInfo ->
     case _adType (_aiDefinition actionInfo) of

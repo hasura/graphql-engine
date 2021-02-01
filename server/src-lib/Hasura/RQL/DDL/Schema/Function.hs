@@ -242,8 +242,8 @@ instance FromJSON UnTrackFunction where
   parseJSON v = withSource <|> withoutSource
     where
       withoutSource = UnTrackFunction <$> parseJSON v <*> pure defaultSource
-      withSource = flip (withObject "Object") v \o ->
-                   UnTrackFunction <$> o .: "table"
+      withSource = flip (withObject "UnTrackFunction") v \o ->
+                   UnTrackFunction <$> o .: "function"
                                    <*> o .:? "source" .!= defaultSource
 
 askPGFunctionInfo
