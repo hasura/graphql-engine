@@ -1,47 +1,45 @@
 import React from 'react';
-import { connect } from 'react-redux';
-import { Link } from 'react-router';
+
 import OverlayTrigger from 'react-bootstrap/lib/OverlayTrigger';
 import Tooltip from 'react-bootstrap/lib/Tooltip';
+import { connect } from 'react-redux';
+import { Link } from 'react-router';
 
-import * as tooltips from './Tooltips';
+import { HASURA_COLLABORATOR_TOKEN } from '../../constants';
 import globals from '../../Globals';
-import { getPathRoot } from '../Common/utils/urlUtils';
+import { UPDATE_CONSOLE_NOTIFICATIONS } from '../../telemetry/Actions';
+import Onboarding from '../Common/Onboarding';
 import Spinner from '../Common/Spinner/Spinner';
+import { getPathRoot } from '../Common/utils/urlUtils';
 import WarningSymbol from '../Common/WarningSymbol/WarningSymbol';
-import logo from './images/white-logo.svg';
-
-import NotificationSection from './NotificationSection';
-
-import styles from './Main.scss';
-
 import {
-  loadServerVersion,
-  fetchServerConfig,
-  loadLatestServerVersion,
-  featureCompatibilityInit,
   emitProClickedEvent,
   fetchPostgresVersion,
+  featureCompatibilityInit,
   fetchConsoleNotifications,
+  fetchServerConfig,
+  loadLatestServerVersion,
+  loadServerVersion,
 } from './Actions';
-
-import {
-  loadInconsistentObjects,
-  redirectToMetadataStatus,
-} from '../Services/Settings/Actions';
+import { Help, ProPopup } from './components/';
+import logo from './images/white-logo.svg';
+import LoveSection from './LoveSection';
+import styles from './Main.scss';
+import NotificationSection from './NotificationSection';
+import * as tooltips from './Tooltips';
 
 import {
   getProClickState,
   setProClickState,
   getLoveConsentState,
-  setLoveConsentState,
   getUserType,
+  setLoveConsentState,
 } from './utils';
+import {
+  loadInconsistentObjects,
+  redirectToMetadataStatus,
+} from '../Services/Settings/Actions';
 import { getSchemaBaseRoute } from '../Common/utils/routesUtils';
-import LoveSection from './LoveSection';
-import { Help, ProPopup } from './components/';
-import { HASURA_COLLABORATOR_TOKEN } from '../../constants';
-import { UPDATE_CONSOLE_NOTIFICATIONS } from '../../telemetry/Actions';
 
 export const updateRequestHeaders = props => {
   const { requestHeaders, dispatch } = props;
@@ -184,6 +182,9 @@ class Main extends React.Component {
       currentSchema,
       serverVersion,
       metadata,
+      console_opts,
+      dispatch,
+      allSchemas,
     } = this.props;
 
     const {
@@ -300,6 +301,11 @@ class Main extends React.Component {
 
     return (
       <div className={styles.container}>
+        <Onboarding
+          dispatch={dispatch}
+          console_opts={console_opts}
+          isMetadataEmpty={!(allSchemas || []).some(t => t.is_table_tracked)}
+        />
         <div className={styles.flexRow}>
           <div className={styles.sidebar}>
             <div className={styles.header_logo_wrapper}>
@@ -412,6 +418,7 @@ const mapStateToProps = (state, ownProps) => {
     metadata: state.metadata,
     console_opts: state.telemetry.console_opts,
     requestHeaders: state.tables.dataHeaders,
+    allSchemas: state.tables.allSchemas,
   };
 };
 

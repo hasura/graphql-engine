@@ -99,12 +99,22 @@ const getUserType = (token: string) => {
   }
 };
 
+const isMetadataEmpty = (metadataObject: Record<string, any>) => {
+  console.log({ metadataObject });
+  const { actions, tables, remote_schemas } = metadataObject;
+  const hasRemoteSchema = remote_schemas && remote_schemas.length;
+  const hasAction = actions && actions.length;
+  const hasTable = tables && tables.length;
+  return !(hasRemoteSchema || hasAction || hasTable);
+};
+
 export {
-  getProClickState,
-  setProClickState,
-  setLoveConsentState,
-  getLoveConsentState,
-  getReadAllNotificationsState,
   getConsoleScope,
+  getLoveConsentState,
+  getProClickState,
+  getReadAllNotificationsState,
   getUserType,
+  isMetadataEmpty,
+  setLoveConsentState,
+  setProClickState,
 };
