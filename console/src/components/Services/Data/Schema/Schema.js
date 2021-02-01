@@ -50,6 +50,7 @@ import {
 } from '../../../../metadata/selector';
 import { RightContainer } from '../../../Common/Layout/RightContainer';
 import { TrackableFunctionsList } from './FunctionsList';
+import { getTrackableFunctions } from './utils';
 
 const DeleteSchemaButton = ({ dispatch, migrationMode, currentDataSource }) => {
   const successCb = () => {
@@ -264,18 +265,6 @@ class Schema extends Component {
       dispatch(updateCurrentSchema(e.target.value, currentDataSource));
     };
 
-    const _getTrackableFunctions = () => {
-      const trackedFuncNames = trackedFunctions.map(fn => fn.function_name);
-
-      // Assuming schema for both function and tables are same
-      // return function which are tracked
-      const filterCondition = func => {
-        return !trackedFuncNames.includes(func.function_name);
-      };
-
-      return functionsList.filter(filterCondition);
-    };
-
     const getSectionHeading = (headingText, tooltip, actionElement = null) => {
       return (
         <div>
@@ -293,8 +282,11 @@ class Schema extends Component {
     const allUntrackedTables = getUntrackedTables(
       getSchemaTables(schema, currentSchema)
     );
-    const trackableFuncs = _getTrackableFunctions();
 
+    const trackableFuncs = getTrackableFunctions(
+      functionsList,
+      trackedFunctions
+    );
     const getCreateBtn = () => {
       let createBtn = null;
 
