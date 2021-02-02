@@ -54,6 +54,7 @@ Dig deeper
    Creating projects <create>
    Project Details <details>
    Project Collaborators <collaborators>
+   Transfer Ownership <ownership>
    Project Env vars <env-vars>
    Project Domains <domains>
    Securing projects <secure>

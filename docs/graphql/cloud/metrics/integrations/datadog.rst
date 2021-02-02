@@ -15,7 +15,7 @@ Datadog Integration
 Introduction
 ------------
 
-You can export metrics of you Hasura Cloud project to your organisation's Datadog dashboard. This can be configured 
+You can export metrics of your Hasura Cloud project to your organisation's Datadog dashboard. This can be configured 
 on the integrations tab on the project's setting page.  
 
 .. note::
