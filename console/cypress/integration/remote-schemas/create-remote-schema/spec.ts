@@ -96,7 +96,9 @@ export const deleteSimpleRemoteSchemaFailUserConfirmationError = () => {
   setPromptValue(null);
   cy.get(getElementFromAlias('remote-schema-edit-delete-btn')).click();
   cy.wait(5000);
-  cy.window().its('prompt').should('be.called');
+  cy.window()
+    .its('prompt')
+    .should('be.called');
 
   cy.url().should(
     'eq',
@@ -116,7 +118,9 @@ export const deleteSimpleRemoteSchema = () => {
   cy.wait(5000);
   setPromptValue(getRemoteSchemaName(1, testName));
   cy.get(getElementFromAlias('remote-schema-edit-delete-btn')).click();
-  cy.window().its('prompt').should('be.called');
+  cy.window()
+    .its('prompt')
+    .should('be.called');
   cy.wait(5000);
   cy.get(getElementFromAlias('delete-confirmation-error')).should('not.exist');
   cy.wait(5000);
@@ -281,12 +285,12 @@ export const createSimpleRemoteSchemaPermission = () => {
   cy.wait(2000);
   cy.get(getElementFromAlias('field-__query_root'))
     .click();
-  cy.get(getElementFromAlias('checkbox-test')).click()
-  cy.get(getElementFromAlias('pen-limit')).click()
-  cy.get(getElementFromAlias('input-limit')).type('1')
+  cy.get(getElementFromAlias('checkbox-test')).click() 
+  cy.get(getElementFromAlias('pen-limit')).click() 
+  cy.get(getElementFromAlias('input-limit')).type('1') 
 
   cy.get(getElementFromAlias('save-remote-schema-permissions'))
-    .click({force: true,});
+    .click({ force: true });
   cy.wait(15000);
   cy.url().should(
     'eq',
