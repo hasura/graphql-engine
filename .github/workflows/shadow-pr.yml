@@ -113,6 +113,10 @@ jobs:
 
     - name: "Open pull request"
       uses: actions/github-script@v3
+      env:
+        PR_TITLE: ${{ steps.pr.outputs.ossPrTitle }}
+        PR_URL: ${{ steps.pr.outputs.ossPrUrl }}
+        PR_NUMBER: ${{github.event.number }}
       with:
         github-token: ${{secrets.HASURA_BOT_GH_TOKEN}}
         script: |
@@ -120,7 +124,7 @@ jobs:
           const prBody = fs.readFileSync('pr-body.txt', 'utf-8');
           const kodiakCommitMessage = fs.readFileSync('kodiak-commit-message-body.txt', 'utf-8');
 
-          let body = `This PR was migrated from ${{ steps.pr.outputs.ossPrUrl }} \n\n---\n`;
+          let body = `This PR was migrated from ${process.env.PR_URL} \n\n---\n`;
           body += `${prBody} \n\n---\n\n`;
           body += `### Kodiak commit message\nInformation used by [Kodiak bot](https://kodiakhq.com/) while merging this PR.\n\n`;
           body += `#### Commit title\nSame as the title of this pull request\n\n`;
@@ -130,9 +134,9 @@ jobs:
             const pr = await github.pulls.create({
               owner: 'hasura',
               repo: 'graphql-engine-mono',
-              head: 'oss_pr_refs/pull/${{ github.event.number }}/head',
+              head: `oss_pr_refs/pull/${process.env.PR_NUMBER}/head`,
               base: 'main',
-              title: '${{ steps.pr.outputs.ossPrTitle }}',
+              title: process.env.PR_TITLE,
               body,
             });
 
