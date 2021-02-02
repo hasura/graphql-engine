@@ -53,9 +53,9 @@ We create two :ref:`actions <create_actions>` and :ref:`custom types <custom_typ
 Example: creating the ``Signup`` action
 
 .. thumbnail:: ../../../../img/graphql/manual/actions/python-flask-signup-types.png
-        :width: 100%
-        :alt: Python Flask signup types
-        :class: no-shadow
+  :width: 1146px
+  :alt: Python Flask signup types
+  :class: no-shadow
 
 Step 2: Action handler implementation for signup
 ------------------------------------------------
