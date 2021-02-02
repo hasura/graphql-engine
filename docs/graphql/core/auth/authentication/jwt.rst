@@ -676,6 +676,9 @@ Auth JWT Examples
 Here are some sample apps that use JWT authorization. You can follow the instructions in the READMEs of the
 repositories to get started.
 
+- :ref:`Custom JWT server with Hasura actions<actions_codegen_python_flask>`:
+  A simple Python / Flask API that implements ``Signup`` and ``Login`` methods as actions returning JWTs
+
 - `Auth0 JWT example <https://github.com/hasura/graphql-engine/tree/master/community/sample-apps/todo-auth0-jwt>`__:
   A todo app that uses Hasura GraphQL engine and Auth0 JWT
 
