@@ -47,10 +47,7 @@ export const passPTCreateTable = () => {
   cy.wait(7000);
   cy.url().should(
     'eq',
-    `${baseUrl}/data/default/schema/public/tables/${getTableName(
-      0,
-      testName
-    )}/modify`
+    `${baseUrl}/data/default/schema/public/tables/${getTableName(0, testName)}/modify`
   );
 };
 
