@@ -1,5 +1,6 @@
 type: bulk
 args:
+
 - type: run_sql
   args:
     sql: |
@@ -7,6 +8,7 @@ args:
           c1 int,
           c2 text
       );
+
 - type: track_table
   args:
     schema: hge_tests
@@ -18,14 +20,14 @@ args:
       schema: hge_tests
       name: test_t1
     insert:
-      columns: "*"
-      payload: "*"
+      columns: '*'
+      payload: '*'
     update:
-      columns: "*"
-      payload: ["c1"]
+      columns: '*'
+      payload: [c1]
     delete:
-      columns: "*"
-      payload: ["c2"]
+      columns: '*'
+      payload: [c2]
     webhook: http://127.0.0.1:5592
     retry_conf:
       num_retries: 10

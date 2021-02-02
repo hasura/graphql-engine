@@ -82,7 +82,6 @@ class RemoteSchema extends React.Component {
 
 const mapStateToProps = state => {
   return {
-    remoteSchemaList: state.remoteSchemas.listData,
     readOnlyMode: state.main.readOnlyMode,
   };
 };

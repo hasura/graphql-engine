@@ -1,0 +1,19 @@
+description: Add a conflicting endpoint
+url: /v1/query
+status: 409
+response:
+  path: $.args
+  error: |-
+    Ambiguous URL paths in endpoints: with_args, with_arg, simple, simple_cached
+  code: conflict
+query:
+  type: create_rest_endpoint
+  args:
+    url: ":conflicting"
+    name: conflicting
+    methods:
+      - GET
+    definition:
+      query:
+        collection_name: test_collection
+        query_name: simple_query

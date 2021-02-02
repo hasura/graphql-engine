@@ -15,13 +15,11 @@
 }
 
 .body_content {
-  font-family: 'Gudea';
   font-size: 15px;
   color: #333;
 }
 
 .small_content {
-  font-family: 'Gudea';
   font-size: 14px;
   color: #333;
 }
@@ -101,6 +99,10 @@
   padding-bottom: 0;
 }
 
+.description {
+  margin-bottom: 20px;
+}
+
 .text_left {
   text-align: left;
 }
@@ -142,7 +144,9 @@
   width: 50%;
   float: left;
 }
-
+.marketoFormWrapper {
+  width: 100% !important;
+}
 @media (max-width: 1024px) {
   .hcl_half {
     width: 100%;

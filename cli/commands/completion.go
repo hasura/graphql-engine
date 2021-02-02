@@ -12,7 +12,7 @@ import (
 const completionCmdExample = `# Bash
     # Linux
       # Add Bash completion file using:
-      $ sudo hasura completion bash --file=/etc/bash.completion.d/hasura
+      $ sudo hasura completion bash --file=/etc/bash_completion.d/hasura
     # Mac
       # Install bash-completion using homebrew:
       $ brew install bash-completion

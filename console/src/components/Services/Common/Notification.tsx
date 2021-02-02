@@ -20,7 +20,7 @@ export interface Notification {
   level?: 'error' | 'warning' | 'info' | 'success';
   position?: 'tr' | 'tl' | 'tc' | 'br' | 'bl' | 'bc';
   autoDismiss?: number;
-  dismissible?: boolean;
+  dismissible?: 'both' | 'button' | 'click' | 'hide' | 'none' | boolean;
   children?: React.ReactNode;
   uid?: number | string;
   action?: {
@@ -31,10 +31,11 @@ export interface Notification {
 
 export const showNotification = (
   options: Notification,
-  level: NotificationLevel
+  level: NotificationLevel,
+  noDismissNotifications?: boolean
 ): Thunk => {
   return dispatch => {
-    if (level === 'success') {
+    if (level === 'success' && !noDismissNotifications) {
       dispatch(removeNotifications());
     }
 
@@ -43,7 +44,9 @@ export const showNotification = (
         {
           position: options.position || 'tr',
           autoDismiss: ['error', 'warning'].includes(level) ? 0 : 5,
-          dismissible: ['error', 'warning'].includes(level),
+          dismissible: ['error', 'warning'].includes(level)
+            ? ('button' as any) // bug in @types/react-notification-system-redux types
+            : ('click' as any),
           ...options,
         },
         level
@@ -110,7 +113,8 @@ export const getErrorMessage = (
         notificationMessage = error.code;
       }
     } else if ('internal' in error && 'error' in error.internal) {
-      notificationMessage = `${error.code} : ${error.internal.error.message}`;
+      notificationMessage = `${error.internal.error.message}.
+      ${error.internal.error.description}`;
     } else if ('custom' in error) {
       notificationMessage = error.custom;
     } else if ('code' in error && 'error' in error && 'path' in error) {
@@ -125,7 +129,7 @@ export const getErrorMessage = (
 };
 const showErrorNotification = (
   title: string,
-  message: string | null,
+  message?: string | null,
   error?: Record<string, any>
 ): Thunk => {
   const getRefreshBtn = () => {
@@ -163,7 +167,7 @@ const showErrorNotification = (
     return errorJson;
   };
 
-  const errorMessage = getErrorMessage(message, error);
+  const errorMessage = getErrorMessage(message || '', error);
   const errorJson = getErrorJson();
 
   return dispatch => {
@@ -209,7 +213,11 @@ const showErrorNotification = (
   };
 };
 
-const showSuccessNotification = (title: string, message?: string): Thunk => {
+const showSuccessNotification = (
+  title: string,
+  message?: string,
+  noDismiss?: boolean
+): Thunk => {
   return dispatch => {
     dispatch(
       showNotification(
@@ -218,7 +226,8 @@ const showSuccessNotification = (title: string, message?: string): Thunk => {
           title,
           message,
         },
-        'success'
+        'success',
+        noDismiss
       )
     );
   };
@@ -241,11 +250,15 @@ const showInfoNotification = (title: string): Thunk => {
 const showWarningNotification = (
   title: string,
   message: string,
-  dataObj: Json
+  dataObj?: Json,
+  child?: JSX.Element
 ): Thunk => {
   const children: JSX.Element[] = [];
   if (dataObj) {
     children.push(getNotificationDetails(dataObj, null));
+  }
+  if (child) {
+    children.push(child);
   }
 
   return dispatch => {

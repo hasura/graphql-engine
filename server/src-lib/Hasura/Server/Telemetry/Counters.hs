@@ -22,15 +22,16 @@ module Hasura.Server.Telemetry.Counters
   )
   where
 
+import           Hasura.Prelude
+
 import qualified Data.Aeson            as A
-import qualified Data.Aeson.Casing     as A
 import qualified Data.Aeson.TH         as A
-import           Data.Hashable
 import qualified Data.HashMap.Strict   as HM
+
 import           Data.IORef
 import           Data.Time.Clock.POSIX (POSIXTime, getPOSIXTime)
 import           GHC.IO.Unsafe         (unsafePerformIO)
-import           Hasura.Prelude
+
 
 -- | The properties that characterize this request. The dimensions over which
 -- we collect metrics for each serviced request.
@@ -110,11 +111,22 @@ instance A.ToJSON QueryType
 instance A.FromJSON QueryType
 
 -- | Was this a PG local query, or did it involve remote execution?
-data Locality = Local | Remote
+data Locality
+  = Empty -- ^ No data was fetched
+  | Local -- ^ local DB data
+  | Remote -- ^ remote schema
+  | Heterogeneous -- ^ mixed
   deriving (Enum, Show, Eq, Generic)
 instance Hashable Locality
 instance A.ToJSON Locality
 instance A.FromJSON Locality
+instance Semigroup Locality where
+  Empty <> x = x
+  x <> Empty = x
+  x <> y | x == y = x
+  _ <> _ = Heterogeneous
+instance Monoid Locality where
+  mempty = Empty
 
 -- | Was this a query over http or websockets?
 data Transport = HTTP | WebSocket
@@ -138,7 +150,7 @@ totalTimeBuckets = coerce [0.000, 0.001, 0.050, 1.000, 3600.000 :: Seconds]
 
 -- | Save a timing metric sample in our in-memory store. These will be
 -- accumulated and uploaded periodically in "Hasura.Server.Telemetry".
-recordTimingMetric :: MonadIO m=> RequestDimensions -> RequestTimings -> m ()
+recordTimingMetric :: MonadIO m => RequestDimensions -> RequestTimings -> m ()
 recordTimingMetric reqDimensions RequestTimings{..} = liftIO $ do
   let ourBucket = fromMaybe (RunningTimeBucket 0) $ -- although we expect 'head' would be safe here
         listToMaybe $ dropWhile (> coerce telemTimeTot) $
@@ -165,8 +177,8 @@ data ServiceTimingMetric
   deriving (Show, Generic, Eq)
 
 
-$(A.deriveJSON (A.aesonDrop 5 A.snakeCase) ''RequestTimingsCount)
-$(A.deriveJSON (A.aesonDrop 5 A.snakeCase) ''RequestDimensions)
+$(A.deriveJSON hasuraJSON ''RequestTimingsCount)
+$(A.deriveJSON hasuraJSON ''RequestDimensions)
 
 instance A.ToJSON ServiceTimingMetric
 instance A.FromJSON ServiceTimingMetric

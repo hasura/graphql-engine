@@ -1,9 +1,12 @@
-description: Alter bool_col column type in test table whose permissions are defined with static value
+description: Alter bool_col column type in test table whose permissions are defined
+  with static value
 url: /v1/query
 status: 400
 response:
-  path: "$.args"
-  error: 'cannot change type of column "bool_col" in table "test" because of the following dependencies : permission test.user.insert, permission test.user.select'
+  path: $.args
+  error: 'cannot change type of column "bool_col" in table "test" because of the following
+    dependencies : permission test.user.insert in source "default", permission test.user.select
+    in source "default"'
   code: dependency-error
 query:
   type: run_sql

@@ -1,0 +1,26 @@
+description: Simple Remote relationship with singleton input value type joining to an expected array input type
+url: /v1/graphql
+status: 200
+response:
+  data:
+    profiles:
+      - id: 1
+        remoteUsers:
+        - user_id: 1
+          userMessages:
+          - id: 1
+            msg: "You win!"
+query:
+  query: |
+    query {
+      profiles(where:{ id: { _eq: 1}}) {
+        id
+        remoteUsers {
+          user_id
+          userMessages {
+            id
+            msg
+          }
+        }
+      }
+    }

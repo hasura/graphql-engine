@@ -99,7 +99,7 @@ type Plugin struct {
 func (p *Plugin) ParseVersion() {
 	v, err := semver.NewVersion(p.Version)
 	if err != nil {
-		p.ParsedVersion = nil
+		p.ParsedVersion = semver.MustParse("0.0.0-dev")
 		return
 	}
 	p.ParsedVersion = v

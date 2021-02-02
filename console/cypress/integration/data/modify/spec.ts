@@ -4,6 +4,8 @@ import {
   getTableName,
   getColName,
   getElementFromAlias,
+  createUntrackedFunctionSQL,
+  dropUntrackedFunctionSQL,
 } from '../../../helpers/dataHelpers';
 
 import {
@@ -11,14 +13,40 @@ import {
   validateCT,
   validateColumn,
   ResultType,
+  dataRequest,
 } from '../../validators/validators';
 import { setPromptValue } from '../../../helpers/common';
 
 const testName = 'mod';
 
+export const passMTFunctionList = () => {
+  const tableName = getTableName(0, testName);
+  dataRequest(
+    createUntrackedFunctionSQL(`${tableName}_id_fn`, tableName),
+    ResultType.SUCCESS
+  );
+  cy.wait(5000);
+  cy.get(getElementFromAlias('modify-table-edit-computed-field-0')).click();
+
+  cy.get(getElementFromAlias('functions-dropdown')).click();
+
+  cy.get('[data-test^="data_test_column_type_value_"]').should(
+    'have.length',
+    1
+  );
+
+  cy.get('[data-test^="data_test_column_type_value_"]')
+    .first()
+    .should('have.text', `${getTableName(0, testName)}_id_fn`.toLowerCase());
+  dataRequest(
+    dropUntrackedFunctionSQL(`${tableName}_id_fn`),
+    ResultType.SUCCESS
+  );
+};
+
 export const passMTCreateTable = () => {
   cy.get(getElementFromAlias('data-create-table')).click();
-  cy.url().should('eq', `${baseUrl}/data/schema/public/table/add`);
+  cy.url().should('eq', `${baseUrl}/data/default/schema/public/table/add`);
   cy.get(getElementFromAlias('tableName')).type(getTableName(0, testName));
   cy.get(getElementFromAlias('column-0')).type('id');
   tableColumnTypeSelector('col-type-0');
@@ -30,7 +58,10 @@ export const passMTCreateTable = () => {
   cy.wait(7000);
   cy.url().should(
     'eq',
-    `${baseUrl}/data/schema/public/tables/${getTableName(0, testName)}/modify`
+    `${baseUrl}/data/default/schema/public/tables/${getTableName(
+      0,
+      testName
+    )}/modify`
   );
   validateCT(getTableName(0, testName), ResultType.SUCCESS);
 };
@@ -41,7 +72,10 @@ export const passMTCheckRoute = () => {
   // Match the URL
   cy.url().should(
     'eq',
-    `${baseUrl}/data/schema/public/tables/${getTableName(0, testName)}/modify`
+    `${baseUrl}/data/default/schema/public/tables/${getTableName(
+      0,
+      testName
+    )}/modify`
   );
 };
 
@@ -92,7 +126,10 @@ export const passMTMoveToTable = () => {
   cy.get(getElementFromAlias(getTableName(0, testName))).click();
   cy.url().should(
     'eq',
-    `${baseUrl}/data/schema/public/tables/${getTableName(0, testName)}/browse`
+    `${baseUrl}/data/default/schema/public/tables/${getTableName(
+      0,
+      testName
+    )}/browse`
   );
 };
 
@@ -101,7 +138,10 @@ export const failMTWithoutColName = () => {
   cy.get(getElementFromAlias('modify-table-add-new-column-save')).click();
   cy.url().should(
     'eq',
-    `${baseUrl}/data/schema/public/tables/${getTableName(0, testName)}/modify`
+    `${baseUrl}/data/default/schema/public/tables/${getTableName(
+      0,
+      testName
+    )}/modify`
   );
 
   validateColumn(
@@ -116,7 +156,10 @@ export const failMTWithoutColType = () => {
   cy.get(getElementFromAlias('modify-table-add-new-column-save')).click();
   cy.url().should(
     'eq',
-    `${baseUrl}/data/schema/public/tables/${getTableName(0, testName)}/modify`
+    `${baseUrl}/data/default/schema/public/tables/${getTableName(
+      0,
+      testName
+    )}/modify`
   );
   validateColumn(
     getTableName(0, testName),
@@ -137,7 +180,10 @@ export const Addcolumnnullable = () => {
   cy.wait(2500);
   cy.url().should(
     'eq',
-    `${baseUrl}/data/schema/public/tables/${getTableName(0, testName)}/modify`
+    `${baseUrl}/data/default/schema/public/tables/${getTableName(
+      0,
+      testName
+    )}/modify`
   );
   validateColumn(
     getTableName(0, testName),
@@ -214,12 +260,20 @@ export const passModifyPkey = () => {
   cy.get(getElementFromAlias('modify-table-edit-pks')).click();
   cy.get(getElementFromAlias('primary-key-select-1')).select('1');
   cy.get(getElementFromAlias('modify-table-pks-save')).click();
+  cy.get(getElementFromAlias('pk-config-text')).within(() => {
+    cy.get('b').contains(getColName(0));
+    cy.get('b').contains('id');
+  });
   cy.wait(5000);
-  // TODO
-  // test disappearance expect
-  // (cy.get(getElementFromAlias('modify-table-column-1-remove'))).not.to.exist;
+
   cy.get(getElementFromAlias('remove-pk-column-1')).click();
   cy.get(getElementFromAlias('modify-table-pks-save')).click();
+  cy.get(getElementFromAlias('pk-config-text')).within(() => {
+    cy.get('b').contains('id');
+  });
+  cy.get(getElementFromAlias('pk-config-text')).within(() => {
+    cy.get('b').should('not.contain', getColName(0));
+  });
   cy.get(getElementFromAlias('modify-table-close-pks')).click();
   cy.wait(3000);
 };
@@ -258,7 +312,10 @@ export const passMTDeleteCol = () => {
   cy.wait(5000);
   cy.url().should(
     'eq',
-    `${baseUrl}/data/schema/public/tables/${getTableName(0, testName)}/modify`
+    `${baseUrl}/data/default/schema/public/tables/${getTableName(
+      0,
+      testName
+    )}/modify`
   );
   validateColumn(
     getTableName(0, testName),
@@ -273,7 +330,10 @@ export const passMTDeleteTableCancel = () => {
   cy.window().its('prompt').should('be.called');
   cy.url().should(
     'eq',
-    `${baseUrl}/data/schema/public/tables/${getTableName(0, testName)}/modify`
+    `${baseUrl}/data/default/schema/public/tables/${getTableName(
+      0,
+      testName
+    )}/modify`
   );
 
   validateCT(getTableName(0, testName), ResultType.SUCCESS);
@@ -284,7 +344,7 @@ export const passMTDeleteTable = () => {
   cy.get(getElementFromAlias('delete-table')).click();
   cy.window().its('prompt').should('be.called');
   cy.wait(5000);
-  cy.url().should('eq', `${baseUrl}/data/schema/public`);
+  cy.url().should('eq', `${baseUrl}/data/default/schema/public`);
   validateCT(getTableName(0, testName), ResultType.FAILURE);
 };
 
@@ -314,7 +374,7 @@ export const createTable = (name: string, dict: { [key: string]: any }) => {
   cy.wait(7000);
   cy.url().should(
     'eq',
-    `${baseUrl}/data/schema/public/tables/${name}_table_mod/modify`
+    `${baseUrl}/data/default/schema/public/tables/${name}_table_mod/modify`
   );
 
   validateCT(`${name}_table_mod`, ResultType.SUCCESS);
@@ -348,7 +408,7 @@ export const Checkviewtable = () => {
   cy.get(getElementFromAlias('author_average_rating_mod')).click();
   cy.url().should(
     'eq',
-    `${baseUrl}/data/schema/public/views/author_average_rating_mod/browse`
+    `${baseUrl}/data/default/schema/public/views/author_average_rating_mod/browse`
   );
   cy.get(getElementFromAlias('table-modify')).click();
   cy.get(getElementFromAlias('modify-view')).click();
@@ -359,7 +419,7 @@ export const Checkviewtabledelete = () => {
   cy.get(getElementFromAlias('author_average_rating_mod')).click();
   cy.url().should(
     'eq',
-    `${baseUrl}/data/schema/public/views/author_average_rating_mod/browse`
+    `${baseUrl}/data/default/schema/public/views/author_average_rating_mod/browse`
   );
   cy.get(getElementFromAlias('table-modify')).click();
   setPromptValue('author_average_rating_mod');

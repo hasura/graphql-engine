@@ -1,0 +1,42 @@
+description: updates in table "author details" with custom name "author_details"
+status: 200
+url: /v1/graphql
+response:
+  data:
+    update_author_details:
+      affected_rows: 1
+      returning:
+        - id: 1
+          name: Author 1 Updated
+    update_author_details_by_pk:
+      id: 1
+      name: Author 1 Updated Again
+query:
+  query: |
+    mutation {
+      update_author_details(
+        _set: {
+          name: "Author 1 Updated"
+        },
+        where: {
+          id: {_eq: 1}
+        }
+      ) {
+        affected_rows
+        returning {
+          id
+          name
+        }
+      }
+      update_author_details_by_pk(
+        _set: {
+          name: "Author 1 Updated Again"
+        },
+        pk_columns: {
+          id: 1
+        }
+      ) {
+          id
+          name
+      }
+    }

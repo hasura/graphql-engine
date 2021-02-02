@@ -1,5 +1,6 @@
 {-# LANGUAGE NondecreasingIndentation #-}
 {-# LANGUAGE RankNTypes               #-}
+{-# LANGUAGE CPP #-}
 
 module Hasura.GraphQL.Transport.WebSocket.Server
   ( WSId(..)
@@ -45,7 +46,9 @@ import qualified Data.TByteString                            as TBS
 import qualified Data.UUID                                   as UUID
 import qualified Data.UUID.V4                                as UUID
 import           Data.Word                                   (Word16)
+#ifndef PROFILING
 import           GHC.AssertNF
+#endif
 import           GHC.Int                                     (Int64)
 import           Hasura.Prelude
 import qualified ListT
@@ -71,7 +74,7 @@ data MessageDetails
   { _mdMessage     :: !TBS.TByteString
   , _mdMessageSize :: !Int64
   } deriving (Show, Eq)
-$(J.deriveToJSON (J.aesonDrop 3 J.snakeCase) ''MessageDetails)
+$(J.deriveToJSON hasuraJSON ''MessageDetails)
 
 data WSEvent
   = EConnectionRequest
@@ -116,10 +119,6 @@ $(J.deriveToJSON
                    }
   ''WSLog)
 
-instance L.ToEngineLog WSLog L.Hasura where
-  toEngineLog wsLog =
-    (L.LevelDebug, L.ELTInternal L.ILTWsServer, J.toJSON wsLog)
-
 class Monad m => MonadWSLog m where
   -- | Takes WS server log data and logs it
   -- logWSServer
@@ -130,6 +129,10 @@ instance MonadWSLog m => MonadWSLog (ExceptT e m) where
 
 instance MonadWSLog m => MonadWSLog (ReaderT r m) where
   logWSLog l ws = lift $ logWSLog l ws
+
+instance L.ToEngineLog WSLog L.Hasura where
+  toEngineLog wsLog =
+    (L.LevelDebug, L.ELTInternal L.ILTWsServer, J.toJSON wsLog)
 
 data WSQueueResponse
   = WSQueueResponse
@@ -171,8 +174,10 @@ closeConnWithCode wsConn code bs = do
 -- writes to a queue instead of the raw connection
 -- so that sendMsg doesn't block
 sendMsg :: WSConn a -> WSQueueResponse -> IO ()
-sendMsg wsConn = \ !resp -> do
+sendMsg wsConn !resp = do
+#ifndef PROFILING
   $assertNFHere resp  -- so we don't write thunks to mutable vars
+#endif
   STM.atomically $ STM.writeTQueue (_wcSendQ wsConn) resp
 
 type ConnMap a = STMMap.Map WSId (WSConn a)
@@ -292,7 +297,9 @@ createServerApp (WSServer logger@(L.Logger writeLog) serverStatus) wsHandlers !i
       --      Requires a fork of 'wai-websockets' and 'websockets', it looks like.
       --      Adding `package` stanzas with -Xstrict -XStrictData for those two packages
       --      helped, cutting the number of thunks approximately in half.
+#   ifndef PROFILING
       liftIO $ $assertNFHere wsConn  -- so we don't write thunks to mutable vars
+#   endif
 
       let whenAcceptingInsertConn = liftIO $ STM.atomically $ do
             status <- STM.readTVar serverStatus
@@ -361,7 +368,6 @@ createServerApp (WSServer logger@(L.Logger writeLog) serverStatus) wsHandlers !i
         liftIO $ STM.atomically $ STMMap.delete (_wcConnId wsConn) connMap
         _hOnClose wsHandlers wsConn
         logWSLog logger $ WSLog (_wcConnId wsConn) EClosed Nothing
-
 
 shutdown :: WSServer a -> IO ()
 shutdown (WSServer (L.Logger writeLog) serverStatus) = do

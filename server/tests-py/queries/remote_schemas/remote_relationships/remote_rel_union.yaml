@@ -1,0 +1,30 @@
+description: Simple remote relationship GraphQL query with union
+url: /v1/graphql
+status: 200
+response:
+  data:
+    profiles:
+      - id: 1
+        searchUnion:
+          title: "Harry Porter and the prisoner of Azkaban"
+      - id: 2
+        searchUnion:
+          name: "J.K. Rowling"
+      - id: 3
+        searchUnion:
+          title: "Harry Porter and the philoshoper's stone"
+query:
+  query: |
+    query {
+      profiles {
+        id
+        searchUnion {
+          ... on Author {
+            name
+          }
+          ... on Book {
+            title
+          }
+        }
+      }
+    }

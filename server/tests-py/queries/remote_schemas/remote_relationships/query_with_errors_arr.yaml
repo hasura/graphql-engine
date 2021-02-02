@@ -32,7 +32,7 @@ response:
           message: intentional-error
           locations:
           - line: 1
-            column: 74
+            column: 71
         - path:
           - messagesNestedArgs__1
           - 0
@@ -40,7 +40,7 @@ response:
           message: intentional-error
           locations:
           - line: 1
-            column: 160
+            column: 144
         - path:
           - messagesNestedArgs__2
           - 0
@@ -48,7 +48,7 @@ response:
           message: intentional-error
           locations:
           - line: 1
-            column: 246
+            column: 217
       path: $
       code: unexpected
     message: Errors from remote server

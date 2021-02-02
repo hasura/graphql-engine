@@ -83,6 +83,13 @@ def pytest_addoption(parser):
     )
 
     parser.addoption(
+        "--test-function-permissions",
+        action="store_true",
+        required=False,
+        help="Run manual function permission tests"
+    )
+
+    parser.addoption(
         "--test-jwk-url",
         action="store_true",
         default=False,
@@ -140,6 +147,13 @@ This option may result in test failures if the schema has to change between the 
         "--test-unauthorized-role",
         action="store_true",
         help="Run testcases for unauthorized role",
+    )
+
+    parser.addoption(
+        "--enable-remote-schema-permissions",
+        action="store_true",
+        default=False,
+        help="Flag to indicate if the graphql-engine has enabled remote schema permissions",
     )
 
 #By default,
@@ -275,6 +289,12 @@ def actions_fixture(hge_ctx):
     webhook_httpd.shutdown()
     webhook_httpd.server_close()
     web_server.join()
+
+@pytest.fixture(scope='class')
+def functions_permissions_fixtures(hge_ctx):
+    if not hge_ctx.function_permissions:
+        pytest.skip('These tests are meant to be run with --test-function-permissions set')
+        return
 
 @pytest.fixture(scope='class')
 def scheduled_triggers_evts_webhook(request):

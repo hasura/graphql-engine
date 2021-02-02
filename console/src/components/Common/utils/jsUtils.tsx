@@ -52,6 +52,10 @@ export const isValidURL = (value: string) => {
   return true;
 };
 
+export const isURLTemplated = (value: string): boolean => {
+  return /{{(\S+)}}/.test(value);
+};
+
 export const isValidTemplateLiteral = (literal_: string) => {
   const literal = literal_.trim();
   if (!literal) return false;
@@ -122,6 +126,21 @@ export function isJsonString(str: string) {
   }
   return true;
 }
+
+export const isNumberString = (str: string | number) =>
+  !Number.isNaN(Number(str));
+
+export const isArrayString = (str: string) => {
+  try {
+    if (isJsonString(str) && Array.isArray(JSON.parse(str))) {
+      return true;
+    }
+  } catch (e) {
+    return false;
+  }
+  return false;
+};
+
 /* ARRAY utils */
 export const deleteArrayElementAtIndex = (array: unknown[], index: number) => {
   return array.splice(index, 1);
@@ -323,7 +342,33 @@ export const downloadObjectAsJsonFile = (fileName: string, object: any) => {
 
   downloadFile(fileNameWithSuffix, dataString);
 };
+export const downloadObjectAsCsvFile = (
+  fileName: string,
+  rows: Record<string, unknown>[] = []
+) => {
+  const titleRowString = Object.keys(rows[0]).join(',');
+  const rowsString = rows
+    .map(e =>
+      Object.values(e)
+        .map(
+          i =>
+            `"${
+              typeof i === 'string' && isJsonString(i)
+                ? i.replace(/"/g, `'`) // in csv, a cell with double quotes and comma will result is bad formating
+                : JSON.stringify(i, null, 2).replace(/"/g, `'`)
+            }"`
+        )
+        .join(',')
+    )
+    .join('\n');
+  const csvContent = `data:text/csv;charset=utf-8,${titleRowString}\n${rowsString}`;
 
+  const fileNameWithSuffix = `${fileName}.csv`;
+
+  const encodedUri = encodeURI(csvContent);
+
+  downloadFile(fileNameWithSuffix, encodedUri);
+};
 export const getFileExtensionFromFilename = (filename: string) => {
   const matches = filename.match(/\.[0-9a-z]+$/i);
   return matches ? matches[0] : null;
@@ -350,6 +395,6 @@ export const getCurrTimeForFileName = () => {
   return [year, month, day, hours, minutes, seconds, milliSeconds].join('_');
 };
 
-export const convertDateTimeToLocale = (dateTime: string) => {
+export const convertDateTimeToLocale = (dateTime: string | Date | number) => {
   return moment(dateTime, moment.ISO_8601).format('ddd, MMM Do HH:mm:ss Z');
 };

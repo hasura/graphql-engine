@@ -70,10 +70,12 @@ instance (MonadUnique m) => ArrowCache m (Rule m) where
         (k $! (s <> s')) (b, s') (listenAccesses r')
 
       cached accesses a b (Rule r) = Rule \s a' k -> if
-        | unchanged accesses a a' -> k s b (cached accesses a b (Rule r))
+        | unchanged accesses a a' -> (k $! (s <> accesses)) b (cached accesses a b (Rule r))
         | otherwise -> r s a' \s' (b', accesses') r' -> k s' b' (cached accesses' a' b' r')
 
-  newDependency = arrM \a -> newUniqueS <&> \u -> Dependency (DependencyRoot u) a
+  newDependency = Rule \s a k -> do
+    key <- DependencyRoot <$> newUniqueS
+    k s (Dependency key a) (arr (Dependency key))
   {-# INLINABLE newDependency #-}
 
   dependOn = Rule \s (Dependency key v) k -> (k $! recordAccess key AccessedAll s) v dependOn
