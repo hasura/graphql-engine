@@ -107,7 +107,9 @@ export const passPVDeleteView = () => {
   // Delete view
   setPromptValue(getTableName(1, testName));
   cy.get(getElementFromAlias('delete-view')).click();
-  cy.window().its('prompt').should('be.called');
+  cy.window()
+    .its('prompt')
+    .should('be.called');
   cy.wait(7000);
 };
 
@@ -120,7 +122,9 @@ export const passPTDeleteTable = () => {
   // Delete table
   setPromptValue(getTableName(0, testName));
   cy.get(getElementFromAlias('delete-table')).click();
-  cy.window().its('prompt').should('be.called');
+  cy.window()
+    .its('prompt')
+    .should('be.called');
   cy.wait(7000);
 };
 
