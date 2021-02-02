@@ -49,7 +49,6 @@ import qualified Control.Concurrent.Async                 as A
 import qualified Control.Concurrent.STM                   as STM
 import qualified Control.Immortal                         as Immortal
 import qualified Crypto.Hash                              as CH
-import qualified Data.Aeson.Casing                        as J
 import qualified Data.Aeson.Extended                      as J
 import qualified Data.Aeson.TH                            as J
 import qualified Data.ByteString                          as BS
@@ -66,7 +65,7 @@ import           Control.Lens
 import qualified Hasura.GraphQL.Execute.LiveQuery.TMap    as TMap
 import qualified Hasura.Logging                           as L
 
-import           Hasura.Db
+import           Hasura.Backends.Postgres.Connection
 import           Hasura.GraphQL.Execute.LiveQuery.Options
 import           Hasura.GraphQL.Execute.LiveQuery.Plan
 import           Hasura.GraphQL.Transport.HTTP.Protocol
@@ -328,7 +327,7 @@ data CohortExecutionDetails
   -- polled cycle
   } deriving (Show, Eq)
 
-$(J.deriveToJSON (J.aesonDrop 4 J.snakeCase) ''CohortExecutionDetails)
+$(J.deriveToJSON hasuraJSON ''CohortExecutionDetails)
 
 -- | Execution information related to a single batched execution
 data BatchExecutionDetails
@@ -348,7 +347,7 @@ batchExecutionDetailMinimal BatchExecutionDetails{..} =
            , "push_time" J..= _bedPushTime
            ]
 
-$(J.deriveToJSON (J.aesonDrop 4 J.snakeCase) ''BatchExecutionDetails)
+$(J.deriveToJSON hasuraJSON ''BatchExecutionDetails)
 
 data PollDetails
   = PollDetails
@@ -368,7 +367,7 @@ data PollDetails
   , _pdLiveQueryOptions :: !LiveQueriesOptions
   } deriving (Show, Eq)
 
-$(J.deriveToJSON (J.aesonDrop 3 J.snakeCase) ''PollDetails)
+$(J.deriveToJSON hasuraJSON ''PollDetails)
 
 {- Note [Minimal LiveQuery Poller Log]
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -479,5 +478,5 @@ pollQuery pollerId lqOpts pgExecCtx pgQuery cohortMap postPollHook = do
           -- Postgres response is not present in the cohort map of this batch
           -- (this shouldn't happen but if it happens it means a logic error and
           -- we should log it)
-          in (pure respBS, cohortId, Just $!(respHash, respSize),) <$>
+          in (pure respBS, cohortId, Just (respHash, respSize),) <$>
              Map.lookup cohortId cohortSnapshotMap

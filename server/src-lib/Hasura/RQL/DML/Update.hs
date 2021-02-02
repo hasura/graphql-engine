@@ -1,109 +1,41 @@
 module Hasura.RQL.DML.Update
-  ( AnnUpdG(..)
-  , traverseAnnUpd
-  , execUpdateQuery
-  , updateOperatorText
-  , runUpdate
+  ( runUpdate
   ) where
 
-import           Data.Aeson.Types
-import           Instances.TH.Lift           ()
-
-import qualified Data.HashMap.Strict         as M
-import qualified Data.Sequence               as DS
-
-import           Data.Text.Extended
-import           Hasura.EncJSON
 import           Hasura.Prelude
-import           Hasura.RQL.DML.Insert       (insertCheckExpr)
+
+import qualified Data.Environment                             as Env
+import qualified Data.HashMap.Strict                          as M
+import qualified Data.Sequence                                as DS
+import qualified Database.PG.Query                            as Q
+
+import           Control.Monad.Trans.Control                  (MonadBaseControl)
+import           Data.Aeson.Types
+import           Data.Text.Extended
+
+import qualified Hasura.Backends.Postgres.SQL.DML             as S
+import qualified Hasura.Tracing                               as Tracing
+
+import           Hasura.Backends.Postgres.Connection
+import           Hasura.Backends.Postgres.Execute.Mutation
+import           Hasura.Backends.Postgres.SQL.Types
+import           Hasura.Backends.Postgres.Translate.Returning
+import           Hasura.EncJSON
 import           Hasura.RQL.DML.Internal
-import           Hasura.RQL.DML.Mutation
-import           Hasura.RQL.DML.Returning
-import           Hasura.RQL.DML.Update.Types
-import           Hasura.RQL.GBoolExp
-import           Hasura.RQL.Instances        ()
+import           Hasura.RQL.DML.Types
+import           Hasura.RQL.IR.BoolExp
+import           Hasura.RQL.IR.Update
 import           Hasura.RQL.Types
-import           Hasura.SQL.Types
-import           Hasura.Server.Version       (HasVersion)
+import           Hasura.RQL.Types.Run
+import           Hasura.Server.Version                        (HasVersion)
 import           Hasura.Session
 
-import qualified Data.Environment            as Env
-import qualified Database.PG.Query           as Q
-import qualified Hasura.SQL.DML              as S
-import qualified Hasura.Tracing              as Tracing
-
-
--- NOTE: This function can be improved, because we use
--- the literal values defined below in the 'updateOperators'
--- function in 'Hasura.GraphQL.Schema.Mutation'. It would
--- be nice if we could avoid duplicating the string literal
--- values
-updateOperatorText :: UpdOpExpG a -> Text
-updateOperatorText (UpdSet          _) = "_set"
-updateOperatorText (UpdInc          _) = "_inc"
-updateOperatorText (UpdAppend       _) = "_append"
-updateOperatorText (UpdPrepend      _) = "_prepend"
-updateOperatorText (UpdDeleteKey    _) = "_delete_key"
-updateOperatorText (UpdDeleteElem   _) = "_delete_elem"
-updateOperatorText (UpdDeleteAtPath _) = "_delete_at_path"
-
-traverseAnnUpd
-  :: (Applicative f)
-  => (a -> f b)
-  -> AnnUpdG backend a
-  -> f (AnnUpdG backend b)
-traverseAnnUpd f annUpd =
-  AnnUpd tn
-  <$> traverse (traverse $ traverse f) opExps
-  <*> ((,) <$> traverseAnnBoolExp f whr <*> traverseAnnBoolExp f fltr)
-  <*> traverseAnnBoolExp f chk
-  <*> traverseMutationOutput f mutOutput
-  <*> pure allCols
-  where
-    AnnUpd tn opExps (whr, fltr) chk mutOutput allCols = annUpd
-
-mkUpdateCTE
-  :: AnnUpd 'Postgres -> S.CTE
-mkUpdateCTE (AnnUpd tn opExps (permFltr, wc) chk _ columnsInfo) =
-  S.CTEUpdate update
-  where
-    update =
-      S.SQLUpdate tn setExp Nothing tableFltr
-        . Just
-        . S.RetExp
-        $ [ S.selectStar
-          , S.Extractor (insertCheckExpr "update check constraint failed" checkExpr) Nothing
-          ]
-    setExp    = S.SetExp $ map (expandOperator columnsInfo) opExps
-    tableFltr = Just $ S.WhereFrag tableFltrExpr
-    tableFltrExpr = toSQLBoolExp (S.QualTable tn) $ andAnnBoolExps permFltr wc
-    checkExpr = toSQLBoolExp (S.QualTable tn) chk
-
-expandOperator :: [ColumnInfo 'Postgres] -> (PGCol, UpdOpExpG S.SQLExp) -> S.SetExpItem
-expandOperator infos (column, op) = S.SetExpItem $ (column,) $ case op of
-  UpdSet          e -> e
-  UpdInc          e -> S.mkSQLOpExp S.incOp               identifier (asNum  e)
-  UpdAppend       e -> S.mkSQLOpExp S.jsonbConcatOp       identifier (asJSON e)
-  UpdPrepend      e -> S.mkSQLOpExp S.jsonbConcatOp       (asJSON e) identifier
-  UpdDeleteKey    e -> S.mkSQLOpExp S.jsonbDeleteOp       identifier (asText e)
-  UpdDeleteElem   e -> S.mkSQLOpExp S.jsonbDeleteOp       identifier (asInt  e)
-  UpdDeleteAtPath a -> S.mkSQLOpExp S.jsonbDeleteAtPathOp identifier (asArray a)
-  where
-    identifier = S.SEIden $ toIden column
-    asInt  e   = S.SETyAnn e S.intTypeAnn
-    asText e   = S.SETyAnn e S.textTypeAnn
-    asJSON e   = S.SETyAnn e S.jsonbTypeAnn
-    asArray a  = S.SETyAnn (S.SEArray a) S.textArrTypeAnn
-    asNum  e   = S.SETyAnn e $
-      case find (\info -> pgiColumn info == column) infos <&> pgiType of
-        Just (PGColumnScalar s) -> S.mkTypeAnn $ PGTypeScalar s
-        _                       -> S.numericTypeAnn
 
 convInc
   :: (QErrM m)
-  => (PGColumnType -> Value -> m S.SQLExp)
+  => (ColumnType 'Postgres -> Value -> m S.SQLExp)
   -> PGCol
-  -> PGColumnType
+  -> ColumnType 'Postgres
   -> Value
   -> m (PGCol, S.SQLExp)
 convInc f col colType val = do
@@ -112,9 +44,9 @@ convInc f col colType val = do
 
 convMul
   :: (QErrM m)
-  => (PGColumnType -> Value -> m S.SQLExp)
+  => (ColumnType 'Postgres -> Value -> m S.SQLExp)
   -> PGCol
-  -> PGColumnType
+  -> ColumnType 'Postgres
   -> Value
   -> m (PGCol, S.SQLExp)
 convMul f col colType val = do
@@ -123,16 +55,16 @@ convMul f col colType val = do
 
 convSet
   :: (QErrM m)
-  => (PGColumnType -> Value -> m S.SQLExp)
+  => (ColumnType 'Postgres -> Value -> m S.SQLExp)
   -> PGCol
-  -> PGColumnType
+  -> ColumnType 'Postgres
   -> Value
   -> m (PGCol, S.SQLExp)
 convSet f col colType val = do
   prepExp <- f colType val
   return (col, prepExp)
 
-convDefault :: (Monad m) => PGCol -> PGColumnType -> () -> m (PGCol, S.SQLExp)
+convDefault :: (Monad m) => PGCol -> ColumnType 'Postgres -> () -> m (PGCol, S.SQLExp)
 convDefault col _ _ = return (col, S.SEUnsafe "DEFAULT")
 
 convOp
@@ -141,7 +73,7 @@ convOp
   -> [PGCol]
   -> UpdPermInfo 'Postgres
   -> [(PGCol, a)]
-  -> (PGCol -> PGColumnType -> a -> m (PGCol, S.SQLExp))
+  -> (PGCol -> ColumnType 'Postgres -> a -> m (PGCol, S.SQLExp))
   -> m [(PGCol, S.SQLExp)]
 convOp fieldInfoMap preSetCols updPerm objs conv =
   forM objs $ \(pgCol, a) -> do
@@ -161,14 +93,14 @@ convOp fieldInfoMap preSetCols updPerm objs conv =
         <> " for role " <> roleName <<> "; its value is predefined in permission"
 
 validateUpdateQueryWith
-  :: (UserInfoM m, QErrM m, CacheRM m)
+  :: (UserInfoM m, QErrM m, TableInfoRM 'Postgres m)
   => SessVarBldr 'Postgres m
-  -> (PGColumnType -> Value -> m S.SQLExp)
+  -> (ColumnType 'Postgres -> Value -> m S.SQLExp)
   -> UpdateQuery
   -> m (AnnUpd 'Postgres)
 validateUpdateQueryWith sessVarBldr prepValBldr uq = do
   let tableName = uqTable uq
-  tableInfo <- withPathK "table" $ askTabInfo tableName
+  tableInfo <- withPathK "table" $ askTabInfoSource tableName
   let coreInfo = _tiCoreInfo tableInfo
 
   -- If it is view then check if it is updatable
@@ -246,33 +178,21 @@ validateUpdateQueryWith sessVarBldr prepValBldr uq = do
 validateUpdateQuery
   :: (QErrM m, UserInfoM m, CacheRM m)
   => UpdateQuery -> m (AnnUpd 'Postgres, DS.Seq Q.PrepArg)
-validateUpdateQuery =
-  runDMLP1T . validateUpdateQueryWith sessVarFromCurrentSetting binRHSBuilder
-
-execUpdateQuery
-  ::
-  ( HasVersion
-  , MonadTx m
-  , MonadIO m
-  , Tracing.MonadTrace m
-  )
-  => Env.Environment
-  -> Bool
-  -> Maybe MutationRemoteJoinCtx
-  -> (AnnUpd 'Postgres, DS.Seq Q.PrepArg)
-  -> m EncJSON
-execUpdateQuery env strfyNum remoteJoinCtx (u, p) =
-  runMutation env $ mkMutation remoteJoinCtx (uqp1Table u) (updateCTE, p)
-                (uqp1Output u) (uqp1AllCols u) strfyNum
-  where
-    updateCTE = mkUpdateCTE u
+validateUpdateQuery query = do
+  let source = uqSource query
+  tableCache <- askTableCache source
+  flip runTableCacheRT (source, tableCache) $ runDMLP1T $
+    validateUpdateQueryWith sessVarFromCurrentSetting binRHSBuilder query
 
 runUpdate
   :: ( HasVersion, QErrM m, UserInfoM m, CacheRM m
-     , MonadTx m, HasSQLGenCtx m, MonadIO m
-     , Tracing.MonadTrace m
+     , HasServerConfigCtx m, MonadBaseControl IO m
+     , MonadIO m, Tracing.MonadTrace m
      )
   => Env.Environment -> UpdateQuery -> m EncJSON
 runUpdate env q = do
-  strfyNum <- stringifyNum <$> askSQLGenCtx
-  validateUpdateQuery q >>= execUpdateQuery env strfyNum Nothing
+  sourceConfig <- askSourceConfig (uqSource q)
+  strfyNum <- stringifyNum . _sccSQLGenCtx <$> askServerConfigCtx
+  validateUpdateQuery q
+    >>= runQueryLazyTx (_pscExecCtx sourceConfig) Q.ReadWrite
+        . execUpdateQuery env strfyNum Nothing

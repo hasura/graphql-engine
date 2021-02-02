@@ -154,6 +154,22 @@ const columnOperatorsInfo = {
     type: 'pattern_match',
     inputStructure: 'object',
   },
+  _regex: {
+    type: 'pattern_match',
+    inputStructure: 'object',
+  },
+  _iregex: {
+    type: 'pattern_match',
+    inputStructure: 'object',
+  },
+  _nregex: {
+    type: 'pattern_match',
+    inputStructure: 'object',
+  },
+  _niregex: {
+    type: 'pattern_match',
+    inputStructure: 'object',
+  },
   _contains: {
     type: 'jsonb',
     inputStructure: 'object',

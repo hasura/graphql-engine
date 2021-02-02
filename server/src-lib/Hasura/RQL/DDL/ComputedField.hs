@@ -6,63 +6,70 @@ module Hasura.RQL.DDL.ComputedField
   , ComputedFieldDefinition(..)
   , runAddComputedField
   , addComputedFieldP2Setup
-  , addComputedFieldToCatalog
   , DropComputedField
-  , dropComputedFieldFromCatalog
   , runDropComputedField
+  , dropComputedFieldInMetadata
   ) where
 
 import           Hasura.Prelude
 
 import qualified Control.Monad.Validate             as MV
+import qualified Data.HashMap.Strict.InsOrd         as OMap
 import qualified Data.HashSet                       as S
 import qualified Data.Sequence                      as Seq
-import qualified Database.PG.Query                  as Q
 import qualified Language.GraphQL.Draft.Syntax      as G
 
 import           Data.Aeson
-import           Data.Aeson.Casing
 import           Data.Aeson.TH
-import           Language.Haskell.TH.Syntax         (Lift)
-
 import           Data.Text.Extended
+
+import           Hasura.Backends.Postgres.SQL.Types
 import           Hasura.EncJSON
 import           Hasura.Incremental                 (Cacheable)
 import           Hasura.RQL.DDL.Deps
-import           Hasura.RQL.DDL.Permission.Internal
-import           Hasura.RQL.DDL.Schema.Function     (RawFunctionInfo (..), mkFunctionArgs)
+import           Hasura.RQL.DDL.Permission
+import           Hasura.RQL.DDL.Schema.Function     (mkFunctionArgs)
 import           Hasura.RQL.Types
 import           Hasura.SQL.Types
 import           Hasura.Server.Utils                (makeReasonMessage)
 
 
-data ComputedFieldDefinition
-  = ComputedFieldDefinition
-  { _cfdFunction        :: !QualifiedFunction
-  , _cfdTableArgument   :: !(Maybe FunctionArgName)
-  , _cfdSessionArgument :: !(Maybe FunctionArgName)
-  } deriving (Show, Eq, Lift, Generic)
-instance NFData ComputedFieldDefinition
-instance Cacheable ComputedFieldDefinition
-$(deriveJSON (aesonDrop 4 snakeCase){omitNothingFields = True} ''ComputedFieldDefinition)
-
 data AddComputedField
   = AddComputedField
-  { _afcTable      :: !QualifiedTable
+  { _afcSource     :: !SourceName
+  , _afcTable      :: !QualifiedTable
   , _afcName       :: !ComputedFieldName
   , _afcDefinition :: !ComputedFieldDefinition
   , _afcComment    :: !(Maybe Text)
-  } deriving (Show, Eq, Lift, Generic)
+  } deriving (Show, Eq, Generic)
 instance NFData AddComputedField
 instance Cacheable AddComputedField
-$(deriveJSON (aesonDrop 4 snakeCase) ''AddComputedField)
+$(deriveToJSON hasuraJSON ''AddComputedField)
 
-runAddComputedField :: (MonadTx m, CacheRWM m) => AddComputedField -> m EncJSON
+instance FromJSON AddComputedField where
+  parseJSON = withObject "Object" $ \o ->
+    AddComputedField
+      <$> o .:? "source" .!= defaultSource
+      <*> o .: "table"
+      <*> o .: "name"
+      <*> o .: "definition"
+      <*> o .:? "comment"
+
+runAddComputedField :: (MonadError QErr m, CacheRWM m, MetadataM m) => AddComputedField -> m EncJSON
 runAddComputedField q = do
-  withPathK "table" $ askTabInfo (_afcTable q)
-  addComputedFieldToCatalog q
-  buildSchemaCacheFor $ MOTableObj (_afcTable q) (MTOComputedField $ _afcName q)
+  withPathK "table" $ askTabInfo source table
+  let metadataObj = MOSourceObjId source $
+                    SMOTableObj table $ MTOComputedField computedFieldName
+      metadata = ComputedFieldMetadata computedFieldName (_afcDefinition q) (_afcComment q)
+  buildSchemaCacheFor metadataObj
+    $ MetadataModifier
+    $ tableMetadataSetter source table.tmComputedFields
+      %~ OMap.insert computedFieldName metadata
   pure successMsg
+  where
+    source = _afcSource q
+    table = _afcTable q
+    computedFieldName = _afcName q
 
 data ComputedFieldValidateError
   = CFVENotValidGraphQLName !ComputedFieldName
@@ -128,7 +135,7 @@ addComputedFieldP2Setup
   -> Maybe Text
   -> m (ComputedFieldInfo 'Postgres)
 addComputedFieldP2Setup trackedTables table computedField definition rawFunctionInfo comment =
-  either (throw400 NotSupported . showErrors) pure =<< MV.runValidateT (mkComputedFieldInfo)
+  either (throw400 NotSupported . showErrors) pure =<< MV.runValidateT mkComputedFieldInfo
   where
     inputArgNames = rfiInputArgNames rawFunctionInfo
     ComputedFieldDefinition function maybeTableArg maybeSessionArg = definition
@@ -167,7 +174,7 @@ addComputedFieldP2Setup trackedTables table computedField definition rawFunction
                          (rfiInputArgTypes rawFunctionInfo) inputArgNames
       tableArgument <- case maybeTableArg of
         Just argName ->
-          case findWithIndex (maybe False (argName ==) . faName) inputArgs of
+          case findWithIndex ((Just argName ==) . faName) inputArgs of
             Just (tableArg, index) -> do
               let functionTableArg = FTANamed argName index
               validateTableArgumentType functionTableArg $ faType tableArg
@@ -183,7 +190,7 @@ addComputedFieldP2Setup trackedTables table computedField definition rawFunction
 
       maybePGSessionArg <- sequence $ do
           argName <- maybeSessionArg
-          return $ case findWithIndex (maybe False (argName ==) . faName) inputArgs of
+          return $ case findWithIndex ((Just argName ==) . faName) inputArgs of
             Just (sessionArg, index) -> do
               let functionSessionArg = FunctionSessionArgument argName index
               validateSessionArgumentType functionSessionArg $ faType sessionArg
@@ -198,7 +205,7 @@ addComputedFieldP2Setup trackedTables table computedField definition rawFunction
             ComputedFieldFunction function inputArgSeq tableArgument maybePGSessionArg $
             rfiDescription rawFunctionInfo
 
-      pure $ ComputedFieldInfo computedField computedFieldFunction returnType comment
+      pure $ ComputedFieldInfo () computedField computedFieldFunction returnType comment
 
     validateTableArgumentType :: (MV.MonadValidate [ComputedFieldValidateError] m)
                               => FunctionTableArgument
@@ -216,7 +223,7 @@ addComputedFieldP2Setup trackedTables table computedField definition rawFunction
                                 -> QualifiedPGType
                                 -> m ()
     validateSessionArgumentType sessionArg qpt = do
-      when (not . isJSONType . _qptName $ qpt) $
+      unless (isJSONType $ _qptName qpt) $
         MV.dispute $ pure $ CFVEInvalidSessionArgument $ ISANotJSON sessionArg
 
     showErrors :: [ComputedFieldValidateError] -> Text
@@ -227,8 +234,8 @@ addComputedFieldP2Setup trackedTables table computedField definition rawFunction
         reasonMessage = makeReasonMessage allErrors (showError function)
 
     dropTableAndSessionArgument :: FunctionTableArgument
-                                -> Maybe FunctionSessionArgument -> [FunctionArg]
-                                -> [FunctionArg]
+                                -> Maybe FunctionSessionArgument -> [FunctionArg 'Postgres]
+                                -> [FunctionArg 'Postgres]
     dropTableAndSessionArgument tableArg sessionArg inputArgs =
       let withoutTable = case tableArg of
             FTAFirst  -> tail inputArgs
@@ -240,69 +247,51 @@ addComputedFieldP2Setup trackedTables table computedField definition rawFunction
               filter ((/=) (Just name) . faName) withoutTable
       in alsoWithoutSession
 
-
-addComputedFieldToCatalog
-  :: MonadTx m
-  => AddComputedField -> m ()
-addComputedFieldToCatalog q =
-  liftTx $ Q.withQE defaultTxErrorHandler
-    [Q.sql|
-     INSERT INTO hdb_catalog.hdb_computed_field
-       (table_schema, table_name, computed_field_name, definition, comment)
-     VALUES ($1, $2, $3, $4, $5)
-    |] (schemaName, tableName, computedField, Q.AltJ definition, comment) True
-  where
-    QualifiedObject schemaName tableName = table
-    AddComputedField table computedField definition comment = q
-
 data DropComputedField
   = DropComputedField
-  { _dccTable   :: !QualifiedTable
+  { _dccSource  :: !SourceName
+  , _dccTable   :: !QualifiedTable
   , _dccName    :: !ComputedFieldName
   , _dccCascade :: !Bool
-  } deriving (Show, Eq, Lift)
-$(deriveToJSON (aesonDrop 4 snakeCase) ''DropComputedField)
+  } deriving (Show, Eq)
+$(deriveToJSON hasuraJSON ''DropComputedField)
 
 instance FromJSON DropComputedField where
   parseJSON = withObject "Object" $ \o ->
     DropComputedField
-      <$> o .: "table"
+      <$> o .:? "source" .!= defaultSource
+      <*> o .: "table"
       <*> o .: "name"
       <*> o .:? "cascade" .!= False
 
 runDropComputedField
-  :: (MonadTx m, CacheRWM m)
+  :: (QErrM m, CacheRWM m, MetadataM m)
   => DropComputedField -> m EncJSON
-runDropComputedField (DropComputedField table computedField cascade) = do
+runDropComputedField (DropComputedField source table computedField cascade) = do
   -- Validation
-  fields <- withPathK "table" $ _tciFieldInfoMap <$> askTableCoreInfo table
+  fields <- withPathK "table" $ _tciFieldInfoMap <$> askTableCoreInfo source table
   void $ withPathK "name" $ askComputedFieldInfo fields computedField
 
   -- Dependencies check
   sc <- askSchemaCache
-  let deps = getDependentObjs sc $ SOTableObj table $ TOComputedField computedField
+  let deps = getDependentObjs sc $ SOSourceObj source $
+             SOITableObj table $ TOComputedField computedField
   when (not cascade && not (null deps)) $ reportDeps deps
 
   withNewInconsistentObjsCheck do
-    mapM_ purgeComputedFieldDependency deps
-    dropComputedFieldFromCatalog table computedField
-    buildSchemaCache
+    metadataModifiers <- mapM purgeComputedFieldDependency deps
+    buildSchemaCache $ MetadataModifier $
+      tableMetadataSetter source table
+      %~ (dropComputedFieldInMetadata computedField) . foldl' (.) id metadataModifiers
   pure successMsg
   where
     purgeComputedFieldDependency = \case
-      SOTableObj qt (TOPerm roleName permType) | qt == table ->
-        liftTx $ dropPermFromCatalog qt roleName permType
+      (SOSourceObj _ (SOITableObj qt (TOPerm roleName permType))) | qt == table ->
+        pure $ dropPermissionInMetadata roleName permType
       d -> throw500 $ "unexpected dependency for computed field "
            <> computedField <<> "; " <> reportSchemaObj d
 
-dropComputedFieldFromCatalog
-  :: MonadTx m
-  => QualifiedTable -> ComputedFieldName -> m ()
-dropComputedFieldFromCatalog (QualifiedObject schema table) computedField =
-  liftTx $ Q.withQE defaultTxErrorHandler
-    [Q.sql|
-     DELETE FROM hdb_catalog.hdb_computed_field
-      WHERE table_schema = $1
-        AND table_name = $2
-        AND computed_field_name = $3
-    |] (schema, table, computedField) True
+dropComputedFieldInMetadata
+  :: ComputedFieldName -> TableMetadata -> TableMetadata
+dropComputedFieldInMetadata name =
+  tmComputedFields %~ OMap.delete name

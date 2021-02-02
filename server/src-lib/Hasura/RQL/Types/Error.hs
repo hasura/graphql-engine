@@ -9,13 +9,17 @@ module Hasura.RQL.Types.Error
        , noInternalQErrEnc
        , err400
        , err404
+       , err405
        , err401
+       , err409
        , err500
        , internalError
 
        , QErrM
        , throw400
        , throw404
+       , throw405
+       , throw409
        , throw500
        , throw500WithDetail
        , throw401
@@ -83,6 +87,8 @@ data Code
   | ConstraintViolation
   | DataException
   | BadRequest
+  | MethodNotAllowed
+  | Conflict
   -- Graphql error
   | NoTables
   | ValidationFailed
@@ -95,6 +101,7 @@ data Code
   -- Remote schemas
   | RemoteSchemaError
   | RemoteSchemaConflicts
+  | CoercionError
   -- Websocket/Subscription errors
   | StartFailed
   | InvalidCustomTypes
@@ -139,8 +146,11 @@ instance Show Code where
     JWTInvalidKey         -> "invalid-jwt-key"
     RemoteSchemaError     -> "remote-schema-error"
     RemoteSchemaConflicts -> "remote-schema-conflicts"
+    CoercionError         -> "coercion-error"
     StartFailed           -> "start-failed"
     InvalidCustomTypes    -> "invalid-custom-types"
+    MethodNotAllowed      -> "method-not-allowed"
+    Conflict              -> "conflict"
     ActionWebhookCode t   -> T.unpack t
     CustomCode t          -> T.unpack t
 
@@ -148,7 +158,7 @@ data QErr
   = QErr
   { qePath     :: !JSONPath
   , qeStatus   :: !N.Status
-  , qeError    :: !T.Text
+  , qeError    :: !Text
   , qeCode     :: !Code
   , qeInternal :: !(Maybe Value)
   } deriving (Show, Eq)
@@ -210,7 +220,7 @@ encodeJSONPath = format "$"
         specialChars []     = True
         -- first char must not be number
         specialChars (c:xs) = notElem c (alphabet ++ "_") ||
-          any (flip notElem (alphaNumerics ++ "_-")) xs
+          any (`notElem` (alphaNumerics ++ "_-")) xs
 
 instance Q.FromPGConnErr QErr where
   fromPGConnErr c =
@@ -222,36 +232,48 @@ instance Q.FromPGTxErr QErr where
     let e = err500 PostgresError "postgres tx error"
     in e {qeInternal = Just $ toJSON txe}
 
-err400 :: Code -> T.Text -> QErr
+err400 :: Code -> Text -> QErr
 err400 c t = QErr [] N.status400 t c Nothing
 
-err404 :: Code -> T.Text -> QErr
+err404 :: Code -> Text -> QErr
 err404 c t = QErr [] N.status404 t c Nothing
 
-err401 :: Code -> T.Text -> QErr
+err405 :: Code -> Text -> QErr
+err405 c t = QErr [] N.status405 t c Nothing
+
+err401 :: Code -> Text -> QErr
 err401 c t = QErr [] N.status401 t c Nothing
 
-err500 :: Code -> T.Text -> QErr
+err409 :: Code -> Text -> QErr
+err409 c t = QErr [] N.status409 t c Nothing
+
+err500 :: Code -> Text -> QErr
 err500 c t = QErr [] N.status500 t c Nothing
 
 type QErrM m = (MonadError QErr m)
 
-throw400 :: (QErrM m) => Code -> T.Text -> m a
+throw400 :: (QErrM m) => Code -> Text -> m a
 throw400 c t = throwError $ err400 c t
 
-throw404 :: (QErrM m) => T.Text -> m a
+throw404 :: (QErrM m) => Text -> m a
 throw404 t = throwError $ err404 NotFound t
 
-throw401 :: (QErrM m) => T.Text -> m a
+throw405 :: (QErrM m) => Text -> m a
+throw405 t = throwError $ err405 MethodNotAllowed t
+
+throw401 :: (QErrM m) => Text -> m a
 throw401 t = throwError $ err401 AccessDenied t
 
-throw500 :: (QErrM m) => T.Text -> m a
+throw409 :: (QErrM m) => Text -> m a
+throw409 t = throwError $ err409 Conflict t
+
+throw500 :: (QErrM m) => Text -> m a
 throw500 t = throwError $ internalError t
 
 internalError :: Text -> QErr
 internalError = err500 Unexpected
 
-throw500WithDetail :: (QErrM m) => T.Text -> Value -> m a
+throw500WithDetail :: (QErrM m) => Text -> Value -> m a
 throw500WithDetail t detail =
   throwError $ (err500 Unexpected t) {qeInternal = Just detail}
 
@@ -260,22 +282,22 @@ modifyQErr :: (QErrM m)
 modifyQErr f a = catchError a (throwError . f)
 
 modifyErr :: (QErrM m)
-          => (T.Text -> T.Text)
+          => (Text -> Text)
           -> m a -> m a
 modifyErr f = modifyQErr (liftTxtMod f)
 
 modifyErrA :: (ArrowError QErr arr) => arr (e, s) a -> arr (e, (Text -> Text, s)) a
 modifyErrA f = proc (e, (g, s)) -> (| mapErrorA (f -< (e, s)) |) (liftTxtMod g)
 
-liftTxtMod :: (T.Text -> T.Text) -> QErr -> QErr
+liftTxtMod :: (Text -> Text) -> QErr -> QErr
 liftTxtMod f (QErr path st s c i) = QErr path st (f s) c i
 
 modifyErrAndSet500 :: (QErrM m)
-                   => (T.Text -> T.Text)
+                   => (Text -> Text)
                    -> m a -> m a
 modifyErrAndSet500 f = modifyQErr (liftTxtMod500 f)
 
-liftTxtMod500 :: (T.Text -> T.Text) -> QErr -> QErr
+liftTxtMod500 :: (Text -> Text) -> QErr -> QErr
 liftTxtMod500 f (QErr path _ s c i) = QErr path N.status500 (f s) c i
 
 withPathE :: (ArrowError QErr arr) => arr (e, s) a -> arr (e, (JSONPathElement, s)) a

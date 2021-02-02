@@ -45,6 +45,7 @@ def mk_reload_remote_q(name):
         }
     }
 
+export_metadata_q = {"type": "export_metadata", "args": {}}
 
 class TestRemoteSchemaBasic:
     """ basic => no hasura tables are tracked """
@@ -66,12 +67,10 @@ class TestRemoteSchemaBasic:
             hge_ctx.v1q(self.teardown)
 
     def test_add_schema(self, hge_ctx):
-        """ check if the remote schema is added in the db """
-        conn = hge_ctx.engine.connect()
-        res = conn.execute('select * from hdb_catalog.remote_schemas')
-        row = res.fetchone()
-        assert row['name'] == "simple 1"
-        conn.close()
+        """ check if the remote schema is added in the metadata """
+        st_code, resp = hge_ctx.v1q(export_metadata_q)
+        assert st_code == 200, resp
+        assert resp['remote_schemas'][0]['name'] == "simple 1"
 
     @pytest.mark.allow_server_upgrade_test
     def test_introspection(self, hge_ctx):
@@ -214,10 +213,10 @@ class TestAddRemoteSchemaTbls:
 
     @pytest.mark.allow_server_upgrade_test
     def test_add_schema(self, hge_ctx):
-        """ check if the remote schema is added in the db """
-        res = hge_ctx.sql('select * from hdb_catalog.remote_schemas')
-        row = res.fetchone()
-        assert row['name'] == "simple2-graphql"
+        """ check if the remote schema is added in the metadata """
+        st_code, resp = hge_ctx.v1q(export_metadata_q)
+        assert st_code == 200, resp
+        assert resp['remote_schemas'][0]['name'] == "simple2-graphql"
 
     def test_add_schema_conflicts_with_tables(self, hge_ctx):
         """add remote schema which conflicts with hasura tables"""
@@ -246,6 +245,9 @@ class TestAddRemoteSchemaTbls:
         st_code, resp = hge_ctx.v1q_f(self.dir + '/create_conflicting_table.yaml')
         assert st_code == 400
         assert resp['code'] == 'remote-schema-conflicts'
+        # Drop "user" table which is created in the previous test
+        st_code, resp = hge_ctx.v1q_f(self.dir + '/drop_user_table.yaml')
+        assert st_code == 200, resp
 
     def test_introspection(self, hge_ctx):
         with open('queries/graphql_introspection/introspection.yaml') as f:

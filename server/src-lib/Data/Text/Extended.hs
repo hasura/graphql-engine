@@ -15,10 +15,11 @@ module Data.Text.Extended
 
 import           Hasura.Prelude
 
-import qualified Language.GraphQL.Draft.Syntax as G
-import qualified Text.Builder                  as TB
+import qualified Language.GraphQL.Draft.Syntax  as G
+import qualified Language.GraphQL.Draft.Printer as G
+import qualified Text.Builder                   as TB
 
-import           Data.Text                     as DT
+import           Data.Text                      as DT
 
 
 class ToTxt a where
@@ -33,6 +34,8 @@ instance ToTxt G.Name where
 
 deriving instance ToTxt G.EnumValue
 
+instance ToTxt (G.Value Void) where
+  toTxt = TB.run . G.value
 
 bquote :: ToTxt t => t -> Text
 bquote t = DT.singleton '`' <> toTxt t <> DT.singleton '`'

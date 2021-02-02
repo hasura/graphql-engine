@@ -1,26 +1,55 @@
-description: create an event trigger and then reset metadata
-url: /v1/query
-status: 200
-query:
-  type: bulk
-  args:
-  - type: track_table
+- description: create an event trigger and then reset metadata
+  url: /v1/query
+  status: 200
+  query:
+    type: bulk
     args:
-      schema: hge_tests
-      name: test_t1
-  - type: create_event_trigger
-    args: &def_args
-      name: t1_1
-      table:
+    - type: track_table
+      args:
         schema: hge_tests
         name: test_t1
-      insert:
-        columns: "*"
-      update:
-        columns: "*"
-      delete:
-        columns: "*"
-      webhook: http://127.0.0.1:5592
+    - type: create_event_trigger
+      args:
+        name: t1_1
+        table:
+          schema: hge_tests
+          name: test_t1
+        insert:
+          columns: '*'
+        update:
+          columns: '*'
+        delete:
+          columns: '*'
+        webhook: http://127.0.0.1:5592
+    - type: insert
+      args:
+        table:
+          schema: hge_tests
+          name: test_t1
+        objects:
+        - c1: 1
+          c2: world
+        returning: []
 
-  - type: clear_metadata
+- description: Clear metadata
+  url: /v1/query
+  status: 200
+  query:
+    type: clear_metadata
     args: {}
+
+- description: ensure the event was archived
+  url: /v1/query
+  status: 200
+  response:
+    result_type: TuplesOk
+    result:
+    - - trigger_name
+      - archived
+    - - t1_1
+      - t
+  query:
+    type: run_sql
+    args:
+      sql: select trigger_name, archived from hdb_catalog.event_log order by created_at
+        asc limit 1

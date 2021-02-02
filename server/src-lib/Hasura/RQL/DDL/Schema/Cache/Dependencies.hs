@@ -22,9 +22,9 @@ import           Hasura.RQL.Types
 -- removed from the cache, and 'InconsistentMetadata's are returned.
 resolveDependencies
   :: (ArrowKleisli m arr, QErrM m)
-  => ( BuildOutputs
+  => ( BuildOutputs 'Postgres
      , [(MetadataObject, SchemaObjId, SchemaDependency)]
-     ) `arr` (BuildOutputs, [InconsistentMetadata], DepMap)
+     ) `arr` (BuildOutputs 'Postgres, [InconsistentMetadata], DepMap)
 resolveDependencies = arrM \(cache, dependencies) -> do
   let dependencyMap = dependencies
         & M.groupOn (view _2)
@@ -48,10 +48,10 @@ resolveDependencies = arrM \(cache, dependencies) -> do
 performIteration
   :: (QErrM m)
   => Int
-  -> BuildOutputs
+  -> BuildOutputs 'Postgres
   -> [InconsistentMetadata]
   -> HashMap SchemaObjId [(MetadataObject, SchemaDependency)]
-  -> m (BuildOutputs, [InconsistentMetadata], DepMap)
+  -> m (BuildOutputs 'Postgres, [InconsistentMetadata], DepMap)
 performIteration iterationNumber cache inconsistencies dependencies = do
   let (newInconsistencies, prunedDependencies) = pruneDanglingDependents cache dependencies
   case newInconsistencies of
@@ -73,7 +73,7 @@ performIteration iterationNumber cache inconsistencies dependencies = do
                 , "pruned_dependencies" .= (map snd <$> prunedDependencies) ] }
 
 pruneDanglingDependents
-  :: BuildOutputs
+  :: BuildOutputs 'Postgres
   -> HashMap SchemaObjId [(MetadataObject, SchemaDependency)]
   -> ([InconsistentMetadata], HashMap SchemaObjId [(MetadataObject, SchemaDependency)])
 pruneDanglingDependents cache = fmap (M.filter (not . null)) . traverse do
@@ -83,38 +83,50 @@ pruneDanglingDependents cache = fmap (M.filter (not . null)) . traverse do
   where
     resolveDependency :: SchemaDependency -> Either Text ()
     resolveDependency (SchemaDependency objectId _) = case objectId of
-      SOTable tableName -> void $ resolveTable tableName
-      SOFunction functionName -> unless (functionName `M.member` _boFunctions cache) $
-        Left $ "function " <> functionName <<> " is not tracked"
+      SOSource source -> void $ M.lookup source (_boSources cache)
+        `onNothing` Left ("no such source exists: " <>> source)
+      SOSourceObj source sourceObjId -> case sourceObjId of
+        SOITable tableName -> void $ resolveTable source tableName
+        SOIFunction functionName -> void $
+          unsafeFunctionInfo @'Postgres source functionName (_boSources cache)
+          `onNothing` Left ("function " <> functionName <<> " is not tracked")
+        SOITableObj tableName tableObjectId -> do
+          tableInfo <- resolveTable source tableName
+          case tableObjectId of
+            TOCol columnName ->
+              void $ resolveField tableInfo (fromCol @'Postgres columnName) _FIColumn "column"
+            TORel relName ->
+              void $ resolveField tableInfo (fromRel relName) _FIRelationship "relationship"
+            TOComputedField fieldName ->
+              void $ resolveField tableInfo (fromComputedField fieldName) _FIComputedField "computed field"
+            TORemoteRel fieldName ->
+              void $ resolveField tableInfo (fromRemoteRelationship fieldName) _FIRemoteRelationship "remote relationship"
+            TOForeignKey constraintName -> do
+              let foreignKeys = _tciForeignKeys $ _tiCoreInfo tableInfo
+              unless (isJust $ find ((== constraintName) . _cName . _fkConstraint) foreignKeys) $
+                Left $ "no foreign key constraint named " <> constraintName <<> " is "
+                  <> "defined for table " <>> tableName
+            TOPerm roleName permType -> withPermType permType \accessor -> do
+              let permLens = permAccToLens accessor
+              unless (has (tiRolePermInfoMap.ix roleName.permLens._Just) tableInfo) $
+                Left $ "no " <> permTypeToCode permType <> " permission defined on table "
+                  <> tableName <<> " for role " <>> roleName
+            TOTrigger triggerName ->
+              unless (M.member triggerName (_tiEventTriggerInfoMap tableInfo)) $ Left $
+                "no event trigger named " <> triggerName <<> " is defined for table " <>> tableName
       SORemoteSchema remoteSchemaName -> unless (remoteSchemaName `M.member` _boRemoteSchemas cache) $
         Left $ "remote schema " <> remoteSchemaName <<> " is not found"
-      SOTableObj tableName tableObjectId -> do
-        tableInfo <- resolveTable tableName
-        case tableObjectId of
-          TOCol columnName ->
-            void $ resolveField tableInfo (fromPGCol columnName) _FIColumn "column"
-          TORel relName ->
-            void $ resolveField tableInfo (fromRel relName) _FIRelationship "relationship"
-          TOComputedField fieldName ->
-            void $ resolveField tableInfo (fromComputedField fieldName) _FIComputedField "computed field"
-          TORemoteRel fieldName ->
-            void $ resolveField tableInfo (fromRemoteRelationship fieldName) _FIRemoteRelationship "remote relationship"
-          TOForeignKey constraintName -> do
-            let foreignKeys = _tciForeignKeys $ _tiCoreInfo tableInfo
-            unless (isJust $ find ((== constraintName) . _cName . _fkConstraint) foreignKeys) $
-              Left $ "no foreign key constraint named " <> constraintName <<> " is "
-                <> "defined for table " <>> tableName
-          TOPerm roleName permType -> withPermType permType \accessor -> do
-            let permLens = permAccToLens accessor
-            unless (has (tiRolePermInfoMap.ix roleName.permLens._Just) tableInfo) $
-              Left $ "no " <> permTypeToCode permType <> " permission defined on table "
-                <> tableName <<> " for role " <>> roleName
-          TOTrigger triggerName ->
-            unless (M.member triggerName (_tiEventTriggerInfoMap tableInfo)) $ Left $
-              "no event trigger named " <> triggerName <<> " is defined for table " <>> tableName
+      SORemoteSchemaPermission remoteSchemaName roleName -> do
+        remoteSchema <-
+          onNothing (M.lookup remoteSchemaName $ _boRemoteSchemas cache)
+            $ Left $ "remote schema " <> remoteSchemaName <<> " is not found"
+        unless (roleName `M.member` _rscPermissions (fst remoteSchema)) $
+          Left $ "no permission defined on remote schema " <> remoteSchemaName
+                  <<> " for role " <>> roleName
 
-    resolveTable tableName = M.lookup tableName (_boTables cache) `onNothing`
-      Left ("table " <> tableName <<> " is not tracked")
+    resolveTable source tableName =
+      unsafeTableInfo source tableName (_boSources cache)
+      `onNothing` Left ("table " <> tableName <<> " is not tracked")
 
     resolveField :: TableInfo 'Postgres -> FieldName -> Getting (First a) (FieldInfo 'Postgres) a -> Text -> Either Text a
     resolveField tableInfo fieldName fieldType fieldTypeName = do
@@ -125,19 +137,31 @@ pruneDanglingDependents cache = fmap (M.filter (not . null)) . traverse do
       (fieldInfo ^? fieldType) `onNothing` Left
         ("field " <> fieldName <<> "of table " <> tableName <<> " is not a " <> fieldTypeName)
 
-deleteMetadataObject :: MetadataObjId -> BuildOutputs -> BuildOutputs
-deleteMetadataObject objectId = case objectId of
-  MOTable        name -> boTables        %~ M.delete name
-  MOFunction     name -> boFunctions     %~ M.delete name
-  MORemoteSchema name -> boRemoteSchemas %~ M.delete name
-  MOCronTrigger name  -> boCronTriggers %~ M.delete name
-  MOTableObj tableName tableObjectId -> boTables.ix tableName %~ case tableObjectId of
-    MTORel           name _ -> tiCoreInfo.tciFieldInfoMap %~ M.delete (fromRel name)
-    MTOComputedField name   -> tiCoreInfo.tciFieldInfoMap %~ M.delete (fromComputedField name)
-    MTORemoteRelationship name -> tiCoreInfo.tciFieldInfoMap %~ M.delete (fromRemoteRelationship name)
-    MTOPerm roleName permType -> withPermType permType \accessor ->
-      tiRolePermInfoMap.ix roleName.permAccToLens accessor .~ Nothing
-    MTOTrigger name -> tiEventTriggerInfoMap %~ M.delete name
-  MOCustomTypes                -> boCustomTypes %~ const emptyAnnotatedCustomTypes
-  MOAction           name      -> boActions %~ M.delete name
-  MOActionPermission name role -> boActions.ix name.aiPermissions %~ M.delete role
+deleteMetadataObject
+  :: MetadataObjId -> BuildOutputs 'Postgres -> BuildOutputs 'Postgres
+deleteMetadataObject = \case
+  MOSource name                       -> boSources %~ M.delete name
+  MOSourceObjId source sourceObjId    -> boSources %~ M.adjust (deleteObjId sourceObjId) source
+  MORemoteSchema name                 -> boRemoteSchemas %~ M.delete name
+  MORemoteSchemaPermissions name role -> boRemoteSchemas.ix name._1.rscPermissions %~ M.delete role
+  MOCronTrigger name                  -> boCronTriggers %~ M.delete name
+  MOCustomTypes                       -> boCustomTypes %~ const emptyAnnotatedCustomTypes
+  MOAction name                       -> boActions %~ M.delete name
+  MOEndpoint name                     -> boEndpoints %~ M.delete name
+  MOActionPermission name role        -> boActions.ix name.aiPermissions %~ M.delete role
+  where
+    deleteObjId :: SourceMetadataObjId -> BackendSourceInfo -> BackendSourceInfo
+    deleteObjId sourceObjId sourceInfo = maybe sourceInfo (BackendSourceInfo . deleteObjFn sourceObjId) $ unsafeSourceInfo sourceInfo
+    deleteObjFn :: SourceMetadataObjId -> SourceInfo 'Postgres -> SourceInfo 'Postgres
+    deleteObjFn = \case
+      SMOTable    name -> siTables    %~ M.delete name
+      SMOFunction name -> siFunctions %~ M.delete name
+      SMOFunctionPermission functionName role ->
+        siFunctions.ix functionName.fiPermissions %~ HS.delete role
+      SMOTableObj tableName tableObjectId -> siTables.ix tableName %~ case tableObjectId of
+        MTORel name _              -> tiCoreInfo.tciFieldInfoMap %~ M.delete (fromRel name)
+        MTOComputedField name      -> tiCoreInfo.tciFieldInfoMap %~ M.delete (fromComputedField name)
+        MTORemoteRelationship name -> tiCoreInfo.tciFieldInfoMap %~ M.delete (fromRemoteRelationship name)
+        MTOTrigger  name           -> tiEventTriggerInfoMap %~ M.delete name
+        MTOPerm roleName permType  -> withPermType permType \accessor ->
+          tiRolePermInfoMap.ix roleName.permAccToLens accessor .~ Nothing

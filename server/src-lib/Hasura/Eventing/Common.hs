@@ -25,7 +25,7 @@ initLockedEventsCtx = do
 -- | After the events are fetched from the DB, we store the locked events
 --   in a hash set(order doesn't matter and look ups are faster) in the
 --   event engine context
-saveLockedEvents :: (MonadIO m) => [Text] -> TVar (Set.Set Text) -> m ()
+saveLockedEvents :: (MonadIO m) => [EventId] -> TVar (Set.Set EventId) -> m ()
 saveLockedEvents eventIds lockedEvents =
   liftIO $ atomically $ do
     lockedEventsVals <- readTVar lockedEvents
@@ -33,7 +33,8 @@ saveLockedEvents eventIds lockedEvents =
       Set.union lockedEventsVals $ Set.fromList eventIds
 
 -- | Remove an event from the 'LockedEventsCtx' after it has been processed
-removeEventFromLockedEvents :: MonadIO m => Text -> TVar (Set.Set Text) -> m ()
+removeEventFromLockedEvents
+  :: MonadIO m => EventId -> TVar (Set.Set EventId) -> m ()
 removeEventFromLockedEvents eventId lockedEvents =
   liftIO $ atomically $ do
   lockedEventsVals <- readTVar lockedEvents

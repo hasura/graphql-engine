@@ -1,0 +1,9 @@
+description: Successful call of an endpoint with a url template
+url: /api/rest/with_template/Foo
+method: GET
+status: 200
+query:
+response:
+  test_table:
+    - first_name: Foo
+      last_name: Bar

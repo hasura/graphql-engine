@@ -425,7 +425,7 @@ Fetch a list of those authors whose names are NOT part of a list:
 Text search or pattern matching operators (_like, _similar, etc.)
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-The ``_like``, ``_nlike``, ``_ilike``, ``_nilike``, ``_similar``, ``_nsimilar`` operators are used for
+The ``_like``, ``_nlike``, ``_ilike``, ``_nilike``, ``_similar``, ``_nsimilar``, ``_regex``, ``_nregex``, ``_iregex``, ``_niregex`` operators are used for
 pattern matching on string/text fields.
 
 For more details on text search operators and Postgres equivalents, refer to the :ref:`API reference <text_operators>`.

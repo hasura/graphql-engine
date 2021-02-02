@@ -40,47 +40,50 @@ module Hasura.Eventing.EventTrigger
   , EventEngineCtx(..)
   ) where
 
-import           Control.Concurrent.Extended          (sleep)
+import           Hasura.Prelude
+
+import qualified Control.Concurrent.Async.Lifted.Safe   as LA
+import qualified Data.ByteString.Lazy                   as LBS
+import qualified Data.HashMap.Strict                    as M
+import qualified Data.TByteString                       as TBS
+import qualified Data.Text                              as T
+import qualified Data.Time.Clock                        as Time
+import qualified Database.PG.Query                      as Q
+import qualified Database.PG.Query.PTI                  as PTI
+import qualified Network.HTTP.Client                    as HTTP
+import qualified PostgreSQL.Binary.Encoding             as PE
+
+import           Control.Concurrent.Extended            (sleep)
 import           Control.Concurrent.STM.TVar
-import           Control.Monad.Catch                  (MonadMask, bracket_)
+import           Control.Monad.Catch                    (MonadMask, bracket_)
 import           Control.Monad.STM
-import           Control.Monad.Trans.Control          (MonadBaseControl)
+import           Control.Monad.Trans.Control            (MonadBaseControl)
 import           Data.Aeson
-import           Data.Aeson.Casing
 import           Data.Aeson.TH
 import           Data.Has
-import           Data.Int                             (Int64)
+import           Data.Int                               (Int64)
 import           Data.String
 import           Data.Text.Extended
+import           Data.Text.NonEmpty
 import           Data.Time.Clock
-import           Data.Word
+
+import qualified Hasura.Logging                         as L
+import qualified Hasura.Tracing                         as Tracing
+
+import           Hasura.Backends.Postgres.Execute.Types
+import           Hasura.Backends.Postgres.SQL.Types
 import           Hasura.Eventing.Common
 import           Hasura.Eventing.HTTP
 import           Hasura.HTTP
-import           Hasura.Prelude
 import           Hasura.RQL.DDL.Headers
 import           Hasura.RQL.Types
-import           Hasura.SQL.Types
-import           Hasura.Server.Version                (HasVersion)
-import qualified Hasura.Tracing                       as Tracing
-
-import qualified Control.Concurrent.Async.Lifted.Safe as LA
-import qualified Data.ByteString.Lazy                 as LBS
-import qualified Data.HashMap.Strict                  as M
-import qualified Data.TByteString                     as TBS
-import qualified Data.Text                            as T
-import qualified Data.Time.Clock                      as Time
-import qualified Database.PG.Query                    as Q
-import qualified Database.PG.Query.PTI                as PTI
-import qualified Hasura.Logging                       as L
-import qualified Network.HTTP.Client                  as HTTP
-import qualified PostgreSQL.Binary.Encoding           as PE
+import           Hasura.Server.Version                  (HasVersion)
 
 data TriggerMetadata
   = TriggerMetadata { tmName :: TriggerName }
   deriving (Show, Eq)
 
-$(deriveJSON (aesonDrop 2 snakeCase){omitNothingFields=True} ''TriggerMetadata)
+$(deriveJSON hasuraJSON{omitNothingFields=True} ''TriggerMetadata)
 
 newtype EventInternalErr
   = EventInternalErr QErr
@@ -94,15 +97,16 @@ instance L.ToEngineLog EventInternalErr L.Hasura where
 -- https://docs.hasura.io/1.0/graphql/manual/event-triggers/payload.html
 data Event
   = Event
-  { eId        :: EventId
-  , eTable     :: QualifiedTable
-  , eTrigger   :: TriggerMetadata
-  , eEvent     :: Value
-  , eTries     :: Int
-  , eCreatedAt :: Time.UTCTime
+  { eId        :: !EventId
+  , eSource    :: !SourceName
+  , eTable     :: !QualifiedTable
+  , eTrigger   :: !TriggerMetadata
+  , eEvent     :: !Value
+  , eTries     :: !Int
+  , eCreatedAt :: !Time.UTCTime
   } deriving (Show, Eq)
 
-$(deriveFromJSON (aesonDrop 1 snakeCase){omitNothingFields=True} ''Event)
+$(deriveFromJSON hasuraJSON{omitNothingFields=True} ''Event)
 
 data EventEngineCtx
   = EventEngineCtx
@@ -116,7 +120,7 @@ data DeliveryInfo
   , diMaxRetries   :: Int
   } deriving (Show, Eq)
 
-$(deriveJSON (aesonDrop 2 snakeCase){omitNothingFields=True} ''DeliveryInfo)
+$(deriveJSON hasuraJSON{omitNothingFields=True} ''DeliveryInfo)
 
 newtype QualifiedTableStrict = QualifiedTableStrict
   { getQualifiedTable :: QualifiedTable
@@ -138,7 +142,7 @@ data EventPayload
   , epCreatedAt    :: Time.UTCTime
   } deriving (Show, Eq)
 
-$(deriveToJSON (aesonDrop 2 snakeCase){omitNothingFields=True} ''EventPayload)
+$(deriveToJSON hasuraJSON{omitNothingFields=True} ''EventPayload)
 
 defaultMaxEventThreads :: Int
 defaultMaxEventThreads = 100
@@ -150,6 +154,8 @@ initEventEngineCtx :: Int -> DiffTime -> STM EventEngineCtx
 initEventEngineCtx maxT _eeCtxFetchInterval = do
   _eeCtxEventThreadsCapacity <- newTVar maxT
   return $ EventEngineCtx{..}
+
+type EventWithSource = (Event, SourceConfig 'Postgres)
 
 -- | Service events from our in-DB queue.
 --
@@ -172,29 +178,42 @@ processEventQueue
   => L.Logger L.Hasura
   -> LogEnvHeaders
   -> HTTP.Manager
-  -> Q.PGPool
   -> IO SchemaCache
   -> EventEngineCtx
   -> LockedEventsCtx
   -> m void
-processEventQueue logger logenv httpMgr pool getSchemaCache eeCtx@EventEngineCtx{..} LockedEventsCtx{leEvents} = do
+processEventQueue logger logenv httpMgr getSchemaCache eeCtx@EventEngineCtx{..} LockedEventsCtx{leEvents} = do
   events0 <- popEventsBatch
   go events0 0 False
   where
     fetchBatchSize = 100
     popEventsBatch = do
-      let run = liftIO . runExceptT . Q.runTx pool (Q.RepeatableRead, Just Q.ReadWrite)
-      run (fetchEvents fetchBatchSize) >>= \case
-          Left err -> do
-            liftIO $ L.unLogger logger $ EventInternalErr err
-            return []
-          Right events -> do
-            saveLockedEvents (map eId events) leEvents
-            return events
+      {-
+        SELECT FOR UPDATE .. SKIP LOCKED can throw serialization errors in RepeatableRead: https://stackoverflow.com/a/53289263/1911889
+        We can avoid this safely by running it in ReadCommitted as Postgres will recheck the
+        predicate condition if a row is updated concurrently: https://www.postgresql.org/docs/9.5/transaction-iso.html#XACT-READ-COMMITTED
+
+        Every other action on an event_log row (like post-processing, archival, etc) are single writes (no R-W or W-R)
+        so it is safe to perform them in ReadCommitted as well (the writes will then acquire some serial order).
+        Any serial order of updates to a row will lead to an eventually consistent state as the row will have
+        (delivered=t or error=t or archived=t) after a fixed number of tries (assuming it begins with locked='f').
+      -}
+      pgSources <- scPostgres <$> liftIO getSchemaCache
+      fmap concat $ forM (M.toList pgSources) $ \(sourceName, sourceCache) ->
+        case unsafeSourceConfiguration @'Postgres sourceCache of
+          Nothing           -> pure []
+          Just sourceConfig ->
+            liftIO $ runPgSourceWriteTx sourceConfig (fetchEvents sourceName fetchBatchSize) >>= \case
+              Left err -> do
+                liftIO $ L.unLogger logger $ EventInternalErr err
+                return []
+              Right events -> do
+                saveLockedEvents (map eId events) leEvents
+                return $ map (, sourceConfig) events
 
     -- work on this batch of events while prefetching the next. Recurse after we've forked workers
     -- for each in the batch, minding the requested pool size.
-    go :: [Event] -> Int -> Bool -> m void
+    go :: [EventWithSource] -> Int -> Bool -> m void
     go events !fullFetchCount !alreadyWarned = do
       -- process events ASAP until we've caught up; only then can we sleep
       when (null events) . liftIO $ sleep _eeCtxFetchInterval
@@ -204,8 +223,8 @@ processEventQueue logger logenv httpMgr pool getSchemaCache eeCtx@EventEngineCtx
       -- worth the effort for something more fine-tuned
       eventsNext <- LA.withAsync popEventsBatch $ \eventsNextA -> do
         -- process approximately in order, minding HASURA_GRAPHQL_EVENTS_HTTP_POOL_SIZE:
-        forM_ events $ \event -> do
-          t <- processEvent event
+        forM_ events $ \(event, sourceConfig) -> do
+          t <- processEvent event sourceConfig
             & withEventEngineCtx eeCtx
             & flip runReaderT (logger, httpMgr)
             & LA.async
@@ -244,8 +263,8 @@ processEventQueue logger logenv httpMgr pool getSchemaCache eeCtx@EventEngineCtx
          , Has (L.Logger L.Hasura) r
          , Tracing.HasReporter io
          )
-      => Event -> io ()
-    processEvent e = do
+      => Event -> SourceConfig 'Postgres -> io ()
+    processEvent e sourceConfig = do
       cache <- liftIO getSchemaCache
 
       tracingCtx <- liftIO (Tracing.extractEventContext (eEvent e))
@@ -261,7 +280,7 @@ processEventQueue logger logenv httpMgr pool getSchemaCache eeCtx@EventEngineCtx
           --  i) schema cache is not up-to-date (due to some bug, say during schema syncing across multiple instances)
           --  ii) the event trigger is dropped when this event was just fetched
           logQErr $ err500 Unexpected err
-          liftIO . runExceptT $ Q.runTx pool (Q.ReadCommitted, Just Q.ReadWrite) $ do
+          liftIO $ runPgSourceWriteTx sourceConfig $ do
             currentTime <- liftIO getCurrentTime
             -- For such an event, we unlock the event and retry after a minute
             setRetry e (addUTCTime 60 currentTime)
@@ -282,8 +301,8 @@ processEventQueue logger logenv httpMgr pool getSchemaCache eeCtx@EventEngineCtx
           logHTTPForET res extraLogCtx requestDetails
           let decodedHeaders = map (decodeHeader logenv headerInfos) headers
           either
-            (processError pool e retryConf decodedHeaders ep)
-            (processSuccess pool e decodedHeaders ep) res
+            (processError sourceConfig e retryConf decodedHeaders ep)
+            (processSuccess sourceConfig e decodedHeaders ep) res
             >>= flip onLeft logQErr
 
 withEventEngineCtx ::
@@ -318,22 +337,22 @@ createEventPayload retryConf e = EventPayload
 
 processSuccess
   :: ( MonadIO m )
-  => Q.PGPool -> Event -> [HeaderConf] -> EventPayload -> HTTPResp a
+  => SourceConfig 'Postgres -> Event -> [HeaderConf] -> EventPayload -> HTTPResp a
   -> m (Either QErr ())
-processSuccess pool e decodedHeaders ep resp = do
+processSuccess sourceConfig e decodedHeaders ep resp = do
   let respBody = hrsBody resp
       respHeaders = hrsHeaders resp
       respStatus = hrsStatus resp
       invocation = mkInvocation ep respStatus decodedHeaders respBody respHeaders
-  liftIO $ runExceptT $ Q.runTx pool (Q.ReadCommitted, Just Q.ReadWrite) $ do
+  liftIO $ runPgSourceWriteTx sourceConfig $ do
     insertInvocation invocation
     setSuccess e
 
 processError
   :: ( MonadIO m )
-  => Q.PGPool -> Event -> RetryConf -> [HeaderConf] -> EventPayload -> HTTPErr a
+  => SourceConfig 'Postgres -> Event -> RetryConf -> [HeaderConf] -> EventPayload -> HTTPErr a
   -> m (Either QErr ())
-processError pool e retryConf decodedHeaders ep err = do
+processError sourceConfig e retryConf decodedHeaders ep err = do
   let invocation = case err of
         HClient excp -> do
           let errMsg = TBS.fromLBS $ encode $ show excp
@@ -347,9 +366,9 @@ processError pool e retryConf decodedHeaders ep err = do
               respStatus = hrsStatus errResp
           mkInvocation ep respStatus decodedHeaders respPayload respHeaders
         HOther detail -> do
-          let errMsg = (TBS.fromLBS $ encode detail)
+          let errMsg = TBS.fromLBS $ encode detail
           mkInvocation ep 500 decodedHeaders errMsg []
-  liftIO $ runExceptT $ Q.runTx pool (Q.ReadCommitted, Just Q.ReadWrite) $ do
+  liftIO $ runPgSourceWriteTx sourceConfig $ do
     insertInvocation invocation
     retryOrSetError e retryConf err
 
@@ -378,7 +397,7 @@ retryOrSetError e retryConf err = do
 
 mkInvocation
   :: EventPayload -> Int -> [HeaderConf] -> TBS.TByteString -> [HeaderConf]
-  -> (Invocation 'EventType)
+  -> Invocation 'EventType
 mkInvocation ep status reqHeaders respBody respHeaders
   = let resp = if isClientError status
           then mkClientErr respBody
@@ -398,7 +417,7 @@ logQErr err = do
 getEventTriggerInfoFromEvent :: SchemaCache -> Event -> Either Text EventTriggerInfo
 getEventTriggerInfoFromEvent sc e = do
   let table = eTable e
-      mTableInfo = M.lookup table $ scTables sc
+      mTableInfo = unsafeTableInfo @'Postgres (eSource e) table $ scPostgres sc
   tableInfo <- onNothing mTableInfo $ Left ("table '" <> table <<> "' not found")
   let triggerName = tmName $ eTrigger e
       mEventTriggerInfo = M.lookup triggerName (_tiEventTriggerInfoMap tableInfo)
@@ -415,8 +434,8 @@ getEventTriggerInfoFromEvent sc e = do
 -- limit. Process events approximately in created_at order, but we make no
 -- ordering guarentees; events can and will race. Nevertheless we want to
 -- ensure newer change events don't starve older ones.
-fetchEvents :: Int -> Q.TxE QErr [Event]
-fetchEvents limitI =
+fetchEvents :: SourceName -> Int -> Q.TxE QErr [Event]
+fetchEvents source limitI =
   map uncurryEvent <$> Q.listQE defaultTxErrorHandler [Q.sql|
       UPDATE hdb_catalog.event_log
       SET locked = NOW()
@@ -434,6 +453,7 @@ fetchEvents limitI =
   where uncurryEvent (id', sn, tn, trn, Q.AltJ payload, tries, created) =
           Event
           { eId        = id'
+          , eSource    = source
           , eTable     = QualifiedObject sn tn
           , eTrigger   = TriggerMetadata trn
           , eEvent     = payload
@@ -494,7 +514,7 @@ toInt64 = fromIntegral
 newtype EventIdArray = EventIdArray { unEventIdArray :: [EventId]} deriving (Show, Eq)
 
 instance Q.ToPrepArg EventIdArray where
-  toPrepVal (EventIdArray l) = Q.toPrepValHelper PTI.unknown encoder $ l
+  toPrepVal (EventIdArray l) = Q.toPrepValHelper PTI.unknown encoder $ map unEventId l
     where
       -- 25 is the OID value of TEXT, https://jdbc.postgresql.org/development/privateapi/constant-values.html
       encoder = PE.array 25 . PE.dimensionArray foldl' (PE.encodingArray . PE.text_strict)
@@ -503,7 +523,7 @@ instance Q.ToPrepArg EventIdArray where
 --   when a graceful shutdown is initiated.
 unlockEvents :: [EventId] -> Q.TxE QErr Int
 unlockEvents eventIds =
-   (runIdentity . Q.getRow) <$> Q.withQE defaultTxErrorHandler
+   runIdentity . Q.getRow <$> Q.withQE defaultTxErrorHandler
    [Q.sql|
      WITH "cte" AS
      (UPDATE hdb_catalog.event_log

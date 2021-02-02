@@ -102,7 +102,7 @@ instance Applicative (Traversal a r) where
     Yield v k -> Yield v ((<*> tx) . k)
 
 traversal :: (Traversable t) => t a -> Traversal a b (t b)
-traversal = traverse (flip Yield Done)
+traversal = traverse (`Yield` Done)
 
 -- | 'traverse' lifted to arrows. See also Note [Weird control operator types].
 traverseA :: (ArrowChoice arr, Traversable t) => arr (e, (a, s)) b -> arr (e, (t a, s)) (t b)

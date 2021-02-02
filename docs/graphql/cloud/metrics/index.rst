@@ -33,3 +33,4 @@ Learn more
    operations
    websockets
    subscription-workers
+   Integrations <integrations/index>

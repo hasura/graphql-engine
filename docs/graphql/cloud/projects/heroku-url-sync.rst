@@ -17,6 +17,11 @@ Introduction
 
 Hasura cloud can keep your project's database URL i.e. the ``HASURA_GRAPHQL_DATABASE_URL`` env var in sync with Postgres from a Heroku app. This is especially helpful in cases when the database credentials of Heroku Postgres are rotated automatically by Heroku.
 
+
+.. note::
+   
+   The database sync automatically gets disconnected if you transfer the ownership of your project to another account. The new project owner can restart the sync with the Heroku account that they have connected their Hasura Cloud account to.
+
 Enable Heroku database URL Sync
 -------------------------------
 

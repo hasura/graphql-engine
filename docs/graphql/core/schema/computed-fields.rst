@@ -15,9 +15,9 @@ Computed fields
 What are computed fields?
 -------------------------
 
-Computed fields are virtual values or objects that are dynamically computed and can be queried along with a table's
+Computed fields are virtual values or objects that are dynamically computed and can be queried along with a table/view's
 columns. Computed fields are computed when requested for via `custom SQL functions <https://www.postgresql.org/docs/current/sql-createfunction.html>`__
-(a.k.a. stored procedures) using other columns of the table and other custom inputs if needed.
+(a.k.a. stored procedures) using other columns of the table/view and other custom inputs if needed.
 
 .. note::
 
@@ -27,7 +27,7 @@ columns. Computed fields are computed when requested for via `custom SQL functio
 Supported SQL functions
 ***********************
 
-Only functions which satisfy the following constraints can be added as a computed field to a table.
+Only functions which satisfy the following constraints can be added as a computed field to a table/view.
 (*terminology from* `Postgres docs <https://www.postgresql.org/docs/current/sql-createfunction.html>`__):
 
 - **Function behaviour**: ONLY ``STABLE`` or ``IMMUTABLE``
@@ -174,22 +174,23 @@ Query data from the ``author`` table:
 
 .. _add-computed-field:
 
-Adding a computed field to a table
-----------------------------------
+Adding a computed field to a table/view
+---------------------------------------
 
 .. rst-class:: api_tabs
 .. tabs::
 
   .. tab:: Console
 
-     Head to the ``Modify`` tab of the table and click on the ``Add`` button in the ``Computed fields``
+     Head to the ``Modify`` tab of the table/view and click on the ``Add`` button in the ``Computed fields``
      section:
 
      .. thumbnail:: /img/graphql/core/schema/computed-field-create.png
 
      .. admonition:: Supported from
 
-       Console support is available in ``v1.1.0`` and above
+       - Console support for tables is available in ``v1.1.0`` and above
+       - Console support for views is available in ``v1.3.0`` and above
 
   .. tab:: CLI
 
@@ -218,7 +219,7 @@ Adding a computed field to a table
 
   .. tab:: API
 
-     A computed field can be added to a table using the :ref:`add_computed_field metadata API <api_computed_field>`:
+     A computed field can be added to a table/view using the :ref:`add_computed_field metadata API <api_computed_field>`:
 
      .. code-block:: http
 
@@ -334,9 +335,7 @@ as shown in the following example.
 
 .. admonition:: Supported from
 
-   This feature is available in ``v1.3.0-beta.1`` and above
-
-   .. This feature is available in ``v1.3.0`` and above
+   This feature is available in ``v1.3.0`` and above
 
 Computed fields vs. Postgres generated columns
 ----------------------------------------------

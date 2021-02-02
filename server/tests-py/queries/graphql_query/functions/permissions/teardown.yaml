@@ -1,0 +1,9 @@
+type: bulk
+args:
+
+- type: run_sql
+  args:
+    sql: |
+      DROP TABLE article cascade;
+      DROP TABLE author cascade;
+    cascade: true

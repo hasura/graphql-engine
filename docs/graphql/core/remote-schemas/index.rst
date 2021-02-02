@@ -57,6 +57,7 @@ You can create remote relationships between your tables and tables from your rem
 
 .. toctree::
    :maxdepth: 1
- 
+
    adding-schema
    schema-auth
+   remote-schema-permissions

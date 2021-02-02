@@ -14,6 +14,7 @@ func NewScriptsCmd(ec *cli.ExecutionContext) *cobra.Command {
 	}
 	scriptsCmd.AddCommand(
 		newScriptsUpdateConfigV2Cmd(ec),
+		newUpdateMultipleSources(ec),
 	)
 	return scriptsCmd
 }
