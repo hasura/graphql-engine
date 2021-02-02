@@ -1,11 +1,11 @@
 module Data.TimeSpec (spec) where
 -- | Time-related properties we care about.
 
-import Prelude
-import Data.Time.Clock.Units
-import Data.Time
-import Data.Aeson
-import Test.Hspec
+import           Data.Aeson
+import           Data.Time
+import           Data.Time.Clock.Units
+import           Prelude
+import           Test.Hspec
 
 spec :: Spec
 spec = do
@@ -31,9 +31,9 @@ timeUnitsSpec =
       toJSON (1 :: Seconds) `shouldBe` Number 1
       decode "1.0" `shouldBe` Just (1 :: Seconds)
 
-    it "converts with fromUnits" $ do
-      fromUnits (2 :: Minutes) `shouldBe` (120 :: NominalDiffTime)
-      fromUnits (60 :: Seconds) `shouldBe` (1 :: Minutes)
+    it "converts with convertDuration" $ do
+      convertDuration (2 :: Minutes) `shouldBe` (120 :: NominalDiffTime)
+      convertDuration (60 :: Seconds) `shouldBe` (1 :: Minutes)
 
 diffTimeSpec :: Spec
 diffTimeSpec =

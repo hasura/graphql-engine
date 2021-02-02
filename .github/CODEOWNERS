@@ -3,7 +3,7 @@
 *         @hasura/hge-changelog-owners
 
 # server code owners
-/server/  @hasura/hge-server-owners
+/server/  @hasura/hge-server
 
 # docs code owners
 /docs/    @hasura/hge-docs-owners
@@ -13,4 +13,3 @@
 
 # console code owners
 /console/ @hasura/hge-console-owners
-

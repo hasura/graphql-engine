@@ -1,10 +1,11 @@
 import React from 'react';
 
-import SearchableSelectBox from '../../../Common/SearchableSelect/SearchableSelect';
 import CustomInputAutoSuggest from '../../../Common/CustomInputAutoSuggest/CustomInputAutoSuggest';
 
-import { getValidAlterOptions } from './utils';
+import { getValidAlterOptions, convertToArrayOptions } from './utils';
 import Tooltip from '../../../Common/Tooltip/Tooltip';
+import { ColumnTypeSelector } from '../Common/Components/ColumnTypeSelector';
+import { dataSource } from '../../../../dataSources';
 
 const ColumnEditor = ({
   onSubmit,
@@ -15,7 +16,7 @@ const ColumnEditor = ({
   alterTypeOptions,
   defaultOptions,
 }) => {
-  const colName = columnProperties.name;
+  const { name: colName, isArrayDataType } = columnProperties;
 
   if (!selectedProperties[colName]) {
     return null;
@@ -30,7 +31,11 @@ const ColumnEditor = ({
       selectedProperties[colName].type
     );
   };
-  const columnTypePG = getColumnType();
+  // todo — data-sources
+  let columnTypePG = getColumnType();
+  if (columnProperties.display_type_name === dataSource.columnDataTypes.ARRAY) {
+    columnTypePG = columnTypePG.replace('_', '') + '[]';
+  }
 
   const customSelectBoxStyles = {
     dropdownIndicator: {
@@ -47,10 +52,16 @@ const ColumnEditor = ({
     },
   };
 
-  const { alterOptions, alterOptionsValueMap } = getValidAlterOptions(
+  // eslint-disable-next-line prefer-const
+  let { alterOptions, alterOptionsValueMap } = getValidAlterOptions(
     alterTypeOptions,
     colName
   );
+
+  // todo — data-sources
+  if (isArrayDataType) {
+    alterOptions = convertToArrayOptions(alterOptions);
+  }
 
   const updateColumnName = e => {
     dispatch(editColumn(colName, 'name', e.target.value));
@@ -110,7 +121,6 @@ const ColumnEditor = ({
         value={selectedProperties[colName].default || ''}
         onChange={updateColumnDefault}
         type="text"
-        disabled={columnProperties.pkConstraint}
         data-test="edit-col-default"
         theme={theme}
       />
@@ -135,14 +145,13 @@ const ColumnEditor = ({
         <div className={`${styles.display_flex} form-group`}>
           <label className={'col-xs-4'}>Type</label>
           <div className="col-xs-6">
-            <SearchableSelectBox
+            <ColumnTypeSelector
               options={alterOptions}
               onChange={updateColumnType}
-              value={columnTypePG && alterOptionsValueMap[columnTypePG]}
+              value={alterOptionsValueMap[columnTypePG] || columnTypePG}
+              colIdentifier={0}
               bsClass={`col-type-${0} modify_select`}
               styleOverrides={customSelectBoxStyles}
-              filterOption={'prefix'}
-              placeholder="column_type"
             />
           </div>
         </div>
@@ -166,7 +175,12 @@ const ColumnEditor = ({
           <div className="col-xs-6">
             <select
               className="input-sm form-control"
-              value={selectedProperties[colName].isUnique}
+              value={
+                !!(
+                  selectedProperties[colName].isUnique ||
+                  columnProperties.isOnlyPrimaryKey
+                )
+              }
               onChange={toggleColumnUnique}
               disabled={columnProperties.pkConstraint}
               data-test="edit-col-unique"

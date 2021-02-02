@@ -5,8 +5,27 @@ response:
   errors:
   - extensions:
       internal:
-        webhook_response:
-          name: Alice
+        error: unexpected response
+        response:
+          status: 200
+          body:
+            name: Alice
+          headers:
+          - value: application/json
+            name: Content-Type
+          - value: abcd
+            name: Set-Cookie
+        request:
+          body:
+            session_variables:
+              x-hasura-role: admin
+            input:
+              arg:
+                name: Alice
+            action:
+              name: mirror
+          url: http://127.0.0.1:5593/mirror-action
+          headers: []
       path: $
       code: unexpected
     message: field "id" expected in webhook response, but not found

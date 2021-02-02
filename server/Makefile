@@ -5,7 +5,7 @@ export VERSION
 
 registry := hasura
 packager_ver := 20190731
-pg_dump_ver := 12
+pg_dump_ver := 13
 build_output := /build/_server_output
 
 # Getting access to the built products with the `cabal v2-*` commands is really awkward; see
@@ -43,8 +43,8 @@ ci-build:
 	# Copy the .mix files needed for `hpc` to generate code coverage reports into the build output
 	# directory, only if coverage is enabled (the mix files aren't generated otherwise).
 	if [[ -n '$(enable_coverage)' ]]; then \
-	  mkdir -p '$(build_output)/mix/' && \
-	  shopt -s failglob globstar && cp -R $(mix_dirs_glob) '$(build_output)/mix/'; \
+		mkdir -p '$(build_output)/mix/' && \
+		shopt -s failglob globstar && cp -R $(mix_dirs_glob) '$(build_output)/mix/'; \
 	fi
 
 # assumes this is built in circleci

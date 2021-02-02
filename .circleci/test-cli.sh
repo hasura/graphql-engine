@@ -21,25 +21,25 @@ mkdir -p /build/_cli_output
 touch /build/_cli_output/server.log
 touch /build/_cli_output/server-secret.log
 
+export HASURA_GRAPHQL_DATABASE_URL='postgres://gql_test@localhost:5432/gql_test'
 # start graphql-engine without admin secret
-/build/_server_output/graphql-engine \
-    --database-url postgres://gql_test@localhost:5432/gql_test serve > /build/_cli_output/server.log 2>&1 &
+/build/_server_output/graphql-engine serve > /build/_cli_output/server.log 2>&1 &
 PID=$!
 
 wait_for_port 8080
 
 # test cli
-HASURA_GRAPHQL_TEST_ENDPOINT="http://localhost:8080" TEST_TAGS="test_plugins" make test
+HASURA_GRAPHQL_TEST_ENDPOINT="http://localhost:8080" 	HASURA_GRAPHQL_TEST_CLI_EXT_MANIFEST_FILE_PATH="/build/_cli_ext_output/manifest-dev.yaml" make test
 kill -s INT $PID
 
 # start graphql-engine with admin secret
 psql -U gql_test -h localhost -c 'CREATE DATABASE "gql_test_with_admin_secret";'
-/build/_server_output/graphql-engine \
-    --database-url postgres://gql_test@localhost:5432/gql_test_with_admin_secret serve --admin-secret "abcd" > /build/_cli_output/server-secret.log 2>&1 &
+export HASURA_GRAPHQL_DATABASE_URL='postgres://gql_test@localhost:5432/gql_test_with_admin_secret'
+/build/_server_output/graphql-engine serve --admin-secret "abcd" > /build/_cli_output/server-secret.log 2>&1 &
 PID=$!
 
 wait_for_port 8080
 
 # test cli
-HASURA_GRAPHQL_TEST_ENDPOINT="http://localhost:8080" HASURA_GRAPHQL_TEST_ADMIN_SECRET="abcd" make test
+HASURA_GRAPHQL_TEST_ENDPOINT="http://localhost:8080" HASURA_GRAPHQL_TEST_CLI_EXT_MANIFEST_FILE_PATH="/build/_cli_ext_output/manifest-dev.yaml" HASURA_GRAPHQL_TEST_ADMIN_SECRET="abcd" make test
 kill -s INT $PID

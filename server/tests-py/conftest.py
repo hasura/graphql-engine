@@ -83,6 +83,13 @@ def pytest_addoption(parser):
     )
 
     parser.addoption(
+        "--test-function-permissions",
+        action="store_true",
+        required=False,
+        help="Run manual function permission tests"
+    )
+
+    parser.addoption(
         "--test-jwk-url",
         action="store_true",
         default=False,
@@ -134,6 +141,19 @@ This option may result in test failures if the schema has to change between the 
         metavar="<path>",
         required=False,
         help="When used along with collect-only, it will write the list of upgrade tests into the file specified"
+    )
+
+    parser.addoption(
+        "--test-unauthorized-role",
+        action="store_true",
+        help="Run testcases for unauthorized role",
+    )
+
+    parser.addoption(
+        "--enable-remote-schema-permissions",
+        action="store_true",
+        default=False,
+        help="Flag to indicate if the graphql-engine has enabled remote schema permissions",
     )
 
 #By default,
@@ -271,10 +291,27 @@ def actions_fixture(hge_ctx):
     web_server.join()
 
 @pytest.fixture(scope='class')
+def functions_permissions_fixtures(hge_ctx):
+    if not hge_ctx.function_permissions:
+        pytest.skip('These tests are meant to be run with --test-function-permissions set')
+        return
+
+@pytest.fixture(scope='class')
+def scheduled_triggers_evts_webhook(request):
+    webhook_httpd = EvtsWebhookServer(server_address=('127.0.0.1', 5594))
+    web_server = threading.Thread(target=webhook_httpd.serve_forever)
+    web_server.start()
+    yield webhook_httpd
+    webhook_httpd.shutdown()
+    webhook_httpd.server_close()
+    web_server.join()
+
+@pytest.fixture(scope='class')
 def gql_server(request, hge_ctx):
     server = HGECtxGQLServer(request.config.getoption('--pg-urls'), 5991)
     yield server
     server.teardown()
+
 
 @pytest.fixture(scope='class')
 def ws_client(request, hge_ctx):

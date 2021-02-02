@@ -1,6 +1,10 @@
 /* eslint-disable */
 import globals from '../../../../Globals';
-import { CODEGEN_REPO, ALL_FRAMEWORKS_FILE_PATH } from '../constants';
+import {
+  CODEGEN_REPO,
+  ALL_FRAMEWORKS_FILE_PATH,
+  BASE_CODEGEN_PATH,
+} from '../constants';
 import endpoints from '../../../../Endpoints';
 
 const {
@@ -14,34 +18,33 @@ const {
   isScalarType,
 } = require('graphql');
 const { camelize } = require('inflection');
-import { getPersistedDerivedAction } from '../lsUtils';
+import { getPersistedDerivedAction } from '../utils';
+import requestAction from '../../../../utils/requestAction';
+import requestActionPlain from '../../../../utils/requestActionPlain';
 
 export const getCodegenFilePath = framework => {
-  return `${globals.assetsPath}/common/codegen/${framework}/actions-codegen.js`;
+  return `${BASE_CODEGEN_PATH}/${framework}/actions-codegen.js`;
 };
 
 export const getStarterKitPath = framework => {
   return `https://github.com/${CODEGEN_REPO}/tree/master/${framework}/starter-kit/`;
 };
 
+export const getStarterKitDownloadPath = framework => {
+  return `https://github.com/${CODEGEN_REPO}/raw/master/${framework}/${framework}.zip`;
+};
 export const getGlitchProjectURL = () => {
   return 'https://glitch.com/edit/?utm_content=project_hasura-actions-starter-kit&utm_source=remix_this&utm_medium=button&utm_campaign=glitchButton#!/remix/hasura-actions-starter-kit';
 };
 
 export const GLITCH_PROJECT_URL = '';
 
-export const getAllCodegenFrameworks = () => {
-  return fetch(ALL_FRAMEWORKS_FILE_PATH)
-    .then(r => r.json())
-    .catch(e => {
-      console.error('could not fetch the latest codegen file');
-      throw e;
-    });
+export const getAllCodegenFrameworks = dispatch => {
+  return dispatch(requestAction(ALL_FRAMEWORKS_FILE_PATH, {}));
 };
 
-export const getCodegenFunc = framework => {
-  return fetch(getCodegenFilePath(framework))
-    .then(r => r.text())
+export const getCodegenFunc = (framework, dispatch) => {
+  return dispatch(requestActionPlain(getCodegenFilePath(framework)))
     .then(rawJsString => {
       const { codegen } = require('@graphql-codegen/core');
       const typescriptPlugin = require('@graphql-codegen/typescript');
@@ -58,9 +61,10 @@ export const getFrameworkCodegen = (
   framework,
   actionName,
   actionsSdl,
-  parentOperation
+  parentOperation,
+  dispatch
 ) => {
-  return getCodegenFunc(framework)
+  return getCodegenFunc(framework, dispatch)
     .then(codegenerator => {
       const derive = {
         operation: parentOperation,

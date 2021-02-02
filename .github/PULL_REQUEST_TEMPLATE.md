@@ -7,7 +7,7 @@
 
 ### Changelog
 
-- [ ] `CHANGELOG.md` is updated with user-facing content relevant to this PR.
+- [ ] `CHANGELOG.md` is updated with user-facing content relevant to this PR. If no changelog is required, then add the `no-changelog-required` label.
 
 ### Affected components
 <!-- Remove non-affected components from the list -->

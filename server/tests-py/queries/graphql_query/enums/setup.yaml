@@ -1,6 +1,9 @@
 type: bulk
 args:
 
+
+  # A user can query only code but not country
+
 - type: run_sql
   args:
     sql: |
@@ -23,12 +26,34 @@ args:
         ('Alyssa', 'red'),
         ('Ben', 'blue');
 
+      CREATE TABLE country
+        ( value text PRIMARY KEY
+        , comment text);
+      INSERT INTO country (value, comment) VALUES
+        ('India', 'Republic of India'),
+        ('USA',   'United States of America');
+
+      CREATE TABLE zones
+        ( id SERIAL
+        , code text NOT NULL
+        , country text NOT NULL REFERENCES country
+        , PRIMARY KEY (code, country) );
+      INSERT INTO zones (code, country) VALUES
+        ('67432',   'USA'),
+        ('600036',  'India');
+
 - type: track_table
   args:
     table: colors
     is_enum: true
 - type: track_table
   args: users
+- type: track_table
+  args:
+    table: country
+    is_enum: true
+- type: track_table
+  args: zones
 
 # Anonymous users can query users, but not colors
 - type: create_select_permission
@@ -37,4 +62,13 @@ args:
     role: anonymous
     permission:
       columns: [id, name, favorite_color]
+      filter: {}
+
+# A user can query only code but not country
+- type: create_select_permission
+  args:
+    table: zones
+    role: user
+    permission:
+      columns: [id, code]
       filter: {}

@@ -1,11 +1,11 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 
-import SearchableSelectBox from '../../../Common/SearchableSelect/SearchableSelect';
-import { commonDataTypes } from '../utils';
 import { getDataOptions, inferDefaultValues } from '../Common/utils';
 
 import TableColumnDefault from './TableColumnDefault';
+import { ColumnTypeSelector } from '../Common/Components/ColumnTypeSelector';
+import { dataSource } from '../../../../dataSources';
 
 /* Custom style object for searchable select box */
 const customSelectBoxStyles = {
@@ -55,7 +55,7 @@ const TableColumn = props => {
     onColTypeChange(selectedOption.colIdentifier, selectedOption.value);
   };
   const { columnDataTypes, columnTypeValueMap } = getDataOptions(
-    commonDataTypes,
+    dataSource.commonDataTypes,
     restTypes,
     i
   );
@@ -99,14 +99,15 @@ const TableColumn = props => {
         className={`${styles.inputDefault} ${styles.defaultWidth}`}
         data-test={`col-type-${i}`}
       >
-        <SearchableSelectBox
+        <ColumnTypeSelector
           options={columnDataTypes}
           onChange={handleColTypeChange}
-          value={column.type && columnTypeValueMap[column.type]}
+          value={
+            (column.type && columnTypeValueMap[column.type]) || column.type
+          }
+          colIdentifier={i}
           bsClass={`col-type-${i} add_table_column_selector`}
           styleOverrides={customSelectBoxStyles}
-          filterOption={'prefix'}
-          placeholder="column_type"
         />
       </span>
       <span className={`${styles.inputDefault} ${styles.defaultWidth}`}>
@@ -118,44 +119,32 @@ const TableColumn = props => {
           colDefaultFunctions={defaultFunctions}
         />
       </span>
-      {/*
-      <input
-        placeholder={getPlaceholder(column)}
-        type="text"
-        value={getDefaultValue(column)}
-        className={`${styles.inputDefault} ${
-          styles.defaultWidth
-        } form-control ${styles.add_pad_left}`}
-        onChange={setColDefaultValue.bind(
-          undefined,
-          i,
-          column.nullable || false
-        )}
-        data-test={`col-default-${i}`}
-      />
-      */}{' '}
-      <input
-        className={`${styles.inputCheckbox} form-control `}
-        checked={column.nullable}
-        type="checkbox"
-        onChange={onColNullableChange.bind(undefined, i)}
-        data-test={`nullable-${i}`}
-      />{' '}
-      <label>Nullable</label>
-      <input
-        className={`${styles.inputCheckbox} form-control `}
-        checked={isColumnUnique}
-        type="checkbox"
-        onChange={onColUniqueChange.bind(
-          undefined,
-          i,
-          numUniqueKeys,
-          isColumnUnique,
-          _uindex
-        )}
-        data-test={`unique-${i.toString()}`}
-      />{' '}
-      <label>Unique</label>
+      <label>
+        <input
+          className={styles.inputCheckbox}
+          checked={column.nullable}
+          type="checkbox"
+          onChange={onColNullableChange.bind(undefined, i)}
+          data-test={`nullable-${i}`}
+        />
+        Nullable
+      </label>
+      <label>
+        <input
+          className={styles.inputCheckbox}
+          checked={isColumnUnique}
+          type="checkbox"
+          onChange={onColUniqueChange.bind(
+            undefined,
+            i,
+            numUniqueKeys,
+            isColumnUnique,
+            _uindex
+          )}
+          data-test={`unique-${i.toString()}`}
+        />
+        Unique
+      </label>
       {getRemoveIcon(colLength)}
     </div>
   );

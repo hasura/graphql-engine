@@ -13,11 +13,9 @@ import qualified Data.Aeson        as J
 import qualified Data.Aeson.Casing as J
 import qualified Data.Aeson.TH     as J
 import qualified Data.Aeson.Types  as J
-import qualified Data.Text         as T
 import qualified Data.Vector       as V
 
 import           Control.Monad
-import           Data.Maybe        (maybeToList)
 import           Hasura.Prelude
 
 data Position
@@ -133,7 +131,7 @@ data GeometryWithCRS
   , _gwcCrs  :: !(Maybe CRS)
   } deriving (Show, Eq)
 
-encToCoords :: (J.ToJSON a) => T.Text -> a -> Maybe CRS -> J.Value
+encToCoords :: (J.ToJSON a) => Text -> a -> Maybe CRS -> J.Value
 encToCoords ty a Nothing =
   J.object [ "type" J..= ty, "coordinates" J..= a]
 encToCoords ty a (Just crs) =
@@ -148,7 +146,7 @@ instance J.ToJSON GeometryWithCRS where
     GPolygon o            -> encToCoords "Polygon" o crsM
     GMultiPolygon o       -> encToCoords "MultiPolygon" o crsM
     GGeometryCollection o ->
-      J.object [ "type" J..= ("GeometryCollection"::T.Text)
+      J.object [ "type" J..= ("GeometryCollection"::Text)
                , "geometries" J..= o
                ]
 
@@ -183,8 +181,8 @@ data CRS
   | CRSLink !CRSLinkProps
   deriving (Show, Eq)
 
-$(J.deriveJSON (J.aesonDrop 4 J.camelCase) ''CRSNameProps)
-$(J.deriveJSON (J.aesonDrop 4 J.camelCase) ''CRSLinkProps)
+$(J.deriveJSON (J.aesonPrefix J.camelCase) ''CRSNameProps)
+$(J.deriveJSON (J.aesonPrefix J.camelCase) ''CRSLinkProps)
 $(J.deriveJSON
   J.defaultOptions { J.constructorTagModifier = J.camelCase . drop 3
                    , J.sumEncoding = J.TaggedObject "type" "properties"

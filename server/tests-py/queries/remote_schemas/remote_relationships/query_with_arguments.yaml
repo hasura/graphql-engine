@@ -1,0 +1,27 @@
+description: Remote relationship GraphQL query with variables
+url: /v1/graphql
+status: 200
+response:
+  data:
+    profiles:
+      - id: 1
+        messagesNestedArgs:
+          - id: 1
+            msg: You win!
+      - id: 2
+        messagesNestedArgs: []
+      - id: 3
+        messagesNestedArgs:
+          - id: 3
+            msg: Another alice
+query:
+  query: |
+    query {
+      profiles {
+        id
+        messagesNestedArgs(where: { name: { eq:  "alice" } }) {
+          id
+          msg
+        }
+      }
+    }

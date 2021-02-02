@@ -5,20 +5,21 @@ module Hasura.Server.Auth.WebHook
   , userInfoFromAuthHook
   ) where
 
-import           Control.Exception         (try)
+import           Control.Exception.Lifted    (try)
 import           Control.Lens
+import           Control.Monad.Trans.Control (MonadBaseControl)
 import           Control.Monad.Trans.Maybe
 import           Data.Aeson
-import           Data.Time.Clock           (UTCTime, addUTCTime, getCurrentTime)
-import           Hasura.Server.Version     (HasVersion)
+import           Data.Time.Clock             (UTCTime, addUTCTime, getCurrentTime)
+import           Hasura.Server.Version       (HasVersion)
 
-import qualified Data.Aeson                as J
-import qualified Data.ByteString.Lazy      as BL
-import qualified Data.HashMap.Strict       as Map
-import qualified Data.Text                 as T
-import qualified Network.HTTP.Client       as H
-import qualified Network.HTTP.Types        as N
-import qualified Network.Wreq              as Wreq
+import qualified Data.Aeson                  as J
+import qualified Data.ByteString.Lazy        as BL
+import qualified Data.HashMap.Strict         as Map
+import qualified Data.Text                   as T
+import qualified Network.HTTP.Client         as H
+import qualified Network.HTTP.Types          as N
+import qualified Network.Wreq                as Wreq
 
 import           Data.Parser.CacheControl
 import           Data.Parser.Expires
@@ -28,7 +29,8 @@ import           Hasura.Prelude
 import           Hasura.RQL.Types
 import           Hasura.Server.Logging
 import           Hasura.Server.Utils
-
+import           Hasura.Session
+import qualified Hasura.Tracing              as Tracing
 
 data AuthHookType
   = AHTGet
@@ -46,7 +48,7 @@ data AuthHookG a b
   , ahType :: !b
   } deriving (Show, Eq)
 
-type AuthHook = AuthHookG T.Text AuthHookType
+type AuthHook = AuthHookG Text AuthHookType
 
 hookMethod :: AuthHook -> N.StdMethod
 hookMethod authHook = case ahType authHook of
@@ -58,42 +60,49 @@ hookMethod authHook = case ahType authHook of
 --   UserInfo parsed from the response, plus an expiration time if one
 --   was returned.
 userInfoFromAuthHook
-  :: (HasVersion, MonadIO m, MonadError QErr m)
+  :: forall m
+   . (HasVersion, MonadIO m, MonadBaseControl IO m, MonadError QErr m, Tracing.MonadTrace m)
   => Logger Hasura
   -> H.Manager
   -> AuthHook
   -> [N.Header]
   -> m (UserInfo, Maybe UTCTime)
 userInfoFromAuthHook logger manager hook reqHeaders = do
-  resp <- (`onLeft` logAndThrow) =<< liftIO (try performHTTPRequest)
+  resp <- (`onLeft` logAndThrow) =<< try performHTTPRequest
   let status   = resp ^. Wreq.responseStatus
       respBody = resp ^. Wreq.responseBody
   mkUserInfoFromResp logger (ahUrl hook) (hookMethod hook) status respBody
   where
-    performHTTPRequest = do
+    performHTTPRequest :: m (Wreq.Response BL.ByteString)
+    performHTTPRequest =  do
       let url = T.unpack $ ahUrl hook
-          mkOptions = wreqOptions manager
-      case ahType hook of
-        AHTGet  -> do
-          let isCommonHeader  = (`elem` commonClientHeadersIgnored)
-              filteredHeaders = filter (not . isCommonHeader . fst) reqHeaders
-          Wreq.getWith (mkOptions filteredHeaders) url
-        AHTPost -> do
-          let contentType    = ("Content-Type", "application/json")
-              headersPayload = J.toJSON $ Map.fromList $ hdrsToText reqHeaders
-          Wreq.postWith (mkOptions [contentType]) url $ object ["headers" J..= headersPayload]
+      req <- liftIO $ H.parseRequest url
+      Tracing.tracedHttpRequest req \req' -> liftIO do
+        case ahType hook of
+          AHTGet  -> do
+            let isCommonHeader  = (`elem` commonClientHeadersIgnored)
+                filteredHeaders = filter (not . isCommonHeader . fst) reqHeaders
+            H.httpLbs (req' { H.requestHeaders = addDefaultHeaders filteredHeaders }) manager
+          AHTPost -> do
+            let contentType = ("Content-Type", "application/json")
+                headersPayload = J.toJSON $ Map.fromList $ hdrsToText reqHeaders
+            H.httpLbs (req' { H.method         = "POST"
+                           , H.requestHeaders = addDefaultHeaders [contentType]
+                           , H.requestBody    = H.RequestBodyLBS . J.encode $ object ["headers" J..= headersPayload]
+                           }) manager
 
+    logAndThrow :: H.HttpException -> m a
     logAndThrow err = do
       unLogger logger $
         WebHookLog LevelError Nothing (ahUrl hook) (hookMethod hook)
         (Just $ HttpException err) Nothing Nothing
-      throw500 $ "webhook authentication request failed"
+      throw500 "webhook authentication request failed"
 
 
 mkUserInfoFromResp
   :: (MonadIO m, MonadError QErr m)
   => Logger Hasura
-  -> T.Text
+  -> Text
   -> N.StdMethod
   -> N.Status
   -> BL.ByteString
@@ -115,17 +124,13 @@ mkUserInfoFromResp (Logger logger) url method statusCode respBody
     throw500 "Invalid response from authorization hook"
   where
     getUserInfoFromHdrs rawHeaders = do
-      let usrVars = mkUserVars $ Map.toList rawHeaders
-      case roleFromVars usrVars of
-        Nothing -> do
-          logError
-          throw500 "missing x-hasura-role key in webhook response"
-        Just rn -> do
-          logWebHookResp LevelInfo Nothing Nothing
-          expiration <- runMaybeT $ timeFromCacheControl rawHeaders <|> timeFromExpires rawHeaders
-          return (mkUserInfo rn usrVars, expiration)
+      userInfo <- mkUserInfo URBFromSessionVariables UAdminSecretNotSent $
+                  mkSessionVariablesText rawHeaders
+      logWebHookResp LevelInfo Nothing Nothing
+      expiration <- runMaybeT $ timeFromCacheControl rawHeaders <|> timeFromExpires rawHeaders
+      pure (userInfo, expiration)
 
-    logWebHookResp :: MonadIO m => LogLevel -> Maybe BL.ByteString -> Maybe T.Text -> m ()
+    logWebHookResp :: MonadIO m => LogLevel -> Maybe BL.ByteString -> Maybe Text -> m ()
     logWebHookResp logLevel mResp message =
       logger $ WebHookLog logLevel (Just statusCode)
         url method Nothing (bsToTxt . BL.toStrict <$> mResp) message

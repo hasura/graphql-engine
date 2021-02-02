@@ -3,11 +3,13 @@ package commands
 import (
 	"bytes"
 	"fmt"
+	"os"
 	"text/tabwriter"
+
+	"github.com/hasura/graphql-engine/cli/util"
 
 	"github.com/hasura/graphql-engine/cli"
 	"github.com/hasura/graphql-engine/cli/migrate"
-	"github.com/hasura/graphql-engine/cli/util"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 )
@@ -27,26 +29,27 @@ func newMigrateStatusCmd(ec *cli.ExecutionContext) *cobra.Command {
 		SilenceUsage: true,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			opts.EC.Spin("Fetching migration status...")
+			opts.Datasource = ec.Datasource
 			status, err := opts.Run()
 			opts.EC.Spinner.Stop()
 			if err != nil {
 				return err
 			}
 			buf := printStatus(status)
-			fmt.Println(buf.String())
+			fmt.Fprintf(os.Stdout, "%s", buf)
 			return nil
 		},
 	}
-
 	return migrateStatusCmd
 }
 
 type MigrateStatusOptions struct {
-	EC *cli.ExecutionContext
+	EC         *cli.ExecutionContext
+	Datasource string
 }
 
 func (o *MigrateStatusOptions) Run() (*migrate.Status, error) {
-	migrateDrv, err := newMigrate(o.EC, true)
+	migrateDrv, err := migrate.NewMigrate(o.EC, true, o.Datasource)
 	if err != nil {
 		return nil, err
 	}
@@ -62,13 +65,14 @@ func printStatus(status *migrate.Status) *bytes.Buffer {
 	buf := &bytes.Buffer{}
 	out.Init(buf, 0, 8, 2, ' ', 0)
 	w := util.NewPrefixWriter(out)
-	w.Write(util.LEVEL_0, "VERSION\tNAME\tSOURCE STATUS\tDATABASE STATUS\n")
+	w.Write(util.LEVEL_0, "VERSION\tNAME\tSOURCE STATUS\tDATABASE STATUS\tDIRTY\n")
 	for _, version := range status.Index {
-		w.Write(util.LEVEL_0, "%d\t%s\t%s\t%s\n",
+		w.Write(util.LEVEL_0, "%d\t%s\t%s\t%s\t%t\n",
 			version,
 			status.Migrations[version].Name,
 			convertBool(status.Migrations[version].IsPresent),
 			convertBool(status.Migrations[version].IsApplied),
+			status.Migrations[version].IsDirty,
 		)
 	}
 	out.Flush()

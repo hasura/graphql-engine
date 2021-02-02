@@ -7,20 +7,16 @@ import Endpoints, { globalCookiePolicy } from '../../../../Endpoints';
 import requestAction from '../../../../utils/requestAction';
 import dataHeaders from '../Common/Headers';
 
-import globals from '../../../../Globals';
-
-import returnMigrateUrl from '../Common/getMigrateUrl';
-import { CLI_CONSOLE_MODE, SERVER_CONSOLE_MODE } from '../../../../constants';
-import { loadMigrationStatus } from '../../../Main/Actions';
-import { handleMigrationErrors } from '../../EventTrigger/EventActions';
-
-import { showSuccessNotification } from '../../Common/Notification';
-
-import { fetchTrackedFunctions } from '../DataActions';
-
 import _push from '../push';
 import { getSchemaBaseRoute } from '../../../Common/utils/routesUtils';
+import { dataSource } from '../../../../dataSources';
+import { exportMetadata } from '../../../../metadata/actions';
 import { getRunSqlQuery } from '../../../Common/utils/v1QueryUtils';
+import {
+  getUntrackFunctionQuery,
+  getTrackFunctionQuery,
+} from '../../../../metadata/queryUtils';
+import { makeRequest } from '../../RemoteSchema/Actions';
 
 /* Constants */
 
@@ -38,123 +34,41 @@ const UNTRACKING_CUSTOM_FUNCTION = '@customFunction/UNTRACKING_CUSTOM_FUNCTION';
 const UNTRACK_CUSTOM_FUNCTION_FAIL =
   '@customFunction/UNTRACK_CUSTOM_FUNCTION_FAIL';
 
-/* */
-
-const makeRequest = (
-  upQueries,
-  downQueries,
-  migrationName,
-  customOnSuccess,
-  customOnError,
-  requestMsg,
-  successMsg,
-  errorMsg
-) => {
-  return (dispatch, getState) => {
-    const upQuery = {
-      type: 'bulk',
-      args: upQueries,
-    };
-
-    const downQuery = {
-      type: 'bulk',
-      args: downQueries,
-    };
-
-    const migrationBody = {
-      name: migrationName,
-      up: upQuery.args,
-      down: downQuery.args,
-    };
-
-    const currMigrationMode = getState().main.migrationMode;
-
-    const migrateUrl = returnMigrateUrl(currMigrationMode);
-
-    let finalReqBody;
-    if (globals.consoleMode === SERVER_CONSOLE_MODE) {
-      finalReqBody = upQuery;
-    } else if (globals.consoleMode === CLI_CONSOLE_MODE) {
-      finalReqBody = migrationBody;
-    }
-    const url = migrateUrl;
-    const options = {
-      method: 'POST',
-      credentials: globalCookiePolicy,
-      headers: dataHeaders(getState),
-      body: JSON.stringify(finalReqBody),
-    };
-
-    const onSuccess = data => {
-      if (globals.consoleMode === CLI_CONSOLE_MODE) {
-        dispatch(loadMigrationStatus()); // don't call for server mode
-      }
-      if (successMsg) {
-        dispatch(showSuccessNotification(successMsg));
-      }
-      customOnSuccess(data);
-    };
-
-    const onError = err => {
-      dispatch(handleMigrationErrors(errorMsg, err));
-      customOnError(err);
-    };
-
-    dispatch(showSuccessNotification(requestMsg));
-    return dispatch(requestAction(url, options)).then(onSuccess, onError);
-  };
-};
+const SESSVAR_CUSTOM_FUNCTION_REQUEST =
+  '@customFunction/SESSVAR_CUSTOM_FUNCTION_REQUEST';
+const SESSVAR_CUSTOM_FUNCTION_ADD_FAIL =
+  '@customFunction/SESSVAR_CUSTOM_FUNCTION_ADD_FAIL';
+const SESSVAR_CUSTOM_FUNCTION_ADD_SUCCESS =
+  '@customFunction/SESSVAR_CUSTOM_FUNCTION_ADD_SUCCESS';
 
 /* Action creators */
-const fetchCustomFunction = (functionName, schema) => {
+const fetchCustomFunction = (functionName, schema, source) => {
   return (dispatch, getState) => {
-    const url = Endpoints.getSchema;
-    const fetchCustomFunctionQuery = {
-      type: 'select',
-      args: {
-        table: {
-          name: 'hdb_function',
-          schema: 'hdb_catalog',
-        },
-        columns: ['*'],
-        where: {
-          function_schema: schema,
-          function_name: functionName,
-        },
-      },
-    };
-    const fetchCustomFunctionDefinition = {
-      type: 'select',
-      args: {
-        table: {
-          name: 'hdb_function_agg',
-          schema: 'hdb_catalog',
-        },
-        columns: ['*'],
-        where: {
-          function_schema: schema,
-          function_name: functionName,
-        },
-      },
-    };
+    const url = Endpoints.query;
+    const fetchCustomFunctionDefinition = getRunSqlQuery(
+      dataSource.getFunctionDefinitionSql(schema, functionName),
+      source
+    );
 
-    const bulkQuery = {
-      type: 'bulk',
-      args: [fetchCustomFunctionQuery, fetchCustomFunctionDefinition],
-    };
     const options = {
       credentials: globalCookiePolicy,
       method: 'POST',
       headers: dataHeaders(getState),
-      body: JSON.stringify(bulkQuery),
+      body: JSON.stringify(fetchCustomFunctionDefinition),
     };
     dispatch({ type: FETCHING_INDIV_CUSTOM_FUNCTION });
     return dispatch(requestAction(url, options)).then(
-      data => {
-        if (data[0].length > 0 && data[1].length > 0) {
+      ({ result }) => {
+        if (result.length > 1) {
+          let funDefinition = {};
+          try {
+            funDefinition = JSON.parse(result[1])[0];
+          } catch (err) {
+            return dispatch({ type: CUSTOM_FUNCTION_FETCH_FAIL, data: err });
+          }
           dispatch({
             type: CUSTOM_FUNCTION_FETCH_SUCCESS,
-            data: [[...data[0]], [...data[1]]],
+            data: funDefinition,
           });
           return Promise.resolve();
         }
@@ -167,59 +81,86 @@ const fetchCustomFunction = (functionName, schema) => {
   };
 };
 
-const deleteFunctionSql = () => {
+const deleteFunction = () => (dispatch, getState) => {
+  const currentSchema = getState().tables.currentSchema;
+  const { functionName, functionDefinition } = getState().functions;
+  const source = getState().tables.currentDataSource;
+  const upSql = dataSource.deleteFunctionSql(
+    currentSchema,
+    getState().functions
+  );
+
+  const sqlUpQueries = [getRunSqlQuery(upSql, source)];
+  const sqlDownQueries = [];
+  if (functionDefinition && functionDefinition.length > 0) {
+    sqlDownQueries.push(getRunSqlQuery(functionDefinition, source));
+  }
+
+  // Apply migrations
+  const migrationName = `drop_function_${currentSchema}_${functionName}`;
+
+  const requestMsg = 'Deleting function...';
+  const successMsg = 'Function deleted';
+  const errorMsg = 'Deleting function failed';
+
+  const customOnSuccess = () =>
+    dispatch(_push(getSchemaBaseRoute(currentSchema, source)));
+  const customOnError = () => dispatch({ type: DELETE_CUSTOM_FUNCTION_FAIL });
+
+  dispatch({ type: DELETING_CUSTOM_FUNCTION });
+  return dispatch(
+    makeRequest(
+      sqlUpQueries,
+      sqlDownQueries,
+      migrationName,
+      customOnSuccess,
+      customOnError,
+      requestMsg,
+      successMsg,
+      errorMsg
+    )
+  );
+};
+
+const unTrackCustomFunction = () => {
   return (dispatch, getState) => {
     const currentSchema = getState().tables.currentSchema;
-    const {
+    const currentDataSource = getState().tables.currentDataSource;
+    const { functionName, configuration } = getState().functions;
+
+    const migrationName = 'remove_custom_function_' + functionName;
+    const payload = getUntrackFunctionQuery(
       functionName,
-      functionDefinition,
-      inputArgTypes,
-    } = getState().functions;
+      currentSchema,
+      currentDataSource
+    );
+    const downPayload = getTrackFunctionQuery(
+      functionName,
+      currentSchema,
+      currentDataSource,
+      configuration
+    );
 
-    const functionNameWithSchema =
-      '"' + currentSchema + '"' + '.' + '"' + functionName + '"';
-
-    let functionArgString = '';
-    if (inputArgTypes.length > 0) {
-      functionArgString += '(';
-      inputArgTypes.forEach((inputArg, i) => {
-        functionArgString += i > 0 ? ', ' : '';
-
-        functionArgString +=
-          '"' + inputArg.schema + '"' + '.' + '"' + inputArg.name + '"';
-      });
-      functionArgString += ')';
-    }
-
-    const sqlDropFunction =
-      'DROP FUNCTION ' + functionNameWithSchema + functionArgString;
-
-    const sqlUpQueries = [getRunSqlQuery(sqlDropFunction)];
-
-    const sqlDownQueries = [];
-    if (functionDefinition && functionDefinition.length > 0) {
-      sqlDownQueries.push(getRunSqlQuery(functionDefinition));
-    }
-
-    // Apply migrations
-    const migrationName = 'drop_function_' + currentSchema + '_' + functionName;
-
-    const requestMsg = 'Deleting function...';
-    const successMsg = 'Function deleted';
-    const errorMsg = 'Deleting function failed';
+    const requestMsg = 'Deleting custom function...';
+    const successMsg = 'Custom function deleted successfully';
+    const errorMsg = 'Delete custom function failed';
 
     const customOnSuccess = () => {
-      dispatch(_push(getSchemaBaseRoute(currentSchema)));
+      dispatch(_push(getSchemaBaseRoute(currentSchema, currentDataSource)));
+      dispatch({ type: RESET });
+      dispatch(exportMetadata());
     };
-    const customOnError = () => {
-      dispatch({ type: DELETE_CUSTOM_FUNCTION_FAIL });
+    const customOnError = error => {
+      Promise.all([
+        dispatch({ type: UNTRACK_CUSTOM_FUNCTION_FAIL, data: error }),
+      ]);
     };
 
-    dispatch({ type: DELETING_CUSTOM_FUNCTION });
+    dispatch({ type: UNTRACKING_CUSTOM_FUNCTION });
     return dispatch(
       makeRequest(
-        sqlUpQueries,
-        sqlDownQueries,
+        [payload],
+        [downPayload],
         migrationName,
         customOnSuccess,
         customOnError,
@@ -230,61 +171,72 @@ const deleteFunctionSql = () => {
     );
   };
 };
-
-const unTrackCustomFunction = () => {
+const updateSessVar = session_argument => {
   return (dispatch, getState) => {
     const currentSchema = getState().tables.currentSchema;
+    const currentDataSource = getState().tables.currentDataSource;
     const functionName = getState().functions.functionName;
-    // const url = Endpoints.getSchema;
-    /*
-    const customFunctionObj = {
-      function_name: functionName,
-    };
-    */
-    const migrationName = 'remove_custom_function_' + functionName;
-    const payload = {
-      type: 'untrack_function',
-      args: {
-        name: functionName,
-        schema: currentSchema,
-      },
-    };
-    const downPayload = {
-      type: 'track_function',
-      args: {
-        name: functionName,
-        schema: currentSchema,
-      },
-    };
+    const oldConfiguration = getState().functions.configuration;
 
-    const upQueryArgs = [];
-    upQueryArgs.push(payload);
-    const downQueryArgs = [];
-    downQueryArgs.push(downPayload);
+    const migrationName = 'update_session_arg_custom_function_' + functionName;
+
+    //untrack function first
+    const untrackPayloadUp = getUntrackFunctionQuery(
+      functionName,
+      currentSchema,
+      currentDataSource
+    );
+    const retrackPayloadDown = getTrackFunctionQuery(
+      functionName,
+      currentSchema,
+      currentDataSource,
+      {
+        ...(oldConfiguration && oldConfiguration),
+      }
+    );
+
+    // retrack with sess arg config
+    const retrackPayloadUp = getTrackFunctionQuery(
+      functionName,
+      currentSchema,
+      currentDataSource,
+      {
+        ...(session_argument && {
+          session_argument,
+        }),
+      }
+    );
+
+    const untrackPayloadDown = getUntrackFunctionQuery(
+      functionName,
+      currentSchema,
+      currentDataSource
+    );
+
     const upQuery = {
       type: 'bulk',
-      args: upQueryArgs,
+      source: currentDataSource,
+      args: [untrackPayloadUp, retrackPayloadUp],
     };
+
     const downQuery = {
       type: 'bulk',
-      args: downQueryArgs,
+      source: currentDataSource,
+      args: [untrackPayloadDown, retrackPayloadDown],
     };
-    const requestMsg = 'Deleting custom function...';
-    const successMsg = 'Custom function deleted successfully';
-    const errorMsg = 'Delete custom function failed';
+
+    const requestMsg = 'Updating Session argument variable...';
+    const successMsg = 'Session variable argument updated successfully';
+    const errorMsg = 'Updating Session argument variable failed';
 
     const customOnSuccess = () => {
-      dispatch(_push(getSchemaBaseRoute(currentSchema)));
-      dispatch({ type: RESET });
-      dispatch(fetchTrackedFunctions());
+      dispatch(exportMetadata());
     };
     const customOnError = error => {
-      Promise.all([
-        dispatch({ type: UNTRACK_CUSTOM_FUNCTION_FAIL, data: error }),
-      ]);
+      dispatch({ type: SESSVAR_CUSTOM_FUNCTION_ADD_FAIL, data: error });
     };
 
-    dispatch({ type: UNTRACKING_CUSTOM_FUNCTION });
+    dispatch({ type: SESSVAR_CUSTOM_FUNCTION_REQUEST });
     return dispatch(
       makeRequest(
         upQuery.args,
@@ -319,14 +271,15 @@ const customFunctionReducer = (state = functionData, action) => {
     case CUSTOM_FUNCTION_FETCH_SUCCESS:
       return {
         ...state,
-        functionName: action.data[0][0].function_name,
-        functionSchema: action.data[0][0].function_schema || null,
-        functionDefinition: action.data[1][0].function_definition || null,
-        setOffTable: action.data[1][0].return_type_name || null,
-        setOffTableSchema: action.data[1][0].return_type_schema || null,
-        inputArgNames: action.data[1][0].input_arg_names || null,
-        inputArgTypes: action.data[1][0].input_arg_types || null,
+        functionName: action?.data?.function_name,
+        functionSchema: action?.data?.function_schema || null,
+        functionDefinition: action?.data?.function_definition || null,
+        setOffTable: action?.data?.return_type_name || null,
+        setOffTableSchema: action?.data?.return_type_schema || null,
+        inputArgNames: action?.data?.input_arg_names || null,
+        inputArgTypes: action?.data?.input_arg_types || null,
         isFetching: false,
+        isUpdating: false,
         isFetchError: null,
       };
     case CUSTOM_FUNCTION_FETCH_FAIL:
@@ -360,6 +313,24 @@ const customFunctionReducer = (state = functionData, action) => {
         isUntracking: true,
         isError: null,
       };
+    case SESSVAR_CUSTOM_FUNCTION_REQUEST:
+      return {
+        ...state,
+        isUpdating: true,
+        isError: null,
+      };
+    case SESSVAR_CUSTOM_FUNCTION_ADD_FAIL:
+      return {
+        ...state,
+        isUpdating: false,
+        isError: action.data,
+      };
+    case SESSVAR_CUSTOM_FUNCTION_ADD_SUCCESS:
+      return {
+        ...state,
+        isUpdating: false,
+        isError: null,
+      };
     default:
       return {
         ...state,
@@ -369,5 +340,11 @@ const customFunctionReducer = (state = functionData, action) => {
 
 /* End of it */
 
-export { RESET, fetchCustomFunction, deleteFunctionSql, unTrackCustomFunction };
+export {
+  RESET,
+  fetchCustomFunction,
+  unTrackCustomFunction,
+  updateSessVar,
+  deleteFunction,
+};
 export default customFunctionReducer;

@@ -1,3 +1,5 @@
+import { getDefaultFilterType } from '../TablePermissions/utils';
+
 export const getAllRoles = allTableSchemas => {
   const _allRoles = [];
 
@@ -26,19 +28,16 @@ export const getTablePermissionsByRoles = tableSchema => {
   return tablePermissionsByRoles;
 };
 
-const getQueryFilterKey = query => {
-  return query === 'insert' ? 'check' : 'filter';
-};
-
 export const getPermissionFilterString = (
   permission,
   query,
-  pretty = false
+  pretty = false,
+  filterType
 ) => {
-  const filterKey = getQueryFilterKey(query);
+  const filterKey = filterType || getDefaultFilterType(query);
 
   let filterString = '';
-  if (permission) {
+  if (permission && permission[filterKey]) {
     filterString = pretty
       ? JSON.stringify(permission[filterKey], null, 2)
       : JSON.stringify(permission[filterKey]);

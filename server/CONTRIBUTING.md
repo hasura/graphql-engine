@@ -5,17 +5,19 @@ own machine and how to contribute.
 
 ## Pre-requisites
 
-- [GHC](https://www.haskell.org/ghc/) 8.6.5 and [cabal-install](https://cabal.readthedocs.io/en/latest/)
+- [GHC](https://www.haskell.org/ghc/) 8.10.2 and [cabal-install](https://cabal.readthedocs.io/en/latest/)
   - There are various ways these can be installed, but [ghcup](https://www.haskell.org/ghcup/) is a good choice if you’re not sure.
 - [Node.js](https://nodejs.org/en/) (>= v8.9)
 - npm >= 5.7
 - [gsutil](https://cloud.google.com/storage/docs/gsutil)
 - libpq-dev
-- python >= 3.5 with pip3
+- libkrb5-dev
+- openssl and libssl-dev
+- python >= 3.5 with pip3 and virtualenv
 
-The last two prerequisites can be installed on Debian with:
+The last few prerequisites can be installed on Debian or Ubuntu with:
 
-    $ sudo apt install libpq-dev python3 python3-pip python3-venv
+    $ sudo apt install libpq-dev libkrb5-dev python3 python3-pip python3-venv openssl libssl-dev
 
 Additionally, you will need a way to run a Postgres database server. The `dev.sh` script (described below) can set up a Postgres instance for you via [Docker](https://www.docker.com), but if you want to run it yourself, you’ll need:
 
@@ -52,6 +54,24 @@ After making your changes
     $ cabal new-update
     $ cabal new-build
 
+To set up the project configuration to coincide with the testing scripts below, thus avoiding recompilation when testing locally, rather use `cabal.project.dev-sh.local` instead of `cabal.project.dev`:
+
+    $ ln -s cabal.project.dev-sh.local cabal.project.local
+
+### IDE Support
+
+You may want to use [hls](https://github.com/haskell/haskell-language-server)/[ghcide](https://github.com/haskell/ghcide) if your editor has LSP support. A sample configuration has been provided which can be used as follows:
+
+```
+ln -s sample.hie.yaml hie.yaml
+```
+
+If you have to customise any of the options for ghcide/hls, you should instead copy the sample file and make necessary changes in `hie.yaml` file. Note that `hie.yaml` is gitignored so the changes will be specific to your machine.
+
+```
+cp sample.hie.yaml hie.yaml
+```
+
 ### Run and test via `dev.sh`
 
 The `dev.sh` script in the top-level `scripts/` directory is a turnkey solution to build, run, and
@@ -73,7 +93,7 @@ You can run the test suite with:
 
     $ scripts/dev.sh test
 
-This should run in isolation.
+This should run in isolation.  The output format is described in the [pytest documentation](https://docs.pytest.org/en/latest/usage.html#detailed-summary-report).  Errors and failures are indicated by `F`s and `E`s.
 
 ### Run and test manually
 
@@ -110,16 +130,13 @@ cabal new-run -- test:graphql-engine-tests \
 
 ##### Running the Python test suite
 
-1. To run the Python tests, you’ll need to install the necessary Python dependencies first. It is
-   recommended that you do this in a self-contained Python venv, which is supported by Python 3.3+
-   out of the box. To create one, run:
+1. To run the Python tests, you’ll need to install the necessary Python dependencies first. It is recommended that you do this in a self-contained Python venv, which is supported by Python 3.3+ out of the box. To create one, run:
 
    ```
    python3 -m venv .python-venv
    ```
 
-   (The second argument names a directory where the venv sandbox will be created; it can be anything
-   you like, but `.python-venv` is `.gitignore`d.)
+   (The second argument names a directory where the venv sandbox will be created; it can be anything you like, but `.python-venv` is `.gitignore`d.)
 
    With the venv created, you can enter into it in your current shell session by running:
 
@@ -135,11 +152,18 @@ cabal new-run -- test:graphql-engine-tests \
    pip3 install -r tests-py/requirements.txt
    ```
 
-3. Start an instance of `graphql-engine` for the test suite to use:
+3. Install the dependencies for the Node server used by the remote schema tests:
+
+   ```
+   (cd tests-py/remote_schemas/nodejs && npm ci)
+   ```
+
+4. Start an instance of `graphql-engine` for the test suite to use:
 
    ```
    env EVENT_WEBHOOK_HEADER=MyEnvValue \
        WEBHOOK_FROM_ENV=http://localhost:5592/ \
+       SCHEDULED_TRIGGERS_WEBHOOK_DOMAIN=http://127.0.0.1:5594 \
      cabal new-run -- exe:graphql-engine \
        --database-url='postgres://<user>:<password>@<host>:<port>/<dbname>' \
        serve --stringify-numeric-types
@@ -147,7 +171,7 @@ cabal new-run -- test:graphql-engine-tests \
 
    The environment variables are needed for a couple tests, and the `--stringify-numeric-types` option is used to avoid the need to do floating-point comparisons.
 
-4. With the server running, run the test suite:
+5. With the server running, run the test suite:
 
    ```
    cd tests-py
@@ -176,4 +200,5 @@ This helps enforce a uniform style for all committers.
 
 - Compiler warnings are turned on, make sure your code has no warnings.
 - Use [hlint](https://github.com/ndmitchell/hlint) to make sure your code has no warnings.
+  You can use our custom hlint config with `$ hlint --hint=server/.hlint.yaml .`
 - Use [stylish-haskell](https://github.com/jaspervdj/stylish-haskell) to format your code.

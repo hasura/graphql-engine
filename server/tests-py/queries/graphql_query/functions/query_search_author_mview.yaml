@@ -1,0 +1,18 @@
+description: Custom GraphQL query using search_author_mview function which returns results from a materialized view
+url: /v1/graphql
+status: 200
+response:
+  data:
+    search_author_mview:
+    - first_name: franz
+      last_name: kafka
+query:
+  query: |
+    query {
+      search_author_mview(
+        args: {query: "kafka"}
+      ) {
+        first_name
+        last_name
+      }
+    }

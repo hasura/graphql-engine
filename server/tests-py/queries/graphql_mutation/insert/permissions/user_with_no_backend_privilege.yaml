@@ -1,0 +1,24 @@
+description: As backend user and without backend only permissions
+url: /v1/graphql
+status: 200
+headers:
+  X-Hasura-Role: backend_user
+  X-Hasura-Use-Backend-Only-Permissions: 'false'
+response:
+  errors:
+  - extensions:
+      path: $.selectionSet.insert_user
+      code: validation-failed
+    message: "field \"insert_user\" not found in type: 'mutation_root'"
+
+query:
+  query: |
+    mutation {
+      insert_user(objects: [
+        {
+          name: "FooBar"
+        }
+      ]){
+        affected_rows
+      }
+    }

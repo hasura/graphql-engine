@@ -1,0 +1,130 @@
+<html lang="en-us">
+<head>
+    <script>
+        window.__env = {
+            apiHost: {{.apiHost}},
+            apiPort: "{{.apiPort}}",
+            cliVersion: {{.cliVersion}},
+            dataApiUrl: {{.dataApiUrl}},
+            dataApiVersion: {{.dataApiVersion}},
+            {{- if .hasAccessKey }}
+            accessKey: {{.adminSecret}},
+            {{ else }}
+            adminSecret: {{.adminSecret}},
+            {{ end -}}
+            urlPrefix: {{.urlPrefix}},
+            consoleMode: "cli",
+            cliUUID: {{.cliUUID}},
+            enableTelemetry: {{.enableTelemetry}},
+            assetsPath:"https://graphql-engine-cdn.hasura.io/console/assets",
+            serverVersion: "{{.serverVersion}}",
+            migrateSkipExecution: {{.migrateSkipExecution}},
+            cdnAssets: {{.cdnAssets}},
+            assetsVersion: {{.assetsVersion}},
+            consolePath:{{.consolePath}},
+        };
+        window.__env.versionedAssetsPath = window.__env.assetsPath;
+    </script>
+</head>
+<body>
+<style>
+    .mainContent {
+        display: "none";
+        opacity: 0;
+        transition: opacity 0.2s linear;
+    }
+    .mainContent.show {
+        display: "block";
+        opacity: 1;
+        transition: opacity 0.2s linear;
+    }
+</style>
+
+<div id="loading">
+    <div
+            class="page-loading"
+            style="
+      min-height: 100vh;
+      width: 100%;
+      display: flex;
+      align-items: center;
+      font-family: sans-serif;
+      justify-content: center;
+      "
+    >
+        <span
+                class=""
+                style="
+        font-size: 2em;
+        margin-top: -3em;
+        color: #848484;
+        "
+        >
+          Loading...
+        </span>
+    </div>
+</div>
+<div id="content" class="mainContent"></div>
+
+<script>
+    // helper functions
+    const loadIcon = url => {
+        linkElem = document.createElement("link");
+        linkElem.rel = "icon";
+        linkElem.type = "image/png";
+        linkElem.href = url;
+        document.head.append(linkElem);
+    };
+    const loadCSS = url => {
+        linkElem = document.createElement("link");
+        linkElem.rel = "stylesheet";
+        linkElem.charset = "UTF-8";
+        linkElem.href = url;
+        document.body.append(linkElem);
+    };
+    const loadScript = url => {
+        scriptElem = document.createElement("script");
+        scriptElem.charset = "UTF-8";
+        scriptElem.src = url;
+        document.body.append(scriptElem);
+    };
+    const prependSlash = str => (str === "" ? "" : "/" + str);
+    const loadAssets = () => {
+        loadCSS(
+            window.__env.assetsPath + "/common/css/font-awesome.min.css.gz"
+        );
+        loadIcon(window.__env.assetsPath + "/common/img/favicon_green.png");
+        loadCSS(window.__env.versionedAssetsPath + "/main.css.gz");
+        loadScript(window.__env.versionedAssetsPath + "/main.js.gz");
+        loadScript(window.__env.versionedAssetsPath + "/vendor.js.gz");
+    };
+
+    // if cdnAssets is set to false, load assets from server instead of cdn
+    if (window.__env.cdnAssets === false) {
+        window.__env.assetsPath =
+            window.location.pathname.slice(
+                0,
+                window.location.pathname.lastIndexOf(window.__env.consolePath)
+            ) + "/console/assets";
+
+        if (window.__env.dataApiUrl) {
+            const serverAddress = window.__env.dataApiUrl
+                .toString()
+                .replace("v1/graphql");
+            window.__env.assetsPath = serverAddress + window.__env.assetsPath;
+        }
+        // set the path to get versioned assets from server
+        window.__env.versionedAssetsPath =
+            window.__env.assetsPath + "/versioned"
+
+        // otherwise load from cdn itself
+    } else {
+        // set the path (cdn-based) to get assets from
+        window.__env.versionedAssetsPath =
+            window.__env.assetsPath + prependSlash(window.__env.assetsVersion);
+    }
+    // load the assets now
+    loadAssets();
+</script>
+</body>
+</html>

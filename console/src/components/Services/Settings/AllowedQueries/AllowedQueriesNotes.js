@@ -8,8 +8,9 @@ class AllowedQueriesNotes extends React.Component {
         <div>
           If GraphQL Engine is started with the{' '}
           <code>HASURA_GRAPHQL_ENABLE_ALLOWLIST</code> env var or the{' '}
-          <code>--enable-allowlist</code> flag set to <i>true</i>, only queries
-          added to the allow-list will be allowed to be executed.&nbsp;
+          <code>--enable-allowlist</code> flag set to <i>true</i>, only
+          operations added to the allow-list will be allowed to be
+          executed.&nbsp;
           <a
             href="https://hasura.io/docs/1.0/graphql/manual/deployment/allow-list.html"
             target="_blank"
@@ -25,7 +26,7 @@ class AllowedQueriesNotes extends React.Component {
               className={styles.ul_left_small + ' ' + styles.add_mar_top_small}
             >
               <li>
-                All allowed queries need to have a unique name for reference
+                All allowed operations need to have a unique name for reference
               </li>
             </ul>
           </div>

@@ -1,0 +1,27 @@
+- description: Inserts in insertable view
+  url: /v1/graphql
+  status: 200
+  response:
+    data:
+      insert_person_mut_view:
+        returning:
+        - details:
+            name:
+              last: murphy
+              first: json
+
+  query:
+    query: |
+      mutation insert_person_mut_view{
+        insert_person_mut_view(
+          objects: [
+            {
+              details: {name: {first: json last: murphy}}
+            }
+          ]
+        ) {
+          returning {
+            details
+          }
+        }
+      }

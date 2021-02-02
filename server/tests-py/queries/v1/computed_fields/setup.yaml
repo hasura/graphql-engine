@@ -1,5 +1,6 @@
 type: bulk
 args:
+
 - type: run_sql
   args:
     sql: |
@@ -65,6 +66,11 @@ args:
       CREATE FUNCTION hello_world()
       RETURNS TEXT AS $$
         SELECT 'Hello, World!'::text
+      $$ LANGUAGE sql STABLE;
+
+      CREATE FUNCTION test_session(author_row author, key text, session json)
+      RETURNS TEXT AS $$
+        SELECT $3->>$2
       $$ LANGUAGE sql STABLE;
 
 - type: track_table

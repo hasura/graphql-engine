@@ -179,6 +179,11 @@ class ActionsWebhookHandler(http.server.BaseHTTPRequestHandler):
             resp, status = self.create_user()
             self._send_response(status, resp)
 
+        elif req_path == "/create-user-timeout":
+            time.sleep(3)
+            resp, status = self.create_user()
+            self._send_response(status, resp)
+
         elif req_path == "/create-users":
             resp, status = self.create_users()
             self._send_response(status, resp)
@@ -188,6 +193,14 @@ class ActionsWebhookHandler(http.server.BaseHTTPRequestHandler):
 
         elif req_path == "/mirror-action":
             resp, status = self.mirror_action()
+            self._send_response(status, resp)
+
+        elif req_path == "/get-user-by-email":
+            resp, status = self.get_users_by_email(True)
+            self._send_response(status, resp)
+
+        elif req_path == "/get-users-by-email":
+            resp, status = self.get_users_by_email(False)
             self._send_response(status, resp)
 
         else:
@@ -271,6 +284,40 @@ class ActionsWebhookHandler(http.server.BaseHTTPRequestHandler):
         response = self.req_json['input']['arg']
         return response, HTTPStatus.OK
 
+    def get_users_by_email(self, singleUser = False):
+        email = self.req_json['input']['email']
+        if not self.check_email(email):
+            response = {
+                'message': 'Given email address is not valid',
+                'code': 'invalid-email'
+            }
+            return response, HTTPStatus.BAD_REQUEST
+        gql_query = '''
+        query get_user($email:String!) {
+           user(where:{email:{_eq:$email}},order_by: {id: asc}) {
+            id
+        }
+        }
+        '''
+        query = {
+            'query': gql_query,
+            'variables':{
+                'email':email
+            }
+        }
+        code,resp = self.execute_query(query)
+        if code != 200 or 'data' not in resp:
+            response = {
+                'message': 'GraphQL query execution failed',
+                'code': 'unexpected'
+            }
+            return response, HTTPStatus.BAD_REQUEST
+        if singleUser:
+            return resp['data']['user'][0], HTTPStatus.OK
+        else:
+            return resp['data']['user'], HTTPStatus.OK
+
+
 
     def check_email(self, email):
         regex = '^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$'
@@ -286,7 +333,8 @@ class ActionsWebhookHandler(http.server.BaseHTTPRequestHandler):
         return code, resp
 
     def _send_response(self, status, body):
-        self.send_response(status)
+        self.log_request(status)
+        self.send_response_only(status)
         self.send_header('Content-Type', 'application/json')
         self.send_header('Set-Cookie', 'abcd')
         self.end_headers()
@@ -369,6 +417,9 @@ class EvtsWebhookServer(ThreadedHTTPServer):
             sz = sz + 1
         return sz
 
+    def is_queue_empty(self):
+        return self.resp_queue.empty
+
     def teardown(self):
         self.evt_trggr_httpd.shutdown()
         self.evt_trggr_httpd.server_close()
@@ -406,7 +457,7 @@ class HGECtx:
     def __init__(self, hge_url, pg_url, config):
 
         self.http = requests.Session()
-        self. hge_key = config.getoption('--hge-key')
+        self.hge_key = config.getoption('--hge-key')
         self.hge_url = hge_url
         self.pg_url = pg_url
         self.hge_webhook = config.getoption('--hge-webhook')
@@ -417,9 +468,12 @@ class HGECtx:
             with open(hge_jwt_key_file) as f:
                 self.hge_jwt_key = f.read()
         self.hge_jwt_conf = config.getoption('--hge-jwt-conf')
+        if self.hge_jwt_conf is not None:
+            self.hge_jwt_conf_dict = json.loads(self.hge_jwt_conf)
         self.webhook_insecure = config.getoption('--test-webhook-insecure')
         self.metadata_disabled = config.getoption('--test-metadata-disabled')
         self.may_skip_test_teardown = False
+        self.function_permissions = config.getoption('--test-function-permissions')
 
         self.engine = create_engine(self.pg_url)
         self.meta = MetaData()
@@ -451,12 +505,43 @@ class HGECtx:
     def reflect_tables(self):
         self.meta.reflect(bind=self.engine)
 
-    def anyq(self, u, q, h):
-        resp = self.http.post(
-            self.hge_url + u,
-            json=q,
-            headers=h
-        )
+    def anyq(self, u, q, h, b = None, v = None):
+        resp = None
+        if v == 'GET':
+          resp = self.http.get(
+              self.hge_url + u,
+              headers=h
+          )
+        elif v == 'POST' and b:
+          # TODO: Figure out why the requests are failing with a byte object passed in as `data`
+          resp = self.http.post(
+              self.hge_url + u,
+              data=b,
+              headers=h
+           )
+        elif v == 'PATCH' and b:
+          resp = self.http.patch(
+              self.hge_url + u,
+              data=b,
+              headers=h
+           )
+        elif v == 'PUT' and b:
+          resp = self.http.put(
+              self.hge_url + u,
+              data=b,
+              headers=h
+           )
+        elif v == 'DELETE':
+          resp = self.http.delete(
+              self.hge_url + u,
+              headers=h
+           )
+        else:
+          resp = self.http.post(
+              self.hge_url + u,
+              json=q,
+              headers=h
+           )
         # NOTE: make sure we preserve key ordering so we can test the ordering
         # properties in the graphql spec properly
         # Returning response headers to get the request id from response
@@ -468,12 +553,12 @@ class HGECtx:
         conn.close()
         return res
 
-    def v1q(self, q, headers = {}):
+    def execute_query(self, q, url_path, headers = {}):
         h = headers.copy()
         if self.hge_key is not None:
             h['X-Hasura-Admin-Secret'] = self.hge_key
         resp = self.http.post(
-            self.hge_url + "/v1/query",
+            self.hge_url + url_path,
             json=q,
             headers=h
         )
@@ -481,11 +566,24 @@ class HGECtx:
         # properties in the graphql spec properly
         return resp.status_code, resp.json(object_pairs_hook=OrderedDict)
 
+
+    def v1q(self, q, headers = {}):
+        return self.execute_query(q, "/v1/query", headers)
+
     def v1q_f(self, fn):
         with open(fn) as f:
             # NOTE: preserve ordering with ruamel
             yml = yaml.YAML()
             return self.v1q(yml.load(f))
+
+    def v1metadataq(self, q, headers = {}):
+        return self.execute_query(q, "/v1/metadata", headers)
+
+    def v1metadataq_f(self, fn):
+        with open(fn) as f:
+            # NOTE: preserve ordering with ruamel
+            yml = yaml.YAML()
+            return self.v1metadataq(yml.load(f))
 
     def teardown(self):
         self.http.close()

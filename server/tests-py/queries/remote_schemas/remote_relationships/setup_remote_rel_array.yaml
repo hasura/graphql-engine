@@ -1,0 +1,12 @@
+type: create_remote_relationship
+args:
+  name: messagesNestedArr
+  table: profiles
+  hasura_fields:
+    - name
+  remote_schema: my-remote-schema
+  remote_field:
+    messages:
+      arguments:
+        includes:
+          name: ["$name"]

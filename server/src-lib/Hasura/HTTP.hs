@@ -3,6 +3,7 @@ module Hasura.HTTP
   , HttpException(..)
   , hdrsToText
   , addDefaultHeaders
+  , HttpResponse(..)
   ) where
 
 import           Hasura.Prelude
@@ -38,7 +39,7 @@ addDefaultHeaders hdrs = defaultHeaders <> rmDefaultHeaders hdrs
     rmDefaultHeaders = filter (not . isDefaultHeader)
 
 isDefaultHeader :: HasVersion => HTTP.Header -> Bool
-isDefaultHeader (hdrName, _) = hdrName `elem` (map fst defaultHeaders)
+isDefaultHeader (hdrName, _) = hdrName `elem` map fst defaultHeaders
 
 defaultHeaders :: HasVersion => [HTTP.Header]
 defaultHeaders = [contentType, userAgent]
@@ -63,3 +64,9 @@ instance J.ToJSON HttpException where
       J.object [ "type" J..= ("http_exception" :: Text)
                , "message" J..= show cont
                ]
+
+data HttpResponse a
+  = HttpResponse
+  { _hrBody    :: !a
+  , _hrHeaders :: !HTTP.ResponseHeaders
+  } deriving (Functor, Foldable, Traversable)

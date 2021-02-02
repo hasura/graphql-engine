@@ -1,64 +1,115 @@
-{-# LANGUAGE RecordWildCards      #-}
+{-# LANGUAGE CPP                  #-}
 {-# LANGUAGE UndecidableInstances #-}
 
 module Hasura.App where
 
-import           Control.Monad.Base
-import           Control.Monad.Stateless
-import           Control.Monad.STM                    (atomically)
-import           Control.Monad.Trans.Control          (MonadBaseControl (..))
-import           Data.Aeson                           ((.=))
-import           Data.Time.Clock                      (UTCTime, getCurrentTime)
-import           GHC.AssertNF
-import           Options.Applicative
-import           System.Environment                   (getEnvironment, lookupEnv)
-import           System.Exit                          (exitFailure)
-
-import qualified Control.Concurrent.Extended          as C
-import qualified Control.Concurrent.Async.Lifted.Safe as LA
-import qualified Data.Aeson                           as A
-import qualified Data.ByteString.Char8                as BC
-import qualified Data.ByteString.Lazy.Char8           as BLC
-import qualified Data.Text                            as T
-import qualified Data.Time.Clock                      as Clock
-import qualified Data.Yaml                            as Y
-import qualified Database.PG.Query                    as Q
-import qualified Network.HTTP.Client                  as HTTP
-import qualified Network.HTTP.Client.TLS              as HTTP
-import qualified Network.Wai.Handler.Warp             as Warp
-import qualified System.Posix.Signals                 as Signals
-import qualified Text.Mustache.Compile                as M
-
-import           Hasura.Db
-import           Hasura.EncJSON
-import           Hasura.Events.Lib
-import           Hasura.GraphQL.Resolve.Action        (asyncActionsProcessor)
-import           Hasura.Logging
 import           Hasura.Prelude
-import           Hasura.RQL.Types                     (CacheRWM, Code (..), HasHttpManager,
-                                                       HasSQLGenCtx, HasSystemDefined, QErr (..),
-                                                       SQLGenCtx (..), SchemaCache (..), UserInfoM,
-                                                       adminRole, adminUserInfo,
-                                                       buildSchemaCacheStrict, decodeValue,
-                                                       throw400, userRole, withPathK)
+
+import qualified Control.Concurrent.Async.Lifted.Safe      as LA
+import qualified Control.Concurrent.Extended               as C
+import qualified Control.Exception.Lifted                  as LE
+import qualified Data.Aeson                                as A
+import qualified Data.ByteString.Char8                     as BC
+import qualified Data.ByteString.Lazy.Char8                as BLC
+import qualified Data.Environment                          as Env
+import qualified Data.HashMap.Strict                       as HM
+import qualified Data.Set                                  as Set
+import qualified Data.Text                                 as T
+import qualified Data.Time.Clock                           as Clock
+import qualified Data.Yaml                                 as Y
+import qualified Database.PG.Query                         as Q
+import qualified Network.HTTP.Client                       as HTTP
+import qualified Network.HTTP.Client.TLS                   as HTTP
+import qualified Network.Wai.Handler.Warp                  as Warp
+import qualified System.Log.FastLogger                     as FL
+import qualified System.Metrics                            as EKG
+import qualified System.Metrics.Gauge                      as EKG.Gauge
+import qualified Text.Mustache.Compile                     as M
+
+import           Control.Concurrent.STM.TVar               (TVar, readTVarIO)
+import           Control.Exception                         (bracket_, throwIO)
+import           Control.Monad.Catch                       (Exception, MonadCatch, MonadMask,
+                                                            MonadThrow, onException)
+import           Control.Monad.Morph                       (hoist)
+import           Control.Monad.STM                         (atomically)
+import           Control.Monad.Stateless
+import           Control.Monad.Trans.Control               (MonadBaseControl (..))
+import           Control.Monad.Trans.Managed               (ManagedT (..), allocate)
+import           Control.Monad.Unique
+import           Data.Time.Clock                           (UTCTime)
+#ifndef PROFILING
+import           GHC.AssertNF
+#endif
+import           Network.HTTP.Client.Extended
+import           Options.Applicative
+import           System.Environment                        (getEnvironment)
+
+import qualified Hasura.GraphQL.Execute.LiveQuery.Poll     as EL
+import qualified Hasura.GraphQL.Transport.WebSocket.Server as WS
+import qualified Hasura.Server.API.V2Query                 as V2Q
+import qualified Hasura.Tracing                            as Tracing
+
+import           Hasura.Backends.Postgres.Connection
+import           Hasura.EncJSON
+import           Hasura.Eventing.Common
+import           Hasura.Eventing.EventTrigger
+import           Hasura.Eventing.ScheduledTrigger
+import           Hasura.GraphQL.Execute                    (MonadGQLExecutionCheck (..),
+                                                            checkQueryInAllowlist)
+import           Hasura.GraphQL.Execute.Action
+import           Hasura.GraphQL.Execute.Query              (MonadQueryInstrumentation (..),
+                                                            noProfile)
+import           Hasura.GraphQL.Logging                    (MonadQueryLog (..), QueryLog (..))
+import           Hasura.GraphQL.Transport.HTTP             (MonadExecuteQuery (..))
+import           Hasura.GraphQL.Transport.HTTP.Protocol    (toParsed)
+import           Hasura.Logging
+import           Hasura.Metadata.Class
+import           Hasura.RQL.DDL.Schema.Cache
+import           Hasura.RQL.DDL.Schema.Cache.Common
+import           Hasura.RQL.DDL.Schema.Catalog
+import           Hasura.RQL.DDL.Schema.Source
+import           Hasura.RQL.Types
 import           Hasura.RQL.Types.Run
+import           Hasura.Server.API.Query                   (requiresAdmin, runQueryM)
 import           Hasura.Server.App
 import           Hasura.Server.Auth
-import           Hasura.Server.CheckUpdates           (checkForUpdates)
+import           Hasura.Server.CheckUpdates                (checkForUpdates)
 import           Hasura.Server.Init
 import           Hasura.Server.Logging
-import           Hasura.Server.Migrate                (migrateCatalog)
-import           Hasura.Server.Query                  (requiresAdmin, runQueryM)
+import           Hasura.Server.Migrate                     (getMigratedFrom, migrateCatalog)
 import           Hasura.Server.SchemaUpdate
 import           Hasura.Server.Telemetry
+import           Hasura.Server.Types
 import           Hasura.Server.Version
+import           Hasura.Session
 
+data ExitCode
+-- these are used during server initialization:
+  = InvalidEnvironmentVariableOptionsError
+  | InvalidDatabaseConnectionParamsError
+  | AuthConfigurationError
+  | EventSubSystemError
+  | DatabaseMigrationError
+  -- these are used in app/Main.hs:
+  | MetadataExportError
+  | MetadataCleanError
+  | ExecuteProcessError
+  | DowngradeProcessError
+  deriving Show
 
-printErrExit :: (MonadIO m) => forall a . String -> m a
-printErrExit = liftIO . (>> exitFailure) . putStrLn
+data ExitException
+  = ExitException
+  { eeCode    :: !ExitCode
+  , eeMessage :: !BC.ByteString
+  } deriving (Show)
 
-printErrJExit :: (A.ToJSON a, MonadIO m) => forall b . a -> m b
-printErrJExit = liftIO . (>> exitFailure) . printJSON
+instance Exception ExitException
+
+printErrExit :: (MonadIO m) => forall a . ExitCode -> String -> m a
+printErrExit reason = liftIO . throwIO . ExitException reason . BC.pack
+
+printErrJExit :: (A.ToJSON a, MonadIO m) => forall b . ExitCode -> a -> m b
+printErrJExit reason = liftIO . throwIO . ExitException reason . BLC.toStrict . A.encode
 
 parseHGECommand :: EnabledLogTypes impl => Parser (RawHGECommand impl)
 parseHGECommand =
@@ -84,14 +135,16 @@ parseArgs = do
   rawHGEOpts <- execParser opts
   env <- getEnvironment
   let eitherOpts = runWithEnv env $ mkHGEOptions rawHGEOpts
-  either printErrExit return eitherOpts
+  onLeft eitherOpts $ printErrExit InvalidEnvironmentVariableOptionsError
   where
     opts = info (helper <*> hgeOpts)
            ( fullDesc <>
              header "Hasura GraphQL Engine: Realtime GraphQL API over Postgres with access control" <>
              footerDoc (Just mainCmdFooter)
            )
-    hgeOpts = HGEOptionsG <$> parseRawConnInfo <*> parseHGECommand
+    hgeOpts = HGEOptionsG <$> parsePostgresConnInfo
+                          <*> parseMetadataDbUrl
+                          <*> parseHGECommand
 
 printJSON :: (A.ToJSON a, MonadIO m) => a -> m ()
 printJSON = liftIO . BLC.putStrLn . A.encode
@@ -103,21 +156,62 @@ mkPGLogger :: Logger Hasura -> Q.PGLogger
 mkPGLogger (Logger logger) (Q.PLERetryMsg msg) =
   logger $ PGLog LevelWarn msg
 
+-- | Context required for all graphql-engine CLI commands
+data GlobalCtx
+  = GlobalCtx
+  { _gcHttpManager             :: !HTTP.Manager
+  , _gcMetadataDbConnInfo      :: !Q.ConnInfo
+  , _gcDefaultPostgresConnInfo :: !(Maybe (UrlConf, Q.ConnInfo), Maybe Int)
+    -- ^ --database-url option, @'UrlConf' is required to construct default source configuration
+    -- and optional retries
+  }
 
--- | most of the required types for initializing graphql-engine
-data InitCtx
-  = InitCtx
-  { _icHttpManager :: !HTTP.Manager
-  , _icInstanceId  :: !InstanceId
-  , _icDbUid       :: !Text
-  , _icLoggers     :: !Loggers
-  , _icConnInfo    :: !Q.ConnInfo
-  , _icPgPool      :: !Q.PGPool
-  , _icPgVersion   :: !PGVersion
+initGlobalCtx
+  :: (MonadIO m)
+  => Env.Environment
+  -> Maybe String
+  -> PostgresConnInfo (Maybe UrlConf)
+  -> m GlobalCtx
+initGlobalCtx env metadataDbUrl defaultPgConnInfo = do
+  httpManager <- liftIO $ HTTP.newManager HTTP.tlsManagerSettings
+
+  let PostgresConnInfo dbUrlConf maybeRetries = defaultPgConnInfo
+      maybeMetadataDbConnInfo =
+        let retries = fromMaybe 1 $ _pciRetries defaultPgConnInfo
+        in (Q.ConnInfo retries . Q.CDDatabaseURI . txtToBs . T.pack)
+           <$> metadataDbUrl
+
+  maybeDbUrlAndConnInfo <- forM dbUrlConf $ \dbUrl -> do
+    connInfo <- resolvePostgresConnInfo env dbUrl maybeRetries
+    pure (dbUrl, connInfo)
+
+  metadataDbConnInfo <-
+    case (maybeMetadataDbConnInfo, maybeDbUrlAndConnInfo) of
+      (Nothing, Nothing) ->
+        printErrExit InvalidDatabaseConnectionParamsError
+        "Fatal Error: Either of --metadata-database-url or --database-url option expected"
+      -- If no metadata storage specified consider use default database as
+      -- metadata storage
+      (Nothing, Just (_, dbConnInfo)) -> pure dbConnInfo
+      (Just mdConnInfo, _) -> pure mdConnInfo
+
+  pure $ GlobalCtx httpManager metadataDbConnInfo (maybeDbUrlAndConnInfo, maybeRetries)
+
+
+-- | Context required for the 'serve' CLI command.
+data ServeCtx
+  = ServeCtx
+  { _scHttpManager    :: !HTTP.Manager
+  , _scInstanceId     :: !InstanceId
+  , _scLoggers        :: !Loggers
+  , _scMetadataDbPool :: !Q.PGPool
+  , _scShutdownLatch  :: !ShutdownLatch
+  , _scSchemaCache    :: !RebuildableSchemaCache
+  , _scSchemaSyncCtx  :: !SchemaSyncCtx
   }
 
 -- | Collection of the LoggerCtx, the regular Logger and the PGLogger
--- TODO: better naming?
+-- TODO (from master): better naming?
 data Loggers
   = Loggers
   { _lsLoggerCtx :: !(LoggerCtx Hasura)
@@ -125,278 +219,598 @@ data Loggers
   , _lsPgLogger  :: !Q.PGLogger
   }
 
-newtype AppM a = AppM { unAppM :: IO a }
-  deriving (Functor, Applicative, Monad, MonadIO, MonadBase IO, MonadBaseControl IO)
+-- | An application with Postgres database as a metadata storage
+newtype PGMetadataStorageApp a
+  = PGMetadataStorageApp {runPGMetadataStorageApp :: (Q.PGPool, Q.PGLogger) -> IO a}
+  deriving ( Functor, Applicative, Monad
+           , MonadIO, MonadBase IO, MonadBaseControl IO
+           , MonadCatch, MonadThrow, MonadMask
+           , MonadUnique, MonadReader (Q.PGPool, Q.PGLogger)
+           ) via (ReaderT (Q.PGPool, Q.PGLogger) IO)
 
--- | this function initializes the catalog and returns an @InitCtx@, based on the command given
--- - for serve command it creates a proper PG connection pool
--- - for other commands, it creates a minimal pool
--- this exists as a separate function because the context (logger, http manager, pg pool) can be
--- used by other functions as well
-initialiseCtx
-  :: (HasVersion, MonadIO m)
-  => HGECommand Hasura
-  -> RawConnInfo
-  -> m (InitCtx, UTCTime)
-initialiseCtx hgeCmd rci = do
-  initTime <- liftIO Clock.getCurrentTime
-  -- global http manager
-  httpManager <- liftIO $ HTTP.newManager HTTP.tlsManagerSettings
-  instanceId <- liftIO generateInstanceId
-  connInfo <- liftIO procConnInfo
-  (loggers, pool) <- case hgeCmd of
-    -- for server command generate a proper pool
-    HCServe so@ServeOptions{..} -> do
-      l@(Loggers _ logger pgLogger) <- mkLoggers soEnabledLogTypes soLogLevel
-      -- log serve options
-      unLogger logger $ serveOptsToLog so
-      -- log postgres connection info
-      unLogger logger $ connInfoToLog connInfo
-      pool <- liftIO $ Q.initPGPool connInfo soConnParams pgLogger
-      -- safe init catalog
-      initialiseCatalog pool (SQLGenCtx soStringifyNum) httpManager logger
-
-      return (l, pool)
-
-    -- for other commands generate a minimal pool
-    _ -> do
-      l@(Loggers _ _ pgLogger) <- mkLoggers defaultEnabledLogTypes LevelInfo
-      pool <- getMinimalPool pgLogger connInfo
-      return (l, pool)
-
-  -- get the unique db id
-  dbId <- liftIO $ runTxIO pool (Q.Serializable, Nothing) getDbId
-
-  -- get the pg version
-  pgVersion <- liftIO $ runTxIO pool (Q.ReadCommitted, Nothing) getPgVersion
-
-  return (InitCtx httpManager instanceId dbId loggers connInfo pool pgVersion, initTime)
-
+resolvePostgresConnInfo
+  :: (MonadIO m) => Env.Environment -> UrlConf -> Maybe Int -> m Q.ConnInfo
+resolvePostgresConnInfo env dbUrlConf maybeRetries = do
+  dbUrlText <-
+    runExcept (resolveUrlConf env dbUrlConf) `onLeft` \err ->
+      liftIO (printErrExit InvalidDatabaseConnectionParamsError (BLC.unpack $ A.encode err))
+  pure $ Q.ConnInfo retries $ Q.CDDatabaseURI $ txtToBs dbUrlText
   where
-    procConnInfo =
-      either (printErrExit . connInfoErrModifier) return $ mkConnInfo rci
+    retries = fromMaybe 1 maybeRetries
 
-    getMinimalPool pgLogger ci = do
-      let connParams = Q.defaultConnParams { Q.cpConns = 1 }
-      liftIO $ Q.initPGPool ci connParams pgLogger
+-- | Initializes or migrates the catalog and returns the context required to start the server.
+initialiseServeCtx
+  :: (HasVersion, C.ForkableMonadIO m, MonadCatch m)
+  => Env.Environment
+  -> GlobalCtx
+  -> ServeOptions Hasura
+  -> ManagedT m ServeCtx
+initialiseServeCtx env GlobalCtx{..} so@ServeOptions{..} = do
+  instanceId <- liftIO generateInstanceId
+  latch <- liftIO newShutdownLatch
+  loggers@(Loggers loggerCtx logger pgLogger) <- mkLoggers soEnabledLogTypes soLogLevel
+  -- log serve options
+  unLogger logger $ serveOptsToLog so
 
-    mkLoggers enabledLogs logLevel = do
-      loggerCtx <- liftIO $ mkLoggerCtx (defaultLoggerSettings True logLevel) enabledLogs
-      let logger = mkLogger loggerCtx
-          pgLogger = mkPGLogger logger
-      return $ Loggers loggerCtx logger pgLogger
+  -- log postgres connection info
+  unLogger logger $ connInfoToLog _gcMetadataDbConnInfo
 
-    initialiseCatalog pool sqlGenCtx httpManager (Logger logger) = do
-      currentTime <- liftIO getCurrentTime
-      -- initialise the catalog
-      initRes <- runAsAdmin pool sqlGenCtx httpManager $ migrateCatalog currentTime
-      either printErrJExit (\(result, schemaCache) -> logger result $> schemaCache) initRes
+  metadataDbPool <- liftIO $ Q.initPGPool _gcMetadataDbConnInfo soConnParams pgLogger
+
+  let maybeDefaultSourceConfig = fst _gcDefaultPostgresConnInfo <&> \(dbUrlConf, _) ->
+        let connSettings = PostgresPoolSettings
+                           { _ppsMaxConnections = Q.cpConns soConnParams
+                           , _ppsIdleTimeout    = Q.cpIdleTime soConnParams
+                           , _ppsRetries        = fromMaybe 1 $ snd _gcDefaultPostgresConnInfo
+                           }
+            sourceConnInfo = PostgresSourceConnInfo dbUrlConf connSettings
+        in SourceConfiguration sourceConnInfo Nothing
+      sqlGenCtx = SQLGenCtx soStringifyNum
+
+  -- Start a background thread for listening schema sync events from other server instances,
+  -- just before building @'RebuildableSchemaCache' (happens in @'migrateCatalogSchema' function).
+  -- See Note [Schema Cache Sync]
+  (schemaSyncListenerThread, schemaSyncEventRef) <- startSchemaSyncListenerThread metadataDbPool logger instanceId
+
+  (rebuildableSchemaCache, cacheInitStartTime) <-
+    lift . flip onException (flushLogger loggerCtx) $
+    migrateCatalogSchema env logger metadataDbPool maybeDefaultSourceConfig _gcHttpManager
+      sqlGenCtx soEnableRemoteSchemaPermissions soInferFunctionPermissions (mkPgSourceResolver pgLogger)
+
+  let schemaSyncCtx = SchemaSyncCtx schemaSyncListenerThread schemaSyncEventRef cacheInitStartTime
+  pure $ ServeCtx _gcHttpManager instanceId loggers metadataDbPool latch
+                  rebuildableSchemaCache schemaSyncCtx
+
+mkLoggers
+  :: (MonadIO m, MonadBaseControl IO m)
+  => HashSet (EngineLogType Hasura)
+  -> LogLevel
+  -> ManagedT m Loggers
+mkLoggers enabledLogs logLevel = do
+  loggerCtx <- mkLoggerCtx (defaultLoggerSettings True logLevel) enabledLogs
+  let logger = mkLogger loggerCtx
+      pgLogger = mkPGLogger logger
+  return $ Loggers loggerCtx logger pgLogger
+
+
+-- | helper function to initialize or migrate the @hdb_catalog@ schema (used by pro as well)
+migrateCatalogSchema
+  :: (HasVersion, MonadIO m, MonadBaseControl IO m)
+  => Env.Environment -> Logger Hasura -> Q.PGPool -> Maybe SourceConfiguration
+  -> HTTP.Manager -> SQLGenCtx -> RemoteSchemaPermsCtx -> FunctionPermissionsCtx
+  -> SourceResolver
+  -> m (RebuildableSchemaCache, UTCTime)
+migrateCatalogSchema env logger pool defaultSourceConfig
+                     httpManager sqlGenCtx remoteSchemaPermsCtx functionPermsCtx
+                     sourceResolver = do
+  currentTime <- liftIO Clock.getCurrentTime
+  initialiseResult <- runExceptT $ do
+    (migrationResult, metadata) <- Q.runTx pool (Q.Serializable, Just Q.ReadWrite) $
+                                   migrateCatalog defaultSourceConfig currentTime
+    let serverConfigCtx = ServerConfigCtx functionPermsCtx remoteSchemaPermsCtx sqlGenCtx
+        cacheBuildParams =
+          CacheBuildParams httpManager sourceResolver serverConfigCtx
+        buildReason = case getMigratedFrom migrationResult of
+          Nothing      -> CatalogSync
+          Just version ->
+            -- Catalog version 43 marks the metadata separation which also drops
+            -- the "hdb_views" schema where table event triggers are hosted.
+            -- We need to re-create table event trigger procedures in "hdb_catalog"
+            -- schema when migration happens from version < 43. Build reason
+            -- @'CatalogUpdate' re-creates event triggers in the database.
+            if version < 43 then CatalogUpdate else CatalogSync
+    schemaCache <- runCacheBuild cacheBuildParams $
+                   buildRebuildableSchemaCacheWithReason buildReason env metadata
+    pure (migrationResult, schemaCache)
+
+  (migrationResult, schemaCache) <-
+    initialiseResult `onLeft` \err -> do
+      unLogger logger StartupLog
+        { slLogLevel = LevelError
+        , slKind = "catalog_migrate"
+        , slInfo = A.toJSON err
+        }
+      liftIO (printErrExit DatabaseMigrationError (BLC.unpack $ A.encode err))
+  unLogger logger migrationResult
+  pure (schemaCache, currentTime)
 
 -- | Run a transaction and if an error is encountered, log the error and abort the program
 runTxIO :: Q.PGPool -> Q.TxMode -> Q.TxE QErr a -> IO a
 runTxIO pool isoLevel tx = do
   eVal <- liftIO $ runExceptT $ Q.runTx pool isoLevel tx
-  either printErrJExit return eVal
+  onLeft eVal (printErrJExit DatabaseMigrationError)
 
+-- | A latch for the graceful shutdown of a server process.
+newtype ShutdownLatch = ShutdownLatch { unShutdownLatch :: C.MVar () }
+
+newShutdownLatch :: IO ShutdownLatch
+newShutdownLatch = fmap ShutdownLatch C.newEmptyMVar
+
+-- | Block the current thread, waiting on the latch.
+waitForShutdown :: ShutdownLatch -> IO ()
+waitForShutdown = C.takeMVar . unShutdownLatch
+
+-- | Initiate a graceful shutdown of the server associated with the provided
+-- latch.
+shutdownGracefully :: ShutdownLatch -> IO ()
+shutdownGracefully = flip C.putMVar () . unShutdownLatch
+
+-- | If an exception is encountered , flush the log buffer and
+-- rethrow If we do not flush the log buffer on exception, then log lines
+-- may be missed
+-- See: https://github.com/hasura/graphql-engine/issues/4772
+flushLogger :: MonadIO m => LoggerCtx impl -> m ()
+flushLogger = liftIO . FL.flushLogStr . _lcLoggerSet
+
+
+-- | This function acts as the entrypoint for the graphql-engine webserver.
+--
+-- Note: at the exit of this function, or in case of a graceful server shutdown
+-- (SIGTERM, or more generally, whenever the shutdown latch is set),  we need to
+-- make absolutely sure that we clean up any resources which were allocated during
+-- server setup. In the case of a multitenant process, failure to do so can lead to
+-- resource leaks.
+--
+-- To track these resources, we use the ManagedT monad, and attach finalizers at
+-- the same point in the code where we allocate resources. If you fork a new
+-- long-lived thread, or create a connection pool, or allocate any other
+-- long-lived resource, make sure to pair the allocator  with its finalizer.
+-- There are plenty of examples throughout the code. For example, see
+-- 'C.forkManagedT'.
+--
+-- Note also: the order in which the finalizers run can be important. Specifically,
+-- we want the finalizers for the logger threads to run last, so that we retain as
+-- many "thread stopping" log messages as possible. The order in which the
+-- finalizers is run is determined by the order in which they are introduced in the
+-- code.
+{- HLINT ignore runHGEServer "Avoid lambda" -}
 runHGEServer
-  :: ( HasVersion
+  :: forall m impl
+   . ( HasVersion
      , MonadIO m
+     , MonadMask m
      , MonadStateless IO m
-     , UserAuthentication m
-     , MetadataApiAuthorization m
+     , LA.Forall (LA.Pure m)
+     , UserAuthentication (Tracing.TraceT m)
      , HttpLog m
      , ConsoleRenderer m
-     , LA.Forall (LA.Pure m)
+     , MonadMetadataApiAuthorization m
+     , MonadGQLExecutionCheck m
+     , MonadConfigApiHandler m
+     , MonadQueryLog m
+     , WS.MonadWSLog m
+     , MonadExecuteQuery m
+     , Tracing.HasReporter m
+     , MonadQueryInstrumentation m
+     , HasResourceLimits m
+     , MonadMetadataStorage (MetadataStorageT m)
+     , MonadResolveSource m
      )
-  => ServeOptions impl
-  -> InitCtx
+  => Env.Environment
+  -> ServeOptions impl
+  -> ServeCtx
+  -- and mutations
   -> UTCTime
   -- ^ start time
-  -> m ()
-runHGEServer ServeOptions{..} InitCtx{..} initTime = do
-  -- Comment this to enable expensive assertions from "GHC.AssertNF". These will log lines to 
-  -- STDOUT containing "not in normal form". In the future we could try to integrate this into
-  -- our tests. For now this is a development tool.
+  -> Maybe EL.LiveQueryPostPollHook
+  -> ServerMetrics
+  -> EKG.Store
+  -> ManagedT m ()
+runHGEServer env ServeOptions{..} ServeCtx{..} initTime postPollHook serverMetrics ekgStore = do
+  -- Comment this to enable expensive assertions from "GHC.AssertNF". These
+  -- will log lines to STDOUT containing "not in normal form". In the future we
+  -- could try to integrate this into our tests. For now this is a development
+  -- tool.
   --
   -- NOTE: be sure to compile WITHOUT code coverage, for this to work properly.
+#ifndef PROFILING
   liftIO disableAssertNF
+#endif
 
   let sqlGenCtx = SQLGenCtx soStringifyNum
-      Loggers loggerCtx logger _ = _icLoggers
+      Loggers loggerCtx logger _ = _scLoggers
+      SchemaSyncCtx{..} = _scSchemaSyncCtx
 
-  authModeRes <- runExceptT $ mkAuthMode soAdminSecret soAuthHook soJwtSecret soUnAuthRole
-                              _icHttpManager logger
+  authModeRes <- runExceptT $ setupAuthMode soAdminSecret soAuthHook soJwtSecret soUnAuthRole
+                              _scHttpManager logger
 
-  authMode <- either (printErrExit . T.unpack) return authModeRes
+  authMode <- onLeft authModeRes (printErrExit AuthConfigurationError . T.unpack)
 
-  HasuraApp app cacheRef cacheInitTime shutdownApp <- mkWaiApp soTxIso
-                                                               logger
-                                                               sqlGenCtx
-                                                               soEnableAllowlist
-                                                               _icPgPool
-                                                               _icConnInfo
-                                                               _icHttpManager
-                                                               authMode
-                                                               soCorsConfig
-                                                               soEnableConsole
-                                                               soConsoleAssetsDir
-                                                               soEnableTelemetry
-                                                               _icInstanceId
-                                                               soEnabledAPIs
-                                                               soLiveQueryOpts
-                                                               soPlanCacheOptions
+  HasuraApp app cacheRef stopWsServer <- lift $ flip onException (flushLogger loggerCtx) $
+    mkWaiApp env
+             logger
+             sqlGenCtx
+             soEnableAllowlist
+             _scHttpManager
+             authMode
+             soCorsConfig
+             soEnableConsole
+             soConsoleAssetsDir
+             soEnableTelemetry
+             _scInstanceId
+             soEnabledAPIs
+             soLiveQueryOpts
+             soPlanCacheOptions
+             soResponseInternalErrorsConfig
+             postPollHook
+             _scSchemaCache
+             ekgStore
+             soEnableRemoteSchemaPermissions
+             soInferFunctionPermissions
+             soConnectionOptions
+             soWebsocketKeepAlive
 
   -- log inconsistent schema objects
   inconsObjs <- scInconsistentObjs <$> liftIO (getSCFromRef cacheRef)
   liftIO $ logInconsObjs logger inconsObjs
 
-  -- start background threads for schema sync
-  (_schemaSyncListenerThread, _schemaSyncProcessorThread) <- 
-    startSchemaSyncThreads sqlGenCtx _icPgPool logger _icHttpManager
-                           cacheRef _icInstanceId cacheInitTime
+  -- Start a background thread for processing schema sync event present in the '_sscSyncEventRef'
+  _ <- startSchemaSyncProcessorThread sqlGenCtx
+                               logger _scHttpManager _sscSyncEventRef
+                               cacheRef _scInstanceId _sscCacheInitStartTime soEnableRemoteSchemaPermissions
+                               soInferFunctionPermissions
 
-  let warpSettings = Warp.setPort soPort
-                     . Warp.setHost soHost
-                     . Warp.setGracefulShutdownTimeout (Just 30) -- 30s graceful shutdown
-                     . Warp.setInstallShutdownHandler (shutdownHandler logger shutdownApp)
-                     $ Warp.defaultSettings
+  let
+    maxEvThrds    = fromMaybe defaultMaxEventThreads soEventsHttpPoolSize
+    fetchI        = milliseconds $ fromMaybe (Milliseconds defaultFetchInterval) soEventsFetchInterval
+    logEnvHeaders = soLogHeadersFromEnv
+    allPgSources  = mapMaybe (unsafeSourceConfiguration @'Postgres) $ HM.elems $ scPostgres $ lastBuiltSchemaCache _scSchemaCache
 
-  maxEvThrds <- liftIO $ getFromEnv defaultMaxEventThreads "HASURA_GRAPHQL_EVENTS_HTTP_POOL_SIZE"
-  fetchI  <- fmap milliseconds $ liftIO $
-    getFromEnv defaultFetchIntervalMilliSec "HASURA_GRAPHQL_EVENTS_FETCH_INTERVAL"
-  logEnvHeaders <- liftIO $ getFromEnv False "LOG_HEADERS_FROM_ENV"
+  lockedEventsCtx <- allocate
+    (liftIO $ atomically initLockedEventsCtx)
+    (\lockedEventsCtx ->
+        liftWithStateless \lowerIO ->
+          shutdownEvents allPgSources (\a b -> hoist lowerIO (unlockScheduledEvents a b)) logger lockedEventsCtx)
 
   -- prepare event triggers data
-  prepareEvents _icPgPool logger
   eventEngineCtx <- liftIO $ atomically $ initEventEngineCtx maxEvThrds fetchI
   unLogger logger $ mkGenericStrLog LevelInfo "event_triggers" "starting workers"
-  _eventQueueThread <- C.forkImmortal "processEventQueue" logger $ liftIO $
+
+  _eventQueueThread <- C.forkManagedT "processEventQueue" logger $
     processEventQueue logger logEnvHeaders
-    _icHttpManager _icPgPool (getSCFromRef cacheRef) eventEngineCtx
+    _scHttpManager (getSCFromRef cacheRef) eventEngineCtx lockedEventsCtx
 
   -- start a backgroud thread to handle async actions
-  _asyncActionsThread <- C.forkImmortal "asyncActionsProcessor" logger $ liftIO $
-    asyncActionsProcessor (_scrCache cacheRef) _icPgPool _icHttpManager
+  _asyncActionsThread <- C.forkManagedT "asyncActionsProcessor" logger $
+    asyncActionsProcessor env logger (_scrCache cacheRef) _scHttpManager
+
+  -- start a background thread to create new cron events
+  _cronEventsThread <- C.forkManagedT "runCronEventsGenerator" logger $
+    runCronEventsGenerator logger (getSCFromRef cacheRef)
+
+  -- prepare scheduled triggers
+  lift $ prepareScheduledEvents logger
+
+  -- start a background thread to deliver the scheduled events
+  _scheduledEventsThread <- C.forkManagedT "processScheduledTriggers" logger $
+    processScheduledTriggers env logger logEnvHeaders _scHttpManager (getSCFromRef cacheRef) lockedEventsCtx
 
   -- start a background thread to check for updates
-  _updateThread <- C.forkImmortal "checkForUpdates" logger $ liftIO $ 
-    checkForUpdates loggerCtx _icHttpManager
+  _updateThread <- C.forkManagedT "checkForUpdates" logger $ liftIO $
+    checkForUpdates loggerCtx _scHttpManager
 
   -- start a background thread for telemetry
-  when soEnableTelemetry $ do
-    unLogger logger $ mkGenericStrLog LevelInfo "telemetry" telemetryNotice
-    void $ C.forkImmortal "runTelemetry" logger $ liftIO $
-      runTelemetry logger _icHttpManager (getSCFromRef cacheRef) _icDbUid _icInstanceId _icPgVersion
+  dbUidE <- runMetadataStorageT getDatabaseUid
+  _telemetryThread <- if soEnableTelemetry
+    then do
+      lift . unLogger logger $ mkGenericStrLog LevelInfo "telemetry" telemetryNotice
+
+      (dbId, pgVersion) <- liftIO $ runTxIO _scMetadataDbPool (Q.ReadCommitted, Nothing) $
+        (,) <$> liftEither dbUidE <*> getPgVersion
+
+      telemetryThread <- C.forkManagedT "runTelemetry" logger $ liftIO $
+        runTelemetry logger _scHttpManager (getSCFromRef cacheRef) dbId _scInstanceId pgVersion
+      return $ Just telemetryThread
+    else return Nothing
 
   finishTime <- liftIO Clock.getCurrentTime
   let apiInitTime = realToFrac $ Clock.diffUTCTime finishTime initTime
   unLogger logger $
     mkGenericLog LevelInfo "server" $ StartupTimeInfo "starting API server" apiInitTime
-  liftIO $ Warp.runSettings warpSettings app
+
+  let setForkIOWithMetrics :: Warp.Settings -> Warp.Settings
+      setForkIOWithMetrics = Warp.setFork \f -> do
+        void $ C.forkIOWithUnmask (\unmask ->
+          bracket_
+            (EKG.Gauge.inc $ smWarpThreads serverMetrics)
+            (EKG.Gauge.dec $ smWarpThreads serverMetrics)
+              (f unmask))
+
+  let shutdownHandler closeSocket = LA.link =<< LA.async do
+        waitForShutdown _scShutdownLatch
+        unLogger logger $ mkGenericStrLog LevelInfo "server" "gracefully shutting down server"
+        closeSocket
+
+  let warpSettings = Warp.setPort soPort
+                     . Warp.setHost soHost
+                     . Warp.setGracefulShutdownTimeout (Just 30) -- 30s graceful shutdown
+                     . Warp.setInstallShutdownHandler shutdownHandler
+                     . setForkIOWithMetrics
+                     $ Warp.defaultSettings
+
+  -- Here we block until the shutdown latch 'MVar' is filled, and then
+  -- shut down the server. Once this blocking call returns, we'll tidy up
+  -- any resources using the finalizers attached using 'ManagedT' above.
+  -- Structuring things using the shutdown latch in this way lets us decide
+  -- elsewhere exactly how we want to control shutdown.
+  liftIO $ Warp.runSettings warpSettings app `LE.finally` do
+    -- These cleanup actions are not directly associated with any
+    -- resource, but we still need to make sure we clean them up here.
+    stopWsServer
 
   where
-    prepareEvents pool (Logger logger) = do
-      liftIO $ logger $ mkGenericStrLog LevelInfo "event_triggers" "preparing data"
-      res <- runTx pool unlockAllEvents
-      either printErrJExit return res
+    -- | prepareScheduledEvents is a function to unlock all the scheduled trigger
+    -- events that are locked and unprocessed, which is called while hasura is
+    -- started.
+    --
+    -- Locked and unprocessed events can occur in 2 ways
+    -- 1.
+    -- Hasura's shutdown was not graceful in which all the fetched
+    -- events will remain locked and unprocessed(TODO: clean shutdown)
+    -- state.
+    -- 2.
+    -- There is another hasura instance which is processing events and
+    -- it will lock events to process them.
+    -- So, unlocking all the locked events might re-deliver an event(due to #2).
+    prepareScheduledEvents (Logger logger) = do
+      liftIO $ logger $ mkGenericStrLog LevelInfo "scheduled_triggers" "preparing data"
+      res <- runMetadataStorageT unlockAllLockedScheduledEvents
+      onLeft res $ printErrJExit EventSubSystemError
 
-    getFromEnv :: (Read a) => a -> String -> IO a
-    getFromEnv defaults env = do
-      mEnv <- lookupEnv env
-      let mRes = case mEnv of
-            Nothing  -> Just defaults
-            Just val -> readMaybe val
-          eRes = maybe (Left $ "Wrong expected type for environment variable: " <> env) Right mRes
-      either printErrExit return eRes
+    -- | shutdownEvents will be triggered when a graceful shutdown has been inititiated, it will
+    -- get the locked events from the event engine context and the scheduled event engine context
+    -- then it will unlock all those events.
+    -- It may happen that an event may be processed more than one time, an event that has been already
+    -- processed but not been marked as delivered in the db will be unlocked by `shutdownEvents`
+    -- and will be processed when the events are proccessed next time.
+    shutdownEvents
+      :: [SourceConfig 'Postgres]
+      -> (ScheduledEventType -> [ScheduledEventId] -> MetadataStorageT IO Int)
+      -> Logger Hasura
+      -> LockedEventsCtx
+      -> IO ()
+    shutdownEvents pgSources unlockScheduledEvents' hasuraLogger@(Logger logger) LockedEventsCtx {..} = do
+      forM_ pgSources $ \pgSource -> do
+        logger $ mkGenericStrLog LevelInfo "event_triggers" "unlocking events that are locked by the HGE"
+        let unlockEvents' l = MetadataStorageT $ runLazyTx (_pscExecCtx pgSource) Q.ReadWrite $ liftTx $ unlockEvents l
+        unlockEventsForShutdown hasuraLogger "event_triggers" "" unlockEvents' leEvents
+        logger $ mkGenericStrLog LevelInfo "scheduled_triggers" "unlocking scheduled events that are locked by the HGE"
 
-    runTx pool tx =
-      liftIO $ runExceptT $ Q.runTx pool (Q.Serializable, Nothing) tx
+      unlockEventsForShutdown hasuraLogger "scheduled_triggers" "cron events" (unlockScheduledEvents' Cron) leCronEvents
+      unlockEventsForShutdown hasuraLogger "scheduled_triggers" "scheduled events" (unlockScheduledEvents' OneOff) leOneOffEvents
 
-    -- | Catches the SIGTERM signal and initiates a graceful shutdown. Graceful shutdown for regular HTTP
-    -- requests is already implemented in Warp, and is triggered by invoking the 'closeSocket' callback.
-    -- We only catch the SIGTERM signal once, that is, if the user hits CTRL-C once again, we terminate
-    -- the process immediately.
-    shutdownHandler :: Logger Hasura -> IO () -> IO () -> IO ()
-    shutdownHandler (Logger logger) shutdownApp closeSocket =
-      void $ Signals.installHandler
-        Signals.sigTERM
-        (Signals.CatchOnce shutdownSequence)
-        Nothing
-     where
-      shutdownSequence = do
-        closeSocket
-        shutdownApp
-        logShutdown
-
-      logShutdown = logger $ mkGenericStrLog LevelInfo "server" "gracefully shutting down server"
+    unlockEventsForShutdown
+      :: Logger Hasura
+      -> Text -- ^ trigger type
+      -> Text -- ^ event type
+      -> ([eventId] -> MetadataStorageT IO Int)
+      -> TVar (Set.Set eventId)
+      -> IO ()
+    unlockEventsForShutdown (Logger logger) triggerType eventType doUnlock lockedIdsVar = do
+      lockedIds <- readTVarIO lockedIdsVar
+      unless (Set.null lockedIds) $ do
+        result <- runMetadataStorageT $ doUnlock $ toList lockedIds
+        case result of
+          Left err -> logger $ mkGenericStrLog LevelWarn triggerType $
+            "Error while unlocking " ++ T.unpack eventType ++ " events: " ++ show err
+          Right count -> logger $ mkGenericStrLog LevelInfo triggerType $
+            show count ++ " " ++ T.unpack eventType ++ " events successfully unlocked"
 
 runAsAdmin
-  :: (MonadIO m)
-  => Q.PGPool
-  -> SQLGenCtx
+  :: SQLGenCtx
   -> HTTP.Manager
-  -> Run a
+  -> RemoteSchemaPermsCtx
+  -> FunctionPermissionsCtx
+  -> RunT m a
   -> m (Either QErr a)
-runAsAdmin pool sqlGenCtx httpManager m = do
-  let runCtx = RunCtx adminUserInfo httpManager sqlGenCtx
-      pgCtx = PGExecCtx pool Q.Serializable
-  runExceptT $ peelRun runCtx pgCtx Q.ReadWrite m
+runAsAdmin sqlGenCtx httpManager remoteSchemaPermsCtx functionPermsCtx m = do
+  let serverConfigCtx = ServerConfigCtx functionPermsCtx remoteSchemaPermsCtx sqlGenCtx
+      runCtx = RunCtx adminUserInfo httpManager serverConfigCtx
+  runExceptT $ peelRun runCtx m
 
 execQuery
   :: ( HasVersion
      , CacheRWM m
-     , MonadTx m
      , MonadIO m
-     , HasHttpManager m
-     , HasSQLGenCtx m
+     , MonadBaseControl IO m
+     , MonadUnique m
+     , HasHttpManagerM m
      , UserInfoM m
-     , HasSystemDefined m
+     , Tracing.MonadTrace m
+     , HasServerConfigCtx m
+     , MetadataM m
+     , MonadMetadataStorageQueryAPI m
      )
-  => BLC.ByteString
+  => Env.Environment
+  -> BLC.ByteString
   -> m BLC.ByteString
-execQuery queryBs = do
+execQuery env queryBs = do
   query <- case A.decode queryBs of
     Just jVal -> decodeValue jVal
     Nothing   -> throw400 InvalidJSON "invalid json"
   buildSchemaCacheStrict
-  encJToLBS <$> runQueryM query
+  encJToLBS <$> runQueryM env query
 
+instance Tracing.HasReporter PGMetadataStorageApp
 
-instance HttpLog AppM where
-  logHttpError logger userInfoM reqId httpReq req qErr headers =
+instance MonadQueryInstrumentation PGMetadataStorageApp where
+  askInstrumentQuery _ = pure (id, noProfile)
+
+instance HasResourceLimits PGMetadataStorageApp where
+  askResourceLimits = pure (ResourceLimits id)
+
+instance HttpLog PGMetadataStorageApp where
+  logHttpError logger userInfoM reqId waiReq req qErr headers =
     unLogger logger $ mkHttpLog $
-      mkHttpErrorLogContext userInfoM reqId httpReq qErr req Nothing Nothing headers
+      mkHttpErrorLogContext userInfoM reqId waiReq req qErr Nothing Nothing headers
 
-  logHttpSuccess logger userInfoM reqId httpReq _ _ compressedResponse qTime cType headers =
+  logHttpSuccess logger userInfoM reqId waiReq _reqBody _response compressedResponse qTime cType headers =
     unLogger logger $ mkHttpLog $
-      mkHttpAccessLogContext userInfoM reqId httpReq compressedResponse qTime cType headers
+      mkHttpAccessLogContext userInfoM reqId waiReq compressedResponse qTime cType headers
 
-instance UserAuthentication AppM where
+instance MonadExecuteQuery PGMetadataStorageApp where
+  cacheLookup _ _ _ = pure ([], Nothing)
+  cacheStore  _ _ = pure ()
+
+instance UserAuthentication (Tracing.TraceT PGMetadataStorageApp) where
   resolveUserInfo logger manager headers authMode =
     runExceptT $ getUserInfoWithExpTime logger manager headers authMode
 
-instance MetadataApiAuthorization AppM where
-  authorizeMetadataApi query userInfo = do
-    let currRole = userRole userInfo
-    when (requiresAdmin query && currRole /= adminRole) $
-      withPathK "args" $ throw400 AccessDenied errMsg
-    where
-      errMsg = "restricted access : admin only"
+accessDeniedErrMsg :: Text
+accessDeniedErrMsg =
+  "restricted access : admin only"
 
-instance ConsoleRenderer AppM where
+instance MonadMetadataApiAuthorization PGMetadataStorageApp where
+  authorizeV1QueryApi query handlerCtx = runExceptT do
+    let currRole = _uiRole $ hcUser handlerCtx
+    when (requiresAdmin query && currRole /= adminRoleName) $
+      withPathK "args" $ throw400 AccessDenied accessDeniedErrMsg
+
+  authorizeV1MetadataApi _ handlerCtx = runExceptT do
+    let currRole = _uiRole $ hcUser handlerCtx
+    when (currRole /= adminRoleName) $
+      withPathK "args" $ throw400 AccessDenied accessDeniedErrMsg
+
+  authorizeV2QueryApi query handlerCtx = runExceptT do
+    let currRole = _uiRole $ hcUser handlerCtx
+    when (V2Q.queryNeedsAdmin query && currRole /= adminRoleName) $
+      withPathK "args" $ throw400 AccessDenied accessDeniedErrMsg
+
+instance ConsoleRenderer PGMetadataStorageApp where
   renderConsole path authMode enableTelemetry consoleAssetsDir =
     return $ mkConsoleHTML path authMode enableTelemetry consoleAssetsDir
+
+instance MonadGQLExecutionCheck PGMetadataStorageApp where
+  checkGQLExecution userInfo _ enableAL sc query = runExceptT $ do
+    req <- toParsed query
+    checkQueryInAllowlist enableAL userInfo req sc
+    return req
+
+instance MonadConfigApiHandler PGMetadataStorageApp where
+  runConfigApiHandler = configApiGetHandler
+
+instance MonadQueryLog PGMetadataStorageApp where
+  logQueryLog logger query genSqlM reqId =
+    unLogger logger $ QueryLog query genSqlM reqId
+
+instance WS.MonadWSLog PGMetadataStorageApp where
+  logWSLog = unLogger
+
+instance MonadResolveSource PGMetadataStorageApp where
+  getSourceResolver = mkPgSourceResolver <$> asks snd
+
+runInSeparateTx :: Q.TxE QErr a -> MetadataStorageT PGMetadataStorageApp a
+runInSeparateTx tx = do
+  pool <- lift $ asks fst
+  liftEitherM $ liftIO $ runExceptT $ Q.runTx pool (Q.RepeatableRead, Nothing) tx
+
+-- | Using @pg_notify@ function to publish schema sync events to other server
+-- instances via 'hasura_schema_update' channel.
+-- See Note [Schema Cache Sync]
+notifySchemaCacheSyncTx :: InstanceId -> CacheInvalidations -> Q.TxE QErr ()
+notifySchemaCacheSyncTx instanceId invalidations = do
+  Q.Discard () <- Q.withQE defaultTxErrorHandler [Q.sql|
+      SELECT pg_notify('hasura_schema_update', json_build_object(
+        'instance_id', $1,
+        'occurred_at', NOW(),
+        'invalidations', $2
+        )::text
+      )
+    |] (instanceId, Q.AltJ invalidations) True
+  pure ()
+
+getCatalogStateTx :: Q.TxE QErr CatalogState
+getCatalogStateTx =
+  mkCatalogState . Q.getRow <$> Q.withQE defaultTxErrorHandler [Q.sql|
+    SELECT hasura_uuid::text, cli_state::json, console_state::json
+      FROM hdb_catalog.hdb_version
+  |] () False
+  where
+    mkCatalogState (dbId, Q.AltJ cliState, Q.AltJ consoleState) =
+      CatalogState dbId cliState consoleState
+
+setCatalogStateTx :: CatalogStateType -> A.Value -> Q.TxE QErr ()
+setCatalogStateTx stateTy stateValue =
+  case stateTy of
+    CSTCli ->
+      Q.unitQE defaultTxErrorHandler [Q.sql|
+        UPDATE hdb_catalog.hdb_version
+           SET cli_state = $1
+      |] (Identity $ Q.AltJ stateValue) False
+    CSTConsole ->
+      Q.unitQE defaultTxErrorHandler [Q.sql|
+        UPDATE hdb_catalog.hdb_version
+           SET console_state = $1
+      |] (Identity $ Q.AltJ stateValue) False
+
+-- | Each of the function in the type class is executed in a totally separate transaction.
+--
+-- To learn more about why the instance is derived as following, see Note [Generic MetadataStorageT transformer]
+instance MonadMetadataStorage (MetadataStorageT PGMetadataStorageApp) where
+
+  fetchMetadata             = runInSeparateTx fetchMetadataFromCatalog
+  setMetadata               = runInSeparateTx . setMetadataInCatalog
+  notifySchemaCacheSync a b = runInSeparateTx $ notifySchemaCacheSyncTx a b
+  processSchemaSyncEventPayload instanceId payload = do
+    EventPayload{..} <- decodeValue payload
+    pure $ SchemaSyncEventProcessResult (instanceId /= _epInstanceId) _epInvalidations
+  getCatalogState     = runInSeparateTx getCatalogStateTx
+  setCatalogState a b = runInSeparateTx $ setCatalogStateTx a b
+
+  getDatabaseUid      = runInSeparateTx getDbId
+  checkMetadataStorageHealth = (lift (asks fst)) >>= checkDbConnection
+
+  getDeprivedCronTriggerStats        = runInSeparateTx getDeprivedCronTriggerStatsTx
+  getScheduledEventsForDelivery      = runInSeparateTx getScheduledEventsForDeliveryTx
+  insertScheduledEvent               = runInSeparateTx . insertScheduledEventTx
+  insertScheduledEventInvocation a b = runInSeparateTx $ insertInvocationTx a b
+  setScheduledEventOp a b c          = runInSeparateTx $ setScheduledEventOpTx a b c
+  unlockScheduledEvents a b          = runInSeparateTx $ unlockScheduledEventsTx a b
+  unlockAllLockedScheduledEvents     = runInSeparateTx unlockAllLockedScheduledEventsTx
+  clearFutureCronEvents              = runInSeparateTx . dropFutureCronEventsTx
+  getOneOffScheduledEvents a b       = runInSeparateTx $ getOneOffScheduledEventsTx a b
+  getCronEvents a b c                = runInSeparateTx $ getCronEventsTx a b c
+  getInvocations a b                 = runInSeparateTx $ getInvocationsTx a b
+  deleteScheduledEvent a b           = runInSeparateTx $ deleteScheduledEventTx a b
+
+  insertAction a b c d         = runInSeparateTx $ insertActionTx a b c d
+  fetchUndeliveredActionEvents = runInSeparateTx fetchUndeliveredActionEventsTx
+  setActionStatus a b          = runInSeparateTx $ setActionStatusTx a b
+  fetchActionResponse          = runInSeparateTx . fetchActionResponseTx
+  clearActionData              = runInSeparateTx . clearActionDataTx
+
+--- helper functions ---
 
 mkConsoleHTML :: HasVersion => Text -> AuthMode -> Bool -> Maybe Text -> Either String Text
 mkConsoleHTML path authMode enableTelemetry consoleAssetsDir =
   renderHtmlTemplate consoleTmplt $
       -- variables required to render the template
-      A.object [ "isAdminSecretSet" .= isAdminSecretSet authMode
-               , "consolePath" .= consolePath
-               , "enableTelemetry" .= boolToText enableTelemetry
-               , "cdnAssets" .= boolToText (isNothing consoleAssetsDir)
-               , "assetsVersion" .= consoleAssetsVersion
-               , "serverVersion" .= currentVersion
+      A.object [ "isAdminSecretSet" A..= isAdminSecretSet authMode
+               , "consolePath"      A..= consolePath
+               , "enableTelemetry"  A..= boolToText enableTelemetry
+               , "cdnAssets"        A..= boolToText (isNothing consoleAssetsDir)
+               , "assetsVersion"    A..= consoleAssetsVersion
+               , "serverVersion"    A..= currentVersion
                ]
     where
       consolePath = case path of
@@ -404,7 +818,6 @@ mkConsoleHTML path authMode enableTelemetry consoleAssetsDir =
         r  -> "/console/" <> r
 
       consoleTmplt = $(M.embedSingleTemplate "src-rsr/console.html")
-
 
 telemetryNotice :: String
 telemetryNotice =

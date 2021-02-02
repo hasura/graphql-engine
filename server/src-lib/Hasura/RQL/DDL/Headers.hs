@@ -5,24 +5,23 @@ import           Hasura.Incremental         (Cacheable)
 import           Hasura.Prelude
 import           Hasura.RQL.Instances       ()
 import           Hasura.RQL.Types.Error
-import           Language.Haskell.TH.Syntax (Lift)
-import           System.Environment         (lookupEnv)
 
 import qualified Data.CaseInsensitive       as CI
+import qualified Data.Environment           as Env
 import qualified Data.Text                  as T
 import qualified Network.HTTP.Types         as HTTP
 
 
 data HeaderConf = HeaderConf HeaderName HeaderValue
-   deriving (Show, Eq, Lift, Generic)
+   deriving (Show, Eq, Generic)
 instance NFData HeaderConf
 instance Hashable HeaderConf
 instance Cacheable HeaderConf
 
-type HeaderName  = T.Text
+type HeaderName  = Text
 
-data HeaderValue = HVValue T.Text | HVEnv T.Text
-   deriving (Show, Eq, Lift, Generic)
+data HeaderValue = HVValue Text | HVEnv Text
+   deriving (Show, Eq, Generic)
 instance NFData HeaderValue
 instance Hashable HeaderValue
 instance Cacheable HeaderValue
@@ -35,7 +34,10 @@ instance FromJSON HeaderConf where
     case (value, valueFromEnv ) of
       (Nothing, Nothing)  -> fail "expecting value or value_from_env keys"
       (Just val, Nothing) -> return $ HeaderConf name (HVValue val)
-      (Nothing, Just val) -> return $ HeaderConf name (HVEnv val)
+      (Nothing, Just val) -> do
+        when (T.isPrefixOf "HASURA_GRAPHQL_" val) $
+          fail $ "env variables starting with \"HASURA_GRAPHQL_\" are not allowed in value_from_env: " <> T.unpack val
+        return $ HeaderConf name (HVEnv val)
       (Just _, Just _)    -> fail "expecting only one of value or value_from_env keys"
   parseJSON _ = fail "expecting object for headers"
 
@@ -45,15 +47,21 @@ instance ToJSON HeaderConf where
 
 
 -- | Resolve configuration headers
-makeHeadersFromConf :: (MonadError QErr m, MonadIO m) => [HeaderConf] -> m [HTTP.Header]
-makeHeadersFromConf = mapM getHeader
+makeHeadersFromConf
+  :: MonadError QErr m => Env.Environment -> [HeaderConf] -> m [HTTP.Header]
+makeHeadersFromConf env = mapM getHeader
   where
-    getHeader hconf = do
+    getHeader hconf =
       ((CI.mk . txtToBs) *** txtToBs) <$>
         case hconf of
           (HeaderConf name (HVValue val)) -> return (name, val)
           (HeaderConf name (HVEnv val))   -> do
-            mEnv <- liftIO $ lookupEnv (T.unpack val)
+            let mEnv = Env.lookupEnv env (T.unpack val)
             case mEnv of
               Nothing     -> throw400 NotFound $ "environment variable '" <> val <> "' not set"
               Just envval -> pure (name, T.pack envval)
+
+-- | Encode headers to HeaderConf
+toHeadersConf :: [HTTP.Header] -> [HeaderConf]
+toHeadersConf =
+  map (uncurry HeaderConf . ((bsToTxt . CI.original) *** (HVValue . bsToTxt)))

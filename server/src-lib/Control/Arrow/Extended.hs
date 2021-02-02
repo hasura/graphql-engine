@@ -2,6 +2,7 @@
 
 {-# LANGUAGE Arrows               #-}
 {-# LANGUAGE UndecidableInstances #-}
+{-# LANGUAGE CPP                  #-}
 
 -- | The missing standard library for arrows. Some of the functionality in this module is similar to
 -- Paterson’s original @arrows@ library, but it has been modernized to work with recent versions of
@@ -101,7 +102,7 @@ instance Applicative (Traversal a r) where
     Yield v k -> Yield v ((<*> tx) . k)
 
 traversal :: (Traversable t) => t a -> Traversal a b (t b)
-traversal = traverse (flip Yield Done)
+traversal = traverse (`Yield` Done)
 
 -- | 'traverse' lifted to arrows. See also Note [Weird control operator types].
 traverseA :: (ArrowChoice arr, Traversable t) => arr (e, (a, s)) b -> arr (e, (t a, s)) (t b)
@@ -130,6 +131,7 @@ onNothingA f = proc (e, (v, s)) -> case v of
 {-# INLINABLE onNothingA #-}
 
 -- These rules are missing from Control.Arrow; see Note [Arrow rewrite rules]
+#ifndef __HLINT__
 {-# RULES
 "arr/arr/R" forall f g h. arr f . (arr g . h) = arr (f . g) . h
 
@@ -174,6 +176,7 @@ class (Monad m, Arrow arr) => ArrowKleisli m arr | arr -> m where
 "+++/arrM"    forall f g. arrM f +++ arrM g = arrM (runKleisli (Kleisli f +++ Kleisli g))
 "|||/arrM"    forall f g. arrM f ||| arrM g = arrM (runKleisli (Kleisli f ||| Kleisli g))
 #-}
+#endif
 
 -- | A combinator that serves a similar role to 'returnA' in arrow notation, except that the
 -- argument is a monadic action instead of a pure value. Just as 'returnA' is actually just

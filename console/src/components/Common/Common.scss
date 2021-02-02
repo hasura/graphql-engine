@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css?family=Gudea:400,700');
+@import url('https://fonts.googleapis.com/css?family=Gudea:400,500,700');
 
 @import url('https://fonts.googleapis.com/css?family=Roboto:300,400,500,700,900');
 
@@ -116,7 +116,8 @@ table tbody tr th {
       padding: 0px 0px;
       // border-left: 5px solid transparent;
 
-      a {
+      a,
+      .dbSelect {
         color: #767e93;
         background-color: #f0f0f0;
         width: 100%;
@@ -140,7 +141,8 @@ table tbody tr th {
       color: #333;
       text-decoration: none;
 
-      a {
+      a,
+      .dbSelect {
         text-decoration: none;
         background-color: #fff3d5;
         display: inline-block;
@@ -305,10 +307,6 @@ table tbody tr th {
   }
 }
 
-.apiExplorerFlex {
-  display: flex;
-}
-
 .collectionWrapper {
   padding-top: 25px;
   background-color: #f8f8f8;
@@ -375,54 +373,6 @@ input {
 
 .header_path_input:focus {
   box-shadow: none;
-}
-
-.ApiExplorerTable {
-  margin-bottom: 0;
-
-  thead {
-    tr {
-      th {
-        border-bottom: 0;
-        padding: 8px;
-      }
-
-      .ApiExplorerTableSuccess {
-        background-color: #fff;
-      }
-
-      .ApiExplorerTableDefault {
-        background-color: #f3f3f3;
-      }
-
-      td {
-        padding: 8px;
-        width: 50%;
-      }
-    }
-  }
-
-  tbody {
-    tr {
-      th {
-        border-bottom: 0;
-        padding: 8px;
-      }
-
-      td {
-        padding: 8px;
-        width: 50%;
-      }
-
-      .ApiExplorerTableSuccess {
-        background-color: #fff;
-      }
-
-      .ApiExplorerTableDefault {
-        background-color: #f3f3f3;
-      }
-    }
-  }
 }
 
 .padd_left_remove {
@@ -530,6 +480,10 @@ input {
   padding-right: 15px;
 }
 
+.addPadding20Px {
+  padding: 20px;
+}
+
 .width_auto {
   width: auto;
 }
@@ -588,6 +542,10 @@ input {
 
 .add_mar_small {
   margin-right: 10px !important;
+}
+
+.box_shadow {
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
 }
 
 .code_space {
@@ -951,6 +909,10 @@ code {
   text-align: center;
 }
 
+.w350 {
+  width: 350px;
+}
+
 .subheading_text {
   font-size: 15px;
   font-weight: bold;
@@ -958,6 +920,17 @@ code {
   margin-top: 0;
   margin-bottom: 0;
 
+  i {
+    margin-left: 5px;
+  }
+}
+
+.subheading_text_no_padd {
+  font-size: 15px;
+  font-weight: bold;
+  padding-bottom: 8px;
+  margin-top: 0;
+  margin-bottom: 0;
   i {
     margin-left: 5px;
   }
@@ -1307,12 +1280,6 @@ code {
   display: block;
   top: 0;
   z-index: 11;
-
-  .stickySeparator {
-    padding-top: 60px;
-    margin-left: -15px;
-    margin-right: -15px;
-  }
 }
 
 .fixed_header_internal_link {
@@ -1322,9 +1289,8 @@ code {
   visibility: hidden;
 }
 
-.graphQLHeight {
-  height: 72vh;
-  margin-bottom: 50px;
+.height100 {
+  height: 100%;
 }
 
 .button_mar_right {
@@ -1391,6 +1357,19 @@ code {
   cursor: not-allowed;
 }
 
+.wd300Px {
+  width: 300px;
+}
+
+.overflowAuto {
+  overflow: auto;
+}
+
+.tooltip {
+  cursor: pointer;
+  color: #4d4d4d;
+}
+
 .hiddenMoreWidth {
   width: 300px;
 }
@@ -1400,8 +1379,78 @@ code {
   margin-right: 50px !important;
 }
 
+.bottom5 {
+  bottom: 5px;
+}
+
+.marginLeftAuto {
+  margin-left: auto;
+}
+
+.textAlignRight {
+  text-align: right;
+}
+
+.flexColumn {
+  display: flex;
+  flex-direction: column;
+}
+
+.textNoNewLine {
+  word-break: break-all;
+  hyphens: auto;
+  white-space: normal;
+  display: block;
+}
+
+.permissionSummaryBtn {
+  margin: 0 auto;
+  margin-left: -23px;
+}
+
+.add_mar_40 {
+  margin-left: 40px;
+}
+
+.manage_dbs_page {
+  margin-right: 40px;
+}
+
+.manage_db_content {
+  margin-top: 20px;
+}
+
+.db_list_item {
+  display: flex;
+  margin-top: 20px;
+}
+
+.db_list_content {
+  margin-left: 10px;
+}
+
+.data_list_container {
+  display: flex;
+  flex-direction: column;
+}
+
+.db_item_actions {
+  width: 110px;
+  display: flex;
+  max-width: 120px;
+  justify-content: space-between;
+  margin-right: 10px;
+}
+
+.boldTitle {
+  color: #788095;
+  font-weight: bold;
+  font-size: 14px;
+  margin-left: 2px;
+}
+
 /* container height subtracting top header and bottom scroll bar */
-$mainContainerHeight: calc(100vh - 50px - 25px);
+$mainContainerHeight: calc(100vh - 50px - 20px);
 
 /* Min container width below which horizontal scroll will appear */
 $minContainerWidth: 1200px;

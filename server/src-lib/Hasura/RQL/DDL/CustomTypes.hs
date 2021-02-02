@@ -1,35 +1,79 @@
+{-# LANGUAGE RecordWildCards #-}
+
 module Hasura.RQL.DDL.CustomTypes
   ( runSetCustomTypes
-  , persistCustomTypes
-  , clearCustomTypes
+  , clearCustomTypesInMetadata
   , resolveCustomTypes
+  , lookupPGScalar
   ) where
 
-import           Control.Monad.Validate
 
-import qualified Data.HashMap.Strict               as Map
-import qualified Data.HashSet                      as Set
-import qualified Data.List.Extended                as L
-import qualified Data.Text                         as T
-import qualified Database.PG.Query                 as Q
-import qualified Language.GraphQL.Draft.Syntax     as G
-
-import           Hasura.EncJSON
 import           Hasura.Prelude
+
+import qualified Data.HashMap.Strict                as Map
+import qualified Data.HashSet                       as Set
+import qualified Data.List.Extended                 as L
+import qualified Data.List.NonEmpty                 as NE
+import qualified Data.Text                          as T
+import qualified Language.GraphQL.Draft.Syntax      as G
+
+import           Control.Lens                       ((.~))
+import           Control.Monad.Validate
+import           Data.Text.Extended
+
+import           Hasura.Backends.Postgres.SQL.Types
+import           Hasura.EncJSON
 import           Hasura.RQL.Types
 import           Hasura.SQL.Types
 
-import           Hasura.GraphQL.Schema.CustomTypes (buildCustomTypesSchemaPartial)
+{- Note [Postgres scalars in custom types]
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+It’s very convenient to be able to reference Postgres scalars in custom type
+definitions. For example, we might have a type like this:
 
+    type User {
+      id: uuid!
+      name: String!
+      location: geography
+    }
+
+The uuid and geography types are Postgres scalars, not separately-defined
+GraphQL types. To support this, we have to take a few extra steps:
+
+  1. The set of Postgres base types is not fixed; extensions like PostGIS add
+     new ones, and users can even define their own. Therefore, we fetch the
+     currently defined base types from the @pg_catalog.pg_type@ system table as part of
+     loading the metadata.
+
+  2. It’s possible for a custom type definition to use a type that doesn’t
+     appear elsewhere in the GraphQL schema, so we record which base types were
+     referenced while validating the custom type definitions and make sure to
+     include them in the generated schema explicitly.
+-}
+
+-- | Validate the custom types and return any reused Postgres base types (as
+-- scalars).
 validateCustomTypeDefinitions
   :: (MonadValidate [CustomTypeValidationError] m)
-  => TableCache -> CustomTypes -> m ()
-validateCustomTypeDefinitions tableCache customTypes = do
+  => SourceCache
+  -> CustomTypes
+  -> HashSet (ScalarType 'Postgres)
+  -- ^ all Postgres base types. See Note [Postgres scalars in custom types]
+  -> m (AnnotatedCustomTypes 'Postgres)
+validateCustomTypeDefinitions sources customTypes allPGScalars = do
   unless (null duplicateTypes) $ dispute $ pure $ DuplicateTypeNames duplicateTypes
   traverse_ validateEnum enumDefinitions
-  traverse_ validateInputObject inputObjectDefinitions
-  traverse_ validateObject objectDefinitions
+  reusedPGScalars <- execWriterT $ traverse_ validateInputObject inputObjectDefinitions
+  annotatedObjects <- mapFromL (unObjectTypeName . _otdName . _aotDefinition) <$>
+                      traverse validateObject objectDefinitions
+  let scalarTypeMap = Map.map NOCTScalar $
+        Map.map ASTCustom scalarTypes <> Map.mapWithKey ASTReusedScalar reusedPGScalars
+      enumTypeMap = Map.map NOCTEnum enumTypes
+      inputObjectTypeMap = Map.map NOCTInputObject inputObjectTypes
+      nonObjectTypeMap = scalarTypeMap <> enumTypeMap <> inputObjectTypeMap
+  pure $ AnnotatedCustomTypes nonObjectTypeMap annotatedObjects
   where
+    sourceTables = Map.mapMaybe unsafeSourceTables sources
     inputObjectDefinitions = fromMaybe [] $ _ctInputObjects customTypes
     objectDefinitions = fromMaybe [] $ _ctObjects customTypes
     scalarDefinitions = fromMaybe [] $ _ctScalars customTypes
@@ -43,12 +87,13 @@ validateCustomTypeDefinitions tableCache customTypes = do
       map (unObjectTypeName . _otdName) objectDefinitions
 
     scalarTypes =
-      Set.fromList $ map _stdName scalarDefinitions <> defaultScalars
+      mapFromL _stdName $ scalarDefinitions <> defaultScalars
 
     enumTypes =
-      Set.fromList $ map (unEnumTypeName . _etdName) enumDefinitions
+      mapFromL (unEnumTypeName . _etdName) enumDefinitions
 
-    defaultScalars = map G.NamedType ["Int", "Float", "String", "Boolean", "ID"]
+    inputObjectTypes =
+      mapFromL (unInputObjectTypeName . _iotdName) inputObjectDefinitions
 
     validateEnum
       :: (MonadValidate [CustomTypeValidationError] m)
@@ -62,7 +107,9 @@ validateCustomTypeDefinitions tableCache customTypes = do
         (_etdName enumDefinition) duplicateEnumValues
 
     validateInputObject
-      :: (MonadValidate [CustomTypeValidationError] m)
+      :: ( MonadValidate [CustomTypeValidationError] m
+         , MonadWriter (Map.HashMap G.Name PGScalarType) m
+         )
       => InputObjectTypeDefinition -> m ()
     validateInputObject inputObjectDefinition = do
       let inputObjectTypeName = _iotdName inputObjectDefinition
@@ -75,108 +122,133 @@ validateCustomTypeDefinitions tableCache customTypes = do
         dispute $ pure $ InputObjectDuplicateFields
         inputObjectTypeName duplicateFieldNames
 
-      let inputObjectTypes =
-            Set.fromList $ map (unInputObjectTypeName . _iotdName)
-            inputObjectDefinitions
-
-      let inputTypes =
-            scalarTypes `Set.union` enumTypes `Set.union` inputObjectTypes
+      let mapToSet = Set.fromList . Map.keys
+          inputTypes =
+            mapToSet scalarTypes `Set.union` mapToSet enumTypes `Set.union` mapToSet inputObjectTypes
 
       -- check that fields reference input types
       for_ (_iotdFields inputObjectDefinition) $ \inputObjectField -> do
         let fieldBaseType = G.getBaseType $ unGraphQLType $ _iofdType inputObjectField
-        unless (Set.member fieldBaseType inputTypes) $
-          refute $ pure $ InputObjectFieldTypeDoesNotExist
-          (_iotdName inputObjectDefinition)
-          (_iofdName inputObjectField) fieldBaseType
+        if | Set.member fieldBaseType inputTypes -> pure ()
+           | Just pgScalar <- lookupPGScalar allPGScalars fieldBaseType ->
+               tell $ Map.singleton fieldBaseType pgScalar
+           | otherwise ->
+               refute $ pure $ InputObjectFieldTypeDoesNotExist
+                 (_iotdName inputObjectDefinition)
+                 (_iofdName inputObjectField) fieldBaseType
 
     validateObject
       :: (MonadValidate [CustomTypeValidationError] m)
-      => ObjectTypeDefinition -> m ()
+      => ObjectType -> m (AnnotatedObjectType 'Postgres)
     validateObject objectDefinition = do
       let objectTypeName = _otdName objectDefinition
           fieldNames = map (unObjectFieldName . _ofdName) $
                        toList (_otdFields objectDefinition)
-          relationships = fromMaybe [] $ _otdRelationships objectDefinition
-          relNames = map (unRelationshipName . _trName) relationships
+          maybeRelationships = _otdRelationships objectDefinition
+          relNames = maybe []
+            (map (unRelationshipName . _trName) . toList) maybeRelationships
           duplicateFieldNames = L.duplicates $ fieldNames <> relNames
-          fields = toList $ _otdFields objectDefinition
+          fields = _otdFields objectDefinition
 
       -- check for duplicate field names
       unless (null duplicateFieldNames) $
         dispute $ pure $ ObjectDuplicateFields objectTypeName duplicateFieldNames
 
-      scalarFields <- fmap (Map.fromList . catMaybes) $
-        for fields $ \objectField -> do
-        let fieldType = _ofdType objectField
-            fieldBaseType = G.getBaseType $ unGraphQLType fieldType
-            fieldName = _ofdName objectField
-
+      scalarOrEnumFields <- for fields $ \objectField -> do
+        let fieldName = _ofdName objectField
         -- check that arguments are not defined
         when (isJust $ _ofdArguments objectField) $
           dispute $ pure $ ObjectFieldArgumentsNotAllowed
           objectTypeName fieldName
 
-        let objectTypes = Set.fromList $ map (unObjectTypeName . _otdName)
-                          objectDefinitions
+        forM objectField $ \fieldType -> do
+          let fieldBaseType = G.getBaseType $ unGraphQLType fieldType
+              objectTypes = Set.fromList $ map (unObjectTypeName . _otdName)
+                            objectDefinitions
 
-        -- check that the fields only reference scalars and enums
-        -- and not other object types
-        if | Set.member fieldBaseType scalarTypes -> return ()
-           | Set.member fieldBaseType enumTypes -> return ()
-           | Set.member fieldBaseType objectTypes ->
-               dispute $ pure $ ObjectFieldObjectBaseType
-               objectTypeName fieldName fieldBaseType
-           | otherwise ->
-               dispute $ pure $ ObjectFieldTypeDoesNotExist
-               objectTypeName fieldName fieldBaseType
+          -- check that the fields only reference scalars and enums
+          -- and not other object types
+          annotatedObjectFieldType <-
+            if | Just scalarDef <- Map.lookup fieldBaseType scalarTypes ->
+                   pure $ AOFTScalar $ ASTCustom scalarDef
+               | Just enumDef <- Map.lookup fieldBaseType enumTypes ->
+                   pure $ AOFTEnum enumDef
+               | Set.member fieldBaseType objectTypes ->
+                   refute $ pure $ ObjectFieldObjectBaseType
+                     objectTypeName fieldName fieldBaseType
+               | Just pgScalar <- lookupPGScalar allPGScalars fieldBaseType ->
+                   pure $ AOFTScalar $ ASTReusedScalar fieldBaseType pgScalar
+               | otherwise ->
+                   refute $ pure $ ObjectFieldTypeDoesNotExist
+                     objectTypeName fieldName fieldBaseType
+          pure (unGraphQLType fieldType, annotatedObjectFieldType)
 
-        -- collect all non list scalar types of this object
-        if (not (isListType fieldType) && Set.member fieldBaseType scalarTypes)
-          then pure $ Just (fieldName, fieldBaseType)
-          else pure Nothing
+      let scalarOrEnumFieldMap = Map.fromList $
+            map (_ofdName &&& (fst . _ofdType)) $ toList $ scalarOrEnumFields
 
-      for_ relationships $ \relationshipField -> do
-        let relationshipName = _trName relationshipField
-            remoteTable = _trRemoteTable relationshipField
-            fieldMapping = _trFieldMapping relationshipField
+      annotatedRelationships <- forM maybeRelationships $ \relationships -> do
+        let headSource NE.:| rest = _trSource <$> relationships
+        -- this check is needed to ensure that custom type relationships are all defined to a single source
+        unless (all (headSource ==) rest) $
+          refute $ pure $ ObjectRelationshipMultiSources objectTypeName
+        forM relationships $ \TypeRelationship{..} -> do
+          --check that the table exists
+          remoteTableInfo <- onNothing (Map.lookup headSource sourceTables >>= Map.lookup _trRemoteTable) $
+            refute $ pure $ ObjectRelationshipTableDoesNotExist
+            objectTypeName _trName _trRemoteTable
 
-        --check that the table exists
-        remoteTableInfo <- onNothing (Map.lookup remoteTable tableCache) $
-          refute $ pure $ ObjectRelationshipTableDoesNotExist
-          objectTypeName relationshipName remoteTable
+          -- check that the column mapping is sane
+          annotatedFieldMapping <- flip Map.traverseWithKey _trFieldMapping $
+            \fieldName columnName -> do
+              case Map.lookup fieldName scalarOrEnumFieldMap of
+                Nothing -> dispute $ pure $ ObjectRelationshipFieldDoesNotExist
+                           objectTypeName _trName fieldName
+                Just fieldType ->
+                  -- the field should be a non-list type scalar
+                  when (G.isListType fieldType) $
+                    dispute $ pure $ ObjectRelationshipFieldListType
+                    objectTypeName _trName fieldName
 
-        -- check that the column mapping is sane
-        forM_ (Map.toList fieldMapping) $ \(fieldName, columnName) -> do
+              -- the column should be a column of the table
+              onNothing (getColumnInfoM remoteTableInfo (fromCol @'Postgres columnName)) $ refute $ pure $
+                ObjectRelationshipColumnDoesNotExist objectTypeName _trName _trRemoteTable columnName
 
-          -- the field should be a non-list type scalar
-          when (Map.lookup fieldName scalarFields == Nothing) $
-            dispute $ pure $ ObjectRelationshipFieldDoesNotExist
-            objectTypeName relationshipName fieldName
+          pure $ TypeRelationship _trName _trType _trSource remoteTableInfo annotatedFieldMapping
 
-          -- the column should be a column of the table
-          when (getPGColumnInfoM remoteTableInfo (fromPGCol columnName) == Nothing) $
-            dispute $ pure $ ObjectRelationshipColumnDoesNotExist
-            objectTypeName relationshipName remoteTable columnName
-          return ()
+      let sourceConfig = do
+            source     <- _trSource . NE.head <$> annotatedRelationships
+            sourceInfo <- Map.lookup source sources
+            unsafeSourceConfiguration @'Postgres sourceInfo
+
+      pure $ flip AnnotatedObjectType sourceConfig $
+             ObjectTypeDefinition objectTypeName (_otdDescription objectDefinition)
+             scalarOrEnumFields annotatedRelationships
+
+-- see Note [Postgres scalars in custom types]
+lookupPGScalar :: Set.HashSet PGScalarType -> G.Name -> Maybe PGScalarType
+lookupPGScalar allPGScalars baseType =
+  fmap snd
+  $ find ((==) baseType . fst)
+  $ flip mapMaybe (toList allPGScalars)
+  $ \pgScalar -> (,pgScalar) <$> G.mkName (toSQLTxt pgScalar)
 
 data CustomTypeValidationError
-  = DuplicateTypeNames !(Set.HashSet G.NamedType)
+  = DuplicateTypeNames !(Set.HashSet G.Name)
   -- ^ type names have to be unique across all types
   | InputObjectFieldTypeDoesNotExist
-    !InputObjectTypeName !InputObjectFieldName !G.NamedType
+    !InputObjectTypeName !InputObjectFieldName !G.Name
   -- ^ field name and the field's base type
   | InputObjectDuplicateFields
     !InputObjectTypeName !(Set.HashSet InputObjectFieldName)
   -- ^ duplicate field declaration in input objects
   | ObjectFieldTypeDoesNotExist
-    !ObjectTypeName !ObjectFieldName !G.NamedType
+    !ObjectTypeName !ObjectFieldName !G.Name
   -- ^ field name and the field's base type
   | ObjectDuplicateFields !ObjectTypeName !(Set.HashSet G.Name)
   -- ^ duplicate field declaration in objects
   | ObjectFieldArgumentsNotAllowed !ObjectTypeName !ObjectFieldName
   -- ^ object fields can't have arguments
-  | ObjectFieldObjectBaseType !ObjectTypeName !ObjectFieldName !G.NamedType
+  | ObjectFieldObjectBaseType !ObjectTypeName !ObjectFieldName !G.Name
   -- ^ object fields can't have object types as base types
   | ObjectRelationshipTableDoesNotExist
     !ObjectTypeName !RelationshipName !QualifiedTable
@@ -184,15 +256,20 @@ data CustomTypeValidationError
   | ObjectRelationshipFieldDoesNotExist
     !ObjectTypeName !RelationshipName !ObjectFieldName
   -- ^ The field specified in the relationship mapping does not exist
+  | ObjectRelationshipFieldListType
+    !ObjectTypeName !RelationshipName !ObjectFieldName
+  -- ^ The field specified in the relationship mapping is a list type
   | ObjectRelationshipColumnDoesNotExist
     !ObjectTypeName !RelationshipName !QualifiedTable !PGCol
   -- ^ The column specified in the relationship mapping does not exist
+  | ObjectRelationshipMultiSources !ObjectTypeName
+  -- ^ Object relationship refers to table in multiple sources
   | DuplicateEnumValues !EnumTypeName !(Set.HashSet G.EnumValue)
   -- ^ duplicate enum values
   deriving (Show, Eq)
 
 showCustomTypeValidationError
-  :: CustomTypeValidationError -> T.Text
+  :: CustomTypeValidationError -> Text
 showCustomTypeValidationError = \case
   DuplicateTypeNames types ->
     "duplicate type names: " <> dquoteList types
@@ -228,10 +305,17 @@ showCustomTypeValidationError = \case
     "the field " <> fieldName <<> " for relationship " <> relName
     <<> " in object type " <> objType <<> " does not exist"
 
+  ObjectRelationshipFieldListType objType relName fieldName ->
+    "the type of the field " <> fieldName <<> " for relationship " <> relName
+    <<> " in object type " <> objType <<> " is a list type"
+
   ObjectRelationshipColumnDoesNotExist objType relName remoteTable column ->
     "the column " <> column <<> " of remote table " <> remoteTable
     <<> " for relationship " <> relName <<> " of object type " <> objType
     <<> " does not exist"
+
+  ObjectRelationshipMultiSources objType ->
+    "the object " <> objType <<> " has relationships refers to tables in multiple sources"
 
   DuplicateEnumValues tyName values ->
     "the enum type " <> tyName <<> " has duplicate values: " <> dquoteList values
@@ -240,38 +324,29 @@ showCustomTypeValidationError = \case
 runSetCustomTypes
   :: ( MonadError QErr m
      , CacheRWM m
-     , MonadTx m
+     , MetadataM m
      )
   => CustomTypes -> m EncJSON
 runSetCustomTypes customTypes = do
-  persistCustomTypes customTypes
-  buildSchemaCacheFor MOCustomTypes
-  return successMsg
+  buildSchemaCacheFor MOCustomTypes $
+    MetadataModifier $ metaCustomTypes .~ customTypes
+  pure successMsg
 
-persistCustomTypes :: MonadTx m => CustomTypes -> m ()
-persistCustomTypes customTypes = liftTx do
-  clearCustomTypes
-  Q.unitQE defaultTxErrorHandler [Q.sql|
-    INSERT into hdb_catalog.hdb_custom_types
-      (custom_types)
-      VALUES ($1)
-  |] (Identity $ Q.AltJ customTypes) False
-
-clearCustomTypes :: Q.TxE QErr ()
-clearCustomTypes = do
-  Q.unitQE defaultTxErrorHandler [Q.sql|
-    DELETE FROM hdb_catalog.hdb_custom_types
-  |] () False
+clearCustomTypesInMetadata :: MetadataModifier
+clearCustomTypesInMetadata =
+  MetadataModifier $ metaCustomTypes .~ emptyCustomTypes
 
 resolveCustomTypes
   :: (MonadError QErr m)
-  => TableCache -> CustomTypes -> m (NonObjectTypeMap, AnnotatedObjects)
-resolveCustomTypes tableCache customTypes = do
+  => SourceCache
+  -> CustomTypes
+  -> HashSet (ScalarType 'Postgres)
+  -> m (AnnotatedCustomTypes 'Postgres)
+resolveCustomTypes sources customTypes allPGScalars =
   either (throw400 ConstraintViolation . showErrors) pure
-    =<< runValidateT (validateCustomTypeDefinitions tableCache customTypes)
-  buildCustomTypesSchemaPartial tableCache customTypes
+    =<< runValidateT (validateCustomTypeDefinitions sources customTypes allPGScalars)
   where
-    showErrors :: [CustomTypeValidationError] -> T.Text
+    showErrors :: [CustomTypeValidationError] -> Text
     showErrors allErrors =
       "validation for the given custom types failed " <> reasonsMessage
       where

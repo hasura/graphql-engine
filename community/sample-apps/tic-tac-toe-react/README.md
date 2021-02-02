@@ -19,4 +19,4 @@ To deploy all the services run the app using docker:
 docker-compose up -d --build
 ```
 
-You can access your app at http://localhost:3030
+You can access your app at http://localhost:8000

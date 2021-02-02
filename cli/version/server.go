@@ -1,10 +1,8 @@
 package version
 
 import (
-	"fmt"
 	"io/ioutil"
 	"net/http"
-	"net/url"
 
 	yaml "github.com/ghodss/yaml"
 	"github.com/pkg/errors"
@@ -15,13 +13,8 @@ type serverVersionResponse struct {
 }
 
 // FetchServerVersion reads the version from server.
-func FetchServerVersion(endpoint string) (version string, err error) {
-	ep, err := url.Parse(endpoint)
-	if err != nil {
-		return "", errors.Wrap(err, "cannot parse endpoint as a valid url")
-	}
-	versionEndpoint := fmt.Sprintf("%s/v1/version", ep.String())
-	response, err := http.Get(versionEndpoint)
+func FetchServerVersion(endpoint string, client *http.Client) (version string, err error) {
+	response, err := client.Get(endpoint)
 	if err != nil {
 		return "", errors.Wrap(err, "failed making version api call")
 	}
@@ -30,7 +23,7 @@ func FetchServerVersion(endpoint string) (version string, err error) {
 		case http.StatusNotFound:
 			return "", nil
 		default:
-			return "", errors.Errorf("GET %s failed - [%d]", versionEndpoint, response.StatusCode)
+			return "", errors.Errorf("GET %s failed - [%d]", endpoint, response.StatusCode)
 		}
 	} else {
 		defer response.Body.Close()

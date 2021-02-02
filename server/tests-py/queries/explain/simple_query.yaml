@@ -1,0 +1,25 @@
+description: Explain query
+url: /v1/graphql/explain
+status: 200
+response:
+- field: user
+  sql: "SELECT  coalesce(json_agg(\"root\" ), '[]' ) AS \"root\" FROM  (SELECT  row_to_json((SELECT\
+    \  \"_1_e\"  FROM  (SELECT  \"_0_root.base\".\"id\" AS \"id\", \"_0_root.base\"\
+    .\"name\" AS \"name\", \"_0_root.base\".\"age\" AS \"age\"       ) AS \"_1_e\"\
+    \      ) ) AS \"root\" FROM  (SELECT  *  FROM \"public\".\"user\"  WHERE ('true')\
+    \     ) AS \"_0_root.base\"      ) AS \"_2_root\"      "
+  plan:
+  - Aggregate  (cost=40.00..40.01 rows=1 width=32)
+  - '  ->  Seq Scan on "user"  (cost=0.00..22.00 rows=1200 width=40)'
+  - '  SubPlan 1'
+  - '    ->  Result  (cost=0.00..0.01 rows=1 width=32)'
+query:
+  query:
+    query: |
+      query {
+        user{
+          id
+          name
+          age
+        }
+      }

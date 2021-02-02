@@ -61,7 +61,13 @@ func newMigrateApplyCmd(ec *cli.ExecutionContext) *cobra.Command {
 			return ec.Validate()
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
-			opts.EC.Spin("Applying migrations...")
+			opts.Datasource = ec.Datasource
+			if opts.dryRun && opts.SkipExecution {
+				return errors.New("both --skip-execution and --dry-run flags cannot be used together")
+			}
+			if !opts.dryRun {
+				opts.EC.Spin("Applying migrations...")
+			}
 			err := opts.Run()
 			opts.EC.Spinner.Stop()
 			if err != nil {
@@ -78,7 +84,9 @@ func newMigrateApplyCmd(ec *cli.ExecutionContext) *cobra.Command {
 				}
 				return errors.Wrap(err, "apply failed")
 			}
-			opts.EC.Logger.Info("migrations applied")
+			if !opts.dryRun {
+				opts.EC.Logger.Info("migrations applied")
+			}
 			return nil
 		},
 	}
@@ -93,6 +101,7 @@ func newMigrateApplyCmd(ec *cli.ExecutionContext) *cobra.Command {
 	f.BoolVar(&opts.SkipExecution, "skip-execution", false, "skip executing the migration action, but mark them as applied")
 	f.StringVar(&opts.MigrationType, "type", "up", "type of migration (up, down) to be used with version flag")
 
+	f.BoolVar(&opts.dryRun, "dry-run", false, "print the names of migrations which are going to be applied")
 	return migrateApplyCmd
 }
 
@@ -106,6 +115,8 @@ type MigrateApplyOptions struct {
 	// version up to which migration chain has to be applied
 	GotoVersion   string
 	SkipExecution bool
+	dryRun        bool
+	Datasource    string
 }
 
 func (o *MigrateApplyOptions) Run() error {
@@ -114,11 +125,12 @@ func (o *MigrateApplyOptions) Run() error {
 		return errors.Wrap(err, "error validating flags")
 	}
 
-	migrateDrv, err := newMigrate(o.EC, true)
+	migrateDrv, err := migrate.NewMigrate(o.EC, true, o.Datasource)
 	if err != nil {
 		return err
 	}
 	migrateDrv.SkipExecution = o.SkipExecution
+	migrateDrv.DryRun = o.dryRun
 
 	return ExecuteMigration(migrationType, migrateDrv, step)
 }

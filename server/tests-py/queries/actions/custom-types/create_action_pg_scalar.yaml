@@ -1,0 +1,28 @@
+- description: Create an action with PG scalars in input arguments
+  url: /v1/query
+  status: 200
+  response:
+    message: success
+  query:
+    type: create_action
+    args:
+      name: some_action
+      definition:
+        kind: synchronous
+        arguments:
+        - name: user_id
+          type: ID!
+        - name: location
+          type: geography!
+        output_type: User!
+        handler: http://127.0.0.1:5593/create-user
+
+- description: Remove action
+  url: /v1/query
+  status: 200
+  response:
+    message: success
+  query:
+    type: drop_action
+    args:
+      name: some_action

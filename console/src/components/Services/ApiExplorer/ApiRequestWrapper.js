@@ -58,6 +58,7 @@ class ApiRequestWrapper extends Component {
             this.props.request.bodyType ? this.props.request.bodyType : ''
           }
           credentials={this.props.credentials}
+          mode={this.props.mode}
           method={this.props.request.method}
           url={this.props.request.url}
           headers={this.props.request.headers}
@@ -65,6 +66,7 @@ class ApiRequestWrapper extends Component {
           params={this.props.request.params}
           explorerData={this.props.explorerData}
           dispatch={this.props.dispatch}
+          loading={this.props.loading}
           dataHeaders={this.props.dataHeaders}
           numberOfTables={this.props.numberOfTables}
           headerFocus={this.props.headerFocus}

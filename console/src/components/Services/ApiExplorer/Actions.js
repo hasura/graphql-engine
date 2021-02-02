@@ -9,9 +9,11 @@ import { WebSocketLink } from 'apollo-link-ws';
 import { parse } from 'graphql';
 import { execute } from 'apollo-link';
 
-import { getHeadersAsJSON } from './utils';
-import { saveAppState, clearState } from '../../AppState.js';
+import { getHeadersAsJSON, getGraphQLEndpoint } from './utils';
+import { saveAppState, clearState } from '../../AppState';
 import { ADMIN_SECRET_HEADER_KEY } from '../../../constants';
+import requestActionPlain from '../../../utils/requestActionPlain';
+import { showErrorNotification } from '../Common/Notification';
 
 const CHANGE_TAB = 'ApiExplorer/CHANGE_TAB';
 const CHANGE_API_SELECTION = 'ApiExplorer/CHANGE_API_SELECTION';
@@ -43,6 +45,32 @@ const CREATE_WEBSOCKET_CLIENT = 'ApiExplorer/CREATE_WEBSOCKET_CLIENT';
 
 const FOCUS_ROLE_HEADER = 'ApiExplorer/FOCUS_ROLE_HEADER';
 const UNFOCUS_ROLE_HEADER = 'ApiExplorer/UNFOCUS_ROLE_HEADER';
+
+let websocketSubscriptionClient;
+
+const getSubscriptionInstance = (url, headers) => {
+  return new SubscriptionClient(url, {
+    connectionParams: {
+      headers: {
+        ...headers,
+      },
+      lazy: true,
+    },
+    reconnect: true,
+  });
+};
+
+const SET_LOADING = 'ApiExplorer/SET_LOADING';
+export const setLoading = isLoading => ({
+  type: SET_LOADING,
+  data: isLoading,
+});
+
+const SWITCH_GRAPHIQL_MODE = 'ApiExplorer/SWITCH_GRAPHIQL_MODE';
+export const switchGraphiQLMode = mode => ({
+  type: SWITCH_GRAPHIQL_MODE,
+  mode,
+});
 
 const clearHistory = () => {
   return {
@@ -88,8 +116,9 @@ const getChangedHeaders = (headers, changedHeaderDetails) => {
   return nonEmptyHeaders;
 };
 
-const verifyJWTToken = token => dispatch => {
-  const url = Endpoints.graphQLUrl;
+const verifyJWTToken = token => (dispatch, getState) => {
+  const { mode: graphiqlMode } = getState().apiexplorer;
+  const url = getGraphQLEndpoint(graphiqlMode);
   const body = {
     query: '{ __type(name: "dummy") {name}}',
     variables: null,
@@ -150,15 +179,15 @@ const createWsClient = (url, headers) => {
   const websocketProtocol = gqlUrl.protocol === 'https:' ? 'wss' : 'ws';
   const headersFinal = getHeadersAsJSON(headers);
   const graphqlUrl = `${websocketProtocol}://${url.split('//')[1]}`;
-  const client = new SubscriptionClient(graphqlUrl, {
-    connectionParams: {
-      headers: {
-        ...headersFinal,
-      },
-    },
-    reconnect: true,
-  });
-  return client;
+
+  if (!websocketSubscriptionClient) {
+    websocketSubscriptionClient = getSubscriptionInstance(
+      graphqlUrl,
+      headersFinal
+    );
+  }
+
+  return websocketSubscriptionClient;
 };
 
 const graphqlSubscriber = (graphQLParams, url, headers) => {
@@ -187,22 +216,25 @@ const isSubscription = graphQlParams => {
   return false;
 };
 
-const graphQLFetcherFinal = (graphQLParams, url, headers) => {
+const graphQLFetcherFinal = (graphQLParams, url, headers, dispatch) => {
   if (isSubscription(graphQLParams)) {
     return graphqlSubscriber(graphQLParams, url, headers);
   }
-  return fetch(url, {
-    method: 'POST',
-    headers: getHeadersAsJSON(headers),
-    body: JSON.stringify(graphQLParams),
-  }).then(response => response.json());
+  return dispatch(
+    requestAction(url, {
+      method: 'POST',
+      headers: getHeadersAsJSON(headers),
+      body: JSON.stringify(graphQLParams),
+    })
+  );
 };
 
 /* Analyse Fetcher */
-const analyzeFetcher = (url, headers) => {
-  return query => {
+const analyzeFetcher = (headers, mode) => {
+  return (query, dispatch) => {
     const editedQuery = {
       query,
+      is_relay: mode === 'relay',
     };
 
     const user = {
@@ -227,18 +259,32 @@ const analyzeFetcher = (url, headers) => {
 
     editedQuery.user = user;
 
-    return fetch(`${url}/explain`, {
-      method: 'post',
-      headers: reqHeaders,
-      body: JSON.stringify(editedQuery),
-      credentials: 'include',
-    });
+    return dispatch(
+      requestActionPlain(`${Endpoints.graphQLUrl}/explain`, {
+        method: 'post',
+        headers: reqHeaders,
+        body: JSON.stringify(editedQuery),
+        credentials: 'include',
+      })
+    )
+      .then(JSON.parse)
+      .catch(errorPayload => {
+        let error;
+        try {
+          error = JSON.parse(errorPayload).error;
+        } catch {
+          error = 'Analyze query error';
+        }
+        dispatch(showErrorNotification(error));
+      });
   };
 };
 /* End of it */
 
 const changeRequestHeader = (index, key, newValue, isDisabled) => {
   return (dispatch, getState) => {
+    websocketSubscriptionClient = null;
+
     const currentState = getState().apiexplorer;
 
     const updatedHeader = {
@@ -262,7 +308,10 @@ const changeRequestHeader = (index, key, newValue, isDisabled) => {
   };
 };
 
-const setHeadersBulk = headers => ({ type: SET_REQUEST_HEADERS_BULK, headers });
+const setHeadersBulk = headers => ({
+  type: SET_REQUEST_HEADERS_BULK,
+  headers,
+});
 
 const removeRequestHeader = index => {
   return (dispatch, getState) => {
@@ -405,9 +454,9 @@ const getStateAfterClearingHistory = state => {
   };
 };
 
-const getRemoteQueries = (queryUrl, cb) => {
-  fetch(queryUrl)
-    .then(resp => resp.text().then(cb))
+const getRemoteQueries = (queryUrl, cb, dispatch) => {
+  dispatch(requestActionPlain(queryUrl))
+    .then(cb)
     .catch(e => console.error('Invalid query file URL: ', e));
 };
 
@@ -615,6 +664,16 @@ const apiExplorerReducer = (state = defaultState, action) => {
             headersInitialised: true,
           },
         },
+      };
+    case SWITCH_GRAPHIQL_MODE:
+      return {
+        ...state,
+        mode: action.mode,
+      };
+    case SET_LOADING:
+      return {
+        ...state,
+        loading: action.data,
       };
     default:
       return state;

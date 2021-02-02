@@ -4,6 +4,7 @@ const asyncState = {
   isDeleting: false,
   isError: false,
   isFetching: false,
+  isUpdating: false,
   isFetchError: null,
 };
 
@@ -11,6 +12,7 @@ const functionData = {
   functionName: '',
   functionSchema: '',
   functionDefinition: '',
+  configuration: {},
   setOffTable: '',
   setOffTableSchema: '',
   inputArgNames: [],

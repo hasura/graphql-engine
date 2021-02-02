@@ -14,8 +14,22 @@
 -- See: https://www.haskell.org/cabal/users-guide/nix-local-build.html#configuring-builds-with-cabal-project
 packages: .
 
+constraints:
+  -- ensure we don't end up with a freeze file that forces an incompatible
+  -- version in CI for Setup.hs scripts.
+  setup.Cabal <3.4
+
+allow-newer:
+  -- dependent-map depends on constraints-extras, but its bounds have not yet
+  -- been relaxed for GHC 8.10.
+  constraints-extras-0.3.0.2:base,
+  constraints-extras-0.3.0.2:constraints,
+  constraints-extras-0.3.0.2:template-haskell
+
 package *
   optimization: 2
+  -- For tooling, e.g. 'weeder', and IDE-like stuff:
+  ghc-options: -fwrite-ide-info
 
   haddock-html: true
   haddock-hoogle: true
@@ -29,14 +43,19 @@ package graphql-engine
 source-repository-package
   type: git
   location: https://github.com/hasura/pg-client-hs.git
-  tag: 70a849d09bea9461e72c5a5bbde06df65aab61c0
+  tag: 08b02fbb4e7c7e1ac44325ef1bd107725f59255f
 
 source-repository-package
   type: git
   location: https://github.com/hasura/graphql-parser-hs.git
-  tag: 1380495a7b3269b70a7ab3081d745a5f54171a9c
+  tag: f3a20ab6201669bd683d5a0c8580410af264c7d0
 
 source-repository-package
   type: git
   location: https://github.com/hasura/ci-info-hs.git
-  tag: 6af5a68450347a02295a9cd050d05a8b2f5c06ab
+  tag: 947fd56582b1e8bec9ffed98ca9ac2f6b63e36c9
+
+source-repository-package
+  type: git
+  location: https://github.com/hasura/pool.git
+  tag: 0fdfaed4e109ca6a6bf00ed6d79c329626e3bdd4

@@ -17,6 +17,379 @@ import (
 
 type CustomQuery linq.Query
 
+func (q CustomQuery) MergeCustomTypes(squashList *database.CustomList) error {
+	actionPermissionsTransition := transition.New(&cronTriggerConfig{})
+	actionPermissionsTransition.Initial("new")
+	actionPermissionsTransition.State("created")
+
+	actionPermissionsTransition.Event(setCustomTypes).To("created").From("new", "created")
+
+	next := q.Iterate()
+
+	for item, ok := next(); ok; item, ok = next() {
+		g := item.(linq.Group)
+		if g.Key == "" {
+			continue
+		}
+		var first *list.Element
+		for ind, val := range g.Group {
+			element := val.(*list.Element)
+			switch obj := element.Value.(type) {
+			case *setCustomTypesInput:
+				if ind == 0 {
+					first = element
+					continue
+				}
+				first.Value = obj
+				squashList.Remove(element)
+			}
+		}
+	}
+	return nil
+}
+
+func (q CustomQuery) MergeActionPermissions(squashList *database.CustomList) error {
+	actionPermissionsTransition := transition.New(&actionPermissionConfig{})
+	actionPermissionsTransition.Initial("new")
+	actionPermissionsTransition.State("created")
+	actionPermissionsTransition.State("deleted")
+
+	actionPermissionsTransition.Event(createActionPermission).To("created").From("new", "deleted")
+	actionPermissionsTransition.Event(dropActionPermission).To("deleted").From("new", "created")
+
+	next := q.Iterate()
+
+	for item, ok := next(); ok; item, ok = next() {
+		g := item.(linq.Group)
+		if g.Key == "" {
+			continue
+		}
+		key := g.Key.(string)
+		cfg := actionPermissionConfig{
+			action: key,
+		}
+		prevElems := make([]*list.Element, 0)
+		for _, val := range g.Group {
+			element := val.(*list.Element)
+			switch element.Value.(type) {
+			case *createActionPermissionInput:
+				err := actionPermissionsTransition.Trigger(createActionPermission, &cfg, nil)
+				if err != nil {
+					return err
+				}
+				prevElems = append(prevElems, element)
+			case *dropActionPermissionInput:
+				if cfg.GetState() == "created" {
+					prevElems = append(prevElems, element)
+				}
+				err := actionPermissionsTransition.Trigger(dropActionPermission, &cfg, nil)
+				if err != nil {
+					return err
+				}
+				for _, e := range prevElems {
+					squashList.Remove(e)
+				}
+			}
+		}
+	}
+	return nil
+}
+
+func (q CustomQuery) MergeActions(squashList *database.CustomList) error {
+	actionTransition := transition.New(&actionConfig{})
+	actionTransition.Initial("new")
+	actionTransition.State("created")
+	actionTransition.State("updated")
+	actionTransition.State("deleted")
+
+	actionTransition.Event(createAction).To("created").From("new", "deleted")
+	actionTransition.Event(updateAction).To("updated").From("new", "created", "updated", "deleted")
+	actionTransition.Event(dropAction).To("deleted").From("new", "created", "updated")
+
+	next := q.Iterate()
+
+	for item, ok := next(); ok; item, ok = next() {
+		g := item.(linq.Group)
+		if g.Key == "" {
+			continue
+		}
+		key, ok := g.Key.(string)
+		if !ok {
+			continue
+		}
+		cfg := actionConfig{
+			name: key,
+		}
+		prevElems := make([]*list.Element, 0)
+		for _, val := range g.Group {
+			element := val.(*list.Element)
+			switch obj := element.Value.(type) {
+			case *createActionInput:
+				err := actionTransition.Trigger(createAction, &cfg, nil)
+				if err != nil {
+					return errors.Wrapf(err, "error squashin Action: %v", obj.Name)
+				}
+				prevElems = append(prevElems, element)
+			case *updateActionInput:
+				if len(prevElems) != 0 {
+					if _, ok := prevElems[0].Value.(*createActionInput); ok {
+						prevElems[0].Value = &createActionInput{
+							actionDefinition: obj.actionDefinition,
+						}
+						prevElems = prevElems[:1]
+
+						err := actionTransition.Trigger(dropAction, &cfg, nil)
+						if err != nil {
+							return errors.Wrapf(err, "error squashing action: %v", obj.Name)
+						}
+						squashList.Remove(element)
+
+						err = actionTransition.Trigger(createAction, &cfg, nil)
+						if err != nil {
+							return errors.Wrapf(err, "error squashing action: %v", obj.Name)
+						}
+						continue
+					}
+
+					for _, e := range prevElems {
+						squashList.Remove(e)
+					}
+					prevElems = prevElems[:0]
+					err := actionTransition.Trigger(dropAction, &cfg, nil)
+					if err != nil {
+						return errors.Wrapf(err, "error squashing action: %v", obj.Name)
+					}
+
+				}
+
+				prevElems = append(prevElems, element)
+				err := actionTransition.Trigger(updateAction, &cfg, nil)
+				if err != nil {
+					return errors.Wrapf(err, "error squashing: %v", obj.Name)
+				}
+			case *dropActionInput:
+				if cfg.GetState() == "created" {
+					prevElems = append(prevElems, element)
+					// drop action permissions as well
+					actionPermissionGroup := CustomQuery(linq.FromIterable(squashList).GroupByT(
+						func(element *list.Element) string {
+							switch args := element.Value.(type) {
+							case *createActionPermissionInput:
+								if v, ok := args.Action.(string); ok {
+									return v
+								}
+							case *dropActionPermissionInput:
+								if v, ok := args.Action.(string); ok {
+									return v
+								}
+							}
+							return ""
+						}, func(element *list.Element) *list.Element {
+							return element
+						},
+					))
+
+					next := actionPermissionGroup.Iterate()
+
+					for item, ok := next(); ok; item, ok = next() {
+						g := item.(linq.Group)
+						if g.Key == "" {
+							continue
+						}
+						key, ok := g.Key.(string)
+						if !ok {
+							continue
+						}
+						if key == obj.Name {
+							for _, val := range g.Group {
+								element := val.(*list.Element)
+								squashList.Remove(element)
+							}
+						}
+					}
+				}
+
+				err := actionTransition.Trigger(dropAction, &cfg, nil)
+				if err != nil {
+					return err
+				}
+				for _, e := range prevElems {
+					squashList.Remove(e)
+				}
+				prevElems = prevElems[:0]
+			}
+		}
+	}
+	return nil
+}
+
+func (q CustomQuery) MergeCronTriggers(squashList *database.CustomList) error {
+	cronTriggersTransition := transition.New(&cronTriggerConfig{})
+	cronTriggersTransition.Initial("new")
+	cronTriggersTransition.State("created")
+	cronTriggersTransition.State("deleted")
+
+	cronTriggersTransition.Event(createCronTrigger).To("created").From("new", "deleted")
+	cronTriggersTransition.Event(deleteCronTrigger).To("deleted").From("new", "created")
+
+	next := q.Iterate()
+
+	for item, ok := next(); ok; item, ok = next() {
+		var wasCreated bool
+		g := item.(linq.Group)
+		if g.Key == "" {
+			continue
+		}
+		key := g.Key.(string)
+		cfg := cronTriggerConfig{
+			name: key,
+		}
+		prevElems := make([]*list.Element, 0)
+		for _, val := range g.Group {
+			element := val.(*list.Element)
+			switch obj := element.Value.(type) {
+			case *createCronTriggerInput:
+				if obj.Replace != nil {
+					if *obj.Replace {
+						for _, e := range prevElems {
+							squashList.Remove(e)
+						}
+						prevElems = prevElems[:0]
+						err := cronTriggersTransition.Trigger(deleteCronTrigger, &cfg, nil)
+						if err != nil {
+							return err
+						}
+						obj.Replace = nil
+					} else {
+						wasCreated = true
+					}
+				} else {
+					wasCreated = true
+				}
+				err := cronTriggersTransition.Trigger(createCronTrigger, &cfg, nil)
+				if err != nil {
+					return err
+				}
+				prevElems = append(prevElems, element)
+			case *deleteCronTriggerInput:
+				if wasCreated {
+					// if this is true it means that a trigger was created
+					// which means their is no point in keeping the delete event trigger around
+					//
+					// otherwise it means that it was only updated so we have to keep
+					// the delete trigger migration
+					prevElems = append(prevElems, element)
+				}
+				err := cronTriggersTransition.Trigger(deleteCronTrigger, &cfg, nil)
+				if err != nil {
+					return err
+				}
+				// drop previous elements
+				for _, e := range prevElems {
+					squashList.Remove(e)
+				}
+			}
+		}
+	}
+	return nil
+}
+
+func (q CustomQuery) MergeRemoteRelationships(squashList *database.CustomList) error {
+	remoteRelationshipTransition := transition.New(&remoteRelationshipConfig{})
+	remoteRelationshipTransition.Initial("new")
+	remoteRelationshipTransition.State("created")
+	remoteRelationshipTransition.State("updated")
+	remoteRelationshipTransition.State("deleted")
+
+	remoteRelationshipTransition.Event(createRemoteRelationship).To("created").From("new", "deleted")
+	remoteRelationshipTransition.Event(updateRemoteRelationship).To("updated").From("new", "created", "updated", "deleted")
+	remoteRelationshipTransition.Event(deleteRemoteRelationship).To("deleted").From("new", "created", "updated")
+
+	next := q.Iterate()
+
+	for item, ok := next(); ok; item, ok = next() {
+		g := item.(linq.Group)
+		if g.Key == nil {
+			// ignore this because this is the default value for the key
+			continue
+		}
+		key, ok := g.Key.(remoteRelationshipMap)
+		if !ok {
+			continue
+		}
+		cfg := remoteRelationshipConfig{
+			tableName:  key.tableName,
+			schemaName: key.schemaName,
+			name:       key.name,
+		}
+		prevElems := make([]*list.Element, 0)
+		for _, val := range g.Group {
+			// possible inputs
+			// 1. create, update, update .....
+			// 2. create, update, update .........., delete
+			// 3. update, update, update ..........
+			// 4. update, update, ...., delete
+			// 5. update, update, ...., delete, create
+			element := val.(*list.Element)
+			switch obj := element.Value.(type) {
+			case *createRemoteRelationshipInput:
+				err := remoteRelationshipTransition.Trigger(createRemoteRelationship, &cfg, nil)
+				if err != nil {
+					return errors.Wrapf(err, "error squashing: %v", obj.Name)
+				}
+				prevElems = append(prevElems, element)
+			case *updateRemoteRelationshipInput:
+				if len(prevElems) != 0 {
+					if _, ok := prevElems[0].Value.(*createRemoteRelationshipInput); ok {
+						squashList.Remove(prevElems[0])
+						prevElems = prevElems[:0]
+						err := remoteRelationshipTransition.Trigger(deleteRemoteRelationship, &cfg, nil)
+						if err != nil {
+							return errors.Wrapf(err, "error squashing: %v", obj.Name)
+						}
+
+						element.Value = obj.createRemoteRelationshipInput
+						prevElems = append(prevElems, element)
+						err = remoteRelationshipTransition.Trigger(createRemoteRelationship, &cfg, nil)
+						if err != nil {
+							return errors.Wrapf(err, "error squashing: %v", obj.Name)
+						}
+						continue
+					}
+
+					for _, e := range prevElems {
+						squashList.Remove(e)
+					}
+					prevElems = prevElems[:0]
+					err := remoteRelationshipTransition.Trigger(deleteRemoteRelationship, &cfg, nil)
+					if err != nil {
+						return errors.Wrapf(err, "error squashing: %v", obj.Name)
+					}
+
+				}
+
+				prevElems = append(prevElems, element)
+				err := remoteRelationshipTransition.Trigger(updateRemoteRelationship, &cfg, nil)
+				if err != nil {
+					return errors.Wrapf(err, "error squashing: %v", obj.Name)
+				}
+			case *deleteRemoteRelationshipInput:
+				if cfg.GetState() == "created" {
+					prevElems = append(prevElems, element)
+				}
+				err := remoteRelationshipTransition.Trigger(deleteRemoteRelationship, &cfg, nil)
+				if err != nil {
+					return err
+				}
+				for _, e := range prevElems {
+					squashList.Remove(e)
+				}
+				prevElems = prevElems[:0]
+			}
+		}
+	}
+	return nil
+}
 func (q CustomQuery) MergeEventTriggers(squashList *database.CustomList) error {
 	eventTriggerTransition := transition.New(&eventTriggerConfig{})
 	eventTriggerTransition.Initial("new")
@@ -29,6 +402,7 @@ func (q CustomQuery) MergeEventTriggers(squashList *database.CustomList) error {
 	next := q.Iterate()
 
 	for item, ok := next(); ok; item, ok = next() {
+		var wasCreated bool
 		g := item.(linq.Group)
 		if g.Key == "" {
 			continue
@@ -40,19 +414,40 @@ func (q CustomQuery) MergeEventTriggers(squashList *database.CustomList) error {
 		prevElems := make([]*list.Element, 0)
 		for _, val := range g.Group {
 			element := val.(*list.Element)
-			switch element.Value.(type) {
-			case *trackTableInput:
+			switch obj := element.Value.(type) {
+			case *createEventTriggerInput:
+				if obj.Replace != nil {
+					if *obj.Replace {
+						for _, e := range prevElems {
+							squashList.Remove(e)
+						}
+						err := eventTriggerTransition.Trigger("delete_event_trigger", &evCfg, nil)
+						if err != nil {
+							return err
+						}
+						obj.Replace = nil
+					}
+				} else {
+					wasCreated = true
+				}
 				err := eventTriggerTransition.Trigger("create_event_trigger", &evCfg, nil)
 				if err != nil {
 					return err
 				}
 				prevElems = append(prevElems, element)
-			case *unTrackTableInput:
+			case *deleteEventTriggerInput:
+				if wasCreated {
+					// if this is true it means that a trigger was created
+					// which means their is no point in keeping the delete event trigger around
+					//
+					// otherwise it means that it was only updated so we have to keep
+					// the delete trigger migration
+					prevElems = append(prevElems, element)
+				}
 				err := eventTriggerTransition.Trigger("delete_event_trigger", &evCfg, nil)
 				if err != nil {
 					return err
 				}
-				prevElems = append(prevElems, element)
 				// drop previous elements
 				for _, e := range prevElems {
 					squashList.Remove(e)
@@ -73,7 +468,6 @@ func (q CustomQuery) MergeRelationships(squashList *database.CustomList) error {
 	relationshipTransition.Event("drop_relationship").To("dropped").From("new", "created")
 
 	next := q.Iterate()
-
 	for item, ok := next(); ok; item, ok = next() {
 		g := item.(linq.Group)
 		if g.Key == nil {
@@ -264,15 +658,20 @@ func (q CustomQuery) MergeTableCustomFields(squashList *database.CustomList) err
 		if g.Key == nil {
 			continue
 		}
-		var prevElem *list.Element
+		var prevElemSetTableCustomFieldsV2Input, prevElemSetTableCustomizationInput *list.Element
 		for _, val := range g.Group {
 			element := val.(*list.Element)
 			switch element.Value.(type) {
 			case *setTableCustomFieldsV2Input:
-				if prevElem != nil {
-					squashList.Remove(prevElem)
+				if prevElemSetTableCustomFieldsV2Input != nil {
+					squashList.Remove(prevElemSetTableCustomFieldsV2Input)
 				}
-				prevElem = element
+				prevElemSetTableCustomFieldsV2Input = element
+			case *setTableCustomizationInput:
+				if prevElemSetTableCustomizationInput != nil {
+					squashList.Remove(prevElemSetTableCustomizationInput)
+				}
+				prevElemSetTableCustomizationInput = element
 			}
 		}
 	}
@@ -405,12 +804,36 @@ func (q CustomQuery) MergeTables(squashList *database.CustomList) error {
 				if tblCfg.GetState() == "untracked" {
 					return fmt.Errorf("cannot set custom fields when table %s on schema %s is untracked", tblCfg.name, tblCfg.schema)
 				}
+			case *setTableCustomizationInput:
+				if tblCfg.GetState() == "untracked" {
+					return fmt.Errorf("cannot set custom fields when table %s on schema %s is untracked", tblCfg.name, tblCfg.schema)
+				}
 				if len(prevElems) != 0 {
 					if track, ok := prevElems[0].Value.(*trackTableV2Input); ok {
 						track.Configuration = args.tableConfiguration
 						squashList.Remove(element)
 						continue
 					}
+				}
+				prevElems = append(prevElems, element)
+			case *setTableIsEnumInput:
+				if tblCfg.GetState() == "untracked" {
+					return fmt.Errorf("cannot set table %s on schema %s has a enum when it is untracked", tblCfg.name, tblCfg.schema)
+				}
+				prevElems = append(prevElems, element)
+			case *createRemoteRelationshipInput:
+				if tblCfg.GetState() == "untracked" {
+					return fmt.Errorf("cannot create remote relationship on %s when table %s on schema %s is untracked", args.Name, tblCfg.name, tblCfg.schema)
+				}
+				prevElems = append(prevElems, element)
+			case *deleteRemoteRelationshipInput:
+				if tblCfg.GetState() == "untracked" {
+					return fmt.Errorf("cannot delete remote relationship on %s when table %s on schema %s is untracked", args.Name, tblCfg.name, tblCfg.schema)
+				}
+				prevElems = append(prevElems, element)
+			case *updateRemoteRelationshipInput:
+				if tblCfg.GetState() == "untracked" {
+					return fmt.Errorf("cannot update remote relationship on %s when table %s on schema %s is untracked", args.Name, tblCfg.name, tblCfg.schema)
 				}
 				prevElems = append(prevElems, element)
 			}
@@ -589,13 +1012,13 @@ func (q CustomQuery) MergeAllowLists(squashList *database.CustomList) error {
 		for _, val := range g.Group {
 			element := val.(*list.Element)
 			switch element.Value.(type) {
-			case *addRemoteSchemaInput:
+			case *addCollectionToAllowListInput:
 				err := allowListTransition.Trigger("add_collection_to_allowlist", &alCfg, nil)
 				if err != nil {
 					return err
 				}
 				prevElems = append(prevElems, element)
-			case *removeRemoteSchemaInput:
+			case *dropCollectionFromAllowListInput:
 				if alCfg.GetState() == "added" {
 					prevElems = append(prevElems, element)
 				}
@@ -693,32 +1116,9 @@ func (q CustomQuery) MergeQueryCollections(squashList *database.CustomList) erro
 	return nil
 }
 
-type customList struct {
-	*list.List
-}
-
-func (c *customList) Iterate() linq.Iterator {
-	length := c.Len()
-	var prevElem *list.Element
-	i := 0
-	return func() (item interface{}, ok bool) {
-		if length == 0 {
-			return
-		}
-
-		if i == 0 {
-			prevElem = c.Front()
-			i++
-		} else {
-			prevElem = prevElem.Next()
-			if prevElem == nil {
-				return
-			}
-		}
-		return prevElem, true
-	}
-}
-
+// PushList will read migration from source
+// for an sql migration it'll append it to the LinkedList
+// for a meta migration it'll append after some processing
 func (h *HasuraDB) PushToList(migration io.Reader, fileType string, l *database.CustomList) error {
 	migr, err := ioutil.ReadAll(migration)
 	if err != nil {
@@ -772,17 +1172,73 @@ func (h *HasuraDB) PushToList(migration io.Reader, fileType string, l *database.
 					}
 				}
 				l.PushBack(actionType)
+			case *createRemoteRelationshipInput, *updateRemoteRelationshipInput:
+				if v.Type == updateRemoteRelationship {
+					createRemoteRelationship, ok := v.Args.(*createRemoteRelationshipInput)
+					if !ok {
+						continue
+					}
+					o := &updateRemoteRelationshipInput{
+						createRemoteRelationship,
+					}
+					l.PushBack(o)
+				}
+				if v.Type == createRemoteRelationship {
+					o, ok := v.Args.(*createRemoteRelationshipInput)
+					if !ok {
+						break
+					}
+					l.PushBack(o)
+				}
+			case *createActionInput, *updateActionInput:
+				if v.Type == updateAction {
+					o, ok := v.Args.(*updateActionInput)
+					if !ok {
+						break
+					}
+					l.PushBack(o)
+				}
+				if v.Type == createAction {
+					o, ok := v.Args.(*createActionInput)
+					if !ok {
+						break
+					}
+					l.PushBack(o)
+				}
 			default:
 				l.PushBack(actionType)
 			}
 		}
 	default:
-		return fmt.Errorf("Invalid migration file type")
+		return fmt.Errorf("invalid migration file type")
 	}
 	return nil
 }
 
 func (h *HasuraDB) Squash(l *database.CustomList, ret chan<- interface{}) {
+	cronTriggersGroup := CustomQuery(linq.FromIterable(l).GroupByT(
+		func(element *list.Element) string {
+			switch args := element.Value.(type) {
+			case *createCronTriggerInput:
+				return args.Name
+			case *deleteCronTriggerInput:
+				return args.Name
+			}
+			return ""
+		}, func(element *list.Element) *list.Element {
+			return element
+		},
+	))
+	err := cronTriggersGroup.MergeCronTriggers(l)
+	if err != nil {
+		ret <- err
+	}
+
+	// get all event triggers groups
+	// ie let's say I have 2 event triggers named
+	// trigger1 and trigger2
+	// then I'll have two groups each containing elements
+	// corresponding to each trigger
 	eventTriggersGroup := CustomQuery(linq.FromIterable(l).GroupByT(
 		func(element *list.Element) string {
 			switch args := element.Value.(type) {
@@ -796,11 +1252,42 @@ func (h *HasuraDB) Squash(l *database.CustomList, ret chan<- interface{}) {
 			return element
 		},
 	))
-	err := eventTriggersGroup.MergeEventTriggers(l)
+	err = eventTriggersGroup.MergeEventTriggers(l)
 	if err != nil {
 		ret <- err
 	}
 
+	remoteRelationShipsGroup := CustomQuery(linq.FromIterable(l).GroupByT(
+		func(element *list.Element) interface{} {
+			switch args := element.Value.(type) {
+			case *createRemoteRelationshipInput:
+				return remoteRelationshipMap{
+					tableName:  args.Table.Name,
+					schemaName: args.Table.Schema,
+					name:       args.Name,
+				}
+			case *updateRemoteRelationshipInput:
+				return remoteRelationshipMap{
+					tableName:  args.Table.Name,
+					schemaName: args.Table.Schema,
+					name:       args.Name,
+				}
+			case *deleteRemoteRelationshipInput:
+				return remoteRelationshipMap{
+					tableName:  args.Table.Name,
+					schemaName: args.Table.Schema,
+					name:       args.Name,
+				}
+			}
+			return nil
+		}, func(element *list.Element) *list.Element {
+			return element
+		},
+	))
+	err = remoteRelationShipsGroup.MergeRemoteRelationships(l)
+	if err != nil {
+		ret <- err
+	}
 	relationshipsGroup := CustomQuery(linq.FromIterable(l).GroupByT(
 		func(element *list.Element) interface{} {
 			switch args := element.Value.(type) {
@@ -950,6 +1437,11 @@ func (h *HasuraDB) Squash(l *database.CustomList, ret chan<- interface{}) {
 					args.Table.Name,
 					args.Table.Schema,
 				}
+			case *setTableCustomizationInput:
+				return tableMap{
+					args.Table.Name,
+					args.Table.Schema,
+				}
 			}
 			return nil
 		}, func(element *list.Element) *list.Element {
@@ -980,6 +1472,16 @@ func (h *HasuraDB) Squash(l *database.CustomList, ret chan<- interface{}) {
 					args.tableSchema.Schema,
 				}
 			case *setTableCustomFieldsV2Input:
+				return tableMap{
+					args.Table.Name,
+					args.Table.Schema,
+				}
+			case *setTableCustomizationInput:
+				return tableMap{
+					args.Table.Name,
+					args.Table.Schema,
+				}
+			case *setTableIsEnumInput:
 				return tableMap{
 					args.Table.Name,
 					args.Table.Schema,
@@ -1175,6 +1677,70 @@ func (h *HasuraDB) Squash(l *database.CustomList, ret chan<- interface{}) {
 		ret <- err
 	}
 
+	customTypesGroup := CustomQuery(linq.FromIterable(l).GroupByT(
+		func(element *list.Element) string {
+			switch element.Value.(type) {
+			case *setCustomTypesInput:
+				return setCustomTypes
+			}
+			return ""
+		}, func(element *list.Element) *list.Element {
+			return element
+		},
+	))
+	err = customTypesGroup.MergeCustomTypes(l)
+	if err != nil {
+		ret <- err
+	}
+
+	actionGroup := CustomQuery(linq.FromIterable(l).GroupByT(
+		func(element *list.Element) string {
+			switch args := element.Value.(type) {
+			case *createActionInput:
+				if v, ok := args.Name.(string); ok {
+					return v
+				}
+			case *updateActionInput:
+				if v, ok := args.Name.(string); ok {
+					return v
+				}
+			case *dropActionInput:
+				if v, ok := args.Name.(string); ok {
+					return v
+				}
+			}
+			return ""
+		}, func(element *list.Element) *list.Element {
+			return element
+		},
+	))
+	err = actionGroup.MergeActions(l)
+	if err != nil {
+		ret <- err
+	}
+
+	actionPermissionGroup := CustomQuery(linq.FromIterable(l).GroupByT(
+		func(element *list.Element) string {
+			switch args := element.Value.(type) {
+			case *createActionPermissionInput:
+				if v, ok := args.Action.(string); ok {
+					return v
+				}
+			case *dropActionPermissionInput:
+				if v, ok := args.Action.(string); ok {
+					return v
+				}
+			}
+			return ""
+		}, func(element *list.Element) *list.Element {
+			return element
+		},
+	))
+	err = actionPermissionGroup.MergeActionPermissions(l)
+	if err != nil {
+		ret <- err
+	}
+
 	for e := l.Front(); e != nil; e = e.Next() {
 		q := HasuraInterfaceQuery{
 			Args: e.Value,
@@ -1185,11 +1751,15 @@ func (h *HasuraDB) Squash(l *database.CustomList, ret chan<- interface{}) {
 		case *trackTableV2Input:
 			q.Version = v2
 			q.Type = trackTable
+		case *setTableIsEnumInput:
+			q.Type = setTableIsEnum
 		case *unTrackTableInput:
 			q.Type = untrackTable
 		case *setTableCustomFieldsV2Input:
 			q.Version = v2
 			q.Type = setTableCustomFields
+		case *setTableCustomizationInput:
+			q.Type = setTableCustomization
 		case *createObjectRelationshipInput:
 			q.Type = createObjectRelationship
 		case *createArrayRelationshipInput:
@@ -1246,10 +1816,33 @@ func (h *HasuraDB) Squash(l *database.CustomList, ret chan<- interface{}) {
 			q.Type = addComputedField
 		case *dropComputedFieldInput:
 			q.Type = dropComputedField
+		case *createRemoteRelationshipInput:
+			q.Type = createRemoteRelationship
+		case *updateRemoteRelationshipInput:
+			q.Type = updateRemoteRelationship
+		case *deleteRemoteRelationshipInput:
+			q.Type = deleteRemoteRelationship
+		case *createCronTriggerInput:
+			q.Type = createCronTrigger
+		case *deleteCronTriggerInput:
+			q.Type = deleteCronTrigger
+		case *createActionInput:
+			q.Type = createAction
+		case *updateActionInput:
+			q.Type = updateAction
+		case *dropActionInput:
+			q.Type = dropAction
+		case *createActionPermissionInput:
+			q.Type = createActionPermission
+		case *dropActionPermissionInput:
+			q.Type = dropActionPermission
+		case *setCustomTypesInput:
+			q.Type = setCustomTypes
 		case *RunSQLInput:
 			ret <- []byte(args.SQL)
 			continue
 		default:
+			h.logger.Debug("cannot find metadata type for:", args)
 			ret <- fmt.Errorf("invalid metadata action")
 			return
 		}

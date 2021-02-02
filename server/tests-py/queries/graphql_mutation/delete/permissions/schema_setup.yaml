@@ -2,23 +2,16 @@ type: bulk
 args:
 
 #Author table
+
 - type: run_sql
   args:
     sql: |
       create table author(
           id serial primary key,
           name text unique,
-          payments_done boolean not null default false
+          payments_done boolean not null default false,
+          user_id int
       );
-- type: track_table
-  args:
-    schema: public
-    name: author
-
-#Article table
-- type: run_sql
-  args:
-    sql: |
       CREATE TABLE article (
         id SERIAL PRIMARY KEY,
         title TEXT,
@@ -26,7 +19,29 @@ args:
         author_id INTEGER NOT NULL REFERENCES author(id),
         is_published BOOLEAN,
         published_on TIMESTAMP
-      )
+      );
+      CREATE TABLE resident (
+        id SERIAL PRIMARY KEY,
+        name TEXT NOT NULL,
+        age INTEGER NOT NULL
+      );
+      create table "user" (
+        id serial primary key,
+        name text not null unique,
+        is_admin boolean default false
+      );
+
+      create table account (
+        id serial primary key,
+        account_no integer not null
+      );
+
+- type: track_table
+  args:
+    schema: public
+    name: author
+
+#Article table
 - type: track_table
   args:
     schema: public
@@ -61,6 +76,15 @@ args:
           - id: X-HASURA-USER-ID
           - payments_done: true
 
+#Author select permission for user
+- type: create_select_permission
+  args:
+    table: author
+    role: user
+    permission:
+      columns: [id, name, payments_done]
+      filter:
+        id: X-HASURA-USER-ID
 
 #A user can delete only his articles
 - type: create_select_permission
@@ -88,14 +112,6 @@ args:
           - author_id: X-HASURA-USER-ID
 
 #Create resident table
-- type: run_sql
-  args:
-    sql: |
-      CREATE TABLE resident (
-        id SERIAL PRIMARY KEY,
-        name TEXT NOT NULL,
-        age INTEGER NOT NULL
-      )
 - type: track_table
   args:
     schema: public
@@ -132,20 +148,6 @@ args:
           $in: X-Hasura-Allowed-Resident-Ids
 
 # Tables to test '_exist' field
-- type: run_sql
-  args:
-    sql: |
-      create table "user" (
-        id serial primary key,
-        name text not null unique,
-        is_admin boolean default false
-      );
-
-      create table account (
-        id serial primary key,
-        account_no integer not null
-      );
-
 - type: track_table
   args:
     name: user

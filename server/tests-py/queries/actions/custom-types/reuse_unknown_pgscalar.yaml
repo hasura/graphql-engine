@@ -1,0 +1,61 @@
+description: Set custom types with Postgres scalars
+url: /v1/query
+status: 400
+response:
+  internal:
+  - definition:
+      input_objects:
+      - name: UserInput
+        description:
+        fields:
+        - name: name
+          type: String!
+          description:
+        - name: id
+          type: uuid!
+          description:
+      objects:
+      - name: User
+        relationships:
+        description:
+        fields:
+        - arguments:
+          name: user_id
+          type: uuid!
+          description:
+        - arguments:
+          name: location
+          type: geography
+          description:
+        - arguments:
+          name: unknown_pgtype
+          type: unknown_type
+          description:
+      scalars:
+      enums:
+    reason: validation for the given custom types failed because the type "unknown_type"
+      for field "unknown_pgtype" in  object type "User" does not exist
+    type: custom_types
+  path: $.args
+  error: validation for the given custom types failed because the type "unknown_type"
+    for field "unknown_pgtype" in  object type "User" does not exist
+  code: constraint-violation
+query:
+  type: set_custom_types
+  args:
+    objects:
+    - name: User
+      fields:
+      - name: user_id
+        type: uuid!
+      - name: location
+        type: geography
+      - name: unknown_pgtype
+        type: unknown_type
+    input_objects:
+    - name: UserInput
+      fields:
+      - name: name
+        type: String!
+      - name: id
+        type: uuid!

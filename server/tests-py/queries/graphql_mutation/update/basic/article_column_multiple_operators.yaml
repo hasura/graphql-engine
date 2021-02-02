@@ -4,9 +4,10 @@ status: 200
 response:
   errors:
   - extensions:
-      path: "$"
+      path: "$.selectionSet.update_article.args"
       code: validation-failed
-    message: column found in multiple operators; "id" in _set, _inc. "author_id" in _set, _inc
+    message: column found in multiple operators; "author_id" in _set, _inc. "id" in _set, _inc
+
 query:
   query: |
     mutation {

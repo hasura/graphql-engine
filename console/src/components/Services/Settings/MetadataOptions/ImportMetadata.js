@@ -2,8 +2,8 @@ import React, { Component } from 'react';
 import PropTypes from 'prop-types';
 import Button from '../../../Common/Button/Button';
 
-import { replaceMetadataFromFile } from '../Actions';
 import { uploadFile } from '../../../Common/utils/jsUtils';
+import { replaceMetadataFromFile } from '../../../../metadata/actions';
 
 class ImportMetadata extends Component {
   constructor() {
@@ -27,22 +27,20 @@ class ImportMetadata extends Component {
       this.setState({ isImporting: false });
     };
 
+    this.setState({ isImporting: true });
+
     dispatch(replaceMetadataFromFile(fileContent, successCb, errorCb));
   }
 
   render() {
     const styles = require('../Settings.scss');
 
-    const { dispatch } = this.props;
-
     const { isImporting } = this.state;
 
     const handleImport = e => {
       e.preventDefault();
 
-      this.setState({ isImporting: true });
-
-      dispatch(uploadFile(this.importMetadata, 'json'));
+      uploadFile(this.importMetadata, 'json');
     };
 
     return (

@@ -11,6 +11,8 @@ args:
 - type: run_sql
   args:
     sql: |
+      drop view person_const_view;
+      drop view person_mut_view;
       drop table person
 
 - type: run_sql

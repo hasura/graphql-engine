@@ -1,7 +1,13 @@
 // import Endpoints, {globalCookiePolicy} from '../../Endpoints';
 import { defaultCurFilter } from '../DataState';
-import { vMakeRequest } from './ViewActions';
+import { vMakeTableRequests, vMakeExportRequest } from './ViewActions';
 import { Integers, Reals } from '../constants';
+import {
+  downloadObjectAsJsonFile,
+  downloadObjectAsCsvFile,
+  getCurrTimeForFileName,
+  getConfirmation,
+} from '../../../Common/utils/jsUtils';
 
 const LOADING = 'ViewTable/FilterQuery/LOADING';
 
@@ -108,10 +114,88 @@ const runQuery = tableSchema => {
       delete newQuery.order_by;
     }
     dispatch({ type: 'ViewTable/V_SET_QUERY_OPTS', queryStuff: newQuery });
-    dispatch(vMakeRequest());
+    dispatch(vMakeTableRequests());
   };
 };
 
+const exportDataQuery = (tableSchema, type) => {
+  return (dispatch, getState) => {
+    const count = getState().tables.view.count;
+
+    const confirmed = getConfirmation(
+      `There ${
+        count === 1 ? 'is 1 row' : `are ${count} rows`
+      } selected for export.`
+    );
+    if (!confirmed) {
+      return;
+    }
+
+    const state = getState().tables.view.curFilter;
+    let finalWhereClauses = state.where.$and.filter(w => {
+      const colName = Object.keys(w)[0].trim();
+      if (colName === '') {
+        return false;
+      }
+      const opName = Object.keys(w[colName])[0].trim();
+      if (opName === '') {
+        return false;
+      }
+      return true;
+    });
+
+    finalWhereClauses = finalWhereClauses.map(w => {
+      const colName = Object.keys(w)[0];
+      const opName = Object.keys(w[colName])[0];
+      const val = w[colName][opName];
+
+      if (['$in', '$nin'].includes(opName)) {
+        w[colName][opName] = parseArray(val);
+        return w;
+      }
+
+      const colType = tableSchema.columns.find(c => c.column_name === colName)
+        .data_type;
+      if (Integers.indexOf(colType) > 0) {
+        w[colName][opName] = parseInt(val, 10);
+        return w;
+      }
+      if (Reals.indexOf(colType) > 0) {
+        w[colName][opName] = parseFloat(val);
+        return w;
+      }
+      if (colType === 'boolean') {
+        if (val === 'true') {
+          w[colName][opName] = true;
+        } else if (val === 'false') {
+          w[colName][opName] = false;
+        }
+      }
+      return w;
+    });
+    const newQuery = {
+      where: { $and: finalWhereClauses },
+      order_by: state.order_by.filter(w => w.column.trim() !== ''),
+    };
+    if (newQuery.where.$and.length === 0) {
+      delete newQuery.where;
+    }
+    if (newQuery.order_by.length === 0) {
+      delete newQuery.order_by;
+    }
+
+    const { table_schema, table_name } = tableSchema;
+    const fileName = `export_${table_schema}_${table_name}_${getCurrTimeForFileName()}`;
+
+    dispatch({ type: 'ViewTable/V_SET_QUERY_OPTS', queryStuff: newQuery });
+    dispatch(vMakeExportRequest(newQuery)).then(d => {
+      if (d[0]) {
+        if (type === 'JSON') downloadObjectAsJsonFile(fileName, d[0]);
+        else if (type === 'CSV') downloadObjectAsCsvFile(fileName, d[0]);
+      }
+    });
+  };
+};
 const filterReducer = (state = defaultCurFilter, action) => {
   const i = action.index;
   const newFilter = {};
@@ -127,15 +211,14 @@ const filterReducer = (state = defaultCurFilter, action) => {
         const newCurFilterQ = {};
         newCurFilterQ.where =
           'where' in q && '$and' in q.where
-            ? { $and: [...q.where.$and, { '': { '': '' } }] }
+            ? { $and: [...q.where.$and, { '': { $eq: '' } }] }
             : { ...defaultCurFilter.where };
         newCurFilterQ.order_by =
           'order_by' in q
             ? [...q.order_by, ...defaultCurFilter.order_by]
             : [...defaultCurFilter.order_by];
-        newCurFilterQ.limit = 'limit' in q ? q.limit : defaultCurFilter.limit;
-        newCurFilterQ.offset =
-          'offset' in q ? q.offset : defaultCurFilter.offset;
+        newCurFilterQ.limit = q.limit || defaultCurFilter.limit;
+        newCurFilterQ.offset = q.offset || defaultCurFilter.offset;
         return newCurFilterQ;
       }
       return defaultCurFilter;
@@ -186,7 +269,7 @@ const filterReducer = (state = defaultCurFilter, action) => {
       return {
         ...state,
         where: {
-          $and: [...state.where.$and, { '': { '': '' } }],
+          $and: [...state.where.$and, { '': { $eq: '' } }],
         },
       };
     case REMOVE_FILTER:
@@ -286,4 +369,5 @@ export {
   setLoading,
   unsetLoading,
   runQuery,
+  exportDataQuery,
 };

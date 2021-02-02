@@ -1,0 +1,31 @@
+description: Explain query with permissions
+url: /v1/graphql/explain
+status: 200
+response:
+- field: user
+  sql: "SELECT  coalesce(json_agg(\"root\" ), '[]' ) AS \"root\" FROM  (SELECT  row_to_json((SELECT\
+    \  \"_1_e\"  FROM  (SELECT  \"_0_root.base\".\"id\" AS \"id\", \"_0_root.base\"\
+    .\"name\" AS \"name\", \"_0_root.base\".\"age\" AS \"age\"       ) AS \"_1_e\"\
+    \      ) ) AS \"root\" FROM  (SELECT  *  FROM \"public\".\"user\"  WHERE (((\"\
+    public\".\"user\".\"id\") = (('1')::integer)) OR (((\"public\".\"user\".\"id\"\
+    ) IS NULL) AND ((('1')::integer) IS NULL)))     ) AS \"_0_root.base\"      ) AS\
+    \ \"_2_root\"      "
+  plan:
+  - Aggregate  (cost=8.19..8.20 rows=1 width=32)
+  - '  ->  Index Scan using user_pkey on "user"  (cost=0.15..8.17 rows=1 width=40)'
+  - '        Index Cond: (id = 1)'
+  - '  SubPlan 1'
+  - '    ->  Result  (cost=0.00..0.01 rows=1 width=32)'
+query:
+  user:
+    X-Hasura-Role: user
+    X-Hasura-User-Id: '1'
+  query:
+    query: |
+      query {
+        user{
+          id
+          name
+          age
+        }
+      }

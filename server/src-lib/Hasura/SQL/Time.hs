@@ -4,11 +4,9 @@ module Hasura.SQL.Time
 
 import           Data.Attoparsec.Text as A
 import           Data.Attoparsec.Time (timeOfDay, timeZone)
-import           Data.Maybe           (fromMaybe)
 import           Hasura.Prelude
 
 import qualified Data.Aeson.Types     as Aeson
-import qualified Data.Text            as T
 import qualified Data.Time.LocalTime  as Local
 
 data ZonedTimeOfDay
@@ -20,7 +18,7 @@ data ZonedTimeOfDay
 utc :: Local.TimeZone
 utc = Local.TimeZone 0 False ""
 
-zonedTimeOfDay :: T.Text -> Aeson.Parser ZonedTimeOfDay
+zonedTimeOfDay :: Text -> Aeson.Parser ZonedTimeOfDay
 zonedTimeOfDay t =
   case A.parseOnly (p <* endOfInput) t of
     Left err -> fail $ "could not parse timetz: " ++ err

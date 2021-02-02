@@ -1,6 +1,7 @@
 package database
 
 import (
+	"crypto/tls"
 	"io"
 	"testing"
 
@@ -13,7 +14,7 @@ type mockDriver struct {
 	url string
 }
 
-func (m *mockDriver) Open(url string, isCmd bool, logger *logrus.Logger) (Driver, error) {
+func (m *mockDriver) Open(url string, isCmd bool, tlsConfig *tls.Config, logger *logrus.Logger, hasuraOpts *HasuraOpts) (Driver, error) {
 	return &mockDriver{
 		url: url,
 	}, nil
@@ -23,6 +24,13 @@ func (m *mockDriver) Close() error {
 	return nil
 }
 
+func (m *mockDriver) UnLockSeq() error {
+	return nil
+}
+
+func (m *mockDriver) RunSeq(migration io.Reader, fileType, fileName string) error {
+	return nil
+}
 func (m *mockDriver) Lock() error {
 	return nil
 }
@@ -39,7 +47,7 @@ func (m *mockDriver) Run(migration io.Reader, fileType, fileName string) error {
 	return nil
 }
 
-func (m *mockDriver) SetVersion(version int, dirty bool) error {
+func (m *mockDriver) SetVersion(version int64, dirty bool) error {
 	return nil
 }
 
@@ -59,20 +67,20 @@ func (m *mockDriver) RemoveVersion(version int64) error {
 	return nil
 }
 
-func (m *mockDriver) First() (version uint64, ok bool) {
-	return 0, false
+func (m *mockDriver) First() (migrationVersion *MigrationVersion, ok bool){
+return nil, false
 }
 
-func (m *mockDriver) Last() (version uint64, ok bool) {
-	return 0, false
+func (m *mockDriver) Last() (*MigrationVersion, bool) {
+	return nil, false
 }
 
-func (m *mockDriver) Next(version uint64) (nextVersion uint64, ok bool) {
-	return 0, false
+func (m *mockDriver)Next(version uint64) (migrationVersion *MigrationVersion, ok bool) {
+	return nil, false
 }
 
-func (m *mockDriver) Prev(version uint64) (prevVersion uint64, ok bool) {
-	return 0, false
+func (m *mockDriver) Prev(version uint64) (prevVersion *MigrationVersion, ok bool) {
+	return nil, false
 }
 
 func (m *mockDriver) Read(version uint64) (ok bool) {
@@ -97,6 +105,9 @@ func (m *mockDriver) Squash(list *CustomList, ret chan<- interface{}) {
 
 func (m *mockDriver) SetMetadataPlugins(plugins types.MetadataPlugins) {
 	return
+}
+
+func (m *mockDriver) EnableCheckMetadataConsistency(enabled bool) {
 }
 
 func (m *mockDriver) GetInconsistentMetadata() (bool, []InconsistentMetadataInterface, error) {
@@ -143,6 +154,21 @@ func (m *mockDriver) UpdateSetting(name string, value string) error {
 	return nil
 }
 
+func (m *mockDriver) ApplySeed(interface{}) error {
+	return nil
+}
+func (m *mockDriver) ExportDataDump([]string) ([]byte, error) {
+	return nil, nil
+}
+
+func (m *mockDriver) GetDatasources() ([]string, error) {
+	return nil, nil
+}
+
+func (m *mockDriver) PrepareMigrationsStateStore() error {
+	return nil
+}
+
 func TestRegisterTwice(t *testing.T) {
 	Register("mock", &mockDriver{})
 
@@ -183,7 +209,7 @@ func TestOpen(t *testing.T) {
 
 	for _, c := range cases {
 		t.Run(c.url, func(t *testing.T) {
-			d, err := Open(c.url, false, nil)
+			d, err := Open(c.url, false, nil, nil, nil)
 
 			if err == nil {
 				if c.err {

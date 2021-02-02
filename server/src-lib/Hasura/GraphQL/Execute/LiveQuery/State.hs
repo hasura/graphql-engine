@@ -1,12 +1,14 @@
+{-# LANGUAGE CPP #-}
 -- | Top-level management of live query poller threads. The implementation of the polling itself is
 -- in "Hasura.GraphQL.Execute.LiveQuery.Poll". See "Hasura.GraphQL.Execute.LiveQuery" for high-level
 -- details.
 module Hasura.GraphQL.Execute.LiveQuery.State
-  ( LiveQueriesState
+  ( LiveQueriesState(..)
   , initLiveQueriesState
   , dumpLiveQueriesState
 
   , LiveQueryId
+  , LiveQueryPostPollHook
   , addLiveQuery
   , removeLiveQuery
   ) where
@@ -16,37 +18,43 @@ import           Hasura.Prelude
 import qualified Control.Concurrent.STM                   as STM
 import qualified Control.Immortal                         as Immortal
 import qualified Data.Aeson.Extended                      as J
+import qualified Data.UUID.V4                             as UUID
 import qualified StmContainers.Map                        as STMMap
 
-import           Control.Concurrent.Extended              (sleep, forkImmortal)
+import           Control.Concurrent.Extended              (forkImmortal, sleep)
 import           Control.Exception                        (mask_)
 import           Data.String
+#ifndef PROFILING
 import           GHC.AssertNF
+#endif
 
-import qualified Hasura.Logging                           as L
 import qualified Hasura.GraphQL.Execute.LiveQuery.TMap    as TMap
+import qualified Hasura.Logging                           as L
 
-import           Hasura.Db
 import           Hasura.GraphQL.Execute.LiveQuery.Options
 import           Hasura.GraphQL.Execute.LiveQuery.Plan
 import           Hasura.GraphQL.Execute.LiveQuery.Poll
+import           Hasura.RQL.Types.Common                  (unNonNegativeDiffTime)
 
 -- | The top-level datatype that holds the state for all active live queries.
 --
--- NOTE!: This must be kept consistent with a websocket connection's 'OperationMap', in 'onClose' 
--- and 'onStart'.
+-- NOTE!: This must be kept consistent with a websocket connection's
+-- 'OperationMap', in 'onClose' and 'onStart'.
 data LiveQueriesState
   = LiveQueriesState
   { _lqsOptions      :: !LiveQueriesOptions
-  , _lqsPGExecTx     :: !PGExecCtx
   , _lqsLiveQueryMap :: !PollerMap
+  , _lqsPostPollHook :: !LiveQueryPostPollHook
+  -- ^ A hook function which is run after each fetch cycle
   }
 
-initLiveQueriesState :: LiveQueriesOptions -> PGExecCtx -> IO LiveQueriesState
-initLiveQueriesState options pgCtx = LiveQueriesState options pgCtx <$> STMMap.newIO
+initLiveQueriesState
+  :: LiveQueriesOptions -> LiveQueryPostPollHook -> IO LiveQueriesState
+initLiveQueriesState options pollHook =
+  LiveQueriesState options <$> STMMap.newIO <*> pure pollHook
 
 dumpLiveQueriesState :: Bool -> LiveQueriesState -> IO J.Value
-dumpLiveQueriesState extended (LiveQueriesState opts _ lqMap) = do
+dumpLiveQueriesState extended (LiveQueriesState opts lqMap _) = do
   lqMapJ <- dumpPollerMap extended lqMap
   return $ J.object
     [ "options" J..= opts
@@ -60,67 +68,73 @@ data LiveQueryId
   , _lqiSubscriber :: !SubscriberId
   } deriving Show
 
+
 addLiveQuery
   :: L.Logger L.Hasura
+  -> SubscriberMetadata
   -> LiveQueriesState
   -> LiveQueryPlan
   -> OnChange
   -- ^ the action to be executed when result changes
   -> IO LiveQueryId
-addLiveQuery logger lqState plan onResultAction = do
+addLiveQuery logger subscriberMetadata lqState plan onResultAction = do
   -- CAREFUL!: It's absolutely crucial that we can't throw any exceptions here!
 
   -- disposable UUIDs:
-  responseId <- newCohortId
-  sinkId <- newSinkId
+  cohortId <- newCohortId
+  subscriberId <- newSubscriberId
 
+  let !subscriber = Subscriber subscriberId subscriberMetadata onResultAction
+
+#ifndef PROFILING
   $assertNFHere subscriber  -- so we don't write thunks to mutable vars
+#endif
 
   -- a handler is returned only when it is newly created
-  handlerM <- STM.atomically $ do
-    handlerM <- STMMap.lookup handlerId lqMap
-    case handlerM of
+  handlerM <- STM.atomically $
+    STMMap.lookup handlerId lqMap >>= \case
       Just handler -> do
-        cohortM <- TMap.lookup cohortKey $ _pCohorts handler
-        case cohortM of
-          Just cohort -> addToCohort sinkId cohort
-          Nothing     -> addToPoller sinkId responseId handler
+        TMap.lookup cohortKey (_pCohorts handler) >>= \case
+          Just cohort -> addToCohort subscriber cohort
+          Nothing     -> addToPoller subscriber cohortId handler
         return Nothing
       Nothing -> do
         !poller <- newPoller
-        addToPoller sinkId responseId poller
+        addToPoller subscriber cohortId poller
         STMMap.insert poller handlerId lqMap
         return $ Just poller
 
-  -- we can then attach a polling thread if it is new
-  -- the livequery can only be cancelled after putTMVar
+  -- we can then attach a polling thread if it is new the livequery can only be
+  -- cancelled after putTMVar
   onJust handlerM $ \handler -> do
-    metrics <- initRefetchMetrics
-    threadRef <- forkImmortal ("pollQuery."<>show sinkId) logger $ forever $ do
-      pollQuery metrics batchSize pgExecCtx query handler
-      sleep $ unRefetchInterval refetchInterval
-    let !pState = PollerIOState threadRef metrics
+    pollerId <- PollerId <$> UUID.nextRandom
+    threadRef <- forkImmortal ("pollQuery." <> show pollerId) logger $ forever $ do
+      pollQuery pollerId lqOpts pgExecCtx query (_pCohorts handler) postPollHook
+      sleep $ unNonNegativeDiffTime $ unRefetchInterval refetchInterval
+    let !pState = PollerIOState threadRef pollerId
+#ifndef PROFILING
     $assertNFHere pState  -- so we don't write thunks to mutable vars
+#endif
     STM.atomically $ STM.putTMVar (_pIOState handler) pState
 
-  pure $ LiveQueryId handlerId cohortKey sinkId
+  pure $ LiveQueryId handlerId cohortKey subscriberId
   where
-    LiveQueriesState lqOpts pgExecCtx lqMap = lqState
-    LiveQueriesOptions batchSize refetchInterval = lqOpts
-    LiveQueryPlan (ParameterizedLiveQueryPlan role alias query) cohortKey = plan
+    LiveQueriesState lqOpts lqMap postPollHook = lqState
+    LiveQueriesOptions _ refetchInterval = lqOpts
+    LiveQueryPlan (ParameterizedLiveQueryPlan role query) cohortKey pgExecCtx = plan
 
     handlerId = PollerKey role query
 
-    !subscriber = Subscriber alias onResultAction
-    addToCohort sinkId handlerC =
-      TMap.insert subscriber sinkId $ _cNewSubscribers handlerC
+    addToCohort subscriber handlerC =
+      TMap.insert subscriber (_sId subscriber) $ _cNewSubscribers handlerC
 
-    addToPoller sinkId responseId handler = do
-      !newCohort <- Cohort responseId <$> STM.newTVar Nothing <*> TMap.new <*> TMap.new
-      addToCohort sinkId newCohort
+    addToPoller subscriber cohortId handler = do
+      !newCohort <- Cohort cohortId <$> STM.newTVar Nothing <*> TMap.new <*> TMap.new
+      addToCohort subscriber newCohort
       TMap.insert newCohort cohortKey $ _pCohorts handler
 
     newPoller = Poller <$> TMap.new <*> STM.newEmptyTMVar
+
 
 removeLiveQuery
   :: L.Logger L.Hasura

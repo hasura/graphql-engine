@@ -8,7 +8,7 @@
 
 - Linux/macOS
 ```bash
-curl -L https://github.com/hasura/graphql-engine/raw/master/cli/get.sh | bash
+curl -L https://github.com/hasura/graphql-engine/raw/stable/cli/get.sh | bash
 ```
 - Windows
 

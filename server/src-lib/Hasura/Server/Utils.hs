@@ -1,13 +1,14 @@
-{-# LANGUAGE TypeApplications #-}
 module Hasura.Server.Utils where
 
 import           Hasura.Prelude
 
 import           Control.Lens               ((^..))
 import           Data.Aeson
+import           Data.Aeson.Internal
 import           Data.Char
-import           Data.List                  (find)
-import           Language.Haskell.TH.Syntax (Lift, Q, TExp)
+import           Data.Text.Extended
+import           Hasura.Server.Types
+import           Language.Haskell.TH.Syntax (Q, TExp)
 import           System.Environment
 import           System.Exit
 import           System.Process
@@ -20,6 +21,7 @@ import qualified Data.Text                  as T
 import qualified Data.Text.IO               as TI
 import qualified Data.UUID                  as UUID
 import qualified Data.UUID.V4               as UUID
+import qualified Data.Vector                as V
 import qualified Language.Haskell.TH.Syntax as TH
 import qualified Network.HTTP.Client        as HC
 import qualified Network.HTTP.Types         as HTTP
@@ -29,10 +31,6 @@ import qualified Text.Regex.TDFA.ReadRegex  as TDFA
 import qualified Text.Regex.TDFA.TDFA       as TDFA
 
 import           Hasura.RQL.Instances       ()
-
-newtype RequestId
-  = RequestId { unRequestId :: Text }
-  deriving (Show, Eq, ToJSON, FromJSON)
 
 jsonHeader :: HTTP.Header
 jsonHeader = ("Content-Type", "application/json; charset=utf-8")
@@ -61,10 +59,26 @@ userIdHeader = "x-hasura-user-id"
 requestIdHeader :: IsString a => a
 requestIdHeader = "x-request-id"
 
+useBackendOnlyPermissionsHeader :: IsString a => a
+useBackendOnlyPermissionsHeader = "x-hasura-use-backend-only-permissions"
+
 getRequestHeader :: HTTP.HeaderName -> [HTTP.Header] -> Maybe B.ByteString
 getRequestHeader hdrName hdrs = snd <$> mHeader
   where
     mHeader = find (\h -> fst h == hdrName) hdrs
+
+parseStringAsBool :: String -> Either String Bool
+parseStringAsBool t
+  | map toLower t `elem` truthVals = Right True
+  | map toLower t `elem` falseVals = Right False
+  | otherwise = Left errMsg
+  where
+    truthVals = ["true", "t", "yes", "y"]
+    falseVals = ["false", "f", "no", "n"]
+
+    errMsg = " Not a valid boolean text. " ++ "True values are "
+             ++ show truthVals ++ " and  False values are " ++ show falseVals
+             ++ ". All values are case insensitive"
 
 getRequestId :: (MonadIO m) => [HTTP.Header] -> m RequestId
 getRequestId headers =
@@ -92,12 +106,6 @@ runScript fp = do
     "Running shell script " ++ fp ++ " failed with exit code : "
     ++ show exitCode ++ " and with error : " ++ stdErr
   [|| stdOut ||]
-
--- find duplicates
-duplicates :: Ord a => [a] -> [a]
-duplicates = mapMaybe greaterThanOne . group . sort
-  where
-    greaterThanOne l = bool Nothing (Just $ head l) $ length l > 1
 
 -- | Quotes a regex using Template Haskell so syntax errors can be reported at compile-time.
 quoteRegex :: TDFA.CompOption -> TDFA.ExecOption -> String -> Q (TExp TDFA.Regex)
@@ -132,7 +140,7 @@ httpExceptToJSON e = case e of
   _        -> toJSON $ show e
   where
     showProxy (HC.Proxy h p) =
-      "host: " <> bsToTxt h <> " port: " <> T.pack (show p)
+      "host: " <> bsToTxt h <> " port: " <> tshow p
 
 -- ignore the following request headers from the client
 commonClientHeadersIgnored :: (IsString a) => [a]
@@ -152,14 +160,14 @@ commonResponseHeadersIgnored =
   , "Content-Type", "Content-Length"
   ]
 
-isUserVar :: Text -> Bool
-isUserVar = T.isPrefixOf "x-hasura-" . T.toLower
+isSessionVariable :: Text -> Bool
+isSessionVariable = T.isPrefixOf "x-hasura-" . T.toLower
 
 mkClientHeadersForward :: [HTTP.Header] -> [HTTP.Header]
 mkClientHeadersForward reqHeaders =
-  xForwardedHeaders <> (filterUserVars . filterRequestHeaders) reqHeaders
+  xForwardedHeaders <> (filterSessionVariables . filterRequestHeaders) reqHeaders
   where
-    filterUserVars = filter (\(k, _) -> not $ isUserVar $ bsToTxt $ CI.original k)
+    filterSessionVariables = filter (\(k, _) -> not $ isSessionVariable $ bsToTxt $ CI.original k)
     xForwardedHeaders = flip mapMaybe reqHeaders $ \(hdrName, hdrValue) ->
       case hdrName of
         "Host"       -> Just ("X-Forwarded-Host", hdrValue)
@@ -199,7 +207,7 @@ applyFirst f (x:xs) = f x: xs
 data APIVersion
   = VIVersion1
   | VIVersion2
-  deriving (Show, Eq, Lift)
+  deriving (Show, Eq)
 
 instance ToJSON APIVersion where
   toJSON VIVersion1 = toJSON @Int 1
@@ -213,13 +221,13 @@ instance FromJSON APIVersion where
       2 -> return VIVersion2
       i -> fail $ "expected 1 or 2, encountered " ++ show i
 
-englishList :: NonEmpty Text -> Text
-englishList = \case
+englishList :: Text -> NonEmpty Text -> Text
+englishList joiner = \case
   one :| []    -> one
-  one :| [two] -> one <> " and " <> two
+  one :| [two] -> one <> " " <> joiner <> " " <> two
   several      ->
     let final :| initials = NE.reverse several
-    in T.intercalate ", " (reverse initials) <> ", and " <> final
+    in commaSeparated (reverse initials) <> ", " <> joiner <> " " <> final
 
 makeReasonMessage :: [a] -> (a -> Text) -> Text
 makeReasonMessage errors showError =
@@ -227,3 +235,16 @@ makeReasonMessage errors showError =
     [singleError] -> "because " <> showError singleError
     _ -> "for the following reasons:\n" <> T.unlines
          (map (("  • " <>) . showError) errors)
+
+executeJSONPath :: JSONPath -> Value -> IResult Value
+executeJSONPath jsonPath = iparse (valueParser jsonPath)
+  where
+    valueParser path value = case path of
+      []                      -> pure value
+      (pathElement:remaining) -> parseWithPathElement pathElement value >>=
+                                 ((<?> pathElement) . valueParser remaining)
+      where
+        parseWithPathElement = \case
+                  Key k   -> withObject "Object" (.: k)
+                  Index i -> withArray "Array" $
+                             maybe (fail "Array index out of range") pure . (V.!? i)

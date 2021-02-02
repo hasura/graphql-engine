@@ -90,20 +90,24 @@ Additional details are provided by the documentation for individual bindings.
 module Hasura.GraphQL.Execute.LiveQuery
   ( LiveQueryPlan
   , ReusableLiveQueryPlan
-  , reuseLiveQueryPlan
+  -- , reuseLiveQueryPlan
   , buildLiveQueryPlan
 
   , LiveQueryPlanExplanation
   , explainLiveQueryPlan
 
-  , LiveQueriesState
+  , LiveQueriesState(..)
   , initLiveQueriesState
   , dumpLiveQueriesState
 
   , LiveQueriesOptions(..)
-  , BatchSize(..)
-  , RefetchInterval(..)
+  , BatchSize
+  , unBatchSize
+  , RefetchInterval
+  , unRefetchInterval
   , mkLiveQueriesOptions
+  , mkBatchSize
+  , mkRefetchInterval
 
   , LiveQueryId
   , addLiveQuery

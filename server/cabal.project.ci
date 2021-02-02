@@ -1,6 +1,14 @@
 -- The project configuration used when building in CI.
 
+reject-unconstrained-dependencies: all
+
 package graphql-engine
-  ghc-options: -j3 -Werror
+  ghc-options:
+    -- Tune for the circleci `xlarge` resource class, which provides
+    -- 8 vcpus.
+    -j6 -Werror
+    -- Limit heap size to 15G, to maintain some breathing room given
+    -- the 16G of available memory.
+    +RTS -M15000m -RTS
   tests: true
   benchmarks: true

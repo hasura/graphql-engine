@@ -1,0 +1,55 @@
+- description: query the remote with a non-existing input argument 'foo'
+  url: /v1/graphql
+  status: 200
+  query:
+    query: |
+      {
+        user(foo:1) {
+          id
+          username
+        }
+      }
+  response:
+    errors:
+      - extensions:
+          path: $.selectionSet.user
+          code: validation-failed
+        message: '"user" has no argument named "foo"'
+
+- description: query the remote with a non-existing input argument 'foo'
+  url: /v1/graphql
+  status: 200
+  query:
+    query: |
+      {
+        user(id:"1") {
+          id
+          username
+        }
+      }
+  response:
+    errors:
+      - extensions:
+          path: $.selectionSet.user.args.id
+          code: validation-failed
+        message: "expected a 32-bit integer for type \"Int\", but found a string"
+
+- description: query the remote with a non-existing input object field 'foo'
+  url: /v1/graphql
+  status: 200
+  query:
+    query: |
+       mutation {
+         createUserInputObj(userData:{id:5,username:"somethin",foo:"baz"}) {
+           user {
+             id
+             username
+           }
+         }
+       }
+  response:
+    errors:
+      - extensions:
+          path: $.selectionSet.createUserInputObj.args.userData.foo
+          code: validation-failed
+        message: "field \"foo\" not found in type: 'UserDetailsInput'"

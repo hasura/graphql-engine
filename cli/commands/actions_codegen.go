@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/hasura/graphql-engine/cli/migrate"
+
 	"github.com/hasura/graphql-engine/cli"
 	"github.com/hasura/graphql-engine/cli/metadata/actions"
 	"github.com/hasura/graphql-engine/cli/metadata/actions/types"
@@ -48,7 +50,8 @@ type actionsCodegenOptions struct {
 }
 
 func (o *actionsCodegenOptions) run() (err error) {
-	migrateDrv, err := newMigrate(o.EC, true)
+	// TODO
+	migrateDrv, err := migrate.NewMigrate(o.EC, true, "")
 	if err != nil {
 		return err
 	}

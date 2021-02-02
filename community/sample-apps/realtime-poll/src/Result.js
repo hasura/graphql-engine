@@ -2,13 +2,13 @@ import React from 'react';
 import {
   Subscription,
 } from 'react-apollo';
-import {Chart} from 'react-google-charts';
+import { Chart } from 'react-google-charts';
 import gql from 'graphql-tag';
 import { SUBSCRIPTION_RESULT } from './GraphQL'
 
 const renderChart = (data) => {
   const d = [
-    ['Option', 'No. of votes', {role:'annotation'}, {role:'style'}],
+    ['Option', 'No. of votes', { role: 'annotation' }, { role: 'style' }],
   ];
   for (var r of data.poll_results) {
     console.log(r);
@@ -26,7 +26,7 @@ const renderChart = (data) => {
           title: 'Realtime results',
         },
         legend: { position: 'none' },
-        animation:{
+        animation: {
           duration: 1000,
           easing: 'out',
           startup: true,
@@ -39,15 +39,20 @@ const renderChart = (data) => {
 export const Result = (pollId) => (
   <Subscription subscription={gql`${SUBSCRIPTION_RESULT}`} variables={pollId}>
     {({ loading, error, data }) => {
-       if (loading) return <p>Loading...</p>;
-       if (error) return <p>Error :</p>;
-       return (
-         <div>
-           <div>
-             {renderChart(data)}
-           </div>
-         </div>
-       );
+      if (loading) return <p>Loading...</p>;
+      if (error) return <p>Error :</p>;
+      return (
+        <div>
+          {data.poll_results.length > 0
+            ?
+            <div>
+              {renderChart(data)}
+            </div>
+            :
+            <p>No result</p>
+          }
+        </div>
+      );
     }}
   </Subscription>
 )

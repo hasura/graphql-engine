@@ -1,17 +1,16 @@
 import React from 'react';
 import AceEditor from 'react-ace';
+
 import ExpandableEditor from '../../../Common/Layout/ExpandableEditor/Editor';
-
 import styles from './AllowedQueries.scss';
+import Button from '../../../Common/Button/Button';
 
+import { getConfirmation } from '../../../Common/utils/jsUtils';
 import {
   updateAllowedQuery,
   deleteAllowedQuery,
   deleteAllowList,
-} from '../Actions';
-import Button from '../../../Common/Button/Button';
-
-import { getConfirmation } from '../../../Common/utils/jsUtils';
+} from '../../../../metadata/actions';
 
 class AllowedQueriesList extends React.Component {
   constructor(props) {
@@ -28,7 +27,7 @@ class AllowedQueriesList extends React.Component {
 
     const getQueryList = () => {
       if (allowedQueries.length === 0) {
-        return <div>No queries in allow-list yet</div>;
+        return <div>No operations in allow-list yet</div>;
       }
 
       return allowedQueries.map((query, i) => {
@@ -63,25 +62,25 @@ class AllowedQueriesList extends React.Component {
             <div>
               <div>
                 <div className={styles.add_mar_bottom_mid}>
-                  <b>Query name:</b>
+                  <b>Operation name:</b>
                 </div>
                 <input
                   type="text"
                   className={'form-control input-sm ' + styles.inline_block}
                   value={modifiedQuery.name}
-                  placeholder={'query_name'}
+                  placeholder={'operation_name'}
                   onChange={handleNameChange}
                 />
               </div>
               <div className={styles.add_mar_top}>
                 <div className={styles.add_mar_bottom_mid}>
-                  <b>Query:</b>
+                  <b>Operation:</b>
                 </div>
                 <AceEditor
-                  data-test="allowed_query_editor"
+                  data-test="allowed_operation_editor"
                   mode="graphql"
                   theme="github"
-                  name="allowed_query_editor"
+                  name="allowed_operation_editor"
                   value={modifiedQuery.query}
                   minLines={8}
                   maxLines={100}
@@ -113,7 +112,7 @@ class AllowedQueriesList extends React.Component {
         };
 
         const onDelete = () => {
-          const confirmMessage = `This will delete the query "${queryName}" from the allow-list`;
+          const confirmMessage = `This will delete the operation "${queryName}" from the allow-list`;
           const isOk = getConfirmation(confirmMessage);
           if (isOk) {
             const isLastQuery = allowedQueries.length === 1;
@@ -127,7 +126,7 @@ class AllowedQueriesList extends React.Component {
             <ExpandableEditor
               editorExpanded={queryEditorExpanded}
               property={`query-${i}`}
-              service="modify-allowed-query"
+              service="modify-allowed-operation"
               saveFunc={onSubmit}
               removeFunc={onDelete}
               collapsedClass={styles.display_flex}
@@ -144,7 +143,7 @@ class AllowedQueriesList extends React.Component {
     const getDeleteAllBtn = () => {
       const handleDeleteAll = () => {
         const confirmMessage =
-          'This will delete all queries from the allow-list';
+          'This will delete all operations from the allow-list';
         const isOk = getConfirmation(confirmMessage, true);
         if (isOk) {
           dispatch(deleteAllowList());
@@ -165,7 +164,7 @@ class AllowedQueriesList extends React.Component {
     return (
       <div>
         <h4 className={styles.subheading_text}>
-          Allowed Queries
+          Allow List
           <span className={styles.add_mar_left}>{getDeleteAllBtn()}</span>
         </h4>
 

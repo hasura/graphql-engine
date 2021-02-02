@@ -39,8 +39,12 @@ export const defaultEnumType = {
   values: [{ ...defaultEnumValue }],
 };
 
-export const defaultActionDefSdl = `type Mutation {
-  ## Define your action as a mutation here
+export const defaultActionDefSdl = `## Use "type Query" for query type actions
+## Use "type Mutation" for mutation type actions
+
+#type Query {
+type Mutation {
+  # Define your action here
   actionName (arg1: SampleInput!): SampleOutput
 }
 `;
@@ -69,6 +73,7 @@ export const defaultRelFieldMapping = {
 export const defaultRelConfig = {
   name: '',
   type: '',
+  refDb: '',
   refSchema: '',
   refTable: '',
   fieldMapping: [defaultRelFieldMapping],

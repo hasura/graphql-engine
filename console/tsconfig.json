@@ -8,8 +8,9 @@
     "strict": true,
     "esModuleInterop": true,
     "noEmitOnError": false,
-    "noEmit": true
+    "noEmit": true,
+    "types": ["react"]
   },
-  "exclude": ["node_modules"],
+  "exclude": ["node_modules", "cypress"],
   "include": ["src/**/*"]
 }

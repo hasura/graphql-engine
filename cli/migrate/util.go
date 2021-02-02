@@ -1,12 +1,34 @@
 package migrate
 
 import (
-	"bufio"
 	"fmt"
-	"io"
 	nurl "net/url"
+	"os"
+	"path/filepath"
+	"runtime"
 	"strings"
-	"time"
+
+	"github.com/hasura/graphql-engine/cli/migrate/database/hasuradb"
+
+	"github.com/hasura/graphql-engine/cli/internal/client"
+
+	"github.com/hasura/graphql-engine/cli/migrate/database"
+
+	crontriggers "github.com/hasura/graphql-engine/cli/metadata/cron_triggers"
+
+	"github.com/hasura/graphql-engine/cli/metadata"
+	"github.com/hasura/graphql-engine/cli/metadata/actions"
+	"github.com/hasura/graphql-engine/cli/metadata/allowlist"
+	"github.com/hasura/graphql-engine/cli/metadata/functions"
+	"github.com/hasura/graphql-engine/cli/metadata/querycollections"
+	"github.com/hasura/graphql-engine/cli/metadata/remoteschemas"
+	"github.com/hasura/graphql-engine/cli/metadata/sources"
+	"github.com/hasura/graphql-engine/cli/metadata/tables"
+	"github.com/hasura/graphql-engine/cli/metadata/types"
+	"github.com/hasura/graphql-engine/cli/metadata/version"
+
+	"github.com/hasura/graphql-engine/cli"
+	"github.com/pkg/errors"
 )
 
 // MultiError holds multiple errors.
@@ -46,6 +68,7 @@ func suint64(n int64) uint64 {
 	return uint64(n)
 }
 
+/*
 // newSlowReader turns an io.ReadCloser into a slow io.ReadCloser.
 // Use this to simulate a slow internet connection.
 func newSlowReader(r io.ReadCloser) io.ReadCloser {
@@ -73,7 +96,7 @@ func (b *slowReader) Read(p []byte) (n int, err error) {
 
 func (b *slowReader) Close() error {
 	return b.rx.Close()
-}
+} */
 
 var errNoScheme = fmt.Errorf("no scheme")
 
@@ -102,4 +125,149 @@ func FilterCustomQuery(u *nurl.URL) *nurl.URL {
 	}
 	ux.RawQuery = vx.Encode()
 	return &ux
+}
+
+func NewMigrate(ec *cli.ExecutionContext, isCmd bool, datasource string) (*Migrate, error) {
+	// create a new directory for the datasource if it does'nt exists
+	if f, _ := os.Stat(filepath.Join(ec.MigrationDir, datasource)); f == nil {
+		err := os.MkdirAll(filepath.Join(ec.MigrationDir, datasource), 0755)
+		if err != nil {
+			return nil, err
+		}
+	}
+	dbURL := GetDataPath(ec)
+	fileURL := GetFilePath(filepath.Join(ec.MigrationDir, datasource))
+	opts := NewMigrateOpts{
+		fileURL.String(),
+		dbURL.String(),
+		isCmd, int(ec.Config.Version),
+		ec.Config.ServerConfig.TLSConfig,
+		ec.Logger,
+		&database.HasuraOpts{
+			HasMetadataV3: ec.HasMetadataV3,
+			Datasource:         datasource,
+			Client:             ec.APIClient,
+		},
+	}
+
+	if ec.HasMetadataV3 && (ec.Config.Version > cli.V1) {
+		defaultDatasourceName := "default"
+		// check if migration table exists and migrate state to catalog state API
+		hasuraAPIClient, err := client.NewHasuraRestAPIClient(client.NewHasuraRestAPIClientOpts{
+			Headers:        ec.HGEHeaders,
+			QueryAPIURL:    fmt.Sprintf("%s/%s", ec.Config.Endpoint, "v2/query"),
+			MetadataAPIURL: fmt.Sprintf("%s/%s", ec.Config.Endpoint, "v1/metadata"),
+			TLSConfig:      ec.Config.TLSConfig,
+		})
+		shouldMigrateStateToCatalogState := false
+		isSettingsStateMoved, err := hasuraAPIClient.CheckIfSettingsStateWasMovedToCatalogState()
+		if err != nil {
+			ec.Logger.Debug("checking if settings state was moved: ", err)
+		}
+		isMigrationStateMoved, err := hasuraAPIClient.CheckIfMigrationStateStoreWasMovedToCatalogState()
+		if err != nil {
+			ec.Logger.Debug("checking if migration state was moved: ", err)
+		}
+		shouldMigrateStateToCatalogState = !isSettingsStateMoved && !isMigrationStateMoved
+		if shouldMigrateStateToCatalogState {
+			migrations, err := hasuraAPIClient.GetMigrationVersions(hasuradb.DefaultSchema, hasuradb.DefaultMigrationsTable)
+			if err != nil {
+				ec.Logger.Debug("getting migration versions from schema_migrations table: ", err)
+			}
+			settings, err := hasuraAPIClient.GetCLISettingsFromSQLTable(hasuradb.DefaultSchema, hasuradb.DefaultSettingsTable)
+			if err != nil {
+				ec.Logger.Debug("getting migration settings: ", err)
+			}
+			if err := hasuraAPIClient.MoveMigrationsAndSettingsToCatalogState(defaultDatasourceName, migrations, settings); err != nil {
+				ec.Logger.Debug("migrating CLI state to catalog API: ", err)
+			}
+
+			// mark both these tables as moved
+			if err := hasuraAPIClient.MarkCLIStateTablesAsMovedToCatalogState(); err != nil {
+				ec.Logger.Debug("marking cli state was moved from tables to catalog state API: ", err)
+			}
+		}
+	}
+	if ec.HasMetadataV3 && (ec.Config.Version > cli.V1) {
+		opts.hasuraOpts.APIVersion = client.V2API
+		opts.hasuraOpts.MigrationExectionStrategy = client.MigrationExecutionStrategySequential
+	} else {
+		opts.hasuraOpts.APIVersion = client.V1API
+		opts.hasuraOpts.MigrationExectionStrategy = client.MigrationExecutionStrategyTransactional
+	}
+	t, err := New(opts)
+	if err != nil {
+		return nil, errors.Wrap(err, "cannot create migrate instance")
+	}
+	// Set Plugins
+	SetMetadataPluginsWithDir(ec, t)
+	if ec.Config.Version >= cli.V2 {
+		t.EnableCheckMetadataConsistency(true)
+	}
+	return t, nil
+}
+
+func GetDataPath(ec *cli.ExecutionContext) *nurl.URL {
+	url := ec.Config.ServerConfig.ParsedEndpoint
+	host := &nurl.URL{
+		Scheme:   "hasuradb",
+		Host:     url.Host,
+		Path:     url.Path,
+		RawQuery: ec.Config.ServerConfig.APIPaths.GetQueryParams().Encode(),
+	}
+	q := host.Query()
+	// Set sslmode in query
+	switch scheme := url.Scheme; scheme {
+	case "https":
+		q.Set("sslmode", "enable")
+	default:
+		q.Set("sslmode", "disable")
+	}
+	for k, v := range ec.HGEHeaders {
+		q.Add("headers", fmt.Sprintf("%s:%s", k, v))
+	}
+	host.RawQuery = q.Encode()
+	return host
+}
+
+func SetMetadataPluginsWithDir(ec *cli.ExecutionContext, drv *Migrate, dir ...string) {
+	var metadataDir string
+	if len(dir) == 0 {
+		metadataDir = ec.MetadataDir
+	} else {
+		metadataDir = dir[0]
+	}
+	ec.Version.GetServerFeatureFlags()
+	plugins := make(types.MetadataPlugins, 0)
+	if ec.Config.Version >= cli.V2 && metadataDir != "" {
+		plugins = append(plugins, version.New(ec, metadataDir))
+		plugins = append(plugins, querycollections.New(ec, metadataDir))
+		plugins = append(plugins, allowlist.New(ec, metadataDir))
+		plugins = append(plugins, remoteschemas.New(ec, metadataDir))
+		plugins = append(plugins, actions.New(ec, metadataDir))
+		plugins = append(plugins, crontriggers.New(ec, metadataDir))
+
+		if ec.HasMetadataV3 {
+			plugins = append(plugins, sources.New(ec, metadataDir))
+		} else {
+			plugins = append(plugins, tables.New(ec, metadataDir))
+			plugins = append(plugins, functions.New(ec, metadataDir))
+		}
+	} else {
+		plugins = append(plugins, metadata.New(ec, ec.MigrationDir))
+	}
+	drv.SetMetadataPlugins(plugins)
+}
+
+func GetFilePath(dir string) *nurl.URL {
+	host := &nurl.URL{
+		Scheme: "file",
+		Path:   dir,
+	}
+
+	// Add Prefix / to path if runtime.GOOS equals to windows
+	if runtime.GOOS == "windows" && !strings.HasPrefix(host.Path, "/") {
+		host.Path = "/" + host.Path
+	}
+	return host
 }

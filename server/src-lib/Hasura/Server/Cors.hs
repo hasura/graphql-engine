@@ -14,16 +14,17 @@ module Hasura.Server.Cors
   ) where
 
 import           Hasura.Prelude
-import           Hasura.Server.Utils  (fmapL)
-
-import           Control.Applicative  (optional)
 
 import qualified Data.Aeson           as J
-import qualified Data.Aeson.Casing    as J
 import qualified Data.Aeson.TH        as J
 import qualified Data.Attoparsec.Text as AT
 import qualified Data.HashSet         as Set
 import qualified Data.Text            as T
+
+import           Control.Applicative  (optional)
+import           Data.Aeson           ((.:))
+
+import           Hasura.Server.Utils  (fmapL)
 
 
 data DomainParts =
@@ -33,7 +34,7 @@ data DomainParts =
   , wdPort   :: !(Maybe Int)
   } deriving (Show, Eq, Generic, Hashable)
 
-$(J.deriveToJSON (J.aesonDrop 2 J.snakeCase) ''DomainParts)
+$(J.deriveJSON hasuraJSON ''DomainParts)
 
 data Domains
   = Domains
@@ -41,7 +42,7 @@ data Domains
   , dmWildcards :: !(Set.HashSet DomainParts)
   } deriving (Show, Eq)
 
-$(J.deriveToJSON (J.aesonDrop 2 J.snakeCase) ''Domains)
+$(J.deriveJSON hasuraJSON ''Domains)
 
 data CorsConfig
   = CCAllowAll
@@ -62,10 +63,20 @@ instance J.ToJSON CorsConfig where
                  , "allowed_origins" J..= origs
                  ]
 
+instance J.FromJSON CorsConfig where
+  parseJSON = J.withObject "cors config" \o -> do
+    let parseAllowAll "*" = pure CCAllowAll
+        parseAllowAll _   = fail "unexpected string"
+    o .: "disabled" >>= \case
+      True -> CCDisabled <$> o .: "ws_read_cookie"
+      False -> o .: "allowed_origins" >>= \v ->
+        J.withText "origins" parseAllowAll v
+        <|> CCAllowedOrigins <$> J.parseJSON v
+
 isCorsDisabled :: CorsConfig -> Bool
 isCorsDisabled = \case
   CCDisabled _ -> True
-  _          -> False
+  _            -> False
 
 readCorsDomains :: String -> Either String CorsConfig
 readCorsDomains str
@@ -132,7 +143,7 @@ parseOptWildcardDomain d =
     fqdnParser :: AT.Parser Text
     fqdnParser = do
       (DomainParts scheme host port) <- domainParser Nothing
-      let sPort = maybe "" (\p -> ":" <> T.pack (show p)) port
+      let sPort = maybe "" (\p -> ":" <> tshow p) port
       return $ scheme <> host <> sPort
 
 

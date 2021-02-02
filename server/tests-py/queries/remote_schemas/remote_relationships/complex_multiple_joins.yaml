@@ -1,0 +1,232 @@
+# NOTE: this would also be a good query to benchmark concurrency and haxl batching/caching
+
+# TODO map to multiple (different?) remote fields in first query (so rtrRemoteFields > 1)
+
+# This is mostly just a bigger more complex test case useful for seeing how
+# everything fits together, but a few things we specifically want to excercise:
+#  - returning > 1 BatchInputs from `extractRemoteRelArguments`.
+#  - empty hasura_fields (remote not closed over any hasura fields)
+#
+- description: Many remote fields, etc
+  url: /v1/graphql
+  status: 200
+  response:
+    data:
+      p_1:
+        id: 1
+        name: alice
+        remoteUser:
+          user_id: 1
+      profiles:
+        - some_constant_text: constant text
+          some_more_constant_text: more constant text
+          messagesNestedArr:
+            - name: alice
+              msg: You win!
+            - name: alice
+              msg: Another alice
+          name: alice
+          r_user:
+            user_id: 1
+        - some_constant_text: constant text
+          some_more_constant_text: more constant text
+          messagesNestedArr:
+            - name: bob
+              msg: You lose!
+          name: bob
+          r_user:
+            user_id: 2
+        - some_constant_text: constant text
+          some_more_constant_text: more constant text
+          messagesNestedArr:
+            - name: alice
+              msg: You win!
+            - name: alice
+              msg: Another alice
+          name: alice
+          r_user:
+            user_id: 3
+      profiles_by_pk:
+        id: 2
+        name: bob
+        remoteUser:
+          user_id: 2
+  query:
+    query: |
+      query {
+        # A top-level object
+        p_1: profiles_by_pk(id: 1) {
+          id
+          name
+          remoteUser {
+            user_id
+          }
+        }
+        # NOTE: ordering is somewhat important and intentional here (e.g. placement of some_more_constant_text)
+        profiles {
+          # no `id`, so becomes rrPhantomFields
+          some_constant_text
+          some_more_constant_text
+          messagesNestedArr {
+            name
+            msg
+          }
+          name
+          # use alias for kicks:
+          r_user: remoteUser {
+            user_id
+          }
+        }
+        # A top-level object
+        profiles_by_pk(id: 2) {
+          id
+          name
+          remoteUser {
+            user_id
+          }
+        }
+      }
+- description: Many remote fields, etc with permissions, id=1
+  headers:
+    X-Hasura-Role: user
+    X-Hasura-User-Id: '1'
+  url: /v1/graphql
+  status: 200
+  response:
+    data:
+      p_1:
+        id: 1
+        name: alice
+        remoteUser:
+          user_id: 1
+      profiles:
+        - some_constant_text: constant text
+          messagesNestedArr:
+            - name: alice
+              msg: You win!
+            - name: alice
+              msg: Another alice
+          name: alice
+          r_user:
+            user_id: 1
+      # Not permitted:
+      profiles_by_pk: null
+  query:
+    query: |
+      query {
+        # A top-level object
+        p_1: profiles_by_pk(id: 1) {
+          id
+          name
+          remoteUser {
+            user_id
+          }
+        }
+        profiles {
+          # no `id`, so becomes rrPhantomFields
+          some_constant_text
+          messagesNestedArr {
+            name
+            msg
+          }
+          name
+          # use alias for kicks:
+          r_user: remoteUser {
+            user_id
+          }
+        }
+        # A top-level object (not permitted)
+        profiles_by_pk(id: 2) {
+          id
+          name
+          remoteUser {
+            user_id
+          }
+        }
+      }
+- description: Many remote fields, etc with permissions, id=2
+  headers:
+    X-Hasura-Role: user
+    X-Hasura-User-Id: '2'
+  url: /v1/graphql
+  status: 200
+  response:
+    data:
+      p_1: null
+      profiles:
+        - some_constant_text: constant text
+          messagesNestedArr:
+            - name: bob
+              msg: You lose!
+          name: bob
+          r_user:
+            user_id: 2
+      profiles_by_pk:
+        id: 2
+        name: bob
+        remoteUser:
+          user_id: 2
+  query:
+    query: |
+      query {
+        # A top-level object
+        p_1: profiles_by_pk(id: 1) {
+          id
+          name
+          remoteUser {
+            user_id
+          }
+        }
+        profiles {
+          # no `id`, so becomes rrPhantomFields
+          some_constant_text
+          messagesNestedArr {
+            name
+            msg
+          }
+          name
+          # use alias for kicks:
+          r_user: remoteUser {
+            user_id
+          }
+        }
+        # A top-level object
+        profiles_by_pk(id: 2) {
+          id
+          name
+          remoteUser {
+            user_id
+          }
+        }
+      }
+- description: Empty hasura_fields bug
+  url: /v1/graphql
+  status: 200
+  response:
+    data:
+      profiles:
+        - some_constant_text: constant text
+          some_more_constant_text: more constant text
+          id: 1
+        - some_constant_text: constant text
+          some_more_constant_text: more constant text
+          id: 2
+        - some_constant_text: constant text
+          some_more_constant_text: more constant text
+          id: 3
+      p_1:
+        # some_constant_text: constant text
+        some_more_constant_text: more constant text
+  query:
+    query: |
+      query {
+        profiles {
+          some_constant_text
+          some_more_constant_text
+          id
+        }
+        p_1: profiles_by_pk(id: 1) {
+          # some_constant_text
+          some_more_constant_text
+        }
+      }

@@ -1,55 +1,84 @@
 {-# LANGUAGE UndecidableInstances #-}
 
 module Hasura.RQL.Types.Run
-  ( Run(..)
+  ( RunT(..)
   , RunCtx(..)
+  , runQueryLazyTx
   , peelRun
   ) where
 
 import           Hasura.Prelude
 
-import qualified Database.PG.Query           as Q
-import qualified Network.HTTP.Client         as HTTP
+import qualified Database.PG.Query            as Q
+import qualified Network.HTTP.Client.Extended as HTTP
 
-import           Control.Monad.Trans.Control (MonadBaseControl)
+import           Control.Monad.Trans.Control  (MonadBaseControl)
 import           Control.Monad.Unique
+import           Hasura.Metadata.Class
+
+import qualified Hasura.Tracing               as Tracing
 
 import           Hasura.RQL.Types
+import           Hasura.Session
+
 
 data RunCtx
   = RunCtx
-  { _rcUserInfo  :: !UserInfo
-  , _rcHttpMgr   :: !HTTP.Manager
-  , _rcSqlGenCtx :: !SQLGenCtx
+  { _rcUserInfo        :: !UserInfo
+  , _rcHttpMgr         :: !HTTP.Manager
+  , _rcServerConfigCtx :: !ServerConfigCtx
   }
 
-newtype Run a
-  = Run { unRun :: ReaderT RunCtx (LazyTx QErr) a }
+newtype RunT m a
+  = RunT { unRunT :: ReaderT RunCtx (ExceptT QErr m) a }
   deriving ( Functor, Applicative, Monad
            , MonadError QErr
            , MonadReader RunCtx
-           , MonadTx
            , MonadIO
-           , MonadBase IO
-           , MonadBaseControl IO
-           , MonadUnique
+           , MonadMetadataStorage
+           , Tracing.MonadTrace
            )
 
-instance UserInfoM Run where
+instance (MonadIO m) => MonadUnique (RunT m) where
+  newUnique = liftIO newUnique
+
+instance (MonadMetadataStorage m) => MonadMetadataStorageQueryAPI (RunT m)
+
+deriving instance (MonadIO m, MonadBase IO m) => MonadBase IO (RunT m)
+deriving instance (MonadIO m, MonadBaseControl IO m) => MonadBaseControl IO (RunT m)
+
+instance (Monad m) => UserInfoM (RunT m) where
   askUserInfo = asks _rcUserInfo
 
-instance HasHttpManager Run where
+instance (Monad m) => HTTP.HasHttpManagerM (RunT m) where
   askHttpManager = asks _rcHttpMgr
 
-instance HasSQLGenCtx Run where
-  askSQLGenCtx = asks _rcSqlGenCtx
+instance (Monad m) => HasServerConfigCtx (RunT m) where
+  askServerConfigCtx = asks _rcServerConfigCtx
+
+instance (MonadResolveSource m) => MonadResolveSource (RunT m) where
+  getSourceResolver = RunT . lift . lift $ getSourceResolver
+
+runQueryLazyTx
+  :: ( MonadIO m
+     , MonadBaseControl IO m
+     , MonadError QErr m
+     , Tracing.MonadTrace m
+     , UserInfoM m
+     )
+  => PGExecCtx
+  -> Q.TxAccess
+  -> LazyTxT QErr m a
+  -> m a
+runQueryLazyTx pgExecCtx txAccess tx = do
+  traceCtx <- Tracing.currentContext
+  userInfo <- askUserInfo
+  liftEitherM
+    $ runExceptT
+    $ runLazyTx pgExecCtx txAccess
+    $ withTraceContext traceCtx
+    $ withUserInfo userInfo tx
 
 peelRun
-  :: (MonadIO m)
-  => RunCtx
-  -> PGExecCtx
-  -> Q.TxAccess
-  -> Run a
-  -> ExceptT QErr m a
-peelRun runCtx@(RunCtx userInfo _ _) pgExecCtx txAccess (Run m) =
-  runLazyTx pgExecCtx txAccess $ withUserInfo userInfo $ runReaderT m runCtx
+  :: RunCtx -> RunT m a -> ExceptT QErr m a
+peelRun runCtx (RunT m) = runReaderT m runCtx

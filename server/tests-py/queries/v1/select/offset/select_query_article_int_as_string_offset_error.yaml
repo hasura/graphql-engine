@@ -3,7 +3,7 @@ url: /v1/query
 status: 400
 response:
   code: parse-failed
-  error: expected Int, encountered String
+  error: parsing Int failed, expected Number, but encountered String
   path: $.offset
 query:
   type: select

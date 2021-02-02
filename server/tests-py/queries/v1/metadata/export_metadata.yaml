@@ -30,6 +30,12 @@ response:
           schema: public
           name: fetch_articles
         table_argument: author_row
+    - name: test_session
+      definition:
+        function:
+          schema: public
+          name: test_session
+        session_argument: session
   functions:
   - function:
       schema: public

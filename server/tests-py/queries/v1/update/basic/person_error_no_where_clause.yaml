@@ -3,7 +3,7 @@ url: /v1/query
 status: 400
 response:
   path: $
-  error: key "where" not present
+  error: key "where" not found
   code: parse-failed
 query:
   type: update

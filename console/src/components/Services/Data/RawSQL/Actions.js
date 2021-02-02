@@ -1,10 +1,6 @@
 import defaultState from './State';
 import Endpoints, { globalCookiePolicy } from '../../../../Endpoints';
-import {
-  handleMigrationErrors,
-  fetchTrackedFunctions,
-  fetchDataInit,
-} from '../DataActions';
+import { handleMigrationErrors, fetchDataInit } from '../DataActions';
 import {
   showErrorNotification,
   showSuccessNotification,
@@ -16,7 +12,16 @@ import {
 import { parseCreateSQL } from './utils';
 import dataHeaders from '../Common/Headers';
 import returnMigrateUrl from '../Common/getMigrateUrl';
+import requestAction from '../../../../utils/requestAction';
+import { dataSource } from '../../../../dataSources';
 import { getRunSqlQuery } from '../../../Common/utils/v1QueryUtils';
+import { getDownQueryComments } from '../../../../utils/migration/utils';
+import {
+  getTrackFunctionQuery,
+  getTrackTableQuery,
+} from '../../../../metadata/queryUtils';
+import globals from '../../../../Globals';
+import { CLI_CONSOLE_MODE } from '../../../../constants';
 
 const MAKING_REQUEST = 'RawSQL/MAKING_REQUEST';
 const SET_SQL = 'RawSQL/SET_SQL';
@@ -32,54 +37,111 @@ const MODAL_OPEN = 'EditItem/MODAL_OPEN';
 const modalOpen = () => ({ type: MODAL_OPEN });
 const modalClose = () => ({ type: MODAL_CLOSE });
 
-const executeSQL = (isMigration, migrationName) => (dispatch, getState) => {
+const trackAllItems = (sql, isMigration, migrationName) => (
+  dispatch,
+  getState
+) => {
+  const currMigrationMode = getState().main.migrationMode;
+  const source = getState().tables.currentDataSource;
+
+  const objects = parseCreateSQL(sql);
+  const changes = [];
+  objects.forEach(({ type, name, schema }) => {
+    let req = {};
+    if (type === 'function') {
+      req = getTrackFunctionQuery(name, schema, source, {});
+    } else {
+      req = getTrackTableQuery({ name, schema }, source);
+    }
+    changes.push(req);
+  });
+
+  let url = Endpoints.metadata;
+  let request;
+  if (isMigration) {
+    if (globals.consoleMode === CLI_CONSOLE_MODE) {
+      url = currMigrationMode
+        ? Endpoints.hasuractlMigrate
+        : Endpoints.hasuractlMetadata;
+    }
+    request = {
+      name: migrationName,
+      datasource: source,
+      up: changes,
+      down: [],
+    };
+  } else {
+    request = {
+      type: 'bulk',
+      args: changes,
+    };
+  }
+
+  const options = {
+    method: 'POST',
+    credentials: globalCookiePolicy,
+    headers: dataHeaders(getState),
+    body: JSON.stringify(request),
+  };
+
+  return dispatch(requestAction(url, options)).then(
+    () => {
+      dispatch(showSuccessNotification('Items were tracked successfuly'));
+    },
+    err => {
+      dispatch(showErrorNotification('Tracking items failed', err.code, err));
+    }
+  );
+};
+
+const executeSQL = (isMigration, migrationName, statementTimeout) => (
+  dispatch,
+  getState
+) => {
   dispatch({ type: MAKING_REQUEST });
   dispatch(showSuccessNotification('Executing the Query...'));
 
-  const sql = getState().rawSQL.sql;
-  const currMigrationMode = getState().main.migrationMode;
-  const readOnlyMode = getState().main.readOnlyMode;
+  const { isTableTrackChecked, isCascadeChecked, sql } = getState().rawSQL;
+  const { migrationMode, readOnlyMode } = getState().main;
 
-  const migrateUrl = returnMigrateUrl(currMigrationMode);
-  const isCascadeChecked = getState().rawSQL.isCascadeChecked;
+  const isStatementTimeout = statementTimeout && !isMigration;
+  const migrateUrl = returnMigrateUrl(migrationMode);
 
-  let url = Endpoints.rawSQL;
-  const schemaChangesUp = [getRunSqlQuery(sql, isCascadeChecked, readOnlyMode)];
-  // check if track view enabled
+  let url = Endpoints.query;
+  const source = getState().tables.currentDataSource;
+  const schemaChangesUp = [];
 
-  if (getState().rawSQL.isTableTrackChecked) {
-    const objects = parseCreateSQL(sql);
-
-    objects.forEach(object => {
-      const trackQuery = {
-        type: '',
-        args: {},
-      };
-
-      if (object.type === 'function') {
-        trackQuery.type = 'track_function';
-      } else {
-        trackQuery.type = 'add_existing_table_or_view';
-      }
-
-      trackQuery.args.name = object.name;
-      trackQuery.args.schema = object.schema;
-
-      schemaChangesUp.push(trackQuery);
-    });
+  if (isStatementTimeout) {
+    schemaChangesUp.push(
+      getRunSqlQuery(
+        dataSource.getStatementTimeoutSql(statementTimeout),
+        source,
+        false,
+        readOnlyMode
+      )
+    );
   }
+
+  schemaChangesUp.push(
+    getRunSqlQuery(sql, source, isCascadeChecked, readOnlyMode)
+  );
+
+  const schemaChangesDown = getDownQueryComments(schemaChangesUp, source);
 
   let requestBody = {
     type: 'bulk',
+    source,
     args: schemaChangesUp,
   };
+
   // check if its a migration and send to hasuractl migrate
   if (isMigration) {
     url = migrateUrl;
     requestBody = {
       name: migrationName,
       up: schemaChangesUp,
-      down: [],
+      down: schemaChangesDown,
+      datasource: source,
     };
   }
   const options = {
@@ -88,76 +150,59 @@ const executeSQL = (isMigration, migrationName) => (dispatch, getState) => {
     headers: dataHeaders(getState),
     body: JSON.stringify(requestBody),
   };
-  fetch(url, options).then(
-    response => {
-      if (response.ok) {
-        response.json().then(
-          data => {
-            if (isMigration) {
-              dispatch(loadMigrationStatus());
-            }
-            dispatch(showSuccessNotification('SQL executed!'));
-            dispatch(fetchDataInit()).then(() => {
-              dispatch({ type: REQUEST_SUCCESS, data });
-            });
-            dispatch(fetchTrackedFunctions());
-          },
-          err => {
-            const parsedErrorMsg = err;
-            parsedErrorMsg.message = JSON.parse(err.message);
-            dispatch({ type: UPDATE_MIGRATION_STATUS_ERROR, data: err });
-            dispatch(
-              showErrorNotification(
-                'SQL execution failed!',
-                'Something is wrong. Received an invalid response json.',
-                parsedErrorMsg
-              )
-            );
-            dispatch({
-              type: REQUEST_ERROR,
-              data: 'Something is wrong. Received an invalid response json.',
-            });
-            console.err('RunSQL error: ', err);
-          }
-        );
-        return;
-      }
-      response.json().then(
-        errorMsg => {
-          const title = 'SQL Execution Failed';
-          dispatch({ type: UPDATE_MIGRATION_STATUS_ERROR, data: errorMsg });
-          dispatch({ type: REQUEST_ERROR, data: errorMsg });
-          if (isMigration) {
-            dispatch(handleMigrationErrors(title, errorMsg));
-          } else {
-            dispatch(showErrorNotification(title, errorMsg.code, errorMsg));
-          }
-        },
-        () => {
-          dispatch(
-            showErrorNotification(
-              'SQL execution failed!',
-              'Something is wrong. Please check your configuration again'
-            )
+
+  const callback = data => {
+    if (isMigration) {
+      dispatch(loadMigrationStatus());
+    }
+    dispatch(showSuccessNotification('SQL executed!'));
+    dispatch(fetchDataInit()).then(() => {
+      dispatch({
+        type: REQUEST_SUCCESS,
+        data: data && (isStatementTimeout ? data[1] : data[0]),
+      });
+    });
+  };
+
+  return dispatch(requestAction(url, options))
+    .then(
+      data => {
+        if (isTableTrackChecked) {
+          dispatch(trackAllItems(sql, isMigration, migrationName)).then(
+            callback(data)
           );
-          dispatch({
-            type: REQUEST_ERROR,
-            data: 'Something is wrong. Please check your configuration again',
-          });
+          return;
         }
-      );
-    },
-    error => {
-      console.error(error);
+        callback(data);
+      },
+      err => {
+        const title = 'SQL Execution Failed';
+        dispatch({ type: UPDATE_MIGRATION_STATUS_ERROR, data: err });
+        dispatch({ type: REQUEST_ERROR, data: err });
+        if (isMigration) {
+          dispatch(handleMigrationErrors(title, err));
+        } else {
+          dispatch(showErrorNotification(title, err.code, err));
+        }
+      }
+    )
+    .catch(errorMsg => {
+      const parsedErrorMsg = errorMsg;
+      parsedErrorMsg.message = JSON.parse(errorMsg.message);
+      dispatch({ type: UPDATE_MIGRATION_STATUS_ERROR, data: errorMsg });
       dispatch(
         showErrorNotification(
-          'SQL execution failed',
-          'Cannot connect to server'
+          'SQL execution failed!',
+          'Something is wrong. Received an invalid response json.',
+          parsedErrorMsg
         )
       );
-      dispatch({ type: REQUEST_ERROR, data: 'server-connection-failed' });
-    }
-  );
+      dispatch({
+        type: REQUEST_ERROR,
+        data: 'Something is wrong. Received an invalid response json.',
+      });
+      console.err('RunSQL error: ', errorMsg);
+    });
 };
 
 const rawSQLReducer = (state = defaultState, action) => {
@@ -174,6 +219,7 @@ const rawSQLReducer = (state = defaultState, action) => {
         isTableTrackChecked: action.data,
         showTrackTable: action.data,
       };
+
     case MAKING_REQUEST:
       return {
         ...state,
@@ -182,11 +228,7 @@ const rawSQLReducer = (state = defaultState, action) => {
         lastSuccess: null,
       };
     case REQUEST_SUCCESS:
-      if (
-        action.data &&
-        action.data[0] &&
-        action.data[0].result_type === 'CommandOk'
-      ) {
+      if (action.data && action.data.result_type === 'CommandOk') {
         return {
           ...state,
           ongoingRequest: false,
@@ -202,8 +244,8 @@ const rawSQLReducer = (state = defaultState, action) => {
         lastError: null,
         lastSuccess: true,
         resultType: 'tuples',
-        result: action.data[0].result.slice(1),
-        resultHeaders: action.data[0].result[0],
+        result: action.data.result.slice(1),
+        resultHeaders: action.data.result[0],
       };
     case REQUEST_ERROR:
       return {

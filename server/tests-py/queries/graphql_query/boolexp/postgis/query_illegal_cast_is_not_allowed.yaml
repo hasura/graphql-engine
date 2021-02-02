@@ -9,7 +9,7 @@ response:
     message: 'field "integer" not found in type: ''geography_cast_exp'''
 query:
   query: |
-    {
+    query {
       geog_table(where: {geog_col: {_cast: {integer: {_eq: 0}}}}) {
         name
       }

@@ -1,10 +1,6 @@
 import defaultState from './AddExistingTableViewState';
 import _push from '../push';
-import {
-  updateSchemaInfo,
-  fetchTrackedFunctions,
-  makeMigrationCall,
-} from '../DataActions';
+import { updateSchemaInfo, makeMigrationCall } from '../DataActions';
 import { showSuccessNotification } from '../../Common/Notification';
 import {
   getSchemaBaseRoute,
@@ -12,7 +8,14 @@ import {
   getTableModifyRoute,
   getFunctionModifyRoute,
 } from '../../../Common/utils/routesUtils';
-import { checkIfTable } from '../../../Common/utils/pgUtils';
+import { dataSource } from '../../../../dataSources';
+import { exportMetadata } from '../../../../metadata/actions';
+import {
+  getUntrackTableQuery,
+  getTrackFunctionQuery,
+  getUntrackFunctionQuery,
+  getTrackTableQuery,
+} from '../../../../metadata/queryUtils';
 
 const SET_DEFAULTS = 'AddExistingTable/SET_DEFAULTS';
 const SET_TABLENAME = 'AddExistingTable/SET_TABLENAME';
@@ -23,40 +26,34 @@ const REQUEST_ERROR = 'AddExistingTable/REQUEST_ERROR';
 const setDefaults = () => ({ type: SET_DEFAULTS });
 const setTableName = value => ({ type: SET_TABLENAME, value });
 
-const addExistingTableSql = () => {
+const addExistingTableSql = (name, customSchema, skipRouting = false) => {
   return (dispatch, getState) => {
     dispatch({ type: MAKING_REQUEST });
     dispatch(showSuccessNotification('Adding an existing table...'));
     const state = getState().addTable.existingTableView;
-    const currentSchema = getState().tables.currentSchema;
-    const tableName = state.tableName.trim();
+    const currentSchema = customSchema
+      ? customSchema
+      : getState().tables.currentSchema;
+    const currentDataSource = getState().tables.currentDataSource;
+    const tableName = name ? name : state.tableName.trim();
 
-    const requestBodyUp = {
-      type: 'add_existing_table_or_view',
-      args: {
+    const requestBodyUp = getTrackTableQuery(
+      {
         name: tableName,
         schema: currentSchema,
       },
-    };
-    const requestBodyDown = {
-      type: 'untrack_table',
-      args: {
-        table: {
-          name: tableName,
-          schema: currentSchema,
-        },
+      currentDataSource
+    );
+
+    const requestBodyDown = getUntrackTableQuery(
+      {
+        name: tableName,
+        schema: currentSchema,
       },
-    };
-    const migrationName =
-      'add_existing_table_or_view_' + currentSchema + '_' + tableName;
-    const upQuery = {
-      type: 'bulk',
-      args: [requestBodyUp],
-    };
-    const downQuery = {
-      type: 'bulk',
-      args: [requestBodyDown],
-    };
+      currentDataSource
+    );
+
+    const migrationName = `add_existing_table_or_view_${currentSchema}_${tableName}`;
 
     const requestMsg = 'Adding existing table/view...';
     const successMsg = 'Existing table/view added';
@@ -67,11 +64,23 @@ const addExistingTableSql = () => {
         const newTable = getState().tables.allSchemas.find(
           t => t.table_name === tableName && t.table_schema === currentSchema
         );
-        const isTable = checkIfTable(newTable);
-        const nextRoute = isTable
-          ? getTableModifyRoute(currentSchema, tableName, isTable)
-          : getTableBrowseRoute(currentSchema, tableName, isTable);
-        dispatch(_push(nextRoute));
+        const isTableType = dataSource.isTable(newTable);
+        const nextRoute = isTableType
+          ? getTableModifyRoute(
+              currentSchema,
+              currentDataSource,
+              tableName,
+              isTableType
+            )
+          : getTableBrowseRoute(
+              currentSchema,
+              currentDataSource,
+              tableName,
+              isTableType
+            );
+        if (!skipRouting) {
+          dispatch(_push(nextRoute));
+        }
       });
       return;
     };
@@ -79,11 +88,11 @@ const addExistingTableSql = () => {
       dispatch({ type: REQUEST_ERROR, data: err });
     };
 
-    makeMigrationCall(
+    return makeMigrationCall(
       dispatch,
       getState,
-      upQuery.args,
-      downQuery.args,
+      [requestBodyUp],
+      [requestBodyDown],
       migrationName,
       customOnSuccess,
       customOnError,
@@ -94,35 +103,32 @@ const addExistingTableSql = () => {
   };
 };
 
-const addExistingFunction = name => {
+const addExistingFunction = (
+  name,
+  config,
+  customSchema,
+  skipRouting = false
+) => {
   return (dispatch, getState) => {
     dispatch({ type: MAKING_REQUEST });
-    dispatch(showSuccessNotification('Adding an function...'));
-    const currentSchema = getState().tables.currentSchema;
+    const currentSchema = customSchema
+      ? customSchema
+      : getState().tables.currentSchema;
+    const currentDataSource = getState().tables.currentDataSource;
 
-    const requestBodyUp = {
-      type: 'track_function',
-      args: {
-        name,
-        schema: currentSchema,
-      },
-    };
-    const requestBodyDown = {
-      type: 'untrack_function',
-      args: {
-        name,
-        schema: currentSchema,
-      },
-    };
-    const migrationName = 'add_existing_function ' + currentSchema + '_' + name;
-    const upQuery = {
-      type: 'bulk',
-      args: [requestBodyUp],
-    };
-    const downQuery = {
-      type: 'bulk',
-      args: [requestBodyDown],
-    };
+    const requestBodyUp = getTrackFunctionQuery(
+      name,
+      currentSchema,
+      currentDataSource,
+      config
+    );
+    const requestBodyDown = getUntrackFunctionQuery(
+      name,
+      currentSchema,
+      currentDataSource
+    );
+
+    const migrationName = `add_existing_function_${currentSchema}_${name}`;
 
     const requestMsg = 'Adding existing function...';
     const successMsg = 'Existing function added';
@@ -130,19 +136,22 @@ const addExistingFunction = name => {
     const customOnSuccess = () => {
       dispatch({ type: REQUEST_SUCCESS });
       // Update the left side bar
-      dispatch(fetchTrackedFunctions(currentSchema));
-      dispatch(_push(getFunctionModifyRoute(currentSchema, name)));
-      return;
+      dispatch(exportMetadata());
+      if (!skipRouting) {
+        dispatch(
+          _push(getFunctionModifyRoute(currentSchema, currentDataSource, name))
+        );
+      }
     };
     const customOnError = err => {
       dispatch({ type: REQUEST_ERROR, data: err });
     };
 
-    makeMigrationCall(
+    return makeMigrationCall(
       dispatch,
       getState,
-      upQuery.args,
-      downQuery.args,
+      [requestBodyUp],
+      [requestBodyDown],
       migrationName,
       customOnSuccess,
       customOnError,
@@ -156,40 +165,34 @@ const addExistingFunction = name => {
 const addAllUntrackedTablesSql = tableList => {
   return (dispatch, getState) => {
     const currentSchema = getState().tables.currentSchema;
+    const currentDataSource = getState().tables.currentDataSource;
 
     dispatch({ type: MAKING_REQUEST });
-    dispatch(showSuccessNotification('Existing table/view added!'));
+    dispatch(showSuccessNotification('Adding...'));
     const bulkQueryUp = [];
     const bulkQueryDown = [];
     for (let i = 0; i < tableList.length; i++) {
       if (tableList[i].table_name !== 'schema_migrations') {
-        bulkQueryUp.push({
-          type: 'add_existing_table_or_view',
-          args: {
-            name: tableList[i].table_name,
-            schema: currentSchema,
-          },
-        });
-        bulkQueryDown.push({
-          type: 'untrack_table',
-          args: {
-            table: {
-              name: tableList[i].table_name,
-              schema: currentSchema,
+        bulkQueryUp.push(
+          getTrackTableQuery(
+            { name: tableList[i].table_name, schema: currentSchema },
+            currentDataSource
+          )
+        );
+        bulkQueryDown.push(
+          getUntrackTableQuery(
+            {
+              table: {
+                name: tableList[i].table_name,
+                schema: currentSchema,
+              },
             },
-          },
-        });
+            currentDataSource
+          )
+        );
       }
     }
     const migrationName = 'add_all_existing_table_or_view_' + currentSchema;
-    const upQuery = {
-      type: 'bulk',
-      args: bulkQueryUp,
-    };
-    const downQuery = {
-      type: 'bulk',
-      args: bulkQueryDown,
-    };
 
     const requestMsg = 'Adding existing table/view...';
     const successMsg = 'Existing table/view added';
@@ -198,7 +201,7 @@ const addAllUntrackedTablesSql = tableList => {
       dispatch(showSuccessNotification('Existing table/view added!'));
       dispatch({ type: REQUEST_SUCCESS });
       dispatch(updateSchemaInfo()).then(() => {
-        dispatch(_push(getSchemaBaseRoute(currentSchema)));
+        dispatch(_push(getSchemaBaseRoute(currentSchema, currentDataSource)));
       });
       return;
     };
@@ -209,8 +212,8 @@ const addAllUntrackedTablesSql = tableList => {
     makeMigrationCall(
       dispatch,
       getState,
-      upQuery.args,
-      downQuery.args,
+      bulkQueryUp,
+      bulkQueryDown,
       migrationName,
       customOnSuccess,
       customOnError,

@@ -1,18 +1,21 @@
 import React, { Component } from 'react';
 import PropTypes from 'prop-types';
 import TableHeader from '../TableCommon/TableHeader';
-import { RESET } from '../TableModify/ModifyActions';
-import { findAllFromRel } from '../utils';
 import { getObjArrRelList } from './utils';
 import { setTable, UPDATE_REMOTE_SCHEMA_MANUAL_REL } from '../DataActions';
 import AddManualRelationship from './AddManualRelationship';
 import RelationshipEditor from './RelationshipEditor';
 import { NotFoundError } from '../../../Error/PageNotFound';
+import RemoteRelationships from './RemoteRelationships/RemoteRelationships';
+import ToolTip from '../../../Common/Tooltip/Tooltip';
+import KnowMoreLink from '../../../Common/KnowMoreLink/KnowMoreLink';
+import { findAllFromRel } from '../../../../dataSources';
+import { getRemoteSchemasSelector } from '../../../../metadata/selector';
+import { RightContainer } from '../../../Common/Layout/RightContainer';
 
 class RelationshipsView extends Component {
   componentDidMount() {
     const { dispatch, currentSchema, tableName } = this.props;
-    dispatch({ type: RESET });
     dispatch(setTable(tableName));
     // Sourcing the current schema into manual relationship
     dispatch({
@@ -35,7 +38,10 @@ class RelationshipsView extends Component {
       migrationMode,
       readOnlyMode,
       schemaList,
+      remoteSchemas,
+      currentSource,
     } = this.props;
+
     const styles = require('../TableModify/ModifyTable.scss');
     const tableStyles = require('../../../Common/TableCommon/TableStyles.scss');
 
@@ -97,11 +103,7 @@ class RelationshipsView extends Component {
                   <RelationshipEditor
                     dispatch={dispatch}
                     key={rel.objRel.rel_name}
-                    relConfig={findAllFromRel(
-                      allSchemas,
-                      tableSchema,
-                      rel.objRel
-                    )}
+                    relConfig={findAllFromRel(tableSchema, rel.objRel)}
                   />
                 ) : (
                   <td />
@@ -110,11 +112,7 @@ class RelationshipsView extends Component {
                   <RelationshipEditor
                     key={rel.arrRel.rel_name}
                     dispatch={dispatch}
-                    relConfig={findAllFromRel(
-                      allSchemas,
-                      tableSchema,
-                      rel.arrRel
-                    )}
+                    relConfig={findAllFromRel(tableSchema, rel.arrRel)}
                   />
                 ) : (
                   <td />
@@ -132,33 +130,57 @@ class RelationshipsView extends Component {
       );
     }
 
-    return (
-      <div className={`${styles.container} container-fluid`}>
-        <TableHeader
-          dispatch={dispatch}
-          table={tableSchema}
-          tabName="relationships"
-          migrationMode={migrationMode}
-          readOnlyMode={readOnlyMode}
-        />
-        <br />
-        <div className={`${styles.padd_left_remove} container-fluid`}>
-          <div className={`${styles.padd_left_remove} col-xs-10 col-md-10`}>
-            <h4 className={styles.subheading_text}>Relationships</h4>
-            {addedRelationshipsView}
-            <br />
-            <AddManualRelationship
-              tableSchema={tableSchema}
-              allSchemas={allSchemas}
-              schemaList={schemaList}
-              relAdd={manualRelAdd}
-              dispatch={dispatch}
-            />
-            <hr />
-          </div>
+    const remoteRelationshipsSection = () => {
+      return (
+        <div className={`${styles.padd_left_remove} col-xs-10 col-md-10`}>
+          <RemoteRelationships
+            relationships={tableSchema.remote_relationships}
+            reduxDispatch={dispatch}
+            table={tableSchema}
+            remoteSchemas={remoteSchemas}
+          />
         </div>
-        <div className={`${styles.fixed} hidden`}>{alert}</div>
-      </div>
+      );
+    };
+
+    return (
+      <RightContainer>
+        <div className={`${styles.container} container-fluid`}>
+          <TableHeader
+            dispatch={dispatch}
+            table={tableSchema}
+            source={currentSource}
+            tabName="relationships"
+            migrationMode={migrationMode}
+            readOnlyMode={readOnlyMode}
+          />
+          <br />
+          <div className={`${styles.padd_left_remove} container-fluid`}>
+            <div
+              className={`${styles.padd_left_remove} ${styles.add_mar_bottom} col-xs-10 col-md-10`}
+            >
+              <h4 className={styles.subheading_text}>
+                Table Relationships
+                <ToolTip message={'Relationships to tables / views'} />
+                &nbsp;
+                <KnowMoreLink href="https://hasura.io/docs/1.0/graphql/manual/schema/table-relationships/index.html" />
+              </h4>
+              {addedRelationshipsView}
+              <div className={styles.activeEdit}>
+                <AddManualRelationship
+                  tableSchema={tableSchema}
+                  allSchemas={allSchemas}
+                  schemaList={schemaList}
+                  relAdd={manualRelAdd}
+                  dispatch={dispatch}
+                />
+              </div>
+            </div>
+            {remoteRelationshipsSection()}
+          </div>
+          <div className={`${styles.fixed} hidden`}>{alert}</div>
+        </div>
+      </RightContainer>
     );
   }
 }
@@ -177,6 +199,8 @@ RelationshipsView.propTypes = {
   lastSuccess: PropTypes.bool,
   dispatch: PropTypes.func.isRequired,
   serverVersion: PropTypes.string,
+  remoteSchemas: PropTypes.array.isRequired,
+  featuresCompatibility: PropTypes.object,
 };
 
 const mapStateToProps = (state, ownProps) => ({
@@ -187,6 +211,8 @@ const mapStateToProps = (state, ownProps) => ({
   readOnlyMode: state.main.readOnlyMode,
   serverVersion: state.main.serverVersion,
   schemaList: state.tables.schemaList,
+  remoteSchemas: getRemoteSchemasSelector(state).map(schema => schema.name),
+  currentSource: state.tables.currentDataSource,
   ...state.tables.modify,
 });
 
