@@ -174,6 +174,10 @@ For the ``serve`` sub-command these are the available flags and ENV variables:
      - ``HASURA_GRAPHQL_TX_ISOLATION``
      - Transaction isolation. read-committed / repeatable-read / serializable (default: read-commited)
 
+   * - ``--retries <NO_OF_RETRIES>``
+     - ``HASURA_GRAPHQL_NO_OF_RETRIES``
+     - Number of retries if Postgres connection error occurs (default: 1)
+
    * - ``--stringify-numeric-types``
      - ``HASURA_GRAPHQL_STRINGIFY_NUMERIC_TYPES``
      - Stringify certain Postgres numeric types, specifically ``bigint``, ``numeric``, ``decimal`` and
