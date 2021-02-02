@@ -120,6 +120,7 @@ library
                      , unordered-containers
                      , template-haskell
                      , hashable
+                     , kan-extensions
                      , transformers
                      , transformers-base
                      , http-types
@@ -285,6 +286,7 @@ library
                      , Control.Concurrent.Extended
                      , Control.Lens.Extended
                      , Control.Monad.Stateless
+                     , Control.Monad.Trans.Managed
                      , Control.Monad.Unique
                      , Data.Aeson.Extended
                      , Data.Aeson.Ordered
@@ -321,6 +323,7 @@ library
                      , Hasura.Prelude
 
                      , Hasura.EncJSON
+                     , Hasura.GC
                      , Hasura.GraphQL.Execute.Query
                      , Hasura.GraphQL.Logging
                      , Hasura.Incremental.Select
@@ -482,6 +485,7 @@ executable graphql-engine
   build-depends:     base
                    , graphql-engine
                    , bytestring
+                   , kan-extensions
                    , pg-client
                    , text
                    , text-conversions
@@ -505,6 +509,7 @@ test-suite graphql-engine-tests
     , http-client-tls
     , jose
     , lifted-base
+    , kan-extensions
     , monad-control
     , mtl
     , natural-transformation >=0.4 && <0.5

@@ -150,7 +150,21 @@ data ObjectTypeDefinition a b c
   } deriving (Show, Eq, Lift, Generic)
 instance (NFData a, NFData b, NFData c) => NFData (ObjectTypeDefinition a b c)
 instance (Cacheable a, Cacheable b, Cacheable c) => Cacheable (ObjectTypeDefinition a b c)
-$(J.deriveJSON (J.aesonDrop 4 J.snakeCase) ''ObjectTypeDefinition)
+$(J.deriveToJSON (J.aesonDrop 4 J.snakeCase) ''ObjectTypeDefinition)
+
+instance (J.FromJSON a, J.FromJSON b, J.FromJSON c) => J.FromJSON (ObjectTypeDefinition a b c) where
+  parseJSON = J.withObject "ObjectTypeDefinition" \obj -> do
+    name <- obj J..: "name"
+    desc <- obj J..:? "description"
+    fields <- obj J..: "fields"
+    relationships <- obj J..:? "relationships"
+    -- We need to do the below because pre-PDV, '[]' was a legal value
+    -- for relationships because the type was `(Maybe [TypeRelationshipDefinition])`,
+    -- In PDV, the type was changed to `(Maybe (NonEmpty (TypeRelationship b c)))`
+    -- which breaks on `[]` for the `relationships` field, to be backwards compatible
+    -- this `FromJSON` instance is written by hand and `[]` sets `_otdRelationships`
+    -- to `Nothing`
+    return $ ObjectTypeDefinition name desc fields (nonEmpty =<< relationships)
 
 data ScalarTypeDefinition
   = ScalarTypeDefinition

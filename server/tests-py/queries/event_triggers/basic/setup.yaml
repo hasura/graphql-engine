@@ -11,6 +11,7 @@ args:
   args:
     schema: hge_tests
     name: test_t1
+
 - type: create_event_trigger
   args:
     name: t1_all

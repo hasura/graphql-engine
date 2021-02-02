@@ -52,6 +52,10 @@ export const isValidURL = (value: string) => {
   return true;
 };
 
+export const isURLTemplated = (value: string): boolean => {
+  return /{{(\S+)}}/.test(value);
+};
+
 export const isValidTemplateLiteral = (literal_: string) => {
   const literal = literal_.trim();
   if (!literal) return false;

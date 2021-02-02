@@ -15,7 +15,7 @@ import qualified Data.Aeson.TH                        as J
 import qualified Data.ByteString.Lazy                 as BL
 import qualified Data.CaseInsensitive                 as CI
 import qualified Data.HashMap.Strict                  as Map
-import qualified Data.HashSet                         as Set
+import qualified Data.IntMap                          as IntMap
 import qualified Data.Text                            as T
 import qualified Data.UUID                            as UUID
 import qualified Database.PG.Query                    as Q
@@ -33,7 +33,6 @@ import           Data.IORef
 
 import qualified Hasura.RQL.DML.RemoteJoin            as RJ
 import qualified Hasura.RQL.DML.Select                as RS
--- import qualified Hasura.GraphQL.Resolve.Select  as GRS
 import           Control.Monad.Trans.Control          (MonadBaseControl)
 
 import qualified Control.Concurrent.Async.Lifted.Safe as LA
@@ -159,26 +158,26 @@ resolveActionExecution env logger userInfo annAction execContext = do
         toTxtValue $ WithScalarType PGJSONB $ PGValJSONB $ Q.JSONB $ J.toJSON webhookRes
       selectAstUnresolved = processOutputSelectionSet webhookResponseExpression
                             outputType definitionList annFields stringifyNum
-  (astResolved, _expectedVariables) <- flip runStateT Set.empty $ RS.traverseAnnSimpleSelect prepareWithoutPlan selectAstUnresolved
-  return $ ActionExecuteResult (executeAction astResolved) respHeaders
+  (astResolved, finalPlanningSt) <- flip runStateT initPlanningSt $ RS.traverseAnnSimpleSelect prepareWithPlan selectAstUnresolved
+  let prepArgs = fmap fst $ withUserVars (_uiSession userInfo) $ IntMap.elems $ _psPrepped finalPlanningSt
+  return $ ActionExecuteResult (executeAction astResolved prepArgs) respHeaders
   where
     AnnActionExecution actionName outputType annFields inputPayload
       outputFields definitionList resolvedWebhook confHeaders
       forwardClientHeaders stringifyNum timeout = annAction
     ActionExecContext manager reqHeaders sessionVariables = execContext
 
-
-    executeAction :: RS.AnnSimpleSel -> ActionExecuteTx
-    executeAction astResolved = do
+    executeAction :: RS.AnnSimpleSel -> [Q.PrepArg] -> ActionExecuteTx
+    executeAction astResolved prepArgs = do
       let (astResolvedWithoutRemoteJoins,maybeRemoteJoins) = RJ.getRemoteJoins astResolved
           jsonAggType = mkJsonAggSelect outputType
       case maybeRemoteJoins of
         Just remoteJoins ->
           let query = Q.fromBuilder $ toSQL $
                       RS.mkSQLSelect jsonAggType astResolvedWithoutRemoteJoins
-          in RJ.executeQueryWithRemoteJoins env manager reqHeaders userInfo query [] remoteJoins
+          in RJ.executeQueryWithRemoteJoins env manager reqHeaders userInfo query prepArgs remoteJoins
         Nothing ->
-          liftTx $ asSingleRowJsonResp (Q.fromBuilder $ toSQL $ RS.mkSQLSelect jsonAggType astResolved) []
+          liftTx $ asSingleRowJsonResp (Q.fromBuilder $ toSQL $ RS.mkSQLSelect jsonAggType astResolved) prepArgs
 
 {- Note: [Async action architecture]
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

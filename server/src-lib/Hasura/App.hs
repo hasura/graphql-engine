@@ -9,6 +9,7 @@ import           Control.Lens                              (view, _2)
 import           Control.Monad.Base
 import           Control.Monad.Catch                       (Exception, MonadCatch, MonadMask,
                                                             MonadThrow, onException)
+import           Control.Monad.Trans.Managed               (ManagedT(..), allocate)
 import           Control.Monad.Morph                       (hoist)
 import           Control.Monad.Stateless
 import           Control.Monad.STM                         (atomically)
@@ -19,14 +20,12 @@ import           Data.Time.Clock                           (UTCTime)
 #ifndef PROFILING
 import           GHC.AssertNF
 #endif
-import           GHC.Stats
 import           Options.Applicative
 import           System.Environment                        (getEnvironment)
-import           System.Mem                                (performMajorGC)
 
 import qualified Control.Concurrent.Async.Lifted.Safe      as LA
 import qualified Control.Concurrent.Extended               as C
-import qualified Control.Immortal                          as Immortal
+import qualified Control.Exception.Lifted                  as LE
 import qualified Data.Aeson                                as A
 import qualified Data.ByteString.Char8                     as BC
 import qualified Data.ByteString.Lazy.Char8                as BLC
@@ -83,19 +82,17 @@ import qualified System.Metrics                            as EKG
 import qualified System.Metrics.Gauge                      as EKG.Gauge
 
 data ExitCode
+-- these are used during server initialization:
   = InvalidEnvironmentVariableOptionsError
   | InvalidDatabaseConnectionParamsError
-  | MetadataCatalogFetchingError
   | AuthConfigurationError
   | EventSubSystemError
-  | EventEnvironmentVariableError
+  | DatabaseMigrationError
+  -- these are used in app/Main.hs:
   | MetadataExportError
   | MetadataCleanError
-  | DatabaseMigrationError
   | ExecuteProcessError
   | DowngradeProcessError
-  | UnexpectedHasuraError
-  | ExitFailureError Int
   deriving Show
 
 data ExitException
@@ -186,11 +183,11 @@ newtype AppM a = AppM { unAppM :: IO a }
 -- this exists as a separate function because the context (logger, http manager, pg pool) can be
 -- used by other functions as well
 initialiseCtx
-  :: (HasVersion, MonadIO m, MonadCatch m)
+  :: (HasVersion, C.ForkableMonadIO m, MonadCatch m)
   => Env.Environment
   -> HGECommand Hasura
   -> RawConnInfo
-  -> m (InitCtx, UTCTime)
+  -> ManagedT m (InitCtx, UTCTime)
 initialiseCtx env hgeCmd rci = do
   initTime <- liftIO Clock.getCurrentTime
   -- global http manager
@@ -215,7 +212,7 @@ initialiseCtx env hgeCmd rci = do
       pool <- getMinimalPool pgLogger connInfo
       pure (l, pool, SQLGenCtx False)
 
-  res <- flip onException (flushLogger (_lsLoggerCtx loggers)) $
+  res <- lift . flip onException (flushLogger (_lsLoggerCtx loggers)) $
     migrateCatalogSchema env (_lsLogger loggers) pool httpManager sqlGenCtx
   pure (InitCtx httpManager instanceId loggers connInfo pool latch res, initTime)
   where
@@ -227,7 +224,7 @@ initialiseCtx env hgeCmd rci = do
       liftIO $ Q.initPGPool ci connParams pgLogger
 
     mkLoggers enabledLogs logLevel = do
-      loggerCtx <- liftIO $ mkLoggerCtx (defaultLoggerSettings True logLevel) enabledLogs
+      loggerCtx <- mkLoggerCtx (defaultLoggerSettings True logLevel) enabledLogs
       let logger = mkLogger loggerCtx
           pgLogger = mkPGLogger logger
       return $ Loggers loggerCtx logger pgLogger
@@ -298,7 +295,8 @@ createServerMetrics store = do
 
 {- HLINT ignore runHGEServer "Avoid lambda" -}
 runHGEServer
-  :: ( HasVersion
+  :: forall m impl
+   . ( HasVersion
      , MonadIO m
      , MonadMask m
      , MonadStateless IO m
@@ -323,13 +321,11 @@ runHGEServer
   -- and mutations
   -> UTCTime
   -- ^ start time
-  -> IO ()
-  -- ^ shutdown function
   -> Maybe EL.LiveQueryPostPollHook
   -> ServerMetrics
   -> EKG.Store
-  -> m ()
-runHGEServer env ServeOptions{..} InitCtx{..} pgExecCtx initTime shutdownApp postPollHook serverMetrics ekgStore = do
+  -> ManagedT m ()
+runHGEServer env ServeOptions{..} InitCtx{..} pgExecCtx initTime postPollHook serverMetrics ekgStore = do
 -- =======
 -- runHGEServer env ServeOptions{..} ServeCtx{..} pgExecCtx initTime shutdownApp postPollHook serverMetrics ekgStore = do
 -- >>>>>>> 02e5d85c (server: add metric for warp threads (#88))
@@ -351,10 +347,7 @@ runHGEServer env ServeOptions{..} InitCtx{..} pgExecCtx initTime shutdownApp pos
 
   authMode <- either (printErrExit AuthConfigurationError . T.unpack) return authModeRes
 
-  _idleGCThread <- C.forkImmortal "ourIdleGC" logger $ liftIO $
-    ourIdleGC logger (seconds 0.3) (seconds 10) (seconds 60)
-
-  HasuraApp app cacheRef cacheInitTime stopWsServer <- flip onException (flushLogger loggerCtx) $
+  HasuraApp app cacheRef cacheInitTime stopWsServer <- lift . flip onException (flushLogger loggerCtx) $
     mkWaiApp env
              soTxIso
              logger
@@ -383,73 +376,65 @@ runHGEServer env ServeOptions{..} InitCtx{..} pgExecCtx initTime shutdownApp pos
   liftIO $ logInconsObjs logger inconsObjs
 
   -- start background threads for schema sync
-  (schemaSyncListenerThread, schemaSyncProcessorThread) <-
-    startSchemaSyncThreads sqlGenCtx _icPgPool logger _icHttpManager
-                           cacheRef _icInstanceId cacheInitTime
+  _ <- startSchemaSyncThreads sqlGenCtx _icPgPool 
+         logger _icHttpManager
+         cacheRef _icInstanceId cacheInitTime
 
   let
     maxEvThrds    = fromMaybe defaultMaxEventThreads soEventsHttpPoolSize
     fetchI        = milliseconds $ fromMaybe (Milliseconds defaultFetchInterval) soEventsFetchInterval
     logEnvHeaders = soLogHeadersFromEnv
 
-  lockedEventsCtx <- liftIO $ atomically initLockedEventsCtx
+  lockedEventsCtx <- allocate
+    (liftIO $ atomically initLockedEventsCtx)
+    (\lockedEventsCtx -> liftIO $ shutdownEvents _icPgPool logger lockedEventsCtx)
 
   -- prepare event triggers data
   prepareEvents _icPgPool logger
   eventEngineCtx <- liftIO $ atomically $ initEventEngineCtx maxEvThrds fetchI
   unLogger logger $ mkGenericStrLog LevelInfo "event_triggers" "starting workers"
 
-  eventQueueThread <- C.forkImmortal "processEventQueue" logger $
+  _eventQueueThread <- C.forkManagedT "processEventQueue" logger $
     processEventQueue logger logEnvHeaders
     _icHttpManager _icPgPool (getSCFromRef cacheRef) eventEngineCtx lockedEventsCtx
 
   -- start a backgroud thread to handle async actions
-  asyncActionsThread <- C.forkImmortal "asyncActionsProcessor" logger $
+  _asyncActionsThread <- C.forkManagedT "asyncActionsProcessor" logger $
     asyncActionsProcessor env logger (_scrCache cacheRef) _icPgPool _icHttpManager
 
   -- start a background thread to create new cron events
-  cronEventsThread <- liftIO $ C.forkImmortal "runCronEventsGenerator" logger $
+  _cronEventsThread <- C.forkManagedT "runCronEventsGenerator" logger . liftIO $
     runCronEventsGenerator logger _icPgPool (getSCFromRef cacheRef)
 
   -- prepare scheduled triggers
-  prepareScheduledEvents _icPgPool logger
+  lift $ prepareScheduledEvents _icPgPool logger
 
   -- start a background thread to deliver the scheduled events
-  scheduledEventsThread <- C.forkImmortal "processScheduledTriggers" logger $
+  _scheduledEventsThread <- C.forkManagedT "processScheduledTriggers" logger $
     processScheduledTriggers env logger logEnvHeaders _icHttpManager _icPgPool (getSCFromRef cacheRef) lockedEventsCtx
 
   -- start a background thread to check for updates
-  updateThread <- C.forkImmortal "checkForUpdates" logger $ liftIO $
+  _updateThread <- C.forkManagedT "checkForUpdates" logger $ liftIO $
     checkForUpdates loggerCtx _icHttpManager
 
   -- start a background thread for telemetry
-  telemetryThread <- if soEnableTelemetry
+  _telemetryThread <- if soEnableTelemetry
     then do
-      unLogger logger $ mkGenericStrLog LevelInfo "telemetry" telemetryNotice
+      lift . unLogger logger $ mkGenericStrLog LevelInfo "telemetry" telemetryNotice
 
       (dbId, pgVersion) <- liftIO $ runTxIO _icPgPool (Q.ReadCommitted, Nothing) $
         (,) <$> getDbId <*> getPgVersion
 
-      telemetryThread <- C.forkImmortal "runTelemetry" logger $ liftIO $
+      telemetryThread <- C.forkManagedT "runTelemetry" logger $ liftIO $
         runTelemetry logger _icHttpManager (getSCFromRef cacheRef) dbId _icInstanceId pgVersion
       return $ Just telemetryThread
     else return Nothing
-
-  -- all the immortal threads are collected so that they can be stopped when gracefully shutting down
-  let immortalThreads = [ schemaSyncListenerThread
-                        , schemaSyncProcessorThread
-                        , updateThread
-                        , asyncActionsThread
-                        , eventQueueThread
-                        , scheduledEventsThread
-                        , cronEventsThread
-                        ] <> maybe [] pure telemetryThread
-
+  
   finishTime <- liftIO Clock.getCurrentTime
   let apiInitTime = realToFrac $ Clock.diffUTCTime finishTime initTime
   unLogger logger $
     mkGenericLog LevelInfo "server" $ StartupTimeInfo "starting API server" apiInitTime
-
+  
   -- Install a variant of forkIOWithUnmask which tracks Warp threads using an EKG metric
   let setForkIOWithMetrics :: Warp.Settings -> Warp.Settings
       setForkIOWithMetrics = Warp.setFork \f -> do
@@ -458,14 +443,28 @@ runHGEServer env ServeOptions{..} InitCtx{..} pgExecCtx initTime shutdownApp pos
             (EKG.Gauge.inc $ smWarpThreads serverMetrics)
             (EKG.Gauge.dec $ smWarpThreads serverMetrics)
               (f unmask))
-
+  
+  let shutdownHandler closeSocket = LA.link =<< LA.async do
+        waitForShutdown _icShutdownLatch
+        unLogger logger $ mkGenericStrLog LevelInfo "server" "gracefully shutting down server"
+        closeSocket
+        
   let warpSettings = Warp.setPort soPort
                      . Warp.setHost soHost
                      . Warp.setGracefulShutdownTimeout (Just 30) -- 30s graceful shutdown
-                     . Warp.setInstallShutdownHandler (shutdownHandler _icLoggers immortalThreads stopWsServer lockedEventsCtx _icPgPool)
+                     . Warp.setInstallShutdownHandler shutdownHandler
                      . setForkIOWithMetrics
                      $ Warp.defaultSettings
-  liftIO $ Warp.runSettings warpSettings app
+                     
+  -- Here we block until the shutdown latch 'MVar' is filled, and then
+  -- shut down the server. Once this blocking call returns, we'll tidy up
+  -- any resources using the finalizers attached using 'ManagedT' above.
+  -- Structuring things using the shutdown latch in this way lets us decide 
+  -- elsewhere exactly how we want to control shutdown.
+  liftIO $ Warp.runSettings warpSettings app `LE.finally` do
+    -- These cleanup actions are not directly associated with any
+    -- resource, but we still need to make sure we clean them up here.
+    stopWsServer
 
   where
     -- | prepareEvents is a function to unlock all the events that are
@@ -529,89 +528,6 @@ runHGEServer env ServeOptions{..} InitCtx{..} pgExecCtx initTime shutdownApp pos
     runTx :: Q.PGPool -> Q.TxMode -> Q.TxE QErr a -> IO (Either QErr a)
     runTx pool txLevel tx =
       liftIO $ runExceptT $ Q.runTx pool txLevel tx
-
-    -- | Waits for the shutdown latch 'MVar' to be filled, and then
-    -- shuts down the server and associated resources.
-    -- Structuring things this way lets us decide elsewhere exactly how
-    -- we want to control shutdown.
-    shutdownHandler
-      :: Loggers
-      -> [Immortal.Thread]
-      -> IO ()
-      -- ^ the stop websocket server function
-      -> LockedEventsCtx
-      -> Q.PGPool
-      -> IO ()
-      -- ^ the closeSocket callback
-      -> IO ()
-    shutdownHandler (Loggers loggerCtx (Logger logger) _) immortalThreads stopWsServer leCtx pool closeSocket =
-      LA.link =<< LA.async do
-        waitForShutdown _icShutdownLatch
-        logger $ mkGenericStrLog LevelInfo "server" "gracefully shutting down server"
-        shutdownEvents pool (Logger logger) leCtx
-        closeSocket
-        stopWsServer
-        -- kill all the background immortal threads
-        logger $ mkGenericStrLog LevelInfo "server" "killing all background immortal threads"
-        forM_ immortalThreads $ \thread -> do
-          logger $ mkGenericStrLog LevelInfo "server" $ "killing thread: " <> show (Immortal.threadId thread)
-          Immortal.stop thread
-        shutdownApp
-        cleanLoggerCtx loggerCtx
-
--- | The RTS's idle GC doesn't work for us:
---
---    - when `-I` is too low it may fire continuously causing scary high CPU
---      when idle among other issues (see #2565)
---    - when we set it higher it won't run at all leading to memory being
---      retained when idle (especially noticeable when users are benchmarking and
---      see memory stay high after finishing). In the theoretical worst case
---      there is such low haskell heap pressure that we never run finalizers to
---      free the foreign data from e.g. libpq.
---    - `-Iw` is not yet implemented in 8.10.1: https://gitlab.haskell.org/ghc/ghc/-/issues/18433
---    - even if it was these two knobs would still not give us a guarentee that
---      a major GC would always run at some minumum frequency (e.g. for finalizers)
---
--- ...so we hack together our own using GHC.Stats, which should have
--- insignificant runtime overhead.
-ourIdleGC
-  :: Logger Hasura
-  -> DiffTime -- ^ Run a major GC when we've been "idle" for idleInterval
-  -> DiffTime -- ^ ...as long as it has been > minGCInterval time since the last major GC
-  -> DiffTime -- ^ Additionally, if it has been > maxNoGCInterval time, force a GC regardless.
-  -> IO void
-ourIdleGC (Logger logger) idleInterval minGCInterval maxNoGCInterval =
-  startTimer >>= go 0 0
-  where
-    go gcs_prev major_gcs_prev timerSinceLastMajorGC = do
-      timeSinceLastGC <- timerSinceLastMajorGC
-      when (timeSinceLastGC < minGCInterval) $ do
-        -- no need to check idle until we've passed the minGCInterval:
-        C.sleep (minGCInterval - timeSinceLastGC)
-
-      RTSStats{gcs, major_gcs} <- getRTSStats
-      -- We use minor GCs as a proxy for "activity", which seems to work
-      -- well-enough (in tests it stays stable for a few seconds when we're
-      -- logically "idle" and otherwise increments quickly)
-      let areIdle = gcs == gcs_prev
-          areOverdue = timeSinceLastGC > maxNoGCInterval
-
-         -- a major GC was run since last iteration (cool!), reset timer:
-      if | major_gcs > major_gcs_prev -> do
-             startTimer >>= go gcs major_gcs
-
-         -- we are idle and its a good time to do a GC, or we're overdue and must run a GC:
-         | areIdle || areOverdue -> do
-             when (areOverdue && not areIdle) $
-               logger $ UnstructuredLog LevelWarn $
-                 "Overdue for a major GC: forcing one even though we don't appear to be idle"
-             performMajorGC
-             startTimer >>= go (gcs+1) (major_gcs+1)
-
-         -- else keep the timer running, waiting for us to go idle:
-         | otherwise -> do
-             C.sleep idleInterval
-             go gcs major_gcs timerSinceLastMajorGC
 
 runAsAdmin
   :: (MonadIO m)
