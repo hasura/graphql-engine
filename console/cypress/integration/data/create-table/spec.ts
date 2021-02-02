@@ -108,10 +108,7 @@ export const passCT = () => {
   // Check if the table got created and navigatied to modify table
   cy.url().should(
     'eq',
-    `${baseUrl}/data/default/schema/public/tables/${getTableName(
-      0,
-      testName
-    )}/modify`
+    `${baseUrl}/data/default/schema/public/tables/${getTableName(0, testName)}/modify`
   );
   cy.get(getElementFromAlias(getTableName(0, testName)));
   // Validate
@@ -175,10 +172,7 @@ export const passCTWithFK = () => {
   // Check if the table got created and navigatied to modify table
   cy.url().should(
     'eq',
-    `${baseUrl}/data/default/schema/public/tables/${getTableName(
-      1,
-      testName
-    )}/modify`
+    `${baseUrl}/data/default/schema/public/tables/${getTableName(1, testName)}/modify`
   );
   cy.get('div').contains(
     `${getTableName(1, testName)}_${getColName(1)}_${getColName(0)}`
