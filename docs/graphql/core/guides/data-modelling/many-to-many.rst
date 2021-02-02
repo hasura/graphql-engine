@@ -74,12 +74,12 @@ To access the nested objects via the GraphQL API, :ref:`create the following rel
 - Array relationship, ``tag_articles`` from ``tag`` table using  ``article_tag :: tag_id -> id``
 - Object relationship, ``article`` from ``article_tag`` table using  ``article_id -> article :: id``
 
-Step 3: Query using relationships
----------------------------------
+Query using many-to-many relationships
+--------------------------------------
 
 We can now:
 
-- fetch a list of articles with their tags:
+- fetch a list of ``articles`` with their ``tags``:
 
   .. graphiql::
     :view_only:
@@ -140,7 +140,7 @@ We can now:
         }
       }
 
-- fetch a list of tags with their articles:
+- fetch a list of ``tags`` with their ``articles``:
 
   .. graphiql::
     :view_only:
@@ -194,6 +194,163 @@ We can now:
           ]
         }
       }
+
+
+Insert using many-to-many relationships
+---------------------------------------
+
+We can now:
+ 
+- insert an ``article`` with ``tags`` where the ``tag`` might already exist (assume unique ``value`` for ``tag``):
+ 
+.. graphiql::
+  :view_only:
+  :query:
+    mutation insertArticleWithTags {
+      insert_article(objects: [
+        {
+          title: "Article 1",
+          content: "Article 1 content",
+          author_id: 1,
+          article_tags: {
+            data: [
+              {
+                tag: {
+                  data: {
+                    value: "Recipes"
+                  },
+                  on_conflict: {
+                    constraint: tag_value_key,
+                    update_columns: [value]
+                  }
+                }
+              }
+              {
+                tag: {
+                  data: {
+                    value: "Cooking"
+                  },
+                  on_conflict: {
+                    constraint: tag_value_key,
+                    update_columns: [value]
+                  }
+                }
+              }
+            ]
+          }
+        }
+      ]) {
+        returning {
+          title
+          article_tags {
+            tag {
+              value
+            }
+          }
+        }
+      }
+    }
+  :response:
+    {
+      "data": {
+        "insert_article": {
+          "returning": [
+            {
+              "title": "Article 1",
+              "article_tags": [
+                {
+                  "tag": {
+                    "value": "Recipes"
+                  }
+                },
+                {
+                  "tag": {
+                    "value": "Cooking"
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      }
+    }
+
+- insert a ``tag`` with ``articles`` where the ``tag`` might already exist (assume unique ``value`` for ``tag``):
+
+.. graphiql::
+  :view_only:
+  :query:
+    mutation insertTagWithArticles {
+      insert_tag(objects: [
+        {
+          value: "Recipes",
+          article_tags: {
+            data: [
+              {
+                article: {
+                  data: {
+                    title: "Article 1",
+                    content: "Article 1 content",
+                    author_id: 1
+                  }
+                }
+              },
+              {
+                article: {
+                  data: {
+                    title: "Article 2",
+                    content: "Article 2 content",
+                    author_id: 1
+                  }
+                }
+              }
+            ]
+          }
+        }
+      ],
+      on_conflict: {
+        constraint: tag_value_key,
+        update_columns: [value]
+      }
+      ) {
+        returning {
+          value
+          article_tags {
+            article {
+              title
+            }
+          }
+        }
+      }
+    }
+  :response:
+    {
+      "data": {
+        "insert_tag": {
+          "returning": [
+            {
+              "value": "Recipes",
+              "article_tags": [
+                {
+                  "article": {
+                    "title": "Article 1"
+                  }
+                },
+                {
+                  "article": {
+                    "title": "Article 2"
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      }
+    }
+ 
+.. note::
+ 
+ You can avoid the ``on_conflict`` clause if you will never have conflicts.
 
 Fetching relationship information
 ---------------------------------

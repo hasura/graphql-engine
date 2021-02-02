@@ -59,12 +59,12 @@ To access the nested objects via the GraphQL API, :ref:`create the following rel
 - Object relationship, ``passport_info`` from the ``author`` table using  ``id -> passport_info :: owner_id``
 - Object relationship, ``owner`` from the ``passport_info`` table using ``owner_id -> author :: id``
 
-Step 3: Query using relationships
----------------------------------
+Query using one-to-one relationships
+------------------------------------
 
 We can now:
 
-- fetch a list of authors with their ``passport_info``:
+- fetch a list of ``authors`` with their ``passport_info``:
 
   .. graphiql::
     :view_only:
@@ -104,7 +104,7 @@ We can now:
       }
 
 
-- fetch a list of passport_infos with their ``owner``:
+- fetch a list of ``passport_infos`` with their ``owner``:
 
   .. graphiql::
     :view_only:
@@ -143,8 +143,62 @@ We can now:
         }
       }
 
-Current limitations with nested mutations
------------------------------------------
+Insert using one-to-one relationships
+-------------------------------------
+
+We can now:
+ 
+- insert ``passport_info`` with their ``owner`` where the ``owner`` might already exist (assume unique ``name`` for ``owner``):
+ 
+.. graphiql::
+  :view_only:
+  :query:
+    mutation upsertPassportInfoWithOwner {
+      insert_passport_info(objects: [
+        {
+          passport_number: "X98973765",
+          owner: {
+            data: {
+              name: "Kelly"
+            },
+            on_conflict: {
+              constraint: owner_name_key,
+              update_columns: [name]
+            }
+          },
+        }
+      ]) {
+        returning {
+          passport_number
+          owner {
+            name
+          }
+        }
+      }
+    }
+  :response:
+    {
+      "data": {
+        "insert_passport_info": {
+          "returning": [
+            {
+              "passport_number": "X98973765",
+              "owner": {
+                "name": "Kelly"
+              }
+            }
+          ]
+        }
+      }
+    }
+ 
+.. note::
+ 
+ You can avoid the ``on_conflict`` clause if you will never have conflicts.
+
+
+Current limitations with nested one-to-one mutations
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 With one-to-one relationships, currently nested mutations will work only in one of the two directions.
 

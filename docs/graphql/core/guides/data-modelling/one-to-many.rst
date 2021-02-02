@@ -57,12 +57,12 @@ To access the nested objects via the GraphQL API, :ref:`create the following rel
 - Array relationship, ``articles`` from ``author`` table using  ``article :: author_id  ->  id``
 - Object relationship, ``author`` from ``article`` table using ``author_id -> author :: id``
 
-Step 3: Query using relationships
----------------------------------
+Query using one-to-many relationships
+-------------------------------------
 
 We can now:
 
-- fetch a list of authors with their ``articles``:
+- fetch a list of ``authors`` with their ``articles``:
 
   .. graphiql::
     :view_only:
@@ -114,7 +114,7 @@ We can now:
       }
 
 
-- fetch a list of articles with their ``author``:
+- fetch a list of ``articles`` with their ``author``:
 
   .. graphiql::
     :view_only:
@@ -152,3 +152,137 @@ We can now:
           ]
         }
       }
+
+Insert using one-to-many relationships
+--------------------------------------
+
+We can now:
+ 
+- insert an ``author`` with their ``articles`` where the author might already exist (assume unique ``name`` for ``author``):
+ 
+.. graphiql::
+  :view_only:
+  :query:
+    mutation UpsertAuthorWithArticles {
+      insert_author(objects: {
+        name: "Felix",
+        articles: {
+          data: [
+            {
+              title: "Article 1",
+              content: "Article 1 content"
+            },
+            {
+              title: "Article 2",
+              content: "Article 2 content"
+            }
+          ]
+        }
+      },
+        on_conflict: {
+          constraint: author_name_key,
+          update_columns: [name]
+        }
+      ) {
+        returning {
+          name
+          articles {
+            title
+            content
+          }
+        }
+      }
+    }
+  :response:
+    {
+      "data": {
+        "insert_author": {
+          "returning": [
+            {
+              "name": "Felix",
+              "articles": [
+                {
+                  "title": "Article 1",
+                  "content": "Article 1 content"
+                },
+                {
+                  "title": "Article 2",
+                  "content": "Article 2 content"
+                }
+              ]
+            }
+          ]
+        }
+      }
+    }
+
+- insert ``articles`` with their ``author`` where the ``author`` might already exist (assume unique ``name`` for ``author``):
+
+.. graphiql::
+  :view_only:
+  :query:
+    mutation upsertArticleWithAuthors {
+      insert_article(objects: [
+        {
+          title: "Article 1",
+          content: "Article 1 content",
+          author: {
+            data: {
+              name: "Alice"
+            },
+            on_conflict: {
+              constraint: author_name_key,
+              update_columns: [name]
+            }
+          }
+        },
+        {
+          title: "Article 2",
+          content: "Article 2 content",
+          author: {
+            data: {
+              name: "Alice"
+            },
+            on_conflict: {
+              constraint: author_name_key,
+              update_columns: [name]
+            }
+          }
+        }
+      ]) {
+        returning {
+          title
+          content
+          author {
+            name
+          }
+        }
+      }
+    }
+  :response:
+    {
+      "data": {
+        "insert_article": {
+          "returning": [
+            {
+              "title": "Article 1",
+              "content": "Article 1 content",
+              "author": {
+                "name": "Alice"
+              }
+            },
+            {
+              "title": "Article 2",
+              "content": "Article 2 content",
+              "author": {
+                "name": "Alice"
+              }
+            }
+          ]
+        }
+      }
+    }
+ 
+.. note::
+ 
+ You can avoid the ``on_conflict`` clause if you will never have conflicts.
