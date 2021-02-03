@@ -526,7 +526,7 @@ case "$SERVER_TEST_TO_RUN" in
   ws-init-cookie-read-cors-enabled)
     # test websocket transport with initial cookie header
 
-    echo -e "\n$(time_elapsped): <########## TEST GRAPHQL-ENGINE WITH COOKIE IN WEBSOCKET INIT ########>\n"
+    echo -e "\n$(time_elapsed): <########## TEST GRAPHQL-ENGINE WITH COOKIE IN WEBSOCKET INIT ########>\n"
     TEST_TYPE="ws-init-cookie-read-cors-enabled"
     export HASURA_GRAPHQL_AUTH_HOOK="http://localhost:9876/auth"
     export HASURA_GRAPHQL_AUTH_HOOK_MODE="POST"
@@ -736,6 +736,24 @@ case "$SERVER_TEST_TO_RUN" in
       kill_hge_servers
     fi
     ;;
+
+  webhook-request-context)
+    if [ "$RUN_WEBHOOK_TESTS" == "true" ] ; then
+      echo -e "\n$(time_elapsed): <########## TEST WEBHOOK RECEIVES REQUEST DATA AS CONTEXT #########################>\n"
+      TEST_TYPE="webhook-request-context"
+      export HASURA_GRAPHQL_AUTH_HOOK="http://localhost:5594/"
+      export HASURA_GRAPHQL_AUTH_HOOK_MODE="POST"
+      export HASURA_GRAPHQL_ADMIN_SECRET="HGE$RANDOM$RANDOM"
+
+      run_hge_with_args serve
+      wait_for_port 8080
+
+      pytest -s -n 1 -vv --hge-urls "$HGE_URL" --pg-urls "$HASURA_GRAPHQL_DATABASE_URL" --hge-key="$HASURA_GRAPHQL_ADMIN_SECRET" --hge-webhook="$HASURA_GRAPHQL_AUTH_HOOK" --test-webhook-request-context test_webhook_request_context.py
+
+      kill_hge_servers
+    fi
+    ;;
+
 
   get-webhook)
     if [ "$RUN_WEBHOOK_TESTS" == "true" ] ; then

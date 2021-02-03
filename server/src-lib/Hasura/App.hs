@@ -673,8 +673,8 @@ instance MonadExecuteQuery PGMetadataStorageApp where
   cacheStore  _ _ = pure ()
 
 instance UserAuthentication (Tracing.TraceT PGMetadataStorageApp) where
-  resolveUserInfo logger manager headers authMode =
-    runExceptT $ getUserInfoWithExpTime logger manager headers authMode
+  resolveUserInfo logger manager headers authMode reqs =
+    runExceptT $ getUserInfoWithExpTime logger manager headers authMode reqs
 
 accessDeniedErrMsg :: Text
 accessDeniedErrMsg =

@@ -6,20 +6,21 @@ import           Hasura.Logging
 import           Hasura.Prelude
 import           Hasura.Server.Version
 
-import           Control.Monad.Trans.Managed     (lowerManagedT)
-import           Control.Monad.Trans.Control
 import           Control.Lens                hiding ((.=))
+import           Control.Monad.Trans.Control
+import           Control.Monad.Trans.Managed (lowerManagedT)
 import qualified Crypto.JOSE.JWK             as Jose
 import qualified Crypto.JWT                  as JWT
 import           Data.Aeson                  ((.=))
 import qualified Data.Aeson                  as J
-import           Data.Parser.JSONPath
 import qualified Data.HashMap.Strict         as Map
+import           Data.Parser.JSONPath
 import qualified Network.HTTP.Types          as N
 
 import           Hasura.RQL.Types
 import           Hasura.Server.Auth          hiding (getUserInfoWithExpTime, processJwt)
 import           Hasura.Server.Auth.JWT      hiding (processJwt)
+import           Hasura.Server.Auth.WebHook  (ReqsText)
 import           Hasura.Server.Utils
 import           Hasura.Session
 import qualified Hasura.Tracing              as Tracing
@@ -39,23 +40,24 @@ defaultRoleClaimText = sessionVariableToText defaultRoleClaim
 
 -- Unit test the core of our authentication code. This doesn't test the details
 -- of resolving roles from JWT or webhook.
+-- TODO(swann): does this need to also test passing
 getUserInfoWithExpTimeTests :: Spec
 getUserInfoWithExpTimeTests = describe "getUserInfo" $ do
   ---- FUNCTION UNDER TEST:
-  let getUserInfoWithExpTime
+  let gqlUserInfoWithExpTime
         :: J.Object
         -- ^ For JWT, inject the raw claims object as though returned from 'processAuthZHeader'
         -- acting on an 'Authorization' header from the request
-        -> [N.Header] -> AuthMode -> IO (Either Code RoleName)
-      getUserInfoWithExpTime claims rawHeaders =
+        -> [N.Header] -> AuthMode -> Maybe ReqsText -> IO (Either Code RoleName)
+      gqlUserInfoWithExpTime claims rawHeaders authMode =
         runExceptT
         . withExceptT qeCode -- just look at Code for purposes of tests
         . fmap _uiRole -- just look at RoleName for purposes of tests
         . fmap fst -- disregard Nothing expiration
-        . getUserInfoWithExpTime_ userInfoFromAuthHook processJwt () () rawHeaders
+        . getUserInfoWithExpTime_ userInfoFromAuthHook processJwt () () rawHeaders authMode
         where
           -- mock authorization callbacks:
-          userInfoFromAuthHook _ _ _hook _reqHeaders = do
+          userInfoFromAuthHook _ _ _hook _reqHeaders _optionalReqs = do
             (, Nothing) <$> _UserInfo "hook"
             where
               -- we don't care about details here; we'll just check role name in tests:
@@ -66,6 +68,13 @@ getUserInfoWithExpTimeTests = describe "getUserInfo" $ do
           processJwt = processJwt_ $
             -- processAuthZHeader:
             \_jwtCtx _authzHeader -> return (mapKeys mkSessionVariable claims, Nothing)
+
+  let getUserInfoWithExpTime
+        :: J.Object
+        -- ^ For JWT, inject the raw claims object as though returned from 'processAuthZHeader'
+        -- acting on an 'Authorization' header from the request
+        -> [N.Header] -> AuthMode -> IO (Either Code RoleName)
+      getUserInfoWithExpTime o claims authMode = gqlUserInfoWithExpTime o claims authMode Nothing
 
   let setupAuthMode'E a b c d =
         either (const $ error "fixme") id <$> setupAuthMode' a b c d
@@ -549,7 +558,7 @@ mkCustomDefaultRoleClaim claimPath defVal =
   -- as the literal value by removing the `Maybe` of defVal
   case claimPath of
     Just path -> JWTCustomClaimsMapJSONPath (mkJSONPathE path) $ defRoleName
-    Nothing -> JWTCustomClaimsMapStatic $ fromMaybe (mkRoleNameE "user") defRoleName
+    Nothing   -> JWTCustomClaimsMapStatic $ fromMaybe (mkRoleNameE "user") defRoleName
   where
     defRoleName = mkRoleNameE <$> defVal
 
@@ -572,7 +581,7 @@ mkCustomOtherClaim claimPath defVal =
   -- as the literal value by removing the `Maybe` of defVal
   case claimPath of
     Just path -> JWTCustomClaimsMapJSONPath (mkJSONPathE path) $ defVal
-    Nothing -> JWTCustomClaimsMapStatic $ fromMaybe "default claim value" defVal
+    Nothing   -> JWTCustomClaimsMapStatic $ fromMaybe "default claim value" defVal
 
 fakeJWTConfig :: JWTConfig
 fakeJWTConfig =

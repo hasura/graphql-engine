@@ -21,6 +21,7 @@ ws-metadata-api-disabled
 remote-schema-permissions
 query-caching
 query-logs
+webhook-request-context
 post-webhook
 get-webhook
 insecure-webhook

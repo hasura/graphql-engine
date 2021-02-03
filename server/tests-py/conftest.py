@@ -33,6 +33,10 @@ def pytest_addoption(parser):
         help="Run Test cases for insecure https webhook"
     )
     parser.addoption(
+        "--test-webhook-request-context", action="store_true",
+        help="Run Test cases for testing webhook request context"
+    )
+    parser.addoption(
         "--hge-jwt-key-file", metavar="HGE_JWT_KEY_FILE", help="File containting the private key used to encode jwt tokens using RS512 algorithm", required=False
     )
     parser.addoption(

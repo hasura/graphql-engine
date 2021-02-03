@@ -636,7 +636,7 @@ onConnInit logger manager wsConn authMode connParamsM = do
     Left err -> unexpectedInitError err
     Right ipAddress -> do
       let headers = mkHeaders connState
-      res <- resolveUserInfo logger manager headers authMode
+      res <- resolveUserInfo logger manager headers authMode Nothing
       case res of
         Left e -> do
           let !initErr = CSInitError $ qeError e

@@ -131,9 +131,18 @@ data APIResp
   = JSONResp !(HttpResponse EncJSON)
   | RawResp  !(HttpResponse BL.ByteString)
 
-data APIHandler m a
-  = AHGet !(Handler m APIResp)
-  | AHPost !(a -> Handler m APIResp)
+type ReqsText = GH.GQLBatchedReqs GH.GQLQueryText
+
+-- | API request handlers for different endpoints
+data APIHandler m a where
+  -- | A simple GET request
+  AHGet :: !(Handler m APIResp) -> APIHandler m void
+  -- | A simple POST request that expects a request body from which an 'a' can be extracted
+  AHPost :: !(a -> Handler m APIResp) -> APIHandler m a
+  -- | A general GraphQL request (query or mutation) for which the content of the query
+  -- is made available to the handler for authentication.
+  -- This is a more specific version of the 'AHPost' constructor.
+  AHGraphQLRequest :: !(ReqsText -> Handler m APIResp) -> APIHandler m ReqsText
 
 boolToText :: Bool -> Text
 boolToText = bool "false" "true"
@@ -157,6 +166,9 @@ withSCUpdate scr logger action =
     (!res, !newSC) <- action
     liftIO $ do
       -- update schemacache in IO reference
+
+
+
       modifyIORef' cacheRef $ \(_, prevVer) ->
         let !newVer = incSchemaCacheVer prevVer
           in (newSC, newVer)
@@ -172,6 +184,9 @@ mkGetHandler = AHGet
 
 mkPostHandler :: (a -> Handler m APIResp) -> APIHandler m a
 mkPostHandler = AHPost
+
+mkGQLRequestHandler :: (ReqsText -> Handler m APIResp) -> APIHandler m ReqsText
+mkGQLRequestHandler = AHGraphQLRequest
 
 mkAPIRespHandler :: (Functor m) => (a -> Handler m (HttpResponse EncJSON)) -> (a -> Handler m APIResp)
 mkAPIRespHandler = (fmap . fmap) JSONResp
@@ -314,33 +329,43 @@ mkSpockAction serverCtx qErrEncoder qErrModifier apiHandler = do
       -- can correlate requests and traces
       lift $ Tracing.attachMetadata [("request_id", unRequestId requestId)]
 
-      userInfoE <- fmap fst <$> lift (resolveUserInfo logger manager headers authMode)
-      userInfo  <- onLeft userInfoE (logErrorAndResp Nothing requestId req (reqBody, Nothing) False headers . qErrModifier)
-
-      let handlerState = HandlerCtx serverCtx userInfo headers requestId ipAddress
-          includeInternal = shouldIncludeInternal (_uiRole userInfo) $
-                            scResponseInternalErrorsConfig serverCtx
-
+      let getInfo parsedRequest = do
+            userInfoE <- fmap fst <$> lift (resolveUserInfo logger manager headers authMode parsedRequest)
+            userInfo  <- onLeft userInfoE (logErrorAndResp Nothing requestId req (reqBody, Nothing) False headers . qErrModifier)
+            let handlerState = HandlerCtx serverCtx userInfo headers requestId ipAddress
+                includeInternal = shouldIncludeInternal (_uiRole userInfo) $
+                                  scResponseInternalErrorsConfig serverCtx
+            pure (userInfo, handlerState, includeInternal)
       limits <- lift askResourceLimits
-      let runHandler = runMetadataStorageT . flip runReaderT handlerState . runResourceLimits limits
+      let runHandler st = runMetadataStorageT . flip runReaderT st . runResourceLimits limits
 
-      (serviceTime, (result, q)) <- withElapsedTime $ case apiHandler of
+      (serviceTime, (result, userInfo, includeInternal, query)) <- withElapsedTime $ case apiHandler of
+        -- in the case of a simple get/post we don't have to send the webhook anything
         AHGet handler -> do
-          res <- lift $ runHandler handler
-          return (res, Nothing)
+          (userInfo, handlerState, includeInternal) <- getInfo Nothing
+          res <- lift $ runHandler handlerState handler
+          return (res, userInfo, includeInternal, Nothing)
         AHPost handler -> do
+          (userInfo, handlerState, includeInternal) <- getInfo Nothing
           parsedReqE <- runExceptT $ parseBody reqBody
           parsedReq  <- onLeft parsedReqE (logErrorAndResp (Just userInfo) requestId req (reqBody, Nothing) includeInternal headers . qErrModifier)
-          res <- lift $ runHandler $ handler parsedReq
-          return (res, Just parsedReq)
+          res <- lift $ runHandler handlerState $ handler parsedReq
+          return (res, userInfo, includeInternal, Just parsedReq)
+        -- in this case we parse the request _first_ and then send the request to the webhook for auth
+        AHGraphQLRequest handler -> do
+          parsedReqE <- runExceptT $ parseBody reqBody
+          parsedReq  <- onLeft parsedReqE (logErrorAndResp Nothing requestId req (reqBody, Nothing) False headers . qErrModifier)
+          (userInfo, handlerState, includeInternal) <- getInfo (Just parsedReq)
+          res <- lift $ runHandler handlerState $ handler parsedReq
+          return (res, userInfo, includeInternal, Just parsedReq)
 
       -- apply the error modifier
       let modResult = fmapL qErrModifier result
 
       -- log and return result
       case modResult of
-        Left err  -> logErrorAndResp (Just userInfo) requestId req (reqBody, toJSON <$> q) includeInternal headers err
-        Right res -> logSuccessAndResp (Just userInfo) requestId req (reqBody, toJSON <$> q) res (Just (ioWaitTime, serviceTime)) headers
+        Left err  -> logErrorAndResp (Just userInfo) requestId req (reqBody, toJSON <$> query) includeInternal headers err
+        Right res -> logSuccessAndResp (Just userInfo) requestId req (reqBody, toJSON <$> query) res (Just (ioWaitTime, serviceTime)) headers
 
     where
       logger = scLogger serverCtx
@@ -787,6 +812,7 @@ mkWaiApp env logger sqlGenCtx enableAL httpManager mode corsCfg enableConsole co
     initialiseCache :: m SchemaCacheRef
     initialiseCache = do
       cacheLock <- liftIO $ newMVar ()
+
       cacheCell <- liftIO $ newIORef (schemaCache, initSchemaCacheVer)
       -- planCache <- liftIO $ E.initPlanCache planCacheOptions
       let cacheRef = SchemaCacheRef cacheLock cacheCell E.clearPlanCache
@@ -920,13 +946,13 @@ httpApp corsCfg serverCtx enableConsole consoleAssetsDir enableTelemetry = do
 
     when enableGraphQL $ do
       Spock.post "v1alpha1/graphql" $ spockAction GH.encodeGQErr id $
-        mkPostHandler $ mkAPIRespHandler $ v1Alpha1GQHandler E.QueryHasura
+        mkGQLRequestHandler $ mkAPIRespHandler $ v1Alpha1GQHandler E.QueryHasura
 
       Spock.post "v1/graphql" $ spockAction GH.encodeGQErr allMod200 $
-        mkPostHandler $ mkAPIRespHandler v1GQHandler
+        mkGQLRequestHandler $ mkAPIRespHandler v1GQHandler
 
       Spock.post "v1beta1/relay" $ spockAction GH.encodeGQErr allMod200 $
-        mkPostHandler $ mkAPIRespHandler $ v1GQRelayHandler
+        mkGQLRequestHandler $ mkAPIRespHandler $ v1GQRelayHandler
 
     when (isDeveloperAPIEnabled serverCtx) $ do
       Spock.get "dev/ekg" $ spockAction encodeQErr id $

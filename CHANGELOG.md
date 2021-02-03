@@ -96,6 +96,7 @@ have select permissions to the target table of the function.
 
 (Add entries here in the order of: server, console, cli, docs, others)
 
+- server: add `request` field to webhook POST body containing the GraphQL query/mutation, its name, and any variables passed (close #2666)
 - server: fix a regression where variables in fragments weren't accepted (fix #6303)
 - server: output stack traces when encountering conflicting GraphQL types in the schema
 - server: add `--websocket-compression` command-line flag for enabling websocket compression (fix #3292)

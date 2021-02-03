@@ -13,10 +13,6 @@ import http.server
 import traceback
 import sys
 
-# FIXME(swann):
-print("in webhook.py")
-print("__name__ == {}".format(__name__))
-
 class S(http.server.BaseHTTPRequestHandler):
 
 
@@ -59,6 +55,7 @@ class S(http.server.BaseHTTPRequestHandler):
         if 'headers' in req_json:
             self.handle_headers(req_json['headers'])
         else:
+            # TODO: is this a typo?
             self.handler_headers({})
 
 def run(keyfile, certfile, server_class=http.server.HTTPServer, handler_class=S, port=9090):
