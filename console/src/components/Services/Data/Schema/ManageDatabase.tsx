@@ -162,7 +162,7 @@ const ManageDatabase: React.FC<ManageDatabaseProps> = ({
                 retries: data.connection_pool_settings.retries,
               }),
             },
-            dbUrl: typeof data.url === 'string' ? data.url : data.url.from_env,
+            dbUrl: data.url,
           },
         },
         successCallback

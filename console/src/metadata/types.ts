@@ -4,7 +4,6 @@ import { PermissionsType } from '../components/Services/RemoteSchema/Permissions
 export type DataSource = {
   name: string;
   url: string | { from_env: string };
-  fromEnv: boolean;
   driver: Driver;
   connection_pool_settings?: {
     max_connections?: number;
@@ -856,7 +855,7 @@ export interface MetadataDataSource {
   kind?: 'postgres' | 'mysql';
   configuration?: {
     connection_info?: {
-      database_url?: string;
+      database_url: string | { from_env: string };
       pool_settings?: {
         max_connections: number;
         idle_timeout: number;

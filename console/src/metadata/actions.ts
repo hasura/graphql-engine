@@ -97,7 +97,7 @@ export interface AddDataSourceRequest {
     driver: Driver;
     payload: {
       name: string;
-      dbUrl: string;
+      dbUrl: string | { from_env: string };
       connection_pool_settings: {
         max_connections?: number;
         idle_timeout?: number; // in seconds

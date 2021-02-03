@@ -6,30 +6,6 @@ import DropdownButton from '../../../Common/DropdownButton/DropdownButton';
 import CollapsibleToggle from '../../../Common/CollapsibleToggle/CollapsibleToggle';
 import { DataSource } from '../../../../metadata/types';
 
-// const customSelectBoxStyles = {
-//   control: {
-//     height: '34px',
-//     minHeight: '34px !important',
-//   },
-//   container: {
-//     width: '156px',
-//     height: '34px',
-//     minHeight: '34px !important',
-//   },
-//   dropdownIndicator: {
-//     padding: '5px',
-//   },
-//   placeholder: {
-//     top: '50%',
-//     fontSize: '12px',
-//   },
-//   singleValue: {
-//     fontSize: '12px',
-//     top: '44%',
-//     color: '#555555',
-//   },
-// };
-
 type AddDataSourceProps = {
   onSubmit(data: DataSource, successCallback: () => void): void;
 };
@@ -49,9 +25,11 @@ const AddDataSource = ({ onSubmit }: AddDataSourceProps) => {
       {
         name: databaseName.trim(),
         driver: 'postgres',
-        fromEnv: urlType === 'from-env',
         connection_pool_settings: retryConf,
-        url: databaseUrl.trim(),
+        url:
+          urlType === 'from-env'
+            ? { from_env: databaseUrl.trim() }
+            : databaseUrl.trim(),
       },
       () => {
         setDatabaseUrl('');
@@ -66,19 +44,6 @@ const AddDataSource = ({ onSubmit }: AddDataSourceProps) => {
   const expandedContent = () => (
     <div style={{ width: '100%' }}>
       <form className={`form-inline ${styles.display_flex}`}>
-        {/* <span className={styles.add_mar_right_mid}>
-          <SearchableSelect
-            options={drivers}
-            onChange={(opt: any) =>
-              setDatabaseType(typeof opt === 'string' ? opt : opt.value)
-            }
-            value={databaseType || ''}
-            bsClass="modify_select"
-            styleOverrides={customSelectBoxStyles}
-            filterOption="prefix"
-            placeholder="database type"
-          />
-        </span> */}
         <input
           placeholder="database name"
           type="text"
