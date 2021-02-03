@@ -159,10 +159,10 @@ convertMutationSelectionSet env logger gqlContext SQLGenCtx{stringifyNum} userIn
       remoteJoinCtx = (manager, reqHeaders, userInfo)
   txs <- for unpreparedQueries \case
     RFDB _ execCtx db -> ExecStepDB execCtx . noResponseHeaders <$> case db of
-      MDBInsert s   -> convertInsert env userSession remoteJoinCtx s stringifyNum
-      MDBUpdate s   -> convertUpdate env userSession remoteJoinCtx s stringifyNum
-      MDBDelete s   -> convertDelete env userSession remoteJoinCtx s stringifyNum
-      MDBFunction s -> convertFunction env userInfo manager reqHeaders s
+      MDBInsert s              -> convertInsert env userSession remoteJoinCtx s stringifyNum
+      MDBUpdate s              -> convertUpdate env userSession remoteJoinCtx s stringifyNum
+      MDBDelete s              -> convertDelete env userSession remoteJoinCtx s stringifyNum
+      MDBFunction returnsSet s -> convertFunction env userInfo manager reqHeaders returnsSet s
 
     RFRemote remoteField -> do
       RemoteFieldG remoteSchemaInfo resolvedRemoteField <- resolveRemoteField userInfo remoteField
@@ -196,17 +196,21 @@ convertFunction
   -> UserInfo
   -> HTTP.Manager
   -> HTTP.RequestHeaders
+  -> JsonAggSelect
   -> IR.AnnSimpleSelG 'Postgres (UnpreparedValue 'Postgres)
   -- ^ VOLATILE function as 'SelectExp'
   -> m (tx EncJSON)
-convertFunction env userInfo manager reqHeaders unpreparedQuery = do
+convertFunction env userInfo manager reqHeaders jsonAggSelect unpreparedQuery = do
   -- Transform the RQL AST into a prepared SQL query
   (preparedQuery, PlanningSt _ _ planVals expectedVariables)
     <- flip runStateT initPlanningSt
        $ IR.traverseAnnSimpleSelect prepareWithPlan unpreparedQuery
   validateSessionVariables expectedVariables $ _uiSession userInfo
-
+  let queryResultFn =
+        case jsonAggSelect of
+          JASMultipleRows -> QDBMultipleRows
+          JASSingleObject -> QDBSingleRow
   pure $!
     fst $ -- forget (Maybe PreparedSql)
       mkCurPlanTx env manager reqHeaders userInfo id noProfile $
-        RFPPostgres $ irToRootFieldPlan planVals $ QDBSimple preparedQuery
+        RFPPostgres $ irToRootFieldPlan planVals $ queryResultFn preparedQuery

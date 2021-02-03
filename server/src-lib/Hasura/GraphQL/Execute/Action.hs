@@ -544,9 +544,9 @@ processOutputSelectionSet tableRowInput actionOutputType definitionList annotate
     functionArgs = RS.FunctionArgsExp [tableRowInput] mempty
     selectFrom = RS.FromFunction jsonbToPostgresRecordFunction functionArgs $ Just definitionList
 
-mkJsonAggSelect :: GraphQLType -> RS.JsonAggSelect
+mkJsonAggSelect :: GraphQLType -> JsonAggSelect
 mkJsonAggSelect =
-  bool RS.JASSingleObject RS.JASMultipleRows . isListType
+  bool JASSingleObject JASMultipleRows . isListType
 
 insertActionTx
   :: ActionName -> SessionVariables -> [HTTP.Header] -> J.Value

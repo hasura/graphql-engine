@@ -47,7 +47,6 @@ import qualified Hasura.Backends.Postgres.Execute.RemoteJoin as RR
 import qualified Hasura.Backends.Postgres.SQL.DML            as S
 import qualified Hasura.Backends.Postgres.Translate.Select   as DS
 import qualified Hasura.GraphQL.Parser.Schema                as PS
-import qualified Hasura.RQL.IR.Select                        as DS
 
 import           Hasura.Backends.Postgres.Connection
 import           Hasura.Backends.Postgres.SQL.Error
@@ -70,10 +69,10 @@ newtype MultiplexedQuery = MultiplexedQuery { unMultiplexedQuery :: Q.Query }
 
 toSQLFromItem :: S.Alias -> SubscriptionRootFieldResolved -> S.FromItem
 toSQLFromItem alias = \case
-  RFDB _ _ (QDBPrimaryKey s)  -> fromSelect $ DS.mkSQLSelect DS.JASSingleObject s
-  RFDB _ _ (QDBSimple s)      -> fromSelect $ DS.mkSQLSelect DS.JASMultipleRows s
-  RFDB _ _ (QDBAggregation s) -> fromSelect $ DS.mkAggregateSelect s
-  RFDB _ _ (QDBConnection s)  -> S.mkSelectWithFromItem (DS.mkConnectionSelect s) alias
+  RFDB _ _ (QDBSingleRow s)     -> fromSelect $ DS.mkSQLSelect JASSingleObject s
+  RFDB _ _ (QDBMultipleRows  s) -> fromSelect $ DS.mkSQLSelect JASMultipleRows s
+  RFDB _ _ (QDBAggregation s)   -> fromSelect $ DS.mkAggregateSelect s
+  RFDB _ _ (QDBConnection s)    -> S.mkSelectWithFromItem (DS.mkConnectionSelect s) alias
   -- RFAction s              -> fromSelect $ DS.mkSQLSelect DS.JASSingleObject s
   where
     fromSelect s = S.mkSelFromItem s alias
@@ -358,10 +357,10 @@ buildLiveQueryPlan pgExecCtx userInfo unpreparedAST = do
       case resolvedRootField of
         RFDB _ _ qDB   -> do
           let remoteJoins = case qDB of
-                QDBSimple s      -> snd $ RR.getRemoteJoins s
-                QDBPrimaryKey s  -> snd $ RR.getRemoteJoins s
-                QDBAggregation s -> snd $ RR.getRemoteJoinsAggregateSelect s
-                QDBConnection s  -> snd $ RR.getRemoteJoinsConnectionSelect s
+                QDBMultipleRows s -> snd $ RR.getRemoteJoins s
+                QDBSingleRow s    -> snd $ RR.getRemoteJoins s
+                QDBAggregation s  -> snd $ RR.getRemoteJoinsAggregateSelect s
+                QDBConnection s   -> snd $ RR.getRemoteJoinsConnectionSelect s
           when (remoteJoins /= mempty)
             $ throw400 NotSupported "Remote relationships are not allowed in subscriptions"
       pure resolvedRootField

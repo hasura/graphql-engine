@@ -40,7 +40,7 @@ args:
       $$ language sql stable;
 
       create function get_test_session_id(hasura_session json)
-      returns setof test as $$
+      returns test as $$
       select * from test where id = (hasura_session ->> 'x-hasura-user-id')::Int
       $$ language sql stable;
       CREATE TABLE integer_column

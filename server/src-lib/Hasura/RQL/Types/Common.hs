@@ -60,6 +60,8 @@ module Hasura.RQL.Types.Common
        , SourceName(..)
        , defaultSource
        , sourceNameToText
+
+       , JsonAggSelect (..)
        ) where
 
 import           Hasura.Prelude
@@ -244,6 +246,17 @@ relNameToTxt = unNonEmptyText . getRelTxt
 relTypeToTxt :: RelType -> Text
 relTypeToTxt ObjRel = "object"
 relTypeToTxt ArrRel = "array"
+
+data JsonAggSelect
+  = JASMultipleRows
+  | JASSingleObject
+  deriving (Show, Eq, Generic)
+instance Hashable JsonAggSelect
+
+instance ToJSON JsonAggSelect where
+  toJSON = \case
+    JASMultipleRows -> "multiple_rows"
+    JASSingleObject -> "single_row"
 
 data RelType
   = ObjRel

@@ -24,7 +24,6 @@ import qualified Hasura.GraphQL.Execute.Inline               as E
 import qualified Hasura.GraphQL.Execute.LiveQuery            as E
 import qualified Hasura.GraphQL.Execute.Query                as E
 import qualified Hasura.GraphQL.Transport.HTTP.Protocol      as GH
-import qualified Hasura.RQL.IR.Select                        as DS
 
 import           Hasura.Backends.Postgres.SQL.Value
 import           Hasura.Backends.Postgres.Translate.Column   (toTxtValue)
@@ -33,8 +32,8 @@ import           Hasura.GraphQL.Context
 import           Hasura.GraphQL.Parser
 import           Hasura.RQL.DML.Internal
 import           Hasura.RQL.Types
-import           Hasura.Session
 import           Hasura.SQL.Types
+import           Hasura.Session
 
 
 data GQLExplain
@@ -95,10 +94,10 @@ explainQueryField userInfo fieldName rootField = do
     RFRaw _    -> pure $ FieldPlan fieldName Nothing Nothing
     RFDB _ pgExecCtx qDB   -> do
       let (querySQL, remoteJoins) = case qDB of
-            QDBSimple s      -> first (DS.selectQuerySQL DS.JASMultipleRows) $ RR.getRemoteJoins s
-            QDBPrimaryKey s  -> first (DS.selectQuerySQL DS.JASSingleObject) $ RR.getRemoteJoins s
-            QDBAggregation s -> first DS.selectAggregateQuerySQL $ RR.getRemoteJoinsAggregateSelect s
-            QDBConnection s  -> first DS.connectionSelectQuerySQL $ RR.getRemoteJoinsConnectionSelect s
+            QDBMultipleRows s -> first (DS.selectQuerySQL JASMultipleRows) $ RR.getRemoteJoins s
+            QDBSingleRow s    -> first (DS.selectQuerySQL JASSingleObject) $ RR.getRemoteJoins s
+            QDBAggregation s  -> first DS.selectAggregateQuerySQL $ RR.getRemoteJoinsAggregateSelect s
+            QDBConnection s   -> first DS.connectionSelectQuerySQL $ RR.getRemoteJoinsConnectionSelect s
           textSQL = Q.getQueryText querySQL
           -- CAREFUL!: an `EXPLAIN ANALYZE` here would actually *execute* this
           -- query, maybe resulting in privilege escalation:

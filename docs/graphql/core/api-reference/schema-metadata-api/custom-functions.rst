@@ -167,7 +167,7 @@ Function Configuration
    (*terminology from* `Postgres docs <https://www.postgresql.org/docs/current/sql-createfunction.html>`__):
 
    - **Function behaviour**: ``STABLE`` or ``IMMUTABLE`` functions may *only* be exposed as queries (i.e. with ``exposed_as: query``)
-   - **Return type**: MUST be ``SETOF <table-name>`` where ``<table-name>`` is already tracked
+   - **Return type**: MUST be ``SETOF <table-name>`` OR ``<table_name>`` where ``<table-name>`` is already tracked
    - **Argument modes**: ONLY ``IN``
 
 .. _pg_create_function_permission:

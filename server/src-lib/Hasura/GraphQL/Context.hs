@@ -100,13 +100,13 @@ traverseRemoteField f = \case
   RFDB s e x -> pure $ RFDB s e x
   RFRemote x -> RFRemote <$> f x
   RFAction x -> pure $ RFAction x
-  RFRaw x -> pure $ RFRaw x
+  RFRaw x    -> pure $ RFRaw x
 
 data QueryDB b v
-  = QDBSimple      (IR.AnnSimpleSelG       b v)
-  | QDBPrimaryKey  (IR.AnnSimpleSelG       b v)
-  | QDBAggregation (IR.AnnAggregateSelectG b v)
-  | QDBConnection  (IR.ConnectionSelect    b v)
+  = QDBMultipleRows (IR.AnnSimpleSelG       b v)
+  | QDBSingleRow    (IR.AnnSimpleSelG       b v)
+  | QDBAggregation  (IR.AnnAggregateSelectG b v)
+  | QDBConnection   (IR.ConnectionSelect    b v)
 
 data ActionQuery (b :: BackendType) v
   = AQQuery !(RQL.AnnActionExecution b v)
@@ -126,7 +126,7 @@ data MutationDB (b :: BackendType) v
   = MDBInsert (IR.AnnInsert   b v)
   | MDBUpdate (IR.AnnUpdG b v)
   | MDBDelete (IR.AnnDelG b v)
-  | MDBFunction (IR.AnnSimpleSelG b v)
+  | MDBFunction RQL.JsonAggSelect (IR.AnnSimpleSelG b v)
   -- ^ This represents a VOLATILE function, and is AnnSimpleSelG for easy
   -- re-use of non-VOLATILE function tracking code.
 

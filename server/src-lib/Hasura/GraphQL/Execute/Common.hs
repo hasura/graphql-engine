@@ -14,7 +14,6 @@ import qualified Network.HTTP.Types                          as HTTP
 
 import qualified Hasura.Backends.Postgres.SQL.DML            as S
 import qualified Hasura.Backends.Postgres.Translate.Select   as DS
-import qualified Hasura.RQL.IR.Select                        as DS
 import qualified Hasura.Tracing                              as Tracing
 
 import           Hasura.Backends.Postgres.Connection
@@ -91,10 +90,10 @@ irToRootFieldPlan
   :: PrepArgMap
   -> QueryDB 'Postgres S.SQLExp -> PreparedSql
 irToRootFieldPlan prepped = \case
-  QDBSimple s      -> mkPreparedSql getRemoteJoins (DS.selectQuerySQL DS.JASMultipleRows) s
-  QDBPrimaryKey s  -> mkPreparedSql getRemoteJoins (DS.selectQuerySQL DS.JASSingleObject) s
-  QDBAggregation s -> mkPreparedSql getRemoteJoinsAggregateSelect DS.selectAggregateQuerySQL s
-  QDBConnection s  -> mkPreparedSql getRemoteJoinsConnectionSelect DS.connectionSelectQuerySQL s
+  QDBMultipleRows s -> mkPreparedSql getRemoteJoins (DS.selectQuerySQL JASMultipleRows) s
+  QDBSingleRow s    -> mkPreparedSql getRemoteJoins (DS.selectQuerySQL JASSingleObject) s
+  QDBAggregation s  -> mkPreparedSql getRemoteJoinsAggregateSelect DS.selectAggregateQuerySQL s
+  QDBConnection s   -> mkPreparedSql getRemoteJoinsConnectionSelect DS.connectionSelectQuerySQL s
   where
     mkPreparedSql :: (s -> (t, Maybe (RemoteJoins 'Postgres))) -> (t -> Q.Query) -> s -> PreparedSql
     mkPreparedSql getJoins f simpleSel =

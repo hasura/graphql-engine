@@ -82,10 +82,10 @@ traverseQueryRootField
   -> RootField (QueryDB backend a) c h d
   -> f (RootField (QueryDB backend b) c h d)
 traverseQueryRootField f = traverseDB \case
-  QDBSimple s      -> QDBSimple      <$> DS.traverseAnnSimpleSelect f s
-  QDBPrimaryKey s  -> QDBPrimaryKey  <$> DS.traverseAnnSimpleSelect f s
-  QDBAggregation s -> QDBAggregation <$> DS.traverseAnnAggregateSelect f s
-  QDBConnection s  -> QDBConnection  <$> DS.traverseConnectionSelect f s
+  QDBMultipleRows s -> QDBMultipleRows <$> DS.traverseAnnSimpleSelect f s
+  QDBSingleRow s    -> QDBSingleRow    <$> DS.traverseAnnSimpleSelect f s
+  QDBAggregation s  -> QDBAggregation  <$> DS.traverseAnnAggregateSelect f s
+  QDBConnection s   -> QDBConnection   <$> DS.traverseConnectionSelect f s
 
 parseGraphQLQuery
   :: MonadError QErr m

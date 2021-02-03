@@ -1025,7 +1025,7 @@ computedFieldPG ComputedFieldInfo{..} selectPermissions = runMaybeT do
       let fieldArgsParser = liftA2 (,) functionArgsParser selectArgsParser
       pure $ P.subselection fieldName (Just fieldDescription) fieldArgsParser selectionSetParser <&>
         \((functionArgs', args), fields) ->
-          IR.AFComputedField $ IR.CFSTable IR.JASMultipleRows $ IR.AnnSelectG
+          IR.AFComputedField $ IR.CFSTable JASMultipleRows $ IR.AnnSelectG
             { IR._asnFields   = fields
             , IR._asnFrom     = IR.FromFunction (_cffName _cfiFunction) functionArgs' Nothing
             , IR._asnPerm     = tablePermissionsInfo remotePerms
@@ -1375,7 +1375,7 @@ nodeField = do
         withArgsPath $  throwInvalidNodeId $ "the table " <>> ident
       whereExp <- buildNodeIdBoolExp columnValues pkeyColumns
       let pgExecCtx = PG._pscExecCtx sourceConfig
-      return $ RFDB source pgExecCtx $ QDBPrimaryKey $ IR.AnnSelectG
+      return $ RFDB source pgExecCtx $ QDBSingleRow $ IR.AnnSelectG
         { IR._asnFields   = fields
         , IR._asnFrom     = IR.FromTable table
         , IR._asnPerm     = tablePermissionsInfo perms

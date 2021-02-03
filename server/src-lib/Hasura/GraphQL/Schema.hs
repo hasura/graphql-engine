@@ -444,9 +444,9 @@ buildQueryFields sourceName sourceConfig tables (takeExposedAs FEAQuery id -> fu
           pkName = tableGQLName <> $$(G.litName "_by_pk")
           pkDesc = G.Description $ "fetch data from the table: " <> table <<> " using primary key columns"
       catMaybes <$> sequenceA
-        [ requiredFieldParser (asDbRootField . QDBSimple)      $ selectTable          table (fromMaybe tableGQLName $ _tcrfSelect          customRootFields) (Just fieldsDesc) perms
-        , mapMaybeFieldParser (asDbRootField . QDBPrimaryKey)  $ selectTableByPk      table (fromMaybe pkName       $ _tcrfSelectByPk      customRootFields) (Just pkDesc)     perms
-        , mapMaybeFieldParser (asDbRootField . QDBAggregation) $ selectTableAggregate table (fromMaybe aggName      $ _tcrfSelectAggregate customRootFields) (Just aggDesc)    perms
+        [ requiredFieldParser (asDbRootField . QDBMultipleRows) $ selectTable          table (fromMaybe tableGQLName $ _tcrfSelect          customRootFields) (Just fieldsDesc) perms
+        , mapMaybeFieldParser (asDbRootField . QDBSingleRow)    $ selectTableByPk      table (fromMaybe pkName       $ _tcrfSelectByPk      customRootFields) (Just pkDesc)     perms
+        , mapMaybeFieldParser (asDbRootField . QDBAggregation)  $ selectTableAggregate table (fromMaybe aggName      $ _tcrfSelectAggregate customRootFields) (Just aggDesc)    perms
         ]
   functionSelectExpParsers <- for functions \function -> runMaybeT $ do
     let targetTable = _fiReturnType function
@@ -462,8 +462,12 @@ buildQueryFields sourceName sourceConfig tables (takeExposedAs FEAQuery id -> fu
     let functionDesc = G.Description $ "execute function " <> functionName <<> " which returns " <>> targetTable
         aggName = displayName <> $$(G.litName "_aggregate")
         aggDesc = G.Description $ "execute function " <> functionName <<> " and query aggregates on result of table type " <>> targetTable
+        queryResultType =
+          case _fiJsonAggSelect function of
+            JASMultipleRows -> QDBMultipleRows
+            JASSingleObject -> QDBSingleRow
     catMaybes <$> sequenceA
-      [ requiredFieldParser (asDbRootField . QDBSimple)      $ lift $ selectFunction          function displayName (Just functionDesc) perms
+      [ requiredFieldParser (asDbRootField . queryResultType) $ lift $ selectFunction          function displayName (Just functionDesc) perms
       , mapMaybeFieldParser (asDbRootField . QDBAggregation) $ lift $ selectFunctionAggregate function aggName     (Just aggDesc)      perms
       ]
   pure $ (concat . catMaybes) (tableSelectExpParsers <> functionSelectExpParsers)
@@ -791,7 +795,7 @@ buildMutationParser allRemotes allActions nonObjectCustomTypes
             in RFDB sourceName pgExecCtx
 
       catMaybes <$> sequenceA
-        [ requiredFieldParser (asDbRootField . MDBFunction) $
+        [ requiredFieldParser (asDbRootField . (MDBFunction _fiJsonAggSelect)) $
             lift $ selectFunction function displayName (Just functionDesc) perms
         -- FWIW: The equivalent of this is possible for mutations; do we want that?:
         -- , mapMaybeFieldParser (asDbRootField . QDBAggregation) $ selectFunctionAggregate function aggName     (Just aggDesc)      perms

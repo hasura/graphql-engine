@@ -12,7 +12,6 @@ import qualified Data.HashMap.Strict.InsOrd         as OMap
 import qualified Data.HashSet                       as Set
 import qualified Data.Sequence                      as Seq
 import qualified Data.Text                          as T
-import qualified Database.PG.Query                  as Q
 
 import           Control.Lens                       hiding ((.=))
 import           Data.Aeson
@@ -58,8 +57,7 @@ data FunctionIntegrityError
   = FunctionNameNotGQLCompliant
   | FunctionVariadic
   | FunctionReturnNotCompositeType
-  | FunctionReturnNotSetof
-  | FunctionReturnNotSetofTable
+  | FunctionReturnNotTable
   | NonVolatileFunctionAsMutation
   | FunctionSessionArgumentNotJSON !FunctionArgName
   | FunctionInvalidSessionArgument !FunctionArgName
@@ -92,8 +90,7 @@ mkFunctionInfo source qf systemDefined FunctionConfig{..} permissions rawFuncInf
         throwValidateError FunctionNameNotGQLCompliant
       when hasVariadic $ throwValidateError FunctionVariadic
       when (retTyTyp /= PGKindComposite) $ throwValidateError FunctionReturnNotCompositeType
-      unless retSet $ throwValidateError FunctionReturnNotSetof
-      unless returnsTab $ throwValidateError FunctionReturnNotSetofTable
+      unless returnsTab $ throwValidateError FunctionReturnNotTable
       -- We mostly take the user at their word here and will, e.g. expose a
       -- function as a query if it is marked VOLATILE (since perhaps the user
       -- is using the function to do some logging, say). But this is also a
@@ -117,8 +114,12 @@ mkFunctionInfo source qf systemDefined FunctionConfig{..} permissions rawFuncInf
       inputArguments <- makeInputArguments
 
       let retTable = typeToTable returnType
+          retJsonAggSelect = bool JASSingleObject JASMultipleRows retSet
+
           functionInfo =
-            FunctionInfo qf systemDefined funVol exposeAs inputArguments retTable descM (Set.fromList $ _fpmRole <$> permissions)
+            FunctionInfo qf systemDefined funVol exposeAs inputArguments
+                         retTable descM (Set.fromList $ _fpmRole <$> permissions)
+                         retJsonAggSelect
 
       pure ( functionInfo
            , SchemaDependency (SOSourceObj source $ SOITable retTable) DRTable
@@ -151,8 +152,7 @@ mkFunctionInfo source qf systemDefined FunctionConfig{..} permissions rawFuncInf
       FunctionNameNotGQLCompliant -> "function name is not a legal GraphQL identifier"
       FunctionVariadic -> "function with \"VARIADIC\" parameters are not supported"
       FunctionReturnNotCompositeType -> "the function does not return a \"COMPOSITE\" type"
-      FunctionReturnNotSetof -> "the function does not return a SETOF"
-      FunctionReturnNotSetofTable -> "the function does not return a SETOF table"
+      FunctionReturnNotTable -> "the function does not return a table"
       NonVolatileFunctionAsMutation ->
         "the function was requested to be exposed as a mutation, but is not marked VOLATILE. " <>
         "Maybe the function was given the wrong volatility when it was defined?"
@@ -200,18 +200,6 @@ handleMultipleFunctions qf = \case
   _       ->
     throw400 NotSupported $
     "function " <> qf <<> " is overloaded. Overloaded functions are not supported"
-
-fetchRawFunctionInfo :: MonadTx m => QualifiedFunction -> m RawFunctionInfo
-fetchRawFunctionInfo qf@(QualifiedObject sn fn) =
-  handleMultipleFunctions qf =<< map (Q.getAltJ . runIdentity) <$> fetchFromDatabase
-  where
-    fetchFromDatabase = liftTx $
-      Q.listQE defaultTxErrorHandler [Q.sql|
-           SELECT function_info
-             FROM hdb_catalog.hdb_function_info_agg
-            WHERE function_schema = $1
-              AND function_name = $2
-          |] (sn, fn) True
 
 runTrackFunc
   :: (MonadError QErr m, CacheRWM m, MetadataM m)

@@ -22,12 +22,6 @@ import           Hasura.RQL.Types.RemoteSchema
 import           Hasura.SQL.Backend
 
 
-data JsonAggSelect
-  = JASMultipleRows
-  | JASSingleObject
-  deriving (Show, Eq, Generic)
-instance Hashable JsonAggSelect
-
 data AnnAggregateOrderBy (b :: BackendType)
   = AAOCount
   | AAOOp !Text !(ColumnInfo b)

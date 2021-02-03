@@ -101,6 +101,7 @@ data FunctionInfo (b :: BackendType)
   -- returns the composite type corresponding to this table".
   , _fiDescription   :: !(Maybe PG.PGDescription) -- FIXME: make generic
   , _fiPermissions   :: !(Set.HashSet RoleName)
+  , _fiJsonAggSelect :: !JsonAggSelect
   -- ^ Roles to which the function is accessible
   } deriving (Generic)
 deriving instance Backend b => Show (FunctionInfo b)

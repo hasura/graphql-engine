@@ -628,3 +628,6 @@ class TestGraphQLMutationFunctions:
         check_query_f(hge_ctx, self.dir() + '/function_as_mutations_permissions.yaml', transport)
         st_code, resp = hge_ctx.v1metadataq_f(self.dir() + '/drop_function_permission_add_to_score.yaml')
         assert st_code == 200, resp
+
+    def test_single_row_function_as_mutation(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/single_row_function_as_mutation.yaml', transport)
