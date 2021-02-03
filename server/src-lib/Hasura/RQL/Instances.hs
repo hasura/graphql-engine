@@ -124,3 +124,5 @@ instance Q.FromCol CronSchedule where
         case parseCronSchedule dbCron of
           Left err'  -> Left $ "invalid cron schedule " <> pack err'
           Right cron -> Right cron
+
+instance J.ToJSONKey Void

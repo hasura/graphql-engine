@@ -70,11 +70,9 @@ deriving instance (Backend b) => Ord (EnumReference b)
 instance (Backend b) => NFData (EnumReference b)
 instance (Backend b) => Hashable (EnumReference b)
 instance (Backend b) => Cacheable (EnumReference b)
-
-instance Backend b => FromJSON (EnumReference b) where
+instance (Backend b) => FromJSON (EnumReference b) where
   parseJSON = genericParseJSON hasuraJSON
-
-instance Backend b => ToJSON (EnumReference b) where
+instance (Backend b) => ToJSON (EnumReference b) where
   toJSON = genericToJSON hasuraJSON
 
 -- | The type we use for columns, which are currently always “scalars” (though
@@ -93,8 +91,7 @@ data ColumnType (b :: BackendType)
 instance (Backend b) => NFData (ColumnType b)
 instance (Backend b) => Hashable (ColumnType b)
 instance (Backend b) => Cacheable (ColumnType b)
-
-instance Backend b => ToJSON (ColumnType b) where
+instance (Backend b) => ToJSON (ColumnType b) where
   toJSON = genericToJSON $ defaultOptions{constructorTagModifier = drop 6}
 
 $(makePrisms ''ColumnType)

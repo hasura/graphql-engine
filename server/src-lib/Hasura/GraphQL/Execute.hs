@@ -33,6 +33,7 @@ import qualified Network.HTTP.Types                     as HTTP
 import qualified Network.Wai.Extended                   as Wai
 
 import           Data.Text.Extended
+import           Data.Typeable
 
 import qualified Hasura.GraphQL.Context                 as C
 import qualified Hasura.GraphQL.Execute.Action          as EA
@@ -165,7 +166,7 @@ getExecPlanPartial userInfo sc queryType req =
 -- The graphql query is resolved into a sequence of execution operations
 data ResolvedExecutionPlan tx
   = QueryExecutionPlan
-      (EPr.ExecutionPlan EA.ActionExecutionPlan (tx EncJSON, Maybe EQ.PreparedSql)) [C.QueryRootField (UnpreparedValue 'Postgres)]
+      (EPr.ExecutionPlan EA.ActionExecutionPlan (tx EncJSON, Maybe EQ.PreparedSql)) [C.QueryRootField UnpreparedValue]
   -- ^ query execution; remote schemas and introspection possible
   | MutationExecutionPlan (EPr.ExecutionPlan (EA.ActionExecutionPlan, HTTP.ResponseHeaders) (tx EncJSON, HTTP.ResponseHeaders))
   -- ^ mutation execution; only __typename introspection supported
@@ -173,17 +174,20 @@ data ResolvedExecutionPlan tx
   -- ^ live query execution; remote schemas and introspection not supported
 
 validateSubscriptionRootField
-  :: (MonadError QErr m, Traversable t)
+  :: (MonadError QErr m, Traversable t, Typeable v)
   => t (C.QueryRootField v) -> m (PGExecCtx, t (C.SubscriptionRootField v))
 validateSubscriptionRootField rootFields = do
-  subscriptionRootFields <- for rootFields \case
-    C.RFDB src e x           -> pure $ C.RFDB src e x
+  subscriptionRootFields <- for rootFields \(C.QueryRootField rootField) -> case rootField of
+    -- TMP!
+    -- Casting to Postgres for now.
+    C.RFDB src e x           -> onNothing (C.RFDB @'Postgres src <$> cast e <*> cast x) $
+                                throw400 NotSupported "subscription are not supported on non-PG backends"
     C.RFAction (C.AQAsync _) -> throw400 NotSupported "async action queries are temporarily not supported in subscription"
     C.RFAction (C.AQQuery _) -> throw400 NotSupported "query actions cannot be run as a subscription"
     C.RFRemote _             -> throw400 NotSupported "subscription to remote server is not supported"
     C.RFRaw _                -> throw400 NotSupported "Introspection not supported over subscriptions"
 
-  pgExecCtx <- case toList subscriptionRootFields of
+  pgExecCtx <- _pscExecCtx <$> case toList subscriptionRootFields of
     [] -> throw500 "empty selset for subscription"
     [C.RFDB _ e _]                    -> pure e
     ((C.RFDB headSrc e _):restFields) -> do
@@ -192,8 +196,7 @@ validateSubscriptionRootField rootFields = do
       unless (all ((headSrc ==) . getSource) restFields) $ throw400 NotSupported ""
       pure e
 
-  pure (pgExecCtx, subscriptionRootFields)
-
+  pure (pgExecCtx, C.SubscriptionRootField <$> subscriptionRootFields)
 
 
 checkQueryInAllowlist

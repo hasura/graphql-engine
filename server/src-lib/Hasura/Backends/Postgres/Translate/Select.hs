@@ -26,7 +26,7 @@ import           Hasura.Backends.Postgres.SQL.Types
 import           Hasura.Backends.Postgres.Translate.BoolExp
 import           Hasura.Backends.Postgres.Translate.Types
 import           Hasura.EncJSON
-import           Hasura.GraphQL.Schema.Common               (nodeIdVersionInt, currentNodeIdVersion)
+import           Hasura.GraphQL.Schema.Common               (currentNodeIdVersion, nodeIdVersionInt)
 import           Hasura.RQL.DML.Internal
 import           Hasura.RQL.IR.OrderBy
 import           Hasura.RQL.IR.Select
@@ -490,7 +490,7 @@ processAnnAggregateSelect sourcePrefixes fieldAlias annAggSel = do
         pure ( aggregateFieldsToExtractorExps thisSourcePrefix aggFields
              , aggregateFieldToExp aggFields strfyNum
              )
-      TAFNodes annFields -> do
+      TAFNodes _ annFields -> do
         annFieldExtr <- processAnnFields thisSourcePrefix fieldName similarArrayFields annFields
         pure ( [annFieldExtr]
              , withJsonAggExtr permLimitSubQuery (_ssOrderBy selectSource) $
@@ -517,7 +517,7 @@ processAnnAggregateSelect sourcePrefixes fieldAlias annAggSel = do
     similarArrayFields = HM.unions $
       flip map (map snd aggSelFields) $ \case
         TAFAgg _ -> mempty
-        TAFNodes annFlds ->
+        TAFNodes _ annFlds ->
           mkSimilarArrayFields annFlds orderBy
         TAFExp _ -> mempty
 
@@ -610,7 +610,7 @@ processSelectParams sourcePrefixes fieldAlias similarArrFields selectFrom
                   orderByM
   let fromItem = selectFromToFromItem (_pfBase sourcePrefixes) selectFrom
       (maybeDistinct, distinctExtrs) =
-        maybe (Nothing, []) (first Just) $ processDistinctOnColumns thisSourcePrefix <$> distM
+        maybe (Nothing, []) (first Just) $ processDistinctOnColumns thisSourcePrefix . snd <$> distM
       finalWhere = toSQLBoolExp (selectFromToQual selectFrom) $
                    maybe permFilter (andAnnBoolExps permFilter) whereM
       selectSource = SelectSource thisSourcePrefix fromItem maybeDistinct finalWhere
@@ -771,11 +771,11 @@ processAnnFields sourcePrefix fieldAlias similarArrFields annFields = do
     case field of
       AFExpression t -> pure $ S.SELit t
 
-      AFNodeId tn pKeys -> pure $ mkNodeId tn pKeys
+      AFNodeId _ tn pKeys -> pure $ mkNodeId tn pKeys
 
       AFColumn c -> toSQLCol c
 
-      AFRemote _ -> pure $ S.SELit "null: remote field selected"
+      AFRemote _ _ -> pure $ S.SELit "null: remote field selected"
 
       AFObjectRelation objSel -> withWriteObjectRelation $ do
         let AnnRelationSelectG relName relMapping annObjSel = objSel
@@ -798,9 +798,9 @@ processAnnFields sourcePrefix fieldAlias similarArrFields annFields = do
         processArrayRelation (mkSourcePrefixes arrRelSourcePrefix) fieldName arrRelAlias arrSel
         pure $ S.mkQIdenExp arrRelSourcePrefix fieldName
 
-      AFComputedField (CFSScalar scalar) -> fromScalarComputedField scalar
+      AFComputedField _ (CFSScalar scalar) -> fromScalarComputedField scalar
 
-      AFComputedField (CFSTable selectTy sel) -> withWriteComputedFieldTableSet $ do
+      AFComputedField _ (CFSTable selectTy sel) -> withWriteComputedFieldTableSet $ do
         let computedFieldSourcePrefix =
               mkComputedFieldTableAlias sourcePrefix fieldName
         (selectSource, nodeExtractors) <-
@@ -1105,7 +1105,7 @@ processConnectionSelect sourcePrefixes fieldAlias relAlias colMapping connection
        , allExtractors
        )
   where
-    ConnectionSelect primaryKeyColumns maybeSplit maybeSlice select = connectionSelect
+    ConnectionSelect _ primaryKeyColumns maybeSplit maybeSlice select = connectionSelect
     AnnSelectG fields selectFrom tablePermissions tableArgs _ = select
     fieldIdentifier = toIdentifier fieldAlias
     thisPrefix = _pfThis sourcePrefixes

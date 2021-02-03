@@ -14,6 +14,8 @@ import qualified Language.GraphQL.Draft.Syntax             as G
 import qualified Network.HTTP.Client                       as HTTP
 import qualified Network.HTTP.Types                        as HTTP
 
+import           Data.Typeable                             (cast)
+
 import qualified Hasura.Backends.Postgres.Execute.Mutation as PGE
 import qualified Hasura.GraphQL.Transport.HTTP.Protocol    as GH
 import qualified Hasura.Logging                            as L
@@ -150,15 +152,19 @@ convertMutationSelectionSet env logger gqlContext SQLGenCtx{stringifyNum} userIn
     throw400 ValidationFailed "no mutations exist"
   -- Parse the GraphQL query into the RQL AST
   (unpreparedQueries, _reusability)
-    :: (OMap.InsOrdHashMap G.Name (MutationRootField (UnpreparedValue 'Postgres)), QueryReusability)
+    :: (OMap.InsOrdHashMap G.Name (MutationRootField UnpreparedValue), QueryReusability)
     <-  resolveVariables varDefs (fromMaybe Map.empty varValsM) fields
     >>= (mutationParser >>> (`onLeft` reportParseErrors))
 
   -- Transform the RQL AST into a prepared SQL query
   let userSession = _uiSession userInfo
       remoteJoinCtx = (manager, reqHeaders, userInfo)
-  txs <- for unpreparedQueries \case
-    RFDB _ execCtx db -> ExecStepDB execCtx . noResponseHeaders <$> case db of
+
+  -- TMP!
+  -- Casting to Postgres for now.
+  let toPG (MutationRootField rf) = cast rf
+  txs <- for (OMap.mapMaybe toPG unpreparedQueries) \case
+    RFDB _ sourceConfig db -> ExecStepDB (_pscExecCtx sourceConfig) . noResponseHeaders <$> case db of
       MDBInsert s              -> convertInsert env userSession remoteJoinCtx s stringifyNum
       MDBUpdate s              -> convertUpdate env userSession remoteJoinCtx s stringifyNum
       MDBDelete s              -> convertDelete env userSession remoteJoinCtx s stringifyNum

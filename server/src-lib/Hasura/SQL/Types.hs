@@ -41,6 +41,7 @@ data CollectableType a
   | CollectableTypeArray !a
   deriving (Show, Eq, Generic, Data, Functor)
 instance (NFData a) => NFData (CollectableType a)
+instance (Hashable a) => Hashable (CollectableType a)
 instance (Cacheable a) => Cacheable (CollectableType a)
 $(deriveJSON defaultOptions{constructorTagModifier = drop 6} ''CollectableType)
 

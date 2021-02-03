@@ -44,11 +44,13 @@ getTableGQLName
   :: forall b r m. (Backend b, MonadTableInfo r m)
   => TableName b
   -> m G.Name
-getTableGQLName table = do
-  tableInfo <- askTableInfo @b table
+getTableGQLName tableName = do
+  -- FIXME: pass tableInfo along to avoid unecessary cache lookups
+  tableInfo <- askTableInfo @b tableName
   let tableCustomName = _tcCustomName . _tciCustomConfig . _tiCoreInfo $ tableInfo
-  tableCustomName `onNothing`
-    tableGraphQLName @b table `onLeft` throwError
+  tableCustomName
+    `onNothing` tableGraphQLName @b tableName
+    `onLeft`    throwError
 
 
 -- | Table select columns enum

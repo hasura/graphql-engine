@@ -187,9 +187,9 @@ $(makePrisms ''FieldInfo)
 
 type FieldInfoMap = M.HashMap FieldName
 
-fieldInfoName :: FieldInfo 'Postgres -> FieldName
+fieldInfoName :: forall b. Backend b => FieldInfo b -> FieldName
 fieldInfoName = \case
-  FIColumn info             -> fromCol @'Postgres $ pgiColumn info
+  FIColumn info             -> fromCol @b $ pgiColumn info
   FIRelationship info       -> fromRel $ riName info
   FIComputedField info      -> fromComputedField $ _cfiName info
   FIRemoteRelationship info -> fromRemoteRelationship $ _rfiName info
@@ -423,8 +423,8 @@ data TableCoreInfoG (b :: BackendType) field primaryKeyColumn
   , _tciDescription       :: !(Maybe PG.PGDescription) -- TODO make into type family?
   , _tciSystemDefined     :: !SystemDefined
   , _tciFieldInfoMap      :: !(FieldInfoMap field)
-  , _tciPrimaryKey        :: !(Maybe (PrimaryKey primaryKeyColumn))
-  , _tciUniqueConstraints :: !(HashSet Constraint)
+  , _tciPrimaryKey        :: !(Maybe (PrimaryKey b primaryKeyColumn))
+  , _tciUniqueConstraints :: !(HashSet (Constraint b))
   -- ^ Does /not/ include the primary key; use 'tciUniqueOrPrimaryKeyConstraints' if you need both.
   , _tciForeignKeys       :: !(HashSet (ForeignKey b))
   , _tciViewInfo          :: !(Maybe ViewInfo)
@@ -433,14 +433,14 @@ data TableCoreInfoG (b :: BackendType) field primaryKeyColumn
   } deriving (Generic)
 deriving instance (Eq field, Eq pkCol, Backend b) => Eq (TableCoreInfoG b field pkCol)
 instance (Cacheable field, Cacheable pkCol, Backend b) => Cacheable (TableCoreInfoG b field pkCol)
-instance (Backend b, ToJSON field, ToJSON pkCol) => ToJSON (TableCoreInfoG b field pkCol) where
+instance (Backend b, Generic pkCol, ToJSON field, ToJSON pkCol) => ToJSON (TableCoreInfoG b field pkCol) where
   toJSON = genericToJSON hasuraJSON
 $(makeLenses ''TableCoreInfoG)
 
 -- | Fully-processed table info that includes non-column fields.
 type TableCoreInfo b = TableCoreInfoG b (FieldInfo b) (ColumnInfo b)
 
-tciUniqueOrPrimaryKeyConstraints :: TableCoreInfoG b f pkCol -> Maybe (NonEmpty Constraint)
+tciUniqueOrPrimaryKeyConstraints :: TableCoreInfoG b f pkCol -> Maybe (NonEmpty (Constraint b))
 tciUniqueOrPrimaryKeyConstraints info = NE.nonEmpty $
   maybeToList (_pkConstraint <$> _tciPrimaryKey info)
   <> toList (_tciUniqueConstraints info)
@@ -487,8 +487,8 @@ data DBTableMetadata (b :: BackendType)
   = DBTableMetadata
   { _ptmiOid               :: !OID
   , _ptmiColumns           :: ![RawColumnInfo b]
-  , _ptmiPrimaryKey        :: !(Maybe (PrimaryKey (Column b)))
-  , _ptmiUniqueConstraints :: !(HashSet Constraint)
+  , _ptmiPrimaryKey        :: !(Maybe (PrimaryKey b (Column b)))
+  , _ptmiUniqueConstraints :: !(HashSet (Constraint b))
   -- ^ Does /not/ include the primary key!
   , _ptmiForeignKeys       :: !(HashSet (ForeignKeyMetadata b))
   , _ptmiViewInfo          :: !(Maybe ViewInfo)

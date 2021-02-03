@@ -127,7 +127,24 @@ takeValidTables = Map.filterWithKey graphQLTableFilter . Map.filter tableFilter
       isJust (_tcCustomName $ _tciCustomConfig $ _tiCoreInfo tableInfo)
 
 -- TODO and what about graphql-compliant function names here too?
-takeValidFunctions :: forall b. FunctionCache b -> [FunctionInfo b]
-takeValidFunctions = Map.elems . Map.filter functionFilter
+takeValidFunctions :: forall b. FunctionCache b -> FunctionCache b
+takeValidFunctions = Map.filter functionFilter
   where
     functionFilter = not . isSystemDefined . _fiSystemDefined
+
+
+-- root field builder helpers
+
+requiredFieldParser
+  :: (Functor n, Functor m)
+  => (a -> b)
+  -> m (P.FieldParser n a)
+  -> m (Maybe (P.FieldParser n b))
+requiredFieldParser f = fmap $ Just . fmap f
+
+optionalFieldParser
+  :: (Functor n, Functor m)
+  => (a -> b)
+  -> m (Maybe (P.FieldParser n a))
+  -> m (Maybe (P.FieldParser n b))
+optionalFieldParser = fmap . fmap . fmap

@@ -23,6 +23,8 @@ import qualified Language.GraphQL.Draft.Syntax          as G
 import qualified Network.HTTP.Client                    as HTTP
 import qualified Network.HTTP.Types                     as HTTP
 
+import           Data.Typeable                          (cast)
+
 import qualified Hasura.GraphQL.Transport.HTTP.Protocol as GH
 import qualified Hasura.Logging                         as L
 import qualified Hasura.RQL.IR.Select                   as DS
@@ -79,8 +81,8 @@ traverseQueryRootField
   :: forall f a b c d h backend
    . Applicative f
   => (a -> f b)
-  -> RootField (QueryDB backend a) c h d
-  -> f (RootField (QueryDB backend b) c h d)
+  -> RootField backend (QueryDB backend a) c h d
+  -> f (RootField backend (QueryDB backend b) c h d)
 traverseQueryRootField f = traverseDB \case
   QDBMultipleRows s -> QDBMultipleRows <$> DS.traverseAnnSimpleSelect f s
   QDBSingleRow s    -> QDBSingleRow    <$> DS.traverseAnnSimpleSelect f s
@@ -93,7 +95,7 @@ parseGraphQLQuery
   -> [G.VariableDefinition]
   -> Maybe (HashMap G.Name J.Value)
   -> G.SelectionSet G.NoFragments G.Name
-  -> m ( InsOrdHashMap G.Name (QueryRootField (UnpreparedValue 'Postgres))
+  -> m ( InsOrdHashMap G.Name (QueryRootField UnpreparedValue)
        , QueryReusability
        )
 parseGraphQLQuery gqlContext varDefs varValsM fields =
@@ -160,20 +162,27 @@ convertQuerySelSet
   -> Maybe GH.VariableValues
   -> m ( ExecutionPlan ActionExecutionPlan (tx EncJSON, Maybe PreparedSql)
        -- , Maybe ReusableQueryPlan
-       , [QueryRootField (UnpreparedValue 'Postgres)]
+       , [QueryRootField UnpreparedValue]
        )
 convertQuerySelSet env logger gqlContext userInfo manager reqHeaders directives fields varDefs varValsM = do
   -- Parse the GraphQL query into the RQL AST
   (unpreparedQueries, _reusability) <- parseGraphQLQuery gqlContext varDefs varValsM fields
 
   -- Transform the RQL AST into a prepared SQL query
-  queryPlan <- for unpreparedQueries \unpreparedQuery -> do
-    (preparedQuery, PlanningSt _ _ planVals expectedVariables)
-      <- flip runStateT initPlanningSt
-         $ traverseQueryRootField prepareWithPlan unpreparedQuery
-           >>= traverseRemoteField (resolveRemoteField userInfo)
-    validateSessionVariables expectedVariables $ _uiSession userInfo
-    traverseDB (pure . irToRootFieldPlan planVals) preparedQuery
+  queryPlan <- OMap.mapMaybe id <$> for unpreparedQueries \(QueryRootField unpreparedQuery) -> do
+    -- TMP TMP TMP
+    -- only executing PG queries for now
+    let pgUQ = cast unpreparedQuery
+          :: Maybe (RootField 'Postgres (QueryDB 'Postgres (UnpreparedValue 'Postgres)) RemoteField (ActionQuery 'Postgres (UnpreparedValue 'Postgres)) J.Value)
+    case pgUQ of
+      Nothing -> pure Nothing
+      Just uq -> do
+        (preparedQuery, PlanningSt _ _ planVals expectedVariables)
+          <- flip runStateT initPlanningSt
+             $ traverseQueryRootField prepareWithPlan uq
+               >>= traverseRemoteField (resolveRemoteField userInfo)
+        validateSessionVariables expectedVariables $ _uiSession userInfo
+        Just <$> traverseDB (pure . irToRootFieldPlan planVals) preparedQuery
 
   (instrument, ep) <- askInstrumentQuery directives
 
@@ -184,13 +193,13 @@ convertQuerySelSet env logger gqlContext userInfo manager reqHeaders directives 
             remoteSchemaInfo
             G.OperationTypeQuery
             [G.SelectionField remoteField]
-        RFDB _ e db          -> pure $ ExecStepDB e $ mkCurPlanTx env manager reqHeaders userInfo instrument ep (RFPPostgres db)
+        RFDB _ e db          -> pure $ ExecStepDB (_pscExecCtx e) $ mkCurPlanTx env manager reqHeaders userInfo instrument ep (RFPPostgres db)
         RFAction (AQQuery s) -> ExecStepAction . AEPSync . _aerExecution <$>
                                 resolveActionExecution env logger userInfo s (ActionExecContext manager reqHeaders usrVars)
         RFAction (AQAsync s) -> pure $ ExecStepAction $ AEPAsyncQuery (_aaaqActionId s) $ resolveAsyncActionQuery userInfo s
         RFRaw r              -> pure $ ExecStepRaw r
 
-  let asts :: [QueryRootField (UnpreparedValue 'Postgres)]
+  let asts :: [QueryRootField UnpreparedValue]
       asts = OMap.elems unpreparedQueries
   pure (executionPlan, asts)  -- See Note [Temporarily disabling query plan caching]
   where

@@ -11,7 +11,7 @@ import qualified Language.GraphQL.Draft.Syntax       as G
 
 import           Control.Lens.TH                     (makeLenses, makePrisms)
 
-import           Hasura.GraphQL.Parser.Schema
+import           Hasura.GraphQL.Parser.Schema        (InputValue)
 import           Hasura.RQL.IR.BoolExp
 import           Hasura.RQL.IR.OrderBy
 import           Hasura.RQL.Types.Column
@@ -183,9 +183,9 @@ data AnnFieldG (b :: BackendType) v
   = AFColumn !(AnnColumnField b)
   | AFObjectRelation !(ObjectRelationSelectG b v)
   | AFArrayRelation !(ArraySelectG b v)
-  | AFComputedField !(ComputedFieldSelect b v)
-  | AFRemote !(RemoteSelect b)
-  | AFNodeId !(TableName b) !(PrimaryKeyColumns b)
+  | AFComputedField (XComputedField b) !(ComputedFieldSelect b v)
+  | AFRemote (XRemoteField b) !(RemoteSelect b)
+  | AFNodeId (XRelay b) !(TableName b) !(PrimaryKeyColumns b)
   | AFExpression !Text
 
 mkAnnColumnField :: ColumnInfo backend -> Maybe (ColumnOp backend) -> AnnFieldG backend v
@@ -200,13 +200,13 @@ traverseAnnField
   :: (Applicative f)
   => (a -> f b) -> AnnFieldG backend a -> f (AnnFieldG backend b)
 traverseAnnField f = \case
-  AFColumn colFld      -> pure $ AFColumn colFld
-  AFObjectRelation sel -> AFObjectRelation <$> traverse (traverseAnnObjectSelect f) sel
-  AFArrayRelation sel  -> AFArrayRelation <$> traverseArraySelect f sel
-  AFComputedField sel  -> AFComputedField <$> traverseComputedFieldSelect f sel
-  AFRemote s           -> pure $ AFRemote s
-  AFNodeId qt pKeys    -> pure $ AFNodeId qt pKeys
-  AFExpression t       -> AFExpression <$> pure t
+  AFColumn colFld       -> pure $ AFColumn colFld
+  AFObjectRelation sel  -> AFObjectRelation <$> traverse (traverseAnnObjectSelect f) sel
+  AFArrayRelation sel   -> AFArrayRelation <$> traverseArraySelect f sel
+  AFComputedField x sel -> AFComputedField x <$> traverseComputedFieldSelect f sel
+  AFRemote x s          -> pure $ AFRemote x s
+  AFNodeId x qt pKeys   -> pure $ AFNodeId x qt pKeys
+  AFExpression t        -> AFExpression <$> pure t
 
 type AnnField b = AnnFieldG b (SQLExpression b)
 
@@ -216,7 +216,7 @@ data SelectArgsG (b :: BackendType) v
   , _saOrderBy  :: !(Maybe (NE.NonEmpty (AnnOrderByItemG b v)))
   , _saLimit    :: !(Maybe Int)
   , _saOffset   :: !(Maybe (SQLExpression b))
-  , _saDistinct :: !(Maybe (NE.NonEmpty (Column b)))
+  , _saDistinct :: !(Maybe (XDistinct b, NE.NonEmpty (Column b)))
   } deriving (Generic)
 deriving instance (Backend b, Eq (ColumnInfo b), Eq v) => Eq (SelectArgsG b v)
 instance (Backend b, Hashable (ColumnInfo b), Hashable v) => Hashable (SelectArgsG b v)
@@ -271,7 +271,7 @@ type AnnFields b = AnnFieldsG b (SQLExpression b)
 
 data TableAggregateFieldG (b :: BackendType) v
   = TAFAgg !(AggregateFields b)
-  | TAFNodes !(AnnFieldsG b v)
+  | TAFNodes (XNodesAgg b) !(AnnFieldsG b v)
   | TAFExp !Text
 
 data PageInfoField
@@ -316,9 +316,9 @@ traverseTableAggregateField
   :: (Applicative f)
   => (a -> f b) -> TableAggregateFieldG backend a -> f (TableAggregateFieldG backend b)
 traverseTableAggregateField f = \case
-  TAFAgg aggFlds   -> pure $ TAFAgg aggFlds
-  TAFNodes annFlds -> TAFNodes <$> traverseAnnFields f annFlds
-  TAFExp t         -> pure $ TAFExp t
+  TAFAgg aggFlds     -> pure $ TAFAgg aggFlds
+  TAFNodes x annFlds -> TAFNodes x <$> traverseAnnFields f annFlds
+  TAFExp t           -> pure $ TAFExp t
 
 type TableAggregateField b = TableAggregateFieldG b (SQLExpression b)
 type TableAggregateFieldsG b v = Fields (TableAggregateFieldG b v)
@@ -438,7 +438,8 @@ traverseConnectionSplit f (ConnectionSplit k v ob) =
 
 data ConnectionSelect (b :: BackendType) v
   = ConnectionSelect
-  { _csPrimaryKeyColumns :: !(PrimaryKeyColumns b)
+  { _csXRelay            :: !(XRelay b)
+  , _csPrimaryKeyColumns :: !(PrimaryKeyColumns b)
   , _csSplit             :: !(Maybe (NE.NonEmpty (ConnectionSplit b v)))
   , _csSlice             :: !(Maybe ConnectionSlice)
   , _csSelect            :: !(AnnSelectG b (ConnectionFields b v) v)
@@ -448,8 +449,8 @@ traverseConnectionSelect
   :: (Applicative f)
   => (a -> f b)
   -> ConnectionSelect backend a -> f (ConnectionSelect backend b)
-traverseConnectionSelect f (ConnectionSelect pkCols cSplit cSlice sel) =
-  ConnectionSelect pkCols
+traverseConnectionSelect f (ConnectionSelect x pkCols cSplit cSlice sel) =
+  ConnectionSelect x pkCols
   <$> traverse (traverse (traverseConnectionSplit f)) cSplit
   <*> pure cSlice
   <*> traverseAnnSelect (traverse (traverse (traverseConnectionField f))) f sel

@@ -70,7 +70,7 @@ class Monad m => MonadExecuteQuery m where
   -- headers that can instruct a client how long a response can be cached
   -- locally (i.e. client-side).
   cacheLookup
-    :: [QueryRootField (UnpreparedValue 'Postgres)]
+    :: [QueryRootField UnpreparedValue]
     -- ^ Used to check that the query is cacheable
     -> ExecutionPlan action (Maybe (Maybe (RJ.RemoteJoins 'Postgres)))
     -- ^ Used to check if the elaborated query supports caching

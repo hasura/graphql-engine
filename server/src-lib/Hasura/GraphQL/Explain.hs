@@ -14,7 +14,9 @@ import qualified Database.PG.Query                           as Q
 import qualified Language.GraphQL.Draft.Syntax               as G
 
 import           Control.Monad.Trans.Control                 (MonadBaseControl)
+import           Data.Maybe                                  (fromJust)
 import           Data.Text.Extended
+import           Data.Typeable                               (cast)
 
 import qualified Hasura.Backends.Postgres.Execute.RemoteJoin as RR
 import qualified Hasura.Backends.Postgres.SQL.DML            as S
@@ -84,15 +86,18 @@ explainQueryField
      )
   => UserInfo
   -> G.Name
-  -> QueryRootField (UnpreparedValue 'Postgres)
+  -> QueryRootField UnpreparedValue
   -> m FieldPlan
-explainQueryField userInfo fieldName rootField = do
-  resolvedRootField <- E.traverseQueryRootField (resolveUnpreparedValue userInfo) rootField
+explainQueryField userInfo fieldName (QueryRootField rootField) = do
+  -- TMP TMP TMP
+  let pgRootField = fromJust $ cast rootField
+        :: RootField 'Postgres (QueryDB 'Postgres (UnpreparedValue 'Postgres)) RemoteField (ActionQuery 'Postgres (UnpreparedValue 'Postgres)) J.Value
+  resolvedRootField <- E.traverseQueryRootField (resolveUnpreparedValue userInfo) pgRootField
   case resolvedRootField of
     RFRemote _ -> throw400 InvalidParams "only hasura queries can be explained"
     RFAction _ -> throw400 InvalidParams "query actions cannot be explained"
     RFRaw _    -> pure $ FieldPlan fieldName Nothing Nothing
-    RFDB _ pgExecCtx qDB   -> do
+    RFDB _ config qDB -> do
       let (querySQL, remoteJoins) = case qDB of
             QDBMultipleRows s -> first (DS.selectQuerySQL JASMultipleRows) $ RR.getRemoteJoins s
             QDBSingleRow s    -> first (DS.selectQuerySQL JASSingleObject) $ RR.getRemoteJoins s
@@ -104,7 +109,7 @@ explainQueryField userInfo fieldName rootField = do
           withExplain = "EXPLAIN (FORMAT TEXT) " <> textSQL
       -- Reject if query contains any remote joins
       when (remoteJoins /= mempty) $ throw400 NotSupported "Remote relationships are not allowed in explain query"
-      planLines <- liftEitherM $ runExceptT $ runLazyTx pgExecCtx Q.ReadOnly $
+      planLines <- liftEitherM $ runExceptT $ runLazyTx (_pscExecCtx config) Q.ReadOnly $
                    liftTx $ map runIdentity <$>
                    Q.listQE dmlTxErrorHandler (Q.fromText withExplain) () True
       pure $ FieldPlan fieldName (Just textSQL) $ Just planLines

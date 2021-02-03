@@ -98,6 +98,7 @@ import           Hasura.RQL.Types.Error
 import           Hasura.SQL.Backend
 import           Hasura.SQL.Types
 
+
 type Representable a = (Show a, Eq a, Hashable a, Cacheable a, NFData a, Typeable a)
 
 -- | Mapping from abstract types to concrete backend representation
@@ -122,48 +123,53 @@ class
   , Representable (ScalarType b)
   , Representable (SQLExpression b)
   , Representable (SQLOperator b)
-  -- TODO define sufficiently many synonyms to get rid of these 4 lines for SessionVarType:
-  , Eq (SessionVarType b)
-  , Data (SessionVarType b)
-  , NFData (SessionVarType b)
-  , Cacheable (SessionVarType b)
+  , Representable (SessionVarType b)
   , Representable (XAILIKE b)
   , Representable (XANILIKE b)
-  , Representable (XComputedFieldInfo b)
+  , Representable (XRelay b)
+  , Representable (XNodesAgg b)
+  , Representable (XRemoteField b)
+  , Representable (XComputedField b)
+  , Representable (XDistinct b)
+  , Generic (Column b)
   , Ord (TableName b)
   , Ord (ScalarType b)
+  , Ord (XRelay b)
   , Data (TableName b)
   , Data (ScalarType b)
   , Data (SQLExpression b)
-  , FromJSON (TableName b)
-  , FromJSON (FunctionName b)
-  , FromJSON (ScalarType b)
-  , FromJSON (BasicOrderType b)
-  , FromJSON (NullsOrderType b)
-  , FromJSON (Column b)
-  , ToJSON (TableName b)
-  , ToJSON (FunctionName b)
-  , ToJSON (FunctionArgType b)
-  , ToJSON (SourceConfig b)
-  , ToJSON (ScalarType b)
-  , ToJSON (BasicOrderType b)
-  , ToJSON (NullsOrderType b)
-  , ToJSON (Column b)
-  , FromJSONKey (Column b)
-  , ToJSONKey (Column b)
-  , ToJSONKey (TableName b)
-  , ToJSONKey (FunctionName b)
-  , ToJSONKey (ScalarType b)
-  , ToTxt (TableName b)
-  , ToTxt (FunctionName b)
-  , ToTxt (ScalarType b)
-  , ToTxt (Column b)
-  , ToSQL (SQLExpression b)
   , Typeable (SourceConfig b)
   , Typeable b
+  , ToSQL (SQLExpression b)
+  , FromJSON (BasicOrderType b)
+  , FromJSON (Column b)
+  , FromJSON (ConstraintName b)
+  , FromJSON (FunctionName b)
+  , FromJSON (NullsOrderType b)
+  , FromJSON (ScalarType b)
+  , FromJSON (TableName b)
+  , FromJSONKey (Column b)
+  , ToJSON (BasicOrderType b)
+  , ToJSON (Column b)
+  , ToJSON (ConstraintName b)
+  , ToJSON (FunctionArgType b)
+  , ToJSON (FunctionName b)
+  , ToJSON (NullsOrderType b)
+  , ToJSON (ScalarType b)
+  , ToJSON (SourceConfig b)
+  , ToJSON (SourceConfig b)
+  , ToJSON (TableName b)
+  , ToJSONKey (Column b)
+  , ToJSONKey (FunctionName b)
+  , ToJSONKey (ScalarType b)
+  , ToJSONKey (TableName b)
+  , ToTxt (Column b)
+  , ToTxt (FunctionName b)
+  , ToTxt (ScalarType b)
+  , ToTxt (TableName b)
   ) => Backend (b :: BackendType) where
   -- types
-  type SourceConfig    b :: Type
+  type SourceConfig    b = sc | sc -> b
   type Identifier      b :: Type
   type Alias           b :: Type
   type TableName       b :: Type
@@ -180,11 +186,15 @@ class
   type SQLOperator     b :: Type
   type XAILIKE         b :: Type
   type XANILIKE        b :: Type
-  type XComputedFieldInfo b :: Type
+  type XComputedField  b :: Type
+  type XRemoteField    b :: Type
+  type XRelay          b :: Type
+  type XNodesAgg       b :: Type
+  type XDistinct       b :: Type
   -- functions on types
   functionArgScalarType :: FunctionArgType b -> ScalarType b
-  isComparableType :: ScalarType b -> Bool
-  isNumType :: ScalarType b -> Bool
+  isComparableType      :: ScalarType b -> Bool
+  isNumType             :: ScalarType b -> Bool
   -- functions on names
   tableGraphQLName    :: TableName b    -> Either QErr G.Name
   functionGraphQLName :: FunctionName b -> Either QErr G.Name
@@ -207,16 +217,17 @@ instance Backend 'Postgres where
   type SQLOperator     'Postgres = PG.SQLOp
   type XAILIKE         'Postgres = ()
   type XANILIKE        'Postgres = ()
-  type XComputedFieldInfo 'Postgres = ()
+  type XComputedField  'Postgres = ()
+  type XRemoteField    'Postgres = ()
+  type XRelay          'Postgres = ()
+  type XNodesAgg       'Postgres = ()
+  type XDistinct       'Postgres = ()
   functionArgScalarType = PG._qptName
-  isComparableType = PG.isComparableType
-  isNumType = PG.isNumType
-  tableGraphQLName    = PG.qualifiedObjectToName
-  functionGraphQLName = PG.qualifiedObjectToName
+  isComparableType      = PG.isComparableType
+  isNumType             = PG.isNumType
+  tableGraphQLName      = PG.qualifiedObjectToName
+  functionGraphQLName   = PG.qualifiedObjectToName
 
--- instance Backend 'Mysql where
---   type XAILIKE 'MySQL = Void
---   type XANILIKE 'MySQL = Void
 
 type SessionVarType b = CollectableType (ScalarType b)
 
@@ -295,11 +306,9 @@ deriving instance Backend b => Eq   (RelInfo b)
 instance Backend b => NFData (RelInfo b)
 instance Backend b => Cacheable (RelInfo b)
 instance Backend b => Hashable (RelInfo b)
-
-instance (Backend b) => FromJSON (RelInfo b) where
+instance Backend b => FromJSON (RelInfo b) where
   parseJSON = genericParseJSON hasuraJSON
-
-instance (Backend b) => ToJSON (RelInfo b) where
+instance Backend b => ToJSON (RelInfo b) where
   toJSON = genericToJSON hasuraJSON
 
 
@@ -391,29 +400,40 @@ $(deriveJSON hasuraJSON ''MutateResp)
 newtype OID = OID { unOID :: Int }
   deriving (Show, Eq, NFData, Hashable, ToJSON, FromJSON, Q.FromCol, Cacheable)
 
-data Constraint
+data Constraint (b :: BackendType)
   = Constraint
-  { _cName :: !PG.ConstraintName
+  { _cName :: !(ConstraintName b)
   , _cOid  :: !OID
-  } deriving (Show, Eq, Generic)
-instance NFData Constraint
-instance Hashable Constraint
-instance Cacheable Constraint
-$(deriveJSON hasuraJSON ''Constraint)
+  } deriving (Generic)
+deriving instance Backend b => Eq (Constraint b)
+deriving instance Backend b => Show (Constraint b)
+instance Backend b => NFData (Constraint b)
+instance Backend b => Hashable (Constraint b)
+instance Backend b => Cacheable (Constraint b)
+instance Backend b => FromJSON (Constraint b) where
+  parseJSON = genericParseJSON hasuraJSON
+instance Backend b => ToJSON (Constraint b) where
+  toJSON = genericToJSON hasuraJSON
 
-data PrimaryKey a
+data PrimaryKey (b :: BackendType) a
   = PrimaryKey
-  { _pkConstraint :: !Constraint
+  { _pkConstraint :: !(Constraint b)
   , _pkColumns    :: !(NESeq a)
-  } deriving (Show, Eq, Generic, Foldable)
-instance (NFData a) => NFData (PrimaryKey a)
-instance (Cacheable a) => Cacheable (PrimaryKey a)
+  } deriving (Generic)
+deriving instance (Backend b, Eq a) => Eq (PrimaryKey b a)
+deriving instance (Backend b, Show a) => Show (PrimaryKey b a)
+deriving instance Foldable (PrimaryKey b)
+instance (Backend b, NFData a) => NFData (PrimaryKey b a)
+instance (Backend b, Cacheable a) => Cacheable (PrimaryKey b a)
 $(makeLenses ''PrimaryKey)
-$(deriveJSON hasuraJSON ''PrimaryKey)
+instance (Backend b, Generic a, FromJSON a) => FromJSON (PrimaryKey b a) where
+  parseJSON = genericParseJSON hasuraJSON
+instance (Backend b, Generic a, ToJSON a) => ToJSON (PrimaryKey b a) where
+  toJSON = genericToJSON hasuraJSON
 
 data ForeignKey (b :: BackendType)
   = ForeignKey
-  { _fkConstraint    :: !Constraint
+  { _fkConstraint    :: !(Constraint b)
   , _fkForeignTable  :: !(TableName b)
   , _fkColumnMapping :: !(HM.HashMap (Column b) (Column b))
   } deriving (Generic)

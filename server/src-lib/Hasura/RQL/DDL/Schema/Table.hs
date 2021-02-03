@@ -127,12 +127,12 @@ trackExistingTableOrViewP1 source qt = do
 -- | Check whether a given name would conflict with the current schema by doing
 -- an internal introspection
 checkConflictingNode
-  :: MonadError QErr m
+  :: forall m. MonadError QErr m
   => SchemaCache
   -> Text
   -> m ()
 checkConflictingNode sc tnGQL = do
-  let queryParser = gqlQueryParser $ scUnauthenticatedGQLContext sc
+  let GQLContext queryParser _ = scUnauthenticatedGQLContext sc
       -- {
       --   __schema {
       --     queryType {
@@ -156,7 +156,7 @@ checkConflictingNode sc tnGQL = do
     Left _ -> pure ()
     Right (results, _reusability) -> do
       case OMap.lookup $$(G.litName "__schema") results of
-        Just (RFRaw (Object schema)) -> do
+        Just (QueryRootField (RFRaw (Object schema))) -> do
           let names = do
                 Object queryType <- Map.lookup "queryType" schema
                 Array fields <- Map.lookup "fields" queryType
@@ -482,7 +482,7 @@ buildTableCache = Inc.cache proc (source, pgSourceConfig, pgTables, tableBuildIn
       :: forall b
        . Backend b
       => ErrorA QErr arr
-       ( Map.HashMap (TableName b) (PrimaryKey (Column b), EnumValues)
+       ( Map.HashMap (TableName b) (PrimaryKey b (Column b), EnumValues)
        , TableCoreInfoG b (RawColumnInfo b) (Column b)
        ) (TableCoreInfoG b (ColumnInfo b) (ColumnInfo b))
     processTableInfo = proc (enumTables, rawInfo) -> liftEitherA -< do
@@ -500,7 +500,7 @@ buildTableCache = Inc.cache proc (source, pgSourceConfig, pgTables, tableBuildIn
         }
 
     resolvePrimaryKeyColumns
-      :: forall b n a . (Backend b, QErrM n) => HashMap FieldName a -> PrimaryKey (Column b) -> n (PrimaryKey a)
+      :: forall b n a . (Backend b, QErrM n) => HashMap FieldName a -> PrimaryKey b (Column b) -> n (PrimaryKey b a)
     resolvePrimaryKeyColumns columnMap = traverseOf (pkColumns.traverse) \columnName ->
       Map.lookup (FieldName (toTxt columnName)) columnMap
         `onNothing` throw500 "column in primary key not in table!"

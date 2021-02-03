@@ -38,9 +38,9 @@ import           Hasura.Backends.Postgres.SQL.Types  hiding (TableName)
 import           Hasura.RQL.Types.Column
 import           Hasura.RQL.Types.Common
 import           Hasura.RQL.Types.Error
-import           Hasura.Server.Utils                 (makeReasonMessage)
 import           Hasura.SQL.Backend
 import           Hasura.SQL.Types
+import           Hasura.Server.Utils                 (makeReasonMessage)
 
 
 -- | Given a map of enum tables, computes all enum references implied by the given set of foreign
@@ -52,7 +52,7 @@ import           Hasura.SQL.Types
 resolveEnumReferences
   :: forall b
    . Backend b
-  => HashMap (TableName b) (PrimaryKey (Column b), EnumValues)
+  => HashMap (TableName b) (PrimaryKey b (Column b), EnumValues)
   -> HashSet (ForeignKey b)
   -> HashMap (Column b) (NonEmpty (EnumReference b))
 resolveEnumReferences enumTables =
@@ -79,7 +79,7 @@ fetchAndValidateEnumValues
   :: (MonadIO m, MonadBaseControl IO m)
   => SourceConfig 'Postgres
   -> TableName 'Postgres
-  -> Maybe (PrimaryKey (RawColumnInfo 'Postgres))
+  -> Maybe (PrimaryKey b (RawColumnInfo 'Postgres))
   -> [RawColumnInfo 'Postgres]
   -> m (Either QErr EnumValues)
 fetchAndValidateEnumValues pgSourceConfig tableName maybePrimaryKey columnInfos = runExceptT $

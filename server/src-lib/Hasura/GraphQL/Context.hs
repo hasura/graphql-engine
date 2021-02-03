@@ -10,35 +10,38 @@ module Hasura.GraphQL.Context
   , traverseRemoteField
   , QueryDB(..)
   , ActionQuery(..)
-  , QueryRootField
+  , QueryRootField(..)
   , MutationDB(..)
   , ActionMutation(..)
-  , MutationRootField
-  , SubscriptionRootField
+  , MutationRootField(..)
+  , SubscriptionRootField(..)
   , SubscriptionRootFieldResolved
   , RemoteFieldG (..)
   , RemoteField
+  , rawQueryRootField
+  , rawMutationRootField
   ) where
 
 import           Hasura.Prelude
 
-import qualified Data.Aeson                          as J
-import qualified Language.GraphQL.Draft.Syntax       as G
+import qualified Data.Aeson                       as J
+import qualified Language.GraphQL.Draft.Syntax    as G
 
 import           Data.Aeson.TH
-import           Hasura.SQL.Backend
+import           Data.Typeable                    (Typeable)
 
-import qualified Hasura.Backends.Postgres.Connection as PG
-import qualified Hasura.Backends.Postgres.SQL.DML    as PG
-import qualified Hasura.RQL.IR.Delete                as IR
-import qualified Hasura.RQL.IR.Insert                as IR
-import qualified Hasura.RQL.IR.Select                as IR
-import qualified Hasura.RQL.IR.Update                as IR
-import qualified Hasura.RQL.Types.Action             as RQL
-import qualified Hasura.RQL.Types.Common             as RQL
-import qualified Hasura.RQL.Types.RemoteSchema       as RQL
+import qualified Hasura.Backends.Postgres.SQL.DML as PG
+import qualified Hasura.RQL.IR.Delete             as IR
+import qualified Hasura.RQL.IR.Insert             as IR
+import qualified Hasura.RQL.IR.Select             as IR
+import qualified Hasura.RQL.IR.Update             as IR
+import qualified Hasura.RQL.Types.Action          as RQL
+import qualified Hasura.RQL.Types.Common          as RQL
+import qualified Hasura.RQL.Types.RemoteSchema    as RQL
 
 import           Hasura.GraphQL.Parser
+import           Hasura.SQL.Backend
+
 
 -- | For storing both a normal GQLContext and one for the backend variant.
 -- Currently, this is to enable the backend variant to have certain insert
@@ -52,8 +55,8 @@ data RoleContext a
 $(deriveToJSON hasuraJSON ''RoleContext)
 
 data GQLContext = GQLContext
-  { gqlQueryParser    :: ParserFn (InsOrdHashMap G.Name (QueryRootField (UnpreparedValue 'Postgres)))
-  , gqlMutationParser :: Maybe (ParserFn (InsOrdHashMap G.Name (MutationRootField (UnpreparedValue 'Postgres))))
+  { gqlQueryParser    :: ParserFn (InsOrdHashMap G.Name (QueryRootField UnpreparedValue))
+  , gqlMutationParser :: Maybe (ParserFn (InsOrdHashMap G.Name (MutationRootField UnpreparedValue)))
   }
 
 instance J.ToJSON GQLContext where
@@ -63,39 +66,40 @@ type ParserFn a
   =  G.SelectionSet G.NoFragments Variable
   -> Either (NESeq ParseError) (a, QueryReusability)
 
-data RootField db remote action raw
-  = RFDB !RQL.SourceName !PG.PGExecCtx db
+data RootField b db remote action raw
+  = RFDB !RQL.SourceName (RQL.SourceConfig b) db
   | RFRemote remote
   | RFAction action
   | RFRaw raw
 
-traverseDB :: forall db db' remote action raw f
+traverseDB :: forall b db db' remote action raw f
         . Applicative f
        => (db -> f db')
-       -> RootField db remote action raw
-       -> f (RootField db' remote action raw)
+       -> RootField b db remote action raw
+       -> f (RootField b db' remote action raw)
 traverseDB f = \case
   RFDB s e x -> RFDB s e <$> f x
   RFRemote x -> pure $ RFRemote x
   RFAction x -> pure $ RFAction x
   RFRaw x    -> pure $ RFRaw x
 
-traverseAction :: forall db remote action action' raw f
+traverseAction :: forall b db remote action action' raw f
         . Applicative f
        => (action -> f action')
-       -> RootField db remote action raw
-       -> f (RootField db remote action' raw)
+       -> RootField b db remote action raw
+       -> f (RootField b db remote action' raw)
 traverseAction f = \case
   RFDB s e x -> pure $ RFDB s e x
   RFRemote x -> pure $ RFRemote x
   RFAction x -> RFAction <$> f x
   RFRaw x    -> pure $ RFRaw x
 
-traverseRemoteField :: forall db remote remote' action raw f
-        . Applicative f
-       => (remote -> f remote')
-       -> RootField db remote action raw
-       -> f (RootField db remote' action raw)
+traverseRemoteField
+  :: forall b db remote remote' action raw f
+   . Applicative f
+  => (remote -> f remote')
+  -> RootField b db remote action raw
+  -> f (RootField b db remote' action raw)
 traverseRemoteField f = \case
   RFDB s e x -> pure $ RFDB s e x
   RFRemote x -> RFRemote <$> f x
@@ -120,7 +124,27 @@ data RemoteFieldG var
 
 type RemoteField = RemoteFieldG RQL.RemoteSchemaVariable
 
-type QueryRootField v = RootField (QueryDB 'Postgres v) RemoteField (ActionQuery 'Postgres v) J.Value
+data QueryRootField v where
+  QueryRootField
+    :: forall b v
+     . (RQL.Backend b, Typeable v)
+    => RootField b (QueryDB b (v b)) RemoteField (ActionQuery 'Postgres {- FIXME -} (v 'Postgres)) J.Value
+    -> QueryRootField v
+
+data MutationRootField v where
+  MutationRootField
+    :: forall b v
+     . (RQL.Backend b, Typeable v)
+    => RootField b (MutationDB b (v b)) RemoteField (ActionMutation 'Postgres {- FIXME -} (v 'Postgres)) J.Value
+    -> MutationRootField v
+
+data SubscriptionRootField v where
+  SubscriptionRootField
+    :: forall b v
+     . (RQL.Backend b, Typeable v)
+    => RootField b (QueryDB b (v b)) Void Void Void
+    -> SubscriptionRootField v
+
 
 data MutationDB (b :: BackendType) v
   = MDBInsert (IR.AnnInsert   b v)
@@ -134,8 +158,16 @@ data ActionMutation (b :: BackendType) v
   = AMSync !(RQL.AnnActionExecution b v)
   | AMAsync !RQL.AnnActionMutationAsync
 
-type MutationRootField v =
-  RootField (MutationDB 'Postgres v) RemoteField (ActionMutation 'Postgres v) J.Value
 
-type SubscriptionRootField v = RootField (QueryDB 'Postgres v) Void Void Void
-type SubscriptionRootFieldResolved = RootField (QueryDB 'Postgres PG.SQLExp) Void Void Void
+-- TODO: remove this
+type SubscriptionRootFieldResolved = RootField 'Postgres (QueryDB 'Postgres PG.SQLExp) Void Void Void
+
+
+-- RFRaw is not tied to any backend, but a backend must be provided as
+-- a parameter to QueryRootField's constructor. We provide 'Postgres
+-- for historical reasons.
+rawQueryRootField :: Typeable v => J.Value -> QueryRootField v
+rawQueryRootField = QueryRootField @'Postgres . RFRaw
+
+rawMutationRootField :: Typeable v => J.Value -> MutationRootField v
+rawMutationRootField = MutationRootField @'Postgres . RFRaw

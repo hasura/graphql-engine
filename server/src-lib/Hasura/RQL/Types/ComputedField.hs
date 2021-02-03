@@ -98,7 +98,7 @@ $(deriveToJSON hasuraJSON ''ComputedFieldFunction)
 
 data ComputedFieldInfo (b :: BackendType)
   = ComputedFieldInfo
-  { _cfiXComputedFieldInfo :: (XComputedFieldInfo b)
+  { _cfiXComputedFieldInfo :: (XComputedField b)
   , _cfiName               :: !ComputedFieldName
   , _cfiFunction           :: !ComputedFieldFunction
   , _cfiReturnType         :: !(ComputedFieldReturn b)
@@ -106,7 +106,7 @@ data ComputedFieldInfo (b :: BackendType)
   } deriving (Generic)
 deriving instance (Backend b) => Eq (ComputedFieldInfo b)
 instance (Backend b) => Cacheable (ComputedFieldInfo b)
-instance Backend b => ToJSON (ComputedFieldInfo b) where
+instance (Backend b) => ToJSON (ComputedFieldInfo b) where
   -- spelling out the JSON instance in order to skip the Trees That Grow field
   toJSON (ComputedFieldInfo _ name func tp comment) =
     object ["name" .= name, "function" .= func, "return_type" .= tp, "comment" .= comment]

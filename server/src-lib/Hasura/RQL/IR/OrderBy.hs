@@ -71,8 +71,5 @@ instance (Backend b, Hashable a) => Hashable (OrderByItemG b a)
 
 type OrderByItem b = OrderByItemG b OrderByCol
 
-instance (Backend b, FromJSON a) => FromJSON (OrderByItemG b a) where
-  parseJSON = genericParseJSON hasuraJSON{omitNothingFields=True}
-
 instance (Backend b, ToJSON a) => ToJSON (OrderByItemG b a) where
   toJSON = genericToJSON hasuraJSON{omitNothingFields=True}

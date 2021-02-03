@@ -38,10 +38,10 @@ import qualified Hasura.Tracing                         as Tracing
 
 import           Hasura.Backends.Postgres.Connection
 import           Hasura.EncJSON
+import           Hasura.GraphQL.Execute.Remote
 import           Hasura.GraphQL.Parser                  hiding (field)
 import           Hasura.GraphQL.RemoteServer            (execRemoteGQ)
 import           Hasura.GraphQL.Transport.HTTP.Protocol
-import           Hasura.GraphQL.Execute.Remote
 import           Hasura.RQL.DML.Internal
 import           Hasura.RQL.IR.RemoteJoin
 import           Hasura.RQL.IR.Returning
@@ -169,9 +169,9 @@ transformAggregateSelect path sel = do
   let aggFields = _asnFields sel
   transformedFields <- forM aggFields $ \(fieldName, aggField) ->
     (fieldName,) <$> case aggField of
-      TAFAgg agg         -> pure $ TAFAgg agg
-      TAFNodes annFields -> TAFNodes <$> transformAnnFields (appendPath fieldName path) annFields
-      TAFExp t           -> pure $ TAFExp t
+      TAFAgg agg           -> pure $ TAFAgg agg
+      TAFNodes x annFields -> TAFNodes x <$> transformAnnFields (appendPath fieldName path) annFields
+      TAFExp t             -> pure $ TAFExp t
   pure sel{_asnFields = transformedFields}
 
 -- | Traverse through @'ConnectionSelect' and collect remote join fields (if any).
@@ -191,7 +191,7 @@ transformConnectionSelect path ConnectionSelect{..} = do
       ConnectionPageInfo p  -> pure $ ConnectionPageInfo p
       ConnectionEdges edges -> ConnectionEdges <$> transformEdges (appendPath fieldName path) edges
   let select = _csSelect{_asnFields = transformedFields}
-  pure $ ConnectionSelect _csPrimaryKeyColumns _csSplit _csSlice select
+  pure $ ConnectionSelect () _csPrimaryKeyColumns _csSplit _csSlice select
   where
     transformEdges edgePath edgeFields =
       forM edgeFields $ \(fieldName, edgeField) ->
@@ -226,7 +226,7 @@ getRemoteJoinsMutationOutput =
 transformAnnFields :: FieldPath -> AnnFields 'Postgres -> State (RemoteJoinMap 'Postgres) (AnnFields 'Postgres)
 transformAnnFields path fields = do
   let pgColumnFields = map fst $ getFields _AFColumn fields
-      remoteSelects = getFields _AFRemote fields
+      remoteSelects = getFields (_AFRemote . _2) fields
       remoteJoins = flip map remoteSelects $ \(fieldName, remoteSelect) ->
         let RemoteSelect argsMap selSet hasuraColumns remoteFields rsi = remoteSelect
             hasuraColumnL = toList hasuraColumns
@@ -237,7 +237,7 @@ transformAnnFields path fields = do
   transformedFields <- forM fields $ \(fieldName, field') -> do
     let fieldPath = appendPath fieldName path
     (fieldName,) <$> case field' of
-      AFNodeId qt pkeys -> pure $ AFNodeId qt pkeys
+      AFNodeId x qt pkeys -> pure $ AFNodeId x qt pkeys
       AFColumn c -> pure $ AFColumn c
       AFObjectRelation annRel ->
         AFObjectRelation <$> transformAnnRelation annRel (transformObjectSelect fieldPath)
@@ -247,11 +247,11 @@ transformAnnFields path fields = do
         AFArrayRelation . ASAggregate <$> transformAnnAggregateRelation fieldPath aggRel
       AFArrayRelation (ASConnection annRel) ->
         AFArrayRelation . ASConnection <$> transformArrayConnection fieldPath annRel
-      AFComputedField computedField ->
-        AFComputedField <$> case computedField of
+      AFComputedField x computedField ->
+        AFComputedField x <$> case computedField of
           CFSScalar _         -> pure computedField
           CFSTable jas annSel -> CFSTable jas <$> transformSelect fieldPath annSel
-      AFRemote rs -> pure $ AFRemote rs
+      AFRemote x rs -> pure $ AFRemote x rs
       AFExpression t     -> pure $ AFExpression t
 
   case NE.nonEmpty remoteJoins of

@@ -48,6 +48,7 @@ actionExecute
      , MonadTableInfo r m
      , MonadRole r m
      , Has QueryContext r
+     , Has (BackendExtension 'Postgres) r
      )
   => NonObjectTypeMap
   -> ActionInfo 'Postgres
@@ -120,6 +121,7 @@ actionAsyncQuery
      , MonadTableInfo r m
      , MonadRole r m
      , Has QueryContext r
+     , Has (BackendExtension 'Postgres) r
      )
   => ActionInfo 'Postgres
   -> m (Maybe (FieldParser n (AnnActionAsyncQuery 'Postgres (UnpreparedValue 'Postgres))))
@@ -182,6 +184,7 @@ actionOutputFields
      , MonadTableInfo r m
      , MonadRole r m
      , Has QueryContext r
+     , Has (BackendExtension 'Postgres) r
      )
   => AnnotatedObjectType 'Postgres
   -> m (Parser 'Output n (RQL.AnnFieldsG 'Postgres (UnpreparedValue 'Postgres)))

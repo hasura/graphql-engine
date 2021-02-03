@@ -41,6 +41,7 @@ import qualified PostgreSQL.Binary.Encoding                  as PE
 import           Control.Lens
 import           Control.Monad.Trans.Control                 (MonadBaseControl)
 import           Data.Semigroup.Generic
+import           Data.Typeable                               (cast)
 import           Data.UUID                                   (UUID)
 
 import qualified Hasura.Backends.Postgres.Execute.RemoteJoin as RR
@@ -348,11 +349,12 @@ buildLiveQueryPlan
      )
   => PGExecCtx
   -> UserInfo
-  -> InsOrdHashMap G.Name (SubscriptionRootField (UnpreparedValue 'Postgres))
+  -> InsOrdHashMap G.Name (SubscriptionRootField UnpreparedValue)
   -> m (LiveQueryPlan, Maybe ReusableLiveQueryPlan)
 buildLiveQueryPlan pgExecCtx userInfo unpreparedAST = do
+  let toPG (SubscriptionRootField rf) = cast rf
   (preparedAST, QueryParametersInfo{..}) <- flip runStateT mempty $
-    for unpreparedAST \unpreparedQuery -> do
+    for (OMap.mapMaybe toPG unpreparedAST) \unpreparedQuery -> do
       resolvedRootField <- traverseQueryRootField resolveMultiplexedValue unpreparedQuery
       case resolvedRootField of
         RFDB _ _ qDB   -> do

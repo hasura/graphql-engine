@@ -1,11 +1,23 @@
 -- | Postgres-specific schema combinators
 module Hasura.GraphQL.Schema.Postgres
-  ( columnParser
+  ( buildTableQueryFields
+  , buildTableRelayQueryFields
+  , buildTableInsertMutationFields
+  , buildTableUpdateMutationFields
+  , buildTableDeleteMutationFields
+  , buildFunctionQueryFields
+  , buildFunctionRelayQueryFields
+  , buildFunctionMutationFields
+  , buildActionQueryFields
+  , buildActionMutationFields
+  , buildActionSubscriptionFields
+  , columnParser
   , jsonPathArg
   , orderByOperators
   , comparisonExps
   , offsetParser
   , mkCountType
+  , tableDistinctOn
   , updateOperators
   ) where
 
@@ -28,20 +40,267 @@ import qualified Hasura.RQL.IR.Select                  as IR
 import qualified Hasura.RQL.IR.Update                  as IR
 
 import           Hasura.Backends.Postgres.SQL.DML      as PG hiding (CountType)
-import           Hasura.Backends.Postgres.SQL.Types    as PG hiding (TableName)
+import           Hasura.Backends.Postgres.SQL.Types    as PG hiding (FunctionName, TableName)
 import           Hasura.Backends.Postgres.SQL.Value    as PG
-import           Hasura.GraphQL.Parser                 (Definition, InputFieldsParser, Kind (..),
-                                                        Opaque, Parser, UnpreparedValue (..),
-                                                        Variable (..), mkParameter)
-import           Hasura.GraphQL.Parser.Class
-import           Hasura.GraphQL.Parser.Internal.Parser (Parser (..), peelVariable, typeCheck,
-                                                        typeMismatch, valueToJSON)
-import           Hasura.GraphQL.Schema.Backend         (BackendSchema, ComparisonExp)
+import           Hasura.GraphQL.Context
+import           Hasura.GraphQL.Parser                 hiding (EnumValueInfo, field)
+import           Hasura.GraphQL.Parser.Internal.Parser hiding (field)
+import           Hasura.GraphQL.Schema.Action
+import           Hasura.GraphQL.Schema.Backend         (BackendSchema, ComparisonExp,
+                                                        MonadBuildSchema)
 import           Hasura.GraphQL.Schema.Common
+import           Hasura.GraphQL.Schema.Mutation
+import           Hasura.GraphQL.Schema.Select
 import           Hasura.GraphQL.Schema.Table
 import           Hasura.RQL.Types
 import           Hasura.SQL.Types
 
+
+----------------------------------------------------------------
+-- Top level parsers
+
+-- TODO:
+-- Once root fields are changed to only require the source config and not
+-- something pg-specific, most of those functions can be made generic, and
+-- therefore be the default implementation for BackendSchema, which would avoid
+-- having duplicate code for different backends.
+-- A backend would still be able to specify its own implementation, if it needs
+-- to only support a subset of features.
+
+buildTableQueryFields
+  :: MonadBuildSchema 'Postgres r m n
+  => SourceName
+  -> SourceConfig 'Postgres
+  -> TableName    'Postgres
+  -> TableInfo    'Postgres
+  -> G.Name
+  -> SelPermInfo  'Postgres
+  -> m [FieldParser n (QueryRootField UnpreparedValue)]
+buildTableQueryFields sourceName sourceInfo tableName tableInfo gqlName selPerms = do
+  let
+    mkRF = QueryRootField . RFDB sourceName sourceInfo
+    customRootFields = _tcCustomRootFields $ _tciCustomConfig $ _tiCoreInfo tableInfo
+    -- select table
+    selectName = fromMaybe gqlName $ _tcrfSelect customRootFields
+    selectDesc = Just $ G.Description $ "fetch data from the table: " <>> tableName
+    -- select table by pk
+    selectPKName = fromMaybe (gqlName <> $$(G.litName "_by_pk")) $ _tcrfSelectByPk customRootFields
+    selectPKDesc = Just $ G.Description $ "fetch data from the table: " <> tableName <<> " using primary key columns"
+    -- select table aggregate
+    selectAggName = fromMaybe (gqlName <> $$(G.litName "_aggregate")) $ _tcrfSelectAggregate customRootFields
+    selectAggDesc = Just $ G.Description $ "fetch aggregated fields from the table: " <>> tableName
+  catMaybes <$> sequenceA
+    [ requiredFieldParser (mkRF . QDBMultipleRows) $ selectTable          tableName selectName    selectDesc    selPerms
+    , optionalFieldParser (mkRF . QDBSingleRow)    $ selectTableByPk      tableName selectPKName  selectPKDesc  selPerms
+    , optionalFieldParser (mkRF . QDBAggregation)  $ selectTableAggregate tableName selectAggName selectAggDesc selPerms
+    ]
+
+buildTableRelayQueryFields
+  :: MonadBuildSchema 'Postgres r m n
+  => SourceName
+  -> SourceConfig 'Postgres
+  -> TableName    'Postgres
+  -> TableInfo    'Postgres
+  -> G.Name
+  -> NESeq (ColumnInfo 'Postgres)
+  -> SelPermInfo  'Postgres
+  -> m (Maybe (FieldParser n (QueryRootField UnpreparedValue)))
+buildTableRelayQueryFields sourceName sourceInfo tableName tableInfo gqlName pkeyColumns selPerms = do
+  let
+    mkRF = QueryRootField . RFDB sourceName sourceInfo
+    fieldName = gqlName <> $$(G.litName "_connection")
+    fieldDesc = Just $ G.Description $ "fetch data from the table: " <>> tableName
+  optionalFieldParser (mkRF . QDBConnection) $ selectTableConnection tableName fieldName fieldDesc pkeyColumns selPerms
+
+buildTableInsertMutationFields
+  :: MonadBuildSchema 'Postgres r m n
+  => SourceName
+  -> SourceConfig 'Postgres
+  -> TableName 'Postgres
+  -> TableInfo 'Postgres
+  -> G.Name
+  -> InsPermInfo 'Postgres
+  -> Maybe (SelPermInfo 'Postgres)
+  -> Maybe (UpdPermInfo 'Postgres)
+  -> m [FieldParser n (MutationRootField UnpreparedValue)]
+buildTableInsertMutationFields sourceName sourceInfo tableName tableInfo gqlName insPerms mSelPerms mUpdPerms = do
+  let
+    mkRF = MutationRootField . RFDB sourceName sourceInfo
+    customRootFields = _tcCustomRootFields $ _tciCustomConfig $ _tiCoreInfo tableInfo
+    -- insert into table
+    insertName = fromMaybe ($$(G.litName "insert_") <> gqlName) $ _tcrfInsert customRootFields
+    insertDesc = Just $ G.Description $ "insert data into the table: " <>> tableName
+    -- insert one into table
+    insertOneName = fromMaybe ($$(G.litName "insert_") <> gqlName <> $$(G.litName "_one")) $ _tcrfInsertOne customRootFields
+    insertOneDesc = Just $ G.Description $ "insert a single row into the table: " <>> tableName
+  insert <- insertIntoTable tableName insertName insertDesc insPerms mSelPerms mUpdPerms
+  -- Select permissions are required for insertOne: the selection set is the
+  -- same as a select on that table, and it therefore can't be populated if the
+  -- user doesn't have select permissions.
+  insertOne <- for mSelPerms \selPerms ->
+    insertOneIntoTable tableName insertOneName insertOneDesc insPerms selPerms mUpdPerms
+  pure $ fmap (mkRF . MDBInsert) <$> insert : maybeToList insertOne
+
+buildTableUpdateMutationFields
+  :: MonadBuildSchema 'Postgres r m n
+  => SourceName
+  -> SourceConfig 'Postgres
+  -> TableName 'Postgres
+  -> TableInfo 'Postgres
+  -> G.Name
+  -> UpdPermInfo 'Postgres
+  -> Maybe (SelPermInfo 'Postgres)
+  -> m [FieldParser n (MutationRootField UnpreparedValue)]
+buildTableUpdateMutationFields sourceName sourceInfo tableName tableInfo gqlName updPerms mSelPerms = do
+  let
+    mkRF = MutationRootField . RFDB sourceName sourceInfo
+    customRootFields = _tcCustomRootFields $ _tciCustomConfig $ _tiCoreInfo tableInfo
+    -- update table
+    updateName = fromMaybe ($$(G.litName "update_") <> gqlName) $ _tcrfUpdate customRootFields
+    updateDesc = Just $ G.Description $ "update data of the table: " <>> tableName
+    -- update table by pk
+    updatePKName = fromMaybe ($$(G.litName "update_") <> gqlName <> $$(G.litName "_by_pk")) $ _tcrfUpdateByPk customRootFields
+    updatePKDesc = Just $ G.Description $ "update single row of the table: " <>> tableName
+  update <- updateTable tableName updateName updateDesc updPerms mSelPerms
+  -- Primary keys can only be tested in the `where` clause if the user has
+  -- select permissions for them, which at the very least requires select
+  -- permissions.
+  updateByPk <- fmap join $ for mSelPerms $ updateTableByPk tableName updatePKName updatePKDesc updPerms
+  pure $ fmap (mkRF . MDBUpdate) <$> catMaybes [update, updateByPk]
+
+buildTableDeleteMutationFields
+  :: MonadBuildSchema 'Postgres r m n
+  => SourceName
+  -> SourceConfig 'Postgres
+  -> TableName 'Postgres
+  -> TableInfo 'Postgres
+  -> G.Name
+  -> DelPermInfo 'Postgres
+  -> Maybe (SelPermInfo 'Postgres)
+  -> m [FieldParser n (MutationRootField UnpreparedValue)]
+buildTableDeleteMutationFields sourceName sourceInfo tableName tableInfo gqlName delPerms mSelPerms = do
+  let
+    mkRF = MutationRootField . RFDB sourceName sourceInfo
+    customRootFields = _tcCustomRootFields $ _tciCustomConfig $ _tiCoreInfo tableInfo
+    -- delete from table
+    deleteName = fromMaybe ($$(G.litName "delete_") <> gqlName) $ _tcrfDelete customRootFields
+    deleteDesc = Just $ G.Description $ "delete data from the table: " <>> tableName
+    -- delete from table by pk
+    deletePKName = fromMaybe ($$(G.litName "delete_") <> gqlName <> $$(G.litName "_by_pk")) $ _tcrfDeleteByPk customRootFields
+    deletePKDesc = Just $ G.Description $ "delete single row from the table: " <>> tableName
+  delete <- deleteFromTable tableName deleteName deleteDesc delPerms mSelPerms
+  -- Primary keys can only be tested in the `where` clause if the user has
+  -- select permissions for them, which at the very least requires select
+  -- permissions.
+  deleteByPk <- fmap join $ for mSelPerms $ deleteFromTableByPk tableName deletePKName deletePKDesc delPerms
+  pure $ fmap (mkRF . MDBDelete) <$> delete : maybeToList deleteByPk
+
+buildFunctionQueryFields
+  :: MonadBuildSchema 'Postgres r m n
+  => SourceName
+  -> SourceConfig 'Postgres
+  -> FunctionName 'Postgres
+  -> FunctionInfo 'Postgres
+  -> TableName    'Postgres
+  -> SelPermInfo  'Postgres
+  -> m [FieldParser n (QueryRootField UnpreparedValue)]
+buildFunctionQueryFields sourceName sourceInfo functionName functionInfo tableName selPerms = do
+  funcName <- functionGraphQLName @'Postgres functionName `onLeft` throwError
+  let
+    mkRF = QueryRootField . RFDB sourceName sourceInfo
+    -- select function
+    funcDesc = Just $ G.Description $ "execute function " <> functionName <<> " which returns " <>> tableName
+    -- select function agg
+    funcAggName = funcName <> $$(G.litName "_aggregate")
+    funcAggDesc = Just $ G.Description $ "execute function " <> functionName <<> " and query aggregates on result of table type " <>> tableName
+    queryResultType =
+      case _fiJsonAggSelect functionInfo of
+        JASMultipleRows -> QDBMultipleRows
+        JASSingleObject -> QDBSingleRow
+  catMaybes <$> sequenceA
+    [ requiredFieldParser (mkRF . queryResultType) $ selectFunction          functionInfo funcName    funcDesc    selPerms
+    , optionalFieldParser (mkRF . QDBAggregation)  $ selectFunctionAggregate functionInfo funcAggName funcAggDesc selPerms
+    ]
+
+buildFunctionRelayQueryFields
+  :: MonadBuildSchema 'Postgres r m n
+  => SourceName
+  -> SourceConfig 'Postgres
+  -> FunctionName 'Postgres
+  -> FunctionInfo 'Postgres
+  -> TableName    'Postgres
+  -> NESeq (ColumnInfo 'Postgres)
+  -> SelPermInfo  'Postgres
+  -> m (Maybe (FieldParser n (QueryRootField UnpreparedValue)))
+buildFunctionRelayQueryFields sourceName sourceInfo functionName functionInfo tableName pkeyColumns selPerms = do
+  funcName <- functionGraphQLName @'Postgres functionName `onLeft` throwError
+  let
+    mkRF = QueryRootField . RFDB sourceName sourceInfo
+    fieldName = funcName <> $$(G.litName "_connection")
+    fieldDesc = Just $ G.Description $ "execute function " <> functionName <<> " which returns " <>> tableName
+  optionalFieldParser (mkRF . QDBConnection) $ selectFunctionConnection functionInfo fieldName fieldDesc pkeyColumns selPerms
+
+buildFunctionMutationFields
+  :: MonadBuildSchema 'Postgres r m n
+  => SourceName
+  -> SourceConfig 'Postgres
+  -> FunctionName 'Postgres
+  -> FunctionInfo 'Postgres
+  -> TableName    'Postgres
+  -> SelPermInfo  'Postgres
+  -> m [FieldParser n (MutationRootField UnpreparedValue)]
+buildFunctionMutationFields sourceName sourceInfo functionName functionInfo tableName selPerms = do
+  funcName <- functionGraphQLName @'Postgres functionName `onLeft` throwError
+  let
+    mkRF = MutationRootField . RFDB sourceName sourceInfo
+    funcDesc = Just $ G.Description $ "execute VOLATILE function " <> functionName <<> " which returns " <>> tableName
+    jsonAggSelect = _fiJsonAggSelect functionInfo
+  catMaybes <$> sequenceA
+    [ requiredFieldParser (mkRF . MDBFunction jsonAggSelect) $ selectFunction functionInfo funcName funcDesc selPerms
+      -- TODO: do we want aggregate mutation functions?
+    ]
+
+buildActionQueryFields
+  :: MonadBuildSchema 'Postgres r m n
+  => NonObjectTypeMap
+  -> ActionInfo 'Postgres
+  -> m [FieldParser n (QueryRootField UnpreparedValue)]
+buildActionQueryFields nonObjectCustomTypes actionInfo =
+  maybeToList <$> case _adType (_aiDefinition actionInfo) of
+    ActionQuery                       ->
+      fmap (fmap (QueryRootField @'Postgres . RFAction . AQQuery)) <$> actionExecute nonObjectCustomTypes actionInfo
+    ActionMutation ActionSynchronous  -> pure Nothing
+    ActionMutation ActionAsynchronous ->
+      fmap (fmap (QueryRootField @'Postgres . RFAction . AQAsync)) <$> actionAsyncQuery actionInfo
+
+buildActionMutationFields
+  :: MonadBuildSchema 'Postgres r m n
+  => NonObjectTypeMap
+  -> ActionInfo 'Postgres
+  -> m [FieldParser n (MutationRootField UnpreparedValue)]
+buildActionMutationFields nonObjectCustomTypes actionInfo =
+  maybeToList <$> case _adType (_aiDefinition actionInfo) of
+    ActionQuery -> pure Nothing
+    ActionMutation ActionSynchronous ->
+      fmap (fmap (MutationRootField @'Postgres . RFAction . AMSync)) <$> actionExecute nonObjectCustomTypes actionInfo
+    ActionMutation ActionAsynchronous ->
+      fmap (fmap (MutationRootField @'Postgres . RFAction . AMAsync)) <$> actionAsyncMutation nonObjectCustomTypes actionInfo
+
+buildActionSubscriptionFields
+  :: MonadBuildSchema 'Postgres r m n
+  => ActionInfo 'Postgres
+  -> m [FieldParser n (QueryRootField UnpreparedValue)]
+buildActionSubscriptionFields actionInfo =
+  maybeToList <$> case _adType (_aiDefinition actionInfo) of
+    ActionQuery                       -> pure Nothing
+    ActionMutation ActionSynchronous  -> pure Nothing
+    ActionMutation ActionAsynchronous ->
+      fmap (fmap (QueryRootField @'Postgres . RFAction . AQAsync)) <$> actionAsyncQuery actionInfo
+
+
+
+----------------------------------------------------------------
+-- Individual components
 
 columnParser
   :: (MonadSchema n m, MonadError QErr m)
@@ -62,10 +321,10 @@ columnParser columnType (G.Nullability isNullable) =
       PGJSON    -> pure (PGValJSON  . Q.JSON  <$> P.json)
       PGJSONB   -> pure (PGValJSONB . Q.JSONB <$> P.jsonb)
       -- For all other scalars, we convert the value to JSON and use the
-      -- FromJSON instance. The major upside is that this avoids having to wri`te
-      -- a new parsers for each custom type: if the JSON parser is sound, so
-      -- will this one, and it avoids the risk of having two separate ways of
-      -- parsing a value in the codebase, which could lead to inconsistencies.
+      -- FromJSON instance. The major upside is that this avoids having to write
+      -- new parsers for each custom type: if the JSON parser is sound, so will
+      -- this one, and it avoids the risk of having two separate ways of parsing
+      -- a value in the codebase, which could lead to inconsistencies.
       _  -> do
         name <- P.mkScalarTypeName scalarType
         let schemaType = P.NonNullable $ P.TNamed $ P.mkDefinition name Nothing P.TIScalar
@@ -381,6 +640,22 @@ mkCountType _           Nothing     = PG.CTStar
 mkCountType (Just True) (Just cols) = PG.CTDistinct cols
 mkCountType _           (Just cols) = PG.CTSimple cols
 
+-- | Argument to distinct select on columns returned from table selection
+-- > distinct_on: [table_select_column!]
+tableDistinctOn
+  :: forall m n r. (BackendSchema 'Postgres, MonadSchema n m, MonadTableInfo r m, MonadRole r m)
+  => TableName 'Postgres
+  -> SelPermInfo 'Postgres
+  -> m (InputFieldsParser n (Maybe (XDistinct 'Postgres, NonEmpty (Column 'Postgres))))
+tableDistinctOn table selectPermissions = do
+  columnsEnum   <- tableSelectColumnsEnum table selectPermissions
+  pure $ do
+    maybeDistinctOnColumns <- join.join <$> for columnsEnum
+      (P.fieldOptional distinctOnName distinctOnDesc . P.nullable . P.list)
+    pure $ maybeDistinctOnColumns >>= NE.nonEmpty <&> ((),)
+  where
+    distinctOnName = $$(G.litName "distinct_on")
+    distinctOnDesc = Just $ G.Description "distinct select on columns"
 
 -- | Various update operators
 updateOperators

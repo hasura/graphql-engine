@@ -15,8 +15,8 @@ module Data.Text.Extended
 
 import           Hasura.Prelude
 
-import qualified Language.GraphQL.Draft.Syntax  as G
 import qualified Language.GraphQL.Draft.Printer as G
+import qualified Language.GraphQL.Draft.Syntax  as G
 import qualified Text.Builder                   as TB
 
 import           Data.Text                      as DT
@@ -33,6 +33,9 @@ instance ToTxt G.Name where
   toTxt = G.unName
 
 deriving instance ToTxt G.EnumValue
+
+instance ToTxt Void where
+  toTxt = absurd
 
 instance ToTxt (G.Value Void) where
   toTxt = TB.run . G.value
