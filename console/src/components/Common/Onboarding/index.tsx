@@ -65,13 +65,13 @@ const PopupLink = ({ link, index, videoId, title }: PopupLinkProps) => {
 interface OnboardingProps {
   dispatch: Dispatch;
   console_opts: ReduxState['telemetry']['console_opts'];
-  isMetadataEmpty: boolean;
+  shouldShowOnboarding: boolean;
 }
 
 const Onboarding: React.FC<OnboardingProps> = ({
   dispatch,
   console_opts,
-  isMetadataEmpty,
+  shouldShowOnboarding: isMetadataEmpty,
 }) => {
   const [visible, setVisible] = React.useState(true);
 

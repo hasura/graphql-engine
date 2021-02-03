@@ -39,7 +39,7 @@ export {
   changeRequestHeader,
   removeRequestHeader,
 } from '../src/components/Services/ApiExplorer/Actions';
-export { filterQueryScss, tableScss, onboardingScss };
+export { filterQueryScss, tableScss };
 export * from '../src/components/Common';
 export { loadConsoleOpts } from '../src/telemetry/Actions';
 export * from '../src/telemetry';
