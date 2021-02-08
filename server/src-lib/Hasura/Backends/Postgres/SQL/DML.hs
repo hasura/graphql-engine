@@ -422,9 +422,8 @@ mkSQLOpExp
   -> SQLExp -- result
 mkSQLOpExp op lhs rhs = SEOpApp op [lhs, rhs]
 
-mkColDefValMap :: [PGCol] -> HM.HashMap PGCol SQLExp
-mkColDefValMap cols =
-  HM.fromList $ zip cols (repeat $ SEUnsafe "DEFAULT")
+columnDefaultValue :: SQLExp
+columnDefaultValue = SEUnsafe "DEFAULT"
 
 handleIfNull :: SQLExp -> SQLExp -> SQLExp
 handleIfNull l e = SEFnApp "coalesce" [e, l] Nothing

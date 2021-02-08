@@ -163,10 +163,11 @@ class
   , ToJSONKey (FunctionName b)
   , ToJSONKey (ScalarType b)
   , ToJSONKey (TableName b)
-  , ToTxt (Column b)
-  , ToTxt (FunctionName b)
-  , ToTxt (ScalarType b)
   , ToTxt (TableName b)
+  , ToTxt (FunctionName b)
+  , ToTxt (ConstraintName b)
+  , ToTxt (Column b)
+  , ToTxt (ScalarType b)
   ) => Backend (b :: BackendType) where
   -- types
   type SourceConfig    b = sc | sc -> b

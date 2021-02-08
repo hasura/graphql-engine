@@ -193,6 +193,9 @@ class Backend b => BackendSchema (b :: BackendType) where
     => RemoteFieldInfo b
     -> m (Maybe [FieldParser n (AnnotatedField b)])
 
+  -- SQL literals
+  columnDefaultValue :: Column b -> SQLExpression b
+
 type ComparisonExp b = OpExpG b (UnpreparedValue b)
 
 data BackendExtension b = BackendExtension

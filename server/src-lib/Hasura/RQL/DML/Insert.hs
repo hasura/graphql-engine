@@ -166,8 +166,7 @@ convInsertQuery objsParser sessVarBldr prepFn (InsertQuery tableName _ val oC mR
 
   let mutOutput = mkDefaultMutFlds mAnnRetCols
 
-  let defInsVals = S.mkColDefValMap $
-                   map pgiColumn $ getCols fieldInfoMap
+  let defInsVals = HM.fromList [(column, S.columnDefaultValue) | column <- pgiColumn <$> getCols fieldInfoMap]
       allCols    = getCols fieldInfoMap
       insCols    = HM.keys defInsVals
 

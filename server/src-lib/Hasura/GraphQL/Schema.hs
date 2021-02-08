@@ -19,6 +19,7 @@ import           Control.Monad.Unique
 import           Data.Has
 import           Data.List.Extended                    (duplicates)
 
+import qualified Hasura.Backends.Postgres.SQL.DML      as PG
 import qualified Hasura.Backends.Postgres.SQL.Types    as PG
 import qualified Hasura.GraphQL.Parser                 as P
 import qualified Hasura.GraphQL.Schema.Postgres        as PGS
@@ -79,6 +80,8 @@ instance BackendSchema 'Postgres where
   node                      = nodePG
   tableDistinctOn           = PGS.tableDistinctOn
   remoteRelationshipField   = remoteRelationshipFieldPG
+  -- SQL literals
+  columnDefaultValue = const PG.columnDefaultValue
 
 -- | Whether the request is sent with `x-hasura-use-backend-only-permissions` set to `true`.
 data Scenario = Backend | Frontend deriving (Enum, Show, Eq)
