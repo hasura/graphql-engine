@@ -193,6 +193,7 @@ class
   type XNodesAgg       b :: Type
   type XDistinct       b :: Type
   -- functions on types
+  backendTag :: BackendTag b
   functionArgScalarType :: FunctionArgType b -> ScalarType b
   isComparableType      :: ScalarType b -> Bool
   isNumType             :: ScalarType b -> Bool
@@ -223,6 +224,7 @@ instance Backend 'Postgres where
   type XRelay          'Postgres = ()
   type XNodesAgg       'Postgres = ()
   type XDistinct       'Postgres = ()
+  backendTag            = PostgresTag
   functionArgScalarType = PG._qptName
   isComparableType      = PG.isComparableType
   isNumType             = PG.isNumType

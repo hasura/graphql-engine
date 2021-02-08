@@ -8,9 +8,7 @@ import qualified Language.GraphQL.Draft.Syntax as G
 
 import           Data.Aeson
 import           Data.Has
-import           Data.Typeable                 (cast)
 import           Language.GraphQL.Draft.Syntax (Nullability)
-import           Language.Haskell.TH
 
 import qualified Hasura.RQL.IR.Select          as IR
 import qualified Hasura.RQL.IR.Update          as IR
@@ -202,5 +200,3 @@ data BackendExtension b = BackendExtension
   { backendRelay    :: Maybe (XRelay b)
   , backendNodesAgg :: Maybe (XNodesAgg b)
   }
-
-$(mkBackendDispatch (mkName "withBackendSchema") ''BackendSchema $ \b -> [t| SourceInfo $b |])

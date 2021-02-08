@@ -212,8 +212,9 @@ buildRoleContext (SQLGenCtx stringifyNum, queryType, functionPermsCtx) sources
             <$> buildQueryFields sourceName sourceConfig validTables validFunctions
             <*> buildMutationFields Frontend sourceName sourceConfig validTables validFunctions
             <*> buildMutationFields Backend  sourceName sourceConfig validTables validFunctions
+      buildBackendSource = withBackendSchema buildSource
 
-  fieldsList <- for (toList sources) \(BackendSourceInfo sourceInfo) -> withBackendSchema sourceInfo buildSource
+  fieldsList <- traverse buildBackendSource $ toList sources
   let (queryFields, mutationFrontendFields, mutationBackendFields) = mconcat fieldsList
 
   -- It's okay to run the rest of this while assuming that the backend is 'Postgres:
@@ -279,8 +280,9 @@ buildRelayRoleContext (SQLGenCtx stringifyNum, queryType, functionPermsCtx) sour
           <$> buildRelayQueryFields sourceName sourceConfig validTables validFunctions
           <*> buildMutationFields Frontend sourceName sourceConfig validTables validFunctions
           <*> buildMutationFields Backend sourceName sourceConfig validTables validFunctions
+      buildBackendSource = withBackendSchema buildSource
 
-  fieldsList <- for (toList sources) \(BackendSourceInfo sourceInfo) -> withBackendSchema sourceInfo buildSource
+  fieldsList <- traverse buildBackendSource $ toList sources
 
   -- It's okay to run the rest of this while assuming that the backend is 'Postgres:
   -- the only remaining parsers are for actions, that are postgres specific, or for
@@ -334,8 +336,9 @@ buildFullestDBSchema queryContext sources allActionInfos nonObjectCustomTypes = 
           (,)
             <$> buildQueryFields sourceName sourceConfig validTables validFunctions
             <*> buildMutationFields Frontend sourceName sourceConfig validTables validFunctions
+      buildBackendSource = withBackendSchema buildSource
 
-  fieldsList <- for (toList sources) \(BackendSourceInfo sourceInfo) -> withBackendSchema sourceInfo buildSource
+  fieldsList <- traverse buildBackendSource $ toList sources
   let (queryFields, mutationFrontendFields) = mconcat fieldsList
 
   -- It's okay to run the rest of this while assuming that the backend is 'Postgres:
@@ -405,7 +408,7 @@ buildRoleBasedRemoteSchemaParser role remoteSchemaCache = do
         (queryParsers, mutationParsers, subscriptionParsers) <-
              P.runSchemaT @m @(P.ParseT Identity) $ buildRemoteParser introspectRes remoteSchemaInfo
         let parsedIntrospection = ParsedIntrospection queryParsers mutationParsers subscriptionParsers
-        return $ (remoteSchemaName, (introspectRes, parsedIntrospection))
+        return (remoteSchemaName, (introspectRes, parsedIntrospection))
   return $ catMaybes remoteSchemaPerms
 
 -- checks that there are no conflicting root field names between remotes and
@@ -472,7 +475,7 @@ buildQueryFields sourceName sourceConfig tables (takeExposedAs FEAQuery -> funct
   functionSelectExpParsers <- for (Map.toList functions) \(functionName, functionInfo) -> runMaybeT $ do
     guard
       $ roleName == adminRoleName
-      || roleName `elem` (_fiPermissions functionInfo)
+      || roleName `elem` _fiPermissions functionInfo
       || functionPermsCtx == FunctionPermissionsInferred
     let targetTable = _fiReturnType functionInfo
     selectPerms <- MaybeT $ tableSelectPermissions targetTable
@@ -543,7 +546,7 @@ buildMutationFields scenario sourceName sourceConfig tables (takeExposedAs FEAMu
     guard $
       -- when function permissions are inferred, we don't expose the
       -- mutation functions for non-admin roles. See Note [Function Permissions]
-      roleName == adminRoleName || roleName `elem` (_fiPermissions functionInfo)
+      roleName == adminRoleName || roleName `elem` _fiPermissions functionInfo
     lift $ buildFunctionMutationFields sourceName sourceConfig functionName functionInfo targetTable selectPerms
   pure $ concat $ catMaybes $ tableMutations <> functionMutations
 
@@ -725,3 +728,7 @@ runMonadSchema
   -> m a
 runMonadSchema roleName queryContext pgSources extensions m =
   flip runReaderT (roleName, pgSources, queryContext, extensions) $ P.runSchemaT m
+
+withBackendSchema :: (forall b. BackendSchema b => SourceInfo b -> r) -> BackendSourceInfo -> r
+withBackendSchema f (BackendSourceInfo (bsi :: SourceInfo b)) = case backendTag @b of
+  PostgresTag -> f bsi

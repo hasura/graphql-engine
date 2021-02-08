@@ -36,7 +36,7 @@ instance Backend b => ToJSON (SourceInfo b) where
 
 data BackendSourceInfo =
   forall b. Backend b => BackendSourceInfo (SourceInfo b)
-instance ToJSON (BackendSourceInfo) where
+instance ToJSON BackendSourceInfo where
   toJSON (BackendSourceInfo si) = toJSON si
 
 type SourceCache = HashMap SourceName BackendSourceInfo
