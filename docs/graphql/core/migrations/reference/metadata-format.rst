@@ -15,8 +15,8 @@ Metadata format reference
 Introduction
 ------------
 
-With ``config v2``, the metadata that is exported from the server is a directory
-of multiple files.
+With ``config v2``, the metadata that is exported from the server by the CLI is a
+directory of multiple files.
 
 .. note::
 
@@ -31,6 +31,10 @@ The following files will be generated in the ``metadata/`` directory of your pro
   :backlinks: none
   :depth: 1
   :local:
+
+.. note::
+
+  The output of the :ref:`export_metadata <export_metadata>` API is a JSON version of the metadata files.
 
 actions.graphql
 ^^^^^^^^^^^^^^^
