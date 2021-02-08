@@ -72,7 +72,7 @@ realtime monitoring, caching, tracing, and rate-limiting. It supports both new a
   read-replicas
   response-caching
   tracing
-  payment-methods
+  Billing <billing/index>
   hasurapro-cli/index
   api-reference
   glossary

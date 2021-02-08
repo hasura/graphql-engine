@@ -22,12 +22,12 @@ Add a new card
 
 Go to the billing section, and click on ``View Cards``. 
 
-.. thumbnail:: /img/graphql/cloud/payment/manage_cards.png
+.. thumbnail:: /img/graphql/cloud/billing/manage_cards.png
    :alt: view saved cards
 
 Click the ``+`` sign to add a new card. 
 
-.. thumbnail:: /img/graphql/cloud/payment/add_new_card.png
+.. thumbnail:: /img/graphql/cloud/billing/add_new_card.png
    :alt: add a new card
    :width: 437px
 
@@ -40,11 +40,11 @@ The default card is used for the payment of upcoming billing cycles.
 
 Select the card you want to set as the default payment method or add a new card, check the ``Set Card as Default`` option and click ``Save``. 
 
-.. thumbnail:: /img/graphql/cloud/payment/set_existing_default.png
+.. thumbnail:: /img/graphql/cloud/billing/set_existing_default.png
    :alt: set an exiting card as the default card
    :width: 437px
 
-.. thumbnail:: /img/graphql/cloud/payment/set_new_default.png
+.. thumbnail:: /img/graphql/cloud/billing/set_new_default.png
    :alt: Add a new card as the default card
    :width: 437px
 
@@ -53,7 +53,7 @@ Delete a card
 
 Select the card you want to delete and click the ``Remove Card`` option. 
 
-.. thumbnail:: /img/graphql/cloud/payment/delete_card.png
+.. thumbnail:: /img/graphql/cloud/billing/delete_card.png
    :alt: Delete card
    :width: 437px
 
