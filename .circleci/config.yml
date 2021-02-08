@@ -391,7 +391,6 @@ jobs:
         name: build extension cli
         working_directory: cli-ext
         command: |
-          npm install -g pkg
           npm run build
           make deploy
           make ci-copy-assets
