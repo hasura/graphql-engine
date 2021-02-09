@@ -48,10 +48,12 @@ module Hasura.RQL.Types.Action
   , ActionSourceInfo(..)
   , getActionSourceInfo
   , AnnActionExecution(..)
+  , traverseAnnActionExecution
   , AnnActionMutationAsync(..)
   , ActionExecContext(..)
   , AsyncActionQueryFieldG(..)
   , AnnActionAsyncQuery(..)
+  , traverseAnnActionAsyncQuery
 
   , ActionId(..)
   , actionIdToText
@@ -83,8 +85,8 @@ import           Hasura.RQL.IR.Select
 import           Hasura.RQL.Types.Common
 import           Hasura.RQL.Types.CustomTypes
 import           Hasura.RQL.Types.Error
-import           Hasura.Session
 import           Hasura.SQL.Backend
+import           Hasura.Session
 
 
 newtype ActionName
@@ -301,6 +303,14 @@ data AnnActionExecution (b :: BackendType) v
   , _aaeSource               :: !(ActionSourceInfo b)
   }
 
+traverseAnnActionExecution
+  :: Applicative f
+  => (a -> f b)
+  -> AnnActionExecution backend a
+  -> f (AnnActionExecution backend b)
+traverseAnnActionExecution f (AnnActionExecution n ot fs p oF dl w h fch sn to s) =
+  traverse (traverse $ traverseAnnField f) fs <&> \tfs -> AnnActionExecution n ot tfs p oF dl w h fch sn to s
+
 data AnnActionMutationAsync
   = AnnActionMutationAsync
   { _aamaName    :: !ActionName
@@ -314,6 +324,18 @@ data AsyncActionQueryFieldG (b :: BackendType) v
   | AsyncCreatedAt
   | AsyncErrors
 
+traverseAsyncActionQueryField
+  :: Applicative f
+  => (a -> f b)
+  -> AsyncActionQueryFieldG backend a
+  -> f (AsyncActionQueryFieldG backend b)
+traverseAsyncActionQueryField f = \case
+  AsyncTypename t    -> pure $ AsyncTypename t
+  AsyncOutput fields -> AsyncOutput <$> traverse (traverse $ traverseAnnField f) fields
+  AsyncId            -> pure $ AsyncId
+  AsyncCreatedAt     -> pure $ AsyncCreatedAt
+  AsyncErrors        -> pure $ AsyncErrors
+
 type AsyncActionQueryFieldsG b v = Fields (AsyncActionQueryFieldG b v)
 
 data AnnActionAsyncQuery (b :: BackendType) v
@@ -326,6 +348,14 @@ data AnnActionAsyncQuery (b :: BackendType) v
   , _aaaqStringifyNum   :: !Bool
   , _aaaqSource         :: !(ActionSourceInfo b)
   }
+
+traverseAnnActionAsyncQuery
+  :: Applicative f
+  => (a -> f b)
+  -> AnnActionAsyncQuery backend a
+  -> f (AnnActionAsyncQuery backend b)
+traverseAnnActionAsyncQuery f (AnnActionAsyncQuery n aid ot fs dl sn s) =
+  traverse (traverse $ traverseAsyncActionQueryField f) fs <&> \tfs -> AnnActionAsyncQuery n aid ot tfs dl sn s
 
 data ActionExecContext
   = ActionExecContext

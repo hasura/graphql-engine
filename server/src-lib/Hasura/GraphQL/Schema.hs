@@ -305,7 +305,7 @@ buildRelayRoleContext (SQLGenCtx stringifyNum, queryType, functionPermsCtx) sour
       buildMutationParser mutationRemotes allActionInfos nonObjectCustomTypes mutationBackendFields
 
     subscriptionParser <- P.safeSelectionSet subscriptionRoot Nothing queryPGFields
-                             <&> fmap (fmap (P.handleTypename (rawQueryRootField . J.String. G.unName)))
+                             <&> fmap (fmap (P.handleTypename (RFRaw . J.String. G.unName)))
     queryParserFrontend <- queryWithIntrospectionHelper queryPGFields
       mutationParserFrontend subscriptionParser
     queryParserBackend <- queryWithIntrospectionHelper queryPGFields
@@ -378,16 +378,16 @@ unauthenticatedContext
   -> m GQLContext
 unauthenticatedContext adminQueryRemotes adminMutationRemotes remoteSchemaPermsCtx = P.runSchemaT $ do
   let isRemoteSchemaPermsEnabled = remoteSchemaPermsCtx == RemoteSchemaPermsEnabled
-      queryFields = bool (fmap (fmap $ QueryRootField @'Postgres . RFRemote) adminQueryRemotes) [] isRemoteSchemaPermsEnabled
-      mutationFields = bool (fmap (fmap $ MutationRootField @'Postgres . RFRemote) adminMutationRemotes) [] isRemoteSchemaPermsEnabled
+      queryFields = bool (fmap (fmap RFRemote) adminQueryRemotes) [] isRemoteSchemaPermsEnabled
+      mutationFields = bool (fmap (fmap RFRemote) adminMutationRemotes) [] isRemoteSchemaPermsEnabled
   mutationParser <-
     if null adminMutationRemotes
     then pure Nothing
     else P.safeSelectionSet mutationRoot Nothing mutationFields
-         <&> Just . fmap (fmap (P.handleTypename (rawMutationRootField . J.String . G.unName)))
+         <&> Just . fmap (fmap (P.handleTypename (RFRaw . J.String . G.unName)))
   subscriptionParser <-
     P.safeSelectionSet subscriptionRoot Nothing []
-    <&> fmap (fmap (P.handleTypename (rawQueryRootField . J.String . G.unName)))
+    <&> fmap (fmap (P.handleTypename (RFRaw . J.String . G.unName)))
   queryParser <- queryWithIntrospectionHelper queryFields mutationParser subscriptionParser
   pure $ GQLContext (finalizeParser queryParser) (finalizeParser <$> mutationParser)
 
@@ -575,7 +575,7 @@ buildQueryParser
   -> m (Parser 'Output n (OMap.InsOrdHashMap G.Name (QueryRootField UnpreparedValue)))
 buildQueryParser pgQueryFields remoteFields allActions nonObjectCustomTypes mutationParser subscriptionParser = do
   actionQueryFields <- concat <$> traverse (buildActionQueryFields nonObjectCustomTypes) allActions
-  let allQueryFields = pgQueryFields <> actionQueryFields <> map (fmap $ QueryRootField @'Postgres . RFRemote) remoteFields
+  let allQueryFields = pgQueryFields <> actionQueryFields <> map (fmap RFRemote) remoteFields
   queryWithIntrospectionHelper allQueryFields mutationParser subscriptionParser
 
 queryWithIntrospectionHelper
@@ -606,9 +606,9 @@ queryWithIntrospectionHelper basicQueryFP mutationP subscriptionP = do
         , sDirectives = defaultDirectives
         }
   let partialQueryFields =
-        basicQueryFP ++ (fmap rawQueryRootField <$> [schema partialSchema, typeIntrospection partialSchema])
+        basicQueryFP ++ (fmap RFRaw <$> [schema partialSchema, typeIntrospection partialSchema])
   P.safeSelectionSet queryRoot Nothing partialQueryFields
-    <&> fmap (fmap (P.handleTypename (rawQueryRootField . J.String . G.unName)))
+    <&> fmap (fmap (P.handleTypename (RFRaw . J.String . G.unName)))
 
 queryRootFromFields
   :: forall n m
@@ -617,7 +617,7 @@ queryRootFromFields
   -> m (Parser 'Output n (OMap.InsOrdHashMap G.Name (QueryRootField UnpreparedValue)))
 queryRootFromFields fps =
   P.safeSelectionSet queryRoot Nothing fps
-    <&> fmap (fmap (P.handleTypename (rawQueryRootField . J.String . G.unName)))
+    <&> fmap (fmap (P.handleTypename (RFRaw . J.String . G.unName)))
 
 emptyIntrospection
   :: forall m n
@@ -634,7 +634,7 @@ emptyIntrospection = do
         , sSubscriptionType = Nothing
         , sDirectives = mempty
         }
-  return $ fmap (fmap rawQueryRootField) [schema introspectionSchema, typeIntrospection introspectionSchema]
+  return $ fmap (fmap RFRaw) [schema introspectionSchema, typeIntrospection introspectionSchema]
 
 collectTypes
   :: forall m a
@@ -665,7 +665,7 @@ buildSubscriptionParser queryFields allActions = do
   actionSubscriptionFields <- concat <$> traverse buildActionSubscriptionFields allActions
   let subscriptionFields = queryFields <> actionSubscriptionFields
   P.safeSelectionSet subscriptionRoot Nothing subscriptionFields
-         <&> fmap (fmap (P.handleTypename (rawQueryRootField . J.String . G.unName)))
+         <&> fmap (fmap (P.handleTypename (RFRaw . J.String . G.unName)))
 
 buildMutationParser
   :: forall m n r
@@ -685,11 +685,11 @@ buildMutationParser allRemotes allActions nonObjectCustomTypes mutationFields = 
   let mutationFieldsParser =
         mutationFields <>
         actionParsers <>
-        fmap (fmap $ MutationRootField @'Postgres . RFRemote) allRemotes
+        fmap (fmap RFRemote) allRemotes
   if null mutationFieldsParser
   then pure Nothing
   else P.safeSelectionSet mutationRoot (Just $ G.Description "mutation root") mutationFieldsParser
-            <&> Just . fmap (fmap (P.handleTypename (rawMutationRootField . J.String . G.unName)))
+            <&> Just . fmap (fmap (P.handleTypename (RFRaw . J.String . G.unName)))
 
 
 

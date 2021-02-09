@@ -88,7 +88,8 @@ mkCurPlanTx env manager reqHdrs userInfo instrument ep = \case
 -- convert a query from an intermediate representation to... another
 irToRootFieldPlan
   :: PrepArgMap
-  -> QueryDB 'Postgres S.SQLExp -> PreparedSql
+  -> QueryDB 'Postgres S.SQLExp
+  -> PreparedSql
 irToRootFieldPlan prepped = \case
   QDBMultipleRows s -> mkPreparedSql getRemoteJoins (DS.selectQuerySQL JASMultipleRows) s
   QDBSingleRow s    -> mkPreparedSql getRemoteJoins (DS.selectQuerySQL JASSingleObject) s

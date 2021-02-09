@@ -1388,7 +1388,7 @@ nodeField = do
         onNothing (Map.lookup table parseds) $
         withArgsPath $  throwInvalidNodeId $ "the table " <>> ident
       whereExp <- buildNodeIdBoolExp columnValues pkeyColumns
-      return $ QueryRootField $ RFDB source sourceConfig $ QDBSingleRow $ IR.AnnSelectG
+      return $ RFDB source sourceConfig $ QDBR $ QDBSingleRow $ IR.AnnSelectG
         { IR._asnFields   = fields
         , IR._asnFrom     = IR.FromTable table
         , IR._asnPerm     = tablePermissionsInfo perms

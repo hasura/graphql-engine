@@ -64,7 +64,7 @@ buildTableRelayQueryFields
   -> m (Maybe (FieldParser n (QueryRootField UnpreparedValue)))
 buildTableRelayQueryFields sourceName sourceInfo tableName tableInfo gqlName pkeyColumns selPerms = do
   let
-    mkRF = QueryRootField . RFDB sourceName sourceInfo
+    mkRF = RFDB sourceName sourceInfo . QDBR
     fieldName = gqlName <> $$(G.litName "_connection")
     fieldDesc = Just $ G.Description $ "fetch data from the table: " <>> tableName
   optionalFieldParser (mkRF . QDBConnection) $ selectTableConnection tableName fieldName fieldDesc pkeyColumns selPerms
@@ -82,7 +82,7 @@ buildFunctionRelayQueryFields
 buildFunctionRelayQueryFields sourceName sourceInfo functionName functionInfo tableName pkeyColumns selPerms = do
   funcName <- functionGraphQLName @'Postgres functionName `onLeft` throwError
   let
-    mkRF = QueryRootField . RFDB sourceName sourceInfo
+    mkRF = RFDB sourceName sourceInfo . QDBR
     fieldName = funcName <> $$(G.litName "_connection")
     fieldDesc = Just $ G.Description $ "execute function " <> functionName <<> " which returns " <>> tableName
   optionalFieldParser (mkRF . QDBConnection) $ selectFunctionConnection functionInfo fieldName fieldDesc pkeyColumns selPerms
@@ -95,10 +95,10 @@ buildActionQueryFields
 buildActionQueryFields nonObjectCustomTypes actionInfo =
   maybeToList <$> case _adType (_aiDefinition actionInfo) of
     ActionQuery                       ->
-      fmap (fmap (QueryRootField @'Postgres . RFAction . AQQuery)) <$> actionExecute nonObjectCustomTypes actionInfo
+      fmap (fmap (RFAction . AQQuery)) <$> actionExecute nonObjectCustomTypes actionInfo
     ActionMutation ActionSynchronous  -> pure Nothing
     ActionMutation ActionAsynchronous ->
-      fmap (fmap (QueryRootField @'Postgres . RFAction . AQAsync)) <$> actionAsyncQuery actionInfo
+      fmap (fmap (RFAction . AQAsync)) <$> actionAsyncQuery actionInfo
 
 buildActionMutationFields
   :: MonadBuildSchema 'Postgres r m n
@@ -109,9 +109,9 @@ buildActionMutationFields nonObjectCustomTypes actionInfo =
   maybeToList <$> case _adType (_aiDefinition actionInfo) of
     ActionQuery -> pure Nothing
     ActionMutation ActionSynchronous ->
-      fmap (fmap (MutationRootField @'Postgres . RFAction . AMSync)) <$> actionExecute nonObjectCustomTypes actionInfo
+      fmap (fmap (RFAction . AMSync)) <$> actionExecute nonObjectCustomTypes actionInfo
     ActionMutation ActionAsynchronous ->
-      fmap (fmap (MutationRootField @'Postgres . RFAction . AMAsync)) <$> actionAsyncMutation nonObjectCustomTypes actionInfo
+      fmap (fmap (RFAction . AMAsync)) <$> actionAsyncMutation nonObjectCustomTypes actionInfo
 
 buildActionSubscriptionFields
   :: MonadBuildSchema 'Postgres r m n
@@ -122,7 +122,7 @@ buildActionSubscriptionFields actionInfo =
     ActionQuery                       -> pure Nothing
     ActionMutation ActionSynchronous  -> pure Nothing
     ActionMutation ActionAsynchronous ->
-      fmap (fmap (QueryRootField @'Postgres . RFAction . AQAsync)) <$> actionAsyncQuery actionInfo
+      fmap (fmap (RFAction . AQAsync)) <$> actionAsyncQuery actionInfo
 
 
 

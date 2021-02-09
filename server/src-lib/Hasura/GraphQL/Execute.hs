@@ -32,6 +32,7 @@ import qualified Network.HTTP.Client                    as HTTP
 import qualified Network.HTTP.Types                     as HTTP
 import qualified Network.Wai.Extended                   as Wai
 
+import           Control.Lens                           (_1, (^.))
 import           Data.Text.Extended
 import           Data.Typeable
 
@@ -177,11 +178,16 @@ validateSubscriptionRootField
   :: (MonadError QErr m, Traversable t, Typeable v)
   => t (C.QueryRootField v) -> m (PGExecCtx, t (C.SubscriptionRootField v))
 validateSubscriptionRootField rootFields = do
-  subscriptionRootFields <- for rootFields \(C.QueryRootField rootField) -> case rootField of
-    -- TMP!
-    -- Casting to Postgres for now.
-    C.RFDB src e x           -> onNothing (C.RFDB @'Postgres src <$> cast e <*> cast x) $
-                                throw400 NotSupported "subscription are not supported on non-PG backends"
+  -- TEMPORARY!!!
+  -- We don't handle non-Postgres backends yet: for now, we filter root fields to only keep those
+  -- that are targeting postgres, and we *silently* discard all the others. This is fine for now, as
+  -- we haven't integrated any other backend yet, but will need to be fixed as soon as possible for
+  -- other backends to work.
+  subscriptionRootFields <- for rootFields \case
+    C.RFDB src e x           -> flip onNothing (throw400 NotSupported "subscription are not supported on non-PG backends") $ do
+      pgE <- cast e
+      pgX <- cast x
+      Just (src, pgE, pgX)
     C.RFAction (C.AQAsync _) -> throw400 NotSupported "async action queries are temporarily not supported in subscription"
     C.RFAction (C.AQQuery _) -> throw400 NotSupported "query actions cannot be run as a subscription"
     C.RFRemote _             -> throw400 NotSupported "subscription to remote server is not supported"
@@ -189,14 +195,12 @@ validateSubscriptionRootField rootFields = do
 
   pgExecCtx <- _pscExecCtx <$> case toList subscriptionRootFields of
     [] -> throw500 "empty selset for subscription"
-    [C.RFDB _ e _]                    -> pure e
-    ((C.RFDB headSrc e _):restFields) -> do
-      let getSource (C.RFDB s _ _) = s
-          getSource _              = defaultSource
-      unless (all ((headSrc ==) . getSource) restFields) $ throw400 NotSupported ""
+    [(_,e,_)] -> pure e
+    ((src, e, _) : restFields) -> do
+      unless (all ((src ==) . (^. _1)) restFields) $ throw400 NotSupported "subscriptions going to more than one source are not supported"
       pure e
 
-  pure (pgExecCtx, C.SubscriptionRootField <$> subscriptionRootFields)
+  pure (pgExecCtx, subscriptionRootFields <&> \(src, e, x) -> C.RFDB @'Postgres src e x)
 
 
 checkQueryInAllowlist

@@ -3,7 +3,7 @@ module Hasura.GraphQL.Execute.Query
   -- , queryOpFromPlan
   -- , ReusableQueryPlan
   , PreparedSql(..)
-  , traverseQueryRootField -- for live query planning
+  , traverseQueryDB
   , parseGraphQLQuery
 
   , MonadQueryInstrumentation(..)
@@ -77,17 +77,17 @@ import           Hasura.Session
 --       return $ IntMap.insert prepNo prepVal accum
 
 
-traverseQueryRootField
-  :: forall f a b c d h backend
+traverseQueryDB
+  :: forall f a b backend
    . Applicative f
   => (a -> f b)
-  -> RootField backend (QueryDB backend a) c h d
-  -> f (RootField backend (QueryDB backend b) c h d)
-traverseQueryRootField f = traverseDB \case
-  QDBMultipleRows s -> QDBMultipleRows <$> DS.traverseAnnSimpleSelect f s
-  QDBSingleRow s    -> QDBSingleRow    <$> DS.traverseAnnSimpleSelect f s
-  QDBAggregation s  -> QDBAggregation  <$> DS.traverseAnnAggregateSelect f s
-  QDBConnection s   -> QDBConnection   <$> DS.traverseConnectionSelect f s
+  -> QueryDB backend a
+  -> f (QueryDB backend b)
+traverseQueryDB f = \case
+  QDBMultipleRows s -> QDBMultipleRows <$> DS.traverseAnnSimpleSelect    f s
+  QDBSingleRow    s -> QDBSingleRow    <$> DS.traverseAnnSimpleSelect    f s
+  QDBAggregation  s -> QDBAggregation  <$> DS.traverseAnnAggregateSelect f s
+  QDBConnection   s -> QDBConnection   <$> DS.traverseConnectionSelect   f s
 
 parseGraphQLQuery
   :: MonadError QErr m
@@ -168,42 +168,33 @@ convertQuerySelSet env logger gqlContext userInfo manager reqHeaders directives 
   -- Parse the GraphQL query into the RQL AST
   (unpreparedQueries, _reusability) <- parseGraphQLQuery gqlContext varDefs varValsM fields
 
-  -- Transform the RQL AST into a prepared SQL query
-  queryPlan <- OMap.mapMaybe id <$> for unpreparedQueries \(QueryRootField unpreparedQuery) -> do
-    -- TMP TMP TMP
-    -- only executing PG queries for now
-    let pgUQ = cast unpreparedQuery
-          :: Maybe (RootField 'Postgres (QueryDB 'Postgres (UnpreparedValue 'Postgres)) RemoteField (ActionQuery 'Postgres (UnpreparedValue 'Postgres)) J.Value)
-    case pgUQ of
-      Nothing -> pure Nothing
-      Just uq -> do
-        (preparedQuery, PlanningSt _ _ planVals expectedVariables)
-          <- flip runStateT initPlanningSt
-             $ traverseQueryRootField prepareWithPlan uq
-               >>= traverseRemoteField (resolveRemoteField userInfo)
-        validateSessionVariables expectedVariables $ _uiSession userInfo
-        Just <$> traverseDB (pure . irToRootFieldPlan planVals) preparedQuery
-
-  (instrument, ep) <- askInstrumentQuery directives
-
   -- Transform the query plans into an execution plan
-  executionPlan <- forM queryPlan  \case
-        RFRemote (RemoteFieldG remoteSchemaInfo remoteField) -> pure $
-          buildExecStepRemote
-            remoteSchemaInfo
-            G.OperationTypeQuery
-            [G.SelectionField remoteField]
-        RFDB _ e db          -> pure $ ExecStepDB (_pscExecCtx e) $ mkCurPlanTx env manager reqHeaders userInfo instrument ep (RFPPostgres db)
-        RFAction (AQQuery s) -> ExecStepAction . AEPSync . _aerExecution <$>
-                                resolveActionExecution env logger userInfo s (ActionExecContext manager reqHeaders usrVars)
-        RFAction (AQAsync s) -> pure $ ExecStepAction $ AEPAsyncQuery (_aaaqActionId s) $ resolveAsyncActionQuery userInfo s
-        RFRaw r              -> pure $ ExecStepRaw r
+  let usrVars = _uiSession userInfo
+  executionPlan <- OMap.mapMaybe id <$> for unpreparedQueries \case
+    RFDB _ sourceConfig (QDBR db) -> runMaybeT $ do
+      -- TEMPORARY!!!
+      -- We don't handle non-Postgres backends yet: for now, we filter root fields to only keep those
+      -- that are targeting postgres, and we *silently* discard all the others. This is fine for now, as
+      -- we haven't integrated any other backend yet, but will need to be fixed as soon as possible for
+      -- other backends to work.
+      pgSC <- hoistMaybe $ cast sourceConfig
+      pgDB <- hoistMaybe $ cast db
+      lift $ do
+        (preparedQuery, PlanningSt _ _ planVals expectedVariables) <- flip runStateT initPlanningSt $ traverseQueryDB prepareWithPlan pgDB
+        validateSessionVariables expectedVariables usrVars
+        (instrument, ep) <- askInstrumentQuery directives
+        pure $ ExecStepDB (_pscExecCtx pgSC) $ mkCurPlanTx env manager reqHeaders userInfo instrument ep $ RFPPostgres $ irToRootFieldPlan planVals preparedQuery
+    RFRemote rf -> do
+      RemoteFieldG remoteSchemaInfo remoteField <- for rf $ resolveRemoteVariable userInfo
+      pure $ Just $ buildExecStepRemote remoteSchemaInfo G.OperationTypeQuery [G.SelectionField remoteField]
+    RFAction a -> case a of
+      AQQuery s -> Just . ExecStepAction . AEPSync . _aerExecution <$> resolveActionExecution env logger userInfo s (ActionExecContext manager reqHeaders usrVars)
+      AQAsync s -> pure $ Just $ ExecStepAction $ AEPAsyncQuery (_aaaqActionId s) $ resolveAsyncActionQuery userInfo s
+    RFRaw r ->
+      pure $ Just $ ExecStepRaw r
 
-  let asts :: [QueryRootField UnpreparedValue]
-      asts = OMap.elems unpreparedQueries
-  pure (executionPlan, asts)  -- See Note [Temporarily disabling query plan caching]
-  where
-    usrVars = _uiSession userInfo
+  -- See Note [Temporarily disabling query plan caching]
+  pure (executionPlan, OMap.elems unpreparedQueries)
 
 -- See Note [Temporarily disabling query plan caching]
 -- use the existing plan and new variables to create a pg query

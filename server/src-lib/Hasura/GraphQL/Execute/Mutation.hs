@@ -160,24 +160,29 @@ convertMutationSelectionSet env logger gqlContext SQLGenCtx{stringifyNum} userIn
   let userSession = _uiSession userInfo
       remoteJoinCtx = (manager, reqHeaders, userInfo)
 
-  -- TMP!
-  -- Casting to Postgres for now.
-  let toPG (MutationRootField rf) = cast rf
-  txs <- for (OMap.mapMaybe toPG unpreparedQueries) \case
-    RFDB _ sourceConfig db -> ExecStepDB (_pscExecCtx sourceConfig) . noResponseHeaders <$> case db of
-      MDBInsert s              -> convertInsert env userSession remoteJoinCtx s stringifyNum
-      MDBUpdate s              -> convertUpdate env userSession remoteJoinCtx s stringifyNum
-      MDBDelete s              -> convertDelete env userSession remoteJoinCtx s stringifyNum
-      MDBFunction returnsSet s -> convertFunction env userInfo manager reqHeaders returnsSet s
+  txs <- OMap.mapMaybe id <$> for unpreparedQueries \case
+    RFDB _ sourceConfig (MDBR db) -> runMaybeT $ do
+      -- TEMPORARY!!!
+      -- We don't handle non-Postgres backends yet: for now, we filter root fields to only keep those
+      -- that are targeting postgres, and we *silently* discard all the others. This is fine for now, as
+      -- we haven't integrated any other backend yet, but will need to be fixed as soon as possible for
+      -- other backends to work.
+      pgSC <- hoistMaybe $ cast sourceConfig
+      pgDB <- hoistMaybe $ cast db
+      lift $ ExecStepDB (_pscExecCtx pgSC) . noResponseHeaders <$> case pgDB of
+        MDBInsert s              -> convertInsert env userSession remoteJoinCtx s stringifyNum
+        MDBUpdate s              -> convertUpdate env userSession remoteJoinCtx s stringifyNum
+        MDBDelete s              -> convertDelete env userSession remoteJoinCtx s stringifyNum
+        MDBFunction returnsSet s -> convertFunction env userInfo manager reqHeaders returnsSet s
 
-    RFRemote remoteField -> do
+    RFRemote remoteField -> Just <$> do
       RemoteFieldG remoteSchemaInfo resolvedRemoteField <- resolveRemoteField userInfo remoteField
       pure $ buildExecStepRemote
         remoteSchemaInfo
         G.OperationTypeMutation
         $ [G.SelectionField resolvedRemoteField]
-    RFAction action     -> ExecStepAction <$> convertMutationAction env logger userInfo manager reqHeaders action
-    RFRaw s             -> pure $ ExecStepRaw s
+    RFAction action -> Just . ExecStepAction <$> convertMutationAction env logger userInfo manager reqHeaders action
+    RFRaw s         -> pure $ Just $ ExecStepRaw s
 
   return txs
   where

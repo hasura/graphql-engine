@@ -156,7 +156,7 @@ checkConflictingNode sc tnGQL = do
     Left _ -> pure ()
     Right (results, _reusability) -> do
       case OMap.lookup $$(G.litName "__schema") results of
-        Just (QueryRootField (RFRaw (Object schema))) -> do
+        Just (RFRaw (Object schema)) -> do
           let names = do
                 Object queryType <- Map.lookup "queryType" schema
                 Array fields <- Map.lookup "fields" queryType

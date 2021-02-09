@@ -5,39 +5,35 @@ module Hasura.GraphQL.Context
   , GQLContext(..)
   , ParserFn
   , RootField(..)
-  , traverseDB
-  , traverseAction
-  , traverseRemoteField
   , QueryDB(..)
-  , ActionQuery(..)
-  , QueryRootField(..)
   , MutationDB(..)
+  , ActionQuery(..)
   , ActionMutation(..)
-  , MutationRootField(..)
-  , SubscriptionRootField(..)
-  , SubscriptionRootFieldResolved
   , RemoteFieldG (..)
   , RemoteField
-  , rawQueryRootField
-  , rawMutationRootField
+  , QueryRootField
+  , MutationRootField
+  , SubscriptionRootField
+  , QueryDBRoot(..)
+  , MutationDBRoot(..)
+  , traverseActionQuery
   ) where
 
 import           Hasura.Prelude
 
-import qualified Data.Aeson                       as J
-import qualified Language.GraphQL.Draft.Syntax    as G
+import qualified Data.Aeson                    as J
+import qualified Language.GraphQL.Draft.Syntax as G
 
 import           Data.Aeson.TH
-import           Data.Typeable                    (Typeable)
+import           Data.Typeable                 (Typeable)
 
-import qualified Hasura.Backends.Postgres.SQL.DML as PG
-import qualified Hasura.RQL.IR.Delete             as IR
-import qualified Hasura.RQL.IR.Insert             as IR
-import qualified Hasura.RQL.IR.Select             as IR
-import qualified Hasura.RQL.IR.Update             as IR
-import qualified Hasura.RQL.Types.Action          as RQL
-import qualified Hasura.RQL.Types.Common          as RQL
-import qualified Hasura.RQL.Types.RemoteSchema    as RQL
+import qualified Hasura.RQL.IR.Delete          as IR
+import qualified Hasura.RQL.IR.Insert          as IR
+import qualified Hasura.RQL.IR.Select          as IR
+import qualified Hasura.RQL.IR.Update          as IR
+import qualified Hasura.RQL.Types.Action       as RQL
+import qualified Hasura.RQL.Types.Common       as RQL
+import qualified Hasura.RQL.Types.RemoteSchema as RQL
 
 import           Hasura.GraphQL.Parser
 import           Hasura.SQL.Backend
@@ -66,55 +62,39 @@ type ParserFn a
   =  G.SelectionSet G.NoFragments Variable
   -> Either (NESeq ParseError) (a, QueryReusability)
 
-data RootField b db remote action raw
-  = RFDB !RQL.SourceName (RQL.SourceConfig b) db
-  | RFRemote remote
-  | RFAction action
-  | RFRaw raw
+data RootField db remote action raw where
+  RFDB
+    :: forall (b :: BackendType) db remote action raw
+     . (RQL.Backend b, Typeable db)
+    => RQL.SourceName
+    -> RQL.SourceConfig b
+    -> db b
+    -> RootField db remote action raw
+  RFRemote :: remote -> RootField db remote action raw
+  RFAction :: action -> RootField db remote action raw
+  RFRaw    :: raw    -> RootField db remote action raw
 
-traverseDB :: forall b db db' remote action raw f
-        . Applicative f
-       => (db -> f db')
-       -> RootField b db remote action raw
-       -> f (RootField b db' remote action raw)
-traverseDB f = \case
-  RFDB s e x -> RFDB s e <$> f x
-  RFRemote x -> pure $ RFRemote x
-  RFAction x -> pure $ RFAction x
-  RFRaw x    -> pure $ RFRaw x
-
-traverseAction :: forall b db remote action action' raw f
-        . Applicative f
-       => (action -> f action')
-       -> RootField b db remote action raw
-       -> f (RootField b db remote action' raw)
-traverseAction f = \case
-  RFDB s e x -> pure $ RFDB s e x
-  RFRemote x -> pure $ RFRemote x
-  RFAction x -> RFAction <$> f x
-  RFRaw x    -> pure $ RFRaw x
-
-traverseRemoteField
-  :: forall b db remote remote' action raw f
-   . Applicative f
-  => (remote -> f remote')
-  -> RootField b db remote action raw
-  -> f (RootField b db remote' action raw)
-traverseRemoteField f = \case
-  RFDB s e x -> pure $ RFDB s e x
-  RFRemote x -> RFRemote <$> f x
-  RFAction x -> pure $ RFAction x
-  RFRaw x    -> pure $ RFRaw x
-
-data QueryDB b v
+data QueryDB (b :: BackendType) v
   = QDBMultipleRows (IR.AnnSimpleSelG       b v)
   | QDBSingleRow    (IR.AnnSimpleSelG       b v)
   | QDBAggregation  (IR.AnnAggregateSelectG b v)
   | QDBConnection   (IR.ConnectionSelect    b v)
 
+data MutationDB (b :: BackendType) v
+  = MDBInsert (IR.AnnInsert b v)
+  | MDBUpdate (IR.AnnUpdG   b v)
+  | MDBDelete (IR.AnnDelG   b v)
+  | MDBFunction RQL.JsonAggSelect (IR.AnnSimpleSelG b v)
+  -- ^ This represents a VOLATILE function, and is AnnSimpleSelG for easy
+  -- re-use of non-VOLATILE function tracking code.
+
 data ActionQuery (b :: BackendType) v
-  = AQQuery !(RQL.AnnActionExecution b v)
+  = AQQuery !(RQL.AnnActionExecution  b v)
   | AQAsync !(RQL.AnnActionAsyncQuery b v)
+
+data ActionMutation (b :: BackendType) v
+  = AMSync !(RQL.AnnActionExecution b v)
+  | AMAsync !RQL.AnnActionMutationAsync
 
 data RemoteFieldG var
   = RemoteFieldG
@@ -124,50 +104,26 @@ data RemoteFieldG var
 
 type RemoteField = RemoteFieldG RQL.RemoteSchemaVariable
 
-data QueryRootField v where
-  QueryRootField
-    :: forall b v
-     . (RQL.Backend b, Typeable v)
-    => RootField b (QueryDB b (v b)) RemoteField (ActionQuery 'Postgres {- FIXME -} (v 'Postgres)) J.Value
-    -> QueryRootField v
-
-data MutationRootField v where
-  MutationRootField
-    :: forall b v
-     . (RQL.Backend b, Typeable v)
-    => RootField b (MutationDB b (v b)) RemoteField (ActionMutation 'Postgres {- FIXME -} (v 'Postgres)) J.Value
-    -> MutationRootField v
-
-data SubscriptionRootField v where
-  SubscriptionRootField
-    :: forall b v
-     . (RQL.Backend b, Typeable v)
-    => RootField b (QueryDB b (v b)) Void Void Void
-    -> SubscriptionRootField v
+-- The `db` type argument of @RootField@ expects only one type argument, the backend `b`, as not all
+-- types stored in a RootField will have a second parameter like @QueryDB@ does: they all only have
+-- in common the fact that they're parametric over the backend. To define @QueryRootField@ in terms
+-- of @QueryDB@ (and likewise for mutations), we need a type-level function `b -> QueryDB b (v
+-- b)`. Sadly, neither type synonyms nor type families may be partially applied. Hence the need for
+-- @QueryDBRoot@ and @MutationDBRoot@.
+newtype QueryDBRoot    v b = QDBR (QueryDB    b (v b))
+newtype MutationDBRoot v b = MDBR (MutationDB b (v b))
 
 
-data MutationDB (b :: BackendType) v
-  = MDBInsert (IR.AnnInsert   b v)
-  | MDBUpdate (IR.AnnUpdG b v)
-  | MDBDelete (IR.AnnDelG b v)
-  | MDBFunction RQL.JsonAggSelect (IR.AnnSimpleSelG b v)
-  -- ^ This represents a VOLATILE function, and is AnnSimpleSelG for easy
-  -- re-use of non-VOLATILE function tracking code.
-
-data ActionMutation (b :: BackendType) v
-  = AMSync !(RQL.AnnActionExecution b v)
-  | AMAsync !RQL.AnnActionMutationAsync
+type QueryRootField        v = RootField (QueryDBRoot    v) RemoteField (ActionQuery    'Postgres (v 'Postgres)) J.Value
+type MutationRootField     v = RootField (MutationDBRoot v) RemoteField (ActionMutation 'Postgres (v 'Postgres)) J.Value
+type SubscriptionRootField v = RootField (QueryDBRoot    v) Void Void Void
 
 
--- TODO: remove this
-type SubscriptionRootFieldResolved = RootField 'Postgres (QueryDB 'Postgres PG.SQLExp) Void Void Void
-
-
--- RFRaw is not tied to any backend, but a backend must be provided as
--- a parameter to QueryRootField's constructor. We provide 'Postgres
--- for historical reasons.
-rawQueryRootField :: Typeable v => J.Value -> QueryRootField v
-rawQueryRootField = QueryRootField @'Postgres . RFRaw
-
-rawMutationRootField :: Typeable v => J.Value -> MutationRootField v
-rawMutationRootField = MutationRootField @'Postgres . RFRaw
+traverseActionQuery
+  :: Applicative f
+  => (a -> f b)
+  -> ActionQuery backend a
+  -> f (ActionQuery backend b)
+traverseActionQuery f = \case
+  AQQuery actionExecution -> AQQuery <$> RQL.traverseAnnActionExecution  f actionExecution
+  AQAsync actionAsyncQ    -> AQAsync <$> RQL.traverseAnnActionAsyncQuery f actionAsyncQ

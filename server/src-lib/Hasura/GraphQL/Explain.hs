@@ -14,7 +14,6 @@ import qualified Database.PG.Query                           as Q
 import qualified Language.GraphQL.Draft.Syntax               as G
 
 import           Control.Monad.Trans.Control                 (MonadBaseControl)
-import           Data.Maybe                                  (fromJust)
 import           Data.Text.Extended
 import           Data.Typeable                               (cast)
 
@@ -87,32 +86,37 @@ explainQueryField
   => UserInfo
   -> G.Name
   -> QueryRootField UnpreparedValue
-  -> m FieldPlan
-explainQueryField userInfo fieldName (QueryRootField rootField) = do
-  -- TMP TMP TMP
-  let pgRootField = fromJust $ cast rootField
-        :: RootField 'Postgres (QueryDB 'Postgres (UnpreparedValue 'Postgres)) RemoteField (ActionQuery 'Postgres (UnpreparedValue 'Postgres)) J.Value
-  resolvedRootField <- E.traverseQueryRootField (resolveUnpreparedValue userInfo) pgRootField
-  case resolvedRootField of
+  -> m (Maybe FieldPlan)
+explainQueryField userInfo fieldName rootField = do
+  case rootField of
     RFRemote _ -> throw400 InvalidParams "only hasura queries can be explained"
     RFAction _ -> throw400 InvalidParams "query actions cannot be explained"
-    RFRaw _    -> pure $ FieldPlan fieldName Nothing Nothing
-    RFDB _ config qDB -> do
-      let (querySQL, remoteJoins) = case qDB of
-            QDBMultipleRows s -> first (DS.selectQuerySQL JASMultipleRows) $ RR.getRemoteJoins s
-            QDBSingleRow s    -> first (DS.selectQuerySQL JASSingleObject) $ RR.getRemoteJoins s
-            QDBAggregation s  -> first DS.selectAggregateQuerySQL $ RR.getRemoteJoinsAggregateSelect s
-            QDBConnection s   -> first DS.connectionSelectQuerySQL $ RR.getRemoteJoinsConnectionSelect s
-          textSQL = Q.getQueryText querySQL
-          -- CAREFUL!: an `EXPLAIN ANALYZE` here would actually *execute* this
-          -- query, maybe resulting in privilege escalation:
-          withExplain = "EXPLAIN (FORMAT TEXT) " <> textSQL
-      -- Reject if query contains any remote joins
-      when (remoteJoins /= mempty) $ throw400 NotSupported "Remote relationships are not allowed in explain query"
-      planLines <- liftEitherM $ runExceptT $ runLazyTx (_pscExecCtx config) Q.ReadOnly $
-                   liftTx $ map runIdentity <$>
-                   Q.listQE dmlTxErrorHandler (Q.fromText withExplain) () True
-      pure $ FieldPlan fieldName (Just textSQL) $ Just planLines
+    RFRaw _    -> pure $ Just $ FieldPlan fieldName Nothing Nothing
+    RFDB _ config (QDBR qDB) -> runMaybeT $ do
+      -- TEMPORARY!!!
+      -- We don't handle non-Postgres backends yet: for now, we filter root fields to only keep those
+      -- that are targeting postgres, and we *silently* discard all the others. This is fine for now, as
+      -- we haven't integrated any other backend yet, but will need to be fixed as soon as possible for
+      -- other backends to work.
+      pgConfig <- hoistMaybe $ cast config
+      pgQDB    <- hoistMaybe $ cast qDB
+      lift $ do
+        resolvedQuery <- E.traverseQueryDB (resolveUnpreparedValue userInfo) pgQDB
+        let (querySQL, remoteJoins) = case resolvedQuery of
+              QDBMultipleRows s -> first (DS.selectQuerySQL JASMultipleRows) $ RR.getRemoteJoins s
+              QDBSingleRow    s -> first (DS.selectQuerySQL JASSingleObject) $ RR.getRemoteJoins s
+              QDBAggregation  s -> first DS.selectAggregateQuerySQL $ RR.getRemoteJoinsAggregateSelect s
+              QDBConnection   s -> first DS.connectionSelectQuerySQL $ RR.getRemoteJoinsConnectionSelect s
+            textSQL = Q.getQueryText querySQL
+            -- CAREFUL!: an `EXPLAIN ANALYZE` here would actually *execute* this
+            -- query, maybe resulting in privilege escalation:
+            withExplain = "EXPLAIN (FORMAT TEXT) " <> textSQL
+        -- Reject if query contains any remote joins
+        when (remoteJoins /= mempty) $ throw400 NotSupported "Remote relationships are not allowed in explain query"
+        planLines <- liftEitherM $ runExceptT $ runLazyTx (_pscExecCtx pgConfig) Q.ReadOnly $
+                     liftTx $ map runIdentity <$>
+                     Q.listQE dmlTxErrorHandler (Q.fromText withExplain) () True
+        pure $ FieldPlan fieldName (Just textSQL) $ Just planLines
 
 -- NOTE: This function has a 'MonadTrace' constraint in master, but we don't need it
 -- here. We should evaluate if we need it here.
@@ -139,7 +143,7 @@ explainGQLQuery sc (GQLExplain query userVarsRaw maybeIsRelay) = do
       inlinedSelSet <- E.inlineSelectionSet fragments selSet
       (unpreparedQueries, _) <-
         E.parseGraphQLQuery graphQLContext varDefs (GH._grVariables query) inlinedSelSet
-      encJFromJValue
+      encJFromJValue . catMaybes
         <$> for (OMap.toList unpreparedQueries) (uncurry (explainQueryField userInfo))
 
     G.TypedOperationDefinition G.OperationTypeMutation _ _ _ _ ->
