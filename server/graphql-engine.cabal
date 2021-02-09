@@ -474,6 +474,7 @@ library
                      , Hasura.GraphQL.Schema.Action
                      , Hasura.GraphQL.Schema.Backend
                      , Hasura.GraphQL.Schema.BoolExp
+                     , Hasura.GraphQL.Schema.Build
                      , Hasura.GraphQL.Schema.Common
                      , Hasura.GraphQL.Schema.Introspect
                      , Hasura.GraphQL.Schema.Mutation
