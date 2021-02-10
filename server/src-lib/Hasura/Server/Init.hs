@@ -169,13 +169,17 @@ mkServeOptions rso = do
   eventsHttpPoolSize <- withEnv (rsoEventsHttpPoolSize rso) (fst eventsHttpPoolSizeEnv)
   eventsFetchInterval <- withEnv (rsoEventsFetchInterval rso) (fst eventsFetchIntervalEnv)
   logHeadersFromEnv <- withEnvBool (rsoLogHeadersFromEnv rso) (fst logHeadersFromEnvEnv)
+  maintenanceMode <-
+    bool MaintenanceModeDisabled MaintenanceModeEnabled
+    <$> withEnvBool (rsoEnableMaintenanceMode rso) (fst maintenanceModeEnv)
 
   return $ ServeOptions port host connParams txIso adminScrt authHook jwtSecret
                         unAuthRole corsCfg enableConsole consoleAssetsDir
                         enableTelemetry strfyNum enabledAPIs lqOpts enableAL
                         enabledLogs serverLogLevel planCacheOptions
                         internalErrorsConfig eventsHttpPoolSize eventsFetchInterval
-                        logHeadersFromEnv
+                        logHeadersFromEnv maintenanceMode
+
   where
 #ifdef DeveloperAPIs
     defaultAPIs = [METADATA,GRAPHQL,PGDUMP,CONFIG,DEVELOPER]
@@ -323,7 +327,7 @@ serveCmdFooter =
     eventEnvs = [ eventsHttpPoolSizeEnv, eventsFetchIntervalEnv ]
 
 eventsHttpPoolSizeEnv :: (String, String)
-eventsHttpPoolSizeEnv = 
+eventsHttpPoolSizeEnv =
   ( "HASURA_GRAPHQL_EVENTS_HTTP_POOL_SIZE"
   , "Max event threads"
   )
@@ -509,6 +513,12 @@ devModeEnv :: (String, String)
 devModeEnv =
   ( "HASURA_GRAPHQL_DEV_MODE"
   , "Set dev mode for GraphQL requests; include 'internal' key in the errors extensions (if required) of the response"
+  )
+
+maintenanceModeEnv :: (String, String)
+maintenanceModeEnv =
+  ( "HASURA_GRAPHQL_ENABLE_MAINTENANCE_MODE"
+  , "Flag to enable maintenance mode in the graphql-engine"
   )
 
 adminInternalErrorsEnv :: (String, String)
@@ -826,6 +836,12 @@ parseLogHeadersFromEnv =
            help (snd devModeEnv)
          )
 
+parseEnableMaintenanceMode :: Parser Bool
+parseEnableMaintenanceMode =
+  switch ( long "enable-maintenance-mode" <>
+           help (snd maintenanceModeEnv)
+         )
+
 mxRefetchDelayEnv :: (String, String)
 mxRefetchDelayEnv =
   ( "HASURA_GRAPHQL_LIVE_QUERIES_MULTIPLEXED_REFETCH_INTERVAL"
@@ -852,7 +868,7 @@ enableAllowlistEnv =
 --   being 70kb. 128mb per-HEC seems like a reasonable default upper bound
 --   (note there is a distinct stripe per-HEC, for now; so this would give 1GB
 --   for an 8-core machine), which gives us a range of 2,000 to 18,000 here.
---     Analysis of telemetry is hazy here; see 
+--     Analysis of telemetry is hazy here; see
 --   https://github.com/hasura/graphql-engine/issues/5363 for some discussion.
 planCacheSizeEnv :: (String, String)
 planCacheSizeEnv =
@@ -935,6 +951,7 @@ serveOptsToLog so =
       , "enabled_log_types" J..= soEnabledLogTypes so
       , "log_level" J..= soLogLevel so
       , "plan_cache_options" J..= soPlanCacheOptions so
+      , "enable_maintenance_mode" J..= soEnableMaintenanceMode so
       ]
 
 mkGenericStrLog :: L.LogLevel -> T.Text -> String -> StartupLog
@@ -980,6 +997,7 @@ serveOptionsParser =
   <*> parseGraphqlEventsHttpPoolSize
   <*> parseGraphqlEventsFetchInterval
   <*> parseLogHeadersFromEnv
+  <*> parseEnableMaintenanceMode
 
 -- | This implements the mapping between application versions
 -- and catalog schema versions.

@@ -113,6 +113,7 @@ data ServerCtx
   , scEkgStore                     :: !EKG.Store
   , scResponseInternalErrorsConfig :: !ResponseInternalErrorsConfig
   , scEnvironment                  :: !Env.Environment
+  , scEnableMaintenanceMode        :: !MaintenanceMode
   }
 
 data HandlerCtx
@@ -275,8 +276,8 @@ mkSpockAction serverCtx qErrEncoder qErrModifier apiHandler = do
           tracingCtx
           (fromString (B8.unpack pathInfo))
 
-    requestId <- getRequestId headers    
-    
+    requestId <- getRequestId headers
+
     mapActionT runTraceT $ do
       -- Add the request ID to the tracing metadata so that we
       -- can correlate requests and traces
@@ -360,15 +361,16 @@ v1QueryHandler query = do
   where
     -- Hit postgres
     dbAction = do
-      userInfo    <- asks hcUser
-      scRef       <- asks (scCacheRef . hcServerCtx)
-      schemaCache <- fmap fst $ liftIO $ readIORef $ _scrCache scRef
-      httpMgr     <- asks (scManager . hcServerCtx)
-      sqlGenCtx   <- asks (scSQLGenCtx . hcServerCtx)
-      pgExecCtx   <- asks (scPGExecCtx . hcServerCtx)
-      instanceId  <- asks (scInstanceId . hcServerCtx)
-      env         <- asks (scEnvironment . hcServerCtx)
-      runQuery env pgExecCtx instanceId userInfo schemaCache httpMgr sqlGenCtx (SystemDefined False) query
+      userInfo        <- asks hcUser
+      scRef           <- asks (scCacheRef . hcServerCtx)
+      schemaCache     <- fmap fst $ liftIO $ readIORef $ _scrCache scRef
+      httpMgr         <- asks (scManager . hcServerCtx)
+      sqlGenCtx       <- asks (scSQLGenCtx . hcServerCtx)
+      pgExecCtx       <- asks (scPGExecCtx . hcServerCtx)
+      instanceId      <- asks (scInstanceId . hcServerCtx)
+      env             <- asks (scEnvironment . hcServerCtx)
+      maintenanceMode <- asks (scEnableMaintenanceMode . hcServerCtx)
+      runQuery env pgExecCtx instanceId userInfo schemaCache httpMgr sqlGenCtx (SystemDefined False) maintenanceMode query
 
 v1Alpha1GQHandler
   :: ( HasVersion
@@ -604,9 +606,10 @@ mkWaiApp
   -> ResponseInternalErrorsConfig
   -> Maybe EL.LiveQueryPostPollHook
   -> (RebuildableSchemaCache Run, Maybe UTCTime)
+  -> MaintenanceMode
   -> m HasuraApp
 mkWaiApp env isoLevel logger sqlGenCtx enableAL pool pgExecCtxCustom ci httpManager mode corsCfg enableConsole consoleAssetsDir
-         enableTelemetry instanceId apis lqOpts planCacheOptions responseErrorsConfig liveQueryHook (schemaCache, cacheBuiltTime) = do
+         enableTelemetry instanceId apis lqOpts planCacheOptions responseErrorsConfig liveQueryHook (schemaCache, cacheBuiltTime) maintenanceMode = do
 
     (planCache, schemaCacheRef) <- initialiseCache
     let getSchemaCache = first lastBuiltSchemaCache <$> readIORef (_scrCache schemaCacheRef)
@@ -622,21 +625,22 @@ mkWaiApp env isoLevel logger sqlGenCtx enableAL pool pgExecCtxCustom ci httpMana
     ekgStore <- liftIO EKG.newStore
 
     let serverCtx = ServerCtx
-                    { scPGExecCtx       =  pgExecCtx
-                    , scConnInfo        =  ci
-                    , scLogger          =  logger
-                    , scCacheRef        =  schemaCacheRef
-                    , scAuthMode        =  mode
-                    , scManager         =  httpManager
-                    , scSQLGenCtx       =  sqlGenCtx
-                    , scEnabledAPIs     =  apis
-                    , scInstanceId      =  instanceId
-                    , scPlanCache       =  planCache
-                    , scLQState         =  lqState
-                    , scEnableAllowlist =  enableAL
-                    , scEkgStore        =  ekgStore
-                    , scEnvironment     =  env
+                    { scPGExecCtx                    =  pgExecCtx
+                    , scConnInfo                     =  ci
+                    , scLogger                       =  logger
+                    , scCacheRef                     =  schemaCacheRef
+                    , scAuthMode                     =  mode
+                    , scManager                      =  httpManager
+                    , scSQLGenCtx                    =  sqlGenCtx
+                    , scEnabledAPIs                  =  apis
+                    , scInstanceId                   =  instanceId
+                    , scPlanCache                    =  planCache
+                    , scLQState                      =  lqState
+                    , scEnableAllowlist              =  enableAL
+                    , scEkgStore                     =  ekgStore
+                    , scEnvironment                  =  env
                     , scResponseInternalErrorsConfig = responseErrorsConfig
+                    , scEnableMaintenanceMode        = maintenanceMode
                     }
 
     when (isDeveloperAPIEnabled serverCtx) $ do

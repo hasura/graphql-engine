@@ -36,34 +36,45 @@ data RawConnParams
 
 type RawAuthHook = AuthHookG (Maybe T.Text) (Maybe AuthHookType)
 
+data MaintenanceMode = MaintenanceModeEnabled | MaintenanceModeDisabled
+  deriving (Show, Eq)
+
+instance J.FromJSON MaintenanceMode where
+  parseJSON = J.withBool "MaintenanceMode" $
+    pure . bool MaintenanceModeDisabled MaintenanceModeEnabled
+
+instance J.ToJSON MaintenanceMode where
+  toJSON = J.Bool . (== MaintenanceModeEnabled)
+
 data RawServeOptions impl
   = RawServeOptions
-  { rsoPort                :: !(Maybe Int)
-  , rsoHost                :: !(Maybe HostPreference)
-  , rsoConnParams          :: !RawConnParams
-  , rsoTxIso               :: !(Maybe Q.TxIsolation)
-  , rsoAdminSecret         :: !(Maybe AdminSecretHash)
-  , rsoAuthHook            :: !RawAuthHook
-  , rsoJwtSecret           :: !(Maybe JWTConfig)
-  , rsoUnAuthRole          :: !(Maybe RoleName)
-  , rsoCorsConfig          :: !(Maybe CorsConfig)
-  , rsoEnableConsole       :: !Bool
-  , rsoConsoleAssetsDir    :: !(Maybe Text)
-  , rsoEnableTelemetry     :: !(Maybe Bool)
-  , rsoWsReadCookie        :: !Bool
-  , rsoStringifyNum        :: !Bool
-  , rsoEnabledAPIs         :: !(Maybe [API])
-  , rsoMxRefetchInt        :: !(Maybe LQ.RefetchInterval)
-  , rsoMxBatchSize         :: !(Maybe LQ.BatchSize)
-  , rsoEnableAllowlist     :: !Bool
-  , rsoEnabledLogTypes     :: !(Maybe [L.EngineLogType impl])
-  , rsoLogLevel            :: !(Maybe L.LogLevel)
-  , rsoPlanCacheSize       :: !(Maybe Cache.CacheSize)
-  , rsoDevMode             :: !Bool
-  , rsoAdminInternalErrors :: !(Maybe Bool)
-  , rsoEventsHttpPoolSize  :: !(Maybe Int)
-  , rsoEventsFetchInterval :: !(Maybe Milliseconds)
-  , rsoLogHeadersFromEnv   :: !Bool
+  { rsoPort                  :: !(Maybe Int)
+  , rsoHost                  :: !(Maybe HostPreference)
+  , rsoConnParams            :: !RawConnParams
+  , rsoTxIso                 :: !(Maybe Q.TxIsolation)
+  , rsoAdminSecret           :: !(Maybe AdminSecretHash)
+  , rsoAuthHook              :: !RawAuthHook
+  , rsoJwtSecret             :: !(Maybe JWTConfig)
+  , rsoUnAuthRole            :: !(Maybe RoleName)
+  , rsoCorsConfig            :: !(Maybe CorsConfig)
+  , rsoEnableConsole         :: !Bool
+  , rsoConsoleAssetsDir      :: !(Maybe Text)
+  , rsoEnableTelemetry       :: !(Maybe Bool)
+  , rsoWsReadCookie          :: !Bool
+  , rsoStringifyNum          :: !Bool
+  , rsoEnabledAPIs           :: !(Maybe [API])
+  , rsoMxRefetchInt          :: !(Maybe LQ.RefetchInterval)
+  , rsoMxBatchSize           :: !(Maybe LQ.BatchSize)
+  , rsoEnableAllowlist       :: !Bool
+  , rsoEnabledLogTypes       :: !(Maybe [L.EngineLogType impl])
+  , rsoLogLevel              :: !(Maybe L.LogLevel)
+  , rsoPlanCacheSize         :: !(Maybe Cache.CacheSize)
+  , rsoDevMode               :: !Bool
+  , rsoAdminInternalErrors   :: !(Maybe Bool)
+  , rsoEventsHttpPoolSize    :: !(Maybe Int)
+  , rsoEventsFetchInterval   :: !(Maybe Milliseconds)
+  , rsoLogHeadersFromEnv     :: !Bool
+  , rsoEnableMaintenanceMode :: !Bool
   }
 
 -- | @'ResponseInternalErrorsConfig' represents the encoding of the internal
@@ -106,6 +117,7 @@ data ServeOptions impl
   , soEventsHttpPoolSize           :: !(Maybe Int)
   , soEventsFetchInterval          :: !(Maybe Milliseconds)
   , soLogHeadersFromEnv            :: !Bool
+  , soEnableMaintenanceMode        :: !MaintenanceMode
   }
 
 data DowngradeOptions

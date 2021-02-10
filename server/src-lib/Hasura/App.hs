@@ -189,7 +189,7 @@ initialiseCtx env hgeCmd rci = do
   instanceId <- liftIO generateInstanceId
   connInfo <- liftIO procConnInfo
   latch <- liftIO newShutdownLatch
-  (loggers, pool, sqlGenCtx) <- case hgeCmd of
+  (loggers, pool, sqlGenCtx, maintenanceMode) <- case hgeCmd of
     -- for the @serve@ command generate a regular PG pool
     HCServe so@ServeOptions{..} -> do
       l@(Loggers _ logger pgLogger) <- mkLoggers soEnabledLogTypes soLogLevel
@@ -198,16 +198,16 @@ initialiseCtx env hgeCmd rci = do
       -- log postgres connection info
       unLogger logger $ connInfoToLog connInfo
       pool <- liftIO $ Q.initPGPool connInfo soConnParams pgLogger
-      pure (l, pool, SQLGenCtx soStringifyNum)
+      pure (l, pool, SQLGenCtx soStringifyNum, soEnableMaintenanceMode)
 
     -- for other commands generate a minimal PG pool
     _ -> do
       l@(Loggers _ _ pgLogger) <- mkLoggers defaultEnabledLogTypes LevelInfo
       pool <- getMinimalPool pgLogger connInfo
-      pure (l, pool, SQLGenCtx False)
+      pure (l, pool, SQLGenCtx False, MaintenanceModeDisabled)
 
   res <- lift . flip onException (flushLogger (_lsLoggerCtx loggers)) $
-    migrateCatalogSchema env (_lsLogger loggers) pool httpManager sqlGenCtx
+    migrateCatalogSchema env (_lsLogger loggers) pool httpManager sqlGenCtx maintenanceMode
   pure (InitCtx httpManager instanceId loggers connInfo pool latch res, initTime)
   where
     procConnInfo =
@@ -227,13 +227,14 @@ initialiseCtx env hgeCmd rci = do
 migrateCatalogSchema
   :: (HasVersion, MonadIO m)
   => Env.Environment -> Logger Hasura -> Q.PGPool -> HTTP.Manager -> SQLGenCtx
+  -> MaintenanceMode
   -> m (RebuildableSchemaCache Run, Maybe UTCTime)
-migrateCatalogSchema env logger pool httpManager sqlGenCtx = do
+migrateCatalogSchema env logger pool httpManager sqlGenCtx maintenanceMode = do
   let pgExecCtx = mkPGExecCtx Q.Serializable pool
       adminRunCtx = RunCtx adminUserInfo httpManager sqlGenCtx
   currentTime <- liftIO Clock.getCurrentTime
   initialiseResult <- runExceptT $ peelRun adminRunCtx pgExecCtx Q.ReadWrite Nothing $
-    (,) <$> migrateCatalog env currentTime <*> liftTx fetchLastUpdate
+    (,) <$> migrateCatalog env currentTime maintenanceMode <*> liftTx fetchLastUpdate
 
   ((migrationResult, schemaCache), lastUpdateEvent) <-
     initialiseResult `onLeft` \err -> do
@@ -344,13 +345,14 @@ runHGEServer env ServeOptions{..} InitCtx{..} pgExecCtx initTime postPollHook = 
              soResponseInternalErrorsConfig
              postPollHook
              _icSchemaCache
+             soEnableMaintenanceMode
 
   -- log inconsistent schema objects
   inconsObjs <- scInconsistentObjs <$> liftIO (getSCFromRef cacheRef)
   liftIO $ logInconsObjs logger inconsObjs
 
   -- start background threads for schema sync
-  _ <- startSchemaSyncThreads sqlGenCtx _icPgPool 
+  _ <- startSchemaSyncThreads sqlGenCtx _icPgPool
          logger _icHttpManager
          cacheRef _icInstanceId cacheInitTime
 
@@ -403,27 +405,27 @@ runHGEServer env ServeOptions{..} InitCtx{..} pgExecCtx initTime postPollHook = 
         runTelemetry logger _icHttpManager (getSCFromRef cacheRef) dbId _icInstanceId pgVersion
       return $ Just telemetryThread
     else return Nothing
-  
+
   finishTime <- liftIO Clock.getCurrentTime
   let apiInitTime = realToFrac $ Clock.diffUTCTime finishTime initTime
   unLogger logger $
     mkGenericLog LevelInfo "server" $ StartupTimeInfo "starting API server" apiInitTime
-  
+
   let shutdownHandler closeSocket = LA.link =<< LA.async do
         waitForShutdown _icShutdownLatch
         unLogger logger $ mkGenericStrLog LevelInfo "server" "gracefully shutting down server"
         closeSocket
-        
+
   let warpSettings = Warp.setPort soPort
                      . Warp.setHost soHost
                      . Warp.setGracefulShutdownTimeout (Just 30) -- 30s graceful shutdown
                      . Warp.setInstallShutdownHandler shutdownHandler
                      $ Warp.defaultSettings
-                     
+
   -- Here we block until the shutdown latch 'MVar' is filled, and then
   -- shut down the server. Once this blocking call returns, we'll tidy up
   -- any resources using the finalizers attached using 'ManagedT' above.
-  -- Structuring things using the shutdown latch in this way lets us decide 
+  -- Structuring things using the shutdown latch in this way lets us decide
   -- elsewhere exactly how we want to control shutdown.
   liftIO $ Warp.runSettings warpSettings app `LE.finally` do
     -- These cleanup actions are not directly associated with any

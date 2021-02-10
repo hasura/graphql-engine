@@ -37,7 +37,7 @@ import           Hasura.RQL.DML.Select
 import           Hasura.RQL.DML.Update
 import           Hasura.RQL.Types
 import           Hasura.RQL.Types.Run
-import           Hasura.Server.Init                 (InstanceId (..))
+import           Hasura.Server.Init                 (InstanceId (..), MaintenanceMode (..))
 import           Hasura.Server.Utils
 import           Hasura.Server.Version              (HasVersion)
 import           Hasura.Session
@@ -195,8 +195,10 @@ runQuery
   :: (HasVersion, MonadIO m, MonadError QErr m, Tracing.MonadTrace m)
   => Env.Environment -> PGExecCtx -> InstanceId
   -> UserInfo -> RebuildableSchemaCache Run -> HTTP.Manager
-  -> SQLGenCtx -> SystemDefined -> RQLQuery -> m (EncJSON, RebuildableSchemaCache Run)
-runQuery env pgExecCtx instanceId userInfo sc hMgr sqlGenCtx systemDefined query = do
+  -> SQLGenCtx -> SystemDefined -> MaintenanceMode -> RQLQuery -> m (EncJSON, RebuildableSchemaCache Run)
+runQuery env pgExecCtx instanceId userInfo sc hMgr sqlGenCtx systemDefined maintenanceMode query = do
+  when (maintenanceMode == MaintenanceModeEnabled && queryModifiesMetadata query) $
+    throw500 "metadata cannot be modified when maintenance mode is enabled"
   accessMode <- getQueryAccessMode query
   traceCtx <- Tracing.currentContext
   resE <- runQueryM env query & Tracing.interpTraceT \x -> do
@@ -205,7 +207,7 @@ runQuery env pgExecCtx instanceId userInfo sc hMgr sqlGenCtx systemDefined query
            & peelRun runCtx pgExecCtx accessMode (Just traceCtx)
            & runExceptT
            & liftIO
-    pure (either 
+    pure (either
       ((, mempty) . Left)
       (\((js, meta), rsc, ci) -> (Right (js, rsc, ci), meta)) a)
   either throwError withReload resE
@@ -311,6 +313,30 @@ queryModifiesSchemaCache (RQV2 qi) = case qi of
   RQV2TrackTable _           -> True
   RQV2SetTableCustomFields _ -> True
   RQV2TrackFunction _        -> True
+
+-- | Helper function to find which APIs modify the metadata.
+queryModifiesMetadata :: RQLQuery -> Bool
+queryModifiesMetadata (RQV1 qi) = case qi of
+  RQGetInconsistentMetadata _     -> False
+
+  RQInsert _                      -> False
+  RQSelect _                      -> False
+  RQUpdate _                      -> False
+  RQDelete _                      -> False
+  RQCount _                       -> False
+
+  RQIntrospectRemoteSchema _      -> False
+
+  RQRunSql q                      -> isSchemaCacheBuildRequiredRunSQL q
+
+  RQExportMetadata _              -> False
+  RQReloadMetadata _              -> False
+
+  RQDumpInternalState _           -> False
+
+  RQBulk qs                       -> any queryModifiesMetadata qs
+  _                               -> True
+queryModifiesMetadata _ = True
 
 getQueryAccessMode :: (MonadError QErr m) => RQLQuery -> m Q.TxAccess
 getQueryAccessMode q = (fromMaybe Q.ReadOnly) <$> getQueryAccessMode' q

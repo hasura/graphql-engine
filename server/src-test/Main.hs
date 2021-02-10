@@ -22,7 +22,7 @@ import           Hasura.Db                    (mkPGExecCtx)
 import           Hasura.RQL.Types             (SQLGenCtx (..))
 import           Hasura.RQL.Types.Run
 import           Hasura.Server.Init           (RawConnInfo, mkConnInfo, mkRawConnInfo,
-                                               parseRawConnInfo, runWithEnv)
+                                               parseRawConnInfo, runWithEnv, MaintenanceMode (..))
 import           Hasura.Server.Migrate
 import           Hasura.Server.Version
 import           Hasura.Session               (adminUserInfo)
@@ -86,8 +86,11 @@ buildPostgresSpecs pgConnOptions = do
                   peelRun runContext pgContext Q.ReadWrite Nothing
               >>> runExceptT
               >=> flip onLeft printErrJExit
-
-        schemaCache <- snd <$> runAsAdmin (migrateCatalog (Env.mkEnvironment env) =<< liftIO getCurrentTime)
+        schemaCache <-
+          snd <$>
+          runAsAdmin
+            (flip (migrateCatalog (Env.mkEnvironment env)) MaintenanceModeDisabled
+                  =<< liftIO getCurrentTime)
         cacheRef <- newMVar schemaCache
         pure $ NT (runAsAdmin . flip MigrateSpec.runCacheRefT cacheRef)
 

@@ -41,7 +41,7 @@ import           Data.Time.Clock               (UTCTime)
 import           Hasura.Logging                (Hasura, LogLevel (..), ToEngineLog (..))
 import           Hasura.RQL.DDL.Relationship
 import           Hasura.RQL.DDL.Schema
-import           Hasura.Server.Init            (DowngradeOptions (..))
+import           Hasura.Server.Init            (DowngradeOptions (..), MaintenanceMode (..))
 import           Hasura.RQL.Types
 import           Hasura.Server.Logging         (StartupLog (..))
 import           Hasura.Server.Version
@@ -59,6 +59,7 @@ data MigrationResult
   = MRNothingToDo
   | MRInitialized
   | MRMigrated T.Text -- ^ old catalog version
+  | MRMaintanenceMode
   deriving (Show, Eq)
 
 instance ToEngineLog MigrationResult Hasura where
@@ -74,6 +75,8 @@ instance ToEngineLog MigrationResult Hasura where
         MRMigrated oldVersion ->
           "Successfully migrated from catalog version " <> oldVersion <> " to version "
             <> latestCatalogVersionString <> "."
+        MRMaintanenceMode ->
+          "Catalog migrations are on hold because the graphql-engine is in maintenance mode"
     }
 
 -- A migration and (hopefully) also its inverse if we have it.
@@ -95,14 +98,23 @@ migrateCatalog
      )
   => Env.Environment
   -> UTCTime
+  -> MaintenanceMode
   -> m (MigrationResult, RebuildableSchemaCache m)
-migrateCatalog env migrationTime = do
-  doesSchemaExist (SchemaName "hdb_catalog") >>= \case
-    False -> initialize True
-    True  -> doesTableExist (SchemaName "hdb_catalog") (TableName "hdb_version") >>= \case
-      False -> initialize False
-      True  -> migrateFrom =<< getCatalogVersion
+migrateCatalog env migrationTime maintenanceMode = do
+  case maintenanceMode of
+    MaintenanceModeEnabled -> doNothing MRMaintanenceMode
+    MaintenanceModeDisabled ->
+      doesSchemaExist (SchemaName "hdb_catalog") >>= \case
+      False -> initialize True
+      True  -> doesTableExist (SchemaName "hdb_catalog") (TableName "hdb_version") >>= \case
+        False -> initialize False
+        True  -> migrateFrom =<< getCatalogVersion
   where
+    doNothing :: MigrationResult -> m (MigrationResult, RebuildableSchemaCache m)
+    doNothing migrationResult = do
+      schemaCache <- buildRebuildableSchemaCache env
+      pure (migrationResult, schemaCache)
+
     -- initializes the catalog, creating the schema if necessary
     initialize :: Bool -> m (MigrationResult, RebuildableSchemaCache m)
     initialize createSchema =  do
@@ -145,9 +157,7 @@ migrateCatalog env migrationTime = do
     -- migrates an existing catalog to the latest version from an existing verion
     migrateFrom :: T.Text -> m (MigrationResult, RebuildableSchemaCache m)
     migrateFrom previousVersion
-      | previousVersion == latestCatalogVersionString = do
-          schemaCache <- buildRebuildableSchemaCache env
-          pure (MRNothingToDo, schemaCache)
+      | previousVersion == latestCatalogVersionString = doNothing MRNothingToDo
       | [] <- neededMigrations =
           throw400 NotSupported $
             "Cannot use database previously used with a newer version of graphql-engine (expected"
