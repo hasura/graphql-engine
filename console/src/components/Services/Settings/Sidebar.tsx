@@ -61,7 +61,13 @@ const Sidebar: React.FC<SidebarProps> = ({ location, metadata }) => {
 
   const adminSecret = getAdminSecret();
 
-  if (adminSecret && globals.consoleMode !== CLI_CONSOLE_MODE) {
+  if (
+    adminSecret &&
+    globals.consoleMode !== CLI_CONSOLE_MODE &&
+    // userRole is only present on team console
+    // eslint-disable-next-line no-underscore-dangle
+    (!window.__env.userRole || !window.location.host.includes('cloud'))
+  ) {
     sectionsData.push({
       key: 'logout',
       link: '/settings/logout',
