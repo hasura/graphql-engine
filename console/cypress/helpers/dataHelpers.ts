@@ -238,18 +238,24 @@ export const getTrackSampleTableQuery = () => {
 };
 export const dropTable = (table = 'post', cascade = false) => {
   return {
-    type: 'bulk',
-    source: 'default',
-    args: [
-      {
-        type: 'run_sql',
-        args: {
-          sql: `DROP table "public"."${table}"${cascade ? ' CASCADE;' : ';'}`,
-          cascade,
-        },
-      },
-    ],
+    type: 'run_sql',
+    args: {
+      sql: `DROP table "public"."${table}"${cascade ? ' CASCADE;' : ';'}`,
+      cascade,
+    },
   };
 };
+
+export const dropTableIfExists = (
+  table: { name: string; schema: string },
+  source = 'default'
+) => ({
+  type: 'run_sql',
+  source,
+  args: {
+    sql: `DROP TABLE IF EXISTS "${table.schema}"."${table.name}";`,
+    cascade: false,
+  },
+});
 
 export const getSchema = () => 'public';

@@ -13,10 +13,10 @@ import {
   createSampleTable,
   getTrackSampleTableQuery,
   createVolatileFunction,
+  dropTableIfExists,
 } from '../../../helpers/dataHelpers';
 
 import {
-  dropTableRequest,
   dataRequest,
   validateCFunc,
   validateUntrackedFunc,
@@ -70,16 +70,19 @@ export const trackFunction = () => {
 };
 
 export const testSessVariable = () => {
-  // Round about way to create a function
-  const fN = 'customFunctionWithSessionArg'.toLowerCase(); // for reading
-
+  const fN = 'customFunctionWithSessionArg'.toLowerCase();
+  dataRequest(
+    dropTableIfExists({ name: 'text_result', schema: 'public' }),
+    ResultType.SUCCESS
+  );
+  cy.wait(3000);
   dataRequest(createSampleTable(), ResultType.SUCCESS, 'query');
-  cy.wait(5000);
+  cy.wait(3000);
   dataRequest(getTrackSampleTableQuery(), ResultType.SUCCESS, 'metadata');
-  cy.wait(5000);
+  cy.wait(3000);
 
   dataRequest(testCustomFunctionSQLWithSessArg(fN), ResultType.SUCCESS);
-  cy.wait(1500);
+  cy.wait(3000);
 
   trackFunctionRequest(getTrackFnPayload(fN), ResultType.SUCCESS);
   cy.wait(1500);
@@ -105,7 +108,7 @@ export const testSessVariable = () => {
     .clear()
     .type('hasura_session');
   cy.get(getElementFromAlias(`${fN}-session-argument-save`)).click();
-  cy.wait(2000);
+  cy.wait(3000);
   cy.get(getElementFromAlias(fN)).should('be.visible');
   cy.visit(`data/default/schema/public/functions/${fN}/modify`);
   cy.wait(3000);
@@ -113,8 +116,8 @@ export const testSessVariable = () => {
     'contain',
     'hasura_session'
   );
-  dropTableRequest(dropTable('text_result', true), ResultType.SUCCESS);
-  cy.wait(2000);
+  dataRequest(dropTable('text_result', true), ResultType.SUCCESS);
+  cy.wait(3000);
   cy.visit(`data/default/schema/public/`);
 };
 
@@ -139,7 +142,7 @@ export const deleteCustomFunction = () => {
   cy.url().should('eq', `${baseUrl}/data/default/schema/public`);
   cy.wait(5000);
 
-  dropTableRequest(dropTable(), ResultType.SUCCESS);
+  dataRequest(dropTable(), ResultType.SUCCESS);
   cy.wait(5000);
 };
 
@@ -158,7 +161,7 @@ export const trackVolatileFunction = () => {
     'eq',
     `${baseUrl}/data/default/schema/public/functions/${fN}/modify`
   );
-  dropTableRequest(dropTable('text_result', true), ResultType.SUCCESS);
+  dataRequest(dropTable('text_result', true), ResultType.SUCCESS);
 };
 
 export const trackVolatileFunctionAsQuery = () => {
@@ -178,5 +181,5 @@ export const trackVolatileFunctionAsQuery = () => {
     'eq',
     `${baseUrl}/data/default/schema/public/functions/${fN}/modify`
   );
-  dropTableRequest(dropTable('text_result', true), ResultType.SUCCESS);
+  dataRequest(dropTable('text_result', true), ResultType.SUCCESS);
 };

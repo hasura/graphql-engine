@@ -108,7 +108,7 @@ export const getMetadataQuery = (
   args: MetadataQueryArgs;
   version?: number;
 } => {
-  const prefix = currentDriver === 'postgres' ? 'pg_' : 'mysq_';
+  const prefix = currentDriver === 'postgres' ? 'pg_' : 'mysql_';
   return {
     type: `${prefix}${type}`,
     args: { ...args, source },
