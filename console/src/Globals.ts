@@ -22,6 +22,7 @@ declare global {
       consolePath: string;
       cliUUID: string;
       consoleId: Nullable<string>;
+      userRole: Nullable<string>;
     };
   }
   const CONSOLE_ASSET_VERSION: string;
