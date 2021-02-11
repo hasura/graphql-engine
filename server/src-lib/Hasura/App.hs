@@ -90,6 +90,7 @@ data ExitCode
   | AuthConfigurationError
   | EventSubSystemError
   | DatabaseMigrationError
+  | SchemaCacheInitError -- ^ used by MT because it initialises the schema cache only
   -- these are used in app/Main.hs:
   | MetadataExportError
   | MetadataCleanError
@@ -166,36 +167,48 @@ data GlobalCtx
     -- and optional retries
   }
 
+
 initGlobalCtx
   :: (MonadIO m)
   => Env.Environment
   -> Maybe String
+  -- ^ the metadata DB URL
   -> PostgresConnInfo (Maybe UrlConf)
+  -- ^ the user's DB URL
   -> m GlobalCtx
 initGlobalCtx env metadataDbUrl defaultPgConnInfo = do
   httpManager <- liftIO $ HTTP.newManager HTTP.tlsManagerSettings
 
   let PostgresConnInfo dbUrlConf maybeRetries = defaultPgConnInfo
-      maybeMetadataDbConnInfo =
-        let retries = fromMaybe 1 $ _pciRetries defaultPgConnInfo
-        in (Q.ConnInfo retries . Q.CDDatabaseURI . txtToBs . T.pack)
-           <$> metadataDbUrl
+      mkConnInfoFromSource dbUrl = do
+        resolvePostgresConnInfo env dbUrl maybeRetries
 
-  maybeDbUrlAndConnInfo <- forM dbUrlConf $ \dbUrl -> do
-    connInfo <- resolvePostgresConnInfo env dbUrl maybeRetries
-    pure (dbUrl, connInfo)
+      mkConnInfoFromMDb mdbUrl =
+        let retries = fromMaybe 1 maybeRetries
+        in (Q.ConnInfo retries . Q.CDDatabaseURI . txtToBs . T.pack) mdbUrl
 
-  metadataDbConnInfo <-
-    case (maybeMetadataDbConnInfo, maybeDbUrlAndConnInfo) of
-      (Nothing, Nothing) ->
-        printErrExit InvalidDatabaseConnectionParamsError
-        "Fatal Error: Either of --metadata-database-url or --database-url option expected"
-      -- If no metadata storage specified consider use default database as
-      -- metadata storage
-      (Nothing, Just (_, dbConnInfo)) -> pure dbConnInfo
-      (Just mdConnInfo, _) -> pure mdConnInfo
+      mkGlobalCtx mdbConnInfo sourceConnInfo =
+        pure $ GlobalCtx httpManager mdbConnInfo (sourceConnInfo, maybeRetries)
 
-  pure $ GlobalCtx httpManager metadataDbConnInfo (maybeDbUrlAndConnInfo, maybeRetries)
+  case (metadataDbUrl, dbUrlConf) of
+    (Nothing, Nothing) ->
+      printErrExit InvalidDatabaseConnectionParamsError
+      "Fatal Error: Either of --metadata-database-url or --database-url option expected"
+
+    -- If no metadata storage specified consider use default database as
+    -- metadata storage
+    (Nothing, Just dbUrl) -> do
+      connInfo <- mkConnInfoFromSource dbUrl
+      mkGlobalCtx connInfo $ Just (dbUrl, connInfo)
+
+    (Just mdUrl, Nothing) -> do
+      let mdConnInfo = mkConnInfoFromMDb mdUrl
+      mkGlobalCtx mdConnInfo Nothing
+
+    (Just mdUrl, Just dbUrl) -> do
+      srcConnInfo <- mkConnInfoFromSource dbUrl
+      let mdConnInfo = mkConnInfoFromMDb mdUrl
+      mkGlobalCtx mdConnInfo (Just (dbUrl, srcConnInfo))
 
 
 -- | Context required for the 'serve' CLI command.
@@ -207,6 +220,7 @@ data ServeCtx
   , _scMetadataDbPool :: !Q.PGPool
   , _scShutdownLatch  :: !ShutdownLatch
   , _scSchemaCache    :: !RebuildableSchemaCache
+  , _scSchemaCacheRef :: !SchemaCacheRef
   , _scSchemaSyncCtx  :: !SchemaSyncCtx
   }
 
@@ -278,8 +292,12 @@ initialiseServeCtx env GlobalCtx{..} so@ServeOptions{..} = do
       sqlGenCtx soEnableRemoteSchemaPermissions soInferFunctionPermissions (mkPgSourceResolver pgLogger)
 
   let schemaSyncCtx = SchemaSyncCtx schemaSyncListenerThread schemaSyncEventRef cacheInitStartTime
+  -- See Note [Temporarily disabling query plan caching]
+  -- (planCache, schemaCacheRef) <- initialiseCache
+  schemaCacheRef <- initialiseCache rebuildableSchemaCache
+
   pure $ ServeCtx _gcHttpManager instanceId loggers metadataDbPool latch
-                  rebuildableSchemaCache schemaSyncCtx
+                  rebuildableSchemaCache schemaCacheRef schemaSyncCtx
 
 mkLoggers
   :: (MonadIO m, MonadBaseControl IO m)
@@ -453,7 +471,7 @@ runHGEServer env ServeOptions{..} ServeCtx{..} initTime postPollHook serverMetri
              soPlanCacheOptions
              soResponseInternalErrorsConfig
              postPollHook
-             _scSchemaCache
+             _scSchemaCacheRef
              ekgStore
              soEnableRemoteSchemaPermissions
              soInferFunctionPermissions

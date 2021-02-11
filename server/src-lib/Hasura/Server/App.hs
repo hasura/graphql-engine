@@ -754,7 +754,7 @@ mkWaiApp
   -> E.PlanCacheOptions
   -> ResponseInternalErrorsConfig
   -> Maybe EL.LiveQueryPostPollHook
-  -> RebuildableSchemaCache
+  -> SchemaCacheRef
   -> EKG.Store
   -> RemoteSchemaPermsCtx
   -> FunctionPermissionsCtx
@@ -764,11 +764,8 @@ mkWaiApp
   -> m HasuraApp
 mkWaiApp env logger sqlGenCtx enableAL httpManager mode corsCfg enableConsole consoleAssetsDir
          enableTelemetry instanceId apis lqOpts _ {- planCacheOptions -} responseErrorsConfig
-         liveQueryHook schemaCache ekgStore enableRSPermsCtx functionPermsCtx connectionOptions keepAliveDelay = do
+         liveQueryHook schemaCacheRef ekgStore enableRSPermsCtx functionPermsCtx connectionOptions keepAliveDelay = do
 
-    -- See Note [Temporarily disabling query plan caching]
-    -- (planCache, schemaCacheRef) <- initialiseCache
-    schemaCacheRef <- initialiseCache
     let getSchemaCache = first lastBuiltSchemaCache <$> readIORef (_scrCache schemaCacheRef)
 
     let corsPolicy = mkDefaultCorsPolicy corsCfg
@@ -807,17 +804,17 @@ mkWaiApp env logger sqlGenCtx enableAL httpManager mode corsCfg enableConsole co
       pure $ WSC.websocketsOr connectionOptions (\ip conn -> lowerIO $ wsServerApp ip conn) spockApp
 
     return $ HasuraApp waiApp schemaCacheRef stopWSServer
-  where
-    -- initialiseCache :: m (E.PlanCache, SchemaCacheRef)
-    initialiseCache :: m SchemaCacheRef
-    initialiseCache = do
-      cacheLock <- liftIO $ newMVar ()
 
-      cacheCell <- liftIO $ newIORef (schemaCache, initSchemaCacheVer)
-      -- planCache <- liftIO $ E.initPlanCache planCacheOptions
-      let cacheRef = SchemaCacheRef cacheLock cacheCell E.clearPlanCache
-      -- pure (planCache, cacheRef)
-      pure cacheRef
+
+-- initialiseCache :: m (E.PlanCache, SchemaCacheRef)
+initialiseCache :: MonadIO m => RebuildableSchemaCache -> m SchemaCacheRef
+initialiseCache schemaCache = do
+  cacheLock <- liftIO $ newMVar ()
+  cacheCell <- liftIO $ newIORef (schemaCache, initSchemaCacheVer)
+  -- planCache <- liftIO $ E.initPlanCache planCacheOptions
+  let cacheRef = SchemaCacheRef cacheLock cacheCell E.clearPlanCache
+  -- pure (planCache, cacheRef)
+  pure cacheRef
 
 
 httpApp
@@ -979,7 +976,7 @@ httpApp corsCfg serverCtx enableConsole consoleAssetsDir enableTelemetry = do
     forM_ [Spock.GET, Spock.POST] $ \m -> Spock.hookAny m $ \_ -> do
       req <- Spock.request
       let headers = Wai.requestHeaders req
-      let qErr = err404 NotFound "resource does not exist"
+          qErr = err404 NotFound "resource does not exist"
       raiseGenericApiError logger headers qErr
 
   where
@@ -1005,14 +1002,14 @@ httpApp corsCfg serverCtx enableConsole consoleAssetsDir enableTelemetry = do
 
       -- serve static files if consoleAssetsDir is set
       onJust consoleAssetsDir $ \dir ->
-        Spock.get ("console/assets" <//> Spock.wildcard) $ \path ->
+        Spock.get ("console/assets" <//> Spock.wildcard) $ \path -> do
           consoleAssetsHandler logger dir (T.unpack path)
 
       -- serve console html
       Spock.get ("console" <//> Spock.wildcard) $ \path -> do
         req <- Spock.request
         let headers = Wai.requestHeaders req
-        let authMode = scAuthMode serverCtx
+            authMode = scAuthMode serverCtx
         consoleHtml <- lift $ renderConsole path authMode enableTelemetry consoleAssetsDir
         either (raiseGenericApiError logger headers . err500 Unexpected . T.pack) Spock.html consoleHtml
 

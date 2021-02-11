@@ -373,6 +373,7 @@ library
                      , Hasura.RQL.Instances
                      , Hasura.RQL.Types
                      , Hasura.RQL.Types.Action
+                     , Hasura.RQL.Types.ApiLimit
                      , Hasura.RQL.Types.Column
                      , Hasura.RQL.Types.Common
                      , Hasura.RQL.Types.ComputedField
@@ -395,6 +396,7 @@ library
                      , Hasura.RQL.Types.Source
                      , Hasura.RQL.Types.Table
                      , Hasura.RQL.DDL.Action
+                     , Hasura.RQL.DDL.ApiLimit
                      , Hasura.RQL.DDL.ComputedField
                      , Hasura.RQL.DDL.CustomTypes
                      , Hasura.RQL.DDL.Deps

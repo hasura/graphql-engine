@@ -87,6 +87,7 @@ module Hasura.Eventing.ScheduledTrigger
   , getCronEventsTx
   , deleteScheduledEventTx
   , getInvocationsTx
+  , getInvocationsQuery
 
   -- * Export utility functions which are useful to build
   -- SQLs for fetching data from metadata storage
@@ -811,8 +812,12 @@ getInvocationsTx
   -> ScheduledEventPagination
   -> Q.TxE QErr (WithTotalCount [ScheduledEventInvocation])
 getInvocationsTx invocationsBy pagination = do
-  let sql = Q.fromBuilder $ toSQL $ mkPaginationSelectExp allRowsSelect pagination
+  let sql = Q.fromBuilder $ toSQL $ getInvocationsQuery invocationsBy pagination
   (withCount . Q.getRow) <$> Q.withQE defaultTxErrorHandler sql () True
+
+getInvocationsQuery :: GetInvocationsBy -> ScheduledEventPagination -> S.Select
+getInvocationsQuery invocationsBy pagination =
+  mkPaginationSelectExp allRowsSelect pagination
   where
     createdAtOrderBy table =
       let createdAtCol = S.SEQIdentifier $ S.mkQIdentifierTable table $ Identifier "created_at"

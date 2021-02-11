@@ -9,6 +9,9 @@ module Hasura.RQL.DDL.Metadata
   , runGetCatalogState
   , runSetCatalogState
 
+  , runSetMetricsConfig
+  , runRemoveMetricsConfig
+
   , module Hasura.RQL.DDL.Metadata.Types
   ) where
 
@@ -20,7 +23,7 @@ import qualified Data.HashMap.Strict.InsOrd        as OMap
 import qualified Data.HashSet                      as HS
 import qualified Data.List                         as L
 
-import           Control.Lens                      ((^?))
+import           Control.Lens                      ((.~), (^?))
 import           Data.Aeson
 
 import           Hasura.Metadata.Class
@@ -93,6 +96,7 @@ runReplaceMetadata replaceMetadata = do
       pure $ Metadata (OMap.singleton defaultSource newDefaultSourceMetadata)
                         _mnsRemoteSchemas _mnsQueryCollections _mnsAllowlist
                         _mnsCustomTypes _mnsActions _mnsCronTriggers (_metaRestEndpoints oldMetadata)
+                        emptyApiLimit emptyMetricsConfig
   putMetadata metadata
   buildSchemaCacheStrict
   -- See Note [Clear postgres schema for dropped triggers]
@@ -198,4 +202,24 @@ runSetCatalogState
   :: (MonadMetadataStorageQueryAPI m) => SetCatalogState -> m EncJSON
 runSetCatalogState SetCatalogState{..} = do
   updateCatalogState _scsType _scsState
+  pure successMsg
+
+runSetMetricsConfig
+  :: (MonadIO m, CacheRWM m, MetadataM m, MonadError QErr m)
+  => MetricsConfig -> m EncJSON
+runSetMetricsConfig mc = do
+  withNewInconsistentObjsCheck
+    $ buildSchemaCache
+    $ MetadataModifier
+    $ metaMetricsConfig .~ mc
+  pure successMsg
+
+runRemoveMetricsConfig
+  :: (MonadIO m, CacheRWM m, MetadataM m, MonadError QErr m)
+  => m EncJSON
+runRemoveMetricsConfig = do
+  withNewInconsistentObjsCheck
+    $ buildSchemaCache
+    $ MetadataModifier
+    $ metaMetricsConfig .~ emptyMetricsConfig
   pure successMsg

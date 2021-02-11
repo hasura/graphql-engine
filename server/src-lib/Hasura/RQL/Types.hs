@@ -49,6 +49,7 @@ import qualified Hasura.Backends.Postgres.SQL.Types  as PG
 import           Hasura.Backends.Postgres.Connection as R
 import           Hasura.RQL.IR.BoolExp               as R
 import           Hasura.RQL.Types.Action             as R
+import           Hasura.RQL.Types.ApiLimit           as R
 import           Hasura.RQL.Types.Column             as R
 import           Hasura.RQL.Types.Common             as R
 import           Hasura.RQL.Types.ComputedField      as R

@@ -195,6 +195,8 @@ buildSchemaCacheRule env = proc (metadata, invalidationKeys) -> do
         <> dependencyInconsistentObjects
         <> toList gqlSchemaInconsistentObjects
         <> toList relaySchemaInconsistentObjects
+    , scApiLimits = _boApiLimits resolvedOutputs
+    , scMetricsConfig = _boMetricsConfig resolvedOutputs
     }
   where
     resolveSourceIfNeeded
@@ -286,7 +288,7 @@ buildSchemaCacheRule env = proc (metadata, invalidationKeys) -> do
       => (Metadata, Inc.Dependency InvalidationKeys) `arr` BuildOutputs 'Postgres
     buildAndCollectInfo = proc (metadata, invalidationKeys) -> do
       let Metadata sources remoteSchemas collections allowlists
-            customTypes actions cronTriggers endpoints = metadata
+            customTypes actions cronTriggers endpoints apiLimits metricsConfig = metadata
           remoteSchemaPermissions =
             let remoteSchemaPermsList = OMap.toList $ _rsmPermissions <$> remoteSchemas
             in concat $ flip map remoteSchemaPermsList $
@@ -371,6 +373,8 @@ buildSchemaCacheRule env = proc (metadata, invalidationKeys) -> do
         , _boCustomTypes = annotatedCustomTypes
         , _boCronTriggers = cronTriggersMap
         , _boEndpoints = resolvedEndpoints
+        , _boApiLimits = apiLimits
+        , _boMetricsConfig = metricsConfig
         }
 
     mkEndpointMetadataObject (name, createEndpoint) =

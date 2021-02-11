@@ -43,9 +43,7 @@ instance L.ToEngineLog QueryLog L.Hasura where
 class Monad m => MonadQueryLog m where
   logQueryLog
     :: L.Logger L.Hasura
-    -- ^ logger
     -> GQLReqUnparsed
-    -- ^ GraphQL request
     -> Maybe (G.Name, EQ.PreparedSql)
     -- ^ Generated SQL if any
     -> RequestId

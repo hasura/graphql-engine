@@ -3,6 +3,7 @@ module Hasura.RQL.Types.Metadata where
 
 import           Hasura.Prelude
 
+import qualified Data.Aeson.Casing                   as Casing
 import qualified Data.Aeson.Ordered                  as AO
 import qualified Data.HashMap.Strict.Extended        as M
 import qualified Data.HashMap.Strict.InsOrd.Extended as OM
@@ -21,6 +22,7 @@ import           Data.Text.Extended
 import           Hasura.Backends.Postgres.SQL.Types
 import           Hasura.Incremental                  (Cacheable)
 import           Hasura.RQL.Types.Action
+import           Hasura.RQL.Types.ApiLimit
 import           Hasura.RQL.Types.Common
 import           Hasura.RQL.Types.ComputedField
 import           Hasura.RQL.Types.CustomTypes
@@ -386,6 +388,20 @@ mkSourceMetadata name urlConf connSettings =
 
 type Sources = InsOrdHashMap SourceName SourceMetadata
 
+-- | Various user-controlled configuration for metrics used by Pro
+data MetricsConfig
+  = MetricsConfig
+  { _mcAnalyzeQueryVariables :: !Bool
+  -- ^ should the query-variables be logged and analyzed for metrics
+  , _mcAnalyzeResponseBody   :: !Bool
+  -- ^ should the response-body be analyzed for empty and null responses
+  } deriving (Show, Eq, Generic)
+
+$(deriveJSON (Casing.aesonPrefix Casing.snakeCase) ''MetricsConfig)
+
+emptyMetricsConfig :: MetricsConfig
+emptyMetricsConfig = MetricsConfig False False
+
 parseNonSourcesMetadata
   :: Object
   -> Parser
@@ -395,6 +411,8 @@ parseNonSourcesMetadata
      , CustomTypes
      , Actions
      , CronTriggers
+     , ApiLimit
+     , MetricsConfig
      )
 parseNonSourcesMetadata o = do
   remoteSchemas <- parseListAsMap "remote schemas" _rsmName $
@@ -406,9 +424,14 @@ parseNonSourcesMetadata o = do
   actions <- parseListAsMap "actions" _amName $ o .:? "actions" .!= []
   cronTriggers <- parseListAsMap "cron triggers" ctName $
                   o .:? "cron_triggers" .!= []
+
+  apiLimits     <- o .:? "api_limits" .!= emptyApiLimit
+  metricsConfig <- o .:? "metrics_config" .!= emptyMetricsConfig
+
   pure ( remoteSchemas, queryCollections, allowlist, customTypes
-       , actions, cronTriggers
+       , actions, cronTriggers, apiLimits, metricsConfig
        )
+
 
 -- | A complete GraphQL Engine metadata representation to be stored,
 -- exported/replaced via metadata queries.
@@ -422,7 +445,10 @@ data Metadata
   , _metaActions          :: !Actions
   , _metaCronTriggers     :: !CronTriggers
   , _metaRestEndpoints    :: !Endpoints
+  , _metaApiLimits        :: !ApiLimit
+  , _metaMetricsConfig    :: !MetricsConfig
   } deriving (Show, Eq)
+
 $(makeLenses ''Metadata)
 
 instance FromJSON Metadata where
@@ -434,13 +460,14 @@ instance FromJSON Metadata where
     endpoints <- oMapFromL _ceName <$> o .:? "rest_endpoints" .!= []
 
     (remoteSchemas, queryCollections, allowlist, customTypes,
-     actions, cronTriggers) <- parseNonSourcesMetadata o
+     actions, cronTriggers, apiLimits, metricsConfig) <- parseNonSourcesMetadata o
     pure $ Metadata sources remoteSchemas queryCollections allowlist
-           customTypes actions cronTriggers endpoints
+           customTypes actions cronTriggers endpoints apiLimits metricsConfig
 
 emptyMetadata :: Metadata
 emptyMetadata =
   Metadata mempty mempty mempty mempty emptyCustomTypes mempty mempty mempty
+    emptyApiLimit emptyMetricsConfig
 
 tableMetadataSetter
   :: SourceName -> QualifiedTable -> ASetter' Metadata TableMetadata
@@ -477,7 +504,7 @@ instance FromJSON MetadataNoSources where
           pure (tables, functions)
         MVVersion3 -> fail "unexpected version for metadata without sources: 3"
     (remoteSchemas, queryCollections, allowlist, customTypes,
-     actions, cronTriggers) <- parseNonSourcesMetadata o
+     actions, cronTriggers, _, _) <- parseNonSourcesMetadata o
     pure $ MetadataNoSources tables functions remoteSchemas queryCollections
                              allowlist customTypes actions cronTriggers
 
@@ -516,7 +543,9 @@ metadataToOrdJSON ( Metadata
                     actions
                     cronTriggers
                     endpoints
-                  ) = AO.object $ [versionPair, sourcesPair] <>
+                    apiLimits
+                    metricsConfig
+                  ) = AO.object $ [ versionPair , sourcesPair] <>
                       catMaybes [ remoteSchemasPair
                                 , queryCollectionsPair
                                 , allowlistPair
@@ -524,6 +553,8 @@ metadataToOrdJSON ( Metadata
                                 , customTypesPair
                                 , cronTriggersPair
                                 , endpointsPair
+                                , apiLimitsPair
+                                , metricsConfigPair
                                 ]
   where
     versionPair          = ("version", AO.toOrdered currentMetadataVersion)
@@ -536,6 +567,12 @@ metadataToOrdJSON ( Metadata
     actionsPair          = listToMaybeOrdPairSort "actions" actionMetadataToOrdJSON _amName actions
     cronTriggersPair     = listToMaybeOrdPairSort "cron_triggers" crontriggerQToOrdJSON ctName cronTriggers
     endpointsPair        = listToMaybeOrdPairSort "rest_endpoints" AO.toOrdered _ceUrl endpoints
+
+    apiLimitsPair        = if apiLimits == emptyApiLimit then Nothing
+                           else Just ("api_limits", AO.toOrdered apiLimits)
+
+    metricsConfigPair    = if metricsConfig == emptyMetricsConfig then Nothing
+                           else Just ("metrics_config", AO.toOrdered metricsConfig)
 
     sourceMetaToOrdJSON :: SourceMetadata -> AO.Value
     sourceMetaToOrdJSON SourceMetadata{..} =

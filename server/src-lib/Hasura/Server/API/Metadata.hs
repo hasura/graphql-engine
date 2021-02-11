@@ -17,6 +17,7 @@ import qualified Hasura.Tracing                     as Tracing
 import           Hasura.EncJSON
 import           Hasura.Metadata.Class
 import           Hasura.RQL.DDL.Action
+import           Hasura.RQL.DDL.ApiLimit
 import           Hasura.RQL.DDL.ComputedField
 import           Hasura.RQL.DDL.CustomTypes
 import           Hasura.RQL.DDL.Endpoint
@@ -141,6 +142,14 @@ data RQLMetadata
 
   | RMGetCatalogState !GetCatalogState
   | RMSetCatalogState !SetCatalogState
+
+  -- 'ApiLimit' related
+  | RMSetApiLimits !ApiLimit
+  | RMRemoveApiLimits
+
+  -- 'MetricsConfig' related
+  | RMSetMetricsConfig !MetricsConfig
+  | RMRemoveMetricsConfig
 
   -- bulk metadata queries
   | RMBulk [RQLMetadata]
@@ -289,5 +298,11 @@ runMetadataQueryM env = withPathK "args" . \case
 
   RMGetCatalogState q             -> runGetCatalogState q
   RMSetCatalogState q             -> runSetCatalogState q
+
+  RMSetApiLimits q                -> runSetApiLimits q
+  RMRemoveApiLimits               -> runRemoveApiLimits
+
+  RMSetMetricsConfig q            -> runSetMetricsConfig q
+  RMRemoveMetricsConfig           -> runRemoveMetricsConfig
 
   RMBulk q                        -> encJFromList <$> indexedMapM (runMetadataQueryM env) q

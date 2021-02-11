@@ -147,6 +147,7 @@ import           Hasura.Incremental                  (Cacheable, Dependency, Mon
                                                       selectKeyD)
 import           Hasura.RQL.IR.BoolExp
 import           Hasura.RQL.Types.Action
+import           Hasura.RQL.Types.ApiLimit
 import           Hasura.RQL.Types.Common
 import           Hasura.RQL.Types.ComputedField
 import           Hasura.RQL.Types.CustomTypes
@@ -285,6 +286,8 @@ data SchemaCache
   , scInconsistentObjs            :: ![InconsistentMetadata]
   , scCronTriggers                :: !(M.HashMap TriggerName CronTriggerInfo)
   , scEndpoints                   :: !(EndpointTrie GQLQueryWithText)
+  , scApiLimits                   :: !ApiLimit
+  , scMetricsConfig               :: !MetricsConfig
   }
 $(deriveToJSON hasuraJSON ''SchemaCache)
 

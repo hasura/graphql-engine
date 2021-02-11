@@ -111,6 +111,8 @@ data BuildOutputs (b :: BackendType)
   , _boCustomTypes   :: !(AnnotatedCustomTypes b)
   , _boCronTriggers  :: !(M.HashMap TriggerName CronTriggerInfo)
   , _boEndpoints     :: !(M.HashMap EndpointName (EndpointMetadata GQLQueryWithText))
+  , _boApiLimits     :: !ApiLimit
+  , _boMetricsConfig :: !MetricsConfig
   }
 $(makeLenses ''BuildOutputs)
 
