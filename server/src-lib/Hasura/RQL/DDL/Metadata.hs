@@ -20,7 +20,7 @@ import qualified Data.HashMap.Strict.InsOrd        as OMap
 import qualified Data.HashSet                      as HS
 import qualified Data.List                         as L
 
-import           Control.Lens                      ((.~), (^?))
+import           Control.Lens                      ((^?))
 import           Data.Aeson
 
 import           Hasura.Metadata.Class
@@ -110,36 +110,11 @@ runReplaceMetadata replaceMetadata = do
 
 
 runExportMetadata
-  :: forall m . ( QErrM m, MetadataM m, HasServerConfigCtx m)
+  :: forall m . ( QErrM m, MetadataM m)
   => ExportMetadata -> m EncJSON
 runExportMetadata _ = do
-  functionPermsCtx <- _sccFunctionPermsCtx <$> askServerConfigCtx
   metadata         <- getMetadata
-  exportMetadata   <- processFunctionPermissions functionPermsCtx metadata
-  pure $ AO.toEncJSON . metadataToOrdJSON $ exportMetadata
-  where
-    -- | when FunctionPermissionsCtx is set to `FunctionPermissionsInferred`
-    --   we don't export the function permissions to the exported metadata
-    --   Note: Please **do not** make this function public as this is only meant
-    --   to be used while exporting metadata i.e. we don't intend on deleting
-    --   any function permissions that may exist in the DB, we simply hide it
-    --   from the user.
-    processFunctionPermissions :: FunctionPermissionsCtx -> Metadata -> m Metadata
-    processFunctionPermissions FunctionPermissionsManual metadata = pure metadata
-    processFunctionPermissions FunctionPermissionsInferred metadata =
-      let sources = OMap.keys $ _metaSources metadata
-      in foldrM clearFunctionPermission metadata sources
-      where
-        clearFunctionPermission sourceName accumulatedMetadata = do
-          let sourceFunctions =
-                OMap.keys . _smFunctions <$> OMap.lookup sourceName (_metaSources accumulatedMetadata)
-          functions <- onNothing sourceFunctions (throw500 "unexpected: runExportMetadata - source not found")
-          pure $ foldr
-                 (\functionName md ->
-                    ((metaSources.ix sourceName.smFunctions.ix functionName.fmPermissions .~ mempty) md))
-                 accumulatedMetadata
-                 functions
-
+  pure $ AO.toEncJSON . metadataToOrdJSON $ metadata
 
 runReloadMetadata :: (QErrM m, CacheRWM m, MetadataM m) => ReloadMetadata -> m EncJSON
 runReloadMetadata (ReloadMetadata reloadRemoteSchemas reloadSources) = do

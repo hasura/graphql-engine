@@ -237,9 +237,6 @@ buildSchemaCacheRule env = proc (metadata, invalidationKeys) -> do
       tableRawInfos <- buildTableCache -< ( source, sourceConfig, pgTables
                                           , tableInputs, metadataInvalidationKey
                                           )
-      -- function permissions context
-      functionPermsCtx <- bindA -< _sccFunctionPermsCtx <$> askServerConfigCtx
-
       -- relationships and computed fields
       let nonColumnsByTable = mapFromL _nctiTable nonColumnInputs
       tableCoreInfos <-
@@ -262,16 +259,12 @@ buildSchemaCacheRule env = proc (metadata, invalidationKeys) -> do
 
       -- sql functions
       functionCache <- (mapFromL _fmFunction (OMap.elems functions) >- returnA)
-        >-> (| Inc.keyed (\_ (FunctionMetadata qf config rawFuncPermissions) -> do
+        >-> (| Inc.keyed (\_ (FunctionMetadata qf config functionPermissions) -> do
                  let systemDefined = SystemDefined False
                      definition = toJSON $ TrackFunction qf
                      metadataObject = MetadataObject (MOSourceObjId source $ SMOFunction qf) definition
                      schemaObject = SOSourceObj source $ SOIFunction qf
                      addFunctionContext e = "in function " <> qf <<> ": " <> e
-                     functionPermissions =
-                       case functionPermsCtx of
-                         FunctionPermissionsInferred -> []
-                         FunctionPermissionsManual   -> rawFuncPermissions
                  (| withRecordInconsistency (
                     (| modifyErrA (do
                          let funcDefs = fromMaybe [] $ M.lookup qf pgFunctions

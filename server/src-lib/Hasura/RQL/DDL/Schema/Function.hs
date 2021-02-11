@@ -116,6 +116,7 @@ mkFunctionInfo source qf systemDefined FunctionConfig{..} permissions rawFuncInf
       let retTable = typeToTable returnType
           retJsonAggSelect = bool JASSingleObject JASMultipleRows retSet
 
+
           functionInfo =
             FunctionInfo qf systemDefined funVol exposeAs inputArguments
                          retTable descM (Set.fromList $ _fpmRole <$> permissions)
@@ -296,14 +297,10 @@ runCreateFunctionPermission
   :: ( CacheRWM m
      , MonadError QErr m
      , MetadataM m
-     , HasServerConfigCtx m
      )
   => CreateFunctionPermission
   -> m EncJSON
 runCreateFunctionPermission (CreateFunctionPermission functionName source role) = do
-  functionPermsCtx <- _sccFunctionPermsCtx <$> askServerConfigCtx
-  unless (functionPermsCtx == FunctionPermissionsManual) $
-    throw400 NotSupported "function permission can only be created when inferring of function permissions is disabled"
   sourceCache <- scPostgres <$> askSchemaCache
   functionInfo <- askPGFunctionInfo source functionName
   when (role `elem` _fiPermissions functionInfo) $
