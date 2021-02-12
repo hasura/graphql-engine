@@ -1,3 +1,4 @@
+{-# LANGUAGE NamedFieldPuns  #-}
 {-# LANGUAGE RecordWildCards #-}
 
 module Main where
@@ -73,10 +74,17 @@ runApp env (HGEOptionsG rci metadataDbUrl hgeCmd) = do
         -- Warp, and is triggered by invoking the 'closeSocket' callback.
         -- We only catch the SIGTERM signal once, that is, if the user hits CTRL-C
         -- once again, we terminate the process immediately.
-        _ <- liftIO $ Signals.installHandler
-          Signals.sigTERM
-          (Signals.CatchOnce (shutdownGracefully $ _scShutdownLatch serveCtx))
-          Nothing
+
+        -- The function is written in this style to avoid the shutdown
+        -- handler retaining a reference to the entire serveCtx (see #344)
+        -- If you modify this code then you should check the core to see
+        -- that serveCtx is not retained.
+        _ <- case serveCtx of
+               ServeCtx{_scShutdownLatch} ->
+                liftIO $ Signals.installHandler
+                  Signals.sigTERM
+                  (Signals.CatchOnce (shutdownGracefully _scShutdownLatch))
+                  Nothing
 
         let Loggers _ logger pgLogger = _scLoggers serveCtx
         _idleGCThread <- C.forkImmortal "ourIdleGC" logger $

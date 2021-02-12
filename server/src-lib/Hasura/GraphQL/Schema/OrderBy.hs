@@ -86,7 +86,7 @@ orderByAggregation
   => TableName b
   -> SelPermInfo b
   -> m (Parser 'Input n [IR.OrderByItemG b (IR.AnnAggregateOrderBy b)])
-orderByAggregation table selectPermissions = do
+orderByAggregation table selectPermissions = memoizeOn 'orderByAggregation table do
   -- WIP NOTE
   -- there is heavy duplication between this and Select.tableAggregationFields
   -- it might be worth putting some of it in common, just to avoid issues when

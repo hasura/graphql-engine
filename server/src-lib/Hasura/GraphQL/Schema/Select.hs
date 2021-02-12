@@ -93,7 +93,7 @@ selectTable
   -> Maybe G.Description  -- ^ field description, if any
   -> SelPermInfo b        -- ^ select permissions of the table
   -> m (FieldParser n (SelectExp b))
-selectTable table fieldName description selectPermissions = do
+selectTable table fieldName description selectPermissions = memoizeOn 'selectTable (table, fieldName) do
   stringifyNum       <- asks $ qcStringifyNum . getter
   tableArgsParser    <- tableArgs table selectPermissions
   selectionSetParser <- tableSelectionList table selectPermissions
@@ -142,7 +142,7 @@ selectTableConnection
   -> m (Maybe (FieldParser n (ConnectionSelectExp b)))
 selectTableConnection table fieldName description pkeyColumns selectPermissions = do
   xRelay <- asks $ backendRelay @b . getter
-  for xRelay \xRelayInfo -> do
+  for xRelay \xRelayInfo -> memoizeOn 'selectTableConnection (table, fieldName) do
     stringifyNum       <- asks $ qcStringifyNum . getter
     selectArgsParser   <- tableConnectionArgs pkeyColumns table selectPermissions
     selectionSetParser <- P.nonNullableParser <$> tableConnectionSelectionSet table selectPermissions
@@ -186,27 +186,28 @@ selectTableByPk
   -> SelPermInfo b        -- ^ select permissions of the table
   -> m (Maybe (FieldParser n (SelectExp b)))
 selectTableByPk table fieldName description selectPermissions = runMaybeT do
-  stringifyNum <- asks $ qcStringifyNum . getter
   primaryKeys <- MaybeT $ fmap _pkColumns . _tciPrimaryKey . _tiCoreInfo <$> askTableInfo table
   guard $ all (\c -> pgiColumn c `Set.member` spiCols selectPermissions) primaryKeys
-  argsParser <- lift $ sequenceA <$> for primaryKeys \columnInfo -> do
-    field <- columnParser (pgiType columnInfo) (G.Nullability $ pgiIsNullable columnInfo)
-    pure $ BoolFld . AVCol columnInfo . pure . AEQ True . mkParameter <$>
-      P.field (pgiName columnInfo) (pgiDescription columnInfo) field
-  selectionSetParser <- lift $ tableSelectionSet table selectPermissions
-  pure $ P.subselection fieldName description argsParser selectionSetParser
-    <&> \(boolExpr, fields) ->
-      let defaultPerms = tablePermissionsInfo selectPermissions
-          -- Do not account permission limit since the result is just a nullable object
-          permissions  = defaultPerms { IR._tpLimit = Nothing }
-          whereExpr    = Just $ BoolAnd $ toList boolExpr
-      in IR.AnnSelectG
-           { IR._asnFields   = fields
-           , IR._asnFrom     = IR.FromTable table
-           , IR._asnPerm     = permissions
-           , IR._asnArgs     = IR.noSelectArgs { IR._saWhere = whereExpr }
-           , IR._asnStrfyNum = stringifyNum
-           }
+  lift $ memoizeOn 'selectTableByPk (table, fieldName) do
+    stringifyNum <- asks $ qcStringifyNum . getter
+    argsParser <- sequenceA <$> for primaryKeys \columnInfo -> do
+      field <- columnParser (pgiType columnInfo) (G.Nullability $ pgiIsNullable columnInfo)
+      pure $ BoolFld . AVCol columnInfo . pure . AEQ True . mkParameter <$>
+        P.field (pgiName columnInfo) (pgiDescription columnInfo) field
+    selectionSetParser <- tableSelectionSet table selectPermissions
+    pure $ P.subselection fieldName description argsParser selectionSetParser
+      <&> \(boolExpr, fields) ->
+        let defaultPerms = tablePermissionsInfo selectPermissions
+            -- Do not account permission limit since the result is just a nullable object
+            permissions  = defaultPerms { IR._tpLimit = Nothing }
+            whereExpr    = Just $ BoolAnd $ toList boolExpr
+        in IR.AnnSelectG
+             { IR._asnFields   = fields
+             , IR._asnFrom     = IR.FromTable table
+             , IR._asnPerm     = permissions
+             , IR._asnArgs     = IR.noSelectArgs { IR._saWhere = whereExpr }
+             , IR._asnStrfyNum = stringifyNum
+             }
 
 -- | Table aggregation selection
 --
@@ -232,29 +233,30 @@ selectTableAggregate
   -> Maybe G.Description  -- ^ field description, if any
   -> SelPermInfo b        -- ^ select permissions of the table
   -> m (Maybe (FieldParser n (AggSelectExp b)))
-selectTableAggregate table fieldName description selectPermissions = runMaybeT do
+selectTableAggregate table fieldName description selectPermissions = runMaybeT $ do
   guard $ spiAllowAgg selectPermissions
-  stringifyNum    <- asks $ qcStringifyNum . getter
-  tableGQLName    <- lift $ getTableGQLName @b table
-  tableArgsParser <- lift $ tableArgs table selectPermissions
-  aggregateParser <- lift $ tableAggregationFields table selectPermissions
-  nodesParser     <- lift $ tableSelectionList table selectPermissions
-  xNodesAgg       <- MaybeT $ asks $ backendNodesAgg @b . getter
-  let selectionName = tableGQLName <> $$(G.litName "_aggregate")
-      aggregationParser = P.nonNullableParser $
-        parsedSelectionsToFields IR.TAFExp <$>
-        P.selectionSet selectionName (Just $ G.Description $ "aggregated selection of " <>> table)
-        [ IR.TAFNodes xNodesAgg <$> P.subselection_ $$(G.litName "nodes") Nothing nodesParser
-        , IR.TAFAgg <$> P.subselection_ $$(G.litName "aggregate") Nothing aggregateParser
-        ]
-  pure $ P.subselection fieldName description tableArgsParser aggregationParser
-    <&> \(args, fields) -> IR.AnnSelectG
-      { IR._asnFields   = fields
-      , IR._asnFrom     = IR.FromTable table
-      , IR._asnPerm     = tablePermissionsInfo selectPermissions
-      , IR._asnArgs     = args
-      , IR._asnStrfyNum = stringifyNum
-      }
+  xNodesAgg <- MaybeT $ asks $ backendNodesAgg @b . getter
+  lift $ memoizeOn 'selectTableAggregate (table, fieldName) do
+    stringifyNum    <- asks $ qcStringifyNum . getter
+    tableGQLName    <- getTableGQLName @b table
+    tableArgsParser <- tableArgs table selectPermissions
+    aggregateParser <- tableAggregationFields table selectPermissions
+    nodesParser     <- tableSelectionList table selectPermissions
+    let selectionName = tableGQLName <> $$(G.litName "_aggregate")
+        aggregationParser = P.nonNullableParser $
+          parsedSelectionsToFields IR.TAFExp <$>
+          P.selectionSet selectionName (Just $ G.Description $ "aggregated selection of " <>> table)
+          [ IR.TAFNodes xNodesAgg <$> P.subselection_ $$(G.litName "nodes") Nothing nodesParser
+          , IR.TAFAgg <$> P.subselection_ $$(G.litName "aggregate") Nothing aggregateParser
+          ]
+    pure $ P.subselection fieldName description tableArgsParser aggregationParser
+      <&> \(args, fields) -> IR.AnnSelectG
+        { IR._asnFields   = fields
+        , IR._asnFrom     = IR.FromTable table
+        , IR._asnPerm     = tablePermissionsInfo selectPermissions
+        , IR._asnArgs     = args
+        , IR._asnStrfyNum = stringifyNum
+        }
 
 {- Note [Selectability of tables]
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -416,7 +418,7 @@ tableConnectionSelectionSet
   => TableName b
   -> SelPermInfo b
   -> m (Parser 'Output n (IR.ConnectionFields b (UnpreparedValue b)))
-tableConnectionSelectionSet table selectPermissions = do
+tableConnectionSelectionSet table selectPermissions = memoizeOn 'tableConnectionSelectionSet table do
   edgesParser  <- tableEdgesSelectionSet
   tableGQLName <- getTableGQLName @b table
   let connectionTypeName = tableGQLName <> $$(G.litName "Connection")
@@ -808,7 +810,7 @@ tableAggregationFields
   => TableName b
   -> SelPermInfo b
   -> m (Parser 'Output n (IR.AggregateFields b))
-tableAggregationFields table selectPermissions = do
+tableAggregationFields table selectPermissions = memoizeOn 'tableAggregationFields table do
   tableGQLName  <- getTableGQLName @b table
   allColumns <- tableSelectColumns table selectPermissions
   let numericColumns   = onlyNumCols allColumns
