@@ -22,7 +22,7 @@ import {
   functionWrapperConnector,
   permissionsSummaryConnector,
   ModifyCustomFunction,
-  PermissionCustomFunction,
+  FunctionPermissions,
   ConnectedDatabaseManagePage,
 } from '.';
 
@@ -60,7 +60,7 @@ const makeDataRouter = (
           >
             <IndexRedirect to="modify" />
             <Route path="modify" component={ModifyCustomFunction} />
-            <Route path="permissions" component={PermissionCustomFunction} />
+            <Route path="permissions" component={FunctionPermissions} />
           </Route>
           <Route
             path=":schema/tables/:table"

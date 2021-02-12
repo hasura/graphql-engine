@@ -11,6 +11,7 @@ import           Data.Aeson.TH
 
 import qualified Hasura.GraphQL.Execute.LiveQuery.Options as LQ
 
+import           Hasura.RQL.Types                         (FunctionPermissionsCtx)
 import           Hasura.Server.Auth
 import           Hasura.Server.Auth.JWT
 import           Hasura.Server.Version                    (HasVersion, Version, currentVersion)
@@ -27,21 +28,23 @@ $(deriveToJSON hasuraJSON ''JWTInfo)
 
 data ServerConfig
   = ServerConfig
-  { scfgVersion            :: !Version
-  , scfgIsAdminSecretSet   :: !Bool
-  , scfgIsAuthHookSet      :: !Bool
-  , scfgIsJwtSet           :: !Bool
-  , scfgJwt                :: !(Maybe JWTInfo)
-  , scfgIsAllowListEnabled :: !Bool
-  , scfgLiveQueries        :: !LQ.LiveQueriesOptions
-  , scfgConsoleAssetsDir   :: !(Maybe Text)
+  { scfgVersion                       :: !Version
+  , scfgIsFunctionPermissionsInferred :: !FunctionPermissionsCtx
+  , scfgIsAdminSecretSet              :: !Bool
+  , scfgIsAuthHookSet                 :: !Bool
+  , scfgIsJwtSet                      :: !Bool
+  , scfgJwt                           :: !(Maybe JWTInfo)
+  , scfgIsAllowListEnabled            :: !Bool
+  , scfgLiveQueries                   :: !LQ.LiveQueriesOptions
+  , scfgConsoleAssetsDir              :: !(Maybe Text)
   } deriving (Show, Eq)
 
 $(deriveToJSON hasuraJSON ''ServerConfig)
 
-runGetConfig :: HasVersion => AuthMode -> Bool -> LQ.LiveQueriesOptions -> Maybe Text -> ServerConfig
-runGetConfig am isAllowListEnabled liveQueryOpts consoleAssetsDir = ServerConfig
+runGetConfig :: HasVersion => FunctionPermissionsCtx ->  AuthMode -> Bool -> LQ.LiveQueriesOptions -> Maybe Text -> ServerConfig
+runGetConfig functionPermsCtx am isAllowListEnabled liveQueryOpts consoleAssetsDir = ServerConfig
     currentVersion
+    functionPermsCtx
     (isAdminSecretSet am)
     (isAuthHookSet am)
     (isJWTSet am)

@@ -6,6 +6,7 @@ import {
   CustomTypes,
   HasuraMetadataV2,
   QualifiedTable,
+  QualifiedFunction,
 } from './types';
 import { transformHeaders } from '../components/Common/Headers/utils';
 import { LocalEventTriggerState } from '../components/Services/Events/EventTriggers/state';
@@ -82,6 +83,8 @@ export const metadataQueryTypes = [
   'get_event_invocations',
   'get_scheduled_events',
   'delete_scheduled_event',
+  'create_function_permission',
+  'drop_function_permission',
 ] as const;
 
 export type MetadataQueryType = typeof metadataQueryTypes[number];
@@ -753,3 +756,23 @@ export const invokeManualTriggerQuery = (
   args: InvokeManualTriggerArgs,
   source: string
 ) => getMetadataQuery('invoke_event_trigger', source, args);
+
+export const createFunctionPermissionQuery = (
+  source: string,
+  func: QualifiedFunction,
+  role: string
+) =>
+  getMetadataQuery('create_function_permission', source, {
+    function: func,
+    role,
+  });
+
+export const dropFunctionPermissionQuery = (
+  source: string,
+  func: QualifiedFunction,
+  role: string
+) =>
+  getMetadataQuery('drop_function_permission', source, {
+    function: func,
+    role,
+  });

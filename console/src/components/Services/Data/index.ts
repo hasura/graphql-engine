@@ -25,7 +25,7 @@ import dataRouterUtils from './DataRouter';
 import dataReducer from './DataReducer';
 import functionWrapperConnector from './Function/FunctionWrapper';
 import ModifyCustomFunction from './Function/Modify/ModifyCustomFunction';
-import PermissionCustomFunction from './Function/Permission/Permission';
+import FunctionPermissions from './Function/Permission/Permission';
 import ConnectedDatabaseManagePage from './Schema/ManageDatabase';
 
 export {
@@ -49,6 +49,6 @@ export {
   dataReducer,
   functionWrapperConnector,
   ModifyCustomFunction,
-  PermissionCustomFunction,
+  FunctionPermissions,
   ConnectedDatabaseManagePage,
 };

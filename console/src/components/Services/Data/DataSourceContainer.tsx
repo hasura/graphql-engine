@@ -11,11 +11,10 @@ import { showErrorNotification } from '../Common/Notification';
 import {
   fetchDataInit,
   fetchFunctionInit,
-  // updateSchemaInfo,
   UPDATE_CURRENT_DATA_SOURCE,
   UPDATE_CURRENT_SCHEMA,
 } from './DataActions';
-import { setDriver } from '../../../dataSources/dataSources';
+import { setDriver } from '../../../dataSources';
 
 type Params = {
   source?: string;

@@ -155,7 +155,16 @@ export const getTablesInfoSelector = createSelector(
   }
 );
 
-const getFunctions = createSelector(
+// TODO?: make it generic i.e to fetch any property from all tables
+export const getCurrentTableInformation = createSelector(
+  getTables,
+  tables => (tableName: string, tableSchema: string) =>
+    tables?.find(
+      t => tableName === t.table.name && tableSchema === t.table.schema
+    )?.select_permissions ?? []
+);
+
+export const getFunctions = createSelector(
   getDataSourceMetadata,
   source =>
     source?.functions?.map(f => ({
@@ -163,6 +172,7 @@ const getFunctions = createSelector(
       function_name: f.function.name,
       function_schema: f.function.schema,
       configuration: f.configuration,
+      permissions: f?.permissions,
     })) || []
 );
 

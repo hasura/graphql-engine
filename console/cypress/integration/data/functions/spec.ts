@@ -85,7 +85,7 @@ export const testSessVariable = () => {
   cy.wait(3000);
 
   trackFunctionRequest(getTrackFnPayload(fN), ResultType.SUCCESS);
-  cy.wait(1500);
+  cy.wait(5000);
 
   cy.visit(`data/default/schema/public/functions/${fN}/modify`);
   cy.get(getElementFromAlias(`${fN}-session-argument-btn`), {
@@ -148,15 +148,17 @@ export const deleteCustomFunction = () => {
 
 export const trackVolatileFunction = () => {
   const fN = 'customVolatileFunc'.toLowerCase();
+  dataRequest(dropTableIfExists({ name: 'text_result', schema: 'public'}), ResultType.SUCCESS);
+  cy.wait(5000);
   dataRequest(createSampleTable(), ResultType.SUCCESS);
-  cy.wait(1500);
+  cy.wait(5000);
   dataRequest(getTrackSampleTableQuery(), ResultType.SUCCESS, 'metadata');
   dataRequest(createVolatileFunction(fN), ResultType.SUCCESS);
-  cy.wait(1500);
+  cy.wait(5000);
   cy.visit(`data/default/schema/public`);
   cy.get(getElementFromAlias(`add-track-function-${fN}`)).click();
   cy.get(getElementFromAlias('track-as-mutation')).click();
-  cy.wait(500);
+  cy.wait(2000);
   cy.url().should(
     'eq',
     `${baseUrl}/data/default/schema/public/functions/${fN}/modify`
@@ -166,17 +168,19 @@ export const trackVolatileFunction = () => {
 
 export const trackVolatileFunctionAsQuery = () => {
   const fN = 'customVolatileFunc'.toLowerCase();
+  dataRequest(dropTableIfExists({ name: 'text_result', schema: 'public'}), ResultType.SUCCESS);
+  cy.wait(5000);
   dataRequest(createSampleTable(), ResultType.SUCCESS);
-  cy.wait(1500);
+  cy.wait(5000);
   dataRequest(getTrackSampleTableQuery(), ResultType.SUCCESS, 'metadata');
   dataRequest(createVolatileFunction(fN), ResultType.SUCCESS);
-  cy.wait(1500);
+  cy.wait(5000);
   cy.visit(`data/default/schema/public`);
   cy.get(getElementFromAlias(`add-track-function-${fN}`)).click();
   cy.get(getElementFromAlias('track-as-query')).click();
-  cy.wait(100);
+  cy.wait(2000);
   cy.get(getElementFromAlias('track-as-query-confirm')).click();
-  cy.wait(500);
+  cy.wait(2000);
   cy.url().should(
     'eq',
     `${baseUrl}/data/default/schema/public/functions/${fN}/modify`

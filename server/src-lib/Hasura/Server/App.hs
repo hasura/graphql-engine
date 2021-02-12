@@ -688,7 +688,7 @@ configApiGetHandler serverCtx@ServerCtx{..} consoleAssetsDir =
   Spock.get "v1alpha1/config" $ mkSpockAction serverCtx encodeQErr id $
     mkGetHandler $ do
       onlyAdmin
-      let res = runGetConfig scAuthMode scEnableAllowlist
+      let res = runGetConfig scFunctionPermsCtx scAuthMode scEnableAllowlist
                 (EL._lqsOptions $ scLQState) consoleAssetsDir
       return $ JSONResp $ HttpResponse (encJFromJValue res) []
 

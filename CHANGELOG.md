@@ -139,6 +139,7 @@ have select permissions to the target table of the function.
 - console: show only compatible postgres functions in computed fields section (close #5155) (#5978)
 - console: added export data option on browse rows page (close #1438 #5158)
 - console: add session argument field for computed fields (close #5154) (#5610)
+- console: add support for function permissions (#413)
 - cli: add missing global flags for seed command (#5565)
 - cli: allow seeds as alias for seed command (#5693)
 - cli: fix action timeouts not being picked up in metadata operations (#6220)

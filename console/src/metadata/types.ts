@@ -152,6 +152,11 @@ export interface FunctionConfiguration {
   session_argument?: string;
 }
 
+export interface FunctionPermission {
+  role: string;
+  definition?: Record<string, any>;
+}
+
 // ////////////////////////////
 // #endregion CUSTOM FUNCTIONS
 // /////////////////////////////
@@ -865,8 +870,12 @@ export interface MetadataDataSource {
   };
   tables: TableEntry[];
   functions?: Array<{
-    function: { schema: string; name: string };
-    configuration: Record<string, any>;
+    function: QualifiedFunction;
+    configuration?: {
+      exposed_as?: 'mutation' | 'query';
+      session_argument?: string;
+    };
+    permissions?: FunctionPermission[];
   }>;
   query_collections?: QueryCollectionEntry[];
   allowlist?: AllowList[];
