@@ -3,6 +3,7 @@ import {
   getReloadMetadataQuery,
   getReloadRemoteSchemaCacheQuery,
 } from './queryUtils';
+import { HasuraMetadataV3 } from './types';
 
 export const allowedQueriesCollection = 'allowed-queries';
 
@@ -104,3 +105,15 @@ export const getReloadCacheAndGetInconsistentObjectsQuery = (
     inconsistentObjectsQuery,
   ],
 });
+
+export const isMetadataEmpty = (metadataObject: HasuraMetadataV3) => {
+  const { actions, sources, remote_schemas } = metadataObject;
+  const hasRemoteSchema = remote_schemas && remote_schemas.length;
+  const hasAction = actions && actions.length;
+  const hasTable = sources.some(source => source.tables.length);
+  return !(hasRemoteSchema || hasAction || hasTable);
+};
+
+export const hasSources = (metadataObject: HasuraMetadataV3) => {
+  return metadataObject?.sources?.length > 0;
+};

@@ -1,6 +1,5 @@
 import jwt_decode from 'jwt-decode';
 
-import { HasuraMetadataV3 } from '../../metadata/types';
 import { NotificationsState } from '../../telemetry/state';
 import { getLSItem, LS_KEYS, setLSItem } from '../../utils/localStorage';
 import { Nullable } from '../Common/utils/tsUtils';
@@ -101,21 +100,12 @@ const getUserType = (token: string) => {
   }
 };
 
-const isMetadataEmpty = (metadataObject: HasuraMetadataV3) => {
-  const { actions, sources, remote_schemas } = metadataObject;
-  const hasRemoteSchema = remote_schemas && remote_schemas.length;
-  const hasAction = actions && actions.length;
-  const hasTable = sources.some(source => source.tables.length);
-  return !(hasRemoteSchema || hasAction || hasTable);
-};
-
 export {
   getConsoleScope,
   getLoveConsentState,
   getProClickState,
   getReadAllNotificationsState,
   getUserType,
-  isMetadataEmpty,
   setLoveConsentState,
   setProClickState,
 };

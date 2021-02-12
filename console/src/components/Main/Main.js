@@ -356,7 +356,7 @@ class Main extends React.Component {
         <Onboarding
           dispatch={dispatch}
           console_opts={console_opts}
-          metadata={metadata}
+          metadata={metadata.metadataObject}
         />
         <div className={styles.flexRow}>
           <div className={styles.sidebar}>
@@ -471,7 +471,7 @@ class Main extends React.Component {
 const mapStateToProps = (state, ownProps) => {
   return {
     ...state.main,
-    header: { ...state.header },
+    header: state.header,
     pathname: ownProps.location.pathname,
     currentSchema: state.tables.currentSchema,
     currentSource: state.tables.currentDataSource,

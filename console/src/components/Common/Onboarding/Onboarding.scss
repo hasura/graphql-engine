@@ -73,7 +73,7 @@
 }
 .link_container.link:hover {
   text-decoration: underline;
-  i {
+  .link_icon {
     text-decoration: underline;
   }
 }
@@ -84,12 +84,14 @@
   display: inline-flex;
   justify-content: center;
   align-items: center;
-  height: 20px;
+  height: 24px;
   padding: 2px;
-  width: 20px;
+  width: 24px;
   background-color: #eeeeee;
   border-radius: 50%;
   margin-right: 8px;
+  font-size: 12px;
+  font-weight: 600;
 }
 .muted {
   color: #999fb1 !important;
@@ -104,6 +106,20 @@
 }
 .popup_buttons {
   display: flex;
-  padding: 8px 8px 16px;;
+  padding: 8px 8px 16px;
   justify-content: space-between;
+}
+
+.helper_circle {
+  text-align: center;
+  display: inline-block;
+  background: #43495a;
+  color: #fff;
+  margin-right: 8px;
+  height: 24px;
+  width: 24px;
+  border-radius: 30px;
+  font-size: 12px;
+  font-weight: 600;
+  padding-top: 3px;
 }
