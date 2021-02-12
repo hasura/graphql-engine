@@ -171,7 +171,7 @@ buildGQLContext =
               nonObjectCustomTypes remotes roleName remoteSchemaPermsCtx
             QueryRelay ->
               buildRelayRoleContext (sqlGenCtx, queryType, functionPermsCtx) sources allActionInfos
-              nonObjectCustomTypes adminMutationRemotes roleName
+              nonObjectCustomTypes roleName
       )
     unauthenticated <- bindA -< unauthenticatedContext adminQueryRemotes adminMutationRemotes remoteSchemaPermsCtx
     returnA -< (roleContexts, unauthenticated)
@@ -257,11 +257,10 @@ buildRoleContext (SQLGenCtx stringifyNum, queryType, functionPermsCtx) sources
 buildRelayRoleContext
   :: forall m. (MonadError QErr m, MonadIO m, MonadUnique m)
   => (SQLGenCtx, GraphQLQueryType, FunctionPermissionsCtx) -> SourceCache -> [ActionInfo 'Postgres] -> NonObjectTypeMap
-  -> [P.FieldParser (P.ParseT Identity) RemoteField]
   -> RoleName
   -> m (RoleContext GQLContext)
 buildRelayRoleContext (SQLGenCtx stringifyNum, queryType, functionPermsCtx) sources
-  allActionInfos nonObjectCustomTypes mutationRemotes roleName = do
+  allActionInfos nonObjectCustomTypes roleName = do
   -- TODO: At the time of writing this, remote schema queries are not supported in relay.
   -- When they are supported, we should get do what `buildRoleContext` does. Since, they
   -- are not supported yet, we use `mempty` below for `RemoteRelationshipQueryContext`.
@@ -298,11 +297,13 @@ buildRelayRoleContext (SQLGenCtx stringifyNum, queryType, functionPermsCtx) sour
     let (queryPGFields', mutationFrontendFields, mutationBackendFields) = mconcat fieldsList
         queryPGFields = nodeField_:queryPGFields'
 
+    -- Remote schema mutations aren't exposed in relay because many times it throws
+    -- the conflicting definitions error between the relay types like `Node`, `PageInfo` etc
     mutationParserFrontend <-
-      buildMutationParser mutationRemotes allActionInfos nonObjectCustomTypes mutationFrontendFields
+      buildMutationParser mempty allActionInfos nonObjectCustomTypes mutationFrontendFields
 
     mutationParserBackend <-
-      buildMutationParser mutationRemotes allActionInfos nonObjectCustomTypes mutationBackendFields
+      buildMutationParser mempty allActionInfos nonObjectCustomTypes mutationBackendFields
 
     subscriptionParser <- P.safeSelectionSet subscriptionRoot Nothing queryPGFields
                              <&> fmap (fmap (P.handleTypename (RFRaw . J.String. G.unName)))
