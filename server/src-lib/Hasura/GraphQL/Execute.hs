@@ -37,7 +37,7 @@ import           Data.Text.Extended
 import           Data.Typeable
 
 import qualified Hasura.GraphQL.Context                 as C
-import qualified Hasura.GraphQL.Execute.Action          as EA
+import qualified Hasura.GraphQL.Execute.Backend         as EB
 import qualified Hasura.GraphQL.Execute.Inline          as EI
 import qualified Hasura.GraphQL.Execute.LiveQuery       as EL
 import qualified Hasura.GraphQL.Execute.Mutation        as EM
@@ -48,7 +48,7 @@ import qualified Hasura.Logging                         as L
 import qualified Hasura.Server.Telemetry.Counters       as Telem
 import qualified Hasura.Tracing                         as Tracing
 
-import           Hasura.EncJSON
+import           Hasura.GraphQL.Execute.Postgres        ()
 import           Hasura.GraphQL.Parser.Column           (UnpreparedValue)
 import           Hasura.GraphQL.RemoteServer            (execRemoteGQ)
 import           Hasura.GraphQL.Transport.HTTP.Protocol
@@ -166,10 +166,9 @@ getExecPlanPartial userInfo sc queryType req =
 
 -- The graphql query is resolved into a sequence of execution operations
 data ResolvedExecutionPlan tx
-  = QueryExecutionPlan
-      (EPr.ExecutionPlan EA.ActionExecutionPlan (tx EncJSON, Maybe EQ.PreparedSql)) [C.QueryRootField UnpreparedValue]
+  = QueryExecutionPlan (EB.ExecutionPlan tx) [C.QueryRootField UnpreparedValue]
   -- ^ query execution; remote schemas and introspection possible
-  | MutationExecutionPlan (EPr.ExecutionPlan (EA.ActionExecutionPlan, HTTP.ResponseHeaders) (tx EncJSON, HTTP.ResponseHeaders))
+  | MutationExecutionPlan (EB.ExecutionPlan tx)
   -- ^ mutation execution; only __typename introspection supported
   | SubscriptionExecutionPlan EL.LiveQueryPlan
   -- ^ live query execution; remote schemas and introspection not supported
@@ -224,13 +223,12 @@ checkQueryInAllowlist enableAL userInfo req sc =
                    unGQLExecDoc q
 
 getResolvedExecPlan
-  :: forall m tx
+  :: forall tx m
    . ( HasVersion
      , MonadError QErr m
      , MonadMetadataStorage (MetadataStorageT m)
      , MonadIO m
      , Tracing.MonadTrace m
-     , EQ.MonadQueryInstrumentation m
      , MonadIO tx
      , MonadTx tx
      , Tracing.MonadTrace tx
@@ -283,19 +281,18 @@ getResolvedExecPlan env logger {- planCache-} userInfo sqlGenCtx
         G.TypedOperationDefinition G.OperationTypeQuery _ varDefs dirs selSet -> do
           -- (Here the above fragment inlining is actually executed.)
           inlinedSelSet <- EI.inlineSelectionSet fragments selSet
-          (execPlan,asts) {-, plan-} <-
+          uncurry QueryExecutionPlan <$>
             EQ.convertQuerySelSet env logger gCtx userInfo httpManager reqHeaders dirs inlinedSelSet varDefs (_grVariables reqUnparsed)
           -- See Note [Temporarily disabling query plan caching]
           -- traverse_ (addPlanToCache . EP.RPQuery) plan
-          return $ QueryExecutionPlan execPlan asts
         G.TypedOperationDefinition G.OperationTypeMutation _ varDefs _ selSet -> do
           -- (Here the above fragment inlining is actually executed.)
           inlinedSelSet <- EI.inlineSelectionSet fragments selSet
-          queryTx <- EM.convertMutationSelectionSet env logger gCtx sqlGenCtx userInfo httpManager reqHeaders
-                     inlinedSelSet varDefs (_grVariables reqUnparsed)
+          MutationExecutionPlan <$>
+            EM.convertMutationSelectionSet env logger gCtx sqlGenCtx userInfo httpManager reqHeaders
+            inlinedSelSet varDefs (_grVariables reqUnparsed)
           -- See Note [Temporarily disabling query plan caching]
           -- traverse_ (addPlanToCache . EP.RPQuery) plan
-          return $ MutationExecutionPlan queryTx
         G.TypedOperationDefinition G.OperationTypeSubscription _ varDefs directives selSet -> do
           -- (Here the above fragment inlining is actually executed.)
           inlinedSelSet <- EI.inlineSelectionSet fragments selSet

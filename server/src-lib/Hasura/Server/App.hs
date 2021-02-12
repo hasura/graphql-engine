@@ -42,7 +42,6 @@ import qualified Hasura.GraphQL.Execute                    as E
 import qualified Hasura.GraphQL.Execute.LiveQuery          as EL
 import qualified Hasura.GraphQL.Execute.LiveQuery.Poll     as EL
 import qualified Hasura.GraphQL.Execute.Plan               as E
-import qualified Hasura.GraphQL.Execute.Query              as EQ
 import qualified Hasura.GraphQL.Explain                    as GE
 import qualified Hasura.GraphQL.Transport.HTTP             as GH
 import qualified Hasura.GraphQL.Transport.HTTP.Protocol    as GH
@@ -493,7 +492,6 @@ v1Alpha1GQHandler
      , MonadQueryLog m
      , Tracing.MonadTrace m
      , GH.MonadExecuteQuery m
-     , EQ.MonadQueryInstrumentation m
      , MonadError QErr m
      , MonadReader HandlerCtx m
      , MonadMetadataStorage (MetadataStorageT m)
@@ -544,7 +542,6 @@ v1GQHandler
      , MonadQueryLog m
      , Tracing.MonadTrace m
      , GH.MonadExecuteQuery m
-     , EQ.MonadQueryInstrumentation m
      , MonadError QErr m
      , MonadReader HandlerCtx m
      , MonadMetadataStorage (MetadataStorageT m)
@@ -561,7 +558,6 @@ v1GQRelayHandler
      , MonadQueryLog m
      , Tracing.MonadTrace m
      , GH.MonadExecuteQuery m
-     , EQ.MonadQueryInstrumentation m
      , MonadError QErr m
      , MonadReader HandlerCtx m
      , MonadMetadataStorage (MetadataStorageT m)
@@ -722,7 +718,6 @@ mkWaiApp
      , WS.MonadWSLog m
      , Tracing.HasReporter m
      , GH.MonadExecuteQuery m
-     , EQ.MonadQueryInstrumentation m
      , HasResourceLimits m
      , MonadMetadataStorage (MetadataStorageT m)
      , MonadResolveSource m
@@ -832,7 +827,6 @@ httpApp
      , MonadQueryLog m
      , Tracing.HasReporter m
      , GH.MonadExecuteQuery m
-     , EQ.MonadQueryInstrumentation m
      , MonadMetadataStorage (MetadataStorageT m)
      , HasResourceLimits m
      , MonadResolveSource m
@@ -876,7 +870,6 @@ httpApp corsCfg serverCtx enableConsole consoleAssetsDir enableTelemetry = do
              , E.MonadGQLExecutionCheck m
              , MonadQueryLog m
              , GH.MonadExecuteQuery m
-             , EQ.MonadQueryInstrumentation m
              , MonadMetadataStorage (MetadataStorageT m)
              )
           => RestRequest Spock.SpockMethod

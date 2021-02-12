@@ -5,10 +5,6 @@ module Hasura.GraphQL.Execute.Query
   , PreparedSql(..)
   , traverseQueryDB
   , parseGraphQLQuery
-
-  , MonadQueryInstrumentation(..)
-  , ExtractProfile(..)
-  , noProfile
   ) where
 
 import           Hasura.Prelude
@@ -18,76 +14,25 @@ import qualified Data.Environment                       as Env
 import qualified Data.HashMap.Strict                    as Map
 import qualified Data.HashMap.Strict.InsOrd             as OMap
 import qualified Data.Sequence.NonEmpty                 as NESeq
-import qualified Database.PG.Query                      as Q
 import qualified Language.GraphQL.Draft.Syntax          as G
 import qualified Network.HTTP.Client                    as HTTP
 import qualified Network.HTTP.Types                     as HTTP
 
-import           Data.Typeable                          (cast)
-
 import qualified Hasura.GraphQL.Transport.HTTP.Protocol as GH
 import qualified Hasura.Logging                         as L
-import qualified Hasura.RQL.IR.Select                   as DS
 import qualified Hasura.Tracing                         as Tracing
 
-import           Hasura.Backends.Postgres.Connection
-import           Hasura.EncJSON
 import           Hasura.GraphQL.Context
 import           Hasura.GraphQL.Execute.Action
+import           Hasura.GraphQL.Execute.Backend
 import           Hasura.GraphQL.Execute.Common
-import           Hasura.GraphQL.Execute.Prepare
 import           Hasura.GraphQL.Execute.Remote
 import           Hasura.GraphQL.Execute.Resolve
 import           Hasura.GraphQL.Parser
-import           Hasura.Metadata.Class
 import           Hasura.RQL.Types
 import           Hasura.Server.Version                  (HasVersion)
 import           Hasura.Session
 
-
--- See Note [Temporarily disabling query plan caching]
--- data ReusableVariableTypes
--- data ReusableVariableValues
-
--- data ReusableQueryPlan
---   = ReusableQueryPlan
---   { _rqpVariableTypes :: !ReusableVariableTypes
---   , _rqpFldPlans      :: !FieldPlans
---   }
-
--- instance J.ToJSON ReusableQueryPlan where
---   toJSON (ReusableQueryPlan varTypes fldPlans) =
---     J.object [ "variables"       J..= () -- varTypes
---              , "field_plans"     J..= fldPlans
---              ]
-
--- withPlan
---   :: (MonadError QErr m)
---   => SessionVariables -> PGPlan -> HashMap G.Name (WithScalarType PGScalarValue) -> m PreparedSql
--- withPlan usrVars (PGPlan q reqVars prepMap remoteJoins) annVars = do
---   prepMap' <- foldM getVar prepMap (Map.toList reqVars)
---   let args = withUserVars usrVars $ IntMap.elems prepMap'
---   return $ PreparedSql q args remoteJoins
---   where
---     getVar accum (var, prepNo) = do
---       let varName = G.unName var
---       colVal <- onNothing (Map.lookup var annVars) $
---         throw500 $ "missing variable in annVars : " <> varName
---       let prepVal = (binEncoder colVal, pstValue colVal)
---       return $ IntMap.insert prepNo prepVal accum
-
-
-traverseQueryDB
-  :: forall f a b backend
-   . Applicative f
-  => (a -> f b)
-  -> QueryDB backend a
-  -> f (QueryDB backend b)
-traverseQueryDB f = \case
-  QDBMultipleRows s -> QDBMultipleRows <$> DS.traverseAnnSimpleSelect    f s
-  QDBSingleRow    s -> QDBSingleRow    <$> DS.traverseAnnSimpleSelect    f s
-  QDBAggregation  s -> QDBAggregation  <$> DS.traverseAnnAggregateSelect f s
-  QDBConnection   s -> QDBConnection   <$> DS.traverseConnectionSelect   f s
 
 parseGraphQLQuery
   :: MonadError QErr m
@@ -109,46 +54,14 @@ parseGraphQLQuery gqlContext varDefs varValsM fields =
       ParseError{ pePath, peMessage, peCode } ->
         throwError (err400 peCode peMessage){ qePath = pePath }
 
--- | Monads which support query instrumentation
-class Monad m => MonadQueryInstrumentation m where
-  -- | Returns the appropriate /instrumentation/ (if any) for a SQL query, as
-  -- requested by the provided directives. Instrumentation is “SQL middleware”:
-  --
-  --   * The @'Q.Query' -> 'Q.Query'@ function is applied to the query just
-  --     prior to execution, and it can adjust the query in arbitrary ways.
-  --
-  --   * The 'ExtractProfile' function is applied to the query /result/, and it
-  --     can perform arbitrary side-effects based on its contents. (This is
-  --     currently just a hook for tracing, a la 'Tracing.MonadTrace'.)
-  --
-  -- The open-source version of graphql-engine does not currently perform any
-  -- instrumentation, so this serves only as a hook for downstream clients.
-  askInstrumentQuery
-    :: [G.Directive G.Name]
-    -> m (Q.Query -> Q.Query, ExtractProfile)
-
-  -- A default for monad transformer instances
-  default askInstrumentQuery
-    :: (m ~ t n, MonadTrans t, MonadQueryInstrumentation n)
-    => [G.Directive G.Name]
-    -> m (Q.Query -> Q.Query, ExtractProfile)
-  askInstrumentQuery = lift . askInstrumentQuery
-
-instance MonadQueryInstrumentation m => MonadQueryInstrumentation (ReaderT r m)
-instance MonadQueryInstrumentation m => MonadQueryInstrumentation (ExceptT e m)
-instance MonadQueryInstrumentation m => MonadQueryInstrumentation (Tracing.TraceT m)
-instance MonadQueryInstrumentation m => MonadQueryInstrumentation (MetadataStorageT m)
 
 convertQuerySelSet
   :: forall m tx .
      ( MonadError QErr m
      , HasVersion
-     , MonadIO m
      , Tracing.MonadTrace m
-     , MonadQueryInstrumentation m
-     , MonadIO tx
-     , MonadTx tx
-     , Tracing.MonadTrace tx
+     , MonadIO m
+     , BackendExecute 'Postgres tx
      )
   => Env.Environment
   -> L.Logger L.Hasura
@@ -160,65 +73,26 @@ convertQuerySelSet
   -> G.SelectionSet G.NoFragments G.Name
   -> [G.VariableDefinition]
   -> Maybe GH.VariableValues
-  -> m ( ExecutionPlan ActionExecutionPlan (tx EncJSON, Maybe PreparedSql)
-       -- , Maybe ReusableQueryPlan
-       , [QueryRootField UnpreparedValue]
-       )
+  -> m (ExecutionPlan tx, [QueryRootField UnpreparedValue])
 convertQuerySelSet env logger gqlContext userInfo manager reqHeaders directives fields varDefs varValsM = do
   -- Parse the GraphQL query into the RQL AST
   (unpreparedQueries, _reusability) <- parseGraphQLQuery gqlContext varDefs varValsM fields
 
   -- Transform the query plans into an execution plan
   let usrVars = _uiSession userInfo
-  executionPlan <- OMap.mapMaybe id <$> for unpreparedQueries \case
-    RFDB _ sourceConfig (QDBR db) -> runMaybeT $ do
-      -- TEMPORARY!!!
-      -- We don't handle non-Postgres backends yet: for now, we filter root fields to only keep those
-      -- that are targeting postgres, and we *silently* discard all the others. This is fine for now, as
-      -- we haven't integrated any other backend yet, but will need to be fixed as soon as possible for
-      -- other backends to work.
-      pgSC <- hoistMaybe $ cast sourceConfig
-      pgDB <- hoistMaybe $ cast db
-      lift $ do
-        (preparedQuery, PlanningSt _ _ planVals expectedVariables) <- flip runStateT initPlanningSt $ traverseQueryDB prepareWithPlan pgDB
-        validateSessionVariables expectedVariables usrVars
-        (instrument, ep) <- askInstrumentQuery directives
-        pure $ ExecStepDB (_pscExecCtx pgSC) $ mkCurPlanTx env manager reqHeaders userInfo instrument ep $ RFPPostgres $ irToRootFieldPlan planVals preparedQuery
+  executionPlan <- for unpreparedQueries \case
+    RFDB _ (sourceConfig :: SourceConfig b) (QDBR db) -> case backendTag @b of
+      PostgresTag -> mkDBQueryPlan env manager reqHeaders userInfo directives sourceConfig db
     RFRemote rf -> do
       RemoteFieldG remoteSchemaInfo remoteField <- for rf $ resolveRemoteVariable userInfo
-      pure $ Just $ buildExecStepRemote remoteSchemaInfo G.OperationTypeQuery [G.SelectionField remoteField]
-    RFAction a -> case a of
-      AQQuery s -> Just . ExecStepAction . AEPSync . _aerExecution <$> resolveActionExecution env logger userInfo s (ActionExecContext manager reqHeaders usrVars)
-      AQAsync s -> pure $ Just $ ExecStepAction $ AEPAsyncQuery (_aaaqActionId s) $ resolveAsyncActionQuery userInfo s
+      pure $ buildExecStepRemote remoteSchemaInfo G.OperationTypeQuery [G.SelectionField remoteField]
+    RFAction a -> do
+      action <- case a of
+        AQQuery s -> AEPSync . _aerExecution <$> resolveActionExecution env logger userInfo s (ActionExecContext manager reqHeaders usrVars)
+        AQAsync s -> pure $ AEPAsyncQuery (_aaaqActionId s) $ resolveAsyncActionQuery userInfo s
+      pure $ ExecStepAction action []
     RFRaw r ->
-      pure $ Just $ ExecStepRaw r
+      pure $ ExecStepRaw r
 
   -- See Note [Temporarily disabling query plan caching]
   pure (executionPlan, OMap.elems unpreparedQueries)
-
--- See Note [Temporarily disabling query plan caching]
--- use the existing plan and new variables to create a pg query
--- queryOpFromPlan
---   :: ( HasVersion
---      , MonadError QErr m
---      , Tracing.MonadTrace m
---      , MonadIO tx
---      , MonadTx tx
---      , Tracing.MonadTrace tx
---      )
---   => Env.Environment
---   -> HTTP.Manager
---   -> [HTTP.Header]
---   -> UserInfo
---   -> Maybe GH.VariableValues
---   -> ReusableQueryPlan
---   -> m (tx EncJSON, GeneratedSqlMap)
--- queryOpFromPlan env  manager reqHdrs userInfo varValsM (ReusableQueryPlan varTypes fldPlans) = do
---   validatedVars <- _validateVariablesForReuse varTypes varValsM
---   -- generate the SQL and prepared vars or the bytestring
---   resolved <- forM fldPlans $ \(alias, fldPlan) ->
---     (alias,) <$> case fldPlan of
---       RFPRaw resp        -> return $ RRRaw resp
---       RFPPostgres pgPlan -> RRSql <$> withPlan (_uiSession userInfo) pgPlan validatedVars
-
---   (,) <$> mkLazyRespTx env manager reqHdrs userInfo resolved <*> pure (mkGeneratedSqlMap resolved)

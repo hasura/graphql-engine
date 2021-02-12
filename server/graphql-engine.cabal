@@ -354,6 +354,8 @@ library
                      , Hasura.GC
                      , Hasura.GraphQL.Execute
                      , Hasura.GraphQL.Execute.LiveQuery
+                     , Hasura.GraphQL.Transport.Backend
+                     , Hasura.GraphQL.Transport.Postgres
                      , Hasura.GraphQL.Transport.HTTP
                      , Hasura.GraphQL.Transport.HTTP.Protocol
                      , Hasura.GraphQL.Transport.WebSocket
@@ -447,15 +449,17 @@ library
                      , Hasura.RQL.IR.Update
                      , Hasura.GraphQL.Explain
                      , Hasura.GraphQL.Execute.Action
+                     , Hasura.GraphQL.Execute.Backend
+                     , Hasura.GraphQL.Execute.Common
                      , Hasura.GraphQL.Execute.Inline
                      , Hasura.GraphQL.Execute.Insert
-                     , Hasura.GraphQL.Execute.Plan
-                     , Hasura.GraphQL.Execute.Types
                      , Hasura.GraphQL.Execute.Mutation
-                     , Hasura.GraphQL.Execute.Common
+                     , Hasura.GraphQL.Execute.Plan
+                     , Hasura.GraphQL.Execute.Postgres
+                     , Hasura.GraphQL.Execute.Prepare
                      , Hasura.GraphQL.Execute.Remote
                      , Hasura.GraphQL.Execute.Resolve
-                     , Hasura.GraphQL.Execute.Prepare
+                     , Hasura.GraphQL.Execute.Types
                      , Hasura.GraphQL.Execute.LiveQuery.Options
                      , Hasura.GraphQL.Execute.LiveQuery.Plan
                      , Hasura.GraphQL.Execute.LiveQuery.Poll

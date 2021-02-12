@@ -57,8 +57,6 @@ import           Hasura.Eventing.ScheduledTrigger
 import           Hasura.GraphQL.Execute                    (MonadGQLExecutionCheck (..),
                                                             checkQueryInAllowlist)
 import           Hasura.GraphQL.Execute.Action
-import           Hasura.GraphQL.Execute.Query              (MonadQueryInstrumentation (..),
-                                                            noProfile)
 import           Hasura.GraphQL.Logging                    (MonadQueryLog (..), QueryLog (..))
 import           Hasura.GraphQL.Transport.HTTP             (MonadExecuteQuery (..))
 import           Hasura.GraphQL.Transport.HTTP.Protocol    (toParsed)
@@ -419,7 +417,6 @@ runHGEServer
      , WS.MonadWSLog m
      , MonadExecuteQuery m
      , Tracing.HasReporter m
-     , MonadQueryInstrumentation m
      , HasResourceLimits m
      , MonadMetadataStorage (MetadataStorageT m)
      , MonadResolveSource m
@@ -670,9 +667,6 @@ execQuery env queryBs = do
   encJToLBS <$> runQueryM env query
 
 instance Tracing.HasReporter PGMetadataStorageApp
-
-instance MonadQueryInstrumentation PGMetadataStorageApp where
-  askInstrumentQuery _ = pure (id, noProfile)
 
 instance HasResourceLimits PGMetadataStorageApp where
   askResourceLimits = pure (ResourceLimits id)

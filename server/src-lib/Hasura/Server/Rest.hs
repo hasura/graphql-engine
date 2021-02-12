@@ -19,7 +19,6 @@ import           Data.Aeson                             hiding (json)
 import           Data.Text.Extended
 
 import qualified Hasura.GraphQL.Execute                 as E
-import qualified Hasura.GraphQL.Execute.Query           as EQ
 import qualified Hasura.GraphQL.Transport.HTTP          as GH
 import qualified Hasura.Tracing                         as Tracing
 import qualified Language.GraphQL.Draft.Syntax          as G
@@ -33,6 +32,7 @@ import           Hasura.RQL.Types
 import           Hasura.Server.Types
 import           Hasura.Server.Version
 import           Hasura.Session
+
 
 -- Note: There may be a better way of constructing this when building the Endpoint datastructure.
 parseVariableNames :: EndpointMetadata GQLQueryWithText -> [Text]
@@ -106,7 +106,6 @@ runCustomEndpoint
        , E.MonadGQLExecutionCheck m
        , MonadQueryLog m
        , GH.MonadExecuteQuery m
-       , EQ.MonadQueryInstrumentation m
        , MonadMetadataStorage (MetadataStorageT m)
        )
     => Env.Environment
@@ -140,7 +139,7 @@ runCustomEndpoint env execCtx requestId userInfo reqHeaders ipAddress RestReques
           let expectedVariables = G._todVariableDefinitions typedDef
           let joinedVars = M.traverseWithKey resolveVar (alignVars expectedVariables (reqArgs ++ zip (parseVariableNames queryx) (map Left matches)))
 
-          resolvedVariablesMaybe <- either (throw400 BadRequest) pure joinedVars
+          resolvedVariablesMaybe <- joinedVars `onLeft` throw400 BadRequest
 
           let resolvedVariables = M.mapMaybe id resolvedVariablesMaybe
 

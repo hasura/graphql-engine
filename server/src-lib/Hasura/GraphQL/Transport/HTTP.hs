@@ -17,42 +17,45 @@ module Hasura.GraphQL.Transport.HTTP
   , ResultsFragment(..)
   ) where
 
-import           Control.Monad.Morph                         (hoist)
-import           Control.Monad.Trans.Control                 (MonadBaseControl)
+import           Hasura.Prelude
+
+import qualified Data.Aeson                             as J
+import qualified Data.Aeson.Ordered                     as JO
+import qualified Data.ByteString.Lazy                   as LBS
+import qualified Data.Environment                       as Env
+import qualified Data.HashMap.Strict.InsOrd             as OMap
+import qualified Data.Text                              as T
+import qualified Language.GraphQL.Draft.Syntax          as G
+import qualified Network.HTTP.Types                     as HTTP
+import qualified Network.Wai.Extended                   as Wai
+
+import           Control.Monad.Morph                    (hoist)
+import           Control.Monad.Trans.Control            (MonadBaseControl)
+
+import qualified Hasura.GraphQL.Execute                 as E
+import qualified Hasura.GraphQL.Execute.Action          as EA
+import qualified Hasura.GraphQL.Execute.Backend         as EB
+import qualified Hasura.Logging                         as L
+import qualified Hasura.RQL.IR.RemoteJoin               as IR
+import qualified Hasura.Server.Telemetry.Counters       as Telem
+import qualified Hasura.Tracing                         as Tracing
 
 import           Hasura.EncJSON
 import           Hasura.GraphQL.Context
-import           Hasura.GraphQL.Execute.Prepare              (ExecutionPlan)
-import           Hasura.GraphQL.Logging                      (MonadQueryLog (..))
-import           Hasura.GraphQL.Parser.Column                (UnpreparedValue)
+import           Hasura.GraphQL.Logging                 (MonadQueryLog (..))
+import           Hasura.GraphQL.Parser.Column           (UnpreparedValue)
+import           Hasura.GraphQL.Transport.Backend
 import           Hasura.GraphQL.Transport.HTTP.Protocol
+import           Hasura.GraphQL.Transport.Postgres      ()
 import           Hasura.HTTP
 import           Hasura.Metadata.Class
-import           Hasura.Prelude
 import           Hasura.RQL.Types
 import           Hasura.Server.Init.Config
-import           Hasura.Server.Types                         (RequestId)
-import           Hasura.Server.Version                       (HasVersion)
+import           Hasura.Server.Types                    (RequestId)
+import           Hasura.Server.Version                  (HasVersion)
 import           Hasura.Session
-import           Hasura.Tracing                              (MonadTrace, TraceT, trace)
+import           Hasura.Tracing                         (MonadTrace, TraceT, trace)
 
-import qualified Data.Aeson                                  as J
-import qualified Data.Aeson.Ordered                          as JO
-import qualified Data.ByteString.Lazy                        as LBS
-import qualified Data.Environment                            as Env
-import qualified Data.HashMap.Strict.InsOrd                  as OMap
-import qualified Data.Text                                   as T
-import qualified Database.PG.Query                           as Q
-import qualified Hasura.Backends.Postgres.Execute.RemoteJoin as RJ
-import qualified Hasura.GraphQL.Execute                      as E
-import qualified Hasura.GraphQL.Execute.Action               as EA
-import qualified Hasura.GraphQL.Execute.Query                as EQ
-import qualified Hasura.Logging                              as L
-import qualified Hasura.Server.Telemetry.Counters            as Telem
-import qualified Hasura.Tracing                              as Tracing
-import qualified Language.GraphQL.Draft.Syntax               as G
-import qualified Network.HTTP.Types                          as HTTP
-import qualified Network.Wai.Extended                        as Wai
 
 data QueryCacheKey = QueryCacheKey
   { qckQueryString :: !GQLReqParsed
@@ -72,7 +75,7 @@ class Monad m => MonadExecuteQuery m where
   cacheLookup
     :: [QueryRootField UnpreparedValue]
     -- ^ Used to check that the query is cacheable
-    -> ExecutionPlan action (Maybe (Maybe (RJ.RemoteJoins 'Postgres)))
+    -> [RemoteSchemaInfo]
     -- ^ Used to check if the elaborated query supports caching
     -> QueryCacheKey
     -- ^ Key that uniquely identifies the result of a query execution
@@ -126,6 +129,7 @@ data ResultsFragment = ResultsFragment
   , rfHeaders  :: HTTP.ResponseHeaders
   }
 
+
 -- | Run (execute) a single GraphQL query
 runGQ
   :: forall m
@@ -138,7 +142,6 @@ runGQ
      , MonadQueryLog m
      , MonadTrace m
      , MonadExecuteQuery m
-     , EQ.MonadQueryInstrumentation m
      , MonadMetadataStorage (MetadataStorageT m)
      )
   => Env.Environment
@@ -158,27 +161,32 @@ runGQ env logger reqId userInfo ipAddress reqHeaders queryType reqUnparsed = do
     reqParsed <- E.checkGQLExecution userInfo (reqHeaders, ipAddress) enableAL sc reqUnparsed
                  >>= flip onLeft throwError
 
-    (telemCacheHit, execPlan) <- E.getResolvedExecPlan env logger {- planCache -}
-                                 userInfo sqlGenCtx sc scVer queryType
-                                 httpManager reqHeaders (reqUnparsed, reqParsed)
+    (telemCacheHit, execPlan) <-
+      E.getResolvedExecPlan @(Tracing.TraceT (LazyTxT QErr IO))
+        env logger {- planCache -}
+        userInfo sqlGenCtx sc scVer queryType
+        httpManager reqHeaders (reqUnparsed, reqParsed)
     (telemCacheHit,) <$> case execPlan of
       E.QueryExecutionPlan queryPlans asts -> trace "Query" $ do
         let cacheKey = QueryCacheKey reqParsed $ _uiRole userInfo
-            redactedPlan = fmap (fmap (fmap EQ._psRemoteJoins . snd)) queryPlans
-        (responseHeaders, cachedValue) <- Tracing.interpTraceT (liftEitherM . runExceptT) $ cacheLookup asts redactedPlan cacheKey
-
+            remoteJoins = OMap.elems queryPlans >>= \case
+              E.ExecStepDB (_ :: SourceConfig b) genSql _headers _tx ->
+                case backendTag @b of
+                  PostgresTag -> IR._rjRemoteSchema <$> maybe [] (EB.getRemoteJoins @b @(Tracing.TraceT (LazyTxT QErr IO))) genSql
+              _ -> []
+        (responseHeaders, cachedValue) <- Tracing.interpTraceT (liftEitherM . runExceptT) $ cacheLookup asts remoteJoins cacheKey
         case fmap decodeGQResp cachedValue of
           Just cachedResponseData ->
             pure (Telem.Query, 0, Telem.Local, HttpResponse cachedResponseData responseHeaders)
           Nothing -> do
             conclusion <- runExceptT $ forWithKey queryPlans $ \fieldName -> \case
-              E.ExecStepDB pgExecCtx (tx, genSql) -> doQErr $ do
-                (telemTimeIO_DT, resp) <-
-                  runQueryDB reqId reqUnparsed fieldName pgExecCtx tx genSql
+              E.ExecStepDB (sourceConfig :: SourceConfig b) genSql _headers tx -> doQErr $ do
+                (telemTimeIO_DT, resp) <- case backendTag @b of
+                  PostgresTag -> runDBQuery reqId reqUnparsed fieldName userInfo logger sourceConfig tx genSql
                 return $ ResultsFragment telemTimeIO_DT Telem.Local resp []
               E.ExecStepRemote rsi gqlReq ->
                 runRemoteGQ httpManager fieldName rsi gqlReq
-              E.ExecStepAction aep -> do
+              E.ExecStepAction aep _ -> do
                 (time, r) <- doQErr $ EA.runActionExecution aep
                 pure $ ResultsFragment time Telem.Empty r []
               E.ExecStepRaw json ->
@@ -189,12 +197,13 @@ runGQ env logger reqId userInfo ipAddress reqHeaders queryType reqUnparsed = do
 
       E.MutationExecutionPlan mutationPlans -> do
         conclusion <- runExceptT $ forWithKey mutationPlans $ \fieldName -> \case
-          E.ExecStepDB pgExecCtx (tx, responseHeaders) -> doQErr $ do
-            (telemTimeIO_DT, resp) <- runMutationDB reqId reqUnparsed userInfo pgExecCtx tx
+          E.ExecStepDB (sourceConfig :: SourceConfig b) genSql responseHeaders tx -> doQErr $ do
+            (telemTimeIO_DT, resp) <- case backendTag @b of
+              PostgresTag -> runDBMutation reqId reqUnparsed fieldName userInfo logger sourceConfig tx genSql
             return $ ResultsFragment telemTimeIO_DT Telem.Local resp responseHeaders
           E.ExecStepRemote rsi gqlReq ->
             runRemoteGQ httpManager fieldName rsi gqlReq
-          E.ExecStepAction (aep, hdrs) -> do
+          E.ExecStepAction aep hdrs -> do
             (time, r) <- doQErr $ EA.runActionExecution aep
             pure $ ResultsFragment time Telem.Empty r hdrs
           E.ExecStepRaw json ->
@@ -275,7 +284,6 @@ runGQBatched
      , MonadQueryLog m
      , MonadTrace m
      , MonadExecuteQuery m
-     , EQ.MonadQueryInstrumentation m
      , MonadMetadataStorage (MetadataStorageT m)
      )
   => Env.Environment
@@ -304,57 +312,5 @@ runGQBatched env logger reqId responseErrorsConfig userInfo ipAddress reqHdrs qu
             . map (either (encJFromJValue . encodeGQErr includeInternal) _hrBody)
 
       removeHeaders <$> traverse (try . (fmap . fmap) snd . runGQ env logger reqId userInfo ipAddress reqHdrs queryType) reqs
-
   where
     try = flip catchError (pure . Left) . fmap Right
-
-
-runQueryDB
-  :: ( MonadIO m
-     , MonadError QErr m
-     , MonadReader E.ExecutionCtx m
-     , MonadQueryLog m
-     , MonadTrace m
-     )
-  => RequestId
-  -> GQLReqUnparsed
-  -> G.Name -- ^ name of the root field we're fetching
-  -> PGExecCtx
-  -> Tracing.TraceT (LazyTxT QErr IO) EncJSON
-  -> Maybe EQ.PreparedSql
-  -> m (DiffTime, EncJSON)
-  -- ^ Also return the time spent in the PG query; for telemetry.
-runQueryDB reqId query fieldName pgExecCtx tx genSql =  do
-  -- log the generated SQL and the graphql query
-  E.ExecutionCtx logger _ _ _ _ _ <- ask
-  logQueryLog logger query ((fieldName,) <$> genSql) reqId
-  withElapsedTime $ trace ("Postgres Query for root field " <> G.unName fieldName) $
-    Tracing.interpTraceT id $ hoist (runQueryTx pgExecCtx) tx
-
-runMutationDB
-  :: ( MonadIO m
-     , MonadError QErr m
-     , MonadReader E.ExecutionCtx m
-     , MonadQueryLog m
-     , MonadTrace m
-     )
-  => RequestId
-  -> GQLReqUnparsed
-  -> UserInfo
-  -> PGExecCtx
-  -> Tracing.TraceT (LazyTxT QErr IO) EncJSON
-  -> m (DiffTime, EncJSON)
-  -- ^ Also return 'Mutation' when the operation was a mutation, and the time
-  -- spent in the PG query; for telemetry.
-runMutationDB reqId query userInfo pgExecCtx tx =  do
-  E.ExecutionCtx logger _ _ _ _ _ <- ask
-  -- log the graphql query
-  logQueryLog logger query Nothing reqId
-  ctx <- Tracing.currentContext
-  withElapsedTime $ trace "Mutation" $
-    Tracing.interpTraceT (
-      liftEitherM . liftIO . runExceptT
-      . runLazyTx pgExecCtx Q.ReadWrite
-      . withTraceContext ctx
-      . withUserInfo userInfo
-      )  tx
