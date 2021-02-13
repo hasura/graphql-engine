@@ -64,7 +64,9 @@ import           Hasura.GraphQL.Transport.Backend
 import           Hasura.GraphQL.Transport.HTTP               (MonadExecuteQuery (..),
                                                               QueryCacheKey (..),
                                                               ResultsFragment (..), buildRaw,
-                                                              extractFieldFromResponse)
+                                                              extractFieldFromResponse,
+                                                              filterVariablesFromQuery,
+                                                              runSessVarPred)
 import           Hasura.GraphQL.Transport.HTTP.Protocol
 import           Hasura.GraphQL.Transport.Postgres           ()
 import           Hasura.GraphQL.Transport.WebSocket.Protocol
@@ -375,7 +377,8 @@ onStart env serverEnv wsConn (StartMsg opId q) = catchAndIgnore $ do
 
   case execPlan of
     E.QueryExecutionPlan queryPlan asts -> Tracing.trace "Query" $ do
-      let cacheKey = QueryCacheKey reqParsed $ _uiRole userInfo
+      let filteredSessionVars = runSessVarPred (filterVariablesFromQuery asts) (_uiSession userInfo)
+          cacheKey = QueryCacheKey reqParsed (_uiRole userInfo) filteredSessionVars
           remoteJoins = OMap.elems queryPlan >>= \case
             E.ExecStepDB (_ :: SourceConfig b) genSql _headers _tx ->
               case backendTag @b of
@@ -383,7 +386,7 @@ onStart env serverEnv wsConn (StartMsg opId q) = catchAndIgnore $ do
             _ -> []
       -- We ignore the response headers (containing TTL information) because
       -- WebSockets don't support them.
-      (_responseHeaders, cachedValue) <- Tracing.interpTraceT (withExceptT mempty) $ cacheLookup asts remoteJoins cacheKey
+      (_responseHeaders, cachedValue) <- Tracing.interpTraceT (withExceptT mempty) $ cacheLookup remoteJoins cacheKey
       case cachedValue of
         Just cachedResponseData -> do
           sendSuccResp cachedResponseData $ LQ.LiveQueryMetadata 0

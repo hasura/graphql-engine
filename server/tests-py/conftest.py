@@ -160,6 +160,13 @@ This option may result in test failures if the schema has to change between the 
         help="Flag to indicate if the graphql-engine has enabled remote schema permissions",
     )
 
+    parser.addoption(
+        "--redis-url",
+        metavar="REDIS_URL",
+        help="redis url for cache server",
+        default=False
+    )
+
 #By default,
 #1) Set default parallelism to one
 #2) Set test grouping to by filename (--dist=loadfile)
@@ -181,7 +188,7 @@ def pytest_configure(config):
         if not config.getoption('--pg-urls'):
             print("pg-urls should be specified")
         config.hge_url_list = config.getoption('--hge-urls')
-        config.pg_url_list =  config.getoption('--pg-urls')
+        config.pg_url_list = config.getoption('--pg-urls')
         config.hge_ctx_gql_server = HGECtxGQLServer(config.hge_url_list)
         if config.getoption('-n', default=None):
             xdist_threads = config.getoption('-n')

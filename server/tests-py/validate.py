@@ -339,10 +339,11 @@ def assert_graphql_resp_expected(resp_orig, exp_response_orig, query, resp_hdrs=
         if 'x-request-id' in resp_hdrs:
             test_output['request id'] = resp_hdrs['x-request-id']
         if exp_resp_hdrs:
+            diff_hdrs = {key: val for key, val in resp_hdrs.items() if key in exp_resp_hdrs}
             test_output['headers'] = {
                 'actual': dict(resp_hdrs),
                 'expected': exp_resp_hdrs,
-                'diff': (stringify_keys(jsondiff.diff(exp_resp_hdrs, dict(resp_hdrs))))
+                'diff': (stringify_keys(jsondiff.diff(exp_resp_hdrs, diff_hdrs)))
             }
         yml.dump(test_output, stream=dump_str)
         if not skip_if_err_msg:

@@ -92,7 +92,7 @@ runApp env (HGEOptionsG rci metadataDbUrl hgeCmd) = do
 
         serverMetrics <- liftIO $ createServerMetrics ekgStore
         flip runPGMetadataStorageApp (_scMetadataDbPool serveCtx, pgLogger) . lowerManagedT $ do
-          runHGEServer env serveOptions serveCtx initTime Nothing serverMetrics ekgStore
+          runHGEServer (const $ pure ()) env serveOptions serveCtx initTime Nothing serverMetrics ekgStore
 
     HCExport -> do
       res <- runTxWithMinimalPool _gcMetadataDbConnInfo fetchMetadataFromCatalog

@@ -722,7 +722,8 @@ mkWaiApp
      , MonadMetadataStorage (MetadataStorageT m)
      , MonadResolveSource m
      )
-  => Env.Environment
+  => (ServerCtx -> Spock.SpockT m ())
+  -> Env.Environment
   -- ^ Set of environment variables for reference in UIs
   -> L.Logger L.Hasura
   -- ^ a 'L.Hasura' specific logger
@@ -757,7 +758,7 @@ mkWaiApp
   -> KeepAliveDelay
   -- ^ Metadata storage connection pool
   -> m HasuraApp
-mkWaiApp env logger sqlGenCtx enableAL httpManager mode corsCfg enableConsole consoleAssetsDir
+mkWaiApp setupHook env logger sqlGenCtx enableAL httpManager mode corsCfg enableConsole consoleAssetsDir
          enableTelemetry instanceId apis lqOpts _ {- planCacheOptions -} responseErrorsConfig
          liveQueryHook schemaCacheRef ekgStore enableRSPermsCtx functionPermsCtx connectionOptions keepAliveDelay = do
 
@@ -790,7 +791,7 @@ mkWaiApp env logger sqlGenCtx enableAL httpManager mode corsCfg enableConsole co
 
     spockApp <- liftWithStateless $ \lowerIO ->
       Spock.spockAsApp $ Spock.spockT lowerIO $
-        httpApp corsCfg serverCtx enableConsole consoleAssetsDir enableTelemetry
+        httpApp setupHook corsCfg serverCtx enableConsole consoleAssetsDir enableTelemetry
 
     let wsServerApp  = WS.createWSServerApp env mode wsServerEnv -- TODO: Lyndon: Can we pass environment through wsServerEnv?
         stopWSServer = WS.stopWSServerApp wsServerEnv
@@ -831,13 +832,17 @@ httpApp
      , HasResourceLimits m
      , MonadResolveSource m
      )
-  => CorsConfig
+  => (ServerCtx -> Spock.SpockT m ())
+  ->  CorsConfig
   -> ServerCtx
   -> Bool
   -> Maybe Text
   -> Bool
   -> Spock.SpockT m ()
-httpApp corsCfg serverCtx enableConsole consoleAssetsDir enableTelemetry = do
+httpApp setupHook corsCfg serverCtx enableConsole consoleAssetsDir enableTelemetry = do
+
+    -- Additional spock action to run
+    setupHook serverCtx
 
     -- cors middleware
     unless (isCorsDisabled corsCfg) $

@@ -15,6 +15,10 @@ module Hasura.GraphQL.Transport.HTTP
   , OperationName(..)
   , GQLQueryText(..)
   , ResultsFragment(..)
+
+  , SessVarPred
+  , filterVariablesFromQuery
+  , runSessVarPred
   ) where
 
 import           Hasura.Prelude
@@ -29,12 +33,14 @@ import qualified Language.GraphQL.Draft.Syntax          as G
 import qualified Network.HTTP.Types                     as HTTP
 import qualified Network.Wai.Extended                   as Wai
 
+import           Control.Lens                           (toListOf)
 import           Control.Monad.Morph                    (hoist)
 import           Control.Monad.Trans.Control            (MonadBaseControl)
 
 import qualified Hasura.GraphQL.Execute                 as E
 import qualified Hasura.GraphQL.Execute.Action          as EA
 import qualified Hasura.GraphQL.Execute.Backend         as EB
+import qualified Hasura.GraphQL.Execute.Common          as EC
 import qualified Hasura.Logging                         as L
 import qualified Hasura.RQL.IR.RemoteJoin               as IR
 import qualified Hasura.Server.Telemetry.Counters       as Telem
@@ -43,7 +49,7 @@ import qualified Hasura.Tracing                         as Tracing
 import           Hasura.EncJSON
 import           Hasura.GraphQL.Context
 import           Hasura.GraphQL.Logging                 (MonadQueryLog (..))
-import           Hasura.GraphQL.Parser.Column           (UnpreparedValue)
+import           Hasura.GraphQL.Parser.Column           (UnpreparedValue (..))
 import           Hasura.GraphQL.Transport.Backend
 import           Hasura.GraphQL.Transport.HTTP.Protocol
 import           Hasura.GraphQL.Transport.Postgres      ()
@@ -60,11 +66,12 @@ import           Hasura.Tracing                         (MonadTrace, TraceT, tra
 data QueryCacheKey = QueryCacheKey
   { qckQueryString :: !GQLReqParsed
   , qckUserRole    :: !RoleName
+  , qckSession     :: !SessionVariables
   }
 
 instance J.ToJSON QueryCacheKey where
-  toJSON (QueryCacheKey qs ur ) =
-    J.object ["query_string" J..= qs, "user_role" J..= ur]
+  toJSON (QueryCacheKey qs ur sess) =
+    J.object ["query_string" J..= qs, "user_role" J..= ur, "session" J..= sess]
 
 
 class Monad m => MonadExecuteQuery m where
@@ -73,9 +80,7 @@ class Monad m => MonadExecuteQuery m where
   -- headers that can instruct a client how long a response can be cached
   -- locally (i.e. client-side).
   cacheLookup
-    :: [QueryRootField UnpreparedValue]
-    -- ^ Used to check that the query is cacheable
-    -> [RemoteSchemaInfo]
+    :: [RemoteSchemaInfo]
     -- ^ Used to check if the elaborated query supports caching
     -> QueryCacheKey
     -- ^ Key that uniquely identifies the result of a query execution
@@ -103,19 +108,19 @@ class Monad m => MonadExecuteQuery m where
     -- ^ Always succeeds
 
 instance MonadExecuteQuery m => MonadExecuteQuery (ReaderT r m) where
-  cacheLookup a b c = hoist (hoist lift) $ cacheLookup a b c
+  cacheLookup a b = hoist (hoist lift) $ cacheLookup a b
   cacheStore  a b = hoist (hoist lift) $ cacheStore  a b
 
 instance MonadExecuteQuery m => MonadExecuteQuery (ExceptT r m) where
-  cacheLookup a b c = hoist (hoist lift) $ cacheLookup a b c
+  cacheLookup a b = hoist (hoist lift) $ cacheLookup a b
   cacheStore  a b = hoist (hoist lift) $ cacheStore  a b
 
 instance MonadExecuteQuery m => MonadExecuteQuery (TraceT m) where
-  cacheLookup a b c = hoist (hoist lift) $ cacheLookup a b c
+  cacheLookup a b = hoist (hoist lift) $ cacheLookup a b
   cacheStore  a b = hoist (hoist lift) $ cacheStore  a b
 
 instance MonadExecuteQuery m => MonadExecuteQuery (MetadataStorageT m) where
-  cacheLookup a b c = hoist (hoist lift) $ cacheLookup a b c
+  cacheLookup a b = hoist (hoist lift) $ cacheLookup a b
   cacheStore  a b = hoist (hoist lift) $ cacheStore  a b
 
 -- | A partial result, e.g. from a remote schema or postgres, which we'll
@@ -129,6 +134,39 @@ data ResultsFragment = ResultsFragment
   , rfHeaders  :: HTTP.ResponseHeaders
   }
 
+-- | A predicate on session variables. The 'Monoid' instance makes it simple
+-- to combine several predicates disjunctively.
+newtype SessVarPred = SessVarPred { unSessVarPred :: SessionVariable -> SessionVariableValue -> Bool }
+
+keepAllSessionVariables :: SessVarPred
+keepAllSessionVariables = SessVarPred $ \_ _ -> True
+
+instance Semigroup SessVarPred where
+  SessVarPred p1 <> SessVarPred p2 = SessVarPred $ \sv svv ->
+    p1 sv svv || p2 sv svv
+
+instance Monoid SessVarPred where
+  mempty = SessVarPred $ \_ _ -> False
+
+runSessVarPred :: SessVarPred -> SessionVariables -> SessionVariables
+runSessVarPred = filterSessionVariables . unSessVarPred
+
+-- | Filter out only those session variables used by the query AST provided
+filterVariablesFromQuery :: [RootField (QueryDBRoot UnpreparedValue) c h d] -> SessVarPred
+filterVariablesFromQuery query = fold $ rootToSessVarPreds =<< query
+  where
+    rootToSessVarPreds :: RootField (QueryDBRoot UnpreparedValue) c h d -> [SessVarPred]
+    rootToSessVarPreds = \case
+      RFDB _ _ (QDBR db) -> fmap toPred $ toListOf EC.traverseQueryDB db
+      _                  -> []
+
+    toPred :: UnpreparedValue bet -> SessVarPred
+    -- if we see a reference to the whole session variables object,
+    -- then we need to keep everything:
+    toPred UVSession               = keepAllSessionVariables
+    -- if we only see a specific session variable, we only need to keep that one:
+    toPred (UVSessionVar _type sv) = SessVarPred $ \sv' _ -> sv == sv'
+    toPred _                       = mempty
 
 -- | Run (execute) a single GraphQL query
 runGQ
@@ -168,13 +206,14 @@ runGQ env logger reqId userInfo ipAddress reqHeaders queryType reqUnparsed = do
         httpManager reqHeaders (reqUnparsed, reqParsed)
     (telemCacheHit,) <$> case execPlan of
       E.QueryExecutionPlan queryPlans asts -> trace "Query" $ do
-        let cacheKey = QueryCacheKey reqParsed $ _uiRole userInfo
+        let filteredSessionVars = runSessVarPred (filterVariablesFromQuery asts) (_uiSession userInfo)
+            cacheKey = QueryCacheKey reqParsed (_uiRole userInfo) filteredSessionVars
             remoteJoins = OMap.elems queryPlans >>= \case
               E.ExecStepDB (_ :: SourceConfig b) genSql _headers _tx ->
                 case backendTag @b of
                   PostgresTag -> IR._rjRemoteSchema <$> maybe [] (EB.getRemoteJoins @b @(Tracing.TraceT (LazyTxT QErr IO))) genSql
               _ -> []
-        (responseHeaders, cachedValue) <- Tracing.interpTraceT (liftEitherM . runExceptT) $ cacheLookup asts remoteJoins cacheKey
+        (responseHeaders, cachedValue) <- Tracing.interpTraceT (liftEitherM . runExceptT) $ cacheLookup remoteJoins cacheKey
         case fmap decodeGQResp cachedValue of
           Just cachedResponseData ->
             pure (Telem.Query, 0, Telem.Local, HttpResponse cachedResponseData responseHeaders)

@@ -80,6 +80,7 @@ import           Hasura.Server.Telemetry
 import           Hasura.Server.Types
 import           Hasura.Server.Version
 import           Hasura.Session
+import qualified Web.Spock.Core                            as Spock
 
 data ExitCode
 -- these are used during server initialization:
@@ -421,7 +422,8 @@ runHGEServer
      , MonadMetadataStorage (MetadataStorageT m)
      , MonadResolveSource m
      )
-  => Env.Environment
+  => (ServerCtx -> Spock.SpockT m ())
+  -> Env.Environment
   -> ServeOptions impl
   -> ServeCtx
   -- and mutations
@@ -431,7 +433,7 @@ runHGEServer
   -> ServerMetrics
   -> EKG.Store
   -> ManagedT m ()
-runHGEServer env ServeOptions{..} ServeCtx{..} initTime postPollHook serverMetrics ekgStore = do
+runHGEServer setupHook env ServeOptions{..} ServeCtx{..} initTime postPollHook serverMetrics ekgStore = do
   -- Comment this to enable expensive assertions from "GHC.AssertNF". These
   -- will log lines to STDOUT containing "not in normal form". In the future we
   -- could try to integrate this into our tests. For now this is a development
@@ -452,7 +454,7 @@ runHGEServer env ServeOptions{..} ServeCtx{..} initTime postPollHook serverMetri
   authMode <- onLeft authModeRes (printErrExit AuthConfigurationError . T.unpack)
 
   HasuraApp app cacheRef stopWsServer <- lift $ flip onException (flushLogger loggerCtx) $
-    mkWaiApp env
+    mkWaiApp setupHook env
              logger
              sqlGenCtx
              soEnableAllowlist
@@ -681,7 +683,7 @@ instance HttpLog PGMetadataStorageApp where
       mkHttpAccessLogContext userInfoM reqId waiReq compressedResponse qTime cType headers
 
 instance MonadExecuteQuery PGMetadataStorageApp where
-  cacheLookup _ _ _ = pure ([], Nothing)
+  cacheLookup _ _ = pure ([], Nothing)
   cacheStore  _ _ = pure ()
 
 instance UserAuthentication (Tracing.TraceT PGMetadataStorageApp) where

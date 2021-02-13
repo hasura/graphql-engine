@@ -3,9 +3,15 @@ import os
 from validate import check_query_f, check_query, get_conf_f
 from context import PytestConf
 
+import redis
+
 @pytest.mark.parametrize("transport", ['http'])
 @pytest.mark.usefixtures('per_class_tests_db_state')
 class TestCustomEndpoints:
+    def flushRedis(self):
+        # TODO: Move this into setup/teardown
+        r = redis.from_url(PytestConf.config.getoption('--redis-url'))
+        r.flushall()
 
     @classmethod
     def dir(cls):
@@ -20,9 +26,10 @@ class TestCustomEndpoints:
     def test_simple_endpoint_wrong_method(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + '/endpoint_simple_wrong_method.yaml', transport)
 
-    @pytest.mark.skipif(os.getenv('MULTITENANT_ENVIRONMENT', default=None) is None, reason="Doesn't work with oss server.")
+    @pytest.mark.skipif(not PytestConf.config.getoption('--redis-url'), reason="Must enable redis")
     def test_simple_cached_endpoint(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + '/endpoint_simple_cached.yaml', transport)
+        self.flushRedis()
 
     def test_endpoint_with_query_arg(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + '/endpoint_with_query_arg.yaml', transport)
