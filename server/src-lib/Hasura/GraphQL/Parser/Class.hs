@@ -20,7 +20,7 @@ import           Type.Reflection                      (Typeable)
 import           Hasura.GraphQL.Parser.Class.Parse
 import           Hasura.GraphQL.Parser.Internal.Types
 import           Hasura.GraphQL.Parser.Schema         (HasDefinition)
-import           Hasura.RQL.Types.Common
+import           Hasura.RQL.Types.Backend
 import           Hasura.RQL.Types.Error
 import           Hasura.RQL.Types.Source
 import           Hasura.RQL.Types.Table

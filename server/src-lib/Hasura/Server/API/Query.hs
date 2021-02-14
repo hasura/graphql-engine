@@ -47,29 +47,28 @@ import           Hasura.Server.Utils
 import           Hasura.Server.Version              (HasVersion)
 import           Hasura.Session
 
-
 data RQLQueryV1
   = RQAddExistingTableOrView !TrackTable
   | RQTrackTable !TrackTable
-  | RQUntrackTable !UntrackTable
+  | RQUntrackTable !(UntrackTable 'Postgres)
   | RQSetTableIsEnum !SetTableIsEnum
   | RQSetTableCustomization !SetTableCustomization
 
-  | RQTrackFunction !TrackFunction
-  | RQUntrackFunction !UnTrackFunction
+  | RQTrackFunction !(TrackFunction 'Postgres)
+  | RQUntrackFunction !(UnTrackFunction 'Postgres)
 
-  | RQCreateObjectRelationship !CreateObjRel
-  | RQCreateArrayRelationship !CreateArrRel
+  | RQCreateObjectRelationship !(CreateObjRel 'Postgres)
+  | RQCreateArrayRelationship !(CreateArrRel 'Postgres)
   | RQDropRelationship !DropRel
   | RQSetRelationshipComment !SetRelComment
   | RQRenameRelationship !RenameRel
 
   -- computed fields related
-  | RQAddComputedField !AddComputedField
-  | RQDropComputedField !DropComputedField
+  | RQAddComputedField !(AddComputedField 'Postgres)
+  | RQDropComputedField !(DropComputedField 'Postgres)
 
-  | RQCreateRemoteRelationship !RemoteRelationship
-  | RQUpdateRemoteRelationship !RemoteRelationship
+  | RQCreateRemoteRelationship !(RemoteRelationship 'Postgres)
+  | RQUpdateRemoteRelationship !(RemoteRelationship 'Postgres)
   | RQDeleteRemoteRelationship !DeleteRemoteRelationship
 
   | RQCreateInsertPermission !(CreateInsPerm 'Postgres)
@@ -77,10 +76,10 @@ data RQLQueryV1
   | RQCreateUpdatePermission !(CreateUpdPerm 'Postgres)
   | RQCreateDeletePermission !(CreateDelPerm 'Postgres)
 
-  | RQDropInsertPermission !(DropPerm (InsPerm 'Postgres))
-  | RQDropSelectPermission !(DropPerm (SelPerm 'Postgres))
-  | RQDropUpdatePermission !(DropPerm (UpdPerm 'Postgres))
-  | RQDropDeletePermission !(DropPerm (DelPerm 'Postgres))
+  | RQDropInsertPermission !(DropPerm 'Postgres (InsPerm 'Postgres))
+  | RQDropSelectPermission !(DropPerm 'Postgres (SelPerm 'Postgres))
+  | RQDropUpdatePermission !(DropPerm 'Postgres (UpdPerm 'Postgres))
+  | RQDropDeletePermission !(DropPerm 'Postgres (DelPerm 'Postgres))
   | RQSetPermissionComment !SetPermComment
 
   | RQGetInconsistentMetadata !GetInconsistentMetadata
@@ -137,7 +136,7 @@ data RQLQueryV1
   | RQDumpInternalState !DumpInternalState
 
   | RQSetCustomTypes !CustomTypes
-  deriving (Show, Eq)
+  deriving (Eq)
 
 data RQLQueryV2
   = RQV2TrackTable !TrackTableV2
@@ -148,7 +147,7 @@ data RQLQueryV2
 data RQLQuery
   = RQV1 !RQLQueryV1
   | RQV2 !RQLQueryV2
-  deriving (Show, Eq)
+  deriving (Eq)
 
 instance FromJSON RQLQuery where
   parseJSON = withObject "Object" $ \o -> do

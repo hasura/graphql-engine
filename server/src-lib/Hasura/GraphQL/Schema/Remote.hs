@@ -26,7 +26,9 @@ import qualified Hasura.GraphQL.Parser.Internal.Parser as P
 
 import           Hasura.GraphQL.Context                (RemoteField, RemoteFieldG (..))
 import           Hasura.GraphQL.Parser                 as P
-import           Hasura.RQL.Types
+import           Hasura.RQL.Types.Error
+import           Hasura.RQL.Types.RemoteSchema
+import           Hasura.RQL.Types.SchemaCache
 
 
 type RemoteSchemaObjectDefinition      = G.ObjectTypeDefinition RemoteSchemaInputValueDefinition

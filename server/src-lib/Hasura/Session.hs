@@ -43,7 +43,6 @@ import           Data.Text.Extended
 import           Data.Text.NonEmpty
 
 import           Hasura.Incremental            (Cacheable)
-import           Hasura.RQL.Types.Common       (adminText)
 import           Hasura.RQL.Types.Error
 import           Hasura.Server.Utils
 import           Hasura.Tracing                (TraceT)
@@ -64,7 +63,7 @@ mkRoleName :: Text -> Maybe RoleName
 mkRoleName = fmap RoleName . mkNonEmptyText
 
 adminRoleName :: RoleName
-adminRoleName = RoleName adminText
+adminRoleName = RoleName $ mkNonEmptyTextUnsafe "admin"
 
 isAdmin :: RoleName -> Bool
 isAdmin = (adminRoleName ==)

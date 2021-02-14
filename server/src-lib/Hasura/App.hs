@@ -277,7 +277,7 @@ initialiseServeCtx env GlobalCtx{..} so@ServeOptions{..} = do
                            , _ppsRetries        = fromMaybe 1 $ snd _gcDefaultPostgresConnInfo
                            }
             sourceConnInfo = PostgresSourceConnInfo dbUrlConf connSettings
-        in SourceConfiguration sourceConnInfo Nothing
+        in PostgresConnConfiguration sourceConnInfo Nothing
       sqlGenCtx = SQLGenCtx soStringifyNum
 
   -- Start a background thread for listening schema sync events from other server instances,
@@ -313,7 +313,7 @@ mkLoggers enabledLogs logLevel = do
 -- | helper function to initialize or migrate the @hdb_catalog@ schema (used by pro as well)
 migrateCatalogSchema
   :: (HasVersion, MonadIO m, MonadBaseControl IO m)
-  => Env.Environment -> Logger Hasura -> Q.PGPool -> Maybe SourceConfiguration
+  => Env.Environment -> Logger Hasura -> Q.PGPool -> Maybe (SourceConnConfiguration 'Postgres)
   -> HTTP.Manager -> SQLGenCtx -> RemoteSchemaPermsCtx -> FunctionPermissionsCtx
   -> SourceResolver
   -> m (RebuildableSchemaCache, UTCTime)

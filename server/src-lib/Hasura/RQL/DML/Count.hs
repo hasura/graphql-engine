@@ -91,7 +91,7 @@ validateCountQWith sessVarBldr prepValBldr (CountQuery qt _ mDistCols mWhere) = 
   -- convert the where clause
   annSQLBoolExp <- forM mWhere $ \be ->
     withPathK "where" $
-    convBoolExp colInfoMap selPerm be sessVarBldr prepValBldr
+    convBoolExp colInfoMap selPerm be sessVarBldr (valueParserWithCollectableType prepValBldr)
 
   resolvedSelFltr <- convAnnBoolExpPartialSQL sessVarBldr $
                      spiFilter selPerm
@@ -112,7 +112,7 @@ validateCountQ
   => CountQuery -> m (CountQueryP1, DS.Seq Q.PrepArg)
 validateCountQ query = do
   let source = cqSource query
-  tableCache <- askTableCache source
+  tableCache :: TableCache 'Postgres <- askTableCache source
   flip runTableCacheRT (source, tableCache) $ runDMLP1T $
     validateCountQWith sessVarFromCurrentSetting binRHSBuilder query
 

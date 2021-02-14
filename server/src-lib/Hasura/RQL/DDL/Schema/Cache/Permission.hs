@@ -17,7 +17,6 @@ import           Data.Text.Extended
 
 import qualified Hasura.Incremental                 as Inc
 
-import           Hasura.Backends.Postgres.SQL.Types
 import           Hasura.RQL.DDL.Permission
 import           Hasura.RQL.DDL.Permission.Internal
 import           Hasura.RQL.DDL.Schema.Cache.Common
@@ -26,12 +25,13 @@ import           Hasura.Session
 
 buildTablePermissions
   :: ( ArrowChoice arr, Inc.ArrowDistribute arr, Inc.ArrowCache m arr
-     , MonadError QErr m, ArrowWriter (Seq CollectedInfo) arr)
+     , MonadError QErr m, ArrowWriter (Seq CollectedInfo) arr
+     , BackendMetadata b)
   => ( SourceName
-     , Inc.Dependency (TableCoreCache 'Postgres)
-     , FieldInfoMap (FieldInfo 'Postgres)
-     , TablePermissionInputs
-     ) `arr` (RolePermInfoMap 'Postgres)
+     , Inc.Dependency (TableCoreCache b)
+     , FieldInfoMap (FieldInfo b)
+     , TablePermissionInputs b
+     ) `arr` (RolePermInfoMap b)
 buildTablePermissions = Inc.cache proc (source, tableCache, tableFields, tablePermissions) -> do
   let alignedPermissions = alignPermissions tablePermissions
       table = _tpiTable tablePermissions
@@ -56,10 +56,10 @@ buildTablePermissions = Inc.cache proc (source, tableCache, tableFields, tablePe
       in insertsMap `unionMap` selectsMap `unionMap` updatesMap `unionMap` deletesMap
 
 mkPermissionMetadataObject
-  :: forall a. (IsPerm a)
-  => SourceName -> QualifiedTable -> PermDef a -> MetadataObject
+  :: forall a b. (Backend b, IsPerm b a)
+  => SourceName -> TableName b -> PermDef a -> MetadataObject
 mkPermissionMetadataObject source table permDef =
-  let permType = permAccToType (permAccessor :: PermAccessor 'Postgres (PermInfo a))
+  let permType = permAccToType (permAccessor :: PermAccessor b (PermInfo b a))
       objectId = MOSourceObjId source $
                  SMOTableObj table $ MTOPerm (_pdRole permDef) permType
       definition = toJSON $ WithTable source table permDef
@@ -73,12 +73,12 @@ mkRemoteSchemaPermissionMetadataObject (AddRemoteSchemaPermissions rsName roleNa
   in MetadataObject objectId $ toJSON defn
 
 withPermission
-  :: forall a b c s arr. (ArrowChoice arr, ArrowWriter (Seq CollectedInfo) arr, IsPerm c)
+  :: forall a b c s arr bknd. (ArrowChoice arr, ArrowWriter (Seq CollectedInfo) arr, IsPerm bknd c, Backend bknd)
   => WriterA (Seq SchemaDependency) (ErrorA QErr arr) (a, s) b
-  -> arr (a, ((SourceName, QualifiedTable, PermDef c), s)) (Maybe b)
+  -> arr (a, ((SourceName, TableName bknd, PermDef c), s)) (Maybe b)
 withPermission f = proc (e, ((source, table, permission), s)) -> do
   let metadataObject = mkPermissionMetadataObject source table permission
-      permType = permAccToType (permAccessor :: PermAccessor 'Postgres (PermInfo c))
+      permType = permAccToType (permAccessor :: PermAccessor bknd (PermInfo bknd c))
       roleName = _pdRole permission
       schemaObject = SOSourceObj source $
                      SOITableObj table $ TOPerm roleName permType
@@ -93,15 +93,16 @@ withPermission f = proc (e, ((source, table, permission), s)) -> do
 buildPermission
   :: ( ArrowChoice arr, Inc.ArrowCache m arr
      , ArrowWriter (Seq CollectedInfo) arr
-     , MonadError QErr m, IsPerm a
+     , MonadError QErr m, IsPerm b a
      , Inc.Cacheable a
+     , BackendMetadata b
      )
-  => ( Inc.Dependency (TableCoreCache 'Postgres)
+  => ( Inc.Dependency (TableCoreCache b)
      , SourceName
-     , QualifiedTable
-     , FieldInfoMap (FieldInfo 'Postgres)
+     , TableName b
+     , FieldInfoMap (FieldInfo b)
      , Maybe (PermDef a)
-     ) `arr` Maybe (PermInfo a)
+     ) `arr` Maybe (PermInfo b a)
 buildPermission = Inc.cache proc (tableCache, source, table, tableFields, maybePermission) -> do
   (| traverseA ( \permission ->
     (| withPermission (do

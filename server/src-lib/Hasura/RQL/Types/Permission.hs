@@ -2,19 +2,20 @@ module Hasura.RQL.Types.Permission where
 
 import           Hasura.Prelude
 
-import qualified Data.Text                          as T
-import qualified Database.PG.Query                  as Q
-import qualified PostgreSQL.Binary.Decoding         as PD
+import qualified Data.Text                      as T
+import qualified Database.PG.Query              as Q
+import qualified PostgreSQL.Binary.Decoding     as PD
 
-import           Control.Lens                       (makeLenses)
+import           Control.Lens                   (makeLenses)
 import           Data.Aeson
 import           Data.Aeson.TH
 import           Data.Hashable
 
-import           Hasura.Backends.Postgres.SQL.Types (PGCol, TableName, getTableTxt)
-import           Hasura.Incremental                 (Cacheable)
+import           Hasura.Incremental             (Cacheable)
 import           Hasura.RQL.IR.BoolExp
-import           Hasura.RQL.Types.Common            hiding (TableName)
+import           Hasura.RQL.Types.Backend
+import           Hasura.RQL.Types.Column
+import           Hasura.RQL.Types.Common
 import           Hasura.RQL.Types.ComputedField
 import           Hasura.SQL.Backend
 import           Hasura.Session
@@ -63,34 +64,19 @@ instance FromJSON PermType where
 instance ToJSON PermType where
   toJSON = String . permTypeToCode
 
-data PermId
-  = PermId
-  { pidTable :: !TableName
-  , pidRole  :: !RoleName
-  , pidType  :: !PermType
-  } deriving (Eq)
-
-instance Show PermId where
-  show (PermId tn rn pType) =
-    show $ mconcat
-    [ getTableTxt tn
-    , "."
-    , roleNameToTxt rn
-    , "."
-    , tshow pType
-    ]
-
-data PermColSpec
+data PermColSpec b
   = PCStar
-  | PCCols ![PGCol]
-  deriving (Show, Eq, Generic)
-instance Cacheable PermColSpec
+  | PCCols ![Column b]
+  deriving (Generic)
+deriving instance (Backend b) => Show (PermColSpec b)
+deriving instance (Backend b) => Eq (PermColSpec b)
+instance (Backend b) => Cacheable (PermColSpec b)
 
-instance FromJSON PermColSpec where
+instance (Backend b) => FromJSON (PermColSpec b) where
   parseJSON (String "*") = return PCStar
   parseJSON x            = PCCols <$> parseJSON x
 
-instance ToJSON PermColSpec where
+instance (Backend b) => ToJSON (PermColSpec b) where
   toJSON (PCCols cols) = toJSON cols
   toJSON PCStar        = "*"
 
@@ -117,9 +103,9 @@ instance (ToJSON a) => ToAesonPairs (PermDef a) where
 -- Insert permission
 data InsPerm (b :: BackendType)
   = InsPerm
-  { ipCheck       :: !(BoolExp b)
-  , ipSet         :: !(Maybe (ColumnValues Value))
-  , ipColumns     :: !(Maybe PermColSpec)
+  { ipCheck       :: !(BoolExp b )
+  , ipSet         :: !(Maybe (ColumnValues b Value))
+  , ipColumns     :: !(Maybe (PermColSpec b))
   , ipBackendOnly :: !(Maybe Bool) -- see Note [Backend only permissions]
   } deriving (Show, Eq, Generic)
 instance Backend b => Cacheable (InsPerm b)
@@ -133,7 +119,7 @@ type InsPermDef b = PermDef (InsPerm b)
 -- Select constraint
 data SelPerm (b :: BackendType)
   = SelPerm
-  { spColumns           :: !PermColSpec         -- ^ Allowed columns
+  { spColumns           :: !(PermColSpec b)     -- ^ Allowed columns
   , spFilter            :: !(BoolExp b)         -- ^ Filter expression
   , spLimit             :: !(Maybe Int)         -- ^ Limit value
   , spAllowAggregations :: !Bool                -- ^ Allow aggregation
@@ -169,8 +155,8 @@ type DelPermDef b = PermDef (DelPerm b)
 -- Update constraint
 data UpdPerm (b :: BackendType)
   = UpdPerm
-  { ucColumns :: !PermColSpec -- Allowed columns
-  , ucSet     :: !(Maybe (ColumnValues Value)) -- Preset columns
+  { ucColumns :: !(PermColSpec b) -- Allowed columns
+  , ucSet     :: !(Maybe (ColumnValues b Value)) -- Preset columns
   , ucFilter  :: !(BoolExp b) -- Filter expression (applied before update)
   , ucCheck   :: !(Maybe (BoolExp b))
   -- ^ Check expression, which must be true after update.

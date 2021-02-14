@@ -314,6 +314,13 @@ library
                      , Hasura.Backends.Postgres.SQL.Rewrite
                      , Hasura.Backends.Postgres.SQL.Types
                      , Hasura.Backends.Postgres.SQL.Value
+                     , Hasura.Backends.Postgres.DDL
+                     , Hasura.Backends.Postgres.DDL.Table
+                     , Hasura.Backends.Postgres.DDL.Source
+                     , Hasura.Backends.Postgres.DDL.Field
+                     , Hasura.Backends.Postgres.DDL.Function
+                     , Hasura.Backends.Postgres.DDL.BoolExp
+                     , Hasura.Backends.Postgres.DDL.RunSQL
 
                      -- Exposed for benchmark:
                      , Hasura.Cache.Bounded
@@ -376,6 +383,7 @@ library
                      , Hasura.RQL.Types
                      , Hasura.RQL.Types.Action
                      , Hasura.RQL.Types.ApiLimit
+                     , Hasura.RQL.Types.Backend
                      , Hasura.RQL.Types.Column
                      , Hasura.RQL.Types.Common
                      , Hasura.RQL.Types.ComputedField
@@ -386,6 +394,8 @@ library
                      , Hasura.RQL.Types.EventTrigger
                      , Hasura.RQL.Types.Function
                      , Hasura.RQL.Types.Metadata
+                     , Hasura.RQL.Types.Metadata.Backend
+                     , Hasura.RQL.Types.Metadata.Object
                      , Hasura.RQL.Types.Permission
                      , Hasura.RQL.Types.QueryCollection
                      , Hasura.RQL.Types.Relationship

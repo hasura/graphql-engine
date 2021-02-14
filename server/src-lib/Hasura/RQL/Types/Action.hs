@@ -82,6 +82,7 @@ import           Data.Text.Extended
 import           Hasura.Incremental            (Cacheable)
 import           Hasura.RQL.DDL.Headers
 import           Hasura.RQL.IR.Select
+import           Hasura.RQL.Types.Backend
 import           Hasura.RQL.Types.Common
 import           Hasura.RQL.Types.CustomTypes
 import           Hasura.RQL.Types.Error
@@ -196,19 +197,19 @@ type ActionPermissionMap = Map.HashMap RoleName ActionPermissionInfo
 
 type ActionOutputFields = Map.HashMap G.Name G.GType
 
-getActionOutputFields :: AnnotatedObjectType backend -> ActionOutputFields
+getActionOutputFields :: AnnotatedObjectType -> ActionOutputFields
 getActionOutputFields =
   Map.fromList . map ( (unObjectFieldName . _ofdName) &&& (fst . _ofdType)) . toList . _otdFields . _aotDefinition
 
-data ActionInfo (b :: BackendType)
+data ActionInfo
   = ActionInfo
   { _aiName         :: !ActionName
-  , _aiOutputObject :: !(AnnotatedObjectType b)
+  , _aiOutputObject :: !AnnotatedObjectType
   , _aiDefinition   :: !ResolvedActionDefinition
   , _aiPermissions  :: !ActionPermissionMap
   , _aiComment      :: !(Maybe Text)
   } deriving (Generic)
-instance J.ToJSON (ActionInfo 'Postgres) where
+instance J.ToJSON ActionInfo where
   toJSON = J.genericToJSON hasuraJSON
 $(makeLenses ''ActionInfo)
 
@@ -283,7 +284,7 @@ data ActionSourceInfo b
   = ASINoSource -- ^ No relationships defined on the action output object
   | ASISource !(SourceConfig b) -- ^ All relationships refer to tables in one source
 
-getActionSourceInfo :: AnnotatedObjectType b -> ActionSourceInfo b
+getActionSourceInfo :: AnnotatedObjectType -> ActionSourceInfo 'Postgres
 getActionSourceInfo = maybe ASINoSource ASISource . _aotSource
 
 data AnnActionExecution (b :: BackendType) v

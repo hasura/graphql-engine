@@ -75,7 +75,7 @@ spec
      , HasServerConfigCtx m
      , MonadResolveSource m
      )
-  => SourceConfiguration -> PGExecCtx -> Q.ConnInfo -> SpecWithCache m
+  => PostgresConnConfiguration -> PGExecCtx -> Q.ConnInfo -> SpecWithCache m
 spec srcConfig pgExecCtx pgConnInfo = do
   let migrateCatalogAndBuildCache env time = do
         (migrationResult, metadata) <- runTx pgExecCtx $ migrateCatalog (Just srcConfig) time

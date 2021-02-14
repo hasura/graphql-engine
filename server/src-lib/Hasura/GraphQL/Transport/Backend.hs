@@ -10,7 +10,7 @@ import           Hasura.EncJSON
 import           Hasura.GraphQL.Execute.Backend
 import           Hasura.GraphQL.Logging                 (MonadQueryLog (..))
 import           Hasura.GraphQL.Transport.HTTP.Protocol
-import           Hasura.RQL.Types.Common
+import           Hasura.RQL.Types.Backend
 import           Hasura.RQL.Types.Error
 import           Hasura.SQL.Backend
 import           Hasura.Server.Types                    (RequestId)

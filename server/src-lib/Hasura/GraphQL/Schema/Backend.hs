@@ -6,7 +6,6 @@ import           Hasura.Prelude
 
 import qualified Language.GraphQL.Draft.Syntax as G
 
-import           Data.Aeson
 import           Data.Has
 import           Language.GraphQL.Draft.Syntax (Nullability)
 
@@ -111,20 +110,6 @@ class Backend b => BackendSchema (b :: BackendType) where
     -> TableName b
     -> SelPermInfo b
     -> m [FieldParser n (MutationRootField UnpreparedValue)]
-  buildActionQueryFields
-    :: MonadBuildSchema b r m n
-    => NonObjectTypeMap -- b
-    -> ActionInfo b
-    -> m [FieldParser n (QueryRootField UnpreparedValue)]
-  buildActionMutationFields
-    :: MonadBuildSchema b r m n
-    => NonObjectTypeMap -- b
-    -> ActionInfo b
-    -> m [FieldParser n (MutationRootField UnpreparedValue)]
-  buildActionSubscriptionFields
-    :: MonadBuildSchema b r m n
-    => ActionInfo b
-    -> m [FieldParser n (QueryRootField UnpreparedValue)]
 
   -- backend extensions
   relayExtension    :: SourceConfig b -> Maybe (XRelay b)
@@ -152,11 +137,6 @@ class Backend b => BackendSchema (b :: BackendType) where
     => TableName b
     -> UpdPermInfo b
     -> m (Maybe (InputFieldsParser n [(Column b, IR.UpdOpExpG (UnpreparedValue b))]))
-  parseScalarValue
-    :: (MonadError QErr m)
-    => ColumnType b
-    -> Value
-    -> m (ScalarValue b)
   -- TODO: THIS IS A TEMPORARY FIX
   -- while offset is exposed in the schema as a GraphQL Int, which
   -- is a bounded Int32, previous versions of the code used to also

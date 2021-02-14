@@ -37,24 +37,25 @@ module Hasura.RQL.DDL.Schema
 
 import           Hasura.Prelude
 
-import qualified Data.Text.Encoding             as TE
-import qualified Database.PG.Query              as Q
-import qualified Database.PostgreSQL.LibPQ      as PQ
-import qualified Text.Regex.TDFA                as TDFA
+import qualified Data.Text.Encoding                  as TE
+import qualified Database.PG.Query                   as Q
+import qualified Database.PostgreSQL.LibPQ           as PQ
+import qualified Text.Regex.TDFA                     as TDFA
 
-import           Control.Monad.Trans.Control    (MonadBaseControl)
+import           Control.Monad.Trans.Control         (MonadBaseControl)
 import           Data.Aeson
 import           Data.Aeson.TH
 
+import           Hasura.Backends.Postgres.DDL.RunSQL
 import           Hasura.EncJSON
 import           Hasura.RQL.DDL.Schema.Cache
 import           Hasura.RQL.DDL.Schema.Catalog
 import           Hasura.RQL.DDL.Schema.Function
 import           Hasura.RQL.DDL.Schema.Rename
 import           Hasura.RQL.DDL.Schema.Table
-import           Hasura.RQL.Instances           ()
+import           Hasura.RQL.Instances                ()
 import           Hasura.RQL.Types
-import           Hasura.Server.Utils            (quoteRegex)
+import           Hasura.Server.Utils                 (quoteRegex)
 
 data RunSQL
   = RunSQL

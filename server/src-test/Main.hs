@@ -89,7 +89,7 @@ buildPostgresSpecs maybeUrlTemplate = do
   let pgConnInfo = Q.ConnInfo 1 $ Q.CDDatabaseURI $ txtToBs pgUrlText
       urlConf = UrlValue $ InputWebhook pgUrlTemplate
       sourceConnInfo = PostgresSourceConnInfo urlConf defaultPostgresPoolSettings
-      sourceConfig = SourceConfiguration sourceConnInfo Nothing
+      sourceConfig = PostgresConnConfiguration sourceConnInfo Nothing
 
   pgPool <- Q.initPGPool pgConnInfo Q.defaultConnParams { Q.cpConns = 1 } print
   let pgContext = mkPGExecCtx Q.Serializable pgPool

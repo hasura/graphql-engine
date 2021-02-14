@@ -38,12 +38,12 @@ convObj
   -> HM.HashMap PGCol S.SQLExp
   -> HM.HashMap PGCol S.SQLExp
   -> FieldInfoMap (FieldInfo 'Postgres)
-  -> InsObj
+  -> InsObj 'Postgres
   -> m ([PGCol], [S.SQLExp])
 convObj prepFn defInsVals setInsVals fieldInfoMap insObj = do
   inpInsVals <- flip HM.traverseWithKey insObj $ \c val -> do
     let relWhenPGErr = "relationships can't be inserted"
-    colType <- askPGType fieldInfoMap c relWhenPGErr
+    colType <- askColumnType fieldInfoMap c relWhenPGErr
     -- if column has predefined value then throw error
     when (c `elem` preSetCols) $ throwNotInsErr c
     -- Encode aeson's value into prepared value
@@ -107,7 +107,7 @@ buildConflictClause sessVarBldr tableInfo inpCols (OnConflict mTCol mTCons act) 
     validateCols c = do
       let targetcols = getPGCols c
       void $ withPathK "constraint_on" $ indexedForM targetcols $
-        \pgCol -> askPGType fieldInfoMap pgCol ""
+        \pgCol -> askColumnType fieldInfoMap pgCol ""
 
     validateConstraint c = do
       let tableConsNames = maybe [] toList $
@@ -129,7 +129,7 @@ buildConflictClause sessVarBldr tableInfo inpCols (OnConflict mTCol mTCons act) 
 
 convInsertQuery
   :: (UserInfoM m, QErrM m, TableInfoRM 'Postgres m)
-  => (Value -> m [InsObj])
+  => (Value -> m [InsObj 'Postgres])
   -> SessVarBldr 'Postgres m
   -> (ColumnType 'Postgres -> Value -> m S.SQLExp)
   -> InsertQuery
@@ -200,7 +200,7 @@ convInsQ
   -> m (InsertQueryP1 'Postgres, DS.Seq Q.PrepArg)
 convInsQ query = do
   let source = iqSource query
-  tableCache <- askTableCache source
+  tableCache :: TableCache 'Postgres <- askTableCache source
   flip runTableCacheRT (source, tableCache) $ runDMLP1T $
     convInsertQuery (withPathK "objects" . decodeInsObjs)
     sessVarFromCurrentSetting binRHSBuilder query
@@ -219,7 +219,7 @@ runInsert env q = do
   runQueryLazyTx (_pscExecCtx sourceConfig) Q.ReadWrite $
     execInsertQuery env strfyNum Nothing res
 
-decodeInsObjs :: (UserInfoM m, QErrM m) => Value -> m [InsObj]
+decodeInsObjs :: (UserInfoM m, QErrM m) => Value -> m [InsObj 'Postgres]
 decodeInsObjs v = do
   objs <- decodeValue v
   when (null objs) $ throw400 UnexpectedPayload "objects should not be empty"

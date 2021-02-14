@@ -144,7 +144,7 @@ insertObject
   -> PGE.MutationRemoteJoinCtx
   -> Seq.Seq Q.PrepArg
   -> Bool
-  -> m (Int, Maybe (ColumnValues TxtEncodedPGVal))
+  -> m (Int, Maybe (ColumnValues 'Postgres TxtEncodedPGVal))
 insertObject env singleObjIns additionalColumns remoteJoinCtx planVars stringifyNum = Tracing.trace ("Insert " <> qualifiedObjectToText table) do
   validateInsert (map fst columns) (map IR._riRelInfo objectRels) (map fst additionalColumns)
 
@@ -158,7 +158,7 @@ insertObject env singleObjIns additionalColumns remoteJoinCtx planVars stringify
 
   cte <- mkInsertQ table onConflict finalInsCols defaultValues checkCond
 
-  MutateResp affRows colVals <- liftTx $
+  PGE.MutateResp affRows colVals <- liftTx $
     PGE.mutateAndFetchCols table allColumns (PGT.MCCheckConstraint cte, planVars) stringifyNum
   colValM <- asSingleObject colVals
 
@@ -294,7 +294,7 @@ mkInsertQ table onConflictM insCols defVals (insCheck, updCheck) = do
 
 fetchFromColVals
   :: MonadError QErr m
-  => ColumnValues TxtEncodedPGVal
+  => ColumnValues 'Postgres TxtEncodedPGVal
   -> [ColumnInfo 'Postgres]
   -> m [(PGCol, PG.SQLExp)]
 fetchFromColVals colVal reqCols =

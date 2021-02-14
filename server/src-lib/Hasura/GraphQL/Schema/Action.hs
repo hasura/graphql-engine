@@ -20,7 +20,6 @@ import qualified Hasura.RQL.DML.Internal               as RQL
 import qualified Hasura.RQL.IR.Select                  as RQL
 
 import           Hasura.Backends.Postgres.SQL.Types
-import           Hasura.Backends.Postgres.SQL.Value
 import           Hasura.GraphQL.Parser                 (FieldParser, InputFieldsParser, Kind (..),
                                                         Parser, UnpreparedValue (..))
 import           Hasura.GraphQL.Parser.Class
@@ -51,7 +50,7 @@ actionExecute
      , Has (BackendExtension 'Postgres) r
      )
   => NonObjectTypeMap
-  -> ActionInfo 'Postgres
+  -> ActionInfo
   -> m (Maybe (FieldParser n (AnnActionExecution 'Postgres (UnpreparedValue 'Postgres))))
 actionExecute nonObjectTypeMap actionInfo = runMaybeT do
   roleName <- lift askRoleName
@@ -88,7 +87,7 @@ actionExecute nonObjectTypeMap actionInfo = runMaybeT do
 actionAsyncMutation
   :: forall m n r. (MonadSchema n m, MonadTableInfo r m, MonadRole r m)
   => NonObjectTypeMap
-  -> ActionInfo 'Postgres
+  -> ActionInfo
   -> m (Maybe (FieldParser n AnnActionMutationAsync))
 actionAsyncMutation nonObjectTypeMap actionInfo = runMaybeT do
   roleName <- lift askRoleName
@@ -123,7 +122,7 @@ actionAsyncQuery
      , Has QueryContext r
      , Has (BackendExtension 'Postgres) r
      )
-  => ActionInfo 'Postgres
+  => ActionInfo
   -> m (Maybe (FieldParser n (AnnActionAsyncQuery 'Postgres (UnpreparedValue 'Postgres))))
 actionAsyncQuery actionInfo = runMaybeT do
   roleName <- lift askRoleName
@@ -186,7 +185,7 @@ actionOutputFields
      , Has QueryContext r
      , Has (BackendExtension 'Postgres) r
      )
-  => AnnotatedObjectType 'Postgres
+  => AnnotatedObjectType
   -> m (Parser 'Output n (RQL.AnnFieldsG 'Postgres (UnpreparedValue 'Postgres)))
 actionOutputFields annotatedObject = do
   let outputObject = _aotDefinition annotatedObject
@@ -249,7 +248,7 @@ actionOutputFields annotatedObject = do
                            ]
 
 
-mkDefinitionList :: AnnotatedObjectType 'Postgres -> [(PGCol, ScalarType 'Postgres)]
+mkDefinitionList :: AnnotatedObjectType -> [(PGCol, ScalarType 'Postgres)]
 mkDefinitionList AnnotatedObjectType{..} =
   flip map (toList _otdFields) $ \ObjectFieldDefinition{..} ->
     (unsafePGCol . G.unName . unObjectFieldName $ _ofdName,) $
@@ -346,7 +345,7 @@ customScalarParser = \case
        { pType = schemaType
        , pParser = P.valueToJSON (P.toGraphQLType schemaType) >=>
                    either (parseErrorWith ParseFailed . qeError)
-                   (pure . pgScalarValueToJson) . runAesonParser (parsePGValue pgScalarType)
+                   (pure . scalarValueToJSON) . parseScalarValue pgScalarType
        }
 
 customEnumParser

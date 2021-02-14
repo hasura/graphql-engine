@@ -2,12 +2,37 @@ module Hasura.SQL.Backend where
 
 import           Hasura.Prelude
 
-data BackendType = Postgres -- MySQL | MSSQL
-  deriving (Show, Bounded, Enum)
-  -- TODO: introduce a "None" backend for parts of the code that
-  -- should never touch an actual backend, such as introspection
-  -- queries.
+import           Data.GADT.Compare
+import           Type.Reflection
+import           Unsafe.Coerce
 
+
+-- | An enum that represents each backend we support.
+data BackendType = Postgres
+  deriving (Show, Eq, Ord, Bounded, Enum)
+
+
+-- | A singleton-like GADT that associates a tag to each backend.
+-- It must contain one tag per backend in @BackendType@.
 data BackendTag (b :: BackendType) where
   PostgresTag :: BackendTag 'Postgres
 
+
+-- | How to convert back from a tag to a runtime value.
+reify :: BackendTag b -> BackendType
+reify PostgresTag = Postgres
+
+
+-- We need those instances to be able to use a @BackendTag@ as a key in a
+-- dependent map.  Using @BackendType@ as a data kind, makes it difficult to use
+-- @Typeable@, hence the reliance on `unsafeCoerce`.
+instance GEq BackendTag where
+  geq b1 b2
+    | reify b1 == reify b2 = unsafeCoerce $ Just Refl
+    | otherwise            = Nothing
+
+instance GCompare BackendTag where
+  gcompare b1 b2 = case compare (reify b1) (reify b2) of
+    EQ -> unsafeCoerce GEQ
+    LT -> GLT
+    GT -> GGT

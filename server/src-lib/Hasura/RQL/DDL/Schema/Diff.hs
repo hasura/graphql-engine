@@ -29,6 +29,7 @@ import qualified Data.List.NonEmpty                 as NE
 
 import           Data.Aeson.TH
 import           Data.List.Extended                 (duplicates)
+import           Data.Typeable                      (cast)
 
 import           Hasura.Backends.Postgres.SQL.Types hiding (TableName)
 import           Hasura.RQL.DDL.Schema.Common
@@ -220,7 +221,9 @@ getSchemaChangeDeps source schemaDiff = do
     SchemaDiff droppedTables alteredTables = schemaDiff
 
     isDirectDep (SOSourceObj s (SOITableObj tn _)) =
-      s == source && tn `HS.member` HS.fromList droppedTables
+      case cast tn of
+        Nothing      -> False
+        Just pgTable -> s == source && pgTable `HS.member` HS.fromList droppedTables
     isDirectDep _                  = False
 
 data FunctionDiff

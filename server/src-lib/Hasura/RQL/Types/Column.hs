@@ -1,15 +1,17 @@
+{-# LANGUAGE AllowAmbiguousTypes #-}
 module Hasura.RQL.Types.Column
   ( ColumnType(..)
   , _ColumnScalar
   , _ColumnEnumReference
   , isScalarColumnWhere
+  , ValueParser
 
   , onlyNumCols
   , onlyJSONBCols
   , onlyComparableCols
 
-  , parsePGScalarValue
-  , parsePGScalarValues
+  , parseScalarValueColumnType
+  , parseScalarValuesColumnType
   , unsafePGColumnToBackend
   , parseTxtEncodedPGValue
 
@@ -24,6 +26,9 @@ module Hasura.RQL.Types.Column
   , EnumValues
   , EnumValue(..)
   , EnumValueInfo(..)
+
+  , fromCol
+  , ColumnValues
   ) where
 
 import           Hasura.Prelude
@@ -40,9 +45,11 @@ import           Hasura.Backends.Postgres.SQL.Types hiding (TableName, isCompara
 import           Hasura.Backends.Postgres.SQL.Value
 import           Hasura.Incremental                 (Cacheable)
 import           Hasura.RQL.Instances               ()
+import           Hasura.RQL.Types.Backend
 import           Hasura.RQL.Types.Common
 import           Hasura.RQL.Types.Error
 import           Hasura.SQL.Backend
+import           Hasura.SQL.Types
 
 
 newtype EnumValue
@@ -101,6 +108,10 @@ instance Backend b => ToTxt (ColumnType b) where
     ColumnScalar scalar                             -> toTxt scalar
     ColumnEnumReference (EnumReference tableName _) -> toTxt tableName
 
+-- | A parser to parse a json value with enforcing column type
+type ValueParser b m v =
+  CollectableType (ColumnType b) -> Value -> m v
+
 data ColumnValue (b :: BackendType) = ColumnValue
   { cvType  :: ColumnType b
   , cvValue :: ScalarValue b
@@ -120,32 +131,36 @@ unsafePGColumnToBackend = \case
   ColumnEnumReference _   -> PGText
 
 -- | Note: Unconditionally accepts null values and returns 'PGNull'.
-parsePGScalarValue
-  :: forall m. (MonadError QErr m) => ColumnType 'Postgres -> Value -> m PGScalarValue
-parsePGScalarValue columnType value = case columnType of
-  ColumnScalar scalarType -> runAesonParser (parsePGValue scalarType) value
+parseScalarValueColumnType
+  :: forall m b
+  . (MonadError QErr m, Backend b)
+  => ColumnType b -> Value -> m (ScalarValue b)
+parseScalarValueColumnType columnType value = case columnType of
+  ColumnScalar scalarType -> liftEither $ parseScalarValue @b scalarType value
   ColumnEnumReference (EnumReference tableName enumValues) ->
-    maybe (pure $ PGNull PGText) parseEnumValue =<< decodeValue value
+    -- maybe (pure $ PGNull PGText) parseEnumValue =<< decodeValue value
+    parseEnumValue =<< decodeValue value
     where
-      parseEnumValue :: G.Name -> m PGScalarValue
+      parseEnumValue :: Maybe G.Name -> m (ScalarValue b)
       parseEnumValue enumValueName = do
-        let enums = map getEnumValue $ M.keys enumValues
-        unless (enumValueName `elem` enums) $ throw400 UnexpectedPayload
-          $ "expected one of the values " <> dquoteList enums
-          <> " for type " <> snakeCaseQualifiedObject tableName <<> ", given " <>> enumValueName
-        pure $ PGValText $ G.unName enumValueName
+        onJust enumValueName \evn -> do
+          let enums = map getEnumValue $ M.keys enumValues
+          unless (evn `elem` enums) $ throw400 UnexpectedPayload
+            $ "expected one of the values " <> dquoteList enums
+            <> " for type " <> snakeCaseTableName tableName <<> ", given " <>> evn
+        pure $ textToScalarValue @b $ G.unName <$> enumValueName
 
-parsePGScalarValues
-  :: (MonadError QErr m)
-  => ColumnType 'Postgres -> [Value] -> m [PGScalarValue]
-parsePGScalarValues columnType values =
-  indexedMapM (parsePGScalarValue columnType) values
+parseScalarValuesColumnType
+  :: (MonadError QErr m, Backend b)
+  => ColumnType b -> [Value] -> m [ScalarValue b]
+parseScalarValuesColumnType columnType values =
+  indexedMapM (parseScalarValueColumnType columnType) values
 
 parseTxtEncodedPGValue
-  :: (MonadError QErr m)
-  => ColumnType 'Postgres -> TxtEncodedPGVal -> m PGScalarValue
+  :: (MonadError QErr m, Backend b)
+  => ColumnType b -> TxtEncodedPGVal -> m (ScalarValue b)
 parseTxtEncodedPGValue colTy val =
-  parsePGScalarValue colTy $ case val of
+  parseScalarValueColumnType colTy $ case val of
     TENull  -> Null
     TELit t -> String t
 
@@ -206,3 +221,8 @@ onlyComparableCols = filter (isScalarColumnWhere (isComparableType @b) . pgiType
 getColInfos :: Backend b => [Column b] -> [ColumnInfo b] -> [ColumnInfo b]
 getColInfos cols allColInfos =
   flip filter allColInfos $ \ci -> pgiColumn ci `elem` cols
+
+fromCol :: Backend b => Column b -> FieldName
+fromCol = FieldName . toTxt
+
+type ColumnValues b a = HashMap (Column b) a

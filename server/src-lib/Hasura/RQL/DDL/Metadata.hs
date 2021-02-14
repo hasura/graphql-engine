@@ -17,15 +17,16 @@ module Hasura.RQL.DDL.Metadata
 
 import           Hasura.Prelude
 
-import qualified Data.Aeson.Ordered                as AO
-import qualified Data.HashMap.Strict               as HM
-import qualified Data.HashMap.Strict.InsOrd        as OMap
-import qualified Data.HashSet                      as HS
-import qualified Data.List                         as L
+import qualified Data.Aeson.Ordered                 as AO
+import qualified Data.HashMap.Strict                as HM
+import qualified Data.HashMap.Strict.InsOrd         as OMap
+import qualified Data.HashSet                       as HS
+import qualified Data.List                          as L
 
-import           Control.Lens                      ((.~), (^?))
+import           Control.Lens                       ((.~), (^?))
 import           Data.Aeson
 
+import           Hasura.Backends.Postgres.DDL.Table (delTriggerQ)
 import           Hasura.Metadata.Class
 import           Hasura.RQL.DDL.Action
 import           Hasura.RQL.DDL.ComputedField
@@ -54,11 +55,11 @@ runClearMetadata _ = do
   let maybeDefaultSourceMetadata = metadata ^? metaSources.ix defaultSource
       emptyMetadata' = case maybeDefaultSourceMetadata of
           Nothing -> emptyMetadata
-          Just defaultSourceMetadata ->
+          Just (BackendSourceMetadata defaultSourceMetadata) ->
             -- If default postgres source is defined, we need to set metadata
             -- which contains only default source without any tables and functions.
-            let emptyDefaultSource = SourceMetadata defaultSource mempty mempty
-                                     $ _smConfiguration defaultSourceMetadata
+            let emptyDefaultSource = BackendSourceMetadata $
+                  SourceMetadata defaultSource mempty mempty $ _smConfiguration defaultSourceMetadata
             in emptyMetadata
                & metaSources %~ OMap.insert defaultSource emptyDefaultSource
   runReplaceMetadata $ RMWithSources emptyMetadata'
@@ -87,9 +88,10 @@ runReplaceMetadata replaceMetadata = do
   metadata <- case replaceMetadata of
     RMWithSources m -> pure m
     RMWithoutSources MetadataNoSources{..} -> do
-      defaultSourceMetadata <- onNothing (OMap.lookup defaultSource $ _metaSources oldMetadata) $
+      let maybeDefaultSourceMetadata = oldMetadata ^? metaSources.ix defaultSource.toSourceMetadata
+      defaultSourceMetadata <- onNothing maybeDefaultSourceMetadata $
         throw400 NotSupported $ "cannot import metadata without sources since no default source is defined"
-      let newDefaultSourceMetadata = defaultSourceMetadata
+      let newDefaultSourceMetadata = BackendSourceMetadata defaultSourceMetadata
                                      { _smTables = _mnsTables
                                      , _smFunctions = _mnsFunctions
                                      }
@@ -102,7 +104,8 @@ runReplaceMetadata replaceMetadata = do
   -- See Note [Clear postgres schema for dropped triggers]
   for_ (OMap.toList $ _metaSources metadata) $ \(source, newSourceCache) ->
     onJust (OMap.lookup source $ _metaSources oldMetadata) $ \oldSourceCache -> do
-      let getTriggersMap = OMap.unions . map _tmEventTriggers . OMap.elems . _smTables
+      let getTriggersMap (BackendSourceMetadata sm) =
+            (OMap.unions . map _tmEventTriggers . OMap.elems . _smTables) sm
           oldTriggersMap = getTriggersMap oldSourceCache
           newTriggersMap = getTriggersMap newSourceCache
           droppedTriggers = OMap.keys $ oldTriggersMap `OMap.difference` newTriggersMap
@@ -174,17 +177,19 @@ runDropInconsistentMetadata _ = do
 purgeMetadataObj :: MetadataObjId -> MetadataModifier
 purgeMetadataObj = \case
   MOSource source -> MetadataModifier $ metaSources %~ OMap.delete source
-  MOSourceObjId source sourceObjId -> case sourceObjId of
-    SMOTable qt                                 -> dropTableInMetadata source qt
-    SMOTableObj qt tableObj -> MetadataModifier $
-      tableMetadataSetter source qt %~ case tableObj of
-        MTORel rn _              -> dropRelationshipInMetadata rn
-        MTOPerm rn pt            -> dropPermissionInMetadata rn pt
-        MTOTrigger trn           -> dropEventTriggerInMetadata trn
-        MTOComputedField ccn     -> dropComputedFieldInMetadata ccn
-        MTORemoteRelationship rn -> dropRemoteRelationshipInMetadata rn
-    SMOFunction qf                           -> dropFunctionInMetadata source qf
-    SMOFunctionPermission qf rn              -> dropFunctionPermissionInMetadata source qf rn
+  MOSourceObjId source (sourceObjId :: SourceMetadataObjId b) ->
+    case backendTag @b of
+      PostgresTag -> case sourceObjId of
+        SMOTable qt                                 -> dropTableInMetadata source qt
+        SMOTableObj qt tableObj -> MetadataModifier $
+          tableMetadataSetter source qt %~ case tableObj of
+            MTORel rn _              -> dropRelationshipInMetadata rn
+            MTOPerm rn pt            -> dropPermissionInMetadata rn pt
+            MTOTrigger trn           -> dropEventTriggerInMetadata trn
+            MTOComputedField ccn     -> dropComputedFieldInMetadata ccn
+            MTORemoteRelationship rn -> dropRemoteRelationshipInMetadata rn
+        SMOFunction qf                           -> dropFunctionInMetadata source qf
+        SMOFunctionPermission qf rn              -> dropFunctionPermissionInMetadata source qf rn
   MORemoteSchema rsn                         -> dropRemoteSchemaInMetadata rsn
   MORemoteSchemaPermissions rsName role      -> dropRemoteSchemaPermissionInMetadata rsName role
   MOCustomTypes                              -> clearCustomTypesInMetadata

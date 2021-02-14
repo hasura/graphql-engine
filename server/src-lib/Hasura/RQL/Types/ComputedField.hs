@@ -17,8 +17,9 @@ import           Data.Aeson.TH
 import           Data.Text.Extended
 import           Data.Text.NonEmpty
 
-import           Hasura.Backends.Postgres.SQL.Types hiding (TableName)
+import           Hasura.Backends.Postgres.SQL.Types hiding (FunctionName, TableName)
 import           Hasura.Incremental                 (Cacheable)
+import           Hasura.RQL.Types.Backend
 import           Hasura.RQL.Types.Common
 import           Hasura.RQL.Types.Function
 import           Hasura.SQL.Backend
@@ -35,15 +36,20 @@ computedFieldNameToText = unNonEmptyText . unComputedFieldName
 fromComputedField :: ComputedFieldName -> FieldName
 fromComputedField = FieldName . computedFieldNameToText
 
-data ComputedFieldDefinition
+data ComputedFieldDefinition b
   = ComputedFieldDefinition
-  { _cfdFunction        :: !QualifiedFunction
+  { _cfdFunction        :: !(FunctionName b)
   , _cfdTableArgument   :: !(Maybe FunctionArgName)
   , _cfdSessionArgument :: !(Maybe FunctionArgName)
-  } deriving (Show, Eq, Generic)
-instance NFData ComputedFieldDefinition
-instance Cacheable ComputedFieldDefinition
-$(deriveJSON hasuraJSON{omitNothingFields = True} ''ComputedFieldDefinition)
+  } deriving (Generic)
+deriving instance (Backend b) => Show (ComputedFieldDefinition b)
+deriving instance (Backend b) => Eq (ComputedFieldDefinition b)
+instance (Backend b) => NFData (ComputedFieldDefinition b)
+instance (Backend b) => Cacheable (ComputedFieldDefinition b)
+instance (Backend b) => ToJSON (ComputedFieldDefinition b) where
+  toJSON = genericToJSON hasuraJSON{omitNothingFields = True}
+instance (Backend b) => FromJSON (ComputedFieldDefinition b) where
+  parseJSON = genericParseJSON hasuraJSON{omitNothingFields = True}
 
 -- | The function table argument is either the very first argument or the named
 -- argument with an index. The index is 0 if the named argument is the first.

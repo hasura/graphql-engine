@@ -32,6 +32,7 @@ import qualified Hasura.RQL.IR.Insert          as IR
 import qualified Hasura.RQL.IR.Select          as IR
 import qualified Hasura.RQL.IR.Update          as IR
 import qualified Hasura.RQL.Types.Action       as RQL
+import qualified Hasura.RQL.Types.Backend      as RQL
 import qualified Hasura.RQL.Types.Common       as RQL
 import qualified Hasura.RQL.Types.RemoteSchema as RQL
 

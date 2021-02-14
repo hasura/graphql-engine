@@ -76,8 +76,7 @@ import           Hasura.Server.Auth                          (AuthMode, UserAuth
                                                               resolveUserInfo)
 import           Hasura.Server.Cors
 import           Hasura.Server.Init.Config                   (KeepAliveDelay (..))
-import           Hasura.Server.Types                         (RequestId)
-import           Hasura.Server.Utils                         (getRequestId)
+import           Hasura.Server.Types                         (RequestId, getRequestId)
 import           Hasura.Server.Version                       (HasVersion)
 import           Hasura.Session
 

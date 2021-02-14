@@ -8,267 +8,14 @@ module Hasura.Backends.Postgres.Translate.BoolExp
 import           Hasura.Prelude
 
 import qualified Data.HashMap.Strict                as M
-import qualified Data.Text                          as T
 
-import           Data.Aeson
 import           Data.Monoid
-import           Data.Text.Extended
 
 import qualified Hasura.Backends.Postgres.SQL.DML   as S
 
-import           Hasura.Backends.Postgres.SQL.Types
+import           Hasura.Backends.Postgres.SQL.Types hiding (TableName)
 import           Hasura.RQL.Types
 import           Hasura.SQL.Types
-
-type OpRhsParser m v =
-  CollectableType (ColumnType 'Postgres) -> Value -> m v
-
--- | Represents a reference to a Postgres column, possibly casted an arbitrary
--- number of times. Used within 'parseOperationsExpression' for bookkeeping.
-data ColumnReference (b :: BackendType)
-  = ColumnReferenceColumn !(ColumnInfo b)
-  | ColumnReferenceCast !(ColumnReference b) !(ColumnType b)
-
-columnReferenceType :: ColumnReference backend -> ColumnType backend
-columnReferenceType = \case
-  ColumnReferenceColumn column     -> pgiType column
-  ColumnReferenceCast _ targetType -> targetType
-
-instance ToTxt (ColumnReference 'Postgres) where
-  toTxt = \case
-    ColumnReferenceColumn column -> toTxt $ pgiColumn column
-    ColumnReferenceCast reference targetType ->
-      toTxt reference <> "::" <> toTxt targetType
-
-parseOperationsExpression
-  :: forall m v
-   . (MonadError QErr m)
-  => OpRhsParser m v
-  -> FieldInfoMap (FieldInfo 'Postgres)
-  -> ColumnInfo 'Postgres
-  -> Value
-  -> m [OpExpG 'Postgres v]
-parseOperationsExpression rhsParser fim columnInfo =
-  withPathK (getPGColTxt $ pgiColumn columnInfo) .
-    parseOperations (ColumnReferenceColumn columnInfo)
-  where
-    parseOperations :: ColumnReference 'Postgres -> Value -> m [OpExpG 'Postgres v]
-    parseOperations column = \case
-      Object o -> mapM (parseOperation column) (M.toList o)
-      val      -> pure . AEQ False <$> rhsParser columnType val
-      where
-        columnType = CollectableTypeScalar $ columnReferenceType column
-
-    parseOperation :: ColumnReference 'Postgres -> (Text, Value) -> m (OpExpG 'Postgres v)
-    parseOperation column (opStr, val) = withPathK opStr $
-      case opStr of
-        "$cast"          -> parseCast
-        "_cast"          -> parseCast
-
-        "$eq"            -> parseEq
-        "_eq"            -> parseEq
-
-        "$ne"            -> parseNe
-        "_ne"            -> parseNe
-        "$neq"           -> parseNe
-        "_neq"           -> parseNe
-
-        "$in"            -> parseIn
-        "_in"            -> parseIn
-
-        "$nin"           -> parseNin
-        "_nin"           -> parseNin
-
-        "$gt"            -> parseGt
-        "_gt"            -> parseGt
-
-        "$lt"            -> parseLt
-        "_lt"            -> parseLt
-
-        "$gte"           -> parseGte
-        "_gte"           -> parseGte
-
-        "$lte"           -> parseLte
-        "_lte"           -> parseLte
-
-        "$like"          -> parseLike
-        "_like"          -> parseLike
-
-        "$nlike"         -> parseNlike
-        "_nlike"         -> parseNlike
-
-        "$ilike"         -> parseIlike
-        "_ilike"         -> parseIlike
-
-        "$nilike"        -> parseNilike
-        "_nilike"        -> parseNilike
-
-        "$similar"       -> parseSimilar
-        "_similar"       -> parseSimilar
-        "$nsimilar"      -> parseNsimilar
-        "_nsimilar"      -> parseNsimilar
-
-        "$regex"         -> parseRegex
-        "_regex"         -> parseRegex
-        "$iregex"        -> parseIRegex
-        "_iregex"        -> parseIRegex
-        "$nregex"        -> parseNRegex
-        "_nregex"        -> parseNRegex
-        "$niregex"       -> parseNIRegex
-        "_niregex"       -> parseNIRegex
-
-        "$is_null"       -> parseIsNull
-        "_is_null"       -> parseIsNull
-
-        -- jsonb type
-        "_contains"      -> guardType [PGJSONB] >> AContains <$> parseOne
-        "$contains"      -> guardType [PGJSONB] >> AContains <$> parseOne
-        "_contained_in"  -> guardType [PGJSONB] >> AContainedIn <$> parseOne
-        "$contained_in"  -> guardType [PGJSONB] >> AContainedIn <$> parseOne
-        "_has_key"       -> guardType [PGJSONB] >> AHasKey <$> parseWithTy (ColumnScalar PGText)
-        "$has_key"       -> guardType [PGJSONB] >> AHasKey <$> parseWithTy (ColumnScalar PGText)
-
-        "_has_keys_any"  -> guardType [PGJSONB] >> AHasKeysAny <$> parseManyWithType (ColumnScalar PGText)
-        "$has_keys_any"  -> guardType [PGJSONB] >> AHasKeysAny <$> parseManyWithType (ColumnScalar PGText)
-        "_has_keys_all"  -> guardType [PGJSONB] >> AHasKeysAll <$> parseManyWithType (ColumnScalar PGText)
-        "$has_keys_all"  -> guardType [PGJSONB] >> AHasKeysAll <$> parseManyWithType (ColumnScalar PGText)
-
-        -- geometry types
-        "_st_contains"   -> parseGeometryOp ASTContains
-        "$st_contains"   -> parseGeometryOp ASTContains
-        "_st_crosses"    -> parseGeometryOp ASTCrosses
-        "$st_crosses"    -> parseGeometryOp ASTCrosses
-        "_st_equals"     -> parseGeometryOp ASTEquals
-        "$st_equals"     -> parseGeometryOp ASTEquals
-        "_st_overlaps"   -> parseGeometryOp ASTOverlaps
-        "$st_overlaps"   -> parseGeometryOp ASTOverlaps
-        "_st_touches"    -> parseGeometryOp ASTTouches
-        "$st_touches"    -> parseGeometryOp ASTTouches
-        "_st_within"     -> parseGeometryOp ASTWithin
-        "$st_within"     -> parseGeometryOp ASTWithin
-        -- geometry and geography types
-        "_st_intersects" -> parseGeometryOrGeographyOp ASTIntersects
-        "$st_intersects" -> parseGeometryOrGeographyOp ASTIntersects
-        "_st_d_within"   -> parseSTDWithinObj
-        "$st_d_within"   -> parseSTDWithinObj
-
-        "$ceq"           -> parseCeq
-        "_ceq"           -> parseCeq
-
-        "$cne"           -> parseCne
-        "_cne"           -> parseCne
-        "$cneq"          -> parseCne
-        "_cneq"          -> parseCne
-
-        "$cgt"           -> parseCgt
-        "_cgt"           -> parseCgt
-
-        "$clt"           -> parseClt
-        "_clt"           -> parseClt
-
-        "$cgte"          -> parseCgte
-        "_cgte"          -> parseCgte
-
-        "$clte"          -> parseClte
-        "_clte"          -> parseClte
-
-        x                -> throw400 UnexpectedPayload $ "Unknown operator : " <> x
-      where
-        colTy = columnReferenceType column
-
-        parseEq       = AEQ False <$> parseOne -- equals
-        parseNe       = ANE False <$> parseOne -- <>
-        parseIn       = AIN <$> parseManyWithType colTy -- in an array
-        parseNin      = ANIN <$> parseManyWithType colTy -- not in an array
-        parseGt       = AGT <$> parseOne -- >
-        parseLt       = ALT <$> parseOne -- <
-        parseGte      = AGTE <$> parseOne -- >=
-        parseLte      = ALTE <$> parseOne -- <=
-        parseLike     = guardType stringTypes >> ALIKE <$> parseOne
-        parseNlike    = guardType stringTypes >> ANLIKE <$> parseOne
-        parseIlike    = guardType stringTypes >> AILIKE () <$> parseOne
-        parseNilike   = guardType stringTypes >> ANILIKE () <$> parseOne
-        parseSimilar  = guardType stringTypes >> ASIMILAR <$> parseOne
-        parseNsimilar = guardType stringTypes >> ANSIMILAR <$> parseOne
-        parseRegex    = guardType stringTypes >> AREGEX <$> parseOne
-        parseIRegex   = guardType stringTypes >> AIREGEX <$> parseOne
-        parseNRegex   = guardType stringTypes >> ANREGEX <$> parseOne
-        parseNIRegex  = guardType stringTypes >> ANIREGEX <$> parseOne
-
-        parseIsNull   = bool ANISNOTNULL ANISNULL -- is null
-                        <$> parseVal
-
-        parseCeq      = CEQ <$> decodeAndValidateRhsCol
-        parseCne      = CNE <$> decodeAndValidateRhsCol
-        parseCgt      = CGT <$> decodeAndValidateRhsCol
-        parseClt      = CLT <$> decodeAndValidateRhsCol
-        parseCgte     = CGTE <$> decodeAndValidateRhsCol
-        parseClte     = CLTE <$> decodeAndValidateRhsCol
-
-        parseCast = do
-          castOperations <- parseVal
-          parsedCastOperations <-
-            forM (M.toList castOperations) $ \(targetTypeName, castedComparisons) -> do
-              let targetType = textToPGScalarType targetTypeName
-                  castedColumn = ColumnReferenceCast column (ColumnScalar targetType)
-              checkValidCast targetType
-              parsedCastedComparisons <- withPathK targetTypeName $
-                parseOperations castedColumn castedComparisons
-              return (targetType, parsedCastedComparisons)
-          return . ACast $ M.fromList parsedCastOperations
-
-        checkValidCast targetType = case (colTy, targetType) of
-          (ColumnScalar PGGeometry, PGGeography) -> return ()
-          (ColumnScalar PGGeography, PGGeometry) -> return ()
-          _ -> throw400 UnexpectedPayload $
-            "cannot cast column of type " <> colTy <<> " to type " <>> targetType
-
-        parseGeometryOp f =
-          guardType [PGGeometry] >> f <$> parseOneNoSess colTy val
-        parseGeometryOrGeographyOp f =
-          guardType geoTypes >> f <$> parseOneNoSess colTy val
-
-        parseSTDWithinObj = case colTy of
-          ColumnScalar PGGeometry -> do
-            DWithinGeomOp distVal fromVal <- parseVal
-            dist <- withPathK "distance" $ parseOneNoSess (ColumnScalar PGFloat) distVal
-            from <- withPathK "from" $ parseOneNoSess colTy fromVal
-            return $ ASTDWithinGeom $ DWithinGeomOp dist from
-          ColumnScalar PGGeography -> do
-            DWithinGeogOp distVal fromVal sphVal <- parseVal
-            dist <- withPathK "distance" $ parseOneNoSess (ColumnScalar PGFloat) distVal
-            from <- withPathK "from" $ parseOneNoSess colTy fromVal
-            useSpheroid <- withPathK "use_spheroid" $ parseOneNoSess (ColumnScalar PGBoolean) sphVal
-            return $ ASTDWithinGeog $ DWithinGeogOp dist from useSpheroid
-          _ -> throwError $ buildMsg colTy [PGGeometry, PGGeography]
-
-        decodeAndValidateRhsCol =
-          parseVal >>= validateRhsCol
-
-        validateRhsCol rhsCol = do
-          let errMsg = "column operators can only compare postgres columns"
-          rhsType <- askPGType fim rhsCol errMsg
-          if colTy /= rhsType
-            then throw400 UnexpectedPayload $
-                 "incompatible column types : " <> column <<> ", " <>> rhsCol
-            else return rhsCol
-
-        parseWithTy ty = rhsParser (CollectableTypeScalar ty) val
-
-        -- parse one with the column's type
-        parseOne = parseWithTy colTy
-        parseOneNoSess ty = rhsParser (CollectableTypeScalar ty)
-
-        parseManyWithType ty = rhsParser (CollectableTypeArray ty) val
-
-        guardType validTys = unless (isScalarColumnWhere (`elem` validTys) colTy) $
-          throwError $ buildMsg colTy validTys
-        buildMsg ty expTys = err400 UnexpectedPayload
-          $ " is of type " <> ty <<> "; this operator works only on columns of type "
-          <> T.intercalate "/" (map dquote expTys)
-
-        parseVal :: (FromJSON a) => m a
-        parseVal = decodeValue val
 
 -- This convoluted expression instead of col = val
 -- to handle the case of col : null
@@ -287,11 +34,11 @@ notEqualsBoolExpBuilder qualColExp rhsExp =
       (S.BENull rhsExp))
 
 annBoolExp
-  :: (QErrM m, TableCoreInfoRM 'Postgres m)
-  => OpRhsParser m v
-  -> FieldInfoMap (FieldInfo 'Postgres)
-  -> GBoolExp 'Postgres ColExp
-  -> m (AnnBoolExp 'Postgres v)
+  :: (QErrM m, TableCoreInfoRM b m, BackendMetadata b)
+  => ValueParser b m v
+  -> FieldInfoMap (FieldInfo b)
+  -> GBoolExp b ColExp
+  -> m (AnnBoolExp b v)
 annBoolExp rhsParser fim boolExp =
   case boolExp of
     BoolAnd exps -> BoolAnd <$> procExps exps
@@ -308,18 +55,15 @@ annBoolExp rhsParser fim boolExp =
     procExps = mapM (annBoolExp rhsParser fim)
 
 annColExp
-  :: (QErrM m, TableCoreInfoRM 'Postgres m)
-  => OpRhsParser m v
-  -> FieldInfoMap (FieldInfo 'Postgres)
+  :: (QErrM m, TableCoreInfoRM b m, BackendMetadata b)
+  => ValueParser b m v
+  -> FieldInfoMap (FieldInfo b)
   -> ColExp
-  -> m (AnnBoolExpFld 'Postgres v)
+  -> m (AnnBoolExpFld b v)
 annColExp rhsParser colInfoMap (ColExp fieldName colVal) = do
   colInfo <- askFieldInfo colInfoMap fieldName
   case colInfo of
-    FIColumn (ColumnInfo _ _ _ (ColumnScalar PGJSON) _ _) ->
-      throwError (err400 UnexpectedPayload "JSON column can not be part of where clause")
-    FIColumn pgi ->
-      AVCol pgi <$> parseOperationsExpression rhsParser colInfoMap pgi colVal
+    FIColumn pgi -> AVCol pgi <$> parseBoolExpOperations rhsParser colInfoMap pgi colVal
     FIRelationship relInfo -> do
       relBoolExp      <- decodeValue colVal
       relFieldInfoMap <- askFieldInfoMapSource $ riRTable relInfo
@@ -476,7 +220,9 @@ hasStaticExp :: OpExpG backend (PartialSQLExp backend) -> Bool
 hasStaticExp = getAny . foldMap (coerce isStaticValue)
 
 getColExpDeps
-  :: SourceName -> QualifiedTable -> AnnBoolExpFldPartialSQL 'Postgres -> [SchemaDependency]
+  :: forall b
+  . (Backend b)
+  => SourceName -> TableName b -> AnnBoolExpFldPartialSQL b -> [SchemaDependency]
 getColExpDeps source tn = \case
   AVCol colInfo opExps ->
     let cn = pgiColumn colInfo
@@ -488,16 +234,19 @@ getColExpDeps source tn = \case
   AVRel relInfo relBoolExp ->
     let rn = riName relInfo
         relTN = riRTable relInfo
-        pd = SchemaDependency (SOSourceObj source $ SOITableObj tn (TORel rn)) DROnType
+        pd = SchemaDependency (SOSourceObj @b source $ SOITableObj tn (TORel rn)) DROnType
     in pd : getBoolExpDeps source relTN relBoolExp
 
-getBoolExpDeps :: SourceName -> QualifiedTable -> AnnBoolExpPartialSQL 'Postgres -> [SchemaDependency]
+getBoolExpDeps
+  :: forall b
+  . (Backend b)
+  => SourceName -> TableName b -> AnnBoolExpPartialSQL b -> [SchemaDependency]
 getBoolExpDeps source tn = \case
   BoolAnd exps -> procExps exps
   BoolOr exps  -> procExps exps
   BoolNot e    -> getBoolExpDeps source tn e
   BoolExists (GExists refqt whereExp) ->
-    let tableDep = SchemaDependency (SOSourceObj source $ SOITable refqt) DRRemoteTable
+    let tableDep = SchemaDependency (SOSourceObj @b source $ SOITable refqt) DRRemoteTable
     in tableDep:getBoolExpDeps source refqt whereExp
   BoolFld fld  -> getColExpDeps source tn fld
   where

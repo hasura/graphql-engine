@@ -199,7 +199,7 @@ convSelectQ
   -> SelPermInfo 'Postgres   -- Additional select permission info
   -> SelectQExt 'Postgres     -- Given Select Query
   -> SessVarBldr 'Postgres m
-  -> (ColumnType 'Postgres -> Value -> m S.SQLExp)
+  -> ValueParser 'Postgres m S.SQLExp
   -> m (AnnSimpleSel 'Postgres)
 convSelectQ table fieldInfoMap selPermInfo selQ sessVarBldr prepValBldr = do
 
@@ -254,7 +254,7 @@ convExtSimple
   -> m (ColumnInfo 'Postgres)
 convExtSimple fieldInfoMap selPermInfo pgCol = do
   checkSelOnCol selPermInfo pgCol
-  askPGColInfo fieldInfoMap pgCol relWhenPGErr
+  askColInfo fieldInfoMap pgCol relWhenPGErr
   where
     relWhenPGErr = "relationships have to be expanded"
 
@@ -265,7 +265,7 @@ convExtRel
   -> Maybe RelName
   -> SelectQExt 'Postgres
   -> SessVarBldr 'Postgres m
-  -> (ColumnType 'Postgres -> Value -> m S.SQLExp)
+  -> ValueParser 'Postgres m S.SQLExp
   -> m (Either (ObjectRelationSelect 'Postgres) (ArraySelect 'Postgres))
 convExtRel fieldInfoMap relName mAlias selQ sessVarBldr prepValBldr = do
   -- Point to the name key
@@ -299,7 +299,8 @@ convExtRel fieldInfoMap relName mAlias selQ sessVarBldr prepValBldr = do
 convSelectQuery
   :: (UserInfoM m, QErrM m, TableInfoRM 'Postgres m, HasServerConfigCtx m)
   => SessVarBldr 'Postgres m
-  -> (ColumnType 'Postgres -> Value -> m S.SQLExp)
+  -> ValueParser 'Postgres m S.SQLExp
+  -- -> (ColumnType 'Postgres -> Value -> m S.SQLExp)
   -> SelectQuery
   -> m (AnnSimpleSel  'Postgres)
 convSelectQuery sessVarBldr prepArgBuilder (DMLQuery _ qt selQ) = do
@@ -322,9 +323,9 @@ phaseOne
   => SelectQuery -> m (AnnSimpleSel  'Postgres, DS.Seq Q.PrepArg)
 phaseOne query = do
   let sourceName = getSourceDMLQuery query
-  tableCache <- askTableCache sourceName
+  tableCache :: TableCache 'Postgres <- askTableCache sourceName
   flip runTableCacheRT (sourceName, tableCache) $ runDMLP1T $
-    convSelectQuery sessVarFromCurrentSetting binRHSBuilder query
+    convSelectQuery sessVarFromCurrentSetting (valueParserWithCollectableType binRHSBuilder) query
 
 phaseTwo :: (MonadTx m) => (AnnSimpleSel 'Postgres, DS.Seq Q.PrepArg) -> m EncJSON
 phaseTwo =

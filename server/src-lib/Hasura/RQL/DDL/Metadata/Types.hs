@@ -104,7 +104,7 @@ instance FromJSON DropInconsistentMetadata where
 data ReplaceMetadata
   = RMWithSources !Metadata
   | RMWithoutSources !MetadataNoSources
-  deriving (Show, Eq)
+  deriving (Eq)
 
 instance FromJSON ReplaceMetadata where
   parseJSON = withObject "Object" $ \o -> do

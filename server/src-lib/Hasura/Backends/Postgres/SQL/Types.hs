@@ -178,6 +178,10 @@ data QualifiedObject a
 instance (NFData a) => NFData (QualifiedObject a)
 instance (Cacheable a) => Cacheable (QualifiedObject a)
 
+instance (Arbitrary a) => Arbitrary (QualifiedObject a) where
+  arbitrary = genericArbitrary
+
+
 instance (FromJSON a) => FromJSON (QualifiedObject a) where
   parseJSON v@(String _) =
     QualifiedObject publicSchema <$> parseJSON v

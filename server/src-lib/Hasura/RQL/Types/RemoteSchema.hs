@@ -193,3 +193,20 @@ instance Cacheable RemoteSchemaInputValueDefinition
 newtype RemoteSchemaIntrospection
   = RemoteSchemaIntrospection [(G.TypeDefinition [G.Name] RemoteSchemaInputValueDefinition)]
   deriving (Show, Eq, Generic, Hashable, Cacheable, Ord)
+
+data RemoteSchemaPermsCtx
+  = RemoteSchemaPermsEnabled
+  | RemoteSchemaPermsDisabled
+  deriving (Show, Eq)
+
+instance J.FromJSON RemoteSchemaPermsCtx where
+  parseJSON = J.withText "RemoteSchemaPermsCtx" $ \t ->
+    case T.toLower t of
+      "true"  -> pure RemoteSchemaPermsEnabled
+      "false" -> pure RemoteSchemaPermsDisabled
+      _       -> fail "enable_remote_schema_permissions should be a boolean value"
+
+instance J.ToJSON RemoteSchemaPermsCtx where
+  toJSON = \case
+    RemoteSchemaPermsEnabled  -> "true"
+    RemoteSchemaPermsDisabled -> "false"

@@ -47,7 +47,9 @@ import           Hasura.Backends.Postgres.SQL.Types
 import           Hasura.RQL.IR.BoolExp
 import           Hasura.RQL.IR.OrderBy
 import           Hasura.RQL.Instances               ()
-import           Hasura.RQL.Types.Common            hiding (ConstraintName)
+import           Hasura.RQL.Types.Backend           hiding (ConstraintName)
+import           Hasura.RQL.Types.Column
+import           Hasura.RQL.Types.Common
 import           Hasura.SQL.Backend
 
 
@@ -180,7 +182,7 @@ instance ToJSON a => ToJSON (DMLQuery (SelectG (SelCol 'Postgres) (BoolExp 'Post
   toJSON (DMLQuery src qt selQ) =
     object $ ["source" .= src, "table" .= qt] <> selectGToPairs selQ
 
-type InsObj = ColumnValues Value
+type InsObj b = ColumnValues b Value
 
 data ConflictAction
   = CAIgnore
@@ -245,16 +247,16 @@ data InsertTxConflictCtx
   } deriving (Show, Eq)
 $(deriveJSON hasuraJSON{omitNothingFields=True} ''InsertTxConflictCtx)
 
-type UpdVals = ColumnValues Value
+type UpdVals b = ColumnValues b Value
 
 data UpdateQuery
   = UpdateQuery
   { uqTable     :: !QualifiedTable
   , uqSource    :: !SourceName
   , uqWhere     :: !(BoolExp 'Postgres)
-  , uqSet       :: !UpdVals
-  , uqInc       :: !UpdVals
-  , uqMul       :: !UpdVals
+  , uqSet       :: !(UpdVals 'Postgres)
+  , uqInc       :: !(UpdVals 'Postgres)
+  , uqMul       :: !(UpdVals 'Postgres)
   , uqDefault   :: ![PGCol]
   , uqReturning :: !(Maybe [PGCol])
   } deriving (Show, Eq)

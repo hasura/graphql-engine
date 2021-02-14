@@ -2,9 +2,6 @@
 module Hasura.GraphQL.Schema.Postgres
   ( buildTableRelayQueryFields
   , buildFunctionRelayQueryFields
-  , buildActionQueryFields
-  , buildActionMutationFields
-  , buildActionSubscriptionFields
   , columnParser
   , jsonPathArg
   , orderByOperators
@@ -13,6 +10,10 @@ module Hasura.GraphQL.Schema.Postgres
   , mkCountType
   , tableDistinctOn
   , updateOperators
+
+  , buildActionQueryFields
+  , buildActionSubscriptionFields
+  , buildActionMutationFields
   ) where
 
 import           Hasura.Prelude
@@ -87,10 +88,13 @@ buildFunctionRelayQueryFields sourceName sourceInfo functionName functionInfo ta
     fieldDesc = Just $ G.Description $ "execute function " <> functionName <<> " which returns " <>> tableName
   optionalFieldParser (mkRF . QDBConnection) $ selectFunctionConnection functionInfo fieldName fieldDesc pkeyColumns selPerms
 
+----------------------------------------------------------
+-- Action related fields
+
 buildActionQueryFields
   :: MonadBuildSchema 'Postgres r m n
   => NonObjectTypeMap
-  -> ActionInfo 'Postgres
+  -> ActionInfo
   -> m [FieldParser n (QueryRootField UnpreparedValue)]
 buildActionQueryFields nonObjectCustomTypes actionInfo =
   maybeToList <$> case _adType (_aiDefinition actionInfo) of
@@ -103,7 +107,7 @@ buildActionQueryFields nonObjectCustomTypes actionInfo =
 buildActionMutationFields
   :: MonadBuildSchema 'Postgres r m n
   => NonObjectTypeMap
-  -> ActionInfo 'Postgres
+  -> ActionInfo
   -> m [FieldParser n (MutationRootField UnpreparedValue)]
 buildActionMutationFields nonObjectCustomTypes actionInfo =
   maybeToList <$> case _adType (_aiDefinition actionInfo) of
@@ -115,7 +119,7 @@ buildActionMutationFields nonObjectCustomTypes actionInfo =
 
 buildActionSubscriptionFields
   :: MonadBuildSchema 'Postgres r m n
-  => ActionInfo 'Postgres
+  => ActionInfo
   -> m [FieldParser n (QueryRootField UnpreparedValue)]
 buildActionSubscriptionFields actionInfo =
   maybeToList <$> case _adType (_aiDefinition actionInfo) of
@@ -123,7 +127,6 @@ buildActionSubscriptionFields actionInfo =
     ActionMutation ActionSynchronous  -> pure Nothing
     ActionMutation ActionAsynchronous ->
       fmap (fmap (RFAction . AQAsync)) <$> actionAsyncQuery actionInfo
-
 
 
 ----------------------------------------------------------------
@@ -153,7 +156,7 @@ columnParser columnType (G.Nullability isNullable) =
       -- this one, and it avoids the risk of having two separate ways of parsing
       -- a value in the codebase, which could lead to inconsistencies.
       _  -> do
-        name <- P.mkScalarTypeName scalarType
+        name <- mkScalarTypeName scalarType
         let schemaType = P.NonNullable $ P.TNamed $ P.mkDefinition name Nothing P.TIScalar
         pure $ Parser
           { pType = schemaType
@@ -394,8 +397,8 @@ comparisonExps = P.memoize 'comparisonExps \columnType -> do
             _                        -> Nothing
 
       forM maybeScalars $ \(sourceScalar, targetScalar) -> do
-        sourceName   <- P.mkScalarTypeName sourceScalar <&> (<> $$(G.litName "_cast_exp"))
-        targetName   <- P.mkScalarTypeName targetScalar
+        sourceName   <- mkScalarTypeName sourceScalar <&> (<> $$(G.litName "_cast_exp"))
+        targetName   <- mkScalarTypeName targetScalar
         targetOpExps <- comparisonExps $ ColumnScalar targetScalar
         let field = P.fieldOptional targetName Nothing $ (targetScalar, ) <$> targetOpExps
         pure $ P.object sourceName Nothing $ M.fromList . maybeToList <$> field
@@ -574,3 +577,4 @@ updateOperators table updatePermissions = do
              $ P.fieldOptional opName (Just opDesc)
              $ P.object objName (Just objDesc)
              $ catMaybes <$> sequenceA fields
+

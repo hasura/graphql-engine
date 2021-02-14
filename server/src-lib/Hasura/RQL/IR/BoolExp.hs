@@ -40,8 +40,8 @@ module Hasura.RQL.IR.BoolExp
 
 import           Hasura.Prelude
 
-import qualified Data.Aeson.Types        as J
-import qualified Data.HashMap.Strict     as M
+import qualified Data.Aeson.Types              as J
+import qualified Data.HashMap.Strict           as M
 
 import           Control.Lens.Plated
 import           Control.Lens.TH
@@ -51,9 +51,11 @@ import           Data.Aeson.TH
 import           Data.Text.Extended
 import           Data.Typeable
 
-import           Hasura.Incremental      (Cacheable)
+import           Hasura.Incremental            (Cacheable)
+import           Hasura.RQL.Types.Backend
 import           Hasura.RQL.Types.Column
 import           Hasura.RQL.Types.Common
+import           Hasura.RQL.Types.Relationship
 import           Hasura.SQL.Backend
 import           Hasura.SQL.Types
 import           Hasura.Session

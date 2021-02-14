@@ -14,14 +14,13 @@ import           Data.Typeable                       (cast)
 import qualified Hasura.Tracing                      as Tracing
 
 import           Hasura.Backends.Postgres.Connection
-import           Hasura.Incremental                  (Cacheable (..))
+import           Hasura.RQL.Types.Backend
 import           Hasura.RQL.Types.Common
 import           Hasura.RQL.Types.Error
 import           Hasura.RQL.Types.Function
 import           Hasura.RQL.Types.Table
 import           Hasura.SQL.Backend
 import           Hasura.Session
-
 
 data SourceInfo b
   = SourceInfo
@@ -36,6 +35,7 @@ instance Backend b => ToJSON (SourceInfo b) where
 
 data BackendSourceInfo =
   forall b. Backend b => BackendSourceInfo (SourceInfo b)
+
 instance ToJSON BackendSourceInfo where
   toJSON (BackendSourceInfo si) = toJSON si
 
@@ -70,64 +70,18 @@ getTableRoles (BackendSourceInfo si) = M.keys . _tiRolePermInfoMap =<< M.elems (
 
 -- | Contains Postgres connection configuration and essential metadata from the
 -- database to build schema cache for tables and function.
-data ResolvedPGSource
-  = ResolvedPGSource
-  { _rsConfig    :: !(SourceConfig 'Postgres)
-  , _rsTables    :: !(DBTablesMetadata 'Postgres)
-  , _rsFunctions :: !PostgresFunctionsMetadata
-  , _rsPgScalars :: !(HashSet (ScalarType 'Postgres))
+data ResolvedSource b
+  = ResolvedSource
+  { _rsConfig    :: !(SourceConfig b)
+  , _rsTables    :: !(DBTablesMetadata b)
+  , _rsFunctions :: !(DBFunctionsMetadata b)
+  , _rsPgScalars :: !(HashSet (ScalarType b))
   } deriving (Eq)
 
 type SourceTables b = HashMap SourceName (TableCache b)
 
-data PostgresPoolSettings
-  = PostgresPoolSettings
-  { _ppsMaxConnections :: !Int
-  , _ppsIdleTimeout    :: !Int
-  , _ppsRetries        :: !Int
-  } deriving (Show, Eq, Generic)
-instance Cacheable PostgresPoolSettings
-$(deriveToJSON hasuraJSON ''PostgresPoolSettings)
-
-instance FromJSON PostgresPoolSettings where
-  parseJSON = withObject "Object" $ \o ->
-    PostgresPoolSettings
-      <$> o .:? "max_connections" .!= _ppsMaxConnections defaultPostgresPoolSettings
-      <*> o .:? "idle_timeout"    .!= _ppsIdleTimeout    defaultPostgresPoolSettings
-      <*> o .:? "retries"         .!= _ppsRetries        defaultPostgresPoolSettings
-
-defaultPostgresPoolSettings :: PostgresPoolSettings
-defaultPostgresPoolSettings =
-  PostgresPoolSettings
-  { _ppsMaxConnections = 50
-  , _ppsIdleTimeout    = 180
-  , _ppsRetries        = 1
-  }
-
-data PostgresSourceConnInfo
-  = PostgresSourceConnInfo
-  { _psciDatabaseUrl  :: !UrlConf
-  , _psciPoolSettings :: !PostgresPoolSettings
-  } deriving (Show, Eq, Generic)
-instance Cacheable PostgresSourceConnInfo
-$(deriveToJSON hasuraJSON ''PostgresSourceConnInfo)
-
-instance FromJSON PostgresSourceConnInfo where
-  parseJSON = withObject "Object" $ \o ->
-    PostgresSourceConnInfo
-      <$> o .: "database_url"
-      <*> o .:? "pool_settings" .!= defaultPostgresPoolSettings
-
-data SourceConfiguration
-  = SourceConfiguration
-  { _scConnectionInfo :: !PostgresSourceConnInfo
-  , _scReadReplicas   :: !(Maybe (NonEmpty PostgresSourceConnInfo))
-  } deriving (Show, Eq, Generic)
-instance Cacheable SourceConfiguration
-$(deriveJSON hasuraJSON{omitNothingFields = True} ''SourceConfiguration)
-
 type SourceResolver =
-  SourceName -> SourceConfiguration -> IO (Either QErr (SourceConfig 'Postgres))
+  SourceName -> PostgresConnConfiguration -> IO (Either QErr (SourceConfig 'Postgres))
 
 class (Monad m) => MonadResolveSource m where
   getSourceResolver :: m SourceResolver
@@ -148,7 +102,7 @@ instance (MonadResolveSource m) => MonadResolveSource (LazyTxT QErr m) where
 data AddPgSource
   = AddPgSource
   { _apsName          :: !SourceName
-  , _apsConfiguration :: !SourceConfiguration
+  , _apsConfiguration :: !PostgresConnConfiguration
   } deriving (Show, Eq)
 $(deriveJSON hasuraJSON ''AddPgSource)
 

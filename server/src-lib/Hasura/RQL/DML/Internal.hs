@@ -54,19 +54,21 @@ mkAdminRolePermInfo ti =
     d = DelPermInfo tn annBoolExpTrue []
 
 askPermInfo'
-  :: (UserInfoM m)
-  => PermAccessor 'Postgres c
-  -> TableInfo 'Postgres
+  :: (UserInfoM m, Backend b)
+  => PermAccessor b c
+  -> TableInfo b
   -> m (Maybe c)
 askPermInfo' pa tableInfo = do
   roleName <- askCurRole
   return $ getPermInfoMaybe roleName pa tableInfo
 
-getPermInfoMaybe :: RoleName -> PermAccessor 'Postgres c -> TableInfo 'Postgres -> Maybe c
+getPermInfoMaybe
+  :: (Backend b) => RoleName -> PermAccessor b c -> TableInfo b -> Maybe c
 getPermInfoMaybe roleName pa tableInfo =
   getRolePermInfo roleName tableInfo >>= (^. permAccToLens pa)
 
-getRolePermInfo :: Backend b => RoleName -> TableInfo b -> Maybe (RolePermInfo b)
+getRolePermInfo
+  :: Backend b => RoleName -> TableInfo b -> Maybe (RolePermInfo b)
 getRolePermInfo roleName tableInfo
   | roleName == adminRoleName =
     Just $ mkAdminRolePermInfo (_tiCoreInfo tableInfo)
@@ -74,9 +76,9 @@ getRolePermInfo roleName tableInfo
     M.lookup roleName (_tiRolePermInfoMap tableInfo)
 
 askPermInfo
-  :: (UserInfoM m, QErrM m)
-  => PermAccessor 'Postgres c
-  -> TableInfo 'Postgres
+  :: (UserInfoM m, QErrM m, Backend b)
+  => PermAccessor b c
+  -> TableInfo b
   -> m c
 askPermInfo pa tableInfo = do
   roleName  <- askCurRole
@@ -97,62 +99,79 @@ isTabUpdatable role ti
     rpim = _tiRolePermInfoMap ti
 
 askInsPermInfo
-  :: (UserInfoM m, QErrM m)
-  => TableInfo 'Postgres -> m (InsPermInfo 'Postgres)
+  :: (UserInfoM m, QErrM m, Backend b)
+  => TableInfo b -> m (InsPermInfo b)
 askInsPermInfo = askPermInfo PAInsert
 
 askSelPermInfo
-  :: (UserInfoM m, QErrM m)
-  => TableInfo 'Postgres -> m (SelPermInfo 'Postgres)
+  :: (UserInfoM m, QErrM m, Backend b)
+  => TableInfo b -> m (SelPermInfo b)
 askSelPermInfo = askPermInfo PASelect
 
 askUpdPermInfo
-  :: (UserInfoM m, QErrM m)
-  => TableInfo 'Postgres -> m (UpdPermInfo 'Postgres)
+  :: (UserInfoM m, QErrM m, Backend b)
+  => TableInfo b -> m (UpdPermInfo b)
 askUpdPermInfo = askPermInfo PAUpdate
 
 askDelPermInfo
-  :: (UserInfoM m, QErrM m)
-  => TableInfo 'Postgres -> m (DelPermInfo 'Postgres)
+  :: (UserInfoM m, QErrM m, Backend b)
+  => TableInfo b -> m (DelPermInfo b)
 askDelPermInfo = askPermInfo PADelete
 
 verifyAsrns :: (MonadError QErr m) => [a -> m ()] -> [a] -> m ()
 verifyAsrns preds xs = indexedForM_ xs $ \a -> mapM_ ($ a) preds
 
-checkSelOnCol :: (UserInfoM m, QErrM m)
-              => SelPermInfo 'Postgres -> PGCol -> m ()
+checkSelOnCol :: forall m b. (UserInfoM m, QErrM m, Backend b)
+              => SelPermInfo b -> Column b -> m ()
 checkSelOnCol selPermInfo =
   checkPermOnCol PTSelect (spiCols selPermInfo)
 
 checkPermOnCol
-  :: (UserInfoM m, QErrM m)
+  :: (UserInfoM m, QErrM m, Backend b)
   => PermType
-  -> HS.HashSet PGCol
-  -> PGCol
+  -> HS.HashSet (Column b)
+  -> Column b
   -> m ()
-checkPermOnCol pt allowedCols pgCol = do
+checkPermOnCol pt allowedCols col = do
   roleName <- askCurRole
-  unless (HS.member pgCol allowedCols) $
+  unless (HS.member col allowedCols) $
     throw400 PermissionDenied $ permErrMsg roleName
   where
     permErrMsg roleName
-      | roleName == adminRoleName = "no such column exists : " <>> pgCol
+      | roleName == adminRoleName = "no such column exists : " <>> col
       | otherwise = mconcat
         [ "role " <>> roleName
         , " does not have permission to "
-        , permTypeToCode pt <> " column " <>> pgCol
+        , permTypeToCode pt <> " column " <>> col
         ]
 
-binRHSBuilder :: (QErrM m) => ColumnType 'Postgres -> Value -> DMLP1T m S.SQLExp
+valueParserWithCollectableType
+  :: (MonadError QErr m)
+  => (ColumnType 'Postgres -> Value -> m S.SQLExp)
+  -> CollectableType (ColumnType 'Postgres)
+  -> Value
+  -> m S.SQLExp
+valueParserWithCollectableType valBldr pgType val = case pgType of
+  CollectableTypeScalar ty  -> valBldr ty val
+  CollectableTypeArray ofTy -> do
+    -- for arrays, we don't use the prepared builder
+    vals <- runAesonParser parseJSON val
+    scalarValues <- parseScalarValuesColumnType ofTy vals
+    return $ S.SETyAnn
+      (S.SEArray $ map (toTxtValue . ColumnValue ofTy) scalarValues)
+      (S.mkTypeAnn $ CollectableTypeArray (unsafePGColumnToBackend ofTy))
+
+binRHSBuilder :: (QErrM m)
+  => ColumnType 'Postgres -> Value -> DMLP1T m S.SQLExp
 binRHSBuilder colType val = do
   preparedArgs <- get
-  scalarValue <- parsePGScalarValue colType val
+  scalarValue <- parseScalarValueColumnType colType val
   put (preparedArgs DS.|> binEncoder scalarValue)
   return $ toPrepParam (DS.length preparedArgs + 1) (unsafePGColumnToBackend colType)
 
 fetchRelTabInfo
-  :: (QErrM m, TableInfoRM 'Postgres m)
-  => TableName 'Postgres -> m (TableInfo 'Postgres)
+  :: (QErrM m, TableInfoRM b m, Backend b)
+  => TableName b -> m (TableInfo b)
 fetchRelTabInfo refTabName =
   -- Internal error
   modifyErrAndSet500 ("foreign " <> ) $
@@ -161,9 +180,9 @@ fetchRelTabInfo refTabName =
 type SessVarBldr b m = SessionVarType b -> SessionVariable -> m (SQLExpression b)
 
 fetchRelDet
-  :: (UserInfoM m, QErrM m, TableInfoRM 'Postgres m)
-  => RelName -> TableName 'Postgres
-  -> m (FieldInfoMap (FieldInfo 'Postgres), SelPermInfo 'Postgres)
+  :: (UserInfoM m, QErrM m, TableInfoRM b m, Backend b)
+  => RelName -> TableName b
+  -> m (FieldInfoMap (FieldInfo b), SelPermInfo b)
 fetchRelDet relName refTabName = do
   roleName <- askCurRole
   -- Internal error
@@ -183,11 +202,11 @@ fetchRelDet relName refTabName = do
       ]
 
 checkOnColExp
-  :: (UserInfoM m, QErrM m, TableInfoRM 'Postgres m)
-  => SelPermInfo 'Postgres
-  -> SessVarBldr 'Postgres m
-  -> AnnBoolExpFldSQL 'Postgres
-  -> m (AnnBoolExpFldSQL 'Postgres)
+  :: (UserInfoM m, QErrM m, TableInfoRM b m, Backend b)
+  => SelPermInfo b
+  -> SessVarBldr b m
+  -> AnnBoolExpFldSQL b
+  -> m (AnnBoolExpFldSQL b)
 checkOnColExp spi sessVarBldr annFld = case annFld of
   AVCol colInfo _ -> do
     let cn = pgiColumn colInfo
@@ -235,35 +254,25 @@ currentSession :: S.SQLExp
 currentSession = S.SEUnsafe "current_setting('hasura.user')::json"
 
 checkSelPerm
-  :: (UserInfoM m, QErrM m, TableInfoRM 'Postgres m)
-  => SelPermInfo 'Postgres
-  -> SessVarBldr 'Postgres m
-  -> AnnBoolExpSQL 'Postgres
-  -> m (AnnBoolExpSQL 'Postgres)
+  :: (UserInfoM m, QErrM m, TableInfoRM b m, Backend b)
+  => SelPermInfo b
+  -> SessVarBldr b m
+  -> AnnBoolExpSQL b
+  -> m (AnnBoolExpSQL b)
 checkSelPerm spi sessVarBldr =
   traverse (checkOnColExp spi sessVarBldr)
 
 convBoolExp
-  :: (UserInfoM m, QErrM m, TableInfoRM 'Postgres m)
-  => FieldInfoMap (FieldInfo 'Postgres)
-  -> SelPermInfo 'Postgres
-  -> BoolExp 'Postgres
-  -> SessVarBldr 'Postgres m
-  -> (ColumnType 'Postgres -> Value -> m S.SQLExp)
-  -> m (AnnBoolExpSQL 'Postgres)
-convBoolExp cim spi be sessVarBldr prepValBldr = do
+  :: (UserInfoM m, QErrM m, TableInfoRM b m, BackendMetadata b)
+  => FieldInfoMap (FieldInfo b)
+  -> SelPermInfo b
+  -> BoolExp b
+  -> SessVarBldr b m
+  -> ValueParser b m (SQLExpression b)
+  -> m (AnnBoolExpSQL b)
+convBoolExp cim spi be sessVarBldr rhsParser = do
   abe <- annBoolExp rhsParser cim $ unBoolExp be
   checkSelPerm spi sessVarBldr abe
-  where
-    rhsParser pgType val = case pgType of
-      CollectableTypeScalar ty  -> prepValBldr ty val
-      CollectableTypeArray ofTy -> do
-        -- for arrays, we don't use the prepared builder
-        vals <- runAesonParser parseJSON val
-        scalarValues <- parsePGScalarValues ofTy vals
-        return $ S.SETyAnn
-          (S.SEArray $ map (toTxtValue . ColumnValue ofTy) scalarValues)
-          (S.mkTypeAnn $ CollectableTypeArray (unsafePGColumnToBackend ofTy))
 
 dmlTxErrorHandler :: Q.PGTxErr -> QErr
 dmlTxErrorHandler = mkTxErrorHandler $ \case

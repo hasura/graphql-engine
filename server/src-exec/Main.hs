@@ -130,7 +130,7 @@ runApp env (HGEOptionsG rci metadataDbUrl hgeCmd) = do
       let defaultSourceConfig = maybeDefaultPgConnInfo <&> \(dbUrlConf, _) ->
             let pgSourceConnInfo = PostgresSourceConnInfo dbUrlConf
                                    defaultPostgresPoolSettings{_ppsRetries = fromMaybe 1 maybeRetries}
-            in SourceConfiguration pgSourceConnInfo Nothing
+            in PostgresConnConfiguration pgSourceConnInfo Nothing
       res <- runTxWithMinimalPool _gcMetadataDbConnInfo $ downgradeCatalog defaultSourceConfig opts initTime
       either (printErrJExit DowngradeProcessError) (liftIO . print) res
 

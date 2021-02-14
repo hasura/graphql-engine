@@ -164,6 +164,6 @@ checkRetCols
   -> m [ColumnInfo 'Postgres]
 checkRetCols fieldInfoMap selPermInfo cols = do
   mapM_ (checkSelOnCol selPermInfo) cols
-  forM cols $ \col -> askPGColInfo fieldInfoMap col relInRetErr
+  forM cols $ \col -> askColInfo fieldInfoMap col relInRetErr
   where
     relInRetErr = "Relationships can't be used in \"returning\"."

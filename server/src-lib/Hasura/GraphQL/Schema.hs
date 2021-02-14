@@ -42,7 +42,6 @@ import           Hasura.RQL.DDL.Schema.Cache.Common
 import           Hasura.RQL.Types
 import           Hasura.Session
 
-
 -- Mapping from backend to schema.
 -- Those instances are orphan by design: generic parsers must be written with the knowledge of the
 -- BackendSchema typeclass, and the backend-specific parsers that we specify here do in turn rely on
@@ -61,9 +60,6 @@ instance BackendSchema 'Postgres where
   buildFunctionQueryFields       = GSB.buildFunctionQueryFields
   buildFunctionRelayQueryFields  = PGS.buildFunctionRelayQueryFields
   buildFunctionMutationFields    = GSB.buildFunctionMutationFields
-  buildActionQueryFields         = PGS.buildActionQueryFields
-  buildActionMutationFields      = PGS.buildActionMutationFields
-  buildActionSubscriptionFields  = PGS.buildActionSubscriptionFields
   -- backend extensions
   relayExtension    = const $ Just ()
   nodesAggExtension = const $ Just ()
@@ -73,7 +69,6 @@ instance BackendSchema 'Postgres where
   orderByOperators          = PGS.orderByOperators
   comparisonExps            = PGS.comparisonExps
   updateOperators           = PGS.updateOperators
-  parseScalarValue          = parsePGScalarValue
   offsetParser              = PGS.offsetParser
   mkCountType               = PGS.mkCountType
   aggregateOrderByCountType = PG.PGInteger
@@ -88,8 +83,6 @@ instance BackendSchema 'Postgres where
 data Scenario = Backend | Frontend deriving (Enum, Show, Eq)
 
 type RemoteSchemaCache = HashMap RemoteSchemaName (RemoteSchemaCtx, MetadataObject)
-
-
 
 ----------------------------------------------------------------
 -- Building contexts
@@ -107,7 +100,7 @@ buildGQLContext
   => ( GraphQLQueryType
      , SourceCache
      , RemoteSchemaCache
-     , ActionCache 'Postgres
+     , ActionCache
      , NonObjectTypeMap
      )
      `arr`
@@ -179,7 +172,7 @@ buildGQLContext =
 buildRoleContext
   :: forall m. (MonadError QErr m, MonadIO m, MonadUnique m)
   => (SQLGenCtx, GraphQLQueryType, FunctionPermissionsCtx) -> SourceCache -> RemoteSchemaCache
-  -> [ActionInfo 'Postgres] -> NonObjectTypeMap
+  -> [ActionInfo] -> NonObjectTypeMap
   -> [( RemoteSchemaName , (IntrospectionResult, ParsedIntrospection))]
   -> RoleName
   -> RemoteSchemaPermsCtx
@@ -256,7 +249,7 @@ buildRoleContext (SQLGenCtx stringifyNum, queryType, functionPermsCtx) sources
 
 buildRelayRoleContext
   :: forall m. (MonadError QErr m, MonadIO m, MonadUnique m)
-  => (SQLGenCtx, GraphQLQueryType, FunctionPermissionsCtx) -> SourceCache -> [ActionInfo 'Postgres] -> NonObjectTypeMap
+  => (SQLGenCtx, GraphQLQueryType, FunctionPermissionsCtx) -> SourceCache -> [ActionInfo] -> NonObjectTypeMap
   -> RoleName
   -> m (RoleContext GQLContext)
 buildRelayRoleContext (SQLGenCtx stringifyNum, queryType, functionPermsCtx) sources
@@ -320,7 +313,7 @@ buildRelayRoleContext (SQLGenCtx stringifyNum, queryType, functionPermsCtx) sour
 
 buildFullestDBSchema
   :: forall m. (MonadError QErr m, MonadIO m, MonadUnique m)
-  => QueryContext -> SourceCache -> [ActionInfo 'Postgres] -> NonObjectTypeMap
+  => QueryContext -> SourceCache -> [ActionInfo] -> NonObjectTypeMap
   -> m ( Parser 'Output (P.ParseT Identity) (OMap.InsOrdHashMap G.Name (QueryRootField UnpreparedValue))
        , Maybe (Parser 'Output (P.ParseT Identity) (OMap.InsOrdHashMap G.Name (MutationRootField UnpreparedValue)))
        )
@@ -569,13 +562,13 @@ buildQueryParser
      )
   => [P.FieldParser n (QueryRootField UnpreparedValue)]
   -> [P.FieldParser n RemoteField]
-  -> [ActionInfo 'Postgres]
+  -> [ActionInfo]
   -> NonObjectTypeMap
   -> Maybe (Parser 'Output n (OMap.InsOrdHashMap G.Name (MutationRootField UnpreparedValue)))
   -> Parser 'Output n (OMap.InsOrdHashMap G.Name (QueryRootField UnpreparedValue))
   -> m (Parser 'Output n (OMap.InsOrdHashMap G.Name (QueryRootField UnpreparedValue)))
 buildQueryParser pgQueryFields remoteFields allActions nonObjectCustomTypes mutationParser subscriptionParser = do
-  actionQueryFields <- concat <$> traverse (buildActionQueryFields nonObjectCustomTypes) allActions
+  actionQueryFields <- concat <$> traverse (PGS.buildActionQueryFields nonObjectCustomTypes) allActions
   let allQueryFields = pgQueryFields <> actionQueryFields <> map (fmap RFRemote) remoteFields
   queryWithIntrospectionHelper allQueryFields mutationParser subscriptionParser
 
@@ -647,7 +640,6 @@ collectTypes x = P.collectTypeDefinitions x
     "Found conflicting definitions for " <> P.getName type1 <<> ".  The definition at " <> origin1 <<>
     " differs from the the definition at " <> commaSeparated origins <<> "."
 
-
 -- | Prepare the parser for subscriptions. Every postgres query field is
 -- exposed as a subscription along with fields to get the status of
 -- asynchronous actions.
@@ -660,10 +652,10 @@ buildSubscriptionParser
      , Has (BackendExtension 'Postgres) r
      )
   => [P.FieldParser n (QueryRootField UnpreparedValue)]
-  -> [ActionInfo 'Postgres]
+  -> [ActionInfo]
   -> m (Parser 'Output n (OMap.InsOrdHashMap G.Name (QueryRootField UnpreparedValue)))
 buildSubscriptionParser queryFields allActions = do
-  actionSubscriptionFields <- concat <$> traverse buildActionSubscriptionFields allActions
+  actionSubscriptionFields <- concat <$> traverse PGS.buildActionSubscriptionFields allActions
   let subscriptionFields = queryFields <> actionSubscriptionFields
   P.safeSelectionSet subscriptionRoot Nothing subscriptionFields
          <&> fmap (fmap (P.handleTypename (RFRaw . J.String . G.unName)))
@@ -677,12 +669,12 @@ buildMutationParser
      , Has (BackendExtension 'Postgres) r
      )
   => [P.FieldParser n RemoteField]
-  -> [ActionInfo 'Postgres]
+  -> [ActionInfo]
   -> NonObjectTypeMap
   -> [P.FieldParser n (MutationRootField UnpreparedValue)]
   -> m (Maybe (Parser 'Output n (OMap.InsOrdHashMap G.Name (MutationRootField UnpreparedValue))))
 buildMutationParser allRemotes allActions nonObjectCustomTypes mutationFields = do
-  actionParsers <- concat <$> traverse (buildActionMutationFields nonObjectCustomTypes) allActions
+  actionParsers <- concat <$> traverse (PGS.buildActionMutationFields nonObjectCustomTypes) allActions
   let mutationFieldsParser =
         mutationFields <>
         actionParsers <>

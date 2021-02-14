@@ -32,8 +32,9 @@ import           Data.Scientific
 import           Data.Text.Extended
 import           Data.Text.NonEmpty
 
-import           Hasura.Backends.Postgres.SQL.Types
+import           Hasura.Backends.Postgres.SQL.Types hiding (TableName)
 import           Hasura.Incremental                 (Cacheable)
+import           Hasura.RQL.Types.Backend
 import           Hasura.RQL.Types.Column
 import           Hasura.RQL.Types.Common
 import           Hasura.RQL.Types.RemoteSchema
@@ -236,13 +237,13 @@ instance ToJSON RemoteFields where
           ]
 
 -- | Metadata type for remote relationship
-data RemoteRelationship =
+data RemoteRelationship b =
   RemoteRelationship
     { rtrName         :: !RemoteRelationshipName
     -- ^ Field name to which we'll map the remote in hasura; this becomes part
     -- of the hasura schema.
     , rtrSource       :: !SourceName
-    , rtrTable        :: !QualifiedTable
+    , rtrTable        :: !(TableName b)
     -- ^ (SourceName, QualifiedTable) determines the table on which the relationship
     -- is defined
     , rtrHasuraFields :: !(HashSet FieldName) -- TODO change to PGCol
@@ -251,12 +252,15 @@ data RemoteRelationship =
     , rtrRemoteSchema :: !RemoteSchemaName
     -- ^ Identifier for this mapping.
     , rtrRemoteField  :: !RemoteFields
-    }  deriving (Show, Eq, Generic)
-instance NFData RemoteRelationship
-instance Cacheable RemoteRelationship
-$(deriveToJSON hasuraJSON ''RemoteRelationship)
+    }  deriving (Generic)
+deriving instance (Backend b) => Show (RemoteRelationship b)
+deriving instance (Backend b) => Eq (RemoteRelationship b)
+instance (Backend b) => NFData (RemoteRelationship b)
+instance (Backend b) => Cacheable (RemoteRelationship b)
+instance (Backend b) => ToJSON (RemoteRelationship b) where
+  toJSON = genericToJSON hasuraJSON
 
-instance FromJSON RemoteRelationship where
+instance (Backend b) => FromJSON (RemoteRelationship b) where
   parseJSON = withObject "RemoteRelationship" $ \o ->
     RemoteRelationship
       <$> o .: "name"

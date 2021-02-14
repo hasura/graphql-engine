@@ -14,9 +14,11 @@ import qualified Data.HashMap.Strict                as HM
 import qualified Database.PG.Query                  as Q
 
 purgeDependentObject
-  :: (MonadError QErr m) => SchemaObjId -> m MetadataModifier
-purgeDependentObject = \case
-  SOSourceObj source (SOITableObj tn tableObj) -> pure $ MetadataModifier $
+  :: forall b m
+   . (MonadError QErr m, BackendMetadata b)
+  => SourceName -> SourceObjId b -> m MetadataModifier
+purgeDependentObject source sourceObjId = case sourceObjId of
+  SOITableObj tn tableObj -> pure $ MetadataModifier $
     tableMetadataSetter source tn %~ case tableObj of
       TOPerm rn pt        -> dropPermissionInMetadata rn pt
       TORel rn            -> dropRelationshipInMetadata rn
@@ -24,9 +26,9 @@ purgeDependentObject = \case
       TOComputedField ccn -> dropComputedFieldInMetadata ccn
       TORemoteRel rrn     -> dropRemoteRelationshipInMetadata rrn
       _                   -> id
-  SOSourceObj source (SOIFunction qf) -> pure $ dropFunctionInMetadata source qf
-  schemaObjId           ->
-      throw500 $ "unexpected dependent object: " <> reportSchemaObj schemaObjId
+  SOIFunction qf -> pure $ dropFunctionInMetadata source qf
+  _           ->
+    throw500 $ "unexpected dependent object: " <> reportSchemaObj (SOSourceObj source sourceObjId)
 
 -- | Fetch Postgres metadata of all user tables
 fetchTableMetadata :: (MonadTx m) => m (DBTablesMetadata 'Postgres)
@@ -37,7 +39,7 @@ fetchTableMetadata = do
     \(schema, table, Q.AltJ info) -> (QualifiedObject schema table, info)
 
 -- | Fetch Postgres metadata for all user functions
-fetchFunctionMetadata :: (MonadTx m) => m PostgresFunctionsMetadata
+fetchFunctionMetadata :: (MonadTx m) => m (DBFunctionsMetadata 'Postgres)
 fetchFunctionMetadata = do
   results <- liftTx $ Q.withQE defaultTxErrorHandler
              $(Q.sqlFromFile "src-rsr/pg_function_metadata.sql") () True

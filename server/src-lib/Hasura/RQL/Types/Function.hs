@@ -16,6 +16,7 @@ import           Data.Text.Extended
 import qualified Hasura.Backends.Postgres.SQL.Types as PG
 
 import           Hasura.Incremental                 (Cacheable)
+import           Hasura.RQL.Types.Backend
 import           Hasura.RQL.Types.Common
 import           Hasura.SQL.Backend
 import           Hasura.Session
@@ -176,7 +177,7 @@ instance NFData RawFunctionInfo
 instance Cacheable RawFunctionInfo
 $(deriveJSON hasuraJSON ''RawFunctionInfo)
 
-type PostgresFunctionsMetadata = HashMap PG.QualifiedFunction [RawFunctionInfo]
+type DBFunctionsMetadata b = HashMap (FunctionName b) [RawFunctionInfo] -- TODO: Generalize RawFunctionInfo
 
 data FunctionPermissionsCtx
   = FunctionPermissionsInferred
@@ -191,3 +192,11 @@ instance ToJSON FunctionPermissionsCtx where
   toJSON = \case
     FunctionPermissionsInferred -> Bool True
     FunctionPermissionsManual   -> Bool False
+
+newtype FunctionPermissionMetadata
+  = FunctionPermissionMetadata
+  { _fpmRole       :: RoleName
+  } deriving (Show, Eq, Generic)
+instance Cacheable FunctionPermissionMetadata
+$(makeLenses ''FunctionPermissionMetadata)
+$(deriveJSON hasuraJSON ''FunctionPermissionMetadata)

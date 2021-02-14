@@ -136,10 +136,10 @@ import           Control.Lens                        (makeLenses)
 import           Data.Aeson
 import           Data.Aeson.TH
 import           Data.Text.Extended
+import           Data.Typeable                       (cast)
 import           System.Cron.Types
 
 import qualified Hasura.Backends.Postgres.Connection as PG
-import qualified Hasura.Backends.Postgres.SQL.Types  as PG
 import qualified Hasura.GraphQL.Parser               as P
 
 import           Hasura.GraphQL.Context              (GQLContext, RemoteField, RoleContext)
@@ -148,6 +148,7 @@ import           Hasura.Incremental                  (Cacheable, Dependency, Mon
 import           Hasura.RQL.IR.BoolExp
 import           Hasura.RQL.Types.Action
 import           Hasura.RQL.Types.ApiLimit
+import           Hasura.RQL.Types.Backend
 import           Hasura.RQL.Types.Common
 import           Hasura.RQL.Types.ComputedField
 import           Hasura.RQL.Types.CustomTypes
@@ -155,14 +156,14 @@ import           Hasura.RQL.Types.Endpoint
 import           Hasura.RQL.Types.Error
 import           Hasura.RQL.Types.EventTrigger
 import           Hasura.RQL.Types.Function
-import           Hasura.RQL.Types.Metadata
+import           Hasura.RQL.Types.Metadata.Object
 import           Hasura.RQL.Types.QueryCollection
+import           Hasura.RQL.Types.Relationship
 import           Hasura.RQL.Types.RemoteSchema
 import           Hasura.RQL.Types.ScheduledTrigger
 import           Hasura.RQL.Types.SchemaCacheTypes
 import           Hasura.RQL.Types.Source
 import           Hasura.RQL.Types.Table
-import           Hasura.SQL.Backend
 import           Hasura.Session
 import           Hasura.Tracing                      (TraceT)
 
@@ -170,17 +171,21 @@ import           Hasura.Tracing                      (TraceT)
 reportSchemaObjs :: [SchemaObjId] -> Text
 reportSchemaObjs = commaSeparated . sort . map reportSchemaObj
 
-mkParentDep :: SourceName -> PG.QualifiedTable -> SchemaDependency
-mkParentDep s tn = SchemaDependency (SOSourceObj s $ SOITable tn) DRTable
+mkParentDep :: forall b. (Backend b) => SourceName -> TableName b -> SchemaDependency
+mkParentDep s tn = SchemaDependency (SOSourceObj @b s $ SOITable tn) DRTable
 
-mkColDep :: DependencyReason -> SourceName -> PG.QualifiedTable -> PG.PGCol -> SchemaDependency
+mkColDep
+  :: forall b
+  . (Backend b)
+  => DependencyReason -> SourceName -> TableName b -> Column b -> SchemaDependency
 mkColDep reason source tn col =
-  flip SchemaDependency reason . SOSourceObj source . SOITableObj tn $ TOCol col
+  flip SchemaDependency reason . SOSourceObj @b source . SOITableObj tn $ TOCol col
 
 mkComputedFieldDep
-  :: DependencyReason -> SourceName -> PG.QualifiedTable -> ComputedFieldName -> SchemaDependency
+  :: forall b. (Backend b)
+  => DependencyReason -> SourceName -> TableName b -> ComputedFieldName -> SchemaDependency
 mkComputedFieldDep reason s tn computedField =
-  flip SchemaDependency reason . SOSourceObj s . SOITableObj tn $ TOComputedField computedField
+  flip SchemaDependency reason . SOSourceObj @b s . SOITableObj tn $ TOComputedField computedField
 
 type WithDeps a = (a, [SchemaDependency])
 
@@ -249,7 +254,7 @@ incSchemaCacheVer :: SchemaCacheVer -> SchemaCacheVer
 incSchemaCacheVer (SchemaCacheVer prev) =
   SchemaCacheVer $ prev + 1
 
-type ActionCache (b :: BackendType) = M.HashMap ActionName (ActionInfo b) -- info of all actions
+type ActionCache = M.HashMap ActionName ActionInfo -- info of all actions
 
 unsafeFunctionCache
   :: forall b. Backend b => SourceName -> SourceCache -> Maybe (FunctionCache b)
@@ -274,7 +279,7 @@ unsafeTableInfo sourceName tableName cache =
 data SchemaCache
   = SchemaCache
   { scPostgres                    :: !SourceCache
-  , scActions                     :: !(ActionCache 'Postgres)
+  , scActions                     :: !ActionCache
   , scRemoteSchemas               :: !RemoteSchemaMap
   , scAllowlist                   :: !(HS.HashSet GQLQuery)
   , scGQLContext                  :: !(HashMap RoleName (RoleContext GQLContext))
@@ -413,7 +418,7 @@ getDependentObjsWith f sc objId =
     -- induces a b : is b dependent on a
     induces (SOSource s1)                   (SOSource s2)                        = s1 == s2
     induces (SOSource s1)                   (SOSourceObj s2 _)                   = s1 == s2
-    induces (SOSourceObj s1 (SOITable tn1)) (SOSourceObj s2 (SOITable tn2))      = s1 == s2 && tn1 == tn2
-    induces (SOSourceObj s1 (SOITable tn1)) (SOSourceObj s2 (SOITableObj tn2 _)) = s1 == s2 && tn1 == tn2
+    induces (SOSourceObj s1 (SOITable tn1)) (SOSourceObj s2 (SOITable tn2))      = s1 == s2 && Just tn1 == (cast tn2)
+    induces (SOSourceObj s1 (SOITable tn1)) (SOSourceObj s2 (SOITableObj tn2 _)) = s1 == s2 && Just tn1 == (cast tn2)
     induces objId1 objId2                                                        = objId1 == objId2
     -- allDeps = toList $ fromMaybe HS.empty $ M.lookup objId $ scDepMap sc

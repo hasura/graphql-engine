@@ -34,6 +34,7 @@ import qualified Language.Haskell.TH.Syntax          as TH
 
 import           Control.Monad.Trans.Control         (MonadBaseControl)
 import           Data.Time.Clock                     (UTCTime)
+import           Data.Typeable                       (cast)
 import           System.Directory                    (doesFileExist)
 
 import           Hasura.Backends.Postgres.SQL.Types
@@ -90,7 +91,7 @@ migrateCatalog
      , MonadIO m
      , MonadBaseControl IO m
      )
-  => Maybe SourceConfiguration
+  => Maybe (SourceConnConfiguration 'Postgres)
   -> UTCTime
   -> m (MigrationResult, Metadata)
 migrateCatalog maybeDefaultSourceConfig migrationTime = do
@@ -115,7 +116,7 @@ migrateCatalog maybeDefaultSourceConfig migrationTime = do
             Nothing -> emptyMetadata
             Just defaultSourceConfig ->
               -- insert metadata with default source
-              let defaultSourceMetadata =
+              let defaultSourceMetadata = BackendSourceMetadata $
                     SourceMetadata defaultSource mempty mempty defaultSourceConfig
                   sources = OMap.singleton defaultSource defaultSourceMetadata
               in emptyMetadata{_metaSources = sources}
@@ -144,7 +145,8 @@ migrateCatalog maybeDefaultSourceConfig migrationTime = do
 
 downgradeCatalog
   :: forall m. (MonadIO m, MonadTx m)
-  => Maybe SourceConfiguration -> DowngradeOptions -> UTCTime -> m MigrationResult
+  => Maybe (SourceConnConfiguration 'Postgres)
+  -> DowngradeOptions -> UTCTime -> m MigrationResult
 downgradeCatalog defaultSourceConfig opts time = do
     downgradeFrom =<< getCatalogVersion
   where
@@ -214,7 +216,7 @@ setCatalogVersion ver time = liftTx $ Q.unitQE defaultTxErrorHandler [Q.sql|
 
 migrations
   :: forall m. (MonadIO m, MonadTx m)
-  => Maybe SourceConfiguration -> Bool -> [(Text, MigrationPair m)]
+  => Maybe (SourceConnConfiguration 'Postgres) -> Bool -> [(Text, MigrationPair m)]
 migrations maybeDefaultSourceConfig dryRun =
     -- We need to build the list of migrations at compile-time so that we can compile the SQL
     -- directly into the executable using `Q.sqlFromFile`. The GHC stage restriction makes
@@ -288,7 +290,7 @@ migrations maybeDefaultSourceConfig dryRun =
           "cannot migrate to catalog version 43 without --database-url or env var " <> tshow (fst databaseUrlEnv)
         let metadataV3 =
               let MetadataNoSources{..} = metadataV2
-                  defaultSourceMetadata =
+                  defaultSourceMetadata = BackendSourceMetadata $
                     SourceMetadata defaultSource _mnsTables _mnsFunctions defaultSourceConfig
               in Metadata (OMap.singleton defaultSource defaultSourceMetadata)
                    _mnsRemoteSchemas _mnsQueryCollections _mnsAllowlist _mnsCustomTypes _mnsActions _mnsCronTriggers mempty
@@ -301,11 +303,16 @@ migrations maybeDefaultSourceConfig dryRun =
         else do
         Metadata{..} <- liftTx fetchMetadataFromCatalog
         runTx query
+        let emptyMetadataNoSources =
+              MetadataNoSources mempty mempty mempty mempty mempty emptyCustomTypes mempty mempty
         metadataV2 <- case OMap.toList _metaSources of
-          [] -> pure $ MetadataNoSources mempty mempty mempty mempty mempty emptyCustomTypes mempty mempty
-          [(_, SourceMetadata{..})] ->
-            pure $ MetadataNoSources _smTables _smFunctions _metaRemoteSchemas _metaQueryCollections
-                      _metaAllowlist _metaCustomTypes _metaActions _metaCronTriggers
+          [] -> pure emptyMetadataNoSources
+          [(_, BackendSourceMetadata sm)] ->
+            pure $ case cast sm of
+              Nothing -> emptyMetadataNoSources
+              Just SourceMetadata{..} ->
+                MetadataNoSources _smTables _smFunctions _metaRemoteSchemas _metaQueryCollections
+                                  _metaAllowlist _metaCustomTypes _metaActions _metaCronTriggers
           _ -> throw400 NotSupported "Cannot downgrade since there are more than one source"
         liftTx $ runHasSystemDefinedT (SystemDefined False) $ saveMetadataToHdbTables metadataV2
         recreateSystemMetadata

@@ -44,32 +44,32 @@ data RQLMetadata
   | RMPgDropSource !DropPgSource
 
   | RMPgTrackTable !TrackTableV2
-  | RMPgUntrackTable !UntrackTable
+  | RMPgUntrackTable !(UntrackTable 'Postgres)
   | RMPgSetTableIsEnum !SetTableIsEnum
   | RMPgSetTableCustomization !SetTableCustomization
 
   -- Postgres functions
   | RMPgTrackFunction !TrackFunctionV2
-  | RMPgUntrackFunction !UnTrackFunction
+  | RMPgUntrackFunction !(UnTrackFunction 'Postgres)
 
   -- Postgres function permissions
-  | RMPgCreateFunctionPermission !CreateFunctionPermission
-  | RMPgDropFunctionPermission !DropFunctionPermission
+  | RMPgCreateFunctionPermission !(CreateFunctionPermission 'Postgres)
+  | RMPgDropFunctionPermission !(DropFunctionPermission 'Postgres)
 
   -- Postgres table relationships
-  | RMPgCreateObjectRelationship !CreateObjRel
-  | RMPgCreateArrayRelationship !CreateArrRel
+  | RMPgCreateObjectRelationship !(CreateObjRel 'Postgres)
+  | RMPgCreateArrayRelationship !(CreateArrRel 'Postgres)
   | RMPgDropRelationship !DropRel
   | RMPgSetRelationshipComment !SetRelComment
   | RMPgRenameRelationship !RenameRel
 
   -- Postgres computed fields
-  | RMPgAddComputedField !AddComputedField
-  | RMPgDropComputedField !DropComputedField
+  | RMPgAddComputedField !(AddComputedField 'Postgres)
+  | RMPgDropComputedField !(DropComputedField 'Postgres)
 
   -- Postgres tables remote relationships
-  | RMPgCreateRemoteRelationship !RemoteRelationship
-  | RMPgUpdateRemoteRelationship !RemoteRelationship
+  | RMPgCreateRemoteRelationship !(RemoteRelationship 'Postgres)
+  | RMPgUpdateRemoteRelationship !(RemoteRelationship 'Postgres)
   | RMPgDeleteRemoteRelationship !DeleteRemoteRelationship
 
   -- Postgres tables permissions
@@ -78,10 +78,10 @@ data RQLMetadata
   | RMPgCreateUpdatePermission !(CreateUpdPerm 'Postgres)
   | RMPgCreateDeletePermission !(CreateDelPerm 'Postgres)
 
-  | RMPgDropInsertPermission !(DropPerm (InsPerm 'Postgres))
-  | RMPgDropSelectPermission !(DropPerm (SelPerm 'Postgres))
-  | RMPgDropUpdatePermission !(DropPerm (UpdPerm 'Postgres))
-  | RMPgDropDeletePermission !(DropPerm (DelPerm 'Postgres))
+  | RMPgDropInsertPermission !(DropPerm 'Postgres (InsPerm 'Postgres))
+  | RMPgDropSelectPermission !(DropPerm 'Postgres (SelPerm 'Postgres))
+  | RMPgDropUpdatePermission !(DropPerm 'Postgres (UpdPerm 'Postgres))
+  | RMPgDropDeletePermission !(DropPerm 'Postgres (DelPerm 'Postgres))
   | RMPgSetPermissionComment !SetPermComment
 
   -- Postgres tables event triggers
@@ -153,7 +153,7 @@ data RQLMetadata
 
   -- bulk metadata queries
   | RMBulk [RQLMetadata]
-  deriving (Show, Eq)
+  deriving (Eq)
 
 $(deriveJSON
   defaultOptions { constructorTagModifier = snakeCase . drop 2

@@ -19,7 +19,7 @@ import                          Hasura.GraphQL.Context
 import {-# SOURCE #-}           Hasura.GraphQL.Execute.Action
 import                          Hasura.GraphQL.Parser                  hiding (Type)
 import                          Hasura.RQL.IR.RemoteJoin
-import                          Hasura.RQL.Types.Common
+import                          Hasura.RQL.Types.Backend
 import                          Hasura.RQL.Types.Error
 import                          Hasura.RQL.Types.RemoteSchema
 import                          Hasura.SQL.Backend
