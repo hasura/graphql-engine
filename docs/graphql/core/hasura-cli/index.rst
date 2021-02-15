@@ -62,9 +62,9 @@ Commands
 - :ref:`hasura plugins upgrade <hasura_plugins_upgrade>`
 - :ref:`hasura scripts <hasura_scripts>`
 - :ref:`hasura scripts update-project-v2 <hasura_scripts_update-project-v2>`
-- :ref:`hasura seed <hasura_seed>`
-- :ref:`hasura seed apply <hasura_seed_apply>`
-- :ref:`hasura seed create <hasura_seed_create>`
+- :ref:`hasura seeds <hasura_seed>`
+- :ref:`hasura seeds apply <hasura_seed_apply>`
+- :ref:`hasura seeds create <hasura_seed_create>`
 - :ref:`hasura update-cli <hasura_update-cli>`
 - :ref:`hasura version <hasura_version>`
 
@@ -110,9 +110,9 @@ Refer to :ref:`uninstall_hasura_cli`.
    hasura plugins upgrade <hasura_plugins_upgrade>
    hasura scripts <hasura_scripts>
    hasura scripts update-project-v2 <hasura_scripts_update-project-v2>
-   hasura seed <hasura_seed>
-   hasura seed apply <hasura_seed_apply>
-   hasura seed create <hasura_seed_create>
+   hasura seeds <hasura_seed>
+   hasura seeds apply <hasura_seed_apply>
+   hasura seeds create <hasura_seed_create>
    hasura update-cli <hasura_update-cli>
    hasura version <hasura_version>
    uninstall-hasura-cli
