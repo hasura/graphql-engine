@@ -135,7 +135,7 @@ func TestMetadataCmd(t *testing.T, ec *cli.ExecutionContext) {
 					if err != nil {
 						t.Fatalf("%s: unable to read actual metadata file %s, got %v", tc.name, name, err)
 					}
-					assert.Equal(t, string(expectedByt), string(actualByt))
+					assert.Equalf(t, string(expectedByt), string(actualByt), "file: %s", filepath.Join(tc.expectedMetadataFolder, name))
 				}
 			}
 		})

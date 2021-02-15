@@ -6,9 +6,7 @@
       "tables": [],
       "configuration": {
         "connection_info": {
-          "database_url": {
-            "from_env": "HASURA_GRAPHQL_DATABASE_URL"
-          },
+          "database_url": "postgres://postgres:postgrespassword@postgres:5432/postgres",
           "pool_settings": {
             "retries": 1,
             "idle_timeout": 180,

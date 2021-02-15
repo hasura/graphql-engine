@@ -145,8 +145,8 @@ func NewMigrate(ec *cli.ExecutionContext, isCmd bool, datasource string) (*Migra
 		ec.Logger,
 		&database.HasuraOpts{
 			HasMetadataV3: ec.HasMetadataV3,
-			Datasource:         datasource,
-			Client:             ec.APIClient,
+			Datasource:    datasource,
+			Client:        ec.APIClient,
 		},
 	}
 
@@ -248,7 +248,13 @@ func SetMetadataPluginsWithDir(ec *cli.ExecutionContext, drv *Migrate, dir ...st
 		plugins = append(plugins, crontriggers.New(ec, metadataDir))
 
 		if ec.HasMetadataV3 {
-			plugins = append(plugins, sources.New(ec, metadataDir))
+			if ec.Config.Version >= cli.V3 {
+				plugins = append(plugins, sources.New(ec, metadataDir))
+			} else {
+				plugins = append(plugins, tables.NewV3MetadataTableConfig(ec, metadataDir))
+				plugins = append(plugins, functions.NewV3MetadataFunctionConfig(ec, metadataDir))
+				plugins = append(plugins, version.NewV3MetadataVersion(ec, metadataDir))
+			}
 		} else {
 			plugins = append(plugins, tables.New(ec, metadataDir))
 			plugins = append(plugins, functions.New(ec, metadataDir))
