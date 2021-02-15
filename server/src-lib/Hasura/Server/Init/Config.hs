@@ -32,13 +32,15 @@ import           Hasura.Session
 
 data RawConnParams
   = RawConnParams
-  { rcpStripes      :: !(Maybe Int)
-  , rcpConns        :: !(Maybe Int)
-  , rcpIdleTime     :: !(Maybe Int)
-  , rcpConnLifetime :: !(Maybe NominalDiffTime)
+  { rcpStripes           :: !(Maybe Int)
+  , rcpConns             :: !(Maybe Int)
+  , rcpIdleTime          :: !(Maybe Int)
+  , rcpConnLifetime      :: !(Maybe NominalDiffTime)
   -- ^ Time from connection creation after which to destroy a connection and
   -- choose a different/new one.
-  , rcpAllowPrepare :: !(Maybe Bool)
+  , rcpAllowPrepare      :: !(Maybe Bool)
+  , rcpConnectionTimeout :: !(Maybe NominalDiffTime)
+  -- ^ See @HASURA_GRAPHQL_PG_CONNECTION_TIMEOUT@
   } deriving (Show, Eq)
 
 type RawAuthHook = AuthHookG (Maybe Text) (Maybe AuthHookType)

@@ -121,6 +121,7 @@ have select permissions to the target table of the function.
 - server: always log the `request_id` at the `detail.request_id` path for both `query-log` and `http-log` (#6244)
 - server: fix issue with `--stringify-numeric-types` not stringifying aggregate fields (fix #5704)
 - server: derive permissions for remote relationship field from the corresponding remote schema's permissions
+- server: terminate a request if time to acquire connection from pool exceeds configurable timeout (#6326)
 - server: fix issue with mapping session variables to standard JWT claims (fix #6449)
 - server: support tracking of functions that return a single row (fix #4299)
 - server: reduce memory usage consumption of the schema cache structures, and fix a memory leak

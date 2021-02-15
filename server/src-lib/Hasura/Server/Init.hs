@@ -211,7 +211,7 @@ mkServeOptions rso = do
 #else
     defaultAPIs = [METADATA,GRAPHQL,PGDUMP,CONFIG]
 #endif
-    mkConnParams (RawConnParams s c i cl p) = do
+    mkConnParams (RawConnParams s c i cl p ct) = do
       stripes <- fromMaybe 1 <$> withEnv s (fst pgStripesEnv)
       -- Note: by Little's Law we can expect e.g. (with 50 max connections) a
       -- hard throughput cap at 1000RPS when db queries take 50ms on average:
@@ -219,7 +219,9 @@ mkServeOptions rso = do
       iTime <- fromMaybe 180 <$> withEnv i (fst pgTimeoutEnv)
       connLifetime <- withEnv cl (fst pgConnLifetimeEnv)
       allowPrepare <- fromMaybe True <$> withEnv p (fst pgUsePrepareEnv)
-      return $ Q.ConnParams stripes conns iTime allowPrepare connLifetime
+      connectionTimeout <- withEnv ct (fst pgConnectionTimeoutEnv)
+      return $ Q.ConnParams
+        stripes conns iTime allowPrepare connLifetime connectionTimeout
 
     mkAuthHook (AuthHookG mUrl mType) = do
       mUrlEnv <- withEnv mUrl $ fst authHookEnv
@@ -416,6 +418,12 @@ pgConnLifetimeEnv =
   ( "HASURA_GRAPHQL_PG_CONN_LIFETIME"
   , "Time from connection creation after which the connection should be destroyed and a new one "
     <> "created. (default: none)"
+  )
+
+pgConnectionTimeoutEnv :: (String, String)
+pgConnectionTimeoutEnv =
+  ( "HASURA_GRAPHQL_PG_CONNECTION_TIMEOUT"
+  , "How long to wait when acquiring a Postgres connection, in seconds (default: forever)."
   )
 
 pgUsePrepareEnv :: (String, String)
@@ -651,7 +659,7 @@ parseTxIsolation = optional $
 
 parseConnParams :: Parser RawConnParams
 parseConnParams =
-  RawConnParams <$> stripes <*> conns <*> idleTimeout <*> connLifetime <*> allowPrepare
+  RawConnParams <$> stripes <*> conns <*> idleTimeout <*> connLifetime <*> allowPrepare <*> connectionTimeout
   where
     stripes = optional $
       option auto
@@ -688,6 +696,13 @@ parseConnParams =
               ( long "use-prepared-statements" <>
                 metavar "<true|false>" <>
                 help (snd pgUsePrepareEnv)
+              )
+
+    connectionTimeout = fmap (fmap (realToFrac :: Int -> NominalDiffTime)) $ optional $
+      option auto
+              ( long "conn-timeout" <>
+                metavar "<SECONDS>" <>
+                help (snd pgConnectionTimeoutEnv)
               )
 
 parseServerPort :: Parser (Maybe Int)
