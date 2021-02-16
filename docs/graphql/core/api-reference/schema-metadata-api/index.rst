@@ -295,8 +295,8 @@ The various types of queries are listed in the following table:
      - 1
      - Export the current metadata
 
-   * - :ref:`replace_metadata`
-     - :ref:`replace_metadata_args <replace_metadata_syntax>`
+   * - :ref:`replace_metadata_v1`
+     - :ref:`replace_metadata_args <replace_metadata_syntax_v1>`
      - 1
      - Import and replace existing metadata
 
