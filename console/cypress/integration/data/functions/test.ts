@@ -33,8 +33,8 @@ export const runCreateCustomFunctionsTableTests = () => {
     it('Verify permission tab', verifyPermissionTab);
     it('Delete custom function', deleteCustomFunction);
     // TODO it('Test custom function with Session Argument', testSessVariable);
-    it('Tracks VOLATILE function as mutation', trackVolatileFunction);
-    it('Tracks VOLATILE function as query', trackVolatileFunctionAsQuery);
+    // it('Tracks VOLATILE function as mutation', trackVolatileFunction);
+    // it('Tracks VOLATILE function as query', trackVolatileFunctionAsQuery);
   });
 };
 
