@@ -29,7 +29,6 @@ func TestInitCmd(t *testing.T, ec *cli.ExecutionContext, initDir string) {
 			if err != tc.err {
 				t.Fatalf("%s: expected %v, got %v", tc.name, tc.err, err)
 			}
-			// TODO: (shahidhk) need to verify the contents of the spec generated
 		})
 	}
 }

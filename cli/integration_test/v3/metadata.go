@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 
 	"github.com/hasura/graphql-engine/cli"
@@ -121,23 +122,21 @@ func TestMetadataCmd(t *testing.T, ec *cli.ExecutionContext) {
 			}
 			if tc.expectedMetadataFolder != "" {
 				assert.DirExists(t, ec.MetadataDir)
-				files, err := ioutil.ReadDir(tc.expectedMetadataFolder)
-				if err != nil {
-					t.Fatalf("%s: unable to read expected metadata directory, got %v", tc.name, err)
-				}
-
-				for _, file := range files {
-					name := file.Name()
-					expectedByt, err := ioutil.ReadFile(filepath.Join(tc.expectedMetadataFolder, name))
-					if err != nil {
-						t.Fatalf("%s: unable to read expected metadata file %s, got %v", tc.name, name, err)
+				filepath.Walk(filepath.Join(tc.expectedMetadataFolder), func(path string, info os.FileInfo, err error) error {
+					if !info.IsDir() {
+						name := info.Name()
+						expectedByt, err := ioutil.ReadFile(path)
+						if err != nil {
+							t.Fatalf("%s: unable to read expected metadata file %s, got %v", tc.name, name, err)
+						}
+						actualByt, err := ioutil.ReadFile(strings.Replace(path, tc.expectedMetadataFolder, ec.MetadataDir, 1))
+						if err != nil {
+							t.Fatalf("%s: unable to read actual metadata file %s, got %v", tc.name, name, err)
+						}
+						assert.Equal(t, string(expectedByt), string(actualByt))
 					}
-					actualByt, err := ioutil.ReadFile(filepath.Join(ec.MetadataDir, name))
-					if err != nil {
-						t.Fatalf("%s: unable to read actual metadata file %s, got %v", tc.name, name, err)
-					}
-					assert.Equal(t, string(expectedByt), string(actualByt))
-				}
+					return nil
+				})
 			}
 		})
 	}
