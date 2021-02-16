@@ -4,6 +4,7 @@ module Hasura.Server.API.Metadata where
 import           Hasura.Prelude
 
 import qualified Data.Environment                   as Env
+import qualified Data.HashMap.Strict                as HM
 import qualified Network.HTTP.Client.Extended       as HTTP
 
 import           Control.Monad.Trans.Control        (MonadBaseControl)
@@ -35,11 +36,12 @@ import           Hasura.RQL.DDL.Schema.Source
 import           Hasura.RQL.Types
 import           Hasura.RQL.Types.Run
 import           Hasura.Server.Types                (InstanceId (..))
+import           Hasura.Server.Utils                (APIVersion (..))
 import           Hasura.Server.Version              (HasVersion)
 import           Hasura.Session
 
 
-data RQLMetadata
+data RQLMetadataV1
   = RMPgAddSource !AddPgSource
   | RMPgDropSource !DropPgSource
 
@@ -155,11 +157,45 @@ data RQLMetadata
   | RMBulk [RQLMetadata]
   deriving (Eq)
 
+data RQLMetadataV2
+  = RMV2ReplaceMetadata !ReplaceMetadataV2
+  | RMV2NoOp -- dummy constructor to allow `deriveJSON` to work. Remove once other real constructors are added.
+  deriving (Eq)
+
+data RQLMetadata
+  = RMV1 !RQLMetadataV1
+  | RMV2 !RQLMetadataV2
+  deriving (Eq)
+
+instance FromJSON RQLMetadata where
+  parseJSON = withObject "RQLMetadata" $ \o -> do
+    version <- o .:? "version" .!= VIVersion1
+    let val = Object o
+    case version of
+      VIVersion1 -> RMV1 <$> parseJSON val
+      VIVersion2 -> RMV2 <$> parseJSON val
+
+instance ToJSON RQLMetadata where
+  toJSON = \case
+    RMV1 q -> embedVersion VIVersion1 $ toJSON q
+    RMV2 q -> embedVersion VIVersion2 $ toJSON q
+    where
+      embedVersion version (Object o) =
+        Object $ HM.insert "version" (toJSON version) o
+      -- never happens since JSON value of RQL queries are always objects
+      embedVersion _ _ = error "Unexpected: toJSON of RQL queries are not objects"
+
 $(deriveJSON
   defaultOptions { constructorTagModifier = snakeCase . drop 2
                  , sumEncoding = TaggedObject "type" "args"
                  }
-  ''RQLMetadata)
+  ''RQLMetadataV1)
+
+$(deriveJSON
+  defaultOptions { constructorTagModifier = snakeCase . drop 4
+                 , sumEncoding = TaggedObject "type" "args"
+                 }
+  ''RQLMetadataV2)
 
 runMetadataQuery
   :: ( HasVersion
@@ -210,6 +246,26 @@ runMetadataQueryM
   -> RQLMetadata
   -> m EncJSON
 runMetadataQueryM env = withPathK "args" . \case
+  RMV1 q -> runMetadataQueryV1M env q
+  RMV2 q -> runMetadataQueryV2M q
+
+runMetadataQueryV1M
+  :: ( HasVersion
+     , MonadIO m
+     , MonadBaseControl IO m
+     , CacheRWM m
+     , Tracing.MonadTrace m
+     , UserInfoM m
+     , MonadUnique m
+     , HTTP.HasHttpManagerM m
+     , MetadataM m
+     , MonadMetadataStorageQueryAPI m
+     , HasServerConfigCtx m
+     )
+  => Env.Environment
+  -> RQLMetadataV1
+  -> m EncJSON
+runMetadataQueryV1M env = \case
   RMPgAddSource q                 -> runAddPgSource q
   RMPgDropSource q                -> runDropPgSource q
 
@@ -306,3 +362,15 @@ runMetadataQueryM env = withPathK "args" . \case
   RMRemoveMetricsConfig           -> runRemoveMetricsConfig
 
   RMBulk q                        -> encJFromList <$> indexedMapM (runMetadataQueryM env) q
+
+runMetadataQueryV2M
+  :: ( MonadIO m
+     , CacheRWM m
+     , MetadataM m
+     , MonadMetadataStorageQueryAPI m
+     )
+  => RQLMetadataV2
+  -> m EncJSON
+runMetadataQueryV2M = \case
+  RMV2ReplaceMetadata q -> runReplaceMetadataV2 q
+  RMV2NoOp              -> pure successMsg

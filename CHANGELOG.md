@@ -2,6 +2,13 @@
 
 ## Next release
 
+### Inconsistent Metadata
+
+Add `allow_inconsistent_metadata` option to `replace_metadata` API.
+This will replace metadata even if there are inconsistency errors,
+returning a 200 response code and `is_consistent` and `inconsistent_objects`
+keys in the response body.
+
 ### Bug fixes and improvements
 
 (Add entries here in the order of: server, console, cli, docs, others)

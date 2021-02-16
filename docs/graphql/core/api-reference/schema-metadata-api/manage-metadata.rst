@@ -58,7 +58,8 @@ metadata will be replaced with the new one.
 
     {
         "type" : "replace_metadata",
-        "args": "<metadata-as-json-object>"
+        "version": 1 | 2
+        "args": <replace-metadata-args>
     }
 
 .. _replace_metadata_syntax:
@@ -66,10 +67,63 @@ metadata will be replaced with the new one.
 Args syntax
 ^^^^^^^^^^^
 
-Args should be the JSON object which is same as the output of
-:ref:`export_metadata`.
+If version is set to 1, then args should be the JSON object which is same as
+the output of :ref:`export_metadata`.
+
+For version 2, the following structure is used:
+
+.. code-block:: json
+
+    {
+        allow_inconsistent_metadata: Boolean
+        metadata: metadata-object
+    }
+
+.. list-table::
+   :header-rows: 1
+
+   * - Key
+     - Required
+     - Schema
+     - Description
+   * - allow_inconsistent_metadata
+     - false
+     - Boolean
+     - If set to ``true``, metadata will be replaced with a warning in the response indicating which items are inconsistent (default: ``false``)
+   * - metadata
+     - true
+     - :ref:`export_metadata`
+     - The metadata that will replace the current metadata.
+
+If the version is not specified, then it is inferred from the format of ``args``.
+
+Responses
+^^^^^^^^^
+
+Example with inconstencies:
+
+    HTTP/1.1 400 Bad Request
+
+.. code-block:: json
+
+    {
+    "internal": [
+        {
+        "definition": {
+            "definition": {
+            "url": "http://localhost:5000/hello-graphql",
+            "forward_client_headers": false
+            },
+            "name": "test",
+            "permissions": [],
+            "comment": "testing replace metadata with remote schemas"
+        },
+        "reason": "HTTP exception occurred while sending the request to http://localhost:5000/hello-graphql",
+        "type": "remote_schema"
+        }, ...
 
 .. _reload_metadata:
+
 
 reload_metadata
 ---------------

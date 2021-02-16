@@ -1,5 +1,6 @@
 module Hasura.RQL.DDL.Metadata
   ( runReplaceMetadata
+  , runReplaceMetadataV2
   , runExportMetadata
   , runClearMetadata
   , runReloadMetadata
@@ -62,7 +63,7 @@ runClearMetadata _ = do
                   SourceMetadata defaultSource mempty mempty $ _smConfiguration defaultSourceMetadata
             in emptyMetadata
                & metaSources %~ OMap.insert defaultSource emptyDefaultSource
-  runReplaceMetadata $ RMWithSources emptyMetadata'
+  runReplaceMetadataV1 $ RMWithSources emptyMetadata'
 
 {- Note [Clear postgres schema for dropped triggers]
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -83,9 +84,30 @@ runReplaceMetadata
      , MonadIO m
      )
   => ReplaceMetadata -> m EncJSON
-runReplaceMetadata replaceMetadata = do
+runReplaceMetadata = \case
+  RMReplaceMetadataV1 v1args -> runReplaceMetadataV1 v1args
+  RMReplaceMetadataV2 v2args -> runReplaceMetadataV2 v2args
+
+runReplaceMetadataV1
+  :: ( QErrM m
+     , CacheRWM m
+     , MetadataM m
+     , MonadIO m
+     )
+  => ReplaceMetadataV1 -> m EncJSON
+runReplaceMetadataV1 =
+  (successMsg <$) . runReplaceMetadataV2 . ReplaceMetadataV2 NoAllowInconsistentMetadata
+
+runReplaceMetadataV2
+  :: ( QErrM m
+     , CacheRWM m
+     , MetadataM m
+     , MonadIO m
+     )
+  => ReplaceMetadataV2 -> m EncJSON
+runReplaceMetadataV2 ReplaceMetadataV2{..} = do
   oldMetadata <- getMetadata
-  metadata <- case replaceMetadata of
+  metadata <- case _rmv2Metadata of
     RMWithSources m -> pure m
     RMWithoutSources MetadataNoSources{..} -> do
       let maybeDefaultSourceMetadata = oldMetadata ^? metaSources.ix defaultSource.toSourceMetadata
@@ -100,7 +122,13 @@ runReplaceMetadata replaceMetadata = do
                         _mnsCustomTypes _mnsActions _mnsCronTriggers (_metaRestEndpoints oldMetadata)
                         emptyApiLimit emptyMetricsConfig
   putMetadata metadata
-  buildSchemaCacheStrict
+
+  case _rmv2AllowInconsistentMetadata of
+    AllowInconsistentMetadata ->
+      buildSchemaCache noMetadataModify
+    NoAllowInconsistentMetadata ->
+      buildSchemaCacheStrict
+
   -- See Note [Clear postgres schema for dropped triggers]
   for_ (OMap.toList $ _metaSources metadata) $ \(source, newSourceCache) ->
     onJust (OMap.lookup source $ _metaSources oldMetadata) $ \oldSourceCache -> do
@@ -113,8 +141,8 @@ runReplaceMetadata replaceMetadata = do
       for_ droppedTriggers $
         \name -> liftIO $ runPgSourceWriteTx sourceConfig $ delTriggerQ name >> archiveEvents name
 
-  pure successMsg
-
+  sc <- askSchemaCache
+  pure $ encJFromJValue $ formatInconsistentObjs $ scInconsistentObjs sc
 
 runExportMetadata
   :: forall m . ( QErrM m, MetadataM m)
@@ -153,10 +181,13 @@ runGetInconsistentMetadata
   => GetInconsistentMetadata -> m EncJSON
 runGetInconsistentMetadata _ = do
   inconsObjs <- scInconsistentObjs <$> askSchemaCache
-  return $ encJFromJValue $ object
-                [ "is_consistent" .= null inconsObjs
-                , "inconsistent_objects" .= inconsObjs
-                ]
+  return $ encJFromJValue $ formatInconsistentObjs inconsObjs
+
+formatInconsistentObjs :: [InconsistentMetadata] -> Value
+formatInconsistentObjs inconsObjs = object
+  [ "is_consistent" .= null inconsObjs
+  , "inconsistent_objects" .= inconsObjs
+  ]
 
 runDropInconsistentMetadata
   :: (QErrM m, CacheRWM m, MetadataM m)

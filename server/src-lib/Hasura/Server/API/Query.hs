@@ -142,7 +142,8 @@ data RQLQueryV2
   = RQV2TrackTable !TrackTableV2
   | RQV2SetTableCustomFields !SetTableCustomFields -- deprecated
   | RQV2TrackFunction !TrackFunctionV2
-  deriving (Show, Eq)
+  | RQV2ReplaceMetadata !ReplaceMetadataV2
+  deriving (Eq)
 
 data RQLQuery
   = RQV1 !RQLQueryV1
@@ -312,6 +313,7 @@ queryModifiesSchemaCache (RQV2 qi) = case qi of
   RQV2TrackTable _           -> True
   RQV2SetTableCustomFields _ -> True
   RQV2TrackFunction _        -> True
+  RQV2ReplaceMetadata _      -> True
 
 getQueryAccessMode :: (MonadError QErr m) => RQLQuery -> m Q.TxAccess
 getQueryAccessMode q = fromMaybe Q.ReadOnly <$> getQueryAccessMode' q
@@ -455,6 +457,7 @@ runQueryM env rq = withPathK "args" $ case rq of
       RQV2TrackTable q           -> runTrackTableV2Q q
       RQV2SetTableCustomFields q -> runSetTableCustomFieldsQV2 q
       RQV2TrackFunction q        -> runTrackFunctionV2 q
+      RQV2ReplaceMetadata q      -> runReplaceMetadataV2 q
 
 requiresAdmin :: RQLQuery -> Bool
 requiresAdmin = \case
@@ -548,3 +551,4 @@ requiresAdmin = \case
     RQV2TrackTable _           -> True
     RQV2SetTableCustomFields _ -> True
     RQV2TrackFunction _        -> True
+    RQV2ReplaceMetadata _      -> True

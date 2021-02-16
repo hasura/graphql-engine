@@ -512,6 +512,10 @@ class TestMetadata:
     def test_replace_metadata_v2(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + '/replace_metadata_v2.yaml')
 
+    def test_replace_metadata_allow_inconsistent(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/replace_metadata_allow_inconsistent_inconsistent.yaml')
+        check_query_f(hge_ctx, self.dir() + '/replace_metadata_allow_inconsistent.yaml')
+
     def test_dump_internal_state(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + '/dump_internal_state.yaml')
 
