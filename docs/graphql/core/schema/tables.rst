@@ -44,7 +44,7 @@ Let's say we want to create two simple tables for ``articles`` and ``author`` sc
 
   .. tab:: Console
 
-    Open the Hasura console and head to the ``Data`` tab and click the ``Create Table`` button to open up an interface to
+    Open the Hasura console and head to the ``Data`` tab and click on the button on the left side bar to open up an interface to
     create tables.
 
     For example, here is the schema for the ``articles`` table in this interface:

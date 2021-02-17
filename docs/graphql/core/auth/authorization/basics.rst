@@ -94,7 +94,7 @@ Now let's define an access control rule for the ``authors`` table for a role ``u
   .. tab:: Console
 
     Head to the
-    **Permissions** section of the table (``Data`` --> <table> --> ``Permissions`` tab) and define permissions
+    **Permissions** section of the table (``Data -> [table] -> Permissions`` tab) and define permissions
     as shown below:
 
     .. thumbnail:: /img/graphql/core/auth/permission-basics-simple-example.png
