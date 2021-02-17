@@ -43,7 +43,7 @@ Step 1: Open the remote relationship section
 - From your table, go to the ``Relationships`` tab.
 - Click the ``Add a remote relationship`` button.
 
-.. thumbnail:: /img/graphql/core/remote-joins/add.png
+.. thumbnail:: /img/graphql/core/schema/add-remote-schema-relationship.png
    :alt: Opening the remote relationship section
    :width: 1000px
 
@@ -66,7 +66,7 @@ For this example, we assume that our schema has a ``users`` table with the field
 
   .. tab:: Console
 
-    .. thumbnail:: /img/graphql/core/remote-joins/define.png
+    .. thumbnail:: /img/graphql/core/schema/define-remote-schema-relationship.png
       :alt: Defining the relationship
       :width: 800px
 
