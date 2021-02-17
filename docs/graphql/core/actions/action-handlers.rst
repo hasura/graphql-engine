@@ -128,7 +128,7 @@ response would be:
       "userId": 4829
     }
 
-To throw an error, you must a response payload of the following type while
+To throw an error, you must send a response of the following type while
 setting the status code as ``4xx``.
 
 .. code-block:: json
