@@ -20,7 +20,7 @@ This guide explains how to connect a new or existing AWS RDS Aurora Postgres dat
 Step 0: Sign up or log in to Hasura Cloud
 -----------------------------------------
 
-Navigate to `Hasura Cloud <https://cloud.hasura.io/>`__ and sign up or log in.
+Navigate to `Hasura Cloud <https://cloud.hasura.io/signup/?pg=docs&plcmt=body&cta=navigate-to-hasura-cloud&tech=default>`__ and sign up or log in.
 
 .. _create_hasura_project_aws_rds_aurora:
 

@@ -21,7 +21,7 @@ Step 1: Create an account
 -------------------------
 
 Navigate to `cloud.hasura.io 
-<https://cloud.hasura.io/login>`__, and create a new Hasura Cloud account.
+<https://cloud.hasura.io/signup/?pg=docs&plcmt=body&cta=navigate-to-cloud-hasura-io&tech=default>`__, and create a new Hasura Cloud account.
 
 .. _cloud_connect_db:
 
