@@ -1,8 +1,11 @@
 package console
 
 import (
+	"encoding/json"
 	"fmt"
 	"net/http"
+
+	"github.com/hasura/graphql-engine/cli/internal/scripts"
 
 	"github.com/pkg/errors"
 
@@ -25,6 +28,47 @@ type APIServer struct {
 	EC      *cli.ExecutionContext
 }
 
+type errMessage struct {
+	ErrorMessage string `json:"error"`
+}
+
+func (e errMessage) Error() string {
+	b, err := json.Marshal(e)
+	if err == nil {
+		return string(b)
+	}
+	return e.ErrorMessage
+}
+
+func cliProjectUpdateCheck(ec *cli.ExecutionContext) gin.HandlerFunc {
+	const updateRequiredMessage = "looks like you are trying to use hasura with multiple databases, this requires changes to your project directory. Please use `hasura scripts update-project-v3` to update your project"
+	return func(c *gin.Context) {
+		type response struct {
+			Code       string `json:"code,omitempty"`
+			Message    string `json:"message,omitempty"`
+			Name       string `json:"name,omitempty"`
+			StatusCode int    `json:"-"`
+		}
+		// if a user is on config v2 and they have multiple databases prompt them to upgrade
+		if ec.Config.Version <= cli.V2 && ec.HasMetadataV3 {
+			sources, err := scripts.ListDatasources(ec.APIClient.V1Metadata)
+			if err != nil {
+				c.AbortWithStatusJSON(http.StatusBadRequest, &response{Code: "internal_error", Message: errMessage{"cannot list sources"}.Error()})
+				return
+			}
+			if len(sources) > 1 {
+				r := response{
+					Code:    "internal_error",
+					Message: errMessage{updateRequiredMessage}.Error(),
+				}
+				c.AbortWithStatusJSON(http.StatusInternalServerError, &r)
+				return
+			}
+		}
+		c.Next()
+	}
+}
+
 func NewAPIServer(address string, port string, ec *cli.ExecutionContext) (*APIServer, error) {
 	migrate, err := migrate.NewMigrate(ec, false, "")
 	if err != nil {
@@ -37,6 +81,7 @@ func NewAPIServer(address string, port string, ec *cli.ExecutionContext) (*APISe
 	gin.SetMode(gin.ReleaseMode)
 	// An Engine instance with the Logger and Recovery middleware already attached.
 	router.Use(allowCors())
+	router.Use(cliProjectUpdateCheck(ec))
 
 	apiServer := &APIServer{Router: router, Migrate: migrate, Address: address, Port: port, EC: ec}
 	apiServer.setRoutes(ec.MigrationDir, ec.Logger)
@@ -52,6 +97,7 @@ func (r *APIServer) GetHTTPServer() *http.Server {
 }
 
 func (r *APIServer) setRoutes(migrationDir string, logger *logrus.Logger) {
+
 	apis := r.Router.Group("/apis")
 	{
 		apis.Use(r.setLogger(logger))

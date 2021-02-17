@@ -23,6 +23,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/hasura/graphql-engine/cli/migrate/database/hasuradb"
+
 	"github.com/hasura/graphql-engine/cli/internal/hasura/v1metadata"
 	"github.com/hasura/graphql-engine/cli/internal/hasura/v1query"
 	"github.com/hasura/graphql-engine/cli/internal/hasura/v2query"
@@ -43,7 +45,6 @@ import (
 	"github.com/briandowns/spinner"
 	"github.com/gofrs/uuid"
 	"github.com/hasura/graphql-engine/cli/metadata/actions/types"
-	"github.com/hasura/graphql-engine/cli/migrate/database/hasuradb"
 	"github.com/hasura/graphql-engine/cli/plugins"
 	"github.com/hasura/graphql-engine/cli/telemetry"
 	"github.com/hasura/graphql-engine/cli/util"
