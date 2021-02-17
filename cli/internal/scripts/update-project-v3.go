@@ -1,8 +1,20 @@
 package scripts
 
 import (
+	"io/ioutil"
 	"path/filepath"
 	"regexp"
+
+	"github.com/fatih/color"
+	"github.com/goccy/go-yaml"
+	"github.com/goccy/go-yaml/parser"
+	"github.com/hasura/graphql-engine/cli/internal/hasura"
+
+	"github.com/hasura/graphql-engine/cli/migrate"
+
+	"github.com/hasura/graphql-engine/cli/internal/statestore"
+	"github.com/hasura/graphql-engine/cli/internal/statestore/migrations"
+	"github.com/hasura/graphql-engine/cli/internal/statestore/settings"
 
 	"github.com/hasura/graphql-engine/cli"
 
@@ -30,12 +42,13 @@ type UpgradeToMuUpgradeProjectToMultipleSourcesOpts struct {
 // The project is expected to be in Config V2
 func UpgradeProjectToMultipleSources(opts UpgradeToMuUpgradeProjectToMultipleSourcesOpts) error {
 	/* New flow
-	Config V2 -> Config V3
-	- Warn user about creating a backup
-	- Ask user for the name of datasource to migrate to
-	- Move current migration directories to a new source directory
-	- Move seeds belonging to the source to a new directory
-	- Update config file and version
+		Config V2 -> Config V3
+		- Warn user about creating a backup
+		- Ask user for the name of datasource to migrate to
+	  	- copy state from hdb_tables to catalog state
+		- Move current migration directories to a new source directory
+		- Move seeds belonging to the source to a new directory
+		- Update config file and version
 	*/
 
 	// Validate config version is
@@ -51,15 +64,26 @@ func UpgradeProjectToMultipleSources(opts UpgradeToMuUpgradeProjectToMultipleSou
 	if response == "n" {
 		return nil
 	}
-	if err != nil {
-		return err
-	}
 	// move migration child directories
 	// get directory names to move
 	targetDatasource, err := util.GetInputPrompt("what datasource does the current migrations / seeds belong to?")
 	if err != nil {
 		return err
 	}
+	opts.EC.Spinner.Start()
+	opts.EC.Spin("updating project... ")
+	// copy state
+	// if a default datasource is setup copy state from it
+	sources, err := ListDatasources(opts.EC.APIClient.V1Metadata)
+	if err != nil {
+		return err
+	}
+	if len(sources) >= 1 {
+		if err := copyState(opts.EC, targetDatasource); err != nil {
+			return err
+		}
+	}
+
 	// move migration child directories
 	// get directory names to move
 	migrationDirectoriesToMove, err := getMigrationDirectoryNames(opts.Fs, opts.MigrationsAbsDirectoryPath)
@@ -104,10 +128,10 @@ func UpgradeProjectToMultipleSources(opts UpgradeToMuUpgradeProjectToMultipleSou
 			SeedsDirectory:      targetDatasource,
 		},
 	}
-	newConfig.ServerConfig.APIPaths.SetDefaults(opts.EC.HasMetadataV3, opts.EC.Config.Version)
 	if err := opts.EC.WriteConfig(&newConfig); err != nil {
 		return err
 	}
+	opts.EC.Config = &newConfig
 
 	// delete original migrations
 	if err := removeDirectories(opts.Fs, opts.MigrationsAbsDirectoryPath, migrationDirectoriesToMove); err != nil {
@@ -117,7 +141,24 @@ func UpgradeProjectToMultipleSources(opts UpgradeToMuUpgradeProjectToMultipleSou
 	if err := removeDirectories(opts.Fs, opts.SeedsAbsDirectoryPath, seedFilesToMove); err != nil {
 		return errors.Wrap(err, "removing up original migrations")
 	}
-
+	// remove functions.yaml and tables.yaml files
+	metadataFiles := []string{"functions.yaml", "tables.yaml"}
+	if err := removeDirectories(opts.Fs, opts.EC.MetadataDir, metadataFiles); err != nil {
+		return err
+	}
+	// do a metadata export
+	m, err := migrate.NewMigrate(opts.EC, true, "")
+	if err != nil {
+		return err
+	}
+	files, err := m.ExportMetadata()
+	if err != nil {
+		return err
+	}
+	if err := m.WriteMetadata(files); err != nil {
+		return err
+	}
+	opts.EC.Spinner.Stop()
 	return nil
 }
 
@@ -139,7 +180,7 @@ func copyMigrations(fs afero.Fs, dirs []string, parentDir, target string) error 
 				if err != nil {
 					return errors.Wrapf(err, "moving %s to %s", dir, target)
 				}
-			}else{
+			} else {
 				err := util.CopyFileAfero(fs, filepath.Join(parentDir, dir), filepath.Join(target, dir))
 				if err != nil {
 					return errors.Wrapf(err, "moving %s to %s", dir, target)
@@ -183,7 +224,7 @@ func getSeedFiles(fs afero.Fs, rootSeedDir string) ([]string, error) {
 
 func getMatchingFilesAndDirs(fs afero.Fs, parentDir string, matcher func(string) (bool, error)) ([]string, error) {
 	// find migrations which are in the format <timestamp>_name
-	var migrations []string
+	var migs []string
 	dirs, err := afero.ReadDir(fs, parentDir)
 	if err != nil {
 		return nil, err
@@ -191,17 +232,111 @@ func getMatchingFilesAndDirs(fs afero.Fs, parentDir string, matcher func(string)
 	for _, info := range dirs {
 		if ok, err := matcher(info.Name()); !ok || err != nil {
 			if err != nil {
-					  return nil, err
-					  }
+				return nil, err
+			}
 			continue
 		}
-		migrations = append(migrations, filepath.Join(info.Name()))
+		migs = append(migs, filepath.Join(info.Name()))
 
 	}
-	return migrations, nil
+	return migs, nil
 }
 
 func isHasuraCLIGeneratedMigration(dirPath string) (bool, error) {
 	const regex = `^([0-9]{13})_(.*)$`
 	return regexp.MatchString(regex, filepath.Base(dirPath))
+}
+
+func copyState(ec *cli.ExecutionContext, destdatasource string) error {
+	// copy migrations state
+	src := cli.GetMigrationsStateStore(ec)
+	if err := src.PrepareMigrationsStateStore(); err != nil {
+		return err
+	}
+	dst := migrations.NewCatalogStateStore(statestore.NewCLICatalogState(ec.APIClient.V1Metadata))
+	if err := dst.PrepareMigrationsStateStore(); err != nil {
+		return err
+	}
+	err := statestore.CopyMigrationState(src, dst, "", destdatasource)
+	if err != nil {
+		return err
+	}
+	// copy settings state
+	srcSettingsStore := cli.GetSettingsStateStore(ec)
+	if err := srcSettingsStore.PrepareSettingsDriver(); err != nil {
+		return err
+	}
+	dstSettingsStore := settings.NewStateStoreCatalog(statestore.NewCLICatalogState(ec.APIClient.V1Metadata))
+	if err := dstSettingsStore.PrepareSettingsDriver(); err != nil {
+		return err
+	}
+	err = statestore.CopySettingsState(srcSettingsStore, dstSettingsStore)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func CheckIfUpdateToConfigV3IsRequired(ec *cli.ExecutionContext) error {
+	// see if an update to config V3 is necessary
+	if ec.Config.Version <= cli.V1 && ec.HasMetadataV3 {
+		ec.Logger.Info("config v1 is deprecated from v1.4")
+		return errors.New("please upgrade your project to a newer version.\ntip: use " + color.New(color.FgCyan).SprintFunc()("hasura scripts update-project-v2") + " to upgrade your project to config v2")
+	}
+	if ec.Config.Version < cli.V3 && ec.HasMetadataV3 {
+		sources, err := ListDatasources(ec.APIClient.V1Metadata)
+		if err != nil {
+			return err
+		}
+		upgrade := func() error {
+			// server is configured with a default datasource
+			// and other datasources
+			ec.Logger.Info("Looks like you are trying to use hasura with multiple datasources, which requires some changes on your project directory\n")
+			ec.Logger.Info("please use " + color.New(color.FgCyan).SprintFunc()("hasura scripts update-project-v3") + " to make this change")
+			return errors.New("update to config V3")
+		}
+		// if no sources are configured prompt and upgrade
+		if len(sources) != 1 {
+			return upgrade()
+		}
+		// if 1 source is configured and it is not "default" then it's a custom datasource
+		// then also prompt an upgrade
+		if len(sources) == 1 {
+			if sources[0] != "default" {
+				return upgrade()
+			}
+		}
+	}
+	return nil
+}
+
+func ListDatasources(client hasura.CommonMetadataOperations) ([]string, error) {
+	metadata, err := client.ExportMetadata()
+	if err != nil {
+		return nil, err
+	}
+	jsonb, err := ioutil.ReadAll(metadata)
+	if err != nil {
+		return nil, err
+	}
+	yamlb, err := yaml.JSONToYAML(jsonb)
+	if err != nil {
+		return nil, err
+	}
+	ast, err := parser.ParseBytes(yamlb, 0)
+	if err != nil {
+		return nil, err
+	}
+	if len(ast.Docs) <= 0 {
+		return nil, fmt.Errorf("failed listing sources from metadata")
+	}
+	var sources []string
+	path, err := yaml.PathString("$.sources[*].name")
+	if err != nil {
+		return nil, err
+	}
+	if err := path.Read(ast.Docs[0], &sources); err != nil {
+		return nil, err
+	}
+	return sources, nil
 }

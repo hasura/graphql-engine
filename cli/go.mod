@@ -25,6 +25,7 @@ require (
 	github.com/jinzhu/configor v1.1.1 // indirect
 	github.com/jinzhu/gorm v1.9.11 // indirect
 	github.com/kardianos/osext v0.0.0-20190222173326-2bc1f35cddc0
+	github.com/lib/pq v1.1.1
 	github.com/lunixbochs/vtclean v1.0.0 // indirect
 	github.com/manifoldco/promptui v0.8.0
 	github.com/markbates/pkger v0.15.1
@@ -33,9 +34,9 @@ require (
 	github.com/microcosm-cc/bluemonday v1.0.2 // indirect
 	github.com/mitchellh/go-homedir v1.1.0
 	github.com/mitchellh/mapstructure v1.1.2
-	github.com/oliveagle/jsonpath v0.0.0-20180606110733-2e52cf6e6852
+	github.com/ory/dockertest/v3 v3.6.3
 	github.com/parnurzeal/gorequest v0.2.16
-	github.com/pkg/errors v0.8.1
+	github.com/pkg/errors v0.9.1
 	github.com/qor/admin v0.0.0-20191205023516-9032e7fec172 // indirect
 	github.com/qor/assetfs v0.0.0-20170713023933-ff57fdc13a14 // indirect
 	github.com/qor/audited v0.0.0-20171228121055-b52c9c2f0571 // indirect

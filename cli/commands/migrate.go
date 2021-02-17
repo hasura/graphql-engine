@@ -3,6 +3,8 @@ package commands
 import (
 	"fmt"
 
+	"github.com/hasura/graphql-engine/cli/internal/scripts"
+
 	"github.com/hasura/graphql-engine/cli/util"
 	"github.com/pkg/errors"
 
@@ -39,7 +41,7 @@ func NewMigrateCmd(ec *cli.ExecutionContext) *cobra.Command {
 					return errors.New("datasource flag is required")
 				}
 			} else {
-				if err := checkIfUpdateToConfigV3IsRequired(ec); err != nil {
+				if err := scripts.CheckIfUpdateToConfigV3IsRequired(ec); err != nil {
 					return err
 				}
 			}

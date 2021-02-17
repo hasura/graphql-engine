@@ -25,11 +25,7 @@ import (
 func init() {
 	rand.Seed(time.Now().UTC().UnixNano())
 }
-func skipMetadataTests(t *testing.T) {
-	if os.Getenv("SKIP_METADATA_TESTS") != "" {
-		t.Skip("Skipping metadata tests")
-	}
-}
+
 func TestCommands(t *testing.T) {
 	// Run tests only for config version v1
 	t.Run("config=v1", func(t *testing.T) {
@@ -74,7 +70,6 @@ func TestCommands(t *testing.T) {
 
 		skip(t)
 		t.Run("metadata commands", func(t *testing.T) {
-			skipMetadataTests(t)
 			v1.TestMetadataCmd(t, ec)
 		})
 	})
@@ -136,7 +131,6 @@ func TestCommands(t *testing.T) {
 
 		skip(t)
 		t.Run("metadata commands", func(t *testing.T) {
-			skipMetadataTests(t)
 			v2.TestMetadataCmd(t, ec)
 		})
 
@@ -206,7 +200,6 @@ func TestCommands(t *testing.T) {
 
 		skip(t)
 		t.Run("metadata commands", func(t *testing.T) {
-			skipMetadataTests(t)
 			v3.TestMetadataCmd(t, ec)
 		})
 

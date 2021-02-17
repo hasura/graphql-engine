@@ -27,8 +27,8 @@ func (t *V3MetadataTableConfig) Export(md yaml.MapSlice) (map[string][]byte, err
 	}
 	var metadata struct {
 		Sources []struct {
-			Name   string      `yaml:"name"'`
-			Tables interface{} `yaml:"tables"`
+			Name   string          `yaml:"name"'`
+			Tables []yaml.MapSlice `yaml:"tables"`
 		} `yaml:"sources"`
 	}
 	var tables interface{}

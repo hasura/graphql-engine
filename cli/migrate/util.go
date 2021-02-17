@@ -8,10 +8,6 @@ import (
 	"runtime"
 	"strings"
 
-	"github.com/hasura/graphql-engine/cli/migrate/database/hasuradb"
-
-	"github.com/hasura/graphql-engine/cli/internal/client"
-
 	"github.com/hasura/graphql-engine/cli/migrate/database"
 
 	crontriggers "github.com/hasura/graphql-engine/cli/metadata/cron_triggers"
@@ -144,57 +140,16 @@ func NewMigrate(ec *cli.ExecutionContext, isCmd bool, datasource string) (*Migra
 		ec.Config.ServerConfig.TLSConfig,
 		ec.Logger,
 		&database.HasuraOpts{
-			HasMetadataV3: ec.HasMetadataV3,
-			Datasource:    datasource,
-			Client:        ec.APIClient,
+			HasMetadataV3:        ec.HasMetadataV3,
+			Datasource:           datasource,
+			Client:               ec.APIClient,
+			DatasourceOps:        cli.GetDatasourceOps(ec),
+			MetadataOps:          cli.GetCommonMetadataOps(ec),
+			MigrationsStateStore: cli.GetMigrationsStateStore(ec),
+			SettingsStateStore:   cli.GetSettingsStateStore(ec),
 		},
 	}
 
-	if ec.HasMetadataV3 && (ec.Config.Version > cli.V1) {
-		defaultDatasourceName := "default"
-		// check if migration table exists and migrate state to catalog state API
-		hasuraAPIClient, err := client.NewHasuraRestAPIClient(client.NewHasuraRestAPIClientOpts{
-			Headers:        ec.HGEHeaders,
-			QueryAPIURL:    fmt.Sprintf("%s/%s", ec.Config.Endpoint, "v2/query"),
-			MetadataAPIURL: fmt.Sprintf("%s/%s", ec.Config.Endpoint, "v1/metadata"),
-			TLSConfig:      ec.Config.TLSConfig,
-		})
-		shouldMigrateStateToCatalogState := false
-		isSettingsStateMoved, err := hasuraAPIClient.CheckIfSettingsStateWasMovedToCatalogState()
-		if err != nil {
-			ec.Logger.Debug("checking if settings state was moved: ", err)
-		}
-		isMigrationStateMoved, err := hasuraAPIClient.CheckIfMigrationStateStoreWasMovedToCatalogState()
-		if err != nil {
-			ec.Logger.Debug("checking if migration state was moved: ", err)
-		}
-		shouldMigrateStateToCatalogState = !isSettingsStateMoved && !isMigrationStateMoved
-		if shouldMigrateStateToCatalogState {
-			migrations, err := hasuraAPIClient.GetMigrationVersions(hasuradb.DefaultSchema, hasuradb.DefaultMigrationsTable)
-			if err != nil {
-				ec.Logger.Debug("getting migration versions from schema_migrations table: ", err)
-			}
-			settings, err := hasuraAPIClient.GetCLISettingsFromSQLTable(hasuradb.DefaultSchema, hasuradb.DefaultSettingsTable)
-			if err != nil {
-				ec.Logger.Debug("getting migration settings: ", err)
-			}
-			if err := hasuraAPIClient.MoveMigrationsAndSettingsToCatalogState(defaultDatasourceName, migrations, settings); err != nil {
-				ec.Logger.Debug("migrating CLI state to catalog API: ", err)
-			}
-
-			// mark both these tables as moved
-			if err := hasuraAPIClient.MarkCLIStateTablesAsMovedToCatalogState(); err != nil {
-				ec.Logger.Debug("marking cli state was moved from tables to catalog state API: ", err)
-			}
-		}
-	}
-	if ec.HasMetadataV3 && (ec.Config.Version > cli.V1) {
-		opts.hasuraOpts.APIVersion = client.V2API
-		opts.hasuraOpts.MigrationExectionStrategy = client.MigrationExecutionStrategySequential
-	} else {
-		opts.hasuraOpts.APIVersion = client.V1API
-		opts.hasuraOpts.MigrationExectionStrategy = client.MigrationExecutionStrategyTransactional
-	}
 	t, err := New(opts)
 	if err != nil {
 		return nil, errors.Wrap(err, "cannot create migrate instance")

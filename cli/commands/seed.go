@@ -2,6 +2,7 @@ package commands
 
 import (
 	"github.com/hasura/graphql-engine/cli"
+	"github.com/hasura/graphql-engine/cli/internal/scripts"
 	"github.com/hasura/graphql-engine/cli/util"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
@@ -30,7 +31,7 @@ func NewSeedCmd(ec *cli.ExecutionContext) *cobra.Command {
 					return errors.New("datasource flag is required")
 				}
 			} else {
-				if err := checkIfUpdateToConfigV3IsRequired(ec); err != nil {
+				if err := scripts.CheckIfUpdateToConfigV3IsRequired(ec); err != nil {
 					return err
 				}
 			}

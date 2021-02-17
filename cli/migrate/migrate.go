@@ -10,7 +10,6 @@ import (
 	"container/list"
 	"crypto/tls"
 	"fmt"
-	"github.com/hasura/graphql-engine/cli/internal/client"
 	"io"
 	"os"
 	"strings"
@@ -103,9 +102,8 @@ type Migrate struct {
 
 	status *Status
 
-	SkipExecution     bool
-	DryRun            bool
-	ExecutionStrategy client.MigrationExecutionStrategy
+	SkipExecution bool
+	DryRun        bool
 }
 
 type NewMigrateOpts struct {
@@ -121,8 +119,6 @@ type NewMigrateOpts struct {
 // The URL scheme is defined by each driver.
 func New(opts NewMigrateOpts) (*Migrate, error) {
 	m := newCommon(opts.cmd)
-	m.ExecutionStrategy = opts.hasuraOpts.MigrationExectionStrategy
-
 	sourceName, err := schemeFromUrl(opts.sourceUrl)
 	if err != nil {
 		log.Debug(err)
@@ -380,8 +376,8 @@ func (m *Migrate) ApplyMetadata() error {
 	return m.databaseDrv.ApplyMetadata()
 }
 
-func (m *Migrate) ExportSchemaDump(schemName []string) ([]byte, error) {
-	return m.databaseDrv.ExportSchemaDump(schemName)
+func (m *Migrate) ExportSchemaDump(schemName []string, database string) ([]byte, error) {
+	return m.databaseDrv.ExportSchemaDump(schemName, database)
 }
 
 func (m *Migrate) RemoveVersions(versions []uint64) error {
@@ -583,20 +579,9 @@ func (m *Migrate) QueryWithVersion(version uint64, data io.ReadCloser, skipExecu
 	}
 
 	if !skipExecution {
-		switch m.ExecutionStrategy {
-		case client.MigrationExecutionStrategyTransactional:
-			if err := m.databaseDrv.Run(data, "meta", ""); err != nil {
-				m.databaseDrv.ResetQuery()
-				return m.unlockErr(err)
-			}
-		case client.MigrationExecutionStrategySequential:
-			if err := m.databaseDrv.RunSeq(data, "meta", ""); err != nil {
-				m.databaseDrv.ResetQuery()
-				return m.unlockErr(err)
-			}
-		default:
-			return errors.New("api: migration strategy not recogonized")
-
+		if err := m.databaseDrv.Run(data, "meta", ""); err != nil {
+			m.databaseDrv.ResetQuery()
+			return m.unlockErr(err)
 		}
 	}
 
@@ -1212,56 +1197,6 @@ func (m *Migrate) readDown(limit int64, ret chan<- interface{}) {
 // to stop execution because it might have received a stop signal on the
 // GracefulStop channel.
 func (m *Migrate) runMigrations(ret <-chan interface{}) error {
-	switch m.ExecutionStrategy {
-	case client.MigrationExecutionStrategySequential:
-		return m.runMigrationsSeq(ret)
-	case client.MigrationExecutionStrategyTransactional:
-		return m.runMigrationsInTransaction(ret)
-	}
-	return fmt.Errorf("exection strategy for running migrations is not identified")
-}
-
-func (m *Migrate) runMigrationsInTransaction(ret <-chan interface{}) error {
-	var lastInsertVersion int64
-	for r := range ret {
-		if m.stop() {
-			return nil
-		}
-
-		switch r.(type) {
-		case error:
-			// Clear Migration query
-			m.databaseDrv.ResetQuery()
-			return r.(error)
-		case *Migration:
-			migr := r.(*Migration)
-			if migr.Body != nil {
-				if !m.SkipExecution {
-					if err := m.databaseDrv.Run(migr.BufferedBody, migr.FileType, migr.FileName); err != nil {
-						return err
-					}
-				}
-				version := int64(migr.Version)
-				if version == migr.TargetVersion {
-					if version != lastInsertVersion {
-						// Insert Version number into the table
-						if err := m.databaseDrv.InsertVersion(version); err != nil {
-							return err
-						}
-						lastInsertVersion = version
-					}
-				} else {
-					// Delete Version number from the table
-					if err := m.databaseDrv.RemoveVersion(version); err != nil {
-						return err
-					}
-				}
-			}
-		}
-	}
-	return nil
-}
-func (m *Migrate) runMigrationsSeq(ret <-chan interface{}) error {
 	for r := range ret {
 		if m.stop() {
 			return nil
@@ -1279,7 +1214,7 @@ func (m *Migrate) runMigrationsSeq(ret <-chan interface{}) error {
 					if err := m.databaseDrv.SetVersion(int64(migr.Version), true); err != nil {
 						return err
 					}
-					if err := m.databaseDrv.RunSeq(migr.BufferedBody, migr.FileType, migr.FileName); err != nil {
+					if err := m.databaseDrv.Run(migr.BufferedBody, migr.FileType, migr.FileName); err != nil {
 						return err
 					}
 				}
@@ -1671,17 +1606,7 @@ func (m *Migrate) unlock() error {
 	defer func() {
 		m.isLocked = false
 	}()
-	switch m.ExecutionStrategy {
-	case client.MigrationExecutionStrategyTransactional:
-		if err := m.databaseDrv.UnLock(); err != nil {
-			return err
-		}
-	case client.MigrationExecutionStrategySequential:
-		if err := m.databaseDrv.UnLockSeq(); err != nil {
-			return err
-		}
-	}
-	return nil
+	return m.databaseDrv.UnLock()
 }
 
 // unlockErr calls unlock and returns a combined error
@@ -1926,7 +1851,7 @@ func (m *Migrate) ApplySeed(q interface{}) error {
 	return m.databaseDrv.ApplySeed(q)
 }
 
-func (m *Migrate) ExportDataDump(tableNames []string) ([]byte, error) {
+func (m *Migrate) ExportDataDump(tableNames []string, database string) ([]byte, error) {
 	// to support tables starting with capital letters
 	modifiedTableNames := make([]string, len(tableNames))
 
@@ -1945,7 +1870,7 @@ func (m *Migrate) ExportDataDump(tableNames []string) ([]byte, error) {
 		}
 	}
 
-	return m.databaseDrv.ExportDataDump(modifiedTableNames)
+	return m.databaseDrv.ExportDataDump(modifiedTableNames, database)
 }
 
 func printDryRunStatus(migrations []*Migration) *bytes.Buffer {

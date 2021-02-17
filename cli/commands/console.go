@@ -1,10 +1,10 @@
 package commands
 
 import (
-	"fmt"
 	"os"
 	"sync"
 
+	"github.com/hasura/graphql-engine/cli/internal/scripts"
 	"github.com/hasura/graphql-engine/cli/util"
 
 	"github.com/gin-gonic/gin"
@@ -49,12 +49,7 @@ func NewConsoleCmd(ec *cli.ExecutionContext) *cobra.Command {
 			if err := ec.Validate(); err != nil {
 				return err
 			}
-			if ec.Config.Version < cli.V2 && ec.HasMetadataV3 {
-				ec.Logger.Errorf("config V1 is not supported with metadata V3 please upgrade to config V2")
-				ec.Logger.Info("upgrade to config V2 using the following command\nhasura scripts update-project-v2")
-				return fmt.Errorf("invalid config version")
-			}
-			return nil
+			return scripts.CheckIfUpdateToConfigV3IsRequired(ec)
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
 			return opts.Run()

@@ -74,7 +74,7 @@ func (o *SeedNewOptions) Run() error {
 	}
 	createSeedOpts := seed.CreateSeedOpts{
 		UserProvidedSeedName: o.SeedName,
-		DirectoryPath:       filepath.Join(o.EC.SeedsDirectory, o.Datasource),
+		DirectoryPath:        filepath.Join(o.EC.SeedsDirectory, o.Datasource),
 	}
 
 	// If we are initializing from a database table
@@ -82,15 +82,12 @@ func (o *SeedNewOptions) Run() error {
 	if createSeedOpts.Data == nil {
 		var body []byte
 		if len(o.FromTableNames) > 0 {
-			if o.EC.Config.Version >= cli.V3 {
-				ec.Logger.Error("this feature is not available in config V3")
-			}
 			migrateDriver, err := migrate.NewMigrate(ec, true, "")
 			if err != nil {
 				return errors.Wrap(err, "cannot initialize migrate driver")
 			}
 			// Send the query
-			body, err = migrateDriver.ExportDataDump(o.FromTableNames)
+			body, err = migrateDriver.ExportDataDump(o.FromTableNames, o.Datasource)
 			if err != nil {
 				return errors.Wrap(err, "exporting seed data")
 			}

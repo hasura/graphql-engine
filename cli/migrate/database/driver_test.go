@@ -24,26 +24,18 @@ func (m *mockDriver) Close() error {
 	return nil
 }
 
-func (m *mockDriver) UnLockSeq() error {
+func (m *mockDriver) UnLock() error {
 	return nil
 }
 
-func (m *mockDriver) RunSeq(migration io.Reader, fileType, fileName string) error {
+func (m *mockDriver) Run(migration io.Reader, fileType, fileName string) error {
 	return nil
 }
 func (m *mockDriver) Lock() error {
 	return nil
 }
 
-func (m *mockDriver) UnLock() error {
-	return nil
-}
-
 func (m *mockDriver) Scan() error {
-	return nil
-}
-
-func (m *mockDriver) Run(migration io.Reader, fileType, fileName string) error {
 	return nil
 }
 
@@ -67,15 +59,15 @@ func (m *mockDriver) RemoveVersion(version int64) error {
 	return nil
 }
 
-func (m *mockDriver) First() (migrationVersion *MigrationVersion, ok bool){
-return nil, false
+func (m *mockDriver) First() (migrationVersion *MigrationVersion, ok bool) {
+	return nil, false
 }
 
 func (m *mockDriver) Last() (*MigrationVersion, bool) {
 	return nil, false
 }
 
-func (m *mockDriver)Next(version uint64) (migrationVersion *MigrationVersion, ok bool) {
+func (m *mockDriver) Next(version uint64) (migrationVersion *MigrationVersion, ok bool) {
 	return nil, false
 }
 
@@ -142,7 +134,7 @@ func (m *mockDriver) GetIntroSpectionSchema() (interface{}, error) {
 	return nil, nil
 }
 
-func (m *mockDriver) ExportSchemaDump(schemaName []string) ([]byte, error) {
+func (m *mockDriver) ExportSchemaDump(schemaName []string, database string) ([]byte, error) {
 	return nil, nil
 }
 
@@ -157,7 +149,7 @@ func (m *mockDriver) UpdateSetting(name string, value string) error {
 func (m *mockDriver) ApplySeed(interface{}) error {
 	return nil
 }
-func (m *mockDriver) ExportDataDump([]string) ([]byte, error) {
+func (m *mockDriver) ExportDataDump([]string, string) ([]byte, error) {
 	return nil, nil
 }
 

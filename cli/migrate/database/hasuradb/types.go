@@ -334,6 +334,7 @@ type PostgresError struct {
 type SchemaDump struct {
 	Opts        []string `json:"opts"`
 	CleanOutput bool     `json:"clean_output"`
+	Database    string   `json:"source,omitempty"`
 }
 
 func (h HasuraError) Error() string {

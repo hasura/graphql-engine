@@ -151,7 +151,7 @@ func (o *migrateCreateOptions) run() (version int64, err error) {
 		}
 	}
 	if o.sqlServer {
-		data, err := migrateDrv.ExportSchemaDump(o.schemaNames)
+		data, err := migrateDrv.ExportSchemaDump(o.schemaNames, o.Datasource)
 		if err != nil {
 			return 0, errors.Wrap(err, "cannot fetch schema dump")
 		}

@@ -1,8 +1,24 @@
 package scripts
 
 import (
+	"io"
 	"os"
+	"reflect"
+	"strings"
 	"testing"
+
+	"github.com/hasura/graphql-engine/cli/internal/httpc"
+	"github.com/hasura/graphql-engine/cli/internal/statestore"
+	"github.com/hasura/graphql-engine/cli/internal/statestore/migrations"
+	"github.com/hasura/graphql-engine/cli/internal/statestore/settings"
+
+	"github.com/hasura/graphql-engine/cli/internal/hasura/v1metadata"
+	"github.com/hasura/graphql-engine/cli/internal/hasura/v1query"
+	"github.com/hasura/graphql-engine/cli/internal/hasura/v2query"
+
+	"github.com/hasura/graphql-engine/cli"
+	"github.com/hasura/graphql-engine/cli/internal/hasura"
+	"github.com/hasura/graphql-engine/cli/internal/testutil"
 
 	"github.com/spf13/afero"
 	"github.com/stretchr/testify/assert"
@@ -206,4 +222,143 @@ func Test_removeDirectories(t *testing.T) {
 			}
 		})
 	}
+}
+
+func Test_copyState(t *testing.T) {
+	port, teardown := testutil.StartHasura(t, testutil.HasuraVersion)
+	defer teardown()
+	type args struct {
+		ec             *cli.ExecutionContext
+		destdatasource string
+	}
+	tests := []struct {
+		name    string
+		args    args
+		wantErr bool
+	}{
+		{
+			"can move state",
+			args{
+				func() *cli.ExecutionContext {
+					return &cli.ExecutionContext{
+						Config: &cli.Config{
+							Version: cli.V2,
+						},
+						APIClient: &hasura.Client{
+							V1Metadata: v1metadata.New(testutil.NewHttpcClient(t, port, nil), "v1/metadata"),
+							V1Query:    v1query.New(testutil.NewHttpcClient(t, port, nil), "v1/query"),
+							V2Query:    v2query.New(testutil.NewHttpcClient(t, port, nil), "v2/query"),
+						},
+					}
+				}(),
+				"test",
+			},
+			false,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			srcSettings := cli.GetSettingsStateStore(tt.args.ec)
+			assert.NoError(t, srcSettings.PrepareSettingsDriver())
+			srcMigrations := cli.GetMigrationsStateStore(tt.args.ec)
+			assert.NoError(t, srcMigrations.PrepareMigrationsStateStore())
+
+			dstSettings := settings.NewStateStoreCatalog(statestore.NewCLICatalogState(tt.args.ec.APIClient.V1Metadata))
+			dstMigrations := migrations.NewCatalogStateStore(statestore.NewCLICatalogState(tt.args.ec.APIClient.V1Metadata))
+			assert.NoError(t, srcSettings.UpdateSetting("test", "test"))
+			assert.NoError(t, srcMigrations.SetVersion("", 123, false))
+			if err := copyState(tt.args.ec, tt.args.destdatasource); (err != nil) != tt.wantErr {
+				t.Fatalf("copyState() error = %v, wantErr %v", err, tt.wantErr)
+			}
+			v, err := dstSettings.GetSetting("test")
+			assert.NoError(t, err)
+			assert.Equal(t, "test", v)
+			m, err := dstMigrations.GetVersions(tt.args.destdatasource)
+			assert.NoError(t, err)
+			assert.Equal(t, map[uint64]bool{123: false}, m)
+		})
+	}
+}
+
+func Test_listDatasources(t *testing.T) {
+	type args struct {
+		client hasura.CommonMetadataOperations
+	}
+	tests := []struct {
+		name    string
+		args    args
+		want    []string
+		wantErr bool
+	}{
+		{
+			"can get list of sources",
+			args{
+				commonMetadataTest{
+					`
+{
+	"sources": [
+		{
+			"name": "test1"
+		},
+		{
+
+			"name": "test2"
+		}
+	]
+}
+`,
+				},
+			},
+			[]string{"test1", "test2"},
+			false,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := ListDatasources(tt.args.client)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("ListDatasources() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("ListDatasources() got = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+type commonMetadataTest struct {
+	s string
+}
+
+func (c commonMetadataTest) SendCommonMetadataOperation(requestBody interface{}) (httpcResponse *httpc.Response, body io.Reader, error error) {
+	panic("implement me")
+}
+
+func (c commonMetadataTest) ExportMetadata() (metadata io.Reader, err error) {
+	return strings.NewReader(c.s), nil
+}
+
+func (c commonMetadataTest) ClearMetadata() (io.Reader, error) {
+	panic("implement me")
+}
+
+func (c commonMetadataTest) ReloadMetadata() (io.Reader, error) {
+	panic("implement me")
+}
+
+func (c commonMetadataTest) DropInconsistentMetadata() (io.Reader, error) {
+	panic("implement me")
+}
+
+func (c commonMetadataTest) ReplaceMetadata(metadata io.Reader) (io.Reader, error) {
+	panic("implement me")
+}
+
+func (c commonMetadataTest) GetInconsistentMetadata() (*hasura.GetInconsistentMetadataResponse, error) {
+	panic("implement me")
+}
+
+func (c commonMetadataTest) GetInconsistentMetadataReader() (io.Reader, error) {
+	panic("implement me")
 }

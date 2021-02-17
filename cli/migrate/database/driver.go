@@ -61,12 +61,9 @@ type Driver interface {
 	// Unlock should release the lock. Migrate will call this function after
 	// all migrations have been run.
 	UnLock() error
-	UnLockSeq() error
 
-	// Run applies a migration to the database. migration is guaranteed to be not nil.
-	Run(migration io.Reader, fileType, fileName string) error
 	// RunSeq applies a migration to the database in a sequential fashion. migration is guaranteed to be not nil.
-	RunSeq(migration io.Reader, fileType, fileName string) error
+	Run(migration io.Reader, fileType, fileName string) error
 
 	// Reset Migration Query Args
 	ResetQuery()
@@ -123,6 +120,8 @@ type Driver interface {
 	SeedDriver
 
 	SettingsDriver
+
+	Query(data interface{}) error
 }
 
 // Open returns a new driver instance.

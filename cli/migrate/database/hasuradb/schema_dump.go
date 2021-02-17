@@ -4,7 +4,7 @@ import (
 	"net/http"
 )
 
-func (h *HasuraDB) ExportSchemaDump(schemaNames []string) ([]byte, error) {
+func (h *HasuraDB) ExportSchemaDump(schemaNames []string, database string) ([]byte, error) {
 	opts := []string{"-O", "-x", "--schema-only"}
 	for _, s := range schemaNames {
 		opts = append(opts, "--schema", s)
@@ -12,6 +12,7 @@ func (h *HasuraDB) ExportSchemaDump(schemaNames []string) ([]byte, error) {
 	query := SchemaDump{
 		Opts:        opts,
 		CleanOutput: true,
+		Database:    database,
 	}
 
 	resp, body, err := h.sendSchemaDumpQuery(query)
