@@ -28,11 +28,11 @@ Run multiple top level queries in the same request
   :view_only:
   :query:
     query {
-      author(limit: 2) {
+      authors(limit: 2) {
         id
         name
       }
-      article(limit: 2) {
+      articles(limit: 2) {
         id
         title
       }
@@ -40,7 +40,7 @@ Run multiple top level queries in the same request
   :response:
     {
       "data": {
-        "author": [
+        "authors": [
           {
             "id": 1,
             "name": "Justin"
@@ -50,7 +50,7 @@ Run multiple top level queries in the same request
             "name": "Beltran"
           }
         ],
-        "article": [
+        "articles": [
           {
             "id": 1,
             "title": "sit amet"

@@ -32,14 +32,14 @@ An existing relationship can be renamed as follows:
 
         - table:
             schema: public
-            name: article
+            name: articles
           object_relationships:
           - name: author
             using:
               foreign_key_constraint_on: author_id
         - table:
             schema: public
-            name: author
+            name: authors
 
     Apply the metadata by running:
 
@@ -60,7 +60,7 @@ An existing relationship can be renamed as follows:
       {
         "type": "rename_relationship",
         "args": {
-          "table": "article",
+          "table": "articles",
           "name": "article_details",
           "new_name": "article_detail"
         }

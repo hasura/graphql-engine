@@ -20,12 +20,12 @@ Let's create a sample table and query data from it using the Hasura console, a U
 Create a table
 --------------
 
-Head to the Hasura console, navigate to ``Data -> Create table`` and create a sample table called ``profile`` with
+Head to the Hasura console, navigate to ``Data -> Create table`` and create a sample table called ``profiles`` with
 the following columns:
 
 .. code-block:: sql
 
-  profile (
+  profiles (
     id SERIAL PRIMARY KEY, -- serial -> auto-incrementing integer
     name TEXT
   )
@@ -33,7 +33,7 @@ the following columns:
 .. thumbnail:: /img/graphql/core/getting-started/create-profile-table.png
    :alt: Create a table
 
-Now, insert some sample data into the table using the ``Insert Row`` tab of the ``profile`` table.
+Now, insert some sample data into the table using the ``Insert Row`` tab of the ``profiles`` table.
 
 Try out a query
 ---------------
@@ -43,7 +43,7 @@ Head to the ``GraphiQL`` tab in the console and try running the following query:
 .. code-block:: graphql
 
     query {
-      profile {
+      profiles {
         id
         name
       }

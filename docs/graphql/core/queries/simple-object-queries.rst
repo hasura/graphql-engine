@@ -25,7 +25,7 @@ Fetch list of objects
   :view_only:
   :query:
     query {
-      author {
+      authors {
         id
         name
       }
@@ -33,7 +33,7 @@ Fetch list of objects
   :response:
     {
       "data": {
-        "author": [
+        "authors": [
           {
             "id": 1,
             "name": "Justin"
@@ -63,7 +63,7 @@ Fetch an object using its primary key
   :view_only:
   :query:
     query {
-      author_by_pk(id: 1) {
+      authors_by_pk(id: 1) {
         id
         name
       }
@@ -71,7 +71,7 @@ Fetch an object using its primary key
   :response:
     {
       "data": {
-        "author_by_pk": {
+        "authors_by_pk": {
           "id": 1,
           "name": "Justin"
         }
@@ -87,7 +87,7 @@ address column:
   :view_only:
   :query:
     query {
-      author_by_pk(id: 1) {
+      authors_by_pk(id: 1) {
         id
         name
         address
@@ -98,7 +98,7 @@ address column:
   :response:
     {
       "data": {
-        "author_by_pk": {
+        "authors_by_pk": {
           "id": 1,
           "name": "Justin",
           "address": {
