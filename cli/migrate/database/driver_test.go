@@ -153,14 +153,6 @@ func (m *mockDriver) ExportDataDump([]string, string) ([]byte, error) {
 	return nil, nil
 }
 
-func (m *mockDriver) GetDatasources() ([]string, error) {
-	return nil, nil
-}
-
-func (m *mockDriver) PrepareMigrationsStateStore() error {
-	return nil
-}
-
 func TestRegisterTwice(t *testing.T) {
 	Register("mock", &mockDriver{})
 

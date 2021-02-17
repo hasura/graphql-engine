@@ -13,7 +13,7 @@ import (
 	"github.com/hasura/graphql-engine/cli/internal/httpc"
 )
 
-// implements all metadata operations which does not depend on the datasource
+// implements all metadata operations which does not depend on the database
 type ClientCommonMetadataOps struct {
 	*httpc.Client
 	path string

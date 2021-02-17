@@ -124,7 +124,7 @@ func Test_getMigrationDirectoryNames(t *testing.T) {
 	}
 }
 
-func Test_moveMigrationsToDatasourceDirectory(t *testing.T) {
+func Test_moveMigrationsToDatabaseDirectory(t *testing.T) {
 	type args struct {
 		fs                        afero.Fs
 		dirs                      []string
@@ -228,8 +228,8 @@ func Test_copyState(t *testing.T) {
 	port, teardown := testutil.StartHasura(t, testutil.HasuraVersion)
 	defer teardown()
 	type args struct {
-		ec             *cli.ExecutionContext
-		destdatasource string
+		ec           *cli.ExecutionContext
+		destdatabase string
 	}
 	tests := []struct {
 		name    string
@@ -267,20 +267,20 @@ func Test_copyState(t *testing.T) {
 			dstMigrations := migrations.NewCatalogStateStore(statestore.NewCLICatalogState(tt.args.ec.APIClient.V1Metadata))
 			assert.NoError(t, srcSettings.UpdateSetting("test", "test"))
 			assert.NoError(t, srcMigrations.SetVersion("", 123, false))
-			if err := copyState(tt.args.ec, tt.args.destdatasource); (err != nil) != tt.wantErr {
+			if err := copyState(tt.args.ec, tt.args.destdatabase); (err != nil) != tt.wantErr {
 				t.Fatalf("copyState() error = %v, wantErr %v", err, tt.wantErr)
 			}
 			v, err := dstSettings.GetSetting("test")
 			assert.NoError(t, err)
 			assert.Equal(t, "test", v)
-			m, err := dstMigrations.GetVersions(tt.args.destdatasource)
+			m, err := dstMigrations.GetVersions(tt.args.destdatabase)
 			assert.NoError(t, err)
 			assert.Equal(t, map[uint64]bool{123: false}, m)
 		})
 	}
 }
 
-func Test_listDatasources(t *testing.T) {
+func Test_listDatabases(t *testing.T) {
 	type args struct {
 		client hasura.CommonMetadataOperations
 	}
@@ -315,13 +315,13 @@ func Test_listDatasources(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := ListDatasources(tt.args.client)
+			got, err := ListDatabases(tt.args.client)
 			if (err != nil) != tt.wantErr {
-				t.Errorf("ListDatasources() error = %v, wantErr %v", err, tt.wantErr)
+				t.Errorf("ListDatabases() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
 			if !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("ListDatasources() got = %v, want %v", got, tt.want)
+				t.Errorf("ListDatabases() got = %v, want %v", got, tt.want)
 			}
 		})
 	}

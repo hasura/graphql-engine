@@ -11,10 +11,10 @@ const (
 	TuplesOK  RunSQLResultType = "TuplesOk"
 )
 
-// hasura API requests used to interact with connected datasource(s)
-type DatasourceOperations interface {
+// hasura API requests used to interact with connected database(s)
+type DatabaseOperations interface {
 	RunSQL(input RunSQLInput) (response *RunSQLOutput, err error)
-	SendDatasourceOperation(requestBody interface{}) (httpcResponse *httpc.Response, body io.Reader, error error)
+	SendDatabaseOperation(requestBody interface{}) (httpcResponse *httpc.Response, body io.Reader, error error)
 }
 
 type RunSQLInput struct {

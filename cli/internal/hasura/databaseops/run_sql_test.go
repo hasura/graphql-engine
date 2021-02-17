@@ -1,4 +1,4 @@
-package datasourceops
+package databaseops
 
 import (
 	"testing"
@@ -11,7 +11,7 @@ import (
 	"github.com/hasura/graphql-engine/cli/internal/httpc"
 )
 
-func TestHasuraDatasourceOperations_RunSQL(t *testing.T) {
+func TestHasuraDatabaseOperations_RunSQL(t *testing.T) {
 	port, teardown := testutil.StartHasura(t, testutil.HasuraVersion)
 	defer teardown()
 	type fields struct {
@@ -19,8 +19,8 @@ func TestHasuraDatasourceOperations_RunSQL(t *testing.T) {
 		path       string
 	}
 	type args struct {
-		input      hasura.RunSQLInput
-		datasource string
+		input    hasura.RunSQLInput
+		database string
 	}
 	tests := []struct {
 		name    string
@@ -50,7 +50,7 @@ func TestHasuraDatasourceOperations_RunSQL(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			test := func() {
-				h := &ClientDatasourceOps{
+				h := &ClientDatabaseOps{
 					Client: tt.fields.httpClient,
 					path:   tt.fields.path,
 				}

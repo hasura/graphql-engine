@@ -12,11 +12,11 @@ import (
 // until version 1.4 migration state was stored a special table
 // this struct will implement the methods required
 type MigrationStateStoreHdbTable struct {
-	client        hasura.DatasourceOperations
+	client        hasura.DatabaseOperations
 	schema, table string
 }
 
-func NewMigrationStateStoreHdbTable(client hasura.DatasourceOperations, schema, table string) *MigrationStateStoreHdbTable {
+func NewMigrationStateStoreHdbTable(client hasura.DatabaseOperations, schema, table string) *MigrationStateStoreHdbTable {
 	return &MigrationStateStoreHdbTable{client, schema, table}
 }
 

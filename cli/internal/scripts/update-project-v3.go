@@ -37,14 +37,13 @@ type UpgradeToMuUpgradeProjectToMultipleSourcesOpts struct {
 	Logger                     *logrus.Logger
 }
 
-// UpgradeProjectToMultipleSources will help a project directory move from a single
-// datasource structure to multiple datasource
+// UpdateProjectV3 will help a project directory move from a single
 // The project is expected to be in Config V2
-func UpgradeProjectToMultipleSources(opts UpgradeToMuUpgradeProjectToMultipleSourcesOpts) error {
+func UpdateProjectV3(opts UpgradeToMuUpgradeProjectToMultipleSourcesOpts) error {
 	/* New flow
 		Config V2 -> Config V3
 		- Warn user about creating a backup
-		- Ask user for the name of datasource to migrate to
+		- Ask user for the name of database to migrate to
 	  	- copy state from hdb_tables to catalog state
 		- Move current migration directories to a new source directory
 		- Move seeds belonging to the source to a new directory
@@ -66,20 +65,20 @@ func UpgradeProjectToMultipleSources(opts UpgradeToMuUpgradeProjectToMultipleSou
 	}
 	// move migration child directories
 	// get directory names to move
-	targetDatasource, err := util.GetInputPrompt("what datasource does the current migrations / seeds belong to?")
+	targetDatabase, err := util.GetInputPrompt("what database does the current migrations / seeds belong to?")
 	if err != nil {
 		return err
 	}
 	opts.EC.Spinner.Start()
 	opts.EC.Spin("updating project... ")
 	// copy state
-	// if a default datasource is setup copy state from it
-	sources, err := ListDatasources(opts.EC.APIClient.V1Metadata)
+	// if a default database is setup copy state from it
+	sources, err := ListDatabases(opts.EC.APIClient.V1Metadata)
 	if err != nil {
 		return err
 	}
 	if len(sources) >= 1 {
-		if err := copyState(opts.EC, targetDatasource); err != nil {
+		if err := copyState(opts.EC, targetDatabase); err != nil {
 			return err
 		}
 	}
@@ -97,35 +96,35 @@ func UpgradeProjectToMultipleSources(opts UpgradeToMuUpgradeProjectToMultipleSou
 		return errors.Wrap(err, "getting list of seed files to move")
 	}
 
-	// create a new directory for TargetDatasource
-	targetMigrationsDirectoryName := filepath.Join(opts.MigrationsAbsDirectoryPath, targetDatasource)
+	// create a new directory for TargetDatabase
+	targetMigrationsDirectoryName := filepath.Join(opts.MigrationsAbsDirectoryPath, targetDatabase)
 	if err = opts.Fs.Mkdir(targetMigrationsDirectoryName, 0755); err != nil {
-		errors.Wrap(err, "creating target datasource name")
+		errors.Wrap(err, "creating target migrations directory")
 	}
 
-	// create a new directory for TargetDatasource
-	targetSeedsDirectoryName := filepath.Join(opts.SeedsAbsDirectoryPath, targetDatasource)
+	// create a new directory for TargetDatabase
+	targetSeedsDirectoryName := filepath.Join(opts.SeedsAbsDirectoryPath, targetDatabase)
 	if err = opts.Fs.Mkdir(targetSeedsDirectoryName, 0755); err != nil {
-		errors.Wrap(err, "creating target datasource name")
+		errors.Wrap(err, "creating target seeds directory")
 	}
 
-	// move migration directories to target datasource directory
+	// move migration directories to target database directory
 	if err := copyMigrations(opts.Fs, migrationDirectoriesToMove, opts.MigrationsAbsDirectoryPath, targetMigrationsDirectoryName); err != nil {
-		return errors.Wrap(err, "moving migrations to target datasource directory")
+		return errors.Wrap(err, "moving migrations to target database directory")
 	}
-	// move seed directories to target datasource directory
+	// move seed directories to target database directory
 	if err := copyFiles(opts.Fs, seedFilesToMove, opts.SeedsAbsDirectoryPath, targetSeedsDirectoryName); err != nil {
-		return errors.Wrap(err, "moving seeds to target datasource directory")
+		return errors.Wrap(err, "moving seeds to target database directory")
 	}
 
 	// write new config file
 	newConfig := *opts.EC.Config
 	newConfig.Version = cli.V3
-	newConfig.DatasourcesConfig = []cli.DatasourceConfig{
+	newConfig.DatabasesConfig = []cli.DatabaseConfig{
 		{
-			Name:                targetDatasource,
-			MigrationsDirectory: targetDatasource,
-			SeedsDirectory:      targetDatasource,
+			Name:                targetDatabase,
+			MigrationsDirectory: targetDatabase,
+			SeedsDirectory:      targetDatabase,
 		},
 	}
 	if err := opts.EC.WriteConfig(&newConfig); err != nil {
@@ -247,7 +246,7 @@ func isHasuraCLIGeneratedMigration(dirPath string) (bool, error) {
 	return regexp.MatchString(regex, filepath.Base(dirPath))
 }
 
-func copyState(ec *cli.ExecutionContext, destdatasource string) error {
+func copyState(ec *cli.ExecutionContext, destdatabase string) error {
 	// copy migrations state
 	src := cli.GetMigrationsStateStore(ec)
 	if err := src.PrepareMigrationsStateStore(); err != nil {
@@ -257,7 +256,7 @@ func copyState(ec *cli.ExecutionContext, destdatasource string) error {
 	if err := dst.PrepareMigrationsStateStore(); err != nil {
 		return err
 	}
-	err := statestore.CopyMigrationState(src, dst, "", destdatasource)
+	err := statestore.CopyMigrationState(src, dst, "", destdatabase)
 	if err != nil {
 		return err
 	}
@@ -284,14 +283,12 @@ func CheckIfUpdateToConfigV3IsRequired(ec *cli.ExecutionContext) error {
 		return errors.New("please upgrade your project to a newer version.\ntip: use " + color.New(color.FgCyan).SprintFunc()("hasura scripts update-project-v2") + " to upgrade your project to config v2")
 	}
 	if ec.Config.Version < cli.V3 && ec.HasMetadataV3 {
-		sources, err := ListDatasources(ec.APIClient.V1Metadata)
+		sources, err := ListDatabases(ec.APIClient.V1Metadata)
 		if err != nil {
 			return err
 		}
 		upgrade := func() error {
-			// server is configured with a default datasource
-			// and other datasources
-			ec.Logger.Info("Looks like you are trying to use hasura with multiple datasources, which requires some changes on your project directory\n")
+			ec.Logger.Info("Looks like you are trying to use hasura with multiple databases, which requires some changes on your project directory\n")
 			ec.Logger.Info("please use " + color.New(color.FgCyan).SprintFunc()("hasura scripts update-project-v3") + " to make this change")
 			return errors.New("update to config V3")
 		}
@@ -299,7 +296,7 @@ func CheckIfUpdateToConfigV3IsRequired(ec *cli.ExecutionContext) error {
 		if len(sources) != 1 {
 			return upgrade()
 		}
-		// if 1 source is configured and it is not "default" then it's a custom datasource
+		// if 1 source is configured and it is not "default" then it's a custom database
 		// then also prompt an upgrade
 		if len(sources) == 1 {
 			if sources[0] != "default" {
@@ -310,7 +307,7 @@ func CheckIfUpdateToConfigV3IsRequired(ec *cli.ExecutionContext) error {
 	return nil
 }
 
-func ListDatasources(client hasura.CommonMetadataOperations) ([]string, error) {
+func ListDatabases(client hasura.CommonMetadataOperations) ([]string, error) {
 	metadata, err := client.ExportMetadata()
 	if err != nil {
 		return nil, err

@@ -1,4 +1,4 @@
-package datasourceops
+package databaseops
 
 import (
 	"bytes"
@@ -9,7 +9,7 @@ import (
 	"github.com/hasura/graphql-engine/cli/internal/hasura"
 )
 
-func (h *ClientDatasourceOps) RunSQL(input hasura.RunSQLInput) (*hasura.RunSQLOutput, error) {
+func (h *ClientDatabaseOps) RunSQL(input hasura.RunSQLInput) (*hasura.RunSQLOutput, error) {
 	body := hasura.RequestBody{
 		Type: "run_sql",
 		Args: input,

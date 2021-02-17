@@ -14,7 +14,7 @@ type Client struct {
 
 type V1Query interface {
 	CommonMetadataOperations
-	DatasourceOperations
+	DatabaseOperations
 	Send(requestBody interface{}) (httpcResponse *httpc.Response, body io.Reader, error error)
 }
 
@@ -30,7 +30,7 @@ type CatalogStateOperations interface {
 }
 
 type V2Query interface {
-	DatasourceOperations
+	DatabaseOperations
 	Send(requestBody interface{}) (httpcResponse *httpc.Response, body io.Reader, error error)
 }
 

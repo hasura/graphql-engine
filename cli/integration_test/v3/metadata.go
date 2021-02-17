@@ -96,7 +96,7 @@ func TestMetadataCmd(t *testing.T, ec *cli.ExecutionContext) {
 			&commands.MigrateApplyOptions{
 				EC:            ec,
 				DownMigration: "all",
-				Datasource:    "default",
+				Database:      "default",
 			},
 			nil,
 			"",

@@ -6,7 +6,7 @@ import (
 	"io"
 	"net/http"
 
-	"github.com/hasura/graphql-engine/cli/internal/hasura/datasourceops"
+	"github.com/hasura/graphql-engine/cli/internal/hasura/databaseops"
 	"github.com/hasura/graphql-engine/cli/internal/httpc"
 )
 
@@ -14,14 +14,14 @@ type Client struct {
 	*httpc.Client
 	path string
 
-	*datasourceops.ClientDatasourceOps
+	*databaseops.ClientDatabaseOps
 }
 
 func New(c *httpc.Client, path string) *Client {
 	client := &Client{
-		Client:              c,
-		ClientDatasourceOps: datasourceops.New(c, path),
-		path:                path,
+		Client:            c,
+		ClientDatabaseOps: databaseops.New(c, path),
+		path:              path,
 	}
 	return client
 }

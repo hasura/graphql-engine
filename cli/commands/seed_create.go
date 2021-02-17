@@ -24,8 +24,8 @@ type SeedNewOptions struct {
 	FromTableNames []string
 
 	// seed file that was created
-	FilePath   string
-	Datasource string
+	FilePath string
+	Database string
 }
 
 func newSeedCreateCmd(ec *cli.ExecutionContext) *cobra.Command {
@@ -50,7 +50,7 @@ func newSeedCreateCmd(ec *cli.ExecutionContext) *cobra.Command {
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
 			opts.SeedName = args[0]
-			opts.Datasource = ec.Datasource
+			opts.Database = ec.Database
 			err := opts.Run()
 			if err != nil {
 				return err
@@ -66,15 +66,15 @@ func newSeedCreateCmd(ec *cli.ExecutionContext) *cobra.Command {
 }
 
 func (o *SeedNewOptions) Run() error {
-	datasourceDirectory := filepath.Join(o.EC.SeedsDirectory, o.Datasource)
-	if f, _ := os.Stat(datasourceDirectory); f == nil {
-		if err := os.MkdirAll(datasourceDirectory, 0755); err != nil {
+	databaseDirectory := filepath.Join(o.EC.SeedsDirectory, o.Database)
+	if f, _ := os.Stat(databaseDirectory); f == nil {
+		if err := os.MkdirAll(databaseDirectory, 0755); err != nil {
 			return err
 		}
 	}
 	createSeedOpts := seed.CreateSeedOpts{
 		UserProvidedSeedName: o.SeedName,
-		DirectoryPath:        filepath.Join(o.EC.SeedsDirectory, o.Datasource),
+		DirectoryPath:        filepath.Join(o.EC.SeedsDirectory, o.Database),
 	}
 
 	// If we are initializing from a database table
@@ -87,7 +87,7 @@ func (o *SeedNewOptions) Run() error {
 				return errors.Wrap(err, "cannot initialize migrate driver")
 			}
 			// Send the query
-			body, err = migrateDriver.ExportDataDump(o.FromTableNames, o.Datasource)
+			body, err = migrateDriver.ExportDataDump(o.FromTableNames, o.Database)
 			if err != nil {
 				return errors.Wrap(err, "exporting seed data")
 			}

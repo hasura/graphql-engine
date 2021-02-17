@@ -315,7 +315,7 @@ func (s *ServerConfig) SetHTTPClient() error {
 	return nil
 }
 
-type DatasourceConfig struct {
+type DatabaseConfig struct {
 	Name                string `yaml:"name,omitempty"`
 	Type                string `yaml:"type,omitempty"`
 	MigrationsDirectory string `yaml:"migrations_directory,omitempty"`
@@ -337,8 +337,8 @@ type Config struct {
 	// SeedsDirectory defines the directory where seed files will be stored
 	SeedsDirectory string `yaml:"seeds_directory,omitempty"`
 	// ActionConfig defines the config required to create or generate codegen for an action.
-	ActionConfig      *types.ActionExecutionConfig `yaml:"actions,omitempty"`
-	DatasourcesConfig []DatasourceConfig           `yaml:"datasources,omitempty"`
+	ActionConfig    *types.ActionExecutionConfig `yaml:"actions,omitempty"`
+	DatabasesConfig []DatabaseConfig             `yaml:"datasources,omitempty"`
 }
 
 // ExecutionContext contains various contextual information required by the cli
@@ -428,8 +428,8 @@ type ExecutionContext struct {
 	// instance of API client which communicates with Hasura API
 	APIClient *hasura.Client
 
-	// current datasource on which operation is being done
-	Datasource    string
+	// current database on which operation is being done
+	Database      string
 	HasMetadataV3 bool
 }
 
@@ -936,7 +936,7 @@ func GetAdminSecretHeaderName(v *version.Version) string {
 	}
 	return XHasuraAdminSecret
 }
-func GetDatasourceOps(ec *ExecutionContext) hasura.DatasourceOperations {
+func GetDatabaseOps(ec *ExecutionContext) hasura.DatabaseOperations {
 	if !ec.HasMetadataV3 {
 		return ec.APIClient.V1Query
 	}

@@ -29,7 +29,7 @@ func newMigrateStatusCmd(ec *cli.ExecutionContext) *cobra.Command {
 		SilenceUsage: true,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			opts.EC.Spin("Fetching migration status...")
-			opts.Datasource = ec.Datasource
+			opts.Database = ec.Database
 			status, err := opts.Run()
 			opts.EC.Spinner.Stop()
 			if err != nil {
@@ -44,12 +44,12 @@ func newMigrateStatusCmd(ec *cli.ExecutionContext) *cobra.Command {
 }
 
 type MigrateStatusOptions struct {
-	EC         *cli.ExecutionContext
-	Datasource string
+	EC       *cli.ExecutionContext
+	Database string
 }
 
 func (o *MigrateStatusOptions) Run() (*migrate.Status, error) {
-	migrateDrv, err := migrate.NewMigrate(o.EC, true, o.Datasource)
+	migrateDrv, err := migrate.NewMigrate(o.EC, true, o.Database)
 	if err != nil {
 		return nil, err
 	}

@@ -7,7 +7,7 @@ import (
 	"testing"
 
 	"github.com/hasura/graphql-engine/cli/internal/hasura/commonmetadata"
-	"github.com/hasura/graphql-engine/cli/internal/hasura/datasourceops"
+	"github.com/hasura/graphql-engine/cli/internal/hasura/databaseops"
 	"github.com/hasura/graphql-engine/cli/internal/httpc"
 	"github.com/hasura/graphql-engine/cli/internal/testutil"
 	"github.com/stretchr/testify/assert"
@@ -19,7 +19,7 @@ func TestClient_Send(t *testing.T) {
 	type fields struct {
 		Client                       *httpc.Client
 		path                         string
-		HasuraDatasourceRequests     *datasourceops.ClientDatasourceOps
+		HasuraDatabaseRequests       *databaseops.ClientDatabaseOps
 		HasuraCommonMetadataRequests *commonmetadata.ClientCommonMetadataOps
 	}
 	type args struct {
@@ -43,7 +43,7 @@ func TestClient_Send(t *testing.T) {
 					return c
 				}(),
 				path:                         "v2/query",
-				HasuraDatasourceRequests:     nil,
+				HasuraDatabaseRequests:       nil,
 				HasuraCommonMetadataRequests: nil,
 			},
 			args{
@@ -61,9 +61,9 @@ func TestClient_Send(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			c := &Client{
-				Client:              tt.fields.Client,
-				path:                tt.fields.path,
-				ClientDatasourceOps: tt.fields.HasuraDatasourceRequests,
+				Client:            tt.fields.Client,
+				path:              tt.fields.path,
+				ClientDatabaseOps: tt.fields.HasuraDatabaseRequests,
 			}
 			resp, gotResponseBody, err := c.Send(tt.args.body)
 			if (err != nil) != tt.wantErr {

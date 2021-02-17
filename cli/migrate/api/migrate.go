@@ -35,14 +35,14 @@ type Request struct {
 	Up            []requestType `json:"up"`
 	Down          []requestType `json:"down"`
 	SkipExecution bool          `json:"skip_execution"`
-	Datasource    string        `json:"datasource,omitempty"`
+	Database      string        `json:"datasource,omitempty"`
 }
 
 type requestType struct {
-	Version    int         `json:"version,omitempty"`
-	Type       string      `json:"type"`
-	Datasource string      `json:"datasource,omitempty"`
-	Args       interface{} `json:"args"`
+	Version  int         `json:"version,omitempty"`
+	Type     string      `json:"type"`
+	Database string      `json:"datasource,omitempty"`
+	Args     interface{} `json:"args"`
 }
 
 func MigrateAPI(c *gin.Context) {
@@ -77,12 +77,12 @@ func MigrateAPI(c *gin.Context) {
 	// Switch on request method
 	switch c.Request.Method {
 	case "GET":
-		datasource := c.Query("datasource")
-		if ec.Config.Version >= cli.V3 && datasource == "" {
+		database := c.Query("datasource")
+		if ec.Config.Version >= cli.V3 && database == "" {
 			c.JSON(http.StatusInternalServerError, &Response{Code: "internal_error", Message: "datasource query parameter is required"})
 			return
 		}
-		t, err := migrate.NewMigrate(ec, false, datasource)
+		t, err := migrate.NewMigrate(ec, false, database)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, &Response{Code: "internal_error", Message: err.Error()})
 			return
@@ -109,23 +109,23 @@ func MigrateAPI(c *gin.Context) {
 			return
 		}
 
-		if ec.Config.Version >= cli.V3 && request.Datasource == "" {
+		if ec.Config.Version >= cli.V3 && request.Database == "" {
 			c.JSON(http.StatusInternalServerError, &Response{Code: "internal_error", Message: "datasource key not found in body"})
 			return
 		}
 
 		startTime := time.Now()
 		timestamp := startTime.UnixNano() / int64(time.Millisecond)
-		datasource := request.Datasource
+		database := request.Database
 		if ec.Config.Version < cli.V3 {
-			datasource = ""
+			database = ""
 		}
-		t, err := migrate.NewMigrate(ec, false, datasource)
+		t, err := migrate.NewMigrate(ec, false, database)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, &Response{Code: "internal_error", Message: err.Error()})
 			return
 		}
-		createOptions := cmd.New(timestamp, request.Name, filepath.Join(ec.MigrationDir, datasource))
+		createOptions := cmd.New(timestamp, request.Name, filepath.Join(ec.MigrationDir, database))
 		if version != int(cli.V1) {
 			sqlUp := &bytes.Buffer{}
 			sqlDown := &bytes.Buffer{}

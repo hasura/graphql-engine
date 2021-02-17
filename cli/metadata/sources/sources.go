@@ -18,8 +18,8 @@ import (
 )
 
 const (
-	fileName           string = "sources.yaml"
-	sourcesDirectory   string = "sources"
+	fileName           string = "databases.yaml"
+	sourcesDirectory   string = "databases"
 	functionsDirectory string = "functions"
 	tablesDirectory    string = "tables"
 )

@@ -106,10 +106,10 @@ func (s migrationVersions) Search(x uint64) int {
 
 type HasuraOpts struct {
 	HasMetadataV3 bool
-	Datasource    string
+	Database      string
 
 	Client               *hasura.Client
-	DatasourceOps        hasura.DatasourceOperations
+	DatabaseOps          hasura.DatabaseOperations
 	MetadataOps          hasura.CommonMetadataOperations
 	MigrationsStateStore statestore.MigrationsStateStore
 	SettingsStateStore   statestore.SettingsStateStore

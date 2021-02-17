@@ -19,8 +19,8 @@ func TestCatalogStateStore_InsertVersion(t *testing.T) {
 		c *statestore.CLICatalogState
 	}
 	type args struct {
-		datasource string
-		version    int64
+		database string
+		version  int64
 	}
 	tests := []struct {
 		name    string
@@ -33,8 +33,8 @@ func TestCatalogStateStore_InsertVersion(t *testing.T) {
 			fields{
 				statestore.NewCLICatalogState(catalogstate.New(testutil.NewHttpcClient(t, port, nil), "v1/metadata"))},
 			args{
-				datasource: "test",
-				version:    321312321321321,
+				database: "test",
+				version:  321312321321321,
 			},
 			false,
 		},
@@ -44,14 +44,14 @@ func TestCatalogStateStore_InsertVersion(t *testing.T) {
 			m := &CatalogStateStore{
 				c: tt.fields.c,
 			}
-			err := m.InsertVersion(tt.args.datasource, tt.args.version)
+			err := m.InsertVersion(tt.args.database, tt.args.version)
 			if tt.wantErr {
 				assert.Error(t, err)
 			} else {
 				assert.NoError(t, err)
 				state, err := m.getCLIState()
 				assert.NoError(t, err)
-				assert.Equal(t, map[string]bool{strconv.Itoa(int(tt.args.version)): false}, state.GetMigrationsByDatasource(tt.args.datasource))
+				assert.Equal(t, map[string]bool{strconv.Itoa(int(tt.args.version)): false}, state.GetMigrationsByDatabase(tt.args.database))
 			}
 		})
 	}

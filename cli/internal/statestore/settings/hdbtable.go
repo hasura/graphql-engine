@@ -7,11 +7,11 @@ import (
 )
 
 type StateStoreHdbTable struct {
-	client        hasura.DatasourceOperations
+	client        hasura.DatabaseOperations
 	schema, table string
 }
 
-func NewStateStoreHdbTable(client hasura.DatasourceOperations, schema, table string) *StateStoreHdbTable {
+func NewStateStoreHdbTable(client hasura.DatabaseOperations, schema, table string) *StateStoreHdbTable {
 	return &StateStoreHdbTable{client, schema, table}
 }
 

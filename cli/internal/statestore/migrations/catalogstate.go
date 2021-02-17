@@ -36,35 +36,35 @@ func NewCatalogStateStore(c *statestore.CLICatalogState) *CatalogStateStore {
 	return &CatalogStateStore{c}
 }
 
-func (m *CatalogStateStore) InsertVersion(datasource string, version int64) error {
+func (m *CatalogStateStore) InsertVersion(database string, version int64) error {
 	// get setting
 	state, err := m.getCLIState()
 	if err != nil {
 		return err
 	}
 	versionString := fmt.Sprintf("%d", version)
-	state.SetMigration(datasource, versionString, false)
+	state.SetMigration(database, versionString, false)
 	return m.setCLIState(*state)
 }
 
-func (m *CatalogStateStore) SetVersion(datasource string, version int64, dirty bool) error {
+func (m *CatalogStateStore) SetVersion(database string, version int64, dirty bool) error {
 	// get setting
 	state, err := m.getCLIState()
 	if err != nil {
 		return err
 	}
 	versionString := fmt.Sprintf("%d", version)
-	state.SetMigration(datasource, versionString, dirty)
+	state.SetMigration(database, versionString, dirty)
 	return m.setCLIState(*state)
 }
 
-func (m *CatalogStateStore) RemoveVersion(datasource string, version int64) error {
+func (m *CatalogStateStore) RemoveVersion(database string, version int64) error {
 	versionString := fmt.Sprintf("%d", version)
 	state, err := m.getCLIState()
 	if err != nil {
 		return err
 	}
-	state.UnsetMigration(datasource, versionString)
+	state.UnsetMigration(database, versionString)
 	return m.setCLIState(*state)
 }
 
@@ -72,13 +72,13 @@ func (m *CatalogStateStore) PrepareMigrationsStateStore() error {
 	return nil
 }
 
-func (m *CatalogStateStore) GetVersions(datasource string) (map[uint64]bool, error) {
+func (m *CatalogStateStore) GetVersions(database string) (map[uint64]bool, error) {
 	state, err := m.getCLIState()
 	if err != nil {
 		return nil, err
 	}
 	var versions = map[uint64]bool{}
-	for version, dirty := range state.GetMigrationsByDatasource(datasource) {
+	for version, dirty := range state.GetMigrationsByDatabase(database) {
 		parsedVersion, err := strconv.ParseUint(version, 10, 64)
 		if err != nil {
 			return nil, errors.Wrap(err, "parsing migration version")

@@ -9,7 +9,7 @@ import (
 )
 
 func (h *HasuraDB) ApplySeed(m interface{}) error {
-	resp, body, err := h.datasourceops.SendDatasourceOperation(m)
+	resp, body, err := h.databaseops.SendDatabaseOperation(m)
 	if err != nil {
 		return err
 	}

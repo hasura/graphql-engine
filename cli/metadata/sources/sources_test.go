@@ -41,7 +41,7 @@ func TestSourceConfig_Export(t *testing.T) {
 				}(),
 			},
 			map[string][]byte{
-				"metadata/sources/sources.yaml": []byte(`- name: default
+				"metadata/databases/databases.yaml": []byte(`- name: default
   configuration:
     connection_info:
       database_url:
@@ -57,19 +57,19 @@ func TestSourceConfig_Export(t *testing.T) {
   - "!include public_get_t1.yaml"
   - "!include public_get_t2.yaml"
 `),
-				"metadata/sources/default/tables/public_t1.yaml": []byte(`table:
+				"metadata/databases/default/tables/public_t1.yaml": []byte(`table:
   name: t1
   schema: public
 `),
-				"metadata/sources/default/tables/public_t2.yaml": []byte(`table:
+				"metadata/databases/default/tables/public_t2.yaml": []byte(`table:
   name: t2
   schema: public
 `),
-				"metadata/sources/default/functions/public_get_t1.yaml": []byte(`function:
+				"metadata/databases/default/functions/public_get_t1.yaml": []byte(`function:
   name: get_t1
   schema: public
 `),
-				"metadata/sources/default/functions/public_get_t2.yaml": []byte(`function:
+				"metadata/databases/default/functions/public_get_t2.yaml": []byte(`function:
   name: get_t2
   schema: public
 `),

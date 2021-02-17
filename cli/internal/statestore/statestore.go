@@ -9,10 +9,10 @@ import (
 
 // Abstraction for the storage layer for migration state
 type MigrationsStateStore interface {
-	InsertVersion(datasource string, version int64) error
-	RemoveVersion(datasource string, version int64) error
-	SetVersion(datasource string, version int64, dirty bool) error
-	GetVersions(datasource string) (map[uint64]bool, error)
+	InsertVersion(database string, version int64) error
+	RemoveVersion(database string, version int64) error
+	SetVersion(database string, version int64, dirty bool) error
+	GetVersions(database string) (map[uint64]bool, error)
 
 	PrepareMigrationsStateStore() error
 }
@@ -71,19 +71,19 @@ func (c *CLIState) Init() {
 		c.Settings = map[string]string{}
 	}
 }
-func (c *CLIState) SetMigration(datasource, key string, value bool) {
-	if c.Migrations[datasource] == nil {
-		c.Migrations[datasource] = map[string]bool{}
+func (c *CLIState) SetMigration(database, key string, value bool) {
+	if c.Migrations[database] == nil {
+		c.Migrations[database] = map[string]bool{}
 	}
-	c.Migrations[datasource][key] = value
+	c.Migrations[database][key] = value
 }
 
-func (c *CLIState) UnsetMigration(datasource, key string) {
-	delete(c.Migrations[datasource], key)
+func (c *CLIState) UnsetMigration(database, key string) {
+	delete(c.Migrations[database], key)
 }
 
-func (c *CLIState) GetMigrationsByDatasource(datasource string) map[string]bool {
-	return c.Migrations[datasource]
+func (c *CLIState) GetMigrationsByDatabase(database string) map[string]bool {
+	return c.Migrations[database]
 }
 
 func (c *CLIState) GetMigrations() *MigrationsState {
@@ -109,13 +109,13 @@ func (c *CLIState) GetSettings() map[string]string {
 	return c.Settings
 }
 
-func CopyMigrationState(src, dest MigrationsStateStore, srcdatasource, destdatasource string) error {
-	versions, err := src.GetVersions(srcdatasource)
+func CopyMigrationState(src, dest MigrationsStateStore, srcdatabase, destdatabase string) error {
+	versions, err := src.GetVersions(srcdatabase)
 	if err != nil {
 		return err
 	}
 	for k, v := range versions {
-		dest.SetVersion(destdatasource, int64(k), v)
+		dest.SetVersion(destdatabase, int64(k), v)
 	}
 	return nil
 }

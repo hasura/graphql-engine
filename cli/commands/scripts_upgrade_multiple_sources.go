@@ -35,7 +35,7 @@ func newUpdateMultipleSources(ec *cli.ExecutionContext) *cobra.Command {
 				Logger:                     ec.Logger,
 				EC:                         ec,
 			}
-			return scripts.UpgradeProjectToMultipleSources(opts)
+			return scripts.UpdateProjectV3(opts)
 		},
 	}
 	return cmd

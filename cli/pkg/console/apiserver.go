@@ -51,7 +51,7 @@ func cliProjectUpdateCheck(ec *cli.ExecutionContext) gin.HandlerFunc {
 		}
 		// if a user is on config v2 and they have multiple databases prompt them to upgrade
 		if ec.Config.Version <= cli.V2 && ec.HasMetadataV3 {
-			sources, err := scripts.ListDatasources(ec.APIClient.V1Metadata)
+			sources, err := scripts.ListDatabases(ec.APIClient.V1Metadata)
 			if err != nil {
 				c.AbortWithStatusJSON(http.StatusBadRequest, &response{Code: "internal_error", Message: errMessage{"cannot list sources"}.Error()})
 				return

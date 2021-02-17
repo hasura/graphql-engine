@@ -33,8 +33,8 @@ func TestMigrateCmd(t *testing.T, ec *cli.ExecutionContext) {
 		status migrate.Status
 	}{
 		{"apply-up-all-migrations", &commands.MigrateApplyOptions{
-			EC:         ec,
-			Datasource: "default",
+			EC:       ec,
+			Database: "default",
 		}, nil, migrate.Status{
 			Index: []uint64{1, 2},
 			Migrations: map[uint64]*migrate.MigrationStatus{
@@ -51,7 +51,7 @@ func TestMigrateCmd(t *testing.T, ec *cli.ExecutionContext) {
 		{"apply-down-1-migration", &commands.MigrateApplyOptions{
 			EC:            ec,
 			DownMigration: "1",
-			Datasource:    "default",
+			Database:      "default",
 		}, nil, migrate.Status{
 			Index: []uint64{1, 2},
 			Migrations: map[uint64]*migrate.MigrationStatus{
@@ -68,7 +68,7 @@ func TestMigrateCmd(t *testing.T, ec *cli.ExecutionContext) {
 		{"apply-down-all-migration", &commands.MigrateApplyOptions{
 			EC:            ec,
 			DownMigration: "all",
-			Datasource:    "default",
+			Database:      "default",
 		}, nil, migrate.Status{
 			Index: []uint64{1, 2},
 			Migrations: map[uint64]*migrate.MigrationStatus{
@@ -85,7 +85,7 @@ func TestMigrateCmd(t *testing.T, ec *cli.ExecutionContext) {
 		{"apply-goto-2-migration", &commands.MigrateApplyOptions{
 			EC:          ec,
 			GotoVersion: "2",
-			Datasource:  "default",
+			Database:    "default",
 		}, nil, migrate.Status{
 			Index: []uint64{1, 2},
 			Migrations: map[uint64]*migrate.MigrationStatus{
@@ -102,7 +102,7 @@ func TestMigrateCmd(t *testing.T, ec *cli.ExecutionContext) {
 		{"apply-goto-nil-migration", &commands.MigrateApplyOptions{
 			EC:          ec,
 			GotoVersion: "-1",
-			Datasource:  "default",
+			Database:    "default",
 		}, nil, migrate.Status{
 			Index: []uint64{1, 2},
 			Migrations: map[uint64]*migrate.MigrationStatus{
@@ -119,7 +119,7 @@ func TestMigrateCmd(t *testing.T, ec *cli.ExecutionContext) {
 		{"apply-up-1-migration", &commands.MigrateApplyOptions{
 			EC:          ec,
 			UpMigration: "1",
-			Datasource:  "default",
+			Database:    "default",
 		}, nil, migrate.Status{
 			Index: []uint64{1, 2},
 			Migrations: map[uint64]*migrate.MigrationStatus{
@@ -136,7 +136,7 @@ func TestMigrateCmd(t *testing.T, ec *cli.ExecutionContext) {
 		{"apply-version-2-up-migration", &commands.MigrateApplyOptions{
 			EC:               ec,
 			VersionMigration: "2",
-			Datasource:       "default",
+			Database:         "default",
 		}, nil, migrate.Status{
 			Index: []uint64{1, 2},
 			Migrations: map[uint64]*migrate.MigrationStatus{
@@ -154,7 +154,7 @@ func TestMigrateCmd(t *testing.T, ec *cli.ExecutionContext) {
 			EC:               ec,
 			VersionMigration: "2",
 			MigrationType:    "down",
-			Datasource:       "default",
+			Database:         "default",
 		}, nil, migrate.Status{
 			Index: []uint64{1, 2},
 			Migrations: map[uint64]*migrate.MigrationStatus{
@@ -182,8 +182,8 @@ func TestMigrateCmd(t *testing.T, ec *cli.ExecutionContext) {
 				t.Fatal(err)
 			}
 			statusOpts := &commands.MigrateStatusOptions{
-				EC:         ec,
-				Datasource: "default",
+				EC:       ec,
+				Database: "default",
 			}
 			actualStatus, err := statusOpts.Run()
 			if err != nil {

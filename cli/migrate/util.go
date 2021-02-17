@@ -8,7 +8,7 @@ import (
 	"runtime"
 	"strings"
 
-	"github.com/hasura/graphql-engine/cli/migrate/database"
+	migratedb "github.com/hasura/graphql-engine/cli/migrate/database"
 
 	crontriggers "github.com/hasura/graphql-engine/cli/metadata/cron_triggers"
 
@@ -123,27 +123,27 @@ func FilterCustomQuery(u *nurl.URL) *nurl.URL {
 	return &ux
 }
 
-func NewMigrate(ec *cli.ExecutionContext, isCmd bool, datasource string) (*Migrate, error) {
-	// create a new directory for the datasource if it does'nt exists
-	if f, _ := os.Stat(filepath.Join(ec.MigrationDir, datasource)); f == nil {
-		err := os.MkdirAll(filepath.Join(ec.MigrationDir, datasource), 0755)
+func NewMigrate(ec *cli.ExecutionContext, isCmd bool, database string) (*Migrate, error) {
+	// create a new directory for the database if it does'nt exists
+	if f, _ := os.Stat(filepath.Join(ec.MigrationDir, database)); f == nil {
+		err := os.MkdirAll(filepath.Join(ec.MigrationDir, database), 0755)
 		if err != nil {
 			return nil, err
 		}
 	}
 	dbURL := GetDataPath(ec)
-	fileURL := GetFilePath(filepath.Join(ec.MigrationDir, datasource))
+	fileURL := GetFilePath(filepath.Join(ec.MigrationDir, database))
 	opts := NewMigrateOpts{
 		fileURL.String(),
 		dbURL.String(),
 		isCmd, int(ec.Config.Version),
 		ec.Config.ServerConfig.TLSConfig,
 		ec.Logger,
-		&database.HasuraOpts{
+		&migratedb.HasuraOpts{
 			HasMetadataV3:        ec.HasMetadataV3,
-			Datasource:           datasource,
+			Database:             database,
 			Client:               ec.APIClient,
-			DatasourceOps:        cli.GetDatasourceOps(ec),
+			DatabaseOps:          cli.GetDatabaseOps(ec),
 			MetadataOps:          cli.GetCommonMetadataOps(ec),
 			MigrationsStateStore: cli.GetMigrationsStateStore(ec),
 			SettingsStateStore:   cli.GetSettingsStateStore(ec),
