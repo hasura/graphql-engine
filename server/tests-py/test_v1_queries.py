@@ -168,6 +168,18 @@ class TestV1SelectBoolExpSearch:
     def test_city_where_not_similar(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + '/select_city_where_not_similar.yaml')
 
+    def test_city_where_regex(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/select_city_where_regex.yaml')
+
+    def test_city_where_not_regex(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/select_city_where_nregex.yaml')
+
+    def test_city_where_iregex(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/select_city_where_iregex.yaml')
+
+    def test_city_where_not_iregex(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/select_city_where_niregex.yaml')
+
     @classmethod
     def dir(cls):
         return 'queries/v1/select/boolexp/search'
@@ -483,8 +495,10 @@ class TestMetadata:
     def test_reload_metadata(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + '/reload_metadata.yaml')
 
-    def test_export_metadata(self, hge_ctx):
-        check_query_f(hge_ctx, self.dir() + '/export_metadata.yaml')
+    # FIXME:- Using export_metadata will dump
+    # the source configuration dependent on --database-url
+    # def test_export_metadata(self, hge_ctx):
+    #     check_query_f(hge_ctx, self.dir() + '/export_metadata.yaml')
 
     def test_clear_metadata(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + '/clear_metadata.yaml')
@@ -497,6 +511,10 @@ class TestMetadata:
 
     def test_replace_metadata_v2(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + '/replace_metadata_v2.yaml')
+
+    def test_replace_metadata_allow_inconsistent(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/replace_metadata_allow_inconsistent_inconsistent.yaml')
+        check_query_f(hge_ctx, self.dir() + '/replace_metadata_allow_inconsistent.yaml')
 
     def test_dump_internal_state(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + '/dump_internal_state.yaml')
@@ -512,13 +530,15 @@ class TestMetadataOrder:
     def dir(cls):
         return "queries/v1/metadata_order"
 
-    def test_export_metadata(self, hge_ctx):
-        check_query_f(hge_ctx, self.dir() + '/export_metadata.yaml')
+    # FIXME:- Using export_metadata will dump
+    # the source configuration dependent on --database-url
+    # def test_export_metadata(self, hge_ctx):
+    #     check_query_f(hge_ctx, self.dir() + '/export_metadata.yaml')
 
-    def test_clear_export_metadata(self, hge_ctx):
+    # def test_clear_export_metadata(self, hge_ctx):
         # In the 'clear_export_metadata.yaml' the metadata is added
         # using the metadata APIs
-        check_query_f(hge_ctx, self.dir() + '/clear_export_metadata.yaml')
+        # check_query_f(hge_ctx, self.dir() + '/clear_export_metadata.yaml')
 
     def test_export_replace(self, hge_ctx):
         url = '/v1/query'
@@ -665,6 +685,12 @@ class TestTrackTables:
     def test_track_untrack_table_as_not_admin_error(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + '/track_untrack_table_as_not_admin_error.yaml')
 
+    # We allow tracking of tables with non-compliant graphql names but we don't
+    # add such tables in the GraphQL schema, but these tables can be used with
+    # RQL queries (CRUD) and event triggers
+    def test_track_table_with_non_graphql_compliant_name(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/track_non_graphql_compliant_table.yaml')
+
     @classmethod
     def dir(cls):
         return "queries/v1/track_table"
@@ -729,6 +755,16 @@ class TestSetTableIsEnum:
     def test_relationship_with_inconsistent_enum_table(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + '/relationship_with_inconsistent_enum_table.yaml')
 
+# regression test for issue #3759
+@usefixtures('per_method_tests_db_state')
+class TestSetTableIsEnumSetAndDelayedReload:
+    @classmethod
+    def dir(cls):
+        return 'queries/v1/set_table_is_enum/set_and_delayed_reload'
+
+    def test_introspect_enum_values(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/introspect_enum_values.yaml')
+
 @usefixtures('per_method_tests_db_state')
 class TestSetTableCustomFields:
 
@@ -753,6 +789,37 @@ class TestSetTableCustomFields:
 
     def test_relationship_conflict_with_custom_column(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + "/relationship_conflict_with_custom_column.yaml")
+
+@usefixtures('per_method_tests_db_state')
+class TestSetTableCustomization:
+
+    @classmethod
+    def dir(cls):
+        return 'queries/v1/set_table_configuration'
+
+    def test_set_and_unset(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/set_and_unset.yaml')
+
+    def test_set_invalid_table(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/set_invalid_table.yaml')
+
+    def test_alter_column(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/alter_column.yaml')
+
+    def test_conflict_with_relationship(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/conflict_with_relationship.yaml')
+
+    def test_column_field_swap(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + "/column_field_swap.yaml")
+
+    def test_relationship_conflict_with_custom_column(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + "/relationship_conflict_with_custom_column.yaml")
+
+    def test_alter_table_name_with_custom_name(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + "/rename_original_table_with_custom_name.yaml")
+
+    def test_conflicting_custom_table_name(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + "/fail_conflicting_custom_table_name.yaml")
 
 @usefixtures('per_method_tests_db_state')
 class TestComputedFields:
@@ -781,8 +848,9 @@ class TestBulkQuery:
     def test_run_bulk(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + '/basic.yaml')
 
-    def test_run_bulk_mixed_access_mode(self, hge_ctx):
-        check_query_f(hge_ctx, self.dir() + '/mixed_access_mode.yaml')
+    # Each query is executed independently in a separate transaction in a bulk query
+    # def test_run_bulk_mixed_access_mode(self, hge_ctx):
+    #     check_query_f(hge_ctx, self.dir() + '/mixed_access_mode.yaml')
 
     def test_run_bulk_with_select_and_writes(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + '/select_with_writes.yaml')

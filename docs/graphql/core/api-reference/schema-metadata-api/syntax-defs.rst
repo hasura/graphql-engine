@@ -333,6 +333,15 @@ Operator
      - ``SIMILAR TO``
    * - ``"$nsimilar"``
      - ``NOT SIMILAR TO``
+   * - ``$regex``
+     - ``~``
+   * - ``$iregex``
+     - ``~*``
+   * - ``$nregex``
+     - ``!~``
+   * - ``$niregex``
+     - ``!~*``
+  
 
 (For more details on text related operators, refer to the `Postgres docs <https://www.postgresql.org/docs/current/functions-matching.html>`__.)
 
@@ -545,6 +554,40 @@ CollectionQuery
        "name": String,
        "query": String
    }
+
+.. _EndpointUrl:
+
+EndpointUrl
+^^^^^^^^^^^
+
+.. parsed-literal::
+
+  String
+
+.. _EndpointMethods:
+
+EndpointMethods
+^^^^^^^^^^^^^^^
+
+.. parsed-literal::
+
+  [String]
+
+.. _EndpointDef:
+
+EndpointDefinition
+^^^^^^^^^^^^^^^^^^
+
+.. parsed-literal::
+   :class: haskell-pre
+
+   {
+       "query": {
+         "query_name : String,
+         "collection_name" : CollectionName
+       }
+   }
+
 
 .. _CustomColumnNames:
 

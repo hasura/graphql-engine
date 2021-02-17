@@ -1,0 +1,48 @@
+- description: call the cached simple endpoint
+  url: /v1/graphql
+  status: 200
+  query:
+    query: |
+      query @cached(ttl: 300) {
+        test_table {
+          first_name
+          last_name
+        }
+      }
+  resp_headers:
+    Cache-Control: max-age=300
+    X-Hasura-Query-Cache-Key: 29c20d58ac50d0934e6708b4752ca5b122c09e3a
+    X-Hasura-Query-Family-Cache-Key: 05e354afeca0828bbe6c1e77c25e4ae948f45f80
+  response:
+    data:
+      test_table:
+        - first_name: Foo
+          last_name: Bar
+        - first_name: Baz
+          last_name: Qux
+        - first_name: X%20Y
+          last_name: Test
+
+- description: call the cached simple endpoint again
+  url: /v1/graphql
+  status: 200
+  query:
+    query: |
+      query @cached(ttl: 300) {
+        test_table {
+          first_name
+          last_name
+        }
+      }
+  resp_headers:
+    X-Hasura-Query-Cache-Key: 29c20d58ac50d0934e6708b4752ca5b122c09e3a
+    X-Hasura-Query-Family-Cache-Key: 05e354afeca0828bbe6c1e77c25e4ae948f45f80
+  response:
+    data:
+      test_table:
+        - first_name: Foo
+          last_name: Bar
+        - first_name: Baz
+          last_name: Qux
+        - first_name: X%20Y
+          last_name: Test

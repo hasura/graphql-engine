@@ -198,6 +198,7 @@ This is how the HTTP access logs look like:
       "level": "info",
       "type": "http-log",
       "detail": {
+        "request_id": "072b3617-6653-4fd5-b5ee-580e9d098c3d",
         "operation": {
           "query_execution_time": 0.009240042,
           "user_vars": {

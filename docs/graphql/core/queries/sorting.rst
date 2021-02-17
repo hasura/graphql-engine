@@ -44,7 +44,7 @@ Sorting objects
   :view_only:
   :query:
     query {
-      author (
+      authors (
         order_by: {name: asc}
       ) {
         id
@@ -54,7 +54,7 @@ Sorting objects
   :response:
     {
       "data": {
-        "author": [
+        "authors": [
           {
             "id": 5,
             "name": "Amii"
@@ -94,7 +94,7 @@ their rating:
   :view_only:
   :query:
     query {
-      author (order_by: {name: asc}) {
+      authors (order_by: {name: asc}) {
         id
         name
         articles(order_by: {rating: desc}) {
@@ -107,7 +107,7 @@ their rating:
   :response:
     {
       "data": {
-        "author": [
+        "authors": [
           {
             "id": 5,
             "name": "Amii",
@@ -179,7 +179,7 @@ For object relationships only columns can be used for sorting.
   :view_only:
   :query:
     query {
-      article (
+      articles (
         order_by: {author: {id: desc}}
       ) {
         id
@@ -194,7 +194,7 @@ For object relationships only columns can be used for sorting.
   :response:
     {
       "data": {
-        "article": [
+        "articles": [
           {
             "id": 3,
             "title": "Article 3",
@@ -236,7 +236,7 @@ For array relationships only aggregates can be used for sorting.
   :view_only:
   :query:
     query {
-      author (
+      authors (
         order_by: {
           articles_aggregate: {count: desc}
         }
@@ -253,7 +253,7 @@ For array relationships only aggregates can be used for sorting.
   :response:
     {
       "data": {
-        "author": [
+        "authors": [
           {
             "id": 5,
             "name": "Amii",
@@ -291,7 +291,7 @@ For array relationships only aggregates can be used for sorting.
   :view_only:
   :query:
     query {
-      author(
+      authors(
         order_by: {
           articles_aggregate: {
             max: {rating: asc_nulls_last}
@@ -310,7 +310,7 @@ For array relationships only aggregates can be used for sorting.
   :response:
     {
       "data": {
-        "author": [
+        "authors": [
           {
             "id": 7,
             "name": "Berti",
@@ -391,7 +391,7 @@ date (ascending with nulls first):
   :view_only:
   :query:
     query {
-      article (
+      articles (
         order_by: [
           {rating: desc},
           {published_on: asc_nulls_first}
@@ -405,7 +405,7 @@ date (ascending with nulls first):
   :response:
     {
       "data": {
-        "article": [
+        "articles": [
           {
             "id": 17,
             "rating": 5,

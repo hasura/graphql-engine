@@ -11,11 +11,13 @@ export interface MainState {
   loginInProgress: boolean;
   loginError: boolean;
   serverVersion: null;
-  latestStableServerVersion: null;
+  latestStableServerVersion: null | string;
+  latestPreReleaseServerVersion: null | string;
   telemetryEnabled: boolean;
   serverConfig: {
     data: {
       version: string;
+      is_function_permissions_inferred: boolean;
       is_admin_secret_set: boolean;
       is_auth_hook_set: boolean;
       is_jwt_set: boolean;
@@ -44,10 +46,12 @@ const defaultState: MainState = {
   loginError: false,
   serverVersion: null,
   latestStableServerVersion: null,
+  latestPreReleaseServerVersion: null,
   telemetryEnabled: true,
   serverConfig: {
     data: {
       version: '',
+      is_function_permissions_inferred: true,
       is_admin_secret_set: false,
       is_auth_hook_set: false,
       is_jwt_set: false,

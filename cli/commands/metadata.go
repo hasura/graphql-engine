@@ -2,6 +2,7 @@ package commands
 
 import (
 	"github.com/hasura/graphql-engine/cli"
+	"github.com/hasura/graphql-engine/cli/internal/scripts"
 	"github.com/hasura/graphql-engine/cli/migrate"
 	"github.com/hasura/graphql-engine/cli/util"
 	"github.com/pkg/errors"
@@ -23,7 +24,11 @@ func NewMetadataCmd(ec *cli.ExecutionContext) *cobra.Command {
 			if err != nil {
 				return err
 			}
-			return ec.Validate()
+			err = ec.Validate()
+			if err != nil {
+				return err
+			}
+			return scripts.CheckIfUpdateToConfigV3IsRequired(ec)
 		},
 		SilenceUsage: true,
 	}

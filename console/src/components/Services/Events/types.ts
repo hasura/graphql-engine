@@ -1,13 +1,12 @@
 import { Action as ReduxAction } from 'redux';
 import { RouteComponentProps } from 'react-router';
-import { Header as ServerHeader } from '../../Common/utils/v1QueryUtils';
 import { Nullable } from '../../Common/utils/tsUtils';
 import { Dispatch } from '../../../types';
+import { ServerHeader } from '../../../metadata/types';
 
 export const LOADING_TRIGGERS = 'Events/LOADING_TRIGGERS';
 export const LOADED_TRIGGERS = 'Events/LOADED_TRIGGERS';
 export const LOADED_SCHEDULED_TRIGGERS = 'Events/LOADED_SCHEDULED_TRIGGERS';
-export const LOADED_EVENT_TRIGGERS = 'Events/LOADED_EVENT_TRIGGERS';
 export const SET_CURRENT_TRIGGER = 'Events/SET_CURRENT_TRIGGER';
 export const LOAD_PENDING_DATA_EVENTS = 'Events/LOAD_PENDING_DATA_EVENTS';
 
@@ -46,10 +45,9 @@ export type ServerWebhookConf =
       from_env: string;
     };
 export type RetryConf = {
-  num_retries: number;
-  interval_sec: number;
-  timeout_sec: number;
-  tolerance_sec: Nullable<number>;
+  num_retries?: number;
+  interval_sec?: number;
+  timeout_sec?: number;
 };
 
 export type TriggerEventsProps = {
@@ -92,9 +90,12 @@ export type EventTrigger = {
   name: string;
   table_name: string;
   schema_name: string;
+  source: string;
   comment: string | null;
   configuration: {
-    definition: Record<EventTriggerOperation, EventTriggerOperationDefinition>;
+    definition: {
+      [key in EventTriggerOperation]: EventTriggerOperationDefinition;
+    };
     headers: ServerHeader[];
     retry_conf: RetryConf;
     webhook: Nullable<string>;
@@ -113,10 +114,10 @@ export type ScheduledTrigger = {
   webhook_conf: string;
   cron_schedule: string;
   retry_conf: {
-    num_retries: number;
-    retry_interval_seconds: number;
-    timeout_seconds: number;
-    tolerance_seconds: number;
+    num_retries?: number;
+    retry_interval_seconds?: number;
+    timeout_seconds?: number;
+    tolerance_seconds?: number;
   };
   include_in_metadata: boolean;
   comment: Nullable<string>;
@@ -125,38 +126,15 @@ export type ScheduledTrigger = {
 /*
  * Redux State Type for Event and Scheduled Triggers
  */
-export type Triggers = {
-  scheduled: ScheduledTrigger[];
-  event: EventTrigger[];
-};
+export type Triggers = ScheduledTrigger[];
 
 /*
  * Redux Action types
  */
-
-export interface RASetAllTriggers extends ReduxAction {
-  type: typeof LOADED_TRIGGERS;
-  data: Triggers;
-}
-
-export interface RASetScheduledTriggers extends ReduxAction {
-  type: typeof LOADED_SCHEDULED_TRIGGERS;
-  data: ScheduledTrigger[];
-}
-
-export interface RASetEventTriggers extends ReduxAction {
-  type: typeof LOADED_EVENT_TRIGGERS;
-  data: EventTrigger[];
-}
 
 export interface RASetCurrentTrigger extends ReduxAction {
   type: typeof SET_CURRENT_TRIGGER;
   name: string;
 }
 
-export type RAEvents =
-  | RASetAllTriggers
-  | RASetScheduledTriggers
-  | RASetEventTriggers
-  | RASetCurrentTrigger
-  | { type: typeof LOADING_TRIGGERS };
+export type RAEvents = RASetCurrentTrigger | { type: typeof LOADING_TRIGGERS };

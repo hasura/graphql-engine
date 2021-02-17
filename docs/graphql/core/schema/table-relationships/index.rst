@@ -18,7 +18,7 @@ Introduction
 To make :ref:`nested object queries <nested_object_queries>`, the tables/views in your database need to
 be connected via relationships.
 
-Let's say we have the following tables in our database: ``author``, ``passport_info``, ``article`` and ``tag``.
+Let's say we have the following tables in our database: ``authors``, ``passport_infos``, ``articles`` and ``tags``.
 
 Table relationships
 -------------------
@@ -26,18 +26,18 @@ Table relationships
 The tables/views in any relational database are typically related to each other via one of the
 following types of table relationships:
 
-+------------------+-----------------------------------+------------------------------------------------+
-| Type             | Example                           | Meaning                                        |
-+==================+===================================+================================================+
-| ``one-to-one``   | ``author`` and ``passport_info``  | - an ``author`` can have one ``passport_info`` |
-|                  |                                   | - a ``passport_info`` can have one ``owner``   |
-+------------------+-----------------------------------+------------------------------------------------+
-| ``one-to-many``  | ``author`` and ``article``        | - an ``author`` can have many ``articles``     |
-|                  |                                   | - an ``article`` can have one ``author``       |
-+------------------+-----------------------------------+------------------------------------------------+
-| ``many-to-many`` | ``article`` and ``tag``           | - an ``article`` can have many ``tags``        |
-|                  |                                   | - a ``tag`` can have many ``articles``         |
-+------------------+-----------------------------------+------------------------------------------------+
++------------------+-------------------------------------+------------------------------------------------+
+| Type             | Example                             | Meaning                                        |
++==================+=====================================+================================================+
+| ``one-to-one``   | ``authors`` and ``passport_infos``  | - an ``author`` can have one ``passport_info`` |
+|                  |                                     | - a ``passport_info`` can have one ``owner``   |
++------------------+-------------------------------------+------------------------------------------------+
+| ``one-to-many``  | ``authors`` and ``articles``        | - an ``author`` can have many ``articles``     |
+|                  |                                     | - an ``article`` can have one ``author``       |
++------------------+-------------------------------------+------------------------------------------------+
+| ``many-to-many`` | ``articles`` and ``tags``           | - an ``article`` can have many ``tags``        |
+|                  |                                     | - a ``tag`` can have many ``articles``         |
++------------------+-------------------------------------+------------------------------------------------+
 
 .. _graphql_relationships:
 

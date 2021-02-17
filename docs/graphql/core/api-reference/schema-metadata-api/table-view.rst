@@ -149,6 +149,45 @@ Add a table/view ``author``:
       }
    }
 
+A table can be tracked with a ``custom name``. This can be useful when a table
+name is not GraphQL compliant, like ``Users Address``. A ``custom name`` like
+``users_address`` will complement the ``"Users Address"``
+table, so that it can be added to the GraphQL schema.
+
+.. code-block:: http
+
+   POST /v1/query HTTP/1.1
+   Content-Type: application/json
+   X-Hasura-Role: admin
+
+   {
+      "type": "track_table",
+      "version": 2,
+      "args": {
+        "table": "Author Details",
+        "configuration": {
+           "custom_name": "author_details"
+        }
+      }
+   }
+
+The GraphQL nodes and typenames
+that are generated will be according to the ``identifier``. For example, in this case,
+the nodes generated will be:
+
+- ``users_address``
+- ``users_address_one``
+- ``users_address_aggregate``
+- ``insert_users_address``
+- ``insert_users_address_one``
+- ``update_users_address``
+- ``update_users_address_by_pk``
+- ``delete_users_address``
+- ``delete_users_address_by_pk``
+
+.. note::
+  graphql-engine requires the constraint names (if any) of a table to be `GraphQL compliant <https://spec.graphql.org/June2018/#sec-Names>`__ in order to be able to track it.
+
 .. _track_table_args_syntax_v2:
 
 Args syntax
@@ -182,6 +221,11 @@ Table Config
      - Required
      - Schema
      - Description
+   * - custom_name
+     - false
+     - ``String``
+     - Customise the ``<table-name>`` with the provided custom name value.
+       The GraphQL nodes for the table will be generated according to the custom name.
    * - custom_root_fields
      - false
      - :ref:`Custom Root Fields <custom_root_fields>`
@@ -242,12 +286,18 @@ Custom Root Fields
 
 .. _set_table_custom_fields:
 
-set_table_custom_fields
------------------------
+set_table_custom_fields (deprecated)
+------------------------------------
+
+``set_table_custom_fields`` has been deprecated. Use the
+:ref:`set_table_customization <set_table_customization>` API to set the custom
+table fields.
 
 ``set_table_custom_fields`` in version ``2`` sets the custom root fields and
 custom column names of already tracked table. This will **replace** the already
 present custom fields configuration.
+
+
 
 Set custom fields for table/view ``author``:
 
@@ -304,6 +354,70 @@ Args syntax
      - :ref:`CustomColumnNames`
      - Customise the column fields
 
+.. _set_table_customization:
+
+set_table_customization
+-----------------------
+
+``set_table_customization`` allows you to customize any given table with
+a custom name, custom root fields and custom column names of an already tracked
+table. This will **replace** the already present customization.
+
+:ref:`set_table_custom_fields <set_table_custom_fields>` has been deprecated in
+favour of this API.
+
+Set the configuration for a table/view called ``author``:
+
+.. code-block:: http
+
+   POST /v1/query HTTP/1.1
+   Content-Type: application/json
+   X-Hasura-Role: admin
+
+   {
+      "type": "set_table_customization",
+      "args": {
+        "table": "author_details",
+        "configuration": {
+          "identifier": "author",
+          "custom_root_fields": {
+             "select": "Authors",
+             "select_by_pk": "Author",
+             "select_aggregate": "AuthorAggregate",
+             "insert": "AddAuthors",
+             "insert_one":"AddAuthor",
+             "update": "UpdateAuthors",
+             "update_by_pk": "UpdateAuthor",
+             "delete": "DeleteAuthors",
+             "delete_by_pk": "DeleteAuthor"
+          },
+          "custom_column_names": {
+             "id": "authorId"
+          }
+        }
+      }
+   }
+
+.. _set_table_customization_syntax:
+
+Args syntax
+^^^^^^^^^^^
+
+.. list-table::
+   :header-rows: 1
+
+   * - Key
+     - Required
+     - Schema
+     - Description
+   * - table
+     - true
+     - :ref:`TableName <TableName>`
+     - Name of the table
+   * - configuration
+     - false
+     - :ref:`TableConfig <table_config>`
+     - Configuration for the table/view
 
 .. _untrack_table:
 

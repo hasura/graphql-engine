@@ -3,6 +3,7 @@ package commands
 import (
 	"io/ioutil"
 	"os"
+	"path/filepath"
 	"time"
 
 	"github.com/hasura/graphql-engine/cli"
@@ -51,6 +52,7 @@ func newMigrateCreateCmd(ec *cli.ExecutionContext) *cobra.Command {
 		RunE: func(cmd *cobra.Command, args []string) error {
 			opts.name = args[0]
 			opts.EC.Spin("Creating migration files...")
+			opts.Database = ec.Database
 			version, err := opts.run()
 			opts.EC.Spinner.Stop()
 			if err != nil {
@@ -95,11 +97,12 @@ type migrateCreateOptions struct {
 	schemaNames    []string
 	upSQL          string
 	downSQL        string
+	Database       string
 }
 
 func (o *migrateCreateOptions) run() (version int64, err error) {
 	timestamp := getTime()
-	createOptions := mig.New(timestamp, o.name, o.EC.MigrationDir)
+	createOptions := mig.New(timestamp, o.name, filepath.Join(o.EC.MigrationDir, o.Database))
 
 	if o.fromServer {
 		o.sqlServer = true
@@ -134,7 +137,7 @@ func (o *migrateCreateOptions) run() (version int64, err error) {
 
 	var migrateDrv *migrate.Migrate
 	if o.sqlServer || o.metaDataServer || o.flags.Changed("up-sql") || o.flags.Changed("down-sql") {
-		migrateDrv, err = migrate.NewMigrate(o.EC, true)
+		migrateDrv, err = migrate.NewMigrate(o.EC, true, o.Database)
 		if err != nil {
 			return 0, errors.Wrap(err, "cannot create migrate instance")
 		}
@@ -148,7 +151,7 @@ func (o *migrateCreateOptions) run() (version int64, err error) {
 		}
 	}
 	if o.sqlServer {
-		data, err := migrateDrv.ExportSchemaDump(o.schemaNames)
+		data, err := migrateDrv.ExportSchemaDump(o.schemaNames, o.Database)
 		if err != nil {
 			return 0, errors.Wrap(err, "cannot fetch schema dump")
 		}

@@ -49,7 +49,8 @@ import           Hasura.Prelude
 import           Hasura.RQL.Types
 import           Hasura.Server.Auth.JWT.Internal (parseHmacKey, parseRsaKey)
 import           Hasura.Server.Auth.JWT.Logging
-import           Hasura.Server.Utils             (executeJSONPath, getRequestHeader, userRoleHeader, isSessionVariable)
+import           Hasura.Server.Utils             (executeJSONPath, getRequestHeader,
+                                                  isSessionVariable, userRoleHeader)
 import           Hasura.Server.Version           (HasVersion)
 import           Hasura.Session
 import qualified Hasura.Tracing                  as Tracing
@@ -153,12 +154,13 @@ instance J.FromJSON JWTCustomClaimsMap where
     let withNotFoundError sessionVariable =
           let errorMsg = T.unpack $
                 sessionVariableToText sessionVariable <> " is expected but not found"
-          in maybe (fail errorMsg) pure $ Map.lookup (sessionVariableToText sessionVariable) obj
+          in Map.lookup (sessionVariableToText sessionVariable) obj
+             `onNothing` fail errorMsg
 
     allowedRoles <- withNotFoundError allowedRolesClaim  >>= J.parseJSON
     defaultRole <- withNotFoundError defaultRoleClaim  >>= J.parseJSON
     let filteredClaims = Map.delete allowedRolesClaim $ Map.delete defaultRoleClaim
-                          $ Map.fromList $ map (first mkSessionVariable) $ Map.toList obj
+                          $ mapKeys mkSessionVariable obj
     customClaims <- flip Map.traverseWithKey filteredClaims $ const $ J.parseJSON
     pure $ JWTCustomClaimsMap defaultRole allowedRoles customClaims
 
@@ -167,7 +169,7 @@ instance J.FromJSON JWTCustomClaimsMap where
 -- key in the JWT token.
 data JWTNamespace
   = ClaimNsPath JSONPath
-  | ClaimNs T.Text
+  | ClaimNs Text
   deriving (Show, Eq)
 
 instance J.ToJSON JWTNamespace where
@@ -182,10 +184,11 @@ data JWTClaims
 -- | The JWT configuration we got from the user.
 data JWTConfig
   = JWTConfig
-  { jcKeyOrUrl :: !(Either Jose.JWK URI)
-  , jcAudience :: !(Maybe Jose.Audience)
-  , jcIssuer   :: !(Maybe Jose.StringOrURI)
-  , jcClaims   :: !JWTClaims
+  { jcKeyOrUrl    :: !(Either Jose.JWK URI)
+  , jcAudience    :: !(Maybe Jose.Audience)
+  , jcIssuer      :: !(Maybe Jose.StringOrURI)
+  , jcClaims      :: !JWTClaims
+  , jcAllowedSkew :: !(Maybe NominalDiffTime)
   } deriving (Show, Eq)
 
 -- | The validated runtime JWT configuration returned by 'mkJwtCtx' in 'setupAuthMode'.
@@ -194,23 +197,24 @@ data JWTConfig
 -- expiration schedule could be determined.
 data JWTCtx
   = JWTCtx
-  { jcxKey      :: !(IORef Jose.JWKSet)
+  { jcxKey         :: !(IORef Jose.JWKSet)
     -- ^ This needs to be a mutable variable for 'updateJwkRef'.
-  , jcxAudience :: !(Maybe Jose.Audience)
-  , jcxIssuer   :: !(Maybe Jose.StringOrURI)
-  , jcxClaims   :: !JWTClaims
+  , jcxAudience    :: !(Maybe Jose.Audience)
+  , jcxIssuer      :: !(Maybe Jose.StringOrURI)
+  , jcxClaims      :: !JWTClaims
+  , jcxAllowedSkew :: !(Maybe NominalDiffTime)
   } deriving (Eq)
 
 instance Show JWTCtx where
-  show (JWTCtx _ audM iss claims) =
-    show ["<IORef JWKSet>", show audM, show iss, show claims]
+  show (JWTCtx _ audM iss claims allowedSkew) =
+    show ["<IORef JWKSet>", show audM, show iss, show claims, show allowedSkew]
 
 data HasuraClaims
   = HasuraClaims
   { _cmAllowedRoles :: ![RoleName]
   , _cmDefaultRole  :: !RoleName
   } deriving (Show, Eq)
-$(J.deriveJSON (J.aesonDrop 3 J.snakeCase) ''HasuraClaims)
+$(J.deriveJSON hasuraJSON ''HasuraClaims)
 
 -- | An action that refreshes the JWK at intervals in an infinite loop.
 jwkRefreshCtrl
@@ -225,7 +229,7 @@ jwkRefreshCtrl logger manager url ref time = do
     liftIO $ C.sleep time
     forever $ Tracing.runTraceT "jwk refresh" do
       res <- runExceptT $ updateJwkRef logger manager url ref
-      mTime <- either (const $ logNotice >> return Nothing) return res
+      mTime <- onLeft res (const $ logNotice >> return Nothing)
       -- if can't parse time from header, defaults to 1 min
       -- let delay = maybe (minutes 1) fromUnits mTime
       let delay = maybe (minutes 1) convertDuration mTime
@@ -249,7 +253,7 @@ updateJwkRef
   -> IORef Jose.JWKSet
   -> m (Maybe NominalDiffTime)
 updateJwkRef (Logger logger) manager url jwkRef = do
-  let urlT    = T.pack $ show url
+  let urlT    = tshow url
       infoMsg = "refreshing JWK from endpoint: " <> urlT
   liftIO $ logger $ JwkRefreshLog LevelInfo (Just infoMsg) Nothing
   res <- try $ do
@@ -257,7 +261,7 @@ updateJwkRef (Logger logger) manager url jwkRef = do
     let req = initReq { HTTP.requestHeaders = addDefaultHeaders (HTTP.requestHeaders initReq) }
     Tracing.tracedHttpRequest req \req' -> do
       liftIO $ HTTP.httpLbs req' manager
-  resp <- either logAndThrowHttp return res
+  resp <- onLeft res logAndThrowHttp
   let status = resp ^. Wreq.responseStatus
       respBody = resp ^. Wreq.responseBody
       statusCode = status ^. Wreq.statusCode
@@ -268,7 +272,7 @@ updateJwkRef (Logger logger) manager url jwkRef = do
     logAndThrow err
 
   let parseErr e = JFEJwkParseError (T.pack e) $ "Error parsing JWK from url: " <> urlT
-  !jwkset <- either (logAndThrow . parseErr) return $ J.eitherDecode' respBody
+  !jwkset <- onLeft (J.eitherDecode' respBody) (logAndThrow . parseErr)
   liftIO $ do
 #ifndef PROFILING
     $assertNFHere jwkset  -- so we don't write thunks to mutable vars
@@ -312,7 +316,7 @@ updateJwkRef (Logger logger) manager url jwkRef = do
 
     getHttpExceptionMsg = \case
       HTTP.HttpExceptionRequest _ reason -> show reason
-      HTTP.InvalidUrlException _ reason -> show reason
+      HTTP.InvalidUrlException _ reason  -> show reason
 
 type ClaimsMap = Map.HashMap SessionVariable J.Value
 
@@ -363,15 +367,14 @@ processJwt_ processAuthZHeader_ jwtCtx headers mUnAuthRole =
       let finalClaims =
             Map.delete defaultRoleClaim . Map.delete allowedRolesClaim $ claimsMap
 
-      -- transform the map of text:aeson-value -> text:text
-      let finalClaimsObject = Map.fromList . map (first sessionVariableToText) . Map.toList $ finalClaims
+      let finalClaimsObject = mapKeys sessionVariableToText finalClaims
       metadata <- parseJwtClaim (J.Object $ finalClaimsObject) "x-hasura-* claims"
       userInfo <- mkUserInfo (URBPreDetermined requestedRole) UAdminSecretNotSent $
-                  mkSessionVariablesText $ Map.toList metadata
+                  mkSessionVariablesText metadata
       pure (userInfo, expTimeM)
 
     withoutAuthZHeader = do
-      unAuthRole <- maybe missingAuthzHeader return mUnAuthRole
+      unAuthRole <- onNothing mUnAuthRole missingAuthzHeader
       userInfo <- mkUserInfo (URBPreDetermined unAuthRole) UAdminSecretNotSent $
         mkSessionVariablesHeaders headers
       pure (userInfo, Nothing)
@@ -396,9 +399,8 @@ processAuthZHeader jwtCtx authzHeader = do
   claims <- liftJWTError invalidJWTError $ verifyJwt jwtCtx $ RawJWT jwt
 
   let expTimeM = fmap (\(Jose.NumericDate t) -> t) $ claims ^. Jose.claimExp
-      unregisteredClaims = claims ^. Jose.unregisteredClaims
 
-  claimsObject <- parseClaimsMap unregisteredClaims claimsConfig
+  claimsObject <- parseClaimsMap claims claimsConfig
 
   pure $ (claimsObject, expTimeM)
 
@@ -413,50 +415,51 @@ processAuthZHeader jwtCtx authzHeader = do
     liftJWTError :: (MonadError e' m) => (e -> e') -> ExceptT e m a -> m a
     liftJWTError ef action = do
       res <- runExceptT action
-      either (throwError . ef) return res
+      onLeft res (throwError . ef)
 
     invalidJWTError e =
-      err400 JWTInvalid $ "Could not verify JWT: " <> T.pack (show e)
+      err400 JWTInvalid $ "Could not verify JWT: " <> tshow e
 
     malformedAuthzHeader =
       throw400 InvalidHeaders "Malformed Authorization header"
 
 -- | parse the claims map from the JWT token or custom claims from the JWT config
 parseClaimsMap
-  :: (MonadError QErr m)
-  => J.Object -- ^ Unregistered JWT claims
+  :: MonadError QErr m
+  => Jose.ClaimsSet -- ^ Unregistered JWT claims
   -> JWTClaims -- ^ Claims config
   -> m ClaimsMap -- ^ Hasura claims and other claims
-parseClaimsMap unregisteredClaims jcxClaims =
+parseClaimsMap claimsSet jcxClaims = do
+  let claimsJSON = J.toJSON claimsSet
+      unregisteredClaims = claimsSet ^. Jose.unregisteredClaims
   case jcxClaims of
+    -- when the user specifies the namespace of the hasura claims map,
+    -- the hasura claims map *must* be specified in the unregistered claims
     JCNamespace namespace claimsFormat -> do
-      claimsV <- maybe (claimsNotFound namespace) pure $ case namespace of
-            ClaimNs k -> Map.lookup k unregisteredClaims
-            ClaimNsPath path -> iResultToMaybe $ executeJSONPath path (J.toJSON unregisteredClaims)
+      claimsV <- flip onNothing (claimsNotFound namespace) $ case namespace of
+        ClaimNs k        -> Map.lookup k unregisteredClaims
+        ClaimNsPath path -> iResultToMaybe $ executeJSONPath path (J.toJSON unregisteredClaims)
       -- get hasura claims value as an object. parse from string possibly
       claimsObject <- parseObjectFromString namespace claimsFormat claimsV
 
       -- filter only x-hasura claims
-      let claimsMap = Map.fromList
-                      $ map (first mkSessionVariable)
-                      $ filter (\(k, _) -> isSessionVariable k)
-                      $ Map.toList claimsObject
+      let claimsMap = mapKeys mkSessionVariable $
+            Map.filterWithKey (const . isSessionVariable) claimsObject
 
       pure claimsMap
 
     JCMap claimsConfig -> do
       let JWTCustomClaimsMap defaultRoleClaimsMap allowedRolesClaimsMap otherClaimsMap = claimsConfig
-          claimsObjValue = J.Object unregisteredClaims
 
       allowedRoles <- case allowedRolesClaimsMap of
         JWTCustomClaimsMapJSONPath allowedRolesJsonPath defaultVal ->
-          parseAllowedRolesClaim defaultVal $ iResultToMaybe $ executeJSONPath allowedRolesJsonPath claimsObjValue
+          parseAllowedRolesClaim defaultVal $ iResultToMaybe $ executeJSONPath allowedRolesJsonPath claimsJSON
         JWTCustomClaimsMapStatic staticAllowedRoles -> pure staticAllowedRoles
 
       defaultRole <- case defaultRoleClaimsMap of
         JWTCustomClaimsMapJSONPath defaultRoleJsonPath defaultVal ->
           parseDefaultRoleClaim defaultVal $ iResultToMaybe $
-          executeJSONPath defaultRoleJsonPath claimsObjValue
+          executeJSONPath defaultRoleJsonPath claimsJSON
         JWTCustomClaimsMapStatic staticDefaultRole -> pure staticDefaultRole
 
       otherClaims <- flip Map.traverseWithKey otherClaimsMap $ \k claimObj -> do
@@ -464,8 +467,9 @@ parseClaimsMap unregisteredClaims jcxClaims =
                             <> sessionVariableToText k <> " not found"
         case claimObj of
           JWTCustomClaimsMapJSONPath path defaultVal ->
-            maybe (onNothing (J.String <$> defaultVal) throwClaimErr) pure
-              $ iResultToMaybe $ executeJSONPath path claimsObjValue
+            iResultToMaybe (executeJSONPath path claimsJSON)
+            `onNothing` (J.String <$> defaultVal)
+            `onNothing` throwClaimErr
           JWTCustomClaimsMapStatic claimStaticValue -> pure $ J.String claimStaticValue
 
       pure $  Map.fromList [
@@ -497,8 +501,7 @@ parseClaimsMap unregisteredClaims jcxClaims =
     parseObjectFromString namespace claimsFmt jVal =
       case (claimsFmt, jVal) of
         (JCFStringifiedJson, J.String v) ->
-          either (const $ claimsErr $ strngfyErr v) return
-          $ J.eitherDecodeStrict $ T.encodeUtf8 v
+          onLeft (J.eitherDecodeStrict $ T.encodeUtf8 v) (const $ claimsErr $ strngfyErr v)
         (JCFStringifiedJson, _) ->
           claimsErr "expecting a string when claims_format is stringified_json"
         (JCFJson, J.Object o) -> return o
@@ -529,10 +532,15 @@ verifyJwt ctx (RawJWT rawJWT) = do
   t   <- liftIO getCurrentTime
   Jose.verifyClaimsAt config key t jwt
   where
+    validationSettingsWithSkew =
+      case jcxAllowedSkew ctx of
+        Just allowedSkew -> Jose.defaultJWTValidationSettings audCheck & set Jose.allowedSkew allowedSkew
+        -- In `Jose.defaultJWTValidationSettings`, the `allowedSkew` is 0
+        Nothing          -> Jose.defaultJWTValidationSettings audCheck
+
     config = case jcxIssuer ctx of
-      Nothing  -> Jose.defaultJWTValidationSettings audCheck
-      Just iss -> Jose.defaultJWTValidationSettings audCheck
-                  & set Jose.issuerPredicate (== iss)
+      Nothing  -> validationSettingsWithSkew
+      Just iss -> validationSettingsWithSkew & set Jose.issuerPredicate (== iss)
     audCheck audience =
       -- dont perform the check if there are no audiences in the conf
       case jcxAudience ctx of
@@ -541,7 +549,7 @@ verifyJwt ctx (RawJWT rawJWT) = do
 
 
 instance J.ToJSON JWTConfig where
-  toJSON (JWTConfig keyOrUrl aud iss claims) =
+  toJSON (JWTConfig keyOrUrl aud iss claims allowedSkew) =
     let keyOrUrlPairs = case keyOrUrl of
           Left _    -> [ "type" J..= J.String "<TYPE REDACTED>"
                        , "key" J..= J.String "<JWK REDACTED>"
@@ -558,7 +566,9 @@ instance J.ToJSON JWTConfig where
     in J.object $ keyOrUrlPairs <>
                   [ "audience" J..= aud
                   , "issuer" J..= iss
-                  ] <> claimsPairs
+                  ]
+                  <> claimsPairs
+                  <> (maybe [] (\skew -> ["allowed_skew" J..= skew]) allowedSkew)
 
 -- | Parse from a json string like:
 -- | `{"type": "RS256", "key": "<PEM-encoded-public-key-or-X509-cert>"}`
@@ -574,6 +584,7 @@ instance J.FromJSON JWTConfig where
     jwkUrl  <- o J..:? "jwk_url"
     claimsFormat <- o J..:? "claims_format" J..!= defaultClaimsFormat
     claimsMap <- o J..:? "claims_map"
+    allowedSkew <- o J..:? "allowed_skew"
 
     hasuraClaimsNs <-
       case (claimsNsPath,claimsNs) of
@@ -591,8 +602,9 @@ instance J.FromJSON JWTConfig where
         pure $ Left key
       (Nothing, Just url) -> pure $ Right url
 
-    pure $ JWTConfig keyOrUrl aud iss $
-           maybe (JCNamespace hasuraClaimsNs claimsFormat) JCMap claimsMap
+    let jwtClaims = maybe (JCNamespace hasuraClaimsNs claimsFormat) JCMap claimsMap
+
+    pure $ JWTConfig keyOrUrl aud iss jwtClaims allowedSkew
 
     where
       parseKey keyType rawKey =
@@ -622,7 +634,7 @@ parseHasuraClaims claimsMap = do
   where
     parseClaim :: J.FromJSON a => SessionVariable -> Text -> m a
     parseClaim claim hint = do
-      claimV <- maybe missingClaim return $ Map.lookup claim claimsMap
+      claimV <- onNothing (Map.lookup claim claimsMap) missingClaim
       parseJwtClaim claimV $ "invalid " <> claimText <> "; " <> hint
       where
         missingClaim = throw400 JWTRoleClaimMissing $ "JWT claim does not contain " <> claimText

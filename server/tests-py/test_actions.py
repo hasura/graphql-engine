@@ -46,6 +46,12 @@ class TestActionsSyncWebsocket:
     def test_create_user_success(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + '/create_user_success.yaml', transport)
 
+    def test_create_user_relationship(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/create_user_relationship.yaml', transport)
+
+    def test_create_user_relationship(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/create_user_relationship_fail.yaml', transport)
+
     def test_create_users_fail(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + '/create_users_fail.yaml', transport)
 
@@ -181,6 +187,9 @@ class TestQueryActions:
     def test_query_action_should_not_throw_validation_error(self, hge_ctx):
         for _ in range(25):
             self.test_query_action_success_output_object(hge_ctx)
+
+    def test_query_action_with_relationship(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/query_action_relationship_with_permission.yaml')
 
 def mk_headers_with_secret(hge_ctx, headers={}):
     admin_secret = hge_ctx.hge_key
@@ -445,6 +454,9 @@ class TestSetCustomTypes:
     def test_list_type_relationship(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + '/list_type_relationship.yaml')
 
+    def test_drop_relationship(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/drop_relationship.yaml')
+
 @pytest.mark.usefixtures('per_class_tests_db_state')
 class TestActionsMetadata:
 
@@ -517,7 +529,11 @@ class TestActionTimeout:
             'query': query,
             'status': 200,
         }
-        # the action takes 2 seconds to complete
+        # Since, the above is an async action, we don't wait for the execution of the webhook.
+        # We need this sleep of 4 seconds here because only after 3 seconds (sleep duration in the handler)
+        # we will be getting the result, otherwise the following asserts will fail because the
+        # response will be empty. This 4 seconds sleep will be concurrent with the sleep duration
+        # of the handler's execution. So, total time taken for this test will be 4 seconds.
         time.sleep(4)
         response, _ = check_query(hge_ctx, conf)
         assert 'errors' in response['data']['create_user']

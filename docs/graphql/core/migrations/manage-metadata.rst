@@ -104,7 +104,7 @@ before.
 
   .. tab:: API
 
-     The exported JSON can be imported via the :ref:`replace_metadata metadata API <replace_metadata>`.
+     The exported JSON can be imported via the :ref:`replace_metadata metadata API <replace_metadata_v1>`.
 
      Here is an example using ``curl``:
 
