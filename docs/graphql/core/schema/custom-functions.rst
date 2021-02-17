@@ -159,23 +159,23 @@ Let's take a look at an example where the ``SETOF`` table is already part of the
 
 .. code-block:: plpgsql
 
-  article(id integer, title text, content text)
+  articles(id integer, title text, content text)
 
 Let's say we've created and tracked a custom function, ``search_articles``, with the following definition:
 
 .. code-block:: plpgsql
 
   CREATE FUNCTION search_articles(search text)
-  RETURNS SETOF article AS $$
+  RETURNS SETOF articles AS $$
       SELECT *
-      FROM article
+      FROM articles
       WHERE
         title ilike ('%' || search || '%')
         OR content ilike ('%' || search || '%')
   $$ LANGUAGE sql STABLE;
 
-This function filters rows from the ``article`` table based on the input text argument, ``search`` i.e. it
-returns ``SETOF article``. Assuming the ``article`` table is being tracked, you can use the custom function
+This function filters rows from the ``articles`` table based on the input text argument, ``search`` i.e. it
+returns ``SETOF articles``. Assuming the ``articles`` table is being tracked, you can use the custom function
 as follows:
 
 .. graphiql::
@@ -223,17 +223,17 @@ Next create a GIN (or GIST) index in your database for the columns you'll be que
 
 .. code-block:: sql
 
-  CREATE INDEX address_gin_idx ON property
+  CREATE INDEX address_gin_idx ON properties
   USING GIN ((unit || ' ' || num || ' ' || street || ' ' || city || ' ' || region || ' ' || postcode) gin_trgm_ops);
 
 And finally create the custom SQL function in the Hasura console:
 
 .. code-block:: plpgsql
 
-  CREATE FUNCTION search_property(search text)
-  RETURNS SETOF property AS $$
+  CREATE FUNCTION search_properties(search text)
+  RETURNS SETOF properties AS $$
       SELECT *
-      FROM property
+      FROM properties
       WHERE
         search <% (unit || ' ' || num || ' ' || street || ' ' || city || ' ' || region || ' ' || postcode)
       ORDER BY
@@ -241,13 +241,13 @@ And finally create the custom SQL function in the Hasura console:
       LIMIT 5;
   $$ LANGUAGE sql STABLE;
 
-Assuming the ``property`` table is being tracked, you can use the custom function as follows:
+Assuming the ``properties`` table is being tracked, you can use the custom function as follows:
 
 .. graphiql::
   :view_only:
   :query:
     query {
-      search_property(
+      search_properties(
         args: {search: "Unit 2, 25 Foobar St, Sydney NSW 2000"}
       ){
         id
@@ -262,7 +262,7 @@ Assuming the ``property`` table is being tracked, you can use the custom functio
   :response:
     {
       "data": {
-        "search_property": [
+        "search_properties": [
           {
             "id": 1,
             "unit": "UNIT 2",

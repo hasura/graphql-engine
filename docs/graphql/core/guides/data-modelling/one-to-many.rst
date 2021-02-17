@@ -21,12 +21,12 @@ Say we have the following two tables in our database schema:
 
 .. code-block:: sql
 
-  author (
+  authors (
     id SERIAL PRIMARY KEY,
     name TEXT
   )
 
-  article (
+  articles (
     id SERIAL PRIMARY KEY,
     author_id INT
     title TEXT
@@ -43,19 +43,19 @@ Step 1: Set up a table relationship in the database
 
 This ``one-to-many`` relationship can be established in the database by:
 
-1. Adding a **foreign key constraint** from the ``article`` table to the ``author`` table using the ``author_id`` and
+1. Adding a **foreign key constraint** from the ``articles`` table to the ``authors`` table using the ``author_id`` and
    ``id`` columns of the tables respectively.
 
-This will ensure that the value of ``author_id`` column in the ``article`` table  is present in the ``id`` column of
-the ``author`` table.
+This will ensure that the value of ``author_id`` column in the ``articles`` table  is present in the ``id`` column of
+the ``authors`` table.
 
 Step 2: Set up GraphQL relationships
 ------------------------------------
 
 To access the nested objects via the GraphQL API, :ref:`create the following relationships <create_relationships>`:
 
-- Array relationship, ``articles`` from ``author`` table using  ``article :: author_id  ->  id``
-- Object relationship, ``author`` from ``article`` table using ``author_id -> author :: id``
+- Array relationship, ``articles`` from ``authors`` table using  ``articles :: author_id  ->  id``
+- Object relationship, ``author`` from ``articles`` table using ``author_id -> authors :: id``
 
 Query using one-to-many relationships
 -------------------------------------
@@ -68,7 +68,7 @@ We can now:
     :view_only:
     :query:
       query {
-        author {
+        authors {
           id
           name
           articles {
@@ -80,7 +80,7 @@ We can now:
     :response:
       {
         "data": {
-          "author": [
+          "authors": [
             {
               "id": 1,
               "name": "Justin",
@@ -120,7 +120,7 @@ We can now:
     :view_only:
     :query:
       query {
-        article {
+        articles {
           id
           title
           author {
@@ -132,7 +132,7 @@ We can now:
     :response:
       {
         "data": {
-          "article": [
+          "articles": [
             {
               "id": 1,
               "title": "sit amet",

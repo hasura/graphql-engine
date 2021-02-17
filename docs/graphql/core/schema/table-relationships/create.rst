@@ -27,23 +27,23 @@ as foreign-keys can't be created on views.
 Using foreign keys
 ------------------
 
-Say we created two tables, ``author(id, name)`` and ``article(id, title, content, rating, author_id)``.
+Say we created two tables, ``authors(id, name)`` and ``articles(id, title, content, rating, author_id)``.
 
 Let us now connect these tables to enable nested queries using a foreign-key:
 
 Step 1: Add foreign-key constraint
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Let's add a foreign-key constraint to the ``author_id`` column in the ``article`` table.
+Let's add a foreign-key constraint to the ``author_id`` column in the ``articles`` table.
 
 .. rst-class:: api_tabs
 .. tabs::
 
   .. tab:: Console
 
-    In the console, navigate to the ``Modify`` tab of the ``article`` table. Click the ``Add`` button in
+    In the console, navigate to the ``Modify`` tab of the ``articles`` table. Click the ``Add`` button in
     the Foreign Keys section and configure the ``author_id`` column as a foreign-key for the ``id`` column in
-    the ``author`` table:
+    the ``authors`` table:
 
     .. thumbnail:: /img/graphql/core/schema/add-foreign-key.png
       :alt: Add foreign-key constraint
@@ -54,15 +54,15 @@ Let's add a foreign-key constraint to the ``author_id`` column in the ``article`
 
     .. code-block:: sql
 
-      ALTER TABLE article
-      ADD FOREIGN KEY (author_id) REFERENCES author(id);
+      ALTER TABLE articles
+      ADD FOREIGN KEY (author_id) REFERENCES authors(id);
 
     Add the following statement to the ``down.sql`` file in case you need to :ref:`roll back <roll_back_migrations>` the above statement:
 
     .. code-block:: sql
 
-      ALTER TABLE article
-      DROP CONSTRAINT article_author_id_fkey;
+      ALTER TABLE articles
+      DROP CONSTRAINT articles_author_id_fkey;
 
     Apply the migration by running:
 
@@ -83,7 +83,7 @@ Let's add a foreign-key constraint to the ``author_id`` column in the ``article`
       {
         "type": "run_sql",
         "args": {
-          "sql": "ALTER TABLE article ADD FOREIGN KEY (author_id) REFERENCES author(id);"
+          "sql": "ALTER TABLE articles ADD FOREIGN KEY (author_id) REFERENCES authors(id);"
         }
       }
 
@@ -98,9 +98,9 @@ Each article has one author. This is an ``object relationship``.
   .. tab:: Console
 
     The console infers potential relationships using the foreign-key created above and recommends these in the
-    ``Relationships`` tab of the ``article`` table.
+    ``Relationships`` tab of the ``articles`` table.
 
-    Add an ``object relationship`` named ``author`` for the ``article`` table as shown here:
+    Add an ``object relationship`` named ``author`` for the ``articles`` table as shown here:
 
     .. thumbnail:: /img/graphql/core/schema/add-1-1-relationship.png
       :alt: Create an object relationship
@@ -114,14 +114,14 @@ Each article has one author. This is an ``object relationship``.
 
         - table:
             schema: public
-            name: article
+            name: articles
           object_relationships:
           - name: author
             using:
               foreign_key_constraint_on: author_id
         - table:
             schema: public
-            name: author
+            name: authors
 
     Apply the metadata by running:
 
@@ -142,7 +142,7 @@ Each article has one author. This is an ``object relationship``.
       {
         "type": "create_object_relationship",
         "args": {
-          "table": "article",
+          "table": "articles",
           "name": "author",
           "using": {
             "foreign_key_constraint_on": "author_id"
@@ -158,7 +158,7 @@ Fetch a list of articles and each article's author:
   :view_only:
   :query:
     query {
-      article {
+      articles {
         id
         title
         author {
@@ -170,7 +170,7 @@ Fetch a list of articles and each article's author:
   :response:
     {
       "data": {
-        "article": [
+        "articles": [
           {
             "id": 1,
             "title": "sit amet",
@@ -211,7 +211,7 @@ You can add an ``array relationship`` in the same fashion as an ``object relatio
 
   .. tab:: Console
 
-    On the console, add an ``array relationship`` named ``articles`` for the ``author`` table as shown here:
+    On the console, add an ``array relationship`` named ``articles`` for the ``authors`` table as shown here:
 
     .. thumbnail:: /img/graphql/core/schema/add-1-many-relationship.png
       :alt: Create an array relationship
@@ -227,14 +227,14 @@ You can add an ``array relationship`` in the same fashion as an ``object relatio
 
         - table:
             schema: public
-            name: article
+            name: articles
           object_relationships:
           - name: author
             using:
               foreign_key_constraint_on: author_id
         - table:
             schema: public
-            name: author
+            name: authors
           array_relationships:
           - name: articles
             using:
@@ -242,7 +242,7 @@ You can add an ``array relationship`` in the same fashion as an ``object relatio
                 column: author_id
                 table:
                   schema: public
-                  name: article
+                  name: articles
 
     Apply the metadata by running:
 
@@ -263,11 +263,11 @@ You can add an ``array relationship`` in the same fashion as an ``object relatio
       {
         "type": "create_array_relationship",
         "args": {
-          "table": "author",
+          "table": "authors",
           "name": "articles",
           "using": {
             "foreign_key_constraint_on" : {
-              "table" : "article",
+              "table" : "articles",
               "column" : "author_id"
             }
           }
@@ -280,7 +280,7 @@ Fetch a list of authors and a nested list of each author's articles:
   :view_only:
   :query:
     query {
-      author {
+      authors {
         id
         name
         articles {
@@ -292,7 +292,7 @@ Fetch a list of authors and a nested list of each author's articles:
   :response:
     {
       "data": {
-        "author": [
+        "authors": [
           {
             "id": 1,
             "name": "Justin",
@@ -348,10 +348,10 @@ Fetch a list of authors and a nested list of each author's articles:
 Using manual relationships
 --------------------------
 
-Let's say you have a table ``author (id, name)`` and a :ref:`view <custom_views>` ``author_avg_rating (id, avg)`` which has the
+Let's say you have a table ``authors (id, name)`` and a :ref:`view <custom_views>` ``author_avg_rating (id, avg)`` which has the
 average rating of articles for each author.
 
-Let us now create an ``object relationship`` called ``avg_rating`` from the ``author`` table to the
+Let us now create an ``object relationship`` called ``avg_rating`` from the ``authors`` table to the
 ``author_avg_rating`` view using a manual relationship:
 
 .. rst-class:: api_tabs
@@ -361,7 +361,7 @@ Let us now create an ``object relationship`` called ``avg_rating`` from the ``au
 
     **Step 1: Open the manual relationship section**
 
-    - Open the console and navigate to the ``Data -> author -> Relationships`` tab.
+    - Open the console and navigate to the ``Data -> authors -> Relationships`` tab.
     - Click on the ``Configure`` button:
 
     .. thumbnail:: /img/graphql/core/schema/manual-relationship-btn.png
@@ -393,10 +393,10 @@ Let us now create an ``object relationship`` called ``avg_rating`` from the ``au
 
         - table:
             schema: public
-            name: article
+            name: articles
         - table:
             schema: public
-            name: author
+            name: authors
           object_relationships:
           - name: avg_rating
             using:
@@ -429,7 +429,7 @@ Let us now create an ``object relationship`` called ``avg_rating`` from the ``au
       {
         "type": "create_object_relationship",
         "args": {
-          "table": "author",
+          "table": "authors",
           "name": "avg_rating",
           "using": {
             "manual_configuration": {
@@ -450,7 +450,7 @@ Fetch a list of authors with the average rating of their articles:
   :view_only:
   :query:
     query {
-      author {
+      authors {
         id
         name
         avg_rating {
@@ -461,7 +461,7 @@ Fetch a list of authors with the average rating of their articles:
   :response:
     {
       "data": {
-        "author": [
+        "authors": [
           {
             "id": 1,
             "name": "Justin",
@@ -514,14 +514,14 @@ As mentioned in the Introduction section above, relationships can be inferred vi
 
       - table:
           schema: public
-          name: article
+          name: articles
         object_relationships:
         - name: author
           using:
             foreign_key_constraint_on: author_id
       - table:
           schema: public
-          name: author
+          name: authors
         array_relationships:
         - name: articles
           using:
@@ -529,7 +529,7 @@ As mentioned in the Introduction section above, relationships can be inferred vi
               column: author_id
               table:
                 schema: public
-                name: article
+                name: articles
 
     Apply the metadata by running:
 
@@ -554,7 +554,7 @@ As mentioned in the Introduction section above, relationships can be inferred vi
           {
             "type": "create_object_relationship",
             "args": {
-              "table": "article",
+              "table": "articles",
               "name": "author",
               "using": {
                 "foreign_key_constraint_on": "author_id"
@@ -564,11 +564,11 @@ As mentioned in the Introduction section above, relationships can be inferred vi
           {
             "type": "create_array_relationship",
             "args": {
-              "table": "author",
+              "table": "authors",
               "name": "articles",
               "using": {
                 "foreign_key_constraint_on" : {
-                  "table" : "article",
+                  "table" : "articles",
                   "column" : "author_id"
                 }
               }

@@ -36,7 +36,7 @@ Fetch aggregated data of an object
   :view_only:
   :query:
     query {
-      article_aggregate {
+      articles_aggregate {
         aggregate {
           count
           sum {
@@ -59,7 +59,7 @@ Fetch aggregated data of an object
   :response:
     {
       "data": {
-        "article_aggregate": {
+        "articles_aggregate": {
           "aggregate": {
             "count": 10,
             "sum": {
@@ -141,7 +141,7 @@ and articles.
   :view_only:
   :query:
     query {
-      author (where: {id: {_eq: 1}}) {
+      authors (where: {id: {_eq: 1}}) {
         id
         name
         articles_aggregate {
@@ -165,7 +165,7 @@ and articles.
   :response:
     {
       "data": {
-        "author": [
+        "authors": [
           {
             "id": 1,
             "name": "Justin",
