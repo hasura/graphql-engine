@@ -29,9 +29,11 @@ module Hasura.Logging
 
 import           Hasura.Prelude
 
+import           Control.Monad.Trans.Managed (ManagedT(..), allocate)
+import           Control.Monad.Trans.Control
+
 import qualified Control.AutoUpdate         as Auto
 import qualified Data.Aeson                 as J
-import qualified Data.Aeson.Casing          as J
 import qualified Data.Aeson.TH              as J
 import qualified Data.ByteString            as B
 import qualified Data.ByteString.Lazy       as BL
@@ -77,14 +79,14 @@ instance Hashable (EngineLogType Hasura)
 
 instance J.ToJSON (EngineLogType Hasura) where
   toJSON = \case
-    ELTHttpLog -> "http-log"
-    ELTWebsocketLog -> "websocket-log"
-    ELTWebhookLog -> "webhook-log"
-    ELTQueryLog -> "query-log"
-    ELTStartup -> "startup"
+    ELTHttpLog            -> "http-log"
+    ELTWebsocketLog       -> "websocket-log"
+    ELTWebhookLog         -> "webhook-log"
+    ELTQueryLog           -> "query-log"
+    ELTStartup            -> "startup"
     ELTLivequeryPollerLog -> "livequery-poller-log"
-    ELTActionHandler -> "action-handler-log"
-    ELTInternal t -> J.toJSON t
+    ELTActionHandler      -> "action-handler-log"
+    ELTInternal t         -> J.toJSON t
 
 instance J.FromJSON (EngineLogType Hasura) where
   parseJSON = J.withText "log-type" $ \s -> case T.toLower $ T.strip s of
@@ -117,14 +119,14 @@ instance Hashable InternalLogTypes
 
 instance J.ToJSON InternalLogTypes where
   toJSON = \case
-    ILTUnstructured -> "unstructured"
-    ILTEventTrigger -> "event-trigger"
+    ILTUnstructured     -> "unstructured"
+    ILTEventTrigger     -> "event-trigger"
     ILTScheduledTrigger -> "scheduled-trigger"
-    ILTWsServer -> "ws-server"
-    ILTPgClient -> "pg-client"
-    ILTMetadata -> "metadata"
-    ILTJwkRefreshLog -> "jwk-refresh-log"
-    ILTTelemetry -> "telemetry-log"
+    ILTWsServer         -> "ws-server"
+    ILTPgClient         -> "pg-client"
+    ILTMetadata         -> "metadata"
+    ILTJwkRefreshLog    -> "jwk-refresh-log"
+    ILTTelemetry        -> "telemetry-log"
     ILTSchemaSyncThread -> "schema-sync-thread"
 
 -- the default enabled log-types
@@ -189,7 +191,7 @@ deriving instance Eq (EngineLogType impl) => Eq (EngineLog impl)
 $(pure [])
 
 instance J.ToJSON (EngineLogType impl) => J.ToJSON (EngineLog impl) where
-  toJSON = $(J.mkToJSON (J.aesonDrop 3 J.snakeCase) ''EngineLog)
+  toJSON = $(J.mkToJSON hasuraJSON ''EngineLog)
 
 -- | Typeclass representing any data type that can be converted to @EngineLog@ for the purpose of
 -- logging
@@ -247,12 +249,15 @@ getFormattedTime tzM = do
     -- format = Format.iso8601DateFormat (Just "%H:%M:%S")
 
 mkLoggerCtx
-  :: LoggerSettings
+  :: (MonadIO io, MonadBaseControl IO io)
+  => LoggerSettings
   -> Set.HashSet (EngineLogType impl)
-  -> IO (LoggerCtx impl)
+  -> ManagedT io (LoggerCtx impl)
 mkLoggerCtx (LoggerSettings cacheTime tzM logLevel) enabledLogs = do
-  loggerSet <- FL.newStdoutLoggerSet FL.defaultBufSize
-  timeGetter <- bool (return $ getFormattedTime tzM) cachedTimeGetter cacheTime
+  loggerSet <- allocate
+    (liftIO $ FL.newStdoutLoggerSet FL.defaultBufSize)
+    (liftIO . FL.rmLoggerSet)
+  timeGetter <- liftIO $ bool (return $ getFormattedTime tzM) cachedTimeGetter cacheTime
   return $ LoggerCtx loggerSet logLevel timeGetter enabledLogs
   where
     cachedTimeGetter =

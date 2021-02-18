@@ -5,8 +5,8 @@ import           Hasura.Prelude
 
 import           Hasura.RQL.IR.BoolExp
 import           Hasura.RQL.IR.Returning
+import           Hasura.RQL.Types.Backend
 import           Hasura.RQL.Types.Column
-import           Hasura.RQL.Types.Common
 import           Hasura.SQL.Backend
 
 
@@ -23,7 +23,7 @@ data AnnUpdG (b :: BackendType) v
   , uqp1AllCols :: ![ColumnInfo b]
   }
 
-type AnnUpd b = AnnUpdG b (SQLExp b)
+type AnnUpd b = AnnUpdG b (SQLExpression b)
 
 data UpdOpExpG v = UpdSet !v
                  | UpdInc !v

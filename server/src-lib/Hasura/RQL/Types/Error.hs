@@ -9,13 +9,17 @@ module Hasura.RQL.Types.Error
        , noInternalQErrEnc
        , err400
        , err404
+       , err405
        , err401
+       , err409
        , err500
        , internalError
 
        , QErrM
        , throw400
        , throw404
+       , throw405
+       , throw409
        , throw500
        , throw500WithDetail
        , throw401
@@ -64,6 +68,7 @@ data Code
   | NotExists
   | AlreadyExists
   | PostgresError
+  | DatabaseConnectionTimeout
   | NotSupported
   | DependencyError
   | InvalidHeaders
@@ -83,6 +88,8 @@ data Code
   | ConstraintViolation
   | DataException
   | BadRequest
+  | MethodNotAllowed
+  | Conflict
   -- Graphql error
   | NoTables
   | ValidationFailed
@@ -95,6 +102,7 @@ data Code
   -- Remote schemas
   | RemoteSchemaError
   | RemoteSchemaConflicts
+  | CoercionError
   -- Websocket/Subscription errors
   | StartFailed
   | InvalidCustomTypes
@@ -106,43 +114,47 @@ data Code
 
 instance Show Code where
   show = \case
-    NotNullViolation      -> "not-null-violation"
-    DataException         -> "data-exception"
-    BadRequest            -> "bad-request"
-    ConstraintViolation   -> "constraint-violation"
-    PermissionDenied      -> "permission-denied"
-    NotExists             -> "not-exists"
-    AlreadyExists         -> "already-exists"
-    AlreadyTracked        -> "already-tracked"
-    AlreadyUntracked      -> "already-untracked"
-    PostgresError         -> "postgres-error"
-    NotSupported          -> "not-supported"
-    DependencyError       -> "dependency-error"
-    InvalidHeaders        -> "invalid-headers"
-    InvalidJSON           -> "invalid-json"
-    AccessDenied          -> "access-denied"
-    ParseFailed           -> "parse-failed"
-    ConstraintError       -> "constraint-error"
-    PermissionError       -> "permission-error"
-    NotFound              -> "not-found"
-    Unexpected            -> "unexpected"
-    UnexpectedPayload     -> "unexpected-payload"
-    NoUpdate              -> "no-update"
-    InvalidParams         -> "invalid-params"
-    AlreadyInit           -> "already-initialised"
-    NoTables              -> "no-tables"
-    ValidationFailed      -> "validation-failed"
-    Busy                  -> "busy"
-    JWTRoleClaimMissing   -> "jwt-missing-role-claims"
-    JWTInvalidClaims      -> "jwt-invalid-claims"
-    JWTInvalid            -> "invalid-jwt"
-    JWTInvalidKey         -> "invalid-jwt-key"
-    RemoteSchemaError     -> "remote-schema-error"
-    RemoteSchemaConflicts -> "remote-schema-conflicts"
-    StartFailed           -> "start-failed"
-    InvalidCustomTypes    -> "invalid-custom-types"
-    ActionWebhookCode t   -> T.unpack t
-    CustomCode t          -> T.unpack t
+    NotNullViolation          -> "not-null-violation"
+    DataException             -> "data-exception"
+    BadRequest                -> "bad-request"
+    ConstraintViolation       -> "constraint-violation"
+    PermissionDenied          -> "permission-denied"
+    NotExists                 -> "not-exists"
+    AlreadyExists             -> "already-exists"
+    AlreadyTracked            -> "already-tracked"
+    AlreadyUntracked          -> "already-untracked"
+    PostgresError             -> "postgres-error"
+    DatabaseConnectionTimeout -> "connection-timeout-error"
+    NotSupported              -> "not-supported"
+    DependencyError           -> "dependency-error"
+    InvalidHeaders            -> "invalid-headers"
+    InvalidJSON               -> "invalid-json"
+    AccessDenied              -> "access-denied"
+    ParseFailed               -> "parse-failed"
+    ConstraintError           -> "constraint-error"
+    PermissionError           -> "permission-error"
+    NotFound                  -> "not-found"
+    Unexpected                -> "unexpected"
+    UnexpectedPayload         -> "unexpected-payload"
+    NoUpdate                  -> "no-update"
+    InvalidParams             -> "invalid-params"
+    AlreadyInit               -> "already-initialised"
+    NoTables                  -> "no-tables"
+    ValidationFailed          -> "validation-failed"
+    Busy                      -> "busy"
+    JWTRoleClaimMissing       -> "jwt-missing-role-claims"
+    JWTInvalidClaims          -> "jwt-invalid-claims"
+    JWTInvalid                -> "invalid-jwt"
+    JWTInvalidKey             -> "invalid-jwt-key"
+    RemoteSchemaError         -> "remote-schema-error"
+    RemoteSchemaConflicts     -> "remote-schema-conflicts"
+    CoercionError             -> "coercion-error"
+    StartFailed               -> "start-failed"
+    InvalidCustomTypes        -> "invalid-custom-types"
+    MethodNotAllowed          -> "method-not-allowed"
+    Conflict                  -> "conflict"
+    ActionWebhookCode t       -> T.unpack t
+    CustomCode t              -> T.unpack t
 
 data QErr
   = QErr
@@ -228,8 +240,14 @@ err400 c t = QErr [] N.status400 t c Nothing
 err404 :: Code -> Text -> QErr
 err404 c t = QErr [] N.status404 t c Nothing
 
+err405 :: Code -> Text -> QErr
+err405 c t = QErr [] N.status405 t c Nothing
+
 err401 :: Code -> Text -> QErr
 err401 c t = QErr [] N.status401 t c Nothing
+
+err409 :: Code -> Text -> QErr
+err409 c t = QErr [] N.status409 t c Nothing
 
 err500 :: Code -> Text -> QErr
 err500 c t = QErr [] N.status500 t c Nothing
@@ -242,8 +260,14 @@ throw400 c t = throwError $ err400 c t
 throw404 :: (QErrM m) => Text -> m a
 throw404 t = throwError $ err404 NotFound t
 
+throw405 :: (QErrM m) => Text -> m a
+throw405 t = throwError $ err405 MethodNotAllowed t
+
 throw401 :: (QErrM m) => Text -> m a
 throw401 t = throwError $ err401 AccessDenied t
+
+throw409 :: (QErrM m) => Text -> m a
+throw409 t = throwError $ err409 Conflict t
 
 throw500 :: (QErrM m) => Text -> m a
 throw500 t = throwError $ internalError t

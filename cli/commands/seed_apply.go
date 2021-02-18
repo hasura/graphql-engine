@@ -14,6 +14,7 @@ type SeedApplyOptions struct {
 
 	// seed file to apply
 	FileNames []string
+	Database  string
 }
 
 func newSeedApplyCmd(ec *cli.ExecutionContext) *cobra.Command {
@@ -34,6 +35,7 @@ func newSeedApplyCmd(ec *cli.ExecutionContext) *cobra.Command {
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
 			opts.EC.Spin("Applying seeds...")
+			opts.Database = ec.Database
 			err := opts.Run()
 			opts.EC.Spinner.Stop()
 			if err != nil {
@@ -48,10 +50,10 @@ func newSeedApplyCmd(ec *cli.ExecutionContext) *cobra.Command {
 }
 
 func (o *SeedApplyOptions) Run() error {
-	migrateDriver, err := migrate.NewMigrate(o.EC, true)
+	migrateDriver, err := migrate.NewMigrate(o.EC, true, "")
 	if err != nil {
 		return err
 	}
 	fs := afero.NewOsFs()
-	return seed.ApplySeedsToDatabase(o.EC, fs, migrateDriver, o.FileNames)
+	return seed.ApplySeedsToDatabase(o.EC, fs, migrateDriver, o.FileNames, o.Database)
 }

@@ -9,6 +9,7 @@ import {
   getSTModifyRoute,
   getETModifyRoute,
 } from '../../Common/utils/routesUtils';
+import { TreeView } from '../../Common/Layout/LeftSubSidebar/TreeView';
 
 interface Props {
   triggers: ScheduledTrigger[] | EventTrigger[];
@@ -24,37 +25,32 @@ const LeftSidebar: React.FC<Props> = props => {
       case 'cron':
         return 'fa-calendar';
       case 'data':
-        return 'fa-database';
+        return 'fa-table';
       default:
         return 'fa-wrench';
     }
   };
 
-  const {
-    getChildList: getTriggersList,
-    getSearchInput,
-    count,
-  } = getLeftSidebarSection({
-    getServiceEntityLink: entityName => {
-      switch (service) {
-        case 'data':
-          return getETModifyRoute(entityName);
-          break;
-        case 'cron':
-          return getSTModifyRoute(entityName);
-          break;
-        default:
-          return getSTModifyRoute(entityName);
-          break;
-      }
-    },
+  const getEntityLink = (entityName: string) => {
+    const encodedEntityName = encodeURIComponent(entityName);
+    switch (service) {
+      case 'data':
+        return getETModifyRoute({ name: encodedEntityName });
+      case 'cron':
+        return getSTModifyRoute(encodedEntityName);
+      default:
+        return getSTModifyRoute(encodedEntityName);
+    }
+  };
+
+  const { getSearchInput, count, items, getChildList } = getLeftSidebarSection({
+    getServiceEntityLink: getEntityLink,
     items: triggers,
     currentItem: currentTrigger,
     service: 'triggers',
     sidebarIcon: getSidebarIcon(),
   });
 
-  // TODO, move to common utils
   const heading = `${getSubserviceHeadings(service).triggerHeading}s`;
 
   const isCronTrigger = service === 'cron';
@@ -70,7 +66,17 @@ const LeftSidebar: React.FC<Props> = props => {
       addTestString={`${service}-sidebar-add`}
       childListTestString={`${service}-links`}
     >
-      {getTriggersList()}
+      {service === 'data' ? (
+        <TreeView
+          items={items as EventTrigger[]}
+          icon={getSidebarIcon()}
+          service="triggers"
+          currentItem={currentTrigger as EventTrigger}
+          getServiceEntityLink={getEntityLink}
+        />
+      ) : (
+        getChildList()
+      )}
     </LeftSubSidebar>
   );
 };

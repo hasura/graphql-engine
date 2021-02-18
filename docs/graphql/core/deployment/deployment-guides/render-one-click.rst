@@ -34,7 +34,7 @@ new managed PostgreSQL database wired up to your Hasura instance.
 
 You will see the Hasura web service and PostgreSQL instance to be created:
 
-.. thumbnail:: /img/graphql/core/deployment/deploy-to-render-hasura-iac.png
+.. thumbnail:: /img/graphql/core/deployment/deploy-to-render-hasura.png
    :alt: Deploy To Render Hasura Page
 
 That's it! Read on to configure your Hasura instance.

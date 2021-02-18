@@ -124,6 +124,7 @@ input SampleInput {
 		for oldActionIndex, oldActionObj := range oldAction.Actions {
 			if action.Name == oldActionObj.Name {
 				sdlFromResp.Actions[actionIndex].Permissions = oldAction.Actions[oldActionIndex].Permissions
+				sdlFromResp.Actions[actionIndex].Definition.Timeout = oldAction.Actions[oldActionIndex].Definition.Timeout
 				sdlFromResp.Actions[actionIndex].Definition.Kind = oldAction.Actions[oldActionIndex].Definition.Kind
 				sdlFromResp.Actions[actionIndex].Definition.Type = oldAction.Actions[oldActionIndex].Definition.Type
 				sdlFromResp.Actions[actionIndex].Definition.Handler = oldAction.Actions[oldActionIndex].Definition.Handler
@@ -295,6 +296,7 @@ func (a *ActionConfig) Build(metadata *yaml.MapSlice) error {
 			if action.Name == newActionObj.Name {
 				isFound = true
 				sdlFromResp.Actions[newActionIndex].Permissions = oldAction.Actions[actionIndex].Permissions
+				sdlFromResp.Actions[newActionIndex].Definition.Timeout = oldAction.Actions[actionIndex].Definition.Timeout
 				sdlFromResp.Actions[newActionIndex].Definition.Kind = oldAction.Actions[actionIndex].Definition.Kind
 				sdlFromResp.Actions[newActionIndex].Definition.Handler = oldAction.Actions[actionIndex].Definition.Handler
 				sdlFromResp.Actions[newActionIndex].Definition.ForwardClientHeaders = oldAction.Actions[actionIndex].Definition.ForwardClientHeaders

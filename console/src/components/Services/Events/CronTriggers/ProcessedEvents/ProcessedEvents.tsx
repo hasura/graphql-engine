@@ -35,6 +35,7 @@ const ProcessedEvents: React.FC<Props> = props => {
       runQuery={runQuery}
       columns={['id', 'status', 'scheduled_time', 'created_at', 'tries']}
       identifier={triggerName}
+      triggerType="cron"
     />
   );
 
@@ -51,6 +52,9 @@ const ProcessedEvents: React.FC<Props> = props => {
         sorts: [makeOrderBy('scheduled_time', 'desc')],
       }}
       relationships={['cron_event_logs']}
+      triggerName={triggerName}
+      triggerType="cron"
+      triggerOp="processed"
     />
   );
 };

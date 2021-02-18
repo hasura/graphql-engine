@@ -15,7 +15,7 @@ Projects & collaborators
 Introduction
 ------------
 
-The ``Projects`` page show a list of your projects.
+The ``Projects`` page shows a list of your projects.
 
 .. thumbnail:: /img/graphql/cloud/projects/projects-list.png
    :alt: Projects list
@@ -54,10 +54,12 @@ Dig deeper
    Creating projects <create>
    Project Details <details>
    Project Collaborators <collaborators>
+   Transfer Ownership <ownership>
    Project Env vars <env-vars>
    Project Domains <domains>
    Securing projects <secure>
    Switching pricing plans <pricing>
+   Deployment regions <regions>
    Heroku database URL Sync <heroku-url-sync>
    Deleting projects <delete>
    

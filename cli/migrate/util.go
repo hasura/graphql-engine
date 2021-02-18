@@ -3,8 +3,12 @@ package migrate
 import (
 	"fmt"
 	nurl "net/url"
+	"os"
+	"path/filepath"
 	"runtime"
 	"strings"
+
+	migratedb "github.com/hasura/graphql-engine/cli/migrate/database"
 
 	crontriggers "github.com/hasura/graphql-engine/cli/metadata/cron_triggers"
 
@@ -14,6 +18,7 @@ import (
 	"github.com/hasura/graphql-engine/cli/metadata/functions"
 	"github.com/hasura/graphql-engine/cli/metadata/querycollections"
 	"github.com/hasura/graphql-engine/cli/metadata/remoteschemas"
+	"github.com/hasura/graphql-engine/cli/metadata/sources"
 	"github.com/hasura/graphql-engine/cli/metadata/tables"
 	"github.com/hasura/graphql-engine/cli/metadata/types"
 	"github.com/hasura/graphql-engine/cli/metadata/version"
@@ -59,7 +64,7 @@ func suint64(n int64) uint64 {
 	return uint64(n)
 }
 
-/* 
+/*
 // newSlowReader turns an io.ReadCloser into a slow io.ReadCloser.
 // Use this to simulate a slow internet connection.
 func newSlowReader(r io.ReadCloser) io.ReadCloser {
@@ -118,16 +123,40 @@ func FilterCustomQuery(u *nurl.URL) *nurl.URL {
 	return &ux
 }
 
-func NewMigrate(ec *cli.ExecutionContext, isCmd bool) (*Migrate, error) {
+func NewMigrate(ec *cli.ExecutionContext, isCmd bool, database string) (*Migrate, error) {
+	// create a new directory for the database if it does'nt exists
+	if f, _ := os.Stat(filepath.Join(ec.MigrationDir, database)); f == nil {
+		err := os.MkdirAll(filepath.Join(ec.MigrationDir, database), 0755)
+		if err != nil {
+			return nil, err
+		}
+	}
 	dbURL := GetDataPath(ec)
-	fileURL := GetFilePath(ec.MigrationDir)
-	t, err := New(fileURL.String(), dbURL.String(), isCmd, int(ec.Config.Version), ec.Config.ServerConfig.TLSConfig, ec.Logger)
+	fileURL := GetFilePath(filepath.Join(ec.MigrationDir, database))
+	opts := NewMigrateOpts{
+		fileURL.String(),
+		dbURL.String(),
+		isCmd, int(ec.Config.Version),
+		ec.Config.ServerConfig.TLSConfig,
+		ec.Logger,
+		&migratedb.HasuraOpts{
+			HasMetadataV3:        ec.HasMetadataV3,
+			Database:             database,
+			Client:               ec.APIClient,
+			DatabaseOps:          cli.GetDatabaseOps(ec),
+			MetadataOps:          cli.GetCommonMetadataOps(ec),
+			MigrationsStateStore: cli.GetMigrationsStateStore(ec),
+			SettingsStateStore:   cli.GetSettingsStateStore(ec),
+		},
+	}
+
+	t, err := New(opts)
 	if err != nil {
 		return nil, errors.Wrap(err, "cannot create migrate instance")
 	}
 	// Set Plugins
 	SetMetadataPluginsWithDir(ec, t)
-	if ec.Config.Version == cli.V2 {
+	if ec.Config.Version >= cli.V2 {
 		t.EnableCheckMetadataConsistency(true)
 	}
 	return t, nil
@@ -163,16 +192,28 @@ func SetMetadataPluginsWithDir(ec *cli.ExecutionContext, drv *Migrate, dir ...st
 	} else {
 		metadataDir = dir[0]
 	}
+	ec.Version.GetServerFeatureFlags()
 	plugins := make(types.MetadataPlugins, 0)
-	if ec.Config.Version == cli.V2 && metadataDir != "" {
+	if ec.Config.Version >= cli.V2 && metadataDir != "" {
 		plugins = append(plugins, version.New(ec, metadataDir))
-		plugins = append(plugins, tables.New(ec, metadataDir))
-		plugins = append(plugins, functions.New(ec, metadataDir))
 		plugins = append(plugins, querycollections.New(ec, metadataDir))
 		plugins = append(plugins, allowlist.New(ec, metadataDir))
 		plugins = append(plugins, remoteschemas.New(ec, metadataDir))
 		plugins = append(plugins, actions.New(ec, metadataDir))
 		plugins = append(plugins, crontriggers.New(ec, metadataDir))
+
+		if ec.HasMetadataV3 {
+			if ec.Config.Version >= cli.V3 {
+				plugins = append(plugins, sources.New(ec, metadataDir))
+			} else {
+				plugins = append(plugins, tables.NewV3MetadataTableConfig(ec, metadataDir))
+				plugins = append(plugins, functions.NewV3MetadataFunctionConfig(ec, metadataDir))
+				plugins = append(plugins, version.NewV3MetadataVersion(ec, metadataDir))
+			}
+		} else {
+			plugins = append(plugins, tables.New(ec, metadataDir))
+			plugins = append(plugins, functions.New(ec, metadataDir))
+		}
 	} else {
 		plugins = append(plugins, metadata.New(ec, ec.MigrationDir))
 	}

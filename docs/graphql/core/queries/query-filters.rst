@@ -25,7 +25,7 @@ For example, to fetch data for an author whose name is "Sidney":
    :emphasize-lines: 3
 
     query {
-      author(
+      authors(
         where: {name: {_eq: "Sidney"}}
       ) {
         id
@@ -41,7 +41,7 @@ For example, to fetch a list of authors who have articles with a rating greater 
    :emphasize-lines: 2,5
 
     query {
-      author (where: {articles: {rating: {_gt: 4}}}) {
+      authors (where: {articles: {rating: {_gt: 4}}}) {
         id
         name
         articles (where: {rating: {_gt: 4}}) {
@@ -75,13 +75,13 @@ The following are examples of using the equality operators on different types.
 
 **Example: Integer (works with Double, Float, Numeric, etc.)**
 
-Fetch data about author whose ``id`` *(an integer field)* is equal to 3:
+Fetch data about an author whose ``id`` *(an integer field)* is equal to 3:
 
 .. graphiql::
   :view_only:
   :query:
     query {
-      author(
+      authors(
         where: {id: {_eq: 3}}
       ) {
         id
@@ -91,7 +91,7 @@ Fetch data about author whose ``id`` *(an integer field)* is equal to 3:
   :response:
     {
       "data": {
-        "author": [
+        "authors": [
           {
             "id": 3,
             "name": "Sidney"
@@ -108,7 +108,7 @@ Fetch a list of authors with ``name`` *(a text field)* as "Sidney":
   :view_only:
   :query:
     query {
-      author(
+      authors(
         where: {name: {_eq: "Sidney"}}
       ) {
         id
@@ -118,7 +118,7 @@ Fetch a list of authors with ``name`` *(a text field)* as "Sidney":
   :response:
     {
       "data": {
-        "author": [
+        "authors": [
           {
             "id": 3,
             "name": "Sidney"
@@ -135,7 +135,7 @@ Fetch a list of articles that have not been published (``is_published`` is a boo
   :view_only:
   :query:
     query {
-      article(
+      articles(
         where: {is_published: {_eq: false}}
       ) {
         id
@@ -146,7 +146,7 @@ Fetch a list of articles that have not been published (``is_published`` is a boo
   :response:
     {
       "data": {
-        "article": [
+        "articles": [
           {
             "id": 5,
             "title": "ut blandit",
@@ -180,7 +180,7 @@ Fetch a list of articles that were published on a certain date (``published_on``
   :view_only:
   :query:
     query {
-      article(
+      articles(
         where: {published_on: {_eq: "2017-05-26"}}
       ) {
         id
@@ -191,7 +191,7 @@ Fetch a list of articles that were published on a certain date (``published_on``
   :response:
     {
       "data": {
-        "article": [
+        "articles": [
           {
             "id": 3,
             "title": "amet justo morbi",
@@ -221,7 +221,7 @@ Fetch a list of articles rated 4 or more (``rating`` is an integer field):
   :view_only:
   :query:
     query {
-      article(
+      articles(
         where: {rating: {_gte: 4}}
       ) {
         id
@@ -232,7 +232,7 @@ Fetch a list of articles rated 4 or more (``rating`` is an integer field):
   :response:
     {
       "data": {
-        "article": [
+        "articles": [
           {
             "id": 3,
             "title": "amet justo morbi",
@@ -261,7 +261,7 @@ dictionary sort)*:
   :view_only:
   :query:
     query {
-      author(
+      authors(
         where: {name: {_gt: "M"}}
       ) {
         id
@@ -271,7 +271,7 @@ dictionary sort)*:
   :response:
     {
       "data": {
-        "author": [
+        "authors": [
           {
             "id": 3,
             "name": "Sidney"
@@ -292,7 +292,7 @@ Fetch a list of articles that were published on or after date "01/01/2018":
   :view_only:
   :query:
     query {
-      article(
+      articles(
         where: {published_on: {_gte: "2018-01-01"}}
       ) {
         id
@@ -303,7 +303,7 @@ Fetch a list of articles that were published on or after date "01/01/2018":
   :response:
     {
       "data": {
-        "article": [
+        "articles": [
           {
             "id": 2,
             "title": "a nibh",
@@ -347,7 +347,7 @@ Fetch a list of articles rated 1, 3 or 5:
   :view_only:
   :query:
     query {
-      article(
+      articles(
         where: {rating: {_in: [1,3,5]}}
       ) {
         id
@@ -358,7 +358,7 @@ Fetch a list of articles rated 1, 3 or 5:
   :response:
     {
       "data": {
-        "article": [
+        "articles": [
           {
             "id": 1,
             "title": "sit amet",
@@ -391,7 +391,7 @@ Fetch a list of those authors whose names are NOT part of a list:
   :view_only:
   :query:
     query {
-      author(
+      authors(
         where: {name: {_nin: ["Justin","Sidney","April"]}}
       ) {
         id
@@ -401,7 +401,7 @@ Fetch a list of those authors whose names are NOT part of a list:
   :response:
     {
       "data": {
-        "author": [
+        "authors": [
           {
             "id": 2,
             "name": "Beltran"
@@ -425,7 +425,7 @@ Fetch a list of those authors whose names are NOT part of a list:
 Text search or pattern matching operators (_like, _similar, etc.)
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-The ``_like``, ``_nlike``, ``_ilike``, ``_nilike``, ``_similar``, ``_nsimilar`` operators are used for
+The ``_like``, ``_nlike``, ``_ilike``, ``_nilike``, ``_similar``, ``_nsimilar``, ``_regex``, ``_nregex``, ``_iregex``, ``_niregex`` operators are used for
 pattern matching on string/text fields.
 
 For more details on text search operators and Postgres equivalents, refer to the :ref:`API reference <text_operators>`.
@@ -438,7 +438,7 @@ Fetch a list of articles whose titles contain the word “amet”:
   :view_only:
   :query:
     query {
-      article(
+      articles(
         where: {title: {_like: "%amet%"}}
       ) {
         id
@@ -448,7 +448,7 @@ Fetch a list of articles whose titles contain the word “amet”:
   :response:
     {
     "data": {
-      "article": [
+      "articles": [
         {
           "id": 1,
           "title": "sit amet"
@@ -476,7 +476,7 @@ Fetch a list of authors whose names begin with A or C:
   :view_only:
   :query:
     query {
-      author(
+      authors(
         where: {name: {_similar: "(A|C)%"}}
       ) {
         id
@@ -486,7 +486,7 @@ Fetch a list of authors whose names begin with A or C:
   :response:
     {
       "data": {
-        "author": [
+        "authors": [
           {
             "id": 4,
             "name": "Anjela"
@@ -527,7 +527,7 @@ Fetch all authors living within a particular pincode (present in ``address`` JSO
   :view_only:
   :query:
     query get_authors_in_pincode ($jsonFilter: jsonb){
-      author(
+      authors(
         where: {
           address: {_contains: $jsonFilter }
         }
@@ -540,7 +540,7 @@ Fetch all authors living within a particular pincode (present in ``address`` JSO
   :response:
     {
       "data": {
-        "author": [
+        "authors": [
           {
             "id": 1,
             "name": "Ash",
@@ -570,7 +570,7 @@ Fetch authors if the ``phone`` key is present in their JSONB ``address`` column:
   :view_only:
   :query:
     query get_authors_if_phone {
-      author(
+      authors(
         where: {
           address: {_has_key: "phone" }
         }
@@ -583,7 +583,7 @@ Fetch authors if the ``phone`` key is present in their JSONB ``address`` column:
   :response:
     {
       "data": {
-        "author": [
+        "authors": [
           {
             "id": 1,
             "name": "Ash",
@@ -727,7 +727,7 @@ Fetch a list of articles that have a value in the ``published_on`` field:
   :view_only:
   :query:
     query {
-      article(
+      articles(
         where: {published_on: {_is_null: false}}
       ) {
         id
@@ -738,7 +738,7 @@ Fetch a list of articles that have a value in the ``published_on`` field:
   :response:
     {
       "data": {
-        "article": [
+        "articles": [
           {
             "id": 1,
             "title": "sit amet",
@@ -930,7 +930,7 @@ Fetch all authors who don't have any published articles:
   :view_only:
   :query:
     {
-      author(
+      authors(
         where: {
           _not: {
             articles: { is_published: {_eq: true} }
@@ -947,7 +947,7 @@ Fetch all authors who don't have any published articles:
   :response:
     {
       "data": {
-        "author": [
+        "authors": [
           {
             "id": 7,
             "name": "Berti",
@@ -995,7 +995,7 @@ Fetch a list of articles published in a specific time-frame (for example: in yea
   :view_only:
   :query:
     query {
-      article (
+      articles (
         where: {
           _and: [
             { published_on: {_gte: "2017-01-01"}},
@@ -1012,7 +1012,7 @@ Fetch a list of articles published in a specific time-frame (for example: in yea
   :response:
     {
       "data": {
-        "article": [
+        "articles": [
           {
             "id": 1,
             "title": "sit amet",
@@ -1050,7 +1050,7 @@ Fetch a list of articles rated more than 4 or published after "01/01/2018":
   :view_only:
   :query:
     query {
-      article (
+      articles (
         where: {
           _or: [
             {rating: {_gte: 4}},
@@ -1068,7 +1068,7 @@ Fetch a list of articles rated more than 4 or published after "01/01/2018":
   :response:
     {
       "data": {
-        "article": [
+        "articles": [
           {
             "id": 2,
             "title": "a nibh",
@@ -1118,7 +1118,7 @@ Fetch all authors with only their 5 rated articles:
   :view_only:
   :query:
     {
-      author {
+      authors {
         id
         name
         articles(where: {rating: {_eq: 5}}) {
@@ -1130,7 +1130,7 @@ Fetch all authors with only their 5 rated articles:
   :response:
     {
       "data": {
-        "author": [
+        "authors": [
           {
             "id": 1,
             "name": "Justin",
@@ -1172,7 +1172,7 @@ For example:
    :emphasize-lines: 2
 
       query {
-        article (where: {author: {name: {_eq: "Sidney"}}}) {
+        articles (where: {author: {name: {_eq: "Sidney"}}}) {
           id
           title
         }
@@ -1199,7 +1199,7 @@ Fetch all articles whose author's name starts with "A":
   :view_only:
   :query:
     {
-      article (
+      articles (
         where: {
           author: {
             name: { _similar: "A%"}
@@ -1216,7 +1216,7 @@ Fetch all articles whose author's name starts with "A":
   :response:
     {
       "data": {
-        "article": [
+        "articles": [
           {
             "id": 1,
             "title": "sit amet",
@@ -1268,7 +1268,7 @@ Fetch all authors which have written at least one article which is rated 1:
   :view_only:
   :query:
     {
-      author(
+      authors(
         where: {
           articles: {rating: {_eq: 1}}
         }
@@ -1284,7 +1284,7 @@ Fetch all authors which have written at least one article which is rated 1:
   :response:
     {
       "data": {
-        "author": [
+        "authors": [
           {
             "id": 1,
             "name": "Justin",
@@ -1360,7 +1360,7 @@ Fetch all authors which have all of their articles published i.e. have ``{is_pub
   :view_only:
   :query:
     {
-      author (
+      authors (
         where: {
           _not: {
             articles: {is_published: {_neq: true}}
@@ -1378,7 +1378,7 @@ Fetch all authors which have all of their articles published i.e. have ``{is_pub
   :response:
     {
       "data": {
-        "author": [
+        "authors": [
           {
             "id": 1,
             "name": "Justin",
@@ -1461,7 +1461,7 @@ Fetch all authors which have none of their articles published i.e. have ``{is_pu
   :view_only:
   :query:
     {
-      author (
+      authors(
         where: {
           _not: {
             articles: {is_published: {_eq: true}}
@@ -1479,7 +1479,7 @@ Fetch all authors which have none of their articles published i.e. have ``{is_pu
   :response:
     {
       "data": {
-        "author": [
+        "authors": [
           {
             "id": 7,
             "name": "Berti",
@@ -1519,7 +1519,7 @@ Fetch all authors which have at least one article written by them:
   :view_only:
   :query:
     {
-      author (
+      authors (
         where: {
           articles: {}
         }
@@ -1536,7 +1536,7 @@ Fetch all authors which have at least one article written by them:
   :response:
     {
       "data": {
-        "author": [
+        "authors": [
           {
             "id": 1,
             "name": "Justin",
@@ -1567,7 +1567,7 @@ Fetch all authors which have not written any articles:
   :view_only:
   :query:
     {
-      author (
+      authors (
         where: {
           _not: {
             articles: {}
@@ -1586,7 +1586,7 @@ Fetch all authors which have not written any articles:
   :response:
     {
       "data": {
-        "author": [
+        "authors": [
           {
             "id": 2,
             "name": "Beltran",

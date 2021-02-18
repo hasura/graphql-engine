@@ -108,13 +108,6 @@ p {
   color: #001934;
   padding-right: 40px;
 }
-.mc_embed_signup form {
-  display: flex !important;
-  padding: 0 0 0 0 !important;
-  flex: 1 !important;
-  position: relative !important;
-  font-size: 16px;
-  }
 /* todo: redesign & clean up */
 .mc_embed_signup input:focus {border-color:#333;}
 .mc_embed_signup .button {clear:both; background-color: #aaa; border: 0 none; border-radius:4px; transition: all 0.23s ease-in-out 0s; color: #FFFFFF; cursor: pointer; display: inline-block; font-size:15px; font-weight: normal; height: 32px; line-height: 32px; margin: 0 5px 10px 0; padding: 0 22px; text-align: center; text-decoration: none; vertical-align: top; white-space: nowrap; width: auto;}
@@ -224,6 +217,136 @@ p {
 }
 .mce-responses .success-message {
   color: #1cd3c6 !important;
+}
+/* new subscribe form css */
+.marketoFormWrapper {
+	 width: 100% !important;
+	 border-radius: 8px;
+	 padding: 0px;
+	 margin: 0 auto;
+	 position: relative;
+   flex: 1;
+   height: 34px;
+}
+.marketoFormWrapper .mktoFormRow {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: calc(100% - 186px);
+}
+ .marketoFormWrapper .mktoFormRow .mktoFieldDescriptor {
+	 float: none;
+	 min-height: unset !important;
+	 margin-bottom: 0px !important;
+}
+ .marketoFormWrapper .mktoFormRow .mktoFieldDescriptor .mktoOffset {
+	 display: none;
+}
+ .marketoFormWrapper .mktoFormRow .mktoFieldDescriptor .mktoFieldWrap {
+	 float: none;
+}
+ .marketoFormWrapper .mktoFormRow .mktoFieldDescriptor .mktoFieldWrap .mktoGutter {
+	 display: none;
+}
+ .marketoFormWrapper .mktoFormRow .mktoFieldDescriptor .mktoFieldWrap .mktoLabel {
+	 display: none;
+	 font-size: 16px;
+	 line-height: 220%;
+	 font-weight: 400;
+	 color: #717780;
+	 font-weight: 400;
+	 float: none;
+	 width: 100% !important;
+}
+ .marketoFormWrapper .mktoFormRow .mktoFieldDescriptor .mktoFieldWrap .mktoField {
+	 width: 100% !important;
+	 height: 34px;
+	 border-radius: 5px;
+   color: #001934!important;
+   opacity: .8!important;
+	 font-weight: 400;
+	 border: solid 1px #ddd;
+	 padding: 0 0 !important;
+	 text-indent: 12px;
+	 font-size: 16px;
+	 background-color: #fff;;
+	 z-index: 1;
+}
+ .marketoFormWrapper .mktoFormRow .mktoFieldDescriptor .mktoFieldWrap .mktoField:hover, .marketoFormWrapper .mktoFormRow .mktoFieldDescriptor .mktoFieldWrap textarea:hover, .marketoFormWrapper .mktoFormRow .mktoFieldDescriptor .mktoFieldWrap select:hover {
+	 border: 1px solid #111b29;
+}
+ .marketoFormWrapper .mktoFormRow .mktoFieldDescriptor .mktoFieldWrap .mktoField:focus, .marketoFormWrapper .mktoFormRow .mktoFieldDescriptor .mktoFieldWrap textarea:focus, .marketoFormWrapper .mktoFormRow .mktoFieldDescriptor .mktoFieldWrap select:focus {
+	 outline: none;
+	 border: 1px solid #0093a5;
+}
+ .marketoFormWrapper .mktoFormRow .mktoFieldDescriptor .mktoFieldWrap .mktoField:-webkit-autofill {
+	 -webkit-animation-name: autofill;
+	 -webkit-animation-fill-mode: both;
+	 -webkit-box-shadow: 0 0 0px 1000px white inset;
+	 background-color: transparent;
+	 font-size: 16px;
+}
+ .marketoFormWrapper .mktoFormRow .mktoFieldDescriptor .mktoFieldWrap .mktoField:-webkit-autofill, .marketoFormWrapper .mktoFormRow .mktoFieldDescriptor .mktoFieldWrap .mktoField:-webkit-autofill:hover, .marketoFormWrapper .mktoFormRow .mktoFieldDescriptor .mktoFieldWrap .mktoField:-webkit-autofill:focus, .marketoFormWrapper .mktoFormRow .mktoFieldDescriptor .mktoFieldWrap .mktoField:-webkit-autofill:active {
+	 -webkit-box-shadow: 0 0 0 35px #fff inset !important;
+	 -webkit-text-fill-color: #505050 !important;
+	 font-size: 16px;
+	 caret-color: #505050;
+	 color: #fff !important;
+}
+ .marketoFormWrapper .mktoFormRow .mktoFieldDescriptor .mktoFieldWrap .mktoField:-internal-autofill-selected {
+	 color: #505050 !important;
+	 font-size: 16px;
+}
+ .marketoFormWrapper .mktoButtonRow {
+	 display: block;
+   position: absolute;
+   right: 0;
+   top: 0;
+   width: 170px;
+}
+ .marketoFormWrapper .mktoButtonRow .mktoButtonWrap {
+	 margin-left: 0 !important;
+}
+ .marketoFormWrapper .mktoButtonRow .mktoButtonWrap .mktoButton {
+	 padding: 3px 15px !important;
+	 font-size: 14px !important;
+	 border-radius: 8px;
+	 font-weight: 600;
+	 width: 100%;
+	 border: 0;
+	 cursor: pointer;
+	 transition: all 0.2s ease-in-out;
+	 background-color: rgba(0,25,52,1) !important;
+	 background-image: none !important;
+	 color: #fff !important;
+	 transition: all 0.2s ease-in-out;
+	 border: 0 !important;
+	 height: 34px;
+}
+ .marketoFormWrapper .mktoButtonRow .mktoButtonWrap .mktoButton:hover {
+	 background-color: rgba(92, 148, 200, 1);
+}
+ .marketoFormWrapper .mktoButtonRow .mktoButtonWrap .mktoButton:focus {
+	 outline: none;
+}
+ .marketoFormWrapper .mktoButtonRow .mktoButtonWrap .mktoButton:hover {
+	 transform: scale(0.98);
+}
+.subscribeNewsletterSuccess {
+  background-color: #f8f8f8;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 34px;
+  color: #111b29;
+  width: 100%;
+  flex: 1;
+  font-weight: 600;
+}
+.subscribeNewsletterSuccess img {
+  margin-right: 12px;
+  height: 22px;
 }
 #content_inner_wrapper {
   width: 75% !important;
@@ -1014,14 +1137,12 @@ article ol ol {
   }
 }
 @media (min-width: 768px) and (max-width: 1385px) {
-  .mc_embed_signup form {
-    padding-top: 10px !important;
-  }
   .mc_embed_signup {
     display: block;
   }
   .mc_embed_signup .subscribe-form-content {
     padding-right: 0;
+    padding-bottom: 10px;
     text-align: center;
   }
   .mce-responses .error-message, .mce-responses .success-message {
@@ -1039,16 +1160,25 @@ article ol ol {
   }
   .mc_embed_signup .subscribe-form-content {
     padding-right: 0;
+    padding-bottom: 10px;
     text-align: center;
-  }
-  .mc_embed_signup form {
-    padding-top: 10px !important;
   }
   .submit-box input {
     padding: 0 4px !important;
   }
   .mce-responses .error-message, .mce-responses .success-message {
     top: 34px !important;
+  }
+  .subscribeNewsletterSuccess {
+    height: auto;
+    padding: 10px;
+    width: auto;
+  }
+  .marketoFormWrapper .mktoFormRow {
+    width: calc(100% - 110px);
+  }
+  .marketoFormWrapper .mktoButtonRow {
+    width: auto;
   }
   #input_search_box {
     flex: 1;

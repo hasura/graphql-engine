@@ -15,23 +15,13 @@ module Hasura.GraphQL.Transport.HTTP
   , OperationName(..)
   , GQLQueryText(..)
   , ResultsFragment(..)
+
+  , SessVarPred
+  , filterVariablesFromQuery
+  , runSessVarPred
   ) where
 
-import           Control.Monad.Morph                    (hoist)
-
-import           Hasura.EncJSON
-import           Hasura.GraphQL.Context
-import           Hasura.GraphQL.Logging                 (MonadQueryLog (..))
-import           Hasura.GraphQL.Parser.Column           (UnpreparedValue)
-import           Hasura.GraphQL.Transport.HTTP.Protocol
-import           Hasura.HTTP
 import           Hasura.Prelude
-import           Hasura.RQL.Types
-import           Hasura.Server.Init.Config
-import           Hasura.Server.Utils                    (RequestId)
-import           Hasura.Server.Version                  (HasVersion)
-import           Hasura.Session
-import           Hasura.Tracing                         (MonadTrace, TraceT, trace)
 
 import qualified Data.Aeson                             as J
 import qualified Data.Aeson.Ordered                     as JO
@@ -39,24 +29,49 @@ import qualified Data.ByteString.Lazy                   as LBS
 import qualified Data.Environment                       as Env
 import qualified Data.HashMap.Strict.InsOrd             as OMap
 import qualified Data.Text                              as T
-import qualified Database.PG.Query                      as Q
-import qualified Hasura.GraphQL.Execute                 as E
-import qualified Hasura.GraphQL.Execute.Query           as EQ
-import qualified Hasura.Logging                         as L
-import qualified Hasura.Server.Telemetry.Counters       as Telem
-import qualified Hasura.Tracing                         as Tracing
 import qualified Language.GraphQL.Draft.Syntax          as G
 import qualified Network.HTTP.Types                     as HTTP
 import qualified Network.Wai.Extended                   as Wai
 
+import           Control.Lens                           (toListOf)
+import           Control.Monad.Morph                    (hoist)
+import           Control.Monad.Trans.Control            (MonadBaseControl)
+
+import qualified Hasura.GraphQL.Execute                 as E
+import qualified Hasura.GraphQL.Execute.Action          as EA
+import qualified Hasura.GraphQL.Execute.Backend         as EB
+import qualified Hasura.GraphQL.Execute.Common          as EC
+import qualified Hasura.Logging                         as L
+import qualified Hasura.RQL.IR.RemoteJoin               as IR
+import qualified Hasura.Server.Telemetry.Counters       as Telem
+import qualified Hasura.Tracing                         as Tracing
+
+import           Hasura.EncJSON
+import           Hasura.GraphQL.Context
+import           Hasura.GraphQL.Logging                 (MonadQueryLog (..))
+import           Hasura.GraphQL.Parser.Column           (UnpreparedValue (..))
+import           Hasura.GraphQL.Transport.Backend
+import           Hasura.GraphQL.Transport.HTTP.Protocol
+import           Hasura.GraphQL.Transport.Postgres      ()
+import           Hasura.HTTP
+import           Hasura.Metadata.Class
+import           Hasura.RQL.Types
+import           Hasura.Server.Init.Config
+import           Hasura.Server.Types                    (RequestId)
+import           Hasura.Server.Version                  (HasVersion)
+import           Hasura.Session
+import           Hasura.Tracing                         (MonadTrace, TraceT, trace)
+
+
 data QueryCacheKey = QueryCacheKey
   { qckQueryString :: !GQLReqParsed
   , qckUserRole    :: !RoleName
+  , qckSession     :: !SessionVariables
   }
 
 instance J.ToJSON QueryCacheKey where
-  toJSON (QueryCacheKey qs ur ) =
-    J.object ["query_string" J..= qs, "user_role" J..= ur]
+  toJSON (QueryCacheKey qs ur sess) =
+    J.object ["query_string" J..= qs, "user_role" J..= ur, "session" J..= sess]
 
 
 class Monad m => MonadExecuteQuery m where
@@ -65,11 +80,11 @@ class Monad m => MonadExecuteQuery m where
   -- headers that can instruct a client how long a response can be cached
   -- locally (i.e. client-side).
   cacheLookup
-    :: [QueryRootField UnpreparedValue]
-    -- ^ Used to check that the query is cacheable
+    :: [RemoteSchemaInfo]
+    -- ^ Used to check if the elaborated query supports caching
     -> QueryCacheKey
     -- ^ Key that uniquely identifies the result of a query execution
-    -> TraceT m (HTTP.ResponseHeaders, Maybe EncJSON)
+    -> TraceT (ExceptT QErr m) (HTTP.ResponseHeaders, Maybe EncJSON)
     -- ^ HTTP headers to be sent back to the caller for this GraphQL request,
     -- containing e.g. time-to-live information, and a cached value if found and
     -- within time-to-live.  So a return value (non-empty-ttl-headers, Nothing)
@@ -89,21 +104,29 @@ class Monad m => MonadExecuteQuery m where
     -- ^ Key under which to store the result of a query execution
     -> EncJSON
     -- ^ Result of a query execution
-    -> TraceT m ()
+    -> TraceT (ExceptT QErr m) ()
     -- ^ Always succeeds
 
 instance MonadExecuteQuery m => MonadExecuteQuery (ReaderT r m) where
-  cacheLookup a b = hoist lift $ cacheLookup a b
-  cacheStore  a b = hoist lift $ cacheStore  a b
+  cacheLookup a b = hoist (hoist lift) $ cacheLookup a b
+  cacheStore  a b = hoist (hoist lift) $ cacheStore  a b
 
 instance MonadExecuteQuery m => MonadExecuteQuery (ExceptT r m) where
-  cacheLookup a b = hoist lift $ cacheLookup a b
-  cacheStore  a b = hoist lift $ cacheStore  a b
+  cacheLookup a b = hoist (hoist lift) $ cacheLookup a b
+  cacheStore  a b = hoist (hoist lift) $ cacheStore  a b
 
 instance MonadExecuteQuery m => MonadExecuteQuery (TraceT m) where
-  cacheLookup a b = hoist lift $ cacheLookup a b
-  cacheStore  a b = hoist lift $ cacheStore  a b
+  cacheLookup a b = hoist (hoist lift) $ cacheLookup a b
+  cacheStore  a b = hoist (hoist lift) $ cacheStore  a b
 
+instance MonadExecuteQuery m => MonadExecuteQuery (MetadataStorageT m) where
+  cacheLookup a b = hoist (hoist lift) $ cacheLookup a b
+  cacheStore  a b = hoist (hoist lift) $ cacheStore  a b
+
+-- | A partial result, e.g. from a remote schema or postgres, which we'll
+-- assemble into the final result for the client.
+--
+-- Nothing to do with graphql fragments...
 data ResultsFragment = ResultsFragment
   { rfTimeIO   :: DiffTime
   , rfLocality :: Telem.Locality
@@ -111,18 +134,53 @@ data ResultsFragment = ResultsFragment
   , rfHeaders  :: HTTP.ResponseHeaders
   }
 
+-- | A predicate on session variables. The 'Monoid' instance makes it simple
+-- to combine several predicates disjunctively.
+newtype SessVarPred = SessVarPred { unSessVarPred :: SessionVariable -> SessionVariableValue -> Bool }
+
+keepAllSessionVariables :: SessVarPred
+keepAllSessionVariables = SessVarPred $ \_ _ -> True
+
+instance Semigroup SessVarPred where
+  SessVarPred p1 <> SessVarPred p2 = SessVarPred $ \sv svv ->
+    p1 sv svv || p2 sv svv
+
+instance Monoid SessVarPred where
+  mempty = SessVarPred $ \_ _ -> False
+
+runSessVarPred :: SessVarPred -> SessionVariables -> SessionVariables
+runSessVarPred = filterSessionVariables . unSessVarPred
+
+-- | Filter out only those session variables used by the query AST provided
+filterVariablesFromQuery :: [RootField (QueryDBRoot UnpreparedValue) c h d] -> SessVarPred
+filterVariablesFromQuery query = fold $ rootToSessVarPreds =<< query
+  where
+    rootToSessVarPreds :: RootField (QueryDBRoot UnpreparedValue) c h d -> [SessVarPred]
+    rootToSessVarPreds = \case
+      RFDB _ _ (QDBR db) -> fmap toPred $ toListOf EC.traverseQueryDB db
+      _                  -> []
+
+    toPred :: UnpreparedValue bet -> SessVarPred
+    -- if we see a reference to the whole session variables object,
+    -- then we need to keep everything:
+    toPred UVSession               = keepAllSessionVariables
+    -- if we only see a specific session variable, we only need to keep that one:
+    toPred (UVSessionVar _type sv) = SessVarPred $ \sv' _ -> sv == sv'
+    toPred _                       = mempty
+
 -- | Run (execute) a single GraphQL query
 runGQ
   :: forall m
    . ( HasVersion
      , MonadIO m
+     , MonadBaseControl IO m
      , MonadError QErr m
      , MonadReader E.ExecutionCtx m
      , E.MonadGQLExecutionCheck m
      , MonadQueryLog m
      , MonadTrace m
      , MonadExecuteQuery m
-     , EQ.MonadQueryInstrumentation m
+     , MonadMetadataStorage (MetadataStorageT m)
      )
   => Env.Environment
   -> L.Logger L.Hasura
@@ -132,46 +190,61 @@ runGQ
   -> [HTTP.Header]
   -> E.GraphQLQueryType
   -> GQLReqUnparsed
-  -> m (HttpResponse EncJSON)
+  -> m (HttpResponse (Maybe GQResponse, EncJSON))
 runGQ env logger reqId userInfo ipAddress reqHeaders queryType reqUnparsed = do
   (telemTimeTot_DT, (telemCacheHit, (telemQueryType, telemTimeIO_DT, telemLocality, resp))) <- withElapsedTime $ do
-    E.ExecutionCtx _ sqlGenCtx pgExecCtx {- planCache -} sc scVer httpManager enableAL <- ask
+    E.ExecutionCtx _ sqlGenCtx {- planCache -} sc scVer httpManager enableAL <- ask
 
     -- run system authorization on the GraphQL API
     reqParsed <- E.checkGQLExecution userInfo (reqHeaders, ipAddress) enableAL sc reqUnparsed
                  >>= flip onLeft throwError
 
-    (telemCacheHit, execPlan) <- E.getResolvedExecPlan env logger pgExecCtx {- planCache -}
-                                 userInfo sqlGenCtx sc scVer queryType
-                                 httpManager reqHeaders (reqUnparsed, reqParsed)
+    (telemCacheHit, execPlan) <-
+      E.getResolvedExecPlan @(Tracing.TraceT (LazyTxT QErr IO))
+        env logger {- planCache -}
+        userInfo sqlGenCtx sc scVer queryType
+        httpManager reqHeaders (reqUnparsed, reqParsed)
     (telemCacheHit,) <$> case execPlan of
       E.QueryExecutionPlan queryPlans asts -> trace "Query" $ do
-        let cacheKey = QueryCacheKey reqParsed $ _uiRole userInfo
-        (responseHeaders, cachedValue) <- Tracing.interpTraceT id $ cacheLookup asts cacheKey
-        case cachedValue of
+        let filteredSessionVars = runSessVarPred (filterVariablesFromQuery asts) (_uiSession userInfo)
+            cacheKey = QueryCacheKey reqParsed (_uiRole userInfo) filteredSessionVars
+            remoteJoins = OMap.elems queryPlans >>= \case
+              E.ExecStepDB (_ :: SourceConfig b) genSql _headers _tx ->
+                case backendTag @b of
+                  PostgresTag -> IR._rjRemoteSchema <$> maybe [] (EB.getRemoteJoins @b @(Tracing.TraceT (LazyTxT QErr IO))) genSql
+              _ -> []
+        (responseHeaders, cachedValue) <- Tracing.interpTraceT (liftEitherM . runExceptT) $ cacheLookup remoteJoins cacheKey
+        case fmap decodeGQResp cachedValue of
           Just cachedResponseData ->
             pure (Telem.Query, 0, Telem.Local, HttpResponse cachedResponseData responseHeaders)
           Nothing -> do
             conclusion <- runExceptT $ forWithKey queryPlans $ \fieldName -> \case
-              E.ExecStepDB (tx, genSql) -> doQErr $ do
-                (telemTimeIO_DT, resp) <-
-                  runQueryDB reqId reqUnparsed fieldName tx genSql
+              E.ExecStepDB (sourceConfig :: SourceConfig b) genSql _headers tx -> doQErr $ do
+                (telemTimeIO_DT, resp) <- case backendTag @b of
+                  PostgresTag -> runDBQuery reqId reqUnparsed fieldName userInfo logger sourceConfig tx genSql
                 return $ ResultsFragment telemTimeIO_DT Telem.Local resp []
-              E.ExecStepRemote (rsi, opDef, varValsM) ->
-                runRemoteGQ fieldName rsi opDef varValsM
+              E.ExecStepRemote rsi gqlReq ->
+                runRemoteGQ httpManager fieldName rsi gqlReq
+              E.ExecStepAction aep _ -> do
+                (time, r) <- doQErr $ EA.runActionExecution aep
+                pure $ ResultsFragment time Telem.Empty r []
               E.ExecStepRaw json ->
                 buildRaw json
             out@(_, _, _, HttpResponse responseData _) <- buildResult Telem.Query conclusion responseHeaders
-            Tracing.interpTraceT id $ cacheStore cacheKey responseData
+            Tracing.interpTraceT (liftEitherM . runExceptT) $ cacheStore cacheKey $ snd responseData
             pure out
 
       E.MutationExecutionPlan mutationPlans -> do
         conclusion <- runExceptT $ forWithKey mutationPlans $ \fieldName -> \case
-          E.ExecStepDB (tx, responseHeaders) -> doQErr $ do
-            (telemTimeIO_DT, resp) <- runMutationDB reqId reqUnparsed userInfo tx
+          E.ExecStepDB (sourceConfig :: SourceConfig b) genSql responseHeaders tx -> doQErr $ do
+            (telemTimeIO_DT, resp) <- case backendTag @b of
+              PostgresTag -> runDBMutation reqId reqUnparsed fieldName userInfo logger sourceConfig tx genSql
             return $ ResultsFragment telemTimeIO_DT Telem.Local resp responseHeaders
-          E.ExecStepRemote (rsi, opDef, varValsM) ->
-            runRemoteGQ fieldName rsi opDef varValsM
+          E.ExecStepRemote rsi gqlReq ->
+            runRemoteGQ httpManager fieldName rsi gqlReq
+          E.ExecStepAction aep hdrs -> do
+            (time, r) <- doQErr $ EA.runActionExecution aep
+            pure $ ResultsFragment time Telem.Empty r hdrs
           E.ExecStepRaw json ->
             buildRaw json
         buildResult Telem.Mutation conclusion []
@@ -189,28 +262,29 @@ runGQ env logger reqId userInfo ipAddress reqHeaders queryType reqUnparsed = do
 
     forWithKey = flip OMap.traverseWithKey
 
-    runRemoteGQ fieldName rsi opDef varValsM = do
-      (telemTimeIO_DT, HttpResponse resp remoteResponseHeaders) <-
-        doQErr $ E.execRemoteGQ env reqId userInfo reqHeaders rsi opDef varValsM
-      value <- extractFieldFromResponse (G.unName fieldName) $ encJToLBS resp
+    runRemoteGQ httpManager fieldName rsi gqlReq = do
+      (telemTimeIO_DT, remoteResponseHeaders, resp) <-
+        doQErr $ E.execRemoteGQ env httpManager userInfo reqHeaders rsi gqlReq
+      value <- extractFieldFromResponse (G.unName fieldName) resp
       let filteredHeaders = filter ((== "Set-Cookie") . fst) remoteResponseHeaders
       pure $ ResultsFragment telemTimeIO_DT Telem.Remote (JO.toEncJSON value) filteredHeaders
 
+    buildResult
+      :: Telem.QueryType
+      -> Either (Either GQExecError QErr) (InsOrdHashMap G.Name ResultsFragment)
+      -> HTTP.ResponseHeaders
+      -> m (Telem.QueryType, DiffTime, Telem.Locality, HttpResponse (Maybe GQResponse, EncJSON))
     buildResult telemType (Left (Left err)) _ = pure
-      ( telemType
-      , 0
-      , Telem.Remote
-      , HttpResponse (encodeGQResp $ throwError err) []
-      )
+      ( telemType , 0 , Telem.Remote , HttpResponse (Just (Left err), encodeGQResp $ Left err) [])
     buildResult _telemType (Left (Right err)) _ = throwError err
     buildResult telemType (Right results) cacheHeaders = do
-      let responseData = encodeGQResp $ pure $ encJToLBS $ encJFromInsOrdHashMap $ rfResponse <$> OMap.mapKeys G.unName results
+      let responseData = pure $ encJToLBS $ encJFromInsOrdHashMap $ rfResponse <$> OMap.mapKeys G.unName results
       pure
         ( telemType
         , sum (fmap rfTimeIO results)
         , foldMap rfLocality results
         , HttpResponse
-          responseData
+          (Just responseData, encodeGQResp responseData)
           (cacheHeaders <> foldMap rfHeaders results)
         )
 
@@ -242,13 +316,14 @@ buildRaw json = do
 runGQBatched
   :: ( HasVersion
      , MonadIO m
+     , MonadBaseControl IO m
      , MonadError QErr m
      , MonadReader E.ExecutionCtx m
      , E.MonadGQLExecutionCheck m
      , MonadQueryLog m
      , MonadTrace m
      , MonadExecuteQuery m
-     , EQ.MonadQueryInstrumentation m
+     , MonadMetadataStorage (MetadataStorageT m)
      )
   => Env.Environment
   -> L.Logger L.Hasura
@@ -264,7 +339,7 @@ runGQBatched
 runGQBatched env logger reqId responseErrorsConfig userInfo ipAddress reqHdrs queryType query =
   case query of
     GQLSingleRequest req ->
-      runGQ env logger reqId userInfo ipAddress reqHdrs queryType req
+      (fmap . fmap) snd (runGQ env logger reqId userInfo ipAddress reqHdrs queryType req)
     GQLBatchedReqs reqs -> do
       -- It's unclear what we should do if we receive multiple
       -- responses with distinct headers, so just do the simplest thing
@@ -275,55 +350,6 @@ runGQBatched env logger reqId responseErrorsConfig userInfo ipAddress reqHdrs qu
             . encJFromList
             . map (either (encJFromJValue . encodeGQErr includeInternal) _hrBody)
 
-      removeHeaders <$> traverse (try . runGQ env logger reqId userInfo ipAddress reqHdrs queryType) reqs
+      removeHeaders <$> traverse (try . (fmap . fmap) snd . runGQ env logger reqId userInfo ipAddress reqHdrs queryType) reqs
   where
     try = flip catchError (pure . Left) . fmap Right
-
-
-runQueryDB
-  :: ( MonadIO m
-     , MonadError QErr m
-     , MonadReader E.ExecutionCtx m
-     , MonadQueryLog m
-     , MonadTrace m
-     )
-  => RequestId
-  -> GQLReqUnparsed
-  -> G.Name -- ^ name of the root field we're fetching
-  -> Tracing.TraceT (LazyTxT QErr IO) EncJSON
-  -> Maybe EQ.PreparedSql
-  -> m (DiffTime, EncJSON)
-  -- ^ Also return the time spent in the PG query; for telemetry.
-runQueryDB reqId query fieldName tx genSql =  do
-  -- log the generated SQL and the graphql query
-  E.ExecutionCtx logger _ pgExecCtx _ _ _ _ <- ask
-  logQueryLog logger query ((fieldName,) <$> genSql) reqId
-  withElapsedTime $ trace ("Postgres Query for root field " <> G.unName fieldName) $
-    Tracing.interpTraceT id $ hoist (runQueryTx pgExecCtx) tx
-
-runMutationDB
-  :: ( MonadIO m
-     , MonadError QErr m
-     , MonadReader E.ExecutionCtx m
-     , MonadQueryLog m
-     , MonadTrace m
-     )
-  => RequestId
-  -> GQLReqUnparsed
-  -> UserInfo
-  -> Tracing.TraceT (LazyTxT QErr IO) EncJSON
-  -> m (DiffTime, EncJSON)
-  -- ^ Also return 'Mutation' when the operation was a mutation, and the time
-  -- spent in the PG query; for telemetry.
-runMutationDB reqId query userInfo tx =  do
-  E.ExecutionCtx logger _ pgExecCtx _ _ _ _ <- ask
-  -- log the graphql query
-  logQueryLog logger query Nothing reqId
-  ctx <- Tracing.currentContext
-  withElapsedTime $ trace "Mutation" $
-    Tracing.interpTraceT (
-      liftEitherM . liftIO . runExceptT
-      . runLazyTx pgExecCtx Q.ReadWrite
-      . withTraceContext ctx
-      . withUserInfo userInfo
-      )  tx

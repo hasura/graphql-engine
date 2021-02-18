@@ -1,28 +1,26 @@
 module Hasura.RQL.Types.Relationship where
 
-import           Hasura.Backends.Postgres.SQL.Types
-import           Hasura.Incremental                 (Cacheable)
+import           Hasura.Incremental       (Cacheable)
 import           Hasura.Prelude
 
-import           Control.Lens                       (makeLenses)
-import           Data.Aeson.Casing
+import           Control.Lens             (makeLenses)
 import           Data.Aeson.TH
 import           Data.Aeson.Types
+import           Hasura.RQL.Types.Backend
 import           Hasura.RQL.Types.Common
-import           Instances.TH.Lift                  ()
-import           Language.Haskell.TH.Syntax         (Lift)
+import           Hasura.SQL.Backend
 
-import qualified Data.HashMap.Strict                as HM
-import qualified Data.Text                          as T
+import qualified Data.HashMap.Strict      as HM
+import qualified Data.Text                as T
 
 data RelDef a
   = RelDef
   { _rdName    :: !RelName
   , _rdUsing   :: !a
   , _rdComment :: !(Maybe T.Text)
-  } deriving (Show, Eq, Lift, Generic)
+  } deriving (Show, Eq, Generic)
 instance (Cacheable a) => Cacheable (RelDef a)
-$(deriveFromJSON (aesonDrop 3 snakeCase){omitNothingFields=True} ''RelDef)
+$(deriveFromJSON hasuraJSON{omitNothingFields=True} ''RelDef)
 $(makeLenses ''RelDef)
 
 instance (ToJSON a) => ToJSON (RelDef a) where
@@ -35,14 +33,16 @@ instance (ToJSON a) => ToAesonPairs (RelDef a) where
   , "comment" .= rc
   ]
 
-data RelManualConfig
+data RelManualConfig (b :: BackendType)
   = RelManualConfig
-  { rmTable   :: !QualifiedTable
-  , rmColumns :: !(HashMap PGCol PGCol)
-  } deriving (Show, Eq, Lift, Generic)
-instance Cacheable RelManualConfig
+  { rmTable   :: !(TableName b)
+  , rmColumns :: !(HashMap (Column b) (Column b))
+  } deriving (Generic)
+deriving instance Backend b => Eq (RelManualConfig b)
+deriving instance Backend b => Show (RelManualConfig b)
+instance (Backend b) => Cacheable (RelManualConfig b)
 
-instance FromJSON RelManualConfig where
+instance (Backend b) => FromJSON (RelManualConfig b) where
   parseJSON (Object v) =
     RelManualConfig
     <$> v .:  "remote_table"
@@ -51,25 +51,25 @@ instance FromJSON RelManualConfig where
   parseJSON _ =
     fail "manual_configuration should be an object"
 
-instance ToJSON RelManualConfig where
+instance (Backend b) => ToJSON (RelManualConfig b) where
   toJSON (RelManualConfig qt cm) =
     object [ "remote_table" .= qt
            , "column_mapping" .= cm
            ]
 
-data RelUsing a
+data RelUsing (b :: BackendType) a
   = RUFKeyOn !a
-  | RUManual !RelManualConfig
-  deriving (Show, Eq, Lift, Generic)
-instance (Cacheable a) => Cacheable (RelUsing a)
+  | RUManual !(RelManualConfig b)
+  deriving (Show, Eq, Generic)
+instance (Backend b, Cacheable a) => Cacheable (RelUsing b a)
 
-instance (ToJSON a) => ToJSON (RelUsing a) where
+instance (Backend b, ToJSON a) => ToJSON (RelUsing b a) where
   toJSON (RUFKeyOn fkey) =
     object [ "foreign_key_constraint_on" .= fkey ]
   toJSON (RUManual manual) =
     object [ "manual_configuration" .= manual ]
 
-instance (FromJSON a) => FromJSON (RelUsing a) where
+instance (FromJSON a, Backend b) => FromJSON (RelUsing b a) where
   parseJSON (Object o) = do
     let fkeyOnM = HM.lookup "foreign_key_constraint_on" o
         manualM = HM.lookup "manual_configuration" o
@@ -82,63 +82,124 @@ instance (FromJSON a) => FromJSON (RelUsing a) where
   parseJSON _ =
     fail "using should be an object"
 
-data ArrRelUsingFKeyOn
+data ArrRelUsingFKeyOn (b :: BackendType)
   = ArrRelUsingFKeyOn
-  { arufTable  :: !QualifiedTable
-  , arufColumn :: !PGCol
-  } deriving (Show, Eq, Lift, Generic)
-instance Cacheable ArrRelUsingFKeyOn
+  { arufTable  :: !(TableName b)
+  , arufColumn :: !(Column b)
+  } deriving (Generic)
+deriving instance Backend b => Eq (ArrRelUsingFKeyOn b)
+deriving instance Backend b => Show (ArrRelUsingFKeyOn b)
+instance Backend b => Cacheable (ArrRelUsingFKeyOn b)
 
-$(deriveJSON (aesonDrop 4 snakeCase){omitNothingFields=True} ''ArrRelUsingFKeyOn)
+instance (Backend b) => FromJSON (ArrRelUsingFKeyOn b) where
+  parseJSON = genericParseJSON hasuraJSON{omitNothingFields=True}
 
-type ArrRelUsing = RelUsing ArrRelUsingFKeyOn
-type ArrRelDef = RelDef ArrRelUsing
-type CreateArrRel = WithTable ArrRelDef
+instance (Backend b) => ToJSON (ArrRelUsingFKeyOn b) where
+  toJSON = genericToJSON hasuraJSON{omitNothingFields=True}
 
-type ObjRelUsing = RelUsing PGCol
-type ObjRelDef = RelDef ObjRelUsing
-type CreateObjRel = WithTable ObjRelDef
+-- TODO: This has to move to a common module
+data WithTable b a
+  = WithTable
+  { wtSource :: !SourceName
+  , wtName   :: !(TableName b)
+  , wtInfo   :: !a
+  }
+deriving instance (Backend b, Show a) => Show (WithTable b a)
+deriving instance (Backend b, Eq a) => Eq (WithTable b a)
+
+instance (FromJSON a, Backend b) => FromJSON (WithTable b a) where
+  parseJSON v@(Object o) =
+    WithTable
+    <$> o .:? "source" .!= defaultSource
+    <*> o .: "table"
+    <*> parseJSON v
+  parseJSON _ =
+    fail "expecting an Object with key 'table'"
+
+instance (ToAesonPairs a, Backend b) => ToJSON (WithTable b a) where
+  toJSON (WithTable sourceName tn rel) =
+    object $ ("source" .= sourceName):("table" .= tn):toAesonPairs rel
+
+
+type ArrRelUsing b = RelUsing b (ArrRelUsingFKeyOn b)
+type ArrRelDef b = RelDef (ArrRelUsing b)
+type CreateArrRel b = WithTable b (ArrRelDef b)
+
+type ObjRelUsing b = RelUsing b (Column b)
+type ObjRelDef b = RelDef (ObjRelUsing b)
+type CreateObjRel b = WithTable b (ObjRelDef b)
 
 data DropRel
   = DropRel
-  { drTable        :: !QualifiedTable
+  { drSource       :: !SourceName
+  , drTable        :: !(TableName 'Postgres)
   , drRelationship :: !RelName
   , drCascade      :: !Bool
-  } deriving (Show, Eq, Lift)
-$(deriveToJSON (aesonDrop 2 snakeCase){omitNothingFields=True} ''DropRel)
+  } deriving (Show, Eq)
+$(deriveToJSON hasuraJSON{omitNothingFields=True} ''DropRel)
 
 instance FromJSON DropRel where
   parseJSON = withObject "Object" $ \o ->
     DropRel
-      <$> o .: "table"
+      <$> o .:? "source" .!= defaultSource
+      <*> o .: "table"
       <*> o .: "relationship"
       <*> o .:? "cascade" .!= False
 
 data SetRelComment
   = SetRelComment
-  { arTable        :: !QualifiedTable
+  { arSource       :: !SourceName
+  , arTable        :: !(TableName 'Postgres)
   , arRelationship :: !RelName
   , arComment      :: !(Maybe T.Text)
-  } deriving (Show, Eq, Lift)
-$(deriveToJSON (aesonDrop 2 snakeCase){omitNothingFields=True} ''SetRelComment)
+  } deriving (Show, Eq)
+$(deriveToJSON hasuraJSON{omitNothingFields=True} ''SetRelComment)
 instance FromJSON SetRelComment where
   parseJSON = withObject "Object" $ \o ->
     SetRelComment
-      <$> o .: "table"
+      <$> o .:? "source" .!= defaultSource
+      <*> o .: "table"
       <*> o .: "relationship"
       <*> o .:? "comment"
 
 data RenameRel
   = RenameRel
-  { rrTable   :: !QualifiedTable
+  { rrSource  :: !SourceName
+  , rrTable   :: !(TableName 'Postgres)
   , rrName    :: !RelName
   , rrNewName :: !RelName
-  } deriving (Show, Eq, Lift)
-$(deriveToJSON (aesonDrop 2 snakeCase) ''RenameRel)
+  } deriving (Show, Eq)
+$(deriveToJSON hasuraJSON ''RenameRel)
 
 instance FromJSON RenameRel where
   parseJSON = withObject "Object" $ \o ->
     RenameRel
-      <$> o .: "table"
+      <$> o .:? "source" .!= defaultSource
+      <*> o .: "table"
       <*> o .: "name"
       <*> o .: "new_name"
+
+-- should this be parameterized by both the source and the destination backend?
+data RelInfo (b :: BackendType)
+  = RelInfo
+  { riName       :: !RelName
+  , riType       :: !RelType
+  , riMapping    :: !(HashMap (Column b) (Column b))
+  , riRTable     :: !(TableName b)
+  , riIsManual   :: !Bool
+  , riIsNullable :: !Bool
+  } deriving (Generic)
+deriving instance Backend b => Show (RelInfo b)
+deriving instance Backend b => Eq   (RelInfo b)
+instance Backend b => NFData (RelInfo b)
+instance Backend b => Cacheable (RelInfo b)
+instance Backend b => Hashable (RelInfo b)
+
+instance (Backend b) => FromJSON (RelInfo b) where
+  parseJSON = genericParseJSON hasuraJSON
+
+instance (Backend b) => ToJSON (RelInfo b) where
+  toJSON = genericToJSON hasuraJSON
+
+fromRel :: RelName -> FieldName
+fromRel = FieldName . relNameToTxt

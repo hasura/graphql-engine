@@ -32,7 +32,6 @@ const defaultState: LocalScheduledTriggerState = {
     timeout_sec: 60,
     num_retries: 0,
     interval_sec: 10,
-    tolerance_sec: 21600,
   },
   includeInMetadata: true,
   comment: null,

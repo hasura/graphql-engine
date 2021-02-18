@@ -11,9 +11,14 @@ import { Dispatch } from '../../../../../types';
 type Props = {
   eventId: string;
   dispatch: Dispatch;
+  eventDataSource: string;
 };
 
-const RedeliverEvent: React.FC<Props> = ({ dispatch, eventId }) => {
+const RedeliverEvent: React.FC<Props> = ({
+  dispatch,
+  eventId,
+  eventDataSource,
+}) => {
   const [error, setError] = React.useState<null | Error>(null);
   const [logs, setLogs] = React.useState<InvocationLog[]>([]);
 
@@ -23,6 +28,7 @@ const RedeliverEvent: React.FC<Props> = ({ dispatch, eventId }) => {
         getEventLogs(
           eventId,
           'data',
+          eventDataSource,
           l => {
             setLogs(l);
           },
@@ -46,8 +52,14 @@ const RedeliverEvent: React.FC<Props> = ({ dispatch, eventId }) => {
 
   const latestLog = logs[0];
 
-  if (!logs.length) {
+  if (!logs.length && !error) {
     return <Spinner />;
+  }
+
+  if (error) {
+    return (
+      <>There was an error in fetching the details of the recent invocations.</>
+    );
   }
 
   return (
@@ -62,7 +74,7 @@ const RedeliverEvent: React.FC<Props> = ({ dispatch, eventId }) => {
               mode="json"
               theme="github"
               name="event_payload"
-              value={JSON.stringify(latestLog.request, null, 4)}
+              value={JSON.stringify(JSON.parse(latestLog.request), null, 4)}
               minLines={10}
               maxLines={30}
               width="100%"
@@ -82,7 +94,7 @@ const RedeliverEvent: React.FC<Props> = ({ dispatch, eventId }) => {
               theme="github"
               name="event_payload"
               value={JSON.stringify(
-                error === null ? latestLog.response : error,
+                error === null ? JSON.parse(latestLog.response) : error,
                 null,
                 4
               )}
@@ -115,8 +127,16 @@ const RedeliverEvent: React.FC<Props> = ({ dispatch, eventId }) => {
             SubComponent={(logRow: any) => {
               const finalIndex = logRow.index;
               const finalRow = logs[finalIndex];
-              const currentPayload = JSON.stringify(finalRow.request, null, 4);
-              const finalResponse = JSON.stringify(finalRow.response, null, 4);
+              const currentPayload = JSON.stringify(
+                JSON.parse(finalRow.request),
+                null,
+                4
+              );
+              const finalResponse = JSON.stringify(
+                JSON.parse(finalRow.response),
+                null,
+                4
+              );
               return (
                 <InvocationLogDetails
                   requestPayload={currentPayload}

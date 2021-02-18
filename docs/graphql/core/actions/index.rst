@@ -160,11 +160,12 @@ Learn more
   Custom types <types/index>
   action-handlers
   async-actions
-  Codegen <codegen>
+  Codegen <codegen/index>
   derive
   action-permissions
   reuse-types-actions
   debugging
+  logs-clean-up
 
 ..
   action-examples

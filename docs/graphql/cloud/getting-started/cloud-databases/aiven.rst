@@ -20,7 +20,7 @@ This guide explains how to connect a new or existing Aiven Postgres database to 
 Step 0: Sign up or log in to Hasura Cloud
 -----------------------------------------
 
-Navigate to `Hasura Cloud <https://cloud.hasura.io/>`__ and sign up or log in.
+Navigate to `Hasura Cloud <https://cloud.hasura.io/signup/?pg=docs&plcmt=body&cta=navigate-to-hasura-cloud&tech=default>`__ and sign up or log in.
 
 .. _create_hasura_project_aiven:
 
@@ -69,6 +69,10 @@ In the end, enter a ``Name`` for the service:
    :width: 1000px
 
 Then click ``Create service``.
+
+.. note::
+
+   If you're using a database user other than the default one, make sure to give it the right :ref:`Postgres permissions <cloud_postgres_permissions>`.
 
 Step 3: Allow connections to your DB from Hasura Cloud
 ------------------------------------------------------

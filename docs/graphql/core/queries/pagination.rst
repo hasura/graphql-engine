@@ -33,7 +33,7 @@ Limit results
   :view_only:
   :query:
     query {
-      author(
+      authors(
         limit: 5
       ) {
         id
@@ -43,7 +43,7 @@ Limit results
   :response:
     {
       "data": {
-        "author": [
+        "authors": [
           {
             "id": 1,
             "name": "Justin"
@@ -76,7 +76,7 @@ Limit results from an offset
   :view_only:
   :query:
     query {
-      author(
+      authors(
         limit: 5,
         offset:5
       ) {
@@ -87,7 +87,7 @@ Limit results from an offset
   :response:
     {
       "data": {
-        "author": [
+        "authors": [
           {
             "id": 6,
             "name": "Corny"
@@ -122,7 +122,7 @@ Limit results in a nested object
   :view_only:
   :query:
     query {
-      author {
+      authors {
         id
         name
         articles (
@@ -137,7 +137,7 @@ Limit results in a nested object
   :response:
     {
       "data": {
-        "author": [
+        "authors": [
           {
             "id": 1,
             "name": "Justin",
@@ -215,7 +215,7 @@ position of the row in the dataset as done by ``offset``, and that duplicate rec
   :view_only:
   :query:
     query {
-      author(
+      authors(
         limit: 5,
         where: { id: {_gt: 5} }
       ) {
@@ -226,7 +226,7 @@ position of the row in the dataset as done by ``offset``, and that duplicate rec
   :response:
     {
       "data": {
-        "author": [
+        "authors": [
           {
             "id": 6,
             "name": "Corny"
