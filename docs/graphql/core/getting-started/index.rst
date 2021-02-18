@@ -54,6 +54,4 @@ Get started using an existing database
    Hasura Cloud quickstart <https://hasura.io/docs/latest/graphql/cloud/getting-started/index.html>
    Docker quickstart <docker-simple>
    Using an existing database <using-existing-database>
-   first-graphql-query
-   first-event-trigger
 
