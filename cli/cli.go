@@ -315,13 +315,6 @@ func (s *ServerConfig) SetHTTPClient() error {
 	return nil
 }
 
-type DatabaseConfig struct {
-	Name                string `yaml:"name,omitempty"`
-	Type                string `yaml:"type,omitempty"`
-	MigrationsDirectory string `yaml:"migrations_directory,omitempty"`
-	SeedsDirectory      string `yaml:"seeds_directory,omitempty"`
-}
-
 // Config represents configuration required for the CLI to function
 type Config struct {
 	// Version of the config.
@@ -337,8 +330,7 @@ type Config struct {
 	// SeedsDirectory defines the directory where seed files will be stored
 	SeedsDirectory string `yaml:"seeds_directory,omitempty"`
 	// ActionConfig defines the config required to create or generate codegen for an action.
-	ActionConfig    *types.ActionExecutionConfig `yaml:"actions,omitempty"`
-	DatabasesConfig []DatabaseConfig             `yaml:"datasources,omitempty"`
+	ActionConfig *types.ActionExecutionConfig `yaml:"actions,omitempty"`
 }
 
 // ExecutionContext contains various contextual information required by the cli

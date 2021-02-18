@@ -120,13 +120,6 @@ func UpdateProjectV3(opts UpgradeToMuUpgradeProjectToMultipleSourcesOpts) error 
 	// write new config file
 	newConfig := *opts.EC.Config
 	newConfig.Version = cli.V3
-	newConfig.DatabasesConfig = []cli.DatabaseConfig{
-		{
-			Name:                targetDatabase,
-			MigrationsDirectory: targetDatabase,
-			SeedsDirectory:      targetDatabase,
-		},
-	}
 	if err := opts.EC.WriteConfig(&newConfig); err != nil {
 		return err
 	}
