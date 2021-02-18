@@ -2,6 +2,7 @@ import {
   getElementFromAlias,
   baseUrl,
   tableColumnTypeSelector,
+  getIndexRoute,
 } from '../../../helpers/dataHelpers';
 
 import {
@@ -43,7 +44,9 @@ export const createTable = (name: string, dict: TableFields) => {
 export const passVCreateTables = () => {
   cy.get(getElementFromAlias('data-create-table')).click();
   createTable('author', { id: 'integer', name: 'text' });
-  cy.get(getElementFromAlias('sidebar-add-table')).click();
+  cy.visit(getIndexRoute());
+  cy.wait(5000);
+  cy.get(getElementFromAlias('data-create-table')).click();
   createTable('article', {
     id: 'integer',
     title: 'text',
@@ -51,7 +54,9 @@ export const passVCreateTables = () => {
     author_id: 'integer',
     rating: 'integer',
   });
-  cy.get(getElementFromAlias('sidebar-add-table')).click();
+  cy.visit(getIndexRoute());
+  cy.wait(5000);
+  cy.get(getElementFromAlias('data-create-table')).click();
   createTable('comment', {
     id: 'integer',
     user_id: 'integer',

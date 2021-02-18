@@ -6,6 +6,7 @@ import {
   getElementFromAlias,
   createUntrackedFunctionSQL,
   dropUntrackedFunctionSQL,
+  getIndexRoute,
 } from '../../../helpers/dataHelpers';
 
 import {
@@ -383,7 +384,9 @@ export const createTable = (name: string, dict: { [key: string]: any }) => {
 export const Createtables = () => {
   cy.get(getElementFromAlias('data-create-table')).click();
   createTable('author', { id: 'integer', name: 'Text' });
-  cy.get(getElementFromAlias('sidebar-add-table')).click();
+  cy.visit(getIndexRoute());
+  cy.wait(5000);
+  cy.get(getElementFromAlias('data-create-table')).click();
   createTable('article', {
     id: 'integer',
     title: 'text',

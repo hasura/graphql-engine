@@ -7,7 +7,6 @@ import {
   unTrackFunction,
   trackFunction,
   verifyPermissionTab,
-  testSessVariable,
   trackVolatileFunction,
   trackVolatileFunctionAsQuery,
 } from './spec';

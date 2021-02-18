@@ -1172,6 +1172,25 @@ export const getEventInvocationInfoByIDSql = (
  *
  * `columns` is an array of column names.
  */
+// export const getDatabaseInfo = `
+// SELECT
+// 	COALESCE(json_agg(row_to_json(info)), '[]'::JSON)
+// FROM (
+// 	SELECT
+// 		table_name::text,
+// 		table_schema::text,
+// 		ARRAY_AGG("column_name"::text) as columns
+// 	FROM
+// 		information_schema.columns
+// 	WHERE
+// 		table_schema NOT in('information_schema', 'pg_catalog', 'hdb_catalog')
+// 		AND table_schema NOT LIKE 'pg_toast%'
+// 		AND table_schema NOT LIKE 'pg_temp_%'
+// 	GROUP BY
+// 		table_name,
+// 		table_schema) AS info;
+// `;
+
 export const getDatabaseInfo = `
 SELECT
 	COALESCE(json_agg(row_to_json(info)), '[]'::JSON)
@@ -1189,4 +1208,24 @@ FROM (
 	GROUP BY
 		table_name,
 		table_schema) AS info;
+`;
+
+export const getTableInfo = (tables: string[]) => `
+SELECT
+	COALESCE(json_agg(row_to_json(info)), '[]'::JSON)
+FROM (
+    select 
+        pgclass.relname::text as table_name, 
+        n.nspname as table_schema,
+        CASE
+        WHEN pgclass.relkind = 'v' THEN 'view'
+        WHEN pgclass.relkind = 'r' THEN 'table'
+        WHEN pgclass.relkind = 'm' THEN 'materialized_view'
+        END as table_type
+        from pg_class pgclass
+        join pg_catalog.pg_namespace n
+        on n.oid = pgclass.relnamespace
+        where 
+        pgclass.relname in (${tables.join(',')})
+) AS info;
 `;

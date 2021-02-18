@@ -29,6 +29,7 @@ import { CLI_CONSOLE_MODE } from '../../../../constants';
 import NotesSection from './molecules/NotesSection';
 import { dataSource } from '../../../../dataSources';
 import { getLSItem, setLSItem, LS_KEYS } from '../../../../utils/localStorage';
+import DropDownSelector from './DropDownSelector';
 /**
  * # RawSQL React FC
  * ## renders raw SQL page on route `/data/sql`
@@ -66,12 +67,20 @@ const RawSQL = ({
   isTableTrackChecked,
   migrationMode,
   allSchemas,
+  sources,
+  currentDataSource,
 }) => {
   const [statementTimeout, setStatementTimeout] = useState(
     Number(getLSItem(LS_KEYS.rawSqlStatementTimeout)) || 10
   );
 
   const [sqlText, onChangeSQLText] = useState(sql);
+
+  const [selectedDatabase, setSelectedDatabase] = useState(currentDataSource);
+
+  const dropDownSelectorValueChange = value => {
+    setSelectedDatabase(value);
+  };
 
   useEffect(() => {
     if (!sql) {
@@ -110,10 +119,17 @@ const RawSQL = ({
           return;
         }
       }
-      dispatch(executeSQL(isMigration, migrationName, statementTimeout));
+      dispatch(
+        executeSQL(
+          isMigration,
+          migrationName,
+          statementTimeout,
+          selectedDatabase
+        )
+      );
       return;
     }
-    dispatch(executeSQL(false, '', statementTimeout));
+    dispatch(executeSQL(false, '', statementTimeout, selectedDatabase));
   };
 
   const getMigrationWarningModal = () => {
@@ -431,7 +447,16 @@ const RawSQL = ({
         <div className={`${styles.padd_left_remove} col-xs-8`}>
           <NotesSection />
         </div>
-
+        <div className={`${styles.padd_left_remove} col-xs-8`}>
+          <label>
+            <b>Database</b>
+          </label>{' '}
+          <DropDownSelector
+            options={sources.map(source => source.name)}
+            defaultValue={currentDataSource}
+            onChange={dropDownSelectorValueChange}
+          />
+        </div>
         <div className={`${styles.padd_left_remove} col-xs-10`}>
           {getSQLSection()}
         </div>
@@ -508,6 +533,8 @@ const mapStateToProps = state => ({
   currentSchema: state.tables.currentSchema,
   allSchemas: state.tables.allSchemas,
   serverVersion: state.main.serverVersion ? state.main.serverVersion : '',
+  sources: state.metadata.metadataObject.sources,
+  currentDataSource: state.tables.currentDataSource,
 });
 
 const rawSQLConnector = connect => connect(mapStateToProps)(RawSQL);

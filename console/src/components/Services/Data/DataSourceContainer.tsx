@@ -67,6 +67,7 @@ const DataSourceContainer = ({
 
   useEffect(() => {
     if (!source || source === 'undefined') return;
+    if (!dataLoaded) return;
 
     if (schema) {
       if (schemaList.find((s: string) => s === schema)) {
@@ -88,7 +89,7 @@ const DataSourceContainer = ({
     if (location.pathname.includes('schema')) {
       dispatch(push(`/data/${source}/schema/${newSchema}`));
     }
-  }, [dispatch, schema, schemaList, source, location]);
+  }, [dispatch, schema, schemaList, source, location, dataLoaded]);
 
   useEffect(() => {
     setDriver(driver);

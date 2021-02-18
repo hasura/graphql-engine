@@ -74,11 +74,12 @@ export const insertAuthorsIntoTable = () => {
 };
 
 export const searchForTable = () => {
-  cy.get(getElementFromAlias('search-tables')).type('a_test_test_author');
-  cy.get(getElementFromAlias('table-links')).should(
-    'contain',
-    'a_test_test_author'
-  );
+  // ADD LATER: after search functionality is implemented
+  // cy.get(getElementFromAlias('search-tables')).type('a_test_test_author');
+  // cy.get(getElementFromAlias('table-links')).should(
+  //   'contain',
+  //   'a_test_test_author'
+  // );
   cy.get(getElementFromAlias('a_test_test_author')).click();
 };
 

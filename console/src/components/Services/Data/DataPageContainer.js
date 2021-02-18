@@ -5,8 +5,6 @@ import globals from '../../../Globals';
 import LeftContainer from '../../Common/Layout/LeftContainer/LeftContainer';
 import PageContainer from '../../Common/Layout/PageContainer/PageContainer';
 import DataSubSidebar from './DataSubSidebar';
-import GqlCompatibilityWarning from '../../Common/GqlCompatibilityWarning/GqlCompatibilityWarning';
-
 import {
   updateCurrentSchema,
   UPDATE_CURRENT_DATA_SOURCE,
@@ -20,13 +18,12 @@ import { push } from 'react-router-redux';
 import { fetchPostgresVersion } from '../../Main/Actions';
 
 const DataPageContainer = ({
-  currentSchema,
-  schemaList,
   children,
   location,
   dispatch,
   dataSources,
   currentDataSource,
+  currentSchema,
 }) => {
   useEffect(() => {
     if (!currentDataSource && dataSources.length) {
@@ -37,6 +34,8 @@ const DataPageContainer = ({
     }
   }, [currentDataSource, dataSources, dispatch]);
 
+  const [loading, setLoading] = useState(false);
+
   useEffect(() => {
     if (currentDataSource) {
       dispatch(fetchPostgresVersion);
@@ -44,25 +43,31 @@ const DataPageContainer = ({
   }, [dispatch, currentDataSource]);
 
   const { setDriver } = useDataSource();
-  const [loadingSchemas, setLoadingSchemas] = useState(false);
-  const onDatabaseChange = e => {
-    const value = e.target.value;
-    let newName;
-    let newDriver;
-    try {
-      [newName, newDriver] = JSON.parse(value);
-    } catch {
-      return;
-    }
-    setDriver(newDriver);
+
+  const handleDatabaseChange = value => {
+    if (value === currentDataSource) return;
+    setLoading(true);
+    setDriver(currentDriver);
     dispatch({
       type: UPDATE_CURRENT_DATA_SOURCE,
-      source: newName,
+      source: value,
     });
-    dispatch(push(`/data/${newName}/schema/`));
-    setLoadingSchemas(true);
+    dispatch(push(`/data/${value}/schema/`));
     dispatch(fetchDataInit()).then(() => {
-      setLoadingSchemas(false);
+      setLoading(false);
+    });
+  };
+
+  const handleSchemaChange = value => {
+    if (value === currentSchema) {
+      dispatch(push(`/data/${currentDataSource}/schema/${value}`));
+      return;
+    }
+
+    setLoading(true);
+    dispatch(updateCurrentSchema(value, currentDataSource)).then(() => {
+      dispatch(push(`/data/${currentDataSource}/schema/${value}`));
+      setLoading(false);
     });
   };
 
@@ -84,16 +89,9 @@ const DataPageContainer = ({
     );
   }
 
-  const handleSchemaChange = e => {
-    dispatch(updateCurrentSchema(e.target.value, currentDataSource));
-  };
-
-  const getSchemaOptions = () => {
-    return schemaList.map(s => (
-      <option key={s} value={s}>
-        {s}
-      </option>
-    ));
+  const loadStyle = {
+    pointerEvents: 'none',
+    cursor: 'progress',
   };
 
   const sidebarContent = (
@@ -101,55 +99,23 @@ const DataPageContainer = ({
       <li
         role="presentation"
         className={
-          currentLocation.match(/(\/)?data\/(\w|%)+\/schema?(\w+)/)
+          currentLocation.match(
+            /(\/)?data((\/manage)|(\/(\w|%)+\/schema?(\w+)))/
+          )
             ? styles.active
             : ''
         }
       >
-        <section className={`${styles.linkBorder} ${styles.dbSelect}`}>
-          <div className={styles.schemaWrapper}>
-            <div
-              className={styles.schemaSidebarSection}
-              style={{
-                marginBottom: '20px',
-              }}
-            >
-              <label style={{ width: '70px' }}>Database:</label>
-              <select
-                onChange={onDatabaseChange}
-                className={`${styles.changeSchema} form-control`}
-                value={JSON.stringify([currentDataSource, currentDriver])}
-              >
-                {dataSources.map(s => (
-                  <option
-                    key={s.name}
-                    value={JSON.stringify([s.name, s.driver])}
-                  >
-                    {s.name} ({s.driver})
-                  </option>
-                ))}
-              </select>
-            </div>
-            <div className={styles.schemaSidebarSection} data-test="schema">
-              <label style={{ width: '70px' }}>Schema:</label>
-              <select
-                onChange={handleSchemaChange}
-                value={currentDataSource ? currentSchema : ''}
-                className={styles.changeSchema + ' form-control'}
-              >
-                <option value="" />
-                {!loadingSchemas && getSchemaOptions()}
-              </select>
-              {currentSchema && (
-                <GqlCompatibilityWarning
-                  identifier={currentSchema}
-                  className={styles.add_mar_left_mid}
-                />
-              )}
-            </div>
-          </div>
-        </section>
-        <DataSubSidebar location={location} />
+        <Link className={styles.linkBorder} to={`/data/manage`}>
+          Data Manager
+        </Link>
+
+        <div style={loading ? loadStyle : { pointerEvents: 'auto' }}>
+          <DataSubSidebar
+            onDatabaseChange={handleDatabaseChange}
+            onSchemaChange={handleSchemaChange}
+          />
+        </div>
       </li>
       {currentDataSource && (
         <li

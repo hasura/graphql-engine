@@ -46,6 +46,7 @@ import {
   deleteFunctionSql,
   getEventInvocationInfoByIDSql,
   getDatabaseInfo,
+  getTableInfo,
 } from './sqlUtils';
 
 export const isTable = (table: Table) => {
@@ -468,4 +469,5 @@ export const postgres: DataSourcesAPI = {
   deleteFunctionSql,
   getEventInvocationInfoByIDSql,
   getDatabaseInfo,
+  getTableInfo,
 };

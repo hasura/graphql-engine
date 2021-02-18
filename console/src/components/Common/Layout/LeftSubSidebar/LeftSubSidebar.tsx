@@ -49,12 +49,14 @@ const LeftSubSidebar: React.FC<Props> = props => {
   return (
     <div className={styles.subSidebarList}>
       <div className={`${styles.display_flex} ${styles.padd_top_medium}`}>
-        <div
-          className={`${styles.sidebarSearch} form-group col-xs-12 ${styles.padd_remove}`}
-        >
-          <i className="fa fa-search" aria-hidden="true" />
-          {searchInput}
-        </div>
+        {searchInput && (
+          <div
+            className={`${styles.sidebarSearch} form-group col-xs-12 ${styles.padd_remove}`}
+          >
+            <i className="fa fa-search" aria-hidden="true" />
+            {searchInput}
+          </div>
+        )}
       </div>
       <div>
         <div className={styles.sidebarHeadingWrapper}>

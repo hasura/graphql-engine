@@ -380,7 +380,7 @@ const updateCurrentSchema = (
     dispatch(_push(getSchemaBaseRoute(schemaName, sourceName)));
   }
 
-  Promise.all([
+  return Promise.all([
     dispatch({ type: UPDATE_CURRENT_SCHEMA, currentSchema: schemaName }),
     dispatch(setUntrackedRelations()),
     dispatch(fetchFunctionInit()),
@@ -489,6 +489,66 @@ export const getDatabaseSchemasInfo = (sourceType = 'postgres', sourceName) => (
         };
       });
 
+      return schemasInfo;
+    },
+    error => {
+      console.error('Failed to fetch schemas info ' + JSON.stringify(error));
+      return error;
+    }
+  );
+};
+
+/**
+ *
+ * @param {'postgres' | 'mysql'} sourceType
+ * @param {string} sourceName
+ * @param {string[]} tables
+ * @returns {{ [schema_name]: {[table_name]: string, [table_type]: string}}}
+ */
+export const getDatabaseTableTypeInfo = (
+  sourceType = 'postgres',
+  sourceName,
+  tables
+) => (dispatch, getState) => {
+  if (!tables.length) {
+    return new Promise(resolve => {
+      resolve({});
+    });
+  }
+
+  const url = Endpoints.query;
+  const sql = services[sourceType].getTableInfo(tables);
+  const query = getRunSqlQuery(sql, sourceName);
+  const options = {
+    credentials: globalCookiePolicy,
+    method: 'POST',
+    headers: dataHeaders(getState),
+    body: JSON.stringify(query),
+  };
+  return dispatch(requestAction(url, options)).then(
+    ({ result }) => {
+      if (!result.length > 1) {
+        return {};
+      }
+      const trackedTables = getTablesFromAllSources(getState()).filter(
+        ({ source }) => source === sourceName
+      );
+      const schemasInfo = {};
+
+      JSON.parse(result[1]).forEach(i => {
+        if (
+          !trackedTables.some(
+            t =>
+              t.table.name === i.table_name && t.table.schema === i.table_schema
+          )
+        ) {
+          return;
+        }
+        schemasInfo[i.table_schema] = {
+          ...schemasInfo[i.table_schema],
+          [i.table_name]: { table_type: i.table_type },
+        };
+      });
       return schemasInfo;
     },
     error => {

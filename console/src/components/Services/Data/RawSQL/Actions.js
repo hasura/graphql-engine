@@ -37,12 +37,11 @@ const MODAL_OPEN = 'EditItem/MODAL_OPEN';
 const modalOpen = () => ({ type: MODAL_OPEN });
 const modalClose = () => ({ type: MODAL_CLOSE });
 
-const trackAllItems = (sql, isMigration, migrationName) => (
+const trackAllItems = (sql, isMigration, migrationName, source) => (
   dispatch,
   getState
 ) => {
   const currMigrationMode = getState().main.migrationMode;
-  const source = getState().tables.currentDataSource;
 
   const objects = parseCreateSQL(sql);
   const changes = [];
@@ -94,7 +93,7 @@ const trackAllItems = (sql, isMigration, migrationName) => (
   );
 };
 
-const executeSQL = (isMigration, migrationName, statementTimeout) => (
+const executeSQL = (isMigration, migrationName, statementTimeout, source) => (
   dispatch,
   getState
 ) => {
@@ -106,9 +105,7 @@ const executeSQL = (isMigration, migrationName, statementTimeout) => (
 
   const isStatementTimeout = statementTimeout && !isMigration;
   const migrateUrl = returnMigrateUrl(migrationMode);
-
   let url = Endpoints.query;
-  const source = getState().tables.currentDataSource;
   const schemaChangesUp = [];
 
   if (isStatementTimeout) {
@@ -168,7 +165,7 @@ const executeSQL = (isMigration, migrationName, statementTimeout) => (
     .then(
       data => {
         if (isTableTrackChecked) {
-          dispatch(trackAllItems(sql, isMigration, migrationName)).then(
+          dispatch(trackAllItems(sql, isMigration, migrationName, source)).then(
             callback(data)
           );
           return;

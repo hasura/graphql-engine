@@ -291,6 +291,7 @@ export interface DataSourcesAPI {
     eventId: string
   ) => string;
   getDatabaseInfo: string;
+  getTableInfo?: (tables: string[]) => string;
 }
 
 export let currentDriver: Driver = 'postgres';

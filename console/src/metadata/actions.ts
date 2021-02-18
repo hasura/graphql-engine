@@ -18,6 +18,7 @@ import {
   makeMigrationCall,
   setConsistentSchema,
   UPDATE_CURRENT_DATA_SOURCE,
+  fetchDataInit,
 } from '../components/Services/Data/DataActions';
 import { filterInconsistentMetadataObjects } from '../components/Services/Settings/utils';
 import { clearIntrospectionSchemaCache } from '../components/Services/RemoteSchema/graphqlUtils';
@@ -215,6 +216,7 @@ export const addDataSource = (
         type: UPDATE_CURRENT_DATA_SOURCE,
         source: data.payload.name,
       });
+      dispatch(fetchDataInit());
       return getState();
     })
     .catch(err => {
