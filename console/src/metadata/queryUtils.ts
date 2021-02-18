@@ -211,22 +211,15 @@ export const getSetCustomRootFieldsQuery = (
 ) => {
   const customNameValue = customTableName || null;
 
-  return getMetadataQuery(
-    'set_table_customization',
+  return getMetadataQuery('set_table_customization', source, {
     source,
-    {
-      source,
-      table: tableDef,
-      configuration: {
-        custom_name: customNameValue,
-        custom_root_fields: rootFields,
-        custom_column_names: customColumnNames,
-      },
+    table: tableDef,
+    configuration: {
+      custom_name: customNameValue,
+      custom_root_fields: rootFields,
+      custom_column_names: customColumnNames,
     },
-    {
-      version: 2,
-    }
-  );
+  });
 };
 
 export const generateDropActionQuery = (name: string) => {
@@ -543,15 +536,10 @@ export const getTrackFunctionQuery = (
   configuration?: Record<string, any>
 ) => {
   if (configuration) {
-    return getMetadataQuery(
-      'track_function',
-      source,
-      {
-        function: { name, schema },
-        configuration,
-      },
-      { version: 2 }
-    );
+    return getMetadataQuery('track_function', source, {
+      function: { name, schema },
+      configuration,
+    });
   }
   return getMetadataQuery('track_function', source, {
     function: { name, schema },
