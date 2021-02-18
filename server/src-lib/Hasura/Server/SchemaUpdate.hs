@@ -4,6 +4,7 @@ module Hasura.Server.SchemaUpdate
   , startSchemaSyncProcessorThread
   , EventPayload(..)
   , SchemaSyncCtx(..)
+  , SchemaSyncEvent(..)
   , SchemaSyncEventRef
   )
 where
