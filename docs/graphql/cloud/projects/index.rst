@@ -27,11 +27,11 @@ For each project, you can do the one of the following actions:
    :alt: Project actions
    :width: 860px
 
-- Click ``Launch Console`` to open the Hasura console in your browser. The ``Pro`` tab
+- Click ``Launch Console`` to open the Hasura console in your browser. The ``Monitoring`` tab
   lets you use the Pro features that Hasura Cloud has set up for you.
 
-  .. thumbnail:: /img/graphql/cloud/metrics/pro-tab-overview.png
-     :alt: Hasura Console: Pro tab
+  .. thumbnail:: /img/graphql/cloud/metrics/monitoring-tab-overview.png
+     :alt: Hasura Console: Monitoring tab
      :width: 900px
 
 - Click the gear icon to manage your project

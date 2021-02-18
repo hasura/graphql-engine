@@ -53,7 +53,6 @@ to open the Hasura console.
 To test it, you can either create tables directly using the console, or add new users to your project clicking on ``Auth`` on the navigation menu.
 
 There is also a ``GraphQL API`` option for you to test the API.
-Check out :ref:`making your first GraphQL query <first_graphql_query>` for more information.
 
 References
 ----------
