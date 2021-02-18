@@ -204,6 +204,7 @@ runGQ env logger reqId userInfo ipAddress reqHeaders queryType reqUnparsed = do
         env logger {- planCache -}
         userInfo sqlGenCtx sc scVer queryType
         httpManager reqHeaders (reqUnparsed, reqParsed)
+
     (telemCacheHit,) <$> case execPlan of
       E.QueryExecutionPlan queryPlans asts -> trace "Query" $ do
         let filteredSessionVars = runSessVarPred (filterVariablesFromQuery asts) (_uiSession userInfo)

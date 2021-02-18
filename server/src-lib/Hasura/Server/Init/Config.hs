@@ -28,6 +28,7 @@ import           Hasura.Prelude
 import           Hasura.RQL.Types
 import           Hasura.Server.Auth
 import           Hasura.Server.Cors
+import           Hasura.Server.Types
 import           Hasura.Session
 
 data RawConnParams
@@ -77,6 +78,7 @@ data RawServeOptions impl
   , rsoWebSocketCompression          :: !Bool
   , rsoWebSocketKeepAlive            :: !(Maybe Int)
   , rsoInferFunctionPermissions      :: !(Maybe Bool)
+  , rsoEnableMaintenanceMode         :: !Bool
   }
 
 -- | @'ResponseInternalErrorsConfig' represents the encoding of the internal
@@ -128,6 +130,7 @@ data ServeOptions impl
   , soConnectionOptions             :: !WS.ConnectionOptions
   , soWebsocketKeepAlive            :: !KeepAliveDelay
   , soInferFunctionPermissions      :: !FunctionPermissionsCtx
+  , soEnableMaintenanceMode         :: !MaintenanceMode
   }
 
 data DowngradeOptions

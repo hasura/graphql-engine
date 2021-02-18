@@ -42,11 +42,12 @@ convertMutationAction
   -> HTTP.RequestHeaders
   -> ActionMutation 'Postgres (UnpreparedValue 'Postgres)
   -> m (ActionExecutionPlan, HTTP.ResponseHeaders)
-convertMutationAction env logger userInfo manager reqHeaders = \case
+convertMutationAction env logger userInfo manager reqHeaders  = \case
   AMSync s  -> ((AEPSync . _aerExecution) &&& _aerHeaders) <$>
     resolveActionExecution env logger userInfo s actionExecContext
   AMAsync s -> do
-    result <- liftEitherM (runMetadataStorageT $ resolveActionMutationAsync s reqHeaders userSession)
+    result <-
+      liftEitherM (runMetadataStorageT $ resolveActionMutationAsync s reqHeaders userSession)
     pure (AEPAsyncMutation result, [])
   where
     userSession = _uiSession userInfo

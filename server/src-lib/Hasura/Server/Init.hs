@@ -198,13 +198,17 @@ mkServeOptions rso = do
     maybe FunctionPermissionsInferred (bool FunctionPermissionsManual FunctionPermissionsInferred) <$>
     (withEnv (rsoInferFunctionPermissions rso) (fst inferFunctionPermsEnv))
 
+  maintenanceMode <-
+    bool MaintenanceModeDisabled MaintenanceModeEnabled
+    <$> withEnvBool (rsoEnableMaintenanceMode rso) (fst maintenanceModeEnv)
+
   return $ ServeOptions port host connParams txIso adminScrt authHook jwtSecret
                         unAuthRole corsCfg enableConsole consoleAssetsDir
                         enableTelemetry strfyNum enabledAPIs lqOpts enableAL
                         enabledLogs serverLogLevel planCacheOptions
                         internalErrorsConfig eventsHttpPoolSize eventsFetchInterval
                         logHeadersFromEnv enableRemoteSchemaPerms connectionOptions webSocketKeepAlive
-                        inferFunctionPerms
+                        inferFunctionPerms maintenanceMode
   where
 #ifdef DeveloperAPIs
     defaultAPIs = [METADATA,GRAPHQL,PGDUMP,CONFIG,DEVELOPER]
@@ -562,6 +566,11 @@ inferFunctionPermsEnv =
   , "Infers function permissions (default: true)"
   )
 
+maintenanceModeEnv :: (String, String)
+maintenanceModeEnv =
+  ( "HASURA_GRAPHQL_ENABLE_MAINTENANCE_MODE"
+  , "Flag to enable maintenance mode in the graphql-engine"
+  )
 
 adminInternalErrorsEnv :: (String, String)
 adminInternalErrorsEnv =
@@ -900,7 +909,12 @@ parseInferFunctionPerms :: Parser (Maybe Bool)
 parseInferFunctionPerms = optional $
   option ( eitherReader parseStrAsBool )
          ( long "infer-function-permissions" <>
-           help (snd inferFunctionPermsEnv)
+           help (snd inferFunctionPermsEnv))
+
+parseEnableMaintenanceMode :: Parser Bool
+parseEnableMaintenanceMode =
+  switch ( long "enable-maintenance-mode" <>
+           help (snd maintenanceModeEnv)
          )
 
 mxRefetchDelayEnv :: (String, String)
@@ -1016,6 +1030,7 @@ serveOptsToLog so =
       , "websocket_compression_options" J..= show (WS.connectionCompressionOptions . soConnectionOptions $ so)
       , "websocket_keep_alive" J..= show (soWebsocketKeepAlive so)
       , "infer_function_permissions" J..= soInferFunctionPermissions so
+      , "enable_maintenance_mode" J..= soEnableMaintenanceMode so
       ]
 
 mkGenericStrLog :: L.LogLevel -> Text -> String -> StartupLog
@@ -1065,6 +1080,7 @@ serveOptionsParser =
   <*> parseWebSocketCompression
   <*> parseWebSocketKeepAlive
   <*> parseInferFunctionPerms
+  <*> parseEnableMaintenanceMode
 
 -- | This implements the mapping between application versions
 -- and catalog schema versions.

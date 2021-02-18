@@ -285,10 +285,13 @@ initialiseServeCtx env GlobalCtx{..} so@ServeOptions{..} = do
   -- See Note [Schema Cache Sync]
   (schemaSyncListenerThread, schemaSyncEventRef) <- startSchemaSyncListenerThread metadataDbPool logger instanceId
 
+  let serverConfigCtx =
+        ServerConfigCtx soInferFunctionPermissions soEnableRemoteSchemaPermissions sqlGenCtx soEnableMaintenanceMode
+
   (rebuildableSchemaCache, cacheInitStartTime) <-
     lift . flip onException (flushLogger loggerCtx) $
     migrateCatalogSchema env logger metadataDbPool maybeDefaultSourceConfig _gcHttpManager
-      sqlGenCtx soEnableRemoteSchemaPermissions soInferFunctionPermissions (mkPgSourceResolver pgLogger)
+      serverConfigCtx (mkPgSourceResolver pgLogger)
 
   let schemaSyncCtx = SchemaSyncCtx schemaSyncListenerThread schemaSyncEventRef cacheInitStartTime
   -- See Note [Temporarily disabling query plan caching]
@@ -314,18 +317,22 @@ mkLoggers enabledLogs logLevel = do
 migrateCatalogSchema
   :: (HasVersion, MonadIO m, MonadBaseControl IO m)
   => Env.Environment -> Logger Hasura -> Q.PGPool -> Maybe (SourceConnConfiguration 'Postgres)
-  -> HTTP.Manager -> SQLGenCtx -> RemoteSchemaPermsCtx -> FunctionPermissionsCtx
+  -> HTTP.Manager -> ServerConfigCtx
   -> SourceResolver
   -> m (RebuildableSchemaCache, UTCTime)
 migrateCatalogSchema env logger pool defaultSourceConfig
-                     httpManager sqlGenCtx remoteSchemaPermsCtx functionPermsCtx
+                     httpManager serverConfigCtx
                      sourceResolver = do
   currentTime <- liftIO Clock.getCurrentTime
   initialiseResult <- runExceptT $ do
-    (migrationResult, metadata) <- Q.runTx pool (Q.Serializable, Just Q.ReadWrite) $
-                                   migrateCatalog defaultSourceConfig currentTime
-    let serverConfigCtx = ServerConfigCtx functionPermsCtx remoteSchemaPermsCtx sqlGenCtx
-        cacheBuildParams =
+    -- TODO: should we allow the migration to happen during maintenance mode?
+    -- Allowing this can be a sanity check, to see if the hdb_catalog in the
+    -- DB has been set correctly
+    (migrationResult, metadata) <-
+      Q.runTx pool (Q.Serializable, Just Q.ReadWrite) $
+        migrateCatalog defaultSourceConfig (_sccMaintenanceMode serverConfigCtx)
+                       currentTime
+    let cacheBuildParams =
           CacheBuildParams httpManager sourceResolver serverConfigCtx
         buildReason = case getMigratedFrom migrationResult of
           Nothing      -> CatalogSync
@@ -476,16 +483,19 @@ runHGEServer setupHook env ServeOptions{..} ServeCtx{..} initTime postPollHook s
              soInferFunctionPermissions
              soConnectionOptions
              soWebsocketKeepAlive
+             soEnableMaintenanceMode
+
+  let serverConfigCtx =
+        ServerConfigCtx soInferFunctionPermissions soEnableRemoteSchemaPermissions sqlGenCtx soEnableMaintenanceMode
 
   -- log inconsistent schema objects
   inconsObjs <- scInconsistentObjs <$> liftIO (getSCFromRef cacheRef)
   liftIO $ logInconsObjs logger inconsObjs
 
   -- Start a background thread for processing schema sync event present in the '_sscSyncEventRef'
-  _ <- startSchemaSyncProcessorThread sqlGenCtx
-                               logger _scHttpManager _sscSyncEventRef
-                               cacheRef _scInstanceId _sscCacheInitStartTime soEnableRemoteSchemaPermissions
-                               soInferFunctionPermissions
+  _ <- startSchemaSyncProcessorThread logger _scHttpManager _sscSyncEventRef
+                               cacheRef _scInstanceId _sscCacheInitStartTime
+                               serverConfigCtx
 
   let
     maxEvThrds    = fromMaybe defaultMaxEventThreads soEventsHttpPoolSize
@@ -497,7 +507,8 @@ runHGEServer setupHook env ServeOptions{..} ServeCtx{..} initTime postPollHook s
     (liftIO $ atomically initLockedEventsCtx)
     (\lockedEventsCtx ->
         liftWithStateless \lowerIO ->
-          shutdownEvents allPgSources (\a b -> hoist lowerIO (unlockScheduledEvents a b)) logger lockedEventsCtx)
+          shutdownEvents allPgSources
+          (\a b -> hoist lowerIO (unlockScheduledEvents a b)) logger lockedEventsCtx)
 
   -- prepare event triggers data
   eventEngineCtx <- liftIO $ atomically $ initEventEngineCtx maxEvThrds fetchI
@@ -520,7 +531,8 @@ runHGEServer setupHook env ServeOptions{..} ServeCtx{..} initTime postPollHook s
 
   -- start a background thread to deliver the scheduled events
   _scheduledEventsThread <- C.forkManagedT "processScheduledTriggers" logger $
-    processScheduledTriggers env logger logEnvHeaders _scHttpManager (getSCFromRef cacheRef) lockedEventsCtx
+    processScheduledTriggers env logger logEnvHeaders _scHttpManager
+                             (getSCFromRef cacheRef) lockedEventsCtx
 
   -- start a background thread to check for updates
   _updateThread <- C.forkManagedT "checkForUpdates" logger $ liftIO $
@@ -634,15 +646,12 @@ runHGEServer setupHook env ServeOptions{..} ServeCtx{..} initTime postPollHook s
             show count ++ " " ++ T.unpack eventType ++ " events successfully unlocked"
 
 runAsAdmin
-  :: SQLGenCtx
-  -> HTTP.Manager
-  -> RemoteSchemaPermsCtx
-  -> FunctionPermissionsCtx
+  :: HTTP.Manager
+  -> ServerConfigCtx
   -> RunT m a
   -> m (Either QErr a)
-runAsAdmin sqlGenCtx httpManager remoteSchemaPermsCtx functionPermsCtx m = do
-  let serverConfigCtx = ServerConfigCtx functionPermsCtx remoteSchemaPermsCtx sqlGenCtx
-      runCtx = RunCtx adminUserInfo httpManager serverConfigCtx
+runAsAdmin httpManager serverConfigCtx m = do
+  let runCtx = RunCtx adminUserInfo httpManager serverConfigCtx
   runExceptT $ peelRun runCtx m
 
 execQuery
@@ -777,11 +786,11 @@ setCatalogStateTx stateTy stateValue =
            SET console_state = $1
       |] (Identity $ Q.AltJ stateValue) False
 
+
 -- | Each of the function in the type class is executed in a totally separate transaction.
 --
 -- To learn more about why the instance is derived as following, see Note [Generic MetadataStorageT transformer]
 instance MonadMetadataStorage (MetadataStorageT PGMetadataStorageApp) where
-
   fetchMetadata             = runInSeparateTx fetchMetadataFromCatalog
   setMetadata               = runInSeparateTx . setMetadataInCatalog
   notifySchemaCacheSync a b = runInSeparateTx $ notifySchemaCacheSyncTx a b

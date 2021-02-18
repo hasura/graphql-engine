@@ -26,6 +26,7 @@ import           Hasura.RQL.Types
 import           Hasura.Server.API.PGDump
 import           Hasura.Server.Init                  (DowngradeOptions (..))
 import           Hasura.Server.Migrate
+import           Hasura.Server.Types                 (MaintenanceMode (..))
 import           Hasura.Server.Version               (HasVersion)
 import           Hasura.Session
 
@@ -78,7 +79,7 @@ spec
   => PostgresConnConfiguration -> PGExecCtx -> Q.ConnInfo -> SpecWithCache m
 spec srcConfig pgExecCtx pgConnInfo = do
   let migrateCatalogAndBuildCache env time = do
-        (migrationResult, metadata) <- runTx pgExecCtx $ migrateCatalog (Just srcConfig) time
+        (migrationResult, metadata) <- runTx pgExecCtx $ migrateCatalog (Just srcConfig) MaintenanceModeDisabled time
         (,migrationResult) <$> runCacheBuildM (buildRebuildableSchemaCache env metadata)
 
       dropAndInit env time = lift $ CacheRefT $ flip modifyMVar \_ ->

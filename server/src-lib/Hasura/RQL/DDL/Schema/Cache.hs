@@ -54,6 +54,7 @@ import           Hasura.RQL.DDL.Schema.Cache.Permission
 import           Hasura.RQL.DDL.Schema.Function
 import           Hasura.RQL.DDL.Schema.Table
 import           Hasura.RQL.Types                         hiding (fmFunction, tmTable)
+import           Hasura.Server.Types                      (MaintenanceMode (..))
 import           Hasura.Server.Version                    (HasVersion)
 import           Hasura.Session
 
@@ -526,7 +527,8 @@ buildSchemaCacheRule env = proc (metadata, invalidationKeys) -> do
           bindA -< do
             buildReason <- ask
             serverConfigCtx <- askServerConfigCtx
-            when (buildReason == CatalogUpdate) $
+            -- we don't modify the existing event trigger definitions in the maintenance mode
+            when (buildReason == CatalogUpdate && (_sccMaintenanceMode serverConfigCtx) == MaintenanceModeDisabled) $
               liftEitherM $ createTableEventTrigger serverConfigCtx sourceConfig tableName tableColumns triggerName triggerDefinition
 
     buildCronTriggers

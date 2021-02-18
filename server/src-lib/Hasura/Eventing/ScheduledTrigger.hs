@@ -250,7 +250,8 @@ processOneOffScheduledEvents
   -> [OneOffScheduledEvent]
   -> TVar (Set.Set OneOffScheduledEventId)
   -> m ()
-processOneOffScheduledEvents env logger logEnv httpMgr oneOffEvents lockedOneOffScheduledEvents = do
+processOneOffScheduledEvents env logger logEnv httpMgr
+                             oneOffEvents lockedOneOffScheduledEvents = do
   -- save the locked one-off events that have been fetched from the
   -- database, the events stored here will be unlocked in case a
   -- graceful shutdown is initiated in midst of processing these events

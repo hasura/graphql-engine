@@ -46,12 +46,14 @@ import           Hasura.Server.Init                  (DowngradeOptions (..), dat
 import           Hasura.Server.Logging               (StartupLog (..))
 import           Hasura.Server.Migrate.Version       (latestCatalogVersion,
                                                       latestCatalogVersionString)
+import           Hasura.Server.Types                 (MaintenanceMode (..))
 
 
 data MigrationResult
   = MRNothingToDo
   | MRInitialized
   | MRMigrated Text -- ^ old catalog version
+  | MRMaintanenceMode
   deriving (Show, Eq)
 
 instance ToEngineLog MigrationResult Hasura where
@@ -67,15 +69,18 @@ instance ToEngineLog MigrationResult Hasura where
         MRMigrated oldVersion ->
           "Successfully migrated from catalog version " <> oldVersion <> " to version "
             <> latestCatalogVersionString <> "."
+        MRMaintanenceMode ->
+          "Catalog migrations are skipped because the graphql-engine is in maintenance mode"
     }
 
 getMigratedFrom
   :: MigrationResult
   -> Maybe Float -- ^ We have version 0.8 as non integral catalog version
 getMigratedFrom = \case
-  MRNothingToDo -> Nothing
-  MRInitialized -> Nothing
-  MRMigrated t  -> readMaybe (T.unpack t)
+  MRNothingToDo     -> Nothing
+  MRInitialized     -> Nothing
+  MRMigrated t      -> readMaybe (T.unpack t)
+  MRMaintanenceMode -> Nothing
 
 -- A migration and (hopefully) also its inverse if we have it.
 -- Polymorphic because `m` can be any `MonadTx`, `MonadIO` when
@@ -92,14 +97,25 @@ migrateCatalog
      , MonadBaseControl IO m
      )
   => Maybe (SourceConnConfiguration 'Postgres)
+  -> MaintenanceMode
   -> UTCTime
   -> m (MigrationResult, Metadata)
-migrateCatalog maybeDefaultSourceConfig migrationTime = do
-  migrationResult <- doesSchemaExist (SchemaName "hdb_catalog") >>= \case
-    False -> initialize True
-    True  -> doesTableExist (SchemaName "hdb_catalog") (TableName "hdb_version") >>= \case
-      False -> initialize False
-      True  -> migrateFrom =<< getCatalogVersion
+migrateCatalog maybeDefaultSourceConfig maintenanceMode migrationTime = do
+  catalogSchemaExists <- doesSchemaExist (SchemaName "hdb_catalog")
+  versionTableExists <- doesTableExist (SchemaName "hdb_catalog") (TableName "hdb_version")
+  migrationResult <-
+    if | maintenanceMode == MaintenanceModeEnabled -> do
+           if | not catalogSchemaExists ->
+                  throw500 "unexpected: hdb_catalog schema not found in maintenance mode"
+              | not versionTableExists ->
+                  throw500 "unexpected: hdb_catalog.hdb_version table not found in maintenance mode"
+              -- TODO: should we also have a check for the catalog version?
+              | otherwise -> pure MRMaintanenceMode
+       | otherwise -> case catalogSchemaExists of
+           False -> initialize True
+           True  -> case versionTableExists of
+             False -> initialize False
+             True  -> migrateFrom =<< getCatalogVersion
   metadata <- liftTx fetchMetadataFromCatalog
   pure (migrationResult, metadata)
   where
@@ -139,7 +155,7 @@ migrateCatalog maybeDefaultSourceConfig migrationTime = do
           pure $ MRMigrated previousVersion
       where
         neededMigrations =
-          dropWhile ((/= previousVersion) . fst) (migrations maybeDefaultSourceConfig False)
+          dropWhile ((/= previousVersion) . fst) (migrations maybeDefaultSourceConfig False maintenanceMode)
 
     updateCatalogVersion = setCatalogVersion latestCatalogVersionString migrationTime
 
@@ -173,7 +189,7 @@ downgradeCatalog defaultSourceConfig opts time = do
       where
         neededDownMigrations newVersion =
           downgrade previousVersion newVersion
-            (reverse (migrations defaultSourceConfig (dgoDryRun opts)))
+            (reverse (migrations defaultSourceConfig (dgoDryRun opts) MaintenanceModeDisabled))
 
         downgrade
           :: Text
@@ -216,8 +232,8 @@ setCatalogVersion ver time = liftTx $ Q.unitQE defaultTxErrorHandler [Q.sql|
 
 migrations
   :: forall m. (MonadIO m, MonadTx m)
-  => Maybe (SourceConnConfiguration 'Postgres) -> Bool -> [(Text, MigrationPair m)]
-migrations maybeDefaultSourceConfig dryRun =
+  => Maybe (SourceConnConfiguration 'Postgres) -> Bool -> MaintenanceMode -> [(Text, MigrationPair m)]
+migrations maybeDefaultSourceConfig dryRun maintenanceMode =
     -- We need to build the list of migrations at compile-time so that we can compile the SQL
     -- directly into the executable using `Q.sqlFromFile`. The GHC stage restriction makes
     -- doing this a little bit awkward (we can’t use any definitions in this module at
@@ -281,6 +297,8 @@ migrations maybeDefaultSourceConfig dryRun =
                                              |] (Q.AltJ $ A.toJSON etc, name) True
 
     from42To43 = do
+      when (maintenanceMode == MaintenanceModeEnabled) $
+        throw500 "cannot migrate to catalog version 43 in maintenance mode"
       let query = $(Q.sqlFromFile "src-rsr/migrations/42_to_43.sql")
       if dryRun then (liftIO . TIO.putStrLn . Q.getQueryText) query
         else do

@@ -42,7 +42,7 @@ import           Hasura.RQL.DML.Types
 import           Hasura.RQL.DML.Update
 import           Hasura.RQL.Types
 import           Hasura.RQL.Types.Run
-import           Hasura.Server.Types                (InstanceId (..))
+import           Hasura.Server.Types                (InstanceId (..), MaintenanceMode (..))
 import           Hasura.Server.Utils
 import           Hasura.Server.Version              (HasVersion)
 import           Hasura.Session
@@ -191,9 +191,8 @@ runQuery
   => Env.Environment
   -> InstanceId
   -> UserInfo -> RebuildableSchemaCache -> HTTP.Manager
-  -> SQLGenCtx -> RemoteSchemaPermsCtx  -> FunctionPermissionsCtx
-  -> RQLQuery -> m (EncJSON, RebuildableSchemaCache)
-runQuery env instanceId userInfo sc hMgr sqlGenCtx remoteSchemaPermsCtx functionPermsCtx query = do
+  -> ServerConfigCtx -> RQLQuery -> m (EncJSON, RebuildableSchemaCache)
+runQuery env instanceId userInfo sc hMgr serverConfigCtx query = do
   metadata <- fetchMetadata
   result <- runQueryM env query & Tracing.interpTraceT \x -> do
     (((js, tracemeta), meta), rsc, ci) <-
@@ -205,13 +204,16 @@ runQuery env instanceId userInfo sc hMgr sqlGenCtx remoteSchemaPermsCtx function
     pure ((js, rsc, ci, meta), tracemeta)
   withReload result
   where
-    serverConfigCtx = ServerConfigCtx functionPermsCtx remoteSchemaPermsCtx sqlGenCtx
     runCtx = RunCtx userInfo hMgr serverConfigCtx
 
     withReload (result, updatedCache, invalidations, updatedMetadata) = do
       when (queryModifiesSchemaCache query) $ do
-        -- set modified metadata in storage
-        setMetadata updatedMetadata
+        case (_sccMaintenanceMode serverConfigCtx) of
+          MaintenanceModeDisabled ->
+            -- set modified metadata in storage
+            setMetadata updatedMetadata
+          MaintenanceModeEnabled ->
+            throw500 "metadata cannot be modified in maintenance mode"
         -- notify schema cache sync
         notifySchemaCacheSync instanceId invalidations
       pure (result, updatedCache)

@@ -186,22 +186,20 @@ startSchemaSyncProcessorThread
      , MonadMetadataStorage (MetadataStorageT m)
      , MonadResolveSource m
      )
-  => SQLGenCtx
-  -> Logger Hasura
+  => Logger Hasura
   -> HTTP.Manager
   -> SchemaSyncEventRef
   -> SchemaCacheRef
   -> InstanceId
   -> UTC.UTCTime
-  -> RemoteSchemaPermsCtx
-  -> FunctionPermissionsCtx
+  -> ServerConfigCtx
   -> ManagedT m Immortal.Thread
-startSchemaSyncProcessorThread sqlGenCtx logger httpMgr
-  schemaSyncEventRef cacheRef instanceId cacheInitStartTime remoteSchemaPermsCtx functionPermsCtx = do
+startSchemaSyncProcessorThread logger httpMgr
+  schemaSyncEventRef cacheRef instanceId cacheInitStartTime serverConfigCtx = do
   -- Start processor thread
   processorThread <- C.forkManagedT "SchemeUpdate.processor" logger $
-    processor sqlGenCtx logger httpMgr schemaSyncEventRef
-              cacheRef instanceId cacheInitStartTime remoteSchemaPermsCtx  functionPermsCtx
+    processor logger httpMgr schemaSyncEventRef
+              cacheRef instanceId cacheInitStartTime serverConfigCtx
   logThreadStarted logger instanceId TTProcessor processorThread
   pure processorThread
 
@@ -254,18 +252,16 @@ processor
      , MonadMetadataStorage (MetadataStorageT m)
      , MonadResolveSource m
      )
-  => SQLGenCtx
-  -> Logger Hasura
+  => Logger Hasura
   -> HTTP.Manager
   -> SchemaSyncEventRef
   -> SchemaCacheRef
   -> InstanceId
   -> UTC.UTCTime
-  -> RemoteSchemaPermsCtx
-  -> FunctionPermissionsCtx
+  -> ServerConfigCtx
   -> m void
-processor sqlGenCtx logger httpMgr updateEventRef
-  cacheRef instanceId cacheInitStartTime remoteSchemaPermsCtx functionPermsCtx =
+processor logger httpMgr updateEventRef
+  cacheRef instanceId cacheInitStartTime serverConfigCtx =
   -- Never exits
   forever $ do
     event <- liftIO $ STM.atomically getLatestEvent
@@ -285,8 +281,8 @@ processor sqlGenCtx logger httpMgr updateEventRef
             pure (_sseprShouldReload, _sseprCacheInvalidations)
 
     when shouldReload $
-      refreshSchemaCache sqlGenCtx logger httpMgr cacheRef cacheInvalidations
-        threadType remoteSchemaPermsCtx functionPermsCtx "schema cache reloaded"
+      refreshSchemaCache logger httpMgr cacheRef cacheInvalidations
+        threadType serverConfigCtx "schema cache reloaded"
   where
     -- checks if there is an event
     -- and replaces it with Nothing
@@ -305,18 +301,16 @@ refreshSchemaCache
      , MonadMetadataStorage (MetadataStorageT m)
      , MonadResolveSource m
      )
-  => SQLGenCtx
-  -> Logger Hasura
+  => Logger Hasura
   -> HTTP.Manager
   -> SchemaCacheRef
   -> CacheInvalidations
   -> ThreadType
-  -> RemoteSchemaPermsCtx
-  -> FunctionPermissionsCtx
+  -> ServerConfigCtx
   -> Text
   -> m ()
-refreshSchemaCache sqlGenCtx logger httpManager
-    cacheRef invalidations threadType remoteSchemaPermsCtx functionPermsCtx msg = do
+refreshSchemaCache logger httpManager
+    cacheRef invalidations threadType serverConfigCtx msg = do
   -- Reload schema cache from catalog
   eitherMetadata <- runMetadataStorageT fetchMetadata
   resE <- runExceptT $ do
@@ -331,7 +325,6 @@ refreshSchemaCache sqlGenCtx logger httpManager
     Left e   -> logError logger threadType $ TEQueryError e
     Right () -> logInfo logger threadType $ object ["message" .= msg]
  where
-   serverConfigCtx = ServerConfigCtx functionPermsCtx remoteSchemaPermsCtx sqlGenCtx
    runCtx = RunCtx adminUserInfo httpManager serverConfigCtx
 
 logInfo :: (MonadIO m) => Logger Hasura -> ThreadType -> Value -> m ()

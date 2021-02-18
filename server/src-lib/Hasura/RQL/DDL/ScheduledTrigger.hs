@@ -117,9 +117,11 @@ dropCronTriggerInMetadata name =
   MetadataModifier $ metaCronTriggers %~ OMap.delete name
 
 runCreateScheduledEvent
-  :: (MonadMetadataStorageQueryAPI m) => CreateScheduledEvent -> m EncJSON
-runCreateScheduledEvent =
-  (createScheduledEvent . SESOneOff) >=> \() -> pure successMsg
+  :: ( MonadMetadataStorageQueryAPI m  )
+  => CreateScheduledEvent -> m EncJSON
+runCreateScheduledEvent scheduledEvent = do
+  createScheduledEvent $ SESOneOff scheduledEvent
+  pure successMsg
 
 checkExists :: (CacheRM m, MonadError QErr m) => TriggerName -> m ()
 checkExists name = do
@@ -129,7 +131,7 @@ checkExists name = do
       "cron trigger with name: " <> triggerNameToTxt name <> " does not exist"
 
 runDeleteScheduledEvent
-  :: (MonadMetadataStorageQueryAPI m) => DeleteScheduledEvent -> m EncJSON
+  :: ( MonadMetadataStorageQueryAPI m ) => DeleteScheduledEvent -> m EncJSON
 runDeleteScheduledEvent DeleteScheduledEvent{..} = do
   dropEvent _dseEventId _dseType
   pure successMsg

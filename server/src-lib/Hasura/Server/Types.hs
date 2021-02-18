@@ -35,9 +35,20 @@ newtype InstanceId
   = InstanceId { getInstanceId :: Text }
   deriving (Show, Eq, ToJSON, FromJSON, Q.FromCol, Q.ToPrepArg)
 
+data MaintenanceMode = MaintenanceModeEnabled | MaintenanceModeDisabled
+  deriving (Show, Eq)
+
+instance FromJSON MaintenanceMode where
+  parseJSON = withBool "MaintenanceMode" $
+    pure . bool MaintenanceModeDisabled MaintenanceModeEnabled
+
+instance ToJSON MaintenanceMode where
+  toJSON = Bool . (== MaintenanceModeEnabled)
+
 data ServerConfigCtx
   = ServerConfigCtx
   { _sccFunctionPermsCtx     :: !FunctionPermissionsCtx
   , _sccRemoteSchemaPermsCtx :: !RemoteSchemaPermsCtx
   , _sccSQLGenCtx            :: !SQLGenCtx
+  , _sccMaintenanceMode      :: !MaintenanceMode
   } deriving (Show, Eq)

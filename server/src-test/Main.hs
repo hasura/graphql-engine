@@ -25,6 +25,7 @@ import           Hasura.RQL.DDL.Schema.Source
 import           Hasura.RQL.Types
 import           Hasura.Server.Init
 import           Hasura.Server.Migrate
+import           Hasura.Server.Types
 import           Hasura.Server.Version
 
 import qualified Data.NonNegativeIntSpec            as NonNegetiveIntSpec
@@ -97,7 +98,9 @@ buildPostgresSpecs maybeUrlTemplate = do
       setupCacheRef = do
         httpManager <- HTTP.newManager HTTP.tlsManagerSettings
         let sqlGenCtx = SQLGenCtx False
-            serverConfigCtx = ServerConfigCtx FunctionPermissionsInferred RemoteSchemaPermsDisabled sqlGenCtx
+            maintenanceMode = MaintenanceModeDisabled
+            serverConfigCtx =
+              ServerConfigCtx FunctionPermissionsInferred RemoteSchemaPermsDisabled sqlGenCtx maintenanceMode
             cacheBuildParams = CacheBuildParams httpManager (mkPgSourceResolver print) serverConfigCtx
 
             run :: CacheBuild a -> IO a
@@ -108,7 +111,7 @@ buildPostgresSpecs maybeUrlTemplate = do
 
         (metadata, schemaCache) <- run do
           metadata <- snd <$> (liftEitherM . runExceptT . runLazyTx pgContext Q.ReadWrite)
-                      (migrateCatalog (Just sourceConfig) =<< liftIO getCurrentTime)
+                      (migrateCatalog (Just sourceConfig) maintenanceMode =<< liftIO getCurrentTime)
           schemaCache <- buildRebuildableSchemaCache envMap metadata
           pure (metadata, schemaCache)
 

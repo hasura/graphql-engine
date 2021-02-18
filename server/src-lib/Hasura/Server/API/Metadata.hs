@@ -35,7 +35,7 @@ import           Hasura.RQL.DDL.Schema
 import           Hasura.RQL.DDL.Schema.Source
 import           Hasura.RQL.Types
 import           Hasura.RQL.Types.Run
-import           Hasura.Server.Types                (InstanceId (..))
+import           Hasura.Server.Types                (InstanceId (..), MaintenanceMode (..))
 import           Hasura.Server.Utils                (APIVersion (..))
 import           Hasura.Server.Version              (HasVersion)
 import           Hasura.Session
@@ -223,11 +223,32 @@ runMetadataQuery env instanceId userInfo httpManager serverConfigCtx schemaCache
     & runExceptT
     & liftEitherM
   -- set modified metadata in storage
-  setMetadata modMetadata
+  when (queryModifiesMetadata query) $
+    case (_sccMaintenanceMode serverConfigCtx) of
+      MaintenanceModeDisabled ->
+        -- set modified metadata in storage
+        setMetadata modMetadata
+      MaintenanceModeEnabled ->
+        throw500 "metadata cannot be modified in maintenance mode"
   -- notify schema cache sync
   notifySchemaCacheSync instanceId cacheInvalidations
 
   pure (r, modSchemaCache)
+
+queryModifiesMetadata :: RQLMetadata -> Bool
+queryModifiesMetadata = \case
+  RMV1 q ->
+    case q of
+      RMGetCatalogState _      -> False
+      RMExportMetadata _       -> False
+      RMGetEventInvocations _  -> False
+      RMGetScheduledEvents _   -> False
+
+      RMCreateScheduledEvent _ -> False
+      RMDeleteScheduledEvent _ -> False
+      RMBulk qs                -> any queryModifiesMetadata qs
+      _                        -> True
+  RMV2 _ -> True
 
 runMetadataQueryM
   :: ( HasVersion
