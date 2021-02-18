@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/hasura/graphql-engine/cli/internal/hasura"
+
 	gyaml "github.com/ghodss/yaml"
 	"github.com/hasura/graphql-engine/cli/metadata/types"
 	"github.com/hasura/graphql-engine/cli/migrate/database"
@@ -117,10 +119,25 @@ func (h *HasuraDB) ApplyMetadata() error {
 	if err != nil {
 		return err
 	}
-	_, err = h.metadataops.ReplaceMetadata(bytes.NewReader(jbyt))
-	if err != nil {
-		h.logger.Debug(err)
-		return err
+	if h.v2metadataops != nil {
+		var metadata interface{}
+		if err := json.Unmarshal(jbyt, &metadata); err != nil {
+			return err
+		}
+		_, err = h.v2metadataops.V2ReplaceMetadata(hasura.V2ReplaceMetadataArgs{
+			AllowInconsistentMetadata: true,
+			Metadata:                  metadata,
+		})
+		if err != nil {
+			h.logger.Debug(err)
+			return err
+		}
+	} else {
+		_, err := h.metadataops.ReplaceMetadata(bytes.NewReader(jbyt))
+		if err != nil {
+			h.logger.Debug(err)
+			return err
+		}
 	}
 	return nil
 }

@@ -20,6 +20,7 @@ type V1Query interface {
 
 type V1Metadata interface {
 	CommonMetadataOperations
+	V2CommonMetadataOperations
 	CatalogStateOperations
 	Send(requestBody interface{}) (httpcResponse *httpc.Response, body io.Reader, error error)
 }
@@ -35,6 +36,7 @@ type V2Query interface {
 }
 
 type RequestBody struct {
-	Type string      `json:"type"`
-	Args interface{} `json:"args"`
+	Type    string      `json:"type"`
+	Version uint        `json:"version,omitempty"`
+	Args    interface{} `json:"args"`
 }

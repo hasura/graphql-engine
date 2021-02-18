@@ -77,6 +77,7 @@ type HasuraDB struct {
 	hasuraOpts     *database.HasuraOpts
 
 	metadataops          hasura.CommonMetadataOperations
+	v2metadataops        hasura.V2CommonMetadataOperations
 	databaseops          hasura.DatabaseOperations
 	hasuraClient         *hasura.Client
 	migrationsStateStore statestore.MigrationsStateStore
@@ -96,6 +97,7 @@ func WithInstance(config *Config, logger *log.Logger, hasuraOpts *database.Hasur
 		logger:               logger,
 		hasuraOpts:           hasuraOpts,
 		metadataops:          hasuraOpts.MetadataOps,
+		v2metadataops:        hasuraOpts.V2MetadataOps,
 		databaseops:          hasuraOpts.DatabaseOps,
 		hasuraClient:         hasuraOpts.Client,
 		migrationsStateStore: hasuraOpts.MigrationsStateStore,
@@ -237,7 +239,7 @@ func (h *HasuraDB) Run(migration io.Reader, fileType, fileName string) error {
 		}
 		_, err := h.databaseops.RunSQL(sqlInput)
 		if err != nil {
-			return nil
+			return err
 		}
 	case "meta":
 		var metadataRequests []interface{}

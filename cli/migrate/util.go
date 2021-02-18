@@ -8,6 +8,8 @@ import (
 	"runtime"
 	"strings"
 
+	"github.com/hasura/graphql-engine/cli/internal/hasura"
+
 	migratedb "github.com/hasura/graphql-engine/cli/migrate/database"
 
 	crontriggers "github.com/hasura/graphql-engine/cli/metadata/cron_triggers"
@@ -140,10 +142,16 @@ func NewMigrate(ec *cli.ExecutionContext, isCmd bool, database string) (*Migrate
 		ec.Config.ServerConfig.TLSConfig,
 		ec.Logger,
 		&migratedb.HasuraOpts{
-			HasMetadataV3:        ec.HasMetadataV3,
-			Database:             database,
-			Client:               ec.APIClient,
-			DatabaseOps:          cli.GetDatabaseOps(ec),
+			HasMetadataV3: ec.HasMetadataV3,
+			Database:      database,
+			Client:        ec.APIClient,
+			DatabaseOps:   cli.GetDatabaseOps(ec),
+			V2MetadataOps: func() hasura.V2CommonMetadataOperations {
+				if ec.Config.Version >= cli.V3 {
+					return ec.APIClient.V1Metadata
+				}
+				return nil
+			}(),
 			MetadataOps:          cli.GetCommonMetadataOps(ec),
 			MigrationsStateStore: cli.GetMigrationsStateStore(ec),
 			SettingsStateStore:   cli.GetSettingsStateStore(ec),

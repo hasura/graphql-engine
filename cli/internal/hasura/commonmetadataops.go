@@ -19,6 +19,20 @@ type CommonMetadataOperations interface {
 	SendCommonMetadataOperation(requestBody interface{}) (httpcResponse *httpc.Response, body io.Reader, error error)
 }
 
+type V2CommonMetadataOperations interface {
+	V2ReplaceMetadata(args V2ReplaceMetadataArgs) (*V2ReplaceMetadataResponse, error)
+}
+
+type V2ReplaceMetadataArgs struct {
+	AllowInconsistentMetadata bool        `json:"allow_inconsistent_metadata"`
+	Metadata                  interface{} `json:"metadata"`
+}
+
+type V2ReplaceMetadataResponse struct {
+	IsConsistent        bool        `json:"is_consistent"`
+	InconsistentObjects interface{} `json:"inconsistent_objects"`
+}
+
 type GetInconsistentMetadataResponse struct {
 	IsConsistent        bool          `json:"is_consistent"`
 	InconsistentObjects []interface{} `json:"inconsistent_objects"`

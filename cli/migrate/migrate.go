@@ -1211,9 +1211,6 @@ func (m *Migrate) runMigrations(ret <-chan interface{}) error {
 			migr := r.(*Migration)
 			if migr.Body != nil {
 				if !m.SkipExecution {
-					if err := m.databaseDrv.SetVersion(int64(migr.Version), true); err != nil {
-						return err
-					}
 					if err := m.databaseDrv.Run(migr.BufferedBody, migr.FileType, migr.FileName); err != nil {
 						return err
 					}

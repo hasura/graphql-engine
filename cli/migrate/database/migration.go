@@ -111,6 +111,7 @@ type HasuraOpts struct {
 	Client               *hasura.Client
 	DatabaseOps          hasura.DatabaseOperations
 	MetadataOps          hasura.CommonMetadataOperations
+	V2MetadataOps        hasura.V2CommonMetadataOperations
 	MigrationsStateStore statestore.MigrationsStateStore
 	SettingsStateStore   statestore.SettingsStateStore
 }
