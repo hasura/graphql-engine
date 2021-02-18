@@ -662,16 +662,18 @@ case "$SERVER_TEST_TO_RUN" in
 
   function-permissions)
       echo -e "\n$(time_elapsed): <########## TEST GRAPHQL-ENGINE WITH FUNCTION PERMISSIONS ENABLED ########>\n"
-      TEST_TYPE="remote-schema-permissions"
+      TEST_TYPE="function-permissions"
       export HASURA_GRAPHQL_INFER_FUNCTION_PERMISSIONS=false
+      export HASURA_GRAPHQL_ADMIN_SECRET="HGE$RANDOM$RANDOM"
 
       run_hge_with_args serve
       wait_for_port 8080
 
-      pytest -n 1 -vv --hge-urls "$HGE_URL" --pg-urls "$HASURA_GRAPHQL_DATABASE_URL" --hge-key="$HASURA_GRAPHQL_ADMIN_SECRET"  --test_function_permissions test_graphql_queries.py::TestGraphQLQueryFunctionPermissions
-      pytest -n 1 -vv --hge-urls "$HGE_URL" --pg-urls "$HASURA_GRAPHQL_DATABASE_URL" --hge-key="$HASURA_GRAPHQL_ADMIN_SECRET"  --test_function_permissions test_graphql_mutations.py::TestGraphQLMutationFunctions
+      pytest -n 1 -vv --hge-urls "$HGE_URL" --pg-urls "$HASURA_GRAPHQL_DATABASE_URL" --hge-key="$HASURA_GRAPHQL_ADMIN_SECRET"  --test-function-permissions test_graphql_queries.py::TestGraphQLQueryFunctionPermissions
+      pytest -n 1 -vv --hge-urls "$HGE_URL" --pg-urls "$HASURA_GRAPHQL_DATABASE_URL" --hge-key="$HASURA_GRAPHQL_ADMIN_SECRET"  --test-function-permissions test_graphql_mutations.py::TestGraphQLMutationFunctions
 
       unset HASURA_GRAPHQL_INFER_FUNCTION_PERMISSIONS
+      unset HASURA_GRAPHQL_ADMIN_SECRET
 
       kill_hge_servers
       ;;

@@ -19,6 +19,7 @@ ws-init-cookie-read-cors-disabled
 ws-graphql-api-disabled
 ws-metadata-api-disabled
 remote-schema-permissions
+function-permissions
 query-caching
 query-logs
 webhook-request-context
