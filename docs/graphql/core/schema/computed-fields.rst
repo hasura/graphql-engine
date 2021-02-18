@@ -58,26 +58,26 @@ Let's say we have the following schema:
 
 .. code-block:: plpgsql
   
-  author(id integer, first_name text, last_name text)
+  authors(id integer, first_name text, last_name text)
 
 :ref:`Define an SQL function <create_sql_functions>` called ``author_full_name``:
 
 .. code-block:: plpgsql
 
-  CREATE FUNCTION author_full_name(author_row author)
+  CREATE FUNCTION author_full_name(author_row authors)
   RETURNS TEXT AS $$
     SELECT author_row.first_name || ' ' || author_row.last_name
   $$ LANGUAGE sql STABLE;
 
-:ref:`Add a computed field <add-computed-field>` called ``full_name`` to the ``author`` table using the SQL function above.
+:ref:`Add a computed field <add-computed-field>` called ``full_name`` to the ``authors`` table using the SQL function above.
 
-Query data from the ``author`` table:
+Query data from the ``authors`` table:
 
 .. graphiql::
   :view_only:
   :query:
     query {
-      author {
+      authors {
         id
         first_name
         last_name
@@ -87,7 +87,7 @@ Query data from the ``author`` table:
   :response:
     {
       "data": {
-        "author": [
+        "authors": [
           {
             "id": 1,
             "first_name": "Chris",
@@ -110,11 +110,11 @@ Let's say we have the following schema:
 
 .. code-block:: plpgsql
   
-  author(id integer, first_name text, last_name text)
+  authors(id integer, first_name text, last_name text)
                                                       
-  article(id integer, title text, content text, author_id integer)
+  articles(id integer, title text, content text, author_id integer)
 
-Now we can define a :ref:`table relationship <table_relationships>` on the ``author``
+Now we can define a :ref:`table relationship <table_relationships>` on the ``authors``
 table to fetch authors along with their articles.
 
 We can make use of computed fields to fetch the author's articles with a search parameter.
@@ -123,25 +123,25 @@ We can make use of computed fields to fetch the author's articles with a search 
 
 .. code-block:: plpgsql
 
-   CREATE FUNCTION filter_author_articles(author_row author, search text)
-   RETURNS SETOF article AS $$
+   CREATE FUNCTION filter_author_articles(author_row authors, search text)
+   RETURNS SETOF articles AS $$
      SELECT *
-     FROM article
+     FROM articles
      WHERE
        ( title ilike ('%' || search || '%')
          OR content ilike ('%' || search || '%')
        ) AND author_id = author_row.id
    $$ LANGUAGE sql STABLE;
 
-:ref:`Add a computed field <add-computed-field>` called ``filtered_articles`` to the ``author`` table using the SQL function above.
+:ref:`Add a computed field <add-computed-field>` called ``filtered_articles`` to the ``authors`` table using the SQL function above.
 
-Query data from the ``author`` table:
+Query data from the ``authors`` table:
 
 .. graphiql::
   :view_only:
   :query:
     query {
-      author {
+      authors {
         id
         first_name
         last_name
@@ -155,7 +155,7 @@ Query data from the ``author`` table:
   :response:
     {
       "data": {
-        "author": [
+        "authors": [
           {
             "id": 1,
             "first_name": "Chris",
@@ -201,7 +201,7 @@ Adding a computed field to a table/view
 
         - table:
             schema: public
-            name: author
+            name: authors
           computed_fields:
           - name: full_name
             definition:
@@ -231,7 +231,7 @@ Adding a computed field to a table/view
         "type": "add_computed_field",
         "args": {
           "table": {
-            "name": "author",
+            "name": "authors",
             "schema": "public"
           },
           "name": "full_name",
@@ -261,9 +261,9 @@ Accessing Hasura session variables in computed fields
 
 It can be useful to have access to the session variable from the SQL function defining a computed field.
 For instance, suppose we want to record which users have liked which articles. We can do so using a table
-``article_likes`` that specifies a many-to-many relationship between ``article`` and ``user``. In such a
+``article_likes`` that specifies a many-to-many relationship between ``articles`` and ``users``. In such a
 case it can be useful to know if the current user has liked a specific article, and this information can be
-exposed as a *Boolean* computed field on ``article``.
+exposed as a *Boolean* computed field on ``articles``.
 
 Create a function with an argument for session variables and add it with the :ref:`add_computed_field` API with the
 ``session_argument`` key set. The session argument is a JSON object where keys are session variable names
@@ -273,7 +273,7 @@ as shown in the following example.
 .. code-block:: plpgsql
 
       -- 'hasura_session' will be the session argument
-      CREATE OR REPLACE FUNCTION article_liked_by_user(article_row article, hasura_session json)
+      CREATE OR REPLACE FUNCTION article_liked_by_user(article_row articles, hasura_session json)
       RETURNS boolean AS $$
       SELECT EXISTS (
           SELECT 1
@@ -292,7 +292,7 @@ as shown in the following example.
        "type":"add_computed_field",
        "args":{
            "table":{
-               "name":"article",
+               "name":"articles",
                "schema":"public"
            },
            "name":"liked_by_user",
@@ -311,7 +311,7 @@ as shown in the following example.
   :view_only:
   :query:
      query {
-       article(where: {id: {_eq: 3}}) {
+       articles(where: {id: {_eq: 3}}) {
          id
          liked_by_user
        }
@@ -319,7 +319,7 @@ as shown in the following example.
   :response:
     {
       "data": {
-        "article": [
+        "articles": [
           {
             "id": "3",
             "liked_by_user": true

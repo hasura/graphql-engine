@@ -35,7 +35,7 @@ author.
   :view_only:
   :query:
     query {
-      article {
+      articles {
         id
         title
         author {
@@ -46,7 +46,7 @@ author.
   :response:
     {
       "data": {
-        "article": [
+        "articles": [
           {
             "id": 1,
             "title": "sit amet",
@@ -83,7 +83,7 @@ articles.
   :view_only:
   :query:
     query {
-      author {
+      authors {
         id
         name
         articles {
@@ -95,7 +95,7 @@ articles.
   :response:
     {
       "data": {
-        "author": [
+        "authors": [
           {
             "id": 1,
             "name": "Justin",

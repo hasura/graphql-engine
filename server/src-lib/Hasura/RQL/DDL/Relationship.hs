@@ -12,24 +12,24 @@ where
 
 import           Hasura.Prelude
 
-import qualified Data.HashMap.Strict                as HM
-import qualified Data.HashMap.Strict.InsOrd         as OMap
-import qualified Data.HashSet                       as HS
+import qualified Data.HashMap.Strict        as HM
+import qualified Data.HashMap.Strict.InsOrd as OMap
+import qualified Data.HashSet               as HS
 
-import           Control.Lens                       ((.~))
+import           Control.Lens               ((.~))
 import           Data.Aeson.Types
 import           Data.Text.Extended
-import           Data.Tuple                         (swap)
+import           Data.Tuple                 (swap)
 
-import           Hasura.Backends.Postgres.SQL.Types hiding (TableName)
 import           Hasura.EncJSON
 import           Hasura.RQL.DDL.Deps
 import           Hasura.RQL.DDL.Permission
 import           Hasura.RQL.Types
 
+
 runCreateRelationship
-  :: (MonadError QErr m, CacheRWM m, ToJSON a, MetadataM m)
-  => RelType -> WithTable (RelDef a) -> m EncJSON
+  :: (MonadError QErr m, CacheRWM m, ToJSON a, MetadataM m, Backend b, BackendMetadata b)
+  => RelType -> WithTable b (RelDef a) -> m EncJSON
 runCreateRelationship relType (WithTable source tableName relDef) = do
   let relName = _rdName relDef
   -- Check if any field with relationship name already exists in the table
@@ -72,7 +72,7 @@ runDropRel (DropRel source qt rn cascade) = do
       pure depObjs
 
 dropRelationshipInMetadata
-  :: RelName -> TableMetadata -> TableMetadata
+  :: RelName -> TableMetadata b -> TableMetadata b
 dropRelationshipInMetadata relName =
   -- Since the name of a relationship is unique in a table, the relationship
   -- with given name may present in either array or object relationships but
@@ -81,12 +81,12 @@ dropRelationshipInMetadata relName =
   . (tmArrayRelationships %~ OMap.delete relName)
 
 objRelP2Setup
-  :: (QErrM m)
+  :: (QErrM m, Backend b)
   => SourceName
-  -> TableName 'Postgres
-  -> HashSet (ForeignKey 'Postgres)
-  -> RelDef ObjRelUsing
-  -> m (RelInfo 'Postgres, [SchemaDependency])
+  -> TableName b
+  -> HashSet (ForeignKey b)
+  -> RelDef (ObjRelUsing b)
+  -> m (RelInfo b, [SchemaDependency])
 objRelP2Setup source qt foreignKeys (RelDef rn ru _) = case ru of
   RUManual rm -> do
     let refqt = rmTable rm
@@ -110,12 +110,12 @@ objRelP2Setup source qt foreignKeys (RelDef rn ru _) = case ru of
     pure (RelInfo rn ObjRel colMap foreignTable False False, dependencies)
 
 arrRelP2Setup
-  :: (QErrM m)
-  => HashMap QualifiedTable (HashSet (ForeignKey 'Postgres))
+  :: (QErrM m, Backend b)
+  => HashMap (TableName b) (HashSet (ForeignKey b))
   -> SourceName
-  -> QualifiedTable
-  -> ArrRelDef
-  -> m (RelInfo 'Postgres, [SchemaDependency])
+  -> TableName b
+  -> (ArrRelDef b)
+  -> m (RelInfo b, [SchemaDependency])
 arrRelP2Setup foreignKeys source qt (RelDef rn ru _) = case ru of
   RUManual rm -> do
     let refqt = rmTable rm
@@ -124,7 +124,7 @@ arrRelP2Setup foreignKeys source qt (RelDef rn ru _) = case ru of
                 <> map (\c -> SchemaDependency (SOSourceObj source $ SOITableObj refqt $ TOCol c) DRRightColumn) rCols
     pure (RelInfo rn ArrRel (rmColumns rm) refqt True True, deps)
   RUFKeyOn (ArrRelUsingFKeyOn refqt refCol) -> do
-    foreignTableForeignKeys <- getTableInfo refqt foreignKeys
+    foreignTableForeignKeys <- findTable refqt foreignKeys
     let keysThatReferenceUs = filter ((== qt) . _fkForeignTable) (HS.toList foreignTableForeignKeys)
     ForeignKey constraint _ colMap <- getRequiredFkey refCol keysThatReferenceUs
     let deps = [ SchemaDependency (SOSourceObj source $ SOITableObj refqt $ TOForeignKey (_cName constraint)) DRRemoteFkey
@@ -139,7 +139,7 @@ arrRelP2Setup foreignKeys source qt (RelDef rn ru _) = case ru of
 
 purgeRelDep
   :: (QErrM m)
-  => SchemaObjId -> m (TableMetadata -> TableMetadata)
+  => SchemaObjId -> m (TableMetadata b -> TableMetadata b)
 purgeRelDep (SOSourceObj _ (SOITableObj _ (TOPerm rn pt))) = pure $ dropPermissionInMetadata rn pt
 purgeRelDep d = throw500 $ "unexpected dependency of relationship : "
                 <> reportSchemaObj d
@@ -161,10 +161,10 @@ runSetRelComment defn = do
     SetRelComment source qt rn comment = defn
 
 getRequiredFkey
-  :: (QErrM m)
-  => PGCol
-  -> [ForeignKey 'Postgres]
-  -> m (ForeignKey 'Postgres)
+  :: (QErrM m, Backend b)
+  => Column b
+  -> [ForeignKey b]
+  -> m (ForeignKey b)
 getRequiredFkey col fkeys =
   case filteredFkeys of
     []  -> throw400 ConstraintError

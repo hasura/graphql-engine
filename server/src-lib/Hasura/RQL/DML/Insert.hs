@@ -38,12 +38,12 @@ convObj
   -> HM.HashMap PGCol S.SQLExp
   -> HM.HashMap PGCol S.SQLExp
   -> FieldInfoMap (FieldInfo 'Postgres)
-  -> InsObj
+  -> InsObj 'Postgres
   -> m ([PGCol], [S.SQLExp])
 convObj prepFn defInsVals setInsVals fieldInfoMap insObj = do
   inpInsVals <- flip HM.traverseWithKey insObj $ \c val -> do
     let relWhenPGErr = "relationships can't be inserted"
-    colType <- askPGType fieldInfoMap c relWhenPGErr
+    colType <- askColumnType fieldInfoMap c relWhenPGErr
     -- if column has predefined value then throw error
     when (c `elem` preSetCols) $ throwNotInsErr c
     -- Encode aeson's value into prepared value
@@ -107,7 +107,7 @@ buildConflictClause sessVarBldr tableInfo inpCols (OnConflict mTCol mTCons act) 
     validateCols c = do
       let targetcols = getPGCols c
       void $ withPathK "constraint_on" $ indexedForM targetcols $
-        \pgCol -> askPGType fieldInfoMap pgCol ""
+        \pgCol -> askColumnType fieldInfoMap pgCol ""
 
     validateConstraint c = do
       let tableConsNames = maybe [] toList $
@@ -129,12 +129,12 @@ buildConflictClause sessVarBldr tableInfo inpCols (OnConflict mTCol mTCons act) 
 
 convInsertQuery
   :: (UserInfoM m, QErrM m, TableInfoRM 'Postgres m)
-  => (Value -> m [InsObj])
+  => (Value -> m [InsObj 'Postgres])
   -> SessVarBldr 'Postgres m
   -> (ColumnType 'Postgres -> Value -> m S.SQLExp)
   -> InsertQuery
   -> m (InsertQueryP1 'Postgres)
-convInsertQuery objsParser sessVarBldr prepFn (InsertQuery tableName val oC mRetCols) = do
+convInsertQuery objsParser sessVarBldr prepFn (InsertQuery tableName _ val oC mRetCols) = do
 
   insObjs <- objsParser val
 
@@ -166,8 +166,7 @@ convInsertQuery objsParser sessVarBldr prepFn (InsertQuery tableName val oC mRet
 
   let mutOutput = mkDefaultMutFlds mAnnRetCols
 
-  let defInsVals = S.mkColDefValMap $
-                   map pgiColumn $ getCols fieldInfoMap
+  let defInsVals = HM.fromList [(column, S.columnDefaultValue) | column <- pgiColumn <$> getCols fieldInfoMap]
       allCols    = getCols fieldInfoMap
       insCols    = HM.keys defInsVals
 
@@ -197,29 +196,30 @@ convInsertQuery objsParser sessVarBldr prepFn (InsertQuery tableName val oC mRet
 
 convInsQ
   :: (QErrM m, UserInfoM m, CacheRM m)
-  => SourceName -> InsertQuery
+  => InsertQuery
   -> m (InsertQueryP1 'Postgres, DS.Seq Q.PrepArg)
-convInsQ source query = do
-  tableCache <- askTableCache source
+convInsQ query = do
+  let source = iqSource query
+  tableCache :: TableCache 'Postgres <- askTableCache source
   flip runTableCacheRT (source, tableCache) $ runDMLP1T $
     convInsertQuery (withPathK "objects" . decodeInsObjs)
     sessVarFromCurrentSetting binRHSBuilder query
 
 runInsert
   :: ( HasVersion, QErrM m, UserInfoM m
-     , CacheRM m, HasSQLGenCtx m, MonadIO m
-     , MonadBaseControl IO m, Tracing.MonadTrace m
+     , CacheRM m, HasServerConfigCtx m
+     , MonadIO m, Tracing.MonadTrace m
+     , MonadBaseControl IO m
      )
-  => Env.Environment -> SourceName -> InsertQuery -> m EncJSON
-runInsert env source q = do
-  sourceConfig <- _pcConfiguration <$> askPGSourceCache source
-  res <- convInsQ source q
-  strfyNum <- stringifyNum <$> askSQLGenCtx
-  liftEitherM $ runExceptT $
-    runQueryLazyTx (_pscExecCtx sourceConfig) Q.ReadWrite $
+  => Env.Environment -> InsertQuery -> m EncJSON
+runInsert env q = do
+  sourceConfig <- askSourceConfig (iqSource q)
+  res <- convInsQ q
+  strfyNum <- stringifyNum . _sccSQLGenCtx <$> askServerConfigCtx
+  runQueryLazyTx (_pscExecCtx sourceConfig) Q.ReadWrite $
     execInsertQuery env strfyNum Nothing res
 
-decodeInsObjs :: (UserInfoM m, QErrM m) => Value -> m [InsObj]
+decodeInsObjs :: (UserInfoM m, QErrM m) => Value -> m [InsObj 'Postgres]
 decodeInsObjs v = do
   objs <- decodeValue v
   when (null objs) $ throw400 UnexpectedPayload "objects should not be empty"

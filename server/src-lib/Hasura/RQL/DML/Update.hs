@@ -27,41 +27,42 @@ import           Hasura.RQL.IR.BoolExp
 import           Hasura.RQL.IR.Update
 import           Hasura.RQL.Types
 import           Hasura.RQL.Types.Run
+import           Hasura.SQL.Types
 import           Hasura.Server.Version                        (HasVersion)
 import           Hasura.Session
 
 
 convInc
   :: (QErrM m)
-  => (ColumnType 'Postgres -> Value -> m S.SQLExp)
+  => ValueParser 'Postgres m S.SQLExp
   -> PGCol
   -> ColumnType 'Postgres
   -> Value
   -> m (PGCol, S.SQLExp)
 convInc f col colType val = do
-  prepExp <- f colType val
+  prepExp <- f (CollectableTypeScalar colType) val
   return (col, S.SEOpApp S.incOp [S.mkSIdenExp col, prepExp])
 
 convMul
   :: (QErrM m)
-  => (ColumnType 'Postgres -> Value -> m S.SQLExp)
+  => ValueParser 'Postgres m S.SQLExp
   -> PGCol
   -> ColumnType 'Postgres
   -> Value
   -> m (PGCol, S.SQLExp)
 convMul f col colType val = do
-  prepExp <- f colType val
+  prepExp <- f (CollectableTypeScalar colType) val
   return (col, S.SEOpApp S.mulOp [S.mkSIdenExp col, prepExp])
 
 convSet
   :: (QErrM m)
-  => (ColumnType 'Postgres -> Value -> m S.SQLExp)
+  => ValueParser 'Postgres m S.SQLExp
   -> PGCol
   -> ColumnType 'Postgres
   -> Value
   -> m (PGCol, S.SQLExp)
 convSet f col colType val = do
-  prepExp <- f colType val
+  prepExp <- f (CollectableTypeScalar colType) val
   return (col, prepExp)
 
 convDefault :: (Monad m) => PGCol -> ColumnType 'Postgres -> () -> m (PGCol, S.SQLExp)
@@ -80,7 +81,7 @@ convOp fieldInfoMap preSetCols updPerm objs conv =
     -- if column has predefined value then throw error
     when (pgCol `elem` preSetCols) $ throwNotUpdErr pgCol
     checkPermOnCol PTUpdate allowedCols pgCol
-    colType <- askPGType fieldInfoMap pgCol relWhenPgErr
+    colType <- askColumnType fieldInfoMap pgCol relWhenPgErr
     res <- conv pgCol colType a
     -- build a set expression's entry
     withPathK (getPGColTxt pgCol) $ return res
@@ -95,7 +96,7 @@ convOp fieldInfoMap preSetCols updPerm objs conv =
 validateUpdateQueryWith
   :: (UserInfoM m, QErrM m, TableInfoRM 'Postgres m)
   => SessVarBldr 'Postgres m
-  -> (ColumnType 'Postgres -> Value -> m S.SQLExp)
+  -> ValueParser 'Postgres m S.SQLExp
   -> UpdateQuery
   -> m (AnnUpd 'Postgres)
 validateUpdateQueryWith sessVarBldr prepValBldr uq = do
@@ -177,20 +178,22 @@ validateUpdateQueryWith sessVarBldr prepValBldr uq = do
 
 validateUpdateQuery
   :: (QErrM m, UserInfoM m, CacheRM m)
-  => SourceName -> UpdateQuery -> m (AnnUpd 'Postgres, DS.Seq Q.PrepArg)
-validateUpdateQuery source query = do
-  tableCache <- askTableCache source
+  => UpdateQuery -> m (AnnUpd 'Postgres, DS.Seq Q.PrepArg)
+validateUpdateQuery query = do
+  let source = uqSource query
+  tableCache :: TableCache 'Postgres <- askTableCache source
   flip runTableCacheRT (source, tableCache) $ runDMLP1T $
-    validateUpdateQueryWith sessVarFromCurrentSetting binRHSBuilder query
+    validateUpdateQueryWith sessVarFromCurrentSetting (valueParserWithCollectableType binRHSBuilder) query
 
 runUpdate
   :: ( HasVersion, QErrM m, UserInfoM m, CacheRM m
-     , HasSQLGenCtx m, MonadIO m, MonadBaseControl IO m
-     , Tracing.MonadTrace m
+     , HasServerConfigCtx m, MonadBaseControl IO m
+     , MonadIO m, Tracing.MonadTrace m
      )
-  => Env.Environment -> SourceName -> UpdateQuery -> m EncJSON
-runUpdate env source q = do
-  sourceConfig <- _pcConfiguration <$> askPGSourceCache source
-  strfyNum <- stringifyNum <$> askSQLGenCtx
-  validateUpdateQuery source q >>= liftEitherM . runExceptT .
-    runQueryLazyTx (_pscExecCtx sourceConfig) Q.ReadWrite . execUpdateQuery env strfyNum Nothing
+  => Env.Environment -> UpdateQuery -> m EncJSON
+runUpdate env q = do
+  sourceConfig <- askSourceConfig (uqSource q)
+  strfyNum <- stringifyNum . _sccSQLGenCtx <$> askServerConfigCtx
+  validateUpdateQuery q
+    >>= runQueryLazyTx (_pscExecCtx sourceConfig) Q.ReadWrite
+        . execUpdateQuery env strfyNum Nothing

@@ -22,15 +22,16 @@ module Hasura.Server.Telemetry.Counters
   )
   where
 
+import           Hasura.Prelude
+
 import qualified Data.Aeson            as A
-import qualified Data.Aeson.Casing     as A
 import qualified Data.Aeson.TH         as A
-import           Data.Hashable
 import qualified Data.HashMap.Strict   as HM
+
 import           Data.IORef
 import           Data.Time.Clock.POSIX (POSIXTime, getPOSIXTime)
 import           GHC.IO.Unsafe         (unsafePerformIO)
-import           Hasura.Prelude
+
 
 -- | The properties that characterize this request. The dimensions over which
 -- we collect metrics for each serviced request.
@@ -176,8 +177,8 @@ data ServiceTimingMetric
   deriving (Show, Generic, Eq)
 
 
-$(A.deriveJSON (A.aesonDrop 5 A.snakeCase) ''RequestTimingsCount)
-$(A.deriveJSON (A.aesonDrop 5 A.snakeCase) ''RequestDimensions)
+$(A.deriveJSON hasuraJSON ''RequestTimingsCount)
+$(A.deriveJSON hasuraJSON ''RequestDimensions)
 
 instance A.ToJSON ServiceTimingMetric
 instance A.FromJSON ServiceTimingMetric

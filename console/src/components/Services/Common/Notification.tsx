@@ -129,7 +129,7 @@ export const getErrorMessage = (
 };
 const showErrorNotification = (
   title: string,
-  message: string | null,
+  message?: string | null,
   error?: Record<string, any>
 ): Thunk => {
   const getRefreshBtn = () => {
@@ -167,7 +167,7 @@ const showErrorNotification = (
     return errorJson;
   };
 
-  const errorMessage = getErrorMessage(message, error);
+  const errorMessage = getErrorMessage(message || '', error);
   const errorJson = getErrorJson();
 
   return dispatch => {

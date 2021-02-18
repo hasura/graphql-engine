@@ -177,7 +177,7 @@ API should be called with the schema document.
    }
 
 Argument Presets
-^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^
 
 Argument presets can be used to automatically inject input values for fields
 during execution. This way the field is executed with limited input values. Argument
@@ -224,6 +224,94 @@ session variable, then its value is resolved and then added before querying the 
    In this case, ``"x-hasura-hello"`` will be the argument to the ``hello`` field
    whenever it's queried.
 
+Remote Relationship Permissions
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Permissions for remote relationships are derived from the role's remote schema permissions.
+When permissions for a given remote relationship cannot be derived from the remote schema
+permissions of a given role, that remote relationship will not be accessible to that role.
+
+Cases when the remote relationship cannot be derived are:
+"""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+
+1. There are no remote schema permissions configured for the role for the remote join's remote schema.
+2. The remote join field is not accessible to the role.
+3. Any of the type (both output and input types) used in the remote join field is not accessible to the role.
+
+When a remote field's argument contains a preset and the same argument
+is used for creating a remote relationship, then the **remote presets will be
+overridden by the remote join configuration**. For example:
+
+Let's say we have a table called ``customer`` and we have a remote schema called
+``payments`` and we have a remote relationship ``customer_transactions_history`` defined
+which joins ``customer`` to ``transactions`` field of the ``payments`` field.
+
+Suppose, the ``payments`` remote schema is defined in the following way:
+
+.. code-block:: graphql
+
+   type Transaction {
+     customer_id    Int!
+     amount         Int!
+     time           String!
+     merchant       String!
+   }
+
+   type Query {
+     transactions(customer_id: String!, limit: Int): [Transaction]
+   }
+
+And, the ``customer`` table is defined in the following manner.
+
+.. code-block:: sql
+
+   CREATE TABLE customer (
+     id SERIAL PRIMARY KEY,
+     name TEXT NOT NULL
+   );
+
+The remote relationship is defined to join the ``id`` field from the
+``customer`` table to the ``customer_id`` argument of the ``transactions``
+field.
+
+We only allow the ``user`` role to access the ``amount`` and ``time`` fiels of
+the ``Transaction`` object, and introduce a preset for the ``limit`` argument
+of the ``transaction`` field, resulting in the following schema being presented.
+
+.. code-block:: graphql
+
+   type Transaction {
+     amount   Int!
+     time     String!
+   }
+
+   type Query {
+     transactions(customer_id: String!, limit: Int @preset(value: 10)): [Transaction]
+   }
+
+Two changes have been made for the ``user`` role:
+
+1. The ``merchant`` and ``customer_id`` fields are not accessible in the ``Transaction`` object.
+2. The ``limit`` argument has a preset of 10.
+
+Now, consider the following query:
+
+.. code-block:: graphql
+
+   query {
+     customer {
+       name
+       customer_transactions_history {
+         amount
+         time
+       }
+     }
+   }
+
+The ``user`` role won't be able to provide the value for the ``limit`` argument in
+the ``customer_transactions_history`` field because the ``limit`` has a preset set
+and the value will be added by the graphql-engine before it queries the remote schema.
+
 .. _add_remote_schema_permissions_syntax:
 
 Args syntax
@@ -256,7 +344,7 @@ Args syntax
 .. _RemoteSchemaPermission:
 
 RemoteSchemaPermission
-&&&&&&&&&&&&&&&&&&&&&&
+""""""""""""""""""""""
 
 .. list-table::
    :header-rows: 1

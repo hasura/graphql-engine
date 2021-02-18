@@ -7,7 +7,6 @@ module Hasura.Server.Init
   ) where
 
 import qualified Data.Aeson                          as J
-import qualified Data.Aeson.Casing                   as J
 import qualified Data.Aeson.TH                       as J
 import qualified Data.HashSet                        as Set
 import qualified Data.String                         as DataString
@@ -59,7 +58,7 @@ data StartupTimeInfo
   { _stiMessage   :: !Text
   , _stiTimeTaken :: !Double
   }
-$(J.deriveJSON (J.aesonDrop 4 J.snakeCase) ''StartupTimeInfo)
+$(J.deriveJSON hasuraJSON ''StartupTimeInfo)
 
 returnJust :: Monad m => a -> m (Maybe a)
 returnJust = return . Just
@@ -99,10 +98,10 @@ withEnvJwtConf jVal envVar =
 
 mkHGEOptions
   :: L.EnabledLogTypes impl => RawHGEOptions impl -> WithEnv (HGEOptions impl)
-mkHGEOptions (HGEOptionsG rawConnInfo rawMetadataDbUrl rawCmd) =
-  HGEOptionsG <$> connInfo <*> metadataDbUrl <*> cmd
+mkHGEOptions (HGEOptionsG rawDbUrl rawMetadataDbUrl rawCmd) =
+  HGEOptionsG <$> dbUrl <*> metadataDbUrl <*> cmd
   where
-    connInfo = processPostgresConnInfo rawConnInfo
+    dbUrl = processPostgresConnInfo rawDbUrl
     metadataDbUrl = withEnv rawMetadataDbUrl $ fst metadataDbUrlEnv
     cmd = case rawCmd of
       HCServe rso     -> HCServe <$> mkServeOptions rso
@@ -114,29 +113,28 @@ mkHGEOptions (HGEOptionsG rawConnInfo rawMetadataDbUrl rawCmd) =
 
 processPostgresConnInfo
   :: PostgresConnInfo (Maybe PostgresRawConnInfo)
-  -> WithEnv (PostgresConnInfo UrlConf)
+  -> WithEnv (PostgresConnInfo (Maybe UrlConf))
 processPostgresConnInfo PostgresConnInfo{..} = do
   withEnvRetries <- withEnv _pciRetries $ fst retriesNumEnv
   databaseUrl <- rawConnInfoToUrlConf _pciDatabaseConn
   pure $ PostgresConnInfo databaseUrl withEnvRetries
 
-rawConnInfoToUrlConf :: Maybe PostgresRawConnInfo -> WithEnv UrlConf
+rawConnInfoToUrlConf :: Maybe PostgresRawConnInfo -> WithEnv (Maybe UrlConf)
 rawConnInfoToUrlConf maybeRawConnInfo = do
   env <- ask
   let databaseUrlEnvVar = fst databaseUrlEnv
       hasDatabaseUrlEnv = any ((== databaseUrlEnvVar) . fst) env
 
-  case maybeRawConnInfo of
+  pure $ case maybeRawConnInfo of
     -- If no --database-url or connection options provided in CLI command
     Nothing -> if hasDatabaseUrlEnv then
                  -- Consider env variable as is in order to store it as @`UrlConf`
                  -- in default source configuration in metadata
-                 pure $ UrlFromEnv $ T.pack databaseUrlEnvVar
-               else throwError $
-                    "Fatal Error: Required --database-url or connection options or env var "
-                    <> databaseUrlEnvVar
+                 Just $ UrlFromEnv $ T.pack databaseUrlEnvVar
+               else Nothing
+
     Just databaseConn ->
-        pure $ UrlValue . InputWebhook $ case databaseConn of
+        Just . UrlValue . InputWebhook $ case databaseConn of
           PGConnDatabaseUrl urlTemplate -> urlTemplate
           PGConnDetails connDetails     -> rawConnDetailsToUrl connDetails
 
@@ -182,8 +180,7 @@ mkServeOptions rso = do
   logHeadersFromEnv <- withEnvBool (rsoLogHeadersFromEnv rso) (fst logHeadersFromEnvEnv)
   enableRemoteSchemaPerms <-
     bool RemoteSchemaPermsDisabled RemoteSchemaPermsEnabled <$>
-    (withEnvBool (rsoEnableRemoteSchemaPermissions rso) $
-                (fst enableRemoteSchemaPermsEnv))
+    (withEnvBool (rsoEnableRemoteSchemaPermissions rso) (fst enableRemoteSchemaPermsEnv))
 
   webSocketCompressionFromEnv <- withEnvBool (rsoWebSocketCompression rso) $
                                  fst webSocketCompressionEnv
@@ -197,19 +194,24 @@ mkServeOptions rso = do
   webSocketKeepAlive <- KeepAliveDelay . fromIntegral . fromMaybe 5
       <$> withEnv (rsoWebSocketKeepAlive rso) (fst webSocketKeepAliveEnv)
 
+  inferFunctionPerms <-
+    maybe FunctionPermissionsInferred (bool FunctionPermissionsManual FunctionPermissionsInferred) <$>
+    (withEnv (rsoInferFunctionPermissions rso) (fst inferFunctionPermsEnv))
+
   return $ ServeOptions port host connParams txIso adminScrt authHook jwtSecret
                         unAuthRole corsCfg enableConsole consoleAssetsDir
                         enableTelemetry strfyNum enabledAPIs lqOpts enableAL
                         enabledLogs serverLogLevel planCacheOptions
                         internalErrorsConfig eventsHttpPoolSize eventsFetchInterval
                         logHeadersFromEnv enableRemoteSchemaPerms connectionOptions webSocketKeepAlive
+                        inferFunctionPerms
   where
 #ifdef DeveloperAPIs
     defaultAPIs = [METADATA,GRAPHQL,PGDUMP,CONFIG,DEVELOPER]
 #else
     defaultAPIs = [METADATA,GRAPHQL,PGDUMP,CONFIG]
 #endif
-    mkConnParams (RawConnParams s c i cl p) = do
+    mkConnParams (RawConnParams s c i cl p pt) = do
       stripes <- fromMaybe 1 <$> withEnv s (fst pgStripesEnv)
       -- Note: by Little's Law we can expect e.g. (with 50 max connections) a
       -- hard throughput cap at 1000RPS when db queries take 50ms on average:
@@ -217,7 +219,9 @@ mkServeOptions rso = do
       iTime <- fromMaybe 180 <$> withEnv i (fst pgTimeoutEnv)
       connLifetime <- withEnv cl (fst pgConnLifetimeEnv)
       allowPrepare <- fromMaybe True <$> withEnv p (fst pgUsePrepareEnv)
-      return $ Q.ConnParams stripes conns iTime allowPrepare connLifetime
+      poolTimeout <- withEnv pt (fst pgPoolTimeoutEnv)
+      return $ Q.ConnParams
+        stripes conns iTime allowPrepare connLifetime poolTimeout
 
     mkAuthHook (AuthHookG mUrl mType) = do
       mUrlEnv <- withEnv mUrl $ fst authHookEnv
@@ -416,6 +420,12 @@ pgConnLifetimeEnv =
     <> "created. (default: none)"
   )
 
+pgPoolTimeoutEnv :: (String, String)
+pgPoolTimeoutEnv =
+  ( "HASURA_GRAPHQL_PG_POOL_TIMEOUT"
+  , "How long to wait when acquiring a Postgres connection, in seconds (default: forever)."
+  )
+
 pgUsePrepareEnv :: (String, String)
 pgUsePrepareEnv =
   ( "HASURA_GRAPHQL_USE_PREPARED_STATEMENTS"
@@ -546,6 +556,12 @@ enableRemoteSchemaPermsEnv =
   , "Enables remote schema permissions (default: false)"
   )
 
+inferFunctionPermsEnv :: (String, String)
+inferFunctionPermsEnv =
+  ( "HASURA_GRAPHQL_INFER_FUNCTION_PERMISSIONS"
+  , "Infers function permissions (default: true)"
+  )
+
 
 adminInternalErrorsEnv :: (String, String)
 adminInternalErrorsEnv =
@@ -643,7 +659,7 @@ parseTxIsolation = optional $
 
 parseConnParams :: Parser RawConnParams
 parseConnParams =
-  RawConnParams <$> stripes <*> conns <*> idleTimeout <*> connLifetime <*> allowPrepare
+  RawConnParams <$> stripes <*> conns <*> idleTimeout <*> connLifetime <*> allowPrepare <*> poolTimeout
   where
     stripes = optional $
       option auto
@@ -680,6 +696,13 @@ parseConnParams =
               ( long "use-prepared-statements" <>
                 metavar "<true|false>" <>
                 help (snd pgUsePrepareEnv)
+              )
+
+    poolTimeout = fmap (fmap (realToFrac :: Int -> NominalDiffTime)) $ optional $
+      option auto
+              ( long "pool-timeout" <>
+                metavar "<SECONDS>" <>
+                help (snd pgPoolTimeoutEnv)
               )
 
 parseServerPort :: Parser (Maybe Int)
@@ -873,6 +896,13 @@ parseEnableRemoteSchemaPerms =
            help (snd enableRemoteSchemaPermsEnv)
          )
 
+parseInferFunctionPerms :: Parser (Maybe Bool)
+parseInferFunctionPerms = optional $
+  option ( eitherReader parseStrAsBool )
+         ( long "infer-function-permissions" <>
+           help (snd inferFunctionPermsEnv)
+         )
+
 mxRefetchDelayEnv :: (String, String)
 mxRefetchDelayEnv =
   ( "HASURA_GRAPHQL_LIVE_QUERIES_MULTIPLEXED_REFETCH_INTERVAL"
@@ -985,6 +1015,7 @@ serveOptsToLog so =
       , "remote_schema_permissions" J..= soEnableRemoteSchemaPermissions so
       , "websocket_compression_options" J..= show (WS.connectionCompressionOptions . soConnectionOptions $ so)
       , "websocket_keep_alive" J..= show (soWebsocketKeepAlive so)
+      , "infer_function_permissions" J..= soInferFunctionPermissions so
       ]
 
 mkGenericStrLog :: L.LogLevel -> Text -> String -> StartupLog
@@ -1033,6 +1064,7 @@ serveOptionsParser =
   <*> parseEnableRemoteSchemaPerms
   <*> parseWebSocketCompression
   <*> parseWebSocketKeepAlive
+  <*> parseInferFunctionPerms
 
 -- | This implements the mapping between application versions
 -- and catalog schema versions.

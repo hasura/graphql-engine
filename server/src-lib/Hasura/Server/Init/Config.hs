@@ -20,6 +20,9 @@ import qualified Hasura.Cache.Bounded             as Cache
 import qualified Hasura.GraphQL.Execute.LiveQuery as LQ
 import qualified Hasura.GraphQL.Execute.Plan      as E
 import qualified Hasura.Logging                   as L
+import qualified System.Metrics                   as EKG
+import qualified System.Metrics.Gauge             as EKG.Gauge
+
 
 import           Hasura.Prelude
 import           Hasura.RQL.Types
@@ -36,6 +39,8 @@ data RawConnParams
   -- ^ Time from connection creation after which to destroy a connection and
   -- choose a different/new one.
   , rcpAllowPrepare :: !(Maybe Bool)
+  , rcpPoolTimeout  :: !(Maybe NominalDiffTime)
+  -- ^ See @HASURA_GRAPHQL_PG_POOL_TIMEOUT@
   } deriving (Show, Eq)
 
 type RawAuthHook = AuthHookG (Maybe Text) (Maybe AuthHookType)
@@ -71,6 +76,7 @@ data RawServeOptions impl
   , rsoEnableRemoteSchemaPermissions :: !Bool
   , rsoWebSocketCompression          :: !Bool
   , rsoWebSocketKeepAlive            :: !(Maybe Int)
+  , rsoInferFunctionPermissions      :: !(Maybe Bool)
   }
 
 -- | @'ResponseInternalErrorsConfig' represents the encoding of the internal
@@ -121,6 +127,7 @@ data ServeOptions impl
   , soEnableRemoteSchemaPermissions :: !RemoteSchemaPermsCtx
   , soConnectionOptions             :: !WS.ConnectionOptions
   , soWebsocketKeepAlive            :: !KeepAliveDelay
+  , soInferFunctionPermissions      :: !FunctionPermissionsCtx
   }
 
 data DowngradeOptions
@@ -186,20 +193,20 @@ $(J.deriveJSON (J.defaultOptions { J.constructorTagModifier = map toLower })
 
 instance Hashable API
 
-$(J.deriveJSON (J.aesonDrop 4 J.camelCase){J.omitNothingFields=True} ''PostgresRawConnDetails)
+$(J.deriveJSON (J.aesonPrefix J.camelCase){J.omitNothingFields=True} ''PostgresRawConnDetails)
 
 type HGECommand impl = HGECommandG (ServeOptions impl)
 type RawHGECommand impl = HGECommandG (RawServeOptions impl)
 
 data HGEOptionsG a b
   = HGEOptionsG
-  { hoConnInfo      :: !(PostgresConnInfo a)
+  { hoDatabaseUrl   :: !(PostgresConnInfo a)
   , hoMetadataDbUrl :: !(Maybe String)
   , hoCommand       :: !(HGECommandG b)
   } deriving (Show, Eq)
 
 type RawHGEOptions impl = HGEOptionsG (Maybe PostgresRawConnInfo) (RawServeOptions impl)
-type HGEOptions impl = HGEOptionsG UrlConf (ServeOptions impl)
+type HGEOptions impl = HGEOptionsG (Maybe UrlConf) (ServeOptions impl)
 
 type Env = [(String, String)]
 
@@ -327,3 +334,13 @@ type WithEnv a = ReaderT Env (ExceptT String Identity) a
 
 runWithEnv :: Env -> WithEnv a -> Either String a
 runWithEnv env m = runIdentity $ runExceptT $ runReaderT m env
+
+data ServerMetrics
+  = ServerMetrics
+  { smWarpThreads :: !EKG.Gauge.Gauge
+  }
+
+createServerMetrics :: EKG.Store -> IO ServerMetrics
+createServerMetrics store = do
+  smWarpThreads <- EKG.createGauge "warp_threads" store
+  pure ServerMetrics { .. }

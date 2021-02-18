@@ -26,7 +26,6 @@ module Hasura.GraphQL.Execute.LiveQuery.Plan
 
 import           Hasura.Prelude
 
-import qualified Data.Aeson.Casing                           as J
 import qualified Data.Aeson.Extended                         as J
 import qualified Data.Aeson.TH                               as J
 import qualified Data.ByteString                             as B
@@ -42,13 +41,13 @@ import qualified PostgreSQL.Binary.Encoding                  as PE
 import           Control.Lens
 import           Control.Monad.Trans.Control                 (MonadBaseControl)
 import           Data.Semigroup.Generic
+import           Data.Typeable                               (cast)
 import           Data.UUID                                   (UUID)
 
 import qualified Hasura.Backends.Postgres.Execute.RemoteJoin as RR
 import qualified Hasura.Backends.Postgres.SQL.DML            as S
 import qualified Hasura.Backends.Postgres.Translate.Select   as DS
 import qualified Hasura.GraphQL.Parser.Schema                as PS
-import qualified Hasura.RQL.IR.Select                        as DS
 
 import           Hasura.Backends.Postgres.Connection
 import           Hasura.Backends.Postgres.SQL.Error
@@ -59,8 +58,8 @@ import           Hasura.GraphQL.Context
 import           Hasura.GraphQL.Execute.Query
 import           Hasura.GraphQL.Parser.Column
 import           Hasura.RQL.Types
-import           Hasura.Session
 import           Hasura.SQL.Types
+import           Hasura.Session
 
 
 -- -------------------------------------------------------------------------------------------------
@@ -69,17 +68,14 @@ import           Hasura.SQL.Types
 newtype MultiplexedQuery = MultiplexedQuery { unMultiplexedQuery :: Q.Query }
   deriving (Show, Eq, Hashable, J.ToJSON)
 
-toSQLFromItem :: S.Alias -> SubscriptionRootFieldResolved -> S.FromItem
-toSQLFromItem alias = \case
-  RFDB _ _ (QDBPrimaryKey s)  -> fromSelect $ DS.mkSQLSelect DS.JASSingleObject s
-  RFDB _ _ (QDBSimple s)      -> fromSelect $ DS.mkSQLSelect DS.JASMultipleRows s
-  RFDB _ _ (QDBAggregation s) -> fromSelect $ DS.mkAggregateSelect s
-  RFDB _ _ (QDBConnection s)  -> S.mkSelectWithFromItem (DS.mkConnectionSelect s) alias
-  -- RFAction s              -> fromSelect $ DS.mkSQLSelect DS.JASSingleObject s
-  where
-    fromSelect s = S.mkSelFromItem s alias
+toSQLFromItem :: S.Alias -> QueryDB 'Postgres S.SQLExp -> S.FromItem
+toSQLFromItem = flip \case
+  QDBSingleRow    s -> S.mkSelFromItem $ DS.mkSQLSelect JASSingleObject s
+  QDBMultipleRows s -> S.mkSelFromItem $ DS.mkSQLSelect JASMultipleRows s
+  QDBAggregation  s -> S.mkSelFromItem $ DS.mkAggregateSelect s
+  QDBConnection   s -> S.mkSelectWithFromItem $ DS.mkConnectionSelect s
 
-mkMultiplexedQuery :: OMap.InsOrdHashMap G.Name SubscriptionRootFieldResolved -> MultiplexedQuery
+mkMultiplexedQuery :: OMap.InsOrdHashMap G.Name (QueryDB 'Postgres S.SQLExp) -> MultiplexedQuery
 mkMultiplexedQuery rootFields = MultiplexedQuery . Q.fromBuilder . toSQL $ S.mkSelect
   { S.selExtr =
     -- SELECT _subs.result_id, _fld_resp.root AS result
@@ -100,7 +96,7 @@ mkMultiplexedQuery rootFields = MultiplexedQuery . Q.fromBuilder . toSQL $ S.mkS
     selectRootFields = S.mkSelect
       { S.selExtr = [S.Extractor rootFieldsJsonAggregate (Just . S.Alias $ Identifier "root")]
       , S.selFrom = Just . S.FromExp $
-          flip map (OMap.toList rootFields) $ \(fieldAlias, resolvedAST) ->
+          OMap.toList rootFields <&> \(fieldAlias, resolvedAST) ->
             toSQLFromItem (S.Alias $ aliasToIdentifier fieldAlias) resolvedAST
       }
 
@@ -331,7 +327,7 @@ data ParameterizedLiveQueryPlan
   { _plqpRole  :: !RoleName
   , _plqpQuery :: !MultiplexedQuery
   } deriving (Show)
-$(J.deriveToJSON (J.aesonDrop 4 J.snakeCase) ''ParameterizedLiveQueryPlan)
+$(J.deriveToJSON hasuraJSON ''ParameterizedLiveQueryPlan)
 
 data ReusableLiveQueryPlan
   = ReusableLiveQueryPlan
@@ -340,7 +336,7 @@ data ReusableLiveQueryPlan
   , _rlqpSyntheticVariableValues  :: !ValidatedSyntheticVariables
   , _rlqpQueryVariableTypes       :: HashMap G.Name (ColumnType 'Postgres)
   } deriving (Show)
-$(J.deriveToJSON (J.aesonDrop 4 J.snakeCase) ''ReusableLiveQueryPlan)
+$(J.deriveToJSON hasuraJSON ''ReusableLiveQueryPlan)
 
 -- | Constructs a new execution plan for a live query and returns a reusable version
 -- of the plan if possible.
@@ -350,22 +346,28 @@ buildLiveQueryPlan
      )
   => PGExecCtx
   -> UserInfo
-  -> InsOrdHashMap G.Name (SubscriptionRootField (UnpreparedValue 'Postgres))
+  -> InsOrdHashMap G.Name (SubscriptionRootField UnpreparedValue)
   -> m (LiveQueryPlan, Maybe ReusableLiveQueryPlan)
 buildLiveQueryPlan pgExecCtx userInfo unpreparedAST = do
   (preparedAST, QueryParametersInfo{..}) <- flip runStateT mempty $
-    for unpreparedAST \unpreparedQuery -> do
-      resolvedRootField <- traverseQueryRootField resolveMultiplexedValue unpreparedQuery
-      case resolvedRootField of
-        RFDB _ _ qDB   -> do
-          let remoteJoins = case qDB of
-                QDBSimple s      -> snd $ RR.getRemoteJoins s
-                QDBPrimaryKey s  -> snd $ RR.getRemoteJoins s
-                QDBAggregation s -> snd $ RR.getRemoteJoinsAggregateSelect s
-                QDBConnection s  -> snd $ RR.getRemoteJoinsConnectionSelect s
+    OMap.mapMaybe id <$> for unpreparedAST \case
+      RFDB _ _ (QDBR db) -> runMaybeT do
+        -- TEMPORARY!!!
+        -- We don't handle non-Postgres backends yet: for now, we filter root fields to only keep those
+        -- that are targeting postgres, and we *silently* discard all the others. This is fine for now, as
+        -- we haven't integrated any other backend yet, but will need to be fixed as soon as possible for
+        -- other backends to work.
+        pgDB <- hoistMaybe $ cast db
+        lift $ do
+          resolvedRootField <- traverseQueryDB resolveMultiplexedValue pgDB
+          let remoteJoins = case resolvedRootField of
+                QDBMultipleRows s -> snd $ RR.getRemoteJoins s
+                QDBSingleRow s    -> snd $ RR.getRemoteJoins s
+                QDBAggregation s  -> snd $ RR.getRemoteJoinsAggregateSelect s
+                QDBConnection s   -> snd $ RR.getRemoteJoinsConnectionSelect s
           when (remoteJoins /= mempty)
             $ throw400 NotSupported "Remote relationships are not allowed in subscriptions"
-      pure resolvedRootField
+          pure resolvedRootField
 
   let multiplexedQuery = mkMultiplexedQuery preparedAST
       roleName = _uiRole userInfo
@@ -397,7 +399,7 @@ data LiveQueryPlanExplanation
   , _lqpePlan      :: ![Text]
   , _lqpeVariables :: !CohortVariables
   } deriving (Show)
-$(J.deriveToJSON (J.aesonDrop 5 J.snakeCase) ''LiveQueryPlanExplanation)
+$(J.deriveToJSON hasuraJSON ''LiveQueryPlanExplanation)
 
 explainLiveQueryPlan
   :: ( MonadError QErr m

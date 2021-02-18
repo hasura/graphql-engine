@@ -15,6 +15,7 @@ import qualified Language.GraphQL.Draft.Syntax               as G
 
 import           Control.Monad.Trans.Control                 (MonadBaseControl)
 import           Data.Text.Extended
+import           Data.Typeable                               (cast)
 
 import qualified Hasura.Backends.Postgres.Execute.RemoteJoin as RR
 import qualified Hasura.Backends.Postgres.SQL.DML            as S
@@ -24,7 +25,6 @@ import qualified Hasura.GraphQL.Execute.Inline               as E
 import qualified Hasura.GraphQL.Execute.LiveQuery            as E
 import qualified Hasura.GraphQL.Execute.Query                as E
 import qualified Hasura.GraphQL.Transport.HTTP.Protocol      as GH
-import qualified Hasura.RQL.IR.Select                        as DS
 
 import           Hasura.Backends.Postgres.SQL.Value
 import           Hasura.Backends.Postgres.Translate.Column   (toTxtValue)
@@ -33,8 +33,8 @@ import           Hasura.GraphQL.Context
 import           Hasura.GraphQL.Parser
 import           Hasura.RQL.DML.Internal
 import           Hasura.RQL.Types
-import           Hasura.Session
 import           Hasura.SQL.Types
+import           Hasura.Session
 
 
 data GQLExplain
@@ -44,7 +44,7 @@ data GQLExplain
   , _gqeIsRelay :: !(Maybe Bool)
   } deriving (Show, Eq)
 
-$(J.deriveJSON (J.aesonDrop 4 J.snakeCase){J.omitNothingFields=True}
+$(J.deriveJSON hasuraJSON{J.omitNothingFields=True}
   ''GQLExplain
  )
 
@@ -55,7 +55,7 @@ data FieldPlan
   , _fpPlan  :: !(Maybe [Text])
   } deriving (Show, Eq)
 
-$(J.deriveJSON (J.aesonDrop 3 J.camelCase) ''FieldPlan)
+$(J.deriveJSON (J.aesonPrefix J.camelCase) ''FieldPlan)
 
 resolveUnpreparedValue
   :: (MonadError QErr m)
@@ -85,30 +85,38 @@ explainQueryField
      )
   => UserInfo
   -> G.Name
-  -> QueryRootField (UnpreparedValue 'Postgres)
-  -> m FieldPlan
+  -> QueryRootField UnpreparedValue
+  -> m (Maybe FieldPlan)
 explainQueryField userInfo fieldName rootField = do
-  resolvedRootField <- E.traverseQueryRootField (resolveUnpreparedValue userInfo) rootField
-  case resolvedRootField of
+  case rootField of
     RFRemote _ -> throw400 InvalidParams "only hasura queries can be explained"
     RFAction _ -> throw400 InvalidParams "query actions cannot be explained"
-    RFRaw _    -> pure $ FieldPlan fieldName Nothing Nothing
-    RFDB _ pgExecCtx qDB   -> do
-      let (querySQL, remoteJoins) = case qDB of
-            QDBSimple s      -> first (DS.selectQuerySQL DS.JASMultipleRows) $ RR.getRemoteJoins s
-            QDBPrimaryKey s  -> first (DS.selectQuerySQL DS.JASSingleObject) $ RR.getRemoteJoins s
-            QDBAggregation s -> first DS.selectAggregateQuerySQL $ RR.getRemoteJoinsAggregateSelect s
-            QDBConnection s  -> first DS.connectionSelectQuerySQL $ RR.getRemoteJoinsConnectionSelect s
-          textSQL = Q.getQueryText querySQL
-          -- CAREFUL!: an `EXPLAIN ANALYZE` here would actually *execute* this
-          -- query, maybe resulting in privilege escalation:
-          withExplain = "EXPLAIN (FORMAT TEXT) " <> textSQL
-      -- Reject if query contains any remote joins
-      when (remoteJoins /= mempty) $ throw400 NotSupported "Remote relationships are not allowed in explain query"
-      planLines <- liftEitherM $ runExceptT $ runLazyTx pgExecCtx Q.ReadOnly $
-                   liftTx $ map runIdentity <$>
-                   Q.listQE dmlTxErrorHandler (Q.fromText withExplain) () True
-      pure $ FieldPlan fieldName (Just textSQL) $ Just planLines
+    RFRaw _    -> pure $ Just $ FieldPlan fieldName Nothing Nothing
+    RFDB _ config (QDBR qDB) -> runMaybeT $ do
+      -- TEMPORARY!!!
+      -- We don't handle non-Postgres backends yet: for now, we filter root fields to only keep those
+      -- that are targeting postgres, and we *silently* discard all the others. This is fine for now, as
+      -- we haven't integrated any other backend yet, but will need to be fixed as soon as possible for
+      -- other backends to work.
+      pgConfig <- hoistMaybe $ cast config
+      pgQDB    <- hoistMaybe $ cast qDB
+      lift $ do
+        resolvedQuery <- E.traverseQueryDB (resolveUnpreparedValue userInfo) pgQDB
+        let (querySQL, remoteJoins) = case resolvedQuery of
+              QDBMultipleRows s -> first (DS.selectQuerySQL JASMultipleRows) $ RR.getRemoteJoins s
+              QDBSingleRow    s -> first (DS.selectQuerySQL JASSingleObject) $ RR.getRemoteJoins s
+              QDBAggregation  s -> first DS.selectAggregateQuerySQL $ RR.getRemoteJoinsAggregateSelect s
+              QDBConnection   s -> first DS.connectionSelectQuerySQL $ RR.getRemoteJoinsConnectionSelect s
+            textSQL = Q.getQueryText querySQL
+            -- CAREFUL!: an `EXPLAIN ANALYZE` here would actually *execute* this
+            -- query, maybe resulting in privilege escalation:
+            withExplain = "EXPLAIN (FORMAT TEXT) " <> textSQL
+        -- Reject if query contains any remote joins
+        when (remoteJoins /= mempty) $ throw400 NotSupported "Remote relationships are not allowed in explain query"
+        planLines <- liftEitherM $ runExceptT $ runLazyTx (_pscExecCtx pgConfig) Q.ReadOnly $
+                     liftTx $ map runIdentity <$>
+                     Q.listQE dmlTxErrorHandler (Q.fromText withExplain) () True
+        pure $ FieldPlan fieldName (Just textSQL) $ Just planLines
 
 -- NOTE: This function has a 'MonadTrace' constraint in master, but we don't need it
 -- here. We should evaluate if we need it here.
@@ -135,7 +143,7 @@ explainGQLQuery sc (GQLExplain query userVarsRaw maybeIsRelay) = do
       inlinedSelSet <- E.inlineSelectionSet fragments selSet
       (unpreparedQueries, _) <-
         E.parseGraphQLQuery graphQLContext varDefs (GH._grVariables query) inlinedSelSet
-      encJFromJValue
+      encJFromJValue . catMaybes
         <$> for (OMap.toList unpreparedQueries) (uncurry (explainQueryField userInfo))
 
     G.TypedOperationDefinition G.OperationTypeMutation _ _ _ _ ->

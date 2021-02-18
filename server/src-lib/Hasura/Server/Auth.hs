@@ -26,28 +26,27 @@ module Hasura.Server.Auth
 
 import           Hasura.Prelude
 
-import qualified Crypto.Hash                          as Crypto
-import qualified Data.Text.Encoding                   as T
-import qualified Network.HTTP.Client                  as H
-import qualified Network.HTTP.Types                   as N
+import qualified Crypto.Hash                 as Crypto
+import qualified Data.Text.Encoding          as T
+import qualified Network.HTTP.Client         as H
+import qualified Network.HTTP.Types          as N
 
-import           Control.Concurrent.Extended          (ForkableMonadIO, forkManagedT)
-import           Control.Monad.Trans.Managed              (ManagedT)
-import           Control.Monad.Morph                  (hoist)
-import           Control.Monad.Trans.Control          (MonadBaseControl)
-import           Data.IORef                           (newIORef)
-import           Data.Time.Clock                      (UTCTime)
+import           Control.Concurrent.Extended (ForkableMonadIO, forkManagedT)
+import           Control.Monad.Morph         (hoist)
+import           Control.Monad.Trans.Control (MonadBaseControl)
+import           Control.Monad.Trans.Managed (ManagedT)
+import           Data.IORef                  (newIORef)
+import           Data.Time.Clock             (UTCTime)
 
-import qualified Hasura.Tracing                       as Tracing
+import qualified Hasura.Tracing              as Tracing
 
 import           Hasura.Logging
 import           Hasura.RQL.Types
-import           Hasura.Server.Auth.JWT               hiding (processJwt_)
+import           Hasura.Server.Auth.JWT      hiding (processJwt_)
 import           Hasura.Server.Auth.WebHook
 import           Hasura.Server.Utils
-import           Hasura.Server.Version                (HasVersion)
+import           Hasura.Server.Version       (HasVersion)
 import           Hasura.Session
-
 
 -- | Typeclass representing the @UserInfo@ authorization and resolving effect
 class (Monad m) => UserAuthentication m where
@@ -58,6 +57,7 @@ class (Monad m) => UserAuthentication m where
     -> [N.Header]
     -- ^ request headers
     -> AuthMode
+    -> Maybe ReqsText
     -> m (Either QErr (UserInfo, Maybe UTCTime))
 
 -- | The hashed admin password. 'hashAdminSecret' is our public interface for
@@ -156,7 +156,7 @@ setupAuthMode mAdminSecretHash mWebHook mJwtSecret mUnAuthRole httpManager logge
       jwkRef <- case jcKeyOrUrl of
         Left jwk  -> liftIO $ newIORef (JWKSet [jwk])
         Right url -> getJwkFromUrl url
-      return $ JWTCtx jwkRef jcAudience jcIssuer jcClaims
+      return $ JWTCtx jwkRef jcAudience jcIssuer jcClaims jcAllowedSkew
       where
         -- if we can't find any expiry time for the JWK (either in @Expires@ header or @Cache-Control@
         -- header), do not start a background thread for refreshing the JWK
@@ -174,9 +174,9 @@ setupAuthMode mAdminSecretHash mWebHook mJwtSecret mUnAuthRole httpManager logge
           res <- runExceptT act
           onLeft res $ \case
             -- when fetching JWK initially, except expiry parsing error, all errors are critical
-            JFEHttpException _ msg -> throwError msg
-            JFEHttpError _ _ _ e -> throwError e
-            JFEJwkParseError _ e -> throwError e
+            JFEHttpException _ msg  -> throwError msg
+            JFEHttpError _ _ _ e    -> throwError e
+            JFEJwkParseError _ e    -> throwError e
             JFEExpiryParseError _ _ -> return Nothing
 
 getUserInfo
@@ -185,8 +185,9 @@ getUserInfo
   -> H.Manager
   -> [N.Header]
   -> AuthMode
+  -> Maybe ReqsText
   -> m UserInfo
-getUserInfo l m r a = fst <$> getUserInfoWithExpTime l m r a
+getUserInfo l m r a reqs = fst <$> getUserInfoWithExpTime l m r a reqs
 
 -- | Authenticate the request using the headers and the configured 'AuthMode'.
 getUserInfoWithExpTime
@@ -195,13 +196,14 @@ getUserInfoWithExpTime
   -> H.Manager
   -> [N.Header]
   -> AuthMode
+  -> Maybe ReqsText
   -> m (UserInfo, Maybe UTCTime)
 getUserInfoWithExpTime = getUserInfoWithExpTime_ userInfoFromAuthHook processJwt
 
 -- Broken out for testing with mocks:
 getUserInfoWithExpTime_
   :: forall m _Manager _Logger_Hasura. (MonadIO m, MonadError QErr m)
-  => (_Logger_Hasura -> _Manager -> AuthHook -> [N.Header] -> m (UserInfo, Maybe UTCTime))
+  => (_Logger_Hasura -> _Manager -> AuthHook -> [N.Header] -> Maybe ReqsText -> m (UserInfo, Maybe UTCTime))
   -- ^ mock 'userInfoFromAuthHook'
   -> (JWTCtx -> [N.Header] -> Maybe RoleName -> m (UserInfo, Maybe UTCTime))
   -- ^ mock 'processJwt'
@@ -209,8 +211,9 @@ getUserInfoWithExpTime_
   -> _Manager
   -> [N.Header]
   -> AuthMode
+  -> Maybe ReqsText
   -> m (UserInfo, Maybe UTCTime)
-getUserInfoWithExpTime_ userInfoFromAuthHook_ processJwt_ logger manager rawHeaders = \case
+getUserInfoWithExpTime_ userInfoFromAuthHook_ processJwt_ logger manager rawHeaders authMode reqs = case authMode of
 
   AMNoAuth -> withNoExpTime $ mkUserInfoFallbackAdminRole UAuthNotSet
 
@@ -227,8 +230,9 @@ getUserInfoWithExpTime_ userInfoFromAuthHook_ processJwt_ logger manager rawHead
         Just unAuthRole ->
           mkUserInfo (URBPreDetermined unAuthRole) UAdminSecretNotSent sessionVariables
 
+  -- this is the case that actually ends up consuming the request AST
   AMAdminSecretAndHook realAdminSecretHash hook ->
-    checkingSecretIfSent realAdminSecretHash $ userInfoFromAuthHook_ logger manager hook rawHeaders
+    checkingSecretIfSent realAdminSecretHash $ userInfoFromAuthHook_ logger manager hook rawHeaders reqs
 
   AMAdminSecretAndJWT realAdminSecretHash jwtSecret unAuthRole ->
     checkingSecretIfSent realAdminSecretHash $ processJwt_ jwtSecret rawHeaders unAuthRole

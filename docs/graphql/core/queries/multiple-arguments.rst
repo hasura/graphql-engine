@@ -24,7 +24,7 @@ of publication:
   :view_only:
   :query:
     query {
-      author {
+      authors {
         id
         name
         articles(
@@ -42,7 +42,7 @@ of publication:
   :response:
     {
       "data": {
-        "author": [
+        "authors": [
           {
             "id": 1,
             "name": "Justin",

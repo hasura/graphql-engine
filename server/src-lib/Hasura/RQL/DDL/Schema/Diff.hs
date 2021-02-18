@@ -27,9 +27,9 @@ import qualified Data.HashMap.Strict                as M
 import qualified Data.HashSet                       as HS
 import qualified Data.List.NonEmpty                 as NE
 
-import           Data.Aeson.Casing
 import           Data.Aeson.TH
 import           Data.List.Extended                 (duplicates)
+import           Data.Typeable                      (cast)
 
 import           Hasura.Backends.Postgres.SQL.Types hiding (TableName)
 import           Hasura.RQL.DDL.Schema.Common
@@ -42,14 +42,14 @@ data FunctionMeta
   , fmFunction :: !QualifiedFunction
   , fmType     :: !FunctionVolatility
   } deriving (Show, Eq)
-$(deriveJSON (aesonDrop 2 snakeCase) ''FunctionMeta)
+$(deriveJSON hasuraJSON ''FunctionMeta)
 
 data ComputedFieldMeta
   = ComputedFieldMeta
   { ccmName         :: !ComputedFieldName
   , ccmFunctionMeta :: !FunctionMeta
   } deriving (Show, Eq)
-$(deriveJSON (aesonDrop 3 snakeCase){omitNothingFields=True} ''ComputedFieldMeta)
+$(deriveJSON hasuraJSON{omitNothingFields=True} ''ComputedFieldMeta)
 
 data TableMeta (b :: BackendType)
   = TableMeta
@@ -61,7 +61,7 @@ data TableMeta (b :: BackendType)
 fetchMeta
   :: (MonadTx m)
   => TableCache 'Postgres
-  -> FunctionCache
+  -> FunctionCache 'Postgres
   -> m ([TableMeta 'Postgres], [FunctionMeta])
 fetchMeta tables functions = do
   tableMetaInfos <- fetchTableMetadata
@@ -221,7 +221,9 @@ getSchemaChangeDeps source schemaDiff = do
     SchemaDiff droppedTables alteredTables = schemaDiff
 
     isDirectDep (SOSourceObj s (SOITableObj tn _)) =
-      s == source && tn `HS.member` HS.fromList droppedTables
+      case cast tn of
+        Nothing      -> False
+        Just pgTable -> s == source && pgTable `HS.member` HS.fromList droppedTables
     isDirectDep _                  = False
 
 data FunctionDiff

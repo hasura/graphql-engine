@@ -59,7 +59,6 @@ import           Control.Monad.Catch                    (MonadMask, bracket_)
 import           Control.Monad.STM
 import           Control.Monad.Trans.Control            (MonadBaseControl)
 import           Data.Aeson
-import           Data.Aeson.Casing
 import           Data.Aeson.TH
 import           Data.Has
 import           Data.Int                               (Int64)
@@ -80,12 +79,11 @@ import           Hasura.RQL.DDL.Headers
 import           Hasura.RQL.Types
 import           Hasura.Server.Version                  (HasVersion)
 
-
 data TriggerMetadata
   = TriggerMetadata { tmName :: TriggerName }
   deriving (Show, Eq)
 
-$(deriveJSON (aesonDrop 2 snakeCase){omitNothingFields=True} ''TriggerMetadata)
+$(deriveJSON hasuraJSON{omitNothingFields=True} ''TriggerMetadata)
 
 newtype EventInternalErr
   = EventInternalErr QErr
@@ -108,7 +106,7 @@ data Event
   , eCreatedAt :: !Time.UTCTime
   } deriving (Show, Eq)
 
-$(deriveFromJSON (aesonDrop 1 snakeCase){omitNothingFields=True} ''Event)
+$(deriveFromJSON hasuraJSON{omitNothingFields=True} ''Event)
 
 data EventEngineCtx
   = EventEngineCtx
@@ -122,7 +120,7 @@ data DeliveryInfo
   , diMaxRetries   :: Int
   } deriving (Show, Eq)
 
-$(deriveJSON (aesonDrop 2 snakeCase){omitNothingFields=True} ''DeliveryInfo)
+$(deriveJSON hasuraJSON{omitNothingFields=True} ''DeliveryInfo)
 
 newtype QualifiedTableStrict = QualifiedTableStrict
   { getQualifiedTable :: QualifiedTable
@@ -144,7 +142,7 @@ data EventPayload
   , epCreatedAt    :: Time.UTCTime
   } deriving (Show, Eq)
 
-$(deriveToJSON (aesonDrop 2 snakeCase){omitNothingFields=True} ''EventPayload)
+$(deriveToJSON hasuraJSON{omitNothingFields=True} ''EventPayload)
 
 defaultMaxEventThreads :: Int
 defaultMaxEventThreads = 100
@@ -201,15 +199,17 @@ processEventQueue logger logenv httpMgr getSchemaCache eeCtx@EventEngineCtx{..} 
         (delivered=t or error=t or archived=t) after a fixed number of tries (assuming it begins with locked='f').
       -}
       pgSources <- scPostgres <$> liftIO getSchemaCache
-      fmap concat $ forM (M.toList pgSources) $ \(sourceName, sourceCache) -> do
-        let sourceConfig = _pcConfiguration sourceCache
-        liftIO $ runPgSourceWriteTx sourceConfig (fetchEvents sourceName fetchBatchSize) >>= \case
-            Left err -> do
-              liftIO $ L.unLogger logger $ EventInternalErr err
-              return []
-            Right events -> do
-              saveLockedEvents (map eId events) leEvents
-              return $ map (, sourceConfig) events
+      fmap concat $ forM (M.toList pgSources) $ \(sourceName, sourceCache) ->
+        case unsafeSourceConfiguration @'Postgres sourceCache of
+          Nothing           -> pure []
+          Just sourceConfig ->
+            liftIO $ runPgSourceWriteTx sourceConfig (fetchEvents sourceName fetchBatchSize) >>= \case
+              Left err -> do
+                liftIO $ L.unLogger logger $ EventInternalErr err
+                return []
+              Right events -> do
+                saveLockedEvents (map eId events) leEvents
+                return $ map (, sourceConfig) events
 
     -- work on this batch of events while prefetching the next. Recurse after we've forked workers
     -- for each in the batch, minding the requested pool size.
@@ -414,10 +414,11 @@ logQErr err = do
   logger :: L.Logger L.Hasura <- asks getter
   L.unLogger logger $ EventInternalErr err
 
-getEventTriggerInfoFromEvent :: SchemaCache -> Event -> Either Text EventTriggerInfo
+getEventTriggerInfoFromEvent
+  :: SchemaCache -> Event -> Either Text (EventTriggerInfo 'Postgres)
 getEventTriggerInfoFromEvent sc e = do
   let table = eTable e
-      mTableInfo = getPGTableInfo (eSource e) table $ scPostgres sc
+      mTableInfo = unsafeTableInfo @'Postgres (eSource e) table $ scPostgres sc
   tableInfo <- onNothing mTableInfo $ Left ("table '" <> table <<> "' not found")
   let triggerName = tmName $ eTrigger e
       mEventTriggerInfo = M.lookup triggerName (_tiEventTriggerInfoMap tableInfo)

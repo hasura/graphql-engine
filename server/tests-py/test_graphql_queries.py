@@ -806,3 +806,24 @@ def _test_relay_pagination(hge_ctx, transport, test_file_prefix, no_of_pages):
         page_no = i + 1
         test_file = "page_" + str(page_no) + ".yaml"
         check_query_f(hge_ctx, test_file_prefix + "/" + test_file, transport)
+
+use_function_permission_fixtures = pytest.mark.usefixtures(
+    'per_method_tests_db_state',
+    'functions_permissions_fixtures'
+)
+
+@pytest.mark.parametrize('transport', ['http', 'websocket'])
+@use_function_permission_fixtures
+class TestGraphQLQueryFunctionPermissions:
+
+    @classmethod
+    def dir(cls):
+        return 'queries/graphql_query/functions/permissions/'
+
+    def test_access_function_without_permission_configured(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + 'get_articles_without_permission_configured.yaml')
+
+    def test_access_function_with_permission_configured(self, hge_ctx, transport):
+        st_code, resp = hge_ctx.v1metadataq_f(self.dir() + 'add_function_permission_get_articles.yaml')
+        assert st_code == 200, resp
+        check_query_f(hge_ctx, self.dir() + 'get_articles_with_permission_configured.yaml')

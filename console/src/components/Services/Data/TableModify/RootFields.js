@@ -4,16 +4,18 @@ import { connect } from 'react-redux';
 import RootFieldsEditor from './RootFieldsEditor';
 import Tooltip from '../../../Common/Tooltip/Tooltip';
 
-import styles from './ModifyTable.scss';
 import {
   getTableCustomRootFields,
-  getTableName,
-} from '../../../Common/utils/pgUtils';
+  getTableCustomName,
+} from '../../../../dataSources';
+
+import styles from './ModifyTable.scss';
 
 const RootFields = props => {
-  const { tableSchema, rootFieldsEdit, dispatch } = props;
+  const { tableSchema, rootFieldsEdit, dispatch, customName } = props;
 
   const existingRootFields = getTableCustomRootFields(tableSchema);
+  const existingCustomName = getTableCustomName(tableSchema);
 
   return (
     <React.Fragment>
@@ -22,12 +24,13 @@ const RootFields = props => {
         <Tooltip message="Change the root fields for the table/view in the GraphQL API" />
       </h4>
       <RootFieldsEditor
+        customName={customName}
+        existingCustomName={existingCustomName}
         existingRootFields={existingRootFields}
         rootFieldsEdit={rootFieldsEdit}
         dispatch={dispatch}
-        tableName={getTableName(tableSchema)}
+        tableName={tableSchema.table_name}
       />
-      <hr />
     </React.Fragment>
   );
 };
@@ -36,6 +39,7 @@ const mapStateToProps = (state, ownProps) => {
   return {
     tableSchema: ownProps.tableSchema,
     rootFieldsEdit: state.tables.modify.rootFieldsEdit,
+    customName: state.tables.modify.custom_name,
   };
 };
 

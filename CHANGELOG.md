@@ -2,6 +2,29 @@
 
 ## Next release
 
+### Inconsistent Metadata
+
+Add `allow_inconsistent_metadata` option to `replace_metadata` API.
+This will replace metadata even if there are inconsistency errors,
+returning a 200 response code and `is_consistent` and `inconsistent_objects`
+keys in the response body.
+
+### Bug fixes and improvements
+
+(Add entries here in the order of: server, console, cli, docs, others)
+
+- server: fix issue of not exposing mutation functions to the admin role when function permissions are inferred (fix #6503)
+
+## v1.4.0-alpha.1
+
+### REST Endpoints
+
+The RESTified GraphQL Endpoints API allows for the use of a REST interface to saved GraphQL queries and mutations.
+
+Users specify the query or mutation they wish to make available, as well a URL template. Segments of the URL template can potentially capture data to be used as GraphQL variables.
+
+See the documentation at `graphql/core/api-reference/restified` for more information.
+
 ### Heterogeneous execution
 
 Previous releases have allowed queries to request data from either Postgres or remote schemas, but not both. This release removes that restriction, so multiple data sources may be mixed within a single query. For example, GraphQL Engine can execute a query like
@@ -52,6 +75,14 @@ access over it.
 either with the server flag ``--enable-remote-schema-permissions`` or the environment
 variable ``HASURA_GRAPHQL_ENABLE_REMOTE_SCHEMA_PERMISSIONS`` set to ``true``.
 
+### Function Permissions
+
+Before volatile functions were supported, the permissions for functions were automatically inferred
+from the select permission of the target table. Now, since volatile functions are supported we can't
+do this anymore, so function permissions are introduced which will explicitly grant permission to
+a function for a given role. A pre-requisite to adding a function permission is that the role should
+have select permissions to the target table of the function.
+
 ### Breaking changes
 
 - This release contains the [PDV refactor (#4111)](https://github.com/hasura/graphql-engine/pull/4111), a significant rewrite of the internals of the server, which did include some breaking changes:
@@ -61,17 +92,18 @@ variable ``HASURA_GRAPHQL_ENABLE_REMOTE_SCHEMA_PERMISSIONS`` set to ``true``.
      - if a query selects table `bar` through table `foo` via a relationship, the required permissions headers will be the union of the required headers of table `foo` and table `bar` (we used to only check the headers of the root table);
      - if an insert does not have an `on_conflict` clause, it will not require the update permissions headers.
 
-This release contains the remote schema permissions feature, which introduces a breaking change:
+- This release contains the remote schema permissions feature, which introduces a breaking change:
 
-Earlier, remote schemas were considered to be a public entity and all the roles had unrestricted
-access to the remote schema. If remote schema permissions are enabled in the graphql-engine, a given
-remote schema will only be accessible to a role ,if the role has permissions configured for the said remote schema
-and be accessible according to the permissions that were configured for the role.
+  Earlier, remote schemas were considered to be a public entity and all the roles had unrestricted
+  access to the remote schema. If remote schema permissions are enabled in the graphql-engine, a given
+  remote schema will only be accessible to a role ,if the role has permissions configured for the said remote schema
+  and be accessible according to the permissions that were configured for the role.
 
 ### Bug fixes and improvements
 
 (Add entries here in the order of: server, console, cli, docs, others)
 
+- server: add `request` field to webhook POST body containing the GraphQL query/mutation, its name, and any variables passed (close #2666)
 - server: fix a regression where variables in fragments weren't accepted (fix #6303)
 - server: output stack traces when encountering conflicting GraphQL types in the schema
 - server: add `--websocket-compression` command-line flag for enabling websocket compression (fix #3292)
@@ -87,15 +119,35 @@ and be accessible according to the permissions that were configured for the role
 - server: update `forkImmortal` function to log more information, i.e log starting of threads and log asynchronous and synchronous exception.
 - server: various changes to ensure timely cleanup of background threads and other resources in the event of a SIGTERM signal.
 - server: fix issue when the `relationships` field in `objects` field is passed `[]` in the `set_custom_types` API (fix #6357)
+- server: fix issue with event triggers defined on a table which is partitioned (fixes #6261)
+- server: action array relationships now support the same input arguments (such as where or distinct_on) as usual relationships
+- server: action array relationships now support aggregate relationships
+- server: fix issue with non-optional fields of the remote schema being added as optional in the graphql-engine (fix #6401)
+- server: accept new config `allowed_skew` in JWT config to provide leeway for JWT expiry (fixes #2109)
+- server: fix issue with query actions with relationship with permissions configured on the remote table (fix #6385)
+- server: always log the `request_id` at the `detail.request_id` path for both `query-log` and `http-log` (#6244)
+- server: fix issue with `--stringify-numeric-types` not stringifying aggregate fields (fix #5704)
+- server: derive permissions for remote relationship field from the corresponding remote schema's permissions
+- server: terminate a request if time to acquire connection from pool exceeds configurable timeout (#6326)
+- server: fix issue with mapping session variables to standard JWT claims (fix #6449)
+- server: support tracking of functions that return a single row (fix #4299)
+- server: reduce memory usage consumption of the schema cache structures, and fix a memory leak
 - console: allow user to cascade Postgres dependencies when dropping Postgres objects (close #5109) (#5248)
 - console: mark inconsistent remote schemas in the UI (close #5093) (#5181)
 - console: remove ONLY as default for ALTER TABLE in column alter operations (close #5512) #5706
+- console: add onboarding helper for new users (#355)
 - console: add option to flag an insertion as a migration from `Data` section (close #1766) (#4933)
 - console: down migrations improvements (close #3503, #4988) (#4790)
 - console: allow setting computed fields for views (close #6168) (#6174)
 - console: select first operator by default on the browse rows screen (close #5729) (#6032)
 - console: fix allow-list not getting added to metadata/allow_list.yaml in CLI mode (close #6374)
 - console: misc bug fixes (close #4785, #6330, #6288)
+- console: allow setting table custom name (#212)
+- console: support tracking VOLATILE functions as mutations or queries (close #6228)
+- console: show only compatible postgres functions in computed fields section (close #5155) (#5978)
+- console: added export data option on browse rows page (close #1438 #5158)
+- console: add session argument field for computed fields (close #5154) (#5610)
+- console: add support for function permissions (#413)
 - cli: add missing global flags for seed command (#5565)
 - cli: allow seeds as alias for seed command (#5693)
 - cli: fix action timeouts not being picked up in metadata operations (#6220)

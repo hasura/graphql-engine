@@ -1,4 +1,4 @@
 import eventsReducer from './reducer';
-import getEventsRouter from './Router';
+import eventsRoutes from './Router';
 
-export { eventsReducer, getEventsRouter };
+export { eventsReducer, eventsRoutes };

@@ -512,6 +512,10 @@ class TestMetadata:
     def test_replace_metadata_v2(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + '/replace_metadata_v2.yaml')
 
+    def test_replace_metadata_allow_inconsistent(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/replace_metadata_allow_inconsistent_inconsistent.yaml')
+        check_query_f(hge_ctx, self.dir() + '/replace_metadata_allow_inconsistent.yaml')
+
     def test_dump_internal_state(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + '/dump_internal_state.yaml')
 
@@ -680,6 +684,12 @@ class TestTrackTables:
 
     def test_track_untrack_table_as_not_admin_error(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + '/track_untrack_table_as_not_admin_error.yaml')
+
+    # We allow tracking of tables with non-compliant graphql names but we don't
+    # add such tables in the GraphQL schema, but these tables can be used with
+    # RQL queries (CRUD) and event triggers
+    def test_track_table_with_non_graphql_compliant_name(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/track_non_graphql_compliant_table.yaml')
 
     @classmethod
     def dir(cls):

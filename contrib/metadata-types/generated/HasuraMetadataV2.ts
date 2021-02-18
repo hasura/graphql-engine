@@ -715,6 +715,10 @@ export interface ComputedFieldDefinition {
  */
 export interface TableConfig {
     /**
+     * Customise the table name / query root name
+     */
+    custom_name: string;
+    /**
      * Customise the column names
      */
     custom_column_names?: { [key: string]: string };

@@ -1,50 +1,46 @@
 import React from 'react';
-import { connect } from 'react-redux';
-import { Link } from 'react-router';
+
 import OverlayTrigger from 'react-bootstrap/lib/OverlayTrigger';
 import Tooltip from 'react-bootstrap/lib/Tooltip';
+import { connect } from 'react-redux';
+import { Link } from 'react-router';
 
-import * as tooltips from './Tooltips';
-import globals from '../../Globals';
-import { getPathRoot } from '../Common/utils/urlUtils';
-import Spinner from '../Common/Spinner/Spinner';
-import WarningSymbol from '../Common/WarningSymbol/WarningSymbol';
-import logo from './images/white-logo.svg';
-
-import NotificationSection from './NotificationSection';
-
-import styles from './Main.scss';
-
-import {
-  loadServerVersion,
-  fetchServerConfig,
-  loadLatestServerVersion,
-  featureCompatibilityInit,
-  emitProClickedEvent,
-  fetchPostgresVersion,
-  fetchConsoleNotifications,
-} from './Actions';
-
-import {
-  loadInconsistentObjects,
-  redirectToMetadataStatus,
-} from '../Services/Settings/Actions';
-
-import {
-  getProClickState,
-  setProClickState,
-  getLoveConsentState,
-  setLoveConsentState,
-  getUserType,
-} from './utils';
-import { getSchemaBaseRoute } from '../Common/utils/routesUtils';
-import LoveSection from './LoveSection';
-import { Help, ProPopup } from './components/';
 import { HASURA_COLLABORATOR_TOKEN } from '../../constants';
+import globals from '../../Globals';
+import { versionGT } from '../../helpers/versionUtils';
+import { loadInconsistentObjects } from '../../metadata/actions';
 import { UPDATE_CONSOLE_NOTIFICATIONS } from '../../telemetry/Actions';
 import { getLSItem, LS_KEYS, setLSItem } from '../../utils/localStorage';
-import { versionGT } from '../../helpers/versionUtils';
+import Onboarding from '../Common/Onboarding';
+import Spinner from '../Common/Spinner/Spinner';
+import {
+  getSchemaBaseRoute,
+  redirectToMetadataStatus,
+} from '../Common/utils/routesUtils';
+import { getPathRoot } from '../Common/utils/urlUtils';
+import WarningSymbol from '../Common/WarningSymbol/WarningSymbol';
+import {
+  emitProClickedEvent,
+  featureCompatibilityInit,
+  fetchConsoleNotifications,
+  fetchServerConfig,
+  loadLatestServerVersion,
+  loadServerVersion,
+} from './Actions';
+import { Help, ProPopup } from './components/';
 import { UpdateVersion } from './components/UpdateVersion';
+import logo from './images/white-logo.svg';
+import LoveSection from './LoveSection';
+import styles from './Main.scss';
+import NotificationSection from './NotificationSection';
+import * as tooltips from './Tooltips';
+import {
+  getLoveConsentState,
+  getProClickState,
+  getUserType,
+  setLoveConsentState,
+  setProClickState,
+} from './utils';
 
 const updateRequestHeaders = props => {
   const { requestHeaders, dispatch } = props;
@@ -107,7 +103,6 @@ class Main extends React.Component {
       dispatch(fetchConsoleNotifications());
     });
 
-    dispatch(fetchPostgresVersion);
     dispatch(fetchServerConfig);
   }
 
@@ -239,6 +234,9 @@ class Main extends React.Component {
       currentSchema,
       serverVersion,
       metadata,
+      console_opts,
+      currentSource,
+      dispatch,
     } = this.props;
 
     const {
@@ -355,6 +353,11 @@ class Main extends React.Component {
 
     return (
       <div className={styles.container}>
+        <Onboarding
+          dispatch={dispatch}
+          console_opts={console_opts}
+          metadata={metadata.metadataObject}
+        />
         <div className={styles.flexRow}>
           <div className={styles.sidebar}>
             <div className={styles.header_logo_wrapper}>
@@ -382,7 +385,9 @@ class Main extends React.Component {
                   'Data',
                   'fa-database',
                   tooltips.data,
-                  getSchemaBaseRoute(currentSchema)
+                  currentSource
+                    ? getSchemaBaseRoute(currentSchema, currentSource)
+                    : '/data'
                 )}
                 {getSidebarItem(
                   'Actions',
@@ -466,9 +471,10 @@ class Main extends React.Component {
 const mapStateToProps = (state, ownProps) => {
   return {
     ...state.main,
-    header: { ...state.header },
+    header: state.header,
     pathname: ownProps.location.pathname,
     currentSchema: state.tables.currentSchema,
+    currentSource: state.tables.currentDataSource,
     metadata: state.metadata,
     console_opts: state.telemetry.console_opts,
     requestHeaders: state.tables.dataHeaders,

@@ -22,13 +22,13 @@ Say we have the following two tables in our database schema:
 
 .. code-block:: sql
 
-  article (
+  articles (
     id SERIAL PRIMARY KEY,
     title TEXT
     ...
   )
 
-  tag (
+  tags (
     id SERIAL PRIMARY KEY,
     tag_value TEXT
     ...
@@ -57,8 +57,8 @@ This ``many-to-many`` relationship can be established in the database by:
 
 2. Adding **foreign key constraints** from the ``article_tag`` table to:
 
-   - the ``article`` table using the ``article_id`` and ``id`` columns of the tables respectively
-   - the ``tag`` table using the ``tag_id`` and ``id`` columns of the tables respectively
+   - the ``articles`` table using the ``article_id`` and ``id`` columns of the tables respectively
+   - the ``tags`` table using the ``tag_id`` and ``id`` columns of the tables respectively
 
 
 The table ``article_tag`` sits between the two tables involved in the many-to-many relationship and captures possible
@@ -69,23 +69,23 @@ Step 2: Set up GraphQL relationships
 
 To access the nested objects via the GraphQL API, :ref:`create the following relationships <create_relationships>`:
 
-- Array relationship, ``article_tags`` from ``article`` table using  ``article_tag :: article_id -> id``
-- Object relationship, ``tag`` from ``article_tag`` table using  ``tag_id -> tag :: id``
-- Array relationship, ``tag_articles`` from ``tag`` table using  ``article_tag :: tag_id -> id``
-- Object relationship, ``article`` from ``article_tag`` table using  ``article_id -> article :: id``
+- Array relationship, ``article_tags`` from ``articles`` table using  ``article_tag :: article_id -> id``
+- Object relationship, ``tag`` from ``article_tag`` table using  ``tag_id -> tags :: id``
+- Array relationship, ``tag_articles`` from ``tags`` table using  ``article_tag :: tag_id -> id``
+- Object relationship, ``article`` from ``article_tag`` table using  ``article_id -> articles :: id``
 
-Step 3: Query using relationships
----------------------------------
+Query using many-to-many relationships
+--------------------------------------
 
 We can now:
 
-- fetch a list of articles with their tags:
+- fetch a list of ``articles`` with their ``tags``:
 
   .. graphiql::
     :view_only:
     :query:
       query {
-        article {
+        articles {
           id
           title
           article_tags {
@@ -99,7 +99,7 @@ We can now:
     :response:
       {
         "data": {
-          "article": [
+          "articles": [
             {
               "id": 1,
               "title": "sit amet",
@@ -140,13 +140,13 @@ We can now:
         }
       }
 
-- fetch a list of tags with their articles:
+- fetch a list of ``tags`` with their ``articles``:
 
   .. graphiql::
     :view_only:
     :query:
       query {
-        tag {
+        tags {
           id
           tag_value
           tag_articles {
@@ -160,7 +160,7 @@ We can now:
     :response:
       {
         "data": {
-          "tag": [
+          "tags": [
             {
               "id": 1,
               "tag_value": "mystery",
@@ -195,6 +195,163 @@ We can now:
         }
       }
 
+
+Insert using many-to-many relationships
+---------------------------------------
+
+We can now:
+ 
+- insert an ``article`` with ``tags`` where the ``tag`` might already exist (assume unique ``value`` for ``tag``):
+ 
+.. graphiql::
+  :view_only:
+  :query:
+    mutation insertArticleWithTags {
+      insert_article(objects: [
+        {
+          title: "Article 1",
+          content: "Article 1 content",
+          author_id: 1,
+          article_tags: {
+            data: [
+              {
+                tag: {
+                  data: {
+                    value: "Recipes"
+                  },
+                  on_conflict: {
+                    constraint: tag_value_key,
+                    update_columns: [value]
+                  }
+                }
+              }
+              {
+                tag: {
+                  data: {
+                    value: "Cooking"
+                  },
+                  on_conflict: {
+                    constraint: tag_value_key,
+                    update_columns: [value]
+                  }
+                }
+              }
+            ]
+          }
+        }
+      ]) {
+        returning {
+          title
+          article_tags {
+            tag {
+              value
+            }
+          }
+        }
+      }
+    }
+  :response:
+    {
+      "data": {
+        "insert_article": {
+          "returning": [
+            {
+              "title": "Article 1",
+              "article_tags": [
+                {
+                  "tag": {
+                    "value": "Recipes"
+                  }
+                },
+                {
+                  "tag": {
+                    "value": "Cooking"
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      }
+    }
+
+- insert a ``tag`` with ``articles`` where the ``tag`` might already exist (assume unique ``value`` for ``tag``):
+
+.. graphiql::
+  :view_only:
+  :query:
+    mutation insertTagWithArticles {
+      insert_tag(objects: [
+        {
+          value: "Recipes",
+          article_tags: {
+            data: [
+              {
+                article: {
+                  data: {
+                    title: "Article 1",
+                    content: "Article 1 content",
+                    author_id: 1
+                  }
+                }
+              },
+              {
+                article: {
+                  data: {
+                    title: "Article 2",
+                    content: "Article 2 content",
+                    author_id: 1
+                  }
+                }
+              }
+            ]
+          }
+        }
+      ],
+      on_conflict: {
+        constraint: tag_value_key,
+        update_columns: [value]
+      }
+      ) {
+        returning {
+          value
+          article_tags {
+            article {
+              title
+            }
+          }
+        }
+      }
+    }
+  :response:
+    {
+      "data": {
+        "insert_tag": {
+          "returning": [
+            {
+              "value": "Recipes",
+              "article_tags": [
+                {
+                  "article": {
+                    "title": "Article 1"
+                  }
+                },
+                {
+                  "article": {
+                    "title": "Article 2"
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      }
+    }
+ 
+.. note::
+ 
+ You can avoid the ``on_conflict`` clause if you will never have conflicts.
+
 Fetching relationship information
 ---------------------------------
 
@@ -206,7 +363,7 @@ table which you can fetch as follows:
   :view_only:
   :query:
     query {
-      article {
+      articles {
         id
         title
         article_tags {
@@ -221,7 +378,7 @@ table which you can fetch as follows:
   :response:
     {
       "data": {
-        "article": [
+        "articles": [
           {
             "id": 1,
             "title": "sit amet",
@@ -277,19 +434,19 @@ query using relationships created on these views:
 .. code-block:: sql
 
   CREATE VIEW article_tags_view AS
-    SELECT article_id, tag.*
-      FROM article_tag LEFT JOIN tag
-        ON article_tag.tag_id = tag.id
+    SELECT article_id, tags.*
+      FROM article_tag LEFT JOIN tags
+        ON article_tag.tag_id = tags.id
 
   CREATE VIEW tag_articles_view AS
-    SELECT tag_id, article.*
-      FROM article_tag LEFT JOIN article
-        ON article_tag.article_id = article.id
+    SELECT tag_id, articles.*
+      FROM article_tag LEFT JOIN articles
+        ON article_tag.article_id = articles.id
 
 Now :ref:`create the following relationships <create_relationships>`:
 
-- Array relationship, ``tags`` from the ``article`` table using  ``article_tags_view :: article_id -> id``
-- Array relationship, ``articles`` from the ``tag`` table using  ``tag_articles_view :: tag_id -> id``
+- Array relationship, ``tags`` from the ``articles`` table using  ``article_tags_view :: article_id -> id``
+- Array relationship, ``articles`` from the ``tags`` table using  ``tag_articles_view :: tag_id -> id``
 
 We can now:
 
@@ -299,7 +456,7 @@ We can now:
     :view_only:
     :query:
       query {
-        article {
+        articles {
           id
           title
           tags {
@@ -311,7 +468,7 @@ We can now:
     :response:
       {
         "data": {
-          "article": [
+          "articles": [
             {
               "id": 1,
               "title": "sit amet",
@@ -350,7 +507,7 @@ We can now:
       :view_only:
       :query:
         query {
-          tag {
+          tags {
             id
             tag_value
             articles {
@@ -362,7 +519,7 @@ We can now:
       :response:
         {
           "data": {
-            "tag": [
+            "tags": [
               {
                 "id": 1,
                 "tag_value": "mystery",
@@ -395,6 +552,6 @@ We can now:
 
   **We do not recommend this** flattening pattern of modelling as this introduces an additional overhead of managing
   permissions and relationships on the newly created views. e.g. You cannot query for the author of the nested articles
-  without setting up a new relationship to the ``author`` table from the ``tag_articles_view`` view.
+  without setting up a new relationship to the ``authors`` table from the ``tag_articles_view`` view.
 
   In our opinion, the cons of this approach seem to outweigh the pros.

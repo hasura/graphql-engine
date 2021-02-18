@@ -22,7 +22,7 @@ Adding tables allows you to define the GraphQL types of your schema including th
 Creating tables
 ---------------
 
-Let's say we want to create two simple tables for an article/author schema:
+Let's say we want to create two simple tables for ``articles`` and ``author`` schema:
 
 .. code-block:: sql
 
@@ -31,7 +31,7 @@ Let's say we want to create two simple tables for an article/author schema:
     name TEXT
   )
 
-  article (
+  articles (
     id SERIAL PRIMARY KEY,
     title TEXT,
     content TEXT,
@@ -44,10 +44,10 @@ Let's say we want to create two simple tables for an article/author schema:
 
   .. tab:: Console
 
-    Open the Hasura console and head to the ``Data`` tab and click the ``Create Table`` button to open up an interface to
+    Open the Hasura console and head to the ``Data`` tab and click on the button on the left side bar to open up an interface to
     create tables.
 
-    For example, here is the schema for the ``article`` table in this interface:
+    For example, here is the schema for the ``articles`` table in this interface:
 
     .. thumbnail:: /img/graphql/core/schema/create-table-graphql.png
       :alt: Schema for an article table
@@ -58,13 +58,13 @@ Let's say we want to create two simple tables for an article/author schema:
 
        .. code-block:: sql
 
-         CREATE TABLE article(id serial NOT NULL, title text NOT NULL, content text NOT NULL, rating integer NOT NULL, author_id serial NOT NULL, PRIMARY KEY (id));
+         CREATE TABLE articles(id serial NOT NULL, title text NOT NULL, content text NOT NULL, rating integer NOT NULL, author_id serial NOT NULL, PRIMARY KEY (id));
 
     2. Add the following statement to the ``down.sql`` file in case you need to :ref:`roll back <roll_back_migrations>` the above statement:
 
        .. code-block:: sql
 
-          DROP TABLE article;
+          DROP TABLE articles;
 
     3. Apply the migration by running:
 
@@ -85,7 +85,7 @@ Let's say we want to create two simple tables for an article/author schema:
       {
         "type": "run_sql",
         "args": {
-          "sql": "CREATE TABLE article(id serial NOT NULL, title text NOT NULL, content text NOT NULL, rating integer NOT NULL, author_id serial NOT NULL, PRIMARY KEY (id));"
+          "sql": "CREATE TABLE articles(id serial NOT NULL, title text NOT NULL, content text NOT NULL, rating integer NOT NULL, author_id serial NOT NULL, PRIMARY KEY (id));"
         }
       }
 
@@ -116,10 +116,10 @@ In order to expose a table over the GraphQL API, it needs to be **tracked**.
 
           - table:
               schema: public
-              name: author
+              name: authors
           - table:
               schema: public
-              name: article
+              name: articles
 
     2. Apply the metadata by running:
 
@@ -141,7 +141,7 @@ In order to expose a table over the GraphQL API, it needs to be **tracked**.
         "type": "track_table",
         "args": {
           "schema": "public",
-          "name": "article"
+          "name": "articles"
         }
       }
 
@@ -151,13 +151,13 @@ Generated GraphQL schema types
 As soon as a table is created and tracked, the corresponding GraphQL schema types
 and query/mutation fields will be automatically generated.
 
-The following object type is generated for the ``article``
+The following object type is generated for the ``articles``
 table we just created and tracked:
 
 .. code-block:: graphql
 
   # Object type
-  type Article {
+  type Articles {
     id: Int
     title: String
     content: String
@@ -167,40 +167,40 @@ table we just created and tracked:
 
 Let's analyze the above type:
 
-- ``Article`` is the name of the type
-- ``id``, ``title``, ``content``, ``rating`` and ``author_id`` are fields of the ``Article`` type
+- ``Articles`` is the name of the type
+- ``id``, ``title``, ``content``, ``rating`` and ``author_id`` are fields of the ``Articles`` type
 - ``Int`` and ``String`` are types that fields can have
 
-The following query/mutation fields are generated for the ``article``
+The following query/mutation fields are generated for the ``articles``
 table we just created and tracked:
 
 .. code-block:: graphql
 
   # Query field
-  article (
-    where: article_bool_exp
+  articles (
+    where: articles_bool_exp
     limit: Int
     offset: Int
-    order_by: [article_order_by!]
-  ): [article!]!
+    order_by: [articles_order_by!]
+  ): [articles!]!
 
   # insert/upsert mutation field
-  insert_article (
-    objects: [article_insert_input!]!
-    on_conflict: article_on_conflict
-  ): article_mutation_response
+  insert_articles (
+    objects: [articles_insert_input!]!
+    on_conflict: articles_on_conflict
+  ): articles_mutation_response
 
   # update mutation field
-  update_article (
-    where: article_bool_exp!
-    _inc: article_inc_input
-    _set: article_set_input
-  ): article_mutation_response
+  update_articles (
+    where: articles_bool_exp!
+    _inc: articles_inc_input
+    _set: articles_set_input
+  ): articles_mutation_response
 
   # delete mutation field
-  delete_article (
-    where: article_bool_exp!
-  ): article_mutation_response
+  delete_articles (
+    where: articles_bool_exp!
+  ): articles_mutation_response
 
 These auto-generated fields will allow you to query and mutate data
 in our table.
@@ -215,13 +215,13 @@ At this point, you should be able to try out basic GraphQL queries/mutations on
 the newly created tables from the GraphiQL tab in the console. *(You may want to add some
 sample data into the tables first)*
 
-- Query all rows in the ``article`` table:
+- Query all rows in the ``articles`` table:
 
   .. graphiql::
     :view_only:
     :query:
       query {
-        article {
+        articles {
           id
           title
           author_id
@@ -230,7 +230,7 @@ sample data into the tables first)*
     :response:
       {
         "data": {
-          "article": [
+          "articles": [
             {
               "id": 1,
               "title": "sit amet",
@@ -288,4 +288,6 @@ sample data into the tables first)*
         }
       }
 
-  Note that the author's ``id`` does not need to passed as an input as it is of type ``serial`` (auto incrementing integer).
+.. note::
+
+  author's ``id`` does not need to be passed as an input as it is of type ``serial`` (auto incrementing integer).

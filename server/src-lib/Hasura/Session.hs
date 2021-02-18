@@ -19,10 +19,9 @@ module Hasura.Session
   , getSessionVariables
   , UserAdminSecret(..)
   , UserRoleBuild(..)
-  , UserInfo
-  , _uiRole
-  , _uiSession
-  , _uiBackendOnlyFieldAccess
+  , UserInfo(..)
+  , UserInfoM(..)
+  , askCurRole
   , mkUserInfo
   , adminUserInfo
   , BackendOnlyFieldAccess(..)
@@ -44,9 +43,9 @@ import           Data.Text.Extended
 import           Data.Text.NonEmpty
 
 import           Hasura.Incremental            (Cacheable)
-import           Hasura.RQL.Types.Common       (adminText)
 import           Hasura.RQL.Types.Error
 import           Hasura.Server.Utils
+import           Hasura.Tracing                (TraceT)
 
 
 newtype RoleName
@@ -64,7 +63,7 @@ mkRoleName :: Text -> Maybe RoleName
 mkRoleName = fmap RoleName . mkNonEmptyText
 
 adminRoleName :: RoleName
-adminRoleName = RoleName adminText
+adminRoleName = RoleName $ mkNonEmptyTextUnsafe "admin"
 
 isAdmin :: RoleName -> Bool
 isAdmin = (adminRoleName ==)
@@ -170,6 +169,22 @@ data UserInfo
   , _uiBackendOnlyFieldAccess :: !BackendOnlyFieldAccess
   } deriving (Show, Eq, Generic)
 instance Hashable UserInfo
+
+class (Monad m) => UserInfoM m where
+  askUserInfo :: m UserInfo
+
+instance (UserInfoM m) => UserInfoM (ReaderT r m) where
+  askUserInfo = lift askUserInfo
+instance (UserInfoM m) => UserInfoM (ExceptT r m) where
+  askUserInfo = lift askUserInfo
+instance (UserInfoM m) => UserInfoM (StateT s m) where
+  askUserInfo = lift askUserInfo
+instance (UserInfoM m) => UserInfoM (TraceT m) where
+  askUserInfo = lift askUserInfo
+
+askCurRole :: (UserInfoM m) => m RoleName
+askCurRole = _uiRole <$> askUserInfo
+
 
 -- | Represents how to build a role from the session variables
 data UserRoleBuild

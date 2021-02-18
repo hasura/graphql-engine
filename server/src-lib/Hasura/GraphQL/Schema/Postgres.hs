@@ -1,43 +1,136 @@
 -- | Postgres-specific schema combinators
 module Hasura.GraphQL.Schema.Postgres
-  ( columnParser
+  ( buildTableRelayQueryFields
+  , buildFunctionRelayQueryFields
+  , columnParser
   , jsonPathArg
-  , getTableGQLName
   , orderByOperators
   , comparisonExps
   , offsetParser
   , mkCountType
+  , tableDistinctOn
+  , updateOperators
+
+  , buildActionQueryFields
+  , buildActionSubscriptionFields
+  , buildActionMutationFields
   ) where
 
 import           Hasura.Prelude
 
 import qualified Data.Aeson                            as J
 import qualified Data.HashMap.Strict                   as Map
+import qualified Data.HashMap.Strict.Extended          as M
+import qualified Data.HashMap.Strict.InsOrd.Extended   as OMap
 import qualified Data.List.NonEmpty                    as NE
 import qualified Data.Text                             as T
 import qualified Database.PG.Query                     as Q
 import qualified Language.GraphQL.Draft.Syntax         as G
 
 import           Data.Parser.JSONPath
+import           Data.Text.Extended
 
-import qualified Data.HashMap.Strict.Extended          as M
 import qualified Hasura.GraphQL.Parser                 as P
 import qualified Hasura.RQL.IR.Select                  as IR
+import qualified Hasura.RQL.IR.Update                  as IR
 
-import           Data.Text.Extended
 import           Hasura.Backends.Postgres.SQL.DML      as PG hiding (CountType)
-import           Hasura.Backends.Postgres.SQL.Types    as PG hiding (TableName)
+import           Hasura.Backends.Postgres.SQL.Types    as PG hiding (FunctionName, TableName)
 import           Hasura.Backends.Postgres.SQL.Value    as PG
-import           Hasura.GraphQL.Parser                 (Definition, InputFieldsParser, Kind (..),
-                                                        Opaque, Parser, UnpreparedValue (..),
-                                                        Variable (..), mkParameter)
-import           Hasura.GraphQL.Parser.Class
-import           Hasura.GraphQL.Parser.Internal.Parser (Parser (..), peelVariable, typeCheck,
-                                                        typeMismatch, valueToJSON)
-import           Hasura.GraphQL.Schema.Backend         (BackendSchema, ComparisonExp)
+import           Hasura.GraphQL.Context
+import           Hasura.GraphQL.Parser                 hiding (EnumValueInfo, field)
+import           Hasura.GraphQL.Parser.Internal.Parser hiding (field)
+import           Hasura.GraphQL.Schema.Action
+import           Hasura.GraphQL.Schema.Backend         (BackendSchema, ComparisonExp,
+                                                        MonadBuildSchema)
+import           Hasura.GraphQL.Schema.Common
+import           Hasura.GraphQL.Schema.Select
+import           Hasura.GraphQL.Schema.Table
 import           Hasura.RQL.Types
 import           Hasura.SQL.Types
 
+
+----------------------------------------------------------------
+-- Top level parsers
+
+buildTableRelayQueryFields
+  :: MonadBuildSchema 'Postgres r m n
+  => SourceName
+  -> SourceConfig 'Postgres
+  -> TableName    'Postgres
+  -> TableInfo    'Postgres
+  -> G.Name
+  -> NESeq (ColumnInfo 'Postgres)
+  -> SelPermInfo  'Postgres
+  -> m (Maybe (FieldParser n (QueryRootField UnpreparedValue)))
+buildTableRelayQueryFields sourceName sourceInfo tableName tableInfo gqlName pkeyColumns selPerms = do
+  let
+    mkRF = RFDB sourceName sourceInfo . QDBR
+    fieldName = gqlName <> $$(G.litName "_connection")
+    fieldDesc = Just $ G.Description $ "fetch data from the table: " <>> tableName
+  optionalFieldParser (mkRF . QDBConnection) $ selectTableConnection tableName fieldName fieldDesc pkeyColumns selPerms
+
+buildFunctionRelayQueryFields
+  :: MonadBuildSchema 'Postgres r m n
+  => SourceName
+  -> SourceConfig 'Postgres
+  -> FunctionName 'Postgres
+  -> FunctionInfo 'Postgres
+  -> TableName    'Postgres
+  -> NESeq (ColumnInfo 'Postgres)
+  -> SelPermInfo  'Postgres
+  -> m (Maybe (FieldParser n (QueryRootField UnpreparedValue)))
+buildFunctionRelayQueryFields sourceName sourceInfo functionName functionInfo tableName pkeyColumns selPerms = do
+  funcName <- functionGraphQLName @'Postgres functionName `onLeft` throwError
+  let
+    mkRF = RFDB sourceName sourceInfo . QDBR
+    fieldName = funcName <> $$(G.litName "_connection")
+    fieldDesc = Just $ G.Description $ "execute function " <> functionName <<> " which returns " <>> tableName
+  optionalFieldParser (mkRF . QDBConnection) $ selectFunctionConnection functionInfo fieldName fieldDesc pkeyColumns selPerms
+
+----------------------------------------------------------
+-- Action related fields
+
+buildActionQueryFields
+  :: MonadBuildSchema 'Postgres r m n
+  => NonObjectTypeMap
+  -> ActionInfo
+  -> m [FieldParser n (QueryRootField UnpreparedValue)]
+buildActionQueryFields nonObjectCustomTypes actionInfo =
+  maybeToList <$> case _adType (_aiDefinition actionInfo) of
+    ActionQuery                       ->
+      fmap (fmap (RFAction . AQQuery)) <$> actionExecute nonObjectCustomTypes actionInfo
+    ActionMutation ActionSynchronous  -> pure Nothing
+    ActionMutation ActionAsynchronous ->
+      fmap (fmap (RFAction . AQAsync)) <$> actionAsyncQuery actionInfo
+
+buildActionMutationFields
+  :: MonadBuildSchema 'Postgres r m n
+  => NonObjectTypeMap
+  -> ActionInfo
+  -> m [FieldParser n (MutationRootField UnpreparedValue)]
+buildActionMutationFields nonObjectCustomTypes actionInfo =
+  maybeToList <$> case _adType (_aiDefinition actionInfo) of
+    ActionQuery -> pure Nothing
+    ActionMutation ActionSynchronous ->
+      fmap (fmap (RFAction . AMSync)) <$> actionExecute nonObjectCustomTypes actionInfo
+    ActionMutation ActionAsynchronous ->
+      fmap (fmap (RFAction . AMAsync)) <$> actionAsyncMutation nonObjectCustomTypes actionInfo
+
+buildActionSubscriptionFields
+  :: MonadBuildSchema 'Postgres r m n
+  => ActionInfo
+  -> m [FieldParser n (QueryRootField UnpreparedValue)]
+buildActionSubscriptionFields actionInfo =
+  maybeToList <$> case _adType (_aiDefinition actionInfo) of
+    ActionQuery                       -> pure Nothing
+    ActionMutation ActionSynchronous  -> pure Nothing
+    ActionMutation ActionAsynchronous ->
+      fmap (fmap (RFAction . AQAsync)) <$> actionAsyncQuery actionInfo
+
+
+----------------------------------------------------------------
+-- Individual components
 
 columnParser
   :: (MonadSchema n m, MonadError QErr m)
@@ -57,13 +150,13 @@ columnParser columnType (G.Nullability isNullable) =
       PGVarchar -> pure (PGValVarchar <$> P.string)
       PGJSON    -> pure (PGValJSON  . Q.JSON  <$> P.json)
       PGJSONB   -> pure (PGValJSONB . Q.JSONB <$> P.jsonb)
-     -- For all other scalars, we convert the value to JSON and use the
-      -- FromJSON instance. The major upside is that this avoids having to wri`te
-      -- a new parsers for each custom type: if the JSON parser is sound, so
-      -- will this one, and it avoids the risk of having two separate ways of
-      -- parsing a value in the codebase, which could lead to inconsistencies.
+      -- For all other scalars, we convert the value to JSON and use the
+      -- FromJSON instance. The major upside is that this avoids having to write
+      -- new parsers for each custom type: if the JSON parser is sound, so will
+      -- this one, and it avoids the risk of having two separate ways of parsing
+      -- a value in the codebase, which could lead to inconsistencies.
       _  -> do
-        name <- P.mkScalarTypeName scalarType
+        name <- mkScalarTypeName scalarType
         let schemaType = P.NonNullable $ P.TNamed $ P.mkDefinition name Nothing P.TIScalar
         pure $ Parser
           { pType = schemaType
@@ -126,16 +219,7 @@ jsonPathArg columnType
       Right []     -> pure Nothing
       Right jPaths -> pure $ Just $ IR.ColumnOp PG.jsonbPathOp $ PG.SEArray $ map elToColExp jPaths
     elToColExp (Key k)   = PG.SELit k
-    elToColExp (Index i) = PG.SELit $ T.pack (show i)
-
-getTableGQLName
-  :: MonadTableInfo 'Postgres r m
-  => TableName 'Postgres
-  -> m G.Name
-getTableGQLName table = do
-  tableInfo <- askTableInfo @'Postgres table
-  let tableCustomName = _tcCustomName . _tciCustomConfig . _tiCoreInfo $ tableInfo
-  tableCustomName `onNothing` qualifiedObjectToName table
+    elToColExp (Index i) = PG.SELit $ tshow i
 
 orderByOperators
   :: NonEmpty (Definition P.EnumValueInfo, (BasicOrderType 'Postgres, NullsOrderType 'Postgres))
@@ -313,8 +397,8 @@ comparisonExps = P.memoize 'comparisonExps \columnType -> do
             _                        -> Nothing
 
       forM maybeScalars $ \(sourceScalar, targetScalar) -> do
-        sourceName   <- P.mkScalarTypeName sourceScalar <&> (<> $$(G.litName "_cast_exp"))
-        targetName   <- P.mkScalarTypeName targetScalar
+        sourceName   <- mkScalarTypeName sourceScalar <&> (<> $$(G.litName "_cast_exp"))
+        targetName   <- mkScalarTypeName targetScalar
         targetOpExps <- comparisonExps $ ColumnScalar targetScalar
         let field = P.fieldOptional targetName Nothing $ (targetScalar, ) <$> targetOpExps
         pure $ P.object sourceName Nothing $ M.fromList . maybeToList <$> field
@@ -385,3 +469,112 @@ mkCountType :: Maybe Bool -> Maybe [Column 'Postgres] -> CountType 'Postgres
 mkCountType _           Nothing     = PG.CTStar
 mkCountType (Just True) (Just cols) = PG.CTDistinct cols
 mkCountType _           (Just cols) = PG.CTSimple cols
+
+-- | Argument to distinct select on columns returned from table selection
+-- > distinct_on: [table_select_column!]
+tableDistinctOn
+  :: forall m n r. (BackendSchema 'Postgres, MonadSchema n m, MonadTableInfo r m, MonadRole r m)
+  => TableName 'Postgres
+  -> SelPermInfo 'Postgres
+  -> m (InputFieldsParser n (Maybe (XDistinct 'Postgres, NonEmpty (Column 'Postgres))))
+tableDistinctOn table selectPermissions = do
+  columnsEnum   <- tableSelectColumnsEnum table selectPermissions
+  pure $ do
+    maybeDistinctOnColumns <- join.join <$> for columnsEnum
+      (P.fieldOptional distinctOnName distinctOnDesc . P.nullable . P.list)
+    pure $ maybeDistinctOnColumns >>= NE.nonEmpty <&> ((),)
+  where
+    distinctOnName = $$(G.litName "distinct_on")
+    distinctOnDesc = Just $ G.Description "distinct select on columns"
+
+-- | Various update operators
+updateOperators
+  :: forall m n r. (MonadSchema n m, MonadTableInfo r m)
+  => QualifiedTable         -- ^ qualified name of the table
+  -> UpdPermInfo 'Postgres  -- ^ update permissions of the table
+  -> m (Maybe (InputFieldsParser n [(Column 'Postgres, IR.UpdOpExpG (UnpreparedValue 'Postgres))]))
+updateOperators table updatePermissions = do
+  tableGQLName <- getTableGQLName @'Postgres table
+  columns      <- tableUpdateColumns table updatePermissions
+  let numericCols = onlyNumCols   columns
+      jsonCols    = onlyJSONBCols columns
+  parsers <- catMaybes <$> sequenceA
+    [ updateOperator tableGQLName $$(G.litName "_set")
+        typedParser IR.UpdSet columns
+        "sets the columns of the filtered rows to the given values"
+        (G.Description $ "input type for updating data in table " <>> table)
+
+    , updateOperator tableGQLName $$(G.litName "_inc")
+        typedParser IR.UpdInc numericCols
+        "increments the numeric columns with given value of the filtered values"
+        (G.Description $"input type for incrementing numeric columns in table " <>> table)
+
+    , let desc = "prepend existing jsonb value of filtered columns with new jsonb value"
+      in updateOperator tableGQLName $$(G.litName "_prepend")
+         typedParser IR.UpdPrepend jsonCols desc desc
+
+    , let desc = "append existing jsonb value of filtered columns with new jsonb value"
+      in updateOperator tableGQLName $$(G.litName "_append")
+         typedParser IR.UpdAppend jsonCols desc desc
+
+    , let desc = "delete key/value pair or string element. key/value pairs are matched based on their key value"
+      in updateOperator tableGQLName $$(G.litName "_delete_key")
+         nullableTextParser IR.UpdDeleteKey jsonCols desc desc
+
+    , let desc = "delete the array element with specified index (negative integers count from the end). "
+                 <> "throws an error if top level container is not an array"
+      in updateOperator tableGQLName $$(G.litName "_delete_elem")
+         nonNullableIntParser IR.UpdDeleteElem jsonCols desc desc
+
+    , let desc = "delete the field or element with specified path (for JSON arrays, negative integers count from the end)"
+      in updateOperator tableGQLName $$(G.litName "_delete_at_path")
+         (fmap P.list . nonNullableTextParser) IR.UpdDeleteAtPath jsonCols desc desc
+    ]
+  whenMaybe (not $ null parsers) do
+    let allowedOperators = fst <$> parsers
+    pure $ fmap catMaybes (sequenceA $ snd <$> parsers)
+      `P.bindFields` \opExps -> do
+        -- there needs to be at least one operator in the update, even if it is empty
+        let presetColumns = Map.toList $ IR.UpdSet . partialSQLExpToUnpreparedValue <$> upiSet updatePermissions
+        when (null opExps && null presetColumns) $ parseError $
+          "at least any one of " <> commaSeparated allowedOperators <> " is expected"
+
+        -- no column should appear twice
+        let flattenedExps = concat opExps
+            erroneousExps = OMap.filter ((>1) . length) $ OMap.groupTuples flattenedExps
+        unless (OMap.null erroneousExps) $ parseError $
+          "column found in multiple operators; " <>
+          T.intercalate ". " [ dquote columnName <> " in " <> commaSeparated (IR.updateOperatorText <$> ops)
+                             | (columnName, ops) <- OMap.toList erroneousExps
+                             ]
+
+        pure $ presetColumns <> flattenedExps
+  where
+    typedParser columnInfo  = fmap P.mkParameter <$> columnParser (pgiType columnInfo) (G.Nullability $ pgiIsNullable columnInfo)
+    nonNullableTextParser _ = fmap P.mkParameter <$> columnParser (ColumnScalar PGText)    (G.Nullability False)
+    nullableTextParser    _ = fmap P.mkParameter <$> columnParser (ColumnScalar PGText)    (G.Nullability True)
+    nonNullableIntParser  _ = fmap P.mkParameter <$> columnParser (ColumnScalar PGInteger) (G.Nullability False)
+
+    updateOperator
+      :: G.Name
+      -> G.Name
+      -> (ColumnInfo b -> m (Parser 'Both n a))
+      -> (a -> IR.UpdOpExpG (UnpreparedValue b))
+      -> [ColumnInfo b]
+      -> G.Description
+      -> G.Description
+      -> m (Maybe (Text, InputFieldsParser n (Maybe [(Column b, IR.UpdOpExpG (UnpreparedValue b))])))
+    updateOperator tableGQLName opName mkParser updOpExp columns opDesc objDesc =
+      whenMaybe (not $ null columns) do
+        fields <- for columns \columnInfo -> do
+          let fieldName = pgiName columnInfo
+              fieldDesc = pgiDescription columnInfo
+          fieldParser <- mkParser columnInfo
+          pure $ P.fieldOptional fieldName fieldDesc fieldParser
+            `mapField` \value -> (pgiColumn columnInfo, updOpExp value)
+        let objName = tableGQLName <> opName <> $$(G.litName "_input")
+        pure $ (G.unName opName,)
+             $ P.fieldOptional opName (Just opDesc)
+             $ P.object objName (Just objDesc)
+             $ catMaybes <$> sequenceA fields
+

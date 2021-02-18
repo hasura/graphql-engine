@@ -54,7 +54,7 @@ type MetadataExportOptions struct {
 }
 
 func (o *MetadataExportOptions) Run() error {
-	migrateDrv, err := migrate.NewMigrate(o.EC, true)
+	migrateDrv, err := migrate.NewMigrate(o.EC, true, "")
 	if err != nil {
 		return err
 	}

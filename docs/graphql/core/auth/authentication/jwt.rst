@@ -134,7 +134,8 @@ JSON object:
      "claims_format": "json|stringified_json",
      "audience": <optional-string-or-list-of-strings-to-verify-audience>,
      "issuer": "<optional-string-to-verify-issuer>",
-     "claims_map": "<optional-object-of-session-variable-to-claim-jsonpath-or-literal-value>"
+     "claims_map": "<optional-object-of-session-variable-to-claim-jsonpath-or-literal-value>",
+     "allowed_skew": "<optional-number-of-seconds-in-integer>"
    }
 
 (``type``, ``key``) pair or ``jwk_url``, **one of them has to be present**.
@@ -494,6 +495,12 @@ The corresponding JWT config should be:
 In the above example, the ``x-hasura-allowed-roles`` and ``x-hasura-default-role`` values are set in the JWT
 config and the value of the ``x-hasura-user-id`` is a JSON path to the value in the JWT token.
 
+``allowed_skew``
+^^^^^^^^^^^^^^^^
+
+``allowed_skew`` is an optional field to provide some leeway (to account for clock skews) while comparing the JWT expiry time. This field
+expects an integer value which will be the number of seconds of the skew value.
+
 
 Examples
 ^^^^^^^^
@@ -553,9 +560,9 @@ Using the flag:
   $ docker run -p 8080:8080 \
       hasura/graphql-engine:latest \
       graphql-engine \
-      --database-url postgres://username:password@hostname:port/dbname \
+      --database-url postgres://<username>:<password>@<hostname>:<port>/<dbname> \
       serve \
-      --admin-secret myadminsecretkey \
+      --admin-secret <myadminsecretkey> \
       --jwt-secret '{"type":"HS256", "key": "3EK6FD+o0+c7tzBNVfjpMkNDi2yARAAKzQlk8O2IKoxQu4nF7EdAh8s3TwpHwrdWT6R"}'
 
 Using env vars:
@@ -563,11 +570,11 @@ Using env vars:
 .. code-block:: shell
 
   $ docker run -p 8080:8080 \
-      -e HASURA_GRAPHQL_ADMIN_SECRET="myadminsecretkey" \
+      -e HASURA_GRAPHQL_ADMIN_SECRET="<myadminsecretkey>" \
       -e HASURA_GRAPHQL_JWT_SECRET='{"type":"RS512", "key": "-----BEGIN PUBLIC KEY-----\nMIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQDdlatRjRjogo3WojgGHFHYLugd\nUWAY9iR3fy4arWNA1KoS8kVw33cJibXr8bvwUAUparCwlvdbH6dvEOfou0/gCFQs\nHUfQrSDv+MuSUMAe8jzKE4qW+jK+xQU9a03GUnKHkkle+Q0pX/g6jXZ7r1/xAK5D\no2kQ+X5xK9cipRgEKwIDAQAB\n-----END PUBLIC KEY-----\n"}' \
       hasura/graphql-engine:latest \
       graphql-engine \
-      --database-url postgres://username:password@hostname:port/dbname \
+      --database-url postgres://<username>:<password>@<hostname>:<port>/<dbname> \
       serve
 
 
@@ -675,6 +682,9 @@ Auth JWT Examples
 
 Here are some sample apps that use JWT authorization. You can follow the instructions in the READMEs of the
 repositories to get started.
+
+- :ref:`Custom JWT server with Hasura actions<actions_codegen_python_flask>`:
+  A simple Python / Flask API that implements ``Signup`` and ``Login`` methods as actions returning JWTs
 
 - `Auth0 JWT example <https://github.com/hasura/graphql-engine/tree/master/community/sample-apps/todo-auth0-jwt>`__:
   A todo app that uses Hasura GraphQL engine and Auth0 JWT

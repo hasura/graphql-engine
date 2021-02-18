@@ -27,6 +27,7 @@ import           Hasura.RQL.IR.BoolExp
 import           Hasura.RQL.Types
 import           Hasura.RQL.Types.Run
 import           Hasura.SQL.Types
+import           Hasura.Session
 
 
 data CountQueryP1
@@ -73,7 +74,7 @@ validateCountQWith
   -> (ColumnType 'Postgres -> Value -> m S.SQLExp)
   -> CountQuery
   -> m CountQueryP1
-validateCountQWith sessVarBldr prepValBldr (CountQuery qt mDistCols mWhere) = do
+validateCountQWith sessVarBldr prepValBldr (CountQuery qt _ mDistCols mWhere) = do
   tableInfo <- askTabInfoSource qt
 
   -- Check if select is allowed
@@ -90,7 +91,7 @@ validateCountQWith sessVarBldr prepValBldr (CountQuery qt mDistCols mWhere) = do
   -- convert the where clause
   annSQLBoolExp <- forM mWhere $ \be ->
     withPathK "where" $
-    convBoolExp colInfoMap selPerm be sessVarBldr prepValBldr
+    convBoolExp colInfoMap selPerm be sessVarBldr (valueParserWithCollectableType prepValBldr)
 
   resolvedSelFltr <- convAnnBoolExpPartialSQL sessVarBldr $
                      spiFilter selPerm
@@ -108,9 +109,10 @@ validateCountQWith sessVarBldr prepValBldr (CountQuery qt mDistCols mWhere) = do
 
 validateCountQ
   :: (QErrM m, UserInfoM m, CacheRM m)
-  => SourceName -> CountQuery -> m (CountQueryP1, DS.Seq Q.PrepArg)
-validateCountQ source query = do
-  tableCache <- askTableCache source
+  => CountQuery -> m (CountQueryP1, DS.Seq Q.PrepArg)
+validateCountQ query = do
+  let source = cqSource query
+  tableCache :: TableCache 'Postgres <- askTableCache source
   flip runTableCacheRT (source, tableCache) $ runDMLP1T $
     validateCountQWith sessVarFromCurrentSetting binRHSBuilder query
 
@@ -131,7 +133,7 @@ runCount
      , MonadIO m, MonadBaseControl IO m
      , Tracing.MonadTrace m
      )
-  => SourceName -> CountQuery -> m EncJSON
-runCount source q = do
-  sourceConfig <- _pcConfiguration <$> askPGSourceCache source
-  validateCountQ source q >>=  liftEitherM . runExceptT . runQueryLazyTx (_pscExecCtx sourceConfig) Q.ReadOnly . countQToTx
+  => CountQuery -> m EncJSON
+runCount q = do
+  sourceConfig <- askSourceConfig (cqSource q)
+  validateCountQ q >>= runQueryLazyTx (_pscExecCtx sourceConfig) Q.ReadOnly . countQToTx

@@ -107,7 +107,7 @@ In most cases you will want ``VOLATILE`` functions to only be exposed as
 mutations, and only ``STABLE`` and ``IMMUTABLE`` functions to be queries.
 When tracking ``VOLATILE`` functions under the ``query`` root, the user needs
 to guarantee that the field is idempotent and side-effect free, in the context
-of the resulting GraphQL API. 
+of the resulting GraphQL API.
 
 One such use case might be a function that wraps a simple query and performs
 some logging visible only to administrators.
@@ -167,7 +167,7 @@ Function Configuration
    (*terminology from* `Postgres docs <https://www.postgresql.org/docs/current/sql-createfunction.html>`__):
 
    - **Function behaviour**: ``STABLE`` or ``IMMUTABLE`` functions may *only* be exposed as queries (i.e. with ``exposed_as: query``)
-   - **Return type**: MUST be ``SETOF <table-name>`` where ``<table-name>`` is already tracked
+   - **Return type**: MUST be ``SETOF <table-name>`` OR ``<table_name>`` where ``<table-name>`` is already tracked
    - **Argument modes**: ONLY ``IN``
 
 .. _untrack_function:

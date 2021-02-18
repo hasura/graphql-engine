@@ -3,19 +3,21 @@ module Hasura.GraphQL.Schema.Common where
 import           Hasura.Prelude
 
 import qualified Data.Aeson                         as J
+import qualified Data.HashMap.Strict                as Map
 import qualified Data.HashMap.Strict.InsOrd         as OMap
+import qualified Data.Text                          as T
 
+import           Data.Either                        (isRight)
 import           Data.Text.Extended
 import           Language.GraphQL.Draft.Syntax      as G
 
-import qualified Data.Text                          as T
+import qualified Hasura.Backends.Postgres.SQL.Types as PG
 import qualified Hasura.GraphQL.Execute.Types       as ET (GraphQLQueryType)
 import qualified Hasura.GraphQL.Parser              as P
 import qualified Hasura.RQL.IR.Select               as IR
 
-import           Hasura.Backends.Postgres.SQL.Types
+import           Hasura.GraphQL.Parser              (UnpreparedValue)
 import           Hasura.RQL.Types
-import           Hasura.GraphQL.Parser                 (UnpreparedValue)
 
 
 type SelectExp           b = IR.AnnSimpleSelG       b (UnpreparedValue b)
@@ -28,9 +30,10 @@ type AnnotatedField      b = IR.AnnFieldG           b (UnpreparedValue b)
 
 data QueryContext =
   QueryContext
-  { qcStringifyNum :: !Bool
-  , qcQueryType    :: !ET.GraphQLQueryType
-  , qcRemoteFields :: !(HashMap RemoteSchemaName [P.Definition P.FieldInfo])
+  { qcStringifyNum              :: !Bool
+  , qcQueryType                 :: !ET.GraphQLQueryType
+  , qcRemoteRelationshipContext :: !(HashMap RemoteSchemaName (IntrospectionResult, ParsedIntrospection))
+  , qcFunctionPermsContext      :: !FunctionPermissionsCtx
   }
 
 textToName :: MonadError QErr m => Text -> m G.Name
@@ -88,10 +91,10 @@ instance J.FromJSON NodeIdVersion where
       1 -> pure NIVersion1
       _ -> fail $ "expecting version 1 for node id, but got " <> show versionInt
 
-mkDescriptionWith :: Maybe PGDescription -> Text -> G.Description
+mkDescriptionWith :: Maybe PG.PGDescription -> Text -> G.Description
 mkDescriptionWith descM defaultTxt = G.Description $ case descM of
-  Nothing                      -> defaultTxt
-  Just (PGDescription descTxt) -> T.unlines [descTxt, "\n", defaultTxt]
+  Nothing                         -> defaultTxt
+  Just (PG.PGDescription descTxt) -> T.unlines [descTxt, "\n", defaultTxt]
 
 -- | The default @'skip' and @'include' directives
 defaultDirectives :: [P.DirectiveInfo]
@@ -105,3 +108,43 @@ defaultDirectives =
       [G.EDLFIELD, G.EDLFRAGMENT_SPREAD, G.EDLINLINE_FRAGMENT]
     mkDirective name =
       P.DirectiveInfo name Nothing [ifInputField] dirLocs
+
+-- TODO why do we do these validations at this point? What does it mean to track
+--      a function but not add it to the schema...?
+--      Auke:
+--        I believe the intention is simply to allow the console to do postgres data management
+--      Karthikeyan: Yes, this is correct. We allowed this pre PDV but somehow
+--        got removed in PDV. OTOH, I’m not sure how prevalent this feature
+--        actually is
+takeValidTables :: forall b. Backend b => TableCache b -> TableCache b
+takeValidTables = Map.filterWithKey graphQLTableFilter . Map.filter tableFilter
+  where
+    tableFilter = not . isSystemDefined . _tciSystemDefined . _tiCoreInfo
+    graphQLTableFilter tableName tableInfo =
+      -- either the table name should be GraphQL compliant
+      -- or it should have a GraphQL custom name set with it
+      isRight (tableGraphQLName @b tableName) ||
+      isJust (_tcCustomName $ _tciCustomConfig $ _tiCoreInfo tableInfo)
+
+-- TODO and what about graphql-compliant function names here too?
+takeValidFunctions :: forall b. FunctionCache b -> FunctionCache b
+takeValidFunctions = Map.filter functionFilter
+  where
+    functionFilter = not . isSystemDefined . _fiSystemDefined
+
+
+-- root field builder helpers
+
+requiredFieldParser
+  :: (Functor n, Functor m)
+  => (a -> b)
+  -> m (P.FieldParser n a)
+  -> m (Maybe (P.FieldParser n b))
+requiredFieldParser f = fmap $ Just . fmap f
+
+optionalFieldParser
+  :: (Functor n, Functor m)
+  => (a -> b)
+  -> m (Maybe (P.FieldParser n a))
+  -> m (Maybe (P.FieldParser n b))
+optionalFieldParser = fmap . fmap . fmap

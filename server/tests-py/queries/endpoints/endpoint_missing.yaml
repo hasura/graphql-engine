@@ -1,0 +1,9 @@
+description: Call of an endpoint with a url template with the arg missing
+url: /api/rest/void
+method: GET
+status: 404
+query:
+response:
+  path: $
+  error: 'Endpoint not found'
+  code: not-found

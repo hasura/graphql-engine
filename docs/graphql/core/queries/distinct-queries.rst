@@ -24,13 +24,13 @@ See :ref:`sort queries <sort_query_results>` for more info on using ``order_by``
 
 .. code-block:: graphql
 
-   employee (
-     distinct_on: [employee_select_column]
-     order_by: [employee_order_by]
-   ): [employee]!
+   employees (
+     distinct_on: [employees_select_column]
+     order_by: [employees_order_by]
+   ): [employees]!
 
-   # select column enum type for "employee" table
-   enum employee_select_column {
+   # select column enum type for "employees" table
+   enum employees_select_column {
      id
      name
      department
@@ -48,7 +48,7 @@ Fetch results with distinct values of a particular field
    :view_only:
    :query:
       query {
-        employee (
+        employees (
           distinct_on: [department]
           order_by: [
             {department: asc},
@@ -64,7 +64,7 @@ Fetch results with distinct values of a particular field
    :response:
      {
        "data": {
-         "employee": [
+         "employees": [
            {
              "id": 5,
              "name": "Kamila",

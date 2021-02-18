@@ -37,7 +37,6 @@ module Hasura.Backends.Postgres.SQL.Types
   , qualifiedObjectToText
   , snakeCaseQualifiedObject
   , qualifiedObjectToName
-  , isGraphQLCompliantTableName
 
   , PGScalarType(..)
   , textToPGScalarType
@@ -58,7 +57,6 @@ import qualified PostgreSQL.Binary.Decoding    as PD
 import qualified Text.Builder                  as TB
 
 import           Data.Aeson
-import           Data.Aeson.Casing
 import           Data.Aeson.Encoding           (text)
 import           Data.Aeson.TH
 import           Data.Aeson.Types              (toJSONKeyText)
@@ -180,6 +178,10 @@ data QualifiedObject a
 instance (NFData a) => NFData (QualifiedObject a)
 instance (Cacheable a) => Cacheable (QualifiedObject a)
 
+instance (Arbitrary a) => Arbitrary (QualifiedObject a) where
+  arbitrary = genericArbitrary
+
+
 instance (FromJSON a) => FromJSON (QualifiedObject a) where
   parseJSON v@(String _) =
     QualifiedObject publicSchema <$> parseJSON v
@@ -224,9 +226,6 @@ qualifiedObjectToName objectName = do
   onNothing (G.mkName textName) $ throw400 ValidationFailed $
     "cannot include " <> objectName <<> " in the GraphQL schema because " <> textName
     <<> " is not a valid GraphQL identifier"
-
-isGraphQLCompliantTableName :: ToTxt a => QualifiedObject a -> Bool
-isGraphQLCompliantTableName = isJust . G.mkName . snakeCaseQualifiedObject
 
 type QualifiedTable = QualifiedObject TableName
 
@@ -447,6 +446,7 @@ data PGTypeKind
   | PGKindUnknown !Text
   deriving (Show, Eq, Generic)
 instance NFData PGTypeKind
+instance Hashable PGTypeKind
 instance Cacheable PGTypeKind
 
 instance FromJSON PGTypeKind where
@@ -477,8 +477,9 @@ data QualifiedPGType
   , _qptType   :: !PGTypeKind
   } deriving (Show, Eq, Generic)
 instance NFData QualifiedPGType
+instance Hashable QualifiedPGType
 instance Cacheable QualifiedPGType
-$(deriveJSON (aesonDrop 4 snakeCase) ''QualifiedPGType)
+$(deriveJSON hasuraJSON ''QualifiedPGType)
 
 isBaseType :: QualifiedPGType -> Bool
 isBaseType (QualifiedPGType _ n ty) =

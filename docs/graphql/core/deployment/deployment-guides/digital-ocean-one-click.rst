@@ -44,12 +44,16 @@ Once the Hasura GraphQL engine Droplet is ready, you can visit the Droplet IP to
 open the Hasura console, where you can create tables, explore GraphQL APIs etc.
 Note that it might take 1 or 2 minutes for everything to start running.
 
+The ``Droplet IP`` is highlighted in the image below:
+
+.. thumbnail:: /img/graphql/core/deployment/dashboard-digital-ocean.png
+   :alt: Dashboard for digital ocean droplet
+
 The Hasura console will be at:
 
 .. code-block:: bash
 
    http://<your_droplet_ip>/console
-
 
 The GraphQL endpoint will be:
 
@@ -61,14 +65,13 @@ The GraphQL endpoint will be:
 A Postgres database is also provisioned on the Droplet. Using the console, you
 can create a table on this Postgres instance and make your first GraphQL query.
 
-.. image:: https://graphql-engine-cdn.hasura.io/heroku-repo/assets/hasura_console.png
-   :class: no-shadow
+.. thumbnail:: /img/graphql/core/deployment/digital-ocean-hasura-console.png
    :alt: Hasura console
 
 Step 3: Create a table
 ^^^^^^^^^^^^^^^^^^^^^^
 
-Navigate to ``Data -> Create table`` on the console and create a table called ``profile`` with the following columns:
+Navigate to ``Data -> Add table`` on the console and create a table called ``profile`` with the following columns:
 
 ``profile``
 
@@ -79,11 +82,10 @@ Navigate to ``Data -> Create table`` on the console and create a table called ``
 ``name``           Text
 ===============  ========
 
-Choose ``id`` as the Primary key and click the ``Create`` button.
+Choose ``id`` as the Primary key and click the ``Add Table`` button.
 
-.. image:: https://graphql-engine-cdn.hasura.io/heroku-repo/assets/hasura_create_table.png
-   :class: no-shadow
-   :alt: Hasura console - create table
+.. thumbnail:: /img/graphql/core/deployment/digital-ocean-create-table.png
+   :alt: Create a table   
 
 Step 4: Insert sample data
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -98,8 +100,7 @@ Once the table is created, go to the ``Insert Row`` tab and insert some sample r
    Captain America
    Black Widow
 
-.. image:: https://graphql-engine-cdn.hasura.io/heroku-repo/assets/hasura_insert_row.png
-   :class: no-shadow
+.. thumbnail:: /img/graphql/core/deployment/digital-ocean-hasura-insert-data.png
    :alt: Hasura console - insert data
 
 Step 5: Try out GraphQL
@@ -116,8 +117,7 @@ Switch to the ``GraphiQL`` tab on top and execute the following GraphQL query:
      }
    }
 
-.. image:: https://graphql-engine-cdn.hasura.io/heroku-repo/assets/hasura_graphql_query.png
-   :class: no-shadow
+.. thumbnail:: /img/graphql/core/deployment/hasura-graphql-query.png
    :alt: Hasura console - GraphiQL
 
 
@@ -161,7 +161,7 @@ Also change it to some unique secret:
 
    ...
    # un-comment next line to add an admin secret key
-   HASURA_GRAPHQL_ADMIN_SECRET: myadminsecretkey
+   HASURA_GRAPHQL_ADMIN_SECRET: <myadminsecretkey>
    ...
 
    # type ESC followed by :wq to save and quit
@@ -180,7 +180,7 @@ following header:
 
 .. code-block:: bash
 
-   X-Hasura-Admin-Secret: myadminsecretkey
+   X-Hasura-Admin-Secret: <myadminsecretkey>
 
 
 Adding a domain & enabling HTTPS

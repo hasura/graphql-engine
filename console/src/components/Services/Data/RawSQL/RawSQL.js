@@ -11,7 +11,6 @@ import KnowMoreLink from '../../../Common/KnowMoreLink/KnowMoreLink';
 import Alert from '../../../Common/Alert';
 import StatementTimeout from './StatementTimeout';
 import { parseCreateSQL } from './utils';
-import { checkSchemaModification } from '../../../Common/utils/sqlUtils';
 import styles from '../../../Common/TableCommon/Table.scss';
 import {
   executeSQL,
@@ -28,6 +27,7 @@ import {
 } from '../../../Common/AceEditor/utils';
 import { CLI_CONSOLE_MODE } from '../../../../constants';
 import NotesSection from './molecules/NotesSection';
+import { dataSource } from '../../../../dataSources';
 import { getLSItem, setLSItem, LS_KEYS } from '../../../../utils/localStorage';
 /**
  * # RawSQL React FC
@@ -105,7 +105,7 @@ const RawSQL = ({
       }
       if (!isMigration && globals.consoleMode === CLI_CONSOLE_MODE) {
         // if migration is not checked, check if is schema modification
-        if (checkSchemaModification(sqlText)) {
+        if (dataSource.checkSchemaModification(sqlText)) {
           dispatch(modalOpen());
           return;
         }
@@ -154,7 +154,7 @@ const RawSQL = ({
       dispatch({ type: SET_SQL, data: val });
 
       // set migration checkbox true
-      if (checkSchemaModification(val)) {
+      if (dataSource.checkSchemaModification(val)) {
         dispatch({ type: SET_MIGRATION_CHECKED, data: true });
       } else {
         dispatch({ type: SET_MIGRATION_CHECKED, data: false });
@@ -445,7 +445,9 @@ const RawSQL = ({
 
           <StatementTimeout
             statementTimeout={statementTimeout}
-            isMigrationChecked={isMigrationChecked}
+            isMigrationChecked={
+              globals.consoleMode === CLI_CONSOLE_MODE && isMigrationChecked
+            }
             updateStatementTimeout={updateStatementTimeout}
           />
           <Button

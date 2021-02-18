@@ -2,10 +2,10 @@
    :description: Hasura schema/metadata API reference
    :keywords: hasura, docs, schema/metadata API, API reference
 
-.. _metadata_apis:
+.. _schema_metadata_apis:
 
-Schema / Metadata API Reference
-===============================
+Schema / Metadata API Reference (v1.3 and below)
+================================================
 
 .. contents:: Table of contents
   :backlinks: none
@@ -295,8 +295,8 @@ The various types of queries are listed in the following table:
      - 1
      - Export the current metadata
 
-   * - :ref:`replace_metadata`
-     - :ref:`replace_metadata_args <replace_metadata_syntax>`
+   * - :ref:`replace_metadata_v1`
+     - :ref:`replace_metadata_args <replace_metadata_syntax_v1>`
      - 1
      - Import and replace existing metadata
 
@@ -379,6 +379,16 @@ The various types of queries are listed in the following table:
      - :ref:`drop_action_permission_args <drop_action_permission_syntax>`
      - 1
      - Drop an action permission
+
+   * - :ref:`create_rest_endpoint`
+     - :ref:`create_rest_endpoint_args <create_rest_endpoint_syntax>`
+     - 3
+     - Create a RESTified GraphQL Endpoint
+
+   * - :ref:`drop_rest_endpoint`
+     - :ref:`drop_rest_endpoint_args <drop_rest_endpoint_syntax>`
+     - 3
+     - Drop a RESTified GraphQL Endpoint
 
 **See:**
 
@@ -481,6 +491,7 @@ See :ref:`server_flag_reference` for info on setting the above flag/env var.
   Remote Schemas <remote-schemas>
   Remote Relationships <remote-relationships>
   Query Collections <query-collections>
+  RESTified GraphQL Endpoints <restified-endpoints>
   Custom Types <custom-types>
   Actions <actions>
   Manage Metadata <manage-metadata>

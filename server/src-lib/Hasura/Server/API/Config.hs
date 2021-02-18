@@ -5,15 +5,17 @@ module Hasura.Server.API.Config
   , runGetConfig
   ) where
 
-import           Data.Aeson.Casing
+import           Hasura.Prelude
+
 import           Data.Aeson.TH
 
-import           Hasura.Prelude
+import qualified Hasura.GraphQL.Execute.LiveQuery.Options as LQ
+
+import           Hasura.RQL.Types                         (FunctionPermissionsCtx)
 import           Hasura.Server.Auth
 import           Hasura.Server.Auth.JWT
 import           Hasura.Server.Version                    (HasVersion, Version, currentVersion)
 
-import qualified Hasura.GraphQL.Execute.LiveQuery.Options as LQ
 
 data JWTInfo
   = JWTInfo
@@ -22,25 +24,27 @@ data JWTInfo
   , jwtiClaimsMap       :: !(Maybe JWTCustomClaimsMap)
   } deriving (Show, Eq)
 
-$(deriveToJSON (aesonDrop 4 snakeCase) ''JWTInfo)
+$(deriveToJSON hasuraJSON ''JWTInfo)
 
 data ServerConfig
   = ServerConfig
-  { scfgVersion            :: !Version
-  , scfgIsAdminSecretSet   :: !Bool
-  , scfgIsAuthHookSet      :: !Bool
-  , scfgIsJwtSet           :: !Bool
-  , scfgJwt                :: !(Maybe JWTInfo)
-  , scfgIsAllowListEnabled :: !Bool
-  , scfgLiveQueries        :: !LQ.LiveQueriesOptions
-  , scfgConsoleAssetsDir   :: !(Maybe Text)
+  { scfgVersion                       :: !Version
+  , scfgIsFunctionPermissionsInferred :: !FunctionPermissionsCtx
+  , scfgIsAdminSecretSet              :: !Bool
+  , scfgIsAuthHookSet                 :: !Bool
+  , scfgIsJwtSet                      :: !Bool
+  , scfgJwt                           :: !(Maybe JWTInfo)
+  , scfgIsAllowListEnabled            :: !Bool
+  , scfgLiveQueries                   :: !LQ.LiveQueriesOptions
+  , scfgConsoleAssetsDir              :: !(Maybe Text)
   } deriving (Show, Eq)
 
-$(deriveToJSON (aesonDrop 4 snakeCase) ''ServerConfig)
+$(deriveToJSON hasuraJSON ''ServerConfig)
 
-runGetConfig :: HasVersion => AuthMode -> Bool -> LQ.LiveQueriesOptions -> Maybe Text -> ServerConfig
-runGetConfig am isAllowListEnabled liveQueryOpts consoleAssetsDir = ServerConfig
+runGetConfig :: HasVersion => FunctionPermissionsCtx ->  AuthMode -> Bool -> LQ.LiveQueriesOptions -> Maybe Text -> ServerConfig
+runGetConfig functionPermsCtx am isAllowListEnabled liveQueryOpts consoleAssetsDir = ServerConfig
     currentVersion
+    functionPermsCtx
     (isAdminSecretSet am)
     (isAuthHookSet am)
     (isJWTSet am)

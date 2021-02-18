@@ -5,7 +5,6 @@ import           Hasura.Prelude
 import qualified Data.Aeson                         as J
 import qualified Data.Aeson.Casing                  as J
 import qualified Data.HashMap.Strict                as HM
-import qualified Data.Text                          as T
 import qualified Text.Builder                       as TB
 
 import           Data.String                        (fromString)
@@ -408,8 +407,7 @@ instance ToSQL SQLExp where
   toSQL (SEFunction funcExp) = toSQL funcExp
 
 intToSQLExp :: Int -> SQLExp
-intToSQLExp =
-  SEUnsafe . T.pack . show
+intToSQLExp = SEUnsafe . tshow
 
 data Extractor = Extractor !SQLExp !(Maybe Alias)
   deriving (Show, Eq, Generic, Data)
@@ -424,9 +422,8 @@ mkSQLOpExp
   -> SQLExp -- result
 mkSQLOpExp op lhs rhs = SEOpApp op [lhs, rhs]
 
-mkColDefValMap :: [PGCol] -> HM.HashMap PGCol SQLExp
-mkColDefValMap cols =
-  HM.fromList $ zip cols (repeat $ SEUnsafe "DEFAULT")
+columnDefaultValue :: SQLExp
+columnDefaultValue = SEUnsafe "DEFAULT"
 
 handleIfNull :: SQLExp -> SQLExp -> SQLExp
 handleIfNull l e = SEFnApp "coalesce" [e, l] Nothing
@@ -764,10 +761,10 @@ instance Show CompareOp where
     SNILIKE      -> "NOT ILIKE"
     SSIMILAR     -> "SIMILAR TO"
     SNSIMILAR    -> "NOT SIMILAR TO"
-    SREGEX    -> "~"
-    SIREGEX    -> "~*"
-    SNREGEX    -> "!~"
-    SNIREGEX    -> "!~*"
+    SREGEX       -> "~"
+    SIREGEX      -> "~*"
+    SNREGEX      -> "!~"
+    SNIREGEX     -> "!~*"
     SContains    -> "@>"
     SContainedIn -> "<@"
     SHasKey      -> "?"
@@ -953,3 +950,13 @@ instance (ToSQL v) => ToSQL (SelectWithG v) where
       f (Alias al, q) = toSQL al <~> "AS" <~> parenB (toSQL q)
 
 type SelectWith = SelectWithG CTE
+
+
+-- local helpers
+
+infixr 6 <+>
+(<+>) :: (ToSQL a) => Text -> [a] -> TB.Builder
+(<+>) _ [] = mempty
+(<+>) kat (x:xs) =
+  toSQL x <> mconcat [ TB.text kat <> toSQL x' | x' <- xs ]
+{-# INLINE (<+>) #-}

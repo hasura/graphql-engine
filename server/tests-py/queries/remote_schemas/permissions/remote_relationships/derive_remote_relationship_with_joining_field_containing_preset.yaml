@@ -1,0 +1,61 @@
+- description: add remote schema permission for the 'user1' role
+  url: /v1/metadata
+  status: 200
+  query:
+    type: add_remote_schema_permissions
+    args:
+      remote_schema: my-remote-schema
+      role: user
+      definition:
+        schema: |
+          interface Communication {
+            id: Int!
+            msg: String!
+          }
+
+          type Message implements Communication {
+            id: Int!
+            name: String!
+            msg: String!
+            errorMsg: String
+          }
+
+          type Query {
+            message(id: Int! @preset(value: 2)): Message
+          }
+
+- description:
+    test to check when the joining field argument contains a preset, the preset value
+    should be ignored as the value comes from the parent query
+  url: /v1/graphql
+  status: 200
+  headers:
+    X-Hasura-Role: user
+    X-Hasura-User-Id: '1'
+  response:
+    data:
+      profiles:
+        - id: 1
+          messageBasic:
+            id: 1
+            name: alice
+  query:
+    query: |
+      query {
+        profiles {
+          id
+          messageBasic {
+            id
+            name
+          }
+        }
+      }
+
+- description: drop remote schema permission for the 'user' role
+  url: /v1/metadata
+  status: 200
+  query:
+    type: drop_remote_schema_permissions
+    args:
+      remote_schema: my-remote-schema
+      role: user

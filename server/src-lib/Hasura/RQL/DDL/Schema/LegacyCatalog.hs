@@ -69,7 +69,7 @@ saveMetadataToHdbTables (MetadataNoSources tables functions schemas collections
 
   -- sql functions
   withPathK "functions" $ indexedForM_ functions $
-    \(FunctionMetadata function config) -> addFunctionToCatalog function config
+    \(FunctionMetadata function config _) -> addFunctionToCatalog function config
 
   -- query collections
   systemDefined <- askSystemDefined
@@ -107,12 +107,12 @@ saveMetadataToHdbTables (MetadataNoSources tables functions schemas collections
 
   where
     processPerms tableName perms = indexedForM_ perms $ \perm -> do
-      let pt = permAccToType $ getPermAcc1 perm
+      let pt = permAccToType @'Postgres $ getPermAcc1 perm
       systemDefined <- askSystemDefined
       liftTx $ addPermissionToCatalog pt tableName perm systemDefined
 
 saveTableToCatalog
-  :: (MonadTx m, HasSystemDefined m) => QualifiedTable -> Bool -> TableConfig -> m ()
+  :: (MonadTx m, HasSystemDefined m) => QualifiedTable -> Bool -> TableConfig 'Postgres -> m ()
 saveTableToCatalog (QualifiedObject sn tn) isEnum config = do
   systemDefined <- askSystemDefined
   liftTx $ Q.unitQE defaultTxErrorHandler [Q.sql|
@@ -158,7 +158,7 @@ addEventTriggerToCatalog qt etc = liftTx do
 
 addComputedFieldToCatalog
   :: MonadTx m
-  => AddComputedField -> m ()
+  => AddComputedField 'Postgres -> m ()
 addComputedFieldToCatalog q =
   liftTx $ Q.withQE defaultTxErrorHandler
     [Q.sql|
@@ -170,7 +170,7 @@ addComputedFieldToCatalog q =
     QualifiedObject schemaName tableName = table
     AddComputedField _ table computedField definition comment = q
 
-addRemoteRelationshipToCatalog :: MonadTx m => RemoteRelationship -> m ()
+addRemoteRelationshipToCatalog :: MonadTx m => RemoteRelationship 'Postgres -> m ()
 addRemoteRelationshipToCatalog remoteRelationship = liftTx $
   Q.unitQE defaultTxErrorHandler [Q.sql|
        INSERT INTO hdb_catalog.hdb_remote_relationship
@@ -342,8 +342,7 @@ fetchMetadataFromHdbTables = liftTx do
   actions <- oMapFromL _amName <$> fetchActions
 
   MetadataNoSources fullTableMetaMap functions remoteSchemas collections
-           allowlist customTypes actions <$> fetchCronTriggers
-
+             allowlist customTypes actions <$> fetchCronTriggers
   where
     modMetaMap l f xs = do
       st <- get
@@ -407,7 +406,10 @@ fetchMetadataFromHdbTables = liftTx do
                     |] () False
       pure $ oMapFromL _fmFunction $
         flip map l $ \(sn, fn, Q.AltJ config) ->
-                       FunctionMetadata (QualifiedObject sn fn) config
+                       -- function permissions were only introduced post 43rd
+                       -- migration, so it's impossible we get any permissions
+                       -- here
+                       FunctionMetadata (QualifiedObject sn fn) config []
 
     fetchRemoteSchemas =
       map fromRow <$> Q.listQE defaultTxErrorHandler
@@ -561,7 +563,7 @@ recreateSystemMetadata = do
       Left relDef  -> insertRelationshipToCatalog tableName ObjRel relDef
       Right relDef -> insertRelationshipToCatalog tableName ArrRel relDef
   where
-    systemMetadata :: [(QualifiedTable, [Either ObjRelDef ArrRelDef])]
+    systemMetadata :: [(QualifiedTable, [Either (ObjRelDef 'Postgres) (ArrRelDef 'Postgres)])]
     systemMetadata =
       [ table "information_schema" "tables" []
       , table "information_schema" "schemata" []

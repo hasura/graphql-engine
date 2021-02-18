@@ -4,7 +4,7 @@ module Hasura.GraphQL.Transport.HTTP.Protocol
   , GQLReqUnparsed
   , GQLReqParsed
   , GQLReqOutgoing
-  , renderGQLReqOutgoing 
+  , renderGQLReqOutgoing
   , toParsed
   , GQLQueryText(..)
   , GQLExecDoc(..)
@@ -12,6 +12,8 @@ module Hasura.GraphQL.Transport.HTTP.Protocol
   , VariableValues
   , encodeGQErr
   , encodeGQResp
+  , decodeGQResp
+  , encodeHTTPResp
   , GQResult
   , GQExecError(..)
   , GQResponse
@@ -22,17 +24,17 @@ import           Hasura.EncJSON
 import           Hasura.Prelude
 import           Hasura.RQL.Types
 
-import           Data.Either                   (isLeft)
-import           Language.Haskell.TH.Syntax    (Lift)
+import           Data.Either                    (isLeft)
+import           Language.Haskell.TH.Syntax     (Lift)
 
-import qualified Data.Aeson                    as J
-import qualified Data.Aeson.Casing             as J
-import qualified Data.Aeson.TH                 as J
-import qualified Data.ByteString.Lazy          as BL
-import qualified Data.HashMap.Strict           as Map
-import qualified Language.GraphQL.Draft.Parser as G
+import qualified Data.Aeson                     as J
+import qualified Data.Aeson.Casing              as J
+import qualified Data.Aeson.TH                  as J
+import qualified Data.ByteString.Lazy           as BL
+import qualified Data.HashMap.Strict            as Map
+import qualified Language.GraphQL.Draft.Parser  as G
 import qualified Language.GraphQL.Draft.Printer as G
-import qualified Language.GraphQL.Draft.Syntax as G
+import qualified Language.GraphQL.Draft.Syntax  as G
 
 -- TODO: why not just `G.ExecutableDocument G.Name`?
 newtype GQLExecDoc
@@ -64,7 +66,7 @@ data GQLReq a
   , _grVariables     :: !(Maybe VariableValues)
   } deriving (Show, Eq, Generic, Functor, Lift)
 
-$(J.deriveJSON (J.aesonDrop 3 J.camelCase){J.omitNothingFields=True} ''GQLReq)
+$(J.deriveJSON (J.aesonPrefix J.camelCase){J.omitNothingFields=True} ''GQLReq)
 
 instance (Hashable a) => Hashable (GQLReq a)
 
@@ -96,10 +98,10 @@ type GQLReqUnparsed = GQLReq GQLQueryText
 
 -- | Invariants:
 --
---    - when '_grOperationName' is @Nothing@, '_grQuery' contains exactly one 
+--    - when '_grOperationName' is @Nothing@, '_grQuery' contains exactly one
 --      'ExecutableDefinitionOperation' (and zero or more 'ExecutableDefinitionFragment')
 --
---    - when '_grOperationName' is present, there is a corresponding 
+--    - when '_grOperationName' is present, there is a corresponding
 --      'ExecutableDefinitionOperation' in '_grQuery'
 type GQLReqParsed = GQLReq GQLExecDoc
 
@@ -120,11 +122,11 @@ renderGQLReqOutgoing :: GQLReqOutgoing -> GQLReqUnparsed
 renderGQLReqOutgoing = fmap (GQLQueryText . G.renderExecutableDoc . toExecDoc . inlineFrags)
   where
     -- This is essentially a 'coerce' (TODO unsafeCoerce optimization possible)?
-    inlineFrags :: G.TypedOperationDefinition G.NoFragments var 
-                -> G.TypedOperationDefinition G.FragmentSpread var 
-    inlineFrags opDef = 
+    inlineFrags :: G.TypedOperationDefinition G.NoFragments var
+                -> G.TypedOperationDefinition G.FragmentSpread var
+    inlineFrags opDef =
       opDef { G._todSelectionSet = G.fmapSelectionSetFragment G.inline $ G._todSelectionSet opDef }
-    toExecDoc = 
+    toExecDoc =
       G.ExecutableDocument . pure . G.ExecutableDefinitionOperation . G.OperationDefinitionTyped
 
 toParsed :: (MonadError QErr m ) => GQLReqUnparsed -> m GQLReqParsed
@@ -153,3 +155,22 @@ encodeGQResp gqResp =
   encJFromAssocList $ case gqResp of
     Right r -> [("data", encJFromLBS r)]
     Left e  -> [("data", "null"), ("errors", encJFromJValue e)]
+
+-- We don't want to force the `Maybe GQResponse` unless absolutely necessary
+-- Decode EncJSON from Cache for HTTP endpoints
+decodeGQResp :: EncJSON -> (Maybe GQResponse, EncJSON)
+decodeGQResp encJson =
+  let gqResp =
+        case J.decode @J.Value (encJToLBS encJson) of
+          Just (J.Object v) ->
+            case Map.lookup "error" v of
+              Just err -> Just (Right $ J.encode err)
+              Nothing  -> Right . J.encode <$> Map.lookup "data" v
+          _ -> Nothing
+  in (gqResp, encJson)
+
+-- Encode for HTTP Response without `data` envelope
+encodeHTTPResp :: GQResponse -> EncJSON
+encodeHTTPResp = \case
+  Right r -> encJFromLBS r
+  Left e  -> encJFromJValue e

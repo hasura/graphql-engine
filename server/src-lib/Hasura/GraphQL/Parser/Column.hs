@@ -1,9 +1,7 @@
 {-# LANGUAGE StrictData #-}
 
 module Hasura.GraphQL.Parser.Column
-  ( mkScalarTypeName
-
-  , UnpreparedValue(..)
+  ( UnpreparedValue(..)
 
   , Opaque
   , mkOpaque
@@ -13,21 +11,12 @@ module Hasura.GraphQL.Parser.Column
 
 import           Hasura.Prelude
 
-import           Data.Text.Extended
-import           Language.GraphQL.Draft.Syntax         (Name (..),
-                                                        mkName)
-
-import qualified Hasura.RQL.Types.CustomTypes          as RQL
-
-import           Hasura.Backends.Postgres.SQL.Types
 import           Hasura.GraphQL.Parser.Class
 import           Hasura.GraphQL.Parser.Schema
-import           Hasura.RQL.Types.Column               hiding (EnumValue (..), EnumValueInfo (..))
-import           Hasura.RQL.Types.Common
-import           Hasura.RQL.Types.Error
+import           Hasura.RQL.Types.Backend
+import           Hasura.RQL.Types.Column      hiding (EnumValue (..), EnumValueInfo (..))
 import           Hasura.SQL.Backend
-import           Hasura.SQL.Types
-import           Hasura.Session                        (SessionVariable)
+import           Hasura.Session               (SessionVariable)
 
 -- -------------------------------------------------------------------------------------------------
 
@@ -63,15 +52,3 @@ data UnpreparedValue (b :: BackendType)
 -- globally.
 mkParameter :: Opaque (ColumnValue b) -> UnpreparedValue b
 mkParameter (Opaque variable value) = UVParameter variable value
-
--- -------------------------------------------------------------------------------------------------
-
-mkScalarTypeName :: MonadError QErr m => PGScalarType -> m Name
-mkScalarTypeName PGInteger  = pure RQL.intScalar
-mkScalarTypeName PGBoolean  = pure RQL.boolScalar
-mkScalarTypeName PGFloat    = pure RQL.floatScalar
-mkScalarTypeName PGText     = pure RQL.stringScalar
-mkScalarTypeName PGVarchar  = pure RQL.stringScalar
-mkScalarTypeName scalarType = mkName (toSQLTxt scalarType) `onNothing` throw400 ValidationFailed
-  ("cannot use SQL type " <> scalarType <<> " in the GraphQL schema because its name is not a "
-  <> "valid GraphQL identifier")

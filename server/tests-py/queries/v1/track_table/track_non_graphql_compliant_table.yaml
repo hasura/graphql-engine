@@ -1,0 +1,9 @@
+description: Track a table with non GraphQL compliant name
+url: /v1/query
+status: 200
+response:
+  message: success
+query:
+  type: track_table
+  args:
+    name: users address
