@@ -13,7 +13,7 @@ keys in the response body.
 (Add entries here in the order of: server, console, cli, docs, others)
 
 - server: fix issue of not exposing mutation functions to the admin role when function permissions are inferred (fix #6503)
-- server: add "resource_version" field to metadata for concurrency control
+- server: add "resource_version" field to metadata for concurrency control - disable lookup during migrations
 
 ## v1.4.0-alpha.1
 

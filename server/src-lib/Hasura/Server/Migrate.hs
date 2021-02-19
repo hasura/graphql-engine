@@ -116,7 +116,7 @@ migrateCatalog maybeDefaultSourceConfig maintenanceMode migrationTime = do
            True  -> case versionTableExists of
              False -> initialize False
              True  -> migrateFrom =<< getCatalogVersion
-  (metadata, _) <- liftTx fetchMetadataFromCatalog
+  metadata <- liftTx fetchMetadataFromCatalog
   pure (migrationResult, metadata)
   where
     -- initializes the catalog, creating the schema if necessary
@@ -137,7 +137,7 @@ migrateCatalog maybeDefaultSourceConfig maintenanceMode migrationTime = do
                   sources = OMap.singleton defaultSource defaultSourceMetadata
               in emptyMetadata{_metaSources = sources}
 
-      liftTx $ setMetadataInCatalog Nothing emptyMetadata'
+      liftTx $ insertMetadataInCatalog emptyMetadata'
       pure MRInitialized
 
     -- migrates an existing catalog to the latest version from an existing verion
@@ -314,13 +314,13 @@ migrations maybeDefaultSourceConfig dryRun maintenanceMode =
               in Metadata (OMap.singleton defaultSource defaultSourceMetadata)
                    _mnsRemoteSchemas _mnsQueryCollections _mnsAllowlist _mnsCustomTypes _mnsActions _mnsCronTriggers mempty
                    emptyApiLimit emptyMetricsConfig
-        liftTx $ setMetadataInCatalog Nothing metadataV3
+        liftTx $ insertMetadataInCatalog metadataV3
 
     from43To42 = do
       let query = $(Q.sqlFromFile "src-rsr/migrations/43_to_42.sql")
       if dryRun then (liftIO . TIO.putStrLn . Q.getQueryText) query
         else do
-        (Metadata{..}, _) <- liftTx fetchMetadataFromCatalog
+        Metadata{..} <- liftTx fetchMetadataFromCatalog
         runTx query
         let emptyMetadataNoSources =
               MetadataNoSources mempty mempty mempty mempty mempty emptyCustomTypes mempty mempty
