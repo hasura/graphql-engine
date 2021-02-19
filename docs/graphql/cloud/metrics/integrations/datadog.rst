@@ -5,7 +5,7 @@
 .. _ss_datadog_integration:
 
 Datadog Integration
-=====================
+===================
 
 .. contents:: Table of contents
   :backlinks: none
@@ -24,6 +24,7 @@ on the integrations tab on the project's setting page.
 
 Configure Datadog Integration
 -----------------------------
+
 Navigate to the integrations tab on project settings page to find Datadog integration.
 
 .. thumbnail:: /img/graphql/cloud/metrics/integrate-datadog.png

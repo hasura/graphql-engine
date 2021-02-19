@@ -4,7 +4,7 @@
 
 .. _permission_rules:
 
-Configuring Permission Rules
+Configuring permission rules
 ============================
 
 .. contents:: Table of contents

@@ -12,9 +12,6 @@ Hasura Cloud billing
   :depth: 1
   :local:
 
-Introduction
-------------
-
 All Hasura Cloud billing related details can be found under the ``Billing`` tab in the Hasura Cloud dashboard
 
 
