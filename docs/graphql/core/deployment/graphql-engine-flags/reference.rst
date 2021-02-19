@@ -45,6 +45,14 @@ For the ``graphql-engine`` command these are the available flags and ENV variabl
 
        Example: ``postgres://admin:mypass@mydomain.com:5432/mydb``
 
+   * - ``--metadata-database-url <METADATA-DATABASE-URL>``
+     - ``HASURA_GRAPHQL_METADATA_DATABASE_URL``
+     - Postgres database URL:
+
+       ``postgres://<user>:<password>@<host>:<port>/<db-name>``
+
+       Example: ``postgres://admin:mypass@mydomain.com:5432/metadata_db``
+    
 Or you can specify the following options *(only via flags)*:
 
 .. code-block:: none
