@@ -32,6 +32,7 @@ Request structure
    {
       "type": <query-type>,
       "version": <Integer> (optional),
+      "resource_version": <Integer> (optional),
       "args": <args-object>
    }
 
@@ -60,6 +61,10 @@ Query
      - true
      - String
      - Type of the query
+   * - resource_version
+     - false
+     - Integer
+     - Version of the resource that you are targeting for replacement
    * - args
      - true
      - JSON Value
@@ -97,10 +102,15 @@ The various types of queries are listed in the following table:
      - 1
      - Drop an existing function permission
 
-   * - :ref:`replace_metadata_v2`
-     - :ref:`replace_metadata_syntax_v2`
-     - 1
-     - Drop an existing function permission
+   * - :ref:`export_metadata`
+     - :ref:`export_metadata_examples`
+     - 2
+     - Export existing metadata with resource version included.
+
+   * - :ref:`replace_metadata`
+     - :ref:`replace_metadata_examples`
+     - 2
+     - Replace existing metadata with check against current resource_version.
 
 Response structure
 ------------------
@@ -162,17 +172,100 @@ to explicitly state that this API is not enabled i.e. remove it from the list of
 
 See :ref:`server_flag_reference` for info on setting the above flag/env var.
 
-Error codes
------------
 
-.. csv-table::
-   :file: dataerrors.csv
-   :widths: 10, 20, 70
-   :header-rows: 1
+.. _metadata_resource_version:
 
-.. toctree::
-   :maxdepth: 1
-   :hidden:
+Metadata Resource Versioning
+----------------------------
 
-    Custom Functions <custom-functions>
-    Manage Metadata <manage-metadata>
+Metadata is versioned with an optional ``resource_version`` field in operations and responses.
+
+This is intended to allow for feedback when replacing metadata with modifications to an out-of-date copy.
+
+The ``resource_version`` supplied must match the version returned otherwise a 409 error response is returned.
+
+The version is incremented on any operation that modified metadata as well as ``reload_metadata``.
+
+
+
+.. _export_metadata_examples:
+
+Export Metadata Examples
+------------------------
+
+``export_metadata`` is used to export the current metadata from the server as a JSON file.
+
+V1 Example: See :ref:`export_metadata`
+
+V2 Example:
+
+.. code-block:: http
+
+   POST /v1/metadata HTTP/1.1
+   Content-Type: application/json
+   X-Hasura-Role: admin
+
+   {
+        "type": "export_metadata",
+        "version": 2,
+        "args": {}
+   }
+
+Response:
+
+.. code-block:: json
+
+    {
+    "resource_version": 8,
+    "metadata": {
+        "version": 3,
+        "sources": [
+        {
+            "name": "default",
+            "tables": [
+            {
+                "table": {
+
+.. _replace_metadata_examples:
+
+Replace Metadata Examples
+-------------------------
+
+``replace_metadata`` is used to replace the current metadata with a JSON object.
+
+V1 Example: See :ref:`replace_metadata_syntax_v1`
+
+Version 2 example with inconsistencies and allow_inconsistent_metadata=true:
+
+    HTTP/1.1 200 OK
+
+.. code-block:: json
+
+    {
+    "is_consistent": false,
+    "inconsistent_objects": [
+        {
+        "definition": {
+            "definition": {
+            "url": "http://localhost:5000/hello-graphql",
+            "forward_client_headers": false
+            },
+            "name": "test",
+            "permissions": [],
+            "comment": "testing replace metadata with remote schemas"
+        },
+        "reason": "HTTP exception occurred while sending the request to http://localhost:5000/hello-graphql",
+        "type": "remote_schema"
+        }, ...
+
+Version 2 example with invalid ``resource_version``:
+
+    HTTP/1.1 409 Conflict
+
+.. code-block:: json
+
+    {
+      "path": "$",
+      "error": "metadata resource version referenced (2) did not match current version",
+      "code": "conflict"
+    }

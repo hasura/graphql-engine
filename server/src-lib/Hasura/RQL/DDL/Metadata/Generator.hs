@@ -401,6 +401,9 @@ instance Arbitrary RemoteSchemaPermissionMetadata where
 instance Arbitrary RemoteSchemaMetadata where
   arbitrary = genericArbitrary
 
+instance Arbitrary MetadataResourceVersion where
+  arbitrary = MetadataResourceVersion <$> arbitrary
+
 sampleCronSchedules :: [CronSchedule]
 sampleCronSchedules = rights $ map Cr.parseCronSchedule
   [ "* * * * *"

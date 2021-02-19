@@ -314,7 +314,7 @@ refreshSchemaCache logger httpManager
   -- Reload schema cache from catalog
   eitherMetadata <- runMetadataStorageT fetchMetadata
   resE <- runExceptT $ do
-    metadata <- liftEither eitherMetadata
+    (metadata, _) <- liftEither eitherMetadata
     withSCUpdate cacheRef logger do
       rebuildableCache <- fst <$> liftIO (readIORef $ _scrCache cacheRef)
       ((), cache, _) <- buildSchemaCacheWithOptions CatalogSync invalidations metadata

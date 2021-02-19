@@ -4,7 +4,6 @@ module Hasura.Server.API.Metadata where
 import           Hasura.Prelude
 
 import qualified Data.Environment                   as Env
-import qualified Data.HashMap.Strict                as HM
 import qualified Network.HTTP.Client.Extended       as HTTP
 
 import           Control.Monad.Trans.Control        (MonadBaseControl)
@@ -154,36 +153,57 @@ data RQLMetadataV1
   | RMRemoveMetricsConfig
 
   -- bulk metadata queries
-  | RMBulk [RQLMetadata]
+  | RMBulk [RQLMetadataRequest]
   deriving (Eq)
 
 data RQLMetadataV2
   = RMV2ReplaceMetadata !ReplaceMetadataV2
-  | RMV2NoOp -- dummy constructor to allow `deriveJSON` to work. Remove once other real constructors are added.
+  | RMV2ExportMetadata !ExportMetadata
   deriving (Eq)
 
-data RQLMetadata
+data RQLMetadataRequest
   = RMV1 !RQLMetadataV1
   | RMV2 !RQLMetadataV2
   deriving (Eq)
 
-instance FromJSON RQLMetadata where
-  parseJSON = withObject "RQLMetadata" $ \o -> do
+instance FromJSON RQLMetadataRequest where
+  parseJSON = withObject "RQLMetadataRequest" $ \o -> do
     version <- o .:? "version" .!= VIVersion1
     let val = Object o
     case version of
       VIVersion1 -> RMV1 <$> parseJSON val
       VIVersion2 -> RMV2 <$> parseJSON val
 
-instance ToJSON RQLMetadata where
+instance ToJSON RQLMetadataRequest where
   toJSON = \case
     RMV1 q -> embedVersion VIVersion1 $ toJSON q
     RMV2 q -> embedVersion VIVersion2 $ toJSON q
     where
       embedVersion version (Object o) =
-        Object $ HM.insert "version" (toJSON version) o
+        Object $ o <> "version" .= version
       -- never happens since JSON value of RQL queries are always objects
-      embedVersion _ _ = error "Unexpected: toJSON of RQL queries are not objects"
+      embedVersion _ _ = error "Unexpected: toJSON of RQLMetadtaV is not an object"
+
+data RQLMetadata
+  = RQLMetadata
+  { _rqlMetadataResourceVersion :: !(Maybe MetadataResourceVersion)
+  , _rqlMetadata                :: !RQLMetadataRequest
+  } deriving (Eq)
+
+instance FromJSON RQLMetadata where
+  parseJSON = withObject "RQLMetadata" $ \o -> do
+    _rqlMetadataResourceVersion <- o .:? "resource_version"
+    _rqlMetadata <- parseJSON $ Object o
+    pure RQLMetadata{..}
+
+instance ToJSON RQLMetadata where
+  toJSON RQLMetadata{..} =
+    embedResourceVersion $ toJSON _rqlMetadata
+    where
+      embedResourceVersion (Object o) =
+        Object $ o <> "resource_version" .= _rqlMetadataResourceVersion
+      -- never happens since JSON value of RQL queries are always objects
+      embedResourceVersion _ = error "Unexpected: toJSON of RQLMetadata is not an object"
 
 $(deriveJSON
   defaultOptions { constructorTagModifier = snakeCase . drop 2
@@ -213,21 +233,21 @@ runMetadataQuery
   -> RebuildableSchemaCache
   -> RQLMetadata
   -> m (EncJSON, RebuildableSchemaCache)
-runMetadataQuery env instanceId userInfo httpManager serverConfigCtx schemaCache query = do
-  metadata <- fetchMetadata
+runMetadataQuery env instanceId userInfo httpManager serverConfigCtx schemaCache RQLMetadata{..} = do
+  (metadata, currentResourceVersion) <- fetchMetadata
   ((r, modMetadata), modSchemaCache, cacheInvalidations) <-
-    runMetadataQueryM env query
+    runMetadataQueryM env currentResourceVersion _rqlMetadata
     & runMetadataT metadata
     & runCacheRWT schemaCache
     & peelRun (RunCtx userInfo httpManager serverConfigCtx)
     & runExceptT
     & liftEitherM
   -- set modified metadata in storage
-  when (queryModifiesMetadata query) $
+  when (queryModifiesMetadata _rqlMetadata) $
     case (_sccMaintenanceMode serverConfigCtx) of
       MaintenanceModeDisabled ->
         -- set modified metadata in storage
-        setMetadata modMetadata
+        setMetadata (fromMaybe currentResourceVersion _rqlMetadataResourceVersion) modMetadata
       MaintenanceModeEnabled ->
         throw500 "metadata cannot be modified in maintenance mode"
   -- notify schema cache sync
@@ -235,7 +255,7 @@ runMetadataQuery env instanceId userInfo httpManager serverConfigCtx schemaCache
 
   pure (r, modSchemaCache)
 
-queryModifiesMetadata :: RQLMetadata -> Bool
+queryModifiesMetadata :: RQLMetadataRequest -> Bool
 queryModifiesMetadata = \case
   RMV1 q ->
     case q of
@@ -248,7 +268,10 @@ queryModifiesMetadata = \case
       RMDeleteScheduledEvent _ -> False
       RMBulk qs                -> any queryModifiesMetadata qs
       _                        -> True
-  RMV2 _ -> True
+  RMV2 q ->
+    case q of
+      RMV2ExportMetadata _  -> False
+      RMV2ReplaceMetadata _ -> True
 
 runMetadataQueryM
   :: ( HasVersion
@@ -264,11 +287,12 @@ runMetadataQueryM
      , HasServerConfigCtx m
      )
   => Env.Environment
-  -> RQLMetadata
+  -> MetadataResourceVersion
+  -> RQLMetadataRequest
   -> m EncJSON
-runMetadataQueryM env = withPathK "args" . \case
-  RMV1 q -> runMetadataQueryV1M env q
-  RMV2 q -> runMetadataQueryV2M q
+runMetadataQueryM env currentResourceVersion = withPathK "args" . \case
+  RMV1 q -> runMetadataQueryV1M env currentResourceVersion q
+  RMV2 q -> runMetadataQueryV2M currentResourceVersion q
 
 runMetadataQueryV1M
   :: ( HasVersion
@@ -284,9 +308,10 @@ runMetadataQueryV1M
      , HasServerConfigCtx m
      )
   => Env.Environment
+  -> MetadataResourceVersion
   -> RQLMetadataV1
   -> m EncJSON
-runMetadataQueryV1M env = \case
+runMetadataQueryV1M env currentResourceVersion = \case
   RMPgAddSource q                 -> runAddPgSource q
   RMPgDropSource q                -> runDropPgSource q
 
@@ -382,7 +407,7 @@ runMetadataQueryV1M env = \case
   RMSetMetricsConfig q            -> runSetMetricsConfig q
   RMRemoveMetricsConfig           -> runRemoveMetricsConfig
 
-  RMBulk q                        -> encJFromList <$> indexedMapM (runMetadataQueryM env) q
+  RMBulk q                        -> encJFromList <$> indexedMapM (runMetadataQueryM env currentResourceVersion) q
 
 runMetadataQueryV2M
   :: ( MonadIO m
@@ -390,8 +415,9 @@ runMetadataQueryV2M
      , MetadataM m
      , MonadMetadataStorageQueryAPI m
      )
-  => RQLMetadataV2
+  => MetadataResourceVersion
+  -> RQLMetadataV2
   -> m EncJSON
-runMetadataQueryV2M = \case
+runMetadataQueryV2M currentResourceVersion = \case
   RMV2ReplaceMetadata q -> runReplaceMetadataV2 q
-  RMV2NoOp              -> pure successMsg
+  RMV2ExportMetadata q  -> runExportMetadataV2 currentResourceVersion q

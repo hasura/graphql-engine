@@ -2,6 +2,7 @@ module Hasura.RQL.DDL.Metadata
   ( runReplaceMetadata
   , runReplaceMetadataV2
   , runExportMetadata
+  , runExportMetadataV2
   , runClearMetadata
   , runReloadMetadata
   , runDumpInternalState
@@ -144,12 +145,22 @@ runReplaceMetadataV2 ReplaceMetadataV2{..} = do
   sc <- askSchemaCache
   pure $ encJFromJValue $ formatInconsistentObjs $ scInconsistentObjs sc
 
+
 runExportMetadata
   :: forall m . ( QErrM m, MetadataM m)
   => ExportMetadata -> m EncJSON
-runExportMetadata _ = do
-  metadata         <- getMetadata
-  pure $ AO.toEncJSON . metadataToOrdJSON $ metadata
+runExportMetadata ExportMetadata{} =
+  AO.toEncJSON . metadataToOrdJSON <$> getMetadata
+
+runExportMetadataV2
+  :: forall m . ( QErrM m, MetadataM m)
+  => MetadataResourceVersion -> ExportMetadata -> m EncJSON
+runExportMetadataV2 currentResourceVersion ExportMetadata{} = do
+  exportMetadata <- getMetadata
+  pure $ AO.toEncJSON $ AO.object
+    [ ("resource_version", AO.toOrdered currentResourceVersion)
+    , ("metadata", metadataToOrdJSON exportMetadata)
+    ]
 
 runReloadMetadata :: (QErrM m, CacheRWM m, MetadataM m) => ReloadMetadata -> m EncJSON
 runReloadMetadata (ReloadMetadata reloadRemoteSchemas reloadSources) = do

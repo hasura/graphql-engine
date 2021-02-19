@@ -116,7 +116,7 @@ migrateCatalog maybeDefaultSourceConfig maintenanceMode migrationTime = do
            True  -> case versionTableExists of
              False -> initialize False
              True  -> migrateFrom =<< getCatalogVersion
-  metadata <- liftTx fetchMetadataFromCatalog
+  (metadata, _) <- liftTx fetchMetadataFromCatalog
   pure (migrationResult, metadata)
   where
     -- initializes the catalog, creating the schema if necessary
@@ -137,7 +137,7 @@ migrateCatalog maybeDefaultSourceConfig maintenanceMode migrationTime = do
                   sources = OMap.singleton defaultSource defaultSourceMetadata
               in emptyMetadata{_metaSources = sources}
 
-      liftTx $ setMetadataInCatalog emptyMetadata'
+      liftTx $ setMetadataInCatalog Nothing emptyMetadata'
       pure MRInitialized
 
     -- migrates an existing catalog to the latest version from an existing verion
@@ -261,7 +261,8 @@ migrations maybeDefaultSourceConfig dryRun maintenanceMode =
         :  migrationsFromFile [2..3]
         ++ [| ("3", MigrationPair from3To4 Nothing) |]
         :  migrationsFromFile [5..42]
-        ++ [[| ("42", MigrationPair from42To43 (Just from43To42)) |]]
+        ++ [| ("42", MigrationPair from42To43 (Just from43To42)) |]
+        :  migrationsFromFile [44]
      )
   where
     runTxOrPrint :: Q.Query -> m ()
@@ -313,13 +314,13 @@ migrations maybeDefaultSourceConfig dryRun maintenanceMode =
               in Metadata (OMap.singleton defaultSource defaultSourceMetadata)
                    _mnsRemoteSchemas _mnsQueryCollections _mnsAllowlist _mnsCustomTypes _mnsActions _mnsCronTriggers mempty
                    emptyApiLimit emptyMetricsConfig
-        liftTx $ setMetadataInCatalog metadataV3
+        liftTx $ setMetadataInCatalog Nothing metadataV3
 
     from43To42 = do
       let query = $(Q.sqlFromFile "src-rsr/migrations/43_to_42.sql")
       if dryRun then (liftIO . TIO.putStrLn . Q.getQueryText) query
         else do
-        Metadata{..} <- liftTx fetchMetadataFromCatalog
+        (Metadata{..}, _) <- liftTx fetchMetadataFromCatalog
         runTx query
         let emptyMetadataNoSources =
               MetadataNoSources mempty mempty mempty mempty mempty emptyCustomTypes mempty mempty

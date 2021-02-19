@@ -32,13 +32,13 @@ $(deriveToJSON defaultOptions ''ClearMetadata)
 instance FromJSON ClearMetadata where
   parseJSON _ = return ClearMetadata
 
-data ExportMetadata
-  = ExportMetadata
-  deriving (Show, Eq)
-$(deriveToJSON defaultOptions ''ExportMetadata)
+data ExportMetadata = ExportMetadata deriving (Show, Eq)
+
+instance ToJSON ExportMetadata where
+  toJSON ExportMetadata = object []
 
 instance FromJSON ExportMetadata where
-  parseJSON _ = return ExportMetadata
+  parseJSON _ = pure ExportMetadata
 
 data ReloadSpec a
   = RSReloadAll

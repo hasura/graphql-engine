@@ -68,7 +68,7 @@ runQuery
   -> RQLQuery
   -> m (EncJSON, RebuildableSchemaCache)
 runQuery env instanceId userInfo schemaCache httpManager serverConfigCtx rqlQuery = do
-  metadata <- fetchMetadata
+  (metadata, currentResourceVersion) <- fetchMetadata
   result <- runQueryM env rqlQuery & Tracing.interpTraceT \x -> do
     (((js, tracemeta), meta), rsc, ci) <-
          x & runMetadataT metadata
@@ -77,16 +77,16 @@ runQuery env instanceId userInfo schemaCache httpManager serverConfigCtx rqlQuer
            & runExceptT
            & liftEitherM
     pure ((js, rsc, ci, meta), tracemeta)
-  withReload result
+  withReload currentResourceVersion result
   where
     runCtx = RunCtx userInfo httpManager serverConfigCtx
 
-    withReload (result, updatedCache, invalidations, updatedMetadata) = do
+    withReload currentResourceVersion (result, updatedCache, invalidations, updatedMetadata) = do
       when (queryModifiesSchema rqlQuery) $ do
         case (_sccMaintenanceMode serverConfigCtx) of
           MaintenanceModeDisabled ->
             -- set modified metadata in storage
-            setMetadata updatedMetadata
+            setMetadata currentResourceVersion updatedMetadata
           MaintenanceModeEnabled ->
             throw500 "metadata cannot be modified in maintenance mode"
         -- notify schema cache sync

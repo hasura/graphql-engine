@@ -792,7 +792,7 @@ setCatalogStateTx stateTy stateValue =
 -- To learn more about why the instance is derived as following, see Note [Generic MetadataStorageT transformer]
 instance MonadMetadataStorage (MetadataStorageT PGMetadataStorageApp) where
   fetchMetadata             = runInSeparateTx fetchMetadataFromCatalog
-  setMetadata               = runInSeparateTx . setMetadataInCatalog
+  setMetadata r             = runInSeparateTx . setMetadataInCatalog (Just r)
   notifySchemaCacheSync a b = runInSeparateTx $ notifySchemaCacheSyncTx a b
   processSchemaSyncEventPayload instanceId payload = do
     EventPayload{..} <- decodeValue payload

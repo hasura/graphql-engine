@@ -79,8 +79,8 @@ TODO: Reference to open issue or rfc?
 class (MonadError QErr m) => MonadMetadataStorage m where
 
   -- Metadata
-  fetchMetadata :: m Metadata
-  setMetadata :: Metadata -> m ()
+  fetchMetadata :: m (Metadata, MetadataResourceVersion)
+  setMetadata :: MetadataResourceVersion -> Metadata -> m ()
   notifySchemaCacheSync :: InstanceId -> CacheInvalidations -> m ()
   processSchemaSyncEventPayload :: InstanceId -> Value -> m SchemaSyncEventProcessResult
   getCatalogState :: m CatalogState
@@ -124,7 +124,7 @@ class (MonadError QErr m) => MonadMetadataStorage m where
 
 instance (MonadMetadataStorage m) => MonadMetadataStorage (ReaderT r m) where
   fetchMetadata                        = lift fetchMetadata
-  setMetadata                          = lift . setMetadata
+  setMetadata r                        = lift . setMetadata r
   notifySchemaCacheSync a b            = lift $ notifySchemaCacheSync a b
   processSchemaSyncEventPayload a b    = lift $ processSchemaSyncEventPayload a b
   getCatalogState                      = lift getCatalogState
@@ -155,7 +155,7 @@ instance (MonadMetadataStorage m) => MonadMetadataStorage (ReaderT r m) where
 
 instance (MonadMetadataStorage m) => MonadMetadataStorage (StateT s m) where
   fetchMetadata                        = lift fetchMetadata
-  setMetadata                          = lift . setMetadata
+  setMetadata r                        = lift . setMetadata r
   notifySchemaCacheSync a b            = lift $ notifySchemaCacheSync a b
   processSchemaSyncEventPayload a b    = lift $ processSchemaSyncEventPayload a b
   getCatalogState                      = lift getCatalogState
@@ -187,7 +187,7 @@ instance (MonadMetadataStorage m) => MonadMetadataStorage (StateT s m) where
 
 instance (MonadMetadataStorage m) => MonadMetadataStorage (Tracing.TraceT m) where
   fetchMetadata                        = lift fetchMetadata
-  setMetadata                          = lift . setMetadata
+  setMetadata r                        = lift . setMetadata r
   notifySchemaCacheSync a b            = lift $ notifySchemaCacheSync a b
   processSchemaSyncEventPayload a b    = lift $ processSchemaSyncEventPayload a b
   getCatalogState                      = lift getCatalogState
@@ -218,7 +218,7 @@ instance (MonadMetadataStorage m) => MonadMetadataStorage (Tracing.TraceT m) whe
 
 instance (MonadMetadataStorage m) => MonadMetadataStorage (ExceptT QErr m) where
   fetchMetadata                        = lift fetchMetadata
-  setMetadata                          = lift . setMetadata
+  setMetadata r                        = lift . setMetadata r
   notifySchemaCacheSync a b            = lift $ notifySchemaCacheSync a b
   processSchemaSyncEventPayload a b    = lift $ processSchemaSyncEventPayload a b
   getCatalogState                      = lift getCatalogState
@@ -249,7 +249,7 @@ instance (MonadMetadataStorage m) => MonadMetadataStorage (ExceptT QErr m) where
 
 instance (MonadMetadataStorage m) => MonadMetadataStorage (MetadataT m) where
   fetchMetadata                        = lift fetchMetadata
-  setMetadata                          = lift . setMetadata
+  setMetadata r                        = lift . setMetadata r
   notifySchemaCacheSync a b            = lift $ notifySchemaCacheSync a b
   processSchemaSyncEventPayload a b    = lift $ processSchemaSyncEventPayload a b
   getCatalogState                      = lift getCatalogState
@@ -351,7 +351,7 @@ instance (Monad m, Monad (t m), MonadTrans t, MonadMetadataStorage (MetadataStor
   => MonadMetadataStorage (MetadataStorageT (t m)) where
 
   fetchMetadata                     = hoist lift fetchMetadata
-  setMetadata                       = hoist lift . setMetadata
+  setMetadata r                     = hoist lift . setMetadata r
   notifySchemaCacheSync a b         = hoist lift $ notifySchemaCacheSync a b
   processSchemaSyncEventPayload a b = hoist lift $ processSchemaSyncEventPayload a b
   getCatalogState                   = hoist lift getCatalogState

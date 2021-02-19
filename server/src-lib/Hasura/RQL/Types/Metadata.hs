@@ -9,6 +9,7 @@ import qualified Data.HashMap.Strict.Extended        as M
 import qualified Data.HashMap.Strict.InsOrd.Extended as OM
 import qualified Data.HashSet                        as HS
 import qualified Data.HashSet.InsOrd                 as HSIns
+import           Data.Int                            (Int64)
 import qualified Data.List.Extended                  as L
 import qualified Data.Text                           as T
 import qualified Language.GraphQL.Draft.Syntax       as G
@@ -315,6 +316,13 @@ parseNonSourcesMetadata o = do
        , actions, cronTriggers, apiLimits, metricsConfig
        )
 
+newtype MetadataResourceVersion
+  = MetadataResourceVersion
+  { getMetadataResourceVersion :: Int64
+  } deriving (Show, Eq, FromJSON, ToJSON)
+
+initialResourceVersion :: MetadataResourceVersion
+initialResourceVersion = MetadataResourceVersion 0
 
 -- | A complete GraphQL Engine metadata representation to be stored,
 -- exported/replaced via metadata queries.

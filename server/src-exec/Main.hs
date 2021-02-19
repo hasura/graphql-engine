@@ -119,7 +119,7 @@ runApp env (HGEOptionsG rci metadataDbUrl hgeCmd) = do
       runManagedT (mkMinimalPool _gcMetadataDbConnInfo) $ \metadataDbPool -> do
         res <- flip runPGMetadataStorageApp (metadataDbPool, pgLogger) $
           runMetadataStorageT $ liftEitherM do
-          metadata <- fetchMetadata
+          (metadata, _) <- fetchMetadata
           runAsAdmin _gcHttpManager serverConfigCtx $ do
             schemaCache <- runCacheBuild cacheBuildParams $
                            buildRebuildableSchemaCache env metadata
