@@ -4,28 +4,31 @@ import { connect, ConnectedProps } from 'react-redux';
 
 import Button from '../../../Common/Button/Button';
 import styles from '../../../Common/Common.scss';
-import { FixMe, ReduxState } from '../../../../types';
+import { ReduxState } from '../../../../types';
 import BreadCrumb from '../../../Common/Layout/BreadCrumb/BreadCrumb';
-import AddDataSource from './AddDataSource';
 import { DataSource } from '../../../../metadata/types';
 import { Driver } from '../../../../dataSources';
 import {
   removeDataSource,
   reloadDataSource,
-  addDataSource,
 } from '../../../../metadata/actions';
 import { RightContainer } from '../../../Common/Layout/RightContainer';
 import { getDataSources } from '../../../../metadata/selector';
 import ToolTip from '../../../Common/Tooltip/Tooltip';
 import { getConfirmation } from '../../../Common/utils/jsUtils';
 import { mapDispatchToPropsEmpty } from '../../../Common/utils/reactUtils';
+import _push from '../push';
+import { getHostFromConnectionString } from '../DataSources/ManageDBUtils';
 
 type DatabaseListItemProps = {
   dataSource: DataSource;
+  // onEdit: (dbName: string) => void;
   onReload: (name: string, driver: Driver, cb: () => void) => void;
   onRemove: (name: string, driver: Driver, cb: () => void) => void;
 };
+
 const DatabaseListItem: React.FC<DatabaseListItemProps> = ({
+  // onEdit,
   onReload,
   onRemove,
   dataSource,
@@ -37,6 +40,15 @@ const DatabaseListItem: React.FC<DatabaseListItemProps> = ({
   return (
     <div className={styles.db_list_item}>
       <div className={styles.db_item_actions}>
+        {/* Edit shall be cut out until we have a server API 
+        <Button
+          size="xs"
+          color="white"
+          style={{ marginRight: '10px' }}
+          onClick={() => onEdit(dataSource.name)}
+        >
+          Edit
+        </Button> */}
         <Button
           size="xs"
           color="white"
@@ -50,7 +62,7 @@ const DatabaseListItem: React.FC<DatabaseListItemProps> = ({
           {reloading ? 'Reloading...' : 'Reload'}
         </Button>
         <Button
-          className={styles.db_list_content}
+          className={`${styles.text_red}`}
           size="xs"
           color="white"
           onClick={() => {
@@ -59,51 +71,55 @@ const DatabaseListItem: React.FC<DatabaseListItemProps> = ({
               setRemoving(false)
             );
           }}
+          style={{ marginLeft: '10px' }}
         >
           {removing ? 'Removing...' : 'Remove'}
         </Button>
       </div>
       <div className={styles.db_list_content}>
-        <b>
-          {dataSource.name} ({dataSource.driver})
-        </b>{' '}
-        -
-        <span style={{ paddingLeft: 5 }}>
-          {showUrl ? (
-            typeof dataSource.url === 'string' ? (
-              dataSource.url
-            ) : (
-              dataSource.url.from_env
-            )
-          ) : (
-            <ToolTip
-              id="connection-string-show"
-              placement="right"
-              message="Show connection string"
-            >
-              <i
-                className={`${styles.showAdminSecret} fa fa-eye`}
-                aria-hidden="true"
-                onClick={() => setShowUrl(true)}
-              />
-            </ToolTip>
-          )}
-          {showUrl && (
-            <ToolTip
-              id="connection-string-hide"
-              placement="right"
-              message="Hide connection string"
-            >
-              <i
-                className={`${styles.closeHeader} fa fa-times`}
-                aria-hidden="true"
-                onClick={() => setShowUrl(false)}
-                style={{ paddingLeft: 10 }}
-              />
-            </ToolTip>
-          )}
-        </span>
+        <div className={styles.db_display_data}>
+          <div className={styles.displayFlexContainer}>
+            <b>{dataSource.name}</b>&nbsp;<p>({dataSource.driver})</p>
+          </div>
+          <p style={{ marginTop: -5 }}>
+            {getHostFromConnectionString(dataSource)}
+          </p>
+        </div>
       </div>
+      <span style={{ paddingLeft: 125 }}>
+        {showUrl ? (
+          typeof dataSource.url === 'string' ? (
+            dataSource.url
+          ) : (
+            dataSource.url.from_env
+          )
+        ) : (
+          <span
+            className={styles.show_connection_string}
+            onClick={() => setShowUrl(true)}
+          >
+            <i
+              className={`${styles.showAdminSecret} fa fa-eye`}
+              aria-hidden="true"
+            />
+            <p style={{ marginLeft: 6 }}>Show Connection String</p>
+          </span>
+        )}
+        {showUrl && (
+          <ToolTip
+            id="connection-string-hide"
+            placement="right"
+            message="Hide connection string"
+          >
+            <i
+              className={`${styles.closeHeader} fa fa-times`}
+              aria-hidden="true"
+              onClick={() => setShowUrl(false)}
+              style={{ paddingLeft: 10 }}
+            />
+          </ToolTip>
+        )}
+      </span>
     </div>
   );
 };
@@ -133,62 +149,54 @@ const ManageDatabase: React.FC<ManageDatabaseProps> = ({
       name
     );
     if (confirmation) {
-      (dispatch(removeDataSource({ driver, name })) as FixMe).then(cb);
+      dispatch(removeDataSource({ driver, name }))
+        .then(cb)
+        .catch(err => {
+          console.error(err);
+          cb();
+        });
+      return;
     }
+    // in case there was no confirmation
+    cb();
   };
 
   const onReload = (name: string, driver: Driver, cb: () => void) => {
-    (dispatch(reloadDataSource({ driver, name })) as FixMe).then(cb);
+    dispatch(reloadDataSource({ driver, name })).then(cb);
   };
 
-  const onSubmitAddDataSource = (
-    data: DataSource,
-    successCallback: () => void
-  ) => {
-    dispatch(
-      addDataSource(
-        {
-          driver: data.driver,
-          payload: {
-            name: data.name.trim(),
-            connection_pool_settings: {
-              ...(data.connection_pool_settings?.idle_timeout && {
-                idle_timeout: data.connection_pool_settings.idle_timeout,
-              }),
-              ...(data.connection_pool_settings?.max_connections && {
-                max_connections: data.connection_pool_settings.max_connections,
-              }),
-              ...(data.connection_pool_settings?.retries && {
-                retries: data.connection_pool_settings.retries,
-              }),
-            },
-            dbUrl: data.url,
-          },
-        },
-        successCallback
-      )
-    );
+  const onClickConnectDB = () => {
+    dispatch(_push('/data/manage/connect'));
   };
+
+  // const onEdit = (dbName: string) => {
+  //   dispatch(_push(`/data/manage/edit/${dbName}`));
+  // };
 
   return (
     <RightContainer>
       <Helmet title="Manage - Data | Hasura" />
       <div className={`container-fluid ${styles.manage_dbs_page}`}>
         <BreadCrumb breadCrumbs={crumbs} />
-        <div className={styles.display_flex}>
-          <h2
-            className={`${styles.headerText} ${styles.display_inline} ${styles.padd_top}`}
-          >
-            Manage Databases
-          </h2>
-          {/* <Button color="yellow" size="md" className={styles.add_mar_left}>
-            Add Database
-          </Button> */}
+        <div className={styles.padd_top}>
+          <div className={`${styles.display_flex} manage-db-header`}>
+            <h2 className={`${styles.headerText} ${styles.display_inline}`}>
+              Manage Databases
+            </h2>
+            <Button
+              color="yellow"
+              size="md"
+              className={styles.add_mar_left}
+              onClick={onClickConnectDB}
+            >
+              Connect Database
+            </Button>
+          </div>
         </div>
         <div className={styles.manage_db_content}>
           <hr />
           <h3 className={`${styles.heading_text} ${styles.remove_pad_bottom}`}>
-            Databases
+            Connected Databases
           </h3>
           <div className={styles.data_list_container}>
             {dataSources.length ? (
@@ -196,19 +204,19 @@ const ManageDatabase: React.FC<ManageDatabaseProps> = ({
                 <DatabaseListItem
                   key={data.name}
                   dataSource={data}
+                  // onEdit={onEdit}
                   onReload={onReload}
                   onRemove={onRemove}
                 />
               ))
             ) : (
               <span style={{ paddingTop: 15 }}>
-                You don&apos;t have any data sources
+                You don&apos;t have any data sources connected.
               </span>
             )}
           </div>
           <hr />
         </div>
-        <AddDataSource onSubmit={onSubmitAddDataSource} />
       </div>
     </RightContainer>
   );

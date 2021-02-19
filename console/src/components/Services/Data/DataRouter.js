@@ -29,6 +29,7 @@ import {
 import { UPDATE_CURRENT_DATA_SOURCE } from './DataActions';
 import { exportMetadata } from '../../../metadata/actions';
 import ConnectedDataSourceContainer from './DataSourceContainer';
+import ConnectDatabase from './DataSources/ConnectDatabase';
 
 const makeDataRouter = (
   connect,
@@ -48,6 +49,8 @@ const makeDataRouter = (
       <IndexRedirect to="manage" />
       <Route path="manage" component={ConnectedDatabaseManagePage} />
       <Route path="schema/manage" component={ConnectedDatabaseManagePage} />
+      <Route path="manage/connect" component={ConnectDatabase} />
+      <Route path="manage/edit/:databaseName" component={ConnectDatabase} />
       <Route path=":source" component={ConnectedDataSourceContainer}>
         <Route path="sql" component={rawSQLConnector(connect)} />
         <Route path="schema">
