@@ -165,9 +165,9 @@ const executeSQL = (isMigration, migrationName, statementTimeout, source) => (
     .then(
       data => {
         if (isTableTrackChecked) {
-          dispatch(trackAllItems(sql, isMigration, migrationName, source)).then(
-            callback(data)
-          );
+          dispatch(
+            trackAllItems(sql, isMigration, migrationName, source)
+          ).then(() => callback(data));
           return;
         }
         callback(data);
