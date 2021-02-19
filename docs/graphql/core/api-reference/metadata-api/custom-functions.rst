@@ -27,8 +27,7 @@ pg_create_function_permission
 -----------------------------
 
 ``pg_create_function_permission`` is used to add permission to an existing custom function.
-To add a function permission, the graphql-engine should have disabled inferring of
-function permissions and the provided role should have select permissions to the
+To add a function permission, the provided role should have select permissions to the
 target table of the function.
 
 .. code-block:: http

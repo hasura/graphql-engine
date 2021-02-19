@@ -20,7 +20,7 @@ that can be used to either encapsulate some custom business logic or extend the 
 are also referred to as **stored procedures**.
 
 Hasura GraphQL engine lets you expose certain types of custom functions as top level fields in the GraphQL API to allow
-querying them as either ``queries`` or ``subscriptions``, or (for ``VOLATILE`` functions) as ``mutations``.
+querying them with either ``queries`` or ``subscriptions``, or for ``VOLATILE`` functions as ``mutations``.
 
 .. note::
 
@@ -34,7 +34,8 @@ Supported SQL functions
 Currently, only functions which satisfy the following constraints can be exposed as top level fields in the GraphQL API
 (*terminology from* `Postgres docs <https://www.postgresql.org/docs/current/sql-createfunction.html>`__):
 
-- **Function behaviour**: ``STABLE`` or ``IMMUTABLE`` functions may *only* be exposed as queries (i.e. with ``exposed_as: query``)
+- **Function behaviour**: ``STABLE`` or ``IMMUTABLE`` functions may *only* be exposed as queries. 
+  ``VOLATILE`` functions may be exposed as mutations or queries. 
 - **Return type**: MUST be ``SETOF <table-name>`` OR ``<table-name>`` where ``<table-name>`` is already tracked
 - **Argument modes**: ONLY ``IN``
 
@@ -575,16 +576,22 @@ visible only to administrators.
    function to end up with ``VOLATILE`` mistakenly, since it's the default).
 
 
-Permissions for custom function queries
----------------------------------------
+Permissions for custom functions
+--------------------------------
+
+A custom function ``f`` is only accessible to a role ``r`` if there is a function permission (see :ref:`Create function permission <pg_create_function_permission>`) defined on the function ``f`` for the role ``r``. Additionally, role ``r`` must have SELECT permissions on the returning table of the function ``f``.
 
 :ref:`Access control permissions <permission_rules>` configured for the ``SETOF`` table of a function are also applicable to the function itself.
 
-**For example**, in our text-search example above, if the role ``user`` doesn't have the requisite permissions to view
-the table ``article``, a validation error will be thrown if the ``search_articles`` query is run using the ``user``
-role.
+.. TODO: add setting fn permission section (API, CLI, Console)
+
+**For example**, in our text-search example above, if the role ``user`` has access only to certain columns of
+the table ``article``, a validation error will be thrown if the ``search_articles`` query is run selecting a column
+to which the ``user`` role doesn't have access to.
 
 .. note::
 
-   When inferring of function permissions is disabled, then there should be a function permission configured for the function to
-   be accessible to a role, otherwise the function is not exposed to the role.
+   In case of **functions exposed as queries**, if the Hasura GraphQL engine is started with inferring of function permissions
+   set to ``true`` (by default: ``true``) then a function exposed as a query will be accessible to a role even
+   if the role doesn't have a function permission for the function - provided the role has select permission defined
+   on the returning table of the function.
