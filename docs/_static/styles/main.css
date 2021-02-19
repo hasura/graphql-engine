@@ -40,6 +40,10 @@ dl dt, dl dd, .graphiql .graphiql-container .CodeMirror {
   font-size: 18px;
 }
 
+[role="main"] h5 {
+  font-size: 16px;
+}
+
 form input[type="search"], form input[type="text"],
 form input[type="email"], form input[type="password"],
 form input[type="number"], form input[type="url"],
