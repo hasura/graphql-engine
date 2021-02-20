@@ -899,7 +899,7 @@ func (ec ExecutionContext) InstallPlugin(name string, forceCLIVersion bool) erro
 	})
 	if err != nil {
 		if err != plugins.ErrIsAlreadyInstalled {
-			return errors.Wrapf(err, "cannot fetch plugin manfiest %s", name)
+			return errors.Wrapf(err, "cannot fetch plugin manifest %s", name)
 		}
 		return nil
 	}
