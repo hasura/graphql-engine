@@ -26,6 +26,7 @@ import           Hasura.GraphQL.Context
 import           Hasura.GraphQL.Execute.Action
 import           Hasura.GraphQL.Execute.Backend
 import           Hasura.GraphQL.Execute.Common
+import           Hasura.GraphQL.Execute.Postgres        ()
 import           Hasura.GraphQL.Execute.Remote
 import           Hasura.GraphQL.Execute.Resolve
 import           Hasura.GraphQL.Parser
@@ -56,12 +57,11 @@ parseGraphQLQuery gqlContext varDefs varValsM fields =
 
 
 convertQuerySelSet
-  :: forall m tx .
+  :: forall m .
      ( MonadError QErr m
      , HasVersion
      , Tracing.MonadTrace m
      , MonadIO m
-     , BackendExecute 'Postgres tx
      )
   => Env.Environment
   -> L.Logger L.Hasura
@@ -73,7 +73,7 @@ convertQuerySelSet
   -> G.SelectionSet G.NoFragments G.Name
   -> [G.VariableDefinition]
   -> Maybe GH.VariableValues
-  -> m (ExecutionPlan tx, [QueryRootField UnpreparedValue])
+  -> m (ExecutionPlan, [QueryRootField UnpreparedValue])
 convertQuerySelSet env logger gqlContext userInfo manager reqHeaders directives fields varDefs varValsM = do
   -- Parse the GraphQL query into the RQL AST
   (unpreparedQueries, _reusability) <- parseGraphQLQuery gqlContext varDefs varValsM fields

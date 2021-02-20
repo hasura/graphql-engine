@@ -2,12 +2,14 @@ module Hasura.GraphQL.Transport.Backend where
 
 import           Hasura.Prelude
 
+import qualified Data.ByteString                        as B
 import qualified Language.GraphQL.Draft.Syntax          as G
 
 import qualified Hasura.Logging                         as L
 
 import           Hasura.EncJSON
 import           Hasura.GraphQL.Execute.Backend
+import           Hasura.GraphQL.Execute.LiveQuery.Plan
 import           Hasura.GraphQL.Logging                 (MonadQueryLog (..))
 import           Hasura.GraphQL.Transport.HTTP.Protocol
 import           Hasura.RQL.Types.Backend
@@ -20,7 +22,7 @@ import           Hasura.Tracing
 
 -- | This typeclass enacapsulates how a given backend sends queries and mutations over the
 -- network. Each backend is currently responsible for both logging and tracing, for now.
-class BackendExecute b tx => BackendTransport (b :: BackendType) tx where
+class BackendExecute b => BackendTransport (b :: BackendType) where
   runDBQuery
     :: forall m
      . ( MonadIO m
@@ -34,7 +36,7 @@ class BackendExecute b tx => BackendTransport (b :: BackendType) tx where
     -> UserInfo
     -> L.Logger L.Hasura
     -> SourceConfig b
-    -> tx EncJSON
+    -> ExecutionMonad b EncJSON
     -> Maybe (PreparedQuery b)
     -> m (DiffTime, EncJSON)
   runDBMutation
@@ -50,6 +52,15 @@ class BackendExecute b tx => BackendTransport (b :: BackendType) tx where
     -> UserInfo
     -> L.Logger L.Hasura
     -> SourceConfig b
-    -> tx EncJSON
+    -> ExecutionMonad b EncJSON
     -> Maybe (PreparedQuery b)
     -> m (DiffTime, EncJSON)
+  runDBSubscription
+    :: forall m
+     . ( MonadIO m
+       )
+    => SourceConfig b
+    -> MultiplexedQuery b
+    -> [(CohortId, CohortVariables)]
+    -- ^ WARNING: Postgres-specific, ignored by other backends
+    -> m (DiffTime, Either QErr [(CohortId, B.ByteString)])

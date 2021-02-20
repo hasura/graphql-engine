@@ -5,29 +5,31 @@ module Hasura.GraphQL.Explain
 
 import           Hasura.Prelude
 
-import qualified Data.Aeson                                  as J
-import qualified Data.Aeson.Casing                           as J
-import qualified Data.Aeson.TH                               as J
-import qualified Data.HashMap.Strict                         as Map
-import qualified Data.HashMap.Strict.InsOrd                  as OMap
-import qualified Database.PG.Query                           as Q
-import qualified Language.GraphQL.Draft.Syntax               as G
+import qualified Data.Aeson                                as J
+import qualified Data.Aeson.Casing                         as J
+import qualified Data.Aeson.TH                             as J
+import qualified Data.HashMap.Strict                       as Map
+import qualified Data.HashMap.Strict.InsOrd                as OMap
+import qualified Database.PG.Query                         as Q
+import qualified Language.GraphQL.Draft.Syntax             as G
 
-import           Control.Monad.Trans.Control                 (MonadBaseControl)
+import           Control.Monad.Trans.Control               (MonadBaseControl)
 import           Data.Text.Extended
-import           Data.Typeable                               (cast)
+import           Data.Typeable                             (cast)
 
-import qualified Hasura.Backends.Postgres.Execute.RemoteJoin as RR
-import qualified Hasura.Backends.Postgres.SQL.DML            as S
-import qualified Hasura.Backends.Postgres.Translate.Select   as DS
-import qualified Hasura.GraphQL.Execute                      as E
-import qualified Hasura.GraphQL.Execute.Inline               as E
-import qualified Hasura.GraphQL.Execute.LiveQuery            as E
-import qualified Hasura.GraphQL.Execute.Query                as E
-import qualified Hasura.GraphQL.Transport.HTTP.Protocol      as GH
+import qualified Hasura.Backends.Postgres.SQL.DML          as S
+import qualified Hasura.Backends.Postgres.Translate.Select as DS
+import qualified Hasura.GraphQL.Execute                    as E
+import qualified Hasura.GraphQL.Execute.Backend            as E
+import qualified Hasura.GraphQL.Execute.Inline             as E
+import qualified Hasura.GraphQL.Execute.LiveQuery.Explain  as E
+import qualified Hasura.GraphQL.Execute.LiveQuery.Plan     as EL
+import qualified Hasura.GraphQL.Execute.Query              as E
+import qualified Hasura.GraphQL.Execute.RemoteJoin         as RR
+import qualified Hasura.GraphQL.Transport.HTTP.Protocol    as GH
 
 import           Hasura.Backends.Postgres.SQL.Value
-import           Hasura.Backends.Postgres.Translate.Column   (toTxtValue)
+import           Hasura.Backends.Postgres.Translate.Column (toTxtValue)
 import           Hasura.EncJSON
 import           Hasura.GraphQL.Context
 import           Hasura.GraphQL.Parser
@@ -103,8 +105,8 @@ explainQueryField userInfo fieldName rootField = do
       lift $ do
         resolvedQuery <- E.traverseQueryDB (resolveUnpreparedValue userInfo) pgQDB
         let (querySQL, remoteJoins) = case resolvedQuery of
-              QDBMultipleRows s -> first (DS.selectQuerySQL JASMultipleRows) $ RR.getRemoteJoins s
-              QDBSingleRow    s -> first (DS.selectQuerySQL JASSingleObject) $ RR.getRemoteJoins s
+              QDBMultipleRows s -> first (DS.selectQuerySQL JASMultipleRows) $ RR.getRemoteJoinsSelect s
+              QDBSingleRow    s -> first (DS.selectQuerySQL JASSingleObject) $ RR.getRemoteJoinsSelect s
               QDBAggregation  s -> first DS.selectAggregateQuerySQL $ RR.getRemoteJoinsAggregateSelect s
               QDBConnection   s -> first DS.connectionSelectQuerySQL $ RR.getRemoteJoinsConnectionSelect s
             textSQL = Q.getQueryText querySQL
@@ -153,9 +155,9 @@ explainGQLQuery sc (GQLExplain query userVarsRaw maybeIsRelay) = do
       -- (Here the above fragment inlining is actually executed.)
       inlinedSelSet <- E.inlineSelectionSet fragments selSet
       (unpreparedQueries, _) <- E.parseGraphQLQuery graphQLContext varDefs (GH._grVariables query) inlinedSelSet
-      (pgExecCtx, validSubscriptionQueries) <-  E.validateSubscriptionRootField unpreparedQueries
-      (plan, _) <- E.buildLiveQueryPlan pgExecCtx userInfo validSubscriptionQueries
-      encJFromJValue <$> E.explainLiveQueryPlan plan
+      (_, E.LQP (execPlan :: EL.LiveQueryPlan b (E.MultiplexedQuery b))) <- E.createSubscriptionPlan userInfo unpreparedQueries
+      case backendTag @b of
+        PostgresTag -> encJFromJValue <$> E.explainLiveQueryPlan execPlan
   where
     queryType = bool E.QueryHasura E.QueryRelay $ Just True == maybeIsRelay
     sessionVariables = mkSessionVariablesText $ fromMaybe mempty userVarsRaw

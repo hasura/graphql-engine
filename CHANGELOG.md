@@ -132,6 +132,7 @@ have select permissions to the target table of the function.
 - server: fix issue with mapping session variables to standard JWT claims (fix #6449)
 - server: support tracking of functions that return a single row (fix #4299)
 - server: reduce memory usage consumption of the schema cache structures, and fix a memory leak
+- server: add source name in livequery logs
 - console: allow user to cascade Postgres dependencies when dropping Postgres objects (close #5109) (#5248)
 - console: mark inconsistent remote schemas in the UI (close #5093) (#5181)
 - console: remove ONLY as default for ALTER TABLE in column alter operations (close #5512) #5706

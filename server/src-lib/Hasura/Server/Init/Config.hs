@@ -1,27 +1,27 @@
 -- | Types and classes related to configuration when the server is initialised
 module Hasura.Server.Init.Config where
 
-import qualified Data.Aeson                       as J
-import qualified Data.Aeson.Casing                as J
-import qualified Data.Aeson.TH                    as J
-import qualified Data.HashSet                     as Set
-import qualified Data.String                      as DataString
-import qualified Data.Text                        as T
-import qualified Database.PG.Query                as Q
-import qualified Network.WebSockets               as WS
+import qualified Data.Aeson                               as J
+import qualified Data.Aeson.Casing                        as J
+import qualified Data.Aeson.TH                            as J
+import qualified Data.HashSet                             as Set
+import qualified Data.String                              as DataString
+import qualified Data.Text                                as T
+import qualified Database.PG.Query                        as Q
+import qualified Network.WebSockets                       as WS
 
 
-import           Data.Char                        (toLower)
+import           Data.Char                                (toLower)
 import           Data.Time
 import           Data.URL.Template
-import           Network.Wai.Handler.Warp         (HostPreference)
+import           Network.Wai.Handler.Warp                 (HostPreference)
 
-import qualified Hasura.Cache.Bounded             as Cache
-import qualified Hasura.GraphQL.Execute.LiveQuery as LQ
-import qualified Hasura.GraphQL.Execute.Plan      as E
-import qualified Hasura.Logging                   as L
-import qualified System.Metrics                   as EKG
-import qualified System.Metrics.Gauge             as EKG.Gauge
+import qualified Hasura.Cache.Bounded                     as Cache
+import qualified Hasura.GraphQL.Execute.LiveQuery.Options as LQ
+import qualified Hasura.GraphQL.Execute.Plan              as E
+import qualified Hasura.Logging                           as L
+import qualified System.Metrics                           as EKG
+import qualified System.Metrics.Gauge                     as EKG.Gauge
 
 
 import           Hasura.Prelude

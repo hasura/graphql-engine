@@ -5,20 +5,12 @@ module Hasura.GraphQL.Execute
   , getResolvedExecPlan
   , getExecPlanPartial
   , execRemoteGQ
-  , validateSubscriptionRootField
-  -- , getSubsOp
-
-  -- , EP.PlanCache
-  -- , EP.mkPlanCacheOptions
-  -- , EP.PlanCacheOptions(..)
-  -- , EP.initPlanCache
-  -- , EP.clearPlanCache
-  -- , EP.dumpPlanCache
   , EQ.PreparedSql(..)
   , ExecutionCtx(..)
-
   , MonadGQLExecutionCheck(..)
   , checkQueryInAllowlist
+  , LiveQueryPlan (..)
+  , createSubscriptionPlan
   ) where
 
 import           Hasura.Prelude
@@ -32,17 +24,17 @@ import qualified Network.HTTP.Client                    as HTTP
 import qualified Network.HTTP.Types                     as HTTP
 import qualified Network.Wai.Extended                   as Wai
 
-import           Control.Lens                           (_1, (^.))
 import           Data.Text.Extended
 import           Data.Typeable
 
 import qualified Hasura.GraphQL.Context                 as C
 import qualified Hasura.GraphQL.Execute.Backend         as EB
 import qualified Hasura.GraphQL.Execute.Inline          as EI
-import qualified Hasura.GraphQL.Execute.LiveQuery       as EL
+import qualified Hasura.GraphQL.Execute.LiveQuery.Plan  as EL
 import qualified Hasura.GraphQL.Execute.Mutation        as EM
 import qualified Hasura.GraphQL.Execute.Prepare         as EPr
 import qualified Hasura.GraphQL.Execute.Query           as EQ
+import qualified Hasura.GraphQL.Execute.RemoteJoin      as RJ
 import qualified Hasura.GraphQL.Execute.Types           as ET
 import qualified Hasura.Logging                         as L
 import qualified Hasura.Server.Telemetry.Counters       as Telem
@@ -165,41 +157,54 @@ getExecPlanPartial userInfo sc queryType req =
           "in the document when operationName is not specified"
 
 -- The graphql query is resolved into a sequence of execution operations
-data ResolvedExecutionPlan tx
-  = QueryExecutionPlan (EB.ExecutionPlan tx) [C.QueryRootField UnpreparedValue]
+data ResolvedExecutionPlan
+  = QueryExecutionPlan EB.ExecutionPlan [C.QueryRootField UnpreparedValue]
   -- ^ query execution; remote schemas and introspection possible
-  | MutationExecutionPlan (EB.ExecutionPlan tx)
+  | MutationExecutionPlan EB.ExecutionPlan
   -- ^ mutation execution; only __typename introspection supported
-  | SubscriptionExecutionPlan EL.LiveQueryPlan
+  | SubscriptionExecutionPlan SourceName LiveQueryPlan
   -- ^ live query execution; remote schemas and introspection not supported
 
-validateSubscriptionRootField
-  :: (MonadError QErr m, Traversable t, Typeable v)
-  => t (C.QueryRootField v) -> m (PGExecCtx, t (C.SubscriptionRootField v))
-validateSubscriptionRootField rootFields = do
-  -- TEMPORARY!!!
-  -- We don't handle non-Postgres backends yet: for now, we filter root fields to only keep those
-  -- that are targeting postgres, and we *silently* discard all the others. This is fine for now, as
-  -- we haven't integrated any other backend yet, but will need to be fixed as soon as possible for
-  -- other backends to work.
-  subscriptionRootFields <- for rootFields \case
-    C.RFDB src e x           -> flip onNothing (throw400 NotSupported "subscription are not supported on non-PG backends") $ do
-      pgE <- cast e
-      pgX <- cast x
-      Just (src, pgE, pgX)
+data LiveQueryPlan where
+  LQP :: forall b. EB.BackendExecute b => EL.LiveQueryPlan b (EB.MultiplexedQuery b) -> LiveQueryPlan
+
+
+createSubscriptionPlan
+  :: forall m
+   . ( MonadError QErr m
+     , MonadIO m
+     )
+  => UserInfo
+  -> InsOrdHashMap G.Name (C.QueryRootField UnpreparedValue)
+  -> m (SourceName, LiveQueryPlan)
+createSubscriptionPlan userInfo rootFields = do
+  subscriptions <- for rootFields \case
+    C.RFDB src e x           -> pure $ C.RFDB src e x
     C.RFAction (C.AQAsync _) -> throw400 NotSupported "async action queries are temporarily not supported in subscription"
     C.RFAction (C.AQQuery _) -> throw400 NotSupported "query actions cannot be run as a subscription"
     C.RFRemote _             -> throw400 NotSupported "subscription to remote server is not supported"
     C.RFRaw _                -> throw400 NotSupported "Introspection not supported over subscriptions"
-
-  pgExecCtx <- _pscExecCtx <$> case toList subscriptionRootFields of
-    [] -> throw500 "empty selset for subscription"
-    [(_,e,_)] -> pure e
-    ((src, e, _) : restFields) -> do
-      unless (all ((src ==) . (^. _1)) restFields) $ throw400 NotSupported "subscriptions going to more than one source are not supported"
-      pure e
-
-  pure (pgExecCtx, subscriptionRootFields <&> \(src, e, x) -> C.RFDB @'Postgres src e x)
+  for_ subscriptions \(C.RFDB _ _ (C.QDBR qdb)) -> do
+    unless (isNothing $ RJ.getRemoteJoins qdb) $
+      throw400 NotSupported "Remote relationships are not allowed in subscriptions"
+  case toList subscriptions of
+    []      -> throw500 "empty selset for subscription"
+    (sub:_) -> buildAction sub subscriptions
+  where
+    buildAction (C.RFDB sourceName (sourceConfig :: SourceConfig b) _) allFields = do
+      qdbs <- traverse (checkField @b sourceName) allFields
+      lqp  <- case backendTag @b of
+        PostgresTag -> LQP <$> EB.mkDBSubscriptionPlan userInfo sourceConfig qdbs
+      pure (sourceName, lqp)
+    checkField
+      :: forall b. Backend b
+      => SourceName
+      -> C.SubscriptionRootField UnpreparedValue
+      -> m (C.QueryDB b (UnpreparedValue b))
+    checkField sourceName (C.RFDB src _ (C.QDBR qdb))
+      | sourceName /= src = throw400 NotSupported "all fields of a subscription must be from the same source"
+      | otherwise         = cast qdb `onNothing`
+        throw500 "internal error: two sources share the same name but are tied to different backends"
 
 
 checkQueryInAllowlist
@@ -223,15 +228,12 @@ checkQueryInAllowlist enableAL userInfo req sc =
                    unGQLExecDoc q
 
 getResolvedExecPlan
-  :: forall tx m
+  :: forall m
    . ( HasVersion
      , MonadError QErr m
      , MonadMetadataStorage (MetadataStorageT m)
      , MonadIO m
      , Tracing.MonadTrace m
-     , MonadIO tx
-     , MonadTx tx
-     , Tracing.MonadTrace tx
      )
   => Env.Environment
   -> L.Logger L.Hasura
@@ -244,7 +246,7 @@ getResolvedExecPlan
   -> HTTP.Manager
   -> [HTTP.Header]
   -> (GQLReqUnparsed, GQLReqParsed)
-  -> m (Telem.CacheHit, ResolvedExecutionPlan tx)
+  -> m (Telem.CacheHit, ResolvedExecutionPlan)
 getResolvedExecPlan env logger {- planCache-} userInfo sqlGenCtx
   sc scVer queryType httpManager reqHeaders (reqUnparsed, reqParsed) = -- do
 
@@ -266,7 +268,7 @@ getResolvedExecPlan env logger {- planCache-} userInfo sqlGenCtx
     -- addPlanToCache plan =
     --   liftIO $ EP.addPlan scVer (userRole userInfo)
     --   opNameM queryStr plan planCache
-    noExistingPlan :: m (ResolvedExecutionPlan tx)
+    noExistingPlan :: m ResolvedExecutionPlan
     noExistingPlan = do
       -- GraphQL requests may incorporate fragments which insert a pre-defined
       -- part of a GraphQL query. Here we make sure to remember those
@@ -308,12 +310,10 @@ getResolvedExecPlan env logger {- planCache-} userInfo sqlGenCtx
             [_] -> pure ()
             (_:rst) ->
               let multipleAllowed =
+                    -- TODO!!!
+                    -- We support directives we don't expose in the schema?!
                     G.Directive $$(G.litName "_multiple_top_level_fields") mempty `elem` directives
               in
               unless (multipleAllowed || null rst) $
                 throw400 ValidationFailed "subscriptions must select one top level field"
-
-          (pgExecCtx, validSubscriptionAST) <- validateSubscriptionRootField unpreparedAST
-
-          (lqOp, _plan) <- EL.buildLiveQueryPlan pgExecCtx userInfo validSubscriptionAST
-          return $ SubscriptionExecutionPlan lqOp
+          uncurry SubscriptionExecutionPlan <$> createSubscriptionPlan userInfo unpreparedAST

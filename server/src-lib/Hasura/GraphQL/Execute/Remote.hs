@@ -21,6 +21,7 @@ import qualified Hasura.GraphQL.Transport.HTTP.Protocol as GH
 import           Hasura.GraphQL.Context                 (RemoteField, RemoteFieldG (..))
 import           Hasura.GraphQL.Execute.Prepare
 import           Hasura.GraphQL.Parser
+import           Hasura.GraphQL.Transport.HTTP.Protocol
 import           Hasura.RQL.Types
 import           Hasura.Session
 
@@ -65,12 +66,12 @@ collectVariablesFromSelectionSet
 collectVariablesFromSelectionSet =
   map mkVariableDefinitionAndValue . Set.toList . collectVariables
 
+
 buildExecStepRemote
-  :: forall m
-  .  RemoteSchemaInfo
+  :: RemoteSchemaInfo
   -> G.OperationType
   -> G.SelectionSet G.NoFragments Variable
-  -> ExecutionStep m
+  -> ExecutionStep
 buildExecStepRemote remoteSchemaInfo tp selSet =
   let unresolvedSelSet = unresolveVariables selSet
       allVars = map mkVariableDefinitionAndValue $ Set.toList $ collectVariables selSet

@@ -157,7 +157,7 @@ filterVariablesFromQuery query = fold $ rootToSessVarPreds =<< query
   where
     rootToSessVarPreds :: RootField (QueryDBRoot UnpreparedValue) c h d -> [SessVarPred]
     rootToSessVarPreds = \case
-      RFDB _ _ (QDBR db) -> fmap toPred $ toListOf EC.traverseQueryDB db
+      RFDB _ _ (QDBR db) -> toPred <$> toListOf EC.traverseQueryDB db
       _                  -> []
 
     toPred :: UnpreparedValue bet -> SessVarPred
@@ -200,7 +200,7 @@ runGQ env logger reqId userInfo ipAddress reqHeaders queryType reqUnparsed = do
                  >>= flip onLeft throwError
 
     (telemCacheHit, execPlan) <-
-      E.getResolvedExecPlan @(Tracing.TraceT (LazyTxT QErr IO))
+      E.getResolvedExecPlan
         env logger {- planCache -}
         userInfo sqlGenCtx sc scVer queryType
         httpManager reqHeaders (reqUnparsed, reqParsed)
@@ -212,7 +212,7 @@ runGQ env logger reqId userInfo ipAddress reqHeaders queryType reqUnparsed = do
             remoteJoins = OMap.elems queryPlans >>= \case
               E.ExecStepDB (_ :: SourceConfig b) genSql _headers _tx ->
                 case backendTag @b of
-                  PostgresTag -> IR._rjRemoteSchema <$> maybe [] (EB.getRemoteJoins @b @(Tracing.TraceT (LazyTxT QErr IO))) genSql
+                  PostgresTag -> IR._rjRemoteSchema <$> maybe [] (EB.getRemoteJoins @b) genSql
               _ -> []
         (responseHeaders, cachedValue) <- Tracing.interpTraceT (liftEitherM . runExceptT) $ cacheLookup remoteJoins cacheKey
         case fmap decodeGQResp cachedValue of
@@ -250,7 +250,7 @@ runGQ env logger reqId userInfo ipAddress reqHeaders queryType reqUnparsed = do
             buildRaw json
         buildResult Telem.Mutation conclusion []
 
-      E.SubscriptionExecutionPlan _sub ->
+      E.SubscriptionExecutionPlan _sourceName _sub ->
         throw400 UnexpectedPayload "subscriptions are not supported over HTTP, use websockets instead"
   -- The response and misc telemetry data:
   let telemTimeIO = convertDuration telemTimeIO_DT

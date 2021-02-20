@@ -19,6 +19,7 @@ import qualified Hasura.Tracing                         as Tracing
 import           Hasura.GraphQL.Context
 import           Hasura.GraphQL.Execute.Action
 import           Hasura.GraphQL.Execute.Backend
+import           Hasura.GraphQL.Execute.Postgres        ()
 import           Hasura.GraphQL.Execute.Remote
 import           Hasura.GraphQL.Execute.Resolve
 import           Hasura.GraphQL.Parser
@@ -54,13 +55,12 @@ convertMutationAction env logger userInfo manager reqHeaders  = \case
     actionExecContext = ActionExecContext manager reqHeaders $ _uiSession userInfo
 
 convertMutationSelectionSet
-  :: forall m tx
+  :: forall m
    . ( HasVersion
      , Tracing.MonadTrace m
      , MonadIO m
      , MonadError QErr m
      , MonadMetadataStorage (MetadataStorageT m)
-     , BackendExecute 'Postgres tx
      )
   => Env.Environment
   -> L.Logger L.Hasura
@@ -72,7 +72,7 @@ convertMutationSelectionSet
   -> G.SelectionSet G.NoFragments G.Name
   -> [G.VariableDefinition]
   -> Maybe GH.VariableValues
-  -> m (ExecutionPlan tx)
+  -> m ExecutionPlan
 convertMutationSelectionSet env logger gqlContext SQLGenCtx{stringifyNum} userInfo manager reqHeaders fields varDefs varValsM = do
   mutationParser <- onNothing (gqlMutationParser gqlContext) $
     throw400 ValidationFailed "no mutations exist"

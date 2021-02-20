@@ -45,6 +45,7 @@ import           Data.Text.Extended
 import qualified Hasura.Backends.Postgres.Execute.RemoteJoin as RJ
 import qualified Hasura.Backends.Postgres.SQL.DML            as S
 import qualified Hasura.Backends.Postgres.Translate.Select   as RS
+import qualified Hasura.GraphQL.Execute.RemoteJoin           as RJ
 import qualified Hasura.Logging                              as L
 import qualified Hasura.RQL.IR.Select                        as RS
 import qualified Hasura.Tracing                              as Tracing
@@ -213,7 +214,7 @@ resolveActionExecution env logger userInfo annAction execContext = do
 
     executeActionInDb :: SourceConfig 'Postgres -> RS.AnnSimpleSel 'Postgres -> [Q.PrepArg] -> ActionExecution
     executeActionInDb sourceConfig astResolved prepArgs = ActionExecution do
-      let (astResolvedWithoutRemoteJoins,maybeRemoteJoins) = RJ.getRemoteJoins astResolved
+      let (astResolvedWithoutRemoteJoins, maybeRemoteJoins) = RJ.getRemoteJoinsSelect astResolved
           jsonAggType = mkJsonAggSelect outputType
       liftEitherM $ runExceptT $ runLazyTx (_pscExecCtx sourceConfig) Q.ReadOnly $
         case maybeRemoteJoins of

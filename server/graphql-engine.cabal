@@ -297,6 +297,7 @@ library
                      , Hasura.Metadata.Class
 
                      , Hasura.Backends.Postgres.Connection
+                     , Hasura.Backends.Postgres.Execute.LiveQuery
                      , Hasura.Backends.Postgres.Execute.Mutation
                      , Hasura.Backends.Postgres.Execute.RemoteJoin
                      , Hasura.Backends.Postgres.Execute.Types
@@ -359,15 +360,6 @@ library
                      , Hasura.Server.Telemetry.Counters
                      , Hasura.Server.Auth.JWT
                      , Hasura.GC
-                     , Hasura.GraphQL.Execute
-                     , Hasura.GraphQL.Execute.LiveQuery
-                     , Hasura.GraphQL.Transport.Backend
-                     , Hasura.GraphQL.Transport.Postgres
-                     , Hasura.GraphQL.Transport.HTTP
-                     , Hasura.GraphQL.Transport.HTTP.Protocol
-                     , Hasura.GraphQL.Transport.WebSocket
-                     , Hasura.GraphQL.Transport.WebSocket.Protocol
-                     , Hasura.GraphQL.Transport.WebSocket.Server
                      , Hasura.Incremental.Internal.Cache
                      , Hasura.Incremental.Internal.Dependency
                      , Hasura.Incremental.Internal.Rule
@@ -457,26 +449,28 @@ library
                      , Hasura.RQL.IR.Returning
                      , Hasura.RQL.IR.Select
                      , Hasura.RQL.IR.Update
-                     , Hasura.GraphQL.Explain
+                     , Hasura.GraphQL.Context
+                     , Hasura.GraphQL.Execute
                      , Hasura.GraphQL.Execute.Action
                      , Hasura.GraphQL.Execute.Backend
                      , Hasura.GraphQL.Execute.Common
                      , Hasura.GraphQL.Execute.Inline
                      , Hasura.GraphQL.Execute.Insert
-                     , Hasura.GraphQL.Execute.Mutation
-                     , Hasura.GraphQL.Execute.Plan
-                     , Hasura.GraphQL.Execute.Postgres
-                     , Hasura.GraphQL.Execute.Prepare
-                     , Hasura.GraphQL.Execute.Remote
-                     , Hasura.GraphQL.Execute.Resolve
-                     , Hasura.GraphQL.Execute.Types
+                     , Hasura.GraphQL.Execute.LiveQuery.Explain
                      , Hasura.GraphQL.Execute.LiveQuery.Options
                      , Hasura.GraphQL.Execute.LiveQuery.Plan
                      , Hasura.GraphQL.Execute.LiveQuery.Poll
                      , Hasura.GraphQL.Execute.LiveQuery.State
                      , Hasura.GraphQL.Execute.LiveQuery.TMap
-                     , Hasura.GraphQL.RemoteServer
-                     , Hasura.GraphQL.Context
+                     , Hasura.GraphQL.Execute.Mutation
+                     , Hasura.GraphQL.Execute.Plan
+                     , Hasura.GraphQL.Execute.Postgres
+                     , Hasura.GraphQL.Execute.Prepare
+                     , Hasura.GraphQL.Execute.Remote
+                     , Hasura.GraphQL.Execute.RemoteJoin
+                     , Hasura.GraphQL.Execute.Resolve
+                     , Hasura.GraphQL.Execute.Types
+                     , Hasura.GraphQL.Explain
                      , Hasura.GraphQL.Parser
                      , Hasura.GraphQL.Parser.Class
                      , Hasura.GraphQL.Parser.Class.Parse
@@ -486,6 +480,7 @@ library
                      , Hasura.GraphQL.Parser.Internal.Types
                      , Hasura.GraphQL.Parser.Monad
                      , Hasura.GraphQL.Parser.Schema
+                     , Hasura.GraphQL.RemoteServer
                      , Hasura.GraphQL.Schema
                      , Hasura.GraphQL.Schema.Action
                      , Hasura.GraphQL.Schema.Backend
@@ -499,6 +494,13 @@ library
                      , Hasura.GraphQL.Schema.Remote
                      , Hasura.GraphQL.Schema.Select
                      , Hasura.GraphQL.Schema.Table
+                     , Hasura.GraphQL.Transport.Backend
+                     , Hasura.GraphQL.Transport.HTTP
+                     , Hasura.GraphQL.Transport.HTTP.Protocol
+                     , Hasura.GraphQL.Transport.Postgres
+                     , Hasura.GraphQL.Transport.WebSocket
+                     , Hasura.GraphQL.Transport.WebSocket.Protocol
+                     , Hasura.GraphQL.Transport.WebSocket.Server
                      , Hasura.Eventing.HTTP
                      , Hasura.Eventing.EventTrigger
                      , Hasura.Eventing.ScheduledTrigger

@@ -50,8 +50,9 @@ import           GHC.AssertNF
 import qualified Hasura.GraphQL.Execute                      as E
 import qualified Hasura.GraphQL.Execute.Action               as EA
 import qualified Hasura.GraphQL.Execute.Backend              as EB
-import qualified Hasura.GraphQL.Execute.LiveQuery            as LQ
+import qualified Hasura.GraphQL.Execute.LiveQuery.Plan       as LQ
 import qualified Hasura.GraphQL.Execute.LiveQuery.Poll       as LQ
+import qualified Hasura.GraphQL.Execute.LiveQuery.State      as LQ
 import qualified Hasura.GraphQL.Transport.WebSocket.Server   as WS
 import qualified Hasura.Logging                              as L
 import qualified Hasura.RQL.IR.RemoteJoin                    as IR
@@ -367,7 +368,7 @@ onStart env serverEnv wsConn (StartMsg opId q) = catchAndIgnore $ do
 
   reqParsedE <- lift $ E.checkGQLExecution userInfo (reqHdrs, ipAddress) enableAL sc q
   reqParsed <- onLeft reqParsedE (withComplete . preExecErr requestId)
-  execPlanE <- runExceptT $ E.getResolvedExecPlan @(Tracing.TraceT (LazyTxT QErr IO))
+  execPlanE <- runExceptT $ E.getResolvedExecPlan
     env logger {- planCache -}
     userInfo sqlGenCtx sc scVer queryType
     httpMgr reqHdrs (q, reqParsed)
@@ -381,7 +382,7 @@ onStart env serverEnv wsConn (StartMsg opId q) = catchAndIgnore $ do
           remoteJoins = OMap.elems queryPlan >>= \case
             E.ExecStepDB (_ :: SourceConfig b) genSql _headers _tx ->
               case backendTag @b of
-                PostgresTag -> IR._rjRemoteSchema <$> maybe [] (EB.getRemoteJoins @b @(Tracing.TraceT (LazyTxT QErr IO))) genSql
+                PostgresTag -> IR._rjRemoteSchema <$> maybe [] (EB.getRemoteJoins @b) genSql
             _ -> []
       -- We ignore the response headers (containing TTL information) because
       -- WebSockets don't support them.
@@ -426,7 +427,7 @@ onStart env serverEnv wsConn (StartMsg opId q) = catchAndIgnore $ do
       buildResult Telem.Query telemCacheHit timerTot requestId conclusion
       sendCompleted (Just requestId)
 
-    E.SubscriptionExecutionPlan lqOp -> do
+    E.SubscriptionExecutionPlan sourceName (E.LQP (liveQueryPlan :: LQ.LiveQueryPlan b (EB.MultiplexedQuery b))) -> do
       -- log the graphql query
       logQueryLog logger q Nothing requestId
       let subscriberMetadata = LQ.mkSubscriberMetadata $ J.object
@@ -435,7 +436,8 @@ onStart env serverEnv wsConn (StartMsg opId q) = catchAndIgnore $ do
                                ]
       -- NOTE!: we mask async exceptions higher in the call stack, but it's
       -- crucial we don't lose lqId after addLiveQuery returns successfully.
-      !lqId <- liftIO $ LQ.addLiveQuery logger subscriberMetadata lqMap lqOp liveQOnChange
+      !lqId <- liftIO $ case backendTag @b of
+        PostgresTag ->  LQ.addLiveQuery logger subscriberMetadata lqMap sourceName liveQueryPlan liveQOnChange
       let !opName = _grOperationName q
 #ifndef PROFILING
       liftIO $ $assertNFHere (lqId, opName)  -- so we don't write thunks to mutable vars

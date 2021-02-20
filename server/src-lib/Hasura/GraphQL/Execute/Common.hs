@@ -24,6 +24,7 @@ import           Hasura.Backends.Postgres.Translate.Select   (asSingleRowJsonRes
 import           Hasura.EncJSON
 import           Hasura.GraphQL.Context
 import           Hasura.GraphQL.Execute.Prepare
+import           Hasura.GraphQL.Execute.RemoteJoin
 import           Hasura.RQL.Types
 import           Hasura.Server.Version                       (HasVersion)
 import           Hasura.Session
@@ -60,16 +61,13 @@ instance J.ToJSON PreparedSql where
 -- turn the current plan into a transaction
 mkCurPlanTx
   :: ( HasVersion
-     , MonadIO tx
-     , MonadTx tx
-     , Tracing.MonadTrace tx
      )
   => Env.Environment
   -> HTTP.Manager
   -> [HTTP.Header]
   -> UserInfo
   -> PreparedSql
-  -> (tx EncJSON, Maybe PreparedSql)
+  -> (Tracing.TraceT (LazyTxT QErr IO) EncJSON, Maybe PreparedSql)
 mkCurPlanTx env manager reqHdrs userInfo ps@(PreparedSql q prepMap remoteJoinsM) =
   -- generate the SQL and prepared vars or the bytestring
   let args = withUserVars (_uiSession userInfo) prepMap
@@ -87,8 +85,8 @@ irToRootFieldPlan
   -> QueryDB 'Postgres S.SQLExp
   -> PreparedSql
 irToRootFieldPlan prepped = \case
-  QDBMultipleRows s -> mkPreparedSql getRemoteJoins (DS.selectQuerySQL JASMultipleRows) s
-  QDBSingleRow s    -> mkPreparedSql getRemoteJoins (DS.selectQuerySQL JASSingleObject) s
+  QDBMultipleRows s -> mkPreparedSql getRemoteJoinsSelect (DS.selectQuerySQL JASMultipleRows) s
+  QDBSingleRow s    -> mkPreparedSql getRemoteJoinsSelect (DS.selectQuerySQL JASSingleObject) s
   QDBAggregation s  -> mkPreparedSql getRemoteJoinsAggregateSelect DS.selectAggregateQuerySQL s
   QDBConnection s   -> mkPreparedSql getRemoteJoinsConnectionSelect DS.connectionSelectQuerySQL s
   where

@@ -4,30 +4,35 @@ module Hasura.GraphQL.Transport.Postgres () where
 
 import           Hasura.Prelude
 
-import qualified Database.PG.Query                      as Q
-import qualified Language.GraphQL.Draft.Syntax          as G
+import qualified Data.ByteString                            as B
+import qualified Database.PG.Query                          as Q
+import qualified Language.GraphQL.Draft.Syntax              as G
 
-import           Control.Monad.Morph                    (hoist)
+import           Control.Monad.Morph                        (hoist)
 import           Data.Text.Extended
 
-import qualified Hasura.GraphQL.Execute.Query           as EQ
-import qualified Hasura.Logging                         as L
-import qualified Hasura.Tracing                         as Tracing
+import qualified Hasura.Backends.Postgres.Execute.LiveQuery as PGL
+import qualified Hasura.GraphQL.Execute.Query               as EQ
+import qualified Hasura.Logging                             as L
+import qualified Hasura.Tracing                             as Tracing
 
 import           Hasura.EncJSON
-import           Hasura.GraphQL.Execute.Postgres        ()
-import           Hasura.GraphQL.Logging                 (MonadQueryLog (..))
+import           Hasura.GraphQL.Execute.Backend
+import           Hasura.GraphQL.Execute.LiveQuery.Plan
+import           Hasura.GraphQL.Execute.Postgres            ()
+import           Hasura.GraphQL.Logging                     (MonadQueryLog (..))
 import           Hasura.GraphQL.Transport.Backend
 import           Hasura.GraphQL.Transport.HTTP.Protocol
 import           Hasura.RQL.Types
-import           Hasura.Server.Types                    (RequestId)
+import           Hasura.Server.Types                        (RequestId)
 import           Hasura.Session
 import           Hasura.Tracing
 
 
-instance BackendTransport 'Postgres (Tracing.TraceT (LazyTxT QErr IO)) where
+instance BackendTransport 'Postgres where
   runDBQuery = runPGQuery
   runDBMutation = runPGMutation
+  runDBSubscription = runPGSubscription
 
 runPGQuery
   :: ( MonadIO m
@@ -79,3 +84,15 @@ runPGMutation reqId query fieldName userInfo logger sourceConfig tx _genSql =  d
       . withTraceContext ctx
       . withUserInfo userInfo
       )  tx
+
+runPGSubscription
+  :: ( MonadIO m
+     )
+  => SourceConfig 'Postgres
+  -> MultiplexedQuery 'Postgres
+  -> [(CohortId, CohortVariables)]
+  -> m (DiffTime, Either QErr [(CohortId, B.ByteString)])
+runPGSubscription sourceConfig query variables = withElapsedTime
+  $ runExceptT
+  $ runQueryTx (_pscExecCtx sourceConfig)
+  $ PGL.executeMultiplexedQuery query variables

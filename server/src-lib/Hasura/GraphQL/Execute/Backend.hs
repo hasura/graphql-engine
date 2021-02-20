@@ -11,12 +11,14 @@ import                qualified Network.HTTP.Client                    as HTTP
 import                qualified Network.HTTP.Types                     as HTTP
 
 import                          Data.Kind                              (Type)
+import                          Data.Text.Extended
 
 import                qualified Hasura.GraphQL.Transport.HTTP.Protocol as GH
 
 import                          Hasura.EncJSON
 import                          Hasura.GraphQL.Context
 import {-# SOURCE #-}           Hasura.GraphQL.Execute.Action
+import                          Hasura.GraphQL.Execute.LiveQuery.Plan
 import                          Hasura.GraphQL.Parser                  hiding (Type)
 import                          Hasura.RQL.IR.RemoteJoin
 import                          Hasura.RQL.Types.Backend
@@ -30,9 +32,14 @@ import                          Hasura.Session
 -- | This typeclass enacapsulates how a given backend translates a root field into an execution
 -- plan. For now, each root field maps to one execution step, but in the future, when we have
 -- a client-side dataloader, each root field might translate into a multi-step plan.
-class Backend b => BackendExecute (b :: BackendType) tx where
+class ( Backend b
+      , ToTxt (MultiplexedQuery b)
+      , Monad (ExecutionMonad b)
+      ) => BackendExecute (b :: BackendType) where
   -- generated query information
-  type PreparedQuery b :: Type
+  type PreparedQuery    b :: Type
+  type MultiplexedQuery b :: Type
+  type ExecutionMonad   b :: Type -> Type
   getRemoteJoins :: PreparedQuery b -> [RemoteJoin b]
 
   -- execution plan generation
@@ -48,7 +55,7 @@ class Backend b => BackendExecute (b :: BackendType) tx where
     -> [G.Directive G.Name]
     -> SourceConfig b
     -> QueryDB b (UnpreparedValue b)
-    -> m (ExecutionStep tx)
+    -> m ExecutionStep
   mkDBMutationPlan
     :: forall m
      . ( MonadError QErr m
@@ -61,36 +68,45 @@ class Backend b => BackendExecute (b :: BackendType) tx where
     -> Bool
     -> SourceConfig b
     -> MutationDB b (UnpreparedValue b)
-    -> m (ExecutionStep tx)
+    -> m ExecutionStep
+  mkDBSubscriptionPlan
+    :: forall m
+     . ( MonadError QErr m
+       , MonadIO m
+       )
+    => UserInfo
+    -> SourceConfig b
+    -> InsOrdHashMap G.Name (QueryDB b (UnpreparedValue b))
+    -> m (LiveQueryPlan b (MultiplexedQuery b))
 
 
 -- | One execution step to processing a GraphQL query (e.g. one root field).
-data ExecutionStep tx where
+data ExecutionStep where
   ExecStepDB
-    :: forall (b :: BackendType) tx
-     . (BackendExecute b tx, Monad tx)
+    :: forall (b :: BackendType)
+     . BackendExecute b
     => SourceConfig b
     -> Maybe (PreparedQuery b)
     -> HTTP.ResponseHeaders
-    -> tx EncJSON
-    -> ExecutionStep tx
+    -> ExecutionMonad b EncJSON
+    -> ExecutionStep
   -- ^ A query to execute against the database
   ExecStepAction
     :: ActionExecutionPlan
     -> HTTP.ResponseHeaders
-    -> ExecutionStep tx
+    -> ExecutionStep
   -- ^ Execute an action
   ExecStepRemote
     :: !RemoteSchemaInfo
     -> !GH.GQLReqOutgoing
-    -> ExecutionStep tx
+    -> ExecutionStep
   -- ^ A graphql query to execute against a remote schema
   ExecStepRaw
     :: J.Value
-    -> ExecutionStep tx
+    -> ExecutionStep
   -- ^ Output a plain JSON object
 
 -- | The series of steps that need to be executed for a given query. For now, those steps are all
 -- independent. In the future, when we implement a client-side dataloader and generalized joins,
 -- this will need to be changed into an annotated tree.
-type ExecutionPlan tx = InsOrdHashMap G.Name (ExecutionStep tx)
+type ExecutionPlan = InsOrdHashMap G.Name ExecutionStep
