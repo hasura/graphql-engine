@@ -100,6 +100,39 @@ And ``base64`` encoded value is
 
    WzEsICJwdWJsaWMiLCAiYXV0aG9yIiwgIjI5NmQzMGIxLTQ3NGQtNDAxMS1hOTA3LTI3MDE5OTJiMDRjMSJd
 
+Extending the Relay ID in the graphql endpoint
+----------------------------------------------
+
+If for any reason you need the relay ID exposed in the graphql endpoint, you can create a trigger like the following:
+
+.. code-block:: plpgsql
+
+  CREATE OR REPLACE FUNCTION public.set_relay_id ()
+    RETURNS TRIGGER
+    LANGUAGE plpgsql
+    AS $$
+  DECLARE
+    _new record;
+    _json_string text;
+  BEGIN
+    _new := NEW;
+    -- assuming the pk column is named "pk" and the table has an "id" text column
+    -- same as [1, "public", "table_name", "pk"]
+    _json_string = concat(
+      '[1, "', TG_TABLE_SCHEMA, '", "', TG_TABLE_NAME, '", ', _new.pk, ']');
+    _new."id" = encode(_json_string::bytea, 'base64');
+    RETURN _new;
+  END;
+  $$;
+
+  CREATE TRIGGER "set_authors_relay_id"
+  BEFORE INSERT ON public.authors
+  FOR EACH ROW
+  EXECUTE FUNCTION public.set_relay_id ();
+
+  COMMENT ON TRIGGER "set_authors_relay_id" ON public.authors IS
+    'trigger to set value of column "id" after insert';
+
 Exporting the Relay schema
 --------------------------
 
