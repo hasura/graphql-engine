@@ -4,8 +4,10 @@ where
 
 import qualified Data.HashMap.Strict                 as Map
 import qualified Database.PG.Query                   as Q
+import qualified Language.Haskell.TH.Lib             as TH
+import qualified Language.Haskell.TH.Syntax          as TH
 
-import           Control.Lens                        hiding (from, index, op, (.=))
+import           Control.Lens                        hiding (from, index, op, to, (.=))
 import           Control.Monad.Trans.Control         (MonadBaseControl)
 
 import           Hasura.Backends.Postgres.Connection
@@ -18,6 +20,7 @@ import           Hasura.RQL.Types.Function
 import           Hasura.RQL.Types.Source
 import           Hasura.RQL.Types.Table
 import           Hasura.SQL.Backend
+import           Hasura.Server.Migrate.Internal
 
 resolveSourceConfig
   :: (MonadIO m, MonadResolveSource m)
@@ -45,15 +48,19 @@ initSource = do
   sourceVersionTableExist <- doesTableExist "hdb_catalog" "hdb_source_catalog_version"
      -- Fresh database
   if | not hdbCatalogExist -> liftTx do
-         Q.unitQE defaultTxErrorHandler "CREATE SCHEMA hdb_catalog" () False
-         enablePgcryptoExtension
-         initPgSourceCatalog
+        Q.unitQE defaultTxErrorHandler "CREATE SCHEMA hdb_catalog" () False
+        enablePgcryptoExtension
+        initPgSourceCatalog
      -- Only 'hdb_catalog' schema defined
      | not sourceVersionTableExist && not eventLogTableExist ->
-         liftTx initPgSourceCatalog
+        liftTx initPgSourceCatalog
      -- Source is initialised by pre multisource support servers
-     | not sourceVersionTableExist && eventLogTableExist ->
-         liftTx createVersionTable
+     | not sourceVersionTableExist && eventLogTableExist -> do
+       -- Update the Source Catalog to v43 to include the new migration
+       -- changes. Skipping this step will result in errors.
+        currCatalogVersion <- getCatalogVersion
+        migrateTo43 currCatalogVersion
+        liftTx createVersionTable
      | otherwise -> migrateSourceCatalog
   where
     initPgSourceCatalog = do
@@ -78,6 +85,30 @@ initSource = do
       case version of
         "1" -> pure ()
         _   -> throw500 $ "unexpected source catalog version: " <> version
+
+    migrateTo43 prevVersion = do
+      let neededMigrations = dropWhile ((/= prevVersion) . fst) upMigrationsUntil43
+      traverse_ snd neededMigrations
+
+-- Upgrade the hdb_catalog schema to v43
+upMigrationsUntil43 :: MonadTx m => [(Text, m ())]
+upMigrationsUntil43 =
+    $(let migrationFromFile from to =
+            let path = "src-rsr/migrations/" <> from <> "_to_" <> to <> ".sql"
+             in [| runTx $(Q.sqlFromFile path) |]
+
+          migrationsFromFile = map $ \(to :: Integer) ->
+            let from = to - 1
+            in [| ( $(TH.lift $ tshow from)
+                  , $(migrationFromFile (show from) (show to))
+                  ) |]
+      in TH.listE
+        -- version 0.8 is the only non-integral catalog version
+        $  [| ("0.8", $(migrationFromFile "08" "1")) |]
+        :  migrationsFromFile [2..3]
+        ++ [| ("3", from3To4) |]
+        :  migrationsFromFile [5..43]
+     )
 
 currentSourceCatalogVersion :: Text
 currentSourceCatalogVersion = "1"

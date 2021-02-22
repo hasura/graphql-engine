@@ -369,6 +369,7 @@ library
                      , Hasura.Server.CheckUpdates
                      , Hasura.Server.SchemaUpdate
                      , Hasura.Server.Migrate.Version
+                     , Hasura.Server.Migrate.Internal
                      , Hasura.Server.Auth.JWT.Internal
                      , Hasura.Server.Auth.JWT.Logging
                      , Hasura.RQL.Instances
