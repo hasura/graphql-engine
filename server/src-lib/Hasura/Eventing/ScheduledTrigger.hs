@@ -97,6 +97,7 @@ module Hasura.Eventing.ScheduledTrigger
   , withCount
   , invocationFieldExtractors
   , mkEventIdBoolExp
+  , EventTables (..)
   ) where
 
 import           Hasura.Prelude
@@ -813,19 +814,27 @@ getInvocationsTx
   -> ScheduledEventPagination
   -> Q.TxE QErr (WithTotalCount [ScheduledEventInvocation])
 getInvocationsTx invocationsBy pagination = do
-  let sql = Q.fromBuilder $ toSQL $ getInvocationsQuery invocationsBy pagination
+  let eventsTables = EventTables oneOffInvocationsTable cronInvocationsTable cronEventsTable
+      sql = Q.fromBuilder $ toSQL $ getInvocationsQuery eventsTables invocationsBy pagination
   (withCount . Q.getRow) <$> Q.withQE defaultTxErrorHandler sql () True
+  where
+    oneOffInvocationsTable = QualifiedObject "hdb_catalog" $ TableName "hdb_scheduled_event_invocation_logs"
+    cronInvocationsTable = QualifiedObject "hdb_catalog" $ TableName "hdb_cron_event_invocation_logs"
 
-getInvocationsQuery :: GetInvocationsBy -> ScheduledEventPagination -> S.Select
-getInvocationsQuery invocationsBy pagination =
+data EventTables
+  = EventTables
+  { etOneOffInvocationsTable :: QualifiedTable
+  , etCronInvocationsTable   :: QualifiedTable
+  , etCronEventsTable        :: QualifiedTable
+  }
+
+getInvocationsQuery :: EventTables -> GetInvocationsBy -> ScheduledEventPagination -> S.Select
+getInvocationsQuery (EventTables oneOffInvocationsTable cronInvocationsTable cronEventsTable') invocationsBy pagination =
   mkPaginationSelectExp allRowsSelect pagination
   where
     createdAtOrderBy table =
       let createdAtCol = S.SEQIdentifier $ S.mkQIdentifierTable table $ Identifier "created_at"
       in S.OrderByExp $ flip (NE.:|) [] $ S.OrderByItem createdAtCol (Just S.OTDesc) Nothing
-
-    oneOffInvocationsTable = QualifiedObject "hdb_catalog" $ TableName "hdb_scheduled_event_invocation_logs"
-    cronInvocationsTable = QualifiedObject "hdb_catalog" $ TableName "hdb_cron_event_invocation_logs"
 
     allRowsSelect = case invocationsBy of
       GIBEventId eventId eventType ->
@@ -849,7 +858,7 @@ getInvocationsQuery invocationsBy pagination =
              }
         SECron triggerName ->
           let invocationTable = cronInvocationsTable
-              eventTable = cronEventsTable
+              eventTable = cronEventsTable'
               joinCondition = S.JoinOn $ S.BECompare S.SEQ
                 (S.SEQIdentifier $ S.mkQIdentifierTable eventTable $ Identifier "id")
                 (S.SEQIdentifier $ S.mkQIdentifierTable invocationTable $ Identifier "event_id")
