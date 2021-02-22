@@ -298,7 +298,7 @@ instance ToSQL PGScalarType where
     PGNumeric     -> "numeric"
     PGMoney       -> "money"
     PGBoolean     -> "boolean"
-    PGChar        -> "character"
+    PGChar        -> "bpchar"
     PGVarchar     -> "varchar"
     PGText        -> "text"
     PGCitext      -> "citext"
@@ -357,6 +357,8 @@ pgScalarTranslations =
   , ("boolean"                     , PGBoolean)
   , ("bool"                        , PGBoolean)
 
+  , ("bpchar"                      , PGChar)
+  , ("char"                        , PGChar)
   , ("character"                   , PGChar)
 
   , ("varchar"                     , PGVarchar)
@@ -401,7 +403,7 @@ isNumType PGMoney    = True
 isNumType _          = False
 
 stringTypes :: [PGScalarType]
-stringTypes = [PGVarchar, PGText, PGCitext]
+stringTypes = [PGVarchar, PGText, PGCitext, PGChar]
 
 isStringType :: PGScalarType -> Bool
 isStringType = (`elem` stringTypes)

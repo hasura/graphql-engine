@@ -180,6 +180,9 @@ class TestV1SelectBoolExpSearch:
     def test_city_where_not_iregex(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + '/select_city_where_niregex.yaml')
 
+    def test_project_where_ilike(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/select_project_where_ilike.yaml')
+
     @classmethod
     def dir(cls):
         return 'queries/v1/select/boolexp/search'

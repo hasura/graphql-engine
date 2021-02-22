@@ -389,6 +389,9 @@ class TestGraphQLQueryBoolExpSearch:
     def test_city_where_niregex(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + '/select_city_where_niregex.yaml', transport)
 
+    def test_project_where_ilike(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/select_project_where_ilike.yaml', transport)
+
     @classmethod
     def dir(cls):
         return 'queries/graphql_query/boolexp/search'
