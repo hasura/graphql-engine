@@ -192,6 +192,23 @@ buildSchemaCacheRule env = proc (metadata, invalidationKeys) -> do
     , scMetricsConfig = _boMetricsConfig resolvedOutputs
     }
   where
+    getSourceConfigIfNeeded
+      :: ( ArrowChoice arr, Inc.ArrowCache m arr
+         , ArrowWriter (Seq CollectedInfo) arr
+         , MonadIO m, MonadBaseControl IO m
+         , MonadResolveSource m
+         , BackendMetadata b
+         )
+      => ( Inc.Dependency (HashMap SourceName Inc.InvalidationKey)
+         , SourceName, (SourceConnConfiguration b)
+         ) `arr` Maybe (SourceConfig b)
+    getSourceConfigIfNeeded = Inc.cache proc (invalidationKeys, sourceName, sourceConfig) -> do
+      let metadataObj = MetadataObject (MOSource sourceName) $ toJSON sourceName
+      Inc.dependOn -< Inc.selectKeyD sourceName invalidationKeys
+      (| withRecordInconsistency (
+           liftEitherA <<< bindA -< resolveSourceConfig sourceName sourceConfig)
+       |) metadataObj
+
     resolveSourceIfNeeded
       :: ( ArrowChoice arr, Inc.ArrowCache m arr
          , ArrowWriter (Seq CollectedInfo) arr
@@ -205,10 +222,13 @@ buildSchemaCacheRule env = proc (metadata, invalidationKeys) -> do
     resolveSourceIfNeeded = Inc.cache proc (invalidationKeys, sourceMetadata) -> do
       let sourceName = _smName sourceMetadata
           metadataObj = MetadataObject (MOSource sourceName) $ toJSON sourceName
-      Inc.dependOn -< Inc.selectKeyD sourceName invalidationKeys
-      (| withRecordInconsistency (
-           liftEitherA <<< bindA -< resolveSource sourceName $ _smConfiguration sourceMetadata)
-       |) metadataObj
+      maybeSourceConfig <- getSourceConfigIfNeeded -< (invalidationKeys, sourceName, _smConfiguration sourceMetadata)
+      case maybeSourceConfig of
+        Nothing -> returnA -< Nothing
+        Just sourceConfig ->
+          (| withRecordInconsistency (
+             liftEitherA <<< bindA -< resolveDatabaseMetadata sourceConfig)
+          |) metadataObj
 
     buildSource
       :: forall arr m b

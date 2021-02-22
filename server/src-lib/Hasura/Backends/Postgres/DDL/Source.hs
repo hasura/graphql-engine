@@ -1,5 +1,5 @@
 module Hasura.Backends.Postgres.DDL.Source
-  (resolveSource)
+  (resolveSourceConfig, resolveDatabaseMetadata)
 where
 
 import qualified Data.HashMap.Strict                 as Map
@@ -11,6 +11,7 @@ import           Control.Monad.Trans.Control         (MonadBaseControl)
 import           Hasura.Backends.Postgres.Connection
 import           Hasura.Backends.Postgres.SQL.Types
 import           Hasura.Prelude
+import           Hasura.RQL.Types.Backend            (SourceConfig)
 import           Hasura.RQL.Types.Common
 import           Hasura.RQL.Types.Error
 import           Hasura.RQL.Types.Function
@@ -18,13 +19,17 @@ import           Hasura.RQL.Types.Source
 import           Hasura.RQL.Types.Table
 import           Hasura.SQL.Backend
 
-resolveSource
-  :: (MonadIO m, MonadBaseControl IO m, MonadResolveSource m)
-  => SourceName -> PostgresConnConfiguration -> m (Either QErr (ResolvedSource 'Postgres))
-resolveSource name config = runExceptT do
+resolveSourceConfig
+  :: (MonadIO m, MonadResolveSource m)
+  => SourceName -> PostgresConnConfiguration -> m (Either QErr (SourceConfig 'Postgres))
+resolveSourceConfig name config = runExceptT do
   sourceResolver <- getSourceResolver
-  sourceConfig <- liftEitherM $ liftIO $ sourceResolver name config
+  liftEitherM $ liftIO $ sourceResolver name config
 
+resolveDatabaseMetadata
+  :: (MonadIO m, MonadBaseControl IO m)
+  => SourceConfig 'Postgres -> m (Either QErr (ResolvedSource 'Postgres))
+resolveDatabaseMetadata sourceConfig = runExceptT do
   (tablesMeta, functionsMeta, pgScalars) <- runLazyTx (_pscExecCtx sourceConfig) Q.ReadWrite $ do
     initSource
     tablesMeta    <- fetchTableMetadata

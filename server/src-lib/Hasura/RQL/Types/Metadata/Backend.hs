@@ -52,10 +52,18 @@ class (Backend b) => BackendMetadata (b :: BackendType) where
     -> [RawColumnInfo b]
     -> m (Either QErr EnumValues)
 
-  resolveSource
+  -- | Function that resolves the connection related source configuration, and
+  -- creates a connection pool (and other related parameters) in the process
+  resolveSourceConfig
     :: (MonadIO m, MonadBaseControl IO m, MonadResolveSource m)
     => SourceName
     -> SourceConnConfiguration b
+    -> m (Either QErr (SourceConfig b))
+
+  -- | Function that introspects a database for tables, columns, functions etc.
+  resolveDatabaseMetadata
+    :: (MonadIO m, MonadBaseControl IO m, MonadResolveSource m)
+    => SourceConfig b
     -> m (Either QErr (ResolvedSource b))
 
   createTableEventTrigger
@@ -112,7 +120,8 @@ instance BackendMetadata 'Postgres where
   buildComputedFieldInfo = PG.buildComputedFieldInfo
   buildRemoteFieldInfo = PG.buildRemoteFieldInfo
   fetchAndValidateEnumValues = PG.fetchAndValidateEnumValues
-  resolveSource = PG.resolveSource
+  resolveSourceConfig = PG.resolveSourceConfig
+  resolveDatabaseMetadata = PG.resolveDatabaseMetadata
   createTableEventTrigger = PG.createTableEventTrigger
   buildEventTriggerInfo = PG.buildEventTriggerInfo
   parseBoolExpOperations = PG.parseBoolExpOperations
