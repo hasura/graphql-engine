@@ -640,7 +640,15 @@ func (ec *ExecutionContext) Validate() error {
 	if !strings.HasSuffix(ec.Config.Endpoint, "/") {
 		ec.Config.Endpoint = fmt.Sprintf("%s/", ec.Config.Endpoint)
 	}
-	httpClient, err := httpc.New(nil, ec.Config.Endpoint, headers)
+	httpClient, err := httpc.New(
+		&http.Client{
+			Transport: &http.Transport{
+				TLSClientConfig: ec.Config.TLSConfig,
+			},
+		},
+		ec.Config.Endpoint,
+		headers,
+	)
 	if err != nil {
 		return err
 	}

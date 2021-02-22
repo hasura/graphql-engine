@@ -56,6 +56,7 @@ func UpdateProjectV3(opts UpgradeToMuUpgradeProjectToMultipleSourcesOpts) error 
 	}
 
 	opts.Logger.Warn("The upgrade process will make some changes to your project directory, It is advised to create a backup project directory before continuing")
+	opts.Logger.Warn("This script will rewrite the project metadata with metadata on server")
 	response, err := util.GetYesNoPrompt("continue?")
 	if err != nil {
 		return err
