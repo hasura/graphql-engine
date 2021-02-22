@@ -1,9 +1,7 @@
 # anchor refs to be used elsewhere
 refs:
   constants:
-  # TODO upload to hasura docker hub:
-  # - &server_builder_image hasura/graphql-engine-server-builder:2020-01-14
-  - &server_builder_image jberryman/graphql-engine-server-builder-8.10:2020-04-29
+  - &server_builder_image hasura/graphql-engine-server-builder:2020-11-05
   skip_job_on_ciignore: &skip_job_on_ciignore
     run:
       name: checking if job should be terminated or not
@@ -18,11 +16,18 @@ refs:
     run:
       name: checking if server tests can be skipped
       command: |
+        export CIRCLE_GIT_COMMIT_DESC=$(git log --format=%B -n 1 $CIRCLE_SHA)
+        echo "Running from git commit '$CIRCLE_GIT_COMMIT_DESC'"
+        if echo $CIRCLE_GIT_COMMIT_DESC | grep "\[force ci\]"; then
+          echo "Forcing CI run as requested"
+          exit 0
+        fi
+
         echo "PR number: $CIRCLE_PR_NUMBER"
         if [ -z "$CIRCLE_PR_NUMBER" ]; then
           echo "Not a PR build, continuing test" && exit 0
         fi
-        echo "Compare refs: ${CIRCLE_COMPARE_URL##http*/}" 
+        echo "Compare refs: ${CIRCLE_COMPARE_URL##http*/}"
         if git diff --quiet "${CIRCLE_COMPARE_URL##http*/}" -- server; then
           echo "No server changes present, skipping test"
           circleci-agent step halt
@@ -81,7 +86,7 @@ refs:
 
   setup_remote_docker: &setup_remote_docker
     setup_remote_docker:
-      version: 17.09.0-ce
+      version: 19.03.13
       docker_layer_caching: true
 
   # ref pg environment for testing
@@ -93,6 +98,7 @@ refs:
   # ref test server job
   test_server: &test_server
     working_directory: ~/graphql-engine
+    parallelism: 32
     steps:
     - attach_workspace:
         at: /build
@@ -107,7 +113,7 @@ refs:
         command: |
           mkdir -p /usr/share/man/man{1,7}
           apt-get update
-          apt install --yes pgbouncer jq curl postgresql-client-12
+          apt install --yes pgbouncer jq curl postgresql-client-13
     - run:
         name: Ensure databases are present
         environment:
@@ -128,7 +134,12 @@ refs:
           GRAPHQL_ENGINE: /build/_server_output/graphql-engine
           GRAPHQL_ENGINE_TESTS: /build/_server_output/graphql-engine-tests
           MIX_FILES_FOLDER: /build/_server_output/mix
-        command: OUTPUT_FOLDER="/build/_server_test_output/$PG_VERSION" .circleci/test-server.sh
+        command: |
+          # TODO(swann): not oss-.circleci right
+          cat .circleci/server-test-names.txt | circleci tests split | while read -r server_test; do
+            export SERVER_TEST_TO_RUN=$server_test
+            OUTPUT_FOLDER="/build/_server_test_output/$PG_VERSION" .circleci/test-server.sh
+          done
     - store_artifacts:
         path: /build/_server_test_output
         destination: server_test
@@ -156,7 +167,7 @@ jobs:
   build_server:
     docker:
     - image: *server_builder_image
-    resource_class: large
+    resource_class: xlarge
     working_directory: ~/graphql-engine
     steps:
     - attach_workspace:
@@ -165,15 +176,21 @@ jobs:
     - checkout
     - restore_cache:
         keys:
-        - cabal-store-v2-{{ checksum "server/cabal.project" }}-{{ checksum "server/graphql-engine.cabal" }}-{{ checksum "server/cabal.project.freeze" }}
-        - cabal-store-v2-{{ checksum "server/cabal.project" }}-{{ checksum "server/graphql-engine.cabal" }}-
-        - cabal-store-v2-{{ checksum "server/cabal.project" }}-
-        - cabal-store-v2-
+        - cabal-store-v3-{{ checksum "server/cabal.project" }}-{{ checksum "server/graphql-engine.cabal" }}-{{ checksum "server/cabal.project.freeze" }}
+        - cabal-store-v3-{{ checksum "server/cabal.project" }}-{{ checksum "server/graphql-engine.cabal" }}-
+        - cabal-store-v3-{{ checksum "server/cabal.project" }}-
+        - cabal-store-v3-
+    - restore_cache:
+        keys:
+        - cabal-packages-v3-{{ checksum "server/cabal.project" }}-{{ checksum "server/graphql-engine.cabal" }}-{{ checksum "server/cabal.project.freeze" }}
+        - cabal-packages-v3-{{ checksum "server/cabal.project" }}-{{ checksum "server/graphql-engine.cabal" }}-
+        - cabal-packages-v3-{{ checksum "server/cabal.project" }}-
+        - cabal-packages-v3-
     - run:
         name: Install latest postgresql client tools
         command: |
           apt-get -y update
-          apt-get -y install postgresql-client-12
+          apt-get -y install postgresql-client-13
     - run:
         name: Build the binary
         working_directory: ./server
@@ -187,9 +204,12 @@ jobs:
             make enable_coverage=true ci-build
           fi
     - save_cache:
-        key: cabal-store-v2-{{ checksum "server/cabal.project" }}-{{ checksum "server/graphql-engine.cabal" }}-{{ checksum "server/cabal.project.freeze" }}
+        key: cabal-packages-v3-{{ checksum "server/cabal.project" }}-{{ checksum "server/graphql-engine.cabal" }}-{{ checksum "server/cabal.project.freeze" }}
         paths:
         - ~/.cabal/packages
+    - save_cache:
+        key: cabal-store-v3-{{ checksum "server/cabal.project" }}-{{ checksum "server/graphql-engine.cabal" }}-{{ checksum "server/cabal.project.freeze" }}
+        paths:
         - ~/.cabal/store
     - store_artifacts:
         path: /build/_server_output
@@ -238,6 +258,16 @@ jobs:
         command: echo 'all server tests passed!'
 
   # pytest the server with postgres versions >= 9.5
+  test_server_pg_13:
+    <<: *test_server
+    environment:
+      PG_VERSION: "13"
+      POSTGIS_VERSION: "3.0.0"
+    docker:
+    - image: *server_builder_image
+    - image: hasura/postgres-13.0-alpine-postgis3
+      <<: *test_pg_env
+
   test_server_pg_12:
     <<: *test_server
     environment:
@@ -361,7 +391,6 @@ jobs:
         name: build extension cli
         working_directory: cli-ext
         command: |
-          npm install -g pkg
           npm run build
           make deploy
           make ci-copy-assets
@@ -376,7 +405,7 @@ jobs:
   # test and build cli
   test_and_build_cli:
     docker:
-    - image: hasura/graphql-engine-cli-builder:20191205
+    - image: hasura/graphql-engine-cli-builder:20201105
     - image: circleci/postgres:10-alpine
       environment:
         POSTGRES_USER: gql_test
@@ -416,7 +445,7 @@ jobs:
         root: /build
         paths:
           - _cli_output
-  
+
   test_and_build_cli_migrations:
     docker:
     - image: hasura/graphql-engine-cli-migrations-builder:20200415
@@ -611,6 +640,10 @@ workflows:
         requires:
         - build_server
         - build_console
+    - test_server_pg_13:
+        <<: *filter_only_vtags
+        requires:
+        - build_server
     - test_server_pg_12:
         <<: *filter_only_vtags
         requires:
@@ -642,6 +675,7 @@ workflows:
     - all_server_tests_pass:
         <<: *filter_only_vtags
         requires:
+        - test_server_pg_13
         - test_server_pg_12
         - test_server_pg_11
         - test_server_pg_10

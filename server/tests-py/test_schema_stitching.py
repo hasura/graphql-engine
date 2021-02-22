@@ -4,6 +4,7 @@ import string
 import random
 import ruamel.yaml as yaml
 import json
+import graphql
 import queue
 import requests
 import time
@@ -11,6 +12,7 @@ import time
 import pytest
 
 from validate import check_query_f, check_query
+from graphql import GraphQLError
 
 def mk_add_remote_q(name, url, headers=None, client_hdrs=False, timeout=None):
     return {
@@ -43,6 +45,7 @@ def mk_reload_remote_q(name):
         }
     }
 
+export_metadata_q = {"type": "export_metadata", "args": {}}
 
 class TestRemoteSchemaBasic:
     """ basic => no hasura tables are tracked """
@@ -64,12 +67,10 @@ class TestRemoteSchemaBasic:
             hge_ctx.v1q(self.teardown)
 
     def test_add_schema(self, hge_ctx):
-        """ check if the remote schema is added in the db """
-        conn = hge_ctx.engine.connect()
-        res = conn.execute('select * from hdb_catalog.remote_schemas')
-        row = res.fetchone()
-        assert row['name'] == "simple 1"
-        conn.close()
+        """ check if the remote schema is added in the metadata """
+        st_code, resp = hge_ctx.v1q(export_metadata_q)
+        assert st_code == 200, resp
+        assert resp['remote_schemas'][0]['name'] == "simple 1"
 
     @pytest.mark.allow_server_upgrade_test
     def test_introspection(self, hge_ctx):
@@ -77,7 +78,7 @@ class TestRemoteSchemaBasic:
         with open('queries/graphql_introspection/introspection.yaml') as f:
             query = yaml.safe_load(f)
         resp, _ = check_query(hge_ctx, query)
-        assert check_introspection_result(resp, ['Hello'], ['hello'])
+        assert check_introspection_result(resp, ['String'], ['hello'])
 
     @pytest.mark.allow_server_upgrade_test
     def test_introspection_as_user(self, hge_ctx):
@@ -212,10 +213,10 @@ class TestAddRemoteSchemaTbls:
 
     @pytest.mark.allow_server_upgrade_test
     def test_add_schema(self, hge_ctx):
-        """ check if the remote schema is added in the db """
-        res = hge_ctx.sql('select * from hdb_catalog.remote_schemas')
-        row = res.fetchone()
-        assert row['name'] == "simple2-graphql"
+        """ check if the remote schema is added in the metadata """
+        st_code, resp = hge_ctx.v1q(export_metadata_q)
+        assert st_code == 200, resp
+        assert resp['remote_schemas'][0]['name'] == "simple2-graphql"
 
     def test_add_schema_conflicts_with_tables(self, hge_ctx):
         """add remote schema which conflicts with hasura tables"""
@@ -244,6 +245,9 @@ class TestAddRemoteSchemaTbls:
         st_code, resp = hge_ctx.v1q_f(self.dir + '/create_conflicting_table.yaml')
         assert st_code == 400
         assert resp['code'] == 'remote-schema-conflicts'
+        # Drop "user" table which is created in the previous test
+        st_code, resp = hge_ctx.v1q_f(self.dir + '/drop_user_table.yaml')
+        assert st_code == 200, resp
 
     def test_introspection(self, hge_ctx):
         with open('queries/graphql_introspection/introspection.yaml') as f:
@@ -353,7 +357,7 @@ class TestRemoteSchemaQueriesOverWebsocket:
         query = """
         query {
           user(id: 2) {
-            blah
+            generateError
             username
           }
         }
@@ -367,7 +371,7 @@ class TestRemoteSchemaQueriesOverWebsocket:
             assert ev['type'] == 'data' and ev['id'] == query_id, ev
             assert 'errors' in ev['payload']
             assert ev['payload']['errors'][0]['message'] == \
-                'Cannot query field "blah" on type "User".'
+                'Cannot query field "generateError" on type "User".'
         finally:
             ws_client.stop(query_id)
 
@@ -522,17 +526,25 @@ def get_fld_by_name(ty, fldName):
 def get_arg_by_name(fld, argName):
     return _filter(lambda a: a['name'] == argName, fld['args'])
 
-def compare_args(argH, argR):
+def compare_args(arg_path, argH, argR):
     assert argR['type'] == argH['type'], yaml.dump({
         'error' : 'Types do not match for arg ' + arg_path,
         'remote_type' : argR['type'],
         'hasura_type' : argH['type']
     })
-    assert argR['defaultValue'] == argH['defaultValue'], yaml.dump({
-        'error' : 'Default values do not match for arg ' + arg_path,
-        'remote_default_value' : argR['defaultValue'],
-        'hasura_default_value' : argH['defaultValue']
-    })
+    compare_default_value(argR['defaultValue'], argH['defaultValue'])
+
+# There doesn't seem to be any Python code that can correctly compare GraphQL
+# 'Value's for equality. So we try to do it here.
+def compare_default_value(valH, valR):
+    a = graphql.parse_value(valH)
+    b = graphql.parse_value(valR)
+    if a == b:
+        return True
+    for field in a.fields:
+        assert field in b.fields
+    for field in b.fields:
+        assert field in a.fields
 
 def compare_flds(fldH, fldR):
     assert fldH['type'] == fldR['type'], yaml.dump({
@@ -546,7 +558,7 @@ def compare_flds(fldH, fldR):
         has_arg[arg_path] = False
         for argH in get_arg_by_name(fldH, argR['name']):
             has_arg[arg_path] = True
-            compare_args(argH, argR)
+            compare_args(arg_path, argH, argR)
         assert has_arg[arg_path], 'Argument ' + arg_path + ' in the remote schema root query type not found in Hasura schema'
 
 reload_metadata_q = {
@@ -589,3 +601,20 @@ class TestRemoteSchemaReload:
         # Delete remote schema
         st_code, resp = hge_ctx.v1q(mk_delete_remote_q('simple 1'))
         assert st_code == 200, resp
+
+@pytest.mark.usefixtures('per_class_tests_db_state')
+class TestValidateRemoteSchemaQuery:
+
+    @classmethod
+    def dir(cls):
+        return "queries/remote_schemas/validation/"
+
+    def test_remote_schema_argument_validation(self, hge_ctx):
+        """ test to check that the graphql-engine throws an validation error
+            when an remote object is queried with an unknown argument  """
+        check_query_f(hge_ctx, self.dir() + '/argument_validation.yaml')
+
+    def test_remote_schema_field_validation(self, hge_ctx):
+        """ test to check that the graphql-engine throws an validation error
+            when an remote object is queried with an unknown field  """
+        check_query_f(hge_ctx, self.dir() + '/field_validation.yaml')

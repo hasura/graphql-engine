@@ -1,0 +1,4 @@
+{
+  "type": "object",
+  "$ref": "./HasuraMetadataV2.schema.json#definitions/HasuraMetadataV2"
+}

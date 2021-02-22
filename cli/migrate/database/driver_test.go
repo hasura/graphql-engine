@@ -14,7 +14,7 @@ type mockDriver struct {
 	url string
 }
 
-func (m *mockDriver) Open(url string, isCmd bool, tlsConfig *tls.Config, logger *logrus.Logger) (Driver, error) {
+func (m *mockDriver) Open(url string, isCmd bool, tlsConfig *tls.Config, logger *logrus.Logger, hasuraOpts *HasuraOpts) (Driver, error) {
 	return &mockDriver{
 		url: url,
 	}, nil
@@ -24,11 +24,14 @@ func (m *mockDriver) Close() error {
 	return nil
 }
 
-func (m *mockDriver) Lock() error {
+func (m *mockDriver) UnLock() error {
 	return nil
 }
 
-func (m *mockDriver) UnLock() error {
+func (m *mockDriver) Run(migration io.Reader, fileType, fileName string) error {
+	return nil
+}
+func (m *mockDriver) Lock() error {
 	return nil
 }
 
@@ -36,11 +39,7 @@ func (m *mockDriver) Scan() error {
 	return nil
 }
 
-func (m *mockDriver) Run(migration io.Reader, fileType, fileName string) error {
-	return nil
-}
-
-func (m *mockDriver) SetVersion(version int, dirty bool) error {
+func (m *mockDriver) SetVersion(version int64, dirty bool) error {
 	return nil
 }
 
@@ -60,20 +59,20 @@ func (m *mockDriver) RemoveVersion(version int64) error {
 	return nil
 }
 
-func (m *mockDriver) First() (version uint64, ok bool) {
-	return 0, false
+func (m *mockDriver) First() (migrationVersion *MigrationVersion, ok bool) {
+	return nil, false
 }
 
-func (m *mockDriver) Last() (version uint64, ok bool) {
-	return 0, false
+func (m *mockDriver) Last() (*MigrationVersion, bool) {
+	return nil, false
 }
 
-func (m *mockDriver) Next(version uint64) (nextVersion uint64, ok bool) {
-	return 0, false
+func (m *mockDriver) Next(version uint64) (migrationVersion *MigrationVersion, ok bool) {
+	return nil, false
 }
 
-func (m *mockDriver) Prev(version uint64) (prevVersion uint64, ok bool) {
-	return 0, false
+func (m *mockDriver) Prev(version uint64) (prevVersion *MigrationVersion, ok bool) {
+	return nil, false
 }
 
 func (m *mockDriver) Read(version uint64) (ok bool) {
@@ -135,7 +134,7 @@ func (m *mockDriver) GetIntroSpectionSchema() (interface{}, error) {
 	return nil, nil
 }
 
-func (m *mockDriver) ExportSchemaDump(schemaName []string) ([]byte, error) {
+func (m *mockDriver) ExportSchemaDump(schemaName []string, database string) ([]byte, error) {
 	return nil, nil
 }
 
@@ -150,7 +149,7 @@ func (m *mockDriver) UpdateSetting(name string, value string) error {
 func (m *mockDriver) ApplySeed(interface{}) error {
 	return nil
 }
-func (m *mockDriver) ExportDataDump([]string) ([]byte, error) {
+func (m *mockDriver) ExportDataDump([]string, string) ([]byte, error) {
 	return nil, nil
 }
 
@@ -194,7 +193,7 @@ func TestOpen(t *testing.T) {
 
 	for _, c := range cases {
 		t.Run(c.url, func(t *testing.T) {
-			d, err := Open(c.url, false, nil, nil)
+			d, err := Open(c.url, false, nil, nil, nil)
 
 			if err == nil {
 				if c.err {

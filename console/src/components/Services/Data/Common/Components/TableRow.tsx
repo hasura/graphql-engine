@@ -1,38 +1,52 @@
 import React from 'react';
 
-import {
-  isColumnAutoIncrement,
-  TableColumn,
-} from '../../../../Common/utils/pgUtils';
+import { dataSource } from '../../../../../dataSources';
 import styles from '../../../../Common/TableCommon/Table.scss';
 import { TypedInput } from './TypedInput';
+import { TableColumn } from '../../../../../dataSources/types';
 
-const getColumnInfo = (col: TableColumn, prevValue?: unknown) => {
+const getColumnInfo = (
+  col: TableColumn,
+  prevValue?: unknown,
+  clone?: Record<string, unknown>
+) => {
   const isEditing = prevValue !== undefined;
 
   const hasDefault = col.column_default
     ? col.column_default.trim() !== ''
     : false;
 
-  const isAutoIncrement = !!isColumnAutoIncrement(col);
-  const isIdentity = col.is_identity ? col.is_identity !== 'NO' : false;
-  const isGenerated = col.is_generated ? col.is_generated !== 'NEVER' : false;
+  const isAutoIncrement = dataSource.isColumnAutoIncrement(col);
+  const isIdentity = col.is_identity;
+  const isGenerated = col.is_generated;
   const isNullable = col.is_nullable ? col.is_nullable !== 'NO' : false;
   const identityGeneration = col.identity_generation;
 
   const isDisabled = isAutoIncrement || isGenerated || isIdentity;
 
-  let columnValueType;
+  let columnValueType: 'default' | 'null' | 'value' | '';
   switch (true) {
-    case !isEditing && (isIdentity || hasDefault || isGenerated):
+    case isEditing:
+      columnValueType = '';
+      break;
+
+    case !isEditing && !clone && (isIdentity || hasDefault || isGenerated):
+    case clone && isDisabled:
     case identityGeneration === 'ALWAYS':
       columnValueType = 'default';
+      break;
+
+    case clone &&
+      clone[col.column_name] !== undefined &&
+      clone[col.column_name] !== null:
+      columnValueType = 'value';
       break;
 
     case prevValue === null:
     case !prevValue && isNullable:
       columnValueType = 'null';
       break;
+
     default:
       columnValueType = 'value';
       break;
@@ -56,9 +70,9 @@ export interface TableRowProps {
     refName: 'valueNode' | 'nullNode' | 'defaultNode' | 'insertRadioNode',
     node: HTMLInputElement | null
   ) => void;
-  enumOptions: object;
+  enumOptions: Record<string, any>;
   index: number;
-  clone?: object;
+  clone?: Record<string, any>;
   onChange?: (e: React.ChangeEvent<HTMLInputElement>, val: unknown) => void;
   onFocus?: (e: React.FocusEvent<HTMLInputElement>) => void;
   prevValue?: unknown;
@@ -80,7 +94,7 @@ export const TableRow: React.FC<TableRowProps> = ({
     isNullable,
     hasDefault,
     columnValueType,
-  } = getColumnInfo(column, prevValue);
+  } = getColumnInfo(column, prevValue, clone);
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement>,

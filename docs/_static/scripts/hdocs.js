@@ -16,8 +16,8 @@ window.hdocs = (function () {
 
       docsearch({
         appId: 'WCBB1VVLRC',
-        apiKey: '298d448cd9d7ed93fbab395658da19e8',
-        indexName: 'graphql-docs-prod',
+        apiKey: HDOCS_ALGOLIA_API_KEY,
+        indexName: HDOCS_ALGOLIA_INDEX,
         inputSelector: '#search_element',
         transformData: hdocs.transformSearchData,
         debug: false
@@ -28,6 +28,21 @@ window.hdocs = (function () {
       hdocs.setExternalLinks();
       hdocs.setupIntercom();
       hdocs.setupGraphiQL();
+      hdocs.newsletterForm();
+    },
+    newsletterForm: function () {
+      const searchParams = new URLSearchParams(window.location.search);
+      const searchAliId = searchParams.get("aliId");
+      var marketoForm = document.getElementById("mktoForm_1011");
+      var marketoSuccess = document.getElementById("marketo-success");
+      if (searchAliId || searchAliId === '') {
+        marketoForm.classList.add('hide');
+        marketoSuccess.classList.remove('hide');
+        marketoSuccess.scrollIntoView({ behavior: "smooth", block: "start", inline: "start" });
+      } else {
+        marketoForm.classList.remove('hide');
+        marketoSuccess.classList.add('hide');
+      }
     },
     trackGA: function (label, action) {
       window.dataLayer = window.dataLayer || [];
@@ -127,13 +142,22 @@ window.hdocs = (function () {
         });
       }
 
+      const searchField = document.getElementById('search_element');
+      const searchHelp = document.getElementById('search_help');
+      const hideHelp = function () { searchHelp.classList.add('hide'); }
+
       if (suggestions.length === 0) {
-        setTimeout(function () { document.getElementById('search_help').classList.remove('hide'); }, 100);
-        document.getElementById('search_element').addEventListener('blur', function () {
-          setTimeout(function () { document.getElementById('search_help').classList.add('hide'); }, 100);
-        });
-      } else if (!document.getElementById('search_help').classList.contains('hide')) {
-        document.getElementById('search_help').classList.add('hide');
+        setTimeout(function () { searchHelp.classList.remove('hide'); }, 100);
+        searchField.addEventListener('blur', function () {
+          setTimeout(hideHelp, 100);
+        }, { once: true });
+        searchField.addEventListener('input', function () {
+          if (searchField.value === '') {
+            setTimeout(hideHelp, 100);
+          }
+        }, { once: true });
+      } else if (!searchHelp.classList.contains('hide')) {
+        hideHelp();
       }
 
       return suggestions;

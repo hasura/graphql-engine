@@ -12,28 +12,31 @@ require (
 	github.com/briandowns/spinner v1.8.0
 	github.com/disintegration/imaging v1.6.2 // indirect
 	github.com/elazarl/goproxy v0.0.0-20191011121108-aa519ddbe484 // indirect
-	github.com/fatih/color v1.7.0
+	github.com/fatih/color v1.10.0
 	github.com/ghodss/yaml v1.0.0
 	github.com/gin-contrib/cors v1.3.0
 	github.com/gin-contrib/static v0.0.0-20191128031702-f81c604d8ac2
 	github.com/gin-gonic/contrib v0.0.0-20191209060500-d6e26eeaa607
 	github.com/gin-gonic/gin v1.5.0
+	github.com/goccy/go-yaml v1.8.8
 	github.com/gofrs/uuid v3.2.0+incompatible
 	github.com/gorilla/sessions v1.2.0 // indirect
 	github.com/gosimple/slug v1.9.0 // indirect
 	github.com/jinzhu/configor v1.1.1 // indirect
 	github.com/jinzhu/gorm v1.9.11 // indirect
 	github.com/kardianos/osext v0.0.0-20190222173326-2bc1f35cddc0
-	github.com/manifoldco/promptui v0.6.0
+	github.com/lib/pq v1.1.1
+	github.com/lunixbochs/vtclean v1.0.0 // indirect
+	github.com/manifoldco/promptui v0.8.0
 	github.com/markbates/pkger v0.15.1
-	github.com/mattn/go-colorable v0.1.4
+	github.com/mattn/go-colorable v0.1.8
 	github.com/mgutz/ansi v0.0.0-20170206155736-9520e82c474b
 	github.com/microcosm-cc/bluemonday v1.0.2 // indirect
 	github.com/mitchellh/go-homedir v1.1.0
 	github.com/mitchellh/mapstructure v1.1.2
-	github.com/oliveagle/jsonpath v0.0.0-20180606110733-2e52cf6e6852
+	github.com/ory/dockertest/v3 v3.6.3
 	github.com/parnurzeal/gorequest v0.2.16
-	github.com/pkg/errors v0.8.1
+	github.com/pkg/errors v0.9.1
 	github.com/qor/admin v0.0.0-20191205023516-9032e7fec172 // indirect
 	github.com/qor/assetfs v0.0.0-20170713023933-ff57fdc13a14 // indirect
 	github.com/qor/audited v0.0.0-20171228121055-b52c9c2f0571 // indirect
@@ -59,9 +62,11 @@ require (
 	github.com/theplant/htmltestingutils v0.0.0-20190423050759-0e06de7b6967 // indirect
 	github.com/theplant/testingutils v0.0.0-20190603093022-26d8b4d95c61 // indirect
 	github.com/yosssi/gohtml v0.0.0-20190915184251-7ff6f235ecaf // indirect
-	golang.org/x/crypto v0.0.0-20191011191535-87dc89f01550
-	golang.org/x/tools v0.0.0-20200316182129-bd88ce97550a // indirect
+	golang.org/x/crypto v0.0.0-20200622213623-75b288015ac9
+	golang.org/x/net v0.0.0-20200226121028-0de0cce0169b // indirect
+	golang.org/x/sys v0.0.0-20201117222635-ba5294a509c7 // indirect
 	gopkg.in/src-d/go-git.v4 v4.13.1
 	gopkg.in/yaml.v2 v2.2.7
+	gopkg.in/yaml.v3 v3.0.0-20210107192922-496545a6307b
 	moul.io/http2curl v1.0.0 // indirect
 )

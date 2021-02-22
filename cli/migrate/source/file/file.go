@@ -11,6 +11,8 @@ import (
 	"runtime"
 	"strings"
 
+	"github.com/spf13/afero"
+
 	"github.com/hasura/graphql-engine/cli/migrate/source"
 	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
@@ -232,7 +234,11 @@ func (f *File) ReadName(version uint64) (name string) {
 
 func (f *File) WriteMetadata(files map[string][]byte) error {
 	for name, content := range files {
-		err := ioutil.WriteFile(name, content, 0644)
+		fs := afero.NewOsFs()
+		if err := fs.MkdirAll(filepath.Dir(name), os.ModePerm); err != nil {
+			return err
+		}
+		err := afero.WriteFile(fs, name, content, 0644)
 		if err != nil {
 			return errors.Wrapf(err, "creating metadata file %s failed", name)
 		}

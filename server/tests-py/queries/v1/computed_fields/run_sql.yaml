@@ -21,10 +21,10 @@
       sql: |
         ALTER FUNCTION fetch_articles(text, author) RENAME TO fetch_articles_renamed
   response:
-    path: "$.args"
-    error: 'cannot drop due to the following dependent objects : computed field author.get_articles'
+    path: $.args
+    error: 'cannot drop due to the following dependent objects : computed field author.get_articles
+      in source "default"'
     code: dependency-error
-
 - description: Try to alter the fetch_articles function to VOLATILE
   url: /v1/query
   status: 400
@@ -34,7 +34,7 @@
       sql: |
         ALTER FUNCTION fetch_articles(text, author) VOLATILE
   response:
-    path: "$.args"
+    path: $.args
     error: The type of function "fetch_articles" associated with computed field "get_articles"
       of table "author" is being altered to "VOLATILE"
     code: not-supported
@@ -57,12 +57,13 @@
           LIMIT $3
         $$ LANGUAGE sql STABLE;
   response:
-    path: "$.args"
+    path: $.args
     error: The function "fetch_articles" associated with computed field"get_articles"
       of table "author" is being overloaded
     code: not-supported
 
-- description: Drop the function fetch_articles and create a new function with the same name
+- description: Drop the function fetch_articles and create a new function with the
+    same name
   url: /v1/query
   status: 400
   query:
@@ -81,10 +82,10 @@
           LIMIT $3
         $$ LANGUAGE sql STABLE;
   response:
-    path: "$.args"
-    error: 'cannot drop due to the following dependent objects : computed field author.get_articles'
+    path: $.args
+    error: 'cannot drop due to the following dependent objects : computed field author.get_articles
+      in source "default"'
     code: dependency-error
-
 - description: Safely alter the definition of function fetch_articles
   url: /v1/query
   status: 200
@@ -102,7 +103,7 @@
         $$ LANGUAGE sql STABLE;
   response:
     result_type: CommandOk
-    result: null
+    result:
 
 - description: Drop computed field get_articles from author table
   url: /v1/query

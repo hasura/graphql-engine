@@ -16,7 +16,6 @@ module Hasura.GraphQL.Transport.WebSocket.Protocol
   ) where
 
 import qualified Data.Aeson                             as J
-import qualified Data.Aeson.Casing                      as J
 import qualified Data.Aeson.TH                          as J
 import qualified Data.ByteString.Lazy                   as BL
 import qualified Data.HashMap.Strict                    as Map
@@ -35,13 +34,13 @@ data StartMsg
   { _smId      :: !OperationId
   , _smPayload :: !GQLReqUnparsed
   } deriving (Show, Eq)
-$(J.deriveJSON (J.aesonDrop 3 J.snakeCase) ''StartMsg)
+$(J.deriveJSON hasuraJSON ''StartMsg)
 
 data StopMsg
   = StopMsg
   { _stId :: OperationId
   } deriving (Show, Eq)
-$(J.deriveJSON (J.aesonDrop 3 J.snakeCase) ''StopMsg)
+$(J.deriveJSON hasuraJSON ''StopMsg)
 
 data ClientMsg
   = CMConnInit !(Maybe ConnParams)
@@ -54,7 +53,7 @@ data ConnParams
   = ConnParams
   { _cpHeaders :: Maybe (Map.HashMap Text Text)
   } deriving (Show, Eq)
-$(J.deriveJSON (J.aesonDrop 3 J.snakeCase) ''ConnParams)
+$(J.deriveJSON hasuraJSON ''ConnParams)
 
 instance J.FromJSON ClientMsg where
   parseJSON = J.withObject "ClientMessage" $ \obj -> do
@@ -70,7 +69,7 @@ instance J.FromJSON ClientMsg where
 data DataMsg
   = DataMsg
   { _dmId      :: !OperationId
-  , _dmPayload :: !GraphqlResponse
+  , _dmPayload :: !GQResponse
   }
 
 data ErrorMsg
@@ -142,7 +141,7 @@ encodeServerMsg msg =
   SMData (DataMsg opId payload) ->
     [ encTy SMT_GQL_DATA
     , ("id", encJFromJValue opId)
-    , ("payload", encodeGraphqlResponse payload)
+    , ("payload", encodeGQResp payload)
     ]
 
   SMErr (ErrorMsg opId payload) ->

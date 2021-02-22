@@ -1,3 +1,4 @@
+/* eslint-disable no-underscore-dangle */
 import React from 'react';
 import { Link, RouteComponentProps } from 'react-router';
 import LeftContainer from '../../Common/Layout/LeftContainer/LeftContainer';
@@ -10,11 +11,11 @@ import { getAdminSecret } from '../ApiExplorer/ApiRequest/utils';
 import styles from '../../Common/TableCommon/Table.scss';
 
 interface Metadata {
-  inconsistentObjects: object[];
+  inconsistentObjects: Record<string, unknown>[];
 }
 
 type SidebarProps = {
-  location: RouteComponentProps<{}, {}>['location'];
+  location: RouteComponentProps<unknown, unknown>['location'];
   metadata: Metadata;
 };
 
@@ -61,7 +62,12 @@ const Sidebar: React.FC<SidebarProps> = ({ location, metadata }) => {
 
   const adminSecret = getAdminSecret();
 
-  if (adminSecret && globals.consoleMode !== CLI_CONSOLE_MODE) {
+  // userRole is only present on team console
+  if (
+    adminSecret &&
+    globals.consoleMode !== CLI_CONSOLE_MODE &&
+    (!window.__env.userRole || !window.location.host.includes('cloud'))
+  ) {
     sectionsData.push({
       key: 'logout',
       link: '/settings/logout',

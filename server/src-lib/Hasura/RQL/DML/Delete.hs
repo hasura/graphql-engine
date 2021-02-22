@@ -8,67 +8,40 @@ module Hasura.RQL.DML.Delete
   , runDelete
   ) where
 
-import           Data.Aeson
-import           Instances.TH.Lift        ()
-
-import qualified Data.Sequence            as DS
-import qualified Data.Environment         as Env
-import qualified Hasura.Tracing           as Tracing
-
-import           Hasura.EncJSON
 import           Hasura.Prelude
+
+import qualified Data.Environment                             as Env
+import qualified Data.Sequence                                as DS
+import qualified Database.PG.Query                            as Q
+
+import           Control.Monad.Trans.Control                  (MonadBaseControl)
+import           Data.Aeson
+
+import qualified Hasura.Backends.Postgres.SQL.DML             as S
+import qualified Hasura.Tracing                               as Tracing
+
+import           Hasura.Backends.Postgres.Connection
+import           Hasura.Backends.Postgres.Execute.Mutation
+import           Hasura.Backends.Postgres.Translate.Returning
+import           Hasura.EncJSON
 import           Hasura.RQL.DML.Internal
-import           Hasura.RQL.DML.Mutation
-import           Hasura.RQL.DML.Returning
-import           Hasura.RQL.GBoolExp
+import           Hasura.RQL.DML.Types
+import           Hasura.RQL.IR.Delete
 import           Hasura.RQL.Types
-import           Hasura.Server.Version    (HasVersion)
-import           Hasura.SQL.Types
+import           Hasura.RQL.Types.Run
+import           Hasura.Server.Version                        (HasVersion)
+import           Hasura.Session
 
-import qualified Database.PG.Query        as Q
-import qualified Hasura.SQL.DML           as S
-
-data AnnDelG v
-  = AnnDel
-  { dqp1Table   :: !QualifiedTable
-  , dqp1Where   :: !(AnnBoolExp v, AnnBoolExp v)
-  , dqp1Output  :: !(MutationOutputG v)
-  , dqp1AllCols :: ![PGColumnInfo]
-  } deriving (Show, Eq)
-
-traverseAnnDel
-  :: (Applicative f)
-  => (a -> f b)
-  -> AnnDelG a
-  -> f (AnnDelG b)
-traverseAnnDel f annUpd =
-  AnnDel tn
-  <$> ((,) <$> traverseAnnBoolExp f whr <*> traverseAnnBoolExp f fltr)
-  <*> traverseMutationOutput f mutOutput
-  <*> pure allCols
-  where
-    AnnDel tn (whr, fltr) mutOutput allCols = annUpd
-
-type AnnDel = AnnDelG S.SQLExp
-
-mkDeleteCTE
-  :: AnnDel -> S.CTE
-mkDeleteCTE (AnnDel tn (fltr, wc) _ _) =
-  S.CTEDelete delete
-  where
-    delete = S.SQLDelete tn Nothing tableFltr $ Just S.returningStar
-    tableFltr = Just $ S.WhereFrag $
-                toSQLBoolExp (S.QualTable tn) $ andAnnBoolExps fltr wc
 
 validateDeleteQWith
-  :: (UserInfoM m, QErrM m, CacheRM m)
-  => SessVarBldr m
-  -> (PGColumnType -> Value -> m S.SQLExp)
+  :: (UserInfoM m, QErrM m, TableInfoRM 'Postgres m)
+  => SessVarBldr 'Postgres m
+  -> (ColumnType 'Postgres -> Value -> m S.SQLExp)
   -> DeleteQuery
-  -> m AnnDel
+  -> m (AnnDel 'Postgres)
 validateDeleteQWith sessVarBldr prepValBldr
-  (DeleteQuery tableName rqlBE mRetCols) = do
-  tableInfo <- askTabInfo tableName
+  (DeleteQuery tableName _ rqlBE mRetCols) = do
+  tableInfo <- askTabInfoSource tableName
   let coreInfo = _tiCoreInfo tableInfo
 
   -- If table is view then check if it deletable
@@ -94,7 +67,7 @@ validateDeleteQWith sessVarBldr prepValBldr
 
   -- convert the where clause
   annSQLBoolExp <- withPathK "where" $
-    convBoolExp fieldInfoMap selPerm rqlBE sessVarBldr prepValBldr
+    convBoolExp fieldInfoMap selPerm rqlBE sessVarBldr (valueParserWithCollectableType prepValBldr)
 
   resolvedDelFltr <- convAnnBoolExpPartialSQL sessVarBldr $
                      dpiFilter delPerm
@@ -111,36 +84,24 @@ validateDeleteQWith sessVarBldr prepValBldr
 
 validateDeleteQ
   :: (QErrM m, UserInfoM m, CacheRM m)
-  => DeleteQuery -> m (AnnDel, DS.Seq Q.PrepArg)
-validateDeleteQ =
-  runDMLP1T . validateDeleteQWith sessVarFromCurrentSetting binRHSBuilder
-
-execDeleteQuery
-  ::
-  ( HasVersion
-  , MonadTx m
-  , MonadIO m
-  , Tracing.MonadTrace m
-  )
-  => Env.Environment
-  -> Bool
-  -> Maybe MutationRemoteJoinCtx
-  -> (AnnDel, DS.Seq Q.PrepArg)
-  -> m EncJSON
-execDeleteQuery env strfyNum remoteJoinCtx (u, p) =
-  runMutation env $ mkMutation remoteJoinCtx (dqp1Table u) (deleteCTE, p)
-                (dqp1Output u) (dqp1AllCols u) strfyNum
-  where
-    deleteCTE = mkDeleteCTE u
+  => DeleteQuery -> m (AnnDel 'Postgres, DS.Seq Q.PrepArg)
+validateDeleteQ query = do
+  let source = doSource query
+  tableCache :: TableCache 'Postgres <- askTableCache source
+  flip runTableCacheRT (source, tableCache) $ runDMLP1T $
+    validateDeleteQWith sessVarFromCurrentSetting binRHSBuilder query
 
 runDelete
   :: ( HasVersion, QErrM m, UserInfoM m, CacheRM m
-     , MonadTx m, HasSQLGenCtx m, MonadIO m
-     , Tracing.MonadTrace m
+     , HasServerConfigCtx m, MonadIO m
+     , Tracing.MonadTrace m, MonadBaseControl IO m
      )
   => Env.Environment
   -> DeleteQuery
   -> m EncJSON
 runDelete env q = do
-  strfyNum <- stringifyNum <$> askSQLGenCtx
-  validateDeleteQ q >>= execDeleteQuery env strfyNum Nothing
+  sourceConfig <- askSourceConfig (doSource q)
+  strfyNum <- stringifyNum . _sccSQLGenCtx <$> askServerConfigCtx
+  validateDeleteQ q
+    >>= runQueryLazyTx (_pscExecCtx sourceConfig) Q.ReadWrite
+        . execDeleteQuery env strfyNum Nothing

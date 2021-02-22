@@ -1,0 +1,60 @@
+- description: Creating a mutation with remote-join fields in the result
+  url: /v1/graphql
+  status: 200
+  response:
+    data:
+      insert_authors_one:
+        name: alice
+        messageBasic:
+          id: 1
+          name: alice
+          msg: You win!
+  query:
+    query: |
+      mutation {
+        insert_authors_one (
+          object: {
+            name: "alice"
+          }
+        ) {
+          name
+          messageBasic {
+            id
+            name
+            msg
+          }
+        }
+      }
+
+- description: Creating a mutation with remote-join fields in the result
+  url: /v1/graphql
+  status: 200
+  response:
+    data:
+      insert_authors:
+        affected_rows: 1
+        returning:
+          - name: bob
+            messageBasic:
+              id: 2
+              name: bob
+              msg: You lose!
+  query:
+    query: |
+      mutation {
+        insert_authors (
+          objects: [{
+            name: "bob"
+          }]
+        ) {
+          affected_rows
+          returning {
+            name
+            messageBasic {
+              id
+              name
+              msg
+            }
+          }
+        }
+      }

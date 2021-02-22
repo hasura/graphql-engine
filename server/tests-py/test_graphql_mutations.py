@@ -53,6 +53,15 @@ class TestGraphQLInsert:
     def test_insert_null_col_value(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + "/order_col_shipped_null.yaml")
 
+    def test_insert_valid_variable_but_invalid_graphql_value(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + "/person_valid_variable_but_invalid_graphql_value.yaml")
+
+    def test_can_insert_in_insertable_view(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + "/can_insert_in_insertable_view.yaml")
+
+    def test_cannot_insert_in_non_insertable_view(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + "/cannot_insert_in_non_insertable_view.yaml")
+
     @classmethod
     def dir(cls):
         return "queries/graphql_mutation/insert/basic"
@@ -191,6 +200,9 @@ class TestGraphqlInsertPermission:
             check_query_f(hge_ctx, self.dir() + "/backend_user_no_admin_secret_fail.yaml")
         else:
             pytest.skip("authorization not configured, skipping the test")
+
+    def test_check_set_headers_while_doing_upsert(self,hge_ctx):
+        check_query_f(hge_ctx, self.dir() + "/leads_upsert_check_with_headers.yaml")
 
     @classmethod
     def dir(cls):
@@ -367,9 +379,6 @@ class TestGraphqlUpdateBasic:
     def test_column_in_multiple_operators(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + "/article_column_multiple_operators.yaml")
 
-    def test_column_in_multiple_operators(self, hge_ctx):
-        check_query_f(hge_ctx, self.dir() + "/article_column_multiple_operators.yaml")
-
     def test_author_by_pk(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + "/author_by_pk.yaml")
 
@@ -502,6 +511,9 @@ class TestGraphqlDeletePermissions:
     def test_agent_delete_perm_arr_sess_var_fail(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + "/agent_delete_perm_arr_sess_var_fail.yaml")
 
+    def test_user_delete_author(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + "/user_delete_author.yaml")
+
     def test_user_delete_account_success(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + "/user_delete_account_success.yaml")
 
@@ -531,6 +543,26 @@ class TestGraphqlMutationCustomSchema:
     def dir(cls):
         return "queries/graphql_mutation/custom_schema"
 
+@pytest.mark.parametrize("transport", ['http', 'websocket'])
+@use_mutation_fixtures
+class TestGraphqlMutationCustomGraphQLTableName:
+
+    def test_insert_author(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/insert_author_details.yaml', transport)
+
+    def test_insert_article_author(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/insert_article_author.yaml', transport)
+
+    def test_update_author(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/update_author_details.yaml', transport)
+
+    def test_delete_author(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/delete_author_details.yaml', transport)
+
+    @classmethod
+    def dir(cls):
+        return "queries/graphql_mutation/custom_schema/custom_table_name"
+
 @pytest.mark.parametrize('transport', ['http', 'websocket'])
 @use_mutation_fixtures
 class TestGraphQLMutateEnums:
@@ -555,3 +587,51 @@ class TestGraphQLMutateEnums:
 
     def test_delete_where_enum_field(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + '/delete_where_enum_field.yaml', transport)
+
+use_function_permission_fixtures = usefixtures(
+    'per_class_db_schema_for_mutation_tests',
+    'per_method_db_data_for_mutation_tests',
+    'functions_permissions_fixtures'
+)
+# Tracking VOLATILE SQL functions as mutations, or queries (#1514)
+@pytest.mark.parametrize('transport', ['http', 'websocket'])
+@use_function_permission_fixtures
+class TestGraphQLMutationFunctions:
+    @classmethod
+    def dir(cls):
+        return 'queries/graphql_mutation/functions'
+
+    # basic test that functions are added in the right places in the schema:
+    def test_smoke(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/smoke.yaml', transport)
+
+    # separate file since we this only works over http transport:
+    def test_smoke_errs(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/smoke_errs.yaml', 'http')
+
+    # Test tracking a VOLATILE function as top-level field of mutation root
+    # field, also smoke testing basic permissions on the table return type.
+    def test_functions_as_mutations(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/function_as_mutations.yaml', transport)
+
+    # When graphql-engine is started with `--infer-function-permissions=false` then
+    # a function is only accessible to a role when the permission is granted through
+    # the `pg_create_function_permission` definition
+    def test_function_as_mutation_without_function_permission(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/function_without_function_permission.yaml')
+
+    # Ensure select permissions on the corresponding SETOF table apply to
+    # the return set of the mutation field backed by the tracked function.
+    def test_functions_as_mutations_permissions(self, hge_ctx, transport):
+        st_code, resp = hge_ctx.v1metadataq_f(self.dir() + '/create_function_permission_add_to_score.yaml')
+        assert st_code == 200, resp
+        check_query_f(hge_ctx, self.dir() + '/function_as_mutations_permissions.yaml', transport)
+        st_code, resp = hge_ctx.v1metadataq_f(self.dir() + '/drop_function_permission_add_to_score.yaml')
+        assert st_code == 200, resp
+
+    def test_single_row_function_as_mutation(self, hge_ctx, transport):
+        st_code, resp = hge_ctx.v1metadataq_f(self.dir() + '/create_function_permission_add_to_score_by_user_id.yaml')
+        assert st_code == 200, resp
+        check_query_f(hge_ctx, self.dir() + '/single_row_function_as_mutation.yaml', transport)
+        st_code, resp = hge_ctx.v1metadataq_f(self.dir() + '/drop_function_permission_add_to_score_by_user_id.yaml')
+        assert st_code == 200, resp

@@ -34,14 +34,16 @@ const InvocationLogs: React.FC<Props> = props => {
 
   return (
     <FilterQuery
-      table={stInvocationLogsTable}
       dispatch={dispatch}
+      table={stInvocationLogsTable}
       render={renderRows}
       relationships={['scheduled_event']}
       presets={{
         sorts: [makeOrderBy('created_at', 'desc')],
         filters: [],
       }}
+      triggerOp="invocation"
+      triggerType="scheduled"
     />
   );
 };

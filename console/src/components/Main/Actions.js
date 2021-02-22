@@ -4,6 +4,14 @@ import requestAction from '../../utils/requestAction';
 import requestActionPlain from '../../utils/requestActionPlain';
 import Endpoints, { globalCookiePolicy } from '../../Endpoints';
 import { getFeaturesCompatibility } from '../../helpers/versionUtils';
+import { getRunSqlQuery } from '../Common/utils/v1QueryUtils';
+import { currentDriver } from '../../dataSources';
+import { defaultNotification, errorNotification } from './ConsoleNotification';
+import { updateConsoleNotificationsState } from '../../telemetry/Actions';
+import { getConsoleNotificationQuery } from '../Common/utils/v1QueryUtils';
+import dataHeaders from '../Services/Data/Common/Headers';
+import { HASURA_COLLABORATOR_TOKEN } from '../../constants';
+import { getUserType, getConsoleScope } from './utils';
 
 const SET_MIGRATION_STATUS_SUCCESS = 'Main/SET_MIGRATION_STATUS_SUCCESS';
 const SET_MIGRATION_STATUS_ERROR = 'Main/SET_MIGRATION_STATUS_ERROR';
@@ -22,6 +30,14 @@ const EXPORT_METADATA_ERROR = 'Main/EXPORT_METADATA_ERROR';
 const UPDATE_ADMIN_SECRET_INPUT = 'Main/UPDATE_ADMIN_SECRET_INPUT';
 const LOGIN_IN_PROGRESS = 'Main/LOGIN_IN_PROGRESS';
 const LOGIN_ERROR = 'Main/LOGIN_ERROR';
+const POSTGRES_VERSION_SUCCESS = 'Main/POSTGRES_VERSION_SUCCESS';
+const POSTGRES_VERSION_ERROR = 'Main/POSTGRES_VERSION_ERROR';
+const FETCH_CONSOLE_NOTIFICATIONS_SUCCESS =
+  'Main/FETCH_CONSOLE_NOTIFICATIONS_SUCCESS';
+const FETCH_CONSOLE_NOTIFICATIONS_SET_DEFAULT =
+  'Main/FETCH_CONSOLE_NOTIFICATIONS_SET_DEFAULT';
+const FETCH_CONSOLE_NOTIFICATIONS_ERROR =
+  'Main/FETCH_CONSOLE_NOTIFICATIONS_ERROR';
 
 const RUN_TIME_ERROR = 'Main/RUN_TIME_ERROR';
 const registerRunTimeError = data => ({
@@ -34,6 +50,210 @@ const FETCHING_SERVER_CONFIG = 'Main/FETCHING_SERVER_CONFIG';
 const SERVER_CONFIG_FETCH_SUCCESS = 'Main/SERVER_CONFIG_FETCH_SUCCESS';
 const SERVER_CONFIG_FETCH_FAIL = 'Main/SERVER_CONFIG_FETCH_FAIL';
 /* End */
+
+// action definitions
+
+const filterScope = (data, consoleScope) => {
+  return data.filter(notif => {
+    if (notif.scope.indexOf(consoleScope) !== -1) {
+      return notif;
+    }
+  });
+};
+
+const makeUppercaseScopes = data => {
+  return data.map(notif => {
+    return { ...notif, scope: notif.scope.toUpperCase() };
+  });
+};
+
+// to fetch and filter notifications
+const fetchConsoleNotifications = () => (dispatch, getState) => {
+  const url = !globals.isProduction
+    ? Endpoints.consoleNotificationsStg
+    : Endpoints.consoleNotificationsProd;
+  const consoleStateDB = getState().telemetry.console_opts;
+  let toShowBadge = true;
+  const headers = dataHeaders(getState);
+  let previousRead = null;
+  const { serverVersion } = getState().main;
+  const consoleId = window.__env.consoleId;
+  const consoleScope = getConsoleScope(serverVersion, consoleId);
+  let userType = 'admin';
+  const headerHasCollabToken = Object.keys(headers).find(
+    header => header.toLowerCase() === HASURA_COLLABORATOR_TOKEN
+  );
+
+  if (headerHasCollabToken) {
+    const collabToken = headers[headerHasCollabToken];
+    userType = getUserType(collabToken);
+  }
+
+  if (
+    consoleStateDB &&
+    consoleStateDB.console_notifications &&
+    consoleStateDB.console_notifications[userType].date
+  ) {
+    toShowBadge = consoleStateDB.console_notifications[userType].showBadge;
+    previousRead = consoleStateDB.console_notifications[userType].read;
+  }
+
+  const now = new Date().toISOString();
+  const payload = getConsoleNotificationQuery(now, consoleScope);
+  const options = {
+    body: JSON.stringify(payload),
+    method: 'POST',
+    headers: {
+      'content-type': 'application/json',
+      // temp. change until Auth is added
+      'x-hasura-role': 'user',
+    },
+  };
+
+  return dispatch(requestAction(url, options))
+    .then(data => {
+      const lastSeenNotifications = JSON.parse(
+        window.localStorage.getItem('notifications:lastSeen')
+      );
+      if (data.data.console_notifications) {
+        const fetchedData = data.data.console_notifications;
+
+        if (!fetchedData.length) {
+          dispatch({ type: FETCH_CONSOLE_NOTIFICATIONS_SET_DEFAULT });
+          dispatch(
+            updateConsoleNotificationsState({
+              read: 'default',
+              date: now,
+              showBadge: false,
+            })
+          );
+          if (!lastSeenNotifications) {
+            window.localStorage.setItem(
+              'notifications:lastSeen',
+              JSON.stringify(0)
+            );
+          }
+          return;
+        }
+
+        // NOTE: these 2 steps may not be required if the table in the DB
+        // enforces the usage of `enums` and we're sure that the notification scope
+        // is only from the allowed permutations of scope. We aren't doing that yet
+        // because within the GQL query, I can't be using the `_ilike` operator during
+        // filtering. Hence I'm keeping it here since this is a new feature and
+        // mistakes can happen while adding data into the DB.
+
+        // TODO: is to remove these once things are more streamlined
+        const uppercaseScopedData = makeUppercaseScopes(fetchedData);
+        let filteredData = filterScope(uppercaseScopedData, consoleScope);
+
+        if (
+          lastSeenNotifications &&
+          lastSeenNotifications > filteredData.length
+        ) {
+          window.localStorage.setItem(
+            'notifications:lastSeen',
+            JSON.stringify(filteredData.length)
+          );
+        }
+
+        if (previousRead) {
+          if (!consoleStateDB.console_notifications) {
+            dispatch(
+              updateConsoleNotificationsState({
+                read: [],
+                date: now,
+                showBadge: true,
+              })
+            );
+          } else {
+            let newReadValue;
+            if (previousRead === 'default' || previousRead === 'error') {
+              newReadValue = [];
+              toShowBadge = false;
+            } else if (previousRead === 'all') {
+              const previousList = JSON.parse(
+                localStorage.getItem('notifications:data')
+              );
+              if (!previousList) {
+                // we don't have a record of the IDs that were marked as read previously
+                newReadValue = [];
+                toShowBadge = true;
+              } else if (previousList.length) {
+                const readNotificationsDiff = filteredData.filter(
+                  newNotif =>
+                    !previousList.find(oldNotif => oldNotif.id === newNotif.id)
+                );
+                if (!readNotificationsDiff.length) {
+                  // since the data hasn't changed since the last call
+                  newReadValue = previousRead;
+                  toShowBadge = false;
+                } else {
+                  newReadValue = [...previousList.map(notif => `${notif.id}`)];
+                  toShowBadge = true;
+                  filteredData = [...readNotificationsDiff, ...previousList];
+                }
+              }
+            } else {
+              newReadValue = previousRead;
+              if (
+                previousRead.length &&
+                lastSeenNotifications >= filteredData.length
+              ) {
+                toShowBadge = false;
+              } else if (lastSeenNotifications < filteredData.length) {
+                toShowBadge = true;
+              }
+            }
+            dispatch(
+              updateConsoleNotificationsState({
+                read: newReadValue,
+                date: consoleStateDB.console_notifications[userType].date,
+                showBadge: toShowBadge,
+              })
+            );
+          }
+        }
+
+        dispatch({
+          type: FETCH_CONSOLE_NOTIFICATIONS_SUCCESS,
+          data: filteredData,
+        });
+
+        // update/set the lastSeen value upon data is set
+        if (
+          !lastSeenNotifications ||
+          lastSeenNotifications !== filteredData.length
+        ) {
+          window.localStorage.setItem(
+            'notifications:lastSeen',
+            JSON.stringify(filteredData.length)
+          );
+        }
+        return;
+      }
+      dispatch({ type: FETCH_CONSOLE_NOTIFICATIONS_ERROR });
+      dispatch(
+        updateConsoleNotificationsState({
+          read: 'error',
+          date: now,
+          showBadge: false,
+        })
+      );
+    })
+    .catch(err => {
+      console.error(err);
+      dispatch({ type: FETCH_CONSOLE_NOTIFICATIONS_ERROR });
+      dispatch(
+        updateConsoleNotificationsState({
+          read: 'error',
+          date: now,
+          showBadge: false,
+        })
+      );
+    });
+};
+
 const SET_FEATURES_COMPATIBILITY = 'Main/SET_FEATURES_COMPATIBILITY';
 const setFeaturesCompatibility = data => ({
   type: SET_FEATURES_COMPATIBILITY,
@@ -51,6 +271,34 @@ const setReadOnlyMode = data => ({
   type: SET_READ_ONLY_MODE,
   data,
 });
+
+export const fetchPostgresVersion = (dispatch, getState) => {
+  if (currentDriver !== 'postgres') return;
+
+  const req = getRunSqlQuery(
+    'SELECT version()',
+    getState().tables.currentDataSource
+  );
+  const options = {
+    method: 'POST',
+    credentials: globalCookiePolicy,
+    body: JSON.stringify(req),
+    headers: getState().tables.dataHeaders,
+  };
+
+  return dispatch(requestAction(Endpoints.query, options)).then(
+    ({ result }) => {
+      if (result.length > 1 && result[1].length) {
+        const matchRes = result[1][0].match(/[0-9]{1,}(\.[0-9]{1,})?/);
+        if (matchRes.length) {
+          dispatch({ type: POSTGRES_VERSION_SUCCESS, payload: matchRes[0] });
+          return;
+        }
+      }
+      dispatch({ type: POSTGRES_VERSION_ERROR });
+    }
+  );
+};
 
 const featureCompatibilityInit = () => {
   return (dispatch, getState) => {
@@ -110,7 +358,7 @@ const loadServerVersion = () => dispatch => {
   );
 };
 
-const fetchServerConfig = () => (dispatch, getState) => {
+const fetchServerConfig = (dispatch, getState) => {
   const url = Endpoints.serverConfig;
   const options = {
     method: 'GET',
@@ -318,6 +566,31 @@ const mainReducer = (state = defaultState, action) => {
         ...state,
         featuresCompatibility: { ...action.data },
       };
+    case POSTGRES_VERSION_SUCCESS:
+      return {
+        ...state,
+        postgresVersion: action.payload,
+      };
+    case POSTGRES_VERSION_ERROR:
+      return {
+        ...state,
+        postgresVersion: null,
+      };
+    case FETCH_CONSOLE_NOTIFICATIONS_SUCCESS:
+      return {
+        ...state,
+        consoleNotifications: action.data,
+      };
+    case FETCH_CONSOLE_NOTIFICATIONS_SET_DEFAULT:
+      return {
+        ...state,
+        consoleNotifications: [defaultNotification],
+      };
+    case FETCH_CONSOLE_NOTIFICATIONS_ERROR:
+      return {
+        ...state,
+        consoleNotifications: [errorNotification],
+      };
     default:
       return state;
   }
@@ -341,4 +614,5 @@ export {
   featureCompatibilityInit,
   RUN_TIME_ERROR,
   registerRunTimeError,
+  fetchConsoleNotifications,
 };

@@ -1,0 +1,41 @@
+{
+  "name": "",
+  "version": "1.0.2",
+  "main": "index.js",
+  "private": false,
+  "license": "MIT",
+  "source": "lib/index.ts",
+  "types": "v2/index.d.ts",
+  "module": "v2/index.js",
+  "files": [
+    "v2",
+    "dist"
+  ],
+  "scripts": {
+    "generate-types": "ts-node ./src/generateTypes.ts",
+    "test": "./node_modules/.bin/ava --verbose",
+    "build": "tsc -p tsconfig.lib.json"
+  },
+  "devDependencies": {
+    "@types/js-yaml": "^3.12.5",
+    "@types/node": "^14.0.14",
+    "fast-glob": "^3.2.4",
+    "ava": "^3.9.0",
+    "ts-node": "^8.10.2",
+    "typescript": "^3.9.6",
+    "js-yaml": "^3.14.0",
+    "microbundle": "^0.12.3",
+    "quicktype": "^15.0.248",
+    "quicktype-core": "^6.0.66",
+    "quicktype-typescript-input": "^0.0.11",
+    "tsd": "^0.12.1"
+  },
+  "ava": {
+    "extensions": [
+      "ts"
+    ],
+    "require": [
+      "ts-node/register"
+    ]
+  }
+}

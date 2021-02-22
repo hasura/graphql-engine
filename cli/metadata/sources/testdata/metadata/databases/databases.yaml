@@ -1,0 +1,30 @@
+- name: s1
+  configuration:
+    connection_info:
+      database_url:
+        from_env: HASURA_GRAPHQL_DATABASE_URL
+      pool_settings:
+        idle_timeout: 180
+        max_connections: 50
+        retries: 1
+  tables:
+  - !include "public_t1.yaml"
+  - !include "public_t2.yaml"
+  functions:
+  - !include "public_get_t1.yaml"
+  - !include "public_get_t2.yaml"
+- name: s2
+  configuration:
+    connection_info:
+      database_url:
+        from_env: HASURA_GRAPHQL_DATABASE_URL
+      pool_settings:
+        idle_timeout: 180
+        max_connections: 50
+        retries: 1
+  tables:
+    - !include "public_t1.yaml"
+    - !include "public_t2.yaml"
+  functions:
+    - !include "public_get_t1.yaml"
+    - !include "public_get_t2.yaml"

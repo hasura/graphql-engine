@@ -1,0 +1,118 @@
+{
+  "version": 3,
+  "sources": [
+    {
+      "name": "default",
+      "tables": [
+        {
+          "table": {
+            "schema": "public",
+            "name": "t1"
+          }
+        },
+        {
+          "table": {
+            "schema": "public",
+            "name": "t2"
+          }
+        }
+      ],
+      "functions": [
+        {
+          "function": {
+            "schema": "public",
+            "name": "get_t1"
+          }
+        },
+        {
+          "function": {
+            "schema": "public",
+            "name": "get_t2"
+          }
+        }
+      ],
+      "configuration": {
+        "connection_info": {
+          "database_url": {
+            "from_env": "HASURA_GRAPHQL_DATABASE_URL"
+          },
+          "pool_settings": {
+            "retries": 1,
+            "idle_timeout": 180,
+            "max_connections": 50
+          }
+        }
+      }
+    }
+  ],
+  "remote_schemas": [
+    {
+      "name": "countries",
+      "definition": {
+        "url": "https://countries.trevorblades.com/",
+        "timeout_seconds": 60,
+        "forward_client_headers": true
+      }
+    }
+  ],
+  "actions": [
+    {
+      "name": "action1",
+      "definition": {
+        "handler": "http://localhost:3000",
+        "output_type": "SampleOutput",
+        "arguments": [
+          {
+            "name": "arg1",
+            "type": "SampleInput!"
+          }
+        ],
+        "type": "mutation",
+        "kind": "synchronous"
+      }
+    },
+    {
+      "name": "action2",
+      "definition": {
+        "handler": "http://localhost:3000",
+        "output_type": "SampleOutput",
+        "arguments": [
+          {
+            "name": "arg1",
+            "type": "SampleInput!"
+          }
+        ],
+        "type": "mutation",
+        "kind": "synchronous"
+      }
+    }
+  ],
+  "custom_types": {
+    "input_objects": [
+      {
+        "name": "SampleInput",
+        "fields": [
+          {
+            "name": "username",
+            "type": "String!"
+          },
+          {
+            "name": "password",
+            "type": "String!"
+          }
+        ]
+      }
+    ],
+    "objects": [
+      {
+        "name": "SampleOutput",
+        "fields": [
+          {
+            "name": "accessToken",
+            "type": "String!"
+          }
+        ]
+      }
+    ]
+  }
+}

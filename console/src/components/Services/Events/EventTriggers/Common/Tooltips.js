@@ -3,14 +3,19 @@ import Tooltip from 'react-bootstrap/lib/Tooltip';
 
 export const manualTriggerInfo = (
   <Tooltip id="tooltip-manual-trigger-description">
-    Selecting this option will let you invoke this trigger from Data Broeser
+    Selecting this option will let you invoke this trigger from Data Browser
   </Tooltip>
 );
 
 export const triggerNameDescription = (
   <Tooltip id="tooltip-trigger-name-description">
-    Trigger name can be alphanumeric and can contain underscores and hyphens
+    Trigger name can be alphanumeric, can contain underscores and hyphens, and
+    must be at most 42 characters.
   </Tooltip>
+);
+
+export const triggerNameSource = (
+  <Tooltip id="tooltip-trigger-source">Select the database</Tooltip>
 );
 
 export const operationsDescription = (
@@ -39,8 +44,8 @@ export const advancedOperationDescription = (
 );
 
 export const postgresDescription = (
-  <Tooltip id="tooltip-postgres-description">
-    Select the postgres schema and table
+  <Tooltip id="tooltip-database-description">
+    Select the database schema and table
   </Tooltip>
 );
 

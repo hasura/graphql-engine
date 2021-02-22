@@ -6,7 +6,8 @@ import           Control.Lens               ((^..))
 import           Data.Aeson
 import           Data.Aeson.Internal
 import           Data.Char
-import           Language.Haskell.TH.Syntax (Lift, Q, TExp)
+import           Data.Text.Extended
+import           Language.Haskell.TH.Syntax (Q, TExp)
 import           System.Environment
 import           System.Exit
 import           System.Process
@@ -29,10 +30,6 @@ import qualified Text.Regex.TDFA.ReadRegex  as TDFA
 import qualified Text.Regex.TDFA.TDFA       as TDFA
 
 import           Hasura.RQL.Instances       ()
-
-newtype RequestId
-  = RequestId { unRequestId :: Text }
-  deriving (Show, Eq, ToJSON, FromJSON)
 
 jsonHeader :: HTTP.Header
 jsonHeader = ("Content-Type", "application/json; charset=utf-8")
@@ -82,13 +79,6 @@ parseStringAsBool t
              ++ show truthVals ++ " and  False values are " ++ show falseVals
              ++ ". All values are case insensitive"
 
-getRequestId :: (MonadIO m) => [HTTP.Header] -> m RequestId
-getRequestId headers =
-  -- generate a request id for every request if the client has not sent it
-  case getRequestHeader requestIdHeader headers  of
-    Nothing    -> RequestId <$> liftIO generateFingerprint
-    Just reqId -> return $ RequestId $ bsToTxt reqId
-
 -- Get an env var during compile time
 getValFromEnvOrScript :: String -> String -> Q (TExp String)
 getValFromEnvOrScript n s = do
@@ -108,12 +98,6 @@ runScript fp = do
     "Running shell script " ++ fp ++ " failed with exit code : "
     ++ show exitCode ++ " and with error : " ++ stdErr
   [|| stdOut ||]
-
--- find duplicates
-duplicates :: Ord a => [a] -> [a]
-duplicates = mapMaybe greaterThanOne . group . sort
-  where
-    greaterThanOne l = bool Nothing (Just $ head l) $ length l > 1
 
 -- | Quotes a regex using Template Haskell so syntax errors can be reported at compile-time.
 quoteRegex :: TDFA.CompOption -> TDFA.ExecOption -> String -> Q (TExp TDFA.Regex)
@@ -148,7 +132,7 @@ httpExceptToJSON e = case e of
   _        -> toJSON $ show e
   where
     showProxy (HC.Proxy h p) =
-      "host: " <> bsToTxt h <> " port: " <> T.pack (show p)
+      "host: " <> bsToTxt h <> " port: " <> tshow p
 
 -- ignore the following request headers from the client
 commonClientHeadersIgnored :: (IsString a) => [a]
@@ -215,7 +199,7 @@ applyFirst f (x:xs) = f x: xs
 data APIVersion
   = VIVersion1
   | VIVersion2
-  deriving (Show, Eq, Lift)
+  deriving (Show, Eq)
 
 instance ToJSON APIVersion where
   toJSON VIVersion1 = toJSON @Int 1
@@ -229,13 +213,13 @@ instance FromJSON APIVersion where
       2 -> return VIVersion2
       i -> fail $ "expected 1 or 2, encountered " ++ show i
 
-englishList :: NonEmpty Text -> Text
-englishList = \case
+englishList :: Text -> NonEmpty Text -> Text
+englishList joiner = \case
   one :| []    -> one
-  one :| [two] -> one <> " and " <> two
+  one :| [two] -> one <> " " <> joiner <> " " <> two
   several      ->
     let final :| initials = NE.reverse several
-    in T.intercalate ", " (reverse initials) <> ", and " <> final
+    in commaSeparated (reverse initials) <> ", " <> joiner <> " " <> final
 
 makeReasonMessage :: [a] -> (a -> Text) -> Text
 makeReasonMessage errors showError =

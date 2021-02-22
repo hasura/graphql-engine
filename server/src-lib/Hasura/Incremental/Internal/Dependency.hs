@@ -7,22 +7,26 @@ module Hasura.Incremental.Internal.Dependency where
 import           Hasura.Prelude
 
 import qualified Data.Dependent.Map            as DM
+import qualified Data.HashMap.Strict           as Map
+import qualified Data.HashMap.Strict.InsOrd    as OMap
 import qualified Data.URL.Template             as UT
 import qualified Language.GraphQL.Draft.Syntax as G
 import qualified Network.URI.Extended          as N
 
-import           Control.Applicative
 import           Data.Aeson                    (Value)
+import           Data.ByteString               (ByteString)
 import           Data.CaseInsensitive          (CI)
 import           Data.Functor.Classes          (Eq1 (..), Eq2 (..))
 import           Data.GADT.Compare
 import           Data.Int
 import           Data.Scientific               (Scientific)
 import           Data.Set                      (Set)
-import           Data.Time.Clock
+import           Data.Text.NonEmpty
+import           Data.Time
 import           Data.Vector                   (Vector)
-import           GHC.Generics                  ((:*:) (..), (:+:) (..), Generic (..), K1 (..),
-                                                M1 (..), U1 (..), V1)
+import           Data.Word
+import           GHC.Generics                  (Generic (..), K1 (..), M1 (..), U1 (..), V1,
+                                                (:*:) (..), (:+:) (..))
 import           System.Cron.Types
 
 import           Hasura.Incremental.Select
@@ -120,8 +124,8 @@ data Access a where
   AccessedParts :: (Select a) => !(DM.DMap (Selector a) Access) -> Access a
 
 instance Semigroup (Access a) where
-  AccessedAll <> _ = AccessedAll
-  _ <> AccessedAll = AccessedAll
+  AccessedAll <> _                   = AccessedAll
+  _ <> AccessedAll                   = AccessedAll
   AccessedParts a <> AccessedParts b = AccessedParts $ DM.unionWithKey (const (<>)) a b
 
 instance (Cacheable a) => Cacheable (Dependency a) where
@@ -138,7 +142,7 @@ instance (Cacheable a) => Cacheable (Dependency a) where
       lookupAccess = \case
         DependencyRoot key -> handleNoAccess $ DM.lookup key (unAccesses accesses)
         DependencyChild selector key -> lookupAccess key >>= \case
-          AccessedAll -> Left (unchanged accesses v1 v2)
+          AccessedAll         -> Left (unchanged accesses v1 v2)
           AccessedParts parts -> handleNoAccess $ DM.lookup selector parts
         where
           -- if this dependency was never accessed, then it’s certainly unchanged
@@ -164,10 +168,18 @@ instance Cacheable Int32 where unchanged _ = (==)
 instance Cacheable Integer where unchanged _ = (==)
 instance Cacheable Scientific where unchanged _ = (==)
 instance Cacheable Text where unchanged _ = (==)
+instance Cacheable NonEmptyText where unchanged _ = (==)
 instance Cacheable N.URIAuth where unchanged _ = (==)
+instance Cacheable G.Name where unchanged _ = (==)
 instance Cacheable DiffTime where unchanged _ = (==)
 instance Cacheable NominalDiffTime where unchanged _ = (==)
 instance Cacheable UTCTime where unchanged _ = (==)
+instance Cacheable Day where unchanged _ = (==)
+instance Cacheable TimeOfDay where unchanged _ = (==)
+instance Cacheable LocalTime where unchanged _ = (==)
+instance Cacheable ByteString where unchanged _ = (==)
+instance Cacheable Float where unchanged _ = (==)
+instance Cacheable Word8 where unchanged _ = (==)
 
 -- instances for CronSchedule from package `cron`
 instance Cacheable StepField
@@ -194,52 +206,65 @@ instance (Cacheable a) => Cacheable (CI a) where
   unchanged _ = (==)
 instance (Cacheable a) => Cacheable (Set a) where
   unchanged = liftEq . unchanged
+instance (Hashable k, Cacheable k, Cacheable v) => Cacheable (InsOrdHashMap k v) where
+  unchanged accesses l r = unchanged accesses (toHashMap l) (toHashMap r)
+    where
+      toHashMap = Map.fromList . OMap.toList
 
 instance Cacheable ()
 instance (Cacheable a, Cacheable b) => Cacheable (a, b)
 instance (Cacheable a, Cacheable b, Cacheable c) => Cacheable (a, b, c)
 instance (Cacheable a, Cacheable b, Cacheable c, Cacheable d) => Cacheable (a, b, c, d)
 instance (Cacheable a, Cacheable b, Cacheable c, Cacheable d, Cacheable e) => Cacheable (a, b, c, d, e)
+instance (Cacheable a, Cacheable b, Cacheable c, Cacheable d, Cacheable e, Cacheable f) => Cacheable (a, b, c, d, e, f)
 
 instance Cacheable Bool
+instance Cacheable Void
 instance Cacheable Value
-instance Cacheable G.Argument
-instance Cacheable G.Directive
-instance Cacheable G.ExecutableDefinition
-instance Cacheable G.Field
 instance Cacheable G.FragmentDefinition
-instance Cacheable G.FragmentSpread
 instance Cacheable G.GType
-instance Cacheable G.InlineFragment
 instance Cacheable G.Nullability
-instance Cacheable G.OperationDefinition
 instance Cacheable G.OperationType
-instance Cacheable G.Selection
-instance Cacheable G.TypedOperationDefinition
-instance Cacheable G.Value
-instance Cacheable G.ValueConst
 instance Cacheable G.VariableDefinition
+instance Cacheable G.InputValueDefinition
+instance Cacheable G.EnumValueDefinition
+instance (Cacheable a) => Cacheable (G.FieldDefinition a)
+instance Cacheable G.ScalarTypeDefinition
+instance Cacheable G.UnionTypeDefinition
+instance (Cacheable possibleTypes, Cacheable a) => Cacheable (G.InterfaceTypeDefinition a possibleTypes)
+instance Cacheable G.EnumTypeDefinition
+instance (Cacheable a) => Cacheable (G.InputObjectTypeDefinition a)
+instance (Cacheable a) => Cacheable (G.ObjectTypeDefinition a)
+instance (Cacheable a, Cacheable possibleTypes) => Cacheable (G.TypeDefinition a possibleTypes)
 instance Cacheable N.URI
 instance Cacheable UT.Variable
 instance Cacheable UT.TemplateItem
 instance Cacheable UT.URLTemplate
 instance (Cacheable a) => Cacheable (Maybe a)
 instance (Cacheable a, Cacheable b) => Cacheable (Either a b)
-instance (Cacheable a) => Cacheable [a]
-instance (Cacheable a) => Cacheable (NonEmpty a)
-instance (Cacheable a) => Cacheable (G.ObjectFieldG a)
+instance (Cacheable a) => Cacheable (NESeq a)
+instance Cacheable a => Cacheable [a]
+instance Cacheable a => Cacheable (NonEmpty a)
+instance Cacheable a => Cacheable (G.Directive a)
+instance Cacheable a => Cacheable (G.ExecutableDefinition a)
+instance (Cacheable (a b), Cacheable b) => Cacheable (G.Field a b)
+instance Cacheable a => Cacheable (G.FragmentSpread a)
+instance (Cacheable (a b), Cacheable b) => Cacheable (G.InlineFragment a b)
+instance (Cacheable (a b), Cacheable b) => Cacheable (G.OperationDefinition a b)
+instance (Cacheable (a b), Cacheable b) => Cacheable (G.Selection a b)
+instance (Cacheable (a b), Cacheable b) => Cacheable (G.TypedOperationDefinition a b)
 
-deriving instance Cacheable G.Alias
-deriving instance Cacheable G.EnumValue
-deriving instance Cacheable G.ExecutableDocument
-deriving instance Cacheable G.ListType
-deriving instance Cacheable G.Name
-deriving instance Cacheable G.NamedType
-deriving instance Cacheable G.StringValue
-deriving instance Cacheable G.Variable
+instance Cacheable a => Cacheable (G.Value a)
+
 deriving instance Cacheable G.Description
-deriving instance (Cacheable a) => Cacheable (G.ListValueG a)
-deriving instance (Cacheable a) => Cacheable (G.ObjectValueG a)
+deriving instance Cacheable G.EnumValue
+deriving instance Cacheable a => Cacheable (G.ExecutableDocument a)
+
+instance Cacheable G.RootOperationTypeDefinition
+instance Cacheable G.SchemaDefinition
+instance Cacheable G.TypeSystemDefinition
+instance Cacheable G.SchemaDocument
+instance Cacheable G.SchemaIntrospection
 
 class GCacheable f where
   gunchanged :: f p -> f p -> Accesses -> Bool

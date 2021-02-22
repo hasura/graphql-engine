@@ -1,6 +1,5 @@
-{-# LANGUAGE DisambiguateRecordFields #-}
-{-# LANGUAGE NamedFieldPuns           #-}
-{-# LANGUAGE RecordWildCards          #-}
+{-# LANGUAGE NamedFieldPuns  #-}
+{-# LANGUAGE RecordWildCards #-}
 
 module Hasura.RQL.Types.RemoteRelationship
   ( RemoteRelationshipName(..)
@@ -10,36 +9,43 @@ module Hasura.RQL.Types.RemoteRelationship
   , RemoteFieldInfo(..)
   , RemoteRelationship(..)
   , RemoteRelationshipDef(..)
+  , rrdRemoteSchema
+  , rrdHasuraFields
+  , rrdRemoteField
   , FieldCall(..)
   , RemoteArguments(..)
   , DeleteRemoteRelationship(..)
+  , graphQLValueToJSON
   ) where
 
-import           Hasura.Incremental            (Cacheable)
 import           Hasura.Prelude
+
+import qualified Data.HashMap.Strict                as HM
+import qualified Data.Text                          as T
+import qualified Database.PG.Query                  as Q
+import qualified Language.GraphQL.Draft.Syntax      as G
+
+import           Control.Lens                       (makeLenses)
+import           Data.Aeson
+import           Data.Aeson.TH
+import           Data.Scientific
+import           Data.Text.Extended
+import           Data.Text.NonEmpty
+
+import           Hasura.Backends.Postgres.SQL.Types hiding (TableName)
+import           Hasura.Incremental                 (Cacheable)
+import           Hasura.RQL.Types.Backend
 import           Hasura.RQL.Types.Column
 import           Hasura.RQL.Types.Common
 import           Hasura.RQL.Types.RemoteSchema
-import           Hasura.SQL.Types
+import           Hasura.SQL.Backend
 
-
-import           Data.Aeson
-import           Data.Aeson.Casing
-import           Data.Aeson.TH
-import           Data.Scientific
-import           Data.Set                      (Set)
-import           Language.Haskell.TH.Syntax    (Lift)
-
-import qualified Data.HashMap.Strict           as HM
-import qualified Data.Text                     as T
-import qualified Database.PG.Query             as Q
-import qualified Language.GraphQL.Draft.Syntax as G
 
 newtype RemoteRelationshipName
   = RemoteRelationshipName
   { unRemoteRelationshipName :: NonEmptyText}
-  deriving ( Show, Eq, Lift, Hashable, ToJSON, ToJSONKey, FromJSON
-           , Q.ToPrepArg, Q.FromCol, DQuote, Cacheable, NFData, Arbitrary
+  deriving ( Show, Eq, Ord, Hashable, ToJSON, ToJSONKey, FromJSON
+           , Q.ToPrepArg, Q.FromCol, ToTxt, Cacheable, NFData, Arbitrary
            )
 
 remoteRelationshipNameToText :: RemoteRelationshipName -> Text
@@ -49,73 +55,66 @@ fromRemoteRelationship :: RemoteRelationshipName -> FieldName
 fromRemoteRelationship = FieldName . remoteRelationshipNameToText
 
 -- | Resolved remote relationship
-data RemoteFieldInfo
+data RemoteFieldInfo (b :: BackendType)
   = RemoteFieldInfo
-  { _rfiName         :: !RemoteRelationshipName
+  { _rfiXRemoteFieldInfo      :: !(XRemoteField b)
+  , _rfiName                  :: !RemoteRelationshipName
     -- ^ Field name to which we'll map the remote in hasura; this becomes part
     -- of the hasura schema.
-  , _rfiGType        :: G.GType
-  , _rfiParamMap     :: !(HashMap G.Name InpValInfo)
-  -- ^ Fully resolved arguments (no variable references, since this uses
-  -- 'G.ValueConst' not 'G.Value').
-  , _rfiHasuraFields :: !(HashSet PGColumnInfo)
-  , _rfiRemoteFields :: !(NonEmpty FieldCall)
-  , _rfiRemoteSchema :: !RemoteSchemaInfo
-  } deriving (Show, Eq, Generic)
-instance Cacheable RemoteFieldInfo
+  , _rfiParamMap              :: !(HashMap G.Name RemoteSchemaInputValueDefinition)
+  -- ^ Input arguments to the remote field info; The '_rfiParamMap' will only
+  --   include the arguments to the remote field that is being joined. The
+  --   names of the arguments here are modified, it will be in the format of
+  --   <Original Field Name>_remote_rel_<hasura table schema>_<hasura table name><remote relationship name>
+  , _rfiHasuraFields          :: !(HashSet (ColumnInfo b))
+  -- ^ Hasura fields used to join the remote schema node
+  , _rfiRemoteFields          :: !RemoteFields
+  , _rfiRemoteSchema          :: !RemoteSchemaInfo
+  , _rfiInputValueDefinitions :: ![G.TypeDefinition [G.Name] RemoteSchemaInputValueDefinition]
+  -- ^ The new input value definitions created for this remote field
+  , _rfiRemoteSchemaName      :: !RemoteSchemaName
+  -- ^ Name of the remote schema, that's used for joining
+  , _rfiTable                 :: !(QualifiedTable, SourceName)
+  -- ^ Name of the table and its source
+  } deriving (Generic)
+deriving instance Backend b => Eq (RemoteFieldInfo b)
+instance Backend b => Cacheable (RemoteFieldInfo b)
 
-instance ToJSON RemoteFieldInfo where
+graphQLValueToJSON :: G.Value Void -> Value
+graphQLValueToJSON = \case
+  G.VNull                 -> Null
+  G.VInt i                -> toJSON i
+  G.VFloat f              -> toJSON f
+  G.VString t             -> toJSON t
+  G.VBoolean b            -> toJSON b
+  G.VEnum (G.EnumValue n) -> toJSON n
+  G.VList values          -> toJSON $ graphQLValueToJSON <$> values
+  G.VObject objects       -> toJSON $ graphQLValueToJSON <$> objects
+
+instance Backend b => ToJSON (RemoteFieldInfo b) where
   toJSON RemoteFieldInfo{..} = object
     [ "name" .= _rfiName
-    , "g_type" .= toJsonGType _rfiGType
     , "param_map" .= fmap toJsonInpValInfo _rfiParamMap
     , "hasura_fields" .= _rfiHasuraFields
-    , "remote_fields" .= RemoteFields _rfiRemoteFields
+    , "remote_fields" .= _rfiRemoteFields
     , "remote_schema" .= _rfiRemoteSchema
     ]
     where
-      -- | Convert to JSON, using Either as an auxilliary type.
-      toJsonGType gtype =
-        toJSON
-          (case gtype of
-             G.TypeNamed (G.Nullability nullability) namedType ->
-               Left (nullability, namedType)
-             G.TypeList (G.Nullability nullability) (G.ListType listType) ->
-               Right (nullability, listType))
-
-      toJsonInpValInfo InpValInfo {..} =
+      toJsonInpValInfo (RemoteSchemaInputValueDefinition (G.InputValueDefinition desc name type' defVal _directives) _preset)  =
         object
-          [ "desc" .= _iviDesc
-          , "name" .= _iviName
-          , "def_val" .= fmap gValueConstToValue _iviDefVal
-          , "type" .= _iviType
+          [ "desc" .= desc
+          , "name" .= name
+          , "def_val" .= fmap graphQLValueToJSON defVal
+          , "type" .= type'
           ]
-
-      gValueConstToValue =
-        \case
-          (G.VCInt i) -> toJSON i
-          (G.VCFloat f) -> toJSON f
-          (G.VCString (G.StringValue s)) -> toJSON s
-          (G.VCBoolean b) -> toJSON b
-          G.VCNull -> Null
-          (G.VCEnum s) -> toJSON s
-          (G.VCList (G.ListValueG list)) -> toJSON (map gValueConstToValue list)
-          (G.VCObject (G.ObjectValueG xs)) -> constFieldsToObject xs
-
-      constFieldsToObject =
-        Object .
-        HM.fromList .
-        map
-          (\G.ObjectFieldG {_ofName = G.Name name, _ofValue} ->
-             (name, gValueConstToValue _ofValue))
 
 -- | For some 'FieldCall', for instance, associates a field argument name with
 -- either a list of either scalar values or some 'G.Variable' we are closed
 -- over (brought into scope, e.g. in 'rtrHasuraFields'.
 newtype RemoteArguments =
   RemoteArguments
-    { getRemoteArguments :: [G.ObjectFieldG G.Value]
-    } deriving (Show, Eq, Lift, Cacheable, NFData)
+    { getRemoteArguments :: HashMap G.Name (G.Value G.Name)
+    } deriving (Show, Eq, Cacheable, NFData)
 
 instance ToJSON RemoteArguments where
   toJSON (RemoteArguments fields) = fieldsToObject fields
@@ -123,19 +122,22 @@ instance ToJSON RemoteArguments where
       fieldsToObject =
         Object .
         HM.fromList .
-        map (\G.ObjectFieldG {_ofName=G.Name name, _ofValue} -> (name, gValueToValue _ofValue))
+        map
+          (\(name, val) ->
+             (G.unName name, gValueToValue val)) .
+        HM.toList
 
       gValueToValue =
         \case
-          (G.VVariable (G.Variable v)) -> toJSON ("$" <> v)
-          (G.VInt i) -> toJSON i
-          (G.VFloat f) -> toJSON f
-          (G.VString (G.StringValue s)) -> toJSON s
-          (G.VBoolean b) -> toJSON b
-          G.VNull -> Null
-          (G.VEnum s) -> toJSON s
-          (G.VList (G.ListValueG list)) -> toJSON (map gValueToValue list)
-          (G.VObject (G.ObjectValueG xs)) -> fieldsToObject xs
+          G.VVariable v -> toJSON ("$" <> G.unName v)
+          G.VInt i      -> toJSON i
+          G.VFloat f    -> toJSON f
+          G.VString s   -> toJSON s
+          G.VBoolean b  -> toJSON b
+          G.VNull       -> Null
+          G.VEnum s     -> toJSON s
+          G.VList list  -> toJSON (map gValueToValue list)
+          G.VObject obj -> fieldsToObject obj
 
 instance FromJSON RemoteArguments where
   parseJSON = \case
@@ -144,25 +146,29 @@ instance FromJSON RemoteArguments where
     where
       -- Parsing GraphQL input arguments from JSON
       parseObjectFieldsToGValue hashMap =
-        traverse
+        HM.fromList <$>
+        (traverse
           (\(key, value) -> do
-             name <- parseJSON (String key)
-             parsedValue <- parseValueAsGValue value
-             pure G.ObjectFieldG {_ofName = name, _ofValue = parsedValue})
-          (HM.toList hashMap)
+              name <- G.mkName key `onNothing` fail (T.unpack key <> " is an invalid key name")
+              parsedValue <- parseValueAsGValue value
+              pure (name,parsedValue))
+             (HM.toList hashMap))
 
       parseValueAsGValue =
         \case
           Object obj ->
-            fmap (G.VObject . G.ObjectValueG) (parseObjectFieldsToGValue obj)
+            fmap G.VObject (parseObjectFieldsToGValue obj)
           Array array ->
-            fmap (G.VList . G.ListValueG . toList) (traverse parseValueAsGValue array)
+            fmap (G.VList . toList) (traverse parseValueAsGValue array)
           String text ->
             case T.uncons text of
               Just ('$', rest)
                 | T.null rest -> fail "Invalid variable name."
-                | otherwise -> pure (G.VVariable (G.Variable (G.Name rest)))
-              _ -> pure (G.VString (G.StringValue text))
+                | otherwise ->
+                    case G.mkName rest of
+                      Nothing    -> fail "Invalid variable name."
+                      Just name' -> pure $ G.VVariable name'
+              _ -> pure (G.VString text)
           Number !scientificNum ->
             pure (either (\(_::Float) -> G.VFloat scientificNum) G.VInt (floatingOrInteger scientificNum))
           Bool !boolean -> pure (G.VBoolean boolean)
@@ -172,17 +178,17 @@ instance FromJSON RemoteArguments where
 --
 -- https://graphql.github.io/graphql-spec/June2018/#sec-Language.Arguments
 --
--- TODO we don't seem to support empty RemoteArguments (like 'hello'), but this seems arbitrary:
+-- TODO (from master) we don't seem to support empty RemoteArguments (like 'hello'), but this seems arbitrary:
 data FieldCall =
   FieldCall
     { fcName      :: !G.Name
     , fcArguments :: !RemoteArguments
-    } deriving (Show, Eq, Lift, Generic)
+    } deriving (Show, Eq, Generic)
 instance NFData FieldCall
 instance Cacheable FieldCall
 
 newtype RemoteFields = RemoteFields {unRemoteFields :: NonEmpty FieldCall}
-  deriving (Show, Eq, Lift, Generic)
+  deriving (Show, Eq, Generic)
 instance NFData RemoteFields
 instance Cacheable RemoteFields
 
@@ -231,35 +237,60 @@ instance ToJSON RemoteFields where
           ]
 
 -- | Metadata type for remote relationship
-data RemoteRelationship =
+data RemoteRelationship b =
   RemoteRelationship
     { rtrName         :: !RemoteRelationshipName
     -- ^ Field name to which we'll map the remote in hasura; this becomes part
     -- of the hasura schema.
-    , rtrTable        :: !QualifiedTable
-    , rtrHasuraFields :: !(Set FieldName) -- TODO? change to PGCol
+    , rtrSource       :: !SourceName
+    , rtrTable        :: !(TableName b)
+    -- ^ (SourceName, QualifiedTable) determines the table on which the relationship
+    -- is defined
+    , rtrHasuraFields :: !(HashSet FieldName) -- TODO change to PGCol
     -- ^ The hasura fields from 'rtrTable' that will be in scope when resolving
     -- the remote objects in 'rtrRemoteField'.
     , rtrRemoteSchema :: !RemoteSchemaName
     -- ^ Identifier for this mapping.
     , rtrRemoteField  :: !RemoteFields
-    }  deriving (Show, Eq, Lift, Generic)
-instance NFData RemoteRelationship
-instance Cacheable RemoteRelationship
-$(deriveJSON (aesonDrop 3 snakeCase) ''RemoteRelationship)
+    }  deriving (Generic)
+deriving instance (Backend b) => Show (RemoteRelationship b)
+deriving instance (Backend b) => Eq (RemoteRelationship b)
+instance (Backend b) => NFData (RemoteRelationship b)
+instance (Backend b) => Cacheable (RemoteRelationship b)
+instance (Backend b) => ToJSON (RemoteRelationship b) where
+  toJSON = genericToJSON hasuraJSON
+
+instance (Backend b) => FromJSON (RemoteRelationship b) where
+  parseJSON = withObject "RemoteRelationship" $ \o ->
+    RemoteRelationship
+      <$> o .: "name"
+      <*> o .:? "source" .!= defaultSource
+      <*> o .: "table"
+      <*> o .: "hasura_fields"
+      <*> o .: "remote_schema"
+      <*> o .: "remote_field"
 
 data RemoteRelationshipDef
   = RemoteRelationshipDef
   { _rrdRemoteSchema :: !RemoteSchemaName
-  , _rrdHasuraFields :: !(Set FieldName)
+  , _rrdHasuraFields :: !(HashSet FieldName)
   , _rrdRemoteField  :: !RemoteFields
-  } deriving (Show, Eq, Generic, Lift)
-$(deriveJSON (aesonDrop 4 snakeCase) ''RemoteRelationshipDef)
+  } deriving (Show, Eq, Generic)
+instance Cacheable RemoteRelationshipDef
+$(deriveJSON hasuraJSON ''RemoteRelationshipDef)
+$(makeLenses ''RemoteRelationshipDef)
 
-data DeleteRemoteRelationship =
-  DeleteRemoteRelationship
-    { drrTable :: QualifiedTable
-    , drrName  :: RemoteRelationshipName
-    }  deriving (Show, Eq, Lift)
+data DeleteRemoteRelationship
+  = DeleteRemoteRelationship
+  { drrSource :: !SourceName
+  , drrTable  :: !QualifiedTable
+  , drrName   :: !RemoteRelationshipName
+  } deriving (Show, Eq)
+instance FromJSON DeleteRemoteRelationship where
+  parseJSON = withObject "Object" $ \o ->
+    DeleteRemoteRelationship
+      <$> o .:? "source" .!= defaultSource
+      <*> o .: "table"
+      <*> o .: "name"
 
-$(deriveJSON (aesonDrop 3 snakeCase){omitNothingFields=True} ''DeleteRemoteRelationship)
+$(deriveToJSON hasuraJSON{omitNothingFields=True} ''DeleteRemoteRelationship)

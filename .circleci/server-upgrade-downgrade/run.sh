@@ -12,7 +12,9 @@ set -euo pipefail
 # # echo an error message before exiting
 # trap 'echo "\"${last_command}\" command filed with exit code $?."' EXIT
 
-ROOT="${BASH_SOURCE[0]%/*}"
+cd "${BASH_SOURCE[0]%/*}"
+ROOT="${PWD}"
+cd - > /dev/null
 
 download_with_etag_check() {
 	URL="$1"
@@ -87,6 +89,7 @@ export GHCRTS='-N1'
 # Required for event trigger tests
 export WEBHOOK_FROM_ENV="http://127.0.0.1:5592"
 export EVENT_WEBHOOK_HEADER="MyEnvValue"
+export REMOTE_SCHEMAS_WEBHOOK_DOMAIN="http://127.0.0.1:5000"
 
 # graphql-engine will be run on this port
 fail_if_port_busy ${HASURA_GRAPHQL_SERVER_PORT}
@@ -119,6 +122,17 @@ trap rm_worktree ERR
 
 make_latest_release_worktree() {
 	git worktree add --detach "$WORKTREE_DIR" "$RELEASE_VERSION"
+        cd "$WORKTREE_DIR"
+        # FIX ME: Remove the patch below after the next stable release
+        # The --avoid-error-message-checks in pytest was implementated  as a rather relaxed check than
+        # what we intended to have. In versions <= v1.3.0,
+        # this check allows response to be success even if the expected response is a failure.
+        # The patch below fixes that issue.
+        # The `git apply` should give errors from next release onwards,
+        # since this change is going to be included in the next release version
+        git apply "${ROOT}/err_msg.patch" || \
+		(log "Remove the git apply in make_latest_release_worktree function"  && false)
+        cd - > /dev/null
 }
 
 cleanup_hasura_metadata_if_present() {
@@ -148,7 +162,23 @@ get_server_upgrade_tests() {
 	cd $RELEASE_PYTEST_DIR
 	tmpfile="$(mktemp --dry-run)"
 	set -x
-	python3 -m pytest -q --collect-only --collect-upgrade-tests-to-file "$tmpfile" -m 'allow_server_upgrade_test and not skip_server_upgrade_test' "${args[@]}" 1>/dev/null 2>/dev/null
+	# FIX ME: Deselecting some introspection tests and event trigger tests from the previous test suite
+	# which throw errors on the latest build. Even when the output of the current build is more accurate.
+	# Remove these deselects after the next stable release
+	python3 -m pytest -q --collect-only --collect-upgrade-tests-to-file "$tmpfile" \
+		-m 'allow_server_upgrade_test and not skip_server_upgrade_test' \
+		--deselect test_schema_stitching.py::TestRemoteSchemaBasic::test_introspection \
+		--deselect test_schema_stitching.py::TestAddRemoteSchemaCompareRootQueryFields::test_schema_check_arg_default_values_and_field_and_arg_types \
+                --deselect test_graphql_mutations.py::TestGraphqlInsertPermission::test_user_with_no_backend_privilege \
+                --deselect test_graphql_mutations.py::TestGraphqlInsertPermission::test_backend_user_no_admin_secret_fail \
+                --deselect test_graphql_mutations.py::TestGraphqlMutationCustomSchema::test_update_article \
+                --deselect test_graphql_queries.py::TestGraphQLQueryEnums::test_introspect_user_role \
+                --deselect test_schema_stitching.py::TestRemoteSchemaQueriesOverWebsocket::test_remote_query_error \
+                --deselect test_events.py::TestCreateAndDelete::test_create_reset \
+                --deselect test_events.py::TestUpdateEvtQuery::test_update_basic \
+                --deselect test_schema_stitching.py::TestAddRemoteSchemaTbls::test_add_schema \
+                --deselect test_schema_stitching.py::TestAddRemoteSchemaTbls::test_add_conflicting_table \
+		"${args[@]}" 1>/dev/null 2>/dev/null
 	set +x
 	cat "$tmpfile"
 	cd - >/dev/null
@@ -174,11 +204,12 @@ run_server_upgrade_pytest() {
 		set -x
 
 		# With --avoid-error-message-checks, we are only going to throw warnings if the error message has changed between releases
- 		# FIX ME: Remove the deselect below after the next stable release
 		pytest --hge-urls "${HGE_URL}"  --pg-urls "$HASURA_GRAPHQL_DATABASE_URL" \
 			--avoid-error-message-checks "$@" \
 			-m 'allow_server_upgrade_test and not skip_server_upgrade_test' \
-			--deselect test_graphql_mutations.py::TestGraphqlUpdateBasic::test_numerics_inc \
+                        --deselect test_graphql_mutations.py::TestGraphqlInsertPermission::test_user_with_no_backend_privilege \
+                        --deselect test_graphql_mutations.py::TestGraphqlMutationCustomSchema::test_update_article \
+                        --deselect test_graphql_queries.py::TestGraphQLQueryEnums::test_introspect_user_role \
 			-v $tests_to_run
 		set +x
 		cd -

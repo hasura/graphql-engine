@@ -9,16 +9,9 @@ import Button from '../../../Common/Button/Button';
 import Tooltip from '../../../Common/Tooltip/Tooltip';
 import KnowMoreLink from '../../../Common/KnowMoreLink/KnowMoreLink';
 import Alert from '../../../Common/Alert';
-import {
-  getLocalStorageItem,
-  LS_RAW_SQL_STATEMENT_TIMEOUT,
-  setLocalStorageItem,
-} from '../../../Common/utils/localStorageUtils';
-
 import StatementTimeout from './StatementTimeout';
 import { parseCreateSQL } from './utils';
-import { checkSchemaModification } from '../../../Common/utils/sqlUtils';
-
+import styles from '../../../Common/TableCommon/Table.scss';
 import {
   executeSQL,
   SET_SQL,
@@ -34,7 +27,9 @@ import {
 } from '../../../Common/AceEditor/utils';
 import { CLI_CONSOLE_MODE } from '../../../../constants';
 import NotesSection from './molecules/NotesSection';
-import styles from '../../../Common/TableCommon/Table.scss';
+import { dataSource } from '../../../../dataSources';
+import { getLSItem, setLSItem, LS_KEYS } from '../../../../utils/localStorage';
+import DropDownSelector from './DropDownSelector';
 /**
  * # RawSQL React FC
  * ## renders raw SQL page on route `/data/sql`
@@ -72,36 +67,41 @@ const RawSQL = ({
   isTableTrackChecked,
   migrationMode,
   allSchemas,
+  sources,
+  currentDataSource,
 }) => {
-  // local storage key for SQL
-  const LS_RAW_SQL_SQL = 'rawSql:sql';
-
   const [statementTimeout, setStatementTimeout] = useState(
-    Number(getLocalStorageItem(LS_RAW_SQL_STATEMENT_TIMEOUT)) || 10
+    Number(getLSItem(LS_KEYS.rawSqlStatementTimeout)) || 10
   );
 
   const [sqlText, onChangeSQLText] = useState(sql);
 
+  const [selectedDatabase, setSelectedDatabase] = useState(currentDataSource);
+
+  const dropDownSelectorValueChange = value => {
+    setSelectedDatabase(value);
+  };
+
   useEffect(() => {
     if (!sql) {
-      const sqlFromLocalStorage = localStorage.getItem(LS_RAW_SQL_SQL);
+      const sqlFromLocalStorage = getLSItem(LS_KEYS.rawSQLKey);
       if (sqlFromLocalStorage) {
         dispatch({ type: SET_SQL, data: sqlFromLocalStorage });
         onChangeSQLText(sqlFromLocalStorage);
       }
     }
     return () => {
-      localStorage.setItem(LS_RAW_SQL_SQL, sqlText);
+      setLSItem(LS_KEYS.rawSQLKey, sqlText);
     };
   }, [dispatch, sql, sqlText]);
 
   const submitSQL = () => {
     if (!sqlText) {
-      localStorage.setItem(LS_RAW_SQL_SQL, '');
+      setLSItem(LS_KEYS.rawSQLKey, '');
       return;
     }
     // set SQL to LS
-    localStorage.setItem(LS_RAW_SQL_SQL, sqlText);
+    setLSItem(LS_KEYS.rawSQLKey, sqlText);
 
     // check migration mode global
     if (migrationMode) {
@@ -114,15 +114,22 @@ const RawSQL = ({
       }
       if (!isMigration && globals.consoleMode === CLI_CONSOLE_MODE) {
         // if migration is not checked, check if is schema modification
-        if (checkSchemaModification(sqlText)) {
+        if (dataSource.checkSchemaModification(sqlText)) {
           dispatch(modalOpen());
           return;
         }
       }
-      dispatch(executeSQL(isMigration, migrationName, statementTimeout));
+      dispatch(
+        executeSQL(
+          isMigration,
+          migrationName,
+          statementTimeout,
+          selectedDatabase
+        )
+      );
       return;
     }
-    dispatch(executeSQL(false, '', statementTimeout));
+    dispatch(executeSQL(false, '', statementTimeout, selectedDatabase));
   };
 
   const getMigrationWarningModal = () => {
@@ -163,7 +170,7 @@ const RawSQL = ({
       dispatch({ type: SET_SQL, data: val });
 
       // set migration checkbox true
-      if (checkSchemaModification(val)) {
+      if (dataSource.checkSchemaModification(val)) {
         dispatch({ type: SET_MIGRATION_CHECKED, data: true });
       } else {
         dispatch({ type: SET_MIGRATION_CHECKED, data: false });
@@ -421,7 +428,7 @@ const RawSQL = ({
   const updateStatementTimeout = value => {
     const timeoutInSeconds = Number(value.trim());
     const isValidTimeout = timeoutInSeconds > 0 && !isNaN(timeoutInSeconds);
-    setLocalStorageItem(LS_RAW_SQL_STATEMENT_TIMEOUT, timeoutInSeconds);
+    setLSItem(LS_KEYS.rawSqlStatementTimeout, timeoutInSeconds);
     setStatementTimeout(isValidTimeout ? timeoutInSeconds : 0);
   };
 
@@ -440,7 +447,16 @@ const RawSQL = ({
         <div className={`${styles.padd_left_remove} col-xs-8`}>
           <NotesSection />
         </div>
-
+        <div className={`${styles.padd_left_remove} col-xs-8`}>
+          <label>
+            <b>Database</b>
+          </label>{' '}
+          <DropDownSelector
+            options={sources.map(source => source.name)}
+            defaultValue={currentDataSource}
+            onChange={dropDownSelectorValueChange}
+          />
+        </div>
         <div className={`${styles.padd_left_remove} col-xs-10`}>
           {getSQLSection()}
         </div>
@@ -454,7 +470,9 @@ const RawSQL = ({
 
           <StatementTimeout
             statementTimeout={statementTimeout}
-            isMigrationChecked={isMigrationChecked}
+            isMigrationChecked={
+              globals.consoleMode === CLI_CONSOLE_MODE && isMigrationChecked
+            }
             updateStatementTimeout={updateStatementTimeout}
           />
           <Button
@@ -515,6 +533,8 @@ const mapStateToProps = state => ({
   currentSchema: state.tables.currentSchema,
   allSchemas: state.tables.allSchemas,
   serverVersion: state.main.serverVersion ? state.main.serverVersion : '',
+  sources: state.metadata.metadataObject.sources,
+  currentDataSource: state.tables.currentDataSource,
 });
 
 const rawSQLConnector = connect => connect(mapStateToProps)(RawSQL);
