@@ -153,6 +153,7 @@ have select permissions to the target table of the function.
 - console: add session argument field for computed fields (close #5154) (#5610)
 - console: add support for function permissions (#413)
 - console: add tree view for Data Tab UI (#524)
+- console: add support for RESTified Endpoints (#569)
 - cli: add missing global flags for seed command (#5565)
 - cli: allow seeds as alias for seed command (#5693)
 - cli: fix action timeouts not being picked up in metadata operations (#6220)

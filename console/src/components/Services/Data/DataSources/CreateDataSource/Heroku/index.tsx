@@ -13,8 +13,6 @@ type Props = {
 const Heroku: React.FC<Props> = ({ session, dispatch }) => {
   const [shouldStart, setShouldStart] = React.useState(false);
 
-  console.log(session, shouldStart);
-
   return (
     <div className={styles.wd100}>
       {session && shouldStart && (

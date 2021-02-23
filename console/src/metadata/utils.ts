@@ -14,7 +14,8 @@ export const deleteAllowedQueryQuery = (queryName: string) => ({
     query_name: queryName,
   },
 });
-const addAllowedQuery = (query: { name: string; query: string }) => ({
+
+export const addAllowedQuery = (query: { name: string; query: string }) => ({
   type: 'add_query_to_collection',
   args: {
     collection_name: allowedQueriesCollection,

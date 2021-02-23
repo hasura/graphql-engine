@@ -6,14 +6,22 @@ const Rectangle = require('./images/Rectangle.svg');
 
 type TopicDescriptionProps = {
   title: string;
-  imgUrl: string;
   imgAlt: string;
-  knowMoreHref?: string;
   description: React.ReactNode;
+  imgElement?: JSX.Element;
+  imgUrl?: string;
+  knowMoreHref?: string;
 };
 
 const TopicDescription = (props: TopicDescriptionProps) => {
-  const { title, imgUrl, imgAlt, description, knowMoreHref } = props;
+  const {
+    title,
+    imgUrl,
+    imgAlt,
+    description,
+    knowMoreHref,
+    imgElement,
+  } = props;
   return (
     <div>
       <div className={styles.subHeaderText}>
@@ -21,7 +29,8 @@ const TopicDescription = (props: TopicDescriptionProps) => {
         {title}
       </div>
       <div className={styles.remoteSchemaImg}>
-        <img className="img-responsive" src={imgUrl} alt={imgAlt} />
+        {imgUrl && <img className="img-responsive" src={imgUrl} alt={imgAlt} />}
+        {imgElement ?? null}
       </div>
       <div className={`${styles.descriptionText} ${styles.wd60}`}>
         {description} {knowMoreHref && <KnowMoreLink href={knowMoreHref} />}

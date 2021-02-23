@@ -91,9 +91,9 @@ export const trackCustomFn = () => {
 };
 
 export const routeToGraphiql = () => {
-  cy.visit('/api-explorer');
+  cy.visit('/api/api-explorer');
   cy.wait(7000);
-  cy.url().should('eq', `${baseUrl}/api-explorer`);
+  cy.url().should('eq', `${baseUrl}/api/api-explorer`);
 };
 
 export const verifyCustomFnResult = () => {

@@ -87,7 +87,7 @@ const DBCreation: React.FC<Props> = ({ session, shouldStart, dispatch }) => {
               connectEnvVarDataSource,
               pushToConnect
             );
-          }, 7000);
+          }, 9000);
         })
         .catch(e => {
           console.error(e);

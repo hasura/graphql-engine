@@ -7,6 +7,7 @@ import {
   HasuraMetadataV2,
   QualifiedTable,
   QualifiedFunction,
+  RestEndpointEntry,
 } from './types';
 import { transformHeaders } from '../components/Common/Headers/utils';
 import { LocalEventTriggerState } from '../components/Services/Events/EventTriggers/state';
@@ -85,6 +86,8 @@ export const metadataQueryTypes = [
   'delete_scheduled_event',
   'create_function_permission',
   'drop_function_permission',
+  'create_rest_endpoint',
+  'drop_rest_endpoint',
 ] as const;
 
 export type MetadataQueryType = typeof metadataQueryTypes[number];
@@ -764,3 +767,13 @@ export const dropFunctionPermissionQuery = (
     function: func,
     role,
   });
+
+export const createRESTEndpointQuery = (args: RestEndpointEntry) => ({
+  type: 'create_rest_endpoint',
+  args,
+});
+
+export const dropRESTEndpointQuery = (name: string) => ({
+  type: 'drop_rest_endpoint',
+  args: { name },
+});

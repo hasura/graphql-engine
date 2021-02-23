@@ -374,10 +374,10 @@ class Main extends React.Component {
             <div className={styles.header_items}>
               <ul className={styles.sidebarItems}>
                 {getSidebarItem(
-                  'GraphiQL',
+                  'API',
                   'fa-flask',
                   tooltips.apiExplorer,
-                  '/api-explorer',
+                  '/api/api-explorer',
                   true
                 )}
                 {getSidebarItem(

@@ -1,5 +1,5 @@
 import React from 'react';
-import { Route, IndexRoute, IndexRedirect } from 'react-router';
+import { Route, IndexRedirect } from 'react-router';
 
 import { connect } from 'react-redux';
 
@@ -30,6 +30,7 @@ import generatedVoyagerConnector from './components/Services/VoyagerView/Voyager
 import generatedLoginConnector from './components/Login/Login';
 
 import settingsContainer from './components/Services/Settings/Container';
+import apiContainer from './components/Services/ApiExplorer/Container';
 import metadataOptionsConnector from './components/Services/Settings/MetadataOptions/MetadataOptions';
 import metadataStatusConnector from './components/Services/Settings/MetadataStatus/MetadataStatus';
 import allowedQueriesConnector from './components/Services/Settings/AllowedQueries/AllowedQueries';
@@ -42,6 +43,9 @@ import UIKit from './components/UIKit/';
 import { Heading } from './components/UIKit/atoms';
 import { SupportContainer } from './components/Services/Support/SupportContainer';
 import HelpPage from './components/Services/Support/HelpPage';
+import CreateRestView from './components/Services/ApiExplorer/Rest/Create/';
+import RestListView from './components/Services/ApiExplorer/Rest/List';
+import DetailsView from './components/Services/ApiExplorer/Rest/Details';
 import TempHerokuCallback from './components/Services/Data/DataSources/CreateDataSource/Heroku/TempCallback';
 
 const routes = store => {
@@ -117,8 +121,22 @@ const routes = store => {
           requireAsyncGlobals(store),
         ])}
       >
-        <IndexRoute component={generatedApiExplorer(connect)} />
-        <Route path="api-explorer" component={generatedApiExplorer(connect)} />
+        <IndexRedirect to="api/api-explorer" />
+        <Route path="api" component={apiContainer}>
+          <IndexRedirect to="api-explorer" />
+          <Route
+            path="api-explorer"
+            component={generatedApiExplorer(connect)}
+          />
+          <Route path="rest">
+            <IndexRedirect to="list" />
+            <Route path="create" component={CreateRestView} />
+            <Route path="list" component={RestListView} />
+            <Route path="details/:name" component={DetailsView} />
+            <Route path="edit/:name" component={CreateRestView} />
+          </Route>
+        </Route>
+
         <Route
           path="voyager-view"
           component={generatedVoyagerConnector(connect)}

@@ -42,7 +42,6 @@ const createHerokuApp = (session: HerokuSession) => {
         });
     })
     .catch(e => {
-      console.log('throwing once again');
       throw e;
     });
 };
@@ -150,7 +149,6 @@ export const useHerokuDBCreation = (
         });
       })
       .catch(e => {
-        console.log('Catching here');
         setError(e.message);
       });
   };

@@ -836,6 +836,35 @@ export interface InputArgument {
 //  #endregion ACTIONS
 // /////////////////////////////
 
+// /////////////////////////////
+// #region REST ENDPOINT
+// /////////////////////////////
+
+/**
+ * https://hasura.io/docs/1.0/graphql/manual/api-reference/schema-metadata-api//schema-metadata-api/restified-endpoints.html
+ */
+
+export type AllowedRESTMethods = 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';
+
+export interface RestEndpointDefinition {
+  query: {
+    query_name: string;
+    collection_name: string;
+  };
+}
+
+export interface RestEndpointEntry {
+  name: string;
+  url: string;
+  methods: AllowedRESTMethods[];
+  definition: RestEndpointDefinition;
+  comment?: string;
+}
+
+// //////////////////////////////
+//  #endregion REST ENDPOINT
+// /////////////////////////////
+
 /**
  * Type used in exported 'metadata.json' and replace metadata endpoint
  * https://hasura.io/docs/1.0/graphql/manual/api-reference/schema-metadata-api/manage-metadata.html#replace-metadata
@@ -889,4 +918,5 @@ export interface HasuraMetadataV3 {
   custom_types?: CustomTypes;
   cron_triggers?: CronTrigger[];
   query_collections: QueryCollectionEntry[];
+  rest_endpoints?: RestEndpointEntry[];
 }

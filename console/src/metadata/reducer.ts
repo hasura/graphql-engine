@@ -1,5 +1,5 @@
 import { MetadataActions } from './actions';
-import { QueryCollection, HasuraMetadataV3 } from './types';
+import { QueryCollection, HasuraMetadataV3, RestEndpointEntry } from './types';
 import { allowedQueriesCollection } from './utils';
 
 type MetadataState = {
@@ -9,6 +9,7 @@ type MetadataState = {
   inconsistentObjects: any[];
   ongoingRequest: boolean; // deprecate
   allowedQueries: QueryCollection[];
+  rest_endpoints?: RestEndpointEntry[];
 };
 
 const defaultState: MetadataState = {
@@ -115,7 +116,16 @@ export const metadataReducer = (
           ),
         ],
       };
-
+    case 'Metadata/ADD_REST_ENDPOINT':
+      return {
+        ...state,
+        rest_endpoints: action.data,
+      };
+    case 'Metadata/DROP_REST_ENDPOINT':
+      return {
+        ...state,
+        rest_endpoints: action.data,
+      };
     default:
       return state;
   }
