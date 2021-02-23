@@ -17,6 +17,7 @@ import {
 } from './state';
 import { getDatasourceURL, getErrorMessageFromMissingFields } from './utils';
 import { LabeledInput } from '../../../Common/LabeledInput';
+import { Driver } from '../../../../dataSources';
 
 interface ConnectDatabaseProps extends InjectedProps {}
 
@@ -240,19 +241,30 @@ const ConnectDatabase: React.FC<ConnectDatabaseProps> = props => {
             label="Database Display Name"
             placeholder="database name"
           />
-          {/* <label className={styles.connect_db_input_label}>
-          Data Source Driver
-        </label>
-        <select
-          key="connect-db-type"
-          value={connectDBInputState.dbType}
-          name={UPDATE_DB_DRIVER}
-          onChange={onChangeConnectionInput}
-          className={`form-control ${styles.connect_db_input_pad}`}
-        >
-          <option value="postgres">Postgres</option>
-        </select> */}
-          {connectionType === connectionTypes.DATABASE_URL ? (
+          <label className={styles.connect_db_input_label}>
+            Data Source Driver
+          </label>
+          <select
+            key="connect-db-type"
+            value={connectDBInputState.dbType}
+            onChange={e =>
+              connectDBDispatch({
+                type: 'UPDATE_DB_DRIVER',
+                data: e.target.value as Driver,
+              })
+            }
+            className={`form-control ${styles.connect_db_input_pad}`}
+          >
+            <option key="postgres" value="postgres">
+              Postgres
+            </option>
+            <option key="mssql" value="mssql">
+              MS Server
+            </option>
+          </select>
+          {connectionType === connectionTypes.DATABASE_URL ||
+          (connectionType === connectionTypes.CONNECTION_PARAMS &&
+            connectDBInputState.dbType === 'mssql') ? (
             <LabeledInput
               label="Database URL"
               onChange={e =>
@@ -279,7 +291,8 @@ const ConnectDatabase: React.FC<ConnectDatabaseProps> = props => {
               value={connectDBInputState.envVarURLState.envVarURL}
             />
           ) : null}
-          {connectionType === connectionTypes.CONNECTION_PARAMS ? (
+          {connectionType === connectionTypes.CONNECTION_PARAMS &&
+          connectDBInputState.dbType !== 'mssql' ? (
             <>
               <LabeledInput
                 label="Host"

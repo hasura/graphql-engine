@@ -69,6 +69,7 @@ import {
   generateTableDef,
   QUERY_TYPES,
   dataSource,
+  currentDriver,
 } from '../../../../dataSources';
 import KnowMoreLink from '../../../Common/KnowMoreLink/KnowMoreLink';
 import {
@@ -83,6 +84,9 @@ import {
 import PermButtonSection from './PermButtonsSection';
 import { rolesSelector } from '../../../../metadata/selector';
 import { RightContainer } from '../../../Common/Layout/RightContainer';
+import FeatureDisabled from '../FeatureDisabled';
+
+const supportedDrivers = ['postgres'];
 
 class Permissions extends Component {
   constructor() {
@@ -108,6 +112,8 @@ class Permissions extends Component {
 
   componentDidMount() {
     const { dispatch } = this.props;
+
+    if (!supportedDrivers.includes(currentDriver)) return;
 
     dispatch({ type: RESET });
     dispatch(setTable(this.props.tableName));
@@ -199,7 +205,17 @@ class Permissions extends Component {
       generateTableDef(tableName, currentSchema)
     );
 
-    if (!currentTableSchema) {
+    if (!supportedDrivers.includes(currentDriver)) {
+      return (
+        <FeatureDisabled
+          tab="permissions"
+          tableName={tableName}
+          schemaName={currentSchema}
+        />
+      );
+    }
+
+    if (!currentTableSchema && supportedDrivers.includes(currentDriver)) {
       // throw a 404 exception
       throw new NotFoundError();
     }

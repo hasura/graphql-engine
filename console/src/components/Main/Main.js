@@ -16,6 +16,7 @@ import Spinner from '../Common/Spinner/Spinner';
 import {
   getSchemaBaseRoute,
   redirectToMetadataStatus,
+  getDataSourceBaseRoute,
 } from '../Common/utils/routesUtils';
 import { getPathRoot } from '../Common/utils/urlUtils';
 import WarningSymbol from '../Common/WarningSymbol/WarningSymbol';
@@ -236,6 +237,7 @@ class Main extends React.Component {
       console_opts,
       currentSource,
       dispatch,
+      schemaList,
     } = this.props;
 
     const {
@@ -385,7 +387,9 @@ class Main extends React.Component {
                   'fa-database',
                   tooltips.data,
                   currentSource
-                    ? getSchemaBaseRoute(currentSchema, currentSource)
+                    ? schemaList.length
+                      ? getSchemaBaseRoute(currentSchema, currentSource)
+                      : getDataSourceBaseRoute(currentSource)
                     : '/data'
                 )}
                 {getSidebarItem(
@@ -477,6 +481,7 @@ const mapStateToProps = (state, ownProps) => {
     metadata: state.metadata,
     console_opts: state.telemetry.console_opts,
     requestHeaders: state.tables.dataHeaders,
+    schemaList: state.tables.schemaList,
   };
 };
 

@@ -6,7 +6,7 @@ import { push } from 'react-router-redux';
 import { AnyAction } from 'redux';
 
 import { ReduxState } from '../../../types';
-import { getDataSources, getInitDataSource } from '../../../metadata/selector';
+import { getDataSources } from '../../../metadata/selector';
 import { showErrorNotification } from '../Common/Notification';
 import {
   fetchDataInit,
@@ -14,7 +14,9 @@ import {
   UPDATE_CURRENT_DATA_SOURCE,
   UPDATE_CURRENT_SCHEMA,
 } from './DataActions';
-import { setDriver } from '../../../dataSources';
+import { currentDriver, useDataSource } from '../../../dataSources';
+import SourceView from './SourceView';
+import { getSourceDriver } from './utils';
 
 type Params = {
   source?: string;
@@ -32,12 +34,11 @@ const DataSourceContainer = ({
   dataSources,
   dispatch,
   currentSource,
-  driver,
   location,
 }: DataSourceContainerProps) => {
+  const { setDriver } = useDataSource();
   const [dataLoaded, setDataLoaded] = useState(false);
   const { source, schema } = params;
-
   useEffect(() => {
     if (!source || source === 'undefined') {
       if (currentSource) {
@@ -46,11 +47,14 @@ const DataSourceContainer = ({
       }
 
       const newSource = dataSources.length ? dataSources[0].name : '';
+      setDriver(getSourceDriver(dataSources, newSource));
       dispatch({ type: UPDATE_CURRENT_DATA_SOURCE, source: newSource });
       dispatch(push(`/data/${newSource}`));
       return;
     }
 
+    setDriver(getSourceDriver(dataSources, source));
+    dispatch({ type: UPDATE_CURRENT_DATA_SOURCE, source });
     if (source === currentSource) {
       return;
     }
@@ -60,26 +64,17 @@ const DataSourceContainer = ({
       dispatch(
         showErrorNotification(`Data source "${source}" doesn't exist`, null)
       );
-      return;
     }
-    dispatch({ type: UPDATE_CURRENT_DATA_SOURCE, source });
   }, [currentSource, dataSources, dispatch, source]);
 
   useEffect(() => {
     if (!source || source === 'undefined') return;
-    if (!dataLoaded) return;
 
     if (schema) {
-      if (schemaList.find((s: string) => s === schema)) {
-        dispatch({ type: UPDATE_CURRENT_SCHEMA, currentSchema: schema });
-      } else {
-        dispatch(
-          showErrorNotification(`Schema "${schema}" doesn't exist`, null)
-        );
-        dispatch(push(`/data/${source}`));
-      }
+      dispatch({ type: UPDATE_CURRENT_SCHEMA, currentSchema: schema });
       return;
     }
+    if (!dataLoaded) return;
 
     let newSchema = '';
     if (schemaList.length) {
@@ -92,23 +87,21 @@ const DataSourceContainer = ({
   }, [dispatch, schema, schemaList, source, location, dataLoaded]);
 
   useEffect(() => {
-    setDriver(driver);
-  }, [driver]);
-
-  useEffect(() => {
+    const driver = getSourceDriver(dataSources, currentSource);
+    if (driver !== currentDriver) return;
     if (currentSource) {
-      dispatch(fetchDataInit()).then(() => {
-        dispatch(fetchFunctionInit());
+      dispatch(fetchDataInit(currentSource, currentDriver)).then(() => {
+        dispatch(fetchFunctionInit()); // todo
         setDataLoaded(true);
       });
     }
-  }, [currentSource, dataLoaded, dispatch]);
+  }, [currentSource, dataLoaded, dispatch, currentDriver]);
 
   if (!currentSource || !dataLoaded) {
     return <div style={{ margin: '20px' }}>Loading...</div>;
   }
 
-  return <>{children}</>;
+  return <>{children || <SourceView />}</>;
 };
 
 const mapStateToProps = (state: ReduxState) => {
@@ -116,7 +109,6 @@ const mapStateToProps = (state: ReduxState) => {
     schemaList: state.tables.schemaList,
     dataSources: getDataSources(state),
     currentSource: state.tables.currentDataSource,
-    driver: getInitDataSource(state).driver,
   };
 };
 const dataSourceConnector = connect(

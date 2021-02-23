@@ -122,7 +122,11 @@ const DataSubSidebar = props => {
         .tables.map(i => `'${i.table.name}'`);
       schemaPromises.push(
         dispatch(
-          getDatabaseTableTypeInfo('postgres', source.name, currentSourceTables)
+          getDatabaseTableTypeInfo(
+            source.kind,
+            source.name,
+            currentSourceTables
+          )
         ).then(data => ({ source: source.name, schemaInfo: data }))
       );
     });

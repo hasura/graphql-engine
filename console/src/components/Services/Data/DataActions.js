@@ -26,13 +26,13 @@ import {
   cascadeUpQueries,
   getDependencyError,
 } from './utils';
-import { mergeLoadSchemaData } from './mergeData';
+import { mergeDataMssql, mergeLoadSchemaDataPostgres } from './mergeData';
 import _push from './push';
 import { convertArrayToJson } from './TableModify/utils';
 import { CLI_CONSOLE_MODE, SERVER_CONSOLE_MODE } from '../../../constants';
 import { getDownQueryComments } from '../../../utils/migration/utils';
 import { isEmpty } from '../../Common/utils/jsUtils';
-import { dataSource } from '../../../dataSources';
+import { currentDriver, dataSource } from '../../../dataSources';
 import { exportMetadata } from '../../../metadata/actions';
 import {
   getTablesFromAllSources,
@@ -171,23 +171,23 @@ const loadSchema = configOptions => {
         fetchTrackedTableFkQuery(configOptions, source),
         // todo: queries below could be done only when user visits `Data` page
         getRunSqlQuery(
-          dataSource.primaryKeysInfoSql(configOptions),
+          dataSource?.primaryKeysInfoSql(configOptions) || '',
           source,
           false,
           checkFeatureSupport(READ_ONLY_RUN_SQL_QUERIES) ? true : false
         ),
         getRunSqlQuery(
-          dataSource.uniqueKeysSql(configOptions),
+          dataSource?.uniqueKeysSql(configOptions) || '',
           source,
           false,
           checkFeatureSupport(READ_ONLY_RUN_SQL_QUERIES) ? true : false
         ),
       ],
     };
-    if (dataSource.checkConstraintsSql) {
+    if (dataSource?.checkConstraintsSql) {
       body.args.push(
         getRunSqlQuery(
-          dataSource.checkConstraintsSql(configOptions),
+          dataSource?.checkConstraintsSql(configOptions) || '',
           source,
           false,
           checkFeatureSupport(READ_ONLY_RUN_SQL_QUERIES) ? true : false
@@ -206,22 +206,18 @@ const loadSchema = configOptions => {
       const metadataTables = getTablesInfoSelector(state)(configOptions);
       return dispatch(requestAction(url, options)).then(
         data => {
-          const tableList = JSON.parse(data[0].result[1]);
-          const fkList = JSON.parse(data[1].result[1]);
-          const primaryKeys = JSON.parse(data[2].result[1]);
-          const uniqueKeys = JSON.parse(data[3].result[1]);
-          const checkConstraints = dataSource.checkConstraintsSql
-            ? JSON.parse(data[4].result[1])
-            : [];
+          if (!data || !data[0] || !data[0].result) return;
 
-          const mergedData = mergeLoadSchemaData(
-            tableList,
-            fkList,
-            metadataTables,
-            primaryKeys,
-            uniqueKeys,
-            checkConstraints
-          );
+          let mergedData = [];
+          switch (currentDriver) {
+            case 'postgres':
+              mergedData = mergeLoadSchemaDataPostgres(data, metadataTables);
+              break;
+            case 'mssql':
+              mergedData = mergeDataMssql(data, metadataTables);
+              break;
+            default:
+          }
 
           const { inconsistentObjects } = state.metadata;
           const maybeInconsistentSchemas = allSchemas.concat(mergedData);
@@ -274,7 +270,7 @@ const fetchAdditionalColumnsInfo = () => (dispatch, getState) => {
       if (data.result) {
         dispatch({
           type: SET_ADDITIONAL_COLUMNS_INFO,
-          data: dataSource.parseColumnsInfoResult(data.result),
+          data: dataSource?.parseColumnsInfoResult(data.result),
         });
       }
     },
@@ -300,11 +296,18 @@ const setConsistentSchema = data => ({
   data,
 });
 
-const fetchDataInit = () => (dispatch, getState) => {
+const fetchDataInit = (source, driver) => (dispatch, getState) => {
   const url = Endpoints.query;
 
-  const source = getState().tables.currentDataSource;
-  const query = getRunSqlQuery(dataSource.schemaListSql, source);
+  const currentSource = source || getState().tables.currentDataSource;
+
+  const query = getRunSqlQuery(
+    dataSource.schemaListSql,
+    currentSource,
+    false,
+    false,
+    driver
+  );
 
   if (!getState().tables.currentDataSource) return;
 
@@ -327,7 +330,7 @@ const fetchDataInit = () => (dispatch, getState) => {
         type: FETCH_SCHEMA_LIST,
         schemaList,
       });
-      return dispatch(updateSchemaInfo());
+      return dispatch(updateSchemaInfo()); // TODO
     },
     error => {
       console.error('Failed to fetch schema ' + JSON.stringify(error));
@@ -340,7 +343,7 @@ const fetchFunctionInit = (schema = null) => (dispatch, getState) => {
   const url = Endpoints.query;
   const fnSchema = schema || getState().tables.currentSchema;
   const source = getState().tables.currentDataSource;
-  if (!source) return;
+  if (!source || !dataSource.getFunctionDefinitionSql) return;
   const body = {
     type: 'bulk',
     source,
@@ -437,35 +440,6 @@ const fetchSchemaList = () => (dispatch, getState) => {
   );
 };
 
-export const getSchemaList = (sourceType, sourceName) => (
-  dispatch,
-  getState
-) => {
-  const url = Endpoints.query;
-  const sql = services[sourceType].schemaListSql;
-  const query = getRunSqlQuery(sql, sourceName);
-  const options = {
-    credentials: globalCookiePolicy,
-    method: 'POST',
-    headers: dataHeaders(getState),
-    body: JSON.stringify(query),
-  };
-  return dispatch(requestAction(url, options)).then(
-    data => data,
-    error => {
-      console.error('Failed to fetch schema ' + JSON.stringify(error));
-      return error;
-    }
-  );
-};
-
-/**
- *
- * @param {'postgres' | 'mysql'} sourceType
- * @param {string} sourceName
- *
- * @returns {{ [schema_name]: {[table_name]: string[]} }}
- */
 export const getDatabaseSchemasInfo = (sourceType = 'postgres', sourceName) => (
   dispatch,
   getState
@@ -516,7 +490,7 @@ export const getDatabaseSchemasInfo = (sourceType = 'postgres', sourceName) => (
 
 /**
  *
- * @param {'postgres' | 'mysql'} sourceType
+ * @param {'postgres' | 'mssql'} sourceType
  * @param {string} sourceName
  * @param {string[]} tables
  * @returns {{ [schema_name]: {[table_name]: string, [table_type]: string}}}
@@ -534,7 +508,7 @@ export const getDatabaseTableTypeInfo = (
 
   const url = Endpoints.query;
   const sql = services[sourceType].getTableInfo(tables);
-  const query = getRunSqlQuery(sql, sourceName);
+  const query = getRunSqlQuery(sql, sourceName, false, false, sourceType);
   const options = {
     credentials: globalCookiePolicy,
     method: 'POST',
@@ -551,7 +525,18 @@ export const getDatabaseTableTypeInfo = (
       );
       const schemasInfo = {};
 
-      JSON.parse(result[1]).forEach(i => {
+      let res;
+      try {
+        if (currentDriver === 'mssql') {
+          res = JSON.parse(result.slice(1).join());
+        } else {
+          res = JSON.parse(result[1]);
+        }
+      } catch {
+        res = [];
+      }
+
+      res.forEach(i => {
         if (
           !trackedTables.some(
             t =>

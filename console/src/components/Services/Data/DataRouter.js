@@ -27,10 +27,11 @@ import {
   ConnectedCreateDataSourcePage,
 } from '.';
 
-import { UPDATE_CURRENT_DATA_SOURCE } from './DataActions';
 import { exportMetadata } from '../../../metadata/actions';
 import ConnectedDataSourceContainer from './DataSourceContainer';
 import ConnectDatabase from './DataSources/ConnectDatabase';
+import { setDriver } from '../../../dataSources';
+import { UPDATE_CURRENT_DATA_SOURCE } from './DataActions';
 
 const makeDataRouter = (
   connect,
@@ -50,12 +51,12 @@ const makeDataRouter = (
       <IndexRedirect to="manage" />
       <Route path="manage" component={ConnectedDatabaseManagePage} />
       <Route path="schema/manage" component={ConnectedDatabaseManagePage} />
+      <Route path="sql" component={rawSQLConnector(connect)} />
       <Route path="manage/connect" component={ConnectDatabase} />
       <Route path="manage/create" component={ConnectedCreateDataSourcePage} />
       <Route path="schema/manage/connect" component={ConnectDatabase} />
       <Route path="manage/edit/:databaseName" component={ConnectDatabase} />
       <Route path=":source" component={ConnectedDataSourceContainer}>
-        <Route path="sql" component={rawSQLConnector(connect)} />
         <Route path="schema">
           <Route path=":schema" component={schemaConnector(connect)} />
           <Route path=":schema/tables" component={schemaConnector(connect)} />
@@ -140,12 +141,22 @@ const dataRouterUtils = (connect, store, composeOnEnterHooks) => {
       const sources = state?.metadata?.metadataObject?.sources || [];
       const currentSource = state?.tables?.currentDataSource || '';
 
-      if (sources.length && !currentSource) {
+      if (currentSource) {
+        return cb();
+      }
+
+      let source;
+      let driver;
+      if (sources.length) {
+        source = sources[0].name;
+        driver = sources[0].kind;
+        setDriver(driver);
         store.dispatch({
           type: UPDATE_CURRENT_DATA_SOURCE,
-          source: sources[0].name,
+          source: source,
         });
       }
+
       return cb();
     });
   };

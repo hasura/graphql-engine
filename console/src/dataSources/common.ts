@@ -224,7 +224,7 @@ export const getTableCustomRootFields = (table: Table) => {
 };
 
 export const getTableCustomColumnNames = (table: Table) => {
-  if (table.configuration) {
+  if (table && table.configuration) {
     return table.configuration.custom_column_names || {};
   }
   return {};

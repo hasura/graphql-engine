@@ -12,10 +12,23 @@ export const addSource = (
     };
   }
 ) => {
-  const typePrefix = driver === 'postgres' ? 'pg_' : 'mysql_';
+  if (driver === 'mssql') {
+    return {
+      type: 'mssql_add_source',
+      args: {
+        name: payload.name,
+        configuration: {
+          connection_info: {
+            connection_string: payload.dbUrl,
+            pool_settings: payload.connection_pool_settings,
+          },
+        },
+      },
+    };
+  }
 
   return {
-    type: `${typePrefix}add_source`,
+    type: 'pg_add_source',
     args: {
       name: payload.name,
       configuration: {
@@ -29,10 +42,20 @@ export const addSource = (
 };
 
 export const removeSource = (driver: Driver, name: string) => {
-  const typePrefix = driver === 'postgres' ? 'pg_' : 'mysql_';
+  let prefix = '';
+  switch (driver) {
+    case 'mssql':
+      prefix = 'mssql_';
+      break;
+    case 'mysql':
+      prefix = 'mysql_';
+      break;
+    default:
+      prefix = 'pg_';
+  }
 
   return {
-    type: `${typePrefix}drop_source`,
+    type: `${prefix}drop_source`,
     args: {
       name,
     },

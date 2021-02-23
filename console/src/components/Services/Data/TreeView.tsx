@@ -217,11 +217,11 @@ const DatabaseItemsView: React.FC<DatabaseItemsViewProps> = ({
     <div className={styles.padd_bottom_small}>
       <div
         onClick={() => {
-          setIsOpen(prev => !prev);
+          // setIsOpen(prev => !prev);
           setActiveDataSource(item.name);
         }}
         onKeyDown={() => {
-          setIsOpen(prev => !prev);
+          // setIsOpen(prev => !prev);
           setActiveDataSource(item.name);
         }}
         role="button"
@@ -232,6 +232,7 @@ const DatabaseItemsView: React.FC<DatabaseItemsViewProps> = ({
             item.children &&
             `${styles.title} ${isOpen ? '' : styles.titleClosed}`
           }
+          style={isActive ? activeStyle : {}}
         >
           <i className={`fa fa-${item.type}`} /> {item.name}
         </span>

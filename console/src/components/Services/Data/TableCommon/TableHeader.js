@@ -6,7 +6,7 @@ import { capitalize, exists } from '../../../Common/utils/jsUtils';
 import EditableHeading from '../../../Common/EditableHeading/EditableHeading';
 import BreadCrumb from '../../../Common/Layout/BreadCrumb/BreadCrumb';
 import { tabNameMap } from '../utils';
-import { dataSource } from '../../../../dataSources';
+import { currentDriver, dataSource } from '../../../../dataSources';
 import {
   getSchemaBaseRoute,
   getTableBrowseRoute,
@@ -17,6 +17,7 @@ import {
   getTableRelationshipsRoute,
 } from '../../../Common/utils/routesUtils';
 import { getReadableNumber } from '../../../Common/utils/jsUtils';
+import FeatureDisabled from '../FeatureDisabled';
 
 const TableHeader = ({
   tabName,
@@ -92,74 +93,83 @@ const TableHeader = ({
           currentValue={tableName}
           save={saveTableNameChange}
           loading={false}
-          editable={tabName === 'modify'}
+          editable={tabName === 'modify' && currentDriver === 'postgres'}
           dispatch={dispatch}
           property={isTableType ? 'table' : 'view'}
         />
         <div className={styles.nav}>
-          <ul className="nav nav-pills">
-            {getTab(
-              'browse',
-              getTableBrowseRoute(tableSchema, source, tableName, isTableType),
-              `Browse Rows ${countDisplay}`,
-              'table-browse-rows'
-            )}
-            {!readOnlyMode &&
-              isTableType &&
-              getTab(
-                'insert',
-                getTableInsertRowRoute(
+          {currentDriver === 'mssql' ? (
+            <FeatureDisabled showTab={false} />
+          ) : (
+            <ul className="nav nav-pills">
+              {getTab(
+                'browse',
+                getTableBrowseRoute(
                   tableSchema,
                   source,
                   tableName,
                   isTableType
                 ),
-                'Insert Row',
-                'table-insert-rows'
+                `Browse Rows ${countDisplay}`,
+                'table-browse-rows'
               )}
-            {migrationMode &&
-              getTab(
-                'modify',
-                getTableModifyRoute(
+              {!readOnlyMode &&
+                isTableType &&
+                getTab(
+                  'insert',
+                  getTableInsertRowRoute(
+                    tableSchema,
+                    source,
+                    tableName,
+                    isTableType
+                  ),
+                  'Insert Row',
+                  'table-insert-rows'
+                )}
+              {migrationMode &&
+                getTab(
+                  'modify',
+                  getTableModifyRoute(
+                    tableSchema,
+                    source,
+                    tableName,
+                    isTableType
+                  ),
+                  'Modify'
+                )}
+              {getTab(
+                'relationships',
+                getTableRelationshipsRoute(
                   tableSchema,
                   source,
                   tableName,
                   isTableType
                 ),
-                'Modify'
+                'Relationships'
               )}
-            {getTab(
-              'relationships',
-              getTableRelationshipsRoute(
-                tableSchema,
-                source,
-                tableName,
-                isTableType
-              ),
-              'Relationships'
-            )}
-            {getTab(
-              'permissions',
-              getTablePermissionsRoute(
-                tableSchema,
-                source,
-                tableName,
-                isTableType
-              ),
-              'Permissions'
-            )}
-            {tabName === 'edit' &&
-              getTab(
-                'edit',
-                getTableEditRowRoute(
+              {getTab(
+                'permissions',
+                getTablePermissionsRoute(
                   tableSchema,
                   source,
                   tableName,
                   isTableType
                 ),
-                'Edit Row'
+                'Permissions'
               )}
-          </ul>
+              {tabName === 'edit' &&
+                getTab(
+                  'edit',
+                  getTableEditRowRoute(
+                    tableSchema,
+                    source,
+                    tableName,
+                    isTableType
+                  ),
+                  'Edit Row'
+                )}
+            </ul>
+          )}
         </div>
         <div className="clearfix" />
       </div>

@@ -4,6 +4,7 @@ import { Driver, currentDriver } from '../../../dataSources';
 const driverToLabel: Record<Driver, string> = {
   mysql: 'MySQL',
   postgres: 'PostgreSQL',
+  mssql: 'MS Server',
 };
 
 type NotSupportedNoteProps = {

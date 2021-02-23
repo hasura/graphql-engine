@@ -1,0 +1,333 @@
+import React from 'react';
+import { DataSourcesAPI } from '../..';
+import { TableColumn, Table } from '../../types';
+
+const isTable = (table: Table) => {
+  if (!table.table_type) return true; // todo
+  return (
+    table.table_type === 'TABLE' ||
+    table.table_type === 'VIEW' ||
+    table.table_type === 'BASE TABLE'
+  );
+};
+
+const columnDataTypes = {
+  INTEGER: 'integer',
+  BIGINT: 'bigint',
+  GUID: 'guid',
+  JSONDTYPE: 'nvarchar',
+  DATETIMEOFFSET: 'timestamp with time zone',
+  NUMERIC: 'numeric',
+  DATE: 'date',
+  TIME: 'time',
+  TEXT: 'text',
+};
+
+// eslint-disable-next-line no-useless-escape
+const createSQLRegex = /create\s*(?:|or\s*replace)\s*(view|table|function)\s*(?:\s*if*\s*not\s*exists\s*)?((\"?\w+\"?)\.(\"?\w+\"?)|(\"?\w+\"?))/g;
+
+export const getColumnType = (column: TableColumn) => {
+  return column.data_type;
+};
+
+export const displayTableName = (table: Table) => {
+  const tableName = table.table_name;
+
+  return isTable(table) ? <span>{tableName}</span> : <i>{tableName}</i>;
+};
+
+export const mssql: DataSourcesAPI = {
+  isTable,
+  displayTableName,
+  getFunctionSchema: () => {
+    return '';
+  },
+  getFunctionDefinition: () => {
+    return '';
+  },
+  getSchemaFunctions: () => {
+    return [];
+  },
+  findFunction: () => {
+    return undefined;
+  },
+  getGroupedTableComputedFields: () => {
+    return { scalar: [], table: [] };
+  },
+  isColumnAutoIncrement: () => {
+    return false;
+  },
+  getTableSupportedQueries: () => {
+    return ['delete', 'insert', 'select', 'update'];
+  },
+  getColumnType: () => {
+    return '';
+  },
+  arrayToPostgresArray: () => {
+    return '';
+  },
+  schemaListSql: `SELECT
+	s.name AS schema_name
+FROM
+	sys.schemas s
+	INNER JOIN sys.sysusers u ON u.uid = s.principal_id
+WHERE
+	u.issqluser = 1
+	AND u.name NOT in ('sys', 'guest', 'INFORMATION_SCHEMA')`,
+  parseColumnsInfoResult: () => {
+    return {};
+  },
+  columnDataTypes,
+  getFetchTablesListQuery: ({ schemas }) => {
+    return `
+    SELECT sch.name as table_schema,
+    obj.name as table_name,
+    case
+        when obj.type = 'AF' then 'Aggregate function (CLR)'
+        when obj.type = 'C' then 'CHECK constraint'
+        when obj.type = 'D' then 'DEFAULT (constraint or stand-alone)'
+        when obj.type = 'F' then 'FOREIGN KEY constraint'
+        when obj.type = 'FN' then 'SQL scalar function'
+        when obj.type = 'FS' then 'Assembly (CLR) scalar-function'
+        when obj.type = 'FT' then 'Assembly (CLR) table-valued function'
+        when obj.type = 'IF' then 'SQL inline table-valued function'
+        when obj.type = 'IT' then 'Internal table'
+        when obj.type = 'P' then 'SQL Stored Procedure'
+        when obj.type = 'PC' then 'Assembly (CLR) stored-procedure'
+        when obj.type = 'PG' then 'Plan guide'
+        when obj.type = 'PK' then 'PRIMARY KEY constraint'
+        when obj.type = 'R' then 'Rule (old-style, stand-alone)'
+        when obj.type = 'RF' then 'Replication-filter-procedure'
+        when obj.type = 'S' then 'System base table'
+        when obj.type = 'SN' then 'Synonym'
+        when obj.type = 'SO' then 'Sequence object'
+        when obj.type = 'U' then 'TABLE'
+        when obj.type = 'V' then 'VIEW'
+        when obj.type = 'EC' then 'Edge constraint'
+    end as table_type,
+    obj.type_desc AS comment,
+    JSON_QUERY([isc].json) AS columns
+FROM sys.objects as obj
+    INNER JOIN sys.schemas as sch ON obj.schema_id = sch.schema_id
+    LEFT OUTER JOIN sys.columns AS col ON col.object_id = obj.object_id
+    OUTER APPLY (
+        SELECT nc.name AS table_schema,
+            c.name AS table_name,
+            a.name AS column_name,
+            a.column_id AS ordinal_position,
+            ad.definition AS column_default,
+            a.collation_name AS collation_name,
+            CASE
+                WHEN a.is_nullable = 0
+                OR t.is_nullable = 0
+                THEN 'NO'
+                ELSE 'YES'
+            END AS is_nullable,
+            CASE
+                WHEN t.is_table_type = 1 THEN 'TABLE'
+                WHEN t.is_assembly_type = 1 THEN 'ASSEMBLY'
+                WHEN t.is_user_defined = 1 THEN 'USER-DEFINED'
+                ELSE 'OTHER'
+            END AS data_type,
+            ISNULL(bt.name, t.name) AS data_type_name
+        FROM (
+            sys.columns a
+            LEFT JOIN sys.default_constraints ad ON a.object_id = ad.parent_column_id
+            AND a.column_id = ad.parent_object_id
+        )
+        JOIN (
+            sys.objects c
+            JOIN sys.schemas nc ON (c.schema_id = nc.schema_id)
+        ) ON a.object_id = c.object_id
+        JOIN (
+                sys.types t
+                JOIN sys.schemas nt ON (t.schema_id = nt.schema_id)
+            ) ON a.user_type_id = t.user_type_id
+        LEFT JOIN (
+                sys.types bt
+                JOIN sys.schemas nbt ON (bt.schema_id = nbt.schema_id)
+            ) ON (
+                t.is_user_defined = 0
+                AND t.system_type_id = bt.system_type_id
+            )
+        WHERE a.column_id > 0
+        AND nc.name = sch.name
+        AND c.name = obj.name
+        AND a.name = col.name
+        FOR JSON path
+)   AS [isc](json) where sch.name = '${schemas.join(',')}';
+    `;
+  },
+  commonDataTypes: [],
+  fetchColumnTypesQuery: '',
+  fetchColumnDefaultFunctions: () => {
+    return '';
+  },
+  isSQLFunction: () => {
+    return false;
+  },
+  getEstimateCountQuery: () => {
+    return '';
+  },
+  isColTypeString: () => {
+    return false;
+  },
+  cascadeSqlQuery: () => {
+    return '';
+  },
+  dependencyErrorCode: '',
+  getCreateTableQueries: () => {
+    return [];
+  },
+  getDropTableSql: () => {
+    return '';
+  },
+  createSQLRegex,
+  getDropSchemaSql: (schema: string) => {
+    return `drop schema ${schema};`;
+  },
+  getCreateSchemaSql: (schema: string) => {
+    return `create schema ${schema};`;
+  },
+  isTimeoutError: () => {
+    return false;
+  },
+  getAlterForeignKeySql: () => {
+    return '';
+  },
+  getCreateFKeySql: () => {
+    return '';
+  },
+  getDropConstraintSql: () => {
+    return '';
+  },
+  getRenameTableSql: () => {
+    return '';
+  },
+  getDropTriggerSql: () => {
+    return '';
+  },
+  getCreateTriggerSql: () => {
+    return '';
+  },
+  getDropSql: () => {
+    return '';
+  },
+  getViewDefinitionSql: () => {
+    return '';
+  },
+  getDropColumnSql: () => {
+    return '';
+  },
+  getAddColumnSql: () => {
+    return '';
+  },
+  getAddUniqueConstraintSql: () => {
+    return '';
+  },
+  getDropNotNullSql: () => {
+    return '';
+  },
+  getSetCommentSql: () => {
+    return '';
+  },
+  getSetColumnDefaultSql: () => {
+    return '';
+  },
+  getSetNotNullSql: () => {
+    return '';
+  },
+  getAlterColumnTypeSql: () => {
+    return '';
+  },
+  getDropColumnDefaultSql: () => {
+    return '';
+  },
+  getRenameColumnQuery: () => {
+    return '';
+  },
+  fetchColumnCastsQuery: '',
+  checkSchemaModification: () => {
+    return false;
+  },
+  getCreateCheckConstraintSql: () => {
+    return '';
+  },
+  getCreatePkSql: () => {
+    return '';
+  },
+  getFunctionDefinitionSql: null,
+  primaryKeysInfoSql: () => {
+    return '';
+  },
+  checkConstraintsSql: () => {
+    return '';
+  },
+  uniqueKeysSql: () => {
+    return '';
+  },
+  frequentlyUsedColumns: [],
+  getFKRelations: () => {
+    return `
+SELECT
+    fk.name AS constraint_name,
+    sch1.name AS [table_schema],
+    tab1.name AS [table_name],
+    sch2.name AS [ref_table_schema],
+    tab2.name AS [ref_table],
+    (
+        SELECT
+            col1.name AS [column],
+            col2.name AS [referenced_column]
+        FROM sys.foreign_key_columns fkc
+        INNER JOIN sys.columns col1
+            ON col1.column_id = fkc.parent_column_id AND col1.object_id = tab1.object_id
+        INNER JOIN sys.columns col2
+            ON col2.column_id = fkc.referenced_column_id AND col2.object_id = tab2.object_id 
+        WHERE fk.object_id = fkc.constraint_object_id
+        FOR JSON PATH
+    ) AS column_mapping,
+    fk.delete_referential_action_desc AS [on_delete],
+    fk.update_referential_action_desc AS [on_update]
+FROM sys.foreign_keys fk
+INNER JOIN sys.objects obj
+    ON obj.object_id = fk.referenced_object_id
+INNER JOIN sys.tables tab1
+    ON tab1.object_id = fk.parent_object_id
+INNER JOIN sys.schemas sch1
+    ON tab1.schema_id = sch1.schema_id
+INNER JOIN sys.tables tab2
+    ON tab2.object_id = fk.referenced_object_id
+INNER JOIN sys.schemas sch2
+    ON tab2.schema_id = sch2.schema_id for json path;
+    `;
+  },
+  getReferenceOption: () => {
+    return '';
+  },
+  deleteFunctionSql: () => {
+    return '';
+  },
+  getEventInvocationInfoByIDSql: () => {
+    return '';
+  },
+  getDatabaseInfo: '',
+  getTableInfo: (tables: string[]) => `
+SELECT
+	o.name AS table_name,
+	s.name AS table_schema,
+	table_type = CASE o.type
+	WHEN 'U' THEN
+		'table'
+	WHEN 'V' THEN
+		'view'
+	ELSE
+		'table'
+	END
+FROM
+	sys.objects AS o
+	JOIN sys.schemas AS s ON (o.schema_id = s.schema_id)
+WHERE
+	o.name in (${tables.join(',')}) for json path;
+  `,
+};

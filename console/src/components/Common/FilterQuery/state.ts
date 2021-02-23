@@ -107,7 +107,7 @@ export const useFilterQuery = (
       if (triggerName) {
         query = getDataTriggerLogsQuery(
           triggerOp,
-          currentSource ?? 'default',
+          currentSource || 'default',
           triggerName,
           limitValue,
           offsetValue

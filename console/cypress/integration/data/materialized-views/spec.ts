@@ -351,7 +351,7 @@ export const passVAscendingSort = () => {
 export const passModifyMaterializedView = () => {
   cy.get(getElementFromAlias('table-modify')).click();
   cy.get('button').contains('Modify').last().click();
-  cy.url().should('eq', `${baseUrl}/data/default/sql`);
+  cy.url().should('eq', `${baseUrl}/data/sql`);
 };
 
 export const passVAddManualObjRel = () => {

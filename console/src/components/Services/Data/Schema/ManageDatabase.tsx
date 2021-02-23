@@ -20,6 +20,12 @@ import { mapDispatchToPropsEmpty } from '../../../Common/utils/reactUtils';
 import _push from '../push';
 import { getHostFromConnectionString } from '../DataSources/ManageDBUtils';
 
+const driverToLabel: Record<Driver, string> = {
+  mysql: 'MySQL',
+  postgres: 'PostgreSQL',
+  mssql: 'MS Server',
+};
+
 type DatabaseListItemProps = {
   dataSource: DataSource;
   // onEdit: (dbName: string) => void;
@@ -79,7 +85,8 @@ const DatabaseListItem: React.FC<DatabaseListItemProps> = ({
       <div className={styles.db_list_content}>
         <div className={styles.db_display_data}>
           <div className={styles.displayFlexContainer}>
-            <b>{dataSource.name}</b>&nbsp;<p>({dataSource.driver})</p>
+            <b>{dataSource.name}</b>&nbsp;
+            <p>({driverToLabel[dataSource.driver]})</p>
           </div>
           <p style={{ marginTop: -5 }}>
             {getHostFromConnectionString(dataSource)}

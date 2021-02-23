@@ -108,17 +108,27 @@ export const getMetadataQuery = (
   type: MetadataQueryType,
   source: string,
   args: MetadataQueryArgs,
-  options?: { version: number }
+  driver: Driver = currentDriver
 ): {
   type: string;
   args: MetadataQueryArgs;
   version?: number;
 } => {
-  const prefix = currentDriver === 'postgres' ? 'pg_' : 'mysql_';
+  let prefix = '';
+  switch (driver) {
+    case 'mysql':
+      prefix = 'mysql_';
+      break;
+    case 'mssql':
+      prefix = 'mssql_';
+      break;
+    case 'postgres':
+    default:
+      prefix = 'pg_';
+  }
   return {
     type: `${prefix}${type}`,
     args: { ...args, source },
-    ...options,
   };
 };
 
@@ -293,11 +303,17 @@ export const getSetTableEnumQuery = (
 
 export const getTrackTableQuery = (
   tableDef: QualifiedTable,
-  source: string
+  source: string,
+  driver: Driver
 ) => {
-  return getMetadataQuery('track_table', source, {
-    table: tableDef,
-  });
+  return getMetadataQuery(
+    'track_table',
+    source,
+    {
+      table: tableDef,
+    },
+    driver
+  );
 };
 
 export const getUntrackTableQuery = (
@@ -536,17 +552,28 @@ export const getTrackFunctionQuery = (
   name: string,
   schema: string,
   source: string,
-  configuration?: Record<string, any>
+  configuration?: Record<string, any>,
+  driver?: Driver
 ) => {
   if (configuration) {
-    return getMetadataQuery('track_function', source, {
-      function: { name, schema },
-      configuration,
-    });
+    return getMetadataQuery(
+      'track_function',
+      source,
+      {
+        function: { name, schema },
+        configuration,
+      },
+      driver
+    );
   }
-  return getMetadataQuery('track_function', source, {
-    function: { name, schema },
-  });
+  return getMetadataQuery(
+    'track_function',
+    source,
+    {
+      function: { name, schema },
+    },
+    driver
+  );
 };
 
 export const getUntrackFunctionQuery = (

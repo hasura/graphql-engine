@@ -29,7 +29,7 @@ const RelationshipEditor = ({
   const [relConfig, setRelConfig] = React.useState(
     existingRelConfig || defaultRelConfig
   );
-
+  const supportedDrivers = ['postgres'];
   const [currentDatabaseInfo, setCurrentDatabaseInfo] = React.useState({});
 
   // if it is an existing relationship, fetch the pg schemas metadata
@@ -194,11 +194,13 @@ const RelationshipEditor = ({
               {'-- data source --'}
             </option>
           )}
-          {dataSources.map(s => (
-            <option key={s.name} value={s.name}>
-              {s.name} ({s.driver})
-            </option>
-          ))}
+          {dataSources
+            .filter(s => supportedDrivers.includes(s.driver || s.kind))
+            .map(s => (
+              <option key={s.name} value={s.name}>
+                {s.name} ({s.driver})
+              </option>
+            ))}
         </select>
       </div>
     );

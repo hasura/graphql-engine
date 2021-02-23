@@ -889,7 +889,8 @@ export interface MetadataDataSource {
   kind?: 'postgres' | 'mysql';
   configuration?: {
     connection_info?: {
-      database_url: string | { from_env: string };
+      connection_string?: string;
+      database_url?: string | { from_env: string };
       pool_settings?: {
         max_connections: number;
         idle_timeout: number;

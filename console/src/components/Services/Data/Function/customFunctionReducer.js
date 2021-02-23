@@ -51,6 +51,7 @@ const PERMISSION_CUSTOM_FUNCTION_DROP_FAIL =
 const fetchCustomFunction = (functionName, schema, source) => {
   return (dispatch, getState) => {
     const url = Endpoints.query;
+    if (!dataSource.getFunctionDefinitionSql) return;
     const fetchCustomFunctionDefinition = getRunSqlQuery(
       dataSource.getFunctionDefinitionSql(schema, functionName),
       source

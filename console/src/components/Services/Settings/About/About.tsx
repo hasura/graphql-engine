@@ -132,7 +132,7 @@ class About extends Component<ConnectInjectedProps & StateProps> {
     const getPgVersionSection = () => {
       return (
         <div>
-          <b>Postgres version ({this.props.source}): </b>
+          <b>Database version ({this.props.source}): </b>
           <span className={styles.add_mar_left_mid}>
             {pgVersion || spinner}
           </span>

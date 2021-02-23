@@ -33,7 +33,7 @@ import {
   createRESTEndpointQuery,
   dropRESTEndpointQuery,
 } from './queryUtils';
-import { Driver } from '../dataSources';
+import { Driver, setDriver } from '../dataSources';
 import { addSource, removeSource, reloadSource } from './sourcesUtils';
 import { getDataSources } from './selector';
 import { FixMe, ReduxState, Thunk } from '../types';
@@ -237,7 +237,8 @@ export const addDataSource = (
         type: UPDATE_CURRENT_DATA_SOURCE,
         source: data.payload.name,
       });
-      dispatch(fetchDataInit());
+      setDriver(data.driver);
+      dispatch(fetchDataInit(data.payload.name, data.driver));
       return getState();
     })
     .catch(err => {

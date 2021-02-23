@@ -33,6 +33,7 @@ import styles from './ModifyTable.scss';
 import { NotFoundError } from '../../../Error/PageNotFound';
 import { getConfirmation } from '../../../Common/utils/jsUtils';
 import {
+  currentDriver,
   findTable,
   generateTableDef,
   getTableCustomColumnNames,
@@ -47,9 +48,13 @@ import {
 import { RightContainer } from '../../../Common/Layout/RightContainer';
 import { NotSupportedNote } from '../../../Common/NotSupportedNote';
 import ConnectedComputedFields from './ComputedFields';
+import FeatureDisabled from '../FeatureDisabled';
+
+const supportedDrivers = ['postgres'];
 
 class ModifyTable extends React.Component {
   componentDidMount() {
+    if (!supportedDrivers.includes(currentDriver)) return;
     const { dispatch } = this.props;
     dispatch({ type: RESET });
     dispatch(setTable(this.props.tableName));
@@ -86,6 +91,16 @@ class ModifyTable extends React.Component {
       currentSource,
     } = this.props;
 
+    if (!supportedDrivers.includes(currentDriver)) {
+      return (
+        <FeatureDisabled
+          tab="modify"
+          tableName={tableName}
+          schemaName={currentSchema}
+        />
+      );
+    }
+
     const dataTypeIndexMap = getAllDataTypeMap(dataTypes);
 
     const table = findTable(
@@ -93,8 +108,7 @@ class ModifyTable extends React.Component {
       generateTableDef(tableName, currentSchema)
     );
 
-    if (!table) {
-      // throw a 404 exception
+    if (!table && supportedDrivers.includes(currentDriver)) {
       throw new NotFoundError();
     }
 

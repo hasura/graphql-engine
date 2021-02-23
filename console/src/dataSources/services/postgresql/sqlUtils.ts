@@ -1214,8 +1214,8 @@ export const getTableInfo = (tables: string[]) => `
 SELECT
 	COALESCE(json_agg(row_to_json(info)), '[]'::JSON)
 FROM (
-    select 
-        pgclass.relname::text as table_name, 
+    select
+        pgclass.relname::text as table_name,
         n.nspname as table_schema,
         CASE
         WHEN pgclass.relkind = 'v' THEN 'view'
@@ -1225,7 +1225,7 @@ FROM (
         from pg_class pgclass
         join pg_catalog.pg_namespace n
         on n.oid = pgclass.relnamespace
-        where 
+        where
         pgclass.relname in (${tables.join(',')})
 ) AS info;
 `;

@@ -348,7 +348,9 @@ export const getDataSources = createSelector(getMetadata, metadata => {
   metadata?.sources.forEach(source => {
     sources.push({
       name: source.name,
-      url: source.configuration?.connection_info?.database_url || '',
+      url: source.configuration?.connection_info?.connection_string
+        ? source.configuration?.connection_info.connection_string
+        : source.configuration?.connection_info?.database_url || '',
       connection_pool_settings: source.configuration?.connection_info
         ?.pool_settings || {
         retries: 1,

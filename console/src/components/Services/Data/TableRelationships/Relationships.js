@@ -25,9 +25,10 @@ import RelationshipEditor from './RelationshipEditor';
 import { NotFoundError } from '../../../Error/PageNotFound';
 import styles from '../TableModify/ModifyTable.scss';
 import tableStyles from '../../../Common/TableCommon/TableStyles.scss';
-import { findAllFromRel } from '../../../../dataSources';
+import { currentDriver, findAllFromRel } from '../../../../dataSources';
 import { getRemoteSchemasSelector } from '../../../../metadata/selector';
 import { RightContainer } from '../../../Common/Layout/RightContainer';
+import FeatureDisabled from '../FeatureDisabled';
 
 const addRelationshipCellView = (
   dispatch,
@@ -296,6 +297,8 @@ const AddRelationship = ({
   );
 };
 
+const supportedDrivers = ['postgres'];
+
 const Relationships = ({
   tableName,
   allSchemas,
@@ -322,7 +325,17 @@ const Relationships = ({
     t => t.table_name === tableName && t.table_schema === currentSchema
   );
 
-  if (!tableSchema) {
+  if (!supportedDrivers.includes(currentDriver)) {
+    return (
+      <FeatureDisabled
+        tab="relationships"
+        tableName={tableName}
+        schemaName={currentSchema}
+      />
+    );
+  }
+
+  if (!tableSchema && supportedDrivers.includes(currentDriver)) {
     // throw a 404 exception
     throw new NotFoundError();
   }

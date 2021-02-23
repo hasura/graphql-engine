@@ -12,8 +12,8 @@ import { PGFunction, FunctionState } from './services/postgresql/types';
 import { Operations } from './common';
 import { QualifiedTable } from '../metadata/types';
 
-export const drivers = ['postgres', 'mysql'];
-export type Driver = 'postgres' | 'mysql';
+export const drivers = ['postgres', 'mysql', 'mssql'] as const;
+export type Driver = typeof drivers[number];
 
 export type ColumnsInfoResult = {
   [tableName: string]: {
@@ -57,15 +57,15 @@ export interface DataSourcesAPI {
   getAdditionalColumnsInfoQuerySql?: (currentSchema: string) => string;
   parseColumnsInfoResult: (data: string[][]) => ColumnsInfoResult;
   columnDataTypes: {
-    INTEGER: string;
-    SERIAL: string;
-    BIGINT: string;
-    JSONDTYPE: string;
-    TIMESTAMP: string;
-    NUMERIC: string;
-    DATE: string;
-    BOOLEAN: string;
-    TEXT: string;
+    INTEGER?: string;
+    SERIAL?: string;
+    BIGINT?: string;
+    JSONDTYPE?: string;
+    TIMESTAMP?: string;
+    NUMERIC?: string;
+    DATE?: string;
+    BOOLEAN?: string;
+    TEXT?: string;
     ARRAY?: string;
     BIGSERIAL?: string;
     DATETIME?: string;
@@ -106,7 +106,7 @@ export interface DataSourcesAPI {
       };
   getDropTableSql(schema: string, table: string): string;
   createSQLRegex: RegExp;
-  getStatementTimeoutSql: (statementTimeoutInSecs: number) => string;
+  getStatementTimeoutSql?: (statementTimeoutInSecs: number) => string;
   getDropSchemaSql(schema: string): string;
   getCreateSchemaSql(schema: string): string;
   isTimeoutError: (error: any) => boolean;
@@ -264,11 +264,13 @@ export interface DataSourcesAPI {
     selectedPkColumns: string[];
     constraintName?: string;
   }) => string;
-  getFunctionDefinitionSql: (
-    schemaName: string,
-    functionName?: string | null | undefined,
-    type?: 'trackable' | 'non-trackable' | undefined
-  ) => string;
+  getFunctionDefinitionSql:
+    | null
+    | ((
+        schemaName: string,
+        functionName?: string | null | undefined,
+        type?: 'trackable' | 'non-trackable' | undefined
+      ) => string);
   frequentlyUsedColumns: FrequentlyUsedColumn[];
   primaryKeysInfoSql: (options: {
     schemas: string[];
@@ -295,7 +297,7 @@ export interface DataSourcesAPI {
 }
 
 export let currentDriver: Driver = 'postgres';
-export let dataSource: DataSourcesAPI = services[currentDriver];
+export let dataSource: DataSourcesAPI = services[currentDriver || 'postgres'];
 
 class DataSourceChangedEvent extends Event {
   static type = 'data-source-changed';

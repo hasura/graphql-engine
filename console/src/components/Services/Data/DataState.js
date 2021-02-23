@@ -170,8 +170,8 @@ const defaultState = {
   nonTrackablePostgresFunctions: [],
   listingSchemas: [],
   untrackedRelations: [],
-  schemaList: ['public'],
-  currentSchema: 'public',
+  schemaList: [],
+  currentSchema: '',
   currentDataSource: '',
   adminSecretError: false,
   dataHeaders: {

@@ -16,6 +16,7 @@ import { currentDriver, useDataSource } from '../../../dataSources';
 import { getDataSources } from '../../../metadata/selector';
 import { push } from 'react-router-redux';
 import { fetchPostgresVersion } from '../../Main/Actions';
+import { getSourceDriver } from './utils';
 
 const DataPageContainer = ({
   children,
@@ -25,35 +26,41 @@ const DataPageContainer = ({
   currentDataSource,
   currentSchema,
 }) => {
-  useEffect(() => {
-    if (!currentDataSource && dataSources.length) {
-      dispatch({
-        type: UPDATE_CURRENT_DATA_SOURCE,
-        source: dataSources[0].name,
-      });
-    }
-  }, [currentDataSource, dataSources, dispatch]);
+  const { setDriver } = useDataSource();
+
+  // useEffect(() => {
+  //   if (!currentDataSource && dataSources.length) {
+  //     setDriver(dataSources[0].driver);
+  //     dispatch({
+  //       type: UPDATE_CURRENT_DATA_SOURCE,
+  //       source: dataSources[0].name,
+  //     });
+  //   }
+  // }, [currentDataSource, dataSources, dispatch]);
 
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    if (currentDataSource) {
+    // TODO: handle for different drivers
+    if (currentDataSource && currentDriver === 'postgres') {
       dispatch(fetchPostgresVersion);
     }
   }, [dispatch, currentDataSource]);
 
-  const { setDriver } = useDataSource();
-
-  const handleDatabaseChange = value => {
-    if (value === currentDataSource) return;
+  const handleDatabaseChange = newSourceName => {
+    if (newSourceName === currentDataSource) {
+      dispatch(push(`/data/${newSourceName}/`));
+      return;
+    }
     setLoading(true);
-    setDriver(currentDriver);
+    const driver = getSourceDriver(dataSources, newSourceName);
     dispatch({
       type: UPDATE_CURRENT_DATA_SOURCE,
-      source: value,
+      source: newSourceName,
     });
-    dispatch(push(`/data/${value}/schema/`));
-    dispatch(fetchDataInit()).then(() => {
+    setDriver(driver);
+    dispatch(push(`/data/${newSourceName}/`));
+    dispatch(fetchDataInit()).finally(() => {
       setLoading(false);
     });
   };
@@ -65,10 +72,13 @@ const DataPageContainer = ({
     }
 
     setLoading(true);
-    dispatch(updateCurrentSchema(value, currentDataSource)).then(() => {
-      dispatch(push(`/data/${currentDataSource}/schema/${value}`));
-      setLoading(false);
-    });
+    dispatch(updateCurrentSchema(value, currentDataSource))
+      .then(() => {
+        dispatch(push(`/data/${currentDataSource}/schema/${value}`));
+      })
+      .finally(() => {
+        setLoading(false);
+      });
   };
 
   const currentLocation = location.pathname;
@@ -124,7 +134,7 @@ const DataPageContainer = ({
         >
           <Link
             className={styles.linkBorder}
-            to={`/data/${currentDataSource}/sql`}
+            to={`/data/sql`}
             data-test="sql-link"
           >
             SQL

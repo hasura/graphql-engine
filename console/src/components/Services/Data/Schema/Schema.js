@@ -31,6 +31,7 @@ import {
   getSchemaTables,
   getUntrackedTables,
   dataSource,
+  currentDriver,
 } from '../../../../dataSources';
 import { isEmpty } from '../../../Common/utils/jsUtils';
 import { getConfirmation } from '../../../Common/utils/jsUtils';
@@ -242,7 +243,7 @@ class Schema extends Component {
     const getCreateBtn = () => {
       let createBtn = null;
 
-      if (migrationMode) {
+      if (migrationMode && currentDriver === 'postgres') {
         const handleClick = e => {
           e.preventDefault();
 
@@ -280,6 +281,7 @@ class Schema extends Component {
                   dispatch={dispatch}
                   migrationMode={migrationMode}
                   currentDataSource={currentDataSource}
+                  schemaList={this.props.schemaList}
                 />
                 <CreateSchemaSection
                   ref={this.schemaNameInputRef}
@@ -664,6 +666,7 @@ Schema.propTypes = {
 
 const mapStateToProps = state => ({
   schema: state.tables.allSchemas,
+  schemaList: state.tables.schemaList,
   migrationMode: state.main.migrationMode,
   readOnlyMode: state.main.readOnlyMode,
   untrackedRelations: state.tables.untrackedRelations,

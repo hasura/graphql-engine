@@ -14,6 +14,9 @@ export const getSchemaBaseRoute = (
     schemaName
   )}`;
 
+export const getDataSourceBaseRoute = (dataSource: string) =>
+  `/data/${encodeURIComponent(dataSource)}`;
+
 export const getSchemaAddTableRoute = (
   schemaName: string,
   sourceName: string

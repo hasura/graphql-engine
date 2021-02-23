@@ -31,7 +31,7 @@ export const openRawSQL = () => {
   cy.wait(3000);
   cy.get(getElementFromAlias('sql-link')).click();
   cy.wait(3000);
-  cy.url().should('eq', `${baseUrl}/data/default/sql`);
+  cy.url().should('eq', `${baseUrl}/data/sql`);
 };
 
 const clearText = () => {
@@ -119,7 +119,7 @@ export const cleanUpSql = () => {
 };
 
 export const routeToSQLPage = () => {
-  cy.visit('/data/default/sql');
+  cy.visit('/data/sql');
   cy.wait(7000);
-  cy.url().should('eq', `${baseUrl}/data/default/sql`);
+  cy.url().should('eq', `${baseUrl}/data/sql`);
 };

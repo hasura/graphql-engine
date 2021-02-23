@@ -50,7 +50,6 @@ const getRoleQueryPermissionSymbol = (
   permissionRole: string,
   selectRoles: SelectPermissionEntry[] | null
 ) => {
-  console.log(allPermissions, permissionRole, selectRoles);
   if (permissionRole === 'admin') {
     return permissionsSymbols.fullAccess;
   }

@@ -2,6 +2,7 @@
 import { Table } from '../../../dataSources/types';
 import { TableEntry } from '../../../metadata/types';
 import { PostgresTable } from '../../../dataSources/services/postgresql/types';
+import { dataSource } from '../../../dataSources';
 import { FixMe } from '../../../types';
 
 // TODO — each service should export `mergeLoadSchemaData` — results should be "merged" to Table object
@@ -28,20 +29,173 @@ const keyToPermission = {
   delete_permissions: 'delete',
 };
 
-export const mergeLoadSchemaData = (
-  infoSchemaTableData: PostgresTable[],
-  fkData: Omit<
+type MSSqlTable = {
+  columns: Array<{
+    column_name: string;
+    data_type: string;
+    data_type_name: string;
+    is_nullable: 'YES' | 'NO';
+    ordinal_position: number;
+    table_name: string;
+    table_schema: string;
+  }>;
+  comment: string;
+  table_name: string;
+  table_schema: string;
+  table_type: 'TABLE' | 'VIEW';
+};
+
+type MSSqlFk = {
+  table_name: string;
+  table_schema: string;
+  constraint_name: string;
+  on_delete: string;
+  on_update: string;
+  ref_table: string;
+  ref_table_schema: string;
+  column_mapping: Array<{ column: string; referenced_column: string }>;
+};
+
+export const mergeDataMssql = (
+  data: Array<{ result: string[] }>,
+  metadataTables: TableEntry[]
+): Table[] => {
+  const result: Table[] = [];
+  const tables: MSSqlTable[] = [];
+  let fkRelations: MSSqlFk[] = [];
+  data[0].result.slice(1).forEach(row => {
+    try {
+      tables.push({
+        table_schema: row[0],
+        table_name: row[1],
+        table_type: row[2] as MSSqlTable['table_type'],
+        comment: row[3],
+        columns: JSON.parse(row[4]),
+      });
+      // eslint-disable-next-line no-empty
+    } catch {}
+  });
+
+  try {
+    fkRelations = JSON.parse(data[1].result.slice(1).join()) as MSSqlFk[];
+    // eslint-disable-next-line no-empty
+  } catch {}
+
+  const trackedFkData = fkRelations
+    .map(fk => ({
+      ...fk,
+      is_table_tracked: !!metadataTables.some(
+        t =>
+          t.table.name === fk.table_name && t.table.schema === fk.table_schema
+      ),
+      is_ref_table_tracked: !!metadataTables.some(
+        t =>
+          t.table.name === fk.ref_table &&
+          t.table.schema === fk.ref_table_schema
+      ),
+    }))
+    .map(fk => {
+      const mapping: Record<string, string> = {};
+      fk.column_mapping.forEach(cols => {
+        mapping[cols.column] = cols.referenced_column;
+      });
+      return {
+        ...fk,
+        column_mapping: mapping,
+        ref_table_table_schema: fk.ref_table_schema,
+      };
+    });
+
+  tables.forEach(table => {
+    if (table.table_type !== 'TABLE') return;
+
+    const metadataTable = metadataTables?.find(
+      t =>
+        t.table.schema === table.table_schema &&
+        t.table.name === table.table_name
+    );
+
+    const fkConstraints = trackedFkData.filter(
+      (fk: FixMe) =>
+        fk.table_schema === table.table_schema &&
+        fk.table_name === table.table_name
+    );
+
+    const refFkConstraints = trackedFkData.filter(
+      (fk: FixMe) =>
+        fk.ref_table_schema === table.table_schema &&
+        fk.ref_table === table.table_name &&
+        fk.is_ref_table_tracked
+    );
+
+    const relationships = [] as Table['relationships'];
+    metadataTable?.array_relationships?.map(rel => {
+      relationships.push({
+        rel_def: rel.using,
+        rel_name: rel.name,
+        table_name: table.table_name,
+        table_schema: table.table_schema,
+        rel_type: 'array',
+      });
+    });
+
+    metadataTable?.object_relationships?.map(rel => {
+      relationships.push({
+        rel_def: rel.using,
+        rel_name: rel.name,
+        table_name: table.table_name,
+        table_schema: table.table_schema,
+        rel_type: 'object',
+      });
+    });
+
+    const mergedInfo = {
+      table_schema: table.table_schema,
+      table_name: table.table_name,
+      table_type: table.table_type,
+      is_table_tracked: metadataTables.some(
+        t =>
+          t.table.name === table.table_name &&
+          t.table.schema === table.table_schema
+      ),
+      columns: table.columns,
+      comment: '',
+      triggers: [],
+      primary_key: null,
+      relationships,
+      permissions: [],
+      unique_constraints: [],
+      check_constraints: [],
+      foreign_key_constraints: fkConstraints,
+      opp_foreign_key_constraints: refFkConstraints,
+      view_info: null,
+      remote_relationships: [],
+      is_enum: false,
+      configuration: undefined,
+      computed_fields: [],
+    };
+    result.push(mergedInfo);
+  });
+  return result;
+};
+
+export const mergeLoadSchemaDataPostgres = (
+  data: Array<{ result: string[] }>,
+  metadataTables: TableEntry[]
+): Table[] => {
+  const tableList = JSON.parse(data[0].result[1]) as PostgresTable[];
+  const fkList = JSON.parse(data[1].result[1]) as Omit<
     Table['foreign_key_constraints'][0],
     'is_table_tracked' | 'is_ref_table_tracked'
-  >[],
-  metadataTables: TableEntry[],
-  primaryKeys: Table['primary_key'][],
-  uniqueKeys: FixMe,
-  checkConstraints: Table['check_constraints']
-): Table[] => {
+  >[];
+  const primaryKeys = JSON.parse(data[2].result[1]) as Table['primary_key'][];
+  const uniqueKeys = JSON.parse(data[3].result[1]) as any;
+  const checkConstraints = dataSource?.checkConstraintsSql
+    ? (JSON.parse(data[4].result[1]) as Table['check_constraints'])
+    : ([] as Table['check_constraints']);
   const _mergedTableData: Table[] = [];
 
-  const trackedFkData = fkData.map(fk => ({
+  const trackedFkData = fkList.map(fk => ({
     ...fk,
     is_table_tracked: !!metadataTables.some(
       t => t.table.name === fk.table_name && t.table.schema === fk.table_schema
@@ -53,7 +207,7 @@ export const mergeLoadSchemaData = (
     ),
   }));
 
-  infoSchemaTableData.forEach(infoSchemaTableInfo => {
+  tableList.forEach(infoSchemaTableInfo => {
     const tableSchema = infoSchemaTableInfo.table_schema;
     const tableName = infoSchemaTableInfo.table_name;
     const metadataTable = metadataTables?.find(

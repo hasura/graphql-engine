@@ -189,15 +189,19 @@ const vMakeCountRequest = () => {
       currentDataSource
     );
 
-    const timeoutQuery = getRunSqlQuery(
-      dataSource.getStatementTimeoutSql(2),
-      currentDataSource
-    );
+    let queries = [selectQuery];
+
+    if (dataSource.getStatementTimeoutSql) {
+      queries = [
+        getRunSqlQuery(dataSource.getStatementTimeoutSql(2), currentDataSource),
+        ...queries,
+      ];
+    }
 
     const requestBody = {
       type: 'bulk',
       source: currentDataSource,
-      args: [timeoutQuery, selectQuery],
+      args: queries,
     };
 
     const options = {

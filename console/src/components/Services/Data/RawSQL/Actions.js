@@ -37,20 +37,20 @@ const MODAL_OPEN = 'EditItem/MODAL_OPEN';
 const modalOpen = () => ({ type: MODAL_OPEN });
 const modalClose = () => ({ type: MODAL_CLOSE });
 
-const trackAllItems = (sql, isMigration, migrationName, source) => (
+const trackAllItems = (sql, isMigration, migrationName, source, driver) => (
   dispatch,
   getState
 ) => {
   const currMigrationMode = getState().main.migrationMode;
 
-  const objects = parseCreateSQL(sql);
+  const objects = parseCreateSQL(sql, driver);
   const changes = [];
   objects.forEach(({ type, name, schema }) => {
     let req = {};
     if (type === 'function') {
-      req = getTrackFunctionQuery(name, schema, source, {});
+      req = getTrackFunctionQuery(name, schema, source, {}, driver);
     } else {
-      req = getTrackTableQuery({ name, schema }, source);
+      req = getTrackTableQuery({ name, schema }, source, driver);
     }
     changes.push(req);
   });
@@ -72,6 +72,7 @@ const trackAllItems = (sql, isMigration, migrationName, source) => (
   } else {
     request = {
       type: 'bulk',
+      source: source,
       args: changes,
     };
   }
@@ -93,10 +94,13 @@ const trackAllItems = (sql, isMigration, migrationName, source) => (
   );
 };
 
-const executeSQL = (isMigration, migrationName, statementTimeout, source) => (
-  dispatch,
-  getState
-) => {
+const executeSQL = (
+  isMigration,
+  migrationName,
+  statementTimeout,
+  source,
+  driver
+) => (dispatch, getState) => {
   dispatch({ type: MAKING_REQUEST });
   dispatch(showSuccessNotification('Executing the Query...'));
 
@@ -108,19 +112,20 @@ const executeSQL = (isMigration, migrationName, statementTimeout, source) => (
   let url = Endpoints.query;
   const schemaChangesUp = [];
 
-  if (isStatementTimeout) {
+  if (isStatementTimeout && dataSource.getStatementTimeoutSql) {
     schemaChangesUp.push(
       getRunSqlQuery(
         dataSource.getStatementTimeoutSql(statementTimeout),
         source,
         false,
-        readOnlyMode
+        readOnlyMode,
+        driver
       )
     );
   }
 
   schemaChangesUp.push(
-    getRunSqlQuery(sql, source, isCascadeChecked, readOnlyMode)
+    getRunSqlQuery(sql, source, isCascadeChecked, readOnlyMode, driver)
   );
 
   const schemaChangesDown = getDownQueryComments(schemaChangesUp, source);
@@ -153,7 +158,7 @@ const executeSQL = (isMigration, migrationName, statementTimeout, source) => (
       dispatch(loadMigrationStatus());
     }
     dispatch(showSuccessNotification('SQL executed!'));
-    dispatch(fetchDataInit()).then(() => {
+    dispatch(fetchDataInit(source, driver)).then(() => {
       dispatch({
         type: REQUEST_SUCCESS,
         data: data && (isStatementTimeout ? data[1] : data[0]),
@@ -166,7 +171,7 @@ const executeSQL = (isMigration, migrationName, statementTimeout, source) => (
       data => {
         if (isTableTrackChecked) {
           dispatch(
-            trackAllItems(sql, isMigration, migrationName, source)
+            trackAllItems(sql, isMigration, migrationName, source, driver)
           ).then(() => callback(data));
           return;
         }

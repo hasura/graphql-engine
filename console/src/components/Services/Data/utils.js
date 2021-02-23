@@ -79,7 +79,7 @@ export const getTableName = t => {
 };
 
 export const fetchTrackedTableFkQuery = (options, source) => {
-  const runSql = dataSource.getFKRelations(options);
+  const runSql = dataSource?.getFKRelations(options) || '';
 
   return getRunSqlQuery(
     runSql,
@@ -90,7 +90,7 @@ export const fetchTrackedTableFkQuery = (options, source) => {
 };
 
 export const fetchTableListQuery = (options, source) => {
-  const runSql = dataSource.getFetchTablesListQuery(options);
+  const runSql = dataSource?.getFetchTablesListQuery(options) || '';
 
   return getRunSqlQuery(
     runSql,
@@ -114,7 +114,7 @@ export const quoteDefault = colDefault => {
 
 export const cascadeUpQueries = (upQueries = [], isCascade = false) =>
   upQueries.map((i = {}) => {
-    if (i.type === 'run_sql' || i.type.includes('untrack_table')) {
+    if (i.type.includes('run_sql') || i.type.includes('untrack_table')) {
       return {
         ...i,
         args: {
@@ -153,4 +153,9 @@ export const getDependencyError = (err = {}) => {
       },
     };
   return {};
+};
+
+export const getSourceDriver = (dataSources, source) => {
+  const sourceObject = dataSources.find(({ name }) => name === source);
+  return sourceObject?.driver || sourceObject?.kind || 'postgres';
 };
