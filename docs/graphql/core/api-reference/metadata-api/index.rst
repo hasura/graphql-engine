@@ -15,7 +15,12 @@ Metadata API Reference (v1.4 and above)
 Introduction
 ------------
 
-This is primarily intended to be used as an ``admin`` API to manage the Hasura metadata.
+The metadata API is primarily intended to be used as an ``admin`` API to manage the Hasura metadata.
+
+.. admonition:: Supported from
+
+  The metadata API is supported for versions ``v.1.4.0`` and above.
+
 
 Endpoint
 --------

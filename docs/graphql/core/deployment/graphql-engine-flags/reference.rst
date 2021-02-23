@@ -47,7 +47,8 @@ For the ``graphql-engine`` command these are the available flags and ENV variabl
 
    * - ``--metadata-database-url <METADATA-DATABASE-URL>``
      - ``HASURA_GRAPHQL_METADATA_DATABASE_URL``
-     - Postgres database URL:
+     - Postgres database URL that will be used to store the Hasura metadata. By default the database configured using ``HASURA_GRAPHQL_DATABASE_URL``
+       will be used to store the metadata. *(Available for versions > v1.4.0)*
 
        ``postgres://<user>:<password>@<host>:<port>/<db-name>``
 
@@ -248,6 +249,8 @@ For the ``serve`` sub-command these are the available flags and ENV variables:
        When the ``--infer-function-permissions`` flag is set to ``true`` or the flag is omitted (defaults to ``true``), the
        permission of the function is inferred from the select permissions from the target table of the function, only for
        stable/immutable functions. Volatile functions are not exposed to any of the roles in this case.
+
+       *(Available for versions > v1.4.0)*
 
 .. note::
 

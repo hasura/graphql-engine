@@ -65,8 +65,8 @@ See details at :ref:`api_reference_relay_graphql`.
 
 .. _schema_metadata_api:
 
-Schema / metadata API V1 (v1.3 and below)
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Schema / metadata API (v1.3 and below)
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Hasura exposes a schema / metadata API for managing metadata for permissions/relationships or for directly
 executing SQL on the underlying Postgres.
@@ -156,25 +156,18 @@ on the defined permissions.
 
 See details at :ref:`explain_api_reference`.
 
-Supported PostgreSQL types
---------------------------
-You can refer to the following to know about all PostgreSQL types supported by the Hasura GraphQL engine:
-
-- :ref:`Supported PostgreSQL types <api_postgres_types>`
-
 .. toctree::
   :maxdepth: 1
   :hidden:
 
   GraphQL API <graphql-api/index>
   Relay GraphQL API <relay-graphql-api/index>
-  Schema / Metadata APIs V1 <schema-metadata-api/index>
-  Schema APIs <schema-api/index>
-  Metadata APIs <metadata-api/index>
+  Schema / Metadata APIs <schema-metadata-api/index>
+  Schema APIs (v1.4 and above) <schema-api/index>
+  Metadata APIs (v1.4 and above) <metadata-api/index>
   RESTified GraphQL Endpoints <restified>
   Version API <version>
   Health check API <health>
   PG Dump API <pgdump>
   Config API <config>
   Explain API <explain>
-  Supported PostgreSQL types <postgresql-types>

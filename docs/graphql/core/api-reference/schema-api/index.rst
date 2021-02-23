@@ -21,6 +21,10 @@ The schema API provides the following features:
 
 This is primarily intended to be used as an ``admin`` API to manage the Hasura schema.
 
+.. admonition:: Supported from
+
+  The schema API is supported for versions ``v.1.4.0`` and above.
+
 Endpoint
 --------
 
