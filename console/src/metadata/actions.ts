@@ -486,7 +486,7 @@ const handleInconsistentObjects = (
     const allSchemas = getState().tables.allSchemas;
 
     dispatch({
-      type: 'Metadata/DROP_INCONSISTENT_METADATA_SUCCESS',
+      type: 'Metadata/LOAD_INCONSISTENT_OBJECTS_SUCCESS',
       data: inconsistentObjects,
     });
 
