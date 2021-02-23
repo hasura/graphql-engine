@@ -25,6 +25,8 @@ import           Hasura.Server.Types
 
 import qualified Hasura.Backends.Postgres.DDL        as PG
 
+import qualified Hasura.Backends.MSSQL.DDL           as MSSQL
+
 class (Backend b) => BackendMetadata (b :: BackendType) where
 
   buildComputedFieldInfo
@@ -116,6 +118,11 @@ class (Backend b) => BackendMetadata (b :: BackendType) where
     -> Value
     -> m (PartialSQLExp b)
 
+  postDropSourceHook
+    :: (MonadError QErr m, MonadIO m, MonadBaseControl IO m)
+    => SourceConfig b
+    -> m ()
+
 instance BackendMetadata 'Postgres where
   buildComputedFieldInfo = PG.buildComputedFieldInfo
   buildRemoteFieldInfo = PG.buildRemoteFieldInfo
@@ -128,3 +135,18 @@ instance BackendMetadata 'Postgres where
   buildFunctionInfo = PG.buildFunctionInfo
   updateColumnInEventTrigger = PG.updateColumnInEventTrigger
   parseCollectableType = PG.parseCollectableType
+  postDropSourceHook = PG.postDropSourceHook
+
+instance BackendMetadata 'MSSQL where
+  buildComputedFieldInfo = MSSQL.buildComputedFieldInfo
+  buildRemoteFieldInfo = MSSQL.buildRemoteFieldInfo
+  fetchAndValidateEnumValues = MSSQL.fetchAndValidateEnumValues
+  resolveSourceConfig = MSSQL.resolveSourceConfig
+  resolveDatabaseMetadata = MSSQL.resolveDatabaseMetadata
+  createTableEventTrigger = MSSQL.createTableEventTrigger
+  buildEventTriggerInfo = MSSQL.buildEventTriggerInfo
+  parseBoolExpOperations = MSSQL.parseBoolExpOperations
+  buildFunctionInfo = MSSQL.buildFunctionInfo
+  updateColumnInEventTrigger = MSSQL.updateColumnInEventTrigger
+  parseCollectableType = MSSQL.parseCollectableType
+  postDropSourceHook = MSSQL.postDropSourceHook

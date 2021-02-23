@@ -501,8 +501,10 @@ runHGEServer setupHook env ServeOptions{..} ServeCtx{..} initTime postPollHook s
     maxEvThrds    = fromMaybe defaultMaxEventThreads soEventsHttpPoolSize
     fetchI        = milliseconds $ fromMaybe (Milliseconds defaultFetchInterval) soEventsFetchInterval
     logEnvHeaders = soLogHeadersFromEnv
-    allPgSources  = mapMaybe (unsafeSourceConfiguration @'Postgres) $ HM.elems $ scPostgres $ lastBuiltSchemaCache _scSchemaCache
+    allPgSources  = mapMaybe (unsafeSourceConfiguration @'Postgres) $ HM.elems $ scSources $ lastBuiltSchemaCache _scSchemaCache
 
+  -- TODO: is this correct?
+  -- event triggers should be tied to the life cycle of a source
   lockedEventsCtx <- allocate
     (liftIO $ atomically initLockedEventsCtx)
     (\lockedEventsCtx ->

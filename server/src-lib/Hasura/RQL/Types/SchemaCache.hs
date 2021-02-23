@@ -259,26 +259,26 @@ type ActionCache = M.HashMap ActionName ActionInfo -- info of all actions
 unsafeFunctionCache
   :: forall b. Backend b => SourceName -> SourceCache -> Maybe (FunctionCache b)
 unsafeFunctionCache sourceName cache =
-  unsafeSourceFunctions =<< M.lookup sourceName cache
+  unsafeSourceFunctions @b =<< M.lookup sourceName cache
 
 unsafeFunctionInfo
   :: forall b. Backend b => SourceName -> FunctionName b -> SourceCache -> Maybe (FunctionInfo b)
 unsafeFunctionInfo sourceName functionName cache =
-  M.lookup functionName =<< unsafeFunctionCache sourceName cache
+  M.lookup functionName =<< unsafeFunctionCache @b sourceName cache
 
 unsafeTableCache
   :: forall b. Backend b => SourceName -> SourceCache -> Maybe (TableCache b)
 unsafeTableCache sourceName cache = do
-  unsafeSourceTables =<< M.lookup sourceName cache
+  unsafeSourceTables @b =<< M.lookup sourceName cache
 
 unsafeTableInfo
   :: forall b. Backend b => SourceName -> TableName b -> SourceCache -> Maybe (TableInfo b)
 unsafeTableInfo sourceName tableName cache =
-  M.lookup tableName =<< unsafeTableCache sourceName cache
+  M.lookup tableName =<< unsafeTableCache @b sourceName cache
 
 data SchemaCache
   = SchemaCache
-  { scPostgres                    :: !SourceCache
+  { scSources                     :: !SourceCache
   , scActions                     :: !ActionCache
   , scRemoteSchemas               :: !RemoteSchemaMap
   , scAllowlist                   :: !(HS.HashSet GQLQuery)

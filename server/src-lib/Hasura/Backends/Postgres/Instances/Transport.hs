@@ -1,6 +1,6 @@
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 
-module Hasura.GraphQL.Transport.Postgres () where
+module Hasura.Backends.Postgres.Instances.Transport () where
 
 import           Hasura.Prelude
 
@@ -19,7 +19,6 @@ import qualified Hasura.Tracing                             as Tracing
 import           Hasura.EncJSON
 import           Hasura.GraphQL.Execute.Backend
 import           Hasura.GraphQL.Execute.LiveQuery.Plan
-import           Hasura.GraphQL.Execute.Postgres            ()
 import           Hasura.GraphQL.Logging                     (MonadQueryLog (..))
 import           Hasura.GraphQL.Transport.Backend
 import           Hasura.GraphQL.Transport.HTTP.Protocol

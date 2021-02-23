@@ -315,7 +315,7 @@ withMetadataCheck source cascade txAccess action = do
   postActionSchemaCache <- askSchemaCache
 
   -- Recreate event triggers in hdb_catalog
-  let postActionTables = fromMaybe mempty $ unsafeTableCache source $ scPostgres postActionSchemaCache
+  let postActionTables = fromMaybe mempty $ unsafeTableCache source $ scSources postActionSchemaCache
   serverConfigCtx <- askServerConfigCtx
   liftEitherM $ runPgSourceWriteTx sourceConfig $
     forM_ (M.elems postActionTables) $ \(TableInfo coreInfo _ eventTriggers) -> do

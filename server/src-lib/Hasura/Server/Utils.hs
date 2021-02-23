@@ -155,6 +155,9 @@ commonResponseHeadersIgnored =
 isSessionVariable :: Text -> Bool
 isSessionVariable = T.isPrefixOf "x-hasura-" . T.toLower
 
+isReqUserId :: Text -> Bool
+isReqUserId = (== "req_user_id") . T.toLower
+
 mkClientHeadersForward :: [HTTP.Header] -> [HTTP.Header]
 mkClientHeadersForward reqHeaders =
   xForwardedHeaders <> (filterSessionVariables . filterRequestHeaders) reqHeaders

@@ -41,7 +41,6 @@ import qualified Data.HashSet                       as HS
 
 import           Control.Lens                       ((.~))
 import           Data.Aeson
-import           Data.Aeson.TH
 import           Data.Text.Extended
 
 import           Hasura.EncJSON
@@ -328,18 +327,20 @@ instance (BackendMetadata b) => IsPerm b (DelPerm b) where
   addPermToMetadata permDef =
     tmDeletePermissions %~ OMap.insert (_pdRole permDef) permDef
 
-data SetPermComment
+data SetPermComment b
   = SetPermComment
   { apSource     :: !SourceName
-  , apTable      :: !(TableName 'Postgres)
+  , apTable      :: !(TableName b)
   , apRole       :: !RoleName
   , apPermission :: !PermType
   , apComment    :: !(Maybe Text)
-  } deriving (Show, Eq)
+  } deriving (Generic)
+deriving instance (Backend b) => Show (SetPermComment b)
+deriving instance (Backend b) => Eq (SetPermComment b)
+instance (Backend b) => ToJSON (SetPermComment b) where
+  toJSON = genericToJSON hasuraJSON
 
-$(deriveToJSON hasuraJSON ''SetPermComment)
-
-instance FromJSON SetPermComment where
+instance (Backend b) => FromJSON (SetPermComment b) where
   parseJSON = withObject "Object" $ \o ->
     SetPermComment
       <$> o .:? "source" .!= defaultSource
@@ -349,8 +350,8 @@ instance FromJSON SetPermComment where
       <*> o .:? "comment"
 
 runSetPermComment
-  :: (QErrM m, CacheRWM m, MetadataM m)
-  => SetPermComment -> m EncJSON
+  :: (QErrM m, CacheRWM m, MetadataM m, BackendMetadata b)
+  => SetPermComment b -> m EncJSON
 runSetPermComment (SetPermComment source table role permType comment) =  do
   tableInfo <- askTabInfo source table
 

@@ -68,6 +68,7 @@ data Code
   | NotExists
   | AlreadyExists
   | PostgresError
+  | MSSQLError
   | DatabaseConnectionTimeout
   | NotSupported
   | DependencyError
@@ -124,6 +125,7 @@ instance Show Code where
     AlreadyTracked            -> "already-tracked"
     AlreadyUntracked          -> "already-untracked"
     PostgresError             -> "postgres-error"
+    MSSQLError                -> "mssql-error"
     DatabaseConnectionTimeout -> "connection-timeout-error"
     NotSupported              -> "not-supported"
     DependencyError           -> "dependency-error"

@@ -82,9 +82,6 @@ procBoolExp source tn fieldInfoMap be = do
   let deps = getBoolExpDeps source tn abe
   return (abe, deps)
 
-isReqUserId :: Text -> Bool
-isReqUserId = (== "req_user_id") . T.toLower
-
 getDepHeadersFromVal :: Value -> [Text]
 getDepHeadersFromVal val = case val of
   Object o -> parseObject o

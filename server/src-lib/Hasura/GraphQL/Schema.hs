@@ -1,88 +1,50 @@
 {-# LANGUAGE Arrows       #-}
 {-# LANGUAGE ViewPatterns #-}
-{-# OPTIONS_GHC -fno-warn-orphans #-}
 module Hasura.GraphQL.Schema
   ( buildGQLContext
   ) where
 
 import           Hasura.Prelude
 
-import qualified Data.Aeson                            as J
-import qualified Data.HashMap.Strict                   as Map
-import qualified Data.HashMap.Strict.InsOrd            as OMap
-import qualified Data.HashSet                          as Set
-import qualified Language.GraphQL.Draft.Syntax         as G
+import qualified Data.Aeson                                as J
+import qualified Data.HashMap.Strict                       as Map
+import qualified Data.HashMap.Strict.InsOrd                as OMap
+import qualified Data.HashSet                              as Set
+import qualified Language.GraphQL.Draft.Syntax             as G
 
 import           Control.Arrow.Extended
 import           Control.Lens.Extended
 import           Control.Monad.Unique
 import           Data.Has
-import           Data.List.Extended                    (duplicates)
+import           Data.List.Extended                        (duplicates)
 
-import qualified Hasura.Backends.Postgres.SQL.DML      as PG
-import qualified Hasura.Backends.Postgres.SQL.Types    as PG
-import qualified Hasura.GraphQL.Parser                 as P
-import qualified Hasura.GraphQL.Schema.Build           as GSB
-import qualified Hasura.GraphQL.Schema.Postgres        as PGS
+import qualified Hasura.GraphQL.Parser                     as P
 
 import           Data.Text.Extended
 import           Hasura.GraphQL.Context
 import           Hasura.GraphQL.Execute.Types
-import           Hasura.GraphQL.Parser                 (Kind (..), Parser, Schema (..),
-                                                        UnpreparedValue (..))
+import           Hasura.GraphQL.Parser                     (Kind (..), Parser, Schema (..),
+                                                            UnpreparedValue (..))
 import           Hasura.GraphQL.Parser.Class
-import           Hasura.GraphQL.Parser.Internal.Parser (FieldParser (..))
+import           Hasura.GraphQL.Parser.Internal.Parser     (FieldParser (..))
 import           Hasura.GraphQL.Schema.Backend
 import           Hasura.GraphQL.Schema.Common
 import           Hasura.GraphQL.Schema.Introspect
-import           Hasura.GraphQL.Schema.Remote          (buildRemoteParser)
+import           Hasura.GraphQL.Schema.Postgres
+import           Hasura.GraphQL.Schema.Remote              (buildRemoteParser)
 import           Hasura.GraphQL.Schema.Select
 import           Hasura.GraphQL.Schema.Table
 import           Hasura.RQL.DDL.Schema.Cache.Common
 import           Hasura.RQL.Types
 import           Hasura.Session
 
--- Mapping from backend to schema.
--- Those instances are orphan by design: generic parsers must be written with the knowledge of the
--- BackendSchema typeclass, and the backend-specific parsers that we specify here do in turn rely on
--- those generic parsers. To avoid a include loop, we split the definition of the typeclass and of
--- its instance.
--- This should probably moved in a PG-specific section of the code (Backend/Postgres/Schema,
--- perhaps?) to avoid the proliferation of such instances as we add more backends.
 
-instance BackendSchema 'Postgres where
-  -- top level parsers
-  buildTableQueryFields          = GSB.buildTableQueryFields
-  buildTableRelayQueryFields     = PGS.buildTableRelayQueryFields
-  buildTableInsertMutationFields = GSB.buildTableInsertMutationFields
-  buildTableUpdateMutationFields = GSB.buildTableUpdateMutationFields
-  buildTableDeleteMutationFields = GSB.buildTableDeleteMutationFields
-  buildFunctionQueryFields       = GSB.buildFunctionQueryFields
-  buildFunctionRelayQueryFields  = PGS.buildFunctionRelayQueryFields
-  buildFunctionMutationFields    = GSB.buildFunctionMutationFields
-  -- backend extensions
-  relayExtension    = const $ Just ()
-  nodesAggExtension = const $ Just ()
-  -- indivdual components
-  columnParser              = PGS.columnParser
-  jsonPathArg               = PGS.jsonPathArg
-  orderByOperators          = PGS.orderByOperators
-  comparisonExps            = PGS.comparisonExps
-  updateOperators           = PGS.updateOperators
-  offsetParser              = PGS.offsetParser
-  mkCountType               = PGS.mkCountType
-  aggregateOrderByCountType = PG.PGInteger
-  computedField             = computedFieldPG
-  node                      = nodePG
-  tableDistinctOn           = PGS.tableDistinctOn
-  remoteRelationshipField   = remoteRelationshipFieldPG
-  -- SQL literals
-  columnDefaultValue = const PG.columnDefaultValue
+----------------------------------------------------------------
+-- Backends schema instances
 
--- | Whether the request is sent with `x-hasura-use-backend-only-permissions` set to `true`.
-data Scenario = Backend | Frontend deriving (Enum, Show, Eq)
+import           Hasura.Backends.MSSQL.Instances.Schema    ()
+import           Hasura.Backends.Postgres.Instances.Schema ()
 
-type RemoteSchemaCache = HashMap RemoteSchemaName (RemoteSchemaCtx, MetadataObject)
 
 ----------------------------------------------------------------
 -- Building contexts
@@ -453,7 +415,8 @@ remoteSchemaFields = proc (queryFieldNames, mutationFieldNames, allRemoteSchemas
      ) |) [] (Map.toList allRemoteSchemas)
 
 buildQueryFields
-  :: forall b r m n. (BackendSchema b, MonadBuildSchema b r m n)
+  :: forall b r m n
+   . MonadBuildSchema b r m n
   => SourceName
   -> SourceConfig b
   -> TableCache b
@@ -478,7 +441,8 @@ buildQueryFields sourceName sourceConfig tables (takeExposedAs FEAQuery -> funct
   pure $ concat $ catMaybes $ tableSelectExpParsers <> functionSelectExpParsers
 
 buildRelayQueryFields
-  :: forall b r m n. (MonadBuildSchema b r m n)
+  :: forall b r m n
+   . MonadBuildSchema b r m n
   => SourceName
   -> SourceConfig b
   -> TableCache b
@@ -500,7 +464,8 @@ buildRelayQueryFields sourceName sourceConfig tables (takeExposedAs FEAQuery -> 
   pure $ catMaybes $ tableConnectionFields <> functionConnectionFields
 
 buildMutationFields
-  :: forall b r m n. (BackendSchema b, MonadBuildSchema b r m n)
+  :: forall b r m n
+   . MonadBuildSchema b r m n
   => Scenario
   -> SourceName
   -> SourceConfig b
@@ -568,7 +533,7 @@ buildQueryParser
   -> Parser 'Output n (OMap.InsOrdHashMap G.Name (QueryRootField UnpreparedValue))
   -> m (Parser 'Output n (OMap.InsOrdHashMap G.Name (QueryRootField UnpreparedValue)))
 buildQueryParser pgQueryFields remoteFields allActions nonObjectCustomTypes mutationParser subscriptionParser = do
-  actionQueryFields <- concat <$> traverse (PGS.buildActionQueryFields nonObjectCustomTypes) allActions
+  actionQueryFields <- concat <$> traverse (buildActionQueryFields nonObjectCustomTypes) allActions
   let allQueryFields = pgQueryFields <> actionQueryFields <> map (fmap RFRemote) remoteFields
   queryWithIntrospectionHelper allQueryFields mutationParser subscriptionParser
 
@@ -655,7 +620,7 @@ buildSubscriptionParser
   -> [ActionInfo]
   -> m (Parser 'Output n (OMap.InsOrdHashMap G.Name (QueryRootField UnpreparedValue)))
 buildSubscriptionParser queryFields allActions = do
-  actionSubscriptionFields <- concat <$> traverse PGS.buildActionSubscriptionFields allActions
+  actionSubscriptionFields <- concat <$> traverse buildActionSubscriptionFields allActions
   let subscriptionFields = queryFields <> actionSubscriptionFields
   P.safeSelectionSet subscriptionRoot Nothing subscriptionFields
          <&> fmap (fmap (P.handleTypename (RFRaw . J.String . G.unName)))
@@ -674,7 +639,7 @@ buildMutationParser
   -> [P.FieldParser n (MutationRootField UnpreparedValue)]
   -> m (Maybe (Parser 'Output n (OMap.InsOrdHashMap G.Name (MutationRootField UnpreparedValue))))
 buildMutationParser allRemotes allActions nonObjectCustomTypes mutationFields = do
-  actionParsers <- concat <$> traverse (PGS.buildActionMutationFields nonObjectCustomTypes) allActions
+  actionParsers <- concat <$> traverse (buildActionMutationFields nonObjectCustomTypes) allActions
   let mutationFieldsParser =
         mutationFields <>
         actionParsers <>
@@ -726,3 +691,9 @@ runMonadSchema roleName queryContext pgSources extensions m =
 withBackendSchema :: (forall b. BackendSchema b => SourceInfo b -> r) -> BackendSourceInfo -> r
 withBackendSchema f (BackendSourceInfo (bsi :: SourceInfo b)) = case backendTag @b of
   PostgresTag -> f bsi
+  MSSQLTag    -> f bsi
+
+-- | Whether the request is sent with `x-hasura-use-backend-only-permissions` set to `true`.
+data Scenario = Backend | Frontend deriving (Enum, Show, Eq)
+
+type RemoteSchemaCache = HashMap RemoteSchemaName (RemoteSchemaCtx, MetadataObject)

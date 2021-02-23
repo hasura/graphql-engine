@@ -604,7 +604,7 @@ v1Alpha1PGDumpHandler b = do
   onlyAdmin
   scRef <- asks (scCacheRef . hcServerCtx)
   sc    <- getSCFromRef scRef
-  let sources      = scPostgres sc
+  let sources      = scSources sc
       sourceName   = PGD.prbSource b
       sourceConfig = unsafeSourceConfiguration @'Postgres =<< M.lookup sourceName sources
   ci <- fmap _pscConnInfo sourceConfig

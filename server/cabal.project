@@ -59,3 +59,16 @@ source-repository-package
   type: git
   location: https://github.com/hasura/pool.git
   tag: bc4c3f739a8fb8ec4444336a34662895831c9acf
+
+source-repository-package
+  type: git
+  location: https://github.com/fpco/odbc.git
+  tag: 95cefd30a0daf4a9cc99e745beeea4034232e8ca
+
+package odbc
+  ghc-options: -Wwarn
+  -- Our CI compiles with -Werror, which is also applied to those packages
+  -- while it's fine for packages we maintain, we can't actually enforce
+  -- that third-party packages are warning-free, hence this -Wno-error.
+  -- When the changes in odbc are released, we can instead depend on
+  -- the hackage version, and remove it from this list of packages.

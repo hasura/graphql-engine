@@ -1,6 +1,8 @@
 module Hasura.Backends.Postgres.DDL.Source
-  (resolveSourceConfig, resolveDatabaseMetadata)
-where
+  ( resolveSourceConfig
+  , postDropSourceHook
+  , resolveDatabaseMetadata
+  ) where
 
 import qualified Data.HashMap.Strict                 as Map
 import qualified Database.PG.Query                   as Q
@@ -150,3 +152,27 @@ fetchPgScalars =
     SELECT coalesce(json_agg(typname), '[]')
     FROM pg_catalog.pg_type where typtype = 'b'
    |] () True
+
+-- | Clean source database after dropping in metadata
+postDropSourceHook
+  :: (MonadIO m, MonadError QErr m, MonadBaseControl IO m)
+  => PGSourceConfig -> m ()
+postDropSourceHook sourceConfig = do
+  -- Clean traces of Hasura in source database
+  liftEitherM $ runPgSourceWriteTx sourceConfig $ do
+    hdbMetadataTableExist <- doesTableExist "hdb_catalog" "hdb_metadata"
+    eventLogTableExist <- doesTableExist "hdb_catalog" "event_log"
+        -- If "hdb_metadata" and "event_log" tables found in the "hdb_catalog" schema
+        -- then this infers the source is being used as default potgres source (--database-url option).
+        -- In this case don't drop any thing in the catalog schema.
+    if | hdbMetadataTableExist && eventLogTableExist -> pure ()
+       -- Otherwise, if only "hdb_metadata" table exist, then this infers the source is
+       -- being used as metadata storage (--metadata-database-url option). In this case
+       -- drop only source related tables and not "hdb_catalog" schema
+       | hdbMetadataTableExist ->
+         Q.multiQE defaultTxErrorHandler $(Q.sqlFromFile "src-rsr/drop_pg_source.sql")
+       -- Otherwise, drop "hdb_catalog" schema.
+       | otherwise -> dropHdbCatalogSchema
+
+  -- Destory postgres source connection
+  liftIO $ _pecDestroyConn $ _pscExecCtx sourceConfig

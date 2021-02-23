@@ -27,6 +27,7 @@ import qualified Data.List                          as L
 
 import           Control.Lens                       ((.~), (^?))
 import           Data.Aeson
+import           Data.Typeable                      (cast)
 
 import           Hasura.Backends.Postgres.DDL.Table (delTriggerQ)
 import           Hasura.Metadata.Class
@@ -100,7 +101,8 @@ runReplaceMetadataV1 =
   (successMsg <$) . runReplaceMetadataV2 . ReplaceMetadataV2 NoAllowInconsistentMetadata
 
 runReplaceMetadataV2
-  :: ( QErrM m
+  :: forall m
+   . ( QErrM m
      , CacheRWM m
      , MetadataM m
      , MonadIO m
@@ -131,19 +133,29 @@ runReplaceMetadataV2 ReplaceMetadataV2{..} = do
       buildSchemaCacheStrict
 
   -- See Note [Clear postgres schema for dropped triggers]
-  for_ (OMap.toList $ _metaSources metadata) $ \(source, newSourceCache) ->
-    onJust (OMap.lookup source $ _metaSources oldMetadata) $ \oldSourceCache -> do
-      let getTriggersMap (BackendSourceMetadata sm) =
-            (OMap.unions . map _tmEventTriggers . OMap.elems . _smTables) sm
-          oldTriggersMap = getTriggersMap oldSourceCache
-          newTriggersMap = getTriggersMap newSourceCache
-          droppedTriggers = OMap.keys $ oldTriggersMap `OMap.difference` newTriggersMap
-      sourceConfig <- askSourceConfig source
-      for_ droppedTriggers $
-        \name -> liftIO $ runPgSourceWriteTx sourceConfig $ delTriggerQ name >> archiveEvents name
+  dropPostgresTriggers (getOnlyPGSources oldMetadata) (getOnlyPGSources metadata)
 
   sc <- askSchemaCache
   pure $ encJFromJValue $ formatInconsistentObjs $ scInconsistentObjs sc
+  where
+    getOnlyPGSources :: Metadata -> InsOrdHashMap SourceName (SourceMetadata 'Postgres)
+    getOnlyPGSources = OMap.mapMaybe (\(BackendSourceMetadata sm) -> cast sm) . _metaSources
+
+    dropPostgresTriggers
+      :: InsOrdHashMap SourceName (SourceMetadata 'Postgres) -- ^ old pg sources
+      -> InsOrdHashMap SourceName (SourceMetadata 'Postgres) -- ^ new pg sources
+      -> m ()
+    dropPostgresTriggers oldSources newSources =
+      for_ (OMap.toList newSources) $ \(source, newSourceCache) ->
+        onJust (OMap.lookup source oldSources) $ \oldSourceCache -> do
+          let oldTriggersMap = getPGTriggersMap oldSourceCache
+              newTriggersMap = getPGTriggersMap newSourceCache
+              droppedTriggers = OMap.keys $ oldTriggersMap `OMap.difference` newTriggersMap
+          sourceConfig <- askSourceConfig source
+          for_ droppedTriggers $
+            \name -> liftIO $ runPgSourceWriteTx sourceConfig $ delTriggerQ name >> archiveEvents name
+      where
+        getPGTriggersMap = OMap.unions . map _tmEventTriggers . OMap.elems . _smTables
 
 
 runExportMetadata
@@ -169,7 +181,7 @@ runReloadMetadata (ReloadMetadata reloadRemoteSchemas reloadSources) = do
         RSReloadAll    -> HS.fromList $ getAllRemoteSchemas sc
         RSReloadList l -> l
       pgSourcesInvalidations = case reloadSources of
-        RSReloadAll    -> HS.fromList $ HM.keys $ scPostgres sc
+        RSReloadAll    -> HS.fromList $ HM.keys $ scSources sc
         RSReloadList l -> l
       cacheInvalidations = CacheInvalidations
                            { ciMetadata = True
@@ -222,6 +234,17 @@ purgeMetadataObj = \case
   MOSourceObjId source (sourceObjId :: SourceMetadataObjId b) ->
     case backendTag @b of
       PostgresTag -> case sourceObjId of
+        SMOTable qt                                 -> dropTableInMetadata source qt
+        SMOTableObj qt tableObj -> MetadataModifier $
+          tableMetadataSetter source qt %~ case tableObj of
+            MTORel rn _              -> dropRelationshipInMetadata rn
+            MTOPerm rn pt            -> dropPermissionInMetadata rn pt
+            MTOTrigger trn           -> dropEventTriggerInMetadata trn
+            MTOComputedField ccn     -> dropComputedFieldInMetadata ccn
+            MTORemoteRelationship rn -> dropRemoteRelationshipInMetadata rn
+        SMOFunction qf                           -> dropFunctionInMetadata source qf
+        SMOFunctionPermission qf rn              -> dropFunctionPermissionInMetadata source qf rn
+      MSSQLTag -> case sourceObjId of
         SMOTable qt                                 -> dropTableInMetadata source qt
         SMOTableObj qt tableObj -> MetadataModifier $
           tableMetadataSetter source qt %~ case tableObj of

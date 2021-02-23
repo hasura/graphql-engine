@@ -1,17 +1,20 @@
 module Hasura.RQL.Types.Relationship where
 
-import           Hasura.Incremental       (Cacheable)
 import           Hasura.Prelude
 
-import           Control.Lens             (makeLenses)
+import qualified Data.HashMap.Strict                      as HM
+import qualified Data.Text                                as T
+
+import           Control.Lens                             (makeLenses)
 import           Data.Aeson.TH
 import           Data.Aeson.Types
+
+import           Hasura.Backends.Postgres.Instances.Types ()
+import           Hasura.Incremental                       (Cacheable)
 import           Hasura.RQL.Types.Backend
 import           Hasura.RQL.Types.Common
 import           Hasura.SQL.Backend
 
-import qualified Data.HashMap.Strict      as HM
-import qualified Data.Text                as T
 
 data RelDef a
   = RelDef
@@ -129,16 +132,19 @@ type ObjRelUsing b = RelUsing b (Column b)
 type ObjRelDef b = RelDef (ObjRelUsing b)
 type CreateObjRel b = WithTable b (ObjRelDef b)
 
-data DropRel
+data DropRel b
   = DropRel
   { drSource       :: !SourceName
-  , drTable        :: !(TableName 'Postgres)
+  , drTable        :: !(TableName b)
   , drRelationship :: !RelName
   , drCascade      :: !Bool
-  } deriving (Show, Eq)
-$(deriveToJSON hasuraJSON{omitNothingFields=True} ''DropRel)
+  } deriving (Generic)
+deriving instance (Backend b) => Show (DropRel b)
+deriving instance (Backend b) => Eq (DropRel b)
+instance (Backend b) => ToJSON (DropRel b) where
+  toJSON = genericToJSON hasuraJSON{omitNothingFields = True}
 
-instance FromJSON DropRel where
+instance (Backend b) => FromJSON (DropRel b) where
   parseJSON = withObject "Object" $ \o ->
     DropRel
       <$> o .:? "source" .!= defaultSource
@@ -146,15 +152,19 @@ instance FromJSON DropRel where
       <*> o .: "relationship"
       <*> o .:? "cascade" .!= False
 
-data SetRelComment
+data SetRelComment b
   = SetRelComment
   { arSource       :: !SourceName
-  , arTable        :: !(TableName 'Postgres)
+  , arTable        :: !(TableName b)
   , arRelationship :: !RelName
   , arComment      :: !(Maybe T.Text)
-  } deriving (Show, Eq)
-$(deriveToJSON hasuraJSON{omitNothingFields=True} ''SetRelComment)
-instance FromJSON SetRelComment where
+  } deriving (Generic)
+deriving instance (Backend b) => Show (SetRelComment b)
+deriving instance (Backend b) => Eq (SetRelComment b)
+instance (Backend b) => ToJSON (SetRelComment b) where
+  toJSON = genericToJSON hasuraJSON{omitNothingFields = True}
+
+instance (Backend b) => FromJSON (SetRelComment b) where
   parseJSON = withObject "Object" $ \o ->
     SetRelComment
       <$> o .:? "source" .!= defaultSource
@@ -162,16 +172,19 @@ instance FromJSON SetRelComment where
       <*> o .: "relationship"
       <*> o .:? "comment"
 
-data RenameRel
+data RenameRel b
   = RenameRel
   { rrSource  :: !SourceName
-  , rrTable   :: !(TableName 'Postgres)
+  , rrTable   :: !(TableName b)
   , rrName    :: !RelName
   , rrNewName :: !RelName
-  } deriving (Show, Eq)
-$(deriveToJSON hasuraJSON ''RenameRel)
+  } deriving (Generic)
+deriving instance (Backend b) => Show (RenameRel b)
+deriving instance (Backend b) => Eq (RenameRel b)
+instance (Backend b) => ToJSON (RenameRel b) where
+  toJSON = genericToJSON hasuraJSON
 
-instance FromJSON RenameRel where
+instance (Backend b) => FromJSON (RenameRel b) where
   parseJSON = withObject "Object" $ \o ->
     RenameRel
       <$> o .:? "source" .!= defaultSource

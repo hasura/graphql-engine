@@ -31,56 +31,52 @@ mkPgSourceResolver pgLogger _ config = runExceptT do
   pure $ PGSourceConfig pgExecCtx connInfo Nothing
 
 --- Metadata APIs related
-runAddPgSource
-  :: (MonadError QErr m, CacheRWM m, MetadataM m)
-  => AddPgSource -> m EncJSON
-runAddPgSource (AddPgSource name sourceConfig) = do
-  let sourceConnConfig = PostgresConnConfiguration (_pccConnectionInfo sourceConfig) mempty
-  sources <- scPostgres <$> askSchemaCache
+runAddSource
+  :: forall m b
+   . (MonadError QErr m, CacheRWM m, MetadataM m, BackendMetadata b)
+  => AddSource b -> m EncJSON
+runAddSource (AddSource name sourceConfig) = do
+  sources <- scSources <$> askSchemaCache
   onJust (HM.lookup name sources) $ const $
     throw400 AlreadyExists $ "postgres source with name " <> name <<> " already exists"
   buildSchemaCacheFor (MOSource name)
     $ MetadataModifier
-    $ metaSources %~ OMap.insert name (mkSourceMetadata @'Postgres name sourceConnConfig)
+    $ metaSources %~ OMap.insert name (mkSourceMetadata @b name sourceConfig)
   pure successMsg
 
-runDropPgSource
-  :: (MonadError QErr m, CacheRWM m, MonadIO m, MonadBaseControl IO m, MetadataM m)
-  => DropPgSource -> m EncJSON
-runDropPgSource (DropPgSource name cascade) = do
-  sourceConfig <- askSourceConfig name
+runDropSource
+  :: forall m. (MonadError QErr m, CacheRWM m, MonadIO m, MonadBaseControl IO m, MetadataM m)
+  => DropSource -> m EncJSON
+runDropSource (DropSource name cascade) = do
   sc <- askSchemaCache
-  let indirectDeps = mapMaybe getIndirectDep $
-                     getDependentObjs sc (SOSource name)
-
-  when (not cascade && indirectDeps /= []) $ reportDepsExt (map (SOSourceObj name) indirectDeps) []
-
-  metadataModifier <- execWriterT $ do
-    mapM_ (purgeDependentObject name >=> tell) indirectDeps
-    tell $ MetadataModifier $ metaSources %~ OMap.delete name
-
-  buildSchemaCacheFor (MOSource name) metadataModifier
-  -- Clean traces of Hasura in source database
-  liftEitherM $ runPgSourceWriteTx sourceConfig $ do
-    hdbMetadataTableExist <- doesTableExist "hdb_catalog" "hdb_metadata"
-    eventLogTableExist <- doesTableExist "hdb_catalog" "event_log"
-        -- If "hdb_metadata" and "event_log" tables found in the "hdb_catalog" schema
-        -- then this infers the source is being used as default potgres source (--database-url option).
-        -- In this case don't drop any thing in the catalog schema.
-    if | hdbMetadataTableExist && eventLogTableExist -> pure ()
-       -- Otherwise, if only "hdb_metadata" table exist, then this infers the source is
-       -- being used as metadata storage (--metadata-database-url option). In this case
-       -- drop only source related tables and not "hdb_catalog" schema
-       | hdbMetadataTableExist ->
-         Q.multiQE defaultTxErrorHandler $(Q.sqlFromFile "src-rsr/drop_pg_source.sql")
-       -- Otherwise, drop "hdb_catalog" schema.
-       | otherwise -> dropHdbCatalogSchema
-
-  -- Destory postgres source connection
-  liftIO $ _pecDestroyConn $ _pscExecCtx sourceConfig
+  let sources = scSources sc
+  backendSourceInfo <- onNothing (HM.lookup name sources) $
+    throw400 NotExists $ "source with name " <> name <<> " does not exist"
+  dropSource' sc backendSourceInfo
   pure successMsg
   where
-    getIndirectDep :: SchemaObjId -> Maybe (SourceObjId 'Postgres)
-    getIndirectDep = \case
-      SOSourceObj s o -> if s == name then Nothing else cast o -- consider only postgres backend dependencies
-      _               -> Nothing
+    dropSource' :: SchemaCache -> BackendSourceInfo -> m ()
+    dropSource' sc (BackendSourceInfo (sourceInfo :: SourceInfo b)) =
+      case backendTag @b of
+        PostgresTag -> dropSource sc (sourceInfo :: SourceInfo 'Postgres)
+        MSSQLTag    -> dropSource sc (sourceInfo :: SourceInfo 'MSSQL)
+
+    dropSource :: forall b. (BackendMetadata b) => SchemaCache -> SourceInfo b -> m ()
+    dropSource sc sourceInfo = do
+      let sourceConfig = _siConfiguration sourceInfo
+      let indirectDeps = mapMaybe getIndirectDep $
+                         getDependentObjs sc (SOSource name)
+
+      when (not cascade && indirectDeps /= []) $ reportDepsExt (map (SOSourceObj name) indirectDeps) []
+
+      metadataModifier <- execWriterT $ do
+        mapM_ (purgeDependentObject name >=> tell) indirectDeps
+        tell $ MetadataModifier $ metaSources %~ OMap.delete name
+
+      buildSchemaCacheFor (MOSource name) metadataModifier
+      postDropSourceHook sourceConfig
+      where
+        getIndirectDep :: SchemaObjId -> Maybe (SourceObjId b)
+        getIndirectDep = \case
+          SOSourceObj s o -> if s == name then Nothing else cast o -- consider only *this* backend specific dependencies
+          _               -> Nothing

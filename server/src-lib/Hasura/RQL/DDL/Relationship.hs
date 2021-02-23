@@ -26,7 +26,6 @@ import           Hasura.RQL.DDL.Deps
 import           Hasura.RQL.DDL.Permission
 import           Hasura.RQL.Types
 
-
 runCreateRelationship
   :: (MonadError QErr m, CacheRWM m, ToJSON a, MetadataM m, Backend b, BackendMetadata b)
   => RelType -> WithTable b (RelDef a) -> m EncJSON
@@ -53,7 +52,9 @@ runCreateRelationship relType (WithTable source tableName relDef) = do
     $ tableMetadataSetter source tableName %~ addRelationshipToMetadata
   pure successMsg
 
-runDropRel :: (MonadError QErr m, CacheRWM m, MetadataM m) => DropRel -> m EncJSON
+runDropRel
+  :: (MonadError QErr m, CacheRWM m, MetadataM m, BackendMetadata b)
+  => DropRel b -> m EncJSON
 runDropRel (DropRel source qt rn cascade) = do
   depObjs <- collectDependencies
   withNewInconsistentObjsCheck do
@@ -145,8 +146,8 @@ purgeRelDep d = throw500 $ "unexpected dependency of relationship : "
                 <> reportSchemaObj d
 
 runSetRelComment
-  :: (CacheRWM m, MonadError QErr m, MetadataM m)
-  => SetRelComment -> m EncJSON
+  :: (CacheRWM m, MonadError QErr m, MetadataM m, BackendMetadata b)
+  => SetRelComment b -> m EncJSON
 runSetRelComment defn = do
   tabInfo <- askTableCoreInfo source qt
   relType <- riType <$> askRelType (_tciFieldInfoMap tabInfo) rn ""

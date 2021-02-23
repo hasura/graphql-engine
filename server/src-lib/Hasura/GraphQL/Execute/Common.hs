@@ -14,7 +14,6 @@ import qualified Network.HTTP.Types                          as HTTP
 
 import qualified Hasura.Backends.Postgres.SQL.DML            as S
 import qualified Hasura.Backends.Postgres.Translate.Select   as DS
-import qualified Hasura.RQL.IR.Select                        as DS
 import qualified Hasura.Tracing                              as Tracing
 
 import           Hasura.Backends.Postgres.Connection
@@ -28,19 +27,6 @@ import           Hasura.GraphQL.Execute.RemoteJoin
 import           Hasura.RQL.Types
 import           Hasura.Server.Version                       (HasVersion)
 import           Hasura.Session
-
-
-traverseQueryDB
-  :: forall f a b backend
-   . Applicative f
-  => (a -> f b)
-  -> QueryDB backend a
-  -> f (QueryDB backend b)
-traverseQueryDB f = \case
-  QDBMultipleRows s -> QDBMultipleRows <$> DS.traverseAnnSimpleSelect    f s
-  QDBSingleRow    s -> QDBSingleRow    <$> DS.traverseAnnSimpleSelect    f s
-  QDBAggregation  s -> QDBAggregation  <$> DS.traverseAnnAggregateSelect f s
-  QDBConnection   s -> QDBConnection   <$> DS.traverseConnectionSelect   f s
 
 
 data PreparedSql

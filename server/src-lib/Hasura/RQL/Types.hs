@@ -73,22 +73,22 @@ import           Hasura.Tracing
 
 
 askSourceInfo
-  :: (CacheRM m, MonadError QErr m)
-  => SourceName -> m (SourceInfo 'Postgres)
+  :: (CacheRM m, MonadError QErr m, Backend b)
+  => SourceName -> m (SourceInfo b)
 askSourceInfo sourceName = do
-  sources <- scPostgres <$> askSchemaCache
+  sources <- scSources <$> askSchemaCache
   onNothing (unsafeSourceInfo =<< M.lookup sourceName sources) $
     -- FIXME: this error can also happen for a lookup with the wrong type
     throw400 NotExists $ "source with name " <> sourceName <<> " does not exist"
 
 askSourceConfig
-  :: (CacheRM m, MonadError QErr m)
-  => SourceName -> m (SourceConfig 'Postgres)
+  :: (CacheRM m, MonadError QErr m, Backend b)
+  => SourceName -> m (SourceConfig b)
 askSourceConfig = fmap _siConfiguration . askSourceInfo
 
 askSourceTables :: (Backend b) => CacheRM m => SourceName -> m (TableCache b)
 askSourceTables sourceName = do
-  sources <- scPostgres <$> askSchemaCache
+  sources <- scSources <$> askSchemaCache
   pure $ fromMaybe mempty $ unsafeSourceTables =<< M.lookup sourceName sources
 
 
@@ -97,7 +97,7 @@ askTabInfo
   => SourceName -> TableName b -> m (TableInfo b)
 askTabInfo sourceName tableName = do
   rawSchemaCache <- askSchemaCache
-  unsafeTableInfo sourceName tableName (scPostgres rawSchemaCache)
+  unsafeTableInfo sourceName tableName (scSources rawSchemaCache)
     `onNothing` throw400 NotExists errMsg
   where
     errMsg = "table " <> tableName <<> " does not exist in source: " <> sourceNameToText sourceName
@@ -171,7 +171,7 @@ askTableCache
   :: (QErrM m, CacheRM m, Backend b) => SourceName -> m (TableCache b)
 askTableCache sourceName = do
   schemaCache <- askSchemaCache
-  sourceInfo  <- M.lookup sourceName (scPostgres schemaCache)
+  sourceInfo  <- M.lookup sourceName (scSources schemaCache)
     `onNothing` throw400 NotExists ("source " <> sourceName <<> " does not exist")
   unsafeSourceTables sourceInfo
     `onNothing` throw400 NotExists ("source " <> sourceName <<> " is not a PG cache")

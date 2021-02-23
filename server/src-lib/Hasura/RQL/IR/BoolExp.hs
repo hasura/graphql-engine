@@ -279,6 +279,7 @@ data OpExpG (b :: BackendType) a
   | CGTE !(Column b)
   | CLTE !(Column b)
   deriving (Functor, Foldable, Traversable, Generic)
+deriving instance (Backend b, Show a) => Show (OpExpG b a)
 deriving instance (Backend b, Eq a) => Eq (OpExpG b a)
 instance (Backend b, NFData a) => NFData (OpExpG b a)
 instance (Backend b, Cacheable a) => Cacheable (OpExpG b a)

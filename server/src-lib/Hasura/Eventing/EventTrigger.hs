@@ -198,7 +198,7 @@ processEventQueue logger logenv httpMgr getSchemaCache eeCtx@EventEngineCtx{..} 
         Any serial order of updates to a row will lead to an eventually consistent state as the row will have
         (delivered=t or error=t or archived=t) after a fixed number of tries (assuming it begins with locked='f').
       -}
-      pgSources <- scPostgres <$> liftIO getSchemaCache
+      pgSources <- scSources <$> liftIO getSchemaCache
       fmap concat $ forM (M.toList pgSources) $ \(sourceName, sourceCache) ->
         case unsafeSourceConfiguration @'Postgres sourceCache of
           Nothing           -> pure []
@@ -418,7 +418,7 @@ getEventTriggerInfoFromEvent
   :: SchemaCache -> Event -> Either Text (EventTriggerInfo 'Postgres)
 getEventTriggerInfoFromEvent sc e = do
   let table = eTable e
-      mTableInfo = unsafeTableInfo @'Postgres (eSource e) table $ scPostgres sc
+      mTableInfo = unsafeTableInfo @'Postgres (eSource e) table $ scSources sc
   tableInfo <- onNothing mTableInfo $ Left ("table '" <> table <<> "' not found")
   let triggerName = tmName $ eTrigger e
       mEventTriggerInfo = M.lookup triggerName (_tiEventTriggerInfoMap tableInfo)

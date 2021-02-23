@@ -2,6 +2,8 @@
 {-# LANGUAGE OverloadedLabels     #-}
 {-# LANGUAGE UndecidableInstances #-}
 
+{-# OPTIONS_GHC -O0 #-}
+
 {-| Top-level functions concerned specifically with operations on the schema cache, such as
 rebuilding it from the catalog and incorporating schema changes. See the module documentation for
 "Hasura.RQL.DDL.Schema" for more details.
@@ -167,7 +169,7 @@ buildSchemaCacheRule env = proc (metadata, invalidationKeys) -> do
       throw409 $ "Ambiguous URL paths in endpoints: " <> commaSeparated (renderPath <$> ambPaths)
 
   returnA -< SchemaCache
-    { scPostgres = _boSources resolvedOutputs
+    { scSources = _boSources resolvedOutputs
     , scActions = _boActions resolvedOutputs
     -- TODO this is not the right value: we should track what part of the schema
     -- we can stitch without consistencies, I think.
@@ -362,6 +364,7 @@ buildSchemaCacheRule env = proc (metadata, invalidationKeys) -> do
         (| Inc.keyed (\_ (BackendSourceMetadata (sourceMetadata :: SourceMetadata b)) ->
              case backendTag @b of
                 PostgresTag -> buildSourceOutput @arr @m -< (invalidationKeys, remoteSchemaCtxMap, sourceMetadata :: SourceMetadata 'Postgres)
+                MSSQLTag    -> buildSourceOutput @arr @m -< (invalidationKeys, remoteSchemaCtxMap, sourceMetadata :: SourceMetadata 'MSSQL)
            )
         |) (M.fromList $ OMap.toList sources)
         >-> (\infos -> M.catMaybes infos >- returnA)

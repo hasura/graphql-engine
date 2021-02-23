@@ -55,10 +55,10 @@ unsafeSourceName :: BackendSourceInfo -> SourceName
 unsafeSourceName (BackendSourceInfo (SourceInfo name _ _ _)) = name
 
 unsafeSourceTables :: forall b. Backend b => BackendSourceInfo -> Maybe (TableCache b)
-unsafeSourceTables = fmap _siTables . unsafeSourceInfo
+unsafeSourceTables = fmap _siTables . unsafeSourceInfo @b
 
 unsafeSourceFunctions :: forall b. Backend b => BackendSourceInfo -> Maybe (FunctionCache b)
-unsafeSourceFunctions = fmap _siFunctions . unsafeSourceInfo
+unsafeSourceFunctions = fmap _siFunctions . unsafeSourceInfo @b
 
 unsafeSourceConfiguration :: forall b. Backend b => BackendSourceInfo -> Maybe (SourceConfig b)
 unsafeSourceConfiguration = fmap _siConfiguration . unsafeSourceInfo @b
@@ -99,23 +99,30 @@ instance (MonadResolveSource m) => MonadResolveSource (LazyTxT QErr m) where
   getSourceResolver = lift getSourceResolver
 
 -- Metadata API related types
-data AddPgSource
-  = AddPgSource
-  { _apsName          :: !SourceName
-  , _apsConfiguration :: !PostgresConnConfiguration
-  } deriving (Show, Eq)
-$(deriveJSON hasuraJSON ''AddPgSource)
+data AddSource b
+  = AddSource
+  { _asName          :: !SourceName
+  , _asConfiguration :: !(SourceConnConfiguration b)
+  } deriving (Generic)
+deriving instance (Backend b) => Show (AddSource b)
+deriving instance (Backend b) => Eq (AddSource b)
 
-data DropPgSource
-  = DropPgSource
-  { _dpsName    :: !SourceName
-  , _dpsCascade :: !Bool
-  } deriving (Show, Eq)
-$(deriveToJSON hasuraJSON ''DropPgSource)
+instance (Backend b) => ToJSON (AddSource b) where
+  toJSON = genericToJSON hasuraJSON
 
-instance FromJSON DropPgSource where
+instance (Backend b) => FromJSON (AddSource b) where
+  parseJSON = genericParseJSON hasuraJSON
+
+data DropSource
+  = DropSource
+  { _dsName    :: !SourceName
+  , _dsCascade :: !Bool
+  } deriving (Show, Eq)
+$(deriveToJSON hasuraJSON ''DropSource)
+
+instance FromJSON DropSource where
   parseJSON = withObject "Object" $ \o ->
-    DropPgSource <$> o .: "name" <*> o .:? "cascade" .!= False
+    DropSource <$> o .: "name" <*> o .:? "cascade" .!= False
 
 newtype PostgresSourceName =
   PostgresSourceName {_psnName :: SourceName}

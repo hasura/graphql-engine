@@ -34,10 +34,10 @@ trackFunctionP1
   => SourceName -> FunctionName b -> m ()
 trackFunctionP1 sourceName qf = do
   rawSchemaCache <- askSchemaCache
-  when (isJust $ unsafeFunctionInfo @b sourceName qf $ scPostgres rawSchemaCache) $
+  when (isJust $ unsafeFunctionInfo @b sourceName qf $ scSources rawSchemaCache) $
     throw400 AlreadyTracked $ "function already tracked : " <>> qf
   let qt = functionToTable qf
-  when (isJust $ unsafeTableInfo @b sourceName qt $ scPostgres rawSchemaCache) $
+  when (isJust $ unsafeTableInfo @b sourceName qt $ scSources rawSchemaCache) $
     throw400 NotSupported $ "table with name " <> qf <<> " already exists"
 
 trackFunctionP2
@@ -100,7 +100,7 @@ askFunctionInfo
    . (CacheRM m, MonadError QErr m, Backend b)
   => SourceName -> FunctionName b -> m (FunctionInfo b)
 askFunctionInfo source functionName = do
-  sourceCache <- scPostgres <$> askSchemaCache
+  sourceCache <- scSources <$> askSchemaCache
   unsafeFunctionInfo @b source functionName sourceCache
     `onNothing` throw400 NotExists ("function " <> functionName <<> " not found in the cache")
 
@@ -167,7 +167,7 @@ runCreateFunctionPermission
   => CreateFunctionPermission b
   -> m EncJSON
 runCreateFunctionPermission (CreateFunctionPermission functionName source role) = do
-  sourceCache <- scPostgres <$> askSchemaCache
+  sourceCache <- scSources <$> askSchemaCache
   functionInfo <- askFunctionInfo source functionName
   when (role `elem` _fiPermissions functionInfo) $
     throw400 AlreadyExists $

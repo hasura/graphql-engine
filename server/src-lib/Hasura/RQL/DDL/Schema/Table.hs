@@ -43,7 +43,7 @@ import           Data.Typeable                      (cast)
 
 import qualified Hasura.Incremental                 as Inc
 
-import           Hasura.Backends.Postgres.SQL.Types (FunctionName (..), QualifiedTable)
+import           Hasura.Backends.Postgres.SQL.Types (QualifiedTable)
 import           Hasura.EncJSON
 import           Hasura.GraphQL.Context
 import           Hasura.GraphQL.Schema.Common       (textToName)
@@ -55,14 +55,16 @@ import           Hasura.RQL.Types                   hiding (fmFunction)
 import           Hasura.Server.Utils
 
 
-data TrackTable
+data TrackTable b
   = TrackTable
   { tSource :: !SourceName
-  , tName   :: !QualifiedTable
+  , tName   :: !(TableName b)
   , tIsEnum :: !Bool
-  } deriving (Show, Eq)
+  }
+deriving instance (Backend b) => Show (TrackTable b)
+deriving instance (Backend b) => Eq (TrackTable b)
 
-instance FromJSON TrackTable where
+instance (Backend b) => FromJSON (TrackTable b) where
   parseJSON v = withOptions <|> withoutOptions
     where
       withOptions = flip (withObject "TrackTable") v $ \o -> TrackTable
@@ -71,7 +73,7 @@ instance FromJSON TrackTable where
         <*> o .:? "is_enum" .!= False
       withoutOptions = TrackTable defaultSource <$> parseJSON v <*> pure False
 
-instance ToJSON TrackTable where
+instance (Backend b) => ToJSON (TrackTable b) where
   toJSON (TrackTable source name isEnum)
     | isEnum = object [ "source" .= source, "table" .= name, "is_enum" .= isEnum ]
     | otherwise = toJSON name
@@ -109,21 +111,21 @@ instance (Backend b) => FromJSON (UntrackTable b) where
       <*> o .: "table"
       <*> o .:? "cascade" .!= False
 
-isTableTracked :: SchemaCache -> SourceName -> QualifiedTable -> Bool
-isTableTracked sc source tableName =
-  isJust $ unsafeTableInfo @'Postgres source tableName $ scPostgres sc
+isTableTracked :: forall b. (Backend b) => SourceInfo b -> TableName b -> Bool
+isTableTracked sourceInfo tableName =
+  isJust $ Map.lookup tableName $ _siTables sourceInfo
 
 -- | Track table/view, Phase 1:
 -- Validate table tracking operation. Fails if table is already being tracked,
 -- or if a function with the same name is being tracked.
-trackExistingTableOrViewP1 :: (QErrM m, CacheRWM m) => SourceName -> QualifiedTable -> m ()
-trackExistingTableOrViewP1 source qt = do
-  rawSchemaCache <- askSchemaCache
-  when (isTableTracked rawSchemaCache source qt) $
-    throw400 AlreadyTracked $ "view/table already tracked : " <>> qt
-  let qf = fmap (FunctionName . toTxt) qt
-  when (isJust $ unsafeFunctionInfo @'Postgres source qf $ scPostgres rawSchemaCache) $
-    throw400 NotSupported $ "function with name " <> qt <<> " already exists"
+trackExistingTableOrViewP1 :: forall m b. (QErrM m, CacheRWM m, Backend b) => SourceName -> TableName b -> m ()
+trackExistingTableOrViewP1 source tableName = do
+  sourceInfo <- askSourceInfo source
+  when (isTableTracked sourceInfo tableName) $
+    throw400 AlreadyTracked $ "view/table already tracked : " <>> tableName
+  let functionName = tableToFunction tableName
+  when (isJust $ Map.lookup functionName $ _siFunctions sourceInfo) $
+    throw400 NotSupported $ "function with name " <> tableName <<> " already exists"
 
 -- | Check whether a given name would conflict with the current schema by doing
 -- an internal introspection
@@ -196,26 +198,27 @@ trackExistingTableOrViewP2 source tableName isEnum config = do
   pure successMsg
 
 runTrackTableQ
-  :: (MonadError QErr m, CacheRWM m, MetadataM m) => TrackTable -> m EncJSON
+  :: (MonadError QErr m, CacheRWM m, MetadataM m, BackendMetadata b) => TrackTable b -> m EncJSON
 runTrackTableQ (TrackTable source qt isEnum) = do
   trackExistingTableOrViewP1 source qt
   trackExistingTableOrViewP2 source qt isEnum emptyTableConfig
 
-data TrackTableV2
+data TrackTableV2 b
   = TrackTableV2
-  { ttv2Table         :: !TrackTable
-  , ttv2Configuration :: !(TableConfig 'Postgres)
-  } deriving (Show, Eq)
-$(deriveToJSON hasuraJSON ''TrackTableV2)
+  { ttv2Table         :: !(TrackTable b)
+  , ttv2Configuration :: !(TableConfig b)
+  } deriving (Show, Eq, Generic)
+instance (Backend b) => ToJSON (TrackTableV2 b) where
+  toJSON = genericToJSON hasuraJSON
 
-instance FromJSON TrackTableV2 where
+instance (Backend b) => FromJSON (TrackTableV2 b) where
   parseJSON = withObject "Object" $ \o -> do
     table <- parseJSON $ Object o
     configuration <- o .:? "configuration" .!= emptyTableConfig
     pure $ TrackTableV2 table configuration
 
 runTrackTableV2Q
-  :: (MonadError QErr m, CacheRWM m, MetadataM m) => TrackTableV2 -> m EncJSON
+  :: (MonadError QErr m, CacheRWM m, MetadataM m, BackendMetadata b) => TrackTableV2 b -> m EncJSON
 runTrackTableV2Q (TrackTableV2 (TrackTable source qt isEnum) config) = do
   trackExistingTableOrViewP1 source qt
   trackExistingTableOrViewP2 source qt isEnum config
@@ -283,7 +286,7 @@ unTrackExistingTableOrViewP1
   :: forall m b. (CacheRM m, QErrM m, Backend b) => UntrackTable b -> m ()
 unTrackExistingTableOrViewP1 (UntrackTable source vn _) = do
   schemaCache <- askSchemaCache
-  tableInfo   <- unsafeTableInfo @b source vn (scPostgres schemaCache)
+  tableInfo   <- unsafeTableInfo @b source vn (scSources schemaCache)
     `onNothing` throw400 AlreadyUntracked ("view/table already untracked : " <>> vn)
   when (isSystemDefined $ _tciSystemDefined $ _tiCoreInfo tableInfo) $
     throw400 NotSupported $ vn <<> " is system defined, cannot untrack"

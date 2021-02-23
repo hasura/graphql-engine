@@ -4,29 +4,32 @@ module Hasura.GraphQL.Execute.Mutation
 
 import           Hasura.Prelude
 
-import qualified Data.Environment                       as Env
-import qualified Data.HashMap.Strict                    as Map
-import qualified Data.HashMap.Strict.InsOrd             as OMap
-import qualified Data.Sequence.NonEmpty                 as NE
-import qualified Language.GraphQL.Draft.Syntax          as G
-import qualified Network.HTTP.Client                    as HTTP
-import qualified Network.HTTP.Types                     as HTTP
+import qualified Data.Environment                           as Env
+import qualified Data.HashMap.Strict                        as Map
+import qualified Data.HashMap.Strict.InsOrd                 as OMap
+import qualified Data.Sequence.NonEmpty                     as NE
+import qualified Language.GraphQL.Draft.Syntax              as G
+import qualified Network.HTTP.Client                        as HTTP
+import qualified Network.HTTP.Types                         as HTTP
 
-import qualified Hasura.GraphQL.Transport.HTTP.Protocol as GH
-import qualified Hasura.Logging                         as L
-import qualified Hasura.Tracing                         as Tracing
+import qualified Hasura.GraphQL.Transport.HTTP.Protocol     as GH
+import qualified Hasura.Logging                             as L
+import qualified Hasura.Tracing                             as Tracing
 
 import           Hasura.GraphQL.Context
 import           Hasura.GraphQL.Execute.Action
 import           Hasura.GraphQL.Execute.Backend
-import           Hasura.GraphQL.Execute.Postgres        ()
 import           Hasura.GraphQL.Execute.Remote
 import           Hasura.GraphQL.Execute.Resolve
 import           Hasura.GraphQL.Parser
 import           Hasura.Metadata.Class
 import           Hasura.RQL.Types
-import           Hasura.Server.Version                  (HasVersion)
+import           Hasura.Server.Version                      (HasVersion)
 import           Hasura.Session
+
+-- backend instances
+import           Hasura.Backends.MSSQL.Instances.Execute    ()
+import           Hasura.Backends.Postgres.Instances.Execute ()
 
 
 convertMutationAction
@@ -86,6 +89,7 @@ convertMutationSelectionSet env logger gqlContext SQLGenCtx{stringifyNum} userIn
   txs <- for unpreparedQueries \case
     RFDB _ (sourceConfig :: SourceConfig b) (MDBR db) -> case backendTag @b of
       PostgresTag -> mkDBMutationPlan env manager reqHeaders userInfo stringifyNum sourceConfig db
+      MSSQLTag    -> mkDBMutationPlan env manager reqHeaders userInfo stringifyNum sourceConfig db
     RFRemote remoteField -> do
       RemoteFieldG remoteSchemaInfo resolvedRemoteField <- resolveRemoteField userInfo remoteField
       pure $ buildExecStepRemote remoteSchemaInfo G.OperationTypeMutation $ [G.SelectionField resolvedRemoteField]

@@ -1,6 +1,6 @@
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 
-module Hasura.GraphQL.Execute.Postgres () where
+module Hasura.Backends.Postgres.Instances.Execute () where
 
 import           Hasura.Prelude
 
@@ -174,13 +174,13 @@ pgDBMutationPlan env manager reqHeaders userInfo stringifyNum sourceConfig mrf =
     remoteJoinCtx = (manager, reqHeaders, userInfo)
 
 
--- mutation
+-- subscription
 
 pgDBSubscriptionPlan
-  :: forall m
-  . ( MonadError QErr m
-    , MonadIO m
-    )
+  :: forall m.
+     ( MonadError QErr m
+     , MonadIO m
+     )
   => UserInfo
   -> SourceConfig 'Postgres
   -> InsOrdHashMap G.Name (QueryDB 'Postgres (UnpreparedValue 'Postgres))

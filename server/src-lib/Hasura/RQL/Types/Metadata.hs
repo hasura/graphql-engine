@@ -274,7 +274,8 @@ instance FromJSON BackendSourceMetadata where
     -- TODO: Make backendKind a concrete type or re-use `BackendType`
     case backendKind of
       "postgres" -> BackendSourceMetadata @'Postgres <$> parseJSON (Object o)
-      _          -> fail "accepting only postgres backends now"
+      "mssql"    -> BackendSourceMetadata @'MSSQL    <$> parseJSON (Object o)
+      _          -> fail "expected postgres or mssql"
 
 toSourceMetadata :: (BackendMetadata b) => Prism' BackendSourceMetadata (SourceMetadata b)
 toSourceMetadata = prism' BackendSourceMetadata getSourceMetadata
@@ -467,14 +468,18 @@ metadataToOrdJSON ( Metadata
                            else Just ("metrics_config", AO.toOrdered metricsConfig)
 
     sourceMetaToOrdJSON :: BackendSourceMetadata -> AO.Value
-    sourceMetaToOrdJSON (BackendSourceMetadata SourceMetadata{..}) =
+    sourceMetaToOrdJSON (BackendSourceMetadata (SourceMetadata{..} :: SourceMetadata b)) =
       let sourceNamePair = ("name", AO.toOrdered _smName)
+          sourceKind     = case backendTag @b of
+                             PostgresTag -> "postgres"
+                             MSSQLTag    -> "mssql"
+          sourceKindPair = ("kind", AO.String sourceKind)
           tablesPair     = ("tables", AO.array $ map tableMetaToOrdJSON $ sortOn _tmTable $ OM.elems _smTables)
           functionsPair  = listToMaybeOrdPairSort "functions" functionMetadataToOrdJSON _fmFunction _smFunctions
 
           configurationPair = [("configuration", AO.toOrdered _smConfiguration)]
 
-      in AO.object $ [sourceNamePair, tablesPair] <> maybeToList functionsPair <> configurationPair
+      in AO.object $ [sourceNamePair, sourceKindPair, tablesPair] <> maybeToList functionsPair <> configurationPair
 
     tableMetaToOrdJSON :: (Backend b) => TableMetadata b -> AO.Value
     tableMetaToOrdJSON ( TableMetadata

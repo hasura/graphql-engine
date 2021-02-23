@@ -158,6 +158,7 @@ explainGQLQuery sc (GQLExplain query userVarsRaw maybeIsRelay) = do
       (_, E.LQP (execPlan :: EL.LiveQueryPlan b (E.MultiplexedQuery b))) <- E.createSubscriptionPlan userInfo unpreparedQueries
       case backendTag @b of
         PostgresTag -> encJFromJValue <$> E.explainLiveQueryPlan execPlan
+        MSSQLTag    -> pure mempty
   where
     queryType = bool E.QueryHasura E.QueryRelay $ Just True == maybeIsRelay
     sessionVariables = mkSessionVariablesText $ fromMaybe mempty userVarsRaw

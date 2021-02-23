@@ -1,26 +1,22 @@
 {-# LANGUAGE AllowAmbiguousTypes #-}
+
 module Hasura.RQL.Types.Backend where
 
 import           Hasura.Prelude
 
-import qualified Language.GraphQL.Draft.Syntax       as G
+import qualified Language.GraphQL.Draft.Syntax as G
 
 import           Data.Aeson
-import           Data.Kind                           (Type)
+import           Data.Kind                     (Type)
 import           Data.Text.Extended
 import           Data.Typeable
 
-import qualified Hasura.Backends.Postgres.Connection as PG
-import qualified Hasura.Backends.Postgres.SQL.DML    as PG
-import qualified Hasura.Backends.Postgres.SQL.Types  as PG
-import qualified Hasura.Backends.Postgres.SQL.Value  as PG
-
-import           Hasura.Incremental                  (Cacheable)
-import           Hasura.RQL.DDL.Headers              ()
-import           Hasura.RQL.Types.Common
+import           Hasura.Incremental            (Cacheable)
+import           Hasura.RQL.DDL.Headers        ()
 import           Hasura.RQL.Types.Error
 import           Hasura.SQL.Backend
 import           Hasura.SQL.Types
+
 
 type Representable a = (Show a, Eq a, Hashable a, Cacheable a, NFData a, Typeable a)
 
@@ -135,11 +131,11 @@ class
   functionArgScalarType :: FunctionArgType b -> ScalarType b
   isComparableType      :: ScalarType b -> Bool
   isNumType             :: ScalarType b -> Bool
-  textToScalarType      :: Text -> ScalarType b
   textToScalarValue     :: Maybe Text -> ScalarValue b
   parseScalarValue      :: ScalarType b -> Value -> Either QErr (ScalarValue b)
   scalarValueToJSON     :: ScalarValue b -> Value
   functionToTable       :: FunctionName b -> TableName b
+  tableToFunction       :: TableName b -> FunctionName b
 
   -- functions on names
   tableGraphQLName    :: TableName b    -> Either QErr G.Name
@@ -148,45 +144,3 @@ class
 
   -- TODO: metadata related functions
   snakeCaseTableName :: TableName b -> Text
-
-instance Backend 'Postgres where
-  type SourceConfig            'Postgres = PG.PGSourceConfig
-  type SourceConnConfiguration 'Postgres = PG.PostgresConnConfiguration
-  type Identifier              'Postgres = PG.Identifier
-  type Alias                   'Postgres = PG.Alias
-  type TableName               'Postgres = PG.QualifiedTable
-  type FunctionName            'Postgres = PG.QualifiedFunction
-  type FunctionArgType         'Postgres = PG.QualifiedPGType
-  type ConstraintName          'Postgres = PG.ConstraintName
-  type BasicOrderType          'Postgres = PG.OrderType
-  type NullsOrderType          'Postgres = PG.NullsOrder
-  type CountType               'Postgres = PG.CountType
-  type Column                  'Postgres = PG.PGCol
-  type ScalarValue             'Postgres = PG.PGScalarValue
-  type ScalarType              'Postgres = PG.PGScalarType
-  type SQLExpression           'Postgres = PG.SQLExp
-  type SQLOperator             'Postgres = PG.SQLOp
-  type XAILIKE                 'Postgres = ()
-  type XANILIKE                'Postgres = ()
-  type XComputedField          'Postgres = ()
-  type XRemoteField            'Postgres = ()
-  type XEventTrigger           'Postgres = ()
-  type XRelay                  'Postgres = ()
-  type XNodesAgg               'Postgres = ()
-  type XDistinct               'Postgres = ()
-
-  backendTag                    = PostgresTag
-  functionArgScalarType         = PG._qptName
-  isComparableType              = PG.isComparableType
-  isNumType                     = PG.isNumType
-  textToScalarType              = PG.textToPGScalarType
-  textToScalarValue             = maybe (PG.PGNull PG.PGText) PG.PGValText
-  parseScalarValue ty val       = runAesonParser (PG.parsePGValue ty) val
-  scalarValueToJSON             = PG.pgScalarValueToJson
-  functionToTable               = fmap (PG.TableName . PG.getFunctionTxt)
-
-  tableGraphQLName              = PG.qualifiedObjectToName
-  functionGraphQLName           = PG.qualifiedObjectToName
-  scalarTypeGraphQLName         = runExcept . mkScalarTypeName
-
-  snakeCaseTableName            = PG.snakeCaseQualifiedObject

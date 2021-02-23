@@ -70,7 +70,7 @@
 - ignore: {name: Use sequenceA}
 - ignore: {name: Use camelCase}
 - ignore: {name: Redundant return}
-- ignore: {name: Use <$>, within: Hasura.RQL.DDL.Metadata}
+- ignore: {name: Use <$>, within: [Hasura.RQL.DDL.Metadata, Hasura.Backends.MSSQL.Types.Instances]}
 - ignore: {name: Functor law, within: Hasura.Server.AuthSpec}
 
 # Define some custom infix operators

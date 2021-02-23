@@ -40,7 +40,6 @@ import qualified Hasura.Logging                         as L
 import qualified Hasura.Server.Telemetry.Counters       as Telem
 import qualified Hasura.Tracing                         as Tracing
 
-import           Hasura.GraphQL.Execute.Postgres        ()
 import           Hasura.GraphQL.Parser.Column           (UnpreparedValue)
 import           Hasura.GraphQL.RemoteServer            (execRemoteGQ)
 import           Hasura.GraphQL.Transport.HTTP.Protocol
@@ -48,7 +47,6 @@ import           Hasura.Metadata.Class
 import           Hasura.RQL.Types
 import           Hasura.Server.Version                  (HasVersion)
 import           Hasura.Session
-
 
 
 type QueryParts = G.TypedOperationDefinition G.FragmentSpread G.Name
@@ -195,6 +193,7 @@ createSubscriptionPlan userInfo rootFields = do
       qdbs <- traverse (checkField @b sourceName) allFields
       lqp  <- case backendTag @b of
         PostgresTag -> LQP <$> EB.mkDBSubscriptionPlan userInfo sourceConfig qdbs
+        MSSQLTag    -> LQP <$> EB.mkDBSubscriptionPlan userInfo sourceConfig qdbs
       pure (sourceName, lqp)
     checkField
       :: forall b. Backend b

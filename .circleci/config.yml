@@ -1,7 +1,7 @@
 # anchor refs to be used elsewhere
 refs:
   constants:
-  - &server_builder_image hasura/graphql-engine-server-builder:2020-11-05
+  - &server_builder_image hasura/graphql-engine-server-builder:0a016555f4fcea810ea4efcd024c11cb66cb4921928e5e59f5c8e44338a05287
   skip_job_on_ciignore: &skip_job_on_ciignore
     run:
       name: checking if job should be terminated or not
@@ -113,7 +113,12 @@ refs:
         command: |
           mkdir -p /usr/share/man/man{1,7}
           apt-get update
-          apt install --yes pgbouncer jq curl postgresql-client-13
+          apt install --yes curl apt-transport-https
+          curl -s https://packages.microsoft.com/config/debian/9/prod.list > /etc/apt/sources.list.d/mssql-release.list
+          curl -s https://packages.microsoft.com/keys/microsoft.asc | apt-key add -
+          apt-get update
+          apt install --yes pgbouncer jq postgresql-client-13 g++ gcc libc6-dev unixodbc-dev
+          ACCEPT_EULA=Y apt install --yes msodbcsql17
     - run:
         name: Ensure databases are present
         environment:
@@ -405,7 +410,7 @@ jobs:
   # test and build cli
   test_and_build_cli:
     docker:
-    - image: hasura/graphql-engine-cli-builder:20201105
+    - image: hasura/graphql-engine-cli-builder:20210223
     - image: circleci/postgres:10-alpine
       environment:
         POSTGRES_USER: gql_test

@@ -16,6 +16,7 @@ module Hasura.GraphQL.Context
   , SubscriptionRootField
   , QueryDBRoot(..)
   , MutationDBRoot(..)
+  , traverseQueryDB
   , traverseActionQuery
   ) where
 
@@ -119,6 +120,18 @@ type QueryRootField        v = RootField (QueryDBRoot    v) RemoteField (ActionQ
 type MutationRootField     v = RootField (MutationDBRoot v) RemoteField (ActionMutation 'Postgres (v 'Postgres)) J.Value
 type SubscriptionRootField v = RootField (QueryDBRoot    v) Void Void Void
 
+
+traverseQueryDB
+  :: forall f a b backend
+   . Applicative f
+  => (a -> f b)
+  -> QueryDB backend a
+  -> f (QueryDB backend b)
+traverseQueryDB f = \case
+  QDBMultipleRows s -> QDBMultipleRows <$> IR.traverseAnnSimpleSelect    f s
+  QDBSingleRow    s -> QDBSingleRow    <$> IR.traverseAnnSimpleSelect    f s
+  QDBAggregation  s -> QDBAggregation  <$> IR.traverseAnnAggregateSelect f s
+  QDBConnection   s -> QDBConnection   <$> IR.traverseConnectionSelect   f s
 
 traverseActionQuery
   :: Applicative f

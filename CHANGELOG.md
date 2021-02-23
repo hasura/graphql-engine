@@ -1,6 +1,11 @@
 # Hasura GraphQL Engine Changelog
 
 ## Next release
+### MSSQL support
+
+It's now possible to add a MSSQL server as a source. For now, only read-only queries and subscriptions are supported.
+FIXME FIXME expand on this.
+
 ### Inconsistent Metadata
 
 Add `allow_inconsistent_metadata` option to `replace_metadata` API.

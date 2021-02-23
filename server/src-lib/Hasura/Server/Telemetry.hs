@@ -171,8 +171,8 @@ computeMetrics sc _mtServiceTimings _mtPgVersion =
 
   where
       -- TODO: multiple sources
-    pgTableCache    = fromMaybe mempty $ unsafeTableCache    @'Postgres defaultSource $ scPostgres sc
-    pgFunctionCache = fromMaybe mempty $ unsafeFunctionCache @'Postgres defaultSource $ scPostgres sc
+    pgTableCache    = fromMaybe mempty $ unsafeTableCache    @'Postgres defaultSource $ scSources sc
+    pgFunctionCache = fromMaybe mempty $ unsafeFunctionCache @'Postgres defaultSource $ scSources sc
     userTables = Map.filter (not . isSystemDefined . _tciSystemDefined . _tiCoreInfo) pgTableCache
     countUserTables predicate = length . filter predicate $ Map.elems userTables
 

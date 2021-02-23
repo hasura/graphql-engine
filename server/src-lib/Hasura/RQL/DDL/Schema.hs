@@ -33,6 +33,8 @@ module Hasura.RQL.DDL.Schema
  , RunSQL(..)
  , runRunSQL
  , isSchemaCacheBuildRequiredRunSQL
+
+ , RunSQLRes(..)
  ) where
 
 import           Hasura.Prelude

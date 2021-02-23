@@ -4,8 +4,6 @@ module Hasura.Backends.Postgres.DDL
   )
 where
 
-import qualified Data.Text                                 as T
-
 import           Data.Aeson
 
 import           Hasura.Backends.Postgres.SQL.DML
@@ -50,6 +48,3 @@ mkTypedSessionVar
   -> SessionVariable -> PartialSQLExp 'Postgres
 mkTypedSessionVar columnType =
   PSESessVar (unsafePGColumnToBackend <$> columnType)
-
-isReqUserId :: Text -> Bool
-isReqUserId = (== "req_user_id") . T.toLower

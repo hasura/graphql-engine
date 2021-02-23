@@ -48,8 +48,8 @@ import           Hasura.Server.Version              (HasVersion)
 import           Hasura.Session
 
 data RQLQueryV1
-  = RQAddExistingTableOrView !TrackTable
-  | RQTrackTable !TrackTable
+  = RQAddExistingTableOrView !(TrackTable 'Postgres)
+  | RQTrackTable !(TrackTable 'Postgres)
   | RQUntrackTable !(UntrackTable 'Postgres)
   | RQSetTableIsEnum !SetTableIsEnum
   | RQSetTableCustomization !SetTableCustomization
@@ -59,9 +59,9 @@ data RQLQueryV1
 
   | RQCreateObjectRelationship !(CreateObjRel 'Postgres)
   | RQCreateArrayRelationship !(CreateArrRel 'Postgres)
-  | RQDropRelationship !DropRel
-  | RQSetRelationshipComment !SetRelComment
-  | RQRenameRelationship !RenameRel
+  | RQDropRelationship !(DropRel 'Postgres)
+  | RQSetRelationshipComment !(SetRelComment 'Postgres)
+  | RQRenameRelationship !(RenameRel 'Postgres)
 
   -- computed fields related
   | RQAddComputedField !(AddComputedField 'Postgres)
@@ -80,7 +80,7 @@ data RQLQueryV1
   | RQDropSelectPermission !(DropPerm 'Postgres (SelPerm 'Postgres))
   | RQDropUpdatePermission !(DropPerm 'Postgres (UpdPerm 'Postgres))
   | RQDropDeletePermission !(DropPerm 'Postgres (DelPerm 'Postgres))
-  | RQSetPermissionComment !SetPermComment
+  | RQSetPermissionComment !(SetPermComment 'Postgres)
 
   | RQGetInconsistentMetadata !GetInconsistentMetadata
   | RQDropInconsistentMetadata !DropInconsistentMetadata
@@ -139,7 +139,7 @@ data RQLQueryV1
   deriving (Eq)
 
 data RQLQueryV2
-  = RQV2TrackTable !TrackTableV2
+  = RQV2TrackTable !(TrackTableV2 'Postgres)
   | RQV2SetTableCustomFields !SetTableCustomFields -- deprecated
   | RQV2TrackFunction !TrackFunctionV2
   | RQV2ReplaceMetadata !ReplaceMetadataV2

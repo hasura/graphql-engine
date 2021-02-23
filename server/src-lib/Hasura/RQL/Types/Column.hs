@@ -33,18 +33,20 @@ module Hasura.RQL.Types.Column
 
 import           Hasura.Prelude
 
-import qualified Data.HashMap.Strict                as M
-import qualified Language.GraphQL.Draft.Syntax      as G
+import qualified Data.HashMap.Strict                      as M
+import qualified Language.GraphQL.Draft.Syntax            as G
 
 import           Control.Lens.TH
 import           Data.Aeson
 import           Data.Aeson.TH
 import           Data.Text.Extended
 
-import           Hasura.Backends.Postgres.SQL.Types hiding (TableName, isComparableType, isNumType)
+import           Hasura.Backends.Postgres.Instances.Types ()
+import           Hasura.Backends.Postgres.SQL.Types       hiding (TableName, isComparableType,
+                                                           isNumType)
 import           Hasura.Backends.Postgres.SQL.Value
-import           Hasura.Incremental                 (Cacheable)
-import           Hasura.RQL.Instances               ()
+import           Hasura.Incremental                       (Cacheable)
+import           Hasura.RQL.Instances                     ()
 import           Hasura.RQL.Types.Backend
 import           Hasura.RQL.Types.Common
 import           Hasura.RQL.Types.Error

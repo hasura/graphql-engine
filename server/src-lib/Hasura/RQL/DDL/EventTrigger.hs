@@ -196,7 +196,7 @@ askTabInfoFromTrigger
   => SourceName -> TriggerName -> m (TableInfo 'Postgres)
 askTabInfoFromTrigger sourceName trn = do
   sc <- askSchemaCache
-  let tabInfos = HM.elems $ fromMaybe mempty $ unsafeTableCache sourceName $ scPostgres sc
+  let tabInfos = HM.elems $ fromMaybe mempty $ unsafeTableCache sourceName $ scSources sc
   find (isJust . HM.lookup trn . _tiEventTriggerInfoMap) tabInfos
     `onNothing` throw400 NotExists errMsg
   where
