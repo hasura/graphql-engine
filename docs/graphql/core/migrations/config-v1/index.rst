@@ -44,7 +44,7 @@ database.
   This documentation is for **Hasura migrations config v1**. Hasura migrations
   config v2 was introduced in Hasura GraphQL engine version ``v1.2.0``
 
-  See :ref:`migrations`
+  See :ref:`migrations_v2`
 
 Simple use cases
 ----------------

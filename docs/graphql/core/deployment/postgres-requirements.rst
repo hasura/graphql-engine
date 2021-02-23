@@ -157,6 +157,7 @@ Following are sample SQL blocks that you can run on your database (as a **superu
     -- GRANT ALL ON ALL TABLES IN SCHEMA <schema-name> TO hasurauser;
     -- GRANT ALL ON ALL SEQUENCES IN SCHEMA <schema-name> TO hasurauser;
     -- GRANT ALL ON ALL FUNCTIONS IN SCHEMA <schema-name> TO hasurauser;
+
 Notes for managed databases (AWS RDS, GCP Cloud SQL, etc.)
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 

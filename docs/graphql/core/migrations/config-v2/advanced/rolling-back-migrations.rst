@@ -2,7 +2,7 @@
    :description: Roll back Hasura migrations
    :keywords: hasura, docs, migration, roll back
 
-.. _roll_back_migrations:
+.. _roll_back_migrations_v2:
 
 Rolling back applied migrations
 ===============================
@@ -34,13 +34,13 @@ To roll back a particular migration version:
 
 .. code-block:: bash
 
-   hasura migrate apply --version 1550925483858 --type down --database <database-name>
+   hasura migrate apply --version 1550925483858 --type down
 
 To roll back the last 2 migration versions:
 
 .. code-block:: bash
 
-   hasura migrate apply --down 2 --database <database-name>
+   hasura migrate apply --down 2
 
 .. note::
 

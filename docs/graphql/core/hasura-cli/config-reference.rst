@@ -59,7 +59,7 @@ The configuration file can be configured with the following config keys:
    * - version
      - false
      - 1
-     - 2
+     - 3
    * - endpoint
      - true
      - 1
@@ -143,13 +143,7 @@ The configuration file can be configured with the following config keys:
 
 .. note::
 
-  The above structure is for the ``config v2`` file which is supported since ``v1.2.0``. Refer to :ref:`this page <migrations_upgrade_v2>` on how to upgrade to ``config v2``.
-
-  A ``config v1`` file of your Hasura project would look like:
-
-  .. code-block:: yaml
-
-      endpoint: http://localhost:8080
+  The above structure is for the ``config v3`` file which is supported since ``v2.0-alpha.1``. Refer to :ref:`this page <migrations_upgrade_v3>` on how to upgrade to ``config v2``.
 
 Environment variables
 ---------------------

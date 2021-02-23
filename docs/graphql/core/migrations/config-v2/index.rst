@@ -2,7 +2,7 @@
    :description: Manage Hasura migrations and metadata
    :keywords: hasura, docs, migration, metadata
 
-.. _migrations:
+.. _migrations_v2:
 
 Migrations & Metadata
 =====================
@@ -21,10 +21,10 @@ a dev -> staging -> production environment promotion scenario.
 
 .. note::
 
-  This documentation is for Hasura migrations ``config v3``, supported from
-  ``v2.0-alpha.1``. (See :ref:`upgrade guide <migrations_upgrade_v3>`).
+  This documentation is for Hasura migrations ``config v2``, supported from
+  ``v1.2.0``. (See :ref:`upgrade guide <migrations_upgrade_v2>`).
 
-  For ``config v2``, see :ref:`migrations_v2`.
+  For ``config v1``, see :ref:`migrations_v1`.
 
 How is Hasura state managed?
 ----------------------------
@@ -63,23 +63,23 @@ Hasura metadata can be exported and imported as a whole.
 Setting up migrations
 ---------------------
 
-See :ref:`migrations_setup`.
+See :ref:`migrations_setup_v2`.
 
 
 Advanced use cases
 ------------------
 
-- :ref:`auto_apply_migrations`
-- :ref:`manual_migrations`
-- :ref:`roll_back_migrations`
-- :ref:`seed_data_migration`
+- :ref:`auto_apply_migrations_v2`
+- :ref:`manual_migrations_v2`
+- :ref:`roll_back_migrations_v2`
+- :ref:`seed_data_migration_v2`
 
 Reference documentation
 -----------------------
 
-- :ref:`migrations_how_it_works`
-- :ref:`Migration file format <migration_file_format_v3>`
-- :ref:`Metadata format <metadata_format_v3>`
+- :ref:`migrations_how_it_works_v2`
+- :ref:`Migration file format <migration_file_format_v2>`
+- :ref:`Metadata format <metadata_format_v2>`
 
 .. toctree::
   :maxdepth: 1
@@ -89,6 +89,4 @@ Reference documentation
   Managing metadata <manage-metadata>
   Advanced use cases <advanced/index>
   Reference documentation <reference/index>
-  Upgrading to config v3 <upgrade-v3>
-  Config v2 <config-v2/index>
-  Config v1 <config-v1/index>
+  Upgrading to config v2 <upgrade-v2>

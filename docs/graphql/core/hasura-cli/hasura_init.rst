@@ -46,7 +46,7 @@ Options
       --endpoint string           http(s) endpoint for Hasura GraphQL engine
   -h, --help                      help for init
       --install-manifest string   install manifest to be cloned
-      --version int               config version to be used (default 2)
+      --version int               config version to be used (default 3)
 
 Options inherited from parent commands
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

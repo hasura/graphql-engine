@@ -2,7 +2,7 @@
    :description: Resetting Hasura migrations
    :keywords: hasura, docs, migration, reset migrations, clear migrations
 
-.. _reset_migration:
+.. _reset_migration_v2:
 
 Resetting Hasura migrations
 ===========================
@@ -34,7 +34,11 @@ You can use the following command:
 Step 2: Reset the migration history on the server
 -------------------------------------------------
 
-`coming soon`
+On the SQL tab of the Hasura console, run the following command:
+
+.. code-block:: bash
+
+   TRUNCATE hdb_catalog.schema_migrations;
 
 Step 3: Pull the schema and metadata from the server
 ----------------------------------------------------
@@ -45,14 +49,14 @@ If the migrations were reset, then we will set up fresh migrations by pulling th
 
    ## create migration files - "this will only export public schema from postgres"
 
-   hasura migrate create "init" --from-server --database <database-name>
+   hasura migrate create "init" --from-server
 
 .. code-block:: bash
 
    ## note down the version
    ## mark the migration as applied on this server
    
-   hasura migrate apply --version "<version>" --skip-execution --database <database-name>
+   hasura migrate apply --version "<version>" --skip-execution
 
 .. code-block:: bash
 
@@ -71,6 +75,6 @@ Run the following command to verify the migration status:
 
 .. code-block:: bash
 
-   hasura migrate status  --database <database-name>
+   hasura migrate status   
 
 You should see the new migrations!  

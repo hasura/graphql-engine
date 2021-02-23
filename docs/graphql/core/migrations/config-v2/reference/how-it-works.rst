@@ -2,7 +2,7 @@
    :description: How Hasura migrations work
    :keywords: hasura, docs, migration, how it works
 
-.. _migrations_how_it_works:
+.. _migrations_how_it_works_v2:
 
 How Hasura migrations work
 ==========================
@@ -16,7 +16,7 @@ Introduction
 ------------
 
 This is an explanation on how the Hasura migration system works. To understand how
-to use the system, refer to :ref:`Migrations & Metadata <migrations>`.
+to use the system, refer to :ref:`Migrations & Metadata <migrations_v2>`.
 
 Metadata
 --------
@@ -62,18 +62,21 @@ For more details on the format of these files, refer to
 When someone executes ``migrate apply`` using the Hasura CLI, the CLI will first
 read the migration files present in the designated directory. The CLI would then
 contact the Hasura Server and get the status of all migrations applied to the
-server by using the catalog state API provided by the server.
+server by reading the ``hdb_catalog.schema_migrations`` table. Each row in this
+table denotes a migration version that is already applied on the server.
 
 By comparing these two sets of versions, the CLI derives which versions are
 already applied and which are not. The CLI would then go ahead and apply the
 migrations on the server. This is done by executing the actions against the
 database through the Hasura metadata APIs. Whenever the ``apply`` command is
-used, each migration that are to be applied are send via a 
-``run_sql`` API request.
+used, all migrations that are to be applied are executed in a Postgres
+transaction (through a ``bulk`` API call). The advantage of doing this is that if
+there are any errors, all actions are rolled back and the user can properly
+debug the error without worrying about partial changes.
 
 The default action of the ``migrate apply`` command is to execute all the ``up``
 migrations. In order to roll back changes, you would need to execute ``down``
 migrations using the ``--down`` flag on the CLI.
 
 This guide provides an overall idea of how the system works. For more details
-on how to actually use the system, refer to :ref:`migrations`.
+on how to actually use the system, refer to :ref:`migrations_v2`.

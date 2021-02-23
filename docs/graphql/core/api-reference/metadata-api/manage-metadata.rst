@@ -39,7 +39,7 @@ metadata will be replaced with the new one.
         "args": <replace-metadata-args>
     }
 
-For version 1, this API corresponds to the legacy API documented under  :ref:`replace_metadata_v1` in the ``/v1/query`` endpoint.
+For version 1, this API corresponds to the legacy API documented under  :ref:`replace_metadata` in the ``/v1/query`` endpoint.
 
 .. _replace_metadata_syntax_v2:
 
@@ -94,7 +94,7 @@ Request
 Responses
 ^^^^^^^^^
 
-Version 2 with inconsistencies and allow_inconsistent_metadata=false, or omitted corresponds with the response document in :ref:`replace_metadata_v1`.
+Version 2 with inconsistencies and allow_inconsistent_metadata=false, or omitted corresponds with the response document in :ref:`replace_metadata`.
 
 Version 2 example with inconsistencies and allow_inconsistent_metadata=true includes an ``is_consistent`` and ``inconsistent_objects`` corresponding to :ref:`get_inconsistent_metadata`.
 

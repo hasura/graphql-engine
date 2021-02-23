@@ -2,7 +2,7 @@
    :description: Write manual migrations for Hasura GraphQL engine
    :keywords: hasura, docs, migration, manual
 
-.. _manual_migrations:
+.. _manual_migrations_v2:
 
 Writing migrations manually
 ===========================
@@ -20,6 +20,10 @@ sometimes you might want to write the migrations yourself, by hand. Using the
 Hasura CLI, you can bootstrap these migration files and write the SQL for the
 Postgres schema.
 
+.. note::
+
+  For ``config v1``, see :ref:`manual_migrations_v1`.
+
 Create migration manually
 -------------------------
 
@@ -27,7 +31,7 @@ Create migration manually
 
    .. code-block:: bash
 
-      hasura migrate create <name-of-migration> --database <database-name>
+      hasura migrate create <name-of-migration>
 
    This command will create up and down migration SQL files in the
    ``migrations`` directory.
@@ -40,10 +44,9 @@ Create migration manually
    the appropriate metadata file in the ``/metadata`` directory, refer to
    :ref:`metadata format <metadata_format_v2>`.
 
-#. Apply the metadata and migrations:
+#. Apply the migration and metadata:
 
    .. code-block:: bash
 
+      hasura migrate apply
       hasura metadata apply
-      hasura migrate apply --database <database-name>
-      hasura metadata reload
