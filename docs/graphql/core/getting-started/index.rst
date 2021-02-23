@@ -42,6 +42,11 @@ Get started using an existing database
 
   Hasura GraphQL engine supports **Postgres 9.5 and above**
 
+.. admonition:: MS SQL Server support (alpha)
+
+  Hasura GraphQL engine supports SQL server 2016 and above. Head to :ref:`this guide <database_ms-sql-server>`
+  to get started with SQL Server.
+
 .. admonition:: MySQL support (alpha)
 
   Head to :ref:`this guide <mysql_preview>` to try out the MySQL preview.

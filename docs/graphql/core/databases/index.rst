@@ -31,3 +31,4 @@ Supported databases
   :titlesonly:
 
   postgres/index
+  ms-sql-server/index
