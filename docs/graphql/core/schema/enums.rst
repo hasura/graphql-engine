@@ -129,7 +129,7 @@ the following restrictions:
   .. code-block:: sql
 
     CREATE TABLE "<my_enum_table>" (value TEXT PRIMARY KEY);
-    INSERT INTO "<my_enum_table>" (value) (SELECT unnest(enum_range(NULL::"<my_enum>")))::text);
+    INSERT INTO "<my_enum_table>" (value) ((SELECT unnest(enum_range(NULL::"<my_enum>"))::text));
 
 Next, we need to tell Hasura that this table represents an enum.
 
