@@ -16,6 +16,7 @@ keys in the response body.
 - server: add "resource_version" field to metadata for concurrency control - disable lookup during migrations
 - server: fix issue with queries on character column types (close #6217)
 - server: optimize resolving source. Resolving a source would create connection pools every time. Optimize that to re-create connection pools only when necessary. (#609)
+- server: fix issues with remote schema introspection and queries over TLS.
 
 ## v1.4.0-alpha.1
 
