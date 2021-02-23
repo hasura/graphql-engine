@@ -93,7 +93,7 @@ const ListComponent: React.FC<Props> = ({
                   </Link>
                   {badgeSort(endpoint.methods).map(method => (
                     <span
-                      className={`${styles.headerBadge} ${styles.padd_small_left}`}
+                      className={styles.padd_small_left}
                       key={`badge-list-${method}`}
                     >
                       <Badge type={`rest-${method}`} />
