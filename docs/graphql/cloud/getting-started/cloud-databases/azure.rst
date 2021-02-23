@@ -33,13 +33,15 @@ On the Hasura Cloud dashboard, create a new project:
    :alt: Create Hasura Cloud project
    :width: 1000px
 
+After the project is initialized successfully, click on ``Launch console`` to open the Hasura console in your browser.
+
+On the Hasura console, navigate to ``Data -> Manage -> Connect Database -> Connect existing database``:
+
 You will get prompted for a Postgres Database URL. We will create this in the next step and then come back here.
 
-.. thumbnail:: /img/graphql/cloud/cloud-dbs/database-setup.png
+.. thumbnail:: /img/graphql/cloud/cloud-dbs/existing-database-setup.png
    :alt: Hasura Cloud database setup
-   :width: 500px
-
-Also, copy the Hasura Cloud IP for later.
+   :width: 800px
 
 Step 2: Create a Postgres DB on Azure (skip if you have an existing DB)
 -----------------------------------------------------------------------
@@ -81,7 +83,15 @@ Step 3: Allow connections to your DB from Hasura Cloud
 
 On the database dashboard, click on ``Connection security`` under ``Settings`` on the left navigation bar. 
 
-On ``Allow access to Azure services``, click the ``Yes`` button. Then add a Firewall rule for Hasura and copy the IP address that you copied in :ref:`step 1 <create_hasura_project_azure>`. 
+On ``Allow access to Azure services``, click the ``Yes`` button. Then add a Firewall rule for Hasura. 
+
+Copy the IP address from the copy icon in the ``Hasura Cloud IP`` field on the project's details view on Hasura Cloud.
+
+.. thumbnail:: /img/graphql/cloud/projects/hasura-cloud-ip.png
+   :alt: Hasura Cloud IP field
+   :width: 1000px
+
+Add the Hasura IP address that you copied:
 
 .. thumbnail:: /img/graphql/cloud/cloud-dbs/azure/add-hasura-ip.png
    :alt: Add Hasura IP on Azure
@@ -112,31 +122,27 @@ On the database dashboard, click on ``Overview``:
 - ``postgres-port``: The default port for Postgres is ``5432``.
 - ``db``: The DB is ``postgres`` by default unless otherwise specified.
 
-Step 5: Finish creating the Hasura Cloud project
-------------------------------------------------
+Step 5: Finish connecting the database
+--------------------------------------
 
-Back on the Hasura Cloud dashboard, enter the database URL that we constructed in :ref:`step 4 <get_db_url_azure>`:
+Back on Hasura Console, enter the database URL that we retrieved in :ref:`step 4 <get_db_url_aiven>`:
 
-.. thumbnail:: /img/graphql/cloud/cloud-dbs/finish-create-project.png
-   :alt: Finish creating the Hasura Cloud project
-   :width: 500px
+.. thumbnail:: /img/graphql/cloud/projects/existing-db-setup.png
+   :alt: Database setup
+   :width: 600px
 
-Then click ``Create project``.
+Then click ``Connect Database``.
 
-Step 6: Launch Hasura console
------------------------------
+.. note::
 
-After the project is initialized successfully, click on ``Launch console``:
-
-.. thumbnail:: /img/graphql/cloud/cloud-dbs/launch-console.png
-   :alt: Launch the Hasura console
-   :width: 900px
+   For security reasons, it is recommended to set database URLs as :ref:`env vars <manage_project_env_vars>` and using the env vars
+   to connect to the databases in place of the raw database URLs.
 
 Voilà. You are ready to start developing.
 
 .. thumbnail:: /img/graphql/cloud/cloud-dbs/hasura-console.png
    :alt: Hasura console
-   :width: 900px
+   :width: 1100px
 
 Next steps
 ----------

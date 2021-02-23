@@ -25,24 +25,40 @@ Navigate to `cloud.hasura.io
 
 .. _cloud_connect_db:
 
-Step 2: Connect new/existing database
+Step 2: Create project
+----------------------
+
+Hasura Cloud creates an initial project. Click ``Launch Console`` to open the Hasura console in your browser.
+
+.. thumbnail:: /img/graphql/cloud/getting-started/create-project.png
+   :alt: Connect new or existing database
+   :width: 556px
+
+Step 3: Connect new/existing database
 -------------------------------------
 
-Hasura Cloud needs to connect to a Postgres database.
+On the Hasura console, navigate to ``Data -> Manage -> Connect Database``:
 
-- To use an existing database, choose ``I have an existing Postgres database``.
-- To try out with a new database, choose ``Try a free database with Heroku``.
+.. thumbnail:: /img/graphql/cloud/getting-started/connect-db-console.png
+   :alt: Enter URL for existing database
+   :width: 1000px
 
-.. thumbnail:: /img/graphql/cloud/getting-started/connect-db.png
-   :alt: Connect new or existing database
-   :width: 591px
+- To use an existing database, choose ``Connect existing database``.
 
-Step 2.1: Enter database connection URL (for existing database)
+- To try out with a new database, choose ``Create Heroku Database``.
+
+.. thumbnail:: /img/graphql/cloud/getting-started/db-setup.png
+   :alt: DB setup
+   :width: 556px
+
+Step 3.1: Enter database connection URL (for existing database)
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-If you chose ``I have an existing Postgres database``, enter your database connection URL.
+If you chose ``Connect existing database``, enter your database connection URL.
 
-.. thumbnail:: /img/graphql/cloud/getting-started/connect-existing-db.png
+Click ``Connect Database``.
+
+.. thumbnail:: /img/graphql/cloud/getting-started/connect-database.png
    :alt: Enter URL for existing database
    :width: 556px
 
@@ -59,31 +75,8 @@ any other steps required to ensure connectivity from Hasura Cloud:
 - :ref:`Timescale Cloud <cloud_db_timescale_cloud>`
 - :ref:`YugaByte <cloud_db_yugabyte>`
 
-Step 3: Create project
-----------------------
-
-Click ``Create Project``.
-
-.. thumbnail:: /img/graphql/cloud/getting-started/create-project-new-db.png
-   :alt: Create project for new database
-   :width: 539px
-   :group: create
-   :class: inline-block
-
-.. thumbnail:: /img/graphql/cloud/getting-started/create-project-existing-db.png
-   :alt: Create project for existing database
-   :width: 552px
-   :group: create
-   :class: inline-block
-
 Step 4: Try out Hasura
 ----------------------
-
-Click ``Launch Console`` to open the Hasura console in your browser:
-
-.. thumbnail:: /img/graphql/cloud/getting-started/project-launch-console.png
-  :alt: Project actions
-  :width: 860px
 
 Create a table
 ^^^^^^^^^^^^^^
