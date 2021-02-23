@@ -177,6 +177,11 @@ const defaultState = {
   dataHeaders: {
     'content-type': 'application/json',
   },
+  dbConnection: {
+    envVar: '',
+    dbURL: '',
+    dbName: '',
+  },
 };
 
 export default defaultState;

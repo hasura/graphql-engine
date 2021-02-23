@@ -22,7 +22,11 @@ declare global {
       consolePath: string;
       cliUUID: string;
       consoleId: Nullable<string>;
+      herokuOAuthClientId: string;
+      tenantID: Nullable<string>;
+      projectID: Nullable<string>;
       userRole: Nullable<string>;
+      cloudRootDomain: Nullable<string>;
     };
   }
   const CONSOLE_ASSET_VERSION: string;
@@ -55,6 +59,10 @@ const globals = {
   hasuraUUID: '',
   telemetryNotificationShown: false,
   isProduction,
+  herokuOAuthClientId: window.__env.herokuOAuthClientId,
+  hasuraCloudTenantId: window.__env.tenantID,
+  hasuraCloudProjectId: window.__env.projectID,
+  cloudDataApiUrl: `${window.location.protocol}//data.${window.__env.cloudRootDomain}`,
 };
 if (globals.consoleMode === SERVER_CONSOLE_MODE) {
   if (!window.__env.dataApiUrl) {

@@ -1,4 +1,5 @@
 import { ConsoleNotification } from './ConsoleNotification';
+import { HerokuSession } from '../Services/Data/DataSources/CreateDataSource/Heroku/types';
 
 export interface MainState {
   migrationError: unknown | null;
@@ -32,6 +33,9 @@ export interface MainState {
   featuresCompatibility: Record<string, unknown>;
   postgresVersion: string | null;
   consoleNotifications: ConsoleNotification[];
+  heroku: {
+    session?: HerokuSession;
+  };
 }
 
 const defaultState: MainState = {
@@ -66,6 +70,9 @@ const defaultState: MainState = {
   featuresCompatibility: {},
   postgresVersion: null,
   consoleNotifications: [],
+  heroku: {
+    session: undefined,
+  },
 };
 
 export default defaultState;

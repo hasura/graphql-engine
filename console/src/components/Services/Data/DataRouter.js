@@ -24,6 +24,7 @@ import {
   ModifyCustomFunction,
   FunctionPermissions,
   ConnectedDatabaseManagePage,
+  ConnectedCreateDataSourcePage,
 } from '.';
 
 import { UPDATE_CURRENT_DATA_SOURCE } from './DataActions';
@@ -50,6 +51,8 @@ const makeDataRouter = (
       <Route path="manage" component={ConnectedDatabaseManagePage} />
       <Route path="schema/manage" component={ConnectedDatabaseManagePage} />
       <Route path="manage/connect" component={ConnectDatabase} />
+      <Route path="manage/create" component={ConnectedCreateDataSourcePage} />
+      <Route path="schema/manage/connect" component={ConnectDatabase} />
       <Route path="manage/edit/:databaseName" component={ConnectDatabase} />
       <Route path=":source" component={ConnectedDataSourceContainer}>
         <Route path="sql" component={rawSQLConnector(connect)} />

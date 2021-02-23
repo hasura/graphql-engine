@@ -1,11 +1,9 @@
 import React, { ChangeEvent } from 'react';
 import { connect, ConnectedProps } from 'react-redux';
-import Helmet from 'react-helmet';
 
+import Tabbed from './TabbedDataSourceConnection';
 import { ReduxState } from '../../../../types';
 import { mapDispatchToPropsEmpty } from '../../../Common/utils/reactUtils';
-import { RightContainer } from '../../../Common/Layout/RightContainer';
-import BreadCrumb from '../../../Common/Layout/BreadCrumb/BreadCrumb';
 import Button from '../../../Common/Button';
 import { showErrorNotification } from '../../Common/Notification';
 import _push from '../push';
@@ -15,7 +13,7 @@ import {
   connectDataSource,
   connectDBReducer,
   connectionTypes,
-  defaultState,
+  getDefaultState,
 } from './state';
 import { getDatasourceURL, getErrorMessageFromMissingFields } from './utils';
 import { LabeledInput } from '../../../Common/LabeledInput';
@@ -44,12 +42,17 @@ const connectionRadios = [
 ];
 
 const ConnectDatabase: React.FC<ConnectDatabaseProps> = props => {
+  const { dispatch } = props;
+
   const [connectDBInputState, connectDBDispatch] = React.useReducer(
     connectDBReducer,
-    defaultState
+    getDefaultState(props)
   );
+
   const [connectionType, changeConnectionType] = React.useState(
-    connectionTypes.DATABASE_URL
+    props.dbConnection.envVar
+      ? connectionTypes.ENV_VAR
+      : connectionTypes.DATABASE_URL
   );
   const [openConnectionSettings, changeConnectionsParamState] = React.useState(
     false
@@ -64,7 +67,6 @@ const ConnectDatabase: React.FC<ConnectDatabaseProps> = props => {
   const currentSourceInfo = sources.find(
     source => source.name === editSourceName
   );
-
   React.useEffect(() => {
     if (isEditState && currentSourceInfo) {
       connectDBDispatch({
@@ -83,26 +85,9 @@ const ConnectDatabase: React.FC<ConnectDatabaseProps> = props => {
     }
   }, [isEditState, currentSourceInfo]);
 
-  const crumbs = [
-    {
-      title: 'Data',
-      url: `/data/${props.currentDataSource}/schema/${props.currentSchema}`,
-    },
-    {
-      title: 'Manage Databases',
-      url: '/data/manage',
-    },
-    {
-      title: `${isEditState ? 'Edit Connection' : 'Connect Database'}`,
-      url: '#',
-    },
-  ];
-
   const onChangeConnectionType = (e: ChangeEvent<HTMLInputElement>) => {
     changeConnectionType(e.target.value);
   };
-
-  const { dispatch } = props;
 
   const resetState = () => {
     connectDBDispatch({
@@ -211,273 +196,251 @@ const ConnectDatabase: React.FC<ConnectDatabaseProps> = props => {
   };
 
   return (
-    <RightContainer>
-      <Helmet
-        title={
-          isEditState ? 'Edit Database - Hasura' : 'Connect Database - Hasura'
-        }
-      />
-      <div className={`container-fluid ${styles.manage_dbs_page}`}>
-        <BreadCrumb breadCrumbs={crumbs} />
-        <div className={styles.padd_top}>
-          <div className={`${styles.display_flex} manage-db-header`}>
-            <h2 className={`${styles.headerText} ${styles.display_inline}`}>
-              {isEditState ? 'Edit Connection' : 'Connect Database'}
-            </h2>
-          </div>
+    <Tabbed tabName="connect">
+      <div className={styles.connect_db_content}>
+        <h4
+          className={`${styles.remove_pad_bottom} ${styles.connect_db_header}`}
+        >
+          Connect Database Via
+        </h4>
+        <div
+          className={styles.connect_db_radios}
+          onChange={onChangeConnectionType}
+        >
+          {connectionRadios.map(
+            (radioBtn: {
+              value: string;
+              title: string;
+              disableOnEdit: boolean;
+            }) => (
+              <label className={styles.connect_db_radio_label}>
+                <input
+                  type="radio"
+                  value={radioBtn.value}
+                  name={connectionRadioName}
+                  checked={connectionType === radioBtn.value}
+                  disabled={
+                    isEditState === radioBtn.disableOnEdit && isEditState
+                  }
+                />
+                {radioBtn.title}
+              </label>
+            )
+          )}
         </div>
-        <hr />
-        <div className={styles.connect_db_content}>
-          <h4
-            className={`${styles.remove_pad_bottom} ${styles.connect_db_header}`}
-          >
-            Connect Database Via
-          </h4>
-          <div
-            className={styles.connect_db_radios}
-            onChange={onChangeConnectionType}
-          >
-            {connectionRadios.map(
-              (radioBtn: {
-                value: string;
-                title: string;
-                disableOnEdit: boolean;
-              }) => (
-                <label className={styles.connect_db_radio_label}>
-                  <input
-                    type="radio"
-                    value={radioBtn.value}
-                    name={connectionRadioName}
-                    checked={connectionType === radioBtn.value}
-                    disabled={
-                      isEditState === radioBtn.disableOnEdit && isEditState
-                    }
-                  />
-                  {radioBtn.title}
-                </label>
-              )
-            )}
-          </div>
-          <div className={styles.connect_form_layout}>
+        <div className={styles.connect_form_layout}>
+          <LabeledInput
+            onChange={e =>
+              connectDBDispatch({
+                type: 'UPDATE_DISPLAY_NAME',
+                data: e.target.value,
+              })
+            }
+            value={connectDBInputState.displayName}
+            label="Database Display Name"
+            placeholder="database name"
+          />
+          {/* <label className={styles.connect_db_input_label}>
+          Data Source Driver
+        </label>
+        <select
+          key="connect-db-type"
+          value={connectDBInputState.dbType}
+          name={UPDATE_DB_DRIVER}
+          onChange={onChangeConnectionInput}
+          className={`form-control ${styles.connect_db_input_pad}`}
+        >
+          <option value="postgres">Postgres</option>
+        </select> */}
+          {connectionType === connectionTypes.DATABASE_URL ? (
             <LabeledInput
+              label="Database URL"
               onChange={e =>
                 connectDBDispatch({
-                  type: 'UPDATE_DISPLAY_NAME',
+                  type: 'UPDATE_DB_URL',
                   data: e.target.value,
                 })
               }
-              value={connectDBInputState.displayName}
-              label="Database Display Name"
-              placeholder="database name"
+              value={connectDBInputState.databaseURLState.dbURL}
+              placeholder={defaultPGURL}
+              disabled={isEditState}
             />
-            {/* <label className={styles.connect_db_input_label}>
-              Data Source Driver
-            </label>
-            <select
-              key="connect-db-type"
-              value={connectDBInputState.dbType}
-              name={UPDATE_DB_DRIVER}
-              onChange={onChangeConnectionInput}
-              className={`form-control ${styles.connect_db_input_pad}`}
-            >
-              <option value="postgres">Postgres</option>
-            </select> */}
-            {connectionType === connectionTypes.DATABASE_URL ? (
+          ) : null}
+          {connectionType === connectionTypes.ENV_VAR ? (
+            <LabeledInput
+              label="Environment Variable"
+              placeholder="DB_URL_FROM_ENV"
+              onChange={e =>
+                connectDBDispatch({
+                  type: 'UPDATE_DB_URL_ENV_VAR',
+                  data: e.target.value,
+                })
+              }
+              value={connectDBInputState.envVarURLState.envVarURL}
+            />
+          ) : null}
+          {connectionType === connectionTypes.CONNECTION_PARAMS ? (
+            <>
               <LabeledInput
-                label="Database URL"
+                label="Host"
+                placeholder="localhost"
                 onChange={e =>
                   connectDBDispatch({
-                    type: 'UPDATE_DB_URL',
+                    type: 'UPDATE_DB_HOST',
                     data: e.target.value,
                   })
                 }
-                value={connectDBInputState.databaseURLState.dbURL}
-                placeholder={defaultPGURL}
-                disabled={isEditState}
+                value={connectDBInputState.connectionParamState.host}
               />
-            ) : null}
-            {connectionType === connectionTypes.ENV_VAR ? (
               <LabeledInput
-                label="Environment Variable"
-                placeholder="DB_URL_FROM_ENV"
+                label="Port"
+                placeholder="5432"
                 onChange={e =>
                   connectDBDispatch({
-                    type: 'UPDATE_DB_URL_ENV_VAR',
+                    type: 'UPDATE_DB_PORT',
                     data: e.target.value,
                   })
                 }
-                value={connectDBInputState.envVarURLState.envVarURL}
+                value={connectDBInputState.connectionParamState.port}
               />
-            ) : null}
-            {connectionType === connectionTypes.CONNECTION_PARAMS ? (
-              <>
-                <LabeledInput
-                  label="Host"
-                  placeholder="localhost"
-                  onChange={e =>
-                    connectDBDispatch({
-                      type: 'UPDATE_DB_HOST',
-                      data: e.target.value,
-                    })
-                  }
-                  value={connectDBInputState.connectionParamState.host}
-                />
-                <LabeledInput
-                  label="Port"
-                  placeholder="5432"
-                  onChange={e =>
-                    connectDBDispatch({
-                      type: 'UPDATE_DB_PORT',
-                      data: e.target.value,
-                    })
-                  }
-                  value={connectDBInputState.connectionParamState.port}
-                />
-                <LabeledInput
-                  label="Username"
-                  placeholder="postgres_user"
-                  onChange={e =>
-                    connectDBDispatch({
-                      type: 'UPDATE_DB_USERNAME',
-                      data: e.target.value,
-                    })
-                  }
-                  value={connectDBInputState.connectionParamState.username}
-                />
-                <LabeledInput
-                  label="Password"
-                  key="connect-db-password"
-                  type="password"
-                  placeholder="postgrespassword"
-                  onChange={e =>
-                    connectDBDispatch({
-                      type: 'UPDATE_DB_PASSWORD',
-                      data: e.target.value,
-                    })
-                  }
-                  value={connectDBInputState.connectionParamState.password}
-                />
-                <LabeledInput
-                  key="connect-db-database-name"
-                  label="Database Name"
-                  placeholder="postgres"
-                  onChange={e =>
-                    connectDBDispatch({
-                      type: 'UPDATE_DB_DATABASE_NAME',
-                      data: e.target.value,
-                    })
-                  }
-                  value={connectDBInputState.connectionParamState.database}
-                />
-              </>
-            ) : null}
-            <div className={styles.connection_settings_layout}>
-              <div className={styles.connection_settings_header}>
-                <a
-                  href="#"
-                  style={{ textDecoration: 'none' }}
-                  onClick={() =>
-                    changeConnectionsParamState(!openConnectionSettings)
-                  }
-                >
-                  {openConnectionSettings ? (
-                    <i className="fa fa-caret-down" />
-                  ) : (
-                    <i className="fa fa-caret-right" />
-                  )}
-                  {'  '}
-                  Connection Settings
-                </a>
-              </div>
-              {openConnectionSettings ? (
-                <div className={styles.connection_settings_form}>
-                  <div
-                    className={styles.connnection_settings_form_input_layout}
-                  >
-                    <LabeledInput
-                      label="Max Connections"
-                      type="number"
-                      className={`form-control ${styles.connnection_settings_form_input}`}
-                      placeholder="50"
-                      value={
-                        connectDBInputState.connectionSettings
-                          ?.max_connections ?? undefined
-                      }
-                      onChange={e =>
-                        connectDBDispatch({
-                          type: 'UPDATE_MAX_CONNECTIONS',
-                          data: e.target.value,
-                        })
-                      }
-                      min="0"
-                      labelInBold
-                    />
-                  </div>
-                  <div
-                    className={styles.connnection_settings_form_input_layout}
-                  >
-                    <LabeledInput
-                      label="Idle Timeout"
-                      type="number"
-                      className={`form-control ${styles.connnection_settings_form_input}`}
-                      placeholder="180"
-                      value={
-                        connectDBInputState.connectionSettings?.idle_timeout ??
-                        undefined
-                      }
-                      onChange={e =>
-                        connectDBDispatch({
-                          type: 'UPDATE_IDLE_TIMEOUT',
-                          data: e.target.value,
-                        })
-                      }
-                      min="0"
-                      labelInBold
-                    />
-                  </div>
-                  <div
-                    className={styles.connnection_settings_form_input_layout}
-                  >
-                    <LabeledInput
-                      label="Retries"
-                      type="number"
-                      className={`form-control ${styles.connnection_settings_form_input}`}
-                      placeholder="1"
-                      value={
-                        connectDBInputState.connectionSettings?.retries ??
-                        undefined
-                      }
-                      onChange={e =>
-                        connectDBDispatch({
-                          type: 'UPDATE_RETRIES',
-                          data: e.target.value,
-                        })
-                      }
-                      min="0"
-                      labelInBold
-                    />
-                  </div>
-                </div>
-              ) : null}
-            </div>
-            <div className={styles.add_button_layout}>
-              <Button
-                onClick={onClickConnectDatabase}
-                size="large"
-                color="yellow"
-                style={{
-                  width: '70%',
-                  ...(loading && { cursor: 'progress' }),
-                }}
-                disabled={loading}
+              <LabeledInput
+                label="Username"
+                placeholder="postgres_user"
+                onChange={e =>
+                  connectDBDispatch({
+                    type: 'UPDATE_DB_USERNAME',
+                    data: e.target.value,
+                  })
+                }
+                value={connectDBInputState.connectionParamState.username}
+              />
+              <LabeledInput
+                label="Password"
+                key="connect-db-password"
+                type="password"
+                placeholder="postgrespassword"
+                onChange={e =>
+                  connectDBDispatch({
+                    type: 'UPDATE_DB_PASSWORD',
+                    data: e.target.value,
+                  })
+                }
+                value={connectDBInputState.connectionParamState.password}
+              />
+              <LabeledInput
+                key="connect-db-database-name"
+                label="Database Name"
+                placeholder="postgres"
+                onChange={e =>
+                  connectDBDispatch({
+                    type: 'UPDATE_DB_DATABASE_NAME',
+                    data: e.target.value,
+                  })
+                }
+                value={connectDBInputState.connectionParamState.database}
+              />
+            </>
+          ) : null}
+          <div className={styles.connection_settings_layout}>
+            <div className={styles.connection_settings_header}>
+              <a
+                href="#"
+                style={{ textDecoration: 'none' }}
+                onClick={() =>
+                  changeConnectionsParamState(!openConnectionSettings)
+                }
               >
-                {!isEditState ? 'Connect Database' : 'Edit Connection'}
-              </Button>
+                {openConnectionSettings ? (
+                  <i className="fa fa-caret-down" />
+                ) : (
+                  <i className="fa fa-caret-right" />
+                )}
+                {'  '}
+                Connection Settings
+              </a>
             </div>
+            {openConnectionSettings ? (
+              <div className={styles.connection_settings_form}>
+                <div className={styles.connnection_settings_form_input_layout}>
+                  <LabeledInput
+                    label="Max Connections"
+                    type="number"
+                    className={`form-control ${styles.connnection_settings_form_input}`}
+                    placeholder="50"
+                    value={
+                      connectDBInputState.connectionSettings?.max_connections ??
+                      undefined
+                    }
+                    onChange={e =>
+                      connectDBDispatch({
+                        type: 'UPDATE_MAX_CONNECTIONS',
+                        data: e.target.value,
+                      })
+                    }
+                    min="0"
+                    labelInBold
+                  />
+                </div>
+                <div className={styles.connnection_settings_form_input_layout}>
+                  <LabeledInput
+                    label="Idle Timeout"
+                    type="number"
+                    className={`form-control ${styles.connnection_settings_form_input}`}
+                    placeholder="180"
+                    value={
+                      connectDBInputState.connectionSettings?.idle_timeout ??
+                      undefined
+                    }
+                    onChange={e =>
+                      connectDBDispatch({
+                        type: 'UPDATE_IDLE_TIMEOUT',
+                        data: e.target.value,
+                      })
+                    }
+                    min="0"
+                    labelInBold
+                  />
+                </div>
+                <div className={styles.connnection_settings_form_input_layout}>
+                  <LabeledInput
+                    label="Retries"
+                    type="number"
+                    className={`form-control ${styles.connnection_settings_form_input}`}
+                    placeholder="1"
+                    value={
+                      connectDBInputState.connectionSettings?.retries ??
+                      undefined
+                    }
+                    onChange={e =>
+                      connectDBDispatch({
+                        type: 'UPDATE_RETRIES',
+                        data: e.target.value,
+                      })
+                    }
+                    min="0"
+                    labelInBold
+                  />
+                </div>
+              </div>
+            ) : null}
+          </div>
+          <div className={styles.add_button_layout}>
+            <Button
+              onClick={onClickConnectDatabase}
+              size="large"
+              color="yellow"
+              style={{
+                width: '70%',
+                ...(loading && { cursor: 'progress' }),
+              }}
+              disabled={loading}
+            >
+              {!isEditState ? 'Connect Database' : 'Edit Connection'}
+            </Button>
           </div>
         </div>
       </div>
-    </RightContainer>
+    </Tabbed>
   );
 };
 
@@ -486,6 +449,7 @@ const mapStateToProps = (state: ReduxState) => {
     currentDataSource: state.tables.currentDataSource,
     currentSchema: state.tables.currentSchema,
     sources: state.metadata.metadataObject?.sources ?? [],
+    dbConnection: state.tables.dbConnection,
     pathname: state?.routing?.locationBeforeTransitions?.pathname,
   };
 };

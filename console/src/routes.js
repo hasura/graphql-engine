@@ -42,6 +42,7 @@ import UIKit from './components/UIKit/';
 import { Heading } from './components/UIKit/atoms';
 import { SupportContainer } from './components/Services/Support/SupportContainer';
 import HelpPage from './components/Services/Support/HelpPage';
+import TempHerokuCallback from './components/Services/Data/DataSources/CreateDataSource/Heroku/TempCallback';
 
 const routes = store => {
   // load hasuractl migration status
@@ -105,6 +106,8 @@ const routes = store => {
       onEnter={composeOnEnterHooks([validateLogin(store)])}
     >
       <Route path="login" component={generatedLoginConnector(connect)} />
+      {/*Temp route, it'll be in dashboard*/}
+      <Route path="heroku-callback" component={TempHerokuCallback} />
       <Route
         path=""
         component={Main}

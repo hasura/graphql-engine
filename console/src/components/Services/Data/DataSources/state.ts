@@ -55,6 +55,27 @@ export const defaultState: ConnectDBState = {
   connectionSettings: {},
 };
 
+type DefaultStateProps = {
+  dbConnection: {
+    dbURL?: string;
+    envVar?: string;
+    dbName?: string;
+  };
+};
+
+export const getDefaultState = (props?: DefaultStateProps): ConnectDBState => {
+  return {
+    ...defaultState,
+    displayName: props?.dbConnection.dbName || '',
+    databaseURLState: {
+      dbURL: props?.dbConnection.dbURL || '',
+    },
+    envVarURLState: {
+      envVarURL: props?.dbConnection.envVar || '',
+    },
+  };
+};
+
 const setNumberFromString = (str: string) => {
   return parseInt(str.trim(), 10);
 };
@@ -114,6 +135,7 @@ export type ConnectDBActions =
   | { type: 'UPDATE_RETRIES'; data: string }
   | { type: 'UPDATE_IDLE_TIMEOUT'; data: string }
   | { type: 'UPDATE_DB_DRIVER'; data: Driver }
+  | { type: 'UPDATE_CONNECTION_SETTINGS'; data: ConnectionSettings }
   | { type: 'RESET_INPUT_STATE' };
 
 export const connectDBReducer = (
@@ -222,6 +244,11 @@ export const connectDBReducer = (
           ...state.connectionSettings,
           idle_timeout: setNumberFromString(action.data),
         },
+      };
+    case 'UPDATE_CONNECTION_SETTINGS':
+      return {
+        ...state,
+        connectionSettings: action.data,
       };
     default:
       return state;

@@ -85,7 +85,6 @@ class Main extends React.Component {
 
   componentDidMount() {
     const { dispatch } = this.props;
-
     updateRequestHeaders(this.props);
     dispatch(loadServerVersion()).then(() => {
       dispatch(featureCompatibilityInit());

@@ -203,6 +203,10 @@ table tbody tr th {
   display: flex;
   justify-content: space-between;
 }
+.flex_justify_center {
+  display: flex;
+  justify-content: center;
+}
 
 .flex_0 {
   flex: 0;
@@ -1469,7 +1473,9 @@ code {
 
 .db_item_actions {
   width: 14%;
+  display: flex;
   margin-right: 10px;
+  align-items: center;
 }
 
 .text_red {
@@ -1501,11 +1507,13 @@ code {
 }
 
 .connect_db_radio_label {
+  margin-left: 4px;
   margin-right: 24px;
 }
 
 .connect_form_layout {
   width: 50%;
+  padding: 8px;
   display: flex;
   flex-direction: column;
   margin-top: 10px;
@@ -1552,6 +1560,7 @@ code {
 .connnection_settings_form_input_layout {
   display: flex;
   flex-direction: column;
+  align-items: center;
 
   label {
     margin-bottom: 10px !important;

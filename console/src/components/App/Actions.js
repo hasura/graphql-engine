@@ -1,6 +1,6 @@
 import defaultState from './State';
 import { loadConsoleOpts } from '../../telemetry/Actions';
-import { fetchServerConfig } from '../Main/Actions';
+import { fetchServerConfig, fetchHerokuSession } from '../Main/Actions';
 
 const LOAD_REQUEST = 'App/ONGOING_REQUEST';
 const DONE_REQUEST = 'App/DONE_REQUEST';
@@ -13,6 +13,7 @@ export const requireAsyncGlobals = ({ dispatch }) => {
     Promise.all([
       dispatch(loadConsoleOpts()),
       dispatch(fetchServerConfig),
+      dispatch(fetchHerokuSession()),
     ]).finally(callback);
   };
 };

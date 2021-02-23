@@ -180,13 +180,15 @@ const ManageDatabase: React.FC<ManageDatabaseProps> = ({
         <BreadCrumb breadCrumbs={crumbs} />
         <div className={styles.padd_top}>
           <div className={`${styles.display_flex} manage-db-header`}>
-            <h2 className={`${styles.headerText} ${styles.display_inline}`}>
+            <h2
+              className={`${styles.headerText} ${styles.display_inline} ${styles.add_mar_right}`}
+            >
               Manage Databases
             </h2>
             <Button
               color="yellow"
               size="md"
-              className={styles.add_mar_left}
+              className={styles.add_mar_right}
               onClick={onClickConnectDB}
             >
               Connect Database

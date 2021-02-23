@@ -70,6 +70,9 @@ const REQUEST_ERROR = 'ModifyTable/REQUEST_ERROR';
 
 const SET_ADDITIONAL_COLUMNS_INFO = 'Data/SET_ADDITIONAL_COLUMNS_INFO';
 
+const SET_DB_CONNECTION_ENV_VAR = 'Data/SET_DB_CONNECTION_ENV_VAR';
+const RESET_DB_CONNECTION_ENV_VAR = 'Data/RESET_DB_CONNECTION_ENV_VAR';
+
 export const mergeRemoteRelationshipsWithSchema = (
   remoteRelationships,
   table
@@ -91,6 +94,19 @@ export const mergeRemoteRelationshipsWithSchema = (
       type: LOAD_SCHEMA,
       allSchemas: newAllSchemas,
     });
+  };
+};
+
+export const setDBConnectionDetails = details => {
+  return {
+    type: SET_DB_CONNECTION_ENV_VAR,
+    data: details,
+  };
+};
+
+export const resetDBConnectionEnvVar = () => {
+  return {
+    type: RESET_DB_CONNECTION_ENV_VAR,
   };
 };
 
@@ -918,6 +934,19 @@ const dataReducer = (state = defaultState, action) => {
             })),
           };
         }),
+      };
+    case SET_DB_CONNECTION_ENV_VAR:
+      return {
+        ...state,
+        dbConnection: action.data,
+      };
+    case RESET_DB_CONNECTION_ENV_VAR:
+      return {
+        ...state,
+        dbConnection: {
+          envVar: '',
+          dbURL: '',
+        },
       };
     default:
       return state;

@@ -32,6 +32,7 @@ export const makeConnectionStringFromConnectionParams = ({
   database: string;
   password?: string;
 }) => {
+  // trim inputs
   const tHost = host.trim();
   const tPort = port.trim();
   const tUserName = username.trim();
