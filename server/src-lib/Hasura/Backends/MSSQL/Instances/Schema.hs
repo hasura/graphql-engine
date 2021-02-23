@@ -4,7 +4,6 @@ module Hasura.Backends.MSSQL.Instances.Schema () where
 
 import           Hasura.Prelude
 
-import qualified Data.Aeson                            as J
 import qualified Data.HashMap.Strict                   as Map
 import qualified Data.List.NonEmpty                    as NE
 import qualified Database.ODBC.SQLServer               as ODBC
