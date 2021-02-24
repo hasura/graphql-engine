@@ -60,7 +60,7 @@ const ListComponent: React.FC<Props> = ({
           /api/rest/* and inherit the authorization and permission structure
           from your associated GraphQL nodes. (
           <a
-            href="https://hasura.io/docs/1.0/graphql/core/api-reference/schema-metadata-api/restified-endpoints.html"
+            href="https://hasura.io/docs/latest/graphql/core/api-reference/restified.html"
             target="_blank"
             rel="noopener noreferrer"
           >

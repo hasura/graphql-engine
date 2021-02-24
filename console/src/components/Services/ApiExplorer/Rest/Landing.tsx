@@ -27,7 +27,7 @@ const Landing = () => (
       imgElement={<LandingImage />}
       imgAlt="REST endpoints"
       description="REST endpoints allow for the creation of a REST interface to your saved GraphQL queries and mutations. Endpoints are generated from /api/rest/* and inherit the authorization and permission structure from your associated GraphQL nodes."
-      knowMoreHref="https://hasura.io/docs/1.0/graphql/core/api-reference/schema-metadata-api/restified-endpoints.html"
+      knowMoreHref="https://hasura.io/docs/latest/graphql/core/api-reference/restified.html"
     />
     <hr className={styles.clear_fix} />
   </div>

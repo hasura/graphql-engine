@@ -153,12 +153,11 @@ const ManageDatabase: React.FC<ManageDatabaseProps> = ({
   dataSources,
   dispatch,
   inconsistentObjects,
-  ...props
 }) => {
   const crumbs = [
     {
       title: 'Data',
-      url: `/data/${props.currentDataSource}/schema/${props.currentSchema}`,
+      url: `/data/`,
     },
     {
       title: 'Manage',

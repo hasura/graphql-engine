@@ -43,7 +43,7 @@ function FeatureDisabled({
   return (
     <div style={{ height: '150px' }}>
       <p>
-        <b>Comming soon: Data Management for MSSQL</b>
+        <b>Coming soon: Data Management for MSSQL</b>
       </p>
       <p>
         We are currently working on bringing our full data management
