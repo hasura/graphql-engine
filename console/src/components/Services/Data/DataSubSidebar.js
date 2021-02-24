@@ -4,6 +4,7 @@ import LeftSubSidebar from '../../Common/Layout/LeftSubSidebar/LeftSubSidebar';
 import { manageDatabasesRoute } from '../../Common/utils/routesUtils';
 import TreeView from './TreeView';
 import { getDatabaseTableTypeInfo } from './DataActions';
+import { isInconsistentSource } from './utils';
 
 const groupByKey = (list, key) =>
   list.reduce(
@@ -27,11 +28,14 @@ const DataSubSidebar = props => {
     schemaList,
     currentSchema,
     enums,
+    inconsistentObjects,
   } = props;
 
   const getItems = (schemaInfo = null) => {
     let sourceItems = [];
     sources.forEach(source => {
+      if (isInconsistentSource(source.name, inconsistentObjects)) return;
+
       const sourceItem = { name: source.name, type: 'database' };
       const sourceTables = !source.tables
         ? []
@@ -144,7 +148,7 @@ const DataSubSidebar = props => {
     updateTreeViewItemsWithSchemaInfo();
   }, [sources.length, tables, functions, enums, schemaList]);
 
-  const databasesCount = sources.length;
+  const databasesCount = treeViewItems?.length || 0;
 
   return (
     <LeftSubSidebar
@@ -170,6 +174,7 @@ const mapStateToProps = state => {
   return {
     migrationMode: state.main.migrationMode,
     sources: state.metadata.metadataObject.sources,
+    inconsistentObjects: state.metadata.inconsistentObjects,
     tables: state.metadata.metadataObject.sources.map(s => s.tables).flat()
       .length,
     enums: state.metadata.metadataObject.sources

@@ -19,6 +19,7 @@ import { getConfirmation } from '../../../Common/utils/jsUtils';
 import { mapDispatchToPropsEmpty } from '../../../Common/utils/reactUtils';
 import _push from '../push';
 import { getHostFromConnectionString } from '../DataSources/ManageDBUtils';
+import { isInconsistentSource } from '../utils';
 
 const driverToLabel: Record<Driver, string> = {
   mysql: 'MySQL',
@@ -28,6 +29,7 @@ const driverToLabel: Record<Driver, string> = {
 
 type DatabaseListItemProps = {
   dataSource: DataSource;
+  inconsistentObjects: InjectedProps['inconsistentObjects'];
   // onEdit: (dbName: string) => void;
   onReload: (name: string, driver: Driver, cb: () => void) => void;
   onRemove: (name: string, driver: Driver, cb: () => void) => void;
@@ -38,6 +40,7 @@ const DatabaseListItem: React.FC<DatabaseListItemProps> = ({
   onReload,
   onRemove,
   dataSource,
+  inconsistentObjects,
 }) => {
   const [reloading, setReloading] = useState(false);
   const [removing, setRemoving] = useState(false);
@@ -92,6 +95,19 @@ const DatabaseListItem: React.FC<DatabaseListItemProps> = ({
             {getHostFromConnectionString(dataSource)}
           </p>
         </div>
+        {isInconsistentSource(dataSource.name, inconsistentObjects) && (
+          <ToolTip
+            id={`inconsistent-source-${dataSource.name}`}
+            placement="right"
+            message="Inconsistent Data Source"
+          >
+            <i
+              className="fa fa-exclamation-triangle"
+              aria-hidden="true"
+              style={{ padding: 3, color: '#c02020' }}
+            />
+          </ToolTip>
+        )}
       </div>
       <span style={{ paddingLeft: 125 }}>
         {showUrl ? (
@@ -136,6 +152,7 @@ interface ManageDatabaseProps extends InjectedProps {}
 const ManageDatabase: React.FC<ManageDatabaseProps> = ({
   dataSources,
   dispatch,
+  inconsistentObjects,
   ...props
 }) => {
   const crumbs = [
@@ -213,6 +230,7 @@ const ManageDatabase: React.FC<ManageDatabaseProps> = ({
                 <DatabaseListItem
                   key={data.name}
                   dataSource={data}
+                  inconsistentObjects={inconsistentObjects}
                   // onEdit={onEdit}
                   onReload={onReload}
                   onRemove={onRemove}
@@ -237,6 +255,7 @@ const mapStateToProps = (state: ReduxState) => {
     dataSources: getDataSources(state),
     currentDataSource: state.tables.currentDataSource,
     currentSchema: state.tables.currentSchema,
+    inconsistentObjects: state.metadata.inconsistentObjects,
   };
 };
 

@@ -155,6 +155,9 @@ export const getDependencyError = (err = {}) => {
   return {};
 };
 
+export const isInconsistentSource = (sourceName, inconsistentObjects) =>
+  !!inconsistentObjects.find(i => sourceName === i.definition);
+
 export const getSourceDriver = (dataSources, source) => {
   const sourceObject = dataSources.find(({ name }) => name === source);
   return sourceObject?.driver || sourceObject?.kind || 'postgres';
