@@ -13,6 +13,8 @@ args:
         query: "query ($first_name:String!) { test_table(where: {first_name: { _eq: $first_name } }) { first_name last_name } }"
       - name: query_with_args
         query: "query ($first_name: String!, $last_name:String!) { test_table(where: {first_name: { _eq: $first_name } last_name: { _eq: $last_name }}) { first_name last_name } }"
+      - name: simple_subscription
+        query: "subscription { test_table { first_name last_name } }"
 
 - type: create_rest_endpoint
   args:

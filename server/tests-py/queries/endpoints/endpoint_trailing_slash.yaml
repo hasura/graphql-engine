@@ -1,0 +1,19 @@
+description: Tries to create an endpoint with trailing slash
+url: /v1/query
+status: 400
+response:
+  path: $.args
+  error: |-
+    Empty segments or unnamed variables are not allowed: foo/
+  code: bad-request
+query:
+  type: create_rest_endpoint
+  args:
+    url: "foo/"
+    name: duplicate
+    methods:
+      - GET
+    definition:
+      query:
+        collection_name: test_collection
+        query_name: simple_query

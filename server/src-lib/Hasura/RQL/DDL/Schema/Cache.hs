@@ -28,6 +28,7 @@ import qualified Data.HashMap.Strict.Extended             as M
 import qualified Data.HashMap.Strict.InsOrd               as OMap
 import qualified Data.HashSet                             as HS
 import qualified Data.HashSet.InsOrd                      as HSIns
+import qualified Language.GraphQL.Draft.Syntax            as G
 
 import           Control.Arrow.Extended
 import           Control.Lens                             hiding ((.=))
@@ -162,6 +163,25 @@ buildSchemaCacheRule env = proc (metadata, invalidationKeys) -> do
     , _boActions resolvedOutputs
     , _actNonObjects $ _boCustomTypes resolvedOutputs
     )
+
+  let
+    duplicateVariables :: EndpointMetadata a -> Bool
+    duplicateVariables m = any ((>1) . length) $ group $ sort $ catMaybes $ splitPath Just (const Nothing) (_ceUrl m)
+
+    --  Cases of urls that generate invalid segments:
+    -- * "" -> Error: "Empty URL"
+    -- * "/asdf" -> Error: "Leading slash not allowed"
+    -- * "asdf/" -> Error: "Trailing slash not allowed"
+    -- * "asdf//qwer" -> Error: "Double Slash not allowed"
+    -- * "asdf/:/qwer" -> Error: "Variables must be named"
+    -- * "asdf/:x/qwer/:x" -> Error: "Duplicate Variable: x"
+    invalidSegments m = any (`elem` ["",":"]) (splitPath id id (_ceUrl m))
+
+  bindA -< onJust (nonEmpty $ filter duplicateVariables (M.elems $ _boEndpoints resolvedOutputs)) $ \md ->
+      throw400 BadRequest $ "Duplicate variables found in endpoint paths: " <> commaSeparated (_ceUrl <$> md)
+
+  bindA -< onJust (nonEmpty $ filter invalidSegments (M.elems $ _boEndpoints resolvedOutputs)) $ \md ->
+      throw400 BadRequest $ "Empty segments or unnamed variables are not allowed: " <> commaSeparated (_ceUrl <$> md)
 
   let endpoints = buildEndpointsTrie (M.elems $ _boEndpoints resolvedOutputs)
 
@@ -450,7 +470,16 @@ buildSchemaCacheRule env = proc (metadata, invalidationKeys) -> do
                 <> toTxt queryName
                 <> " does not exist in collection " <> toTxt collName)
                $ find ((== queryName) . _lqName) (_cdQueries (_ccDefinition collection))
-      pure (_lqQuery listedQuery)
+
+      let lq@(GQLQueryWithText lqq) = _lqQuery listedQuery
+
+      for_ (G.getExecutableDefinitions $ unGQLQuery $ snd lqq) $ \case
+          G.ExecutableDefinitionOperation (G.OperationDefinitionTyped d)
+            | G._todType d == G.OperationTypeSubscription ->
+                throw405 $ "query with name " <> toTxt queryName <> " is a subscription"
+          _ -> pure ()
+
+      pure lq
 
     mkEventTriggerMetadataObject (_, source, _, table, eventTriggerConf) =
       let objectId = MOSourceObjId source $

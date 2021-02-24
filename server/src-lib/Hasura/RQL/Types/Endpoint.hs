@@ -1,6 +1,7 @@
 module Hasura.RQL.Types.Endpoint
   ( EndpointName(..)
   , EndpointMethod(..)
+  , EndpointUrl()
   , CreateEndpoint
   , EndpointDef(..)
   , QueryReference(..)
@@ -18,6 +19,8 @@ module Hasura.RQL.Types.Endpoint
   , ceName
   , ceUrl
   , deName
+  , splitPath
+  , mkEndpointUrl
   ) where
 
 import           Hasura.Prelude
@@ -61,6 +64,9 @@ newtype EndpointUrl = EndpointUrl { unEndpointUrl :: NonEmptyText }
            , Generic, Arbitrary
            )
 
+mkEndpointUrl :: ToTxt a => a -> Maybe EndpointUrl
+mkEndpointUrl s = EndpointUrl <$> mkNonEmptyText (toTxt s)
+
 instance FromHttpApiData EndpointUrl where
   parseQueryParam s = parseQueryParam s >>= \t ->
     case mkNonEmptyText t of
@@ -89,15 +95,16 @@ buildEndpointsTrie = foldl' insert mempty
   where
     insert t q =
       let endpointMap = foldMap (`singletonMultiMap` q) $ _ceMethods q
-      in insertPath (split (_ceUrl q)) endpointMap t
+      in insertPath (splitPath (const PathParam) PathLiteral (_ceUrl q)) endpointMap t
 
-    split :: EndpointUrl -> Path Text
-    split = map toPathComponent . T.split (=='/') . toTxt
-
-    toPathComponent :: T.Text -> PathComponent Text
-    toPathComponent x
-      | ":" `T.isPrefixOf` x = PathParam
-      | otherwise            = PathLiteral x
+-- | Split a path and construct PathSegments based on callbacks for variables and literals
+--   Var callback is passed the ":" prefix as part of the text.
+splitPath :: (T.Text -> a) -> (T.Text -> a) -> EndpointUrl -> [a]
+splitPath var lit = map toPathComponent . T.split (=='/') . toTxt
+  where
+  toPathComponent x
+    | ":" `T.isPrefixOf` x = var x
+    | otherwise            = lit x
 
 type CreateEndpoint = EndpointMetadata QueryReference
 

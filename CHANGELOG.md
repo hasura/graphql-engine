@@ -23,6 +23,7 @@ keys in the response body.
 - server: optimize resolving source. Resolving a source would create connection pools every time. Optimize that to re-create connection pools only when necessary. (#609)
 - server: fix issues with remote schema introspection and queries over TLS.
 - console: add support for MS SQL Server
+- server: Prohibit Invalid slashes, duplicate variables, subscriptions, non-singular query definitions for REST endpoints
 
 ## v1.4.0-alpha.1
 
