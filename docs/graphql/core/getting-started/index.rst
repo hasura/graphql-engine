@@ -44,7 +44,7 @@ Get started using an existing database
 
 .. admonition:: MS SQL Server support (alpha)
 
-  Hasura GraphQL engine supports SQL server 2016 and above. Head to :ref:`this guide <database_ms-sql-server>`
+  Hasura GraphQL engine supports **SQL server 2016 and above**. Head to :ref:`this guide <database_ms-sql-server>`
   to get started with SQL Server.
 
 .. admonition:: MySQL support (alpha)
@@ -59,4 +59,5 @@ Get started using an existing database
    Hasura Cloud quickstart <https://hasura.io/docs/1.0/graphql/cloud/getting-started/index.html>
    Docker quickstart <docker-simple>
    Using an existing database <using-existing-database>
+   Making your first GraphQL query <first-graphql-query>
 

@@ -19,8 +19,7 @@ Hasura allows connecting to a SQL Server database and build an GraphQL API based
 
 .. admonition:: Supported from
 
-  Hasura 2.0 onwards
-
+  Hasura GraphQL engine ``v2.0.0-alpha.2`` onwards
 
 .. admonition:: Supported SQL Server versions
 
