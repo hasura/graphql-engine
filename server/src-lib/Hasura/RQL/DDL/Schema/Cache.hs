@@ -471,13 +471,17 @@ buildSchemaCacheRule env = proc (metadata, invalidationKeys) -> do
                 <> " does not exist in collection " <> toTxt collName)
                $ find ((== queryName) . _lqName) (_cdQueries (_ccDefinition collection))
 
-      let lq@(GQLQueryWithText lqq) = _lqQuery listedQuery
+      let
+        lq@(GQLQueryWithText lqq) = _lqQuery listedQuery
+        ds = G.getExecutableDefinitions $ unGQLQuery $ snd lqq
 
-      for_ (G.getExecutableDefinitions $ unGQLQuery $ snd lqq) $ \case
-          G.ExecutableDefinitionOperation (G.OperationDefinitionTyped d)
-            | G._todType d == G.OperationTypeSubscription ->
-                throw405 $ "query with name " <> toTxt queryName <> " is a subscription"
-          _ -> pure ()
+      case ds of
+        [G.ExecutableDefinitionOperation (G.OperationDefinitionTyped d)]
+          | G._todType d == G.OperationTypeSubscription ->
+              throw405 $ "query with name " <> toTxt queryName <> " is a subscription"
+          | otherwise -> pure ()
+        [] -> throw400 BadRequest $ "query with name " <> toTxt queryName <> " has no definitions."
+        _  -> throw400 BadRequest $ "query with name " <> toTxt queryName <> " has multiple definitions."
 
       pure lq
 

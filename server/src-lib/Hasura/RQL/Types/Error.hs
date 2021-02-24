@@ -262,12 +262,15 @@ throw400 c t = throwError $ err400 c t
 throw404 :: (QErrM m) => Text -> m a
 throw404 t = throwError $ err404 NotFound t
 
+-- | MethodNotAllowed
 throw405 :: (QErrM m) => Text -> m a
 throw405 t = throwError $ err405 MethodNotAllowed t
 
+-- | AccessDenied
 throw401 :: (QErrM m) => Text -> m a
 throw401 t = throwError $ err401 AccessDenied t
 
+-- | Conflict
 throw409 :: (QErrM m) => Text -> m a
 throw409 t = throwError $ err409 Conflict t
 
