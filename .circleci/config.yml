@@ -484,7 +484,7 @@ jobs:
   # build console assets
   build_console:
     docker:
-    - image: hasura/graphql-engine-console-builder:20190515
+    - image: hasura/graphql-engine-console-builder:20210224 
     working_directory: ~/graphql-engine
     steps:
     - attach_workspace:
@@ -536,7 +536,7 @@ jobs:
   # test console
   test_console:
     docker:
-    - image: hasura/graphql-engine-console-builder:v0.3
+    - image: hasura/graphql-engine-console-builder:20210224
       environment:
         CYPRESS_KEY: 983be0db-0f19-40cc-bfc4-194fcacd85e1
         GHCRTS: -N1
