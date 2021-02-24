@@ -1,11 +1,11 @@
 .. meta::
-   :description: Define custom types with the Hasura schema/metadata API
-   :keywords: hasura, docs, schema/metadata API, API reference, custom types
+   :description: Define custom types with the Hasura metadata API
+   :keywords: hasura, docs, metadata API, API reference, custom types
 
-.. _api_custom_types:
+.. _metadata_api_custom_types:
 
-Schema/Metadata API Reference: Custom Types
-===========================================
+Metadata API Reference: Custom Types (v1.4 and above)
+=====================================================
 
 .. contents:: Table of contents
   :backlinks: none
@@ -17,7 +17,7 @@ Introduction
 
 **Custom Types** are user-defined GraphQL types which help to define :ref:`Actions <api_actions>`.
 
-.. _set_custom_types:
+.. _metadata_set_custom_types:
 
 set_custom_types
 ----------------
@@ -27,7 +27,7 @@ set_custom_types
 
 .. code-block:: http
 
-   POST /v1/query HTTP/1.1
+   POST /v1/metadata HTTP/1.1
    Content-Type: application/json
    X-Hasura-Role: admin
 
@@ -76,7 +76,7 @@ set_custom_types
    }
 
 
-.. _set_custom_types_syntax:
+.. _metadata_set_custom_types_syntax:
 
 Args syntax
 ^^^^^^^^^^^

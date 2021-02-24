@@ -1,11 +1,11 @@
 .. meta::
-   :description: Manage event triggers with the Hasura schema/metadata API
-   :keywords: hasura, docs, schema/metadata API, API reference, event trigger
+   :description: Manage event triggers with the Hasura metadata API
+   :keywords: hasura, docs, metadata API, API reference, event trigger
 
-.. _api_event_triggers:
+.. _metadata_api_event_triggers:
 
-Schema/Metadata API Reference: Event Triggers
-=============================================
+Metadata API Reference: Event Triggers (v1.4 and above)
+=======================================================
 
 .. contents:: Table of contents
   :backlinks: none
@@ -17,27 +17,28 @@ Introduction
 
 Event triggers are used to capture database changes and send them to a configured webhook.
 
-.. _create_event_trigger:
+.. _pg_create_event_trigger:
 
-create_event_trigger
---------------------
+pg_create_event_trigger
+-----------------------
 
-``create_event_trigger`` is used to create a new event trigger or replace an existing event trigger.
+``pg_create_event_trigger`` is used to create a new event trigger or replace an existing event trigger.
 
 .. code-block:: http
 
-   POST /v1/query HTTP/1.1
+   POST /v1/metadata HTTP/1.1
    Content-Type: application/json
    X-Hasura-Role: admin
 
    {
-       "type" : "create_event_trigger",
+       "type" : "pg_create_event_trigger",
        "args" : {
            "name": "sample_trigger",
            "table": {
               "name": "users",
               "schema": "public"
            },
+           "source": "default",
            "webhook": "https://httpbin.org/post",
            "insert": {
                "columns": "*",
@@ -64,7 +65,7 @@ create_event_trigger
        }
    }
 
-.. _create_event_trigger_syntax:
+.. _pg_create_event_trigger_syntax:
 
 Args syntax
 ^^^^^^^^^^^
@@ -84,6 +85,10 @@ Args syntax
      - true
      - :ref:`QualifiedTable <QualifiedTable>`
      - Object with table name and schema
+   * - source
+     - false
+     - :ref:`SourceName <SourceName>`
+     - Name of the source database of the table (default: ``default``)
    * - webhook
      - false
      - String
@@ -123,27 +128,28 @@ Args syntax
 
 (*) Either ``webhook`` or ``webhook_from_env`` are required.
 
-.. _delete_event_trigger:
+.. _pg_delete_event_trigger:
 
-delete_event_trigger
---------------------
+pg_delete_event_trigger
+-----------------------
 
-``delete_event_trigger`` is used to delete an event trigger.
+``pg_delete_event_trigger`` is used to delete an event trigger.
 
 .. code-block:: http
 
-   POST /v1/query HTTP/1.1
+   POST /v1/metadata HTTP/1.1
    Content-Type: application/json
    X-Hasura-Role: admin
 
    {
-       "type" : "delete_event_trigger",
+       "type" : "pg_delete_event_trigger",
        "args" : {
-           "name": "sample_trigger"
+           "name": "sample_trigger",
+           "source": "default"
        }
    }
 
-.. _delete_event_trigger_syntax:
+.. _pg_delete_event_trigger_syntax:
 
 Args syntax
 ^^^^^^^^^^^
@@ -159,12 +165,15 @@ Args syntax
      - true
      - :ref:`TriggerName <TriggerName>`
      - Name of the event trigger
+   * - source
+     - false
+     - :ref:`SourceName <SourceName>`
+     - Name of the source database of the trigger (default: ``default``)
 
+.. _pg_redeliver_event:
 
-.. _redeliver_event:
-
-redeliver_event
----------------
+pg_redeliver_event
+------------------
 
 ``redeliver_event`` is used to redeliver an existing event. For example, if an event is marked as error (
 say it did not succeed after retries), you can redeliver it using this API. Note that this will reset the count of retries so far.
@@ -172,18 +181,18 @@ If the event fails to deliver, it will be retried automatically according to its
 
 .. code-block:: http
 
-   POST /v1/query HTTP/1.1
+   POST /v1/metadata HTTP/1.1
    Content-Type: application/json
    X-Hasura-Role: admin
 
    {
-       "type" : "redeliver_event",
+       "type" : "pg_redeliver_event",
        "args" : {
            "event_id": "ad4f698f-a14e-4a6d-a01b-38cd252dd8bf"
        }
    }
 
-.. _redeliver_event_syntax:
+.. _pg_redeliver_event_syntax:
 
 Args syntax
 ^^^^^^^^^^^
@@ -201,28 +210,29 @@ Args syntax
      - UUID of the event
 
 
-.. _invoke_event_trigger:
+.. _pg_invoke_event_trigger:
 
-invoke_event_trigger
---------------------
+pg_invoke_event_trigger
+-----------------------
 
 ``invoke_event_trigger`` is used to invoke an event trigger with custom payload.
 
 .. code-block:: http
 
-   POST /v1/query HTTP/1.1
+   POST /v1/metadata HTTP/1.1
    Content-Type: application/json
    X-Hasura-Role: admin
 
    {
-       "type" : "invoke_event_trigger",
+       "type" : "pg_invoke_event_trigger",
        "args" : {
            "name": "sample_trigger",
+           "source": "default",
            "payload": {}
        }
    }
 
-.. _invoke_event_trigger_syntax:
+.. _pg_invoke_event_trigger_syntax:
 
 Args syntax
 ^^^^^^^^^^^
@@ -242,3 +252,7 @@ Args syntax
      - true
      - JSON
      - Some JSON payload to send to trigger
+   * - source
+     - false
+     - :ref:`SourceName <SourceName>`
+     - Name of the source database of the trigger (default: ``default``)

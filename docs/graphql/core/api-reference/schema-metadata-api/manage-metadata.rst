@@ -62,7 +62,7 @@ metadata will be replaced with the new one.
         "args": <replace-metadata-args>
     }
 
-.. _replace_metadata_syntax_v1:
+.. _replace_metadata_syntax:
 
 Args syntax
 ^^^^^^^^^^^

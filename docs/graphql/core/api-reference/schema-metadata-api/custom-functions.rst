@@ -25,7 +25,7 @@ track_function
 --------------
 
 ``track_function`` is used to add a custom SQL function to the ``query`` root field of the GraphQL schema.
-Also refer a note :ref:`here <note>`.
+Also refer a note :ref:`here <function_req_note>`.
 
 Add an SQL function ``search_articles``:
 
@@ -51,7 +51,7 @@ track_function v2
 Version 2 of ``track_function`` is used to add a custom SQL function to the GraphQL schema.
 It supports more configuration options than v1, and also supports tracking
 functions as mutations.
-Also refer a note :ref:`here <note>`.
+Also refer a note :ref:`here <function_req_note>`.
 
 Track an SQL function called ``search_articles`` with a Hasura session argument:
 
@@ -137,38 +137,6 @@ Args syntax
      - false
      - :ref:`Function Configuration <function_configuration>`
      - Configuration for the SQL function
-
-.. _function_configuration:
-
-Function Configuration
-^^^^^^^^^^^^^^^^^^^^^^
-
-.. list-table::
-   :header-rows: 1
-
-   * - Key
-     - Required
-     - Schema
-     - Description
-   * - session_argument
-     - false
-     - `String`
-     - Function argument which accepts session info JSON
-   * - exposed_as
-     - false
-     - `String`
-     - In which part of the schema should we expose this function? Either "mutation" or "query".
-
-.. _note:
-
-.. note::
-
-   Currently, only functions which satisfy the following constraints can be exposed over the GraphQL API
-   (*terminology from* `Postgres docs <https://www.postgresql.org/docs/current/sql-createfunction.html>`__):
-
-   - **Function behaviour**: ``STABLE`` or ``IMMUTABLE`` functions may *only* be exposed as queries (i.e. with ``exposed_as: query``)
-   - **Return type**: MUST be ``SETOF <table-name>`` OR ``<table_name>`` where ``<table-name>`` is already tracked
-   - **Argument modes**: ONLY ``IN``
 
 .. _untrack_function:
 

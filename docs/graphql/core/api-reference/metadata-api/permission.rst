@@ -1,11 +1,11 @@
 .. meta::
-   :description: Manage permissions with the Hasura schema/metadata API
-   :keywords: hasura, docs, schema/metadata API, API reference, permission
+   :description: Manage permissions with the Hasura metadata API
+   :keywords: hasura, docs, metadata API, API reference, permission
 
-.. _api_permission:
+.. _metadata_api_permission:
 
-Schema/Metadata API Reference: Permissions
-==========================================
+Metadata API Reference: Permissions (v1.4 and above)
+====================================================
 
 .. contents:: Table of contents
   :backlinks: none
@@ -26,10 +26,10 @@ role has unrestricted access to all operations.
    values can come with the request and can be validated using webhook or can be
    sent with the JWT token.
 
-.. _create_insert_permission:
+.. _pg_create_insert_permission:
 
-create_insert_permission
-------------------------
+pg_create_insert_permission
+---------------------------
 
 An insert permission is used to enforce constraints on the data that is being
 inserted.
@@ -40,14 +40,15 @@ user can only insert articles for themselves* .
 
 .. code-block:: http
 
-   POST /v1/query HTTP/1.1
+   POST /v1/metadata HTTP/1.1
    Content-Type: application/json
    X-Hasura-Role: admin
 
    {
-       "type" : "create_insert_permission",
+       "type" : "pg_create_insert_permission",
        "args" : {
            "table" : "article",
+           "source": "default",
            "role" : "user",
            "permission" : {
                "check" : {
@@ -76,14 +77,15 @@ An example:
 
 .. code-block:: http
 
-   POST /v1/query HTTP/1.1
+   POST /v1/metadata HTTP/1.1
    Content-Type: application/json
    X-Hasura-Role: admin
 
    {
-       "type" : "create_insert_permission",
+       "type" : "pg_create_insert_permission",
        "args" : {
            "table" : "article",
+           "source": "default",
            "role" : "user",
            "permission" : {
                "check" : {
@@ -106,7 +108,7 @@ In the above definition, the row is allowed to be inserted if the ``author_id``
 is the same as the request's user id and ``is_reviewed`` is ``false`` when the
 ``category`` is "editorial".
 
-.. _create_insert_permission_syntax:
+.. _pg_create_insert_permission_syntax:
 
 Args syntax
 ^^^^^^^^^^^
@@ -134,31 +136,36 @@ Args syntax
      - false
      - text
      - Comment
+   * - source
+     - false
+     - :ref:`SourceName <SourceName>`
+     - Name of the source database of the table (default: ``default``)
 
-.. _drop_insert_permission:
+.. _pg_drop_insert_permission:
 
-drop_insert_permission
-----------------------
+pg_drop_insert_permission
+-------------------------
 
-The ``drop_insert_permission`` API is used to drop an existing insert permission for a role on a table.
+The ``pg_drop_insert_permission`` API is used to drop an existing insert permission for a role on a table.
 
 An example:
 
 .. code-block:: http
 
-   POST /v1/query HTTP/1.1
+   POST /v1/metadata HTTP/1.1
    Content-Type: application/json
    X-Hasura-Role: admin
 
    {
-       "type" : "drop_insert_permission",
+       "type" : "pg_drop_insert_permission",
        "args" : {
            "table" : "article",
+           "source": "default",
            "role" : "user"
        }
    }
 
-.. _drop_insert_permission_syntax:
+.. _pg_drop_insert_permission_syntax:
 
 Args syntax
 ^^^^^^^^^^^
@@ -178,11 +185,15 @@ Args syntax
      - true
      - :ref:`RoleName`
      - Role
+   * - source
+     - false
+     - :ref:`SourceName <SourceName>`
+     - Name of the source database of the table (default: ``default``)
 
-.. _create_select_permission:
+.. _pg_create_select_permission:
 
-create_select_permission
-------------------------
+pg_create_select_permission
+---------------------------
 
 A select permission is used to restrict access to only the specified columns and rows.
 
@@ -192,15 +203,16 @@ authored by the user themselves.
 
 .. code-block:: http
 
-   POST /v1/query HTTP/1.1
+   POST /v1/metadata HTTP/1.1
    Content-Type: application/json
    X-Hasura-Role: admin
 
    {
-       "type" : "create_select_permission",
+       "type" : "pg_create_select_permission",
        "args" : {
            "table" : "article",
            "role" : "user",
+           "source": "default",
            "permission" : {
                "columns" : "*",
                "filter" : {
@@ -225,7 +237,7 @@ This reads as follows - For the ``user`` role:
 
 * Allow aggregate queries.
 
-.. _create_select_permission_syntax:
+.. _pg_create_select_permission_syntax:
 
 Args syntax
 ^^^^^^^^^^^
@@ -253,31 +265,36 @@ Args syntax
      - false
      - text
      - Comment
+   * - source
+     - false
+     - :ref:`SourceName <SourceName>`
+     - Name of the source database of the table (default: ``default``)
 
-.. _drop_select_permission:
+.. _pg_drop_select_permission:
 
-drop_select_permission
-----------------------
+pg_drop_select_permission
+-------------------------
 
-The ``drop_select_permission`` is used to drop an existing select permission for a role on a table.
+The ``pg_drop_select_permission`` is used to drop an existing select permission for a role on a table.
 
 An example:
 
 .. code-block:: http
 
-   POST /v1/query HTTP/1.1
+   POST /v1/metadata HTTP/1.1
    Content-Type: application/json
    X-Hasura-Role: admin
 
    {
-       "type" : "drop_select_permission",
+       "type" : "pg_drop_select_permission",
        "args" : {
            "table" : "article",
-           "role" : "user"
+           "role" : "user",
+           "source": "default"
        }
    }
 
-.. _drop_select_permission_syntax:
+.. _pg_drop_select_permission_syntax:
 
 Args syntax
 ^^^^^^^^^^^
@@ -297,12 +314,15 @@ Args syntax
      - true
      - :ref:`RoleName`
      - Role
+   * - source
+     - false
+     - :ref:`SourceName <SourceName>`
+     - Name of the source database of the table (default: ``default``)
 
-.. _create_update_permission:
+.. _pg_create_update_permission:
 
-
-create_update_permission
-------------------------
+pg_create_update_permission
+---------------------------
 
 An update permission is used to restrict the columns and rows that can be
 updated. Its structure is quite similar to the select permission.
@@ -311,14 +331,15 @@ An example:
 
 .. code-block:: http
 
-   POST /v1/query HTTP/1.1
+   POST /v1/metadata HTTP/1.1
    Content-Type: application/json
    X-Hasura-Role: admin
 
    {
-       "type" : "create_update_permission",
+       "type" : "pg_create_update_permission",
        "args" : {
            "table" : "article",
+           "source": "default",
            "role" : "user",
            "permission" : {
                "columns" : ["title", "content", "category"],
@@ -354,7 +375,7 @@ This reads as follows - for the ``user`` role:
    ownership of a row in the ``article`` table. Columns such as this should
    never be allowed to be updated.
 
-.. _create_update_permission_syntax:
+.. _pg_create_update_permission_syntax:
 
 Args syntax
 ^^^^^^^^^^^
@@ -382,31 +403,36 @@ Args syntax
      - false
      - text
      - Comment
+   * - source
+     - false
+     - :ref:`SourceName <SourceName>`
+     - Name of the source database of the table (default: ``default``)
 
-.. _drop_update_permission:
+.. _pg_drop_update_permission:
 
-drop_update_permission
-----------------------
+pg_drop_update_permission
+-------------------------
 
-The ``drop_update_permission`` API is used to drop an existing update permission for a role on a table.
+The ``pg_drop_update_permission`` API is used to drop an existing update permission for a role on a table.
 
 An example:
 
 .. code-block:: http
 
-   POST /v1/query HTTP/1.1
+   POST /v1/metadata HTTP/1.1
    Content-Type: application/json
    X-Hasura-Role: admin
 
    {
-       "type" : "drop_update_permission",
+       "type" : "pg_drop_update_permission",
        "args" : {
            "table" : "article",
+           "source": "default",
            "role" : "user"
        }
    }
 
-.. _drop_update_permission_syntax:
+.. _pg_drop_update_permission_syntax:
 
 Args syntax
 ^^^^^^^^^^^
@@ -426,11 +452,15 @@ Args syntax
      - true
      - :ref:`RoleName`
      - Role
+   * - source
+     - false
+     - :ref:`SourceName <SourceName>`
+     - Name of the source database of the table (default: ``default``)
 
-.. _create_delete_permission:
+.. _pg_create_delete_permission:
 
-create_delete_permission
-------------------------
+pg_create_delete_permission
+---------------------------
 
 A delete permission is used to restrict the rows that can be deleted.
 
@@ -438,14 +468,15 @@ An example:
 
 .. code-block:: http
 
-   POST /v1/query HTTP/1.1
+   POST /v1/metadata HTTP/1.1
    Content-Type: application/json
    X-Hasura-Role: admin
 
    {
-       "type" : "create_delete_permission",
+       "type" : "pg_create_delete_permission",
        "args" : {
            "table" : "article",
+           "source": "default",
            "role" : "user",
            "permission" : {
                "filter" : {
@@ -460,7 +491,7 @@ This reads as follows:
 "``delete`` for the ``user`` role on the ``article`` table is allowed on rows where
 ``author_id`` is the same as the request header ``X-HASURA-USER-ID`` value."
 
-.. _create_delete_permission_syntax:
+.. _pg_create_delete_permission_syntax:
 
 Args syntax
 ^^^^^^^^^^^
@@ -488,31 +519,36 @@ Args syntax
      - false
      - text
      - Comment
+   * - source
+     - false
+     - :ref:`SourceName <SourceName>`
+     - Name of the source database of the table (default: ``default``)
 
-.. _drop_delete_permission:
+.. _pg_drop_delete_permission:
 
-drop_delete_permission
-----------------------
+pg_drop_delete_permission
+-------------------------
 
-The ``drop_delete_permission`` API is used to drop an existing delete permission for a role on a table.
+The ``pg_drop_delete_permission`` API is used to drop an existing delete permission for a role on a table.
 
 An example:
 
 .. code-block:: http
 
-   POST /v1/query HTTP/1.1
+   POST /v1/metadata HTTP/1.1
    Content-Type: application/json
    X-Hasura-Role: admin
 
    {
-       "type" : "drop_delete_permission",
+       "type" : "pg_drop_delete_permission",
        "args" : {
            "table" : "article",
-           "role" : "user"
+           "role" : "user",
+           "source": "default"
        }
    }
 
-.. _drop_delete_permission_syntax:
+.. _pg_drop_delete_permission_syntax:
 
 Args syntax
 ^^^^^^^^^^^
@@ -532,35 +568,40 @@ Args syntax
      - true
      - :ref:`RoleName`
      - Role
+   * - source
+     - false
+     - :ref:`SourceName <SourceName>`
+     - Name of the source database of the table (default: ``default``)
 
-.. _set_permission_comment:
+.. _pg_set_permission_comment:
 
-set_permission_comment
-----------------------
+pg_set_permission_comment
+-------------------------
 
-``set_permission_comment`` is used to set/update the comment on a permission.
+``pg_set_permission_comment`` is used to set/update the comment on a permission.
 Setting the comment to ``null`` removes it.
 
 An example:
 
 .. code-block:: http
 
-   POST /v1/query HTTP/1.1
+   POST /v1/metadata HTTP/1.1
    Content-Type: application/json
    Authorization: Bearer <auth-token> # optional if cookie is set
    X-Hasura-Role: admin
 
    {
-       "type": "set_permission_comment",
+       "type": "pg_set_permission_comment",
        "args": {
            "table": "article",
+           "source": "default",
            "role": "user",
            "type" : "update",
            "comment" : "can only modify his/her own rows"
        }
    }
 
-.. _set_permission_comment_syntax:
+.. _pg_set_permission_comment_syntax:
 
 Args syntax
 ^^^^^^^^^^^
@@ -588,3 +629,8 @@ Args syntax
      - false
      - Text
      - Comment
+   * - source
+     - false
+     - :ref:`SourceName <SourceName>`
+     - Name of the source database of the table (default: ``default``)
+

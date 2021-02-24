@@ -171,3 +171,4 @@ See details at :ref:`explain_api_reference`.
   PG Dump API <pgdump>
   Config API <config>
   Explain API <explain>
+  Common syntax definitions <syntax-defs>

@@ -48,9 +48,9 @@ Request body
 
 .. parsed-literal::
 
-   Query_
+   :ref:`Query <metadata_query>`
 
-.. _Query:
+.. _metadata_query:
 
 Query
 *****
@@ -93,29 +93,341 @@ The various types of queries are listed in the following table:
      - Synopsis
 
    * - **bulk**
-     - :ref:`Query <Query>` array
+     - :ref:`Query <metadata_query>` array
      - 1
      - Execute multiple operations in a single query
 
-   * - :ref:`pg_create_function_permission`
-     - :ref:`pg_create_function_permission_args <pg_create_function_permission_args_syntax>`
+   * - :ref:`pg_add_source <pg_add_source>`
+     - :ref:`pg_add_source_args <pg_add_source_syntax>`
      - 1
-     - Create a function permission
+     - Add a Postgres database
+
+   * - :ref:`pg_drop_source <pg_drop_source>`
+     - :ref:`pg_drop_source_args <pg_drop_source_syntax>`
+     - 1
+     - Remove a Postgres database
+
+   * - :ref:`pg_track_table <pg_track_table>`
+     - :ref:`pg_track_table_args <pg_track_table_syntax>`
+     - 1
+     - Add a Postgres table/view with configuration
+
+   * - :ref:`pg_untrack_table`
+     - :ref:`pg_untrack_table_args <pg_untrack_table_syntax>`
+     - 1
+     - Remove a Postgres table/view
+
+   * - :ref:`pg_set_table_customization <pg_set_table_customization>`
+     - :ref:`pg_set_table_customization_args <pg_set_table_customization_syntax>`
+     - 1
+     - Set table customization of an already tracked Postgres table
+
+   * - :ref:`pg_set_table_is_enum`
+     - :ref:`pg_set_table_is_enum_args <pg_set_table_is_enum_syntax>`
+     - 1
+     - Set a tracked Postgres table as an enum table
+
+   * - :ref:`pg_track_function`
+     - :ref:`pg_track_function_args <pg_track_function_syntax>`
+     - 1
+     - Add a Postgres SQL function with configuration
+
+   * - :ref:`pg_untrack_function`
+     - :ref:`FunctionName <FunctionName>`
+     - 1
+     - Remove a Postgres SQL function
+
+   * - :ref:`pg_create_function_permission`
+     - :ref:`pg_create_function_permission_args <pg_create_function_permission_syntax>`
+     - 1
+     - Create a Postgres function permission
 
    * - :ref:`pg_drop_function_permission`
-     - :ref:`pg_drop_function_permission_args <pg_drop_function_permission_args_syntax>`
+     - :ref:`pg_drop_function_permission_args <pg_drop_function_permission_syntax>`
      - 1
-     - Drop an existing function permission
+     - Drop an existing Postgres function permission
 
-   * - :ref:`export_metadata`
-     - :ref:`export_metadata_examples`
+   * - :ref:`pg_create_object_relationship`
+     - :ref:`pg_create_object_relationship_args <pg_create_object_relationship_syntax>`
+     - 1
+     - Define a new object relationship between Postgres tables/views
+
+   * - :ref:`pg_create_array_relationship`
+     - :ref:`pg_create_array_relationship_args <pg_create_array_relationship_syntax>`
+     - 1
+     - Define a new array relationship between Postgres tables/views
+
+   * - :ref:`pg_drop_relationship`
+     - :ref:`pg_drop_relationship_args <pg_drop_relationship_syntax>`
+     - 1
+     - Drop an existing Postgres relationship
+
+   * - :ref:`pg_rename_relationship`
+     - :ref:`pg_rename_relationship_args <pg_rename_relationship_syntax>`
+     - 1
+     - Modify name of an existing Postgres relationship
+
+   * - :ref:`pg_set_relationship_comment`
+     - :ref:`pg_set_relationship_comment_args <pg_set_relationship_comment_syntax>`
+     - 1
+     - Set comment on an existing Postgres relationship
+
+   * - :ref:`pg_add_computed_field`
+     - :ref:`pg_add_computed_field_args <pg_add_computed_field_syntax>`
+     - 1
+     - Add a computed field to a Postgres table/view
+
+   * - :ref:`pg_drop_computed_field`
+     - :ref:`pg_drop_computed_field_args <pg_drop_computed_field_syntax>`
+     - 1
+     - Drop a Postgres computed field
+
+   * - :ref:`pg_create_insert_permission`
+     - :ref:`pg_create_insert_permission_args <pg_create_insert_permission_syntax>`
+     - 1
+     - Specify insert permission for a Postgres table/view
+
+   * - :ref:`pg_drop_insert_permission`
+     - :ref:`pg_drop_insert_permission_args <pg_drop_insert_permission_syntax>`
+     - 1
+     - Remove existing insert permission for a Postgres table/view
+
+   * - :ref:`pg_create_select_permission`
+     - :ref:`pg_create_select_permission_args <pg_create_select_permission_syntax>`
+     - 1
+     - Specify select permission for a Postgres table/view
+
+   * - :ref:`pg_drop_select_permission`
+     - :ref:`pg_drop_select_permission_args <pg_drop_select_permission_syntax>`
+     - 1
+     - Remove existing select permission for a Postgres table/view
+
+   * - :ref:`pg_create_update_permission`
+     - :ref:`pg_create_update_permission_args <pg_create_update_permission_syntax>`
+     - 1
+     - Specify update permission for a Postgres table/view
+
+   * - :ref:`pg_drop_update_permission`
+     - :ref:`pg_drop_update_permission_args <pg_drop_update_permission_syntax>`
+     - 1
+     - Remove existing update permission for a Postgres table/view
+
+   * - :ref:`pg_create_delete_permission`
+     - :ref:`pg_create_delete_permission_args <pg_create_delete_permission_syntax>`
+     - 1
+     - Specify delete permission for a Postgres table/view
+
+   * - :ref:`pg_drop_delete_permission`
+     - :ref:`pg_drop_delete_permission_args <pg_drop_delete_permission_syntax>`
+     - 1
+     - Remove existing delete permission for a Postgres table/view
+
+   * - :ref:`pg_set_permission_comment`
+     - :ref:`pg_set_permission_comment_args <pg_set_permission_comment_syntax>`
+     - 1
+     - Set comment on an existing permission for a Postgres table/view
+
+   * - :ref:`pg_create_event_trigger`
+     - :ref:`pg_create_event_trigger_args <pg_create_event_trigger_syntax>`
+     - 1
+     - Create or replace an event trigger on a Postgres table
+
+   * - :ref:`pg_delete_event_trigger`
+     - :ref:`pg_delete_event_trigger_args <pg_delete_event_trigger_syntax>`
+     - 1
+     - Delete an existing event trigger on a Postgres table
+
+   * - :ref:`pg_redeliver_event`
+     - :ref:`pg_redeliver_event_args <pg_redeliver_event_syntax>`
+     - 1
+     - Redeliver an existing event on a Postgres table
+
+   * - :ref:`pg_invoke_event_trigger`
+     - :ref:`pg_invoke_event_trigger_args <pg_invoke_event_trigger_syntax>`
+     - 1
+     - Invoke a trigger with custom payload on a Postgres table
+
+   * - :ref:`metadata_create_cron_trigger`
+     - :ref:`create_cron_trigger_args <metadata_create_cron_trigger_syntax>`
+     - 1
+     - Create a cron trigger
+
+   * - :ref:`metadata_delete_cron_trigger`
+     - :ref:`delete_cron_trigger_args <metadata_delete_cron_trigger_syntax>`
+     - 1
+     - Delete an existing cron trigger
+
+   * - :ref:`metadata_create_scheduled_event`
+     - :ref:`create_scheduled_event_args <metadata_create_scheduled_event_syntax>`
+     - 1
+     - Create a new scheduled event
+
+   * - :ref:`metadata_add_remote_schema`
+     - :ref:`add_remote_schema_args <metadata_add_remote_schema_syntax>`
+     - 1
+     - Add a remote GraphQL server as a remote schema
+
+   * - :ref:`metadata_remove_remote_schema`
+     - :ref:`remove_remote_schema_args <metadata_remove_remote_schema_syntax>`
+     - 1
+     - Remove an existing remote schema
+
+   * - :ref:`metadata_reload_remote_schema`
+     - :ref:`reload_remote_schema_args <metadata_reload_remote_schema_syntax>`
+     - 1
+     - Reload schema of an existing remote schema
+
+   * - :ref:`metadata_add_remote_schema_permissions`
+     - :ref:`add_remote_schema_permissions <metadata_add_remote_schema_permissions_syntax>`
+     - 1
+     - Add permissions to a role of an existing remote schema
+
+   * - :ref:`metadata_drop_remote_schema_permissions`
+     - :ref:`drop_remote_schema_permissions <metadata_drop_remote_schema_permissions_syntax>`
+     - 1
+     - Drop existing permissions defined for a role for a remote schema
+
+   * - :ref:`metadata_create_remote_relationship`
+     - :ref:`create_remote_relationship_args <metadata_create_remote_relationship_syntax>`
+     - 1
+     - Create a remote relationship with an existing remote schema
+
+   * - :ref:`metadata_update_remote_relationship`
+     - :ref:`update_remote_relationship_args <metadata_update_remote_relationship_syntax>`
+     - 1
+     - Update an existing remote relationship
+
+   * - :ref:`metadata_delete_remote_relationship`
+     - :ref:`delete_remote_relationship_args <metadata_delete_remote_relationship_syntax>`
+     - 1
+     - Delete an existing remote relationship
+
+   * - :ref:`metadata_export_metadata`
+     - :ref:`Empty Object`
+     - 1
+     - Export the current metadata
+
+   * - :ref:`metadata_export_metadata`
+     - :ref:`Empty Object`
      - 2
      - Export existing metadata with resource version included.
 
-   * - :ref:`replace_metadata`
-     - :ref:`replace_metadata_examples`
+   * - :ref:`metadata_replace_metadata`
+     - :ref:`replace_metadata_args <metadata_replace_metadata_syntax>`
+     - 1
+     - Import and replace existing metadata
+
+
+   * - :ref:`metadata_replace_metadata`
+     - :ref:`replace_metadata_args <metadata_replace_metadata_syntax>`
      - 2
      - Replace existing metadata with check against current resource_version.
+
+   * - :ref:`metadata_reload_metadata`
+     - :ref:`Empty Object`
+     - 1
+     - Reload changes to the underlying Postgres DB
+
+   * - :ref:`metadata_clear_metadata`
+     - :ref:`Empty Object`
+     - 1
+     - Clear/wipe-out the current metadata state form server
+
+   * - :ref:`metadata_get_inconsistent_metadata`
+     - :ref:`Empty Object`
+     - 1
+     - List all inconsistent metadata objects
+
+   * - :ref:`metadata_drop_inconsistent_metadata`
+     - :ref:`Empty Object`
+     - 1
+     - Drop all inconsistent metadata objects
+
+   * - :ref:`metadata_create_query_collection`
+     - :ref:`create_query_collection_args <metadata_create_query_collection_syntax>`
+     - 1
+     - Create a query collection
+
+   * - :ref:`metadata_drop_query_collection`
+     - :ref:`drop_query_collection_args <metadata_drop_query_collection_syntax>`
+     - 1
+     - Drop a query collection
+
+   * - :ref:`metadata_add_query_to_collection`
+     - :ref:`add_query_to_collection_args <metadata_add_query_to_collection_syntax>`
+     - 1
+     - Add a query to a given collection
+
+   * - :ref:`metadata_drop_query_from_collection`
+     - :ref:`drop_query_from_collection_args <metadata_drop_query_from_collection_syntax>`
+     - 1
+     - Drop a query from a given collection
+
+   * - :ref:`metadata_add_collection_to_allowlist`
+     - :ref:`add_collection_to_allowlist_args <metadata_add_collection_to_allowlist_syntax>`
+     - 1
+     - Add a collection to the allow-list
+
+   * - :ref:`metadata_drop_collection_from_allowlist`
+     - :ref:`drop_collection_from_allowlist_args <metadata_drop_collection_from_allowlist_syntax>`
+     - 1
+     - Drop a collection from the allow-list
+
+   * - :ref:`metadata_set_custom_types`
+     - :ref:`set_custom_types_args <metadata_set_custom_types_syntax>`
+     - 1
+     - Set custom GraphQL types
+
+   * - :ref:`metadata_create_action`
+     - :ref:`create_action_args <metadata_create_action_syntax>`
+     - 1
+     - Create an action
+
+   * - :ref:`metadata_drop_action`
+     - :ref:`drop_action_args <metadata_drop_action_syntax>`
+     - 1
+     - Drop an action
+
+   * - :ref:`metadata_update_action`
+     - :ref:`update_action_args <metadata_update_action_syntax>`
+     - 1
+     - Update an action
+
+   * - :ref:`metadata_create_action_permission`
+     - :ref:`create_action_permission_args <metadata_create_action_permission_syntax>`
+     - 1
+     - Create an action permission
+
+   * - :ref:`metadata_drop_action_permission`
+     - :ref:`drop_action_permission_args <metadata_drop_action_permission_syntax>`
+     - 1
+     - Drop an action permission
+
+   * - :ref:`metadata_create_rest_endpoint`
+     - :ref:`create_rest_endpoint_args <metadata_create_rest_endpoint_syntax>`
+     - 1
+     - Create a RESTified GraphQL Endpoint
+
+   * - :ref:`metadata_drop_rest_endpoint`
+     - :ref:`drop_rest_endpoint_args <metadata_drop_rest_endpoint_syntax>`
+     - 1
+     - Drop a RESTified GraphQL Endpoint
+
+**See:**
+
+- :ref:`Tables/Views <metadata_api_tables_views>`
+- :ref:`Custom SQL Functions <metadata_api_custom_functions>`
+- :ref:`Relationships <metadata_api_relationship>`
+- :ref:`Computed Fields <metadata_api_computed_field>`
+- :ref:`Permissions <metadata_api_permission>`
+- :ref:`Remote Schema Permissions <metadata_remote_schema_api_permission>`
+- :ref:`Event Triggers <metadata_api_event_triggers>`
+- :ref:`Remote Schemas <metadata_api_remote_schemas>`
+- :ref:`Query Collections <metadata_api_query_collections>`
+- :ref:`Custom Types <metadata_api_custom_types>`
+- :ref:`Actions <metadata_api_actions>`
+- :ref:`Manage Metadata <metadata_api_manage_metadata>`
+
 
 Response structure
 ------------------
@@ -191,86 +503,23 @@ The ``resource_version`` supplied must match the version returned otherwise a 40
 
 The version is incremented on any operation that modified metadata as well as ``reload_metadata``.
 
+.. toctree::
+  :maxdepth: 1
+  :hidden:
 
-
-.. _export_metadata_examples:
-
-Export Metadata Examples
-------------------------
-
-``export_metadata`` is used to export the current metadata from the server as a JSON file.
-
-V1 Example: See :ref:`export_metadata`
-
-V2 Example:
-
-.. code-block:: http
-
-   POST /v1/metadata HTTP/1.1
-   Content-Type: application/json
-   X-Hasura-Role: admin
-
-   {
-        "type": "export_metadata",
-        "version": 2,
-        "args": {}
-   }
-
-Response:
-
-.. code-block:: json
-
-    {
-    "resource_version": 8,
-    "metadata": {
-        "version": 3,
-        "sources": [
-        {
-            "name": "default",
-            "tables": [
-            {
-                "table": {
-
-.. _replace_metadata_examples:
-
-Replace Metadata Examples
--------------------------
-
-``replace_metadata`` is used to replace the current metadata with a JSON object.
-
-V1 Example: See :ref:`replace_metadata_syntax_v1`
-
-Version 2 example with inconsistencies and allow_inconsistent_metadata=true:
-
-    HTTP/1.1 200 OK
-
-.. code-block:: json
-
-    {
-    "is_consistent": false,
-    "inconsistent_objects": [
-        {
-        "definition": {
-            "definition": {
-            "url": "http://localhost:5000/hello-graphql",
-            "forward_client_headers": false
-            },
-            "name": "test",
-            "permissions": [],
-            "comment": "testing replace metadata with remote schemas"
-        },
-        "reason": "HTTP exception occurred while sending the request to http://localhost:5000/hello-graphql",
-        "type": "remote_schema"
-        }, ...
-
-Version 2 example with invalid ``resource_version``:
-
-    HTTP/1.1 409 Conflict
-
-.. code-block:: json
-
-    {
-      "path": "$",
-      "error": "metadata resource version referenced (2) did not match current version",
-      "code": "conflict"
-    }
+  Databases <source>
+  Tables/Views <table-view>
+  Custom Functions <custom-functions>
+  Relationships <relationship>
+  Permissions <permission>
+  Remote Schema Permissions <remote-schema-permissions>
+  Computed Fields <computed-field>
+  Event Triggers <event-triggers>
+  Scheduled Triggers <scheduled-triggers>
+  Remote Schemas <remote-schemas>
+  Remote Relationships <remote-relationships>
+  Query Collections <query-collections>
+  RESTified GraphQL Endpoints <restified-endpoints>
+  Custom Types <custom-types>
+  Actions <actions>
+  Manage Metadata <manage-metadata>

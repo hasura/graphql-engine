@@ -1,11 +1,11 @@
 .. meta::
-   :description: Use relationships with the Hasura schema/metadata API
-   :keywords: hasura, docs, schema/metadata API, API reference, relationship
+   :description: Use relationships with the Hasura metadata API
+   :keywords: hasura, docs, metadata API, API reference, relationship
 
-.. _api_relationship:
+.. _metadata_api_relationship:
 
-Schema/Metadata API Reference: Relationships
-============================================
+Metadata API Reference: Relationships (v1.4 and above)
+======================================================
 
 .. contents:: Table of contents
   :backlinks: none
@@ -30,10 +30,10 @@ There are two kinds of relationships:
 - one-to-one or ``object relationships`` (e.g. ``author``).
 - one-to-many or ``array relationships`` (e.g. ``articles``).
 
-.. _create_object_relationship:
+.. _pg_create_object_relationship:
 
-create_object_relationship
---------------------------
+pg_create_object_relationship
+-----------------------------
 
 ``create_object_relationship`` is used to create an object relationship on a
 table. There cannot be an existing column or relationship with the same name. 
@@ -48,15 +48,16 @@ Create an ``object relationship`` ``author`` on ``article`` *table*,  *using* th
 
 .. code-block:: http
 
-   POST /v1/query HTTP/1.1
+   POST /v1/metadata HTTP/1.1
    Content-Type: application/json
    X-Hasura-Role: admin
 
    {
-       "type": "create_object_relationship",
+       "type": "pg_create_object_relationship",
        "args": {
            "table": "article",
            "name": "author",
+           "source": "default",
            "using": {
                "foreign_key_constraint_on" : "author_id"
            }
@@ -64,7 +65,7 @@ Create an ``object relationship`` ``author`` on ``article`` *table*,  *using* th
    }
 
 
-.. _manual_obj_relationship:
+.. _pg_manual_obj_relationship:
 
 2. Manual configuration
 ^^^^^^^^^^^^^^^^^^^^^^^
@@ -82,15 +83,16 @@ follows:
  
 .. code-block:: http
 
-   POST /v1/query HTTP/1.1
+   POST /v1/metadata HTTP/1.1
    Content-Type: application/json
    X-Hasura-Role: admin
 
    {
-       "type": "create_object_relationship",
+       "type": "pg_create_object_relationship",
        "args": {
            "table": "article",
            "name": "article_detail",
+           "source": "default",
            "using": {
                "manual_configuration" : {
                    "remote_table" : "article_detail",
@@ -111,7 +113,7 @@ follows:
    ``article`` table's ``id`` column to ``article_detail`` view's ``article_id``
    column.
 
-.. _create_object_relationship_syntax:
+.. _pg_create_object_relationship_syntax:
 
 Args syntax
 ^^^^^^^^^^^
@@ -139,11 +141,15 @@ Args syntax
      - false
      - text
      - comment
+   * - source
+     - false
+     - :ref:`SourceName <SourceName>`
+     - Name of the source database of the table (default: ``default``)
 
-.. _create_array_relationship:
+.. _pg_create_array_relationship:
 
-create_array_relationship
--------------------------
+pg_create_array_relationship
+----------------------------
 
 ``create_array_relationship`` is used to create an array relationship on a
 table. There cannot be an existing column or relationship with the same name. 
@@ -158,15 +164,16 @@ Create an ``array relationship`` ``articles`` on ``author`` *table*,  *using* th
 
 .. code-block:: http
 
-   POST /v1/query HTTP/1.1
+   POST /v1/metadata HTTP/1.1
    Content-Type: application/json
    X-Hasura-Role: admin
 
    {
-       "type": "create_array_relationship",
+       "type": "pg_create_array_relationship",
        "args": {
            "table": "author",
            "name": "articles",
+           "source": "default",
            "using": {
                "foreign_key_constraint_on" : {
                    "table" : "article",
@@ -193,15 +200,16 @@ follows:
 
 .. code-block:: http
 
-   POST /v1/query HTTP/1.1
+   POST /v1/metadata HTTP/1.1
    Content-Type: application/json
    X-Hasura-Role: admin
 
    {
-       "type": "create_array_relationship",
+       "type": "pg_create_array_relationship",
        "args": {
            "table": "author",
            "name": "article_details",
+           "source": "default",
            "using": {
                "manual_configuration" : {
                    "remote_table" : "article_detail",
@@ -222,7 +230,7 @@ follows:
    ``author`` table's ``id`` column to ``article_detail`` view's ``author_id``
    column.
 
-.. _create_array_relationship_syntax:
+.. _pg_create_array_relationship_syntax:
 
 Args syntax
 ^^^^^^^^^^^
@@ -250,13 +258,17 @@ Args syntax
      - false
      - text
      - comment
+   * - source
+     - false
+     - :ref:`SourceName <SourceName>`
+     - Name of the source database of the table (default: ``default``)
 
-.. _drop_relationship:
+.. _pg_drop_relationship:
 
-drop_relationship
------------------
+pg_drop_relationship
+--------------------
 
-``drop_relationship`` is used to drop a relationship (both object and array) on
+``pg_drop_relationship`` is used to drop a relationship (both object and array) on
 a table. If there are other objects dependent on this relationship like
 permissions and query templates, etc., the request will fail and report the dependencies
 unless ``cascade`` is set to ``true``. If ``cascade`` is set to ``true``, the
@@ -266,19 +278,20 @@ An example:
 
 .. code-block:: http
 
-   POST /v1/query HTTP/1.1
+   POST /v1/metadata HTTP/1.1
    Content-Type: application/json
    X-Hasura-Role: admin
 
    {
-       "type": "drop_relationship",
+       "type": "pg_drop_relationship",
        "args": {
            "table": "article",
+           "source": "default",
            "relationship": "article_detail"
        }
    }
 
-.. _drop_relationship_syntax:
+.. _pg_drop_relationship_syntax:
 
 Args syntax
 ^^^^^^^^^^^
@@ -302,38 +315,43 @@ Args syntax
      - false
      - Boolean
      - When set to ``true``, all the dependent items on this relationship are also dropped
+   * - source
+     - false
+     - :ref:`SourceName <SourceName>`
+     - Name of the source database of the table (default: ``default``)
 
 .. note::
 
    Be careful when using ``cascade``. First, try running the request without
    ``cascade`` or ``cascade`` set to ``false``.
 
-.. _set_relationship_comment:
+.. _pg_set_relationship_comment:
 
-set_relationship_comment
-------------------------
+pg_set_relationship_comment
+---------------------------
 
-``set_relationship_comment`` is used to set/update the comment on a
-relationship. Setting the comment to ``null`` removes it. 
+``pg_set_relationship_comment`` is used to set/update the comment on a
+relationship. Setting the comment to ``null`` removes it.
 
 An example:
 
 .. code-block:: http
 
-   POST /v1/query HTTP/1.1
+   POST /v1/metadata HTTP/1.1
    Content-Type: application/json
    X-Hasura-Role: admin
 
    {
-       "type": "set_relationship_comment",
+       "type": "pg_set_relationship_comment",
        "args": {
            "table": "article",
+           "source": "default",
            "name": "article_detail",
            "comment" : "has extra information about an article like count etc."
        }
    }
 
-.. _set_relationship_comment_syntax:
+.. _pg_set_relationship_comment_syntax:
 
 Args syntax
 ^^^^^^^^^^^
@@ -357,32 +375,38 @@ Args syntax
      - false
      - Text
      - Comment
+   * - source
+     - false
+     - :ref:`SourceName <SourceName>`
+     - Name of the source database of the table (default: ``default``)
 
-.. _rename_relationship:
 
-rename_relationship
--------------------
+.. _pg_rename_relationship:
 
-``rename_relationship`` is used to modify the name of an existing relationship.
+pg_rename_relationship
+----------------------
+
+``pg_rename_relationship`` is used to modify the name of an existing relationship.
 
 An example:
 
 .. code-block:: http
 
-   POST /v1/query HTTP/1.1
+   POST /v1/metadata HTTP/1.1
    Content-Type: application/json
    X-Hasura-Role: admin
 
    {
-       "type": "rename_relationship",
+       "type": "pg_rename_relationship",
        "args": {
            "table": "article",
            "name": "article_details",
+           "source": "default",
            "new_name": "article_detail"
        }
    }
 
-.. _rename_relationship_syntax:
+.. _pg_rename_relationship_syntax:
 
 Args syntax
 ^^^^^^^^^^^
@@ -406,3 +430,7 @@ Args syntax
      - true
      - :ref:`RelationshipName`
      - New relationship name
+   * - source
+     - false
+     - :ref:`SourceName <SourceName>`
+     - Name of the source database of the table (default: ``default``)

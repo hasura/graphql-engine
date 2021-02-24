@@ -1,11 +1,11 @@
 .. meta::
    :description: Manage remote schema permissions with the Hasura metadata API
-   :keywords: hasura, docs, schema/metadata API, API reference, remote schema permissions, permission
+   :keywords: hasura, docs, metadata API, API reference, remote schema permissions, permission
 
-.. _remote_schema_api_permission:
+.. _metadata_remote_schema_api_permission:
 
-Schema/Metadata API Reference: Remote Schema Permissions
-========================================================
+Metadata API Reference: Remote Schema Permissions (v1.4 and above)
+==================================================================
 
 .. contents:: Table of contents
    :backlinks: none
@@ -23,7 +23,7 @@ Remote schema permissions can be defined to:
 By default, the ``admin`` role has unrestricted access to
 the  remote schema.
 
-.. _add_remote_schema_permissions:
+.. _metadata_add_remote_schema_permissions:
 
 add_remote_schema_permissions
 -----------------------------
@@ -31,7 +31,6 @@ add_remote_schema_permissions
 This API takes the schema `(GraphQL IDL format) <http://spec.graphql.org/June2018/#sec-Type-System>`__
 which should be a subset of the remote schema and the role for which this restricted schema is exposed.
 The schema also accepts a custom ``@preset`` directive for setting argument presets.
-
 
 
 Suppose the following is the schema document of the  remote.
@@ -160,7 +159,7 @@ API should be called with the schema document.
 
 .. code-block:: http
 
-   POST /v1/query HTTP/1.1
+   POST /v1/metadata HTTP/1.1
    Content-Type: application/json
    X-Hasura-Role: admin
 
@@ -312,7 +311,7 @@ The ``user`` role won't be able to provide the value for the ``limit`` argument 
 the ``customer_transactions_history`` field because the ``limit`` has a preset set
 and the value will be added by the graphql-engine before it queries the remote schema.
 
-.. _add_remote_schema_permissions_syntax:
+.. _metadata_add_remote_schema_permissions_syntax:
 
 Args syntax
 ^^^^^^^^^^^
@@ -341,14 +340,7 @@ Args syntax
      - text
      - Comment
 
-.. note::
-
-   ``add_remote_schema_permissions`` will only work when the graphql-engine has enabled remote
-   schema permissions. Remote schema permissions can be enabled by running the graphql-engine
-   with the ``--enable-remote-schema-permissions`` server flag or by setting the   ``HASURA_GRAPHQL_ENABLE_REMOTE_SCHEMA_PERMISSIONS`` environment variable.
-
-
-.. _drop_remote_schema_permissions:
+.. _metadata_drop_remote_schema_permissions:
 
 drop_remote_schema_permissions
 ------------------------------
@@ -359,7 +351,7 @@ An example:
 
 .. code-block:: http
 
-   POST /v1/query HTTP/1.1
+   POST /v1/metadata HTTP/1.1
    Content-Type: application/json
    X-Hasura-Role: admin
 
@@ -371,7 +363,7 @@ An example:
        }
    }
 
-.. _drop_remote_schema_permissions_syntax:
+.. _metadata_drop_remote_schema_permissions_syntax:
 
 Args syntax
 ^^^^^^^^^^^

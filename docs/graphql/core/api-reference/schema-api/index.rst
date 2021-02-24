@@ -47,9 +47,9 @@ Request body
 
 .. parsed-literal::
 
-   Query_
+   :ref:`Query <schema_query>`
 
-.. _Query_:
+.. _schema_query:
 
 Query
 *****
@@ -88,12 +88,12 @@ The various types of queries are listed in the following table:
      - Synopsis
 
    * - **bulk**
-     - :ref:`Query <Query>` array
+     - :ref:`Query <schema_query>` array
      - 1
      - Execute multiple operations in a single query
 
-   * - :ref:`run_sql`
-     - :ref:`run_sql_args <run_sql_syntax>`
+   * - :ref:`schema_run_sql`
+     - :ref:`run_sql_args <schema_run_sql_syntax>`
      - 1
      - Run SQL directly on Postgres
 
@@ -156,3 +156,9 @@ to explicitly state that this API is not enabled i.e. remove it from the list of
    HASURA_GRAPHQL_ENABLED_APIS="graphql"
 
 See :ref:`server_flag_reference` for info on setting the above flag/env var.
+
+.. toctree::
+   :maxdepth: 1
+   :hidden:
+
+   Run SQL <run-sql>

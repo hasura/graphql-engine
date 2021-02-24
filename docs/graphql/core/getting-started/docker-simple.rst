@@ -52,7 +52,7 @@ contains all installation manifests required to deploy Hasura anywhere. Get the 
       # or run
       curl https://raw.githubusercontent.com/hasura/graphql-engine/master/install-manifests/docker-compose-v2.0.0/docker-compose.yaml -o docker-compose.yml
 
-
+   See `changelog <https://github.com/hasura/graphql-engine/releases/tag/v2.0.0-alpha.1>`__
 
 Step 2: Run Hasura GraphQL engine & Postgres
 --------------------------------------------

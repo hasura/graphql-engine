@@ -1,9 +1,9 @@
 .. meta::
-   :description: Manage scheduled triggers with the Hasura schema/metadata API
-   :keywords: hasura, docs, schema/metadata API, API reference, scheduled trigger
+   :description: Manage scheduled triggers with the Hasura metadata API
+   :keywords: hasura, docs, metadata API, API reference, scheduled trigger
 
-Schema/Metadata API Reference: Scheduled Triggers
-=================================================
+Metadata API Reference: Scheduled Triggers (v1.4 and above)
+===========================================================
 
 .. contents:: Table of contents
   :backlinks: none
@@ -15,7 +15,7 @@ Introduction
 
 Scheduled triggers are used to invoke webhooks based on a timestamp or cron.
 
-.. _create_cron_trigger:
+.. _metadata_create_cron_trigger:
 
 create_cron_trigger
 -------------------
@@ -24,7 +24,7 @@ create_cron_trigger
 
 .. code-block:: http
 
-   POST /v1/query HTTP/1.1
+   POST /v1/metadata HTTP/1.1
    Content-Type: application/json
    X-Hasura-Role: admin
 
@@ -43,7 +43,7 @@ create_cron_trigger
        }
    }
 
-.. _create_cron_trigger_syntax:
+.. _metadata_create_cron_trigger_syntax:
 
 Args syntax
 ^^^^^^^^^^^
@@ -95,7 +95,7 @@ Args syntax
      - When replace is set to ``true``, the cron trigger will be updated(if exists) and when it's ``false`` or the
        field is omitted, then a new cron trigger will be created.
 
-.. _delete_cron_trigger:
+.. _metadata_delete_cron_trigger:
 
 delete_cron_trigger
 -------------------
@@ -105,7 +105,7 @@ delete_cron_trigger
 
 .. code-block:: http
 
-   POST /v1/query HTTP/1.1
+   POST /v1/metadata HTTP/1.1
    Content-Type: application/json
    X-Hasura-Role: admin
 
@@ -116,7 +116,7 @@ delete_cron_trigger
        }
    }
 
-.. _delete_cron_trigger_syntax:
+.. _metadata_delete_cron_trigger_syntax:
 
 Args syntax
 ^^^^^^^^^^^
@@ -133,7 +133,7 @@ Args syntax
      - :ref:`TriggerName <TriggerName>`
      - Name of the cron trigger
 
-.. _create_scheduled_event:
+.. _metadata_create_scheduled_event:
 
 create_scheduled_event
 ----------------------
@@ -142,7 +142,7 @@ create_scheduled_event
 
 .. code-block:: http
 
-   POST /v1/query HTTP/1.1
+   POST /v1/metadata HTTP/1.1
    Content-Type: application/json
    X-Hasura-Role: admin
 
@@ -163,7 +163,7 @@ create_scheduled_event
        }
    }
 
-.. _create_scheduled_event_syntax:
+.. _metadata_create_scheduled_event_syntax:
 
 Args syntax
 ^^^^^^^^^^^

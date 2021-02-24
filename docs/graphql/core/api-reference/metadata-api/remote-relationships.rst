@@ -1,9 +1,9 @@
 .. meta::
-   :description: Manage remote relationships with the Hasura schema/metadata API
-   :keywords: hasura, docs, schema/metadata API, API reference, remote joins, remote relationships
+   :description: Manage remote relationships with the Hasura metadata API
+   :keywords: hasura, docs, metadata API, API reference, remote joins, remote relationships
 
-Schema/Metadata API Reference: Remote Relationships
-===================================================
+Metadata API Reference: Remote Relationships (v1.4 and above)
+=============================================================
 
 .. contents:: Table of contents
   :backlinks: none
@@ -15,7 +15,7 @@ Introduction
 
 Remote Relationships allow you to join tables with remote schemas.
 
-.. _create_remote_relationship:
+.. _metadata_create_remote_relationship:
 
 create_remote_relationship
 --------------------------
@@ -24,7 +24,7 @@ create_remote_relationship
 
 .. code-block:: http
 
-   POST /v1/query HTTP/1.1
+   POST /v1/metadata HTTP/1.1
    Content-Type: application/json
    X-Hasura-Role: admin
 
@@ -45,7 +45,7 @@ create_remote_relationship
       }
    }
 
-.. _create_remote_relationship_syntax:
+.. _metadata_create_remote_relationship_syntax:
 
 Args syntax
 ^^^^^^^^^^^
@@ -78,7 +78,7 @@ Args syntax
      - :ref:`RemoteField`
      - The schema tree ending at the field in remote schema which needs to be joined with.
 
-.. _update_remote_relationship:
+.. _metadata_update_remote_relationship:
 
 update_remote_relationship
 --------------------------
@@ -87,7 +87,7 @@ update_remote_relationship
 
 .. code-block:: http
 
-   POST /v1/query HTTP/1.1
+   POST /v1/metadata HTTP/1.1
    Content-Type: application/json
    X-Hasura-Role: admin
 
@@ -111,7 +111,7 @@ update_remote_relationship
      }
    }
 
-.. _update_remote_relationship_syntax:
+.. _metadata_update_remote_relationship_syntax:
 
 Args syntax
 ^^^^^^^^^^^
@@ -144,7 +144,7 @@ Args syntax
      - :ref:`RemoteField`
      - The schema tree ending at the field in remote schema which needs to be joined with.
 
-.. _delete_remote_relationship:
+.. _metadata_delete_remote_relationship:
 
 delete_remote_relationship
 --------------------------
@@ -153,7 +153,7 @@ delete_remote_relationship
 
 .. code-block:: http
 
-   POST /v1/query HTTP/1.1
+   POST /v1/metadata HTTP/1.1
    Content-Type: application/json
    X-Hasura-Role: admin
 
@@ -168,7 +168,7 @@ delete_remote_relationship
        }
    }
 
-.. _delete_remote_relationship_syntax:
+.. _metadata_delete_remote_relationship_syntax:
 
 Args syntax
 ^^^^^^^^^^^

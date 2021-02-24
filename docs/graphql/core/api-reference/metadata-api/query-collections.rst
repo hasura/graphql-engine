@@ -1,11 +1,11 @@
 .. meta::
-   :description: Manage query collections with the Hasura schema/metadata API
-   :keywords: hasura, docs, schema/metadata API, API reference, query collection
+   :description: Manage query collections with the Hasura metadata API
+   :keywords: hasura, docs, metadata API, API reference, query collection
 
-.. _api_query_collections:
+.. _metadata_api_query_collections:
 
-Schema/Metadata API Reference: Query collections
-================================================
+Metadata API Reference: Query collections (v1.4 and above)
+==========================================================
 
 .. contents:: Table of contents
   :backlinks: none
@@ -19,7 +19,7 @@ Group queries using query collections.
 
 Create/drop query collections and add/drop a query to a collection using the following query types.
 
-.. _create_query_collection:
+.. _metadata_create_query_collection:
 
 create_query_collection
 -----------------------
@@ -28,7 +28,7 @@ create_query_collection
 
 .. code-block:: http
 
-   POST /v1/query HTTP/1.1
+   POST /v1/metadata HTTP/1.1
    Content-Type: application/json
    X-Hasura-Role: admin
 
@@ -45,7 +45,7 @@ create_query_collection
         }
    }
 
-.. _create_query_collection_syntax:
+.. _metadata_create_query_collection_syntax:
 
 Args Syntax
 ^^^^^^^^^^^
@@ -71,7 +71,7 @@ Args Syntax
      - Optional comment
 
 
-.. _drop_query_collection:
+.. _metadata_drop_query_collection:
 
 drop_query_collection
 ---------------------
@@ -80,7 +80,7 @@ drop_query_collection
 
 .. code-block:: http
 
-   POST /v1/query HTTP/1.1
+   POST /v1/metadata HTTP/1.1
    Content-Type: application/json
    X-Hasura-Role: admin
 
@@ -92,7 +92,7 @@ drop_query_collection
         }
    }
 
-.. _drop_query_collection_syntax:
+.. _metadata_drop_query_collection_syntax:
 
 Args syntax
 ^^^^^^^^^^^
@@ -113,7 +113,7 @@ Args syntax
      - boolean
      - When set to ``true``, the collection (if present) is removed from the allowlist
 
-.. _add_query_to_collection:
+.. _metadata_add_query_to_collection:
 
 add_query_to_collection
 -----------------------
@@ -122,7 +122,7 @@ add_query_to_collection
 
 .. code-block:: http
 
-   POST /v1/query HTTP/1.1
+   POST /v1/metadata HTTP/1.1
    Content-Type: application/json
    X-Hasura-Role: admin
 
@@ -135,7 +135,7 @@ add_query_to_collection
         }
    }
 
-.. _add_query_to_collection_syntax:
+.. _metadata_add_query_to_collection_syntax:
 
 Args Syntax
 ^^^^^^^^^^^
@@ -160,7 +160,7 @@ Args Syntax
      - text
      - The GraphQL query text
 
-.. _drop_query_from_collection:
+.. _metadata_drop_query_from_collection:
 
 drop_query_from_collection
 --------------------------
@@ -169,7 +169,7 @@ drop_query_from_collection
 
 .. code-block:: http
 
-   POST /v1/query HTTP/1.1
+   POST /v1/metadata HTTP/1.1
    Content-Type: application/json
    X-Hasura-Role: admin
 
@@ -181,7 +181,7 @@ drop_query_from_collection
         }
    }
 
-.. _drop_query_from_collection_syntax:
+.. _metadata_drop_query_from_collection_syntax:
 
 Args Syntax
 ^^^^^^^^^^^
@@ -202,7 +202,7 @@ Args Syntax
      - :ref:`QueryName`
      - Name of the query
 
-.. _add_collection_to_allowlist:
+.. _metadata_add_collection_to_allowlist:
 
 add_collection_to_allowlist
 ---------------------------
@@ -211,7 +211,7 @@ add_collection_to_allowlist
 
 .. code-block:: http
 
-   POST /v1/query HTTP/1.1
+   POST /v1/metadata HTTP/1.1
    Content-Type: application/json
    X-Hasura-Role: admin
 
@@ -222,7 +222,7 @@ add_collection_to_allowlist
         }
    }
 
-.. _add_collection_to_allowlist_syntax:
+.. _metadata_add_collection_to_allowlist_syntax:
 
 Args Syntax
 ^^^^^^^^^^^
@@ -239,7 +239,7 @@ Args Syntax
      - :ref:`CollectionName`
      - Name of a query collection to be added to the allow-list
 
-.. _drop_collection_from_allowlist:
+.. _metadata_drop_collection_from_allowlist:
 
 drop_collection_from_allowlist
 ------------------------------
@@ -248,7 +248,7 @@ drop_collection_from_allowlist
 
 .. code-block:: http
 
-   POST /v1/query HTTP/1.1
+   POST /v1/metadata HTTP/1.1
    Content-Type: application/json
    X-Hasura-Role: admin
 
@@ -259,7 +259,7 @@ drop_collection_from_allowlist
         }
    }
 
-.. _drop_collection_from_allowlist_syntax:
+.. _metadata_drop_collection_from_allowlist_syntax:
 
 Args Syntax
 ^^^^^^^^^^^

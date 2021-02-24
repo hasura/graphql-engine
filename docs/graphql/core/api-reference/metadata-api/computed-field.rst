@@ -1,11 +1,11 @@
 .. meta::
-   :description: Manage computed fields with the Hasura schema/metadata API
-   :keywords: hasura, docs, schema/metadata API, API reference, computed field
+   :description: Manage computed fields with the Hasura metadata API
+   :keywords: hasura, docs, metadata API, API reference, computed field
 
-.. _api_computed_field:
+.. _metadata_api_computed_field:
 
-Schema/Metadata API Reference: Computed Fields
-==============================================
+Metadata API Reference: Computed Fields (v1.4 and above)
+========================================================
 
 .. contents:: Table of contents
   :backlinks: none
@@ -22,12 +22,12 @@ Currenty, the Hasura GraphQL engine supports functions returning
 `table row types <https://www.postgresql.org/docs/current/rowtypes.html#ROWTYPES-DECLARING>`__
 as computed fields.
 
-.. _add_computed_field:
+.. _pg_add_computed_field:
 
-add_computed_field
-------------------
+pg_add_computed_field
+---------------------
 
-``add_computed_field`` is used to define a computed field in a table.
+``pg_add_computed_field`` is used to define a computed field in a table.
 There cannot be an existing column or relationship or computed field with
 the same name.
 
@@ -36,17 +36,18 @@ an SQL function called ``author_full_name``:
 
 .. code-block:: http
 
-   POST /v1/query HTTP/1.1
+   POST /v1/metadata HTTP/1.1
    Content-Type: application/json
    X-Hasura-Role: admin
 
    {
-       "type":"add_computed_field",
+       "type":"pg_add_computed_field",
        "args":{
            "table":{
                "name":"author",
                "schema":"public"
            },
+           "source": "default",
            "name":"full_name",
            "definition":{
                "function":{
@@ -58,7 +59,7 @@ an SQL function called ``author_full_name``:
        }
    }
 
-.. _add_computed_field_syntax:
+.. _pg_add_computed_field_syntax:
 
 Args syntax
 ^^^^^^^^^^^
@@ -86,13 +87,17 @@ Args syntax
      - false
      - text
      - comment
+   * - source
+     - false
+     - :ref:`SourceName <SourceName>`
+     - Name of the source database of the table (default: ``default``)
 
-.. _drop_computed_field:
+.. _pg_drop_computed_field:
 
-drop_computed_field
--------------------
+pg_drop_computed_field
+----------------------
 
-``drop_computed_field`` is used to drop a computed field of a table. If
+``pg_drop_computed_field`` is used to drop a computed field of a table. If
 there are other objects dependent on this computed field, like permissions, the request will fail and report the
 dependencies unless ``cascade`` is set to ``true``. If ``cascade`` is set to ``true``, the dependent objects
 are also dropped.
@@ -101,23 +106,24 @@ Drop a computed field ``full_name`` from a table ``author``:
 
 .. code-block:: http
 
-   POST /v1/query HTTP/1.1
+   POST /v1/metadata HTTP/1.1
    Content-Type: application/json
    X-Hasura-Role: admin
 
    {
-       "type":"drop_computed_field",
+       "type":"pg_drop_computed_field",
        "args":{
            "table":{
                "name":"author",
                "schema":"public"
            },
+           "source": "default",
            "name":"full_name",
            "cascade": false
        }
    }
 
-.. _drop_computed_field_syntax:
+.. _pg_drop_computed_field_syntax:
 
 Args syntax
 ^^^^^^^^^^^
@@ -141,3 +147,8 @@ Args syntax
      - false
      - Boolean
      - When set to ``true``, all the dependent items (if any) on this computed fields are also dropped
+   * - source
+     - false
+     - :ref:`SourceName <SourceName>`
+     - Name of the source database of the table (default: ``default``)
+

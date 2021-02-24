@@ -78,8 +78,8 @@ Reference documentation
 -----------------------
 
 - :ref:`migrations_how_it_works`
-- :ref:`Migration file format <migration_file_format_v3>`
-- :ref:`Metadata format <metadata_format_v3>`
+- :ref:`Migration file format <migration_file_format>`
+- :ref:`Metadata format <metadata_format>`
 
 .. toctree::
   :maxdepth: 1

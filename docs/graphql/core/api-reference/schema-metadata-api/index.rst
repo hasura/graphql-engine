@@ -44,9 +44,9 @@ Request body
 
 .. parsed-literal::
 
-   Query_
+   :ref:`Query <api_query>`
 
-.. _Query:
+.. _api_query:
 
 Query
 *****
@@ -85,7 +85,7 @@ The various types of queries are listed in the following table:
      - Synopsis
 
    * - **bulk**
-     - :ref:`Query <Query>` array
+     - :ref:`Query <api_query>` array
      - 1
      - Execute multiple operations in a single query
 
@@ -118,6 +118,11 @@ The various types of queries are listed in the following table:
      - :ref:`untrack_table_args <untrack_table_syntax>`
      - 1
      - Remove a table/view
+
+   * - :ref:`set_table_is_enum`
+     - :ref:`set_table_is_enum_args <set_table_is_enum_syntax>`
+     - 1
+     - Set a tracked table as an enum table
 
    * - :ref:`track_function`
      - :ref:`FunctionName <FunctionName>`
@@ -289,14 +294,13 @@ The various types of queries are listed in the following table:
      - 1
      - Delete an existing remote relationship
 
-
    * - :ref:`export_metadata`
      - :ref:`Empty Object`
      - 1
      - Export the current metadata
 
-   * - :ref:`replace_metadata_v1`
-     - :ref:`replace_metadata_args <replace_metadata_syntax_v1>`
+   * - :ref:`replace_metadata`
+     - :ref:`replace_metadata_args <replace_metadata_syntax>`
      - 1
      - Import and replace existing metadata
 
@@ -495,4 +499,3 @@ See :ref:`server_flag_reference` for info on setting the above flag/env var.
   Custom Types <custom-types>
   Actions <actions>
   Manage Metadata <manage-metadata>
-  Common syntax definitions <syntax-defs>

@@ -1,11 +1,11 @@
 .. meta::
-   :description: Manage actions with the Hasura schema/metadata API
-   :keywords: hasura, docs, schema/metadata API, API reference, actions
+   :description: Manage actions with the Hasura metadata API
+   :keywords: hasura, docs, metadata API, API reference, actions
 
-.. _api_actions:
+.. _metadata_api_actions:
 
-Schema/Metadata API Reference: Actions
-======================================
+Metadata API Reference: Actions (v1.4 and above)
+================================================
 
 .. contents:: Table of contents
   :backlinks: none
@@ -17,7 +17,7 @@ Introduction
 
 **actions** are user defined mutations with custom business logic.
 
-.. _create_action:
+.. _metadata_create_action:
 
 create_action
 -------------
@@ -28,7 +28,7 @@ Create a synchronous action with name ``create_user``:
 
 .. code-block:: http
 
-   POST /v1/query HTTP/1.1
+   POST /v1/metadata HTTP/1.1
    Content-Type: application/json
    X-Hasura-Role: admin
 
@@ -57,7 +57,7 @@ Create a synchronous action with name ``create_user``:
    }
 
 
-.. _create_action_syntax:
+.. _metadata_create_action_syntax:
 
 Args syntax
 ^^^^^^^^^^^
@@ -82,7 +82,11 @@ Args syntax
      - text
      - comment
 
-.. _drop_action:
+.. note::
+
+   The ``GraphQL Types`` used in creating an action must be defined before via :ref:`Custom Types <metadata_api_custom_types>`
+
+.. _metadata_drop_action:
 
 drop_action
 -----------
@@ -93,7 +97,7 @@ Drop an action ``create_user``:
 
 .. code-block:: http
 
-   POST /v1/query HTTP/1.1
+   POST /v1/metadata HTTP/1.1
    Content-Type: application/json
    X-Hasura-Role: admin
 
@@ -105,7 +109,7 @@ Drop an action ``create_user``:
       }
    }
 
-.. _drop_action_syntax:
+.. _metadata_drop_action_syntax:
 
 Args syntax
 ^^^^^^^^^^^
@@ -126,7 +130,7 @@ Args syntax
      - boolean
      - If set to ``true`` and action kind is ``asynchronous``, related data is deleted from catalog. (default: ``true``)
 
-.. _update_action:
+.. _metadata_update_action:
 
 update_action
 -------------
@@ -138,7 +142,7 @@ Update an action ``create_user`` by making it's kind to ``asynchronous``:
 
 .. code-block:: http
 
-   POST /v1/query HTTP/1.1
+   POST /v1/metadata HTTP/1.1
    Content-Type: application/json
    X-Hasura-Role: admin
 
@@ -165,7 +169,7 @@ Update an action ``create_user`` by making it's kind to ``asynchronous``:
    }
 
 
-.. _update_action_syntax:
+.. _metadata_update_action_syntax:
 
 Args syntax
 ^^^^^^^^^^^
@@ -186,7 +190,7 @@ Args syntax
      - :ref:`ActionDefinition`
      - Definition of the action to be replaced
 
-.. _create_action_permission:
+.. _metadata_create_action_permission:
 
 create_action_permission
 ------------------------
@@ -195,7 +199,7 @@ create_action_permission
 
 .. code-block:: http
 
-   POST /v1/query HTTP/1.1
+   POST /v1/metadata HTTP/1.1
    Content-Type: application/json
    X-Hasura-Role: admin
 
@@ -207,7 +211,7 @@ create_action_permission
      }
    }
 
-.. _create_action_permission_syntax:
+.. _metadata_create_action_permission_syntax:
 
 Args syntax
 ^^^^^^^^^^^
@@ -232,7 +236,7 @@ Args syntax
      - text
      - comment
 
-.. _drop_action_permission:
+.. _metadata_drop_action_permission:
 
 drop_action_permission
 ----------------------
@@ -241,7 +245,7 @@ drop_action_permission
 
 .. code-block:: http
 
-   POST /v1/query HTTP/1.1
+   POST /v1/metadata HTTP/1.1
    Content-Type: application/json
    X-Hasura-Role: admin
 
@@ -253,7 +257,7 @@ drop_action_permission
      }
    }
 
-.. _drop_action_permission_syntax:
+.. _metadata_drop_action_permission_syntax:
 
 Args syntax
 ^^^^^^^^^^^
