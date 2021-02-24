@@ -70,9 +70,9 @@ class CollapsibleToggle extends React.Component<
     return (
       <details
         className={styles.collapsibleWrapper}
-        onToggle={event => {
+        onToggle={(event: React.ChangeEvent<HTMLDetailsElement>) => {
           // it gets called on mount if open=true, so we check if we really need to call handler
-          if ((event.target as any).open !== isOpen) {
+          if (event.target.open !== isOpen) {
             toggleHandler();
           }
         }}
