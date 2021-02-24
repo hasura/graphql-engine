@@ -1,3 +1,4 @@
+/* eslint-disable no-underscore-dangle */
 import { AnyAction, Dispatch } from 'redux';
 import { ThunkDispatch } from 'redux-thunk';
 
@@ -109,9 +110,14 @@ const setOnboardingCompletedInDB = (
   getState: GetReduxState
 ) => {
   const successCb = () => {
-    dispatch(
-      showSuccessNotification('Success', 'Dismissed console onboarding')
-    );
+    // the success notification won't be shown on cloud
+    const isCloudContext =
+      window.__env.userRole || window.location.host.includes('cloud');
+    if (!isCloudContext) {
+      dispatch(
+        showSuccessNotification('Success', 'Dismissed console onboarding')
+      );
+    }
   };
 
   const errorCb = (error: Error) => {
