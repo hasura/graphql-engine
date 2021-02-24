@@ -1,5 +1,5 @@
 import React from 'react';
-import { Route, IndexRedirect } from 'react-router';
+import { Route, IndexRedirect, IndexRoute } from 'react-router';
 
 import { connect } from 'react-redux';
 
@@ -30,7 +30,7 @@ import generatedVoyagerConnector from './components/Services/VoyagerView/Voyager
 import generatedLoginConnector from './components/Login/Login';
 
 import settingsContainer from './components/Services/Settings/Container';
-import apiContainer from './components/Services/ApiExplorer/Container';
+import ApiContainer from './components/Services/ApiExplorer/Container';
 import metadataOptionsConnector from './components/Services/Settings/MetadataOptions/MetadataOptions';
 import metadataStatusConnector from './components/Services/Settings/MetadataStatus/MetadataStatus';
 import allowedQueriesConnector from './components/Services/Settings/AllowedQueries/AllowedQueries';
@@ -121,8 +121,8 @@ const routes = store => {
           requireAsyncGlobals(store),
         ])}
       >
-        <IndexRedirect to="api/api-explorer" />
-        <Route path="api" component={apiContainer}>
+        <IndexRoute component={ApiContainer} />
+        <Route path="api" component={ApiContainer}>
           <IndexRedirect to="api-explorer" />
           <Route
             path="api-explorer"

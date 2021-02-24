@@ -23,7 +23,12 @@ const TopNav: React.FC<TopNavProps> = ({ location }) => {
     },
   ];
 
-  const isActive = (link: string) => location.pathname.includes(link);
+  const isActive = (link: string) => {
+    if (location.pathname === '' || location.pathname === '/') {
+      return link.includes('api-explorer');
+    }
+    return location.pathname.includes(link);
+  };
 
   return (
     <div className={styles.topNavContainer}>
