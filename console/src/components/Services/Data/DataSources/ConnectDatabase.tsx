@@ -22,7 +22,12 @@ import { Driver } from '../../../../dataSources';
 interface ConnectDatabaseProps extends InjectedProps {}
 
 const connectionRadioName = 'connection-type';
-const defaultPGURL = 'postgresql://username:password@hostname:5432/database';
+const dbTypePlaceholders: Record<Driver, string> = {
+  postgres: 'postgresql://username:password@hostname:5432/database',
+  mssql:
+    'Driver={ODBC Driver 17 for SQL Server};Server=serveraddress;Database=dbname;Uid=username;Pwd=password;',
+  mysql: 'MySQL connection string',
+};
 
 const connectionRadios = [
   {
@@ -118,7 +123,11 @@ const ConnectDatabase: React.FC<ConnectDatabaseProps> = props => {
       // TODO: server to provide API
     }
 
-    if (connectionType === connectionTypes.DATABASE_URL) {
+    if (
+      connectionType === connectionTypes.DATABASE_URL ||
+      (connectionType === connectionTypes.CONNECTION_PARAMS &&
+        connectDBInputState.dbType === 'mssql')
+    ) {
       if (!connectDBInputState.databaseURLState.dbURL.trim()) {
         dispatch(
           showErrorNotification(
@@ -132,7 +141,7 @@ const ConnectDatabase: React.FC<ConnectDatabaseProps> = props => {
       setLoading(true);
       connectDataSource(
         dispatch,
-        connectionType,
+        connectionTypes.DATABASE_URL,
         connectDBInputState,
         onSuccessConnectDBCb
       )
@@ -274,7 +283,7 @@ const ConnectDatabase: React.FC<ConnectDatabaseProps> = props => {
                 })
               }
               value={connectDBInputState.databaseURLState.dbURL}
-              placeholder={defaultPGURL}
+              placeholder={dbTypePlaceholders[connectDBInputState.dbType]}
               disabled={isEditState}
             />
           ) : null}
