@@ -1,6 +1,12 @@
 # Hasura GraphQL Engine Changelog
 
 ## Next release
+
+### Bug fixes and improvements
+
+- server/mssql: fix runtime errors when selecting geography/geometry columns
+
+## v1.4.0-alpha.2
 ### MSSQL support
 
 It's now possible to add a MSSQL server as a source. For now, only read-only queries and subscriptions are supported.

@@ -587,14 +587,20 @@ fromAnnColumnField ::
   -> ReaderT EntityAlias FromIr Expression
 fromAnnColumnField _stringifyNumbers annColumnField = do
   fieldName <- fromPGCol pgCol
-  if asText || True -- TODO: FIXME:
-               -- TODO: Does MSSQL support bignums? Probably, but needs researching.
-               {-(IR.isScalarColumnWhere PG.isBigNum typ && stringifyNumbers == StringifyNumbers)-}
-     then pure (ToStringExpression (ColumnExpression fieldName))
+  -- TODO: Handle stringifying large numbers
+  {-(IR.isScalarColumnWhere PG.isBigNum typ && stringifyNumbers == StringifyNumbers)-}
+
+  -- for geometry and geography values, the automatic json encoding on sql
+  -- server would fail. So we need to convert it to a format the json encoding
+  -- handles. Ideally we want this representation to be GeoJSON but sql server
+  -- doesn't have any functions to convert to GeoJSON format. So we return it in
+  -- WKT format
+  if typ == (IR.ColumnScalar GeometryType) || typ == (IR.ColumnScalar GeographyType)
+     then pure $ MethodExpression (ColumnExpression fieldName) "STAsText" []
      else pure (ColumnExpression fieldName)
   where
-    IR.AnnColumnField { _acfInfo = IR.ColumnInfo{pgiColumn=pgCol,pgiType=_typ}
-                      , _acfAsText = asText :: Bool
+    IR.AnnColumnField { _acfInfo = IR.ColumnInfo{pgiColumn=pgCol,pgiType=typ}
+                      , _acfAsText = _asText :: Bool
                       , _acfOp = _ :: Maybe (IR.ColumnOp 'MSSQL) -- TODO: What's this?
                       } = annColumnField
 

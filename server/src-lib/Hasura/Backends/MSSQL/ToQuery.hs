@@ -93,6 +93,10 @@ fromExpression =
       "(" <+> fromExpression x <+> ") != (" <+> fromExpression y <+> ")"
     ToStringExpression e -> "CONCAT(" <+> fromExpression e <+> ", '')"
     SelectExpression s -> "(" <+> IndentPrinter 1 (fromSelect s) <+> ")"
+    MethodExpression field method args ->
+      fromExpression field <+> "." <+>
+      fromString (T.unpack method) <+>
+      "(" <+> (SeqPrinter $ map fromExpression args) <+> ")"
     OpExpression op x y ->
       "(" <+>
       fromExpression x <+>

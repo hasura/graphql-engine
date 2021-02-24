@@ -3,8 +3,7 @@
 -- |
 
 module Hasura.Backends.MSSQL.Meta
-  ( MetadataError(..)
-  , loadDBMetadata
+  ( loadDBMetadata
   ) where
 
 import           Hasura.Prelude
@@ -30,10 +29,6 @@ import           Hasura.SQL.Backend
 
 --------------------------------------------------------------------------------
 -- Loader
-
-data MetadataError
-  = UnknownScalarType Text
-  deriving (Show)
 
 loadDBMetadata :: Connection -> IO (DBTablesMetadata 'MSSQL)
 loadDBMetadata conn = do
@@ -179,6 +174,8 @@ parseScalarType = \case
   "varbinary"        -> VarbinaryType
   "bit"              -> BitType
   "uniqueidentifier" -> GuidType
+  "geography"        -> GeographyType
+  "geometry"         -> GeometryType
   t                  -> UnknownType t
 
 

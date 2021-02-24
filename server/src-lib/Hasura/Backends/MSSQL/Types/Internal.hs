@@ -157,6 +157,8 @@ data Expression
     -- behave like it knows your field is JSON and not double-encode
     -- it.
   | ToStringExpression Expression
+  -- expression.text(e1, e2, ..)
+  | MethodExpression !Expression !Text ![Expression]
   | JsonValueExpression Expression JsonPath
     -- ^ This is for getting actual atomic values out of a JSON
     -- string.
@@ -266,6 +268,8 @@ data ScalarType
   | TinyintType
   | BitType
   | GuidType
+  | GeographyType
+  | GeometryType
   | UnknownType !Text
 
 scalarTypeDBName :: ScalarType -> Text
@@ -291,6 +295,8 @@ scalarTypeDBName = \case
   TinyintType   -> "tinyint"
   BitType       -> "bit"
   GuidType      -> "uniqueidentifier"
+  GeographyType -> "geography"
+  GeometryType  -> "geometry"
   -- the input form for types that aren't explicitly supported is a string
   UnknownType t -> t
 
@@ -317,6 +323,11 @@ parseScalarValue scalarType jValue = case scalarType of
   TinyintType   -> ODBC.IntValue <$> parseJValue jValue
   BitType       -> ODBC.ByteValue <$> parseJValue jValue
   GuidType      -> ODBC.TextValue <$> parseJValue jValue
+
+  -- TODO: We'll need to wrap this with geography::STGeomFromText
+  GeographyType -> ODBC.TextValue <$> parseJValue jValue
+  GeometryType  -> ODBC.TextValue <$> parseJValue jValue
+
   -- the input format for types that aren't explicitly supported is a string
   UnknownType _ -> ODBC.TextValue <$> parseJValue jValue
   where
