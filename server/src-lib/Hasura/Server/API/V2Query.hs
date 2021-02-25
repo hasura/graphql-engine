@@ -27,7 +27,6 @@ import           Hasura.Server.Version            (HasVersion)
 import           Hasura.Session
 
 import qualified Hasura.Backends.MSSQL.DDL.RunSQL as MSSQL
-import qualified Hasura.Backends.MSSQL.Types      as MSSQL
 import qualified Hasura.Tracing                   as Tracing
 
 data RQLQuery

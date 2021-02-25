@@ -269,6 +269,7 @@ library
 
                      -- mssql support
                      , odbc
+                     , resource-pool
 
   if !flag(profiling)
     build-depends:
@@ -344,7 +345,6 @@ library
                      , Hasura.Backends.MSSQL.Instances.Types
                      , Hasura.Backends.MSSQL.Meta
                      , Hasura.Backends.MSSQL.Plan
-                     , Hasura.Backends.MSSQL.Result
                      , Hasura.Backends.MSSQL.ToQuery
                      , Hasura.Backends.MSSQL.Types
                      , Hasura.Backends.MSSQL.Types.Instances

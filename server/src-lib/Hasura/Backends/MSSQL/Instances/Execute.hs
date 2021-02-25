@@ -13,9 +13,9 @@ import qualified Network.HTTP.Types                    as HTTP
 
 import           Data.Text.Extended
 
+import           Hasura.Backends.MSSQL.Connection
 import           Hasura.Backends.MSSQL.Plan
 import           Hasura.Backends.MSSQL.ToQuery
-import           Hasura.Backends.MSSQL.Types
 import           Hasura.EncJSON
 import           Hasura.GraphQL.Context
 import           Hasura.GraphQL.Execute.Backend
@@ -28,7 +28,7 @@ import           Hasura.Session
 instance BackendExecute 'MSSQL where
   type PreparedQuery    'MSSQL = Text
   type MultiplexedQuery 'MSSQL = NoMultiplex
-  type ExecutionMonad   'MSSQL = IO
+  type ExecutionMonad   'MSSQL = ExceptT QErr IO
   getRemoteJoins = const []
 
   mkDBQueryPlan = msDBQueryPlan
@@ -62,12 +62,9 @@ msDBQueryPlan
 msDBQueryPlan _env _manager _reqHeaders userInfo _directives sourceConfig qrf = do
   select <- fromSelect <$> planNoPlan userInfo qrf
   let queryString = ODBC.renderQuery $ toQueryPretty select
-      connection  = _mscConnection sourceConfig
-      odbcQuery   = ODBC.query connection (toQueryFlat select) <&> toResultJSON
+      pool  = _mscConnectionPool sourceConfig
+      odbcQuery = encJFromText <$> runJSONPathQuery pool (toQueryFlat select)
   pure $ ExecStepDB sourceConfig (Just queryString) [] odbcQuery
-  where
-    toResultJSON :: [Text] -> EncJSON
-    toResultJSON = encJFromText . mconcat
 
 -- mutation
 
