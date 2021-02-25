@@ -916,6 +916,95 @@ Executes the following SQL function:
      }
    }
 
+ltree operators (_ancestor, _matches, etc.)
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Comparison operators on columns with ``ltree``, ``lquery`` or ``ltxtquery`` types are supported.
+
+Please submit a feature request via `GitHub <https://github.com/hasura/graphql-engine>`__ if you want support for more functions.
+
+For more details on ``ltree`` operators and Postgres equivalents, refer to the :ref:`API reference <ltree_operators>`.
+
+**Example: _ancestor**
+
+Select ancestors of an `ltree` argument
+
+.. graphiql::
+  :view_only:
+  :query:
+    query {
+      tree (
+        where: {path: {_ancestor: "Tree.Collections.Pictures.Astronomy.Astronauts"}}
+      ) {
+        path
+      }
+    }
+  :response:
+    {
+      "data": {
+        "tree": [
+          {
+            "path": "Tree"
+          },
+          {
+            "path": "Tree.Collections"
+          },
+          {
+            "path": "Tree.Collections.Pictures"
+          },
+          {
+            "path": "Tree.Collections.Pictures.Astronomy"
+          },
+          {
+            "path": "Tree.Collections.Pictures.Astronomy.Astronauts"
+          }
+        ]
+      }
+    }
+
+**Example: _matches_any**
+
+Select `ltree` paths matching any `lquery` regex in an array
+
+.. graphiql::
+  :view_only:
+  :query:
+    query {
+      tree (
+        where: {path: {_matches_any: ["*.Pictures.*", "*.Hobbies.*"]}}
+      ) {
+        path
+      }
+    }
+  :response:
+    {
+      "data": {
+        "tree": [
+          {
+            "path": "Tree.Hobbies"
+          },
+          {
+            "path": "Tree.Hobbies.Amateurs_Astronomy"
+          },
+          {
+            "path": "Tree.Collections.Pictures"
+          },
+          {
+            "path": "Tree.Collections.Pictures.Astronomy"
+          },
+          {
+            "path": "Tree.Collections.Pictures.Astronomy.Stars"
+          },
+          {
+            "path": "Tree.Collections.Pictures.Astronomy.Galaxies"
+          },
+          {
+            "path": "Tree.Collections.Pictures.Astronomy.Astronauts"
+          }
+        ]
+      }
+    }
+
 Filter based on failure of some criteria (_not)
 -----------------------------------------------
 
