@@ -4,6 +4,7 @@
 
 ### Bug fixes and improvements
 
+- server/mssql: fix malformed JSON answer on empty tables
 - server/mssql: fix runtime errors when selecting geography/geometry columns
 
 ## v1.4.0-alpha.2

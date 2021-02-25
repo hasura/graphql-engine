@@ -96,7 +96,7 @@ fromExpression =
     MethodExpression field method args ->
       fromExpression field <+> "." <+>
       fromString (T.unpack method) <+>
-      "(" <+> (SeqPrinter $ map fromExpression args) <+> ")"
+      "(" <+> SeqPrinter (map fromExpression args) <+> ")"
     OpExpression op x y ->
       "(" <+>
       fromExpression x <+>
@@ -136,33 +136,37 @@ fromDelete Delete {deleteTable, deleteWhere} =
     ]
 
 fromSelect :: Select -> Printer
-fromSelect Select {..} =
-  SepByPrinter
-    NewlinePrinter
-    [ "SELECT " <+>
-      IndentPrinter
-        7
-        (SepByPrinter
-           ("," <+> NewlinePrinter)
-           (map fromProjection (toList selectProjections)))
-    , "FROM " <+> IndentPrinter 5 (fromFrom selectFrom)
-    , SepByPrinter
-        NewlinePrinter
-        (map
-           (\Join {..} ->
-              SeqPrinter
-                [ "OUTER APPLY ("
-                , IndentPrinter 13 (fromJoinSource joinSource)
-                , ") "
-                , NewlinePrinter
-                , "AS "
-                , fromJoinAlias joinJoinAlias
-                ])
-           selectJoins)
-    , fromWhere selectWhere
-    , fromOrderBys selectTop selectOffset selectOrderBy
-    , fromFor selectFor
-    ]
+fromSelect Select {..} = case selectFor of
+  NoFor     -> result
+  JsonFor _ -> SeqPrinter ["SELECT ISNULL((", result, "), '[]')"]
+  where
+    result =
+      SepByPrinter
+      NewlinePrinter
+      [ "SELECT " <+>
+        IndentPrinter
+          7
+          (SepByPrinter
+             ("," <+> NewlinePrinter)
+             (map fromProjection (toList selectProjections)))
+      , "FROM " <+> IndentPrinter 5 (fromFrom selectFrom)
+      , SepByPrinter
+          NewlinePrinter
+          (map
+             (\Join {..} ->
+                SeqPrinter
+                  [ "OUTER APPLY ("
+                  , IndentPrinter 13 (fromJoinSource joinSource)
+                  , ") "
+                  , NewlinePrinter
+                  , "AS "
+                  , fromJoinAlias joinJoinAlias
+                  ])
+             selectJoins)
+      , fromWhere selectWhere
+      , fromOrderBys selectTop selectOffset selectOrderBy
+      , fromFor selectFor
+      ]
 
 fromJoinSource :: JoinSource -> Printer
 fromJoinSource =
