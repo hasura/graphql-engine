@@ -238,6 +238,10 @@ comparisonExps = P.memoize 'comparisonExps \columnType -> do
   typedParser        <- columnParser columnType (G.Nullability False)
   nullableTextParser <- columnParser (ColumnScalar PGText) (G.Nullability True)
   textParser         <- columnParser (ColumnScalar PGText) (G.Nullability False)
+  -- `lquery` represents a regular-expression-like pattern for matching `ltree` values.
+  lqueryParser       <- columnParser (ColumnScalar PGLquery) (G.Nullability False)
+  -- `ltxtquery` represents a full-text-search-like pattern for matching `ltree` values.
+  ltxtqueryParser    <- columnParser (ColumnScalar PGLtxtquery) (G.Nullability False)
   maybeCastParser    <- castExp columnType
   let name = P.getName typedParser <> $$(G.litName "_comparison_exp")
       desc = G.Description $ "Boolean expression to compare columns of type "
@@ -361,6 +365,31 @@ comparisonExps = P.memoize 'comparisonExps \columnType -> do
       , P.fieldOptional $$(G.litName "_st_d_within")
         (Just "is the column within a given distance from the given geometry value")
         (ASTDWithinGeom <$> geomInputParser)
+      ]
+
+    -- Ops for Ltree type
+    , guard (isScalarColumnWhere (== PGLtree) columnType) *>
+      [ P.fieldOptional $$(G.litName "_ancestor")
+        (Just "is the left argument an ancestor of right (or equal)?")
+        (AAncestor        . mkParameter <$> typedParser)
+      , P.fieldOptional $$(G.litName "_ancestor_any")
+        (Just "does array contain an ancestor of `ltree`?")
+        (AAncestorAny     . mkListLiteral columnType <$> columnListParser)
+      , P.fieldOptional $$(G.litName "_descendant")
+        (Just "is the left argument a descendant of right (or equal)?")
+        (ADescendant      . mkParameter <$> typedParser)
+      , P.fieldOptional $$(G.litName "_descendant_any")
+        (Just "does array contain a descendant of `ltree`?")
+        (ADescendantAny   . mkListLiteral columnType <$> columnListParser)
+      , P.fieldOptional $$(G.litName "_matches")
+        (Just "does `ltree` match `lquery`?")
+        (AMatches         . mkParameter <$> lqueryParser)
+      , P.fieldOptional $$(G.litName "_matches_any")
+        (Just "does `ltree` match any `lquery` in array?")
+        (AMatchesAny      . mkListLiteral (ColumnScalar PGLquery) <$> textListParser)
+      , P.fieldOptional $$(G.litName "_matches_fulltext")
+        (Just "does `ltree` match `ltxtquery`?")
+        (AMatchesFulltext . mkParameter <$> ltxtqueryParser)
       ]
     ]
   where

@@ -860,6 +860,13 @@ fromOpExpG expression op =
     IR.CLT _rhsCol               -> refute (pure (UnsupportedOpExpG op)) -- S.BECompare S.SLT lhs $ mkQCol rhsCol
     IR.CGTE _rhsCol              -> refute (pure (UnsupportedOpExpG op)) -- S.BECompare S.SGTE lhs $ mkQCol rhsCol
     IR.CLTE _rhsCol              -> refute (pure (UnsupportedOpExpG op)) -- S.BECompare S.SLTE lhs $ mkQCol rhsCol
+    IR.AAncestor _               -> refute (pure (UnsupportedOpExpG op)) -- See Hierarchical Data (SQL Server)
+    IR.AAncestorAny _            -> refute (pure (UnsupportedOpExpG op)) -- See Hierarchical Data (SQL Server)
+    IR.ADescendant _             -> refute (pure (UnsupportedOpExpG op)) -- See Hierarchical Data (SQL Server)
+    IR.ADescendantAny _          -> refute (pure (UnsupportedOpExpG op)) -- See Hierarchical Data (SQL Server)
+    IR.AMatches _                -> refute (pure (UnsupportedOpExpG op)) -- See Hierarchical Data (SQL Server)
+    IR.AMatchesAny _             -> refute (pure (UnsupportedOpExpG op)) -- See Hierarchical Data (SQL Server)
+    IR.AMatchesFulltext _        -> refute (pure (UnsupportedOpExpG op)) -- See Hierarchical Data (SQL Server)
 
 nullableBoolEquality :: Expression -> Expression -> Expression
 nullableBoolEquality x y =

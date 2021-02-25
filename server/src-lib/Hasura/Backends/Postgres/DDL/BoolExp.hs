@@ -174,6 +174,22 @@ parseBoolExpOperations rhsParser fim columnInfo value = do
         "$clte"          -> parseClte
         "_clte"          -> parseClte
 
+        -- ltree types
+        "_ancestor"         -> guardType [PGLtree] >> AAncestor <$> parseOne
+        "$ancestor"         -> guardType [PGLtree] >> AAncestor <$> parseOne
+        "_ancestor_any"     -> guardType [PGLtree] >> AAncestorAny <$> parseManyWithType (ColumnScalar PGLtree)
+        "$ancestor_any"     -> guardType [PGLtree] >> AAncestorAny <$> parseManyWithType (ColumnScalar PGLtree)
+        "_descendant"       -> guardType [PGLtree] >> ADescendant <$> parseOne
+        "$descendant"       -> guardType [PGLtree] >> ADescendant <$> parseOne
+        "_descendant_any"   -> guardType [PGLtree] >> ADescendantAny <$> parseManyWithType (ColumnScalar PGLtree)
+        "$descendant_any"   -> guardType [PGLtree] >> ADescendantAny <$> parseManyWithType (ColumnScalar PGLtree)
+        "_matches"          -> guardType [PGLtree] >> AMatches <$> parseWithTy (ColumnScalar PGLquery)
+        "$matches"          -> guardType [PGLtree] >> AMatches <$> parseWithTy (ColumnScalar PGLquery)
+        "_matches_any"      -> guardType [PGLtree] >> AMatchesAny <$> parseManyWithType (ColumnScalar PGLquery)
+        "$matches_any"      -> guardType [PGLtree] >> AMatchesAny <$> parseManyWithType (ColumnScalar PGLquery)
+        "_matches_fulltext" -> guardType [PGLtree] >> AMatchesFulltext <$> parseWithTy (ColumnScalar PGLtxtquery)
+        "$matches_fulltext" -> guardType [PGLtree] >> AMatchesFulltext <$> parseWithTy (ColumnScalar PGLtxtquery)
+
         x                -> throw400 UnexpectedPayload $ "Unknown operator : " <> x
       where
         colTy = columnReferenceType column

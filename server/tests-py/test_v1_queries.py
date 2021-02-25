@@ -775,3 +775,31 @@ class TestBulkQuery:
 
     def test_run_bulk_with_select_and_reads(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + '/select_with_reads.yaml')
+
+@pytest.mark.parametrize('transport', ['http', 'websocket'])
+@usefixtures('per_class_tests_db_state')
+class TestGraphQLQueryBoolExpLtree:
+    def test_select_path_where_ancestor(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/select_path_where_ancestor.yaml')
+
+    def test_select_path_where_ancestor_array(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/select_path_where_ancestor_array.yaml')
+
+    def test_select_path_where_descendant(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/select_path_where_descendant.yaml')
+
+    def test_select_path_where_descendant_array(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/select_path_where_descendant_array.yaml')
+
+    def test_select_path_where_matches(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/select_path_where_matches.yaml')
+
+    def test_select_path_where_matches_array(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/select_path_where_matches_array.yaml')
+
+    def test_select_path_where_matches_ltxtquery(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/select_path_where_matches_ltxtquery.yaml')
+
+    @classmethod
+    def dir(cls):
+        return 'queries/v1/select/boolexp/ltree'
