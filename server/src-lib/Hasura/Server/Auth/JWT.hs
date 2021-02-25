@@ -8,6 +8,7 @@ module Hasura.Server.Auth.JWT
   , JWTClaimsFormat (..)
   , JWTClaims(..)
   , JwkFetchError (..)
+  , JWTHeader (..)
   , JWTNamespace (..)
   , JWTCustomClaimsMapDefaultRole
   , JWTCustomClaimsMapAllowedRoles
@@ -69,6 +70,7 @@ import qualified Data.Text.Encoding              as T
 import qualified Network.HTTP.Client             as HTTP
 import qualified Network.HTTP.Types              as HTTP
 import qualified Network.Wreq                    as Wreq
+import qualified Web.Spock.Internal.Cookies      as Spock
 
 newtype RawJWT = RawJWT BL.ByteString
 
@@ -79,6 +81,24 @@ data JWTClaimsFormat
 
 $(J.deriveJSON J.defaultOptions { J.sumEncoding = J.ObjectWithSingleField
                                 , J.constructorTagModifier = J.snakeCase . drop 3 } ''JWTClaimsFormat)
+
+data JWTHeader
+  = JHAuthorization
+  | JHCookie Text -- cookie name
+  deriving (Show, Eq)
+
+instance J.FromJSON JWTHeader where
+  parseJSON = J.withObject "JWTHeader" $ \o -> do
+    hdrType <- o J..: "type" <&> CI.mk @Text
+    if | hdrType == "Authorization" -> pure JHAuthorization
+       | hdrType == "Cookie"        -> JHCookie <$> o J..: "name"
+       | otherwise                  -> fail "expected 'type' is 'Authorization' or 'Cookie'"
+
+instance J.ToJSON JWTHeader where
+  toJSON JHAuthorization = J.object ["type" J..= ("Authorization" :: String)]
+  toJSON (JHCookie name) = J.object [ "type" J..= ("Cookie" :: String)
+                                    , "name" J..= name
+                                    ]
 
 defaultClaimsFormat :: JWTClaimsFormat
 defaultClaimsFormat = JCFJson
@@ -189,6 +209,7 @@ data JWTConfig
   , jcIssuer      :: !(Maybe Jose.StringOrURI)
   , jcClaims      :: !JWTClaims
   , jcAllowedSkew :: !(Maybe NominalDiffTime)
+  , jcHeader      :: !(Maybe JWTHeader)
   } deriving (Show, Eq)
 
 -- | The validated runtime JWT configuration returned by 'mkJwtCtx' in 'setupAuthMode'.
@@ -203,11 +224,12 @@ data JWTCtx
   , jcxIssuer      :: !(Maybe Jose.StringOrURI)
   , jcxClaims      :: !JWTClaims
   , jcxAllowedSkew :: !(Maybe NominalDiffTime)
+  , jcxHeader      :: !JWTHeader
   } deriving (Eq)
 
 instance Show JWTCtx where
-  show (JWTCtx _ audM iss claims allowedSkew) =
-    show ["<IORef JWKSet>", show audM, show iss, show claims, show allowedSkew]
+  show (JWTCtx _ audM iss claims allowedSkew headers) =
+    show ["<IORef JWKSet>", show audM, show iss, show claims, show allowedSkew, show headers]
 
 data HasuraClaims
   = HasuraClaims
@@ -321,8 +343,10 @@ updateJwkRef (Logger logger) manager url jwkRef = do
 type ClaimsMap = Map.HashMap SessionVariable J.Value
 
 -- | Process the request headers to verify the JWT and extract UserInfo from it
+-- From the JWT config, we check which header to expect, it can be the "Authorization"
+-- or "Cookie" header
 --
--- Iff no "Authorization" header was passed, we will fall back to the
+-- Iff no "Authorization"/"Cookie" header was passed, we will fall back to the
 -- unauthenticated user role [1], if one was configured at server start.
 --
 -- When no 'x-hasura-user-role' is specified in the request, the mandatory
@@ -337,24 +361,31 @@ processJwt
   -> HTTP.RequestHeaders
   -> Maybe RoleName
   -> m (UserInfo, Maybe UTCTime)
-processJwt = processJwt_ processAuthZHeader
+processJwt = processJwt_ processAuthZOrCookieHeader jcxHeader
 
 -- Broken out for testing with mocks:
 processJwt_
   :: (MonadError QErr m)
   => (_JWTCtx -> BLC.ByteString -> m (ClaimsMap, Maybe UTCTime))
-  -- ^ mock 'processAuthZHeader'
+  -- ^ mock 'processAuthZOrCookieHeader'
+  -> (_JWTCtx -> JWTHeader)
   -> _JWTCtx
   -> HTTP.RequestHeaders
   -> Maybe RoleName
   -> m (UserInfo, Maybe UTCTime)
-processJwt_ processAuthZHeader_ jwtCtx headers mUnAuthRole =
+processJwt_ processAuthZOrCookieHeader_ fGetHeaderType jwtCtx headers mUnAuthRole =
   maybe withoutAuthZHeader withAuthZHeader mAuthZHeader
   where
-    mAuthZHeader = find (\h -> fst h == CI.mk "Authorization") headers
+    expectedHeader =
+      case fGetHeaderType jwtCtx of
+        JHAuthorization -> "Authorization"
+        JHCookie _      -> "Cookie"
+
+    mAuthZHeader =
+      find (\(headerName, _) -> headerName == CI.mk expectedHeader) headers
 
     withAuthZHeader (_, authzHeader) = do
-      (claimsMap, expTimeM) <- processAuthZHeader_ jwtCtx $ BL.fromStrict authzHeader
+      (claimsMap, expTimeM) <- processAuthZOrCookieHeader_ jwtCtx $ BL.fromStrict authzHeader
 
       HasuraClaims allowedRoles defaultRole <- parseHasuraClaims claimsMap
       -- see if there is a x-hasura-role header, or else pick the default role.
@@ -381,19 +412,24 @@ processJwt_ processAuthZHeader_ jwtCtx headers mUnAuthRole =
 
       where
         missingAuthzHeader =
-          throw400 InvalidHeaders "Missing Authorization header in JWT authentication mode"
+          throw400 InvalidHeaders
+            $ "Missing " <> bsToTxt expectedHeader <>  " header in JWT authentication mode"
 
--- Parse and verify the 'Authorization' header, returning the raw claims
+-- | Parse and verify the 'Authorization' or 'Cookie' header (depending upon
+-- the `jcHeader` value of the `JWTConfig`), returning the raw claims
 -- object, and the expiration, if any.
-processAuthZHeader
+processAuthZOrCookieHeader
   :: ( MonadIO m
      , MonadError QErr m)
   => JWTCtx
   -> BLC.ByteString
   -> m (ClaimsMap, Maybe UTCTime)
-processAuthZHeader jwtCtx authzHeader = do
-  -- try to parse JWT token from Authorization header
-  jwt <- parseAuthzHeader
+processAuthZOrCookieHeader jwtCtx authzHeader = do
+  -- try to parse JWT token from Authorization or Cookie header
+  jwt <-
+    case jcxHeader jwtCtx of
+      JHAuthorization -> parseAuthzHeader
+      JHCookie cName  -> parseCookieHeader cName
 
   -- verify the JWT
   claims <- liftJWTError invalidJWTError $ verifyJwt jwtCtx $ RawJWT jwt
@@ -412,6 +448,11 @@ processAuthZHeader jwtCtx authzHeader = do
         ["Bearer", jwt] -> return jwt
         _               -> malformedAuthzHeader
 
+    parseCookieHeader cName = do
+      let cookies = Spock.parseCookies $ BL.toStrict authzHeader
+          jwtCookie = snd <$> find (\(hn, _) -> hn == cName) cookies
+      BL.fromStrict . txtToBs <$> (onNothing jwtCookie (malformedCookieHeader cName))
+
     liftJWTError :: (MonadError e' m) => (e -> e') -> ExceptT e m a -> m a
     liftJWTError ef action = do
       res <- runExceptT action
@@ -422,6 +463,9 @@ processAuthZHeader jwtCtx authzHeader = do
 
     malformedAuthzHeader =
       throw400 InvalidHeaders "Malformed Authorization header"
+
+    malformedCookieHeader c =
+      throw400 InvalidHeaders $ "Could not find " <> c <> " in Cookie header"
 
 -- | parse the claims map from the JWT token or custom claims from the JWT config
 parseClaimsMap
@@ -549,7 +593,7 @@ verifyJwt ctx (RawJWT rawJWT) = do
 
 
 instance J.ToJSON JWTConfig where
-  toJSON (JWTConfig keyOrUrl aud iss claims allowedSkew) =
+  toJSON (JWTConfig keyOrUrl aud iss claims allowedSkew jwtHeader) =
     let keyOrUrlPairs = case keyOrUrl of
           Left _    -> [ "type" J..= J.String "<TYPE REDACTED>"
                        , "key" J..= J.String "<JWK REDACTED>"
@@ -566,6 +610,7 @@ instance J.ToJSON JWTConfig where
     in J.object $ keyOrUrlPairs <>
                   [ "audience" J..= aud
                   , "issuer" J..= iss
+                  , "header" J..= jwtHeader
                   ]
                   <> claimsPairs
                   <> (maybe [] (\skew -> ["allowed_skew" J..= skew]) allowedSkew)
@@ -585,6 +630,7 @@ instance J.FromJSON JWTConfig where
     claimsFormat <- o J..:? "claims_format" J..!= defaultClaimsFormat
     claimsMap <- o J..:? "claims_map"
     allowedSkew <- o J..:? "allowed_skew"
+    jwtHeader <- o J..:? "header"
 
     hasuraClaimsNs <-
       case (claimsNsPath,claimsNs) of
@@ -604,7 +650,7 @@ instance J.FromJSON JWTConfig where
 
     let jwtClaims = maybe (JCNamespace hasuraClaimsNs claimsFormat) JCMap claimsMap
 
-    pure $ JWTConfig keyOrUrl aud iss jwtClaims allowedSkew
+    pure $ JWTConfig keyOrUrl aud iss jwtClaims allowedSkew jwtHeader
 
     where
       parseKey keyType rawKey =

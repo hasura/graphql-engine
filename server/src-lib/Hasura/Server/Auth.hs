@@ -156,7 +156,8 @@ setupAuthMode mAdminSecretHash mWebHook mJwtSecret mUnAuthRole httpManager logge
       jwkRef <- case jcKeyOrUrl of
         Left jwk  -> liftIO $ newIORef (JWKSet [jwk])
         Right url -> getJwkFromUrl url
-      return $ JWTCtx jwkRef jcAudience jcIssuer jcClaims jcAllowedSkew
+      let jwtHeader = fromMaybe JHAuthorization jcHeader
+      return $ JWTCtx jwkRef jcAudience jcIssuer jcClaims jcAllowedSkew jwtHeader
       where
         -- if we can't find any expiry time for the JWK (either in @Expires@ header or @Cache-Control@
         -- header), do not start a background thread for refreshing the JWK

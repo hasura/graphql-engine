@@ -135,7 +135,8 @@ JSON object:
      "audience": <optional-string-or-list-of-strings-to-verify-audience>,
      "issuer": "<optional-string-to-verify-issuer>",
      "claims_map": "<optional-object-of-session-variable-to-claim-jsonpath-or-literal-value>",
-     "allowed_skew": "<optional-number-of-seconds-in-integer>"
+     "allowed_skew": "<optional-number-of-seconds-in-integer>",
+     "header": "<optional-key-to-indicate-cookie-or-authorization-header>"
    }
 
 (``type``, ``key``) pair or ``jwk_url``, **one of them has to be present**.
@@ -500,6 +501,38 @@ config and the value of the ``x-hasura-user-id`` is a JSON path to the value in 
 
 ``allowed_skew`` is an optional field to provide some leeway (to account for clock skews) while comparing the JWT expiry time. This field
 expects an integer value which will be the number of seconds of the skew value.
+
+``header``
+^^^^^^^^^^
+This is an optional field, which indicates which request header to read the JWT
+from. This field is an object.
+
+Following are the possible values:
+
+- ``{"type": "Authorization"}``
+- ``{"type": "Cookie", "name": "cookie_name" }``
+
+Default is ``{"type": "Authorization"}``.
+
+In the default mode, Hasura expects an ``Authorization`` header with a ``Bearer`` token.
+
+In the cookie mode, Hasura will try to parse the cookie header with the given
+cookie name. The value of the cookie should be the exact JWT.
+
+Example:-
+
+If ``header`` is ``{"type": "Authorization"}`` then JWT header should look like:
+
+.. code-block:: http
+
+   Authorization: Bearer eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWI...
+
+If ``header`` is ``{"type": "Cookie", "name": "cookie_name" }`` then JWT header should look like:
+
+
+.. code-block:: http
+
+   Cookie: cookie_name=eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWI...
 
 
 Examples

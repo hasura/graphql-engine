@@ -65,9 +65,11 @@ getUserInfoWithExpTimeTests = describe "getUserInfo" $ do
                 mkUserInfo (URBFromSessionVariablesFallback $ mkRoleNameE nm)
                            UAdminSecretNotSent
                            (mkSessionVariablesHeaders mempty)
-          processJwt = processJwt_ $
-            -- processAuthZHeader:
-            \_jwtCtx _authzHeader -> return (mapKeys mkSessionVariable claims, Nothing)
+
+          processAuthZHeader _jwtCtx _authzHeader =
+            return (mapKeys mkSessionVariable claims, Nothing)
+
+          processJwt = processJwt_ processAuthZHeader (const JHAuthorization)
 
   let getUserInfoWithExpTime
         :: J.Object
@@ -590,6 +592,7 @@ fakeJWTConfig =
       jcIssuer = Nothing
       jcClaims = JCNamespace (ClaimNs "") JCFJson
       jcAllowedSkew = Nothing
+      jcHeader = Nothing
    in JWTConfig{..}
 
 fakeAuthHook :: AuthHook
