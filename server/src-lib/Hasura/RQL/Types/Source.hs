@@ -82,7 +82,10 @@ with the value. The most common example is 'Showable':
     showShowable (Showable a) = show a
 
 We are able to call 'show' on 'a' because we are /packing/ the 'Show' constraint
-along with the value. This is key to using existential types. -}
+along with the value. This is key to using existential types.
+
+For details on how we use existentials in our code, please see note
+[Recovering Existentially Quantified Type Information] -}
 
 data SourceInfo b
   = SourceInfo
