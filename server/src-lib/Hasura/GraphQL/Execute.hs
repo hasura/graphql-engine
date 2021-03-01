@@ -163,6 +163,7 @@ data ResolvedExecutionPlan
   | SubscriptionExecutionPlan SourceName LiveQueryPlan
   -- ^ live query execution; remote schemas and introspection not supported
 
+-- See Note [Existentially Quantified Types]
 data LiveQueryPlan where
   LQP :: forall b. EB.BackendExecute b => EL.LiveQueryPlan b (EB.MultiplexedQuery b) -> LiveQueryPlan
 
