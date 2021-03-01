@@ -1,6 +1,7 @@
 # Motor Hasura GraphQL
 
-[![Docs](https://img.shields.io/badge/docs-v1.0-brightgreen.svg?style=flat)](https://hasura.io/docs)
+[![Latest release](https://img.shields.io/github/v/release/hasura/graphql-engine)](https://github.com/hasura/graphql-engine/releases/latest)
+[![Docs](https://img.shields.io/badge/docs-v1.x-brightgreen.svg?style=flat)](https://hasura.io/docs)
 [![CircleCI](https://circleci.com/gh/hasura/graphql-engine.svg?style=shield)](https://circleci.com/gh/hasura/graphql-engine)
 
 
@@ -42,22 +43,27 @@ Leer más en [hasura.io](https://hasura.io) y en [docs](https://hasura.io/docs).
 <!-- markdown-toc start - Don't edit this section. Run M-x markdown-toc-refresh-toc -->
 **Tabla de contenidos**
 
-- [Inicio rápido:](#inicio-rápido)
+- [Motor Hasura GraphQL](#motor-hasura-graphql)
+  - [Características](#características)
+  - [Tabla de contenidos](#tabla-de-contenidos)
+  - [Inicio rápido:](#inicio-rápido)
     - [Despliegue en un click con Heroku](#despliegue-en-un-click-con-heroku)
+    - [Otras opciones de despliegue en un clic](#otras-opciones-de-despliegue-en-un-clic)
     - [Otros métodos de despliegue](#otros-métodos-de-despliegue)
-- [Arquitectura](#arquitectura)
-- [Herramientas client-side](#herramientas-client-side)
-- [Agregar lógica de negocio](#agregar-lógica-de-negocio)
+  - [Arquitectura](#arquitectura)
+  - [Herramientas client-side](#herramientas-client-side)
+  - [Agregar lógica de negocio](#agregar-lógica-de-negocio)
     - [Esquemas remotos](#esquemas-remotos)
     - [Ejecutar webhooks con eventos de la base de datos](#ejecutar-webhooks-con-eventos-de-la-base-de-datos)
-- [Demos](#demos)
+    - [Datos derivados o transformación de datos](#datos-derivados-o-transformación-de-datos)
+  - [Demos](#demos)
     - [Aplicaciones en tiempo real](#aplicaciones-en-tiempo-real)
     - [Videos](#videos)
-- [Soporte y solución de problemas](#soporte-y-solución-de-problemas)
-- [Contribuir](#contribuir)
-- [Archivos de marca](#archivos-de-marca)
-- [Licencia](#licencia)
-- [Traducciones](#traducciones)
+  - [Soporte y solución de problemas](#soporte-y-solución-de-problemas)
+  - [Contribuir](#contribuir)
+  - [Archivos de la marca](#archivos-de-la-marca)
+  - [Licencia](#licencia)
+  - [Traducciones](#traducciones)
 
 <!-- markdown-toc end -->
 
@@ -65,15 +71,15 @@ Leer más en [hasura.io](https://hasura.io) y en [docs](https://hasura.io/docs).
 
 ### Despliegue en un click con Heroku
 
-La manera más rápida de probar Hasura es usando Heroku.
+La manera más rápida y sencilla de probar Hasura es a través de [Hasura Cloud](https://hasura.io/docs/cloud/1.0/manual/getting-started/index.html).
 
-1. Da click en el siguiente botón para desplegar el motor GraphQL en Heroku con el add-on gratuito de Postgres:
+1. Haga click en el siguiente botón para desplegar el motor GraphQL en Hasura Cloud, incluyendo el complemento de Postgres o utilizando una base de datos de Postgres existente:
 
-    [![Deploy to Heroku](https://www.herokucdn.com/deploy/button.svg)](https://heroku.com/deploy?template=https://github.com/hasura/graphql-engine-heroku)
+    [![Deploy to Hasura Cloud](https://graphql-engine-cdn.hasura.io/img/deploy_to_hasura.png)](https://cloud.hasura.io/)
 
 2. Abre la consola de Hasura
 
-   Visita `https://<app-name>.herokuapp.com` (*reemplaza \<app-name\> con el nombre de tu aplicacion*) para abrir la consola de administrador.
+    Haga clic en el botón "Iniciar consola" para abrir la consola Hasura.
 
 3. Haz tu primer consulta con GraphQL
 
@@ -85,8 +91,10 @@ Revisa las instrucciones para las siguientes opciones de despliegue en un click:
 
 | **Proveedor de infraestructura** | **Enlace en un clic** | **Información adicional** |
 |:------------------:|:------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------:|:-------------------------------------------------------------------------------------------------------------------------------------------------:|
+| Heroku | [![Deploy to Heroku](https://www.herokucdn.com/deploy/button.svg)](https://heroku.com/deploy?template=https://github.com/hasura/graphql-engine-heroku) | [docs](https://hasura.io/docs/1.0/graphql/manual/guides/deployment/heroku-one-click.html) |
 | DigitalOcean | [![Deploy to DigitalOcean](https://graphql-engine-cdn.hasura.io/img/create_hasura_droplet_200px.png)](https://marketplace.digitalocean.com/apps/hasura?action=deploy&refcode=c4d9092d2c48&utm_source=hasura&utm_campaign=readme) | [docs](https://hasura.io/docs/1.0/graphql/manual/guides/deployment/digital-ocean-one-click.html#hasura-graphql-engine-digitalocean-one-click-app) |
 | Azure | [![Deploy to Azure](http://azuredeploy.net/deploybutton.png)](https://portal.azure.com/#create/Microsoft.Template/uri/https%3a%2f%2fraw.githubusercontent.com%2fhasura%2fgraphql-engine%2fmaster%2finstall-manifests%2fazure-container-with-pg%2fazuredeploy.json) | [docs](https://hasura.io/docs/1.0/graphql/manual/guides/deployment/azure-container-instances-postgres.html) |
+| Render | [![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https://github.com/render-examples/hasura-graphql) | [docs](https://hasura.io/docs/1.0/graphql/manual/guides/deployment/render-one-click.html) |
 
 ### Otros métodos de despliegue
 
@@ -168,9 +176,9 @@ Si quieres reportar un problema de seguridad, por favor [lee esto](../SECURITY.m
 
 Revisa nuestra [guía de contribución](../CONTRIBUTING.md) para más detalles.
 
-## Archivos de marca
+## Archivos de la marca
 
-Los archivos de marca de Hasura (logotipos, la mascota de Hasura, la insignia: "powered by", etc.) pueden ser encontradas en la carpeta [assets/brand](../assets/brand). Siéntete libre de usarlos en tu
+Los archivos de la marca Hasura (logotipos, la mascota de Hasura, la insignia: "powered by", etc.) pueden ser encontrados en la carpeta [assets/brand](../assets/brand). Siéntete libre de usarlos en tu
 aplicación, sitio web, etc. Estaremos encantados si agregas la insignia "Powered by Hasura" a tus aplicaciones creadas con Hasura. ❤️
 
 <div style="display: flex;">
@@ -194,7 +202,7 @@ aplicación, sitio web, etc. Estaremos encantados si agregas la insignia "Powere
 
 El núcleo del motor GraphQL está disponible bajo la [Licencia Apache 2.0](https://www.apache.org/licenses/LICENSE-2.0) (Apache-2.0).
 
-Todos **los contenidos** (excepto aquellos incluidos en los directorios [`server`](../server), [`cli`](../cli) y
+Todos **los demás contenidos** (excepto aquellos incluidos en los directorios [`server`](../server), [`cli`](../cli) y
 [`console`](../console)) están disponibles bajo la [Licencia MIT](../LICENSE-community).
 Esto incluye todo en los directorios [`docs`](../docs) y [`community`](../community).
 
@@ -202,12 +210,17 @@ Esto incluye todo en los directorios [`docs`](../docs) y [`community`](../commun
 
 Este archivo está disponible en los siguientes idiomas:
 
-- [Japonés :jp:](../translations/README.japanese.md) (:pray: [@moksahero](https://github.com/moksahero))
-- [Francés :fr:](../translations/README.french.md) (:pray: [@l0ck3](https://github.com/l0ck3))
-- [Griego 🇬🇷](../translations/README.greek.md) (:pray: [@MIP2000](https://github.com/MIP2000))
-- [Español 🇲🇽](../translations/README.mx_spanish.md)(:pray: [@ferdox2](https://github.com/ferdox2))
-- [Indonesian :indonesia:](translations/README.indonesian.md) (:pray: [@anwari666](https://github.com/anwari666))
-- [Brazilian Portuguese :brazil:](translations/README.portuguese_br.md) (:pray: [@rubensmp](https://github.com/rubensmp))
-- [German 🇩🇪](translations/README.german.md) (:pray: [@FynnGrandke](https://github.com/FynnGrandke))
+- [Japonés :jp:](translations/README.japanese.md) (:pray: [@moksahero](https://github.com/moksahero))
+- [Francés :fr:](translations/README.french.md) (:pray: [@l0ck3](https://github.com/l0ck3))
+- [Bosnio :bosnia_herzegovina:](translations/README.bosnian.md) (:pray: [@hajro92](https://github.com/hajro92))
+- [Ruso :ru:](translations/README.russian.md) (:pray: [@highflyer910](https://github.com/highflyer910))
+- [Griego 🇬🇷](translations/README.greek.md) (:pray: [@MIP2000](https://github.com/MIP2000))
+- [Español :es:](/translations/README.spanish.md)(:pray: [@ferdox2](https://github.com/ferdox2))
+- [Indonesio :indonesia:](translations/README.indonesian.md) (:pray: [@anwari666](https://github.com/anwari666))
+- [Portugués Brasileño :brazil:](translations/README.portuguese_br.md) (:pray: [@rubensmp](https://github.com/rubensmp))
+- [Alemán 🇩🇪](translations/README.german.md) (:pray: [@FynnGrandke](https://github.com/FynnGrandke))
+- [Chino :cn:](translations/README.chinese.md) (:pray: [@jagreetdg](https://github.com/jagreetdg) & [@johnbanq](https://github.com/johnbanq))
+- [Turco :tr:](translations/README.turkish.md) (:pray: [@berat](https://github.com/berat))
+- [Coreano :kr:](translations/README.korean.md) (:pray: [@라스크](https://github.com/laskdjlaskdj12))
 
 Las traducciones para otros idiomas se encuentran [aquí](../translations).
