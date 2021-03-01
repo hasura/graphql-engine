@@ -14,7 +14,7 @@ import { CLI_CONSOLE_MODE } from '../../../constants';
 import styles from '../../Common/TableCommon/Table.scss';
 import { currentDriver, useDataSource } from '../../../dataSources';
 import { getDataSources } from '../../../metadata/selector';
-import { push } from 'react-router-redux';
+import _push from './push';
 import { fetchPostgresVersion } from '../../Main/Actions';
 import { getSourceDriver } from './utils';
 
@@ -49,7 +49,7 @@ const DataPageContainer = ({
 
   const handleDatabaseChange = newSourceName => {
     if (newSourceName === currentDataSource) {
-      dispatch(push(`/data/${newSourceName}/`));
+      dispatch(_push(`/data/${newSourceName}/`));
       return;
     }
     setLoading(true);
@@ -59,7 +59,7 @@ const DataPageContainer = ({
       source: newSourceName,
     });
     setDriver(driver);
-    dispatch(push(`/data/${newSourceName}/`));
+    dispatch(_push(`/data/${newSourceName}/`));
     dispatch(fetchDataInit()).finally(() => {
       setLoading(false);
     });
@@ -67,14 +67,14 @@ const DataPageContainer = ({
 
   const handleSchemaChange = value => {
     if (value === currentSchema) {
-      dispatch(push(`/data/${currentDataSource}/schema/${value}`));
+      dispatch(_push(`/data/${currentDataSource}/schema/${value}`));
       return;
     }
 
     setLoading(true);
     dispatch(updateCurrentSchema(value, currentDataSource))
       .then(() => {
-        dispatch(push(`/data/${currentDataSource}/schema/${value}`));
+        dispatch(_push(`/data/${currentDataSource}/schema/${value}`));
       })
       .finally(() => {
         setLoading(false);
