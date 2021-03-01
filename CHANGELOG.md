@@ -12,7 +12,8 @@
 ### MSSQL support
 
 It's now possible to add a MSSQL server as a source. For now, only read-only queries and subscriptions are supported.
-FIXME FIXME expand on this.
+
+See the documentation at `graphql/core/databases/ms-sql-server` for more information.
 
 ### Inconsistent Metadata
 
