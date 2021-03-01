@@ -26,7 +26,7 @@ const RemoteRelationships: React.FC<Props> = ({
         Remote Schema Relationships
         <ToolTip message="Relationships to remote schemas" />
         &nbsp;
-        <KnowMoreLink href="https://hasura.io/docs/1.0/graphql/manual/schema/remote-relationships/remote-schema-relationships.html" />
+        <KnowMoreLink href="https://hasura.io/docs/latest/graphql/core/schema/remote-relationships/remote-schema-relationships.html" />
       </h4>
       <div className={styles.activeEdit}>
         <RemoteRelationshipList

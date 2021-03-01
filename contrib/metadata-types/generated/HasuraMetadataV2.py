@@ -147,7 +147,7 @@ def to_float(x: Any) -> float:
 @dataclass
 class HeaderFromValue:
     """
-    https://hasura.io/docs/1.0/graphql/manual/api-reference/schema-metadata-api/syntax-defs.html#headerfromvalue
+    https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/syntax-defs.html#headerfromvalue
     """
     """Name of the header"""
     name: str
@@ -171,7 +171,7 @@ class HeaderFromValue:
 @dataclass
 class HeaderFromEnv:
     """
-    https://hasura.io/docs/1.0/graphql/manual/api-reference/schema-metadata-api/syntax-defs.html#headerfromenv
+    https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/syntax-defs.html#headerfromenv
     """
     """Name of the header"""
     name: str
@@ -195,7 +195,7 @@ class HeaderFromEnv:
 @dataclass
 class ObjectField:
     """
-    https://hasura.io/docs/1.0/graphql/manual/api-reference/schema-metadata-api/custom-types.html#objectfield
+    https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/custom-types.html#objectfield
     """
     """Name of the Input object type"""
     name: str
@@ -223,7 +223,7 @@ class ObjectField:
 @dataclass
 class InputArgument:
     """
-    https://hasura.io/docs/1.0/graphql/manual/api-reference/schema-metadata-api/actions.html#inputargument
+    https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/actions.html#inputargument
     """
     name: str
     type: str
@@ -245,10 +245,10 @@ class InputArgument:
 @dataclass
 class Header:
     """
-    https://hasura.io/docs/1.0/graphql/manual/api-reference/schema-metadata-api/syntax-defs.html#headerfromvalue
+    https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/syntax-defs.html#headerfromvalue
     
     
-    https://hasura.io/docs/1.0/graphql/manual/api-reference/schema-metadata-api/syntax-defs.html#headerfromenv
+    https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/syntax-defs.html#headerfromenv
     """
     """Name of the header"""
     name: str
@@ -283,7 +283,7 @@ class ActionDefinition:
     """Definition of the action
     
     
-    https://hasura.io/docs/1.0/graphql/manual/api-reference/schema-metadata-api/actions.html#actiondefinition
+    https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/actions.html#actiondefinition
     """
     """A String value which supports templating environment variables enclosed in {{ and }}.
     Template example: https://{{ACTION_API_DOMAIN}}/create-user
@@ -340,7 +340,7 @@ class Permissions:
 @dataclass
 class Action:
     """
-    https://hasura.io/docs/1.0/graphql/manual/api-reference/schema-metadata-api/actions.html#args-syntax
+    https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/actions.html#args-syntax
     """
     """Definition of the action"""
     definition: ActionDefinition
@@ -372,7 +372,7 @@ class Action:
 @dataclass
 class AllowList:
     """
-    https://hasura.io/docs/1.0/graphql/manual/api-reference/schema-metadata-api/query-collections.html#add-collection-to-allowlist-syntax
+    https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/query-collections.html#add-collection-to-allowlist-syntax
     """
     """Name of a query collection to be added to the allow-list"""
     collection: str
@@ -394,7 +394,7 @@ class RetryConfST:
     """Retry configuration if scheduled invocation delivery fails
     
     
-    https://hasura.io/docs/1.0/graphql/manual/api-reference/schema-metadata-api/scheduled-triggers.html#retryconfst
+    https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/scheduled-triggers.html#retryconfst
     """
     """Number of times to retry delivery.
     Default: 0
@@ -435,7 +435,7 @@ class RetryConfST:
 @dataclass
 class CronTrigger:
     """
-    https://hasura.io/docs/1.0/graphql/manual/api-reference/schema-metadata-api/scheduled-triggers.html#create-cron-trigger
+    https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/scheduled-triggers.html#create-cron-trigger
     """
     """List of headers to be sent with the webhook"""
     headers: List[Header]
@@ -486,7 +486,7 @@ class CronTrigger:
 @dataclass
 class EnumValue:
     """
-    https://hasura.io/docs/1.0/graphql/manual/api-reference/schema-metadata-api/custom-types.html#enumvalue
+    https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/custom-types.html#enumvalue
     """
     """Value of the Enum type"""
     value: str
@@ -514,7 +514,7 @@ class EnumValue:
 @dataclass
 class EnumType:
     """
-    https://hasura.io/docs/1.0/graphql/manual/api-reference/schema-metadata-api/custom-types.html#enumtype
+    https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/custom-types.html#enumtype
     """
     """Name of the Enum type"""
     name: str
@@ -542,7 +542,7 @@ class EnumType:
 @dataclass
 class InputObjectField:
     """
-    https://hasura.io/docs/1.0/graphql/manual/api-reference/schema-metadata-api/custom-types.html#inputobjectfield
+    https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/custom-types.html#inputobjectfield
     """
     """Name of the Input object type"""
     name: str
@@ -570,7 +570,7 @@ class InputObjectField:
 @dataclass
 class InputObjectType:
     """
-    https://hasura.io/docs/1.0/graphql/manual/api-reference/schema-metadata-api/custom-types.html#inputobjecttype
+    https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/custom-types.html#inputobjecttype
     """
     """Fields of the Input object type"""
     fields: List[InputObjectField]
@@ -623,7 +623,7 @@ class CustomTypeObjectRelationshipType(Enum):
 @dataclass
 class CustomTypeObjectRelationship:
     """
-    https://hasura.io/docs/1.0/graphql/manual/api-reference/schema-metadata-api/custom-types.html#objectrelationship
+    https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/custom-types.html#objectrelationship
     """
     """Mapping of fields of object type to columns of remote table"""
     field_mapping: Dict[str, str]
@@ -655,7 +655,7 @@ class CustomTypeObjectRelationship:
 @dataclass
 class ObjectType:
     """
-    https://hasura.io/docs/1.0/graphql/manual/api-reference/schema-metadata-api/custom-types.html#objecttype
+    https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/custom-types.html#objecttype
     """
     """Fields of the Input object type"""
     fields: List[InputObjectField]
@@ -687,7 +687,7 @@ class ObjectType:
 @dataclass
 class ScalarType:
     """
-    https://hasura.io/docs/1.0/graphql/manual/api-reference/schema-metadata-api/custom-types.html#scalartype
+    https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/custom-types.html#scalartype
     """
     """Name of the Scalar type"""
     name: str
@@ -739,7 +739,7 @@ class FunctionConfiguration:
     
     Configuration for a CustomFunction
     
-    https://hasura.io/docs/1.0/graphql/manual/api-reference/schema-metadata-api/custom-functions.html#function-configuration
+    https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/custom-functions.html#function-configuration
     """
     """Function argument which accepts session info JSON
     Currently, only functions which satisfy the following constraints can be exposed over the
@@ -785,7 +785,7 @@ class QualifiedFunction:
 class CustomFunction:
     """A custom SQL function to add to the GraphQL schema with configuration.
     
-    https://hasura.io/docs/1.0/graphql/manual/api-reference/schema-metadata-api/custom-functions.html#args-syntax
+    https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/custom-functions.html#args-syntax
     """
     """Name of the SQL function"""
     function: Union[QualifiedFunction, str]
@@ -809,7 +809,7 @@ class CustomFunction:
 @dataclass
 class QueryCollection:
     """
-    https://hasura.io/docs/1.0/graphql/manual/api-reference/schema-metadata-api/syntax-defs.html#collectionquery
+    https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/syntax-defs.html#collectionquery
     """
     name: str
     query: str
@@ -848,7 +848,7 @@ class Definition:
 @dataclass
 class QueryCollectionEntry:
     """
-    https://hasura.io/docs/1.0/graphql/manual/api-reference/schema-metadata-api/query-collections.html#args-syntax
+    https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/query-collections.html#args-syntax
     """
     """List of queries"""
     definition: Definition
@@ -878,7 +878,7 @@ class RemoteSchemaDef:
     """Name of the remote schema
     
     
-    https://hasura.io/docs/1.0/graphql/manual/api-reference/schema-metadata-api/syntax-defs.html#remoteschemadef
+    https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/syntax-defs.html#remoteschemadef
     """
     forward_client_headers: Optional[bool] = None
     headers: Optional[List[Header]] = None
@@ -909,7 +909,7 @@ class RemoteSchemaDef:
 @dataclass
 class RemoteSchema:
     """
-    https://hasura.io/docs/1.0/graphql/manual/api-reference/schema-metadata-api/remote-schemas.html#add-remote-schema
+    https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/remote-schemas.html#add-remote-schema
     """
     """Name of the remote schema"""
     definition: RemoteSchemaDef
@@ -940,7 +940,7 @@ class ArrRelUsingFKeyOn:
     
     The column with foreign key constraint
     
-    https://hasura.io/docs/1.0/graphql/manual/api-reference/schema-metadata-api/relationship.html#arrrelusingfkeyon
+    https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/relationship.html#arrrelusingfkeyon
     """
     column: str
     table: Union[QualifiedTable, str]
@@ -965,7 +965,7 @@ class ArrRelUsingManualMapping:
     
     Manual mapping of table and columns
     
-    https://hasura.io/docs/1.0/graphql/manual/api-reference/schema-metadata-api/relationship.html#arrrelusingmanualmapping
+    https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/relationship.html#arrrelusingmanualmapping
     """
     """Mapping of columns from current table to remote table"""
     column_mapping: Dict[str, str]
@@ -992,7 +992,7 @@ class ArrRelUsing:
     
     Use one of the available ways to define an object relationship
     
-    https://hasura.io/docs/1.0/graphql/manual/api-reference/schema-metadata-api/relationship.html#arrrelusing
+    https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/relationship.html#arrrelusing
     """
     """The column with foreign key constraint"""
     foreign_key_constraint_on: Optional[ArrRelUsingFKeyOn] = None
@@ -1016,7 +1016,7 @@ class ArrRelUsing:
 @dataclass
 class ArrayRelationship:
     """
-    https://hasura.io/docs/1.0/graphql/manual/api-reference/schema-metadata-api/relationship.html#create-array-relationship-syntax
+    https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/relationship.html#create-array-relationship-syntax
     """
     """Name of the new relationship"""
     name: str
@@ -1046,7 +1046,7 @@ class ComputedFieldDefinition:
     """The computed field definition
     
     
-    https://hasura.io/docs/1.0/graphql/manual/api-reference/schema-metadata-api/computed-field.html#computedfielddefinition
+    https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/computed-field.html#computedfielddefinition
     """
     """The SQL function"""
     function: Union[QualifiedFunction, str]
@@ -1078,7 +1078,7 @@ class ComputedFieldDefinition:
 @dataclass
 class ComputedField:
     """
-    https://hasura.io/docs/1.0/graphql/manual/api-reference/schema-metadata-api/computed-field.html#args-syntax
+    https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/computed-field.html#args-syntax
     """
     """The computed field definition"""
     definition: ComputedFieldDefinition
@@ -1109,7 +1109,7 @@ class CustomRootFields:
     
     Customise the root fields
     
-    https://hasura.io/docs/1.0/graphql/manual/api-reference/schema-metadata-api/table-view.html#custom-root-fields
+    https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/table-view.html#custom-root-fields
     """
     """Customise the `delete_<table-name>` root field"""
     delete: Optional[str] = None
@@ -1162,7 +1162,7 @@ class CustomRootFields:
 class TableConfig:
     """Configuration for the table/view
     
-    https://hasura.io/docs/1.0/graphql/manual/api-reference/schema-metadata-api/table-view.html#table-config
+    https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/table-view.html#table-config
     """
     """Customise the column names"""
     custom_column_names: Optional[Dict[str, str]] = None
@@ -1188,7 +1188,7 @@ class DeletePermission:
     """The permission definition
     
     
-    https://hasura.io/docs/1.0/graphql/manual/api-reference/schema-metadata-api/permission.html#deletepermission
+    https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/permission.html#deletepermission
     """
     """Only the rows where this precondition holds true are updatable"""
     filter: Optional[Dict[str, Union[float, Dict[str, Any], str]]] = None
@@ -1208,7 +1208,7 @@ class DeletePermission:
 @dataclass
 class DeletePermissionEntry:
     """
-    https://hasura.io/docs/1.0/graphql/manual/api-reference/schema-metadata-api/permission.html#create-delete-permission-syntax
+    https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/permission.html#create-delete-permission-syntax
     """
     """The permission definition"""
     permission: DeletePermission
@@ -1240,14 +1240,14 @@ class EventTriggerColumnsEnum(Enum):
 @dataclass
 class OperationSpec:
     """
-    https://hasura.io/docs/1.0/graphql/manual/api-reference/schema-metadata-api/event-triggers.html#operationspec
+    https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/event-triggers.html#operationspec
     """
     """
-    https://hasura.io/docs/1.0/graphql/manual/api-reference/schema-metadata-api/event-triggers.html#eventtriggercolumns
+    https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/event-triggers.html#eventtriggercolumns
     """
     columns: Union[List[str], EventTriggerColumnsEnum]
     """
-    https://hasura.io/docs/1.0/graphql/manual/api-reference/schema-metadata-api/event-triggers.html#eventtriggercolumns
+    https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/event-triggers.html#eventtriggercolumns
     """
     payload: Union[List[str], EventTriggerColumnsEnum, None]
 
@@ -1270,15 +1270,15 @@ class EventTriggerDefinition:
     """The SQL function"""
     enable_manual: bool
     """
-    https://hasura.io/docs/1.0/graphql/manual/api-reference/schema-metadata-api/event-triggers.html#operationspec
+    https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/event-triggers.html#operationspec
     """
     delete: Optional[OperationSpec] = None
     """
-    https://hasura.io/docs/1.0/graphql/manual/api-reference/schema-metadata-api/event-triggers.html#operationspec
+    https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/event-triggers.html#operationspec
     """
     insert: Optional[OperationSpec] = None
     """
-    https://hasura.io/docs/1.0/graphql/manual/api-reference/schema-metadata-api/event-triggers.html#operationspec
+    https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/event-triggers.html#operationspec
     """
     update: Optional[OperationSpec] = None
 
@@ -1305,7 +1305,7 @@ class RetryConf:
     """The SQL function
     
     
-    https://hasura.io/docs/1.0/graphql/manual/api-reference/schema-metadata-api/event-triggers.html#retryconf
+    https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/event-triggers.html#retryconf
     """
     """Number of seconds to wait between each retry.
     Default: 10
@@ -1340,7 +1340,7 @@ class RetryConf:
 class EventTrigger:
     """NOTE: The metadata type doesn't QUITE match the 'create' arguments here
     
-    https://hasura.io/docs/1.0/graphql/manual/api-reference/schema-metadata-api/event-triggers.html#create-event-trigger
+    https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/event-triggers.html#create-event-trigger
     """
     """The SQL function"""
     definition: EventTriggerDefinition
@@ -1381,7 +1381,7 @@ class InsertPermission:
     """The permission definition
     
     
-    https://hasura.io/docs/1.0/graphql/manual/api-reference/schema-metadata-api/permission.html#insertpermission
+    https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/permission.html#insertpermission
     """
     """Can insert into only these columns (or all when '*' is specified)"""
     columns: Union[List[str], EventTriggerColumnsEnum]
@@ -1417,7 +1417,7 @@ class InsertPermission:
 @dataclass
 class InsertPermissionEntry:
     """
-    https://hasura.io/docs/1.0/graphql/manual/api-reference/schema-metadata-api/permission.html#args-syntax
+    https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/permission.html#args-syntax
     """
     """The permission definition"""
     permission: InsertPermission
@@ -1448,7 +1448,7 @@ class ObjRelUsingManualMapping:
     
     Manual mapping of table and columns
     
-    https://hasura.io/docs/1.0/graphql/manual/api-reference/schema-metadata-api/relationship.html#objrelusingmanualmapping
+    https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/relationship.html#objrelusingmanualmapping
     """
     """Mapping of columns from current table to remote table"""
     column_mapping: Dict[str, str]
@@ -1475,7 +1475,7 @@ class ObjRelUsing:
     
     Use one of the available ways to define an object relationship
     
-    https://hasura.io/docs/1.0/graphql/manual/api-reference/schema-metadata-api/relationship.html#objrelusing
+    https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/relationship.html#objrelusing
     """
     """The column with foreign key constraint"""
     foreign_key_constraint_on: Optional[str] = None
@@ -1499,7 +1499,7 @@ class ObjRelUsing:
 @dataclass
 class ObjectRelationship:
     """
-    https://hasura.io/docs/1.0/graphql/manual/api-reference/schema-metadata-api/relationship.html#args-syntax
+    https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/relationship.html#args-syntax
     """
     """Name of the new relationship"""
     name: str
@@ -1531,7 +1531,7 @@ class RemoteFieldValue:
     joined with.
     It is recursive because the remote field maybe nested deeply in the remote schema.
     
-    https://hasura.io/docs/1.0/graphql/manual/api-reference/schema-metadata-api/remote-relationships.html#remotefield
+    https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/remote-relationships.html#remotefield
     """
     field: Optional[Dict[str, 'RemoteFieldValue']] = None
 
@@ -1580,7 +1580,7 @@ class RemoteRelationshipDef:
 @dataclass
 class RemoteRelationship:
     """
-    https://hasura.io/docs/1.0/graphql/manual/api-reference/schema-metadata-api/remote-relationships.html#args-syntax
+    https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/remote-relationships.html#args-syntax
     """
     """Definition object"""
     definition: RemoteRelationshipDef
@@ -1606,7 +1606,7 @@ class SelectPermission:
     """The permission definition
     
     
-    https://hasura.io/docs/1.0/graphql/manual/api-reference/schema-metadata-api/permission.html#selectpermission
+    https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/permission.html#selectpermission
     """
     """Only these columns are selectable (or all when '*' is specified)"""
     columns: Union[List[str], EventTriggerColumnsEnum]
@@ -1642,7 +1642,7 @@ class SelectPermission:
 @dataclass
 class SelectPermissionEntry:
     """
-    https://hasura.io/docs/1.0/graphql/manual/api-reference/schema-metadata-api/permission.html#create-select-permission-syntax
+    https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/permission.html#create-select-permission-syntax
     """
     """The permission definition"""
     permission: SelectPermission
@@ -1672,7 +1672,7 @@ class UpdatePermission:
     """The permission definition
     
     
-    https://hasura.io/docs/1.0/graphql/manual/api-reference/schema-metadata-api/permission.html#updatepermission
+    https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/permission.html#updatepermission
     """
     """Only these columns are selectable (or all when '*' is specified)"""
     columns: Union[List[str], EventTriggerColumnsEnum]
@@ -1704,7 +1704,7 @@ class UpdatePermission:
 @dataclass
 class UpdatePermissionEntry:
     """
-    https://hasura.io/docs/1.0/graphql/manual/api-reference/schema-metadata-api/permission.html#create-update-permission-syntax
+    https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/permission.html#create-update-permission-syntax
     """
     """The permission definition"""
     permission: UpdatePermission
@@ -1737,7 +1737,7 @@ class TableEntry:
     computed_fields: Optional[List[ComputedField]] = None
     """Configuration for the table/view
     
-    https://hasura.io/docs/1.0/graphql/manual/api-reference/schema-metadata-api/table-view.html#table-config
+    https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/table-view.html#table-config
     """
     configuration: Optional[TableConfig] = None
     delete_permissions: Optional[List[DeletePermissionEntry]] = None
@@ -1787,7 +1787,7 @@ class TableEntry:
 class HasuraMetadataV2:
     """Type used in exported 'metadata.json' and replace metadata endpoint
     
-    https://hasura.io/docs/1.0/graphql/manual/api-reference/schema-metadata-api/manage-metadata.html#replace-metadata
+    https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/manage-metadata.html#replace-metadata
     """
     tables: List[TableEntry]
     version: float

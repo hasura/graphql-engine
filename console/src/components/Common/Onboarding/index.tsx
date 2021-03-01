@@ -96,11 +96,11 @@ const onboardingList = [
     title: 'Read the Getting Started Docs',
     link: {
       pro:
-        'https://hasura.io/docs/1.0/graphql/core/getting-started/first-graphql-query.html?pg=pro&plcmt=onboarding-checklist#create-a-table',
+        'https://hasura.io/docs/latest/graphql/core/getting-started/first-graphql-query.html?pg=pro&plcmt=onboarding-checklist#create-a-table',
       oss:
-        'https://hasura.io/docs/1.0/graphql/core/getting-started/first-graphql-query.html?pg=oss-console&plcmt=onboarding#create-a-table',
+        'https://hasura.io/docs/latest/graphql/core/getting-started/first-graphql-query.html?pg=oss-console&plcmt=onboarding#create-a-table',
       cloud:
-        'https://hasura.io/docs/1.0/graphql/core/getting-started/first-graphql-query.html?pg=cloud&plcmt=onboarding-checklist#create-a-table',
+        'https://hasura.io/docs/latest/graphql/core/getting-started/first-graphql-query.html?pg=cloud&plcmt=onboarding-checklist#create-a-table',
     },
   },
   { title: 'Watch Our Getting Started Video', videoId: 'ZGKQ0U18USU' },

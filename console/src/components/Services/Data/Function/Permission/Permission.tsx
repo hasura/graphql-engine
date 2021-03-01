@@ -37,7 +37,7 @@ const PermissionServerFlagNote = ({ isEditable = false }) =>
         <code>HASURA_GRAPHQL_INFER_FUNCTION_PERMISSIONS=false</code> on the
         server (
         <a
-          href="https://hasura.io/docs/1.0/graphql/core/api-reference/schema-metadata-api/custom-functions.html#api-custom-functions"
+          href="https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/custom-functions.html#api-custom-functions"
           target="_blank"
           rel="noopener noreferrer"
         >

@@ -141,7 +141,7 @@ emptyFunctionConfig = FunctionConfig Nothing Nothing
 
 -- | JSON API payload for v2 of 'track_function':
 --
--- https://hasura.io/docs/1.0/graphql/core/api-reference/schema-metadata-api/custom-functions.html#track-function-v2
+-- https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/custom-functions.html#track-function-v2
 data TrackFunctionV2
   = TrackFunctionV2
   { _tfv2Source        :: !SourceName

@@ -263,7 +263,7 @@ const VersionUpdateNotification: React.FC<VersionUpdateNotificationProps> = ({
       <span className={styles.middot}> &middot; </span>
       <a
         className={styles.updateLink}
-        href="https://hasura.io/docs/1.0/graphql/manual/deployment/updating.html"
+        href="https://hasura.io/docs/latest/graphql/core/deployment/updating.html"
         target="_blank"
         rel="noopener noreferrer"
       >
@@ -299,7 +299,7 @@ const VulnerableVersionNotification: React.FC<VulnerableVersionProps> = ({
     <span className={styles.middot}> &middot; </span>
     <a
       className={styles.updateLink}
-      href="https://hasura.io/docs/1.0/graphql/manual/deployment/updating.html"
+      href="https://hasura.io/docs/latest/graphql/core/deployment/updating.html"
       target="_blank"
       rel="noopener noreferrer"
     >

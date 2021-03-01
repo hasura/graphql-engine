@@ -514,7 +514,7 @@ query {
 
 Support for this is now added through the `add_computed_field` API.
 
-Read more about the session argument for computed fields in the [docs](https://hasura.io/docs/1.0/graphql/manual/api-reference/schema-metadata-api/computed-field.html).
+Read more about the session argument for computed fields in the [docs](https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/computed-field.html).
 
 ### Manage seed migrations as SQL files
 
@@ -761,7 +761,7 @@ Postgres materialized views are views that are persisted in a table-like form. T
 ### docs: map Postgres operators to corresponding Hasura operators
 
 Map Postgres operators to corresponding Hasura operators at various places in docs and link to PG documentation for reference.
-For example, see [here](https://hasura.io/docs/1.0/graphql/manual/api-reference/schema-metadata-api/syntax-defs.html#operator).
+For example, see [here](https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/syntax-defs.html#operator).
 
 (#4502) (close #4056)
 
@@ -854,7 +854,7 @@ Read more about check constraints on [Postgres Docs](https://www.postgresql.org/
 
 A new CLI migrations image is introduced to account for the new migrations workflow. If you're have a project with `version: 2` in `config.yaml`, you should use the new image: `hasura/graphql-engine:v1.2.0-cli-migrations-v2`. Mount the migrations at `/hasura-migrations` and metadata at `/hasura-metadata`.
 
-See [upgrade docs](https://hasura.io/docs/1.0/graphql/manual/migrations/upgrade-v2.html).
+See [upgrade docs](https://hasura.io/docs/latest/graphql/core/migrations/upgrade-v2.html).
 
 (close #3969) (#4145)
 
@@ -929,7 +929,7 @@ docker run hasura/graphql-engine:v1.2.0 graphql-engine --database-url <db-url> d
 # start hasura v1.0.0
 ```
 
-Read more about this command in the [docs](https://hasura.io/docs/1.0/graphql/manual/deployment/downgrading.html#downgrading-hasura-graphql-engine).
+Read more about this command in the [docs](https://hasura.io/docs/latest/graphql/core/deployment/downgrading.html#downgrading-hasura-graphql-engine).
 
 (close #1156) (#3760)
 
@@ -937,7 +937,7 @@ Read more about this command in the [docs](https://hasura.io/docs/1.0/graphql/ma
 
 When using webhooks to authenticate incoming requests to the GraphQL engine server, it is now possible to specify an expiration time; the connection to the server will be automatically closed if it's still running when the expiration delay is expired.
 
-Read more about it in the [docs](https://hasura.io/docs/1.0/graphql/manual/auth/authentication/webhook.html).
+Read more about it in the [docs](https://hasura.io/docs/latest/graphql/core/auth/authentication/webhook.html).
 
 ### Bug fixes and improvements
 

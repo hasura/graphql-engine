@@ -19,7 +19,7 @@ The react client is a forked version of [urigo/whatsapp-client-react](https://gi
   git clone https://github.com/hasura/graphql-engine
   cd graphql-engine/community/sample-apps/whatsapp-clone-typescript-react
   ```
-- [Install Hasura CLI](https://hasura.io/docs/1.0/graphql/manual/hasura-cli/install-hasura-cli.html)
+- [Install Hasura CLI](https://hasura.io/docs/latest/graphql/core/hasura-cli/install-hasura-cli.html)
 - Apply the migrations:
   ```bash
   cd hasura 

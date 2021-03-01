@@ -88,7 +88,7 @@ hashAdminSecret = AdminSecretHash . Crypto.hash . T.encodeUtf8
 -- @Maybe RoleName@ below is the optionally-defined role for the
 -- unauthenticated (anonymous) user.
 --
--- See: https://hasura.io/docs/1.0/graphql/manual/auth/authentication/unauthenticated-access.html
+-- See: https://hasura.io/docs/latest/graphql/core/auth/authentication/unauthenticated-access.html
 
 data AuthMode
   = AMNoAuth

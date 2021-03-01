@@ -523,7 +523,7 @@ class Schema extends Component {
         'Untracked foreign-key relationships',
         'Relationships inferred via foreign-keys that are not exposed over the GraphQL API',
         <>
-          <KnowMoreLink href="https://hasura.io/docs/1.0/graphql/manual/schema/table-relationships/index.html" />
+          <KnowMoreLink href="https://hasura.io/docs/latest/graphql/core/schema/table-relationships/index.html" />
           <span className={styles.add_mar_left}>{getTrackAllBtn()}</span>
         </>
       );
@@ -544,7 +544,7 @@ class Schema extends Component {
       const heading = getSectionHeading(
         'Untracked custom functions',
         'Custom functions that are not exposed over the GraphQL API',
-        <KnowMoreLink href="https://hasura.io/docs/1.0/graphql/manual/schema/custom-functions.html" />
+        <KnowMoreLink href="https://hasura.io/docs/latest/graphql/core/schema/custom-functions.html" />
       );
 
       return (

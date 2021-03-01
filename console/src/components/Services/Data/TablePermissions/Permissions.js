@@ -1726,7 +1726,7 @@ class Permissions extends Component {
               'Backend only',
               tooltip,
               backendStatus,
-              'https://hasura.io/docs/1.0/graphql/manual/auth/authorization/permission-rules.html#backend-only'
+              'https://hasura.io/docs/latest/graphql/core/auth/authorization/permission-rules.html#backend-only'
             )}
             useDefaultTitleStyle
             testId={'toggle-backend-only'}

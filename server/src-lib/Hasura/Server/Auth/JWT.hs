@@ -352,8 +352,8 @@ type ClaimsMap = Map.HashMap SessionVariable J.Value
 -- When no 'x-hasura-user-role' is specified in the request, the mandatory
 -- 'x-hasura-default-role' [2] from the JWT claims will be used.
 
--- [1]: https://hasura.io/docs/1.0/graphql/manual/auth/authentication/unauthenticated-access.html
--- [2]: https://hasura.io/docs/1.0/graphql/manual/auth/authentication/jwt.html#the-spec
+-- [1]: https://hasura.io/docs/latest/graphql/core/auth/authentication/unauthenticated-access.html
+-- [2]: https://hasura.io/docs/latest/graphql/core/auth/authentication/jwt.html#the-spec
 processJwt
   :: ( MonadIO m
      , MonadError QErr m)
