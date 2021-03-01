@@ -523,14 +523,14 @@ Example:-
 
 If ``header`` is ``{"type": "Authorization"}`` then JWT header should look like:
 
-.. code-block:: http
+.. code-block:: none
 
    Authorization: Bearer eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWI...
 
 If ``header`` is ``{"type": "Cookie", "name": "cookie_name" }`` then JWT header should look like:
 
 
-.. code-block:: http
+.. code-block:: none
 
    Cookie: cookie_name=eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWI...
 
