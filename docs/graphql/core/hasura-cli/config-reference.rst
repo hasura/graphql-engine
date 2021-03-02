@@ -63,7 +63,7 @@ The configuration file can be configured with the following config keys:
    * - endpoint
      - true
      - 1
-     - http://localhost:8080
+     - ``http://localhost:8080``
    * - admin_secret
      - false
      - 1
@@ -123,7 +123,7 @@ The configuration file can be configured with the following config keys:
    * - actions.handler_webhook_baseurl
      - true
      - 2
-     - http://localhost:3000
+     - ``http://localhost:3000``
    * - actions.codegen
      - false
      - 2

@@ -45,7 +45,7 @@ Choose from the full list of deployment guides:
 - :ref:`Deploy using Digital Ocean One-click App on Marketplace <deploy_do_marketplace>`
 - :ref:`Deploy using Azure Container Instances with Postgres <deploy_azure_ci_pg>`
 - :ref:`Deploy using Google Cloud Platform with Kubernetes engine and Cloud SQL <deploy_gc_kubernetes>`
-- `Deploy using Instant GraphQL on AWS RDS (blog) <https://hasura.io/blog/instant-graphql-on-aws-rds-1edfb85b5985>`__
+- `Deploy using Instant GraphQL on AWS RDS (blog) <https://hasura.io/blog/instant-graphql-on-aws-rds-1edfb85b5985/>`__
 - :ref:`Deploy using Render One-click Deploy with Managed PostgreSQL <deploy_render>`
 - :ref:`Deploy using Nhost One-click Deploy with Managed PostgreSQL, Storage, and Auth <deploy_nhost>`
 

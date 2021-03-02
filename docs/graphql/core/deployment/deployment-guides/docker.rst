@@ -149,7 +149,7 @@ Execute ``docker-run.sh`` & check if everything is running well:
 Step 4: Open the Hasura console
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Head to http://localhost:8080/console to open the Hasura console.
+Head to ``http://localhost:8080/console`` to open the Hasura console.
 
 Step 5: Track existing tables and relationships
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
