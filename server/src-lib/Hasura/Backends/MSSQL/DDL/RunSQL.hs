@@ -42,7 +42,7 @@ data MSSQLRunSQL
 $(deriveJSON hasuraJSON ''MSSQLRunSQL)
 
 runSQL
-  :: (MonadIO m, CacheRWM m, MonadError QErr m)
+  :: (MonadIO m, CacheRWM m, MonadError QErr m, MetadataM m)
   => MSSQLRunSQL -> m EncJSON
 runSQL (MSSQLRunSQL sqlText source) = do
   pool <- _mscConnectionPool <$> askSourceConfig source

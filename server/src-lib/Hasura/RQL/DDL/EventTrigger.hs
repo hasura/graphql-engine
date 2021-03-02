@@ -141,7 +141,7 @@ deliverEvent eventId = do
   markForDelivery eventId
 
 runRedeliverEvent
-  :: (MonadIO m, CacheRM m, QErrM m)
+  :: (MonadIO m, CacheRM m, QErrM m, MetadataM m)
   => RedeliverEventQuery -> m EncJSON
 runRedeliverEvent (RedeliverEventQuery eventId source) = do
   sourceConfig <- askSourceConfig source
@@ -165,7 +165,7 @@ insertManualEvent qt trn rowData = do
     getEid (x:_) = return x
 
 runInvokeEventTrigger
-  :: (MonadIO m, QErrM m, CacheRM m)
+  :: (MonadIO m, QErrM m, CacheRM m, MetadataM m)
   => InvokeEventTriggerQuery -> m EncJSON
 runInvokeEventTrigger (InvokeEventTriggerQuery name source payload) = do
   trigInfo <- askEventTriggerInfo source name

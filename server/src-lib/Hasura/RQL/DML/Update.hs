@@ -188,7 +188,7 @@ validateUpdateQuery query = do
 runUpdate
   :: ( HasVersion, QErrM m, UserInfoM m, CacheRM m
      , HasServerConfigCtx m, MonadBaseControl IO m
-     , MonadIO m, Tracing.MonadTrace m
+     , MonadIO m, Tracing.MonadTrace m, MetadataM m
      )
   => Env.Environment -> UpdateQuery -> m EncJSON
 runUpdate env q = do

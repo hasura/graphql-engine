@@ -7,6 +7,7 @@
 - server/mssql: fix malformed JSON answer on empty tables
 - server/mssql: fix runtime errors when selecting geography/geometry columns
 - server/mssql: supports connection pooling to sql server
+- server: improve errors messages for inconsistent sources
 
 ## v1.4.0-alpha.2
 ### MSSQL support

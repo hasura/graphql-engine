@@ -35,6 +35,7 @@ import           Hasura.Prelude
 import qualified Data.HashMap.Strict                 as M
 import qualified Database.PG.Query                   as Q
 
+import           Control.Lens                        (at, (^.))
 import           Control.Monad.Unique
 import           Data.Text.Extended
 import           Network.HTTP.Client.Extended        (HasHttpManagerM (..))
@@ -73,16 +74,21 @@ import           Hasura.Tracing
 
 
 askSourceInfo
-  :: (CacheRM m, MonadError QErr m, Backend b)
+  :: (CacheRM m, MonadError QErr m, Backend b, MetadataM m)
   => SourceName -> m (SourceInfo b)
 askSourceInfo sourceName = do
   sources <- scSources <$> askSchemaCache
-  onNothing (unsafeSourceInfo =<< M.lookup sourceName sources) $
+  onNothing (unsafeSourceInfo =<< M.lookup sourceName sources) $ do
     -- FIXME: this error can also happen for a lookup with the wrong type
-    throw400 NotExists $ "source with name " <> sourceName <<> " does not exist"
+    metadata <- getMetadata
+    case metadata ^. metaSources . at sourceName of
+      Nothing ->
+        throw400 NotExists $ "source with name " <> sourceName <<> " does not exist"
+      Just _ ->
+        throw400 Unexpected $ "source with name " <> sourceName <<> " is inconsistent"
 
 askSourceConfig
-  :: (CacheRM m, MonadError QErr m, Backend b)
+  :: (CacheRM m, MonadError QErr m, Backend b, MetadataM m)
   => SourceName -> m (SourceConfig b)
 askSourceConfig = fmap _siConfiguration . askSourceInfo
 
