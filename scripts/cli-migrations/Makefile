@@ -6,6 +6,8 @@ BINARY ?= $(BUILD_DIR)/_cli_output/binaries/cli-hasura-linux-amd64
 IMAGE_TAG ?= cli-migrations
 BUILD_OUTPUT ?= $(BUILD_DIR)/_cli_migrations_output
 SERVER_BUILD_OUTPUT := $(BUILD_DIR)/_server_output
+SHELL := /bin/bash
+.SHELLFLAGS := -ce
 
 .PHONY: load-server-image
 load-server-image:
