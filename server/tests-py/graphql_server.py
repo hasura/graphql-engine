@@ -1,17 +1,13 @@
 # -*- coding: utf-8 -*-
 
 from http import HTTPStatus
-
 import graphene
-
 import copy
-
 from webserver import RequestHandler, WebServer, MkHandlers, Response
-
 from enum import Enum
-
 import time
-
+import ssl
+import sys
 from graphql import GraphQLError
 
 HGE_URLS=[]
@@ -761,5 +757,19 @@ def set_hge_urls(hge_urls = []):
     HGE_URLS=hge_urls
 
 if __name__ == '__main__':
-    s = create_server(host='0.0.0.0')
+    port = None
+    certfile = None
+    s = None
+    if len(sys.argv) == 4: # usage - python3 graphql-server.py <port> <certfile> <keyfile>
+        port_ = int(sys.argv[1])
+        certfile_ = sys.argv[2]
+        keyfile_ = sys.argv[3]
+        s = create_server(port = port_)
+        s.socket = ssl.wrap_socket( s.socket,
+                                    certfile=certfile_,
+                                    keyfile=keyfile_,
+                                    server_side=True,
+                                    ssl_version=ssl.PROTOCOL_SSLv23)
+    else:
+        s = create_server()
     s.serve_forever()

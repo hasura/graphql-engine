@@ -182,7 +182,7 @@ if [ $EUID != 0 ] ; then
   RUN_WEBHOOK_TESTS=false
 fi
 
-for port in 8080 8081 9876 5592 5000 5594
+for port in 8080 8081 9876 5592 5000 5001 5594
 do
 	fail_if_port_busy $port
 done
@@ -215,6 +215,7 @@ HGE_PIDS=""
 WH_PID=""
 WHC_PID=""
 HS_PID=""
+GQL_SERVER_PID=""
 
 trap stop_services ERR
 trap stop_services INT
@@ -738,6 +739,28 @@ case "$SERVER_TEST_TO_RUN" in
 
     # end verbose logging tests
     ;;
+
+  remote-schema-https)
+      TEST_TYPE="remote-schemas-https"
+      echo -e "\n$(time_elapsed): <########## TEST GRAPHQL-ENGINE WITH SECURE REMOTE SCHEMA #########################>\n"
+
+      export REMOTE_SCHEMAS_WEBHOOK_DOMAIN="https://127.0.0.1:5001/"
+      init_ssl
+
+      run_hge_with_args serve
+
+      wait_for_port 8080
+
+      python3 graphql_server.py 5001 "$OUTPUT_FOLDER/ssl/webhook.pem" "$OUTPUT_FOLDER/ssl/webhook-key.pem" > "$OUTPUT_FOLDER/remote_gql_server.log" 2>&1 & GQL_SERVER_PID=$!
+
+      wait_for_port 5001
+
+      pytest -n 1 -vv --hge-urls="$HGE_URL" --pg-urls="$HASURA_GRAPHQL_DATABASE_URL" test_schema_stitching.py::TestRemoteSchemaBasic
+
+      export REMOTE_SCHEMA_WEBHOOK_DOMAIN="https://localhost:5000/"
+      kill_hge_servers
+      kill $GQL_SERVER_PID
+      ;;
 
   post-webhook)
     if [ "$RUN_WEBHOOK_TESTS" == "true" ] ; then
