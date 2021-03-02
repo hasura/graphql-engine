@@ -6,17 +6,19 @@ Boilerplate to get started with Quasar Framework, Hasura GraphQL engine as CMS a
 
 # Tutorial
 
-- Deploy Postgres and GraphQL Engine on Heroku:
+- Deploy GraphQL Engine on Hasura Cloud and setup PostgreSQL via Heroku:
 
-  [![Deploy to
-  heroku](https://www.herokucdn.com/deploy/button.svg)](https://heroku.com/deploy?template=https://github.com/hasura/graphql-engine-heroku)
+  [![Deploy to Hasura Cloud](https://graphql-engine-cdn.hasura.io/img/deploy_to_hasura.png)](https://cloud.hasura.io/)
 
-  Please checkout our [docs](https://hasura.io/docs/latest/graphql/core/deployment/index.html) for other deployment methods
+- Get the Hasura app URL (say `quasar-graphql.hasura.app`)
 
-- Get the Heroku app URL (say `my-app.herokuapp.com`)
 - Create `author` table:
 
+<<<<<<< HEAD
+  Open Hasura console: visit https://quasar-graphql.hasura.app on a browser
+=======
   Open Hasura console: visit https://my-app.herokuapp.com on a browser
+>>>>>>> main
   Navigate to `Data` section in the top nav bar and create a table as follows:
 
   ![Create author table](../gatsby-postgres-graphql/assets/add_table.jpg)
@@ -53,7 +55,7 @@ import VueApollo from 'vue-apollo'
 import fetch from 'node-fetch'
 import { createHttpLink } from 'apollo-link-http'
 
-const httpLink = createHttpLink({ uri: 'https://myapp.herokuapp.com/v1/graphql', fetch: fetch })
+const httpLink = createHttpLink({ uri: 'https://quasar-graphql.hasura.app/v1/graphql', fetch: fetch })
 
 // Create the apollo client
 const apolloClient = new ApolloClient({
@@ -64,7 +66,7 @@ const apolloClient = new ApolloClient({
 
 ```
 
-In the `httpLink`, replace `myapp.herokuapp.com` with your own Heroku URL of Hasura GraphQL Engine.
+In the `httpLink`, replace `quasar-graphql.hasura.app` with your own URL of Hasura Cloud Project.
 
 - We have defined the graphql query for fetching author list in `src/layouts/MyLayout.vue`.
     - GraphQL query

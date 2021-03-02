@@ -4,6 +4,10 @@ This app demonstrates pagination using Hasura with Relay. It's for demo purposes
 
 ## Setup
 
+- Deploy GraphQL Engine on Hasura Cloud and setup PostgreSQL via Heroku:
+  
+  [![Deploy to Hasura Cloud](https://graphql-engine-cdn.hasura.io/img/deploy_to_hasura.png)](https://cloud.hasura.io/)
+
 - Create the following tables via the Hasura console:
   - `reviews`
     - columns: `id`, `body`, `created_at`, `restaurant_id`

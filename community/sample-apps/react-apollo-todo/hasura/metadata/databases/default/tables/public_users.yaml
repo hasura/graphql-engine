@@ -1,0 +1,46 @@
+array_relationships:
+- name: todos
+  using:
+    foreign_key_constraint_on:
+      column: user_id
+      table:
+        name: todos
+        schema: public
+delete_permissions:
+- permission:
+    filter:
+      auth0_id:
+        _eq: X-HASURA-USER-ID
+  role: user
+insert_permissions:
+- permission:
+    check:
+      auth0_id:
+        _eq: X-HASURA-USER-ID
+  role: user
+select_permissions:
+- permission:
+    columns:
+    - name
+    - created_at
+    - last_seen
+    - auth0_id
+    - id
+    filter: {}
+  role: user
+table:
+  name: users
+  schema: public
+update_permissions:
+- permission:
+    check: null
+    columns:
+    - id
+    - name
+    - auth0_id
+    - created_at
+    - last_seen
+    filter:
+      auth0_id:
+        _eq: X-HASURA-USER-ID
+  role: user

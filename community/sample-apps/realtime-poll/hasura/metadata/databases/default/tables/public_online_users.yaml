@@ -1,0 +1,3 @@
+table:
+  name: online_users
+  schema: public

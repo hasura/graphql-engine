@@ -8,27 +8,27 @@ Boilerplate to get started with Gatsby, Hasura GraphQL engine as CMS and postgre
 
 # Tutorial
 
-1. Deploy Postgres and GraphQL Engine on Heroku:
+- Deploy GraphQL Engine on Hasura Cloud and setup PostgreSQL via Heroku:
+  
+  [![Deploy to Hasura Cloud](https://graphql-engine-cdn.hasura.io/img/deploy_to_hasura.png)](https://cloud.hasura.io/)
 
-[![Deploy to
-heroku](https://www.herokucdn.com/deploy/button.svg)](https://heroku.com/deploy?template=https://github.com/hasura/graphql-engine-heroku)
+- Get the Hasura app URL (say `gatsby-graphql.hasura.app`)
 
-2. Get the Heroku app URL (say `my-app.herokuapp.com`)
-3. Clone this repo:
+- Clone this repo:
 
 ```bash
 git clone https://github.com/hasura/graphql-engine
 cd graphql-engine/community/sample-apps/gatsby-postgres-graphql
 ```
 
-4. Create `author` table:
+- Create `author` table:
 
-Open Hasura console: visit https://my-app.herokuapp.com on a browser  
+Open Hasura console: visit https://gatsby-graphql.hasura.app on a browser  
  Navigate to `Data` section in the top nav bar and create a table as follows:
 
 ![Create author table](./assets/add_table.jpg)
 
-5. Insert sample data into `author` table:
+- Insert sample data into `author` table:
 
 ![Insert data into author table](./assets/insert_data.jpg)
 
@@ -36,13 +36,13 @@ Verify if the row is inserted successfully
 
 ![Insert data into author table](./assets/browse_rows.jpg)
 
-6. Install npm modules:
+- Install npm modules:
 
 ```bash
 npm install
 ```
 
-7. Configure gatsby to use `gatsby-source-graphql` plugin and a connection GraphQL url to stitch the schema.
+- Configure gatsby to use `gatsby-source-graphql` plugin and a connection GraphQL url to stitch the schema.
 
 ```js
 {
@@ -60,13 +60,13 @@ npm install
 }
 ```
 
-8. Run the app:
+- Run the app:
 
 ```bash
-GATSBY_HASURA_GRAPHQL_URL=https://my-app.herokuapp.com/v1/graphql npm run develop
+GATSBY_HASURA_GRAPHQL_URL=https://gatsby-graphql.hasura.app/v1/graphql npm run develop
 ```
 
-9. Test the app
+- Test the app
    Visit [http://localhost:8000](http://localhost:8000) to view the app
 
 ![Demo app](./assets/test_app.jpg)
