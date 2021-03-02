@@ -221,6 +221,7 @@ query {
 - cli: allow seeds as alias for seed command (#5693)
 - cli: fix action timeouts not being picked up in metadata operations (#6220)
 - build: add `test_server_pg_13` to the CI to run the server tests on Postgres v13 (#6070)
+- build: fix the packaging of static console assets (fix #6610)
 
 ## v1.3.3
 

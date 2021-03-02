@@ -17,6 +17,6 @@ RUN apt-get update \
 
 COPY rootfs/graphql-engine /bin/
 COPY rootfs/pg_dump /bin/
-COPY rootfs/srv/* /srv
+COPY rootfs/srv/ /srv/
 
 CMD ["graphql-engine", "serve"]
