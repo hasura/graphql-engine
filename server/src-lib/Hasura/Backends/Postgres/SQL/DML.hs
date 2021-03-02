@@ -740,6 +740,7 @@ data CompareOp
   | SHasKey
   | SHasKeysAny
   | SHasKeysAll
+  | SMatchesFulltext
   deriving (Eq, Generic, Data)
 instance NFData CompareOp
 instance Cacheable CompareOp
@@ -747,29 +748,30 @@ instance Hashable CompareOp
 
 instance Show CompareOp where
   show = \case
-    SEQ          -> "="
-    SGT          -> ">"
-    SLT          -> "<"
-    SIN          -> "IN"
-    SNE          -> "<>"
-    SGTE         -> ">="
-    SLTE         -> "<="
-    SNIN         -> "NOT IN"
-    SLIKE        -> "LIKE"
-    SNLIKE       -> "NOT LIKE"
-    SILIKE       -> "ILIKE"
-    SNILIKE      -> "NOT ILIKE"
-    SSIMILAR     -> "SIMILAR TO"
-    SNSIMILAR    -> "NOT SIMILAR TO"
-    SREGEX       -> "~"
-    SIREGEX      -> "~*"
-    SNREGEX      -> "!~"
-    SNIREGEX     -> "!~*"
-    SContains    -> "@>"
-    SContainedIn -> "<@"
-    SHasKey      -> "?"
-    SHasKeysAny  -> "?|"
-    SHasKeysAll  -> "?&"
+    SEQ              -> "="
+    SGT              -> ">"
+    SLT              -> "<"
+    SIN              -> "IN"
+    SNE              -> "<>"
+    SGTE             -> ">="
+    SLTE             -> "<="
+    SNIN             -> "NOT IN"
+    SLIKE            -> "LIKE"
+    SNLIKE           -> "NOT LIKE"
+    SILIKE           -> "ILIKE"
+    SNILIKE          -> "NOT ILIKE"
+    SSIMILAR         -> "SIMILAR TO"
+    SNSIMILAR        -> "NOT SIMILAR TO"
+    SREGEX           -> "~"
+    SIREGEX          -> "~*"
+    SNREGEX          -> "!~"
+    SNIREGEX         -> "!~*"
+    SContains        -> "@>"
+    SContainedIn     -> "<@"
+    SHasKey          -> "?"
+    SHasKeysAny      -> "?|"
+    SHasKeysAll      -> "?&"
+    SMatchesFulltext -> "@"
 
 instance ToSQL CompareOp where
   toSQL = fromString . show

@@ -20,10 +20,7 @@ class AllowedQueries extends React.Component {
           <div className={styles.add_mar_top + ' ' + styles.wd60}>
             <AllowedQueriesNotes />
             <hr />
-            <AddAllowedQuery
-              dispatch={dispatch}
-              isEmptyList={allowedQueries.length === 0}
-            />
+            <AddAllowedQuery dispatch={dispatch} />
             <hr />
             <AllowedQueriesList
               dispatch={dispatch}

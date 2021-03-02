@@ -1,22 +1,44 @@
 import { DataSource } from '../../../../metadata/types';
 import { Driver } from '../../../../dataSources';
 
+const parseURI = (url: string) => {
+  try {
+    const pattern = /^(?:([^:/?#\s]+):\/{2})?(?:([^@/?#\s]+)@)?([^/?#\s]+)?(?:\/([^?#\s]*))?(?:[?]([^#\s]+))?\S*$/;
+    const matches = url.match(pattern);
+    if (!matches) return {};
+
+    const params = {} as Record<string, string | Record<string, string>>;
+    if (matches[5] !== undefined) {
+      matches[5]?.split('&').forEach((x: string) => {
+        const a = x?.split('=');
+        if (a[0] && a[1]) params[a[0]] = a[1];
+      });
+    }
+
+    return {
+      protocol: matches[1],
+      user: matches[2]?.split(':')[0],
+      password: matches[2]?.split(':')[1],
+      host: matches[3],
+      hostname: matches[3]?.split(/:(?=\d+$)/)[0],
+      port: matches[3]?.split(/:(?=\d+$)/)[1],
+      segments: matches[4]?.split('/'),
+      params,
+    };
+  } catch (error) {
+    console.error(error);
+    return {};
+  }
+};
+
 export const getHostFromConnectionString = (datasource: DataSource) => {
-  const connectionString =
-    typeof datasource.url === 'string'
-      ? datasource.url
-      : datasource.url.from_env;
-  // this is for postgres
-  if (
-    connectionString.includes('postgresql') ||
-    connectionString.indexOf('postgresql') !== -1
-  ) {
-    return connectionString.split('@')[1].split(':')[0];
+  if (typeof datasource.url === 'string' && datasource.driver === 'postgres') {
+    const { hostname = null } = parseURI(datasource.url);
+    return hostname;
   }
   // TODO: update this function with connection string for other databases
   return null;
 };
-
 export const makeConnectionStringFromConnectionParams = ({
   dbType,
   host,

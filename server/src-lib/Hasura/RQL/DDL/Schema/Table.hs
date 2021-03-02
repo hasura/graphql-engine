@@ -118,7 +118,7 @@ isTableTracked sourceInfo tableName =
 -- | Track table/view, Phase 1:
 -- Validate table tracking operation. Fails if table is already being tracked,
 -- or if a function with the same name is being tracked.
-trackExistingTableOrViewP1 :: forall m b. (QErrM m, CacheRWM m, Backend b) => SourceName -> TableName b -> m ()
+trackExistingTableOrViewP1 :: forall m b. (QErrM m, CacheRWM m, Backend b, MetadataM m) => SourceName -> TableName b -> m ()
 trackExistingTableOrViewP1 source tableName = do
   sourceInfo <- askSourceInfo source
   when (isTableTracked sourceInfo tableName) $

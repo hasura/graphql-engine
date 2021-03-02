@@ -352,7 +352,7 @@ const RawSQL = ({
         <KnowMoreLink
           text={'See supported functions requirements'}
           href={
-            'https://hasura.io/docs/1.0/graphql/manual/schema/custom-functions.html#supported-sql-functions'
+            'https://hasura.io/docs/latest/graphql/core/schema/custom-functions.html#supported-sql-functions'
           }
         />
       </div>

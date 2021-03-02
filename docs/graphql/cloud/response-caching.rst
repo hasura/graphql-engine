@@ -82,7 +82,7 @@ Please note:
 * A session variable will only influence the cache key for a query if it referenced by the execution plan.
   In practice this means that session variables are only factored into cache keys if they are referenced
   in the permissions for a query.
-  See https://hasura.io/docs/1.0/graphql/core/api-reference/schema-metadata-api/permission.html
+  See https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/permission.html
 
 Response headers
 ----------------

@@ -280,6 +280,9 @@ data PGScalarType
   | PGGeography
   | PGRaster
   | PGUUID
+  | PGLtree
+  | PGLquery
+  | PGLtxtquery
   | PGUnknown !Text
   deriving (Show, Eq, Ord, Generic, Data)
 instance NFData PGScalarType
@@ -312,6 +315,9 @@ instance ToSQL PGScalarType where
     PGGeography   -> "geography"
     PGRaster      -> "raster"
     PGUUID        -> "uuid"
+    PGLtree       -> "ltree"
+    PGLquery      -> "lquery"
+    PGLtxtquery   -> "ltxtquery"
     PGUnknown t   -> TB.text t
 
 instance ToJSON PGScalarType where
@@ -386,6 +392,10 @@ pgScalarTranslations =
 
   , ("raster"                      , PGRaster)
   , ("uuid"                        , PGUUID)
+
+  , ("ltree"                       , PGLtree)
+  , ("lquery"                      , PGLquery)
+  , ("ltxtquery"                   , PGLtxtquery)
   ]
 
 instance FromJSON PGScalarType where

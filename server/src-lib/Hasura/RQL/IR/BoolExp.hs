@@ -272,6 +272,14 @@ data OpExpG (b :: BackendType) a
   | ANISNULL -- IS NULL
   | ANISNOTNULL -- IS NOT NULL
 
+  | AAncestor !a
+  | AAncestorAny !a
+  | ADescendant !a
+  | ADescendantAny !a
+  | AMatches !a
+  | AMatchesAny !a
+  | AMatchesFulltext !a
+
   | CEQ !(Column b)
   | CNE !(Column b)
   | CGT !(Column b)
@@ -344,6 +352,14 @@ opExpToJPair f = \case
   ASTIntersectsRast a      -> ("_st_intersects_rast", f a)
   ASTIntersectsNbandGeom a -> ("_st_intersects_nband_geom", toJSON $ f <$> a)
   ASTIntersectsGeomNband a -> ("_st_intersects_geom_nband", toJSON $ f <$> a)
+
+  AAncestor a              -> ("_ancestor", f a)
+  AAncestorAny a           -> ("_ancestor_any", f a)
+  ADescendant a            -> ("_descendant", f a)
+  ADescendantAny a         -> ("_descendant_any", f a)
+  AMatches a               -> ("_matches", f a)
+  AMatchesAny a            -> ("_matches_any", f a)
+  AMatchesFulltext a       -> ("_matches_fulltext", f a)
 
   ANISNULL                 -> ("_is_null", toJSON True)
   ANISNOTNULL              -> ("_is_null", toJSON False)

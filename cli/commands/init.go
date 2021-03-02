@@ -52,7 +52,7 @@ func NewInitCmd(ec *cli.ExecutionContext) *cobra.Command {
   # Create a hasura project in the current working directory
   hasura init .
 
-  # See https://hasura.io/docs/1.0/graphql/manual/migrations/index.html for more details`,
+  # See https://hasura.io/docs/latest/graphql/core/migrations/index.html for more details`,
 		SilenceUsage: true,
 		Args:         cobra.MaximumNArgs(1),
 		PreRunE: func(cmd *cobra.Command, args []string) error {

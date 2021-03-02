@@ -43,6 +43,7 @@ data SourceObjId (b :: BackendType)
   deriving (Show, Eq, Generic)
 instance (Backend b) => Hashable (SourceObjId b)
 
+-- See Note [Existentially Quantified Types]
 data SchemaObjId
   = SOSource !SourceName
   | forall b . (Backend b) => SOSourceObj !SourceName !(SourceObjId b)

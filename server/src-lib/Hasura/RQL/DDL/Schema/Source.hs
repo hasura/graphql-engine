@@ -1,5 +1,6 @@
 module Hasura.RQL.DDL.Schema.Source where
 
+import           Control.Lens                        (at, (^.))
 import           Control.Monad.Trans.Control         (MonadBaseControl)
 import           Data.Text.Extended
 import           Data.Typeable                       (cast)
@@ -50,9 +51,20 @@ runDropSource
 runDropSource (DropSource name cascade) = do
   sc <- askSchemaCache
   let sources = scSources sc
-  backendSourceInfo <- onNothing (HM.lookup name sources) $
-    throw400 NotExists $ "source with name " <> name <<> " does not exist"
-  dropSource' sc backendSourceInfo
+  case HM.lookup name sources of
+    Just backendSourceInfo ->
+      dropSource' sc backendSourceInfo
+    Nothing -> do
+      metadata <- getMetadata
+      void $ onNothing (metadata ^. metaSources . at name) $
+          throw400 NotExists $ "source with name " <> name <<> " does not exist"
+      if cascade
+        then
+          -- Without sourceInfo we can't cascade, so throw an error
+          throw400 Unexpected $ "source with name " <> name <<> " is inconsistent"
+        else
+          -- Drop source from metadata
+          buildSchemaCacheFor (MOSource name) dropSourceMetadataModifier
   pure successMsg
   where
     dropSource' :: SchemaCache -> BackendSourceInfo -> m ()
@@ -71,7 +83,7 @@ runDropSource (DropSource name cascade) = do
 
       metadataModifier <- execWriterT $ do
         mapM_ (purgeDependentObject name >=> tell) indirectDeps
-        tell $ MetadataModifier $ metaSources %~ OMap.delete name
+        tell dropSourceMetadataModifier
 
       buildSchemaCacheFor (MOSource name) metadataModifier
       postDropSourceHook sourceConfig
@@ -80,3 +92,5 @@ runDropSource (DropSource name cascade) = do
         getIndirectDep = \case
           SOSourceObj s o -> if s == name then Nothing else cast o -- consider only *this* backend specific dependencies
           _               -> Nothing
+
+    dropSourceMetadataModifier = MetadataModifier $ metaSources %~ OMap.delete name

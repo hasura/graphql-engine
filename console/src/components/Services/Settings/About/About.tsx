@@ -96,7 +96,7 @@ class About extends Component<ConnectInjectedProps & StateProps> {
               &nbsp;<b>&middot;</b>&nbsp;
             </span>
             <a
-              href="https://hasura.io/docs/1.0/graphql/manual/deployment/updating.html"
+              href="https://hasura.io/docs/latest/graphql/core/deployment/updating.html"
               target="_blank"
               rel="noopener noreferrer"
             >

@@ -27,7 +27,7 @@ const ComputedFields = (props: ComputedFieldsProps) => {
       <h4 className={styles.subheading_text}>
         Computed fields
         <Tooltip message="Add a function as a virtual field in the GraphQL API" />
-        <KnowMoreLink href="https://hasura.io/docs/1.0/graphql/manual/schema/computed-fields.html" />
+        <KnowMoreLink href="https://hasura.io/docs/latest/graphql/core/schema/computed-fields.html" />
       </h4>
       <ComputedFieldsEditor
         table={tableSchema}

@@ -12,6 +12,7 @@ jwt-with-claims-namespace-path
 jwt-claims-map-with-json-path-values
 jwt-claims-map-with-literal-values
 jwt-with-expiry-time-leeway
+jwt-cookie
 cors-domains
 ws-init-cookie-read-cors-enabled
 ws-init-cookie-noread

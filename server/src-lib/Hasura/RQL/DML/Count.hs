@@ -131,7 +131,7 @@ countQToTx (u, p) = do
 runCount
   :: ( QErrM m, UserInfoM m, CacheRM m
      , MonadIO m, MonadBaseControl IO m
-     , Tracing.MonadTrace m
+     , Tracing.MonadTrace m, MetadataM m
      )
   => CountQuery -> m EncJSON
 runCount q = do

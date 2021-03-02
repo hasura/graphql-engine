@@ -4,13 +4,17 @@
 
 ### Bug fixes and improvements
 
+- server/mssql: fix malformed JSON answer on empty tables
 - server/mssql: fix runtime errors when selecting geography/geometry columns
+- server/mssql: supports connection pooling to sql server
+- server: improve errors messages for inconsistent sources
 
 ## v1.4.0-alpha.2
 ### MSSQL support
 
 It's now possible to add a MSSQL server as a source. For now, only read-only queries and subscriptions are supported.
-FIXME FIXME expand on this.
+
+See the documentation at `graphql/core/databases/ms-sql-server` for more information.
 
 ### Inconsistent Metadata
 
@@ -100,6 +104,49 @@ do this anymore, so function permissions are introduced which will explicitly gr
 a function for a given role. A pre-requisite to adding a function permission is that the role should
 have select permissions to the target table of the function.
 
+### `ltree` comparison operators
+
+Comparison operators on columns with ``ltree``, ``lquery`` or ``ltxtquery`` types are now supported, for searching through data stored in a hierarchical tree-like structure.
+
+See the documentation at `graphql/core/queries/query-filters` more details on the currently supported ``ltree`` operators.
+
+**Example query:** Select ancestors of an `ltree` argument
+
+```
+query {
+  tree (
+    where: {path: {_ancestor: "Tree.Collections.Pictures.Astronomy.Astronauts"}}
+  ) {
+    path
+  }
+}
+```
+
+**Example response:**
+```
+{
+  "data": {
+    "tree": [
+      {
+        "path": "Tree"
+      },
+      {
+        "path": "Tree.Collections"
+      },
+      {
+        "path": "Tree.Collections.Pictures"
+      },
+      {
+        "path": "Tree.Collections.Pictures.Astronomy"
+      },
+      {
+        "path": "Tree.Collections.Pictures.Astronomy.Astronauts"
+      }
+    ]
+  }
+}
+```
+
 ### Breaking changes
 
 - This release contains the [PDV refactor (#4111)](https://github.com/hasura/graphql-engine/pull/4111), a significant rewrite of the internals of the server, which did include some breaking changes:
@@ -150,6 +197,8 @@ have select permissions to the target table of the function.
 - server: support tracking of functions that return a single row (fix #4299)
 - server: reduce memory usage consumption of the schema cache structures, and fix a memory leak
 - server: add source name in livequery logs
+- server: support ltree comparison operators (close #625)
+- server: support parsing JWT from cookie header (fix #2183)
 - console: allow user to cascade Postgres dependencies when dropping Postgres objects (close #5109) (#5248)
 - console: mark inconsistent remote schemas in the UI (close #5093) (#5181)
 - console: remove ONLY as default for ALTER TABLE in column alter operations (close #5512) #5706
@@ -467,7 +516,7 @@ query {
 
 Support for this is now added through the `add_computed_field` API.
 
-Read more about the session argument for computed fields in the [docs](https://hasura.io/docs/1.0/graphql/manual/api-reference/schema-metadata-api/computed-field.html).
+Read more about the session argument for computed fields in the [docs](https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/computed-field.html).
 
 ### Manage seed migrations as SQL files
 
@@ -714,7 +763,7 @@ Postgres materialized views are views that are persisted in a table-like form. T
 ### docs: map Postgres operators to corresponding Hasura operators
 
 Map Postgres operators to corresponding Hasura operators at various places in docs and link to PG documentation for reference.
-For example, see [here](https://hasura.io/docs/1.0/graphql/manual/api-reference/schema-metadata-api/syntax-defs.html#operator).
+For example, see [here](https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/syntax-defs.html#operator).
 
 (#4502) (close #4056)
 
@@ -807,7 +856,7 @@ Read more about check constraints on [Postgres Docs](https://www.postgresql.org/
 
 A new CLI migrations image is introduced to account for the new migrations workflow. If you're have a project with `version: 2` in `config.yaml`, you should use the new image: `hasura/graphql-engine:v1.2.0-cli-migrations-v2`. Mount the migrations at `/hasura-migrations` and metadata at `/hasura-metadata`.
 
-See [upgrade docs](https://hasura.io/docs/1.0/graphql/manual/migrations/upgrade-v2.html).
+See [upgrade docs](https://hasura.io/docs/latest/graphql/core/migrations/upgrade-v2.html).
 
 (close #3969) (#4145)
 
@@ -882,7 +931,7 @@ docker run hasura/graphql-engine:v1.2.0 graphql-engine --database-url <db-url> d
 # start hasura v1.0.0
 ```
 
-Read more about this command in the [docs](https://hasura.io/docs/1.0/graphql/manual/deployment/downgrading.html#downgrading-hasura-graphql-engine).
+Read more about this command in the [docs](https://hasura.io/docs/latest/graphql/core/deployment/downgrading.html#downgrading-hasura-graphql-engine).
 
 (close #1156) (#3760)
 
@@ -890,7 +939,7 @@ Read more about this command in the [docs](https://hasura.io/docs/1.0/graphql/ma
 
 When using webhooks to authenticate incoming requests to the GraphQL engine server, it is now possible to specify an expiration time; the connection to the server will be automatically closed if it's still running when the expiration delay is expired.
 
-Read more about it in the [docs](https://hasura.io/docs/1.0/graphql/manual/auth/authentication/webhook.html).
+Read more about it in the [docs](https://hasura.io/docs/latest/graphql/core/auth/authentication/webhook.html).
 
 ### Bug fixes and improvements
 

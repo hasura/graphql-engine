@@ -506,6 +506,26 @@ case "$SERVER_TEST_TO_RUN" in
     unset HASURA_GRAPHQL_JWT_SECRET
     ;;
 
+  jwt-cookie)
+
+    echo -e "\n$(time_elapsed): <########## TEST GRAPHQL-ENGINE WITH ADMIN SECRET AND JWT (in cookie mode) #####################################>\n"
+    TEST_TYPE="jwt-cookie"
+
+    init_jwt
+
+    export HASURA_GRAPHQL_JWT_SECRET="$(jq -n --arg key "$(cat $OUTPUT_FOLDER/ssl/jwt_public.key)" '{ type: "RS512", key: $key , header: {"type": "Cookie", "name": "hasura_user"}}')"
+    export HASURA_GRAPHQL_ADMIN_SECRET="HGE$RANDOM$RANDOM"
+
+    run_hge_with_args serve
+    wait_for_port 8080
+
+    pytest -n 1 -vv --hge-urls "$HGE_URL" --pg-urls "$HASURA_GRAPHQL_DATABASE_URL" --hge-key="$HASURA_GRAPHQL_ADMIN_SECRET" --hge-jwt-key-file="$OUTPUT_FOLDER/ssl/jwt_private.key" --hge-jwt-conf="$HASURA_GRAPHQL_JWT_SECRET" test_jwt.py
+
+    kill_hge_servers
+
+    unset HASURA_GRAPHQL_JWT_SECRET
+    ;;
+
   # test with CORS modes
   cors-domains)
     echo -e "\n$(time_elapsed): <########## TEST GRAPHQL-ENGINE WITH CORS DOMAINS ########>\n"

@@ -75,7 +75,7 @@ Hasuraを試す最も早い方法はHerokuを使うことです。
 
 3. 最初のGraphQLのクエリを発行
 
-   テーブルを作成して、最初のクエリを実行します。こちらの [シンプルなガイド](https://hasura.io/docs/1.0/graphql/manual/getting-started/first-graphql-query.html)を参考にしてください。
+   テーブルを作成して、最初のクエリを実行します。こちらの [シンプルなガイド](https://hasura.io/docs/latest/graphql/core/getting-started/first-graphql-query.html)を参考にしてください。
 
 ### 他のワンクリックでデプロイする方法
 
@@ -83,12 +83,12 @@ Hasuraを試す最も早い方法はHerokuを使うことです。
 
 | **インフラ業者** | **ワンクリックリンク** | **追加情報** |
 |:------------------:|:------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------:|:-------------------------------------------------------------------------------------------------------------------------------------------------:|
-| DigitalOcean | [![DigitalOceanへのデプロイ](https://graphql-engine-cdn.hasura.io/img/create_hasura_droplet_200px.png)](https://marketplace.digitalocean.com/apps/hasura?action=deploy&refcode=c4d9092d2c48&utm_source=hasura&utm_campaign=readme) | [ドキュメント](https://hasura.io/docs/1.0/graphql/manual/guides/deployment/digital-ocean-one-click.html#hasura-graphql-engine-digitalocean-one-click-app) |
-| Azure | [![Azureへのデプロイ](https://azuredeploy.net/deploybutton.png)](https://portal.azure.com/#create/Microsoft.Template/uri/https%3a%2f%2fraw.githubusercontent.com%2fhasura%2fgraphql-engine%2fmaster%2finstall-manifests%2fazure-container-with-pg%2fazuredeploy.json) | [ドキュメント](https://hasura.io/docs/1.0/graphql/manual/guides/deployment/azure-container-instances-postgres.html) |
+| DigitalOcean | [![DigitalOceanへのデプロイ](https://graphql-engine-cdn.hasura.io/img/create_hasura_droplet_200px.png)](https://marketplace.digitalocean.com/apps/hasura?action=deploy&refcode=c4d9092d2c48&utm_source=hasura&utm_campaign=readme) | [ドキュメント](https://hasura.io/docs/latest/graphql/core/guides/deployment/digital-ocean-one-click.html#hasura-graphql-engine-digitalocean-one-click-app) |
+| Azure | [![Azureへのデプロイ](https://azuredeploy.net/deploybutton.png)](https://portal.azure.com/#create/Microsoft.Template/uri/https%3a%2f%2fraw.githubusercontent.com%2fhasura%2fgraphql-engine%2fmaster%2finstall-manifests%2fazure-container-with-pg%2fazuredeploy.json) | [ドキュメント](https://hasura.io/docs/latest/graphql/core/guides/deployment/azure-container-instances-postgres.html) |
 
 ### 他のデプロイ方法
 
-Dockerでのデプロイと高度なカスタマイズオプションについては [デプロイガイド](https://hasura.io/docs/1.0/graphql/manual/getting-started/index.html) か
+Dockerでのデプロイと高度なカスタマイズオプションについては [デプロイガイド](https://hasura.io/docs/latest/graphql/core/getting-started/index.html) か
 [インストールマニフェスト](../install-manifests)を参考にしてください。
 
 ## アーキテクチャ
@@ -118,7 +118,7 @@ HasuraのPostgresベースのGraphQLスキーマに加えて、リモートス�
 
 ### 派生データまたはデータ変換
 
-PostgreSQLのデータを変換するか、あるいはその上でビジネスロジックを実行することでGraphQLエンジンを使用して問い合わせることができる別のデータセットを派生させる事ができます。[続きを読む](https://hasura.io/docs/1.0/graphql/manual/queries/derived-data.html).
+PostgreSQLのデータを変換するか、あるいはその上でビジネスロジックを実行することでGraphQLエンジンを使用して問い合わせることができる別のデータセットを派生させる事ができます。[続きを読む](https://hasura.io/docs/latest/graphql/core/queries/derived-data.html).
 
 ## デモ
 

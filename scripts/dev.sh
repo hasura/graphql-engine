@@ -180,14 +180,16 @@ function wait_postgres {
   echo " Ok"
 }
 
+DOCKER_MSSQL="docker exec -t $MSSQL_CONTAINER_NAME /opt/mssql-tools/bin/sqlcmd -S localhost -U sa -P $MSSQLPASSWORD"
+
 function wait_mssql {
   set +e
   echo -n "Waiting for mssql to come up"
-  docker exec -t $MSSQL_CONTAINER_NAME /opt/mssql-tools/bin/sqlcmd -S localhost -U sa -P $MSSQLPASSWORD -Q "SELECT 1" &>/dev/null
+  $DOCKER_MSSQL -Q "SELECT 1" &>/dev/null
   while [ $? -eq 0 ];
   do
     echo -n '.' && sleep 0.2
-    docker exec -t $MSSQL_CONTAINER_NAME /opt/mssql-tools/bin/sqlcmd -S localhost -U sa -P $MSSQLPASSWORD -Q "SELECT 1" &>/dev/null
+    $DOCKER_MSSQL -Q "SELECT 1" &>/dev/null
   done
   set -e
   echo " Ok"
@@ -444,6 +446,13 @@ if [ "$MODE" = "mssql" ]; then
   wait_mssql
   echo_pretty "MSSQL logs will start to show up in realtime here. Press CTRL-C to exit and "
   echo_pretty "shutdown this container."
+  echo_pretty ""
+  echo_pretty "You can use the following to connect to the running instance:"
+  echo_pretty "    $ $DOCKER_MSSQL"
+  echo_pretty ""
+  echo_pretty "If you want to import a SQL file into MSSQL:"
+  echo_pretty "    $ $DOCKER_MSSQL -i <import_file>"
+
   # Runs continuously until CTRL-C, jumping to cleanup() above:
   docker logs -f --tail=0 "$MSSQL_CONTAINER_NAME"
 

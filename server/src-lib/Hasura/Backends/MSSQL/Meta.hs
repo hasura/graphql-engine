@@ -8,21 +8,20 @@ module Hasura.Backends.MSSQL.Meta
 
 import           Hasura.Prelude
 
+import           Data.Aeson                            as Aeson
 import qualified Data.HashMap.Strict                   as HM
 import qualified Data.HashSet                          as HS
+import           Data.String
+import qualified Data.Text                             as T
 import qualified Data.Text.Encoding                    as T
 import qualified Database.PG.Query                     as Q (sqlFromFile)
 
-import           Data.Aeson                            as Aeson
-import           Data.Aeson.Types                      (parseEither)
-import           Data.Attoparsec.ByteString
-import           Data.String
-import           Database.ODBC.SQLServer
-
+import           Hasura.Backends.MSSQL.Connection
 import           Hasura.Backends.MSSQL.Instances.Types ()
 import           Hasura.Backends.MSSQL.Types
 import           Hasura.RQL.Types.Column
 import           Hasura.RQL.Types.Common               (OID (..))
+import           Hasura.RQL.Types.Error
 import           Hasura.RQL.Types.Table
 import           Hasura.SQL.Backend
 
@@ -30,12 +29,15 @@ import           Hasura.SQL.Backend
 --------------------------------------------------------------------------------
 -- Loader
 
-loadDBMetadata :: Connection -> IO (DBTablesMetadata 'MSSQL)
-loadDBMetadata conn = do
+loadDBMetadata
+  :: (MonadError QErr m, MonadIO m)
+  => MSSQLPool -> m (DBTablesMetadata 'MSSQL)
+loadDBMetadata pool = do
   let sql = $(Q.sqlFromFile "src-rsr/mssql_table_metadata.sql")
-  sysTables <- queryJson conn (fromString sql)
-  let tables = map transformTable sysTables
-  pure $ HM.fromList tables
+  sysTablesText <- runJSONPathQuery pool (fromString sql)
+  case Aeson.eitherDecodeStrict (T.encodeUtf8 sysTablesText) of
+    Left e          -> throw500 $ T.pack $ "error loading sql server database schema: " <> e
+    Right sysTables -> pure $ HM.fromList $ map transformTable sysTables
 
 --------------------------------------------------------------------------------
 -- Local types
@@ -178,24 +180,3 @@ parseScalarType = \case
   "geometry"         -> GeometryType
   t                  -> UnknownType t
 
-
---------------------------------------------------------------------------------
--- Quick catalog queries
-
-queryJson :: FromJSON a => Connection -> Query -> IO [a]
-queryJson conn query' = do
-  (steps, iresult) <-
-    stream
-      conn
-      query'
-      (\(!steps, parser) input ->
-         pure (Continue (steps + 1, feed parser (T.encodeUtf8 input))))
-      (0 :: Int, parse json mempty)
-  case steps of
-    0 -> pure []
-    _ ->
-      case iresult of
-        Done _ jvalue ->
-          parseEither parseJSON jvalue `onLeft` error -- FIXME
-        Partial {} -> error "Incomplete output from SQL Server."
-        Fail _ _ctx err -> error ("JSON parser error: " <> err)

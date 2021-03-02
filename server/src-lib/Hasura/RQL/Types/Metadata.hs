@@ -258,6 +258,7 @@ mkSourceMetadata
 mkSourceMetadata name config =
   BackendSourceMetadata $ SourceMetadata name mempty mempty config
 
+-- See Note [Existentially Quantified Types]
 data BackendSourceMetadata =
   forall b. (BackendMetadata b) => BackendSourceMetadata (SourceMetadata b)
 

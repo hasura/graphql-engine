@@ -771,7 +771,6 @@ export const deleteAllowList = (): Thunk<void, MetadataActions> => {
 
 export const addAllowedQueries = (
   queries: Array<{ name: string; query: string }>,
-  isEmptyList: boolean,
   callback: any
 ): Thunk<void, MetadataActions> => {
   return (dispatch, getState) => {
@@ -782,8 +781,12 @@ export const addAllowedQueries = (
     }
 
     const source = getState().tables.currentDataSource;
+    const isAllowedQueryCollectionInMetadata =
+      getState().metadata?.metadataObject?.query_collections?.find(
+        qc => qc.name === allowedQueriesCollection
+      ) ?? false;
 
-    const upQuery = isEmptyList
+    const upQuery = !isAllowedQueryCollectionInMetadata
       ? createAllowListQuery(queries, source)
       : addAllowedQueriesQuery(queries, source);
 

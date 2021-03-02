@@ -57,7 +57,7 @@ export const createAllowListQuery = (
   queries: Array<{ name: string; query: string }>,
   source: string
 ) => {
-  const createAllowListCollectionQuery = () => ({
+  const createAllowListCollectionQuery = {
     type: 'create_query_collection',
     args: {
       name: allowedQueriesCollection,
@@ -65,19 +65,19 @@ export const createAllowListQuery = (
         queries,
       },
     },
-  });
+  };
 
-  const addCollectionToAllowListQuery = () => ({
+  const addCollectionToAllowListQuery = {
     type: 'add_collection_to_allowlist',
     args: {
       collection: allowedQueriesCollection,
     },
-  });
+  };
 
   return {
     type: 'bulk',
     source,
-    args: [createAllowListCollectionQuery(), addCollectionToAllowListQuery()],
+    args: [createAllowListCollectionQuery, addCollectionToAllowListQuery],
   };
 };
 

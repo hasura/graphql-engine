@@ -84,6 +84,91 @@ ComputedFieldName
 
   String
 
+.. _PGConfiguration:
+
+PGConfiguration
+^^^^^^^^^^^^^^^
+
+.. list-table::
+   :header-rows: 1
+
+   * - Key
+     - Required
+     - Schema
+     - Description
+   * - connection_info
+     - true
+     - PGSourceConnectionInfo_
+     - Connection parameters for the source
+   * - read_replicas
+     - false
+     - [PGSourceConnectionInfo_]
+     - Optional list of read replica configuration
+
+.. _PGSourceConnectionInfo:
+
+PGSourceConnectionInfo
+^^^^^^^^^^^^^^^^^^^^^^
+
+.. list-table::
+   :header-rows: 1
+
+   * - Key
+     - Required
+     - Schema
+     - Description
+   * - database_url
+     - true
+     - ``String`` | FromEnv_
+     - The database connection URL string, or as an environment variable
+   * - pool_settings
+     - true
+     - PGPoolSettings_
+     - Connection pool settings
+
+.. _FromEnv:
+
+FromEnv
+^^^^^^^
+
+.. list-table::
+   :header-rows: 1
+
+   * - Key
+     - Required
+     - Schema
+     - Description
+   * - from_env
+     - true
+     - ``String``
+     - Name of the environment variable
+
+.. _PGPoolSettings:
+
+PGPoolSettings
+^^^^^^^^^^^^^^
+
+.. list-table::
+   :header-rows: 1
+
+   * - Key
+     - Required
+     - Schema
+     - Description
+   * - max_connections
+     - false
+     - ``Integer``
+     - Maximum number of connections to be kept in the pool (default: 50)
+   * - idle_timeout
+     - false
+     - ``Integer``
+     - The idle timeout (in seconds) per connection (default: 180)
+   * - retries
+     - false
+     - ``Integer``
+     - Number of retries to perform (default: 1)
+
+
 .. _PGColumnType:
 
 PGColumnType

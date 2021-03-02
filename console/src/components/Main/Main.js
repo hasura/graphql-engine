@@ -300,7 +300,7 @@ class Main extends React.Component {
         adminSecretHtml = (
           <div className={styles.secureSection}>
             <a
-              href="https://hasura.io/docs/1.0/graphql/manual/deployment/securing-graphql-endpoint.html"
+              href="https://hasura.io/docs/latest/graphql/core/deployment/securing-graphql-endpoint.html"
               target="_blank"
               rel="noopener noreferrer"
             >

@@ -830,3 +830,31 @@ class TestGraphQLQueryFunctionPermissions:
         st_code, resp = hge_ctx.v1metadataq_f(self.dir() + 'add_function_permission_get_articles.yaml')
         assert st_code == 200, resp
         check_query_f(hge_ctx, self.dir() + 'get_articles_with_permission_configured.yaml')
+
+@pytest.mark.parametrize('transport', ['http', 'websocket'])
+@usefixtures('per_class_tests_db_state')
+class TestGraphQLQueryBoolExpLtree:
+    def test_select_path_where_ancestor(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/select_path_where_ancestor.yaml')
+
+    def test_select_path_where_ancestor_array(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/select_path_where_ancestor_array.yaml')
+
+    def test_select_path_where_descendant(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/select_path_where_descendant.yaml')
+
+    def test_select_path_where_descendant_array(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/select_path_where_descendant_array.yaml')
+
+    def test_select_path_where_matches(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/select_path_where_matches.yaml')
+
+    def test_select_path_where_matches_array(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/select_path_where_matches_array.yaml')
+
+    def test_select_path_where_matches_ltxtquery(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/select_path_where_matches_ltxtquery.yaml')
+
+    @classmethod
+    def dir(cls):
+        return 'queries/graphql_query/boolexp/ltree'

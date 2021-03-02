@@ -173,6 +173,14 @@ mkFieldCompExp qual lhsField = mkCompExp (mkQField lhsField)
       AHasKeysAny val  -> S.BECompare S.SHasKeysAny lhs val
       AHasKeysAll val  -> S.BECompare S.SHasKeysAll lhs val
 
+      AAncestor val        -> S.BECompare S.SContains lhs val
+      AAncestorAny val     -> S.BECompare S.SContains lhs val
+      ADescendant val      -> S.BECompare S.SContainedIn lhs val
+      ADescendantAny val   -> S.BECompare S.SContainedIn lhs val
+      AMatches val         -> S.BECompare S.SREGEX lhs val
+      AMatchesAny val      -> S.BECompare S.SHasKey lhs val
+      AMatchesFulltext val -> S.BECompare S.SMatchesFulltext lhs val
+
       ASTContains val   -> mkGeomOpBe "ST_Contains" val
       ASTCrosses val    -> mkGeomOpBe "ST_Crosses" val
       ASTEquals val     -> mkGeomOpBe "ST_Equals" val

@@ -76,7 +76,7 @@ runTrackFunctionV2 (TrackFunctionV2 source qf config) = do
 
 -- | JSON API payload for 'untrack_function':
 --
--- https://hasura.io/docs/1.0/graphql/core/api-reference/schema-metadata-api/custom-functions.html#untrack-function
+-- https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/custom-functions.html#untrack-function
 data UnTrackFunction b
   = UnTrackFunction
   { _utfFunction :: !(FunctionName b)

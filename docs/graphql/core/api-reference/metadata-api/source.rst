@@ -70,8 +70,6 @@ Args syntax
      - :ref:`PGConfiguration <PGConfiguration>`
      - Database connection configuration
 
-.. TODO: add pgconfiguration spec
-
 .. _pg_drop_source:
 
 pg_drop_source

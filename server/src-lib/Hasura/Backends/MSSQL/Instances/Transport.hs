@@ -4,9 +4,7 @@ module Hasura.Backends.MSSQL.Instances.Transport () where
 
 import           Hasura.Prelude
 
-import qualified Control.Exception                       as E
 import qualified Data.ByteString                         as B
-import qualified Database.ODBC.SQLServer                 as ODBC
 import qualified Language.GraphQL.Draft.Syntax           as G
 
 import           Data.Text.Encoding                      (encodeUtf8)
@@ -15,8 +13,8 @@ import           Hasura.RQL.Types.Error                  as HE
 
 import qualified Hasura.Logging                          as L
 
+import           Hasura.Backends.MSSQL.Connection
 import           Hasura.Backends.MSSQL.Instances.Execute
-import           Hasura.Backends.MSSQL.Types
 import           Hasura.EncJSON
 import           Hasura.GraphQL.Execute.Backend
 import           Hasura.GraphQL.Execute.LiveQuery.Plan
@@ -46,7 +44,7 @@ runQuery
   -> UserInfo
   -> L.Logger L.Hasura
   -> SourceConfig 'MSSQL
-  -> IO EncJSON
+  -> ExceptT QErr IO EncJSON
   -> Maybe Text
   -> m (DiffTime, EncJSON)
   -- ^ Also return the time spent in the PG query; for telemetry.
@@ -70,7 +68,7 @@ runMutation
   -> UserInfo
   -> L.Logger L.Hasura
   -> SourceConfig 'MSSQL
-  -> IO EncJSON
+  -> ExceptT QErr IO EncJSON
   -> Maybe Text
   -> m (DiffTime, EncJSON)
   -- ^ Also return 'Mutation' when the operation was a mutation, and the time
@@ -90,19 +88,19 @@ runSubscription
   -> [(CohortId, CohortVariables)]
   -> m (DiffTime, Either QErr [(CohortId, B.ByteString)])
 runSubscription sourceConfig (NoMultiplex (name, query)) variables = do
-  let connection = _mscConnection sourceConfig
+  let pool = _mscConnectionPool sourceConfig
   withElapsedTime $ runExceptT $ for variables $ traverse $ const $
-    fmap toResult $ run $ ODBC.query connection query
+    fmap toResult $ run $ runJSONPathQuery pool query
   where
-    toResult :: [Text] -> B.ByteString
-    toResult = encodeUtf8 . addFieldName . mconcat
+    toResult :: Text -> B.ByteString
+    toResult = encodeUtf8 . addFieldName
 
     -- TODO: This should probably be generated from the database or should
     -- probably return encjson so that encJFromAssocList can be used
     addFieldName result =
       "{\"" <> G.unName name <> "\":" <> result <> "}"
 
-run :: (MonadIO m, MonadError QErr m) => IO a -> m a
+run :: (MonadIO m, MonadError QErr m) => ExceptT QErr IO a -> m a
 run action = do
-  result <- liftIO $ E.try @ODBC.ODBCException action
-  result `onLeft` (throw400 HE.MSSQLError . tshow)
+  result <- liftIO $ runExceptT action
+  result `onLeft` throwError

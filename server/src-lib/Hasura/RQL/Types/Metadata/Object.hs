@@ -41,6 +41,7 @@ deriving instance (Backend b) => Show (SourceMetadataObjId b)
 deriving instance (Backend b) => Eq (SourceMetadataObjId b)
 instance (Backend b) => Hashable (SourceMetadataObjId b)
 
+-- See Note [Existentially Quantified Types]
 data MetadataObjId
   = MOSource !SourceName
   | forall b. (Backend b) => MOSourceObjId !SourceName !(SourceMetadataObjId b)

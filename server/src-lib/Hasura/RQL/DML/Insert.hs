@@ -209,7 +209,7 @@ runInsert
   :: ( HasVersion, QErrM m, UserInfoM m
      , CacheRM m, HasServerConfigCtx m
      , MonadIO m, Tracing.MonadTrace m
-     , MonadBaseControl IO m
+     , MonadBaseControl IO m, MetadataM m
      )
   => Env.Environment -> InsertQuery -> m EncJSON
 runInsert env q = do

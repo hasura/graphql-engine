@@ -272,7 +272,7 @@ enablePgcryptoExtension = do
             permissionsMessage =
               "pgcrypto extension is required, but the current user doesn’t have permission to"
               <> " create it. Please grant superuser permission, or setup the initial schema via"
-              <> " https://hasura.io/docs/1.0/graphql/manual/deployment/postgres-permissions.html"
+              <> " https://hasura.io/docs/latest/graphql/core/deployment/postgres-permissions.html"
 
 dropHdbCatalogSchema :: (MonadTx m) => m ()
 dropHdbCatalogSchema = liftTx $ Q.catchE defaultTxErrorHandler $
