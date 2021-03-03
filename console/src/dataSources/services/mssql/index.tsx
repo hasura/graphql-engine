@@ -78,7 +78,15 @@ WHERE
     return {};
   },
   columnDataTypes,
-  getFetchTablesListQuery: ({ schemas }) => {
+  getFetchTablesListQuery: ({ schemas, tables }) => {
+    let whereClause;
+    if (schemas) {
+      whereClause = `AND sch.name IN (${schemas.map(s => `'${s}'`).join(',')})`;
+    } else if (tables) {
+      whereClause = `AND obj.name IN (${tables
+        .map(t => `'${t.table_name}'`)
+        .join(',')})`;
+    }
     return `
     SELECT sch.name as table_schema,
     obj.name as table_name,
@@ -109,10 +117,8 @@ WHERE
     JSON_QUERY([isc].json) AS columns
 FROM sys.objects as obj
     INNER JOIN sys.schemas as sch ON obj.schema_id = sch.schema_id
-    LEFT OUTER JOIN sys.columns AS col ON col.object_id = obj.object_id
     OUTER APPLY (
-        SELECT nc.name AS table_schema,
-            c.name AS table_name,
+        SELECT
             a.name AS column_name,
             a.column_id AS ordinal_position,
             ad.definition AS column_default,
@@ -129,34 +135,14 @@ FROM sys.objects as obj
                 WHEN t.is_user_defined = 1 THEN 'USER-DEFINED'
                 ELSE 'OTHER'
             END AS data_type,
-            ISNULL(bt.name, t.name) AS data_type_name
-        FROM (
+            t.name AS data_type_name
+        FROM
             sys.columns a
-            LEFT JOIN sys.default_constraints ad ON a.object_id = ad.parent_column_id
-            AND a.column_id = ad.parent_object_id
-        )
-        JOIN (
-            sys.objects c
-            JOIN sys.schemas nc ON (c.schema_id = nc.schema_id)
-        ) ON a.object_id = c.object_id
-        JOIN (
-                sys.types t
-                JOIN sys.schemas nt ON (t.schema_id = nt.schema_id)
-            ) ON a.user_type_id = t.user_type_id
-        LEFT JOIN (
-                sys.types bt
-                JOIN sys.schemas nbt ON (bt.schema_id = nbt.schema_id)
-            ) ON (
-                t.is_user_defined = 0
-                AND t.system_type_id = bt.system_type_id
-            )
-        WHERE a.column_id > 0
-        AND nc.name = sch.name
-        AND c.name = obj.name
-        AND a.name = col.name
+            LEFT JOIN sys.default_constraints ad ON (a.column_id = ad.parent_column_id AND a.object_id = ad.parent_object_id)
+            JOIN sys.types t ON a.user_type_id = t.user_type_id
+        WHERE a.column_id > 0 and a.object_id = obj.object_id
         FOR JSON path
-)   AS [isc](json) where sch.name = '${schemas.join(',')}';
-    `;
+)   AS [isc](json) where obj.type_desc in ('USER_TABLE') ${whereClause}`;
   },
   commonDataTypes: [],
   fetchColumnTypesQuery: '',

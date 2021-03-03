@@ -21,7 +21,6 @@ class ViewTable extends Component {
       dispatch: props.dispatch,
       tableName: props.tableName,
     };
-
     this.getInitialData(this.props.tableName);
   }
 
@@ -32,8 +31,12 @@ class ViewTable extends Component {
   }
 
   getInitialData(tableName) {
-    if (currentDriver !== 'postgres') return;
     const { dispatch, currentSchema } = this.props;
+
+    if (currentDriver !== 'postgres') {
+      dispatch(setTable(tableName));
+      return;
+    }
     const limit = getPersistedPageSize(tableName, currentSchema);
     Promise.all([
       dispatch(setTable(tableName)),

@@ -17,7 +17,6 @@ import {
   getTableRelationshipsRoute,
 } from '../../../Common/utils/routesUtils';
 import { getReadableNumber } from '../../../Common/utils/jsUtils';
-import FeatureDisabled from '../FeatureDisabled';
 
 const TableHeader = ({
   tabName,
@@ -98,78 +97,69 @@ const TableHeader = ({
           property={isTableType ? 'table' : 'view'}
         />
         <div className={styles.nav}>
-          {currentDriver === 'mssql' ? (
-            <FeatureDisabled showTab={false} />
-          ) : (
-            <ul className="nav nav-pills">
-              {getTab(
-                'browse',
-                getTableBrowseRoute(
+          <ul className="nav nav-pills">
+            {getTab(
+              'browse',
+              getTableBrowseRoute(tableSchema, source, tableName, isTableType),
+              `Browse Rows ${countDisplay}`,
+              'table-browse-rows'
+            )}
+            {!readOnlyMode &&
+              isTableType &&
+              getTab(
+                'insert',
+                getTableInsertRowRoute(
                   tableSchema,
                   source,
                   tableName,
                   isTableType
                 ),
-                `Browse Rows ${countDisplay}`,
-                'table-browse-rows'
+                'Insert Row',
+                'table-insert-rows'
               )}
-              {!readOnlyMode &&
-                isTableType &&
-                getTab(
-                  'insert',
-                  getTableInsertRowRoute(
-                    tableSchema,
-                    source,
-                    tableName,
-                    isTableType
-                  ),
-                  'Insert Row',
-                  'table-insert-rows'
-                )}
-              {migrationMode &&
-                getTab(
-                  'modify',
-                  getTableModifyRoute(
-                    tableSchema,
-                    source,
-                    tableName,
-                    isTableType
-                  ),
-                  'Modify'
-                )}
-              {getTab(
-                'relationships',
-                getTableRelationshipsRoute(
+            {migrationMode &&
+              getTab(
+                'modify',
+                getTableModifyRoute(
                   tableSchema,
                   source,
                   tableName,
                   isTableType
                 ),
-                'Relationships'
+                'Modify'
               )}
-              {getTab(
-                'permissions',
-                getTablePermissionsRoute(
+            {getTab(
+              'relationships',
+              getTableRelationshipsRoute(
+                tableSchema,
+                source,
+                tableName,
+                isTableType
+              ),
+              'Relationships'
+            )}
+            {getTab(
+              'permissions',
+              getTablePermissionsRoute(
+                tableSchema,
+                source,
+                tableName,
+                isTableType
+              ),
+              'Permissions'
+            )}
+            {tabName === 'edit' &&
+              getTab(
+                'edit',
+                getTableEditRowRoute(
                   tableSchema,
                   source,
                   tableName,
                   isTableType
                 ),
-                'Permissions'
+                'Edit Row'
               )}
-              {tabName === 'edit' &&
-                getTab(
-                  'edit',
-                  getTableEditRowRoute(
-                    tableSchema,
-                    source,
-                    tableName,
-                    isTableType
-                  ),
-                  'Edit Row'
-                )}
-            </ul>
-          )}
+          </ul>
         </div>
         <div className="clearfix" />
       </div>

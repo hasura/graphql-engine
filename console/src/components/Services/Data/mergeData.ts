@@ -73,9 +73,10 @@ export const mergeDataMssql = (
         columns: JSON.parse(row[4]),
       });
       // eslint-disable-next-line no-empty
-    } catch {}
+    } catch (err) {
+      console.log(err);
+    }
   });
-
   try {
     fkRelations = JSON.parse(data[1].result.slice(1).join()) as MSSqlFk[];
     // eslint-disable-next-line no-empty
@@ -107,8 +108,6 @@ export const mergeDataMssql = (
     });
 
   tables.forEach(table => {
-    if (table.table_type !== 'TABLE') return;
-
     const metadataTable = metadataTables?.find(
       t =>
         t.table.schema === table.table_schema &&

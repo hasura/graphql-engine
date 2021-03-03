@@ -8,6 +8,7 @@
 - server/mssql: fix runtime errors when selecting geography/geometry columns
 - server/mssql: supports connection pooling to sql server
 - server: improve errors messages for inconsistent sources
+- console: add relationship tab for mssql tables (#677)
 
 ## v1.4.0-alpha.2
 ### MSSQL support

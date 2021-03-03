@@ -22,38 +22,33 @@ function FeatureDisabled({
   migrationMode,
   schemaName,
   tableName,
-  showTab = true,
 }: Props) {
-  if (showTab) {
-    return (
-      <RightContainer>
-        <TableHeader
-          count={0}
-          isCountEstimated
-          dispatch={dispatch}
-          table={{ table_name: tableName, table_schema: schemaName }}
-          source={currentDataSource}
-          tabName={tab}
-          migrationMode={migrationMode}
-          readOnlyMode={readOnlyMode}
-        />
-      </RightContainer>
-    );
-  }
   return (
-    <div style={{ height: '150px' }}>
-      <p>
-        <b>Coming soon: Data Management for MSSQL</b>
-      </p>
-      <p>
-        We are currently working on bringing our full data management
-        capabilities to MSSQL. <br /> For all row and column based operations
-        our SQL runner is currently available.
-      </p>
-      <RawSqlButton sql="" dispatch={dispatch}>
-        Go to SQL Runner
-      </RawSqlButton>
-    </div>
+    <RightContainer>
+      <TableHeader
+        count={0}
+        isCountEstimated
+        dispatch={dispatch}
+        table={{ table_name: tableName, table_schema: schemaName }}
+        source={currentDataSource}
+        tabName={tab}
+        migrationMode={migrationMode}
+        readOnlyMode={readOnlyMode}
+      />
+      <div style={{ height: '150px', paddingTop: '10px' }}>
+        <p>
+          <b>Coming soon: Data Management for MSSQL</b>
+        </p>
+        <p>
+          We are currently working on bringing our full data management
+          capabilities to MSSQL. <br /> For all row and column based operations
+          our SQL runner is currently available.
+        </p>
+        <RawSqlButton sql="" dispatch={dispatch}>
+          Go to SQL Runner
+        </RawSqlButton>
+      </div>
+    </RightContainer>
   );
 }
 
