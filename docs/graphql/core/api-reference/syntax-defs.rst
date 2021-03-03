@@ -306,7 +306,6 @@ RelationshipName
 
   String
 
-
 .. _table_config:
 
 Table Config
@@ -507,11 +506,11 @@ ObjRelUsing
      - Description
    * - foreign_key_constraint_on
      - false
-     - :ref:`PGColumn <PGColumn>`
-     - The column with foreign key constraint
+     - :ref:`ObjRelUsingChoice <ObjRelUsingChoice>`
+     - The column with foreign key constraint or the remote table and column
    * - manual_configuration
      - false
-     - ObjRelUsingManualMapping_
+     - :ref:`ObjRelUsingManualMapping <ObjRelUsingManualMapping>`
      - Manual mapping of table and columns
 
 .. note::
@@ -519,6 +518,39 @@ ObjRelUsing
    There has to be at least one and only one of ``foreign_key_constraint_on``
    and ``manual_configuration``.
 
+.. _ObjRelUsingChoice:
+
+ObjRelUsingChoice
+^^^^^^^^^^^^^^^^^
+
+.. parsed-literal::
+   :class: haskell-pre
+
+   SameTable_ | RemoteTable_
+
+SameTable
+^^^^^^^^^
+
+.. parsed-literal::
+
+   PGColumn_
+
+RemoteTable
+^^^^^^^^^^^
+
+.. parsed-literal::
+   :class: haskell-pre
+
+   {
+       "table"  : TableName_,
+       "column" : PGColumn_
+   }
+
+.. admonition:: Supported from
+
+    Supported in ``v2.0.0-alpha.3`` and above.
+
+.. _ObjRelUsingManualMapping:
 
 ObjRelUsingManualMapping
 ^^^^^^^^^^^^^^^^^^^^^^^^
@@ -538,6 +570,28 @@ ObjRelUsingManualMapping
      - true
      - Object (:ref:`PGColumn` : :ref:`PGColumn`)
      - Mapping of columns from current table to remote table
+   * - insertion_order
+     - false
+     - :ref:`InsertOrder`
+     - insertion order: before or after parent (default: before)
+
+
+.. _InsertOrder:
+
+InsertOrder
+^^^^^^^^^^^
+
+Describes when should the referenced table row be inserted in relation to the
+current table row in case of a nested insert. Defaults to "before_parent".
+
+.. parsed-literal::
+   :class: haskell-pre
+
+   "before_parent" | "after_parent"
+
+.. admonition:: Supported from
+
+    Supported in ``v2.0.0-alpha.3`` and above.
 
 .. _ArrRelUsing:
 

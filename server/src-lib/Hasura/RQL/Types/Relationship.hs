@@ -38,8 +38,9 @@ instance (ToJSON a) => ToAesonPairs (RelDef a) where
 
 data RelManualConfig (b :: BackendType)
   = RelManualConfig
-  { rmTable   :: !(TableName b)
-  , rmColumns :: !(HashMap (Column b) (Column b))
+  { rmTable       :: !(TableName b)
+  , rmColumns     :: !(HashMap (Column b) (Column b))
+  , rmInsertOrder :: !(Maybe InsertOrder)
   } deriving (Generic)
 deriving instance Backend b => Eq (RelManualConfig b)
 deriving instance Backend b => Show (RelManualConfig b)
@@ -50,14 +51,16 @@ instance (Backend b) => FromJSON (RelManualConfig b) where
     RelManualConfig
     <$> v .:  "remote_table"
     <*> v .:  "column_mapping"
+    <*> v .:? "insertion_order"
 
   parseJSON _ =
     fail "manual_configuration should be an object"
 
 instance (Backend b) => ToJSON (RelManualConfig b) where
-  toJSON (RelManualConfig qt cm) =
+  toJSON (RelManualConfig qt cm io) =
     object [ "remote_table" .= qt
            , "column_mapping" .= cm
+           , "insertion_order" .= io
            ]
 
 data RelUsing (b :: BackendType) a
@@ -123,12 +126,34 @@ instance (ToAesonPairs a, Backend b) => ToJSON (WithTable b a) where
   toJSON (WithTable sourceName tn rel) =
     object $ ("source" .= sourceName):("table" .= tn):toAesonPairs rel
 
+data ObjRelUsingChoice b
+  = SameTable !(Column b)
+  | RemoteTable !(TableName b) !(Column b)
+  deriving (Generic)
+deriving instance Backend b => Eq (ObjRelUsingChoice b)
+deriving instance Backend b => Show (ObjRelUsingChoice b)
+instance (Backend b) => Cacheable (ObjRelUsingChoice b)
+
+instance (Backend b) => ToJSON (ObjRelUsingChoice b) where
+  toJSON = \case
+    SameTable col -> toJSON col
+    RemoteTable qt lcol ->
+      object
+        [ "table" .= qt
+        , "column" .= lcol
+        ]
+
+instance (Backend b) => FromJSON (ObjRelUsingChoice b) where
+  parseJSON = \case
+    v@(String _) -> SameTable <$> parseJSON v
+    Object o     -> RemoteTable <$> o .: "table" <*> o .: "column"
+    _            -> fail "expected single column or columns/table"
 
 type ArrRelUsing b = RelUsing b (ArrRelUsingFKeyOn b)
 type ArrRelDef b = RelDef (ArrRelUsing b)
 type CreateArrRel b = WithTable b (ArrRelDef b)
 
-type ObjRelUsing b = RelUsing b (Column b)
+type ObjRelUsing b = RelUsing b (ObjRelUsingChoice b)
 type ObjRelDef b = RelDef (ObjRelUsing b)
 type CreateObjRel b = WithTable b (ObjRelDef b)
 
@@ -195,12 +220,13 @@ instance (Backend b) => FromJSON (RenameRel b) where
 -- should this be parameterized by both the source and the destination backend?
 data RelInfo (b :: BackendType)
   = RelInfo
-  { riName       :: !RelName
-  , riType       :: !RelType
-  , riMapping    :: !(HashMap (Column b) (Column b))
-  , riRTable     :: !(TableName b)
-  , riIsManual   :: !Bool
-  , riIsNullable :: !Bool
+  { riName        :: !RelName
+  , riType        :: !RelType
+  , riMapping     :: !(HashMap (Column b) (Column b))
+  , riRTable      :: !(TableName b)
+  , riIsManual    :: !Bool
+  , riIsNullable  :: !Bool
+  , riInsertOrder :: !InsertOrder
   } deriving (Generic)
 deriving instance Backend b => Show (RelInfo b)
 deriving instance Backend b => Eq   (RelInfo b)

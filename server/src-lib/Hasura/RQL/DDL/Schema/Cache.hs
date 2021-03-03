@@ -269,8 +269,7 @@ buildSchemaCacheRule env = proc (metadata, invalidationKeys) -> do
       let SourceMetadata source tables functions _ = sourceMetadata
           tablesMetadata = OMap.elems tables
           (tableInputs, nonColumnInputs, permissions) = unzip3 $ map mkTableInputs tablesMetadata
-          eventTriggers :: [(TableName b, [EventTriggerConf])] = map (_tmTable &&& (OMap.elems . _tmEventTriggers)) tablesMetadata
-          -- HashMap k a -> HashMap k b -> HashMap k (a, b)
+          eventTriggers = map (_tmTable &&& (OMap.elems . _tmEventTriggers)) tablesMetadata
           alignTableMap :: HashMap (TableName b) a -> HashMap (TableName b) c -> HashMap (TableName b) (a, c)
           alignTableMap = M.intersectionWith (,)
           metadataInvalidationKey = Inc.selectD #_ikMetadata invalidationKeys

@@ -85,19 +85,21 @@ objRelP2Setup
   :: (QErrM m, Backend b)
   => SourceName
   -> TableName b
-  -> HashSet (ForeignKey b)
+  -> HashMap (TableName b) (HashSet (ForeignKey b))
   -> RelDef (ObjRelUsing b)
   -> m (RelInfo b, [SchemaDependency])
 objRelP2Setup source qt foreignKeys (RelDef rn ru _) = case ru of
   RUManual rm -> do
     let refqt = rmTable rm
         (lCols, rCols) = unzip $ HM.toList $ rmColumns rm
+        io = fromMaybe BeforeParent $ rmInsertOrder rm
         mkDependency tableName reason col = SchemaDependency (SOSourceObj source $ SOITableObj tableName $ TOCol col) reason
         dependencies = map (mkDependency qt DRLeftColumn) lCols
                     <> map (mkDependency refqt DRRightColumn) rCols
-    pure (RelInfo rn ObjRel (rmColumns rm) refqt True True, dependencies)
-  RUFKeyOn columnName -> do
-    ForeignKey constraint foreignTable colMap <- getRequiredFkey columnName (HS.toList foreignKeys)
+    pure (RelInfo rn ObjRel (rmColumns rm) refqt True True io, dependencies)
+  RUFKeyOn (SameTable columnName) -> do
+    foreignTableForeignKeys <- findTable qt foreignKeys
+    ForeignKey constraint foreignTable colMap <- getRequiredFkey columnName (HS.toList foreignTableForeignKeys)
     let dependencies =
           [ SchemaDependency (SOSourceObj source $ SOITableObj qt $ TOForeignKey (_cName constraint)) DRFkey
           , SchemaDependency (SOSourceObj source $ SOITableObj qt $ TOCol columnName) DRUsingColumn
@@ -108,7 +110,16 @@ objRelP2Setup source qt foreignKeys (RelDef rn ru _) = case ru of
     -- TODO(PDV?): this is too optimistic. Some object relationships are nullable, but
     -- we are marking some as non-nullable here.  This should really be done by
     -- checking nullability in the SQL schema.
-    pure (RelInfo rn ObjRel colMap foreignTable False False, dependencies)
+    pure (RelInfo rn ObjRel colMap foreignTable False False BeforeParent, dependencies)
+  RUFKeyOn (RemoteTable remoteTable remoteCol) -> do
+    foreignTableForeignKeys <- findTable remoteTable foreignKeys
+    ForeignKey constraint _foreignTable colMap <- getRequiredRemoteFkey remoteCol (HS.toList foreignTableForeignKeys)
+    let dependencies =
+          [ SchemaDependency (SOSourceObj source $ SOITableObj remoteTable $ TOForeignKey (_cName constraint)) DRRemoteFkey
+          , SchemaDependency (SOSourceObj source $ SOITableObj qt $ TOCol remoteCol) DRUsingColumn
+          , SchemaDependency (SOSourceObj source $ SOITable remoteTable) DRRemoteTable
+          ]
+    pure (RelInfo rn ObjRel colMap remoteTable False False AfterParent, dependencies)
 
 arrRelP2Setup
   :: (QErrM m, Backend b)
@@ -123,7 +134,7 @@ arrRelP2Setup foreignKeys source qt (RelDef rn ru _) = case ru of
         (lCols, rCols) = unzip $ HM.toList $ rmColumns rm
         deps  = map (\c -> SchemaDependency (SOSourceObj source $ SOITableObj qt $ TOCol c) DRLeftColumn) lCols
                 <> map (\c -> SchemaDependency (SOSourceObj source $ SOITableObj refqt $ TOCol c) DRRightColumn) rCols
-    pure (RelInfo rn ArrRel (rmColumns rm) refqt True True, deps)
+    pure (RelInfo rn ArrRel (rmColumns rm) refqt True True BeforeParent, deps)
   RUFKeyOn (ArrRelUsingFKeyOn refqt refCol) -> do
     foreignTableForeignKeys <- findTable refqt foreignKeys
     let keysThatReferenceUs = filter ((== qt) . _fkForeignTable) (HS.toList foreignTableForeignKeys)
@@ -136,7 +147,7 @@ arrRelP2Setup foreignKeys source qt (RelDef rn ru _) = case ru of
                , SchemaDependency (SOSourceObj source $ SOITable refqt) DRRemoteTable
                ]
         mapping = HM.fromList $ map swap $ HM.toList colMap
-    pure (RelInfo rn ArrRel mapping refqt False False, deps)
+    pure (RelInfo rn ArrRel mapping refqt False False BeforeParent, deps)
 
 purgeRelDep
   :: (QErrM m)
@@ -175,3 +186,19 @@ getRequiredFkey col fkeys =
            "more than one foreign key constraint exists on the given column"
   where
     filteredFkeys = filter ((== [col]) . HM.keys . _fkColumnMapping) fkeys
+
+getRequiredRemoteFkey
+  :: QErrM m
+  => Backend b
+  => Column b
+  -> [ForeignKey b]
+  -> m (ForeignKey b)
+getRequiredRemoteFkey col fkeys =
+  case filteredFkeys of
+    []  -> throw400 ConstraintError
+          "no foreign constraint exists on the given column"
+    [k] -> return k
+    _   -> throw400 ConstraintError
+           "more than one foreign key constraint exists on the given column"
+  where
+    filteredFkeys = filter ((== [col]) . HM.elems . _fkColumnMapping) fkeys

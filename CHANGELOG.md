@@ -35,6 +35,7 @@ keys in the response body.
 - console: add support for MS SQL Server
 - server: Prohibit Invalid slashes, duplicate variables, subscriptions for REST endpoints
 - server: Prohibit non-singular query definitions for REST endpoints
+- server: better handling for one-to-one relationships via both `manual_configuration` and `foreign_key_constraint_on` (#2576)
 
 ## v1.4.0-alpha.1
 

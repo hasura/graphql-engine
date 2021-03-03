@@ -144,9 +144,7 @@ buildObjectRelationship
        )
      ) `arr` Maybe (RelInfo b)
 buildObjectRelationship = proc (fkeysMap, (source, table, relDef)) -> do
-  let buildRelInfo def = do
-        fkeys <- findTable table fkeysMap
-        objRelP2Setup source table fkeys def
+  let buildRelInfo def = objRelP2Setup source table fkeysMap def
   buildRelationship -< (source, table, buildRelInfo, ObjRel, relDef)
 
 buildArrayRelationship

@@ -292,6 +292,11 @@ class TestGraphqlInsertGeoJson:
 # Skipping server upgrade tests for a few tests below
 # Those tests capture bugs in the previous release
 class TestGraphqlNestedInserts:
+    def test_author_with_detail(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + "/author_with_detail.yaml")
+
+    def test_author_with_detail_fk(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + "/author_with_detail_fk.yaml")
 
     def test_author_with_articles(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + "/author_with_articles.yaml")

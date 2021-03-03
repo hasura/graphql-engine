@@ -21,6 +21,10 @@ args:
         published_on TIMESTAMP,
         tags JSON
       );
+      create table author_detail(
+        id integer primary key references author(id),
+        phone text
+      );
 
       CREATE FUNCTION fetch_articles(search text, author_row author)
       RETURNS SETOF article AS $$
@@ -42,6 +46,11 @@ args:
   args:
     schema: public
     name: article
+
+- type: track_table
+  args:
+    schema: public
+    name: author_detail
 
 #Create relationships
 - type: create_object_relationship
@@ -68,3 +77,26 @@ args:
     definition:
       function: fetch_articles
       table_argument: author_row
+
+#Create relationships
+- type: create_object_relationship
+  args:
+    table: author
+    name: detail_manual
+    using:
+      manual_configuration:
+        remote_table:
+          name: author_detail
+          schema: public
+        column_mapping:
+          id: id
+        insertion_order: after_parent
+
+- type: create_object_relationship
+  args:
+    table: author
+    name: detail_fk
+    using:
+      foreign_key_constraint_on:
+        table: author_detail
+        column: id

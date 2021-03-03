@@ -10,6 +10,8 @@ module Hasura.RQL.Types.Common
 
        , FieldName(..)
 
+       , InsertOrder(..)
+
        , ToAesonPairs(..)
 
        , EquatableGType(..)
@@ -76,7 +78,9 @@ import qualified Hasura.Backends.Postgres.SQL.Types as PG
 import           Hasura.EncJSON
 import           Hasura.Incremental                 (Cacheable)
 import           Hasura.RQL.DDL.Headers             ()
+import           Hasura.RQL.Types.Backend
 import           Hasura.RQL.Types.Error
+import           Hasura.SQL.Backend                 (BackendType)
 import           Hasura.SQL.Types
 
 newtype RelName
@@ -129,6 +133,46 @@ instance Q.FromCol RelType where
     "object" -> Just ObjRel
     "array"  -> Just ArrRel
     _        -> Nothing
+
+data InsertOrder = BeforeParent | AfterParent
+   deriving (Show, Eq, Generic)
+
+instance NFData InsertOrder
+instance Hashable InsertOrder
+instance Cacheable InsertOrder
+
+instance FromJSON InsertOrder where
+  parseJSON (String t)
+    | t == "before_parent" = pure BeforeParent
+    | t == "after_parent"  = pure AfterParent
+  parseJSON _ =
+    fail "insertion_order should be 'before_parent' or 'after_parent'"
+
+instance ToJSON InsertOrder where
+  toJSON = \case
+    BeforeParent -> String "before_parent"
+    AfterParent  -> String "after_parent"
+
+-- should this be parameterized by both the source and the destination backend?
+data RelInfo (b :: BackendType)
+  = RelInfo
+  { riName        :: !RelName
+  , riType        :: !RelType
+  , riMapping     :: !(HashMap (Column b) (Column b))
+  , riRTable      :: !(TableName b)
+  , riIsManual    :: !Bool
+  , riIsNullable  :: !Bool
+  , riInsertOrder :: !InsertOrder
+  } deriving (Generic)
+deriving instance Backend b => Show (RelInfo b)
+deriving instance Backend b => Eq   (RelInfo b)
+instance Backend b => NFData (RelInfo b)
+instance Backend b => Cacheable (RelInfo b)
+instance Backend b => Hashable (RelInfo b)
+instance Backend b => FromJSON (RelInfo b) where
+  parseJSON = genericParseJSON hasuraJSON
+instance Backend b => ToJSON (RelInfo b) where
+  toJSON = genericToJSON hasuraJSON
 
 -- | Postgres OIDs. <https://www.postgresql.org/docs/12/datatype-oid.html>
 newtype OID = OID { unOID :: Int }

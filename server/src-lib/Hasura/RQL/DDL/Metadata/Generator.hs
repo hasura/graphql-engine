@@ -93,7 +93,13 @@ instance (Arbitrary a, Backend b) => Arbitrary (RelUsing b a) where
 instance (Arbitrary a) => Arbitrary (RelDef a) where
   arbitrary = genericArbitrary
 
+instance Arbitrary InsertOrder where
+  arbitrary = genericArbitrary
+
 instance (Backend b) => Arbitrary (RelManualConfig b) where
+  arbitrary = genericArbitrary
+
+instance (Backend b) => Arbitrary (ObjRelUsingChoice b) where
   arbitrary = genericArbitrary
 
 instance (Backend b) => Arbitrary (ArrRelUsingFKeyOn b) where

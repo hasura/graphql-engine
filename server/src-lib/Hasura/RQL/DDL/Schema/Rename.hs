@@ -168,9 +168,9 @@ updateRelDefs source qt rn renameTable = do
     updateObjRelDef (oldQT, newQT) =
       rdUsing %~ \case
       RUFKeyOn fk -> RUFKeyOn fk
-      RUManual (RelManualConfig origQT rmCols) ->
+      RUManual (RelManualConfig origQT rmCols rmIO) ->
         let updQT = bool origQT newQT $ oldQT == origQT
-        in RUManual $ RelManualConfig updQT rmCols
+        in RUManual $ RelManualConfig updQT rmCols rmIO
 
     updateArrRelDef :: RenameTable b -> ArrRelDef b -> ArrRelDef b
     updateArrRelDef (oldQT, newQT) =
@@ -178,9 +178,9 @@ updateRelDefs source qt rn renameTable = do
       RUFKeyOn (ArrRelUsingFKeyOn origQT c) ->
         let updQT = getUpdQT origQT
         in RUFKeyOn $ ArrRelUsingFKeyOn updQT c
-      RUManual (RelManualConfig origQT rmCols) ->
+      RUManual (RelManualConfig origQT rmCols rmIO) ->
         let updQT = getUpdQT origQT
-        in RUManual $ RelManualConfig updQT rmCols
+        in RUManual $ RelManualConfig updQT rmCols rmIO
       where
         getUpdQT origQT = bool origQT newQT $ oldQT == origQT
 
@@ -407,8 +407,22 @@ updateColInObjRel
   :: (Backend b)
   => TableName b -> TableName b -> RenameCol b -> ObjRelUsing b -> ObjRelUsing b
 updateColInObjRel fromQT toQT rnCol = \case
-  RUFKeyOn col       -> RUFKeyOn $ getNewCol rnCol fromQT col
-  RUManual manConfig -> RUManual $ updateRelManualConfig fromQT toQT rnCol manConfig
+  RUFKeyOn c         ->
+    RUFKeyOn $ updateRelChoice fromQT toQT rnCol c
+  RUManual manConfig ->
+    RUManual $ updateRelManualConfig fromQT toQT rnCol manConfig
+
+updateRelChoice
+  :: Backend b
+  => TableName b
+  -> TableName b
+  -> RenameCol b
+  -> ObjRelUsingChoice b
+  -> ObjRelUsingChoice b
+updateRelChoice fromQT toQT rnCol =
+  \case
+    SameTable col   -> SameTable $ getNewCol rnCol fromQT col
+    RemoteTable t c -> RemoteTable t (getNewCol rnCol toQT c)
 
 updateColInArrRel
   :: (Backend b)
@@ -432,9 +446,9 @@ updateRelManualConfig
   :: (Backend b)
   => TableName b -> TableName b -> RenameCol b -> RelManualConfig b -> RelManualConfig b
 updateRelManualConfig fromQT toQT rnCol manConfig =
-  RelManualConfig tn $ updateColMap fromQT toQT rnCol colMap
+  RelManualConfig tn (updateColMap fromQT toQT rnCol colMap) io
   where
-    RelManualConfig tn colMap = manConfig
+    RelManualConfig tn colMap io = manConfig
 
 updateColMap
   :: (Backend b)
