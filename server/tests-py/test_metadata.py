@@ -74,7 +74,7 @@ class TestMetadataOrder:
         headers = {}
         if hge_ctx.hge_key is not None:
             headers['X-Hasura-Admin-Secret'] = hge_ctx.hge_key
-        # we are exporting the metadata here after creating it though
+        # we are exporting the metadata here after creating it through
         # the metadata APIs
         export_code, export_resp, _ = hge_ctx.anyq(url, export_query, headers)
         assert export_code == 200, export_resp
@@ -110,7 +110,7 @@ class TestMetadataOrder:
         headers = {}
         if hge_ctx.hge_key is not None:
             headers['X-Hasura-Admin-Secret'] = hge_ctx.hge_key
-        # we are exporting the metadata here after creating it though
+        # we are exporting the metadata here after creating it through
         # the metadata APIs
         export_code, export_resp, _ = hge_ctx.anyq(url, export_query, headers)
         assert export_code == 200, export_resp
@@ -146,7 +146,7 @@ class TestMetadataOrder:
         headers = {}
         if hge_ctx.hge_key is not None:
             headers['X-Hasura-Admin-Secret'] = hge_ctx.hge_key
-        # we are exporting the metadata here after creating it though
+        # we are exporting the metadata here after creating it through
         # the metadata APIs
         export_code, export_resp, _ = hge_ctx.anyq(url, export_query, headers)
         assert export_code == 200, export_resp
@@ -163,6 +163,75 @@ class TestMetadataOrder:
         replace_code, replace_resp, _ = hge_ctx.anyq(
             url, replace_query, headers)
         assert replace_code == 409, replace_resp
+
+        export_code_1, export_resp_1, _ = hge_ctx.anyq(
+            url, export_query, headers)
+        assert export_code_1 == 200
+        assert export_resp['metadata'] == export_resp_1['metadata']
+
+        # `resource_version` should be unchanged
+        assert export_resp['resource_version'] == export_resp_1['resource_version']
+
+    def test_reload_metadata(self, hge_ctx):
+        url = '/v1/metadata'
+        export_query = {
+            'type': 'export_metadata',
+            'version': 2,
+            'args': {}
+        }
+        headers = {}
+        if hge_ctx.hge_key is not None:
+            headers['X-Hasura-Admin-Secret'] = hge_ctx.hge_key
+        # we are exporting the metadata here after creating it through
+        # the metadata APIs
+        export_code, export_resp, _ = hge_ctx.anyq(url, export_query, headers)
+        assert export_code == 200, export_resp
+
+        reload_query = {
+            'type': 'reload_metadata',
+            'resource_version': export_resp['resource_version'],
+            'args': {}
+        }
+        # we are replacing the metadata with the exported metadata from the
+        # `export_metadata` response.
+        reload_code, reload_resp, _ = hge_ctx.anyq(
+            url, reload_query, headers)
+        assert reload_code == 200, reload_resp
+
+        export_code_1, export_resp_1, _ = hge_ctx.anyq(
+            url, export_query, headers)
+        assert export_code_1 == 200
+        assert export_resp['metadata'] == export_resp_1['metadata']
+
+        # `resource_version` should have been incremented
+        assert export_resp['resource_version'] + \
+            1 == export_resp_1['resource_version']
+
+    def test_reload_metadata_conflict(self, hge_ctx):
+        url = '/v1/metadata'
+        export_query = {
+            'type': 'export_metadata',
+            'version': 2,
+            'args': {}
+        }
+        headers = {}
+        if hge_ctx.hge_key is not None:
+            headers['X-Hasura-Admin-Secret'] = hge_ctx.hge_key
+        # we are exporting the metadata here after creating it through
+        # the metadata APIs
+        export_code, export_resp, _ = hge_ctx.anyq(url, export_query, headers)
+        assert export_code == 200, export_resp
+
+        reload_query = {
+            'type': 'reload_metadata',
+            'resource_version': export_resp['resource_version'] - 1,
+            'args': {}
+        }
+        # we are replacing the metadata with the exported metadata from the
+        # `export_metadata` response.
+        reload_code, reload_resp, _ = hge_ctx.anyq(
+            url, reload_query, headers)
+        assert reload_code == 409, reload_resp
 
         export_code_1, export_resp_1, _ = hge_ctx.anyq(
             url, export_query, headers)
