@@ -182,7 +182,7 @@ const mapStateToProps = state => {
       .flat()
       .filter(item => item.hasOwnProperty('is_enum')).length,
     functions: state.metadata.metadataObject.sources
-      .map(s => s.functions)
+      .map(s => s.functions || [])
       .flat().length,
     currentDataSource: state.tables.currentDataSource,
     currentSchema: state.tables.currentSchema,
