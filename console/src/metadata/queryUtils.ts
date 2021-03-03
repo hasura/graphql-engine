@@ -520,14 +520,12 @@ export const getDropRemoteRelQuery = (
   name: string,
   table: QualifiedTable,
   source: string
-) => ({
-  type: 'delete_remote_relationship',
-  args: {
+) =>
+  getMetadataQuery('delete_remote_relationship', source, {
     name,
     table,
     source,
-  },
-});
+  });
 
 export const getRemoteSchemaIntrospectionQuery = (
   remoteSchemaName: string
