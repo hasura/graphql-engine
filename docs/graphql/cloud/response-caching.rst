@@ -102,4 +102,4 @@ A set of endpoints exist to clear items from the cache for the current project:
 
 * ``POST /pro/cache/clear`` -- Clears all
 * ``POST /pro/cache/clear?key={HASH}`` -- Clears key hash
-* ``POST /pro/cache/clear?family={FAMILY}`` -- Clears items that match query family (ignoring vairables)
+* ``POST /pro/cache/clear?family={FAMILY}`` -- Clears items that match query family (ignoring variables)
