@@ -53,7 +53,7 @@ source-repository-package
 source-repository-package
   type: git
   location: https://github.com/hasura/ci-info-hs.git
-  tag: 947fd56582b1e8bec9ffed98ca9ac2f6b63e36c9
+  tag: be578a01979fc95137cc2c84827f9fafb99df60f
 
 source-repository-package
   type: git
