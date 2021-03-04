@@ -4,6 +4,13 @@
 
 ### Bug fixes and improvements
 
+(Add entries here in the order of: server, console, cli, docs, others)
+
+
+## v2.0.0-alpha.3
+
+### Bug fixes and improvements
+
 - server/mssql: fix malformed JSON answer on empty tables
 - server/mssql: fix runtime errors when selecting geography/geometry columns
 - server/mssql: supports connection pooling to sql server
@@ -12,12 +19,19 @@
 - build: fix the packaging of static console assets (fix #6610)
 
 
-## v1.4.0-alpha.2
+## v2.0.0-alpha.2
+
 ### MSSQL support
 
 It's now possible to add a MSSQL server as a source. For now, only read-only queries and subscriptions are supported.
 
 See the documentation at `graphql/core/databases/ms-sql-server` for more information.
+
+## v2.0.0-alpha.1
+
+Bunch of bug fixes and refactor for generalized backends: https://github.com/hasura/graphql-engine/compare/v1.4.0-alpha.2...v2.0.0-alpha.1
+
+## v1.4.0-alpha.2
 
 ### Inconsistent Metadata
 
