@@ -4,7 +4,7 @@
 
 .. _metadata_api_actions:
 
-Metadata API Reference: Actions (v1.4 and above)
+Metadata API Reference: Actions (v2.0 and above)
 ================================================
 
 .. contents:: Table of contents
@@ -16,6 +16,11 @@ Introduction
 ------------
 
 **actions** are user defined mutations with custom business logic.
+
+.. admonition:: Supported from
+
+  The metadata API is supported for versions ``v2.0.0`` and above and replaces the older
+  :ref:`schema/metadata API <schema_metadata_apis>`.
 
 .. _metadata_create_action:
 

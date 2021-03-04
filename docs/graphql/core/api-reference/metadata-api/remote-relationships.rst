@@ -2,7 +2,7 @@
    :description: Manage remote relationships with the Hasura metadata API
    :keywords: hasura, docs, metadata API, API reference, remote joins, remote relationships
 
-Metadata API Reference: Remote Relationships (v1.4 and above)
+Metadata API Reference: Remote Relationships (v2.0 and above)
 =============================================================
 
 .. contents:: Table of contents
@@ -14,6 +14,11 @@ Introduction
 ------------
 
 Remote Relationships allow you to join tables with remote schemas.
+
+.. admonition:: Supported from
+
+  The metadata API is supported for versions ``v2.0.0`` and above and replaces the older
+  :ref:`schema/metadata API <schema_metadata_apis>`.
 
 .. _metadata_create_remote_relationship:
 

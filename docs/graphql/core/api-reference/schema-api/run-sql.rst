@@ -4,8 +4,8 @@
 
 .. _schema_api_run_sql:
 
-Schema API Reference: Run SQL
-=============================
+Schema API Reference: Run SQL (v2.0 and above)
+==============================================
 
 .. contents:: Table of contents
   :backlinks: none
@@ -32,6 +32,11 @@ returned.
   you find yourself in the need of using ``run_sql`` to run custom DML requests,
   consider creating a view. You can now define permissions on that particular view
   for various roles.
+
+.. admonition:: Supported from
+
+  The schema API is supported for versions ``v2.0.0`` and above and replaces the older
+  :ref:`schema/metadata API <schema_metadata_apis>`.
 
 Use cases
 ^^^^^^^^^

@@ -24,7 +24,7 @@ See :ref:`api_restified_endpoints` for information on how to work with endpoints
 
 .. admonition:: Supported from
 
-  RESTified endpoints are supported from versions ``v.2.0.0-alpha.1`` and above.
+  RESTified endpoints are supported from versions ``v2.0.0-alpha.1`` and above.
 
 Endpoint
 --------

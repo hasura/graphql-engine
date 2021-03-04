@@ -17,6 +17,13 @@ Introduction
 
 Add/Remove a RESTified GraphQL endpoint to Hasura GraphQL engine.
 
+.. admonition:: Deprecation
+
+  In versions ``v2.0.0`` and above, the schema/metadata API is deprecated in favour of the :ref:`schema API <schema_apis>` and the
+  :ref:`metadata API <metadata_apis>`.
+
+  Though for backwards compatibility, the schema/metadata APIs will continue to function.
+
 .. _create_rest_endpoint:
 
 create_rest_endpoint
@@ -81,7 +88,7 @@ An example request as follows:
 
 .. admonition:: Supported from
 
-  RESTified endpoints are supported from versions ``v.2.0.0-alpha.1`` and above.
+  RESTified endpoints are supported from versions ``v2.0.0-alpha.1`` and above.
 
 .. _drop_rest_endpoint:
 
@@ -121,4 +128,4 @@ An example request as follows:
 
 .. admonition:: Supported from
 
-  RESTified endpoints are supported from versions ``v.2.0.0-alpha.1`` and above.
+  RESTified endpoints are supported from versions ``v2.0.0-alpha.1`` and above.

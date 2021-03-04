@@ -19,6 +19,13 @@ Group queries using query collections.
 
 Create/drop query collections and add/drop a query to a collection using the following query types.
 
+.. admonition:: Deprecation
+
+  In versions ``v2.0.0`` and above, the schema/metadata API is deprecated in favour of the :ref:`schema API <schema_apis>` and the
+  :ref:`metadata API <metadata_apis>`.
+
+  Though for backwards compatibility, the schema/metadata APIs will continue to function.
+
 .. _create_query_collection:
 
 create_query_collection

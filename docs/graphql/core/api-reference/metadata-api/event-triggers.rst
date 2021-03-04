@@ -4,7 +4,7 @@
 
 .. _metadata_api_event_triggers:
 
-Metadata API Reference: Event Triggers (v1.4 and above)
+Metadata API Reference: Event Triggers (v2.0 and above)
 =======================================================
 
 .. contents:: Table of contents
@@ -16,6 +16,11 @@ Introduction
 ------------
 
 Event triggers are used to capture database changes and send them to a configured webhook.
+
+.. admonition:: Supported from
+
+  The metadata API is supported for versions ``v2.0.0`` and above and replaces the older
+  :ref:`schema/metadata API <schema_metadata_apis>`.
 
 .. _pg_create_event_trigger:
 

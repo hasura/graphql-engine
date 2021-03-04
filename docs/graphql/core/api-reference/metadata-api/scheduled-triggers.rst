@@ -2,7 +2,7 @@
    :description: Manage scheduled triggers with the Hasura metadata API
    :keywords: hasura, docs, metadata API, API reference, scheduled trigger
 
-Metadata API Reference: Scheduled Triggers (v1.4 and above)
+Metadata API Reference: Scheduled Triggers (v2.0 and above)
 ===========================================================
 
 .. contents:: Table of contents
@@ -14,6 +14,11 @@ Introduction
 ------------
 
 Scheduled triggers are used to invoke webhooks based on a timestamp or cron.
+
+.. admonition:: Supported from
+
+  The metadata API is supported for versions ``v2.0.0`` and above and replaces the older
+  :ref:`schema/metadata API <schema_metadata_apis>`.
 
 .. _metadata_create_cron_trigger:
 
@@ -95,6 +100,10 @@ Args syntax
      - When replace is set to ``true``, the cron trigger will be updated(if exists) and when it's ``false`` or the
        field is omitted, then a new cron trigger will be created.
 
+.. admonition:: Supported from
+
+  Scheduled triggers are supported from versions ``v1.3.0`` and above.
+
 .. _metadata_delete_cron_trigger:
 
 delete_cron_trigger
@@ -132,6 +141,10 @@ Args syntax
      - true
      - :ref:`TriggerName <TriggerName>`
      - Name of the cron trigger
+
+.. admonition:: Supported from
+
+  Scheduled triggers are supported from versions ``v1.3.0`` and above.
 
 .. _metadata_create_scheduled_event:
 
@@ -199,3 +212,7 @@ Args syntax
      - false
      - Text
      - Custom comment.
+
+.. admonition:: Supported from
+
+  Scheduled triggers are supported from versions ``v1.3.0`` and above.

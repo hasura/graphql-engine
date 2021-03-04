@@ -4,7 +4,7 @@
 
 .. _metadata_api_permission:
 
-Metadata API Reference: Permissions (v1.4 and above)
+Metadata API Reference: Permissions (v2.0 and above)
 ====================================================
 
 .. contents:: Table of contents
@@ -25,6 +25,11 @@ role has unrestricted access to all operations.
    All ``X-Hasura-*`` header values can be used in the permission rules. These
    values can come with the request and can be validated using webhook or can be
    sent with the JWT token.
+
+.. admonition:: Supported from
+
+  The metadata API is supported for versions ``v2.0.0`` and above and replaces the older
+  :ref:`schema/metadata API <schema_metadata_apis>`.
 
 .. _pg_create_insert_permission:
 

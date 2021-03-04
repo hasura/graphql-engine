@@ -4,7 +4,7 @@
 
 .. _metadata_api_custom_functions:
 
-Metadata API Reference: Custom Functions (v1.4 and above)
+Metadata API Reference: Custom Functions (v2.0 and above)
 =========================================================
 
 .. contents:: Table of contents
@@ -18,6 +18,11 @@ Introduction
 Track/untrack a custom SQL function in the Hasura GraphQL engine.
 
 Only tracked custom functions are available for querying/mutating/subscribing data over the GraphQL API.
+
+.. admonition:: Supported from
+
+  The metadata API is supported for versions ``v2.0.0`` and above and replaces the older
+  :ref:`schema/metadata API <schema_metadata_apis>`.
 
 .. _pg_track_function:
 

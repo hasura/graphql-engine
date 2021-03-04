@@ -4,7 +4,7 @@
 
 .. _metadata_remote_schema_api_permission:
 
-Metadata API Reference: Remote Schema Permissions (v1.4 and above)
+Metadata API Reference: Remote Schema Permissions (v2.0 and above)
 ==================================================================
 
 .. contents:: Table of contents
@@ -22,6 +22,11 @@ Remote schema permissions can be defined to:
 
 By default, the ``admin`` role has unrestricted access to
 the  remote schema.
+
+.. admonition:: Supported from
+
+  The metadata API is supported for versions ``v2.0.0`` and above and replaces the older
+  :ref:`schema/metadata API <schema_metadata_apis>`.
 
 .. _metadata_add_remote_schema_permissions:
 

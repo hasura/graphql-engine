@@ -22,7 +22,7 @@ a dev -> staging -> production environment promotion scenario.
 .. note::
 
   This documentation is for Hasura migrations ``config v3``, supported from
-  ``v2.0-alpha.1``. (See :ref:`upgrade guide <migrations_upgrade_v3>`).
+  ``v2.0.0-alpha.1``. (See :ref:`upgrade guide <migrations_upgrade_v3>`).
 
   For ``config v2``, see :ref:`migrations_v2`.
 

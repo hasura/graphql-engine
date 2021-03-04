@@ -26,7 +26,7 @@ enrichment from external sources and any other complex business logic.
 
 .. admonition:: Supported from
 
-   Actions are supported in Hasura GraphQL engine versions ``v.1.2.0`` and above.
+   Actions are supported in Hasura GraphQL engine versions ``v1.2.0`` and above. 
 
    Actions are supported for **Postgres versions 10 and above**.
 

@@ -19,6 +19,13 @@ Track/untrack a custom SQL function in the Hasura GraphQL engine.
 
 Only tracked custom functions are available for querying/mutating/subscribing data over the GraphQL API.
 
+.. admonition:: Deprecation
+
+  In versions ``v2.0.0`` and above, the schema/metadata API is deprecated in favour of the :ref:`schema API <schema_apis>` and the
+  :ref:`metadata API <metadata_apis>`.
+
+  Though for backwards compatibility, the schema/metadata APIs will continue to function.
+
 .. _track_function:
 
 track_function

@@ -4,7 +4,7 @@
 
 .. _schema_apis:
 
-Schema API Reference (v1.4 and above)
+Schema API Reference (v2.0 and above)
 =====================================
 
 .. contents:: Table of contents
@@ -23,7 +23,8 @@ This is primarily intended to be used as an ``admin`` API to manage the Hasura s
 
 .. admonition:: Supported from
 
-  The schema API is supported for versions ``v.1.4.0`` and above.
+  The schema API is supported for versions ``v2.0.0`` and above and replaces the older
+  :ref:`schema/metadata API <schema_metadata_apis>`.
 
 Endpoint
 --------

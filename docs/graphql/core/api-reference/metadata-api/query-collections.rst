@@ -4,7 +4,7 @@
 
 .. _metadata_api_query_collections:
 
-Metadata API Reference: Query collections (v1.4 and above)
+Metadata API Reference: Query collections (v2.0 and above)
 ==========================================================
 
 .. contents:: Table of contents
@@ -18,6 +18,11 @@ Introduction
 Group queries using query collections.
 
 Create/drop query collections and add/drop a query to a collection using the following query types.
+
+.. admonition:: Supported from
+
+  The metadata API is supported for versions ``v2.0.0`` and above and replaces the older
+  :ref:`schema/metadata API <schema_metadata_apis>`.
 
 .. _metadata_create_query_collection:
 

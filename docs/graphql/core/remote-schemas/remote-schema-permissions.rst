@@ -25,7 +25,7 @@ Remote schema permissions can be defined to:
 .. admonition:: Supported from
 
    Remote schema permissions are supported in Hasura GraphQL engine versions
-   ``v1.4.0`` and above.
+   ``v2.0.0`` and above.
 
 .. note::
 

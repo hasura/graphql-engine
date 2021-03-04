@@ -26,9 +26,9 @@ Available APIs
 +----------------------------------+---------------------------------------------------+------------------+
 | Schema/Metadata *(< v1.3)*       | :ref:`/v1/query <schema_metadata_api>`            | Admin only       |
 +----------------------------------+---------------------------------------------------+------------------+
-| Schema *(> v1.4)*                | :ref:`/v2/query <schema_api>`                     | Admin only       |
+| Schema *(> v2.0)*                | :ref:`/v2/query <schema_api>`                     | Admin only       |
 +----------------------------------+---------------------------------------------------+------------------+
-| Metadata *(> v1.4)*              | :ref:`/v1/metadata <metadata_api>`                | Admin only       |
+| Metadata *(> v2.0)*              | :ref:`/v1/metadata <metadata_api>`                | Admin only       |
 +----------------------------------+---------------------------------------------------+------------------+
 | Restified GQL                    | :ref:`/api/rest <restified_api>`                  | GQL REST Routes  |
 +----------------------------------+---------------------------------------------------+------------------+
@@ -77,7 +77,7 @@ See details at :ref:`schema_metadata_apis` .
 
 .. _schema_api:
 
-Schema API (v1.4 and above)
+Schema API (v2.0 and above)
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Hasura exposes a schema API for directly executing SQL on the underlying Postgres.
@@ -88,7 +88,7 @@ See details at :ref:`schema_apis`.
 
 .. _metadata_api:
 
-Metadata API (v1.4 and above)
+Metadata API (v2.0 and above)
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Hasura exposes a metadata API for managing metadata.
@@ -163,8 +163,8 @@ See details at :ref:`explain_api_reference`.
   GraphQL API <graphql-api/index>
   Relay GraphQL API <relay-graphql-api/index>
   Schema / Metadata APIs <schema-metadata-api/index>
-  Schema APIs (v1.4 and above) <schema-api/index>
-  Metadata APIs (v1.4 and above) <metadata-api/index>
+  Schema APIs (v2.0 and above) <schema-api/index>
+  Metadata APIs (v2.0 and above) <metadata-api/index>
   RESTified GraphQL Endpoints <restified>
   Version API <version>
   Health check API <health>

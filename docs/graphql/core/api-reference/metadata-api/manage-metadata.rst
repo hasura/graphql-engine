@@ -4,7 +4,7 @@
 
 .. _metadata_api_manage_metadata:
 
-Metadata API Reference: Manage metadata (v1.4 and above)
+Metadata API Reference: Manage metadata (v2.0 and above)
 ========================================================
 
 .. contents:: Table of contents
@@ -16,6 +16,11 @@ Introduction
 ------------
 
 APIs to manage Hasura metadata which is stored in ``hdb_catalog`` schema.
+
+.. admonition:: Supported from
+
+  The metadata API is supported for versions ``v2.0.0`` and above and replaces the older
+  :ref:`schema/metadata API <schema_metadata_apis>`.
 
 .. _metadata_export_metadata:
 

@@ -4,7 +4,7 @@
 
 .. _metadata_api_tables_views:
 
-Metadata API Reference: Tables/Views (v1.4 and above)
+Metadata API Reference: Tables/Views (v2.0 and above)
 =====================================================
 
 .. contents:: Table of contents
@@ -18,6 +18,11 @@ Introduction
 Track/untrack a table/view in Hasura GraphQL engine.
 
 Only tracked tables/views are available for querying/mutating/subscribing data over the GraphQL API.
+
+.. admonition:: Supported from
+
+  The metadata API is supported for versions ``v2.0.0`` and above and replaces the older
+  :ref:`schema/metadata API <schema_metadata_apis>`.
 
 .. _pg_track_table:
 

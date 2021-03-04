@@ -17,6 +17,13 @@ Introduction
 
 APIs to manage Hasura metadata which is stored in ``hdb_catalog`` schema.
 
+.. admonition:: Deprecation
+
+  In versions ``v2.0.0`` and above, the schema/metadata API is deprecated in favour of the :ref:`schema API <schema_apis>` and the
+  :ref:`metadata API <metadata_apis>`.
+
+  Though for backwards compatibility, the schema/metadata APIs will continue to function.
+
 .. _export_metadata:
 
 export_metadata

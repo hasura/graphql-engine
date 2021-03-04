@@ -26,6 +26,13 @@ role has unrestricted access to all operations.
    values can come with the request and can be validated using webhook or can be
    sent with the JWT token.
 
+.. admonition:: Deprecation
+
+  In versions ``v2.0.0`` and above, the schema/metadata API is deprecated in favour of the :ref:`schema API <schema_apis>` and the
+  :ref:`metadata API <metadata_apis>`.
+
+  Though for backwards compatibility, the schema/metadata APIs will continue to function.
+
 .. _create_insert_permission:
 
 create_insert_permission

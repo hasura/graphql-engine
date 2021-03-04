@@ -4,7 +4,7 @@
 
 .. _metadata_api_relationship:
 
-Metadata API Reference: Relationships (v1.4 and above)
+Metadata API Reference: Relationships (v2.0 and above)
 ======================================================
 
 .. contents:: Table of contents
@@ -39,6 +39,11 @@ example, given tables ``author`` and ``author_details``, if the ``author_details
 table has a primary key ``author_id`` which is a foreign key to the
 ``author`` table's primary key ``id``. In this case there will be a single ``author``
 for every ``author_details`` and a single ``details`` for every ``author``
+
+.. admonition:: Supported from
+
+  The metadata API is supported for versions ``v2.0.0`` and above and replaces the older
+  :ref:`schema/metadata API <schema_metadata_apis>`.
 
 .. _pg_create_object_relationship:
 

@@ -4,8 +4,8 @@
 
 .. _schema_metadata_apis:
 
-Schema / Metadata API Reference (v1.3 and below)
-================================================
+Schema / Metadata API Reference
+===============================
 
 .. contents:: Table of contents
   :backlinks: none
@@ -21,6 +21,13 @@ The schema / metadata API provides the following features:
 2. Modify Hasura metadata (permission rules and relationships).
 
 This is primarily intended to be used as an ``admin`` API to manage the Hasura schema and metadata.
+
+.. admonition:: Deprecation
+
+  In versions ``v2.0.0`` and above, the schema/metadata API is deprecated in favour of the :ref:`schema API <schema_apis>` and the
+  :ref:`metadata API <metadata_apis>`.
+
+  Though for backwards compatibility, the schema/metadata APIs will continue to function.
 
 Endpoint
 --------

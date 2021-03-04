@@ -15,6 +15,17 @@ Introduction
 
 Scheduled triggers are used to invoke webhooks based on a timestamp or cron.
 
+.. admonition:: Supported from
+
+  Scheduled triggers are supported from versions ``v1.3.0`` and above.
+
+.. admonition:: Deprecation
+
+  In versions ``v2.0.0`` and above, the schema/metadata API is deprecated in favour of the :ref:`schema API <schema_apis>` and the
+  :ref:`metadata API <metadata_apis>`.
+
+  Though for backwards compatibility, the schema/metadata APIs will continue to function.
+
 .. _create_cron_trigger:
 
 create_cron_trigger
@@ -95,6 +106,11 @@ Args syntax
      - When replace is set to ``true``, the cron trigger will be updated(if exists) and when it's ``false`` or the
        field is omitted, then a new cron trigger will be created.
 
+
+.. admonition:: Supported from
+
+  Scheduled triggers are supported from versions ``v1.3.0`` and above.
+
 .. _delete_cron_trigger:
 
 delete_cron_trigger
@@ -132,6 +148,10 @@ Args syntax
      - true
      - :ref:`TriggerName <TriggerName>`
      - Name of the cron trigger
+
+.. admonition:: Supported from
+
+  Scheduled triggers are supported from versions ``v1.3.0`` and above.
 
 .. _create_scheduled_event:
 
@@ -199,3 +219,8 @@ Args syntax
      - false
      - Text
      - Custom comment.
+
+
+.. admonition:: Supported from
+
+  Scheduled triggers are supported from versions ``v1.3.0`` and above.

@@ -4,7 +4,7 @@
 
 .. _metadata_api_computed_field:
 
-Metadata API Reference: Computed Fields (v1.4 and above)
+Metadata API Reference: Computed Fields (v2.0 and above)
 ========================================================
 
 .. contents:: Table of contents
@@ -21,6 +21,11 @@ Currenty, the Hasura GraphQL engine supports functions returning
 `base types <https://www.postgresql.org/docs/current/extend-type-system.html#id-1.8.3.5.9>`__ or
 `table row types <https://www.postgresql.org/docs/current/rowtypes.html#ROWTYPES-DECLARING>`__
 as computed fields.
+
+.. admonition:: Supported from
+
+  The metadata API is supported for versions ``v2.0.0`` and above and replaces the older
+  :ref:`schema/metadata API <schema_metadata_apis>`.
 
 .. _pg_add_computed_field:
 

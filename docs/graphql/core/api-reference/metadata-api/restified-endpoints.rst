@@ -4,7 +4,7 @@
 
 .. _metadata_api_restified_endpoints:
 
-Metadata API Reference: RESTified GraphQL Endpoints (v1.4 and above)
+Metadata API Reference: RESTified GraphQL Endpoints (v2.0 and above)
 ====================================================================
 
 .. contents:: Table of contents
@@ -16,6 +16,11 @@ Introduction
 ------------
 
 Add/Remove a RESTified GraphQL endpoint to Hasura GraphQL engine.
+
+.. admonition:: Supported from
+
+  The metadata API is supported for versions ``v2.0.0`` and above and replaces the older
+  :ref:`schema/metadata API <schema_metadata_apis>`.
 
 .. _metadata_create_rest_endpoint:
 
@@ -81,7 +86,7 @@ An example request as follows:
 
 .. admonition:: Supported from
 
-  RESTified endpoints are supported from versions ``v.2.0.0-alpha.1`` and above.
+  RESTified endpoints are supported from versions ``v2.0.0-alpha.1`` and above.
 
 .. _metadata_drop_rest_endpoint:
 
@@ -121,4 +126,4 @@ An example request as follows:
 
 .. admonition:: Supported from
 
-  RESTified endpoints are supported from versions ``v.2.0.0-alpha.1`` and above.
+  RESTified endpoints are supported from versions ``v2.0.0-alpha.1`` and above.

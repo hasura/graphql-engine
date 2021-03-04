@@ -143,7 +143,7 @@ The configuration file can be configured with the following config keys:
 
 .. note::
 
-  The above structure is for the ``config v3`` file which is supported since ``v2.0-alpha.1``. Refer to :ref:`this page <migrations_upgrade_v3>` on how to upgrade to ``config v2``.
+  The above structure is for the ``config v3`` file which is supported since ``v2.0.0-alpha.1``. Refer to :ref:`this page <migrations_upgrade_v3>` on how to upgrade to ``config v2``.
 
 Environment variables
 ---------------------
@@ -260,7 +260,7 @@ project root directory.
 
 .. admonition:: Supported from
 
-   ``.env`` file is supported in versions ``v.1.2.0`` and above.
+   ``.env`` file is supported in versions ``v1.2.0`` and above.
 
 .. note::
 

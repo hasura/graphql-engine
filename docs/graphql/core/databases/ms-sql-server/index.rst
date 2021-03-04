@@ -130,7 +130,7 @@ Hasura tracks your new database objects in its GraphQL schema.
 
 
 Step 6: Try out a GraphQL query
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Head to the ``GraphiQL`` tab in the console and try running a GraphQL query! Use the explorer sidebar on GraphQL to get help in creating a GraphQL query.
 

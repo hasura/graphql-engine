@@ -4,7 +4,7 @@
 
 .. _metadata_apis:
 
-Metadata API Reference (v1.4 and above)
+Metadata API Reference (v2.0 and above)
 =======================================
 
 .. contents:: Table of contents
@@ -19,8 +19,8 @@ The metadata API is primarily intended to be used as an ``admin`` API to manage 
 
 .. admonition:: Supported from
 
-  The metadata API is supported for versions ``v.1.4.0`` and above.
-
+  The metadata API is supported for versions ``v2.0.0`` and above and replaces the older
+  :ref:`schema/metadata API <schema_metadata_apis>`.
 
 Endpoint
 --------
