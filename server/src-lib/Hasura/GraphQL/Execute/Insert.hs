@@ -292,7 +292,7 @@ validateInsert insCols objRels addCols = do
         relNameTxt = relNameToTxt relName
         lColConflicts = lCols `intersect` (addCols <> insCols)
     withPathK relNameTxt $ unless (null lColConflicts) $ throw400 ValidationFailed $
-      "cannot insert object relation ship " <> relName
+      "cannot insert object relationship " <> relName
       <<> " as " <> showPGCols lColConflicts
       <> " column values are already determined"
   where
