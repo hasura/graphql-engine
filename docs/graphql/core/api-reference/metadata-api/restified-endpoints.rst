@@ -79,6 +79,10 @@ An example request as follows:
      - Text
      - comment
 
+.. admonition:: Supported from
+
+  RESTified endpoints are supported from versions ``v.2.0.0-alpha.1`` and above.
+
 .. _metadata_drop_rest_endpoint:
 
 drop_rest_endpoint
@@ -97,7 +101,7 @@ An example request as follows:
    {
        "type": "drop_rest_endpoint",
        "args": {
-           "url": "my simple rest endpoint"
+           "name": "name_of_the_endpoint"
        }
    }
 
@@ -110,7 +114,11 @@ An example request as follows:
      - Required
      - Schema
      - Description
-   * - url
+   * - name
      - true
-     - :ref:`EndpointUrl`
+     - Text
      - URL of the RESTified endpoint
+
+.. admonition:: Supported from
+
+  RESTified endpoints are supported from versions ``v.2.0.0-alpha.1`` and above.

@@ -79,6 +79,10 @@ An example request as follows:
      - Text
      - comment
 
+.. admonition:: Supported from
+
+  RESTified endpoints are supported from versions ``v.2.0.0-alpha.1`` and above.
+
 .. _drop_rest_endpoint:
 
 drop_rest_endpoint
@@ -114,3 +118,7 @@ An example request as follows:
      - true
      - Text
      - URL of the RESTified endpoint
+
+.. admonition:: Supported from
+
+  RESTified endpoints are supported from versions ``v.2.0.0-alpha.1`` and above.
