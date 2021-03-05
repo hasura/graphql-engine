@@ -7,9 +7,10 @@ module Hasura.Backends.MSSQL.Types.Internal where
 import           Hasura.Prelude
 
 import qualified Data.Aeson                    as J
-import           Data.Text.Encoding            (encodeUtf8)
 import qualified Database.ODBC.SQLServer       as ODBC
 import qualified Language.GraphQL.Draft.Syntax as G
+
+import           Data.Text.Encoding            (encodeUtf8)
 
 import           Hasura.RQL.Types.Error
 import           Hasura.SQL.Backend
@@ -302,31 +303,44 @@ scalarTypeDBName = \case
 
 parseScalarValue :: ScalarType -> J.Value -> Either QErr Value
 parseScalarValue scalarType jValue = case scalarType of
+  -- bytestring
   CharType      -> ODBC.ByteStringValue . encodeUtf8 <$> parseJValue jValue
   VarcharType   -> ODBC.ByteStringValue . encodeUtf8 <$> parseJValue jValue
-  TextType      -> ODBC.ByteStringValue . encodeUtf8 <$> parseJValue jValue
-  NumericType   -> ODBC.FloatValue <$> parseJValue jValue
-  DecimalType   -> ODBC.FloatValue <$> parseJValue jValue
-  IntegerType   -> ODBC.IntValue <$> parseJValue jValue
-  SmallintType  -> ODBC.IntValue <$> parseJValue jValue
-  FloatType     -> ODBC.FloatValue <$> parseJValue jValue
-  RealType      -> ODBC.FloatValue <$> parseJValue jValue
-  DateType      -> ODBC.DayValue <$> parseJValue jValue
-  Ss_time2Type  -> ODBC.TimeOfDayValue <$> parseJValue jValue
+
+  -- text
+  TextType      -> ODBC.TextValue <$> parseJValue jValue
   WcharType     -> ODBC.TextValue <$> parseJValue jValue
   WvarcharType  -> ODBC.TextValue <$> parseJValue jValue
   WtextType     -> ODBC.TextValue <$> parseJValue jValue
-  TimestampType -> ODBC.LocalTimeValue <$> parseJValue jValue
-  BinaryType    -> ODBC.BinaryValue . ODBC.Binary . txtToBs <$> parseJValue jValue
-  VarbinaryType -> ODBC.BinaryValue . ODBC.Binary . txtToBs <$> parseJValue jValue
+
+  -- integer
+  IntegerType   -> ODBC.IntValue <$> parseJValue jValue
+  SmallintType  -> ODBC.IntValue <$> parseJValue jValue
   BigintType    -> ODBC.IntValue <$> parseJValue jValue
   TinyintType   -> ODBC.IntValue <$> parseJValue jValue
-  BitType       -> ODBC.ByteValue <$> parseJValue jValue
-  GuidType      -> ODBC.TextValue <$> parseJValue jValue
 
+  -- float
+  NumericType   -> ODBC.FloatValue <$> parseJValue jValue
+  DecimalType   -> ODBC.FloatValue <$> parseJValue jValue
+  FloatType     -> ODBC.FloatValue <$> parseJValue jValue
+  RealType      -> ODBC.FloatValue <$> parseJValue jValue
+
+  -- boolean
+  BitType       -> ODBC.ByteValue <$> parseJValue jValue
+
+
+  -- geo
   -- TODO: We'll need to wrap this with geography::STGeomFromText
   GeographyType -> ODBC.TextValue <$> parseJValue jValue
   GeometryType  -> ODBC.TextValue <$> parseJValue jValue
+
+  -- misc
+  BinaryType    -> ODBC.BinaryValue . ODBC.Binary . txtToBs <$> parseJValue jValue
+  VarbinaryType -> ODBC.BinaryValue . ODBC.Binary . txtToBs <$> parseJValue jValue
+  Ss_time2Type  -> ODBC.TimeOfDayValue <$> parseJValue jValue
+  TimestampType -> ODBC.LocalTimeValue <$> parseJValue jValue
+  DateType      -> ODBC.DayValue <$> parseJValue jValue
+  GuidType      -> ODBC.TextValue <$> parseJValue jValue
 
   -- the input format for types that aren't explicitly supported is a string
   UnknownType _ -> ODBC.TextValue <$> parseJValue jValue

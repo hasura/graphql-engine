@@ -15,6 +15,7 @@
 - server/mssql: fix malformed JSON answer on empty tables
 - server/mssql: fix runtime errors when selecting geography/geometry columns
 - server/mssql: supports connection pooling to sql server
+- server/mssql: fix text values erroneously being parsed as varchar
 - server: improve errors messages for inconsistent sources
 - console: add relationship tab for mssql tables (#677)
 - build: fix the packaging of static console assets (fix #6610)

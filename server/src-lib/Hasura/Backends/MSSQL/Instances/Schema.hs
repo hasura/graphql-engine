@@ -9,6 +9,7 @@ import qualified Data.List.NonEmpty                    as NE
 import qualified Database.ODBC.SQLServer               as ODBC
 import qualified Language.GraphQL.Draft.Syntax         as G
 
+import           Data.Text.Encoding                    (encodeUtf8)
 import           Data.Text.Extended
 
 import qualified Hasura.Backends.MSSQL.Types           as MSSQL
@@ -176,15 +177,30 @@ msColumnParser
 msColumnParser columnType (G.Nullability isNullable) =
   opaque . fmap (ColumnValue columnType) <$> case columnType of
     ColumnScalar scalarType -> possiblyNullable scalarType <$> case scalarType of
-      MSSQL.WcharType    -> pure (ODBC.TextValue <$> P.string)
-      MSSQL.WvarcharType -> pure (ODBC.TextValue <$> P.string)
-      MSSQL.WtextType    -> pure (ODBC.TextValue <$> P.string)
+      -- bytestring
+      MSSQL.CharType     -> pure $ ODBC.ByteStringValue . encodeUtf8 <$> P.string
+      MSSQL.VarcharType  -> pure $ ODBC.ByteStringValue . encodeUtf8 <$> P.string
+
       -- text
-      MSSQL.FloatType    -> pure (ODBC.DoubleValue <$> P.float)
-      -- integer types
-      MSSQL.IntegerType  -> pure (ODBC.IntValue  . fromIntegral <$> P.int)
-      -- boolean type
-      MSSQL.BitType      -> pure (ODBC.BoolValue <$> P.boolean)
+      MSSQL.WcharType    -> pure $ ODBC.TextValue <$> P.string
+      MSSQL.WvarcharType -> pure $ ODBC.TextValue <$> P.string
+      MSSQL.WtextType    -> pure $ ODBC.TextValue <$> P.string
+      MSSQL.TextType     -> pure $ ODBC.TextValue <$> P.string
+
+      -- integer
+      MSSQL.IntegerType  -> pure $ ODBC.IntValue . fromIntegral <$> P.int
+      MSSQL.SmallintType -> pure $ ODBC.IntValue . fromIntegral <$> P.int
+      MSSQL.BigintType   -> pure $ ODBC.IntValue . fromIntegral <$> P.int
+      MSSQL.TinyintType  -> pure $ ODBC.IntValue . fromIntegral <$> P.int
+
+      -- float
+      MSSQL.NumericType  -> pure $ ODBC.DoubleValue <$> P.float
+      MSSQL.DecimalType  -> pure $ ODBC.DoubleValue <$> P.float
+      MSSQL.FloatType    -> pure $ ODBC.DoubleValue <$> P.float
+      MSSQL.RealType     -> pure $ ODBC.DoubleValue <$> P.float
+
+      -- boolean
+      MSSQL.BitType      -> pure $ ODBC.BoolValue <$> P.boolean
       _                  -> do
         name <- mkMSSQLScalarTypeName scalarType
         let schemaType = P.NonNullable $ P.TNamed $ P.mkDefinition name Nothing P.TIScalar
