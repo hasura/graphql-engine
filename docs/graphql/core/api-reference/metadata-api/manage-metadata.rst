@@ -325,7 +325,7 @@ Response:
        },
        {
            "definition": "article",
-           "reason": "no such table/view exists in postgres : \"article\"",
+           "reason": "no such table/view exists in source : \"article\"",
            "type": "table"
        }
    ]

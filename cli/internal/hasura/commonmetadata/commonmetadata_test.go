@@ -317,7 +317,7 @@ func TestClient_GetInconsistentMetadata(t *testing.T) {
 	}{
 		{
 			name: "can get inconsistent metadata",
-			want: bytes.NewReader([]byte(`{"is_consistent":false,"inconsistent_objects":[{"definition":{"schema":"public","name":"test"},"reason":"no such table/view exists in postgres: \"test\"","type":"table"}]}`)),
+			want: bytes.NewReader([]byte(`{"is_consistent":false,"inconsistent_objects":[{"definition":{"schema":"public","name":"test"},"reason":"no such table/view exists in source: \"test\"","type":"table"}]}`)),
 			fields: fields{
 				Client: testutil.NewHttpcClient(t, portHasuraLatest, nil),
 				path:   "v1/metadata",

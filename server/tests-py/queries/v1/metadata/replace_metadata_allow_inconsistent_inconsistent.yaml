@@ -7,7 +7,7 @@ response:
   - definition:
       schema: public
       name: foobar
-    reason: 'no such table/view exists in postgres: "foobar"'
+    reason: 'no such table/view exists in source: "foobar"'
     type: table
   - definition:
       using:

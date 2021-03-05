@@ -38,5 +38,5 @@ FROM sys.objects object
                     WHERE [schema].schema_id = object.schema_id
                     FOR JSON PATH, WITHOUT_ARRAY_WRAPPER)
          AS [schema](json)
-WHERE object.type_desc = 'USER_TABLE'
+WHERE object.type_desc IN ('USER_TABLE', 'VIEW')
 FOR JSON PATH

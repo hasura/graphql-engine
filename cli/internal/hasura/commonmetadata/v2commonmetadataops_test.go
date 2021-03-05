@@ -83,7 +83,7 @@ func TestClientCommonMetadataOps_V2ReplaceMetadata(t *testing.T) {
                 "schema": "default",
                 "name": "test"
             },
-            "reason": "no such table/view exists in postgres: \"default.test\"",
+            "reason": "no such table/view exists in source: \"default.test\"",
             "type": "table"
         }
     ]

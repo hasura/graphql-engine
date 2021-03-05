@@ -2,7 +2,7 @@ Status Code,Code,Error
 400,postgres-error,Not-NULL violation. null value in column <column-name> violates not-null constraint
 400,permission-denied,select on <column/table> for role <role-name> is not allowed.
 400,not-exists,table <table-name> does not exist
-400,not-exists,no such table/view exists in postgres : <table-name>
+400,not-exists,no such table/view exists in source : <table-name>
 400,not-exists,<field-name> does not exist
 400,already-tracked,view/table already tracked : <table-name>
 400,access-denied,restricted access : admin only
@@ -28,7 +28,7 @@ Status Code,Code,Error
 400,already-exists,the query template already exists <template-name>
 400,permission-error,<permission-type>' permission on <table-name> for role <role-name> already exists
 400,permission-error,<permission-type>' permission on <table-name> for role <role-name> does not exist
-400,unexpected-payload,Unknown operator : <operator-type>  
+400,unexpected-payload,Unknown operator : <operator-type>
 400,unexpected-payload,expecting a string for column operator
 400,unexpected-payload,"incompatible column types : '<column-name>', '<column-name>' "
 400,unexpected-payload,Expecting 'constraint' or 'constraint_on' when the 'action' is 'update'

@@ -107,7 +107,7 @@ transformTable tableInfo =
   let schemaName   = ssName $ staJoinedSysSchema tableInfo
       tableName    = TableName (staName tableInfo) schemaName
       tableOID     = OID $ staObjectId tableInfo
-      (columns, foreignKeys) = unzip $ fmap transformColumn $ staJoinedSysColumn tableInfo
+      (columns, foreignKeys) = unzip $ transformColumn <$> staJoinedSysColumn tableInfo
   in ( tableName
      , DBTableMetadata
        tableOID
@@ -179,4 +179,3 @@ parseScalarType = \case
   "geography"        -> GeographyType
   "geometry"         -> GeometryType
   t                  -> UnknownType t
-

@@ -348,12 +348,12 @@ buildTableCache
      , [TableBuildInput b]
      , Inc.Dependency Inc.InvalidationKey
      ) `arr` Map.HashMap (TableName b) (TableCoreInfoG b (ColumnInfo b) (ColumnInfo b))
-buildTableCache = Inc.cache proc (source, pgSourceConfig, pgTables, tableBuildInputs, reloadMetadataInvalidationKey) -> do
+buildTableCache = Inc.cache proc (source, sourceConfig, dbTablesMeta, tableBuildInputs, reloadMetadataInvalidationKey) -> do
   rawTableInfos <-
     (| Inc.keyed (| withTable (\tables -> do
          table <- noDuplicateTables -< tables
-         let maybeInfo = Map.lookup (_tbiName table) pgTables
-         buildRawTableInfo -< (table, maybeInfo, pgSourceConfig, reloadMetadataInvalidationKey)
+         let maybeInfo = Map.lookup (_tbiName table) dbTablesMeta
+         buildRawTableInfo -< (table, maybeInfo, sourceConfig, reloadMetadataInvalidationKey)
          )
        |)
     |) (withSourceInKey source $ Map.groupOnNE _tbiName tableBuildInputs)
@@ -387,11 +387,11 @@ buildTableCache = Inc.cache proc (source, pgSourceConfig, pgTables, tableBuildIn
        , SourceConfig b
        , Inc.Dependency Inc.InvalidationKey
        ) (TableCoreInfoG b (RawColumnInfo b) (Column b))
-    buildRawTableInfo = Inc.cache proc (tableBuildInput, maybeInfo, pgSourceConfig, reloadMetadataInvalidationKey) -> do
+    buildRawTableInfo = Inc.cache proc (tableBuildInput, maybeInfo, sourceConfig, reloadMetadataInvalidationKey) -> do
       let TableBuildInput name isEnum config = tableBuildInput
       metadataTable <-
         (| onNothingA (throwA -<
-             err400 NotExists $ "no such table/view exists in postgres: " <>> name)
+             err400 NotExists $ "no such table/view exists in source: " <>> name)
         |) maybeInfo
 
       let columns :: [RawColumnInfo b] = _ptmiColumns metadataTable
@@ -403,7 +403,7 @@ buildTableCache = Inc.cache proc (source, pgSourceConfig, pgTables, tableBuildIn
           -- We want to make sure we reload enum values whenever someone explicitly calls
           -- `reload_metadata`.
           Inc.dependOn -< reloadMetadataInvalidationKey
-          eitherEnums <- bindA -< fetchAndValidateEnumValues pgSourceConfig name rawPrimaryKey columns
+          eitherEnums <- bindA -< fetchAndValidateEnumValues sourceConfig name rawPrimaryKey columns
           liftEitherA -< Just <$> eitherEnums
         else returnA -< Nothing
 
