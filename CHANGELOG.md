@@ -4,7 +4,7 @@
 
 ### Bug fixes and improvements
 
-(Add entries here in the order of: server, console, cli, docs, others)
+- cli: add support for rest endpoints
 
 
 ## v2.0.0-alpha.3

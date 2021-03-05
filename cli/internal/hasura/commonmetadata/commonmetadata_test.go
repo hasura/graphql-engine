@@ -47,7 +47,7 @@ func TestClient_ExportMetadata(t *testing.T) {
 		},
 		{
 			name:         "can export metadata v3",
-			wantMetadata: "{\"version\":3,\"sources\":[{\"name\":\"default\",\"tables\":[],\"configuration\":{\"connection_info\":{\"database_url\":{\"from_env\":\"HASURA_GRAPHQL_DATABASE_URL\"},\"pool_settings\":{\"retries\":1,\"idle_timeout\":180,\"max_connections\":50}}}}]}",
+			wantMetadata: "{\"version\":3,\"sources\":[{\"name\":\"default\",\"kind\":\"postgres\",\"tables\":[],\"configuration\":{\"connection_info\":{\"database_url\":{\"from_env\":\"HASURA_GRAPHQL_DATABASE_URL\"},\"pool_settings\":{\"retries\":1,\"idle_timeout\":180,\"max_connections\":50}}}}]}",
 			fields: fields{
 				Client: testutil.NewHttpcClient(t, portHasuraLatest, nil),
 				path:   "v1/metadata",

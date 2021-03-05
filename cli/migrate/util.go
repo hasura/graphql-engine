@@ -2,6 +2,7 @@ package migrate
 
 import (
 	"fmt"
+	restendpoints "github.com/hasura/graphql-engine/cli/metadata/rest_endpoints"
 	nurl "net/url"
 	"os"
 	"path/filepath"
@@ -209,6 +210,7 @@ func SetMetadataPluginsWithDir(ec *cli.ExecutionContext, drv *Migrate, dir ...st
 		plugins = append(plugins, remoteschemas.New(ec, metadataDir))
 		plugins = append(plugins, actions.New(ec, metadataDir))
 		plugins = append(plugins, crontriggers.New(ec, metadataDir))
+		plugins = append(plugins, restendpoints.New(ec, metadataDir))
 
 		if ec.HasMetadataV3 {
 			if ec.Config.Version >= cli.V3 {
