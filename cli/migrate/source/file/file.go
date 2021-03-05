@@ -94,6 +94,15 @@ func (f *File) Scan() error {
 	}
 
 	for _, fo := range folders {
+		orgPath, err := filepath.EvalSymlinks(filepath.Join(f.path, fo.Name()))
+		if err != nil {
+			return err
+		}
+		fo, err = os.Lstat(orgPath)
+		if err != nil {
+			return err
+		}
+
 		if fo.IsDir() {
 			// v2 migrate
 			dirName := fo.Name()
