@@ -208,5 +208,5 @@ instance J.FromJSON RemoteSchemaPermsCtx where
 
 instance J.ToJSON RemoteSchemaPermsCtx where
   toJSON = \case
-    RemoteSchemaPermsEnabled  -> "true"
-    RemoteSchemaPermsDisabled -> "false"
+    RemoteSchemaPermsEnabled  -> J.Bool True
+    RemoteSchemaPermsDisabled -> J.Bool False
