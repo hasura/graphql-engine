@@ -200,11 +200,8 @@ data RemoteSchemaPermsCtx
   deriving (Show, Eq)
 
 instance J.FromJSON RemoteSchemaPermsCtx where
-  parseJSON = J.withText "RemoteSchemaPermsCtx" $ \t ->
-    case T.toLower t of
-      "true"  -> pure RemoteSchemaPermsEnabled
-      "false" -> pure RemoteSchemaPermsDisabled
-      _       -> fail "enable_remote_schema_permissions should be a boolean value"
+  parseJSON = J.withBool "RemoteSchemaPermsCtx" $
+    pure . bool RemoteSchemaPermsDisabled RemoteSchemaPermsEnabled
 
 instance J.ToJSON RemoteSchemaPermsCtx where
   toJSON = \case
