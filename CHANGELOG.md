@@ -400,6 +400,7 @@ If you do have such headers configured, then you must update the header configur
 - console: add "identity" to frequently used columns (close #4279) (#5360)
 - cli: improve error messages thrown when metadata apply fails (#5513)
 - cli: fix issue with creating seed migrations while using tables with capital letters (closes #5532) (#5549)
+- cli: add `to` flag to squash command, to squash migrations up to a certain version
 - build: introduce additional log kinds for cli-migrations image (#5529)
 
 ## `v1.3.0`

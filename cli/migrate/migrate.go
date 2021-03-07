@@ -17,6 +17,8 @@ import (
 	"text/tabwriter"
 	"time"
 
+	"github.com/hasura/graphql-engine/cli/internal/client"
+
 	"github.com/hasura/graphql-engine/cli/util"
 
 	"github.com/hasura/graphql-engine/cli/metadata/types"
@@ -418,7 +420,7 @@ func (m *Migrate) Query(data interface{}) error {
 // the squashed SQL for all UP steps: us
 // the squashed metadata for all down steps: dm
 // the squashed SQL for all down steps: ds
-func (m *Migrate) Squash(v uint64) (vs []int64, um []interface{}, us []byte, dm []interface{}, ds []byte, err error) {
+func (m *Migrate) Squash(v uint64, toV uint64) (vs []int64, um []interface{}, us []byte, dm []interface{}, ds []byte, err error) {
 	// check the migration mode on the database
 	mode, err := m.databaseDrv.GetSetting("migration_mode")
 	if err != nil {
@@ -435,13 +437,13 @@ func (m *Migrate) Squash(v uint64) (vs []int64, um []interface{}, us []byte, dm 
 	// read all up migrations from source and send each migration
 	// to the returned channel
 	retUp := make(chan interface{}, m.PrefetchMigrations)
-	go m.squashUp(v, retUp)
+	go m.squashUp(v, toV, retUp)
 
 	// concurrently squash all down migrations
 	// read all down migrations from source and send each migration
 	// to the returned channel
 	retDown := make(chan interface{}, m.PrefetchMigrations)
-	go m.squashDown(v, retDown)
+	go m.squashDown(v, toV, retDown)
 
 	// combine squashed up and down migrations into a single one when they're ready
 	dataUp := make(chan interface{}, m.PrefetchMigrations)
@@ -700,9 +702,9 @@ func (m *Migrate) Down() error {
 	}
 }
 
-func (m *Migrate) squashUp(version uint64, ret chan<- interface{}) {
+func (m *Migrate) squashUp(versionFrom, versionTo uint64, ret chan<- interface{}) {
 	defer close(ret)
-	currentVersion := version
+	currentVersion := versionFrom
 	count := int64(0)
 	limit := int64(-1)
 	if m.stop() {
@@ -710,10 +712,10 @@ func (m *Migrate) squashUp(version uint64, ret chan<- interface{}) {
 	}
 
 	for limit == -1 {
-		if currentVersion == version {
+		if currentVersion == versionFrom {
 			// during the first iteration of the loop
 			// check if a next version exists for "--from" version
-			if err := m.versionUpExists(version); err != nil {
+			if err := m.versionUpExists(versionFrom); err != nil {
 				ret <- err
 				return
 			}
@@ -723,7 +725,7 @@ func (m *Migrate) squashUp(version uint64, ret chan<- interface{}) {
 			// this reads the SQL up migration
 			// even if a migration file does'nt exist in the source
 			// a empty migration will be returned
-			migr, err := m.newMigration(version, int64(version))
+			migr, err := m.newMigration(versionFrom, int64(versionFrom))
 			if err != nil {
 				ret <- err
 				return
@@ -737,7 +739,7 @@ func (m *Migrate) squashUp(version uint64, ret chan<- interface{}) {
 			// read next version of meta up migration
 			// even if a migration file does'nt exist in the source
 			// a empty migration will be returned
-			migr, err = m.metanewMigration(version, int64(version))
+			migr, err = m.metanewMigration(versionFrom, int64(versionFrom))
 			if err != nil {
 				ret <- err
 				return
@@ -745,6 +747,11 @@ func (m *Migrate) squashUp(version uint64, ret chan<- interface{}) {
 			ret <- migr
 			go migr.Buffer()
 			count++
+		}
+
+		// we're at the to - version
+		if currentVersion == versionTo && versionTo != 0 {
+			return
 		}
 
 		// get the next version using source driver
@@ -796,7 +803,7 @@ func (m *Migrate) squashUp(version uint64, ret chan<- interface{}) {
 	}
 }
 
-func (m *Migrate) squashDown(version uint64, ret chan<- interface{}) {
+func (m *Migrate) squashDown(versionFrom, versionTo uint64, ret chan<- interface{}) {
 	defer close(ret)
 
 	// get the last version from the source driver
@@ -811,7 +818,7 @@ func (m *Migrate) squashDown(version uint64, ret chan<- interface{}) {
 			return
 		}
 
-		if from < version {
+		if from < versionFrom {
 			return
 		}
 
@@ -852,6 +859,10 @@ func (m *Migrate) squashDown(version uint64, ret chan<- interface{}) {
 
 		ret <- migr
 		go migr.Buffer()
+
+		if from == versionTo && versionTo != 0 {
+			return
+		}
 
 		migr, err = m.newMigration(from, int64(prev))
 		if err != nil {
