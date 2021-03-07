@@ -21,8 +21,8 @@ import qualified Hasura.GraphQL.Execute.LiveQuery.Options as LQ
 import qualified Hasura.GraphQL.Execute.Plan              as E
 import qualified Hasura.Logging                           as L
 import qualified System.Metrics                           as EKG
+import qualified System.Metrics.Distribution              as EKG.Distribution
 import qualified System.Metrics.Gauge                     as EKG.Gauge
-
 
 import           Hasura.Prelude
 import           Hasura.RQL.Types
@@ -338,12 +338,23 @@ type WithEnv a = ReaderT Env (ExceptT String Identity) a
 runWithEnv :: Env -> WithEnv a -> Either String a
 runWithEnv env m = runIdentity $ runExceptT $ runReaderT m env
 
+-- | Collection of various server metrics
 data ServerMetrics
   = ServerMetrics
-  { smWarpThreads :: !EKG.Gauge.Gauge
+  { smWarpThreads         :: !EKG.Gauge.Gauge
+  -- ^ Current Number of warp threads
+  , smNumEventsFetched    :: !EKG.Distribution.Distribution
+  -- ^ Total Number of events fetched from last 'Event Trigger Fetch'
+  , smNumEventHTTPWorkers :: !EKG.Gauge.Gauge
+  -- ^ Current number of Event trigger's HTTP workers in process
+  , smEventLockTime       :: !EKG.Distribution.Distribution
+  -- ^ Time between the 'Event Trigger Fetch' from DB and the processing of the event
   }
 
 createServerMetrics :: EKG.Store -> IO ServerMetrics
 createServerMetrics store = do
   smWarpThreads <- EKG.createGauge "warp_threads" store
+  smNumEventsFetched <- EKG.createDistribution "num_events_fetched" store
+  smNumEventHTTPWorkers <- EKG.createGauge "num_event_trigger_http_workers" store
+  smEventLockTime <- EKG.createDistribution "event_lock_time" store
   pure ServerMetrics { .. }

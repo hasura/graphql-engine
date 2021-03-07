@@ -4,6 +4,8 @@
 
 ### Bug fixes and improvements
 
+(Add entries here in the order of: server, console, cli, docs, others)
+
 - server/mssql: support tracking and querying from views
 - cli: add support for rest endpoints
 

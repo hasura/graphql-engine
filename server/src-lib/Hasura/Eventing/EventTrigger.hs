@@ -52,6 +52,8 @@ import qualified Database.PG.Query                      as Q
 import qualified Database.PG.Query.PTI                  as PTI
 import qualified Network.HTTP.Client                    as HTTP
 import qualified PostgreSQL.Binary.Encoding             as PE
+import qualified System.Metrics.Distribution            as EKG.Distribution
+import qualified System.Metrics.Gauge                   as EKG.Gauge
 
 import           Control.Concurrent.Extended            (sleep)
 import           Control.Concurrent.STM.TVar
@@ -77,6 +79,7 @@ import           Hasura.Eventing.HTTP
 import           Hasura.HTTP
 import           Hasura.RQL.DDL.Headers
 import           Hasura.RQL.Types
+import           Hasura.Server.Init.Config
 import           Hasura.Server.Version                  (HasVersion)
 
 data TriggerMetadata
@@ -155,7 +158,7 @@ initEventEngineCtx maxT _eeCtxFetchInterval = do
   _eeCtxEventThreadsCapacity <- newTVar maxT
   return $ EventEngineCtx{..}
 
-type EventWithSource = (Event, SourceConfig 'Postgres)
+type EventWithSource = (Event, SourceConfig 'Postgres, Time.UTCTime)
 
 -- | Service events from our in-DB queue.
 --
@@ -181,9 +184,12 @@ processEventQueue
   -> IO SchemaCache
   -> EventEngineCtx
   -> LockedEventsCtx
+  -> ServerMetrics
   -> m void
-processEventQueue logger logenv httpMgr getSchemaCache eeCtx@EventEngineCtx{..} LockedEventsCtx{leEvents} = do
+processEventQueue logger logenv httpMgr getSchemaCache eeCtx@EventEngineCtx{..} LockedEventsCtx{leEvents} serverMetrics = do
   events0 <- popEventsBatch
+  -- Track number of events fetched in EKG
+  _ <- liftIO $ EKG.Distribution.add (smNumEventsFetched serverMetrics) (fromIntegral $ length events0)
   go events0 0 False
   where
     fetchBatchSize = 100
@@ -208,8 +214,10 @@ processEventQueue logger logenv httpMgr getSchemaCache eeCtx@EventEngineCtx{..} 
                 liftIO $ L.unLogger logger $ EventInternalErr err
                 return []
               Right events -> do
+                -- The time when the events were fetched. This is used to calculate the average lock time of an event.
+                eventsFetchedTime <- liftIO getCurrentTime
                 saveLockedEvents (map eId events) leEvents
-                return $ map (, sourceConfig) events
+                return $ map (, sourceConfig, eventsFetchedTime) events
 
     -- work on this batch of events while prefetching the next. Recurse after we've forked workers
     -- for each in the batch, minding the requested pool size.
@@ -223,8 +231,8 @@ processEventQueue logger logenv httpMgr getSchemaCache eeCtx@EventEngineCtx{..} 
       -- worth the effort for something more fine-tuned
       eventsNext <- LA.withAsync popEventsBatch $ \eventsNextA -> do
         -- process approximately in order, minding HASURA_GRAPHQL_EVENTS_HTTP_POOL_SIZE:
-        forM_ events $ \(event, sourceConfig) -> do
-          t <- processEvent event sourceConfig
+        forM_ events $ \(event, sourceConfig, eventFetchedTime) -> do
+          t <- processEvent event sourceConfig eventFetchedTime
             & withEventEngineCtx eeCtx
             & flip runReaderT (logger, httpMgr)
             & LA.async
@@ -262,9 +270,20 @@ processEventQueue logger logenv httpMgr getSchemaCache eeCtx@EventEngineCtx{..} 
          , Has HTTP.Manager r
          , Has (L.Logger L.Hasura) r
          , Tracing.HasReporter io
+         , MonadMask io
          )
-      => Event -> SourceConfig 'Postgres -> io ()
-    processEvent e sourceConfig = do
+      => Event
+      -> SourceConfig 'Postgres
+      -> Time.UTCTime
+      -- ^ Time when the event was fetched from DB. Used to calculate Event Lock time
+      -> io ()
+    processEvent e sourceConfig eventFetchedTime= do
+      -- Track Lock Time of Event
+      -- Lock Time = Time when the event was fetched from DB - Time when the event is being processed
+      eventProcessTime <- liftIO getCurrentTime
+      let eventLockTime = realToFrac $ diffUTCTime eventProcessTime eventFetchedTime
+      _ <- liftIO $ EKG.Distribution.add (smEventLockTime serverMetrics) eventLockTime
+
       cache <- liftIO getSchemaCache
 
       tracingCtx <- liftIO (Tracing.extractEventContext (eEvent e))
@@ -297,7 +316,13 @@ processEventQueue logger logenv httpMgr getSchemaCache eeCtx@EventEngineCtx{..} 
               payload = encode $ toJSON ep
               extraLogCtx = ExtraLogContext Nothing (epId ep) -- avoiding getting current time here to avoid another IO call with each event call
               requestDetails = RequestDetails $ LBS.length payload
-          res <- runExceptT $ tryWebhook headers responseTimeout payload webhook
+
+          -- Track the number of active HTTP workers using EKG.
+          res <- bracket_
+                  (liftIO $ EKG.Gauge.inc $ smNumEventHTTPWorkers serverMetrics)
+                  (liftIO $ EKG.Gauge.dec $ smNumEventHTTPWorkers serverMetrics)
+                  (runExceptT $ tryWebhook headers responseTimeout payload webhook)
+
           logHTTPForET res extraLogCtx requestDetails
           let decodedHeaders = map (decodeHeader logenv headerInfos) headers
           either
