@@ -12,6 +12,11 @@ Hasura Pro CLI
   :depth: 1
   :local:
 
+Introduction
+------------
+
+The Hasura Pro CLI is used to manage the Pro features (e.g. regression tests) that
+Hasura Cloud sets up for you
 
 Installing the Hasura Pro CLI
 -----------------------------

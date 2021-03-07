@@ -62,4 +62,5 @@ Dig deeper
    Deployment regions <regions>
    Heroku database URL Sync <heroku-url-sync>
    Deleting projects <delete>
+   Managing development environments <environments>
    

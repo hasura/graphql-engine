@@ -22,7 +22,6 @@ Based on your deployment method, follow the appropriate guide to update the Grap
 - :ref:`Updating on Heroku <heroku_update>`
 - :ref:`Updating on Docker <docker_update>`
 - :ref:`Updating on Kubernetes <kubernetes_update>`
-- :ref:`Updating on Digital Ocean <do_updating>`
 
 Latest available versions
 -------------------------
