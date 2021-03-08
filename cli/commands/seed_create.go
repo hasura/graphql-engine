@@ -94,7 +94,7 @@ func (o *SeedNewOptions) Run() error {
 		} else {
 			const defaultText = ""
 			var err error
-			body, err = editor.CaptureInputFromEditor(editor.GetPreferredEditorFromEnvironment, defaultText, "*.sql")
+			body, err = editor.CaptureInputFromEditor(editor.GetPreferredEditorFromEnvironment, defaultText, "sql")
 			if err != nil {
 				return errors.Wrap(err, "cannot find default editor from env")
 			}
