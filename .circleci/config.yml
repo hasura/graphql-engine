@@ -396,7 +396,7 @@ jobs:
         name: build extension cli
         working_directory: cli-ext
         command: |
-          npm run build
+          make build
           make deploy
           make ci-copy-assets
     - store_artifacts:
