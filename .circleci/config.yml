@@ -440,6 +440,7 @@ jobs:
         name: build cli
         working_directory: cli
         command: |
+          make ci-copy-cli-ext
           make build
           make compress
           make ci-copy-binary

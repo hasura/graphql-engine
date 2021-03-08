@@ -46,6 +46,10 @@ ci-copy-binary:
 	cp $(OUTPUT_DIR)/$(VERSION)/cli-hasura-* /build/_cli_output/binaries
 	echo "$(VERSION)" > /build/_cli_output/version.txt
 
+.PHONY: ci-copy-cli-ext
+ci-copy-cli-ext:
+	ls -la /build/_cli_ext_output
+
 # run tests
 .PHONY: test
 test:
