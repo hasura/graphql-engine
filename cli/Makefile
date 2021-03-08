@@ -48,7 +48,7 @@ ci-copy-binary:
 
 .PHONY: ci-copy-cli-ext
 ci-copy-cli-ext:
-	ls -la /build/_cli_ext_output
+	cp -r /build/_cli_ext_output ./_cli_ext
 
 # run tests
 .PHONY: test
