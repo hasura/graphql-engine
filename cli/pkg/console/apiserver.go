@@ -5,7 +5,9 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/hasura/graphql-engine/cli/internal/scripts"
+	"github.com/hasura/graphql-engine/cli/internal/hasura"
+
+	"github.com/hasura/graphql-engine/cli/internal/metadatautil"
 
 	"github.com/pkg/errors"
 
@@ -51,7 +53,7 @@ func cliProjectUpdateCheck(ec *cli.ExecutionContext) gin.HandlerFunc {
 		}
 		// if a user is on config v2 and they have multiple databases prompt them to upgrade
 		if ec.Config.Version <= cli.V2 && ec.HasMetadataV3 {
-			sources, err := scripts.ListDatabases(ec.APIClient.V1Metadata)
+			sources, err := metadatautil.GetSources(ec.APIClient.V1Metadata.ExportMetadata)
 			if err != nil {
 				c.AbortWithStatusJSON(http.StatusBadRequest, &response{Code: "internal_error", Message: errMessage{"cannot list sources"}.Error()})
 				return
@@ -70,7 +72,7 @@ func cliProjectUpdateCheck(ec *cli.ExecutionContext) gin.HandlerFunc {
 }
 
 func NewAPIServer(address string, port string, ec *cli.ExecutionContext) (*APIServer, error) {
-	migrate, err := migrate.NewMigrate(ec, false, "")
+	migrate, err := migrate.NewMigrate(ec, false, "", hasura.SourceKindPG)
 	if err != nil {
 		return nil, errors.Wrap(err, "error creating migrate instance")
 	}

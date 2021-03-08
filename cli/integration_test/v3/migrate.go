@@ -5,6 +5,8 @@ import (
 	"path/filepath"
 	"testing"
 
+	"github.com/hasura/graphql-engine/cli/internal/hasura"
+
 	"github.com/ghodss/yaml"
 	"github.com/hasura/graphql-engine/cli"
 	"github.com/hasura/graphql-engine/cli/commands"
@@ -33,8 +35,8 @@ func TestMigrateCmd(t *testing.T, ec *cli.ExecutionContext) {
 		status migrate.Status
 	}{
 		{"apply-up-all-migrations", &commands.MigrateApplyOptions{
-			EC:       ec,
-			Database: "default",
+			EC:     ec,
+			Source: cli.Source{Name: "default", Kind: hasura.SourceKindPG},
 		}, nil, migrate.Status{
 			Index: []uint64{1, 2},
 			Migrations: map[uint64]*migrate.MigrationStatus{
@@ -51,7 +53,7 @@ func TestMigrateCmd(t *testing.T, ec *cli.ExecutionContext) {
 		{"apply-down-1-migration", &commands.MigrateApplyOptions{
 			EC:            ec,
 			DownMigration: "1",
-			Database:      "default",
+			Source:        cli.Source{Name: "default", Kind: hasura.SourceKindPG},
 		}, nil, migrate.Status{
 			Index: []uint64{1, 2},
 			Migrations: map[uint64]*migrate.MigrationStatus{
@@ -68,7 +70,7 @@ func TestMigrateCmd(t *testing.T, ec *cli.ExecutionContext) {
 		{"apply-down-all-migration", &commands.MigrateApplyOptions{
 			EC:            ec,
 			DownMigration: "all",
-			Database:      "default",
+			Source:        cli.Source{Name: "default", Kind: hasura.SourceKindPG},
 		}, nil, migrate.Status{
 			Index: []uint64{1, 2},
 			Migrations: map[uint64]*migrate.MigrationStatus{
@@ -85,7 +87,7 @@ func TestMigrateCmd(t *testing.T, ec *cli.ExecutionContext) {
 		{"apply-goto-2-migration", &commands.MigrateApplyOptions{
 			EC:          ec,
 			GotoVersion: "2",
-			Database:    "default",
+			Source:      cli.Source{Name: "default", Kind: hasura.SourceKindPG},
 		}, nil, migrate.Status{
 			Index: []uint64{1, 2},
 			Migrations: map[uint64]*migrate.MigrationStatus{
@@ -102,7 +104,7 @@ func TestMigrateCmd(t *testing.T, ec *cli.ExecutionContext) {
 		{"apply-goto-nil-migration", &commands.MigrateApplyOptions{
 			EC:          ec,
 			GotoVersion: "-1",
-			Database:    "default",
+			Source:      cli.Source{Name: "default", Kind: hasura.SourceKindPG},
 		}, nil, migrate.Status{
 			Index: []uint64{1, 2},
 			Migrations: map[uint64]*migrate.MigrationStatus{
@@ -119,7 +121,7 @@ func TestMigrateCmd(t *testing.T, ec *cli.ExecutionContext) {
 		{"apply-up-1-migration", &commands.MigrateApplyOptions{
 			EC:          ec,
 			UpMigration: "1",
-			Database:    "default",
+			Source:      cli.Source{Name: "default", Kind: hasura.SourceKindPG},
 		}, nil, migrate.Status{
 			Index: []uint64{1, 2},
 			Migrations: map[uint64]*migrate.MigrationStatus{
@@ -136,7 +138,7 @@ func TestMigrateCmd(t *testing.T, ec *cli.ExecutionContext) {
 		{"apply-version-2-up-migration", &commands.MigrateApplyOptions{
 			EC:               ec,
 			VersionMigration: "2",
-			Database:         "default",
+			Source:           cli.Source{Name: "default", Kind: hasura.SourceKindPG},
 		}, nil, migrate.Status{
 			Index: []uint64{1, 2},
 			Migrations: map[uint64]*migrate.MigrationStatus{
@@ -154,7 +156,7 @@ func TestMigrateCmd(t *testing.T, ec *cli.ExecutionContext) {
 			EC:               ec,
 			VersionMigration: "2",
 			MigrationType:    "down",
-			Database:         "default",
+			Source:           cli.Source{Name: "default", Kind: hasura.SourceKindPG},
 		}, nil, migrate.Status{
 			Index: []uint64{1, 2},
 			Migrations: map[uint64]*migrate.MigrationStatus{
@@ -182,8 +184,8 @@ func TestMigrateCmd(t *testing.T, ec *cli.ExecutionContext) {
 				t.Fatal(err)
 			}
 			statusOpts := &commands.MigrateStatusOptions{
-				EC:       ec,
-				Database: "default",
+				EC:     ec,
+				Source: cli.Source{Name: "default", Kind: hasura.SourceKindPG},
 			}
 			actualStatus, err := statusOpts.Run()
 			if err != nil {

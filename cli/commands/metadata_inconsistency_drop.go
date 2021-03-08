@@ -2,6 +2,7 @@ package commands
 
 import (
 	"github.com/hasura/graphql-engine/cli"
+	"github.com/hasura/graphql-engine/cli/internal/hasura"
 	"github.com/hasura/graphql-engine/cli/migrate"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
@@ -35,7 +36,7 @@ type metadataInconsistencyDropOptions struct {
 }
 
 func (o *metadataInconsistencyDropOptions) run() error {
-	d, err := migrate.NewMigrate(o.EC, true, "")
+	d, err := migrate.NewMigrate(o.EC, true, "", hasura.SourceKindPG)
 	if err != nil {
 		return err
 	}

@@ -45,7 +45,9 @@ func TestClientCatalogState_Set(t *testing.T) {
 					"test": "test",
 				},
 			},
-			strings.NewReader(`{"message":"success"}`),
+			strings.NewReader(`{
+  "message": "success"
+}`),
 			false,
 		},
 		{

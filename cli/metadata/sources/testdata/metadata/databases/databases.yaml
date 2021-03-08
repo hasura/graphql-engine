@@ -1,4 +1,5 @@
 - name: s1
+  kind: postgres
   configuration:
     connection_info:
       database_url:
@@ -14,6 +15,7 @@
   - !include "public_get_t1.yaml"
   - !include "public_get_t2.yaml"
 - name: s2
+  kind: postgres
   configuration:
     connection_info:
       database_url:

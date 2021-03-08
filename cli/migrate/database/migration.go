@@ -106,12 +106,17 @@ func (s migrationVersions) Search(x uint64) int {
 
 type HasuraOpts struct {
 	HasMetadataV3 bool
-	Database      string
+	SourceName    string
+	SourceKind    hasura.SourceKind
 
-	Client               *hasura.Client
-	DatabaseOps          hasura.DatabaseOperations
-	MetadataOps          hasura.CommonMetadataOperations
-	V2MetadataOps        hasura.V2CommonMetadataOperations
+	Client *hasura.Client
+
+	PGSourceOps         hasura.PGSourceOps
+	MSSQLSourceOps      hasura.MSSQLSourceOps
+	MetadataOps         hasura.CommonMetadataOperations
+	V2MetadataOps       hasura.V2CommonMetadataOperations
+	GenericQueryRequest hasura.GenericSend
+
 	MigrationsStateStore statestore.MigrationsStateStore
 	SettingsStateStore   statestore.SettingsStateStore
 }

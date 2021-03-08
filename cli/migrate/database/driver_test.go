@@ -5,6 +5,8 @@ import (
 	"io"
 	"testing"
 
+	"github.com/hasura/graphql-engine/cli/internal/hasura"
+
 	"github.com/hasura/graphql-engine/cli/metadata/types"
 	"github.com/sirupsen/logrus"
 	"gopkg.in/yaml.v2"
@@ -134,7 +136,7 @@ func (m *mockDriver) GetIntroSpectionSchema() (interface{}, error) {
 	return nil, nil
 }
 
-func (m *mockDriver) ExportSchemaDump(schemaName []string, database string) ([]byte, error) {
+func (m *mockDriver) ExportSchemaDump(schemaName []string, sourceName string, sourceKind hasura.SourceKind) ([]byte, error) {
 	return nil, nil
 }
 
@@ -149,7 +151,7 @@ func (m *mockDriver) UpdateSetting(name string, value string) error {
 func (m *mockDriver) ApplySeed(interface{}) error {
 	return nil
 }
-func (m *mockDriver) ExportDataDump([]string, string) ([]byte, error) {
+func (m *mockDriver) ExportDataDump(tableNames []string, sourceName string, sourceKind hasura.SourceKind) ([]byte, error) {
 	return nil, nil
 }
 

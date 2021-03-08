@@ -42,6 +42,7 @@ func TestClientCommonMetadataOps_V2ReplaceMetadata(t *testing.T) {
     "sources": [
         {
             "name": "default",
+			"kind": "postgres",
            	"tables": [
                         {
                             "table": {
@@ -108,6 +109,7 @@ func TestClientCommonMetadataOps_V2ReplaceMetadata(t *testing.T) {
     "sources": [
         {
             "name": "default",
+			"kind": "postgres",
            	"tables": [], 
             "configuration": {
                 "connection_info": {

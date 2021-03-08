@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"io/ioutil"
 	"net/http"
 	"net/url"
 	"strings"
@@ -113,11 +114,21 @@ func (c *Client) Do(ctx context.Context, req *http.Request, v interface{}) (*Res
 		return resp, err
 	}
 	defer resp.Body.Close()
-
 	switch v := v.(type) {
 	case nil:
 	case io.Writer:
-		_, err = io.Copy(v, resp.Body)
+		// indent json response
+		respBodyBytes, err := ioutil.ReadAll(resp.Body)
+		if err != nil {
+			return resp, err
+		}
+		var buf bytes.Buffer
+		err = json.Indent(&buf, respBodyBytes, "", "  ")
+		if err != nil {
+			return resp, err
+		}
+		// copy it to writer
+		_, err = io.Copy(v, &buf)
 	default:
 		decErr := json.NewDecoder(resp.Body).Decode(v)
 		if decErr == io.EOF {

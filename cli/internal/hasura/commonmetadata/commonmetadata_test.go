@@ -36,8 +36,11 @@ func TestClient_ExportMetadata(t *testing.T) {
 		hasuraVersion string
 	}{
 		{
-			name:         "can export metadata v2",
-			wantMetadata: `{"version":2,"tables":[]}`,
+			name: "can export metadata v2",
+			wantMetadata: `{
+  "version": 2,
+  "tables": []
+}`,
 			fields: fields{
 				Client: testutil.NewHttpcClient(t, portHasuraV13, nil),
 				path:   "v1/query",
@@ -46,8 +49,29 @@ func TestClient_ExportMetadata(t *testing.T) {
 			wantErr:       false,
 		},
 		{
-			name:         "can export metadata v3",
-			wantMetadata: "{\"version\":3,\"sources\":[{\"name\":\"default\",\"kind\":\"postgres\",\"tables\":[],\"configuration\":{\"connection_info\":{\"database_url\":{\"from_env\":\"HASURA_GRAPHQL_DATABASE_URL\"},\"pool_settings\":{\"retries\":1,\"idle_timeout\":180,\"max_connections\":50}}}}]}",
+			name: "can export metadata v3",
+			wantMetadata: `{
+  "version": 3,
+  "sources": [
+    {
+      "name": "default",
+      "kind": "postgres",
+      "tables": [],
+      "configuration": {
+        "connection_info": {
+          "database_url": {
+            "from_env": "HASURA_GRAPHQL_DATABASE_URL"
+          },
+          "pool_settings": {
+            "retries": 1,
+            "idle_timeout": 180,
+            "max_connections": 50
+          }
+        }
+      }
+    }
+  ]
+}`,
 			fields: fields{
 				Client: testutil.NewHttpcClient(t, portHasuraLatest, nil),
 				path:   "v1/metadata",
@@ -94,7 +118,9 @@ func TestClient_ReloadMetadata(t *testing.T) {
 	}{
 		{
 			name: "can reload metadata v2",
-			want: `{"message":"success"}`,
+			want: `{
+  "message": "success"
+}`,
 			fields: fields{
 				Client: testutil.NewHttpcClient(t, portHasuraV13, nil),
 				path:   "v1/query",
@@ -104,7 +130,9 @@ func TestClient_ReloadMetadata(t *testing.T) {
 		},
 		{
 			name: "can reload metadata v3",
-			want: `{"message":"success"}`,
+			want: `{
+  "message": "success"
+}`,
 			fields: fields{
 				Client: testutil.NewHttpcClient(t, portHasuraLatest, nil),
 				path:   "v1/metadata",
@@ -149,7 +177,9 @@ func TestClient_DropInconsistentMetadata(t *testing.T) {
 	}{
 		{
 			name: "can drop inconsistent metadata v2",
-			want: `{"message":"success"}`,
+			want: `{
+  "message": "success"
+}`,
 			fields: fields{
 				Client: testutil.NewHttpcClient(t, portHasuraV13, nil),
 				path:   "v1/query",
@@ -159,7 +189,9 @@ func TestClient_DropInconsistentMetadata(t *testing.T) {
 		},
 		{
 			name: "can drop inconsistent metadata v3",
-			want: `{"message":"success"}`,
+			want: `{
+  "message": "success"
+}`,
 			fields: fields{
 				Client: testutil.NewHttpcClient(t, portHasuraLatest, nil),
 				path:   "v1/metadata",
@@ -204,7 +236,9 @@ func TestClient_ResetMetadata(t *testing.T) {
 	}{
 		{
 			name: "can reset metadata",
-			want: `{"message":"success"}`,
+			want: `{
+  "message": "success"
+}`,
 			fields: fields{
 				Client: testutil.NewHttpcClient(t, portHasuraV13, nil),
 				path:   "v1/query",
@@ -214,7 +248,9 @@ func TestClient_ResetMetadata(t *testing.T) {
 		},
 		{
 			name: "can reset metadata",
-			want: `{"message":"success"}`,
+			want: `{
+  "message": "success"
+}`,
 			fields: fields{
 				Client: testutil.NewHttpcClient(t, portHasuraLatest, nil),
 				path:   "v1/metadata",
@@ -368,7 +404,9 @@ func TestClient_ReplaceMetadata(t *testing.T) {
 	}{
 		{
 			name: "can replace metadata v2",
-			want: `{"message":"success"}`,
+			want: `{
+  "message": "success"
+}`,
 			args: args{
 				metadata: bytes.NewBuffer([]byte(`{"version":2, "tables":[]}`)),
 			},
@@ -384,7 +422,9 @@ func TestClient_ReplaceMetadata(t *testing.T) {
 			args: args{
 				metadata: bytes.NewBuffer([]byte(`{"version":3, "sources":[]}`)),
 			},
-			want: `{"message":"success"}`,
+			want: `{
+  "message": "success"
+}`,
 			fields: fields{
 				Client: testutil.NewHttpcClient(t, portHasuraLatest, nil),
 				path:   "v1/metadata",

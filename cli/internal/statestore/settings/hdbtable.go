@@ -7,20 +7,20 @@ import (
 )
 
 type StateStoreHdbTable struct {
-	client        hasura.DatabaseOperations
+	client        hasura.PGSourceOps
 	schema, table string
 }
 
-func NewStateStoreHdbTable(client hasura.DatabaseOperations, schema, table string) *StateStoreHdbTable {
+func NewStateStoreHdbTable(client hasura.PGSourceOps, schema, table string) *StateStoreHdbTable {
 	return &StateStoreHdbTable{client, schema, table}
 }
 
 func (s *StateStoreHdbTable) GetSetting(name string) (value string, err error) {
-	query := hasura.RunSQLInput{
+	query := hasura.PGRunSQLInput{
 		SQL: `SELECT value from ` + fmt.Sprintf("%s.%s", s.schema, s.table) + ` where setting='` + name + `'`,
 	}
 
-	resp, err := s.client.RunSQL(query)
+	resp, err := s.client.PGRunSQL(query)
 	if err != nil {
 		return value, err
 	}
@@ -42,11 +42,11 @@ func (s *StateStoreHdbTable) GetSetting(name string) (value string, err error) {
 }
 
 func (s *StateStoreHdbTable) GetAllSettings() (map[string]string, error) {
-	query := hasura.RunSQLInput{
+	query := hasura.PGRunSQLInput{
 		SQL: `SELECT setting, value from ` + fmt.Sprintf("%s.%s", s.schema, s.table) + `;`,
 	}
 
-	resp, err := s.client.RunSQL(query)
+	resp, err := s.client.PGRunSQL(query)
 	if err != nil {
 		return nil, err
 	}
@@ -68,11 +68,11 @@ func (s *StateStoreHdbTable) GetAllSettings() (map[string]string, error) {
 }
 
 func (s *StateStoreHdbTable) UpdateSetting(name string, value string) error {
-	query := hasura.RunSQLInput{
+	query := hasura.PGRunSQLInput{
 		SQL: `INSERT INTO ` + fmt.Sprintf("%s.%s", s.schema, s.table) + ` (setting, value) VALUES ('` + name + `', '` + value + `') ON CONFLICT (setting) DO UPDATE SET value='` + value + `'`,
 	}
 
-	resp, err := s.client.RunSQL(query)
+	resp, err := s.client.PGRunSQL(query)
 	if err != nil {
 		return err
 	}
@@ -84,11 +84,11 @@ func (s *StateStoreHdbTable) UpdateSetting(name string, value string) error {
 
 func (s *StateStoreHdbTable) PrepareSettingsDriver() error {
 	// check if migration table exists
-	query := hasura.RunSQLInput{
+	query := hasura.PGRunSQLInput{
 		SQL: `SELECT COUNT(1) FROM information_schema.tables WHERE table_name = '` + s.table + `' AND table_schema = '` + s.schema + `' LIMIT 1`,
 	}
 
-	resp, err := s.client.RunSQL(query)
+	resp, err := s.client.PGRunSQL(query)
 	if err != nil {
 		return err
 	}
@@ -102,11 +102,11 @@ func (s *StateStoreHdbTable) PrepareSettingsDriver() error {
 	}
 
 	// Now Create the table
-	query = hasura.RunSQLInput{
+	query = hasura.PGRunSQLInput{
 		SQL: `CREATE TABLE ` + fmt.Sprintf("%s.%s", s.schema, s.table) + ` (setting text not null primary key, value text not null)`,
 	}
 
-	resp, err = s.client.RunSQL(query)
+	resp, err = s.client.PGRunSQL(query)
 	if err != nil {
 		return err
 	}
@@ -123,10 +123,10 @@ func (s *StateStoreHdbTable) setDefaults() error {
 		sql += `INSERT INTO ` + fmt.Sprintf("%s.%s", s.schema, s.table) + ` (setting, value) VALUES ('` + fmt.Sprintf("%s", setting.GetName()) + `', '` + fmt.Sprintf("%s", setting.GetDefaultValue()) + `');`
 	}
 
-	query := hasura.RunSQLInput{
+	query := hasura.PGRunSQLInput{
 		SQL: sql,
 	}
-	_, err := s.client.RunSQL(query)
+	_, err := s.client.PGRunSQL(query)
 	if err != nil {
 		return err
 	}

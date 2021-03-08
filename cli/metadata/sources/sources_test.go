@@ -42,6 +42,7 @@ func TestSourceConfig_Export(t *testing.T) {
 			},
 			map[string][]byte{
 				"metadata/databases/databases.yaml": []byte(`- name: default
+  kind: postgres
   configuration:
     connection_info:
       database_url:
@@ -141,6 +142,7 @@ func TestSourceConfig_Build(t *testing.T) {
   - function:
       name: get_t2
       schema: public
+  kind: postgres
   name: s1
   tables:
   - table:
@@ -164,6 +166,7 @@ func TestSourceConfig_Build(t *testing.T) {
   - function:
       name: get_t2
       schema: public
+  kind: postgres
   name: s2
   tables:
   - table:

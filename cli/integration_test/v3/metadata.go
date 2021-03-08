@@ -11,6 +11,8 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/hasura/graphql-engine/cli/internal/hasura"
+
 	"github.com/hasura/graphql-engine/cli"
 	"github.com/hasura/graphql-engine/cli/commands"
 	"github.com/hasura/graphql-engine/cli/util"
@@ -96,7 +98,7 @@ func TestMetadataCmd(t *testing.T, ec *cli.ExecutionContext) {
 			&commands.MigrateApplyOptions{
 				EC:            ec,
 				DownMigration: "all",
-				Database:      "default",
+				Source:        cli.Source{Name: "default", Kind: hasura.SourceKindPG},
 			},
 			nil,
 			"",

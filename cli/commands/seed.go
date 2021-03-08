@@ -45,7 +45,7 @@ func NewSeedCmd(ec *cli.ExecutionContext) *cobra.Command {
 	)
 
 	f := seedCmd.PersistentFlags()
-	f.StringVar(&ec.Database, "database", "", "database on which operation should be applied")
+	f.StringVar(&ec.Source.Name, "database", "", "database on which operation should be applied")
 
 	f.String("endpoint", "", "http(s) endpoint for Hasura GraphQL Engine")
 	f.String("admin-secret", "", "admin secret for Hasura GraphQL Engine")

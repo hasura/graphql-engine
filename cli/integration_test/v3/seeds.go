@@ -128,8 +128,8 @@ func TestSeedsApplyCmd(t *testing.T, ec *cli.ExecutionContext) {
 		{
 			"can apply all seeds",
 			&commands.SeedApplyOptions{
-				EC:       ec,
-				Database: "default",
+				EC:     ec,
+				Source: cli.Source{Name: "default"},
 			},
 			false,
 		},

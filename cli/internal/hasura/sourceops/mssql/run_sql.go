@@ -1,4 +1,4 @@
-package databaseops
+package mssql
 
 import (
 	"bytes"
@@ -9,13 +9,13 @@ import (
 	"github.com/hasura/graphql-engine/cli/internal/hasura"
 )
 
-func (h *ClientDatabaseOps) RunSQL(input hasura.RunSQLInput) (*hasura.RunSQLOutput, error) {
+func (c *SourceOps) MSSQLRunSQL(input hasura.MSSQLRunSQLInput) (*hasura.MSSQLRunSQLOutput, error) {
 	body := hasura.RequestBody{
-		Type: "run_sql",
+		Type: "mssql_run_sql",
 		Args: input,
 	}
 	var b = new(bytes.Buffer)
-	resp, err := h.send(body, b)
+	resp, err := c.send(body, b)
 	if err != nil {
 		return nil, err
 	}
@@ -26,7 +26,7 @@ func (h *ClientDatabaseOps) RunSQL(input hasura.RunSQLInput) (*hasura.RunSQLOutp
 			return nil, fmt.Errorf("run_sql api request failed %d", resp.StatusCode)
 		}
 	}
-	o := new(hasura.RunSQLOutput)
+	o := new(hasura.MSSQLRunSQLOutput)
 	if err = json.NewDecoder(b).Decode(o); err != nil {
 		return nil, err
 	}

@@ -42,7 +42,10 @@ var (
 	ErrNoSchema       = fmt.Errorf("no schema")
 	ErrDatabaseDirty  = fmt.Errorf("database is dirty")
 
-	queryTypes    = []string{"select", "insert", "select", "update", "delete", "count", "run_sql", "bulk"}
+	queryTypes = []string{
+		"select", "insert", "select", "update", "delete", "count", "run_sql", "bulk",
+		"mssql_select", "mssql_insert", "msssql_select", "mssql_update", "mssql_delete", "mssql_count", "mssql_run_sql",
+	}
 	queryTypesMap = func() map[string]bool {
 		var m = map[string]bool{}
 		for _, v := range queryTypes {
@@ -78,7 +81,9 @@ type HasuraDB struct {
 
 	metadataops          hasura.CommonMetadataOperations
 	v2metadataops        hasura.V2CommonMetadataOperations
-	databaseops          hasura.DatabaseOperations
+	pgSourceOps          hasura.PGSourceOps
+	mssqlSourceOps       hasura.MSSQLSourceOps
+	genericQueryRequest  hasura.GenericSend
 	hasuraClient         *hasura.Client
 	migrationsStateStore statestore.MigrationsStateStore
 	settingsStateStore   statestore.SettingsStateStore
@@ -91,15 +96,20 @@ func WithInstance(config *Config, logger *log.Logger, hasuraOpts *database.Hasur
 	}
 
 	hx := &HasuraDB{
-		config:               config,
-		migrations:           database.NewMigrations(),
-		settings:             settings.Settings,
-		logger:               logger,
-		hasuraOpts:           hasuraOpts,
-		metadataops:          hasuraOpts.MetadataOps,
-		v2metadataops:        hasuraOpts.V2MetadataOps,
-		databaseops:          hasuraOpts.DatabaseOps,
-		hasuraClient:         hasuraOpts.Client,
+		config:     config,
+		migrations: database.NewMigrations(),
+		settings:   settings.Settings,
+		logger:     logger,
+		hasuraOpts: hasuraOpts,
+
+		metadataops:         hasuraOpts.MetadataOps,
+		v2metadataops:       hasuraOpts.V2MetadataOps,
+		pgSourceOps:         hasuraOpts.PGSourceOps,
+		mssqlSourceOps:      hasuraOpts.MSSQLSourceOps,
+		genericQueryRequest: hasuraOpts.GenericQueryRequest,
+
+		hasuraClient: hasuraOpts.Client,
+
 		migrationsStateStore: hasuraOpts.MigrationsStateStore,
 		settingsStateStore:   hasuraOpts.SettingsStateStore,
 	}
@@ -230,16 +240,26 @@ func (h *HasuraDB) Run(migration io.Reader, fileType, fileName string) error {
 		if body == "" {
 			break
 		}
-		sqlInput := hasura.RunSQLInput{
+		sqlInput := hasura.PGRunSQLInput{
 			SQL:    string(body),
-			Source: h.hasuraOpts.Database,
+			Source: h.hasuraOpts.SourceName,
 		}
 		if h.config.enableCheckMetadataConsistency {
 			sqlInput.CheckMetadataConsistency = func() *bool { b := false; return &b }()
 		}
-		_, err := h.databaseops.RunSQL(sqlInput)
-		if err != nil {
-			return err
+		switch h.hasuraOpts.SourceKind {
+		case hasura.SourceKindPG:
+			_, err := h.pgSourceOps.PGRunSQL(sqlInput)
+			if err != nil {
+				return err
+			}
+		case hasura.SourceKindMSSQL:
+			_, err := h.mssqlSourceOps.MSSQLRunSQL(hasura.MSSQLRunSQLInput(sqlInput))
+			if err != nil {
+				return err
+			}
+		default:
+			return fmt.Errorf("unsupported source kind, source name: %v kind: %v", h.hasuraOpts.SourceName, h.hasuraOpts.SourceKind)
 		}
 	case "meta":
 		var metadataRequests []interface{}
@@ -309,7 +329,7 @@ func sendMetadataMigrations(hasuradb *HasuraDB, requests []interface{}) error {
 			Type: "bulk",
 			Args: queryRequests,
 		}
-		resp, body, err := hasuradb.databaseops.SendDatabaseOperation(queryBulk)
+		resp, body, err := hasuradb.genericQueryRequest(queryBulk)
 		if err != nil {
 			return err
 		}
@@ -347,20 +367,20 @@ func (h *HasuraDB) ResetQuery() {
 }
 
 func (h *HasuraDB) InsertVersion(version int64) error {
-	return h.migrationsStateStore.InsertVersion(h.hasuraOpts.Database, version)
+	return h.migrationsStateStore.InsertVersion(h.hasuraOpts.SourceName, version)
 }
 
 func (h *HasuraDB) SetVersion(version int64, dirty bool) error {
-	return h.migrationsStateStore.SetVersion(h.hasuraOpts.Database, version, dirty)
+	return h.migrationsStateStore.SetVersion(h.hasuraOpts.SourceName, version, dirty)
 }
 
 func (h *HasuraDB) RemoveVersion(version int64) error {
-	return h.migrationsStateStore.RemoveVersion(h.hasuraOpts.Database, version)
+	return h.migrationsStateStore.RemoveVersion(h.hasuraOpts.SourceName, version)
 }
 
 func (h *HasuraDB) getVersions() (err error) {
 
-	v, err := h.migrationsStateStore.GetVersions(h.hasuraOpts.Database)
+	v, err := h.migrationsStateStore.GetVersions(h.hasuraOpts.SourceName)
 	if err != nil {
 		return err
 	}

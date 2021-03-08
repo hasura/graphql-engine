@@ -126,16 +126,20 @@ func FilterCustomQuery(u *nurl.URL) *nurl.URL {
 	return &ux
 }
 
-func NewMigrate(ec *cli.ExecutionContext, isCmd bool, database string) (*Migrate, error) {
+func NewMigrate(ec *cli.ExecutionContext, isCmd bool, sourceName string, sourceKind hasura.SourceKind) (*Migrate, error) {
+	// set a default source kind
+	if len(sourceKind) < 1 {
+		return nil, fmt.Errorf("invalid source kind")
+	}
 	// create a new directory for the database if it does'nt exists
-	if f, _ := os.Stat(filepath.Join(ec.MigrationDir, database)); f == nil {
-		err := os.MkdirAll(filepath.Join(ec.MigrationDir, database), 0755)
+	if f, _ := os.Stat(filepath.Join(ec.MigrationDir, sourceName)); f == nil {
+		err := os.MkdirAll(filepath.Join(ec.MigrationDir, sourceName), 0755)
 		if err != nil {
 			return nil, err
 		}
 	}
 	dbURL := GetDataPath(ec)
-	fileURL := GetFilePath(filepath.Join(ec.MigrationDir, database))
+	fileURL := GetFilePath(filepath.Join(ec.MigrationDir, sourceName))
 	opts := NewMigrateOpts{
 		fileURL.String(),
 		dbURL.String(),
@@ -144,9 +148,9 @@ func NewMigrate(ec *cli.ExecutionContext, isCmd bool, database string) (*Migrate
 		ec.Logger,
 		&migratedb.HasuraOpts{
 			HasMetadataV3: ec.HasMetadataV3,
-			Database:      database,
+			SourceName:    sourceName,
+			SourceKind:    sourceKind,
 			Client:        ec.APIClient,
-			DatabaseOps:   cli.GetDatabaseOps(ec),
 			V2MetadataOps: func() hasura.V2CommonMetadataOperations {
 				if ec.Config.Version >= cli.V3 {
 					return ec.APIClient.V1Metadata
@@ -157,6 +161,14 @@ func NewMigrate(ec *cli.ExecutionContext, isCmd bool, database string) (*Migrate
 			MigrationsStateStore: cli.GetMigrationsStateStore(ec),
 			SettingsStateStore:   cli.GetSettingsStateStore(ec),
 		},
+	}
+	if ec.HasMetadataV3 {
+		opts.hasuraOpts.PGSourceOps = ec.APIClient.V2Query
+		opts.hasuraOpts.MSSQLSourceOps = ec.APIClient.V2Query
+		opts.hasuraOpts.GenericQueryRequest = ec.APIClient.V2Query.Send
+	} else {
+		opts.hasuraOpts.PGSourceOps = ec.APIClient.V1Query
+		opts.hasuraOpts.GenericQueryRequest = ec.APIClient.V1Query.Send
 	}
 
 	t, err := New(opts)

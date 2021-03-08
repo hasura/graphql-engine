@@ -421,8 +421,13 @@ type ExecutionContext struct {
 	APIClient *hasura.Client
 
 	// current database on which operation is being done
-	Database      string
+	Source        Source
 	HasMetadataV3 bool
+}
+
+type Source struct {
+	Name string
+	Kind hasura.SourceKind
 }
 
 // NewExecutionContext returns a new instance of execution context
@@ -935,12 +940,6 @@ func GetAdminSecretHeaderName(v *version.Version) string {
 		return XHasuraAccessKey
 	}
 	return XHasuraAdminSecret
-}
-func GetDatabaseOps(ec *ExecutionContext) hasura.DatabaseOperations {
-	if !ec.HasMetadataV3 {
-		return ec.APIClient.V1Query
-	}
-	return ec.APIClient.V2Query
 }
 
 func GetCommonMetadataOps(ec *ExecutionContext) hasura.CommonMetadataOperations {

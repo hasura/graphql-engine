@@ -1,23 +1,20 @@
 package hasura
 
-import (
-	"io"
-
-	"github.com/hasura/graphql-engine/cli/internal/httpc"
-)
-
 const (
 	CommandOK RunSQLResultType = "CommandOk"
 	TuplesOK  RunSQLResultType = "TuplesOk"
 )
 
-// hasura API requests used to interact with connected database(s)
-type DatabaseOperations interface {
-	RunSQL(input RunSQLInput) (response *RunSQLOutput, err error)
-	SendDatabaseOperation(requestBody interface{}) (httpcResponse *httpc.Response, body io.Reader, error error)
+// hasura API requests used to interact with pg sources
+type PGSourceOps interface {
+	PGRunSQL(input PGRunSQLInput) (response *PGRunSQLOutput, err error)
 }
 
-type RunSQLInput struct {
+type MSSQLSourceOps interface {
+	MSSQLRunSQL(input MSSQLRunSQLInput) (response *MSSQLRunSQLOutput, err error)
+}
+
+type PGRunSQLInput struct {
 	SQL                      string `json:"sql" yaml:"sql"`
 	Source                   string `json:"source,omitempty" yaml:"source,omitempty"`
 	Cascade                  bool   `json:"cascade,omitempty" yaml:"cascade,omitempty"`
@@ -27,11 +24,13 @@ type RunSQLInput struct {
 
 type RunSQLResultType string
 
-type RunSQLOutput struct {
+type PGRunSQLOutput struct {
 	ResultType RunSQLResultType `json:"result_type" yaml:"result_type"`
 	Result     [][]string       `json:"result" yaml:"result"`
 }
 
-type RequestTypes string
-
-type MetadataVersion int
+type MSSQLRunSQLInput PGRunSQLInput
+type MSSQLRunSQLOutput struct {
+	ResultType RunSQLResultType `json:"result_type" yaml:"result_type"`
+	Result     [][]interface{}  `json:"result" yaml:"result"`
+}

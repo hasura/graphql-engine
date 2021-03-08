@@ -1,13 +1,9 @@
 package scripts
 
 import (
-	"io"
 	"os"
-	"reflect"
-	"strings"
 	"testing"
 
-	"github.com/hasura/graphql-engine/cli/internal/httpc"
 	"github.com/hasura/graphql-engine/cli/internal/statestore"
 	"github.com/hasura/graphql-engine/cli/internal/statestore/migrations"
 	"github.com/hasura/graphql-engine/cli/internal/statestore/settings"
@@ -278,87 +274,4 @@ func Test_copyState(t *testing.T) {
 			assert.Equal(t, map[uint64]bool{123: false}, m)
 		})
 	}
-}
-
-func Test_listDatabases(t *testing.T) {
-	type args struct {
-		client hasura.CommonMetadataOperations
-	}
-	tests := []struct {
-		name    string
-		args    args
-		want    []string
-		wantErr bool
-	}{
-		{
-			"can get list of sources",
-			args{
-				commonMetadataTest{
-					`
-{
-	"sources": [
-		{
-			"name": "test1"
-		},
-		{
-
-			"name": "test2"
-		}
-	]
-}
-`,
-				},
-			},
-			[]string{"test1", "test2"},
-			false,
-		},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			got, err := ListDatabases(tt.args.client)
-			if (err != nil) != tt.wantErr {
-				t.Errorf("ListDatabases() error = %v, wantErr %v", err, tt.wantErr)
-				return
-			}
-			if !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("ListDatabases() got = %v, want %v", got, tt.want)
-			}
-		})
-	}
-}
-
-type commonMetadataTest struct {
-	s string
-}
-
-func (c commonMetadataTest) SendCommonMetadataOperation(requestBody interface{}) (httpcResponse *httpc.Response, body io.Reader, error error) {
-	panic("implement me")
-}
-
-func (c commonMetadataTest) ExportMetadata() (metadata io.Reader, err error) {
-	return strings.NewReader(c.s), nil
-}
-
-func (c commonMetadataTest) ClearMetadata() (io.Reader, error) {
-	panic("implement me")
-}
-
-func (c commonMetadataTest) ReloadMetadata() (io.Reader, error) {
-	panic("implement me")
-}
-
-func (c commonMetadataTest) DropInconsistentMetadata() (io.Reader, error) {
-	panic("implement me")
-}
-
-func (c commonMetadataTest) ReplaceMetadata(metadata io.Reader) (io.Reader, error) {
-	panic("implement me")
-}
-
-func (c commonMetadataTest) GetInconsistentMetadata() (*hasura.GetInconsistentMetadataResponse, error) {
-	panic("implement me")
-}
-
-func (c commonMetadataTest) GetInconsistentMetadataReader() (io.Reader, error) {
-	panic("implement me")
 }

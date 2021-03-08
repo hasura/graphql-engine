@@ -1,6 +1,7 @@
 package commands
 
 import (
+	"fmt"
 	"os"
 	"strconv"
 
@@ -61,7 +62,7 @@ func newMigrateApplyCmd(ec *cli.ExecutionContext) *cobra.Command {
 			return ec.Validate()
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
-			opts.Database = ec.Database
+			opts.Source = ec.Source
 			if opts.dryRun && opts.SkipExecution {
 				return errors.New("both --skip-execution and --dry-run flags cannot be used together")
 			}
@@ -82,7 +83,7 @@ func newMigrateApplyCmd(ec *cli.ExecutionContext) *cobra.Command {
 						return nil
 					}
 				}
-				return errors.Wrap(err, "apply failed")
+				return fmt.Errorf("apply failed\n%w", err)
 			}
 			if !opts.dryRun {
 				opts.EC.Logger.Info("migrations applied")
@@ -116,7 +117,7 @@ type MigrateApplyOptions struct {
 	GotoVersion   string
 	SkipExecution bool
 	dryRun        bool
-	Database      string
+	Source        cli.Source
 }
 
 func (o *MigrateApplyOptions) Run() error {
@@ -125,7 +126,7 @@ func (o *MigrateApplyOptions) Run() error {
 		return errors.Wrap(err, "error validating flags")
 	}
 
-	migrateDrv, err := migrate.NewMigrate(o.EC, true, o.Database)
+	migrateDrv, err := migrate.NewMigrate(o.EC, true, o.Source.Name, o.Source.Kind)
 	if err != nil {
 		return err
 	}

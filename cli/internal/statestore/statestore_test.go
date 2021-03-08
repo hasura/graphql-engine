@@ -95,7 +95,9 @@ func TestCLICatalogState_Set(t *testing.T) {
 					Settings: nil,
 				},
 			},
-			`{"message":"success"}`,
+			`{
+  "message": "success"
+}`,
 			false,
 		},
 	}

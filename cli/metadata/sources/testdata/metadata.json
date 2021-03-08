@@ -3,6 +3,7 @@
   "sources": [
     {
       "name": "default",
+      "kind": "postgres",
       "tables": [
         {
           "table": {

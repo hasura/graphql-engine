@@ -1,15 +1,14 @@
 package scripts
 
 import (
-	"io/ioutil"
 	"path/filepath"
 	"regexp"
 
-	"github.com/fatih/color"
-	"github.com/goccy/go-yaml"
-	"github.com/goccy/go-yaml/parser"
+	"github.com/hasura/graphql-engine/cli/internal/metadatautil"
+
 	"github.com/hasura/graphql-engine/cli/internal/hasura"
 
+	"github.com/fatih/color"
 	"github.com/hasura/graphql-engine/cli/migrate"
 
 	"github.com/hasura/graphql-engine/cli/internal/statestore"
@@ -87,7 +86,7 @@ func UpdateProjectV3(opts UpgradeToMuUpgradeProjectToMultipleSourcesOpts) error 
 	opts.EC.Spin("updating project... ")
 	// copy state
 	// if a default database is setup copy state from it
-	sources, err := ListDatabases(opts.EC.APIClient.V1Metadata)
+	sources, err := metadatautil.GetSources(opts.EC.APIClient.V1Metadata.ExportMetadata)
 	if err != nil {
 		return err
 	}
@@ -153,7 +152,7 @@ func UpdateProjectV3(opts UpgradeToMuUpgradeProjectToMultipleSourcesOpts) error 
 		return err
 	}
 	// do a metadata export
-	m, err := migrate.NewMigrate(opts.EC, true, "")
+	m, err := migrate.NewMigrate(opts.EC, true, "", hasura.SourceKindPG)
 	if err != nil {
 		return err
 	}
@@ -290,7 +289,7 @@ func CheckIfUpdateToConfigV3IsRequired(ec *cli.ExecutionContext) error {
 		return errors.New("please upgrade your project to a newer version.\ntip: use " + color.New(color.FgCyan).SprintFunc()("hasura scripts update-project-v2") + " to upgrade your project to config v2")
 	}
 	if ec.Config.Version < cli.V3 && ec.HasMetadataV3 {
-		sources, err := ListDatabases(ec.APIClient.V1Metadata)
+		sources, err := metadatautil.GetSources(ec.APIClient.V1Metadata.ExportMetadata)
 		if err != nil {
 			return err
 		}
@@ -312,35 +311,4 @@ func CheckIfUpdateToConfigV3IsRequired(ec *cli.ExecutionContext) error {
 		}
 	}
 	return nil
-}
-
-func ListDatabases(client hasura.CommonMetadataOperations) ([]string, error) {
-	metadata, err := client.ExportMetadata()
-	if err != nil {
-		return nil, err
-	}
-	jsonb, err := ioutil.ReadAll(metadata)
-	if err != nil {
-		return nil, err
-	}
-	yamlb, err := yaml.JSONToYAML(jsonb)
-	if err != nil {
-		return nil, err
-	}
-	ast, err := parser.ParseBytes(yamlb, 0)
-	if err != nil {
-		return nil, err
-	}
-	if len(ast.Docs) <= 0 {
-		return nil, fmt.Errorf("failed listing sources from metadata")
-	}
-	var sources []string
-	path, err := yaml.PathString("$.sources[*].name")
-	if err != nil {
-		return nil, err
-	}
-	if err := path.Read(ast.Docs[0], &sources); err != nil {
-		return nil, err
-	}
-	return sources, nil
 }

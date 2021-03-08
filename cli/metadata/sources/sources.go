@@ -1,20 +1,20 @@
 package sources
 
 import (
-  "bytes"
-  "fmt"
-  "io/ioutil"
-  "os"
-  "path/filepath"
+	"bytes"
+	"fmt"
+	"io/ioutil"
+	"os"
+	"path/filepath"
 
-  "github.com/hasura/graphql-engine/cli/metadata/tables"
+	"github.com/hasura/graphql-engine/cli/metadata/tables"
 
-  "github.com/sirupsen/logrus"
+	"github.com/sirupsen/logrus"
 
-  "github.com/goccy/go-yaml"
-  "github.com/hasura/graphql-engine/cli"
-  goyaml "gopkg.in/yaml.v2"
-  v3yaml "gopkg.in/yaml.v3"
+	"github.com/goccy/go-yaml"
+	"github.com/hasura/graphql-engine/cli"
+	goyaml "gopkg.in/yaml.v2"
+	v3yaml "gopkg.in/yaml.v3"
 )
 
 const (
@@ -26,6 +26,7 @@ const (
 
 type SourceWithNormalFields struct {
 	Name          string      `yaml:"name"`
+	Kind          string      `yaml:"kind"`
 	Configuration interface{} `yaml:"configuration"`
 }
 type Source struct {
@@ -59,7 +60,7 @@ func (t *SourceConfig) CreateFiles() error {
 	}
 	path := filepath.Join(t.MetadataDir, sourcesDirectory, fileName)
 	if err := os.MkdirAll(filepath.Dir(path), 0744); err != nil {
-	  return err
+		return err
 	}
 	err = ioutil.WriteFile(path, data, 0644)
 	if err != nil {

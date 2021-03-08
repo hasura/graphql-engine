@@ -6,22 +6,26 @@ import (
 	"io"
 	"net/http"
 
-	"github.com/hasura/graphql-engine/cli/internal/hasura/databaseops"
+	"github.com/hasura/graphql-engine/cli/internal/hasura/sourceops/mssql"
+	"github.com/hasura/graphql-engine/cli/internal/hasura/sourceops/postgres"
+
+	"github.com/hasura/graphql-engine/cli/internal/hasura"
 	"github.com/hasura/graphql-engine/cli/internal/httpc"
 )
 
 type Client struct {
 	*httpc.Client
+	hasura.PGSourceOps
+	hasura.MSSQLSourceOps
 	path string
-
-	*databaseops.ClientDatabaseOps
 }
 
 func New(c *httpc.Client, path string) *Client {
 	client := &Client{
-		Client:            c,
-		ClientDatabaseOps: databaseops.New(c, path),
-		path:              path,
+		Client:         c,
+		PGSourceOps:    postgres.New(c, path),
+		MSSQLSourceOps: mssql.New(c, path),
+		path:           path,
 	}
 	return client
 }

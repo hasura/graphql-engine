@@ -6,6 +6,8 @@ import (
 	"github.com/hasura/graphql-engine/cli/internal/httpc"
 )
 
+type GenericSend func(requestBody interface{}) (httpcResponse *httpc.Response, responseBody io.Reader, error error)
+
 type Client struct {
 	V1Metadata V1Metadata
 	V1Query    V1Query
@@ -14,7 +16,7 @@ type Client struct {
 
 type V1Query interface {
 	CommonMetadataOperations
-	DatabaseOperations
+	PGSourceOps
 	Send(requestBody interface{}) (httpcResponse *httpc.Response, body io.Reader, error error)
 }
 
@@ -30,8 +32,16 @@ type CatalogStateOperations interface {
 	Get() (io.Reader, error)
 }
 
+type SourceKind string
+
+const (
+	SourceKindPG    SourceKind = "postgres"
+	SourceKindMSSQL            = "mssql"
+)
+
 type V2Query interface {
-	DatabaseOperations
+	PGSourceOps
+	MSSQLSourceOps
 	Send(requestBody interface{}) (httpcResponse *httpc.Response, body io.Reader, error error)
 }
 

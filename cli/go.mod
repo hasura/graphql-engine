@@ -4,12 +4,14 @@ go 1.13
 
 require (
 	github.com/Masterminds/semver v1.5.0
+	github.com/Pallinder/go-randomdata v1.2.0
 	github.com/ahmetb/go-linq v3.0.0+incompatible
 	github.com/andybalholm/cascadia v1.1.0 // indirect
 	github.com/aryann/difflib v0.0.0-20170710044230-e206f873d14a
 	github.com/asaskevich/govalidator v0.0.0-20190424111038-f61b66f89f4a // indirect
 	github.com/aws/aws-sdk-go v1.25.50 // indirect
 	github.com/briandowns/spinner v1.8.0
+	github.com/denisenkom/go-mssqldb v0.0.0-20190515213511-eb9f6a1743f3
 	github.com/disintegration/imaging v1.6.2 // indirect
 	github.com/elazarl/goproxy v0.0.0-20191011121108-aa519ddbe484 // indirect
 	github.com/fatih/color v1.10.0

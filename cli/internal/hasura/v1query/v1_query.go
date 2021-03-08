@@ -7,7 +7,7 @@ import (
 	"net/http"
 
 	"github.com/hasura/graphql-engine/cli/internal/hasura/commonmetadata"
-	"github.com/hasura/graphql-engine/cli/internal/hasura/databaseops"
+	"github.com/hasura/graphql-engine/cli/internal/hasura/sourceops/postgres"
 	"github.com/hasura/graphql-engine/cli/internal/httpc"
 )
 
@@ -16,7 +16,7 @@ type Client struct {
 	// api path, normaly this would be v1/query
 	path string
 
-	*databaseops.ClientDatabaseOps
+	*postgres.SourceOps
 	*commonmetadata.ClientCommonMetadataOps
 }
 
@@ -24,7 +24,7 @@ func New(c *httpc.Client, path string) *Client {
 	client := &Client{
 		Client:                  c,
 		path:                    path,
-		ClientDatabaseOps:       databaseops.New(c, path),
+		SourceOps:               postgres.New(c, path),
 		ClientCommonMetadataOps: commonmetadata.New(c, path),
 	}
 	return client

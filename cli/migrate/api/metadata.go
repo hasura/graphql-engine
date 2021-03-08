@@ -4,6 +4,8 @@ import (
 	"net/http"
 	"strings"
 
+	"github.com/hasura/graphql-engine/cli/internal/hasura"
+
 	"github.com/hasura/graphql-engine/cli"
 
 	"github.com/gin-gonic/gin"
@@ -23,7 +25,7 @@ func MetadataAPI(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, &Response{Code: "internal_error", Message: "cannot get execution context"})
 		return
 	}
-	t, err := migrate.NewMigrate(ec, false, "")
+	t, err := migrate.NewMigrate(ec, false, "", hasura.SourceKindPG)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, &Response{Code: "internal_error", Message: err.Error()})
 		return

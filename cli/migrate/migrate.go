@@ -17,6 +17,8 @@ import (
 	"text/tabwriter"
 	"time"
 
+	"github.com/hasura/graphql-engine/cli/internal/hasura"
+
 	"github.com/hasura/graphql-engine/cli/util"
 
 	"github.com/hasura/graphql-engine/cli/metadata/types"
@@ -376,8 +378,8 @@ func (m *Migrate) ApplyMetadata() error {
 	return m.databaseDrv.ApplyMetadata()
 }
 
-func (m *Migrate) ExportSchemaDump(schemName []string, database string) ([]byte, error) {
-	return m.databaseDrv.ExportSchemaDump(schemName, database)
+func (m *Migrate) ExportSchemaDump(schemName []string, sourceName string, sourceKind hasura.SourceKind) ([]byte, error) {
+	return m.databaseDrv.ExportSchemaDump(schemName, sourceName, sourceKind)
 }
 
 func (m *Migrate) RemoveVersions(versions []uint64) error {
@@ -1848,7 +1850,7 @@ func (m *Migrate) ApplySeed(q interface{}) error {
 	return m.databaseDrv.ApplySeed(q)
 }
 
-func (m *Migrate) ExportDataDump(tableNames []string, database string) ([]byte, error) {
+func (m *Migrate) ExportDataDump(tableNames []string, sourceName string, sourceKind hasura.SourceKind) ([]byte, error) {
 	// to support tables starting with capital letters
 	modifiedTableNames := make([]string, len(tableNames))
 
@@ -1867,7 +1869,7 @@ func (m *Migrate) ExportDataDump(tableNames []string, database string) ([]byte, 
 		}
 	}
 
-	return m.databaseDrv.ExportDataDump(modifiedTableNames, database)
+	return m.databaseDrv.ExportDataDump(modifiedTableNames, sourceName, sourceKind)
 }
 
 func printDryRunStatus(migrations []*Migration) *bytes.Buffer {

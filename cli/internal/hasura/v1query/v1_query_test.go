@@ -6,8 +6,9 @@ import (
 	"net/http"
 	"testing"
 
+	pg "github.com/hasura/graphql-engine/cli/internal/hasura/sourceops/postgres"
+
 	"github.com/hasura/graphql-engine/cli/internal/hasura/commonmetadata"
-	"github.com/hasura/graphql-engine/cli/internal/hasura/databaseops"
 	"github.com/hasura/graphql-engine/cli/internal/httpc"
 	"github.com/hasura/graphql-engine/cli/internal/testutil"
 	"github.com/stretchr/testify/assert"
@@ -19,7 +20,7 @@ func TestClient_Send(t *testing.T) {
 	type fields struct {
 		Client                       *httpc.Client
 		path                         string
-		HasuraDatabaseRequests       *databaseops.ClientDatabaseOps
+		HasuraDatabaseRequests       *pg.SourceOps
 		HasuraCommonMetadataRequests *commonmetadata.ClientCommonMetadataOps
 	}
 	type args struct {
@@ -52,7 +53,10 @@ func TestClient_Send(t *testing.T) {
 					"args": "{}",
 				},
 			},
-			`{"version":2,"tables":[]}`,
+			`{
+  "version": 2,
+  "tables": []
+}`,
 			false,
 		},
 	}
@@ -61,7 +65,7 @@ func TestClient_Send(t *testing.T) {
 			c := &Client{
 				Client:                  tt.fields.Client,
 				path:                    tt.fields.path,
-				ClientDatabaseOps:       tt.fields.HasuraDatabaseRequests,
+				SourceOps:               tt.fields.HasuraDatabaseRequests,
 				ClientCommonMetadataOps: tt.fields.HasuraCommonMetadataRequests,
 			}
 			resp, gotResponseBody, err := c.Send(tt.args.body)

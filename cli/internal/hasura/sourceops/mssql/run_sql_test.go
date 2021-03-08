@@ -1,4 +1,4 @@
-package databaseops
+package mssql
 
 import (
 	"testing"
@@ -12,37 +12,45 @@ import (
 )
 
 func TestHasuraDatabaseOperations_RunSQL(t *testing.T) {
-	port, teardown := testutil.StartHasura(t, testutil.HasuraVersion)
+	port, mssqlSourceName, teardown := testutil.StartHasuraWithMSSQLSource(t, testutil.HasuraVersion)
 	defer teardown()
 	type fields struct {
 		httpClient *httpc.Client
 		path       string
 	}
 	type args struct {
-		input    hasura.RunSQLInput
+		input    hasura.MSSQLRunSQLInput
 		database string
 	}
 	tests := []struct {
 		name    string
 		fields  fields
 		args    args
-		want    *hasura.RunSQLOutput
+		want    *hasura.MSSQLRunSQLOutput
 		wantErr bool
 	}{
 		{
 			"can send a run_sql request",
 			fields{
 				httpClient: testutil.NewHttpcClient(t, port, nil),
-				path:       "v1/query",
+				path:       "v2/query",
 			},
 			args{
-				input: hasura.RunSQLInput{
-					SQL: "CREATE TABLE users();",
+				input: hasura.MSSQLRunSQLInput{
+					SQL:    "select 1",
+					Source: mssqlSourceName,
 				},
 			},
-			&hasura.RunSQLOutput{
-				ResultType: hasura.CommandOK,
-				Result:     nil,
+			&hasura.MSSQLRunSQLOutput{
+				ResultType: hasura.TuplesOK,
+				Result: [][]interface{}{
+					{
+						"",
+					},
+					{
+						float64(1),
+					},
+				},
 			},
 			false,
 		},
@@ -50,11 +58,11 @@ func TestHasuraDatabaseOperations_RunSQL(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			test := func() {
-				h := &ClientDatabaseOps{
+				h := &SourceOps{
 					Client: tt.fields.httpClient,
 					path:   tt.fields.path,
 				}
-				got, err := h.RunSQL(tt.args.input)
+				got, err := h.MSSQLRunSQL(tt.args.input)
 				if (err != nil) != tt.wantErr {
 					t.Errorf("RunSQL() error = %v, wantErr %v", err, tt.wantErr)
 					return
