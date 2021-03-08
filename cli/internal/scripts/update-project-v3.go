@@ -50,13 +50,26 @@ func UpdateProjectV3(opts UpgradeToMuUpgradeProjectToMultipleSourcesOpts) error 
 		- Update config file and version
 	*/
 
-	// Validate config version is
+	// pre checks
 	if opts.EC.Config.Version != cli.V2 {
 		return fmt.Errorf("project should be using config V2 to be able to update to V3")
 	}
+	if !opts.EC.HasMetadataV3 {
+		return fmt.Errorf("unsupported server version %v, config V3 is supported only on server with metadata version >= 3", opts.EC.Version.Server)
+	}
+	if r, err := opts.EC.APIClient.V1Metadata.GetInconsistentMetadata(); err != nil {
+		return fmt.Errorf("determing server metadata inconsistency: %w", err)
+	} else {
+		if !r.IsConsistent {
+			return fmt.Errorf("cannot continue: metadata is inconsistent on the server")
+		}
+	}
 
-	opts.Logger.Warn("The upgrade process will make some changes to your project directory, It is advised to create a backup project directory before continuing")
-	opts.Logger.Warn("This script will rewrite the project metadata with metadata on server")
+	opts.Logger.Infof("The upgrade process will make some changes to your project directory, It is advised to create a backup project directory before continuing")
+	opts.Logger.Warn(`Config V3 is expected to be used with servers >=v2.0.0-alpha.1`)
+	opts.Logger.Warn(`During the update process CLI uses the server as the source of truth, so make sure your server is upto date`)
+	opts.Logger.Warn(`The update process replaces project metadata with metadata on the server`)
+
 	response, err := util.GetYesNoPrompt("continue?")
 	if err != nil {
 		return err

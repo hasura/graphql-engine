@@ -16,8 +16,8 @@ func newUpdateMultipleSources(ec *cli.ExecutionContext) *cobra.Command {
 		Use:   "update-project-v3",
 		Short: "update project to use config v2 to config v3",
 		Long: `
-`,
-		Example:      `  `,
+Convenience script used to upgrade your CLI project to use config v3.
+Note that this process is completely independent from your Hasura Graphql Engine server update process.`,
 		SilenceUsage: true,
 		PreRunE: func(cmd *cobra.Command, args []string) error {
 			ec.Viper = v
