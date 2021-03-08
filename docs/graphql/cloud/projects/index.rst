@@ -62,4 +62,5 @@ Dig deeper
    Deployment regions <regions>
    Heroku database URL Sync <heroku-url-sync>
    Deleting projects <delete>
+   Moving v1.3 projects to v2.0 <move-project-v2>
    

@@ -66,6 +66,12 @@ To use an existing database, choose ``Connect existing database`` and enter your
    :alt: database setup with existing database
    :width: 700px
 
+.. note::
+
+  You can connect to databases either using env vars or by using their raw connection string/parameters. It is
+  recommended to use env vars for better security *(as connection details are part of Hasura metadata)* as well as
+  to allow configuring different databases in different environments *(like staging/production)* easily.
+
 Allowing connections from Hasura Cloud IP
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 

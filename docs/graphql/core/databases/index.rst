@@ -32,3 +32,4 @@ Supported databases
 
   postgres/index
   ms-sql-server/index
+  Connecting databases <connect-db>

@@ -43,7 +43,9 @@ Add a database with name ``pg1``:
       "name": "pg1",
       "configuration": {
         "connection_info": {
-          "database_url": "<db-connection-string>",
+          "database_url": {
+             "from_env": "<DB_URL_ENV_VAR>"
+           },
           "pool_settings": {
             "max_connections": 50,
             "idle_timeout": 180,

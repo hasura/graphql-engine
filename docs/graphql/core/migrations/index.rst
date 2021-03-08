@@ -82,7 +82,7 @@ Reference documentation
 - :ref:`Metadata format <metadata_format>`
 
 .. toctree::
-  :maxdepth: 1
+  :maxdepth: 10
   :hidden:
 
   Setting up migrations <migrations-setup>
