@@ -337,7 +337,8 @@ resolveAsyncActionQuery userInfo annAction actionLogResponse = ActionExecution
     sessionVarsColumn = (unsafePGCol "session_variables", PGJSONB)
 
     -- TODO (from master):- Avoid using ColumnInfo
-    mkAnnFldFromPGCol = flip RS.mkAnnColumnField Nothing . mkPGColumnInfo
+    mkAnnFldFromPGCol columnInfoArgs =
+      RS.mkAnnColumnField (mkPGColumnInfo columnInfoArgs) Nothing Nothing
 
     mkPGColumnInfo (column', columnType) =
       ColumnInfo column' (G.unsafeMkName $ getPGColTxt column') 0 (ColumnScalar columnType) True Nothing
@@ -354,7 +355,7 @@ resolveAsyncActionQuery userInfo annAction actionLogResponse = ActionExecution
       -- For non-admin roles, accessing an async action's response should be allowed only for the user
       -- who initiated the action through mutation. The action's response is accessible for a query/subscription
       -- only when it's session variables are equal to that of action's.
-      in if isAdmin (_uiRole userInfo) then actionIdColumnEq
+      in if (adminRoleName == (_uiRole userInfo))  then actionIdColumnEq
          else BoolAnd [actionIdColumnEq, sessionVarsColumnEq]
 
 

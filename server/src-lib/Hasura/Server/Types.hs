@@ -3,7 +3,10 @@ module Hasura.Server.Types where
 import           Hasura.Prelude
 
 import           Data.Aeson
+import           Data.Aeson.Casing
+import           Data.Aeson.TH
 
+import qualified Data.HashSet                  as Set
 import qualified Database.PG.Query             as Q
 import qualified Network.HTTP.Types            as HTTP
 
@@ -35,6 +38,22 @@ newtype InstanceId
   = InstanceId { getInstanceId :: Text }
   deriving (Show, Eq, ToJSON, FromJSON, Q.FromCol, Q.ToPrepArg)
 
+data ExperimentalFeature
+  = EFInheritedRoles
+  deriving (Show, Eq, Generic)
+
+$(deriveFromJSON (defaultOptions { constructorTagModifier = snakeCase . drop 2})
+  ''ExperimentalFeature)
+instance Hashable ExperimentalFeature
+
+-- TODO: when there are more than one constuctors in `ExperimentalFeature`, we should
+-- derive the `ToJSON` instance like we do it for the `FromJSON` instance. Doing it
+-- with a single data constructor messes up the `ToJSON` instance which is why it's
+-- manually implemented here
+instance ToJSON ExperimentalFeature where
+  toJSON = \case
+    EFInheritedRoles -> "inherited_roles"
+
 data MaintenanceMode = MaintenanceModeEnabled | MaintenanceModeDisabled
   deriving (Show, Eq)
 
@@ -51,4 +70,5 @@ data ServerConfigCtx
   , _sccRemoteSchemaPermsCtx :: !RemoteSchemaPermsCtx
   , _sccSQLGenCtx            :: !SQLGenCtx
   , _sccMaintenanceMode      :: !MaintenanceMode
+  , _sccExperimentalFeatures :: !(Set.HashSet ExperimentalFeature)
   } deriving (Show, Eq)

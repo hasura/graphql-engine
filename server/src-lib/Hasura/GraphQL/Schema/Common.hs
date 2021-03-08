@@ -19,7 +19,6 @@ import qualified Hasura.RQL.IR.Select               as IR
 import           Hasura.GraphQL.Parser              (UnpreparedValue)
 import           Hasura.RQL.Types
 
-
 type SelectExp           b = IR.AnnSimpleSelG       b (UnpreparedValue b)
 type AggSelectExp        b = IR.AnnAggregateSelectG b (UnpreparedValue b)
 type ConnectionSelectExp b = IR.ConnectionSelect    b (UnpreparedValue b)

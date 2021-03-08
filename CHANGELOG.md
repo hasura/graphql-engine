@@ -7,6 +7,7 @@
 (Add entries here in the order of: server, console, cli, docs, others)
 
 - server/mssql: support tracking and querying from views
+- server: inherited roles for PG queries and subscription
 - cli: add support for rest endpoints
 
 

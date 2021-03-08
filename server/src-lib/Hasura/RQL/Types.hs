@@ -11,6 +11,7 @@ module Hasura.RQL.Types
   , HasSystemDefinedT
   , runHasSystemDefinedT
 
+
   , askSourceInfo
   , askSourceConfig
   , askSourceTables
@@ -26,7 +27,6 @@ module Hasura.RQL.Types
   , askComputedFieldInfo
   , askRemoteRel
   , findTable
-
   , module R
   ) where
 
@@ -53,6 +53,7 @@ import           Hasura.RQL.Types.Endpoint           as R
 import           Hasura.RQL.Types.Error              as R
 import           Hasura.RQL.Types.EventTrigger       as R
 import           Hasura.RQL.Types.Function           as R
+import           Hasura.RQL.Types.InheritedRoles     as R
 import           Hasura.RQL.Types.Metadata           as R
 import           Hasura.RQL.Types.Metadata.Backend   as R
 import           Hasura.RQL.Types.Metadata.Object    as R
@@ -267,3 +268,4 @@ askRemoteRel fieldInfoMap relName = do
     (FIRemoteRelationship remoteFieldInfo) -> return remoteFieldInfo
     _                                      ->
       throw400 UnexpectedPayload "expecting a remote relationship"
+

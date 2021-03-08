@@ -52,6 +52,7 @@ data MetadataObjId
   | MOAction !ActionName
   | MOActionPermission !ActionName !RoleName
   | MOCronTrigger !TriggerName
+  | MOInheritedRole !RoleName
   | MOEndpoint !EndpointName
 $(makePrisms ''MetadataObjId)
 
@@ -65,6 +66,7 @@ instance Hashable MetadataObjId where
     MOAction actionName                    -> hashWithSalt salt actionName
     MOActionPermission actionName roleName -> hashWithSalt salt (actionName, roleName)
     MOCronTrigger triggerName              -> hashWithSalt salt triggerName
+    MOInheritedRole roleName               -> hashWithSalt salt roleName
     MOEndpoint endpoint                    -> hashWithSalt salt endpoint
 
 instance Eq MetadataObjId where
@@ -75,6 +77,7 @@ instance Eq MetadataObjId where
   MOCustomTypes == MOCustomTypes                             = True
   (MOActionPermission an1 r1) == (MOActionPermission an2 r2) = an1 == an2 && r1 == r2
   (MOCronTrigger trn1) == (MOCronTrigger trn2)               = trn1 == trn2
+  (MOInheritedRole rn1) == (MOInheritedRole rn2)             = rn1 == rn2
   _ == _                                                     = False
 
 moiTypeName :: MetadataObjId -> Text
@@ -96,6 +99,7 @@ moiTypeName = \case
   MOCustomTypes -> "custom_types"
   MOAction _ -> "action"
   MOActionPermission _ _ -> "action_permission"
+  MOInheritedRole _      -> "inherited_role"
   MOEndpoint _ -> "endpoint"
 
 moiName :: MetadataObjId -> Text
@@ -122,6 +126,7 @@ moiName objectId = moiTypeName objectId <> " " <> case objectId of
   MOCustomTypes -> "custom_types"
   MOAction name -> toTxt name
   MOActionPermission name roleName -> toTxt roleName <> " permission in " <> toTxt name
+  MOInheritedRole inheritedRoleName -> "inherited role " <> toTxt inheritedRoleName
   MOEndpoint name -> toTxt name
 
 data MetadataObject

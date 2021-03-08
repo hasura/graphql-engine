@@ -115,6 +115,7 @@ data ServerCtx
   , scRemoteSchemaPermsCtx         :: !RemoteSchemaPermsCtx
   , scFunctionPermsCtx             :: !FunctionPermissionsCtx
   , scEnableMaintenanceMode        :: !MaintenanceMode
+  , scExperimentalFeatures         :: !(S.HashSet ExperimentalFeature)
   }
 
 data HandlerCtx
@@ -217,7 +218,7 @@ parseBody reqBody =
 onlyAdmin :: (MonadError QErr m, MonadReader HandlerCtx m) => m ()
 onlyAdmin = do
   uRole <- asks (_uiRole . hcUser)
-  when (uRole /= adminRoleName) $
+  unless (uRole == adminRoleName) $
     throw400 AccessDenied "You have to be an admin to access this endpoint"
 
 setHeader :: MonadIO m => HTTP.Header -> Spock.ActionT m ()
@@ -428,7 +429,8 @@ v1QueryHandler query = do
       remoteSchemaPermsCtx <- asks (scRemoteSchemaPermsCtx . hcServerCtx)
       functionPermsCtx     <- asks (scFunctionPermsCtx . hcServerCtx)
       maintenanceMode      <- asks (scEnableMaintenanceMode . hcServerCtx)
-      let serverConfigCtx = ServerConfigCtx functionPermsCtx remoteSchemaPermsCtx sqlGenCtx maintenanceMode
+      experimentalFeatures <- asks (scExperimentalFeatures . hcServerCtx)
+      let serverConfigCtx = ServerConfigCtx functionPermsCtx remoteSchemaPermsCtx sqlGenCtx maintenanceMode experimentalFeatures
       runQuery env instanceId userInfo schemaCache httpMgr
                serverConfigCtx query
 
@@ -455,8 +457,9 @@ v1MetadataHandler query = do
   logger               <- asks (scLogger . hcServerCtx)
   remoteSchemaPermsCtx <- asks (scRemoteSchemaPermsCtx . hcServerCtx)
   functionPermsCtx     <- asks (scFunctionPermsCtx . hcServerCtx)
+  experimentalFeatures <- asks (scExperimentalFeatures . hcServerCtx)
   maintenanceMode      <- asks (scEnableMaintenanceMode . hcServerCtx)
-  let serverConfigCtx = ServerConfigCtx functionPermsCtx remoteSchemaPermsCtx sqlGenCtx maintenanceMode
+  let serverConfigCtx = ServerConfigCtx functionPermsCtx remoteSchemaPermsCtx sqlGenCtx maintenanceMode experimentalFeatures
   r <- withSCUpdate scRef logger $
        runMetadataQuery env instanceId userInfo httpMgr serverConfigCtx
                         schemaCache query
@@ -488,9 +491,10 @@ v2QueryHandler query = do
       instanceId  <- asks (scInstanceId . hcServerCtx)
       env         <- asks (scEnvironment . hcServerCtx)
       remoteSchemaPermsCtx <- asks (scRemoteSchemaPermsCtx . hcServerCtx)
+      experimentalFeatures <- asks (scExperimentalFeatures . hcServerCtx)
       functionPermsCtx     <- asks (scFunctionPermsCtx . hcServerCtx)
       maintenanceMode      <- asks (scEnableMaintenanceMode . hcServerCtx)
-      let serverConfigCtx = ServerConfigCtx functionPermsCtx remoteSchemaPermsCtx sqlGenCtx maintenanceMode
+      let serverConfigCtx = ServerConfigCtx functionPermsCtx remoteSchemaPermsCtx sqlGenCtx maintenanceMode experimentalFeatures
       V2Q.runQuery env instanceId userInfo schemaCache httpMgr serverConfigCtx query
 
 v1Alpha1GQHandler
@@ -766,10 +770,13 @@ mkWaiApp
   -> KeepAliveDelay
   -- ^ Metadata storage connection pool
   -> MaintenanceMode
+  -> S.HashSet ExperimentalFeature
+  -- ^ Set of the enabled experimental features
   -> m HasuraApp
 mkWaiApp setupHook env logger sqlGenCtx enableAL httpManager mode corsCfg enableConsole consoleAssetsDir
          enableTelemetry instanceId apis lqOpts _ {- planCacheOptions -} responseErrorsConfig
-         liveQueryHook schemaCacheRef ekgStore enableRSPermsCtx functionPermsCtx connectionOptions keepAliveDelay maintenanceMode = do
+         liveQueryHook schemaCacheRef ekgStore enableRSPermsCtx functionPermsCtx connectionOptions keepAliveDelay
+         maintenanceMode experimentalFeatures = do
 
     let getSchemaCache = first lastBuiltSchemaCache <$> readIORef (_scrCache schemaCacheRef)
 
@@ -797,6 +804,7 @@ mkWaiApp setupHook env logger sqlGenCtx enableAL httpManager mode corsCfg enable
                     , scRemoteSchemaPermsCtx         = enableRSPermsCtx
                     , scFunctionPermsCtx             = functionPermsCtx
                     , scEnableMaintenanceMode        = maintenanceMode
+                    , scExperimentalFeatures         = experimentalFeatures
                     }
 
     spockApp <- liftWithStateless $ \lowerIO ->

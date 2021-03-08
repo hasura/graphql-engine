@@ -3,7 +3,6 @@ module Hasura.Server.Auth.WebHook
   , AuthHookG (..)
   , AuthHook
   , userInfoFromAuthHook
-  , userInfoFromAuthHook'
   , type ReqsText
   ) where
 
@@ -59,16 +58,6 @@ hookMethod authHook = case ahType authHook of
   AHTPost -> N.POST
 
 type ReqsText = GH.GQLBatchedReqs GH.GQLQueryText
-
-userInfoFromAuthHook'
-  :: forall m
-   . (HasVersion, MonadIO m, MonadBaseControl IO m, MonadError QErr m, Tracing.MonadTrace m)
-  => Logger Hasura
-  -> H.Manager
-  -> AuthHook
-  -> [N.Header]
-  -> m (UserInfo, Maybe UTCTime)
-userInfoFromAuthHook' l m h r = userInfoFromAuthHook l m h r Nothing
 
 -- | Makes an authentication request to the given AuthHook and returns
 --   UserInfo parsed from the response, plus an expiration time if one

@@ -161,11 +161,19 @@ This option may result in test failures if the schema has to change between the 
     )
 
     parser.addoption(
+        "--test-inherited-roles",
+        action="store_true",
+        default=False,
+        help="Flag to specify if the inherited roles tests are to be run"
+    )
+
+    parser.addoption(
         "--redis-url",
         metavar="REDIS_URL",
         help="redis url for cache server",
         default=False
     )
+
 
 #By default,
 #1) Set default parallelism to one
@@ -308,6 +316,12 @@ def functions_permissions_fixtures(hge_ctx):
         return
 
 @pytest.fixture(scope='class')
+def inherited_role_fixtures(hge_ctx):
+    if not hge_ctx.inherited_roles_tests:
+        pytest.skip('These tests are meant to be run with --test-inherited-roles set')
+        return
+
+@pytest.fixture(scope='class')
 def scheduled_triggers_evts_webhook(request):
     webhook_httpd = EvtsWebhookServer(server_address=('127.0.0.1', 5594))
     web_server = threading.Thread(target=webhook_httpd.serve_forever)
@@ -345,6 +359,19 @@ def per_class_tests_db_state(request, hge_ctx):
     the list of setup and teardown files respectively
     """
     yield from db_state_context(request, hge_ctx)
+
+@pytest.fixture(scope='class')
+def per_class_tests_db_state_new(request, hge_ctx):
+    """
+    Set up the database state for select queries.
+    Has a class level scope, since select queries does not change database state
+    Expects either `dir()` method which provides the directory
+    with `setup.yaml` and `teardown.yaml` files
+    Or class variables `setup_files` and `teardown_files` that provides
+    the list of setup and teardown files respectively
+    """
+    print ("per_class_tests_db_state_new")
+    yield from db_state_context_new(request, hge_ctx)
 
 @pytest.fixture(scope='function')
 def per_method_tests_db_state(request, hge_ctx):
@@ -390,6 +417,12 @@ def db_state_context(request, hge_ctx):
         'teardown.yaml', True
     )
 
+def db_state_context_new(request, hge_ctx):
+    yield from db_context_with_schema_common_new (
+        request, hge_ctx, 'setup_files', 'setup.yaml', 'teardown_files',
+        'teardown.yaml', 'sql_schema_setup.yaml', 'sql_schema_teardown.yaml', True
+    )
+
 def db_context_with_schema_common(
     request, hge_ctx, setup_files_attr, setup_default_file,
     teardown_files_attr, teardown_default_file, check_file_exists=True):
@@ -400,6 +433,19 @@ def db_context_with_schema_common(
     yield from db_context_common(
         request, hge_ctx, setup_files_attr, setup_default_file,
         teardown_files_attr, teardown_default_file,
+        check_file_exists, skip_setup, skip_teardown
+    )
+
+def db_context_with_schema_common_new (
+    request, hge_ctx, setup_files_attr, setup_default_file,
+        teardown_files_attr, teardown_default_file, setup_sql_file, teardown_sql_file, check_file_exists=True):
+    (skip_setup, skip_teardown) = [
+        request.config.getoption('--' + x)
+        for x in ['skip-schema-setup', 'skip-schema-teardown']
+    ]
+    yield from db_context_common_new (
+        request, hge_ctx, setup_files_attr, setup_default_file, setup_sql_file,
+        teardown_files_attr, teardown_default_file, teardown_sql_file,
         check_file_exists, skip_setup, skip_teardown
     )
 
@@ -414,9 +460,26 @@ def db_context_common(
         return files
     setup = get_files(setup_files_attr, setup_default_file)
     teardown = get_files(teardown_files_attr, teardown_default_file)
-    yield from setup_and_teardown(request, hge_ctx, setup, teardown, check_file_exists, skip_setup, skip_teardown)
+    yield from setup_and_teardown_v1q(request, hge_ctx, setup, teardown, check_file_exists, skip_setup, skip_teardown)
 
-def setup_and_teardown(request, hge_ctx, setup_files, teardown_files, check_file_exists=True, skip_setup=False, skip_teardown=False):
+def db_context_common_new(
+        request, hge_ctx, setup_files_attr, setup_default_file,
+        setup_default_sql_file,
+        teardown_files_attr, teardown_default_file, teardown_default_sql_file,
+        check_file_exists=True, skip_setup=True, skip_teardown=True ):
+    def get_files(attr, default_file):
+        files = getattr(request.cls, attr, None)
+        if not files:
+            files = os.path.join(request.cls.dir(), default_file)
+        return files
+    setup = get_files(setup_files_attr, setup_default_file)
+    teardown = get_files(teardown_files_attr, teardown_default_file)
+    setup_default_sql_file = os.path.join(request.cls.dir(), setup_default_sql_file)
+    teardown_default_sql_file = os.path.join(request.cls.dir(), teardown_default_sql_file)
+    yield from setup_and_teardown(request, hge_ctx, setup, teardown,
+                                  setup_default_sql_file, teardown_default_sql_file, check_file_exists, skip_setup, skip_teardown)
+
+def setup_and_teardown_v1q(request, hge_ctx, setup_files, teardown_files, check_file_exists=True, skip_setup=False, skip_teardown=False):
     def assert_file_exists(f):
         assert os.path.isfile(f), 'Could not find file ' + f
     if check_file_exists:
@@ -432,6 +495,34 @@ def setup_and_teardown(request, hge_ctx, setup_files, teardown_files, check_file
     # Teardown anyway if any of the tests have failed
     if request.session.testsfailed > 0 or not skip_teardown:
         run_on_elem_or_list(v1q_f, teardown_files)
+
+def setup_and_teardown(request, hge_ctx, setup_files, teardown_files,
+                       sql_schema_setup_file,sql_schema_teardown_file,
+                       check_file_exists=True, skip_setup=False, skip_teardown=False):
+    def assert_file_exists(f):
+        assert os.path.isfile(f), 'Could not find file ' + f
+    if check_file_exists:
+        for o in [setup_files, teardown_files, sql_schema_setup_file, sql_schema_teardown_file]:
+            run_on_elem_or_list(assert_file_exists, o)
+    def v2q_f(f):
+        if os.path.isfile(f):
+            st_code, resp = hge_ctx.v2q_f(f)
+            assert st_code == 200, resp
+    def metadataq_f(f):
+        if os.path.isfile(f):
+            st_code, resp = hge_ctx.v1metadataq_f(f)
+            if st_code != 200:
+                # drop the sql setup, if the metadata calls fail
+                run_on_elem_or_list(v2q_f, sql_schema_teardown_file)
+            assert st_code == 200, resp
+    if not skip_setup:
+        run_on_elem_or_list(v2q_f, sql_schema_setup_file)
+        run_on_elem_or_list(metadataq_f, setup_files)
+    yield
+    # Teardown anyway if any of the tests have failed
+    if request.session.testsfailed > 0 or not skip_teardown:
+        run_on_elem_or_list(metadataq_f, teardown_files)
+        run_on_elem_or_list(v2q_f, sql_schema_teardown_file)
 
 def run_on_elem_or_list(f, x):
     if isinstance(x, str):
@@ -450,3 +541,8 @@ def is_master(config):
     node or not running xdist at all.
     """
     return not hasattr(config, 'slaveinput')
+
+use_inherited_roles_fixtures = pytest.mark.usefixtures(
+    "inherited_role_fixtures",
+    "per_class_tests_db_state_new"
+)

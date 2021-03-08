@@ -482,6 +482,7 @@ class HGECtx:
 
         self.hge_scale_url = config.getoption('--test-hge-scale-url')
         self.avoid_err_msg_checks = config.getoption('--avoid-error-message-checks')
+        self.inherited_roles_tests = config.getoption('--test-inherited-roles')
 
         self.ws_client = GQLWsClient(self, '/v1/graphql')
 
@@ -575,6 +576,15 @@ class HGECtx:
             # NOTE: preserve ordering with ruamel
             yml = yaml.YAML()
             return self.v1q(yml.load(f))
+
+    def v2q(self, q, headers = {}):
+        return self.execute_query(q, "/v2/query", headers)
+
+    def v2q_f(self, fn):
+        with open(fn) as f:
+            # NOTE: preserve ordering with ruamel
+            yml = yaml.YAML()
+            return self.v2q(yml.load(f))
 
     def v1metadataq(self, q, headers = {}):
         return self.execute_query(q, "/v1/metadata", headers)

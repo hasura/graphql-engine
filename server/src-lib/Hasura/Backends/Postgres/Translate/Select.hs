@@ -33,7 +33,6 @@ import           Hasura.RQL.IR.Select
 import           Hasura.RQL.Types                           hiding (Identifier)
 import           Hasura.SQL.Types
 
-
 selectQuerySQL :: JsonAggSelect -> AnnSimpleSel 'Postgres -> Q.Query
 selectQuerySQL jsonAggSelect sel =
   Q.fromBuilder $ toSQL $ mkSQLSelect jsonAggSelect sel
@@ -756,10 +755,31 @@ aggregateFieldsToExtractorExps sourcePrefix aggregateFields =
           colAls = toIdentifier c
       in (S.Alias colAls, qualCol)
 
+{- Note: [SQL generation for inherited roles]
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+When a query is executed by an inherited role, each column may contain a predicate
+(AnnColumnCaseBoolExp 'Postgres SQLExp) along with it. The predicate is then
+converted to a BoolExp, which will be used to check if the said column should
+be nullified. For example,
+
+Suppose there are two roles, role1 gives access only to the `addr` column with
+row filter P1 and role2 gives access to both addr and phone column with row
+filter P2. The `OR`ing of the predicates will have already been done while
+the schema has been generated. The SQL generated will look like this:
+
+ select
+    (case when (P1 or P2) then addr else null end) as addr,
+    (case when P2 then phone else null end) as phone
+ from employee
+ where (P1 or P2)
+
+-}
+
 processAnnFields
-  :: forall m . ( MonadReader Bool m
-               , MonadWriter (JoinTree 'Postgres) m
-               )
+  :: forall m
+   . ( MonadReader Bool m
+     , MonadWriter (JoinTree 'Postgres) m
+     )
   => Identifier
   -> FieldName
   -> SimilarArrayFields
@@ -798,7 +818,19 @@ processAnnFields sourcePrefix fieldAlias similarArrFields annFields = do
         processArrayRelation (mkSourcePrefixes arrRelSourcePrefix) fieldName arrRelAlias arrSel
         pure $ S.mkQIdenExp arrRelSourcePrefix fieldName
 
-      AFComputedField _ (CFSScalar scalar) -> fromScalarComputedField scalar
+      AFComputedField _ (CFSScalar scalar caseBoolExpMaybe) -> do
+        computedFieldSQLExp <- fromScalarComputedField scalar
+        -- The computed field is conditionally outputed depending
+        -- on the presence of `caseBoolExpMaybe` and the value it
+        -- evaluates to. `caseBoolExpMaybe` will be set only in the
+        -- case of an inherited role.
+        -- See [SQL generation for inherited role]
+        case caseBoolExpMaybe of
+          Nothing -> pure computedFieldSQLExp
+          Just caseBoolExp ->
+            let boolExp = S.simplifyBoolExp $ toSQLBoolExp (S.QualifiedIdentifier baseTableIdentifier Nothing)
+                          $ _accColCaseBoolExpField <$> caseBoolExp
+            in pure $ S.SECond boolExp computedFieldSQLExp S.SENull
 
       AFComputedField _ (CFSTable selectTy sel) -> withWriteComputedFieldTableSet $ do
         let computedFieldSourcePrefix =
@@ -814,7 +846,7 @@ processAnnFields sourcePrefix fieldAlias similarArrFields annFields = do
              )
 
   pure $
-    -- posttgres ignores anything beyond 63 chars for an iden
+    -- postgres ignores anything beyond 63 chars for an iden
     -- in this case, we'll need to use json_build_object function
     -- json_build_object is slower than row_to_json hence it is only
     -- used when needed
@@ -829,11 +861,24 @@ processAnnFields sourcePrefix fieldAlias similarArrFields annFields = do
     toRowToJsonExtr (fieldName, fieldExp) =
       S.Extractor fieldExp $ Just $ S.toAlias fieldName
 
-    toSQLCol :: AnnColumnField 'Postgres -> m S.SQLExp
-    toSQLCol (AnnColumnField col asText colOpM) = do
+    baseTableIdentifier = mkBaseTableAlias sourcePrefix
+
+    toSQLCol :: AnnColumnField 'Postgres S.SQLExp -> m S.SQLExp
+    toSQLCol (AnnColumnField col asText colOpM caseBoolExpMaybe) = do
       strfyNum <- ask
-      pure $ toJSONableExp strfyNum (pgiType col) asText $ withColumnOp colOpM $
-             S.mkQIdenExp (mkBaseTableAlias sourcePrefix) $ pgiColumn col
+      let sqlExpression =
+            withColumnOp colOpM $
+            S.mkQIdenExp baseTableIdentifier $ pgiColumn col
+          finalSQLExpression =
+            -- Check out [SQL generation for inherited role]
+            case caseBoolExpMaybe of
+              Nothing          -> sqlExpression
+              Just caseBoolExp ->
+                let boolExp =
+                      S.simplifyBoolExp $ toSQLBoolExp (S.QualifiedIdentifier baseTableIdentifier Nothing) $
+                      _accColCaseBoolExpField <$> caseBoolExp
+                in S.SECond boolExp sqlExpression S.SENull
+      pure $ toJSONableExp strfyNum (pgiType col) asText finalSQLExpression
 
     fromScalarComputedField :: ComputedFieldScalarSelect 'Postgres S.SQLExp -> m S.SQLExp
     fromScalarComputedField computedFieldScalar = do

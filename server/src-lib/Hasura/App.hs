@@ -286,7 +286,8 @@ initialiseServeCtx env GlobalCtx{..} so@ServeOptions{..} = do
   (schemaSyncListenerThread, schemaSyncEventRef) <- startSchemaSyncListenerThread metadataDbPool logger instanceId
 
   let serverConfigCtx =
-        ServerConfigCtx soInferFunctionPermissions soEnableRemoteSchemaPermissions sqlGenCtx soEnableMaintenanceMode
+        ServerConfigCtx soInferFunctionPermissions soEnableRemoteSchemaPermissions
+                        sqlGenCtx soEnableMaintenanceMode soExperimentalFeatures
 
   (rebuildableSchemaCache, cacheInitStartTime) <-
     lift . flip onException (flushLogger loggerCtx) $
@@ -484,9 +485,14 @@ runHGEServer setupHook env ServeOptions{..} ServeCtx{..} initTime postPollHook s
              soConnectionOptions
              soWebsocketKeepAlive
              soEnableMaintenanceMode
+             soExperimentalFeatures
 
   let serverConfigCtx =
-        ServerConfigCtx soInferFunctionPermissions soEnableRemoteSchemaPermissions sqlGenCtx soEnableMaintenanceMode
+        ServerConfigCtx soInferFunctionPermissions
+                        soEnableRemoteSchemaPermissions
+                        sqlGenCtx
+                        soEnableMaintenanceMode
+                        soExperimentalFeatures
 
   -- log inconsistent schema objects
   inconsObjs <- scInconsistentObjs <$> liftIO (getSCFromRef cacheRef)

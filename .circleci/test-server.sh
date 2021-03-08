@@ -699,6 +699,24 @@ case "$SERVER_TEST_TO_RUN" in
       kill_hge_servers
       ;;
 
+  inherited-roles)
+      echo -e "\n$(time_elapsed): <########## TEST GRAPHQL-ENGINE WITH EXPERIMENTAL FEATURE: INHERITED-ROLES ########>\n"
+      TEST_TYPE="experimental-features-inherited-roles"
+      export HASURA_GRAPHQL_EXPERIMENTAL_FEATURES="inherited_roles"
+      export HASURA_GRAPHQL_ADMIN_SECRET="HGE$RANDOM$RANDOM"
+
+      run_hge_with_args serve
+      wait_for_port 8080
+
+      pytest -n 1 -vv --hge-urls "$HGE_URL" --pg-urls "$HASURA_GRAPHQL_DATABASE_URL" --hge-key="$HASURA_GRAPHQL_ADMIN_SECRET"  --test-inherited-roles test_graphql_queries.py::TestGraphQLInheritedRoles
+      pytest -vv --hge-urls="$HGE_URL" --pg-urls="$HASURA_GRAPHQL_DATABASE_URL" --hge-key="$HASURA_GRAPHQL_ADMIN_SECRET" --test-inherited-roles test_graphql_mutations.py::TestGraphQLInheritedRoles
+
+      unset HASURA_GRAPHQL_EXPERIMENTAL_FEATURES
+      unset HASURA_GRAPHQL_ADMIN_SECRET
+
+      kill_hge_servers
+      ;;
+
   query-caching)
     echo -e "\n$(time_elapsed): <########## TEST GRAPHQL-ENGINE QUERY CACHING #####################################>\n"
     TEST_TYPE="query-caching"

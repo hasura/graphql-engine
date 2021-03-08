@@ -133,7 +133,9 @@ explainGQLQuery
   -> m EncJSON
 explainGQLQuery sc (GQLExplain query userVarsRaw maybeIsRelay) = do
   -- NOTE!: we will be executing what follows as though admin role. See e.g. notes in explainField:
-  userInfo <- mkUserInfo (URBFromSessionVariablesFallback adminRoleName) UAdminSecretSent sessionVariables
+  userInfo <-
+    mkUserInfo (URBFromSessionVariablesFallback adminRoleName) UAdminSecretSent
+               sessionVariables
   -- we don't need to check in allow list as we consider it an admin endpoint
   let takeFragment =
         \case G.ExecutableDefinitionFragment f -> Just f; _ -> Nothing

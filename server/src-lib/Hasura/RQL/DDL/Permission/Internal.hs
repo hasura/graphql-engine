@@ -33,15 +33,15 @@ assertPermDefined
   -> PermAccessor backend a
   -> TableInfo backend
   -> m ()
-assertPermDefined roleName pa tableInfo =
+assertPermDefined role pa tableInfo =
   unless (permissionIsDefined rpi pa) $ throw400 PermissionDenied $ mconcat
   [ "'" <> tshow (permAccToType pa) <> "'"
   , " permission on " <>> _tciName (_tiCoreInfo tableInfo)
-  , " for role " <>> roleName
+  , " for role " <>> role
   , " does not exist"
   ]
   where
-    rpi = M.lookup roleName $ _tiRolePermInfoMap tableInfo
+    rpi = M.lookup role $ _tiRolePermInfoMap tableInfo
 
 askPermInfo
   :: (Backend backend, MonadError QErr m)

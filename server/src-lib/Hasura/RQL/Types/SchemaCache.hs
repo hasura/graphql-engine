@@ -20,6 +20,7 @@ module Hasura.RQL.Types.SchemaCache
   , TableCoreCache
   , TableCache
   , ActionCache
+  , InheritedRolesCache
 
   , TypeRelationship(..)
   , trName, trType, trRemoteTable, trFieldMapping
@@ -82,12 +83,6 @@ module Hasura.RQL.Types.SchemaCache
   , isPGColInfo
   , RelInfo(..)
 
-  , RolePermInfo(..)
-  , mkRolePermInfo
-  , permIns
-  , permSel
-  , permUpd
-  , permDel
   , PermAccessor(..)
   , permAccToLens
   , permAccToType
@@ -95,8 +90,6 @@ module Hasura.RQL.Types.SchemaCache
   , RolePermInfoMap
 
   , InsPermInfo(..)
-  , SelPermInfo(..)
-  , getSelectPermissionInfoM
   , UpdPermInfo(..)
   , DelPermInfo(..)
   , PreSetColsPartial
@@ -266,6 +259,8 @@ unsafeFunctionInfo
 unsafeFunctionInfo sourceName functionName cache =
   M.lookup functionName =<< unsafeFunctionCache @b sourceName cache
 
+type InheritedRolesCache = M.HashMap RoleName (HashSet RoleName)
+
 unsafeTableCache
   :: forall b. Backend b => SourceName -> SourceCache -> Maybe (TableCache b)
 unsafeTableCache sourceName cache = do
@@ -286,7 +281,6 @@ data SchemaCache
   , scUnauthenticatedGQLContext   :: !GQLContext
   , scRelayContext                :: !(HashMap RoleName (RoleContext GQLContext))
   , scUnauthenticatedRelayContext :: !GQLContext
-  -- , scCustomTypes       :: !(NonObjectTypeMap, AnnotatedObjects)
   , scDepMap                      :: !DepMap
   , scInconsistentObjs            :: ![InconsistentMetadata]
   , scCronTriggers                :: !(M.HashMap TriggerName CronTriggerInfo)

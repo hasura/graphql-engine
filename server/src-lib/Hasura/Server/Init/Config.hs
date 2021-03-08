@@ -79,6 +79,7 @@ data RawServeOptions impl
   , rsoWebSocketKeepAlive            :: !(Maybe Int)
   , rsoInferFunctionPermissions      :: !(Maybe Bool)
   , rsoEnableMaintenanceMode         :: !Bool
+  , rsoExperimentalFeatures          :: !(Maybe [ExperimentalFeature])
   }
 
 -- | @'ResponseInternalErrorsConfig' represents the encoding of the internal
@@ -93,7 +94,7 @@ data ResponseInternalErrorsConfig
 shouldIncludeInternal :: RoleName -> ResponseInternalErrorsConfig -> Bool
 shouldIncludeInternal role = \case
   InternalErrorsAllRequests -> True
-  InternalErrorsAdminOnly   -> isAdmin role
+  InternalErrorsAdminOnly   -> role == adminRoleName
   InternalErrorsDisabled    -> False
 
 newtype KeepAliveDelay
@@ -131,6 +132,7 @@ data ServeOptions impl
   , soWebsocketKeepAlive            :: !KeepAliveDelay
   , soInferFunctionPermissions      :: !FunctionPermissionsCtx
   , soEnableMaintenanceMode         :: !MaintenanceMode
+  , soExperimentalFeatures          :: !(Set.HashSet ExperimentalFeature)
   }
 
 data DowngradeOptions
@@ -251,6 +253,12 @@ readAPIs = mapM readAPI . T.splitOn "," . T.pack
           "CONFIG"    -> Right CONFIG
           _            -> Left "Only expecting list of comma separated API types metadata,graphql,pgdump,developer,config"
 
+readExperimentalFeatures :: String -> Either String [ExperimentalFeature]
+readExperimentalFeatures = mapM readAPI . T.splitOn "," . T.pack
+  where readAPI si = case T.toLower $ T.strip si of
+          "inherited_roles" -> Right EFInheritedRoles
+          _                 -> Left "Only expecting list of comma separated experimental features"
+
 readLogLevel :: String -> Either String L.LogLevel
 readLogLevel s = case T.toLower $ T.strip $ T.pack s of
   "debug" -> Right L.LevelDebug
@@ -304,6 +312,9 @@ instance FromEnv CorsConfig where
 
 instance FromEnv [API] where
   fromEnv = readAPIs
+
+instance FromEnv [ExperimentalFeature] where
+  fromEnv = readExperimentalFeatures
 
 instance FromEnv LQ.BatchSize where
   fromEnv s = do

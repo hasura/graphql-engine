@@ -216,7 +216,7 @@ transformAnnFields path fields = do
         AFArrayRelation . ASConnection <$> transformArrayConnection fieldPath annRel
       AFComputedField x computedField ->
         AFComputedField x <$> case computedField of
-          CFSScalar _         -> pure computedField
+          CFSScalar _ _       -> pure computedField
           CFSTable jas annSel -> CFSTable jas <$> transformSelect fieldPath annSel
       AFRemote x rs -> pure $ AFRemote x rs
       AFExpression t     -> pure $ AFExpression t
@@ -224,7 +224,7 @@ transformAnnFields path fields = do
   case NE.nonEmpty remoteJoins of
     Nothing -> pure transformedFields
     Just nonEmptyRemoteJoins -> do
-      let phantomColumns = map (\ci -> (fromCol @b $ pgiColumn ci, AFColumn $ AnnColumnField ci False Nothing)) $
+      let phantomColumns = map (\ci -> (fromCol @b $ pgiColumn ci, AFColumn $ AnnColumnField ci False Nothing Nothing)) $
                            concatMap _rjPhantomFields remoteJoins
       modify (Map.insert path nonEmptyRemoteJoins)
       pure $ transformedFields <> phantomColumns

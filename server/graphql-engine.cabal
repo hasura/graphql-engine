@@ -427,12 +427,14 @@ library
                      , Hasura.RQL.Types.SchemaCacheTypes
                      , Hasura.RQL.Types.Source
                      , Hasura.RQL.Types.Table
+                     , Hasura.RQL.Types.InheritedRoles
                      , Hasura.RQL.DDL.Action
                      , Hasura.RQL.DDL.ApiLimit
                      , Hasura.RQL.DDL.ComputedField
                      , Hasura.RQL.DDL.CustomTypes
                      , Hasura.RQL.DDL.Deps
                      , Hasura.RQL.DDL.Endpoint
+                     , Hasura.RQL.DDL.InheritedRoles
                      , Hasura.RQL.DDL.Headers
                      , Hasura.RQL.DDL.Metadata
                      , Hasura.RQL.DDL.Metadata.Generator

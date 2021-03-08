@@ -22,8 +22,13 @@ module Hasura.RQL.IR.BoolExp
 
        , AnnBoolExpFld(..)
        , AnnBoolExp
+       , AnnColumnCaseBoolExpPartialSQL
+       , AnnColumnCaseBoolExp
+       , AnnColumnCaseBoolExpField(..)
        , traverseAnnBoolExp
        , fmapAnnBoolExp
+       , traverseAnnColumnCaseBoolExp
+       , fmapAnnColumnCaseBoolExp
        , annBoolExpTrue
        , andAnnBoolExps
 
@@ -293,7 +298,6 @@ instance (Backend b, NFData a) => NFData (OpExpG b a)
 instance (Backend b, Cacheable a) => Cacheable (OpExpG b a)
 instance (Backend b, Hashable a) => Hashable (OpExpG b a)
 
-
 opExpDepCol :: OpExpG backend a -> Maybe (Column backend)
 opExpDepCol = \case
   CEQ c  -> Just c
@@ -382,20 +386,47 @@ instance (Backend b, NFData (ColumnInfo b), NFData a) => NFData (AnnBoolExpFld b
 instance (Backend b, Cacheable (ColumnInfo b), Cacheable a) => Cacheable (AnnBoolExpFld b a)
 instance (Backend b, Hashable (ColumnInfo b), Hashable a) => Hashable (AnnBoolExpFld b a)
 
+newtype AnnColumnCaseBoolExpField (b :: BackendType) a
+  = AnnColumnCaseBoolExpField { _accColCaseBoolExpField :: (AnnBoolExpFld b a)}
+  deriving (Functor, Foldable, Traversable, Generic)
+deriving instance (Backend b, Eq (ColumnInfo b), Eq a) => Eq (AnnColumnCaseBoolExpField b a)
+instance (Backend b, NFData (ColumnInfo b), NFData a) => NFData (AnnColumnCaseBoolExpField b a)
+instance (Backend b, Cacheable (ColumnInfo b), Cacheable a) => Cacheable (AnnColumnCaseBoolExpField b a)
+instance (Backend b, Hashable (ColumnInfo b), Hashable a) => Hashable (AnnColumnCaseBoolExpField b a)
+
 type AnnBoolExp b a
   = GBoolExp b (AnnBoolExpFld b a)
+
+type AnnColumnCaseBoolExp b a
+  = GBoolExp b (AnnColumnCaseBoolExpField b a)
+
+traverseAnnBoolExpFld
+  :: (Applicative f)
+  => (a -> f b)
+  -> AnnBoolExpFld backend a
+  -> f (AnnBoolExpFld backend b)
+traverseAnnBoolExpFld f = \case
+  AVCol pgColInfo opExps ->
+    AVCol pgColInfo <$> traverse (traverse f) opExps
+  AVRel relInfo annBoolExp ->
+    AVRel relInfo <$> traverseAnnBoolExp f annBoolExp
 
 traverseAnnBoolExp
   :: (Applicative f)
   => (a -> f b)
   -> AnnBoolExp backend a
   -> f (AnnBoolExp backend b)
-traverseAnnBoolExp f =
-  traverse $ \case
-   AVCol pgColInfo opExps ->
-     AVCol pgColInfo <$> traverse (traverse f) opExps
-   AVRel relInfo annBoolExp ->
-     AVRel relInfo <$> traverseAnnBoolExp f annBoolExp
+traverseAnnBoolExp f = traverse (traverseAnnBoolExpFld f)
+
+traverseAnnColumnCaseBoolExp
+  :: (Applicative f)
+  => (a -> f b)
+  -> AnnColumnCaseBoolExp backend a
+  -> f (AnnColumnCaseBoolExp backend b)
+traverseAnnColumnCaseBoolExp f = traverse traverseColCaseBoolExp
+  where
+    traverseColCaseBoolExp (AnnColumnCaseBoolExpField annBoolExpField) =
+      AnnColumnCaseBoolExpField <$> traverseAnnBoolExpFld f annBoolExpField
 
 fmapAnnBoolExp
   :: (a -> b)
@@ -403,6 +434,13 @@ fmapAnnBoolExp
   -> AnnBoolExp backend b
 fmapAnnBoolExp f =
   runIdentity . traverseAnnBoolExp (pure . f)
+
+fmapAnnColumnCaseBoolExp
+  :: (a -> b)
+  -> AnnColumnCaseBoolExp backend a
+  -> AnnColumnCaseBoolExp backend b
+fmapAnnColumnCaseBoolExp f =
+  runIdentity . traverseAnnColumnCaseBoolExp (pure . f)
 
 annBoolExpTrue :: AnnBoolExp backend a
 annBoolExpTrue = gBoolExpTrue
@@ -416,6 +454,8 @@ type AnnBoolExpSQL    b = AnnBoolExp    b (SQLExpression b)
 
 type AnnBoolExpFldPartialSQL b = AnnBoolExpFld b (PartialSQLExp b)
 type AnnBoolExpPartialSQL b = AnnBoolExp b (PartialSQLExp b)
+
+type AnnColumnCaseBoolExpPartialSQL b = AnnColumnCaseBoolExp b (PartialSQLExp b)
 
 type PreSetColsG b v = M.HashMap (Column b) v
 type PreSetColsPartial b = M.HashMap (Column b) (PartialSQLExp b)
@@ -436,20 +476,22 @@ instance Backend b => ToJSON (PartialSQLExp b) where
     PSESQLExp e              -> toJSON $ toSQLTxt e
 
 instance Backend b => ToJSON (AnnBoolExpPartialSQL b) where
-  toJSON = gBoolExpToJSON f
-    where
-      f annFld = case annFld of
-        AVCol pci opExps ->
-          ( toTxt $ pgiColumn pci
-          , toJSON (pci, map opExpSToJSON opExps)
-          )
-        AVRel ri relBoolExp ->
-          ( relNameToTxt $ riName ri
-          , toJSON (ri, toJSON relBoolExp)
-          )
-      opExpSToJSON :: OpExpG b (PartialSQLExp b) -> Value
-      opExpSToJSON =
-        object . pure . opExpToJPair toJSON
+  toJSON = gBoolExpToJSON annBoolExpMakeKeyValuePair
+
+annBoolExpMakeKeyValuePair :: forall b . Backend b => AnnBoolExpFld b (PartialSQLExp b) -> (Text, Value)
+annBoolExpMakeKeyValuePair = \case
+  AVCol pci opExps ->
+    ( toTxt $ pgiColumn pci
+    , toJSON (pci, map opExpSToJSON opExps))
+  AVRel ri relBoolExp ->
+    ( relNameToTxt $ riName ri
+    , toJSON (ri, toJSON relBoolExp))
+  where
+    opExpSToJSON :: OpExpG b (PartialSQLExp b) -> Value
+    opExpSToJSON =  object . pure . opExpToJPair toJSON
+
+instance Backend b => ToJSON (AnnColumnCaseBoolExpPartialSQL b) where
+  toJSON = gBoolExpToJSON (annBoolExpMakeKeyValuePair . _accColCaseBoolExpField)
 
 isStaticValue :: PartialSQLExp backend -> Bool
 isStaticValue = \case

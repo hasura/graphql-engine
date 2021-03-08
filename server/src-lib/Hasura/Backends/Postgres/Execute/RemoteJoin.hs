@@ -123,7 +123,6 @@ pathToAlias path counter =
   parseGraphQLName $ T.intercalate "_" (map getFieldNameTxt $ unFieldPath path)
                  <> "__" <> (tshow . unCounter) counter
 
-
 type CompositeObject a = OMap.InsOrdHashMap Text (CompositeValue a)
 
 -- | A hybrid JSON value representation which captures the context of remote join field in type parameter.

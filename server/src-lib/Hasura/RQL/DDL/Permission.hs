@@ -210,7 +210,7 @@ buildSelPermInfo
 buildSelPermInfo source tn fieldInfoMap sp = withPathK "permission" $ do
   let pgCols     = convColSpec fieldInfoMap $ spColumns sp
 
-  (be, beDeps) <- withPathK "filter" $
+  (boolExp, boolExpDeps) <- withPathK "filter" $
     procBoolExp source tn fieldInfoMap  $ spFilter sp
 
   -- check if the columns exist
@@ -228,17 +228,20 @@ buildSelPermInfo source tn fieldInfoMap sp = withPathK "permission" $ do
           <<> " are auto-derived from the permissions on its returning table "
           <> returnTable <<> " and cannot be specified manually"
 
-  let deps = mkParentDep source tn : beDeps ++ map (mkColDep DRUntyped source tn) pgCols
+  let deps = mkParentDep source tn : boolExpDeps ++ map (mkColDep DRUntyped source tn) pgCols
              ++ map (mkComputedFieldDep DRUntyped source tn) scalarComputedFields
       depHeaders = getDependentHeaders $ spFilter sp
       mLimit = spLimit sp
 
   withPathK "limit" $ mapM_ onlyPositiveInt mLimit
 
-  return ( SelPermInfo (HS.fromList pgCols) (HS.fromList computedFields)
-                        be mLimit allowAgg depHeaders
-         , deps
-         )
+  let pgColsWithFilter = HM.fromList $ map (, Nothing) pgCols
+      scalarComputedFieldsWithFilter = HS.toMap (HS.fromList scalarComputedFields) $> Nothing
+
+  let selPermInfo =
+        SelPermInfo pgColsWithFilter scalarComputedFieldsWithFilter boolExp mLimit allowAgg depHeaders
+
+  return ( selPermInfo, deps )
   where
     allowAgg = spAllowAggregations sp
     computedFields = spComputedFields sp
@@ -352,26 +355,26 @@ instance (Backend b) => FromJSON (SetPermComment b) where
 runSetPermComment
   :: (QErrM m, CacheRWM m, MetadataM m, BackendMetadata b)
   => SetPermComment b -> m EncJSON
-runSetPermComment (SetPermComment source table role permType comment) =  do
+runSetPermComment (SetPermComment source table roleName permType comment) =  do
   tableInfo <- askTabInfo source table
 
   -- assert permission exists and return appropriate permission modifier
   permModifier <- case permType of
     PTInsert -> do
-      assertPermDefined role PAInsert tableInfo
-      pure $ tmInsertPermissions.ix role.pdComment .~ comment
+      assertPermDefined roleName PAInsert tableInfo
+      pure $ tmInsertPermissions.ix roleName.pdComment .~ comment
     PTSelect -> do
-      assertPermDefined role PASelect tableInfo
-      pure $ tmSelectPermissions.ix role.pdComment .~ comment
+      assertPermDefined roleName PASelect tableInfo
+      pure $ tmSelectPermissions.ix roleName.pdComment .~ comment
     PTUpdate -> do
-      assertPermDefined role PAUpdate tableInfo
-      pure $ tmUpdatePermissions.ix role.pdComment .~ comment
+      assertPermDefined roleName PAUpdate tableInfo
+      pure $ tmUpdatePermissions.ix roleName.pdComment .~ comment
     PTDelete -> do
-      assertPermDefined role PADelete tableInfo
-      pure $ tmDeletePermissions.ix role.pdComment .~ comment
+      assertPermDefined roleName PADelete tableInfo
+      pure $ tmDeletePermissions.ix roleName.pdComment .~ comment
 
   let metadataObject = MOSourceObjId source $
-                       SMOTableObj table $ MTOPerm role permType
+                       SMOTableObj table $ MTOPerm roleName permType
   buildSchemaCacheFor metadataObject
     $ MetadataModifier
     $ tableMetadataSetter source table %~ permModifier

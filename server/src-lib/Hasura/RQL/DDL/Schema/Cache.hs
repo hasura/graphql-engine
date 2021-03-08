@@ -264,8 +264,9 @@ buildSchemaCacheRule env = proc (metadata, invalidationKeys) -> do
          , DBFunctionsMetadata b
          , RemoteSchemaMap
          , Inc.Dependency InvalidationKeys
+         , InheritedRoles
          ) `arr` BackendSourceInfo
-    buildSource = proc (sourceMetadata, sourceConfig, dbTables, dbFunctions, remoteSchemaMap, invalidationKeys) -> do
+    buildSource = proc (sourceMetadata, sourceConfig, dbTables, dbFunctions, remoteSchemaMap, invalidationKeys, inheritedRoles) -> do
       let SourceMetadata source tables functions _ = sourceMetadata
           tablesMetadata = OMap.elems tables
           (tableInputs, nonColumnInputs, permissions) = unzip3 $ map mkTableInputs tablesMetadata
@@ -292,7 +293,9 @@ buildSchemaCacheRule env = proc (metadata, invalidationKeys) -> do
       tableCache <-
         (| Inc.keyed (\_ ((tableCoreInfo, permissionInputs), (_, eventTriggerConfs)) -> do
              let tableFields = _tciFieldInfoMap tableCoreInfo
-             permissionInfos <- buildTablePermissions -< (source, tableCoreInfosDep, tableFields, permissionInputs)
+             permissionInfos <-
+                buildTablePermissions
+                -< (source, tableCoreInfosDep, tableFields, permissionInputs, inheritedRoles)
              eventTriggerInfos <- buildTableEventTriggers -< (source, sourceConfig, tableCoreInfo, eventTriggerConfs, metadataInvalidationKey)
              returnA -< TableInfo tableCoreInfo permissionInfos eventTriggerInfos
             )
@@ -330,15 +333,16 @@ buildSchemaCacheRule env = proc (metadata, invalidationKeys) -> do
       => ( Inc.Dependency InvalidationKeys
          , HashMap RemoteSchemaName RemoteSchemaCtx
          , SourceMetadata b
+         , InheritedRoles
          ) `arr` Maybe (BackendSourceInfo, DMap.DMap BackendTag ScalarSet)
-    buildSourceOutput = proc (invalidationKeys, remoteSchemaCtxMap, sourceMetadata) -> do
+    buildSourceOutput = proc (invalidationKeys, remoteSchemaCtxMap, sourceMetadata, inheritedRoles) -> do
       let sourceInvalidationsKeys = Inc.selectD #_ikSources invalidationKeys
       maybeResolvedSource <- resolveSourceIfNeeded -< (sourceInvalidationsKeys, sourceMetadata)
       case maybeResolvedSource of
         Nothing -> returnA -< Nothing
         Just (ResolvedSource sourceConfig tablesMeta functionsMeta scalars) -> do
           so <- buildSource -< ( sourceMetadata, sourceConfig, tablesMeta, functionsMeta
-                               , remoteSchemaCtxMap, invalidationKeys
+                               , remoteSchemaCtxMap, invalidationKeys, inheritedRoles
                                )
           returnA -< Just (so, DMap.singleton (backendTag @b) $ ScalarSet scalars)
 
@@ -351,7 +355,16 @@ buildSchemaCacheRule env = proc (metadata, invalidationKeys) -> do
       => (Metadata, Inc.Dependency InvalidationKeys) `arr` BuildOutputs
     buildAndCollectInfo = proc (metadata, invalidationKeys) -> do
       let Metadata sources remoteSchemas collections allowlists
-            customTypes actions cronTriggers endpoints apiLimits metricsConfig = metadata
+            customTypes actions cronTriggers endpoints apiLimits metricsConfig inheritedRoles = metadata
+          actionRoles = map _apmRole . _amPermissions =<< OMap.elems actions
+          remoteSchemaRoles = map _rspmRole . _rsmPermissions =<< OMap.elems remoteSchemas
+          sourceRoles =
+            HS.fromList $ concat $
+            OMap.elems sources >>= \(BackendSourceMetadata (SourceMetadata _ tables _functions _) ) -> do
+               table <- OMap.elems tables
+               pure ( OMap.keys (_tmInsertPermissions table) <> OMap.keys (_tmSelectPermissions table)
+                    <> OMap.keys (_tmUpdatePermissions table) <> OMap.keys (_tmDeletePermissions table))
+
           remoteSchemaPermissions =
             let remoteSchemaPermsList = OMap.toList $ _rsmPermissions <$> remoteSchemas
             in concat $ flip map remoteSchemaPermsList $
@@ -359,6 +372,22 @@ buildSchemaCacheRule env = proc (metadata, invalidationKeys) -> do
                     flip map remoteSchemaPerms $ \(RemoteSchemaPermissionMetadata role defn comment) ->
                      AddRemoteSchemaPermissions remoteSchemaName role defn comment
                  )
+          nonInheritedRoles = sourceRoles <> HS.fromList (actionRoles <> remoteSchemaRoles)
+
+
+      let commonInheritedRoles = HS.intersection (HS.fromList (OMap.keys inheritedRoles)) nonInheritedRoles
+
+
+      bindA -< do
+        unless (HS.null commonInheritedRoles) $ do
+          throw400 AlreadyExists $
+            "role " <> commaSeparated (map toTxt $ toList commonInheritedRoles) <> " already exists"
+        for_ (toList inheritedRoles) $ \(AddInheritedRole _ roleSet) ->
+          for_ roleSet $ \role -> do
+            unless (role `elem` nonInheritedRoles) $
+              throw400 NotFound $ role <<> " not found. An inherited role can only be created out of existing roles"
+            when (role `OMap.member` inheritedRoles) $
+              throw400 ConstraintError $  role <<> " is an inherited role. An inherited role can only be created out of non-inherited roles"
 
       -- remote schemas
       let remoteSchemaInvalidationKeys = Inc.selectD #_ikRemoteSchemas invalidationKeys
@@ -382,8 +411,8 @@ buildSchemaCacheRule env = proc (metadata, invalidationKeys) -> do
       sourcesOutput <-
         (| Inc.keyed (\_ (BackendSourceMetadata (sourceMetadata :: SourceMetadata b)) ->
              case backendTag @b of
-                PostgresTag -> buildSourceOutput @arr @m -< (invalidationKeys, remoteSchemaCtxMap, sourceMetadata :: SourceMetadata 'Postgres)
-                MSSQLTag    -> buildSourceOutput @arr @m -< (invalidationKeys, remoteSchemaCtxMap, sourceMetadata :: SourceMetadata 'MSSQL)
+                PostgresTag -> buildSourceOutput @arr @m -< (invalidationKeys, remoteSchemaCtxMap, sourceMetadata :: SourceMetadata 'Postgres, inheritedRoles)
+                MSSQLTag    -> buildSourceOutput @arr @m -< (invalidationKeys, remoteSchemaCtxMap, sourceMetadata :: SourceMetadata 'MSSQL, inheritedRoles)
            )
         |) (M.fromList $ OMap.toList sources)
         >-> (\infos -> M.catMaybes infos >- returnA)
@@ -424,6 +453,8 @@ buildSchemaCacheRule env = proc (metadata, invalidationKeys) -> do
 
       cronTriggersMap <- buildCronTriggers -< ((), OMap.elems cronTriggers)
 
+      let inheritedRolesCache = OMap.toHashMap $ fmap _adrRoleSet inheritedRoles
+
       returnA -< BuildOutputs
         { _boSources = M.map fst sourcesOutput
         , _boActions = actionCache
@@ -431,6 +462,7 @@ buildSchemaCacheRule env = proc (metadata, invalidationKeys) -> do
         , _boAllowlist = allowList
         , _boCustomTypes = annotatedCustomTypes
         , _boCronTriggers = cronTriggersMap
+        , _boInheritedRoles = inheritedRolesCache
         , _boEndpoints = resolvedEndpoints
         , _boApiLimits = apiLimits
         , _boMetricsConfig = metricsConfig

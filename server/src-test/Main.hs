@@ -100,7 +100,7 @@ buildPostgresSpecs maybeUrlTemplate = do
         let sqlGenCtx = SQLGenCtx False
             maintenanceMode = MaintenanceModeDisabled
             serverConfigCtx =
-              ServerConfigCtx FunctionPermissionsInferred RemoteSchemaPermsDisabled sqlGenCtx maintenanceMode
+              ServerConfigCtx FunctionPermissionsInferred RemoteSchemaPermsDisabled sqlGenCtx maintenanceMode mempty
             cacheBuildParams = CacheBuildParams httpManager (mkPgSourceResolver print) serverConfigCtx
 
             run :: CacheBuild a -> IO a

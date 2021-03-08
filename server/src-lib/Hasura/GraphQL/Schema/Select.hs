@@ -66,7 +66,6 @@ import           Hasura.RQL.Types
 import           Hasura.Server.Utils                        (executeJSONPath)
 import           Hasura.Session
 
-
 -- 1. top level selection functions
 -- write a blurb?
 
@@ -187,7 +186,7 @@ selectTableByPk
   -> m (Maybe (FieldParser n (SelectExp b)))
 selectTableByPk table fieldName description selectPermissions = runMaybeT do
   primaryKeys <- MaybeT $ fmap _pkColumns . _tciPrimaryKey . _tiCoreInfo <$> askTableInfo table
-  guard $ all (\c -> pgiColumn c `Set.member` spiCols selectPermissions) primaryKeys
+  guard $ all (\c -> pgiColumn c `Map.member` spiCols selectPermissions) primaryKeys
   lift $ memoizeOn 'selectTableByPk (table, fieldName) do
     stringifyNum <- asks $ qcStringifyNum . getter
     argsParser <- sequenceA <$> for primaryKeys \columnInfo -> do
@@ -888,7 +887,7 @@ lookupRemoteField' fieldInfos (FieldCall fcName _) =
     Just (P.Definition _ _ _ fieldInfo) -> pure fieldInfo
 
 lookupRemoteField
-  :: (MonadSchema n m, MonadError QErr m, MonadRole r m)
+  :: (MonadSchema n m, MonadError QErr m)
   => [P.Definition P.FieldInfo]
   -> NonEmpty FieldCall
   -> m P.FieldInfo
@@ -919,7 +918,7 @@ fieldSelection
   -> FieldInfo b
   -> SelPermInfo b
   -> m [FieldParser n (AnnotatedField b)]
-fieldSelection table maybePkeyColumns fieldInfo selectPermissions =
+fieldSelection table maybePkeyColumns fieldInfo selectPermissions = do
   case fieldInfo of
     FIColumn columnInfo -> maybeToList <$> runMaybeT do
       queryType <- asks $ qcQueryType . getter
@@ -931,11 +930,34 @@ fieldSelection table maybePkeyColumns fieldInfo selectPermissions =
              pure $ P.selection_ fieldName Nothing P.identifier
                     $> IR.AFNodeId xRelayInfo table pkeyColumns
          | otherwise -> do
-             guard $ Set.member columnName (spiCols selectPermissions)
+             guard $ columnName `Map.member` (spiCols selectPermissions)
+             let caseBoolExp = join $ Map.lookup columnName (spiCols selectPermissions)
+             let caseBoolExpUnpreparedValue =
+                   fmapAnnColumnCaseBoolExp partialSQLExpToUnpreparedValue <$> caseBoolExp
              let pathArg = jsonPathArg $ pgiType columnInfo
-             field <- lift $ columnParser (pgiType columnInfo) (G.Nullability $ pgiIsNullable columnInfo)
+                 -- In an inherited role, when a column is part of all the select
+                 -- permissions which make up the inherited role then the nullability
+                 -- of the field is determined by the nullability of the DB column
+                 -- otherwise it is marked as nullable explicitly, ignoring the column's
+                 -- nullability. We do this because
+                 -- in multiple roles we execute an SQL query like:
+                 --
+                 --  select
+                 --    (case when (P1 or P2) then addr else null end) as addr,
+                 --    (case when P2 then phone else null end) as phone
+                 -- from employee
+                 -- where (P1 or P2)
+                 --
+                 -- In the above example, P(n) is a predicate configured for a role
+                 --
+                 -- NOTE: https://www.microsoft.com/en-us/research/wp-content/uploads/2016/02/FGALanguageICDE07.pdf
+                 -- The above is the paper which talks about the idea of cell-level
+                 -- authorization and multiple roles. The paper says that we should only
+                 -- allow the case analysis only on nullable columns.
+                 nullability = pgiIsNullable columnInfo || isJust caseBoolExp
+             field <- lift $ columnParser (pgiType columnInfo) (G.Nullability nullability)
              pure $ P.selection fieldName (pgiDescription columnInfo) pathArg field
-               <&> IR.mkAnnColumnField columnInfo
+               <&> IR.mkAnnColumnField columnInfo caseBoolExpUnpreparedValue
 
     FIRelationship relationshipInfo ->
       concat . maybeToList <$> relationshipField relationshipInfo
@@ -1016,16 +1038,23 @@ computedFieldPG ComputedFieldInfo{..} selectPermissions = runMaybeT do
   functionArgsParser <- lift $ computedFieldFunctionArgs _cfiFunction
   case _cfiReturnType of
     CFRScalar scalarReturnType -> do
-      guard $ _cfiName `Set.member` spiScalarComputedFields selectPermissions
-      let fieldArgsParser = do
+      caseBoolExpMaybe <-
+        onNothing
+          (Map.lookup _cfiName (spiScalarComputedFields selectPermissions))
+          (hoistMaybe Nothing)
+      let caseBoolExpUnpreparedValue =
+            fmapAnnColumnCaseBoolExp partialSQLExpToUnpreparedValue <$> caseBoolExpMaybe
+          fieldArgsParser = do
             args  <- functionArgsParser
             colOp <- jsonPathArg $ ColumnScalar scalarReturnType
-            pure $ IR.AFComputedField _cfiXComputedFieldInfo $ IR.CFSScalar $ IR.ComputedFieldScalarSelect
-              { IR._cfssFunction  = _cffName _cfiFunction
-              , IR._cfssType      = scalarReturnType
-              , IR._cfssColumnOp  = colOp
-              , IR._cfssArguments = args
-              }
+            pure $ IR.AFComputedField _cfiXComputedFieldInfo
+                      (IR.CFSScalar (IR.ComputedFieldScalarSelect
+                       { IR._cfssFunction  = _cffName _cfiFunction
+                       , IR._cfssType      = scalarReturnType
+                       , IR._cfssColumnOp  = colOp
+                       , IR._cfssArguments = args
+                       })
+                      caseBoolExpUnpreparedValue)
       dummyParser <- lift $ columnParser @'Postgres (ColumnScalar scalarReturnType) (G.Nullability True)
       pure $ P.selection fieldName (Just fieldDescription) fieldArgsParser dummyParser
     CFRSetofTable tableName -> do
@@ -1091,7 +1120,7 @@ remoteRelationshipFieldPG remoteFieldInfo = runMaybeT do
   let hasuraFieldNames = Set.map (FieldName . G.unName . pgiName) hasuraFields
       remoteRelationship = RemoteRelationship name source table hasuraFieldNames remoteSchemaName remoteFields
   (newInpValDefns, remoteFieldParamMap) <-
-    if | isAdmin role ->
+    if | role == adminRoleName ->
          -- we don't validate the remote relationship when the role is admin
          -- because it's already been validated, when the remote relationship
          -- was created

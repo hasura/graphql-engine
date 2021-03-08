@@ -1,13 +1,11 @@
 module Hasura.RQL.DML.Select
-  ( selectP2
-  , convSelectQuery
-  , runSelect
+  ( runSelect
   )
 where
 
 import           Hasura.Prelude
 
-import qualified Data.HashSet                              as HS
+import qualified Data.HashMap.Strict                       as HM
 import qualified Data.List.NonEmpty                        as NE
 import qualified Data.Sequence                             as DS
 import qualified Database.PG.Query                         as Q
@@ -30,7 +28,6 @@ import           Hasura.RQL.Types
 import           Hasura.RQL.Types.Run
 import           Hasura.SQL.Types
 import           Hasura.Session
-
 
 type SelectQExt b = SelectG (ExtCol b) (BoolExp b) Int
 
@@ -98,7 +95,7 @@ convWildcard fieldInfoMap selPermInfo wildcard =
     pgCols = map pgiColumn $ getCols fieldInfoMap
     relColInfos = getRels fieldInfoMap
 
-    simpleCols = map ECSimple $ filter (`HS.member` cols) pgCols
+    simpleCols = map ECSimple $ filter (`HM.member` cols) pgCols
 
     mkRelCol wc relInfo = do
       let relName = riName relInfo
@@ -106,8 +103,8 @@ convWildcard fieldInfoMap selPermInfo wildcard =
       relTabInfo <- fetchRelTabInfo relTab
       mRelSelPerm <- askPermInfo' PASelect relTabInfo
 
-      forM mRelSelPerm $ \rspi -> do
-        rExtCols <- convWildcard (_tciFieldInfoMap $ _tiCoreInfo relTabInfo) rspi wc
+      forM mRelSelPerm $ \relSelPermInfo -> do
+        rExtCols <- convWildcard (_tciFieldInfoMap $ _tiCoreInfo relTabInfo) relSelPermInfo wc
         return $ ECRel relName Nothing $
           SelectG rExtCols Nothing Nothing Nothing Nothing
 
@@ -118,14 +115,14 @@ resolveStar :: (UserInfoM m, QErrM m, TableInfoRM 'Postgres m)
             -> SelPermInfo 'Postgres
             -> SelectQ 'Postgres
             -> m (SelectQExt 'Postgres)
-resolveStar fim spi (SelectG selCols mWh mOb mLt mOf) = do
+resolveStar fim selPermInfo (SelectG selCols mWh mOb mLt mOf) = do
   procOverrides <- fmap (concat . catMaybes) $ withPathK "columns" $
     indexedForM selCols $ \selCol -> case selCol of
     (SCStar _) -> return Nothing
-    _          -> Just <$> convSelCol fim spi selCol
+    _          -> Just <$> convSelCol fim selPermInfo selCol
   everything <- case wildcards of
     [] -> return []
-    _  -> convWildcard fim spi $ maximum wildcards
+    _  -> convWildcard fim selPermInfo $ maximum wildcards
   let extCols = unionBy equals procOverrides everything
   return $ SelectG extCols mWh mOb mLt mOf
   where
@@ -185,15 +182,19 @@ convOrderByElem sessVarBldr (flds, spi) = \case
           [ fldName <<> " is an array relationship"
           ," and can't be used in 'order_by'"
           ]
-        (relFim, relSpi) <- fetchRelDet (riName relInfo) (riRTable relInfo)
-        resolvedSelFltr <- convAnnBoolExpPartialSQL sessVarBldr $ spiFilter relSpi
+        (relFim, relSelPermInfo) <- fetchRelDet (riName relInfo) (riRTable relInfo)
+        resolvedSelFltr <- convAnnBoolExpPartialSQL sessVarBldr $ spiFilter relSelPermInfo
         AOCObjectRelation relInfo resolvedSelFltr <$>
-          convOrderByElem sessVarBldr (relFim, relSpi) rest
+          convOrderByElem sessVarBldr (relFim, relSelPermInfo) rest
       FIRemoteRelationship {} ->
         throw400 UnexpectedPayload (mconcat [ fldName <<> " is a remote field" ])
 
 convSelectQ
-  :: (UserInfoM m, QErrM m, TableInfoRM 'Postgres m, HasServerConfigCtx m)
+  :: ( UserInfoM m
+     , QErrM m
+     , TableInfoRM 'Postgres m
+     , HasServerConfigCtx m
+     )
   => TableName 'Postgres
   -> FieldInfoMap (FieldInfo 'Postgres)  -- Table information of current table
   -> SelPermInfo 'Postgres   -- Additional select permission info
@@ -202,23 +203,24 @@ convSelectQ
   -> ValueParser 'Postgres m S.SQLExp
   -> m (AnnSimpleSel 'Postgres)
 convSelectQ table fieldInfoMap selPermInfo selQ sessVarBldr prepValBldr = do
+  -- Convert where clause
+  wClause <- forM (sqWhere selQ) $ \boolExp ->
+    withPathK "where" $
+    convBoolExp fieldInfoMap selPermInfo boolExp sessVarBldr prepValBldr
 
   annFlds <- withPathK "columns" $
     indexedForM (sqColumns selQ) $ \case
     (ECSimple pgCol) -> do
-      colInfo <- convExtSimple fieldInfoMap selPermInfo pgCol
-      return (fromCol @'Postgres pgCol, mkAnnColumnField colInfo Nothing)
+      (colInfo, caseBoolExpMaybe) <- convExtSimple fieldInfoMap selPermInfo pgCol
+      resolvedCaseBoolExp <-
+        traverse (convAnnColumnCaseBoolExpPartialSQL sessVarBldr) caseBoolExpMaybe
+      return (fromCol @'Postgres pgCol, mkAnnColumnField colInfo resolvedCaseBoolExp Nothing)
     (ECRel relName mAlias relSelQ) -> do
       annRel <- convExtRel fieldInfoMap relName mAlias
                 relSelQ sessVarBldr prepValBldr
       return ( fromRel $ fromMaybe relName mAlias
              , either AFObjectRelation AFArrayRelation annRel
              )
-
-  -- Convert where clause
-  wClause <- forM (sqWhere selQ) $ \be ->
-    withPathK "where" $
-    convBoolExp fieldInfoMap selPermInfo be sessVarBldr prepValBldr
 
   annOrdByML <- forM (sqOrderBy selQ) $ \(OrderByExp obItems) ->
     withPathK "order_by" $ indexedForM obItems $ mapM $
@@ -251,15 +253,20 @@ convExtSimple
   => FieldInfoMap (FieldInfo 'Postgres)
   -> SelPermInfo 'Postgres
   -> PGCol
-  -> m (ColumnInfo 'Postgres)
+  -> m (ColumnInfo 'Postgres, Maybe (AnnColumnCaseBoolExpPartialSQL 'Postgres))
 convExtSimple fieldInfoMap selPermInfo pgCol = do
   checkSelOnCol selPermInfo pgCol
-  askColInfo fieldInfoMap pgCol relWhenPGErr
+  colInfo <- askColInfo fieldInfoMap pgCol relWhenPGErr
+  pure (colInfo, join $ HM.lookup pgCol (spiCols selPermInfo))
   where
     relWhenPGErr = "relationships have to be expanded"
 
 convExtRel
-  :: (UserInfoM m, QErrM m, TableInfoRM 'Postgres m, HasServerConfigCtx m)
+  :: ( UserInfoM m
+     , QErrM m
+     , TableInfoRM 'Postgres m
+     , HasServerConfigCtx m
+     )
   => FieldInfoMap (FieldInfo 'Postgres)
   -> RelName
   -> Maybe RelName
@@ -297,7 +304,11 @@ convExtRel fieldInfoMap relName mAlias selQ sessVarBldr prepValBldr = do
               ]
 
 convSelectQuery
-  :: (UserInfoM m, QErrM m, TableInfoRM 'Postgres m, HasServerConfigCtx m)
+  :: ( UserInfoM m
+     , QErrM m
+     , TableInfoRM 'Postgres m
+     , HasServerConfigCtx m
+     )
   => SessVarBldr 'Postgres m
   -> ValueParser 'Postgres m S.SQLExp
   -- -> (ColumnType 'Postgres -> Value -> m S.SQLExp)

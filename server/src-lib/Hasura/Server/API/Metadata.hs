@@ -22,6 +22,7 @@ import           Hasura.RQL.DDL.ComputedField
 import           Hasura.RQL.DDL.CustomTypes
 import           Hasura.RQL.DDL.Endpoint
 import           Hasura.RQL.DDL.EventTrigger
+import           Hasura.RQL.DDL.InheritedRoles
 import           Hasura.RQL.DDL.Metadata
 import           Hasura.RQL.DDL.Permission
 import           Hasura.RQL.DDL.QueryCollection
@@ -174,6 +175,10 @@ data RQLMetadataV1
   -- 'MetricsConfig' related
   | RMSetMetricsConfig !MetricsConfig
   | RMRemoveMetricsConfig
+
+  -- inherited roles
+  | RMAddInheritedRole !AddInheritedRole
+  | RMDropInheritedRole !DropInheritedRole
 
   -- bulk metadata queries
   | RMBulk [RQLMetadataRequest]
@@ -452,6 +457,9 @@ runMetadataQueryV1M env currentResourceVersion = \case
   RMSetMetricsConfig q              -> runSetMetricsConfig q
   RMRemoveMetricsConfig             -> runRemoveMetricsConfig
 
+  RMAddInheritedRole q              -> runAddInheritedRole q
+  RMDropInheritedRole q             -> runDropInheritedRole q
+
   RMBulk q                          -> encJFromList <$> indexedMapM (runMetadataQueryM env currentResourceVersion) q
 
 runMetadataQueryV2M
@@ -459,6 +467,7 @@ runMetadataQueryV2M
      , CacheRWM m
      , MetadataM m
      , MonadMetadataStorageQueryAPI m
+     , HasServerConfigCtx m
      )
   => MetadataResourceVersion
   -> RQLMetadataV2

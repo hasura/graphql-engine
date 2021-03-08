@@ -49,7 +49,9 @@ checkPermissionRequired = \case
 pgColsToSelFlds :: [ColumnInfo 'Postgres] -> [(FieldName, AnnField 'Postgres)]
 pgColsToSelFlds cols =
   flip map cols $
-  \pgColInfo -> (fromCol @'Postgres $ pgiColumn pgColInfo, mkAnnColumnField pgColInfo Nothing)
+  \pgColInfo -> (fromCol @'Postgres $ pgiColumn pgColInfo, mkAnnColumnField pgColInfo Nothing Nothing)
+  --                                                                         ^^ Nothing because mutations aren't supported
+  --                                                                         with inherited role
 
 mkDefaultMutFlds :: Maybe [ColumnInfo 'Postgres] -> MutationOutput 'Postgres
 mkDefaultMutFlds = MOutMultirowFields . \case

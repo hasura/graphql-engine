@@ -113,7 +113,7 @@ runApp env (HGEOptionsG rci metadataDbUrl hgeCmd) = do
           functionPermsCtx = FunctionPermissionsInferred
           maintenanceMode = MaintenanceModeDisabled
           serverConfigCtx =
-            ServerConfigCtx functionPermsCtx remoteSchemaPermsCtx sqlGenCtx maintenanceMode
+            ServerConfigCtx functionPermsCtx remoteSchemaPermsCtx sqlGenCtx maintenanceMode mempty
           cacheBuildParams =
             CacheBuildParams _gcHttpManager pgSourceResolver serverConfigCtx
       runManagedT (mkMinimalPool _gcMetadataDbConnInfo) $ \metadataDbPool -> do

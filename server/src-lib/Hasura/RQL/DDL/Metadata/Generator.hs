@@ -49,6 +49,7 @@ genMetadata =
     <*> arbitrary
     <*> arbitrary
     <*> arbitrary
+    <*> arbitrary
 
 instance (Arbitrary k, Eq k, Hashable k, Arbitrary v) => Arbitrary (InsOrdHashMap k v) where
   arbitrary = OM.fromList <$> arbitrary
@@ -106,6 +107,9 @@ instance (Backend b) => Arbitrary (ArrRelUsingFKeyOn b) where
   arbitrary = genericArbitrary
 
 instance (Arbitrary a) => Arbitrary (PermDef a) where
+  arbitrary = genericArbitrary
+
+instance Arbitrary AddInheritedRole where
   arbitrary = genericArbitrary
 
 instance (Backend b) => Arbitrary (ComputedFieldDefinition b) where
@@ -447,7 +451,6 @@ sampleGraphQLValues = [ G.VInt 1
                       , G.VString "article"
                       , G.VBoolean True
                       ]
-
 
 instance Arbitrary MetricsConfig where
   arbitrary = genericArbitrary

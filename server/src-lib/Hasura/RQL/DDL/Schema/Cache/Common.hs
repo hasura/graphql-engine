@@ -101,18 +101,19 @@ mkTableInputs TableMetadata{..} =
 -- 'MonadWriter' side channel.
 data BuildOutputs
   = BuildOutputs
-  { _boSources       :: SourceCache
-  , _boActions       :: !ActionCache
-  , _boRemoteSchemas :: !(HashMap RemoteSchemaName (RemoteSchemaCtx, MetadataObject))
+  { _boSources        :: SourceCache
+  , _boActions        :: !ActionCache
+  , _boRemoteSchemas  :: !(HashMap RemoteSchemaName (RemoteSchemaCtx, MetadataObject))
   -- ^ We preserve the 'MetadataObject' from the original catalog metadata in the output so we can
   -- reuse it later if we need to mark the remote schema inconsistent during GraphQL schema
   -- generation (because of field conflicts).
-  , _boAllowlist     :: !(HS.HashSet GQLQuery)
-  , _boCustomTypes   :: !AnnotatedCustomTypes
-  , _boCronTriggers  :: !(M.HashMap TriggerName CronTriggerInfo)
-  , _boEndpoints     :: !(M.HashMap EndpointName (EndpointMetadata GQLQueryWithText))
-  , _boApiLimits     :: !ApiLimit
-  , _boMetricsConfig :: !MetricsConfig
+  , _boAllowlist      :: !(HS.HashSet GQLQuery)
+  , _boCustomTypes    :: !AnnotatedCustomTypes
+  , _boCronTriggers   :: !(M.HashMap TriggerName CronTriggerInfo)
+  , _boEndpoints      :: !(M.HashMap EndpointName (EndpointMetadata GQLQueryWithText))
+  , _boApiLimits      :: !ApiLimit
+  , _boMetricsConfig  :: !MetricsConfig
+  , _boInheritedRoles :: !InheritedRolesCache
   }
 $(makeLenses ''BuildOutputs)
 
@@ -144,7 +145,6 @@ instance HasServerConfigCtx CacheBuild where
 
 instance MonadResolveSource CacheBuild where
   getSourceResolver = asks _cbpSourceResolver
-
 
 runCacheBuild
   :: ( MonadIO m

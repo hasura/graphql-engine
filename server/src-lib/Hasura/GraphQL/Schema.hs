@@ -71,24 +71,28 @@ buildGQLContext
      )
 buildGQLContext =
   proc (queryType, sources, allRemoteSchemas, allActions, nonObjectCustomTypes) -> do
-    ServerConfigCtx functionPermsCtx remoteSchemaPermsCtx sqlGenCtx@(SQLGenCtx stringifyNum) _maintenanceMode <-
+    ServerConfigCtx functionPermsCtx remoteSchemaPermsCtx sqlGenCtx@(SQLGenCtx stringifyNum) _maintenanceMode _experimentalFeatures <-
       bindA -< askServerConfigCtx
-
     let remoteSchemasRoles = concatMap (Map.keys . _rscPermissions . fst . snd) $ Map.toList allRemoteSchemas
 
-    let allRoles = Set.insert adminRoleName $
-          allTableRoles
-          <> (allActionInfos ^.. folded.aiPermissions.to Map.keys.folded)
+    let nonTableRoles =
+          Set.insert adminRoleName $
+          (allActionInfos ^.. folded.aiPermissions.to Map.keys.folded)
           <> Set.fromList (bool mempty remoteSchemasRoles $ remoteSchemaPermsCtx == RemoteSchemaPermsEnabled)
         allActionInfos = Map.elems allActions
+
         allTableRoles = Set.fromList $ getTableRoles =<< Map.elems sources
         adminRemoteRelationshipQueryCtx =
           allRemoteSchemas
           <&> (\(remoteSchemaCtx, _metadataObj) ->
                  (_rscIntro remoteSchemaCtx, _rscParsed remoteSchemaCtx))
+        allRoles :: Set.HashSet RoleName
+        allRoles = nonTableRoles <> allTableRoles
         -- The function permissions context doesn't actually matter because the
         -- admin will have access to the function anyway
-        adminQueryContext = QueryContext stringifyNum queryType adminRemoteRelationshipQueryCtx FunctionPermissionsInferred
+        adminQueryContext =
+          QueryContext stringifyNum queryType
+                       adminRemoteRelationshipQueryCtx FunctionPermissionsInferred
 
     -- build the admin DB-only context so that we can check against name clashes with remotes
     -- TODO: Is there a better way to check for conflicts without actually building the admin schema?
@@ -119,14 +123,14 @@ buildGQLContext =
         adminMutationRemotes = concatMap (concat . piMutation . snd . snd) remotes
 
     roleContexts <- bindA -<
-      ( Set.toMap allRoles & Map.traverseWithKey \roleName () ->
+      ( Set.toMap allRoles & Map.traverseWithKey \role () ->
           case queryType of
             QueryHasura ->
               buildRoleContext (sqlGenCtx, queryType, functionPermsCtx) sources allRemoteSchemas allActionInfos
-              nonObjectCustomTypes remotes roleName remoteSchemaPermsCtx
+              nonObjectCustomTypes remotes role remoteSchemaPermsCtx
             QueryRelay ->
               buildRelayRoleContext (sqlGenCtx, queryType, functionPermsCtx) sources allActionInfos
-              nonObjectCustomTypes roleName
+              nonObjectCustomTypes role
       )
     unauthenticated <- bindA -< unauthenticatedContext adminQueryRemotes adminMutationRemotes remoteSchemaPermsCtx
     returnA -< (roleContexts, unauthenticated)
@@ -140,11 +144,11 @@ buildRoleContext
   -> RemoteSchemaPermsCtx
   -> m (RoleContext GQLContext)
 buildRoleContext (SQLGenCtx stringifyNum, queryType, functionPermsCtx) sources
-  allRemoteSchemas allActionInfos nonObjectCustomTypes remotes roleName remoteSchemaPermsCtx = do
+  allRemoteSchemas allActionInfos nonObjectCustomTypes remotes role remoteSchemaPermsCtx = do
 
   roleBasedRemoteSchemas <-
-    if | roleName == adminRoleName                        -> pure remotes
-       | remoteSchemaPermsCtx == RemoteSchemaPermsEnabled -> buildRoleBasedRemoteSchemaParser roleName allRemoteSchemas
+    if | role == adminRoleName                            -> pure remotes
+       | remoteSchemaPermsCtx == RemoteSchemaPermsEnabled -> buildRoleBasedRemoteSchemaParser role allRemoteSchemas
        -- when remote schema permissions are not enabled, then remote schemas
        -- are a public entity which is accesible to all the roles
        | otherwise                                        -> pure remotes
@@ -152,7 +156,8 @@ buildRoleContext (SQLGenCtx stringifyNum, queryType, functionPermsCtx) sources
   let queryRemotes    = getQueryRemotes $ snd . snd <$> roleBasedRemoteSchemas
       mutationRemotes = getMutationRemotes $ snd . snd <$> roleBasedRemoteSchemas
       remoteRelationshipQueryContext = Map.fromList roleBasedRemoteSchemas
-      roleQueryContext = QueryContext stringifyNum queryType remoteRelationshipQueryContext functionPermsCtx
+      roleQueryContext =
+        QueryContext stringifyNum queryType remoteRelationshipQueryContext functionPermsCtx
       buildSource :: forall b. BackendSchema b => SourceInfo b ->
         m ( [FieldParser (P.ParseT Identity) (QueryRootField    UnpreparedValue)]
           , [FieldParser (P.ParseT Identity) (MutationRootField UnpreparedValue)]
@@ -163,7 +168,7 @@ buildRoleContext (SQLGenCtx stringifyNum, queryType, functionPermsCtx) sources
             validTables    = takeValidTables tables
             xNodesAgg      = nodesAggExtension sourceConfig
             xRelay         = relayExtension    sourceConfig
-        runMonadSchema roleName roleQueryContext sources (BackendExtension @b xRelay xNodesAgg) $
+        runMonadSchema role roleQueryContext sources (BackendExtension @b xRelay xNodesAgg) $
           (,,)
             <$> buildQueryFields sourceName sourceConfig validTables validFunctions
             <*> buildMutationFields Frontend sourceName sourceConfig validTables validFunctions
@@ -178,7 +183,7 @@ buildRoleContext (SQLGenCtx stringifyNum, queryType, functionPermsCtx) sources
   -- remotes, which are backend-agnostic.
   -- In the long term, all backend-specific processing should be moved to `buildSource`, and this
   -- block should be running in the schema for a `None` backend.
-  runMonadSchema roleName roleQueryContext sources (BackendExtension @'Postgres (Just ()) (Just ())) $ do
+  runMonadSchema role roleQueryContext sources (BackendExtension @'Postgres (Just ()) (Just ())) $ do
     mutationParserFrontend <-
       buildMutationParser mutationRemotes allActionInfos nonObjectCustomTypes mutationFrontendFields
 
@@ -215,7 +220,7 @@ buildRelayRoleContext
   -> RoleName
   -> m (RoleContext GQLContext)
 buildRelayRoleContext (SQLGenCtx stringifyNum, queryType, functionPermsCtx) sources
-  allActionInfos nonObjectCustomTypes roleName = do
+  allActionInfos nonObjectCustomTypes role = do
   -- TODO: At the time of writing this, remote schema queries are not supported in relay.
   -- When they are supported, we should get do what `buildRoleContext` does. Since, they
   -- are not supported yet, we use `mempty` below for `RemoteRelationshipQueryContext`.
@@ -230,7 +235,7 @@ buildRelayRoleContext (SQLGenCtx stringifyNum, queryType, functionPermsCtx) sour
             validTables    = takeValidTables tables
             xNodesAgg      = nodesAggExtension sourceConfig
             xRelay         = relayExtension    sourceConfig
-        runMonadSchema roleName roleQueryContext sources (BackendExtension @b xRelay xNodesAgg) $
+        runMonadSchema role roleQueryContext sources (BackendExtension @b xRelay xNodesAgg) $
           (,,)
           <$> buildRelayQueryFields sourceName sourceConfig validTables validFunctions
           <*> buildMutationFields Frontend sourceName sourceConfig validTables validFunctions
@@ -244,7 +249,7 @@ buildRelayRoleContext (SQLGenCtx stringifyNum, queryType, functionPermsCtx) sour
   -- remotes, which are backend-agnostic.
   -- In the long term, all backend-specific processing should be moved to `buildSource`, and this
   -- block should be running in the schema for a `None` backend.
-  runMonadSchema roleName roleQueryContext sources (BackendExtension @'Postgres (Just ()) (Just ())) $ do
+  runMonadSchema role roleQueryContext sources (BackendExtension @'Postgres (Just ()) (Just ())) $ do
     -- Add node root field.
     -- FIXME: for now this is PG-only. This isn't a problem yet since for now only PG supports relay.
     -- To fix this, we'd need to first generalize `nodeField`.
@@ -357,11 +362,11 @@ buildRoleBasedRemoteSchemaParser
   => RoleName
   -> RemoteSchemaCache
   -> m [(RemoteSchemaName, (IntrospectionResult, ParsedIntrospection))]
-buildRoleBasedRemoteSchemaParser role remoteSchemaCache = do
+buildRoleBasedRemoteSchemaParser roleName remoteSchemaCache = do
   let remoteSchemaIntroInfos = map fst $ toList remoteSchemaCache
   remoteSchemaPerms <-
     for remoteSchemaIntroInfos $ \(RemoteSchemaCtx remoteSchemaName _ remoteSchemaInfo _ _ permissions) ->
-      for (Map.lookup role permissions) $ \introspectRes -> do
+      for (Map.lookup roleName permissions) $ \introspectRes -> do
         (queryParsers, mutationParsers, subscriptionParsers) <-
              P.runSchemaT @m @(P.ParseT Identity) $ buildRemoteParser introspectRes remoteSchemaInfo
         let parsedIntrospection = ParsedIntrospection queryParsers mutationParsers subscriptionParsers
@@ -488,7 +493,9 @@ buildMutationFields scenario sourceName sourceConfig tables (takeExposedAs FEAMu
           if scenario == Frontend && ipiBackendOnly insertPerms
             then Nothing
             else Just insertPerms
-        lift $ buildTableInsertMutationFields sourceName sourceConfig tableName tableInfo tableGQLName insertPerms _permSel _permUpd
+        lift $
+          buildTableInsertMutationFields sourceName sourceConfig tableName tableInfo
+                                 tableGQLName insertPerms _permSel _permUpd
       updates <- runMaybeT $ do
         guard $ isMutable viIsUpdatable viewInfo
         updatePerms <- hoistMaybe _permUpd
@@ -506,7 +513,7 @@ buildMutationFields scenario sourceName sourceConfig tables (takeExposedAs FEAMu
     guard $
       -- when function permissions are inferred, we don't expose the
       -- mutation functions for non-admin roles. See Note [Function Permissions]
-      roleName == adminRoleName || roleName `elem` _fiPermissions functionInfo
+      roleName == adminRoleName || roleName `elem` (_fiPermissions functionInfo)
     lift $ buildFunctionMutationFields sourceName sourceConfig functionName functionInfo targetTable selectPerms
   pure $ concat $ catMaybes $ tableMutations <> functionMutations
 

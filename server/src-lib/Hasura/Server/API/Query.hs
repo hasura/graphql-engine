@@ -42,7 +42,7 @@ import           Hasura.RQL.DML.Types
 import           Hasura.RQL.DML.Update
 import           Hasura.RQL.Types
 import           Hasura.RQL.Types.Run
-import           Hasura.Server.Types                (InstanceId (..), MaintenanceMode (..))
+import           Hasura.Server.Types
 import           Hasura.Server.Utils
 import           Hasura.Server.Version              (HasVersion)
 import           Hasura.Session

@@ -115,7 +115,7 @@ fromSelectRows annSelectG = do
   selectFrom <-
     case from of
       IR.FromTable qualifiedObject -> fromQualifiedTable qualifiedObject
-      IR.FromFunction _ _ _        -> refute $ pure FunctionNotSupported
+      IR.FromFunction {}           -> refute $ pure FunctionNotSupported
   Args { argsOrderBy
        , argsWhere
        , argsJoins
@@ -153,9 +153,7 @@ fromSelectRows annSelectG = do
                   } = annSelectG
     IR.TablePerm {_tpLimit = mPermLimit, _tpFilter = permFilter} = perm
     permissionBasedTop =
-      case mPermLimit of
-        Nothing    -> NoTop
-        Just limit -> Top limit
+      maybe NoTop Top mPermLimit
     stringifyNumbers =
       if num
         then StringifyNumbers
@@ -168,7 +166,7 @@ fromSelectAggregate annSelectG = do
   selectFrom <-
     case from of
       IR.FromTable qualifiedObject -> fromQualifiedTable qualifiedObject
-      IR.FromFunction _ _ _        -> refute $ pure FunctionNotSupported
+      IR.FromFunction {}           -> refute $ pure FunctionNotSupported
   fieldSources <-
     runReaderT (traverse fromTableAggregateFieldG fields) (fromAlias selectFrom)
   filterExpression <-
@@ -202,10 +200,7 @@ fromSelectAggregate annSelectG = do
                   , _asnStrfyNum = _num -- TODO: Do we ignore this for aggregates?
                   } = annSelectG
     IR.TablePerm {_tpLimit = mPermLimit, _tpFilter = permFilter} = perm
-    permissionBasedTop =
-      case mPermLimit of
-        Nothing    -> NoTop
-        Just limit -> Top limit
+    permissionBasedTop = maybe NoTop Top mPermLimit
 
 
 --------------------------------------------------------------------------------
@@ -583,7 +578,7 @@ fromAnnFieldsG existingJoins stringifyNumbers (IR.FieldName name, field) =
 -- 'ToStringExpression' so that it's casted when being projected.
 fromAnnColumnField ::
      StringifyNumbers
-  -> IR.AnnColumnField 'MSSQL
+  -> IR.AnnColumnField 'MSSQL Expression
   -> ReaderT EntityAlias FromIr Expression
 fromAnnColumnField _stringifyNumbers annColumnField = do
   fieldName <- fromPGCol pgCol

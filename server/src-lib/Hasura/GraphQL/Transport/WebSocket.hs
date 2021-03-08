@@ -637,7 +637,8 @@ logWSEvent (L.Logger logger) wsConn wsEv = do
 
 onConnInit
   :: (HasVersion, MonadIO m, UserAuthentication (Tracing.TraceT m))
-  => L.Logger L.Hasura -> H.Manager -> WSConn -> AuthMode -> Maybe ConnParams -> Tracing.TraceT m ()
+  => L.Logger L.Hasura -> H.Manager -> WSConn -> AuthMode
+  -> Maybe ConnParams -> Tracing.TraceT m ()
 onConnInit logger manager wsConn authMode connParamsM = do
   -- TODO(from master): what should be the behaviour of connection_init message when a
   -- connection is already iniatilized? Currently, we seem to be doing

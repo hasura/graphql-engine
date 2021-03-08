@@ -59,6 +59,7 @@ class
   , Ord (FunctionName b)
   , Ord (ScalarType b)
   , Ord (XRelay b)
+  , Ord (Column b)
   , Data (TableName b)
   , Data (ScalarType b)
   , Data (SQLExpression b)

@@ -184,7 +184,7 @@ updateRelDefs source qt rn renameTable = do
       where
         getUpdQT origQT = bool origQT newQT $ oldQT == origQT
 
--- | update fields in premissions
+-- | update fields in permissions
 updatePermFlds
   :: forall b m
    . ( MonadError QErr m

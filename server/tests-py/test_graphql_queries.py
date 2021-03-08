@@ -1,5 +1,6 @@
 import pytest
 from validate import check_query_f, check_query, get_conf_f
+from conftest import use_inherited_roles_fixtures
 from context import PytestConf
 
 # Mark that all tests in this module can be run as server upgrade tests
@@ -353,6 +354,17 @@ class TestGraphqlQueryPermissions:
     @classmethod
     def dir(cls):
         return 'queries/graphql_query/permissions'
+
+@pytest.mark.parametrize('transport', ['http', 'websocket'])
+@use_inherited_roles_fixtures
+class TestGraphQLInheritedRoles:
+
+    @classmethod
+    def dir(cls):
+        return 'queries/graphql_query/permissions/inherited_roles'
+
+    def test_basic_inherited_role(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/basic_inherited_roles.yaml')
 
 
 @pytest.mark.parametrize("transport", ['http', 'websocket'])

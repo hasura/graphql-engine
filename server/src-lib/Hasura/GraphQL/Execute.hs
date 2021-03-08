@@ -108,7 +108,7 @@ getExecPlanPartial
 getExecPlanPartial userInfo sc queryType req =
   (getGCtx ,) <$> getQueryParts req
   where
-    roleName = _uiRole userInfo
+    role = _uiRole userInfo
 
     contextMap =
       case queryType of
@@ -122,7 +122,7 @@ getExecPlanPartial userInfo sc queryType req =
 
     getGCtx :: C.GQLContext
     getGCtx =
-      case Map.lookup roleName contextMap of
+      case Map.lookup role contextMap of
         Nothing  -> defaultContext
         Just (C.RoleContext frontend backend) ->
           case _uiBackendOnlyFieldAccess userInfo of

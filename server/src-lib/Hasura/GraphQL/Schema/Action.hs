@@ -53,8 +53,8 @@ actionExecute
   -> ActionInfo
   -> m (Maybe (FieldParser n (AnnActionExecution 'Postgres (UnpreparedValue 'Postgres))))
 actionExecute nonObjectTypeMap actionInfo = runMaybeT do
-  roleName <- lift askRoleName
-  guard $ roleName == adminRoleName || roleName `Map.member` permissions
+  roleName <- askRoleName
+  guard $ (roleName == adminRoleName || roleName `Map.member` permissions)
   let fieldName = unActionName actionName
       description = G.Description <$> comment
   inputArguments <- lift $ actionInputArguments nonObjectTypeMap $ _adArguments definition
@@ -125,7 +125,7 @@ actionAsyncQuery
   => ActionInfo
   -> m (Maybe (FieldParser n (AnnActionAsyncQuery 'Postgres (UnpreparedValue 'Postgres))))
 actionAsyncQuery actionInfo = runMaybeT do
-  roleName <- lift askRoleName
+  roleName <- askRoleName
   guard $ roleName == adminRoleName || roleName `Map.member` permissions
   actionOutputParser <- lift $ actionOutputFields outputObject
   createdAtFieldParser <-
@@ -212,7 +212,7 @@ actionOutputFields annotatedObject = do
             AOFTEnum def   -> customEnumParser def
       in bool P.nonNullableField id (G.isNullable gType) $
          P.selection_ (unObjectFieldName name) description fieldParser
-         $> RQL.mkAnnColumnField pgColumnInfo Nothing
+         $> RQL.mkAnnColumnField pgColumnInfo Nothing Nothing
 
     relationshipFieldParser
       :: TypeRelationship (TableInfo 'Postgres) (ColumnInfo 'Postgres)
@@ -246,7 +246,6 @@ actionOutputFields annotatedObject = do
           pure $ catMaybes [ Just arrayRelField
                            , fmap (RQL.AFArrayRelation . RQL.ASAggregate . RQL.AnnRelationSelectG tableRelName columnMapping) <$> tableAggField
                            ]
-
 
 mkDefinitionList :: AnnotatedObjectType -> [(PGCol, ScalarType 'Postgres)]
 mkDefinitionList AnnotatedObjectType{..} =

@@ -194,6 +194,7 @@ mkServeOptions rso = do
   webSocketKeepAlive <- KeepAliveDelay . fromIntegral . fromMaybe 5
       <$> withEnv (rsoWebSocketKeepAlive rso) (fst webSocketKeepAliveEnv)
 
+  experimentalFeatures <- maybe mempty Set.fromList <$> withEnv (rsoExperimentalFeatures rso) (fst experimentalFeaturesEnv)
   inferFunctionPerms <-
     maybe FunctionPermissionsInferred (bool FunctionPermissionsManual FunctionPermissionsInferred) <$>
     (withEnv (rsoInferFunctionPermissions rso) (fst inferFunctionPermsEnv))
@@ -208,7 +209,7 @@ mkServeOptions rso = do
                         enabledLogs serverLogLevel planCacheOptions
                         internalErrorsConfig eventsHttpPoolSize eventsFetchInterval
                         logHeadersFromEnv enableRemoteSchemaPerms connectionOptions webSocketKeepAlive
-                        inferFunctionPerms maintenanceMode
+                        inferFunctionPerms maintenanceMode experimentalFeatures
   where
 #ifdef DeveloperAPIs
     defaultAPIs = [METADATA,GRAPHQL,PGDUMP,CONFIG,DEVELOPER]
@@ -526,6 +527,12 @@ enabledAPIsEnv =
   , "Comma separated list of enabled APIs. (default: metadata,graphql,pgdump,config)"
   )
 
+experimentalFeaturesEnv :: (String, String)
+experimentalFeaturesEnv =
+  ( "HASURA_GRAPHQL_EXPERIMENTAL_FEATURES"
+  , "Comma separated list of experimental features. (all: inherited_roles)"
+  )
+
 consoleAssetsDirEnv :: (String, String)
 consoleAssetsDirEnv =
   ( "HASURA_GRAPHQL_CONSOLE_ASSETS_DIR"
@@ -840,6 +847,13 @@ parseEnabledAPIs = optional $
            help (snd enabledAPIsEnv)
          )
 
+parseExperimentalFeatures :: Parser (Maybe [ExperimentalFeature])
+parseExperimentalFeatures = optional $
+  option (eitherReader readExperimentalFeatures)
+         ( long "experimental-features" <>
+           help (snd experimentalFeaturesEnv)
+         )
+
 parseMxRefetchInt :: Parser (Maybe LQ.RefetchInterval)
 parseMxRefetchInt =
   optional $
@@ -1031,6 +1045,7 @@ serveOptsToLog so =
       , "websocket_keep_alive" J..= show (soWebsocketKeepAlive so)
       , "infer_function_permissions" J..= soInferFunctionPermissions so
       , "enable_maintenance_mode" J..= soEnableMaintenanceMode so
+      , "experimental_features" J..= soExperimentalFeatures so
       ]
 
 mkGenericStrLog :: L.LogLevel -> Text -> String -> StartupLog
@@ -1081,6 +1096,7 @@ serveOptionsParser =
   <*> parseWebSocketKeepAlive
   <*> parseInferFunctionPerms
   <*> parseEnableMaintenanceMode
+  <*> parseExperimentalFeatures
 
 -- | This implements the mapping between application versions
 -- and catalog schema versions.

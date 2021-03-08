@@ -1,5 +1,6 @@
 import pytest
 from validate import check_query_f, check_query, get_conf_f
+from conftest import use_inherited_roles_fixtures
 
 
 # Marking all tests in this module that server upgrade tests can be run
@@ -640,3 +641,17 @@ class TestGraphQLMutationFunctions:
         check_query_f(hge_ctx, self.dir() + '/single_row_function_as_mutation.yaml', transport)
         st_code, resp = hge_ctx.v1metadataq_f(self.dir() + '/drop_function_permission_add_to_score_by_user_id.yaml')
         assert st_code == 200, resp
+
+@pytest.mark.parametrize('transport', ['http', 'websocket'])
+@use_inherited_roles_fixtures
+class TestGraphQLInheritedRoles:
+
+    @classmethod
+    def dir(cls):
+        return 'queries/graphql_mutation/insert/permissions/inherited_roles'
+
+    # This test exists here as a sanity check to check if mutations aren't exposed
+    # to an inherited role. When mutations are supported for everything, this test
+    # should be removed/modified.
+    def test_mutations_not_exposed_for_inherited_roles(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/mutation_not_exposed_to_inherited_roles.yaml')

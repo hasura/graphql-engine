@@ -148,7 +148,7 @@ convInsertQuery objsParser sessVarBldr prepFn (InsertQuery tableName _ val oC mR
 
   -- Check if the role has insert permissions
   insPerm   <- askInsPermInfo tableInfo
-  updPerm   <- askPermInfo' PAUpdate tableInfo
+  updPerm  <- askPermInfo' PAUpdate tableInfo
 
   -- Check if all dependent headers are present
   validateHeaders $ ipiRequiredHeaders insPerm
@@ -181,12 +181,11 @@ convInsertQuery objsParser sessVarBldr prepFn (InsertQuery tableName _ val oC mR
   updCheck <- traverse (convAnnBoolExpPartialSQL sessVarFromCurrentSetting) (upiCheck =<< updPerm)
 
   conflictClause <- withPathK "on_conflict" $ forM oC $ \c -> do
-      roleName <- askCurRole
-      unless (isTabUpdatable roleName tableInfo) $ throw400 PermissionDenied $
-        "upsert is not allowed for role " <> roleName
-        <<> " since update permissions are not defined"
-
-      buildConflictClause sessVarBldr tableInfo inpCols c
+    role <- askCurRole
+    unless (isTabUpdatable role tableInfo) $ throw400 PermissionDenied $
+      "upsert is not allowed for role " <> role
+      <<> " since update permissions are not defined"
+    buildConflictClause sessVarBldr tableInfo inpCols c
   return $ InsertQueryP1 tableName insCols sqlExps
            conflictClause (insCheck, updCheck) mutOutput allCols
   where

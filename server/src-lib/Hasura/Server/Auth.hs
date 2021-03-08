@@ -1,8 +1,7 @@
 {-# LANGUAGE DerivingStrategies #-}
 
 module Hasura.Server.Auth
-  ( getUserInfo
-  , getUserInfoWithExpTime
+  ( getUserInfoWithExpTime
   , AuthMode (..)
   , setupAuthMode
   , AdminSecretHash
@@ -180,16 +179,6 @@ setupAuthMode mAdminSecretHash mWebHook mJwtSecret mUnAuthRole httpManager logge
             JFEJwkParseError _ e    -> throwError e
             JFEExpiryParseError _ _ -> return Nothing
 
-getUserInfo
-  :: (HasVersion, MonadIO m, MonadBaseControl IO m, MonadError QErr m, Tracing.MonadTrace m)
-  => Logger Hasura
-  -> H.Manager
-  -> [N.Header]
-  -> AuthMode
-  -> Maybe ReqsText
-  -> m UserInfo
-getUserInfo l m r a reqs = fst <$> getUserInfoWithExpTime l m r a reqs
-
 -- | Authenticate the request using the headers and the configured 'AuthMode'.
 getUserInfoWithExpTime
   :: forall m. (HasVersion, MonadIO m, MonadBaseControl IO m, MonadError QErr m, Tracing.MonadTrace m)
@@ -204,7 +193,8 @@ getUserInfoWithExpTime = getUserInfoWithExpTime_ userInfoFromAuthHook processJwt
 -- Broken out for testing with mocks:
 getUserInfoWithExpTime_
   :: forall m _Manager _Logger_Hasura. (MonadIO m, MonadError QErr m)
-  => (_Logger_Hasura -> _Manager -> AuthHook -> [N.Header] -> Maybe ReqsText -> m (UserInfo, Maybe UTCTime))
+  => (_Logger_Hasura -> _Manager -> AuthHook -> [N.Header]
+      -> Maybe ReqsText -> m (UserInfo, Maybe UTCTime))
   -- ^ mock 'userInfoFromAuthHook'
   -> (JWTCtx -> [N.Header] -> Maybe RoleName -> m (UserInfo, Maybe UTCTime))
   -- ^ mock 'processJwt'
@@ -214,7 +204,7 @@ getUserInfoWithExpTime_
   -> AuthMode
   -> Maybe ReqsText
   -> m (UserInfo, Maybe UTCTime)
-getUserInfoWithExpTime_ userInfoFromAuthHook_ processJwt_ logger manager rawHeaders authMode reqs = case authMode of
+getUserInfoWithExpTime_ userInfoFromAuthHook_ processJwt_ logger manager rawHeaders authMode  reqs = case authMode of
 
   AMNoAuth -> withNoExpTime $ mkUserInfoFallbackAdminRole UAuthNotSet
 

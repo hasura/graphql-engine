@@ -36,6 +36,7 @@ import           Hasura.RQL.DDL.ComputedField
 import           Hasura.RQL.DDL.CustomTypes
 import           Hasura.RQL.DDL.Endpoint
 import           Hasura.RQL.DDL.EventTrigger
+import           Hasura.RQL.DDL.InheritedRoles
 import           Hasura.RQL.DDL.Permission
 import           Hasura.RQL.DDL.Relationship
 import           Hasura.RQL.DDL.RemoteRelationship
@@ -46,9 +47,10 @@ import           Hasura.RQL.DDL.Schema
 import           Hasura.EncJSON
 import           Hasura.RQL.DDL.Metadata.Types
 import           Hasura.RQL.Types
+import           Hasura.Server.Types                (ExperimentalFeature (..))
 
 runClearMetadata
-  :: (MonadIO m, CacheRWM m, MetadataM m, MonadError QErr m)
+  :: (MonadIO m, CacheRWM m, MetadataM m, MonadError QErr m, HasServerConfigCtx m)
   => ClearMetadata -> m EncJSON
 runClearMetadata _ = do
   metadata <- getMetadata
@@ -84,6 +86,7 @@ runReplaceMetadata
      , CacheRWM m
      , MetadataM m
      , MonadIO m
+     , HasServerConfigCtx m
      )
   => ReplaceMetadata -> m EncJSON
 runReplaceMetadata = \case
@@ -95,6 +98,7 @@ runReplaceMetadataV1
      , CacheRWM m
      , MetadataM m
      , MonadIO m
+     , HasServerConfigCtx m
      )
   => ReplaceMetadataV1 -> m EncJSON
 runReplaceMetadataV1 =
@@ -106,9 +110,17 @@ runReplaceMetadataV2
      , CacheRWM m
      , MetadataM m
      , MonadIO m
+     , HasServerConfigCtx m
      )
   => ReplaceMetadataV2 -> m EncJSON
 runReplaceMetadataV2 ReplaceMetadataV2{..} = do
+  experimentalFeatures <- _sccExperimentalFeatures <$> askServerConfigCtx
+  let inheritedRoles =
+        case _rmv2Metadata of
+          RMWithSources (Metadata { _metaInheritedRoles }) -> _metaInheritedRoles
+          RMWithoutSources _                               -> mempty
+  when (inheritedRoles /= mempty && (EFInheritedRoles `notElem` experimentalFeatures)) $
+    throw400 ConstraintViolation $ "inherited_roles can only be added when it's enabled in the experimental features"
   oldMetadata <- getMetadata
   metadata <- case _rmv2Metadata of
     RMWithSources m -> pure m
@@ -123,7 +135,7 @@ runReplaceMetadataV2 ReplaceMetadataV2{..} = do
       pure $ Metadata (OMap.singleton defaultSource newDefaultSourceMetadata)
                         _mnsRemoteSchemas _mnsQueryCollections _mnsAllowlist
                         _mnsCustomTypes _mnsActions _mnsCronTriggers (_metaRestEndpoints oldMetadata)
-                        emptyApiLimit emptyMetricsConfig
+                        emptyApiLimit emptyMetricsConfig mempty
   putMetadata metadata
 
   case _rmv2AllowInconsistentMetadata of
@@ -157,18 +169,24 @@ runReplaceMetadataV2 ReplaceMetadataV2{..} = do
       where
         getPGTriggersMap = OMap.unions . map _tmEventTriggers . OMap.elems . _smTables
 
+processExperimentalFeatures :: HasServerConfigCtx m => Metadata -> m Metadata
+processExperimentalFeatures metadata = do
+  experimentalFeatures <- _sccExperimentalFeatures <$> askServerConfigCtx
+  let isInheritedRolesSet = EFInheritedRoles `elem` experimentalFeatures
+  -- export inherited roles only when inherited_roles is set in the experimental features
+  pure $ bool (metadata { _metaInheritedRoles = mempty }) metadata isInheritedRolesSet
 
 runExportMetadata
-  :: forall m . ( QErrM m, MetadataM m)
+  :: forall m . ( QErrM m, MetadataM m, HasServerConfigCtx m)
   => ExportMetadata -> m EncJSON
-runExportMetadata ExportMetadata{} =
-  AO.toEncJSON . metadataToOrdJSON <$> getMetadata
+runExportMetadata ExportMetadata{} = do
+  AO.toEncJSON . metadataToOrdJSON <$> (getMetadata >>= processExperimentalFeatures)
 
 runExportMetadataV2
-  :: forall m . ( QErrM m, MetadataM m)
+  :: forall m . ( QErrM m, MetadataM m, HasServerConfigCtx m)
   => MetadataResourceVersion -> ExportMetadata -> m EncJSON
 runExportMetadataV2 currentResourceVersion ExportMetadata{} = do
-  exportMetadata <- getMetadata
+  exportMetadata <- processExperimentalFeatures =<< getMetadata
   pure $ AO.toEncJSON $ AO.object
     [ ("resource_version", AO.toOrdered currentResourceVersion)
     , ("metadata", metadataToOrdJSON exportMetadata)
@@ -261,6 +279,7 @@ purgeMetadataObj = \case
   MOAction action                            -> dropActionInMetadata action -- Nothing
   MOActionPermission action role             -> dropActionPermissionInMetadata action role
   MOCronTrigger ctName                       -> dropCronTriggerInMetadata ctName
+  MOInheritedRole role                       -> dropInheritedRoleInMetadata role
   MOEndpoint epName                          -> dropEndpointInMetadata epName
 
 runGetCatalogState

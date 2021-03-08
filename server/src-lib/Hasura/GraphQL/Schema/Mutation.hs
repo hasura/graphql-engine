@@ -34,8 +34,6 @@ import           Hasura.GraphQL.Schema.Select
 import           Hasura.GraphQL.Schema.Table
 import           Hasura.RQL.Types
 
-
-
 -- insert
 
 -- | Construct a root field, normally called insert_tablename, that can be used to add several rows to a DB table
@@ -113,6 +111,7 @@ tableFieldsInput
   -> m (Parser 'Input n (IR.AnnInsObj b (UnpreparedValue b)))
 tableFieldsInput table insertPerms = memoizeOn 'tableFieldsInput table do
   tableGQLName <- getTableGQLName @b table
+  roleName     <- askRoleName
   allFields    <- _tciFieldInfoMap . _tiCoreInfo <$> askTableInfo table
   objectFields <- catMaybes <$> for (Map.elems allFields) \case
     FIComputedField _ -> pure Nothing
@@ -444,7 +443,7 @@ primaryKeysArguments
 primaryKeysArguments table selectPerms = runMaybeT $ do
   primaryKeys <- MaybeT $ _tciPrimaryKey . _tiCoreInfo <$> askTableInfo table
   let columns = _pkColumns primaryKeys
-  guard $ all (\c -> pgiColumn c `Set.member` spiCols selectPerms) columns
+  guard $ all (\c -> pgiColumn c `Map.member` spiCols selectPerms) columns
   lift $ fmap (BoolAnd . toList) . sequenceA <$> for columns \columnInfo -> do
     field <- columnParser (pgiType columnInfo) (G.Nullability False)
     pure $ BoolFld . AVCol columnInfo . pure . AEQ True . mkParameter <$>

@@ -113,7 +113,15 @@ deriving instance (Backend b, Show v) => Show (ComputedFieldScalarSelect b v)
 deriving instance (Backend b, Eq   v) => Eq   (ComputedFieldScalarSelect b v)
 
 data ComputedFieldSelect (b :: BackendType) v
-  = CFSScalar !(ComputedFieldScalarSelect b v)
+  = CFSScalar
+      !(ComputedFieldScalarSelect b v)
+      -- ^ Type containing info about the computed field
+      !(Maybe (AnnColumnCaseBoolExp b v))
+      -- ^ This type is used to determine if whether the scalar
+      -- computed field should be nullified. When the value is `Nothing`,
+      -- the scalar computed value will be outputted as computed and when the
+      -- value is `Just c`, the scalar computed field will be outputted when
+      -- `c` evaluates to `true` and `null` when `c` evaluates to `false`
   | CFSTable !JsonAggSelect !(AnnSimpleSelG b v)
 
 traverseComputedFieldSelect
@@ -121,7 +129,8 @@ traverseComputedFieldSelect
   => (v -> f w)
   -> ComputedFieldSelect backend v -> f (ComputedFieldSelect backend w)
 traverseComputedFieldSelect fv = \case
-  CFSScalar scalarSel -> CFSScalar <$> traverse fv scalarSel
+  CFSScalar scalarSel caseBoolExpMaybe ->
+    CFSScalar <$> traverse fv scalarSel <*> traverse (traverseAnnColumnCaseBoolExp fv) caseBoolExpMaybe
   CFSTable b tableSel -> CFSTable b <$> traverseAnnSimpleSelect fv tableSel
 
 type Fields a = [(FieldName, a)]
@@ -156,15 +165,35 @@ data ColumnOp (b :: BackendType)
 deriving instance Backend b => Show (ColumnOp b)
 deriving instance Backend b => Eq   (ColumnOp b)
 
-data AnnColumnField (b :: BackendType)
+type ColumnBoolExpression b = Either (AnnBoolExpPartialSQL b) (AnnBoolExpSQL b)
+
+data AnnColumnField (b :: BackendType) v
   = AnnColumnField
-  { _acfInfo   :: !(ColumnInfo b)
-  , _acfAsText :: !Bool
+  { _acfInfo               :: !(ColumnInfo b)
+  , _acfAsText             :: !Bool
   -- ^ If this field is 'True', columns are explicitly casted to @text@ when fetched, which avoids
   -- an issue that occurs because we don’t currently have proper support for array types. See
   -- https://github.com/hasura/graphql-engine/pull/3198 for more details.
-  , _acfOp     :: !(Maybe (ColumnOp b))
+  , _acfOp                 :: !(Maybe (ColumnOp b))
+  , _acfCaseBoolExpression :: !(Maybe (AnnColumnCaseBoolExp b v))
+  -- ^ This type is used to determine if whether the column
+  -- should be nullified. When the value is `Nothing`, the column value
+  -- will be outputted as computed and when the value is `Just c`, the
+  -- column will be outputted when `c` evaluates to `true` and `null`
+  -- when `c` evaluates to `false`.
   }
+
+traverseAnnColumnField
+  :: (Applicative f)
+  => (a -> f b)
+  -> AnnColumnField backend a
+  -> f (AnnColumnField backend b)
+traverseAnnColumnField f (AnnColumnField info asText op caseBoolExpMaybe) =
+  AnnColumnField
+  <$> pure info
+  <*> pure asText
+  <*> pure op
+  <*> (traverse (traverseAnnColumnCaseBoolExp f) caseBoolExpMaybe)
 
 data RemoteFieldArgument
   = RemoteFieldArgument
@@ -182,7 +211,7 @@ data RemoteSelect (b :: BackendType)
   }
 
 data AnnFieldG (b :: BackendType) v
-  = AFColumn !(AnnColumnField b)
+  = AFColumn !(AnnColumnField b v)
   | AFObjectRelation !(ObjectRelationSelectG b v)
   | AFArrayRelation !(ArraySelectG b v)
   | AFComputedField (XComputedField b) !(ComputedFieldSelect b v)
@@ -190,19 +219,25 @@ data AnnFieldG (b :: BackendType) v
   | AFNodeId (XRelay b) !(TableName b) !(PrimaryKeyColumns b)
   | AFExpression !Text
 
-mkAnnColumnField :: ColumnInfo backend -> Maybe (ColumnOp backend) -> AnnFieldG backend v
-mkAnnColumnField ci colOpM =
-  AFColumn $ AnnColumnField ci False colOpM
+mkAnnColumnField
+  :: ColumnInfo backend
+  -> Maybe (AnnColumnCaseBoolExp backend v)
+  -> Maybe (ColumnOp backend)
+  -> AnnFieldG backend v
+mkAnnColumnField ci caseBoolExp colOpM =
+  AFColumn (AnnColumnField ci False colOpM caseBoolExp)
 
-mkAnnColumnFieldAsText :: ColumnInfo backend -> AnnFieldG backend v
+mkAnnColumnFieldAsText
+  :: ColumnInfo backend
+  -> AnnFieldG backend v
 mkAnnColumnFieldAsText ci =
-  AFColumn $ AnnColumnField ci True Nothing
+  AFColumn (AnnColumnField ci True Nothing Nothing)
 
 traverseAnnField
   :: (Applicative f)
   => (a -> f b) -> AnnFieldG backend a -> f (AnnFieldG backend b)
 traverseAnnField f = \case
-  AFColumn colFld       -> pure $ AFColumn colFld
+  AFColumn colFld       -> AFColumn <$> traverseAnnColumnField f colFld
   AFObjectRelation sel  -> AFObjectRelation <$> traverse (traverseAnnObjectSelect f) sel
   AFArrayRelation sel   -> AFArrayRelation <$> traverseArraySelect f sel
   AFComputedField x sel -> AFComputedField x <$> traverseComputedFieldSelect f sel

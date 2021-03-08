@@ -7,8 +7,6 @@ module Hasura.GraphQL.Schema.Table
   , tableUpdateColumnsEnum
   , tablePermissions
   , tableSelectPermissions
-  , tableUpdatePermissions
-  , tableDeletePermissions
   , tableSelectFields
   , tableColumns
   , tableSelectColumns
@@ -31,7 +29,6 @@ import           Hasura.GraphQL.Schema.Backend
 import           Hasura.RQL.DML.Internal       (getRolePermInfo)
 import           Hasura.RQL.Types
 
-
 -- | Helper function to get the table GraphQL name. A table may have a
 -- custom name configured with it. When the custom name exists, the GraphQL nodes
 -- that are generated according to the custom name. For example: Let's say,
@@ -51,7 +48,6 @@ getTableGQLName tableName = do
   tableCustomName
     `onNothing` tableGraphQLName @b tableName
     `onLeft`    throwError
-
 
 -- | Table select columns enum
 --
@@ -128,18 +124,6 @@ tableSelectPermissions
   -> m (Maybe (SelPermInfo b))
 tableSelectPermissions table = (_permSel =<<) <$> tablePermissions table
 
-tableUpdatePermissions
-  :: forall m n r b. (Backend b, MonadSchema n m, MonadTableInfo r m, MonadRole r m)
-  => TableName b
-  -> m (Maybe (UpdPermInfo b))
-tableUpdatePermissions table = (_permUpd =<<) <$> tablePermissions table
-
-tableDeletePermissions
-  :: forall m n r b. (Backend b, MonadSchema n m, MonadTableInfo r m, MonadRole r m)
-  => TableName b
-  -> m (Maybe (DelPermInfo b))
-tableDeletePermissions table = (_permDel =<<) <$> tablePermissions table
-
 tableSelectFields
   :: forall m n r b. (Backend b, MonadSchema n m, MonadTableInfo r m, MonadRole r m)
   => TableName b
@@ -150,13 +134,13 @@ tableSelectFields table permissions = do
   filterM canBeSelected $ Map.elems tableFields
   where
     canBeSelected (FIColumn columnInfo) =
-      pure $ Set.member (pgiColumn columnInfo) (spiCols permissions)
+      pure $ Map.member (pgiColumn columnInfo) (spiCols permissions)
     canBeSelected (FIRelationship relationshipInfo) =
       isJust <$> tableSelectPermissions @_ @_ @_ @b (riRTable relationshipInfo)
     canBeSelected (FIComputedField computedFieldInfo) =
       case _cfiReturnType computedFieldInfo of
         CFRScalar _ ->
-          pure $ Set.member (_cfiName computedFieldInfo) $ spiScalarComputedFields permissions
+          pure $ Map.member (_cfiName computedFieldInfo) $ spiScalarComputedFields permissions
         CFRSetofTable tableName ->
           isJust <$> tableSelectPermissions @_ @_ @_ @b tableName
     canBeSelected (FIRemoteRelationship _) = pure True

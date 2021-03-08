@@ -31,6 +31,7 @@ import           Hasura.RQL.Types.CustomTypes
 import           Hasura.RQL.Types.Endpoint
 import           Hasura.RQL.Types.EventTrigger
 import           Hasura.RQL.Types.Function
+import           Hasura.RQL.Types.InheritedRoles
 import           Hasura.RQL.Types.Metadata.Backend
 import           Hasura.RQL.Types.Permission
 import           Hasura.RQL.Types.QueryCollection
@@ -232,6 +233,7 @@ type Allowlist = HSIns.InsOrdHashSet CollectionReq
 type Endpoints = InsOrdHashMap EndpointName CreateEndpoint
 type Actions = InsOrdHashMap ActionName ActionMetadata
 type CronTriggers = InsOrdHashMap TriggerName CronTriggerMetadata
+type InheritedRoles = InsOrdHashMap RoleName AddInheritedRole
 
 data SourceMetadata b
   = SourceMetadata
@@ -299,6 +301,7 @@ parseNonSourcesMetadata
      , CronTriggers
      , ApiLimit
      , MetricsConfig
+     , InheritedRoles
      )
 parseNonSourcesMetadata o = do
   remoteSchemas <- parseListAsMap "remote schemas" _rsmName $
@@ -313,9 +316,11 @@ parseNonSourcesMetadata o = do
 
   apiLimits     <- o .:? "api_limits" .!= emptyApiLimit
   metricsConfig <- o .:? "metrics_config" .!= emptyMetricsConfig
+  inheritedRoles <- parseListAsMap "inherited roles" _adrRoleName $
+                  o .:? "inherited_roles" .!= []
 
   pure ( remoteSchemas, queryCollections, allowlist, customTypes
-       , actions, cronTriggers, apiLimits, metricsConfig
+       , actions, cronTriggers, apiLimits, metricsConfig, inheritedRoles
        )
 
 newtype MetadataResourceVersion
@@ -340,6 +345,7 @@ data Metadata
   , _metaRestEndpoints    :: !Endpoints
   , _metaApiLimits        :: !ApiLimit
   , _metaMetricsConfig    :: !MetricsConfig
+  , _metaInheritedRoles   :: !InheritedRoles
   } deriving (Show, Eq)
 
 $(makeLenses ''Metadata)
@@ -352,14 +358,14 @@ instance FromJSON Metadata where
     sources <- oMapFromL getSourceName <$> o .: "sources"
     endpoints <- oMapFromL _ceName <$> o .:? "rest_endpoints" .!= []
     (remoteSchemas, queryCollections, allowlist, customTypes,
-     actions, cronTriggers, apiLimits, metricsConfig) <- parseNonSourcesMetadata o
+     actions, cronTriggers, apiLimits, metricsConfig, inheritedRoles) <- parseNonSourcesMetadata o
     pure $ Metadata sources remoteSchemas queryCollections allowlist
-           customTypes actions cronTriggers endpoints apiLimits metricsConfig
+           customTypes actions cronTriggers endpoints apiLimits metricsConfig inheritedRoles
 
 emptyMetadata :: Metadata
 emptyMetadata =
   Metadata mempty mempty mempty mempty emptyCustomTypes mempty mempty mempty
-    emptyApiLimit emptyMetricsConfig
+    emptyApiLimit emptyMetricsConfig mempty
 
 tableMetadataSetter
   :: (BackendMetadata b)
@@ -381,7 +387,7 @@ data MetadataNoSources
 $(deriveToJSON hasuraJSON ''MetadataNoSources)
 
 instance FromJSON MetadataNoSources where
-  parseJSON = withObject "Object" $ \o -> do
+  parseJSON = withObject "MetadataNoSources" $ \o -> do
     version <- o .:? "version" .!= MVVersion1
     (tables, functions) <-
       case version of
@@ -397,7 +403,7 @@ instance FromJSON MetadataNoSources where
           pure (tables, functions)
         MVVersion3 -> fail "unexpected version for metadata without sources: 3"
     (remoteSchemas, queryCollections, allowlist, customTypes,
-     actions, cronTriggers, _, _) <- parseNonSourcesMetadata o
+     actions, cronTriggers, _, _, _) <- parseNonSourcesMetadata o
     pure $ MetadataNoSources tables functions remoteSchemas queryCollections
                              allowlist customTypes actions cronTriggers
 
@@ -438,6 +444,7 @@ metadataToOrdJSON ( Metadata
                     endpoints
                     apiLimits
                     metricsConfig
+                    inheritedRoles
                   ) = AO.object $ [ versionPair , sourcesPair] <>
                       catMaybes [ remoteSchemasPair
                                 , queryCollectionsPair
@@ -448,6 +455,7 @@ metadataToOrdJSON ( Metadata
                                 , endpointsPair
                                 , apiLimitsPair
                                 , metricsConfigPair
+                                , inheritedRolesPair
                                 ]
   where
     versionPair          = ("version", AO.toOrdered currentMetadataVersion)
@@ -460,6 +468,7 @@ metadataToOrdJSON ( Metadata
                            else Just ("custom_types", customTypesToOrdJSON customTypes)
     actionsPair          = listToMaybeOrdPairSort "actions" actionMetadataToOrdJSON _amName actions
     cronTriggersPair     = listToMaybeOrdPairSort "cron_triggers" crontriggerQToOrdJSON ctName cronTriggers
+    inheritedRolesPair   = listToMaybeOrdPairSort "inherited_roles" inheritedRolesQToOrdJSON _adrRoleName inheritedRoles
     endpointsPair        = listToMaybeOrdPairSort "rest_endpoints" AO.toOrdered _ceUrl endpoints
 
     apiLimitsPair        = if apiLimits == emptyApiLimit then Nothing
@@ -609,6 +618,12 @@ metadataToOrdJSON ( Metadata
             if (null _fmPermissions) then []
             else pure ("permissions", AO.toOrdered _fmPermissions)
       in AO.object $ [("function", AO.toOrdered _fmFunction)] <> confKeyPair <> permissionsKeyPair
+
+    inheritedRolesQToOrdJSON :: AddInheritedRole -> AO.Value
+    inheritedRolesQToOrdJSON AddInheritedRole{..} =
+      AO.object $ [ ("role_name", AO.toOrdered _adrRoleName)
+                  , ("role_set", AO.toOrdered _adrRoleSet)
+                  ]
 
     remoteSchemaQToOrdJSON :: RemoteSchemaMetadata -> AO.Value
     remoteSchemaQToOrdJSON (RemoteSchemaMetadata name definition comment permissions) =

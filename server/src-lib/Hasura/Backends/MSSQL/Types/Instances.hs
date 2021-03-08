@@ -165,6 +165,7 @@ deriving instance Data n => Data (Countable n)
 instance NFData n => NFData (Countable n)
 instance ToJSON n => ToJSON (Countable n)
 instance FromJSON n => FromJSON (Countable n)
+deriving instance Ord ColumnName
 
 instance Monoid Where where
   mempty = Where mempty

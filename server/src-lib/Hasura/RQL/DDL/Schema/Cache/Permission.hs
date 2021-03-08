@@ -1,4 +1,5 @@
-{-# LANGUAGE Arrows #-}
+{-# LANGUAGE Arrows       #-}
+{-# LANGUAGE ViewPatterns #-}
 
 module Hasura.RQL.DDL.Schema.Cache.Permission
   ( buildTablePermissions
@@ -8,8 +9,13 @@ module Hasura.RQL.DDL.Schema.Cache.Permission
 
 import           Hasura.Prelude
 
+import qualified Data.HashMap.Strict                as M
 import qualified Data.HashMap.Strict.Extended       as M
+import qualified Data.HashMap.Strict.InsOrd         as OMap
+import qualified Data.HashSet                       as Set
+import qualified Data.List.NonEmpty                 as NE
 import qualified Data.Sequence                      as Seq
+
 
 import           Control.Arrow.Extended
 import           Data.Aeson
@@ -21,28 +27,163 @@ import           Hasura.RQL.DDL.Permission
 import           Hasura.RQL.DDL.Permission.Internal
 import           Hasura.RQL.DDL.Schema.Cache.Common
 import           Hasura.RQL.Types
+import           Hasura.Server.Types
 import           Hasura.Session
+
+{- Note: [Inherited roles architecture for postgres read queries]
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+1. Schema generation
+--------------------
+
+Schema generation for inherited roles is similar to the schema
+generation of non-inherited roles. In the case of inherited roles,
+we combine the `SelectPermInfo`s (see `combineSelectPermInfos`) of the
+inherited role's role set and a new `SelectPermInfo` will be generated
+which will be the select permission of the inherited role.
+
+2. SQL generation
+-----------------
+
+See note [SQL generation for inherited roles]
+
+3. Introspection
+----------------
+
+The columns accessible to an inherited role are explicitly set to
+nullable irrespective of the nullability of the DB column to accomodate
+cell value nullification.
+
+-}
+
+-- | This type is only used in the `combineSelectPermInfos` for
+--   combining select permissions efficiently
+data CombinedSelPermInfo (b :: BackendType)
+  = CombinedSelPermInfo
+  { cspiCols                 :: ![(M.HashMap (Column b) (Maybe (AnnColumnCaseBoolExpPartialSQL b)))]
+  , cspiScalarComputedFields :: ![(M.HashMap ComputedFieldName (Maybe (AnnColumnCaseBoolExpPartialSQL b)))]
+  , cspiFilter               :: ![(AnnBoolExpPartialSQL b)]
+  , cspiLimit                :: !(Maybe Int)
+  , cspiAllowAgg             :: !Bool
+  , cspiRequiredHeaders      :: !(Set.HashSet Text)
+  }
+
+-- | combineSelectPermInfos combines multiple `SelPermInfo`s
+--   into one `SelPermInfo`. Two `SelPermInfo` will
+--   be combined in the following manner:
+--
+--   1. Columns - The `SelPermInfo` contains a hashset of the columns that are
+--      accessible to the role. To combine two `SelPermInfo`s, every column of the
+--      hashset is coupled with the boolean expression (filter) of the `SelPermInfo`
+--      and a hash map of all the columns is created out of it, this hashmap is
+--      generated for the `SelPermInfo`s that are going to be combined. These hashmaps
+--      are then unioned and the values of these hashmaps are `OR`ed. When a column
+--      is accessible to all the select permissions then the nullability of the column
+--      is inferred from the DB column otherwise the column is explicitly marked as
+--      nullable to accomodate cell-value nullification.
+--   2. Scalar computed fields - Scalar computed fields work the same as Columns (#1)
+--   3. Filter / Boolean expression - The filters are combined using a `BoolOr`
+--   4. Limit - Limits are combined by taking the minimum of the two limits
+--   5. Allow Aggregation - Aggregation is allowed, if any of the permissions allow it.
+--   6. Request Headers - Request headers are concatenated
+--
+--   To maintain backwards compatibility, we handle the case of single select permission
+--   differently i.e. we don't want the case statements that always evaluate to true with
+--   the columns
+--
+combineSelectPermInfos
+  :: forall b
+   . (Backend b)
+  => NE.NonEmpty (SelPermInfo b)
+  -> SelPermInfo b
+combineSelectPermInfos (headSelPermInfo NE.:| []) = headSelPermInfo
+combineSelectPermInfos selPermInfos@(headSelPermInfo NE.:| restSelPermInfos) =
+  let CombinedSelPermInfo {..}
+        = foldr combine (modifySingleSelectPerm headSelPermInfo) restSelPermInfos
+      mergeColumnsWithBoolExp xs
+        | length selPermInfos == length xs = Nothing
+        | otherwise                        = foldr combineCaseBoolExps Nothing xs
+  in SelPermInfo (mergeColumnsWithBoolExp <$> M.unionsAll cspiCols)
+                 (mergeColumnsWithBoolExp <$> M.unionsAll cspiScalarComputedFields)
+                 (BoolOr cspiFilter)
+                 cspiLimit
+                 cspiAllowAgg
+                 (toList cspiRequiredHeaders)
+  where
+    modifySingleSelectPerm :: SelPermInfo b -> CombinedSelPermInfo b
+    modifySingleSelectPerm SelPermInfo {..} =
+      let columnCaseBoolExp = fmap AnnColumnCaseBoolExpField spiFilter
+          colsWithColCaseBoolExp = spiCols $> Just columnCaseBoolExp
+          scalarCompFieldsWithColCaseBoolExp = spiScalarComputedFields $> Just columnCaseBoolExp
+      in
+        CombinedSelPermInfo [colsWithColCaseBoolExp]
+                            [scalarCompFieldsWithColCaseBoolExp]
+                            [spiFilter]
+                            spiLimit
+                            spiAllowAgg
+                            (Set.fromList spiRequiredHeaders)
+
+    combine :: SelPermInfo b -> CombinedSelPermInfo b -> CombinedSelPermInfo b
+    combine (modifySingleSelectPerm -> lSelPermInfo) accSelPermInfo =
+      CombinedSelPermInfo
+      { cspiCols = (cspiCols lSelPermInfo) <> (cspiCols accSelPermInfo)
+      , cspiScalarComputedFields =
+        (cspiScalarComputedFields lSelPermInfo) <> (cspiScalarComputedFields accSelPermInfo)
+      , cspiFilter = (cspiFilter lSelPermInfo) <> (cspiFilter accSelPermInfo)
+      , cspiLimit =
+          case (cspiLimit lSelPermInfo, cspiLimit accSelPermInfo) of
+            (Nothing, Nothing) -> Nothing
+            (Just l, Nothing)  -> Just l
+            (Nothing, Just r)  -> Just r
+            (Just l , Just r)  -> Just $ min l r
+      , cspiAllowAgg = cspiAllowAgg lSelPermInfo || cspiAllowAgg accSelPermInfo
+      , cspiRequiredHeaders = (cspiRequiredHeaders lSelPermInfo) <> (cspiRequiredHeaders accSelPermInfo)
+      }
+
+    combineCaseBoolExps l r =
+      case (l, r) of
+        (Nothing, Nothing)                     -> Nothing
+        (Just caseBoolExp, Nothing)            -> Just caseBoolExp
+        (Nothing, Just caseBoolExp)            -> Just caseBoolExp
+        (Just caseBoolExpL, Just caseBoolExpR) -> Just $ BoolOr [caseBoolExpL, caseBoolExpR]
 
 buildTablePermissions
   :: ( ArrowChoice arr, Inc.ArrowDistribute arr, Inc.ArrowCache m arr
      , MonadError QErr m, ArrowWriter (Seq CollectedInfo) arr
+     , HasServerConfigCtx m
      , BackendMetadata b)
   => ( SourceName
      , Inc.Dependency (TableCoreCache b)
      , FieldInfoMap (FieldInfo b)
      , TablePermissionInputs b
+     , InheritedRoles
      ) `arr` (RolePermInfoMap b)
-buildTablePermissions = Inc.cache proc (source, tableCache, tableFields, tablePermissions) -> do
+buildTablePermissions = Inc.cache proc (source, tableCache, tableFields, tablePermissions, inheritedRoles) -> do
   let alignedPermissions = alignPermissions tablePermissions
       table = _tpiTable tablePermissions
-
-  (| Inc.keyed (\_ (insertPermission, selectPermission, updatePermission, deletePermission) -> do
+  experimentalFeatures <- bindA -< _sccExperimentalFeatures <$> askServerConfigCtx
+  nonInheritedRolePermissions <-
+    (| Inc.keyed (\_ (insertPermission, selectPermission, updatePermission, deletePermission) -> do
        insert <- buildPermission -< (tableCache, source, table, tableFields, listToMaybe insertPermission)
        select <- buildPermission -< (tableCache, source, table, tableFields, listToMaybe selectPermission)
        update <- buildPermission -< (tableCache, source, table, tableFields, listToMaybe updatePermission)
        delete <- buildPermission -< (tableCache, source, table, tableFields, listToMaybe deletePermission)
        returnA -< RolePermInfo insert select update delete)
    |) alignedPermissions
+  -- build permissions for inherited roles only when inherited roles is enabled
+  let inheritedRolesMap =
+        bool mempty (OMap.toHashMap inheritedRoles) $ EFInheritedRoles `elem` experimentalFeatures
+  -- see [Inherited roles architecture for postgres read queries]
+  inheritedRolePermissions <-
+    (| Inc.keyed (\_ (AddInheritedRole _ roleSet) -> do
+       let singleRoleSelectPerms =
+             map ((_permSel =<<) . (`M.lookup` nonInheritedRolePermissions)) $
+                  toList roleSet
+           nonEmptySelPerms = NE.nonEmpty =<< sequenceA singleRoleSelectPerms
+           combinedSelPermInfo = combineSelectPermInfos <$> nonEmptySelPerms
+       returnA -< RolePermInfo Nothing combinedSelPermInfo Nothing Nothing)
+    |) inheritedRolesMap
+  returnA -< nonInheritedRolePermissions <> inheritedRolePermissions
   where
     mkMap :: [PermDef a] -> HashMap RoleName (PermDef a)
     mkMap = mapFromL _pdRole

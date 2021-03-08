@@ -167,8 +167,15 @@ instance Backend b => ToJSON (InsPermInfo b) where
 
 data SelPermInfo (b :: BackendType)
   = SelPermInfo
-  { spiCols                 :: !(HS.HashSet (Column b))
-  , spiScalarComputedFields :: !(HS.HashSet ComputedFieldName)
+  { spiCols                 :: !(M.HashMap (Column b) (Maybe (AnnColumnCaseBoolExpPartialSQL b)))
+  -- ^ HashMap of accessible columns to the role, the `Column` may be mapped to
+  -- an `AnnColumnCaseBoolExpPartialSQL`, which happens only in the case of an
+  -- inherited role, for a non-inherited role, it will be `Nothing`. The above
+  -- bool exp will determine if the column should be nullified in a row, when
+  -- there aren't requisite permissions.
+  , spiScalarComputedFields :: !(M.HashMap ComputedFieldName (Maybe (AnnColumnCaseBoolExpPartialSQL b)))
+  -- ^ HashMap of accessible scalar computed fields to the role, mapped to
+  -- `AnnColumnCaseBoolExpPartialSQL`, simililar to `spiCols`
   , spiFilter               :: !(AnnBoolExpPartialSQL b)
   , spiLimit                :: !(Maybe Int)
   , spiAllowAgg             :: !Bool
@@ -206,9 +213,6 @@ deriving instance Backend b => Eq (DelPermInfo b)
 instance Backend b => Cacheable (DelPermInfo b)
 instance Backend b => ToJSON (DelPermInfo b) where
   toJSON = genericToJSON hasuraJSON
-
-mkRolePermInfo :: RolePermInfo backend
-mkRolePermInfo = RolePermInfo Nothing Nothing Nothing Nothing
 
 data RolePermInfo (b :: BackendType)
   = RolePermInfo
@@ -494,11 +498,6 @@ getColumnInfoM
   :: TableInfo b -> FieldName -> Maybe (ColumnInfo b)
 getColumnInfoM tableInfo fieldName =
   (^? _FIColumn) =<< getFieldInfoM tableInfo fieldName
-
-getSelectPermissionInfoM
-  :: TableInfo b -> RoleName -> Maybe (SelPermInfo b)
-getSelectPermissionInfoM tableInfo roleName =
-  join $ tableInfo ^? tiRolePermInfoMap.at roleName._Just.permSel
 
 data PermAccessor (b :: BackendType) a where
   PAInsert :: PermAccessor b (InsPermInfo b)

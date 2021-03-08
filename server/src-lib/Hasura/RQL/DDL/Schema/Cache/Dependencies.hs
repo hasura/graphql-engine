@@ -168,6 +168,7 @@ deleteMetadataObject = \case
   MOAction name                       -> boActions %~ M.delete name
   MOEndpoint name                     -> boEndpoints %~ M.delete name
   MOActionPermission name role        -> boActions.ix name.aiPermissions %~ M.delete role
+  MOInheritedRole name                -> boInheritedRoles %~ M.delete name
   where
     deleteObjId :: (Backend b) => SourceMetadataObjId b -> BackendSourceInfo -> BackendSourceInfo
     deleteObjId sourceObjId sourceInfo = maybe sourceInfo (BackendSourceInfo . deleteObjFn sourceObjId) $ unsafeSourceInfo sourceInfo
