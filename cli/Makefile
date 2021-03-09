@@ -48,7 +48,10 @@ ci-copy-binary:
 
 .PHONY: ci-copy-cli-ext
 ci-copy-cli-ext:
-	cp -r /build/_cli_ext_output ./_cli_ext
+	cp -r /build/_cli_ext_output ./cliext/bin
+
+copy-cli-ext:
+	cp -r ../cli-ext/bin ./cliext/bin
 
 # run tests
 .PHONY: test

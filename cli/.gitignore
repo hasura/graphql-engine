@@ -2,4 +2,4 @@ vendor/
 vendor.orig/
 _output/
 *.temp
-_cli_ext/
+bin/
