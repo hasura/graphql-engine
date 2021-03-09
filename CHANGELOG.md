@@ -8,6 +8,7 @@
 
 - server/mssql: support tracking and querying from views
 - server: inherited roles for PG queries and subscription
+- server: fix issue when a remote relationship's joining field had a custom GraphQL name defined (fix #6626)
 - cli: add support for rest endpoints
 - cli: support mssql sources
 - cli: use relative paths in metadata !include directives

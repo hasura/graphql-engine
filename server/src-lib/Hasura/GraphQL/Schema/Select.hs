@@ -1117,7 +1117,7 @@ remoteRelationshipFieldPG remoteFieldInfo = runMaybeT do
     hoistMaybe $ Map.lookup remoteSchemaName remoteRelationshipQueryCtx
   let fieldDefns = map P.fDefinition (piQuery parsedIntrospection)
   role <- askRoleName
-  let hasuraFieldNames = Set.map (FieldName . G.unName . pgiName) hasuraFields
+  let hasuraFieldNames = Set.map (FieldName . PG.getPGColTxt . pgiColumn)  hasuraFields
       remoteRelationship = RemoteRelationship name source table hasuraFieldNames remoteSchemaName remoteFields
   (newInpValDefns, remoteFieldParamMap) <-
     if | role == adminRoleName ->
