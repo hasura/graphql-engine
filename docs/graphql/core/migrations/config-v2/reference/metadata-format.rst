@@ -218,6 +218,24 @@ The ``tables.yaml`` file contains metadata related to :ref:`tables<schema_tables
     - table:
         schema: public
         name: authors
+      insert_permissions:
+      - role: user
+        permission:
+          check:
+            id:
+              _eq: X-Hasura-User-Id
+          columns:
+          - name
+          backend_only: false
+      select_permissions:
+      - role: user
+        permission:
+          columns:
+          - id
+          - name
+          filter:
+            id:
+              _eq: X-Hasura-User-Id
       array_relationships:
       - name: books
         using:
@@ -246,6 +264,25 @@ The ``tables.yaml`` file contains metadata related to :ref:`tables<schema_tables
     - table:
         schema: public
         name: books
+      insert_permissions:
+      - role: user
+        permission:
+          check:
+            id:
+              _eq: X-Hasura-User-Id
+          columns:
+          - author_id
+          - name
+          backend_only: false
+      select_permissions:
+      - role: user
+        permission:
+          columns:
+          - id
+          - name
+          filter:
+            id:
+              _eq: X-Hasura-User-Id
       object_relationships:
       - name: author
         using:
