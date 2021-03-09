@@ -7,13 +7,9 @@ import (
 	"io/ioutil"
 	"os"
 	"os/exec"
-	"path/filepath"
-
-	"github.com/hasura/graphql-engine/cli"
 
 	gyaml "github.com/ghodss/yaml"
 	"github.com/hasura/graphql-engine/cli/metadata/actions/types"
-	"github.com/hasura/graphql-engine/cli/plugins"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	"gopkg.in/yaml.v2"
@@ -25,10 +21,10 @@ type Config struct {
 	logger  *logrus.Logger
 }
 
-// NewCLIExtensionConfig creates CLIExtensionConfig to interact with cli-extension plugin
-func NewCLIExtensionConfig(binDir string, logger *logrus.Logger) *Config {
+// NewCLIExtensionConfig creates CLIExtensionConfig to interact with cli-extension
+func NewCLIExtensionConfig(binPath string, logger *logrus.Logger) *Config {
 	return &Config{
-		binPath: filepath.Join(binDir, plugins.PluginNameToBin(cli.CLIExtPluginName, plugins.IsWindows())),
+		binPath: binPath,
 		logger:  logger,
 	}
 }
