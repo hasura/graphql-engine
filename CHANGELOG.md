@@ -9,6 +9,8 @@
 - server/mssql: support tracking and querying from views
 - server: inherited roles for PG queries and subscription
 - cli: add support for rest endpoints
+- cli: support mssql sources
+- cli: use relative paths in metadata !include directives
 
 
 ## v2.0.0-alpha.3
@@ -21,7 +23,6 @@
 - server/mssql: fix text values erroneously being parsed as varchar
 - server: improve errors messages for inconsistent sources
 - console: add relationship tab for mssql tables (#677)
-- cli: support mssql sources
 - build: fix the packaging of static console assets (fix #6610)
 
 

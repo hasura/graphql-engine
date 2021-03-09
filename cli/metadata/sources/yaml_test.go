@@ -1,6 +1,7 @@
 package sources
 
 import (
+	"io/ioutil"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -32,7 +33,14 @@ actions: !include "actions.yaml"
 					return v
 				}(),
 			},
-			"actions:\n    actions: []\n    custom_types:\n        enums: []\n        input_objects: []\n        objects: []\n        scalars: []\n",
+			`actions:
+    actions: []
+    custom_types:
+        enums: []
+        input_objects: []
+        objects: []
+        scalars: []
+`,
 			false,
 		},
 		{
@@ -48,7 +56,100 @@ actions: '!include "actions.yaml"'
 					return v
 				}(),
 			},
-			"actions:\n    actions: []\n    custom_types:\n        enums: []\n        input_objects: []\n        objects: []\n        scalars: []\n",
+			`actions:
+    actions: []
+    custom_types:
+        enums: []
+        input_objects: []
+        objects: []
+        scalars: []
+`,
+			false,
+		},
+		{
+			"can resolve !include tags in strings",
+			args{
+				ctx: map[string]string{includeTag: "testdata/metadata/"},
+				node: func() *yaml.Node {
+					v := new(yaml.Node)
+					b := []byte(`
+actions: "!include actions.yaml"
+`)
+					assert.NoError(t, yaml.Unmarshal(b, v))
+					return v
+				}(),
+			},
+			`actions:
+    actions: []
+    custom_types:
+        enums: []
+        input_objects: []
+        objects: []
+        scalars: []
+`,
+			false,
+		},
+		{
+			"can resolve !include tags with relative paths",
+			args{
+				ctx: map[string]string{includeTag: "testdata/metadata/databases"},
+				node: func() *yaml.Node {
+					v := new(yaml.Node)
+					b, err := ioutil.ReadFile("testdata/metadata/databases/databases.yaml")
+					assert.Nil(t, err)
+					assert.NoError(t, yaml.Unmarshal(b, v))
+					return v
+				}(),
+			},
+			`- name: s1
+  kind: postgres
+  configuration:
+    connection_info:
+        database_url:
+            from_env: HASURA_GRAPHQL_DATABASE_URL
+        pool_settings:
+            idle_timeout: 180
+            max_connections: 50
+            retries: 1
+  tables:
+    - table:
+        name: t1
+        schema: public
+    - table:
+        name: t2
+        schema: public
+  functions:
+    - function:
+        name: get_t1
+        schema: public
+    - function:
+        name: get_t2
+        schema: public
+- name: s2
+  kind: postgres
+  configuration:
+    connection_info:
+        database_url:
+            from_env: HASURA_GRAPHQL_DATABASE_URL
+        pool_settings:
+            idle_timeout: 180
+            max_connections: 50
+            retries: 1
+  tables:
+    - table:
+        name: t1
+        schema: public
+    - table:
+        name: t2
+        schema: public
+  functions:
+    - function:
+        name: get_t1
+        schema: public
+    - function:
+        name: get_t2
+        schema: public
+`,
 			false,
 		},
 	}

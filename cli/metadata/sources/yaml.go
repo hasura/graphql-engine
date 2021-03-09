@@ -66,7 +66,12 @@ func resolveTags(ctx map[string]string, node *yaml.Node) (*yaml.Node, error) {
 		if err != nil {
 			return nil, err
 		}
-		var f = newFragment(ctx)
+		newctx := map[string]string{}
+		for k, v := range ctx {
+			newctx[k] = v
+		}
+		newctx[includeTag] = filepath.Dir(filepath.Join(baseDir, node.Value))
+		var f = newFragment(newctx)
 		err = yaml.Unmarshal(file, f)
 		if err != nil {
 			return nil, err
