@@ -701,7 +701,7 @@ configApiGetHandler serverCtx@ServerCtx{..} consoleAssetsDir =
     mkGetHandler $ do
       onlyAdmin
       let res = runGetConfig scFunctionPermsCtx scRemoteSchemaPermsCtx scAuthMode scEnableAllowlist
-                (EL._lqsOptions $ scLQState) consoleAssetsDir
+                (EL._lqsOptions $ scLQState) consoleAssetsDir scExperimentalFeatures
       return $ JSONResp $ HttpResponse (encJFromJValue res) []
 
 data HasuraApp
