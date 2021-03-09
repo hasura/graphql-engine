@@ -70,3 +70,7 @@ If you're managing migrations with a different tool and want to use this image
 to apply only the metadata, mount the ``metadata`` directory of your Hasura project
 at the ``/hasura-metadata`` path of this Docker container the container’s entry point
 script will apply the metadata before starting the server.
+
+.. admonition:: Additional Resources
+
+  Hasura Database Schema Migrations - `Watch Webinar <https://hasura.io/events/webinar/hasura-database-schema-migrations/?pg=docs&plcmt=body&cta=watch-webinar&tech=>`__.

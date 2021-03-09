@@ -181,3 +181,7 @@ Next steps
 Read about roles and session variables at: :ref:`roles_variables`
 
 See more detailed examples at: :ref:`Common access control examples<auth_examples>`
+
+.. admonition:: Additional Resources
+
+  Enterprise Grade Authorization - `Watch Webinar <https://hasura.io/events/webinar/authorization-modeling-hasura/?pg=docs&plcmt=body&cta=watch-webinar&tech=>`__.

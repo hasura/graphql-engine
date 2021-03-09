@@ -250,3 +250,7 @@ public_t1.yaml
   table:
   name: t1
   schema: public
+
+.. admonition:: Additional Resources
+
+  Hasura Database Schema Migrations - `Watch Webinar <https://hasura.io/events/webinar/hasura-database-schema-migrations/?pg=docs&plcmt=body&cta=watch-webinar&tech=>`__.

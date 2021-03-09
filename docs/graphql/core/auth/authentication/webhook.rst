@@ -205,3 +205,7 @@ Once deployed, you can use any of the following endpoints as your auth webhook i
 .. note::
 
    If you are using ``Firebase``, you will have to set the associated environment variables.
+
+.. admonition:: Additional Resources
+
+  Enterprise Grade Authorization - `Watch Webinar <https://hasura.io/events/webinar/authorization-modeling-hasura/?pg=docs&plcmt=body&cta=watch-webinar&tech=>`__.

@@ -305,3 +305,7 @@ issue.
 If ``DATABASE STATUS`` indicates ``Not Present``, it denotes that there are new
 migration versions in the local directory which are not applied on the database
 yet. Executing ``hasura migrate apply`` will resolve this.
+
+.. admonition:: Additional Resources
+
+  Hasura Database Schema Migrations - `Watch Webinar <https://hasura.io/events/webinar/hasura-database-schema-migrations/?pg=docs&plcmt=body&cta=watch-webinar&tech=>`__.

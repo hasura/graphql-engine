@@ -117,6 +117,9 @@ user is a member of*.
   The ability to use arrays and operators like ``contains`` or ``contained_by`` are currently work-in-progress
   and will be available soon.
 
+.. admonition:: Additional Resources
+
+  Enterprise Grade Authorization - `Watch Webinar <https://hasura.io/events/webinar/authorization-modeling-hasura/?pg=docs&plcmt=body&cta=watch-webinar&tech=>`__.
 
 
 

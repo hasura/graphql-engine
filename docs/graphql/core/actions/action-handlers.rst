@@ -288,3 +288,6 @@ The following is an example of a simple authorization middleware with Express:
         return requiredSecret == providedSecret;
     }
 
+.. admonition:: Additional Resources
+
+  Introduction to Hasura Actions - `View Recording <https://hasura.io/events/webinar/hasura-actions/?pg=docs&plcmt=body&cta=view-recording&tech=>`__.

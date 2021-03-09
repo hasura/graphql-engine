@@ -597,3 +597,7 @@ Complete app code
 
     if __name__ == "__main__":
         app.run(debug=True, host="0.0.0.0")
+
+.. admonition:: Additional Resources
+
+  Introduction to Hasura Actions - `View Recording <https://hasura.io/events/webinar/hasura-actions/?pg=docs&plcmt=body&cta=view-recording&tech=>`__.

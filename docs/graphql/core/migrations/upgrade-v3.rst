@@ -185,3 +185,7 @@ any metadata and migrations commands.
 - Else you can connect a database with the name ``default`` following the steps :ref:`here <connect_database_v2.0>`.
 
 Post this, the metadata and migration commands should work as usual.
+
+.. admonition:: Additional Resources
+
+  Hasura Database Schema Migrations - `Watch Webinar <https://hasura.io/events/webinar/hasura-database-schema-migrations/?pg=docs&plcmt=body&cta=watch-webinar&tech=>`__.

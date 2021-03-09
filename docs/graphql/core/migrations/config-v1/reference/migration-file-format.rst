@@ -83,3 +83,7 @@ As the name indicates, an SQL file can contain SQL statements which are executed
 on the apply step of the migration. There can be an ``up`` SQL and a ``down``
 SQL file. The SQL file is executed first if it is present in an up migration and the
 YAML file is executed first in a down migration.
+
+.. admonition:: Additional Resources
+
+  Hasura Database Schema Migrations - `Watch Webinar <https://hasura.io/events/webinar/hasura-database-schema-migrations/?pg=docs&plcmt=body&cta=watch-webinar&tech=>`__.

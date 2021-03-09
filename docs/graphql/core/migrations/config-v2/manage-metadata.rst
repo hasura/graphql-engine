@@ -219,3 +219,7 @@ In case you need an automated way of applying/importing the metadata, take a
 look at the :ref:`cli-migrations <auto_apply_migrations_v2>` Docker image, which
 can start the GraphQL engine after automatically importing a mounted metadata
 directory.
+
+.. admonition:: Additional Resources
+
+  Hasura Database Schema Migrations - `Watch Webinar <https://hasura.io/events/webinar/hasura-database-schema-migrations/?pg=docs&plcmt=body&cta=watch-webinar&tech=>`__.

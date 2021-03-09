@@ -262,3 +262,7 @@ if ``{hello,world}`` is a valid format of type ``text[]``, you can run:
 
    In future, we'll add support for passing session variables as JSON values where possible (i.e, auth
    webhook and JWT but not in headers).
+
+.. admonition:: Additional Resources
+
+  Enterprise Grade Authorization - `Watch Webinar <https://hasura.io/events/webinar/authorization-modeling-hasura/?pg=docs&plcmt=body&cta=watch-webinar&tech=>`__.

@@ -562,3 +562,7 @@ In the Hasura console, head to the ``GraphiQL`` tab and try out the new action.
     }
 
 And that's it. You have extended your Hasura schema with a new query.
+
+.. admonition:: Additional Resources
+
+  Introduction to Hasura Actions - `View Recording <https://hasura.io/events/webinar/hasura-actions/?pg=docs&plcmt=body&cta=view-recording&tech=>`__.

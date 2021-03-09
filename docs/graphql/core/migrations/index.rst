@@ -92,3 +92,7 @@ Reference documentation
   Upgrading to config v3 <upgrade-v3>
   Config v2 <config-v2/index>
   Config v1 <config-v1/index>
+
+.. admonition:: Additional Resources
+
+  Hasura Database Schema Migrations - `Watch Webinar <https://hasura.io/events/webinar/hasura-database-schema-migrations/?pg=docs&plcmt=body&cta=watch-webinar&tech=>`__.

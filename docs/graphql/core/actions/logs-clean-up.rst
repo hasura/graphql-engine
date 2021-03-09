@@ -55,3 +55,7 @@ Option 4: Delete all logs
 .. code-block:: SQL
 
    DELETE FROM hdb_catalog.hdb_action_log;
+
+.. admonition:: Additional Resources
+
+  Introduction to Hasura Actions - `View Recording <https://hasura.io/events/webinar/hasura-actions/?pg=docs&plcmt=body&cta=view-recording&tech=>`__.

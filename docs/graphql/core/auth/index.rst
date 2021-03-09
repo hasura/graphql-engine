@@ -48,3 +48,7 @@ As you can see from this:
 .. admonition:: Learn course
 
   If you'd like to learn about authentication and authorization / access control by following a tutorial, check out our Learn course, `Authentication with Hasura <https://hasura.io/learn/graphql/hasura-auth-slack/introduction/>`__.
+
+.. admonition:: Additional Resources
+
+  Enterprise Grade Authorization - `Watch Webinar <https://hasura.io/events/webinar/authorization-modeling-hasura/?pg=docs&plcmt=body&cta=watch-webinar&tech=>`__.

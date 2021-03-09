@@ -793,3 +793,6 @@ via a "trusted backend".
 
   Setting ``backend-only`` is currently available for insert mutations only.
 
+.. admonition:: Additional Resources
+
+  Enterprise Grade Authorization - `Watch Webinar <https://hasura.io/events/webinar/authorization-modeling-hasura/?pg=docs&plcmt=body&cta=watch-webinar&tech=>`__.

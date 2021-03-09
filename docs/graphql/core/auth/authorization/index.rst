@@ -57,3 +57,7 @@ Follow the example at :ref:`access control basics <auth_basics>`.
   permission-rules
   common-roles-auth-examples
   role-multiple-rules
+
+.. admonition:: Additional Resources
+
+  Enterprise Grade Authorization - `Watch Webinar <https://hasura.io/events/webinar/authorization-modeling-hasura/?pg=docs&plcmt=body&cta=watch-webinar&tech=>`__.
