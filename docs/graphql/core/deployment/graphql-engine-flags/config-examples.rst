@@ -208,6 +208,8 @@ If you want the debugging mode enabled only for ``admin`` role requests, configu
 
    It is highly recommended to enable debugging only for the ``admin`` role in production.
 
+.. _add-metadata-database:
+
 Add a metadata database
 -----------------------
 

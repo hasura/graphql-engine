@@ -32,6 +32,7 @@ The following are a few configuration use cases:
 - :ref:`configure-cors`
 - :ref:`console-assets-on-server`
 - :ref:`dev-mode`
+- :ref:`add-metadata-database`
 
 .. toctree::
    :hidden:
