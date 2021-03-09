@@ -41,8 +41,8 @@ func NewMigrateCmd(ec *cli.ExecutionContext) *cobra.Command {
 				return err
 			}
 			if ec.Config.Version >= cli.V3 {
-				if !cmd.Flags().Changed("database") {
-					return errors.New("database flag is required")
+				if !cmd.Flags().Changed("database-name") {
+					return errors.New("--database-name flag is required")
 				}
 				sourceKind, err := metadatautil.GetSourceKind(ec.APIClient.V1Metadata.ExportMetadata, ec.Source.Name)
 				if err != nil {
@@ -65,7 +65,7 @@ func NewMigrateCmd(ec *cli.ExecutionContext) *cobra.Command {
 	}
 
 	f := migrateCmd.PersistentFlags()
-	f.StringVar(&ec.Source.Name, "database", "", "database on which operation should be applied")
+	f.StringVar(&ec.Source.Name, "database-name", "", "database on which operation should be applied")
 
 	f.String("endpoint", "", "http(s) endpoint for Hasura GraphQL Engine")
 	f.String("admin-secret", "", "admin secret for Hasura GraphQL Engine")

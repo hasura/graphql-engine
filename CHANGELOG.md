@@ -11,6 +11,7 @@
 - cli: add support for rest endpoints
 - cli: support mssql sources
 - cli: use relative paths in metadata !include directives
+- cli: rename `--database` flag in `migrate` and `seed` command to `--database-name`
 
 
 ## v2.0.0-alpha.3

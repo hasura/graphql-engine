@@ -1,7 +1,11 @@
 package commands
 
 import (
+	"fmt"
+
 	"github.com/hasura/graphql-engine/cli"
+	"github.com/hasura/graphql-engine/cli/internal/hasura"
+	"github.com/hasura/graphql-engine/cli/internal/metadatautil"
 	"github.com/hasura/graphql-engine/cli/internal/scripts"
 	"github.com/hasura/graphql-engine/cli/util"
 	"github.com/pkg/errors"
@@ -27,10 +31,20 @@ func NewSeedCmd(ec *cli.ExecutionContext) *cobra.Command {
 				return err
 			}
 			if ec.Config.Version >= cli.V3 {
-				if !cmd.Flags().Changed("database") {
-					return errors.New("database flag is required")
+				if !cmd.Flags().Changed("database-name") {
+					return errors.New("--database-name flag is required")
 				}
+				sourceKind, err := metadatautil.GetSourceKind(ec.APIClient.V1Metadata.ExportMetadata, ec.Source.Name)
+				if err != nil {
+					return err
+				}
+				if sourceKind == nil {
+					return fmt.Errorf("cannot determine source kind for %v", ec.Source.Name)
+				}
+				ec.Source.Kind = *sourceKind
 			} else {
+				// for project using config older than v3, use PG source kind
+				ec.Source.Kind = hasura.SourceKindPG
 				if err := scripts.CheckIfUpdateToConfigV3IsRequired(ec); err != nil {
 					return err
 				}
@@ -45,7 +59,7 @@ func NewSeedCmd(ec *cli.ExecutionContext) *cobra.Command {
 	)
 
 	f := seedCmd.PersistentFlags()
-	f.StringVar(&ec.Source.Name, "database", "", "database on which operation should be applied")
+	f.StringVar(&ec.Source.Name, "database-name", "", "database on which operation should be applied")
 
 	f.String("endpoint", "", "http(s) endpoint for Hasura GraphQL Engine")
 	f.String("admin-secret", "", "admin secret for Hasura GraphQL Engine")
