@@ -14,30 +14,16 @@ Synopsis
 
 Manage actions on hasura.
 
-Examples
-~~~~~~~~
-
-::
-
-    # Create an action
-    hasura actions create [action-name]
-
-    # Generate code for an actions
-    hasura actions codegen [action-name]
-
-    # Set a framework to be used by codegen
-    hasura actions use-codegen
-
 Options
 ~~~~~~~
 
 ::
 
-      --admin-secret string            admin secret for Hasura GraphQL engine
-      --certificate-authority string   path to a cert file for the certificate authority 
-      --endpoint string                http(s) endpoint for Hasura GraphQL engine 
+      --admin-secret string            admin secret for Hasura GraphQL engine (env "HASURA_GRAPHQL_ADMIN_SECRET")
+      --certificate-authority string   path to a cert file for the certificate authority (env "HASURA_GRAPHQL_CERTIFICATE_AUTHORITY")
+      --endpoint string                http(s) endpoint for Hasura GraphQL engine (env "HASURA_GRAPHQL_ENDPOINT")
   -h, --help                           help for actions
-      --insecure-skip-tls-verify       skip TLS verification and disable cert checking (default: false)
+      --insecure-skip-tls-verify       skip TLS verification and disable cert checking (default: false) (env "HASURA_GRAPHQL_INSECURE_SKIP_TLS_VERIFY")
 
 Options inherited from parent commands
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

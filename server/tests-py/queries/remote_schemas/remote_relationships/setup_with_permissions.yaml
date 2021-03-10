@@ -33,6 +33,13 @@ args:
     schema: public
     name: profiles
 
+- type: set_table_customization
+  args:
+    table: profiles
+    configuration:
+      custom_column_names:
+        name: profile_name
+
 - type: create_select_permission
   args:
     table:

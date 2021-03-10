@@ -29,6 +29,7 @@ func (h *HasuraInterfaceBulk) ResetArgs() {
 type HasuraInterfaceQuery struct {
 	Type    requestTypes    `json:"type" yaml:"type"`
 	Version metadataVersion `json:"version,omitempty" yaml:"version,omitempty"`
+	Source  string          `json:"source,omitempty" yaml:"source,omitempty"`
 	Args    interface{}     `json:"args" yaml:"args"`
 }
 
@@ -37,6 +38,7 @@ type metadataVersion int
 const (
 	v1 metadataVersion = 1
 	v2                 = 2
+	v3                 = 3
 )
 
 type newHasuraIntefaceQuery struct {
@@ -148,6 +150,8 @@ func (h *newHasuraIntefaceQuery) UnmarshalJSON(b []byte) error {
 		}
 	case setTableCustomFields:
 		q.Args = &setTableCustomFieldsV2Input{}
+	case setTableCustomization:
+		q.Args = &setTableCustomizationInput{}
 	case setTableIsEnum:
 		q.Args = &setTableIsEnumInput{}
 	case untrackTable:
@@ -313,10 +317,10 @@ func (mderror *InconsistentMetadataError) String() string {
 }
 
 type SQLInternalError struct {
-	Arguments                 []string      `json:"arguments" mapstructure:"arguments,omitempty"`
+	Arguments                 []string       `json:"arguments" mapstructure:"arguments,omitempty"`
 	Error                     *PostgresError `json:"error" mapstructure:"error,omitempty"`
-	Prepared                  bool          `json:"prepared" mapstructure:"prepared,omitempty"`
-	Statement                 string        `json:"statement" mapstructure:"statement,omitempty"`
+	Prepared                  bool           `json:"prepared" mapstructure:"prepared,omitempty"`
+	Statement                 string         `json:"statement" mapstructure:"statement,omitempty"`
 	InconsistentMetadataError `mapstructure:",squash"`
 }
 type PostgresError struct {
@@ -330,6 +334,7 @@ type PostgresError struct {
 type SchemaDump struct {
 	Opts        []string `json:"opts"`
 	CleanOutput bool     `json:"clean_output"`
+	Database    string   `json:"source,omitempty"`
 }
 
 func (h HasuraError) Error() string {
@@ -414,6 +419,7 @@ const (
 	trackTable                  requestTypes = "track_table"
 	addExistingTableOrView                   = "add_existing_table_or_view"
 	setTableCustomFields                     = "set_table_custom_fields"
+	setTableCustomization                    = "set_table_customization"
 	setTableIsEnum                           = "set_table_is_enum"
 	untrackTable                             = "untrack_table"
 	trackFunction                            = "track_function"
@@ -527,8 +533,9 @@ func (t *trackTableInput) UnmarshalJSON(b []byte) error {
 }
 
 type tableConfiguration struct {
-	CustomRootFields  map[string]string `json:"custom_root_fields" yaml:"custom_root_fields"`
-	CustomColumnNames map[string]string `json:"custom_column_names" yaml:"custom_column_names"`
+	CustomName        string            `json:"custom_name,omitempty" yaml:"custom_name,omitempty"`
+	CustomRootFields  map[string]string `json:"custom_root_fields,omitempty" yaml:"custom_root_fields,omitempty"`
+	CustomColumnNames map[string]string `json:"custom_column_names,omitempty" yaml:"custom_column_names,omitempty"`
 }
 
 type trackTableV2Input struct {
@@ -539,6 +546,11 @@ type trackTableV2Input struct {
 type setTableCustomFieldsV2Input struct {
 	Table tableSchema `json:"table" yaml:"table"`
 	tableConfiguration
+}
+
+type setTableCustomizationInput struct {
+	Table              tableSchema `json:"table" yaml:"table"`
+	tableConfiguration `json:"configuration,omitempty" yaml:"configuration,omitempty"`
 }
 
 type setTableIsEnumInput struct {
@@ -1086,6 +1098,7 @@ func (i InconsistentMeatadataObject) GetReason() string {
 
 type RunSQLInput struct {
 	SQL                      string `json:"sql" yaml:"sql"`
+	Source                   string `json:"source,omitempty" yaml:"source,omitempty"`
 	Cascade                  bool   `json:"cascade,omitempty" yaml:"cascade,omitempty"`
 	ReadOnly                 bool   `json:"read_only,omitempty" yaml:"read_only,omitempty"`
 	CheckMetadataConsistency *bool  `json:"check_metadata_consistency,omitempty" yaml:"check_metadata_consistency,omitempty"`

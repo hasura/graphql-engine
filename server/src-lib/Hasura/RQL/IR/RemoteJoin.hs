@@ -6,7 +6,6 @@ import           Hasura.Prelude
 
 import qualified Language.GraphQL.Draft.Syntax as G
 
-import           Hasura.GraphQL.Parser         hiding (field)
 import           Hasura.RQL.IR.Select
 import           Hasura.RQL.Types
 
@@ -16,7 +15,7 @@ data RemoteJoin (b :: BackendType)
   = RemoteJoin
   { _rjName          :: !FieldName -- ^ The remote join field name.
   , _rjArgs          :: ![RemoteFieldArgument] -- ^ User-provided arguments with variables.
-  , _rjSelSet        :: !(G.SelectionSet G.NoFragments Variable)  -- ^ User-provided selection set of remote field.
+  , _rjSelSet        :: !(G.SelectionSet G.NoFragments RemoteSchemaVariable)  -- ^ User-provided selection set of remote field.
   , _rjHasuraFields  :: !(HashSet FieldName) -- ^ Table fields.
   , _rjFieldCall     :: !(NonEmpty FieldCall) -- ^ Remote server fields.
   , _rjRemoteSchema  :: !RemoteSchemaInfo -- ^ The remote schema server info.
@@ -24,4 +23,4 @@ data RemoteJoin (b :: BackendType)
     -- ^ Hasura fields which are not in the selection set, but are required as
     -- parameters to satisfy the remote join.
   }
-deriving instance Eq (RemoteJoin 'Postgres)
+deriving instance Backend b => Eq (RemoteJoin b)

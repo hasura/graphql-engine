@@ -36,7 +36,7 @@ insert_user(objects: [{name: "testuser"}] ){
           imgUrl={`${globals.assetsPath}/common/img/event-trigger.png`}
           imgAlt={`${EVENT_TRIGGER}s`}
           description={`An ${EVENT_TRIGGER} atomically captures events (insert, update, delete) on a specified table and then reliably calls a HTTP webhook to run some custom business logic.`}
-          knowMoreHref="https://hasura.io/docs/1.0/graphql/manual/event-triggers/index.html"
+          knowMoreHref="https://hasura.io/docs/latest/graphql/core/event-triggers/index.html"
         />
         <hr className={styles.clear_fix} />
       </div>

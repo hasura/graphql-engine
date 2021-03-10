@@ -1,21 +1,17 @@
 import PropTypes from 'prop-types';
 import React, { Component } from 'react';
-import {
-  vSetDefaults,
-  // vExpandHeading,
-  fetchManualTriggers,
-  UPDATE_TRIGGER_ROW,
-  UPDATE_TRIGGER_FUNCTION,
-  vMakeTableRequests,
-} from './ViewActions';
-import { checkIfTable } from '../../../Common/utils/pgUtils';
+
+import { vSetDefaults, vMakeTableRequests } from './ViewActions';
 import { setTable } from '../DataActions';
 import TableHeader from '../TableCommon/TableHeader';
 import ViewRows from './ViewRows';
-
 import { NotFoundError } from '../../../Error/PageNotFound';
 import { exists } from '../../../Common/utils/jsUtils';
+import { currentDriver, dataSource } from '../../../../dataSources';
+import { RightContainer } from '../../../Common/Layout/RightContainer';
 import { getPersistedPageSize } from './tableUtils';
+import { getManualEventsTriggers } from '../../../../metadata/selector';
+import FeatureDisabled from '../FeatureDisabled';
 
 class ViewTable extends Component {
   constructor(props) {
@@ -25,7 +21,6 @@ class ViewTable extends Component {
       dispatch: props.dispatch,
       tableName: props.tableName,
     };
-
     this.getInitialData(this.props.tableName);
   }
 
@@ -37,12 +32,16 @@ class ViewTable extends Component {
 
   getInitialData(tableName) {
     const { dispatch, currentSchema } = this.props;
+
+    if (currentDriver !== 'postgres') {
+      dispatch(setTable(tableName));
+      return;
+    }
     const limit = getPersistedPageSize(tableName, currentSchema);
     Promise.all([
       dispatch(setTable(tableName)),
       dispatch(vSetDefaults(limit)),
       dispatch(vMakeTableRequests()),
-      dispatch(fetchManualTriggers(tableName)),
     ]);
   }
 
@@ -71,22 +70,6 @@ class ViewTable extends Component {
     dispatch(vSetDefaults());
   }
 
-  updateInvocationRow = row => {
-    const { dispatch } = this.props;
-    dispatch({
-      type: UPDATE_TRIGGER_ROW,
-      data: row,
-    });
-  };
-
-  updateInvocationFunction = triggerFunc => {
-    const { dispatch } = this.props;
-    dispatch({
-      type: UPDATE_TRIGGER_FUNCTION,
-      data: triggerFunc,
-    });
-  };
-
   render() {
     const {
       tableName,
@@ -106,11 +89,10 @@ class ViewTable extends Component {
       expandedRow,
       currentSchema,
       manualTriggers = [],
-      triggeredRow,
-      triggeredFunction,
       location,
       estimatedCount,
       isCountEstimated,
+      currentSource,
     } = this.props;
 
     // check if table exists
@@ -118,15 +100,24 @@ class ViewTable extends Component {
       s => s.table_name === tableName && s.table_schema === currentSchema
     );
 
-    if (!tableSchema) {
-      // throw a 404 exception
+    if (!tableSchema && currentDriver === 'postgres') {
       throw new NotFoundError();
+    }
+
+    if (currentDriver === 'mssql') {
+      return (
+        <FeatureDisabled
+          tab="browse"
+          tableName={tableName}
+          schemaName={currentSchema}
+        />
+      );
     }
 
     const styles = require('../../../Common/Common.scss');
 
     // Is this a view
-    const isView = !checkIfTable(tableSchema);
+    const isView = !dataSource.isTable(tableSchema);
 
     // Are there any expanded columns
     const viewRows = (
@@ -135,7 +126,6 @@ class ViewTable extends Component {
         currentSchema={currentSchema}
         curQuery={query}
         curFilter={curFilter}
-        curPath={[]}
         curRows={rows}
         isView={isView}
         parentTableName={null}
@@ -151,12 +141,9 @@ class ViewTable extends Component {
         dispatch={dispatch}
         expandedRow={expandedRow}
         manualTriggers={manualTriggers}
-        updateInvocationRow={this.updateInvocationRow.bind(this)}
-        updateInvocationFunction={this.updateInvocationFunction.bind(this)}
-        triggeredRow={triggeredRow}
-        triggeredFunction={triggeredFunction}
         location={location}
         readOnlyMode={readOnlyMode}
+        currentSource={currentSource}
       />
     );
 
@@ -167,6 +154,7 @@ class ViewTable extends Component {
         isCountEstimated={isCountEstimated}
         dispatch={dispatch}
         table={tableSchema}
+        source={currentSource}
         tabName="browse"
         migrationMode={migrationMode}
         readOnlyMode={readOnlyMode}
@@ -185,11 +173,13 @@ class ViewTable extends Component {
     }
 
     return (
-      <div>
-        {header}
-        {comment}
-        <div>{viewRows}</div>
-      </div>
+      <RightContainer>
+        <div>
+          {header}
+          {comment}
+          <div>{viewRows}</div>
+        </div>
+      </RightContainer>
     );
   }
 }
@@ -218,12 +208,14 @@ const mapStateToProps = (state, ownProps) => {
   return {
     tableName: ownProps.params.table,
     currentSchema: state.tables.currentSchema,
+    currentSource: state.tables.currentDataSource,
     schemas: state.tables.allSchemas,
     tableComment: state.tables.tableComment,
     migrationMode: state.main.migrationMode,
     readOnlyMode: state.main.readOnlyMode,
     serverVersion: state.main.serverVersion,
     ...state.tables.view,
+    manualTriggers: getManualEventsTriggers(state),
   };
 };
 

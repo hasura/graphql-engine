@@ -1,32 +1,85 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router';
 import globals from '../../../Globals';
 
 import LeftContainer from '../../Common/Layout/LeftContainer/LeftContainer';
 import PageContainer from '../../Common/Layout/PageContainer/PageContainer';
 import DataSubSidebar from './DataSubSidebar';
-import GqlCompatibilityWarning from '../../Common/GqlCompatibilityWarning/GqlCompatibilityWarning';
-
-import { updateCurrentSchema } from './DataActions';
-import { NotFoundError } from '../../Error/PageNotFound';
+import {
+  updateCurrentSchema,
+  UPDATE_CURRENT_DATA_SOURCE,
+  fetchDataInit,
+} from './DataActions';
 import { CLI_CONSOLE_MODE } from '../../../constants';
-import { getSchemaBaseRoute } from '../../Common/utils/routesUtils';
+import styles from '../../Common/TableCommon/Table.scss';
+import { currentDriver, useDataSource } from '../../../dataSources';
+import { getDataSources } from '../../../metadata/selector';
+import _push from './push';
+import { fetchPostgresVersion } from '../../Main/Actions';
+import { getSourceDriver } from './utils';
 
 const DataPageContainer = ({
-  currentSchema,
-  schemaList,
   children,
   location,
   dispatch,
+  dataSources,
+  currentDataSource,
+  currentSchema,
 }) => {
-  const styles = require('../../Common/TableCommon/Table.scss');
+  const { setDriver } = useDataSource();
 
-  if (!schemaList.map(s => s.schema_name).includes(currentSchema)) {
-    dispatch(updateCurrentSchema('public', false));
+  // useEffect(() => {
+  //   if (!currentDataSource && dataSources.length) {
+  //     setDriver(dataSources[0].driver);
+  //     dispatch({
+  //       type: UPDATE_CURRENT_DATA_SOURCE,
+  //       source: dataSources[0].name,
+  //     });
+  //   }
+  // }, [currentDataSource, dataSources, dispatch]);
 
-    // throw a 404 exception
-    throw new NotFoundError();
-  }
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    // TODO: handle for different drivers
+    if (currentDataSource && currentDriver === 'postgres') {
+      dispatch(fetchPostgresVersion);
+    }
+  }, [dispatch, currentDataSource]);
+
+  const handleDatabaseChange = newSourceName => {
+    if (newSourceName === currentDataSource) {
+      dispatch(_push(`/data/${newSourceName}/`));
+      return;
+    }
+    setLoading(true);
+    const driver = getSourceDriver(dataSources, newSourceName);
+    dispatch({
+      type: UPDATE_CURRENT_DATA_SOURCE,
+      source: newSourceName,
+    });
+    setDriver(driver);
+    dispatch(_push(`/data/${newSourceName}/`));
+    dispatch(fetchDataInit()).finally(() => {
+      setLoading(false);
+    });
+  };
+
+  const handleSchemaChange = value => {
+    if (value === currentSchema) {
+      dispatch(_push(`/data/${currentDataSource}/schema/${value}`));
+      return;
+    }
+
+    setLoading(true);
+    dispatch(updateCurrentSchema(value, currentDataSource))
+      .then(() => {
+        dispatch(_push(`/data/${currentDataSource}/schema/${value}`));
+      })
+      .finally(() => {
+        setLoading(false);
+      });
+  };
 
   const currentLocation = location.pathname;
 
@@ -46,59 +99,48 @@ const DataPageContainer = ({
     );
   }
 
-  const handleSchemaChange = e => {
-    dispatch(updateCurrentSchema(e.target.value));
-  };
-
-  const getSchemaOptions = () => {
-    return schemaList.map(s => (
-      <option key={s.schema_name} value={s.schema_name}>
-        {s.schema_name}
-      </option>
-    ));
+  const loadStyle = {
+    pointerEvents: 'none',
+    cursor: 'progress',
   };
 
   const sidebarContent = (
     <ul>
       <li
         role="presentation"
-        className={currentLocation.includes('data/schema') ? styles.active : ''}
+        className={
+          currentLocation.match(
+            /(\/)?data((\/manage)|(\/(\w|%)+\/schema?(\w+)))/
+          )
+            ? styles.active
+            : ''
+        }
       >
-        <Link
-          className={styles.linkBorder}
-          to={getSchemaBaseRoute(currentSchema)}
-        >
-          <div className={styles.schemaWrapper}>
-            <div className={styles.schemaSidebarSection} data-test="schema">
-              Schema:
-              <select
-                onChange={handleSchemaChange}
-                value={currentSchema}
-                className={styles.changeSchema + ' form-control'}
-              >
-                {getSchemaOptions()}
-              </select>
-              <GqlCompatibilityWarning
-                identifier={currentSchema}
-                className={styles.add_mar_left_mid}
-              />
-            </div>
-          </div>
+        <Link className={styles.linkBorder} to={`/data/manage`}>
+          Data Manager
         </Link>
-        <DataSubSidebar location={location} />
+
+        <div style={loading ? loadStyle : { pointerEvents: 'auto' }}>
+          <DataSubSidebar
+            onDatabaseChange={handleDatabaseChange}
+            onSchemaChange={handleSchemaChange}
+          />
+        </div>
       </li>
-      <li
-        role="presentation"
-        className={currentLocation.includes('data/sql') ? styles.active : ''}
-      >
-        <Link
-          className={styles.linkBorder}
-          to={'/data/sql'}
-          data-test="sql-link"
+      {currentDataSource && (
+        <li
+          role="presentation"
+          className={currentLocation.includes('/sql') ? styles.active : ''}
         >
-          SQL
-        </Link>
-      </li>
+          <Link
+            className={styles.linkBorder}
+            to={`/data/sql`}
+            data-test="sql-link"
+          >
+            SQL
+          </Link>
+        </li>
+      )}
       {migrationTab}
     </ul>
   );
@@ -118,6 +160,9 @@ const mapStateToProps = state => {
   return {
     schemaList: state.tables.schemaList,
     currentSchema: state.tables.currentSchema,
+    metadata: state.metadata.metadataObject,
+    dataSources: getDataSources(state),
+    currentDataSource: state.tables.currentDataSource,
   };
 };
 

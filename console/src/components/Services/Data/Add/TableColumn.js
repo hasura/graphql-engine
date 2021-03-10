@@ -1,11 +1,11 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 
-import { commonDataTypes } from '../utils';
 import { getDataOptions, inferDefaultValues } from '../Common/utils';
 
 import TableColumnDefault from './TableColumnDefault';
 import { ColumnTypeSelector } from '../Common/Components/ColumnTypeSelector';
+import { dataSource } from '../../../../dataSources';
 
 /* Custom style object for searchable select box */
 const customSelectBoxStyles = {
@@ -55,7 +55,7 @@ const TableColumn = props => {
     onColTypeChange(selectedOption.colIdentifier, selectedOption.value);
   };
   const { columnDataTypes, columnTypeValueMap } = getDataOptions(
-    commonDataTypes,
+    dataSource.commonDataTypes,
     restTypes,
     i
   );
@@ -119,22 +119,6 @@ const TableColumn = props => {
           colDefaultFunctions={defaultFunctions}
         />
       </span>
-      {/*
-      <input
-        placeholder={getPlaceholder(column)}
-        type="text"
-        value={getDefaultValue(column)}
-        className={`${styles.inputDefault} ${
-          styles.defaultWidth
-        } form-control ${styles.add_pad_left}`}
-        onChange={setColDefaultValue.bind(
-          undefined,
-          i,
-          column.nullable || false
-        )}
-        data-test={`col-default-${i}`}
-      />
-      */}{' '}
       <label>
         <input
           className={styles.inputCheckbox}

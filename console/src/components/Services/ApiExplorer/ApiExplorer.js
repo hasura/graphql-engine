@@ -5,6 +5,7 @@ import Helmet from 'react-helmet';
 import ApiRequestWrapper from './ApiRequestWrapper';
 
 import globals from '../../../Globals';
+import { getTables } from '../../../metadata/selector';
 
 class ApiExplorer extends Component {
   render() {
@@ -76,7 +77,7 @@ const generatedApiExplorer = connect => {
       credentials: {},
       dataApiExplorerData: { ...state.dataApiExplorer },
       dataHeaders: state.tables.dataHeaders,
-      tables: state.tables.allSchemas,
+      tables: getTables(state),
       serverConfig: state.main.serverConfig ? state.main.serverConfig.data : {},
     };
   };

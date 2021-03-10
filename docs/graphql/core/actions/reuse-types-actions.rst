@@ -167,3 +167,7 @@ You can create relationships for custom output types by:
           ]
         }
       }
+      
+.. admonition:: Additional Resources
+
+  Introduction to Hasura Actions - `View Recording <https://hasura.io/events/webinar/hasura-actions/?pg=docs&plcmt=body&cta=view-recording&tech=>`__.

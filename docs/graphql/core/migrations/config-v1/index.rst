@@ -44,7 +44,7 @@ database.
   This documentation is for **Hasura migrations config v1**. Hasura migrations
   config v2 was introduced in Hasura GraphQL engine version ``v1.2.0``
 
-  See :ref:`migrations`
+  See :ref:`migrations_v2`
 
 Simple use cases
 ----------------
@@ -79,3 +79,7 @@ Reference documentation
   Manage metadata <manage-metadata>
   Advanced use cases <advanced/index>
   Reference documentation <reference/index>
+
+.. admonition:: Additional Resources
+
+  Hasura Database Schema Migrations - `Watch Webinar <https://hasura.io/events/webinar/hasura-database-schema-migrations/?pg=docs&plcmt=body&cta=watch-webinar&tech=>`__.

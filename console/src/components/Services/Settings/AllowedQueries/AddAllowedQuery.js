@@ -2,12 +2,12 @@ import React from 'react';
 import AceEditor from 'react-ace';
 import styles from './AllowedQueries.scss';
 
-import { addAllowedQueries } from '../Actions';
 import ExpandableEditor from '../../../Common/Layout/ExpandableEditor/Editor';
 import Tooltip from '../../../Common/Tooltip/Tooltip';
 
 import { readFile, parseQueryString } from './utils';
 import { showErrorNotification } from '../../Common/Notification';
+import { addAllowedQueries } from '../../../../metadata/actions';
 
 class AddAllowedQuery extends React.Component {
   constructor(props) {
@@ -20,7 +20,7 @@ class AddAllowedQuery extends React.Component {
   }
 
   render() {
-    const { dispatch, isEmptyList } = this.props;
+    const { dispatch } = this.props;
     const { manualQuery, graphqlFile } = this.state;
 
     const handleManualCollapse = () => {
@@ -28,7 +28,7 @@ class AddAllowedQuery extends React.Component {
     };
 
     const handleManualSubmit = toggle => {
-      dispatch(addAllowedQueries([manualQuery], isEmptyList, toggle));
+      dispatch(addAllowedQueries([manualQuery], toggle));
     };
 
     const handleFileUploadCollapse = () => {};
@@ -37,7 +37,7 @@ class AddAllowedQuery extends React.Component {
       const addFileQueries = content => {
         try {
           const fileQueries = parseQueryString(content);
-          dispatch(addAllowedQueries(fileQueries, isEmptyList, toggle));
+          dispatch(addAllowedQueries(fileQueries, toggle));
         } catch (error) {
           dispatch(
             showErrorNotification('Uploading operations failed', error.message)

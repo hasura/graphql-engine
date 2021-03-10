@@ -5,6 +5,7 @@ import requestActionPlain from '../../utils/requestActionPlain';
 import Endpoints, { globalCookiePolicy } from '../../Endpoints';
 import { getFeaturesCompatibility } from '../../helpers/versionUtils';
 import { getRunSqlQuery } from '../Common/utils/v1QueryUtils';
+import { currentDriver } from '../../dataSources';
 import { defaultNotification, errorNotification } from './ConsoleNotification';
 import { updateConsoleNotificationsState } from '../../telemetry/Actions';
 import { getConsoleNotificationQuery } from '../Common/utils/v1QueryUtils';
@@ -37,6 +38,9 @@ const FETCH_CONSOLE_NOTIFICATIONS_SET_DEFAULT =
   'Main/FETCH_CONSOLE_NOTIFICATIONS_SET_DEFAULT';
 const FETCH_CONSOLE_NOTIFICATIONS_ERROR =
   'Main/FETCH_CONSOLE_NOTIFICATIONS_ERROR';
+const FETCHING_HEROKU_SESSION = 'Main/FETCHING_HEROKU_SESSION';
+const FETCHING_HEROKU_SESSION_FAILED = 'Main/FETCHING_HEROKU_SESSION_FAILED';
+const SET_HEROKU_SESSION = 'Main/SET_HEROKU_SESSION';
 
 const RUN_TIME_ERROR = 'Main/RUN_TIME_ERROR';
 const registerRunTimeError = data => ({
@@ -272,7 +276,12 @@ const setReadOnlyMode = data => ({
 });
 
 export const fetchPostgresVersion = (dispatch, getState) => {
-  const req = getRunSqlQuery('SELECT version()');
+  if (currentDriver !== 'postgres') return;
+
+  const req = getRunSqlQuery(
+    'SELECT version()',
+    getState().tables.currentDataSource
+  );
   const options = {
     method: 'POST',
     credentials: globalCookiePolicy,
@@ -449,6 +458,51 @@ const updateMigrationModeStatus = () => (dispatch, getState) => {
   // refresh console
 };
 
+export const setHerokuSession = session => ({
+  type: SET_HEROKU_SESSION,
+  data: session,
+});
+
+// TODO to be queried via Apollo client
+export const fetchHerokuSession = () => dispatch => {
+  if (!globals.herokuOAuthClientId || !globals.hasuraCloudTenantId) {
+    return;
+  }
+  dispatch({
+    type: FETCHING_HEROKU_SESSION,
+  });
+  return fetch(Endpoints.hasuraCloudDataGraphql, {
+    method: 'POST',
+    credentials: 'include',
+    headers: {
+      'content-type': 'application/json',
+    },
+    body: JSON.stringify({
+      query:
+        'mutation { getHerokuSession { access_token refresh_token expires_in token_type } }',
+    }),
+  })
+    .then(r => r.json())
+    .then(response => {
+      if (response.errors) {
+        dispatch({ type: FETCHING_HEROKU_SESSION_FAILED });
+        console.error('Failed fetching heroku session');
+      } else {
+        const session = response.data.getHerokuSession;
+        if (!session.access_token) {
+          dispatch({ type: FETCHING_HEROKU_SESSION_FAILED });
+          console.error('Failed fetching heroku session');
+        } else {
+          dispatch(setHerokuSession(session));
+        }
+      }
+    })
+    .catch(e => {
+      console.error('Failed fetching Heroku session');
+      console.error(e);
+    });
+};
+
 const mainReducer = (state = defaultState, action) => {
   switch (action.type) {
     case SET_MIGRATION_STATUS_SUCCESS:
@@ -584,6 +638,13 @@ const mainReducer = (state = defaultState, action) => {
       return {
         ...state,
         consoleNotifications: [errorNotification],
+      };
+    case SET_HEROKU_SESSION:
+      return {
+        ...state,
+        heroku: {
+          session: action.data,
+        },
       };
     default:
       return state;

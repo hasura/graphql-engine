@@ -7,6 +7,8 @@ import (
 	"os"
 	"path/filepath"
 
+	"github.com/hasura/graphql-engine/cli/internal/hasura"
+
 	"github.com/hasura/graphql-engine/cli/migrate"
 
 	"gopkg.in/yaml.v2"
@@ -272,7 +274,7 @@ func newScriptsUpdateConfigV2Cmd(ec *cli.ExecutionContext) *cobra.Command {
 				}
 			}
 			ec.Spin("Removing versions from database...")
-			migrateDrv, err := migrate.NewMigrate(ec, true)
+			migrateDrv, err := migrate.NewMigrate(ec, true, "", hasura.SourceKindPG)
 			if err != nil {
 				return errors.Wrap(err, "unable to initialize migrations driver")
 			}
@@ -307,7 +309,7 @@ func newScriptsUpdateConfigV2Cmd(ec *cli.ExecutionContext) *cobra.Command {
 			ec.Config.ActionConfig.Codegen = nil
 			// run metadata export
 			ec.Spin("Exporting metadata...")
-			migrateDrv, err = migrate.NewMigrate(ec, true)
+			migrateDrv, err = migrate.NewMigrate(ec, true, "", hasura.SourceKindPG)
 			if err != nil {
 				return errors.Wrap(err, "unable to initialize migrations driver")
 			}
@@ -343,6 +345,14 @@ func newScriptsUpdateConfigV2Cmd(ec *cli.ExecutionContext) *cobra.Command {
 			}
 			ec.Spinner.Stop()
 			ec.Logger.Infoln("Updated config to version 2")
+
+			if f, _ := os.Stat(filepath.Join(ec.MigrationDir, "metadata.yaml")); f != nil {
+				err = os.Remove(filepath.Join(ec.MigrationDir, "metadata.yaml"))
+				if err != nil {
+					ec.Logger.Warnln("Warning: cannot remove metadata.yaml file ", err)
+				}
+			}
+
 			return nil
 		},
 	}

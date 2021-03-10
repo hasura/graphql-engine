@@ -13,8 +13,6 @@ module Hasura.Backends.Postgres.Translate.Returning
 
 import           Hasura.Prelude
 
-import qualified Data.Text                                 as T
-
 import qualified Hasura.Backends.Postgres.SQL.DML          as S
 
 import           Hasura.Backends.Postgres.SQL.Types
@@ -22,7 +20,8 @@ import           Hasura.Backends.Postgres.Translate.Select
 import           Hasura.RQL.DML.Internal
 import           Hasura.RQL.IR.Returning
 import           Hasura.RQL.IR.Select
-import           Hasura.RQL.Types
+import           Hasura.RQL.Types                          hiding (Identifier)
+import           Hasura.Session
 
 
 -- | The postgres common table expression (CTE) for mutation queries.
@@ -50,7 +49,9 @@ checkPermissionRequired = \case
 pgColsToSelFlds :: [ColumnInfo 'Postgres] -> [(FieldName, AnnField 'Postgres)]
 pgColsToSelFlds cols =
   flip map cols $
-  \pgColInfo -> (fromPGCol $ pgiColumn pgColInfo, mkAnnColumnField pgColInfo Nothing)
+  \pgColInfo -> (fromCol @'Postgres $ pgiColumn pgColInfo, mkAnnColumnField pgColInfo Nothing Nothing)
+  --                                                                         ^^ Nothing because mutations aren't supported
+  --                                                                         with inherited role
 
 mkDefaultMutFlds :: Maybe [ColumnInfo 'Postgres] -> MutationOutput 'Postgres
 mkDefaultMutFlds = MOutMultirowFields . \case
@@ -67,7 +68,7 @@ mkMutFldExp cteAlias preCalAffRows strfyNum = \case
           { S.selExtr = [S.Extractor S.countStar Nothing]
           , S.selFrom = Just $ S.FromExp $ pure $ S.FIIdentifier cteAlias
           }
-    in maybe countExp (S.SEUnsafe . T.pack . show) preCalAffRows
+    in maybe countExp (S.SEUnsafe . tshow) preCalAffRows
   MExp t -> S.SELit t
   MRet selFlds ->
     let tabFrom = FromIdentifier cteAlias
@@ -165,6 +166,6 @@ checkRetCols
   -> m [ColumnInfo 'Postgres]
 checkRetCols fieldInfoMap selPermInfo cols = do
   mapM_ (checkSelOnCol selPermInfo) cols
-  forM cols $ \col -> askPGColInfo fieldInfoMap col relInRetErr
+  forM cols $ \col -> askColInfo fieldInfoMap col relInRetErr
   where
     relInRetErr = "Relationships can't be used in \"returning\"."

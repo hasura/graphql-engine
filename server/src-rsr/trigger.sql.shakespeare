@@ -19,12 +19,16 @@ CREATE OR REPLACE function hdb_catalog.#{qualifiedTriggerName}() RETURNS trigger
       'new', #{newPayloadExpression}
     );
     BEGIN
+    /* NOTE: formerly we used TG_TABLE_NAME in place of tableName here. However in the case of
+    partitioned tables this will give the name of the partitioned table and since we use the table name to
+    get the event trigger configuration from the schema, this fails because the event trigger is only created
+    on the original table.  */
       IF (TG_OP <> 'UPDATE') OR (_old <> _new) THEN
-        PERFORM hdb_catalog.insert_event_log(CAST(TG_TABLE_SCHEMA AS text), CAST(TG_TABLE_NAME AS text), CAST('#{name}' AS text), TG_OP, _data);
+        PERFORM hdb_catalog.insert_event_log(CAST(#{schemaName} AS text), CAST(#{tableName} AS text), CAST('#{name}' AS text), TG_OP, _data);
       END IF;
       EXCEPTION WHEN undefined_function THEN
         IF (TG_OP <> 'UPDATE') OR (_old *<> _new) THEN
-          PERFORM hdb_catalog.insert_event_log(CAST(TG_TABLE_SCHEMA AS text), CAST(TG_TABLE_NAME AS text), CAST('#{name}' AS text), TG_OP, _data);
+          PERFORM hdb_catalog.insert_event_log(CAST(#{schemaName} AS text), CAST(#{tableName} AS text), CAST('#{name}' AS text), TG_OP, _data);
         END IF;
     END;
 

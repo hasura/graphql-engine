@@ -28,6 +28,7 @@ You can also configure Hasura to have (as shown :ref:`here <merge_remote_schema>
 
 1. static header values that are sent to the remote server
 2. forward all headers from the client (like ``Authorization``, ``Cookie`` headers etc.)
+3. :ref:`Fine grained access control <remote_schema_permissions>`
 
 In case there are multiple headers with same name, the order of precedence is:
 configuration headers > resolved user (``x-hasura-*``) variables > client headers.
@@ -45,8 +46,8 @@ will selected.
 Cookie header from your remote GraphQL servers
 ----------------------------------------------
 ``Set-Cookie`` headers from your remote schema servers are sent back to the
-client over HTTP transport. **Over websocket transport there exists no means 
-of sending headers after a query/mutation and hence the ``Set-Cookie`` headers are 
+client over HTTP transport. **Over websocket transport there exists no means
+of sending headers after a query/mutation and hence the ``Set-Cookie`` headers are
 not sent to the client.** Use HTTP transport if your remote servers set cookies.
 
 
@@ -106,3 +107,7 @@ For example, the generated JWT can be:
 Hasura will get this JWT and successfully validate it. When your remote server receives this JWT, it should
 specifically validate the JWT and, for example, check for the ``role`` key in the JWT. If it is set to ``anonymous``,
 then it should consider the request as unauthenticated.
+
+.. admonition:: Additional Resources
+
+  Data Federation with Hasura - `Watch Webinar <https://hasura.io/events/webinar/data-federation-hasura-graphql/?pg=docs&plcmt=body&cta=watch-webinar&tech=>`__.

@@ -79,7 +79,7 @@ For example, consider the following mutation.
 .. code-block:: graphql
 
     extend type Mutation {
-      UserLogin (username: String!, email: String!): UserInfo
+      UserLogin (username: String!, password: String!): UserInfo
     }
 
     type UserInfo {
@@ -125,10 +125,10 @@ response would be:
 
     {
       "accessToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVC",
-      "userId": 4829
+      "userId": 423
     }
 
-To throw an error, you must a response payload of the following type while
+To throw an error, you must send a response of the following type while
 setting the status code as ``4xx``.
 
 .. code-block:: json
@@ -288,3 +288,6 @@ The following is an example of a simple authorization middleware with Express:
         return requiredSecret == providedSecret;
     }
 
+.. admonition:: Additional Resources
+
+  Introduction to Hasura Actions - `View Recording <https://hasura.io/events/webinar/hasura-actions/?pg=docs&plcmt=body&cta=view-recording&tech=>`__.

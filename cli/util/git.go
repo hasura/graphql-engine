@@ -107,6 +107,7 @@ func (g *GitUtil) updateAndCleanUntracked() error {
 	}
 	err = wt.Pull(&git.PullOptions{
 		ReferenceName: g.ReferenceName,
+		Force:         true,
 	})
 	if err != nil && err != git.NoErrAlreadyUpToDate {
 		return err

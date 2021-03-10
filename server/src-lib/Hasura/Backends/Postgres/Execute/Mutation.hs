@@ -1,5 +1,6 @@
 module Hasura.Backends.Postgres.Execute.Mutation
   ( MutationRemoteJoinCtx
+  , MutateResp(..)
   --
   , execDeleteQuery
   , execInsertQuery
@@ -17,8 +18,7 @@ import qualified Database.PG.Query                            as Q
 import qualified Network.HTTP.Client                          as HTTP
 import qualified Network.HTTP.Types                           as N
 
-
-import           Instances.TH.Lift                            ()
+import           Data.Aeson.TH
 
 import qualified Hasura.Backends.Postgres.SQL.DML             as S
 import qualified Hasura.Tracing                               as Tracing
@@ -46,6 +46,13 @@ import           Hasura.SQL.Types
 import           Hasura.Server.Version                        (HasVersion)
 import           Hasura.Session
 
+
+data MutateResp a
+  = MutateResp
+  { _mrAffectedRows     :: !Int
+  , _mrReturningColumns :: ![ColumnValues 'Postgres a]
+  } deriving (Show, Eq)
+$(deriveJSON hasuraJSON ''MutateResp)
 
 type MutationRemoteJoinCtx = (HTTP.Manager, [N.Header], UserInfo)
 
@@ -249,7 +256,7 @@ mutateAndFetchCols qt cols (cte, p) strfyNum = do
     tabFrom = FromIdentifier aliasIdentifier
     tabPerm = TablePerm annBoolExpTrue Nothing
     selFlds = flip map cols $
-              \ci -> (fromPGCol $ pgiColumn ci, mkAnnColumnFieldAsText ci)
+              \ci -> (fromCol @'Postgres $ pgiColumn ci, mkAnnColumnFieldAsText ci)
 
     sqlText = Q.fromBuilder $ toSQL selectWith
     selectWith = S.SelectWith [(S.Alias aliasIdentifier, getMutationCTE cte)] select

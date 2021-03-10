@@ -34,13 +34,13 @@ To roll back a particular migration version:
 
 .. code-block:: bash
 
-   hasura migrate apply --version 1550925483858 --type down
+   hasura migrate apply --version 1550925483858 --type down --database <database-name>
 
 To roll back the last 2 migration versions:
 
 .. code-block:: bash
 
-   hasura migrate apply --down 2
+   hasura migrate apply --down 2 --database <database-name>
 
 .. note::
 
@@ -64,4 +64,6 @@ version control via commits.
 
    hasura metadata apply
 
+.. admonition:: Additional Resources
 
+  Hasura Database Schema Migrations - `Watch Webinar <https://hasura.io/events/webinar/hasura-database-schema-migrations/?pg=docs&plcmt=body&cta=watch-webinar&tech=>`__.

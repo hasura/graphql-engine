@@ -5,6 +5,7 @@ import { ADMIN_SECRET_HEADER_KEY, CLI_CONSOLE_MODE } from '../../constants';
 import requestAction from '../../utils/requestAction';
 import { Dispatch } from '../../types';
 import globals from '../../Globals';
+import { inconsistentObjectsQuery } from '../../metadata/queryUtils';
 
 type VerifyLoginOptions = {
   adminSecret: string;
@@ -21,29 +22,16 @@ export const verifyLogin = ({
   errorCallback,
   dispatch,
 }: VerifyLoginOptions) => {
-  const url = Endpoints.getSchema;
-  const requestOptions: RequestInit = {
-    credentials: globalCookiePolicy,
+  const options: RequestInit = {
     method: 'POST',
+    credentials: globalCookiePolicy,
     headers: {
       [ADMIN_SECRET_HEADER_KEY]: adminSecret,
       'content-type': 'application/json',
     },
-    body: JSON.stringify({
-      type: 'select',
-      args: {
-        table: {
-          name: 'hdb_table',
-          schema: 'hdb_catalog',
-        },
-        columns: ['table_schema'],
-        where: { table_schema: 'public' },
-        limit: 1,
-      },
-    }),
+    body: JSON.stringify(inconsistentObjectsQuery),
   };
-
-  dispatch(requestAction(url, requestOptions)).then(
+  return dispatch(requestAction(Endpoints.metadata, options)).then(
     () => {
       if (adminSecret) {
         if (globals.consoleMode !== CLI_CONSOLE_MODE) {

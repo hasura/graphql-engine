@@ -107,10 +107,7 @@ The Hasura GraphQL engine makes your data instantly accessible over a real-time 
   :hidden:
 
   getting-started/index
-  schema/index
-  queries/index
-  mutations/index
-  subscriptions/index
+  databases/index
   actions/index
   remote-schemas/index
   event-triggers/index

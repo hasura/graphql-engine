@@ -9,9 +9,9 @@ import qualified Data.HashSet                                 as HS
 import qualified Data.Sequence                                as DS
 import qualified Database.PG.Query                            as Q
 
+import           Control.Monad.Trans.Control                  (MonadBaseControl)
 import           Data.Aeson.Types
 import           Data.Text.Extended
-import           Instances.TH.Lift                            ()
 
 import qualified Hasura.Backends.Postgres.SQL.DML             as S
 
@@ -24,6 +24,7 @@ import           Hasura.RQL.DML.Internal
 import           Hasura.RQL.DML.Types
 import           Hasura.RQL.IR.Insert
 import           Hasura.RQL.Types
+import           Hasura.RQL.Types.Run
 import           Hasura.Server.Version                        (HasVersion)
 import           Hasura.Session
 
@@ -37,12 +38,12 @@ convObj
   -> HM.HashMap PGCol S.SQLExp
   -> HM.HashMap PGCol S.SQLExp
   -> FieldInfoMap (FieldInfo 'Postgres)
-  -> InsObj
+  -> InsObj 'Postgres
   -> m ([PGCol], [S.SQLExp])
 convObj prepFn defInsVals setInsVals fieldInfoMap insObj = do
   inpInsVals <- flip HM.traverseWithKey insObj $ \c val -> do
     let relWhenPGErr = "relationships can't be inserted"
-    colType <- askPGType fieldInfoMap c relWhenPGErr
+    colType <- askColumnType fieldInfoMap c relWhenPGErr
     -- if column has predefined value then throw error
     when (c `elem` preSetCols) $ throwNotInsErr c
     -- Encode aeson's value into prepared value
@@ -106,7 +107,7 @@ buildConflictClause sessVarBldr tableInfo inpCols (OnConflict mTCol mTCons act) 
     validateCols c = do
       let targetcols = getPGCols c
       void $ withPathK "constraint_on" $ indexedForM targetcols $
-        \pgCol -> askPGType fieldInfoMap pgCol ""
+        \pgCol -> askColumnType fieldInfoMap pgCol ""
 
     validateConstraint c = do
       let tableConsNames = maybe [] toList $
@@ -127,18 +128,18 @@ buildConflictClause sessVarBldr tableInfo inpCols (OnConflict mTCol mTCons act) 
 
 
 convInsertQuery
-  :: (UserInfoM m, QErrM m, CacheRM m)
-  => (Value -> m [InsObj])
+  :: (UserInfoM m, QErrM m, TableInfoRM 'Postgres m)
+  => (Value -> m [InsObj 'Postgres])
   -> SessVarBldr 'Postgres m
   -> (ColumnType 'Postgres -> Value -> m S.SQLExp)
   -> InsertQuery
   -> m (InsertQueryP1 'Postgres)
-convInsertQuery objsParser sessVarBldr prepFn (InsertQuery tableName val oC mRetCols) = do
+convInsertQuery objsParser sessVarBldr prepFn (InsertQuery tableName _ val oC mRetCols) = do
 
   insObjs <- objsParser val
 
   -- Get the current table information
-  tableInfo <- askTabInfo tableName
+  tableInfo <- askTabInfoSource tableName
   let coreInfo = _tiCoreInfo tableInfo
 
   -- If table is view then check if it is insertable
@@ -147,7 +148,7 @@ convInsertQuery objsParser sessVarBldr prepFn (InsertQuery tableName val oC mRet
 
   -- Check if the role has insert permissions
   insPerm   <- askInsPermInfo tableInfo
-  updPerm   <- askPermInfo' PAUpdate tableInfo
+  updPerm  <- askPermInfo' PAUpdate tableInfo
 
   -- Check if all dependent headers are present
   validateHeaders $ ipiRequiredHeaders insPerm
@@ -165,8 +166,7 @@ convInsertQuery objsParser sessVarBldr prepFn (InsertQuery tableName val oC mRet
 
   let mutOutput = mkDefaultMutFlds mAnnRetCols
 
-  let defInsVals = S.mkColDefValMap $
-                   map pgiColumn $ getCols fieldInfoMap
+  let defInsVals = HM.fromList [(column, S.columnDefaultValue) | column <- pgiColumn <$> getCols fieldInfoMap]
       allCols    = getCols fieldInfoMap
       insCols    = HM.keys defInsVals
 
@@ -181,12 +181,11 @@ convInsertQuery objsParser sessVarBldr prepFn (InsertQuery tableName val oC mRet
   updCheck <- traverse (convAnnBoolExpPartialSQL sessVarFromCurrentSetting) (upiCheck =<< updPerm)
 
   conflictClause <- withPathK "on_conflict" $ forM oC $ \c -> do
-      roleName <- askCurRole
-      unless (isTabUpdatable roleName tableInfo) $ throw400 PermissionDenied $
-        "upsert is not allowed for role " <> roleName
-        <<> " since update permissions are not defined"
-
-      buildConflictClause sessVarBldr tableInfo inpCols c
+    role <- askCurRole
+    unless (isTabUpdatable role tableInfo) $ throw400 PermissionDenied $
+      "upsert is not allowed for role " <> role
+      <<> " since update permissions are not defined"
+    buildConflictClause sessVarBldr tableInfo inpCols c
   return $ InsertQueryP1 tableName insCols sqlExps
            conflictClause (insCheck, updCheck) mutOutput allCols
   where
@@ -198,24 +197,28 @@ convInsQ
   :: (QErrM m, UserInfoM m, CacheRM m)
   => InsertQuery
   -> m (InsertQueryP1 'Postgres, DS.Seq Q.PrepArg)
-convInsQ =
-  runDMLP1T .
-  convInsertQuery (withPathK "objects" . decodeInsObjs)
-  sessVarFromCurrentSetting
-  binRHSBuilder
+convInsQ query = do
+  let source = iqSource query
+  tableCache :: TableCache 'Postgres <- askTableCache source
+  flip runTableCacheRT (source, tableCache) $ runDMLP1T $
+    convInsertQuery (withPathK "objects" . decodeInsObjs)
+    sessVarFromCurrentSetting binRHSBuilder query
 
 runInsert
   :: ( HasVersion, QErrM m, UserInfoM m
-     , CacheRM m, MonadTx m, HasSQLGenCtx m, MonadIO m
-     , Tracing.MonadTrace m
+     , CacheRM m, HasServerConfigCtx m
+     , MonadIO m, Tracing.MonadTrace m
+     , MonadBaseControl IO m, MetadataM m
      )
   => Env.Environment -> InsertQuery -> m EncJSON
 runInsert env q = do
+  sourceConfig <- askSourceConfig (iqSource q)
   res <- convInsQ q
-  strfyNum <- stringifyNum <$> askSQLGenCtx
-  execInsertQuery env strfyNum Nothing res
+  strfyNum <- stringifyNum . _sccSQLGenCtx <$> askServerConfigCtx
+  runQueryLazyTx (_pscExecCtx sourceConfig) Q.ReadWrite $
+    execInsertQuery env strfyNum Nothing res
 
-decodeInsObjs :: (UserInfoM m, QErrM m) => Value -> m [InsObj]
+decodeInsObjs :: (UserInfoM m, QErrM m) => Value -> m [InsObj 'Postgres]
 decodeInsObjs v = do
   objs <- decodeValue v
   when (null objs) $ throw400 UnexpectedPayload "objects should not be empty"

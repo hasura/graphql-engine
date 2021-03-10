@@ -62,3 +62,7 @@ Applying only metadata
 If you're managing migrations with a different tool and want to use this image to apply only the
 metadata, mount a directory with just a ``metadata.yaml`` file and the script will
 apply the metadata.
+
+.. admonition:: Additional Resources
+
+  Hasura Database Schema Migrations - `Watch Webinar <https://hasura.io/events/webinar/hasura-database-schema-migrations/?pg=docs&plcmt=body&cta=watch-webinar&tech=>`__.

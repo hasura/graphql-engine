@@ -1,0 +1,15 @@
+- name: default
+  configuration:
+    connection_info:
+      database_url:
+        from_env: SAMPLE_APPS_DATABASE_URL
+      pool_settings:
+        idle_timeout: 180
+        max_connections: 50
+        retries: 1
+  tables:
+  - "!include public_message.yaml"
+  - "!include public_user.yaml"
+  - "!include public_user_online.yaml"
+  - "!include public_user_typing.yaml"
+  functions: []
