@@ -11,7 +11,6 @@ ENV HASURA_GRAPHQL_SHOW_UPDATE_NOTIFICATION=false
 COPY docker-entrypoint.sh /bin/
 COPY cli-hasura-linux-amd64 /bin/hasura-cli
 
-COPY ./hasura-home-dir-tmpl /opt/hasura-home-directory
 RUN chmod +x /bin/hasura-cli 
 
 # set an env var to let the cli know that
