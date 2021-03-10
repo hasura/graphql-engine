@@ -338,7 +338,7 @@ jobs:
 
   test_cli_with_last_release:
     docker:
-    - image: hasura/graphql-engine-cli-builder:20191205
+    - image: hasura/graphql-engine-cli-builder:20210310
     - image: circleci/postgres:10-alpine
       environment:
         POSTGRES_USER: gql_test
