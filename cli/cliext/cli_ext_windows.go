@@ -1,4 +1,5 @@
 // +build windows
+
 package cliext
 
 import _ "embed"
