@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 
+set -evo pipefail
+
 SERVER_BUILD_OUTPUT="$1"
 BUILD_OUTPUT="$2"
 CLI_MIGRATIONS_IMAGE="cli-migrations-v2"
