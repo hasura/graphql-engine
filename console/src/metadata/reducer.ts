@@ -1,5 +1,10 @@
 import { MetadataActions } from './actions';
-import { QueryCollection, HasuraMetadataV3, RestEndpointEntry } from './types';
+import {
+  QueryCollection,
+  HasuraMetadataV3,
+  RestEndpointEntry,
+  InheritedRole,
+} from './types';
 import { allowedQueriesCollection } from './utils';
 
 type MetadataState = {
@@ -9,6 +14,7 @@ type MetadataState = {
   inconsistentObjects: any[];
   ongoingRequest: boolean; // deprecate
   allowedQueries: QueryCollection[];
+  inheritedRoles: InheritedRole[];
   rest_endpoints?: RestEndpointEntry[];
 };
 
@@ -19,6 +25,7 @@ const defaultState: MetadataState = {
   inconsistentObjects: [],
   ongoingRequest: false,
   allowedQueries: [],
+  inheritedRoles: [],
 };
 
 export const metadataReducer = (
@@ -34,6 +41,7 @@ export const metadataReducer = (
           action.data?.query_collections?.find(
             query => query.name === allowedQueriesCollection
           )?.definition.queries || [],
+        inheritedRoles: action.data?.inherited_roles,
         loading: false,
         error: null,
       };
@@ -116,6 +124,28 @@ export const metadataReducer = (
           ),
         ],
       };
+    case 'Metadata/ADD_INHERITED_ROLE':
+      return {
+        ...state,
+        inheritedRoles: [...state.inheritedRoles, action.data],
+      };
+    case 'Metadata/DELETE_INHERITED_ROLE':
+      return {
+        ...state,
+        inheritedRoles: [
+          ...state.inheritedRoles.filter(ir => ir.role_name !== action.data),
+        ],
+      };
+    case 'Metadata/UPDATE_INHERITED_ROLE':
+      return {
+        ...state,
+        inheritedRoles: [
+          ...state.inheritedRoles.map(ir =>
+            ir.role_name === action.data.role_name ? action.data : ir
+          ),
+        ],
+      };
+
     case 'Metadata/ADD_REST_ENDPOINT':
       return {
         ...state,

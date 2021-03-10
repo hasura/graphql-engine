@@ -19,7 +19,13 @@ type SidebarProps = {
   metadata: Metadata;
 };
 
-type SectionDataKey = 'actions' | 'status' | 'allow-list' | 'logout' | 'about';
+type SectionDataKey =
+  | 'actions'
+  | 'status'
+  | 'allow-list'
+  | 'logout'
+  | 'about'
+  | 'inherited-roles';
 
 interface SectionData {
   key: SectionDataKey;
@@ -81,6 +87,13 @@ const Sidebar: React.FC<SidebarProps> = ({ location, metadata }) => {
     link: '/settings/about',
     dataTestVal: 'about-link',
     title: 'About',
+  });
+
+  sectionsData.push({
+    key: 'inherited-roles',
+    link: '/settings/inherited-roles',
+    dataTestVal: 'inherited-roles-link',
+    title: 'Inherited Roles',
   });
 
   const currentLocation = location.pathname;

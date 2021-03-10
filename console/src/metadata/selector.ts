@@ -343,6 +343,9 @@ export const getCronTriggers = createSelector(getMetadata, metadata => {
 export const getAllowedQueries = (state: ReduxState) =>
   state.metadata.allowedQueries || [];
 
+export const getInheritedRoles = (state: ReduxState) =>
+  state.metadata.inheritedRoles || [];
+
 export const getDataSources = createSelector(getMetadata, metadata => {
   const sources: DataSource[] = [];
   metadata?.sources.forEach(source => {

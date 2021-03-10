@@ -22,6 +22,7 @@ export interface MainState {
       is_admin_secret_set: boolean;
       is_auth_hook_set: boolean;
       is_jwt_set: boolean;
+      experimental_features: string[];
       jwt: {
         claims_namespace: string;
         claims_format: string;
@@ -58,6 +59,7 @@ const defaultState: MainState = {
       is_function_permissions_inferred: true,
       is_admin_secret_set: false,
       is_auth_hook_set: false,
+      experimental_features: [],
       is_jwt_set: false,
       jwt: {
         claims_namespace: '',

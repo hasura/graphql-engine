@@ -11,6 +11,7 @@ export type AllowedBadges =
   | 'feature'
   | 'security'
   | 'error'
+  | 'experimental'
   | 'rest-GET'
   | 'rest-PUT'
   | 'rest-POST'
@@ -77,6 +78,12 @@ export const Badge: React.FC<ExtendedBadgeProps> = ({
       return (
         <StyledBadge {...props} bg="#FFE8E8" color="#F47E7E">
           security
+        </StyledBadge>
+      );
+    case 'experimental':
+      return (
+        <StyledBadge {...props} bg="#DBEAFE" color="#1E40AF">
+          experimental
         </StyledBadge>
       );
     case 'rest-GET':

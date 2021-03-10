@@ -10,6 +10,9 @@ import {
   deleteAllowedQueryQuery,
   createAllowListQuery,
   addAllowedQueriesQuery,
+  addInheritedRole,
+  deleteInheritedRole,
+  updateInheritedRole,
   getReloadCacheAndGetInconsistentObjectsQuery,
   reloadRemoteSchemaCacheAndGetInconsistentObjectsQuery,
   updateAllowedQueryQuery,
@@ -142,6 +145,26 @@ export interface ReloadDataSourceError {
   data: string;
 }
 
+export interface AddInheritedRole {
+  type: 'Metadata/ADD_INHERITED_ROLE';
+  data: {
+    role_name: string;
+    role_set: string[];
+  };
+}
+
+export interface DeleteInheritedRole {
+  type: 'Metadata/DELETE_INHERITED_ROLE';
+  data: string;
+}
+
+export interface UpdateInheritedRole {
+  type: 'Metadata/UPDATE_INHERITED_ROLE';
+  data: {
+    role_name: string;
+    role_set: string[];
+  };
+}
 export interface AddRestEndpoint {
   type: 'Metadata/ADD_REST_ENDPOINT';
   data: RestEndpointEntry[];
@@ -173,6 +196,9 @@ export type MetadataActions =
   | RemoveDataSourceError
   | ReloadDataSourceRequest
   | ReloadDataSourceError
+  | AddInheritedRole
+  | DeleteInheritedRole
+  | UpdateInheritedRole
   | AddRestEndpoint
   | DropRestEndpoint
   | { type: typeof UPDATE_CURRENT_DATA_SOURCE; source: string };
@@ -800,6 +826,120 @@ export const addAllowedQueries = (
     const onSuccess = () => {
       dispatch({ type: 'Metadata/ADD_ALLOWED_QUERIES', data: queries });
       callback();
+    };
+
+    const onError = () => {};
+
+    makeMigrationCall(
+      dispatch,
+      getState,
+      [upQuery],
+      undefined,
+      migrationName,
+      onSuccess,
+      onError,
+      requestMsg,
+      successMsg,
+      errorMsg
+    );
+  };
+};
+
+export const addInheritedRoleAction = (
+  role_name: string,
+  role_set: string[],
+  callback?: any
+): Thunk<void, MetadataActions> => {
+  return (dispatch, getState) => {
+    const upQuery = addInheritedRole(role_name, role_set);
+
+    const migrationName = `add_inherited_role`;
+    const requestMsg = 'Adding inherited role...';
+    const successMsg = 'Added inherited role';
+    const errorMsg = 'Adding inherited role failed';
+
+    const onSuccess = () => {
+      dispatch({
+        type: 'Metadata/ADD_INHERITED_ROLE',
+        data: { role_name, role_set },
+      });
+      callback();
+    };
+
+    const onError = () => {};
+
+    makeMigrationCall(
+      dispatch,
+      getState,
+      [upQuery],
+      undefined,
+      migrationName,
+      onSuccess,
+      onError,
+      requestMsg,
+      successMsg,
+      errorMsg
+    );
+  };
+};
+
+export const deleteInheritedRoleAction = (
+  role_name: string,
+  callback?: () => void
+): Thunk<void, MetadataActions> => {
+  return (dispatch, getState) => {
+    const upQuery = deleteInheritedRole(role_name);
+
+    const migrationName = `delete_inherited_role`;
+    const requestMsg = 'Deleting inherited role...';
+    const successMsg = 'Deleted inherited role';
+    const errorMsg = 'Deleting inherited role failed';
+
+    const onSuccess = () => {
+      dispatch({ type: 'Metadata/DELETE_INHERITED_ROLE', data: role_name });
+      if (callback) {
+        callback();
+      }
+    };
+
+    const onError = () => {};
+
+    makeMigrationCall(
+      dispatch,
+      getState,
+      [upQuery],
+      undefined,
+      migrationName,
+      onSuccess,
+      onError,
+      requestMsg,
+      successMsg,
+      errorMsg
+    );
+  };
+};
+
+export const updateInheritedRoleAction = (
+  role_name: string,
+  role_set: string[],
+  callback?: () => void
+): Thunk<void, MetadataActions> => {
+  return (dispatch, getState) => {
+    const upQuery = updateInheritedRole(role_name, role_set);
+
+    const migrationName = `update_inherited_role`;
+    const requestMsg = 'Updating inherited role...';
+    const successMsg = 'Updated inherited role';
+    const errorMsg = 'Updating inherited role failed';
+
+    const onSuccess = () => {
+      dispatch({
+        type: 'Metadata/UPDATE_INHERITED_ROLE',
+        data: { role_name, role_set },
+      });
+      if (callback) {
+        callback();
+      }
     };
 
     const onError = () => {};

@@ -107,6 +107,26 @@ export const getReloadCacheAndGetInconsistentObjectsQuery = (
   ],
 });
 
+export const addInheritedRole = (roleName: string, roleSet: string[]) => ({
+  type: 'add_inherited_role',
+  args: {
+    role_name: roleName,
+    role_set: roleSet,
+  },
+});
+
+export const deleteInheritedRole = (roleName: string) => ({
+  type: 'drop_inherited_role',
+  args: {
+    role_name: roleName,
+  },
+});
+
+export const updateInheritedRole = (roleName: string, roleSet: string[]) => ({
+  type: 'bulk',
+  args: [deleteInheritedRole(roleName), addInheritedRole(roleName, roleSet)],
+});
+
 export const isMetadataEmpty = (metadataObject: HasuraMetadataV3) => {
   const { actions, sources, remote_schemas } = metadataObject;
   const hasRemoteSchema = remote_schemas && remote_schemas.length;

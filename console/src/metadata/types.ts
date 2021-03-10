@@ -911,6 +911,11 @@ export interface MetadataDataSource {
   allowlist?: AllowList[];
 }
 
+export interface InheritedRole {
+  role_name: string;
+  role_set: string[];
+}
+
 export interface HasuraMetadataV3 {
   version: 3;
   sources: MetadataDataSource[];
@@ -919,5 +924,6 @@ export interface HasuraMetadataV3 {
   custom_types?: CustomTypes;
   cron_triggers?: CronTrigger[];
   query_collections: QueryCollectionEntry[];
+  inherited_roles: InheritedRole[];
   rest_endpoints?: RestEndpointEntry[];
 }
