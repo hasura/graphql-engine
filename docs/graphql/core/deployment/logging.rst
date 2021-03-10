@@ -198,6 +198,7 @@ This is how the HTTP access logs look like:
       "level": "info",
       "type": "http-log",
       "detail": {
+        "request_id": "072b3617-6653-4fd5-b5ee-580e9d098c3d",
         "operation": {
           "query_execution_time": 0.009240042,
           "user_vars": {
@@ -225,7 +226,7 @@ This is how the HTTP access logs look like:
 
     {
       "timestamp": "2019-05-29T15:22:37.834+0530",
-      "level": "info",
+      "level": "error",
       "type": "http-log",
       "detail": {
         "operation": {
@@ -368,7 +369,7 @@ This is how the Websocket logs look like:
 
     {
       "timestamp": "2019-06-10T10:55:20.650+0530",
-      "level": "info",
+      "level": "error",
       "type": "websocket-log",
       "detail": {
         "event": {

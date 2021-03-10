@@ -10,7 +10,14 @@ export type AllowedBadges =
   | 'update'
   | 'feature'
   | 'security'
-  | 'error';
+  | 'error'
+  | 'experimental'
+  | 'rest-GET'
+  | 'rest-PUT'
+  | 'rest-POST'
+  | 'rest-PATCH'
+  | 'rest-DELETE'
+  | string;
 
 interface BadgeProps {
   type: AllowedBadges;
@@ -18,11 +25,18 @@ interface BadgeProps {
 
 interface ExtendedBadgeProps extends BadgeProps, StyledOwnBadgeProps {}
 
-// NOTE: update the colors once they are decided
+// TODO: update the colors for the methods badge
 export const Badge: React.FC<ExtendedBadgeProps> = ({
   type = '',
   ...props
 }) => {
+  const restApiProps = {
+    ...props,
+    fontSize: '12px',
+    px: '8px',
+    py: '4px',
+    border: '1px solid #AACBE0',
+  };
   switch (type) {
     case 'error':
       return (
@@ -64,6 +78,42 @@ export const Badge: React.FC<ExtendedBadgeProps> = ({
       return (
         <StyledBadge {...props} bg="#FFE8E8" color="#F47E7E">
           security
+        </StyledBadge>
+      );
+    case 'experimental':
+      return (
+        <StyledBadge {...props} bg="#DBEAFE" color="#1E40AF">
+          experimental
+        </StyledBadge>
+      );
+    case 'rest-GET':
+      return (
+        <StyledBadge {...restApiProps} bg="#e6f7ff" color="#006699">
+          GET
+        </StyledBadge>
+      );
+    case 'rest-PUT':
+      return (
+        <StyledBadge {...restApiProps} bg="#e6f7ff" color="#006699">
+          PUT
+        </StyledBadge>
+      );
+    case 'rest-POST':
+      return (
+        <StyledBadge {...restApiProps} bg="#e6f7ff" color="#006699">
+          POST
+        </StyledBadge>
+      );
+    case 'rest-PATCH':
+      return (
+        <StyledBadge {...restApiProps} bg="#e6f7ff" color="#006699">
+          PATCH
+        </StyledBadge>
+      );
+    case 'rest-DELETE':
+      return (
+        <StyledBadge {...restApiProps} bg="#e6f7ff" color="#006699">
+          DELETE
         </StyledBadge>
       );
     default:

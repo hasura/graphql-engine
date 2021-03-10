@@ -17,11 +17,12 @@ Guides / Tutorials / Resources
    :titlesonly:
 
    Data modelling guides <data-modelling/index>
-   Postgres concepts <postgres/index>
+   Postgres basics <postgres/index>
    Docker networking <docker-networking>
    Sample apps & boilerplates <sample-apps/index>
    Integration/migration tutorials <integrations/index>
    Integrating with monitoring frameworks <monitoring/index>
+   Exporting the Hasura GraphQL schema <export-graphql-schema>
    Auditing tables <auditing-tables>
    Telemetry <telemetry>
    Code Editor Integrations <code-editor-integrations/index>

@@ -58,6 +58,20 @@ To set up the project configuration to coincide with the testing scripts below, 
 
     $ ln -s cabal.project.dev-sh.local cabal.project.local
 
+### IDE Support
+
+You may want to use [hls](https://github.com/haskell/haskell-language-server)/[ghcide](https://github.com/haskell/ghcide) if your editor has LSP support. A sample configuration has been provided which can be used as follows:
+
+```
+ln -s sample.hie.yaml hie.yaml
+```
+
+If you have to customise any of the options for ghcide/hls, you should instead copy the sample file and make necessary changes in `hie.yaml` file. Note that `hie.yaml` is gitignored so the changes will be specific to your machine.
+
+```
+cp sample.hie.yaml hie.yaml
+```
+
 ### Run and test via `dev.sh`
 
 The `dev.sh` script in the top-level `scripts/` directory is a turnkey solution to build, run, and
@@ -80,6 +94,10 @@ You can run the test suite with:
     $ scripts/dev.sh test
 
 This should run in isolation.  The output format is described in the [pytest documentation](https://docs.pytest.org/en/latest/usage.html#detailed-summary-report).  Errors and failures are indicated by `F`s and `E`s.
+
+Optionally, launch a new container for alternative (MSSQL) backend with:
+
+    $ scripts/dev.sh mssql
 
 ### Run and test manually
 
@@ -186,4 +204,5 @@ This helps enforce a uniform style for all committers.
 
 - Compiler warnings are turned on, make sure your code has no warnings.
 - Use [hlint](https://github.com/ndmitchell/hlint) to make sure your code has no warnings.
+  You can use our custom hlint config with `$ hlint --hint=server/.hlint.yaml .`
 - Use [stylish-haskell](https://github.com/jaspervdj/stylish-haskell) to format your code.

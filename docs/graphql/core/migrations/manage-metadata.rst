@@ -26,6 +26,8 @@ controlled. The metadata file can be later imported to another Hasura instance t
 configuration. You can also manually edit the metadata file to add more objects to
 it and then use it to update the instance.
 
+.. _exporting_metadata:
+
 Exporting Hasura metadata
 -------------------------
 
@@ -43,18 +45,22 @@ Exporting Hasura metadata
 
      1. Click on the settings (⚙) icon at the top right corner of the console screen.
      2. In the Hasura metadata actions page that opens, click on the ``Export Metadata`` button.
+
+        .. thumbnail:: /img/graphql/core/migrations/metadata-export.png
+           :alt: Export metadata
+
      3. This will prompt a file download for ``hasura_metadata_<timestamp>.json``. Save the file.
 
   .. tab:: API
 
-     The export can be done via the :ref:`Metadata API
-     <api_manage_metadata>`.
-     Response will be a JSON object with the Hasura metadata. Here is an example
-     using ``curl`` to save this as a file:
+     The export can be done via the :ref:`export_metadata metadata API <export_metadata>`.
+     Response will be a JSON object with the Hasura metadata.
+
+     Here is an example using ``curl`` to save this as a file:
 
      .. code-block:: bash
 
-        curl -d'{"type": "export_metadata", "args": {}}' http://localhost:8080/v1/query -o hasura_metadata.json
+        curl -d'{"type": "export_metadata", "args": {}}' http://localhost:8080/v1/metadata -o hasura_metadata.json
 
      This command will create a ``hasura_metadata.json`` file.
      If an admin secret is set, add ``-H 'X-Hasura-Admin-Secret: <your-admin-secret>'`` as the API is an
@@ -69,6 +75,8 @@ Exporting Hasura metadata
   management in version control and CI/CD and can be applied via the CLI or the
   :ref:`cli-migrations <auto_apply_migrations>` image only.
 
+
+.. _applying_metadata:
 
 Applying/Importing Hasura metadata
 ----------------------------------
@@ -91,18 +99,22 @@ before.
 
      1. Click on the settings (⚙) icon at the top right corner of the console screen.
      2. Click on ``Import Metadata`` button.
+
+        .. thumbnail:: /img/graphql/core/migrations/metadata-import.png
+           :alt: Import metadata
+
      3. Choose a ``hasura_metadata.json`` file that was exported earlier.
      4. A notification should appear indicating the success or error.
 
   .. tab:: API
 
-     The exported JSON can be imported via the :ref:`Metadata API
-     <api_manage_metadata>`.
+     The exported JSON can be imported via the :ref:`replace_metadata metadata API <replace_metadata>`.
+
      Here is an example using ``curl``:
 
      .. code-block:: bash
 
-        curl -d'{"type":"replace_metadata", "args":'$(cat hasura_metadata.json)'}' http://localhost:8080/v1/query
+        curl -d'{"type":"replace_metadata", "args":'$(cat hasura_metadata.json)'}' http://localhost:8080/v1/metadata
 
      This command reads the ``hasura_metadata.json`` file and makes a POST request to
      replace the metadata.
@@ -137,17 +149,21 @@ when a new column has been added to a table via an external tool such as ``psql`
 
      1. Click on the settings (⚙) icon at the top right corner of the console screen.
      2. Click on ``Reload`` button.
+
+        .. thumbnail:: /img/graphql/core/migrations/metadata-reload.png
+           :alt: Reload metadata
+
      3. A notification should appear indicating the success.
 
   .. tab:: API
 
-     The reload of metadata can be done via the :ref:`Metadata API
-     <api_manage_metadata>`.
+     The reload of metadata can be done via the :ref:`reload_metadata metadata API <reload_metadata>`.
+
      Here is an example using ``curl``:
 
      .. code-block:: bash
 
-        curl -d'{"type": "reload_metadata", "args": {}}' http://localhost:8080/v1/query
+        curl -d'{"type": "reload_metadata", "args": {}}' http://localhost:8080/v1/metadata
 
      If an admin secret is set, add ``-H 'X-Hasura-Admin-Secret: <your-admin-secret>'`` as the API is an
      admin-only API.
@@ -158,6 +174,48 @@ when a new column has been added to a table via an external tool such as ``psql`
    all inconsistent objects manually or delete them. After that, you need to reload
    metadata again.
 
+
+.. _reset_metadata_manual:
+
+Resetting Hasura metadata
+-------------------------
+
+Resetting GraphQL engine's metadata is an irreversible process. It is recommended to first export the metadata
+so that it can be reapplied if needed or else that information will be lost and Hasura will have to be configured
+again from scratch (e.g. tracking tables, relationships, creating triggers, actions, etc.).
+
+.. rst-class:: api_tabs
+.. tabs::
+
+  .. tab:: CLI
+
+     Metadata can be reset with the :ref:`hasura metadata clear <hasura_metadata_clear>`
+     command.
+
+  .. tab:: Console
+
+     1. Click on the settings (⚙) icon at the top right corner of the console screen.
+     2. Click on ``Reset`` button.
+
+        .. thumbnail:: /img/graphql/core/migrations/metadata-reset.png
+           :alt: Reset metadata
+
+     3. A pop-up will appear prompting you to confirm the process.
+     4. A notification should appear indicating the success.
+
+  .. tab:: API
+
+   The reset of metadata can be done via the :ref:`clear_metadata metadata API <clear_metadata>`.
+
+   Here is an example using ``curl``:
+
+   .. code-block:: bash
+
+      curl -d'{"type": "clear_metadata", "args": {}}' http://localhost:8080/v1/metadata
+
+   If an admin secret is set, add ``-H 'X-Hasura-Admin-Secret: <your-admin-secret>'`` as the API is an
+   admin-only API.
+
 Managing Hasura metadata in CI/CD
 ---------------------------------
 
@@ -165,3 +223,7 @@ In case you need an automated way of applying/importing the metadata, take a
 look at the :ref:`cli-migrations <auto_apply_migrations>` Docker image, which
 can start the GraphQL engine after automatically importing a mounted metadata
 directory.
+
+.. admonition:: Additional Resources
+
+  Hasura Database Schema Migrations - `Watch Webinar <https://hasura.io/events/webinar/hasura-database-schema-migrations/?pg=docs&plcmt=body&cta=watch-webinar&tech=>`__.

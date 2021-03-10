@@ -78,7 +78,7 @@ O modo mais fácil de experimentar Hasura é via o Heroku.
 
 3. Faça sua primeira consulta GraphQL
 
-   Crie uma tabela e rode instantaneamente sua primeira consulta. Siga esse [simples guia](https://hasura.io/docs/1.0/graphql/manual/getting-started/first-graphql-query.html).
+   Crie uma tabela e rode instantaneamente sua primeira consulta. Siga esse [simples guia](https://hasura.io/docs/latest/graphql/core/getting-started/first-graphql-query.html).
 
 ### Outros métodos de implantação
 
@@ -86,12 +86,12 @@ Confira as instruções para as seguintes opções de implantação com um cliqu
 
 | **Fornecedor de infraestrutura** |                                                                                                                       **Link com um clique**                                                                                                                       |                                                             **Informação adicional**                                                              |
 | :------------------------------: | :----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------: | :-----------------------------------------------------------------------------------------------------------------------------------------------: |
-|           DigitalOcean           |                  [![Deploy to DigitalOcean](https://graphql-engine-cdn.hasura.io/img/create_hasura_droplet_200px.png)](https://marketplace.digitalocean.com/apps/hasura?action=deploy&refcode=c4d9092d2c48&utm_source=hasura&utm_campaign=readme)                  | [docs](https://hasura.io/docs/1.0/graphql/manual/guides/deployment/digital-ocean-one-click.html#hasura-graphql-engine-digitalocean-one-click-app) |
-|              Azure               | [![Deploy to Azure](http://azuredeploy.net/deploybutton.png)](https://portal.azure.com/#create/Microsoft.Template/uri/https%3a%2f%2fraw.githubusercontent.com%2fhasura%2fgraphql-engine%2fmaster%2finstall-manifests%2fazure-container-with-pg%2fazuredeploy.json) |                    [docs](https://hasura.io/docs/1.0/graphql/manual/guides/deployment/azure-container-instances-postgres.html)                    |
+|           DigitalOcean           |                  [![Deploy to DigitalOcean](https://graphql-engine-cdn.hasura.io/img/create_hasura_droplet_200px.png)](https://marketplace.digitalocean.com/apps/hasura?action=deploy&refcode=c4d9092d2c48&utm_source=hasura&utm_campaign=readme)                  | [docs](https://hasura.io/docs/latest/graphql/core/guides/deployment/digital-ocean-one-click.html#hasura-graphql-engine-digitalocean-one-click-app) |
+|              Azure               | [![Deploy to Azure](http://azuredeploy.net/deploybutton.png)](https://portal.azure.com/#create/Microsoft.Template/uri/https%3a%2f%2fraw.githubusercontent.com%2fhasura%2fgraphql-engine%2fmaster%2finstall-manifests%2fazure-container-with-pg%2fazuredeploy.json) |                    [docs](https://hasura.io/docs/latest/graphql/core/guides/deployment/azure-container-instances-postgres.html)                    |
 
 ### Outros métodos de implantação
 
-Para implantação baseada no Docker e opções de configuração avançadas, veja o [guias de implantação](https://hasura.io/docs/1.0/graphql/manual/getting-started/index.html) ou o
+Para implantação baseada no Docker e opções de configuração avançadas, veja o [guias de implantação](https://hasura.io/docs/latest/graphql/core/getting-started/index.html) ou o
 [manifestos de instalação](/install-manifests).
 
 ## Arquitetura
@@ -120,7 +120,7 @@ Adicione lógica de negócios assíncrona que é acionada com base nos eventos d
 
 ### Dados derivados ou transformações de dados
 
-Transforme dados no Postgres ou execute a lógica de negócios para obter outro conjunto de dados que possa ser consultado usando o GraphQL Engine - [leia mais](https://hasura.io/docs/1.0/graphql/manual/queries/derived-data.html).
+Transforme dados no Postgres ou execute a lógica de negócios para obter outro conjunto de dados que possa ser consultado usando o GraphQL Engine - [leia mais](https://hasura.io/docs/latest/graphql/core/queries/derived-data.html).
 
 ## Demos
 

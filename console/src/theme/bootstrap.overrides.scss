@@ -139,9 +139,14 @@ form {
     0 0 0px rgba(102, 175, 233, 0.6);
 }
 
+
 .form-control {
   // border-radius: 0;
   height: auto;
+}
+
+.max-width-250 {
+  max-width: 250px;
 }
 
 select.form-control {

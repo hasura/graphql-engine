@@ -1,16 +1,14 @@
 # -*- coding: utf-8 -*-
 
 from http import HTTPStatus
-
 import graphene
-
 import copy
-
 from webserver import RequestHandler, WebServer, MkHandlers, Response
-
 from enum import Enum
-
 import time
+import ssl
+import sys
+from graphql import GraphQLError
 
 HGE_URLS=[]
 
@@ -53,6 +51,8 @@ class HelloGraphQL(RequestHandler):
 class User(graphene.ObjectType):
     id = graphene.Int()
     username = graphene.String()
+    generateError = graphene.String()
+
     def __init__(self, id, username):
         self.id = id
         self.username = username
@@ -62,6 +62,9 @@ class User(graphene.ObjectType):
 
     def resolve_username(self, info):
         return self.username
+
+    def resolve_generateError(self, info):
+        return GraphQLError ('Cannot query field "generateError" on type "User".')
 
     @staticmethod
     def get_by_id(_id):
@@ -75,6 +78,25 @@ all_users = [
     User(2, 'john'),
     User(3, 'joe'),
 ]
+
+class UserDetailsInput(graphene.InputObjectType):
+    id = graphene.Int(required=True)
+    username = graphene.String(required=True)
+
+class CreateUserInputObject(graphene.Mutation):
+    class Arguments:
+        user_data = UserDetailsInput(required=True)
+
+    ok = graphene.Boolean()
+    user = graphene.Field(lambda: User)
+
+    def mutate(self, info, user_data=None):
+        user = User(
+            id = user_data.id,
+            username = user_data.username
+        )
+        all_users.append(user)
+        return CreateUserInputObject(ok=True, user = user)
 
 class CreateUser(graphene.Mutation):
     class Arguments:
@@ -101,6 +123,8 @@ class UserQuery(graphene.ObjectType):
 
 class UserMutation(graphene.ObjectType):
     createUser = CreateUser.Field()
+    createUserInputObj = CreateUserInputObject.Field()
+
 user_schema = graphene.Schema(query=UserQuery, mutation=UserMutation)
 
 class UserGraphQL(RequestHandler):
@@ -733,5 +757,19 @@ def set_hge_urls(hge_urls = []):
     HGE_URLS=hge_urls
 
 if __name__ == '__main__':
-    s = create_server(host='0.0.0.0')
+    port = None
+    certfile = None
+    s = None
+    if len(sys.argv) == 4: # usage - python3 graphql-server.py <port> <certfile> <keyfile>
+        port_ = int(sys.argv[1])
+        certfile_ = sys.argv[2]
+        keyfile_ = sys.argv[3]
+        s = create_server(port = port_)
+        s.socket = ssl.wrap_socket( s.socket,
+                                    certfile=certfile_,
+                                    keyfile=keyfile_,
+                                    server_side=True,
+                                    ssl_version=ssl.PROTOCOL_SSLv23)
+    else:
+        s = create_server()
     s.serve_forever()

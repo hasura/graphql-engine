@@ -4,14 +4,18 @@ This app demonstrates pagination using Hasura with Relay. It's for demo purposes
 
 ## Setup
 
+- Deploy GraphQL Engine on Hasura Cloud and setup PostgreSQL via Heroku:
+  
+  [![Deploy to Hasura Cloud](https://graphql-engine-cdn.hasura.io/img/deploy_to_hasura.png)](https://cloud.hasura.io/)
+
 - Create the following tables via the Hasura console:
   - `reviews`
     - columns: `id`, `body`, `created_at`, `restaurant_id`
   - `restaurants`
     - columns: `id`, `name`, `cuisine`
-- Create a [one-to-many relationship](https://hasura.io/docs/1.0/graphql/manual/schema/relationships/database-modelling/one-to-many.html) between the tables.
+- Create a [one-to-many relationship](https://hasura.io/docs/latest/graphql/core/schema/relationships/database-modelling/one-to-many.html) between the tables.
 - Using the Hasura console, add some rows to both tables. Add at least four reviews since the sample code loads three reviews at a time.
-- Using your Relay endpoint from Hasura (`/v1beta1/relay`), export your GraphQL schema by following the instructions [here](https://hasura.io/docs/1.0/graphql/manual/schema/export-graphql-schema.html) (to replace `schema.graphql` at the root of this project).
+- Using your Relay endpoint from Hasura (`/v1beta1/relay`), export your GraphQL schema by following the instructions [here](https://hasura.io/docs/latest/graphql/core/schema/export-graphql-schema.html) (to replace `schema.graphql` at the root of this project).
 - In `fetchGraphQL.js`, set the GraphQL endpoint to your Relay endpoint.
 - In `App.js`, replace `MY_RESTAURANT_ID` with a restaurant `id` from your database (This is for demo purposes; normally you'd pass in the `id` via routing).
 - In your Terminal, at the root of the app:
@@ -21,4 +25,4 @@ This app demonstrates pagination using Hasura with Relay. It's for demo purposes
 - Open [http://localhost:3000](http://localhost:3000) to view the app in your browser.
 - Click the `Load More` button to load more reviews.
 
-For more information on Hasura's Relay API, see the [Hasura docs](https://hasura.io/docs/1.0/graphql/manual/schema/relay-schema.html).
+For more information on Hasura's Relay API, see the [Hasura docs](https://hasura.io/docs/latest/graphql/core/schema/relay-schema.html).

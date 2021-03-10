@@ -7,7 +7,7 @@
 Hasura CLI: hasura scripts update-project-v2
 --------------------------------------------
 
-Update the Hasura Project from v1 to v2.
+Update the Hasura project from config v1 to v2.
 
 Synopsis
 ~~~~~~~~
@@ -47,11 +47,11 @@ Options
 
 ::
 
-      --admin-secret string            admin secret for Hasura GraphQL engine 
-      --certificate-authority string   path to a cert file for the certificate authority
-      --endpoint string                http(s) endpoint for Hasura GraphQL engine
+      --admin-secret string            admin secret for Hasura GraphQL engine (env "HASURA_GRAPHQL_ADMIN_SECRET")
+      --certificate-authority string   path to a cert file for the certificate authority (env "HASURA_GRAPHQL_CERTIFICATE_AUTHORITY")
+      --endpoint string                http(s) endpoint for Hasura GraphQL engine (env "HASURA_GRAPHQL_ENDPOINT")
   -h, --help                           help for update-project-v2
-      --insecure-skip-tls-verify       skip TLS verification and disable cert checking (default: false)
+      --insecure-skip-tls-verify       skip TLS verification and disable cert checking (default: false) (env "HASURA_GRAPHQL_INSECURE_SKIP_TLS_VERIFY")
       --metadata-dir string             (default "metadata")
 
 Options inherited from parent commands

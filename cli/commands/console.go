@@ -4,6 +4,7 @@ import (
 	"os"
 	"sync"
 
+	"github.com/hasura/graphql-engine/cli/internal/scripts"
 	"github.com/hasura/graphql-engine/cli/util"
 
 	"github.com/gin-gonic/gin"
@@ -45,7 +46,10 @@ func NewConsoleCmd(ec *cli.ExecutionContext) *cobra.Command {
 			if err != nil {
 				return err
 			}
-			return ec.Validate()
+			if err := ec.Validate(); err != nil {
+				return err
+			}
+			return scripts.CheckIfUpdateToConfigV3IsRequired(ec)
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
 			return opts.Run()

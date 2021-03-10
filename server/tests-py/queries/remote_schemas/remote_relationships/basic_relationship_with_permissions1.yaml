@@ -8,6 +8,7 @@
     data:
       profiles:
         - id: 1
+          profile_name: alice
           messageBasic:
             name: alice
   query:
@@ -15,6 +16,7 @@
       query {
         profiles {
           id
+          profile_name
           messageBasic {
             name
           }

@@ -1,3 +1,11 @@
-ALTER TABLE hdb_catalog.event_log ALTER COLUMN locked DROP DEFAULT;
-ALTER TABLE hdb_catalog.event_log ALTER COLUMN locked DROP NOT NULL;
-ALTER TABLE hdb_catalog.event_log ALTER COLUMN locked TYPE TIMESTAMPTZ USING CASE WHEN locked THEN NOW() ELSE NULL END;
+ALTER TABLE hdb_catalog.hdb_cron_events
+ALTER COLUMN created_at TYPE TIMESTAMPTZ;
+
+ALTER TABLE hdb_catalog.hdb_cron_event_invocation_logs
+ALTER COLUMN created_at TYPE TIMESTAMPTZ;
+
+ALTER TABLE hdb_catalog.hdb_scheduled_events
+ALTER COLUMN created_at TYPE TIMESTAMPTZ;
+
+ALTER TABLE hdb_catalog.hdb_scheduled_event_invocation_logs
+ALTER COLUMN created_at TYPE TIMESTAMPTZ;

@@ -14,5 +14,5 @@ Overview
 
 The Overview displays aggregate stats over the last hour:
 
-.. thumbnail:: /img/graphql/cloud/metrics/pro-tab-overview.png
+.. thumbnail:: /img/graphql/cloud/metrics/monitoring-tab-overview.png
    :alt: Hasura Cloud Console overview tab

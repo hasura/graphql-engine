@@ -12,12 +12,13 @@ import {
   deleteCTTestTables,
   passCTWithFK,
 } from './spec';
+import { getIndexRoute } from '../../../helpers/dataHelpers';
 
 const setup = () => {
   describe('Setup route', () => {
     it('Visit the index route', () => {
       // Visit the index route
-      cy.visit('/data/schema/public');
+      cy.visit(getIndexRoute());
       cy.wait(7000);
       // Get and set validation metadata
       setMetaData();
@@ -38,7 +39,7 @@ export const runCreateTableTests = () => {
       passCTWithFK
     );
     it('Fails to create duplicate table', failCTDuplicateTable);
-    it('Delete off the test tables', deleteCTTestTables);
+    it('Delete the test tables', deleteCTTestTables);
   });
 };
 

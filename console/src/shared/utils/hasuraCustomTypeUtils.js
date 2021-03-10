@@ -150,7 +150,9 @@ export const hydrateTypeRelationships = (newTypes, existingTypes) => {
     if (t.kind === 'object' && typeMap[t.name]) {
       return {
         ...t,
-        relationships: typeMap[t.name].relationships,
+        ...(typeMap[t.name].relationships && {
+          relationships: typeMap[t.name].relationships,
+        }),
       };
     }
 

@@ -1,0 +1,30 @@
+type: bulk
+args:
+- type: run_sql
+  args:
+    sql: |
+      CREATE TABLE table1 (
+        id serial primary key,
+        name text
+      );
+      CREATE TABLE table2 (
+        id serial primary key,
+        name text,
+        table1_id INTEGER REFERENCES table1(id)
+      );
+
+- type: track_table
+  version: 2
+  args:
+    table: table1
+- type: track_table
+  version: 2
+  args:
+    table: table2
+
+- type: create_object_relationship
+  args:
+    name: via_table1
+    table: table2
+    using:
+      foreign_key_constraint_on: table1_id

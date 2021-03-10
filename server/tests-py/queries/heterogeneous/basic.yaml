@@ -78,13 +78,16 @@
           name
         }
         user_alias : user(id: 2) {
-          NonExistingField
+          generateError
         }
       }
   response:
     data:
     errors:
-    - message: Cannot query field "NonExistingField" on type "User".
+    - message: Cannot query field "generateError" on type "User".
+      path:
+        - user_alias
+        - generateError
       locations:
       - line: 1
         column: 36

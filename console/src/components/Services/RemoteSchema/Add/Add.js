@@ -27,13 +27,13 @@ class Add extends React.Component {
             dispatch(addRemoteSchema());
           }}
         >
-          <Common {...this.props} />
+          <Common isNew {...this.props} />
           <div className={styles.commonBtn}>
             <Button
               type="submit"
               color="yellow"
               size="sm"
-              disabled={isRequesting}
+              // disabled={isRequesting} // TODO
               data-test="add-remote-schema-submit"
             >
               {isRequesting ? 'Adding...' : 'Add Remote Schema'}
