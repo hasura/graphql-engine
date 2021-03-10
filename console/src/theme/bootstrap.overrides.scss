@@ -139,7 +139,6 @@ form {
     0 0 0px rgba(102, 175, 233, 0.6);
 }
 
-
 .form-control {
   // border-radius: 0;
   height: auto;
@@ -152,10 +151,10 @@ form {
 select.form-control {
   border-radius: 0;
   -webkit-border-radius: 0px;
+  font-family: 'Gudea', sans-serif;
 }
 
 .btn {
-  // border-radius: 0;
   outline: none;
 }
 
