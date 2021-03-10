@@ -446,9 +446,9 @@ class Permissions extends Component {
         });
 
         const dispatchRoleNameChange = e => {
-          const role = e.target.value;
-
-          dispatch(permSetRoleName(role));
+          const newRole = e.target.value;
+          dispatch(permOpenEdit(tableSchema, newRole, permissionsState.query));
+          dispatch(permSetRoleName(newRole));
         };
 
         return (
