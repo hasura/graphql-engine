@@ -40,9 +40,9 @@ To merge your remote schema with the GraphQL engine's auto-generated schema:
 
   .. tab:: Console
 
-    Head to the ``Remote Schemas`` tab of the console and click on the ``Add`` button.
+    Head to the ``Remote Schemas`` tab of the console and click on the ``Add`` button on the left sidebar.
 
-    .. thumbnail:: /img/graphql/core/business-logic/add-remote-schemas-interface.png
+    .. thumbnail:: /img/graphql/core/remote-schemas/add-remote-schemas-interface.png
       :alt: Merge remote schema
 
     You need to enter the following information:
@@ -186,3 +186,7 @@ To support them, you can use community tooling to write your own client-facing G
   **Adding an additional layer on top of the Hasura GraphQL engine significantly impacts the performance provided by
   it out of the box** (*by as much as 4x*). If you need any help with remodelling these kinds of use cases to use the
   built-in remote schemas feature, please get in touch with us on `Discord <https://discord.gg/vBPpJkS>`__.
+
+.. admonition:: Additional Resources
+
+  Data Federation with Hasura - `Watch Webinar <https://hasura.io/events/webinar/data-federation-hasura-graphql/?pg=docs&plcmt=body&cta=watch-webinar&tech=>`__.

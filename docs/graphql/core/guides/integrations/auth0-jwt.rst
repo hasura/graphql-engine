@@ -31,7 +31,7 @@ Create an Auth0 Application
 Configure Auth0 Rules & Callback URLs
 -------------------------------------
 
-In the settings of the application, add appropriate (e.g: http://localhost:3000/callback) URLs as ``Allowed Callback
+In the settings of the application, add appropriate (e.g: ``http://localhost:3000/callback``) URLs as ``Allowed Callback
 URLs`` and ``Allowed Web Origins``. Add domain specific URLs as well for production apps (e.g: https://myapp.com/callback).
 
 Auth0 has multiple versions of its SDK available and unfortunately they have different semantics
@@ -186,7 +186,7 @@ And use it in the ``key`` field:
 
 An easier way to generate the above config is to use the following UI:
 
-https://hasura.io/jwt-config.
+https://hasura.io/jwt-config/.
 
 The generated config can be used in env ``HASURA_GRAPHQL_JWT_SECRET`` or ``--jwt-secret`` flag.
 The config generated from this page can be directly pasted in ``yaml`` files and command line arguments as it takes care of

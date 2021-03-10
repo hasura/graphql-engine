@@ -15,6 +15,11 @@ args:
     sql: |
       drop table if exists authors
 
+- type: run_sql
+  args:
+    sql: |
+      drop table if exists employees
+
 # also drops remote relationship as direct dep
 - type: remove_remote_schema
   args:

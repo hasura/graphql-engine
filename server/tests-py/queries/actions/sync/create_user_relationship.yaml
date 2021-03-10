@@ -1,0 +1,125 @@
+- description: Run create_user sync action mutation with valid email
+  url: /v1/graphql
+  status: 200
+  query:
+    query: |
+      mutation {
+        create_user(email: "clarke@gmail.com", name: "Clarke"){
+          __typename
+          id
+          user {
+            __typename
+            name
+            email
+            is_admin
+          }
+        }
+      }
+  response:
+    data:
+      create_user:
+        __typename: UserId
+        id: 1
+        user:
+          __typename: user
+          name: Clarke
+          email: clarke@gmail.com
+          is_admin: false
+
+- description: Use user_by_email to get our user and test array relationship
+  url: /v1/graphql
+  status: 200
+  query:
+    query: |
+      query {
+        get_user_by_email(email: "clarke@gmail.com"){
+          __typename
+          id
+          articles {
+            name
+          }
+        }
+      }
+  response:
+    data:
+      get_user_by_email:
+        __typename: UserId
+        id: 1
+        articles:
+          - name: foo
+          - name: bar
+          - name: bar
+
+- description: Use user_by_email to get our user and test array relationship with limit input parameter
+  url: /v1/graphql
+  status: 200
+  query:
+    query: |
+      query {
+        get_user_by_email(email: "clarke@gmail.com"){
+          __typename
+          id
+          articles(limit: 1) {
+            name
+          }
+        }
+      }
+  response:
+    data:
+      get_user_by_email:
+        __typename: UserId
+        id: 1
+        articles:
+          - name: foo
+
+
+- description: Use user_by_email to get our user and test array relationship with distinct input parameter
+  url: /v1/graphql
+  status: 200
+  query:
+    query: |
+      query {
+        get_user_by_email(email: "clarke@gmail.com"){
+          __typename
+          id
+          articles(distinct_on: name) {
+            name
+          }
+        }
+      }
+  response:
+    data:
+      get_user_by_email:
+        __typename: UserId
+        id: 1
+        articles:
+          - name: bar
+          - name: foo
+
+
+- description: Use user_by_email to get our user and test aggregate array relationship
+  url: /v1/graphql
+  status: 200
+  query:
+    query: |
+      query {
+        get_user_by_email(email: "clarke@gmail.com"){
+          __typename
+          id
+          articles_aggregate {
+            aggregate {
+              max {
+                name
+              }
+            }
+          }
+        }
+      }
+  response:
+    data:
+      get_user_by_email:
+        __typename: UserId
+        id: 1
+        articles:
+          - name: bar
+          - name: foo

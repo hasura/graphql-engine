@@ -133,30 +133,12 @@ deploy_cli_ext() {
     unset DIST_PATH
 }
 
-# build and push container for auto-migrations
-build_and_push_cli_migrations_image_v1() {
-    IMAGE_TAG="hasura/graphql-engine:${CIRCLE_TAG}.cli-migrations"
-    docker load -i /build/_cli_migrations_output/v1.tar
-    docker tag cli-migrations "$IMAGE_TAG"
-    docker push "$IMAGE_TAG"
-}
-
 # build and push container for auto-migrations-v2
 build_and_push_cli_migrations_image_v2() {
     IMAGE_TAG="hasura/graphql-engine:${CIRCLE_TAG}.cli-migrations-v2"
     docker load -i /build/_cli_migrations_output/v2.tar
     docker tag cli-migrations-v2 "$IMAGE_TAG"
     docker push "$IMAGE_TAG"
-}
-
-# build and push latest container for auto-migrations
-push_latest_cli_migrations_image_v1() {
-    IMAGE_TAG="hasura/graphql-engine:${CIRCLE_TAG}.cli-migrations"
-    LATEST_IMAGE_TAG="hasura/graphql-engine:latest.cli-migrations"
-
-    # push latest.cli-migrations tag
-    docker tag "$IMAGE_TAG" "$LATEST_IMAGE_TAG"
-    docker push "$LATEST_IMAGE_TAG"
 }
 
 # build and push latest container for auto-migrations-v2
@@ -222,7 +204,6 @@ fi
 deploy_console
 deploy_server
 if [[ ! -z "$CIRCLE_TAG" ]]; then
-    build_and_push_cli_migrations_image_v1
     build_and_push_cli_migrations_image_v2
     deploy_cli_ext
 
@@ -230,7 +211,6 @@ if [[ ! -z "$CIRCLE_TAG" ]]; then
     if [ $IS_STABLE_RELEASE = true ]; then
         deploy_server_latest
         push_server_binary
-        push_latest_cli_migrations_image_v1
         push_latest_cli_migrations_image_v2
         send_pr_to_repo graphql-engine-heroku
         deploy_do_manifests

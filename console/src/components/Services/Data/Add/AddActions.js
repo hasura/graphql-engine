@@ -2,18 +2,16 @@ import defaultState from './AddState';
 
 import _push from '../push';
 import { updateSchemaInfo, makeMigrationCall } from '../DataActions';
-import {
-  showSuccessNotification,
-  showErrorNotification,
-} from '../../Common/Notification';
+import { showErrorNotification } from '../../Common/Notification';
 import { UPDATE_MIGRATION_STATUS_ERROR } from '../../../Main/Actions';
 import { setTable } from '../DataActions.js';
-
-import { isColTypeString, isPostgresFunction } from '../utils';
-import { sqlEscapeText } from '../../../Common/utils/sqlUtils';
-import { getRunSqlQuery } from '../../../Common/utils/v1QueryUtils';
 import { getTableModifyRoute } from '../../../Common/utils/routesUtils';
-import Migration from '../../../../utils/migration/Migration';
+import { dataSource } from '../../../../dataSources';
+import { getRunSqlQuery } from '../../../Common/utils/v1QueryUtils';
+import {
+  getTrackTableQuery,
+  getUntrackTableQuery,
+} from '../../../../metadata/queryUtils';
 
 const SET_DEFAULTS = 'AddTable/SET_DEFAULTS';
 const SET_TABLENAME = 'AddTable/SET_TABLENAME';
@@ -39,9 +37,6 @@ const VALIDATION_ERROR = 'AddTable/VALIDATION_ERROR';
 const RESET_VALIDATION_ERROR = 'AddTable/RESET_VALIDATION_ERROR';
 const SET_CHECK_CONSTRAINTS = 'AddTable/SET_CHECK_CONSTRAINTS';
 const REMOVE_CHECK_CONSTRAINT = 'AddTable/REMOVE_CHECK_CONSTRAINT';
-/*
- * For any action dispatched, the ability to notify the renderer that something is happening
- * */
 
 const setCheckConstraints = constraints => ({
   type: SET_CHECK_CONSTRAINTS,
@@ -141,17 +136,68 @@ const toggleFk = i => ({ type: TOGGLE_FK, data: i });
 const clearFkToggle = () => ({ type: CLEAR_FK_TOGGLE });
 
 // General error during validation.
-// const validationError = (error) => ({type: VALIDATION_ERROR, error: error});
 const validationError = error => {
   alert(error);
   return { type: VALIDATION_ERROR, error };
 };
 const resetValidation = () => ({ type: RESET_VALIDATION_ERROR });
 
+/**
+ *
+ * @param {{name: string, schema: string}} payload
+ */
+export const trackTable = payload => (dispatch, getState) => {
+  dispatch({ type: MAKING_REQUEST });
+  const currentDataSource = getState().tables.currentDataSource;
+
+  const requestBodyUp = getTrackTableQuery(payload, currentDataSource);
+  const requestBodyDown = getUntrackTableQuery(payload, currentDataSource);
+
+  const migrationName = 'track_table_' + payload.schema + '_' + payload.name;
+
+  const successMsg = 'Table created successfully';
+  const errorMsg = 'Tracking a created table failed';
+
+  const customOnSuccess = () => {
+    dispatch({ type: REQUEST_SUCCESS });
+    dispatch({ type: SET_DEFAULTS });
+    dispatch(setTable(payload.name));
+    dispatch(updateSchemaInfo()).then(() =>
+      dispatch(
+        _push(
+          getTableModifyRoute(
+            payload.schema,
+            currentDataSource,
+            payload.name,
+            true
+          )
+        )
+      )
+    );
+    return;
+  };
+
+  const customOnError = err => {
+    dispatch({ type: REQUEST_ERROR, data: err });
+  };
+
+  makeMigrationCall(
+    dispatch,
+    getState,
+    [requestBodyUp],
+    [requestBodyDown],
+    migrationName,
+    customOnSuccess,
+    customOnError,
+    null,
+    successMsg,
+    errorMsg
+  );
+};
+
 const createTableSql = () => {
   return (dispatch, getState) => {
     dispatch({ type: MAKING_REQUEST });
-    dispatch(showSuccessNotification('Creating Table...'));
 
     const state = getState().addTable.table;
     const currentSchema = getState().tables.currentSchema;
@@ -162,212 +208,51 @@ const createTableSql = () => {
       checkConstraints,
       tableName,
       columns,
+      tableComment,
+      primaryKeys,
     } = state;
+    const { currentDataSource } = getState().tables;
 
     // validations
     if (tableName === '') {
       alert('Table name cannot be empty');
     }
 
-    const currentCols = columns.filter(c => c.name !== '');
+    const createTableQueries = dataSource.getCreateTableQueries(
+      currentSchema,
+      tableName,
+      columns,
+      primaryKeys,
+      foreignKeys,
+      uniqueKeys,
+      checkConstraints,
+      tableComment
+    );
 
-    const pKeys = state.primaryKeys
-      .filter(p => p !== '')
-      .map(p => currentCols[p].name);
-
-    let hasUUIDDefault = false;
-    const columnSpecificSql = [];
-
-    let tableDefSql = '';
-    for (let i = 0; i < currentCols.length; i++) {
-      tableDefSql +=
-        '"' + currentCols[i].name + '"' + ' ' + currentCols[i].type;
-
-      // check if column is nullable
-      if (!currentCols[i].nullable) {
-        tableDefSql += ' NOT NULL';
-      }
-
-      // check if column has a default value
-      if (
-        currentCols[i].default !== undefined &&
-        currentCols[i].default.value !== ''
-      ) {
-        if (
-          isColTypeString(currentCols[i].type) &&
-          !isPostgresFunction(currentCols[i].default.value)
-        ) {
-          // if a column type is text and if it has a non-func default value, add a single quote by default
-          tableDefSql += " DEFAULT '" + currentCols[i].default.value + "'";
-        } else {
-          tableDefSql += ' DEFAULT ' + currentCols[i].default.value;
-        }
-
-        if (currentCols[i].type === 'uuid') {
-          hasUUIDDefault = true;
-        }
-      }
-
-      // check if column has dependent sql
-      if (currentCols[i].dependentSQLGenerator) {
-        const dependentSql = currentCols[i].dependentSQLGenerator(
-          currentSchema,
-          tableName,
-          currentCols[i].name
-        );
-        columnSpecificSql.push(dependentSql);
-      }
-
-      tableDefSql += i === currentCols.length - 1 ? '' : ', ';
-    }
-
-    // add primary key
-    if (pKeys.length > 0) {
-      tableDefSql += ', PRIMARY KEY (';
-      tableDefSql += pKeys.map(col => '"' + col + '"').join(',');
-      tableDefSql += ') ';
-    }
-
-    // add foreign keys
-    const numFks = foreignKeys.length;
-    let fkDupColumn = null;
-    if (numFks > 1) {
-      foreignKeys.forEach((fk, _i) => {
-        if (_i === numFks - 1) {
-          return;
-        }
-
-        const { colMappings, refTableName, onUpdate, onDelete } = fk;
-
-        const mappingObj = {};
-        const rCols = [];
-        const lCols = [];
-
-        colMappings.slice(0, -1).forEach(cm => {
-          if (mappingObj[cm.column] !== undefined) {
-            fkDupColumn = state.columns[cm.column].name;
-          }
-
-          mappingObj[cm.column] = cm.refColumn;
-          lCols.push(`"${state.columns[cm.column].name}"`);
-          rCols.push(`"${cm.refColumn}"`);
-        });
-
-        if (lCols.length === 0) {
-          return;
-        }
-
-        tableDefSql += `, FOREIGN KEY (${lCols.join(', ')}) REFERENCES "${
-          fk.refSchemaName
-        }"."${refTableName}"(${rCols.join(
-          ', '
-        )}) ON UPDATE ${onUpdate} ON DELETE ${onDelete}`;
-      });
-    }
-
-    if (fkDupColumn) {
+    if (createTableQueries.error) {
       return dispatch(
-        showErrorNotification(
-          'Create table failed',
-          `The column "${fkDupColumn}" seems to be referencing multiple foreign columns`
-        )
+        showErrorNotification('Create table failed', createTableQueries.error)
       );
-    }
-
-    // add unique keys
-    const numUniqueConstraints = uniqueKeys.length;
-    if (numUniqueConstraints > 0) {
-      uniqueKeys.forEach(uk => {
-        if (!uk.length) {
-          return;
-        }
-
-        const uniqueColumns = uk.map(c => `"${state.columns[c].name}"`);
-        tableDefSql += `, UNIQUE (${uniqueColumns.join(', ')})`;
-      });
-    }
-
-    // add check constraints
-    if (checkConstraints.length > 0) {
-      checkConstraints.forEach(constraint => {
-        if (!constraint.name || !constraint.check) {
-          return;
-        }
-
-        tableDefSql += `, CONSTRAINT "${constraint.name}" CHECK (${constraint.check})`;
-      });
-    }
-
-    let sqlCreateTable =
-      'CREATE TABLE ' +
-      '"' +
-      currentSchema +
-      '"' +
-      '.' +
-      '"' +
-      tableName +
-      '"' +
-      '(' +
-      tableDefSql +
-      ');';
-
-    // add comment
-    if (state.tableComment && state.tableComment !== '') {
-      sqlCreateTable +=
-        ' COMMENT ON TABLE ' +
-        '"' +
-        currentSchema +
-        '"' +
-        '.' +
-        '"' +
-        tableName +
-        '"' +
-        ' IS ' +
-        sqlEscapeText(state.tableComment) +
-        ';';
-    }
-
-    if (columnSpecificSql.length) {
-      columnSpecificSql.forEach(csql => {
-        sqlCreateTable += csql.upSql;
-      });
     }
 
     // apply migrations
     const migrationName = 'create_table_' + currentSchema + '_' + tableName;
-    const sqlDropTable =
-      'DROP TABLE ' + '"' + currentSchema + '"' + '.' + '"' + tableName + '"';
 
-    const migration = new Migration();
+    // up migration
+    const upChanges = createTableQueries.map(sql =>
+      getRunSqlQuery(sql, currentDataSource)
+    );
 
-    if (hasUUIDDefault) {
-      const sqlCreateExtension = 'CREATE EXTENSION IF NOT EXISTS pgcrypto;';
-      migration.add(getRunSqlQuery(sqlCreateExtension));
-    }
-
-    migration.add(getRunSqlQuery(sqlCreateTable), getRunSqlQuery(sqlDropTable));
-
-    migration.add({
-      type: 'add_existing_table_or_view',
-      args: {
-        name: tableName,
-        schema: currentSchema,
-      },
-    });
+    // down migration
+    const sqlDropTable = dataSource.getDropTableSql(currentSchema, tableName);
+    const downChanges = [getRunSqlQuery(sqlDropTable, currentDataSource)];
 
     // make request
     const requestMsg = 'Creating table...';
-    const successMsg = 'Table Created';
     const errorMsg = 'Create table failed';
 
     const customOnSuccess = () => {
-      dispatch({ type: REQUEST_SUCCESS });
-      dispatch({ type: SET_DEFAULTS });
-      dispatch(setTable(tableName));
-      dispatch(updateSchemaInfo()).then(() =>
-        dispatch(_push(getTableModifyRoute(currentSchema, tableName, true)))
-      );
-      return;
+      dispatch(trackTable({ schema: currentSchema, name: tableName }));
     };
     const customOnError = err => {
       dispatch({ type: REQUEST_ERROR, data: errorMsg });
@@ -378,13 +263,13 @@ const createTableSql = () => {
     makeMigrationCall(
       dispatch,
       getState,
-      migration.upMigration,
-      migration.downMigration,
+      upChanges,
+      downChanges,
       migrationName,
       customOnSuccess,
       customOnError,
       requestMsg,
-      successMsg,
+      null,
       errorMsg,
       true
     );

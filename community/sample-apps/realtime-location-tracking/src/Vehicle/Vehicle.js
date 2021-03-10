@@ -153,7 +153,7 @@ class Vehicle extends Component { constructor() {
                 <img alt="hasura logo" src="https://graphql-engine-cdn.hasura.io/img/powered_by_hasura_black_200px.png" />
               </a>
                 &nbsp; | &nbsp;
-              <a href="/console" target="_blank" rel="noopener noreferrer">
+              <a href="https://realtime-location.hasura.app/console" target="_blank" rel="noopener noreferrer">
                 Backend
               </a>
               &nbsp; | &nbsp;

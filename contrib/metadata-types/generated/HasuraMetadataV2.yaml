@@ -50,7 +50,7 @@ definitions:
     description: >-
       Configuration for the table/view
 
-      https://hasura.io/docs/1.0/graphql/manual/api-reference/schema-metadata-api/table-view.html#table-config
+      https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/table-view.html#table-config
     title: TableConfig
     type: object
     properties:
@@ -77,7 +77,7 @@ definitions:
         description: >-
           Configuration for the table/view
 
-          https://hasura.io/docs/1.0/graphql/manual/api-reference/schema-metadata-api/table-view.html#table-config
+          https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/table-view.html#table-config
         $ref: '#/definitions/TableConfig'
         title: configuration
       event_triggers:
@@ -131,7 +131,7 @@ definitions:
     description: >-
       Customise the root fields
 
-      https://hasura.io/docs/1.0/graphql/manual/api-reference/schema-metadata-api/table-view.html#custom-root-fields
+      https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/table-view.html#custom-root-fields
     title: CustomRootFields
     type: object
     properties:
@@ -198,7 +198,7 @@ definitions:
     description: >-
       A custom SQL function to add to the GraphQL schema with configuration.
 
-      https://hasura.io/docs/1.0/graphql/manual/api-reference/schema-metadata-api/custom-functions.html#args-syntax
+      https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/custom-functions.html#args-syntax
     title: CustomFunction
     type: object
     properties:
@@ -218,7 +218,7 @@ definitions:
     description: >-
       Configuration for a CustomFunction
 
-      https://hasura.io/docs/1.0/graphql/manual/api-reference/schema-metadata-api/custom-functions.html#function-configuration
+      https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/custom-functions.html#function-configuration
     title: FunctionConfiguration
     type: object
     properties:
@@ -238,7 +238,7 @@ definitions:
         title: session_argument
   ObjectRelationship:
     description: >-
-      https://hasura.io/docs/1.0/graphql/manual/api-reference/schema-metadata-api/relationship.html#args-syntax
+      https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/relationship.html#args-syntax
     title: ObjectRelationship
     type: object
     properties:
@@ -261,7 +261,7 @@ definitions:
     description: >-
       Use one of the available ways to define an object relationship
 
-      https://hasura.io/docs/1.0/graphql/manual/api-reference/schema-metadata-api/relationship.html#objrelusing
+      https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/relationship.html#objrelusing
     title: ObjRelUsing
     type: object
     properties:
@@ -277,7 +277,7 @@ definitions:
     description: >-
       Manual mapping of table and columns
 
-      https://hasura.io/docs/1.0/graphql/manual/api-reference/schema-metadata-api/relationship.html#objrelusingmanualmapping
+      https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/relationship.html#objrelusingmanualmapping
     title: ObjRelUsingManualMapping
     type: object
     properties:
@@ -298,7 +298,7 @@ definitions:
       - remote_table
   ArrayRelationship:
     description: >-
-      https://hasura.io/docs/1.0/graphql/manual/api-reference/schema-metadata-api/relationship.html#create-array-relationship-syntax
+      https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/relationship.html#create-array-relationship-syntax
     title: ArrayRelationship
     type: object
     properties:
@@ -321,7 +321,7 @@ definitions:
     description: >-
       Use one of the available ways to define an object relationship
 
-      https://hasura.io/docs/1.0/graphql/manual/api-reference/schema-metadata-api/relationship.html#arrrelusing
+      https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/relationship.html#arrrelusing
     title: ArrRelUsing
     type: object
     properties:
@@ -337,7 +337,7 @@ definitions:
     description: >-
       The column with foreign key constraint
 
-      https://hasura.io/docs/1.0/graphql/manual/api-reference/schema-metadata-api/relationship.html#arrrelusingfkeyon
+      https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/relationship.html#arrrelusingfkeyon
     title: ArrRelUsingFKeyOn
     type: object
     properties:
@@ -356,7 +356,7 @@ definitions:
     description: >-
       Manual mapping of table and columns
 
-      https://hasura.io/docs/1.0/graphql/manual/api-reference/schema-metadata-api/relationship.html#arrrelusingmanualmapping
+      https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/relationship.html#arrrelusingmanualmapping
     title: ArrRelUsingManualMapping
     type: object
     properties:
@@ -380,14 +380,14 @@ definitions:
       Preset values for columns that can be sourced from session variables or
       static values.
 
-      https://hasura.io/docs/1.0/graphql/manual/api-reference/schema-metadata-api/syntax-defs.html#columnpresetexp
+      https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/syntax-defs.html#columnpresetexp
     title: ColumnPresetsExpression
     type: object
     additionalProperties:
       type: string
   InsertPermissionEntry:
     description: >-
-      https://hasura.io/docs/1.0/graphql/manual/api-reference/schema-metadata-api/permission.html#args-syntax
+      https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/permission.html#args-syntax
     title: InsertPermissionEntry
     type: object
     properties:
@@ -408,7 +408,7 @@ definitions:
       - role
   InsertPermission:
     description: >-
-      https://hasura.io/docs/1.0/graphql/manual/api-reference/schema-metadata-api/permission.html#insertpermission
+      https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/permission.html#insertpermission
     title: InsertPermission
     type: object
     properties:
@@ -453,7 +453,7 @@ definitions:
       - columns
   SelectPermissionEntry:
     description: >-
-      https://hasura.io/docs/1.0/graphql/manual/api-reference/schema-metadata-api/permission.html#create-select-permission-syntax
+      https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/permission.html#create-select-permission-syntax
     title: SelectPermissionEntry
     type: object
     properties:
@@ -474,7 +474,7 @@ definitions:
       - role
   SelectPermission:
     description: >-
-      https://hasura.io/docs/1.0/graphql/manual/api-reference/schema-metadata-api/permission.html#selectpermission
+      https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/permission.html#selectpermission
     title: SelectPermission
     type: object
     properties:
@@ -518,7 +518,7 @@ definitions:
       - columns
   UpdatePermissionEntry:
     description: >-
-      https://hasura.io/docs/1.0/graphql/manual/api-reference/schema-metadata-api/permission.html#create-update-permission-syntax
+      https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/permission.html#create-update-permission-syntax
     title: UpdatePermissionEntry
     type: object
     properties:
@@ -539,7 +539,7 @@ definitions:
       - role
   UpdatePermission:
     description: >-
-      https://hasura.io/docs/1.0/graphql/manual/api-reference/schema-metadata-api/permission.html#updatepermission
+      https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/permission.html#updatepermission
     title: UpdatePermission
     type: object
     properties:
@@ -587,7 +587,7 @@ definitions:
       - columns
   DeletePermissionEntry:
     description: >-
-      https://hasura.io/docs/1.0/graphql/manual/api-reference/schema-metadata-api/permission.html#create-delete-permission-syntax
+      https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/permission.html#create-delete-permission-syntax
     title: DeletePermissionEntry
     type: object
     properties:
@@ -608,7 +608,7 @@ definitions:
       - role
   DeletePermission:
     description: >-
-      https://hasura.io/docs/1.0/graphql/manual/api-reference/schema-metadata-api/permission.html#deletepermission
+      https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/permission.html#deletepermission
     title: DeletePermission
     type: object
     properties:
@@ -626,7 +626,7 @@ definitions:
         title: filter
   ComputedField:
     description: >-
-      https://hasura.io/docs/1.0/graphql/manual/api-reference/schema-metadata-api/computed-field.html#args-syntax
+      https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/computed-field.html#args-syntax
     title: ComputedField
     type: object
     properties:
@@ -647,7 +647,7 @@ definitions:
       - name
   ComputedFieldDefinition:
     description: >-
-      https://hasura.io/docs/1.0/graphql/manual/api-reference/schema-metadata-api/computed-field.html#computedfielddefinition
+      https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/computed-field.html#computedfielddefinition
     title: ComputedFieldDefinition
     type: object
     properties:
@@ -676,7 +676,7 @@ definitions:
     description: >-
       NOTE: The metadata type doesn't QUITE match the 'create' arguments here
 
-      https://hasura.io/docs/1.0/graphql/manual/api-reference/schema-metadata-api/event-triggers.html#create-event-trigger
+      https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/event-triggers.html#create-event-trigger
     title: EventTrigger
     type: object
     properties:
@@ -720,17 +720,17 @@ definitions:
         title: enable_manual
       insert:
         description: >-
-          https://hasura.io/docs/1.0/graphql/manual/api-reference/schema-metadata-api/event-triggers.html#operationspec
+          https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/event-triggers.html#operationspec
         $ref: '#/definitions/OperationSpec'
         title: insert
       delete:
         description: >-
-          https://hasura.io/docs/1.0/graphql/manual/api-reference/schema-metadata-api/event-triggers.html#operationspec
+          https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/event-triggers.html#operationspec
         $ref: '#/definitions/OperationSpec'
         title: delete
       update:
         description: >-
-          https://hasura.io/docs/1.0/graphql/manual/api-reference/schema-metadata-api/event-triggers.html#operationspec
+          https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/event-triggers.html#operationspec
         $ref: '#/definitions/OperationSpec'
         title: update
     required:
@@ -745,13 +745,13 @@ definitions:
         type: string
   OperationSpec:
     description: >-
-      https://hasura.io/docs/1.0/graphql/manual/api-reference/schema-metadata-api/event-triggers.html#operationspec
+      https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/event-triggers.html#operationspec
     title: OperationSpec
     type: object
     properties:
       columns:
         description: >-
-          https://hasura.io/docs/1.0/graphql/manual/api-reference/schema-metadata-api/event-triggers.html#eventtriggercolumns
+          https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/event-triggers.html#eventtriggercolumns
         anyOf:
           - type: array
             items:
@@ -762,7 +762,7 @@ definitions:
         title: columns
       payload:
         description: >-
-          https://hasura.io/docs/1.0/graphql/manual/api-reference/schema-metadata-api/event-triggers.html#eventtriggercolumns
+          https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/event-triggers.html#eventtriggercolumns
         anyOf:
           - type: array
             items:
@@ -775,7 +775,7 @@ definitions:
       - columns
   HeaderFromValue:
     description: >-
-      https://hasura.io/docs/1.0/graphql/manual/api-reference/schema-metadata-api/syntax-defs.html#headerfromvalue
+      https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/syntax-defs.html#headerfromvalue
     title: HeaderFromValue
     type: object
     properties:
@@ -792,7 +792,7 @@ definitions:
       - value
   HeaderFromEnv:
     description: >-
-      https://hasura.io/docs/1.0/graphql/manual/api-reference/schema-metadata-api/syntax-defs.html#headerfromenv
+      https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/syntax-defs.html#headerfromenv
     title: HeaderFromEnv
     type: object
     properties:
@@ -809,7 +809,7 @@ definitions:
       - value_from_env
   RetryConf:
     description: >-
-      https://hasura.io/docs/1.0/graphql/manual/api-reference/schema-metadata-api/event-triggers.html#retryconf
+      https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/event-triggers.html#retryconf
     title: RetryConf
     type: object
     properties:
@@ -833,7 +833,7 @@ definitions:
         title: timeout_sec
   CronTrigger:
     description: >-
-      https://hasura.io/docs/1.0/graphql/manual/api-reference/schema-metadata-api/scheduled-triggers.html#create-cron-trigger
+      https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/scheduled-triggers.html#create-cron-trigger
     title: CronTrigger
     type: object
     properties:
@@ -886,7 +886,7 @@ definitions:
       - webhook
   RetryConfST:
     description: >-
-      https://hasura.io/docs/1.0/graphql/manual/api-reference/schema-metadata-api/scheduled-triggers.html#retryconfst
+      https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/scheduled-triggers.html#retryconfst
     title: RetryConfST
     type: object
     properties:
@@ -919,7 +919,7 @@ definitions:
         title: tolerance_seconds
   RemoteSchema:
     description: >-
-      https://hasura.io/docs/1.0/graphql/manual/api-reference/schema-metadata-api/remote-schemas.html#add-remote-schema
+      https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/remote-schemas.html#add-remote-schema
     title: RemoteSchema
     type: object
     properties:
@@ -940,7 +940,7 @@ definitions:
       - name
   RemoteSchemaDef:
     description: >-
-      https://hasura.io/docs/1.0/graphql/manual/api-reference/schema-metadata-api/syntax-defs.html#remoteschemadef
+      https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/syntax-defs.html#remoteschemadef
     title: RemoteSchemaDef
     type: object
     properties:
@@ -965,7 +965,7 @@ definitions:
         title: timeout_seconds
   RemoteRelationship:
     description: >-
-      https://hasura.io/docs/1.0/graphql/manual/api-reference/schema-metadata-api/remote-relationships.html#args-syntax
+      https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/remote-relationships.html#args-syntax
     title: RemoteRelationship
     type: object
     properties:
@@ -1016,7 +1016,7 @@ definitions:
       It is recursive because the remote field maybe nested deeply in the remote
       schema.
 
-      https://hasura.io/docs/1.0/graphql/manual/api-reference/schema-metadata-api/remote-relationships.html#remotefield
+      https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/remote-relationships.html#remotefield
     title: RemoteField
     type: object
     additionalProperties:
@@ -1033,7 +1033,7 @@ definitions:
             It is recursive because the remote field maybe nested deeply in the
             remote schema.
 
-            https://hasura.io/docs/1.0/graphql/manual/api-reference/schema-metadata-api/remote-relationships.html#remotefield
+            https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/remote-relationships.html#remotefield
           $ref: '#/definitions/RemoteField'
           title: field
       required:
@@ -1042,14 +1042,14 @@ definitions:
     description: >-
       Note: Table columns can be referred by prefixing $ e.g $id.
 
-      https://hasura.io/docs/1.0/graphql/manual/api-reference/schema-metadata-api/remote-relationships.html#inputarguments
+      https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/remote-relationships.html#inputarguments
     title: InputArguments
     type: object
     additionalProperties:
       type: string
   QueryCollectionEntry:
     description: >-
-      https://hasura.io/docs/1.0/graphql/manual/api-reference/schema-metadata-api/query-collections.html#args-syntax
+      https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/query-collections.html#args-syntax
     title: QueryCollectionEntry
     type: object
     properties:
@@ -1078,7 +1078,7 @@ definitions:
       - name
   QueryCollection:
     description: >-
-      https://hasura.io/docs/1.0/graphql/manual/api-reference/schema-metadata-api/syntax-defs.html#collectionquery
+      https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/syntax-defs.html#collectionquery
     title: QueryCollection
     type: object
     properties:
@@ -1093,7 +1093,7 @@ definitions:
       - query
   AllowList:
     description: >-
-      https://hasura.io/docs/1.0/graphql/manual/api-reference/schema-metadata-api/query-collections.html#add-collection-to-allowlist-syntax
+      https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/query-collections.html#add-collection-to-allowlist-syntax
     title: AllowList
     type: object
     properties:
@@ -1129,7 +1129,7 @@ definitions:
         title: enums
   InputObjectType:
     description: >-
-      https://hasura.io/docs/1.0/graphql/manual/api-reference/schema-metadata-api/custom-types.html#inputobjecttype
+      https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/custom-types.html#inputobjecttype
     title: InputObjectType
     type: object
     properties:
@@ -1152,7 +1152,7 @@ definitions:
       - name
   InputObjectField:
     description: >-
-      https://hasura.io/docs/1.0/graphql/manual/api-reference/schema-metadata-api/custom-types.html#inputobjectfield
+      https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/custom-types.html#inputobjectfield
     title: InputObjectField
     type: object
     properties:
@@ -1173,7 +1173,7 @@ definitions:
       - type
   ObjectType:
     description: >-
-      https://hasura.io/docs/1.0/graphql/manual/api-reference/schema-metadata-api/custom-types.html#objecttype
+      https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/custom-types.html#objecttype
     title: ObjectType
     type: object
     properties:
@@ -1202,7 +1202,7 @@ definitions:
       - name
   ObjectField:
     description: >-
-      https://hasura.io/docs/1.0/graphql/manual/api-reference/schema-metadata-api/custom-types.html#objectfield
+      https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/custom-types.html#objectfield
     title: ObjectField
     type: object
     properties:
@@ -1223,7 +1223,7 @@ definitions:
       - type
   CustomTypeObjectRelationship:
     description: >-
-      https://hasura.io/docs/1.0/graphql/manual/api-reference/schema-metadata-api/custom-types.html#objectrelationship
+      https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/custom-types.html#objectrelationship
     title: CustomTypeObjectRelationship
     type: object
     properties:
@@ -1257,7 +1257,7 @@ definitions:
       - type
   ScalarType:
     description: >-
-      https://hasura.io/docs/1.0/graphql/manual/api-reference/schema-metadata-api/custom-types.html#scalartype
+      https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/custom-types.html#scalartype
     title: ScalarType
     type: object
     properties:
@@ -1273,7 +1273,7 @@ definitions:
       - name
   EnumType:
     description: >-
-      https://hasura.io/docs/1.0/graphql/manual/api-reference/schema-metadata-api/custom-types.html#enumtype
+      https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/custom-types.html#enumtype
     title: EnumType
     type: object
     properties:
@@ -1296,7 +1296,7 @@ definitions:
       - values
   EnumValue:
     description: >-
-      https://hasura.io/docs/1.0/graphql/manual/api-reference/schema-metadata-api/custom-types.html#enumvalue
+      https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/custom-types.html#enumvalue
     title: EnumValue
     type: object
     properties:
@@ -1316,7 +1316,7 @@ definitions:
       - value
   Action:
     description: >-
-      https://hasura.io/docs/1.0/graphql/manual/api-reference/schema-metadata-api/actions.html#args-syntax
+      https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/actions.html#args-syntax
     title: Action
     type: object
     properties:
@@ -1347,7 +1347,7 @@ definitions:
       - name
   ActionDefinition:
     description: >-
-      https://hasura.io/docs/1.0/graphql/manual/api-reference/schema-metadata-api/actions.html#actiondefinition
+      https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/actions.html#actiondefinition
     title: ActionDefinition
     type: object
     properties:
@@ -1390,7 +1390,7 @@ definitions:
       - handler
   InputArgument:
     description: >-
-      https://hasura.io/docs/1.0/graphql/manual/api-reference/schema-metadata-api/actions.html#inputargument
+      https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/actions.html#inputargument
     title: InputArgument
     type: object
     properties:
@@ -1407,7 +1407,7 @@ definitions:
     description: >-
       Type used in exported 'metadata.json' and replace metadata endpoint
 
-      https://hasura.io/docs/1.0/graphql/manual/api-reference/schema-metadata-api/manage-metadata.html#replace-metadata
+      https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/manage-metadata.html#replace-metadata
     title: HasuraMetadataV2
     type: object
     properties:

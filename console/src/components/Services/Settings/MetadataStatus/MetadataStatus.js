@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import Button from '../../../Common/Button/Button';
-import { dropInconsistentObjects } from '../Actions';
 import { permissionTypes, getTableNameFromDef } from '../utils';
 import metaDataStyles from '../Settings.scss';
 import styles from '../../../Common/TableCommon/Table.scss';
@@ -8,6 +7,7 @@ import CheckIcon from '../../../Common/Icons/Check';
 import CrossIcon from '../../../Common/Icons/Cross';
 import { getConfirmation } from '../../../Common/utils/jsUtils';
 import ReloadMetadata from '../MetadataOptions/ReloadMetadata';
+import { dropInconsistentObjects } from '../../../../metadata/actions';
 
 const MetadataStatus = ({ dispatch, metadata }) => {
   const [shouldShowErrorBanner, toggleErrorBanner] = useState(true);
@@ -33,6 +33,9 @@ const MetadataStatus = ({ dispatch, metadata }) => {
           {metadata.inconsistentObjects.map((ico, _i) => {
             let name;
             let definition;
+            if (ico.type === 'source') {
+              name = ico.definition;
+            }
             if (
               ico.type === 'object_relation' ||
               ico.type === 'array_relation'

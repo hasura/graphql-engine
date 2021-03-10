@@ -16,6 +16,8 @@ type MigrationStatus struct {
 
 	// Check if the migration is present on the local.
 	IsPresent bool `json:"source_status"`
+
+	IsDirty bool `json:"-"`
 }
 
 type Status struct {

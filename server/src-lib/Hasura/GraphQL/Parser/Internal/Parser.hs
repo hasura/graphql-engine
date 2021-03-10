@@ -18,7 +18,7 @@ import qualified Data.HashMap.Strict.Extended         as M
 import qualified Data.HashMap.Strict.InsOrd           as OMap
 import qualified Data.HashSet                         as S
 import qualified Data.List.Extended                   as LE
-import qualified Data.Text                            as T
+import qualified Data.UUID                            as UUID
 
 import           Control.Lens.Extended                hiding (enum, index)
 import           Data.Int                             (Int32, Int64)
@@ -81,6 +81,9 @@ data FieldParser m a = FieldParser
   { fDefinition :: Definition FieldInfo
   , fParser     :: Field NoFragments Variable -> m a
   } deriving (Functor)
+
+instance HasDefinition (FieldParser m a) FieldInfo where
+  definitionLens f parser = definitionLens f (fDefinition parser) <&> \fDefinition -> parser { fDefinition }
 
 infixl 1 `bindField`
 bindField :: Monad m => FieldParser m a -> (a -> m b) -> FieldParser m b
@@ -162,6 +165,19 @@ float = scalar floatScalar Nothing SRFloat
 string :: MonadParse m => Parser 'Both m Text
 string = scalar stringScalar Nothing SRString
 
+uuid :: MonadParse m => Parser 'Both m UUID.UUID
+uuid = Parser
+  { pType = schemaType
+  , pParser = peelVariable (Just $ toGraphQLType schemaType) >=> \case
+      GraphQLValue (VString s) -> parseUUID $ A.String s
+      JSONValue    v           -> parseUUID v
+      v                        -> typeMismatch name "a UUID" v
+  }
+  where
+    name = $$(litName "uuid")
+    schemaType = NonNullable $ TNamed $ mkDefinition name Nothing TIScalar
+    parseUUID = either (parseErrorWith ParseFailed . qeError) pure . runAesonParser A.parseJSON
+
 -- | As an input type, any string or integer input value should be coerced to ID as Text
 -- https://spec.graphql.org/June2018/#sec-ID
 identifier :: MonadParse m => Parser 'Both m Text
@@ -169,7 +185,7 @@ identifier = Parser
   { pType = schemaType
   , pParser = peelVariable (Just $ toGraphQLType schemaType) >=> \case
       GraphQLValue (VString  s) -> pure s
-      GraphQLValue (VInt     i) -> pure $ T.pack $ show i
+      GraphQLValue (VInt     i) -> pure $ tshow i
       JSONValue    (A.String s) -> pure s
       JSONValue    (A.Number n) -> parseScientific n
       v                         -> typeMismatch idName "a String or a 32-bit integer" v
@@ -178,7 +194,7 @@ identifier = Parser
     idName = idScalar
     schemaType = NonNullable $ TNamed $ mkDefinition idName Nothing TIScalar
     parseScientific = either (parseErrorWith ParseFailed . qeError)
-      (pure . T.pack . show @Int) . runAesonParser scientificToInteger
+      (pure . tshow @Int) . runAesonParser scientificToInteger
 
 namedJSON :: MonadParse m => Name -> Maybe Description -> Parser 'Both m A.Value
 namedJSON name description = Parser
@@ -221,9 +237,8 @@ enum name description values = Parser
   where
     schemaType = NonNullable $ TNamed $ mkDefinition name description $ TIEnum (fst <$> values)
     valuesMap = M.fromList $ over (traverse._1) dName $ toList values
-    validate value = case M.lookup value valuesMap of
-      Just result -> pure result
-      Nothing -> parseError $ "expected one of the values "
+    validate value = onNothing (M.lookup value valuesMap) $
+      parseError $ "expected one of the values "
         <> englishList "or" (toTxt . dName . fst <$> values) <> " for type "
         <> name <<> ", but found " <>> value
 
@@ -724,7 +739,13 @@ rawSelection name description argumentsParser resultParser = FieldParser
       fmap (_fAlias, _fArguments, ) $ withPath (++[Key "args"]) $ ifParser argumentsParser $ GraphQLValue <$> _fArguments
   }
   where
-    argumentNames = S.fromList (dName <$> ifDefinitions argumentsParser)
+    -- If  `ifDefinitions` is empty, then not forcing this will lead to
+    -- a thunk which is usually never forced because the definition is only used
+    -- inside the loop which checks arguments have the correct name.
+    -- Forcing it will lead to the statically allocated empty set.
+    -- If it's non-empty then it will be forced the first time the parser
+    -- is used so might as well force it when constructing the parser.
+    !argumentNames = S.fromList (dName <$> ifDefinitions argumentsParser)
 
 -- | Builds a 'FieldParser' for a field that takes a subselection set, i.e. a
 -- field that returns an object.

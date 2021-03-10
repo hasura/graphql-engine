@@ -31,9 +31,7 @@ mkNonEmptyTextUnsafe :: Text -> NonEmptyText
 mkNonEmptyTextUnsafe = NonEmptyText
 
 parseNonEmptyText :: MonadFail m => Text -> m NonEmptyText
-parseNonEmptyText text = case mkNonEmptyText text of
-  Nothing     -> fail "empty string not allowed"
-  Just neText -> return neText
+parseNonEmptyText text = mkNonEmptyText text `onNothing` fail "empty string not allowed"
 
 nonEmptyText :: Text -> Q (TExp NonEmptyText)
 nonEmptyText = parseNonEmptyText >=> \text -> [|| text ||]

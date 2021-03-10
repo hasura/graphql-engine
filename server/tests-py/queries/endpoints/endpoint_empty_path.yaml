@@ -1,0 +1,19 @@
+description: Tries to create an endpoint with empty path
+url: /v1/query
+status: 400
+response:
+  path: $.url
+  error: |-
+    empty string not allowed
+  code: parse-failed
+query:
+  type: create_rest_endpoint
+  args:
+    url: ""
+    name: empty
+    methods:
+      - GET
+    definition:
+      query:
+        collection_name: test_collection
+        query_name: simple_query

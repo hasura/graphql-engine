@@ -1,0 +1,15 @@
+- description: call the cached simple endpoint
+  url: /api/rest/simple_cached
+  method: GET
+  status: 200
+  query:
+  resp_headers:
+    Cache-Control: max-age=5
+  response:
+    test_table:
+      - first_name: Foo
+        last_name: Bar
+      - first_name: Baz
+        last_name: Qux
+      - first_name: X%20Y
+        last_name: Test

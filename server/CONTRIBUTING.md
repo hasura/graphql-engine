@@ -95,6 +95,10 @@ You can run the test suite with:
 
 This should run in isolation.  The output format is described in the [pytest documentation](https://docs.pytest.org/en/latest/usage.html#detailed-summary-report).  Errors and failures are indicated by `F`s and `E`s.
 
+Optionally, launch a new container for alternative (MSSQL) backend with:
+
+    $ scripts/dev.sh mssql
+
 ### Run and test manually
 
 If you want, you can also run the server and test suite manually against a Postgres instance of your choosing.
@@ -200,4 +204,5 @@ This helps enforce a uniform style for all committers.
 
 - Compiler warnings are turned on, make sure your code has no warnings.
 - Use [hlint](https://github.com/ndmitchell/hlint) to make sure your code has no warnings.
+  You can use our custom hlint config with `$ hlint --hint=server/.hlint.yaml .`
 - Use [stylish-haskell](https://github.com/jaspervdj/stylish-haskell) to format your code.

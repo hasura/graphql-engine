@@ -1,5 +1,3 @@
-{-# LANGUAGE DeriveLift           #-}
-{-# LANGUAGE OverloadedStrings    #-}
 {-# LANGUAGE UndecidableInstances #-}
 
 module Hasura.RQL.IR.Select where
@@ -13,40 +11,33 @@ import qualified Language.GraphQL.Draft.Syntax       as G
 
 import           Control.Lens.TH                     (makeLenses, makePrisms)
 
-import qualified Hasura.Backends.Postgres.SQL.DML    as PG
-import qualified Hasura.Backends.Postgres.SQL.Types  as PG
-
-import           Hasura.GraphQL.Parser.Schema
+import           Hasura.GraphQL.Parser.Schema        (InputValue)
 import           Hasura.RQL.IR.BoolExp
 import           Hasura.RQL.IR.OrderBy
+import           Hasura.RQL.Types.Backend
 import           Hasura.RQL.Types.Column
 import           Hasura.RQL.Types.Common
 import           Hasura.RQL.Types.Function
+import           Hasura.RQL.Types.Relationship
 import           Hasura.RQL.Types.RemoteRelationship
 import           Hasura.RQL.Types.RemoteSchema
 import           Hasura.SQL.Backend
 
 
-data JsonAggSelect
-  = JASMultipleRows
-  | JASSingleObject
-  deriving (Show, Eq, Generic)
-instance Hashable JsonAggSelect
-
 data AnnAggregateOrderBy (b :: BackendType)
   = AAOCount
   | AAOOp !Text !(ColumnInfo b)
   deriving (Generic)
-deriving instance Eq (AnnAggregateOrderBy 'Postgres)
-instance Hashable (AnnAggregateOrderBy 'Postgres)
+deriving instance (Backend b, Eq (ColumnInfo b)) => Eq (AnnAggregateOrderBy b)
+instance (Backend b, Hashable (ColumnInfo b)) => Hashable (AnnAggregateOrderBy b)
 
 data AnnOrderByElementG (b :: BackendType) v
   = AOCColumn !(ColumnInfo b)
-  | AOCObjectRelation !RelInfo !v !(AnnOrderByElementG b v)
-  | AOCArrayAggregation !RelInfo !v !(AnnAggregateOrderBy b)
+  | AOCObjectRelation !(RelInfo b) !v !(AnnOrderByElementG b v)
+  | AOCArrayAggregation !(RelInfo b) !v !(AnnAggregateOrderBy b)
   deriving (Generic, Functor)
-deriving instance Eq v => Eq (AnnOrderByElementG 'Postgres v)
-instance (Hashable v) => Hashable (AnnOrderByElementG 'Postgres v)
+deriving instance (Backend b, Eq (ColumnInfo b), Eq v) => Eq (AnnOrderByElementG b v)
+instance (Backend b, Hashable (ColumnInfo b), Hashable v) => Hashable (AnnOrderByElementG b v)
 
 type AnnOrderByElement b v = AnnOrderByElementG b (AnnBoolExp b v)
 
@@ -72,10 +63,10 @@ traverseAnnOrderByItem
 traverseAnnOrderByItem f =
   traverse (traverseAnnOrderByElement f)
 
-type AnnOrderByItem b = AnnOrderByItemG b (SQLExp b)
+type AnnOrderByItem b = AnnOrderByItemG b (SQLExpression b)
 
 type OrderByItemExp b =
-  OrderByItemG b (AnnOrderByElement b (SQLExp b), (PG.Alias, (SQLExp b)))
+  OrderByItemG b (AnnOrderByElement b (SQLExpression b), (Alias b, (SQLExpression b)))
 
 data AnnRelationSelectG (b :: BackendType) a
   = AnnRelationSelectG
@@ -87,7 +78,7 @@ data AnnRelationSelectG (b :: BackendType) a
 type ArrayRelationSelectG b v = AnnRelationSelectG b (AnnSimpleSelG b v)
 type ArrayAggregateSelectG b v = AnnRelationSelectG b (AnnAggregateSelectG b v)
 type ArrayConnectionSelect b v = AnnRelationSelectG b (ConnectionSelect b v)
-type ArrayAggregateSelect b = ArrayAggregateSelectG b (SQLExp b)
+type ArrayAggregateSelect b = ArrayAggregateSelectG b (SQLExpression b)
 
 data AnnObjectSelectG (b :: BackendType) v
   = AnnObjectSelectG
@@ -96,7 +87,7 @@ data AnnObjectSelectG (b :: BackendType) v
   , _aosTableFilter :: !(AnnBoolExp b v)
   }
 
-type AnnObjectSelect b = AnnObjectSelectG b (SQLExp b)
+type AnnObjectSelect b = AnnObjectSelectG b (SQLExpression b)
 
 traverseAnnObjectSelect
   :: (Applicative f)
@@ -109,20 +100,28 @@ traverseAnnObjectSelect f (AnnObjectSelectG fields fromTable permissionFilter) =
   <*> traverseAnnBoolExp f permissionFilter
 
 type ObjectRelationSelectG b v = AnnRelationSelectG b (AnnObjectSelectG b v)
-type ObjectRelationSelect b = ObjectRelationSelectG b (SQLExp b)
+type ObjectRelationSelect b = ObjectRelationSelectG b (SQLExpression b)
 
 data ComputedFieldScalarSelect (b :: BackendType) v
   = ComputedFieldScalarSelect
-  { _cfssFunction  :: !PG.QualifiedFunction
-  , _cfssArguments :: !(FunctionArgsExpTableRow v)
-  , _cfssType      :: !PG.PGScalarType
+  { _cfssFunction  :: !(FunctionName b)
+  , _cfssArguments :: !(FunctionArgsExpTableRow b v)
+  , _cfssType      :: !(ScalarType b)
   , _cfssColumnOp  :: !(Maybe (ColumnOp b))
   } deriving (Functor, Foldable, Traversable)
-deriving instance Show v => Show (ComputedFieldScalarSelect 'Postgres v)
-deriving instance Eq   v => Eq   (ComputedFieldScalarSelect 'Postgres v)
+deriving instance (Backend b, Show v) => Show (ComputedFieldScalarSelect b v)
+deriving instance (Backend b, Eq   v) => Eq   (ComputedFieldScalarSelect b v)
 
 data ComputedFieldSelect (b :: BackendType) v
-  = CFSScalar !(ComputedFieldScalarSelect b v)
+  = CFSScalar
+      !(ComputedFieldScalarSelect b v)
+      -- ^ Type containing info about the computed field
+      !(Maybe (AnnColumnCaseBoolExp b v))
+      -- ^ This type is used to determine if whether the scalar
+      -- computed field should be nullified. When the value is `Nothing`,
+      -- the scalar computed value will be outputted as computed and when the
+      -- value is `Just c`, the scalar computed field will be outputted when
+      -- `c` evaluates to `true` and `null` when `c` evaluates to `false`
   | CFSTable !JsonAggSelect !(AnnSimpleSelG b v)
 
 traverseComputedFieldSelect
@@ -130,7 +129,8 @@ traverseComputedFieldSelect
   => (v -> f w)
   -> ComputedFieldSelect backend v -> f (ComputedFieldSelect backend w)
 traverseComputedFieldSelect fv = \case
-  CFSScalar scalarSel -> CFSScalar <$> traverse fv scalarSel
+  CFSScalar scalarSel caseBoolExpMaybe ->
+    CFSScalar <$> traverse fv scalarSel <*> traverse (traverseAnnColumnCaseBoolExp fv) caseBoolExpMaybe
   CFSTable b tableSel -> CFSTable b <$> traverseAnnSimpleSelect fv tableSel
 
 type Fields a = [(FieldName, a)]
@@ -153,84 +153,110 @@ traverseArraySelect f = \case
   ASConnection relConnection ->
     ASConnection <$> traverse (traverseConnectionSelect f) relConnection
 
-type ArraySelect b = ArraySelectG b (SQLExp b)
+type ArraySelect b = ArraySelectG b (SQLExpression b)
 
 type ArraySelectFieldsG b v = Fields (ArraySelectG b v)
 
 data ColumnOp (b :: BackendType)
   = ColumnOp
-  { _colOp  :: PG.SQLOp
-  , _colExp :: (SQLExp b)
+  { _colOp  :: (SQLOperator b)
+  , _colExp :: (SQLExpression b)
   }
-deriving instance Show (ColumnOp 'Postgres)
-deriving instance Eq   (ColumnOp 'Postgres)
+deriving instance Backend b => Show (ColumnOp b)
+deriving instance Backend b => Eq   (ColumnOp b)
 
-data AnnColumnField (b :: BackendType)
+type ColumnBoolExpression b = Either (AnnBoolExpPartialSQL b) (AnnBoolExpSQL b)
+
+data AnnColumnField (b :: BackendType) v
   = AnnColumnField
-  { _acfInfo   :: !(ColumnInfo b)
-  , _acfAsText :: !Bool
+  { _acfInfo               :: !(ColumnInfo b)
+  , _acfAsText             :: !Bool
   -- ^ If this field is 'True', columns are explicitly casted to @text@ when fetched, which avoids
   -- an issue that occurs because we don’t currently have proper support for array types. See
   -- https://github.com/hasura/graphql-engine/pull/3198 for more details.
-  , _acfOp     :: !(Maybe (ColumnOp b))
+  , _acfOp                 :: !(Maybe (ColumnOp b))
+  , _acfCaseBoolExpression :: !(Maybe (AnnColumnCaseBoolExp b v))
+  -- ^ This type is used to determine if whether the column
+  -- should be nullified. When the value is `Nothing`, the column value
+  -- will be outputted as computed and when the value is `Just c`, the
+  -- column will be outputted when `c` evaluates to `true` and `null`
+  -- when `c` evaluates to `false`.
   }
+
+traverseAnnColumnField
+  :: (Applicative f)
+  => (a -> f b)
+  -> AnnColumnField backend a
+  -> f (AnnColumnField backend b)
+traverseAnnColumnField f (AnnColumnField info asText op caseBoolExpMaybe) =
+  AnnColumnField
+  <$> pure info
+  <*> pure asText
+  <*> pure op
+  <*> (traverse (traverseAnnColumnCaseBoolExp f) caseBoolExpMaybe)
 
 data RemoteFieldArgument
   = RemoteFieldArgument
   { _rfaArgument :: !G.Name
-  , _rfaValue    :: !(InputValue Variable)
+  , _rfaValue    :: !(InputValue RemoteSchemaVariable)
   } deriving (Eq,Show)
 
 data RemoteSelect (b :: BackendType)
   = RemoteSelect
   { _rselArgs          :: ![RemoteFieldArgument]
-  , _rselSelection     :: !(G.SelectionSet G.NoFragments Variable)
+  , _rselSelection     :: !(G.SelectionSet G.NoFragments RemoteSchemaVariable)
   , _rselHasuraColumns :: !(HashSet (ColumnInfo b))
   , _rselFieldCall     :: !(NonEmpty FieldCall)
   , _rselRemoteSchema  :: !RemoteSchemaInfo
   }
 
 data AnnFieldG (b :: BackendType) v
-  = AFColumn !(AnnColumnField b)
+  = AFColumn !(AnnColumnField b v)
   | AFObjectRelation !(ObjectRelationSelectG b v)
   | AFArrayRelation !(ArraySelectG b v)
-  | AFComputedField !(ComputedFieldSelect b v)
-  | AFRemote !(RemoteSelect b)
-  | AFNodeId !(TableName b) !(PrimaryKeyColumns b)
+  | AFComputedField (XComputedField b) !(ComputedFieldSelect b v)
+  | AFRemote (XRemoteField b) !(RemoteSelect b)
+  | AFNodeId (XRelay b) !(TableName b) !(PrimaryKeyColumns b)
   | AFExpression !Text
 
-mkAnnColumnField :: ColumnInfo backend -> Maybe (ColumnOp backend) -> AnnFieldG backend v
-mkAnnColumnField ci colOpM =
-  AFColumn $ AnnColumnField ci False colOpM
+mkAnnColumnField
+  :: ColumnInfo backend
+  -> Maybe (AnnColumnCaseBoolExp backend v)
+  -> Maybe (ColumnOp backend)
+  -> AnnFieldG backend v
+mkAnnColumnField ci caseBoolExp colOpM =
+  AFColumn (AnnColumnField ci False colOpM caseBoolExp)
 
-mkAnnColumnFieldAsText :: ColumnInfo backend -> AnnFieldG backend v
+mkAnnColumnFieldAsText
+  :: ColumnInfo backend
+  -> AnnFieldG backend v
 mkAnnColumnFieldAsText ci =
-  AFColumn $ AnnColumnField ci True Nothing
+  AFColumn (AnnColumnField ci True Nothing Nothing)
 
 traverseAnnField
   :: (Applicative f)
   => (a -> f b) -> AnnFieldG backend a -> f (AnnFieldG backend b)
 traverseAnnField f = \case
-  AFColumn colFld      -> pure $ AFColumn colFld
-  AFObjectRelation sel -> AFObjectRelation <$> traverse (traverseAnnObjectSelect f) sel
-  AFArrayRelation sel  -> AFArrayRelation <$> traverseArraySelect f sel
-  AFComputedField sel  -> AFComputedField <$> traverseComputedFieldSelect f sel
-  AFRemote s           -> pure $ AFRemote s
-  AFNodeId qt pKeys    -> pure $ AFNodeId qt pKeys
-  AFExpression t       -> AFExpression <$> pure t
+  AFColumn colFld       -> AFColumn <$> traverseAnnColumnField f colFld
+  AFObjectRelation sel  -> AFObjectRelation <$> traverse (traverseAnnObjectSelect f) sel
+  AFArrayRelation sel   -> AFArrayRelation <$> traverseArraySelect f sel
+  AFComputedField x sel -> AFComputedField x <$> traverseComputedFieldSelect f sel
+  AFRemote x s          -> pure $ AFRemote x s
+  AFNodeId x qt pKeys   -> pure $ AFNodeId x qt pKeys
+  AFExpression t        -> AFExpression <$> pure t
 
-type AnnField b = AnnFieldG b (SQLExp b)
+type AnnField b = AnnFieldG b (SQLExpression b)
 
 data SelectArgsG (b :: BackendType) v
   = SelectArgs
   { _saWhere    :: !(Maybe (AnnBoolExp b v))
   , _saOrderBy  :: !(Maybe (NE.NonEmpty (AnnOrderByItemG b v)))
   , _saLimit    :: !(Maybe Int)
-  , _saOffset   :: !(Maybe (SQLExp b))
-  , _saDistinct :: !(Maybe (NE.NonEmpty (Column b)))
+  , _saOffset   :: !(Maybe (SQLExpression b))
+  , _saDistinct :: !(Maybe (XDistinct b, NE.NonEmpty (Column b)))
   } deriving (Generic)
-deriving instance Eq v => Eq (SelectArgsG 'Postgres v)
-instance (Hashable v) => Hashable (SelectArgsG 'Postgres v)
+deriving instance (Backend b, Eq (ColumnInfo b), Eq v) => Eq (SelectArgsG b v)
+instance (Backend b, Hashable (ColumnInfo b), Hashable v) => Hashable (SelectArgsG b v)
 
 traverseSelectArgs
   :: (Applicative f)
@@ -244,13 +270,13 @@ traverseSelectArgs f (SelectArgs wh ordBy lmt ofst distCols) =
   <*> pure ofst
   <*> pure distCols
 
-type SelectArgs b = SelectArgsG b (SQLExp b)
+type SelectArgs b = SelectArgsG b (SQLExpression b)
 
 noSelectArgs :: SelectArgsG backend v
 noSelectArgs = SelectArgs Nothing Nothing Nothing Nothing Nothing
 
 data ColFld (b :: BackendType)
-  = CFCol !(Column b)
+  = CFCol !(Column b) !(ColumnType b)
   | CFExp !Text
 {-
 deriving instance Eq (Column b) => Eq (ColFld b)
@@ -266,7 +292,7 @@ data AggregateOp (b :: BackendType)
   }
 
 data AggregateField (b :: BackendType)
-  = AFCount !PG.CountType
+  = AFCount !(CountType b)
   | AFOp !(AggregateOp b)
   | AFExp !Text
 
@@ -278,11 +304,11 @@ traverseAnnFields
   => (a -> f b) -> AnnFieldsG backend a -> f (AnnFieldsG backend b)
 traverseAnnFields f = traverse (traverse (traverseAnnField f))
 
-type AnnFields b = AnnFieldsG b (SQLExp b)
+type AnnFields b = AnnFieldsG b (SQLExpression b)
 
 data TableAggregateFieldG (b :: BackendType) v
   = TAFAgg !(AggregateFields b)
-  | TAFNodes !(AnnFieldsG b v)
+  | TAFNodes (XNodesAgg b) !(AnnFieldsG b v)
   | TAFExp !Text
 
 data PageInfoField
@@ -327,41 +353,43 @@ traverseTableAggregateField
   :: (Applicative f)
   => (a -> f b) -> TableAggregateFieldG backend a -> f (TableAggregateFieldG backend b)
 traverseTableAggregateField f = \case
-  TAFAgg aggFlds   -> pure $ TAFAgg aggFlds
-  TAFNodes annFlds -> TAFNodes <$> traverseAnnFields f annFlds
-  TAFExp t         -> pure $ TAFExp t
+  TAFAgg aggFlds     -> pure $ TAFAgg aggFlds
+  TAFNodes x annFlds -> TAFNodes x <$> traverseAnnFields f annFlds
+  TAFExp t           -> pure $ TAFExp t
 
-type TableAggregateField b = TableAggregateFieldG b (SQLExp b)
+type TableAggregateField b = TableAggregateFieldG b (SQLExpression b)
 type TableAggregateFieldsG b v = Fields (TableAggregateFieldG b v)
-type TableAggregateFields b = TableAggregateFieldsG b (SQLExp b)
+type TableAggregateFields b = TableAggregateFieldsG b (SQLExpression b)
 
-data ArgumentExp a
-  = AETableRow !(Maybe PG.Identifier) -- ^ table row accessor
+data ArgumentExp (b :: BackendType) a
+  = AETableRow !(Maybe (Identifier b)) -- ^ table row accessor
   | AESession !a -- ^ JSON/JSONB hasura session variable object
   | AEInput !a
-  deriving (Show, Eq, Functor, Foldable, Traversable, Generic)
-instance (Hashable v) => Hashable (ArgumentExp v)
+  deriving (Functor, Foldable, Traversable, Generic)
+deriving instance (Backend b, Show a) => Show (ArgumentExp b a)
+deriving instance (Backend b, Eq   a) => Eq   (ArgumentExp b a)
+instance (Backend b, Hashable v) => Hashable (ArgumentExp b v)
 
-type FunctionArgsExpTableRow v = FunctionArgsExpG (ArgumentExp v)
+type FunctionArgsExpTableRow b v = FunctionArgsExpG (ArgumentExp b v)
 
 data SelectFromG (b :: BackendType) v
   = FromTable !(TableName b)
-  | FromIdentifier !PG.Identifier
-  | FromFunction !PG.QualifiedFunction
-                 !(FunctionArgsExpTableRow v)
+  | FromIdentifier !(Identifier b)
+  | FromFunction !(FunctionName b)
+                 !(FunctionArgsExpTableRow b v)
                  -- a definition list
                  !(Maybe [(Column b, ScalarType b)])
   deriving (Functor, Foldable, Traversable, Generic)
-instance (Hashable v) => Hashable (SelectFromG 'Postgres v)
+instance (Backend b, Hashable v) => Hashable (SelectFromG b v)
 
-type SelectFrom b = SelectFromG b (SQLExp b)
+type SelectFrom b = SelectFromG b (SQLExpression b)
 
 data TablePermG (b :: BackendType) v
   = TablePerm
   { _tpFilter :: !(AnnBoolExp b v)
   , _tpLimit  :: !(Maybe Int)
   } deriving (Generic)
-instance (Hashable v) => Hashable (TablePermG 'Postgres v)
+instance (Backend b, Hashable (ColumnInfo b), Hashable v) => Hashable (TablePermG b v)
 
 traverseTablePerm
   :: (Applicative f)
@@ -377,7 +405,7 @@ noTablePermissions :: TablePermG backend v
 noTablePermissions =
   TablePerm annBoolExpTrue Nothing
 
-type TablePerm b = TablePermG b (SQLExp b)
+type TablePerm b = TablePermG b (SQLExpression b)
 
 data AnnSelectG (b :: BackendType) a v
   = AnnSelectG
@@ -414,10 +442,10 @@ traverseAnnSelect f1 f2 (AnnSelectG flds tabFrom perm args strfyNum) =
   <*> pure strfyNum
 
 type AnnSimpleSelG b v = AnnSelectG    b (AnnFieldsG b v) v
-type AnnSimpleSel  b   = AnnSimpleSelG b (SQLExp b)
+type AnnSimpleSel  b   = AnnSimpleSelG b (SQLExpression b)
 
 type AnnAggregateSelectG b v = AnnSelectG b (TableAggregateFieldsG b v) v
-type AnnAggregateSelect b = AnnAggregateSelectG b (SQLExp b)
+type AnnAggregateSelect b = AnnAggregateSelectG b (SQLExpression b)
 
 data ConnectionSlice
   = SliceFirst !Int
@@ -437,7 +465,7 @@ data ConnectionSplit (b :: BackendType) v
   , _csValue   :: !v
   , _csOrderBy :: !(OrderByItemG b (AnnOrderByElementG b ()))
   } deriving (Functor, Generic, Foldable, Traversable)
-instance (Hashable v) => Hashable (ConnectionSplit 'Postgres v)
+instance (Backend b, Hashable (ColumnInfo b), Hashable v) => Hashable (ConnectionSplit b v)
 
 traverseConnectionSplit
   :: (Applicative f)
@@ -447,7 +475,8 @@ traverseConnectionSplit f (ConnectionSplit k v ob) =
 
 data ConnectionSelect (b :: BackendType) v
   = ConnectionSelect
-  { _csPrimaryKeyColumns :: !(PrimaryKeyColumns b)
+  { _csXRelay            :: !(XRelay b)
+  , _csPrimaryKeyColumns :: !(PrimaryKeyColumns b)
   , _csSplit             :: !(Maybe (NE.NonEmpty (ConnectionSplit b v)))
   , _csSlice             :: !(Maybe ConnectionSlice)
   , _csSelect            :: !(AnnSelectG b (ConnectionFields b v) v)
@@ -457,8 +486,8 @@ traverseConnectionSelect
   :: (Applicative f)
   => (a -> f b)
   -> ConnectionSelect backend a -> f (ConnectionSelect backend b)
-traverseConnectionSelect f (ConnectionSelect pkCols cSplit cSlice sel) =
-  ConnectionSelect pkCols
+traverseConnectionSelect f (ConnectionSelect x pkCols cSplit cSlice sel) =
+  ConnectionSelect x pkCols
   <$> traverse (traverse (traverseConnectionSplit f)) cSplit
   <*> pure cSlice
   <*> traverseAnnSelect (traverse (traverse (traverseConnectionField f))) f sel
@@ -473,7 +502,7 @@ instance (Hashable a) => Hashable (FunctionArgsExpG a)
 emptyFunctionArgsExp :: FunctionArgsExpG a
 emptyFunctionArgsExp = FunctionArgsExp [] HM.empty
 
-type FunctionArgExp b = FunctionArgsExpG (SQLExp b)
+type FunctionArgExp b = FunctionArgsExpG (SQLExpression b)
 
 -- | If argument positional index is less than or equal to length of
 -- 'positional' arguments then insert the value in 'positional' arguments else
@@ -492,124 +521,6 @@ insertFunctionArg argName idx value (FunctionArgsExp positional named) =
   where
     insertAt i a = toList . Seq.insertAt i a . Seq.fromList
 
-data SourcePrefixes
-  = SourcePrefixes
-  { _pfThis :: !PG.Identifier -- ^ Current source prefix
-  , _pfBase :: !PG.Identifier
-  -- ^ Base table source row identifier to generate
-  -- the table's column identifiers for computed field
-  -- function input parameters
-  } deriving (Show, Eq, Generic)
-instance Hashable SourcePrefixes
-
-data SelectSource (b :: BackendType)
-  = SelectSource
-  { _ssPrefix   :: !PG.Identifier
-  , _ssFrom     :: !PG.FromItem
-  , _ssDistinct :: !(Maybe PG.DistinctExpr)
-  , _ssWhere    :: !PG.BoolExp
-  , _ssOrderBy  :: !(Maybe PG.OrderByExp)
-  , _ssLimit    :: !(Maybe Int)
-  , _ssOffset   :: !(Maybe (SQLExp b))
-  } deriving (Generic)
-instance Hashable (SelectSource 'Postgres)
-deriving instance Show (SelectSource 'Postgres)
-deriving instance Eq   (SelectSource 'Postgres)
-
-data SelectNode (b :: BackendType)
-  = SelectNode
-  { _snExtractors :: !(HM.HashMap PG.Alias (SQLExp b))
-  , _snJoinTree   :: !(JoinTree b)
-  }
-
-instance Semigroup (SelectNode 'Postgres) where
-  SelectNode lExtrs lJoinTree <> SelectNode rExtrs rJoinTree =
-    SelectNode (lExtrs <> rExtrs) (lJoinTree <> rJoinTree)
-
-data ObjectSelectSource
-  = ObjectSelectSource
-  { _ossPrefix :: !PG.Identifier
-  , _ossFrom   :: !PG.FromItem
-  , _ossWhere  :: !PG.BoolExp
-  } deriving (Show, Eq, Generic)
-instance Hashable ObjectSelectSource
-
-objectSelectSourceToSelectSource :: ObjectSelectSource -> (SelectSource backend)
-objectSelectSourceToSelectSource ObjectSelectSource{..} =
-  SelectSource _ossPrefix _ossFrom Nothing _ossWhere Nothing Nothing Nothing
-
-data ObjectRelationSource (b :: BackendType)
-  = ObjectRelationSource
-  { _orsRelationshipName :: !RelName
-  , _orsRelationMapping  :: !(HM.HashMap (Column b) (Column b))
-  , _orsSelectSource     :: !ObjectSelectSource
-  } deriving (Generic)
-instance Hashable (ObjectRelationSource 'Postgres)
-deriving instance Eq (Column b) => Eq (ObjectRelationSource b)
-
-data ArrayRelationSource (b :: BackendType)
-  = ArrayRelationSource
-  { _arsAlias           :: !PG.Alias
-  , _arsRelationMapping :: !(HM.HashMap (Column b) (Column b))
-  , _arsSelectSource    :: !(SelectSource b)
-  } deriving (Generic)
-instance Hashable (ArrayRelationSource 'Postgres)
-deriving instance Eq (ArrayRelationSource 'Postgres)
-
-data ArraySelectNode (b :: BackendType)
-  = ArraySelectNode
-  { _asnTopExtractors :: ![PG.Extractor]
-  , _asnSelectNode    :: !(SelectNode b)
-  }
-
-instance Semigroup (ArraySelectNode 'Postgres) where
-  ArraySelectNode lTopExtrs lSelNode <> ArraySelectNode rTopExtrs rSelNode =
-    ArraySelectNode (lTopExtrs <> rTopExtrs) (lSelNode <> rSelNode)
-
-data ComputedFieldTableSetSource (b :: BackendType)
-  = ComputedFieldTableSetSource
-  { _cftssFieldName    :: !FieldName
-  , _cftssSelectType   :: !JsonAggSelect
-  , _cftssSelectSource :: !(SelectSource b)
-  } deriving (Generic)
-instance Hashable (ComputedFieldTableSetSource 'Postgres)
-deriving instance Show (ComputedFieldTableSetSource 'Postgres)
-deriving instance Eq   (ComputedFieldTableSetSource 'Postgres)
-
-data ArrayConnectionSource (b :: BackendType)
-  = ArrayConnectionSource
-  { _acsAlias           :: !PG.Alias
-  , _acsRelationMapping :: !(HM.HashMap (Column b) (Column b))
-  , _acsSplitFilter     :: !(Maybe PG.BoolExp)
-  , _acsSlice           :: !(Maybe ConnectionSlice)
-  , _acsSource          :: !(SelectSource b)
-  } deriving (Generic)
-deriving instance Eq (ArrayConnectionSource 'Postgres)
-
-instance Hashable (ArrayConnectionSource 'Postgres)
-
-data JoinTree (b :: BackendType)
-  = JoinTree
-  { _jtObjectRelations        :: !(HM.HashMap (ObjectRelationSource b) (SelectNode b))
-  , _jtArrayRelations         :: !(HM.HashMap (ArrayRelationSource b) (ArraySelectNode b))
-  , _jtArrayConnections       :: !(HM.HashMap (ArrayConnectionSource b) (ArraySelectNode b))
-  , _jtComputedFieldTableSets :: !(HM.HashMap (ComputedFieldTableSetSource b) (SelectNode b))
-  }
-
-instance Semigroup (JoinTree 'Postgres) where
-  JoinTree lObjs lArrs lArrConns lCfts <> JoinTree rObjs rArrs rArrConns rCfts =
-    JoinTree (HM.unionWith (<>) lObjs rObjs)
-             (HM.unionWith (<>) lArrs rArrs)
-             (HM.unionWith (<>) lArrConns rArrConns)
-             (HM.unionWith (<>) lCfts rCfts)
-
-instance Monoid (JoinTree 'Postgres) where
-  mempty = JoinTree mempty mempty mempty mempty
-
-data PermissionLimitSubQuery
-  = PLSQRequired !Int -- ^ Permission limit
-  | PLSQNotRequired
-  deriving (Show, Eq)
 
 $(makeLenses ''AnnSelectG)
 $(makePrisms ''AnnFieldG)

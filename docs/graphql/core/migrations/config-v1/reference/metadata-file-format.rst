@@ -135,3 +135,7 @@ metadata.yaml
 
 The schema for this file will mostly correspond to the table structure of the
 :ref:`metadata catalogue <hasura_metadata_schema>`.
+
+.. admonition:: Additional Resources
+
+  Hasura Database Schema Migrations - `Watch Webinar <https://hasura.io/events/webinar/hasura-database-schema-migrations/?pg=docs&plcmt=body&cta=watch-webinar&tech=>`__.

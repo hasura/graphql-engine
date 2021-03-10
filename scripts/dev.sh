@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 set -euo pipefail
 shopt -s globstar
 
@@ -37,6 +37,10 @@ Available COMMANDs:
 
   postgres
     Launch a postgres container suitable for use with graphql-engine, watch its logs,
+    clean up nicely after
+
+  mssql
+    Launch a MSSQL container suitable for use with graphql-engine, watch its logs,
     clean up nicely after
 
   test [--integration [pytest_args...] | --unit | --hlint]
@@ -80,6 +84,8 @@ case "${1-}" in
     esac
   ;;
   postgres)
+  ;;
+  mssql)
   ;;
   test)
     case "${2-}" in
@@ -144,28 +150,48 @@ fi
 if [ "$MODE" = "test" ]; then
   # Choose a different port so PG is totally disposable:
   PG_PORT=35432
+  MSSQL_PORT=31433
 else
   PG_PORT=25432
+  MSSQL_PORT=21433
 fi
 
 # export for psql, etc.
 export PGPASSWORD=postgres
+# needs at least 8 characters, and lowercase, uppercase and number
+export MSSQLPASSWORD="hasuraMSSQL1"
 
 # The URL for the postgres server we might launch
-CONTAINER_DB_URL="postgres://postgres:$PGPASSWORD@127.0.0.1:$PG_PORT/postgres"
+POSTGRES_DB_URL="postgres://postgres:$PGPASSWORD@127.0.0.1:$PG_PORT/postgres"
 # ... but we might like to use a different PG instance when just launching graphql-engine:
-HASURA_GRAPHQL_DATABASE_URL=${HASURA_GRAPHQL_DATABASE_URL-$CONTAINER_DB_URL}
+HASURA_GRAPHQL_DATABASE_URL=${HASURA_GRAPHQL_DATABASE_URL-$POSTGRES_DB_URL}
 
 PG_CONTAINER_NAME="hasura-dev-postgres-$PG_PORT"
+MSSQL_CONTAINER_NAME="hasura-dev-mssql-$MSSQL_PORT"
 
 # We can remove psql as a dependency by using it from the (running) PG container:
 DOCKER_PSQL="docker exec -u postgres -it $PG_CONTAINER_NAME psql $HASURA_GRAPHQL_DATABASE_URL"
 
 function wait_postgres {
   echo -n "Waiting for postgres to come up"
-  until ( $DOCKER_PSQL -c '\l' || psql $HASURA_GRAPHQL_DATABASE_URL -c '\l') &>/dev/null; do
+  until ( $DOCKER_PSQL -c '\l' ) &>/dev/null; do
     echo -n '.' && sleep 0.2
   done
+  echo " Ok"
+}
+
+DOCKER_MSSQL="docker exec -t $MSSQL_CONTAINER_NAME /opt/mssql-tools/bin/sqlcmd -S localhost -U sa -P $MSSQLPASSWORD"
+
+function wait_mssql {
+  set +e
+  echo -n "Waiting for mssql to come up"
+  $DOCKER_MSSQL -Q "SELECT 1" &>/dev/null
+  while [ $? -eq 0 ];
+  do
+    echo -n '.' && sleep 0.2
+    $DOCKER_MSSQL -Q "SELECT 1" &>/dev/null
+  done
+  set -e
   echo " Ok"
 }
 
@@ -255,7 +281,7 @@ if [ "$MODE" = "graphql-engine" ]; then
     echo_pretty ""
     echo_pretty "  If the console was modified since your last build (re)build assets with:"
     echo_pretty "      $ cd \"$PROJECT_ROOT/console\""
-    echo_pretty "      $ npm ci && npm run server-build "
+    echo_pretty "      $ npm ci && make server-build "
     echo_pretty ""
     echo_pretty "Useful endpoints when compiling with 'graphql-engine:developer' and running with '+RTS -T'"
     echo_pretty "   http://127.0.0.1:$HASURA_GRAPHQL_SERVER_PORT/dev/subscriptions"
@@ -282,10 +308,20 @@ fi
 # setting 'port' in container is a workaround for the pg_dump endpoint (see tests)
 # log_hostname=off to avoid timeout failures when running offline due to:
 #   https://forums.aws.amazon.com/thread.jspa?threadID=291285
+#
+# All lines up to log_error_verbosity are to support pgBadger:
+#   https://github.com/darold/pgbadger#LOG-STATEMENTS
+#
+# Also useful:
+#   log_autovacuum_min_duration=0
 CONF=$(cat <<-EOF
-log_statement=all
+log_min_duration_statement=0
+log_checkpoints=on
 log_connections=on
 log_disconnections=on
+log_lock_waits=on
+log_temp_files=0
+log_error_verbosity=default
 log_hostname=off
 log_duration=on
 port=$PG_PORT
@@ -361,12 +397,65 @@ if [ "$MODE" = "postgres" ]; then
   echo_pretty "    $ PGPASSWORD="$PGPASSWORD" psql -h 127.0.0.1 -p "$PG_PORT" postgres -U postgres"
   echo_pretty ""
   echo_pretty "Here is the database URL:"
-  echo_pretty "    $CONTAINER_DB_URL"
+  echo_pretty "    $POSTGRES_DB_URL"
   echo_pretty ""
   echo_pretty "If you want to launch a 'graphql-engine' that works with this database:"
   echo_pretty "    $ $0 graphql-engine"
   # Runs continuously until CTRL-C, jumping to cleanup() above:
   docker logs -f --tail=0 "$PG_CONTAINER_NAME"
+fi
+
+#################################
+###     MSSQL Container    ###
+#################################
+
+function launch_mssql_container(){
+  echo_pretty "Launching MSSQL container: $MSSQL_CONTAINER_NAME"
+  docker run --name "$MSSQL_CONTAINER_NAME" --net=host \
+    -e SA_PASSWORD="$MSSQLPASSWORD" -e "ACCEPT_EULA=Y" -d mcr.microsoft.com/mssql/server:2019-CU8-ubuntu-16.04
+
+  # Since launching the postgres container worked we can set up cleanup routines. This will catch CTRL-C
+  function cleanup {
+    echo
+
+    if [ ! -z "${GRAPHQL_ENGINE_PID-}" ]; then
+      # Kill the cabal new-run and its children. This may already have been killed:
+      pkill -P "$GRAPHQL_ENGINE_PID" &>/dev/null || true
+    fi
+
+    case "$MODE" in
+      test|mssql)
+        echo_pretty "Removing $MSSQL_CONTAINER_NAME and its volumes in 5 seconds!"
+        echo_pretty "  PRESS CTRL-C TO ABORT removal, or ENTER to clean up right away"
+        read -t5 || true
+        docker stop "$MSSQL_CONTAINER_NAME"
+        docker rm -v "$MSSQL_CONTAINER_NAME"
+      ;;
+      graphql-engine)
+      ;;
+    esac
+
+    echo_pretty "Done"
+  }
+  trap cleanup EXIT
+}
+
+
+if [ "$MODE" = "mssql" ]; then
+  launch_mssql_container
+  wait_mssql
+  echo_pretty "MSSQL logs will start to show up in realtime here. Press CTRL-C to exit and "
+  echo_pretty "shutdown this container."
+  echo_pretty ""
+  echo_pretty "You can use the following to connect to the running instance:"
+  echo_pretty "    $ $DOCKER_MSSQL"
+  echo_pretty ""
+  echo_pretty "If you want to import a SQL file into MSSQL:"
+  echo_pretty "    $ $DOCKER_MSSQL -i <import_file>"
+
+  # Runs continuously until CTRL-C, jumping to cleanup() above:
+  docker logs -f --tail=0 "$MSSQL_CONTAINER_NAME"
+
 
 elif [ "$MODE" = "test" ]; then
   ########################################
@@ -396,14 +485,14 @@ elif [ "$MODE" = "test" ]; then
   # These also depend on a running DB:
   if [ "$RUN_UNIT_TESTS" = true ]; then
     echo_pretty "Running Haskell test suite"
-    HASURA_GRAPHQL_DATABASE_URL="$CONTAINER_DB_URL" cabal new-run --project-file=cabal.project.dev-sh -- test:graphql-engine-tests
+    HASURA_GRAPHQL_DATABASE_URL="$POSTGRES_DB_URL" cabal new-run --project-file=cabal.project.dev-sh -- test:graphql-engine-tests
   fi
 
   if [ "$RUN_INTEGRATION_TESTS" = true ]; then
     GRAPHQL_ENGINE_TEST_LOG=/tmp/hasura-dev-test-engine.log
     echo_pretty "Starting graphql-engine, logging to $GRAPHQL_ENGINE_TEST_LOG"
     export HASURA_GRAPHQL_SERVER_PORT=8088
-    cabal new-run --project-file=cabal.project.dev-sh -- exe:graphql-engine --database-url="$CONTAINER_DB_URL" serve --stringify-numeric-types \
+    cabal new-run --project-file=cabal.project.dev-sh -- exe:graphql-engine --database-url="$POSTGRES_DB_URL" serve --stringify-numeric-types \
       --enable-console --console-assets-dir ../console/static/dist \
       &> "$GRAPHQL_ENGINE_TEST_LOG" & GRAPHQL_ENGINE_PID=$!
 
@@ -465,7 +554,7 @@ elif [ "$MODE" = "test" ]; then
 
 
     # TODO MAYBE: fix deprecation warnings, make them an error
-    if pytest -W ignore::DeprecationWarning --hge-urls http://127.0.0.1:$HASURA_GRAPHQL_SERVER_PORT --pg-urls "$CONTAINER_DB_URL" $PYTEST_ARGS; then
+    if pytest -W ignore::DeprecationWarning --hge-urls http://127.0.0.1:$HASURA_GRAPHQL_SERVER_PORT --pg-urls "$POSTGRES_DB_URL" $PYTEST_ARGS; then
       PASSED=true
     else
       PASSED=false

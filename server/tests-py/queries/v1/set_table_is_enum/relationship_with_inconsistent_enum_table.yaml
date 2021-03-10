@@ -18,8 +18,13 @@
     - type: run_sql
       args:
         sql: INSERT INTO colors (value, comment) VALUES ('illegal+graphql+identifier', '')
-    - type: reload_metadata
-      args: {}
+
+- description: Reload metadata
+  url: /v1/query
+  status: 200
+  query:
+    type: reload_metadata
+    args: {}
 
 - description: Query inconsistent objects
   url: /v1/query
@@ -37,6 +42,7 @@
         using:
           foreign_key_constraint_on: favorite_color
         name: favorite_color_object
+        source: default
         comment:
         table:
           schema: public

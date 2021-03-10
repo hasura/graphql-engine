@@ -1,0 +1,34 @@
+type: bulk
+args:
+
+- type: pg_track_table
+  args:
+    table: authors
+
+- type: pg_create_insert_permission
+  args:
+    table: authors
+    role: user
+    permission:
+      set:
+        id: X-Hasura-User-Id
+      check: {}
+      columns: '*'
+
+# same permission as `user` role
+- type: pg_create_insert_permission
+  args:
+    table: authors
+    role: user1
+    permission:
+      set:
+        id: X-Hasura-User-Id
+      check: {}
+      columns: '*'
+
+- type: add_inherited_role
+  args:
+    role_name: inherited_user
+    role_set:
+      - user
+      - user1

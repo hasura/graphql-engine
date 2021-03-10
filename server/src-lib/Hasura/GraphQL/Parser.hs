@@ -13,6 +13,8 @@ module Hasura.GraphQL.Parser
   , int
   , float
   , string
+  , json
+  , jsonb
   , identifier
   , unsafeRawScalar
 

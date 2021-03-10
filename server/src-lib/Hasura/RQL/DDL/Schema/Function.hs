@@ -6,185 +6,51 @@ module Hasura.RQL.DDL.Schema.Function where
 
 import           Hasura.Prelude
 
-import qualified Control.Monad.Validate             as MV
-import qualified Data.HashMap.Strict                as M
-import qualified Data.Sequence                      as Seq
-import qualified Data.Text                          as T
-import qualified Database.PG.Query                  as Q
+import qualified Data.HashMap.Strict        as Map
+import qualified Data.HashMap.Strict.InsOrd as OMap
 
-import           Control.Lens
 import           Data.Aeson
 import           Data.Text.Extended
-import           Language.Haskell.TH.Syntax         (Lift)
 
-import qualified Language.GraphQL.Draft.Syntax      as G
-
-import           Hasura.Backends.Postgres.SQL.Types
 import           Hasura.EncJSON
 import           Hasura.RQL.Types
-import           Hasura.Server.Utils                (englishList, makeReasonMessage)
 
+import           Hasura.Session
 
-mkFunctionArgs :: Int -> [QualifiedPGType] -> [FunctionArgName] -> [FunctionArg]
-mkFunctionArgs defArgsNo tys argNames =
-  bool withNames withNoNames $ null argNames
-  where
-    hasDefaultBoolSeq = replicate (length tys - defArgsNo) (HasDefault False)
-                        -- only last arguments can have default expression
-                        <> replicate defArgsNo (HasDefault True)
-
-    tysWithHasDefault = zip tys hasDefaultBoolSeq
-
-    withNoNames = flip map tysWithHasDefault $ uncurry $ FunctionArg Nothing
-    withNames = zipWith mkArg argNames tysWithHasDefault
-
-    mkArg "" (ty, hasDef) = FunctionArg Nothing ty hasDef
-    mkArg n  (ty, hasDef) = FunctionArg (Just n) ty hasDef
-
-validateFuncArgs :: MonadError QErr m => [FunctionArg] -> m ()
-validateFuncArgs args =
-  for_ (nonEmpty invalidArgs) \someInvalidArgs ->
-    throw400 NotSupported $
-      "arguments: " <> englishList "and" someInvalidArgs
-      <> " are not in compliance with GraphQL spec"
-  where
-    funcArgsText = mapMaybe (fmap getFuncArgNameTxt . faName) args
-    invalidArgs = filter (isNothing . G.mkName) funcArgsText
-
-data FunctionIntegrityError
-  = FunctionNameNotGQLCompliant
-  | FunctionVariadic
-  | FunctionReturnNotCompositeType
-  | FunctionReturnNotSetof
-  | FunctionReturnNotSetofTable
-  | FunctionVolatile
-  | FunctionSessionArgumentNotJSON !FunctionArgName
-  | FunctionInvalidSessionArgument !FunctionArgName
-  | FunctionInvalidArgumentNames [FunctionArgName]
-  deriving (Show, Eq)
-
-mkFunctionInfo
-  :: (QErrM m)
-  => QualifiedFunction
-  -> SystemDefined
-  -> FunctionConfig
-  -> RawFunctionInfo
-  -> m (FunctionInfo, SchemaDependency)
-mkFunctionInfo qf systemDefined config rawFuncInfo =
-  either (throw400 NotSupported . showErrors) pure
-    =<< MV.runValidateT validateFunction
-  where
-    functionArgs = mkFunctionArgs defArgsNo inpArgTyps inpArgNames
-    RawFunctionInfo hasVariadic funTy retSn retN retTyTyp retSet
-                inpArgTyps inpArgNames defArgsNo returnsTab descM
-                = rawFuncInfo
-    returnType = QualifiedPGType retSn retN retTyTyp
-
-    throwValidateError = MV.dispute . pure
-
-    validateFunction = do
-      unless (has _Right $ qualifiedObjectToName qf) $
-        throwValidateError FunctionNameNotGQLCompliant
-      when hasVariadic $ throwValidateError FunctionVariadic
-      when (retTyTyp /= PGKindComposite) $ throwValidateError FunctionReturnNotCompositeType
-      unless retSet $ throwValidateError FunctionReturnNotSetof
-      unless returnsTab $ throwValidateError FunctionReturnNotSetofTable
-      when (funTy == FTVOLATILE) $ throwValidateError FunctionVolatile
-
-      -- validate function argument names
-      validateFunctionArgNames
-
-      inputArguments <- makeInputArguments
-
-      let retTable = typeToTable returnType
-
-      pure ( FunctionInfo qf systemDefined funTy inputArguments retTable descM
-           , SchemaDependency (SOTable retTable) DRTable
-           )
-
-    validateFunctionArgNames = do
-      let argNames = mapMaybe faName functionArgs
-          invalidArgs = filter (isNothing . G.mkName . getFuncArgNameTxt) argNames
-      unless (null invalidArgs) $
-        throwValidateError $ FunctionInvalidArgumentNames invalidArgs
-
-    makeInputArguments =
-      case _fcSessionArgument config of
-        Nothing -> pure $ Seq.fromList $ map IAUserProvided functionArgs
-        Just sessionArgName -> do
-          unless (any (\arg -> Just sessionArgName == faName arg) functionArgs) $
-            throwValidateError $ FunctionInvalidSessionArgument sessionArgName
-          fmap Seq.fromList $ forM functionArgs $ \arg ->
-            if Just sessionArgName == faName arg then do
-              let argTy = _qptName $ faType arg
-              if argTy == PGJSON then pure $ IASessionVariables sessionArgName
-              else MV.refute $ pure $ FunctionSessionArgumentNotJSON sessionArgName
-            else pure $ IAUserProvided arg
-
-    showErrors allErrors =
-      "the function " <> qf <<> " cannot be tracked "
-      <> makeReasonMessage allErrors showOneError
-
-    showOneError = \case
-      FunctionNameNotGQLCompliant -> "function name is not a legal GraphQL identifier"
-      FunctionVariadic -> "function with \"VARIADIC\" parameters are not supported"
-      FunctionReturnNotCompositeType -> "the function does not return a \"COMPOSITE\" type"
-      FunctionReturnNotSetof -> "the function does not return a SETOF"
-      FunctionReturnNotSetofTable -> "the function does not return a SETOF table"
-      FunctionVolatile -> "function of type \"VOLATILE\" is not supported now"
-      FunctionSessionArgumentNotJSON argName ->
-        "given session argument " <> argName <<> " is not of type json"
-      FunctionInvalidSessionArgument argName ->
-        "given session argument " <> argName <<> " not the input argument of the function"
-      FunctionInvalidArgumentNames args ->
-        let argsText = T.intercalate "," $ map getFuncArgNameTxt args
-        in "the function arguments " <> argsText <> " are not in compliance with GraphQL spec"
-
-saveFunctionToCatalog
-  :: (MonadTx m, HasSystemDefined m)
-  => QualifiedFunction -> FunctionConfig -> m ()
-saveFunctionToCatalog (QualifiedObject sn fn) config = do
-  systemDefined <- askSystemDefined
-  liftTx $ Q.unitQE defaultTxErrorHandler [Q.sql|
-         INSERT INTO "hdb_catalog"."hdb_function"
-           (function_schema, function_name, configuration, is_system_defined)
-         VALUES ($1, $2, $3, $4)
-                 |] (sn, fn, Q.AltJ config, systemDefined) False
-
-delFunctionFromCatalog :: QualifiedFunction -> Q.TxE QErr ()
-delFunctionFromCatalog (QualifiedObject sn fn) =
-  Q.unitQE defaultTxErrorHandler [Q.sql|
-         DELETE FROM hdb_catalog.hdb_function
-         WHERE function_schema = $1
-           AND function_name = $2
-         |] (sn, fn) False
-
-newtype TrackFunction
+newtype TrackFunction b
   = TrackFunction
-  { tfName :: QualifiedFunction}
-  deriving (Show, Eq, FromJSON, ToJSON, Lift)
+  { tfName :: (FunctionName b)}
+deriving instance (Backend b) => Show (TrackFunction b)
+deriving instance (Backend b) => Eq (TrackFunction b)
+deriving instance (Backend b) => FromJSON (TrackFunction b)
+deriving instance (Backend b) => ToJSON (TrackFunction b)
 
 -- | Track function, Phase 1:
 -- Validate function tracking operation. Fails if function is already being
 -- tracked, or if a table with the same name is being tracked.
 trackFunctionP1
-  :: (CacheRM m, QErrM m) => QualifiedFunction -> m ()
-trackFunctionP1 qf = do
+  :: forall m b
+   . (CacheRM m, QErrM m, Backend b)
+  => SourceName -> FunctionName b -> m ()
+trackFunctionP1 sourceName qf = do
   rawSchemaCache <- askSchemaCache
-  when (M.member qf $ scFunctions rawSchemaCache) $
+  when (isJust $ unsafeFunctionInfo @b sourceName qf $ scSources rawSchemaCache) $
     throw400 AlreadyTracked $ "function already tracked : " <>> qf
-  let qt = fmap (TableName . getFunctionTxt) qf
-  when (M.member qt $ scTables rawSchemaCache) $
+  let qt = functionToTable qf
+  when (isJust $ unsafeTableInfo @b sourceName qt $ scSources rawSchemaCache) $
     throw400 NotSupported $ "table with name " <> qf <<> " already exists"
 
-trackFunctionP2 :: (MonadTx m, CacheRWM m, HasSystemDefined m)
-                => QualifiedFunction -> FunctionConfig -> m EncJSON
-trackFunctionP2 qf config = do
-  saveFunctionToCatalog qf config
-  buildSchemaCacheFor $ MOFunction qf
-  return successMsg
+trackFunctionP2
+  :: (MonadError QErr m, CacheRWM m, MetadataM m, BackendMetadata b)
+  => SourceName -> FunctionName b -> FunctionConfig -> m EncJSON
+trackFunctionP2 sourceName qf config = do
+  buildSchemaCacheFor (MOSourceObjId sourceName $ SMOFunction qf)
+    $ MetadataModifier
+    $ metaSources.ix sourceName.toSourceMetadata.smFunctions
+      %~ OMap.insert qf (FunctionMetadata qf config mempty)
+  pure successMsg
 
-handleMultipleFunctions :: (QErrM m) => QualifiedFunction -> [a] -> m a
+handleMultipleFunctions :: (QErrM m, Backend b) => FunctionName b -> [a] -> m a
 handleMultipleFunctions qf = \case
   []      ->
     throw400 NotExists $ "no such function exists in postgres : " <>> qf
@@ -193,44 +59,155 @@ handleMultipleFunctions qf = \case
     throw400 NotSupported $
     "function " <> qf <<> " is overloaded. Overloaded functions are not supported"
 
-fetchRawFunctionInfo :: MonadTx m => QualifiedFunction -> m RawFunctionInfo
-fetchRawFunctionInfo qf@(QualifiedObject sn fn) =
-  handleMultipleFunctions qf =<< map (Q.getAltJ . runIdentity) <$> fetchFromDatabase
-  where
-    fetchFromDatabase = liftTx $
-      Q.listQE defaultTxErrorHandler [Q.sql|
-           SELECT function_info
-             FROM hdb_catalog.hdb_function_info_agg
-            WHERE function_schema = $1
-              AND function_name = $2
-          |] (sn, fn) True
-
 runTrackFunc
-  :: (MonadTx m, CacheRWM m, HasSystemDefined m)
-  => TrackFunction -> m EncJSON
+  :: (MonadError QErr m, CacheRWM m, MetadataM m, BackendMetadata b)
+  => TrackFunction b -> m EncJSON
 runTrackFunc (TrackFunction qf)= do
-  trackFunctionP1 qf
-  trackFunctionP2 qf emptyFunctionConfig
+  -- v1 track_function lacks a means to take extra arguments
+  trackFunctionP1 defaultSource qf
+  trackFunctionP2 defaultSource qf emptyFunctionConfig
 
 runTrackFunctionV2
-  :: ( QErrM m, CacheRWM m, HasSystemDefined m
-     , MonadTx m
-     )
+  :: (QErrM m, CacheRWM m, MetadataM m)
   => TrackFunctionV2 -> m EncJSON
-runTrackFunctionV2 (TrackFunctionV2 qf config) = do
-  trackFunctionP1 qf
-  trackFunctionP2 qf config
+runTrackFunctionV2 (TrackFunctionV2 source qf config) = do
+  trackFunctionP1 source qf
+  trackFunctionP2 source qf config
 
-newtype UnTrackFunction
+-- | JSON API payload for 'untrack_function':
+--
+-- https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/custom-functions.html#untrack-function
+data UnTrackFunction b
   = UnTrackFunction
-  { utfName :: QualifiedFunction }
-  deriving (Show, Eq, FromJSON, ToJSON, Lift)
+  { _utfFunction :: !(FunctionName b)
+  , _utfSource   :: !SourceName
+  } deriving (Generic)
+deriving instance (Backend b) => Show (UnTrackFunction b)
+deriving instance (Backend b) => Eq (UnTrackFunction b)
+instance (Backend b) => ToJSON (UnTrackFunction b) where
+  toJSON = genericToJSON hasuraJSON
+
+instance (Backend b) => FromJSON (UnTrackFunction b) where
+  parseJSON v = withSource <|> withoutSource
+    where
+      withoutSource = UnTrackFunction <$> parseJSON v <*> pure defaultSource
+      withSource = flip (withObject "UnTrackFunction") v \o ->
+                   UnTrackFunction <$> o .: "function"
+                                   <*> o .:? "source" .!= defaultSource
+
+askFunctionInfo
+  :: forall m b
+   . (CacheRM m, MonadError QErr m, Backend b)
+  => SourceName -> FunctionName b -> m (FunctionInfo b)
+askFunctionInfo source functionName = do
+  sourceCache <- scSources <$> askSchemaCache
+  unsafeFunctionInfo @b source functionName sourceCache
+    `onNothing` throw400 NotExists ("function " <> functionName <<> " not found in the cache")
 
 runUntrackFunc
-  :: (QErrM m, CacheRWM m, MonadTx m)
-  => UnTrackFunction -> m EncJSON
-runUntrackFunc (UnTrackFunction qf) = do
-  void $ askFunctionInfo qf
-  liftTx $ delFunctionFromCatalog qf
-  withNewInconsistentObjsCheck buildSchemaCache
-  return successMsg
+  :: (CacheRWM m, MonadError QErr m, MetadataM m, BackendMetadata b)
+  => UnTrackFunction b -> m EncJSON
+runUntrackFunc (UnTrackFunction functionName sourceName) = do
+  void $ askFunctionInfo sourceName functionName
+  withNewInconsistentObjsCheck
+    $ buildSchemaCache
+    $ dropFunctionInMetadata defaultSource functionName
+  pure successMsg
+
+dropFunctionInMetadata :: (BackendMetadata b) => SourceName -> FunctionName b -> MetadataModifier
+dropFunctionInMetadata source function = MetadataModifier $
+  metaSources.ix source.toSourceMetadata.smFunctions %~ OMap.delete function
+
+{- Note [Function Permissions]
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Before we started supporting tracking volatile functions, permissions
+for a function was inferred from the target table of the function.
+The rationale behind this is that a stable/immutable function does not
+modify the database and the data returned by the function is filtered using
+the permissions that are specified precisely for that data.
+Now consider mutable/volatile functions, we can't automatically infer whether or
+not these functions should be exposed for the sole reason that they can modify
+the database. This necessitates a permission system for functions.
+So, we introduce a new API `pg_create_function_permission` which will
+explicitly grant permission to a function to a role. For creating a
+function permission, the role must have select permissions configured
+for the target table.
+Since, this is a breaking change, we enable it only when the graphql-engine
+is started with
+`--infer-function-permissions`/HASURA_GRAPHQL_INFER_FUNCTION_PERMISSIONS set
+to false (by default, it's set to true).
+-}
+
+data CreateFunctionPermission b
+  = CreateFunctionPermission
+  { _afpFunction :: !(FunctionName b)
+  , _afpSource   :: !SourceName
+  , _afpRole     :: !RoleName
+  } deriving (Generic)
+deriving instance (Backend b) => Show (CreateFunctionPermission b)
+deriving instance (Backend b) => Eq (CreateFunctionPermission b)
+instance (Backend b) => ToJSON (CreateFunctionPermission b) where
+  toJSON = genericToJSON hasuraJSON
+
+instance (Backend b) => FromJSON (CreateFunctionPermission b) where
+  parseJSON v =
+    flip (withObject "CreateFunctionPermission") v $ \o ->
+      CreateFunctionPermission
+      <$> o .: "function"
+      <*> o .:? "source" .!= defaultSource
+      <*> o .: "role"
+
+runCreateFunctionPermission
+  :: forall m b
+   . ( CacheRWM m
+     , MonadError QErr m
+     , MetadataM m
+     , BackendMetadata b
+     )
+  => CreateFunctionPermission b
+  -> m EncJSON
+runCreateFunctionPermission (CreateFunctionPermission functionName source role) = do
+  sourceCache <- scSources <$> askSchemaCache
+  functionInfo <- askFunctionInfo source functionName
+  when (role `elem` _fiPermissions functionInfo) $
+    throw400 AlreadyExists $
+    "permission of role "
+    <> role <<> " already exists for function " <> functionName <<> " in source: " <>> source
+  functionTableInfo <-
+    unsafeTableInfo @b source (_fiReturnType functionInfo) sourceCache
+    `onNothing` throw400 NotExists ("function's return table " <> (_fiReturnType functionInfo) <<> " not found in the cache")
+  unless (role `Map.member` _tiRolePermInfoMap functionTableInfo) $
+    throw400 NotSupported $
+    "function permission can only be added when the function's return table "
+    <> _fiReturnType functionInfo <<>  " has select permission configured for role: " <>> role
+  buildSchemaCacheFor (MOSourceObjId source $ SMOFunctionPermission functionName role)
+    $ MetadataModifier
+    $ metaSources.ix source.toSourceMetadata.smFunctions.ix functionName.fmPermissions
+    %~ (:) (FunctionPermissionMetadata role)
+  pure successMsg
+
+dropFunctionPermissionInMetadata
+  :: (BackendMetadata b)
+  => SourceName -> FunctionName b -> RoleName -> MetadataModifier
+dropFunctionPermissionInMetadata source function role = MetadataModifier $
+  metaSources.ix source.toSourceMetadata.smFunctions.ix function.fmPermissions %~ filter ((/=) role . _fpmRole)
+
+type DropFunctionPermission = CreateFunctionPermission
+
+runDropFunctionPermission
+  :: ( CacheRWM m
+     , MonadError QErr m
+     , MetadataM m
+     , BackendMetadata b
+     )
+  => DropFunctionPermission b
+  -> m EncJSON
+runDropFunctionPermission (CreateFunctionPermission functionName source role) = do
+  functionInfo <- askFunctionInfo source functionName
+  unless (role `elem` _fiPermissions functionInfo) $
+    throw400 NotExists $
+    "permission of role "
+    <> role <<> " does not exist for function " <> functionName <<> " in source: " <>> source
+  buildSchemaCacheFor (MOSourceObjId source $ SMOFunctionPermission functionName role)
+    $ dropFunctionPermissionInMetadata source functionName role
+  pure successMsg

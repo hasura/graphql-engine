@@ -7,7 +7,7 @@ import { ApolloProvider } from 'react-apollo';
 import { WebSocketLink } from 'apollo-link-ws';
 import { InMemoryCache } from 'apollo-cache-inmemory';
 
-const GRAPHQL_ENGINE_URL = process.env.REACT_APP_GRAPHQL_ENGINE_URL || `tic-tac-toe-react.demo.hasura.app/v1alpha1/graphql`;
+const GRAPHQL_ENGINE_URL = process.env.REACT_APP_GRAPHQL_ENGINE_URL || `tic-tac-toe-react.hasura.app/v1/graphql`;
 
 const link = new WebSocketLink({
   uri: `wss://${GRAPHQL_ENGINE_URL}`,

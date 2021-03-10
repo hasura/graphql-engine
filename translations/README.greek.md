@@ -75,7 +75,7 @@
 
 3. Κάντε το πρώτο σας ερώτημα GraphQL
 
-   Δημιουργήστε έναν πίνακα και κάντε το πρώτο σας ερώτημα. Ακολουθήστε [αυτόν](https://hasura.io/docs/1.0/graphql/manual/getting-started/first-graphql-query.html) τον απλό οδηγό.
+   Δημιουργήστε έναν πίνακα και κάντε το πρώτο σας ερώτημα. Ακολουθήστε [αυτόν](https://hasura.io/docs/latest/graphql/core/getting-started/first-graphql-query.html) τον απλό οδηγό.
    
 ### Άλλες μέθοδοι ανάπτυξης σε ένα κλίκ
 
@@ -83,12 +83,12 @@
 
 | **Infra provider** | **One-click link** | **Additional information** |
 |:------------------:|:------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------:|:-------------------------------------------------------------------------------------------------------------------------------------------------:|
-| DigitalOcean | [![Deploy to DigitalOcean](https://graphql-engine-cdn.hasura.io/img/create_hasura_droplet_200px.png)](https://marketplace.digitalocean.com/apps/hasura?action=deploy&refcode=c4d9092d2c48&utm_source=hasura&utm_campaign=readme) | [docs](https://hasura.io/docs/1.0/graphql/manual/guides/deployment/digital-ocean-one-click.html#hasura-graphql-engine-digitalocean-one-click-app) |
-| Azure | [![Deploy to Azure](http://azuredeploy.net/deploybutton.png)](https://portal.azure.com/#create/Microsoft.Template/uri/https%3a%2f%2fraw.githubusercontent.com%2fhasura%2fgraphql-engine%2fmaster%2finstall-manifests%2fazure-container-with-pg%2fazuredeploy.json) | [docs](https://hasura.io/docs/1.0/graphql/manual/guides/deployment/azure-container-instances-postgres.html) |
+| DigitalOcean | [![Deploy to DigitalOcean](https://graphql-engine-cdn.hasura.io/img/create_hasura_droplet_200px.png)](https://marketplace.digitalocean.com/apps/hasura?action=deploy&refcode=c4d9092d2c48&utm_source=hasura&utm_campaign=readme) | [docs](https://hasura.io/docs/latest/graphql/core/guides/deployment/digital-ocean-one-click.html#hasura-graphql-engine-digitalocean-one-click-app) |
+| Azure | [![Deploy to Azure](http://azuredeploy.net/deploybutton.png)](https://portal.azure.com/#create/Microsoft.Template/uri/https%3a%2f%2fraw.githubusercontent.com%2fhasura%2fgraphql-engine%2fmaster%2finstall-manifests%2fazure-container-with-pg%2fazuredeploy.json) | [docs](https://hasura.io/docs/latest/graphql/core/guides/deployment/azure-container-instances-postgres.html) |
 
 ### Άλλες μέθοδοι ανάπτυξης
 
-Για μεθόδους ανάπτυξης με βάση το Docker και για προχωρημένες επιλογές διαμόρφωσης, ανατρέξτε στους [οδηγούς ανάπτυξης](https://hasura.io/docs/1.0/graphql/manual/getting-started/index.html) ή στα
+Για μεθόδους ανάπτυξης με βάση το Docker και για προχωρημένες επιλογές διαμόρφωσης, ανατρέξτε στους [οδηγούς ανάπτυξης](https://hasura.io/docs/latest/graphql/core/getting-started/index.html) ή στα
 [μηνύματα εγκατάστασης](https://github.com/hasura/graphql-engine/tree/master/install-manifests).
 
 ## Αρχιτεκτονική
@@ -116,7 +116,7 @@
 
 ### Παραγόμενα δεδομένα ή μετασχηματισμοί δεδομένων
 
-Μετατρέψτε τα δεδομένα στο Postgres ή τρέξτε επιχειρηματική λογική με άλλα δεδομένα που μπορούν να αναζητηθούν χρησιμοποιώντας το GraphQL Engine - [διαβάστε περισσότερα](https://hasura.io/docs/1.0/graphql/manual/queries/derived-data.html).
+Μετατρέψτε τα δεδομένα στο Postgres ή τρέξτε επιχειρηματική λογική με άλλα δεδομένα που μπορούν να αναζητηθούν χρησιμοποιώντας το GraphQL Engine - [διαβάστε περισσότερα](https://hasura.io/docs/latest/graphql/core/queries/derived-data.html).
 
 ## Demos
 

@@ -3,18 +3,23 @@ import Button from '../../Button/Button';
 import styles from './Editor.scss';
 
 class Editor extends React.Component {
-  state = {
-    isEditing: this.props.toggled || false,
-  };
-
-  UNSAFE_componentWillReceiveProps(nextProps) {
-    if (nextProps.toggled !== this.state.isEditing) {
+  static getDerivedStateFromProps(nextProps, state) {
+    if (nextProps.toggled !== state.isEditing) {
       if (nextProps.toggled !== undefined) {
-        this.setState({
+        return {
           isEditing: nextProps.toggled,
-        });
+        };
       }
     }
+
+    return null;
+  }
+
+  constructor(props) {
+    super(props);
+    this.state = {
+      isEditing: props.toggled || false,
+    };
   }
 
   toggleEditor = () => {

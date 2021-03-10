@@ -53,7 +53,6 @@ import qualified Network.HTTP.Types            as HTTP
 
 import           Control.Exception             (try)
 import           Data.Aeson
-import           Data.Aeson.Casing
 import           Data.Aeson.TH
 import           Data.Either
 import           Data.Has
@@ -75,7 +74,7 @@ data WebhookRequest
   , _rqHeaders :: [HeaderConf]
   , _rqVersion :: Text
   }
-$(deriveToJSON (aesonDrop 3 snakeCase){omitNothingFields=True} ''WebhookRequest)
+$(deriveToJSON hasuraJSON{omitNothingFields=True} ''WebhookRequest)
 
 data WebhookResponse
   = WebhookResponse
@@ -83,10 +82,10 @@ data WebhookResponse
   , _wrsHeaders :: [HeaderConf]
   , _wrsStatus  :: Int
   }
-$(deriveToJSON (aesonDrop 4 snakeCase){omitNothingFields=True} ''WebhookResponse)
+$(deriveToJSON hasuraJSON{omitNothingFields=True} ''WebhookResponse)
 
 newtype ClientError =  ClientError { _ceMessage :: TBS.TByteString}
-$(deriveToJSON (aesonDrop 3 snakeCase){omitNothingFields=True} ''ClientError)
+$(deriveToJSON hasuraJSON{omitNothingFields=True} ''ClientError)
 
 type InvocationVersion = Text
 
@@ -141,7 +140,7 @@ data ExtraLogContext
   , elEventId        :: EventId
   } deriving (Show, Eq)
 
-$(deriveJSON (aesonDrop 2 snakeCase){omitNothingFields=True} ''ExtraLogContext)
+$(deriveJSON hasuraJSON{omitNothingFields=True} ''ExtraLogContext)
 
 data HTTPResp (a :: TriggerTypes)
    = HTTPResp
@@ -151,7 +150,7 @@ data HTTPResp (a :: TriggerTypes)
    , hrsSize    :: !Int64
    } deriving (Show, Eq)
 
-$(deriveToJSON (aesonDrop 3 snakeCase){omitNothingFields=True} ''HTTPResp)
+$(deriveToJSON hasuraJSON{omitNothingFields=True} ''HTTPResp)
 
 instance ToEngineLog (HTTPResp 'EventType) Hasura where
   toEngineLog resp = (LevelInfo, eventTriggerLogType, toJSON resp)
@@ -203,7 +202,7 @@ mkHTTPResp resp =
 
 newtype RequestDetails
   = RequestDetails { _rdSize :: Int64 }
-$(deriveToJSON (aesonDrop 3 snakeCase) ''RequestDetails)
+$(deriveToJSON hasuraJSON ''RequestDetails)
 
 data HTTPRespExtra (a :: TriggerTypes)
   = HTTPRespExtra
@@ -240,9 +239,9 @@ isNetworkError = \case
 isNetworkErrorHC :: HTTP.HttpException -> Bool
 isNetworkErrorHC = \case
   HTTP.HttpExceptionRequest _ (HTTP.ConnectionFailure _) -> True
-  HTTP.HttpExceptionRequest _ HTTP.ConnectionTimeout -> True
-  HTTP.HttpExceptionRequest _ HTTP.ResponseTimeout -> True
-  _ -> False
+  HTTP.HttpExceptionRequest _ HTTP.ConnectionTimeout     -> True
+  HTTP.HttpExceptionRequest _ HTTP.ResponseTimeout       -> True
+  _                                                      -> False
 
 anyBodyParser :: HTTP.Response LBS.ByteString -> Either (HTTPErr a) (HTTPResp a)
 anyBodyParser resp = do
@@ -262,7 +261,7 @@ data HTTPReq
   , _hrqDelay   :: !(Maybe Int)
   } deriving (Show, Eq)
 
-$(deriveJSON (aesonDrop 4 snakeCase){omitNothingFields=True} ''HTTPReq)
+$(deriveJSON hasuraJSON{omitNothingFields=True} ''HTTPReq)
 
 instance ToEngineLog HTTPReq Hasura where
   toEngineLog req = (LevelInfo, eventTriggerLogType, toJSON req)

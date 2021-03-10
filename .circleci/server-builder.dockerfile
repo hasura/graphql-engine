@@ -1,9 +1,9 @@
 # Don't update this without updating the
-# packager imager of graphql-engine
+# packager image of graphql-engine
 FROM haskell:8.10.2-stretch
 
-ARG docker_ver="17.09.0-ce"
-ARG postgres_ver="12"
+ARG docker_ver="19.03.13"
+ARG postgres_ver="13"
 ARG node_ver="12.x"
 
 # Install GNU make, curl, git and docker client. Required to build the server
