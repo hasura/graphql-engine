@@ -191,6 +191,40 @@ Some other useful points of note:
 
   - You can pass the `-v` or `-vv` options to `pytest` to enable more verbose output while running the tests and in test failures. You can also pass the `-l` option to display the current values of Python local variables in test failures.
 
+##### Guide on writing python tests
+
+1. Check whether the test you intend to write already exists in the test suite, so that there will be no
+   duplicate tests or the existing test will just need to be modified.
+
+2. All the tests use setup and teardown, the setup step is used to initialize the graphql-engine
+   and the database in a certain state after which the tests should be run. After the tests are run,
+   the state needs to be cleared, which should be done in the teardown step. The setup and teardown
+   is localised for every python test class.
+
+   See `TestCreateAndDelete` in [test_events.py](tests-py/test_events.py)
+   for reference.
+
+3. The setup and teardown can be configured to run before and after every test in a test class
+   or run before and after running all the tests in a class. Depending on the use case, there
+   are different fixtures like `per_class_tests_db_state`,`per_method_tests_db_state` defined in the [conftest.py](tests-py/conftest.py) file.
+
+4. Sometimes, it's required to run the graphql-engine with in a different configuration only
+   for a particular set of tests. In this case, these tests should be run only when the graphql-engine
+   is run with the said configuration and should be skipped in other graphql-engine configurations. This
+   can be done by accepting a new command-line flag from the `pytest` command and depending on the value or
+   presence of the flag, the tests should be run accordingly. After adding this kind of a test, a new section
+   needs to be added in the [test-server.sh](../.circleci/test-server.sh). This new section's name should also
+   be added in the `server-test-names.txt` file, otherwise the test will not be run in the CI.
+
+   For example,
+
+   The tests in the [test_remote_schema_permissions.py](tests-py/test_remote_schema_permissions.py)
+   are only to be run when the remote schema permissions are enabled in the graphql-engine and when
+   it's not set, these tests should be skipped. Now, to run these tests we parse a command line option
+   from pytest called (`--enable-remote-schema-permissions`) and the presence of this flag means that
+   we need to run these tests. When the tests are run with this command line option, it's assumed that
+   the server has enabled remote schema permissions.
+
 ### Create Pull Request
 
 - Make sure your commit messages meet the [guidelines](../CONTRIBUTING.md).
