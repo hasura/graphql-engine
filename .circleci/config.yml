@@ -397,7 +397,6 @@ jobs:
         working_directory: cli-ext
         command: |
           make build
-          make deploy
           make ci-copy-assets
     - store_artifacts:
         path: /build/_cli_ext_output

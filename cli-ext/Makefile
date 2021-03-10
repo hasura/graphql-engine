@@ -1,6 +1,4 @@
 BUILDDIR   := bin
-ASSETS     := $(BUILDDIR)/cli-ext-hasura-macos.tar.gz $(BUILDDIR)/cli-ext-hasura-linux.tar.gz $(BUILDDIR)/cli-ext-hasura-win.zip
-CHECKSUMS  := $(patsubst %,%.sha256,$(ASSETS))
 BINARY_ASSETS := $(BUILDDIR)/cli-ext-hasura-linux $(BUILDDIR)/cli-ext-hasura-macos $(BUILDDIR)/cli-ext-hasura-win.exe
 BINARY_ASSET_CHECKSUMS := $(patsubst %,%.sha256,$(BINARY_ASSETS))
 
@@ -36,11 +34,6 @@ upx-compress: $(BUILDDIR)
 build:
 	npm run build
 	$(MAKE) $(BINARY_ASSET_CHECKSUMS)
-
-.PHONY: deploy
-deploy: $(CHECKSUMS)
-	./scripts/generate-manifest.sh && \
-	$(RM) $(BUILDDIR)/tmp.yaml
 
 .PHONY: clean
 clean:
