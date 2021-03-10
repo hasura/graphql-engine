@@ -482,6 +482,7 @@ library
                      , Hasura.GraphQL.Context
                      , Hasura.GraphQL.Execute
                      , Hasura.GraphQL.Execute.Action
+                     , Hasura.GraphQL.Execute.Action.Types
                      , Hasura.GraphQL.Execute.Backend
                      , Hasura.GraphQL.Execute.Common
                      , Hasura.GraphQL.Execute.Inline

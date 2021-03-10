@@ -2,31 +2,31 @@
 
 module Hasura.GraphQL.Execute.Backend where
 
-import                          Hasura.Prelude
+import           Hasura.Prelude
 
-import                qualified Data.Aeson                             as J
-import                qualified Data.Environment                       as Env
-import                qualified Language.GraphQL.Draft.Syntax          as G
-import                qualified Network.HTTP.Client                    as HTTP
-import                qualified Network.HTTP.Types                     as HTTP
+import qualified Data.Aeson                             as J
+import qualified Data.Environment                       as Env
+import qualified Language.GraphQL.Draft.Syntax          as G
+import qualified Network.HTTP.Client                    as HTTP
+import qualified Network.HTTP.Types                     as HTTP
 
-import                          Data.Kind                              (Type)
-import                          Data.Text.Extended
+import           Data.Kind                              (Type)
+import           Data.Text.Extended
 
-import                qualified Hasura.GraphQL.Transport.HTTP.Protocol as GH
+import qualified Hasura.GraphQL.Transport.HTTP.Protocol as GH
 
-import                          Hasura.EncJSON
-import                          Hasura.GraphQL.Context
-import {-# SOURCE #-}           Hasura.GraphQL.Execute.Action
-import                          Hasura.GraphQL.Execute.LiveQuery.Plan
-import                          Hasura.GraphQL.Parser                  hiding (Type)
-import                          Hasura.RQL.IR.RemoteJoin
-import                          Hasura.RQL.Types.Backend
-import                          Hasura.RQL.Types.Error
-import                          Hasura.RQL.Types.RemoteSchema
-import                          Hasura.SQL.Backend
-import                          Hasura.Server.Version                  (HasVersion)
-import                          Hasura.Session
+import           Hasura.EncJSON
+import           Hasura.GraphQL.Context
+import           Hasura.GraphQL.Execute.Action.Types
+import           Hasura.GraphQL.Execute.LiveQuery.Plan
+import           Hasura.GraphQL.Parser                  hiding (Type)
+import           Hasura.RQL.IR.RemoteJoin
+import           Hasura.RQL.Types.Backend
+import           Hasura.RQL.Types.Error
+import           Hasura.RQL.Types.RemoteSchema
+import           Hasura.SQL.Backend
+import           Hasura.Server.Version                  (HasVersion)
+import           Hasura.Session
 
 
 -- | This typeclass enacapsulates how a given backend translates a root field into an execution
