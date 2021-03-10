@@ -15,7 +15,7 @@ import (
 	"gopkg.in/yaml.v2"
 )
 
-// Config represents the object to interact with cli-ext plugin
+// Config represents the object to interact with cli-ext
 type Config struct {
 	binPath string
 	logger  *logrus.Logger

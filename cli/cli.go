@@ -66,9 +66,6 @@ const (
 	// Name of the file to store last update check time
 	LastUpdateCheckFileName = "last_update_check_at"
 
-	// Name of the cli extension plugin
-	CLIExtPluginName = "cli-ext"
-
 	DefaultMigrationsDirectory = "migrations"
 	DefaultMetadataDirectory   = "metadata"
 	DefaultSeedsDirectory      = "seeds"
