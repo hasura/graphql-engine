@@ -39,7 +39,7 @@ runAddSource
 runAddSource (AddSource name sourceConfig) = do
   sources <- scSources <$> askSchemaCache
   onJust (HM.lookup name sources) $ const $
-    throw400 AlreadyExists $ "postgres source with name " <> name <<> " already exists"
+    throw400 AlreadyExists $ "source with name " <> name <<> " already exists"
   buildSchemaCacheFor (MOSource name)
     $ MetadataModifier
     $ metaSources %~ OMap.insert name (mkSourceMetadata @b name sourceConfig)
