@@ -6,6 +6,11 @@
 
 (Add entries here in the order of: server, console, cli, docs, others)
 
+
+## v2.0.0-alpha.4
+
+### Bug fixes and improvements
+
 - server/mssql: support tracking and querying from views
 - server: inherited roles for PG queries and subscription
 - server: fix issue when a remote relationship's joining field had a custom GraphQL name defined (fix #6626)
