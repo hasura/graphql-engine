@@ -87,8 +87,9 @@ objRelP2Setup
   -> TableName b
   -> HashMap (TableName b) (HashSet (ForeignKey b))
   -> RelDef (ObjRelUsing b)
+  -> FieldInfoMap (ColumnInfo b)
   -> m (RelInfo b, [SchemaDependency])
-objRelP2Setup source qt foreignKeys (RelDef rn ru _) = case ru of
+objRelP2Setup source qt foreignKeys (RelDef rn ru _) fieldInfoMap = case ru of
   RUManual rm -> do
     let refqt = rmTable rm
         (lCols, rCols) = unzip $ HM.toList $ rmColumns rm
@@ -107,10 +108,10 @@ objRelP2Setup source qt foreignKeys (RelDef rn ru _) = case ru of
           -- neither the using_col nor the constraint name will help.
           , SchemaDependency (SOSourceObj source $ SOITable foreignTable) DRRemoteTable
           ]
-    -- TODO(PDV?): this is too optimistic. Some object relationships are nullable, but
-    -- we are marking some as non-nullable here.  This should really be done by
-    -- checking nullability in the SQL schema.
-    pure (RelInfo rn ObjRel colMap foreignTable False False BeforeParent, dependencies)
+    colInfo <- HM.lookup (fromCol columnName) fieldInfoMap
+               `onNothing` throw500 "could not find column info in schema cache"
+    let nullable = pgiIsNullable colInfo
+    pure (RelInfo rn ObjRel colMap foreignTable False nullable BeforeParent, dependencies)
   RUFKeyOn (RemoteTable remoteTable remoteCol) -> do
     foreignTableForeignKeys <- findTable remoteTable foreignKeys
     ForeignKey constraint _foreignTable colMap <- getRequiredRemoteFkey remoteCol (HS.toList foreignTableForeignKeys)

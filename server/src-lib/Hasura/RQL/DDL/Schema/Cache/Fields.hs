@@ -43,10 +43,10 @@ addNonColumnFields = proc ( source
                           ) -> do
   objectRelationshipInfos
     <- buildInfoMapPreservingMetadata
-         (_rdName . (^. _3))
-         (mkRelationshipMetadataObject ObjRel)
+         (_rdName . (^. _4))
+         (\(s, _, t, c) -> mkRelationshipMetadataObject ObjRel (s,t,c))
          buildObjectRelationship
-    -< (_tciForeignKeys <$> rawTableInfo, map (source, _nctiTable,) _nctiObjectRelationships)
+    -< (_tciForeignKeys <$> rawTableInfo, map (source, columns, _nctiTable,) _nctiObjectRelationships)
 
   arrayRelationshipInfos
     <- buildInfoMapPreservingMetadata
@@ -139,12 +139,13 @@ buildObjectRelationship
      )
   => ( HashMap (TableName b) (HashSet (ForeignKey b))
      , ( SourceName
+       , FieldInfoMap (ColumnInfo b)
        , TableName b
        , ObjRelDef b
        )
      ) `arr` Maybe (RelInfo b)
-buildObjectRelationship = proc (fkeysMap, (source, table, relDef)) -> do
-  let buildRelInfo def = objRelP2Setup source table fkeysMap def
+buildObjectRelationship = proc (fkeysMap, (source, columns, table, relDef)) -> do
+  let buildRelInfo def = objRelP2Setup source table fkeysMap def columns
   buildRelationship -< (source, table, buildRelInfo, ObjRel, relDef)
 
 buildArrayRelationship
