@@ -59,9 +59,6 @@ draft_github_release() {
         -a /build/_cli_output/binaries/cli-hasura-darwin-amd64 \
         -a /build/_cli_output/binaries/cli-hasura-linux-amd64 \
         -a /build/_cli_output/binaries/cli-hasura-windows-amd64.exe \
-        -a /build/_cli_ext_output/cli-ext-hasura-linux.tar.gz \
-        -a /build/_cli_ext_output/cli-ext-hasura-macos.tar.gz \
-        -a /build/_cli_ext_output/cli-ext-hasura-win.zip \
         -m "$CIRCLE_TAG" \
         -m "${RELEASE_BODY}" \
      "$CIRCLE_TAG"
@@ -103,31 +100,6 @@ deploy_console() {
     gsutil cp "$DIST_PATH/assets/versioned/main.css.gz" "$GS_BUCKET_ROOT/main.css.gz"
     gsutil cp "$DIST_PATH/assets/versioned/vendor.js.gz" "$GS_BUCKET_ROOT/vendor.js.gz"
     gsutil setmeta -h "Content-Encoding: gzip" "$GS_BUCKET_ROOT/*"
-
-    unset VERSION
-    unset DIST_PATH
-}
-
-deploy_cli_ext() {
-    echo "deploying extension cli"
-
-    cd "$ROOT/cli-ext"
-    export VERSION=$(../scripts/get-version.sh)
-    export DIST_PATH="/build/_cli_ext_output"
-
-    configure_git
-    git clone https://github.com/hasura/cli-plugins-index.git ~/plugins-index
-    cd ~/plugins-index
-    git checkout -b cli-ext-${LATEST_TAG}
-    mkdir -p ./plugins/cli-ext/${LATEST_TAG}
-    # Replace existing cli-ext.yaml to work with previous versions of plugin system
-    cp ${DIST_PATH}/manifest.yaml ./plugins/cli-ext.yaml
-    # Copy the manifest to versioned folder structure
-    cp ${DIST_PATH}/manifest.yaml ./plugins/cli-ext/${LATEST_TAG}/manifest.yaml
-    git add .
-    git commit -m "update cli-ext manifest to ${LATEST_TAG}"
-    git push -q https://${GITHUB_TOKEN}@github.com/hasura/cli-plugins-index.git cli-ext-${LATEST_TAG}
-    hub pull-request -f -F- <<<"Update cli-ext manifest to ${LATEST_TAG}" -r ${REVIEWERS} -a ${REVIEWERS}
 
     unset VERSION
     unset DIST_PATH
@@ -205,7 +177,6 @@ deploy_console
 deploy_server
 if [[ ! -z "$CIRCLE_TAG" ]]; then
     build_and_push_cli_migrations_image_v2
-    deploy_cli_ext
 
     # if this is a stable release, update all latest assets
     if [ $IS_STABLE_RELEASE = true ]; then
