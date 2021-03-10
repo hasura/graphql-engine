@@ -12,6 +12,7 @@ module Hasura.RQL.Types.Endpoint.Trie
   , insertPath
   , matchPath
   , ambiguousPaths
+  , ambiguousPathsGrouped
   )
  where
 
@@ -168,15 +169,35 @@ matchPath k path = foldMap toResult . lookupPath path
                 Just (_:_) -> MatchAmbiguous
                 _          -> maybe MatchNotFound MatchMissingKey (nonEmpty $ M.keys methodMap)
 
+-- | A version of ambiguousPaths that attempts to group all ambiguous paths that have overlapping endpoints
+ambiguousPathsGrouped :: (Hashable a, Eq k, Hashable k, Ord v, Ord a) => MultiMapTrie a k v -> [(S.Set (Path a), S.Set v)]
+ambiguousPathsGrouped = groupAmbiguousPaths . map (first S.singleton) . ambiguousPaths
+
+groupAmbiguousPaths :: (Ord a, Ord v) => [(S.Set (Path a), S.Set v)] -> [(S.Set (Path a), S.Set v)]
+groupAmbiguousPaths [] = []
+groupAmbiguousPaths (x:xs) =
+  if any fst added
+  then groupAmbiguousPaths $ map snd added
+  else x : groupAmbiguousPaths xs
+  where
+  added = map (add x) xs
+  add (p1, v1) (p2, v2)
+    | intersects v1 v2 = (True,  (S.union p1 p2, S.union v1 v2))
+    | otherwise        = (False, (p2, v2))
+
+intersects :: Ord a => S.Set a -> S.Set a -> Bool
+intersects a b = not $ S.null $ S.intersection a b
+
 -- | Detect and return all ambiguous paths in the @MultiMapTrie@
 -- A path @p@ is ambiguous if @matchPath k p@ can return @MatchAmbiguous@ for some @k@.
-ambiguousPaths :: (Eq a, Hashable a, Eq k, Hashable k, Ord v) => MultiMapTrie a k v -> [Path a]
+ambiguousPaths :: (Eq a, Hashable a, Eq k, Hashable k, Ord v) => MultiMapTrie a k v -> [(Path a, S.Set v)]
 ambiguousPaths (Trie pathMap (MultiMap methodMap)) =
     thisNodeAmbiguousPaths ++ childNodesAmbiguousPaths
         where
-            isAmbiguous e = S.size e >= 2
-            thisNodeAmbiguousPaths = guard (any isAmbiguous methodMap) >> [[]]
-            childNodesAmbiguousPaths = uncurry childNodeAmbiguousPaths =<< M.toList pathMap
-            childNodeAmbiguousPaths pc t = (pc:) <$> ambiguousPaths (mergeWildcardTrie t)
-            wildcardTrie = M.lookup PathParam pathMap
-            mergeWildcardTrie = maybe id (<>) wildcardTrie
+            isAmbiguous e                = S.size e >= 2
+            ambiguous                    = mconcat $ filter isAmbiguous $ M.elems methodMap
+            thisNodeAmbiguousPaths       = guard (not $ null $ ambiguous) >> [([], ambiguous)]
+            childNodesAmbiguousPaths     = uncurry childNodeAmbiguousPaths =<< M.toList pathMap
+            childNodeAmbiguousPaths pc t = first (pc:) <$> ambiguousPaths (mergeWildcardTrie t)
+            wildcardTrie                 = M.lookup PathParam pathMap
+            mergeWildcardTrie            = maybe id (<>) wildcardTrie

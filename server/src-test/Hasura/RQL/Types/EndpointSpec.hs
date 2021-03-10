@@ -67,7 +67,7 @@ spec = describe "Endpoint" $ do
                 r -> expectationFailure $ "Expected MatchMissingKey. Got " <> show r
 
       describe "ambiguousPaths" $ do
-        let amb = ambiguousPaths
+        let amb = map fst . ambiguousPaths
 
         it "empty trie" $
             amb e `shouldBe` []

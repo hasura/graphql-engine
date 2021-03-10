@@ -2,10 +2,22 @@ description: Tries to create an endpoint with empty path component
 url: /v1/query
 status: 400
 response:
+  internal:
+  - definition:
+      definition:
+        query:
+          collection_name: test_collection
+          query_name: simple_query
+      url: foo//bar
+      methods:
+      - GET
+      name: foo
+      comment:
+    reason: 'Empty segments or unnamed variables are not allowed: foo//bar'
+    type: endpoint
   path: $.args
-  error: |-
-    Empty segments or unnamed variables are not allowed: foo//bar
-  code: bad-request
+  error: cannot continue due to new inconsistent metadata
+  code: unexpected
 query:
   type: create_rest_endpoint
   args:

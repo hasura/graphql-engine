@@ -140,6 +140,9 @@ data InconsistentMetadata
   = InconsistentObject !Text !MetadataObject
   | ConflictingObjects !Text ![MetadataObject]
   | DuplicateObjects !MetadataObjId ![Value]
+  | DuplicateRestVariables !Text !MetadataObject
+  | InvalidRestSegments !Text !MetadataObject
+  | AmbiguousRestEndpoints !Text ![MetadataObject]
   deriving (Eq)
 $(makePrisms ''InconsistentMetadata)
 
@@ -152,12 +155,18 @@ imObjectIds = \case
   InconsistentObject _ metadata  -> [_moId metadata]
   ConflictingObjects _ metadatas -> map _moId metadatas
   DuplicateObjects objectId _    -> [objectId]
+  DuplicateRestVariables _ md    -> [_moId md]
+  InvalidRestSegments _ md       -> [_moId md]
+  AmbiguousRestEndpoints _ mds   -> take 1 $ map _moId mds -- TODO: Take 1 is a workaround to ensure that conflicts are not reported multiple times per endpoint.
 
 imReason :: InconsistentMetadata -> Text
 imReason = \case
-  InconsistentObject reason _ -> reason
-  ConflictingObjects reason _ -> reason
-  DuplicateObjects objectId _ -> "multiple definitions for " <> moiName objectId
+  InconsistentObject reason _     -> reason
+  ConflictingObjects reason _     -> reason
+  DuplicateObjects objectId _     -> "multiple definitions for " <> moiName objectId
+  DuplicateRestVariables reason _ -> reason
+  InvalidRestSegments reason _    -> reason
+  AmbiguousRestEndpoints reason _ -> reason
 
 -- | Builds a map from each unique metadata object id to the inconsistencies associated with it.
 -- Note that a single inconsistency can involve multiple metadata objects, so the same inconsistency
@@ -177,6 +186,10 @@ instance ToJSON InconsistentMetadata where
         DuplicateObjects objectId definitions ->
           [ "type" .= String (moiTypeName objectId)
           , "definitions" .= definitions ]
+
+        DuplicateRestVariables _ md  -> metadataObjectFields md
+        InvalidRestSegments _ md     -> metadataObjectFields md
+        AmbiguousRestEndpoints _ mds -> [ "conflicts" .= map _moDefinition mds ]
 
       metadataObjectFields (MetadataObject objectId definition) =
         [ "type" .= String (moiTypeName objectId)

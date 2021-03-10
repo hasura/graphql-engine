@@ -63,10 +63,10 @@ class TestCustomEndpoints:
 
     def test_endpoint_empty_path(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + '/endpoint_empty_path.yaml', transport)
-        
+
     def test_endpoint_trailing_slash(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + '/endpoint_trailing_slash.yaml', transport)
-        
+
     def test_endpoint_empty_path_segment(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + '/endpoint_empty_path_segment.yaml', transport)
 

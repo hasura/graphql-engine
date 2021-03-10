@@ -10,7 +10,7 @@ query:
   type: create_rest_endpoint
   args:
     url: ""
-    name: duplicate
+    name: empty
     methods:
       - GET
     definition:

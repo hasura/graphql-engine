@@ -28,6 +28,7 @@ import qualified Data.HashMap.Strict.Extended             as M
 import qualified Data.HashMap.Strict.InsOrd               as OMap
 import qualified Data.HashSet                             as HS
 import qualified Data.HashSet.InsOrd                      as HSIns
+import qualified Data.Set                                 as S
 import qualified Language.GraphQL.Draft.Syntax            as G
 
 import           Control.Arrow.Extended
@@ -168,6 +169,12 @@ buildSchemaCacheRule env = proc (metadata, invalidationKeys) -> do
     duplicateVariables :: EndpointMetadata a -> Bool
     duplicateVariables m = any ((>1) . length) $ group $ sort $ catMaybes $ splitPath Just (const Nothing) (_ceUrl m)
 
+    endpointObjId :: EndpointMetadata q -> MetadataObjId
+    endpointObjId md = MOEndpoint (_ceName md)
+
+    endpointObject :: EndpointMetadata q -> MetadataObject
+    endpointObject md = MetadataObject (endpointObjId md) (toJSON $ OMap.lookup (_ceName md) $ _metaRestEndpoints metadata)
+
     --  Cases of urls that generate invalid segments:
     -- * "" -> Error: "Empty URL"
     -- * "/asdf" -> Error: "Leading slash not allowed"
@@ -175,18 +182,22 @@ buildSchemaCacheRule env = proc (metadata, invalidationKeys) -> do
     -- * "asdf//qwer" -> Error: "Double Slash not allowed"
     -- * "asdf/:/qwer" -> Error: "Variables must be named"
     -- * "asdf/:x/qwer/:x" -> Error: "Duplicate Variable: x"
-    invalidSegments m = any (`elem` ["",":"]) (splitPath id id (_ceUrl m))
+    hasInvalidSegments :: EndpointMetadata query -> Bool
+    hasInvalidSegments m = any (`elem` ["",":"]) (splitPath id id (_ceUrl m))
 
-  bindA -< onJust (nonEmpty $ filter duplicateVariables (M.elems $ _boEndpoints resolvedOutputs)) $ \md ->
-      throw400 BadRequest $ "Duplicate variables found in endpoint paths: " <> commaSeparated (_ceUrl <$> md)
+    ceUrlTxt               = toTxt . _ceUrl
 
-  bindA -< onJust (nonEmpty $ filter invalidSegments (M.elems $ _boEndpoints resolvedOutputs)) $ \md ->
-      throw400 BadRequest $ "Empty segments or unnamed variables are not allowed: " <> commaSeparated (_ceUrl <$> md)
+    endpoints              = buildEndpointsTrie (M.elems $ _boEndpoints resolvedOutputs)
 
-  let endpoints = buildEndpointsTrie (M.elems $ _boEndpoints resolvedOutputs)
+    duplicateF md          = DuplicateRestVariables ("Duplicate variables found in endpoint path " <> (ceUrlTxt md)) (endpointObject md)
+    duplicateRestVariables = map duplicateF $ filter duplicateVariables (M.elems $ _boEndpoints resolvedOutputs)
 
-  bindA -< onJust (nonEmpty $ ambiguousPaths endpoints) $ \ambPaths ->
-      throw409 $ "Ambiguous URL paths in endpoints: " <> commaSeparated (renderPath <$> ambPaths)
+    invalidF md            = InvalidRestSegments ("Empty segments or unnamed variables are not allowed: " <> (ceUrlTxt md)) (endpointObject md)
+    invalidRestSegments    = map invalidF $ filter hasInvalidSegments (M.elems $ _boEndpoints resolvedOutputs)
+
+    ambiguousF' ep         = MetadataObject (endpointObjId ep) (toJSON ep)
+    ambiguousF mds         = AmbiguousRestEndpoints ("Ambiguous URL paths: " <> commaSeparated (map _ceUrl mds)) (map ambiguousF' mds)
+    ambiguousRestEndpoints = map (ambiguousF . S.elems . snd) $ ambiguousPathsGrouped endpoints
 
   returnA -< SchemaCache
     { scSources = _boSources resolvedOutputs
@@ -210,6 +221,9 @@ buildSchemaCacheRule env = proc (metadata, invalidationKeys) -> do
         <> dependencyInconsistentObjects
         <> toList gqlSchemaInconsistentObjects
         <> toList relaySchemaInconsistentObjects
+        <> duplicateRestVariables
+        <> invalidRestSegments
+        <> ambiguousRestEndpoints
     , scApiLimits = _boApiLimits resolvedOutputs
     , scMetricsConfig = _boMetricsConfig resolvedOutputs
     }

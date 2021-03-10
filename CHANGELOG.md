@@ -28,6 +28,7 @@
 - console: add relationship tab for mssql tables (#677)
 - console: add permissions support for mssql tables (#677)
 - build: fix the packaging of static console assets (fix #6610)
+- server: make REST endpoint errors compatible with inconsistent metadata
 
 
 ## v2.0.0-alpha.2

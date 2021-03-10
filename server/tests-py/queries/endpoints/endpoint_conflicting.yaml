@@ -1,11 +1,52 @@
 description: Add a conflicting endpoint
 url: /v1/query
-status: 409
+status: 400
 response:
+  internal:
+  - reason: 'Ambiguous URL paths: :conflicting, simple, simple_cached, with_arg, with_args'
+    conflicts:
+    - definition:
+        query: query { test_table { first_name last_name } }
+      url: :conflicting
+      methods:
+      - GET
+      name: conflicting
+      comment:
+    - definition:
+        query: query { test_table { first_name last_name } }
+      url: simple
+      methods:
+      - GET
+      name: simple
+      comment:
+    - definition:
+        query: 'query @cached(ttl: 5) { test_table { first_name last_name } }'
+      url: simple_cached
+      methods:
+      - GET
+      name: simple_cached
+      comment:
+    - definition:
+        query: 'query ($first_name:String!) { test_table(where: {first_name: { _eq:
+          $first_name } }) { first_name last_name } }'
+      url: with_arg
+      methods:
+      - GET
+      - POST
+      name: with_arg
+      comment:
+    - definition:
+        query: 'query ($first_name: String!, $last_name:String!) { test_table(where:
+          {first_name: { _eq: $first_name } last_name: { _eq: $last_name }}) { first_name
+          last_name } }'
+      url: with_args
+      methods:
+      - GET
+      name: with_args
+      comment:
   path: $.args
-  error: |-
-    Ambiguous URL paths in endpoints: with_args, with_arg, simple, simple_cached
-  code: conflict
+  error: cannot continue due to new inconsistent metadata
+  code: unexpected
 query:
   type: create_rest_endpoint
   args:
@@ -17,3 +58,4 @@ query:
       query:
         collection_name: test_collection
         query_name: simple_query
+
