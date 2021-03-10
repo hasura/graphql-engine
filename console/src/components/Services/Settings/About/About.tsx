@@ -12,52 +12,61 @@ import { showErrorNotification } from '../../Common/Notification';
 import { versionGT } from '../../../../helpers/versionUtils';
 import { ReduxState, ConnectInjectedProps } from '../../../../types';
 import { getRunSqlQuery } from '../../../Common/utils/v1QueryUtils';
+import { dataSource } from '../../../../dataSources';
 
 type AboutState = {
   consoleAssetVersion?: string;
-  pgVersion: string | null;
+  dataSourceVersion: string | null;
 };
 
 class About extends Component<ConnectInjectedProps & StateProps> {
   // had to add this here as the state type is not being read properly if added above.
   state: AboutState = {
     consoleAssetVersion: globals.consoleAssetVersion,
-    pgVersion: null,
+    dataSourceVersion: null,
   };
 
   componentDidMount() {
-    const fetchPgVersion = () => {
+    const fetchDBVersion = () => {
       const { dispatch, dataHeaders, source } = this.props;
+      const query = dataSource?.getDatabaseVersionSql ?? '';
+
+      if (!query) {
+        this.setState({ dataSourceVersion: '' });
+        return;
+      }
 
       const url = Endpoints.query;
       const options: RequestInit = {
         method: 'POST',
         credentials: globalCookiePolicy,
         headers: dataHeaders,
-        body: JSON.stringify(
-          getRunSqlQuery('SELECT version();', source, false, true)
-        ),
+        body: JSON.stringify(getRunSqlQuery(query, source, false, true)),
       };
 
       dispatch(requestAction(url, options)).then(
         (data: Record<'result', Array<unknown[]>>) => {
           this.setState({
-            pgVersion: data.result[1][0],
+            dataSourceVersion: data.result[1][0],
           });
         },
         (error: Error) => {
           dispatch(
-            showErrorNotification('Failed fetching PG version', null, error)
+            showErrorNotification(
+              'Failed to fetch Database version',
+              null,
+              error
+            )
           );
         }
       );
     };
 
-    fetchPgVersion();
+    fetchDBVersion();
   }
 
   render() {
-    const { consoleAssetVersion, pgVersion } = this.state;
+    const { consoleAssetVersion, dataSourceVersion } = this.state;
 
     const { serverVersion, latestStableServerVersion } = this.props;
 
@@ -134,7 +143,7 @@ class About extends Component<ConnectInjectedProps & StateProps> {
         <div>
           <b>Database version ({this.props.source}): </b>
           <span className={styles.add_mar_left_mid}>
-            {pgVersion || spinner}
+            {dataSourceVersion || spinner}
           </span>
         </div>
       );

@@ -221,4 +221,8 @@ WHERE
   getReferenceOption: (option: string) => option,
   getEventInvocationInfoByIDSql: undefined,
   getDatabaseInfo: '',
+  permissionColumnDataTypes: null,
+  viewsSupported: false,
+  supportedColumnOperators: null,
+  aggregationPermissionsAllowed: false,
 };

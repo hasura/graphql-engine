@@ -7,6 +7,7 @@ import {
   ComputedField,
   TableColumn,
   FrequentlyUsedColumn,
+  PermissionColumnCategories,
 } from './types';
 import { PGFunction, FunctionState } from './services/postgresql/types';
 import { Operations } from './common';
@@ -294,6 +295,12 @@ export interface DataSourcesAPI {
   ) => string;
   getDatabaseInfo: string;
   getTableInfo?: (tables: string[]) => string;
+  getDatabaseVersionSql?: string;
+  permissionColumnDataTypes: Partial<PermissionColumnCategories> | null;
+  viewsSupported: boolean;
+  // use null, if all operators are supported
+  supportedColumnOperators: string[] | null;
+  aggregationPermissionsAllowed: boolean;
 }
 
 export let currentDriver: Driver = 'postgres';

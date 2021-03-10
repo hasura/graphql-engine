@@ -47,6 +47,7 @@ import {
   getEventInvocationInfoByIDSql,
   getDatabaseInfo,
   getTableInfo,
+  getDatabaseVersionSql,
 } from './sqlUtils';
 
 export const isTable = (table: Table) => {
@@ -405,6 +406,36 @@ const getReferenceOption = (opt: string) => {
   }
 };
 
+const permissionColumnDataTypes = {
+  boolean: ['boolean'],
+  character: ['character', 'character varying', 'text', 'citext'],
+  dateTime: [
+    'timestamp',
+    'timestamp with time zone',
+    'timestamp without time zone',
+    'date',
+    'time',
+    'time with time zone',
+    'time without time zone',
+    'interval',
+  ],
+  geometry: ['geometry'],
+  geography: ['geography'],
+  json: ['json'],
+  jsonb: ['jsonb'],
+  numeric: [
+    'smallint',
+    'integer',
+    'bigint',
+    'decimal',
+    'numeric',
+    'real',
+    'double precision',
+  ],
+  uuid: ['uuid'],
+  user_defined: [], // default for all other types
+};
+
 export const postgres: DataSourcesAPI = {
   isTable,
   displayTableName,
@@ -470,4 +501,9 @@ export const postgres: DataSourcesAPI = {
   getEventInvocationInfoByIDSql,
   getDatabaseInfo,
   getTableInfo,
+  getDatabaseVersionSql,
+  permissionColumnDataTypes,
+  viewsSupported: true,
+  supportedColumnOperators: null,
+  aggregationPermissionsAllowed: true,
 };

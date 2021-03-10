@@ -26,6 +26,7 @@
 - server/mssql: fix text values erroneously being parsed as varchar
 - server: improve errors messages for inconsistent sources
 - console: add relationship tab for mssql tables (#677)
+- console: add permissions support for mssql tables (#677)
 - build: fix the packaging of static console assets (fix #6610)
 
 

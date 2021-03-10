@@ -86,7 +86,7 @@ import { rolesSelector } from '../../../../metadata/selector';
 import { RightContainer } from '../../../Common/Layout/RightContainer';
 import FeatureDisabled from '../FeatureDisabled';
 
-const supportedDrivers = ['postgres'];
+const supportedDrivers = ['postgres', 'mssql'];
 
 class Permissions extends Component {
   constructor() {
@@ -303,6 +303,10 @@ class Permissions extends Component {
       );
 
       const getViewPermissionNote = () => {
+        if (!dataSource.viewsSupported) {
+          return null;
+        }
+
         let note;
 
         const unsupportedQueryTypes = arrayDiff(
@@ -1488,6 +1492,10 @@ class Permissions extends Component {
       };
 
       const getAggregationSection = () => {
+        if (!dataSource.aggregationPermissionsAllowed) {
+          return null;
+        }
+
         if (query !== 'select') {
           return;
         }
@@ -1569,7 +1577,12 @@ class Permissions extends Component {
           const _applyToListHtml = [];
 
           const tableOptions = allSchemas.map(schema => schema.table_name);
-          const actionsList = ['insert', 'select', 'update', 'delete'];
+          const actionsList = supportedQueryTypes || [
+            'insert',
+            'select',
+            'update',
+            'delete',
+          ];
 
           const getApplyToRow = (applyTo, index) => {
             const getSelect = (type, options, value = '') => {

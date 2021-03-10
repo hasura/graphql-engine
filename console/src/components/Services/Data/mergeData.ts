@@ -148,6 +148,31 @@ export const mergeDataMssql = (
       });
     });
 
+    const rolePermMap = permKeys.reduce((rpm: Record<string, any>, key) => {
+      if (metadataTable) {
+        metadataTable[key]?.forEach(
+          (perm: { role: string; permission: Record<string, any> }) => {
+            rpm[perm.role] = {
+              permissions: {
+                ...(rpm[perm.role] && rpm[perm.role].permissions),
+                [keyToPermission[key]]: perm.permission,
+              },
+            };
+          }
+        );
+      }
+      return rpm;
+    }, {});
+
+    const permissions: Table['permissions'] = Object.keys(rolePermMap).map(
+      role => ({
+        role_name: role,
+        permissions: rolePermMap[role].permissions,
+        table_name: table.table_name,
+        table_schema: table.table_schema,
+      })
+    );
+
     const mergedInfo = {
       table_schema: table.table_schema,
       table_name: table.table_name,
@@ -162,7 +187,7 @@ export const mergeDataMssql = (
       triggers: [],
       primary_key: null,
       relationships,
-      permissions: [],
+      permissions,
       unique_constraints: [],
       check_constraints: [],
       foreign_key_constraints: fkConstraints,

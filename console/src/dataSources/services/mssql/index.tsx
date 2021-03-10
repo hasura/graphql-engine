@@ -2,6 +2,51 @@ import React from 'react';
 import { DataSourcesAPI } from '../..';
 import { TableColumn, Table } from '../../types';
 
+const permissionColumnDataTypes = {
+  character: [
+    'char',
+    'varchar',
+    'text',
+    'nchar',
+    'nvarchar',
+    'binary',
+    'vbinary',
+    'image',
+  ],
+  numeric: [
+    'bit',
+    'tinyint',
+    'smallint',
+    'int',
+    'bigint',
+    'decimal',
+    'numeric',
+    'smallmoney',
+    'money',
+    'float',
+    'real',
+  ],
+  dateTime: [
+    'datetime',
+    'smalldatetime',
+    'date',
+    'time',
+    'datetimeoffset',
+    'timestamp',
+  ],
+  user_defined: [],
+};
+
+const supportedColumnOperators = [
+  '_is_null',
+  '_eq',
+  '_neq',
+  '_gt',
+  '_lt',
+  '_gte',
+  '_lte',
+];
+
 const isTable = (table: Table) => {
   if (!table.table_type) return true; // todo
   return (
@@ -25,10 +70,6 @@ const columnDataTypes = {
 
 // eslint-disable-next-line no-useless-escape
 const createSQLRegex = /create\s*(?:|or\s*replace)\s*(view|table|function)\s*(?:\s*if*\s*not\s*exists\s*)?((\"?\w+\"?)\.(\"?\w+\"?)|(\"?\w+\"?))/g;
-
-export const getColumnType = (column: TableColumn) => {
-  return column.data_type;
-};
 
 export const displayTableName = (table: Table) => {
   const tableName = table.table_name;
@@ -58,11 +99,10 @@ export const mssql: DataSourcesAPI = {
     return false;
   },
   getTableSupportedQueries: () => {
-    return ['delete', 'insert', 'select', 'update'];
+    // since only subscriptions and queries are supported on MSSQL atm.
+    return ['select'];
   },
-  getColumnType: () => {
-    return '';
-  },
+  getColumnType: (col: TableColumn) => col.data_type_name ?? col.data_type,
   arrayToPostgresArray: () => {
     return '';
   },
@@ -79,7 +119,8 @@ WHERE
   },
   columnDataTypes,
   getFetchTablesListQuery: ({ schemas, tables }) => {
-    let whereClause;
+    let whereClause = '';
+
     if (schemas) {
       whereClause = `AND sch.name IN (${schemas.map(s => `'${s}'`).join(',')})`;
     } else if (tables) {
@@ -87,6 +128,7 @@ WHERE
         .map(t => `'${t.table_name}'`)
         .join(',')})`;
     }
+
     return `
     SELECT sch.name as table_schema,
     obj.name as table_name,
@@ -110,7 +152,6 @@ WHERE
         when obj.type = 'SN' then 'Synonym'
         when obj.type = 'SO' then 'Sequence object'
         when obj.type = 'U' then 'TABLE'
-        when obj.type = 'V' then 'VIEW'
         when obj.type = 'EC' then 'Edge constraint'
     end as table_type,
     obj.type_desc AS comment,
@@ -142,7 +183,7 @@ FROM sys.objects as obj
             JOIN sys.types t ON a.user_type_id = t.user_type_id
         WHERE a.column_id > 0 and a.object_id = obj.object_id
         FOR JSON path
-)   AS [isc](json) where obj.type_desc in ('USER_TABLE') ${whereClause}`;
+) AS [isc](json) where obj.type_desc in ('USER_TABLE') ${whereClause};`;
   },
   commonDataTypes: [],
   fetchColumnTypesQuery: '',
@@ -316,4 +357,9 @@ FROM
 WHERE
 	o.name in (${tables.join(',')}) for json path;
   `,
+  getDatabaseVersionSql: 'SELECT @@VERSION;',
+  permissionColumnDataTypes,
+  viewsSupported: false,
+  supportedColumnOperators,
+  aggregationPermissionsAllowed: false,
 };

@@ -11,7 +11,7 @@ type OwnProps = {
   tableName: string;
   schemaName: string;
   tab: string;
-  showTab: boolean;
+  showTab?: boolean;
 };
 
 function FeatureDisabled({

@@ -1229,3 +1229,5 @@ FROM (
         pgclass.relname in (${tables.join(',')})
 ) AS info;
 `;
+
+export const getDatabaseVersionSql = 'SELECT version();';

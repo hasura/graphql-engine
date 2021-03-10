@@ -98,7 +98,8 @@ export interface Table extends BaseTable {
     | 'MATERIALIZED VIEW'
     | 'FOREIGN TABLE'
     | 'PARTITIONED TABLE'
-    | 'BASE TABLE';
+    | 'BASE TABLE'
+    | 'TABLE'; // specific to SQL Server
   primary_key: {
     table_name: string;
     table_schema: string;
@@ -166,3 +167,16 @@ export interface FrequentlyUsedColumn {
   ) => { upSql: string; downSql: string };
   minPGVersion?: number;
 }
+
+type ColumnCategories =
+  | 'boolean'
+  | 'character'
+  | 'dateTime'
+  | 'geometry'
+  | 'geography'
+  | 'json'
+  | 'jsonb'
+  | 'numeric'
+  | 'uuid'
+  | 'user_defined';
+export type PermissionColumnCategories = Record<ColumnCategories, string[]>;
