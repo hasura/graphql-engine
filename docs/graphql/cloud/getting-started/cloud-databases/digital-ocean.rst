@@ -39,9 +39,9 @@ On the Hasura console, navigate to ``Data -> Manage -> Connect Database -> Conne
 
 You will get prompted for a Postgres Database URL. We will create this in the next step and then come back here.
 
-.. thumbnail:: /img/graphql/cloud/cloud-dbs/existing-database-setup.png
+.. thumbnail:: /img/graphql/cloud/cloud-dbs/existing-db-setup.png
    :alt: Hasura Cloud database setup
-   :width: 800px
+   :width: 700px
 
 Step 2: Create a Postgres DB on Digital Ocean (skip if you have an existing DB)
 -------------------------------------------------------------------------------
@@ -125,10 +125,9 @@ Then click the ``Copy`` button for the next step.
 Step 5: Finish connecting the database
 --------------------------------------
 
-Back on Hasura Console, enter the database URL that we retrieved in :ref:`step 4 <get_db_url_aiven>`:
+Back on Hasura Console, enter the database URL that we retrieved in :ref:`step 4 <get_db_url_do>`:
 
-.. thumbnail:: /img/graphql/cloud/projects/existing-db-setup.png
-   :alt: Database setup
+.. thumbnail:: /img/graphql/cloud/getting-started/connect-db.png
    :width: 600px
 
 Then click ``Connect Database``.

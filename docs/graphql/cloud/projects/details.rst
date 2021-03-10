@@ -17,7 +17,7 @@ Introduction
 
 You can view all the details about your project in the ``General`` tab.
 
-.. thumbnail:: /img/graphql/cloud/projects/project-details.png
+.. thumbnail:: /img/graphql/cloud/projects/general-details.png
    :alt: General tab
    :width: 900px
 

@@ -34,9 +34,9 @@ There are three different pricing plans that you can chose from:
 View current pricing plans for projects
 ---------------------------------------
 
-By clicking on the ``Billing`` tab, you can see all your projects and what plan they are currently on:
+By clicking on the ``Projects`` tab, you can see all your projects and what plan they are currently on:
 
-.. thumbnail:: /img/graphql/cloud/projects/pricing-overview.png
+.. thumbnail:: /img/graphql/cloud/projects/project-pricing-plans.png
   :alt: Billing overview
   :width: 1200px
   :class: inline-block

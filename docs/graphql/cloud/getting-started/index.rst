@@ -58,7 +58,7 @@ If you chose ``Connect existing database``, enter your database connection URL.
 
 Click ``Connect Database``.
 
-.. thumbnail:: /img/graphql/cloud/getting-started/connect-database.png
+.. thumbnail:: /img/graphql/cloud/getting-started/connect-db.png
    :alt: Enter URL for existing database
    :width: 556px
 
