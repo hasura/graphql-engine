@@ -37,7 +37,7 @@ export interface TableColumn extends BaseTableColumn {
   table_name: string;
   column_name: string;
   table_schema: string;
-  column_default: string | null;
+  column_default?: string | null;
   ordinal_position: number;
   /**
    * auto_increment for columns that have the AUTO_INCREMENT attribute.
@@ -72,7 +72,10 @@ export type ComputedField = {
   computed_field_name: string;
   definition: {
     function: FunctionDefinition;
+    table_argument: string | null;
+    session_argument: string | null;
   };
+  comment: string | null;
 };
 
 export type Schema = {
@@ -95,7 +98,8 @@ export interface Table extends BaseTable {
     | 'MATERIALIZED VIEW'
     | 'FOREIGN TABLE'
     | 'PARTITIONED TABLE'
-    | 'BASE TABLE';
+    | 'BASE TABLE'
+    | 'TABLE'; // specific to SQL Server
   primary_key: {
     table_name: string;
     table_schema: string;
@@ -124,6 +128,7 @@ export interface Table extends BaseTable {
       delete?: Nullable<string>;
       delete_by_pk?: Nullable<string>;
     };
+    custom_name: string;
   };
   computed_fields: ComputedField[];
   is_enum: boolean;
@@ -136,7 +141,7 @@ export interface Table extends BaseTable {
     table_schema: string;
     table_name: string;
     view_definition: string;
-  };
+  } | null;
   remote_relationships: {
     remote_relationship_name: string;
     table_name: string;
@@ -162,3 +167,16 @@ export interface FrequentlyUsedColumn {
   ) => { upSql: string; downSql: string };
   minPGVersion?: number;
 }
+
+type ColumnCategories =
+  | 'boolean'
+  | 'character'
+  | 'dateTime'
+  | 'geometry'
+  | 'geography'
+  | 'json'
+  | 'jsonb'
+  | 'numeric'
+  | 'uuid'
+  | 'user_defined';
+export type PermissionColumnCategories = Record<ColumnCategories, string[]>;

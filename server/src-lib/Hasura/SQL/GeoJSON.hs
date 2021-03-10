@@ -181,8 +181,8 @@ data CRS
   | CRSLink !CRSLinkProps
   deriving (Show, Eq)
 
-$(J.deriveJSON (J.aesonDrop 4 J.camelCase) ''CRSNameProps)
-$(J.deriveJSON (J.aesonDrop 4 J.camelCase) ''CRSLinkProps)
+$(J.deriveJSON (J.aesonPrefix J.camelCase) ''CRSNameProps)
+$(J.deriveJSON (J.aesonPrefix J.camelCase) ''CRSLinkProps)
 $(J.deriveJSON
   J.defaultOptions { J.constructorTagModifier = J.camelCase . drop 3
                    , J.sumEncoding = J.TaggedObject "type" "properties"

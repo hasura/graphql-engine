@@ -118,6 +118,7 @@ const defaultModifyState = {
   remoteRelationships: {
     remoteSchema: {},
   },
+  custom_name: '',
   rootFieldsEdit: {
     select: '',
     select_by_pk: '',
@@ -169,12 +170,17 @@ const defaultState = {
   nonTrackablePostgresFunctions: [],
   listingSchemas: [],
   untrackedRelations: [],
-  schemaList: ['public'],
-  currentSchema: 'public',
+  schemaList: [],
+  currentSchema: '',
   currentDataSource: '',
   adminSecretError: false,
   dataHeaders: {
     'content-type': 'application/json',
+  },
+  dbConnection: {
+    envVar: '',
+    dbURL: '',
+    dbName: '',
   },
 };
 

@@ -79,6 +79,48 @@ export const deleteCurrentSchema = (successCb, errorCb) => {
     const errorMsg = 'Error dropping schema';
 
     const customOnSuccess = () => {
+      dispatch(fetchSchemaList()).then(successCb);
+    };
+    const customOnError = () => {
+      if (errorCb) {
+        errorCb();
+      }
+    };
+
+    makeMigrationCall(
+      dispatch,
+      getState,
+      migration.upMigration,
+      migration.downMigration,
+      migrationName,
+      customOnSuccess,
+      customOnError,
+      requestMsg,
+      successMsg,
+      errorMsg
+    );
+  };
+};
+
+export const deleteSchema = (schema, successCb, errorCb) => {
+  return (dispatch, getState) => {
+    const { currentDataSource } = getState().tables;
+
+    const confirmMessage = `This will permanently delete schema "${schema}" from the database`;
+    const isOk = getConfirmation(confirmMessage, true, schema);
+    if (!isOk) {
+      return;
+    }
+    const migration = new Migration();
+    migration.add(
+      getRunSqlQuery(dataSource.getDropSchemaSql(schema), currentDataSource)
+    );
+    const migrationName = `drop_schema_${schema}`;
+    const requestMsg = 'Dropping schema';
+    const successMsg = 'Successfully dropped schema';
+    const errorMsg = 'Error dropping schema';
+
+    const customOnSuccess = () => {
       dispatch(fetchSchemaList());
       if (successCb) {
         successCb();

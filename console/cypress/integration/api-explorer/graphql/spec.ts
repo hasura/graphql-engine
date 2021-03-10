@@ -64,7 +64,7 @@ export const insertValue = () => {
 
 export const openAPIExplorer = () => {
   // Open API Explorer
-  cy.get(getElementFromAlias('api-explorer')).click();
+  cy.get(getElementFromAlias('api')).click();
   cy.wait(3000);
 };
 

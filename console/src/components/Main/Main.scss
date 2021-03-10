@@ -444,7 +444,6 @@
     padding: 0;
     display: inline-block;
     margin-bottom: 0;
-    margin-top: 16px;
 
     a,
     a:visited {
@@ -474,8 +473,7 @@
         display: block;
         margin-left: 20px;
         border-bottom: 4px solid transparent;
-        padding: 0 10px;
-        padding-bottom: 10px;
+        padding: 16px 10px 10px;
 
         .iconCenter {
           display: inline-block;

@@ -5,17 +5,15 @@ A simple Todo PWA (Progressive Web App) inspired by [TodoMVC](http://todomvc.com
 
 # Tutorial
 
-- Deploy Postgres and GraphQL Engine on Heroku:
+- Deploy GraphQL Engine on Hasura Cloud and setup PostgreSQL via Heroku:
   
-  [![Deploy to
-  heroku](https://www.herokucdn.com/deploy/button.svg)](https://heroku.com/deploy?template=https://github.com/hasura/graphql-engine-heroku)
+  [![Deploy to Hasura Cloud](https://graphql-engine-cdn.hasura.io/img/deploy_to_hasura.png)](https://cloud.hasura.io/)
 
-  Please checkout our [docs](https://hasura.io/docs/1.0/graphql/manual/deployment/index.html) for other deployment methods
+- Get the Hasura app URL (say `my-app.hasura.app`)
 
-- Get the Heroku app URL (say `my-app.herokuapp.com`)
 - Create `todos` table:
   
-  Open Hasura console: visit https://my-app.herokuapp.com on a browser  
+  Open Hasura console: visit https://my-app.hasura.app on a browser  
   Navigate to `Data` section in the top nav bar and create a table as follows:
 
   ![Create todos table](https://storage.googleapis.com/graphql-engine-cdn.hasura.io/assets/vuetify-vuex-todo-graphql/create_table_todos.png)
@@ -42,7 +40,7 @@ import { InMemoryCache } from 'apollo-cache-inmemory'
 
 const httpLink = new HttpLink({
   // You should use an absolute URL here
-  uri: 'https://myapp.herokuapp.com/v1/graphql'
+  uri: 'https://myapp.hasura.app/v1/graphql'
 })
 
 // Create the apollo client
@@ -63,7 +61,7 @@ export default apolloProvider
 
 ```
 
-In the `httpLink`, replace `myapp.herokuapp.com` with your own Heroku URL of Hasura GraphQL Engine that you deployed above
+In the `httpLink`, replace `myapp.hasura.app` with your own Hasura Project URL of Hasura GraphQL Engine that you deployed above
 
 - Compile and hot-reload for development
 ```bash
@@ -74,4 +72,3 @@ In the `httpLink`, replace `myapp.herokuapp.com` with your own Heroku URL of Has
 ```bash
   npm run build
 ```
-

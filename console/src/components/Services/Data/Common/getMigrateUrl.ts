@@ -10,6 +10,7 @@ const rqlQueryTypes = [
   'delete',
   'update',
   'run_sql',
+  'mssql_run_sql',
 ];
 
 type Query = {

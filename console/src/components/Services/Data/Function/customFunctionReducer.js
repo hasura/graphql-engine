@@ -1,23 +1,19 @@
-/* Import default State */
-
-import { functionData } from './customFunctionState';
-
-import Endpoints, { globalCookiePolicy } from '../../../../Endpoints';
-
-import requestAction from '../../../../utils/requestAction';
-import dataHeaders from '../Common/Headers';
-
-import _push from '../push';
-import { getSchemaBaseRoute } from '../../../Common/utils/routesUtils';
 import { dataSource } from '../../../../dataSources';
+import Endpoints, { globalCookiePolicy } from '../../../../Endpoints';
 import { exportMetadata } from '../../../../metadata/actions';
-import { getRunSqlQuery } from '../../../Common/utils/v1QueryUtils';
 import {
-  getUntrackFunctionQuery,
+  createFunctionPermissionQuery,
+  dropFunctionPermissionQuery,
   getTrackFunctionQuery,
-  getTrackFunctionV2Query,
+  getUntrackFunctionQuery,
 } from '../../../../metadata/queryUtils';
+import requestAction from '../../../../utils/requestAction';
+import { getSchemaBaseRoute } from '../../../Common/utils/routesUtils';
+import { getRunSqlQuery } from '../../../Common/utils/v1QueryUtils';
 import { makeRequest } from '../../RemoteSchema/Actions';
+import dataHeaders from '../Common/Headers';
+import _push from '../push';
+import { functionData } from './customFunctionState';
 
 /* Constants */
 
@@ -42,10 +38,20 @@ const SESSVAR_CUSTOM_FUNCTION_ADD_FAIL =
 const SESSVAR_CUSTOM_FUNCTION_ADD_SUCCESS =
   '@customFunction/SESSVAR_CUSTOM_FUNCTION_ADD_SUCCESS';
 
+const PERMISSION_CUSTOM_FUNCTION_SET_SUCCESS =
+  '@customFunction/PERMISSION_CUSTOM_FUNCTION_SET_SUCCESS';
+const PERMISSION_CUSTOM_FUNCTION_SET_FAIL =
+  '@customFunction/PERMISSION_CUSTOM_FUNCTION_SET_FAIL';
+const PERMISSION_CUSTOM_FUNCTION_DROP_SUCCESS =
+  '@customFunction/PERMISSION_CUSTOM_FUNCTION_DROP_SUCCESS';
+const PERMISSION_CUSTOM_FUNCTION_DROP_FAIL =
+  '@customFunction/PERMISSION_CUSTOM_FUNCTION_DROP_FAIL';
+
 /* Action creators */
 const fetchCustomFunction = (functionName, schema, source) => {
   return (dispatch, getState) => {
     const url = Endpoints.query;
+    if (!dataSource.getFunctionDefinitionSql) return;
     const fetchCustomFunctionDefinition = getRunSqlQuery(
       dataSource.getFunctionDefinitionSql(schema, functionName),
       source
@@ -104,11 +110,12 @@ const deleteFunction = () => (dispatch, getState) => {
   const successMsg = 'Function deleted';
   const errorMsg = 'Deleting function failed';
 
-  const customOnSuccess = () =>
+  const customOnSuccess = () => {
+    dispatch({ type: DELETING_CUSTOM_FUNCTION });
     dispatch(_push(getSchemaBaseRoute(currentSchema, source)));
+  };
   const customOnError = () => dispatch({ type: DELETE_CUSTOM_FUNCTION_FAIL });
 
-  dispatch({ type: DELETING_CUSTOM_FUNCTION });
   return dispatch(
     makeRequest(
       sqlUpQueries,
@@ -127,7 +134,7 @@ const unTrackCustomFunction = () => {
   return (dispatch, getState) => {
     const currentSchema = getState().tables.currentSchema;
     const currentDataSource = getState().tables.currentDataSource;
-    const functionName = getState().functions.functionName;
+    const { functionName, configuration } = getState().functions;
 
     const migrationName = 'remove_custom_function_' + functionName;
     const payload = getUntrackFunctionQuery(
@@ -138,7 +145,8 @@ const unTrackCustomFunction = () => {
     const downPayload = getTrackFunctionQuery(
       functionName,
       currentSchema,
-      currentDataSource
+      currentDataSource,
+      configuration
     );
 
     const requestMsg = 'Deleting custom function...';
@@ -146,6 +154,7 @@ const unTrackCustomFunction = () => {
     const errorMsg = 'Delete custom function failed';
 
     const customOnSuccess = () => {
+      dispatch({ type: UNTRACKING_CUSTOM_FUNCTION });
       dispatch(_push(getSchemaBaseRoute(currentSchema, currentDataSource)));
       dispatch({ type: RESET });
       dispatch(exportMetadata());
@@ -156,7 +165,6 @@ const unTrackCustomFunction = () => {
       ]);
     };
 
-    dispatch({ type: UNTRACKING_CUSTOM_FUNCTION });
     return dispatch(
       makeRequest(
         [payload],
@@ -186,25 +194,25 @@ const updateSessVar = session_argument => {
       currentSchema,
       currentDataSource
     );
-    const retrackPayloadDown = getTrackFunctionV2Query(
+    const retrackPayloadDown = getTrackFunctionQuery(
       functionName,
       currentSchema,
+      currentDataSource,
       {
         ...(oldConfiguration && oldConfiguration),
-      },
-      currentDataSource
+      }
     );
 
     // retrack with sess arg config
-    const retrackPayloadUp = getTrackFunctionV2Query(
+    const retrackPayloadUp = getTrackFunctionQuery(
       functionName,
       currentSchema,
+      currentDataSource,
       {
         ...(session_argument && {
           session_argument,
         }),
-      },
-      currentDataSource
+      }
     );
 
     const untrackPayloadDown = getUntrackFunctionQuery(
@@ -230,13 +238,13 @@ const updateSessVar = session_argument => {
     const errorMsg = 'Updating Session argument variable failed';
 
     const customOnSuccess = () => {
+      dispatch({ type: SESSVAR_CUSTOM_FUNCTION_REQUEST });
       dispatch(exportMetadata());
     };
     const customOnError = error => {
       dispatch({ type: SESSVAR_CUSTOM_FUNCTION_ADD_FAIL, data: error });
     };
 
-    dispatch({ type: SESSVAR_CUSTOM_FUNCTION_REQUEST });
     return dispatch(
       makeRequest(
         upQuery.args,
@@ -252,16 +260,105 @@ const updateSessVar = session_argument => {
   };
 };
 
-/* */
+const setFunctionPermission = (userRole, onSuccessCb) => (
+  dispatch,
+  getState
+) => {
+  const { currentDataSource, currentSchema } = getState().tables;
+  const { functionName } = getState().functions;
+  const currentFunction = { schema: currentSchema, name: functionName };
+
+  const upQuery = createFunctionPermissionQuery(
+    currentDataSource,
+    currentFunction,
+    userRole
+  );
+  const downQuery = dropFunctionPermissionQuery(
+    currentDataSource,
+    currentFunction,
+    userRole
+  );
+
+  const migrationName = `set_permission_role_${userRole}_function_${functionName}`;
+  const requestMsg = `Setting permisions for ${userRole} role on ${functionName}`;
+  const successMsg = `Successfully set permissions for ${userRole}`;
+  const errorMsg = `Failed to set permissions for ${userRole}`;
+
+  const customOnSuccess = () => {
+    dispatch({ type: PERMISSION_CUSTOM_FUNCTION_SET_SUCCESS });
+    dispatch(exportMetadata(onSuccessCb));
+  };
+
+  const customOnError = err => {
+    dispatch({ type: PERMISSION_CUSTOM_FUNCTION_SET_FAIL, data: err });
+  };
+
+  return dispatch(
+    makeRequest(
+      [upQuery],
+      [downQuery],
+      migrationName,
+      customOnSuccess,
+      customOnError,
+      requestMsg,
+      successMsg,
+      errorMsg
+    )
+  );
+};
+
+const dropFunctionPermission = (userRole, onSuccessCb) => (
+  dispatch,
+  getState
+) => {
+  const { currentDataSource, currentSchema } = getState().tables;
+  const { functionName } = getState().functions;
+  const currentFunction = { schema: currentSchema, name: functionName };
+
+  const upQuery = dropFunctionPermissionQuery(
+    currentDataSource,
+    currentFunction,
+    userRole
+  );
+  const downQuery = createFunctionPermissionQuery(
+    currentDataSource,
+    currentFunction,
+    userRole
+  );
+
+  const migrationName = `drop_permission_role_${userRole}_function_${functionName}`;
+  const requestMsg = `Dropping permisions for ${userRole} role on ${functionName}`;
+  const successMsg = `Successfully dropped permissions for ${userRole}`;
+  const errorMsg = `Failed to drop permissions for ${userRole}`;
+
+  const customOnSuccess = () => {
+    dispatch({ type: PERMISSION_CUSTOM_FUNCTION_DROP_SUCCESS });
+    dispatch(exportMetadata(onSuccessCb));
+  };
+
+  const customOnError = err => {
+    dispatch({ type: PERMISSION_CUSTOM_FUNCTION_DROP_FAIL, data: err });
+  };
+
+  return dispatch(
+    makeRequest(
+      [upQuery],
+      [downQuery],
+      migrationName,
+      customOnSuccess,
+      customOnError,
+      requestMsg,
+      successMsg,
+      errorMsg
+    )
+  );
+};
 
 /* Reducer */
-
 const customFunctionReducer = (state = functionData, action) => {
   switch (action.type) {
     case RESET:
-      return {
-        ...functionData,
-      };
+      return functionData;
     case FETCHING_INDIV_CUSTOM_FUNCTION:
       return {
         ...state,
@@ -300,7 +397,6 @@ const customFunctionReducer = (state = functionData, action) => {
         isDeleting: true,
         isError: null,
       };
-
     case UNTRACK_CUSTOM_FUNCTION_FAIL:
       return {
         ...state,
@@ -331,20 +427,42 @@ const customFunctionReducer = (state = functionData, action) => {
         isUpdating: false,
         isError: null,
       };
-    default:
+    case PERMISSION_CUSTOM_FUNCTION_SET_SUCCESS:
       return {
         ...state,
+        isPermissionSet: true,
+        isError: null,
       };
+    case PERMISSION_CUSTOM_FUNCTION_SET_FAIL:
+      return {
+        ...state,
+        isPermissionSet: false,
+        isError: action.data,
+      };
+    case PERMISSION_CUSTOM_FUNCTION_DROP_SUCCESS:
+      return {
+        ...state,
+        isPermissionDrop: true,
+        isError: null,
+      };
+    case PERMISSION_CUSTOM_FUNCTION_DROP_FAIL:
+      return {
+        ...state,
+        isPermissionDrop: false,
+        isError: action.data,
+      };
+    default:
+      return state;
   }
 };
 
-/* End of it */
-
 export {
-  RESET,
+  deleteFunction,
+  dropFunctionPermission,
   fetchCustomFunction,
+  RESET,
+  setFunctionPermission,
   unTrackCustomFunction,
   updateSessVar,
-  deleteFunction,
 };
 export default customFunctionReducer;

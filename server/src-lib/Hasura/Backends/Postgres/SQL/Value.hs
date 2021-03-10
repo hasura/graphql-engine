@@ -16,18 +16,18 @@ module Hasura.Backends.Postgres.SQL.Value
 
 import           Hasura.Prelude
 
-import qualified Data.Aeson.Text                as AE
-import qualified Data.Aeson.Types               as AT
-import qualified Data.ByteString                as B
-import qualified Data.Text                      as T
-import qualified Data.Text.Conversions          as TC
-import qualified Data.Text.Encoding             as TE
-import qualified Data.Text.Lazy                 as TL
-import qualified Data.UUID                      as UUID
-import qualified Database.PG.Query              as Q
-import qualified Database.PG.Query.PTI          as PTI
-import qualified Database.PostgreSQL.LibPQ      as PQ
-import qualified PostgreSQL.Binary.Encoding     as PE
+import qualified Data.Aeson.Text                    as AE
+import qualified Data.Aeson.Types                   as AT
+import qualified Data.ByteString                    as B
+import qualified Data.Text                          as T
+import qualified Data.Text.Conversions              as TC
+import qualified Data.Text.Encoding                 as TE
+import qualified Data.Text.Lazy                     as TL
+import qualified Data.UUID                          as UUID
+import qualified Database.PG.Query                  as Q
+import qualified Database.PG.Query.PTI              as PTI
+import qualified Database.PostgreSQL.LibPQ          as PQ
+import qualified PostgreSQL.Binary.Encoding         as PE
 
 import           Data.Aeson
 import           Data.Int
@@ -55,6 +55,22 @@ instance FromJSON RasterWKB where
 instance ToJSON RasterWKB where
   toJSON = toJSON . TC.toText . getRasterWKB
 
+newtype Ltree = Ltree Text
+  deriving (Show, Eq)
+
+instance ToJSON Ltree where
+    toJSON (Ltree t) = toJSON t
+
+instance FromJSON Ltree where
+    parseJSON = \case
+        String t ->
+            if any T.null $ T.splitOn (T.pack ".") t
+                then fail message
+                else pure $ Ltree t
+        _ -> fail message
+        where
+            message = "Expecting label path: a sequence of zero or more labels separated by dots, for example L1.L2.L3"
+
 --  Binary value. Used in prepared sq
 data PGScalarValue
   = PGValInteger !Int32
@@ -79,6 +95,9 @@ data PGScalarValue
   | PGValGeo !GeometryWithCRS
   | PGValRaster !RasterWKB
   | PGValUUID !UUID.UUID
+  | PGValLtree !Ltree
+  | PGValLquery !Text
+  | PGValLtxtquery !Text
   | PGValUnknown !Text
   deriving (Show, Eq)
 
@@ -109,6 +128,9 @@ pgScalarValueToJson = \case
   PGValGeo o    -> toJSON o
   PGValRaster r -> toJSON r
   PGValUUID u -> toJSON u
+  PGValLtree t -> toJSON t
+  PGValLquery t -> toJSON t
+  PGValLtxtquery t -> toJSON t
   PGValUnknown t -> toJSON t
 
 withConstructorFn :: PGScalarType -> S.SQLExp -> S.SQLExp
@@ -138,6 +160,7 @@ parsePGValue ty val = case (ty, val) of
   (_          , Null)     -> pure $ PGNull ty
   (PGUnknown _, String t) -> pure $ PGValUnknown t
   (PGRaster   , _)        -> parseTyped -- strictly parse raster value
+  (PGLtree    , _)        -> parseTyped
   (_          , String t) -> parseTyped <|> pure (PGValUnknown t)
   (_          , _)        -> parseTyped
   where
@@ -172,6 +195,9 @@ parsePGValue ty val = case (ty, val) of
       PGGeography -> PGValGeo <$> parseJSON val
       PGRaster -> PGValRaster <$> parseJSON val
       PGUUID -> PGValUUID <$> parseJSON val
+      PGLtree -> PGValLtree <$> parseJSON val
+      PGLquery -> PGValLquery <$> parseJSON val
+      PGLtxtquery -> PGValLtxtquery <$> parseJSON val
       PGUnknown tyName ->
         fail $ "A string is expected for type: " ++ T.unpack tyName
 
@@ -194,17 +220,17 @@ instance FromJSON TxtEncodedPGVal where
 
 txtEncodedPGVal :: PGScalarValue -> TxtEncodedPGVal
 txtEncodedPGVal = \case
-  PGValInteger i  -> TELit $ T.pack $ show i
-  PGValSmallInt i -> TELit $ T.pack $ show i
-  PGValBigInt i   -> TELit $ T.pack $ show i
-  PGValFloat f    -> TELit $ T.pack $ show f
-  PGValDouble d   -> TELit $ T.pack $ show d
-  PGValNumeric sc -> TELit $ T.pack $ show sc
+  PGValInteger i  -> TELit $ tshow i
+  PGValSmallInt i -> TELit $ tshow i
+  PGValBigInt i   -> TELit $ tshow i
+  PGValFloat f    -> TELit $ tshow f
+  PGValDouble d   -> TELit $ tshow d
+  PGValNumeric sc -> TELit $ tshow sc
   -- PostgreSQL doesn't like scientific notation for money, so pass it
   -- with 2 decimal places.
   PGValMoney m    -> TELit $ T.pack $ formatScientific Fixed (Just 2) m
   PGValBoolean b  -> TELit $ bool "false" "true" b
-  PGValChar t     -> TELit $ T.pack $ show t
+  PGValChar t     -> TELit $ tshow t
   PGValVarchar t  -> TELit t
   PGValText t     -> TELit t
   PGValCitext t   -> TELit t
@@ -225,6 +251,9 @@ txtEncodedPGVal = \case
     AE.encodeToLazyText o
   PGValRaster r -> TELit $ TC.toText $ getRasterWKB r
   PGValUUID u -> TELit $ UUID.toText u
+  PGValLtree (Ltree t) -> TELit t
+  PGValLquery t -> TELit t
+  PGValLtxtquery t -> TELit t
   PGValUnknown t -> TELit t
 
 pgTypeOid :: PGScalarType -> PQ.Oid
@@ -253,6 +282,9 @@ pgTypeOid = \case
   PGGeography   -> PTI.text
   PGRaster      -> PTI.text -- we are using the ST_RastFromHexWKB($i) instead of $i
   PGUUID        -> PTI.uuid
+  PGLtree       -> PTI.text
+  PGLquery      -> PTI.text
+  PGLtxtquery   -> PTI.text
   (PGUnknown _) -> PTI.auto
 
 binEncoder :: PGScalarValue -> Q.PrepArg
@@ -279,6 +311,9 @@ binEncoder = \case
   PGValGeo o                       -> Q.toPrepVal $ TL.toStrict $ AE.encodeToLazyText o
   PGValRaster r                    -> Q.toPrepVal $ TC.toText $ getRasterWKB r
   PGValUUID u                      -> Q.toPrepVal u
+  PGValLtree (Ltree t)             -> Q.toPrepVal t
+  PGValLquery t                    -> Q.toPrepVal t
+  PGValLtxtquery t                 -> Q.toPrepVal t
   PGValUnknown t                   -> (PTI.auto, Just (TE.encodeUtf8 t, PQ.Text))
 
 txtEncoder :: PGScalarValue -> S.SQLExp

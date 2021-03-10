@@ -18,6 +18,8 @@ import { mapDispatchToPropsEmpty } from '../../../../Common/utils/reactUtils';
 import { getDataSources } from '../../../../../metadata/selector';
 import { DataSource } from '../../../../../metadata/types';
 import { getDatabaseSchemasInfo } from '../../../Data/DataActions';
+import { getSourceDriver } from '../../../Data/utils';
+import { currentDriver, setDriver } from '../../../../../dataSources';
 
 interface Props extends InjectedProps {}
 
@@ -37,15 +39,21 @@ const Add: React.FC<Props> = props => {
 
   useEffect(() => {
     setState.source(currentDataSource);
-  }, [currentDataSource]);
+    const driver = getSourceDriver(dataSourcesList, currentDataSource);
+    if (driver === 'mssql' || driver === 'postgres') {
+      setDriver(driver);
+    }
+  }, [currentDataSource, dataSourcesList]);
 
   const [databaseInfo, setDatabaseInfo] = useState<{
     [schema_name: string]: { [table_name: string]: string[] };
   }>({});
 
+  const supportedDrivers = ['postgres'];
+
   useEffect(() => {
     dispatch(
-      getDatabaseSchemasInfo('postgres', source || currentDataSource) as any
+      getDatabaseSchemasInfo(currentDriver, source || currentDataSource) as any
     ).then(setDatabaseInfo);
   }, [currentDataSource, source, dispatch]);
 
@@ -56,7 +64,7 @@ const Add: React.FC<Props> = props => {
           return {
             name: c,
             enabled: true,
-            type: '', // todo — updated types, make it optional
+            type: '', // todo — update types, make it optional
           };
         })
       );
@@ -174,7 +182,6 @@ const Add: React.FC<Props> = props => {
   const headersList = (
     <Headers headers={headers} setHeaders={setState.headers} />
   );
-
   return (
     <div
       className={`${styles.addTablesBody} ${styles.clear_fix} ${styles.padd_left}`}
@@ -229,11 +236,13 @@ const Add: React.FC<Props> = props => {
               value={source}
             >
               <option value="">Select database</option>
-              {dataSourcesList.map(s => (
-                <option key={s.name} value={s.name}>
-                  {s.name}
-                </option>
-              ))}
+              {dataSourcesList
+                .filter(s => supportedDrivers.includes(s.driver))
+                .map(s => (
+                  <option key={s.name} value={s.name}>
+                    {s.name}
+                  </option>
+                ))}
             </select>
             <hr />
             <h4 className={styles.subheading_text}>
@@ -251,9 +260,8 @@ const Add: React.FC<Props> = props => {
               className={`${styles.selectTrigger} form-control`}
               value={table.schema}
             >
-              <option value="">Select schema</option>
               {Object.keys(databaseInfo).map(s => (
-                <option value={s} key={s} selected={s === table.schema}>
+                <option value={s} key={s}>
                   {s}
                 </option>
               ))}

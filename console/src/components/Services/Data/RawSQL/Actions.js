@@ -17,7 +17,7 @@ import { dataSource } from '../../../../dataSources';
 import { getRunSqlQuery } from '../../../Common/utils/v1QueryUtils';
 import { getDownQueryComments } from '../../../../utils/migration/utils';
 import {
-  getTrackFunctionV2Query,
+  getTrackFunctionQuery,
   getTrackTableQuery,
 } from '../../../../metadata/queryUtils';
 import globals from '../../../../Globals';
@@ -37,21 +37,20 @@ const MODAL_OPEN = 'EditItem/MODAL_OPEN';
 const modalOpen = () => ({ type: MODAL_OPEN });
 const modalClose = () => ({ type: MODAL_CLOSE });
 
-const trackAllItems = (sql, isMigration, migrationName) => (
+const trackAllItems = (sql, isMigration, migrationName, source, driver) => (
   dispatch,
   getState
 ) => {
   const currMigrationMode = getState().main.migrationMode;
-  const source = getState().tables.currentDataSource;
 
-  const objects = parseCreateSQL(sql);
+  const objects = parseCreateSQL(sql, driver);
   const changes = [];
   objects.forEach(({ type, name, schema }) => {
     let req = {};
     if (type === 'function') {
-      req = getTrackFunctionV2Query(name, schema, {}, source);
+      req = getTrackFunctionQuery(name, schema, source, {}, driver);
     } else {
-      req = getTrackTableQuery({ name, schema }, source);
+      req = getTrackTableQuery({ name, schema }, source, driver);
     }
     changes.push(req);
   });
@@ -66,12 +65,14 @@ const trackAllItems = (sql, isMigration, migrationName) => (
     }
     request = {
       name: migrationName,
+      datasource: source,
       up: changes,
       down: [],
     };
   } else {
     request = {
       type: 'bulk',
+      source: source,
       args: changes,
     };
   }
@@ -93,10 +94,13 @@ const trackAllItems = (sql, isMigration, migrationName) => (
   );
 };
 
-const executeSQL = (isMigration, migrationName, statementTimeout) => (
-  dispatch,
-  getState
-) => {
+const executeSQL = (
+  isMigration,
+  migrationName,
+  statementTimeout,
+  source,
+  driver
+) => (dispatch, getState) => {
   dispatch({ type: MAKING_REQUEST });
   dispatch(showSuccessNotification('Executing the Query...'));
 
@@ -105,24 +109,23 @@ const executeSQL = (isMigration, migrationName, statementTimeout) => (
 
   const isStatementTimeout = statementTimeout && !isMigration;
   const migrateUrl = returnMigrateUrl(migrationMode);
-
   let url = Endpoints.query;
-  const source = getState().tables.currentDataSource;
   const schemaChangesUp = [];
 
-  if (isStatementTimeout) {
+  if (isStatementTimeout && dataSource.getStatementTimeoutSql) {
     schemaChangesUp.push(
       getRunSqlQuery(
         dataSource.getStatementTimeoutSql(statementTimeout),
         source,
         false,
-        readOnlyMode
+        readOnlyMode,
+        driver
       )
     );
   }
 
   schemaChangesUp.push(
-    getRunSqlQuery(sql, source, isCascadeChecked, readOnlyMode)
+    getRunSqlQuery(sql, source, isCascadeChecked, readOnlyMode, driver)
   );
 
   const schemaChangesDown = getDownQueryComments(schemaChangesUp, source);
@@ -140,6 +143,7 @@ const executeSQL = (isMigration, migrationName, statementTimeout) => (
       name: migrationName,
       up: schemaChangesUp,
       down: schemaChangesDown,
+      datasource: source,
     };
   }
   const options = {
@@ -154,7 +158,7 @@ const executeSQL = (isMigration, migrationName, statementTimeout) => (
       dispatch(loadMigrationStatus());
     }
     dispatch(showSuccessNotification('SQL executed!'));
-    dispatch(fetchDataInit()).then(() => {
+    dispatch(fetchDataInit(source, driver)).then(() => {
       dispatch({
         type: REQUEST_SUCCESS,
         data: data && (isStatementTimeout ? data[1] : data[0]),
@@ -166,9 +170,9 @@ const executeSQL = (isMigration, migrationName, statementTimeout) => (
     .then(
       data => {
         if (isTableTrackChecked) {
-          dispatch(trackAllItems(sql, isMigration, migrationName)).then(
-            callback(data)
-          );
+          dispatch(
+            trackAllItems(sql, isMigration, migrationName, source, driver)
+          ).then(() => callback(data));
           return;
         }
         callback(data);

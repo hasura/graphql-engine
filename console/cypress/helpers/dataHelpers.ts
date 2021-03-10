@@ -6,6 +6,21 @@ export const baseUrl = Cypress.config('baseUrl');
 export const getIndexRoute = (sourceName = 'default', schemaName = 'public') =>
   `/data/${sourceName}/schema/${schemaName}/`;
 
+export const createVolatileFunction = (name: string) => {
+  return {
+    type: 'run_sql',
+    args: {
+      sql: `CREATE OR REPLACE  FUNCTION public.${name}()
+            RETURNS SETOF text_result
+            LANGUAGE sql
+            AS $function$
+              SELECT * FROM text_result;
+            $function$`,
+      cascade: false,
+    },
+  };
+};
+
 export const dataTypes = [
   'serial',
   'bigserial',
@@ -65,7 +80,12 @@ interface APIPayload {
   [key: string]: any;
 }
 
-export type QueryEndpoint = 'query' | 'metadata';
+export const queryEndpoints = {
+  query: 'query',
+  metadata: 'metadata',
+} as const;
+
+export type QueryEndpoint = keyof typeof queryEndpoints;
 
 export const makeDataAPIOptions = (
   dataApiUrl: string,
@@ -131,6 +151,39 @@ export const testCustomFunctionSQLWithSessArg = (
   };
 };
 
+export const createUntrackedFunctionSQL = (
+  fnName: string,
+  tableName: string
+) => {
+  return {
+    type: 'run_sql',
+    args: {
+      sql: `
+          CREATE OR REPLACE FUNCTION ${fnName}(table_row "${tableName}")
+           RETURNS int
+           LANGUAGE sql
+           STABLE
+          AS $function$
+            SELECT table_row.id
+          $function$
+          `,
+      cascade: false,
+    },
+  };
+};
+
+export const dropUntrackedFunctionSQL = (fnName: string) => {
+  return {
+    type: 'run_sql',
+    args: {
+      sql: `
+          DROP FUNCTION public.${fnName};
+          `,
+      cascade: false,
+    },
+  };
+};
+
 export const getTrackFnPayload = (name = 'customfunctionwithsessionarg') => ({
   type: 'pg_track_function',
   args: {
@@ -163,20 +216,28 @@ export const trackCreateFunctionTable = () => {
   };
 };
 
-export const createTableForSessionVarTest = () => {
-  return {
-    type: 'run_sql',
-    source: 'default',
-    args: {
-      sql: `CREATE TABLE text_result(
-          result text
-        );`,
-      cascade: false,
-    },
-  };
-};
+export const createSampleTable = () => ({
+  type: 'run_sql',
+  source: 'default',
+  args: {
+    sql: 'CREATE TABLE text_result(result text);',
+    cascade: false,
+  },
+});
 
-export const getTrackSessionVarTestTableQuery = () => {
+export const dropTableIfExists = (
+  table: { name: string; schema: string },
+  source = 'default'
+) => ({
+  type: 'run_sql',
+  source,
+  args: {
+    sql: `DROP TABLE IF EXISTS "${table.schema}"."${table.name}";`,
+    cascade: false,
+  },
+});
+
+export const getTrackSampleTableQuery = () => {
   return {
     type: 'pg_track_table',
     source: 'default',
@@ -190,18 +251,24 @@ export const getTrackSessionVarTestTableQuery = () => {
 };
 export const dropTable = (table = 'post', cascade = false) => {
   return {
-    type: 'bulk',
-    source: 'default',
-    args: [
-      {
-        type: 'run_sql',
-        args: {
-          sql: `DROP table ${table}${cascade ? ' CASCADE;' : ';'}`,
-          cascade,
-        },
-      },
-    ],
+    type: 'run_sql',
+    args: {
+      sql: `DROP table "public"."${table}"${cascade ? ' CASCADE;' : ';'}`,
+      cascade,
+    },
   };
 };
+
+export const dropTableIfExists = (
+  table: { name: string; schema: string },
+  source = 'default'
+) => ({
+  type: 'run_sql',
+  source,
+  args: {
+    sql: `DROP TABLE IF EXISTS "${table.schema}"."${table.name}";`,
+    cascade: false,
+  },
+});
 
 export const getSchema = () => 'public';

@@ -9,7 +9,7 @@ export const openRawSQL = () => {
   cy.get(getElementFromAlias('sql-link')).click();
   cy.wait(3000);
   // Match URL
-  cy.url().should('eq', `${baseUrl}/data/default/sql`);
+  cy.url().should('eq', `${baseUrl}/data/sql`);
 };
 const clearText = () => {
   cy.get('textarea').type('{selectall}', { force: true });
@@ -26,9 +26,7 @@ export const passCreateTable = () => {
   cy.get('textarea').type(prevStr, { force: true });
   cy.wait(1000); // debounce
   cy.get(getElementFromAlias('run-sql')).click();
-  cy.get(getElementFromAlias('raw-sql-statement-timeout')).should(
-    'be.disabled'
-  );
+  cy.get(getElementFromAlias('raw-sql-statement-timeout'));
   cy.wait(5000);
 };
 
@@ -68,10 +66,10 @@ export const delTestTables = () => {
   prevStr = 'DROP TABLE Apic_test_table_rsql CASCADE;';
   cy.get('textarea').type(prevStr, { force: true });
   cy.wait(1000);
-  // cy.get(getElementFromAlias('raw-sql-migration-check')).uncheck();
+  cy.get(getElementFromAlias('raw-sql-migration-check')).uncheck();
   cy.get(getElementFromAlias('run-sql')).click();
   // NOTE: This is only visible, when the console is in CLI mode
-  // cy.get(getElementFromAlias('not-migration-confirm')).click();
+  cy.get(getElementFromAlias('not-migration-confirm')).click();
   cy.get(getElementFromAlias('raw-sql-statement-timeout')).type('20', {
     force: true,
   });

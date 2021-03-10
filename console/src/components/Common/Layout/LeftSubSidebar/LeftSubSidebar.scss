@@ -169,6 +169,12 @@
   }
 }
 
+.reducedChildPadding {
+  li:first-child {
+    padding-top: 5px !important;
+  }
+}
+
 .activeLink {
   a {
     color: #fd9540 !important;

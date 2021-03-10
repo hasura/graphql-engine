@@ -110,8 +110,8 @@ const editItem = (tableName, colValues) => {
 
     const reqBody = {
       type: 'update',
-      source: currentDataSource,
       args: {
+        source: currentDataSource,
         table: tableDef,
         $set: _setObject,
         $default: _defaultArray,

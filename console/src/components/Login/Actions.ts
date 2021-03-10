@@ -5,6 +5,7 @@ import { ADMIN_SECRET_HEADER_KEY, CLI_CONSOLE_MODE } from '../../constants';
 import requestAction from '../../utils/requestAction';
 import { Dispatch } from '../../types';
 import globals from '../../Globals';
+import { inconsistentObjectsQuery } from '../../metadata/queryUtils';
 
 type VerifyLoginOptions = {
   adminSecret: string;
@@ -22,14 +23,15 @@ export const verifyLogin = ({
   dispatch,
 }: VerifyLoginOptions) => {
   const options: RequestInit = {
-    method: 'GET',
+    method: 'POST',
     credentials: globalCookiePolicy,
     headers: {
       [ADMIN_SECRET_HEADER_KEY]: adminSecret,
       'content-type': 'application/json',
     },
+    body: JSON.stringify(inconsistentObjectsQuery),
   };
-  return dispatch(requestAction(Endpoints.serverConfig, options)).then(
+  return dispatch(requestAction(Endpoints.metadata, options)).then(
     () => {
       if (adminSecret) {
         if (globals.consoleMode !== CLI_CONSOLE_MODE) {

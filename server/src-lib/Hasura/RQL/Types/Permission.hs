@@ -2,24 +2,23 @@ module Hasura.RQL.Types.Permission where
 
 import           Hasura.Prelude
 
-import qualified Data.Text                          as T
-import qualified Database.PG.Query                  as Q
-import qualified PostgreSQL.Binary.Decoding         as PD
+import qualified Data.Text                      as T
+import qualified Database.PG.Query              as Q
+import qualified PostgreSQL.Binary.Decoding     as PD
 
-import           Control.Lens                       (makeLenses)
+import           Control.Lens                   (makeLenses)
 import           Data.Aeson
-import           Data.Aeson.Casing
 import           Data.Aeson.TH
 import           Data.Hashable
 
-import           Hasura.Backends.Postgres.SQL.Types (PGCol, TableName, getTableTxt)
-import           Hasura.Incremental                 (Cacheable)
+import           Hasura.Incremental             (Cacheable)
 import           Hasura.RQL.IR.BoolExp
-import           Hasura.RQL.Types.Common            hiding (TableName)
+import           Hasura.RQL.Types.Backend
+import           Hasura.RQL.Types.Column
+import           Hasura.RQL.Types.Common
 import           Hasura.RQL.Types.ComputedField
 import           Hasura.SQL.Backend
 import           Hasura.Session
-
 
 data PermType
   = PTInsert
@@ -64,34 +63,19 @@ instance FromJSON PermType where
 instance ToJSON PermType where
   toJSON = String . permTypeToCode
 
-data PermId
-  = PermId
-  { pidTable :: !TableName
-  , pidRole  :: !RoleName
-  , pidType  :: !PermType
-  } deriving (Eq)
-
-instance Show PermId where
-  show (PermId tn rn pType) =
-    show $ mconcat
-    [ getTableTxt tn
-    , "."
-    , roleNameToTxt rn
-    , "."
-    , T.pack $ show pType
-    ]
-
-data PermColSpec
+data PermColSpec b
   = PCStar
-  | PCCols ![PGCol]
-  deriving (Show, Eq, Generic)
-instance Cacheable PermColSpec
+  | PCCols ![Column b]
+  deriving (Generic)
+deriving instance (Backend b) => Show (PermColSpec b)
+deriving instance (Backend b) => Eq (PermColSpec b)
+instance (Backend b) => Cacheable (PermColSpec b)
 
-instance FromJSON PermColSpec where
+instance (Backend b) => FromJSON (PermColSpec b) where
   parseJSON (String "*") = return PCStar
   parseJSON x            = PCCols <$> parseJSON x
 
-instance ToJSON PermColSpec where
+instance (Backend b) => ToJSON (PermColSpec b) where
   toJSON (PCCols cols) = toJSON cols
   toJSON PCStar        = "*"
 
@@ -102,7 +86,7 @@ data PermDef a =
   , _pdComment    :: !(Maybe T.Text)
   } deriving (Show, Eq, Generic)
 instance (Cacheable a) => Cacheable (PermDef a)
-$(deriveFromJSON (aesonDrop 3 snakeCase){omitNothingFields=True} ''PermDef)
+$(deriveFromJSON hasuraJSON{omitNothingFields=True} ''PermDef)
 $(makeLenses ''PermDef)
 
 instance (ToJSON a) => ToJSON (PermDef a) where
@@ -118,33 +102,33 @@ instance (ToJSON a) => ToAesonPairs (PermDef a) where
 -- Insert permission
 data InsPerm (b :: BackendType)
   = InsPerm
-  { ipCheck       :: !(BoolExp b)
-  , ipSet         :: !(Maybe (ColumnValues Value))
-  , ipColumns     :: !(Maybe PermColSpec)
+  { ipCheck       :: !(BoolExp b )
+  , ipSet         :: !(Maybe (ColumnValues b Value))
+  , ipColumns     :: !(Maybe (PermColSpec b))
   , ipBackendOnly :: !(Maybe Bool) -- see Note [Backend only permissions]
   } deriving (Show, Eq, Generic)
-instance Cacheable (InsPerm 'Postgres)
-instance FromJSON (InsPerm 'Postgres) where
-  parseJSON = genericParseJSON (aesonDrop 2 snakeCase){omitNothingFields=True}
-instance ToJSON (InsPerm 'Postgres) where
-  toJSON = genericToJSON (aesonDrop 2 snakeCase){omitNothingFields=True}
+instance Backend b => Cacheable (InsPerm b)
+instance Backend b => FromJSON (InsPerm b) where
+  parseJSON = genericParseJSON hasuraJSON{omitNothingFields=True}
+instance Backend b => ToJSON (InsPerm b) where
+  toJSON = genericToJSON hasuraJSON{omitNothingFields=True}
 
-type InsPermDef    b = PermDef    (InsPerm b)
+type InsPermDef b = PermDef (InsPerm b)
 
 -- Select constraint
 data SelPerm (b :: BackendType)
   = SelPerm
-  { spColumns           :: !PermColSpec         -- ^ Allowed columns
+  { spColumns           :: !(PermColSpec b)     -- ^ Allowed columns
   , spFilter            :: !(BoolExp b)         -- ^ Filter expression
   , spLimit             :: !(Maybe Int)         -- ^ Limit value
   , spAllowAggregations :: !Bool                -- ^ Allow aggregation
   , spComputedFields    :: ![ComputedFieldName] -- ^ Allowed computed fields
   } deriving (Show, Eq, Generic)
-instance Cacheable (SelPerm 'Postgres)
-instance ToJSON (SelPerm 'Postgres) where
-  toJSON = genericToJSON (aesonDrop 2 snakeCase) {omitNothingFields=True}
+instance Backend b => Cacheable (SelPerm b)
+instance Backend b => ToJSON (SelPerm b) where
+  toJSON = genericToJSON hasuraJSON{omitNothingFields=True}
 
-instance FromJSON (SelPerm 'Postgres) where
+instance Backend b => FromJSON (SelPerm b) where
   parseJSON = withObject "SelPerm" $ \o ->
     SelPerm
     <$> o .: "columns"
@@ -159,19 +143,19 @@ type SelPermDef b = PermDef (SelPerm b)
 data DelPerm (b :: BackendType)
   = DelPerm { dcFilter :: !(BoolExp b) }
   deriving (Show, Eq, Generic)
-instance Cacheable (DelPerm 'Postgres)
-instance FromJSON (DelPerm 'Postgres) where
-  parseJSON = genericParseJSON $ aesonDrop 2 snakeCase
-instance ToJSON (DelPerm 'Postgres) where
-  toJSON = genericToJSON (aesonDrop 2 snakeCase) {omitNothingFields=True}
+instance Backend b => Cacheable (DelPerm b)
+instance Backend b => FromJSON (DelPerm b) where
+  parseJSON = genericParseJSON hasuraJSON{omitNothingFields=True}
+instance Backend b => ToJSON (DelPerm b) where
+  toJSON = genericToJSON hasuraJSON{omitNothingFields=True}
 
-type DelPermDef    b = PermDef    (DelPerm b)
+type DelPermDef b = PermDef (DelPerm b)
 
 -- Update constraint
 data UpdPerm (b :: BackendType)
   = UpdPerm
-  { ucColumns :: !PermColSpec -- Allowed columns
-  , ucSet     :: !(Maybe (ColumnValues Value)) -- Preset columns
+  { ucColumns :: !(PermColSpec b) -- Allowed columns
+  , ucSet     :: !(Maybe (ColumnValues b Value)) -- Preset columns
   , ucFilter  :: !(BoolExp b) -- Filter expression (applied before update)
   , ucCheck   :: !(Maybe (BoolExp b))
   -- ^ Check expression, which must be true after update.
@@ -179,10 +163,10 @@ data UpdPerm (b :: BackendType)
   -- but Nothing should be equivalent to the expression which always
   -- returns true.
   } deriving (Show, Eq, Generic)
-instance Cacheable (UpdPerm 'Postgres)
-instance FromJSON (UpdPerm 'Postgres) where
-  parseJSON = genericParseJSON (aesonDrop 2 snakeCase){omitNothingFields=True}
-instance ToJSON (UpdPerm 'Postgres) where
-  toJSON = genericToJSON (aesonDrop 2 snakeCase){omitNothingFields=True}
+instance Backend b => Cacheable (UpdPerm b)
+instance Backend b => FromJSON (UpdPerm b) where
+  parseJSON = genericParseJSON hasuraJSON{omitNothingFields=True}
+instance Backend b => ToJSON (UpdPerm b) where
+  toJSON = genericToJSON hasuraJSON{omitNothingFields=True}
 
-type UpdPermDef    b = PermDef    (UpdPerm b)
+type UpdPermDef b = PermDef (UpdPerm b)

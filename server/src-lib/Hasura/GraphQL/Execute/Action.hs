@@ -1,8 +1,5 @@
 module Hasura.GraphQL.Execute.Action
-  ( ActionExecution(..)
-  , runActionExecution
-  , ActionExecutionPlan(..)
-  , ActionExecuteResult(..)
+  ( runActionExecution
   , asyncActionsProcessor
   , resolveActionExecution
   , resolveActionMutationAsync
@@ -12,13 +9,13 @@ module Hasura.GraphQL.Execute.Action
   , setActionStatusTx
   , fetchActionResponseTx
   , clearActionDataTx
+  , module Types
   ) where
 
 import           Hasura.Prelude
 
 import qualified Control.Concurrent.Async.Lifted.Safe        as LA
 import qualified Data.Aeson                                  as J
-import qualified Data.Aeson.Casing                           as J
 import qualified Data.Aeson.Ordered                          as AO
 import qualified Data.Aeson.TH                               as J
 import qualified Data.ByteString.Lazy                        as BL
@@ -26,6 +23,7 @@ import qualified Data.CaseInsensitive                        as CI
 import qualified Data.Environment                            as Env
 import qualified Data.HashMap.Strict                         as Map
 import qualified Data.HashSet                                as Set
+import qualified Data.IntMap                                 as IntMap
 import qualified Data.Text                                   as T
 import qualified Database.PG.Query                           as Q
 import qualified Language.GraphQL.Draft.Syntax               as G
@@ -38,13 +36,14 @@ import           Control.Exception                           (try)
 import           Control.Lens
 import           Control.Monad.Trans.Control                 (MonadBaseControl)
 import           Data.Has
-import           Data.Int                                    (Int64)
 import           Data.IORef
+import           Data.Int                                    (Int64)
 import           Data.Text.Extended
 
 import qualified Hasura.Backends.Postgres.Execute.RemoteJoin as RJ
 import qualified Hasura.Backends.Postgres.SQL.DML            as S
 import qualified Hasura.Backends.Postgres.Translate.Select   as RS
+import qualified Hasura.GraphQL.Execute.RemoteJoin           as RJ
 import qualified Hasura.Logging                              as L
 import qualified Hasura.RQL.IR.Select                        as RS
 import qualified Hasura.Tracing                              as Tracing
@@ -54,33 +53,19 @@ import           Hasura.Backends.Postgres.SQL.Value          (PGScalarValue (..)
 import           Hasura.Backends.Postgres.Translate.Column   (toTxtValue)
 import           Hasura.Backends.Postgres.Translate.Select   (asSingleRowJsonResp)
 import           Hasura.EncJSON
+import           Hasura.GraphQL.Execute.Action.Types         as Types
 import           Hasura.GraphQL.Execute.Prepare
 import           Hasura.GraphQL.Parser
-import           Hasura.GraphQL.Utils                        (showNames)
 import           Hasura.HTTP
 import           Hasura.Metadata.Class
 import           Hasura.RQL.DDL.Headers
 import           Hasura.RQL.DDL.Schema.Cache
 import           Hasura.RQL.Types
+import           Hasura.SQL.Types
 import           Hasura.Server.Utils                         (mkClientHeadersForward,
                                                               mkSetCookieHeaders)
 import           Hasura.Server.Version                       (HasVersion)
 import           Hasura.Session
-import           Hasura.SQL.Types
-
-
-newtype ActionExecution =
-  ActionExecution {
-    unActionExecution
-      :: forall m
-       . (MonadIO m, MonadBaseControl IO m, MonadError QErr m, Tracing.MonadTrace m) => m EncJSON
-  }
-
--- A plan to execute any action
-data ActionExecutionPlan
-  = AEPSync !ActionExecution
-  | AEPAsyncQuery !ActionId !(ActionLogResponse -> ActionExecution)
-  | AEPAsyncMutation !EncJSON
 
 runActionExecution
   :: ( MonadIO m, MonadBaseControl IO m
@@ -100,7 +85,7 @@ runActionExecution aep = do
 newtype ActionContext
   = ActionContext {_acName :: ActionName}
   deriving (Show, Eq)
-$(J.deriveJSON (J.aesonDrop 3 J.snakeCase) ''ActionContext)
+$(J.deriveJSON hasuraJSON ''ActionContext)
 
 data ActionWebhookPayload
   = ActionWebhookPayload
@@ -108,14 +93,14 @@ data ActionWebhookPayload
   , _awpSessionVariables :: !SessionVariables
   , _awpInput            :: !J.Value
   } deriving (Show, Eq)
-$(J.deriveJSON (J.aesonDrop 4 J.snakeCase) ''ActionWebhookPayload)
+$(J.deriveJSON hasuraJSON ''ActionWebhookPayload)
 
 data ActionWebhookErrorResponse
   = ActionWebhookErrorResponse
   { _awerMessage :: !Text
   , _awerCode    :: !(Maybe Text)
   } deriving (Show, Eq)
-$(J.deriveJSON (J.aesonDrop 5 J.snakeCase) ''ActionWebhookErrorResponse)
+$(J.deriveJSON hasuraJSON ''ActionWebhookErrorResponse)
 
 data ActionWebhookResponse
   = AWRArray ![Map.HashMap G.Name J.Value]
@@ -138,7 +123,7 @@ data ActionRequestInfo
   , _areqiBody    :: !J.Value
   , _areqiHeaders :: ![HeaderConf]
   } deriving (Show, Eq)
-$(J.deriveToJSON (J.aesonDrop 6 J.snakeCase) ''ActionRequestInfo)
+$(J.deriveToJSON hasuraJSON ''ActionRequestInfo)
 
 data ActionResponseInfo
   = ActionResponseInfo
@@ -146,7 +131,7 @@ data ActionResponseInfo
   , _aresiBody    :: !J.Value
   , _aresiHeaders :: ![HeaderConf]
   } deriving (Show, Eq)
-$(J.deriveToJSON (J.aesonDrop 6 J.snakeCase) ''ActionResponseInfo)
+$(J.deriveToJSON hasuraJSON ''ActionResponseInfo)
 
 data ActionInternalError
   = ActionInternalError
@@ -154,7 +139,7 @@ data ActionInternalError
   , _aieRequest  :: !ActionRequestInfo
   , _aieResponse :: !(Maybe ActionResponseInfo)
   } deriving (Show, Eq)
-$(J.deriveToJSON (J.aesonDrop 4 J.snakeCase) ''ActionInternalError)
+$(J.deriveToJSON hasuraJSON ''ActionInternalError)
 
 -- * Action handler logging related
 data ActionHandlerLog
@@ -162,17 +147,11 @@ data ActionHandlerLog
   { _ahlRequestSize  :: !Int64
   , _ahlResponseSize :: !Int64
   } deriving (Show)
-$(J.deriveJSON (J.aesonDrop 4 J.snakeCase){J.omitNothingFields=True} ''ActionHandlerLog)
+$(J.deriveJSON hasuraJSON{J.omitNothingFields=True} ''ActionHandlerLog)
 
 instance L.ToEngineLog ActionHandlerLog L.Hasura where
   toEngineLog ahl = (L.LevelInfo, L.ELTActionHandler, J.toJSON ahl)
 
-
-data ActionExecuteResult
-  = ActionExecuteResult
-  { _aerExecution :: !ActionExecution
-  , _aerHeaders   :: !HTTP.ResponseHeaders
-  }
 
 -- | Synchronously execute webhook handler and resolve response to action "output"
 resolveActionExecution
@@ -202,8 +181,9 @@ resolveActionExecution env logger userInfo annAction execContext = do
             toTxtValue $ ColumnValue (ColumnScalar PGJSONB) $ PGValJSONB $ Q.JSONB $ J.toJSON webhookRes
           selectAstUnresolved = processOutputSelectionSet webhookResponseExpression
                                 outputType definitionList annFields stringifyNum
-      (astResolved, _expectedVariables) <- flip runStateT Set.empty $ RS.traverseAnnSimpleSelect prepareWithoutPlan selectAstUnresolved
-      pure $ executeActionInDb sourceConfig astResolved
+      (astResolved, finalPlanningSt) <- flip runStateT initPlanningSt $ RS.traverseAnnSimpleSelect prepareWithPlan selectAstUnresolved
+      let prepArgs = fmap fst $ IntMap.elems $ withUserVars (_uiSession userInfo) $ _psPrepped finalPlanningSt
+      pure $ executeActionInDb sourceConfig astResolved prepArgs
   where
     AnnActionExecution actionName outputType annFields inputPayload
       outputFields definitionList resolvedWebhook confHeaders
@@ -211,18 +191,18 @@ resolveActionExecution env logger userInfo annAction execContext = do
     ActionExecContext manager reqHeaders sessionVariables = execContext
 
 
-    executeActionInDb :: SourceConfig 'Postgres -> RS.AnnSimpleSel 'Postgres -> ActionExecution
-    executeActionInDb sourceConfig astResolved = ActionExecution do
-      let (astResolvedWithoutRemoteJoins,maybeRemoteJoins) = RJ.getRemoteJoins astResolved
+    executeActionInDb :: SourceConfig 'Postgres -> RS.AnnSimpleSel 'Postgres -> [Q.PrepArg] -> ActionExecution
+    executeActionInDb sourceConfig astResolved prepArgs = ActionExecution do
+      let (astResolvedWithoutRemoteJoins, maybeRemoteJoins) = RJ.getRemoteJoinsSelect astResolved
           jsonAggType = mkJsonAggSelect outputType
       liftEitherM $ runExceptT $ runLazyTx (_pscExecCtx sourceConfig) Q.ReadOnly $
         case maybeRemoteJoins of
           Just remoteJoins ->
             let query = Q.fromBuilder $ toSQL $
                         RS.mkSQLSelect jsonAggType astResolvedWithoutRemoteJoins
-            in RJ.executeQueryWithRemoteJoins env manager reqHeaders userInfo query [] remoteJoins
+            in RJ.executeQueryWithRemoteJoins env manager reqHeaders userInfo query prepArgs remoteJoins
           Nothing ->
-            liftTx $ asSingleRowJsonResp (Q.fromBuilder $ toSQL $ RS.mkSQLSelect jsonAggType astResolved) []
+            liftTx $ asSingleRowJsonResp (Q.fromBuilder $ toSQL $ RS.mkSQLSelect jsonAggType astResolved) prepArgs
 
 
 -- | Build action response from the Webhook JSON response when there are no relationships defined
@@ -304,7 +284,7 @@ resolveAsyncActionQuery userInfo annAction actionLogResponse = ActionExecution
             AsyncOutput annFields ->
               -- See Note [Resolving async action query/subscription]
               let inputTableArgument = RS.AETableRow $ Just $ Identifier "response_payload"
-              in RS.AFComputedField $ RS.CFSTable jsonAggSelect $
+              in RS.AFComputedField () $ RS.CFSTable jsonAggSelect $
                  processOutputSelectionSet inputTableArgument outputType
                  definitionList annFields stringifyNumerics
 
@@ -336,7 +316,8 @@ resolveAsyncActionQuery userInfo annAction actionLogResponse = ActionExecution
     sessionVarsColumn = (unsafePGCol "session_variables", PGJSONB)
 
     -- TODO (from master):- Avoid using ColumnInfo
-    mkAnnFldFromPGCol = flip RS.mkAnnColumnField Nothing . mkPGColumnInfo
+    mkAnnFldFromPGCol columnInfoArgs =
+      RS.mkAnnColumnField (mkPGColumnInfo columnInfoArgs) Nothing Nothing
 
     mkPGColumnInfo (column', columnType) =
       ColumnInfo column' (G.unsafeMkName $ getPGColTxt column') 0 (ColumnScalar columnType) True Nothing
@@ -353,7 +334,7 @@ resolveAsyncActionQuery userInfo annAction actionLogResponse = ActionExecution
       -- For non-admin roles, accessing an async action's response should be allowed only for the user
       -- who initiated the action through mutation. The action's response is accessible for a query/subscription
       -- only when it's session variables are equal to that of action's.
-      in if isAdmin (_uiRole userInfo) then actionIdColumnEq
+      in if (adminRoleName == (_uiRole userInfo))  then actionIdColumnEq
          else BoolAnd [actionIdColumnEq, sessionVarsColumnEq]
 
 
@@ -515,7 +496,7 @@ callWebhook env manager outputType outputFields reqHeaders confHeaders
         -- Fields not specified in the output type shouldn't be present in the response
         let extraFields = filter (not . flip Map.member outputFields) $ Map.keys obj
         unless (null extraFields) $ throwUnexpected $
-          "unexpected fields in webhook response: " <> showNames extraFields
+          "unexpected fields in webhook response: " <> commaSeparated extraFields
 
         void $ flip Map.traverseWithKey outputFields $ \fieldName fieldTy ->
           -- When field is non-nullable, it has to present in the response with no null value
@@ -544,9 +525,9 @@ processOutputSelectionSet tableRowInput actionOutputType definitionList annotate
     functionArgs = RS.FunctionArgsExp [tableRowInput] mempty
     selectFrom = RS.FromFunction jsonbToPostgresRecordFunction functionArgs $ Just definitionList
 
-mkJsonAggSelect :: GraphQLType -> RS.JsonAggSelect
+mkJsonAggSelect :: GraphQLType -> JsonAggSelect
 mkJsonAggSelect =
-  bool RS.JASSingleObject RS.JASMultipleRows . isListType
+  bool JASSingleObject JASMultipleRows . isListType
 
 insertActionTx
   :: ActionName -> SessionVariables -> [HTTP.Header] -> J.Value

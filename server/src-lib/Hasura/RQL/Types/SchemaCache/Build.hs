@@ -36,7 +36,6 @@ import           Control.Monad.Morph
 import           Control.Monad.Trans.Control         (MonadBaseControl)
 import           Control.Monad.Unique
 import           Data.Aeson                          (toJSON)
-import           Data.Aeson.Casing
 import           Data.Aeson.TH
 import           Data.List                           (nub)
 import           Data.Text.Extended
@@ -48,11 +47,11 @@ import           Hasura.Backends.Postgres.Connection
 import           Hasura.RQL.Types.Common
 import           Hasura.RQL.Types.Error
 import           Hasura.RQL.Types.Metadata
+import           Hasura.RQL.Types.Metadata.Object
 import           Hasura.RQL.Types.RemoteSchema       (RemoteSchemaName)
 import           Hasura.RQL.Types.SchemaCache
 import           Hasura.Session
 import           Hasura.Tracing                      (TraceT)
-
 
 -- ----------------------------------------------------------------------------
 -- types used during schema cache construction
@@ -63,7 +62,7 @@ data CollectedInfo
     !MetadataObject -- ^ for error reporting on missing dependencies
     !SchemaObjId
     !SchemaDependency
-  deriving (Show, Eq)
+  deriving (Eq)
 $(makePrisms ''CollectedInfo)
 
 class AsInconsistentMetadata s where
@@ -140,7 +139,7 @@ data CacheInvalidations = CacheInvalidations
   -- ^ Force re-establishing connections of the given data sources, even if their configuration has not changed. Set
   -- by the @pg_reload_source@ API.
   }
-$(deriveJSON (aesonDrop 2 snakeCase) ''CacheInvalidations)
+$(deriveJSON hasuraJSON ''CacheInvalidations)
 
 instance Semigroup CacheInvalidations where
   CacheInvalidations a1 b1 c1 <> CacheInvalidations a2 b2 c2 =
@@ -204,7 +203,7 @@ runMetadataT metadata (MetadataT m) =
 buildSchemaCacheWithInvalidations :: (MetadataM m, CacheRWM m) => CacheInvalidations -> MetadataModifier -> m ()
 buildSchemaCacheWithInvalidations cacheInvalidations metadataModifier = do
   metadata <- getMetadata
-  let modifiedMetadata = unMetadataModifier metadataModifier $ metadata
+  let modifiedMetadata = unMetadataModifier metadataModifier metadata
   buildSchemaCacheWithOptions CatalogUpdate cacheInvalidations modifiedMetadata
   putMetadata modifiedMetadata
 

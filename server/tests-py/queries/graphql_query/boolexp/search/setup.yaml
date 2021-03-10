@@ -7,7 +7,7 @@ args:
   args:
     sql: |
       create table author(
-          id serial primary key, 
+          id serial primary key,
           name text unique
       );
       CREATE TABLE article (
@@ -66,7 +66,6 @@ args:
     schema: public
     name: article
 
-
 #Article table
 - type: track_table
   args:
@@ -91,18 +90,35 @@ args:
         table: article
         column: author_id
 
-
-#Insert values
+#Insert values: City table
 - type: insert
   args:
     table: city
     objects:
     - name: Durham
-      country: USA 
+      country: USA
     - name:  New York
       country: USA
     - name: Framlingham
       country: UK
-    - name: New Orleans 
+    - name: New Orleans
       country: USA
 
+# Project table
+- type: run_sql
+  args:
+    sql: |
+      CREATE TABLE project (
+        id CHAR(3) PRIMARY KEY
+      );
+
+      INSERT INTO project VALUES
+        ('abc'),
+        ('ABC'),
+        ('bcd'),
+        ('BCD');
+
+- type: track_table
+  args:
+    schema: public
+    name: project

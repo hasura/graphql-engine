@@ -1,7 +1,7 @@
 - description:
     The types of the fields of the 'User' object have been changed, 'user_id' has the type 'Int' in the upstream
     remote schema and the field 'created_at' doesn't exist in the upstream remote schema.
-  url: /v1/query
+  url: /v1/metadata
   status: 400
   query:
     type: add_remote_schema_permissions
@@ -33,7 +33,7 @@
 - description:
     The 'Person' object is implementing the interface 'FullName' which doesn't exist in the
     remote schema
-  url: /v1/query
+  url: /v1/metadata
   status: 400
   query:
     type: add_remote_schema_permissions
@@ -72,7 +72,7 @@
 - description:
     The 'user' field in the 'Query' object doesn't have all the non-nullable arguments
     that the corresponding remote 'user' field implements.
-  url: /v1/query
+  url: /v1/metadata
   status: 400
   query:
     type: add_remote_schema_permissions

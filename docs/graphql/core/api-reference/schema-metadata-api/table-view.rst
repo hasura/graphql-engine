@@ -19,6 +19,13 @@ Track/untrack a table/view in Hasura GraphQL engine.
 
 Only tracked tables/views are available for querying/mutating/subscribing data over the GraphQL API.
 
+.. admonition:: Deprecation
+
+  In versions ``v2.0.0`` and above, the schema/metadata API is deprecated in favour of the :ref:`schema API <schema_apis>` and the
+  :ref:`metadata API <metadata_apis>`.
+
+  Though for backwards compatibility, the schema/metadata APIs will continue to function.
+
 .. _track_table:
 
 track_table
@@ -209,81 +216,6 @@ Args syntax
      - :ref:`Table Config <table_config>`
      - Configuration for the table/view
 
-.. _table_config:
-
-Table Config
-^^^^^^^^^^^^
-
-.. list-table::
-   :header-rows: 1
-
-   * - Key
-     - Required
-     - Schema
-     - Description
-   * - custom_name
-     - false
-     - ``String``
-     - Customise the ``<table-name>`` with the provided custom name value.
-       The GraphQL nodes for the table will be generated according to the custom name.
-   * - custom_root_fields
-     - false
-     - :ref:`Custom Root Fields <custom_root_fields>`
-     - Customise the root fields
-   * - custom_column_names
-     - false
-     - :ref:`CustomColumnNames`
-     - Customise the column fields
-
-.. _custom_root_fields:
-
-Custom Root Fields
-^^^^^^^^^^^^^^^^^^
-
-.. list-table::
-   :header-rows: 1
-
-   * - Key
-     - Required
-     - Schema
-     - Description
-   * - select
-     - false
-     - ``String``
-     - Customise the ``<table-name>`` root field
-   * - select_by_pk
-     - false
-     - ``String``
-     - Customise the ``<table-name>_by_pk`` root field
-   * - select_aggregate
-     - false
-     - ``String``
-     - Customise the ``<table-name>_aggregete`` root field
-   * - insert
-     - false
-     - ``String``
-     - Customise the ``insert_<table-name>`` root field
-   * - insert_one
-     - false
-     - ``String``
-     - Customise the ``insert_<table-name>_one`` root field
-   * - update
-     - false
-     - ``String``
-     - Customise the ``update_<table-name>`` root field
-   * - update_by_pk
-     - false
-     - ``String``
-     - Customise the ``update_<table-name>_by_pk`` root field
-   * - delete
-     - false
-     - ``String``
-     - Customise the ``delete_<table-name>`` root field
-   * - delete_by_pk
-     - false
-     - ``String``
-     - Customise the ``delete_<table-name>_by_pk`` root field
-
 .. _set_table_custom_fields:
 
 set_table_custom_fields (deprecated)
@@ -296,8 +228,6 @@ table fields.
 ``set_table_custom_fields`` in version ``2`` sets the custom root fields and
 custom column names of already tracked table. This will **replace** the already
 present custom fields configuration.
-
-
 
 Set custom fields for table/view ``author``:
 

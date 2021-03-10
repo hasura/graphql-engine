@@ -15,19 +15,19 @@ How Hasura GraphQL engine works
 Introduction
 ------------
 
-Given a Postgres database, the Hasura GraphQL engine can automatically generate a GraphQL schema and process GraphQL
+Given a database, the Hasura GraphQL engine can automatically generate a GraphQL schema and process GraphQL
 queries, subscriptions and mutations. Here’s what the Hasura GraphQL engine does under the hood.
 
 Schema generation
 -----------------
 
 The Hasura GraphQL engine automatically generates GraphQL schema components when you track a
-Postgres table/view in Hasura and create relationships between them.
+table/view in Hasura and create relationships between them.
 
 Tables
 ^^^^^^
 
-When you track a Postgres table in the Hasura GraphQL engine, it automatically generates the following for it:
+When you track a table in the Hasura GraphQL engine, it automatically generates the following for it:
 
 - A GraphQL type definition for the table
 - A query field with ``where``, ``order_by``, ``limit`` and ``offset`` arguments
@@ -39,7 +39,7 @@ When you track a Postgres table in the Hasura GraphQL engine, it automatically g
 Views
 ^^^^^
 
-When you track a Postgres view in Hasura GraphQL engine, it automatically generates the following for it:
+When you track a view in Hasura GraphQL engine, it automatically generates the following for it:
 
 - A GraphQL type definition for the view
 - A query field with ``where``, ``order_by``, ``limit`` and ``offset`` arguments
@@ -69,7 +69,7 @@ Metadata
 --------
 
 All the information required for schema generation is stored by the Hasura GraphQL engine as metadata in its "catalogue"
-which is essentially a special Postgres schema in the database.
+which is essentially a special Postgres schema in the metadata database.
 
 See :ref:`metadata catalogue <hasura_metadata_schema>` for more details.
 

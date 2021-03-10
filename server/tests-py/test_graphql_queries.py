@@ -1,5 +1,6 @@
 import pytest
 from validate import check_query_f, check_query, get_conf_f
+from conftest import use_inherited_roles_fixtures
 from context import PytestConf
 
 # Mark that all tests in this module can be run as server upgrade tests
@@ -354,6 +355,17 @@ class TestGraphqlQueryPermissions:
     def dir(cls):
         return 'queries/graphql_query/permissions'
 
+@pytest.mark.parametrize('transport', ['http', 'websocket'])
+@use_inherited_roles_fixtures
+class TestGraphQLInheritedRoles:
+
+    @classmethod
+    def dir(cls):
+        return 'queries/graphql_query/permissions/inherited_roles'
+
+    def test_basic_inherited_role(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/basic_inherited_roles.yaml')
+
 
 @pytest.mark.parametrize("transport", ['http', 'websocket'])
 @usefixtures('per_class_tests_db_state')
@@ -388,6 +400,9 @@ class TestGraphQLQueryBoolExpSearch:
 
     def test_city_where_niregex(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + '/select_city_where_niregex.yaml', transport)
+
+    def test_project_where_ilike(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/select_project_where_ilike.yaml', transport)
 
     @classmethod
     def dir(cls):
@@ -806,3 +821,52 @@ def _test_relay_pagination(hge_ctx, transport, test_file_prefix, no_of_pages):
         page_no = i + 1
         test_file = "page_" + str(page_no) + ".yaml"
         check_query_f(hge_ctx, test_file_prefix + "/" + test_file, transport)
+
+use_function_permission_fixtures = pytest.mark.usefixtures(
+    'per_method_tests_db_state',
+    'functions_permissions_fixtures'
+)
+
+@pytest.mark.parametrize('transport', ['http', 'websocket'])
+@use_function_permission_fixtures
+class TestGraphQLQueryFunctionPermissions:
+
+    @classmethod
+    def dir(cls):
+        return 'queries/graphql_query/functions/permissions/'
+
+    def test_access_function_without_permission_configured(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + 'get_articles_without_permission_configured.yaml')
+
+    def test_access_function_with_permission_configured(self, hge_ctx, transport):
+        st_code, resp = hge_ctx.v1metadataq_f(self.dir() + 'add_function_permission_get_articles.yaml')
+        assert st_code == 200, resp
+        check_query_f(hge_ctx, self.dir() + 'get_articles_with_permission_configured.yaml')
+
+@pytest.mark.parametrize('transport', ['http', 'websocket'])
+@usefixtures('per_class_tests_db_state')
+class TestGraphQLQueryBoolExpLtree:
+    def test_select_path_where_ancestor(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/select_path_where_ancestor.yaml')
+
+    def test_select_path_where_ancestor_array(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/select_path_where_ancestor_array.yaml')
+
+    def test_select_path_where_descendant(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/select_path_where_descendant.yaml')
+
+    def test_select_path_where_descendant_array(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/select_path_where_descendant_array.yaml')
+
+    def test_select_path_where_matches(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/select_path_where_matches.yaml')
+
+    def test_select_path_where_matches_array(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/select_path_where_matches_array.yaml')
+
+    def test_select_path_where_matches_ltxtquery(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/select_path_where_matches_ltxtquery.yaml')
+
+    @classmethod
+    def dir(cls):
+        return 'queries/graphql_query/boolexp/ltree'

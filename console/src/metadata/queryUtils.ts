@@ -6,6 +6,8 @@ import {
   CustomTypes,
   HasuraMetadataV2,
   QualifiedTable,
+  QualifiedFunction,
+  RestEndpointEntry,
 } from './types';
 import { transformHeaders } from '../components/Common/Headers/utils';
 import { LocalEventTriggerState } from '../components/Services/Events/EventTriggers/state';
@@ -78,10 +80,14 @@ export const metadataQueryTypes = [
   'bulk',
   'get_catalog_state',
   'set_catalog_state',
-  'set_table_custom_fields',
+  'set_table_customization',
   'get_event_invocations',
   'get_scheduled_events',
   'delete_scheduled_event',
+  'create_function_permission',
+  'drop_function_permission',
+  'create_rest_endpoint',
+  'drop_rest_endpoint',
 ] as const;
 
 export type MetadataQueryType = typeof metadataQueryTypes[number];
@@ -102,17 +108,27 @@ export const getMetadataQuery = (
   type: MetadataQueryType,
   source: string,
   args: MetadataQueryArgs,
-  options?: { version: number }
+  driver: Driver = currentDriver
 ): {
   type: string;
   args: MetadataQueryArgs;
   version?: number;
 } => {
-  const prefix = currentDriver === 'postgres' ? 'pg_' : 'mysq_';
+  let prefix = '';
+  switch (driver) {
+    case 'mysql':
+      prefix = 'mysql_';
+      break;
+    case 'mssql':
+      prefix = 'mssql_';
+      break;
+    case 'postgres':
+    default:
+      prefix = 'pg_';
+  }
   return {
     type: `${prefix}${type}`,
     args: { ...args, source },
-    ...options,
   };
 };
 
@@ -203,21 +219,20 @@ export const getSetCustomRootFieldsQuery = (
   tableDef: QualifiedTable,
   rootFields: CustomRootFields,
   customColumnNames: Record<string, string>,
+  customTableName: string | null,
   source: string
 ) => {
-  return getMetadataQuery(
-    'set_table_custom_fields',
+  const customNameValue = customTableName || null;
+
+  return getMetadataQuery('set_table_customization', source, {
     source,
-    {
-      source,
-      table: tableDef,
+    table: tableDef,
+    configuration: {
+      custom_name: customNameValue,
       custom_root_fields: rootFields,
       custom_column_names: customColumnNames,
     },
-    {
-      version: 2,
-    }
-  );
+  });
 };
 
 export const generateDropActionQuery = (name: string) => {
@@ -288,11 +303,17 @@ export const getSetTableEnumQuery = (
 
 export const getTrackTableQuery = (
   tableDef: QualifiedTable,
-  source: string
+  source: string,
+  driver: Driver
 ) => {
-  return getMetadataQuery('track_table', source, {
-    table: tableDef,
-  });
+  return getMetadataQuery(
+    'track_table',
+    source,
+    {
+      table: tableDef,
+    },
+    driver
+  );
 };
 
 export const getUntrackTableQuery = (
@@ -499,14 +520,12 @@ export const getDropRemoteRelQuery = (
   name: string,
   table: QualifiedTable,
   source: string
-) => ({
-  type: 'delete_remote_relationship',
-  args: {
+) =>
+  getMetadataQuery('delete_remote_relationship', source, {
     name,
     table,
     source,
-  },
-});
+  });
 
 export const getRemoteSchemaIntrospectionQuery = (
   remoteSchemaName: string
@@ -530,24 +549,30 @@ export const addExistingTableOrView = (
 export const getTrackFunctionQuery = (
   name: string,
   schema: string,
-  source: string
-) => getMetadataQuery('track_function', source, { function: { name, schema } });
-
-export const getTrackFunctionV2Query = (
-  name: string,
-  schema: string,
-  configuration: Record<string, string>,
-  source: string
-) =>
-  getMetadataQuery(
+  source: string,
+  configuration?: Record<string, any>,
+  driver?: Driver
+) => {
+  if (configuration) {
+    return getMetadataQuery(
+      'track_function',
+      source,
+      {
+        function: { name, schema },
+        configuration,
+      },
+      driver
+    );
+  }
+  return getMetadataQuery(
     'track_function',
     source,
     {
       function: { name, schema },
-      configuration,
     },
-    { version: 2 }
+    driver
   );
+};
 
 export const getUntrackFunctionQuery = (
   name: string,
@@ -747,3 +772,33 @@ export const invokeManualTriggerQuery = (
   args: InvokeManualTriggerArgs,
   source: string
 ) => getMetadataQuery('invoke_event_trigger', source, args);
+
+export const createFunctionPermissionQuery = (
+  source: string,
+  func: QualifiedFunction,
+  role: string
+) =>
+  getMetadataQuery('create_function_permission', source, {
+    function: func,
+    role,
+  });
+
+export const dropFunctionPermissionQuery = (
+  source: string,
+  func: QualifiedFunction,
+  role: string
+) =>
+  getMetadataQuery('drop_function_permission', source, {
+    function: func,
+    role,
+  });
+
+export const createRESTEndpointQuery = (args: RestEndpointEntry) => ({
+  type: 'create_rest_endpoint',
+  args,
+});
+
+export const dropRESTEndpointQuery = (name: string) => ({
+  type: 'drop_rest_endpoint',
+  args: { name },
+});

@@ -2,13 +2,13 @@
 module Hasura.Server.API.V2Query where
 
 import           Control.Lens
-import           Control.Monad.Trans.Control (MonadBaseControl)
+import           Control.Monad.Trans.Control      (MonadBaseControl)
 import           Data.Aeson
 import           Data.Aeson.Casing
 import           Data.Aeson.TH
 
-import qualified Data.Environment            as Env
-import qualified Network.HTTP.Client         as HTTP
+import qualified Data.Environment                 as Env
+import qualified Network.HTTP.Client              as HTTP
 
 import           Hasura.EncJSON
 import           Hasura.Metadata.Class
@@ -22,11 +22,12 @@ import           Hasura.RQL.DML.Types
 import           Hasura.RQL.DML.Update
 import           Hasura.RQL.Types
 import           Hasura.RQL.Types.Run
-import           Hasura.Server.Types         (InstanceId (..))
-import           Hasura.Server.Version       (HasVersion)
+import           Hasura.Server.Types
+import           Hasura.Server.Version            (HasVersion)
 import           Hasura.Session
 
-import qualified Hasura.Tracing              as Tracing
+import qualified Hasura.Backends.MSSQL.DDL.RunSQL as MSSQL
+import qualified Hasura.Tracing                   as Tracing
 
 data RQLQuery
   = RQInsert !InsertQuery
@@ -34,7 +35,7 @@ data RQLQuery
   | RQUpdate !UpdateQuery
   | RQDelete !DeleteQuery
   | RQCount  !CountQuery
-
+  | RMMssqlRunSql !MSSQL.MSSQLRunSQL
   | RQRunSql !RunSQL
   | RQBulk ![RQLQuery]
   deriving (Show)
@@ -64,12 +65,11 @@ runQuery
   -> UserInfo
   -> RebuildableSchemaCache
   -> HTTP.Manager
-  -> SQLGenCtx
-  -> RemoteSchemaPermsCtx
+  -> ServerConfigCtx
   -> RQLQuery
   -> m (EncJSON, RebuildableSchemaCache)
-runQuery env instanceId userInfo schemaCache httpManager sqlGenCtx remoteSchemaPermCtx rqlQuery = do
-  metadata <- fetchMetadata
+runQuery env instanceId userInfo schemaCache httpManager serverConfigCtx rqlQuery = do
+  (metadata, currentResourceVersion) <- fetchMetadata
   result <- runQueryM env rqlQuery & Tracing.interpTraceT \x -> do
     (((js, tracemeta), meta), rsc, ci) <-
          x & runMetadataT metadata
@@ -78,23 +78,27 @@ runQuery env instanceId userInfo schemaCache httpManager sqlGenCtx remoteSchemaP
            & runExceptT
            & liftEitherM
     pure ((js, rsc, ci, meta), tracemeta)
-  withReload result
+  withReload currentResourceVersion result
   where
-    runCtx = RunCtx userInfo httpManager sqlGenCtx remoteSchemaPermCtx
+    runCtx = RunCtx userInfo httpManager serverConfigCtx
 
-    withReload (result, updatedCache, invalidations, updatedMetadata) = do
+    withReload currentResourceVersion (result, updatedCache, invalidations, updatedMetadata) = do
       when (queryModifiesSchema rqlQuery) $ do
-        -- set modified metadata in storage
-        setMetadata updatedMetadata
+        case (_sccMaintenanceMode serverConfigCtx) of
+          MaintenanceModeDisabled ->
+            -- set modified metadata in storage
+            setMetadata currentResourceVersion updatedMetadata
+          MaintenanceModeEnabled ->
+            throw500 "metadata cannot be modified in maintenance mode"
         -- notify schema cache sync
         notifySchemaCacheSync instanceId invalidations
       pure (result, updatedCache)
 
 queryModifiesSchema :: RQLQuery -> Bool
 queryModifiesSchema = \case
-  RQRunSql q  -> isSchemaCacheBuildRequiredRunSQL q
-  RQBulk l    -> any queryModifiesSchema l
-  _           -> False
+  RQRunSql q -> isSchemaCacheBuildRequiredRunSQL q
+  RQBulk l   -> any queryModifiesSchema l
+  _          -> False
 
 runQueryM
   :: ( HasVersion
@@ -103,16 +107,17 @@ runQueryM
      , MonadBaseControl IO m
      , UserInfoM m
      , CacheRWM m
-     , HasSQLGenCtx m
+     , HasServerConfigCtx m
      , Tracing.MonadTrace m
      , MetadataM m
      )
   => Env.Environment -> RQLQuery -> m EncJSON
 runQueryM env = \case
-  RQInsert q -> runInsert env q
-  RQSelect q -> runSelect q
-  RQUpdate q -> runUpdate env q
-  RQDelete q -> runDelete env q
-  RQCount  q -> runCount q
-  RQRunSql q -> runRunSQL q
-  RQBulk   l -> encJFromList <$> indexedMapM (runQueryM env) l
+  RQInsert q      -> runInsert env q
+  RQSelect q      -> runSelect q
+  RQUpdate q      -> runUpdate env q
+  RQDelete q      -> runDelete env q
+  RQCount  q      -> runCount q
+  RQRunSql q      -> runRunSQL q
+  RMMssqlRunSql q -> MSSQL.runSQL q
+  RQBulk   l      -> encJFromList <$> indexedMapM (runQueryM env) l

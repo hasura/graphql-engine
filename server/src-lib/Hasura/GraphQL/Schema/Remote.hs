@@ -4,6 +4,7 @@ module Hasura.GraphQL.Schema.Remote
   , lookupObject
   , lookupType
   , lookupScalar
+  , remoteField
   , lookupInterface
   , lookupUnion
   , lookupEnum
@@ -12,9 +13,9 @@ module Hasura.GraphQL.Schema.Remote
 
 import           Hasura.Prelude
 
+import qualified Data.HashMap.Strict                   as Map
 import qualified Data.HashMap.Strict.InsOrd            as OMap
 import qualified Data.HashMap.Strict.InsOrd.Extended   as OMap
-import qualified Data.HashMap.Strict                   as Map
 import qualified Data.List.NonEmpty                    as NE
 
 import           Data.Text.Extended
@@ -22,16 +23,19 @@ import           Data.Type.Equality
 import           Language.GraphQL.Draft.Syntax         as G
 
 import qualified Hasura.GraphQL.Parser.Internal.Parser as P
-import           Hasura.GraphQL.Context                (RemoteFieldG (..), RemoteField)
 
+import           Hasura.GraphQL.Context                (RemoteField, RemoteFieldG (..))
 import           Hasura.GraphQL.Parser                 as P
-import           Hasura.RQL.Types
+import           Hasura.RQL.Types.Error
+import           Hasura.RQL.Types.RemoteSchema
+import           Hasura.RQL.Types.SchemaCache
 
-type RemoteSchemaObjectDefinition = G.ObjectTypeDefinition RemoteSchemaInputValueDefinition
+
+type RemoteSchemaObjectDefinition      = G.ObjectTypeDefinition RemoteSchemaInputValueDefinition
 type RemoteSchemaInputObjectDefinition = G.InputObjectTypeDefinition RemoteSchemaInputValueDefinition
-type RemoteSchemaInterfaceDefinition = G.InterfaceTypeDefinition [G.Name] RemoteSchemaInputValueDefinition
-type RemoteSchemaFieldDefinition = G.FieldDefinition RemoteSchemaInputValueDefinition
-type RemoteSchemaTypeDefinition = G.TypeDefinition [G.Name] RemoteSchemaInputValueDefinition
+type RemoteSchemaInterfaceDefinition   = G.InterfaceTypeDefinition [G.Name] RemoteSchemaInputValueDefinition
+type RemoteSchemaFieldDefinition       = G.FieldDefinition RemoteSchemaInputValueDefinition
+type RemoteSchemaTypeDefinition        = G.TypeDefinition [G.Name] RemoteSchemaInputValueDefinition
 
 buildRemoteParser
   :: forall m n
@@ -512,7 +516,7 @@ inputValueDefinitionParser schemaDoc (G.InputValueDefinition desc name fieldType
         => G.Nullability
         -> Parser k n (Maybe (HashMap G.Name (Value RemoteSchemaVariable)))
         -> Parser k n (Maybe (HashMap G.Name (Value RemoteSchemaVariable)))
-      inputObjectNullability (G.Nullability True) = fmap join . P.nullable
+      inputObjectNullability (G.Nullability True)  = fmap join . P.nullable
       inputObjectNullability (G.Nullability False) = id
 
       inputObjectFieldConstructor
@@ -730,7 +734,7 @@ remoteField sdoc fieldName description argsDefn typeDefn = do
       resolvedArgs <-
         case presetArgs of
           Just presetArg' -> mergeArgs userProvidedArgs' presetArg'
-          Nothing -> Just userProvidedArgs'
+          Nothing         -> Just userProvidedArgs'
       Just $ G.Field alias fldName resolvedArgs mempty selSet
 
     validateField
@@ -740,7 +744,7 @@ remoteField sdoc fieldName description argsDefn typeDefn = do
     -- ideally, we should be throwing a 500 below
     -- The below case, ideally will never happen, because such a query will
     -- not be a valid one and it will fail at the validation stage
-    validateField Nothing = parseErrorWith Unexpected $ "only objects or lists can be merged"
+    validateField Nothing    = parseErrorWith Unexpected $ "only objects or lists can be merged"
 
     mkFieldParserWithoutSelectionSet
       :: InputFieldsParser n (Maybe (HashMap G.Name (G.Value RemoteSchemaVariable)))

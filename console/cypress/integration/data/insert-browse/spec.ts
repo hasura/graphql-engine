@@ -6,6 +6,7 @@ import {
   getElementFromAlias,
   typeDefaults,
   tableColumnTypeSelector,
+  getIndexRoute,
 } from '../../../helpers/dataHelpers';
 
 import {
@@ -107,7 +108,9 @@ export const passBICreateTable = () => {
 
 export const passSearchTables = () => {
   // Click add table button
-  cy.get(getElementFromAlias('sidebar-add-table')).click();
+  cy.visit(getIndexRoute());
+  cy.wait(5000);
+  cy.get(getElementFromAlias('data-create-table')).click();
   // Type table name
   cy.get(getElementFromAlias('tableName')).type(getTableName(1, testName));
   // Type column name
@@ -122,9 +125,9 @@ export const passSearchTables = () => {
   cy.get(getElementFromAlias('table-create')).click();
   cy.wait(7000);
   validateCT(getTableName(0, testName), ResultType.SUCCESS);
-  cy.get(getElementFromAlias('search-tables')).type('0');
-  cy.get(getElementFromAlias('table-links')).should('not.contain', '1');
-  cy.get(getElementFromAlias('search-tables')).type('{home}{del}');
+  // cy.get(getElementFromAlias('search-tables')).type('0');
+  // cy.get(getElementFromAlias('table-links')).should('not.contain', '1');
+  // cy.get(getElementFromAlias('search-tables')).type('{home}{del}');
 };
 
 export const checkInsertRoute = () => {
@@ -407,7 +410,9 @@ export const passCloneButton = () => {
 };
 
 export const checkViewRelationship = () => {
-  cy.get(getElementFromAlias('sidebar-add-table')).click();
+  cy.visit(getIndexRoute());
+  cy.wait(5000);
+  cy.get(getElementFromAlias('data-create-table')).click();
   // Type table name
   cy.get(getElementFromAlias('tableName')).type(getTableName(2, testName));
   cy.get(getElementFromAlias('column-0')).type('id');

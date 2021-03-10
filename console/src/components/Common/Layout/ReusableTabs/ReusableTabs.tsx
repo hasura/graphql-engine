@@ -2,7 +2,10 @@ import React from 'react';
 import { Link } from 'react-router';
 import styles from './ReusableTabs.scss';
 
-export type Tabs = Record<string, { display_text: string }>;
+export type Tabs = Record<
+  string,
+  { display_text: string; display?: React.ReactNode }
+>;
 
 type Props = {
   appPrefix: string;
@@ -43,7 +46,8 @@ const Tabs: React.FC<Props> = ({
                   testPrefix ? `${testPrefix}-` : ''
                 }${appPrefix.slice(1)}-${t}`}
               >
-                {tabsInfo[t].display_text} {tabName === t ? showCount : null}
+                {tabsInfo[t].display || tabsInfo[t].display_text}{' '}
+                {tabName === t ? showCount : null}
                 {tabName === t && showLoader ? (
                   <span className={styles.loader_ml}>
                     <i className="fa fa-spinner fa-spin" />

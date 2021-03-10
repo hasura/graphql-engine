@@ -3,6 +3,7 @@ import {
   getReloadMetadataQuery,
   getReloadRemoteSchemaCacheQuery,
 } from './queryUtils';
+import { HasuraMetadataV3 } from './types';
 
 export const allowedQueriesCollection = 'allowed-queries';
 
@@ -13,7 +14,8 @@ export const deleteAllowedQueryQuery = (queryName: string) => ({
     query_name: queryName,
   },
 });
-const addAllowedQuery = (query: { name: string; query: string }) => ({
+
+export const addAllowedQuery = (query: { name: string; query: string }) => ({
   type: 'add_query_to_collection',
   args: {
     collection_name: allowedQueriesCollection,
@@ -55,7 +57,7 @@ export const createAllowListQuery = (
   queries: Array<{ name: string; query: string }>,
   source: string
 ) => {
-  const createAllowListCollectionQuery = () => ({
+  const createAllowListCollectionQuery = {
     type: 'create_query_collection',
     args: {
       name: allowedQueriesCollection,
@@ -63,19 +65,19 @@ export const createAllowListQuery = (
         queries,
       },
     },
-  });
+  };
 
-  const addCollectionToAllowListQuery = () => ({
+  const addCollectionToAllowListQuery = {
     type: 'add_collection_to_allowlist',
     args: {
       collection: allowedQueriesCollection,
     },
-  });
+  };
 
   return {
     type: 'bulk',
     source,
-    args: [createAllowListCollectionQuery(), addCollectionToAllowListQuery()],
+    args: [createAllowListCollectionQuery, addCollectionToAllowListQuery],
   };
 };
 
@@ -104,3 +106,35 @@ export const getReloadCacheAndGetInconsistentObjectsQuery = (
     inconsistentObjectsQuery,
   ],
 });
+
+export const addInheritedRole = (roleName: string, roleSet: string[]) => ({
+  type: 'add_inherited_role',
+  args: {
+    role_name: roleName,
+    role_set: roleSet,
+  },
+});
+
+export const deleteInheritedRole = (roleName: string) => ({
+  type: 'drop_inherited_role',
+  args: {
+    role_name: roleName,
+  },
+});
+
+export const updateInheritedRole = (roleName: string, roleSet: string[]) => ({
+  type: 'bulk',
+  args: [deleteInheritedRole(roleName), addInheritedRole(roleName, roleSet)],
+});
+
+export const isMetadataEmpty = (metadataObject: HasuraMetadataV3) => {
+  const { actions, sources, remote_schemas } = metadataObject;
+  const hasRemoteSchema = remote_schemas && remote_schemas.length;
+  const hasAction = actions && actions.length;
+  const hasTable = sources.some(source => source.tables.length);
+  return !(hasRemoteSchema || hasAction || hasTable);
+};
+
+export const hasSources = (metadataObject: HasuraMetadataV3) => {
+  return metadataObject?.sources?.length > 0;
+};

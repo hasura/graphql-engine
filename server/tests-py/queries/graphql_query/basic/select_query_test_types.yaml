@@ -116,6 +116,7 @@ response:
       c43_range_timestamptz: '("2011-02-05 12:03:00+00","2012-03-04 16:40:04+00"]'
       c44_xml: '<foo>bar</foo>'
       c45_money: $123.45
+      c46_ltree: 'A.B.C'
 query:
   query: |
     query {
@@ -185,5 +186,6 @@ query:
         c43_range_timestamptz
         c44_xml
         c45_money
+        c46_ltree
       }
     }

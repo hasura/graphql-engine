@@ -91,7 +91,7 @@ validateCountQWith sessVarBldr prepValBldr (CountQuery qt _ mDistCols mWhere) = 
   -- convert the where clause
   annSQLBoolExp <- forM mWhere $ \be ->
     withPathK "where" $
-    convBoolExp colInfoMap selPerm be sessVarBldr prepValBldr
+    convBoolExp colInfoMap selPerm be sessVarBldr (valueParserWithCollectableType prepValBldr)
 
   resolvedSelFltr <- convAnnBoolExpPartialSQL sessVarBldr $
                      spiFilter selPerm
@@ -112,7 +112,7 @@ validateCountQ
   => CountQuery -> m (CountQueryP1, DS.Seq Q.PrepArg)
 validateCountQ query = do
   let source = cqSource query
-  tableCache <- askTableCache source
+  tableCache :: TableCache 'Postgres <- askTableCache source
   flip runTableCacheRT (source, tableCache) $ runDMLP1T $
     validateCountQWith sessVarFromCurrentSetting binRHSBuilder query
 
@@ -131,9 +131,9 @@ countQToTx (u, p) = do
 runCount
   :: ( QErrM m, UserInfoM m, CacheRM m
      , MonadIO m, MonadBaseControl IO m
-     , Tracing.MonadTrace m
+     , Tracing.MonadTrace m, MetadataM m
      )
   => CountQuery -> m EncJSON
 runCount q = do
-  sourceConfig <- _pcConfiguration <$> askPGSourceCache (cqSource q)
+  sourceConfig <- askSourceConfig (cqSource q)
   validateCountQ q >>= runQueryLazyTx (_pscExecCtx sourceConfig) Q.ReadOnly . countQToTx

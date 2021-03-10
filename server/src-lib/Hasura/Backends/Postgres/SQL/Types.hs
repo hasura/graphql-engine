@@ -37,7 +37,6 @@ module Hasura.Backends.Postgres.SQL.Types
   , qualifiedObjectToText
   , snakeCaseQualifiedObject
   , qualifiedObjectToName
-  , isGraphQLCompliantTableName
 
   , PGScalarType(..)
   , textToPGScalarType
@@ -58,7 +57,6 @@ import qualified PostgreSQL.Binary.Decoding    as PD
 import qualified Text.Builder                  as TB
 
 import           Data.Aeson
-import           Data.Aeson.Casing
 import           Data.Aeson.Encoding           (text)
 import           Data.Aeson.TH
 import           Data.Aeson.Types              (toJSONKeyText)
@@ -180,6 +178,10 @@ data QualifiedObject a
 instance (NFData a) => NFData (QualifiedObject a)
 instance (Cacheable a) => Cacheable (QualifiedObject a)
 
+instance (Arbitrary a) => Arbitrary (QualifiedObject a) where
+  arbitrary = genericArbitrary
+
+
 instance (FromJSON a) => FromJSON (QualifiedObject a) where
   parseJSON v@(String _) =
     QualifiedObject publicSchema <$> parseJSON v
@@ -224,9 +226,6 @@ qualifiedObjectToName objectName = do
   onNothing (G.mkName textName) $ throw400 ValidationFailed $
     "cannot include " <> objectName <<> " in the GraphQL schema because " <> textName
     <<> " is not a valid GraphQL identifier"
-
-isGraphQLCompliantTableName :: ToTxt a => QualifiedObject a -> Bool
-isGraphQLCompliantTableName = isJust . G.mkName . snakeCaseQualifiedObject
 
 type QualifiedTable = QualifiedObject TableName
 
@@ -281,6 +280,9 @@ data PGScalarType
   | PGGeography
   | PGRaster
   | PGUUID
+  | PGLtree
+  | PGLquery
+  | PGLtxtquery
   | PGUnknown !Text
   deriving (Show, Eq, Ord, Generic, Data)
 instance NFData PGScalarType
@@ -299,7 +301,7 @@ instance ToSQL PGScalarType where
     PGNumeric     -> "numeric"
     PGMoney       -> "money"
     PGBoolean     -> "boolean"
-    PGChar        -> "character"
+    PGChar        -> "bpchar"
     PGVarchar     -> "varchar"
     PGText        -> "text"
     PGCitext      -> "citext"
@@ -313,6 +315,9 @@ instance ToSQL PGScalarType where
     PGGeography   -> "geography"
     PGRaster      -> "raster"
     PGUUID        -> "uuid"
+    PGLtree       -> "ltree"
+    PGLquery      -> "lquery"
+    PGLtxtquery   -> "ltxtquery"
     PGUnknown t   -> TB.text t
 
 instance ToJSON PGScalarType where
@@ -358,6 +363,8 @@ pgScalarTranslations =
   , ("boolean"                     , PGBoolean)
   , ("bool"                        , PGBoolean)
 
+  , ("bpchar"                      , PGChar)
+  , ("char"                        , PGChar)
   , ("character"                   , PGChar)
 
   , ("varchar"                     , PGVarchar)
@@ -385,6 +392,10 @@ pgScalarTranslations =
 
   , ("raster"                      , PGRaster)
   , ("uuid"                        , PGUUID)
+
+  , ("ltree"                       , PGLtree)
+  , ("lquery"                      , PGLquery)
+  , ("ltxtquery"                   , PGLtxtquery)
   ]
 
 instance FromJSON PGScalarType where
@@ -402,7 +413,7 @@ isNumType PGMoney    = True
 isNumType _          = False
 
 stringTypes :: [PGScalarType]
-stringTypes = [PGVarchar, PGText, PGCitext]
+stringTypes = [PGVarchar, PGText, PGCitext, PGChar]
 
 isStringType :: PGScalarType -> Bool
 isStringType = (`elem` stringTypes)
@@ -447,6 +458,7 @@ data PGTypeKind
   | PGKindUnknown !Text
   deriving (Show, Eq, Generic)
 instance NFData PGTypeKind
+instance Hashable PGTypeKind
 instance Cacheable PGTypeKind
 
 instance FromJSON PGTypeKind where
@@ -477,8 +489,9 @@ data QualifiedPGType
   , _qptType   :: !PGTypeKind
   } deriving (Show, Eq, Generic)
 instance NFData QualifiedPGType
+instance Hashable QualifiedPGType
 instance Cacheable QualifiedPGType
-$(deriveJSON (aesonDrop 4 snakeCase) ''QualifiedPGType)
+$(deriveJSON hasuraJSON ''QualifiedPGType)
 
 isBaseType :: QualifiedPGType -> Bool
 isBaseType (QualifiedPGType _ n ty) =

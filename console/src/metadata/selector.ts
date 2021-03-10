@@ -21,6 +21,9 @@ export const getDataSourceMetadata = (state: ReduxState) => {
 export const getRemoteSchemas = (state: ReduxState) => {
   return state.metadata.metadataObject?.remote_schemas ?? [];
 };
+export const getRemoteSchemaPermissions = (state: ReduxState) => {
+  return state.remoteSchemas.permissions ?? {};
+};
 
 export const getInitDataSource = (
   state: ReduxState
@@ -90,8 +93,8 @@ const permKeys: Array<keyof PermKeys> = [
   'delete_permissions',
 ];
 export const rolesSelector = createSelector(
-  [getTablesFromAllSources, getActions],
-  (tables, actions) => {
+  [getTablesFromAllSources, getActions, getRemoteSchemas],
+  (tables, actions, remoteSchemas) => {
     const roleNames: string[] = [];
     tables?.forEach(table =>
       permKeys.forEach(key =>
@@ -103,6 +106,9 @@ export const rolesSelector = createSelector(
     actions?.forEach(action =>
       action.permissions?.forEach(p => roleNames.push(p.role))
     );
+    remoteSchemas?.forEach(remoteSchema => {
+      remoteSchema?.permissions?.forEach(p => roleNames.push(p.role));
+    });
     return Array.from(new Set(roleNames));
   }
 );
@@ -149,7 +155,16 @@ export const getTablesInfoSelector = createSelector(
   }
 );
 
-const getFunctions = createSelector(
+// TODO?: make it generic i.e to fetch any property from all tables
+export const getCurrentTableInformation = createSelector(
+  getTables,
+  tables => (tableName: string, tableSchema: string) =>
+    tables?.find(
+      t => tableName === t.table.name && tableSchema === t.table.schema
+    )?.select_permissions ?? []
+);
+
+export const getFunctions = createSelector(
   getDataSourceMetadata,
   source =>
     source?.functions?.map(f => ({
@@ -157,6 +172,7 @@ const getFunctions = createSelector(
       function_name: f.function.name,
       function_schema: f.function.schema,
       configuration: f.configuration,
+      permissions: f?.permissions,
     })) || []
 );
 
@@ -327,15 +343,17 @@ export const getCronTriggers = createSelector(getMetadata, metadata => {
 export const getAllowedQueries = (state: ReduxState) =>
   state.metadata.allowedQueries || [];
 
+export const getInheritedRoles = (state: ReduxState) =>
+  state.metadata.inheritedRoles || [];
+
 export const getDataSources = createSelector(getMetadata, metadata => {
   const sources: DataSource[] = [];
   metadata?.sources.forEach(source => {
     sources.push({
       name: source.name,
-      url:
-        source.configuration?.connection_info.database_url ||
-        'HASURA_GRAPHQL_DATABASE_URL',
-      fromEnv: false,
+      url: source.configuration?.connection_info?.connection_string
+        ? source.configuration?.connection_info.connection_string
+        : source.configuration?.connection_info?.database_url || '',
       connection_pool_settings: source.configuration?.connection_info
         ?.pool_settings || {
         retries: 1,

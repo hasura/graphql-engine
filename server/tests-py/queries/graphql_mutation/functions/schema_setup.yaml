@@ -52,6 +52,16 @@ args:
       RETURNS SETOF "user" AS $$
           SELECT * FROM "user" ORDER BY id
       $$ LANGUAGE sql STABLE;
+      CREATE FUNCTION add_to_score_by_user_id(hasura_session json, id int, increment integer default 1)
+      RETURNS "user" AS $$
+          UPDATE "user"
+          SET score = score + increment
+          WHERE id = id
+          RETURNING id,
+                    name,
+                    score,
+                    hasura_session->>'x-hasura-role' AS role_echo
+      $$ LANGUAGE sql VOLATILE;
 
 - type: track_table
   args:
@@ -68,6 +78,15 @@ args:
       exposed_as: mutation
       session_argument: hasura_session
 
+- type: track_function
+  version: 2
+  args:
+    function:
+      schema: public
+      name: add_to_score_by_user_id
+    configuration:
+      exposed_as: mutation
+      session_argument: hasura_session
 
 # We'll use this to check that permissions on "user" table are applied to the
 # return set of the tracked function:

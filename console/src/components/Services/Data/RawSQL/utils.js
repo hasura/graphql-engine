@@ -1,4 +1,5 @@
-import { dataSource } from '../../../../dataSources';
+import { currentDriver } from '../../../../dataSources';
+import { services } from '../../../../dataSources/services';
 
 const getSQLValue = value => {
   const quotedStringRegex = /^".*"$/;
@@ -21,10 +22,15 @@ export const removeCommentsSQL = sql => {
   return comments.reduce((acc, comment) => acc.replace(comment, ''), sql);
 };
 
-export const parseCreateSQL = sql => {
+const getDefaultSchema = driver => {
+  if (driver === 'postgres') return 'public';
+  if (driver === 'mssql') return 'dbo';
+};
+
+export const parseCreateSQL = (sql, driver = currentDriver) => {
   const _objects = [];
 
-  const regExp = dataSource.createSQLRegex;
+  const regExp = services[driver].createSQLRegex;
 
   const matches = sql.match(new RegExp(regExp, 'gmi'));
   if (matches) {
@@ -42,7 +48,7 @@ export const parseCreateSQL = sql => {
         let schema;
         if (itemMatch[5]) {
           name = itemMatch[5];
-          schema = 'public';
+          schema = getDefaultSchema(driver);
         } else {
           name = itemMatch[4];
           schema = itemMatch[3];

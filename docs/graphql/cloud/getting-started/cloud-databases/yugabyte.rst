@@ -20,7 +20,7 @@ This guide explains how to connect a new or existing YugaByte Postgres database 
 Step 0: Sign up or log in to Hasura Cloud
 -----------------------------------------
 
-Navigate to `Hasura Cloud <https://cloud.hasura.io/>`__ and sign up or log in.
+Navigate to `Hasura Cloud <https://cloud.hasura.io/signup/?pg=docs&plcmt=body&cta=navigate-to-hasura-cloud&tech=default>`__ and sign up or log in.
 
 .. _create_hasura_project_yugabyte:
 
@@ -35,11 +35,13 @@ On the Hasura Cloud dashboard, create a new project:
 
 You will get prompted for a Postgres Database URL. We will create this in the next step and then come back here.
 
-.. thumbnail:: /img/graphql/cloud/cloud-dbs/database-setup.png
-   :alt: Hasura Cloud database setup
-   :width: 500px
+After the project is initialized successfully, click on ``Launch console`` to open the Hasura console in your browser.
 
-Also, copy the Hasura Cloud IP for later.
+On the Hasura console, navigate to ``Data -> Manage -> Connect Database -> Connect existing database``:
+
+.. thumbnail:: /img/graphql/cloud/cloud-dbs/existing-db-setup.png
+   :alt: Hasura Cloud database setup
+   :width: 700px
 
 .. _create_pg_db_yugabyte:
 
@@ -55,6 +57,10 @@ On the YugaByte Cloud dashboard, click on ``Create cluster``:
    :width: 1000px
 
 Select a ``Cloud Provider`` and ``Region`` and then click ``Create Cluster``.
+
+.. note::
+
+   If you're using a database user other than the default one, make sure to give it the right :ref:`Postgres permissions <cloud_postgres_permissions>`.
 
 .. _construct_db_url_yugabyte:
 
@@ -91,31 +97,27 @@ Now you can get the connection info from the following screen:
 - ``postgres-port``: The port is ``10301`` (see on the screenshot after ``-p``). This can be configured if required.
 - ``db``: The DB is ``yugabyte`` (see on the screenshot after ``-d``).
 
-Step 4: Finish creating the Hasura Cloud project
-------------------------------------------------
+Step 4: Finish connecting the database
+--------------------------------------
 
-Back on the Hasura Cloud dashboard, enter the database URL that we constructed in :ref:`step 3 <construct_db_url_yugabyte>`:
+Back on Hasura Console, enter the database URL that we retrieved in :ref:`step 3 <construct_db_url_yugabyte>`:
 
-.. thumbnail:: /img/graphql/cloud/cloud-dbs/finish-create-project.png
-   :alt: Finish creating the Hasura Cloud project
-   :width: 500px
+.. thumbnail:: /img/graphql/cloud/getting-started/connect-db.png
+   :alt: Database setup
+   :width: 600px
 
-Then click ``Create project``.
+Then click ``Connect Database``.
 
-Step 5: Launch Hasura console
------------------------------
+.. note::
 
-After the project is initialized successfully, click on ``Launch console``:
-
-.. thumbnail:: /img/graphql/cloud/cloud-dbs/launch-console.png
-   :alt: Launch the Hasura console
-   :width: 900px
+   For security reasons, it is recommended to set database URLs as :ref:`env vars <manage_project_env_vars>` and using the env vars
+   to connect to the databases in place of the raw database URLs.
 
 Voilà. You are ready to start developing.
 
 .. thumbnail:: /img/graphql/cloud/cloud-dbs/hasura-console.png
    :alt: Hasura console
-   :width: 900px
+   :width: 1100px
 
 Next steps
 ----------

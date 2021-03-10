@@ -25,9 +25,10 @@ import RelationshipEditor from './RelationshipEditor';
 import { NotFoundError } from '../../../Error/PageNotFound';
 import styles from '../TableModify/ModifyTable.scss';
 import tableStyles from '../../../Common/TableCommon/TableStyles.scss';
-import { findAllFromRel } from '../../../../dataSources';
+import { currentDriver, findAllFromRel } from '../../../../dataSources';
 import { getRemoteSchemasSelector } from '../../../../metadata/selector';
 import { RightContainer } from '../../../Common/Layout/RightContainer';
+import FeatureDisabled from '../FeatureDisabled';
 
 const addRelationshipCellView = (
   dispatch,
@@ -296,6 +297,8 @@ const AddRelationship = ({
   );
 };
 
+const supportedDrivers = ['postgres', 'mssql'];
+
 const Relationships = ({
   tableName,
   allSchemas,
@@ -322,7 +325,17 @@ const Relationships = ({
     t => t.table_name === tableName && t.table_schema === currentSchema
   );
 
-  if (!tableSchema) {
+  if (!supportedDrivers.includes(currentDriver)) {
+    return (
+      <FeatureDisabled
+        tab="relationships"
+        tableName={tableName}
+        schemaName={currentSchema}
+      />
+    );
+  }
+
+  if (!tableSchema && supportedDrivers.includes(currentDriver)) {
     // throw a 404 exception
     throw new NotFoundError();
   }
@@ -470,19 +483,21 @@ const Relationships = ({
               Table Relationships
               <ToolTip message={'Relationships to tables / views'} />
               &nbsp;
-              <KnowMoreLink href="https://hasura.io/docs/1.0/graphql/manual/schema/table-relationships/index.html" />
+              <KnowMoreLink href="https://hasura.io/docs/latest/graphql/core/schema/table-relationships/index.html" />
             </h4>
             {addedRelationshipsView}
             {getAddRelSection()}
           </div>
-          <div className={`${styles.padd_left_remove} col-xs-10 col-md-10`}>
-            <RemoteRelationships
-              relationships={existingRemoteRelationships}
-              reduxDispatch={dispatch}
-              table={tableSchema}
-              remoteSchemas={remoteSchemas}
-            />
-          </div>
+          {currentDriver === 'postgres' ? (
+            <div className={`${styles.padd_left_remove} col-xs-10 col-md-10`}>
+              <RemoteRelationships
+                relationships={existingRemoteRelationships}
+                reduxDispatch={dispatch}
+                table={tableSchema}
+                remoteSchemas={remoteSchemas}
+              />
+            </div>
+          ) : null}
         </div>
         <div className={`${styles.fixed} hidden`}>{alert}</div>
       </div>

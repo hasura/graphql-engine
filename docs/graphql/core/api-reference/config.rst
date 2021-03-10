@@ -46,6 +46,8 @@ Sample response
 
    {
      "version": "v1.0.0-beta.3",
+     "is_function_permissions_inferred": true,
+     "is_remote_schema_permissions_enabled": false,
      "is_admin_secret_set": true,
      "is_auth_hook_set": false,
      "is_jwt_set": true,

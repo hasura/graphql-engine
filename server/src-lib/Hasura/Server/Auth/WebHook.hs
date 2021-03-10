@@ -3,26 +3,28 @@ module Hasura.Server.Auth.WebHook
   , AuthHookG (..)
   , AuthHook
   , userInfoFromAuthHook
+  , type ReqsText
   ) where
 
-import           Control.Exception.Lifted    (try)
+import           Control.Exception.Lifted               (try)
 import           Control.Lens
-import           Control.Monad.Trans.Control (MonadBaseControl)
+import           Control.Monad.Trans.Control            (MonadBaseControl)
 import           Control.Monad.Trans.Maybe
 import           Data.Aeson
-import           Data.Time.Clock             (UTCTime, addUTCTime, getCurrentTime)
-import           Hasura.Server.Version       (HasVersion)
+import           Data.Time.Clock                        (UTCTime, addUTCTime, getCurrentTime)
+import           Hasura.Server.Version                  (HasVersion)
 
-import qualified Data.Aeson                  as J
-import qualified Data.ByteString.Lazy        as BL
-import qualified Data.HashMap.Strict         as Map
-import qualified Data.Text                   as T
-import qualified Network.HTTP.Client         as H
-import qualified Network.HTTP.Types          as N
-import qualified Network.Wreq                as Wreq
+import qualified Data.Aeson                             as J
+import qualified Data.ByteString.Lazy                   as BL
+import qualified Data.HashMap.Strict                    as Map
+import qualified Data.Text                              as T
+import qualified Network.HTTP.Client                    as H
+import qualified Network.HTTP.Types                     as N
+import qualified Network.Wreq                           as Wreq
 
 import           Data.Parser.CacheControl
 import           Data.Parser.Expires
+import qualified Hasura.GraphQL.Transport.HTTP.Protocol as GH
 import           Hasura.HTTP
 import           Hasura.Logging
 import           Hasura.Prelude
@@ -30,7 +32,7 @@ import           Hasura.RQL.Types
 import           Hasura.Server.Logging
 import           Hasura.Server.Utils
 import           Hasura.Session
-import qualified Hasura.Tracing              as Tracing
+import qualified Hasura.Tracing                         as Tracing
 
 data AuthHookType
   = AHTGet
@@ -55,10 +57,12 @@ hookMethod authHook = case ahType authHook of
   AHTGet  -> N.GET
   AHTPost -> N.POST
 
+type ReqsText = GH.GQLBatchedReqs GH.GQLQueryText
 
 -- | Makes an authentication request to the given AuthHook and returns
 --   UserInfo parsed from the response, plus an expiration time if one
---   was returned.
+--   was returned. Optionally passes a batch of raw GraphQL requests
+--   for finer-grained auth. (#2666)
 userInfoFromAuthHook
   :: forall m
    . (HasVersion, MonadIO m, MonadBaseControl IO m, MonadError QErr m, Tracing.MonadTrace m)
@@ -66,8 +70,9 @@ userInfoFromAuthHook
   -> H.Manager
   -> AuthHook
   -> [N.Header]
+  -> Maybe ReqsText
   -> m (UserInfo, Maybe UTCTime)
-userInfoFromAuthHook logger manager hook reqHeaders = do
+userInfoFromAuthHook logger manager hook reqHeaders reqs = do
   resp <- (`onLeft` logAndThrow) =<< try performHTTPRequest
   let status   = resp ^. Wreq.responseStatus
       respBody = resp ^. Wreq.responseBody
@@ -88,7 +93,8 @@ userInfoFromAuthHook logger manager hook reqHeaders = do
                 headersPayload = J.toJSON $ Map.fromList $ hdrsToText reqHeaders
             H.httpLbs (req' { H.method         = "POST"
                            , H.requestHeaders = addDefaultHeaders [contentType]
-                           , H.requestBody    = H.RequestBodyLBS . J.encode $ object ["headers" J..= headersPayload]
+                           , H.requestBody    = H.RequestBodyLBS . J.encode $ object ["headers" J..= headersPayload,
+                                                                                     "request" J..= reqs]
                            }) manager
 
     logAndThrow :: H.HttpException -> m a

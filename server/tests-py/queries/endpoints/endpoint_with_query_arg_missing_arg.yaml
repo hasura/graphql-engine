@@ -1,0 +1,9 @@
+description: Failing call with missing query arg
+url: /api/rest/with_arg
+method: GET
+status: 400
+query:
+response:
+   path: $
+   error: 'expecting a value for non-nullable variable: "first_name"'
+   code: validation-failed

@@ -34,7 +34,7 @@ new managed PostgreSQL database wired up to your Hasura instance.
 
 You will see the Hasura web service and PostgreSQL instance to be created:
 
-.. thumbnail:: /img/graphql/core/deployment/deploy-to-render-hasura-iac.png
+.. thumbnail:: /img/graphql/core/deployment/deploy-to-render-hasura.png
    :alt: Deploy To Render Hasura Page
 
 That's it! Read on to configure your Hasura instance.
@@ -54,8 +54,6 @@ You can monitor the deployment of the Hasura web service from the **Logs** tab. 
    https://<your-hasura-slug>.onrender.com/
 
 You can create tables and test your GraphQL queries here.
-
-Check out :ref:`making your first GraphQL query <first_graphql_query>` or :ref:`setting up your first event trigger <first_event_trigger>` for more.
 
 References
 ----------

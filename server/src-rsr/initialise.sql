@@ -24,7 +24,8 @@ ON hdb_catalog.hdb_version((version IS NOT NULL));
 CREATE TABLE hdb_catalog.hdb_metadata
 (
   id INTEGER PRIMARY KEY,
-  metadata JSON NOT NULL
+  metadata JSON NOT NULL,
+  resource_version INTEGER NOT NULL DEFAULT 1 UNIQUE
 );
 
 CREATE TABLE hdb_catalog.hdb_action_log

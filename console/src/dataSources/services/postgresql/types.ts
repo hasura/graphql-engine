@@ -1,8 +1,16 @@
+export type PGInputArgType = {
+  schema: string;
+  name: string;
+  type: ArgType;
+};
+
 export type PGFunction = {
   function_name: string;
   function_schema: string;
   function_definition: string;
   return_type_type: string;
+  function_type: string;
+  input_arg_types?: PGInputArgType[];
 };
 
 export interface PostgresTable {
@@ -49,10 +57,15 @@ export interface PostgresTrigger {
   event_manipulation: string;
 }
 
-type InputArgType = {
+export type InputArgType = {
   schema: string;
   name: string;
 };
+
+export enum ArgType {
+  CompositeType = 'c',
+  BaseType = 'b',
+}
 
 export interface FunctionState {
   functionName: string;

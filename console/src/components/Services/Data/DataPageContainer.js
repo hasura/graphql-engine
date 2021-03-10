@@ -5,8 +5,6 @@ import globals from '../../../Globals';
 import LeftContainer from '../../Common/Layout/LeftContainer/LeftContainer';
 import PageContainer from '../../Common/Layout/PageContainer/PageContainer';
 import DataSubSidebar from './DataSubSidebar';
-import GqlCompatibilityWarning from '../../Common/GqlCompatibilityWarning/GqlCompatibilityWarning';
-
 import {
   updateCurrentSchema,
   UPDATE_CURRENT_DATA_SOURCE,
@@ -16,54 +14,71 @@ import { CLI_CONSOLE_MODE } from '../../../constants';
 import styles from '../../Common/TableCommon/Table.scss';
 import { currentDriver, useDataSource } from '../../../dataSources';
 import { getDataSources } from '../../../metadata/selector';
-import { push } from 'react-router-redux';
+import _push from './push';
 import { fetchPostgresVersion } from '../../Main/Actions';
+import { getSourceDriver } from './utils';
 
 const DataPageContainer = ({
-  currentSchema,
-  schemaList,
   children,
   location,
   dispatch,
   dataSources,
   currentDataSource,
+  currentSchema,
 }) => {
-  useEffect(() => {
-    if (!currentDataSource && dataSources.length) {
-      dispatch({
-        type: UPDATE_CURRENT_DATA_SOURCE,
-        source: dataSources[0].name,
-      });
-    }
-  }, [currentDataSource, dataSources, dispatch]);
+  const { setDriver } = useDataSource();
+
+  // useEffect(() => {
+  //   if (!currentDataSource && dataSources.length) {
+  //     setDriver(dataSources[0].driver);
+  //     dispatch({
+  //       type: UPDATE_CURRENT_DATA_SOURCE,
+  //       source: dataSources[0].name,
+  //     });
+  //   }
+  // }, [currentDataSource, dataSources, dispatch]);
+
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    if (currentDataSource) {
+    // TODO: handle for different drivers
+    if (currentDataSource && currentDriver === 'postgres') {
       dispatch(fetchPostgresVersion);
     }
   }, [dispatch, currentDataSource]);
 
-  const { setDriver } = useDataSource();
-  const [loadingSchemas, setLoadingSchemas] = useState(false);
-  const onDatabaseChange = e => {
-    const value = e.target.value;
-    let newName;
-    let newDriver;
-    try {
-      [newName, newDriver] = JSON.parse(value);
-    } catch {
+  const handleDatabaseChange = newSourceName => {
+    if (newSourceName === currentDataSource) {
+      dispatch(_push(`/data/${newSourceName}/`));
       return;
     }
-    setDriver(newDriver);
+    setLoading(true);
+    const driver = getSourceDriver(dataSources, newSourceName);
     dispatch({
       type: UPDATE_CURRENT_DATA_SOURCE,
-      source: newName,
+      source: newSourceName,
     });
-    dispatch(push(`/data/${newName}/schema/`));
-    setLoadingSchemas(true);
-    dispatch(fetchDataInit()).then(() => {
-      setLoadingSchemas(false);
+    setDriver(driver);
+    dispatch(_push(`/data/${newSourceName}/`));
+    dispatch(fetchDataInit()).finally(() => {
+      setLoading(false);
     });
+  };
+
+  const handleSchemaChange = value => {
+    if (value === currentSchema) {
+      dispatch(_push(`/data/${currentDataSource}/schema/${value}`));
+      return;
+    }
+
+    setLoading(true);
+    dispatch(updateCurrentSchema(value, currentDataSource))
+      .then(() => {
+        dispatch(_push(`/data/${currentDataSource}/schema/${value}`));
+      })
+      .finally(() => {
+        setLoading(false);
+      });
   };
 
   const currentLocation = location.pathname;
@@ -84,16 +99,9 @@ const DataPageContainer = ({
     );
   }
 
-  const handleSchemaChange = e => {
-    dispatch(updateCurrentSchema(e.target.value, currentDataSource));
-  };
-
-  const getSchemaOptions = () => {
-    return schemaList.map(s => (
-      <option key={s} value={s}>
-        {s}
-      </option>
-    ));
+  const loadStyle = {
+    pointerEvents: 'none',
+    cursor: 'progress',
   };
 
   const sidebarContent = (
@@ -101,55 +109,23 @@ const DataPageContainer = ({
       <li
         role="presentation"
         className={
-          currentLocation.match(/(\/)?data\/(\w|%)+\/schema?(\w+)/)
+          currentLocation.match(
+            /(\/)?data((\/manage)|(\/(\w|%)+\/schema?(\w+)))/
+          )
             ? styles.active
             : ''
         }
       >
-        <section className={`${styles.linkBorder} ${styles.dbSelect}`}>
-          <div className={styles.schemaWrapper}>
-            <div
-              className={styles.schemaSidebarSection}
-              style={{
-                marginBottom: '20px',
-              }}
-            >
-              <label style={{ width: '70px' }}>Database:</label>
-              <select
-                onChange={onDatabaseChange}
-                className={`${styles.changeSchema} form-control`}
-                value={JSON.stringify([currentDataSource, currentDriver])}
-              >
-                {dataSources.map(s => (
-                  <option
-                    key={s.name}
-                    value={JSON.stringify([s.name, s.driver])}
-                  >
-                    {s.name} ({s.driver})
-                  </option>
-                ))}
-              </select>
-            </div>
-            <div className={styles.schemaSidebarSection} data-test="schema">
-              <label style={{ width: '70px' }}>Schema:</label>
-              <select
-                onChange={handleSchemaChange}
-                value={currentDataSource ? currentSchema : ''}
-                className={styles.changeSchema + ' form-control'}
-              >
-                <option value="" />
-                {!loadingSchemas && getSchemaOptions()}
-              </select>
-              {currentSchema && (
-                <GqlCompatibilityWarning
-                  identifier={currentSchema}
-                  className={styles.add_mar_left_mid}
-                />
-              )}
-            </div>
-          </div>
-        </section>
-        <DataSubSidebar location={location} />
+        <Link className={styles.linkBorder} to={`/data/manage`}>
+          Data Manager
+        </Link>
+
+        <div style={loading ? loadStyle : { pointerEvents: 'auto' }}>
+          <DataSubSidebar
+            onDatabaseChange={handleDatabaseChange}
+            onSchemaChange={handleSchemaChange}
+          />
+        </div>
       </li>
       {currentDataSource && (
         <li
@@ -158,7 +134,7 @@ const DataPageContainer = ({
         >
           <Link
             className={styles.linkBorder}
-            to={`/data/${currentDataSource}/sql`}
+            to={`/data/sql`}
             data-test="sql-link"
           >
             SQL

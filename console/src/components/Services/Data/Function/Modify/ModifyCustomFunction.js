@@ -138,11 +138,11 @@ class ModifyCustomFunction extends React.Component {
         ? { isRequesting, isDeleting, isUntracking, isFetching }
         : null;
 
-    const { migrationMode, dispatch } = this.props;
+    const { migrationMode, dispatch, currentSource } = this.props;
 
     const functionBaseUrl = getFunctionBaseRoute(
       schema,
-      this.props.currentSource,
+      currentSource,
       functionName
     );
 
@@ -230,6 +230,7 @@ class ModifyCustomFunction extends React.Component {
                 sql={functionDefinition}
                 dispatch={dispatch}
                 data-test="modify-view"
+                source={currentSource}
               >
                 Modify
               </RawSqlButton>

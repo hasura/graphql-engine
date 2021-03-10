@@ -46,6 +46,8 @@ import {
   deleteFunctionSql,
   getEventInvocationInfoByIDSql,
   getDatabaseInfo,
+  getTableInfo,
+  getDatabaseVersionSql,
 } from './sqlUtils';
 
 export const isTable = (table: Table) => {
@@ -135,11 +137,42 @@ export const getFunctionDefinition = (pgFunction: PGFunction) => {
   return pgFunction.function_definition;
 };
 
+export const isFunctionCompatibleToTable = (
+  pgFunction: PGFunction,
+  tableName: string,
+  tableSchema: string
+) => {
+  const inputArgTypes = pgFunction?.input_arg_types || [];
+
+  let hasTableRowInArguments = false;
+  let hasUnsupportedArguments = false;
+
+  inputArgTypes.forEach(inputArgType => {
+    if (!hasTableRowInArguments) {
+      hasTableRowInArguments =
+        inputArgType.name === tableName && inputArgType.schema === tableSchema;
+    }
+
+    if (!hasUnsupportedArguments) {
+      hasUnsupportedArguments =
+        inputArgType.type !== 'c' && inputArgType.type !== 'b';
+    }
+  });
+
+  return hasTableRowInArguments && !hasUnsupportedArguments;
+};
+
 export const getSchemaFunctions = (
   allFunctions: PGFunction[],
-  fnSchema: string
+  fnSchema: string,
+  tableName: string,
+  tableSchema: string
 ) => {
-  return allFunctions.filter(fn => getFunctionSchema(fn) === fnSchema);
+  return allFunctions.filter(
+    fn =>
+      getFunctionSchema(fn) === fnSchema &&
+      isFunctionCompatibleToTable(fn, tableName, tableSchema)
+  );
 };
 
 export const findFunction = (
@@ -373,6 +406,36 @@ const getReferenceOption = (opt: string) => {
   }
 };
 
+const permissionColumnDataTypes = {
+  boolean: ['boolean'],
+  character: ['character', 'character varying', 'text', 'citext'],
+  dateTime: [
+    'timestamp',
+    'timestamp with time zone',
+    'timestamp without time zone',
+    'date',
+    'time',
+    'time with time zone',
+    'time without time zone',
+    'interval',
+  ],
+  geometry: ['geometry'],
+  geography: ['geography'],
+  json: ['json'],
+  jsonb: ['jsonb'],
+  numeric: [
+    'smallint',
+    'integer',
+    'bigint',
+    'decimal',
+    'numeric',
+    'real',
+    'double precision',
+  ],
+  uuid: ['uuid'],
+  user_defined: [], // default for all other types
+};
+
 export const postgres: DataSourcesAPI = {
   isTable,
   displayTableName,
@@ -437,4 +500,10 @@ export const postgres: DataSourcesAPI = {
   deleteFunctionSql,
   getEventInvocationInfoByIDSql,
   getDatabaseInfo,
+  getTableInfo,
+  getDatabaseVersionSql,
+  permissionColumnDataTypes,
+  viewsSupported: true,
+  supportedColumnOperators: null,
+  aggregationPermissionsAllowed: true,
 };

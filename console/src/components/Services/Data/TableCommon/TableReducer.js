@@ -22,6 +22,7 @@ import {
   TOGGLE_ENUM_SUCCESS,
   TOGGLE_ENUM_FAILURE,
   MODIFY_ROOT_FIELD,
+  MODIFY_TABLE_CUSTOM_NAME,
   SET_CHECK_CONSTRAINTS,
   SET_VIEW_DEF_SQL,
 } from '../TableModify/ModifyActions';
@@ -621,6 +622,11 @@ const modifyReducer = (tableName, schemas, modifyStateOrig, action) => {
         tableEnum: {
           loading: false,
         },
+      };
+    case MODIFY_TABLE_CUSTOM_NAME:
+      return {
+        ...modifyState,
+        custom_name: action.data,
       };
     case MODIFY_ROOT_FIELD:
       return {

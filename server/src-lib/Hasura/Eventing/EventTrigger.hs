@@ -52,6 +52,8 @@ import qualified Database.PG.Query                      as Q
 import qualified Database.PG.Query.PTI                  as PTI
 import qualified Network.HTTP.Client                    as HTTP
 import qualified PostgreSQL.Binary.Encoding             as PE
+import qualified System.Metrics.Distribution            as EKG.Distribution
+import qualified System.Metrics.Gauge                   as EKG.Gauge
 
 import           Control.Concurrent.Extended            (sleep)
 import           Control.Concurrent.STM.TVar
@@ -59,7 +61,6 @@ import           Control.Monad.Catch                    (MonadMask, bracket_)
 import           Control.Monad.STM
 import           Control.Monad.Trans.Control            (MonadBaseControl)
 import           Data.Aeson
-import           Data.Aeson.Casing
 import           Data.Aeson.TH
 import           Data.Has
 import           Data.Int                               (Int64)
@@ -78,13 +79,14 @@ import           Hasura.Eventing.HTTP
 import           Hasura.HTTP
 import           Hasura.RQL.DDL.Headers
 import           Hasura.RQL.Types
+import           Hasura.Server.Init.Config
 import           Hasura.Server.Version                  (HasVersion)
 
 data TriggerMetadata
   = TriggerMetadata { tmName :: TriggerName }
   deriving (Show, Eq)
 
-$(deriveJSON (aesonDrop 2 snakeCase){omitNothingFields=True} ''TriggerMetadata)
+$(deriveJSON hasuraJSON{omitNothingFields=True} ''TriggerMetadata)
 
 newtype EventInternalErr
   = EventInternalErr QErr
@@ -107,7 +109,7 @@ data Event
   , eCreatedAt :: !Time.UTCTime
   } deriving (Show, Eq)
 
-$(deriveFromJSON (aesonDrop 1 snakeCase){omitNothingFields=True} ''Event)
+$(deriveFromJSON hasuraJSON{omitNothingFields=True} ''Event)
 
 data EventEngineCtx
   = EventEngineCtx
@@ -121,7 +123,7 @@ data DeliveryInfo
   , diMaxRetries   :: Int
   } deriving (Show, Eq)
 
-$(deriveJSON (aesonDrop 2 snakeCase){omitNothingFields=True} ''DeliveryInfo)
+$(deriveJSON hasuraJSON{omitNothingFields=True} ''DeliveryInfo)
 
 newtype QualifiedTableStrict = QualifiedTableStrict
   { getQualifiedTable :: QualifiedTable
@@ -143,7 +145,7 @@ data EventPayload
   , epCreatedAt    :: Time.UTCTime
   } deriving (Show, Eq)
 
-$(deriveToJSON (aesonDrop 2 snakeCase){omitNothingFields=True} ''EventPayload)
+$(deriveToJSON hasuraJSON{omitNothingFields=True} ''EventPayload)
 
 defaultMaxEventThreads :: Int
 defaultMaxEventThreads = 100
@@ -156,7 +158,7 @@ initEventEngineCtx maxT _eeCtxFetchInterval = do
   _eeCtxEventThreadsCapacity <- newTVar maxT
   return $ EventEngineCtx{..}
 
-type EventWithSource = (Event, SourceConfig 'Postgres)
+type EventWithSource = (Event, SourceConfig 'Postgres, Time.UTCTime)
 
 -- | Service events from our in-DB queue.
 --
@@ -182,9 +184,12 @@ processEventQueue
   -> IO SchemaCache
   -> EventEngineCtx
   -> LockedEventsCtx
+  -> ServerMetrics
   -> m void
-processEventQueue logger logenv httpMgr getSchemaCache eeCtx@EventEngineCtx{..} LockedEventsCtx{leEvents} = do
+processEventQueue logger logenv httpMgr getSchemaCache eeCtx@EventEngineCtx{..} LockedEventsCtx{leEvents} serverMetrics = do
   events0 <- popEventsBatch
+  -- Track number of events fetched in EKG
+  _ <- liftIO $ EKG.Distribution.add (smNumEventsFetched serverMetrics) (fromIntegral $ length events0)
   go events0 0 False
   where
     fetchBatchSize = 100
@@ -199,16 +204,20 @@ processEventQueue logger logenv httpMgr getSchemaCache eeCtx@EventEngineCtx{..} 
         Any serial order of updates to a row will lead to an eventually consistent state as the row will have
         (delivered=t or error=t or archived=t) after a fixed number of tries (assuming it begins with locked='f').
       -}
-      pgSources <- scPostgres <$> liftIO getSchemaCache
-      fmap concat $ forM (M.toList pgSources) $ \(sourceName, sourceCache) -> do
-        let sourceConfig = _pcConfiguration sourceCache
-        liftIO $ runPgSourceWriteTx sourceConfig (fetchEvents sourceName fetchBatchSize) >>= \case
-            Left err -> do
-              liftIO $ L.unLogger logger $ EventInternalErr err
-              return []
-            Right events -> do
-              saveLockedEvents (map eId events) leEvents
-              return $ map (, sourceConfig) events
+      pgSources <- scSources <$> liftIO getSchemaCache
+      fmap concat $ forM (M.toList pgSources) $ \(sourceName, sourceCache) ->
+        case unsafeSourceConfiguration @'Postgres sourceCache of
+          Nothing           -> pure []
+          Just sourceConfig ->
+            liftIO $ runPgSourceWriteTx sourceConfig (fetchEvents sourceName fetchBatchSize) >>= \case
+              Left err -> do
+                liftIO $ L.unLogger logger $ EventInternalErr err
+                return []
+              Right events -> do
+                -- The time when the events were fetched. This is used to calculate the average lock time of an event.
+                eventsFetchedTime <- liftIO getCurrentTime
+                saveLockedEvents (map eId events) leEvents
+                return $ map (, sourceConfig, eventsFetchedTime) events
 
     -- work on this batch of events while prefetching the next. Recurse after we've forked workers
     -- for each in the batch, minding the requested pool size.
@@ -222,8 +231,8 @@ processEventQueue logger logenv httpMgr getSchemaCache eeCtx@EventEngineCtx{..} 
       -- worth the effort for something more fine-tuned
       eventsNext <- LA.withAsync popEventsBatch $ \eventsNextA -> do
         -- process approximately in order, minding HASURA_GRAPHQL_EVENTS_HTTP_POOL_SIZE:
-        forM_ events $ \(event, sourceConfig) -> do
-          t <- processEvent event sourceConfig
+        forM_ events $ \(event, sourceConfig, eventFetchedTime) -> do
+          t <- processEvent event sourceConfig eventFetchedTime
             & withEventEngineCtx eeCtx
             & flip runReaderT (logger, httpMgr)
             & LA.async
@@ -261,9 +270,20 @@ processEventQueue logger logenv httpMgr getSchemaCache eeCtx@EventEngineCtx{..} 
          , Has HTTP.Manager r
          , Has (L.Logger L.Hasura) r
          , Tracing.HasReporter io
+         , MonadMask io
          )
-      => Event -> SourceConfig 'Postgres -> io ()
-    processEvent e sourceConfig = do
+      => Event
+      -> SourceConfig 'Postgres
+      -> Time.UTCTime
+      -- ^ Time when the event was fetched from DB. Used to calculate Event Lock time
+      -> io ()
+    processEvent e sourceConfig eventFetchedTime= do
+      -- Track Lock Time of Event
+      -- Lock Time = Time when the event was fetched from DB - Time when the event is being processed
+      eventProcessTime <- liftIO getCurrentTime
+      let eventLockTime = realToFrac $ diffUTCTime eventProcessTime eventFetchedTime
+      _ <- liftIO $ EKG.Distribution.add (smEventLockTime serverMetrics) eventLockTime
+
       cache <- liftIO getSchemaCache
 
       tracingCtx <- liftIO (Tracing.extractEventContext (eEvent e))
@@ -296,7 +316,13 @@ processEventQueue logger logenv httpMgr getSchemaCache eeCtx@EventEngineCtx{..} 
               payload = encode $ toJSON ep
               extraLogCtx = ExtraLogContext Nothing (epId ep) -- avoiding getting current time here to avoid another IO call with each event call
               requestDetails = RequestDetails $ LBS.length payload
-          res <- runExceptT $ tryWebhook headers responseTimeout payload webhook
+
+          -- Track the number of active HTTP workers using EKG.
+          res <- bracket_
+                  (liftIO $ EKG.Gauge.inc $ smNumEventHTTPWorkers serverMetrics)
+                  (liftIO $ EKG.Gauge.dec $ smNumEventHTTPWorkers serverMetrics)
+                  (runExceptT $ tryWebhook headers responseTimeout payload webhook)
+
           logHTTPForET res extraLogCtx requestDetails
           let decodedHeaders = map (decodeHeader logenv headerInfos) headers
           either
@@ -413,10 +439,11 @@ logQErr err = do
   logger :: L.Logger L.Hasura <- asks getter
   L.unLogger logger $ EventInternalErr err
 
-getEventTriggerInfoFromEvent :: SchemaCache -> Event -> Either Text EventTriggerInfo
+getEventTriggerInfoFromEvent
+  :: SchemaCache -> Event -> Either Text (EventTriggerInfo 'Postgres)
 getEventTriggerInfoFromEvent sc e = do
   let table = eTable e
-      mTableInfo = getPGTableInfo (eSource e) table $ scPostgres sc
+      mTableInfo = unsafeTableInfo @'Postgres (eSource e) table $ scSources sc
   tableInfo <- onNothing mTableInfo $ Left ("table '" <> table <<> "' not found")
   let triggerName = tmName $ eTrigger e
       mEventTriggerInfo = M.lookup triggerName (_tiEventTriggerInfoMap tableInfo)

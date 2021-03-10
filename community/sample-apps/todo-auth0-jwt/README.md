@@ -67,7 +67,10 @@ awk 'NF {sub(/\r/, ""); printf "%s\\n",$0;}' yourauth0subdomain.pem
 ```
 
 ## Deploy Hasura GraphQL Engine
-[![Deploy HGE on heroku](https://www.herokucdn.com/deploy/button.svg)](https://heroku.com/deploy?template=https://github.com/hasura/graphql-engine-heroku)
+
+- Deploy GraphQL Engine on Hasura Cloud and setup PostgreSQL via Heroku:
+  
+  [![Deploy to Hasura Cloud](https://graphql-engine-cdn.hasura.io/img/deploy_to_hasura.png)](https://cloud.hasura.io/)
 
 After deploying, add the following environment variables to configure JWT mode:
 
@@ -91,14 +94,14 @@ Save changes.
 
 Setup values in `todo-app/src/constants.js`:
 1. Auth0 domain
-2. GraphQL engine deployed URL, e.g: `https://hasura-todo-auth0-jwt.herokuapp.com/v1/graphql`
+2. GraphQL engine deployed URL, e.g: `https://hasura-todo-auth0-jwt.hasura.app/v1/graphql`
 3. Auth0 application's client id
 
 ## Create the initial tables
 1. Add your database URL and admin secret in `hasura/config.yaml`
 
 ```yaml
-endpoint: https://<hge-heroku-url>
+endpoint: https://hasura-todo-auth0-jwt.hasura.app
 admin_secret: <your-admin-secret>
 ```
 

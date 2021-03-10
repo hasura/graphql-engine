@@ -69,6 +69,7 @@ import {
   generateTableDef,
   QUERY_TYPES,
   dataSource,
+  currentDriver,
 } from '../../../../dataSources';
 import KnowMoreLink from '../../../Common/KnowMoreLink/KnowMoreLink';
 import {
@@ -83,6 +84,9 @@ import {
 import PermButtonSection from './PermButtonsSection';
 import { rolesSelector } from '../../../../metadata/selector';
 import { RightContainer } from '../../../Common/Layout/RightContainer';
+import FeatureDisabled from '../FeatureDisabled';
+
+const supportedDrivers = ['postgres', 'mssql'];
 
 class Permissions extends Component {
   constructor() {
@@ -108,6 +112,8 @@ class Permissions extends Component {
 
   componentDidMount() {
     const { dispatch } = this.props;
+
+    if (!supportedDrivers.includes(currentDriver)) return;
 
     dispatch({ type: RESET });
     dispatch(setTable(this.props.tableName));
@@ -199,7 +205,17 @@ class Permissions extends Component {
       generateTableDef(tableName, currentSchema)
     );
 
-    if (!currentTableSchema) {
+    if (!supportedDrivers.includes(currentDriver)) {
+      return (
+        <FeatureDisabled
+          tab="permissions"
+          tableName={tableName}
+          schemaName={currentSchema}
+        />
+      );
+    }
+
+    if (!currentTableSchema && supportedDrivers.includes(currentDriver)) {
       // throw a 404 exception
       throw new NotFoundError();
     }
@@ -287,6 +303,10 @@ class Permissions extends Component {
       );
 
       const getViewPermissionNote = () => {
+        if (!dataSource.viewsSupported) {
+          return null;
+        }
+
         let note;
 
         const unsupportedQueryTypes = arrayDiff(
@@ -1472,6 +1492,10 @@ class Permissions extends Component {
       };
 
       const getAggregationSection = () => {
+        if (!dataSource.aggregationPermissionsAllowed) {
+          return null;
+        }
+
         if (query !== 'select') {
           return;
         }
@@ -1553,7 +1577,12 @@ class Permissions extends Component {
           const _applyToListHtml = [];
 
           const tableOptions = allSchemas.map(schema => schema.table_name);
-          const actionsList = ['insert', 'select', 'update', 'delete'];
+          const actionsList = supportedQueryTypes || [
+            'insert',
+            'select',
+            'update',
+            'delete',
+          ];
 
           const getApplyToRow = (applyTo, index) => {
             const getSelect = (type, options, value = '') => {
@@ -1710,7 +1739,7 @@ class Permissions extends Component {
               'Backend only',
               tooltip,
               backendStatus,
-              'https://hasura.io/docs/1.0/graphql/manual/auth/authorization/permission-rules.html#backend-only'
+              'https://hasura.io/docs/latest/graphql/core/auth/authorization/permission-rules.html#backend-only'
             )}
             useDefaultTitleStyle
             testId={'toggle-backend-only'}

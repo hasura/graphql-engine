@@ -7,7 +7,8 @@ import {
   unTrackFunction,
   trackFunction,
   verifyPermissionTab,
-  testSessVariable,
+  trackVolatileFunction,
+  trackVolatileFunctionAsQuery,
 } from './spec';
 import { getIndexRoute } from '../../../helpers/dataHelpers';
 
@@ -30,7 +31,9 @@ export const runCreateCustomFunctionsTableTests = () => {
     it('Track custom function', trackFunction);
     it('Verify permission tab', verifyPermissionTab);
     it('Delete custom function', deleteCustomFunction);
-    it('Test custom function with Session Argument', testSessVariable);
+    // TODO it('Test custom function with Session Argument', testSessVariable);
+    it('Tracks VOLATILE function as mutation', trackVolatileFunction);
+    it('Tracks VOLATILE function as query', trackVolatileFunctionAsQuery);
   });
 };
 

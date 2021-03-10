@@ -3,25 +3,24 @@ module Hasura.RQL.Types.RemoteSchema where
 import           Hasura.Prelude
 
 import qualified Data.Aeson                     as J
-import qualified Data.Aeson.Casing              as J
 import qualified Data.Aeson.TH                  as J
 import qualified Data.Environment               as Env
 import qualified Data.HashSet                   as Set
 import qualified Data.Text                      as T
-import qualified Text.Builder                   as TB
 import           Data.Text.Extended
 import           Data.Text.NonEmpty
 import qualified Database.PG.Query              as Q
-import qualified Network.URI.Extended           as N
-import qualified Language.GraphQL.Draft.Syntax  as G
 import qualified Language.GraphQL.Draft.Printer as G
+import qualified Language.GraphQL.Draft.Syntax  as G
+import qualified Network.URI.Extended           as N
+import qualified Text.Builder                   as TB
 
-import           Hasura.Incremental         (Cacheable)
-import           Hasura.RQL.DDL.Headers     (HeaderConf (..))
+import           Hasura.GraphQL.Parser.Schema   (Variable)
+import           Hasura.Incremental             (Cacheable)
+import           Hasura.RQL.DDL.Headers         (HeaderConf (..))
 import           Hasura.RQL.Types.Common
 import           Hasura.RQL.Types.Error
 import           Hasura.Session
-import           Hasura.GraphQL.Parser.Schema      (Variable)
 
 type UrlFromEnv = Text
 
@@ -50,7 +49,7 @@ instance NFData RemoteSchemaInfo
 instance Cacheable RemoteSchemaInfo
 instance Hashable RemoteSchemaInfo
 
-$(J.deriveJSON (J.aesonDrop 2 J.snakeCase) ''RemoteSchemaInfo)
+$(J.deriveJSON hasuraJSON ''RemoteSchemaInfo)
 
 -- | From the user's API request
 data RemoteSchemaDef
@@ -63,7 +62,7 @@ data RemoteSchemaDef
   } deriving (Show, Eq, Generic)
 instance NFData RemoteSchemaDef
 instance Cacheable RemoteSchemaDef
-$(J.deriveToJSON (J.aesonDrop 4 J.snakeCase){J.omitNothingFields=True} ''RemoteSchemaDef)
+$(J.deriveToJSON hasuraJSON{J.omitNothingFields=True} ''RemoteSchemaDef)
 
 instance J.FromJSON RemoteSchemaDef where
   parseJSON = J.withObject "Object" $ \o ->
@@ -84,14 +83,14 @@ data AddRemoteSchemaQuery
   } deriving (Show, Eq, Generic)
 instance NFData AddRemoteSchemaQuery
 instance Cacheable AddRemoteSchemaQuery
-$(J.deriveJSON (J.aesonDrop 5 J.snakeCase) ''AddRemoteSchemaQuery)
+$(J.deriveJSON hasuraJSON ''AddRemoteSchemaQuery)
 
 newtype RemoteSchemaNameQuery
   = RemoteSchemaNameQuery
   { _rsnqName    :: RemoteSchemaName
   } deriving (Show, Eq)
 
-$(J.deriveJSON (J.aesonDrop 5 J.snakeCase) ''RemoteSchemaNameQuery)
+$(J.deriveJSON hasuraJSON ''RemoteSchemaNameQuery)
 
 getUrlFromEnv :: (MonadIO m, MonadError QErr m) => Env.Environment -> Text -> m N.URI
 getUrlFromEnv env urlFromEnv = do
@@ -151,7 +150,7 @@ data AddRemoteSchemaPermissions
   } deriving (Show, Eq, Generic)
 instance NFData AddRemoteSchemaPermissions
 instance Cacheable AddRemoteSchemaPermissions
-$(J.deriveJSON (J.aesonDrop 5 J.snakeCase) ''AddRemoteSchemaPermissions)
+$(J.deriveJSON hasuraJSON ''AddRemoteSchemaPermissions)
 
 data DropRemoteSchemaPermissions
   = DropRemoteSchemaPermissions
@@ -160,7 +159,7 @@ data DropRemoteSchemaPermissions
   } deriving (Show, Eq, Generic)
 instance NFData DropRemoteSchemaPermissions
 instance Cacheable DropRemoteSchemaPermissions
-$(J.deriveJSON (J.aesonDrop 5 J.snakeCase) ''DropRemoteSchemaPermissions)
+$(J.deriveJSON hasuraJSON ''DropRemoteSchemaPermissions)
 
 -- | See `resolveRemoteVariable` function. This data type is used
 --   for validation of the session variable value
@@ -185,8 +184,8 @@ instance Cacheable RemoteSchemaVariable
 --   may contain a preset with it.
 data RemoteSchemaInputValueDefinition
   = RemoteSchemaInputValueDefinition
-  { _rsitdDefinition      :: !G.InputValueDefinition
-  , _rsitdPresetArgument  :: !(Maybe (G.Value RemoteSchemaVariable))
+  { _rsitdDefinition     :: !G.InputValueDefinition
+  , _rsitdPresetArgument :: !(Maybe (G.Value RemoteSchemaVariable))
   } deriving (Show, Eq, Generic, Ord)
 instance Hashable RemoteSchemaInputValueDefinition
 instance Cacheable RemoteSchemaInputValueDefinition
@@ -194,3 +193,17 @@ instance Cacheable RemoteSchemaInputValueDefinition
 newtype RemoteSchemaIntrospection
   = RemoteSchemaIntrospection [(G.TypeDefinition [G.Name] RemoteSchemaInputValueDefinition)]
   deriving (Show, Eq, Generic, Hashable, Cacheable, Ord)
+
+data RemoteSchemaPermsCtx
+  = RemoteSchemaPermsEnabled
+  | RemoteSchemaPermsDisabled
+  deriving (Show, Eq)
+
+instance J.FromJSON RemoteSchemaPermsCtx where
+  parseJSON = J.withBool "RemoteSchemaPermsCtx" $
+    pure . bool RemoteSchemaPermsDisabled RemoteSchemaPermsEnabled
+
+instance J.ToJSON RemoteSchemaPermsCtx where
+  toJSON = \case
+    RemoteSchemaPermsEnabled  -> J.Bool True
+    RemoteSchemaPermsDisabled -> J.Bool False

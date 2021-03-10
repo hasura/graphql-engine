@@ -700,15 +700,6 @@ Operator
 - ``_gte``
 - ``_lte``
 
-**Operators for comparing columns (all column types except json, jsonb)**:
-
-- ``_ceq``
-- ``_cneq``
-- ``_cgt``
-- ``_clt``
-- ``_cgte``
-- ``_cnlte``
-
 **Text related operators:**
 
 - ``_like``

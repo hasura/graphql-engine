@@ -34,11 +34,13 @@ import qualified System.Random                as Rand
 import qualified Web.HttpApiData              as HTTP
 
 import           Control.Lens                 ((^?))
+import           Control.Monad.Catch          (MonadCatch, MonadMask, MonadThrow)
 import           Control.Monad.Morph
 import           Control.Monad.Trans.Control
 import           Control.Monad.Unique
 import           Data.String                  (fromString)
 import           Network.URI                  (URI)
+
 
 
 -- | Any additional human-readable key-value pairs relevant
@@ -89,7 +91,7 @@ data TraceContext = TraceContext
 -- | The 'TraceT' monad transformer adds the ability to keep track of
 -- the current trace context.
 newtype TraceT m a = TraceT { unTraceT :: ReaderT (TraceContext, Reporter) (WriterT TracingMetadata m) a }
-  deriving (Functor, Applicative, Monad, MonadIO, MonadUnique)
+  deriving (Functor, Applicative, Monad, MonadIO, MonadUnique, MonadMask, MonadCatch, MonadThrow)
 
 instance MonadTrans TraceT where
   lift = TraceT . lift . lift
@@ -215,7 +217,7 @@ word64ToHex randNum = bsToTxt $ Hex.encode numInBytes
 hexToWord64 :: Text -> Maybe Word64
 hexToWord64 randText = do
   case Hex.decode $ txtToBs randText of
-    Left _ -> Nothing
+    Left _        -> Nothing
     Right decoded -> Just $ Bin.decode $ BL.fromStrict decoded
 
 -- | Inject the trace context as a set of HTTP headers.

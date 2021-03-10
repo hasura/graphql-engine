@@ -163,7 +163,7 @@ class RelationshipsView extends Component {
                 Table Relationships
                 <ToolTip message={'Relationships to tables / views'} />
                 &nbsp;
-                <KnowMoreLink href="https://hasura.io/docs/1.0/graphql/manual/schema/table-relationships/index.html" />
+                <KnowMoreLink href="https://hasura.io/docs/latest/graphql/core/schema/table-relationships/index.html" />
               </h4>
               {addedRelationshipsView}
               <div className={styles.activeEdit}>

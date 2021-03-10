@@ -25,6 +25,10 @@ users add more books, the search index gets bigger.
 - Algolia account
 - Hasura GraphQL Engine (HGE) installation
 
+- Deploy GraphQL Engine on Hasura Cloud and setup PostgreSQL via Heroku:
+  
+  [![Deploy to Hasura Cloud](https://graphql-engine-cdn.hasura.io/img/deploy_to_hasura.png)](https://cloud.hasura.io/)
+
 ### Step 1: Create table
 
 Go to HGE console and create the following table:

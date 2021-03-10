@@ -1,217 +1,192 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { connect } from 'react-redux';
-import { Link } from 'react-router';
-
 import LeftSubSidebar from '../../Common/Layout/LeftSubSidebar/LeftSubSidebar';
-import GqlCompatibilityWarning from '../../Common/GqlCompatibilityWarning/GqlCompatibilityWarning';
-import { dataSource, getSchemaTables } from '../../../dataSources';
-import { isEmpty } from '../../Common/utils/jsUtils';
-import {
-  getFunctionModifyRoute,
-  getSchemaAddTableRoute,
-  getTableBrowseRoute,
-} from '../../Common/utils/routesUtils';
-import { getConsistentFunctions } from '../../../metadata/selector';
+import { manageDatabasesRoute } from '../../Common/utils/routesUtils';
+import TreeView from './TreeView';
+import { getDatabaseTableTypeInfo } from './DataActions';
+import { isInconsistentSource } from './utils';
 
-class DataSubSidebar extends React.Component {
-  constructor() {
-    super();
+const groupByKey = (list, key) =>
+  list.reduce(
+    (hash, obj) => ({
+      ...hash,
+      [obj[key]]: (hash[obj[key]] || []).concat(obj),
+    }),
+    {}
+  );
 
-    this.state = {
-      searchInput: '',
-    };
+const DataSubSidebar = props => {
+  const {
+    migrationMode,
+    dispatch,
+    onDatabaseChange,
+    onSchemaChange,
+    tables,
+    functions,
+    sources,
+    currentDataSource,
+    schemaList,
+    currentSchema,
+    enums,
+    inconsistentObjects,
+  } = props;
 
-    this.tableSearch = this.tableSearch.bind(this);
-  }
+  const getItems = (schemaInfo = null) => {
+    let sourceItems = [];
+    sources.forEach(source => {
+      if (isInconsistentSource(source.name, inconsistentObjects)) return;
 
-  shouldComponentUpdate(nextProps) {
-    if (nextProps.metadata.ongoingRequest) {
-      return false;
-    }
+      const sourceItem = { name: source.name, type: 'database' };
+      const sourceTables = !source.tables
+        ? []
+        : source.tables.map(data => {
+            const is_enum = data.is_enum ? true : false;
+            return {
+              name: data.table.name,
+              schema: data.table.schema,
+              type: 'table',
+              is_enum: is_enum,
+            };
+          });
+      const sourceFunctions = !source.functions
+        ? []
+        : source.functions.map(data => ({
+            name: data.function.name,
+            schema: data.function.schema,
+            type: 'function',
+          }));
 
-    return true;
-  }
-
-  tableSearch(e) {
-    const searchTerm = e.target.value;
-
-    this.setState({
-      searchInput: searchTerm,
-    });
-  }
-
-  render() {
-    const styles = require('../../Common/Layout/LeftSubSidebar/LeftSubSidebar.scss');
-    const functionSymbol = require('../../Common/Layout/LeftSubSidebar/function.svg');
-    const functionSymbolActive = require('../../Common/Layout/LeftSubSidebar/function_active.svg');
-    const {
-      currentTable,
-      currentSchema,
-      migrationMode,
-      location,
-      currentFunction,
-      trackedFunctions,
-      allSchemas,
-      currentSource,
-    } = this.props;
-
-    const { searchInput } = this.state;
-
-    const trackedTablesInSchema = getSchemaTables(
-      allSchemas,
-      currentSchema
-    ).filter(table => table.is_table_tracked);
-
-    const filteredTableList = trackedTablesInSchema.filter(t =>
-      t.table_name.includes(searchInput)
-    );
-
-    const filteredFunctionsList = trackedFunctions.filter(f =>
-      f.name.includes(searchInput)
-    );
-
-    const getSearchInput = () => {
-      return (
-        <input
-          type="text"
-          onChange={this.tableSearch}
-          className="form-control"
-          placeholder={'search table/view/function'}
-          data-test="search-tables"
-        />
+      const schemaGroups = groupByKey(
+        [...sourceTables, ...sourceFunctions],
+        'schema'
       );
-    };
 
-    const getChildList = () => {
-      let childList;
+      // Find out the difference between schemas from metadata and SchemaList from state
+      const schemasFromMetadata = Array.from(
+        new Set([
+          ...sourceTables.map(i => i.schema),
+          ...sourceFunctions.map(i => i.schema),
+        ])
+      );
+      const missingSchemas = schemaList.filter(
+        x => !schemasFromMetadata.includes(x)
+      );
 
-      const currentLocation = location.pathname;
-
-      let tableLinks = [];
-      if (filteredTableList && filteredTableList.length) {
-        const filteredTablesObject = {};
-        filteredTableList.forEach(t => {
-          filteredTablesObject[t.table_name] = t;
+      let schemaItems = [];
+      Object.keys(schemaGroups).forEach(schema => {
+        const schemaItem = { name: schema, type: 'schema' };
+        const tableItems = [];
+        schemaGroups[schema].forEach(table => {
+          const is_view =
+            schemaInfo &&
+            schemaInfo[source.name][schema] &&
+            schemaInfo[source.name][schema][table.name]
+              ? schemaInfo[source.name][schema][table.name].table_type ===
+                  'view' ||
+                schemaInfo[source.name][schema][table.name].table_type ===
+                  'materialized_view'
+              : false;
+          let type = table.type;
+          if (is_view) type = 'view';
+          if (table.is_enum) type = 'enum';
+          tableItems.push({
+            name: table.name,
+            type: type,
+          });
         });
+        schemaItem.children = tableItems;
+        schemaItems = [...schemaItems, schemaItem];
+      });
 
-        const sortedTableNames = Object.keys(filteredTablesObject).sort();
+      sourceItem.children = schemaItems;
 
-        tableLinks = sortedTableNames.map((tableName, i) => {
-          const table = filteredTablesObject[tableName];
-
-          const isActive =
-            tableName === currentTable && currentLocation.includes(tableName);
-
-          const iconStyle = table.is_enum ? 'fa-list-ul' : 'fa-table';
-
-          return (
-            <li
-              className={isActive ? styles.activeLink : ''}
-              key={'table ' + i}
-            >
-              <Link
-                to={getTableBrowseRoute(
-                  currentSchema,
-                  currentSource,
-                  tableName,
-                  dataSource.isTable(table)
-                )}
-                data-test={tableName}
-              >
-                <i
-                  className={`${styles.tableIcon} fa ${iconStyle}`}
-                  aria-hidden="true"
-                />
-                {dataSource.displayTableName(table)}
-              </Link>
-              <GqlCompatibilityWarning
-                identifier={tableName}
-                className={styles.add_mar_left_mid}
-              />
-            </li>
-          );
-        });
-      }
-
-      let functionLinks = [];
-      if (filteredFunctionsList && filteredFunctionsList.length > 0) {
-        const filteredFunctionsObject = {};
-        filteredFunctionsList.forEach(f => {
-          filteredFunctionsObject[f.name] = f;
-        });
-
-        const sortedFunctionNames = Object.keys(filteredFunctionsObject).sort();
-
-        functionLinks = sortedFunctionNames.map((funcName, i) => {
-          const func = filteredFunctionsObject[funcName];
-
-          const isActive =
-            funcName === currentFunction && currentLocation.includes(funcName);
-
-          return (
-            <li className={isActive ? styles.activeLink : ''} key={'fn ' + i}>
-              <Link
-                to={getFunctionModifyRoute(
-                  dataSource.getFunctionSchema(func),
-                  currentSource,
-                  funcName
-                )}
-                data-test={funcName}
-              >
-                <img
-                  src={isActive ? functionSymbolActive : functionSymbol}
-                  className={styles.functionIcon}
-                />
-                <span>{funcName}</span>
-              </Link>
-            </li>
-          );
-        });
-      }
-
-      childList = [...tableLinks, ...functionLinks];
-
-      if (isEmpty(childList)) {
-        childList = [
-          <li className={styles.noChildren} key="no-tables-1">
-            <i>No tables/views/functions available</i>
-          </li>,
+      if (source.name === currentDataSource) {
+        sourceItem.children = [
+          ...missingSchemas.map(schemaName => ({
+            name: schemaName,
+            type: 'schema',
+            children: [],
+          })),
+          ...sourceItem.children,
         ];
       }
 
-      return childList;
-    };
+      sourceItems = [...sourceItems, sourceItem];
+    });
+    return sourceItems;
+  };
 
-    const tablesViewsFunctionsCount =
-      filteredTableList.length + filteredFunctionsList.length;
+  const [treeViewItems, setTreeViewItems] = useState([]);
 
-    return (
-      <LeftSubSidebar
-        showAddBtn={migrationMode && currentSource}
-        searchInput={getSearchInput()}
-        heading={`Tables/Views/Functions (${tablesViewsFunctionsCount})`}
-        addLink={getSchemaAddTableRoute(currentSchema, currentSource)}
-        addLabel={'Add Table'}
-        addTestString={'sidebar-add-table'}
-        childListTestString={'table-links'}
-      >
-        {getChildList()}
-      </LeftSubSidebar>
-    );
-  }
-}
+  const updateTreeViewItemsWithSchemaInfo = () => {
+    const schemaPromises = [];
+    sources.forEach(source => {
+      const currentSourceTables = sources
+        .filter(i => i.name === source.name)[0]
+        .tables.map(i => `'${i.table.name}'`);
+      schemaPromises.push(
+        dispatch(
+          getDatabaseTableTypeInfo(
+            source.kind,
+            source.name,
+            currentSourceTables
+          )
+        ).then(data => ({ source: source.name, schemaInfo: data }))
+      );
+    });
+    Promise.all(schemaPromises).then(data => {
+      const schemaInfo = {};
+      data.forEach(item => {
+        schemaInfo[item.source] = item.schemaInfo;
+      });
+      const newItems = getItems(schemaInfo);
+      setTreeViewItems(newItems);
+    });
+  };
+
+  useEffect(() => {
+    updateTreeViewItemsWithSchemaInfo();
+  }, [sources.length, tables, functions, enums, schemaList]);
+
+  const databasesCount = treeViewItems?.length || 0;
+
+  return (
+    <LeftSubSidebar
+      showAddBtn={migrationMode}
+      heading={`Databases (${databasesCount})`}
+      addLink={manageDatabasesRoute}
+      addLabel={'Manage'}
+      addTestString={'sidebar-manage-database'}
+      childListTestString={'table-links'}
+    >
+      <TreeView
+        items={treeViewItems}
+        onDatabaseChange={onDatabaseChange}
+        onSchemaChange={onSchemaChange}
+        currentDataSource={currentDataSource}
+        currentSchema={currentSchema}
+      />
+    </LeftSubSidebar>
+  );
+};
 
 const mapStateToProps = state => {
   return {
     migrationMode: state.main.migrationMode,
-    trackedFunctions: getConsistentFunctions(state),
-    currentFunction: state.functions.functionName,
-    allSchemas: state.tables.allSchemas,
-    currentTable: state.tables.currentTable,
+    sources: state.metadata.metadataObject.sources,
+    inconsistentObjects: state.metadata.inconsistentObjects,
+    tables: state.metadata.metadataObject.sources.map(s => s.tables).flat()
+      .length,
+    enums: state.metadata.metadataObject.sources
+      .map(s => s.tables)
+      .flat()
+      .filter(item => item.hasOwnProperty('is_enum')).length,
+    functions: state.metadata.metadataObject.sources
+      .map(s => s.functions || [])
+      .flat().length,
+    currentDataSource: state.tables.currentDataSource,
     currentSchema: state.tables.currentSchema,
-    currentSource: state.tables.currentDataSource,
-    serverVersion: state.main.serverVersion ? state.main.serverVersion : '',
-    metadata: state.metadata,
+    schemaList: state.tables.schemaList,
   };
 };
 

@@ -113,6 +113,7 @@ export const getKeyDef = (config, constraintName) => {
 
 export const getRootFieldLabel = rfType => {
   const labels = {
+    custom_name: 'Custom Table Name',
     select: 'Select',
     select_by_pk: 'Select by PK',
     select_aggregate: 'Select Aggregate',

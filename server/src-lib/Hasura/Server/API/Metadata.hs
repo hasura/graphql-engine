@@ -17,9 +17,12 @@ import qualified Hasura.Tracing                     as Tracing
 import           Hasura.EncJSON
 import           Hasura.Metadata.Class
 import           Hasura.RQL.DDL.Action
+import           Hasura.RQL.DDL.ApiLimit
 import           Hasura.RQL.DDL.ComputedField
 import           Hasura.RQL.DDL.CustomTypes
+import           Hasura.RQL.DDL.Endpoint
 import           Hasura.RQL.DDL.EventTrigger
+import           Hasura.RQL.DDL.InheritedRoles
 import           Hasura.RQL.DDL.Metadata
 import           Hasura.RQL.DDL.Permission
 import           Hasura.RQL.DDL.QueryCollection
@@ -32,38 +35,43 @@ import           Hasura.RQL.DDL.Schema
 import           Hasura.RQL.DDL.Schema.Source
 import           Hasura.RQL.Types
 import           Hasura.RQL.Types.Run
-import           Hasura.Server.Types                (InstanceId (..))
+import           Hasura.Server.Types                (InstanceId (..), MaintenanceMode (..))
+import           Hasura.Server.Utils                (APIVersion (..))
 import           Hasura.Server.Version              (HasVersion)
 import           Hasura.Session
 
 
-data RQLMetadata
-  = RMPgAddSource !AddPgSource
-  | RMPgDropSource !DropPgSource
+data RQLMetadataV1
+  = RMPgAddSource !(AddSource 'Postgres)
+  | RMPgDropSource !DropSource
 
-  | RMPgTrackTable !TrackTableV2
-  | RMPgUntrackTable !UntrackTable
+  | RMPgTrackTable !(TrackTableV2 'Postgres)
+  | RMPgUntrackTable !(UntrackTable 'Postgres)
   | RMPgSetTableIsEnum !SetTableIsEnum
   | RMPgSetTableCustomization !SetTableCustomization
 
   -- Postgres functions
   | RMPgTrackFunction !TrackFunctionV2
-  | RMPgUntrackFunction !UnTrackFunction
+  | RMPgUntrackFunction !(UnTrackFunction 'Postgres)
+
+  -- Postgres function permissions
+  | RMPgCreateFunctionPermission !(CreateFunctionPermission 'Postgres)
+  | RMPgDropFunctionPermission !(DropFunctionPermission 'Postgres)
 
   -- Postgres table relationships
-  | RMPgCreateObjectRelationship !CreateObjRel
-  | RMPgCreateArrayRelationship !CreateArrRel
-  | RMPgDropRelationship !DropRel
-  | RMPgSetRelationshipComment !SetRelComment
-  | RMPgRenameRelationship !RenameRel
+  | RMPgCreateObjectRelationship !(CreateObjRel 'Postgres)
+  | RMPgCreateArrayRelationship !(CreateArrRel 'Postgres)
+  | RMPgDropRelationship !(DropRel 'Postgres)
+  | RMPgSetRelationshipComment !(SetRelComment 'Postgres)
+  | RMPgRenameRelationship !(RenameRel 'Postgres)
 
   -- Postgres computed fields
-  | RMPgAddComputedField !AddComputedField
-  | RMPgDropComputedField !DropComputedField
+  | RMPgAddComputedField !(AddComputedField 'Postgres)
+  | RMPgDropComputedField !(DropComputedField 'Postgres)
 
   -- Postgres tables remote relationships
-  | RMPgCreateRemoteRelationship !RemoteRelationship
-  | RMPgUpdateRemoteRelationship !RemoteRelationship
+  | RMPgCreateRemoteRelationship !(RemoteRelationship 'Postgres)
+  | RMPgUpdateRemoteRelationship !(RemoteRelationship 'Postgres)
   | RMPgDeleteRemoteRelationship !DeleteRemoteRelationship
 
   -- Postgres tables permissions
@@ -72,17 +80,40 @@ data RQLMetadata
   | RMPgCreateUpdatePermission !(CreateUpdPerm 'Postgres)
   | RMPgCreateDeletePermission !(CreateDelPerm 'Postgres)
 
-  | RMPgDropInsertPermission !(DropPerm (InsPerm 'Postgres))
-  | RMPgDropSelectPermission !(DropPerm (SelPerm 'Postgres))
-  | RMPgDropUpdatePermission !(DropPerm (UpdPerm 'Postgres))
-  | RMPgDropDeletePermission !(DropPerm (DelPerm 'Postgres))
-  | RMPgSetPermissionComment !SetPermComment
+  | RMPgDropInsertPermission !(DropPerm 'Postgres (InsPerm 'Postgres))
+  | RMPgDropSelectPermission !(DropPerm 'Postgres (SelPerm 'Postgres))
+  | RMPgDropUpdatePermission !(DropPerm 'Postgres (UpdPerm 'Postgres))
+  | RMPgDropDeletePermission !(DropPerm 'Postgres (DelPerm 'Postgres))
+  | RMPgSetPermissionComment !(SetPermComment 'Postgres)
 
   -- Postgres tables event triggers
   | RMPgCreateEventTrigger !CreateEventTriggerQuery
   | RMPgDeleteEventTrigger !DeleteEventTriggerQuery
   | RMPgRedeliverEvent     !RedeliverEventQuery
   | RMPgInvokeEventTrigger !InvokeEventTriggerQuery
+
+  -- MSSQL sources
+  | RMMssqlAddSource !(AddSource 'MSSQL)
+  | RMMssqlDropSource !DropSource
+  | RMMssqlTrackTable !(TrackTableV2 'MSSQL)
+  | RMMssqlUntrackTable !(UntrackTable 'MSSQL)
+
+  | RMMssqlCreateObjectRelationship !(CreateObjRel 'MSSQL)
+  | RMMssqlCreateArrayRelationship !(CreateArrRel 'MSSQL)
+  | RMMssqlDropRelationship !(DropRel 'MSSQL)
+  | RMMssqlSetRelationshipComment !(SetRelComment 'MSSQL)
+  | RMMssqlRenameRelationship !(RenameRel 'MSSQL)
+
+  | RMMssqlCreateInsertPermission !(CreateInsPerm 'MSSQL)
+  | RMMssqlCreateSelectPermission !(CreateSelPerm 'MSSQL)
+  | RMMssqlCreateUpdatePermission !(CreateUpdPerm 'MSSQL)
+  | RMMssqlCreateDeletePermission !(CreateDelPerm 'MSSQL)
+
+  | RMMssqlDropInsertPermission !(DropPerm 'MSSQL (InsPerm 'MSSQL))
+  | RMMssqlDropSelectPermission !(DropPerm 'MSSQL (SelPerm 'MSSQL))
+  | RMMssqlDropUpdatePermission !(DropPerm 'MSSQL (UpdPerm 'MSSQL))
+  | RMMssqlDropDeletePermission !(DropPerm 'MSSQL (DelPerm 'MSSQL))
+  | RMMssqlSetPermissionComment !(SetPermComment 'MSSQL)
 
   -- Inconsistent metadata
   | RMGetInconsistentMetadata !GetInconsistentMetadata
@@ -93,6 +124,10 @@ data RQLMetadata
   | RMRemoveRemoteSchema !RemoteSchemaNameQuery
   | RMReloadRemoteSchema !RemoteSchemaNameQuery
   | RMIntrospectRemoteSchema !RemoteSchemaNameQuery
+
+  -- remote-schema permissions
+  | RMAddRemoteSchemaPermissions !AddRemoteSchemaPermissions
+  | RMDropRemoteSchemaPermissions !DropRemoteSchemaPermissions
 
   -- scheduled triggers
   | RMCreateCronTrigger !CreateCronTrigger
@@ -123,6 +158,9 @@ data RQLMetadata
   | RMCreateActionPermission !CreateActionPermission
   | RMDropActionPermission !DropActionPermission
 
+  | RMCreateRestEndpoint !CreateEndpoint
+  | RMDropRestEndpoint !DropEndpoint
+
   | RMSetCustomTypes !CustomTypes
 
   | RMDumpInternalState !DumpInternalState
@@ -130,15 +168,82 @@ data RQLMetadata
   | RMGetCatalogState !GetCatalogState
   | RMSetCatalogState !SetCatalogState
 
+  -- 'ApiLimit' related
+  | RMSetApiLimits !ApiLimit
+  | RMRemoveApiLimits
+
+  -- 'MetricsConfig' related
+  | RMSetMetricsConfig !MetricsConfig
+  | RMRemoveMetricsConfig
+
+  -- inherited roles
+  | RMAddInheritedRole !AddInheritedRole
+  | RMDropInheritedRole !DropInheritedRole
+
   -- bulk metadata queries
-  | RMBulk [RQLMetadata]
-  deriving (Show, Eq)
+  | RMBulk [RQLMetadataRequest]
+  deriving (Eq)
+
+data RQLMetadataV2
+  = RMV2ReplaceMetadata !ReplaceMetadataV2
+  | RMV2ExportMetadata !ExportMetadata
+  deriving (Eq)
+
+data RQLMetadataRequest
+  = RMV1 !RQLMetadataV1
+  | RMV2 !RQLMetadataV2
+  deriving (Eq)
+
+instance FromJSON RQLMetadataRequest where
+  parseJSON = withObject "RQLMetadataRequest" $ \o -> do
+    version <- o .:? "version" .!= VIVersion1
+    let val = Object o
+    case version of
+      VIVersion1 -> RMV1 <$> parseJSON val
+      VIVersion2 -> RMV2 <$> parseJSON val
+
+instance ToJSON RQLMetadataRequest where
+  toJSON = \case
+    RMV1 q -> embedVersion VIVersion1 $ toJSON q
+    RMV2 q -> embedVersion VIVersion2 $ toJSON q
+    where
+      embedVersion version (Object o) =
+        Object $ o <> "version" .= version
+      -- never happens since JSON value of RQL queries are always objects
+      embedVersion _ _ = error "Unexpected: toJSON of RQLMetadtaV is not an object"
+
+data RQLMetadata
+  = RQLMetadata
+  { _rqlMetadataResourceVersion :: !(Maybe MetadataResourceVersion)
+  , _rqlMetadata                :: !RQLMetadataRequest
+  } deriving (Eq)
+
+instance FromJSON RQLMetadata where
+  parseJSON = withObject "RQLMetadata" $ \o -> do
+    _rqlMetadataResourceVersion <- o .:? "resource_version"
+    _rqlMetadata <- parseJSON $ Object o
+    pure RQLMetadata{..}
+
+instance ToJSON RQLMetadata where
+  toJSON RQLMetadata{..} =
+    embedResourceVersion $ toJSON _rqlMetadata
+    where
+      embedResourceVersion (Object o) =
+        Object $ o <> "resource_version" .= _rqlMetadataResourceVersion
+      -- never happens since JSON value of RQL queries are always objects
+      embedResourceVersion _ = error "Unexpected: toJSON of RQLMetadata is not an object"
 
 $(deriveJSON
   defaultOptions { constructorTagModifier = snakeCase . drop 2
                  , sumEncoding = TaggedObject "type" "args"
                  }
-  ''RQLMetadata)
+  ''RQLMetadataV1)
+
+$(deriveJSON
+  defaultOptions { constructorTagModifier = snakeCase . drop 4
+                 , sumEncoding = TaggedObject "type" "args"
+                 }
+  ''RQLMetadataV2)
 
 runMetadataQuery
   :: ( HasVersion
@@ -152,27 +257,49 @@ runMetadataQuery
   -> InstanceId
   -> UserInfo
   -> HTTP.Manager
-  -> SQLGenCtx
-  -> RemoteSchemaPermsCtx
+  -> ServerConfigCtx
   -> RebuildableSchemaCache
   -> RQLMetadata
   -> m (EncJSON, RebuildableSchemaCache)
-runMetadataQuery env instanceId userInfo httpManager sqlGenCtx remoteSchemaPermsCtx schemaCache query = do
-  metadata <- fetchMetadata
+runMetadataQuery env instanceId userInfo httpManager serverConfigCtx schemaCache RQLMetadata{..} = do
+  (metadata, currentResourceVersion) <- fetchMetadata
   ((r, modMetadata), modSchemaCache, cacheInvalidations) <-
-    runMetadataQueryM env query
+    runMetadataQueryM env currentResourceVersion _rqlMetadata
     & runMetadataT metadata
     & runCacheRWT schemaCache
-    & peelRun (RunCtx userInfo httpManager sqlGenCtx remoteSchemaPermsCtx)
+    & peelRun (RunCtx userInfo httpManager serverConfigCtx)
     & runExceptT
     & liftEitherM
-
   -- set modified metadata in storage
-  setMetadata modMetadata
+  when (queryModifiesMetadata _rqlMetadata) $
+    case (_sccMaintenanceMode serverConfigCtx) of
+      MaintenanceModeDisabled ->
+        -- set modified metadata in storage
+        setMetadata (fromMaybe currentResourceVersion _rqlMetadataResourceVersion) modMetadata
+      MaintenanceModeEnabled ->
+        throw500 "metadata cannot be modified in maintenance mode"
   -- notify schema cache sync
   notifySchemaCacheSync instanceId cacheInvalidations
 
   pure (r, modSchemaCache)
+
+queryModifiesMetadata :: RQLMetadataRequest -> Bool
+queryModifiesMetadata = \case
+  RMV1 q ->
+    case q of
+      RMGetCatalogState _      -> False
+      RMExportMetadata _       -> False
+      RMGetEventInvocations _  -> False
+      RMGetScheduledEvents _   -> False
+
+      RMCreateScheduledEvent _ -> False
+      RMDeleteScheduledEvent _ -> False
+      RMBulk qs                -> any queryModifiesMetadata qs
+      _                        -> True
+  RMV2 q ->
+    case q of
+      RMV2ExportMetadata _  -> False
+      RMV2ReplaceMetadata _ -> True
 
 runMetadataQueryM
   :: ( HasVersion
@@ -185,89 +312,166 @@ runMetadataQueryM
      , HTTP.HasHttpManagerM m
      , MetadataM m
      , MonadMetadataStorageQueryAPI m
+     , HasServerConfigCtx m
      )
   => Env.Environment
-  -> RQLMetadata
+  -> MetadataResourceVersion
+  -> RQLMetadataRequest
   -> m EncJSON
-runMetadataQueryM env = \case
-  RMPgAddSource q                 -> runAddPgSource q
-  RMPgDropSource q                -> runDropPgSource q
+runMetadataQueryM env currentResourceVersion = withPathK "args" . \case
+  RMV1 q -> runMetadataQueryV1M env currentResourceVersion q
+  RMV2 q -> runMetadataQueryV2M currentResourceVersion q
 
-  RMPgTrackTable q                -> runTrackTableV2Q q
-  RMPgUntrackTable q              -> runUntrackTableQ q
-  RMPgSetTableIsEnum q            -> runSetExistingTableIsEnumQ q
-  RMPgSetTableCustomization q     -> runSetTableCustomization q
+runMetadataQueryV1M
+  :: ( HasVersion
+     , MonadIO m
+     , MonadBaseControl IO m
+     , CacheRWM m
+     , Tracing.MonadTrace m
+     , UserInfoM m
+     , MonadUnique m
+     , HTTP.HasHttpManagerM m
+     , MetadataM m
+     , MonadMetadataStorageQueryAPI m
+     , HasServerConfigCtx m
+     )
+  => Env.Environment
+  -> MetadataResourceVersion
+  -> RQLMetadataV1
+  -> m EncJSON
+runMetadataQueryV1M env currentResourceVersion = \case
+  RMPgAddSource q                   -> runAddSource q
+  RMPgDropSource q                  -> runDropSource q
 
-  RMPgTrackFunction q             -> runTrackFunctionV2 q
-  RMPgUntrackFunction q           -> runUntrackFunc q
+  RMPgTrackTable q                  -> runTrackTableV2Q q
+  RMPgUntrackTable q                -> runUntrackTableQ q
+  RMPgSetTableIsEnum q              -> runSetExistingTableIsEnumQ q
+  RMPgSetTableCustomization q       -> runSetTableCustomization q
 
-  RMPgCreateObjectRelationship q  -> runCreateRelationship ObjRel q
-  RMPgCreateArrayRelationship q   -> runCreateRelationship ArrRel q
-  RMPgDropRelationship q          -> runDropRel q
-  RMPgSetRelationshipComment q    -> runSetRelComment q
-  RMPgRenameRelationship q        -> runRenameRel q
+  RMPgTrackFunction q               -> runTrackFunctionV2 q
+  RMPgUntrackFunction q             -> runUntrackFunc q
 
-  RMPgAddComputedField q          -> runAddComputedField q
-  RMPgDropComputedField q         -> runDropComputedField q
+  RMPgCreateFunctionPermission q    -> runCreateFunctionPermission q
+  RMPgDropFunctionPermission   q    -> runDropFunctionPermission q
 
-  RMPgCreateRemoteRelationship q  -> runCreateRemoteRelationship q
-  RMPgUpdateRemoteRelationship q  -> runUpdateRemoteRelationship q
-  RMPgDeleteRemoteRelationship q  -> runDeleteRemoteRelationship q
+  RMPgCreateObjectRelationship q    -> runCreateRelationship ObjRel q
+  RMPgCreateArrayRelationship q     -> runCreateRelationship ArrRel q
+  RMPgDropRelationship q            -> runDropRel q
+  RMPgSetRelationshipComment q      -> runSetRelComment q
+  RMPgRenameRelationship q          -> runRenameRel q
 
-  RMPgCreateInsertPermission q    -> runCreatePerm q
-  RMPgCreateSelectPermission q    -> runCreatePerm q
-  RMPgCreateUpdatePermission q    -> runCreatePerm q
-  RMPgCreateDeletePermission q    -> runCreatePerm q
+  RMPgAddComputedField q            -> runAddComputedField q
+  RMPgDropComputedField q           -> runDropComputedField q
 
-  RMPgDropInsertPermission q      -> runDropPerm q
-  RMPgDropSelectPermission q      -> runDropPerm q
-  RMPgDropUpdatePermission q      -> runDropPerm q
-  RMPgDropDeletePermission q      -> runDropPerm q
-  RMPgSetPermissionComment q      -> runSetPermComment q
+  RMPgCreateRemoteRelationship q    -> runCreateRemoteRelationship q
+  RMPgUpdateRemoteRelationship q    -> runUpdateRemoteRelationship q
+  RMPgDeleteRemoteRelationship q    -> runDeleteRemoteRelationship q
 
-  RMPgCreateEventTrigger q        -> runCreateEventTriggerQuery q
-  RMPgDeleteEventTrigger q        -> runDeleteEventTriggerQuery q
-  RMPgRedeliverEvent     q        -> runRedeliverEvent q
-  RMPgInvokeEventTrigger q        -> runInvokeEventTrigger q
+  RMPgCreateInsertPermission q      -> runCreatePerm q
+  RMPgCreateSelectPermission q      -> runCreatePerm q
+  RMPgCreateUpdatePermission q      -> runCreatePerm q
+  RMPgCreateDeletePermission q      -> runCreatePerm q
 
-  RMGetInconsistentMetadata q     -> runGetInconsistentMetadata q
-  RMDropInconsistentMetadata q    -> runDropInconsistentMetadata q
+  RMPgDropInsertPermission q        -> runDropPerm q
+  RMPgDropSelectPermission q        -> runDropPerm q
+  RMPgDropUpdatePermission q        -> runDropPerm q
+  RMPgDropDeletePermission q        -> runDropPerm q
+  RMPgSetPermissionComment q        -> runSetPermComment q
 
-  RMAddRemoteSchema q             -> runAddRemoteSchema env q
-  RMRemoveRemoteSchema q          -> runRemoveRemoteSchema q
-  RMReloadRemoteSchema q          -> runReloadRemoteSchema q
-  RMIntrospectRemoteSchema q      -> runIntrospectRemoteSchema q
+  RMPgCreateEventTrigger q          -> runCreateEventTriggerQuery q
+  RMPgDeleteEventTrigger q          -> runDeleteEventTriggerQuery q
+  RMPgRedeliverEvent     q          -> runRedeliverEvent q
+  RMPgInvokeEventTrigger q          -> runInvokeEventTrigger q
 
-  RMCreateCronTrigger q           -> runCreateCronTrigger q
-  RMDeleteCronTrigger q           -> runDeleteCronTrigger q
-  RMCreateScheduledEvent q        -> runCreateScheduledEvent q
-  RMDeleteScheduledEvent q        -> runDeleteScheduledEvent q
-  RMGetScheduledEvents q          -> runGetScheduledEvents q
-  RMGetEventInvocations q         -> runGetEventInvocations q
+  RMMssqlAddSource q                -> runAddSource q
+  RMMssqlDropSource q               -> runDropSource q
+  RMMssqlTrackTable q               -> runTrackTableV2Q q
+  RMMssqlUntrackTable q             -> runUntrackTableQ q
 
-  RMCreateQueryCollection q       -> runCreateCollection q
-  RMDropQueryCollection q         -> runDropCollection q
-  RMAddQueryToCollection q        -> runAddQueryToCollection q
-  RMDropQueryFromCollection q     -> runDropQueryFromCollection q
-  RMAddCollectionToAllowlist q    -> runAddCollectionToAllowlist q
-  RMDropCollectionFromAllowlist q -> runDropCollectionFromAllowlist q
+  RMMssqlCreateObjectRelationship q -> runCreateRelationship ObjRel q
+  RMMssqlCreateArrayRelationship q  -> runCreateRelationship ArrRel q
+  RMMssqlDropRelationship q         -> runDropRel q
+  RMMssqlSetRelationshipComment q   -> runSetRelComment q
+  RMMssqlRenameRelationship q       -> runRenameRel q
 
-  RMReplaceMetadata q             -> runReplaceMetadata q
-  RMExportMetadata q              -> runExportMetadata q
-  RMClearMetadata q               -> runClearMetadata q
-  RMReloadMetadata q              -> runReloadMetadata q
+  RMMssqlCreateInsertPermission q   -> runCreatePerm q
+  RMMssqlCreateSelectPermission q   -> runCreatePerm q
+  RMMssqlCreateUpdatePermission q   -> runCreatePerm q
+  RMMssqlCreateDeletePermission q   -> runCreatePerm q
 
-  RMCreateAction q                -> runCreateAction q
-  RMDropAction q                  -> runDropAction q
-  RMUpdateAction q                -> runUpdateAction q
-  RMCreateActionPermission q      -> runCreateActionPermission q
-  RMDropActionPermission q        -> runDropActionPermission q
+  RMMssqlDropInsertPermission q     -> runDropPerm q
+  RMMssqlDropSelectPermission q     -> runDropPerm q
+  RMMssqlDropUpdatePermission q     -> runDropPerm q
+  RMMssqlDropDeletePermission q     -> runDropPerm q
+  RMMssqlSetPermissionComment q     -> runSetPermComment q
 
-  RMSetCustomTypes q              -> runSetCustomTypes q
+  RMGetInconsistentMetadata q       -> runGetInconsistentMetadata q
+  RMDropInconsistentMetadata q      -> runDropInconsistentMetadata q
 
-  RMDumpInternalState q           -> runDumpInternalState q
+  RMAddRemoteSchema q               -> runAddRemoteSchema env q
+  RMRemoveRemoteSchema q            -> runRemoveRemoteSchema q
+  RMReloadRemoteSchema q            -> runReloadRemoteSchema q
+  RMIntrospectRemoteSchema q        -> runIntrospectRemoteSchema q
 
-  RMGetCatalogState q             -> runGetCatalogState q
-  RMSetCatalogState q             -> runSetCatalogState q
+  RMAddRemoteSchemaPermissions q    -> runAddRemoteSchemaPermissions q
+  RMDropRemoteSchemaPermissions q   -> runDropRemoteSchemaPermissions q
 
-  RMBulk q                        -> encJFromList <$> indexedMapM (runMetadataQueryM env) q
+  RMCreateCronTrigger q             -> runCreateCronTrigger q
+  RMDeleteCronTrigger q             -> runDeleteCronTrigger q
+  RMCreateScheduledEvent q          -> runCreateScheduledEvent q
+  RMDeleteScheduledEvent q          -> runDeleteScheduledEvent q
+  RMGetScheduledEvents q            -> runGetScheduledEvents q
+  RMGetEventInvocations q           -> runGetEventInvocations q
+
+  RMCreateQueryCollection q         -> runCreateCollection q
+  RMDropQueryCollection q           -> runDropCollection q
+  RMAddQueryToCollection q          -> runAddQueryToCollection q
+  RMDropQueryFromCollection q       -> runDropQueryFromCollection q
+  RMAddCollectionToAllowlist q      -> runAddCollectionToAllowlist q
+  RMDropCollectionFromAllowlist q   -> runDropCollectionFromAllowlist q
+
+  RMReplaceMetadata q               -> runReplaceMetadata q
+  RMExportMetadata q                -> runExportMetadata q
+  RMClearMetadata q                 -> runClearMetadata q
+  RMReloadMetadata q                -> runReloadMetadata q
+
+  RMCreateAction q                  -> runCreateAction q
+  RMDropAction q                    -> runDropAction q
+  RMUpdateAction q                  -> runUpdateAction q
+  RMCreateActionPermission q        -> runCreateActionPermission q
+  RMDropActionPermission q          -> runDropActionPermission q
+
+  RMCreateRestEndpoint q            -> runCreateEndpoint q
+  RMDropRestEndpoint q              -> runDropEndpoint q
+
+  RMSetCustomTypes q                -> runSetCustomTypes q
+
+  RMDumpInternalState q             -> runDumpInternalState q
+
+  RMGetCatalogState q               -> runGetCatalogState q
+  RMSetCatalogState q               -> runSetCatalogState q
+
+  RMSetApiLimits q                  -> runSetApiLimits q
+  RMRemoveApiLimits                 -> runRemoveApiLimits
+
+  RMSetMetricsConfig q              -> runSetMetricsConfig q
+  RMRemoveMetricsConfig             -> runRemoveMetricsConfig
+
+  RMAddInheritedRole q              -> runAddInheritedRole q
+  RMDropInheritedRole q             -> runDropInheritedRole q
+
+  RMBulk q                          -> encJFromList <$> indexedMapM (runMetadataQueryM env currentResourceVersion) q
+
+runMetadataQueryV2M
+  :: ( MonadIO m
+     , CacheRWM m
+     , MetadataM m
+     , MonadMetadataStorageQueryAPI m
+     , HasServerConfigCtx m
+     )
+  => MetadataResourceVersion
+  -> RQLMetadataV2
+  -> m EncJSON
+runMetadataQueryV2M currentResourceVersion = \case
+  RMV2ReplaceMetadata q -> runReplaceMetadataV2 q
+  RMV2ExportMetadata q  -> runExportMetadataV2 currentResourceVersion q

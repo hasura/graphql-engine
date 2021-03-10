@@ -7,13 +7,14 @@ import {
   ComputedField,
   TableColumn,
   FrequentlyUsedColumn,
+  PermissionColumnCategories,
 } from './types';
 import { PGFunction, FunctionState } from './services/postgresql/types';
 import { Operations } from './common';
 import { QualifiedTable } from '../metadata/types';
 
-export const drivers = ['postgres', 'mysql'];
-export type Driver = 'postgres' | 'mysql';
+export const drivers = ['postgres', 'mysql', 'mssql'] as const;
+export type Driver = typeof drivers[number];
 
 export type ColumnsInfoResult = {
   [tableName: string]: {
@@ -31,7 +32,12 @@ export interface DataSourcesAPI {
   // todo: replace with function type
   getFunctionSchema(func: PGFunction): string;
   getFunctionDefinition(func: PGFunction): string;
-  getSchemaFunctions(func: PGFunction[], schemaName: string): PGFunction[];
+  getSchemaFunctions(
+    func: PGFunction[],
+    schemaName: string,
+    tableName: string,
+    tableSchema: string
+  ): PGFunction[];
   findFunction(
     func: PGFunction[],
     fName: string,
@@ -52,15 +58,15 @@ export interface DataSourcesAPI {
   getAdditionalColumnsInfoQuerySql?: (currentSchema: string) => string;
   parseColumnsInfoResult: (data: string[][]) => ColumnsInfoResult;
   columnDataTypes: {
-    INTEGER: string;
-    SERIAL: string;
-    BIGINT: string;
-    JSONDTYPE: string;
-    TIMESTAMP: string;
-    NUMERIC: string;
-    DATE: string;
-    BOOLEAN: string;
-    TEXT: string;
+    INTEGER?: string;
+    SERIAL?: string;
+    BIGINT?: string;
+    JSONDTYPE?: string;
+    TIMESTAMP?: string;
+    NUMERIC?: string;
+    DATE?: string;
+    BOOLEAN?: string;
+    TEXT?: string;
     ARRAY?: string;
     BIGSERIAL?: string;
     DATETIME?: string;
@@ -101,7 +107,7 @@ export interface DataSourcesAPI {
       };
   getDropTableSql(schema: string, table: string): string;
   createSQLRegex: RegExp;
-  getStatementTimeoutSql: (statementTimeoutInSecs: number) => string;
+  getStatementTimeoutSql?: (statementTimeoutInSecs: number) => string;
   getDropSchemaSql(schema: string): string;
   getCreateSchemaSql(schema: string): string;
   isTimeoutError: (error: any) => boolean;
@@ -259,11 +265,13 @@ export interface DataSourcesAPI {
     selectedPkColumns: string[];
     constraintName?: string;
   }) => string;
-  getFunctionDefinitionSql: (
-    schemaName: string,
-    functionName?: string | null | undefined,
-    type?: 'trackable' | 'non-trackable' | undefined
-  ) => string;
+  getFunctionDefinitionSql:
+    | null
+    | ((
+        schemaName: string,
+        functionName?: string | null | undefined,
+        type?: 'trackable' | 'non-trackable' | undefined
+      ) => string);
   frequentlyUsedColumns: FrequentlyUsedColumn[];
   primaryKeysInfoSql: (options: {
     schemas: string[];
@@ -286,10 +294,17 @@ export interface DataSourcesAPI {
     eventId: string
   ) => string;
   getDatabaseInfo: string;
+  getTableInfo?: (tables: string[]) => string;
+  getDatabaseVersionSql?: string;
+  permissionColumnDataTypes: Partial<PermissionColumnCategories> | null;
+  viewsSupported: boolean;
+  // use null, if all operators are supported
+  supportedColumnOperators: string[] | null;
+  aggregationPermissionsAllowed: boolean;
 }
 
 export let currentDriver: Driver = 'postgres';
-export let dataSource: DataSourcesAPI = services[currentDriver];
+export let dataSource: DataSourcesAPI = services[currentDriver || 'postgres'];
 
 class DataSourceChangedEvent extends Event {
   static type = 'data-source-changed';

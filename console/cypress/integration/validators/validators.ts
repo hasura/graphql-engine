@@ -206,25 +206,6 @@ export const dataRequest = (
   });
 };
 
-export const createFunctionRequest = (
-  reqBody: RequestBody,
-  result: ResultType
-) => {
-  const requestOptions = makeDataAPIOptions(
-    dataApiUrl,
-    adminSecret,
-    reqBody,
-    'query'
-  );
-  cy.request(requestOptions).then(response => {
-    if (result === ResultType.SUCCESS) {
-      expect(response.body.result_type === 'CommandOk').to.be.true;
-    } else {
-      expect(response.body.result_type === 'CommandOk').to.be.false;
-    }
-  });
-};
-
 export const trackFunctionRequest = (
   reqBody: RequestBody,
   result: ResultType
