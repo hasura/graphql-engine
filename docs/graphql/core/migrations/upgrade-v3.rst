@@ -40,12 +40,22 @@ The following is a sample metadata directory when using ``config v3``.
   ├── cron_triggers.yaml
   ├── databases
   │   ├── databases.yaml
-  │   └── default
+  │   └── s1
+  │       ├── functions
+  │       │   ├── functions.yaml
+  │       │   └── public_search_artists.yaml
   │       └── tables
   │           ├── public_albums.yaml
   │           ├── public_artists.yaml
+  │           ├── public_genres.yaml
+  │           ├── public_media_types.yaml
+  │           ├── public_playlists.yaml
+  │           ├── public_playlist_track.yaml
+  │           ├── public_tracks.yaml
+  │           └── tables.yaml
   ├── query_collections.yaml
   ├── remote_schemas.yaml
+  ├── rest_endpoints.yaml
   └── version.yaml
 
 
@@ -56,27 +66,63 @@ Now let's looks at the contents of ``databases/databases.yaml``
 
 .. code-block:: yaml
 
-  - name: default
+  - name: s1
+    kind: postgres
     configuration:
       connection_info:
-        database_url: <database_url>
+        database_url:
+          from_env: DATABASE_URL
         pool_settings:
           idle_timeout: 180
           max_connections: 50
           retries: 1
-    tables:
-    - "!include public_albums.yaml"
-    - "!include public_artists.yaml"
-    functions: []
+    tables: "!include s1/tables/tables.yaml"
+    functions: "!include s1/functions/functions.yaml"
 
-We can see that we have a database called `default`, with it's configuration information and other metadata.
-Take a a look at the first element under ``tables`` key. This is a special syntax/directive to hasura CLI to "include"
-and inline the contents of a file called ``public_albums.yaml``. The location at which the CLI looks for this file is  
-``<project-directory>/metadata/databases/<database-name>/tables``
+We can see that we have a database called ``s1``, with it's configuration information and other metadata. Notice the peculiarity
+of values of ``tables`` and ``functions`` keys. CLI now uses a special syntax to "include" contents from another file to use it 
+as the value for a particular key. Here it is ``!include s1/tables/tables.yaml`` , which means that CLI will try to fill in value
+of ``tables`` from ``s1/tables/tables.yaml``. 
 
-Therefore when doing a ``hasura metadata apply`` CLI will inline elements of ``tables`` key in ``databases.yaml`` with 
-content sourced from ``metadata/databases/default/tables``. This allows managing metadata related a table easier since 
-it'll have a file of it's own.
+Now, If we look at the contents of ``s1/tables/tables.yaml`` (as shown below) we understand that it is array whose values are again 
+similarly sourced from different files.
+
+.. code-block:: yaml
+
+  - "!include public_albums.yaml"
+  - "!include public_artists.yaml"
+  - "!include public_genres.yaml"
+  - "!include public_media_types.yaml"
+  - "!include public_playlist_track.yaml"
+  - "!include public_playlists.yaml"
+  - "!include public_tracks.yaml"
+
+Let's look at ``public_albums.yaml`` from the first line above.
+
+.. code-block:: yaml
+  
+  array_relationships:
+  - name: tracks
+    using:
+      foreign_key_constraint_on:
+        column: album_id
+        table:
+          name: tracks
+          schema: public
+  object_relationships:
+  - name: artist
+    using:
+      foreign_key_constraint_on: artist_id
+  table:
+    name: albums
+    schema: public
+
+This file specifies the metadata related to a table called ``tracks`` in ``public`` schema. This means that each table will have it's own 
+file for it's metadata specifically. This makes understanding and managing metadata related to tables a lot easier.
+
+Also note that Metadata related to functions is also managed in a similar fashion. 
+
+When doing a ``hasura metadata apply`` CLI will inline ``!include`` directives with the appropriate contents.
 
 .. note::
 
@@ -109,7 +155,7 @@ The steps to apply migrations and metadata to a new hasura instance will be:
   # first apply metadata, this will populate hasura with configuration of connected databases
   hasura metadata apply
   # now we can apply migrations
-  hasura migrate apply --database <database-name>
+  hasura migrate apply --database-name <database-name>
   # follow it with a metadata reload to make sure hasura is aware of the changes
   hasura metadata reload
 
@@ -117,7 +163,7 @@ The reason why we have to do ``metadata apply`` first instead of ``migrate apply
 If we do a ``migrate apply`` first then hasura might not be aware about the databases it has to connect to. Earlier we could not start hasura
 without a connected database, but now we can.
 
-Also, ``hasura seeds`` and ``hasura migrate`` now accepts a required flag ``--database``.
+Also, ``hasura seeds`` and ``hasura migrate`` now accepts a required flag ``--database-name``.
 
 Upgrade steps
 -------------

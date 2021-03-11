@@ -121,12 +121,12 @@ Create a migration called ``init`` by exporting the current Postgres schema from
 
    # create migration files (note that this will only export the public schema from postgres)
    # if you started hasura with HASURA_GRAPHQL_DATABASE_URL  environment variable, the database name should be default
-   hasura migrate create "init" --from-server --database <database-name>
+   hasura migrate create "init" --from-server --database-name <database-name>
 
    # note down the version
 
    # mark the migration as applied on this server
-   hasura migrate apply --version "<version>" --skip-execution --database <database-name>
+   hasura migrate apply --version "<version>" --skip-execution --database-name <database-name>
 
 This command will create a new directory named ``<timestamp>_init`` inside the ``migrations/<database-name>`` directory. 
 In the newly created directory, there's a file named ``up.sql``.
@@ -146,7 +146,7 @@ The apply command will mark this migration as "applied" on the server.
 
   .. code-block:: bash
 
-     hasura migrate create "init" --from-server --schema "public" --schema "schema1" --schema "schema2" --database <database-name>
+     hasura migrate create "init" --from-server --schema "public" --schema "schema1" --schema "schema2" --database-name <database-name>
 
 Step 3.2: Initialize Hasura metadata
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -229,12 +229,12 @@ migration into a single migration file.
 
 .. code-block:: bash
 
-  hasura migrate squash --name "<feature-name>" --from <start-migration-version> --database <database-name>
+  hasura migrate squash --name "<feature-name>" --from <start-migration-version> --database-name <database-name>
 
   # note down the version
 
   # mark the squashed migration as applied on this server
-  hasura migrate apply --version "<squash-migration-version>" --skip-execution --database <database-name>
+  hasura migrate apply --version "<squash-migration-version>" --skip-execution --database-name <database-name>
 
 Commit the project status into version control.
 
@@ -258,7 +258,7 @@ in the ``metadata/`` directory on a new instance at ``http://another-graphql-ins
 
    # in project dir
    hasura metadata apply --endpoint http://another-graphql-instance.hasura.app
-   hasura migrate apply --endpoint http://another-graphql-instance.hasura.app --database <database-name>
+   hasura migrate apply --endpoint http://another-graphql-instance.hasura.app --database-name <database-name>
    hasura metadata reload --endpoint http://another-graphql-instance.hasura.app 
 
 In case you need an automated way of applying the migrations and metadata, take a look at the
@@ -279,7 +279,7 @@ Step 8: Check the status of migrations
 .. code-block:: bash
 
    # in project dir
-   hasura migrate status --database <database-name>
+   hasura migrate status --database-name <database-name>
 
 This command will print out each migration version present in the ``migrations``
 directory along with its name, source status and database status.
@@ -288,7 +288,7 @@ For example,
 
 .. code-block:: bash
 
-   $ hasura migrate status --database <database-name>
+   $ hasura migrate status --database-name <database-name>
    VERSION        NAME                           SOURCE STATUS  DATABASE STATUS
    1590493510167  init                           Present        Present
    1590497881360  create_table_public_address    Present        Present

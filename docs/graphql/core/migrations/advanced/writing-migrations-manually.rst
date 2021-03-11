@@ -27,7 +27,7 @@ Create migration manually
 
    .. code-block:: bash
 
-      hasura migrate create <name-of-migration> --database <database-name>
+      hasura migrate create <name-of-migration> --database-name <database-name>
 
    This command will create up and down migration SQL files in the
    ``migrations`` directory.
@@ -45,7 +45,7 @@ Create migration manually
    .. code-block:: bash
 
       hasura metadata apply
-      hasura migrate apply --database <database-name>
+      hasura migrate apply --database-name <database-name>
       hasura metadata reload
 
 .. admonition:: Additional Resources
