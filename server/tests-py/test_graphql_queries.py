@@ -9,9 +9,31 @@ pytestmark = pytest.mark.allow_server_upgrade_test
 usefixtures = pytest.mark.usefixtures
 
 @pytest.mark.parametrize("transport", ['http', 'websocket'])
-@usefixtures('per_class_tests_db_state')
-class TestGraphQLQueryBasic:
+@pytest.mark.parametrize("backend", ['mssql', 'postgres'])
+@usefixtures('per_class_tests_db_state', 'per_backend_tests')
+class TestGraphQLQueryBasicCommon:
+    def test_select_query_author_quoted_col(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/select_query_author_col_quoted.yaml', transport)
 
+    @classmethod
+    def dir(cls):
+        return 'queries/graphql_query/basic'
+
+@pytest.mark.parametrize("transport", ['http', 'websocket'])
+@pytest.mark.parametrize("backend", ['mssql'])
+@usefixtures('per_class_tests_db_state', 'per_backend_tests')
+class TestGraphQLQueryBasicMSSQL:
+    def test_select_various_mssql_types(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/select_query_test_types_mssql.yaml', transport)
+
+    @classmethod
+    def dir(cls):
+        return 'queries/graphql_query/basic'
+
+@pytest.mark.parametrize("transport", ['http', 'websocket'])
+@pytest.mark.parametrize("backend", ['postgres'])
+@usefixtures('per_class_tests_db_state', 'per_backend_tests')
+class TestGraphQLQueryBasicPostgres:
     # This also excercises support for multiple operations in a document:
     def test_select_query_author(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + '/select_query_author.yaml', transport)
@@ -25,10 +47,7 @@ class TestGraphQLQueryBasic:
     # Can't run server upgrade tests, as this test has a schema change
     @pytest.mark.skip_server_upgrade_test
     def test_select_various_postgres_types(self, hge_ctx, transport):
-        check_query_f(hge_ctx, self.dir() + '/select_query_test_types.yaml', transport)
-
-    def test_select_query_author_quoted_col(self, hge_ctx, transport):
-        check_query_f(hge_ctx, self.dir() + '/select_query_author_col_quoted.yaml', transport)
+        check_query_f(hge_ctx, self.dir() + '/select_query_test_types_postgres.yaml', transport)
 
     def test_select_query_author_pk(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + '/select_query_author_by_pkey.yaml', transport)
@@ -86,7 +105,6 @@ class TestGraphQLQueryBasic:
     @classmethod
     def dir(cls):
         return 'queries/graphql_query/basic'
-
 
 @pytest.mark.parametrize("transport", ['http', 'websocket'])
 @usefixtures('per_class_tests_db_state')

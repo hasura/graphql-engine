@@ -68,7 +68,7 @@ args:
       create table author(
           id serial primary key,
           name text unique,
-          "createdAt" timestamptz
+          "createdAt" timestamp
       );
       CREATE TABLE article (
         id SERIAL PRIMARY KEY,
@@ -170,8 +170,8 @@ args:
       );
       insert into author (name, "createdAt")
       values
-      ('Author 1', '2017-09-21T09:39:44Z'),
-      ('Author 2', '2017-09-21T09:50:44Z');
+      ('Author 1', '2017-09-21T09:39:44'),
+      ('Author 2', '2017-09-21T09:50:44');
       insert into article (title,content,author_id,is_published)
       values
       (

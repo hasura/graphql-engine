@@ -35,8 +35,8 @@ data RQLQuery
   | RQUpdate !UpdateQuery
   | RQDelete !DeleteQuery
   | RQCount  !CountQuery
-  | RMMssqlRunSql !MSSQL.MSSQLRunSQL
   | RQRunSql !RunSQL
+  | RQMssqlRunSql !MSSQL.MSSQLRunSQL
   | RQBulk ![RQLQuery]
   deriving (Show)
 
@@ -119,5 +119,5 @@ runQueryM env = \case
   RQDelete q      -> runDelete env q
   RQCount  q      -> runCount q
   RQRunSql q      -> runRunSQL q
-  RMMssqlRunSql q -> MSSQL.runSQL q
+  RQMssqlRunSql q -> MSSQL.runSQL q
   RQBulk   l      -> encJFromList <$> indexedMapM (runQueryM env) l

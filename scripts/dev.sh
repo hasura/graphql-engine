@@ -142,6 +142,17 @@ else
   echo_warn "Pyenv not installed. Proceeding with system python version: $(python3 --version)"
 fi
 
+function cleanup_any_backends(){
+  # run cleanup only if there are any backend containers running
+  if ( $DOCKER_PSQL -c '\l' ) &>/dev/null; then
+    cleanup_postgres
+  fi
+
+  if $DOCKER_MSSQL -Q "SELECT 1" &>/dev/null; then
+    cleanup_mssql
+  fi
+}
+
 ####################################
 ###   Shared environment stuff   ###
 ####################################
@@ -376,8 +387,11 @@ EOL
     fi
 
     case "$MODE" in
-      test|postgres)
+      postgres)
         cleanup_postgres
+      ;;
+      test)
+        cleanup_any_backends
       ;;
       graphql-engine)
       ;;
@@ -413,10 +427,17 @@ fi
 ###     MSSQL Container    ###
 #################################
 
+function cleanup_mssql(){
+  echo_pretty "Removing $MSSQL_CONTAINER_NAME and its volumes in 5 seconds!"
+  echo_pretty "  PRESS CTRL-C TO ABORT removal, or ENTER to clean up right away"
+  read -t5 || true
+  docker stop "$MSSQL_CONTAINER_NAME"
+  docker rm "$MSSQL_CONTAINER_NAME"
+}
+
 function launch_mssql_container(){
   echo_pretty "Launching MSSQL container: $MSSQL_CONTAINER_NAME"
-  docker run --rm --name $MSSQL_CONTAINER_NAME --net=host \
-    -e 'ACCEPT_EULA=Y' -e "SA_PASSWORD=$MSSQL_PASSWORD" \
+  docker run --name $MSSQL_CONTAINER_NAME -e 'ACCEPT_EULA=Y' -e "SA_PASSWORD=$MSSQL_PASSWORD" \
     -p 127.0.0.1:"$MSSQL_PORT":1433 -d mcr.microsoft.com/mssql/server:2019-CU8-ubuntu-16.04
 
   # Since launching the SQL Server container worked we can set up cleanup routines. This will catch CTRL-C
@@ -429,12 +450,11 @@ function launch_mssql_container(){
     fi
 
     case "$MODE" in
-      test|mssql)
-        echo_pretty "Removing $MSSQL_CONTAINER_NAME and its volumes in 5 seconds!"
-        echo_pretty "  PRESS CTRL-C TO ABORT removal, or ENTER to clean up right away"
-        read -t5 || true
-        docker stop "$MSSQL_CONTAINER_NAME"
-        # container will be removed automatically as it was started using the --rm option
+      mssql)
+        cleanup_mssql
+      ;;
+      test)
+        cleanup_any_backends
       ;;
       graphql-engine)
       ;;
@@ -498,10 +518,16 @@ elif [ "$MODE" = "test" ]; then
   fi
 
   if [ "$RUN_INTEGRATION_TESTS" = true ]; then
+    launch_mssql_container
+    wait_mssql
+
     GRAPHQL_ENGINE_TEST_LOG=/tmp/hasura-dev-test-engine.log
     echo_pretty "Starting graphql-engine, logging to $GRAPHQL_ENGINE_TEST_LOG"
     export HASURA_GRAPHQL_SERVER_PORT=8088
-    cabal new-run --project-file=cabal.project.dev-sh -- exe:graphql-engine --database-url="$POSTGRES_DB_URL" serve --stringify-numeric-types \
+
+    # Using --metadata-database-url flag to test multiple backends
+    cabal new-run --project-file=cabal.project.dev-sh -- exe:graphql-engine \
+      --metadata-database-url="$POSTGRES_DB_URL" serve --stringify-numeric-types \
       --enable-console --console-assets-dir ../console/static/dist \
       &> "$GRAPHQL_ENGINE_TEST_LOG" & GRAPHQL_ENGINE_PID=$!
 
@@ -514,7 +540,25 @@ elif [ "$MODE" = "test" ]; then
         exit 666
       fi
     done
+
+    echo ""
     echo " Ok"
+
+    METADATA_URL=http://127.0.0.1:$HASURA_GRAPHQL_SERVER_PORT/v1/metadata
+
+    echo ""
+    echo "Adding Postgres source"
+    curl "$METADATA_URL" \
+    --data-raw '{"type":"pg_add_source","args":{"name":"default","configuration":{"connection_info":{"database_url":"'"$POSTGRES_DB_URL"'","pool_settings":{}}}}}'
+
+    echo ""
+    echo "Adding SQL Server source"
+    curl "$METADATA_URL" \
+    --data-raw '{"type":"mssql_add_source","args":{"name":"mssql","configuration":{"connection_info":{"connection_string":"'"$MSSQL_DB_URL"'","pool_settings":{}}}}}'
+
+    echo ""
+    echo "Sources added:"
+    curl "$METADATA_URL" --data-raw '{"type":"export_metadata","args":{}}'
 
     cd "$PROJECT_ROOT/server/tests-py"
 

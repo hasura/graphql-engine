@@ -486,22 +486,24 @@ class HGECtx:
 
         self.ws_client = GQLWsClient(self, '/v1/graphql')
 
+        self.backend = config.getoption('--backend')
+
         # HGE version
         result = subprocess.run(['../../scripts/get-version.sh'], shell=False, stdout=subprocess.PIPE, check=True)
         env_version = os.getenv('VERSION')
         self.version = env_version if env_version else result.stdout.decode('utf-8').strip()
         if not self.metadata_disabled and not config.getoption('--skip-schema-setup'):
           try:
-              st_code, resp = self.v1q_f('queries/clear_db.yaml')
+              st_code, resp = self.v2q_f("queries/" + self.backend_suffix("clear_db")+ ".yaml")
           except requests.exceptions.RequestException as e:
               self.teardown()
               raise HGECtxError(repr(e))
           assert st_code == 200, resp
 
         # Postgres version
-        pg_version_text = self.sql('show server_version_num').fetchone()['server_version_num']
-        self.pg_version = int(pg_version_text)
-
+        if self.backend == 'postgres':
+            pg_version_text = self.sql('show server_version_num').fetchone()['server_version_num']
+            self.pg_version = int(pg_version_text)
 
     def reflect_tables(self):
         self.meta.reflect(bind=self.engine)
@@ -585,6 +587,12 @@ class HGECtx:
             # NOTE: preserve ordering with ruamel
             yml = yaml.YAML()
             return self.v2q(yml.load(f))
+
+    def backend_suffix(self, filename):
+        if self.backend == 'postgres':
+            return filename
+        else:
+            return filename + "_" + self.backend
 
     def v1metadataq(self, q, headers = {}):
         return self.execute_query(q, "/v1/metadata", headers)

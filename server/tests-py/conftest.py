@@ -174,6 +174,11 @@ This option may result in test failures if the schema has to change between the 
         default=False
     )
 
+    parser.addoption(
+        "--backend",
+        help="run integration tests using a particular backend",
+        default="postgres"
+    )
 
 #By default,
 #1) Set default parallelism to one
@@ -411,16 +416,46 @@ def per_method_db_data_for_mutation_tests(request, hge_ctx, per_class_db_schema_
         False, False, False
     )
 
-def db_state_context(request, hge_ctx):
-    yield from db_context_with_schema_common(
-        request, hge_ctx, 'setup_files', 'setup.yaml', 'teardown_files',
-        'teardown.yaml', True
-    )
+@pytest.fixture(scope='function')
+def per_backend_tests(hge_ctx, backend):
+    """
+    This fixture ignores backend-specific tests unless the relevant --backend flag has been passed.
+    """
+    # Currently, we default all tests to run on Postgres with or without a --backend flag.
+    # As our test suite develops, we may consider running backend-agnostic tests on all
+    # backends, unless a specific `--backend` flag is passed.
+    if not hge_ctx.backend == backend:
+        pytest.skip(
+            'Skipping test. Add --backend ' + backend + ' to run backend-specific tests'
+        )
+        return
 
-def db_state_context_new(request, hge_ctx):
+def db_state_context(request, hge_ctx):
+    # Non-default (Postgres) backend tests expect separate setup and schema_setup
+    # files for v1/metadata and v2/query requests, respectively.
+    (setup, teardown, schema_setup, schema_teardown) = [
+        hge_ctx.backend_suffix(filename) + ".yaml"
+        for filename in ['setup', 'teardown', 'schema_setup', 'schema_teardown']
+    ]
+
+    if hge_ctx.backend == 'postgres':
+        db_context = db_context_with_schema_common(
+            request, hge_ctx, 'setup_files', 'setup.yaml', 'teardown_files',
+            'teardown.yaml', True
+        )
+    else:
+        db_context = db_context_with_schema_common_new (
+            request, hge_ctx, 'setup_files', setup, 'teardown_files',
+            teardown, schema_setup, schema_teardown, True
+        )
+    yield from db_context
+
+def db_state_context_new(
+    request, hge_ctx, setup='setup.yaml', teardown='teardown.yaml',
+        schema_setup='schema_setup.yaml', schema_teardown='schema_teardown.yaml'):
     yield from db_context_with_schema_common_new (
-        request, hge_ctx, 'setup_files', 'setup.yaml', 'teardown_files',
-        'teardown.yaml', 'sql_schema_setup.yaml', 'sql_schema_teardown.yaml', True
+        request, hge_ctx, 'setup_files', setup, 'teardown_files',
+        teardown, schema_setup, schema_teardown, True
     )
 
 def db_context_with_schema_common(
