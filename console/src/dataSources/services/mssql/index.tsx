@@ -183,7 +183,7 @@ FROM sys.objects as obj
             JOIN sys.types t ON a.user_type_id = t.user_type_id
         WHERE a.column_id > 0 and a.object_id = obj.object_id
         FOR JSON path
-) AS [isc](json) where obj.type_desc in ('USER_TABLE') ${whereClause};`;
+) AS [isc](json) where obj.type_desc in ('USER_TABLE', 'VIEW') ${whereClause};`;
   },
   commonDataTypes: [],
   fetchColumnTypesQuery: '',
