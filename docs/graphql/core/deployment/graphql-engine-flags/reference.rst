@@ -252,6 +252,10 @@ For the ``serve`` sub-command these are the available flags and ENV variables:
 
        *(Available for versions > v2.0.0)*
 
+   * - ``--experimental-features``
+     - ``HASURA_GRAPHQL_EXPERIMENTAL_FEATURES``
+     - List of experimental features to be enabled. A comma separated value is expected. Options: ``inherited_roles``.
+
 .. note::
 
   When the equivalent flags for environment variables are used, the flags will take precedence.

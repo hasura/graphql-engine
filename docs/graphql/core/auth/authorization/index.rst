@@ -54,9 +54,11 @@ Follow the example at :ref:`access control basics <auth_basics>`.
 
   basics
   roles-variables
+  inherited-roles
   permission-rules
   common-roles-auth-examples
   role-multiple-rules
+
 
 .. admonition:: Additional Resources
 

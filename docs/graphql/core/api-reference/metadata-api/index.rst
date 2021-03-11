@@ -413,6 +413,18 @@ The various types of queries are listed in the following table:
      - 1
      - Drop a RESTified GraphQL Endpoint
 
+   * - :ref:`metadata_add_inherited_role`
+     - :ref:`add_inherited_role_args <metadata_add_inherited_role_syntax>`
+     - 1
+     - Add an inherited role
+
+   * - :ref:`metadata_drop_inherited_role`
+     - :ref:`drop_inherited_role_args <metadata_drop_inherited_role_syntax>`
+     - 1
+     - Drop an inherited role
+
+
+
 **See:**
 
 - :ref:`Tables/Views <metadata_api_tables_views>`
@@ -420,6 +432,7 @@ The various types of queries are listed in the following table:
 - :ref:`Relationships <metadata_api_relationship>`
 - :ref:`Computed Fields <metadata_api_computed_field>`
 - :ref:`Permissions <metadata_api_permission>`
+- :ref:`Inherited Roles <metadata_inherited_role>`
 - :ref:`Remote Schema Permissions <metadata_remote_schema_api_permission>`
 - :ref:`Event Triggers <metadata_api_event_triggers>`
 - :ref:`Remote Schemas <metadata_api_remote_schemas>`
@@ -512,6 +525,7 @@ The version is incremented on any operation that modified metadata as well as ``
   Custom Functions <custom-functions>
   Relationships <relationship>
   Permissions <permission>
+  Inherited Roles <inherited-roles>
   Remote Schema Permissions <remote-schema-permissions>
   Computed Fields <computed-field>
   Event Triggers <event-triggers>
