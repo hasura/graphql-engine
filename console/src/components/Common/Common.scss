@@ -480,6 +480,9 @@ input {
   padding-right: 0 !important;
 }
 
+.add_pad_min {
+  padding: 1em;
+}
 .add_pad_right {
   padding-right: 15px;
 }
@@ -594,6 +597,9 @@ code {
 
 .add_pad_top {
   padding-top: 20px;
+}
+.add_pad_top_10 {
+  padding-top: 10px;
 }
 
 .padd_bottom {
@@ -1436,14 +1442,13 @@ code {
 }
 
 .db_list_item {
-  display: flex;
-  margin-top: 20px;
-  border-bottom: 1px solid rgb(187, 187, 187);
-  padding-bottom: 12px;
+  border-bottom: 1px solid rgb(232, 232, 232);
+  padding-left: 0;
 }
 
 .db_list_item:last-of-type {
   border-bottom: none;
+  padding-bottom: 0;
 }
 
 .show_connection_string {
@@ -1452,34 +1457,20 @@ code {
     cursor: pointer;
   }
   color: #337ab7;
+  p {
+    margin-bottom: 0;
+  }
 }
 
 .showAdminSecret {
   font-size: 16px;
 }
 
-.db_display_data {
+.db_large_string_break_words {
+  max-width: 40%;
+  word-break: break-word;
+  padding: 1em;
   display: flex;
-  align-items: flex-start;
-  padding-left: 95px;
-  flex-direction: column;
-}
-
-.db_list_content {
-  display: inline-flex;
-  width: 30%;
-}
-
-.data_list_container {
-  display: flex;
-  flex-direction: column;
-}
-
-.db_item_actions {
-  width: 14%;
-  display: flex;
-  margin-right: 10px;
-  align-items: center;
 }
 
 .text_red {
@@ -1489,6 +1480,7 @@ code {
 .connect_db_content {
   display: flex;
   flex-direction: column;
+  padding-left: 10px;
 }
 
 .connect_db_header {
@@ -1511,13 +1503,12 @@ code {
 }
 
 .connect_db_radio_label {
-  margin-left: 4px;
   margin-right: 24px;
 }
 
 .connect_form_layout {
   width: 50%;
-  padding: 8px;
+  padding: 8px 0;
   display: flex;
   flex-direction: column;
   margin-top: 10px;

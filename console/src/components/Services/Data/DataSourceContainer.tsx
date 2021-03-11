@@ -16,7 +16,7 @@ import {
 } from './DataActions';
 import { currentDriver, useDataSource } from '../../../dataSources';
 import SourceView from './SourceView';
-import { getSourceDriver } from './utils';
+import { getSourceDriver, isInconsistentSource } from './utils';
 
 type Params = {
   source?: string;
@@ -35,10 +35,19 @@ const DataSourceContainer = ({
   dispatch,
   currentSource,
   location,
+  inconsistentObjects,
 }: DataSourceContainerProps) => {
   const { setDriver } = useDataSource();
   const [dataLoaded, setDataLoaded] = useState(false);
   const { source, schema } = params;
+
+  useEffect(() => {
+    // if the source is inconsistent, do not show the source route
+    if (isInconsistentSource(currentSource, inconsistentObjects)) {
+      dispatch(push('/data/manage'));
+    }
+  }, [inconsistentObjects, currentSource, dispatch, location]);
+
   useEffect(() => {
     if (!source || source === 'undefined') {
       if (currentSource) {
@@ -109,6 +118,7 @@ const mapStateToProps = (state: ReduxState) => {
     schemaList: state.tables.schemaList,
     dataSources: getDataSources(state),
     currentSource: state.tables.currentDataSource,
+    inconsistentObjects: state.metadata.inconsistentObjects,
   };
 };
 const dataSourceConnector = connect(

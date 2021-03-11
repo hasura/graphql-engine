@@ -5,7 +5,7 @@ import styles from './DataSources.scss';
 
 const tabs: Tabs = {
   connect: {
-    display_text: 'Connect existing database',
+    display_text: 'Connect Existing Database',
   },
 };
 if (Globals.hasuraCloudTenantId && Globals.herokuOAuthClientId) {

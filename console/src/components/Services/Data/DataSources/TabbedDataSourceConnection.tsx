@@ -17,7 +17,7 @@ const TabbedDSConnection: React.FC<{ tabName: 'create' | 'connect' }> = ({
       url: appPrefix,
     },
     {
-      title: 'Manage Databases',
+      title: 'Data Manager',
       url: `${appPrefix}/manage`,
     },
     {
@@ -35,7 +35,7 @@ const TabbedDSConnection: React.FC<{ tabName: 'create' | 'connect' }> = ({
         <CommonTabLayout
           appPrefix={appPrefix}
           currentTab={tabName}
-          heading="Create database"
+          heading="Connect Database"
           tabsInfo={tabs}
           breadCrumbs={breadCrumbs}
           baseUrl={`${appPrefix}/manage`}

@@ -1,4 +1,4 @@
-import React, { ChangeEvent } from 'react';
+import React, { ChangeEvent, FormEvent } from 'react';
 import { connect, ConnectedProps } from 'react-redux';
 
 import Tabbed from './TabbedDataSourceConnection';
@@ -103,12 +103,13 @@ const ConnectDatabase: React.FC<ConnectDatabaseProps> = props => {
   };
 
   const onSuccessConnectDBCb = () => {
+    setLoading(false);
     resetState();
     // route to manage page
     dispatch(_push('/data/manage'));
   };
 
-  const onClickConnectDatabase = () => {
+  const onConnectDatabase = () => {
     if (!connectDBInputState.displayName.trim()) {
       dispatch(
         showErrorNotification(
@@ -204,10 +205,14 @@ const ConnectDatabase: React.FC<ConnectDatabaseProps> = props => {
       .then(() => setLoading(false))
       .catch(() => setLoading(false));
   };
+  const onSubmit = (e: FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    onConnectDatabase();
+  };
 
   return (
     <Tabbed tabName="connect">
-      <div className={styles.connect_db_content}>
+      <form onSubmit={onSubmit} className={styles.connect_db_content}>
         <h4
           className={`${styles.remove_pad_bottom} ${styles.connect_db_header}`}
         >
@@ -223,7 +228,10 @@ const ConnectDatabase: React.FC<ConnectDatabaseProps> = props => {
               title: string;
               disableOnEdit: boolean;
             }) => (
-              <label className={styles.connect_db_radio_label}>
+              <label
+                key={`label-${radioBtn.title}`}
+                className={styles.connect_db_radio_label}
+              >
                 <input
                   type="radio"
                   value={radioBtn.value}
@@ -250,7 +258,10 @@ const ConnectDatabase: React.FC<ConnectDatabaseProps> = props => {
             label="Database Display Name"
             placeholder="database name"
           />
-          <label className={styles.connect_db_input_label}>
+          <label
+            key="Data Source Driver"
+            className={styles.connect_db_input_label}
+          >
             Data Source Driver
           </label>
           <select
@@ -290,7 +301,7 @@ const ConnectDatabase: React.FC<ConnectDatabaseProps> = props => {
           {connectionType === connectionTypes.ENV_VAR ? (
             <LabeledInput
               label="Environment Variable"
-              placeholder="DB_URL_FROM_ENV"
+              placeholder="HASURA_GRAPHQL_DB_URL_FROM_ENV"
               onChange={e =>
                 connectDBDispatch({
                   type: 'UPDATE_DB_URL_ENV_VAR',
@@ -448,9 +459,9 @@ const ConnectDatabase: React.FC<ConnectDatabaseProps> = props => {
           </div>
           <div className={styles.add_button_layout}>
             <Button
-              onClick={onClickConnectDatabase}
               size="large"
               color="yellow"
+              type="submit"
               style={{
                 width: '70%',
                 ...(loading && { cursor: 'progress' }),
@@ -461,7 +472,7 @@ const ConnectDatabase: React.FC<ConnectDatabaseProps> = props => {
             </Button>
           </div>
         </div>
-      </div>
+      </form>
     </Tabbed>
   );
 };

@@ -29,6 +29,7 @@ const DataSubSidebar = props => {
     currentSchema,
     enums,
     inconsistentObjects,
+    pathname,
   } = props;
 
   const getItems = (schemaInfo = null) => {
@@ -146,7 +147,14 @@ const DataSubSidebar = props => {
 
   useEffect(() => {
     updateTreeViewItemsWithSchemaInfo();
-  }, [sources.length, tables, functions, enums, schemaList]);
+  }, [
+    sources.length,
+    tables,
+    functions,
+    enums,
+    schemaList,
+    inconsistentObjects,
+  ]);
 
   const databasesCount = treeViewItems?.length || 0;
 
@@ -165,6 +173,7 @@ const DataSubSidebar = props => {
         onSchemaChange={onSchemaChange}
         currentDataSource={currentDataSource}
         currentSchema={currentSchema}
+        pathname={pathname}
       />
     </LeftSubSidebar>
   );
@@ -187,6 +196,7 @@ const mapStateToProps = state => {
     currentDataSource: state.tables.currentDataSource,
     currentSchema: state.tables.currentSchema,
     schemaList: state.tables.schemaList,
+    pathname: state?.routing?.locationBeforeTransitions?.pathname,
   };
 };
 

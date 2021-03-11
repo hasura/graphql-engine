@@ -44,6 +44,21 @@ import { RightContainer } from '../../../Common/Layout/RightContainer';
 import { TrackableFunctionsList } from './FunctionsList';
 import { getTrackableFunctions } from './utils';
 
+const FEATURES = {
+  UNTRACKED_TABLES: 'UNTRACKED_TABLES',
+  UNTRACKED_RELATIONS: 'UNTRACKED_RELATIONS',
+  UNTRACKED_FUNCTION: 'UNTRACKED_FUNCTION',
+  NON_TRACKABLE_FUNCTIONS: 'NON_TRACKABLE_FUNCTIONS',
+};
+
+const supportedFeaturesByDriver = {
+  postgres: Object.values(FEATURES),
+  mssql: [FEATURES.UNTRACKED_TABLES, FEATURES.UNTRACKED_RELATIONS],
+};
+
+const isAllowed = (driver, feature) =>
+  supportedFeaturesByDriver[driver].includes(feature);
+
 const DeleteSchemaButton = ({ dispatch, migrationMode, currentDataSource }) => {
   const successCb = () => {
     dispatch(updateCurrentSchema('public', currentDataSource));
@@ -540,7 +555,7 @@ class Schema extends Component {
       );
     };
 
-    const getUntrackedFunctionsSection = () => {
+    const getUntrackedFunctionsSection = isSupported => {
       const heading = getSectionHeading(
         'Untracked custom functions',
         'Custom functions that are not exposed over the GraphQL API',
@@ -555,12 +570,18 @@ class Schema extends Component {
             testId={'toggle-trackable-functions'}
           >
             <div className={`${styles.padd_left_remove} col-xs-12`}>
-              <TrackableFunctionsList
-                dispatch={dispatch}
-                funcs={trackableFuncs}
-                readOnlyMode={readOnlyMode}
-                source={currentDataSource}
-              />
+              {isSupported ? (
+                <TrackableFunctionsList
+                  dispatch={dispatch}
+                  funcs={trackableFuncs}
+                  readOnlyMode={readOnlyMode}
+                  source={currentDataSource}
+                />
+              ) : (
+                `Currently unsupported for ${(
+                  currentDriver + ''
+                ).toUpperCase()}`
+              )}
             </div>
             <div className={styles.clear_fix} />
           </CollapsibleToggle>
@@ -646,8 +667,11 @@ class Schema extends Component {
             <hr />
             {getUntrackedTablesSection()}
             {getUntrackedRelationsSection()}
-            {getUntrackedFunctionsSection()}
-            {getNonTrackableFunctionsSection()}
+            {getUntrackedFunctionsSection(
+              isAllowed(currentDriver, FEATURES.NON_TRACKABLE_FUNCTIONS)
+            )}
+            {isAllowed(currentDriver, FEATURES.NON_TRACKABLE_FUNCTIONS) &&
+              getNonTrackableFunctionsSection()}
             <hr />
           </div>
         </div>

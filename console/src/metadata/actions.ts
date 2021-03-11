@@ -4,6 +4,7 @@ import { HasuraMetadataV2, HasuraMetadataV3, RestEndpointEntry } from './types';
 import {
   showSuccessNotification,
   showErrorNotification,
+  showNotification,
 } from '../components/Services/Common/Notification';
 import {
   deleteAllowListQuery,
@@ -254,18 +255,35 @@ export const addDataSource = (
 
   return dispatch(requestAction(Endpoints.metadata, options))
     .then(() => {
-      successCb();
-      if (!skipNotification) {
-        dispatch(showSuccessNotification('Data source added successfully!'));
-      }
-      dispatch(exportMetadata());
       dispatch({
         type: UPDATE_CURRENT_DATA_SOURCE,
         source: data.payload.name,
       });
       setDriver(data.driver);
-      dispatch(fetchDataInit(data.payload.name, data.driver));
-      return getState();
+      const onButtonClick = () => {
+        if (data.payload.name) dispatch(_push(`/data/${data.payload.name}`));
+      };
+      return dispatch(exportMetadata()).then(() => {
+        dispatch(fetchDataInit(data.payload.name, data.driver));
+        if (!skipNotification) {
+          dispatch(
+            showNotification(
+              {
+                title: 'Database added successfully!',
+                level: 'success',
+                autoDismiss: 0,
+                action: {
+                  label: 'View Database',
+                  callback: onButtonClick,
+                },
+              },
+              'success'
+            )
+          );
+        }
+        successCb();
+        return getState();
+      });
     })
     .catch(err => {
       console.error(err);
@@ -366,34 +384,6 @@ export const editDataSource = (
     });
 };
 
-export const reloadDataSource = (
-  data: ReloadDataSourceRequest['data']
-): Thunk<Promise<void | ReduxState>, MetadataActions> => (
-  dispatch,
-  getState
-) => {
-  const { dataHeaders } = getState().tables;
-
-  const query = reloadSource(data.name);
-
-  const options = {
-    method: 'POST',
-    headers: dataHeaders,
-    body: JSON.stringify(query),
-  };
-
-  return dispatch(requestAction(Endpoints.metadata, options))
-    .then(() => {
-      dispatch(showSuccessNotification('Data source reloaded successfully!'));
-      dispatch(exportMetadata());
-      return getState();
-    })
-    .catch(err => {
-      console.error(err);
-      dispatch(showErrorNotification('Reload data source failed', null, err));
-    });
-};
-
 export const replaceMetadata = (
   newMetadata: HasuraMetadataV2,
   successCb: () => void,
@@ -461,6 +451,7 @@ export const resetMetadata = (
     requestAction(Endpoints.metadata, options as RequestInit)
   ).then(
     () => {
+      dispatch({ type: UPDATE_CURRENT_DATA_SOURCE, source: '' });
       dispatch(exportMetadata());
       if (successCb) {
         successCb();
@@ -584,7 +575,34 @@ export const loadInconsistentObjects = (
     );
   };
 };
+export const reloadDataSource = (
+  data: ReloadDataSourceRequest['data']
+): Thunk<Promise<void | ReduxState>, MetadataActions> => (
+  dispatch,
+  getState
+) => {
+  const { dataHeaders } = getState().tables;
 
+  const query = reloadSource(data.name);
+
+  const options = {
+    method: 'POST',
+    headers: dataHeaders,
+    body: JSON.stringify(query),
+  };
+
+  return dispatch(requestAction(Endpoints.metadata, options))
+    .then(() => {
+      dispatch(showSuccessNotification('Data source reloaded successfully!'));
+      dispatch(exportMetadata());
+      dispatch(loadInconsistentObjects({ shouldReloadMetadata: false }));
+      return getState();
+    })
+    .catch(err => {
+      console.error(err);
+      dispatch(showErrorNotification('Reload data source failed', null, err));
+    });
+};
 export const reloadRemoteSchema = (
   remoteSchemaName: string,
   successCb: () => void,

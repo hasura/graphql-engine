@@ -1,9 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Helmet from 'react-helmet';
 import { connect, ConnectedProps } from 'react-redux';
 
 import Button from '../../../Common/Button/Button';
-import styles from '../../../Common/Common.scss';
+import styles from './styles.scss';
 import { ReduxState } from '../../../../types';
 import BreadCrumb from '../../../Common/Layout/BreadCrumb/BreadCrumb';
 import { DataSource } from '../../../../metadata/types';
@@ -33,10 +33,12 @@ type DatabaseListItemProps = {
   // onEdit: (dbName: string) => void;
   onReload: (name: string, driver: Driver, cb: () => void) => void;
   onRemove: (name: string, driver: Driver, cb: () => void) => void;
+  pushRoute: (route: string) => void;
 };
 
 const DatabaseListItem: React.FC<DatabaseListItemProps> = ({
   // onEdit,
+  pushRoute,
   onReload,
   onRemove,
   dataSource,
@@ -46,18 +48,27 @@ const DatabaseListItem: React.FC<DatabaseListItemProps> = ({
   const [removing, setRemoving] = useState(false);
   const [showUrl, setShowUrl] = useState(false);
 
+  const viewDB = () => {
+    if (dataSource?.name) pushRoute(`/data/${dataSource.name}`);
+  };
+  const isInconsistentDataSource = isInconsistentSource(
+    dataSource.name,
+    inconsistentObjects
+  );
   return (
-    <div className={styles.db_list_item}>
-      <div className={styles.db_item_actions}>
-        {/* Edit shall be cut out until we have a server API 
+    <div
+      className={`${styles.flex_space_between} ${styles.add_pad_min} ${styles.db_list_item}`}
+    >
+      <div className={styles.display_flex}>
         <Button
           size="xs"
           color="white"
           style={{ marginRight: '10px' }}
-          onClick={() => onEdit(dataSource.name)}
+          onClick={viewDB}
+          disabled={isInconsistentDataSource}
         >
-          Edit
-        </Button> */}
+          View Database
+        </Button>
         <Button
           size="xs"
           color="white"
@@ -84,32 +95,31 @@ const DatabaseListItem: React.FC<DatabaseListItemProps> = ({
         >
           {removing ? 'Removing...' : 'Remove'}
         </Button>
-      </div>
-      <div className={styles.db_list_content}>
-        <div className={styles.db_display_data}>
-          <div className={styles.displayFlexContainer}>
-            <b>{dataSource.name}</b>&nbsp;
-            <p>({driverToLabel[dataSource.driver]})</p>
-          </div>
-          <p style={{ marginTop: -5 }}>
-            {getHostFromConnectionString(dataSource)}
-          </p>
+        <div
+          className={`${styles.displayFlexContainer} ${styles.add_pad_left} ${styles.add_pad_top_10}`}
+        >
+          <b>{dataSource.name}</b>&nbsp;
+          <p>({driverToLabel[dataSource.driver]})</p>
         </div>
-        {isInconsistentSource(dataSource.name, inconsistentObjects) && (
+        <p className={`${styles.add_pad_top_10} ${styles.add_pad_left}`}>
+          {getHostFromConnectionString(dataSource)}
+        </p>
+        {isInconsistentDataSource && (
           <ToolTip
             id={`inconsistent-source-${dataSource.name}`}
             placement="right"
             message="Inconsistent Data Source"
           >
             <i
-              className="fa fa-exclamation-triangle"
+              className={`fa fa-exclamation-triangle ${styles.inconsistentSourceIcon}`}
               aria-hidden="true"
-              style={{ padding: 3, color: '#c02020' }}
             />
           </ToolTip>
         )}
       </div>
-      <span style={{ paddingLeft: 125 }}>
+      <span
+        className={`${styles.db_large_string_break_words} ${styles.add_pad_top_10}`}
+      >
         {showUrl ? (
           typeof dataSource.url === 'string' ? (
             dataSource.url
@@ -149,11 +159,20 @@ const DatabaseListItem: React.FC<DatabaseListItemProps> = ({
 
 interface ManageDatabaseProps extends InjectedProps {}
 
+let autoRedirectedToConnectPage = false;
+
 const ManageDatabase: React.FC<ManageDatabaseProps> = ({
   dataSources,
   dispatch,
   inconsistentObjects,
+  location,
 }) => {
+  useEffect(() => {
+    if (dataSources.length === 0 && !autoRedirectedToConnectPage) {
+      dispatch(_push('/data/manage/connect'));
+      autoRedirectedToConnectPage = true;
+    }
+  }, [location, dataSources, dispatch]);
   const crumbs = [
     {
       title: 'Data',
@@ -192,6 +211,10 @@ const ManageDatabase: React.FC<ManageDatabaseProps> = ({
     dispatch(_push('/data/manage/connect'));
   };
 
+  const pushRoute = (route: string) => {
+    if (route) dispatch(_push(route));
+  };
+
   // const onEdit = (dbName: string) => {
   //   dispatch(_push(`/data/manage/edit/${dbName}`));
   // };
@@ -206,7 +229,7 @@ const ManageDatabase: React.FC<ManageDatabaseProps> = ({
             <h2
               className={`${styles.headerText} ${styles.display_inline} ${styles.add_mar_right}`}
             >
-              Manage Databases
+              Data Manager
             </h2>
             <Button
               color="yellow"
@@ -220,17 +243,15 @@ const ManageDatabase: React.FC<ManageDatabaseProps> = ({
         </div>
         <div className={styles.manage_db_content}>
           <hr />
-          <h3 className={`${styles.heading_text} ${styles.remove_pad_bottom}`}>
-            Connected Databases
-          </h3>
-          <div className={styles.data_list_container}>
+          <h3 className={styles.heading_text}>Connected Databases</h3>
+          <div className={styles.flexColumn}>
             {dataSources.length ? (
               dataSources.map(data => (
                 <DatabaseListItem
                   key={data.name}
                   dataSource={data}
                   inconsistentObjects={inconsistentObjects}
-                  // onEdit={onEdit}
+                  pushRoute={pushRoute}
                   onReload={onReload}
                   onRemove={onRemove}
                 />
@@ -255,6 +276,7 @@ const mapStateToProps = (state: ReduxState) => {
     currentDataSource: state.tables.currentDataSource,
     currentSchema: state.tables.currentSchema,
     inconsistentObjects: state.metadata.inconsistentObjects,
+    location: state?.routing?.locationBeforeTransitions,
   };
 };
 

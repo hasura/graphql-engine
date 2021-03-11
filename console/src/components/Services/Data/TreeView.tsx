@@ -29,17 +29,18 @@ type LeafItemsViewProps = {
   item: SourceItem;
   currentSource: string;
   currentSchema: string;
-  setActiveTable: (value: string) => void;
-  isActive: boolean;
+  pathname: string;
 };
 const LeafItemsView: React.FC<LeafItemsViewProps> = ({
   item,
   currentSource,
   currentSchema,
-  setActiveTable,
-  isActive,
+  pathname,
 }) => {
   const [isOpen, setIsOpen] = useState(false);
+  const isActive = pathname.includes(
+    `/data/${currentSource}/schema/${currentSchema}/tables/${item.name}`
+  );
 
   const isView = item.type === 'view';
 
@@ -59,11 +60,9 @@ const LeafItemsView: React.FC<LeafItemsViewProps> = ({
       <div
         onClick={() => {
           setIsOpen(prev => !prev);
-          setActiveTable(item.name);
         }}
         onKeyDown={() => {
           setIsOpen(prev => !prev);
-          setActiveTable(item.name);
         }}
         role="button"
       >
@@ -126,26 +125,20 @@ type SchemaItemsViewProps = {
   currentSource: string;
   isActive: boolean;
   setActiveSchema: (value: string) => void;
+  pathname: string;
 };
 const SchemaItemsView: React.FC<SchemaItemsViewProps> = ({
   item,
   currentSource,
   isActive,
   setActiveSchema,
+  pathname,
 }) => {
   const [isOpen, setIsOpen] = useState(false);
-  const [activeTable, setActiveTable] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!isActive) {
-      setActiveTable(null);
-    }
     setIsOpen(isActive);
   }, [isActive]);
-
-  const handleActiveTable = (value: string) => {
-    setActiveTable(value);
-  };
 
   return (
     <>
@@ -178,9 +171,8 @@ const SchemaItemsView: React.FC<SchemaItemsViewProps> = ({
                   item={child}
                   currentSource={currentSource}
                   currentSchema={item.name}
-                  setActiveTable={handleActiveTable}
-                  isActive={activeTable === child.name}
                   key={key}
+                  pathname={pathname}
                 />
               </li>
             ))
@@ -196,6 +188,7 @@ type DatabaseItemsViewProps = {
   setActiveDataSource: (activeSource: string) => void;
   onSchemaChange: (value: string) => void;
   currentSchema: string;
+  pathname: string;
 };
 const DatabaseItemsView: React.FC<DatabaseItemsViewProps> = ({
   item,
@@ -203,6 +196,7 @@ const DatabaseItemsView: React.FC<DatabaseItemsViewProps> = ({
   setActiveDataSource,
   onSchemaChange,
   currentSchema,
+  pathname,
 }) => {
   const [isOpen, setIsOpen] = useState(false);
 
@@ -246,6 +240,7 @@ const DatabaseItemsView: React.FC<DatabaseItemsViewProps> = ({
                 isActive={child.name === currentSchema}
                 setActiveSchema={handleSelectSchema}
                 key={key}
+                pathname={pathname}
               />
             </li>
           ))
@@ -260,6 +255,7 @@ type TreeViewProps = {
   onSchemaChange: (value: string) => void;
   currentDataSource: string;
   currentSchema: string;
+  pathname: string;
 };
 const TreeView: React.FC<TreeViewProps> = ({
   items,
@@ -267,6 +263,7 @@ const TreeView: React.FC<TreeViewProps> = ({
   currentDataSource,
   onSchemaChange,
   currentSchema,
+  pathname,
 }) => {
   const handleSelectDataSource = (dataSource: string) => {
     onDatabaseChange(dataSource);
@@ -290,6 +287,7 @@ const TreeView: React.FC<TreeViewProps> = ({
           isActive={currentDataSource === item.name}
           setActiveDataSource={handleSelectDataSource}
           currentSchema={currentSchema}
+          pathname={pathname}
         />
       ))}
     </div>
