@@ -5,7 +5,6 @@ module Hasura.GraphQL.Execute.Common
 
 import           Hasura.Prelude
 
-import qualified Data.Aeson                                  as J
 import qualified Data.Environment                            as Env
 import qualified Data.IntMap                                 as IntMap
 import qualified Database.PG.Query                           as Q
@@ -18,7 +17,6 @@ import qualified Hasura.Tracing                              as Tracing
 
 import           Hasura.Backends.Postgres.Connection
 import           Hasura.Backends.Postgres.Execute.RemoteJoin
-import           Hasura.Backends.Postgres.SQL.Value
 import           Hasura.Backends.Postgres.Translate.Select   (asSingleRowJsonResp)
 import           Hasura.EncJSON
 import           Hasura.GraphQL.Context
@@ -35,13 +33,6 @@ data PreparedSql
   , _psPrepArgs    :: !PrepArgMap
   , _psRemoteJoins :: !(Maybe (RemoteJoins 'Postgres))
   }
-
--- | Required to log in `query-log`
-instance J.ToJSON PreparedSql where
-  toJSON (PreparedSql q prepArgs _) =
-    J.object [ "query" J..= Q.getQueryText q
-             , "prepared_arguments" J..= fmap (pgScalarValueToJson . snd) prepArgs
-             ]
 
 
 -- turn the current plan into a transaction

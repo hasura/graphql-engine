@@ -4,6 +4,7 @@ module Hasura.Backends.Postgres.Instances.Transport () where
 
 import           Hasura.Prelude
 
+import qualified Data.Aeson                                 as J
 import qualified Data.ByteString                            as B
 import qualified Database.PG.Query                          as Q
 import qualified Language.GraphQL.Draft.Syntax              as G
@@ -16,10 +17,11 @@ import qualified Hasura.GraphQL.Execute.Query               as EQ
 import qualified Hasura.Logging                             as L
 import qualified Hasura.Tracing                             as Tracing
 
+import           Hasura.Backends.Postgres.SQL.Value
 import           Hasura.EncJSON
 import           Hasura.GraphQL.Execute.Backend
 import           Hasura.GraphQL.Execute.LiveQuery.Plan
-import           Hasura.GraphQL.Logging                     (MonadQueryLog (..))
+import           Hasura.GraphQL.Logging
 import           Hasura.GraphQL.Transport.Backend
 import           Hasura.GraphQL.Transport.HTTP.Protocol
 import           Hasura.RQL.Types
@@ -51,7 +53,7 @@ runPGQuery
   -- ^ Also return the time spent in the PG query; for telemetry.
 runPGQuery reqId query fieldName _userInfo logger sourceConfig tx genSql =  do
   -- log the generated SQL and the graphql query
-  logQueryLog logger query ((fieldName,) <$> genSql) reqId
+  logQueryLog logger $ mkQueryLog query fieldName genSql reqId
   withElapsedTime $ trace ("Postgres Query for root field " <>> fieldName) $
     Tracing.interpTraceT id $ hoist (runQueryTx $ _pscExecCtx sourceConfig) tx
 
@@ -74,7 +76,7 @@ runPGMutation
   -- spent in the PG query; for telemetry.
 runPGMutation reqId query fieldName userInfo logger sourceConfig tx _genSql =  do
   -- log the graphql query
-  logQueryLog logger query Nothing reqId
+  logQueryLog logger $ mkQueryLog query fieldName Nothing reqId
   ctx <- Tracing.currentContext
   withElapsedTime $ trace ("Postgres Mutation for root field " <>> fieldName) $
     Tracing.interpTraceT (
@@ -95,3 +97,16 @@ runPGSubscription sourceConfig query variables = withElapsedTime
   $ runExceptT
   $ runQueryTx (_pscExecCtx sourceConfig)
   $ PGL.executeMultiplexedQuery query variables
+
+
+mkQueryLog
+  :: GQLReqUnparsed
+  -> G.Name
+  -> Maybe EQ.PreparedSql
+  -> RequestId
+  -> QueryLog
+mkQueryLog gqlQuery fieldName preparedSql requestId =
+  QueryLog gqlQuery ((fieldName,) <$> generatedQuery) requestId
+  where
+    generatedQuery = preparedSql <&> \(EQ.PreparedSql query args _) ->
+      GeneratedQuery (Q.getQueryText query) (J.toJSON $ pgScalarValueToJson . snd <$> args)

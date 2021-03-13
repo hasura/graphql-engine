@@ -36,7 +36,6 @@ instance BackendExecute 'MSSQL where
   mkDBSubscriptionPlan = msDBSubscriptionPlan
 
 
-
 -- multiplexed query
 
 newtype NoMultiplex = NoMultiplex (G.Name, ODBC.Query)

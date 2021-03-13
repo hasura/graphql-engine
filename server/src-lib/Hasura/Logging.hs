@@ -29,9 +29,6 @@ module Hasura.Logging
 
 import           Hasura.Prelude
 
-import           Control.Monad.Trans.Control
-import           Control.Monad.Trans.Managed (ManagedT (..), allocate)
-
 import qualified Control.AutoUpdate          as Auto
 import qualified Data.Aeson                  as J
 import qualified Data.Aeson.TH               as J
@@ -45,6 +42,9 @@ import qualified Data.Time.Clock             as Time
 import qualified Data.Time.Format            as Format
 import qualified Data.Time.LocalTime         as Time
 import qualified System.Log.FastLogger       as FL
+
+import           Control.Monad.Trans.Control
+import           Control.Monad.Trans.Managed (ManagedT (..), allocate)
 
 
 newtype FormattedTime

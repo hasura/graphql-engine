@@ -25,6 +25,7 @@ import qualified System.Log.FastLogger                     as FL
 import qualified System.Metrics                            as EKG
 import qualified System.Metrics.Gauge                      as EKG.Gauge
 import qualified Text.Mustache.Compile                     as M
+import qualified Web.Spock.Core                            as Spock
 
 import           Control.Concurrent.STM.TVar               (TVar, readTVarIO)
 import           Control.Exception                         (bracket_, throwIO)
@@ -57,7 +58,7 @@ import           Hasura.Eventing.ScheduledTrigger
 import           Hasura.GraphQL.Execute                    (MonadGQLExecutionCheck (..),
                                                             checkQueryInAllowlist)
 import           Hasura.GraphQL.Execute.Action
-import           Hasura.GraphQL.Logging                    (MonadQueryLog (..), QueryLog (..))
+import           Hasura.GraphQL.Logging                    (MonadQueryLog (..))
 import           Hasura.GraphQL.Transport.HTTP             (MonadExecuteQuery (..))
 import           Hasura.GraphQL.Transport.HTTP.Protocol    (toParsed)
 import           Hasura.Logging
@@ -80,7 +81,7 @@ import           Hasura.Server.Telemetry
 import           Hasura.Server.Types
 import           Hasura.Server.Version
 import           Hasura.Session
-import qualified Web.Spock.Core                            as Spock
+
 
 data ExitCode
 -- these are used during server initialization:
@@ -741,8 +742,7 @@ instance MonadConfigApiHandler PGMetadataStorageApp where
   runConfigApiHandler = configApiGetHandler
 
 instance MonadQueryLog PGMetadataStorageApp where
-  logQueryLog logger query genSqlM reqId =
-    unLogger logger $ QueryLog query genSqlM reqId
+  logQueryLog = unLogger
 
 instance WS.MonadWSLog PGMetadataStorageApp where
   logWSLog = unLogger

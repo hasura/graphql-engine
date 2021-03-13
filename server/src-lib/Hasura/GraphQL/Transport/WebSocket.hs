@@ -60,7 +60,7 @@ import qualified Hasura.Server.Telemetry.Counters             as Telem
 import qualified Hasura.Tracing                               as Tracing
 
 import           Hasura.EncJSON
-import           Hasura.GraphQL.Logging                       (MonadQueryLog (..))
+import           Hasura.GraphQL.Logging
 import           Hasura.GraphQL.Transport.Backend
 import           Hasura.GraphQL.Transport.HTTP                (MonadExecuteQuery (..),
                                                                QueryCacheKey (..),
@@ -435,7 +435,7 @@ onStart env serverEnv wsConn (StartMsg opId q) = catchAndIgnore $ do
 
     E.SubscriptionExecutionPlan sourceName (E.LQP (liveQueryPlan :: LQ.LiveQueryPlan b (EB.MultiplexedQuery b))) -> do
       -- log the graphql query
-      logQueryLog logger q Nothing requestId
+      logQueryLog logger $ QueryLog q Nothing requestId
       let subscriberMetadata = LQ.mkSubscriberMetadata $ J.object
                                [ "websocket_id" J..= WS.getWSId wsConn
                                , "operation_id" J..= opId

@@ -55,7 +55,7 @@ import qualified Hasura.Tracing                            as Tracing
 
 import           Hasura.Backends.Postgres.Execute.Types
 import           Hasura.EncJSON
-import           Hasura.GraphQL.Logging                    (MonadQueryLog (..))
+import           Hasura.GraphQL.Logging                    (MonadQueryLog)
 import           Hasura.HTTP
 import           Hasura.Metadata.Class
 import           Hasura.RQL.DDL.Schema

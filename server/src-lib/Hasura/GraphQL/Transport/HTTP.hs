@@ -47,7 +47,7 @@ import qualified Hasura.Tracing                               as Tracing
 
 import           Hasura.EncJSON
 import           Hasura.GraphQL.Context
-import           Hasura.GraphQL.Logging                       (MonadQueryLog (..))
+import           Hasura.GraphQL.Logging                       (MonadQueryLog)
 import           Hasura.GraphQL.Parser.Column                 (UnpreparedValue (..))
 import           Hasura.GraphQL.Transport.Backend
 import           Hasura.GraphQL.Transport.HTTP.Protocol

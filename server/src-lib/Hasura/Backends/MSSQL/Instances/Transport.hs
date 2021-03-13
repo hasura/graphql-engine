@@ -4,6 +4,7 @@ module Hasura.Backends.MSSQL.Instances.Transport () where
 
 import           Hasura.Prelude
 
+import qualified Data.Aeson                              as J
 import qualified Data.ByteString                         as B
 import qualified Language.GraphQL.Draft.Syntax           as G
 
@@ -18,7 +19,7 @@ import           Hasura.Backends.MSSQL.Instances.Execute
 import           Hasura.EncJSON
 import           Hasura.GraphQL.Execute.Backend
 import           Hasura.GraphQL.Execute.LiveQuery.Plan
-import           Hasura.GraphQL.Logging                  (MonadQueryLog (..))
+import           Hasura.GraphQL.Logging
 import           Hasura.GraphQL.Transport.Backend
 import           Hasura.GraphQL.Transport.HTTP.Protocol
 import           Hasura.RQL.Types
@@ -48,10 +49,8 @@ runQuery
   -> Maybe Text
   -> m (DiffTime, EncJSON)
   -- ^ Also return the time spent in the PG query; for telemetry.
-runQuery reqId query fieldName _userInfo logger _sourceConfig tx _genSql =  do
-  -- log the generated SQL and the graphql query
-  -- FIXME: fix logging by making logQueryLog expect something backend agnostic!
-  logQueryLog logger query Nothing reqId
+runQuery reqId query fieldName _userInfo logger _sourceConfig tx genSql =  do
+  logQueryLog logger $ mkQueryLog query fieldName genSql reqId
   withElapsedTime
     $ trace ("MSSQL Query for root field " <>> fieldName)
     $ run tx
@@ -74,8 +73,7 @@ runMutation
   -- ^ Also return 'Mutation' when the operation was a mutation, and the time
   -- spent in the PG query; for telemetry.
 runMutation reqId query fieldName _userInfo logger _sourceConfig tx _genSql =  do
-  -- log the graphql query
-  logQueryLog logger query Nothing reqId
+  logQueryLog logger $ mkQueryLog query fieldName Nothing reqId
   withElapsedTime
     $ trace ("MSSQL Mutation for root field " <>> fieldName)
     $ run tx
@@ -100,7 +98,19 @@ runSubscription sourceConfig (NoMultiplex (name, query)) variables = do
     addFieldName result =
       "{\"" <> G.unName name <> "\":" <> result <> "}"
 
+
 run :: (MonadIO m, MonadError QErr m) => ExceptT QErr IO a -> m a
 run action = do
   result <- liftIO $ runExceptT action
   result `onLeft` throwError
+
+mkQueryLog
+  :: GQLReqUnparsed
+  -> G.Name
+  -> Maybe Text
+  -> RequestId
+  -> QueryLog
+mkQueryLog gqlQuery fieldName preparedSql requestId =
+  QueryLog gqlQuery ((fieldName,) <$> generatedQuery) requestId
+  where
+    generatedQuery = preparedSql <&> \qs -> GeneratedQuery qs J.Null
