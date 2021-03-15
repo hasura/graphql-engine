@@ -13,8 +13,8 @@ load and modify the Hasura catalog and schema cache.
     representation of the data stored in the catalog. The in-memory representation is not identical
     to the data in the catalog, since it has some post-processing applied to it in order to make it
     easier to consume for other parts of the system, such as GraphQL schema generation. For example,
-    although column information is represented by 'PGRawColumnInfo', the schema cache contains
-    “processed” 'PGColumnInfo' values, instead.
+    although column information is represented by 'RawColumnInfo', the schema cache contains
+    “processed” 'ColumnInfo' values, instead.
 
     Ultimately, the catalog is the source of truth for all information contained in the schema
     cache, but to avoid rebuilding the entire schema cache on every change to the catalog, various
@@ -33,42 +33,45 @@ module Hasura.RQL.DDL.Schema
  , RunSQL(..)
  , runRunSQL
  , isSchemaCacheBuildRequiredRunSQL
+
+ , RunSQLRes(..)
  ) where
 
 import           Hasura.Prelude
 
-import qualified Data.Text                      as T
-import qualified Data.Text.Encoding             as TE
-import qualified Database.PG.Query              as Q
-import qualified Database.PostgreSQL.LibPQ      as PQ
-import qualified Text.Regex.TDFA                as TDFA
+import qualified Data.Text.Encoding                  as TE
+import qualified Database.PG.Query                   as Q
+import qualified Database.PostgreSQL.LibPQ           as PQ
+import qualified Text.Regex.TDFA                     as TDFA
 
+import           Control.Monad.Trans.Control         (MonadBaseControl)
 import           Data.Aeson
-import           Data.Aeson.Casing
 import           Data.Aeson.TH
-import           Language.Haskell.TH.Syntax     (Lift)
 
+import           Hasura.Backends.Postgres.DDL.RunSQL
 import           Hasura.EncJSON
 import           Hasura.RQL.DDL.Schema.Cache
 import           Hasura.RQL.DDL.Schema.Catalog
 import           Hasura.RQL.DDL.Schema.Function
 import           Hasura.RQL.DDL.Schema.Rename
 import           Hasura.RQL.DDL.Schema.Table
-import           Hasura.RQL.Instances           ()
+import           Hasura.RQL.Instances                ()
 import           Hasura.RQL.Types
-import           Hasura.Server.Utils            (quoteRegex)
+import           Hasura.Server.Utils                 (quoteRegex)
 
 data RunSQL
   = RunSQL
   { rSql                      :: Text
+  , rSource                   :: !SourceName
   , rCascade                  :: !Bool
   , rCheckMetadataConsistency :: !(Maybe Bool)
   , rTxAccessMode             :: !Q.TxAccess
-  } deriving (Show, Eq, Lift)
+  } deriving (Show, Eq)
 
 instance FromJSON RunSQL where
   parseJSON = withObject "RunSQL" $ \o -> do
     rSql <- o .: "sql"
+    rSource <- o .:? "source" .!= defaultSource
     rCascade <- o .:? "cascade" .!= False
     rCheckMetadataConsistency <- o .:? "check_metadata_consistency"
     isReadOnly <- o .:? "read_only" .!= False
@@ -79,6 +82,7 @@ instance ToJSON RunSQL where
   toJSON RunSQL {..} =
     object
       [ "sql" .= rSql
+      , "source" .= rSource
       , "cascade" .= rCascade
       , "check_metadata_consistency" .= rCheckMetadataConsistency
       , "read_only" .=
@@ -104,13 +108,16 @@ isSchemaCacheBuildRequiredRunSQL RunSQL {..} =
         { TDFA.captureGroups = False }
         "\\balter\\b|\\bdrop\\b|\\breplace\\b|\\bcreate function\\b|\\bcomment on\\b")
 
-runRunSQL :: (MonadTx m, CacheRWM m, HasSQLGenCtx m) => RunSQL -> m EncJSON
+runRunSQL :: (MonadIO m, MonadBaseControl IO m, MonadError QErr m, CacheRWM m, HasServerConfigCtx m, MetadataM m)
+  => RunSQL -> m EncJSON
 runRunSQL q@RunSQL {..}
   -- see Note [Checking metadata consistency in run_sql]
   | isSchemaCacheBuildRequiredRunSQL q
-  = withMetadataCheck rCascade $ execRawSQL rSql
+  = withMetadataCheck rSource rCascade rTxAccessMode $ execRawSQL rSql
   | otherwise
-  = execRawSQL rSql
+  = askSourceConfig rSource >>= \sourceConfig ->
+      liftEitherM $ runExceptT $
+      runLazyTx (_pscExecCtx sourceConfig) rTxAccessMode $ execRawSQL rSql
   where
     execRawSQL :: (MonadTx m) => Text -> m EncJSON
     execRawSQL =
@@ -144,7 +151,7 @@ data RunSQLRes
   { rrResultType :: !Text
   , rrResult     :: !Value
   } deriving (Show, Eq)
-$(deriveJSON (aesonDrop 2 snakeCase) ''RunSQLRes)
+$(deriveJSON hasuraJSON ''RunSQLRes)
 
 instance Q.FromRes RunSQLRes where
   fromRes (Q.ResultOkEmpty _) =
@@ -153,7 +160,7 @@ instance Q.FromRes RunSQLRes where
     csvRows <- resToCSV res
     return $ RunSQLRes "TuplesOk" $ toJSON csvRows
     where
-      resToCSV :: PQ.Result -> ExceptT T.Text IO [[Text]]
+      resToCSV :: PQ.Result -> ExceptT Text IO [[Text]]
       resToCSV r =  do
         nr  <- liftIO $ PQ.ntuples r
         nc  <- liftIO $ PQ.nfields r
@@ -169,4 +176,4 @@ instance Q.FromRes RunSQLRes where
 
         return $ hdr:rows
 
-      decodeBS = either (throwError . T.pack . show) return . TE.decodeUtf8'
+      decodeBS = either (throwError . tshow) return . TE.decodeUtf8'

@@ -4,13 +4,18 @@ Visit https://serverless-push.demo.hasura.app/ for a live demo.
 
 [![Edit serverless-push](https://codesandbox.io/static/img/play-codesandbox.svg)](https://codesandbox.io/s/github/hasura/graphql-engine/tree/master/community/sample-apps/serverless-push?fontsize=14)
 
-## Pre-requisites
+## Instructions
+
+### Pre-requisites
 
 - Google Cloud account with billing enabled
 - Firebase Cloud Messaging (FCM) account
 - Hasura GraphQL Engine (HGE) installation
 
-## Instructions
+
+- Deploy GraphQL Engine on Hasura Cloud and setup PostgreSQL via Heroku:
+  
+  [![Deploy to Hasura Cloud](https://graphql-engine-cdn.hasura.io/img/deploy_to_hasura.png)](https://cloud.hasura.io/)
 
 ### Step 1: Create table
 

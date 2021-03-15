@@ -3,7 +3,6 @@ import { connect, ConnectedProps } from 'react-redux';
 import TableHeader from '../TableCommon/TableHeader';
 import styles from './ModifyEvent.scss';
 import { updateSchemaInfo } from '../../../Data/DataActions';
-import { getTableColumns, Table } from '../../../../Common/utils/pgUtils';
 import Button from '../../../../Common/Button/Button';
 import { useEventTriggerModify } from '../state';
 
@@ -12,8 +11,8 @@ import WebhookEditor from './WebhookEditor';
 import OperationEditor from './OperationEditor';
 import RetryConfEditor from './RetryConfEditor';
 import HeadersEditor from './HeadersEditor';
-import { MapStateToProps } from '../../../../../types';
-import { EventTrigger, RouterTriggerProps } from '../../types';
+import { ReduxState } from '../../../../../types';
+import { RouterTriggerProps } from '../../types';
 import { findETTable } from '../../utils';
 import { EventTriggerProperty } from './utils';
 import { mapDispatchToPropsEmpty } from '../../../../Common/utils/reactUtils';
@@ -21,13 +20,28 @@ import { mapDispatchToPropsEmpty } from '../../../../Common/utils/reactUtils';
 import { modifyEventTrigger, deleteEventTrigger } from '../../ServerIO';
 
 import { NotFoundError } from '../../../../Error/PageNotFound';
+import { getEventTriggerByName } from '../../../../../metadata/selector';
 
 interface Props extends InjectedProps {}
 
 const Modify: React.FC<Props> = props => {
-  const { currentTrigger, allSchemas, readOnlyMode, dispatch } = props;
+  const {
+    currentTrigger,
+    allSchemas,
+    readOnlyMode,
+    dispatch,
+    currentDataSource,
+  } = props;
+  if (!currentTrigger) {
+    // throw a 404 exception
+    throw new NotFoundError();
+  }
 
-  const { state, setState } = useEventTriggerModify(currentTrigger, allSchemas);
+  const { state, setState } = useEventTriggerModify(
+    currentTrigger,
+    allSchemas,
+    currentDataSource
+  );
 
   React.useEffect(() => {
     if (currentTrigger) {
@@ -37,7 +51,7 @@ const Modify: React.FC<Props> = props => {
         })
       );
     }
-  }, [currentTrigger]);
+  }, [currentTrigger.name]);
 
   const table = findETTable(currentTrigger, allSchemas);
 
@@ -81,9 +95,9 @@ const Modify: React.FC<Props> = props => {
         />
         <OperationEditor
           currentTrigger={currentTrigger}
-          allTableColumns={getTableColumns(
-            findETTable(currentTrigger, allSchemas)
-          )}
+          allTableColumns={
+            findETTable(currentTrigger, allSchemas)?.columns || []
+          }
           operations={state.operations}
           setOperations={setState.operations}
           operationColumns={state.operationColumns}
@@ -124,30 +138,15 @@ const Modify: React.FC<Props> = props => {
   );
 };
 
-type PropsFromState = {
-  currentTrigger: EventTrigger;
-  allSchemas: Table[];
-  readOnlyMode: boolean;
-};
-
-const mapStateToProps: MapStateToProps<PropsFromState, RouterTriggerProps> = (
-  state,
-  ownProps
-) => {
-  const triggerList = state.events.triggers.event;
+const mapStateToProps = (state: ReduxState, ownProps: RouterTriggerProps) => {
   const modifyTriggerName = ownProps.params.triggerName;
-
-  const currentTrigger = triggerList.find(tr => tr.name === modifyTriggerName);
-
-  if (!currentTrigger) {
-    // throw a 404 exception
-    throw new NotFoundError();
-  }
+  const currentTrigger = getEventTriggerByName(state)(modifyTriggerName);
 
   return {
     currentTrigger,
     allSchemas: state.tables.allSchemas,
     readOnlyMode: state.main.readOnlyMode,
+    currentDataSource: state.tables.currentDataSource,
   };
 };
 

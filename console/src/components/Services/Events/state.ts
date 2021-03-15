@@ -1,7 +1,4 @@
-import { Triggers } from './types';
-
 export type EventsState = {
-  triggers: Triggers;
   currentTrigger: string;
   loading: boolean;
   error: {
@@ -10,10 +7,6 @@ export type EventsState = {
 };
 
 const state: EventsState = {
-  triggers: {
-    scheduled: [],
-    event: [],
-  },
   currentTrigger: '',
   loading: true,
   error: {},

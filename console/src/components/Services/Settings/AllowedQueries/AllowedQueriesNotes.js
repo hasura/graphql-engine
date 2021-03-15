@@ -12,7 +12,7 @@ class AllowedQueriesNotes extends React.Component {
           operations added to the allow-list will be allowed to be
           executed.&nbsp;
           <a
-            href="https://hasura.io/docs/1.0/graphql/manual/deployment/allow-list.html"
+            href="https://hasura.io/docs/latest/graphql/core/deployment/allow-list.html"
             target="_blank"
             rel="noopener noreferrer"
           >

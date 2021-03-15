@@ -1,0 +1,13 @@
+@import '../../../Common/Common.scss';
+
+.free_badge {
+  display: flex;
+  align-items: center;
+  background-color: #666666;
+  width: auto;
+  border-radius: 10px;
+  height: 20px;
+  padding: 8px;
+  font-size: 12px;
+  color: white;
+}

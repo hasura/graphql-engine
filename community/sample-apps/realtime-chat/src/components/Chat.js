@@ -99,7 +99,7 @@ class Chat extends React.Component {
           <div className="hasura-logo">
             <img src="https://graphql-engine-cdn.hasura.io/img/powered_by_hasura_black.svg" onClick={() => window.open("https://hasura.io")} alt="Powered by Hasura"/>
             &nbsp; | &nbsp;
-            <a href="/console" target="_blank" rel="noopener noreferrer">
+            <a href="https://realtime-chat.hasura.app/console" target="_blank" rel="noopener noreferrer">
               Backend
             </a>
             &nbsp; | &nbsp;

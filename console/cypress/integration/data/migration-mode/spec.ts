@@ -1,7 +1,6 @@
 import { validateMigrationMode } from '../../validators/validators';
 
 import { toggleOnMigrationMode, toggleOffMigrationMode } from './utils';
-import { getElementFromAlias } from '../../../helpers/dataHelpers';
 
 export const testToggleButton = () => {
   // Turn off migration mode
@@ -16,7 +15,6 @@ export const testToggleButton = () => {
   // Validate
   validateMigrationMode(true);
   cy.wait(7000);
-  cy.get(getElementFromAlias('schema')).click();
 };
 
 export const checkToggleButton = () => {

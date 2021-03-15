@@ -31,8 +31,8 @@ Let's say we have the following two tables in our schema:
 
 Now we want to set up migrations starting with this schema.
 
-Before you begin
-----------------
+Step 0: Disable the console on the server
+-----------------------------------------
 
 To use migrations effectively, the console on the server (which is served at
 ``/console``) should be disabled and all changes must go through the console
@@ -221,3 +221,5 @@ issue.
 If ``DATABASE STATUS`` indicates ``Not Present``, it denotes that there are new
 migration versions in the local directory which are not applied on the database
 yet. Executing a ``migrate apply`` will resolve this.
+
+

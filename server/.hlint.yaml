@@ -1,0 +1,130 @@
+# HLint configuration file
+# https://github.com/ndmitchell/hlint
+##########################
+
+# This file contains a template configuration file, which is typically
+# placed as .hlint.yaml in the root of your project
+
+
+# Specify additional command line arguments
+#
+# - arguments: [--color, --cpp-simple, -XQuasiQuotes]
+
+- arguments: -XQuasiQuotes
+
+# Control which extensions/flags/modules/functions can be used
+#
+# - extensions:
+#   - default: false # all extension are banned by default
+#   - name: [PatternGuards, ViewPatterns] # only these listed extensions can be used
+#   - {name: CPP, within: CrossPlatform} # CPP can only be used in a given module
+#
+# - flags:
+#   - {name: -w, within: []} # -w is allowed nowhere
+#
+# - modules:
+#   - {name: [Data.Set, Data.HashSet], as: Set} # if you import Data.Set qualified, it must be as 'Set'
+#   - {name: Control.Arrow, within: []} # Certain modules are banned entirely
+#
+# - functions:
+#   - {name: unsafePerformIO, within: []} # unsafePerformIO can only appear in no modules
+
+
+# Add custom hints for this project
+#
+# Will suggest replacing "wibbleMany [myvar]" with "wibbleOne myvar"
+# - error: {lhs: "wibbleMany [x]", rhs: wibbleOne x}
+
+# Turn on hints that are off by default
+#
+# Ban "module X(module X) where", to require a real export list
+# - warn: {name: Use explicit module export list}
+#
+# Replace a $ b $ c with a . b $ c
+# - group: {name: dollar, enabled: true}
+#
+# Generalise map to fmap, ++ to <>
+# - group: {name: generalise, enabled: true}
+
+
+# Ignore some builtin hints
+# - ignore: {name: Use let}
+# - ignore: {name: Use const, within: SpecialModule} # Only within certain modules
+
+- ignore: {name: Reduce duplication}
+- ignore: {name: Redundant $}
+- ignore: {name: Redundant bracket}
+- ignore: {name: Use fmap}
+- ignore: {name: Use first}
+- ignore: {name: Use if}
+- ignore: {name: Redundant <$>}
+- ignore: {name: Use ++}
+- ignore: {name: Use const}
+- ignore: {name: Eta reduce}
+- ignore: {name: Redundant multi-way if}
+- ignore: {name: Use newtype instead of data}
+- ignore: {name: Use bimap}
+- ignore: {name: Use $>}
+- ignore: {name: "Use ?~"}
+- ignore: {name: Use <=<}
+- ignore: {name: Use sequenceA}
+- ignore: {name: Use camelCase}
+- ignore: {name: Redundant return}
+- ignore: {name: Use <$>, within: [Hasura.RQL.DDL.Metadata, Hasura.Backends.MSSQL.Types.Instances]}
+- ignore: {name: Functor law, within: Hasura.Server.AuthSpec}
+
+# Define some custom infix operators
+# - fixity: infixr 3 ~^#^~
+
+
+# To generate a suitable file for HLint do:
+# $ hlint --default > .hlint.yaml
+
+
+- group:
+    name: hasura-prelude
+    enabled: true
+    imports:
+    - package base
+    rules:
+    - warn: {lhs: "maybe b return a", rhs: "onNothing a b"}
+    - warn: {lhs: "maybe b pure a", rhs: "onNothing a b"}
+    - warn: {lhs: "maybe (return ()) b a", rhs: "onJust a b"}
+    - warn: {lhs: "maybe (pure ()) b a", rhs: "onJust a b"}
+    - warn: {lhs: "either b return a", rhs: "onLeft a b"}
+    - warn: {lhs: "either b pure a", rhs: "onLeft a b"}
+    - warn: {lhs: "maybe (f x) f", rhs: "f . fromMaybe x"}
+    - warn: {lhs: "maybe (f x) f", rhs: "f . fromMaybe x"}
+    - warn: {lhs: "either (f . g) (f . h)", rhs: "f . either g h"}
+    - warn: {lhs: "either (f . g) (f . h)", rhs: "f . either g h"}
+    - warn: {lhs: "onNothing x (return y)", rhs: "return (fromMaybe y x)"}
+    - warn: {lhs: "onNothing x (pure y)", rhs: "pure (fromMaybe y x)"}
+    - warn: {lhs: "onLeft x (return . f)", rhs: "return (either f id x)"}
+    - warn: {lhs: "onLeft x (pure . f)", rhs: "pure (either f id x)"}
+    - warn: {lhs: "case x of {Right a -> pure a; Left c -> d}", rhs: "onLeft x (\\ c -> d)"}
+    - warn: {lhs: "case x of {Left c -> d; Right a -> pure a}", rhs: "onLeft x (\\ c -> d)"}
+    - warn: {lhs: "case x of {Right a -> return a; Left c -> d}", rhs: "onLeft x (\\ c -> d)"}
+    - warn: {lhs: "case x of {Left c -> d; Right a -> return a}", rhs: "onLeft x (\\ c -> d)"}
+    - warn: {lhs: "case x of {Nothing -> a; Just b -> pure b}", rhs: "onNothing x a"}
+    - warn: {lhs: "case x of {Just b -> pure b; Nothing -> a}", rhs: "onNothing x a"}
+    - warn: {lhs: "case x of {Nothing -> a; Just b -> return b}", rhs: "onNothing x a"}
+    - warn: {lhs: "case x of {Just b -> return b; Nothing -> a}", rhs: "onNothing x a"}
+    - warn: {lhs: "Data.Text.pack (Prelude.show x)", rhs: "Hasura.Prelude.tshow x"}
+    # mapKeys:
+    - warn: {lhs: "Data.HashMap.Strict.Extended.fromList . map (first f) . Data.HashMap.Strict.Extended.toList", rhs: "mapKeys f"}
+    - warn: {lhs: "Data.HashMap.Strict.fromList . map (first f) . Data.HashMap.Strict.toList", rhs: "mapKeys f"}
+    - warn: {lhs: "Data.HashMap.Strict.Extended.fromList $ map (first f) $ Data.HashMap.Strict.Extended.toList x", rhs: "mapKeys f x"}
+    - warn: {lhs: "Data.HashMap.Strict.fromList $ map (first f) $ Data.HashMap.Strict.toList x", rhs: "mapKeys f x"}
+    # MaybeT
+    - warn: {lhs: "MaybeT (pure x)",         rhs: "hoistMaybe x"}
+    - warn: {lhs: "MaybeT (return x)",       rhs: "hoistMaybe x"}
+    - warn: {lhs: "MaybeT (pure Nothing)",   rhs: "Control.Applicative.empty"}
+    - warn: {lhs: "MaybeT (return Nothing)", rhs: "Control.Applicative.empty"}
+
+- group:
+    name: data-text-extended
+    enabled: true
+    imports:
+    - package base
+    rules:
+    - warn: {lhs: "Data.Text.intercalate \", \" x", rhs: "commaSeparated x", note: "From Data.Text.Extended"}

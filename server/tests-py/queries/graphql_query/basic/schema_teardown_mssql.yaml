@@ -1,0 +1,14 @@
+type: bulk
+args:
+
+- type: mssql_run_sql
+  args:
+    source: mssql
+    sql: |
+      drop table test_types
+
+- type: mssql_run_sql
+  args:
+    source: mssql
+    sql: |
+      drop table author

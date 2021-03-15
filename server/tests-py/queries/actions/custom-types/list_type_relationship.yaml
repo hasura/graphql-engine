@@ -12,6 +12,7 @@ response:
             schema: public
             name: user
           name: Names
+          source: default
           type: array
           field_mapping:
             names: name

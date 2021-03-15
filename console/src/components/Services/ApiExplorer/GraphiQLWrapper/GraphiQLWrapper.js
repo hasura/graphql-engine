@@ -38,6 +38,8 @@ import snippets from './snippets';
 import 'graphiql/graphiql.css';
 import './GraphiQL.css';
 import 'graphiql-code-exporter/CodeExporter.css';
+import _push from '../../Data/push';
+import { isQueryValid } from '../Rest/utils';
 
 class GraphiQLWrapper extends Component {
   constructor(props) {
@@ -166,6 +168,14 @@ class GraphiQLWrapper extends Component {
       dispatch(push(getActionsCreateRoute()));
     };
 
+    const routeToREST = gqlProps => () => {
+      const { query, schema } = graphiqlContext.state;
+      if (!query || !schema || !gqlProps.query || !isQueryValid(query)) {
+        return;
+      }
+      dispatch(_push('/api/rest/create'));
+    };
+
     const renderGraphiql = graphiqlProps => {
       const voyagerUrl = graphqlNetworkData.consoleUrl + '/voyager-view';
       let analyzerProps = {};
@@ -206,6 +216,11 @@ class GraphiQLWrapper extends Component {
             title: 'GraphQL Voyager',
             onClick: () => window.open(voyagerUrl, '_blank'),
             icon: <i className="fa fa-external-link" aria-hidden="true" />,
+          },
+          {
+            label: 'REST',
+            title: 'REST Endpoints',
+            onClick: routeToREST(graphiqlProps),
           },
         ];
         if (mode === 'graphql') {

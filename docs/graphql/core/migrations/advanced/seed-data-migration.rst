@@ -35,7 +35,7 @@ Step 3: Write an insert statement
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 The next step is to write an insert statement that populates the database with
-seed data, like this:
+seed data like the following:
 
 .. code-block:: SQL
 
@@ -69,3 +69,4 @@ If the insert statement was successful, the data is now added to the DB.
 
 Navigate to the ``migrations`` directory in your Hasura project. The latest migration
 will be the the insert statement that was just run.
+

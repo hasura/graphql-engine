@@ -1,0 +1,34 @@
+- description: Set custom types with an object relationship
+  url: /v1/query
+  status: 200
+  query:
+    type: set_custom_types
+    args:
+      objects:
+      - name: User
+        fields:
+        - name: user_id
+          type: uuid!
+        - name: name
+          type: 'String!'
+        relationships:
+        - name: Names
+          type: array
+          remote_table: user
+          field_mapping:
+            name: name
+
+- description: drop the custom type relationship
+  url: /v1/query
+  status: 200
+  query:
+    type: set_custom_types
+    args:
+      objects:
+      - name: User
+        fields:
+        - name: user_id
+          type: uuid!
+        - name: name
+          type: 'String!'
+        relationships: []

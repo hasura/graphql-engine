@@ -8,14 +8,15 @@ import (
 	"strings"
 
 	crontriggers "github.com/hasura/graphql-engine/cli/metadata/cron_triggers"
+	"github.com/hasura/graphql-engine/cli/metadata/functions"
+	"github.com/hasura/graphql-engine/cli/metadata/sources"
+	"github.com/hasura/graphql-engine/cli/metadata/tables"
 
 	"github.com/hasura/graphql-engine/cli/metadata/actions"
 	"github.com/hasura/graphql-engine/cli/metadata/actions/types"
 	"github.com/hasura/graphql-engine/cli/metadata/allowlist"
-	"github.com/hasura/graphql-engine/cli/metadata/functions"
 	"github.com/hasura/graphql-engine/cli/metadata/querycollections"
 	"github.com/hasura/graphql-engine/cli/metadata/remoteschemas"
-	"github.com/hasura/graphql-engine/cli/metadata/tables"
 	metadataTypes "github.com/hasura/graphql-engine/cli/metadata/types"
 	metadataVersion "github.com/hasura/graphql-engine/cli/metadata/version"
 	"github.com/hasura/graphql-engine/cli/util"
@@ -51,7 +52,7 @@ func NewInitCmd(ec *cli.ExecutionContext) *cobra.Command {
   # Create a hasura project in the current working directory
   hasura init .
 
-  # See https://hasura.io/docs/1.0/graphql/manual/migrations/index.html for more details`,
+  # See https://hasura.io/docs/latest/graphql/core/migrations/index.html for more details`,
 		SilenceUsage: true,
 		Args:         cobra.MaximumNArgs(1),
 		PreRunE: func(cmd *cobra.Command, args []string) error {
@@ -71,7 +72,7 @@ func NewInitCmd(ec *cli.ExecutionContext) *cobra.Command {
 	}
 
 	f := initCmd.Flags()
-	f.Var(cli.NewConfigVersionValue(cli.V2, &opts.Version), "version", "config version to be used")
+	f.Var(cli.NewConfigVersionValue(cli.V3, &opts.Version), "version", "config version to be used")
 	f.StringVar(&opts.InitDir, "directory", "", "name of directory where files will be created")
 	f.StringVar(&opts.Endpoint, "endpoint", "", "http(s) endpoint for Hasura GraphQL Engine")
 	f.StringVar(&opts.AdminSecret, "admin-secret", "", "admin secret for Hasura GraphQL Engine")
@@ -131,9 +132,9 @@ func (o *InitOptions) Run() error {
 			return errors.Errorf("current working directory is already a hasura project directory")
 		}
 		o.EC.ExecutionDirectory = cwdir
-		infoMsg = fmt.Sprintf(`hasura project initialised. execute the following command to continue:
+		infoMsg = `hasura project initialised. execute the following command to continue:
   hasura console
-`)
+`
 	} else {
 		// create execution directory
 		err := o.createExecutionDirectory()
@@ -236,24 +237,30 @@ func (o *InitOptions) createFiles() error {
 		return errors.Wrap(err, "cannot write migration directory")
 	}
 
-	if config.Version == cli.V2 {
+	if config.Version >= cli.V2 {
 		// create metadata directory
 		o.EC.MetadataDir = filepath.Join(o.EC.ExecutionDirectory, cli.DefaultMetadataDirectory)
 		err = os.MkdirAll(o.EC.MetadataDir, os.ModePerm)
 		if err != nil {
-			return errors.Wrap(err, "cannot write migration directory")
+			return errors.Wrap(err, "cannot write metadata directory")
 		}
+		o.EC.Version.GetServerFeatureFlags()
 
 		// create metadata files
 		plugins := make(metadataTypes.MetadataPlugins, 0)
 		plugins = append(plugins, metadataVersion.New(o.EC, o.EC.MetadataDir))
-		plugins = append(plugins, tables.New(o.EC, o.EC.MetadataDir))
-		plugins = append(plugins, functions.New(o.EC, o.EC.MetadataDir))
 		plugins = append(plugins, querycollections.New(o.EC, o.EC.MetadataDir))
 		plugins = append(plugins, allowlist.New(o.EC, o.EC.MetadataDir))
 		plugins = append(plugins, remoteschemas.New(o.EC, o.EC.MetadataDir))
 		plugins = append(plugins, actions.New(o.EC, o.EC.MetadataDir))
 		plugins = append(plugins, crontriggers.New(o.EC, o.EC.MetadataDir))
+		if config.Version == cli.V3 {
+			plugins = append(plugins, sources.New(o.EC, o.EC.MetadataDir))
+		} else {
+			plugins = append(plugins, tables.New(o.EC, o.EC.MetadataDir))
+			plugins = append(plugins, functions.New(o.EC, o.EC.MetadataDir))
+		}
+
 		for _, plg := range plugins {
 			err := plg.CreateFiles()
 			if err != nil {

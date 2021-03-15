@@ -132,7 +132,7 @@ export const replaceLegacyOperators = (filterString: FilterString) => {
   return newFilterString;
 };
 
-export const getAllowedFilterKeys = (query: BaseQueryType) => {
+export const getAllowedFilterKeys = (query: BaseQueryType): FilterType[] => {
   switch (query) {
     case 'insert':
       return ['check'];
@@ -154,4 +154,65 @@ export const getQuerySingleRowMutation = (query: BaseQueryType) => {
     default:
       return '';
   }
+};
+
+type PermissionsIcon = 'fullAccess' | 'partialAccess' | 'noAccess';
+type RolePermissions = {
+  [role: string]: {
+    [query in BaseQueryType]: {
+      columns: (string | '*')[];
+      computed_fields: (string | '*')[];
+    } & {
+      [key in FilterType]: Record<string, any>;
+    };
+  };
+};
+export const getPermissionsIcon = (
+  role: 'admin' | string,
+  rolePermissions: RolePermissions,
+  query: BaseQueryType,
+  schemaColumns: any[],
+  computedFields: { scalar: any[] }
+): PermissionsIcon => {
+  if (role === 'admin') {
+    return 'fullAccess';
+  }
+
+  if (!rolePermissions[role]) {
+    return 'noAccess';
+  }
+
+  const permissions = rolePermissions[role][query];
+  if (!permissions) {
+    return 'noAccess';
+  }
+
+  const filterKeys = getAllowedFilterKeys(query);
+  const checkColumns = query !== 'delete';
+  const checkComputedFields = query === 'select';
+
+  if (!filterKeys.every(key => JSON.stringify(permissions[key]) === '{}')) {
+    return 'partialAccess';
+  }
+
+  if (
+    checkColumns &&
+    (!permissions.columns ||
+      (!permissions.columns.includes('*') &&
+        permissions.columns.length !== schemaColumns.length))
+  ) {
+    return 'partialAccess';
+  }
+
+  if (
+    checkComputedFields &&
+    computedFields.scalar.length &&
+    (!permissions.computed_fields ||
+      (permissions.computed_fields.includes('*') &&
+        permissions.computed_fields.length !== computedFields.scalar.length))
+  ) {
+    return 'partialAccess';
+  }
+
+  return 'fullAccess';
 };

@@ -1,0 +1,29 @@
+type: bulk
+args:
+
+- type: run_sql
+  args:
+    sql: |
+      CREATE TABLE hello (
+        id SERIAL PRIMARY KEY,
+        name TEXT
+      );
+
+- type: track_table
+  args:
+    schema: public
+    name: hello
+- type: add_remote_schema
+  args:
+    name: simple1-graphql
+    comment: testing
+    definition:
+      url: '{{REMOTE_SCHEMAS_WEBHOOK_DOMAIN}}/user-graphql'
+      forward_client_headers: false
+- type: add_remote_schema
+  args:
+    name: simple2-graphql
+    comment: testing
+    definition:
+      url: '{{REMOTE_SCHEMAS_WEBHOOK_DOMAIN}}/union-graphql'
+      forward_client_headers: false

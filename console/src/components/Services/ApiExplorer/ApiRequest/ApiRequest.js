@@ -40,6 +40,11 @@ import { getGraphQLEndpoint } from '../utils';
 
 import styles from '../ApiExplorer.scss';
 import {
+  getLSItem,
+  removeLSItem,
+  LS_KEYS,
+} from '../../../../utils/localStorage';
+import {
   ADMIN_SECRET_HEADER_KEY,
   HASURA_CLIENT_NAME,
   HASURA_COLLABORATOR_TOKEN,
@@ -78,9 +83,9 @@ class ApiRequest extends Component {
     };
 
     if (this.props.numberOfTables !== 0) {
-      const graphqlQueryInLS = window.localStorage.getItem('graphiql:query');
+      const graphqlQueryInLS = getLSItem(LS_KEYS.graphiqlQuery);
       if (graphqlQueryInLS && graphqlQueryInLS.indexOf('do not have') !== -1) {
-        window.localStorage.removeItem('graphiql:query');
+        removeLSItem(LS_KEYS.graphiqlQuery);
       }
     }
 

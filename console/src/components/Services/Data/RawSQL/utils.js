@@ -1,4 +1,5 @@
-const createSQLRegex = /create\s*(?:|or\s*replace)\s*(view|table|function)\s*(?:\s*if*\s*not\s*exists\s*)?((\"?\w+\"?)\.(\"?\w+\"?)|(\"?\w+\"?))/; // eslint-disable-line
+import { currentDriver } from '../../../../dataSources';
+import { services } from '../../../../dataSources/services';
 
 const getSQLValue = value => {
   const quotedStringRegex = /^".*"$/;
@@ -11,10 +12,15 @@ const getSQLValue = value => {
   return sqlValue.replace(/['"]+/g, '');
 };
 
-export const parseCreateSQL = sql => {
+const getDefaultSchema = driver => {
+  if (driver === 'postgres') return 'public';
+  if (driver === 'mssql') return 'dbo';
+};
+
+export const parseCreateSQL = (sql, driver = currentDriver) => {
   const _objects = [];
 
-  const regExp = createSQLRegex;
+  const regExp = services[driver].createSQLRegex;
 
   const matches = sql.match(new RegExp(regExp, 'gmi'));
   if (matches) {
@@ -32,7 +38,7 @@ export const parseCreateSQL = sql => {
         let schema;
         if (itemMatch[5]) {
           name = itemMatch[5];
-          schema = 'public';
+          schema = getDefaultSchema(driver);
         } else {
           name = itemMatch[4];
           schema = itemMatch[3];
@@ -48,8 +54,4 @@ export const parseCreateSQL = sql => {
   }
 
   return _objects;
-};
-
-export const getStatementTimeoutSql = statementTimeoutInSecs => {
-  return `SET LOCAL statement_timeout = ${statementTimeoutInSecs * 1000};`;
 };

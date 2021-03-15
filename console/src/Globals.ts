@@ -3,8 +3,7 @@ import { SERVER_CONSOLE_MODE } from './constants';
 import { getFeaturesCompatibility } from './helpers/versionUtils';
 import { stripTrailingSlash } from './components/Common/utils/urlUtils';
 import { isEmpty } from './components/Common/utils/jsUtils';
-
-// TODO: move this section to a more appropriate location
+import { Nullable } from './components/Common/utils/tsUtils';
 
 declare global {
   interface Window {
@@ -22,6 +21,12 @@ declare global {
       serverVersion: string;
       consolePath: string;
       cliUUID: string;
+      consoleId: Nullable<string>;
+      herokuOAuthClientId: string;
+      tenantID: Nullable<string>;
+      projectID: Nullable<string>;
+      userRole: Nullable<string>;
+      cloudRootDomain: Nullable<string>;
     };
   }
   const CONSOLE_ASSET_VERSION: string;
@@ -54,18 +59,35 @@ const globals = {
   hasuraUUID: '',
   telemetryNotificationShown: false,
   isProduction,
+  herokuOAuthClientId: window.__env.herokuOAuthClientId,
+  hasuraCloudTenantId: window.__env.tenantID,
+  hasuraCloudProjectId: window.__env.projectID,
+  cloudDataApiUrl: `${window.location.protocol}//data.${window.__env.cloudRootDomain}`,
 };
 if (globals.consoleMode === SERVER_CONSOLE_MODE) {
+  if (!window.__env.dataApiUrl) {
+    globals.dataApiUrl = stripTrailingSlash(window.location.href);
+  }
   if (isProduction) {
     const consolePath = window.__env.consolePath;
     if (consolePath) {
-      const currentUrl = stripTrailingSlash(window.location.href);
+      let currentUrl = stripTrailingSlash(window.location.href);
+      let slicePath = true;
+      if (window.__env.dataApiUrl) {
+        currentUrl = stripTrailingSlash(window.__env.dataApiUrl);
+        slicePath = false;
+      }
       const currentPath = stripTrailingSlash(window.location.pathname);
 
-      globals.dataApiUrl = currentUrl.slice(
-        0,
-        currentUrl.lastIndexOf(consolePath)
-      );
+      // NOTE: perform the slice if not on team console
+      // as on team console, we're using the server
+      // endpoint directly to load the assets of the console
+      if (slicePath) {
+        globals.dataApiUrl = currentUrl.slice(
+          0,
+          currentUrl.lastIndexOf(consolePath)
+        );
+      }
 
       globals.urlPrefix = `${currentPath.slice(
         0,
@@ -73,7 +95,6 @@ if (globals.consoleMode === SERVER_CONSOLE_MODE) {
       )}/console`;
     } else {
       const windowHostUrl = `${window.location.protocol}//${window.location.host}`;
-
       globals.dataApiUrl = windowHostUrl;
     }
   }

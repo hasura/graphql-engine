@@ -31,7 +31,7 @@ Create an Auth0 Application
 Configure Auth0 Rules & Callback URLs
 -------------------------------------
 
-In the settings of the application, add appropriate (e.g: http://localhost:3000/callback) URLs as ``Allowed Callback
+In the settings of the application, add appropriate (e.g: ``http://localhost:3000/callback``) URLs as ``Allowed Callback
 URLs`` and ``Allowed Web Origins``. Add domain specific URLs as well for production apps (e.g: https://myapp.com/callback).
 
 Auth0 has multiple versions of its SDK available and unfortunately they have different semantics
@@ -186,7 +186,7 @@ And use it in the ``key`` field:
 
 An easier way to generate the above config is to use the following UI:
 
-https://hasura.io/jwt-config.
+https://hasura.io/jwt-config/.
 
 The generated config can be used in env ``HASURA_GRAPHQL_JWT_SECRET`` or ``--jwt-secret`` flag.
 The config generated from this page can be directly pasted in ``yaml`` files and command line arguments as it takes care of
@@ -233,7 +233,6 @@ Using Auth0 Rules again, add the following rule which will insert a new user eve
 
    function (user, context, callback) {
      const userId = user.user_id;
-     const hasuraAdminSecret = "xxxx";
      const url = "https://my-hasura-app.hasura.app/v1/graphql";
      const upsertUserQuery = `
        mutation($userId: String!){
@@ -244,7 +243,7 @@ Using Auth0 Rules again, add the following rule which will insert a new user eve
      const graphqlReq = { "query": upsertUserQuery, "variables": { "userId": userId } }
 
      request.post({
-         headers: {'content-type' : 'application/json', 'x-hasura-admin-secret': hasuraAdminSecret},
+         headers: {'content-type' : 'application/json', 'x-hasura-admin-secret': configuration.HASURA_ADMIN_SECRET},
          url:   url,
          body:  JSON.stringify(graphqlReq)
      }, function(error, response, body){
@@ -252,6 +251,8 @@ Using Auth0 Rules again, add the following rule which will insert a new user eve
           callback(null, user, context);
      });
    }
+
+Make sure to specify the ``HASURA_ADMIN_SECRET`` variable in the "Rules > Settings" section of Auth0. 
 
 That’s it! This rule will be triggered on every successful signup/login and sync your Auth0 user into your postgres database.
 

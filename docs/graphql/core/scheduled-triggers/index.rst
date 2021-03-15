@@ -24,7 +24,7 @@ Scheduled triggers are used to execute custom business logic at specific points 
 
 .. admonition:: Supported from
 
-  Scheduled triggers are supported from versions ``v.1.3.0`` and above.
+  Scheduled triggers are supported from versions ``v1.3.0`` and above.
 
 Types
 -----

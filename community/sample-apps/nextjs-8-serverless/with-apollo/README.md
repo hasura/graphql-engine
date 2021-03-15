@@ -4,17 +4,15 @@
 
 # Tutorial
 
-- Deploy Postgres and GraphQL Engine on Heroku:
+- Deploy GraphQL Engine on Hasura Cloud and setup PostgreSQL via Heroku:
   
-  [![Deploy to heroku](https://www.herokucdn.com/deploy/button.svg)](https://heroku.com/deploy?template=https://github.com/hasura/graphql-engine-heroku)
+  [![Deploy to Hasura Cloud](https://graphql-engine-cdn.hasura.io/img/deploy_to_hasura.png)](https://cloud.hasura.io/)
 
-  Please checkout our [docs](https://hasura.io/docs/1.0/graphql/manual/deployment/index.html) for other deployment methods
-
-- Get the Heroku app URL (say `my-app.herokuapp.com`)
+- Get the app URL (something like `https://<my-project-name>.hasura.app`)
 
 - Create `author` table:
   
-  Open Hasura console: visit https://my-app.herokuapp.com on a browser  
+  Open Hasura console: visit https://<my-project-name>.hasura.app on a browser  
   Navigate to `Data` section in the top nav bar and create a table as follows:
 
   ![Create author table](../../gatsby-postgres-graphql/assets/add_table.jpg)
@@ -47,7 +45,7 @@
         connectToDevTools: process.browser,
         ssrMode: !process.browser, // Disables forceFetch on the server (so queries are only run once)
         link: new HttpLink({
-          uri: 'https://myapp.herokuapp.com/v1/graphql', // Server URL (must be absolute)
+          uri: 'https://myapp.hasura.app/v1/graphql', // Server URL (must be absolute)
           credentials: 'same-origin' // Additional fetch() options like `credentials` or `headers`
         }),
         cache: new InMemoryCache().restore(initialState || {})

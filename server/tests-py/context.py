@@ -180,7 +180,7 @@ class ActionsWebhookHandler(http.server.BaseHTTPRequestHandler):
             self._send_response(status, resp)
 
         elif req_path == "/create-user-timeout":
-            time.sleep(2)
+            time.sleep(3)
             resp, status = self.create_user()
             self._send_response(status, resp)
 
@@ -473,6 +473,7 @@ class HGECtx:
         self.webhook_insecure = config.getoption('--test-webhook-insecure')
         self.metadata_disabled = config.getoption('--test-metadata-disabled')
         self.may_skip_test_teardown = False
+        self.function_permissions = config.getoption('--test-function-permissions')
 
         self.engine = create_engine(self.pg_url)
         self.meta = MetaData()
@@ -481,8 +482,11 @@ class HGECtx:
 
         self.hge_scale_url = config.getoption('--test-hge-scale-url')
         self.avoid_err_msg_checks = config.getoption('--avoid-error-message-checks')
+        self.inherited_roles_tests = config.getoption('--test-inherited-roles')
 
         self.ws_client = GQLWsClient(self, '/v1/graphql')
+
+        self.backend = config.getoption('--backend')
 
         # HGE version
         result = subprocess.run(['../../scripts/get-version.sh'], shell=False, stdout=subprocess.PIPE, check=True)
@@ -490,26 +494,57 @@ class HGECtx:
         self.version = env_version if env_version else result.stdout.decode('utf-8').strip()
         if not self.metadata_disabled and not config.getoption('--skip-schema-setup'):
           try:
-              st_code, resp = self.v1q_f('queries/clear_db.yaml')
+              st_code, resp = self.v2q_f("queries/" + self.backend_suffix("clear_db")+ ".yaml")
           except requests.exceptions.RequestException as e:
               self.teardown()
               raise HGECtxError(repr(e))
           assert st_code == 200, resp
 
         # Postgres version
-        pg_version_text = self.sql('show server_version_num').fetchone()['server_version_num']
-        self.pg_version = int(pg_version_text)
-
+        if self.backend == 'postgres':
+            pg_version_text = self.sql('show server_version_num').fetchone()['server_version_num']
+            self.pg_version = int(pg_version_text)
 
     def reflect_tables(self):
         self.meta.reflect(bind=self.engine)
 
-    def anyq(self, u, q, h):
-        resp = self.http.post(
-            self.hge_url + u,
-            json=q,
-            headers=h
-        )
+    def anyq(self, u, q, h, b = None, v = None):
+        resp = None
+        if v == 'GET':
+          resp = self.http.get(
+              self.hge_url + u,
+              headers=h
+          )
+        elif v == 'POST' and b:
+          # TODO: Figure out why the requests are failing with a byte object passed in as `data`
+          resp = self.http.post(
+              self.hge_url + u,
+              data=b,
+              headers=h
+           )
+        elif v == 'PATCH' and b:
+          resp = self.http.patch(
+              self.hge_url + u,
+              data=b,
+              headers=h
+           )
+        elif v == 'PUT' and b:
+          resp = self.http.put(
+              self.hge_url + u,
+              data=b,
+              headers=h
+           )
+        elif v == 'DELETE':
+          resp = self.http.delete(
+              self.hge_url + u,
+              headers=h
+           )
+        else:
+          resp = self.http.post(
+              self.hge_url + u,
+              json=q,
+              headers=h
+           )
         # NOTE: make sure we preserve key ordering so we can test the ordering
         # properties in the graphql spec properly
         # Returning response headers to get the request id from response
@@ -521,12 +556,12 @@ class HGECtx:
         conn.close()
         return res
 
-    def v1q(self, q, headers = {}):
+    def execute_query(self, q, url_path, headers = {}):
         h = headers.copy()
         if self.hge_key is not None:
             h['X-Hasura-Admin-Secret'] = self.hge_key
         resp = self.http.post(
-            self.hge_url + "/v1/query",
+            self.hge_url + url_path,
             json=q,
             headers=h
         )
@@ -534,11 +569,39 @@ class HGECtx:
         # properties in the graphql spec properly
         return resp.status_code, resp.json(object_pairs_hook=OrderedDict)
 
+
+    def v1q(self, q, headers = {}):
+        return self.execute_query(q, "/v1/query", headers)
+
     def v1q_f(self, fn):
         with open(fn) as f:
             # NOTE: preserve ordering with ruamel
             yml = yaml.YAML()
             return self.v1q(yml.load(f))
+
+    def v2q(self, q, headers = {}):
+        return self.execute_query(q, "/v2/query", headers)
+
+    def v2q_f(self, fn):
+        with open(fn) as f:
+            # NOTE: preserve ordering with ruamel
+            yml = yaml.YAML()
+            return self.v2q(yml.load(f))
+
+    def backend_suffix(self, filename):
+        if self.backend == 'postgres':
+            return filename
+        else:
+            return filename + "_" + self.backend
+
+    def v1metadataq(self, q, headers = {}):
+        return self.execute_query(q, "/v1/metadata", headers)
+
+    def v1metadataq_f(self, fn):
+        with open(fn) as f:
+            # NOTE: preserve ordering with ruamel
+            yml = yaml.YAML()
+            return self.v1metadataq(yml.load(f))
 
     def teardown(self):
         self.http.close()

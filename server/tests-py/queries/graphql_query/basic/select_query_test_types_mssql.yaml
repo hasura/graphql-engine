@@ -1,0 +1,66 @@
+description: GraphQL query to test different data types of SQL Server
+url: /v1/graphql
+status: 200
+response:
+  data:
+    test_types:
+     - c1_smallint: 3277
+       c2_integer: 2147483647
+       c3_bigint: 9223372036854775807
+       c4_decimal: 123.45
+       c5_numeric: 1.234
+       c6_real: 0.00390625
+       c7_double_precision: 16.0001220703125
+       c11_varchar_3: abc
+       c12_char_4: baaz
+       c13_text: foo bar baz
+       c16_date: '2014-09-14'
+       c17_time: 11:09:23
+       c44_xml: <foo>bar</foo>
+       c45_money: 123.45
+       c47_smallmoney: -123.45
+       c48_bit: false
+       c49_tinyint: 254
+       c50_float: -305.77
+       c51_real: -36.82
+       c52_datetime: '1996-04-15T04:00:00'
+       c53_datetime2: '9999-04-15T23:59:59.9999999'
+       c54_datetimeoffset: '2007-05-08T12:35:29.1234567+12:15'
+       c55_smalldatetime: '1955-12-13T12:43:00'
+       c56_binary: AAHiQA==
+       c57_varbinary: AAHiQA==
+       c58_hierarchyid: /0.1/0.2/
+       c59_uniqueidentifier: 0E984725-C51C-4BF4-9960-E1C80E27ABA0
+query:
+  query: |
+    query {
+      test_types {
+        c1_smallint
+        c2_integer
+        c3_bigint
+        c4_decimal
+        c5_numeric
+        c6_real
+        c7_double_precision
+        c11_varchar_3
+        c12_char_4
+        c13_text
+        c16_date
+        c17_time
+        c44_xml
+        c45_money
+        c47_smallmoney
+        c48_bit
+        c49_tinyint
+        c50_float
+        c51_real
+        c52_datetime
+        c53_datetime2
+        c54_datetimeoffset
+        c55_smalldatetime
+        c56_binary
+        c57_varbinary
+        c58_hierarchyid
+        c59_uniqueidentifier
+      }
+    }

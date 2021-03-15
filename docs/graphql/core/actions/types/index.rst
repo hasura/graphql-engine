@@ -197,3 +197,7 @@ This means that wherever we use the type ``Color`` in our schema, we expect it
 to be exactly one of RED, GREEN, or BLUE.
 
 `See reference <https://graphql.org/learn/schema/#enumeration-types>`__
+
+.. admonition:: Additional Resources
+
+  Introduction to Hasura Actions - `View Recording <https://hasura.io/events/webinar/hasura-actions/?pg=docs&plcmt=body&cta=view-recording&tech=>`__.
