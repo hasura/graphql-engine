@@ -112,10 +112,12 @@ class CreateUser(graphene.Mutation):
         return CreateUser(ok=True, user=user)
 
 class UserQuery(graphene.ObjectType):
-    user = graphene.Field(User, id=graphene.Int(required=True))
+    user = graphene.Field( User
+                          , id=graphene.Int(required=True)
+                          , user_info=graphene.Argument(graphene.List(UserDetailsInput), required=False))
     allUsers = graphene.List(User)
 
-    def resolve_user(self, info, id):
+    def resolve_user(self, info, id, user_info=None):
         return User.get_by_id(id)
 
     def resolve_allUsers(self, info):

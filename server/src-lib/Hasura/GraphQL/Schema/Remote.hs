@@ -489,41 +489,19 @@ inputValueDefinitionParser
   -> G.InputValueDefinition
   -> m (InputFieldsParser n ((Maybe (InputValue Variable)),(Maybe (HashMap G.Name (Value RemoteSchemaVariable)))))
 inputValueDefinitionParser schemaDoc (G.InputValueDefinition desc name fieldType maybeDefaultVal _directives) =
-  let fieldConstructor
-        :: forall k. 'Input <: k
-        => Parser k n ()
-        -> InputFieldsParser n ((Maybe (InputValue Variable)),(Maybe (HashMap G.Name (Value RemoteSchemaVariable))))
-      fieldConstructor parser =
-        let wrappedParser :: Parser k n (InputValue Variable)
-            wrappedParser =
-              P.Parser
-                { P.pType   = P.pType parser
-                , P.pParser = \value -> P.pParser parser value $> castWith (P.inputParserInput @k) value
-                }
-        in case maybeDefaultVal of
-          Nothing ->
-            if G.isNullable fieldType
-            then fieldOptional name desc wrappedParser <&> (,Nothing)
-            else Just <$> field name desc wrappedParser <&> (,Nothing)
-          Just defaultVal -> Just <$> fieldWithDefault name desc defaultVal wrappedParser <&> (,Nothing)
-
-      doNullability :: forall k . 'Input <: k => G.Nullability -> Parser k n () -> Parser k n ()
-      doNullability (G.Nullability True)  = void . P.nullable
+  let doNullability
+        :: forall a k . 'Input <: k
+        => G.Nullability
+        -> Parser k n (Maybe a)
+        -> Parser k n (Maybe a)
+      doNullability (G.Nullability True)  = fmap join . P.nullable
       doNullability (G.Nullability False) = id
 
-      inputObjectNullability
-        :: forall k . 'Input <: k
-        => G.Nullability
-        -> Parser k n (Maybe (HashMap G.Name (Value RemoteSchemaVariable)))
-        -> Parser k n (Maybe (HashMap G.Name (Value RemoteSchemaVariable)))
-      inputObjectNullability (G.Nullability True)  = fmap join . P.nullable
-      inputObjectNullability (G.Nullability False) = id
-
-      inputObjectFieldConstructor
+      fieldConstructor
         :: forall k. 'Input <: k
         => Parser k n (Maybe (HashMap G.Name (Value RemoteSchemaVariable)))
         -> InputFieldsParser n ((Maybe (InputValue Variable)), Maybe (HashMap G.Name (Value RemoteSchemaVariable)))
-      inputObjectFieldConstructor parser =
+      fieldConstructor parser =
         let wrappedParser :: Parser k n (InputValue Variable, Maybe (HashMap G.Name (Value RemoteSchemaVariable)))
             wrappedParser =
               P.Parser
@@ -541,14 +519,14 @@ inputValueDefinitionParser schemaDoc (G.InputValueDefinition desc name fieldType
         where
           f :: Maybe (InputValue Variable, (Maybe (HashMap G.Name (G.Value RemoteSchemaVariable))))
             -> (Maybe (InputValue Variable), Maybe (HashMap G.Name (G.Value RemoteSchemaVariable)))
-          f Nothing =  (Nothing, Nothing)
-          f (Just (inpValue, presetVal)) = (Just inpValue, (Map.singleton name . G.VObject) <$> presetVal)
+          f Nothing                      =  (Nothing, Nothing)
+          f (Just (inpValue, presetVal)) =  (Just inpValue, (Map.singleton name . G.VObject) <$> presetVal)
 
 
       buildField
         :: G.GType
         -> (forall k. 'Input <: k
-               => Parser k n ()
+               => Parser k n (Maybe (HashMap G.Name (Value RemoteSchemaVariable)))
                -> InputFieldsParser n ((Maybe (InputValue Variable)), (Maybe (HashMap G.Name (G.Value RemoteSchemaVariable)))))
         -> m (InputFieldsParser n ((Maybe (InputValue Variable)), (Maybe (HashMap G.Name (G.Value RemoteSchemaVariable)))))
       buildField fieldType' fieldConstructor' = case fieldType' of
@@ -558,15 +536,16 @@ inputValueDefinitionParser schemaDoc (G.InputValueDefinition desc name fieldType
            Just typeDef ->
              case typeDef of
                G.TypeDefinitionScalar scalarTypeDefn ->
-                 pure $ fieldConstructor' $ doNullability nullability $ remoteFieldScalarParser scalarTypeDefn
+                 pure $ fieldConstructor' $ doNullability nullability $ (remoteFieldScalarParser scalarTypeDefn $> Nothing)
                G.TypeDefinitionEnum defn ->
-                 pure $ fieldConstructor' $ doNullability nullability $ remoteFieldEnumParser defn
+                 pure $ fieldConstructor' $ doNullability nullability $ remoteFieldEnumParser defn $> Nothing
                G.TypeDefinitionObject _ -> throw400 RemoteSchemaError "expected input type, but got output type" -- couldn't find the equivalent error in Validate/Types.hs, so using a new error message
                G.TypeDefinitionInputObject defn -> do
-                 inputObjectFieldConstructor . inputObjectNullability nullability <$> remoteSchemaInputObject schemaDoc defn
+                 fieldConstructor' . doNullability nullability <$> remoteSchemaInputObject schemaDoc defn
                G.TypeDefinitionUnion _ -> throw400 RemoteSchemaError "expected input type, but got output type"
                G.TypeDefinitionInterface _ -> throw400 RemoteSchemaError "expected input type, but got output type"
-       G.TypeList nullability subType -> buildField subType (fieldConstructor' . doNullability nullability . void . P.list)
+       G.TypeList nullability subType ->
+         buildField subType (fieldConstructor' . doNullability nullability . fmap fold . P.list)
 
   in buildField fieldType fieldConstructor
 
@@ -635,7 +614,10 @@ argumentsParser args schemaDoc = do
       :: [(Maybe (HashMap G.Name (Value RemoteSchemaVariable)))]
       -> Maybe (HashMap G.Name (Value RemoteSchemaVariable))
     mkPresets previousPresets =
-      let nestedPreset = Map.unions <$> (sequenceA $ (filter isJust previousPresets))
+      let nestedPreset =
+            case catMaybes previousPresets of
+              []               -> Nothing
+              previousPresets' -> Just $ Map.unions previousPresets'
       in currentPreset <> nestedPreset
 
 -- | 'remoteField' accepts a 'G.TypeDefinition' and will returns a 'FieldParser' for it.

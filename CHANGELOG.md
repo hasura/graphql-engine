@@ -6,6 +6,8 @@
 
 (Add entries here in the order of: server, console, cli, docs, others)
 
+- server: fix issue with parsing of remote schema list of input objects (fix #6584)
+
 
 ## v2.0.0-alpha.4
 
