@@ -81,6 +81,3 @@ migrations using the ``--down`` flag on the CLI.
 This guide provides an overall idea of how the system works. For more details
 on how to actually use the system, refer to :ref:`migrations_v2`.
 
-.. admonition:: Additional Resources
-
-  Hasura Database Schema Migrations - `Watch Webinar <https://hasura.io/events/webinar/hasura-database-schema-migrations/?pg=docs&plcmt=body&cta=watch-webinar&tech=>`__.

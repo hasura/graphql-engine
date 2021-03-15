@@ -14,11 +14,7 @@ Boilerplate to get started with Quasar Framework, Hasura GraphQL engine as CMS a
 
 - Create `author` table:
 
-<<<<<<< HEAD
   Open Hasura console: visit https://quasar-graphql.hasura.app on a browser
-=======
-  Open Hasura console: visit https://my-app.herokuapp.com on a browser
->>>>>>> main
   Navigate to `Data` section in the top nav bar and create a table as follows:
 
   ![Create author table](../gatsby-postgres-graphql/assets/add_table.jpg)

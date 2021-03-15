@@ -48,6 +48,3 @@ Create migration manually
       hasura migrate apply --database-name <database-name>
       hasura metadata reload
 
-.. admonition:: Additional Resources
-
-  Hasura Database Schema Migrations - `Watch Webinar <https://hasura.io/events/webinar/hasura-database-schema-migrations/?pg=docs&plcmt=body&cta=watch-webinar&tech=>`__.

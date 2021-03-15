@@ -73,6 +73,3 @@ Auto-apply migrations/metadata when the server starts
 .. at the ``/hasura-metadata`` path of this Docker container the container’s entry point
 .. script will apply the metadata before starting the server.
 
-.. admonition:: Additional Resources
-
-  Hasura Database Schema Migrations - `Watch Webinar <https://hasura.io/events/webinar/hasura-database-schema-migrations/?pg=docs&plcmt=body&cta=watch-webinar&tech=>`__.

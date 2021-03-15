@@ -42,6 +42,4 @@ To roll back a particular migration version:
 
    hasura migrate apply --version 1550925483858 --type down
 
-.. admonition:: Additional Resources
 
-  Hasura Database Schema Migrations - `Watch Webinar <https://hasura.io/events/webinar/hasura-database-schema-migrations/?pg=docs&plcmt=body&cta=watch-webinar&tech=>`__.

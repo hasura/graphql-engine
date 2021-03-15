@@ -232,6 +232,3 @@ any metadata and migrations commands.
 
 Post this, the metadata and migration commands should work as usual.
 
-.. admonition:: Additional Resources
-
-  Hasura Database Schema Migrations - `Watch Webinar <https://hasura.io/events/webinar/hasura-database-schema-migrations/?pg=docs&plcmt=body&cta=watch-webinar&tech=>`__.

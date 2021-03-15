@@ -70,6 +70,4 @@ In your project directory, run:
 
 Your project directory and ``config.yaml`` should be updated to v2.
 
-.. admonition:: Additional Resources
 
-  Hasura Database Schema Migrations - `Watch Webinar <https://hasura.io/events/webinar/hasura-database-schema-migrations/?pg=docs&plcmt=body&cta=watch-webinar&tech=>`__.
