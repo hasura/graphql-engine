@@ -4,6 +4,8 @@ module Hasura.Backends.Postgres.DDL.Function
   )
 where
 
+import           Hasura.Prelude
+
 import qualified Control.Monad.Validate             as MV
 import qualified Data.HashSet                       as S
 import qualified Data.Sequence                      as Seq
@@ -13,8 +15,9 @@ import qualified Language.GraphQL.Draft.Syntax      as G
 import           Control.Lens                       hiding (from, index, op, (.=))
 import           Data.Text.Extended
 
+import qualified Hasura.SQL.AnyBackend              as AB
+
 import           Hasura.Backends.Postgres.SQL.Types
-import           Hasura.Prelude
 import           Hasura.RQL.Types.Common
 import           Hasura.RQL.Types.Error
 import           Hasura.RQL.Types.Function
@@ -88,7 +91,7 @@ buildFunctionInfo source qf systemDefined FunctionConfig{..} permissions rawFunc
       -- commited to this check, and it would be backwards compatible to remove
       -- it, but this seemed like an obvious case:
       when (funVol /= FTVOLATILE && _fcExposedAs == Just FEAMutation) $
-        throwValidateError $ NonVolatileFunctionAsMutation
+        throwValidateError NonVolatileFunctionAsMutation
       -- If 'exposed_as' is omitted we'll infer it from the volatility:
       let exposeAs = flip fromMaybe _fcExposedAs $ case funVol of
                        FTVOLATILE -> FEAMutation
@@ -107,7 +110,11 @@ buildFunctionInfo source qf systemDefined FunctionConfig{..} permissions rawFunc
                          retJsonAggSelect
 
       pure ( functionInfo
-           , SchemaDependency (SOSourceObj @'Postgres source $ SOITable retTable) DRTable
+           , SchemaDependency
+               (SOSourceObj source
+                 $ AB.mkAnyBackend
+                 $ SOITable retTable)
+               DRTable
            )
 
     validateFunctionArgNames = do

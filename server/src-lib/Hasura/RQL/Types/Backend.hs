@@ -9,7 +9,7 @@ import qualified Language.GraphQL.Draft.Syntax as G
 import           Data.Aeson
 import           Data.Kind                     (Type)
 import           Data.Text.Extended
-import           Data.Typeable
+import           Data.Typeable                 (Typeable)
 
 import           Hasura.Incremental            (Cacheable)
 import           Hasura.RQL.DDL.Headers        ()
@@ -63,7 +63,6 @@ class
   , Data (TableName b)
   , Data (ScalarType b)
   , Data (SQLExpression b)
-  , Typeable (SourceConfig b)
   , Typeable b
   , ToSQL (SQLExpression b)
   , FromJSON (BasicOrderType b)
@@ -128,7 +127,7 @@ class
   type XDistinct               b :: Type
 
   -- functions on types
-  backendTag :: BackendTag b
+  backendTag            :: BackendTag b
   functionArgScalarType :: FunctionArgType b -> ScalarType b
   isComparableType      :: ScalarType b -> Bool
   isNumType             :: ScalarType b -> Bool

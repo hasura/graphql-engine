@@ -1,7 +1,13 @@
 module Hasura.RQL.DDL.Schema.Common where
 
-import           Hasura.Backends.Postgres.SQL.Types
 import           Hasura.Prelude
+
+import qualified Data.HashMap.Strict                as HM
+import qualified Database.PG.Query                  as Q
+
+import qualified Hasura.SQL.AnyBackend              as AB
+
+import           Hasura.Backends.Postgres.SQL.Types
 import           Hasura.RQL.DDL.ComputedField
 import           Hasura.RQL.DDL.EventTrigger
 import           Hasura.RQL.DDL.Permission
@@ -10,8 +16,6 @@ import           Hasura.RQL.DDL.RemoteRelationship
 import           Hasura.RQL.DDL.Schema.Function
 import           Hasura.RQL.Types
 
-import qualified Data.HashMap.Strict                as HM
-import qualified Database.PG.Query                  as Q
 
 purgeDependentObject
   :: forall b m
@@ -28,7 +32,9 @@ purgeDependentObject source sourceObjId = case sourceObjId of
       _                   -> id
   SOIFunction qf -> pure $ dropFunctionInMetadata source qf
   _           ->
-    throw500 $ "unexpected dependent object: " <> reportSchemaObj (SOSourceObj source sourceObjId)
+    throw500
+      $ "unexpected dependent object: "
+      <> reportSchemaObj (SOSourceObj source $ AB.mkAnyBackend sourceObjId)
 
 -- | Fetch Postgres metadata of all user tables
 fetchTableMetadata :: (MonadTx m) => m (DBTablesMetadata 'Postgres)

@@ -10,6 +10,8 @@ import qualified Language.GraphQL.Draft.Syntax  as G
 
 import           Data.Text.Extended
 
+import qualified Hasura.SQL.AnyBackend          as AB
+
 import           Hasura.GraphQL.Context
 import           Hasura.GraphQL.Parser          hiding (EnumValueInfo, field)
 import           Hasura.GraphQL.Schema.Backend  (MonadBuildSchema)
@@ -31,7 +33,10 @@ buildTableQueryFields
   -> m [FieldParser n (QueryRootField UnpreparedValue)]
 buildTableQueryFields sourceName sourceInfo tableName tableInfo gqlName selPerms = do
   let
-    mkRF = RFDB sourceName sourceInfo . QDBR
+    mkRF = RFDB sourceName
+             . AB.mkAnyBackend
+             . SourceConfigWith sourceInfo
+             . QDBR
     customRootFields = _tcCustomRootFields $ _tciCustomConfig $ _tiCoreInfo tableInfo
     -- select table
     selectName = fromMaybe gqlName $ _tcrfSelect customRootFields
@@ -62,7 +67,10 @@ buildTableInsertMutationFields
   -> m [FieldParser n (MutationRootField UnpreparedValue)]
 buildTableInsertMutationFields sourceName sourceInfo tableName tableInfo gqlName insPerms mSelPerms mUpdPerms = do
   let
-    mkRF = RFDB sourceName sourceInfo . MDBR
+    mkRF = RFDB sourceName
+             . AB.mkAnyBackend
+             . SourceConfigWith sourceInfo
+             . MDBR
     customRootFields = _tcCustomRootFields $ _tciCustomConfig $ _tiCoreInfo tableInfo
     -- insert into table
     insertName = fromMaybe ($$(G.litName "insert_") <> gqlName) $ _tcrfInsert customRootFields
@@ -91,7 +99,10 @@ buildTableUpdateMutationFields
   -> m [FieldParser n (MutationRootField UnpreparedValue)]
 buildTableUpdateMutationFields sourceName sourceInfo tableName tableInfo gqlName updPerms mSelPerms = do
   let
-    mkRF = RFDB sourceName sourceInfo . MDBR
+    mkRF = RFDB sourceName
+             . AB.mkAnyBackend
+             . SourceConfigWith sourceInfo
+             . MDBR
     customRootFields = _tcCustomRootFields $ _tciCustomConfig $ _tiCoreInfo tableInfo
     -- update table
     updateName = fromMaybe ($$(G.litName "update_") <> gqlName) $ _tcrfUpdate customRootFields
@@ -119,7 +130,10 @@ buildTableDeleteMutationFields
   -> m [FieldParser n (MutationRootField UnpreparedValue)]
 buildTableDeleteMutationFields sourceName sourceInfo tableName tableInfo gqlName delPerms mSelPerms = do
   let
-    mkRF = RFDB sourceName sourceInfo . MDBR
+    mkRF = RFDB sourceName
+             . AB.mkAnyBackend
+             . SourceConfigWith sourceInfo
+             . MDBR
     customRootFields = _tcCustomRootFields $ _tciCustomConfig $ _tiCoreInfo tableInfo
     -- delete from table
     deleteName = fromMaybe ($$(G.litName "delete_") <> gqlName) $ _tcrfDelete customRootFields
@@ -147,7 +161,10 @@ buildFunctionQueryFields
 buildFunctionQueryFields sourceName sourceInfo functionName functionInfo tableName selPerms = do
   funcName <- functionGraphQLName @b functionName `onLeft` throwError
   let
-    mkRF = RFDB sourceName sourceInfo . QDBR
+    mkRF = RFDB sourceName
+             . AB.mkAnyBackend
+             . SourceConfigWith sourceInfo
+             . QDBR
     -- select function
     funcDesc = Just $ G.Description $ "execute function " <> functionName <<> " which returns " <>> tableName
     -- select function agg
@@ -175,7 +192,10 @@ buildFunctionMutationFields
 buildFunctionMutationFields sourceName sourceInfo functionName functionInfo tableName selPerms = do
   funcName <- functionGraphQLName @b functionName `onLeft` throwError
   let
-    mkRF = RFDB sourceName sourceInfo . MDBR
+    mkRF = RFDB sourceName
+             . AB.mkAnyBackend
+             . SourceConfigWith sourceInfo
+             . MDBR
     funcDesc = Just $ G.Description $ "execute VOLATILE function " <> functionName <<> " which returns " <>> tableName
     jsonAggSelect = _fiJsonAggSelect functionInfo
   catMaybes <$> sequenceA

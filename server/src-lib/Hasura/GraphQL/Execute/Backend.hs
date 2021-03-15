@@ -14,10 +14,12 @@ import           Data.Kind                              (Type)
 import           Data.Text.Extended
 
 import qualified Hasura.GraphQL.Transport.HTTP.Protocol as GH
+import qualified Hasura.RQL.IR.RemoteJoin               as IR
+import qualified Hasura.SQL.AnyBackend                  as AB
 
 import           Hasura.EncJSON
 import           Hasura.GraphQL.Context
-import           Hasura.GraphQL.Execute.Action.Types
+import           Hasura.GraphQL.Execute.Action.Types    (ActionExecutionPlan)
 import           Hasura.GraphQL.Execute.LiveQuery.Plan
 import           Hasura.GraphQL.Parser                  hiding (Type)
 import           Hasura.RQL.IR.RemoteJoin
@@ -79,16 +81,17 @@ class ( Backend b
     -> InsOrdHashMap G.Name (QueryDB b (UnpreparedValue b))
     -> m (LiveQueryPlan b (MultiplexedQuery b))
 
+data DBStepInfo b =
+  DBStepInfo
+    (SourceConfig b)
+    (Maybe (PreparedQuery b))
+    (ExecutionMonad b EncJSON)
 
 -- | One execution step to processing a GraphQL query (e.g. one root field).
 data ExecutionStep where
   ExecStepDB
-    :: forall (b :: BackendType)
-     . BackendExecute b
-    => SourceConfig b
-    -> Maybe (PreparedQuery b)
-    -> HTTP.ResponseHeaders
-    -> ExecutionMonad b EncJSON
+    :: HTTP.ResponseHeaders
+    -> AB.AnyBackend DBStepInfo
     -> ExecutionStep
   -- ^ A query to execute against the database
   ExecStepAction
@@ -111,3 +114,11 @@ data ExecutionStep where
 -- independent. In the future, when we implement a client-side dataloader and generalized joins,
 -- this will need to be changed into an annotated tree.
 type ExecutionPlan = InsOrdHashMap G.Name ExecutionStep
+
+getRemoteSchemaInfo
+    :: forall b
+     . BackendExecute b
+    => DBStepInfo b
+    -> [RemoteSchemaInfo]
+getRemoteSchemaInfo (DBStepInfo _ genSql _) =
+    IR._rjRemoteSchema <$> maybe [] (getRemoteJoins @b) genSql

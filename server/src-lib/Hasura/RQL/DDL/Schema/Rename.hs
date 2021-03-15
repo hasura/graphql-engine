@@ -8,23 +8,25 @@ module Hasura.RQL.DDL.Schema.Rename
   )
 where
 
-import           Control.Lens.Combinators
-import           Control.Lens.Operators
--- import           Hasura.Backends.Postgres.SQL.Types
 import           Hasura.Prelude
-import           Hasura.RQL.DDL.Permission
-import           Hasura.RQL.Types
-import           Hasura.Session
-
-import           Data.Aeson
-import           Data.Text.Extended
-import           Data.Typeable                 (cast)
 
 import qualified Data.HashMap.Strict           as M
 import qualified Data.HashMap.Strict.InsOrd    as OMap
 import qualified Data.HashSet                  as Set
 import qualified Data.List.NonEmpty            as NE
 import qualified Language.GraphQL.Draft.Syntax as G
+
+import           Control.Lens.Combinators
+import           Control.Lens.Operators
+import           Data.Aeson
+import           Data.Text.Extended
+
+import qualified Hasura.SQL.AnyBackend         as AB
+
+import           Hasura.RQL.DDL.Permission
+import           Hasura.RQL.Types
+import           Hasura.Session
+
 
 data RenameItem (b :: BackendType) a
   = RenameItem
@@ -51,7 +53,8 @@ otherDeps errMsg d =
     <> reportSchemaObj d <> "; " <> errMsg
 
 renameTableInMetadata
-  :: ( MonadError QErr m
+  :: forall b m
+   . ( MonadError QErr m
      , CacheRM m
      , MonadWriter MetadataModifier m
      , BackendMetadata b
@@ -59,18 +62,23 @@ renameTableInMetadata
   => SourceName -> TableName b -> TableName b -> m ()
 renameTableInMetadata source newQT oldQT = do
   sc <- askSchemaCache
-  let allDeps = getDependentObjs sc $ SOSourceObj source $ SOITable oldQT
+  let allDeps = getDependentObjs sc
+                  $ SOSourceObj source
+                  $ AB.mkAnyBackend
+                  $ SOITable oldQT
 
   -- update all dependant schema objects
   forM_ allDeps $ \case
-    (SOSourceObj _ (SOITableObj refQT (TORel rn))) ->
-      onJust (cast refQT) \tn -> updateRelDefs source tn rn (oldQT, newQT)
-    (SOSourceObj _ (SOITableObj refQT (TOPerm rn pt)))   ->
-      onJust (cast refQT) \tn -> updatePermFlds source tn rn pt $ RTable (oldQT, newQT)
-    -- A trigger's definition is not dependent on the table directly
-    (SOSourceObj _ (SOITableObj _ (TOTrigger _)))   -> pure ()
-    -- A remote relationship's definition is not dependent on the table directly
-    (SOSourceObj _ (SOITableObj _ (TORemoteRel _))) -> pure ()
+    sobj@(SOSourceObj _ exists) -> case AB.unpackAnyBackend exists of
+      Just (SOITableObj refQT (TORel rn)) ->
+        updateRelDefs source refQT rn (oldQT, newQT)
+      Just (SOITableObj refQT (TOPerm rn pt)) ->
+        updatePermFlds source refQT rn pt $ RTable (oldQT, newQT)
+      -- A trigger's definition is not dependent on the table directly
+      Just (SOITableObj _ (TOTrigger _)) -> pure ()
+      -- A remote relationship's definition is not dependent on the table directly
+      Just (SOITableObj _ (TORemoteRel _)) -> pure ()
+      _ -> otherDeps errMsg sobj
 
     d -> otherDeps errMsg d
   -- Update table name in metadata
@@ -93,20 +101,28 @@ renameColumnInMetadata oCol nCol source qt fieldInfo = do
   -- Check if any relation exists with new column name
   assertFldNotExists
   -- Fetch dependent objects
-  let depObjs = getDependentObjs sc $ SOSourceObj source $
-                SOITableObj qt $ TOCol oCol
+  let depObjs = getDependentObjs sc
+                  $ SOSourceObj source
+                  $ AB.mkAnyBackend
+                  $ SOITableObj qt
+                  $ TOCol oCol
       renameFld = RFCol $ RenameItem qt oCol nCol
   -- Update dependent objects
   forM_ depObjs $ \case
-    (SOSourceObj _ (SOITableObj refQT (TOPerm role pt))) ->
-      onJust (cast refQT) \tn -> updatePermFlds source tn role pt $ RField renameFld
-    (SOSourceObj _ (SOITableObj refQT (TORel rn))) ->
-      onJust (cast refQT) \tn -> updateColInRel source tn rn $ RenameItem qt oCol nCol
-    (SOSourceObj _ (SOITableObj refQT (TOTrigger triggerName))) ->
-      onJust (cast refQT) \tn -> tell $ MetadataModifier $
-        tableMetadataSetter source tn.tmEventTriggers.ix triggerName %~ (updateColumnInEventTrigger tn oCol nCol qt)
-    (SOSourceObj _ (SOITableObj _ (TORemoteRel remoteRelName))) ->
-      updateColInRemoteRelationship source remoteRelName $ RenameItem qt oCol nCol
+    sobj@(SOSourceObj _ exists) -> case AB.unpackAnyBackend exists of
+      Just (SOITableObj refQT (TOPerm role pt)) ->
+        updatePermFlds source refQT role pt $ RField renameFld
+      Just (SOITableObj refQT (TORel rn)) ->
+        updateColInRel source refQT rn $ RenameItem qt oCol nCol
+      Just (SOITableObj refQT (TOTrigger triggerName)) ->
+        tell
+          $ MetadataModifier
+          $ tableMetadataSetter source refQT.tmEventTriggers.ix triggerName
+          %~ updateColumnInEventTrigger refQT oCol nCol qt
+      Just (SOITableObj _ (TORemoteRel remoteRelName)) ->
+        updateColInRemoteRelationship source remoteRelName
+          $ RenameItem qt oCol nCol
+      _ -> otherDeps errMsg sobj
     d -> otherDeps errMsg d
   -- Update custom column names
   possiblyUpdateCustomColumnNames source qt oCol nCol
@@ -121,7 +137,8 @@ renameColumnInMetadata oCol nCol source qt fieldInfo = do
         _ -> pure ()
 
 renameRelationshipInMetadata
-  :: ( MonadError QErr m
+  :: forall b m
+   . ( MonadError QErr m
      , CacheRM m
      , MonadWriter MetadataModifier m
      , BackendMetadata b
@@ -129,13 +146,18 @@ renameRelationshipInMetadata
   => SourceName -> TableName b -> RelName -> RelType -> RelName -> m ()
 renameRelationshipInMetadata source qt oldRN relType newRN = do
   sc <- askSchemaCache
-  let depObjs = getDependentObjs sc $ SOSourceObj source $
-                SOITableObj qt $ TORel oldRN
+  let depObjs = getDependentObjs sc
+                  $ SOSourceObj source
+                  $ AB.mkAnyBackend
+                  $ SOITableObj qt
+                  $ TORel oldRN
       renameFld = RFRel $ RenameItem qt oldRN newRN
 
   forM_ depObjs $ \case
-    (SOSourceObj _ (SOITableObj refQT (TOPerm role pt))) ->
-      onJust (cast refQT) \tn -> updatePermFlds source tn role pt $ RField renameFld
+    sobj@(SOSourceObj _ exists) -> case AB.unpackAnyBackend exists of
+      Just (SOITableObj refQT (TOPerm role pt)) ->
+        updatePermFlds source refQT role pt $ RField renameFld
+      _ -> otherDeps errMsg sobj
     d -> otherDeps errMsg d
   tell $ MetadataModifier $ tableMetadataSetter source qt %~ case relType of
     ObjRel -> tmObjectRelationships %~ rewriteRelationships

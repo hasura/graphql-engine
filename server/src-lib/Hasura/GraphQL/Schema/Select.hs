@@ -49,6 +49,7 @@ import qualified Hasura.GraphQL.Parser.Internal.Parser      as P
 import qualified Hasura.RQL.IR.BoolExp                      as IR
 import qualified Hasura.RQL.IR.OrderBy                      as IR
 import qualified Hasura.RQL.IR.Select                       as IR
+import qualified Hasura.SQL.AnyBackend                      as AB
 
 import           Hasura.GraphQL.Context
 import           Hasura.GraphQL.Parser                      (FieldParser, InputFieldsParser,
@@ -1419,19 +1420,25 @@ nodeField = do
         onNothing (Map.lookup table parseds) $
         withArgsPath $  throwInvalidNodeId $ "the table " <>> ident
       whereExp <- buildNodeIdBoolExp columnValues pkeyColumns
-      return $ RFDB source sourceConfig $ QDBR $ QDBSingleRow $ IR.AnnSelectG
-        { IR._asnFields   = fields
-        , IR._asnFrom     = IR.FromTable table
-        , IR._asnPerm     = tablePermissionsInfo perms
-        , IR._asnArgs     = IR.SelectArgs
-          { IR._saWhere    = Just whereExp
-          , IR._saOrderBy  = Nothing
-          , IR._saLimit    = Nothing
-          , IR._saOffset   = Nothing
-          , IR._saDistinct = Nothing
+      return
+        $ RFDB source
+        $ AB.mkAnyBackend
+        $ SourceConfigWith sourceConfig
+        $ QDBR
+        $ QDBSingleRow
+        $ IR.AnnSelectG
+          { IR._asnFields   = fields
+          , IR._asnFrom     = IR.FromTable table
+          , IR._asnPerm     = tablePermissionsInfo perms
+          , IR._asnArgs     = IR.SelectArgs
+            { IR._saWhere    = Just whereExp
+            , IR._saOrderBy  = Nothing
+            , IR._saLimit    = Nothing
+            , IR._saOffset   = Nothing
+            , IR._saDistinct = Nothing
+            }
+          , IR._asnStrfyNum = stringifyNum
           }
-        , IR._asnStrfyNum = stringifyNum
-        }
   where
     parseNodeId :: Text -> n NodeId
     parseNodeId =

@@ -19,6 +19,7 @@ import           Data.Has
 import           Data.List.Extended                        (duplicates)
 
 import qualified Hasura.GraphQL.Parser                     as P
+import qualified Hasura.SQL.AnyBackend                     as AB
 
 import           Data.Text.Extended
 import           Hasura.GraphQL.Context
@@ -173,9 +174,8 @@ buildRoleContext (SQLGenCtx stringifyNum, queryType, functionPermsCtx) sources
             <$> buildQueryFields sourceName sourceConfig validTables validFunctions
             <*> buildMutationFields Frontend sourceName sourceConfig validTables validFunctions
             <*> buildMutationFields Backend  sourceName sourceConfig validTables validFunctions
-      buildBackendSource = withBackendSchema buildSource
 
-  fieldsList <- traverse buildBackendSource $ toList sources
+  fieldsList <- traverse (buildBackendSource buildSource) $ toList sources
   let (queryFields, mutationFrontendFields, mutationBackendFields) = mconcat fieldsList
 
   -- It's okay to run the rest of this while assuming that the backend is 'Postgres:
@@ -240,9 +240,8 @@ buildRelayRoleContext (SQLGenCtx stringifyNum, queryType, functionPermsCtx) sour
           <$> buildRelayQueryFields sourceName sourceConfig validTables validFunctions
           <*> buildMutationFields Frontend sourceName sourceConfig validTables validFunctions
           <*> buildMutationFields Backend sourceName sourceConfig validTables validFunctions
-      buildBackendSource = withBackendSchema buildSource
 
-  fieldsList <- traverse buildBackendSource $ toList sources
+  fieldsList <- traverse (buildBackendSource buildSource) $ toList sources
 
   -- It's okay to run the rest of this while assuming that the backend is 'Postgres:
   -- the only remaining parsers are for actions, that are postgres specific, or for
@@ -298,9 +297,8 @@ buildFullestDBSchema queryContext sources allActionInfos nonObjectCustomTypes = 
           (,)
             <$> buildQueryFields sourceName sourceConfig validTables validFunctions
             <*> buildMutationFields Frontend sourceName sourceConfig validTables validFunctions
-      buildBackendSource = withBackendSchema buildSource
 
-  fieldsList <- traverse buildBackendSource $ toList sources
+  fieldsList <- traverse (buildBackendSource buildSource) $ toList sources
   let (queryFields, mutationFrontendFields) = mconcat fieldsList
 
   -- It's okay to run the rest of this while assuming that the backend is 'Postgres:
@@ -695,12 +693,13 @@ runMonadSchema
 runMonadSchema roleName queryContext pgSources extensions m =
   flip runReaderT (roleName, pgSources, queryContext, extensions) $ P.runSchemaT m
 
-withBackendSchema :: (forall b. BackendSchema b => SourceInfo b -> r) -> BackendSourceInfo -> r
-withBackendSchema f (BackendSourceInfo (bsi :: SourceInfo b)) = case backendTag @b of
-  PostgresTag -> f bsi
-  MSSQLTag    -> f bsi
-
 -- | Whether the request is sent with `x-hasura-use-backend-only-permissions` set to `true`.
 data Scenario = Backend | Frontend deriving (Enum, Show, Eq)
 
 type RemoteSchemaCache = HashMap RemoteSchemaName (RemoteSchemaCtx, MetadataObject)
+
+buildBackendSource
+  :: (forall b. BackendSchema b => SourceInfo b -> r)
+  -> AB.AnyBackend SourceInfo
+  -> r
+buildBackendSource f e = AB.dispatchAnyBackend @BackendSchema e f

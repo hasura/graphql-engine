@@ -22,6 +22,7 @@ import           Data.Aeson
 import           Data.Text.Extended
 
 import qualified Hasura.Incremental                 as Inc
+import qualified Hasura.SQL.AnyBackend              as AB
 
 import           Hasura.RQL.DDL.Permission
 import           Hasura.RQL.DDL.Permission.Internal
@@ -201,8 +202,10 @@ mkPermissionMetadataObject
   => SourceName -> TableName b -> PermDef a -> MetadataObject
 mkPermissionMetadataObject source table permDef =
   let permType = permAccToType (permAccessor :: PermAccessor b (PermInfo b a))
-      objectId = MOSourceObjId source $
-                 SMOTableObj table $ MTOPerm (_pdRole permDef) permType
+      objectId = MOSourceObjId source
+                   $ AB.mkAnyBackend
+                   $ SMOTableObj table
+                   $ MTOPerm (_pdRole permDef) permType
       definition = toJSON $ WithTable source table permDef
   in MetadataObject objectId definition
 
@@ -221,8 +224,10 @@ withPermission f = proc (e, ((source, table, permission), s)) -> do
   let metadataObject = mkPermissionMetadataObject source table permission
       permType = permAccToType (permAccessor :: PermAccessor bknd (PermInfo bknd c))
       roleName = _pdRole permission
-      schemaObject = SOSourceObj source $
-                     SOITableObj table $ TOPerm roleName permType
+      schemaObject = SOSourceObj source
+                       $ AB.mkAnyBackend
+                       $ SOITableObj table
+                       $ TOPerm roleName permType
       addPermContext err = "in permission for role " <> roleName <<> ": " <> err
   (| withRecordInconsistency (
      (| withRecordDependencies (

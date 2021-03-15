@@ -2,8 +2,6 @@
 {-# LANGUAGE OverloadedLabels     #-}
 {-# LANGUAGE UndecidableInstances #-}
 
-{-# OPTIONS_GHC -O0 #-}
-
 {-| Top-level functions concerned specifically with operations on the schema cache, such as
 rebuilding it from the catalog and incorporating schema changes. See the module documentation for
 "Hasura.RQL.DDL.Schema" for more details.
@@ -40,6 +38,7 @@ import           Data.Text.Extended
 import           Network.HTTP.Client.Extended
 
 import qualified Hasura.Incremental                       as Inc
+import qualified Hasura.SQL.AnyBackend                    as AB
 import qualified Hasura.Tracing                           as Tracing
 
 import           Hasura.Backends.Postgres.Connection
@@ -63,7 +62,7 @@ import           Hasura.Server.Version                    (HasVersion)
 import           Hasura.Session
 
 buildRebuildableSchemaCache
-  :: (HasVersion)
+  :: HasVersion
   => Env.Environment
   -> Metadata
   -> CacheBuild RebuildableSchemaCache
@@ -71,7 +70,7 @@ buildRebuildableSchemaCache =
   buildRebuildableSchemaCacheWithReason CatalogSync
 
 buildRebuildableSchemaCacheWithReason
-  :: (HasVersion)
+  :: HasVersion
   => BuildReason
   -> Env.Environment
   -> Metadata
@@ -320,8 +319,16 @@ buildSchemaCacheRule env = proc (metadata, invalidationKeys) -> do
         >-> (| Inc.keyed (\_ (FunctionMetadata qf config functionPermissions) -> do
                  let systemDefined = SystemDefined False
                      definition = toJSON $ TrackFunction qf
-                     metadataObject = MetadataObject (MOSourceObjId @b source $ SMOFunction qf) definition
-                     schemaObject = SOSourceObj @b source $ SOIFunction qf
+                     metadataObject =
+                       MetadataObject
+                         (MOSourceObjId source
+                           $ AB.mkAnyBackend
+                           $ SMOFunction qf)
+                       definition
+                     schemaObject =
+                       SOSourceObj source
+                         $ AB.mkAnyBackend
+                         $ SOIFunction qf
                      addFunctionContext e = "in function " <> qf <<> ": " <> e
                  (| withRecordInconsistency (
                     (| modifyErrA (do
@@ -334,7 +341,7 @@ buildSchemaCacheRule env = proc (metadata, invalidationKeys) -> do
                   |) metadataObject) |)
         >-> (\infos -> M.catMaybes infos >- returnA)
 
-      returnA -< BackendSourceInfo $ SourceInfo source tableCache functionCache sourceConfig
+      returnA -< AB.mkAnyBackend $ SourceInfo source tableCache functionCache sourceConfig
 
     buildSourceOutput
       :: forall arr m b
@@ -374,7 +381,8 @@ buildSchemaCacheRule env = proc (metadata, invalidationKeys) -> do
           remoteSchemaRoles = map _rspmRole . _rsmPermissions =<< OMap.elems remoteSchemas
           sourceRoles =
             HS.fromList $ concat $
-            OMap.elems sources >>= \(BackendSourceMetadata (SourceMetadata _ tables _functions _) ) -> do
+            OMap.elems sources >>=
+              \e -> AB.dispatchAnyBackend @Backend e \(SourceMetadata _ tables _functions _) -> do
                table <- OMap.elems tables
                pure ( OMap.keys (_tmInsertPermissions table) <> OMap.keys (_tmSelectPermissions table)
                     <> OMap.keys (_tmUpdatePermissions table) <> OMap.keys (_tmDeletePermissions table))
@@ -423,10 +431,9 @@ buildSchemaCacheRule env = proc (metadata, invalidationKeys) -> do
 
       let remoteSchemaCtxMap = M.map fst remoteSchemaMap
       sourcesOutput <-
-        (| Inc.keyed (\_ (BackendSourceMetadata (sourceMetadata :: SourceMetadata b)) ->
-             case backendTag @b of
-                PostgresTag -> buildSourceOutput @arr @m -< (invalidationKeys, remoteSchemaCtxMap, sourceMetadata :: SourceMetadata 'Postgres, inheritedRoles)
-                MSSQLTag    -> buildSourceOutput @arr @m -< (invalidationKeys, remoteSchemaCtxMap, sourceMetadata :: SourceMetadata 'MSSQL, inheritedRoles)
+        (| Inc.keyed (\_ exists ->
+             AB.dispatchAnyBackendArrow @BackendMetadata (buildSourceOutput @arr @m)
+               -< (invalidationKeys, remoteSchemaCtxMap, exists, inheritedRoles)
            )
         |) (M.fromList $ OMap.toList sources)
         >-> (\infos -> M.catMaybes infos >- returnA)
@@ -530,9 +537,17 @@ buildSchemaCacheRule env = proc (metadata, invalidationKeys) -> do
 
       pure lq
 
+    mkEventTriggerMetadataObject
+      :: forall b a c
+       . Backend b
+      => (a, SourceName, c, TableName b, EventTriggerConf)
+      -> MetadataObject
     mkEventTriggerMetadataObject (_, source, _, table, eventTriggerConf) =
-      let objectId = MOSourceObjId source $
-                     SMOTableObj table $ MTOTrigger $ etcName eventTriggerConf
+      let objectId = MOSourceObjId source
+                       $ AB.mkAnyBackend
+                       $ SMOTableObj table
+                       $ MTOTrigger
+                       $ etcName eventTriggerConf
           definition = object ["table" .= table, "configuration" .= eventTriggerConf]
       in MetadataObject objectId definition
 
@@ -599,7 +614,7 @@ buildSchemaCacheRule env = proc (metadata, invalidationKeys) -> do
          , MonadReader BuildReason m, HasServerConfigCtx m, BackendMetadata b)
       => ( SourceName, SourceConfig b, TableCoreInfo b
          , [EventTriggerConf], Inc.Dependency Inc.InvalidationKey
-         ) `arr` (EventTriggerInfoMap b)
+         ) `arr` EventTriggerInfoMap b
     buildTableEventTriggers = proc (source, sourceConfig, tableInfo, eventTriggerConfs, metadataInvalidationKey) ->
       buildInfoMap (etcName . (^. _5)) mkEventTriggerMetadataObject buildEventTrigger
         -< (tableInfo, map (metadataInvalidationKey, source, sourceConfig, _tciName tableInfo,) eventTriggerConfs)
@@ -607,8 +622,10 @@ buildSchemaCacheRule env = proc (metadata, invalidationKeys) -> do
         buildEventTrigger = proc (tableInfo, (metadataInvalidationKey, source, sourceConfig, table, eventTriggerConf)) -> do
           let triggerName = etcName eventTriggerConf
               metadataObject = mkEventTriggerMetadataObject (metadataInvalidationKey, source, sourceConfig, table, eventTriggerConf)
-              schemaObjectId = SOSourceObj @b source $
-                               SOITableObj table $ TOTrigger triggerName
+              schemaObjectId = SOSourceObj source
+                                 $ AB.mkAnyBackend
+                                 $ SOITableObj table
+                                 $ TOTrigger triggerName
               addTriggerContext e = "in event trigger " <> triggerName <<> ": " <> e
           (| withRecordInconsistency (
              (| modifyErrA (do
@@ -629,8 +646,15 @@ buildSchemaCacheRule env = proc (metadata, invalidationKeys) -> do
             buildReason <- ask
             serverConfigCtx <- askServerConfigCtx
             -- we don't modify the existing event trigger definitions in the maintenance mode
-            when (buildReason == CatalogUpdate && (_sccMaintenanceMode serverConfigCtx) == MaintenanceModeDisabled) $
-              liftEitherM $ createTableEventTrigger serverConfigCtx sourceConfig tableName tableColumns triggerName triggerDefinition
+            when (buildReason == CatalogUpdate && _sccMaintenanceMode serverConfigCtx == MaintenanceModeDisabled)
+              $ liftEitherM
+              $ createTableEventTrigger
+                  serverConfigCtx
+                  sourceConfig
+                  tableName
+                  tableColumns
+                  triggerName
+                  triggerDefinition
 
     buildCronTriggers
       :: ( ArrowChoice arr

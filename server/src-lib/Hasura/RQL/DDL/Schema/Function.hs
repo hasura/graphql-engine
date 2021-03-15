@@ -12,14 +12,15 @@ import qualified Data.HashMap.Strict.InsOrd as OMap
 import           Data.Aeson
 import           Data.Text.Extended
 
+import qualified Hasura.SQL.AnyBackend      as AB
+
 import           Hasura.EncJSON
 import           Hasura.RQL.Types
-
 import           Hasura.Session
 
 newtype TrackFunction b
   = TrackFunction
-  { tfName :: (FunctionName b)}
+  { tfName :: FunctionName b }
 deriving instance (Backend b) => Show (TrackFunction b)
 deriving instance (Backend b) => Eq (TrackFunction b)
 deriving instance (Backend b) => FromJSON (TrackFunction b)
@@ -41,10 +42,12 @@ trackFunctionP1 sourceName qf = do
     throw400 NotSupported $ "table with name " <> qf <<> " already exists"
 
 trackFunctionP2
-  :: (MonadError QErr m, CacheRWM m, MetadataM m, BackendMetadata b)
+  :: forall b m
+   . (MonadError QErr m, CacheRWM m, MetadataM m, BackendMetadata b)
   => SourceName -> FunctionName b -> FunctionConfig -> m EncJSON
 trackFunctionP2 sourceName qf config = do
-  buildSchemaCacheFor (MOSourceObjId sourceName $ SMOFunction qf)
+  buildSchemaCacheFor
+    (MOSourceObjId sourceName $ AB.mkAnyBackend $ SMOFunction qf)
     $ MetadataModifier
     $ metaSources.ix sourceName.toSourceMetadata.smFunctions
       %~ OMap.insert qf (FunctionMetadata qf config mempty)
@@ -175,14 +178,18 @@ runCreateFunctionPermission (CreateFunctionPermission functionName source role) 
     <> role <<> " already exists for function " <> functionName <<> " in source: " <>> source
   functionTableInfo <-
     unsafeTableInfo @b source (_fiReturnType functionInfo) sourceCache
-    `onNothing` throw400 NotExists ("function's return table " <> (_fiReturnType functionInfo) <<> " not found in the cache")
+    `onNothing` throw400 NotExists ("function's return table " <> _fiReturnType functionInfo <<> " not found in the cache")
   unless (role `Map.member` _tiRolePermInfoMap functionTableInfo) $
     throw400 NotSupported $
     "function permission can only be added when the function's return table "
     <> _fiReturnType functionInfo <<>  " has select permission configured for role: " <>> role
-  buildSchemaCacheFor (MOSourceObjId source $ SMOFunctionPermission functionName role)
+  buildSchemaCacheFor
+    (MOSourceObjId source
+      $ AB.mkAnyBackend (SMOFunctionPermission functionName role))
     $ MetadataModifier
-    $ metaSources.ix source.toSourceMetadata.smFunctions.ix functionName.fmPermissions
+    $ metaSources.ix
+        source.toSourceMetadata.smFunctions.ix
+        functionName.fmPermissions
     %~ (:) (FunctionPermissionMetadata role)
   pure successMsg
 
@@ -195,7 +202,8 @@ dropFunctionPermissionInMetadata source function role = MetadataModifier $
 type DropFunctionPermission = CreateFunctionPermission
 
 runDropFunctionPermission
-  :: ( CacheRWM m
+  :: forall m b
+   . ( CacheRWM m
      , MonadError QErr m
      , MetadataM m
      , BackendMetadata b
@@ -208,6 +216,9 @@ runDropFunctionPermission (CreateFunctionPermission functionName source role) = 
     throw400 NotExists $
     "permission of role "
     <> role <<> " does not exist for function " <> functionName <<> " in source: " <>> source
-  buildSchemaCacheFor (MOSourceObjId source $ SMOFunctionPermission functionName role)
+  buildSchemaCacheFor
+    (MOSourceObjId source
+      $ AB.mkAnyBackend
+      $ SMOFunctionPermission functionName role)
     $ dropFunctionPermissionInMetadata source functionName role
   pure successMsg

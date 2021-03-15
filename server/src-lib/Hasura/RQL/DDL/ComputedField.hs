@@ -16,7 +16,8 @@ import qualified Data.HashMap.Strict.InsOrd as OMap
 
 import           Data.Aeson
 import           Data.Text.Extended
-import           Data.Typeable              (cast)
+
+import qualified Hasura.SQL.AnyBackend      as AB
 
 import           Hasura.EncJSON
 import           Hasura.Incremental         (Cacheable)
@@ -52,8 +53,10 @@ instance (Backend b) => FromJSON (AddComputedField b) where
 runAddComputedField :: (MonadError QErr m, CacheRWM m, MetadataM m) => AddComputedField 'Postgres -> m EncJSON
 runAddComputedField q = do
   withPathK "table" $ askTabInfo source table
-  let metadataObj = MOSourceObjId source $
-                    SMOTableObj table $ MTOComputedField computedFieldName
+  let metadataObj = MOSourceObjId source
+                      $ AB.mkAnyBackend
+                      $ SMOTableObj table
+                      $ MTOComputedField computedFieldName
       metadata = ComputedFieldMetadata computedFieldName (_afcDefinition q) (_afcComment q)
   buildSchemaCacheFor metadataObj
     $ MetadataModifier
@@ -86,7 +89,8 @@ instance (Backend b) => FromJSON (DropComputedField b) where
       <*> o .:? "cascade" .!= False
 
 runDropComputedField
-  :: (QErrM m, CacheRWM m, MetadataM m, BackendMetadata b)
+  :: forall b m
+   . (QErrM m, CacheRWM m, MetadataM m, BackendMetadata b)
   => DropComputedField b -> m EncJSON
 runDropComputedField (DropComputedField source table computedField cascade) = do
   -- Validation
@@ -95,23 +99,28 @@ runDropComputedField (DropComputedField source table computedField cascade) = do
 
   -- Dependencies check
   sc <- askSchemaCache
-  let deps = getDependentObjs sc $ SOSourceObj source $
-             SOITableObj table $ TOComputedField computedField
+  let deps = getDependentObjs sc
+               $ SOSourceObj source
+               $ AB.mkAnyBackend
+               $ SOITableObj table
+               $ TOComputedField computedField
   when (not cascade && not (null deps)) $ reportDeps deps
 
   withNewInconsistentObjsCheck do
     metadataModifiers <- mapM purgeComputedFieldDependency deps
     buildSchemaCache $ MetadataModifier $
       tableMetadataSetter source table
-      %~ (dropComputedFieldInMetadata computedField) . foldl' (.) id metadataModifiers
+      %~ dropComputedFieldInMetadata computedField . foldl' (.) id metadataModifiers
   pure successMsg
   where
     purgeComputedFieldDependency = \case
       -- TODO: do a better check of ensuring that the dependency is as expected.
       -- i.e, the only allowed dependent objects on a computed fields are permissions
       -- on the same table
-      (SOSourceObj _ (SOITableObj qt (TOPerm roleName permType))) | cast qt == Just table ->
-        pure $ dropPermissionInMetadata roleName permType
+      SOSourceObj _ exists
+        | Just (SOITableObj _ (TOPerm roleName permType))
+            <- AB.unpackAnyBackend @b exists ->
+              pure $ dropPermissionInMetadata roleName permType
       d -> throw500 $ "unexpected dependency for computed field "
            <> computedField <<> "; " <> reportSchemaObj d
 

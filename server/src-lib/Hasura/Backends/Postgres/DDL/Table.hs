@@ -9,6 +9,8 @@ module Hasura.Backends.Postgres.DDL.Table
   )
 where
 
+import           Hasura.Prelude
+
 import qualified Data.Environment                    as Env
 import qualified Data.HashMap.Strict                 as Map
 import qualified Data.List.NonEmpty                  as NE
@@ -25,10 +27,11 @@ import           Control.Monad.Validate
 import           Data.List                           (delete)
 import           Data.Text.Extended
 
+import qualified Hasura.SQL.AnyBackend               as AB
+
 import           Hasura.Backends.Postgres.Connection
 import           Hasura.Backends.Postgres.SQL.DML
 import           Hasura.Backends.Postgres.SQL.Types
-import           Hasura.Prelude
 import           Hasura.RQL.DDL.Headers
 import           Hasura.RQL.Types.Column
 import           Hasura.RQL.Types.Common
@@ -37,7 +40,7 @@ import           Hasura.RQL.Types.EventTrigger
 import           Hasura.RQL.Types.SchemaCache
 import           Hasura.RQL.Types.SchemaCacheTypes
 import           Hasura.RQL.Types.Table
-import           Hasura.SQL.Backend
+import           Hasura.SQL.Backend                  (BackendType (Postgres))
 import           Hasura.SQL.Types
 import           Hasura.Server.Types
 import           Hasura.Server.Utils
@@ -179,7 +182,11 @@ buildEventTriggerInfo env source qt (EventTriggerConf name def webhook webhookFr
   webhookInfo <- getWebhookInfoFromConf env webhookConf
   headerInfos <- getHeaderInfosFromConf env headerConfs
   let eTrigInfo = EventTriggerInfo () name def rconf webhookInfo headerInfos
-      tabDep = SchemaDependency (SOSourceObj source $ SOITable qt) DRParent
+      tabDep = SchemaDependency
+                 (SOSourceObj source
+                   $ AB.mkAnyBackend
+                   $ SOITable qt)
+                 DRParent
   pure (eTrigInfo, tabDep:getTrigDefDeps source qt def)
 
 getTrigDefDeps :: SourceName -> QualifiedTable -> TriggerOpsDef -> [SchemaDependency]
@@ -193,10 +200,18 @@ getTrigDefDeps source qt (TriggerOpsDef mIns mUpd mDel _) =
     subsOpSpecDeps os =
       let cols = getColsFromSub $ sosColumns os
           colDeps = flip map cols $ \col ->
-            SchemaDependency (SOSourceObj source $ SOITableObj qt (TOCol col)) DRColumn
+            SchemaDependency
+              (SOSourceObj source
+                $ AB.mkAnyBackend
+                $ SOITableObj qt (TOCol col))
+              DRColumn
           payload = maybe [] getColsFromSub (sosPayload os)
           payloadDeps = flip map payload $ \col ->
-            SchemaDependency (SOSourceObj source $ SOITableObj qt (TOCol col)) DRPayload
+            SchemaDependency
+              (SOSourceObj source
+                $ AB.mkAnyBackend
+                $ SOITableObj qt (TOCol col))
+              DRPayload
         in colDeps <> payloadDeps
     getColsFromSub sc = case sc of
       SubCStar         -> []

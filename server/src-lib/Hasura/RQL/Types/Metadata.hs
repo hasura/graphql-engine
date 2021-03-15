@@ -9,7 +9,6 @@ import qualified Data.HashMap.Strict.Extended        as M
 import qualified Data.HashMap.Strict.InsOrd.Extended as OM
 import qualified Data.HashSet                        as HS
 import qualified Data.HashSet.InsOrd                 as HSIns
-import           Data.Int                            (Int64)
 import qualified Data.List.Extended                  as L
 import qualified Data.Text                           as T
 import qualified Language.GraphQL.Draft.Syntax       as G
@@ -18,7 +17,9 @@ import           Control.Lens                        hiding (set, (.=))
 import           Data.Aeson.Casing
 import           Data.Aeson.TH
 import           Data.Aeson.Types
-import           Data.Typeable                       (cast)
+import           Data.Int                            (Int64)
+
+import qualified Hasura.SQL.AnyBackend               as AB
 
 import           Hasura.Incremental                  (Cacheable)
 import           Hasura.RQL.Types.Action
@@ -255,38 +256,21 @@ instance (Backend b) => FromJSON (SourceMetadata b) where
     pure SourceMetadata{..}
 
 mkSourceMetadata
-  :: BackendMetadata b
-  => SourceName -> SourceConnConfiguration b -> BackendSourceMetadata
+  :: forall (b :: BackendType)
+   . BackendMetadata b
+  => SourceName
+  -> SourceConnConfiguration b
+  -> BackendSourceMetadata
 mkSourceMetadata name config =
-  BackendSourceMetadata $ SourceMetadata name mempty mempty config
+  AB.mkAnyBackend $ SourceMetadata name mempty mempty config
 
--- See Note [Existentially Quantified Types]
-data BackendSourceMetadata =
-  forall b. (BackendMetadata b) => BackendSourceMetadata (SourceMetadata b)
+type BackendSourceMetadata = AB.AnyBackend SourceMetadata
 
-instance Show BackendSourceMetadata where
-  show (BackendSourceMetadata sm) = show sm
-
-instance Eq BackendSourceMetadata where
-  BackendSourceMetadata sm1 == BackendSourceMetadata sm2 =
-    (Just sm1) == (cast sm2)
-
-instance FromJSON BackendSourceMetadata where
-  parseJSON = withObject "Object" $ \o -> do
-    backendKind :: Text <- fromMaybe "postgres" <$> o .:? "kind"
-    -- TODO: Make backendKind a concrete type or re-use `BackendType`
-    case backendKind of
-      "postgres" -> BackendSourceMetadata @'Postgres <$> parseJSON (Object o)
-      "mssql"    -> BackendSourceMetadata @'MSSQL    <$> parseJSON (Object o)
-      _          -> fail "expected postgres or mssql"
-
-toSourceMetadata :: (BackendMetadata b) => Prism' BackendSourceMetadata (SourceMetadata b)
-toSourceMetadata = prism' BackendSourceMetadata getSourceMetadata
-  where
-    getSourceMetadata (BackendSourceMetadata sm) = cast sm
+toSourceMetadata :: forall b. (BackendMetadata b) => Prism' BackendSourceMetadata (SourceMetadata b)
+toSourceMetadata = prism' AB.mkAnyBackend AB.unpackAnyBackend
 
 getSourceName :: BackendSourceMetadata -> SourceName
-getSourceName (BackendSourceMetadata sm) = _smName sm
+getSourceName e = AB.dispatchAnyBackend @BackendMetadata e _smName
 
 type Sources = InsOrdHashMap SourceName BackendSourceMetadata
 
@@ -478,18 +462,17 @@ metadataToOrdJSON ( Metadata
                            else Just ("metrics_config", AO.toOrdered metricsConfig)
 
     sourceMetaToOrdJSON :: BackendSourceMetadata -> AO.Value
-    sourceMetaToOrdJSON (BackendSourceMetadata (SourceMetadata{..} :: SourceMetadata b)) =
-      let sourceNamePair = ("name", AO.toOrdered _smName)
-          sourceKind     = case backendTag @b of
-                             PostgresTag -> "postgres"
-                             MSSQLTag    -> "mssql"
-          sourceKindPair = ("kind", AO.String sourceKind)
-          tablesPair     = ("tables", AO.array $ map tableMetaToOrdJSON $ sortOn _tmTable $ OM.elems _smTables)
-          functionsPair  = listToMaybeOrdPairSort "functions" functionMetadataToOrdJSON _fmFunction _smFunctions
+    sourceMetaToOrdJSON exists =
+      AB.dispatchAnyBackend @BackendMetadata exists $ \(SourceMetadata {..} :: SourceMetadata b) ->
+        let sourceNamePair = ("name", AO.toOrdered _smName)
+            sourceKind     = backendName $ backendTag @b
+            sourceKindPair = ("kind", AO.String sourceKind)
+            tablesPair     = ("tables", AO.array $ map tableMetaToOrdJSON $ sortOn _tmTable $ OM.elems _smTables)
+            functionsPair  = listToMaybeOrdPairSort "functions" functionMetadataToOrdJSON _fmFunction _smFunctions
 
-          configurationPair = [("configuration", AO.toOrdered _smConfiguration)]
+            configurationPair = [("configuration", AO.toOrdered _smConfiguration)]
 
-      in AO.object $ [sourceNamePair, sourceKindPair, tablesPair] <> maybeToList functionsPair <> configurationPair
+        in AO.object $ [sourceNamePair, sourceKindPair, tablesPair] <> maybeToList functionsPair <> configurationPair
 
     tableMetaToOrdJSON :: (Backend b) => TableMetadata b -> AO.Value
     tableMetaToOrdJSON ( TableMetadata
@@ -615,24 +598,27 @@ metadataToOrdJSON ( Metadata
             if _fmConfiguration == emptyFunctionConfig then []
             else pure ("configuration", AO.toOrdered _fmConfiguration)
           permissionsKeyPair =
-            if (null _fmPermissions) then []
+            if null _fmPermissions then []
             else pure ("permissions", AO.toOrdered _fmPermissions)
       in AO.object $ [("function", AO.toOrdered _fmFunction)] <> confKeyPair <> permissionsKeyPair
 
     inheritedRolesQToOrdJSON :: AddInheritedRole -> AO.Value
     inheritedRolesQToOrdJSON AddInheritedRole{..} =
-      AO.object $ [ ("role_name", AO.toOrdered _adrRoleName)
-                  , ("role_set", AO.toOrdered _adrRoleSet)
-                  ]
+      AO.object [ ("role_name", AO.toOrdered _adrRoleName)
+                , ("role_set", AO.toOrdered _adrRoleSet)
+                ]
 
     remoteSchemaQToOrdJSON :: RemoteSchemaMetadata -> AO.Value
     remoteSchemaQToOrdJSON (RemoteSchemaMetadata name definition comment permissions) =
       AO.object $ [ ("name", AO.toOrdered name)
                   , ("definition", remoteSchemaDefToOrdJSON definition)
                   ]
-                  <> (catMaybes [ maybeCommentToMaybeOrdPair comment
-                                , listToMaybeOrdPair "permissions" permsToMaybeOrdJSON permissions
-                                ])
+                  <> catMaybes [ maybeCommentToMaybeOrdPair comment
+                                , listToMaybeOrdPair
+                                    "permissions"
+                                    permsToMaybeOrdJSON
+                                    permissions
+                                ]
       where
         permsToMaybeOrdJSON :: RemoteSchemaPermissionMetadata -> AO.Value
         permsToMaybeOrdJSON (RemoteSchemaPermissionMetadata role defn permComment) =

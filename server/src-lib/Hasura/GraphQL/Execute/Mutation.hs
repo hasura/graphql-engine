@@ -14,8 +14,11 @@ import qualified Network.HTTP.Types                         as HTTP
 
 import qualified Hasura.GraphQL.Transport.HTTP.Protocol     as GH
 import qualified Hasura.Logging                             as L
+import qualified Hasura.SQL.AnyBackend                      as AB
 import qualified Hasura.Tracing                             as Tracing
 
+import           Hasura.Backends.MSSQL.Instances.Execute    ()
+import           Hasura.Backends.Postgres.Instances.Execute ()
 import           Hasura.GraphQL.Context
 import           Hasura.GraphQL.Execute.Action
 import           Hasura.GraphQL.Execute.Backend
@@ -26,10 +29,6 @@ import           Hasura.Metadata.Class
 import           Hasura.RQL.Types
 import           Hasura.Server.Version                      (HasVersion)
 import           Hasura.Session
-
--- backend instances
-import           Hasura.Backends.MSSQL.Instances.Execute    ()
-import           Hasura.Backends.Postgres.Instances.Execute ()
 
 
 convertMutationAction
@@ -87,9 +86,10 @@ convertMutationSelectionSet env logger gqlContext SQLGenCtx{stringifyNum} userIn
 
   -- Transform the RQL AST into a prepared SQL query
   txs <- for unpreparedQueries \case
-    RFDB _ (sourceConfig :: SourceConfig b) (MDBR db) -> case backendTag @b of
-      PostgresTag -> mkDBMutationPlan env manager reqHeaders userInfo stringifyNum sourceConfig db
-      MSSQLTag    -> mkDBMutationPlan env manager reqHeaders userInfo stringifyNum sourceConfig db
+    RFDB _ exists ->
+      AB.dispatchAnyBackend @BackendExecute exists
+        \(SourceConfigWith sourceConfig (MDBR db)) ->
+           mkDBMutationPlan env manager reqHeaders userInfo stringifyNum sourceConfig db
     RFRemote remoteField -> do
       RemoteFieldG remoteSchemaInfo resolvedRemoteField <- resolveRemoteField userInfo remoteField
       pure $ buildExecStepRemote remoteSchemaInfo G.OperationTypeMutation $ [G.SelectionField resolvedRemoteField]

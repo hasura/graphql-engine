@@ -72,10 +72,6 @@ instance (Backend b) => Arbitrary (SourceMetadata b) where
 instance Arbitrary FunctionPermissionMetadata where
   arbitrary = genericArbitrary
 
-instance Arbitrary BackendSourceMetadata where
-  -- FIXME: Derive instance for any b using Backend b
-  arbitrary = BackendSourceMetadata @'Postgres <$> genericArbitrary
-
 instance Arbitrary TableCustomRootFields where
   arbitrary = uniqueRootFields
     where

@@ -34,8 +34,9 @@ import qualified Language.Haskell.TH.Syntax          as TH
 
 import           Control.Monad.Trans.Control         (MonadBaseControl)
 import           Data.Time.Clock                     (UTCTime)
-import           Data.Typeable                       (cast)
 import           System.Directory                    (doesFileExist)
+
+import qualified Hasura.SQL.AnyBackend               as AB
 
 import           Hasura.Backends.Postgres.SQL.Types
 import           Hasura.Logging                      (Hasura, LogLevel (..), ToEngineLog (..))
@@ -132,7 +133,7 @@ migrateCatalog maybeDefaultSourceConfig maintenanceMode migrationTime = do
             Nothing -> emptyMetadata
             Just defaultSourceConfig ->
               -- insert metadata with default source
-              let defaultSourceMetadata = BackendSourceMetadata $
+              let defaultSourceMetadata = AB.mkAnyBackend $
                     SourceMetadata defaultSource mempty mempty defaultSourceConfig
                   sources = OMap.singleton defaultSource defaultSourceMetadata
               in emptyMetadata{_metaSources = sources}
@@ -277,7 +278,7 @@ migrations maybeDefaultSourceConfig dryRun maintenanceMode =
           "cannot migrate to catalog version 43 without --database-url or env var " <> tshow (fst databaseUrlEnv)
         let metadataV3 =
               let MetadataNoSources{..} = metadataV2
-                  defaultSourceMetadata = BackendSourceMetadata $
+                  defaultSourceMetadata = AB.mkAnyBackend $
                     SourceMetadata defaultSource _mnsTables _mnsFunctions defaultSourceConfig
               in Metadata (OMap.singleton defaultSource defaultSourceMetadata)
                    _mnsRemoteSchemas _mnsQueryCollections _mnsAllowlist _mnsCustomTypes _mnsActions _mnsCronTriggers mempty
@@ -294,8 +295,8 @@ migrations maybeDefaultSourceConfig dryRun maintenanceMode =
               MetadataNoSources mempty mempty mempty mempty mempty emptyCustomTypes mempty mempty
         metadataV2 <- case OMap.toList _metaSources of
           [] -> pure emptyMetadataNoSources
-          [(_, BackendSourceMetadata sm)] ->
-            pure $ case cast sm of
+          [(_, exists)] ->
+            pure $ case AB.unpackAnyBackend exists of
               Nothing -> emptyMetadataNoSources
               Just SourceMetadata{..} ->
                 MetadataNoSources _smTables _smFunctions _metaRemoteSchemas _metaQueryCollections

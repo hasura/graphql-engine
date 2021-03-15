@@ -15,18 +15,16 @@ import qualified Language.GraphQL.Draft.Syntax             as G
 
 import           Control.Monad.Trans.Control               (MonadBaseControl)
 import           Data.Text.Extended
-import           Data.Typeable                             (cast)
 
 import qualified Hasura.Backends.Postgres.SQL.DML          as S
 import qualified Hasura.Backends.Postgres.Translate.Select as DS
 import qualified Hasura.GraphQL.Execute                    as E
-import qualified Hasura.GraphQL.Execute.Backend            as E
 import qualified Hasura.GraphQL.Execute.Inline             as E
 import qualified Hasura.GraphQL.Execute.LiveQuery.Explain  as E
-import qualified Hasura.GraphQL.Execute.LiveQuery.Plan     as EL
 import qualified Hasura.GraphQL.Execute.Query              as E
 import qualified Hasura.GraphQL.Execute.RemoteJoin         as RR
 import qualified Hasura.GraphQL.Transport.HTTP.Protocol    as GH
+import qualified Hasura.SQL.AnyBackend                     as AB
 
 import           Hasura.Backends.Postgres.SQL.Value
 import           Hasura.Backends.Postgres.Translate.Column (toTxtValue)
@@ -94,14 +92,14 @@ explainQueryField userInfo fieldName rootField = do
     RFRemote _ -> throw400 InvalidParams "only hasura queries can be explained"
     RFAction _ -> throw400 InvalidParams "query actions cannot be explained"
     RFRaw _    -> pure $ Just $ FieldPlan fieldName Nothing Nothing
-    RFDB _ config (QDBR qDB) -> runMaybeT $ do
+    RFDB _ exists -> runMaybeT $ do
       -- TEMPORARY!!!
       -- We don't handle non-Postgres backends yet: for now, we filter root fields to only keep those
       -- that are targeting postgres, and we *silently* discard all the others. This is fine for now, as
       -- we haven't integrated any other backend yet, but will need to be fixed as soon as possible for
       -- other backends to work.
-      pgConfig <- hoistMaybe $ cast config
-      pgQDB    <- hoistMaybe $ cast qDB
+      SourceConfigWith pgConfig (QDBR pgQDB) <-
+        hoistMaybe $ AB.unpackAnyBackend exists
       lift $ do
         resolvedQuery <- E.traverseQueryDB (resolveUnpreparedValue userInfo) pgQDB
         let (querySQL, remoteJoins) = case resolvedQuery of
@@ -157,10 +155,12 @@ explainGQLQuery sc (GQLExplain query userVarsRaw maybeIsRelay) = do
       -- (Here the above fragment inlining is actually executed.)
       inlinedSelSet <- E.inlineSelectionSet fragments selSet
       (unpreparedQueries, _) <- E.parseGraphQLQuery graphQLContext varDefs (GH._grVariables query) inlinedSelSet
-      (_, E.LQP (execPlan :: EL.LiveQueryPlan b (E.MultiplexedQuery b))) <- E.createSubscriptionPlan userInfo unpreparedQueries
-      case backendTag @b of
-        PostgresTag -> encJFromJValue <$> E.explainLiveQueryPlan execPlan
-        MSSQLTag    -> pure mempty
+      (_, E.LQP exists) <-
+        E.createSubscriptionPlan userInfo unpreparedQueries
+      case AB.unpackAnyBackend exists of
+        Nothing -> pure mempty
+        Just (E.MultiplexedLiveQueryPlan execPlan) ->
+          encJFromJValue <$> E.explainLiveQueryPlan execPlan
   where
     queryType = bool E.QueryHasura E.QueryRelay $ Just True == maybeIsRelay
     sessionVariables = mkSessionVariablesText $ fromMaybe mempty userVarsRaw

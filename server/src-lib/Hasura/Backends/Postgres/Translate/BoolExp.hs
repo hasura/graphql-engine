@@ -12,6 +12,7 @@ import qualified Data.HashMap.Strict                as M
 import           Data.Monoid
 
 import qualified Hasura.Backends.Postgres.SQL.DML   as S
+import qualified Hasura.SQL.AnyBackend              as AB
 
 import           Hasura.Backends.Postgres.SQL.Types hiding (TableName)
 import           Hasura.RQL.Types
@@ -242,7 +243,11 @@ getColExpDeps source tn = \case
   AVRel relInfo relBoolExp ->
     let rn = riName relInfo
         relTN = riRTable relInfo
-        pd = SchemaDependency (SOSourceObj @b source $ SOITableObj tn (TORel rn)) DROnType
+        pd = SchemaDependency
+               (SOSourceObj source
+                 $ AB.mkAnyBackend
+                 $ SOITableObj tn (TORel rn))
+               DROnType
     in pd : getBoolExpDeps source relTN relBoolExp
 
 getBoolExpDeps
@@ -254,7 +259,11 @@ getBoolExpDeps source tn = \case
   BoolOr exps  -> procExps exps
   BoolNot e    -> getBoolExpDeps source tn e
   BoolExists (GExists refqt whereExp) ->
-    let tableDep = SchemaDependency (SOSourceObj @b source $ SOITable refqt) DRRemoteTable
+    let tableDep = SchemaDependency
+                     (SOSourceObj source
+                       $ AB.mkAnyBackend
+                       $ SOITable refqt)
+                     DRRemoteTable
     in tableDep:getBoolExpDeps source refqt whereExp
   BoolFld fld  -> getColExpDeps source tn fld
   where

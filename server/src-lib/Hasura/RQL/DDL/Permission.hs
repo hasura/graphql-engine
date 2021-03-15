@@ -43,6 +43,8 @@ import           Control.Lens                       ((.~))
 import           Data.Aeson
 import           Data.Text.Extended
 
+import qualified Hasura.SQL.AnyBackend              as AB
+
 import           Hasura.EncJSON
 import           Hasura.RQL.DDL.Permission.Internal
 import           Hasura.RQL.DML.Internal            hiding (askPermInfo)
@@ -130,7 +132,8 @@ class (ToJSON a) => IsPerm b a where
     :: PermDef a -> TableMetadata b -> TableMetadata b
 
 runCreatePerm
-  :: (UserInfoM m, CacheRWM m, IsPerm b a, MonadError QErr m, MetadataM m, BackendMetadata b)
+  :: forall m b a
+   . (UserInfoM m, CacheRWM m, IsPerm b a, MonadError QErr m, MetadataM m, BackendMetadata b)
   => CreatePerm b a -> m EncJSON
 runCreatePerm (WithTable source tn pd) = do
   tableInfo <- askTabInfo source tn
@@ -138,7 +141,10 @@ runCreatePerm (WithTable source tn pd) = do
       pt = permAccToType permAcc
       ptText = permTypeToCode pt
       role = _pdRole pd
-      metadataObject = MOSourceObjId source $ SMOTableObj tn $ MTOPerm role pt
+      metadataObject = MOSourceObjId source
+                         $ AB.mkAnyBackend
+                         $ SMOTableObj tn
+                         $ MTOPerm role pt
   onJust (getPermInfoMaybe role permAcc tableInfo) $ const $ throw400 AlreadyExists $
     ptText <> " permission already defined on table " <> tn <<> " with role " <>> role
   buildSchemaCacheFor metadataObject
@@ -353,7 +359,8 @@ instance (Backend b) => FromJSON (SetPermComment b) where
       <*> o .:? "comment"
 
 runSetPermComment
-  :: (QErrM m, CacheRWM m, MetadataM m, BackendMetadata b)
+  :: forall m b
+   . (QErrM m, CacheRWM m, MetadataM m, BackendMetadata b)
   => SetPermComment b -> m EncJSON
 runSetPermComment (SetPermComment source table roleName permType comment) =  do
   tableInfo <- askTabInfo source table
@@ -373,8 +380,10 @@ runSetPermComment (SetPermComment source table roleName permType comment) =  do
       assertPermDefined roleName PADelete tableInfo
       pure $ tmDeletePermissions.ix roleName.pdComment .~ comment
 
-  let metadataObject = MOSourceObjId source $
-                       SMOTableObj table $ MTOPerm roleName permType
+  let metadataObject = MOSourceObjId source
+                         $ AB.mkAnyBackend
+                         $ SMOTableObj table
+                         $ MTOPerm roleName permType
   buildSchemaCacheFor metadataObject
     $ MetadataModifier
     $ tableMetadataSetter source table %~ permModifier

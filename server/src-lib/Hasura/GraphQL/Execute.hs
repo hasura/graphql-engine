@@ -9,6 +9,7 @@ module Hasura.GraphQL.Execute
   , ExecutionCtx(..)
   , MonadGQLExecutionCheck(..)
   , checkQueryInAllowlist
+  , MultiplexedLiveQueryPlan(..)
   , LiveQueryPlan (..)
   , createSubscriptionPlan
   ) where
@@ -25,7 +26,6 @@ import qualified Network.HTTP.Types                     as HTTP
 import qualified Network.Wai.Extended                   as Wai
 
 import           Data.Text.Extended
-import           Data.Typeable
 
 import qualified Hasura.GraphQL.Context                 as C
 import qualified Hasura.GraphQL.Execute.Backend         as EB
@@ -37,6 +37,7 @@ import qualified Hasura.GraphQL.Execute.Query           as EQ
 import qualified Hasura.GraphQL.Execute.RemoteJoin      as RJ
 import qualified Hasura.GraphQL.Execute.Types           as ET
 import qualified Hasura.Logging                         as L
+import qualified Hasura.SQL.AnyBackend                  as AB
 import qualified Hasura.Server.Telemetry.Counters       as Telem
 import qualified Hasura.Tracing                         as Tracing
 
@@ -163,9 +164,10 @@ data ResolvedExecutionPlan
   | SubscriptionExecutionPlan SourceName LiveQueryPlan
   -- ^ live query execution; remote schemas and introspection not supported
 
--- See Note [Existentially Quantified Types]
-data LiveQueryPlan where
-  LQP :: forall b. EB.BackendExecute b => EL.LiveQueryPlan b (EB.MultiplexedQuery b) -> LiveQueryPlan
+newtype MultiplexedLiveQueryPlan (b :: BackendType) =
+  MultiplexedLiveQueryPlan (EL.LiveQueryPlan b (EB.MultiplexedQuery b))
+
+newtype LiveQueryPlan = LQP (AB.AnyBackend MultiplexedLiveQueryPlan)
 
 
 createSubscriptionPlan
@@ -178,34 +180,36 @@ createSubscriptionPlan
   -> m (SourceName, LiveQueryPlan)
 createSubscriptionPlan userInfo rootFields = do
   subscriptions <- for rootFields \case
-    C.RFDB src e x           -> pure $ C.RFDB src e x
+    C.RFDB src e             -> pure $ C.RFDB src e
     C.RFAction (C.AQAsync _) -> throw400 NotSupported "async action queries are temporarily not supported in subscription"
     C.RFAction (C.AQQuery _) -> throw400 NotSupported "query actions cannot be run as a subscription"
     C.RFRemote _             -> throw400 NotSupported "subscription to remote server is not supported"
     C.RFRaw _                -> throw400 NotSupported "Introspection not supported over subscriptions"
-  for_ subscriptions \(C.RFDB _ _ (C.QDBR qdb)) -> do
-    unless (isNothing $ RJ.getRemoteJoins qdb) $
-      throw400 NotSupported "Remote relationships are not allowed in subscriptions"
+  for_ subscriptions \(C.RFDB _ exists) -> do
+    AB.dispatchAnyBackend @EB.BackendExecute exists \(C.SourceConfigWith _ (C.QDBR qdb)) ->
+      unless (isNothing $ RJ.getRemoteJoins qdb) $
+        throw400 NotSupported "Remote relationships are not allowed in subscriptions"
   case toList subscriptions of
     []      -> throw500 "empty selset for subscription"
     (sub:_) -> buildAction sub subscriptions
   where
-    buildAction (C.RFDB sourceName (sourceConfig :: SourceConfig b) _) allFields = do
-      qdbs <- traverse (checkField @b sourceName) allFields
-      lqp  <- case backendTag @b of
-        PostgresTag -> LQP <$> EB.mkDBSubscriptionPlan userInfo sourceConfig qdbs
-        MSSQLTag    -> LQP <$> EB.mkDBSubscriptionPlan userInfo sourceConfig qdbs
+    buildAction (C.RFDB sourceName exists) allFields = do
+      lqp <- AB.dispatchAnyBackend @EB.BackendExecute exists
+        \(C.SourceConfigWith (sourceConfig :: SourceConfig b) _) -> do
+           qdbs <- traverse (checkField @b sourceName) allFields
+           LQP . AB.mkAnyBackend . MultiplexedLiveQueryPlan
+             <$> EB.mkDBSubscriptionPlan userInfo sourceConfig qdbs
       pure (sourceName, lqp)
     checkField
       :: forall b. Backend b
       => SourceName
       -> C.SubscriptionRootField UnpreparedValue
       -> m (C.QueryDB b (UnpreparedValue b))
-    checkField sourceName (C.RFDB src _ (C.QDBR qdb))
+    checkField sourceName (C.RFDB src exists)
       | sourceName /= src = throw400 NotSupported "all fields of a subscription must be from the same source"
-      | otherwise         = cast qdb `onNothing`
-        throw500 "internal error: two sources share the same name but are tied to different backends"
-
+      | otherwise         = case AB.unpackAnyBackend exists of
+          Nothing -> throw500 "internal error: two sources share the same name but are tied to different backends"
+          Just (C.SourceConfigWith _ (C.QDBR qdb)) -> pure qdb
 
 checkQueryInAllowlist
   :: (MonadError QErr m) => Bool -> UserInfo -> GQLReqParsed -> SchemaCache -> m ()

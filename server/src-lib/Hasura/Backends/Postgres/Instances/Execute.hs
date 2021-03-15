@@ -18,6 +18,7 @@ import qualified Hasura.RQL.IR.Insert                       as IR
 import qualified Hasura.RQL.IR.Returning                    as IR
 import qualified Hasura.RQL.IR.Select                       as IR
 import qualified Hasura.RQL.IR.Update                       as IR
+import qualified Hasura.SQL.AnyBackend                      as AB
 import qualified Hasura.Tracing                             as Tracing
 
 import           Hasura.Backends.Postgres.Connection
@@ -64,7 +65,10 @@ pgDBQueryPlan env manager reqHeaders userInfo _directives sourceConfig qrf = do
   (preparedQuery, PlanningSt _ _ planVals expectedVariables) <- flip runStateT initPlanningSt $ traverseQueryDB prepareWithPlan qrf
   validateSessionVariables expectedVariables $ _uiSession userInfo
   let (action, preparedSQL) = mkCurPlanTx env manager reqHeaders userInfo $ irToRootFieldPlan planVals preparedQuery
-  pure $ ExecStepDB sourceConfig preparedSQL [] action
+  pure
+    $ ExecStepDB []
+    . AB.mkAnyBackend
+    $ DBStepInfo sourceConfig preparedSQL action
 
 
 -- mutation
@@ -164,7 +168,7 @@ pgDBMutationPlan
   -> MutationDB 'Postgres (UnpreparedValue 'Postgres)
   -> m ExecutionStep
 pgDBMutationPlan env manager reqHeaders userInfo stringifyNum sourceConfig mrf =
-  ExecStepDB sourceConfig Nothing [] <$> case mrf of
+    go <$> case mrf of
     MDBInsert s              -> convertInsert env userSession remoteJoinCtx s stringifyNum
     MDBUpdate s              -> convertUpdate env userSession remoteJoinCtx s stringifyNum
     MDBDelete s              -> convertDelete env userSession remoteJoinCtx s stringifyNum
@@ -172,7 +176,7 @@ pgDBMutationPlan env manager reqHeaders userInfo stringifyNum sourceConfig mrf =
   where
     userSession = _uiSession userInfo
     remoteJoinCtx = (manager, reqHeaders, userInfo)
-
+    go = ExecStepDB [] . AB.mkAnyBackend . DBStepInfo sourceConfig Nothing
 
 -- subscription
 

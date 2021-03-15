@@ -20,8 +20,11 @@ import qualified Network.HTTP.Types                         as HTTP
 
 import qualified Hasura.GraphQL.Transport.HTTP.Protocol     as GH
 import qualified Hasura.Logging                             as L
+import qualified Hasura.SQL.AnyBackend                      as AB
 import qualified Hasura.Tracing                             as Tracing
 
+import           Hasura.Backends.MSSQL.Instances.Execute    ()
+import           Hasura.Backends.Postgres.Instances.Execute ()
 import           Hasura.GraphQL.Context
 import           Hasura.GraphQL.Execute.Action
 import           Hasura.GraphQL.Execute.Backend
@@ -32,10 +35,6 @@ import           Hasura.GraphQL.Parser
 import           Hasura.RQL.Types
 import           Hasura.Server.Version                      (HasVersion)
 import           Hasura.Session
-
--- backend instances
-import           Hasura.Backends.MSSQL.Instances.Execute    ()
-import           Hasura.Backends.Postgres.Instances.Execute ()
 
 
 parseGraphQLQuery
@@ -84,9 +83,10 @@ convertQuerySelSet env logger gqlContext userInfo manager reqHeaders directives 
   -- Transform the query plans into an execution plan
   let usrVars = _uiSession userInfo
   executionPlan <- for unpreparedQueries \case
-    RFDB _ (sourceConfig :: SourceConfig b) (QDBR db) -> case backendTag @b of
-      PostgresTag -> mkDBQueryPlan env manager reqHeaders userInfo directives sourceConfig db
-      MSSQLTag    -> mkDBQueryPlan env manager reqHeaders userInfo directives sourceConfig db
+    RFDB _ exists ->
+      AB.dispatchAnyBackend @BackendExecute exists
+        \(SourceConfigWith sourceConfig (QDBR db)) ->
+           mkDBQueryPlan env manager reqHeaders userInfo directives sourceConfig db
     RFRemote rf -> do
       RemoteFieldG remoteSchemaInfo remoteField <- for rf $ resolveRemoteVariable userInfo
       pure $ buildExecStepRemote remoteSchemaInfo G.OperationTypeQuery [G.SelectionField remoteField]

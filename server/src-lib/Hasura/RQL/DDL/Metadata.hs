@@ -27,7 +27,8 @@ import qualified Data.List                          as L
 
 import           Control.Lens                       ((.~), (^?))
 import           Data.Aeson
-import           Data.Typeable                      (cast)
+
+import qualified Hasura.SQL.AnyBackend              as AB
 
 import           Hasura.Backends.Postgres.DDL.Table (delTriggerQ)
 import           Hasura.Metadata.Class
@@ -60,11 +61,14 @@ runClearMetadata _ = do
   let maybeDefaultSourceMetadata = metadata ^? metaSources.ix defaultSource
       emptyMetadata' = case maybeDefaultSourceMetadata of
           Nothing -> emptyMetadata
-          Just (BackendSourceMetadata defaultSourceMetadata) ->
+          Just exists ->
             -- If default postgres source is defined, we need to set metadata
             -- which contains only default source without any tables and functions.
-            let emptyDefaultSource = BackendSourceMetadata $
-                  SourceMetadata defaultSource mempty mempty $ _smConfiguration defaultSourceMetadata
+            let emptyDefaultSource =
+                  AB.dispatchAnyBackend @Backend exists
+                    $ AB.mkAnyBackend
+                    . SourceMetadata defaultSource mempty mempty
+                    . _smConfiguration
             in emptyMetadata
                & metaSources %~ OMap.insert defaultSource emptyDefaultSource
   runReplaceMetadataV1 $ RMWithSources emptyMetadata'
@@ -127,8 +131,8 @@ runReplaceMetadataV2 ReplaceMetadataV2{..} = do
     RMWithoutSources MetadataNoSources{..} -> do
       let maybeDefaultSourceMetadata = oldMetadata ^? metaSources.ix defaultSource.toSourceMetadata
       defaultSourceMetadata <- onNothing maybeDefaultSourceMetadata $
-        throw400 NotSupported $ "cannot import metadata without sources since no default source is defined"
-      let newDefaultSourceMetadata = BackendSourceMetadata defaultSourceMetadata
+        throw400 NotSupported "cannot import metadata without sources since no default source is defined"
+      let newDefaultSourceMetadata = AB.mkAnyBackend defaultSourceMetadata
                                      { _smTables = _mnsTables
                                      , _smFunctions = _mnsFunctions
                                      }
@@ -151,7 +155,7 @@ runReplaceMetadataV2 ReplaceMetadataV2{..} = do
   pure $ encJFromJValue $ formatInconsistentObjs $ scInconsistentObjs sc
   where
     getOnlyPGSources :: Metadata -> InsOrdHashMap SourceName (SourceMetadata 'Postgres)
-    getOnlyPGSources = OMap.mapMaybe (\(BackendSourceMetadata sm) -> cast sm) . _metaSources
+    getOnlyPGSources = OMap.mapMaybe AB.unpackAnyBackend . _metaSources
 
     dropPostgresTriggers
       :: InsOrdHashMap SourceName (SourceMetadata 'Postgres) -- ^ old pg sources
@@ -242,45 +246,36 @@ runDropInconsistentMetadata _ = do
   -- seems to work well enough for now.
   metadataModifier <- execWriterT $ mapM_ (tell . purgeMetadataObj) (reverse inconsSchObjs)
   metadata <- getMetadata
-  putMetadata $ unMetadataModifier metadataModifier $ metadata
+  putMetadata $ unMetadataModifier metadataModifier metadata
   buildSchemaCacheStrict
   return successMsg
 
 purgeMetadataObj :: MetadataObjId -> MetadataModifier
 purgeMetadataObj = \case
-  MOSource source -> MetadataModifier $ metaSources %~ OMap.delete source
-  MOSourceObjId source (sourceObjId :: SourceMetadataObjId b) ->
-    case backendTag @b of
-      PostgresTag -> case sourceObjId of
-        SMOTable qt                                 -> dropTableInMetadata source qt
-        SMOTableObj qt tableObj -> MetadataModifier $
-          tableMetadataSetter source qt %~ case tableObj of
+  MOSource source                       -> MetadataModifier $ metaSources %~ OMap.delete source
+  MOSourceObjId source exists           -> AB.dispatchAnyBackend @BackendMetadata exists $ handleSourceObj source
+  MORemoteSchema rsn                    -> dropRemoteSchemaInMetadata rsn
+  MORemoteSchemaPermissions rsName role -> dropRemoteSchemaPermissionInMetadata rsName role
+  MOCustomTypes                         -> clearCustomTypesInMetadata
+  MOAction action                       -> dropActionInMetadata action -- Nothing
+  MOActionPermission action role        -> dropActionPermissionInMetadata action role
+  MOCronTrigger ctName                  -> dropCronTriggerInMetadata ctName
+  MOEndpoint epName                     -> dropEndpointInMetadata epName
+  MOInheritedRole role                  -> dropInheritedRoleInMetadata role
+  where
+    handleSourceObj :: BackendMetadata b => SourceName -> SourceMetadataObjId b -> MetadataModifier
+    handleSourceObj source = \case
+      SMOTable qt                 -> dropTableInMetadata source qt
+      SMOFunction qf              -> dropFunctionInMetadata source qf
+      SMOFunctionPermission qf rn -> dropFunctionPermissionInMetadata source qf rn
+      SMOTableObj qt tableObj     ->
+        MetadataModifier
+          $ tableMetadataSetter source qt %~ case tableObj of
             MTORel rn _              -> dropRelationshipInMetadata rn
             MTOPerm rn pt            -> dropPermissionInMetadata rn pt
             MTOTrigger trn           -> dropEventTriggerInMetadata trn
             MTOComputedField ccn     -> dropComputedFieldInMetadata ccn
             MTORemoteRelationship rn -> dropRemoteRelationshipInMetadata rn
-        SMOFunction qf                           -> dropFunctionInMetadata source qf
-        SMOFunctionPermission qf rn              -> dropFunctionPermissionInMetadata source qf rn
-      MSSQLTag -> case sourceObjId of
-        SMOTable qt                                 -> dropTableInMetadata source qt
-        SMOTableObj qt tableObj -> MetadataModifier $
-          tableMetadataSetter source qt %~ case tableObj of
-            MTORel rn _              -> dropRelationshipInMetadata rn
-            MTOPerm rn pt            -> dropPermissionInMetadata rn pt
-            MTOTrigger trn           -> dropEventTriggerInMetadata trn
-            MTOComputedField ccn     -> dropComputedFieldInMetadata ccn
-            MTORemoteRelationship rn -> dropRemoteRelationshipInMetadata rn
-        SMOFunction qf                           -> dropFunctionInMetadata source qf
-        SMOFunctionPermission qf rn              -> dropFunctionPermissionInMetadata source qf rn
-  MORemoteSchema rsn                         -> dropRemoteSchemaInMetadata rsn
-  MORemoteSchemaPermissions rsName role      -> dropRemoteSchemaPermissionInMetadata rsName role
-  MOCustomTypes                              -> clearCustomTypesInMetadata
-  MOAction action                            -> dropActionInMetadata action -- Nothing
-  MOActionPermission action role             -> dropActionPermissionInMetadata action role
-  MOCronTrigger ctName                       -> dropCronTriggerInMetadata ctName
-  MOInheritedRole role                       -> dropInheritedRoleInMetadata role
-  MOEndpoint epName                          -> dropEndpointInMetadata epName
 
 runGetCatalogState
   :: (MonadMetadataStorageQueryAPI m) => GetCatalogState -> m EncJSON

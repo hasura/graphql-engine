@@ -23,6 +23,7 @@ import           Control.Lens                           ((.~))
 import           Data.Aeson
 import           Data.Text.Extended
 
+import qualified Hasura.SQL.AnyBackend                  as AB
 
 import           Hasura.Backends.Postgres.DDL.Table
 import           Hasura.Backends.Postgres.Execute.Types
@@ -94,7 +95,11 @@ createEventTriggerQueryMetadata q = do
   let table = cetqTable q
       source = cetqSource q
       triggerName = etcName triggerConf
-      metadataObj = MOSourceObjId source $ SMOTableObj table $ MTOTrigger triggerName
+      metadataObj =
+        MOSourceObjId source
+          $ AB.mkAnyBackend
+          $ SMOTableObj table
+          $ MTOTrigger triggerName
   buildSchemaCacheFor metadataObj
     $ MetadataModifier
     $ tableMetadataSetter source table.tmEventTriggers %~

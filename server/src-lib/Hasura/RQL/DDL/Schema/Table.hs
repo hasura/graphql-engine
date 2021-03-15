@@ -39,9 +39,9 @@ import           Control.Monad.Trans.Control        (MonadBaseControl)
 import           Data.Aeson
 import           Data.Aeson.TH
 import           Data.Text.Extended
-import           Data.Typeable                      (cast)
 
 import qualified Hasura.Incremental                 as Inc
+import qualified Hasura.SQL.AnyBackend              as AB
 
 import           Hasura.Backends.Postgres.SQL.Types (QualifiedTable)
 import           Hasura.EncJSON
@@ -178,7 +178,8 @@ checkConflictingNode sc tnGQL = do
         _ -> pure ()
 
 trackExistingTableOrViewP2
-  :: (MonadError QErr m, CacheRWM m, MetadataM m, BackendMetadata b)
+  :: forall m b
+   . (MonadError QErr m, CacheRWM m, MetadataM m, BackendMetadata b)
   => SourceName -> TableName b -> Bool -> TableConfig b -> m EncJSON
 trackExistingTableOrViewP2 source tableName isEnum config = do
   sc <- askSchemaCache
@@ -192,7 +193,10 @@ trackExistingTableOrViewP2 source tableName isEnum config = do
   -}
   checkConflictingNode sc $ snakeCaseTableName tableName
   let metadata = mkTableMeta tableName isEnum config
-  buildSchemaCacheFor (MOSourceObjId source $ SMOTable tableName)
+  buildSchemaCacheFor
+    (MOSourceObjId source
+         $ AB.mkAnyBackend
+         $ SMOTable tableName)
     $ MetadataModifier
     $ metaSources.ix source.toSourceMetadata.smTables %~ OMap.insert tableName metadata
   pure successMsg
@@ -226,7 +230,8 @@ runTrackTableV2Q (TrackTableV2 (TrackTable source qt isEnum) config) = do
 runSetExistingTableIsEnumQ :: (MonadError QErr m, CacheRWM m, MetadataM m) => SetTableIsEnum -> m EncJSON
 runSetExistingTableIsEnumQ (SetTableIsEnum source tableName isEnum) = do
   void $ askTabInfo source tableName -- assert that table is tracked
-  buildSchemaCacheFor (MOSourceObjId source $ SMOTable tableName)
+  buildSchemaCacheFor
+    (MOSourceObjId source $ AB.mkAnyBackend $ SMOTable tableName)
     $ MetadataModifier
     $ tableMetadataSetter source tableName.tmIsEnum .~ isEnum
   return successMsg
@@ -268,7 +273,8 @@ runSetTableCustomFieldsQV2
 runSetTableCustomFieldsQV2 (SetTableCustomFields source tableName rootFields columnNames) = do
   void $ askTabInfo source tableName -- assert that table is tracked
   let tableConfig = TableConfig rootFields columnNames Nothing
-  buildSchemaCacheFor (MOSourceObjId source $ SMOTable tableName)
+  buildSchemaCacheFor
+    (MOSourceObjId source $ AB.mkAnyBackend $ SMOTable tableName)
     $ MetadataModifier
     $ tableMetadataSetter source tableName.tmConfiguration .~ tableConfig
   return successMsg
@@ -277,7 +283,8 @@ runSetTableCustomization
   :: (QErrM m, CacheRWM m, MetadataM m) => SetTableCustomization -> m EncJSON
 runSetTableCustomization (SetTableCustomization source table config) = do
   void $ askTabInfo source table
-  buildSchemaCacheFor (MOSourceObjId source $ SMOTable table)
+  buildSchemaCacheFor
+    (MOSourceObjId source $ AB.mkAnyBackend $ SMOTable table)
     $ MetadataModifier
     $ tableMetadataSetter source table.tmConfiguration .~ config
   return successMsg
@@ -299,10 +306,16 @@ unTrackExistingTableOrViewP2 (UntrackTable source qtn cascade) = withNewInconsis
   sc <- askSchemaCache
 
   -- Get relational, query template and function dependants
-  let allDeps = getDependentObjs sc (SOSourceObj source $ SOITable qtn)
+  let allDeps =
+        getDependentObjs
+          sc
+          (SOSourceObj source $ AB.mkAnyBackend $ SOITable qtn)
       indirectDeps = mapMaybe getIndirectDep allDeps
   -- Report bach with an error if cascade is not set
-  when (indirectDeps /= [] && not cascade) $ reportDepsExt (map (SOSourceObj source) indirectDeps) []
+  when (indirectDeps /= [] && not cascade)
+    $ reportDepsExt
+        (map (SOSourceObj source . AB.mkAnyBackend) indirectDeps)
+        []
   -- Purge all the dependents from state
   metadataModifier <- execWriterT do
     mapM_ (purgeDependentObject source >=> tell) indirectDeps
@@ -313,11 +326,11 @@ unTrackExistingTableOrViewP2 (UntrackTable source qtn cascade) = withNewInconsis
   where
     getIndirectDep :: SchemaObjId -> Maybe (SourceObjId b)
     getIndirectDep = \case
-      SOSourceObj s srcObjId ->
+      SOSourceObj s exists ->
         -- If the dependency is to any other source, it automatically is an
         -- indirect dependency, hence the cast is safe here. However, we don't
         -- have these cross source dependencies yet
-        cast srcObjId >>= \case
+        AB.unpackAnyBackend exists >>= \case
           v@(SOITableObj dtn _) ->
             if not (s == source && qtn == dtn) then Just v else Nothing
           v                 -> Just v
@@ -373,7 +386,12 @@ buildTableCache = Inc.cache proc (source, sourceConfig, dbTablesMeta, tableBuild
 
     withTable :: ErrorA QErr arr (e, s) a -> arr (e, ((SourceName, TableName b), s)) (Maybe a)
     withTable f = withRecordInconsistency f <<<
-      second (first $ arr \(source, name) -> MetadataObject (MOSourceObjId source $ SMOTable name) (toJSON name))
+      second (first $ arr \(source, name) ->
+        MetadataObject
+          (MOSourceObjId source
+            $ AB.mkAnyBackend
+            $ SMOTable name)
+          (toJSON name))
 
     noDuplicateTables = proc tables -> case tables of
       table :| [] -> returnA -< table

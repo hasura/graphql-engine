@@ -2,14 +2,17 @@ module Hasura.RQL.Types.Metadata.Object where
 
 import           Hasura.Prelude
 
-import qualified Data.HashMap.Strict.Extended        as M
+import qualified Data.HashMap.Strict.Extended             as M
 
-import           Control.Lens                        hiding (set, (.=))
+import           Control.Lens                             hiding (set, (.=))
 import           Data.Aeson.Types
 import           Data.Hashable
 import           Data.Text.Extended
-import           Data.Typeable                       (cast)
 
+import qualified Hasura.SQL.AnyBackend                    as AB
+
+import           Hasura.Backends.MSSQL.Instances.Types    ()
+import           Hasura.Backends.Postgres.Instances.Types ()
 import           Hasura.RQL.Types.Action
 import           Hasura.RQL.Types.Backend
 import           Hasura.RQL.Types.Common
@@ -44,7 +47,7 @@ instance (Backend b) => Hashable (SourceMetadataObjId b)
 -- See Note [Existentially Quantified Types]
 data MetadataObjId
   = MOSource !SourceName
-  | forall b. (Backend b) => MOSourceObjId !SourceName !(SourceMetadataObjId b)
+  | MOSourceObjId !SourceName !(AB.AnyBackend SourceMetadataObjId)
   | MORemoteSchema !RemoteSchemaName
   -- ^ Originates from user-defined '_arsqName'
   | MORemoteSchemaPermissions !RemoteSchemaName !RoleName
@@ -70,55 +73,45 @@ instance Hashable MetadataObjId where
     MOEndpoint endpoint                    -> hashWithSalt salt endpoint
 
 instance Eq MetadataObjId where
-  (MOSource s1) == (MOSource s2)                             = s1 == s2
-  (MOSourceObjId s1 id1) == (MOSourceObjId s2 id2)           = s1 == s2 && Just id1 == cast id2
-  (MORemoteSchema n1) == (MORemoteSchema n2)                 = n1 == n2
+  (MOSource s1) == (MOSource s2)                                         = s1 == s2
+  (MOSourceObjId s1 id1) == (MOSourceObjId s2 id2)                       = s1 == s2 && id1 == id2
+  (MORemoteSchema n1) == (MORemoteSchema n2)                             = n1 == n2
   (MORemoteSchemaPermissions n1 r1) == (MORemoteSchemaPermissions n2 r2) = n1 == n2 && r1 == r2
-  MOCustomTypes == MOCustomTypes                             = True
-  (MOActionPermission an1 r1) == (MOActionPermission an2 r2) = an1 == an2 && r1 == r2
-  (MOCronTrigger trn1) == (MOCronTrigger trn2)               = trn1 == trn2
-  (MOInheritedRole rn1) == (MOInheritedRole rn2)             = rn1 == rn2
-  _ == _                                                     = False
+  MOCustomTypes == MOCustomTypes                                         = True
+  (MOActionPermission an1 r1) == (MOActionPermission an2 r2)             = an1 == an2 && r1 == r2
+  (MOCronTrigger trn1) == (MOCronTrigger trn2)                           = trn1 == trn2
+  (MOInheritedRole rn1) == (MOInheritedRole rn2)                         = rn1 == rn2
+  _ == _                                                                 = False
 
 moiTypeName :: MetadataObjId -> Text
 moiTypeName = \case
-  MOSource _ -> "source"
-  MOSourceObjId _ sourceObjId -> case sourceObjId of
-    SMOTable _  -> "table"
-    SMOFunction _ -> "function"
-    SMOFunctionPermission _ _ -> "function_permission"
-    SMOTableObj _ tableObjectId -> case tableObjectId of
-      MTORel _ relType        -> relTypeToTxt relType <> "_relation"
-      MTOPerm _ permType      -> permTypeToCode permType <> "_permission"
-      MTOTrigger _            -> "event_trigger"
-      MTOComputedField _      -> "computed_field"
-      MTORemoteRelationship _ -> "remote_relationship"
-  MORemoteSchema _ -> "remote_schema"
+  MOSource _                    -> "source"
+  MOSourceObjId _ exists        -> AB.dispatchAnyBackend @Backend exists handleSourceObj
+  MORemoteSchema _              -> "remote_schema"
   MORemoteSchemaPermissions _ _ -> "remote_schema_permission"
-  MOCronTrigger _ -> "cron_trigger"
-  MOCustomTypes -> "custom_types"
-  MOAction _ -> "action"
-  MOActionPermission _ _ -> "action_permission"
-  MOInheritedRole _      -> "inherited_role"
-  MOEndpoint _ -> "endpoint"
+  MOCronTrigger _               -> "cron_trigger"
+  MOCustomTypes                 -> "custom_types"
+  MOAction _                    -> "action"
+  MOActionPermission _ _        -> "action_permission"
+  MOInheritedRole _             -> "inherited_role"
+  MOEndpoint _                  -> "endpoint"
+ where
+    handleSourceObj :: forall b. SourceMetadataObjId b -> Text
+    handleSourceObj = \case
+      SMOTable _  -> "table"
+      SMOFunction _ -> "function"
+      SMOFunctionPermission _ _ -> "function_permission"
+      SMOTableObj _ tableObjectId -> case tableObjectId of
+        MTORel _ relType        -> relTypeToTxt relType <> "_relation"
+        MTOPerm _ permType      -> permTypeToCode permType <> "_permission"
+        MTOTrigger _            -> "event_trigger"
+        MTOComputedField _      -> "computed_field"
+        MTORemoteRelationship _ -> "remote_relationship"
 
 moiName :: MetadataObjId -> Text
 moiName objectId = moiTypeName objectId <> " " <> case objectId of
   MOSource name -> toTxt name
-  MOSourceObjId source sourceObjId -> case sourceObjId of
-    SMOTable name -> toTxt name <> " in source " <> toTxt source
-    SMOFunction name -> toTxt name <> " in source " <> toTxt source
-    SMOFunctionPermission functionName roleName ->
-      toTxt roleName <> " permission for function "
-      <> toTxt functionName <> " in source " <> toTxt source
-    SMOTableObj tableName tableObjectId ->
-      let tableObjectName = case tableObjectId of
-            MTORel name _              -> toTxt name
-            MTOComputedField name      -> toTxt name
-            MTORemoteRelationship name -> toTxt name
-            MTOPerm name _             -> toTxt name
-            MTOTrigger name            -> toTxt name
-      in tableObjectName <> " in " <> moiName (MOSourceObjId source $ SMOTable tableName)
+  MOSourceObjId source exists -> AB.dispatchAnyBackend @Backend exists (handleSourceObj source)
   MORemoteSchema name -> toTxt name
   MORemoteSchemaPermissions name roleName ->
     toTxt roleName <> " permission in remote schema " <> toTxt name
@@ -128,6 +121,31 @@ moiName objectId = moiTypeName objectId <> " " <> case objectId of
   MOActionPermission name roleName -> toTxt roleName <> " permission in " <> toTxt name
   MOInheritedRole inheritedRoleName -> "inherited role " <> toTxt inheritedRoleName
   MOEndpoint name -> toTxt name
+  where
+    handleSourceObj
+      :: forall b
+       . Backend b
+      => SourceName
+      -> SourceMetadataObjId b
+      -> Text
+    handleSourceObj source = \case
+      SMOTable name -> toTxt name <> " in source " <> toTxt source
+      SMOFunction name -> toTxt name <> " in source " <> toTxt source
+      SMOFunctionPermission functionName roleName ->
+        toTxt roleName <> " permission for function "
+        <> toTxt functionName <> " in source " <> toTxt source
+      SMOTableObj tableName tableObjectId ->
+        let tableObjectName = case tableObjectId of
+              MTORel name _              -> toTxt name
+              MTOComputedField name      -> toTxt name
+              MTORemoteRelationship name -> toTxt name
+              MTOPerm name _             -> toTxt name
+              MTOTrigger name            -> toTxt name
+        in tableObjectName
+            <> " in "
+            <> moiName (MOSourceObjId source
+                         $ AB.mkAnyBackend
+                         $ SMOTable tableName)
 
 data MetadataObject
   = MetadataObject

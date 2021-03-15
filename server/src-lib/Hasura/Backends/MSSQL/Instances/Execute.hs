@@ -13,6 +13,8 @@ import qualified Network.HTTP.Types                    as HTTP
 
 import           Data.Text.Extended
 
+import qualified Hasura.SQL.AnyBackend                 as AB
+
 import           Hasura.Backends.MSSQL.Connection
 import           Hasura.Backends.MSSQL.Plan
 import           Hasura.Backends.MSSQL.ToQuery
@@ -63,7 +65,10 @@ msDBQueryPlan _env _manager _reqHeaders userInfo _directives sourceConfig qrf = 
   let queryString = ODBC.renderQuery $ toQueryPretty select
       pool  = _mscConnectionPool sourceConfig
       odbcQuery = encJFromText <$> runJSONPathQuery pool (toQueryFlat select)
-  pure $ ExecStepDB sourceConfig (Just queryString) [] odbcQuery
+  pure
+    $ ExecStepDB []
+    . AB.mkAnyBackend
+    $ DBStepInfo sourceConfig (Just queryString) odbcQuery
 
 -- mutation
 

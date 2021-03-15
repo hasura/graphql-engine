@@ -120,24 +120,26 @@ module Hasura.RQL.Types.SchemaCache
 
 import           Hasura.Prelude
 
-import qualified Data.ByteString.Lazy                as BL
-import qualified Data.HashMap.Strict                 as M
-import qualified Data.HashSet                        as HS
-import qualified Language.GraphQL.Draft.Syntax       as G
+import qualified Data.ByteString.Lazy                     as BL
+import qualified Data.HashMap.Strict                      as M
+import qualified Data.HashSet                             as HS
+import qualified Language.GraphQL.Draft.Syntax            as G
 
-import           Control.Lens                        (makeLenses)
+import           Control.Lens                             (makeLenses)
 import           Data.Aeson
 import           Data.Aeson.TH
 import           Data.Text.Extended
-import           Data.Typeable                       (cast)
 import           System.Cron.Types
 
-import qualified Hasura.Backends.Postgres.Connection as PG
-import qualified Hasura.GraphQL.Parser               as P
+import qualified Hasura.Backends.Postgres.Connection      as PG
+import qualified Hasura.GraphQL.Parser                    as P
+import qualified Hasura.SQL.AnyBackend                    as AB
 
-import           Hasura.GraphQL.Context              (GQLContext, RemoteField, RoleContext)
-import           Hasura.Incremental                  (Cacheable, Dependency, MonadDepend (..),
-                                                      selectKeyD)
+import           Hasura.Backends.MSSQL.Instances.Types    ()
+import           Hasura.Backends.Postgres.Instances.Types ()
+import           Hasura.GraphQL.Context                   (GQLContext, RemoteField, RoleContext)
+import           Hasura.Incremental                       (Cacheable, Dependency, MonadDepend (..),
+                                                           selectKeyD)
 import           Hasura.RQL.IR.BoolExp
 import           Hasura.RQL.Types.Action
 import           Hasura.RQL.Types.ApiLimit
@@ -158,27 +160,49 @@ import           Hasura.RQL.Types.SchemaCacheTypes
 import           Hasura.RQL.Types.Source
 import           Hasura.RQL.Types.Table
 import           Hasura.Session
-import           Hasura.Tracing                      (TraceT)
+import           Hasura.Tracing                           (TraceT)
 
 
 reportSchemaObjs :: [SchemaObjId] -> Text
 reportSchemaObjs = commaSeparated . sort . map reportSchemaObj
 
-mkParentDep :: forall b. (Backend b) => SourceName -> TableName b -> SchemaDependency
-mkParentDep s tn = SchemaDependency (SOSourceObj @b s $ SOITable tn) DRTable
+mkParentDep
+  :: forall b
+   . Backend b
+  => SourceName
+  -> TableName b
+  -> SchemaDependency
+mkParentDep s tn =
+  SchemaDependency (SOSourceObj s $ AB.mkAnyBackend (SOITable tn)) DRTable
 
 mkColDep
   :: forall b
   . (Backend b)
-  => DependencyReason -> SourceName -> TableName b -> Column b -> SchemaDependency
+  => DependencyReason
+  -> SourceName
+  -> TableName b
+  -> Column b
+  -> SchemaDependency
 mkColDep reason source tn col =
-  flip SchemaDependency reason . SOSourceObj @b source . SOITableObj tn $ TOCol col
+  flip SchemaDependency reason
+    . SOSourceObj source
+    . AB.mkAnyBackend
+    . SOITableObj tn
+    $ TOCol col
 
 mkComputedFieldDep
   :: forall b. (Backend b)
-  => DependencyReason -> SourceName -> TableName b -> ComputedFieldName -> SchemaDependency
+  => DependencyReason
+  -> SourceName
+  -> TableName b
+  -> ComputedFieldName
+  -> SchemaDependency
 mkComputedFieldDep reason s tn computedField =
-  flip SchemaDependency reason . SOSourceObj @b s . SOITableObj tn $ TOComputedField computedField
+  flip SchemaDependency reason
+    . SOSourceObj s
+    . AB.mkAnyBackend
+    . SOITableObj tn
+    $ TOComputedField computedField
 
 type WithDeps a = (a, [SchemaDependency])
 
@@ -404,15 +428,17 @@ getDependentObjs = getDependentObjsWith (const True)
 getDependentObjsWith
   :: (DependencyReason -> Bool) -> SchemaCache -> SchemaObjId -> [SchemaObjId]
 getDependentObjsWith f sc objId =
-  -- [ sdObjId sd | sd <- filter (f . sdReason) allDeps]
   map fst $ filter (isDependency . snd) $ M.toList $ scDepMap sc
   where
     isDependency deps = not $ HS.null $ flip HS.filter deps $
       \(SchemaDependency depId reason) -> objId `induces` depId && f reason
     -- induces a b : is b dependent on a
-    induces (SOSource s1)                   (SOSource s2)                        = s1 == s2
-    induces (SOSource s1)                   (SOSourceObj s2 _)                   = s1 == s2
-    induces (SOSourceObj s1 (SOITable tn1)) (SOSourceObj s2 (SOITable tn2))      = s1 == s2 && Just tn1 == (cast tn2)
-    induces (SOSourceObj s1 (SOITable tn1)) (SOSourceObj s2 (SOITableObj tn2 _)) = s1 == s2 && Just tn1 == (cast tn2)
-    induces objId1 objId2                                                        = objId1 == objId2
-    -- allDeps = toList $ fromMaybe HS.empty $ M.lookup objId $ scDepMap sc
+    induces (SOSource s1) (SOSource s2)                   = s1 == s2
+    induces (SOSource s1) (SOSourceObj s2 _)              = s1 == s2
+    induces o1@(SOSourceObj s1 e1) o2@(SOSourceObj s2 e2) =
+        s1 == s2 && fromMaybe (o1 == o2) (AB.composeAnyBackend @Backend go e1 e2 Nothing)
+    induces o1 o2                                         = o1 == o2
+
+    go (SOITable tn1) (SOITable tn2)      = Just $ tn1 == tn2
+    go (SOITable tn1) (SOITableObj tn2 _) = Just $ tn1 == tn2
+    go _              _                   = Nothing

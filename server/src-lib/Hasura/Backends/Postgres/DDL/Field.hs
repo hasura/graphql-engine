@@ -4,6 +4,8 @@ module Hasura.Backends.Postgres.DDL.Field
   )
 where
 
+import           Hasura.Prelude
+
 import qualified Control.Monad.Validate                     as MV
 import qualified Data.HashMap.Strict                        as Map
 import qualified Data.HashSet                               as S
@@ -12,9 +14,10 @@ import qualified Language.GraphQL.Draft.Syntax              as G
 
 import           Data.Text.Extended
 
+import qualified Hasura.SQL.AnyBackend                      as AB
+
 import           Hasura.Backends.Postgres.DDL.Function
 import           Hasura.Backends.Postgres.SQL.Types
-import           Hasura.Prelude
 import           Hasura.RQL.DDL.RemoteRelationship.Validate
 import           Hasura.RQL.Types.Column
 import           Hasura.RQL.Types.ComputedField
@@ -222,10 +225,19 @@ buildRemoteFieldInfo remoteRelationship
   let table = rtrTable remoteRelationship
       source = rtrSource remoteRelationship
       schemaDependencies =
-        let tableDep = SchemaDependency (SOSourceObj source $ SOITable table) DRTable
+        let tableDep = SchemaDependency
+                         (SOSourceObj source
+                            $ AB.mkAnyBackend
+                            $ SOITable table)
+                         DRTable
             columnsDep =
               map
-                (flip SchemaDependency DRRemoteRelationship . SOSourceObj source . SOITableObj table . TOCol . pgiColumn)
+                (flip SchemaDependency DRRemoteRelationship
+                   . SOSourceObj source
+                   . AB.mkAnyBackend
+                   . SOITableObj table
+                   . TOCol
+                   . pgiColumn)
                 $ S.toList $ _rfiHasuraFields remoteField
             remoteSchemaDep =
               SchemaDependency (SORemoteSchema remoteSchemaName) DRRemoteSchema

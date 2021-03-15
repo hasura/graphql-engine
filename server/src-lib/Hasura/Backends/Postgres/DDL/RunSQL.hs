@@ -14,7 +14,8 @@ import           Control.Monad.Trans.Control        (MonadBaseControl)
 import           Data.Aeson.TH
 import           Data.List.Extended                 (duplicates)
 import           Data.Text.Extended
-import           Data.Typeable                      (cast)
+
+import qualified Hasura.SQL.AnyBackend              as AB
 
 import           Hasura.Backends.Postgres.DDL.Table
 import           Hasura.Backends.Postgres.SQL.Types hiding (TableName)
@@ -169,16 +170,28 @@ getTableChangeDeps source tn tableDiff = do
   sc <- askSchemaCache
   -- for all the dropped columns
   droppedColDeps <- fmap concat $ forM droppedCols $ \droppedCol -> do
-    let objId = SOSourceObj source $ SOITableObj tn $ TOCol droppedCol
+    let objId = SOSourceObj source
+                  $ AB.mkAnyBackend
+                  $ SOITableObj tn
+                  $ TOCol droppedCol
     return $ getDependentObjs sc objId
   -- for all dropped constraints
   droppedConsDeps <- fmap concat $ forM droppedFKeyConstraints $ \droppedCons -> do
-    let objId = SOSourceObj source $ SOITableObj tn $ TOForeignKey droppedCons
+    let objId = SOSourceObj source
+                  $ AB.mkAnyBackend
+                  $ SOITableObj tn
+                  $ TOForeignKey droppedCons
     return $ getDependentObjs sc objId
   return $ droppedConsDeps <> droppedColDeps <> droppedComputedFieldDeps
   where
     TableDiff _ droppedCols _ _ droppedFKeyConstraints computedFieldDiff _ _ = tableDiff
-    droppedComputedFieldDeps = map (SOSourceObj source . SOITableObj tn . TOComputedField) $ _cfdDropped computedFieldDiff
+    droppedComputedFieldDeps =
+      map
+        (SOSourceObj source
+          . AB.mkAnyBackend
+          . SOITableObj tn
+          . TOComputedField)
+        $ _cfdDropped computedFieldDiff
 
 data SchemaDiff (b :: BackendType)
   = SchemaDiff
@@ -201,7 +214,10 @@ getSchemaChangeDeps
 getSchemaChangeDeps source schemaDiff = do
   -- Get schema cache
   sc <- askSchemaCache
-  let tableIds = map (SOSourceObj source . SOITable) droppedTables
+  let tableIds =
+        map
+          (SOSourceObj source . AB.mkAnyBackend . SOITable)
+          droppedTables
   -- Get the dependent of the dropped tables
   let tableDropDeps = concatMap (getDependentObjs sc) tableIds
   tableModDeps <- concat <$> traverse (uncurry (getTableChangeDeps source)) alteredTables
@@ -211,15 +227,16 @@ getSchemaChangeDeps source schemaDiff = do
   where
     SchemaDiff droppedTables alteredTables = schemaDiff
 
-    getIndirectDep (SOSourceObj s srcObjId') =
-      cast srcObjId' >>= \srcObjId -> case srcObjId of
-        SOITableObj tn _ ->
+    getIndirectDep :: SchemaObjId -> Maybe (SourceObjId 'Postgres)
+    getIndirectDep (SOSourceObj s exists) =
+      AB.unpackAnyBackend exists >>= \case
+        srcObjId@(SOITableObj tn _) ->
           -- Indirect dependancy shouldn't be of same source and not among dropped tables
-          if not (s == source && tn `HS.member` HS.fromList droppedTables) then
-            Just srcObjId
-          else Nothing
-        _                                -> Just srcObjId
-    getIndirectDep _                         = Nothing
+          if not (s == source && tn `HS.member` HS.fromList droppedTables)
+            then Just srcObjId
+            else Nothing
+        srcObjId -> Just srcObjId
+    getIndirectDep _ = Nothing
 
 data FunctionDiff
   = FunctionDiff
@@ -282,7 +299,10 @@ withMetadataCheck source cascade txAccess action = do
 
       indirectSourceDeps <- getSchemaChangeDeps source schemaDiff
 
-      let indirectDeps = map (SOSourceObj source) indirectSourceDeps
+      let indirectDeps =
+            map
+              (SOSourceObj source . AB.mkAnyBackend)
+              indirectSourceDeps
       -- Report back with an error if cascade is not set
       when (indirectDeps /= [] && not cascade) $ reportDepsExt indirectDeps []
 
@@ -381,7 +401,7 @@ processTableChanges source ti tableDiff = do
           modifiedCustomColumnNames = foldl' (flip M.delete) customColumnNames droppedCols
       when (modifiedCustomColumnNames /= customColumnNames) $
         tell $ MetadataModifier $
-          tableMetadataSetter source tn.tmConfiguration .~ (TableConfig customFields modifiedCustomColumnNames customName)
+          tableMetadataSetter source tn.tmConfiguration .~ TableConfig customFields modifiedCustomColumnNames customName
 
     procAlteredCols sc tn = for_ alteredCols $
       \( RawColumnInfo oldName _ oldType _ _
@@ -390,7 +410,11 @@ processTableChanges source ti tableDiff = do
              renameColumnInMetadata oldName newName source tn (_tciFieldInfoMap ti)
 
            | oldType /= newType -> do
-              let colId = SOSourceObj source $ SOITableObj tn $ TOCol oldName
+              let colId =
+                    SOSourceObj source
+                      $ AB.mkAnyBackend
+                      $ SOITableObj tn
+                      $ TOCol oldName
                   typeDepObjs = getDependentObjsWith (== DROnType) sc colId
 
               unless (null typeDepObjs) $ throw400 DependencyError $

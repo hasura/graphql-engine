@@ -21,6 +21,7 @@ import qualified Hasura.GraphQL.Schema.Backend         as BS
 import qualified Hasura.GraphQL.Schema.Build           as GSB
 import qualified Hasura.RQL.IR.Select                  as IR
 import qualified Hasura.RQL.IR.Update                  as IR
+import qualified Hasura.SQL.AnyBackend                 as AB
 
 import           Hasura.Backends.Postgres.SQL.DML      as PG hiding (CountType)
 import           Hasura.Backends.Postgres.SQL.Types    as PG hiding (FunctionName, TableName)
@@ -85,7 +86,10 @@ buildTableRelayQueryFields
   -> m (Maybe (FieldParser n (QueryRootField UnpreparedValue)))
 buildTableRelayQueryFields sourceName sourceInfo tableName tableInfo gqlName pkeyColumns selPerms = do
   let
-    mkRF = RFDB sourceName sourceInfo . QDBR
+    mkRF = RFDB sourceName
+             . AB.mkAnyBackend
+             . SourceConfigWith sourceInfo
+             . QDBR
     fieldName = gqlName <> $$(G.litName "_connection")
     fieldDesc = Just $ G.Description $ "fetch data from the table: " <>> tableName
   optionalFieldParser (mkRF . QDBConnection) $ selectTableConnection tableName fieldName fieldDesc pkeyColumns selPerms
@@ -103,7 +107,10 @@ buildFunctionRelayQueryFields
 buildFunctionRelayQueryFields sourceName sourceInfo functionName functionInfo tableName pkeyColumns selPerms = do
   funcName <- functionGraphQLName @'Postgres functionName `onLeft` throwError
   let
-    mkRF = RFDB sourceName sourceInfo . QDBR
+    mkRF = RFDB sourceName
+             . AB.mkAnyBackend
+             . SourceConfigWith sourceInfo
+             . QDBR
     fieldName = funcName <> $$(G.litName "_connection")
     fieldDesc = Just $ G.Description $ "execute function " <> functionName <<> " which returns " <>> tableName
   optionalFieldParser (mkRF . QDBConnection) $ selectFunctionConnection functionInfo fieldName fieldDesc pkeyColumns selPerms

@@ -41,10 +41,12 @@ import qualified Hasura.GraphQL.Execute                       as E
 import qualified Hasura.GraphQL.Execute.Action                as EA
 import qualified Hasura.GraphQL.Execute.Backend               as EB
 import qualified Hasura.Logging                               as L
-import qualified Hasura.RQL.IR.RemoteJoin                     as IR
+import qualified Hasura.SQL.AnyBackend                        as AB
 import qualified Hasura.Server.Telemetry.Counters             as Telem
 import qualified Hasura.Tracing                               as Tracing
 
+import           Hasura.Backends.MSSQL.Instances.Transport    ()
+import           Hasura.Backends.Postgres.Instances.Transport ()
 import           Hasura.EncJSON
 import           Hasura.GraphQL.Context
 import           Hasura.GraphQL.Logging                       (MonadQueryLog)
@@ -59,10 +61,6 @@ import           Hasura.Server.Types                          (RequestId)
 import           Hasura.Server.Version                        (HasVersion)
 import           Hasura.Session
 import           Hasura.Tracing                               (MonadTrace, TraceT, trace)
-
--- backend instances
-import           Hasura.Backends.MSSQL.Instances.Transport    ()
-import           Hasura.Backends.Postgres.Instances.Transport ()
 
 
 data QueryCacheKey = QueryCacheKey
@@ -159,8 +157,10 @@ filterVariablesFromQuery query = fold $ rootToSessVarPreds =<< query
   where
     rootToSessVarPreds :: RootField (QueryDBRoot UnpreparedValue) c h d -> [SessVarPred]
     rootToSessVarPreds = \case
-      RFDB _ _ (QDBR db) -> toPred <$> toListOf traverseQueryDB db
-      _                  -> []
+      RFDB _ exists ->
+        AB.runBackend exists \case
+          SourceConfigWith _ (QDBR db) -> toPred <$> toListOf traverseQueryDB db
+      _ -> []
 
     toPred :: UnpreparedValue bet -> SessVarPred
     -- if we see a reference to the whole session variables object,
@@ -212,10 +212,8 @@ runGQ env logger reqId userInfo ipAddress reqHeaders queryType reqUnparsed = do
         let filteredSessionVars = runSessVarPred (filterVariablesFromQuery asts) (_uiSession userInfo)
             cacheKey = QueryCacheKey reqParsed (_uiRole userInfo) filteredSessionVars
             remoteJoins = OMap.elems queryPlans >>= \case
-              E.ExecStepDB (_ :: SourceConfig b) genSql _headers _tx ->
-                case backendTag @b of
-                  PostgresTag -> IR._rjRemoteSchema <$> maybe [] (EB.getRemoteJoins @b) genSql
-                  MSSQLTag    -> IR._rjRemoteSchema <$> maybe [] (EB.getRemoteJoins @b) genSql
+              E.ExecStepDB _headers exists ->
+                AB.dispatchAnyBackend @BackendTransport exists EB.getRemoteSchemaInfo
               _ -> []
         (responseHeaders, cachedValue) <- Tracing.interpTraceT (liftEitherM . runExceptT) $ cacheLookup remoteJoins cacheKey
         case fmap decodeGQResp cachedValue of
@@ -223,10 +221,19 @@ runGQ env logger reqId userInfo ipAddress reqHeaders queryType reqUnparsed = do
             pure (Telem.Query, 0, Telem.Local, HttpResponse cachedResponseData responseHeaders)
           Nothing -> do
             conclusion <- runExceptT $ forWithKey queryPlans $ \fieldName -> \case
-              E.ExecStepDB (sourceConfig :: SourceConfig b) genSql _headers tx -> doQErr $ do
-                (telemTimeIO_DT, resp) <- case backendTag @b of
-                  PostgresTag -> runDBQuery reqId reqUnparsed fieldName userInfo logger sourceConfig tx genSql
-                  MSSQLTag    -> runDBQuery reqId reqUnparsed fieldName userInfo logger sourceConfig tx genSql
+              E.ExecStepDB _headers exists -> doQErr $ do
+                (telemTimeIO_DT, resp) <-
+                  AB.dispatchAnyBackend @BackendTransport exists
+                    \(EB.DBStepInfo sourceConfig genSql tx) ->
+                        runDBQuery
+                          reqId
+                          reqUnparsed
+                          fieldName
+                          userInfo
+                          logger
+                          sourceConfig
+                          tx
+                          genSql
                 return $ ResultsFragment telemTimeIO_DT Telem.Local resp []
               E.ExecStepRemote rsi gqlReq ->
                 runRemoteGQ httpManager fieldName rsi gqlReq
@@ -241,10 +248,19 @@ runGQ env logger reqId userInfo ipAddress reqHeaders queryType reqUnparsed = do
 
       E.MutationExecutionPlan mutationPlans -> do
         conclusion <- runExceptT $ forWithKey mutationPlans $ \fieldName -> \case
-          E.ExecStepDB (sourceConfig :: SourceConfig b) genSql responseHeaders tx -> doQErr $ do
-            (telemTimeIO_DT, resp) <- case backendTag @b of
-              PostgresTag -> runDBMutation reqId reqUnparsed fieldName userInfo logger sourceConfig tx genSql
-              MSSQLTag    -> runDBMutation reqId reqUnparsed fieldName userInfo logger sourceConfig tx genSql
+          E.ExecStepDB responseHeaders exists -> doQErr $ do
+            (telemTimeIO_DT, resp) <-
+              AB.dispatchAnyBackend @BackendTransport exists
+                \(EB.DBStepInfo sourceConfig genSql tx) ->
+                    runDBMutation
+                      reqId
+                      reqUnparsed
+                      fieldName
+                      userInfo
+                      logger
+                      sourceConfig
+                      tx
+                      genSql
             return $ ResultsFragment telemTimeIO_DT Telem.Local resp responseHeaders
           E.ExecStepRemote rsi gqlReq ->
             runRemoteGQ httpManager fieldName rsi gqlReq
@@ -359,3 +375,4 @@ runGQBatched env logger reqId responseErrorsConfig userInfo ipAddress reqHdrs qu
       removeHeaders <$> traverse (try . (fmap . fmap) snd . runGQ env logger reqId userInfo ipAddress reqHdrs queryType) reqs
   where
     try = flip catchError (pure . Left) . fmap Right
+

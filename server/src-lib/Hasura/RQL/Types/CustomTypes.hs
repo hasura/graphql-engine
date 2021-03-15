@@ -35,7 +35,6 @@ module Hasura.RQL.Types.CustomTypes
 
 import           Control.Lens.TH                    (makeLenses)
 import           Data.Text.Extended
-import           Data.Typeable                      (cast)
 
 import qualified Data.Aeson                         as J
 import qualified Data.Aeson.TH                      as J
@@ -249,7 +248,7 @@ instance Backend b => Monoid (ScalarSet b) where
 
 instance Eq AnnotatedScalarType where
   (ASTCustom std1) == (ASTCustom std2)                 = std1 == std2
-  (ASTReusedScalar g1 st1) == (ASTReusedScalar g2 st2) = g1 == g2 && Just st1 == cast st2
+  (ASTReusedScalar g1 st1) == (ASTReusedScalar g2 st2) = g1 == g2 && st1 == st2
   _ == _                                               = False
 
 instance J.ToJSON AnnotatedScalarType where

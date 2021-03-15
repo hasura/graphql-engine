@@ -1,21 +1,24 @@
 module Hasura.RQL.DDL.Schema.Source where
 
-import           Control.Lens                        (at, (^.))
-import           Control.Monad.Trans.Control         (MonadBaseControl)
-import           Data.Text.Extended
-import           Data.Typeable                       (cast)
-
-import           Hasura.Backends.Postgres.Connection
-import           Hasura.EncJSON
 import           Hasura.Prelude
-import           Hasura.RQL.DDL.Deps
-import           Hasura.RQL.DDL.Schema.Common
-import           Hasura.RQL.Types
 
 import qualified Data.Environment                    as Env
 import qualified Data.HashMap.Strict                 as HM
 import qualified Data.HashMap.Strict.InsOrd          as OMap
 import qualified Database.PG.Query                   as Q
+
+import           Control.Lens                        (at, (^.))
+import           Control.Monad.Trans.Control         (MonadBaseControl)
+import           Data.Text.Extended
+
+import qualified Hasura.SQL.AnyBackend               as AB
+
+import           Hasura.Backends.Postgres.Connection
+import           Hasura.EncJSON
+import           Hasura.RQL.DDL.Deps
+import           Hasura.RQL.DDL.Schema.Common
+import           Hasura.RQL.Types
+
 
 mkPgSourceResolver :: Q.PGLogger -> SourceResolver
 mkPgSourceResolver pgLogger _ config = runExceptT do
@@ -53,7 +56,8 @@ runDropSource (DropSource name cascade) = do
   let sources = scSources sc
   case HM.lookup name sources of
     Just backendSourceInfo ->
-      dropSource' sc backendSourceInfo
+      AB.dispatchAnyBackend @BackendMetadata backendSourceInfo $ dropSource sc
+
     Nothing -> do
       metadata <- getMetadata
       void $ onNothing (metadata ^. metaSources . at name) $
@@ -67,19 +71,16 @@ runDropSource (DropSource name cascade) = do
           buildSchemaCacheFor (MOSource name) dropSourceMetadataModifier
   pure successMsg
   where
-    dropSource' :: SchemaCache -> BackendSourceInfo -> m ()
-    dropSource' sc (BackendSourceInfo (sourceInfo :: SourceInfo b)) =
-      case backendTag @b of
-        PostgresTag -> dropSource sc (sourceInfo :: SourceInfo 'Postgres)
-        MSSQLTag    -> dropSource sc (sourceInfo :: SourceInfo 'MSSQL)
-
     dropSource :: forall b. (BackendMetadata b) => SchemaCache -> SourceInfo b -> m ()
     dropSource sc sourceInfo = do
       let sourceConfig = _siConfiguration sourceInfo
       let indirectDeps = mapMaybe getIndirectDep $
                          getDependentObjs sc (SOSource name)
 
-      when (not cascade && indirectDeps /= []) $ reportDepsExt (map (SOSourceObj name) indirectDeps) []
+      when (not cascade && indirectDeps /= [])
+        $ reportDepsExt
+            (map (SOSourceObj name . AB.mkAnyBackend) indirectDeps)
+            []
 
       metadataModifier <- execWriterT $ do
         mapM_ (purgeDependentObject name >=> tell) indirectDeps
@@ -90,7 +91,11 @@ runDropSource (DropSource name cascade) = do
       where
         getIndirectDep :: SchemaObjId -> Maybe (SourceObjId b)
         getIndirectDep = \case
-          SOSourceObj s o -> if s == name then Nothing else cast o -- consider only *this* backend specific dependencies
+          SOSourceObj s o ->
+            if s == name
+              then Nothing
+              -- consider only *this* backend specific dependencies
+              else AB.unpackAnyBackend o
           _               -> Nothing
 
     dropSourceMetadataModifier = MetadataModifier $ metaSources %~ OMap.delete name

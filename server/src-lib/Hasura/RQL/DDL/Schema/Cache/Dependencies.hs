@@ -13,11 +13,11 @@ import           Data.Aeson
 import           Data.List                          (nub)
 import           Data.Monoid                        (First)
 import           Data.Text.Extended
-import           Data.Typeable                      (cast)
+
+import qualified Hasura.SQL.AnyBackend              as AB
 
 import           Hasura.RQL.DDL.Schema.Cache.Common
 import           Hasura.RQL.Types
-
 
 -- | Processes collected 'CIDependency' values into a 'DepMap', performing integrity checking to
 -- ensure the dependencies actually exist. If a dependency is missing, its transitive dependents are
@@ -96,45 +96,46 @@ pruneDanglingDependents cache = fmap (M.filter (not . null)) . traverse do
         unless (roleName `M.member` _rscPermissions (fst remoteSchema)) $
           Left $ "no permission defined on remote schema " <> remoteSchemaName
                   <<> " for role " <>> roleName
-      SOSourceObj source sourceObjId -> do
-        sourceInfo <- castSourceInfo source sourceObjId
-        case sourceObjId of
-          SOITable tableName -> do
-            void $ resolveTable sourceInfo tableName
-          SOIFunction functionName -> void $
-            M.lookup functionName (_siFunctions sourceInfo)
-            `onNothing` Left ("function " <> functionName <<> " is not tracked")
-          SOITableObj tableName tableObjectId -> do
-            tableInfo <- resolveTable sourceInfo tableName
-            case tableObjectId of
-              TOCol columnName ->
-                void $ resolveField tableInfo (columnToFieldName tableInfo columnName) _FIColumn "column"
-              TORel relName ->
-                void $ resolveField tableInfo (fromRel relName) _FIRelationship "relationship"
-              TOComputedField fieldName ->
-                void $ resolveField tableInfo (fromComputedField fieldName) _FIComputedField "computed field"
-              TORemoteRel fieldName ->
-                void $ resolveField tableInfo (fromRemoteRelationship fieldName) _FIRemoteRelationship "remote relationship"
-              TOForeignKey constraintName -> do
-                let foreignKeys = _tciForeignKeys $ _tiCoreInfo tableInfo
-                unless (isJust $ find ((== constraintName) . _cName . _fkConstraint) foreignKeys) $
-                  Left $ "no foreign key constraint named " <> constraintName <<> " is "
-                    <> "defined for table " <>> tableName
-              TOPerm roleName permType -> withPermType permType \accessor -> do
-                let permLens = permAccToLens accessor
-                unless (has (tiRolePermInfoMap.ix roleName.permLens._Just) tableInfo) $
-                  Left $ "no " <> permTypeToCode permType <> " permission defined on table "
-                    <> tableName <<> " for role " <>> roleName
-              TOTrigger triggerName ->
-                unless (M.member triggerName (_tiEventTriggerInfoMap tableInfo)) $ Left $
-                  "no event trigger named " <> triggerName <<> " is defined for table " <>> tableName
+      SOSourceObj source exists -> do
+        AB.dispatchAnyBackend @BackendMetadata exists $ \sourceObjId -> do
+          sourceInfo <- castSourceInfo source sourceObjId
+          case sourceObjId of
+            SOITable tableName -> do
+              void $ resolveTable sourceInfo tableName
+            SOIFunction functionName -> void $
+              M.lookup functionName (_siFunctions sourceInfo)
+              `onNothing` Left ("function " <> functionName <<> " is not tracked")
+            SOITableObj tableName tableObjectId -> do
+              tableInfo <- resolveTable sourceInfo tableName
+              case tableObjectId of
+                TOCol columnName ->
+                  void $ resolveField tableInfo (columnToFieldName tableInfo columnName) _FIColumn "column"
+                TORel relName ->
+                  void $ resolveField tableInfo (fromRel relName) _FIRelationship "relationship"
+                TOComputedField fieldName ->
+                  void $ resolveField tableInfo (fromComputedField fieldName) _FIComputedField "computed field"
+                TORemoteRel fieldName ->
+                  void $ resolveField tableInfo (fromRemoteRelationship fieldName) _FIRemoteRelationship "remote relationship"
+                TOForeignKey constraintName -> do
+                  let foreignKeys = _tciForeignKeys $ _tiCoreInfo tableInfo
+                  unless (isJust $ find ((== constraintName) . _cName . _fkConstraint) foreignKeys) $
+                    Left $ "no foreign key constraint named " <> constraintName <<> " is "
+                      <> "defined for table " <>> tableName
+                TOPerm roleName permType -> withPermType permType \accessor -> do
+                  let permLens = permAccToLens accessor
+                  unless (has (tiRolePermInfoMap.ix roleName.permLens._Just) tableInfo) $
+                    Left $ "no " <> permTypeToCode permType <> " permission defined on table "
+                      <> tableName <<> " for role " <>> roleName
+                TOTrigger triggerName ->
+                  unless (M.member triggerName (_tiEventTriggerInfoMap tableInfo)) $ Left $
+                    "no event trigger named " <> triggerName <<> " is defined for table " <>> tableName
 
     castSourceInfo
       :: (Backend b) => SourceName -> SourceObjId b -> Either Text (SourceInfo b)
     castSourceInfo sourceName _ =
       -- TODO: if the cast returns Nothing, we should be throwing an internal error
       -- the type of the dependency in sources is not as recorded
-      (M.lookup sourceName (_boSources cache) >>= \(BackendSourceInfo si) -> cast si)
+      (M.lookup sourceName (_boSources cache) >>= unsafeSourceInfo)
       `onNothing` Left ("no such source found " <>> sourceName)
 
     resolveTable sourceInfo tableName =
@@ -160,7 +161,7 @@ deleteMetadataObject
   :: MetadataObjId -> BuildOutputs -> BuildOutputs
 deleteMetadataObject = \case
   MOSource name                       -> boSources %~ M.delete name
-  MOSourceObjId source sourceObjId    -> boSources %~ M.adjust (deleteObjId sourceObjId) source
+  MOSourceObjId source exists         -> AB.dispatchAnyBackend @Backend exists (\sourceObjId -> boSources %~ M.adjust (deleteObjId sourceObjId) source)
   MORemoteSchema name                 -> boRemoteSchemas %~ M.delete name
   MORemoteSchemaPermissions name role -> boRemoteSchemas.ix name._1.rscPermissions %~ M.delete role
   MOCronTrigger name                  -> boCronTriggers %~ M.delete name
@@ -170,8 +171,13 @@ deleteMetadataObject = \case
   MOActionPermission name role        -> boActions.ix name.aiPermissions %~ M.delete role
   MOInheritedRole name                -> boInheritedRoles %~ M.delete name
   where
-    deleteObjId :: (Backend b) => SourceMetadataObjId b -> BackendSourceInfo -> BackendSourceInfo
-    deleteObjId sourceObjId sourceInfo = maybe sourceInfo (BackendSourceInfo . deleteObjFn sourceObjId) $ unsafeSourceInfo sourceInfo
+    deleteObjId :: forall b. (Backend b) => SourceMetadataObjId b -> BackendSourceInfo -> BackendSourceInfo
+    deleteObjId sourceObjId sourceInfo =
+      maybe
+        sourceInfo
+        (AB.mkAnyBackend . deleteObjFn sourceObjId)
+        $ unsafeSourceInfo sourceInfo
+
     deleteObjFn :: (Backend b) => SourceMetadataObjId b -> SourceInfo b -> SourceInfo b
     deleteObjFn = \case
       SMOTable    name -> siTables    %~ M.delete name
