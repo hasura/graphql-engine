@@ -31,8 +31,7 @@ Navigate to the integrations tab on project settings page to find Datadog integr
    :alt: Configure Datadog Integration
    :width: 1146px
 
-Select the Datadog API region and enter the Datadog API key (can be retrieved by navigating to Datadog's settings page by clicking the ``Get API Key`` link), host, service name and tags to associate with exported logs. A source tag 
-``hasura-cloud-metrics`` is added to all exported logs.
+Select the Datadog API region and enter the Datadog API key (can be retrieved by navigating to Datadog's settings page by clicking the ``Get API Key`` link), host, service name and tags to associate with exported logs.
 
 .. list-table::
    :header-rows: 1
@@ -51,7 +50,7 @@ Select the Datadog API region and enter the Datadog API key (can be retrieved by
      - The name of the originating host of the log and metrics.
 
    * - Tags
-     - Tags associated with your logs and metrics.
+     - Tags associated with your logs and metrics. Default tags ``project_id`` and ``project_name`` are exported with all logs and metrics. A source tag ``hasura-cloud-metrics`` is added to all exported logs. 
 
    * - Service Name 
      - The name of the application or service generating the log events.
@@ -126,7 +125,7 @@ The integration exports the following five metrics to your Datadog dashboard:
      - ``websockets_open``
 
 Non zero values of all the above metrics are exported over a one minute time interval. Each metric name 
-is prefixed with your project's name.
+is prefixed with ``hasura_cloud``.
 
 Graphs for all the above metrics can be viewed in your Datadog dashboard, under the ``Metrics`` tab. To navigate to the same, click ``View Metrics``.
 
