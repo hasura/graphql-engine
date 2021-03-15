@@ -14,10 +14,10 @@ func newUpdateMultipleSources(ec *cli.ExecutionContext) *cobra.Command {
 	v := viper.New()
 	cmd := &cobra.Command{
 		Use:   "update-project-v3",
-		Short: "update project to use config v2 to config v3",
+		Short: "Update the Hasura project from config v2 to v3",
 		Long: `
 Convenience script used to upgrade your CLI project to use config v3.
-Note that this process is completely independent from your Hasura Graphql Engine server update process.`,
+Note that this process is completely independent from your Hasura Graphql Engine server update process`,
 		SilenceUsage: true,
 		PreRunE: func(cmd *cobra.Command, args []string) error {
 			ec.Viper = v
@@ -42,9 +42,9 @@ Note that this process is completely independent from your Hasura Graphql Engine
 
 	f := cmd.Flags()
 
-	f.String("endpoint", "", "http(s) endpoint for Hasura GraphQL Engine")
-	f.String("admin-secret", "", "admin secret for Hasura GraphQL Engine")
-	f.String("access-key", "", "access key for Hasura GraphQL Engine")
+	f.String("endpoint", "", "http(s) endpoint for Hasura GraphQL engine")
+	f.String("admin-secret", "", "admin secret for Hasura GraphQL engine")
+	f.String("access-key", "", "access key for Hasura GraphQL engine")
 	f.MarkDeprecated("access-key", "use --admin-secret instead")
 	f.Bool("insecure-skip-tls-verify", false, "skip TLS verification and disable cert checking (default: false)")
 	f.String("certificate-authority", "", "path to a cert file for the certificate authority")

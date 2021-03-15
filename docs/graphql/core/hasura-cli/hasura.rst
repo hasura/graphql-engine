@@ -1,5 +1,5 @@
 .. meta::
-   :description: Hasura CLI commands reference
+   :description: Hasura GraphQL engine command line tool using the Hasura CLI
    :keywords: hasura, docs, CLI
 
 .. _hasura:
@@ -12,14 +12,13 @@ Hasura GraphQL engine command line tool.
 Synopsis
 ~~~~~~~~
 
-
 ::
 
-       __
-      / /_   ____ _ _____ __  __ _____ ____ _
-     / __ \ / __ `// ___// / / // ___// __ `/
-    / / / // /_/ /(__  )/ /_/ // /   / /_/ /
-   /_/ /_/ \__,_//____/ \__,_//_/    \__,_/
+    __
+   / /_   ____ _ _____ __  __ _____ ____ _
+  / __ \ / __ `// ___// / / // ___// __ `/
+ / / / // /_/ /(__  )/ /_/ // /   / /_/ /
+/_/ /_/ \__,_//____/ \__,_//_/    \__,_/
 
 
 
@@ -42,10 +41,10 @@ Options
 SEE ALSO
 ~~~~~~~~
 
-* :ref:`hasura actions <hasura_actions>` 	 - Manage actions on hasura
+* :ref:`hasura actions <hasura_actions>` 	 - Manage Hasura actions
 * :ref:`hasura completion <hasura_completion>` 	 - Generate auto completion code
-* :ref:`hasura console <hasura_console>` 	 - Open console to manage database and try out APIs
-* :ref:`hasura init <hasura_init>` 	 - Initialize directory for Hasura GraphQL engine migrations
+* :ref:`hasura console <hasura_console>` 	 - Open the console to manage the database and try out APIs
+* :ref:`hasura init <hasura_init>` 	 - Initialize a directory for Hasura GraphQL engine migrations
 * :ref:`hasura metadata <hasura_metadata>` 	 - Manage Hasura GraphQL engine metadata saved in the database
 * :ref:`hasura migrate <hasura_migrate>` 	 - Manage migrations on the database
 * :ref:`hasura plugins <hasura_plugins>` 	 - Manage plugins for the CLI

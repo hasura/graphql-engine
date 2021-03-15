@@ -39,7 +39,7 @@ func newMetadataDiffCmd(ec *cli.ExecutionContext) *cobra.Command {
 		Use:   "diff [file1] [file2]",
 		Short: "(PREVIEW) Show a highlighted diff of Hasura metadata",
 		Long: `(PREVIEW) Show changes between two different sets of Hasura metadata.
-By default, shows changes between exported metadata file and server metadata.`,
+By default, it shows changes between the exported metadata file and server metadata`,
 		Example: `  # NOTE: This command is in preview, usage and diff format may change.
 
   # Show changes between server metadata and the exported metadata file:
@@ -51,7 +51,7 @@ By default, shows changes between exported metadata file and server metadata.`,
   # Show changes between metadata from metadata.yaml and metadata_old.yaml:
   hasura metadata diff metadata.yaml metadata_old.yaml
 
-  # Apply admin secret for Hasura GraphQL Engine:
+  # Apply admin secret for Hasura GraphQL engine:
   hasura metadata diff --admin-secret "<admin-secret>"
 
   # Diff metadata on a different Hasura instance:

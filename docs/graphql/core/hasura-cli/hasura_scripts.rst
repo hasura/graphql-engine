@@ -1,5 +1,5 @@
 .. meta::
-   :description: Use hasura scripts to list scripts on the Hasura CLI
+   :description: Execute helper scripts to manage Hasura projects using the Hasura CLI
    :keywords: hasura, docs, CLI, hasura scripts
 
 .. _hasura_scripts:
@@ -7,13 +7,13 @@
 Hasura CLI: hasura scripts
 --------------------------
 
-Execute helper scripts to manage Hasura Projects
+Execute helper scripts to manage Hasura projects.
 
 Synopsis
 ~~~~~~~~
 
 
-Execute helper scripts to manage Hasura Projects
+Execute helper scripts to manage Hasura projects.
 
 Options
 ~~~~~~~

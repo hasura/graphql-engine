@@ -1,5 +1,5 @@
 .. meta::
-   :description: Use hasura metadata reload to reload Hasura metadata on the database from the Hasura CLI
+   :description: Reload Hasura GraphQL engine metadata on the database using the Hasura CLI
    :keywords: hasura, docs, CLI, hasura metadata reload
 
 .. _hasura_metadata_reload:

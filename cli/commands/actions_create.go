@@ -23,17 +23,17 @@ func newActionsCreateCmd(ec *cli.ExecutionContext, v *viper.Viper) *cobra.Comman
 	}
 	actionsCreateCmd := &cobra.Command{
 		Use:   "create [action-name]",
-		Short: "Create an action",
-		Example: `  # Create an Action
+		Short: "Create a Hasura action",
+		Example: `  # Create a Hasura action
   hasura actions create [action-name]
 
-  # Create an action with codegen
-  hasura actions create [action-name] --with-codegen true
+  # Create a Hasura action with codegen
+  hasura actions create [action-name] --with-codegen
 
-  # Create an action by deriving from a hasura operation
+  # Create a Hasura action by deriving from a hasura operation
   hasura actions create [action-name] --derive-from ''
 
-  # Create an action with a different kind or webhook
+  # Create a Hasura action with a different kind or webhook
   hasura actions create [action-name] --kind [synchronous|asynchronous] --webhook [http://localhost:3000]`,
 		SilenceUsage: true,
 		Args:         cobra.ExactArgs(1),

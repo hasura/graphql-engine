@@ -1,5 +1,5 @@
 .. meta::
-   :description: Use hasura init to initialise a directory for Hasura migrations on the Hasura CLI
+   :description: Initialize a directory for Hasura GraphQL engine migrations using the Hasura CLI
    :keywords: hasura, docs, CLI, hasura init
 
 .. _hasura_init:

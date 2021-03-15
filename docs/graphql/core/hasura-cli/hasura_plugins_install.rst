@@ -1,5 +1,5 @@
 .. meta::
-   :description: Use hasura plugins install to install Hasura plugins on the Hasura CLI
+   :description: Install a plugin from the index using the Hasura CLI
    :keywords: hasura, docs, CLI, hasura plugins install
 
 .. _hasura_plugins_install:

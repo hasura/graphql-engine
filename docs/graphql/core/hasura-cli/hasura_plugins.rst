@@ -1,5 +1,5 @@
 .. meta::
-   :description: Use hasura plugins to manage Hasura plugins on the Hasura CLI
+   :description: Manage plugins for the CLI using the Hasura CLI
    :keywords: hasura, docs, CLI, hasura plugins
 
 .. _hasura_plugins:
@@ -7,7 +7,7 @@
 Hasura CLI: hasura plugins
 --------------------------
 
-Manage plugins for the CLI
+Manage plugins for the CLI.
 
 Synopsis
 ~~~~~~~~
@@ -17,7 +17,7 @@ Plugins can be installed to extend the functionality of Hasura CLI
 An index for all available plugins can be found at 
 https://github.com/hasura/cli-plugins-index
 
-Please open pull requests against this repo to add new plugins
+Please open pull requests against this repo to add new plugins.
 
 Alias: plugin
 

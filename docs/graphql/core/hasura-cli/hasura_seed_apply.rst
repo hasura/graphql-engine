@@ -1,6 +1,6 @@
 .. meta::
-   :description: Use hasura seeds apply to apply seed data
-   :keywords: hasura, docs, CLI, hasura seeds apply
+   :description: Apply seed data using the Hasura CLI
+   :keywords: hasura, docs, CLI, hasura seed apply
 
 .. _hasura_seed_apply:
 
@@ -45,7 +45,7 @@ Options inherited from parent commands
 
       --admin-secret string            admin secret for Hasura GraphQL engine (env "HASURA_GRAPHQL_ADMIN_SECRET")
       --certificate-authority string   path to a cert file for the certificate authority (env "HASURA_GRAPHQL_CERTIFICATE_AUTHORITY")
-      --database-name string                database on which operation should be applied
+      --database-name string           database on which operation should be applied
       --endpoint string                http(s) endpoint for Hasura GraphQL engine (env "HASURA_GRAPHQL_ENDPOINT")
       --envfile string                 .env filename to load ENV vars from (default ".env")
       --insecure-skip-tls-verify       skip TLS verification and disable cert checking (default: false) (env "HASURA_GRAPHQL_INSECURE_SKIP_TLS_VERIFY")

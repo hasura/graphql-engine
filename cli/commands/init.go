@@ -39,8 +39,8 @@ func NewInitCmd(ec *cli.ExecutionContext) *cobra.Command {
 	}
 	initCmd := &cobra.Command{
 		Use:   "init [directory-name]",
-		Short: "Initialize directory for Hasura GraphQL Engine migrations",
-		Long:  "Create directories and files required for enabling migrations on Hasura GraphQL Engine",
+		Short: "Initialize a directory for Hasura GraphQL engine migrations",
+		Long:  "Create directories and files required for enabling migrations on the Hasura GraphQL engine",
 		Example: `  # Create a directory to store migrations
   hasura init [directory-name]
 
@@ -74,9 +74,9 @@ func NewInitCmd(ec *cli.ExecutionContext) *cobra.Command {
 	f := initCmd.Flags()
 	f.Var(cli.NewConfigVersionValue(cli.V3, &opts.Version), "version", "config version to be used")
 	f.StringVar(&opts.InitDir, "directory", "", "name of directory where files will be created")
-	f.StringVar(&opts.Endpoint, "endpoint", "", "http(s) endpoint for Hasura GraphQL Engine")
-	f.StringVar(&opts.AdminSecret, "admin-secret", "", "admin secret for Hasura GraphQL Engine")
-	f.StringVar(&opts.AdminSecret, "access-key", "", "access key for Hasura GraphQL Engine")
+	f.StringVar(&opts.Endpoint, "endpoint", "", "http(s) endpoint for Hasura GraphQL engine")
+	f.StringVar(&opts.AdminSecret, "admin-secret", "", "admin secret for Hasura GraphQL engine")
+	f.StringVar(&opts.AdminSecret, "access-key", "", "access key for Hasura GraphQL engine")
 	f.StringVar(&opts.Template, "install-manifest", "", "install manifest to be cloned")
 	f.MarkDeprecated("access-key", "use --admin-secret instead")
 	f.MarkDeprecated("directory", "use directory-name argument instead")

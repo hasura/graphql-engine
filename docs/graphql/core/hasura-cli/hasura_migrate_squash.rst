@@ -1,5 +1,5 @@
 .. meta::
-   :description: Use hasura migrate squash to squash multiple migrations into one migration with the Hasura CLI
+   :description: (PREVIEW) Squash multiple migrations into a single one using the Hasura CLI
    :keywords: hasura, docs, CLI, hasura migrate squash
 
 .. _hasura_migrate_squash:
@@ -49,7 +49,7 @@ Options inherited from parent commands
 
       --admin-secret string            admin secret for Hasura GraphQL engine (env "HASURA_GRAPHQL_ADMIN_SECRET")
       --certificate-authority string   path to a cert file for the certificate authority (env "HASURA_GRAPHQL_CERTIFICATE_AUTHORITY")
-      --database-name string                database on which operation should be applied
+      --database-name string           database on which operation should be applied
       --endpoint string                http(s) endpoint for Hasura GraphQL engine (env "HASURA_GRAPHQL_ENDPOINT")
       --envfile string                 .env filename to load ENV vars from (default ".env")
       --insecure-skip-tls-verify       skip TLS verification and disable cert checking (default: false) (env "HASURA_GRAPHQL_INSECURE_SKIP_TLS_VERIFY")

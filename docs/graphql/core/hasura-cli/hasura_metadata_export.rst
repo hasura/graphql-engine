@@ -1,5 +1,5 @@
 .. meta::
-   :description: Use hasura metadata export to export Hasura metadata from the database with the Hasura CLI
+   :description: Export Hasura GraphQL engine metadata from the database using the Hasura CLI
    :keywords: hasura, docs, CLI, hasura metadata export
 
 .. _hasura_metadata_export:
@@ -7,7 +7,7 @@
 Hasura CLI: hasura metadata export
 ----------------------------------
 
-Export Hasura GraphQL engine metadata from the database
+Export Hasura GraphQL engine metadata from the database.
 
 Synopsis
 ~~~~~~~~

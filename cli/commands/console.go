@@ -23,8 +23,8 @@ func NewConsoleCmd(ec *cli.ExecutionContext) *cobra.Command {
 	}
 	consoleCmd := &cobra.Command{
 		Use:   "console",
-		Short: "Open console to manage database and try out APIs",
-		Long:  "Run a web server to serve Hasura Console for GraphQL Engine to manage database and build queries",
+		Short: "Open the console to manage the database and try out APIs",
+		Long:  "Run a web server to serve the Hasura console for the GraphQL engine to manage the database and build queries",
 		Example: `  # Start console:
   hasura console
 
@@ -65,9 +65,9 @@ func NewConsoleCmd(ec *cli.ExecutionContext) *cobra.Command {
 	f.StringVar(&opts.Browser, "browser", "", "open console in a specific browser")
 	f.BoolVar(&opts.UseServerAssets, "use-server-assets", false, "when rendering console, use assets provided by HGE server")
 
-	f.String("endpoint", "", "http(s) endpoint for Hasura GraphQL Engine")
-	f.String("admin-secret", "", "admin secret for Hasura GraphQL Engine")
-	f.String("access-key", "", "access key for Hasura GraphQL Engine")
+	f.String("endpoint", "", "http(s) endpoint for Hasura GraphQL engine")
+	f.String("admin-secret", "", "admin secret for Hasura GraphQL engine")
+	f.String("access-key", "", "access key for Hasura GraphQL engine")
 	f.MarkDeprecated("access-key", "use --admin-secret instead")
 	f.Bool("insecure-skip-tls-verify", false, "skip TLS verification and disable cert checking (default: false)")
 	f.String("certificate-authority", "", "path to a cert file for the certificate authority")

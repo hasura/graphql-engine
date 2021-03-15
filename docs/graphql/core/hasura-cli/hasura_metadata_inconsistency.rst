@@ -1,5 +1,5 @@
 .. meta::
-   :description: Use hasura metadata inconsistency to export Hasura metadata from the database with the Hasura CLI
+   :description: Manage inconsistent objects in Hasura metadata using the Hasura CLI
    :keywords: hasura, docs, CLI, hasura metadata inconsistency
 
 .. _hasura_metadata_inconsistency:

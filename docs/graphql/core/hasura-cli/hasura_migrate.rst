@@ -1,5 +1,5 @@
 .. meta::
-   :description: Use hasura migrate to manage Hasura migrations on the database with the Hasura CLI
+   :description: Manage migrations on the database using the Hasura CLI
    :keywords: hasura, docs, CLI, hasura migrate
 
 .. _hasura_migrate:
@@ -22,7 +22,7 @@ Options
 
       --admin-secret string            admin secret for Hasura GraphQL engine (env "HASURA_GRAPHQL_ADMIN_SECRET")
       --certificate-authority string   path to a cert file for the certificate authority (env "HASURA_GRAPHQL_CERTIFICATE_AUTHORITY")
-      --database-name string                database on which operation should be applied
+      --database-name string           database on which operation should be applied
       --endpoint string                http(s) endpoint for Hasura GraphQL engine (env "HASURA_GRAPHQL_ENDPOINT")
   -h, --help                           help for migrate
       --insecure-skip-tls-verify       skip TLS verification and disable cert checking (default: false) (env "HASURA_GRAPHQL_INSECURE_SKIP_TLS_VERIFY")
