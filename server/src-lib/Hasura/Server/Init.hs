@@ -15,7 +15,7 @@ import qualified Database.PG.Query                        as Q
 import qualified Language.Haskell.TH.Syntax               as TH
 import qualified Text.PrettyPrint.ANSI.Leijen             as PP
 
-import           Data.FileEmbed                           (embedStringFile)
+import           Data.FileEmbed                           (embedStringFile, makeRelativeToProject)
 import           Data.Time                                (NominalDiffTime)
 import           Data.URL.Template
 import           Network.Wai.Handler.Warp                 (HostPreference)
@@ -41,7 +41,7 @@ import           Network.URI                              (parseURI)
 
 getDbId :: Q.TxE QErr Text
 getDbId =
-  (runIdentity . Q.getRow) <$>
+  runIdentity . Q.getRow <$>
   Q.withQE defaultTxErrorHandler
   [Q.sql|
     SELECT (hasura_uuid :: text) FROM hdb_catalog.hdb_version
@@ -180,7 +180,7 @@ mkServeOptions rso = do
   logHeadersFromEnv <- withEnvBool (rsoLogHeadersFromEnv rso) (fst logHeadersFromEnvEnv)
   enableRemoteSchemaPerms <-
     bool RemoteSchemaPermsDisabled RemoteSchemaPermsEnabled <$>
-    (withEnvBool (rsoEnableRemoteSchemaPermissions rso) (fst enableRemoteSchemaPermsEnv))
+    withEnvBool (rsoEnableRemoteSchemaPermissions rso) (fst enableRemoteSchemaPermsEnv)
 
   webSocketCompressionFromEnv <- withEnvBool (rsoWebSocketCompression rso) $
                                  fst webSocketCompressionEnv
@@ -197,7 +197,7 @@ mkServeOptions rso = do
   experimentalFeatures <- maybe mempty Set.fromList <$> withEnv (rsoExperimentalFeatures rso) (fst experimentalFeaturesEnv)
   inferFunctionPerms <-
     maybe FunctionPermissionsInferred (bool FunctionPermissionsManual FunctionPermissionsInferred) <$>
-    (withEnv (rsoInferFunctionPermissions rso) (fst inferFunctionPermsEnv))
+    withEnv (rsoInferFunctionPermissions rso) (fst inferFunctionPermsEnv)
 
   maintenanceMode <-
     bool MaintenanceModeDisabled MaintenanceModeEnabled
@@ -616,8 +616,8 @@ parseRawConnDetails = do
   dbName' <- dbName
   options' <- options
   pure $ PostgresRawConnDetails
-         <$> host' <*> port' <*> user' <*> (pure password')
-         <*> dbName' <*> (pure options')
+         <$> host' <*> port' <*> user' <*> pure password'
+         <*> dbName' <*> pure options'
   where
     host = optional $
       strOption ( long "host" <>
@@ -1102,7 +1102,7 @@ serveOptionsParser =
 -- and catalog schema versions.
 downgradeShortcuts :: [(String, String)]
 downgradeShortcuts =
-  $(do let s = $(embedStringFile "src-rsr/catalog_versions.txt")
+  $(do let s = $(makeRelativeToProject "src-rsr/catalog_versions.txt" >>= embedStringFile)
 
            parseVersions = map (parseVersion . words) . lines
 

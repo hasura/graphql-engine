@@ -11,6 +11,7 @@ import qualified Language.Haskell.TH.Syntax          as TH
 
 import           Control.Lens                        hiding (from, index, op, to, (.=))
 import           Control.Monad.Trans.Control         (MonadBaseControl)
+import           Data.FileEmbed                      (makeRelativeToProject)
 
 import           Hasura.Backends.Postgres.Connection
 import           Hasura.Backends.Postgres.SQL.Types
@@ -66,7 +67,7 @@ initSource = do
      | otherwise -> migrateSourceCatalog
   where
     initPgSourceCatalog = do
-      () <- Q.multiQE defaultTxErrorHandler $(Q.sqlFromFile "src-rsr/init_pg_source.sql")
+      () <- Q.multiQE defaultTxErrorHandler $(makeRelativeToProject "src-rsr/init_pg_source.sql" >>= Q.sqlFromFile)
       setSourceCatalogVersion
 
     createVersionTable = do
@@ -97,7 +98,7 @@ upMigrationsUntil43 :: MonadTx m => [(Text, m ())]
 upMigrationsUntil43 =
     $(let migrationFromFile from to =
             let path = "src-rsr/migrations/" <> from <> "_to_" <> to <> ".sql"
-             in [| runTx $(Q.sqlFromFile path) |]
+             in [| runTx $(makeRelativeToProject path >>= Q.sqlFromFile) |]
 
           migrationsFromFile = map $ \(to :: Integer) ->
             let from = to - 1
@@ -131,7 +132,7 @@ getSourceCatalogVersion = liftTx $ runIdentity . Q.getRow <$> Q.withQE defaultTx
 fetchTableMetadata :: (MonadTx m) => m (DBTablesMetadata 'Postgres)
 fetchTableMetadata = do
   results <- liftTx $ Q.withQE defaultTxErrorHandler
-             $(Q.sqlFromFile "src-rsr/pg_table_metadata.sql") () True
+             $(makeRelativeToProject "src-rsr/pg_table_metadata.sql" >>= Q.sqlFromFile) () True
   pure $ Map.fromList $ flip map results $
     \(schema, table, Q.AltJ info) -> (QualifiedObject schema table, info)
 
@@ -139,7 +140,7 @@ fetchTableMetadata = do
 fetchFunctionMetadata :: (MonadTx m) => m (DBFunctionsMetadata 'Postgres)
 fetchFunctionMetadata = do
   results <- liftTx $ Q.withQE defaultTxErrorHandler
-             $(Q.sqlFromFile "src-rsr/pg_function_metadata.sql") () True
+             $(makeRelativeToProject "src-rsr/pg_function_metadata.sql" >>= Q.sqlFromFile) () True
   pure $ Map.fromList $ flip map results $
     \(schema, table, Q.AltJ infos) -> (QualifiedObject schema table, infos)
 
@@ -170,7 +171,7 @@ postDropSourceHook sourceConfig = do
        -- being used as metadata storage (--metadata-database-url option). In this case
        -- drop only source related tables and not "hdb_catalog" schema
        | hdbMetadataTableExist ->
-         Q.multiQE defaultTxErrorHandler $(Q.sqlFromFile "src-rsr/drop_pg_source.sql")
+         Q.multiQE defaultTxErrorHandler $(makeRelativeToProject "src-rsr/drop_pg_source.sql" >>= Q.sqlFromFile)
        -- Otherwise, drop "hdb_catalog" schema.
        | otherwise -> dropHdbCatalogSchema
 

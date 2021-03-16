@@ -37,6 +37,7 @@ import           Control.Monad.Stateless
 import           Control.Monad.Trans.Control               (MonadBaseControl (..))
 import           Control.Monad.Trans.Managed               (ManagedT (..), allocate)
 import           Control.Monad.Unique
+import           Data.FileEmbed                            (makeRelativeToProject)
 import           Data.Time.Clock                           (UTCTime)
 #ifndef PROFILING
 import           GHC.AssertNF
@@ -809,7 +810,7 @@ instance MonadMetadataStorage (MetadataStorageT PGMetadataStorageApp) where
   setCatalogState a b = runInSeparateTx $ setCatalogStateTx a b
 
   getDatabaseUid      = runInSeparateTx getDbId
-  checkMetadataStorageHealth = (lift (asks fst)) >>= checkDbConnection
+  checkMetadataStorageHealth = lift (asks fst) >>= checkDbConnection
 
   getDeprivedCronTriggerStats        = runInSeparateTx getDeprivedCronTriggerStatsTx
   getScheduledEventsForDelivery      = runInSeparateTx getScheduledEventsForDeliveryTx
@@ -848,7 +849,7 @@ mkConsoleHTML path authMode enableTelemetry consoleAssetsDir =
         "" -> "/console"
         r  -> "/console/" <> r
 
-      consoleTmplt = $(M.embedSingleTemplate "src-rsr/console.html")
+      consoleTmplt = $(makeRelativeToProject "src-rsr/console.html" >>= M.embedSingleTemplate)
 
 telemetryNotice :: String
 telemetryNotice =

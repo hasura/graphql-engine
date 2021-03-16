@@ -24,6 +24,7 @@ import qualified Text.Shakespeare.Text               as ST
 
 import           Control.Monad.Trans.Control         (MonadBaseControl)
 import           Control.Monad.Validate
+import           Data.FileEmbed                      (makeRelativeToProject)
 import           Data.List                           (delete)
 import           Data.Text.Extended
 
@@ -159,7 +160,7 @@ mkTriggerQ trn qt@(QualifiedObject schema table) allCols op (SubscribeOpSpec col
         oldPayloadExpression = toSQLTxt oldDataExp
         newPayloadExpression = toSQLTxt newDataExp
 
-    in $(ST.stextFile "src-rsr/trigger.sql.shakespeare")
+    in $(makeRelativeToProject "src-rsr/trigger.sql.shakespeare" >>= ST.stextFile )
   where
     applyRowToJson' e = SEFnApp "row_to_json" [e] Nothing
     applyRow e = SEFnApp "row" [e] Nothing
