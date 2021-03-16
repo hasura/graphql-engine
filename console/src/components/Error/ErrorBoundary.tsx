@@ -20,20 +20,17 @@ export interface Metadata {
 
 export interface ErrorBoundaryProps {
   metadata: Metadata;
-  errorValue: Error;
-  requestError: Error;
-  requestURL: string;
   dispatch: Dispatch;
 }
 
 interface ErrorBoundaryState {
-  hasReactError: boolean;
+  hasError: boolean;
   error: Error | null;
   type: string;
 }
 
 const initialState: ErrorBoundaryState = {
-  hasReactError: false,
+  hasError: false,
   error: null,
   type: '500',
 };
@@ -58,7 +55,7 @@ class ErrorBoundary extends React.Component<
       });
     }
 
-    this.setState({ hasReactError: true, error });
+    this.setState({ hasError: true, error });
 
     // trigger telemetry
     dispatch(
@@ -85,21 +82,19 @@ class ErrorBoundary extends React.Component<
 
   render() {
     const { metadata } = this.props;
-    const { hasReactError, type, error } = this.state;
+    const { hasError, type, error } = this.state;
 
-    if (hasReactError && metadata.ongoingRequest) {
+    if (hasError && metadata.ongoingRequest) {
       return <Spinner />;
     }
 
-    if (hasReactError) {
+    if (hasError) {
       return type === '404' ? (
         <PageNotFound resetCallback={this.resetState} />
       ) : (
         <RuntimeError resetCallback={this.resetState} error={error} />
       );
     }
-
-    // Catch Api errors
 
     return this.props.children;
   }

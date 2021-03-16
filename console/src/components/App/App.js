@@ -22,9 +22,6 @@ const App = ({
   children,
   notifications,
   connectionFailed,
-  requestError,
-  error,
-  reqURL,
   dispatch,
   metadata,
   telemetry,
@@ -70,19 +67,13 @@ const App = ({
   return (
     <GlobalContext.Provider value={globals}>
       <ThemeProvider theme={theme}>
-        <ErrorBoundary
-          metadata={metadata}
-          dispatch={dispatch}
-          errorValue={error}
-          requestError={requestError}
-          requestURL={reqURL}
-        >
+        <ErrorBoundary metadata={metadata} dispatch={dispatch}>
           <div>
             {connectionFailMsg}
             {ongoingRequest && (
               <ProgressBar
                 percent={percent}
-                autoIncrement
+                autoIncrement={true} // eslint-disable-line react/jsx-boolean-value
                 intervalTime={intervalTime}
                 spinner={false}
               />
@@ -100,12 +91,16 @@ App.propTypes = {
   reqURL: PropTypes.string,
   reqData: PropTypes.object,
   statusCode: PropTypes.number,
+
   ongoingRequest: PropTypes.bool,
   connectionFailed: PropTypes.bool,
+
   intervalTime: PropTypes.number,
   percent: PropTypes.number,
+
   children: PropTypes.element,
   dispatch: PropTypes.func.isRequired,
+
   notifications: PropTypes.array,
 };
 
