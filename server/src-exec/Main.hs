@@ -3,6 +3,7 @@
 
 module Main where
 
+import           Control.Applicative
 import           Control.Exception
 import           Control.Monad.Trans.Managed        (ManagedT (..), lowerManagedT)
 import           Data.Int                           (Int64)
@@ -133,7 +134,7 @@ runApp env (HGEOptionsG rci metadataDbUrl hgeCmd) = do
     HCDowngrade opts -> do
       let defaultSourceConfig = maybeDefaultPgConnInfo <&> \(dbUrlConf, _) ->
             let pgSourceConnInfo = PostgresSourceConnInfo dbUrlConf
-                                   defaultPostgresPoolSettings{_ppsRetries = fromMaybe 1 maybeRetries}
+                                   (Just setPostgresPoolSettings{_ppsRetries = maybeRetries <|> Just 1})
             in PostgresConnConfiguration pgSourceConnInfo Nothing
       res <- runTxWithMinimalPool _gcMetadataDbConnInfo $ downgradeCatalog defaultSourceConfig opts initTime
       either (printErrJExit DowngradeProcessError) (liftIO . print) res
