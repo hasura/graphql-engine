@@ -18,6 +18,7 @@ module Hasura.RQL.Types.SchemaCache.Build
   , MetadataM(..)
   , MetadataT(..)
   , runMetadataT
+  , buildSchemaCacheWithInvalidations
   , buildSchemaCache
   , buildSchemaCacheFor
   , buildSchemaCacheStrict
@@ -35,17 +36,21 @@ import           Control.Monad.Morph
 import           Control.Monad.Trans.Control         (MonadBaseControl)
 import           Control.Monad.Unique
 import           Data.Aeson                          (toJSON)
-import           Data.Aeson.Casing
 import           Data.Aeson.TH
 import           Data.List                           (nub)
 import           Data.Text.Extended
+import           Network.HTTP.Client.Extended
+
+import qualified Hasura.Tracing                      as Tracing
 
 import           Hasura.Backends.Postgres.Connection
 import           Hasura.RQL.Types.Common
 import           Hasura.RQL.Types.Error
 import           Hasura.RQL.Types.Metadata
+import           Hasura.RQL.Types.Metadata.Object
 import           Hasura.RQL.Types.RemoteSchema       (RemoteSchemaName)
 import           Hasura.RQL.Types.SchemaCache
+import           Hasura.Session
 import           Hasura.Tracing                      (TraceT)
 
 -- ----------------------------------------------------------------------------
@@ -57,7 +62,7 @@ data CollectedInfo
     !MetadataObject -- ^ for error reporting on missing dependencies
     !SchemaObjId
     !SchemaDependency
-  deriving (Show, Eq)
+  deriving (Eq)
 $(makePrisms ''CollectedInfo)
 
 class AsInconsistentMetadata s where
@@ -134,7 +139,7 @@ data CacheInvalidations = CacheInvalidations
   -- ^ Force re-establishing connections of the given data sources, even if their configuration has not changed. Set
   -- by the @pg_reload_source@ API.
   }
-$(deriveJSON (aesonDrop 2 snakeCase) ''CacheInvalidations)
+$(deriveJSON hasuraJSON ''CacheInvalidations)
 
 instance Semigroup CacheInvalidations where
   CacheInvalidations a1 b1 c1 <> CacheInvalidations a2 b2 c2 =
@@ -175,6 +180,7 @@ newtype MetadataT m a
     ( Functor, Applicative, Monad, MonadTrans
     , MonadIO, MonadUnique, MonadReader r, MonadError e, MonadTx
     , SourceM, TableCoreInfoRM b, CacheRM, CacheRWM, MFunctor
+    , Tracing.MonadTrace
     )
 
 deriving instance (MonadBase IO m) => MonadBase IO (MetadataT m)
@@ -184,16 +190,25 @@ instance (Monad m) => MetadataM (MetadataT m) where
   getMetadata = MetadataT get
   putMetadata = MetadataT . put
 
+instance (HasHttpManagerM m) => HasHttpManagerM (MetadataT m) where
+  askHttpManager = lift askHttpManager
+
+instance (UserInfoM m) => UserInfoM (MetadataT m) where
+  askUserInfo = lift askUserInfo
+
 runMetadataT :: Metadata -> MetadataT m a -> m (a, Metadata)
 runMetadataT metadata (MetadataT m) =
   runStateT m metadata
 
-buildSchemaCache :: (MetadataM m, CacheRWM m) => MetadataModifier -> m ()
-buildSchemaCache metadataModifier = do
+buildSchemaCacheWithInvalidations :: (MetadataM m, CacheRWM m) => CacheInvalidations -> MetadataModifier -> m ()
+buildSchemaCacheWithInvalidations cacheInvalidations metadataModifier = do
   metadata <- getMetadata
-  let modifiedMetadata = unMetadataModifier metadataModifier $ metadata
-  buildSchemaCacheWithOptions CatalogUpdate mempty modifiedMetadata
+  let modifiedMetadata = unMetadataModifier metadataModifier metadata
+  buildSchemaCacheWithOptions CatalogUpdate cacheInvalidations modifiedMetadata
   putMetadata modifiedMetadata
+
+buildSchemaCache :: (MetadataM m, CacheRWM m) => MetadataModifier -> m ()
+buildSchemaCache = buildSchemaCacheWithInvalidations mempty
 
 -- | Rebuilds the schema cache after modifying metadata. If an object with the given object id became newly inconsistent,
 -- raises an error about it specifically. Otherwise, raises a generic metadata inconsistency error.

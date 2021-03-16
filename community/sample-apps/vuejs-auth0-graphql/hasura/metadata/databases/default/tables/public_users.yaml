@@ -1,0 +1,13 @@
+select_permissions:
+- permission:
+    columns:
+    - auth0_id
+    - name
+    - created_at
+    filter:
+      auth0_id:
+        _eq: X-Hasura-User-Id
+  role: user
+table:
+  name: users
+  schema: public

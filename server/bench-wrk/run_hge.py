@@ -178,7 +178,7 @@ class HGE:
             print(Fore.YELLOW + "Stopping graphql engine at port:", self.port, Style.RESET_ALL)
 
             pgrp = os.getpgid(self.proc.pid)
-            os.killpg(pgrp, signal.SIGTERM) 
+            os.killpg(pgrp, signal.SIGTERM)
             # NOTE this doesn't seem to work, although a SIGINT from terminal does ...
             # self.proc.send_signal(signal.SIGINT)
             self.proc.wait()

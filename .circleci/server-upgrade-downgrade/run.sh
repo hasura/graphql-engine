@@ -175,6 +175,9 @@ get_server_upgrade_tests() {
                 --deselect test_graphql_queries.py::TestGraphQLQueryEnums::test_introspect_user_role \
                 --deselect test_schema_stitching.py::TestRemoteSchemaQueriesOverWebsocket::test_remote_query_error \
                 --deselect test_events.py::TestCreateAndDelete::test_create_reset \
+                --deselect test_events.py::TestUpdateEvtQuery::test_update_basic \
+                --deselect test_schema_stitching.py::TestAddRemoteSchemaTbls::test_add_schema \
+                --deselect test_schema_stitching.py::TestAddRemoteSchemaTbls::test_add_conflicting_table \
 		"${args[@]}" 1>/dev/null 2>/dev/null
 	set +x
 	cat "$tmpfile"

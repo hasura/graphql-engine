@@ -25,6 +25,7 @@ import           Hasura.RQL.DDL.Schema.Source
 import           Hasura.RQL.Types
 import           Hasura.Server.Init
 import           Hasura.Server.Migrate
+import           Hasura.Server.Types
 import           Hasura.Server.Version
 
 import qualified Data.NonNegativeIntSpec            as NonNegetiveIntSpec
@@ -35,6 +36,7 @@ import qualified Data.TimeSpec                      as TimeSpec
 import qualified Hasura.IncrementalSpec             as IncrementalSpec
 -- import qualified Hasura.RQL.MetadataSpec      as MetadataSpec
 import qualified Hasura.CacheBoundedSpec            as CacheBoundedSpec
+import qualified Hasura.RQL.Types.EndpointSpec      as EndpointSpec
 import qualified Hasura.Server.AuthSpec             as AuthSpec
 import qualified Hasura.Server.MigrateSpec          as MigrateSpec
 import qualified Hasura.Server.TelemetrySpec        as TelemetrySpec
@@ -71,6 +73,7 @@ unitSpecs = do
   describe "Hasura.Server.Telemetry" TelemetrySpec.spec
   describe "Hasura.Server.Auth" AuthSpec.spec
   describe "Hasura.Cache.Bounded" CacheBoundedSpec.spec
+  describe "Hasura.RQL.Types.Endpoint" EndpointSpec.spec
 
 buildPostgresSpecs :: HasVersion => Maybe URLTemplate -> IO Spec
 buildPostgresSpecs maybeUrlTemplate = do
@@ -87,7 +90,7 @@ buildPostgresSpecs maybeUrlTemplate = do
   let pgConnInfo = Q.ConnInfo 1 $ Q.CDDatabaseURI $ txtToBs pgUrlText
       urlConf = UrlValue $ InputWebhook pgUrlTemplate
       sourceConnInfo = PostgresSourceConnInfo urlConf defaultPostgresPoolSettings
-      sourceConfig = SourceConfiguration sourceConnInfo Nothing
+      sourceConfig = PostgresConnConfiguration sourceConnInfo Nothing
 
   pgPool <- Q.initPGPool pgConnInfo Q.defaultConnParams { Q.cpConns = 1 } print
   let pgContext = mkPGExecCtx Q.Serializable pgPool
@@ -95,8 +98,10 @@ buildPostgresSpecs maybeUrlTemplate = do
       setupCacheRef = do
         httpManager <- HTTP.newManager HTTP.tlsManagerSettings
         let sqlGenCtx = SQLGenCtx False
-            cacheBuildParams = CacheBuildParams httpManager sqlGenCtx RemoteSchemaPermsDisabled
-                               (mkPgSourceResolver print)
+            maintenanceMode = MaintenanceModeDisabled
+            serverConfigCtx =
+              ServerConfigCtx FunctionPermissionsInferred RemoteSchemaPermsDisabled sqlGenCtx maintenanceMode mempty
+            cacheBuildParams = CacheBuildParams httpManager (mkPgSourceResolver print) serverConfigCtx
 
             run :: CacheBuild a -> IO a
             run =
@@ -106,7 +111,7 @@ buildPostgresSpecs maybeUrlTemplate = do
 
         (metadata, schemaCache) <- run do
           metadata <- snd <$> (liftEitherM . runExceptT . runLazyTx pgContext Q.ReadWrite)
-                      (migrateCatalog sourceConfig =<< liftIO getCurrentTime)
+                      (migrateCatalog (Just sourceConfig) maintenanceMode =<< liftIO getCurrentTime)
           schemaCache <- buildRebuildableSchemaCache envMap metadata
           pure (metadata, schemaCache)
 

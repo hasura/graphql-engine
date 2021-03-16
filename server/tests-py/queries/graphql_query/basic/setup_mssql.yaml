@@ -1,0 +1,15 @@
+type: bulk
+args:
+
+- type: mssql_track_table
+  args:
+    source: mssql
+    table:
+      name: test_types
+
+#Author table
+- type: mssql_track_table
+  args:
+    source: mssql
+    table:
+      name: author

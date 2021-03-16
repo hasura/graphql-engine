@@ -224,7 +224,7 @@ The permission for ``org-member`` role changes to this:
 .. admonition:: Array session variables in permission rules
 
    Support for using session variables for array operators like ``_in``, ``_nin``, ``_has_any_keys``,
-   ``_has_all_keys`` is available in versions ``v.1.0.0-beta.3`` and above.
+   ``_has_all_keys`` is available in versions ``v1.0.0-beta.3`` and above.
 
    When you use array operators such as ``_in`` in the permissions builder in the Hasura console, it will automatically open an array for your values. 
    If your session variable value is already an array, you can click the ``[X-Hasura-Allowed-Ids]`` suggestion to remove the brackets and set your 
@@ -262,3 +262,7 @@ if ``{hello,world}`` is a valid format of type ``text[]``, you can run:
 
    In future, we'll add support for passing session variables as JSON values where possible (i.e, auth
    webhook and JWT but not in headers).
+
+.. admonition:: Additional Resources
+
+  Enterprise Grade Authorization - `Watch Webinar <https://hasura.io/events/webinar/authorization-modeling-hasura/?pg=docs&plcmt=body&cta=watch-webinar&tech=>`__.

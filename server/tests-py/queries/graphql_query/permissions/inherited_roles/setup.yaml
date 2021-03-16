@@ -1,0 +1,102 @@
+type: bulk
+args:
+
+- type: pg_track_table
+  args:
+    table: employee
+
+- type: pg_track_table
+  args:
+    table: team
+
+- type: pg_track_table
+  args:
+    table: manager
+
+#Object relationship
+- type: pg_create_object_relationship
+  args:
+    name: manager
+    table: employee
+    using:
+      foreign_key_constraint_on: manager_id
+
+#Array relationship
+- type: pg_create_array_relationship
+  args:
+    table: manager
+    name: employees
+    using:
+      foreign_key_constraint_on:
+        table: employee
+        column: manager_id
+
+- type: pg_add_computed_field
+  args:
+    table: employee
+    name: yearly_salary
+    definition:
+      function: employee_yearly_salary
+      table_argument: employee_row
+
+- type: pg_create_select_permission
+  args:
+    table: employee
+    role: employee
+    permission:
+      columns:
+        - id
+        - name
+        - salary
+        - title
+        - team_id
+      computed_fields:
+        - yearly_salary
+      filter:
+        id:
+          _eq: X-Hasura-User-Id
+
+- type: pg_create_select_permission
+  args:
+    table: employee
+    role:  manager
+    permission:
+      columns:
+        - name
+        - title
+        - manager_remarks
+      filter:
+        manager_id:
+          _eq: X-Hasura-Manager-Id
+      allow_aggregations: true
+
+- type: pg_create_select_permission
+  args:
+    table: manager
+    role:  manager
+    permission:
+      columns: '*'
+      allow_aggregations: true
+      filter:
+        id: X-Hasura-Manager-Id
+
+- type: pg_create_select_permission
+  args:
+    table: manager
+    role:  employee
+    permission:
+      columns:
+        - name
+        - phone
+      allow_aggregations: true
+      filter:
+        employees:
+          manager_id:
+            _eq: X-Hasura-Manager-Id
+
+- type: add_inherited_role
+  args:
+    role_name: manager_employee
+    role_set:
+      - manager
+      - employee

@@ -1,72 +1,62 @@
 module Hasura.RQL.Types
   ( MonadTx(..)
 
-  , UserInfoM(..)
-
-  , HasHttpManager (..)
-
   , SQLGenCtx(..)
-  , HasSQLGenCtx(..)
-
   , RemoteSchemaPermsCtx(..)
-  , HasRemoteSchemaPermsCtx(..)
+
+  , ServerConfigCtx(..)
+  , HasServerConfigCtx(..)
 
   , HasSystemDefined(..)
   , HasSystemDefinedT
   , runHasSystemDefinedT
 
-  , QCtx(..)
-  , HasQCtx(..)
-  , mkAdminQCtx
-  , askPGSourceCache
+
+  , askSourceInfo
+  , askSourceConfig
+  , askSourceTables
   , askTableCache
   , askTabInfo
   , askTabInfoSource
   , askTableCoreInfo
   , askTableCoreInfoSource
-  , getTableInfo
   , askFieldInfoMap
   , askFieldInfoMapSource
-  , askPGType
   , assertPGCol
   , askRelType
-  , askFieldInfo
-  , askPGColInfo
   , askComputedFieldInfo
   , askRemoteRel
-  , askCurRole
-  , askEventTriggerInfo
-  , askTabInfoFromTrigger
-
-  , HeaderObj
-
-  , liftMaybe
+  , findTable
   , module R
   ) where
 
 import           Hasura.Prelude
 
-import           Data.Aeson
 import qualified Data.HashMap.Strict                 as M
-import qualified Data.Text                           as T
 import qualified Database.PG.Query                   as Q
-import qualified Network.HTTP.Client                 as HTTP
 
+import           Control.Lens                        (at, (^.))
 import           Control.Monad.Unique
 import           Data.Text.Extended
+import           Network.HTTP.Client.Extended        (HasHttpManagerM (..))
 
 import           Hasura.Backends.Postgres.Connection as R
-import           Hasura.Backends.Postgres.SQL.Types  hiding (TableName)
 import           Hasura.RQL.IR.BoolExp               as R
 import           Hasura.RQL.Types.Action             as R
+import           Hasura.RQL.Types.ApiLimit           as R
+import           Hasura.RQL.Types.Backend            as R
 import           Hasura.RQL.Types.Column             as R
-import           Hasura.RQL.Types.Common             as R hiding (FunctionName)
+import           Hasura.RQL.Types.Common             as R
 import           Hasura.RQL.Types.ComputedField      as R
 import           Hasura.RQL.Types.CustomTypes        as R
+import           Hasura.RQL.Types.Endpoint           as R
 import           Hasura.RQL.Types.Error              as R
 import           Hasura.RQL.Types.EventTrigger       as R
 import           Hasura.RQL.Types.Function           as R
+import           Hasura.RQL.Types.InheritedRoles     as R
 import           Hasura.RQL.Types.Metadata           as R
+import           Hasura.RQL.Types.Metadata.Backend   as R
+import           Hasura.RQL.Types.Metadata.Object    as R
 import           Hasura.RQL.Types.Permission         as R
 import           Hasura.RQL.Types.QueryCollection    as R
 import           Hasura.RQL.Types.Relationship       as R
@@ -79,170 +69,80 @@ import           Hasura.RQL.Types.SchemaCacheTypes   as R
 import           Hasura.RQL.Types.Source             as R
 import           Hasura.RQL.Types.Table              as R
 import           Hasura.SQL.Backend                  as R
-
+import           Hasura.Server.Types
 import           Hasura.Session
 import           Hasura.Tracing
 
-data QCtx
-  = QCtx
-  { qcUserInfo    :: !UserInfo
-  , qcSchemaCache :: !SchemaCache
-  , qcSQLCtx      :: !SQLGenCtx
-  }
 
-class HasQCtx a where
-  getQCtx :: a -> QCtx
+askSourceInfo
+  :: (CacheRM m, MonadError QErr m, Backend b, MetadataM m)
+  => SourceName -> m (SourceInfo b)
+askSourceInfo sourceName = do
+  sources <- scSources <$> askSchemaCache
+  onNothing (unsafeSourceInfo =<< M.lookup sourceName sources) $ do
+    -- FIXME: this error can also happen for a lookup with the wrong type
+    metadata <- getMetadata
+    case metadata ^. metaSources . at sourceName of
+      Nothing ->
+        throw400 NotExists $ "source with name " <> sourceName <<> " does not exist"
+      Just _ ->
+        throw400 Unexpected $ "source with name " <> sourceName <<> " is inconsistent"
 
-instance HasQCtx QCtx where
-  getQCtx = id
+askSourceConfig
+  :: (CacheRM m, MonadError QErr m, Backend b, MetadataM m)
+  => SourceName -> m (SourceConfig b)
+askSourceConfig = fmap _siConfiguration . askSourceInfo
 
-mkAdminQCtx :: SQLGenCtx -> SchemaCache ->  QCtx
-mkAdminQCtx soc sc = QCtx adminUserInfo sc soc
+askSourceTables :: (Backend b) => CacheRM m => SourceName -> m (TableCache b)
+askSourceTables sourceName = do
+  sources <- scSources <$> askSchemaCache
+  pure $ fromMaybe mempty $ unsafeSourceTables =<< M.lookup sourceName sources
 
-class (Monad m) => UserInfoM m where
-  askUserInfo :: m UserInfo
-
-instance (UserInfoM m) => UserInfoM (ReaderT r m) where
-  askUserInfo = lift askUserInfo
-instance (UserInfoM m) => UserInfoM (ExceptT r m) where
-  askUserInfo = lift askUserInfo
-instance (UserInfoM m) => UserInfoM (StateT s m) where
-  askUserInfo = lift askUserInfo
-instance (UserInfoM m) => UserInfoM (TraceT m) where
-  askUserInfo = lift askUserInfo
-instance (UserInfoM m) => UserInfoM (MetadataT m) where
-  askUserInfo = lift askUserInfo
-instance (UserInfoM m) => UserInfoM (TableCacheRT b m) where
-  askUserInfo = lift askUserInfo
-
-askPGSourceCache
-  :: (CacheRM m, MonadError QErr m)
-  => SourceName -> m (SourceInfo 'Postgres)
-askPGSourceCache source = do
-  pgSources <- scPostgres <$> askSchemaCache
-  onNothing (M.lookup source pgSources) $
-    throw400 NotExists $ "source with name " <> source <<> " not exists"
 
 askTabInfo
-  :: (QErrM m, CacheRM m)
-  => SourceName -> QualifiedTable -> m (TableInfo 'Postgres)
-askTabInfo sourceName tabName = do
+  :: (QErrM m, CacheRM m, Backend b)
+  => SourceName -> TableName b -> m (TableInfo b)
+askTabInfo sourceName tableName = do
   rawSchemaCache <- askSchemaCache
-  liftMaybe (err400 NotExists errMsg) $ do
-    sourceCache <- M.lookup sourceName $ scPostgres rawSchemaCache
-    M.lookup tabName $ _pcTables sourceCache
+  unsafeTableInfo sourceName tableName (scSources rawSchemaCache)
+    `onNothing` throw400 NotExists errMsg
   where
-    errMsg = "table " <> tabName <<> " does not exist " <> "in source: "
-              <> sourceNameToText sourceName
+    errMsg = "table " <> tableName <<> " does not exist in source: " <> sourceNameToText sourceName
 
 askTabInfoSource
-  :: (QErrM m, TableInfoRM 'Postgres m)
-  => QualifiedTable -> m (TableInfo 'Postgres)
+  :: (QErrM m, TableInfoRM b m, Backend b)
+  => TableName b -> m (TableInfo b)
 askTabInfoSource tableName = do
   lookupTableInfo tableName >>= (`onNothing` throwTableDoesNotExist tableName)
 
-askTabInfoFromTrigger
-  :: (QErrM m, CacheRM m)
-  => SourceName -> TriggerName -> m (TableInfo 'Postgres)
-askTabInfoFromTrigger sourceName trn = do
-  sc <- askSchemaCache
-  let tabInfos = M.elems $ maybe mempty _pcTables $ M.lookup sourceName $ scPostgres sc
-  liftMaybe (err400 NotExists errMsg) $ find (isJust.M.lookup trn._tiEventTriggerInfoMap) tabInfos
-  where
-    errMsg = "event trigger " <> triggerNameToTxt trn <<> " does not exist"
+class (Monad m) => HasServerConfigCtx m where
+  askServerConfigCtx :: m ServerConfigCtx
 
-askEventTriggerInfo
-  :: (QErrM m, CacheRM m)
-  => SourceName -> TriggerName -> m EventTriggerInfo
-askEventTriggerInfo sourceName trn = do
-  ti <- askTabInfoFromTrigger sourceName trn
-  let etim = _tiEventTriggerInfoMap ti
-  liftMaybe (err400 NotExists errMsg) $ M.lookup trn etim
-  where
-    errMsg = "event trigger " <> triggerNameToTxt trn <<> " does not exist"
-
-class (Monad m) => HasHttpManager m where
-  askHttpManager :: m HTTP.Manager
-
-instance (HasHttpManager m) => HasHttpManager (ExceptT e m) where
-  askHttpManager = lift askHttpManager
-instance (HasHttpManager m) => HasHttpManager (ReaderT r m) where
-  askHttpManager = lift askHttpManager
-instance (HasHttpManager m) => HasHttpManager (StateT s m) where
-  askHttpManager = lift askHttpManager
-instance (Monoid w, HasHttpManager m) => HasHttpManager (WriterT w m) where
-  askHttpManager = lift askHttpManager
-instance (HasHttpManager m) => HasHttpManager (TraceT m) where
-  askHttpManager = lift askHttpManager
-instance (HasHttpManager m) => HasHttpManager (MetadataT m) where
-  askHttpManager = lift askHttpManager
-instance (HasHttpManager m) => HasHttpManager (LazyTxT QErr m) where
-  askHttpManager = lift askHttpManager
-
-
-data RemoteSchemaPermsCtx
-  = RemoteSchemaPermsEnabled
-  | RemoteSchemaPermsDisabled
-  deriving (Show, Eq)
-
-instance FromJSON RemoteSchemaPermsCtx where
-  parseJSON = withText "RemoteSchemaPermsCtx" $ \t ->
-    case T.toLower t of
-      "true"  -> pure RemoteSchemaPermsEnabled
-      "false" -> pure RemoteSchemaPermsDisabled
-      _       -> fail "enable_remote_schema_permissions should be a boolean value"
-
-instance ToJSON RemoteSchemaPermsCtx where
-  toJSON = \case
-    RemoteSchemaPermsEnabled  -> "true"
-    RemoteSchemaPermsDisabled -> "false"
-
-class (Monad m) => HasRemoteSchemaPermsCtx m where
-  askRemoteSchemaPermsCtx :: m RemoteSchemaPermsCtx
-
-instance (HasRemoteSchemaPermsCtx m)
-         => HasRemoteSchemaPermsCtx (ReaderT r m) where
-  askRemoteSchemaPermsCtx = lift askRemoteSchemaPermsCtx
-instance (HasRemoteSchemaPermsCtx m)
-         => HasRemoteSchemaPermsCtx (StateT s m) where
-  askRemoteSchemaPermsCtx = lift askRemoteSchemaPermsCtx
-instance (Monoid w, HasRemoteSchemaPermsCtx m)
-         => HasRemoteSchemaPermsCtx (WriterT w m) where
-  askRemoteSchemaPermsCtx = lift askRemoteSchemaPermsCtx
-instance (HasRemoteSchemaPermsCtx m)
-         => HasRemoteSchemaPermsCtx (TableCoreCacheRT b m) where
-  askRemoteSchemaPermsCtx = lift askRemoteSchemaPermsCtx
-instance (HasRemoteSchemaPermsCtx m)
-         => HasRemoteSchemaPermsCtx (TraceT m) where
-  askRemoteSchemaPermsCtx = lift askRemoteSchemaPermsCtx
-instance (HasRemoteSchemaPermsCtx m)
-         => HasRemoteSchemaPermsCtx (MetadataT m) where
-  askRemoteSchemaPermsCtx = lift askRemoteSchemaPermsCtx
-instance (HasRemoteSchemaPermsCtx m)
-         => HasRemoteSchemaPermsCtx (LazyTxT QErr m) where
-  askRemoteSchemaPermsCtx = lift askRemoteSchemaPermsCtx
-
-class (Monad m) => HasSQLGenCtx m where
-  askSQLGenCtx :: m SQLGenCtx
-
-instance (HasSQLGenCtx m) => HasSQLGenCtx (ReaderT r m) where
-  askSQLGenCtx = lift askSQLGenCtx
-instance (HasSQLGenCtx m) => HasSQLGenCtx (StateT s m) where
-  askSQLGenCtx = lift askSQLGenCtx
-instance (Monoid w, HasSQLGenCtx m) => HasSQLGenCtx (WriterT w m) where
-  askSQLGenCtx = lift askSQLGenCtx
-instance (HasSQLGenCtx m) => HasSQLGenCtx (TableCoreCacheRT b m) where
-  askSQLGenCtx = lift askSQLGenCtx
-instance (HasSQLGenCtx m) => HasSQLGenCtx (TraceT m) where
-  askSQLGenCtx = lift askSQLGenCtx
-instance (HasSQLGenCtx m) => HasSQLGenCtx (MetadataT m) where
-  askSQLGenCtx = lift askSQLGenCtx
-instance (HasSQLGenCtx m) => HasSQLGenCtx (Q.TxET QErr m) where
-  askSQLGenCtx = lift askSQLGenCtx
-instance (HasSQLGenCtx m) => HasSQLGenCtx (LazyTxT QErr m) where
-  askSQLGenCtx = lift askSQLGenCtx
-instance (HasSQLGenCtx m) => HasSQLGenCtx (TableCacheRT b m) where
-  askSQLGenCtx = lift askSQLGenCtx
+instance (HasServerConfigCtx m)
+         => HasServerConfigCtx (ReaderT r m) where
+  askServerConfigCtx = lift askServerConfigCtx
+instance (HasServerConfigCtx m)
+         => HasServerConfigCtx (StateT s m) where
+  askServerConfigCtx = lift askServerConfigCtx
+instance (Monoid w, HasServerConfigCtx m)
+         => HasServerConfigCtx (WriterT w m) where
+  askServerConfigCtx = lift askServerConfigCtx
+instance (HasServerConfigCtx m)
+         => HasServerConfigCtx (TableCoreCacheRT b m) where
+  askServerConfigCtx = lift askServerConfigCtx
+instance (HasServerConfigCtx m)
+         => HasServerConfigCtx (TraceT m) where
+  askServerConfigCtx = lift askServerConfigCtx
+instance (HasServerConfigCtx m)
+         => HasServerConfigCtx (MetadataT m) where
+  askServerConfigCtx = lift askServerConfigCtx
+instance (HasServerConfigCtx m)
+         => HasServerConfigCtx (LazyTxT QErr m) where
+  askServerConfigCtx = lift askServerConfigCtx
+instance (HasServerConfigCtx m) => HasServerConfigCtx (Q.TxET QErr m) where
+  askServerConfigCtx = lift askServerConfigCtx
+instance (HasServerConfigCtx m) => HasServerConfigCtx (TableCacheRT b m) where
+  askServerConfigCtx = lift askServerConfigCtx
 
 class (Monad m) => HasSystemDefined m where
   askSystemDefined :: m SystemDefined
@@ -259,7 +159,7 @@ instance (HasSystemDefined m) => HasSystemDefined (TraceT m) where
 newtype HasSystemDefinedT m a
   = HasSystemDefinedT { unHasSystemDefinedT :: ReaderT SystemDefined m a }
   deriving ( Functor, Applicative, Monad, MonadTrans, MonadIO, MonadUnique, MonadError e, MonadTx
-           , HasHttpManager, HasSQLGenCtx, SourceM, TableCoreInfoRM b, CacheRM, UserInfoM, HasRemoteSchemaPermsCtx)
+           , HasHttpManagerM, SourceM, TableCoreInfoRM b, CacheRM, UserInfoM, HasServerConfigCtx)
 
 runHasSystemDefinedT :: SystemDefined -> HasSystemDefinedT m a -> m a
 runHasSystemDefinedT systemDefined = flip runReaderT systemDefined . unHasSystemDefinedT
@@ -267,26 +167,25 @@ runHasSystemDefinedT systemDefined = flip runReaderT systemDefined . unHasSystem
 instance (Monad m) => HasSystemDefined (HasSystemDefinedT m) where
   askSystemDefined = HasSystemDefinedT ask
 
-liftMaybe :: (QErrM m) => QErr -> Maybe a -> m a
-liftMaybe e = maybe (throwError e) return
-
-throwTableDoesNotExist :: (QErrM m) => QualifiedTable -> m a
+throwTableDoesNotExist :: (QErrM m, Backend b) => TableName b -> m a
 throwTableDoesNotExist tableName = throw400 NotExists ("table " <> tableName <<> " does not exist")
 
-getTableInfo :: (QErrM m) => QualifiedTable -> HashMap QualifiedTable a -> m a
-getTableInfo tableName infoMap =
+findTable :: (QErrM m, Backend b) => TableName b -> HashMap (TableName b) a -> m a
+findTable tableName infoMap =
   M.lookup tableName infoMap `onNothing` throwTableDoesNotExist tableName
 
 askTableCache
-  :: (QErrM m, CacheRM m) => SourceName -> m (TableCache 'Postgres)
+  :: (QErrM m, CacheRM m, Backend b) => SourceName -> m (TableCache b)
 askTableCache sourceName = do
   schemaCache <- askSchemaCache
-  case M.lookup sourceName (scPostgres schemaCache) of
-    Just tableCache -> pure $ _pcTables tableCache
-    Nothing         -> throw400 NotExists $ "source " <> sourceName <<> " does not exist"
+  sourceInfo  <- M.lookup sourceName (scSources schemaCache)
+    `onNothing` throw400 NotExists ("source " <> sourceName <<> " does not exist")
+  unsafeSourceTables sourceInfo
+    `onNothing` throw400 NotExists ("source " <> sourceName <<> " is not a PG cache")
 
 askTableCoreInfo
-  :: (QErrM m, CacheRM m) => SourceName -> TableName 'Postgres -> m (TableCoreInfo 'Postgres)
+  :: (QErrM m, CacheRM m, Backend b)
+  => SourceName -> TableName b -> m (TableCoreInfo b)
 askTableCoreInfo sourceName tableName =
   _tiCoreInfo <$> askTabInfo sourceName tableName
 
@@ -294,13 +193,13 @@ askTableCoreInfo sourceName tableName =
 -- The source name is implicitly inferred from @'SourceM' via @'TableCoreInfoRM'.
 -- This is useful in RQL DML queries which are executed in a particular source database.
 askTableCoreInfoSource
-  :: (QErrM m, TableCoreInfoRM 'Postgres m) => QualifiedTable -> m (TableCoreInfo 'Postgres)
+  :: (QErrM m, Backend b, TableCoreInfoRM b m) => TableName b -> m (TableCoreInfo b)
 askTableCoreInfoSource tableName =
   lookupTableCoreInfo tableName >>= (`onNothing` throwTableDoesNotExist tableName)
 
 askFieldInfoMap
-  :: (QErrM m, CacheRM m)
-  => SourceName -> TableName 'Postgres -> m (FieldInfoMap (FieldInfo 'Postgres))
+  :: (QErrM m, CacheRM m, Backend b)
+  => SourceName -> TableName b -> m (FieldInfoMap (FieldInfo b))
 askFieldInfoMap sourceName tableName =
   _tciFieldInfoMap . _tiCoreInfo <$> askTabInfo sourceName tableName
 
@@ -308,41 +207,10 @@ askFieldInfoMap sourceName tableName =
 -- The source name is implicitly inferred from @'SourceM' via @'TableCoreInfoRM'.
 -- This is useful in RQL DML queries which are executed in a particular source database.
 askFieldInfoMapSource
-  :: (QErrM m, TableCoreInfoRM 'Postgres m)
-  => QualifiedTable -> m (FieldInfoMap (FieldInfo 'Postgres))
+  :: (QErrM m, Backend b, TableCoreInfoRM b m)
+  => TableName b -> m (FieldInfoMap (FieldInfo b))
 askFieldInfoMapSource tableName =
   _tciFieldInfoMap <$> askTableCoreInfoSource tableName
-
-askPGType
-  :: (MonadError QErr m)
-  => FieldInfoMap (FieldInfo 'Postgres)
-  -> PGCol
-  -> Text
-  -> m (ColumnType 'Postgres)
-askPGType m c msg =
-  pgiType <$> askPGColInfo m c msg
-
-askPGColInfo
-  :: (MonadError QErr m)
-  => FieldInfoMap (FieldInfo backend)
-  -> PGCol
-  -> Text
-  -> m (ColumnInfo backend)
-askPGColInfo m c msg = do
-  fieldInfo <- modifyErr ("column " <>) $
-             askFieldInfo m (fromCol @'Postgres c)
-  case fieldInfo of
-    (FIColumn pgColInfo)     -> pure pgColInfo
-    (FIRelationship   _)     -> throwErr "relationship"
-    (FIComputedField _)      -> throwErr "computed field"
-    (FIRemoteRelationship _) -> throwErr "remote relationship"
-  where
-    throwErr fieldType =
-      throwError $ err400 UnexpectedPayload $ mconcat
-      [ "expecting a postgres column; but, "
-      , c <<> " is a " <> fieldType <> "; "
-      , msg
-      ]
 
 askComputedFieldInfo
   :: (MonadError QErr m)
@@ -364,13 +232,13 @@ askComputedFieldInfo fields computedField = do
       , computedField <<> " is a " <> fieldType <> "; "
       ]
 
-assertPGCol :: (MonadError QErr m)
+assertPGCol :: (MonadError QErr m, Backend backend)
             => FieldInfoMap (FieldInfo backend)
             -> Text
-            -> PGCol
+            -> Column backend
             -> m ()
 assertPGCol m msg c = do
-  _ <- askPGColInfo m c msg
+  _ <- askColInfo m c msg
   return ()
 
 askRelType :: (MonadError QErr m)
@@ -390,13 +258,6 @@ askRelType m r msg = do
       , msg
       ]
 
-askFieldInfo :: (MonadError QErr m)
-             => FieldInfoMap fieldInfo
-             -> FieldName
-             -> m fieldInfo
-askFieldInfo m f =
-  onNothing (M.lookup f m) $ throw400 NotExists (f <<> " does not exist")
-
 askRemoteRel :: (MonadError QErr m)
            => FieldInfoMap (FieldInfo backend)
            -> RemoteRelationshipName
@@ -408,7 +269,3 @@ askRemoteRel fieldInfoMap relName = do
     _                                      ->
       throw400 UnexpectedPayload "expecting a remote relationship"
 
-askCurRole :: (UserInfoM m) => m RoleName
-askCurRole = _uiRole <$> askUserInfo
-
-type HeaderObj = M.HashMap Text Text

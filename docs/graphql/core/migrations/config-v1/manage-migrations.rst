@@ -221,3 +221,5 @@ issue.
 If ``DATABASE STATUS`` indicates ``Not Present``, it denotes that there are new
 migration versions in the local directory which are not applied on the database
 yet. Executing a ``migrate apply`` will resolve this.
+
+

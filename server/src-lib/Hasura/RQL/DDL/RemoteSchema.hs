@@ -21,14 +21,15 @@ import qualified Data.HashSet                           as S
 
 import           Control.Monad.Unique
 import           Data.Text.Extended
+import           Network.HTTP.Client.Extended
 
 import           Hasura.EncJSON
 import           Hasura.GraphQL.RemoteServer
 import           Hasura.RQL.DDL.Deps
 import           Hasura.RQL.Types
 import           Hasura.Server.Version                  (HasVersion)
-
 import           Hasura.Session
+
 
 runAddRemoteSchema
   :: ( HasVersion
@@ -36,7 +37,7 @@ runAddRemoteSchema
      , CacheRWM m
      , MonadIO m
      , MonadUnique m
-     , HasHttpManager m
+     , HasHttpManagerM m
      , MetadataM m
      )
   => Env.Environment
@@ -55,13 +56,13 @@ runAddRemoteSchema env q@(AddRemoteSchemaQuery name defn comment) = do
 runAddRemoteSchemaPermissions
   :: ( QErrM m
      , CacheRWM m
-     , HasRemoteSchemaPermsCtx m
+     , HasServerConfigCtx m
      , MetadataM m
      )
   => AddRemoteSchemaPermissions
   -> m EncJSON
 runAddRemoteSchemaPermissions q = do
-  remoteSchemaPermsCtx <- askRemoteSchemaPermsCtx
+  remoteSchemaPermsCtx <- _sccRemoteSchemaPermsCtx <$> askServerConfigCtx
   unless (remoteSchemaPermsCtx == RemoteSchemaPermsEnabled) $ do
     throw400 ConstraintViolation
       $ "remote schema permissions can only be added when "
@@ -113,7 +114,7 @@ addRemoteSchemaP1 name = do
     <> name <<> " already exists"
 
 addRemoteSchemaP2Setup
-  :: (HasVersion, QErrM m, MonadIO m, MonadUnique m, HasHttpManager m)
+  :: (HasVersion, QErrM m, MonadIO m, MonadUnique m, HasHttpManagerM m)
   => Env.Environment
   -> AddRemoteSchemaQuery -> m RemoteSchemaCtx
 addRemoteSchemaP2Setup env (AddRemoteSchemaQuery name def _) = do

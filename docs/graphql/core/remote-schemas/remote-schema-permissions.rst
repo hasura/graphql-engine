@@ -25,7 +25,7 @@ Remote schema permissions can be defined to:
 .. admonition:: Supported from
 
    Remote schema permissions are supported in Hasura GraphQL engine versions
-   ``v1.4.0`` and above.
+   ``v2.0.0`` and above.
 
 .. note::
 
@@ -36,8 +36,6 @@ Remote schema permissions can be defined to:
    schema permissions are not enabled in the graphql-engine, the remote schemas are
    considered to be a public entity i.e. all roles will have unrestricted access to the
    remote schema.
-
-.. note::
 
 Role based remote schemas
 -------------------------
@@ -285,3 +283,7 @@ be sent to the remote server will be:
    mutation {
      create_message(message: {to: "2", content: "hello world", from: "<x-hasura-user-id>"})
    }
+
+.. admonition:: Additional Resources
+
+  Data Federation with Hasura - `Watch Webinar <https://hasura.io/events/webinar/data-federation-hasura-graphql/?pg=docs&plcmt=body&cta=watch-webinar&tech=>`__.

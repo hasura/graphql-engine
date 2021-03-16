@@ -77,11 +77,11 @@ La manière la plus rapide d'essayer Hasura est via Heroku.
 
 3. Réalisez votre première requête GraphQL
 
-   Créez une table et réalisez votre première requête. Suivez ce [guide](https://hasura.io/docs/1.0/graphql/manual/getting-started/first-graphql-query.html).
+   Créez une table et réalisez votre première requête. Suivez ce [guide](https://hasura.io/docs/latest/graphql/core/getting-started/first-graphql-query.html).
 
 ### Autres méthodes de déploiement
 
-Pour les méthodes de déploiement basées sur Docker et les options de configuration avancées, consultez les [guides de déploiement](https://hasura.io/docs/1.0/graphql/manual/getting-started/index.html) ou les [manifestes d'installation](../install-manifests).
+Pour les méthodes de déploiement basées sur Docker et les options de configuration avancées, consultez les [guides de déploiement](https://hasura.io/docs/latest/graphql/core/getting-started/index.html) ou les [manifestes d'installation](../install-manifests).
 
 ## Architecture
 
@@ -111,7 +111,7 @@ traitements asynchrones - [plus d'informations](event-triggers.french.md).
 
 ### Données dérivée ou transformations de données
 
-Transformez les données dans Postgres ou exécutez de la logique métier dessus pour en deriver un autre jeu de données qui peut être requêté à l'aide de GraphQL Engine - [plus d'informations](https://hasura.io/docs/1.0/graphql/manual/queries/derived-data.html).
+Transformez les données dans Postgres ou exécutez de la logique métier dessus pour en deriver un autre jeu de données qui peut être requêté à l'aide de GraphQL Engine - [plus d'informations](https://hasura.io/docs/latest/graphql/core/queries/derived-data.html).
 
 ## Démos
 

@@ -963,21 +963,21 @@ func (r *HasuraMetadataV2) Marshal() ([]byte, error) {
 }
 
 //
-// https://hasura.io/docs/1.0/graphql/manual/api-reference/schema-metadata-api/syntax-defs.html#headerfromvalue
+// https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/syntax-defs.html#headerfromvalue
 type HeaderFromValue struct {
 	Name  string `json:"name"` // Name of the header
 	Value string `json:"value"`// Value of the header
 }
 
 //
-// https://hasura.io/docs/1.0/graphql/manual/api-reference/schema-metadata-api/syntax-defs.html#headerfromenv
+// https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/syntax-defs.html#headerfromenv
 type HeaderFromEnv struct {
 	Name         string `json:"name"`          // Name of the header
 	ValueFromEnv string `json:"value_from_env"`// Name of the environment variable which holds the value of the header
 }
 
 //
-// https://hasura.io/docs/1.0/graphql/manual/api-reference/schema-metadata-api/custom-types.html#objectfield
+// https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/custom-types.html#objectfield
 type ObjectField struct {
 	Description *string `json:"description,omitempty"`// Description of the Input object type
 	Name        string  `json:"name"`                 // Name of the Input object type
@@ -986,7 +986,7 @@ type ObjectField struct {
 
 // Type used in exported 'metadata.json' and replace metadata endpoint
 //
-// https://hasura.io/docs/1.0/graphql/manual/api-reference/schema-metadata-api/manage-metadata.html#replace-metadata
+// https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/manage-metadata.html#replace-metadata
 type HasuraMetadataV2 struct {
 	Actions          []Action               `json:"actions"`               
 	Allowlist        []AllowList            `json:"allowlist"`             
@@ -1000,7 +1000,7 @@ type HasuraMetadataV2 struct {
 }
 
 //
-// https://hasura.io/docs/1.0/graphql/manual/api-reference/schema-metadata-api/actions.html#args-syntax
+// https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/actions.html#args-syntax
 type Action struct {
 	Comment     *string          `json:"comment,omitempty"`    // Comment
 	Definition  ActionDefinition `json:"definition"`           // Definition of the action
@@ -1011,7 +1011,7 @@ type Action struct {
 // Definition of the action
 //
 //
-// https://hasura.io/docs/1.0/graphql/manual/api-reference/schema-metadata-api/actions.html#actiondefinition
+// https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/actions.html#actiondefinition
 type ActionDefinition struct {
 	Arguments            []InputArgument       `json:"arguments"`                       
 	ForwardClientHeaders *bool                 `json:"forward_client_headers,omitempty"`
@@ -1023,17 +1023,17 @@ type ActionDefinition struct {
 }
 
 //
-// https://hasura.io/docs/1.0/graphql/manual/api-reference/schema-metadata-api/actions.html#inputargument
+// https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/actions.html#inputargument
 type InputArgument struct {
 	Name string `json:"name"`
 	Type string `json:"type"`
 }
 
 //
-// https://hasura.io/docs/1.0/graphql/manual/api-reference/schema-metadata-api/syntax-defs.html#headerfromvalue
+// https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/syntax-defs.html#headerfromvalue
 //
 //
-// https://hasura.io/docs/1.0/graphql/manual/api-reference/schema-metadata-api/syntax-defs.html#headerfromenv
+// https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/syntax-defs.html#headerfromenv
 type Header struct {
 	Name         string  `json:"name"`                    // Name of the header
 	Value        *string `json:"value,omitempty"`         // Value of the header
@@ -1046,13 +1046,13 @@ type Permissions struct {
 }
 
 //
-// https://hasura.io/docs/1.0/graphql/manual/api-reference/schema-metadata-api/query-collections.html#add-collection-to-allowlist-syntax
+// https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/query-collections.html#add-collection-to-allowlist-syntax
 type AllowList struct {
 	Collection string `json:"collection"`// Name of a query collection to be added to the allow-list
 }
 
 //
-// https://hasura.io/docs/1.0/graphql/manual/api-reference/schema-metadata-api/scheduled-triggers.html#create-cron-trigger
+// https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/scheduled-triggers.html#create-cron-trigger
 type CronTrigger struct {
 	Comment           *string                `json:"comment,omitempty"`   // Custom comment.
 	Headers           []Header               `json:"headers"`             // List of headers to be sent with the webhook
@@ -1067,7 +1067,7 @@ type CronTrigger struct {
 // Retry configuration if scheduled invocation delivery fails
 //
 //
-// https://hasura.io/docs/1.0/graphql/manual/api-reference/schema-metadata-api/scheduled-triggers.html#retryconfst
+// https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/scheduled-triggers.html#retryconfst
 type RetryConfST struct {
 	NumRetries           *int64 `json:"num_retries,omitempty"`           // Number of times to retry delivery.; Default: 0
 	RetryIntervalSeconds *int64 `json:"retry_interval_seconds,omitempty"`// Number of seconds to wait between each retry.; Default: 10
@@ -1083,7 +1083,7 @@ type CustomTypes struct {
 }
 
 //
-// https://hasura.io/docs/1.0/graphql/manual/api-reference/schema-metadata-api/custom-types.html#enumtype
+// https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/custom-types.html#enumtype
 type EnumType struct {
 	Description *string     `json:"description,omitempty"`// Description of the Enum type
 	Name        string      `json:"name"`                 // Name of the Enum type
@@ -1091,7 +1091,7 @@ type EnumType struct {
 }
 
 //
-// https://hasura.io/docs/1.0/graphql/manual/api-reference/schema-metadata-api/custom-types.html#enumvalue
+// https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/custom-types.html#enumvalue
 type EnumValue struct {
 	Description  *string `json:"description,omitempty"`  // Description of the Enum value
 	IsDeprecated *bool   `json:"is_deprecated,omitempty"`// If set to true, the enum value is marked as deprecated
@@ -1099,7 +1099,7 @@ type EnumValue struct {
 }
 
 //
-// https://hasura.io/docs/1.0/graphql/manual/api-reference/schema-metadata-api/custom-types.html#inputobjecttype
+// https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/custom-types.html#inputobjecttype
 type InputObjectType struct {
 	Description *string            `json:"description,omitempty"`// Description of the Input object type
 	Fields      []InputObjectField `json:"fields"`               // Fields of the Input object type
@@ -1107,7 +1107,7 @@ type InputObjectType struct {
 }
 
 //
-// https://hasura.io/docs/1.0/graphql/manual/api-reference/schema-metadata-api/custom-types.html#inputobjectfield
+// https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/custom-types.html#inputobjectfield
 type InputObjectField struct {
 	Description *string `json:"description,omitempty"`// Description of the Input object type
 	Name        string  `json:"name"`                 // Name of the Input object type
@@ -1115,7 +1115,7 @@ type InputObjectField struct {
 }
 
 //
-// https://hasura.io/docs/1.0/graphql/manual/api-reference/schema-metadata-api/custom-types.html#objecttype
+// https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/custom-types.html#objecttype
 type ObjectType struct {
 	Description   *string                        `json:"description,omitempty"`// Description of the Input object type
 	Fields        []InputObjectField             `json:"fields"`               // Fields of the Input object type
@@ -1124,7 +1124,7 @@ type ObjectType struct {
 }
 
 //
-// https://hasura.io/docs/1.0/graphql/manual/api-reference/schema-metadata-api/custom-types.html#objectrelationship
+// https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/custom-types.html#objectrelationship
 type CustomTypeObjectRelationship struct {
 	FieldMapping map[string]string                `json:"field_mapping"`// Mapping of fields of object type to columns of remote table
 	Name         string                           `json:"name"`         // Name of the relationship, shouldn’t conflict with existing field names
@@ -1138,7 +1138,7 @@ type QualifiedTable struct {
 }
 
 //
-// https://hasura.io/docs/1.0/graphql/manual/api-reference/schema-metadata-api/custom-types.html#scalartype
+// https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/custom-types.html#scalartype
 type ScalarType struct {
 	Description *string `json:"description,omitempty"`// Description of the Scalar type
 	Name        string  `json:"name"`                 // Name of the Scalar type
@@ -1146,7 +1146,7 @@ type ScalarType struct {
 
 // A custom SQL function to add to the GraphQL schema with configuration.
 //
-// https://hasura.io/docs/1.0/graphql/manual/api-reference/schema-metadata-api/custom-functions.html#args-syntax
+// https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/custom-functions.html#args-syntax
 type CustomFunction struct {
 	Configuration *FunctionConfiguration `json:"configuration,omitempty"`// Configuration for the SQL function
 	Function      *FunctionName          `json:"function"`               // Name of the SQL function
@@ -1156,7 +1156,7 @@ type CustomFunction struct {
 //
 // Configuration for a CustomFunction
 //
-// https://hasura.io/docs/1.0/graphql/manual/api-reference/schema-metadata-api/custom-functions.html#function-configuration
+// https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/custom-functions.html#function-configuration
 type FunctionConfiguration struct {
 	SessionArgument *string `json:"session_argument,omitempty"`// Function argument which accepts session info JSON; Currently, only functions which satisfy the following constraints can be exposed over the; GraphQL API (terminology from Postgres docs):; - Function behaviour: ONLY `STABLE` or `IMMUTABLE`; - Return type: MUST be `SETOF <table-name>`; - Argument modes: ONLY `IN`
 }
@@ -1167,7 +1167,7 @@ type QualifiedFunction struct {
 }
 
 //
-// https://hasura.io/docs/1.0/graphql/manual/api-reference/schema-metadata-api/query-collections.html#args-syntax
+// https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/query-collections.html#args-syntax
 type QueryCollectionEntry struct {
 	Comment    *string    `json:"comment,omitempty"`// Comment
 	Definition Definition `json:"definition"`       // List of queries
@@ -1180,14 +1180,14 @@ type Definition struct {
 }
 
 //
-// https://hasura.io/docs/1.0/graphql/manual/api-reference/schema-metadata-api/syntax-defs.html#collectionquery
+// https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/syntax-defs.html#collectionquery
 type QueryCollection struct {
 	Name  string `json:"name"` 
 	Query string `json:"query"`
 }
 
 //
-// https://hasura.io/docs/1.0/graphql/manual/api-reference/schema-metadata-api/remote-schemas.html#add-remote-schema
+// https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/remote-schemas.html#add-remote-schema
 type RemoteSchema struct {
 	Comment    *string         `json:"comment,omitempty"`// Comment
 	Definition RemoteSchemaDef `json:"definition"`       // Name of the remote schema
@@ -1197,7 +1197,7 @@ type RemoteSchema struct {
 // Name of the remote schema
 //
 //
-// https://hasura.io/docs/1.0/graphql/manual/api-reference/schema-metadata-api/syntax-defs.html#remoteschemadef
+// https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/syntax-defs.html#remoteschemadef
 type RemoteSchemaDef struct {
 	ForwardClientHeaders *bool    `json:"forward_client_headers,omitempty"`
 	Headers              []Header `json:"headers"`                         
@@ -1210,7 +1210,7 @@ type RemoteSchemaDef struct {
 type TableEntry struct {
 	ArrayRelationships  []ArrayRelationship     `json:"array_relationships"`    
 	ComputedFields      []ComputedField         `json:"computed_fields"`        
-	Configuration       *TableConfig            `json:"configuration,omitempty"`// Configuration for the table/view; ; https://hasura.io/docs/1.0/graphql/manual/api-reference/schema-metadata-api/table-view.html#table-config
+	Configuration       *TableConfig            `json:"configuration,omitempty"`// Configuration for the table/view; ; https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/table-view.html#table-config
 	DeletePermissions   []DeletePermissionEntry `json:"delete_permissions"`     
 	EventTriggers       []EventTrigger          `json:"event_triggers"`         
 	InsertPermissions   []InsertPermissionEntry `json:"insert_permissions"`     
@@ -1223,7 +1223,7 @@ type TableEntry struct {
 }
 
 //
-// https://hasura.io/docs/1.0/graphql/manual/api-reference/schema-metadata-api/relationship.html#create-array-relationship-syntax
+// https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/relationship.html#create-array-relationship-syntax
 type ArrayRelationship struct {
 	Comment *string     `json:"comment,omitempty"`// Comment
 	Name    string      `json:"name"`             // Name of the new relationship
@@ -1234,7 +1234,7 @@ type ArrayRelationship struct {
 //
 // Use one of the available ways to define an object relationship
 //
-// https://hasura.io/docs/1.0/graphql/manual/api-reference/schema-metadata-api/relationship.html#arrrelusing
+// https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/relationship.html#arrrelusing
 type ArrRelUsing struct {
 	ForeignKeyConstraintOn *ArrRelUsingFKeyOn        `json:"foreign_key_constraint_on,omitempty"`// The column with foreign key constraint
 	ManualConfiguration    *ArrRelUsingManualMapping `json:"manual_configuration,omitempty"`     // Manual mapping of table and columns
@@ -1244,7 +1244,7 @@ type ArrRelUsing struct {
 //
 // The column with foreign key constraint
 //
-// https://hasura.io/docs/1.0/graphql/manual/api-reference/schema-metadata-api/relationship.html#arrrelusingfkeyon
+// https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/relationship.html#arrrelusingfkeyon
 type ArrRelUsingFKeyOn struct {
 	Column string     `json:"column"`
 	Table  *TableName `json:"table"` 
@@ -1254,14 +1254,14 @@ type ArrRelUsingFKeyOn struct {
 //
 // Manual mapping of table and columns
 //
-// https://hasura.io/docs/1.0/graphql/manual/api-reference/schema-metadata-api/relationship.html#arrrelusingmanualmapping
+// https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/relationship.html#arrrelusingmanualmapping
 type ArrRelUsingManualMapping struct {
 	ColumnMapping map[string]string `json:"column_mapping"`// Mapping of columns from current table to remote table
 	RemoteTable   *TableName        `json:"remote_table"`  // The table to which the relationship has to be established
 }
 
 //
-// https://hasura.io/docs/1.0/graphql/manual/api-reference/schema-metadata-api/computed-field.html#args-syntax
+// https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/computed-field.html#args-syntax
 type ComputedField struct {
 	Comment    *string                 `json:"comment,omitempty"`// Comment
 	Definition ComputedFieldDefinition `json:"definition"`       // The computed field definition
@@ -1271,7 +1271,7 @@ type ComputedField struct {
 // The computed field definition
 //
 //
-// https://hasura.io/docs/1.0/graphql/manual/api-reference/schema-metadata-api/computed-field.html#computedfielddefinition
+// https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/computed-field.html#computedfielddefinition
 type ComputedFieldDefinition struct {
 	Function        *FunctionName `json:"function"`                  // The SQL function
 	SessionArgument *string       `json:"session_argument,omitempty"`// Name of the argument which accepts the Hasura session object as a JSON/JSONB value. If; omitted, the Hasura session object is not passed to the function
@@ -1280,7 +1280,7 @@ type ComputedFieldDefinition struct {
 
 // Configuration for the table/view
 //
-// https://hasura.io/docs/1.0/graphql/manual/api-reference/schema-metadata-api/table-view.html#table-config
+// https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/table-view.html#table-config
 type TableConfig struct {
 	CustomColumnNames map[string]string `json:"custom_column_names,omitempty"`// Customise the column names
 	CustomRootFields  *CustomRootFields `json:"custom_root_fields,omitempty"` // Customise the root fields
@@ -1290,7 +1290,7 @@ type TableConfig struct {
 //
 // Customise the root fields
 //
-// https://hasura.io/docs/1.0/graphql/manual/api-reference/schema-metadata-api/table-view.html#custom-root-fields
+// https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/table-view.html#custom-root-fields
 type CustomRootFields struct {
 	Delete          *string `json:"delete,omitempty"`          // Customise the `delete_<table-name>` root field
 	DeleteByPk      *string `json:"delete_by_pk,omitempty"`    // Customise the `delete_<table-name>_by_pk` root field
@@ -1304,7 +1304,7 @@ type CustomRootFields struct {
 }
 
 //
-// https://hasura.io/docs/1.0/graphql/manual/api-reference/schema-metadata-api/permission.html#create-delete-permission-syntax
+// https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/permission.html#create-delete-permission-syntax
 type DeletePermissionEntry struct {
 	Comment    *string          `json:"comment,omitempty"`// Comment
 	Permission DeletePermission `json:"permission"`       // The permission definition
@@ -1314,14 +1314,14 @@ type DeletePermissionEntry struct {
 // The permission definition
 //
 //
-// https://hasura.io/docs/1.0/graphql/manual/api-reference/schema-metadata-api/permission.html#deletepermission
+// https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/permission.html#deletepermission
 type DeletePermission struct {
 	Filter map[string]*Filter `json:"filter,omitempty"`// Only the rows where this precondition holds true are updatable
 }
 
 // NOTE: The metadata type doesn't QUITE match the 'create' arguments here
 //
-// https://hasura.io/docs/1.0/graphql/manual/api-reference/schema-metadata-api/event-triggers.html#create-event-trigger
+// https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/event-triggers.html#create-event-trigger
 type EventTrigger struct {
 	Definition     EventTriggerDefinition `json:"definition"`                // The SQL function
 	Headers        []Header               `json:"headers"`                   // The SQL function
@@ -1333,23 +1333,23 @@ type EventTrigger struct {
 
 // The SQL function
 type EventTriggerDefinition struct {
-	Delete       *OperationSpec `json:"delete,omitempty"`// ; https://hasura.io/docs/1.0/graphql/manual/api-reference/schema-metadata-api/event-triggers.html#operationspec
+	Delete       *OperationSpec `json:"delete,omitempty"`// ; https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/event-triggers.html#operationspec
 	EnableManual bool           `json:"enable_manual"`   
-	Insert       *OperationSpec `json:"insert,omitempty"`// ; https://hasura.io/docs/1.0/graphql/manual/api-reference/schema-metadata-api/event-triggers.html#operationspec
-	Update       *OperationSpec `json:"update,omitempty"`// ; https://hasura.io/docs/1.0/graphql/manual/api-reference/schema-metadata-api/event-triggers.html#operationspec
+	Insert       *OperationSpec `json:"insert,omitempty"`// ; https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/event-triggers.html#operationspec
+	Update       *OperationSpec `json:"update,omitempty"`// ; https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/event-triggers.html#operationspec
 }
 
 //
-// https://hasura.io/docs/1.0/graphql/manual/api-reference/schema-metadata-api/event-triggers.html#operationspec
+// https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/event-triggers.html#operationspec
 type OperationSpec struct {
-	Columns *EventTriggerColumns `json:"columns"`// ; https://hasura.io/docs/1.0/graphql/manual/api-reference/schema-metadata-api/event-triggers.html#eventtriggercolumns
-	Payload *EventTriggerColumns `json:"payload"`// ; https://hasura.io/docs/1.0/graphql/manual/api-reference/schema-metadata-api/event-triggers.html#eventtriggercolumns
+	Columns *EventTriggerColumns `json:"columns"`// ; https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/event-triggers.html#eventtriggercolumns
+	Payload *EventTriggerColumns `json:"payload"`// ; https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/event-triggers.html#eventtriggercolumns
 }
 
 // The SQL function
 //
 //
-// https://hasura.io/docs/1.0/graphql/manual/api-reference/schema-metadata-api/event-triggers.html#retryconf
+// https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/event-triggers.html#retryconf
 type RetryConf struct {
 	IntervalSEC *int64 `json:"interval_sec,omitempty"`// Number of seconds to wait between each retry.; Default: 10
 	NumRetries  *int64 `json:"num_retries,omitempty"` // Number of times to retry delivery.; Default: 0
@@ -1357,7 +1357,7 @@ type RetryConf struct {
 }
 
 //
-// https://hasura.io/docs/1.0/graphql/manual/api-reference/schema-metadata-api/permission.html#args-syntax
+// https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/permission.html#args-syntax
 type InsertPermissionEntry struct {
 	Comment    *string          `json:"comment,omitempty"`// Comment
 	Permission InsertPermission `json:"permission"`       // The permission definition
@@ -1367,7 +1367,7 @@ type InsertPermissionEntry struct {
 // The permission definition
 //
 //
-// https://hasura.io/docs/1.0/graphql/manual/api-reference/schema-metadata-api/permission.html#insertpermission
+// https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/permission.html#insertpermission
 type InsertPermission struct {
 	BackendOnly *bool                `json:"backend_only,omitempty"`// When set to true the mutation is accessible only if x-hasura-use-backend-only-permissions; session variable exists; and is set to true and request is made with x-hasura-admin-secret set if any auth is; configured
 	Check       map[string]*Filter   `json:"check,omitempty"`       // This expression has to hold true for every new row that is inserted
@@ -1376,7 +1376,7 @@ type InsertPermission struct {
 }
 
 //
-// https://hasura.io/docs/1.0/graphql/manual/api-reference/schema-metadata-api/relationship.html#args-syntax
+// https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/relationship.html#args-syntax
 type ObjectRelationship struct {
 	Comment *string     `json:"comment,omitempty"`// Comment
 	Name    string      `json:"name"`             // Name of the new relationship
@@ -1387,7 +1387,7 @@ type ObjectRelationship struct {
 //
 // Use one of the available ways to define an object relationship
 //
-// https://hasura.io/docs/1.0/graphql/manual/api-reference/schema-metadata-api/relationship.html#objrelusing
+// https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/relationship.html#objrelusing
 type ObjRelUsing struct {
 	ForeignKeyConstraintOn *string                   `json:"foreign_key_constraint_on,omitempty"`// The column with foreign key constraint
 	ManualConfiguration    *ObjRelUsingManualMapping `json:"manual_configuration,omitempty"`     // Manual mapping of table and columns
@@ -1397,14 +1397,14 @@ type ObjRelUsing struct {
 //
 // Manual mapping of table and columns
 //
-// https://hasura.io/docs/1.0/graphql/manual/api-reference/schema-metadata-api/relationship.html#objrelusingmanualmapping
+// https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/relationship.html#objrelusingmanualmapping
 type ObjRelUsingManualMapping struct {
 	ColumnMapping map[string]string `json:"column_mapping"`// Mapping of columns from current table to remote table
 	RemoteTable   *TableName        `json:"remote_table"`  // The table to which the relationship has to be established
 }
 
 //
-// https://hasura.io/docs/1.0/graphql/manual/api-reference/schema-metadata-api/remote-relationships.html#args-syntax
+// https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/remote-relationships.html#args-syntax
 type RemoteRelationship struct {
 	Definition RemoteRelationshipDef `json:"definition"`// Definition object
 	Name       string                `json:"name"`      // Name of the remote relationship
@@ -1419,11 +1419,11 @@ type RemoteRelationshipDef struct {
 
 type RemoteFieldValue struct {
 	Arguments map[string]string           `json:"arguments"`      
-	Field     map[string]RemoteFieldValue `json:"field,omitempty"`// A recursive tree structure that points to the field in the remote schema that needs to be; joined with.; It is recursive because the remote field maybe nested deeply in the remote schema.; ; https://hasura.io/docs/1.0/graphql/manual/api-reference/schema-metadata-api/remote-relationships.html#remotefield
+	Field     map[string]RemoteFieldValue `json:"field,omitempty"`// A recursive tree structure that points to the field in the remote schema that needs to be; joined with.; It is recursive because the remote field maybe nested deeply in the remote schema.; ; https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/remote-relationships.html#remotefield
 }
 
 //
-// https://hasura.io/docs/1.0/graphql/manual/api-reference/schema-metadata-api/permission.html#create-select-permission-syntax
+// https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/permission.html#create-select-permission-syntax
 type SelectPermissionEntry struct {
 	Comment    *string          `json:"comment,omitempty"`// Comment
 	Permission SelectPermission `json:"permission"`       // The permission definition
@@ -1433,7 +1433,7 @@ type SelectPermissionEntry struct {
 // The permission definition
 //
 //
-// https://hasura.io/docs/1.0/graphql/manual/api-reference/schema-metadata-api/permission.html#selectpermission
+// https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/permission.html#selectpermission
 type SelectPermission struct {
 	AllowAggregations *bool                `json:"allow_aggregations,omitempty"`// Toggle allowing aggregate queries
 	Columns           *EventTriggerColumns `json:"columns"`                     // Only these columns are selectable (or all when '*' is specified)
@@ -1443,7 +1443,7 @@ type SelectPermission struct {
 }
 
 //
-// https://hasura.io/docs/1.0/graphql/manual/api-reference/schema-metadata-api/permission.html#create-update-permission-syntax
+// https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/permission.html#create-update-permission-syntax
 type UpdatePermissionEntry struct {
 	Comment    *string          `json:"comment,omitempty"`// Comment
 	Permission UpdatePermission `json:"permission"`       // The permission definition
@@ -1453,7 +1453,7 @@ type UpdatePermissionEntry struct {
 // The permission definition
 //
 //
-// https://hasura.io/docs/1.0/graphql/manual/api-reference/schema-metadata-api/permission.html#updatepermission
+// https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/permission.html#updatepermission
 type UpdatePermission struct {
 	Check   map[string]*Filter   `json:"check,omitempty"` // Postcondition which must be satisfied by rows which have been updated
 	Columns *EventTriggerColumns `json:"columns"`         // Only these columns are selectable (or all when '*' is specified)

@@ -7,7 +7,7 @@ import qualified Data.HashMap.Strict.InsOrd as OMap
 
 import           Hasura.EncJSON
 import           Hasura.RQL.IR.Select
-import           Hasura.RQL.Types.Common
+import           Hasura.RQL.Types.Backend
 import           Hasura.SQL.Backend
 
 

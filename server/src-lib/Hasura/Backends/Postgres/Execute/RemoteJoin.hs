@@ -21,7 +21,6 @@ import qualified Data.Environment                       as Env
 import qualified Data.HashMap.Strict                    as Map
 import qualified Data.HashMap.Strict.Extended           as Map
 import qualified Data.HashMap.Strict.InsOrd             as OMap
-import qualified Data.HashSet                           as HS
 import qualified Data.List.NonEmpty                     as NE
 import qualified Data.Text                              as T
 import qualified Database.PG.Query                      as Q
@@ -29,25 +28,25 @@ import qualified Language.GraphQL.Draft.Syntax          as G
 import qualified Network.HTTP.Client                    as HTTP
 import qualified Network.HTTP.Types                     as N
 
-import           Control.Lens
 import           Data.Text.Extended                     (commaSeparated, (<<>))
 import           Data.Validation
 
-import qualified Hasura.Backends.Postgres.SQL.DML       as S
 import qualified Hasura.Tracing                         as Tracing
 
 import           Hasura.Backends.Postgres.Connection
 import           Hasura.EncJSON
+import           Hasura.GraphQL.Execute.Remote
+import           Hasura.GraphQL.Execute.RemoteJoin
 import           Hasura.GraphQL.Parser                  hiding (field)
 import           Hasura.GraphQL.RemoteServer            (execRemoteGQ)
 import           Hasura.GraphQL.Transport.HTTP.Protocol
 import           Hasura.RQL.DML.Internal
 import           Hasura.RQL.IR.RemoteJoin
-import           Hasura.RQL.IR.Returning
 import           Hasura.RQL.IR.Select
 import           Hasura.RQL.Types                       hiding (Alias)
 import           Hasura.Server.Version                  (HasVersion)
 import           Hasura.Session
+
 
 -- | Executes given query and fetch response JSON from Postgres. Substitutes remote relationship fields.
 executeQueryWithRemoteJoins
@@ -97,14 +96,7 @@ processRemoteJoins env manager reqHdrs userInfo pgRes rjs = do
   where
     rjMap = Map.fromList $ toList rjs
 
--- | Path to the remote join field in query response JSON from Postgres.
-newtype FieldPath = FieldPath {unFieldPath :: [FieldName]}
-  deriving (Show, Eq, Semigroup, Monoid, Hashable)
-
 type Alias = G.Name
-
-appendPath :: FieldName -> FieldPath -> FieldPath
-appendPath fieldName = FieldPath . (<> [fieldName]) . unFieldPath
 
 -- | The counter which is used to append the alias generated for remote field. See 'pathToAlias'.
 -- This guarentees the uniqueness of the alias.
@@ -130,153 +122,6 @@ pathToAlias :: (MonadError QErr m) => FieldPath -> Counter -> m Alias
 pathToAlias path counter =
   parseGraphQLName $ T.intercalate "_" (map getFieldNameTxt $ unFieldPath path)
                  <> "__" <> (tshow . unCounter) counter
-
-type RemoteJoins b = NE.NonEmpty (FieldPath, NE.NonEmpty (RemoteJoin b))
-type RemoteJoinMap b = Map.HashMap FieldPath (NE.NonEmpty (RemoteJoin b))
-
-mapToNonEmpty :: RemoteJoinMap backend -> Maybe (RemoteJoins backend)
-mapToNonEmpty = NE.nonEmpty . Map.toList
-
--- | Traverse through 'AnnSimpleSel' and collect remote join fields (if any).
-getRemoteJoins :: AnnSimpleSel 'Postgres -> (AnnSimpleSel 'Postgres, Maybe (RemoteJoins 'Postgres))
-getRemoteJoins =
-  second mapToNonEmpty . flip runState mempty . transformSelect mempty
-
-transformSelect :: FieldPath -> AnnSimpleSel 'Postgres -> State (RemoteJoinMap 'Postgres) (AnnSimpleSel 'Postgres)
-transformSelect path sel = do
-  let fields = _asnFields sel
-  -- Transform selects in array, object and computed fields
-  transformedFields <- transformAnnFields path fields
-  pure sel{_asnFields = transformedFields}
-
-transformObjectSelect :: FieldPath -> AnnObjectSelect 'Postgres -> State (RemoteJoinMap 'Postgres) (AnnObjectSelect 'Postgres)
-transformObjectSelect path sel = do
-  let fields = _aosFields sel
-  transformedFields <- transformAnnFields path fields
-  pure sel{_aosFields = transformedFields}
-
--- | Traverse through @'AnnAggregateSelect' and collect remote join fields (if any).
-getRemoteJoinsAggregateSelect :: AnnAggregateSelect 'Postgres -> (AnnAggregateSelect 'Postgres, Maybe (RemoteJoins 'Postgres))
-getRemoteJoinsAggregateSelect =
-  second mapToNonEmpty . flip runState mempty . transformAggregateSelect mempty
-
-transformAggregateSelect
-  :: FieldPath
-  -> AnnAggregateSelect 'Postgres
-  -> State (RemoteJoinMap 'Postgres) (AnnAggregateSelect 'Postgres)
-transformAggregateSelect path sel = do
-  let aggFields = _asnFields sel
-  transformedFields <- forM aggFields $ \(fieldName, aggField) ->
-    (fieldName,) <$> case aggField of
-      TAFAgg agg         -> pure $ TAFAgg agg
-      TAFNodes annFields -> TAFNodes <$> transformAnnFields (appendPath fieldName path) annFields
-      TAFExp t           -> pure $ TAFExp t
-  pure sel{_asnFields = transformedFields}
-
--- | Traverse through @'ConnectionSelect' and collect remote join fields (if any).
-getRemoteJoinsConnectionSelect :: ConnectionSelect 'Postgres S.SQLExp -> (ConnectionSelect 'Postgres S.SQLExp, Maybe (RemoteJoins 'Postgres))
-getRemoteJoinsConnectionSelect =
-  second mapToNonEmpty . flip runState mempty . transformConnectionSelect mempty
-
-transformConnectionSelect
-  :: FieldPath
-  -> ConnectionSelect 'Postgres S.SQLExp
-  -> State (RemoteJoinMap 'Postgres) (ConnectionSelect 'Postgres S.SQLExp)
-transformConnectionSelect path ConnectionSelect{..} = do
-  let connectionFields = _asnFields _csSelect
-  transformedFields <- forM connectionFields $ \(fieldName, field) ->
-    (fieldName,) <$> case field of
-      ConnectionTypename t  -> pure $ ConnectionTypename t
-      ConnectionPageInfo p  -> pure $ ConnectionPageInfo p
-      ConnectionEdges edges -> ConnectionEdges <$> transformEdges (appendPath fieldName path) edges
-  let select = _csSelect{_asnFields = transformedFields}
-  pure $ ConnectionSelect _csPrimaryKeyColumns _csSplit _csSlice select
-  where
-    transformEdges edgePath edgeFields =
-      forM edgeFields $ \(fieldName, edgeField) ->
-      (fieldName,) <$> case edgeField of
-        EdgeTypename t -> pure $ EdgeTypename t
-        EdgeCursor -> pure EdgeCursor
-        EdgeNode annFields ->
-          EdgeNode <$> transformAnnFields (appendPath fieldName edgePath) annFields
-
--- | Traverse through 'MutationOutput' and collect remote join fields (if any)
-getRemoteJoinsMutationOutput
-  :: MutationOutput 'Postgres
-  -> (MutationOutput 'Postgres, Maybe (RemoteJoins 'Postgres))
-getRemoteJoinsMutationOutput =
-  second mapToNonEmpty . flip runState mempty . transformMutationOutput mempty
-  where
-    transformMutationOutput :: FieldPath -> MutationOutput 'Postgres -> State (RemoteJoinMap 'Postgres) (MutationOutput 'Postgres)
-    transformMutationOutput path = \case
-      MOutMultirowFields mutationFields ->
-        MOutMultirowFields <$> transfromMutationFields mutationFields
-      MOutSinglerowObject annFields ->
-        MOutSinglerowObject <$> transformAnnFields path annFields
-      where
-        transfromMutationFields fields =
-          forM fields $ \(fieldName, field') -> do
-          let fieldPath = appendPath fieldName path
-          (fieldName,) <$> case field' of
-            MCount         -> pure MCount
-            MExp t         -> pure $ MExp t
-            MRet annFields -> MRet <$> transformAnnFields fieldPath annFields
-
-transformAnnFields :: FieldPath -> AnnFields 'Postgres -> State (RemoteJoinMap 'Postgres) (AnnFields 'Postgres)
-transformAnnFields path fields = do
-  let pgColumnFields = map fst $ getFields _AFColumn fields
-      remoteSelects = getFields _AFRemote fields
-      remoteJoins = flip map remoteSelects $ \(fieldName, remoteSelect) ->
-        let RemoteSelect argsMap selSet hasuraColumns remoteFields rsi = remoteSelect
-            hasuraColumnL = toList hasuraColumns
-            hasuraColumnFields = HS.fromList $ map (fromCol @'Postgres . pgiColumn) hasuraColumnL
-            phantomColumns = filter ((`notElem` pgColumnFields) . fromCol @'Postgres . pgiColumn) hasuraColumnL
-        in RemoteJoin fieldName argsMap selSet hasuraColumnFields remoteFields rsi phantomColumns
-
-  transformedFields <- forM fields $ \(fieldName, field') -> do
-    let fieldPath = appendPath fieldName path
-    (fieldName,) <$> case field' of
-      AFNodeId qt pkeys -> pure $ AFNodeId qt pkeys
-      AFColumn c -> pure $ AFColumn c
-      AFObjectRelation annRel ->
-        AFObjectRelation <$> transformAnnRelation annRel (transformObjectSelect fieldPath)
-      AFArrayRelation (ASSimple annRel) ->
-        AFArrayRelation . ASSimple <$> transformAnnRelation annRel (transformSelect fieldPath)
-      AFArrayRelation (ASAggregate aggRel) ->
-        AFArrayRelation . ASAggregate <$> transformAnnAggregateRelation fieldPath aggRel
-      AFArrayRelation (ASConnection annRel) ->
-        AFArrayRelation . ASConnection <$> transformArrayConnection fieldPath annRel
-      AFComputedField computedField ->
-        AFComputedField <$> case computedField of
-          CFSScalar _         -> pure computedField
-          CFSTable jas annSel -> CFSTable jas <$> transformSelect fieldPath annSel
-      AFRemote rs -> pure $ AFRemote rs
-      AFExpression t     -> pure $ AFExpression t
-
-  case NE.nonEmpty remoteJoins of
-    Nothing -> pure transformedFields
-    Just nonEmptyRemoteJoins -> do
-      let phantomColumns = map (\ci -> (fromCol @'Postgres $ pgiColumn ci, AFColumn $ AnnColumnField ci False Nothing)) $
-                           concatMap _rjPhantomFields remoteJoins
-      modify (Map.insert path nonEmptyRemoteJoins)
-      pure $ transformedFields <> phantomColumns
-    where
-      getFields f = mapMaybe (sequence . second (^? f))
-
-      transformAnnRelation annRel f = do
-        let annSel = aarAnnSelect annRel
-        transformedSel <- f annSel
-        pure annRel{aarAnnSelect = transformedSel}
-
-      transformAnnAggregateRelation fieldPath annRel = do
-        let annSel = aarAnnSelect annRel
-        transformedSel <- transformAggregateSelect fieldPath annSel
-        pure annRel{aarAnnSelect = transformedSel}
-
-      transformArrayConnection fieldPath annRel = do
-        let connectionSelect = aarAnnSelect annRel
-        transformedConnectionSelect <- transformConnectionSelect fieldPath connectionSelect
-        pure annRel{aarAnnSelect = transformedConnectionSelect}
 
 type CompositeObject a = OMap.InsOrdHashMap Text (CompositeValue a)
 
@@ -305,7 +150,7 @@ data RemoteJoinField
   = RemoteJoinField
   { _rjfRemoteSchema :: !RemoteSchemaInfo -- ^ The remote schema server info.
   , _rjfAlias        :: !Alias -- ^ Top level alias of the field
-  , _rjfField        :: !(G.Field G.NoFragments Variable) -- ^ The field AST
+  , _rjfField        :: !(G.Field G.NoFragments RemoteSchemaVariable) -- ^ The field AST
   , _rjfFieldCall    :: ![G.Name] -- ^ Path to remote join value
   } deriving (Show, Eq)
 
@@ -431,21 +276,27 @@ defaultValue = \case
   JSONValue    _ -> Nothing
   GraphQLValue g -> Just g
 
-collectVariables :: G.Value Variable -> HashMap G.VariableDefinition A.Value
-collectVariables = \case
+collectVariablesFromValue :: G.Value Variable -> HashMap G.VariableDefinition A.Value
+collectVariablesFromValue = \case
   G.VNull          -> mempty
   G.VInt _         -> mempty
   G.VFloat _       -> mempty
   G.VString _      -> mempty
   G.VBoolean _     -> mempty
   G.VEnum _        -> mempty
-  G.VList values   -> foldl Map.union mempty $ map collectVariables values
-  G.VObject values -> foldl Map.union mempty $ map collectVariables $ Map.elems values
+  G.VList values   -> foldl Map.union mempty $ map collectVariablesFromValue values
+  G.VObject values -> foldl Map.union mempty $ map collectVariablesFromValue $ Map.elems values
   G.VVariable var@(Variable _ gType val) ->
     let name       = getName var
         jsonVal    = inputValueToJSON val
         defaultVal = defaultValue val
     in Map.singleton (G.VariableDefinition name gType defaultVal) jsonVal
+
+collectVariablesFromField :: G.Field G.NoFragments Variable -> HashMap G.VariableDefinition A.Value
+collectVariablesFromField (G.Field _ _ arguments _ selSet) =
+  let argumentVariables = fmap collectVariablesFromValue arguments
+      selSetVariables   = (fmap snd <$> collectVariablesFromSelectionSet selSet)
+  in foldl Map.union mempty (Map.elems argumentVariables) <> Map.fromList selSetVariables
 
 -- | Fetch remote join field value from remote servers by batching respective 'RemoteJoinField's
 fetchRemoteJoinFields
@@ -462,7 +313,8 @@ fetchRemoteJoinFields
   -> m AO.Object
 fetchRemoteJoinFields env manager reqHdrs userInfo remoteJoins = do
   results <- forM (Map.toList remoteSchemaBatch) $ \(rsi, batch) -> do
-    let gqlReq = fieldsToRequest $ _rjfField <$> batch
+    resolvedRemoteFields <- traverse (traverse (resolveRemoteVariable userInfo)) $ _rjfField <$> batch
+    let gqlReq = fieldsToRequest resolvedRemoteFields
     -- NOTE: discard remote headers (for now):
     (_, _, respBody) <- execRemoteGQ env manager userInfo reqHdrs rsi gqlReq
     case AO.eitherDecode respBody of
@@ -484,7 +336,7 @@ fetchRemoteJoinFields env manager reqHdrs userInfo remoteJoins = do
 
     fieldsToRequest :: NonEmpty (G.Field G.NoFragments Variable) -> GQLReqOutgoing
     fieldsToRequest gFields@(headField :| _) =
-      let variableInfos = 
+      let variableInfos =
             -- only the `headField` is used for collecting the variables here because
             -- the variable information of all the fields will be the same.
             -- For example:
@@ -497,21 +349,20 @@ fetchRemoteJoinFields env manager reqHdrs userInfo remoteJoins = do
             --
             -- If there are 10 authors, then there are 10 fields that will be requested
             -- each containing exactly the same variable info.
-            foldMap collectVariables $ G._fArguments headField
-       in GQLReq
-            { _grOperationName = Nothing
-            , _grVariables =
-                mapKeys G._vdName variableInfos <$ guard (not $ Map.null variableInfos)
-            , _grQuery = G.TypedOperationDefinition
-               { G._todSelectionSet =
-                   NE.toList $ G.SelectionField . convertFieldWithVariablesToName <$> gFields
-               , G._todVariableDefinitions = Map.keys variableInfos
-               , G._todType = G.OperationTypeQuery
-               , G._todName = Nothing
-               , G._todDirectives = []
-               }
-            }
-
+            collectVariablesFromField headField
+      in GQLReq
+           { _grOperationName = Nothing
+           , _grVariables =
+               mapKeys G._vdName variableInfos <$ guard (not $ Map.null variableInfos)
+           , _grQuery = G.TypedOperationDefinition
+              { G._todSelectionSet =
+                  NE.toList $ G.SelectionField . convertFieldWithVariablesToName <$> gFields
+              , G._todVariableDefinitions = Map.keys variableInfos
+              , G._todType = G.OperationTypeQuery
+              , G._todName = Nothing
+              , G._todDirectives = []
+              }
+           }
 
 -- | Replace 'RemoteJoinField' in composite JSON with it's json value from remote server response.
 replaceRemoteFields
@@ -546,21 +397,21 @@ replaceRemoteFields compositeJson remoteServerResponse =
 -- selection set at the leaf of the tree we construct.
 fieldCallsToField
   :: forall m. MonadError QErr m
-  => Map.HashMap G.Name (InputValue Variable)
+  => Map.HashMap G.Name (InputValue RemoteSchemaVariable)
   -- ^ user input arguments to the remote join field
   -> Map.HashMap G.Name (G.Value Void)
   -- ^ Contains the values of the variables that have been defined in the remote join definition
-  -> G.SelectionSet G.NoFragments Variable
+  -> G.SelectionSet G.NoFragments RemoteSchemaVariable
   -- ^ Inserted at leaf of nested FieldCalls
   -> Alias
   -- ^ Top-level name to set for this Field
   -> NonEmpty FieldCall
-  -> m (G.Field G.NoFragments Variable)
+  -> m (G.Field G.NoFragments RemoteSchemaVariable)
 fieldCallsToField rrArguments variables finalSelSet topAlias =
   fmap (\f -> f{G._fAlias = Just topAlias}) . nest
   where
     -- almost: `foldr nest finalSelSet`
-    nest :: NonEmpty FieldCall -> m (G.Field G.NoFragments Variable)
+    nest :: NonEmpty FieldCall -> m (G.Field G.NoFragments RemoteSchemaVariable)
     nest ((FieldCall name remoteArgs) :| rest) = do
       templatedArguments <- convert <$> createArguments variables remoteArgs
       graphQLarguments <- traverse peel rrArguments
@@ -577,10 +428,10 @@ fieldCallsToField rrArguments variables finalSelSet topAlias =
               in pure (arguments, finalSelSet)
       pure $ G.Field Nothing name args [] selSet
 
-    convert :: Map.HashMap G.Name (G.Value Void) -> Map.HashMap G.Name (G.Value Variable)
+    convert :: Map.HashMap G.Name (G.Value Void) -> Map.HashMap G.Name (G.Value RemoteSchemaVariable)
     convert = fmap G.literal
 
-    peel :: InputValue Variable -> m (G.Value Variable)
+    peel :: InputValue RemoteSchemaVariable -> m (G.Value RemoteSchemaVariable)
     peel = \case
       GraphQLValue v -> pure v
       JSONValue _ ->
@@ -596,7 +447,7 @@ fieldCallsToField rrArguments variables finalSelSet topAlias =
 -- `where: { id : 1}`
 -- And during execution, client also gives the input arg: `where: {name: "tiru"}`
 -- We need to merge the input argument to where: {id : 1, name: "tiru"}
-mergeValue :: G.Value Variable -> G.Value Variable -> G.Value Variable
+mergeValue :: G.Value RemoteSchemaVariable -> G.Value RemoteSchemaVariable -> G.Value RemoteSchemaVariable
 mergeValue lVal rVal = case (lVal, rVal) of
   (G.VList l, G.VList r) ->
     G.VList $ l <> r

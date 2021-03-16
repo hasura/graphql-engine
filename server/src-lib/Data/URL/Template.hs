@@ -22,7 +22,7 @@ import           Data.Text.Extended
 import           Test.QuickCheck
 
 newtype Variable = Variable {unVariable :: Text}
-  deriving (Show, Eq, Generic)
+  deriving (Show, Eq, Generic, Hashable)
 
 printVariable :: Variable -> Text
 printVariable var = "{{" <> unVariable var <> "}}"
@@ -31,6 +31,7 @@ data TemplateItem
   = TIText !Text
   | TIVariable !Variable
   deriving (Show, Eq, Generic)
+instance Hashable TemplateItem
 
 printTemplateItem :: TemplateItem -> Text
 printTemplateItem = \case
@@ -40,7 +41,7 @@ printTemplateItem = \case
 -- | A String with environment variables enclosed in '{{' and '}}'
 -- http://{{APP_HOST}}:{{APP_PORT}}/v1/api
 newtype URLTemplate = URLTemplate {unURLTemplate :: [TemplateItem]}
-  deriving (Show, Eq, Generic)
+  deriving (Show, Eq, Generic, Hashable)
 
 printURLTemplate :: URLTemplate -> Text
 printURLTemplate = T.concat . map printTemplateItem . unURLTemplate

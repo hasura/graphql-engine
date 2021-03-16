@@ -8,6 +8,7 @@ import           Hasura.Prelude
 import qualified Data.Aeson                                   as J
 import qualified Data.Environment                             as Env
 import qualified Data.HashMap.Strict                          as Map
+import qualified Data.List                                    as L
 import qualified Data.Sequence                                as Seq
 import qualified Data.Text                                    as T
 import qualified Database.PG.Query                            as Q
@@ -120,7 +121,7 @@ insertMultipleObjects env multiObjIns additionalColumns remoteJoinCtx mutationOu
             checkCondition
             mutationOutput
             columnInfos
-          rowCount = T.pack . show . length $ IR._aiInsObj multiObjIns
+          rowCount = tshow . length $ IR._aiInsObj multiObjIns
       Tracing.trace ("Insert (" <> rowCount <> ") " <> qualifiedObjectToText table) do
         Tracing.attachMetadata [("count", rowCount)]
         PGE.execInsertQuery env stringifyNum (Just remoteJoinCtx) (insertQuery, planVars)
@@ -137,19 +138,20 @@ insertMultipleObjects env multiObjIns additionalColumns remoteJoinCtx mutationOu
         mutOutputRJ stringifyNum [] $ (, remoteJoinCtx) <$> remoteJoins
 
 insertObject
-  :: (HasVersion, MonadTx m, MonadIO m, Tracing.MonadTrace m)
+  :: forall m
+   . (HasVersion, MonadTx m, MonadIO m, Tracing.MonadTrace m)
   => Env.Environment
   -> IR.SingleObjIns 'Postgres PG.SQLExp
   -> [(PGCol, PG.SQLExp)]
   -> PGE.MutationRemoteJoinCtx
   -> Seq.Seq Q.PrepArg
   -> Bool
-  -> m (Int, Maybe (ColumnValues TxtEncodedPGVal))
+  -> m (Int, Maybe (ColumnValues 'Postgres TxtEncodedPGVal))
 insertObject env singleObjIns additionalColumns remoteJoinCtx planVars stringifyNum = Tracing.trace ("Insert " <> qualifiedObjectToText table) do
   validateInsert (map fst columns) (map IR._riRelInfo objectRels) (map fst additionalColumns)
 
   -- insert all object relations and fetch this insert dependent column values
-  objInsRes <- forM objectRels $ insertObjRel env planVars remoteJoinCtx stringifyNum
+  objInsRes <- forM beforeInsert $ insertObjRel env planVars remoteJoinCtx stringifyNum
 
   -- prepare final insert columns
   let objRelAffRows = sum $ map fst objInsRes
@@ -158,11 +160,11 @@ insertObject env singleObjIns additionalColumns remoteJoinCtx planVars stringify
 
   cte <- mkInsertQ table onConflict finalInsCols defaultValues checkCond
 
-  MutateResp affRows colVals <- liftTx $
+  PGE.MutateResp affRows colVals <- liftTx $
     PGE.mutateAndFetchCols table allColumns (PGT.MCCheckConstraint cte, planVars) stringifyNum
   colValM <- asSingleObject colVals
 
-  arrRelAffRows <- bool (withArrRels colValM) (return 0) $ null arrayRels
+  arrRelAffRows <- bool (withArrRels colValM) (return 0) $ null allAfterInsertRels
   let totAffRows = objRelAffRows + affRows + arrRelAffRows
 
   return (totAffRows, colValM)
@@ -170,20 +172,49 @@ insertObject env singleObjIns additionalColumns remoteJoinCtx planVars stringify
     IR.AnnIns annObj table onConflict checkCond allColumns defaultValues = singleObjIns
     IR.AnnInsObj columns objectRels arrayRels = annObj
 
-    arrRelDepCols = flip getColInfos allColumns $
-      concatMap (Map.keys . riMapping . IR._riRelInfo) arrayRels
+    afterInsert, beforeInsert :: [IR.ObjRelIns 'Postgres PG.SQLExp]
+    (afterInsert, beforeInsert) =
+      L.partition ((== AfterParent) . riInsertOrder . IR._riRelInfo) objectRels
 
+    allAfterInsertRels :: [IR.ArrRelIns 'Postgres PG.SQLExp]
+    allAfterInsertRels = arrayRels <> map objToArr afterInsert
+
+    afterInsertDepCols :: [ColumnInfo 'Postgres]
+    afterInsertDepCols = flip getColInfos allColumns $
+      concatMap (Map.keys . riMapping . IR._riRelInfo) allAfterInsertRels
+
+    objToArr :: forall a b. IR.ObjRelIns b a -> IR.ArrRelIns b a
+    objToArr IR.RelIns {..} = IR.RelIns (singleToMulti _riAnnIns) _riRelInfo
+
+    singleToMulti :: forall a b. IR.SingleObjIns b a -> IR.MultiObjIns b a
+    singleToMulti IR.AnnIns {..} =
+      IR.AnnIns
+        [_aiInsObj]
+        _aiTableName
+        _aiConflictClause
+        _aiCheckCond
+        _aiTableCols
+        _aiDefVals
+
+    withArrRels
+      :: Maybe (ColumnValues 'Postgres TxtEncodedPGVal)
+      -> m Int
     withArrRels colValM = do
       colVal <- onNothing colValM $ throw400 NotSupported cannotInsArrRelErr
-      arrDepColsWithVal <- fetchFromColVals colVal arrRelDepCols
-      arrInsARows <- forM arrayRels $ insertArrRel env arrDepColsWithVal remoteJoinCtx planVars stringifyNum
+      afterInsertDepColsWithVal <- fetchFromColVals colVal afterInsertDepCols
+      arrInsARows <- forM allAfterInsertRels
+        $ insertArrRel env afterInsertDepColsWithVal remoteJoinCtx planVars stringifyNum
       return $ sum arrInsARows
 
+    asSingleObject
+      :: [ColumnValues 'Postgres TxtEncodedPGVal]
+      -> m (Maybe (ColumnValues 'Postgres TxtEncodedPGVal))
     asSingleObject = \case
       []  -> pure Nothing
       [r] -> pure $ Just r
       _   -> throw500 "more than one row returned"
 
+    cannotInsArrRelErr :: Text
     cannotInsArrRelErr =
       "cannot proceed to insert array relations since insert to table "
       <> table <<> " affects zero rows"
@@ -261,7 +292,7 @@ validateInsert insCols objRels addCols = do
         relNameTxt = relNameToTxt relName
         lColConflicts = lCols `intersect` (addCols <> insCols)
     withPathK relNameTxt $ unless (null lColConflicts) $ throw400 ValidationFailed $
-      "cannot insert object relation ship " <> relName
+      "cannot insert object relationship " <> relName
       <<> " as " <> showPGCols lColConflicts
       <> " column values are already determined"
   where
@@ -294,7 +325,7 @@ mkInsertQ table onConflictM insCols defVals (insCheck, updCheck) = do
 
 fetchFromColVals
   :: MonadError QErr m
-  => ColumnValues TxtEncodedPGVal
+  => ColumnValues 'Postgres TxtEncodedPGVal
   -> [ColumnInfo 'Postgres]
   -> m [(PGCol, PG.SQLExp)]
 fetchFromColVals colVal reqCols =

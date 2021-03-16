@@ -26,6 +26,8 @@ controlled. The metadata file can be later imported to another Hasura instance t
 configuration. You can also manually edit the metadata file to add more objects to
 it and then use it to update the instance.
 
+.. _exporting_metadata:
+
 Exporting Hasura metadata
 -------------------------
 
@@ -58,7 +60,7 @@ Exporting Hasura metadata
 
      .. code-block:: bash
 
-        curl -d'{"type": "export_metadata", "args": {}}' http://localhost:8080/v1/query -o hasura_metadata.json
+        curl -d'{"type": "export_metadata", "args": {}}' http://localhost:8080/v1/metadata -o hasura_metadata.json
 
      This command will create a ``hasura_metadata.json`` file.
      If an admin secret is set, add ``-H 'X-Hasura-Admin-Secret: <your-admin-secret>'`` as the API is an
@@ -73,6 +75,8 @@ Exporting Hasura metadata
   management in version control and CI/CD and can be applied via the CLI or the
   :ref:`cli-migrations <auto_apply_migrations>` image only.
 
+
+.. _applying_metadata:
 
 Applying/Importing Hasura metadata
 ----------------------------------
@@ -110,7 +114,7 @@ before.
 
      .. code-block:: bash
 
-        curl -d'{"type":"replace_metadata", "args":'$(cat hasura_metadata.json)'}' http://localhost:8080/v1/query
+        curl -d'{"type":"replace_metadata", "args":'$(cat hasura_metadata.json)'}' http://localhost:8080/v1/metadata
 
      This command reads the ``hasura_metadata.json`` file and makes a POST request to
      replace the metadata.
@@ -159,7 +163,7 @@ when a new column has been added to a table via an external tool such as ``psql`
 
      .. code-block:: bash
 
-        curl -d'{"type": "reload_metadata", "args": {}}' http://localhost:8080/v1/query
+        curl -d'{"type": "reload_metadata", "args": {}}' http://localhost:8080/v1/metadata
 
      If an admin secret is set, add ``-H 'X-Hasura-Admin-Secret: <your-admin-secret>'`` as the API is an
      admin-only API.
@@ -207,7 +211,7 @@ again from scratch (e.g. tracking tables, relationships, creating triggers, acti
 
    .. code-block:: bash
 
-      curl -d'{"type": "clear_metadata", "args": {}}' http://localhost:8080/v1/query
+      curl -d'{"type": "clear_metadata", "args": {}}' http://localhost:8080/v1/metadata
 
    If an admin secret is set, add ``-H 'X-Hasura-Admin-Secret: <your-admin-secret>'`` as the API is an
    admin-only API.
@@ -219,3 +223,4 @@ In case you need an automated way of applying/importing the metadata, take a
 look at the :ref:`cli-migrations <auto_apply_migrations>` Docker image, which
 can start the GraphQL engine after automatically importing a mounted metadata
 directory.
+

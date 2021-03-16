@@ -27,9 +27,10 @@ import qualified Data.HashMap.Strict                as M
 import qualified Data.HashSet                       as HS
 import qualified Data.List.NonEmpty                 as NE
 
-import           Data.Aeson.Casing
 import           Data.Aeson.TH
 import           Data.List.Extended                 (duplicates)
+
+import qualified Hasura.SQL.AnyBackend              as AB
 
 import           Hasura.Backends.Postgres.SQL.Types hiding (TableName)
 import           Hasura.RQL.DDL.Schema.Common
@@ -42,14 +43,14 @@ data FunctionMeta
   , fmFunction :: !QualifiedFunction
   , fmType     :: !FunctionVolatility
   } deriving (Show, Eq)
-$(deriveJSON (aesonDrop 2 snakeCase) ''FunctionMeta)
+$(deriveJSON hasuraJSON ''FunctionMeta)
 
 data ComputedFieldMeta
   = ComputedFieldMeta
   { ccmName         :: !ComputedFieldName
   , ccmFunctionMeta :: !FunctionMeta
   } deriving (Show, Eq)
-$(deriveJSON (aesonDrop 3 snakeCase){omitNothingFields=True} ''ComputedFieldMeta)
+$(deriveJSON hasuraJSON{omitNothingFields=True} ''ComputedFieldMeta)
 
 data TableMeta (b :: BackendType)
   = TableMeta
@@ -61,7 +62,7 @@ data TableMeta (b :: BackendType)
 fetchMeta
   :: (MonadTx m)
   => TableCache 'Postgres
-  -> FunctionCache
+  -> FunctionCache 'Postgres
   -> m ([TableMeta 'Postgres], [FunctionMeta])
 fetchMeta tables functions = do
   tableMetaInfos <- fetchTableMetadata
@@ -179,16 +180,28 @@ getTableChangeDeps source tn tableDiff = do
   sc <- askSchemaCache
   -- for all the dropped columns
   droppedColDeps <- fmap concat $ forM droppedCols $ \droppedCol -> do
-    let objId = SOSourceObj source $ SOITableObj tn $ TOCol droppedCol
+    let objId = SOSourceObj source
+                  $ AB.mkAnyBackend
+                  $ SOITableObj tn
+                  $ TOCol droppedCol
     return $ getDependentObjs sc objId
   -- for all dropped constraints
   droppedConsDeps <- fmap concat $ forM droppedFKeyConstraints $ \droppedCons -> do
-    let objId = SOSourceObj source $ SOITableObj tn $ TOForeignKey droppedCons
+    let objId = SOSourceObj source
+                  $ AB.mkAnyBackend
+                  $ SOITableObj tn
+                  $ TOForeignKey droppedCons
     return $ getDependentObjs sc objId
   return $ droppedConsDeps <> droppedColDeps <> droppedComputedFieldDeps
   where
     TableDiff _ droppedCols _ _ droppedFKeyConstraints computedFieldDiff _ _ = tableDiff
-    droppedComputedFieldDeps = map (SOSourceObj source . SOITableObj tn . TOComputedField) $ _cfdDropped computedFieldDiff
+    droppedComputedFieldDeps =
+      map
+        (SOSourceObj source
+          . AB.mkAnyBackend
+          . SOITableObj tn
+          . TOComputedField)
+        $ _cfdDropped computedFieldDiff
 
 data SchemaDiff (b :: BackendType)
   = SchemaDiff
@@ -211,7 +224,10 @@ getSchemaChangeDeps
 getSchemaChangeDeps source schemaDiff = do
   -- Get schema cache
   sc <- askSchemaCache
-  let tableIds = map (SOSourceObj source . SOITable) droppedTables
+  let tableIds =
+        map
+          (SOSourceObj source . AB.mkAnyBackend . SOITable)
+          droppedTables
   -- Get the dependent of the dropped tables
   let tableDropDeps = concatMap (getDependentObjs sc) tableIds
   tableModDeps <- concat <$> traverse (uncurry (getTableChangeDeps source)) alteredTables
@@ -220,8 +236,11 @@ getSchemaChangeDeps source schemaDiff = do
   where
     SchemaDiff droppedTables alteredTables = schemaDiff
 
-    isDirectDep (SOSourceObj s (SOITableObj tn _)) =
-      s == source && tn `HS.member` HS.fromList droppedTables
+    isDirectDep (SOSourceObj s exists) =
+      case AB.unpackAnyBackend exists of
+        Just (SOITableObj pgTable _) ->
+          s == source && pgTable `HS.member` HS.fromList droppedTables
+        _ -> False
     isDirectDep _                  = False
 
 data FunctionDiff

@@ -22,6 +22,7 @@ import           Data.Text.NonEmpty
 import           Hasura.EncJSON
 import           Hasura.RQL.Types
 import           Hasura.RQL.Types.QueryCollection
+import           Hasura.Session
 
 
 addCollectionP2

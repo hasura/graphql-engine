@@ -97,9 +97,9 @@
   display: flex;
   align-items: center;
   border-right: 1px solid #788095;
-  display: inline-block;
   width: 20%;
   min-width: 240px;
+  height: 54px;
 
   .logoParent {
     display: flex;
@@ -444,7 +444,6 @@
     padding: 0;
     display: inline-block;
     margin-bottom: 0;
-    margin-top: 16px;
 
     a,
     a:visited {
@@ -474,8 +473,7 @@
         display: block;
         margin-left: 20px;
         border-bottom: 4px solid transparent;
-        padding: 0 10px;
-        padding-bottom: 10px;
+        padding: 16px 10px 10px;
 
         .iconCenter {
           display: inline-block;
@@ -1532,13 +1530,21 @@
   }
 }
 
-@media (max-width: 1250px) {
+@media (max-width: 150px) {
   .secureSectionText {
     display: none;
   }
 }
 
-@media (max-width: 1050px) {
+@media (max-width: 1350px) {
+  .sidebar {
+    .header_logo_wrapper {
+      padding: 0px 10px;
+    }
+  }
+}
+
+@media (max-width: 1250px) {
   .sidebar {
     .sidebarItems {
       li {

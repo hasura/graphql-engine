@@ -7,7 +7,6 @@ import           Data.Aeson
 import           Data.Aeson.Internal
 import           Data.Char
 import           Data.Text.Extended
-import           Hasura.Server.Types
 import           Language.Haskell.TH.Syntax (Q, TExp)
 import           System.Environment
 import           System.Exit
@@ -79,13 +78,6 @@ parseStringAsBool t
     errMsg = " Not a valid boolean text. " ++ "True values are "
              ++ show truthVals ++ " and  False values are " ++ show falseVals
              ++ ". All values are case insensitive"
-
-getRequestId :: (MonadIO m) => [HTTP.Header] -> m RequestId
-getRequestId headers =
-  -- generate a request id for every request if the client has not sent it
-  case getRequestHeader requestIdHeader headers  of
-    Nothing    -> RequestId <$> liftIO generateFingerprint
-    Just reqId -> return $ RequestId $ bsToTxt reqId
 
 -- Get an env var during compile time
 getValFromEnvOrScript :: String -> String -> Q (TExp String)
@@ -162,6 +154,9 @@ commonResponseHeadersIgnored =
 
 isSessionVariable :: Text -> Bool
 isSessionVariable = T.isPrefixOf "x-hasura-" . T.toLower
+
+isReqUserId :: Text -> Bool
+isReqUserId = (== "req_user_id") . T.toLower
 
 mkClientHeadersForward :: [HTTP.Header] -> [HTTP.Header]
 mkClientHeadersForward reqHeaders =

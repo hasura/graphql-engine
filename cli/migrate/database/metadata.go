@@ -23,8 +23,6 @@ type MetadataDriver interface {
 	BuildMetadata() (yaml.MapSlice, error)
 
 	ApplyMetadata() error
-
-	Query(data interface{}) error
 }
 
 type InconsistentMetadataInterface interface {

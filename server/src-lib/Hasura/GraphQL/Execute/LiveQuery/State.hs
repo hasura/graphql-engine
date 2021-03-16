@@ -24,6 +24,7 @@ import qualified StmContainers.Map                        as STMMap
 import           Control.Concurrent.Extended              (forkImmortal, sleep)
 import           Control.Exception                        (mask_)
 import           Data.String
+import           Data.Text.Extended
 #ifndef PROFILING
 import           GHC.AssertNF
 #endif
@@ -31,10 +32,13 @@ import           GHC.AssertNF
 import qualified Hasura.GraphQL.Execute.LiveQuery.TMap    as TMap
 import qualified Hasura.Logging                           as L
 
+import           Hasura.GraphQL.Execute.Backend
 import           Hasura.GraphQL.Execute.LiveQuery.Options
 import           Hasura.GraphQL.Execute.LiveQuery.Plan
 import           Hasura.GraphQL.Execute.LiveQuery.Poll
-import           Hasura.RQL.Types.Common                  (unNonNegativeDiffTime)
+import           Hasura.GraphQL.Transport.Backend
+import           Hasura.RQL.Types.Common                  (SourceName, unNonNegativeDiffTime)
+
 
 -- | The top-level datatype that holds the state for all active live queries.
 --
@@ -70,14 +74,17 @@ data LiveQueryId
 
 
 addLiveQuery
-  :: L.Logger L.Hasura
+  :: forall b
+   . BackendTransport b
+  => L.Logger L.Hasura
   -> SubscriberMetadata
   -> LiveQueriesState
-  -> LiveQueryPlan
+  -> SourceName
+  -> LiveQueryPlan b (MultiplexedQuery b)
   -> OnChange
   -- ^ the action to be executed when result changes
   -> IO LiveQueryId
-addLiveQuery logger subscriberMetadata lqState plan onResultAction = do
+addLiveQuery logger subscriberMetadata lqState source plan onResultAction = do
   -- CAREFUL!: It's absolutely crucial that we can't throw any exceptions here!
 
   -- disposable UUIDs:
@@ -109,7 +116,7 @@ addLiveQuery logger subscriberMetadata lqState plan onResultAction = do
   onJust handlerM $ \handler -> do
     pollerId <- PollerId <$> UUID.nextRandom
     threadRef <- forkImmortal ("pollQuery." <> show pollerId) logger $ forever $ do
-      pollQuery pollerId lqOpts pgExecCtx query (_pCohorts handler) postPollHook
+      pollQuery pollerId lqOpts sourceConfig query (_pCohorts handler) postPollHook
       sleep $ unNonNegativeDiffTime $ unRefetchInterval refetchInterval
     let !pState = PollerIOState threadRef pollerId
 #ifndef PROFILING
@@ -121,9 +128,9 @@ addLiveQuery logger subscriberMetadata lqState plan onResultAction = do
   where
     LiveQueriesState lqOpts lqMap postPollHook = lqState
     LiveQueriesOptions _ refetchInterval = lqOpts
-    LiveQueryPlan (ParameterizedLiveQueryPlan role query) cohortKey pgExecCtx = plan
+    LiveQueryPlan (ParameterizedLiveQueryPlan role query) sourceConfig cohortKey = plan
 
-    handlerId = PollerKey role query
+    handlerId = PollerKey source role $ toTxt query
 
     addToCohort subscriber handlerC =
       TMap.insert subscriber (_sId subscriber) $ _cNewSubscribers handlerC

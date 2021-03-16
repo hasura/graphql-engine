@@ -39,6 +39,7 @@ const TableRow = ({
       >
         {p.access}
         {p.editIcon}
+        {p.tooltip}
       </td>
     );
   });

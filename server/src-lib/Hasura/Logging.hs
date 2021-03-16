@@ -29,23 +29,22 @@ module Hasura.Logging
 
 import           Hasura.Prelude
 
-import           Control.Monad.Trans.Managed (ManagedT(..), allocate)
-import           Control.Monad.Trans.Control
+import qualified Control.AutoUpdate          as Auto
+import qualified Data.Aeson                  as J
+import qualified Data.Aeson.TH               as J
+import qualified Data.ByteString             as B
+import qualified Data.ByteString.Lazy        as BL
+import qualified Data.ByteString.Lazy.Char8  as BLC
+import qualified Data.HashSet                as Set
+import qualified Data.TByteString            as TBS
+import qualified Data.Text                   as T
+import qualified Data.Time.Clock             as Time
+import qualified Data.Time.Format            as Format
+import qualified Data.Time.LocalTime         as Time
+import qualified System.Log.FastLogger       as FL
 
-import qualified Control.AutoUpdate         as Auto
-import qualified Data.Aeson                 as J
-import qualified Data.Aeson.Casing          as J
-import qualified Data.Aeson.TH              as J
-import qualified Data.ByteString            as B
-import qualified Data.ByteString.Lazy       as BL
-import qualified Data.ByteString.Lazy.Char8 as BLC
-import qualified Data.HashSet               as Set
-import qualified Data.TByteString           as TBS
-import qualified Data.Text                  as T
-import qualified Data.Time.Clock            as Time
-import qualified Data.Time.Format           as Format
-import qualified Data.Time.LocalTime        as Time
-import qualified System.Log.FastLogger      as FL
+import           Control.Monad.Trans.Control
+import           Control.Monad.Trans.Managed (ManagedT (..), allocate)
 
 
 newtype FormattedTime
@@ -80,14 +79,14 @@ instance Hashable (EngineLogType Hasura)
 
 instance J.ToJSON (EngineLogType Hasura) where
   toJSON = \case
-    ELTHttpLog -> "http-log"
-    ELTWebsocketLog -> "websocket-log"
-    ELTWebhookLog -> "webhook-log"
-    ELTQueryLog -> "query-log"
-    ELTStartup -> "startup"
+    ELTHttpLog            -> "http-log"
+    ELTWebsocketLog       -> "websocket-log"
+    ELTWebhookLog         -> "webhook-log"
+    ELTQueryLog           -> "query-log"
+    ELTStartup            -> "startup"
     ELTLivequeryPollerLog -> "livequery-poller-log"
-    ELTActionHandler -> "action-handler-log"
-    ELTInternal t -> J.toJSON t
+    ELTActionHandler      -> "action-handler-log"
+    ELTInternal t         -> J.toJSON t
 
 instance J.FromJSON (EngineLogType Hasura) where
   parseJSON = J.withText "log-type" $ \s -> case T.toLower $ T.strip s of
@@ -120,14 +119,14 @@ instance Hashable InternalLogTypes
 
 instance J.ToJSON InternalLogTypes where
   toJSON = \case
-    ILTUnstructured -> "unstructured"
-    ILTEventTrigger -> "event-trigger"
+    ILTUnstructured     -> "unstructured"
+    ILTEventTrigger     -> "event-trigger"
     ILTScheduledTrigger -> "scheduled-trigger"
-    ILTWsServer -> "ws-server"
-    ILTPgClient -> "pg-client"
-    ILTMetadata -> "metadata"
-    ILTJwkRefreshLog -> "jwk-refresh-log"
-    ILTTelemetry -> "telemetry-log"
+    ILTWsServer         -> "ws-server"
+    ILTPgClient         -> "pg-client"
+    ILTMetadata         -> "metadata"
+    ILTJwkRefreshLog    -> "jwk-refresh-log"
+    ILTTelemetry        -> "telemetry-log"
     ILTSchemaSyncThread -> "schema-sync-thread"
 
 -- the default enabled log-types
@@ -192,7 +191,7 @@ deriving instance Eq (EngineLogType impl) => Eq (EngineLog impl)
 $(pure [])
 
 instance J.ToJSON (EngineLogType impl) => J.ToJSON (EngineLog impl) where
-  toJSON = $(J.mkToJSON (J.aesonDrop 3 J.snakeCase) ''EngineLog)
+  toJSON = $(J.mkToJSON hasuraJSON ''EngineLog)
 
 -- | Typeclass representing any data type that can be converted to @EngineLog@ for the purpose of
 -- logging
@@ -270,7 +269,7 @@ cleanLoggerCtx :: LoggerCtx a -> IO ()
 cleanLoggerCtx =
   FL.rmLoggerSet . _lcLoggerSet
 
-
+-- See Note [Existentially Quantified Types]
 newtype Logger impl
   = Logger { unLogger :: forall a m. (ToEngineLog a impl, MonadIO m) => a -> m () }
 

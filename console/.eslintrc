@@ -178,8 +178,9 @@
         ],
         "@typescript-eslint/no-empty-function": "off",
         "@typescript-eslint/explicit-module-boundary-types": "off",
+        "no-restricted-syntax": "warn",
         /**
-         * Disable things that are checked by Typescript
+         * Disable things that are checked by TypeScript
          */
         "import/no-unresolved": 0,
         "getter-return": "off",
@@ -207,7 +208,8 @@
         "no-restricted-properties": "off",
         "react/no-danger": "off",
         "react/no-array-index-key": "off",
-        "no-case-declarations": 0
+        "no-case-declarations": 0,
+        "react/jsx-indent": "off"
       }
     }
   ]

@@ -1,0 +1,24 @@
+- name: s1
+  kind: postgres
+  configuration:
+    connection_info:
+      database_url:
+        from_env: HASURA_GRAPHQL_DATABASE_URL
+      pool_settings:
+        idle_timeout: 180
+        max_connections: 50
+        retries: 1
+  tables: !include "s1/tables/tables.yaml"
+  functions: !include "s1/functions/functions.yaml"
+- name: s2
+  kind: postgres
+  configuration:
+    connection_info:
+      database_url:
+        from_env: HASURA_GRAPHQL_DATABASE_URL
+      pool_settings:
+        idle_timeout: 180
+        max_connections: 50
+        retries: 1
+  tables: !include "s2/tables/tables.yaml"
+  functions: !include "s2/functions/functions.yaml"

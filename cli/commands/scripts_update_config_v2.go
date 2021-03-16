@@ -7,6 +7,8 @@ import (
 	"os"
 	"path/filepath"
 
+	"github.com/hasura/graphql-engine/cli/internal/hasura"
+
 	"github.com/hasura/graphql-engine/cli/migrate"
 
 	"gopkg.in/yaml.v2"
@@ -28,8 +30,9 @@ func newScriptsUpdateConfigV2Cmd(ec *cli.ExecutionContext) *cobra.Command {
 	scriptsUpdateConfigV2Cmd := &cobra.Command{
 		Use:     "update-project-v2",
 		Aliases: []string{"update-config-v2"},
-		Short:   "Update the Hasura Project from v1 to v2",
-		Long: `Update the Hasura Project from v1 to v2 by executing the following actions:
+		Short:   "Update the Hasura project from config v1 to v2",
+		Long: `Update the Hasura project from config v1 to v2 by executing the following actions:
+
 1. Installs a plugin system for CLI
 2. Installs CLI Extensions plugins (primarily for actions)
 3. Takes a back up of migrations directory
@@ -39,10 +42,10 @@ func newScriptsUpdateConfigV2Cmd(ec *cli.ExecutionContext) *cobra.Command {
 `,
 		Example: `  # Read more about v2 configuration for CLI at https://docs.hasura.io
 
-  # Update the Hasura Project from v1 to v2
+  # Update the Hasura project from config v1 to v2
   hasura scripts update-project-v2
 
-  # Update the Hasura Project from v1 to v2 with a different metadata directory:
+  # Update the Hasura project from config v1 to v2 with a different metadata directory:
   hasura scripts update-project-v2 --metadata-dir "metadata"`,
 		SilenceUsage: true,
 		PreRunE: func(cmd *cobra.Command, args []string) error {
@@ -272,7 +275,7 @@ func newScriptsUpdateConfigV2Cmd(ec *cli.ExecutionContext) *cobra.Command {
 				}
 			}
 			ec.Spin("Removing versions from database...")
-			migrateDrv, err := migrate.NewMigrate(ec, true)
+			migrateDrv, err := migrate.NewMigrate(ec, true, "", hasura.SourceKindPG)
 			if err != nil {
 				return errors.Wrap(err, "unable to initialize migrations driver")
 			}
@@ -307,7 +310,7 @@ func newScriptsUpdateConfigV2Cmd(ec *cli.ExecutionContext) *cobra.Command {
 			ec.Config.ActionConfig.Codegen = nil
 			// run metadata export
 			ec.Spin("Exporting metadata...")
-			migrateDrv, err = migrate.NewMigrate(ec, true)
+			migrateDrv, err = migrate.NewMigrate(ec, true, "", hasura.SourceKindPG)
 			if err != nil {
 				return errors.Wrap(err, "unable to initialize migrations driver")
 			}
@@ -343,6 +346,14 @@ func newScriptsUpdateConfigV2Cmd(ec *cli.ExecutionContext) *cobra.Command {
 			}
 			ec.Spinner.Stop()
 			ec.Logger.Infoln("Updated config to version 2")
+
+			if f, _ := os.Stat(filepath.Join(ec.MigrationDir, "metadata.yaml")); f != nil {
+				err = os.Remove(filepath.Join(ec.MigrationDir, "metadata.yaml"))
+				if err != nil {
+					ec.Logger.Warnln("Warning: cannot remove metadata.yaml file ", err)
+				}
+			}
+
 			return nil
 		},
 	}
@@ -350,9 +361,9 @@ func newScriptsUpdateConfigV2Cmd(ec *cli.ExecutionContext) *cobra.Command {
 	f := scriptsUpdateConfigV2Cmd.Flags()
 
 	f.StringVar(&metadataDir, "metadata-dir", "metadata", "")
-	f.String("endpoint", "", "http(s) endpoint for Hasura GraphQL Engine")
-	f.String("admin-secret", "", "admin secret for Hasura GraphQL Engine")
-	f.String("access-key", "", "access key for Hasura GraphQL Engine")
+	f.String("endpoint", "", "http(s) endpoint for Hasura GraphQL engine")
+	f.String("admin-secret", "", "admin secret for Hasura GraphQL engine")
+	f.String("access-key", "", "access key for Hasura GraphQL engine")
 	f.MarkDeprecated("access-key", "use --admin-secret instead")
 	f.Bool("insecure-skip-tls-verify", false, "skip TLS verification and disable cert checking (default: false)")
 	f.String("certificate-authority", "", "path to a cert file for the certificate authority")

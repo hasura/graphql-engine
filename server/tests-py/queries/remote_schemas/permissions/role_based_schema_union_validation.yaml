@@ -1,5 +1,5 @@
 description: Provide a member type 'Message' in the 'SearchResult' which doesn't exist in the upstream remote
-url: /v1/query
+url: /v1/metadata
 status: 400
 query:
   type: add_remote_schema_permissions

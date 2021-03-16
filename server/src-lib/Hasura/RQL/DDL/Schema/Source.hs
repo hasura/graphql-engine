@@ -1,18 +1,29 @@
 module Hasura.RQL.DDL.Schema.Source where
 
-import           Control.Monad.Trans.Control         (MonadBaseControl)
-import           Hasura.Backends.Postgres.Connection
 import           Hasura.Prelude
+
+import qualified Data.Environment                    as Env
+import qualified Data.HashMap.Strict                 as HM
+import qualified Data.HashMap.Strict.InsOrd          as OMap
+import qualified Database.PG.Query                   as Q
+
+import           Control.Lens                        (at, (^.))
+import           Control.Monad.Trans.Control         (MonadBaseControl)
+import           Data.Text.Extended
+
+import qualified Hasura.SQL.AnyBackend               as AB
+
+import           Hasura.Backends.Postgres.Connection
+import           Hasura.EncJSON
+import           Hasura.RQL.DDL.Deps
 import           Hasura.RQL.DDL.Schema.Common
 import           Hasura.RQL.Types
 
-import qualified Data.Environment                    as Env
-import qualified Database.PG.Query                   as Q
 
 mkPgSourceResolver :: Q.PGLogger -> SourceResolver
-mkPgSourceResolver pgLogger config = runExceptT do
+mkPgSourceResolver pgLogger _ config = runExceptT do
   env <- lift Env.getEnvironment
-  let PostgresSourceConnInfo urlConf connSettings = _scConnectionInfo config
+  let PostgresSourceConnInfo urlConf connSettings = _pccConnectionInfo config
       PostgresPoolSettings maxConns idleTimeout retries = connSettings
   urlText <- resolveUrlConf env urlConf
   let connInfo = Q.ConnInfo retries $ Q.CDDatabaseURI $ txtToBs urlText
@@ -23,73 +34,68 @@ mkPgSourceResolver pgLogger config = runExceptT do
   let pgExecCtx = mkPGExecCtx Q.ReadCommitted pgPool
   pure $ PGSourceConfig pgExecCtx connInfo Nothing
 
-resolveSource
-  :: (MonadIO m, MonadBaseControl IO m, MonadResolveSource m)
-  => SourceConfiguration -> m (Either QErr ResolvedPGSource)
-resolveSource config = runExceptT do
-  sourceResolver <- getSourceResolver
-  sourceConfig <- liftEitherM $ liftIO $ sourceResolver config
+--- Metadata APIs related
+runAddSource
+  :: forall m b
+   . (MonadError QErr m, CacheRWM m, MetadataM m, BackendMetadata b)
+  => AddSource b -> m EncJSON
+runAddSource (AddSource name sourceConfig) = do
+  sources <- scSources <$> askSchemaCache
+  onJust (HM.lookup name sources) $ const $
+    throw400 AlreadyExists $ "source with name " <> name <<> " already exists"
+  buildSchemaCacheFor (MOSource name)
+    $ MetadataModifier
+    $ metaSources %~ OMap.insert name (mkSourceMetadata @b name sourceConfig)
+  pure successMsg
 
-  (tablesMeta, functionsMeta, pgScalars) <- runLazyTx (_pscExecCtx sourceConfig) Q.ReadWrite $ do
-    initSource
-    tablesMeta    <- fetchTableMetadata
-    functionsMeta <- fetchFunctionMetadata
-    pgScalars     <- fetchPgScalars
-    pure (tablesMeta, functionsMeta, pgScalars)
-  pure $ ResolvedPGSource sourceConfig tablesMeta functionsMeta pgScalars
+runDropSource
+  :: forall m. (MonadError QErr m, CacheRWM m, MonadIO m, MonadBaseControl IO m, MetadataM m)
+  => DropSource -> m EncJSON
+runDropSource (DropSource name cascade) = do
+  sc <- askSchemaCache
+  let sources = scSources sc
+  case HM.lookup name sources of
+    Just backendSourceInfo ->
+      AB.dispatchAnyBackend @BackendMetadata backendSourceInfo $ dropSource sc
 
-initSource :: MonadTx m => m ()
-initSource = do
-  hdbCatalogExist <- doesSchemaExist "hdb_catalog"
-  eventLogTableExist <- doesTableExist "hdb_catalog" "event_log"
-  sourceVersionTableExist <- doesTableExist "hdb_catalog" "hdb_source_catalog_version"
-     -- Fresh database
-  if | not hdbCatalogExist -> liftTx do
-         Q.unitQE defaultTxErrorHandler "CREATE SCHEMA hdb_catalog" () False
-         enablePgcryptoExtension
-         initPgSourceCatalog
-     -- Only 'hdb_catalog' schema defined
-     | not sourceVersionTableExist && not eventLogTableExist ->
-         liftTx initPgSourceCatalog
-     -- Source is initialised by pre multisource support servers
-     | not sourceVersionTableExist && eventLogTableExist ->
-         liftTx createVersionTable
-     | otherwise -> migrateSourceCatalog
+    Nothing -> do
+      metadata <- getMetadata
+      void $ onNothing (metadata ^. metaSources . at name) $
+          throw400 NotExists $ "source with name " <> name <<> " does not exist"
+      if cascade
+        then
+          -- Without sourceInfo we can't cascade, so throw an error
+          throw400 Unexpected $ "source with name " <> name <<> " is inconsistent"
+        else
+          -- Drop source from metadata
+          buildSchemaCacheFor (MOSource name) dropSourceMetadataModifier
+  pure successMsg
   where
-    initPgSourceCatalog = do
-      () <- Q.multiQE defaultTxErrorHandler $(Q.sqlFromFile "src-rsr/init_pg_source.sql")
-      setSourceCatalogVersion
+    dropSource :: forall b. (BackendMetadata b) => SchemaCache -> SourceInfo b -> m ()
+    dropSource sc sourceInfo = do
+      let sourceConfig = _siConfiguration sourceInfo
+      let indirectDeps = mapMaybe getIndirectDep $
+                         getDependentObjs sc (SOSource name)
 
-    createVersionTable = do
-      () <- Q.multiQE defaultTxErrorHandler
-        [Q.sql|
-           CREATE TABLE hdb_catalog.hdb_source_catalog_version(
-             version TEXT NOT NULL,
-             upgraded_on TIMESTAMPTZ NOT NULL
-           );
+      when (not cascade && indirectDeps /= [])
+        $ reportDepsExt
+            (map (SOSourceObj name . AB.mkAnyBackend) indirectDeps)
+            []
 
-           CREATE UNIQUE INDEX hdb_source_catalog_version_one_row
-           ON hdb_catalog.hdb_source_catalog_version((version IS NOT NULL));
-        |]
-      setSourceCatalogVersion
+      metadataModifier <- execWriterT $ do
+        mapM_ (purgeDependentObject name >=> tell) indirectDeps
+        tell dropSourceMetadataModifier
 
-    migrateSourceCatalog = do
-      version <- getSourceCatalogVersion
-      case version of
-        "1" -> pure ()
-        _   -> throw500 $ "unexpected source catalog version: " <> version
+      buildSchemaCacheFor (MOSource name) metadataModifier
+      postDropSourceHook sourceConfig
+      where
+        getIndirectDep :: SchemaObjId -> Maybe (SourceObjId b)
+        getIndirectDep = \case
+          SOSourceObj s o ->
+            if s == name
+              then Nothing
+              -- consider only *this* backend specific dependencies
+              else AB.unpackAnyBackend o
+          _               -> Nothing
 
-currentSourceCatalogVersion :: Text
-currentSourceCatalogVersion = "1"
-
-setSourceCatalogVersion :: MonadTx m => m ()
-setSourceCatalogVersion = liftTx $ Q.unitQE defaultTxErrorHandler [Q.sql|
-  INSERT INTO hdb_catalog.hdb_source_catalog_version(version, upgraded_on)
-    VALUES ($1, NOW())
-   ON CONFLICT ((version IS NOT NULL))
-   DO UPDATE SET version = $1, upgraded_on = NOW()
-  |] (Identity currentSourceCatalogVersion) False
-
-getSourceCatalogVersion :: MonadTx m => m Text
-getSourceCatalogVersion = liftTx $ runIdentity . Q.getRow <$> Q.withQE defaultTxErrorHandler
-  [Q.sql| SELECT version FROM hdb_catalog.hdb_source_catalog_version |] () False
+    dropSourceMetadataModifier = MetadataModifier $ metaSources %~ OMap.delete name

@@ -7,6 +7,7 @@ import styles from './ModifyTable.scss';
 import KnowMoreLink from '../../../Common/KnowMoreLink/KnowMoreLink';
 import ComputedFieldsEditor from './ComputedFieldsEditor';
 import { ReduxState } from '../../../../types';
+import { Table } from '../../../../dataSources/types';
 
 const ComputedFields = (props: ComputedFieldsProps) => {
   const {
@@ -16,6 +17,7 @@ const ComputedFields = (props: ComputedFieldsProps) => {
     nonTrackableFunctions,
     trackableFunctions,
     schemaList,
+    currentSource,
   } = props;
 
   const allFunctions = nonTrackableFunctions.concat(trackableFunctions);
@@ -25,7 +27,7 @@ const ComputedFields = (props: ComputedFieldsProps) => {
       <h4 className={styles.subheading_text}>
         Computed fields
         <Tooltip message="Add a function as a virtual field in the GraphQL API" />
-        <KnowMoreLink href="https://hasura.io/docs/1.0/graphql/manual/schema/computed-fields.html" />
+        <KnowMoreLink href="https://hasura.io/docs/latest/graphql/core/schema/computed-fields.html" />
       </h4>
       <ComputedFieldsEditor
         table={tableSchema}
@@ -33,6 +35,7 @@ const ComputedFields = (props: ComputedFieldsProps) => {
         functions={allFunctions} // TODO: fix cross schema functions
         schemaList={schemaList}
         dispatch={dispatch}
+        source={currentSource}
       />
     </React.Fragment>
   );
@@ -44,13 +47,14 @@ ComputedFields.propTypes = {
 };
 
 type OwnProps = {
-  tableSchema: string;
+  tableSchema: Table;
 };
 
 const mapStateToProps = (state: ReduxState, ownProps: OwnProps) => {
   return {
     tableSchema: ownProps.tableSchema,
     currentSchema: state.tables.currentSchema,
+    currentSource: state.tables.currentDataSource,
     nonTrackableFunctions: state.tables.nonTrackablePostgresFunctions || [],
     trackableFunctions: state.tables.postgresFunctions || [],
     schemaList: state.tables.schemaList,

@@ -1,5 +1,5 @@
 - description: Include Enum Occupation which doesn't exist in the remote schema
-  url: /v1/query
+  url: /v1/metadata
   status: 400
   response:
     path: $.args
@@ -33,7 +33,7 @@
           }
 
 - description: Include unknown enum value "IDLE" in the 'MessageStatus' Enum
-  url: /v1/query
+  url: /v1/metadata
   status: 400
   response:
     path: $.args
@@ -70,7 +70,7 @@
           }
 
 - description: Add duplicate enum value in the `MessageStatus` Enum
-  url: /v1/query
+  url: /v1/metadata
   status: 400
   response:
     path: $.args

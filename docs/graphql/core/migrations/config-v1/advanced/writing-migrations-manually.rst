@@ -36,3 +36,4 @@ Postgres schema and YAML for Hasura metadata actions.
 
       hasura migrate apply
 
+

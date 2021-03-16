@@ -2,7 +2,7 @@ description:
   The types of the fields of the input 'IntCompareObj'
   object in the upstream remote schema is 'Int', so a different
   type should throw an error
-url: /v1/query
+url: /v1/metadata
 status: 400
 query:
   type: add_remote_schema_permissions

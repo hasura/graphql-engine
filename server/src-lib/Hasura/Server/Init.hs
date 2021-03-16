@@ -6,27 +6,26 @@ module Hasura.Server.Init
   , module Hasura.Server.Init.Config
   ) where
 
-import qualified Data.Aeson                          as J
-import qualified Data.Aeson.Casing                   as J
-import qualified Data.Aeson.TH                       as J
-import qualified Data.HashSet                        as Set
-import qualified Data.String                         as DataString
-import qualified Data.Text                           as T
-import qualified Database.PG.Query                   as Q
-import qualified Language.Haskell.TH.Syntax          as TH
-import qualified Text.PrettyPrint.ANSI.Leijen        as PP
+import qualified Data.Aeson                               as J
+import qualified Data.Aeson.TH                            as J
+import qualified Data.HashSet                             as Set
+import qualified Data.String                              as DataString
+import qualified Data.Text                                as T
+import qualified Database.PG.Query                        as Q
+import qualified Language.Haskell.TH.Syntax               as TH
+import qualified Text.PrettyPrint.ANSI.Leijen             as PP
 
-import           Data.FileEmbed                      (embedStringFile)
-import           Data.Time                           (NominalDiffTime)
+import           Data.FileEmbed                           (embedStringFile)
+import           Data.Time                                (NominalDiffTime)
 import           Data.URL.Template
-import           Network.Wai.Handler.Warp            (HostPreference)
-import qualified Network.WebSockets                  as WS
+import           Network.Wai.Handler.Warp                 (HostPreference)
+import qualified Network.WebSockets                       as WS
 import           Options.Applicative
 
-import qualified Hasura.Cache.Bounded                as Cache
-import qualified Hasura.GraphQL.Execute.LiveQuery    as LQ
-import qualified Hasura.GraphQL.Execute.Plan         as E
-import qualified Hasura.Logging                      as L
+import qualified Hasura.Cache.Bounded                     as Cache
+import qualified Hasura.GraphQL.Execute.LiveQuery.Options as LQ
+import qualified Hasura.GraphQL.Execute.Plan              as E
+import qualified Hasura.Logging                           as L
 
 import           Hasura.Backends.Postgres.Connection
 import           Hasura.Prelude
@@ -38,7 +37,7 @@ import           Hasura.Server.Logging
 import           Hasura.Server.Types
 import           Hasura.Server.Utils
 import           Hasura.Session
-import           Network.URI                         (parseURI)
+import           Network.URI                              (parseURI)
 
 getDbId :: Q.TxE QErr Text
 getDbId =
@@ -59,7 +58,7 @@ data StartupTimeInfo
   { _stiMessage   :: !Text
   , _stiTimeTaken :: !Double
   }
-$(J.deriveJSON (J.aesonDrop 4 J.snakeCase) ''StartupTimeInfo)
+$(J.deriveJSON hasuraJSON ''StartupTimeInfo)
 
 returnJust :: Monad m => a -> m (Maybe a)
 returnJust = return . Just
@@ -99,10 +98,10 @@ withEnvJwtConf jVal envVar =
 
 mkHGEOptions
   :: L.EnabledLogTypes impl => RawHGEOptions impl -> WithEnv (HGEOptions impl)
-mkHGEOptions (HGEOptionsG rawConnInfo rawMetadataDbUrl rawCmd) =
-  HGEOptionsG <$> connInfo <*> metadataDbUrl <*> cmd
+mkHGEOptions (HGEOptionsG rawDbUrl rawMetadataDbUrl rawCmd) =
+  HGEOptionsG <$> dbUrl <*> metadataDbUrl <*> cmd
   where
-    connInfo = processPostgresConnInfo rawConnInfo
+    dbUrl = processPostgresConnInfo rawDbUrl
     metadataDbUrl = withEnv rawMetadataDbUrl $ fst metadataDbUrlEnv
     cmd = case rawCmd of
       HCServe rso     -> HCServe <$> mkServeOptions rso
@@ -114,29 +113,28 @@ mkHGEOptions (HGEOptionsG rawConnInfo rawMetadataDbUrl rawCmd) =
 
 processPostgresConnInfo
   :: PostgresConnInfo (Maybe PostgresRawConnInfo)
-  -> WithEnv (PostgresConnInfo UrlConf)
+  -> WithEnv (PostgresConnInfo (Maybe UrlConf))
 processPostgresConnInfo PostgresConnInfo{..} = do
   withEnvRetries <- withEnv _pciRetries $ fst retriesNumEnv
   databaseUrl <- rawConnInfoToUrlConf _pciDatabaseConn
   pure $ PostgresConnInfo databaseUrl withEnvRetries
 
-rawConnInfoToUrlConf :: Maybe PostgresRawConnInfo -> WithEnv UrlConf
+rawConnInfoToUrlConf :: Maybe PostgresRawConnInfo -> WithEnv (Maybe UrlConf)
 rawConnInfoToUrlConf maybeRawConnInfo = do
   env <- ask
   let databaseUrlEnvVar = fst databaseUrlEnv
       hasDatabaseUrlEnv = any ((== databaseUrlEnvVar) . fst) env
 
-  case maybeRawConnInfo of
+  pure $ case maybeRawConnInfo of
     -- If no --database-url or connection options provided in CLI command
     Nothing -> if hasDatabaseUrlEnv then
                  -- Consider env variable as is in order to store it as @`UrlConf`
                  -- in default source configuration in metadata
-                 pure $ UrlFromEnv $ T.pack databaseUrlEnvVar
-               else throwError $
-                    "Fatal Error: Required --database-url or connection options or env var "
-                    <> databaseUrlEnvVar
+                 Just $ UrlFromEnv $ T.pack databaseUrlEnvVar
+               else Nothing
+
     Just databaseConn ->
-        pure $ UrlValue . InputWebhook $ case databaseConn of
+        Just . UrlValue . InputWebhook $ case databaseConn of
           PGConnDatabaseUrl urlTemplate -> urlTemplate
           PGConnDetails connDetails     -> rawConnDetailsToUrl connDetails
 
@@ -182,8 +180,7 @@ mkServeOptions rso = do
   logHeadersFromEnv <- withEnvBool (rsoLogHeadersFromEnv rso) (fst logHeadersFromEnvEnv)
   enableRemoteSchemaPerms <-
     bool RemoteSchemaPermsDisabled RemoteSchemaPermsEnabled <$>
-    (withEnvBool (rsoEnableRemoteSchemaPermissions rso) $
-                (fst enableRemoteSchemaPermsEnv))
+    (withEnvBool (rsoEnableRemoteSchemaPermissions rso) (fst enableRemoteSchemaPermsEnv))
 
   webSocketCompressionFromEnv <- withEnvBool (rsoWebSocketCompression rso) $
                                  fst webSocketCompressionEnv
@@ -197,19 +194,29 @@ mkServeOptions rso = do
   webSocketKeepAlive <- KeepAliveDelay . fromIntegral . fromMaybe 5
       <$> withEnv (rsoWebSocketKeepAlive rso) (fst webSocketKeepAliveEnv)
 
+  experimentalFeatures <- maybe mempty Set.fromList <$> withEnv (rsoExperimentalFeatures rso) (fst experimentalFeaturesEnv)
+  inferFunctionPerms <-
+    maybe FunctionPermissionsInferred (bool FunctionPermissionsManual FunctionPermissionsInferred) <$>
+    (withEnv (rsoInferFunctionPermissions rso) (fst inferFunctionPermsEnv))
+
+  maintenanceMode <-
+    bool MaintenanceModeDisabled MaintenanceModeEnabled
+    <$> withEnvBool (rsoEnableMaintenanceMode rso) (fst maintenanceModeEnv)
+
   return $ ServeOptions port host connParams txIso adminScrt authHook jwtSecret
                         unAuthRole corsCfg enableConsole consoleAssetsDir
                         enableTelemetry strfyNum enabledAPIs lqOpts enableAL
                         enabledLogs serverLogLevel planCacheOptions
                         internalErrorsConfig eventsHttpPoolSize eventsFetchInterval
                         logHeadersFromEnv enableRemoteSchemaPerms connectionOptions webSocketKeepAlive
+                        inferFunctionPerms maintenanceMode experimentalFeatures
   where
 #ifdef DeveloperAPIs
     defaultAPIs = [METADATA,GRAPHQL,PGDUMP,CONFIG,DEVELOPER]
 #else
     defaultAPIs = [METADATA,GRAPHQL,PGDUMP,CONFIG]
 #endif
-    mkConnParams (RawConnParams s c i cl p) = do
+    mkConnParams (RawConnParams s c i cl p pt) = do
       stripes <- fromMaybe 1 <$> withEnv s (fst pgStripesEnv)
       -- Note: by Little's Law we can expect e.g. (with 50 max connections) a
       -- hard throughput cap at 1000RPS when db queries take 50ms on average:
@@ -217,7 +224,9 @@ mkServeOptions rso = do
       iTime <- fromMaybe 180 <$> withEnv i (fst pgTimeoutEnv)
       connLifetime <- withEnv cl (fst pgConnLifetimeEnv)
       allowPrepare <- fromMaybe True <$> withEnv p (fst pgUsePrepareEnv)
-      return $ Q.ConnParams stripes conns iTime allowPrepare connLifetime
+      poolTimeout <- withEnv pt (fst pgPoolTimeoutEnv)
+      return $ Q.ConnParams
+        stripes conns iTime allowPrepare connLifetime poolTimeout
 
     mkAuthHook (AuthHookG mUrl mType) = do
       mUrlEnv <- withEnv mUrl $ fst authHookEnv
@@ -416,6 +425,12 @@ pgConnLifetimeEnv =
     <> "created. (default: none)"
   )
 
+pgPoolTimeoutEnv :: (String, String)
+pgPoolTimeoutEnv =
+  ( "HASURA_GRAPHQL_PG_POOL_TIMEOUT"
+  , "How long to wait when acquiring a Postgres connection, in seconds (default: forever)."
+  )
+
 pgUsePrepareEnv :: (String, String)
 pgUsePrepareEnv =
   ( "HASURA_GRAPHQL_USE_PREPARED_STATEMENTS"
@@ -512,6 +527,12 @@ enabledAPIsEnv =
   , "Comma separated list of enabled APIs. (default: metadata,graphql,pgdump,config)"
   )
 
+experimentalFeaturesEnv :: (String, String)
+experimentalFeaturesEnv =
+  ( "HASURA_GRAPHQL_EXPERIMENTAL_FEATURES"
+  , "Comma separated list of experimental features. (all: inherited_roles)"
+  )
+
 consoleAssetsDirEnv :: (String, String)
 consoleAssetsDirEnv =
   ( "HASURA_GRAPHQL_CONSOLE_ASSETS_DIR"
@@ -546,6 +567,17 @@ enableRemoteSchemaPermsEnv =
   , "Enables remote schema permissions (default: false)"
   )
 
+inferFunctionPermsEnv :: (String, String)
+inferFunctionPermsEnv =
+  ( "HASURA_GRAPHQL_INFER_FUNCTION_PERMISSIONS"
+  , "Infers function permissions (default: true)"
+  )
+
+maintenanceModeEnv :: (String, String)
+maintenanceModeEnv =
+  ( "HASURA_GRAPHQL_ENABLE_MAINTENANCE_MODE"
+  , "Flag to enable maintenance mode in the graphql-engine"
+  )
 
 adminInternalErrorsEnv :: (String, String)
 adminInternalErrorsEnv =
@@ -643,7 +675,7 @@ parseTxIsolation = optional $
 
 parseConnParams :: Parser RawConnParams
 parseConnParams =
-  RawConnParams <$> stripes <*> conns <*> idleTimeout <*> connLifetime <*> allowPrepare
+  RawConnParams <$> stripes <*> conns <*> idleTimeout <*> connLifetime <*> allowPrepare <*> poolTimeout
   where
     stripes = optional $
       option auto
@@ -680,6 +712,13 @@ parseConnParams =
               ( long "use-prepared-statements" <>
                 metavar "<true|false>" <>
                 help (snd pgUsePrepareEnv)
+              )
+
+    poolTimeout = fmap (fmap (realToFrac :: Int -> NominalDiffTime)) $ optional $
+      option auto
+              ( long "pool-timeout" <>
+                metavar "<SECONDS>" <>
+                help (snd pgPoolTimeoutEnv)
               )
 
 parseServerPort :: Parser (Maybe Int)
@@ -808,6 +847,13 @@ parseEnabledAPIs = optional $
            help (snd enabledAPIsEnv)
          )
 
+parseExperimentalFeatures :: Parser (Maybe [ExperimentalFeature])
+parseExperimentalFeatures = optional $
+  option (eitherReader readExperimentalFeatures)
+         ( long "experimental-features" <>
+           help (snd experimentalFeaturesEnv)
+         )
+
 parseMxRefetchInt :: Parser (Maybe LQ.RefetchInterval)
 parseMxRefetchInt =
   optional $
@@ -871,6 +917,18 @@ parseEnableRemoteSchemaPerms :: Parser Bool
 parseEnableRemoteSchemaPerms =
   switch ( long "enable-remote-schema-permissions" <>
            help (snd enableRemoteSchemaPermsEnv)
+         )
+
+parseInferFunctionPerms :: Parser (Maybe Bool)
+parseInferFunctionPerms = optional $
+  option ( eitherReader parseStrAsBool )
+         ( long "infer-function-permissions" <>
+           help (snd inferFunctionPermsEnv))
+
+parseEnableMaintenanceMode :: Parser Bool
+parseEnableMaintenanceMode =
+  switch ( long "enable-maintenance-mode" <>
+           help (snd maintenanceModeEnv)
          )
 
 mxRefetchDelayEnv :: (String, String)
@@ -985,6 +1043,9 @@ serveOptsToLog so =
       , "remote_schema_permissions" J..= soEnableRemoteSchemaPermissions so
       , "websocket_compression_options" J..= show (WS.connectionCompressionOptions . soConnectionOptions $ so)
       , "websocket_keep_alive" J..= show (soWebsocketKeepAlive so)
+      , "infer_function_permissions" J..= soInferFunctionPermissions so
+      , "enable_maintenance_mode" J..= soEnableMaintenanceMode so
+      , "experimental_features" J..= soExperimentalFeatures so
       ]
 
 mkGenericStrLog :: L.LogLevel -> Text -> String -> StartupLog
@@ -1033,6 +1094,9 @@ serveOptionsParser =
   <*> parseEnableRemoteSchemaPerms
   <*> parseWebSocketCompression
   <*> parseWebSocketKeepAlive
+  <*> parseInferFunctionPerms
+  <*> parseEnableMaintenanceMode
+  <*> parseExperimentalFeatures
 
 -- | This implements the mapping between application versions
 -- and catalog schema versions.

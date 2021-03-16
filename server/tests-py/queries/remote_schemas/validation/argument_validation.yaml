@@ -53,3 +53,51 @@
           path: $.selectionSet.createUserInputObj.args.userData.foo
           code: validation-failed
         message: "field \"foo\" not found in type: 'UserDetailsInput'"
+
+- description: an argument expecting a list of input objects should work properly
+  url: /v1/graphql
+  status: 200
+  query:
+    query: |
+      {
+        objectPassedToArrayType: user(id:1, userInfo: {id: 1, username: "foo"}) {
+          id
+          username
+        }
+        user(id:1, userInfo: {id: 1, username: "foo"}) {
+          id
+          username
+        }
+      }
+  response:
+    data:
+      objectPassedToArrayType:
+        id: 1
+        username: jane
+      user:
+        id: 1
+        username: jane
+
+- description: an argument expecting a list of input objects should work properly
+  url: /v1/graphql
+  status: 200
+  query:
+    query: |
+      {
+        objectPassedToArrayType: user(id:1, userInfo: {id: 1, username: "foo"}) {
+          id
+          username
+        }
+        user(id:1, userInfo: [{id: 1, username: "foo"}]) {
+          id
+          username
+        }
+      }
+  response:
+    data:
+      objectPassedToArrayType:
+        id: 1
+        username: jane
+      user:
+        id: 1
+        username: jane

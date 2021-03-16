@@ -2,16 +2,17 @@ package commands
 
 import (
 	"github.com/hasura/graphql-engine/cli"
+	"github.com/hasura/graphql-engine/cli/internal/hasura"
 	"github.com/hasura/graphql-engine/cli/migrate"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 )
 
-const longHelpMetadataExportCmd = `Export Hasura metadata and save it in migrations/metadata.yaml file.
-The output is a yaml file which captures all the metadata required
-by GraphQL Engine. This includes info about tables that are tracked,
+const longHelpMetadataExportCmd = `Export Hasura metadata and save it in the` + " ``/metadata``" + ` directory.
+The output is a bunch of yaml files which captures all the metadata required
+by the GraphQL engine. This includes info about tables that are tracked,
 permission rules, relationships and event triggers that are defined
-on those tables.`
+on those tables`
 
 func newMetadataExportCmd(ec *cli.ExecutionContext) *cobra.Command {
 	opts := &MetadataExportOptions{
@@ -21,7 +22,7 @@ func newMetadataExportCmd(ec *cli.ExecutionContext) *cobra.Command {
 
 	metadataExportCmd := &cobra.Command{
 		Use:   "export",
-		Short: "Export Hasura GraphQL Engine metadata from the database",
+		Short: "Export Hasura GraphQL engine metadata from the database",
 		Example: `  # Export metadata and save it in migrations/metadata.yaml file:
   hasura metadata export
 
@@ -54,7 +55,7 @@ type MetadataExportOptions struct {
 }
 
 func (o *MetadataExportOptions) Run() error {
-	migrateDrv, err := migrate.NewMigrate(o.EC, true)
+	migrateDrv, err := migrate.NewMigrate(o.EC, true, "", hasura.SourceKindPG)
 	if err != nil {
 		return err
 	}

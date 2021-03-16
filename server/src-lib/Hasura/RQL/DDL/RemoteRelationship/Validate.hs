@@ -7,20 +7,23 @@ module Hasura.RQL.DDL.RemoteRelationship.Validate
   , errorToText
   ) where
 
-import           Hasura.Prelude                     hiding (first)
+import           Hasura.Prelude                      hiding (first)
 
-import qualified Data.HashMap.Strict                as HM
-import qualified Data.HashSet                       as HS
-import qualified Language.GraphQL.Draft.Syntax      as G
+import qualified Data.HashMap.Strict                 as HM
+import qualified Data.HashSet                        as HS
+import qualified Language.GraphQL.Draft.Syntax       as G
 
 import           Data.Foldable
 import           Data.Text.Extended
 
 import           Hasura.Backends.Postgres.SQL.Types
-import           Hasura.GraphQL.Parser.Column
 import           Hasura.GraphQL.Schema.Remote
-import           Hasura.GraphQL.Utils               (getBaseTyWithNestedLevelsCount)
-import           Hasura.RQL.Types
+import           Hasura.RQL.Types.Column
+import           Hasura.RQL.Types.Common
+import           Hasura.RQL.Types.RemoteRelationship
+import           Hasura.RQL.Types.RemoteSchema
+import           Hasura.RQL.Types.SchemaCache
+import           Hasura.SQL.Backend
 import           Hasura.SQL.Types
 
 
@@ -86,11 +89,11 @@ errorToText = \case
 validateRemoteRelationship
   :: forall m
   .  (MonadError ValidationError m)
-  => RemoteRelationship
-  -> RemoteSchemaMap
+  => RemoteRelationship 'Postgres
+  -> (RemoteSchemaInfo, IntrospectionResult)
   -> [ColumnInfo 'Postgres]
   -> m (RemoteFieldInfo 'Postgres)
-validateRemoteRelationship remoteRelationship remoteSchemaMap pgColumns = do
+validateRemoteRelationship remoteRelationship (remoteSchemaInfo, introspectionResult) pgColumns = do
   let remoteSchemaName = rtrRemoteSchema remoteRelationship
       table = rtrTable remoteRelationship
   hasuraFields <- forM (toList $ rtrHasuraFields remoteRelationship) $
@@ -101,10 +104,7 @@ validateRemoteRelationship remoteRelationship remoteSchemaMap pgColumns = do
                                   pure $ (variableName,v)
                               ) $ HM.toList (mapFromL pgiColumn pgColumns)
   let pgColumnsVariablesMap = HM.fromList pgColumnsVariables
-  RemoteSchemaCtx rsName introspectionResult rsi _ _ _ <-
-    onNothing (HM.lookup remoteSchemaName remoteSchemaMap) $
-    throwError $ RemoteSchemaNotFound remoteSchemaName
-  let schemaDoc@(RemoteSchemaIntrospection originalDefns) = irDoc introspectionResult
+  let schemaDoc     = irDoc introspectionResult
       queryRootName = irQueryRoot introspectionResult
   queryRoot <- onNothing (lookupObject schemaDoc queryRootName) $
     throwError $ FieldNotFoundInRemoteSchema queryRootName
@@ -113,22 +113,18 @@ validateRemoteRelationship remoteRelationship remoteSchemaMap pgColumns = do
     (buildRelationshipTypeInfo pgColumnsVariablesMap schemaDoc)
     (queryRoot, (mempty, mempty))
     (unRemoteFields $ rtrRemoteField remoteRelationship)
-  let newInputValueDefinitions =
-        -- The preset part below is set to `Nothing` because preset values
-        -- are ignored for remote relationships and instead the argument
-        -- values comes from the parent query.
-        fmap (`RemoteSchemaInputValueDefinition` Nothing) <$> HM.elems leafTypeMap
   pure $ RemoteFieldInfo
-        { _rfiName = rtrName remoteRelationship
+        { _rfiXRemoteFieldInfo = ()
+        , _rfiName = rtrName remoteRelationship
         , _rfiParamMap = leafParamMap
         , _rfiHasuraFields = HS.fromList hasuraFields
         , _rfiRemoteFields = rtrRemoteField remoteRelationship
-        , _rfiRemoteSchema = rsi
-        -- adding the new types after stripping the values to the
+        , _rfiRemoteSchema = remoteSchemaInfo
+        -- adding the new input types after stripping the values of the
         -- schema document
-        , _rfiSchemaIntrospect = RemoteSchemaIntrospection
-                                    $ originalDefns <> newInputValueDefinitions
-        , _rfiRemoteSchemaName = rsName
+        , _rfiInputValueDefinitions = HM.elems leafTypeMap
+        , _rfiRemoteSchemaName = remoteSchemaName
+        , _rfiTable = (table, rtrSource remoteRelationship)
         }
   where
     getObjTyInfoFromField
@@ -153,12 +149,12 @@ validateRemoteRelationship remoteRelationship remoteSchemaMap pgColumns = do
       :: HashMap G.Name (ColumnInfo 'Postgres)
       -> RemoteSchemaIntrospection
       -> (G.ObjectTypeDefinition RemoteSchemaInputValueDefinition,
-           ( (HashMap G.Name G.InputValueDefinition)
-           , (HashMap G.Name (G.TypeDefinition [G.Name] G.InputValueDefinition))))
+           ( (HashMap G.Name RemoteSchemaInputValueDefinition)
+           , (HashMap G.Name (G.TypeDefinition [G.Name] RemoteSchemaInputValueDefinition))))
       -> FieldCall
       -> m ( G.ObjectTypeDefinition RemoteSchemaInputValueDefinition
-           , ( HashMap G.Name G.InputValueDefinition
-             , HashMap G.Name (G.TypeDefinition [G.Name] G.InputValueDefinition)))
+           , ( HashMap G.Name RemoteSchemaInputValueDefinition
+             , HashMap G.Name (G.TypeDefinition [G.Name] RemoteSchemaInputValueDefinition)))
     buildRelationshipTypeInfo pgColumnsVariablesMap schemaDoc (objTyInfo,(_,typeMap)) fieldCall = do
       objFldDefinition <- lookupField (fcName fieldCall) objTyInfo
       let providedArguments = getRemoteArguments $ fcArguments fieldCall
@@ -194,38 +190,41 @@ validateRemoteRelationship remoteRelationship remoteSchemaMap pgColumns = do
 -- list types are preserved because they can be merged, if any arguments are
 -- provided by the user while querying a remote join field.
 stripInMap
-  :: RemoteRelationship
+  :: RemoteRelationship 'Postgres
   -> RemoteSchemaIntrospection
   -> HM.HashMap G.Name RemoteSchemaInputValueDefinition
   -> HM.HashMap G.Name (G.Value G.Name)
   -> StateT
-       (HashMap G.Name (G.TypeDefinition [G.Name] G.InputValueDefinition))
+       (HashMap G.Name (G.TypeDefinition [G.Name] RemoteSchemaInputValueDefinition))
        (Either ValidationError)
-       (HM.HashMap G.Name G.InputValueDefinition)
+       (HM.HashMap G.Name RemoteSchemaInputValueDefinition)
 stripInMap remoteRelationship types schemaArguments providedArguments =
   fmap
     (HM.mapMaybe id)
     (HM.traverseWithKey
-       (\name inpValInfo ->
+       (\name remoteInpValDef@(RemoteSchemaInputValueDefinition inpValInfo _preset) ->
           case HM.lookup name providedArguments of
-            Nothing -> pure (Just inpValInfo)
+            Nothing -> pure $ Just remoteInpValDef
             Just value -> do
               maybeNewGType <- stripValue remoteRelationship types (G._ivdType inpValInfo) value
               pure
                 (fmap
-                   (\newGType -> inpValInfo {G._ivdType = newGType})
+                   (\newGType ->
+                      let newInpValInfo = inpValInfo {G._ivdType = newGType}
+                      in RemoteSchemaInputValueDefinition newInpValInfo Nothing
+                   )
                    maybeNewGType))
-       (fmap _rsitdDefinition schemaArguments))
+       schemaArguments)
 
 -- | Strip a value type completely, or modify it, if the given value
 -- is atomic-ish.
 stripValue
-  :: RemoteRelationship
+  :: RemoteRelationship 'Postgres
   -> RemoteSchemaIntrospection
   -> G.GType
   -> G.Value G.Name
   -> StateT
-       (HashMap G.Name (G.TypeDefinition [G.Name] G.InputValueDefinition))
+       (HashMap G.Name (G.TypeDefinition [G.Name] RemoteSchemaInputValueDefinition))
        (Either ValidationError)
        (Maybe G.GType)
 stripValue remoteRelationshipName types gtype value = do
@@ -245,14 +244,14 @@ stripValue remoteRelationshipName types gtype value = do
     G.VObject keyPairs ->
       fmap Just (stripObject remoteRelationshipName types gtype keyPairs)
 
--- -- | Produce a new type for the list, or strip it entirely.
+-- | Produce a new type for the list, or strip it entirely.
 stripList
-  :: RemoteRelationship
+  :: RemoteRelationship 'Postgres
   -> RemoteSchemaIntrospection
   -> G.GType
   -> G.Value G.Name
   -> StateT
-       (HashMap G.Name (G.TypeDefinition [G.Name] G.InputValueDefinition))
+       (HashMap G.Name (G.TypeDefinition [G.Name] RemoteSchemaInputValueDefinition))
        (Either ValidationError)
        (Maybe G.GType)
 stripList remoteRelationshipName types originalOuterGType value =
@@ -262,16 +261,16 @@ stripList remoteRelationshipName types originalOuterGType value =
       pure (G.TypeList nullability <$> maybeNewInnerGType)
     _ -> lift (Left (InvalidGTypeForStripping originalOuterGType))
 
--- -- | Produce a new type for the given InpValInfo, modified by
--- -- 'stripInMap'. Objects can't be deleted entirely, just keys of an
--- -- object.
+-- | Produce a new type for the given InpValInfo, modified by
+-- 'stripInMap'. Objects can't be deleted entirely, just keys of an
+-- object.
 stripObject
-  :: RemoteRelationship
+  :: RemoteRelationship 'Postgres
   -> RemoteSchemaIntrospection
   -> G.GType
   -> HashMap G.Name (G.Value G.Name)
   -> StateT
-       (HashMap G.Name (G.TypeDefinition [G.Name] G.InputValueDefinition))
+       (HashMap G.Name (G.TypeDefinition [G.Name] RemoteSchemaInputValueDefinition))
        (Either ValidationError)
        G.GType
 stripObject remoteRelationshipName schemaDoc originalGtype templateArguments =
@@ -305,7 +304,7 @@ stripObject remoteRelationshipName schemaDoc originalGtype templateArguments =
 -- -- | Produce a new name for a type, used when stripping the schema
 -- -- types for a remote relationship.
 -- TODO: Consider a separator character to avoid conflicts. (from master)
-renameTypeForRelationship :: RemoteRelationship -> Text -> Text
+renameTypeForRelationship :: RemoteRelationship 'Postgres -> Text -> Text
 renameTypeForRelationship rtr text =
   text <> "_remote_rel_" <> name
   where name = schema <> "_" <> table <> remoteRelationshipNameToText (rtrName rtr)
@@ -475,3 +474,12 @@ columnInfoToNamedType pci =
   case pgiType pci of
     ColumnScalar scalarType -> getPGScalarTypeName scalarType
     _                       -> throwError UnsupportedEnum
+
+getBaseTyWithNestedLevelsCount :: G.GType -> (G.Name, Int)
+getBaseTyWithNestedLevelsCount ty = go ty 0
+  where
+    go :: G.GType -> Int -> (G.Name, Int)
+    go gType ctr =
+      case gType of
+        G.TypeNamed _ n      -> (n, ctr)
+        G.TypeList  _ gType' -> go gType' (ctr + 1)

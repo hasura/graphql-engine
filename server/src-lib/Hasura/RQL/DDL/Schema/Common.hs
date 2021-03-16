@@ -1,7 +1,13 @@
 module Hasura.RQL.DDL.Schema.Common where
 
-import           Hasura.Backends.Postgres.SQL.Types
 import           Hasura.Prelude
+
+import qualified Data.HashMap.Strict                as HM
+import qualified Database.PG.Query                  as Q
+
+import qualified Hasura.SQL.AnyBackend              as AB
+
+import           Hasura.Backends.Postgres.SQL.Types
 import           Hasura.RQL.DDL.ComputedField
 import           Hasura.RQL.DDL.EventTrigger
 import           Hasura.RQL.DDL.Permission
@@ -10,13 +16,13 @@ import           Hasura.RQL.DDL.RemoteRelationship
 import           Hasura.RQL.DDL.Schema.Function
 import           Hasura.RQL.Types
 
-import qualified Data.HashMap.Strict                as HM
-import qualified Database.PG.Query                  as Q
 
 purgeDependentObject
-  :: (MonadError QErr m) => SchemaObjId -> m MetadataModifier
-purgeDependentObject = \case
-  SOSourceObj source (SOITableObj tn tableObj) -> pure $ MetadataModifier $
+  :: forall b m
+   . (MonadError QErr m, BackendMetadata b)
+  => SourceName -> SourceObjId b -> m MetadataModifier
+purgeDependentObject source sourceObjId = case sourceObjId of
+  SOITableObj tn tableObj -> pure $ MetadataModifier $
     tableMetadataSetter source tn %~ case tableObj of
       TOPerm rn pt        -> dropPermissionInMetadata rn pt
       TORel rn            -> dropRelationshipInMetadata rn
@@ -24,9 +30,11 @@ purgeDependentObject = \case
       TOComputedField ccn -> dropComputedFieldInMetadata ccn
       TORemoteRel rrn     -> dropRemoteRelationshipInMetadata rrn
       _                   -> id
-  SOSourceObj source (SOIFunction qf) -> pure $ dropFunctionInMetadata source qf
-  schemaObjId           ->
-      throw500 $ "unexpected dependent object: " <> reportSchemaObj schemaObjId
+  SOIFunction qf -> pure $ dropFunctionInMetadata source qf
+  _           ->
+    throw500
+      $ "unexpected dependent object: "
+      <> reportSchemaObj (SOSourceObj source $ AB.mkAnyBackend sourceObjId)
 
 -- | Fetch Postgres metadata of all user tables
 fetchTableMetadata :: (MonadTx m) => m (DBTablesMetadata 'Postgres)
@@ -37,7 +45,7 @@ fetchTableMetadata = do
     \(schema, table, Q.AltJ info) -> (QualifiedObject schema table, info)
 
 -- | Fetch Postgres metadata for all user functions
-fetchFunctionMetadata :: (MonadTx m) => m PostgresFunctionsMetadata
+fetchFunctionMetadata :: (MonadTx m) => m (DBFunctionsMetadata 'Postgres)
 fetchFunctionMetadata = do
   results <- liftTx $ Q.withQE defaultTxErrorHandler
              $(Q.sqlFromFile "src-rsr/pg_function_metadata.sql") () True

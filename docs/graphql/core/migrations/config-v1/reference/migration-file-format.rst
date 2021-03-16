@@ -68,7 +68,7 @@ actions, which is represented with a ``-`` in YAML. Here is an example file:
 
 Each one of the actions in these files are actually Hasura metadata API calls,
 which are executed in **sequence** when the migration is applied. You can find
-all the metadata actions that are available in the :ref:`API reference <Query>`.
+all the metadata actions that are available in the :ref:`API reference <api_query>`.
 
 
 SQL Files
@@ -83,3 +83,4 @@ As the name indicates, an SQL file can contain SQL statements which are executed
 on the apply step of the migration. There can be an ``up`` SQL and a ``down``
 SQL file. The SQL file is executed first if it is present in an up migration and the
 YAML file is executed first in a down migration.
+

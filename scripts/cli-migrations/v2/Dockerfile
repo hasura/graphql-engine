@@ -1,13 +1,8 @@
-FROM hasura/haskell-docker-packager:20190731 as packager
-WORKDIR /tmp
-RUN apt-get update && apt-get download libstdc++6
+ARG SERVER_IMAGE_TAG
 
-FROM hasura/graphql-engine:v1.3.3
+FROM hasura/graphql-engine:${SERVER_IMAGE_TAG}
 
-# install libstdc++6 from .deb file
-COPY --from=packager /tmp/libstdc++6* .
-RUN busybox dpkg-deb -x libstdc++6*.deb / \
-    && rm libstdc++6*.deb
+RUN apt-get update && apt-get install -y netcat
 
 # set an env var to let the cli know that
 # update notification is disabled

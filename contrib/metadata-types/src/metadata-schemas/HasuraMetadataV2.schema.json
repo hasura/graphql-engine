@@ -64,7 +64,7 @@
       "required": ["name", "schema"]
     },
     "TableConfig": {
-      "description": "Configuration for the table/view\nhttps://hasura.io/docs/1.0/graphql/manual/api-reference/schema-metadata-api/table-view.html#table-config",
+      "description": "Configuration for the table/view\nhttps://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/table-view.html#table-config",
       "title": "TableConfig",
       "type": "object",
       "properties": {
@@ -94,7 +94,7 @@
           "title": "is_enum"
         },
         "configuration": {
-          "description": "Configuration for the table/view\nhttps://hasura.io/docs/1.0/graphql/manual/api-reference/schema-metadata-api/table-view.html#table-config",
+          "description": "Configuration for the table/view\nhttps://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/table-view.html#table-config",
           "$ref": "#/definitions/TableConfig",
           "title": "configuration"
         },
@@ -165,7 +165,7 @@
       "required": ["table"]
     },
     "CustomRootFields": {
-      "description": "Customise the root fields\nhttps://hasura.io/docs/1.0/graphql/manual/api-reference/schema-metadata-api/table-view.html#custom-root-fields",
+      "description": "Customise the root fields\nhttps://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/table-view.html#custom-root-fields",
       "title": "CustomRootFields",
       "type": "object",
       "properties": {
@@ -250,7 +250,7 @@
       "required": ["name", "schema"]
     },
     "Function": {
-      "description": "A custom SQL function to add to the GraphQL schema with configuration.\nhttps://hasura.io/docs/1.0/graphql/manual/api-reference/schema-metadata-api/custom-functions.html#args-syntax",
+      "description": "A custom SQL function to add to the GraphQL schema with configuration.\nhttps://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/custom-functions.html#args-syntax",
       "title": "Function",
       "type": "object",
       "properties": {
@@ -275,7 +275,7 @@
       "required": ["function"]
     },
     "FunctionConfiguration": {
-      "description": "Configuration for a CustomFunction\nhttps://hasura.io/docs/1.0/graphql/manual/api-reference/schema-metadata-api/custom-functions.html#function-configuration",
+      "description": "Configuration for a CustomFunction\nhttps://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/custom-functions.html#function-configuration",
       "title": "FunctionConfiguration",
       "type": "object",
       "properties": {
@@ -287,7 +287,7 @@
       }
     },
     "ObjectRelationship": {
-      "description": "https://hasura.io/docs/1.0/graphql/manual/api-reference/schema-metadata-api/relationship.html#args-syntax",
+      "description": "https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/relationship.html#args-syntax",
       "title": "ObjectRelationship",
       "type": "object",
       "properties": {
@@ -310,7 +310,7 @@
       "required": ["name", "using"]
     },
     "ObjRelUsing": {
-      "description": "Use one of the available ways to define an object relationship\nhttps://hasura.io/docs/1.0/graphql/manual/api-reference/schema-metadata-api/relationship.html#objrelusing",
+      "description": "Use one of the available ways to define an object relationship\nhttps://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/relationship.html#objrelusing",
       "title": "ObjRelUsing",
       "type": "object",
       "properties": {
@@ -327,7 +327,7 @@
       }
     },
     "ObjRelUsingManualMapping": {
-      "description": "Manual mapping of table and columns\nhttps://hasura.io/docs/1.0/graphql/manual/api-reference/schema-metadata-api/relationship.html#objrelusingmanualmapping",
+      "description": "Manual mapping of table and columns\nhttps://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/relationship.html#objrelusingmanualmapping",
       "title": "ObjRelUsingManualMapping",
       "type": "object",
       "properties": {
@@ -355,7 +355,7 @@
       "required": ["column_mapping", "remote_table"]
     },
     "ArrayRelationship": {
-      "description": "https://hasura.io/docs/1.0/graphql/manual/api-reference/schema-metadata-api/relationship.html#create-array-relationship-syntax",
+      "description": "https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/relationship.html#create-array-relationship-syntax",
       "title": "ArrayRelationship",
       "type": "object",
       "properties": {
@@ -378,7 +378,7 @@
       "required": ["name", "using"]
     },
     "ArrRelUsing": {
-      "description": "Use one of the available ways to define an object relationship\nhttps://hasura.io/docs/1.0/graphql/manual/api-reference/schema-metadata-api/relationship.html#arrrelusing",
+      "description": "Use one of the available ways to define an object relationship\nhttps://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/relationship.html#arrrelusing",
       "title": "ArrRelUsing",
       "type": "object",
       "properties": {
@@ -395,7 +395,7 @@
       }
     },
     "ArrRelUsingFKeyOn": {
-      "description": "The column with foreign key constraint\nhttps://hasura.io/docs/1.0/graphql/manual/api-reference/schema-metadata-api/relationship.html#arrrelusingfkeyon",
+      "description": "The column with foreign key constraint\nhttps://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/relationship.html#arrrelusingfkeyon",
       "title": "ArrRelUsingFKeyOn",
       "type": "object",
       "properties": {
@@ -418,7 +418,7 @@
       "required": ["column", "table"]
     },
     "ArrRelUsingManualMapping": {
-      "description": "Manual mapping of table and columns\nhttps://hasura.io/docs/1.0/graphql/manual/api-reference/schema-metadata-api/relationship.html#arrrelusingmanualmapping",
+      "description": "Manual mapping of table and columns\nhttps://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/relationship.html#arrrelusingmanualmapping",
       "title": "ArrRelUsingManualMapping",
       "type": "object",
       "properties": {
@@ -446,7 +446,7 @@
       "required": ["column_mapping", "remote_table"]
     },
     "ColumnPresetsExpression": {
-      "description": "Preset values for columns that can be sourced from session variables or static values.\nhttps://hasura.io/docs/1.0/graphql/manual/api-reference/schema-metadata-api/syntax-defs.html#columnpresetexp",
+      "description": "Preset values for columns that can be sourced from session variables or static values.\nhttps://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/syntax-defs.html#columnpresetexp",
       "title": "ColumnPresetsExpression",
       "type": "object",
       "additionalProperties": {
@@ -454,7 +454,7 @@
       }
     },
     "InsertPermissionEntry": {
-      "description": "https://hasura.io/docs/1.0/graphql/manual/api-reference/schema-metadata-api/permission.html#args-syntax",
+      "description": "https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/permission.html#args-syntax",
       "title": "InsertPermissionEntry",
       "type": "object",
       "properties": {
@@ -477,7 +477,7 @@
       "required": ["permission", "role"]
     },
     "InsertPermission": {
-      "description": "https://hasura.io/docs/1.0/graphql/manual/api-reference/schema-metadata-api/permission.html#insertpermission",
+      "description": "https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/permission.html#insertpermission",
       "title": "InsertPermission",
       "type": "object",
       "properties": {
@@ -528,7 +528,7 @@
       "required": ["columns"]
     },
     "SelectPermissionEntry": {
-      "description": "https://hasura.io/docs/1.0/graphql/manual/api-reference/schema-metadata-api/permission.html#create-select-permission-syntax",
+      "description": "https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/permission.html#create-select-permission-syntax",
       "title": "SelectPermissionEntry",
       "type": "object",
       "properties": {
@@ -551,7 +551,7 @@
       "required": ["permission", "role"]
     },
     "SelectPermission": {
-      "description": "https://hasura.io/docs/1.0/graphql/manual/api-reference/schema-metadata-api/permission.html#selectpermission",
+      "description": "https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/permission.html#selectpermission",
       "title": "SelectPermission",
       "type": "object",
       "properties": {
@@ -610,7 +610,7 @@
       "required": ["columns"]
     },
     "UpdatePermissionEntry": {
-      "description": "https://hasura.io/docs/1.0/graphql/manual/api-reference/schema-metadata-api/permission.html#create-update-permission-syntax",
+      "description": "https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/permission.html#create-update-permission-syntax",
       "title": "UpdatePermissionEntry",
       "type": "object",
       "properties": {
@@ -633,7 +633,7 @@
       "required": ["permission", "role"]
     },
     "UpdatePermission": {
-      "description": "https://hasura.io/docs/1.0/graphql/manual/api-reference/schema-metadata-api/permission.html#updatepermission",
+      "description": "https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/permission.html#updatepermission",
       "title": "UpdatePermission",
       "type": "object",
       "properties": {
@@ -696,7 +696,7 @@
       "required": ["columns"]
     },
     "DeletePermissionEntry": {
-      "description": "https://hasura.io/docs/1.0/graphql/manual/api-reference/schema-metadata-api/permission.html#create-delete-permission-syntax",
+      "description": "https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/permission.html#create-delete-permission-syntax",
       "title": "DeletePermissionEntry",
       "type": "object",
       "properties": {
@@ -719,7 +719,7 @@
       "required": ["permission", "role"]
     },
     "DeletePermission": {
-      "description": "https://hasura.io/docs/1.0/graphql/manual/api-reference/schema-metadata-api/permission.html#deletepermission",
+      "description": "https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/permission.html#deletepermission",
       "title": "DeletePermission",
       "type": "object",
       "properties": {
@@ -743,7 +743,7 @@
       }
     },
     "ComputedField": {
-      "description": "https://hasura.io/docs/1.0/graphql/manual/api-reference/schema-metadata-api/computed-field.html#args-syntax",
+      "description": "https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/computed-field.html#args-syntax",
       "title": "ComputedField",
       "type": "object",
       "properties": {
@@ -766,7 +766,7 @@
       "required": ["definition", "name"]
     },
     "ComputedFieldDefinition": {
-      "description": "https://hasura.io/docs/1.0/graphql/manual/api-reference/schema-metadata-api/computed-field.html#computedfielddefinition",
+      "description": "https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/computed-field.html#computedfielddefinition",
       "title": "ComputedFieldDefinition",
       "type": "object",
       "properties": {
@@ -796,7 +796,7 @@
       "required": ["function"]
     },
     "EventTrigger": {
-      "description": "NOTE: The metadata type doesn't QUITE match the \"create\" arguments here\nhttps://hasura.io/docs/1.0/graphql/manual/api-reference/schema-metadata-api/event-triggers.html#create-event-trigger",
+      "description": "NOTE: The metadata type doesn't QUITE match the \"create\" arguments here\nhttps://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/event-triggers.html#create-event-trigger",
       "title": "EventTrigger",
       "type": "object",
       "properties": {
@@ -851,17 +851,17 @@
           "title": "enable_manual"
         },
         "insert": {
-          "description": "https://hasura.io/docs/1.0/graphql/manual/api-reference/schema-metadata-api/event-triggers.html#operationspec",
+          "description": "https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/event-triggers.html#operationspec",
           "$ref": "#/definitions/OperationSpec",
           "title": "insert"
         },
         "delete": {
-          "description": "https://hasura.io/docs/1.0/graphql/manual/api-reference/schema-metadata-api/event-triggers.html#operationspec",
+          "description": "https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/event-triggers.html#operationspec",
           "$ref": "#/definitions/OperationSpec",
           "title": "delete"
         },
         "update": {
-          "description": "https://hasura.io/docs/1.0/graphql/manual/api-reference/schema-metadata-api/event-triggers.html#operationspec",
+          "description": "https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/event-triggers.html#operationspec",
           "$ref": "#/definitions/OperationSpec",
           "title": "update"
         }
@@ -883,12 +883,12 @@
       ]
     },
     "OperationSpec": {
-      "description": "https://hasura.io/docs/1.0/graphql/manual/api-reference/schema-metadata-api/event-triggers.html#operationspec",
+      "description": "https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/event-triggers.html#operationspec",
       "title": "OperationSpec",
       "type": "object",
       "properties": {
         "columns": {
-          "description": "https://hasura.io/docs/1.0/graphql/manual/api-reference/schema-metadata-api/event-triggers.html#eventtriggercolumns",
+          "description": "https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/event-triggers.html#eventtriggercolumns",
           "anyOf": [
             {
               "type": "array",
@@ -904,7 +904,7 @@
           "title": "columns"
         },
         "payload": {
-          "description": "https://hasura.io/docs/1.0/graphql/manual/api-reference/schema-metadata-api/event-triggers.html#eventtriggercolumns",
+          "description": "https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/event-triggers.html#eventtriggercolumns",
           "anyOf": [
             {
               "type": "array",
@@ -923,7 +923,7 @@
       "required": ["columns"]
     },
     "HeaderFromValue": {
-      "description": "https://hasura.io/docs/1.0/graphql/manual/api-reference/schema-metadata-api/syntax-defs.html#headerfromvalue",
+      "description": "https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/syntax-defs.html#headerfromvalue",
       "title": "HeaderFromValue",
       "type": "object",
       "properties": {
@@ -941,7 +941,7 @@
       "required": ["name", "value"]
     },
     "HeaderFromEnv": {
-      "description": "https://hasura.io/docs/1.0/graphql/manual/api-reference/schema-metadata-api/syntax-defs.html#headerfromenv",
+      "description": "https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/syntax-defs.html#headerfromenv",
       "title": "HeaderFromEnv",
       "type": "object",
       "properties": {
@@ -959,7 +959,7 @@
       "required": ["name", "value_from_env"]
     },
     "RetryConf": {
-      "description": "https://hasura.io/docs/1.0/graphql/manual/api-reference/schema-metadata-api/event-triggers.html#retryconf",
+      "description": "https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/event-triggers.html#retryconf",
       "title": "RetryConf",
       "type": "object",
       "properties": {
@@ -981,7 +981,7 @@
       }
     },
     "CronTrigger": {
-      "description": "https://hasura.io/docs/1.0/graphql/manual/api-reference/schema-metadata-api/scheduled-triggers.html#create-cron-trigger",
+      "description": "https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/scheduled-triggers.html#create-cron-trigger",
       "title": "CronTrigger",
       "type": "object",
       "properties": {
@@ -1047,7 +1047,7 @@
       ]
     },
     "RetryConfST": {
-      "description": "https://hasura.io/docs/1.0/graphql/manual/api-reference/schema-metadata-api/scheduled-triggers.html#retryconfst",
+      "description": "https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/scheduled-triggers.html#retryconfst",
       "title": "RetryConfST",
       "type": "object",
       "properties": {
@@ -1074,7 +1074,7 @@
       }
     },
     "RemoteSchema": {
-      "description": "https://hasura.io/docs/1.0/graphql/manual/api-reference/schema-metadata-api/remote-schemas.html#add-remote-schema",
+      "description": "https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/remote-schemas.html#add-remote-schema",
       "title": "RemoteSchema",
       "type": "object",
       "properties": {
@@ -1097,7 +1097,7 @@
       "required": ["definition", "name"]
     },
     "RemoteSchemaDef": {
-      "description": "https://hasura.io/docs/1.0/graphql/manual/api-reference/schema-metadata-api/syntax-defs.html#remoteschemadef",
+      "description": "https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/syntax-defs.html#remoteschemadef",
       "title": "RemoteSchemaDef",
       "type": "object",
       "properties": {
@@ -1134,7 +1134,7 @@
       }
     },
     "RemoteRelationship": {
-      "description": "NOTE: Metadata shape is slightly different than \"create\" arguments here\nhttps://hasura.io/docs/1.0/graphql/manual/api-reference/schema-metadata-api/remote-relationships.html#args-syntax",
+      "description": "NOTE: Metadata shape is slightly different than \"create\" arguments here\nhttps://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/remote-relationships.html#args-syntax",
       "title": "RemoteRelationship",
       "type": "object",
       "properties": {
@@ -1177,7 +1177,7 @@
       "required": ["hasura_fields", "remote_field", "remote_schema"]
     },
     "RemoteField": {
-      "description": "A recursive tree structure that points to the field in the remote schema that needs to be joined with.\nIt is recursive because the remote field maybe nested deeply in the remote schema.\nhttps://hasura.io/docs/1.0/graphql/manual/api-reference/schema-metadata-api/remote-relationships.html#remotefield",
+      "description": "A recursive tree structure that points to the field in the remote schema that needs to be joined with.\nIt is recursive because the remote field maybe nested deeply in the remote schema.\nhttps://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/remote-relationships.html#remotefield",
       "title": "RemoteField",
       "type": "object",
       "additionalProperties": {
@@ -1188,7 +1188,7 @@
             "title": "arguments"
           },
           "field": {
-            "description": "A recursive tree structure that points to the field in the remote schema that needs to be joined with.\nIt is recursive because the remote field maybe nested deeply in the remote schema.\nhttps://hasura.io/docs/1.0/graphql/manual/api-reference/schema-metadata-api/remote-relationships.html#remotefield",
+            "description": "A recursive tree structure that points to the field in the remote schema that needs to be joined with.\nIt is recursive because the remote field maybe nested deeply in the remote schema.\nhttps://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/remote-relationships.html#remotefield",
             "$ref": "#/definitions/RemoteField",
             "title": "field"
           }
@@ -1197,7 +1197,7 @@
       }
     },
     "InputArguments": {
-      "description": "Note: Table columns can be referred by prefixing $ e.g $id.\nhttps://hasura.io/docs/1.0/graphql/manual/api-reference/schema-metadata-api/remote-relationships.html#inputarguments",
+      "description": "Note: Table columns can be referred by prefixing $ e.g $id.\nhttps://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/remote-relationships.html#inputarguments",
       "title": "InputArguments",
       "type": "object",
       "additionalProperties": {
@@ -1205,7 +1205,7 @@
       }
     },
     "QueryCollectionEntry": {
-      "description": "https://hasura.io/docs/1.0/graphql/manual/api-reference/schema-metadata-api/query-collections.html#args-syntax",
+      "description": "https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/query-collections.html#args-syntax",
       "title": "QueryCollectionEntry",
       "type": "object",
       "properties": {
@@ -1238,7 +1238,7 @@
       "required": ["definition", "name"]
     },
     "QueryCollection": {
-      "description": "https://hasura.io/docs/1.0/graphql/manual/api-reference/schema-metadata-api/syntax-defs.html#collectionquery",
+      "description": "https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/syntax-defs.html#collectionquery",
       "title": "QueryCollection",
       "type": "object",
       "properties": {
@@ -1254,7 +1254,7 @@
       "required": ["name", "query"]
     },
     "AllowList": {
-      "description": "https://hasura.io/docs/1.0/graphql/manual/api-reference/schema-metadata-api/query-collections.html#add-collection-to-allowlist-syntax",
+      "description": "https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/query-collections.html#add-collection-to-allowlist-syntax",
       "title": "AllowList",
       "type": "object",
       "properties": {
@@ -1301,7 +1301,7 @@
       }
     },
     "InputObjectType": {
-      "description": "https://hasura.io/docs/1.0/graphql/manual/api-reference/schema-metadata-api/custom-types.html#inputobjecttype",
+      "description": "https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/custom-types.html#inputobjecttype",
       "title": "InputObjectType",
       "type": "object",
       "properties": {
@@ -1327,7 +1327,7 @@
       "required": ["fields", "name"]
     },
     "InputObjectField": {
-      "description": "https://hasura.io/docs/1.0/graphql/manual/api-reference/schema-metadata-api/custom-types.html#inputobjectfield",
+      "description": "https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/custom-types.html#inputobjectfield",
       "title": "InputObjectField",
       "type": "object",
       "properties": {
@@ -1350,7 +1350,7 @@
       "required": ["name", "type"]
     },
     "ObjectType": {
-      "description": "https://hasura.io/docs/1.0/graphql/manual/api-reference/schema-metadata-api/custom-types.html#objecttype",
+      "description": "https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/custom-types.html#objecttype",
       "title": "ObjectType",
       "type": "object",
       "properties": {
@@ -1384,7 +1384,7 @@
       "required": ["fields", "name"]
     },
     "ObjectField": {
-      "description": "https://hasura.io/docs/1.0/graphql/manual/api-reference/schema-metadata-api/custom-types.html#objectfield",
+      "description": "https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/custom-types.html#objectfield",
       "title": "ObjectField",
       "type": "object",
       "properties": {
@@ -1407,7 +1407,7 @@
       "required": ["name", "type"]
     },
     "CustomTypeObjectRelationship": {
-      "description": "https://hasura.io/docs/1.0/graphql/manual/api-reference/schema-metadata-api/custom-types.html#objectrelationship",
+      "description": "https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/custom-types.html#objectrelationship",
       "title": "CustomTypeObjectRelationship",
       "type": "object",
       "properties": {
@@ -1446,7 +1446,7 @@
       "required": ["field_mapping", "name", "remote_table", "type"]
     },
     "ScalarType": {
-      "description": "https://hasura.io/docs/1.0/graphql/manual/api-reference/schema-metadata-api/custom-types.html#scalartype",
+      "description": "https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/custom-types.html#scalartype",
       "title": "ScalarType",
       "type": "object",
       "properties": {
@@ -1464,7 +1464,7 @@
       "required": ["name"]
     },
     "EnumType": {
-      "description": "https://hasura.io/docs/1.0/graphql/manual/api-reference/schema-metadata-api/custom-types.html#enumtype",
+      "description": "https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/custom-types.html#enumtype",
       "title": "EnumType",
       "type": "object",
       "properties": {
@@ -1490,7 +1490,7 @@
       "required": ["name", "values"]
     },
     "EnumValue": {
-      "description": "https://hasura.io/docs/1.0/graphql/manual/api-reference/schema-metadata-api/custom-types.html#enumvalue",
+      "description": "https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/custom-types.html#enumvalue",
       "title": "EnumValue",
       "type": "object",
       "properties": {
@@ -1513,7 +1513,7 @@
       "required": ["value"]
     },
     "Action": {
-      "description": "NOTE: Metadata type is slightly different than \"create\" type\nhttps://hasura.io/docs/1.0/graphql/manual/api-reference/schema-metadata-api/actions.html#args-syntax",
+      "description": "NOTE: Metadata type is slightly different than \"create\" type\nhttps://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/actions.html#args-syntax",
       "title": "Action",
       "type": "object",
       "properties": {
@@ -1548,7 +1548,7 @@
       "required": ["definition", "name"]
     },
     "ActionDefinition": {
-      "description": "https://hasura.io/docs/1.0/graphql/manual/api-reference/schema-metadata-api/actions.html#actiondefinition",
+      "description": "https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/actions.html#actiondefinition",
       "title": "ActionDefinition",
       "type": "object",
       "properties": {
@@ -1599,7 +1599,7 @@
       "required": ["handler"]
     },
     "InputArgument": {
-      "description": "https://hasura.io/docs/1.0/graphql/manual/api-reference/schema-metadata-api/actions.html#inputargument",
+      "description": "https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/actions.html#inputargument",
       "title": "InputArgument",
       "type": "object",
       "properties": {

@@ -135,3 +135,4 @@ metadata.yaml
 
 The schema for this file will mostly correspond to the table structure of the
 :ref:`metadata catalogue <hasura_metadata_schema>`.
+

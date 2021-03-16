@@ -10,4 +10,5 @@ args:
       DROP TABLE author;
       DROP TABLE test1;
       DROP TABLE test2 CASCADE;
+      DROP TABLE "users address";
     cascade: true

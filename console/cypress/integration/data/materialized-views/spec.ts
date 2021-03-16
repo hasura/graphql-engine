@@ -2,6 +2,7 @@ import {
   getElementFromAlias,
   baseUrl,
   tableColumnTypeSelector,
+  getIndexRoute,
 } from '../../../helpers/dataHelpers';
 
 import {
@@ -18,7 +19,7 @@ import { setPromptValue } from '../../../helpers/common';
 const userId = 5555;
 
 export const createTable = (name: string, dict: TableFields) => {
-  cy.url().should('eq', `${baseUrl}/data/schema/public/table/add`);
+  cy.url().should('eq', `${baseUrl}/data/default/schema/public/table/add`);
   cy.get(getElementFromAlias('tableName')).type(`${name}_table_vt`);
   const keys = Object.keys(dict).map(k => k);
   const values = Object.keys(dict).map(k => dict[k]);
@@ -34,7 +35,7 @@ export const createTable = (name: string, dict: TableFields) => {
   cy.wait(7000);
   cy.url().should(
     'eq',
-    `${baseUrl}/data/schema/public/tables/${name}_table_vt/modify`
+    `${baseUrl}/data/default/schema/public/tables/${name}_table_vt/modify`
   );
 
   validateCT(`${name}_table_vt`, ResultType.SUCCESS);
@@ -43,7 +44,9 @@ export const createTable = (name: string, dict: TableFields) => {
 export const passVCreateTables = () => {
   cy.get(getElementFromAlias('data-create-table')).click();
   createTable('author', { id: 'integer', name: 'text' });
-  cy.get(getElementFromAlias('sidebar-add-table')).click();
+  cy.visit(getIndexRoute());
+  cy.wait(5000);
+  cy.get(getElementFromAlias('data-create-table')).click();
   createTable('article', {
     id: 'integer',
     title: 'text',
@@ -51,7 +54,9 @@ export const passVCreateTables = () => {
     author_id: 'integer',
     rating: 'integer',
   });
-  cy.get(getElementFromAlias('sidebar-add-table')).click();
+  cy.visit(getIndexRoute());
+  cy.wait(5000);
+  cy.get(getElementFromAlias('data-create-table')).click();
   createTable('comment', {
     id: 'integer',
     user_id: 'integer',
@@ -69,7 +74,7 @@ export const passVCreateMaterializedViews = () => {
 };
 
 export const passTrackTable = () => {
-  cy.visit('/data');
+  cy.visit('/data/default/schema/public/');
   cy.wait(7000);
   cy.get(
     getElementFromAlias('add-track-table-author_average_rating_vt')
@@ -83,7 +88,7 @@ export const passMaterializedViewRoute = () => {
   cy.get(getElementFromAlias('author_average_rating_vt')).click();
   cy.url().should(
     'eq',
-    `${baseUrl}/data/schema/public/views/author_average_rating_vt/browse`
+    `${baseUrl}/data/default/schema/public/views/author_average_rating_vt/browse`
   );
 };
 
@@ -98,12 +103,7 @@ export const passVAddDataarticle = (
     .find('input')
     .last()
     .type('{selectall}{del}');
-  cy.get('label')
-    .contains('id')
-    .next()
-    .find('input')
-    .last()
-    .type(`${data[0]}`);
+  cy.get('label').contains('id').next().find('input').last().type(`${data[0]}`);
   cy.get('label')
     .contains('title')
     .next()
@@ -171,12 +171,7 @@ export const passVAddDataauthor = (
     .find('input')
     .last()
     .type('{selectall}{del}');
-  cy.get('label')
-    .contains('id')
-    .next()
-    .find('input')
-    .last()
-    .type(`${data[0]}`);
+  cy.get('label').contains('id').next().find('input').last().type(`${data[0]}`);
   cy.get('label')
     .contains('name')
     .next()
@@ -207,12 +202,7 @@ export const passVAddDatacomment = (
     .find('input')
     .last()
     .type('{selectall}{del}');
-  cy.get('label')
-    .contains('id')
-    .next()
-    .find('input')
-    .last()
-    .type(`${data[0]}`);
+  cy.get('label').contains('id').next().find('input').last().type(`${data[0]}`);
   cy.get('label')
     .contains('user_id')
     .next()
@@ -260,9 +250,7 @@ export const passVAddDatacomment = (
 const checkQuerySuccess = () => {
   // Expect only 4 rows i.e. expect fifth element to not exist
   cy.get('[role=gridcell]').contains(userId);
-  cy.get('[role=row]')
-    .eq(2)
-    .should('not.exist');
+  cy.get('[role=row]').eq(2).should('not.exist');
 };
 
 export const passVAddData = () => {
@@ -302,9 +290,7 @@ export const passVFilterQueryEq = () => {
     .first()
     .select('id');
   // Type value as `filter-text`
-  cy.get("input[placeholder='-- value --']")
-    .last()
-    .type(`${userId}`);
+  cy.get("input[placeholder='-- value --']").last().type(`${userId}`);
   // Run query
   cy.get(getElementFromAlias('run-query')).click();
   cy.wait(5000);
@@ -318,12 +304,7 @@ const checkOrder = (order: string) => {
   if (order === 'asc') {
     curElement.each(($el, index) => {
       if (index === 1) {
-        cy.wrap($el)
-          .find('[role=gridcell]')
-          .first()
-          .next()
-          .next()
-          .contains(2);
+        cy.wrap($el).find('[role=gridcell]').first().next().next().contains(2);
       }
       if (index === 2) {
         cy.wrap($el)
@@ -337,12 +318,7 @@ const checkOrder = (order: string) => {
   } else {
     curElement.each(($el, index) => {
       if (index === 2) {
-        cy.wrap($el)
-          .find('[role=gridcell]')
-          .first()
-          .next()
-          .next()
-          .contains(2);
+        cy.wrap($el).find('[role=gridcell]').first().next().next().contains(2);
       }
       if (index === 1) {
         cy.wrap($el)
@@ -357,7 +333,6 @@ const checkOrder = (order: string) => {
 };
 
 export const passVAscendingSort = () => {
-  // Scroll to top TODO responsive is messy
   cy.wait(7000);
   // cy.scrollTo('top');
   // Select column with type 'serial'
@@ -375,10 +350,7 @@ export const passVAscendingSort = () => {
 
 export const passModifyMaterializedView = () => {
   cy.get(getElementFromAlias('table-modify')).click();
-  cy.get('button')
-    .contains('Modify')
-    .last()
-    .click();
+  cy.get('button').contains('Modify').last().click();
   cy.url().should('eq', `${baseUrl}/data/sql`);
 };
 
@@ -427,9 +399,7 @@ export const passVDeleteMaterializedView = () => {
   cy.get(getElementFromAlias('table-modify')).click();
   setPromptValue('author_average_rating_vt');
   cy.get(getElementFromAlias('delete-view')).click();
-  cy.window()
-    .its('prompt')
-    .should('be.called');
+  cy.window().its('prompt').should('be.called');
   cy.wait(7000);
   // cy.get('.notification-error');
   validateView('author_average_rating_vt', ResultType.FAILURE);
@@ -440,9 +410,7 @@ export const deleteTable = (name: string) => {
   cy.get(getElementFromAlias('table-modify')).click();
   setPromptValue(name);
   cy.get(getElementFromAlias('delete-table')).click();
-  cy.window()
-    .its('prompt')
-    .should('be.called');
+  cy.window().its('prompt').should('be.called');
   cy.wait(7000);
   validateCT(name, ResultType.FAILURE);
   cy.wait(7000);

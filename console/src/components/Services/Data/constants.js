@@ -67,7 +67,7 @@ export const Numerics = [...Integers, ...Reals];
 
 export const defaultDataTypeToCast = 'text';
 
-// https://hasura.io/docs/1.0/graphql/manual/api-reference/schema-metadata-api/index.html#error-codes
+// https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/index.html#error-codes
 export const ERROR_CODES = {
   postgresError: {
     code: 'postgres-error',
@@ -151,7 +151,6 @@ export const ERROR_CODES = {
     ERRORS: ['No such resource exists'],
     httpCode: '404',
   },
-  // todo update this, this happens on bulk request failed
   dataApiError: {
     code: 'data_api_error',
   },

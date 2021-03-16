@@ -27,6 +27,7 @@ import           Hasura.Backends.Postgres.SQL.Error
 import           Hasura.Incremental                 (Cacheable (..))
 import           Hasura.RQL.Types.Error
 
+-- See Note [Existentially Quantified Types]
 type RunTx =
   forall m a. (MonadIO m, MonadBaseControl IO m) => Q.TxET QErr m a -> ExceptT QErr m a
 
@@ -40,6 +41,8 @@ data PGExecCtx
   -- ^ Run a Q.ReadWrite transaction
   , _pecCheckHealth  :: (IO Bool)
   -- ^ Checks the health of this execution context
+  , _pecDestroyConn  :: (IO ())
+  -- ^ Destroys connection pools
   }
 
 -- | Creates a Postgres execution context for a single Postgres master pool
@@ -50,6 +53,7 @@ mkPGExecCtx isoLevel pool =
   , _pecRunReadNoTx       = (Q.runTx' pool)
   , _pecRunReadWrite      = (Q.runTx pool (isoLevel, Just Q.ReadWrite))
   , _pecCheckHealth       = checkDbConnection pool
+  , _pecDestroyConn       = Q.destroyPGPool pool
   }
 
 checkDbConnection :: MonadIO m => Q.PGPool -> m Bool

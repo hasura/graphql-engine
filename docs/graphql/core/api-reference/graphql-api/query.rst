@@ -410,7 +410,7 @@ AndExp
 
   You can simplify an ``_and`` expression by passing the sub-expressions separated by a ``,``.
 
-  **For example:**
+  **First example: _and expression with different fields**
 
   .. code-block:: graphql
 
@@ -427,6 +427,30 @@ AndExp
       rating: { _gte: 4 },
       published_on: { _gte: "2018-01-01" }
     }
+
+  **Second example: _and expression with same field**
+
+  .. code-block:: graphql
+
+      _and: [
+        {
+          rating: {
+            _gt: 1
+          }
+        },
+        {
+          rating: {
+            _lt: 5
+          }
+        }
+      ]
+
+      # can be simplified to:
+
+      rating: {
+        _gt: 1,
+        _lt: 5
+      }  
 
 .. _OrExp:
 
@@ -726,6 +750,32 @@ Operator
      - ``{ _st_intersects_geom_nband: {geommin: geometry! nband: Integer }``
 
 (For more details on intersect operators on ``raster`` columns refer to the `PostGIS docs <https://postgis.net/docs/RT_ST_Intersects.html>`__.)
+
+.. _ltree_operators:
+
+**ltree operators:**
+
+.. list-table::
+   :header-rows: 1
+
+   * - Operator
+     - PostgreSQL equivalent
+   * - ``_ancestor``
+     - ``@>``
+   * - ``_ancestor_any``
+     - ``@>``
+   * - ``_descendant``
+     - ``<@``
+   * - ``_descendant_any``
+     - ``<@``
+   * - ``_matches``
+     - ``~``
+   * - ``_matches_any``
+     - ``?``
+   * - ``_matches_fulltext``
+     - ``@``
+
+(For more details on operators on ``ltree`` columns refer to the `Postgres docs <https://www.postgresql.org/docs/current/ltree.html>`__.)
 
 .. _CastExp:
 

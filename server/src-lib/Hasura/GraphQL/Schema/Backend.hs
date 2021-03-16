@@ -4,21 +4,118 @@ module Hasura.GraphQL.Schema.Backend where
 
 import           Hasura.Prelude
 
-import           Data.Aeson
+import qualified Language.GraphQL.Draft.Syntax as G
+
 import           Data.Has
+import           Language.GraphQL.Draft.Syntax (Nullability)
 
 import qualified Hasura.RQL.IR.Select          as IR
+import qualified Hasura.RQL.IR.Update          as IR
 
-import           Hasura.GraphQL.Parser         (Definition, EnumValueInfo, FieldParser,
-                                                InputFieldsParser, Kind (..), Opaque, Parser,
-                                                UnpreparedValue (..))
-import           Hasura.GraphQL.Parser.Class
+import           Hasura.GraphQL.Context
+import           Hasura.GraphQL.Parser
 import           Hasura.GraphQL.Schema.Common
 import           Hasura.RQL.Types              hiding (EnumValueInfo)
-import           Language.GraphQL.Draft.Syntax (Name, Nullability)
 
+
+-- TODO: it might make sense to add those constraints to MonadSchema directly?
+type MonadBuildSchema b r m n =
+  ( Backend b
+  , BackendSchema b
+  , MonadError QErr m
+  , MonadSchema n m
+  , MonadTableInfo r m
+  , MonadRole r m
+  , Has QueryContext r
+  , Has (BackendExtension b) r
+  )
 
 class Backend b => BackendSchema (b :: BackendType) where
+  -- top level parsers
+  buildTableQueryFields
+    :: MonadBuildSchema b r m n
+    => SourceName
+    -> SourceConfig b
+    -> TableName b
+    -> TableInfo b
+    -> G.Name
+    -> SelPermInfo b
+    -> m [FieldParser n (QueryRootField UnpreparedValue)]
+  buildTableRelayQueryFields
+    :: MonadBuildSchema b r m n
+    => SourceName
+    -> SourceConfig b
+    -> TableName b
+    -> TableInfo b
+    -> G.Name
+    -> NESeq (ColumnInfo b)
+    -> SelPermInfo b
+    -> m (Maybe (FieldParser n (QueryRootField UnpreparedValue)))
+  buildTableInsertMutationFields
+    :: MonadBuildSchema b r m n
+    => SourceName
+    -> SourceConfig b
+    -> TableName b
+    -> TableInfo b
+    -> G.Name
+    -> InsPermInfo b
+    -> Maybe (SelPermInfo b)
+    -> Maybe (UpdPermInfo b)
+    -> m [FieldParser n (MutationRootField UnpreparedValue)]
+  buildTableUpdateMutationFields
+    :: MonadBuildSchema b r m n
+    => SourceName
+    -> SourceConfig b
+    -> TableName b
+    -> TableInfo b
+    -> G.Name
+    -> UpdPermInfo b
+    -> Maybe (SelPermInfo b)
+    -> m [FieldParser n (MutationRootField UnpreparedValue)]
+  buildTableDeleteMutationFields
+    :: MonadBuildSchema b r m n
+    => SourceName
+    -> SourceConfig b
+    -> TableName b
+    -> TableInfo b
+    -> G.Name
+    -> DelPermInfo b
+    -> Maybe (SelPermInfo b)
+    -> m [FieldParser n (MutationRootField UnpreparedValue)]
+  buildFunctionQueryFields
+    :: MonadBuildSchema b r m n
+    => SourceName
+    -> SourceConfig b
+    -> FunctionName b
+    -> FunctionInfo b
+    -> TableName b
+    -> SelPermInfo b
+    -> m [FieldParser n (QueryRootField UnpreparedValue)]
+  buildFunctionRelayQueryFields
+    :: MonadBuildSchema b r m n
+    => SourceName
+    -> SourceConfig b
+    -> FunctionName b
+    -> FunctionInfo b
+    -> TableName b
+    -> NESeq (ColumnInfo b)
+    -> SelPermInfo b
+    -> m (Maybe (FieldParser n (QueryRootField UnpreparedValue)))
+  buildFunctionMutationFields
+    :: MonadBuildSchema b r m n
+    => SourceName
+    -> SourceConfig b
+    -> FunctionName b
+    -> FunctionInfo b
+    -> TableName b
+    -> SelPermInfo b
+    -> m [FieldParser n (MutationRootField UnpreparedValue)]
+
+  -- backend extensions
+  relayExtension    :: SourceConfig b -> Maybe (XRelay b)
+  nodesAggExtension :: SourceConfig b -> Maybe (XNodesAgg b)
+
+  -- individual components
   columnParser
     :: (MonadSchema n m, MonadError QErr m)
     => ColumnType b
@@ -29,29 +126,17 @@ class Backend b => BackendSchema (b :: BackendType) where
     :: MonadParse n
     => ColumnType b
     -> InputFieldsParser n (Maybe (IR.ColumnOp b))
-  -- | Helper function to get the table GraphQL name. A table may have an
-  -- identifier configured with it. When the identifier exists, the GraphQL nodes
-  -- that are generated according to the identifier. For example: Let's say,
-  -- we have a table called `users address`, the name of the table is not GraphQL
-  -- compliant so we configure the table with a GraphQL compliant name,
-  -- say `users_address`
-  -- The generated top-level nodes of this table will be like `users_address`,
-  -- `insert_users_address` etc
-  getTableGQLName
-    :: MonadTableInfo b r m
-    => TableName b
-    -> m Name
   orderByOperators
     :: NonEmpty (Definition EnumValueInfo, (BasicOrderType b, NullsOrderType b))
   comparisonExps
     :: (MonadSchema n m, MonadError QErr m)
     => ColumnType b
     -> m (Parser 'Input n [ComparisonExp b])
-  parseScalarValue
-    :: (MonadError QErr m)
-    => ColumnType b
-    -> Value
-    -> m (ScalarValue b)
+  updateOperators
+    :: (MonadSchema n m, MonadTableInfo r m)
+    => TableName b
+    -> UpdPermInfo b
+    -> m (Maybe (InputFieldsParser n [(Column b, IR.UpdOpExpG (UnpreparedValue b))]))
   -- TODO: THIS IS A TEMPORARY FIX
   -- while offset is exposed in the schema as a GraphQL Int, which
   -- is a bounded Int32, previous versions of the code used to also
@@ -64,20 +149,34 @@ class Backend b => BackendSchema (b :: BackendType) where
   offsetParser :: MonadParse n => Parser 'Both n (SQLExpression b)
   mkCountType :: Maybe Bool -> Maybe [Column b] -> CountType b
   aggregateOrderByCountType :: ScalarType b
+  -- | Argument to distinct select on columns returned from table selection
+  -- > distinct_on: [table_select_column!]
+  tableDistinctOn
+    :: forall m n r. (BackendSchema b, MonadSchema n m, MonadTableInfo r m, MonadRole r m)
+    => TableName b
+    -> SelPermInfo b
+    -> m (InputFieldsParser n (Maybe (XDistinct b, NonEmpty (Column b))))
   -- | Computed field parser
   computedField
-    :: (BackendSchema b, MonadSchema n m, MonadTableInfo b r m, MonadRole r m, Has QueryContext r)
+    :: MonadBuildSchema b r m n
     => ComputedFieldInfo b
     -> SelPermInfo b
     -> m (Maybe (FieldParser n (AnnotatedField b)))
   -- | The 'node' root field of a Relay request.
   node
-    :: ( BackendSchema b
-       , MonadSchema n m
-       , MonadTableInfo b r m
-       , MonadRole r m
-       , Has QueryContext r
-       )
+    :: MonadBuildSchema b r m n
     => m (Parser 'Output n (HashMap (TableName b) (SourceName, SourceConfig b, SelPermInfo b, PrimaryKeyColumns b, AnnotatedFields b)))
+  remoteRelationshipField
+    :: MonadBuildSchema b r m n
+    => RemoteFieldInfo b
+    -> m (Maybe [FieldParser n (AnnotatedField b)])
+
+  -- SQL literals
+  columnDefaultValue :: Column b -> SQLExpression b
 
 type ComparisonExp b = OpExpG b (UnpreparedValue b)
+
+data BackendExtension b = BackendExtension
+  { backendRelay    :: Maybe (XRelay b)
+  , backendNodesAgg :: Maybe (XNodesAgg b)
+  }
