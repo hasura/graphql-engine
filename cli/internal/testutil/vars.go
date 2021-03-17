@@ -7,7 +7,7 @@ import (
 
 // this can be overridden by ldflags
 var (
-	HasuraVersion   = "v2.0.0-alpha.2"
+	HasuraVersion   = "v2.0.0-alpha.4"
 	DockerSwitchIP  = "172.17.0.1"
 	Hostname        = "localhost"
 	BaseURL         = fmt.Sprintf("http://%s", Hostname)

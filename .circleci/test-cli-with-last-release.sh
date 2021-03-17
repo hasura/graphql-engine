@@ -33,7 +33,7 @@ PID=$!
 wait_for_port 8080
 
 # test cli
-HASURA_GRAPHQL_TEST_ENDPOINT="http://localhost:8080" HASURA_GRAPHQL_TEST_ADMIN_SECRET="abcd" HASURA_GRAPHQL_TEST_CLI_EXT_MANIFEST_FILE_PATH="/build/_cli_ext_output/manifest-dev.yaml" make integration_tests_config_v2
+HASURA_GRAPHQL_TEST_ENDPOINT="http://localhost:8080" HASURA_GRAPHQL_TEST_ADMIN_SECRET="abcd" make integration_tests_config_v2
 
 # kill the running server
 kill -s INT $PID
@@ -47,6 +47,6 @@ PID=$!
 wait_for_port 8080
 
 # test cli
-HASURA_GRAPHQL_TEST_ENDPOINT="http://localhost:8080" HASURA_GRAPHQL_TEST_ADMIN_SECRET="abcd" HASURA_GRAPHQL_TEST_CLI_EXT_MANIFEST_FILE_PATH="/build/_cli_ext_output/manifest-dev.yaml" make integration_tests_config_v2
+HASURA_GRAPHQL_TEST_ENDPOINT="http://localhost:8080" HASURA_GRAPHQL_TEST_ADMIN_SECRET="abcd" make integration_tests_config_v2
 
 kill -s INT $PID

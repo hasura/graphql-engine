@@ -6,10 +6,10 @@ import (
 	"path/filepath"
 
 	"github.com/hasura/graphql-engine/cli"
+	"github.com/hasura/graphql-engine/cli/internal/cliext"
 	cliextension "github.com/hasura/graphql-engine/cli/metadata/actions/cli_extension"
 	"github.com/hasura/graphql-engine/cli/metadata/actions/editor"
 	"github.com/hasura/graphql-engine/cli/metadata/actions/types"
-	"github.com/hasura/graphql-engine/cli/plugins"
 	"github.com/hasura/graphql-engine/cli/util"
 	"github.com/hasura/graphql-engine/cli/version"
 	"github.com/pkg/errors"
@@ -26,9 +26,8 @@ type ActionConfig struct {
 	MetadataDir        string
 	ActionConfig       *types.ActionExecutionConfig
 	serverFeatureFlags *version.ServerFeatureFlags
-	pluginsCfg         *plugins.Config
 	cliExtensionConfig *cliextension.Config
-	pluginInstallFunc  func(string, bool) error
+	ensureCliExt       func() error
 
 	logger *logrus.Logger
 }
@@ -39,19 +38,20 @@ func New(ec *cli.ExecutionContext, baseDir string) *ActionConfig {
 		ActionConfig:       ec.Config.ActionConfig,
 		serverFeatureFlags: ec.Version.ServerFeatureFlags,
 		logger:             ec.Logger,
-		pluginsCfg:         ec.PluginsConfig,
-		cliExtensionConfig: cliextension.NewCLIExtensionConfig(ec.PluginsConfig.Paths.BinPath(), ec.Logger),
-		pluginInstallFunc:  ec.InstallPlugin,
+		cliExtensionConfig: cliextension.NewCLIExtensionConfig(cliext.BinPath(ec), ec.Logger),
+		ensureCliExt: func() error {
+			return cliext.Setup(ec)
+		},
 	}
 	return cfg
 }
 
 func (a *ActionConfig) Create(name string, introSchema interface{}, deriveFrom string) error {
-	// Ensure CLI Extesnion
-	err := a.pluginInstallFunc(cli.CLIExtPluginName, true)
+	err := a.ensureCliExt()
 	if err != nil {
 		return err
 	}
+
 	// Read the content of graphql file
 	graphqlFileContent, err := a.GetActionsGraphQLFileContent()
 	if err != nil {
@@ -198,7 +198,7 @@ input SampleInput {
 }
 
 func (a *ActionConfig) Codegen(name string, derivePld types.DerivePayload) error {
-	err := a.pluginInstallFunc(cli.CLIExtPluginName, true)
+	err := a.ensureCliExt()
 	if err != nil {
 		return err
 	}
@@ -265,7 +265,7 @@ func (a *ActionConfig) Build(metadata *yaml.MapSlice) error {
 		}
 		return nil
 	}
-	err := a.pluginInstallFunc(cli.CLIExtPluginName, true)
+	err := a.ensureCliExt()
 	if err != nil {
 		return err
 	}
@@ -387,7 +387,7 @@ func (a *ActionConfig) Export(metadata yaml.MapSlice) (map[string][]byte, error)
 		a.logger.Debugf("Skipping creating %s and %s", actionsFileName, graphqlFileName)
 		return make(map[string][]byte), nil
 	}
-	err := a.pluginInstallFunc(cli.CLIExtPluginName, true)
+	err := a.ensureCliExt()
 	if err != nil {
 		return nil, err
 	}

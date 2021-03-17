@@ -155,7 +155,7 @@ jobs:
   # changes only contains files in .ciignore
   check_build_worthiness:
     docker:
-    - image: hasura/graphql-engine-cli-builder:20191205
+    - image: hasura/graphql-engine-cli-builder:20210310
     working_directory: ~/graphql-engine
     steps:
     - attach_workspace:
@@ -338,7 +338,7 @@ jobs:
 
   test_cli_with_last_release:
     docker:
-    - image: hasura/graphql-engine-cli-builder:20191205
+    - image: hasura/graphql-engine-cli-builder:20210310
     - image: circleci/postgres:10-alpine
       environment:
         POSTGRES_USER: gql_test
@@ -396,8 +396,7 @@ jobs:
         name: build extension cli
         working_directory: cli-ext
         command: |
-          npm run build
-          make deploy
+          make build
           make ci-copy-assets
     - store_artifacts:
         path: /build/_cli_ext_output
@@ -410,7 +409,7 @@ jobs:
   # test and build cli
   test_and_build_cli:
     docker:
-    - image: hasura/graphql-engine-cli-builder:20210223
+    - image: hasura/graphql-engine-cli-builder:20210310
     - image: circleci/postgres:10-alpine
       environment:
         POSTGRES_USER: gql_test

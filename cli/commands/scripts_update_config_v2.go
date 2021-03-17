@@ -7,6 +7,7 @@ import (
 	"os"
 	"path/filepath"
 
+	"github.com/hasura/graphql-engine/cli/internal/cliext"
 	"github.com/hasura/graphql-engine/cli/internal/hasura"
 
 	"github.com/hasura/graphql-engine/cli/migrate"
@@ -60,16 +61,9 @@ func newScriptsUpdateConfigV2Cmd(ec *cli.ExecutionContext) *cobra.Command {
 			if ec.Config.Version != cli.V1 {
 				return fmt.Errorf("this script can be executed only when the current config version is 1")
 			}
-			// update the plugin index
-			ec.Spin("Updating the plugin index...")
+			ec.Spin("Setting up cli-ext")
 			defer ec.Spinner.Stop()
-			err := ec.PluginsConfig.Repo.EnsureUpdated()
-			if err != nil {
-				return errors.Wrap(err, "cannot update plugin index")
-			}
-			// install the plugin
-			ec.Spin(fmt.Sprintf("Installing %s plugin...", cli.CLIExtPluginName))
-			err = ec.InstallPlugin(cli.CLIExtPluginName, true)
+			err := cliext.Setup(ec)
 			if err != nil {
 				return err
 			}

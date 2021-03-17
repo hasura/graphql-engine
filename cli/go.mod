@@ -1,6 +1,6 @@
 module github.com/hasura/graphql-engine/cli
 
-go 1.13
+go 1.16
 
 require (
 	github.com/Masterminds/semver v1.5.0

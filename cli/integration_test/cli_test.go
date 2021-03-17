@@ -9,8 +9,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/hasura/graphql-engine/cli/commands"
-
 	"github.com/briandowns/spinner"
 	"github.com/hasura/graphql-engine/cli"
 	integrationtest "github.com/hasura/graphql-engine/cli/integration_test"
@@ -105,21 +103,6 @@ func TestCommands(t *testing.T) {
 		})
 
 		skip(t)
-		if cliExtManifestFilePath := os.Getenv("HASURA_GRAPHQL_TEST_CLI_EXT_MANIFEST_FILE_PATH"); cliExtManifestFilePath != "" {
-			t.Run("cli-ext-plugin-install", func(t *testing.T) {
-				installOpts := &commands.PluginInstallOptions{
-					EC:           ec,
-					Name:         cli.CLIExtPluginName,
-					ManifestFile: cliExtManifestFilePath,
-				}
-				err := installOpts.Run()
-				if err != nil {
-					t.Fatalf("unable to install %s plugin, got %v", cli.CLIExtPluginName, err)
-				}
-			})
-		}
-
-		skip(t)
 		t.Run("console command", func(t *testing.T) {
 			v2.TestConsoleCmd(t, ec)
 		})
@@ -172,21 +155,6 @@ func TestCommands(t *testing.T) {
 		t.Run("validate", func(t *testing.T) {
 			integrationtest.TestValidate(t, ec)
 		})
-
-		skip(t)
-		if cliExtManifestFilePath := os.Getenv("HASURA_GRAPHQL_TEST_CLI_EXT_MANIFEST_FILE_PATH"); cliExtManifestFilePath != "" {
-			t.Run("cli-ext-plugin-install", func(t *testing.T) {
-				installOpts := &commands.PluginInstallOptions{
-					EC:           ec,
-					Name:         cli.CLIExtPluginName,
-					ManifestFile: cliExtManifestFilePath,
-				}
-				err := installOpts.Run()
-				if err != nil {
-					t.Fatalf("unable to install %s plugin, got %v", cli.CLIExtPluginName, err)
-				}
-			})
-		}
 
 		skip(t)
 		t.Run("console command", func(t *testing.T) {
