@@ -133,7 +133,7 @@ export const mssql: DataSourcesAPI = {
   arrayToPostgresArray: () => {
     return '';
   },
-  schemaListSql: `SELECT
+  schemaListSql: () => `SELECT
 	s.name AS schema_name
 FROM
 	sys.schemas s

@@ -1,14 +1,16 @@
 {
-  "name": "graphql-engine-console",
+  "package-name": "@hasura/console-oss",
+  "name": "",
   "description": "Console for Hasura GraphQL Engine",
   "author": "Hasura (https://github.com/hasura/graphql-engine)",
   "license": "Apache 2.0",
-  "version": "0.1.0",
+  "version": "2.0.1-5",
   "repository": {
     "type": "git",
     "url": "https://github.com/hasura/graphql-engine"
   },
-  "main": "index.js",
+  "main": "lib/main.js",
+  "module": "lib/main.js",
   "homepage": "https://hasura.io/",
   "keywords": [],
   "scripts": {
@@ -17,6 +19,7 @@
     "dev": "concurrently --kill-others \"npm run watch-client\" \"npm run start-dev\"",
     "start-prod": "cross-env NODE_PATH=./src PORT=8080 NODE_ENV=production node ./bin/server.js",
     "build": "webpack --progress -p --colors --display-error-details --config webpack/prod.config.js",
+    "build-lib": "webpack --progress -p --colors --display-error-details --config webpack/bundle.config.js",
     "server-build": "make server-build",
     "build-unused": "webpack --verbose --colors --display-error-details --config webpack/prod.config.js --json | webpack-unused -s src",
     "cypress": "cypress open",
@@ -100,8 +103,10 @@
     "subscriptions-transport-ws": "0.9.16"
   },
   "devDependencies": {
+    "@babel/cli": "^7.12.1",
     "@babel/core": "7.9.6",
     "@babel/plugin-proposal-class-properties": "7.8.3",
+    "@babel/plugin-proposal-export-default-from": "^7.10.4",
     "@babel/plugin-proposal-nullish-coalescing-operator": "7.10.1",
     "@babel/preset-env": "7.9.5",
     "@babel/preset-react": "7.9.4",
@@ -162,6 +167,7 @@
     "babel-loader": "8.0.6",
     "babel-plugin-istanbul": "5.2.0",
     "babel-plugin-styled-components": "1.10.7",
+    "babel-plugin-transform-es2015-modules-commonjs": "^6.26.2",
     "babel-plugin-transform-react-remove-prop-types": "0.4.24",
     "bootstrap-loader": "2.2.0",
     "bootstrap-sass": "3.4.1",
@@ -212,7 +218,8 @@
     "webpack-cli": "3.3.11",
     "webpack-dev-middleware": "3.7.2",
     "webpack-hot-middleware": "2.25.0",
-    "webpack-isomorphic-tools": "3.0.6"
+    "webpack-isomorphic-tools": "3.0.6",
+    "webpack-node-externals": "^1.7.2"
   },
   "engines": {
     "node": ">=8.9.1"

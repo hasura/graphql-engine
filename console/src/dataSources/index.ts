@@ -55,7 +55,7 @@ export interface DataSourcesAPI {
   getTableSupportedQueries(table: Table): Operations[];
   getColumnType(col: TableColumn): string;
   arrayToPostgresArray(arr: any[]): string;
-  schemaListSql: string;
+  schemaListSql(schemas: string[]): string;
   getAdditionalColumnsInfoQuerySql?: (currentSchema: string) => string;
   parseColumnsInfoResult: (data: string[][]) => ColumnsInfoResult;
   columnDataTypes: {

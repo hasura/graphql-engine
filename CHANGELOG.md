@@ -72,7 +72,6 @@ keys in the response body.
 - server: fix issue with queries on character column types (close #6217)
 - server: optimize resolving source. Resolving a source would create connection pools every time. Optimize that to re-create connection pools only when necessary. (#609)
 - server: fix issues with remote schema introspection and queries over TLS.
-- console: add support for MS SQL Server
 - server: Prohibit Invalid slashes, duplicate variables, subscriptions for REST endpoints
 - server: Prohibit non-singular query definitions for REST endpoints
 - server: better handling for one-to-one relationships via both `manual_configuration` and `foreign_key_constraint_on` (#2576)

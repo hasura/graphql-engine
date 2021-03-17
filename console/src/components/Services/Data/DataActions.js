@@ -68,7 +68,16 @@ const MAKE_REQUEST = 'ModifyTable/MAKE_REQUEST';
 const REQUEST_SUCCESS = 'ModifyTable/REQUEST_SUCCESS';
 const REQUEST_ERROR = 'ModifyTable/REQUEST_ERROR';
 
+const SET_FILTER_SCHEMA = 'Data/SET_FILTER_SCHEMA';
+const SET_FILTER_TABLES = 'Data/SET_FILTER_TABLES';
+
 const SET_ADDITIONAL_COLUMNS_INFO = 'Data/SET_ADDITIONAL_COLUMNS_INFO';
+
+export const SET_ALL_ROLES = 'Data/SET_ALL_ROLES';
+export const setAllRoles = roles => ({
+  type: SET_ALL_ROLES,
+  roles,
+});
 
 const SET_DB_CONNECTION_ENV_VAR = 'Data/SET_DB_CONNECTION_ENV_VAR';
 const RESET_DB_CONNECTION_ENV_VAR = 'Data/RESET_DB_CONNECTION_ENV_VAR';
@@ -299,10 +308,11 @@ const setConsistentSchema = data => ({
 const fetchDataInit = (source, driver) => (dispatch, getState) => {
   const url = Endpoints.query;
 
+  const { schemaFilter } = getState().tables;
   const currentSource = source || getState().tables.currentDataSource;
 
   const query = getRunSqlQuery(
-    dataSource.schemaListSql,
+    dataSource.schemaListSql(schemaFilter),
     currentSource,
     false,
     false,
@@ -341,8 +351,14 @@ const fetchDataInit = (source, driver) => (dispatch, getState) => {
 
 const fetchFunctionInit = (schema = null) => (dispatch, getState) => {
   const url = Endpoints.query;
-  const fnSchema = schema || getState().tables.currentSchema;
   const source = getState().tables.currentDataSource;
+
+  const { schemaFilter } = getState().tables;
+  let fnSchema = schema || getState().tables.currentSchema;
+  if (schemaFilter && schemaFilter.length) {
+    fnSchema = schemaFilter[0]; // todo: fix me
+  }
+
   if (!source || !dataSource.getFunctionDefinitionSql) return;
   const body = {
     type: 'bulk',
@@ -411,7 +427,11 @@ const updateCurrentSchema = (
 const fetchSchemaList = () => (dispatch, getState) => {
   const url = Endpoints.query;
   const currentSource = getState().tables.currentDataSource;
-  const query = getRunSqlQuery(dataSource.schemaListSql, currentSource);
+  const { schemaFilter } = getState().tables;
+  const query = getRunSqlQuery(
+    dataSource.schemaListSql(schemaFilter),
+    currentSource
+  );
 
   const options = {
     credentials: globalCookiePolicy,
@@ -433,6 +453,28 @@ const fetchSchemaList = () => (dispatch, getState) => {
       });
       return data;
     },
+    error => {
+      console.error('Failed to fetch schema ' + JSON.stringify(error));
+      return error;
+    }
+  );
+};
+
+export const getSchemaList = (sourceType, sourceName) => (
+  dispatch,
+  getState
+) => {
+  const url = Endpoints.query;
+  const sql = services[sourceType].schemaListSql();
+  const query = getRunSqlQuery(sql, sourceName);
+  const options = {
+    credentials: globalCookiePolicy,
+    method: 'POST',
+    headers: dataHeaders(getState),
+    body: JSON.stringify(query),
+  };
+  return dispatch(requestAction(url, options)).then(
+    data => data,
     error => {
       console.error('Failed to fetch schema ' + JSON.stringify(error));
       return error;
@@ -920,6 +962,16 @@ const dataReducer = (state = defaultState, action) => {
           };
         }),
       };
+    case SET_FILTER_SCHEMA:
+      return {
+        ...state,
+        schemaFilter: action.data,
+      };
+    case SET_FILTER_TABLES:
+      return {
+        ...state,
+        tableFilter: action.data,
+      };
     case SET_DB_CONNECTION_ENV_VAR:
       return {
         ...state,
@@ -964,4 +1016,6 @@ export {
   setUntrackedRelations,
   SET_ADDITIONAL_COLUMNS_INFO,
   fetchAdditionalColumnsInfo,
+  SET_FILTER_SCHEMA,
+  SET_FILTER_TABLES,
 };

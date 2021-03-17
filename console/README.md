@@ -197,3 +197,7 @@ npm run format
 - The source code and the preview app will be reviewed by maintainers.
 
 <!-- prettier-ignore-end -->
+
+### Working with PRO console
+
+Wiki page: https://github.com/hasura/graphql-engine-internal/wiki/Console:-Code-Sharing-Between-OSS-and-PRO

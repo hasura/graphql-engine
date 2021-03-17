@@ -215,8 +215,11 @@ export const getGroupedTableComputedFields = (
   return groupedComputedFields;
 };
 
-const schemaListSql = `SELECT schema_name FROM information_schema.schemata WHERE
+const schemaListSql = (
+  schemas?: string[]
+) => `SELECT schema_name FROM information_schema.schemata WHERE
 schema_name NOT IN ('information_schema', 'pg_catalog', 'hdb_catalog', 'hdb_views', 'pg_temp_1', 'pg_toast_temp_1', 'pg_toast')
+${schemas?.length ? ` AND schema_name IN (${schemas.join(',')})` : ''}
 ORDER BY schema_name ASC;`;
 
 const getAdditionalColumnsInfoQuerySql = (

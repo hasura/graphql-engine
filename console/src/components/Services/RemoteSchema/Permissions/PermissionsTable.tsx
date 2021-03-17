@@ -89,7 +89,6 @@ const PermissionsTable: React.FC<PermissionsTableProps> = ({
     };
   };
 
-  // get root types for a given role
   const getQueryTypes = (role: string, isNewRole: boolean) => {
     return queryTypes.map(queryType => {
       const dispatchOpenEdit = () => () => {

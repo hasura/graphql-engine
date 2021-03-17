@@ -43,7 +43,7 @@ import {
   setProClickState,
 } from './utils';
 
-const updateRequestHeaders = props => {
+export const updateRequestHeaders = props => {
   const { requestHeaders, dispatch } = props;
 
   const collabTokenKey = Object.keys(requestHeaders).find(

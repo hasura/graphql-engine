@@ -8,11 +8,15 @@ const FAILED_REQUEST = 'App/FAILED_REQUEST';
 const ERROR_REQUEST = 'App/ERROR_REQUEST';
 const CONNECTION_FAILED = 'App/CONNECTION_FAILED';
 
-export const requireAsyncGlobals = ({ dispatch }) => {
+export const requireAsyncGlobals = (
+  { dispatch },
+  shouldLoadOpts = true,
+  shouldLoadServerConfig = true
+) => {
   return (nextState, finalState, callback) => {
     Promise.all([
-      dispatch(loadConsoleOpts()),
-      dispatch(fetchServerConfig),
+      shouldLoadOpts && dispatch(loadConsoleOpts()),
+      shouldLoadServerConfig && dispatch(fetchServerConfig),
       dispatch(fetchHerokuSession()),
     ]).finally(callback);
   };
