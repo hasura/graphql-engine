@@ -83,7 +83,7 @@ export const Field: React.FC<FieldProps> = ({
       >
         {i.name}
       </span>
-      {i.args && ' ('}
+      {i.args && Object.keys(i.args).length !== 0 && ' ('}
       {i.args && (
         <ul data-test={i.name}>
           {i.args &&
@@ -99,7 +99,7 @@ export const Field: React.FC<FieldProps> = ({
             ))}
         </ul>
       )}
-      {i.args && ' )'}
+      {i.args && Object.keys(i.args).length !== 0 && ' )'}
       {i.return && (
         <span className={styles.fw_large}>
           :

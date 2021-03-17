@@ -299,6 +299,7 @@ export const createSimpleRemoteSchemaPermission = () => {
       testName
     )}/permissions`
   );
+  cy.get(getElementFromAlias('role-test-role-rs-1')).should('be.visible');
   cy.wait(5000);
 };
 

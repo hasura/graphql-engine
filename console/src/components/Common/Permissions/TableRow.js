@@ -25,7 +25,11 @@ const TableRow = ({
       </th>
     );
   } else {
-    rowCells.push(<th key={'role-textbox'}>{roleName}</th>);
+    rowCells.push(
+      <th data-test={`role-${roleName}`} key={'role-textbox'}>
+        {roleName}
+      </th>
+    );
   }
 
   permTypes.forEach(p => {

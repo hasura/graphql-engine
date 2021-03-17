@@ -767,7 +767,7 @@ export const addDepFields = (list: FieldType[], field: FieldType) => {
   return newList;
 };
 
-export const getExpandeItems = (list: FieldType[]) => {
+export const getExpandedItems = (list: FieldType[]) => {
   const res: ExpandedItems = {};
   list.forEach((item: FieldType, ix) => {
     const hasValidChildren = item?.children?.find(i => i.checked === true);

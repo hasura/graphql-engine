@@ -2,7 +2,7 @@ import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { FieldType, ExpandedItems, PermissionEdit } from './types';
 import { Field } from './Field';
 import styles from '../../../Common/Permissions/PermissionStyles.scss';
-import { addDepFields, getExpandeItems } from './utils';
+import { addDepFields, getExpandedItems } from './utils';
 
 type RSPTreeComponentProps = {
   list: FieldType[];
@@ -51,14 +51,16 @@ const Tree: React.FC<RSPTreeComponentProps> = ({
   );
 
   useEffect(() => {
-    const expandedItemsFromList = getExpandeItems(list);
+    const expandedItemsFromList = getExpandedItems(list);
     setExpandedItems({ ...expandedItems, ...expandedItemsFromList }); // this will only handle expand, it wont collapse anything which are already expanded.
   }, [list]);
 
   useEffect(() => {
     if (
-      permissionEdit?.isNewRole &&
-      permissionEdit?.isNewRole !== prevIsNewRole.current
+      permissionEdit &&
+      (!permissionEdit?.isNewRole ||
+        (permissionEdit?.isNewRole &&
+          permissionEdit?.isNewRole !== prevIsNewRole.current))
     ) {
       // ignore the new role name change event
       setExpandedItems({});
