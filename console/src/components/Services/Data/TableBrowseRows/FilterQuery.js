@@ -8,7 +8,6 @@ import React, { Component } from 'react';
 import PropTypes from 'prop-types';
 import { createHistory } from 'history';
 
-import { Operators } from '../constants';
 import {
   setFilterCol,
   setFilterOp,
@@ -34,6 +33,7 @@ import styles from '../../../Common/FilterQuery/FilterQuery.scss';
 import { getPersistedPageSize } from './tableUtils';
 import { isEmpty } from '../../../Common/utils/jsUtils';
 import ExportData from './ExportData';
+import { dataSource } from '../../../../dataSources';
 
 const history = createHistory();
 
@@ -85,7 +85,7 @@ const renderOps = (opName, onChange, key) => (
         -- op --
       </option>
     ) : null}
-    {Operators.map((o, i) => (
+    {dataSource.operators.map((o, i) => (
       <option key={i} value={o.value}>
         {`[${o.graphqlOp}] ${o.name}`}
       </option>
@@ -99,7 +99,7 @@ const getDefaultValue = (possibleValue, opName) => {
     return possibleValue;
   }
 
-  const operator = Operators.find(op => op.value === opName);
+  const operator = dataSource.operators.find(op => op.value === opName);
   return operator && operator.defaultValue ? operator.defaultValue : '';
 };
 

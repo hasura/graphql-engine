@@ -101,7 +101,7 @@ const TableHeader = ({
             {getTab(
               'browse',
               getTableBrowseRoute(tableSchema, source, tableName, isTableType),
-              `Browse Rows ${countDisplay}`,
+              `Browse Rows ${currentDriver !== 'mssql' ? countDisplay : ''}`,
               'table-browse-rows'
             )}
             {!readOnlyMode &&

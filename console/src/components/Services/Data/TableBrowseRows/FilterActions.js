@@ -188,10 +188,10 @@ const exportDataQuery = (tableSchema, type) => {
     const fileName = `export_${table_schema}_${table_name}_${getCurrTimeForFileName()}`;
 
     dispatch({ type: 'ViewTable/V_SET_QUERY_OPTS', queryStuff: newQuery });
-    dispatch(vMakeExportRequest(newQuery)).then(d => {
-      if (d[0]) {
-        if (type === 'JSON') downloadObjectAsJsonFile(fileName, d[0]);
-        else if (type === 'CSV') downloadObjectAsCsvFile(fileName, d[0]);
+    dispatch(vMakeExportRequest()).then(d => {
+      if (d) {
+        if (type === 'JSON') downloadObjectAsJsonFile(fileName, d);
+        else if (type === 'CSV') downloadObjectAsCsvFile(fileName, d);
       }
     });
   };

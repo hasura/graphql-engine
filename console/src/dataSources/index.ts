@@ -12,6 +12,7 @@ import {
 import { PGFunction, FunctionState } from './services/postgresql/types';
 import { Operations } from './common';
 import { QualifiedTable } from '../metadata/types';
+import { ReduxState, Thunk } from '../types';
 
 export const drivers = ['postgres', 'mysql', 'mssql'] as const;
 export type Driver = typeof drivers[number];
@@ -75,6 +76,7 @@ export interface DataSourcesAPI {
     TIME?: string;
     TIMETZ?: string;
   };
+  operators: Array<{ name: string; value: string; graphqlOp: string }>;
   getFetchTablesListQuery: (options: {
     schemas: string[];
     tables: Table[];
@@ -295,6 +297,15 @@ export interface DataSourcesAPI {
   ) => string;
   getDatabaseInfo: string;
   getTableInfo?: (tables: string[]) => string;
+  getTableRowRequest?: <T = any>(
+    tables: ReduxState['tables'],
+    headers: ReduxState['tables']['dataHeaders'],
+    isExport?: boolean
+  ) => Thunk<Promise<T>>;
+  processTableRowData?: (
+    data: any,
+    config?: { originalTable: string; currentSchema: string }
+  ) => { rows: any[]; estimatedCount: number };
   getDatabaseVersionSql?: string;
   permissionColumnDataTypes: Partial<PermissionColumnCategories> | null;
   viewsSupported: boolean;

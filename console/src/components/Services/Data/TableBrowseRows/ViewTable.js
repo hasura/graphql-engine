@@ -11,7 +11,6 @@ import { currentDriver, dataSource } from '../../../../dataSources';
 import { RightContainer } from '../../../Common/Layout/RightContainer';
 import { getPersistedPageSize } from './tableUtils';
 import { getManualEventsTriggers } from '../../../../metadata/selector';
-import FeatureDisabled from '../FeatureDisabled';
 
 class ViewTable extends Component {
   constructor(props) {
@@ -33,10 +32,6 @@ class ViewTable extends Component {
   getInitialData(tableName) {
     const { dispatch, currentSchema } = this.props;
 
-    if (currentDriver !== 'postgres') {
-      dispatch(setTable(tableName));
-      return;
-    }
     const limit = getPersistedPageSize(tableName, currentSchema);
     Promise.all([
       dispatch(setTable(tableName)),
@@ -102,16 +97,6 @@ class ViewTable extends Component {
 
     if (!tableSchema && currentDriver === 'postgres') {
       throw new NotFoundError();
-    }
-
-    if (currentDriver === 'mssql') {
-      return (
-        <FeatureDisabled
-          tab="browse"
-          tableName={tableName}
-          schemaName={currentSchema}
-        />
-      );
     }
 
     const styles = require('../../../Common/Common.scss');

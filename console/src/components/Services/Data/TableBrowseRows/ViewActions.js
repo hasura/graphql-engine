@@ -19,6 +19,7 @@ import {
   generateTableDef,
   dataSource,
   findTableFromRel,
+  currentDriver,
 } from '../../../../dataSources';
 
 /* ****************** View actions *************/
@@ -54,60 +55,24 @@ const vSetDefaults = limit => ({ type: V_SET_DEFAULTS, limit });
 
 const vMakeRowsRequest = () => {
   return (dispatch, getState) => {
-    const {
-      currentTable: originalTable,
-      currentSchema,
-      currentDataSource,
-      view,
-    } = getState().tables;
-
-    const url = Endpoints.query;
+    const { tables } = getState();
+    const headers = dataHeaders(getState);
     dispatch({ type: V_REQUEST_PROGRESS, data: true });
 
-    const requestBody = {
-      type: 'bulk',
-      source: currentDataSource,
-      args: [
-        getSelectQuery(
-          'select',
-          generateTableDef(originalTable, currentSchema),
-          view.query.columns,
-          view.query.where,
-          view.query.offset,
-          view.query.limit,
-          view.query.order_by,
-          currentDataSource
-        ),
-        getRunSqlQuery(
-          dataSource.getEstimateCountQuery(currentSchema, originalTable),
-          currentDataSource
-        ),
-      ],
-    };
-    const options = {
-      method: 'POST',
-      body: JSON.stringify(requestBody),
-      headers: dataHeaders(getState),
-      credentials: globalCookiePolicy,
-    };
-    return dispatch(requestAction(url, options)).then(
+    return dispatch(dataSource.getTableRowRequest(tables, headers)).then(
       data => {
+        const { currentSchema, currentTable: originalTable } = tables;
+        const { rows, estimatedCount } = dataSource.processTableRowData(data, {
+          currentSchema,
+          originalTable,
+        });
         const currentTable = getState().tables.currentTable;
-        const estimatedCount =
-          data.length > 1 && data[0].result > 1 && data.result[1].length
-            ? data[1].result[1][0]
-            : null;
-
-        // in case table has changed before count load
         if (currentTable === originalTable) {
           Promise.all([
             dispatch({
               type: V_REQUEST_SUCCESS,
-              data: data[0],
-              estimatedCount:
-                estimatedCount !== null
-                  ? parseInt(data[1]?.result[1][0], 10)
-                  : null,
+              data: rows,
+              estimatedCount,
             }),
             dispatch({ type: V_REQUEST_PROGRESS, data: false }),
           ]);
@@ -124,51 +89,36 @@ const vMakeRowsRequest = () => {
     );
   };
 };
+
 const vMakeExportRequest = () => {
   return (dispatch, getState) => {
-    const {
-      currentTable: originalTable,
-      currentSchema,
-      view,
-      currentDataSource,
-    } = getState().tables;
-
-    const url = Endpoints.query;
-
-    const requestBody = {
-      type: 'bulk',
-      args: [
-        getSelectQuery(
-          'select',
-          generateTableDef(originalTable, currentSchema),
-          view.query.columns,
-          view.query.where,
-          null,
-          null,
-          view.query.order_by,
-          currentDataSource
-        ),
-        getRunSqlQuery(
-          dataSource.getEstimateCountQuery(currentSchema, originalTable)
-        ),
-      ],
-    };
-    const options = {
-      method: 'POST',
-      body: JSON.stringify(requestBody),
-      headers: dataHeaders(getState),
-      credentials: globalCookiePolicy,
-    };
+    const { tables } = getState();
+    const headers = dataHeaders(getState);
     return new Promise((resolve, reject) => {
-      dispatch(requestAction(url, options))
+      dispatch(dataSource.getTableRowRequest(tables, headers))
         .then(data => {
-          resolve(data);
+          const { currentSchema, currentTable: originalTable } = tables;
+          const { rows } = dataSource.processTableRowData(data, {
+            currentSchema,
+            originalTable,
+          });
+          resolve(rows);
         })
         .catch(reject);
     });
   };
 };
 const vMakeCountRequest = () => {
+  // TODO: fix when aggregate is available
+  if (currentDriver === 'mssql')
+    return (dispatch, getState) => {
+      // This is just for the moment, until aggregators for mssql is ready
+      const { estimatedCount } = getState().tables.view;
+      dispatch({
+        type: V_COUNT_REQUEST_SUCCESS,
+        count: estimatedCount,
+      });
+    };
   return (dispatch, getState) => {
     const {
       currentTable: originalTable,
@@ -241,7 +191,7 @@ const vMakeCountRequest = () => {
 };
 
 const vMakeTableRequests = () => (dispatch, getState) => {
-  dispatch(vMakeRowsRequest()).then(() => {
+  return dispatch(vMakeRowsRequest()).then(() => {
     const { estimatedCount } = getState().tables.view;
     if (estimatedCount > COUNT_LIMIT) {
       dispatch({

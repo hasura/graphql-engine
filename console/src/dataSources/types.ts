@@ -24,6 +24,7 @@ export type Permission = {
 export interface BaseTableColumn {
   column_name: string;
   data_type: string;
+  data_type_name?: string;
 }
 
 export interface TableColumn extends BaseTableColumn {
