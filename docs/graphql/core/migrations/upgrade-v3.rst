@@ -217,9 +217,9 @@ If you are starting hasura with a ``HASURA_GRAPHQL_DATABASE_URL`` then the name 
 Continue using config v2
 ------------------------
 
-It is possible to continue using ``config v2`` with Hasura ``v2.0.0`` and above if you would like to do so.
+It is possible to continue using ``config v2`` with Hasura versions ``v2.0.0`` and above if you would like to do so.
 
-While using ``config v2`` with Hasura ``v2.0.0`` and above, as we have metadata and migrations for only a single database,
+While using ``config v2`` with Hasura versions ``v2.0.0`` and above, as we have metadata and migrations for only a single database,
 the server assumes that they belong to a database named ``default`` and attempts to apply them to it.
 
 Hence, to continue using ``config v2`` we need to connect a database to Hasura GraphQL engine with the name ``default`` and then run
@@ -231,4 +231,8 @@ any metadata and migrations commands.
 - Else you can connect a database with the name ``default`` following the steps :ref:`here <connect_database_v2.0>`.
 
 Post this, the metadata and migration commands should work as usual.
+
+.. note::
+
+  Ensure the ``version`` key in ``config.yaml`` is set to ``2`` while using ``config v2``
 

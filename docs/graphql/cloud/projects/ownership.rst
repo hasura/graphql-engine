@@ -20,7 +20,7 @@ owner will lose all access to the project.
 
 .. note::
 
-   If the project is on the Standard (pay-as-you-go) tier, the new owner will pay for the entire data usage for the month in which the ownership is transferred.
+   If the project is on the ``Standard`` (pay-as-you-go) tier, the new owner will pay for the entire data usage for the month in which the ownership is transferred.
 
 Send an ownership transfer invitation
 -------------------------------------
@@ -63,5 +63,5 @@ You can accept an invitation by clicking on the ``Accept`` button.
 
 .. note::
 
-   If the project is on the Standard (pay-as-you-go) tier, the new owner must have an active card 
+   If the project is on the ``Standard`` (pay-as-you-go) tier, the new owner must have an active card
    associated with their Hasura Cloud account to accept the invitation.

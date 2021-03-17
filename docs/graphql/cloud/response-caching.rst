@@ -26,6 +26,10 @@ A query's response can be cached only if the following conditions hold:
 - The query does not make use of remote schemas or remote joins
 - The response JSON is under 100KB in size
 
+.. admonition:: Support
+
+  Query response caching is available for Hasura Cloud projects on the ``Standard`` (pay-as-you-go) tier and above.
+
 Enable caching
 --------------
 

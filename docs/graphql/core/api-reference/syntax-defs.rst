@@ -103,7 +103,7 @@ PGConfiguration
    * - read_replicas
      - false
      - [PGSourceConnectionInfo_]
-     - Optional list of read replica configuration
+     - Optional list of read replica configuration *(supported only in cloud/enterprise versions)*
 
 .. _PGSourceConnectionInfo:
 

@@ -171,7 +171,7 @@ the right content-type headers.
    Hasura follows a rolling update pattern for console releases where assets for
    a ``major.minor`` version is updated continuously across all patches. If
    you're using the assets on the server with a Docker image, it might not be the latest
-   version of console.
+   version of the console.
 
 .. _dev-mode:
 

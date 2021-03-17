@@ -20,7 +20,7 @@ on the integrations tab on the project's setting page.
 
 .. note::
 
-  Datadog Integration is only available for Hasura Cloud projects on the Standard (pay-as-you-go) tier.
+  Datadog Integration is only available for Hasura Cloud projects on the ``Standard`` (pay-as-you-go) tier and above.
 
 Configure Datadog Integration
 -----------------------------

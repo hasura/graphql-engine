@@ -32,7 +32,7 @@ Inherited roles are useful when you need to define multiple permission rules (ma
 
    Inherited roles are supported for versions ``v2.0.0-alpha.4`` and above.
 
-Creating Inherited roles
+Creating inherited roles
 ------------------------
 
 .. rst-class:: api_tabs
@@ -40,7 +40,7 @@ Creating Inherited roles
 
   .. tab:: Console
 
-     Go to the ``Settings`` tab on the console and click on ``Inherited Roles``.
+     Go to the ``Settings`` tab (⚙) on the console and click on ``Inherited Roles``.
 
      .. thumbnail:: /img/graphql/core/auth/console-inherited-role.png
         :alt: Console create inherited role
@@ -128,8 +128,10 @@ The other parameters of the select permission will be combined in the following 
 2. Allow aggregations - If any of the role allows aggregation, then the inherited role will allow aggregation
 3. Scalar computed fields - same as table column fields, as in the above example
 
-Accessibility of a field to an inherited role is defined as follows:
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Accessibility of a field for an inherited role
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Accessibility of a field for an inherited role is defined as follows:
 
 1. When all the roles give access to a column ``C``, then ``C`` will
    always be accessible.
