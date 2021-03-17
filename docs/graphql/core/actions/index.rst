@@ -163,7 +163,7 @@ Learn more
   Codegen <codegen/index>
   derive
   action-permissions
-  reuse-types-actions
+  action-relationships
   debugging
   logs-clean-up
 

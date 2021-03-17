@@ -2,7 +2,7 @@
    :description: Adding remote schema relationships with Postgres tables in Hasura
    :keywords: hasura, docs, remote schema relationship, remote join, remote schema, data federation
 
-.. _remote_schema_relationships:
+.. _pg_remote_schema_relationships:
 
 Postgres: Remote schema relationships
 =====================================
@@ -15,7 +15,8 @@ Postgres: Remote schema relationships
 Introduction
 ------------
 
-Remote schema relationships extend the concept of joining data across tables, to joining across tables and remote data sources. Once you create relationships between types from your database and types created from APIs, you can then "join" them by running GraphQL queries.
+Remote schema relationships extend the concept of joining data across tables, to joining across tables and remote data sources. Once you create relationships between
+types from your database and types created from APIs, you can then "join" them by running GraphQL queries.
 
 These APIs can be custom GraphQL servers you write, third party SaaS APIs, or even other Hasura instances.
 
@@ -37,18 +38,8 @@ Step 0: Add a remote schema
 
 Add a remote schema as described :ref:`here <adding_schema>`.
 
-Step 1: Open the remote relationship section
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-- From your table, go to the ``Relationships`` tab.
-- Click the ``Add a remote relationship`` button.
-
-.. thumbnail:: /img/graphql/core/schema/add-remote-schema-relationship.png
-   :alt: Opening the remote relationship section
-   :width: 1000px
-
-Step 2: Define the relationship
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Step 1: Define and create the relationship
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 The following fields can be defined for a remote schema relationship:
 
@@ -65,6 +56,15 @@ For this example, we assume that our schema has a ``users`` table with the field
 .. tabs::
 
   .. tab:: Console
+
+    - Head to the ``Data -> [table-name] -> Relationships`` tab.
+    - Click the ``Add a remote relationship`` button.
+
+    .. thumbnail:: /img/graphql/core/schema/add-remote-schema-relationship.png
+       :alt: Opening the remote relationship section
+       :width: 1000px
+
+    - Define the relationship and hit ``Save``.
 
     .. thumbnail:: /img/graphql/core/schema/define-remote-schema-relationship.png
       :alt: Defining the relationship
@@ -133,7 +133,7 @@ In this example, we've added a remote schema which is a wrapper around `Auth0 <h
 2. We select the ``auth0`` schema that we've added.
 3. We set up the config to join the ``auth0_id`` input argument of our remote schema field to the ``auth0_id`` column of this table (in this case, the ``users`` table).
 
-Step 3: Explore with GraphiQL
+Step 2: Explore with GraphiQL
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 In the GraphiQL tab, test out your remote schema relationship.

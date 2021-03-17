@@ -146,9 +146,9 @@ the value in the ``id`` column is greater than 10:
               - role: user
                 permission:
                   columns: []
-                    filter:
-                      id:
-                        _gt: 10
+                  filter:
+                    id:
+                      _gt: 10
 
       Apply the metadata by running:
 
@@ -301,9 +301,9 @@ the author's ID*):
                   columns:
                   - title
                   - content
-                filter:
-                  id:
-                    _eq: X-Hasura-User-Id
+                  filter:
+                    id:
+                      _eq: X-Hasura-User-Id
 
       Apply the metadata by running:
 

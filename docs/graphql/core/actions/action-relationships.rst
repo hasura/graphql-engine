@@ -1,19 +1,19 @@
 .. meta::
-   :description: Reusing existing types with actions
-   :keywords: hasura, docs, actions, connect, existing types
+   :description: Manage Hasura actions relationships
+   :keywords: hasura, docs, actions, relationships
 
-.. _reuse_types_actions:
+.. _actions_relationships:
 
-Reusing existing types with actions
-===================================
+Actions relationships
+=====================
 
 .. contents:: Table of contents
   :backlinks: none
   :depth: 2
   :local:
 
-Use case
---------
+Introduction
+------------
 
 Actions are a way to extend your GraphQL schema with custom queries or mutations. It
 is quite a typical case that an action's response is actually related to
