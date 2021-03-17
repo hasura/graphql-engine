@@ -240,14 +240,18 @@ class TestGraphQLQueryOffsets:
 
 
 @pytest.mark.parametrize("transport", ['http', 'websocket'])
-@usefixtures('per_class_tests_db_state')
-class TestGraphQLQueryBoolExpBasic:
+@pytest.mark.parametrize("backend", ['mssql', 'postgres'])
+@usefixtures('per_class_tests_db_state', 'per_backend_tests')
+class TestGraphQLQueryBoolExpBasicCommon:
+
+    def test_order_delivered_at_is_null(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/select_query_order_delivered_at_is_null.yaml', transport)
+
+    def test_order_delivered_at_is_not_null(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/select_query_order_delivered_at_is_not_null.yaml', transport)
 
     def test_author_article_where_not_equal(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + '/select_author_article_where_neq.yaml', transport)
-
-    def test_author_article_operator_ne_not_found_err(self, hge_ctx, transport):
-        check_query_f(hge_ctx, self.dir() + '/select_author_article_operator_ne_not_found_err.yaml', transport)
 
     def test_author_article_where_greater_than(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + '/select_author_article_where_gt.yaml', transport)
@@ -258,8 +262,28 @@ class TestGraphQLQueryBoolExpBasic:
     def test_author_article_where_less_than(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + '/select_author_article_where_lt.yaml', transport)
 
+    def test_author_article_where_not_less_than(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/select_author_article_where_not_lt.yaml', transport)
+
     def test_author_article_where_less_than_or_equal(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + '/select_author_article_where_lte.yaml', transport)
+
+    def test_article_author_is_published_and_registered(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/select_article_author_is_published_and_registered.yaml', transport)
+
+    def test_article_author_not_published_nor_registered(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/select_article_author_not_published_or_not_registered.yaml', transport)
+
+    @classmethod
+    def dir(cls):
+        return 'queries/graphql_query/boolexp/basic'
+
+@pytest.mark.parametrize("transport", ['http', 'websocket'])
+@pytest.mark.parametrize("backend", ['postgres'])
+@usefixtures('per_class_tests_db_state', 'per_backend_tests')
+class TestGraphQLQueryBoolExpBasicPostgres:
+    def test_author_article_operator_ne_not_found_err(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/select_author_article_operator_ne_not_found_err_postgres.yaml', transport)
 
     def test_author_article_where_in(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + '/select_author_article_where_in.yaml', transport)
@@ -275,21 +299,6 @@ class TestGraphQLQueryBoolExpBasic:
 
     def test_uuid_test_in_uuid_col(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + '/select_uuid_test_in_uuid_col.yaml', transport)
-
-    def test_order_delivered_at_is_null(self, hge_ctx, transport):
-        check_query_f(hge_ctx, self.dir() + '/select_query_order_delivered_at_is_null.yaml', transport)
-
-    def test_order_delivered_at_is_not_null(self, hge_ctx, transport):
-        check_query_f(hge_ctx, self.dir() + '/select_query_order_delivered_at_is_not_null.yaml', transport)
-
-    def test_author_article_where_not_less_than(self, hge_ctx, transport):
-        check_query_f(hge_ctx, self.dir() + '/select_author_article_where_not_lt.yaml', transport)
-
-    def test_article_author_is_published_and_registered(self, hge_ctx, transport):
-        check_query_f(hge_ctx, self.dir() + '/select_article_author_is_published_and_registered.yaml', transport)
-
-    def test_article_author_not_published_nor_registered(self, hge_ctx, transport):
-        check_query_f(hge_ctx, self.dir() + '/select_article_author_not_published_or_not_registered.yaml', transport)
 
     def test_article_author_unexpected_operator_in_where_err(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + '/select_author_article_unexpected_operator_in_where_err.yaml', transport)
@@ -310,6 +319,16 @@ class TestGraphQLQueryBoolExpBasic:
     def dir(cls):
         return 'queries/graphql_query/boolexp/basic'
 
+@pytest.mark.parametrize("transport", ['http', 'websocket'])
+@pytest.mark.parametrize("backend", ['mssql'])
+@usefixtures('per_class_tests_db_state', 'per_backend_tests')
+class TestGraphQLQueryBoolExpBasicMSSQL:
+    def test_author_article_operator_ne_not_found_err(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/select_author_article_operator_ne_not_found_err_mssql.yaml', transport)
+
+    @classmethod
+    def dir(cls):
+        return 'queries/graphql_query/boolexp/basic'
 
 @pytest.mark.parametrize("transport", ['http', 'websocket'])
 @usefixtures('per_class_tests_db_state')
