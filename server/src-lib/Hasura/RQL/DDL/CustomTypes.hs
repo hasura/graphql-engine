@@ -25,6 +25,8 @@ import           Data.Text.Extended
 import           Hasura.Backends.Postgres.SQL.Types
 import           Hasura.EncJSON
 import           Hasura.RQL.Types
+import           Hasura.SQL.Tag
+
 
 {- Note [Postgres scalars in custom types]
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

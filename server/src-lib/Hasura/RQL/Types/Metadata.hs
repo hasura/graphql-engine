@@ -11,6 +11,7 @@ import qualified Data.HashSet                        as HS
 import qualified Data.HashSet.InsOrd                 as HSIns
 import qualified Data.List.Extended                  as L
 import qualified Data.Text                           as T
+import qualified Data.Text.Extended                  as T
 import qualified Language.GraphQL.Draft.Syntax       as G
 
 import           Control.Lens                        hiding (set, (.=))
@@ -43,7 +44,9 @@ import           Hasura.RQL.Types.RemoteSchema
 import           Hasura.RQL.Types.ScheduledTrigger
 import           Hasura.RQL.Types.Table
 import           Hasura.SQL.Backend
+import           Hasura.SQL.Tag
 import           Hasura.Session
+
 
 -- | Raise exception if parsed list has multiple declarations
 parseListAsMap
@@ -466,7 +469,7 @@ metadataToOrdJSON ( Metadata
     sourceMetaToOrdJSON exists =
       AB.dispatchAnyBackend @BackendMetadata exists $ \(SourceMetadata {..} :: SourceMetadata b) ->
         let sourceNamePair = ("name", AO.toOrdered _smName)
-            sourceKind     = backendName $ backendTag @b
+            sourceKind     = T.toTxt $ reify $ backendTag @b
             sourceKindPair = ("kind", AO.String sourceKind)
             tablesPair     = ("tables", AO.array $ map tableMetaToOrdJSON $ sortOn _tmTable $ OM.elems _smTables)
             functionsPair  = listToMaybeOrdPairSort "functions" functionMetadataToOrdJSON _fmFunction _smFunctions

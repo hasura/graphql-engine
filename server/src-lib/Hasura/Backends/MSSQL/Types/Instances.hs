@@ -153,6 +153,7 @@ instance Arbitrary TableName where
 instance ToTxt () where
   toTxt = tshow
 
+
 --------------------------------------------------------------------------------
 -- Manual instances
 

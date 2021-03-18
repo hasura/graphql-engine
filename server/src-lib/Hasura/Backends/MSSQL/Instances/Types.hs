@@ -17,6 +17,7 @@ import           Hasura.RQL.DDL.Headers           ()
 import           Hasura.RQL.Types.Backend
 import           Hasura.RQL.Types.Error
 import           Hasura.SQL.Backend
+import           Hasura.SQL.Tag
 
 
 instance Backend 'MSSQL where

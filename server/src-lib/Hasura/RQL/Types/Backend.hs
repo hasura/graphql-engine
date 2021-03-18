@@ -15,6 +15,7 @@ import           Hasura.Incremental            (Cacheable)
 import           Hasura.RQL.DDL.Headers        ()
 import           Hasura.RQL.Types.Error
 import           Hasura.SQL.Backend
+import           Hasura.SQL.Tag
 import           Hasura.SQL.Types
 
 

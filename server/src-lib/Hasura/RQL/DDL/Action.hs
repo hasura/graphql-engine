@@ -36,6 +36,7 @@ import           Hasura.EncJSON
 import           Hasura.Metadata.Class
 import           Hasura.RQL.DDL.CustomTypes    (lookupPGScalar)
 import           Hasura.RQL.Types
+import           Hasura.SQL.Tag
 import           Hasura.Session
 
 
