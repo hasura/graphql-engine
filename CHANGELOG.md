@@ -3,8 +3,12 @@
 ## Next release
 
 ### Bug fixes and improvements
-
 (Add entries here in the order of: server, console, cli, docs, others)
+
+
+## v2.0.0-alpha.5
+
+### Bug fixes and improvements
 
 - server: fix issue with parsing of remote schema list of input objects (fix #6584)
 - console: add browse rows for mssql tables (#805)
