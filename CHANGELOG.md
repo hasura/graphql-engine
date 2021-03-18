@@ -7,9 +7,10 @@
 (Add entries here in the order of: server, console, cli, docs, others)
 
 - server: fix issue with parsing of remote schema list of input objects (fix #6584)
-- cli: cli-ext is now a native part of cli binary (no longer needed as a plugin)
 - console: add browse rows for mssql tables (#805)
 - console: remote schema permissions bug fixes (#439)
+- cli: cli-ext is now a native part of cli binary (no longer needed as a plugin)
+- cli: fix issue with adding operation to allow list in console mode (fix #6617)
 
 ## v2.0.0-alpha.4
 

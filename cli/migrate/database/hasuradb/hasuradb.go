@@ -316,13 +316,13 @@ func sendMetadataMigrations(hasuradb *HasuraDB, requests []interface{}) error {
 			}
 			metadataRequests = append(metadataRequests, metadataBulk)
 			queryRequests = append(queryRequests, queryBulk)
-		}
-		if ok := isQueryRequest(v); ok {
-			queryRequests = append(queryRequests, v)
 		} else {
-			metadataRequests = append(metadataRequests, v)
+			if ok := isQueryRequest(v); ok {
+				queryRequests = append(queryRequests, v)
+			} else {
+				metadataRequests = append(metadataRequests, v)
+			}
 		}
-
 	}
 	if len(queryRequests) > 0 {
 		queryBulk := HasuraInterfaceBulk{
