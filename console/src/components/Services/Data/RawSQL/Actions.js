@@ -90,6 +90,7 @@ const trackAllItems = (sql, isMigration, migrationName, source, driver) => (
     },
     err => {
       dispatch(showErrorNotification('Tracking items failed', err.code, err));
+      throw new Error(err);
     }
   );
 };
