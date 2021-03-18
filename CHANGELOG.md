@@ -1,6 +1,7 @@
 # Hasura GraphQL Engine Changelog
 
 ## Next release
+- server/mssql: `mssql_add_source` can now take connection strings from environment variables
 
 ### Bug fixes and improvements
 (Add entries here in the order of: server, console, cli, docs, others)
