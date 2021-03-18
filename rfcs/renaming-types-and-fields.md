@@ -1,12 +1,14 @@
 ## Rename type and field names for Remote Schemas
 
 When adding a remote schema (or after adding), users can be given a choice to rename
-types and fields so that they are graphql-conformant, avoid conflicts, or simply more usable.
+types and fields so that they are graphql-conformant, avoid conflicts with already existing schemas, or simply for better customization.
 
-There are 2 independent things that are required for Remote Schemas:
+There are 4 things that we can do for Remote Schemas:
 
 1. Namespacing
-2. Customise type and field names (also enable prefixing)
+2. Customize type names
+3. Add global type prefix
+4. Customize root field names
 
 #### Namespacing
 
@@ -21,8 +23,10 @@ E.g. suppose user provides namespace “userservice” when adding remote schema
         "name": "my remote schema",
         "definition": {
             "url": "https://remote-server.com/graphql",
-            "forward_client_headers": false,
-            "namespace": “userservice”
+            "forward_client_headers": false
+        },
+        "customization": {
+          "namespace": "userservice"
         }
     }
 }
@@ -42,9 +46,9 @@ mutation {
 }
 ```
 
-#### Customise type and field names 
+#### Customize type names
 
-When adding a remote schema, a custom spec for renaming types and fields can be given.
+When adding a remote schema, a custom spec for renaming types can be given.
 
 ```
 {
@@ -53,37 +57,25 @@ When adding a remote schema, a custom spec for renaming types and fields can be 
         "name": "my remote schema",
         "definition": {
           "url": "https://remote-server.com/graphql",
-          "forward_client_headers": false,
-          "custom_types": [
-            {
-              "type": "Query",
-              "custom_fields": [
-                {
-                  "field": "getUser",
-                  "new_field": "getRemoteUser"
-                },
-                {
-                  "field": "getUser2",
-                  "new_field": "getRemoteUser2"
-                }
-              ]
-            },
-            {
-              "type": "User",
-              "new_type": "RemoteUser"
-            }
-          ]
-      }
+          "forward_client_headers": false
+        },
+        "customization": {
+           "custom_types": [
+             {
+               "name": "User",
+               "new_name": "RemoteUser"
+             }
+           ]
+        }
     }
 }
 ```
 
-The main parameters here are `new_type` and `new_field`.
 
-##### Prefixing
+#### Add global type prefix
 
-Although the above solves the problem of customizing individual types and fields, we can also provide an
-option to add a global prefix to all types and field names. This allows in automatic customization in case 
+Although the above solves the problem of customizing individual types, we can also provide an
+option to add a global prefix to all types. This allows in automatic customization in case 
 the downstream graphql schema are changed.
 
 ```
@@ -93,20 +85,49 @@ the downstream graphql schema are changed.
         "name": "my remote schema",
         "definition": {
             "url": "https://remote-server.com/graphql",
-            "forward_client_headers": false,
-            "custom_prefix": “userservice”
+            "forward_client_headers": false
+        },
+        "customization": {
+          "custom_type_prefix": “userservice”
         }
     }
 }
 ```
 
+Note that if both `custom_type_prefix` and `custom_types` are given, then `custom_types` is given priority i.e. `custom_type_prefix` is applied to all types other than those given in `custom_types`.
+
+
+#### Customize root field names
+
+Similar to customizing type names, we can also customize root field names.
+
+
+```
+{
+    "type": "add_remote_schema",
+    "args": {
+        "name": "my remote schema",
+        "definition": {
+          "url": "https://remote-server.com/graphql",
+          "forward_client_headers": false
+        },
+        "customization": {
+           "custom_root_fields": [
+             {
+               "name": "getUser",
+               "new_name": "userserviceGetUser"
+             }
+           ]
+        }
+    }
+}
+```
+
+Then you can run the query as:
 
 ```
 query {
-  userservice_getUser
+  userserviceGetUser { .. }
 }
 
-mutation {
-  userservice_deleteUser
-}
 ```
