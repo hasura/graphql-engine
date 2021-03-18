@@ -482,6 +482,7 @@ jobs:
 
   # build console assets
   build_console:
+    resource_class: large
     docker:
     - image: hasura/graphql-engine-console-builder:20210224 
     working_directory: ~/graphql-engine
