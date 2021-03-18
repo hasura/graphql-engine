@@ -11,6 +11,7 @@
 ### Bug fixes and improvements
 
 - server: fix issue with parsing of remote schema list of input objects (fix #6584)
+- server: support tracking functions having only base type arguments (fix #6628)
 - console: add browse rows for mssql tables (#805)
 - console: remote schema permissions bug fixes (#439)
 - cli: cli-ext is now a native part of cli binary (no longer needed as a plugin)

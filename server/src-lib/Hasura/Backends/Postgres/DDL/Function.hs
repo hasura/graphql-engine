@@ -51,6 +51,7 @@ data FunctionIntegrityError
   | FunctionSessionArgumentNotJSON !FunctionArgName
   | FunctionInvalidSessionArgument !FunctionArgName
   | FunctionInvalidArgumentNames [FunctionArgName]
+  | FunctionInvalidArgumentType ![QualifiedPGType]
   deriving (Show, Eq)
 
 buildFunctionInfo
@@ -100,6 +101,9 @@ buildFunctionInfo source qf systemDefined FunctionConfig{..} permissions rawFunc
       -- validate function argument names
       validateFunctionArgNames
 
+      -- validate function argument types
+      validateFunctionArgTypes
+
       inputArguments <- makeInputArguments
 
       let retTable = typeToTable returnType
@@ -122,6 +126,11 @@ buildFunctionInfo source qf systemDefined FunctionConfig{..} permissions rawFunc
           invalidArgs = filter (isNothing . G.mkName . getFuncArgNameTxt) argNames
       unless (null invalidArgs) $
         throwValidateError $ FunctionInvalidArgumentNames invalidArgs
+
+    validateFunctionArgTypes = do
+      let nonBaseTypeArgs = filter (not . isBaseType) inpArgTyps
+      unless (null nonBaseTypeArgs) $
+        throwValidateError $ FunctionInvalidArgumentType nonBaseTypeArgs
 
     makeInputArguments =
       case _fcSessionArgument of
@@ -155,3 +164,9 @@ buildFunctionInfo source qf systemDefined FunctionConfig{..} permissions rawFunc
       FunctionInvalidArgumentNames args ->
         let argsText = T.intercalate "," $ map getFuncArgNameTxt args
         in "the function arguments " <> argsText <> " are not in compliance with GraphQL spec"
+      FunctionInvalidArgumentType argTypes ->
+        let argsText = T.intercalate "," $ map (toTxt . _qptName) argTypes
+        in "the function argument types "
+           <> argsText
+           <<> " are not supported, because function arguments are expected"
+           <> " to be of the type: 'base'"

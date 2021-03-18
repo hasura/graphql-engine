@@ -632,6 +632,9 @@ class TestGraphQLQueryFunctions:
     def test_query_search_author_mview(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + '/query_search_author_mview.yaml')
 
+    def test_tracking_function_with_non_base_type_argument_error(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/track_non_base_function_arg_type.yaml')
+
     @classmethod
     def dir(cls):
         return 'queries/graphql_query/functions'

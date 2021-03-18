@@ -1,0 +1,37 @@
+- description: setup a custom SQL function
+  url: /v1/query
+  status: 200
+  query:
+    type: run_sql
+    args:
+      sql: |
+        create function search_post_by_test(t test)
+        returns setof post as $$
+            select *
+            from post
+            where
+            title ilike ('%' || t.name || '%')
+            $$ language sql stable;
+
+- description: Track function v2 with invalid session argument
+  url: /v1/query
+  status: 400
+  response:
+    internal:
+    - definition:
+        schema: public
+        name: search_post_by_test
+      reason: "in function \"search_post_by_test\": the function \"search_post_by_test\"\
+            \ cannot be tracked because the function argument types \"test\" are not supported,\
+            \ because function arguments are expected to be of the type: 'base'"
+      type: function
+    path: $.args
+    error: "in function \"search_post_by_test\": the function \"search_post_by_test\"\
+            \ cannot be tracked because the function argument types \"test\" are not supported,\
+            \ because function arguments are expected to be of the type: 'base'"
+    code: constraint-violation
+  query:
+    version: 2
+    type: track_function
+    args:
+      function: search_post_by_test
