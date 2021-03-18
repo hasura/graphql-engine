@@ -5,3 +5,5 @@ args:
     DROP TABLE employee CASCADE;
     DROP TABLE manager;
     DROP TABLE team;
+    DROP TABLE articles;
+    DROP TABLE authors;

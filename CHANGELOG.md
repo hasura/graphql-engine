@@ -5,6 +5,8 @@
 ### Bug fixes and improvements
 (Add entries here in the order of: server, console, cli, docs, others)
 
+- server: fix inherited_roles issue when some of the underlying roles don't have permissions configured (fixes #6672)
+
 
 ## v2.0.0-alpha.5
 

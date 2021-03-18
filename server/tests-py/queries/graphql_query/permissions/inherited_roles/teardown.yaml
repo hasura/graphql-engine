@@ -1,3 +1,9 @@
-type: drop_inherited_role
+type: bulk
 args:
-  role_name: manager_employee
+  - type: drop_inherited_role
+    args:
+      role_name: manager_employee
+
+  - type: drop_inherited_role
+    args:
+      role_name: author_editor_guest_inherited_role

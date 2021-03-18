@@ -415,6 +415,9 @@ class TestGraphQLInheritedRoles:
     def test_basic_inherited_role(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + '/basic_inherited_roles.yaml')
 
+    def test_inherited_role_when_some_roles_may_not_have_permission_configured(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/inherited_role_with_some_roles_having_no_permissions.yaml')
+
 
 @pytest.mark.parametrize("transport", ['http', 'websocket'])
 @usefixtures('per_class_tests_db_state')

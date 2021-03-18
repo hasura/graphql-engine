@@ -43,3 +43,29 @@ args:
       RETURNS INT AS $$
       SELECT employee_row.salary * 12
       $$ LANGUAGE sql STABLE;
+
+      CREATE TABLE authors (
+        id serial primary key,
+        name text,
+        followers int
+      );
+
+      CREATE TABLE articles (
+        id serial primary key,
+        title text,
+        content text,
+        is_published boolean default false,
+        author_id int references authors(id)
+      );
+
+      insert into authors (name, followers) values
+      ('J.K.Rowling', 1232344),
+      ('Paulo Coelho', 21312332),
+      ('Murakami', 1232132);
+
+      insert into articles (title, content, is_published, author_id) values
+      ('title 1', 'content 1', false, 1),
+      ('title 2', 'content 2', true, 2),
+      ('title 3', 'content 3', true, 1),
+      ('title 4', 'content 4', true, 3),
+      ('title 5', 'content 5', true, 2);

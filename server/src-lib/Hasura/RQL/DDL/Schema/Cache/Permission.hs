@@ -180,7 +180,7 @@ buildTablePermissions = Inc.cache proc (source, tableCache, tableFields, tablePe
        let singleRoleSelectPerms =
              map ((_permSel =<<) . (`M.lookup` nonInheritedRolePermissions)) $
                   toList roleSet
-           nonEmptySelPerms = NE.nonEmpty =<< sequenceA singleRoleSelectPerms
+           nonEmptySelPerms = NE.nonEmpty $ catMaybes singleRoleSelectPerms
            combinedSelPermInfo = combineSelectPermInfos <$> nonEmptySelPerms
        returnA -< RolePermInfo Nothing combinedSelPermInfo Nothing Nothing)
     |) inheritedRolesMap
