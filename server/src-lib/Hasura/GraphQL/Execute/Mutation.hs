@@ -4,30 +4,29 @@ module Hasura.GraphQL.Execute.Mutation
 
 import           Hasura.Prelude
 
-import qualified Data.Environment                           as Env
-import qualified Data.HashMap.Strict                        as Map
-import qualified Data.HashMap.Strict.InsOrd                 as OMap
-import qualified Data.Sequence.NonEmpty                     as NE
-import qualified Language.GraphQL.Draft.Syntax              as G
-import qualified Network.HTTP.Client                        as HTTP
-import qualified Network.HTTP.Types                         as HTTP
+import qualified Data.Environment                       as Env
+import qualified Data.HashMap.Strict                    as Map
+import qualified Data.HashMap.Strict.InsOrd             as OMap
+import qualified Data.Sequence.NonEmpty                 as NE
+import qualified Language.GraphQL.Draft.Syntax          as G
+import qualified Network.HTTP.Client                    as HTTP
+import qualified Network.HTTP.Types                     as HTTP
 
-import qualified Hasura.GraphQL.Transport.HTTP.Protocol     as GH
-import qualified Hasura.Logging                             as L
-import qualified Hasura.SQL.AnyBackend                      as AB
-import qualified Hasura.Tracing                             as Tracing
+import qualified Hasura.GraphQL.Transport.HTTP.Protocol as GH
+import qualified Hasura.Logging                         as L
+import qualified Hasura.SQL.AnyBackend                  as AB
+import qualified Hasura.Tracing                         as Tracing
 
-import           Hasura.Backends.MSSQL.Instances.Execute    ()
-import           Hasura.Backends.Postgres.Instances.Execute ()
 import           Hasura.GraphQL.Context
 import           Hasura.GraphQL.Execute.Action
 import           Hasura.GraphQL.Execute.Backend
+import           Hasura.GraphQL.Execute.Instances       ()
 import           Hasura.GraphQL.Execute.Remote
 import           Hasura.GraphQL.Execute.Resolve
 import           Hasura.GraphQL.Parser
 import           Hasura.Metadata.Class
 import           Hasura.RQL.Types
-import           Hasura.Server.Version                      (HasVersion)
+import           Hasura.Server.Version                  (HasVersion)
 import           Hasura.Session
 
 

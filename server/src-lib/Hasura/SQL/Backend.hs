@@ -52,4 +52,3 @@ instance GCompare BackendTag where
     EQ -> unsafeCoerce GEQ
     LT -> GLT
     GT -> GGT
-

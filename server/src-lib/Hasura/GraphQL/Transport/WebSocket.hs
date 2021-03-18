@@ -17,68 +17,67 @@ module Hasura.GraphQL.Transport.WebSocket
 
 import           Hasura.Prelude
 
-import qualified Control.Concurrent.Async.Lifted.Safe         as LA
-import qualified Control.Concurrent.STM                       as STM
-import qualified Control.Monad.Trans.Control                  as MC
-import qualified Data.Aeson                                   as J
-import qualified Data.Aeson.Casing                            as J
-import qualified Data.Aeson.Ordered                           as JO
-import qualified Data.Aeson.TH                                as J
-import qualified Data.ByteString.Lazy                         as LBS
-import qualified Data.CaseInsensitive                         as CI
-import qualified Data.Environment                             as Env
-import qualified Data.HashMap.Strict                          as Map
-import qualified Data.HashMap.Strict.InsOrd                   as OMap
-import qualified Data.Text                                    as T
-import qualified Data.Text.Encoding                           as TE
-import qualified Data.Time.Clock                              as TC
-import qualified Language.GraphQL.Draft.Syntax                as G
+import qualified Control.Concurrent.Async.Lifted.Safe        as LA
+import qualified Control.Concurrent.STM                      as STM
+import qualified Control.Monad.Trans.Control                 as MC
+import qualified Data.Aeson                                  as J
+import qualified Data.Aeson.Casing                           as J
+import qualified Data.Aeson.Ordered                          as JO
+import qualified Data.Aeson.TH                               as J
+import qualified Data.ByteString.Lazy                        as LBS
+import qualified Data.CaseInsensitive                        as CI
+import qualified Data.Environment                            as Env
+import qualified Data.HashMap.Strict                         as Map
+import qualified Data.HashMap.Strict.InsOrd                  as OMap
+import qualified Data.Text                                   as T
+import qualified Data.Text.Encoding                          as TE
+import qualified Data.Time.Clock                             as TC
+import qualified Language.GraphQL.Draft.Syntax               as G
 import qualified ListT
-import qualified Network.HTTP.Client                          as H
-import qualified Network.HTTP.Types                           as H
-import qualified Network.Wai.Extended                         as Wai
-import qualified Network.WebSockets                           as WS
-import qualified StmContainers.Map                            as STMMap
+import qualified Network.HTTP.Client                         as H
+import qualified Network.HTTP.Types                          as H
+import qualified Network.Wai.Extended                        as Wai
+import qualified Network.WebSockets                          as WS
+import qualified StmContainers.Map                           as STMMap
 
-import           Control.Concurrent.Extended                  (sleep)
+import           Control.Concurrent.Extended                 (sleep)
 import           Control.Exception.Lifted
 import           Data.String
 #ifndef PROFILING
 import           GHC.AssertNF
 #endif
 
-import qualified Hasura.GraphQL.Execute                       as E
-import qualified Hasura.GraphQL.Execute.Action                as EA
-import qualified Hasura.GraphQL.Execute.Backend               as EB
-import qualified Hasura.GraphQL.Execute.LiveQuery.Poll        as LQ
-import qualified Hasura.GraphQL.Execute.LiveQuery.State       as LQ
-import qualified Hasura.GraphQL.Transport.WebSocket.Server    as WS
-import qualified Hasura.Logging                               as L
-import qualified Hasura.SQL.AnyBackend                        as AB
-import qualified Hasura.Server.Telemetry.Counters             as Telem
-import qualified Hasura.Tracing                               as Tracing
+import qualified Hasura.GraphQL.Execute                      as E
+import qualified Hasura.GraphQL.Execute.Action               as EA
+import qualified Hasura.GraphQL.Execute.Backend              as EB
+import qualified Hasura.GraphQL.Execute.LiveQuery.Poll       as LQ
+import qualified Hasura.GraphQL.Execute.LiveQuery.State      as LQ
+import qualified Hasura.GraphQL.Transport.WebSocket.Server   as WS
+import qualified Hasura.Logging                              as L
+import qualified Hasura.SQL.AnyBackend                       as AB
+import qualified Hasura.Server.Telemetry.Counters            as Telem
+import qualified Hasura.Tracing                              as Tracing
 
-import           Hasura.Backends.MSSQL.Instances.Transport    ()
-import           Hasura.Backends.Postgres.Instances.Transport ()
 import           Hasura.EncJSON
 import           Hasura.GraphQL.Logging
 import           Hasura.GraphQL.Transport.Backend
-import           Hasura.GraphQL.Transport.HTTP                (MonadExecuteQuery (..),
-                                                               QueryCacheKey (..),
-                                                               ResultsFragment (..), buildRaw,
-                                                               extractFieldFromResponse,
-                                                               filterVariablesFromQuery,
-                                                               runSessVarPred)
+import           Hasura.GraphQL.Transport.HTTP               (MonadExecuteQuery (..),
+                                                              QueryCacheKey (..),
+                                                              ResultsFragment (..), buildRaw,
+                                                              extractFieldFromResponse,
+                                                              filterVariablesFromQuery,
+                                                              runSessVarPred)
 import           Hasura.GraphQL.Transport.HTTP.Protocol
+import           Hasura.GraphQL.Transport.Instances          ()
 import           Hasura.GraphQL.Transport.WebSocket.Protocol
 import           Hasura.Metadata.Class
 import           Hasura.RQL.Types
-import           Hasura.Server.Auth                           (AuthMode, UserAuthentication,
-                                                               resolveUserInfo)
+import           Hasura.Server.Auth                          (AuthMode, UserAuthentication,
+                                                              resolveUserInfo)
 import           Hasura.Server.Cors
-import           Hasura.Server.Init.Config                    (KeepAliveDelay (..))
-import           Hasura.Server.Types                          (RequestId, getRequestId)
-import           Hasura.Server.Version                        (HasVersion)
+import           Hasura.Server.Init.Config                   (KeepAliveDelay (..))
+import           Hasura.Server.Types                         (RequestId, getRequestId)
+import           Hasura.Server.Version                       (HasVersion)
 import           Hasura.Session
 
 

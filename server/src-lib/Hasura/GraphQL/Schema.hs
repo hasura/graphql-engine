@@ -6,45 +6,39 @@ module Hasura.GraphQL.Schema
 
 import           Hasura.Prelude
 
-import qualified Data.Aeson                                as J
-import qualified Data.HashMap.Strict                       as Map
-import qualified Data.HashMap.Strict.InsOrd                as OMap
-import qualified Data.HashSet                              as Set
-import qualified Language.GraphQL.Draft.Syntax             as G
+import qualified Data.Aeson                            as J
+import qualified Data.HashMap.Strict                   as Map
+import qualified Data.HashMap.Strict.InsOrd            as OMap
+import qualified Data.HashSet                          as Set
+import qualified Language.GraphQL.Draft.Syntax         as G
 
 import           Control.Arrow.Extended
 import           Control.Lens.Extended
 import           Control.Monad.Unique
 import           Data.Has
-import           Data.List.Extended                        (duplicates)
+import           Data.List.Extended                    (duplicates)
 
-import qualified Hasura.GraphQL.Parser                     as P
-import qualified Hasura.SQL.AnyBackend                     as AB
+import qualified Hasura.GraphQL.Parser                 as P
+import qualified Hasura.SQL.AnyBackend                 as AB
 
 import           Data.Text.Extended
 import           Hasura.GraphQL.Context
 import           Hasura.GraphQL.Execute.Types
-import           Hasura.GraphQL.Parser                     (Kind (..), Parser, Schema (..),
-                                                            UnpreparedValue (..))
+import           Hasura.GraphQL.Parser                 (Kind (..), Parser, Schema (..),
+                                                        UnpreparedValue (..))
 import           Hasura.GraphQL.Parser.Class
-import           Hasura.GraphQL.Parser.Internal.Parser     (FieldParser (..))
+import           Hasura.GraphQL.Parser.Internal.Parser (FieldParser (..))
 import           Hasura.GraphQL.Schema.Backend
 import           Hasura.GraphQL.Schema.Common
+import           Hasura.GraphQL.Schema.Instances       ()
 import           Hasura.GraphQL.Schema.Introspect
 import           Hasura.GraphQL.Schema.Postgres
-import           Hasura.GraphQL.Schema.Remote              (buildRemoteParser)
+import           Hasura.GraphQL.Schema.Remote          (buildRemoteParser)
 import           Hasura.GraphQL.Schema.Select
 import           Hasura.GraphQL.Schema.Table
 import           Hasura.RQL.DDL.Schema.Cache.Common
 import           Hasura.RQL.Types
 import           Hasura.Session
-
-
-----------------------------------------------------------------
--- Backends schema instances
-
-import           Hasura.Backends.MSSQL.Instances.Schema    ()
-import           Hasura.Backends.Postgres.Instances.Schema ()
 
 
 ----------------------------------------------------------------

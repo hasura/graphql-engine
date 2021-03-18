@@ -120,26 +120,24 @@ module Hasura.RQL.Types.SchemaCache
 
 import           Hasura.Prelude
 
-import qualified Data.ByteString.Lazy                     as BL
-import qualified Data.HashMap.Strict                      as M
-import qualified Data.HashSet                             as HS
-import qualified Language.GraphQL.Draft.Syntax            as G
+import qualified Data.ByteString.Lazy                as BL
+import qualified Data.HashMap.Strict                 as M
+import qualified Data.HashSet                        as HS
+import qualified Language.GraphQL.Draft.Syntax       as G
 
-import           Control.Lens                             (makeLenses)
+import           Control.Lens                        (makeLenses)
 import           Data.Aeson
 import           Data.Aeson.TH
 import           Data.Text.Extended
 import           System.Cron.Types
 
-import qualified Hasura.Backends.Postgres.Connection      as PG
-import qualified Hasura.GraphQL.Parser                    as P
-import qualified Hasura.SQL.AnyBackend                    as AB
+import qualified Hasura.Backends.Postgres.Connection as PG
+import qualified Hasura.GraphQL.Parser               as P
+import qualified Hasura.SQL.AnyBackend               as AB
 
-import           Hasura.Backends.MSSQL.Instances.Types    ()
-import           Hasura.Backends.Postgres.Instances.Types ()
-import           Hasura.GraphQL.Context                   (GQLContext, RemoteField, RoleContext)
-import           Hasura.Incremental                       (Cacheable, Dependency, MonadDepend (..),
-                                                           selectKeyD)
+import           Hasura.GraphQL.Context              (GQLContext, RemoteField, RoleContext)
+import           Hasura.Incremental                  (Cacheable, Dependency, MonadDepend (..),
+                                                      selectKeyD)
 import           Hasura.RQL.IR.BoolExp
 import           Hasura.RQL.Types.Action
 import           Hasura.RQL.Types.ApiLimit
@@ -160,7 +158,7 @@ import           Hasura.RQL.Types.SchemaCacheTypes
 import           Hasura.RQL.Types.Source
 import           Hasura.RQL.Types.Table
 import           Hasura.Session
-import           Hasura.Tracing                           (TraceT)
+import           Hasura.Tracing                      (TraceT)
 
 
 reportSchemaObjs :: [SchemaObjId] -> Text

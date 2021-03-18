@@ -2,23 +2,22 @@ module Hasura.RQL.Types.Metadata.Object where
 
 import           Hasura.Prelude
 
-import qualified Data.HashMap.Strict.Extended             as M
+import qualified Data.HashMap.Strict.Extended        as M
 
-import           Control.Lens                             hiding (set, (.=))
+import           Control.Lens                        hiding (set, (.=))
 import           Data.Aeson.Types
 import           Data.Hashable
 import           Data.Text.Extended
 
-import qualified Hasura.SQL.AnyBackend                    as AB
+import qualified Hasura.SQL.AnyBackend               as AB
 
-import           Hasura.Backends.MSSQL.Instances.Types    ()
-import           Hasura.Backends.Postgres.Instances.Types ()
 import           Hasura.RQL.Types.Action
 import           Hasura.RQL.Types.Backend
 import           Hasura.RQL.Types.Common
 import           Hasura.RQL.Types.ComputedField
 import           Hasura.RQL.Types.Endpoint
 import           Hasura.RQL.Types.EventTrigger
+import           Hasura.RQL.Types.Instances          ()
 import           Hasura.RQL.Types.Permission
 import           Hasura.RQL.Types.RemoteRelationship
 import           Hasura.RQL.Types.RemoteSchema

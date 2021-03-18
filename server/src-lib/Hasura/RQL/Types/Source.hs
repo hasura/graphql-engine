@@ -4,24 +4,25 @@ module Hasura.RQL.Types.Source where
 
 import           Hasura.Prelude
 
-import qualified Data.HashMap.Strict                   as M
+import qualified Data.HashMap.Strict                 as M
 
 import           Control.Lens
 import           Data.Aeson
 import           Data.Aeson.TH
 
-import qualified Hasura.SQL.AnyBackend                 as AB
-import qualified Hasura.Tracing                        as Tracing
+import qualified Hasura.SQL.AnyBackend               as AB
+import qualified Hasura.Tracing                      as Tracing
 
-import           Hasura.Backends.MSSQL.Instances.Types ()
 import           Hasura.Backends.Postgres.Connection
 import           Hasura.RQL.Types.Backend
 import           Hasura.RQL.Types.Common
 import           Hasura.RQL.Types.Error
 import           Hasura.RQL.Types.Function
+import           Hasura.RQL.Types.Instances          ()
 import           Hasura.RQL.Types.Table
 import           Hasura.SQL.Backend
 import           Hasura.Session
+
 
 data SourceInfo b
   = SourceInfo

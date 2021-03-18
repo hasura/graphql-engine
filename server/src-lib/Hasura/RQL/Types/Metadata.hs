@@ -34,6 +34,7 @@ import           Hasura.RQL.Types.EventTrigger
 import           Hasura.RQL.Types.Function
 import           Hasura.RQL.Types.InheritedRoles
 import           Hasura.RQL.Types.Metadata.Backend
+import           Hasura.RQL.Types.Metadata.Instances ()
 import           Hasura.RQL.Types.Permission
 import           Hasura.RQL.Types.QueryCollection
 import           Hasura.RQL.Types.Relationship
