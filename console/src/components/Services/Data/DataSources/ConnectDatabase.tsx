@@ -257,6 +257,7 @@ const ConnectDatabase: React.FC<ConnectDatabaseProps> = props => {
             value={connectDBInputState.displayName}
             label="Database Display Name"
             placeholder="database name"
+            data-test="database-display-name"
           />
           <label
             key="Data Source Driver"
@@ -274,6 +275,7 @@ const ConnectDatabase: React.FC<ConnectDatabaseProps> = props => {
               })
             }
             className={`form-control ${styles.connect_db_input_pad}`}
+            data-test="database-type"
           >
             <option key="postgres" value="postgres">
               Postgres
@@ -296,6 +298,7 @@ const ConnectDatabase: React.FC<ConnectDatabaseProps> = props => {
               value={connectDBInputState.databaseURLState.dbURL}
               placeholder={dbTypePlaceholders[connectDBInputState.dbType]}
               disabled={isEditState}
+              data-test="database-url"
             />
           ) : null}
           {connectionType === connectionTypes.ENV_VAR ? (
@@ -309,6 +312,7 @@ const ConnectDatabase: React.FC<ConnectDatabaseProps> = props => {
                 })
               }
               value={connectDBInputState.envVarURLState.envVarURL}
+              data-test="database-url-env"
             />
           ) : null}
           {connectionType === connectionTypes.CONNECTION_PARAMS &&
@@ -324,6 +328,7 @@ const ConnectDatabase: React.FC<ConnectDatabaseProps> = props => {
                   })
                 }
                 value={connectDBInputState.connectionParamState.host}
+                data-test="host"
               />
               <LabeledInput
                 label="Port"
@@ -335,6 +340,7 @@ const ConnectDatabase: React.FC<ConnectDatabaseProps> = props => {
                   })
                 }
                 value={connectDBInputState.connectionParamState.port}
+                data-test="port"
               />
               <LabeledInput
                 label="Username"
@@ -346,6 +352,7 @@ const ConnectDatabase: React.FC<ConnectDatabaseProps> = props => {
                   })
                 }
                 value={connectDBInputState.connectionParamState.username}
+                data-test="username"
               />
               <LabeledInput
                 label="Password"
@@ -359,6 +366,7 @@ const ConnectDatabase: React.FC<ConnectDatabaseProps> = props => {
                   })
                 }
                 value={connectDBInputState.connectionParamState.password}
+                data-test="password"
               />
               <LabeledInput
                 key="connect-db-database-name"
@@ -371,6 +379,7 @@ const ConnectDatabase: React.FC<ConnectDatabaseProps> = props => {
                   })
                 }
                 value={connectDBInputState.connectionParamState.database}
+                data-test="database-name"
               />
             </>
           ) : null}
@@ -412,6 +421,7 @@ const ConnectDatabase: React.FC<ConnectDatabaseProps> = props => {
                     }
                     min="0"
                     labelInBold
+                    data-test="max-connections"
                   />
                 </div>
                 <div className={styles.connnection_settings_form_input_layout}>
@@ -432,6 +442,7 @@ const ConnectDatabase: React.FC<ConnectDatabaseProps> = props => {
                     }
                     min="0"
                     labelInBold
+                    data-test="idle-timeout"
                   />
                 </div>
                 <div className={styles.connnection_settings_form_input_layout}>
@@ -452,6 +463,7 @@ const ConnectDatabase: React.FC<ConnectDatabaseProps> = props => {
                     }
                     min="0"
                     labelInBold
+                    data-test="retries"
                   />
                 </div>
               </div>
@@ -467,6 +479,7 @@ const ConnectDatabase: React.FC<ConnectDatabaseProps> = props => {
                 ...(loading && { cursor: 'progress' }),
               }}
               disabled={loading}
+              data-test="save-database"
             >
               {!isEditState ? 'Connect Database' : 'Edit Connection'}
             </Button>

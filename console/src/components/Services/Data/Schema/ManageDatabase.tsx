@@ -58,6 +58,7 @@ const DatabaseListItem: React.FC<DatabaseListItemProps> = ({
   return (
     <div
       className={`${styles.flex_space_between} ${styles.add_pad_min} ${styles.db_list_item}`}
+      data-test={dataSource.name}
     >
       <div className={styles.display_flex}>
         <Button
