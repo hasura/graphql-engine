@@ -57,6 +57,25 @@ func TestSourceConfig_Export(t *testing.T) {
 				"metadata/databases/default/tables/public_t1.yaml": []byte(`table:
   name: t1
   schema: public
+insert_permissions:
+- permission:
+    backend_only: false
+    check:
+      id:
+        _eq: X-Hasura-User-Id
+    columns: []
+  role: user
+event_triggers:
+- definition:
+    enable_manual: false
+    insert:
+      columns: "*"
+  name: t1
+  retry_conf:
+    interval_sec: 10
+    num_retries: 0
+    timeout_sec: 60
+  webhook: https://httpbin.org/post
 `),
 				"metadata/databases/default/tables/public_t2.yaml": []byte(`table:
   name: t2
@@ -71,6 +90,12 @@ func TestSourceConfig_Export(t *testing.T) {
 				"metadata/databases/default/functions/public_get_t1.yaml": []byte(`function:
   name: get_t1
   schema: public
+some_amazing_stuff:
+  test1: test
+  test2: test
+xyz_test:
+  test1: test
+  test2: test
 `),
 				"metadata/databases/default/functions/public_get_t2.yaml": []byte(`function:
   name: get_t2
@@ -99,6 +124,8 @@ func TestSourceConfig_Export(t *testing.T) {
 			for k, v := range tt.want {
 				wantContent[k] = string(v)
 			}
+			assert.NoError(t, err)
+			assert.NoError(t, err)
 			assert.Equal(t, wantContent, gotContent)
 		})
 	}

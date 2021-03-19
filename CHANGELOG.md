@@ -7,7 +7,7 @@
 (Add entries here in the order of: server, console, cli, docs, others)
 
 - server: fix inherited_roles issue when some of the underlying roles don't have permissions configured (fixes #6672)
-
+- cli: match ordering of keys in project metadata files with server metadata
 
 ## v2.0.0-alpha.5
 

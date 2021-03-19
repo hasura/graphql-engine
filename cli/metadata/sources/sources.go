@@ -190,7 +190,7 @@ func (t *SourceConfig) Export(metadata goyaml.MapSlice) (map[string][]byte, erro
 			t.logger.Debug("reading functions node from metadata", err)
 		}
 
-		var rawTables []interface{}
+		var rawTables []yaml.MapSlice
 		if err := tablesPath.Read(bytes.NewReader(metadataBytes), &rawTables); err != nil {
 			t.logger.Debug("reading tables node from metadata", err)
 		}
@@ -221,7 +221,7 @@ func (t *SourceConfig) Export(metadata goyaml.MapSlice) (map[string][]byte, erro
 		if err := functionsPath.Read(bytes.NewReader(metadataBytes), &functions); err != nil {
 			t.logger.Debug("reading functions node from metadata", err)
 		}
-		var rawFunctions []interface{}
+		var rawFunctions []yaml.MapSlice
 		if err := functionsPath.Read(bytes.NewReader(metadataBytes), &rawFunctions); err != nil {
 			t.logger.Debug("reading functions node from metadata", err)
 		}

@@ -9,7 +9,38 @@
           "table": {
             "schema": "public",
             "name": "t1"
-          }
+          },
+          "insert_permissions": [
+            {
+              "role": "user",
+              "permission": {
+                "check": {
+                  "id": {
+                    "_eq": "X-Hasura-User-Id"
+                  }
+                },
+                "columns": [],
+                "backend_only": false
+              }
+            }
+          ],
+          "event_triggers": [
+            {
+              "name": "t1",
+              "definition": {
+                "enable_manual": false,
+                "insert": {
+                  "columns": "*"
+                }
+              },
+              "retry_conf": {
+                "num_retries": 0,
+                "interval_sec": 10,
+                "timeout_sec": 60
+              },
+              "webhook": "https://httpbin.org/post"
+            }
+          ]
         },
         {
           "table": {
@@ -23,6 +54,14 @@
           "function": {
             "schema": "public",
             "name": "get_t1"
+          },
+          "some_amazing_stuff": {
+            "test1": "test",
+            "test2": "test"
+          },
+          "xyz_test": {
+            "test1": "test",
+            "test2": "test"
           }
         },
         {
