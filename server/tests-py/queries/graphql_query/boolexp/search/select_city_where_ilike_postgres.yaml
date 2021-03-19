@@ -4,10 +4,10 @@ status: 200
 response:
   data:
     city:
-    - name:  New York
-      country: USA
-    - name: New Orleans 
-      country: USA
+      - name: New York
+        country: USA
+      - name: New Orleans
+        country: USA
 query:
   query: |
     query {

@@ -13,11 +13,11 @@ module Hasura.Backends.MSSQL.ToQuery
   , Printer(..)
   ) where
 
-import           Hasura.Prelude
+import           Hasura.Prelude              hiding (GT, LT)
 
 import qualified Data.Text                   as T
-import qualified Data.Text.Lazy              as LT
-import qualified Data.Text.Lazy.Builder      as LT
+import qualified Data.Text.Lazy              as L
+import qualified Data.Text.Lazy.Builder      as L
 
 import           Data.List                   (intersperse)
 import           Data.String
@@ -101,26 +101,31 @@ fromExpression =
       "(" <+>
       fromExpression x <+>
       ") " <+> fromOp op <+> " (" <+> fromExpression y <+> ")"
+    ListExpression xs -> SepByPrinter ", " $ fromExpression <$> xs
 
 fromOp :: Op -> Printer
 fromOp =
   \case
-    LessOp        -> "<"
-    MoreOp        -> ">"
-    MoreOrEqualOp -> ">="
-    LessOrEqualOp -> "<="
+    LT    -> "<"
+    GT    -> ">"
+    GTE   -> ">="
+    LTE   -> "<="
+    IN    -> "IN"
+    NIN   -> "NOT IN"
+    LIKE  -> "LIKE"
+    NLIKE -> "NOT LIKE"
 
 fromPath :: JsonPath -> Printer
 fromPath path =
   ", " <+> string path
   where
     string = fromExpression .
-             ValueExpression . TextValue . LT.toStrict . LT.toLazyText . go
+             ValueExpression . TextValue . L.toStrict . L.toLazyText . go
     go =
       \case
         RootPath      -> "$"
-        IndexPath r i -> go r <> "[" <> LT.fromString (show i) <> "]"
-        FieldPath r f -> go r <> ".\"" <> LT.fromText f <> "\""
+        IndexPath r i -> go r <> "[" <> L.fromString (show i) <> "]"
+        FieldPath r f -> go r <> ".\"" <> L.fromText f <> "\""
 
 fromFieldName :: FieldName -> Printer
 fromFieldName (FieldName {..}) =

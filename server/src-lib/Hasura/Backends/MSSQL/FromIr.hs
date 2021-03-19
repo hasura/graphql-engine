@@ -809,34 +809,47 @@ fromMapping localFrom =
 fromOpExpG :: Expression -> IR.OpExpG 'MSSQL Expression -> FromIr Expression
 fromOpExpG expression op =
   case op of
-    IR.ANISNULL                  -> pure (IsNullExpression expression)
-    IR.ANISNOTNULL               -> pure (IsNotNullExpression expression)
+    IR.ANISNULL                  -> pure (TSQL.IsNullExpression expression)
+    IR.ANISNOTNULL               -> pure (TSQL.IsNotNullExpression expression)
     IR.AEQ False val             -> pure (nullableBoolEquality expression val)
-    IR.AEQ True val              -> pure (EqualExpression expression val)
+    IR.AEQ True val              -> pure (TSQL.EqualExpression expression val)
     IR.ANE False val             -> pure (nullableBoolInequality expression val)
-    IR.ANE True val              -> pure (NotEqualExpression expression val)
-    IR.AGT val                   -> pure (OpExpression MoreOp expression val)
-    IR.ALT val                   -> pure (OpExpression LessOp expression val)
-    IR.AGTE val                  -> pure (OpExpression MoreOrEqualOp expression val)
-    IR.ALTE val                  -> pure (OpExpression LessOrEqualOp expression val)
+    IR.ANE True val              -> pure (TSQL.NotEqualExpression expression val)
+    IR.AGT val                   -> pure (OpExpression TSQL.GT expression val)
+    IR.ALT val                   -> pure (OpExpression TSQL.LT expression val)
+    IR.AGTE val                  -> pure (OpExpression TSQL.GTE expression val)
+    IR.ALTE val                  -> pure (OpExpression TSQL.LTE expression val)
+    IR.AIN val                   -> pure (OpExpression TSQL.IN expression val)
+    IR.ANIN val                  -> pure (OpExpression TSQL.NIN expression val)
+    IR.ALIKE val                 -> pure (OpExpression TSQL.LIKE expression val)
+    IR.ANLIKE val                -> pure (OpExpression TSQL.NLIKE expression val)
+    -- https://docs.microsoft.com/en-us/sql/t-sql/functions/json-functions-transact-sql
+    IR.AContains _val            -> refute (pure (UnsupportedOpExpG op))
+    IR.AContainedIn _val         -> refute (pure (UnsupportedOpExpG op))
+    IR.AHasKey _val              -> refute (pure (UnsupportedOpExpG op))
+    IR.AHasKeysAny _val          -> refute (pure (UnsupportedOpExpG op))
+    IR.AHasKeysAll _val          -> refute (pure (UnsupportedOpExpG op))
+    -- https://stackoverflow.com/questions/14962419/is-the-like-operator-case-sensitive-with-mssql-server
+    IR.AILIKE _ _val             -> refute (pure (UnsupportedOpExpG op))
+    IR.ANILIKE _ _val            -> refute (pure (UnsupportedOpExpG op))
+    -- https://docs.microsoft.com/en-us/sql/t-sql/language-elements/like-transact-sql
+    IR.ASIMILAR _val             -> refute (pure (UnsupportedOpExpG op))
+    IR.ANSIMILAR _val            -> refute (pure (UnsupportedOpExpG op))
+    IR.AREGEX _val               -> refute (pure (UnsupportedOpExpG op))
+    IR.AIREGEX _val              -> refute (pure (UnsupportedOpExpG op))
+    IR.ANREGEX _val              -> refute (pure (UnsupportedOpExpG op))
+    IR.ANIREGEX _val             -> refute (pure (UnsupportedOpExpG op))
+    -- https://docs.microsoft.com/en-us/sql/relational-databases/hierarchical-data-sql-server
+    IR.AAncestor _               -> refute (pure (UnsupportedOpExpG op))
+    IR.AAncestorAny _            -> refute (pure (UnsupportedOpExpG op))
+    IR.ADescendant _             -> refute (pure (UnsupportedOpExpG op))
+    IR.ADescendantAny _          -> refute (pure (UnsupportedOpExpG op))
+    IR.AMatches _                -> refute (pure (UnsupportedOpExpG op))
+    IR.AMatchesAny _             -> refute (pure (UnsupportedOpExpG op))
+    IR.AMatchesFulltext _        -> refute (pure (UnsupportedOpExpG op))
+    -- As of March 2021, only geometry/geography casts are supported
     IR.ACast _casts              -> refute (pure (UnsupportedOpExpG op)) -- mkCastsExp casts
-    IR.AIN _val                  -> refute (pure (UnsupportedOpExpG op)) -- S.BECompareAny S.SEQ lhs val
-    IR.ANIN _val                 -> refute (pure (UnsupportedOpExpG op)) -- S.BENot $ S.BECompareAny S.SEQ lhs val
-    IR.ALIKE _val                -> refute (pure (UnsupportedOpExpG op)) -- S.BECompare S.SLIKE lhs val
-    IR.ANLIKE _val               -> refute (pure (UnsupportedOpExpG op)) -- S.BECompare S.SNLIKE lhs val
-    IR.AILIKE _ _val             -> refute (pure (UnsupportedOpExpG op)) -- S.BECompare S.SILIKE lhs val
-    IR.ANILIKE _ _val            -> refute (pure (UnsupportedOpExpG op)) -- S.BECompare S.SNILIKE lhs val
-    IR.ASIMILAR _val             -> refute (pure (UnsupportedOpExpG op)) -- S.BECompare S.SSIMILAR lhs val
-    IR.ANSIMILAR _val            -> refute (pure (UnsupportedOpExpG op)) -- S.BECompare S.SNSIMILAR lhs val
-    IR.AREGEX _val               -> refute (pure (UnsupportedOpExpG op)) -- S.BECompare S.SNSIMILAR lhs val
-    IR.AIREGEX _val              -> refute (pure (UnsupportedOpExpG op)) -- S.BECompare S.SNSIMILAR lhs val
-    IR.ANREGEX _val              -> refute (pure (UnsupportedOpExpG op)) -- S.BECompare S.SNSIMILAR lhs val
-    IR.ANIREGEX _val             -> refute (pure (UnsupportedOpExpG op)) -- S.BECompare S.SNSIMILAR lhs val
-    IR.AContains _val            -> refute (pure (UnsupportedOpExpG op)) -- S.BECompare S.SContains lhs val
-    IR.AContainedIn _val         -> refute (pure (UnsupportedOpExpG op)) -- S.BECompare S.SContainedIn lhs val
-    IR.AHasKey _val              -> refute (pure (UnsupportedOpExpG op)) -- S.BECompare S.SHasKey lhs val
-    IR.AHasKeysAny _val          -> refute (pure (UnsupportedOpExpG op)) -- S.BECompare S.SHasKeysAny lhs val
-    IR.AHasKeysAll _val          -> refute (pure (UnsupportedOpExpG op)) -- S.BECompare S.SHasKeysAll lhs val
+    -- https://docs.microsoft.com/en-us/sql/relational-databases/spatial/spatial-data-sql-server?view=sql-server-ver15
     IR.ASTContains _val          -> refute (pure (UnsupportedOpExpG op)) -- mkGeomOpBe "ST_Contains" val
     IR.ASTCrosses _val           -> refute (pure (UnsupportedOpExpG op)) -- mkGeomOpBe "ST_Crosses" val
     IR.ASTEquals _val            -> refute (pure (UnsupportedOpExpG op)) -- mkGeomOpBe "ST_Equals" val
@@ -855,13 +868,6 @@ fromOpExpG expression op =
     IR.CLT _rhsCol               -> refute (pure (UnsupportedOpExpG op)) -- S.BECompare S.SLT lhs $ mkQCol rhsCol
     IR.CGTE _rhsCol              -> refute (pure (UnsupportedOpExpG op)) -- S.BECompare S.SGTE lhs $ mkQCol rhsCol
     IR.CLTE _rhsCol              -> refute (pure (UnsupportedOpExpG op)) -- S.BECompare S.SLTE lhs $ mkQCol rhsCol
-    IR.AAncestor _               -> refute (pure (UnsupportedOpExpG op)) -- See Hierarchical Data (SQL Server)
-    IR.AAncestorAny _            -> refute (pure (UnsupportedOpExpG op)) -- See Hierarchical Data (SQL Server)
-    IR.ADescendant _             -> refute (pure (UnsupportedOpExpG op)) -- See Hierarchical Data (SQL Server)
-    IR.ADescendantAny _          -> refute (pure (UnsupportedOpExpG op)) -- See Hierarchical Data (SQL Server)
-    IR.AMatches _                -> refute (pure (UnsupportedOpExpG op)) -- See Hierarchical Data (SQL Server)
-    IR.AMatchesAny _             -> refute (pure (UnsupportedOpExpG op)) -- See Hierarchical Data (SQL Server)
-    IR.AMatchesFulltext _        -> refute (pure (UnsupportedOpExpG op)) -- See Hierarchical Data (SQL Server)
 
 nullableBoolEquality :: Expression -> Expression -> Expression
 nullableBoolEquality x y =

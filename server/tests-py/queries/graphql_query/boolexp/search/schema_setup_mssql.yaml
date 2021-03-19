@@ -1,0 +1,80 @@
+type: bulk
+args:
+
+#Author table
+- type: mssql_run_sql
+  args:
+    source: mssql
+    sql: |
+      CREATE TABLE author(
+          id int identity NOT NULL PRIMARY KEY,
+          name varchar(450) UNIQUE
+      );
+
+      INSERT INTO
+          author (name)
+      VALUES
+          ('Author 1'),
+          ('Author 2'),
+          ('Author 3');
+
+#Article table
+- type: mssql_run_sql
+  args:
+    source: mssql
+    sql: |
+      CREATE TABLE article (
+          id int identity NOT NULL PRIMARY KEY,
+          title TEXT,
+          content TEXT,
+          author_id INTEGER REFERENCES author(id),
+          is_published BIT,
+          published_on TIMESTAMP
+      );
+
+      INSERT INTO
+          article (title, content, author_id, is_published)
+      VALUES
+          (
+              'Article 1',
+              'Sample article content 1',
+              1,
+              0
+          ),
+          (
+              'Article 2',
+              'Sample article content 2',
+              1,
+              1
+          ),
+          (
+              'Article 3',
+              'Sample article content 3',
+              2,
+              0
+          ),
+          (
+              'Article 4',
+              'Sample article content 4',
+              3,
+              1
+          );
+
+#City table
+- type: mssql_run_sql
+  args:
+    source: mssql
+    sql: |
+      CREATE TABLE city (
+          id int identity NOT NULL PRIMARY KEY,
+          name TEXT NOT NULL,
+          country TEXT NOT NULL
+      );
+
+      INSERT INTO
+          city ([name], country)
+      VALUES
+          ('Durham', 'USA'),
+          ('New York', 'USA'),
+          ('Framlingham', 'UK'),
+          ('New Orleans', 'USA');

@@ -243,7 +243,6 @@ class TestGraphQLQueryOffsets:
 @pytest.mark.parametrize("backend", ['mssql', 'postgres'])
 @usefixtures('per_class_tests_db_state', 'per_backend_tests')
 class TestGraphQLQueryBoolExpBasicCommon:
-
     def test_order_delivered_at_is_null(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + '/select_query_order_delivered_at_is_null.yaml', transport)
 
@@ -274,6 +273,12 @@ class TestGraphQLQueryBoolExpBasicCommon:
     def test_article_author_not_published_nor_registered(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + '/select_article_author_not_published_or_not_registered.yaml', transport)
 
+    def test_author_article_where_in(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/select_author_article_where_in.yaml', transport)
+
+    def test_author_article_where_nin(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/select_author_article_where_nin.yaml', transport)
+
     @classmethod
     def dir(cls):
         return 'queries/graphql_query/boolexp/basic'
@@ -285,23 +290,17 @@ class TestGraphQLQueryBoolExpBasicPostgres:
     def test_author_article_operator_ne_not_found_err(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + '/select_author_article_operator_ne_not_found_err_postgres.yaml', transport)
 
-    def test_author_article_where_in(self, hge_ctx, transport):
-        check_query_f(hge_ctx, self.dir() + '/select_author_article_where_in.yaml', transport)
-
     def test_author_article_where_in_empty_array(self, hge_ctx, transport):
-        check_query_f(hge_ctx, self.dir() + '/select_author_article_where_in_empty_array.yaml', transport)
+        check_query_f(hge_ctx, self.dir() + '/select_author_article_where_in_empty_array_postgres.yaml', transport)
 
     def test_author_article_where_nin_empty_array(self, hge_ctx, transport):
-        check_query_f(hge_ctx, self.dir() + '/select_author_article_where_nin_empty_array.yaml', transport)
-
-    def test_author_article_where_nin(self, hge_ctx, transport):
-        check_query_f(hge_ctx, self.dir() + '/select_author_article_where_nin.yaml', transport)
-
-    def test_uuid_test_in_uuid_col(self, hge_ctx, transport):
-        check_query_f(hge_ctx, self.dir() + '/select_uuid_test_in_uuid_col.yaml', transport)
+        check_query_f(hge_ctx, self.dir() + '/select_author_article_where_nin_empty_array_postgres.yaml', transport)
 
     def test_article_author_unexpected_operator_in_where_err(self, hge_ctx, transport):
-        check_query_f(hge_ctx, self.dir() + '/select_author_article_unexpected_operator_in_where_err.yaml', transport)
+        check_query_f(hge_ctx, self.dir() + '/select_author_article_unexpected_operator_in_where_err_postgres.yaml', transport)
+
+    def test_uuid_test_in_uuid_col(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/select_uuid_test_in_uuid_col_postgres.yaml', transport)
 
     def test_self_referential_relationships(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + '/self_referential_relationships.yaml', transport)
@@ -325,6 +324,12 @@ class TestGraphQLQueryBoolExpBasicPostgres:
 class TestGraphQLQueryBoolExpBasicMSSQL:
     def test_author_article_operator_ne_not_found_err(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + '/select_author_article_operator_ne_not_found_err_mssql.yaml', transport)
+
+    def test_article_author_unexpected_operator_in_where_err(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/select_author_article_unexpected_operator_in_where_err_mssql.yaml', transport)
+
+    def test_uuid_test_in_uuid_col(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/select_uuid_test_in_uuid_col_mssql.yaml', transport)
 
     @classmethod
     def dir(cls):
@@ -420,8 +425,9 @@ class TestGraphQLInheritedRoles:
 
 
 @pytest.mark.parametrize("transport", ['http', 'websocket'])
-@usefixtures('per_class_tests_db_state')
-class TestGraphQLQueryBoolExpSearch:
+@pytest.mark.parametrize("backend", ['postgres', 'mssql'])
+@usefixtures('per_class_tests_db_state', 'per_backend_tests')
+class TestGraphQLQueryBoolExpSearchCommon:
 
     def test_city_where_like(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + '/select_city_where_like.yaml', transport)
@@ -429,37 +435,60 @@ class TestGraphQLQueryBoolExpSearch:
     def test_city_where_not_like(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + '/select_city_where_nlike.yaml', transport)
 
+    @classmethod
+    def dir(cls):
+        return 'queries/graphql_query/boolexp/search'
+
+@pytest.mark.parametrize("transport", ['http', 'websocket'])
+@pytest.mark.parametrize("backend", ['postgres'])
+@usefixtures('per_class_tests_db_state', 'per_backend_tests')
+class TestGraphQLQueryBoolExpSearchPostgres:
+
     def test_city_where_ilike(self, hge_ctx, transport):
-        check_query_f(hge_ctx, self.dir() + '/select_city_where_ilike.yaml', transport)
+        check_query_f(hge_ctx, self.dir() + '/select_city_where_ilike_postgres.yaml', transport)
 
     def test_city_where_not_ilike(self, hge_ctx, transport):
-        check_query_f(hge_ctx, self.dir() + '/select_city_where_nilike.yaml', transport)
+        check_query_f(hge_ctx, self.dir() + '/select_city_where_nilike_postgres.yaml', transport)
 
     def test_city_where_similar(self, hge_ctx, transport):
-        check_query_f(hge_ctx, self.dir() + '/select_city_where_similar.yaml', transport)
+        check_query_f(hge_ctx, self.dir() + '/select_city_where_similar_postgres.yaml', transport)
 
     def test_city_where_not_similar(self, hge_ctx, transport):
-        check_query_f(hge_ctx, self.dir() + '/select_city_where_not_similar.yaml', transport)
+        check_query_f(hge_ctx, self.dir() + '/select_city_where_not_similar_postgres.yaml', transport)
 
     def test_city_where_regex(self, hge_ctx, transport):
-        check_query_f(hge_ctx, self.dir() + '/select_city_where_regex.yaml', transport)
+        check_query_f(hge_ctx, self.dir() + '/select_city_where_regex_postgres.yaml', transport)
 
     def test_city_where_nregex(self, hge_ctx, transport):
-        check_query_f(hge_ctx, self.dir() + '/select_city_where_nregex.yaml', transport)
+        check_query_f(hge_ctx, self.dir() + '/select_city_where_nregex_postgres.yaml', transport)
 
     def test_city_where_iregex(self, hge_ctx, transport):
-        check_query_f(hge_ctx, self.dir() + '/select_city_where_iregex.yaml', transport)
+        check_query_f(hge_ctx, self.dir() + '/select_city_where_iregex_postgres.yaml', transport)
 
     def test_city_where_niregex(self, hge_ctx, transport):
-        check_query_f(hge_ctx, self.dir() + '/select_city_where_niregex.yaml', transport)
+        check_query_f(hge_ctx, self.dir() + '/select_city_where_niregex_postgres.yaml', transport)
 
     def test_project_where_ilike(self, hge_ctx, transport):
-        check_query_f(hge_ctx, self.dir() + '/select_project_where_ilike.yaml', transport)
+        check_query_f(hge_ctx, self.dir() + '/select_project_where_ilike_postgres.yaml', transport)
 
     @classmethod
     def dir(cls):
         return 'queries/graphql_query/boolexp/search'
 
+@pytest.mark.parametrize("transport", ['http', 'websocket'])
+@pytest.mark.parametrize("backend", ['mssql'])
+@usefixtures('per_class_tests_db_state', 'per_backend_tests')
+class TestGraphQLQueryBoolExpSearchMSSQL:
+
+    def test_city_where_like(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/select_city_where_like_mssql.yaml', transport)
+
+    def test_city_where_not_like(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/select_city_where_nlike_mssql.yaml', transport)
+
+    @classmethod
+    def dir(cls):
+        return 'queries/graphql_query/boolexp/search'
 
 @pytest.mark.parametrize("transport", ['http', 'websocket'])
 @usefixtures('per_class_tests_db_state')

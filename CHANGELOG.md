@@ -2,6 +2,7 @@
 
 ## Next release
 - server/mssql: `mssql_add_source` can now take connection strings from environment variables
+- server: support `IN`, `NIN`, `LIKE` and `NLIKE` operators in MSSQL
 
 ### Bug fixes and improvements
 (Add entries here in the order of: server, console, cli, docs, others)

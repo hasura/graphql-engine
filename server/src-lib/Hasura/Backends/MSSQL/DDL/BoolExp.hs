@@ -4,6 +4,9 @@ import           Hasura.Prelude
 
 import qualified Data.Aeson                            as J
 import qualified Data.HashMap.Strict                   as Map
+import qualified Data.Text                             as T
+
+import           Data.Text.Extended                    (dquote, (<<>))
 
 import           Hasura.Backends.MSSQL.Instances.Types ()
 import           Hasura.Backends.MSSQL.Types           hiding (ColumnType)
@@ -36,32 +39,58 @@ parseBoolExpOperations rhsParser _fields columnInfo value =
     parseOperation :: ColumnType 'MSSQL -> (Text, J.Value) -> m (OpExpG 'MSSQL v)
     parseOperation columnType (opStr, val) = withPathK opStr $
       case opStr of
-        "_eq"  -> parseEq
-        "$eq"  -> parseEq
+        "_eq"    -> parseEq
+        "$eq"    -> parseEq
 
-        "_neq" -> parseNeq
-        "$neq" -> parseNeq
+        "_neq"   -> parseNeq
+        "$neq"   -> parseNeq
 
-        "_gt"  -> parseGt
-        "$gt"  -> parseGt
+        "$in"    -> parseIn
+        "_in"    -> parseIn
 
-        "_lt"  -> parseLt
-        "$lt"  -> parseLt
+        "$nin"   -> parseNin
+        "_nin"   -> parseNin
 
-        "_gte" -> parseGte
-        "$gte" -> parseGte
+        "_gt"    -> parseGt
+        "$gt"    -> parseGt
 
-        "_lte" -> parseLte
-        "$lte" -> parseLte
+        "_lt"    -> parseLt
+        "$lt"    -> parseLt
 
-        x      -> throw400 UnexpectedPayload $ "Unknown operator : " <> x
+        "_gte"   -> parseGte
+        "$gte"   -> parseGte
+
+        "_lte"   -> parseLte
+        "$lte"   -> parseLte
+
+        "$like"  -> parseLike
+        "_like"  -> parseLike
+
+        "$nlike" -> parseNlike
+        "_nlike" -> parseNlike
+
+        x        -> throw400 UnexpectedPayload $ "Unknown operator : " <> x
 
       where
+        colTy = pgiType columnInfo
+
         parseOne = parseWithTy columnType val
+        parseManyWithType ty = rhsParser (CollectableTypeArray ty) val
 
         parseEq = AEQ False <$> parseOne
         parseNeq = ANE False <$> parseOne
+        parseIn = AIN <$> parseManyWithType colTy
+        parseNin = ANIN <$> parseManyWithType colTy
         parseGt = AGT <$> parseOne
         parseLt = ALT <$> parseOne
         parseGte = AGTE <$> parseOne
         parseLte = ALTE <$> parseOne
+        parseLike     = guardType stringTypes >> ALIKE <$> parseOne
+        parseNlike    = guardType stringTypes >> ANLIKE <$> parseOne
+
+        guardType validTys = unless (isScalarColumnWhere (`elem` validTys) colTy) $
+          throwError $ buildMsg colTy validTys
+
+        buildMsg ty expTys = err400 UnexpectedPayload
+          $ " is of type " <> ty <<> "; this operator works only on columns of type "
+          <> T.intercalate "/" (map dquote expTys)

@@ -5,8 +5,8 @@ status: 200
 response:
   data:
     project:
-    - id: 'bcd'
-    - id: 'BCD'
+      - id: "bcd"
+      - id: "BCD"
 query:
   query: |
     query {

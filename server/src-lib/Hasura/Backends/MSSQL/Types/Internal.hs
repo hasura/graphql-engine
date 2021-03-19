@@ -164,6 +164,7 @@ data Expression
     -- ^ This is for getting actual atomic values out of a JSON
     -- string.
   | OpExpression Op Expression Expression
+  | ListExpression [Expression]
 
 data JsonPath
   = RootPath
@@ -221,26 +222,14 @@ newtype EntityAlias = EntityAlias
   }
 
 data Op
-  = LessOp
-  | LessOrEqualOp
-  | MoreOp
-  | MoreOrEqualOp
-  -- | SIN
-  -- | SNE
-  -- | SLIKE
-  -- | SNLIKE
-  -- | SILIKE
-  -- | SNILIKE
-  -- | SSIMILAR
-  -- | SNSIMILAR
-  -- | SGTE
-  -- | SLTE
-  -- | SNIN
-  -- | SContains
-  -- | SContainedIn
-  -- | SHasKey
-  -- | SHasKeysAny
-  -- | SHasKeysAll
+  = LT
+  | LTE
+  | GT
+  | GTE
+  | IN
+  | LIKE
+  | NLIKE
+  | NIN
 
 -- | Column name of some database table -- this differs to FieldName
 -- that is used for referring to things within a query.
@@ -377,3 +366,13 @@ snakeCaseTableName TableName { tableName, tableSchema } =
   if tableSchema == "dbo"
      then tableName
      else tableSchema <> "_" <> tableName
+
+stringTypes :: [ScalarType]
+stringTypes =
+  [ CharType
+  , VarcharType
+  , TextType
+  , WcharType
+  , WvarcharType
+  , WtextType
+  ]

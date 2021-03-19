@@ -4,15 +4,15 @@ status: 200
 response:
   data:
     city:
-    - name: Durham
-      country: USA 
-    - name: Framlingham
-      country: UK
+      - name: Durham
+        country: USA
+      - name: Framlingham
+        country: UK
 query:
   query: |
     query {
       city (
-      where: {name: {_niregex: "new.*" }}
+      where: {name: {_nilike: "new %" }}
       ) {
         name
         country

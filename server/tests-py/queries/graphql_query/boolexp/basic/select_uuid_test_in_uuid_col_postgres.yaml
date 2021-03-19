@@ -1,4 +1,4 @@
-description: Fetch data from uuid_test table using _in operator in where filter
+description: Fetch data from uuid_test table using _in operator in where filter. Postgres UUIDs are lowercase by default.
 url: /v1/graphql
 status: 200
 response:
@@ -26,5 +26,3 @@ query:
         uuid_col
       }
     }
-
-

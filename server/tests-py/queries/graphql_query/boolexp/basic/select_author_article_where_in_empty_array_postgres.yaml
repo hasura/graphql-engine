@@ -13,7 +13,7 @@ query:
         name
         articles{
           id
-          title 
+          title
           content
         }
       }

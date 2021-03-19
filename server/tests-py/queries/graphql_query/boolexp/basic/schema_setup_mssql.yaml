@@ -133,6 +133,13 @@ args:
           uuid_col uniqueidentifier NOT NULL
       );
 
+      INSERT INTO
+          [uuid_test] ([uuid_col])
+      VALUES
+          ('28D6D683-1317-49F7-B1CF-7D195242E4E5'),
+          ('28D6D683-1317-49F7-B1CF-7D195242E4E6'),
+          ('28D6D683-1317-49F7-B1CF-7D195242E4E7')
+
       CREATE TABLE [user] (
           id int identity NOT NULL PRIMARY KEY,
           [name] varchar(450) NOT NULL UNIQUE,
