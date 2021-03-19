@@ -285,23 +285,26 @@ actionInputArguments nonObjectTypeMap arguments = do
       -> G.GType
       -> NonObjectCustomType
       -> m (InputFieldsParser n (Maybe J.Value))
-    argumentParser name description gType = \case
-      NOCTScalar def -> pure $ mkArgumentInputFieldParser name description gType $ customScalarParser def
-      NOCTEnum def -> pure $ mkArgumentInputFieldParser name description gType $ customEnumParser def
-      NOCTInputObject def -> do
-        let InputObjectTypeDefinition typeName objectDescription inputFields = def
-            objectName = unInputObjectTypeName typeName
-        inputFieldsParsers <- forM (toList inputFields) $ \inputField -> do
-          let InputObjectFieldName fieldName = _iofdName inputField
-              GraphQLType fieldType = _iofdType inputField
-          nonObjectFieldType <-
-            onNothing (Map.lookup (G.getBaseType fieldType) nonObjectTypeMap) $
-              throw500 "object type for a field found in custom input object type"
-          (fieldName,) <$> argumentParser fieldName (_iofdDescription inputField) fieldType nonObjectFieldType
+    argumentParser name description gType nonObjectType = do
+      let mkResult :: forall k. ('Input P.<: k) => Parser k n J.Value -> InputFieldsParser n (Maybe J.Value)
+          mkResult = mkArgumentInputFieldParser name description gType
+      case nonObjectType of
+        -- scalar and enum parsers are not recursive and need not be memoized
+        NOCTScalar def -> pure $ mkResult $ customScalarParser def
+        NOCTEnum   def -> pure $ mkResult $ customEnumParser   def
+        -- input objects however may recursively contain one another
+        NOCTInputObject (InputObjectTypeDefinition (InputObjectTypeName objectName) objectDesc inputFields) ->
+          mkResult <$> memoizeOn 'actionInputArguments objectName do
+            inputFieldsParsers <- forM (toList inputFields)
+              \(InputObjectFieldDefinition (InputObjectFieldName fieldName) fieldDesc (GraphQLType fieldType)) -> do
+                nonObjectFieldType <-
+                  Map.lookup (G.getBaseType fieldType) nonObjectTypeMap
+                  `onNothing` throw500 "object type for a field found in custom input object type"
+                (fieldName,) <$> argumentParser fieldName fieldDesc fieldType nonObjectFieldType
+            pure
+              $ P.object objectName objectDesc
+              $ J.Object <$> inputFieldsToObject inputFieldsParsers
 
-        pure $ mkArgumentInputFieldParser name description gType $
-               P.object objectName objectDescription $
-               J.Object <$> inputFieldsToObject inputFieldsParsers
 
 mkArgumentInputFieldParser
   :: forall m k. (MonadParse m, 'Input P.<: k)
