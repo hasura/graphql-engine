@@ -77,16 +77,16 @@ parseBoolExpOperations rhsParser _fields columnInfo value =
         parseOne = parseWithTy columnType val
         parseManyWithType ty = rhsParser (CollectableTypeArray ty) val
 
-        parseEq = AEQ False <$> parseOne
-        parseNeq = ANE False <$> parseOne
-        parseIn = AIN <$> parseManyWithType colTy
-        parseNin = ANIN <$> parseManyWithType colTy
-        parseGt = AGT <$> parseOne
-        parseLt = ALT <$> parseOne
-        parseGte = AGTE <$> parseOne
-        parseLte = ALTE <$> parseOne
-        parseLike     = guardType stringTypes >> ALIKE <$> parseOne
-        parseNlike    = guardType stringTypes >> ANLIKE <$> parseOne
+        parseEq    = AEQ False <$> parseOne
+        parseNeq   = ANE False <$> parseOne
+        parseIn    = AIN <$> parseManyWithType colTy
+        parseNin   = ANIN <$> parseManyWithType colTy
+        parseGt    = AGT <$> parseOne
+        parseLt    = ALT <$> parseOne
+        parseGte   = AGTE <$> parseOne
+        parseLte   = ALTE <$> parseOne
+        parseLike  = guardType stringTypes >> ALIKE  <$> parseOne
+        parseNlike = guardType stringTypes >> ANLIKE <$> parseOne
 
         guardType validTys = unless (isScalarColumnWhere (`elem` validTys) colTy) $
           throwError $ buildMsg colTy validTys

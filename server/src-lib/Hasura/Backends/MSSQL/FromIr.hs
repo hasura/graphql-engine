@@ -849,7 +849,7 @@ fromOpExpG expression op =
     IR.AMatchesFulltext _        -> refute (pure (UnsupportedOpExpG op))
     -- As of March 2021, only geometry/geography casts are supported
     IR.ACast _casts              -> refute (pure (UnsupportedOpExpG op)) -- mkCastsExp casts
-    -- https://docs.microsoft.com/en-us/sql/relational-databases/spatial/spatial-data-sql-server?view=sql-server-ver15
+    -- https://docs.microsoft.com/en-us/sql/relational-databases/spatial/spatial-data-sql-server
     IR.ASTContains _val          -> refute (pure (UnsupportedOpExpG op)) -- mkGeomOpBe "ST_Contains" val
     IR.ASTCrosses _val           -> refute (pure (UnsupportedOpExpG op)) -- mkGeomOpBe "ST_Crosses" val
     IR.ASTEquals _val            -> refute (pure (UnsupportedOpExpG op)) -- mkGeomOpBe "ST_Equals" val
