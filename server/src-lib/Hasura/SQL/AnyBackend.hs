@@ -15,15 +15,13 @@ module Hasura.SQL.AnyBackend
 
 import           Hasura.Prelude
 
-import           Control.Arrow.Extended   (ArrowChoice, arr, (|||))
-import           Data.Aeson               (FromJSON (..), ToJSON (..), Value (..), withObject,
-                                           (.:?))
-import           Data.Hashable            (Hashable (hashWithSalt))
-import           Data.Kind                (Constraint, Type)
-import           Language.Haskell.TH      hiding (Type)
-import           Test.QuickCheck          (oneof)
+import           Control.Arrow.Extended (ArrowChoice, arr, (|||))
+import           Data.Aeson             (FromJSON (..), ToJSON (..), Value (..), withObject, (.:?))
+import           Data.Hashable          (Hashable (hashWithSalt))
+import           Data.Kind              (Constraint, Type)
+import           Language.Haskell.TH    hiding (Type)
+import           Test.QuickCheck        (oneof)
 
-import           Hasura.RQL.Types.Backend
 import           Hasura.SQL.Backend
 import           Hasura.SQL.TH
 import           Hasura.SQL.Tag
@@ -174,7 +172,7 @@ mkAnyBackend
   :: forall
       (b :: BackendType)
       (i :: BackendType -> Type)
-   . Backend b
+   . HasTag b
   => i b
   -> AnyBackend i
 mkAnyBackend =
@@ -268,7 +266,7 @@ unpackAnyBackend
   :: forall
       (b :: BackendType)
       (i :: BackendType -> Type)
-   . Backend b
+   . HasTag b
   => AnyBackend i
   -> Maybe (i b)
 unpackAnyBackend exists =

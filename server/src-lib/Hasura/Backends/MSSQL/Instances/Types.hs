@@ -17,7 +17,6 @@ import           Hasura.RQL.DDL.Headers           ()
 import           Hasura.RQL.Types.Backend
 import           Hasura.RQL.Types.Error
 import           Hasura.SQL.Backend
-import           Hasura.SQL.Tag
 
 
 instance Backend 'MSSQL where
@@ -45,9 +44,6 @@ instance Backend 'MSSQL where
   type XRelay                  'MSSQL = Void
   type XNodesAgg               'MSSQL = Void
   type XDistinct               'MSSQL = Void
-
-  backendTag :: BackendTag 'MSSQL
-  backendTag = MSSQLTag
 
   functionArgScalarType :: FunctionArgType 'MSSQL -> ScalarType 'MSSQL
   functionArgScalarType = absurd

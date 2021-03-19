@@ -14,7 +14,6 @@ import           Hasura.RQL.Types.Backend
 import           Hasura.RQL.Types.Common
 import           Hasura.RQL.Types.Error
 import           Hasura.SQL.Backend
-import           Hasura.SQL.Tag
 
 
 instance Backend 'Postgres where
@@ -43,7 +42,6 @@ instance Backend 'Postgres where
   type XNodesAgg               'Postgres = ()
   type XDistinct               'Postgres = ()
 
-  backendTag              = PostgresTag
   functionArgScalarType   = PG._qptName
   isComparableType        = PG.isComparableType
   isNumType               = PG.isNumType

@@ -118,7 +118,7 @@ class (Monad m, MonadParse n) => MonadSchema n m | m -> n where
     -- the same key.
     -> m (p n b) -> m (p n b)
 
-type MonadRole    r m = (MonadReader r m, Has RoleName r)
+type MonadRole r m = (MonadReader r m, Has RoleName r)
 
 -- | Gets the current role the schema is being built for.
 askRoleName

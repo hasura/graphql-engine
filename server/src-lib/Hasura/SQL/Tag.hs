@@ -1,5 +1,6 @@
 module Hasura.SQL.Tag
   ( BackendTag(..)
+  , HasTag(..)
   , reify
   ) where
 
@@ -39,6 +40,22 @@ $(let name = mkName "BackendTag" in
   )
  )
 
+
+-- | This class describes how to get a tag for a given type.
+-- We use it in AnyBackend: `case backendTag @b of`...
+class HasTag (b :: BackendType) where
+  backendTag :: BackendTag b
+
+-- | This generates the instance of HasTag for every backend.
+$(concat <$> forEachBackend \b -> do
+  -- the name of the tag: FooTag
+  let tagName      = pure $ ConE $ getBackendTagName b
+  -- the promoted version of b: 'Foo
+  let promotedName = pure $ PromotedT b
+  -- the instance:
+  --  instance HasTag 'Foo          where backendTag = FooTag
+  [d| instance HasTag $promotedName where backendTag = $tagName |]
+ )
 
 -- | How to convert back from a tag to a runtime value. This function
 -- is generated with Template Haskell for each 'Backend'. The case
