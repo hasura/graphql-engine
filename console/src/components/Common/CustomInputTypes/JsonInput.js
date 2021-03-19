@@ -54,7 +54,7 @@ const JsonInput = props => {
   };
 
   const handleKeyUpEvent = e => {
-    if ((e.ctrlKey || event.metaKey) && e.which === 32) {
+    if ((e.ctrlKey || e.metaKey) && e.which === 32) {
       updateState(toggleEditorType);
     }
   };
