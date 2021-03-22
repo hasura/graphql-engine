@@ -166,15 +166,6 @@ export interface UpdateInheritedRole {
     role_set: string[];
   };
 }
-export interface AddRestEndpoint {
-  type: 'Metadata/ADD_REST_ENDPOINT';
-  data: RestEndpointEntry[];
-}
-
-export interface DropRestEndpoint {
-  type: 'Metadata/DROP_REST_ENDPOINT';
-  data: RestEndpointEntry[];
-}
 
 export type MetadataActions =
   | ExportMetadataSuccess
@@ -200,8 +191,6 @@ export type MetadataActions =
   | AddInheritedRole
   | DeleteInheritedRole
   | UpdateInheritedRole
-  | AddRestEndpoint
-  | DropRestEndpoint
   | { type: typeof UPDATE_CURRENT_DATA_SOURCE; source: string };
 
 export const exportMetadata = (
@@ -987,11 +976,7 @@ export const addRESTEndpoint = (
   getState
 ) => {
   const { currentDataSource } = getState().tables;
-  const { rest_endpoints, metadataObject } = getState().metadata;
-  let currentEndpoints: RestEndpointEntry[] = [];
-  if (rest_endpoints?.length) {
-    currentEndpoints = rest_endpoints;
-  }
+  const { metadataObject } = getState().metadata;
   const upQueries = [];
   const downQueries = [];
 
@@ -1025,10 +1010,6 @@ export const addRESTEndpoint = (
   const errorMsg = 'Error creating REST endpoint';
 
   const onSuccess = () => {
-    dispatch({
-      type: 'Metadata/ADD_REST_ENDPOINT',
-      data: [...currentEndpoints, queryObj],
-    });
     if (successCb) {
       successCb();
     }
@@ -1088,10 +1069,6 @@ export const dropRESTEndpoint = (
     return;
   }
 
-  const filteredEndpoints = currentRESTEndpoints.filter(
-    re => re.name !== endpointName
-  );
-
   const confirmation = getConfirmation(
     `You want to delete the endpoint: ${endpointName}`
   );
@@ -1115,10 +1092,6 @@ export const dropRESTEndpoint = (
   const errorMsg = 'Error dropping REST endpoint';
 
   const onSuccess = () => {
-    dispatch({
-      type: 'Metadata/DROP_REST_ENDPOINT',
-      data: filteredEndpoints,
-    });
     if (successCb) {
       successCb();
     }
@@ -1155,6 +1128,7 @@ export const editRESTEndpoint = (
   getState
 ) => {
   const currentEndpoints = getState().metadata.metadataObject?.rest_endpoints;
+
   if (!currentEndpoints) {
     dispatch(
       showErrorNotification(
@@ -1165,56 +1139,38 @@ export const editRESTEndpoint = (
     return;
   }
 
-  // using `any` here since the 3 queries have a different
-  // return types, hence ended up using any
-  let upQueries: any = [
+  const dropOldQueryFromCollection = deleteAllowedQueryQuery(oldQueryObj.name);
+  const addNewQueryToCollection = addAllowedQuery({
+    name: newQueryObj.name,
+    query: request,
+  });
+
+  const dropNewQueryFromCollection = deleteAllowedQueryQuery(newQueryObj.name);
+  const addOldQueryToCollection = addAllowedQuery({
+    name: oldQueryObj.name,
+    query: request,
+  });
+
+  const upQueries = [
     dropRESTEndpointQuery(oldQueryObj.name),
+    dropOldQueryFromCollection,
+    addNewQueryToCollection,
     createRESTEndpointQuery(newQueryObj),
   ];
-  let downQueries: any = [
-    createRESTEndpointQuery(oldQueryObj),
-    dropRESTEndpointQuery(newQueryObj.name),
-  ];
 
-  if (newQueryObj.name !== oldQueryObj.name) {
-    const newAllowedQuery = addAllowedQuery({
-      name: newQueryObj.name,
-      query: request,
-    });
-    const deleteOldFromCollection = deleteAllowedQueryQuery(oldQueryObj.name);
-    const addOldIntoQueryCollection = addAllowedQuery({
-      name: oldQueryObj.name,
-      query: request,
-    });
-    const newDeleteAllowedQuery = deleteAllowedQueryQuery(newQueryObj.name);
-    upQueries = [
-      upQueries[0],
-      deleteOldFromCollection,
-      newAllowedQuery,
-      upQueries[1],
-    ];
-    downQueries = [
-      addOldIntoQueryCollection,
-      downQueries[0],
-      downQueries[1],
-      newDeleteAllowedQuery,
-    ];
-  }
+  const downQueries = [
+    dropRESTEndpointQuery(newQueryObj.name),
+    dropNewQueryFromCollection,
+    addOldQueryToCollection,
+    createRESTEndpointQuery(oldQueryObj),
+  ];
 
   const migrationName = `edit_rest_endpoint_${newQueryObj.url}_${newQueryObj.name}`;
   const requestMsg = `Editing REST endpoint ${oldQueryObj.name}`;
   const successMsg = 'Successfully edited REST endpoint';
   const errorMsg = 'Error editing REST endpoint';
 
-  const filteredEndpoints = currentEndpoints.filter(
-    re => re.name !== oldQueryObj.name
-  );
-
   const onSuccess = () => {
-    dispatch({
-      type: 'Metadata/ADD_REST_ENDPOINT',
-      data: [...filteredEndpoints, newQueryObj],
-    });
     if (successCb) {
       successCb();
     }

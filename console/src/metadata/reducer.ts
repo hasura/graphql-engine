@@ -1,10 +1,5 @@
 import { MetadataActions } from './actions';
-import {
-  QueryCollection,
-  HasuraMetadataV3,
-  RestEndpointEntry,
-  InheritedRole,
-} from './types';
+import { QueryCollection, HasuraMetadataV3, InheritedRole } from './types';
 import { allowedQueriesCollection } from './utils';
 
 type MetadataState = {
@@ -15,7 +10,6 @@ type MetadataState = {
   ongoingRequest: boolean; // deprecate
   allowedQueries: QueryCollection[];
   inheritedRoles: InheritedRole[];
-  rest_endpoints?: RestEndpointEntry[];
 };
 
 const defaultState: MetadataState = {
@@ -144,17 +138,6 @@ export const metadataReducer = (
             ir.role_name === action.data.role_name ? action.data : ir
           ),
         ],
-      };
-
-    case 'Metadata/ADD_REST_ENDPOINT':
-      return {
-        ...state,
-        rest_endpoints: action.data,
-      };
-    case 'Metadata/DROP_REST_ENDPOINT':
-      return {
-        ...state,
-        rest_endpoints: action.data,
       };
     default:
       return state;

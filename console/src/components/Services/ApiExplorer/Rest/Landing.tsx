@@ -6,6 +6,10 @@ import LandingImage from './LandingImage';
 
 import styles from './RESTStyles.scss';
 
+const landingDescription = `REST endpoints allow for the creation of a REST interface to your saved GraphQL queries and mutations.
+Endpoints are accessible from /api/rest/* and inherit the authorization and permission structure from your associated GraphQL nodes. 
+To create a new endpoint simply test your query in GraphiQL then click the REST button on GraphiQL to configure a URL.`;
+
 const Landing = () => (
   <div
     className={`container-fluid ${styles.rest_add_padding_left} ${styles.padd_top}`}
@@ -26,7 +30,7 @@ const Landing = () => (
       title="What are REST endpoints?"
       imgElement={<LandingImage />}
       imgAlt="REST endpoints"
-      description="REST endpoints allow for the creation of a REST interface to your saved GraphQL queries and mutations. Endpoints are generated from /api/rest/* and inherit the authorization and permission structure from your associated GraphQL nodes."
+      description={landingDescription}
       knowMoreHref="https://hasura.io/docs/latest/graphql/core/api-reference/restified.html"
     />
     <hr className={styles.clear_fix} />

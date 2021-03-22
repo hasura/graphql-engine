@@ -1,4 +1,4 @@
-import React, { useReducer, useEffect, useState } from 'react';
+import React, { useReducer, useEffect, useRef } from 'react';
 import { RouteComponentProps } from 'react-router';
 import { connect, ConnectedProps } from 'react-redux';
 
@@ -47,7 +47,21 @@ const cleanUpState = (state: CreateEndpointState) => {
 };
 
 const isErroredState = (state: CreateEndpointState) => {
-  return !state.name || !state.url || !state.request || !state.methods.length;
+  const errorFields = [];
+  if (!state.name) {
+    errorFields.push('Name');
+  }
+  if (!state.url) {
+    errorFields.push('Location');
+  }
+  if (!state.request) {
+    errorFields.push('Request');
+  }
+  if (!state.methods.length) {
+    errorFields.push('Method');
+  }
+
+  return errorFields;
 };
 
 const createEndpointObject = (
@@ -87,7 +101,7 @@ const CreateEndpoint: React.FC<CreateEndpointProps> = ({
     createEndpointReducer,
     defaultState
   );
-  const [oldState, updateOldState] = useState<RestEndpointEntry | null>(null);
+  const oldState = useRef<RestEndpointEntry | null>(null);
   const isPageCreate = location.pathname === '/api/rest/create';
   // currentPageName will have a valid value, when it's on the edit page
   let currentPageName = '';
@@ -166,7 +180,7 @@ const CreateEndpoint: React.FC<CreateEndpointProps> = ({
       // Ideally, this also, should not be happening
       return;
     }
-    updateOldState(oldRestEndpointEntry);
+    oldState.current = oldRestEndpointEntry;
     updateEndpointName(oldRestEndpointEntry.name);
     updateEndpointComment(oldRestEndpointEntry?.comment ?? '');
     updateEndpointURL(oldRestEndpointEntry.url);
@@ -190,14 +204,19 @@ const CreateEndpoint: React.FC<CreateEndpointProps> = ({
 
   const onClickCreate = () => {
     const cleanedUpState = cleanUpState(inputState);
-    if (isErroredState(cleanedUpState)) {
+    const catchedError = isErroredState(cleanedUpState);
+    const errorLen = catchedError.length;
+    if (errorLen >= 1) {
+      const fieldText = `field${errorLen >= 2 ? 's' : ''}`;
+      const isAreText = `${errorLen >= 2 ? 'are' : 'is a'}`;
       showError(
         'Some required fields are empty',
-        'Name, Location, Request and Methods are required fields.'
+        `${catchedError.join(', ')} ${isAreText} required ${fieldText}.`
       );
       return;
     }
-    // NOTE: this is a case of extreme safe coding. Maybe be unecessary here.
+    // NOTE: this check is necessary for the edit page
+    // where queries can be edited
     if (!isQueryValid(cleanedUpState.request)) {
       showError(
         'Invalid Query being used to create endpoint',
@@ -209,10 +228,10 @@ const CreateEndpoint: React.FC<CreateEndpointProps> = ({
       createEndpoint(restEndpointObj, request, resetPageState);
       return;
     }
-    if (!oldState) {
+    if (!oldState || !oldState.current) {
       return;
     }
-    editEndpoint(oldState, restEndpointObj, request, resetPageState);
+    editEndpoint(oldState.current, restEndpointObj, request, resetPageState);
   };
 
   return (
@@ -254,7 +273,11 @@ const CreateEndpoint: React.FC<CreateEndpointProps> = ({
           currentState={inputState.methods}
           updateState={updateEndpointMethods}
         />
-        <RequestViewer request={inputState.request} />
+        <RequestViewer
+          request={inputState.request}
+          isEditable={!isPageCreate}
+          onChangeQueryText={isPageCreate ? undefined : updateEndpointRequest}
+        />
       </div>
       <div className={styles.rest_action_btns}>
         <Button color="white" onClick={resetPageState}>

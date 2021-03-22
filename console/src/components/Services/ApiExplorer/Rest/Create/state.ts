@@ -1,10 +1,10 @@
 import { AllowedRESTMethods } from '../../../../../metadata/types';
 
 type CreateEndpointState = {
-  name: string;
-  comment: string;
-  url: string;
-  methods: AllowedRESTMethods[];
+  name: string; // Name on UI
+  comment: string; // Description on UI
+  url: string; // Location on UI
+  methods: AllowedRESTMethods[]; // Methods on the UI
   request: string;
 };
 
