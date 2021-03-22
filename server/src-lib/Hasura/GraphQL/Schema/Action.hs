@@ -58,7 +58,7 @@ actionExecute nonObjectTypeMap actionInfo = runMaybeT do
   let fieldName = unActionName actionName
       description = G.Description <$> comment
   inputArguments <- lift $ actionInputArguments nonObjectTypeMap $ _adArguments definition
-  selectionSet <- lift $ actionOutputFields outputObject
+  selectionSet <- lift $ actionOutputFields outputType outputObject
   stringifyNum <- asks $ qcStringifyNum . getter
   pure $ P.subselection fieldName description inputArguments selectionSet
          <&> \(argsJson, fields) -> AnnActionExecution
@@ -73,10 +73,10 @@ actionExecute nonObjectTypeMap actionInfo = runMaybeT do
                , _aaeForwardClientHeaders = _adForwardClientHeaders definition
                , _aaeStrfyNum = stringifyNum
                , _aaeTimeOut = _adTimeout definition
-               , _aaeSource  = getActionSourceInfo (_aiOutputObject actionInfo)
+               , _aaeSource  = getActionSourceInfo outputObject
                }
   where
-    ActionInfo actionName outputObject definition permissions comment = actionInfo
+    ActionInfo actionName (outputType, outputObject) definition permissions comment = actionInfo
 
 -- | actionAsyncMutation is used to execute a asynchronous mutation action. An
 --   asynchronous action expects the field name and the input arguments to the
@@ -127,7 +127,7 @@ actionAsyncQuery
 actionAsyncQuery actionInfo = runMaybeT do
   roleName <- askRoleName
   guard $ roleName == adminRoleName || roleName `Map.member` permissions
-  actionOutputParser <- lift $ actionOutputFields outputObject
+  actionOutputParser <- lift $ actionOutputFields outputType outputObject
   createdAtFieldParser <-
     lift $ columnParser @'Postgres (ColumnScalar PGTimeStampTZ) (G.Nullability False)
   errorsFieldParser <-
@@ -164,10 +164,10 @@ actionAsyncQuery actionInfo = runMaybeT do
               , _aaaqFields = fields
               , _aaaqDefinitionList = mkDefinitionList outputObject
               , _aaaqStringifyNum = stringifyNum
-              , _aaaqSource  = getActionSourceInfo (_aiOutputObject actionInfo)
+              , _aaaqSource  = getActionSourceInfo outputObject
               }
   where
-    ActionInfo actionName outputObject definition permissions comment = actionInfo
+    ActionInfo actionName (outputType, outputObject) definition permissions comment = actionInfo
     idFieldName = $$(G.litName "id")
     idFieldDescription = "the unique id of an action"
 
@@ -185,9 +185,10 @@ actionOutputFields
      , Has QueryContext r
      , Has (BackendExtension 'Postgres) r
      )
-  => AnnotatedObjectType
+  => G.GType
+  -> AnnotatedObjectType
   -> m (Parser 'Output n (RQL.AnnFieldsG 'Postgres (UnpreparedValue 'Postgres)))
-actionOutputFields annotatedObject = do
+actionOutputFields outputType annotatedObject = do
   let outputObject = _aotDefinition annotatedObject
       scalarOrEnumFields = map scalarOrEnumFieldParser $ toList $ _otdFields outputObject
   relationshipFields <- forM (_otdRelationships outputObject) $ traverse relationshipFieldParser
@@ -195,8 +196,9 @@ actionOutputFields annotatedObject = do
                         maybe [] (concat . catMaybes . toList) relationshipFields
       outputTypeName = unObjectTypeName $ _otdName outputObject
       outputTypeDescription = _otdDescription outputObject
-  pure $ P.selectionSet outputTypeName outputTypeDescription allFieldParsers
-         <&> parsedSelectionsToFields RQL.AFExpression
+  pure $ mkOutputParserModifier outputType $
+    P.selectionSet outputTypeName outputTypeDescription allFieldParsers
+    <&> parsedSelectionsToFields RQL.AFExpression
   where
     scalarOrEnumFieldParser
       :: ObjectFieldDefinition (G.GType, AnnotatedObjectFieldType)
@@ -246,6 +248,15 @@ actionOutputFields annotatedObject = do
           pure $ catMaybes [ Just arrayRelField
                            , fmap (RQL.AFArrayRelation . RQL.ASAggregate . RQL.AnnRelationSelectG tableRelName columnMapping) <$> tableAggField
                            ]
+
+mkOutputParserModifier :: G.GType -> Parser 'Output m a -> Parser 'Output m a
+mkOutputParserModifier = \case
+  G.TypeNamed nullable _ -> nullableModifier nullable
+  G.TypeList nullable ty ->
+    nullableModifier nullable . P.multiple . mkOutputParserModifier ty
+  where
+    nullableModifier nullable =
+      if G.unNullability nullable then P.nullableParser else P.nonNullableParser
 
 mkDefinitionList :: AnnotatedObjectType -> [(PGCol, ScalarType 'Postgres)]
 mkDefinitionList AnnotatedObjectType{..} =

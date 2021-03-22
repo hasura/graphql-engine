@@ -275,6 +275,10 @@ field = field
 nonNullableParser :: forall m a . Parser 'Output m a -> Parser 'Output m a
 nonNullableParser parser = parser { pType = nonNullableType (pType parser) }
 
+-- | Make a schema output as nullable
+nullableParser :: forall m a . Parser 'Output m a -> Parser 'Output m a
+nullableParser parser = parser { pType = nullableType (pType parser) }
+
 multiple :: Parser 'Output m a -> Parser 'Output m a
 multiple parser = parser { pType = Nullable $ TList $ pType parser }
 

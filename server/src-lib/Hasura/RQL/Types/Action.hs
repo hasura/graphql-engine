@@ -204,7 +204,7 @@ getActionOutputFields =
 data ActionInfo
   = ActionInfo
   { _aiName         :: !ActionName
-  , _aiOutputObject :: !AnnotatedObjectType
+  , _aiOutputObject :: !(G.GType, AnnotatedObjectType)
   , _aiDefinition   :: !ResolvedActionDefinition
   , _aiPermissions  :: !ActionPermissionMap
   , _aiComment      :: !(Maybe Text)

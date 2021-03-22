@@ -369,7 +369,7 @@ asyncActionsProcessor env logger cacheRef httpManager = forever $ do
         Nothing -> return ()
         Just actionInfo -> do
           let definition = _aiDefinition actionInfo
-              outputFields = getActionOutputFields $ _aiOutputObject actionInfo
+              outputFields = getActionOutputFields $ snd $ _aiOutputObject actionInfo
               webhookUrl = _adHandler definition
               forwardClientHeaders = _adForwardClientHeaders definition
               confHeaders = _adHeaders definition

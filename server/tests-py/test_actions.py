@@ -87,6 +87,36 @@ class TestActionsSync:
     def test_mirror_action_success(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + '/mirror_action_success.yaml')
 
+    #https://github.com/hasura/graphql-engine/issues/6631
+    def test_create_users_output_type(self, hge_ctx):
+        gql_query = '''
+        query {
+          __type(name: "mutation_root"){
+            fields {
+              name
+              type{
+                kind
+              }
+            }
+          }
+        }
+        '''
+        query = {
+            'query': gql_query
+        }
+        headers = {}
+        admin_secret = hge_ctx.hge_key
+        if admin_secret is not None:
+            headers['X-Hasura-Admin-Secret'] = admin_secret
+        code, resp, _ = hge_ctx.anyq('/v1/graphql', query, headers)
+        assert code == 200, resp
+        resp_data = resp['data']
+        mutation_root_fields = resp_data['__type']['fields']
+        # check type for create_users root field
+        for root_field in mutation_root_fields:
+            if root_field['name'] == 'create_users':
+                assert root_field['type']['kind'] == 'LIST', root_field
+
 @use_action_fixtures_with_remote_joins
 class TestActionsSyncWithRemoteJoins:
 

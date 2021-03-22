@@ -695,7 +695,8 @@ buildSchemaCacheRule env = proc (metadata, invalidationKeys) -> do
                     runExceptT $ resolveAction env resolvedCustomTypes def scalarsMap
                   let permissionInfos = map (ActionPermissionInfo . _apmRole) actionPermissions
                       permissionMap = mapFromL _apiRole permissionInfos
-                  returnA -< ActionInfo name outObject resolvedDef permissionMap comment)
+                      outputType = unGraphQLType $ _adOutputType def
+                  returnA -< ActionInfo name (outputType, outObject) resolvedDef permissionMap comment)
               |) addActionContext)
            |) (mkActionMetadataObject action)
 

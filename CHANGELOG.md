@@ -1,6 +1,7 @@
 # Hasura GraphQL Engine Changelog
 
 ## Next release
+- server: fix action output type schema generation (fix #6631)
 - server/mssql: `mssql_add_source` can now take connection strings from environment variables
 - server: support `IN`, `NIN`, `LIKE` and `NLIKE` operators in MSSQL
 
