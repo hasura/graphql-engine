@@ -108,7 +108,10 @@ instance ToTxt ScalarType where
   toTxt = tshow -- TODO: include schema
 
 instance ToTxt TableName where
-  toTxt = tshow -- TODO: include schema
+  toTxt TableName { tableName, tableSchema } =
+    if tableSchema == "dbo"
+      then tableName
+      else tableSchema <> "." <> tableName
 
 instance ToTxt ColumnName where
   toTxt = columnNameText
