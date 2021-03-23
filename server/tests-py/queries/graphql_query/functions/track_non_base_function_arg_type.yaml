@@ -15,23 +15,26 @@
 
 - description: Track function v2 with invalid session argument
   url: /v1/query
-  status: 400
+  status: 200
   response:
-    internal:
-    - definition:
-        schema: public
-        name: search_post_by_test
-      reason: "in function \"search_post_by_test\": the function \"search_post_by_test\"\
-            \ cannot be tracked because the function argument types \"test\" are not supported,\
-            \ because function arguments are expected to be of the type: 'base'"
-      type: function
-    path: $.args
-    error: "in function \"search_post_by_test\": the function \"search_post_by_test\"\
-            \ cannot be tracked because the function argument types \"test\" are not supported,\
-            \ because function arguments are expected to be of the type: 'base'"
-    code: constraint-violation
+    message: success
   query:
     version: 2
     type: track_function
     args:
       function: search_post_by_test
+
+- description: Introspect the new composite table scalar type created
+  url: /v1/graphql
+  status: 200
+  response:
+    data:
+      __type:
+        kind: SCALAR
+  query:
+    query: |
+      query {
+        __type (name: "test_scalar") {
+          kind
+        }
+      }

@@ -4,6 +4,7 @@
 - server: fix action output type schema generation (fix #6631)
 - server/mssql: `mssql_add_source` can now take connection strings from environment variables
 - server: support `IN`, `NIN`, `LIKE` and `NLIKE` operators in MSSQL
+- server: remove the restriction of supporting only base type function arguments. The type of an argument with a table type is now `<tablename>_scalar` to avoid conflicts with the object type `<tablename>`.
 
 ### Bug fixes and improvements
 (Add entries here in the order of: server, console, cli, docs, others)
