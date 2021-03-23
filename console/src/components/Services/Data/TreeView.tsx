@@ -39,7 +39,7 @@ const LeafItemsView: React.FC<LeafItemsViewProps> = ({
 }) => {
   const [isOpen, setIsOpen] = useState(false);
   const isActive = pathname.includes(
-    `/data/${currentSource}/schema/${currentSchema}/tables/${item.name}`
+    `/data/${currentSource}/schema/${currentSchema}/tables/${item.name}/`
   );
 
   const isView = item.type === 'view';
