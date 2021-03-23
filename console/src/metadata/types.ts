@@ -923,7 +923,8 @@ export interface HasuraMetadataV3 {
   actions?: Action[];
   custom_types?: CustomTypes;
   cron_triggers?: CronTrigger[];
-  query_collections: QueryCollectionEntry[];
+  query_collections?: QueryCollectionEntry[];
+  allowlist?: AllowList[];
   inherited_roles: InheritedRole[];
   rest_endpoints?: RestEndpointEntry[];
 }

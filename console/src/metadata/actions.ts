@@ -91,7 +91,7 @@ export interface UpdateAllowedQuery {
   type: 'Metadata/UPDATE_ALLOWED_QUERY';
   data: {
     queryName: string;
-    newQuery: { name: string; query: string };
+    newQuery: { name: string; query: string; collection: string };
   };
 }
 export interface DeleteAllowedQuery {
@@ -704,20 +704,27 @@ export const dropInconsistentObjects = (
 
 export const updateAllowedQuery = (
   queryName: string,
-  newQuery: { name: string; query: string }
+  newQuery: { name: string; query: string },
+  collectionName: string
 ): Thunk<void, MetadataActions> => {
   return (dispatch, getState) => {
-    const upQuery = updateAllowedQueryQuery(queryName, newQuery);
+    const upQuery = updateAllowedQueryQuery(
+      queryName,
+      newQuery,
+      collectionName
+    );
 
     const migrationName = `update_allowed_query`;
     const requestMsg = 'Updating allowed query...';
     const successMsg = 'Updated allow-list query';
     const errorMsg = 'Updating allow-list query failed';
 
+    const updatedQuery = { ...newQuery, collection: collectionName };
+
     const onSuccess = () => {
       dispatch({
         type: 'Metadata/UPDATE_ALLOWED_QUERY',
-        data: { queryName, newQuery },
+        data: { queryName, newQuery: updatedQuery },
       });
     };
 
@@ -740,12 +747,13 @@ export const updateAllowedQuery = (
 
 export const deleteAllowedQuery = (
   queryName: string,
-  isLastQuery: boolean
+  isLastQuery: boolean,
+  collectionName: string
 ): Thunk<void, MetadataActions> => {
   return (dispatch, getState) => {
     const upQuery = isLastQuery
-      ? deleteAllowListQuery()
-      : deleteAllowedQueryQuery(queryName);
+      ? deleteAllowListQuery(collectionName)
+      : deleteAllowedQueryQuery(queryName, collectionName);
 
     const migrationName = `delete_allowed_query`;
     const requestMsg = 'Deleting allowed query...';
@@ -773,9 +781,19 @@ export const deleteAllowedQuery = (
   };
 };
 
-export const deleteAllowList = (): Thunk<void, MetadataActions> => {
+export const deleteAllowList = (
+  collectionNames: string[]
+): Thunk<void, MetadataActions> => {
   return (dispatch, getState) => {
-    const upQuery = deleteAllowListQuery();
+    const upQueries: {
+      type: string;
+      args: { collection: string; cascade: boolean };
+    }[] = [];
+
+    collectionNames.forEach(collectionName => {
+      upQueries.push(deleteAllowListQuery(collectionName));
+    });
+
     const migrationName = 'delete_allow_list';
     const requestMsg = 'Deleting allow list...';
     const successMsg = 'Deleted all queries from allow-list';
@@ -790,7 +808,7 @@ export const deleteAllowList = (): Thunk<void, MetadataActions> => {
     makeMigrationCall(
       dispatch,
       getState,
-      [upQuery],
+      upQueries,
       undefined,
       migrationName,
       onSuccess,
