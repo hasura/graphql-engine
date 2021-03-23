@@ -227,13 +227,19 @@ const ViewRows = props => {
     const pkClause = {};
 
     if (!isView && hasPrimaryKey) {
-      tableSchema.primary_key.columns.map(key => {
+      tableSchema.primary_key.columns.forEach(key => {
+        pkClause[key] = row[key];
+      });
+    } else if (tableSchema.unique_constraints?.length) {
+      tableSchema.unique_constraints[0].columns.forEach(key => {
         pkClause[key] = row[key];
       });
     } else {
-      tableSchema.columns.map(key => {
-        pkClause[key.column_name] = row[key.column_name];
-      });
+      tableSchema.columns
+        .filter(c => !dataSource.isJsonColumn(c))
+        .forEach(key => {
+          pkClause[key.column_name] = row[key.column_name];
+        });
     }
 
     Object.keys(pkClause).forEach(key => {

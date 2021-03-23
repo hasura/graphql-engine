@@ -8,6 +8,7 @@ import {
   TableColumn,
   FrequentlyUsedColumn,
   PermissionColumnCategories,
+  BaseTableColumn,
 } from './types';
 import { PGFunction, FunctionState } from './services/postgresql/types';
 import { Operations } from './common';
@@ -89,6 +90,7 @@ export interface DataSourcesAPI {
   fetchColumnTypesQuery: string;
   fetchColumnDefaultFunctions(schema: string): string;
   isSQLFunction(str: string): boolean;
+  isJsonColumn(column: BaseTableColumn): boolean;
   getEstimateCountQuery: (schemaName: string, tableName: string) => string;
   isColTypeString(colType: string): boolean;
   cascadeSqlQuery(sql: string): string;

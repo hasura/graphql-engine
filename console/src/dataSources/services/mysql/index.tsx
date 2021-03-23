@@ -135,6 +135,7 @@ export const mysql: DataSourcesAPI = {
   getFunctionSchema: () => {
     return '';
   },
+  isJsonColumn: () => false,
   getFunctionDefinitionSql: () => {
     return '';
   },

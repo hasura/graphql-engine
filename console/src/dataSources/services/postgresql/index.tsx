@@ -1,5 +1,10 @@
 import React from 'react';
-import { Table, TableColumn, ComputedField } from '../../types';
+import {
+  Table,
+  TableColumn,
+  ComputedField,
+  BaseTableColumn,
+} from '../../types';
 import { QUERY_TYPES, Operations } from '../../common';
 import { PGFunction } from './types';
 import { DataSourcesAPI, ColumnsInfoResult } from '../..';
@@ -174,6 +179,10 @@ export const getSchemaFunctions = (
       getFunctionSchema(fn) === fnSchema &&
       isFunctionCompatibleToTable(fn, tableName, tableSchema)
   );
+};
+
+export const isJsonColumn = (column: BaseTableColumn): boolean => {
+  return column.data_type === 'json' || column.data_type === 'jsonb';
 };
 
 export const findFunction = (
@@ -504,6 +513,7 @@ const permissionColumnDataTypes = {
 
 export const postgres: DataSourcesAPI = {
   isTable,
+  isJsonColumn,
   displayTableName,
   getFunctionSchema,
   getFunctionDefinition,

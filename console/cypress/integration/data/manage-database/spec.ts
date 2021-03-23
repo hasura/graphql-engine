@@ -37,7 +37,7 @@ export const addsNewPostgresDatabaseWithUrl = () => {
   cy.getBySel('idle-timeout').type('180');
   cy.getBySel('retries').type('1');
   cy.getBySel('save-database').click();
-  cy.get('.notification-success')
+  cy.get('.notification-success', { timeout: 10000 })
     .should('be.visible')
     .and('contain', 'Database added successfully!');
   cy.url().should('eq', `${baseUrl}/data/manage`);
@@ -57,7 +57,7 @@ export const addsNewPgDBWithConParams = () => {
   }
   cy.getBySel('database-name').type(config.dbName);
   cy.getBySel('save-database').click();
-  cy.get('.notification-success')
+  cy.get('.notification-success', { timeout: 10000 })
     .should('be.visible')
     .and('contain', 'Database added successfully!');
   cy.url().should('eq', `${baseUrl}/data/manage`);
@@ -71,7 +71,7 @@ export const addsNewPgDBWithEnvVar = () => {
   cy.getBySel('database-type').select('postgres');
   cy.getBySel('database-url-env').type('HASURA_GRAPHQL_DATABASE_URL');
   cy.getBySel('save-database').click();
-  cy.get('.notification-success')
+  cy.get('.notification-success', { timeout: 10000 })
     .should('be.visible')
     .and('contain', 'Database added successfully!');
   cy.url().should('eq', `${baseUrl}/data/manage`);

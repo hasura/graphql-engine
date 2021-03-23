@@ -1,6 +1,6 @@
 import React from 'react';
 import { DataSourcesAPI } from '../..';
-import { TableColumn, Table } from '../../types';
+import { TableColumn, Table, BaseTableColumn } from '../../types';
 import { getTableRowRequest } from './utils';
 
 const permissionColumnDataTypes = {
@@ -87,6 +87,10 @@ export const displayTableName = (table: Table) => {
   return isTable(table) ? <span>{tableName}</span> : <i>{tableName}</i>;
 };
 
+export const isJsonColumn = (column: BaseTableColumn): boolean => {
+  return column.data_type_name === 'json' || column.data_type_name === 'jsonb';
+};
+
 const processTableRowData = (
   data: any,
   config?: { originalTable: string; currentSchema: string }
@@ -103,6 +107,7 @@ const processTableRowData = (
 
 export const mssql: DataSourcesAPI = {
   isTable,
+  isJsonColumn,
   displayTableName,
   operators,
   getTableRowRequest,
