@@ -1,6 +1,39 @@
 import { ConsoleNotification } from './ConsoleNotification';
 import { HerokuSession } from '../Services/Data/DataSources/CreateDataSource/Heroku/types';
 
+export type CloudProjectInfo = {
+  name: string;
+  plan_name: string;
+  heroku_integrations: {
+    app_id: string;
+    app_name: string;
+    project_id: string;
+    var_name: string;
+    webhook_id: string;
+  };
+  owner: {
+    id: string;
+    email: string;
+  };
+  collaborators: {
+    collaborator: {
+      id: string;
+      email: string;
+    };
+  }[];
+  tenant: {
+    active: boolean;
+    region: string;
+    custom_domains: {
+      id: string;
+      fqdn: string;
+      dns_validation: string;
+      created_at: string;
+      cert: string;
+    };
+  };
+};
+
 export interface MainState {
   migrationError: unknown | null;
   hasuractlEnv: unknown | null;
@@ -37,6 +70,9 @@ export interface MainState {
   consoleNotifications: ConsoleNotification[];
   heroku: {
     session?: HerokuSession;
+  };
+  cloud: {
+    project?: CloudProjectInfo;
   };
 }
 
@@ -76,6 +112,9 @@ const defaultState: MainState = {
   consoleNotifications: [],
   heroku: {
     session: undefined,
+  },
+  cloud: {
+    project: undefined,
   },
 };
 
