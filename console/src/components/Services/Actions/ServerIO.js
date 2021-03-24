@@ -64,12 +64,14 @@ export const createAction = () => (dispatch, getState) => {
   const { add: rawState } = getState().actions;
   const existingTypesList = customTypesSelector(getState());
   const allActions = actionsSelector(getState());
+
+  const actionComment = rawState.comment ? rawState.comment.trim() : null;
+
   const {
     name: actionName,
     arguments: args,
     outputType,
     error: actionDefError,
-    comment: actionDescription,
     type: actionType,
   } = getActionDefinitionFromSdl(rawState.actionDefinition.sdl);
   if (actionDefError) {
@@ -98,7 +100,7 @@ export const createAction = () => (dispatch, getState) => {
     outputType,
     headers: rawState.headers,
     forwardClientHeaders: rawState.forwardClientHeaders,
-    comment: actionDescription,
+    comment: actionComment,
   };
 
   const validationError = getStateValidationError(state, existingTypesList);
@@ -142,7 +144,7 @@ export const createAction = () => (dispatch, getState) => {
   const actionQueryUp = generateCreateActionQuery(
     state.name,
     generateActionDefinition(state),
-    actionDescription
+    actionComment
   );
 
   const actionQueryDown = generateDropActionQuery(state.name);
@@ -192,7 +194,6 @@ export const saveAction = currentAction => (dispatch, getState) => {
     outputType,
     type: actionType,
     error: actionDefError,
-    comment: actionDescription,
   } = getActionDefinitionFromSdl(rawState.actionDefinition.sdl);
 
   if (actionDefError) {
@@ -200,6 +201,8 @@ export const saveAction = currentAction => (dispatch, getState) => {
       showErrorNotification('Invalid Action Definition', actionDefError)
     );
   }
+
+  const actionComment = rawState.comment ? rawState.comment.trim() : null;
 
   const { types, error: typeDefError } = getTypesFromSdl(
     rawState.typeDefinition.sdl
@@ -220,7 +223,7 @@ export const saveAction = currentAction => (dispatch, getState) => {
     outputType,
     headers: rawState.headers,
     forwardClientHeaders: rawState.forwardClientHeaders,
-    comment: actionDescription,
+    comment: actionComment,
   };
 
   const validationError = getStateValidationError(state);
@@ -254,7 +257,7 @@ export const saveAction = currentAction => (dispatch, getState) => {
   const updateCurrentActionQuery = getUpdateActionQuery(
     generateActionDefinition(state),
     currentAction.name,
-    actionDescription
+    actionComment
   );
   const rollbackActionQuery = getUpdateActionQuery(
     currentAction.definition,
@@ -265,7 +268,7 @@ export const saveAction = currentAction => (dispatch, getState) => {
   const createNewActionQuery = generateCreateActionQuery(
     state.name,
     generateActionDefinition(state),
-    actionDescription
+    actionComment
   );
 
   const actionQueryDown = generateDropActionQuery(state.name);

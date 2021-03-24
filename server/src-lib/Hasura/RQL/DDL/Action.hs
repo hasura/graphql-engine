@@ -123,15 +123,18 @@ resolveAction env AnnotatedCustomTypes{..} ActionDefinition{..} allScalars = do
 runUpdateAction
   :: forall m. ( QErrM m , CacheRWM m, MetadataM m)
   => UpdateAction -> m EncJSON
-runUpdateAction (UpdateAction actionName actionDefinition) = do
+runUpdateAction (UpdateAction actionName actionDefinition actionComment) = do
   sc <- askSchemaCache
   let actionsMap = scActions sc
   void $ onNothing (Map.lookup actionName actionsMap) $
     throw400 NotExists $ "action with name " <> actionName <<> " not exists"
-  buildSchemaCacheFor (MOAction actionName)
-    $ MetadataModifier
-    $ metaActions.ix actionName.amDefinition .~ actionDefinition
+  buildSchemaCacheFor (MOAction actionName) $ updateActionMetadataModifier actionDefinition actionComment
   pure successMsg
+    where
+      updateActionMetadataModifier :: ActionDefinitionInput -> Maybe Text -> MetadataModifier
+      updateActionMetadataModifier def comment = MetadataModifier $
+        (metaActions.ix actionName.amDefinition .~ def) .
+        (metaActions.ix actionName.amComment .~ comment)
 
 newtype ClearActionData
   = ClearActionData { unClearActionData :: Bool }

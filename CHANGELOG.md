@@ -3,6 +3,9 @@
 ## Next release
 (Add entries here in the order of: server, console, cli, docs, others)
 
+- server: add a comment field for actions (#231)
+- console: add a comment field for actions (#231)
+
 ### Support geometry and geography spatial data comparison operators in MS SQL Server
 
 Comparison operators on spatial data types, geometry and geography, are now supported in MS SQL Server. The following operators are supported:
