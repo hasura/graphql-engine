@@ -541,6 +541,7 @@ jobs:
     docker:
     - image: hasura/graphql-engine-console-builder:20210224
       environment:
+        HASURA_GRAPHQL_DATABASE_URL: 'postgres://gql_test:@localhost:5432/gql_test'
         CYPRESS_KEY: 983be0db-0f19-40cc-bfc4-194fcacd85e1
         GHCRTS: -N1
     - image: circleci/postgres:10-alpine-postgis
