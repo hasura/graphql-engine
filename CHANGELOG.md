@@ -3,12 +3,51 @@
 ## Next release
 (Add entries here in the order of: server, console, cli, docs, others)
 
+### Support geometry and geography spatial data comparison operators in MS SQL Server
+
+Comparison operators on spatial data types, geometry and geography, are now supported in MS SQL Server. The following operators are supported:
+
+- STEquals
+- STIntersects
+- STTouches
+- STOverlaps
+- STCrosses
+- STWithin
+- STContains
+
+**Example query:** Select values equal to a given geography instance
+
+```
+query {
+  spatial_types_geog(
+    where: {
+      point: { _st_equals: "POINT(3 4)" }
+      }
+    ) {
+    point
+  }
+}
+```
+
+**Example query:** Select values that spatially contain a given geometry instance
+
+```
+query {
+  spatial_types_geom(
+    where: {
+      compoundcurve: { _st_contains: "POINT(0.5 0)" }
+    }
+  ) {
+    compoundcurve
+  }
+}
+```
 
 ## v2.0.0-alpha.6
 
 - server: fix action output type schema generation (fix #6631)
 - server/mssql: `mssql_add_source` can now take connection strings from environment variables
-- server: support `IN`, `NIN`, `LIKE` and `NLIKE` operators in MSSQL
+- server: support `IN`, `NIN`, `LIKE` and `NLIKE` operators in MS SQL Server
 - server: remove the restriction of supporting only base type function arguments. The type of an argument with a table type is now `<tablename>_scalar` to avoid conflicts with the object type `<tablename>`.
 - server: fix inherited_roles issue when some of the underlying roles don't have permissions configured (fixes #6672)
 - server: fix action custom types failing to parse when mutually recursive

@@ -1,0 +1,32 @@
+description: Query data from spatial_types_geo* tables
+url: /v1/graphql
+status: 200
+response:
+  data:
+    spatial_types_geog:
+      - multipoint: MULTIPOINT ((2 3), (7 8))
+    spatial_types_geom:
+      - compoundcurve: COMPOUNDCURVE (CIRCULARSTRING (1 0, 0 1, -1 0), (-1 0, 2 0))
+query:
+  query: |
+    query {
+      spatial_types_geog(
+          where: {
+            multipoint: {
+              _st_contains: "POINT(2 3)"
+            }
+          }
+        ) {
+          multipoint
+        }
+
+      spatial_types_geom(
+        where: {
+          compoundcurve: {
+            _st_contains: "POINT(0.5 0)"
+          }
+        }
+      ) {
+        compoundcurve
+      }
+    }

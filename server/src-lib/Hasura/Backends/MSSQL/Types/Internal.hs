@@ -165,6 +165,7 @@ data Expression
     -- string.
   | OpExpression Op Expression Expression
   | ListExpression [Expression]
+  | STOpExpression SpatialOp Expression Expression
 
 data JsonPath
   = RootPath
@@ -230,6 +231,16 @@ data Op
   | LIKE
   | NLIKE
   | NIN
+
+-- | Supported operations for spatial data types
+data SpatialOp
+  = STEquals
+  | STContains
+  | STCrosses
+  | STIntersects
+  | STOverlaps
+  | STWithin
+  | STTouches
 
 -- | Column name of some database table -- this differs to FieldName
 -- that is used for referring to things within a query.
@@ -376,3 +387,6 @@ stringTypes =
   , WvarcharType
   , WtextType
   ]
+
+geoTypes :: [ScalarType]
+geoTypes = [GeometryType, GeographyType]

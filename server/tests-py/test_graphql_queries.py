@@ -954,3 +954,36 @@ class TestGraphQLQueryBoolExpLtree:
     @classmethod
     def dir(cls):
         return 'queries/graphql_query/boolexp/ltree'
+
+@pytest.mark.parametrize("transport", ['http', 'websocket'])
+@pytest.mark.parametrize("backend", ['mssql'])
+@usefixtures('per_class_tests_db_state', 'per_backend_tests')
+class TestGraphQLQueryBoolExpSpatialMSSQL:
+    @pytest.mark.skip_server_upgrade_test
+    def test_select_spatial_mssql_types(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/select_query_spatial_types_mssql.yaml', transport)
+
+    def test_select_spatial_mssql_types_where_st_equals(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/select_query_spatial_types_where_st_equals_mssql.yaml', transport)
+
+    def test_select_spatial_mssql_types_where_st_contains(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/select_query_spatial_types_where_st_contains_mssql.yaml', transport)
+
+    def test_select_spatial_mssql_types_where_st_crosses(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/select_query_geom_where_st_crosses_mssql.yaml', transport)
+
+    def test_select_spatial_mssql_types_where_st_intersects(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/select_query_spatial_types_where_st_intersects_mssql.yaml', transport)
+
+    def test_select_spatial_mssql_types_where_st_overlaps(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/select_query_spatial_types_where_st_overlaps_mssql.yaml', transport)
+
+    def test_select_spatial_mssql_types_where_st_within(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/select_query_spatial_types_where_st_within_mssql.yaml', transport)
+
+    def test_select_spatial_mssql_types_where_st_touches(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/select_query_spatial_types_where_st_touches_mssql.yaml', transport)
+
+    @classmethod
+    def dir(cls):
+        return 'queries/graphql_query/boolexp/spatial'

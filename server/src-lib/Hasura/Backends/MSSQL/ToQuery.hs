@@ -102,6 +102,10 @@ fromExpression =
       fromExpression x <+>
       ") " <+> fromOp op <+> " (" <+> fromExpression y <+> ")"
     ListExpression xs -> SepByPrinter ", " $ fromExpression <$> xs
+    STOpExpression op e str ->
+      "(" <+> fromExpression e <+> ")." <+>
+      fromString (show op) <+>
+      "(" <+> fromExpression str <+> ") = 1"
 
 fromOp :: Op -> Printer
 fromOp =
