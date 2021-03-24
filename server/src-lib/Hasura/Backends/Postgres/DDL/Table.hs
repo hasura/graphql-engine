@@ -173,7 +173,7 @@ buildEventTriggerInfo
   -> SourceName
   -> QualifiedTable
   -> EventTriggerConf
-  -> m (EventTriggerInfo 'Postgres, [SchemaDependency])
+  -> m (EventTriggerInfo, [SchemaDependency])
 buildEventTriggerInfo env source qt (EventTriggerConf name def webhook webhookFromEnv rconf mheaders) = do
   webhookConf <- case (webhook, webhookFromEnv) of
     (Just w, Nothing)    -> return $ WCValue w
@@ -182,7 +182,7 @@ buildEventTriggerInfo env source qt (EventTriggerConf name def webhook webhookFr
   let headerConfs = fromMaybe [] mheaders
   webhookInfo <- getWebhookInfoFromConf env webhookConf
   headerInfos <- getHeaderInfosFromConf env headerConfs
-  let eTrigInfo = EventTriggerInfo () name def rconf webhookInfo headerInfos
+  let eTrigInfo = EventTriggerInfo name def rconf webhookInfo headerInfos
       tabDep = SchemaDependency
                  (SOSourceObj source
                    $ AB.mkAnyBackend

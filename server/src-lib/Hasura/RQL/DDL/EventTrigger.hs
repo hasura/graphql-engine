@@ -209,7 +209,7 @@ askTabInfoFromTrigger sourceName trn = do
 
 askEventTriggerInfo
   :: (QErrM m, CacheRM m)
-  => SourceName -> TriggerName -> m (EventTriggerInfo 'Postgres)
+  => SourceName -> TriggerName -> m EventTriggerInfo
 askEventTriggerInfo sourceName trn = do
   ti <- askTabInfoFromTrigger sourceName trn
   let etim = _tiEventTriggerInfoMap ti

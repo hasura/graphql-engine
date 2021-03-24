@@ -23,6 +23,10 @@ type Representable a = (Show a, Eq a, Hashable a, Cacheable a, NFData a, Typeabl
 
 type SessionVarType b = CollectableType (ScalarType b)
 
+-- Used for extension types.
+type XEnable  = ()
+type XDisable = Void
+
 -- | Mapping from abstract types to concrete backend representation
 --
 -- The RQL IR, used as the output of GraphQL parsers and of the RQL parsers, is
@@ -53,7 +57,6 @@ class
   , Representable (XNodesAgg b)
   , Representable (XRemoteField b)
   , Representable (XComputedField b)
-  , Representable (XEventTrigger b)
   , Representable (XDistinct b)
   , Generic (Column b)
   , Ord (TableName b)
@@ -119,11 +122,12 @@ class
   type ScalarType              b = s | s -> b
   type SQLExpression           b :: Type
   type SQLOperator             b :: Type
+
+  -- extension types
   type XAILIKE                 b :: Type
   type XANILIKE                b :: Type
   type XComputedField          b :: Type
   type XRemoteField            b :: Type
-  type XEventTrigger           b :: Type
   type XRelay                  b :: Type
   type XNodesAgg               b :: Type
   type XDistinct               b :: Type

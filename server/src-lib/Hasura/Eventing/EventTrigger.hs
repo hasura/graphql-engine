@@ -440,7 +440,7 @@ logQErr err = do
   L.unLogger logger $ EventInternalErr err
 
 getEventTriggerInfoFromEvent
-  :: SchemaCache -> Event -> Either Text (EventTriggerInfo 'Postgres)
+  :: SchemaCache -> Event -> Either Text EventTriggerInfo
 getEventTriggerInfoFromEvent sc e = do
   let table = eTable e
       mTableInfo = unsafeTableInfo @'Postgres (eSource e) table $ scSources sc

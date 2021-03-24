@@ -567,11 +567,6 @@ fromAnnFieldsG existingJoins stringifyNumbers (IR.FieldName name, field) =
         (\aliasedThing ->
            JoinFieldSource (Aliased {aliasedThing, aliasedAlias = name}))
         (fromArraySelectG arraySelectG)
-    -- TODO:
-    -- Vamshi said to ignore these three for now:
-    IR.AFNodeId x _ _      -> case x of {}
-    IR.AFRemote x _        -> case x of {}
-    IR.AFComputedField x _ -> case x of {}
 
 -- | Here is where we project a field as a column expression. If
 -- number stringification is on, then we wrap it in a
@@ -829,9 +824,6 @@ fromOpExpG expression op =
     IR.AHasKey _val              -> refute (pure (UnsupportedOpExpG op))
     IR.AHasKeysAny _val          -> refute (pure (UnsupportedOpExpG op))
     IR.AHasKeysAll _val          -> refute (pure (UnsupportedOpExpG op))
-    -- https://stackoverflow.com/questions/14962419/is-the-like-operator-case-sensitive-with-mssql-server
-    IR.AILIKE _ _val             -> refute (pure (UnsupportedOpExpG op))
-    IR.ANILIKE _ _val            -> refute (pure (UnsupportedOpExpG op))
     -- https://docs.microsoft.com/en-us/sql/t-sql/language-elements/like-transact-sql
     IR.ASIMILAR _val             -> refute (pure (UnsupportedOpExpG op))
     IR.ANSIMILAR _val            -> refute (pure (UnsupportedOpExpG op))

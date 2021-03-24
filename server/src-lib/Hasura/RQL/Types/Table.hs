@@ -229,25 +229,23 @@ makeLenses ''RolePermInfo
 
 type RolePermInfoMap b = M.HashMap RoleName (RolePermInfo b)
 
-data EventTriggerInfo b
+data EventTriggerInfo
  = EventTriggerInfo
-   { etiXEventTrigger :: !(XEventTrigger b)
-   , etiName          :: !TriggerName
-   , etiOpsDef        :: !TriggerOpsDef
-   , etiRetryConf     :: !RetryConf
-   , etiWebhookInfo   :: !WebhookConfInfo
+   { etiName        :: !TriggerName
+   , etiOpsDef      :: !TriggerOpsDef
+   , etiRetryConf   :: !RetryConf
+   , etiWebhookInfo :: !WebhookConfInfo
    -- ^ The HTTP(s) URL which will be called with the event payload on configured operation.
    -- Must be a POST handler. This URL can be entered manually or can be picked up from an
    -- environment variable (the environment variable needs to be set before using it for
    -- this configuration).
-   , etiHeaders       :: ![EventHeaderInfo]
+   , etiHeaders     :: ![EventHeaderInfo]
    -- ^ Custom headers can be added to an event trigger. Each webhook request will have these
    -- headers added.
-   } deriving (Generic)
-deriving instance (Backend b) => Show (EventTriggerInfo b)
-deriving instance (Backend b) => Eq (EventTriggerInfo b)
-instance (Backend b) => NFData (EventTriggerInfo b)
-instance (Backend b) => ToJSON (EventTriggerInfo b) where
+   } deriving (Generic, Show, Eq)
+instance NFData EventTriggerInfo
+
+instance ToJSON EventTriggerInfo where
   toJSON EventTriggerInfo{..} =
     object [ "name" .= etiName
            , "ops_def" .= etiOpsDef
@@ -256,7 +254,7 @@ instance (Backend b) => ToJSON (EventTriggerInfo b) where
            , "headers" .= etiHeaders
            ]
 
-type EventTriggerInfoMap b = M.HashMap TriggerName (EventTriggerInfo b)
+type EventTriggerInfoMap = M.HashMap TriggerName EventTriggerInfo
 
 -- data ConstraintType
 --   = CTCHECK
@@ -435,7 +433,7 @@ data TableInfo (b :: BackendType)
   = TableInfo
   { _tiCoreInfo            :: TableCoreInfo b
   , _tiRolePermInfoMap     :: !(RolePermInfoMap b)
-  , _tiEventTriggerInfoMap :: !(EventTriggerInfoMap b)
+  , _tiEventTriggerInfoMap :: !EventTriggerInfoMap
   } deriving (Generic)
 instance Backend b => ToJSON (TableInfo b) where
   toJSON = genericToJSON hasuraJSON

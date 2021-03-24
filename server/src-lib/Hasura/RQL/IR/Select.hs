@@ -214,9 +214,9 @@ data AnnFieldG (b :: BackendType) v
   = AFColumn !(AnnColumnField b v)
   | AFObjectRelation !(ObjectRelationSelectG b v)
   | AFArrayRelation !(ArraySelectG b v)
-  | AFComputedField (XComputedField b) !(ComputedFieldSelect b v)
-  | AFRemote (XRemoteField b) !(RemoteSelect b)
-  | AFNodeId (XRelay b) !(TableName b) !(PrimaryKeyColumns b)
+  | AFComputedField !(XComputedField b) !(ComputedFieldSelect b v)
+  | AFRemote !(XRemoteField b) !(RemoteSelect b)
+  | AFNodeId !(XRelay b) !(TableName b) !(PrimaryKeyColumns b)
   | AFExpression !Text
 
 mkAnnColumnField
@@ -278,10 +278,6 @@ noSelectArgs = SelectArgs Nothing Nothing Nothing Nothing Nothing
 data ColFld (b :: BackendType)
   = CFCol !(Column b) !(ColumnType b)
   | CFExp !Text
-{-
-deriving instance Eq (Column b) => Eq (ColFld b)
-deriving instance Show (Column b) => Show (ColFld b)
--}
 
 type ColumnFields b = Fields (ColFld b)
 

@@ -33,14 +33,14 @@ instance Backend 'Postgres where
   type ScalarType              'Postgres = PG.PGScalarType
   type SQLExpression           'Postgres = PG.SQLExp
   type SQLOperator             'Postgres = PG.SQLOp
-  type XAILIKE                 'Postgres = ()
-  type XANILIKE                'Postgres = ()
-  type XComputedField          'Postgres = ()
-  type XRemoteField            'Postgres = ()
-  type XEventTrigger           'Postgres = ()
-  type XRelay                  'Postgres = ()
-  type XNodesAgg               'Postgres = ()
-  type XDistinct               'Postgres = ()
+
+  type XAILIKE                 'Postgres = XEnable
+  type XANILIKE                'Postgres = XEnable
+  type XComputedField          'Postgres = XEnable
+  type XRemoteField            'Postgres = XEnable
+  type XRelay                  'Postgres = XEnable
+  type XNodesAgg               'Postgres = XEnable
+  type XDistinct               'Postgres = XEnable
 
   functionArgScalarType   = PG.mkFunctionArgScalarType
   isComparableType        = PG.isComparableType

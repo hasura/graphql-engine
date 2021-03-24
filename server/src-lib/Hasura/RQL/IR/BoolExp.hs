@@ -236,22 +236,22 @@ data OpExpG (b :: BackendType) a
   | AGTE !a
   | ALTE !a
 
-  | ALIKE !a -- LIKE
+  | ALIKE  !a -- LIKE
   | ANLIKE !a -- NOT LIKE
 
-  | AILIKE (XAILIKE b) !a -- ILIKE, case insensitive
-  | ANILIKE (XANILIKE b) !a-- NOT ILIKE, case insensitive
+  | AILIKE  !(XAILIKE  b) !a -- ILIKE, case insensitive
+  | ANILIKE !(XANILIKE b) !a -- NOT ILIKE, case insensitive
 
-  | ASIMILAR !a -- similar, regex
-  | ANSIMILAR !a-- not similar, regex
+  | ASIMILAR  !a -- similar, regex
+  | ANSIMILAR !a -- not similar, regex
 
   -- Now that in the RQL code we've started to take a "trees that grow"
   -- approach (see PR #6003), we may eventually want to move these
   -- recently added constructors, which correspond to newly supported
   -- Postgres operators, to the backend-specific extensions of this type.
-  | AREGEX !a -- match POSIX case sensitive, regex
-  | AIREGEX !a -- match POSIX case insensitive, regex
-  | ANREGEX !a -- dont match POSIX case sensitive, regex
+  | AREGEX !a   -- match POSIX case sensitive, regex
+  | AIREGEX !a  -- match POSIX case insensitive, regex
+  | ANREGEX !a  -- dont match POSIX case sensitive, regex
   | ANIREGEX !a -- dont match POSIX case insensitive, regex
 
   | AContains !a
@@ -482,13 +482,13 @@ annBoolExpMakeKeyValuePair :: forall b . Backend b => AnnBoolExpFld b (PartialSQ
 annBoolExpMakeKeyValuePair = \case
   AVCol pci opExps ->
     ( toTxt $ pgiColumn pci
-    , toJSON (pci, map opExpSToJSON opExps))
+    , toJSON (pci, map opExpsToJSON opExps))
   AVRel ri relBoolExp ->
     ( relNameToTxt $ riName ri
     , toJSON (ri, toJSON relBoolExp))
   where
-    opExpSToJSON :: OpExpG b (PartialSQLExp b) -> Value
-    opExpSToJSON =  object . pure . opExpToJPair toJSON
+    opExpsToJSON :: OpExpG b (PartialSQLExp b) -> Value
+    opExpsToJSON =  object . pure . opExpToJPair toJSON
 
 instance Backend b => ToJSON (AnnColumnCaseBoolExpPartialSQL b) where
   toJSON = gBoolExpToJSON (annBoolExpMakeKeyValuePair . _accColCaseBoolExpField)

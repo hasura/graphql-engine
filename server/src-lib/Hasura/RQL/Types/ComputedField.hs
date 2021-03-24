@@ -104,7 +104,7 @@ $(deriveToJSON hasuraJSON ''ComputedFieldFunction)
 
 data ComputedFieldInfo (b :: BackendType)
   = ComputedFieldInfo
-  { _cfiXComputedFieldInfo :: (XComputedField b)
+  { _cfiXComputedFieldInfo :: !(XComputedField b)
   , _cfiName               :: !ComputedFieldName
   , _cfiFunction           :: !ComputedFieldFunction
   , _cfiReturnType         :: !(ComputedFieldReturn b)

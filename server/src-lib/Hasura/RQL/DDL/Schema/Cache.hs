@@ -618,7 +618,7 @@ buildSchemaCacheRule env = proc (metadata, invalidationKeys) -> do
          , MonadReader BuildReason m, HasServerConfigCtx m, BackendMetadata b)
       => ( SourceName, SourceConfig b, TableCoreInfo b
          , [EventTriggerConf], Inc.Dependency Inc.InvalidationKey
-         ) `arr` EventTriggerInfoMap b
+         ) `arr` EventTriggerInfoMap
     buildTableEventTriggers = proc (source, sourceConfig, tableInfo, eventTriggerConfs, metadataInvalidationKey) ->
       buildInfoMap (etcName . (^. _5)) mkEventTriggerMetadataObject buildEventTrigger
         -< (tableInfo, map (metadataInvalidationKey, source, sourceConfig, _tciName tableInfo,) eventTriggerConfs)

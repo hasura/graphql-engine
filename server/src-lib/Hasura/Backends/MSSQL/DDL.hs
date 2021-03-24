@@ -89,7 +89,7 @@ buildEventTriggerInfo
   -> SourceName
   -> TableName 'MSSQL
   -> EventTriggerConf
-  -> m (EventTriggerInfo 'MSSQL, [SchemaDependency])
+  -> m (EventTriggerInfo, [SchemaDependency])
 buildEventTriggerInfo _ _ _ _ =
   throw400 NotSupported "Table event triggers are not supported for MSSQL sources"
 

@@ -81,7 +81,7 @@ class (Backend b) => BackendMetadata (b :: BackendType) where
     -> SourceName
     -> TableName b
     -> EventTriggerConf
-    -> m (EventTriggerInfo b, [SchemaDependency])
+    -> m (EventTriggerInfo, [SchemaDependency])
 
   parseBoolExpOperations
     :: (MonadError QErr m, TableCoreInfoRM b m)
