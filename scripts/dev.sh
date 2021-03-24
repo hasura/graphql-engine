@@ -179,6 +179,11 @@ HASURA_GRAPHQL_DATABASE_URL=${HASURA_GRAPHQL_DATABASE_URL-$POSTGRES_DB_URL}
 # MSSQL connection string as an optional alternative source
 MSSQL_DB_URL="DRIVER={ODBC Driver 17 for SQL Server};SERVER=127.0.0.1,$MSSQL_PORT;Uid=sa;Pwd=$MSSQL_PASSWORD;"
 
+# Extra sources for multi-source tests. Uses the default postgres DB if no extra sources
+# are defined.
+export HASURA_GRAPHQL_PG_SOURCE_URL_1=${HASURA_GRAPHQL_PG_SOURCE_URL_1-$POSTGRES_DB_URL}
+export HASURA_GRAPHQL_PG_SOURCE_URL_2=${HASURA_GRAPHQL_PG_SOURCE_URL_2-$POSTGRES_DB_URL}
+
 PG_CONTAINER_NAME="hasura-dev-postgres-$PG_PORT"
 MSSQL_CONTAINER_NAME="hasura-dev-mssql-$MSSQL_PORT"
 
