@@ -818,6 +818,22 @@ fromOpExpG expression op =
     IR.ANIN val                  -> pure (OpExpression TSQL.NIN expression val)
     IR.ALIKE val                 -> pure (OpExpression TSQL.LIKE expression val)
     IR.ANLIKE val                -> pure (OpExpression TSQL.NLIKE expression val)
+    IR.ASTContains val           -> pure (TSQL.STOpExpression TSQL.STContains expression val)
+    IR.ASTCrosses val            -> pure (TSQL.STOpExpression TSQL.STCrosses expression val)
+    IR.ASTEquals val             -> pure (TSQL.STOpExpression TSQL.STEquals expression val)
+    IR.ASTIntersects val         -> pure (TSQL.STOpExpression TSQL.STIntersects expression val)
+    IR.ASTOverlaps val           -> pure (TSQL.STOpExpression TSQL.STOverlaps expression val)
+    IR.ASTTouches val            -> pure (TSQL.STOpExpression TSQL.STTouches expression val)
+    IR.ASTWithin val             -> pure (TSQL.STOpExpression TSQL.STWithin expression val)
+    -- https://docs.microsoft.com/en-us/sql/relational-databases/hierarchical-data-sql-server
+    IR.AAncestor _               -> refute (pure (UnsupportedOpExpG op))
+    IR.AAncestorAny _            -> refute (pure (UnsupportedOpExpG op))
+    IR.ADescendant _             -> refute (pure (UnsupportedOpExpG op))
+    IR.ADescendantAny _          -> refute (pure (UnsupportedOpExpG op))
+    IR.AMatches _                -> refute (pure (UnsupportedOpExpG op))
+    IR.AMatchesAny _             -> refute (pure (UnsupportedOpExpG op))
+    IR.AMatchesFulltext _        -> refute (pure (UnsupportedOpExpG op))
+    -- No equivalent operators in SQL Server for the following
     -- https://docs.microsoft.com/en-us/sql/t-sql/functions/json-functions-transact-sql
     IR.AContains _val            -> refute (pure (UnsupportedOpExpG op))
     IR.AContainedIn _val         -> refute (pure (UnsupportedOpExpG op))
@@ -831,35 +847,19 @@ fromOpExpG expression op =
     IR.AIREGEX _val              -> refute (pure (UnsupportedOpExpG op))
     IR.ANREGEX _val              -> refute (pure (UnsupportedOpExpG op))
     IR.ANIREGEX _val             -> refute (pure (UnsupportedOpExpG op))
-    -- https://docs.microsoft.com/en-us/sql/relational-databases/hierarchical-data-sql-server
-    IR.AAncestor _               -> refute (pure (UnsupportedOpExpG op))
-    IR.AAncestorAny _            -> refute (pure (UnsupportedOpExpG op))
-    IR.ADescendant _             -> refute (pure (UnsupportedOpExpG op))
-    IR.ADescendantAny _          -> refute (pure (UnsupportedOpExpG op))
-    IR.AMatches _                -> refute (pure (UnsupportedOpExpG op))
-    IR.AMatchesAny _             -> refute (pure (UnsupportedOpExpG op))
-    IR.AMatchesFulltext _        -> refute (pure (UnsupportedOpExpG op))
-    -- As of March 2021, only geometry/geography casts are supported
-    IR.ACast _casts              -> refute (pure (UnsupportedOpExpG op)) -- mkCastsExp casts
     -- https://docs.microsoft.com/en-us/sql/relational-databases/spatial/spatial-data-sql-server
-    IR.ASTContains _val          -> refute (pure (UnsupportedOpExpG op)) -- mkGeomOpBe "ST_Contains" val
-    IR.ASTCrosses _val           -> refute (pure (UnsupportedOpExpG op)) -- mkGeomOpBe "ST_Crosses" val
-    IR.ASTEquals _val            -> refute (pure (UnsupportedOpExpG op)) -- mkGeomOpBe "ST_Equals" val
-    IR.ASTIntersects _val        -> refute (pure (UnsupportedOpExpG op)) -- mkGeomOpBe "ST_Intersects" val
-    IR.ASTOverlaps _val          -> refute (pure (UnsupportedOpExpG op)) -- mkGeomOpBe "ST_Overlaps" val
-    IR.ASTTouches _val           -> refute (pure (UnsupportedOpExpG op)) -- mkGeomOpBe "ST_Touches" val
-    IR.ASTWithin _val            -> refute (pure (UnsupportedOpExpG op)) -- mkGeomOpBe "ST_Within" val
-    IR.ASTDWithinGeom {}         -> refute (pure (UnsupportedOpExpG op)) -- applySQLFn "ST_DWithin" [lhs, val, r]
-    IR.ASTDWithinGeog {}         -> refute (pure (UnsupportedOpExpG op)) -- applySQLFn "ST_DWithin" [lhs, val, r, sph]
-    IR.ASTIntersectsRast _val    -> refute (pure (UnsupportedOpExpG op)) -- applySTIntersects [lhs, val]
-    IR.ASTIntersectsNbandGeom {} -> refute (pure (UnsupportedOpExpG op)) -- applySTIntersects [lhs, nband, geommin]
-    IR.ASTIntersectsGeomNband {} -> refute (pure (UnsupportedOpExpG op)) -- applySTIntersects [lhs, geommin, withSQLNull mNband]
-    IR.CEQ _rhsCol               -> refute (pure (UnsupportedOpExpG op)) -- S.BECompare S.SEQ lhs $ mkQCol rhsCol
-    IR.CNE _rhsCol               -> refute (pure (UnsupportedOpExpG op)) -- S.BECompare S.SNE lhs $ mkQCol rhsCol
-    IR.CGT _rhsCol               -> refute (pure (UnsupportedOpExpG op)) -- S.BECompare S.SGT lhs $ mkQCol rhsCol
-    IR.CLT _rhsCol               -> refute (pure (UnsupportedOpExpG op)) -- S.BECompare S.SLT lhs $ mkQCol rhsCol
-    IR.CGTE _rhsCol              -> refute (pure (UnsupportedOpExpG op)) -- S.BECompare S.SGTE lhs $ mkQCol rhsCol
-    IR.CLTE _rhsCol              -> refute (pure (UnsupportedOpExpG op)) -- S.BECompare S.SLTE lhs $ mkQCol rhsCol
+    IR.ACast _casts              -> refute (pure (UnsupportedOpExpG op))
+    IR.ASTDWithinGeom {}         -> refute (pure (UnsupportedOpExpG op))
+    IR.ASTDWithinGeog {}         -> refute (pure (UnsupportedOpExpG op))
+    IR.ASTIntersectsRast _val    -> refute (pure (UnsupportedOpExpG op))
+    IR.ASTIntersectsNbandGeom {} -> refute (pure (UnsupportedOpExpG op))
+    IR.ASTIntersectsGeomNband {} -> refute (pure (UnsupportedOpExpG op))
+    IR.CEQ _rhsCol               -> refute (pure (UnsupportedOpExpG op))
+    IR.CNE _rhsCol               -> refute (pure (UnsupportedOpExpG op))
+    IR.CGT _rhsCol               -> refute (pure (UnsupportedOpExpG op))
+    IR.CLT _rhsCol               -> refute (pure (UnsupportedOpExpG op))
+    IR.CGTE _rhsCol              -> refute (pure (UnsupportedOpExpG op))
+    IR.CLTE _rhsCol              -> refute (pure (UnsupportedOpExpG op))
 
 nullableBoolEquality :: Expression -> Expression -> Expression
 nullableBoolEquality x y =

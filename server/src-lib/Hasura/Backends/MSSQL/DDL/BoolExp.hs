@@ -39,37 +39,53 @@ parseBoolExpOperations rhsParser _fields columnInfo value =
     parseOperation :: ColumnType 'MSSQL -> (Text, J.Value) -> m (OpExpG 'MSSQL v)
     parseOperation columnType (opStr, val) = withPathK opStr $
       case opStr of
-        "_eq"    -> parseEq
-        "$eq"    -> parseEq
+        "_eq"            -> parseEq
+        "$eq"            -> parseEq
 
-        "_neq"   -> parseNeq
-        "$neq"   -> parseNeq
+        "_neq"           -> parseNeq
+        "$neq"           -> parseNeq
 
-        "$in"    -> parseIn
-        "_in"    -> parseIn
+        "$in"            -> parseIn
+        "_in"            -> parseIn
 
-        "$nin"   -> parseNin
-        "_nin"   -> parseNin
+        "$nin"           -> parseNin
+        "_nin"           -> parseNin
 
-        "_gt"    -> parseGt
-        "$gt"    -> parseGt
+        "_gt"            -> parseGt
+        "$gt"            -> parseGt
 
-        "_lt"    -> parseLt
-        "$lt"    -> parseLt
+        "_lt"            -> parseLt
+        "$lt"            -> parseLt
 
-        "_gte"   -> parseGte
-        "$gte"   -> parseGte
+        "_gte"           -> parseGte
+        "$gte"           -> parseGte
 
-        "_lte"   -> parseLte
-        "$lte"   -> parseLte
+        "_lte"           -> parseLte
+        "$lte"           -> parseLte
 
-        "$like"  -> parseLike
-        "_like"  -> parseLike
+        "$like"          -> parseLike
+        "_like"          -> parseLike
 
-        "$nlike" -> parseNlike
-        "_nlike" -> parseNlike
+        "$nlike"         -> parseNlike
+        "_nlike"         -> parseNlike
 
-        x        -> throw400 UnexpectedPayload $ "Unknown operator : " <> x
+        "_st_contains"   -> parseGeometryOrGeographyOp ASTContains
+        "$st_contains"   -> parseGeometryOrGeographyOp ASTContains
+        "_st_equals"     -> parseGeometryOrGeographyOp ASTEquals
+        "$st_equals"     -> parseGeometryOrGeographyOp ASTEquals
+        "_st_intersects" -> parseGeometryOrGeographyOp ASTIntersects
+        "$st_intersects" -> parseGeometryOrGeographyOp ASTIntersects
+        "_st_overlaps"   -> parseGeometryOrGeographyOp ASTOverlaps
+        "$st_overlaps"   -> parseGeometryOrGeographyOp ASTOverlaps
+        "_st_within"     -> parseGeometryOrGeographyOp ASTWithin
+        "$st_within"     -> parseGeometryOrGeographyOp ASTWithin
+
+        "_st_crosses"    -> parseGeometryOp ASTCrosses
+        "$st_crosses"    -> parseGeometryOp ASTCrosses
+        "_st_touches"    -> parseGeometryOp ASTTouches
+        "$st_touches"    -> parseGeometryOp ASTTouches
+
+        x                -> throw400 UnexpectedPayload $ "Unknown operator : " <> x
 
       where
         colTy = pgiType columnInfo
@@ -87,6 +103,12 @@ parseBoolExpOperations rhsParser _fields columnInfo value =
         parseLte   = ALTE <$> parseOne
         parseLike  = guardType stringTypes >> ALIKE  <$> parseOne
         parseNlike = guardType stringTypes >> ANLIKE <$> parseOne
+
+        parseGeometryOp f =
+          guardType [GeometryType] >> f <$> parseOneNoSess colTy val
+        parseGeometryOrGeographyOp f =
+          guardType geoTypes >> f <$> parseOneNoSess colTy val
+        parseOneNoSess ty = rhsParser (CollectableTypeScalar ty)
 
         guardType validTys = unless (isScalarColumnWhere (`elem` validTys) colTy) $
           throwError $ buildMsg colTy validTys

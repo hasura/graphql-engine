@@ -69,6 +69,7 @@ $(fmap concat $ for [ ''Where
                     , ''FieldName
                     , ''JsonPath
                     , ''Op
+                    , ''SpatialOp
                     , ''Projection
                     , ''From
                     , ''OpenJson
