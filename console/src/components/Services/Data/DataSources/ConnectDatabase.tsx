@@ -1,4 +1,11 @@
-import React, { ChangeEvent, FormEvent } from 'react';
+/* eslint-disable no-underscore-dangle */
+import React, {
+  ChangeEvent,
+  FormEvent,
+  useReducer,
+  useState,
+  useEffect,
+} from 'react';
 import { connect, ConnectedProps } from 'react-redux';
 
 import Tabbed from './TabbedDataSourceConnection';
@@ -7,65 +14,52 @@ import { mapDispatchToPropsEmpty } from '../../../Common/utils/reactUtils';
 import Button from '../../../Common/Button';
 import { showErrorNotification } from '../../Common/Notification';
 import _push from '../push';
-
-import styles from '../../../Common/Common.scss';
 import {
   connectDataSource,
   connectDBReducer,
   connectionTypes,
   getDefaultState,
+  readReplicaReducer,
+  defaultState,
+  makeReadReplicaConnectionObject,
 } from './state';
 import { getDatasourceURL, getErrorMessageFromMissingFields } from './utils';
-import { LabeledInput } from '../../../Common/LabeledInput';
-import { Driver } from '../../../../dataSources';
+import ConnectDatabaseForm from './ConnectDBForm';
+import ReadReplicaForm from './ReadReplicaForm';
+
+import styles from './DataSources.scss';
 
 interface ConnectDatabaseProps extends InjectedProps {}
-
-const connectionRadioName = 'connection-type';
-const dbTypePlaceholders: Record<Driver, string> = {
-  postgres: 'postgresql://username:password@hostname:5432/database',
-  mssql:
-    'Driver={ODBC Driver 17 for SQL Server};Server=serveraddress;Database=dbname;Uid=username;Pwd=password;',
-  mysql: 'MySQL connection string',
-};
-
-const connectionRadios = [
-  {
-    value: connectionTypes.CONNECTION_PARAMS,
-    title: 'Connection Parameters',
-    disableOnEdit: true,
-  },
-  {
-    value: connectionTypes.DATABASE_URL,
-    title: 'Database URL',
-    disableOnEdit: false,
-  },
-  {
-    value: connectionTypes.ENV_VAR,
-    title: 'Environment Variable',
-    disableOnEdit: true,
-  },
-];
 
 const ConnectDatabase: React.FC<ConnectDatabaseProps> = props => {
   const { dispatch } = props;
 
-  const [connectDBInputState, connectDBDispatch] = React.useReducer(
+  const [connectDBInputState, connectDBDispatch] = useReducer(
     connectDBReducer,
     getDefaultState(props)
   );
 
-  const [connectionType, changeConnectionType] = React.useState(
+  const [connectionType, changeConnectionType] = useState(
     props.dbConnection.envVar
       ? connectionTypes.ENV_VAR
       : connectionTypes.DATABASE_URL
   );
-  const [openConnectionSettings, changeConnectionsParamState] = React.useState(
-    false
-  );
-  const [loading, setLoading] = React.useState(false);
-  const { sources = [], pathname = '' } = props;
 
+  const [loading, setLoading] = useState(false);
+
+  const [readReplicasState, readReplicaDispatch] = useReducer(
+    readReplicaReducer,
+    []
+  );
+  const [
+    connectDBStateForReadReplica,
+    connectDBReadReplicaDispatch,
+  ] = useReducer(connectDBReducer, defaultState);
+  const [readReplicaConnectionType, updateReadReplicaConnectionType] = useState(
+    connectionTypes.DATABASE_URL
+  );
+
+  const { sources = [], pathname = '' } = props;
   const isEditState =
     pathname.includes('edit') || pathname.indexOf('edit') !== -1;
   const paths = pathname.split('/');
@@ -73,7 +67,8 @@ const ConnectDatabase: React.FC<ConnectDatabaseProps> = props => {
   const currentSourceInfo = sources.find(
     source => source.name === editSourceName
   );
-  React.useEffect(() => {
+
+  useEffect(() => {
     if (isEditState && currentSourceInfo) {
       connectDBDispatch({
         type: 'INIT',
@@ -91,9 +86,8 @@ const ConnectDatabase: React.FC<ConnectDatabaseProps> = props => {
     }
   }, [isEditState, currentSourceInfo]);
 
-  const onChangeConnectionType = (e: ChangeEvent<HTMLInputElement>) => {
+  const onChangeConnectionType = (e: ChangeEvent<HTMLInputElement>) =>
     changeConnectionType(e.target.value);
-  };
 
   const resetState = () => {
     connectDBDispatch({
@@ -124,6 +118,11 @@ const ConnectDatabase: React.FC<ConnectDatabaseProps> = props => {
       // TODO: server to provide API
     }
 
+    // TODO: check if permitted, if not pass undefined
+    const read_replicas = readReplicasState.map(replica =>
+      makeReadReplicaConnectionObject(replica)
+    );
+
     if (
       connectionType === connectionTypes.DATABASE_URL ||
       (connectionType === connectionTypes.CONNECTION_PARAMS &&
@@ -144,7 +143,8 @@ const ConnectDatabase: React.FC<ConnectDatabaseProps> = props => {
         dispatch,
         connectionTypes.DATABASE_URL,
         connectDBInputState,
-        onSuccessConnectDBCb
+        onSuccessConnectDBCb,
+        read_replicas
       )
         .then(() => setLoading(false))
         .catch(() => setLoading(false));
@@ -165,9 +165,10 @@ const ConnectDatabase: React.FC<ConnectDatabaseProps> = props => {
       setLoading(true);
       connectDataSource(
         dispatch,
-        connectionType,
+        connectionTypes.ENV_VAR,
         connectDBInputState,
-        onSuccessConnectDBCb
+        onSuccessConnectDBCb,
+        read_replicas
       )
         .then(() => setLoading(false))
         .catch(() => setLoading(false));
@@ -198,292 +199,95 @@ const ConnectDatabase: React.FC<ConnectDatabaseProps> = props => {
     setLoading(true);
     connectDataSource(
       dispatch,
-      connectionType,
+      connectionTypes.CONNECTION_PARAMS,
       connectDBInputState,
-      onSuccessConnectDBCb
+      onSuccessConnectDBCb,
+      read_replicas
     )
       .then(() => setLoading(false))
       .catch(() => setLoading(false));
   };
+
   const onSubmit = (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     onConnectDatabase();
   };
 
+  const updateRadioForReadReplica = (e: ChangeEvent<HTMLInputElement>) =>
+    updateReadReplicaConnectionType(e.target.value);
+
+  const onClickAddReadReplica = () => {
+    connectDBReadReplicaDispatch({
+      type: 'RESET_INPUT_STATE',
+    });
+    updateReadReplicaConnectionType(connectionTypes.DATABASE_URL);
+    const indexForName = readReplicasState.length;
+    connectDBReadReplicaDispatch({
+      type: 'UPDATE_DISPLAY_NAME',
+      data: `read-replica-${indexForName}`,
+    });
+  };
+
+  const onClickCancelOnReadReplicaForm = () =>
+    connectDBReadReplicaDispatch({
+      type: 'RESET_INPUT_STATE',
+    });
+
+  const onClickSaveReadReplicaForm = () => {
+    readReplicaDispatch({
+      type: 'ADD_READ_REPLICA',
+      data: {
+        ...connectDBStateForReadReplica,
+        chosenConnectionType: readReplicaConnectionType,
+      },
+    });
+    connectDBReadReplicaDispatch({
+      type: 'RESET_INPUT_STATE',
+    });
+  };
+
   return (
     <Tabbed tabName="connect">
-      <form onSubmit={onSubmit} className={styles.connect_db_content}>
-        <h4
-          className={`${styles.remove_pad_bottom} ${styles.connect_db_header}`}
-        >
-          Connect Database Via
-        </h4>
-        <div
-          className={styles.connect_db_radios}
-          onChange={onChangeConnectionType}
-        >
-          {connectionRadios.map(
-            (radioBtn: {
-              value: string;
-              title: string;
-              disableOnEdit: boolean;
-            }) => (
-              <label
-                key={`label-${radioBtn.title}`}
-                className={styles.connect_db_radio_label}
-              >
-                <input
-                  type="radio"
-                  value={radioBtn.value}
-                  name={connectionRadioName}
-                  checked={connectionType === radioBtn.value}
-                  disabled={
-                    isEditState === radioBtn.disableOnEdit && isEditState
-                  }
-                />
-                {radioBtn.title}
-              </label>
-            )
+      <form
+        onSubmit={onSubmit}
+        className={`${styles.connect_db_content} ${styles.connect_form_width}`}
+      >
+        <ConnectDatabaseForm
+          connectionDBState={connectDBInputState}
+          connectionDBStateDispatch={connectDBDispatch}
+          connectionTypeState={connectionType}
+          updateConnectionTypeRadio={onChangeConnectionType}
+        />
+        {/* Should be rendered only on Pro and Cloud Console */}
+        {connectDBInputState.dbType !== 'mssql' &&
+          (window.__env.consoleId || window.__env.userRole) && (
+            <ReadReplicaForm
+              readReplicaState={readReplicasState}
+              readReplicaDispatch={readReplicaDispatch}
+              connectDBState={connectDBStateForReadReplica}
+              connectDBStateDispatch={connectDBReadReplicaDispatch}
+              readReplicaConnectionType={readReplicaConnectionType}
+              updateReadReplicaConnectionType={updateRadioForReadReplica}
+              onClickAddReadReplicaCb={onClickAddReadReplica}
+              onClickCancelOnReadReplicaCb={onClickCancelOnReadReplicaForm}
+              onClickSaveReadReplicaCb={onClickSaveReadReplicaForm}
+            />
           )}
-        </div>
-        <div className={styles.connect_form_layout}>
-          <LabeledInput
-            onChange={e =>
-              connectDBDispatch({
-                type: 'UPDATE_DISPLAY_NAME',
-                data: e.target.value,
-              })
-            }
-            value={connectDBInputState.displayName}
-            label="Database Display Name"
-            placeholder="database name"
-            data-test="database-display-name"
-          />
-          <label
-            key="Data Source Driver"
-            className={styles.connect_db_input_label}
+
+        <div className={styles.add_button_layout}>
+          <Button
+            size="large"
+            color="yellow"
+            type="submit"
+            style={{
+              width: '70%',
+              ...(loading && { cursor: 'progress' }),
+            }}
+            disabled={loading}
+            data-test="connect-database-btn"
           >
-            Data Source Driver
-          </label>
-          <select
-            key="connect-db-type"
-            value={connectDBInputState.dbType}
-            onChange={e =>
-              connectDBDispatch({
-                type: 'UPDATE_DB_DRIVER',
-                data: e.target.value as Driver,
-              })
-            }
-            className={`form-control ${styles.connect_db_input_pad}`}
-            data-test="database-type"
-          >
-            <option key="postgres" value="postgres">
-              Postgres
-            </option>
-            <option key="mssql" value="mssql">
-              MS Server
-            </option>
-          </select>
-          {connectionType === connectionTypes.DATABASE_URL ||
-          (connectionType === connectionTypes.CONNECTION_PARAMS &&
-            connectDBInputState.dbType === 'mssql') ? (
-            <LabeledInput
-              label="Database URL"
-              onChange={e =>
-                connectDBDispatch({
-                  type: 'UPDATE_DB_URL',
-                  data: e.target.value,
-                })
-              }
-              value={connectDBInputState.databaseURLState.dbURL}
-              placeholder={dbTypePlaceholders[connectDBInputState.dbType]}
-              disabled={isEditState}
-              data-test="database-url"
-            />
-          ) : null}
-          {connectionType === connectionTypes.ENV_VAR ? (
-            <LabeledInput
-              label="Environment Variable"
-              placeholder="HASURA_GRAPHQL_DB_URL_FROM_ENV"
-              onChange={e =>
-                connectDBDispatch({
-                  type: 'UPDATE_DB_URL_ENV_VAR',
-                  data: e.target.value,
-                })
-              }
-              value={connectDBInputState.envVarURLState.envVarURL}
-              data-test="database-url-env"
-            />
-          ) : null}
-          {connectionType === connectionTypes.CONNECTION_PARAMS &&
-          connectDBInputState.dbType !== 'mssql' ? (
-            <>
-              <LabeledInput
-                label="Host"
-                placeholder="localhost"
-                onChange={e =>
-                  connectDBDispatch({
-                    type: 'UPDATE_DB_HOST',
-                    data: e.target.value,
-                  })
-                }
-                value={connectDBInputState.connectionParamState.host}
-                data-test="host"
-              />
-              <LabeledInput
-                label="Port"
-                placeholder="5432"
-                onChange={e =>
-                  connectDBDispatch({
-                    type: 'UPDATE_DB_PORT',
-                    data: e.target.value,
-                  })
-                }
-                value={connectDBInputState.connectionParamState.port}
-                data-test="port"
-              />
-              <LabeledInput
-                label="Username"
-                placeholder="postgres_user"
-                onChange={e =>
-                  connectDBDispatch({
-                    type: 'UPDATE_DB_USERNAME',
-                    data: e.target.value,
-                  })
-                }
-                value={connectDBInputState.connectionParamState.username}
-                data-test="username"
-              />
-              <LabeledInput
-                label="Password"
-                key="connect-db-password"
-                type="password"
-                placeholder="postgrespassword"
-                onChange={e =>
-                  connectDBDispatch({
-                    type: 'UPDATE_DB_PASSWORD',
-                    data: e.target.value,
-                  })
-                }
-                value={connectDBInputState.connectionParamState.password}
-                data-test="password"
-              />
-              <LabeledInput
-                key="connect-db-database-name"
-                label="Database Name"
-                placeholder="postgres"
-                onChange={e =>
-                  connectDBDispatch({
-                    type: 'UPDATE_DB_DATABASE_NAME',
-                    data: e.target.value,
-                  })
-                }
-                value={connectDBInputState.connectionParamState.database}
-                data-test="database-name"
-              />
-            </>
-          ) : null}
-          <div className={styles.connection_settings_layout}>
-            <div className={styles.connection_settings_header}>
-              <a
-                href="#"
-                style={{ textDecoration: 'none' }}
-                onClick={() =>
-                  changeConnectionsParamState(!openConnectionSettings)
-                }
-              >
-                {openConnectionSettings ? (
-                  <i className="fa fa-caret-down" />
-                ) : (
-                  <i className="fa fa-caret-right" />
-                )}
-                {'  '}
-                Connection Settings
-              </a>
-            </div>
-            {openConnectionSettings ? (
-              <div className={styles.connection_settings_form}>
-                <div className={styles.connnection_settings_form_input_layout}>
-                  <LabeledInput
-                    label="Max Connections"
-                    type="number"
-                    className={`form-control ${styles.connnection_settings_form_input}`}
-                    placeholder="50"
-                    value={
-                      connectDBInputState.connectionSettings?.max_connections ??
-                      undefined
-                    }
-                    onChange={e =>
-                      connectDBDispatch({
-                        type: 'UPDATE_MAX_CONNECTIONS',
-                        data: e.target.value,
-                      })
-                    }
-                    min="0"
-                    labelInBold
-                    data-test="max-connections"
-                  />
-                </div>
-                <div className={styles.connnection_settings_form_input_layout}>
-                  <LabeledInput
-                    label="Idle Timeout"
-                    type="number"
-                    className={`form-control ${styles.connnection_settings_form_input}`}
-                    placeholder="180"
-                    value={
-                      connectDBInputState.connectionSettings?.idle_timeout ??
-                      undefined
-                    }
-                    onChange={e =>
-                      connectDBDispatch({
-                        type: 'UPDATE_IDLE_TIMEOUT',
-                        data: e.target.value,
-                      })
-                    }
-                    min="0"
-                    labelInBold
-                    data-test="idle-timeout"
-                  />
-                </div>
-                <div className={styles.connnection_settings_form_input_layout}>
-                  <LabeledInput
-                    label="Retries"
-                    type="number"
-                    className={`form-control ${styles.connnection_settings_form_input}`}
-                    placeholder="1"
-                    value={
-                      connectDBInputState.connectionSettings?.retries ??
-                      undefined
-                    }
-                    onChange={e =>
-                      connectDBDispatch({
-                        type: 'UPDATE_RETRIES',
-                        data: e.target.value,
-                      })
-                    }
-                    min="0"
-                    labelInBold
-                    data-test="retries"
-                  />
-                </div>
-              </div>
-            ) : null}
-          </div>
-          <div className={styles.add_button_layout}>
-            <Button
-              size="large"
-              color="yellow"
-              type="submit"
-              style={{
-                width: '70%',
-                ...(loading && { cursor: 'progress' }),
-              }}
-              disabled={loading}
-              data-test="save-database"
-            >
-              {!isEditState ? 'Connect Database' : 'Edit Connection'}
-            </Button>
-          </div>
+            {!isEditState ? 'Connect Database' : 'Edit Connection'}
+          </Button>
         </div>
       </form>
     </Tabbed>

@@ -10,6 +10,7 @@ export type DataSource = {
     idle_timeout?: number;
     retries?: number;
   };
+  read_replicas?: Omit<SourceConnectionInfo, 'connection_string'>[];
 };
 
 // GENERATED
@@ -866,6 +867,22 @@ export interface RestEndpointEntry {
 // /////////////////////////////
 
 /**
+ * Docs for type: https://hasura.io/docs/latest/graphql/core/api-reference/syntax-defs.html#pgsourceconnectioninfo
+ */
+
+export interface SourceConnectionInfo {
+  // used for SQL Server
+  connection_string: string;
+  // used for Postgres
+  database_url: string | { from_env: string };
+  pool_settings: {
+    max_connections: number;
+    idle_timeout: number;
+    retries: number;
+  };
+}
+
+/**
  * Type used in exported 'metadata.json' and replace metadata endpoint
  * https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/manage-metadata.html#replace-metadata
  */
@@ -886,17 +903,11 @@ export interface HasuraMetadataV2 {
 
 export interface MetadataDataSource {
   name: string;
-  kind?: 'postgres' | 'mysql';
+  kind?: 'postgres' | 'mysql' | 'mssql';
   configuration?: {
-    connection_info?: {
-      connection_string?: string;
-      database_url?: string | { from_env: string };
-      pool_settings?: {
-        max_connections: number;
-        idle_timeout: number;
-        retries: number;
-      };
-    };
+    connection_info?: SourceConnectionInfo;
+    // pro-only feature
+    read_replicas?: SourceConnectionInfo[];
   };
   tables: TableEntry[];
   functions?: Array<{

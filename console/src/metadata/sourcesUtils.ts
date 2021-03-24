@@ -1,4 +1,5 @@
 import { Driver } from '../dataSources';
+import { SourceConnectionInfo } from './types';
 
 export const addSource = (
   driver: Driver,
@@ -10,7 +11,9 @@ export const addSource = (
       idle_timeout?: number;
       retries?: number;
     };
-  }
+  },
+  // supported only for PG sources at the moment
+  replicas?: Omit<SourceConnectionInfo, 'connection_string'>[]
 ) => {
   if (driver === 'mssql') {
     return {
@@ -36,6 +39,7 @@ export const addSource = (
           database_url: payload.dbUrl,
           pool_settings: payload.connection_pool_settings,
         },
+        read_replicas: replicas?.length ? replicas : null,
       },
     },
   };

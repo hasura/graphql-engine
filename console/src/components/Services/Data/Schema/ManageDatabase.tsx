@@ -18,7 +18,6 @@ import ToolTip from '../../../Common/Tooltip/Tooltip';
 import { getConfirmation } from '../../../Common/utils/jsUtils';
 import { mapDispatchToPropsEmpty } from '../../../Common/utils/reactUtils';
 import _push from '../push';
-import { getHostFromConnectionString } from '../DataSources/ManageDBUtils';
 import { isInconsistentSource } from '../utils';
 
 const driverToLabel: Record<Driver, string> = {
@@ -96,15 +95,19 @@ const DatabaseListItem: React.FC<DatabaseListItemProps> = ({
         >
           {removing ? 'Removing...' : 'Remove'}
         </Button>
-        <div
-          className={`${styles.displayFlexContainer} ${styles.add_pad_left} ${styles.add_pad_top_10}`}
-        >
-          <b>{dataSource.name}</b>&nbsp;
-          <p>({driverToLabel[dataSource.driver]})</p>
+        <div className={styles.flexColumn}>
+          <div
+            className={`${styles.displayFlexContainer} ${styles.add_pad_left} ${styles.add_pad_top_10}`}
+          >
+            <b>{dataSource.name}</b>&nbsp;
+            <p>({driverToLabel[dataSource.driver]})</p>
+            {!!dataSource?.read_replicas?.length && (
+              <div className={styles.replica_badge}>
+                {dataSource.read_replicas.length} Replicas
+              </div>
+            )}
+          </div>
         </div>
-        <p className={`${styles.add_pad_top_10} ${styles.add_pad_left}`}>
-          {getHostFromConnectionString(dataSource)}
-        </p>
         {isInconsistentDataSource && (
           <ToolTip
             id={`inconsistent-source-${dataSource.name}`}
@@ -142,7 +145,7 @@ const DatabaseListItem: React.FC<DatabaseListItemProps> = ({
         {showUrl && (
           <ToolTip
             id="connection-string-hide"
-            placement="right"
+            placement="top"
             message="Hide connection string"
           >
             <i

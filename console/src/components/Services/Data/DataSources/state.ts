@@ -2,6 +2,7 @@ import { Driver } from '../../../../dataSources';
 import { makeConnectionStringFromConnectionParams } from './ManageDBUtils';
 import { addDataSource } from '../../../../metadata/actions';
 import { Dispatch } from '../../../../types';
+import { SourceConnectionInfo } from '../../../../metadata/types';
 
 export const connectionTypes = {
   DATABASE_URL: 'DATABASE_URL',
@@ -84,7 +85,8 @@ export const connectDataSource = (
   dispatch: Dispatch,
   typeConnection: string,
   currentState: ConnectDBState,
-  cb: () => void
+  cb: () => void,
+  replicas?: Omit<SourceConnectionInfo, 'connection_string'>[]
 ) => {
   let databaseURL:
     | string
@@ -108,7 +110,8 @@ export const connectDataSource = (
           connection_pool_settings: currentState.connectionSettings,
         },
       },
-      cb
+      cb,
+      replicas
     )
   );
 };
@@ -253,4 +256,82 @@ export const connectDBReducer = (
     default:
       return state;
   }
+};
+
+export interface ExtendedConnectDBState extends ConnectDBState {
+  chosenConnectionType: string;
+}
+
+const defaultReadReplicasState: ExtendedConnectDBState[] = [];
+export type ReadReplicaState = ExtendedConnectDBState[];
+
+export interface AddReadReplicaToState {
+  type: 'ADD_READ_REPLICA';
+  data: ExtendedConnectDBState;
+}
+
+export interface RemoveReadReplicaFromState {
+  type: 'REMOVE_READ_REPLICA';
+  // the default name is set using index `read-replica-${index}`
+  // we can use that to simplify removal
+  data: string;
+}
+
+export interface ResetReadReplicaState {
+  type: 'RESET_READ_REPLICA_STATE';
+}
+
+export type ReadReplicaActions =
+  | AddReadReplicaToState
+  | RemoveReadReplicaFromState
+  | ResetReadReplicaState;
+
+export const readReplicaReducer = (
+  state: ReadReplicaState,
+  action: ReadReplicaActions
+): ReadReplicaState => {
+  switch (action.type) {
+    case 'ADD_READ_REPLICA':
+      return [...state, action.data];
+    case 'REMOVE_READ_REPLICA':
+      return state.filter(st => st.displayName !== action.data);
+    case 'RESET_READ_REPLICA_STATE':
+      return defaultReadReplicasState;
+    default:
+      return state;
+  }
+};
+
+export const makeReadReplicaConnectionObject = (
+  stateVal: ExtendedConnectDBState
+) => {
+  let database_url;
+  if (stateVal.chosenConnectionType === connectionTypes.DATABASE_URL) {
+    database_url = stateVal.databaseURLState?.dbURL?.trim() ?? '';
+  } else if (stateVal.chosenConnectionType === connectionTypes.ENV_VAR) {
+    database_url = {
+      from_env: stateVal.envVarURLState?.envVarURL?.trim() ?? '',
+    };
+  } else {
+    database_url = makeConnectionStringFromConnectionParams({
+      dbType: 'postgres',
+      ...stateVal.connectionParamState,
+    });
+  }
+
+  const pool_settings: any = {};
+  if (stateVal.connectionSettings.max_connections) {
+    pool_settings.max_connections = stateVal.connectionSettings.max_connections;
+  }
+  if (stateVal.connectionSettings.idle_timeout) {
+    pool_settings.idle_timeout = stateVal.connectionSettings.idle_timeout;
+  }
+  if (stateVal.connectionSettings.retries) {
+    pool_settings.retries = stateVal.connectionSettings.retries;
+  }
+
+  return {
+    database_url,
+    pool_settings,
+  };
 };

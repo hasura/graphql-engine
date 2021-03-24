@@ -1,6 +1,11 @@
 import requestAction from '../utils/requestAction';
 import Endpoints, { globalCookiePolicy } from '../Endpoints';
-import { HasuraMetadataV2, HasuraMetadataV3, RestEndpointEntry } from './types';
+import {
+  HasuraMetadataV2,
+  HasuraMetadataV3,
+  RestEndpointEntry,
+  SourceConnectionInfo,
+} from './types';
 import {
   showSuccessNotification,
   showErrorNotification,
@@ -227,6 +232,7 @@ export const exportMetadata = (
 export const addDataSource = (
   data: AddDataSourceRequest['data'],
   successCb: () => void,
+  replicas?: Omit<SourceConnectionInfo, 'connection_string'>[],
   skipNotification = false
 ): Thunk<Promise<void | ReduxState>, MetadataActions> => (
   dispatch,
@@ -234,7 +240,7 @@ export const addDataSource = (
 ) => {
   const { dataHeaders } = getState().tables;
 
-  const query = addSource(data.driver, data.payload);
+  const query = addSource(data.driver, data.payload, replicas);
 
   const options = {
     method: 'POST',
@@ -350,6 +356,7 @@ export const editDataSource = (
             );
             onSuccessCb();
           },
+          [],
           true
         )
       ).catch(err => {

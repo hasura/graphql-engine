@@ -25,7 +25,7 @@ export const expandConnectionSettingsform = () => {
 };
 
 export const failsOnEmptyFormSubmission = () => {
-  cy.getBySel('save-database').click();
+  cy.getBySel('connect-database-btn').click();
   cy.get('.notification-error').should('be.visible');
 };
 
@@ -36,7 +36,7 @@ export const addsNewPostgresDatabaseWithUrl = () => {
   cy.getBySel('max-connections').type('50');
   cy.getBySel('idle-timeout').type('180');
   cy.getBySel('retries').type('1');
-  cy.getBySel('save-database').click();
+  cy.getBySel('connect-database-btn').click();
   cy.get('.notification-success', { timeout: 10000 })
     .should('be.visible')
     .and('contain', 'Database added successfully!');
@@ -56,7 +56,7 @@ export const addsNewPgDBWithConParams = () => {
     cy.getBySel('password').type(config.password);
   }
   cy.getBySel('database-name').type(config.dbName);
-  cy.getBySel('save-database').click();
+  cy.getBySel('connect-database-btn').click();
   cy.get('.notification-success', { timeout: 10000 })
     .should('be.visible')
     .and('contain', 'Database added successfully!');
@@ -70,7 +70,7 @@ export const addsNewPgDBWithEnvVar = () => {
   cy.getBySel('database-display-name').type('testDB3');
   cy.getBySel('database-type').select('postgres');
   cy.getBySel('database-url-env').type('HASURA_GRAPHQL_DATABASE_URL');
-  cy.getBySel('save-database').click();
+  cy.getBySel('connect-database-btn').click();
   cy.get('.notification-success', { timeout: 10000 })
     .should('be.visible')
     .and('contain', 'Database added successfully!');
@@ -82,7 +82,7 @@ export const failDuplicateNameDb = () => {
   cy.get('button').contains('Connect Database').click();
   cy.getBySel('database-display-name').type('testDB1');
   cy.getBySel('database-url').type(dbUrl);
-  cy.getBySel('save-database').click();
+  cy.getBySel('connect-database-btn').click();
   cy.get('.notification-error')
     .should('be.visible')
     .and('contain', 'Add data source failed')

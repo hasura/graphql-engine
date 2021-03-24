@@ -361,6 +361,7 @@ export const getDataSources = createSelector(getMetadata, metadata => {
         max_connections: 50,
       },
       driver: source.kind || 'postgres',
+      read_replicas: source.configuration?.read_replicas ?? undefined,
     });
   });
   return sources;
