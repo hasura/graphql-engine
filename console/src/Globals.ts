@@ -5,6 +5,8 @@ import { stripTrailingSlash } from './components/Common/utils/urlUtils';
 import { isEmpty } from './components/Common/utils/jsUtils';
 import { Nullable } from './components/Common/utils/tsUtils';
 
+type ConsoleType = 'oss' | 'cloud' | 'pro' | 'pro-cloud';
+
 declare global {
   interface Window {
     __env: {
@@ -27,6 +29,7 @@ declare global {
       projectID: Nullable<string>;
       userRole: Nullable<string>;
       cloudRootDomain: Nullable<string>;
+      consoleType: ConsoleType;
     };
   }
   const CONSOLE_ASSET_VERSION: string;
@@ -63,6 +66,8 @@ const globals = {
   hasuraCloudTenantId: window.__env.tenantID,
   hasuraCloudProjectId: window.__env.projectID,
   cloudDataApiUrl: `${window.location.protocol}//data.${window.__env.cloudRootDomain}`,
+  userRole: undefined, // userRole is not applicable for the OSS console
+  consoleType: window.__env.consoleType,
 };
 if (globals.consoleMode === SERVER_CONSOLE_MODE) {
   if (!window.__env.dataApiUrl) {
