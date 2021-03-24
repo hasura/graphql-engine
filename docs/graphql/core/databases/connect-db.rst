@@ -81,7 +81,7 @@ engine instance via the console / metadata APIs / CLI:
 
       .. code-block:: http
 
-         POST /v2/metadata HTTP/1.1
+         POST /v1/metadata HTTP/1.1
          Content-Type: application/json
          X-Hasura-Role: admin
 
@@ -93,6 +93,11 @@ engine instance via the console / metadata APIs / CLI:
                "connection_info": {
                  "database_url": {
                    "from_env": "<DB_URL_ENV_VAR>"
+                 },
+                 "pool_settings": {
+                   "retries": 1,
+                   "idle_timeout": 180,
+                   "max_connections": 50
                  }
                }
              }

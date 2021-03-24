@@ -57,10 +57,10 @@ argument to filter on equality.
 
 You can see the complete specification of the ``where`` argument in the :ref:`API reference <WhereExp>`.
 
-Comparision operators
----------------------
+Comparison operators
+--------------------
 
-Let’s take a look at different comparision operators that can be used to filter results.
+Let’s take a look at different comparison operators that can be used to filter results.
 
 Equality operators (_eq, _neq)
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -1267,7 +1267,7 @@ For example:
         }
       }
 
-The behaviour of the comparision operators depends on whether the nested objects are a single object related via an
+The behaviour of the comparison operators depends on whether the nested objects are a single object related via an
 object relationship or an array of objects related via an array relationship.
 
 - In case of an **object relationship**, a row will be returned if the single nested object satisfies the defined
@@ -1826,10 +1826,17 @@ The expression ``{}`` evaluates to ``true`` if an object exists (even if it's ``
 
 .. _null_value_evaluation:
 
-Evaluation of **null** values in comparision expressions
---------------------------------------------------------
+Evaluation of **null** values in comparison expressions
+-------------------------------------------------------
 
-If in any comparision expression a ``null`` (or ``undefined``) value is passed, the expression currently gets
-reduced to ``{}`` (:ref:`TRUE expression <true_expression>`)
+In **versions v2.0.0 and above**, if in any comparison expression a ``null`` value is passed, a type mismatch error
+will be thrown.
 
-**For example**, the expression ``{ where: { _eq: null } }`` will be reduced to ``{ where: {} }``
+For example, the expression ``{ where: {id: { _eq: null }}}`` will throw an error.
+
+
+In **versions v1.3.3 and below**, if in any comparison expression a ``null`` value is passed, the expression gets
+reduced to ``{}``, the :ref:`TRUE expression <true_expression>`.
+
+For example, the expression ``{ where: { id: {_eq: null }}}`` will be reduced to ``{ where: {id: {}} }`` which
+will return all objects for which an ``id`` is set, i.e. all objects will be returned.

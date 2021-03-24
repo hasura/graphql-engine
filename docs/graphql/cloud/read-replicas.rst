@@ -20,23 +20,91 @@ Hasura Cloud can load balance queries and subscriptions across read replicas whi
 Adding read replica urls
 ------------------------
 
-If you have configured your Postgres instances with replicas, the replica URLs can be added to Hasura using the following environment variable in your project ENV Vars tab:
+.. rst-class:: api_tabs
+.. tabs::
 
-.. code-block:: bash
+   .. tab:: Console
 
-   HASURA_GRAPHQL_READ_REPLICA_URLS=postgres://user:password@replica-host:5432/db
+      Support coming very soon
 
-If you have multiple replicas, their urls can be added as comma separated values.
+   .. tab:: CLI
 
-Connection pool parameters
---------------------------
+      You can add read replicas for a database by adding their config to the ``/metadata/databases/database.yaml`` file:
 
-Additional environment variables for connection pools, and for read replicas specifically:
+      .. code-block:: yaml
+         :emphasize-lines: 11-17
 
-``HASURA_GRAPHQL_PG_STRIPES``
+         - name: <db-name>
+           kind: postgres
+           configuration:
+             connection_info:
+               database_url:
+                 from_env: <DATABASE_URL_ENV>
+               pool_settings:
+                 idle_timeout: 180
+                 max_connections: 50
+                 retries: 1
+             read_replicas:
+             - database_url:
+                 from_env: <DATABASE_REPLICA_URL_ENV>
+               pool_settings:
+                 idle_timeout: 180
+                 max_connections: 50
+                 retries: 1
 
-``HASURA_GRAPHQL_PG_CONNECTIONS``
+      Apply the metadata by running:
 
-``HASURA_GRAPHQL_CONNECTIONS_PER_READ_REPLICA``
+      .. code-block:: yaml
 
-``HASURA_GRAPHQL_STRIPES_PER_READ_REPLICA``
+         hasura metadata apply
+
+   .. tab:: API
+
+      Currently it is only possible to add read replicas for a database at the time of creation using the :ref:`pg_add_source metadata API <pg_add_source>`
+
+      .. code-block:: http
+         :emphasize-lines: 15-26
+
+         POST /v1/metadata HTTP/1.1
+         Content-Type: application/json
+         X-Hasura-Role: admin
+
+         {
+           "type": "pg_add_source",
+           "args": {
+             "name": "<db_name>",
+             "configuration": {
+               "connection_info": {
+                 "database_url": {
+                   "from_env": "<DATABASE_URL_ENV>"
+                 }
+               },
+             "read_replicas": [
+               {
+                 "database_url": {
+                   "from_env": "<DATABASE_REPLICA_URL_ENV>"
+                 },
+                 "pool_settings": {
+                   "retries": 1,
+                   "idle_timeout": 180,
+                   "max_connections": 50
+                 }
+               }
+             ]
+           }
+
+.. admonition:: For existing v1.3 projects
+
+   If you have configured your Postgres instances with replicas, the replica URLs can be added to Hasura using the following environment variable in your project ENV Vars tab:
+
+   .. code-block:: bash
+
+      HASURA_GRAPHQL_READ_REPLICA_URLS=postgres://user:password@replica-host:5432/db
+
+   If you have multiple replicas, their urls can be added as comma separated values.
+
+   Additional environment variables for read replicas specifically:
+
+   ``HASURA_GRAPHQL_CONNECTIONS_PER_READ_REPLICA``
+
+   ``HASURA_GRAPHQL_STRIPES_PER_READ_REPLICA``
