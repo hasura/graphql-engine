@@ -3,6 +3,7 @@
 ## Next release
 (Add entries here in the order of: server, console, cli, docs, others)
 
+- server: `use_prepared_statements` option (default: False) in `add_pg_source` metadata API
 - server: add a comment field for actions (#231)
 - console: add a comment field for actions (#231)
 

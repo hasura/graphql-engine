@@ -349,8 +349,9 @@ getDefaultPGPoolSettingIfNotExists connSettings defaultPgPoolSettings =
 
 data PostgresSourceConnInfo
   = PostgresSourceConnInfo
-  { _psciDatabaseUrl  :: !UrlConf
-  , _psciPoolSettings :: !(Maybe PostgresPoolSettings)
+  { _psciDatabaseUrl           :: !UrlConf
+  , _psciPoolSettings          :: !(Maybe PostgresPoolSettings)
+  , _psciUsePreparedStatements :: !Bool
   } deriving (Show, Eq, Generic)
 instance Cacheable PostgresSourceConnInfo
 instance Hashable PostgresSourceConnInfo
@@ -362,6 +363,7 @@ instance FromJSON PostgresSourceConnInfo where
     PostgresSourceConnInfo
       <$> o .: "database_url"
       <*> o .:? "pool_settings"
+      <*> o .:? "use_prepared_statements" .!= False -- By default preparing statements is OFF for postgres source
 
 instance Arbitrary PostgresSourceConnInfo where
   arbitrary = genericArbitrary

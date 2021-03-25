@@ -35,7 +35,7 @@ import           Control.Lens
 import           Control.Monad.Morph
 import           Control.Monad.Trans.Control         (MonadBaseControl)
 import           Control.Monad.Unique
-import           Data.Aeson                          (toJSON)
+import           Data.Aeson                          (Value, toJSON)
 import           Data.Aeson.TH
 import           Data.List                           (nub)
 import           Data.Text.Extended
@@ -83,13 +83,17 @@ partitionCollectedInfo =
       in (inconsistencies, dependency:dependencies)
 
 recordInconsistency
-  :: (ArrowWriter (Seq w) arr, AsInconsistentMetadata w) => (MetadataObject, Text) `arr` ()
-recordInconsistency = first (arr (:[])) >>> recordInconsistencies
+  :: (ArrowWriter (Seq w) arr, AsInconsistentMetadata w) => ((Maybe Value, MetadataObject), Text) `arr` ()
+recordInconsistency = first (arr (:[])) >>> recordInconsistencies'
 
 recordInconsistencies
   :: (ArrowWriter (Seq w) arr, AsInconsistentMetadata w) => ([MetadataObject], Text) `arr` ()
-recordInconsistencies = proc (metadataObjects, reason) ->
-  tellA -< Seq.fromList $ map (review _InconsistentMetadata . InconsistentObject reason) metadataObjects
+recordInconsistencies = first (arr (map (Nothing,))) >>> recordInconsistencies'
+
+recordInconsistencies'
+  :: (ArrowWriter (Seq w) arr, AsInconsistentMetadata w) => ([(Maybe Value, MetadataObject)], Text) `arr` ()
+recordInconsistencies' = proc (metadataObjects, reason) ->
+  tellA -< Seq.fromList $ map (review _InconsistentMetadata . uncurry (InconsistentObject reason)) metadataObjects
 
 recordDependencies
   :: (ArrowWriter (Seq CollectedInfo) arr)
@@ -105,7 +109,7 @@ withRecordInconsistency f = proc (e, (metadataObject, s)) -> do
   result <- runErrorA f -< (e, s)
   case result of
     Left err -> do
-      recordInconsistency -< (metadataObject, qeError err)
+      recordInconsistency -< ((qeInternal err, metadataObject), qeError err)
       returnA -< Nothing
     Right v -> returnA -< Just v
 {-# INLINABLE withRecordInconsistency #-}
