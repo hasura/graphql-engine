@@ -8,10 +8,15 @@ import styles from './styles.scss';
 import { mapDispatchToPropsEmpty } from '../../../../Common/utils/reactUtils';
 import Tabbed from '../TabbedDataSourceConnection';
 import { NotFoundError } from '../../../../Error/PageNotFound';
+import { getDataSources } from '../../../../../metadata/selector';
 
 interface Props extends InjectedProps {}
 
-const CreateDataSource: React.FC<Props> = ({ herokuSession, dispatch }) => {
+const CreateDataSource: React.FC<Props> = ({
+  herokuSession,
+  dispatch,
+  allDataSources,
+}) => {
   if (!Globals.herokuOAuthClientId || !Globals.hasuraCloudTenantId) {
     throw new NotFoundError();
   }
@@ -20,7 +25,11 @@ const CreateDataSource: React.FC<Props> = ({ herokuSession, dispatch }) => {
     <Tabbed tabName="create">
       <div className={styles.connect_db_content}>
         <div className={`${styles.container}`}>
-          <Heroku session={herokuSession} dispatch={dispatch} />
+          <Heroku
+            session={herokuSession}
+            dispatch={dispatch}
+            allDataSources={allDataSources}
+          />
         </div>
       </div>
     </Tabbed>
@@ -32,6 +41,7 @@ const mapStateToProps = (state: ReduxState) => {
     herokuSession: state.main.heroku.session as HerokuSession | undefined,
     currentDataSource: state.tables.currentDataSource,
     currentSchema: state.tables.currentSchema,
+    allDataSources: getDataSources(state),
   };
 };
 

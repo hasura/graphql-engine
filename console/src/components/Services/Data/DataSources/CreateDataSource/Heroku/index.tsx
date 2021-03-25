@@ -4,13 +4,15 @@ import { HerokuSession } from './types';
 import Intro from './Intro';
 import DBCreation from './DBCreation';
 import { Dispatch } from '../../../../../../types';
+import { DataSource } from '../../../../../../metadata/types';
 
 type Props = {
   session?: HerokuSession;
   dispatch: Dispatch;
+  allDataSources: DataSource[];
 };
 
-const Heroku: React.FC<Props> = ({ session, dispatch }) => {
+const Heroku: React.FC<Props> = ({ session, dispatch, allDataSources }) => {
   const [shouldStart, setShouldStart] = React.useState(false);
 
   return (
@@ -20,6 +22,7 @@ const Heroku: React.FC<Props> = ({ session, dispatch }) => {
           session={session}
           shouldStart={shouldStart}
           dispatch={dispatch}
+          allDataSources={allDataSources}
         />
       )}
       {!shouldStart && (
