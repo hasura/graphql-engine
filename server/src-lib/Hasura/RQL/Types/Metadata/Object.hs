@@ -154,7 +154,7 @@ data MetadataObject
 $(makeLenses ''MetadataObject)
 
 data InconsistentMetadata
-  = InconsistentObject !Text !(Maybe Value) !MetadataObject
+  = InconsistentObject !Text !MetadataObject
   | ConflictingObjects !Text ![MetadataObject]
   | DuplicateObjects !MetadataObjId ![Value]
   | DuplicateRestVariables !Text !MetadataObject
@@ -165,20 +165,20 @@ $(makePrisms ''InconsistentMetadata)
 
 getInconsistentRemoteSchemas :: [InconsistentMetadata] -> [RemoteSchemaName]
 getInconsistentRemoteSchemas =
-  toListOf (traverse._InconsistentObject._3.moId._MORemoteSchema)
+  toListOf (traverse._InconsistentObject._2.moId._MORemoteSchema)
 
 imObjectIds :: InconsistentMetadata -> [MetadataObjId]
 imObjectIds = \case
-  InconsistentObject _ _ metadata -> [_moId metadata]
-  ConflictingObjects _ metadatas  -> map _moId metadatas
-  DuplicateObjects objectId _     -> [objectId]
-  DuplicateRestVariables _ md     -> [_moId md]
-  InvalidRestSegments _ md        -> [_moId md]
-  AmbiguousRestEndpoints _ mds    -> take 1 $ map _moId mds -- TODO: Take 1 is a workaround to ensure that conflicts are not reported multiple times per endpoint.
+  InconsistentObject _ metadata  -> [_moId metadata]
+  ConflictingObjects _ metadatas -> map _moId metadatas
+  DuplicateObjects objectId _    -> [objectId]
+  DuplicateRestVariables _ md    -> [_moId md]
+  InvalidRestSegments _ md       -> [_moId md]
+  AmbiguousRestEndpoints _ mds   -> take 1 $ map _moId mds -- TODO: Take 1 is a workaround to ensure that conflicts are not reported multiple times per endpoint.
 
 imReason :: InconsistentMetadata -> Text
 imReason = \case
-  InconsistentObject reason _ _   -> reason
+  InconsistentObject reason _     -> reason
   ConflictingObjects reason _     -> reason
   DuplicateObjects objectId _     -> "multiple definitions for " <> moiName objectId
   DuplicateRestVariables reason _ -> reason
@@ -197,18 +197,17 @@ instance ToJSON InconsistentMetadata where
   toJSON inconsistentMetadata = object (("reason" .= imReason inconsistentMetadata) : extraFields)
     where
       extraFields = case inconsistentMetadata of
-        InconsistentObject _ internal metadata -> metadataObjectFields internal metadata
+        InconsistentObject _ metadata -> metadataObjectFields metadata
         ConflictingObjects _ metadatas ->
-          [ "objects" .= map (object . metadataObjectFields Nothing) metadatas ]
+          [ "objects" .= map (object . metadataObjectFields) metadatas ]
         DuplicateObjects objectId definitions ->
           [ "type" .= String (moiTypeName objectId)
           , "definitions" .= definitions ]
 
-        DuplicateRestVariables _ md  -> metadataObjectFields Nothing md
-        InvalidRestSegments _ md     -> metadataObjectFields Nothing md
+        DuplicateRestVariables _ md  -> metadataObjectFields md
+        InvalidRestSegments _ md     -> metadataObjectFields md
         AmbiguousRestEndpoints _ mds -> [ "conflicts" .= map _moDefinition mds ]
 
-      metadataObjectFields (maybeInternal :: Maybe Value) (MetadataObject objectId definition) =
+      metadataObjectFields (MetadataObject objectId definition) =
         [ "type" .= String (moiTypeName objectId)
         , "definition" .= definition ]
-        <> maybe [] (\internal -> ["internal" .= internal]) maybeInternal

@@ -122,7 +122,7 @@ addNonColumnFields = proc ( source
       This columnInfo -> returnA -< FIColumn columnInfo
       That (fieldInfo, _) -> returnA -< fieldInfo
       These columnInfo (_, fieldMetadata) -> do
-        recordInconsistency -< ((Nothing, fieldMetadata), "field definition conflicts with postgres column")
+        recordInconsistency -< (fieldMetadata, "field definition conflicts with postgres column")
         returnA -< FIColumn columnInfo
 
 mkRelationshipMetadataObject
