@@ -1078,7 +1078,7 @@ computedFieldPG ComputedFieldInfo{..} selectPermissions = runMaybeT do
       in mkDescriptionWith (_cffDescription _cfiFunction) defaultDescription
 
     computedFieldFunctionArgs
-      :: ComputedFieldFunction -> m (InputFieldsParser n (IR.FunctionArgsExpTableRow 'Postgres (UnpreparedValue 'Postgres)))
+      :: ComputedFieldFunction 'Postgres -> m (InputFieldsParser n (IR.FunctionArgsExpTableRow 'Postgres (UnpreparedValue 'Postgres)))
     computedFieldFunctionArgs ComputedFieldFunction{..} =
       functionArgs _cffName (IAUserProvided <$> _cffInputArgs) <&> fmap addTableAndSessionArgument
       where
@@ -1295,7 +1295,7 @@ functionArgs functionName (toList -> inputArgs) = do
         Nothing -> whenMaybe (not $ unHasDefault $ faHasDefault arg) $
           parseErrorWith NotSupported "Non default arguments cannot be omitted"
 
-tablePermissionsInfo :: SelPermInfo b -> TablePerms b
+tablePermissionsInfo :: Backend b => SelPermInfo b -> TablePerms b
 tablePermissionsInfo selectPermissions = IR.TablePerm
   { IR._tpFilter = fmapAnnBoolExp partialSQLExpToUnpreparedValue $ spiFilter selectPermissions
   , IR._tpLimit  = spiLimit selectPermissions

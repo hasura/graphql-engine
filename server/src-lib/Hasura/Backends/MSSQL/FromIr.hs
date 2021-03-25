@@ -804,62 +804,40 @@ fromMapping localFrom =
 fromOpExpG :: Expression -> IR.OpExpG 'MSSQL Expression -> FromIr Expression
 fromOpExpG expression op =
   case op of
-    IR.ANISNULL                  -> pure (TSQL.IsNullExpression expression)
-    IR.ANISNOTNULL               -> pure (TSQL.IsNotNullExpression expression)
-    IR.AEQ False val             -> pure (nullableBoolEquality expression val)
-    IR.AEQ True val              -> pure (TSQL.EqualExpression expression val)
-    IR.ANE False val             -> pure (nullableBoolInequality expression val)
-    IR.ANE True val              -> pure (TSQL.NotEqualExpression expression val)
-    IR.AGT val                   -> pure (OpExpression TSQL.GT expression val)
-    IR.ALT val                   -> pure (OpExpression TSQL.LT expression val)
-    IR.AGTE val                  -> pure (OpExpression TSQL.GTE expression val)
-    IR.ALTE val                  -> pure (OpExpression TSQL.LTE expression val)
-    IR.AIN val                   -> pure (OpExpression TSQL.IN expression val)
-    IR.ANIN val                  -> pure (OpExpression TSQL.NIN expression val)
-    IR.ALIKE val                 -> pure (OpExpression TSQL.LIKE expression val)
-    IR.ANLIKE val                -> pure (OpExpression TSQL.NLIKE expression val)
-    IR.ASTContains val           -> pure (TSQL.STOpExpression TSQL.STContains expression val)
-    IR.ASTCrosses val            -> pure (TSQL.STOpExpression TSQL.STCrosses expression val)
-    IR.ASTEquals val             -> pure (TSQL.STOpExpression TSQL.STEquals expression val)
-    IR.ASTIntersects val         -> pure (TSQL.STOpExpression TSQL.STIntersects expression val)
-    IR.ASTOverlaps val           -> pure (TSQL.STOpExpression TSQL.STOverlaps expression val)
-    IR.ASTTouches val            -> pure (TSQL.STOpExpression TSQL.STTouches expression val)
-    IR.ASTWithin val             -> pure (TSQL.STOpExpression TSQL.STWithin expression val)
-    -- https://docs.microsoft.com/en-us/sql/relational-databases/hierarchical-data-sql-server
-    IR.AAncestor _               -> refute (pure (UnsupportedOpExpG op))
-    IR.AAncestorAny _            -> refute (pure (UnsupportedOpExpG op))
-    IR.ADescendant _             -> refute (pure (UnsupportedOpExpG op))
-    IR.ADescendantAny _          -> refute (pure (UnsupportedOpExpG op))
-    IR.AMatches _                -> refute (pure (UnsupportedOpExpG op))
-    IR.AMatchesAny _             -> refute (pure (UnsupportedOpExpG op))
-    IR.AMatchesFulltext _        -> refute (pure (UnsupportedOpExpG op))
-    -- No equivalent operators in SQL Server for the following
-    -- https://docs.microsoft.com/en-us/sql/t-sql/functions/json-functions-transact-sql
-    IR.AContains _val            -> refute (pure (UnsupportedOpExpG op))
-    IR.AContainedIn _val         -> refute (pure (UnsupportedOpExpG op))
-    IR.AHasKey _val              -> refute (pure (UnsupportedOpExpG op))
-    IR.AHasKeysAny _val          -> refute (pure (UnsupportedOpExpG op))
-    IR.AHasKeysAll _val          -> refute (pure (UnsupportedOpExpG op))
-    -- https://docs.microsoft.com/en-us/sql/t-sql/language-elements/like-transact-sql
-    IR.ASIMILAR _val             -> refute (pure (UnsupportedOpExpG op))
-    IR.ANSIMILAR _val            -> refute (pure (UnsupportedOpExpG op))
-    IR.AREGEX _val               -> refute (pure (UnsupportedOpExpG op))
-    IR.AIREGEX _val              -> refute (pure (UnsupportedOpExpG op))
-    IR.ANREGEX _val              -> refute (pure (UnsupportedOpExpG op))
-    IR.ANIREGEX _val             -> refute (pure (UnsupportedOpExpG op))
-    -- https://docs.microsoft.com/en-us/sql/relational-databases/spatial/spatial-data-sql-server
-    IR.ACast _casts              -> refute (pure (UnsupportedOpExpG op))
-    IR.ASTDWithinGeom {}         -> refute (pure (UnsupportedOpExpG op))
-    IR.ASTDWithinGeog {}         -> refute (pure (UnsupportedOpExpG op))
-    IR.ASTIntersectsRast _val    -> refute (pure (UnsupportedOpExpG op))
-    IR.ASTIntersectsNbandGeom {} -> refute (pure (UnsupportedOpExpG op))
-    IR.ASTIntersectsGeomNband {} -> refute (pure (UnsupportedOpExpG op))
-    IR.CEQ _rhsCol               -> refute (pure (UnsupportedOpExpG op))
-    IR.CNE _rhsCol               -> refute (pure (UnsupportedOpExpG op))
-    IR.CGT _rhsCol               -> refute (pure (UnsupportedOpExpG op))
-    IR.CLT _rhsCol               -> refute (pure (UnsupportedOpExpG op))
-    IR.CGTE _rhsCol              -> refute (pure (UnsupportedOpExpG op))
-    IR.CLTE _rhsCol              -> refute (pure (UnsupportedOpExpG op))
+    IR.ANISNULL      -> pure $ TSQL.IsNullExpression    expression
+    IR.ANISNOTNULL   -> pure $ TSQL.IsNotNullExpression expression
+    IR.AEQ False val -> pure $ nullableBoolEquality    expression val
+    IR.AEQ True  val -> pure $ TSQL.EqualExpression    expression val
+    IR.ANE False val -> pure $ nullableBoolInequality  expression val
+    IR.ANE True  val -> pure $ TSQL.NotEqualExpression expression val
+    IR.AGT       val -> pure $ OpExpression TSQL.GT    expression val
+    IR.ALT       val -> pure $ OpExpression TSQL.LT    expression val
+    IR.AGTE      val -> pure $ OpExpression TSQL.GTE   expression val
+    IR.ALTE      val -> pure $ OpExpression TSQL.LTE   expression val
+    IR.AIN       val -> pure $ OpExpression TSQL.IN    expression val
+    IR.ANIN      val -> pure $ OpExpression TSQL.NIN   expression val
+    IR.ALIKE     val -> pure $ OpExpression TSQL.LIKE  expression val
+    IR.ANLIKE    val -> pure $ OpExpression TSQL.NLIKE expression val
+
+    IR.ABackendSpecific o -> case o of
+      ASTContains   val -> pure $ TSQL.STOpExpression TSQL.STContains   expression val
+      ASTCrosses    val -> pure $ TSQL.STOpExpression TSQL.STCrosses    expression val
+      ASTEquals     val -> pure $ TSQL.STOpExpression TSQL.STEquals     expression val
+      ASTIntersects val -> pure $ TSQL.STOpExpression TSQL.STIntersects expression val
+      ASTOverlaps   val -> pure $ TSQL.STOpExpression TSQL.STOverlaps   expression val
+      ASTTouches    val -> pure $ TSQL.STOpExpression TSQL.STTouches    expression val
+      ASTWithin     val -> pure $ TSQL.STOpExpression TSQL.STWithin     expression val
+
+    -- As of March 2021, only geometry/geography casts are supported
+    IR.ACast _casts  -> refute (pure (UnsupportedOpExpG op)) -- mkCastsExp casts
+
+    -- We do not yet support column names in permissions
+    IR.CEQ _rhsCol   -> refute (pure (UnsupportedOpExpG op)) -- S.BECompare S.SEQ lhs $ mkQCol rhsCol
+    IR.CNE _rhsCol   -> refute (pure (UnsupportedOpExpG op)) -- S.BECompare S.SNE lhs $ mkQCol rhsCol
+    IR.CGT _rhsCol   -> refute (pure (UnsupportedOpExpG op)) -- S.BECompare S.SGT lhs $ mkQCol rhsCol
+    IR.CLT _rhsCol   -> refute (pure (UnsupportedOpExpG op)) -- S.BECompare S.SLT lhs $ mkQCol rhsCol
+    IR.CGTE _rhsCol  -> refute (pure (UnsupportedOpExpG op)) -- S.BECompare S.SGTE lhs $ mkQCol rhsCol
+    IR.CLTE _rhsCol  -> refute (pure (UnsupportedOpExpG op)) -- S.BECompare S.SLTE lhs $ mkQCol rhsCol
 
 nullableBoolEquality :: Expression -> Expression -> Expression
 nullableBoolEquality x y =

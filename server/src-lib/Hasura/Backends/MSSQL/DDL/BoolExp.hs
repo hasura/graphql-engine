@@ -69,21 +69,21 @@ parseBoolExpOperations rhsParser _fields columnInfo value =
         "$nlike"         -> parseNlike
         "_nlike"         -> parseNlike
 
-        "_st_contains"   -> parseGeometryOrGeographyOp ASTContains
-        "$st_contains"   -> parseGeometryOrGeographyOp ASTContains
-        "_st_equals"     -> parseGeometryOrGeographyOp ASTEquals
-        "$st_equals"     -> parseGeometryOrGeographyOp ASTEquals
-        "_st_intersects" -> parseGeometryOrGeographyOp ASTIntersects
-        "$st_intersects" -> parseGeometryOrGeographyOp ASTIntersects
-        "_st_overlaps"   -> parseGeometryOrGeographyOp ASTOverlaps
-        "$st_overlaps"   -> parseGeometryOrGeographyOp ASTOverlaps
-        "_st_within"     -> parseGeometryOrGeographyOp ASTWithin
-        "$st_within"     -> parseGeometryOrGeographyOp ASTWithin
+        "_st_contains"   -> ABackendSpecific <$> parseGeometryOrGeographyOp ASTContains
+        "$st_contains"   -> ABackendSpecific <$> parseGeometryOrGeographyOp ASTContains
+        "_st_equals"     -> ABackendSpecific <$> parseGeometryOrGeographyOp ASTEquals
+        "$st_equals"     -> ABackendSpecific <$> parseGeometryOrGeographyOp ASTEquals
+        "_st_intersects" -> ABackendSpecific <$> parseGeometryOrGeographyOp ASTIntersects
+        "$st_intersects" -> ABackendSpecific <$> parseGeometryOrGeographyOp ASTIntersects
+        "_st_overlaps"   -> ABackendSpecific <$> parseGeometryOrGeographyOp ASTOverlaps
+        "$st_overlaps"   -> ABackendSpecific <$> parseGeometryOrGeographyOp ASTOverlaps
+        "_st_within"     -> ABackendSpecific <$> parseGeometryOrGeographyOp ASTWithin
+        "$st_within"     -> ABackendSpecific <$> parseGeometryOrGeographyOp ASTWithin
 
-        "_st_crosses"    -> parseGeometryOp ASTCrosses
-        "$st_crosses"    -> parseGeometryOp ASTCrosses
-        "_st_touches"    -> parseGeometryOp ASTTouches
-        "$st_touches"    -> parseGeometryOp ASTTouches
+        "_st_crosses"    -> ABackendSpecific <$> parseGeometryOp ASTCrosses
+        "$st_crosses"    -> ABackendSpecific <$> parseGeometryOp ASTCrosses
+        "_st_touches"    -> ABackendSpecific <$> parseGeometryOp ASTTouches
+        "$st_touches"    -> ABackendSpecific <$> parseGeometryOp ASTTouches
 
         x                -> throw400 UnexpectedPayload $ "Unknown operator : " <> x
 

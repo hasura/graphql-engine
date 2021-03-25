@@ -328,29 +328,29 @@ msComparisonExps = P.memoize 'comparisonExps \columnType -> do
     , guard (isScalarColumnWhere (`elem` MSSQL.geoTypes) columnType) *>
       [ P.fieldOptional $$(G.litName "_st_contains")
         (Just "does the column contain the given value")
-        (ASTContains   . mkParameter <$> typedParser)
+        (ABackendSpecific . MSSQL.ASTContains   . mkParameter <$> typedParser)
       , P.fieldOptional $$(G.litName "_st_equals")
         (Just "is the column equal to given value (directionality is ignored)")
-        (ASTEquals     . mkParameter <$> typedParser)
+        (ABackendSpecific . MSSQL.ASTEquals     . mkParameter <$> typedParser)
       , P.fieldOptional $$(G.litName "_st_intersects")
         (Just "does the column spatially intersect the given value")
-        (ASTIntersects     . mkParameter <$> typedParser)
+        (ABackendSpecific . MSSQL.ASTIntersects . mkParameter <$> typedParser)
       , P.fieldOptional $$(G.litName "_st_overlaps")
         (Just "does the column 'spatially overlap' (intersect but not completely contain) the given value")
-        (ASTOverlaps     . mkParameter <$> typedParser)
+        (ABackendSpecific . MSSQL.ASTOverlaps   . mkParameter <$> typedParser)
       , P.fieldOptional $$(G.litName "_st_within")
         (Just "is the column contained in the given value")
-        (ASTWithin     . mkParameter <$> typedParser)
+        (ABackendSpecific . MSSQL.ASTWithin     . mkParameter <$> typedParser)
       ]
 
     -- Ops for Geometry types
     , guard (isScalarColumnWhere (MSSQL.GeometryType ==) columnType) *>
       [ P.fieldOptional $$(G.litName "_st_crosses")
         (Just "does the column cross the given geometry value")
-        (ASTCrosses   . mkParameter <$> typedParser)
+        (ABackendSpecific . MSSQL.ASTCrosses . mkParameter <$> typedParser)
       , P.fieldOptional $$(G.litName "_st_touches")
         (Just "does the column have at least one point in common with the given geometry value")
-        (ASTTouches     . mkParameter <$> typedParser)
+        (ABackendSpecific . MSSQL.ASTTouches . mkParameter <$> typedParser)
       ]
     ]
   where

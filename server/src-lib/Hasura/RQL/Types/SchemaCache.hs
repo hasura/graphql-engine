@@ -45,7 +45,6 @@ module Hasura.RQL.Types.SchemaCache
 
   , ViewInfo(..)
   , isMutable
-  , mutableView
 
   , IntrospectionResult(..)
   , ParsedIntrospection(..)
@@ -116,6 +115,8 @@ module Hasura.RQL.Types.SchemaCache
   , FunctionInfo(..)
   , FunctionCache
   , CronTriggerInfo(..)
+
+  , getBoolExpDeps
   ) where
 
 import           Hasura.Prelude
@@ -142,6 +143,7 @@ import           Hasura.RQL.IR.BoolExp
 import           Hasura.RQL.Types.Action
 import           Hasura.RQL.Types.ApiLimit
 import           Hasura.RQL.Types.Backend
+import           Hasura.RQL.Types.Column
 import           Hasura.RQL.Types.Common
 import           Hasura.RQL.Types.ComputedField
 import           Hasura.RQL.Types.CustomTypes
@@ -440,3 +442,50 @@ getDependentObjsWith f sc objId =
     go (SOITable tn1) (SOITable tn2)      = Just $ tn1 == tn2
     go (SOITable tn1) (SOITableObj tn2 _) = Just $ tn1 == tn2
     go _              _                   = Nothing
+
+
+-- | Build dependencies from an AnnBoolExpPartialSQL.
+getBoolExpDeps
+  :: Backend b
+  => SourceName
+  -> TableName b
+  -> AnnBoolExpPartialSQL b
+  -> [SchemaDependency]
+getBoolExpDeps source tn = \case
+  BoolAnd exps -> procExps exps
+  BoolOr  exps -> procExps exps
+  BoolNot e    -> getBoolExpDeps source tn e
+  BoolFld fld  -> getColExpDeps  source tn fld
+  BoolExists (GExists refqt whereExp) ->
+    let tableDep = SchemaDependency
+                     (SOSourceObj source
+                       $ AB.mkAnyBackend
+                       $ SOITable refqt)
+                     DRRemoteTable
+    in tableDep : getBoolExpDeps source refqt whereExp
+  where
+    procExps = concatMap (getBoolExpDeps source tn)
+
+getColExpDeps
+  :: Backend b
+  => SourceName
+  -> TableName b
+  -> AnnBoolExpFld b (PartialSQLExp b)
+  -> [SchemaDependency]
+getColExpDeps source tn = \case
+  AVCol colInfo opExps ->
+    let cn = pgiColumn colInfo
+        colDepReason = bool DRSessionVariable DROnType $ any hasStaticExp opExps
+        colDep = mkColDep colDepReason source tn cn
+        depColsInOpExp = mapMaybe opExpDepCol opExps
+        colDepsInOpExp = map (mkColDep DROnType source tn) depColsInOpExp
+    in colDep:colDepsInOpExp
+  AVRel relInfo relBoolExp ->
+    let rn = riName relInfo
+        relTN = riRTable relInfo
+        pd = SchemaDependency
+               (SOSourceObj source
+                 $ AB.mkAnyBackend
+                 $ SOITableObj tn (TORel rn))
+               DROnType
+    in pd : getBoolExpDeps source relTN relBoolExp

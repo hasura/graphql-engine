@@ -7,16 +7,16 @@ module Hasura.Backends.Postgres.Translate.BoolExp
 
 import           Hasura.Prelude
 
-import qualified Data.HashMap.Strict                as M
+import qualified Data.HashMap.Strict                      as M
 
-import           Data.Monoid
+import qualified Hasura.Backends.Postgres.SQL.DML         as S
 
-import qualified Hasura.Backends.Postgres.SQL.DML   as S
-import qualified Hasura.SQL.AnyBackend              as AB
-
-import           Hasura.Backends.Postgres.SQL.Types hiding (TableName)
+import           Hasura.Backends.Postgres.Instances.Types ()
+import           Hasura.Backends.Postgres.SQL.Types       hiding (TableName)
+import           Hasura.Backends.Postgres.Types.BoolExp
 import           Hasura.RQL.Types
 import           Hasura.SQL.Types
+
 
 -- This convoluted expression instead of col = val
 -- to handle the case of col : null
@@ -136,7 +136,7 @@ foldBoolExp f = \case
   BoolFld ce           -> f ce
 
 mkFieldCompExp
-  :: S.Qual -> FieldName -> OpExpG 'Postgres (SQLExpression 'Postgres) -> S.BoolExp
+  :: S.Qual -> FieldName -> OpExpG 'Postgres S.SQLExp -> S.BoolExp
 mkFieldCompExp qual lhsField = mkCompExp (mkQField lhsField)
   where
     mkQCol = S.SEQIdentifier . S.QIdentifier qual . toIdentifier
@@ -149,66 +149,68 @@ mkFieldCompExp qual lhsField = mkCompExp (mkQField lhsField)
       AEQ True val     -> S.BECompare S.SEQ lhs val
       ANE False val    -> notEqualsBoolExpBuilder lhs val
       ANE True  val    -> S.BECompare S.SNE lhs val
-
       AIN val          -> S.BECompareAny S.SEQ lhs val
       ANIN val         -> S.BENot $ S.BECompareAny S.SEQ lhs val
-
       AGT val          -> S.BECompare S.SGT lhs val
       ALT val          -> S.BECompare S.SLT lhs val
       AGTE val         -> S.BECompare S.SGTE lhs val
       ALTE val         -> S.BECompare S.SLTE lhs val
       ALIKE val        -> S.BECompare S.SLIKE lhs val
       ANLIKE val       -> S.BECompare S.SNLIKE lhs val
-      AILIKE _ val     -> S.BECompare S.SILIKE lhs val
-      ANILIKE _ val    -> S.BECompare S.SNILIKE lhs val
-      ASIMILAR val     -> S.BECompare S.SSIMILAR lhs val
-      ANSIMILAR val    -> S.BECompare S.SNSIMILAR lhs val
-      AREGEX val       -> S.BECompare S.SREGEX lhs val
-      AIREGEX val      -> S.BECompare S.SIREGEX lhs val
-      ANREGEX val      -> S.BECompare S.SNREGEX lhs val
-      ANIREGEX val     -> S.BECompare S.SNIREGEX lhs val
-      AContains val    -> S.BECompare S.SContains lhs val
-      AContainedIn val -> S.BECompare S.SContainedIn lhs val
-      AHasKey val      -> S.BECompare S.SHasKey lhs val
 
-      AHasKeysAny val  -> S.BECompare S.SHasKeysAny lhs val
-      AHasKeysAll val  -> S.BECompare S.SHasKeysAll lhs val
-
-      AAncestor val        -> S.BECompare S.SContains lhs val
-      AAncestorAny val     -> S.BECompare S.SContains lhs val
-      ADescendant val      -> S.BECompare S.SContainedIn lhs val
-      ADescendantAny val   -> S.BECompare S.SContainedIn lhs val
-      AMatches val         -> S.BECompare S.SREGEX lhs val
-      AMatchesAny val      -> S.BECompare S.SHasKey lhs val
-      AMatchesFulltext val -> S.BECompare S.SMatchesFulltext lhs val
-
-      ASTContains val   -> mkGeomOpBe "ST_Contains" val
-      ASTCrosses val    -> mkGeomOpBe "ST_Crosses" val
-      ASTEquals val     -> mkGeomOpBe "ST_Equals" val
-      ASTIntersects val -> mkGeomOpBe "ST_Intersects" val
-      ASTOverlaps val   -> mkGeomOpBe "ST_Overlaps" val
-      ASTTouches val    -> mkGeomOpBe "ST_Touches" val
-      ASTWithin val     -> mkGeomOpBe "ST_Within" val
-      ASTDWithinGeom (DWithinGeomOp r val)     ->
-        applySQLFn "ST_DWithin" [lhs, val, r]
-      ASTDWithinGeog (DWithinGeogOp r val sph) ->
-        applySQLFn "ST_DWithin" [lhs, val, r, sph]
-
-      ASTIntersectsRast val ->
-        applySTIntersects [lhs, val]
-      ASTIntersectsNbandGeom (STIntersectsNbandGeommin nband geommin) ->
-        applySTIntersects [lhs, nband, geommin]
-      ASTIntersectsGeomNband (STIntersectsGeomminNband geommin mNband)->
-        applySTIntersects [lhs, geommin, withSQLNull mNband]
-
-      ANISNULL         -> S.BENull lhs
-      ANISNOTNULL      -> S.BENotNull lhs
       CEQ rhsCol       -> S.BECompare S.SEQ lhs $ mkQCol rhsCol
       CNE rhsCol       -> S.BECompare S.SNE lhs $ mkQCol rhsCol
       CGT rhsCol       -> S.BECompare S.SGT lhs $ mkQCol rhsCol
       CLT rhsCol       -> S.BECompare S.SLT lhs $ mkQCol rhsCol
       CGTE rhsCol      -> S.BECompare S.SGTE lhs $ mkQCol rhsCol
       CLTE rhsCol      -> S.BECompare S.SLTE lhs $ mkQCol rhsCol
+
+      ANISNULL         -> S.BENull lhs
+      ANISNOTNULL      -> S.BENotNull lhs
+
+      ABackendSpecific (AILIKE       val)     -> S.BECompare S.SILIKE lhs val
+      ABackendSpecific (ANILIKE      val)     -> S.BECompare S.SNILIKE lhs val
+      ABackendSpecific (ASIMILAR     val)     -> S.BECompare S.SSIMILAR lhs val
+      ABackendSpecific (ANSIMILAR    val)     -> S.BECompare S.SNSIMILAR lhs val
+      ABackendSpecific (AREGEX       val)     -> S.BECompare S.SREGEX lhs val
+      ABackendSpecific (AIREGEX      val)     -> S.BECompare S.SIREGEX lhs val
+      ABackendSpecific (ANREGEX      val)     -> S.BECompare S.SNREGEX lhs val
+      ABackendSpecific (ANIREGEX     val)     -> S.BECompare S.SNIREGEX lhs val
+      ABackendSpecific (AContains    val)     -> S.BECompare S.SContains lhs val
+      ABackendSpecific (AContainedIn val)     -> S.BECompare S.SContainedIn lhs val
+
+      ABackendSpecific (AHasKey     val)      -> S.BECompare S.SHasKey lhs val
+      ABackendSpecific (AHasKeysAny val)      -> S.BECompare S.SHasKeysAny lhs val
+      ABackendSpecific (AHasKeysAll val)      -> S.BECompare S.SHasKeysAll lhs val
+
+      ABackendSpecific (AAncestor        val) -> S.BECompare S.SContains lhs val
+      ABackendSpecific (AAncestorAny     val) -> S.BECompare S.SContains lhs val
+      ABackendSpecific (ADescendant      val) -> S.BECompare S.SContainedIn lhs val
+      ABackendSpecific (ADescendantAny   val) -> S.BECompare S.SContainedIn lhs val
+      ABackendSpecific (AMatches         val) -> S.BECompare S.SREGEX lhs val
+      ABackendSpecific (AMatchesAny      val) -> S.BECompare S.SHasKey lhs val
+      ABackendSpecific (AMatchesFulltext val) -> S.BECompare S.SMatchesFulltext lhs val
+
+      ABackendSpecific (ASTContains   val)    -> mkGeomOpBe "ST_Contains" val
+      ABackendSpecific (ASTCrosses    val)    -> mkGeomOpBe "ST_Crosses" val
+      ABackendSpecific (ASTEquals     val)    -> mkGeomOpBe "ST_Equals" val
+      ABackendSpecific (ASTIntersects val)    -> mkGeomOpBe "ST_Intersects" val
+      ABackendSpecific (ASTOverlaps   val)    -> mkGeomOpBe "ST_Overlaps" val
+      ABackendSpecific (ASTTouches    val)    -> mkGeomOpBe "ST_Touches" val
+      ABackendSpecific (ASTWithin     val)    -> mkGeomOpBe "ST_Within" val
+
+      ABackendSpecific (ASTDWithinGeom (DWithinGeomOp r val)     ) ->
+        applySQLFn "ST_DWithin" [lhs, val, r]
+      ABackendSpecific (ASTDWithinGeog (DWithinGeogOp r val sph) ) ->
+        applySQLFn "ST_DWithin" [lhs, val, r, sph]
+
+      ABackendSpecific (ASTIntersectsRast val ) ->
+        applySTIntersects [lhs, val]
+      ABackendSpecific (ASTIntersectsNbandGeom (STIntersectsNbandGeommin nband geommin) ) ->
+        applySTIntersects [lhs, nband, geommin]
+      ABackendSpecific (ASTIntersectsGeomNband (STIntersectsGeomminNband geommin mNband)) ->
+        applySTIntersects [lhs, geommin, withSQLNull mNband]
+
       where
         mkGeomOpBe fn v = applySQLFn fn [lhs, v]
 
@@ -224,47 +226,3 @@ mkFieldCompExp qual lhsField = mkCompExp (mkQField lhsField)
             in sqlAll $ map (mkCompExp (S.SETyAnn lhs targetAnn)) operations
 
         sqlAll = foldr (S.BEBin S.AndOp) (S.BELit True)
-
-hasStaticExp :: OpExpG backend (PartialSQLExp backend) -> Bool
-hasStaticExp = getAny . foldMap (coerce isStaticValue)
-
-getColExpDeps
-  :: forall b
-  . (Backend b)
-  => SourceName -> TableName b -> AnnBoolExpFldPartialSQL b -> [SchemaDependency]
-getColExpDeps source tn = \case
-  AVCol colInfo opExps ->
-    let cn = pgiColumn colInfo
-        colDepReason = bool DRSessionVariable DROnType $ any hasStaticExp opExps
-        colDep = mkColDep colDepReason source tn cn
-        depColsInOpExp = mapMaybe opExpDepCol opExps
-        colDepsInOpExp = map (mkColDep DROnType source tn) depColsInOpExp
-    in colDep:colDepsInOpExp
-  AVRel relInfo relBoolExp ->
-    let rn = riName relInfo
-        relTN = riRTable relInfo
-        pd = SchemaDependency
-               (SOSourceObj source
-                 $ AB.mkAnyBackend
-                 $ SOITableObj tn (TORel rn))
-               DROnType
-    in pd : getBoolExpDeps source relTN relBoolExp
-
-getBoolExpDeps
-  :: forall b
-  . (Backend b)
-  => SourceName -> TableName b -> AnnBoolExpPartialSQL b -> [SchemaDependency]
-getBoolExpDeps source tn = \case
-  BoolAnd exps -> procExps exps
-  BoolOr exps  -> procExps exps
-  BoolNot e    -> getBoolExpDeps source tn e
-  BoolExists (GExists refqt whereExp) ->
-    let tableDep = SchemaDependency
-                     (SOSourceObj source
-                       $ AB.mkAnyBackend
-                       $ SOITable refqt)
-                     DRRemoteTable
-    in tableDep:getBoolExpDeps source refqt whereExp
-  BoolFld fld  -> getColExpDeps source tn fld
-  where
-    procExps = concatMap (getBoolExpDeps source tn)

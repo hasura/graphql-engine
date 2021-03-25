@@ -17,6 +17,7 @@ import           Data.Aeson                    (Value)
 import           Data.ByteString               (ByteString)
 import           Data.CaseInsensitive          (CI)
 import           Data.Functor.Classes          (Eq1 (..), Eq2 (..))
+import           Data.Functor.Const
 import           Data.GADT.Compare
 import           Data.Int
 import           Data.Scientific               (Scientific)
@@ -30,6 +31,7 @@ import           GHC.Generics                  (Generic (..), K1 (..), M1 (..), 
 import           System.Cron.Types
 
 import           Hasura.Incremental.Select
+
 
 -- | A 'Dependency' represents a value that a 'Rule' can /conditionally/ depend on. A 'Dependency'
 -- is created using 'newDependency', and it can be “opened” again using 'dependOn'. What makes a
@@ -255,6 +257,8 @@ instance (Cacheable (a b), Cacheable b) => Cacheable (G.Selection a b)
 instance (Cacheable (a b), Cacheable b) => Cacheable (G.TypedOperationDefinition a b)
 
 instance Cacheable a => Cacheable (G.Value a)
+
+instance Cacheable a => Cacheable (Const a b)
 
 deriving instance Cacheable G.Description
 deriving instance Cacheable G.EnumValue

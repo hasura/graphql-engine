@@ -306,7 +306,7 @@ data AnnActionExecution (b :: BackendType) v
   }
 
 traverseAnnActionExecution
-  :: Applicative f
+  :: (Applicative f, Backend backend)
   => (a -> f b)
   -> AnnActionExecution backend a
   -> f (AnnActionExecution backend b)
@@ -327,7 +327,7 @@ data AsyncActionQueryFieldG (b :: BackendType) v
   | AsyncErrors
 
 traverseAsyncActionQueryField
-  :: Applicative f
+  :: (Applicative f, Backend backend)
   => (a -> f b)
   -> AsyncActionQueryFieldG backend a
   -> f (AsyncActionQueryFieldG backend b)
@@ -352,7 +352,7 @@ data AnnActionAsyncQuery (b :: BackendType) v
   }
 
 traverseAnnActionAsyncQuery
-  :: Applicative f
+  :: (Applicative f, Backend backend)
   => (a -> f b)
   -> AnnActionAsyncQuery backend a
   -> f (AnnActionAsyncQuery backend b)

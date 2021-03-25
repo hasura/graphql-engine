@@ -2,15 +2,14 @@ module Hasura.RQL.Types.Relationship where
 
 import           Hasura.Prelude
 
-import qualified Data.HashMap.Strict                      as HM
-import qualified Data.Text                                as T
+import qualified Data.HashMap.Strict      as HM
+import qualified Data.Text                as T
 
-import           Control.Lens                             (makeLenses)
+import           Control.Lens             (makeLenses)
 import           Data.Aeson.TH
 import           Data.Aeson.Types
 
-import           Hasura.Backends.Postgres.Instances.Types ()
-import           Hasura.Incremental                       (Cacheable)
+import           Hasura.Incremental       (Cacheable)
 import           Hasura.RQL.Types.Backend
 import           Hasura.RQL.Types.Common
 import           Hasura.SQL.Backend

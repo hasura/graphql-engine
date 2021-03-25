@@ -33,27 +33,29 @@ module Hasura.RQL.Types.CustomTypes
   , emptyAnnotatedCustomTypes
   ) where
 
-import           Control.Lens.TH                    (makeLenses)
+import           Control.Lens.TH                          (makeLenses)
 import           Data.Text.Extended
 
-import qualified Data.Aeson                         as J
-import qualified Data.Aeson.TH                      as J
-import qualified Data.HashMap.Strict                as Map
-import qualified Data.List.NonEmpty                 as NEList
-import qualified Data.Text                          as T
-import qualified Language.GraphQL.Draft.Parser      as GParse
-import qualified Language.GraphQL.Draft.Printer     as GPrint
-import qualified Language.GraphQL.Draft.Syntax      as G
-import qualified Text.Builder                       as T
+import qualified Data.Aeson                               as J
+import qualified Data.Aeson.TH                            as J
+import qualified Data.HashMap.Strict                      as Map
+import qualified Data.List.NonEmpty                       as NEList
+import qualified Data.Text                                as T
+import qualified Language.GraphQL.Draft.Parser            as GParse
+import qualified Language.GraphQL.Draft.Printer           as GPrint
+import qualified Language.GraphQL.Draft.Syntax            as G
+import qualified Text.Builder                             as T
 
+import           Hasura.Backends.Postgres.Instances.Types ()
 import           Hasura.Backends.Postgres.SQL.Types
-import           Hasura.Incremental                 (Cacheable)
+import           Hasura.Incremental                       (Cacheable)
 import           Hasura.Prelude
 import           Hasura.RQL.Types.Backend
 import           Hasura.RQL.Types.Column
 import           Hasura.RQL.Types.Common
 import           Hasura.RQL.Types.Table
 import           Hasura.SQL.Backend
+
 
 newtype GraphQLType
   = GraphQLType { unGraphQLType :: G.GType }
@@ -234,7 +236,7 @@ emptyCustomTypes = CustomTypes Nothing Nothing Nothing Nothing
 
 data AnnotatedScalarType
   = ASTCustom !ScalarTypeDefinition
-  | forall b . (b ~ 'Postgres) => ASTReusedScalar !G.Name !(ScalarType b)
+  | ASTReusedScalar !G.Name !(ScalarType 'Postgres)
 
 
 -- | A simple type-level function: `ScalarSet :: Backend b => b -> HashSet (ScalarType b)`

@@ -6,7 +6,7 @@ import           Hasura.Prelude
 
 import qualified Language.GraphQL.Draft.Syntax as G
 
-import           Data.Aeson
+import           Data.Aeson.Extended
 import           Data.Kind                     (Type)
 import           Data.Text.Extended
 import           Data.Typeable                 (Typeable)
@@ -51,8 +51,6 @@ class
   , Representable (SQLOperator b)
   , Representable (SessionVarType b)
   , Representable (SourceConnConfiguration b)
-  , Representable (XAILIKE b)
-  , Representable (XANILIKE b)
   , Representable (XRelay b)
   , Representable (XNodesAgg b)
   , Representable (XRemoteField b)
@@ -66,6 +64,7 @@ class
   , Ord (Column b)
   , Data (TableName b)
   , Data (ScalarType b)
+  , Traversable (BooleanOperators b)
   , Data (SQLExpression b)
   , ToSQL (SQLExpression b)
   , FromJSON (BasicOrderType b)
@@ -120,12 +119,11 @@ class
   type Column                  b = c | c -> b
   type ScalarValue             b = sv | sv -> b
   type ScalarType              b = s | s -> b
+  type BooleanOperators        b :: Type -> Type
   type SQLExpression           b :: Type
   type SQLOperator             b :: Type
 
   -- extension types
-  type XAILIKE                 b :: Type
-  type XANILIKE                b :: Type
   type XComputedField          b :: Type
   type XRemoteField            b :: Type
   type XRelay                  b :: Type

@@ -9,7 +9,7 @@ import           Hasura.Prelude
 
 import qualified Database.ODBC.SQLServer                as ODBC
 
-import           Data.Aeson
+import           Data.Aeson.Extended
 import           Data.Aeson.Types
 import           Data.Text.Extended                     (ToTxt (..))
 import           Hasura.Backends.MSSQL.Types.Internal
@@ -186,3 +186,24 @@ instance Semigroup Top where
   (<>) NoTop x         = x
   (<>) x NoTop         = x
   (<>) (Top x) (Top y) = Top (min x y)
+
+
+deriving instance Generic (BooleanOperators a)
+deriving instance Functor     BooleanOperators
+deriving instance Foldable    BooleanOperators
+deriving instance Traversable BooleanOperators
+deriving instance Show      a => Show      (BooleanOperators a)
+deriving instance Eq        a => Eq        (BooleanOperators a)
+instance          NFData    a => NFData    (BooleanOperators a)
+instance          Hashable  a => Hashable  (BooleanOperators a)
+instance          Cacheable a => Cacheable (BooleanOperators a)
+
+instance ToJSON a => ToJSONKeyValue (BooleanOperators a) where
+  toJSONKeyValue = \case
+    ASTContains    a -> ("_st_contains",   toJSON a)
+    ASTCrosses     a -> ("_st_crosses",    toJSON a)
+    ASTEquals      a -> ("_st_equals",     toJSON a)
+    ASTIntersects  a -> ("_st_intersects", toJSON a)
+    ASTOverlaps    a -> ("_st_overlaps",   toJSON a)
+    ASTTouches     a -> ("_st_touches",    toJSON a)
+    ASTWithin      a -> ("_st_within",     toJSON a)

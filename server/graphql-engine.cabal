@@ -333,6 +333,9 @@ library
                      , Hasura.Backends.Postgres.Translate.Select
                      , Hasura.Backends.Postgres.Translate.Types
                      , Hasura.Backends.Postgres.Translate.Update
+                     , Hasura.Backends.Postgres.Types.BoolExp
+                     , Hasura.Backends.Postgres.Types.Column
+                     , Hasura.Backends.Postgres.Types.Table
 
                      , Hasura.Backends.MSSQL.Connection
                      , Hasura.Backends.MSSQL.DDL

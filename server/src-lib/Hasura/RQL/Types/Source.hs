@@ -1,4 +1,5 @@
-{-# LANGUAGE AllowAmbiguousTypes #-}
+{-# LANGUAGE AllowAmbiguousTypes  #-}
+{-# LANGUAGE UndecidableInstances #-}
 
 module Hasura.RQL.Types.Source where
 
@@ -7,13 +8,14 @@ import           Hasura.Prelude
 import qualified Data.HashMap.Strict                 as M
 
 import           Control.Lens
-import           Data.Aeson
+import           Data.Aeson.Extended
 import           Data.Aeson.TH
 
 import qualified Hasura.SQL.AnyBackend               as AB
 import qualified Hasura.Tracing                      as Tracing
 
 import           Hasura.Backends.Postgres.Connection
+import           Hasura.RQL.IR.BoolExp
 import           Hasura.RQL.Types.Backend
 import           Hasura.RQL.Types.Common
 import           Hasura.RQL.Types.Error
@@ -33,7 +35,7 @@ data SourceInfo b
   , _siConfiguration :: !(SourceConfig b)
   } deriving (Generic)
 $(makeLenses ''SourceInfo)
-instance Backend b => ToJSON (SourceInfo b) where
+instance (Backend b, ToJSONKeyValue (BooleanOperators b (PartialSQLExp b))) => ToJSON (SourceInfo b) where
   toJSON = genericToJSON hasuraJSON
 
 type BackendSourceInfo = AB.AnyBackend SourceInfo

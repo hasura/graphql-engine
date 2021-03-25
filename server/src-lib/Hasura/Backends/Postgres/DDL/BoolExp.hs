@@ -2,13 +2,14 @@ module Hasura.Backends.Postgres.DDL.BoolExp
   (parseBoolExpOperations)
 where
 
-import qualified Data.HashMap.Strict                as Map
-import qualified Data.Text                          as T
+import qualified Data.HashMap.Strict                    as Map
+import qualified Data.Text                              as T
 
 import           Data.Aeson
 import           Data.Text.Extended
 
 import           Hasura.Backends.Postgres.SQL.Types
+import           Hasura.Backends.Postgres.Types.BoolExp
 import           Hasura.Prelude
 import           Hasura.RQL.IR.BoolExp
 import           Hasura.RQL.Types.Column
@@ -17,6 +18,7 @@ import           Hasura.RQL.Types.SchemaCache
 import           Hasura.RQL.Types.Table
 import           Hasura.SQL.Backend
 import           Hasura.SQL.Types
+
 
 -- | Represents a reference to a Postgres column, possibly casted an arbitrary
 -- number of times. Used within 'parseOperationsExpression' for bookkeeping.
@@ -123,17 +125,17 @@ parseBoolExpOperations rhsParser fim columnInfo value = do
         "_is_null"       -> parseIsNull
 
         -- jsonb type
-        "_contains"      -> guardType [PGJSONB] >> AContains <$> parseOne
-        "$contains"      -> guardType [PGJSONB] >> AContains <$> parseOne
-        "_contained_in"  -> guardType [PGJSONB] >> AContainedIn <$> parseOne
-        "$contained_in"  -> guardType [PGJSONB] >> AContainedIn <$> parseOne
-        "_has_key"       -> guardType [PGJSONB] >> AHasKey <$> parseWithTy (ColumnScalar PGText)
-        "$has_key"       -> guardType [PGJSONB] >> AHasKey <$> parseWithTy (ColumnScalar PGText)
+        "_contains"      -> guardType [PGJSONB] >> ABackendSpecific . AContains <$> parseOne
+        "$contains"      -> guardType [PGJSONB] >> ABackendSpecific . AContains <$> parseOne
+        "_contained_in"  -> guardType [PGJSONB] >> ABackendSpecific . AContainedIn <$> parseOne
+        "$contained_in"  -> guardType [PGJSONB] >> ABackendSpecific . AContainedIn <$> parseOne
+        "_has_key"       -> guardType [PGJSONB] >> ABackendSpecific . AHasKey <$> parseWithTy (ColumnScalar PGText)
+        "$has_key"       -> guardType [PGJSONB] >> ABackendSpecific . AHasKey <$> parseWithTy (ColumnScalar PGText)
 
-        "_has_keys_any"  -> guardType [PGJSONB] >> AHasKeysAny <$> parseManyWithType (ColumnScalar PGText)
-        "$has_keys_any"  -> guardType [PGJSONB] >> AHasKeysAny <$> parseManyWithType (ColumnScalar PGText)
-        "_has_keys_all"  -> guardType [PGJSONB] >> AHasKeysAll <$> parseManyWithType (ColumnScalar PGText)
-        "$has_keys_all"  -> guardType [PGJSONB] >> AHasKeysAll <$> parseManyWithType (ColumnScalar PGText)
+        "_has_keys_any"  -> guardType [PGJSONB] >> ABackendSpecific . AHasKeysAny <$> parseManyWithType (ColumnScalar PGText)
+        "$has_keys_any"  -> guardType [PGJSONB] >> ABackendSpecific . AHasKeysAny <$> parseManyWithType (ColumnScalar PGText)
+        "_has_keys_all"  -> guardType [PGJSONB] >> ABackendSpecific . AHasKeysAll <$> parseManyWithType (ColumnScalar PGText)
+        "$has_keys_all"  -> guardType [PGJSONB] >> ABackendSpecific . AHasKeysAll <$> parseManyWithType (ColumnScalar PGText)
 
         -- geometry types
         "_st_contains"   -> parseGeometryOp ASTContains
@@ -175,53 +177,54 @@ parseBoolExpOperations rhsParser fim columnInfo value = do
         "_clte"          -> parseClte
 
         -- ltree types
-        "_ancestor"         -> guardType [PGLtree] >> AAncestor <$> parseOne
-        "$ancestor"         -> guardType [PGLtree] >> AAncestor <$> parseOne
-        "_ancestor_any"     -> guardType [PGLtree] >> AAncestorAny <$> parseManyWithType (ColumnScalar PGLtree)
-        "$ancestor_any"     -> guardType [PGLtree] >> AAncestorAny <$> parseManyWithType (ColumnScalar PGLtree)
-        "_descendant"       -> guardType [PGLtree] >> ADescendant <$> parseOne
-        "$descendant"       -> guardType [PGLtree] >> ADescendant <$> parseOne
-        "_descendant_any"   -> guardType [PGLtree] >> ADescendantAny <$> parseManyWithType (ColumnScalar PGLtree)
-        "$descendant_any"   -> guardType [PGLtree] >> ADescendantAny <$> parseManyWithType (ColumnScalar PGLtree)
-        "_matches"          -> guardType [PGLtree] >> AMatches <$> parseWithTy (ColumnScalar PGLquery)
-        "$matches"          -> guardType [PGLtree] >> AMatches <$> parseWithTy (ColumnScalar PGLquery)
-        "_matches_any"      -> guardType [PGLtree] >> AMatchesAny <$> parseManyWithType (ColumnScalar PGLquery)
-        "$matches_any"      -> guardType [PGLtree] >> AMatchesAny <$> parseManyWithType (ColumnScalar PGLquery)
-        "_matches_fulltext" -> guardType [PGLtree] >> AMatchesFulltext <$> parseWithTy (ColumnScalar PGLtxtquery)
-        "$matches_fulltext" -> guardType [PGLtree] >> AMatchesFulltext <$> parseWithTy (ColumnScalar PGLtxtquery)
+        "_ancestor"         -> guardType [PGLtree] >> ABackendSpecific . AAncestor <$> parseOne
+        "$ancestor"         -> guardType [PGLtree] >> ABackendSpecific . AAncestor <$> parseOne
+        "_ancestor_any"     -> guardType [PGLtree] >> ABackendSpecific . AAncestorAny <$> parseManyWithType (ColumnScalar PGLtree)
+        "$ancestor_any"     -> guardType [PGLtree] >> ABackendSpecific . AAncestorAny <$> parseManyWithType (ColumnScalar PGLtree)
+        "_descendant"       -> guardType [PGLtree] >> ABackendSpecific . ADescendant <$> parseOne
+        "$descendant"       -> guardType [PGLtree] >> ABackendSpecific . ADescendant <$> parseOne
+        "_descendant_any"   -> guardType [PGLtree] >> ABackendSpecific . ADescendantAny <$> parseManyWithType (ColumnScalar PGLtree)
+        "$descendant_any"   -> guardType [PGLtree] >> ABackendSpecific . ADescendantAny <$> parseManyWithType (ColumnScalar PGLtree)
+        "_matches"          -> guardType [PGLtree] >> ABackendSpecific . AMatches <$> parseWithTy (ColumnScalar PGLquery)
+        "$matches"          -> guardType [PGLtree] >> ABackendSpecific . AMatches <$> parseWithTy (ColumnScalar PGLquery)
+        "_matches_any"      -> guardType [PGLtree] >> ABackendSpecific . AMatchesAny <$> parseManyWithType (ColumnScalar PGLquery)
+        "$matches_any"      -> guardType [PGLtree] >> ABackendSpecific . AMatchesAny <$> parseManyWithType (ColumnScalar PGLquery)
+        "_matches_fulltext" -> guardType [PGLtree] >> ABackendSpecific . AMatchesFulltext <$> parseWithTy (ColumnScalar PGLtxtquery)
+        "$matches_fulltext" -> guardType [PGLtree] >> ABackendSpecific . AMatchesFulltext <$> parseWithTy (ColumnScalar PGLtxtquery)
 
         x                -> throw400 UnexpectedPayload $ "Unknown operator : " <> x
       where
         colTy = columnReferenceType column
 
+        parseIsNull   = bool ANISNOTNULL ANISNULL <$> parseVal -- is null
+
         parseEq       = AEQ False <$> parseOne -- equals
         parseNe       = ANE False <$> parseOne -- <>
-        parseIn       = AIN <$> parseManyWithType colTy -- in an array
+        parseIn       = AIN  <$> parseManyWithType colTy -- in an array
         parseNin      = ANIN <$> parseManyWithType colTy -- not in an array
-        parseGt       = AGT <$> parseOne -- >
-        parseLt       = ALT <$> parseOne -- <
+        parseGt       = AGT  <$> parseOne -- >
+        parseLt       = ALT  <$> parseOne -- <
         parseGte      = AGTE <$> parseOne -- >=
         parseLte      = ALTE <$> parseOne -- <=
-        parseLike     = guardType stringTypes >> ALIKE <$> parseOne
-        parseNlike    = guardType stringTypes >> ANLIKE <$> parseOne
-        parseIlike    = guardType stringTypes >> AILIKE () <$> parseOne
-        parseNilike   = guardType stringTypes >> ANILIKE () <$> parseOne
-        parseSimilar  = guardType stringTypes >> ASIMILAR <$> parseOne
-        parseNsimilar = guardType stringTypes >> ANSIMILAR <$> parseOne
-        parseRegex    = guardType stringTypes >> AREGEX <$> parseOne
-        parseIRegex   = guardType stringTypes >> AIREGEX <$> parseOne
-        parseNRegex   = guardType stringTypes >> ANREGEX <$> parseOne
-        parseNIRegex  = guardType stringTypes >> ANIREGEX <$> parseOne
 
-        parseIsNull   = bool ANISNOTNULL ANISNULL -- is null
-                        <$> parseVal
-
-        parseCeq      = CEQ <$> decodeAndValidateRhsCol
-        parseCne      = CNE <$> decodeAndValidateRhsCol
-        parseCgt      = CGT <$> decodeAndValidateRhsCol
-        parseClt      = CLT <$> decodeAndValidateRhsCol
+        parseCeq      = CEQ  <$> decodeAndValidateRhsCol
+        parseCne      = CNE  <$> decodeAndValidateRhsCol
+        parseCgt      = CGT  <$> decodeAndValidateRhsCol
+        parseClt      = CLT  <$> decodeAndValidateRhsCol
         parseCgte     = CGTE <$> decodeAndValidateRhsCol
         parseClte     = CLTE <$> decodeAndValidateRhsCol
+
+        parseLike     = guardType stringTypes >> ALIKE                      <$> parseOne
+        parseNlike    = guardType stringTypes >> ANLIKE                     <$> parseOne
+        parseIlike    = guardType stringTypes >> ABackendSpecific . AILIKE  <$> parseOne
+        parseNilike   = guardType stringTypes >> ABackendSpecific . ANILIKE <$> parseOne
+
+        parseRegex    = guardType stringTypes >> ABackendSpecific . AREGEX     <$> parseOne
+        parseIRegex   = guardType stringTypes >> ABackendSpecific . AIREGEX    <$> parseOne
+        parseNRegex   = guardType stringTypes >> ABackendSpecific . ANREGEX    <$> parseOne
+        parseNIRegex  = guardType stringTypes >> ABackendSpecific . ANIREGEX   <$> parseOne
+        parseSimilar  = guardType stringTypes >> ABackendSpecific . ASIMILAR   <$> parseOne
+        parseNsimilar = guardType stringTypes >> ABackendSpecific . ANSIMILAR  <$> parseOne
 
         parseCast = do
           castOperations <- parseVal
@@ -242,11 +245,11 @@ parseBoolExpOperations rhsParser fim columnInfo value = do
             "cannot cast column of type " <> colTy <<> " to type " <>> targetType
 
         parseGeometryOp f =
-          guardType [PGGeometry] >> f <$> parseOneNoSess colTy val
+          guardType [PGGeometry] >> ABackendSpecific . f <$> parseOneNoSess colTy val
         parseGeometryOrGeographyOp f =
-          guardType geoTypes >> f <$> parseOneNoSess colTy val
+          guardType geoTypes >> ABackendSpecific . f <$> parseOneNoSess colTy val
 
-        parseSTDWithinObj = case colTy of
+        parseSTDWithinObj = ABackendSpecific <$> case colTy of
           ColumnScalar PGGeometry -> do
             DWithinGeomOp distVal fromVal <- parseVal
             dist <- withPathK "distance" $ parseOneNoSess (ColumnScalar PGFloat) distVal

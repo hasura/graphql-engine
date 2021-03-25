@@ -39,7 +39,7 @@ buildEmptyMutResp = \case
       MRet _ -> J.toJSON ([] :: [J.Value])
 
 traverseMutFld
-  :: (Applicative f)
+  :: (Applicative f, Backend backend)
   => (a -> f b)
   -> MutFldG backend a
   -> f (MutFldG backend b)
@@ -49,7 +49,7 @@ traverseMutFld f = \case
   MRet flds -> MRet <$> traverse (traverse (traverseAnnField f)) flds
 
 traverseMutationOutput
-  :: (Applicative f)
+  :: (Applicative f, Backend backend)
   => (a -> f b)
   -> MutationOutputG backend a -> f (MutationOutputG backend b)
 traverseMutationOutput f = \case
@@ -59,7 +59,7 @@ traverseMutationOutput f = \case
     MOutSinglerowObject <$> traverseAnnFields f annFields
 
 traverseMutFlds
-  :: (Applicative f)
+  :: (Applicative f, Backend backend)
   => (a -> f b)
   -> MutFldsG backend a
   -> f (MutFldsG backend b)

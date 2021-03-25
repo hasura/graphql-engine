@@ -59,6 +59,15 @@ data UnifiedOn = UnifiedOn
 -------------------------------------------------------------------------------
 -- AST types
 
+data BooleanOperators a
+  = ASTContains   !a
+  | ASTCrosses    !a
+  | ASTEquals     !a
+  | ASTIntersects !a
+  | ASTOverlaps   !a
+  | ASTTouches    !a
+  | ASTWithin     !a
+
 data Select = Select
   { selectTop         :: !Top
   , selectProjections :: ![Projection]

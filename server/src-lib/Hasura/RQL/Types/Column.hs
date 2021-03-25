@@ -7,13 +7,10 @@ module Hasura.RQL.Types.Column
   , ValueParser
 
   , onlyNumCols
-  , onlyJSONBCols
   , onlyComparableCols
 
   , parseScalarValueColumnType
   , parseScalarValuesColumnType
-  , unsafePGColumnToBackend
-  , parseTxtEncodedPGValue
 
   , ColumnValue(..)
 
@@ -33,20 +30,16 @@ module Hasura.RQL.Types.Column
 
 import           Hasura.Prelude
 
-import qualified Data.HashMap.Strict                      as M
-import qualified Language.GraphQL.Draft.Syntax            as G
+import qualified Data.HashMap.Strict           as M
+import qualified Language.GraphQL.Draft.Syntax as G
 
 import           Control.Lens.TH
 import           Data.Aeson
 import           Data.Aeson.TH
 import           Data.Text.Extended
 
-import           Hasura.Backends.Postgres.Instances.Types ()
-import           Hasura.Backends.Postgres.SQL.Types       hiding (TableName, isComparableType,
-                                                           isNumType)
-import           Hasura.Backends.Postgres.SQL.Value
-import           Hasura.Incremental                       (Cacheable)
-import           Hasura.RQL.Instances                     ()
+import           Hasura.Incremental            (Cacheable)
+import           Hasura.RQL.Instances          ()
 import           Hasura.RQL.Types.Backend
 import           Hasura.RQL.Types.Common
 import           Hasura.RQL.Types.Error
@@ -124,14 +117,6 @@ isScalarColumnWhere f = \case
   ColumnScalar scalar   -> f scalar
   ColumnEnumReference _ -> False
 
--- | Gets the representation type associated with a 'ColumnType'. Avoid using this if possible.
--- Prefer 'parsePGScalarValue', 'parsePGScalarValues', or
--- 'Hasura.RQL.Types.BoolExp.mkTypedSessionVar'.
-unsafePGColumnToBackend :: ColumnType 'Postgres -> ScalarType 'Postgres
-unsafePGColumnToBackend = \case
-  ColumnScalar scalarType -> scalarType
-  ColumnEnumReference _   -> PGText
-
 -- | Note: Unconditionally accepts null values and returns 'PGNull'.
 parseScalarValueColumnType
   :: forall m b
@@ -157,14 +142,6 @@ parseScalarValuesColumnType
   => ColumnType b -> [Value] -> m [ScalarValue b]
 parseScalarValuesColumnType columnType values =
   indexedMapM (parseScalarValueColumnType columnType) values
-
-parseTxtEncodedPGValue
-  :: (MonadError QErr m, Backend b)
-  => ColumnType b -> TxtEncodedPGVal -> m (ScalarValue b)
-parseTxtEncodedPGValue colTy val =
-  parseScalarValueColumnType colTy $ case val of
-    TENull  -> Null
-    TELit t -> String t
 
 -- | “Raw” column info, as stored in the catalog (but not in the schema cache). Instead of
 -- containing a 'PGColumnType', it only contains a 'PGScalarType', which is combined with the
@@ -213,9 +190,6 @@ type PrimaryKeyColumns b = NESeq (ColumnInfo b)
 
 onlyNumCols :: forall b . Backend b => [ColumnInfo b] -> [ColumnInfo b]
 onlyNumCols = filter (isScalarColumnWhere (isNumType @b) . pgiType)
-
-onlyJSONBCols :: [ColumnInfo 'Postgres] -> [ColumnInfo 'Postgres]
-onlyJSONBCols = filter (isScalarColumnWhere (== PGJSONB) . pgiType)
 
 onlyComparableCols :: forall b. Backend b => [ColumnInfo b] -> [ColumnInfo b]
 onlyComparableCols = filter (isScalarColumnWhere (isComparableType @b) . pgiType)

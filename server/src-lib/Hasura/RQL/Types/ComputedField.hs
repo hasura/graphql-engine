@@ -6,19 +6,17 @@ module Hasura.RQL.Types.ComputedField where
 
 import           Hasura.Prelude
 
-import qualified Data.Sequence                            as Seq
-import qualified Database.PG.Query                        as Q
+import qualified Data.Sequence                      as Seq
+import qualified Database.PG.Query                  as Q
 
-import           Control.Lens                             hiding ((.=))
+import           Control.Lens                       hiding ((.=))
 import           Data.Aeson
 import           Data.Aeson.Casing
-import           Data.Aeson.TH
 import           Data.Text.Extended
 import           Data.Text.NonEmpty
 
-import           Hasura.Backends.Postgres.Instances.Types ()
-import           Hasura.Backends.Postgres.SQL.Types       hiding (FunctionName, TableName)
-import           Hasura.Incremental                       (Cacheable)
+import           Hasura.Backends.Postgres.SQL.Types hiding (FunctionName, TableName)
+import           Hasura.Incremental                 (Cacheable)
 import           Hasura.RQL.Types.Backend
 import           Hasura.RQL.Types.Common
 import           Hasura.RQL.Types.Function
@@ -91,22 +89,23 @@ instance Backend b => ToJSON (ComputedFieldReturn b) where
                    }
 $(makePrisms ''ComputedFieldReturn)
 
-data ComputedFieldFunction
+data ComputedFieldFunction (b :: BackendType)
   = ComputedFieldFunction
   { _cffName            :: !QualifiedFunction
-  , _cffInputArgs       :: !(Seq.Seq (FunctionArg 'Postgres))
+  , _cffInputArgs       :: !(Seq.Seq (FunctionArg b))
   , _cffTableArgument   :: !FunctionTableArgument
   , _cffSessionArgument :: !(Maybe FunctionSessionArgument)
   , _cffDescription     :: !(Maybe PGDescription)
   } deriving (Show, Eq, Generic)
-instance Cacheable ComputedFieldFunction
-$(deriveToJSON hasuraJSON ''ComputedFieldFunction)
+instance (Backend b) => Cacheable (ComputedFieldFunction b)
+instance (Backend b) => ToJSON (ComputedFieldFunction b) where
+  toJSON = genericToJSON hasuraJSON
 
 data ComputedFieldInfo (b :: BackendType)
   = ComputedFieldInfo
   { _cfiXComputedFieldInfo :: !(XComputedField b)
   , _cfiName               :: !ComputedFieldName
-  , _cfiFunction           :: !ComputedFieldFunction
+  , _cfiFunction           :: !(ComputedFieldFunction b)
   , _cfiReturnType         :: !(ComputedFieldReturn b)
   , _cfiComment            :: !(Maybe Text)
   } deriving (Generic)

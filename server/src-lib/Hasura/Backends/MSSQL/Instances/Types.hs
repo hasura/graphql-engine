@@ -34,11 +34,10 @@ instance Backend 'MSSQL where
   type Column                  'MSSQL = MSSQL.ColumnName
   type ScalarValue             'MSSQL = MSSQL.Value
   type ScalarType              'MSSQL = MSSQL.ScalarType
+  type BooleanOperators        'MSSQL = MSSQL.BooleanOperators
   type SQLExpression           'MSSQL = MSSQL.Expression
   type SQLOperator             'MSSQL = MSSQL.Op
 
-  type XAILIKE                 'MSSQL = XDisable
-  type XANILIKE                'MSSQL = XDisable
   type XComputedField          'MSSQL = XDisable
   type XRemoteField            'MSSQL = XDisable
   type XRelay                  'MSSQL = XDisable

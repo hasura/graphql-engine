@@ -151,13 +151,15 @@ runSessVarPred :: SessVarPred -> SessionVariables -> SessionVariables
 runSessVarPred = filterSessionVariables . unSessVarPred
 
 -- | Filter out only those session variables used by the query AST provided
-filterVariablesFromQuery :: [RootField (QueryDBRoot UnpreparedValue) c (ActionQuery backend (UnpreparedValue bet)) d] -> SessVarPred
+filterVariablesFromQuery
+  :: Backend backend
+  => [RootField (QueryDBRoot UnpreparedValue) c (ActionQuery backend (UnpreparedValue bet)) d]
+  -> SessVarPred
 filterVariablesFromQuery query = fold $ rootToSessVarPreds =<< query
   where
-    rootToSessVarPreds :: RootField (QueryDBRoot UnpreparedValue) c (ActionQuery backend (UnpreparedValue bet)) d -> [SessVarPred]
     rootToSessVarPreds = \case
       RFDB _ exists ->
-        AB.runBackend exists \case
+        AB.dispatchAnyBackend @Backend exists \case
           SourceConfigWith _ (QDBR db) -> toPred <$> toListOf traverseQueryDB db
       RFAction actionQ -> toPred <$> toListOf traverseActionQuery actionQ
       _ -> []

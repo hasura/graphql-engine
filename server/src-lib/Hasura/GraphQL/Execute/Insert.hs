@@ -35,7 +35,7 @@ import           Hasura.Server.Version                        (HasVersion)
 
 
 traverseAnnInsert
-  :: (Applicative f)
+  :: (Applicative f, Backend backend)
   => (a -> f b)
   -> IR.AnnInsert backend a
   -> f (IR.AnnInsert backend b)

@@ -22,9 +22,11 @@ import           Hasura.Backends.Postgres.SQL.Types         hiding (TableName)
 import           Hasura.Backends.Postgres.SQL.Value
 import           Hasura.Backends.Postgres.Translate.BoolExp
 import           Hasura.Backends.Postgres.Translate.Column
+import           Hasura.Backends.Postgres.Types.Column
 import           Hasura.RQL.Types
 import           Hasura.SQL.Types
 import           Hasura.Session
+
 
 newtype DMLP1T m a
   = DMLP1T { unDMLP1T :: StateT (DS.Seq Q.PrepArg) m a }
@@ -220,7 +222,7 @@ checkOnColExp spi sessVarBldr annFld = case annFld of
     return $ AVRel relInfo $ andAnnBoolExps modAnn resolvedFltr
 
 convAnnBoolExpPartialSQL
-  :: (Applicative f)
+  :: (Applicative f, Backend backend)
   => SessVarBldr backend f
   -> AnnBoolExpPartialSQL backend
   -> f (AnnBoolExpSQL backend)
@@ -228,7 +230,7 @@ convAnnBoolExpPartialSQL f =
   traverseAnnBoolExp (convPartialSQLExp f)
 
 convAnnColumnCaseBoolExpPartialSQL
-  :: (Applicative f)
+  :: (Applicative f, Backend backend)
   => SessVarBldr backend f
   -> AnnColumnCaseBoolExpPartialSQL backend
   -> f (AnnColumnCaseBoolExp backend (SQLExpression backend))
