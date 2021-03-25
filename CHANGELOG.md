@@ -55,6 +55,7 @@ query {
 - server: fix inherited_roles issue when some of the underlying roles don't have permissions configured (fixes #6672)
 - server: fix action custom types failing to parse when mutually recursive
 - server: fix MSSQL table name descriptions
+- server: emit `postgres-max-connections-error` when max postgres connections are reached
 - console: allow editing rest endpoints queries and misc ui improvements
 - console: display collection names and queries from all collections in allowlist
 - cli: match ordering of keys in project metadata files with server metadata

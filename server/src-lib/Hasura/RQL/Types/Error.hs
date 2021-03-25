@@ -68,6 +68,7 @@ data Code
   | NotExists
   | AlreadyExists
   | PostgresError
+  | PostgresMaxConnectionsError
   | MSSQLError
   | DatabaseConnectionTimeout
   | NotSupported
@@ -115,48 +116,50 @@ data Code
 
 instance Show Code where
   show = \case
-    NotNullViolation          -> "not-null-violation"
-    DataException             -> "data-exception"
-    BadRequest                -> "bad-request"
-    ConstraintViolation       -> "constraint-violation"
-    PermissionDenied          -> "permission-denied"
-    NotExists                 -> "not-exists"
-    AlreadyExists             -> "already-exists"
-    AlreadyTracked            -> "already-tracked"
-    AlreadyUntracked          -> "already-untracked"
-    PostgresError             -> "postgres-error"
-    MSSQLError                -> "mssql-error"
-    DatabaseConnectionTimeout -> "connection-timeout-error"
-    NotSupported              -> "not-supported"
-    DependencyError           -> "dependency-error"
-    InvalidHeaders            -> "invalid-headers"
-    InvalidJSON               -> "invalid-json"
-    AccessDenied              -> "access-denied"
-    ParseFailed               -> "parse-failed"
-    ConstraintError           -> "constraint-error"
-    PermissionError           -> "permission-error"
-    NotFound                  -> "not-found"
-    Unexpected                -> "unexpected"
-    UnexpectedPayload         -> "unexpected-payload"
-    NoUpdate                  -> "no-update"
-    InvalidParams             -> "invalid-params"
-    AlreadyInit               -> "already-initialised"
-    NoTables                  -> "no-tables"
-    ValidationFailed          -> "validation-failed"
-    Busy                      -> "busy"
-    JWTRoleClaimMissing       -> "jwt-missing-role-claims"
-    JWTInvalidClaims          -> "jwt-invalid-claims"
-    JWTInvalid                -> "invalid-jwt"
-    JWTInvalidKey             -> "invalid-jwt-key"
-    RemoteSchemaError         -> "remote-schema-error"
-    RemoteSchemaConflicts     -> "remote-schema-conflicts"
-    CoercionError             -> "coercion-error"
-    StartFailed               -> "start-failed"
-    InvalidCustomTypes        -> "invalid-custom-types"
-    MethodNotAllowed          -> "method-not-allowed"
-    Conflict                  -> "conflict"
-    ActionWebhookCode t       -> T.unpack t
-    CustomCode t              -> T.unpack t
+    NotNullViolation            -> "not-null-violation"
+    DataException               -> "data-exception"
+    BadRequest                  -> "bad-request"
+    ConstraintViolation         -> "constraint-violation"
+    PermissionDenied            -> "permission-denied"
+    NotExists                   -> "not-exists"
+    AlreadyExists               -> "already-exists"
+    AlreadyTracked              -> "already-tracked"
+    AlreadyUntracked            -> "already-untracked"
+    PostgresError               -> "postgres-error"
+    PostgresMaxConnectionsError -> "postgres-max-connections-error"
+    MSSQLError                  -> "mssql-error"
+    DatabaseConnectionTimeout   -> "connection-timeout-error"
+    -- TODO (Naveen): We don't use the above error anywhere, do we remove this?
+    NotSupported                -> "not-supported"
+    DependencyError             -> "dependency-error"
+    InvalidHeaders              -> "invalid-headers"
+    InvalidJSON                 -> "invalid-json"
+    AccessDenied                -> "access-denied"
+    ParseFailed                 -> "parse-failed"
+    ConstraintError             -> "constraint-error"
+    PermissionError             -> "permission-error"
+    NotFound                    -> "not-found"
+    Unexpected                  -> "unexpected"
+    UnexpectedPayload           -> "unexpected-payload"
+    NoUpdate                    -> "no-update"
+    InvalidParams               -> "invalid-params"
+    AlreadyInit                 -> "already-initialised"
+    NoTables                    -> "no-tables"
+    ValidationFailed            -> "validation-failed"
+    Busy                        -> "busy"
+    JWTRoleClaimMissing         -> "jwt-missing-role-claims"
+    JWTInvalidClaims            -> "jwt-invalid-claims"
+    JWTInvalid                  -> "invalid-jwt"
+    JWTInvalidKey               -> "invalid-jwt-key"
+    RemoteSchemaError           -> "remote-schema-error"
+    RemoteSchemaConflicts       -> "remote-schema-conflicts"
+    CoercionError               -> "coercion-error"
+    StartFailed                 -> "start-failed"
+    InvalidCustomTypes          -> "invalid-custom-types"
+    MethodNotAllowed            -> "method-not-allowed"
+    Conflict                    -> "conflict"
+    ActionWebhookCode t         -> T.unpack t
+    CustomCode t                -> T.unpack t
 
 data QErr
   = QErr
@@ -226,11 +229,25 @@ encodeJSONPath = format "$"
         specialChars (c:xs) = notElem c (alphabet ++ "_") ||
           any (`notElem` (alphaNumerics ++ "_-")) xs
 
+-- Postgres Connection Errors
 instance Q.FromPGConnErr QErr where
+  -- | According to <https://github.com/hasura/graphql-engine-mono/issues/800>
+  -- we want to track when we receive max connections reached error from
+  -- Postgres. But @libpq@ does not provide any structured errors for connection
+  -- errors [1]. It only provides an error message as string. So to capture max
+  -- connections error we are resorting to substring matching here. This will,
+  -- obviously, fail if the error message changes in libpq.
+  -- [1]: <https://www.postgresql.org/docs/current/libpq-status.html#LIBPQ-PQERRORMESSAGE>
+  fromPGConnErr c
+    | "too many clients" `T.isInfixOf` (Q.getConnErr c) =
+      let e = err500 PostgresMaxConnectionsError "max connections reached on postgres"
+      in e {qeInternal = Just $ toJSON c}
+
   fromPGConnErr c =
     let e = err500 PostgresError "connection error"
     in e {qeInternal = Just $ toJSON c}
 
+-- Postgres Transaction error
 instance Q.FromPGTxErr QErr where
   fromPGTxErr txe =
     let e = err500 PostgresError "postgres tx error"
