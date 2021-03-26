@@ -28,13 +28,7 @@ export type RSPContainerProps = {
 };
 
 const RSP: React.FC<Props> = props => {
-  const {
-    allRoles,
-    allRemoteSchemas,
-    params,
-    viewRemoteSchema,
-    rspEnabled,
-  } = props;
+  const { allRemoteSchemas, params, viewRemoteSchema, rspEnabled } = props;
   return (
     <RSPWrapper
       params={params}
@@ -43,11 +37,7 @@ const RSP: React.FC<Props> = props => {
       viewRemoteSchema={viewRemoteSchema}
       permissionRenderer={currentRemoteSchema =>
         rspEnabled ? (
-          <Permissions
-            allRoles={allRoles}
-            {...props}
-            {...{ currentRemoteSchema }}
-          />
+          <Permissions {...props} {...{ currentRemoteSchema }} />
         ) : (
           <div>
             Remote schema permissions are not enabled. To enable remote schema

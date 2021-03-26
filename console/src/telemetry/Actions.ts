@@ -142,8 +142,6 @@ const setOnboardingCompletedInDB = (
   );
 };
 
-type X = ReduxState['telemetry'];
-
 const setPreReleaseNotificationOptOutInDB = () => (
   dispatch: ThunkDispatch<ReduxState, unknown, AnyAction>,
   getState: () => ReduxState

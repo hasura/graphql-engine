@@ -1,3 +1,9 @@
+// eslint-disable-next-line no-shadow
+export enum ArgType {
+  CompositeType = 'c',
+  BaseType = 'b',
+}
+
 export type PGInputArgType = {
   schema: string;
   name: string;
@@ -61,11 +67,6 @@ export type InputArgType = {
   schema: string;
   name: string;
 };
-
-export enum ArgType {
-  CompositeType = 'c',
-  BaseType = 'b',
-}
 
 export interface FunctionState {
   functionName: string;

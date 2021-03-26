@@ -209,7 +209,9 @@
         "react/no-danger": "off",
         "react/no-array-index-key": "off",
         "no-case-declarations": 0,
-        "react/jsx-indent": "off"
+        "react/jsx-indent": "off",
+        "no-use-before-define": "warn",
+        "arrow-body-style": "off"
       }
     }
   ]

@@ -1,8 +1,8 @@
 import { PermissionEdit } from './types';
 
 export type RemoteSchemaPermissionsState = {
-  isEditing: false;
-  isFetching: false;
+  isEditing: boolean;
+  isFetching: boolean;
   permissionEdit: PermissionEdit;
   schemaDefinition: string;
   bulkSelect: string[];

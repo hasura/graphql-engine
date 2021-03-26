@@ -128,7 +128,7 @@ export const mergeDataMssql = (
     );
 
     const relationships = [] as Table['relationships'];
-    metadataTable?.array_relationships?.map(rel => {
+    metadataTable?.array_relationships?.forEach(rel => {
       relationships.push({
         rel_def: rel.using,
         rel_name: rel.name,
@@ -138,7 +138,7 @@ export const mergeDataMssql = (
       });
     });
 
-    metadataTable?.object_relationships?.map(rel => {
+    metadataTable?.object_relationships?.forEach(rel => {
       relationships.push({
         rel_def: rel.using,
         rel_name: rel.name,
@@ -304,7 +304,7 @@ export const mergeLoadSchemaDataPostgres = (
         definition: field.definition as Table['computed_fields'][0]['definition'],
       }));
 
-      metadataTable?.array_relationships?.map(rel => {
+      metadataTable?.array_relationships?.forEach(rel => {
         relationships.push({
           rel_def: rel.using,
           rel_name: rel.name,
@@ -314,7 +314,7 @@ export const mergeLoadSchemaDataPostgres = (
         });
       });
 
-      metadataTable?.object_relationships?.map(rel => {
+      metadataTable?.object_relationships?.forEach(rel => {
         relationships.push({
           rel_def: rel.using,
           rel_name: rel.name,

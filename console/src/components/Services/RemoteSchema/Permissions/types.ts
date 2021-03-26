@@ -36,6 +36,7 @@ export type PermissionEdit = {
   isNewRole: boolean;
   isNewPerm: boolean;
   role: string;
+  filter?: Record<string, string>;
 };
 
 export type ArgTreeType = {
