@@ -177,9 +177,27 @@ cabal new-run -- test:graphql-engine-tests \
        serve --stringify-numeric-types
    ```
 
+   Optionally, replace the `--database-url` parameter with `--metadata-database-url` to enable testing against multiple sources.
+
    The environment variables are needed for a couple tests, and the `--stringify-numeric-types` option is used to avoid the need to do floating-point comparisons.
 
-5. With the server running, run the test suite:
+5. Optionally, add alternative sources to test against:
+
+    If you enabled testing against multiple sources with in the last step, you can add those sources as follows:
+    ```
+    # Add a Postgres source
+    curl "$METADATA_URL" \
+    --data-raw '{"type":"pg_add_source","args":{"name":"default","configuration":{"connection_info":{"database_url":"'"$POSTGRES_DB_URL"'","pool_settings":{}}}}}'
+
+    # Add a SQL Server source
+    curl "$METADATA_URL" \
+    --data-raw '{"type":"mssql_add_source","args":{"name":"mssql","configuration":{"connection_info":{"connection_string":"'"$MSSQL_DB_URL"'","pool_settings":{}}}}}'
+
+    # Optionally verify sources have been added
+    curl "$METADATA_URL" --data-raw '{"type":"export_metadata","args":{}}'
+    ```
+
+6. With the server running, run the test suite:
 
    ```
    cd tests-py
@@ -194,6 +212,13 @@ Some other useful points of note:
   - It is recommended to use a separate Postgres database for testing, since the tests will drop and recreate the `hdb_catalog` schema, and they may fail if certain tables already exist. (It’s also useful to be able to just drop and recreate the entire test database if it somehow gets into a bad state.)
 
   - You can pass the `-v` or `-vv` options to `pytest` to enable more verbose output while running the tests and in test failures. You can also pass the `-l` option to display the current values of Python local variables in test failures.
+
+  - Tests can be run against a specific backend (defaulting to Postgres) with the `backend` flag, for example:
+    ```
+      pytest --hge-urls http://localhost:8080 \
+             --pg-urls 'postgres://<user>:<password>@<host>:<port>/<dbname>'
+             --backend mssql -k TestGraphQLQueryBasicCommon
+    ```
 
 ##### Guide on writing python tests
 

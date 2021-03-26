@@ -6,6 +6,8 @@
 - server: add a comment field for actions (#231)
 - console: add a comment field for actions (#231)
 
+## v2.0.0-alpha.6
+
 ### Support geometry and geography spatial data comparison operators in MS SQL Server
 
 Comparison operators on spatial data types, geometry and geography, are now supported in MS SQL Server. The following operators are supported:
@@ -46,7 +48,7 @@ query {
 }
 ```
 
-## v2.0.0-alpha.6
+### Bug fixes and improvements
 
 - server: fix action output type schema generation (fix #6631)
 - server/mssql: `mssql_add_source` can now take connection strings from environment variables
