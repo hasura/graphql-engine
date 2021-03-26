@@ -4,6 +4,7 @@
 (Add entries here in the order of: server, console, cli, docs, others)
 
 - server: add a comment field for actions (#231)
+- server: accept GeoJSON for MSSQL geometry and geography operators (#787)
 - console: add a comment field for actions (#231)
 
 ## v2.0.0-alpha.6

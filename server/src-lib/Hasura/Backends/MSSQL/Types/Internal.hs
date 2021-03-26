@@ -8,6 +8,8 @@ import           Hasura.Prelude
 
 import qualified Data.Aeson                    as J
 import qualified Database.ODBC.SQLServer       as ODBC
+import qualified Hasura.SQL.GeoJSON            as Geo
+import qualified Hasura.SQL.WKT                as WKT
 import qualified Language.GraphQL.Draft.Syntax as G
 
 import           Data.Text.Encoding            (encodeUtf8)
@@ -337,11 +339,9 @@ parseScalarValue scalarType jValue = case scalarType of
   -- boolean
   BitType       -> ODBC.ByteValue <$> parseJValue jValue
 
-
   -- geo
-  -- TODO: We'll need to wrap this with geography::STGeomFromText
-  GeographyType -> ODBC.TextValue <$> parseJValue jValue
-  GeometryType  -> ODBC.TextValue <$> parseJValue jValue
+  GeographyType -> ODBC.TextValue <$> parseGeoTypes jValue
+  GeometryType  -> ODBC.TextValue <$> parseGeoTypes jValue
 
   -- misc
   BinaryType    -> ODBC.BinaryValue . ODBC.Binary . txtToBs <$> parseJValue jValue
@@ -356,6 +356,15 @@ parseScalarValue scalarType jValue = case scalarType of
   where
     parseJValue :: (J.FromJSON a) => J.Value -> Either QErr a
     parseJValue = runAesonParser J.parseJSON
+
+    parseGeoTypes :: J.Value -> Either QErr Text
+    parseGeoTypes jv =
+      runAesonParser (J.parseJSON @Text) jv <> parseGeoJSONAsWKT jValue
+
+    parseGeoJSONAsWKT :: J.Value -> Either QErr Text
+    parseGeoJSONAsWKT jv =
+      runAesonParser (J.parseJSON @Geo.GeometryWithCRS) jv
+        >>= fmap WKT.getWKT . WKT.toWKT
 
 isComparableType, isNumType :: ScalarType -> Bool
 isComparableType = \case

@@ -543,6 +543,7 @@ library
                      , Hasura.SQL.GeoJSON
                      , Hasura.SQL.Time
                      , Hasura.SQL.Types
+                     , Hasura.SQL.WKT
                      , Hasura.Tracing
                      , Network.HTTP.Client.Extended
                      , Network.URI.Extended
@@ -601,18 +602,19 @@ test-suite graphql-engine-tests
   hs-source-dirs: src-test
   main-is: Main.hs
   other-modules:
-    Data.Parser.CacheControlSpec
-    Data.Parser.URLTemplate
-    Data.Parser.JSONPathSpec
-    Data.TimeSpec
     Data.NonNegativeIntSpec
+    Data.Parser.CacheControlSpec
+    Data.Parser.JSONPathSpec
+    Data.Parser.URLTemplate
+    Data.TimeSpec
+    Hasura.CacheBoundedSpec
     Hasura.IncrementalSpec
     Hasura.RQL.MetadataSpec
     Hasura.RQL.Types.EndpointSpec
+    Hasura.SQL.WKTSpec
+    Hasura.Server.AuthSpec
     Hasura.Server.MigrateSpec
     Hasura.Server.TelemetrySpec
-    Hasura.CacheBoundedSpec
-    Hasura.Server.AuthSpec
 
 -- Benchmarks related to caching (e.g. the plan cache).
 --

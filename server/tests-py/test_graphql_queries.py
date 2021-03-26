@@ -984,6 +984,24 @@ class TestGraphQLQueryBoolExpSpatialMSSQL:
     def test_select_spatial_mssql_types_where_st_touches(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + '/select_query_spatial_types_where_st_touches_mssql.yaml', transport)
 
+    def test_select_spatial_mssql_types_where_st_crosses_geojson(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/select_query_geom_where_st_crosses_geojson_mssql.yaml', transport)
+
+    def test_select_spatial_mssql_types_where_st_contains_geojson(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/select_query_spatial_types_where_st_contains_geojson_mssql.yaml', transport)
+
+    def test_select_spatial_mssql_types_where_st_equals_geojson(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/select_query_spatial_types_where_st_equals_geojson_mssql.yaml', transport)
+
+    def test_select_spatial_mssql_types_where_st_intersects_geojson(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/select_query_spatial_types_where_st_intersects_geojson_mssql.yaml', transport)
+
+    def test_select_spatial_mssql_types_where_st_touches_geojson(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/select_query_spatial_types_where_st_touches_geojson_mssql.yaml', transport)
+
+    def test_select_spatial_mssql_types_where_st_within_geojson(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/select_query_spatial_types_where_st_within_geojson_mssql.yaml', transport)
+
     @classmethod
     def dir(cls):
         return 'queries/graphql_query/boolexp/spatial'
