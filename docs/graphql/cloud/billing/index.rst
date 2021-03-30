@@ -12,11 +12,16 @@ Hasura Cloud billing
   :depth: 1
   :local:
 
-All Hasura Cloud billing related details can be found under the ``Billing`` tab in the Hasura Cloud dashboard
+Introduction
+------------
 
+All Hasura Cloud billing related details can be found under the ``Billing`` tab in the Hasura Cloud dashboard
 
 .. thumbnail:: /img/graphql/cloud/billing/billing.png
   :alt: Billing
+
+Details
+-------
 
 .. toctree::
   :maxdepth: 1

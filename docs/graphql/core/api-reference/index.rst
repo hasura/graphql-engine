@@ -24,11 +24,11 @@ Available APIs
 +----------------------------------+---------------------------------------------------+------------------+
 | Legacy GraphQL                   | :ref:`/v1alpha1/graphql <graphql_api>`            | Permission rules |
 +----------------------------------+---------------------------------------------------+------------------+
-| Schema/Metadata *(< v1.3)*       | :ref:`/v1/query <schema_metadata_api>`            | Admin only       |
-+----------------------------------+---------------------------------------------------+------------------+
 | Schema *(> v2.0)*                | :ref:`/v2/query <schema_api>`                     | Admin only       |
 +----------------------------------+---------------------------------------------------+------------------+
 | Metadata *(> v2.0)*              | :ref:`/v1/metadata <metadata_api>`                | Admin only       |
++----------------------------------+---------------------------------------------------+------------------+
+| Schema/Metadata *(< v1.3)*       | :ref:`/v1/query <schema_metadata_api>`            | Admin only       |
 +----------------------------------+---------------------------------------------------+------------------+
 | Restified GQL                    | :ref:`/api/rest <restified_api>`                  | GQL REST Routes  |
 +----------------------------------+---------------------------------------------------+------------------+
@@ -63,18 +63,6 @@ See docs at :ref:`relay_schema`.
 
 See details at :ref:`api_reference_relay_graphql`.
 
-.. _schema_metadata_api:
-
-Schema / metadata API (v1.3 and below)
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-Hasura exposes a schema / metadata API for managing metadata for permissions/relationships or for directly
-executing SQL on the underlying Postgres.
-
-This is primarily intended to be used as an ``admin`` API to manage the Hasura schema and metadata.
-
-See details at :ref:`schema_metadata_apis` .
-
 .. _schema_api:
 
 Schema API (v2.0 and above)
@@ -96,6 +84,18 @@ Hasura exposes a metadata API for managing metadata.
 This is primarily intended to be used as an ``admin`` API to manage the Hasura metadata.
 
 See details at :ref:`metadata_apis`.
+
+.. _schema_metadata_api:
+
+Schema / metadata API (v1.3 and below)
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Hasura exposes a schema / metadata API for managing metadata for permissions/relationships or for directly
+executing SQL on the underlying Postgres.
+
+This is primarily intended to be used as an ``admin`` API to manage the Hasura schema and metadata.
+
+See details at :ref:`schema_metadata_apis` .
 
 .. _version_api:
 
@@ -162,9 +162,9 @@ See details at :ref:`explain_api_reference`.
 
   GraphQL API <graphql-api/index>
   Relay GraphQL API <relay-graphql-api/index>
-  Schema / Metadata APIs <schema-metadata-api/index>
   Schema APIs (v2.0 and above) <schema-api/index>
   Metadata APIs (v2.0 and above) <metadata-api/index>
+  Schema / Metadata APIs <schema-metadata-api/index>
   RESTified GraphQL Endpoints <restified>
   Version API <version>
   Health check API <health>

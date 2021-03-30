@@ -20,8 +20,8 @@ Hasura Cloud projects include Pro features for enhanced reliability and performa
 .. thumbnail:: /img/graphql/cloud/metrics/monitoring-tab-overview.png
    :alt: Hasura Cloud Console overview tab
 
-Learn more
-----------
+Features
+--------
 
 .. toctree::
    :maxdepth: 1

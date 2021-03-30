@@ -57,7 +57,7 @@ realtime monitoring, caching, tracing, and rate-limiting. It supports both new a
       - :ref:`cloud_api_reference`
       - :ref:`glossary`
       - :ref:`hasurapro_cli`
-      - :ref:`changelog`
+      - :ref:`cloud_changelog`
 
 .. toctree::
   :maxdepth: 1
