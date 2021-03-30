@@ -154,17 +154,22 @@ runCronEventsGenerator logger getSC = do
     -- get cron triggers from cache
     let cronTriggersCache = scCronTriggers sc
 
-    -- get cron trigger stats from db
-    eitherRes <- runMetadataStorageT $ do
-      deprivedCronTriggerStats <- getDeprivedCronTriggerStats
-      -- join stats with cron triggers and produce @[(CronTriggerInfo, CronTriggerStats)]@
-      cronTriggersForHydrationWithStats <-
-        catMaybes <$>
-        mapM (withCronTrigger cronTriggersCache) deprivedCronTriggerStats
-      insertCronEventsFor cronTriggersForHydrationWithStats
+    if (Map.null cronTriggersCache)
+    then return ()
+    else do
+      -- Poll the DB only when there's at-least one cron trigger present
+      -- in the schema cache
+      -- get cron trigger stats from db
+      eitherRes <- runMetadataStorageT $ do
+        deprivedCronTriggerStats <- getDeprivedCronTriggerStats
+        -- join stats with cron triggers and produce @[(CronTriggerInfo, CronTriggerStats)]@
+        cronTriggersForHydrationWithStats <-
+          catMaybes <$>
+          mapM (withCronTrigger cronTriggersCache) deprivedCronTriggerStats
+        insertCronEventsFor cronTriggersForHydrationWithStats
 
-    onLeft eitherRes $ L.unLogger logger .
-      ScheduledTriggerInternalErr . err500 Unexpected . tshow
+      onLeft eitherRes $ L.unLogger logger .
+        ScheduledTriggerInternalErr . err500 Unexpected . tshow
 
     liftIO $ sleep (minutes 1)
     where
@@ -294,7 +299,7 @@ processScheduledTriggers env logger logEnv httpMgr getSC LockedEventsCtx {..} =
       Right (cronEvents, oneOffEvents) -> do
         processCronEvents logger logEnv httpMgr cronEvents getSC leCronEvents
         processOneOffScheduledEvents env logger logEnv httpMgr oneOffEvents leOneOffEvents
-        liftIO $ sleep (minutes 1)
+    liftIO $ sleep (minutes 1)
   where
     logInternalError err = liftIO . L.unLogger logger $ ScheduledTriggerInternalErr err
 

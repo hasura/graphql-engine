@@ -355,10 +355,16 @@ asyncActionsProcessor
   -> HTTP.Manager
   -> m void
 asyncActionsProcessor env logger cacheRef httpManager = forever $ do
-  asyncInvocationsE <- runMetadataStorageT fetchUndeliveredActionEvents
-  asyncInvocations <- liftIO $ onLeft asyncInvocationsE mempty
   actionCache <- scActions . lastBuiltSchemaCache . fst <$> liftIO (readIORef cacheRef)
-  LA.mapConcurrently_ (callHandler actionCache) asyncInvocations
+  let asyncActions = Map.filter ((== ActionMutation ActionAsynchronous) . (^. aiDefinition.adType)) actionCache
+  if (Map.null asyncActions)
+  then return ()
+  else do
+    -- fetch undelivered action events only when there's at least
+    -- one async action present in the schema cache
+    asyncInvocationsE <- runMetadataStorageT fetchUndeliveredActionEvents
+    asyncInvocations <- liftIO $ onLeft asyncInvocationsE mempty
+    LA.mapConcurrently_ (callHandler actionCache) asyncInvocations
   liftIO $ threadDelay (1 * 1000 * 1000)
   where
     callHandler :: ActionCache -> ActionLogItem -> m ()
