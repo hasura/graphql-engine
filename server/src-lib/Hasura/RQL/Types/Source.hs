@@ -105,8 +105,9 @@ instance (MonadResolveSource m) => MonadResolveSource (LazyTxT QErr m) where
 -- Metadata API related types
 data AddSource b
   = AddSource
-  { _asName          :: !SourceName
-  , _asConfiguration :: !(SourceConnConfiguration b)
+  { _asName                 :: !SourceName
+  , _asConfiguration        :: !(SourceConnConfiguration b)
+  , _asReplaceConfiguration :: !Bool
   } deriving (Generic)
 deriving instance (Backend b) => Show (AddSource b)
 deriving instance (Backend b) => Eq (AddSource b)
@@ -115,7 +116,11 @@ instance (Backend b) => ToJSON (AddSource b) where
   toJSON = genericToJSON hasuraJSON
 
 instance (Backend b) => FromJSON (AddSource b) where
-  parseJSON = genericParseJSON hasuraJSON
+  parseJSON = withObject "Object" $ \o ->
+    AddSource
+      <$> o .: "name"
+      <*> o .: "configuration"
+      <*> o .:? "replace_configuration" .!= False
 
 data DropSource
   = DropSource

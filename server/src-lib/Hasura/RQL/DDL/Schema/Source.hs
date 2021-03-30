@@ -7,7 +7,7 @@ import qualified Data.HashMap.Strict                 as HM
 import qualified Data.HashMap.Strict.InsOrd          as OMap
 import qualified Database.PG.Query                   as Q
 
-import           Control.Lens                        (at, (^.))
+import           Control.Lens                        (at, (.~), (^.))
 import           Control.Monad.Trans.Control         (MonadBaseControl)
 import           Data.Text.Extended
 
@@ -40,13 +40,17 @@ runAddSource
   :: forall m b
    . (MonadError QErr m, CacheRWM m, MetadataM m, BackendMetadata b)
   => AddSource b -> m EncJSON
-runAddSource (AddSource name sourceConfig) = do
+runAddSource (AddSource name sourceConfig replaceConfiguration) = do
   sources <- scSources <$> askSchemaCache
-  onJust (HM.lookup name sources) $ const $
-    throw400 AlreadyExists $ "source with name " <> name <<> " already exists"
-  buildSchemaCacheFor (MOSource name)
-    $ MetadataModifier
-    $ metaSources %~ OMap.insert name (mkSourceMetadata @b name sourceConfig)
+  let sourceMetadata = mkSourceMetadata @b name sourceConfig
+
+  metadataModifier <- MetadataModifier <$>
+    if HM.member name sources then
+      if replaceConfiguration then pure $ metaSources.ix name .~ sourceMetadata
+      else throw400 AlreadyExists $ "source with name " <> name <<> " already exists"
+    else pure $ metaSources %~ OMap.insert name sourceMetadata
+
+  buildSchemaCacheFor (MOSource name) metadataModifier
   pure successMsg
 
 runDropSource
