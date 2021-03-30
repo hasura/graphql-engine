@@ -72,13 +72,13 @@ export const mergeDataMssql = (
         comment: row[3],
         columns: JSON.parse(row[4]),
       });
-      // eslint-disable-next-line no-empty
     } catch (err) {
       console.log(err);
     }
   });
+
   try {
-    fkRelations = JSON.parse(data[1].result.slice(1).join()) as MSSqlFk[];
+    fkRelations = JSON.parse(data[1].result.slice(1).join('')) as MSSqlFk[];
     // eslint-disable-next-line no-empty
   } catch {}
 
