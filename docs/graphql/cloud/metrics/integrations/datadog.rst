@@ -22,7 +22,7 @@ on the integrations tab on the project's setting page.
 
   Datadog Integration is only available for Hasura Cloud projects on the ``Standard`` (pay-as-you-go) tier and above.
 
-Configure Datadog Integration
+Configure Datadog integration
 -----------------------------
 
 Navigate to the integrations tab on project settings page to find Datadog integration.
@@ -31,7 +31,7 @@ Navigate to the integrations tab on project settings page to find Datadog integr
    :alt: Configure Datadog Integration
    :width: 1146px
 
-Select the Datadog API region and enter the Datadog API key (can be retrieved by navigating to Datadog's settings page by clicking the ``Get API Key`` link), host, service name and tags to associate with exported logs.
+Select the Datadog API region and enter the Datadog API key (can be retrieved by navigating to Datadog's settings page by clicking the ``Get API Key`` link), host, service name and tags to associate with exported logs and metrics.
 
 .. list-table::
    :header-rows: 1

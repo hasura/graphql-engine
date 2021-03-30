@@ -4,18 +4,27 @@
 
 .. _cloud_integrations:
 
-Guides for configuring Hasura Cloud with different services
-===========================================================
+Integrations with external services
+===================================
 
 .. contents:: Table of contents
   :backlinks: none
   :depth: 1
   :local:
 
-Check out the following guides for tutorials on how to integrate various services in Hasura Cloud. 
+Introduction
+------------
+
+You can export data like metrics and operation logs of your Hasura Cloud project to external services.
+
+Supported integrations
+----------------------
+
+Check out the following guides for tutorials on how to integrate the following services with Hasura Cloud.
 
 .. toctree::
    :maxdepth: 1
    :titlesonly:
 
    Datadog <datadog> 
+   New Relic <newrelic>
