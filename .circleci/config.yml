@@ -1,9 +1,7 @@
 # anchor refs to be used elsewhere
 refs:
   constants:
-  # TODO upload to hasura docker hub:
-  # - &server_builder_image hasura/graphql-engine-server-builder:2020-01-14
-  - &server_builder_image jberryman/graphql-engine-server-builder-8.10:2020-04-29
+  - &server_builder_image hasura/graphql-engine-server-builder:196099c798158aa7594fbc1128fab8a9eb572ab851db84248d624c13904eab47
   skip_job_on_ciignore: &skip_job_on_ciignore
     run:
       name: checking if job should be terminated or not

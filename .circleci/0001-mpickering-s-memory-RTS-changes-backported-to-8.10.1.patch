@@ -1,0 +1,527 @@
+From 95adb78d46461c3248fa4c91ad5d756f7530c6ac Mon Sep 17 00:00:00 2001
+From: Matthew Pickering <matthewtpickering@gmail.com>
+Date: Wed, 17 Feb 2021 10:20:19 +0000
+Subject: [PATCH] mpickering's memory RTS changes, backported to 8.10.1
+
+Squashed commits from :
+https://gitlab.haskell.org/mpickering/ghc/-/commits/wip/fd-decay-factor
+
+namely...
+29d4df0f5ec1b1e3600ca20a5ef11e2c1f6eb0d4
+33dfb61f528905321bd863e16e44b1b29a30edac
+962b00e7fbf75913ee1ceb8231ad533b7ee4978f
+
+rts: Gradually return retained memory to the OS
+
+Related to #19381 #19359 #14702
+
+After a spike in memory usage we have been conservative about returning
+allocated blocks to the OS in case we are still allocating a lot and would
+end up just reallocating them. The result of this was that up to 4 * live_bytes
+of blocks would be retained once they were allocated even if memory usage ended up
+a lot lower.
+
+For a heap of size ~1.5G, this would result in OS memory reporting 6G which is
+both misleading and worrying for clients.
+In long-lived server applications this results in consistent high memory
+usage when the live data size is much more reasonable (for example ghcide)
+
+Therefore we have a new (2021) strategy which starts by retaining up to 4 * live_bytes
+of blocks before gradually returning uneeded memory back to the OS on subsequent
+major GCs which are NOT caused by a heap overflow.
+
+Each major GC which is NOT caused by heap overflow increases the consec_idle_gcs
+counter and the amount of memory which is retained is inversely proportional to this number.
+By default the excess memory retained is
+ oldGenFactor (controlled by -F) / 2 ^ (consec_idle_gcs * returnDecayFactor)
+
+On a major GC caused by a heap overflow, the `consec_idle_gcs` variable is reset to 0
+(as we could continue to allocate more, so retaining all the memory might make sense).
+
+Therefore setting bigger values for `-Fd` makes the rate at which memory is returned slower.
+Smaller values make it get returned faster. Setting `-Fd0` means no additional memory
+is retained.
+
+The default is `-Fd4` which results in the following scaling:
+
+> mapM print [(x, 1/ (2**(x / 4))) | x <- [1 :: Double ..20]]
+(1.0,0.8408964152537146)
+(2.0,0.7071067811865475)
+(3.0,0.5946035575013605)
+(4.0,0.5)
+(5.0,0.4204482076268573)
+(6.0,0.35355339059327373)
+(7.0,0.29730177875068026)
+(8.0,0.25)
+(9.0,0.21022410381342865)
+(10.0,0.17677669529663687)
+(11.0,0.14865088937534013)
+(12.0,0.125)
+(13.0,0.10511205190671433)
+(14.0,8.838834764831843e-2)
+(15.0,7.432544468767006e-2)
+(16.0,6.25e-2)
+(17.0,5.255602595335716e-2)
+(18.0,4.4194173824159216e-2)
+(19.0,3.716272234383503e-2)
+(20.0,3.125e-2)
+
+So after 13 consecutive GCs only 0.1 of the maximum memory used will be retained.
+
+Further to this decay factor, the amount of memory we attempt to retain is
+also influenced by the GC strategy for the oldest generation. If we are using
+a copying strategy then we will need at least 2 * live_bytes for copying to take
+place, so we always keep that much. If using compacting then we need a lower number,
+so we just retain at least `1.2 * live_bytes` for some protection.
+
+rts: Make allocatePinned always take a new block
+
+This change surprisingly fixes quite bad fragmentation issues
+
+When a new block was stolen from the nursery it meant that on the next
+GC that the nursery had to be resized and the stolen block replaced.
+This led to a few (1 or 2) random blocks from the free list being added to
+the nursery, from which they would never escape. Over time, the rest of
+the blocks in these megablocks would get collected but the nursery would hold onto 1
+block from many different megablocks. This led to the situation where
+there were many nearly empty megablocks in the free list.
+
+Add --pinned-from-nursery RTS flag
+
+This flag controls whether allocatePinned takes a block from the nursery
+or not.
+---
+ docs/users_guide/runtime_control.rst |  19 ++++
+ includes/rts/Flags.h                 |   2 +
+ libraries/base/GHC/RTS/Flags.hsc     |   2 +
+ rts/RtsFlags.c                       |  31 ++++++-
+ rts/Schedule.c                       |  20 ++---
+ rts/sm/GC.c                          | 124 +++++++++++++++++++++++++--
+ rts/sm/GC.h                          |   1 +
+ rts/sm/Storage.c                     |   2 +-
+ 8 files changed, 182 insertions(+), 19 deletions(-)
+
+diff --git docs/users_guide/runtime_control.rst docs/users_guide/runtime_control.rst
+index 371249cace..873565909b 100644
+--- docs/users_guide/runtime_control.rst
++++ docs/users_guide/runtime_control.rst
+@@ -533,6 +533,25 @@ performance.
+     The :rts-flag:`-F ⟨factor⟩` setting will be automatically reduced by the garbage
+     collector when the maximum heap size (the :rts-flag:`-M ⟨size⟩` setting) is approaching.
+ 
++.. rts-flag:: -Fd ⟨factor⟩
++
++    :default: 4
++
++    .. index::
++       single: heap size, factor
++
++    The inverse rate at which unused memory is returned to the OS when it is no longer
++    needed. After a large amount of allocation the RTS will start by retaining
++    a lot of allocated blocks in case it will need them again shortly but then
++    it will gradually release them based on the :rts-flag:`-Fd ⟨factor⟩`. On
++    each subsequent major collection which is not caused by a heap overflow a little
++    more memory will attempt to be returned until the amount retained is similar to
++    the amount of live bytes.
++
++    Increasing this factor will make the rate memory is returned slower, decreasing
++    it will make memory be returned more eagerly. Setting it to 0 will disable the
++    memory return (which will emulate the behaviour in releases prior to 9.2).
++
+ .. rts-flag:: -G ⟨generations⟩
+ 
+     :default: 2
+diff --git includes/rts/Flags.h includes/rts/Flags.h
+index 4af19aa953..9e4808151d 100644
+--- includes/rts/Flags.h
++++ includes/rts/Flags.h
+@@ -50,6 +50,7 @@ typedef struct _GC_FLAGS {
+     uint32_t     heapSizeSuggestion; /* in *blocks* */
+     bool heapSizeSuggestionAuto;
+     double  oldGenFactor;
++    double  returnDecayFactor;
+     double  pcFreeHeap;
+ 
+     bool         useNonmoving; // default = false
+@@ -223,6 +224,7 @@ typedef struct _MISC_FLAGS {
+     bool linkerAlwaysPic;        /* Assume the object code is always PIC */
+     StgWord linkerMemBase;       /* address to ask the OS for memory
+                                   * for the linker, NULL ==> off */
++    bool pinnedFromNursery; /* Whether allocatePinned will steal blocks from the nursery */
+ } MISC_FLAGS;
+ 
+ /* See Note [Synchronization of flags and base APIs] */
+diff --git libraries/base/GHC/RTS/Flags.hsc libraries/base/GHC/RTS/Flags.hsc
+index abff8aa1f9..c8301e44ce 100644
+--- libraries/base/GHC/RTS/Flags.hsc
++++ libraries/base/GHC/RTS/Flags.hsc
+@@ -102,6 +102,7 @@ data GCFlags = GCFlags
+     , heapSizeSuggestion    :: Word32
+     , heapSizeSuggestionAuto :: Bool
+     , oldGenFactor          :: Double
++    , returnDecayFactor     :: Double
+     , pcFreeHeap            :: Double
+     , generations           :: Word32
+     , squeezeUpdFrames      :: Bool
+@@ -388,6 +389,7 @@ getGCFlags = do
+           <*> (toBool <$>
+                 (#{peek GC_FLAGS, heapSizeSuggestionAuto} ptr :: IO CBool))
+           <*> #{peek GC_FLAGS, oldGenFactor} ptr
++          <*> #{peek GC_FLAGS, returnDecayFactor} ptr
+           <*> #{peek GC_FLAGS, pcFreeHeap} ptr
+           <*> #{peek GC_FLAGS, generations} ptr
+           <*> (toBool <$>
+diff --git rts/RtsFlags.c rts/RtsFlags.c
+index 2c5f69a76f..7b89def0cb 100644
+--- rts/RtsFlags.c
++++ rts/RtsFlags.c
+@@ -156,6 +156,7 @@ void initRtsFlagsDefaults(void)
+     RtsFlags.GcFlags.heapSizeSuggestionAuto = false;
+     RtsFlags.GcFlags.pcFreeHeap         = 3;    /* 3% */
+     RtsFlags.GcFlags.oldGenFactor       = 2;
++    RtsFlags.GcFlags.returnDecayFactor  = 4;
+     RtsFlags.GcFlags.useNonmoving       = false;
+     RtsFlags.GcFlags.nonmovingSelectorOpt = false;
+     RtsFlags.GcFlags.generations        = 2;
+@@ -247,6 +248,7 @@ void initRtsFlagsDefaults(void)
+     RtsFlags.MiscFlags.internalCounters        = false;
+     RtsFlags.MiscFlags.linkerAlwaysPic         = DEFAULT_LINKER_ALWAYS_PIC;
+     RtsFlags.MiscFlags.linkerMemBase           = 0;
++    RtsFlags.MiscFlags.pinnedFromNursery       = false;
+ 
+ #if defined(THREADED_RTS)
+     RtsFlags.ParFlags.nCapabilities     = 1;
+@@ -285,6 +287,9 @@ usage_text[] = {
+ "  -?       Prints this message and exits; the program is not executed",
+ "  --info   Print information about the RTS used by this program",
+ "",
++"  --pinned-from-nursery",
++"            Try to take a block from the nursery when a new pinned block is needed",
++"",
+ "  -K<size>  Sets the maximum stack size (default: 80% of the heap)",
+ "            Egs: -K32k -K512k -K8M",
+ "  -ki<size> Sets the initial thread stack size (default 1k)  Egs: -ki4k -ki2m",
+@@ -297,6 +302,12 @@ usage_text[] = {
+ "  -F<n>     Sets the collecting threshold for old generations as a factor of",
+ "            the live data in that generation the last time it was collected",
+ "            (default: 2.0)",
++"  -Fd<n>    Sets the inverse rate which memory is returned to the OS after being",
++"            optimistically retained after being allocated. Subsequent major",
++"            collections not caused by heap overflow will return an amount of",
++"            memory controlled by this factor (higher is slower). Setting the factor",
++"            to 0 means memory is not returned.",
++"            (default 4.0)",
+ "  -n<size>  Allocation area chunk size (0 = disabled, default: 0)",
+ "  -O<size>  Sets the minimum size of the old generation (default 1M)",
+ "  -M<size>  Sets the maximum heap size (default unlimited)  Egs: -M256k -M1G",
+@@ -936,6 +947,11 @@ error = true;
+                       OPTION_SAFE;
+                       RtsFlags.GcFlags.useNonmoving = true;
+                   }
++                  else if (strequal("pinned-from-nursery",
++                               &rts_argv[arg][2])) {
++                      OPTION_SAFE;
++                      RtsFlags.MiscFlags.pinnedFromNursery = true;
++                  }
+ #if defined(THREADED_RTS)
+                   else if (!strncmp("numa", &rts_argv[arg][2], 4)) {
+                       if (!osBuiltWithNumaSupport()) {
+@@ -1055,10 +1071,19 @@ error = true;
+ 
+               case 'F':
+                 OPTION_UNSAFE;
+-                RtsFlags.GcFlags.oldGenFactor = atof(rts_argv[arg]+2);
++                switch(rts_argv[arg][2]) {
++                case 'd':
++                  RtsFlags.GcFlags.returnDecayFactor = atof(rts_argv[arg]+3);
++                  if (RtsFlags.GcFlags.returnDecayFactor < 0)
++                    bad_option( rts_argv[arg] );
++                  break;
++                default:
++                  RtsFlags.GcFlags.oldGenFactor = atof(rts_argv[arg]+2);
+ 
+-                if (RtsFlags.GcFlags.oldGenFactor < 0)
+-                  bad_option( rts_argv[arg] );
++                  if (RtsFlags.GcFlags.oldGenFactor < 0)
++                    bad_option( rts_argv[arg] );
++                  break;
++                };
+                 break;
+ 
+               case 'D':
+diff --git rts/Schedule.c rts/Schedule.c
+index 9323915dfe..b3fc2e69d0 100644
+--- rts/Schedule.c
++++ rts/Schedule.c
+@@ -165,7 +165,7 @@ static bool scheduleHandleThreadFinished( Capability *cap, Task *task,
+                                           StgTSO *t );
+ static bool scheduleNeedHeapProfile(bool ready_to_gc);
+ static void scheduleDoGC( Capability **pcap, Task *task,
+-                          bool force_major, bool deadlock_detect );
++                          bool force_major, bool is_overflow_gc, bool deadlock_detect );
+ 
+ static void deleteThread (StgTSO *tso);
+ static void deleteAllThreads (void);
+@@ -265,7 +265,7 @@ schedule (Capability *initialCapability, Task *task)
+     case SCHED_INTERRUPTING:
+         debugTrace(DEBUG_sched, "SCHED_INTERRUPTING");
+         /* scheduleDoGC() deletes all the threads */
+-        scheduleDoGC(&cap,task,true,false);
++        scheduleDoGC(&cap,task,true,false,false);
+ 
+         // after scheduleDoGC(), we must be shutting down.  Either some
+         // other Capability did the final GC, or we did it above,
+@@ -562,7 +562,7 @@ run_thread:
+     }
+ 
+     if (ready_to_gc || scheduleNeedHeapProfile(ready_to_gc)) {
+-      scheduleDoGC(&cap,task,false,false);
++      scheduleDoGC(&cap,task,false,ready_to_gc,false);
+     }
+   } /* end of while() */
+ }
+@@ -936,7 +936,7 @@ scheduleDetectDeadlock (Capability **pcap, Task *task)
+         // they are unreachable and will therefore be sent an
+         // exception.  Any threads thus released will be immediately
+         // runnable.
+-        scheduleDoGC (pcap, task, true/*force major GC*/, true/*deadlock detection*/);
++        scheduleDoGC (pcap, task, true/*force major GC*/, false /* Whether it is an overflow GC */, true/*deadlock detection*/);
+         cap = *pcap;
+         // when force_major == true. scheduleDoGC sets
+         // recent_activity to ACTIVITY_DONE_GC and turns off the timer
+@@ -1006,7 +1006,7 @@ scheduleProcessInbox (Capability **pcap USED_IF_THREADS)
+     while (!emptyInbox(cap)) {
+         // Executing messages might use heap, so we should check for GC.
+         if (doYouWantToGC(cap)) {
+-            scheduleDoGC(pcap, cap->running_task, false, false);
++            scheduleDoGC(pcap, cap->running_task, false, false, false);
+             cap = *pcap;
+         }
+ 
+@@ -1557,7 +1557,7 @@ void releaseAllCapabilities(uint32_t n, Capability *keep_cap, Task *task)
+ // behind deadlock_detect argument.
+ static void
+ scheduleDoGC (Capability **pcap, Task *task USED_IF_THREADS,
+-              bool force_major, bool deadlock_detect)
++              bool force_major, bool is_overflow_gc, bool deadlock_detect)
+ {
+     Capability *cap = *pcap;
+     bool heap_census;
+@@ -1850,9 +1850,9 @@ delete_threads_and_gc:
+     // emerge they don't immediately re-enter the GC.
+     pending_sync = 0;
+     signalCondition(&sync_finished_cond);
+-    GarbageCollect(collect_gen, heap_census, deadlock_detect, gc_type, cap, idle_cap);
++    GarbageCollect(collect_gen, heap_census, is_overflow_gc, deadlock_detect, gc_type, cap, idle_cap);
+ #else
+-    GarbageCollect(collect_gen, heap_census, deadlock_detect, 0, cap, NULL);
++    GarbageCollect(collect_gen, heap_census, is_overflow_gc, deadlock_detect, 0, cap, NULL);
+ #endif
+ 
+     // If we're shutting down, don't leave any idle GC work to do.
+@@ -2720,7 +2720,7 @@ exitScheduler (bool wait_foreign USED_IF_THREADS)
+         nonmovingStop();
+         Capability *cap = task->cap;
+         waitForCapability(&cap,task);
+-        scheduleDoGC(&cap,task,true,false);
++        scheduleDoGC(&cap,task,true,false,false);
+         ASSERT(task->incall->tso == NULL);
+         releaseCapability(cap);
+     }
+@@ -2788,7 +2788,7 @@ performGC_(bool force_major)
+     // TODO: do we need to traceTask*() here?
+ 
+     waitForCapability(&cap,task);
+-    scheduleDoGC(&cap,task,force_major,false);
++    scheduleDoGC(&cap,task,force_major,false,false);
+     releaseCapability(cap);
+     boundTaskExiting(task);
+ }
+diff --git rts/sm/GC.c rts/sm/GC.c
+index 62c0f3ed42..61ae9eecb7 100644
+--- rts/sm/GC.c
++++ rts/sm/GC.c
+@@ -110,6 +110,8 @@ bool deadlock_detect_gc;
+  */
+ static W_ g0_pcnt_kept = 30; // percentage of g0 live at last minor GC
+ 
++static int consec_idle_gcs = 0;
++
+ /* Mut-list stats */
+ #if defined(DEBUG)
+ uint32_t mutlist_MUTVARS,
+@@ -195,6 +197,7 @@ StgPtr mark_sp;            // pointer to the next unallocated mark stack entry
+ void
+ GarbageCollect (uint32_t collect_gen,
+                 const bool do_heap_census,
++                const bool is_overflow_gc,
+                 const bool deadlock_detect,
+                 uint32_t gc_type USED_IF_THREADS,
+                 Capability *cap,
+@@ -878,11 +881,24 @@ GarbageCollect (uint32_t collect_gen,
+       }
+ #endif
+ 
+-      /* If the amount of data remains constant, next major GC we'll
+-       * require (F+1)*live + prealloc. We leave (F+2)*live + prealloc
+-       * in order to reduce repeated deallocation and reallocation. #14702
+-       */
+-      need = need_prealloc + (RtsFlags.GcFlags.oldGenFactor + 2) * need_live;
++      // Reset the counter if the major GC was caused by a heap overflow
++      consec_idle_gcs = is_overflow_gc ? 0 : consec_idle_gcs + 1;
++
++      // See Note [Scaling retained memory]
++      double scaled_factor =
++        RtsFlags.GcFlags.returnDecayFactor > 0
++          ? RtsFlags.GcFlags.oldGenFactor / pow(2, (float) consec_idle_gcs / RtsFlags.GcFlags.returnDecayFactor)
++          : RtsFlags.GcFlags.oldGenFactor;
++
++      debugTrace(DEBUG_gc, "factors: %f %d %f", RtsFlags.GcFlags.oldGenFactor, consec_idle_gcs, scaled_factor  );
++
++      // Unavoidable need depends on GC strategy
++      // * Copying need 2 * live
++      // * Compacting need 1.x * live (we choose 1.2)
++      double unavoidable_need_factor = oldest_gen->compact ? 1.2 : 2;
++      W_ scaled_needed = (scaled_factor + unavoidable_need_factor) * need_live;
++      debugTrace(DEBUG_gc, "factors_2: %f %d", unavoidable_need_factor, scaled_needed);
++      need = need_prealloc + scaled_needed;
+ 
+       /* Also, if user set heap size, do not drop below it.
+        */
+@@ -900,6 +916,7 @@ GarbageCollect (uint32_t collect_gen,
+       need = BLOCKS_TO_MBLOCKS(need);
+ 
+       got = mblocks_allocated;
++      debugTrace(DEBUG_gc,"Returning: %d %d", got, need);
+ 
+       if (got > need) {
+           returnMemoryToOS(got - need);
+@@ -2005,3 +2022,100 @@ bool doIdleGCWork(Capability *cap STG_UNUSED, bool all)
+ {
+     return runSomeFinalizers(all);
+ }
++
++
++/* Note [Synchronising work stealing]
++ *
++ * During parallel garbage collections, idle gc threads will steal work from
++ * other threads. If they see no work to steal then they will wait on a
++ * condition variabl(gc_running_cv).
++ *
++ * There are two synchronisation primitivees:
++ *  - gc_running_mutex
++ *  - gc_running_cv
++ *
++ *  Two mutable variables
++ *  - gc_running_threads
++ *  - work_stealing
++ *
++ *  Two immutable variables
++ *  - n_gc_threads
++ *  - n_gc_idle_threads
++ *
++ *  gc_running_threads is modified only through the functions inc_running and
++ *  dec_running are called when a gc thread starts(wakeup_gc_threads), runs out
++ *  of work(scavenge_until_all_done), or finds more
++ *  work(scavenge_until_all_done).
++ *
++ *  We care about the value of gc_running_threads in two places.
++ *   (a) in dec_running, if gc_running_threads reaches 0 then we broadcast
++ *     gc_running_cv so that all gc_threads can exis scavenge_until_all_done.
++ *   (b) in notifyTodoBlock, if there are any threads not running, then we
++ *     signal gc_running_cv so a thread can try stealing some work.
++ *
++ *  Note that:
++ *    (c) inc_running does not hold gc_running_mutex while incrementing
++ *      gc_running_threads.
++ *    (d) notifyTodoBlock does not hold gc_running_mutex while inspecting
++ *      gc_running_mutex.
++ *    (d) The gc leader calls shutdown_gc_threads before it begins the final
++ *      sequential collections (i.e. traverseWeakPtrList)
++ *    (e) A gc worker thread can never observe gc_running_threads increasing
++ *      from 0. gc_running_threads will increase from 0, but this is after (d),
++ *      where gc worker threads are all finished.
++ *    (f) The check in (b) tolerates wrong values of gc_running_threads. See the
++ *      function for details.
++ *
++ * work_stealing is "mostly immutable". We set it to false when we begin the
++ * final sequential collections, for the benefit of notifyTodoBlock.
++ * */
++
++/* Note [Scaling retained memory]
++ * Tickets: #19381 #19359 #14702
++ *
++ * After a spike in memory usage we have been conservative about returning
++ * allocated blocks to the OS in case we are still allocating a lot and would
++ * end up just reallocating them. The result of this was that up to 4 * live_bytes
++ * of blocks would be retained once they were allocated even if memory usage ended up
++ * a lot lower.
++ *
++ * For a heap of size ~1.5G, this would result in OS memory reporting 6G which is
++ * both misleading and worrying for users.
++ * In long-lived server applications this results in consistent high memory
++ * usage when the live data size is much more reasonable (for example ghcide)
++ *
++ * Therefore we have a new (2021) strategy which starts by retaining up to 4 * live_bytes
++ * of blocks before gradually returning uneeded memory back to the OS on subsequent
++ * major GCs which are NOT caused by a heap overflow.
++ *
++ * Each major GC which is NOT caused by heap overflow increases the consec_idle_gcs
++ * counter and the amount of memory which is retained is inversely proportional to this number.
++ * By default the excess memory retained is
++ *  oldGenFactor (controlled by -F) / 2 ^ (consec_idle_gcs * returnDecayFactor)
++ *
++ * On a major GC caused by a heap overflow, the `consec_idle_gcs` variable is reset to 0
++ * (as we could continue to allocate more, so retaining all the memory might make sense).
++ *
++ * Therefore setting bigger values for `-Fd` makes the rate at which memory is returned slower.
++ * Smaller values make it get returned faster. Setting `-Fd0` means no additional memory
++ * is retained.
++ *
++ * The default is `-Fd4` which results in the following scaling:
++ *
++ * > mapM print [(x, 1/ (2**(x / 4))) | x <- [1 :: Double ..20]]
++ * (1.0,0.8408964152537146)
++ * ...
++ * (4.0,0.5)
++ * ...
++ * (12.0,0.125)
++ * ...
++ * (20.0,3.125e-2)
++ *
++ * So after 12 consecutive GCs only 0.1 of the maximum memory used will be retained.
++ *
++ * Further to this decay factor, the amount of memory we attempt to retain is
++ * also influenced by the GC strategy for the oldest generation. If we are using
++ * a copying strategy then we will need at least 2 * live_bytes for copying to take
++ * place, so we always keep that much. If using compacting then we need a lower number,
++ * so we just retain at least `1.2 * live_bytes` for some protection.
++ */
+diff --git rts/sm/GC.h rts/sm/GC.h
+index bde006913b..67f99bd73d 100644
+--- rts/sm/GC.h
++++ rts/sm/GC.h
+@@ -19,6 +19,7 @@
+ 
+ void GarbageCollect (uint32_t collect_gen,
+                      bool do_heap_census,
++                     bool is_overflow_gc,
+                      bool deadlock_detect,
+                      uint32_t gc_type,
+                      Capability *cap,
+diff --git rts/sm/Storage.c rts/sm/Storage.c
+index f04b3c5929..7b38deeb89 100644
+--- rts/sm/Storage.c
++++ rts/sm/Storage.c
+@@ -1125,7 +1125,7 @@ allocatePinned (Capability *cap, W_ n)
+         // So first, we try taking the next block from the nursery, in
+         // the same way as allocate().
+         bd = cap->r.rCurrentNursery->link;
+-        if (bd == NULL) {
++        if (bd == NULL || !RtsFlags.MiscFlags.pinnedFromNursery ) {
+             // The nursery is empty: allocate a fresh block (we can't fail
+             // here).
+             ACQUIRE_SM_LOCK;
+-- 
+2.20.1
+

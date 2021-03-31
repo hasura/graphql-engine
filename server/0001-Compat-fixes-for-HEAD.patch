@@ -1,0 +1,1361 @@
+From d1eb870c9edd79cae6e0892b9f038d7c7d43c7eb Mon Sep 17 00:00:00 2001
+From: Matthew Pickering <matthewtpickering@gmail.com>
+Date: Fri, 18 Dec 2020 18:44:41 +0000
+Subject: [PATCH] Compat fixes for HEAD
+
+Really messy to backport...
+
+Adapt for usage with ghc-debug
+
+Update ghc-debug commits
+
+fixups from sloppy rebase
+---
+ scripts/dev.sh                                |  14 +-
+ server/cabal.project                          |  62 ++-
+ server/cabal.project.ci                       |   2 -
+ server/cabal.project.freeze                   | 372 ------------------
+ server/graphql-engine.cabal                   |   7 +-
+ server/src-bench-cache/Main.hs                |   2 +-
+ server/src-exec/Main.hs                       |   3 +-
+ server/src-lib/Control/Concurrent/Extended.hs |  21 +-
+ server/src-lib/Data/Text/NonEmpty.hs          |  49 +++
+ server/src-lib/Hasura/App.hs                  |   6 +-
+ .../Hasura/GraphQL/Execute/LiveQuery/Poll.hs  |   2 +-
+ .../Hasura/GraphQL/Execute/Mutation.hs        |   2 +-
+ .../src-lib/Hasura/GraphQL/Schema/Mutation.hs |   2 +-
+ .../GraphQL/Transport/WebSocket/Server.hs     |   2 +-
+ server/src-lib/Hasura/RQL/DDL/Schema.hs       | 104 ++---
+ .../src-lib/Hasura/RQL/DDL/Schema/Function.hs |  15 +-
+ server/src-lib/Hasura/RQL/Instances.hs        |   4 +-
+ server/src-lib/Hasura/RQL/Types/Common.hs     |   9 +-
+ server/src-lib/Hasura/SQL/GeoJSON.hs          |  47 +--
+ server/src-lib/Hasura/Server/API/Query.hs     |  61 +--
+ server/src-lib/Hasura/Server/Auth.hs          |   3 +
+ server/src-lib/Hasura/Server/Utils.hs         |  16 +-
+ server/src-lib/Hasura/Server/Version.hs       |   6 +-
+ server/src-lib/Hasura/Tracing.hs              |   9 +-
+ server/src-test/Hasura/Server/AuthSpec.hs     |   3 +-
+ 25 files changed, 285 insertions(+), 538 deletions(-)
+ create mode 100644 server/src-lib/Data/Text/NonEmpty.hs
+
+diff --git scripts/dev.sh scripts/dev.sh
+index a9e595d31..91b008108 100755
+--- scripts/dev.sh
++++ scripts/dev.sh
+@@ -13,6 +13,8 @@ shopt -s globstar
+ # This makes use of 'cabal.project.dev-sh*' files when building. See
+ # 'cabal.project.dev-sh.local'.
+ 
++GHC=/home/me/Work/hasura/ghc-for-ghc-debug/_build/stage1/bin/ghc
++CABAL=/home/me/Work/hasura/cabal-for-ghc-debug/dist-newstyle/build/x86_64-linux/ghc-8.10.2/cabal-install-3.4.0.0/x/cabal/build/cabal/cabal
+ 
+ echo_pretty() {
+     echo ">>> $(tput setaf 2)$1$(tput sgr0)"
+@@ -215,8 +217,8 @@ if [ "$MODE" = "graphql-engine" ]; then
+   echo_pretty "    $ $0 postgres"
+   echo_pretty ""
+ 
+-  RUN_INVOCATION=(cabal new-run --project-file=cabal.project.dev-sh --RTS --
+-    exe:graphql-engine +RTS -N -T -s -RTS serve
++  RUN_INVOCATION=($CABAL new-run -w $GHC --project-file=cabal.project.dev-sh --RTS --
++    exe:graphql-engine +RTS -N -T -s -hT -l-au -i0.5 -RTS serve
+     --enable-console --console-assets-dir "$PROJECT_ROOT/console/static/dist"
+     )
+ 
+@@ -225,7 +227,7 @@ if [ "$MODE" = "graphql-engine" ]; then
+   echo_pretty "    $ ${RUN_INVOCATION[*]}"
+   echo_pretty ''
+ 
+-  cabal new-build --project-file=cabal.project.dev-sh exe:graphql-engine
++  $CABAL new-build -w $GHC --project-file=cabal.project.dev-sh exe:graphql-engine
+   wait_postgres
+ 
+   # Print helpful info after startup logs so it's visible:
+@@ -380,21 +382,21 @@ elif [ "$MODE" = "test" ]; then
+   # It's better UX to build first (possibly failing) before trying to launch
+   # PG, but make sure that new-run uses the exact same build plan, else we risk
+   # rebuilding twice... ugh
+-  cabal new-build --project-file=cabal.project.dev-sh exe:graphql-engine test:graphql-engine-tests
++  $CABAL new-build --project-file=cabal.project.dev-sh exe:graphql-engine test:graphql-engine-tests
+   launch_postgres_container
+   wait_postgres
+ 
+   # These also depend on a running DB:
+   if [ "$RUN_UNIT_TESTS" = true ]; then
+     echo_pretty "Running Haskell test suite"
+-    HASURA_GRAPHQL_DATABASE_URL="$CONTAINER_DB_URL" cabal new-run --project-file=cabal.project.dev-sh -- test:graphql-engine-tests
++    HASURA_GRAPHQL_DATABASE_URL="$CONTAINER_DB_URL" $CABAL new-run --project-file=cabal.project.dev-sh -- test:graphql-engine-tests
+   fi
+ 
+   if [ "$RUN_INTEGRATION_TESTS" = true ]; then
+     GRAPHQL_ENGINE_TEST_LOG=/tmp/hasura-dev-test-engine.log
+     echo_pretty "Starting graphql-engine, logging to $GRAPHQL_ENGINE_TEST_LOG"
+     export HASURA_GRAPHQL_SERVER_PORT=8088
+-    cabal new-run --project-file=cabal.project.dev-sh -- exe:graphql-engine --database-url="$CONTAINER_DB_URL" serve --stringify-numeric-types \
++    $CABAL new-run -w $GHC --project-file=cabal.project.dev-sh -- exe:graphql-engine --database-url="$CONTAINER_DB_URL" serve --stringify-numeric-types \
+       --enable-console --console-assets-dir ../console/static/dist \
+       &> "$GRAPHQL_ENGINE_TEST_LOG" & GRAPHQL_ENGINE_PID=$!
+ 
+diff --git server/cabal.project server/cabal.project
+index ee85d3e29..061431b78 100644
+--- server/cabal.project
++++ server/cabal.project
+@@ -12,12 +12,20 @@
+ --     $ cabal new-build --project-file=cabal.project.myconfig
+ --
+ -- See: https://www.haskell.org/cabal/users-guide/nix-local-build.html#configuring-builds-with-cabal-project
+-packages: .
++packages: ., patches/**/*.cabal
++
++--/home/matt/ghc-debug/stub/*.cabal
++--/home/matt/ghc-debug/common/*.cabal
++
++index-state: 2020-12-29T12:00:00Z
++
++with-compiler: /home/me/Work/hasura/ghc-for-ghc-debug/_build/stage1/bin/ghc
++with-hc-pkg: /home/me/Work/hasura/ghc-for-ghc-debug/_build/stage1/bin/ghc-pkg
+ 
+ constraints:
+   -- ensure we don't end up with a freeze file that forces an incompatible
+   -- version in CI for Setup.hs scripts.
+-  setup.Cabal <3.4
++  setup.Cabal <3.6
+ 
+ allow-newer:
+   -- dependent-map depends on constraints-extras, but its bounds have not yet
+@@ -29,17 +37,38 @@ allow-newer:
+ package *
+   optimization: 2
+   -- For tooling, e.g. 'weeder', and IDE-like stuff:
+-  ghc-options: -fwrite-ide-info
++  ghc-options: -fwrite-ide-info -finfo-table-map -fdistinct-constructor-tables
+ 
+   haddock-html: true
+   haddock-hoogle: true
+   haddock-hyperlink-source: true
+   haddock-quickjump: true
+ 
++package vault
++  documentation: false
++  haddock-html: false
++  haddock-hoogle: false
++  haddock-hyperlink-source: false
++  haddock-quickjump: false
++
+ package graphql-engine
+   ghc-options: -j
+   haddock-options: "--show-all"
+ 
++allow-newer: all
++
++source-repository-package
++  type: git
++  location: https://gitlab.haskell.org/ghc/ghc-debug.git
++  tag: 9b07c21014e5e5f58b916ac10ced849cd0a13822
++  subdir: common
++
++source-repository-package
++  type: git
++  location: https://gitlab.haskell.org/ghc/ghc-debug.git
++  tag: 9b07c21014e5e5f58b916ac10ced849cd0a13822
++  subdir: stub
++
+ source-repository-package
+   type: git
+   location: https://github.com/hasura/pg-client-hs.git
+@@ -49,10 +78,29 @@ source-repository-package
+ 
+ source-repository-package
+   type: git
+-  location: https://github.com/hasura/graphql-parser-hs.git
+-  tag: 44bd0660da02ce3a5eefd470710faa68b5b608b1
++  location: https://github.com/mpickering/graphql-parser-hs.git
++  tag: 8a2d0c7de873d9fe90ef1cb087622efbd24ee93e
++
++source-repository-package
++  type: git
++  location: https://github.com/mpickering/ci-info-hs.git
++  tag: eee4be901c28406b393eb4648d30a6d9adbf56ef
+ 
+ source-repository-package
+   type: git
+-  location: https://github.com/hasura/ci-info-hs.git
+-  tag: 947fd56582b1e8bec9ffed98ca9ac2f6b63e36c9
++  location: https://github.com/hasura/pool.git
++  tag: 0fdfaed4e109ca6a6bf00ed6d79c329626e3bdd4
++
++source-repository-package
++  type: git
++  location: https://github.com/AndreasPK/dom-lt.git
++  tag: 90cb66a5eba7c1b24322d94c692698a7212b42fe
++
++repository head.hackage.ghc.haskell.org
++   url: https://ghc.gitlab.haskell.org/head.hackage/
++   secure: True
++   key-threshold: 3
++   root-keys:
++       f76d08be13e9a61a377a85e2fb63f4c5435d40f8feb3e12eb05905edb8cdea89
++       26021a13b401500c8eb2761ca95c61f2d625bfef951b939a8124ed12ecf07329
++       7541f32a4ccca4f97aea3b22f5e593ba2c0267546016b992dfadcd2fe944e55d
+diff --git server/cabal.project.ci server/cabal.project.ci
+index 221c5c20b..5e29e9f64 100644
+--- server/cabal.project.ci
++++ server/cabal.project.ci
+@@ -1,7 +1,5 @@
+ -- The project configuration used when building in CI.
+ 
+-reject-unconstrained-dependencies: all
+-
+ package graphql-engine
+   ghc-options:
+     -j3 -Werror
+diff --git server/cabal.project.freeze server/cabal.project.freeze
+index 219113c03..e69de29bb 100644
+--- server/cabal.project.freeze
++++ server/cabal.project.freeze
+@@ -1,372 +0,0 @@
+-constraints: any.Cabal ==3.2.0.0,
+-             Cabal -bundled-binary-generic,
+-             any.Glob ==0.10.0,
+-             any.HUnit ==1.6.0.0,
+-             any.Only ==0.1,
+-             any.QuickCheck ==2.14,
+-             QuickCheck +templatehaskell,
+-             any.RSA ==2.4.1,
+-             any.SHA ==1.6.4.4,
+-             SHA -exe,
+-             any.Spock-core ==0.13.0.0,
+-             any.StateVar ==1.2,
+-             any.abstract-deque ==0.3,
+-             abstract-deque -usecas,
+-             any.abstract-par ==0.3.3,
+-             any.adjunctions ==4.4,
+-             any.aeson ==1.4.7.1,
+-             aeson -bytestring-builder -cffi -developer -fast,
+-             any.aeson-casing ==0.2.0.0,
+-             any.ansi-terminal ==0.10.3,
+-             ansi-terminal -example,
+-             any.ansi-wl-pprint ==0.6.9,
+-             ansi-wl-pprint -example,
+-             any.appar ==0.1.8,
+-             any.array ==0.5.4.0,
+-             any.asn1-encoding ==0.9.6,
+-             any.asn1-parse ==0.9.5,
+-             any.asn1-types ==0.3.4,
+-             any.assoc ==1.0.1,
+-             any.async ==2.2.2,
+-             async -bench,
+-             any.attoparsec ==0.13.2.4,
+-             attoparsec -developer,
+-             any.attoparsec-iso8601 ==1.0.1.0,
+-             attoparsec-iso8601 -developer -fast,
+-             any.authenticate-oauth ==1.6.0.1,
+-             any.auto-update ==0.1.6,
+-             any.base ==4.14.1.0,
+-             any.base-compat ==0.11.1,
+-             any.base-compat-batteries ==0.11.1,
+-             any.base-orphans ==0.8.2,
+-             any.base-prelude ==1.3,
+-             any.base16-bytestring ==0.1.1.6,
+-             any.base64-bytestring ==1.0.0.3,
+-             any.basement ==0.0.11,
+-             any.bifunctors ==5.5.7,
+-             bifunctors +semigroups +tagged,
+-             any.binary ==0.8.8.0,
+-             any.binary-orphans ==1.0.1,
+-             any.binary-parser ==0.5.5,
+-             any.blaze-builder ==0.4.1.0,
+-             any.blaze-html ==0.9.1.2,
+-             any.blaze-markup ==0.8.2.5,
+-             any.bsb-http-chunked ==0.0.0.4,
+-             any.byteorder ==1.0.4,
+-             any.bytestring ==0.10.10.0,
+-             any.bytestring-builder ==0.10.8.2.0,
+-             bytestring-builder +bytestring_has_builder,
+-             any.bytestring-strict-builder ==0.4.5.3,
+-             any.bytestring-tree-builder ==0.2.7.3,
+-             any.cabal-doctest ==1.0.8,
+-             any.call-stack ==0.2.0,
+-             any.case-insensitive ==1.2.1.0,
+-             any.cassava ==0.5.2.0,
+-             cassava -bytestring--lt-0_10_4,
+-             any.cereal ==0.5.8.1,
+-             cereal -bytestring-builder,
+-             any.charset ==0.3.7.1,
+-             any.clock ==0.8,
+-             clock -llvm,
+-             any.cmdargs ==0.10.20,
+-             cmdargs +quotation -testprog,
+-             any.code-page ==0.2,
+-             any.colour ==2.3.5,
+-             any.comonad ==5.0.6,
+-             comonad +containers +distributive +test-doctests,
+-             any.concise ==0.1.0.1,
+-             any.concurrent-output ==1.10.11,
+-             any.conduit ==1.3.2,
+-             any.connection ==0.3.1,
+-             any.constraints ==0.12,
+-             any.constraints-extras ==0.3.0.2,
+-             constraints-extras +build-readme,
+-             any.containers ==0.6.2.1,
+-             any.contravariant ==1.5.2,
+-             contravariant +semigroups +statevar +tagged,
+-             any.contravariant-extras ==0.3.5.1,
+-             any.cookie ==0.4.5,
+-             any.criterion ==1.5.6.2,
+-             criterion -embed-data-files -fast,
+-             any.criterion-measurement ==0.1.2.0,
+-             criterion-measurement -fast,
+-             any.cron ==0.7.0,
+-             cron -lib-werror,
+-             any.crypto-api ==0.13.3,
+-             crypto-api -all_cpolys,
+-             any.crypto-pubkey-types ==0.4.3,
+-             any.cryptohash-md5 ==0.11.100.1,
+-             any.cryptohash-sha1 ==0.11.100.1,
+-             any.cryptonite ==0.26,
+-             cryptonite -check_alignment +integer-gmp -old_toolchain_inliner +support_aesni +support_deepseq -support_pclmuldq +support_rdrand -support_sse,
+-             any.data-bword ==0.1.0.1,
+-             any.data-checked ==0.3,
+-             any.data-default ==0.7.1.1,
+-             any.data-default-class ==0.1.2.0,
+-             any.data-default-instances-containers ==0.0.1,
+-             any.data-default-instances-dlist ==0.0.1,
+-             any.data-default-instances-old-locale ==0.0.1,
+-             any.data-dword ==0.3.2,
+-             any.data-endian ==0.1.1,
+-             any.data-has ==0.3.0.0,
+-             any.data-serializer ==0.3.4.1,
+-             any.data-textual ==0.3.0.3,
+-             any.deepseq ==1.4.4.0,
+-             any.deferred-folds ==0.9.10.1,
+-             any.dense-linear-algebra ==0.1.0.0,
+-             any.dependent-map ==0.4.0.0,
+-             any.dependent-sum ==0.7.1.0,
+-             any.directory ==1.3.6.1,
+-             any.distributive ==0.6.2,
+-             distributive +semigroups +tagged,
+-             any.dlist ==0.8.0.8,
+-             any.easy-file ==0.2.2,
+-             any.either ==5.0.1.1,
+-             any.ekg-core ==0.1.1.7,
+-             any.ekg-json ==0.1.0.6,
+-             any.entropy ==0.4.1.6,
+-             entropy -halvm,
+-             any.erf ==2.0.0.0,
+-             any.errors ==2.3.0,
+-             any.exceptions ==0.10.4,
+-             any.fail ==4.9.0.0,
+-             any.fast-logger ==3.0.1,
+-             any.file-embed ==0.0.11.2,
+-             any.filepath ==1.4.2.1,
+-             any.focus ==1.0.1.3,
+-             any.foldl ==1.4.6,
+-             any.free ==5.1.3,
+-             any.generic-arbitrary ==0.1.0,
+-             any.ghc-boot-th ==8.10.2,
+-             any.ghc-heap ==8.10.2,
+-             any.ghc-heap-view ==0.6.2,
+-             ghc-heap-view -prim-supports-any,
+-             any.ghc-prim ==0.6.1,
+-             any.happy ==1.19.12,
+-             happy +small_base,
+-             any.hashable ==1.3.0.0,
+-             hashable -examples +integer-gmp +sse2 -sse41,
+-             any.hashtables ==1.2.3.4,
+-             hashtables -bounds-checking -debug -detailed-profiling -portable -sse42 +unsafe-tricks,
+-             any.haskell-lexer ==1.1,
+-             any.hasql ==1.4.2,
+-             any.hasql-pool ==0.5.1,
+-             any.hasql-transaction ==1.0.0.1,
+-             any.hedgehog ==1.0.2,
+-             any.hourglass ==0.2.12,
+-             any.hsc2hs ==0.68.7,
+-             hsc2hs -in-ghc-tree,
+-             any.hspec ==2.7.1,
+-             any.hspec-core ==2.7.1,
+-             any.hspec-discover ==2.7.1,
+-             any.hspec-expectations ==0.8.2,
+-             any.hspec-expectations-lifted ==0.10.0,
+-             any.http-api-data ==0.4.1.1,
+-             http-api-data -use-text-show,
+-             any.http-client ==0.6.4.1,
+-             http-client +network-uri,
+-             any.http-client-tls ==0.3.5.3,
+-             any.http-date ==0.0.8,
+-             any.http-types ==0.12.3,
+-             any.http2 ==2.0.4,
+-             http2 -devel,
+-             any.hvect ==0.4.0.0,
+-             any.immortal ==0.2.2.1,
+-             any.indexed-profunctors ==0.1,
+-             any.insert-ordered-containers ==0.2.3.1,
+-             any.integer-gmp ==1.0.3.0,
+-             any.integer-logarithms ==1.0.3,
+-             integer-logarithms -check-bounds +integer-gmp,
+-             any.invariant ==0.5.3,
+-             any.iproute ==1.7.9,
+-             any.jose ==0.8.2.0,
+-             jose -demos,
+-             any.js-flot ==0.8.3,
+-             any.js-jquery ==3.3.1,
+-             any.kan-extensions ==5.2,
+-             any.lens ==4.19.2,
+-             lens -benchmark-uniplate -dump-splices +inlining -j -old-inline-pragmas -safe +test-doctests +test-hunit +test-properties +test-templates +trustworthy,
+-             any.lens-aeson ==1.1,
+-             lens-aeson +test-doctests,
+-             any.libyaml ==0.1.2,
+-             libyaml -no-unicode -system-libyaml,
+-             any.lifted-async ==0.10.0.6,
+-             any.lifted-base ==0.2.3.12,
+-             any.list-t ==1.0.4,
+-             any.loch-th ==0.2.2,
+-             any.math-functions ==0.3.3.0,
+-             math-functions +system-erf +system-expm1,
+-             any.memory ==0.15.0,
+-             memory +support_basement +support_bytestring +support_deepseq +support_foundation,
+-             any.microstache ==1.0.1.1,
+-             any.mime-types ==0.1.0.9,
+-             any.mmorph ==1.1.3,
+-             any.monad-control ==1.0.2.3,
+-             any.monad-par ==0.3.5,
+-             monad-par -chaselev -newgeneric,
+-             any.monad-par-extras ==0.3.3,
+-             any.monad-time ==0.3.1.0,
+-             any.monad-validate ==1.2.0.0,
+-             any.mono-traversable ==1.0.15.1,
+-             any.mtl ==2.2.2,
+-             any.mtl-compat ==0.2.2,
+-             mtl-compat -two-point-one -two-point-two,
+-             any.mustache ==2.3.1,
+-             any.mwc-probability ==2.2.0,
+-             any.mwc-random ==0.14.0.0,
+-             any.natural-transformation ==0.4,
+-             any.network ==3.1.1.1,
+-             any.network-byte-order ==0.1.4.0,
+-             any.network-info ==0.2.0.10,
+-             any.network-ip ==0.3.0.3,
+-             any.network-uri ==2.6.3.0,
+-             any.old-locale ==1.0.0.7,
+-             any.old-time ==1.1.0.3,
+-             any.optics-core ==0.3,
+-             any.optics-extra ==0.3,
+-             any.optparse-applicative ==0.15.1.0,
+-             any.parallel ==3.2.2.0,
+-             any.parsec ==3.1.14.0,
+-             any.parsers ==0.12.10,
+-             parsers +attoparsec +binary +parsec,
+-             any.pem ==0.2.4,
+-             any.placeholders ==0.1,
+-             any.postgresql-binary ==0.12.2,
+-             any.postgresql-libpq ==0.9.4.2,
+-             postgresql-libpq -use-pkg-config,
+-             any.pretty ==1.1.3.6,
+-             any.pretty-show ==1.10,
+-             any.prettyprinter ==1.6.1,
+-             prettyprinter -buildreadme,
+-             any.primitive ==0.7.0.1,
+-             any.primitive-extras ==0.8,
+-             any.primitive-unlifted ==0.1.3.0,
+-             any.process ==1.6.8.2,
+-             any.profunctors ==5.5.2,
+-             any.psqueues ==0.2.7.2,
+-             any.quickcheck-instances ==0.3.22,
+-             quickcheck-instances -bytestring-builder,
+-             any.quickcheck-io ==0.2.0,
+-             any.random ==1.1,
+-             any.reflection ==2.1.5,
+-             reflection -slow +template-haskell,
+-             any.regex-base ==0.94.0.0,
+-             any.regex-tdfa ==1.3.1.0,
+-             regex-tdfa -force-o2,
+-             any.reroute ==0.5.0.0,
+-             any.resource-pool ==0.2.3.2,
+-             resource-pool -developer,
+-             any.resourcet ==1.2.4,
+-             any.retry ==0.8.1.1,
+-             retry -lib-werror,
+-             any.rts ==1.0,
+-             any.safe ==0.3.18,
+-             any.scientific ==0.3.6.2,
+-             scientific -bytestring-builder -integer-simple,
+-             any.semialign ==1.1,
+-             semialign +semigroupoids,
+-             any.semigroupoids ==5.3.4,
+-             semigroupoids +comonad +containers +contravariant +distributive +doctests +tagged +unordered-containers,
+-             any.semigroups ==0.19.1,
+-             semigroups +binary +bytestring -bytestring-builder +containers +deepseq +hashable +tagged +template-haskell +text +transformers +unordered-containers,
+-             any.semver ==0.3.4,
+-             any.setenv ==0.1.1.3,
+-             any.shakespeare ==2.0.24,
+-             shakespeare -test_coffee -test_export -test_roy,
+-             any.simple-sendfile ==0.2.30,
+-             simple-sendfile +allow-bsd,
+-             any.socks ==0.6.1,
+-             any.some ==1.0.1,
+-             some +newtype-unsafe,
+-             any.split ==0.2.3.4,
+-             any.splitmix ==0.0.4,
+-             splitmix -optimised-mixer +random,
+-             any.statistics ==0.15.2.0,
+-             any.stm ==2.5.0.0,
+-             any.stm-containers ==1.1.0.4,
+-             any.stm-hamt ==1.2.0.4,
+-             any.streaming-commons ==0.2.1.2,
+-             streaming-commons -use-bytestring-builder,
+-             any.superbuffer ==0.3.1.1,
+-             any.tagged ==0.8.6,
+-             tagged +deepseq +transformers,
+-             any.template-haskell ==2.16.0.0,
+-             any.template-haskell-compat-v0208 ==0.1.2.1,
+-             any.terminal-size ==0.3.2.1,
+-             any.text ==1.2.3.2,
+-             any.text-builder ==0.6.6.1,
+-             any.text-conversions ==0.3.0,
+-             any.text-latin1 ==0.3.1,
+-             any.text-printer ==0.5.0.1,
+-             any.text-short ==0.1.3,
+-             text-short -asserts,
+-             any.tf-random ==0.5,
+-             any.th-abstraction ==0.3.2.0,
+-             any.th-lift ==0.8.1,
+-             any.th-lift-instances ==0.1.16,
+-             any.these ==1.0.1,
+-             these +aeson +assoc +quickcheck +semigroupoids,
+-             any.time ==1.9.3,
+-             any.time-compat ==1.9.3,
+-             time-compat -old-locale,
+-             any.time-locale-compat ==0.1.1.5,
+-             time-locale-compat -old-locale,
+-             any.time-manager ==0.0.0,
+-             any.tls ==1.5.4,
+-             tls +compat -hans +network,
+-             any.transformers ==0.5.6.2,
+-             any.transformers-base ==0.4.5.2,
+-             transformers-base +orphaninstances,
+-             any.transformers-compat ==0.6.5,
+-             transformers-compat -five +five-three -four +generic-deriving +mtl -three -two,
+-             any.type-equality ==1,
+-             any.type-hint ==0.1,
+-             any.unix ==2.7.2.2,
+-             any.unix-compat ==0.5.2,
+-             unix-compat -old-time,
+-             any.unix-time ==0.4.7,
+-             any.unliftio-core ==0.2.0.1,
+-             any.unordered-containers ==0.2.10.0,
+-             unordered-containers -debug,
+-             any.uri-encode ==1.5.0.5,
+-             uri-encode +network-uri -tools,
+-             any.utf8-string ==1.0.1.1,
+-             any.uuid ==1.3.13,
+-             any.uuid-types ==1.0.3,
+-             any.validation ==1.1,
+-             any.vault ==0.3.1.4,
+-             vault +useghc,
+-             any.vector ==0.12.1.2,
+-             vector +boundschecks -internalchecks -unsafechecks -wall,
+-             any.vector-algorithms ==0.8.0.3,
+-             vector-algorithms +bench +boundschecks -internalchecks -llvm +properties -unsafechecks,
+-             any.vector-binary-instances ==0.2.5.1,
+-             any.vector-builder ==0.3.8,
+-             any.vector-th-unbox ==0.2.1.7,
+-             any.void ==0.7.3,
+-             void -safe,
+-             any.wai ==3.2.2.1,
+-             any.wai-app-static ==3.1.7.1,
+-             wai-app-static -print,
+-             any.wai-extra ==3.0.29.1,
+-             wai-extra -build-example,
+-             any.wai-logger ==2.3.6,
+-             any.wai-websockets ==3.0.1.2,
+-             wai-websockets +example,
+-             any.warp ==3.3.10,
+-             warp +allow-sendfilefd -network-bytestring -warp-debug,
+-             any.websockets ==0.12.7.0,
+-             websockets -example,
+-             any.witherable ==0.3.1,
+-             any.wl-pprint-annotated ==0.1.0.1,
+-             any.word8 ==0.1.3,
+-             any.wreq ==0.5.3.2,
+-             wreq -aws -developer +doctest -httpbin,
+-             any.x509 ==1.7.5,
+-             any.x509-store ==1.6.7,
+-             any.x509-system ==1.6.6,
+-             any.x509-validation ==1.6.11,
+-             any.yaml ==0.11.3.0,
+-             yaml +no-examples +no-exe,
+-             any.zlib ==0.6.2.1,
+-             zlib -non-blocking-ffi -pkg-config
+diff --git server/graphql-engine.cabal server/graphql-engine.cabal
+index 7594a7277..661626b96 100644
+--- server/graphql-engine.cabal
++++ server/graphql-engine.cabal
+@@ -28,7 +28,8 @@ flag profiling
+ common common-all
+   ghc-options:
+     -fmax-simplifier-iterations=20 -foptimal-applicative-do
+-    -Wall -Wcompat -Wincomplete-record-updates -Wincomplete-uni-patterns -Wredundant-constraints
++    -Wall -Wcompat -Wincomplete-uni-patterns -Wredundant-constraints
++    -eventlog
+ 
+   if flag(developer)
+     cpp-options: -DDeveloperAPIs
+@@ -274,6 +275,8 @@ library
+ 
+                      -- scheduled triggers
+                      , cron >= 0.6.2
++                     , unliftio-core
++                     , ghc-debug-stub
+   if !flag(profiling)
+     build-depends:
+       -- 0.6.1 is supposedly not okay for ghc 8.6:
+@@ -488,6 +491,7 @@ executable graphql-engine
+                    , time
+                    , unix
+                    , ekg-core
++                   , ghc-debug-stub
+ 
+ test-suite graphql-engine-tests
+   import: common-all, common-exe
+@@ -519,6 +523,7 @@ test-suite graphql-engine-tests
+     , transformers-base
+     , unordered-containers
+     , text
++    , unliftio-core
+   hs-source-dirs: src-test
+   main-is: Main.hs
+   other-modules:
+diff --git server/src-bench-cache/Main.hs server/src-bench-cache/Main.hs
+index 09b06952b..f94048b15 100644
+--- server/src-bench-cache/Main.hs
++++ server/src-bench-cache/Main.hs
+@@ -218,7 +218,7 @@ populate n _initialise _insertAllStripes = do
+ 
+ randomInts :: Int -> IO (V.Vector Int)
+ randomInts n =
+-  withSystemRandom . asGenST $ \gen -> uniformVector gen n
++  withSystemRandomST $ \gen -> uniformVector gen n
+ 
+ 
+ -- | Return a zipf-mandelbrot distributed list of 'n' Ints (the Ints themselves
+diff --git server/src-exec/Main.hs server/src-exec/Main.hs
+index b883c7905..00274e6cc 100644
+--- server/src-exec/Main.hs
++++ server/src-exec/Main.hs
+@@ -26,9 +26,10 @@ import qualified Hasura.Tracing             as Tracing
+ import qualified System.Exit                as Sys
+ import qualified System.Metrics             as EKG
+ import qualified System.Posix.Signals       as Signals
++import GHC.Debug.Stub
+ 
+ main :: IO ()
+-main = do
++main = withGhcDebug $ do
+   tryExit $ do
+     args <- parseArgs
+     env  <- Env.getEnvironment
+diff --git server/src-lib/Control/Concurrent/Extended.hs server/src-lib/Control/Concurrent/Extended.hs
+index 6e64f8304..4b1d89c93 100644
+--- server/src-lib/Control/Concurrent/Extended.hs
++++ server/src-lib/Control/Concurrent/Extended.hs
+@@ -23,6 +23,7 @@ import qualified Control.Monad.Trans.Control          as MC
+ 
+ import           Control.Concurrent    hiding (threadDelay, forkIO)
+ import           Data.Time.Clock.Units (seconds, Microseconds (..), DiffTime)
++import Control.Monad.IO.Unlift
+ 
+ -- For forkImmortal. We could also have it take a cumbersome continuation if we
+ -- want to break this dependency. Probably best to move Hasura.Logging into a
+@@ -40,16 +41,16 @@ sleep = Base.threadDelay . round . Microseconds
+ threadDelay :: Int -> IO ()
+ threadDelay = Base.threadDelay
+ 
+-{-# DEPRECATED forkIO 
++{-# DEPRECATED forkIO
+    "Please use 'Control.Control.Concurrent.Async.Lifted.Safe.withAsync'\
+   \ or our 'forkImmortal' instead formore robust threading." 
+ #-}
+ forkIO :: IO () -> IO ThreadId 
+ forkIO = Base.forkIO
+ 
+-forkImmortal 
+-  :: ForkableMonadIO m
+-  => String 
++forkImmortal
++  :: (ForkableMonadIO m, MonadUnliftIO m)
++  => String
+   -- ^ A label describing this thread's function (see 'labelThread').
+   -> Logger Hasura
+   -> m Void
+@@ -65,7 +66,7 @@ forkImmortal label logger m =
+           Left e  -> liftIO $ do
+             liftIO $ unLogger logger $
+               ImmortalThreadLog label e
+-            -- pause before restarting some arbitrary amount of time. The idea is not to flood 
++            -- pause before restarting some arbitrary amount of time. The idea is not to flood
+             -- logs or cause other cascading failures.
+             sleep (seconds 1)
+ 
+@@ -76,12 +77,12 @@ instance ToEngineLog ImmortalThreadLog Hasura where
+     (LevelError, ELTInternal ILTUnstructured, toJSON msg)
+    where msg = "Unexpected exception in immortal thread \""<>label<>"\" (it will be restarted):\n"
+                <> show e
+-          
+ 
+--- TODO 
++
++-- TODO
+ --   - maybe use this everywhere, but also:
+ --     - consider unifying with: src-lib/Control/Monad/Stateless.hs  ?
+---   - nice TypeError:  https://kodimensional.dev/type-errors 
++--   - nice TypeError:  https://kodimensional.dev/type-errors
+ --
+ -- | Like 'MonadIO' but constrained to stacks in which forking a new thread is reasonable/safe.
+ -- In particular 'StateT' causes problems.
+@@ -90,8 +91,8 @@ instance ToEngineLog ImmortalThreadLog Hasura where
+ type ForkableMonadIO m = (MonadIO m, MC.MonadBaseControl IO m, LA.Forall (LA.Pure m))
+ 
+ 
+--- TODO consider deprecating async. 
++-- TODO consider deprecating async.
+ --        export something with polymorphic return type, which makes "fork and forget" difficult
+ --        this could automatically link in one variant
+ --        another variant might return ThreadId that self destructs w/ finalizer (mkWeakThreadId)
+---          and note: "Holding a normal ThreadId reference will prevent the delivery of BlockedIndefinitely exceptions because the reference could be used as the target of throwTo at any time,  " 
++--          and note: "Holding a normal ThreadId reference will prevent the delivery of BlockedIndefinitely exceptions because the reference could be used as the target of throwTo at any time,  "
+diff --git server/src-lib/Data/Text/NonEmpty.hs server/src-lib/Data/Text/NonEmpty.hs
+new file mode 100644
+index 000000000..51c7826cb
+--- /dev/null
++++ server/src-lib/Data/Text/NonEmpty.hs
+@@ -0,0 +1,49 @@
++module Data.Text.NonEmpty
++  ( NonEmptyText
++  , mkNonEmptyTextUnsafe
++  , mkNonEmptyText
++  , unNonEmptyText
++  , nonEmptyText
++  ) where
++
++import           Hasura.Prelude
++
++import qualified Data.Text                  as T
++import qualified Database.PG.Query          as Q
++import qualified Test.QuickCheck            as QC
++
++import           Data.Aeson
++import           Data.Text.Extended
++import           Language.Haskell.TH.Syntax (Lift, Q, Code, examineCode, liftCode)
++
++
++newtype NonEmptyText = NonEmptyText { unNonEmptyText :: Text }
++  deriving (Show, Eq, Ord, Hashable, ToJSON, ToJSONKey, Lift, Q.ToPrepArg, ToTxt, Generic, NFData)
++
++instance Arbitrary NonEmptyText where
++  arbitrary = NonEmptyText . T.pack <$> QC.listOf1 (QC.elements alphaNumerics)
++
++mkNonEmptyText :: Text -> Maybe NonEmptyText
++mkNonEmptyText ""   = Nothing
++mkNonEmptyText text = Just $ NonEmptyText text
++
++mkNonEmptyTextUnsafe :: Text -> NonEmptyText
++mkNonEmptyTextUnsafe = NonEmptyText
++
++parseNonEmptyText :: MonadFail m => Text -> m NonEmptyText
++parseNonEmptyText text = case mkNonEmptyText text of
++  Nothing     -> fail "empty string not allowed"
++  Just neText -> return neText
++
++nonEmptyText :: Text -> Code Q NonEmptyText
++nonEmptyText = liftCode . (parseNonEmptyText >=> \text -> examineCode [|| text ||])
++
++instance FromJSON NonEmptyText where
++  parseJSON = withText "String" parseNonEmptyText
++
++instance FromJSONKey NonEmptyText where
++  fromJSONKey = FromJSONKeyTextParser parseNonEmptyText
++
++instance Q.FromCol NonEmptyText where
++  fromCol bs = mkNonEmptyText <$> Q.fromCol bs
++    >>= maybe (Left "empty string not allowed") Right
+diff --git server/src-lib/Hasura/App.hs server/src-lib/Hasura/App.hs
+index ebd0493f2..5eda90838 100644
+--- server/src-lib/Hasura/App.hs
++++ server/src-lib/Hasura/App.hs
+@@ -14,6 +14,7 @@ import           Control.Monad.Stateless
+ import           Control.Monad.STM                         (atomically)
+ import           Control.Monad.Trans.Control               (MonadBaseControl (..))
+ import           Control.Monad.Unique
++import Control.Monad.IO.Unlift
+ import           Data.Aeson                                ((.=))
+ import           Data.Time.Clock                           (UTCTime)
+ #ifndef PROFILING
+@@ -178,7 +179,7 @@ data Loggers
+   }
+ 
+ newtype AppM a = AppM { unAppM :: IO a }
+-  deriving (Functor, Applicative, Monad, MonadIO, MonadBase IO, MonadBaseControl IO, MonadCatch, MonadThrow, MonadMask)
++  deriving (Functor, Applicative, Monad, MonadIO, MonadBase IO, MonadBaseControl IO, MonadUnliftIO, MonadCatch, MonadThrow, MonadMask)
+ 
+ -- | this function initializes the catalog and returns an @InitCtx@, based on the command given
+ -- - for serve command it creates a proper PG connection pool
+@@ -300,6 +301,7 @@ createServerMetrics store = do
+ runHGEServer
+   :: ( HasVersion
+      , MonadIO m
++     , MonadUnliftIO m
+      , MonadMask m
+      , MonadStateless IO m
+      , LA.Forall (LA.Pure m)
+@@ -696,7 +698,7 @@ instance MonadQueryLog AppM where
+     unLogger logger $ QueryLog query genSqlM reqId
+ 
+ instance WS.MonadWSLog AppM where
+-  logWSLog = unLogger
++  logWSLog x = unLogger x
+ 
+ --- helper functions ---
+ 
+diff --git server/src-lib/Hasura/GraphQL/Execute/LiveQuery/Poll.hs server/src-lib/Hasura/GraphQL/Execute/LiveQuery/Poll.hs
+index 0b8550c38..ef022417b 100644
+--- server/src-lib/Hasura/GraphQL/Execute/LiveQuery/Poll.hs
++++ server/src-lib/Hasura/GraphQL/Execute/LiveQuery/Poll.hs
+@@ -395,7 +395,7 @@ type LiveQueryPostPollHook = PollDetails -> IO ()
+ 
+ -- the default LiveQueryPostPollHook
+ defaultLiveQueryPostPollHook :: L.Logger L.Hasura -> LiveQueryPostPollHook
+-defaultLiveQueryPostPollHook = L.unLogger
++defaultLiveQueryPostPollHook x = L.unLogger x
+ 
+ -- | Where the magic happens: the top-level action run periodically by each
+ -- active 'Poller'. This needs to be async exception safe.
+diff --git server/src-lib/Hasura/GraphQL/Execute/Mutation.hs server/src-lib/Hasura/GraphQL/Execute/Mutation.hs
+index d5bdd6f19..79058f40b 100644
+--- server/src-lib/Hasura/GraphQL/Execute/Mutation.hs
++++ server/src-lib/Hasura/GraphQL/Execute/Mutation.hs
+@@ -118,7 +118,7 @@ convertMutationRootField env logger userInfo manager reqHeaders stringifyNum = \
+   RFDB (MDBUpdate s)  -> noResponseHeaders =<< convertUpdate env userSession rjCtx s stringifyNum
+   RFDB (MDBDelete s)  -> noResponseHeaders =<< convertDelete env userSession rjCtx s stringifyNum
+   RFRemote remote     -> pure $ Right remote
+-  RFAction (AMSync s) -> Left . (_aerTransaction &&& _aerHeaders) <$> resolveActionExecution env logger userInfo s actionExecContext
++  RFAction (AMSync s) -> Left . ((\x -> _aerTransaction x) &&& _aerHeaders) <$> resolveActionExecution env logger userInfo s actionExecContext
+   RFAction (AMAsync s) -> noResponseHeaders =<< resolveActionMutationAsync s reqHeaders userSession
+   RFRaw s              -> noResponseHeaders $ pure $ encJFromJValue s
+   where
+diff --git server/src-lib/Hasura/GraphQL/Schema/Mutation.hs server/src-lib/Hasura/GraphQL/Schema/Mutation.hs
+index f00929664..2536157b0 100644
+--- server/src-lib/Hasura/GraphQL/Schema/Mutation.hs
++++ server/src-lib/Hasura/GraphQL/Schema/Mutation.hs
+@@ -355,7 +355,7 @@ updateOperators table updatePermissions = do
+     , updateOperator tableGQLName $$(G.litName "_inc")
+         columnParser RQL.UpdInc numericCols
+         "increments the numeric columns with given value of the filtered values"
+-        (G.Description $"input type for incrementing numeric columns in table " <>> table)
++        (G.Description $ "input type for incrementing numeric columns in table " <>> table)
+ 
+     , let desc = "prepend existing jsonb value of filtered columns with new jsonb value"
+       in updateOperator tableGQLName $$(G.litName "_prepend")
+diff --git server/src-lib/Hasura/GraphQL/Transport/WebSocket/Server.hs server/src-lib/Hasura/GraphQL/Transport/WebSocket/Server.hs
+index f5e90b747..a418412b5 100644
+--- server/src-lib/Hasura/GraphQL/Transport/WebSocket/Server.hs
++++ server/src-lib/Hasura/GraphQL/Transport/WebSocket/Server.hs
+@@ -167,7 +167,7 @@ forceConnReconnect wsConn bs = liftIO $ closeConnWithCode wsConn 1012 bs
+ 
+ closeConnWithCode :: WSConn a -> Word16 -> BL.ByteString -> IO ()
+ closeConnWithCode wsConn code bs = do
+-  (L.unLogger . _wcLogger) wsConn $
++  (\x -> L.unLogger (_wcLogger x)) wsConn $
+     WSLog (_wcConnId wsConn) (ECloseSent $ TBS.fromLBS bs) Nothing
+   WS.sendCloseCode (_wcConnRaw wsConn) code bs
+ 
+diff --git server/src-lib/Hasura/RQL/DDL/Schema.hs server/src-lib/Hasura/RQL/DDL/Schema.hs
+index 0ddd5ea81..84adcf8e4 100644
+--- server/src-lib/Hasura/RQL/DDL/Schema.hs
++++ server/src-lib/Hasura/RQL/DDL/Schema.hs
+@@ -58,6 +58,59 @@ import           Hasura.RQL.Instances           ()
+ import           Hasura.RQL.Types
+ import           Hasura.Server.Utils            (quoteRegex)
+ 
++
++{- Note [Checking metadata consistency in run_sql]
++~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
++SQL queries executed by run_sql may change the Postgres schema in arbitrary
++ways. We attempt to automatically update the metadata to reflect those changes
++as much as possible---for example, if a table is renamed, we want to update the
++metadata to track the table under its new name instead of its old one. This
++schema diffing (plus some integrity checking) is handled by withMetadataCheck.
++
++But this process has overhead---it involves reloading the metadata, diffing it,
++and rebuilding the schema cache---so we don’t want to do it if it isn’t
++necessary. The user can explicitly disable the check via the
++check_metadata_consistency option, and we also skip it if the current
++transaction is in READ ONLY mode, since the schema can’t be modified in that
++case, anyway.
++
++However, even if neither read_only or check_metadata_consistency is passed, lots
++of queries may not modify the schema at all. As a (fairly stupid) heuristic, we
++check if the query contains any keywords for DDL operations, and if not, we skip
++the metadata check as well. -}
++
++data RunSQLRes
++  = RunSQLRes
++  { rrResultType :: !Text
++  , rrResult     :: !Value
++  } deriving (Show, Eq)
++$(deriveJSON (aesonDrop 2 snakeCase) ''RunSQLRes)
++
++instance Q.FromRes RunSQLRes where
++  fromRes (Q.ResultOkEmpty _) =
++    return $ RunSQLRes "CommandOk" Null
++  fromRes (Q.ResultOkData res) = do
++    csvRows <- resToCSV res
++    return $ RunSQLRes "TuplesOk" $ toJSON csvRows
++    where
++      resToCSV :: PQ.Result -> ExceptT Text IO [[Text]]
++      resToCSV r =  do
++        nr  <- liftIO $ PQ.ntuples r
++        nc  <- liftIO $ PQ.nfields r
++
++        hdr <- forM [0..pred nc] $ \ic -> do
++          colNameBS <- liftIO $ PQ.fname r ic
++          maybe (return "unknown") decodeBS colNameBS
++
++        rows <- forM [0..pred nr] $ \ir ->
++          forM [0..pred nc] $ \ic -> do
++            cellValBS <- liftIO $ PQ.getvalue r ir ic
++            maybe (return "NULL") decodeBS cellValBS
++
++        return $ hdr:rows
++
++      decodeBS = either (throwError . T.pack . show) return . TE.decodeUtf8'
++
+ data RunSQL
+   = RunSQL
+   { rSql                      :: Text
+@@ -119,54 +172,3 @@ runRunSQL q@RunSQL {..}
+         rawSqlErrHandler txe =
+           (err400 PostgresError "query execution failed") { qeInternal = Just $ toJSON txe }
+ 
+-{- Note [Checking metadata consistency in run_sql]
+-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+-SQL queries executed by run_sql may change the Postgres schema in arbitrary
+-ways. We attempt to automatically update the metadata to reflect those changes
+-as much as possible---for example, if a table is renamed, we want to update the
+-metadata to track the table under its new name instead of its old one. This
+-schema diffing (plus some integrity checking) is handled by withMetadataCheck.
+-
+-But this process has overhead---it involves reloading the metadata, diffing it,
+-and rebuilding the schema cache---so we don’t want to do it if it isn’t
+-necessary. The user can explicitly disable the check via the
+-check_metadata_consistency option, and we also skip it if the current
+-transaction is in READ ONLY mode, since the schema can’t be modified in that
+-case, anyway.
+-
+-However, even if neither read_only or check_metadata_consistency is passed, lots
+-of queries may not modify the schema at all. As a (fairly stupid) heuristic, we
+-check if the query contains any keywords for DDL operations, and if not, we skip
+-the metadata check as well. -}
+-
+-data RunSQLRes
+-  = RunSQLRes
+-  { rrResultType :: !Text
+-  , rrResult     :: !Value
+-  } deriving (Show, Eq)
+-$(deriveJSON (aesonDrop 2 snakeCase) ''RunSQLRes)
+-
+-instance Q.FromRes RunSQLRes where
+-  fromRes (Q.ResultOkEmpty _) =
+-    return $ RunSQLRes "CommandOk" Null
+-  fromRes (Q.ResultOkData res) = do
+-    csvRows <- resToCSV res
+-    return $ RunSQLRes "TuplesOk" $ toJSON csvRows
+-    where
+-      resToCSV :: PQ.Result -> ExceptT T.Text IO [[Text]]
+-      resToCSV r =  do
+-        nr  <- liftIO $ PQ.ntuples r
+-        nc  <- liftIO $ PQ.nfields r
+-
+-        hdr <- forM [0..pred nc] $ \ic -> do
+-          colNameBS <- liftIO $ PQ.fname r ic
+-          maybe (return "unknown") decodeBS colNameBS
+-
+-        rows <- forM [0..pred nr] $ \ir ->
+-          forM [0..pred nc] $ \ic -> do
+-            cellValBS <- liftIO $ PQ.getvalue r ir ic
+-            maybe (return "NULL") decodeBS cellValBS
+-
+-        return $ hdr:rows
+-
+-      decodeBS = either (throwError . T.pack . show) return . TE.decodeUtf8'
+diff --git server/src-lib/Hasura/RQL/DDL/Schema/Function.hs server/src-lib/Hasura/RQL/DDL/Schema/Function.hs
+index 221dcef0b..643ecf8f3 100644
+--- server/src-lib/Hasura/RQL/DDL/Schema/Function.hs
++++ server/src-lib/Hasura/RQL/DDL/Schema/Function.hs
+@@ -158,6 +158,14 @@ mkFunctionInfo qf systemDefined config rawFuncInfo =
+         let argsText = T.intercalate "," $ map getFuncArgNameTxt args
+         in "the function arguments " <> argsText <> " are not in compliance with GraphQL spec"
+ 
++data FunctionConfig
++  = FunctionConfig
++  { _fcSessionArgument :: !(Maybe FunctionArgName)
++  } deriving (Show, Eq, Generic, Lift)
++instance NFData FunctionConfig
++instance Cacheable FunctionConfig
++$(deriveJSON (aesonDrop 3 snakeCase){omitNothingFields = True} ''FunctionConfig)
++
+ saveFunctionToCatalog
+   :: (MonadTx m, HasSystemDefined m)
+   => QualifiedFunction -> FunctionConfig -> m ()
+@@ -182,13 +190,6 @@ newtype TrackFunction
+   { tfName :: QualifiedFunction}
+   deriving (Show, Eq, FromJSON, ToJSON, Lift)
+ 
+-data FunctionConfig
+-  = FunctionConfig
+-  { _fcSessionArgument :: !(Maybe FunctionArgName)
+-  } deriving (Show, Eq, Generic, Lift)
+-instance NFData FunctionConfig
+-instance Cacheable FunctionConfig
+-$(deriveJSON (aesonDrop 3 snakeCase){omitNothingFields = True} ''FunctionConfig)
+ 
+ emptyFunctionConfig :: FunctionConfig
+ emptyFunctionConfig = FunctionConfig Nothing
+diff --git server/src-lib/Hasura/RQL/Instances.hs server/src-lib/Hasura/RQL/Instances.hs
+index 2125d78fe..c3a38b1d1 100644
+--- server/src-lib/Hasura/RQL/Instances.hs
++++ server/src-lib/Hasura/RQL/Instances.hs
+@@ -66,13 +66,13 @@ instance NFData CronSchedule
+ instance (TH.Lift k, TH.Lift v) => TH.Lift (M.HashMap k v) where
+   lift m = [| M.fromList $(TH.lift $ M.toList m) |]
+ #if MIN_VERSION_template_haskell(2,16,0)
+-  liftTyped = TH.unsafeTExpCoerce . TH.lift
++  liftTyped = TH.unsafeCodeCoerce . TH.lift
+ #endif
+ 
+ instance TH.Lift a => TH.Lift (S.HashSet a) where
+   lift s = [| S.fromList $(TH.lift $ S.toList s) |]
+ #if MIN_VERSION_template_haskell(2,16,0)
+-  liftTyped = TH.unsafeTExpCoerce . TH.lift
++  liftTyped = TH.unsafeCodeCoerce . TH.lift
+ #endif
+ 
+ deriving instance TH.Lift TDFA.CompOption
+diff --git server/src-lib/Hasura/RQL/Types/Common.hs server/src-lib/Hasura/RQL/Types/Common.hs
+index b3f8be067..a602c0e4f 100644
+--- server/src-lib/Hasura/RQL/Types/Common.hs
++++ server/src-lib/Hasura/RQL/Types/Common.hs
+@@ -50,7 +50,7 @@ import           Hasura.EncJSON
+ import           Hasura.Incremental            (Cacheable)
+ import           Hasura.Prelude
+ import           Hasura.RQL.DDL.Headers        ()
+-import           Hasura.RQL.Types.Error
++import           Hasura.RQL.Types.Error        hiding (Code)
+ import           Hasura.SQL.Types
+ import           Hasura.RQL.DDL.Headers        ()
+ 
+@@ -64,7 +64,7 @@ import           Data.Aeson.TH
+ import           Data.Scientific               (toBoundedInteger)
+ import           Data.URL.Template
+ import           Instances.TH.Lift             ()
+-import           Language.Haskell.TH.Syntax    (Lift, Q, TExp)
++import           Language.Haskell.TH.Syntax    (Lift, Q, Code, examineCode, liftCode)
+ 
+ import qualified Data.HashMap.Strict           as HM
+ import qualified Data.Text                     as T
+@@ -93,8 +93,9 @@ parseNonEmptyText text = case mkNonEmptyText text of
+   Nothing     -> fail "empty string not allowed"
+   Just neText -> return neText
+ 
+-nonEmptyText :: Text -> Q (TExp NonEmptyText)
+-nonEmptyText = parseNonEmptyText >=> \text -> [|| text ||]
++nonEmptyText :: Text -> Code Q NonEmptyText
++nonEmptyText = liftCode . (parseNonEmptyText >=> \text -> examineCode [|| text ||])
++
+ 
+ instance FromJSON NonEmptyText where
+   parseJSON = withText "String" parseNonEmptyText
+diff --git server/src-lib/Hasura/SQL/GeoJSON.hs server/src-lib/Hasura/SQL/GeoJSON.hs
+index fc27b0663..6c1fa7579 100644
+--- server/src-lib/Hasura/SQL/GeoJSON.hs
++++ server/src-lib/Hasura/SQL/GeoJSON.hs
+@@ -19,6 +19,30 @@ import qualified Data.Vector       as V
+ import           Control.Monad
+ import           Hasura.Prelude
+ 
++data CRSNameProps
++  = CRSNameProps
++  { _cnpName :: !Text
++  } deriving (Show, Eq)
++
++data CRSLinkProps
++  = CRSLinkProps
++  { _clpHref :: !Text
++  , _clpType :: !(Maybe Text)
++  } deriving (Show, Eq)
++
++data CRS
++  = CRSName !CRSNameProps
++  | CRSLink !CRSLinkProps
++  deriving (Show, Eq)
++
++$(J.deriveJSON (J.aesonDrop 4 J.camelCase) ''CRSNameProps)
++$(J.deriveJSON (J.aesonDrop 4 J.camelCase) ''CRSLinkProps)
++$(J.deriveJSON
++  J.defaultOptions { J.constructorTagModifier = J.camelCase . drop 3
++                   , J.sumEncoding = J.TaggedObject "type" "properties"
++                   }
++  ''CRS)
++
+ data Position
+   = Position !Double !Double !(Maybe Double)
+   deriving (Show, Eq)
+@@ -166,26 +190,3 @@ instance J.FromJSON GeometryWithCRS where
+     crsM <- o J..:? "crs"
+     return $ GeometryWithCRS geom crsM
+ 
+-data CRSNameProps
+-  = CRSNameProps
+-  { _cnpName :: !Text
+-  } deriving (Show, Eq)
+-
+-data CRSLinkProps
+-  = CRSLinkProps
+-  { _clpHref :: !Text
+-  , _clpType :: !(Maybe Text)
+-  } deriving (Show, Eq)
+-
+-data CRS
+-  = CRSName !CRSNameProps
+-  | CRSLink !CRSLinkProps
+-  deriving (Show, Eq)
+-
+-$(J.deriveJSON (J.aesonDrop 4 J.camelCase) ''CRSNameProps)
+-$(J.deriveJSON (J.aesonDrop 4 J.camelCase) ''CRSLinkProps)
+-$(J.deriveJSON
+-  J.defaultOptions { J.constructorTagModifier = J.camelCase . drop 3
+-                   , J.sumEncoding = J.TaggedObject "type" "properties"
+-                   }
+-  ''CRS)
+diff --git server/src-lib/Hasura/Server/API/Query.hs server/src-lib/Hasura/Server/API/Query.hs
+index 1e2888a59..b32bc1d4c 100644
+--- server/src-lib/Hasura/Server/API/Query.hs
++++ server/src-lib/Hasura/Server/API/Query.hs
+@@ -138,43 +138,48 @@ data RQLQueryV2
+   | RQV2TrackFunction !TrackFunctionV2
+   deriving (Show, Eq)
+ 
++
++
+ data RQLQuery
+   = RQV1 !RQLQueryV1
+   | RQV2 !RQLQueryV2
+   deriving (Show, Eq)
+ 
+-instance FromJSON RQLQuery where
+-  parseJSON = withObject "Object" $ \o -> do
+-    mVersion <- o .:? "version"
+-    let version = fromMaybe VIVersion1 mVersion
+-        val = Object o
+-    case version of
+-      VIVersion1 -> RQV1 <$> parseJSON val
+-      VIVersion2 -> RQV2 <$> parseJSON val
+-
+-instance ToJSON RQLQuery where
+-  toJSON = \case
+-    RQV1 q -> embedVersion VIVersion1 $ toJSON q
+-    RQV2 q -> embedVersion VIVersion2 $ toJSON q
+-    where
+-      embedVersion version (Object o) =
+-        Object $ HM.insert "version" (toJSON version) o
+-      -- never happens since JSON value of RQL queries are always objects
+-      embedVersion _ _ = error "Unexpected: toJSON of RQL queries are not objects"
+-
+-$(deriveJSON
+-  defaultOptions { constructorTagModifier = snakeCase . drop 2
+-                 , sumEncoding = TaggedObject "type" "args"
+-                 }
+-  ''RQLQueryV1)
++$(do
+ 
+-$(deriveJSON
+-  defaultOptions { constructorTagModifier = snakeCase . drop 4
++  i1 <- deriveJSON defaultOptions { constructorTagModifier = snakeCase . drop 2
++                          , sumEncoding = TaggedObject "type" "args"
++                 } ''RQLQueryV1
++  i2 <- deriveJSON
++    defaultOptions { constructorTagModifier = snakeCase . drop 4
+                  , sumEncoding = TaggedObject "type" "args"
+                  , tagSingleConstructors = True
+                  }
+-  ''RQLQueryV2
+- )
++    ''RQLQueryV2
++
++  i3 <- [d| instance FromJSON RQLQuery where
++              parseJSON = withObject "Object" $ \o -> do
++                mVersion <- o .:? "version"
++                let version = fromMaybe VIVersion1 mVersion
++                    val = Object o
++                case version of
++                  VIVersion1 -> RQV1 <$> parseJSON val
++                  VIVersion2 -> RQV2 <$> parseJSON val |]
++
++  i4 <- [d| instance ToJSON RQLQuery where
++              toJSON = \case
++                RQV1 q -> embedVersion VIVersion1 $ toJSON q
++                RQV2 q -> embedVersion VIVersion2 $ toJSON q
++                where
++                  embedVersion version (Object o) =
++                    Object $ HM.insert "version" (toJSON version) o
++                  -- never happens since JSON value of RQL queries are always objects
++                  embedVersion _ _ = error "Unexpected: toJSON of RQL queries are not objects" |]
++  return (i1 ++ i2 ++ i3 ++ i4) )
++
++
++
++
+ 
+ fetchLastUpdate :: Q.TxE QErr (Maybe (InstanceId, UTCTime, CacheInvalidations))
+ fetchLastUpdate = over (_Just._3) Q.getAltJ <$> Q.withQE defaultTxErrorHandler [Q.sql|
+diff --git server/src-lib/Hasura/Server/Auth.hs server/src-lib/Hasura/Server/Auth.hs
+index 3c09c4e06..e4a29a719 100644
+--- server/src-lib/Hasura/Server/Auth.hs
++++ server/src-lib/Hasura/Server/Auth.hs
+@@ -30,6 +30,7 @@ import           Control.Monad.Trans.Control          (MonadBaseControl)
+ import           Data.IORef                           (newIORef)
+ import           Data.Time.Clock                      (UTCTime)
+ import           Hasura.Server.Version                (HasVersion)
++import Control.Monad.IO.Unlift
+ 
+ import qualified Crypto.Hash                          as Crypto
+ import qualified Data.Text                            as T
+@@ -103,6 +104,7 @@ setupAuthMode
+   :: ( HasVersion
+      , MonadIO m
+      , MonadBaseControl IO m
++     , MonadUnliftIO m
+      , LA.Forall (LA.Pure m)
+      , Tracing.HasReporter m
+      )
+@@ -149,6 +151,7 @@ setupAuthMode mAdminSecretHash mWebHook mJwtSecret mUnAuthRole httpManager logge
+       :: ( HasVersion
+          , MonadIO m
+          , MonadBaseControl IO m
++         , MonadUnliftIO m
+          , LA.Forall (LA.Pure m)
+          , Tracing.HasReporter m
+          )
+diff --git server/src-lib/Hasura/Server/Utils.hs server/src-lib/Hasura/Server/Utils.hs
+index 7f6d2e6c4..88f55cecc 100644
+--- server/src-lib/Hasura/Server/Utils.hs
++++ server/src-lib/Hasura/Server/Utils.hs
+@@ -6,7 +6,7 @@ import           Control.Lens               ((^..))
+ import           Data.Aeson
+ import           Data.Aeson.Internal
+ import           Data.Char
+-import           Language.Haskell.TH.Syntax (Lift, Q, TExp)
++import           Language.Haskell.TH.Syntax (Lift, Q, TExp, liftCode, examineCode, Code)
+ import           System.Environment
+ import           System.Exit
+ import           System.Process
+@@ -90,11 +90,11 @@ getRequestId headers =
+     Just reqId -> return $ RequestId $ bsToTxt reqId
+ 
+ -- Get an env var during compile time
+-getValFromEnvOrScript :: String -> String -> Q (TExp String)
+-getValFromEnvOrScript n s = do
++getValFromEnvOrScript :: String -> String -> Code Q String
++getValFromEnvOrScript n s = liftCode $ do
+   maybeVal <- TH.runIO $ lookupEnv n
+   case maybeVal of
+-    Just val -> [|| val ||]
++    Just val -> examineCode [|| val ||]
+     Nothing  -> runScript s
+ 
+ -- Run a shell script during compile time
+@@ -107,7 +107,7 @@ runScript fp = do
+   when (exitCode /= ExitSuccess) $ fail $
+     "Running shell script " ++ fp ++ " failed with exit code : "
+     ++ show exitCode ++ " and with error : " ++ stdErr
+-  [|| stdOut ||]
++  examineCode [|| stdOut ||]
+ 
+ -- find duplicates
+ duplicates :: Ord a => [a] -> [a]
+@@ -116,10 +116,10 @@ duplicates = mapMaybe greaterThanOne . group . sort
+     greaterThanOne l = bool Nothing (Just $ head l) $ length l > 1
+ 
+ -- | Quotes a regex using Template Haskell so syntax errors can be reported at compile-time.
+-quoteRegex :: TDFA.CompOption -> TDFA.ExecOption -> String -> Q (TExp TDFA.Regex)
+-quoteRegex compOption execOption regexText = do
++quoteRegex :: TDFA.CompOption -> TDFA.ExecOption -> String -> Code Q TDFA.Regex
++quoteRegex compOption execOption regexText = liftCode $ do
+   regex <- TDFA.parseRegex regexText `onLeft` (fail . show)
+-  [|| TDFA.patternToRegex regex compOption execOption ||]
++  examineCode [|| TDFA.patternToRegex regex compOption execOption ||]
+ 
+ fmapL :: (a -> a') -> Either a b -> Either a' b
+ fmapL fn (Left e) = Left (fn e)
+diff --git server/src-lib/Hasura/Server/Version.hs server/src-lib/Hasura/Server/Version.hs
+index 59da03bf6..ac924dd81 100644
+--- server/src-lib/Hasura/Server/Version.hs
++++ server/src-lib/Hasura/Server/Version.hs
+@@ -46,10 +46,10 @@ instance ToJSON Version where
+ instance FromJSON Version where
+   parseJSON = fmap fromText . parseJSON
+ 
+-getVersionFromEnvironment :: TH.Q (TH.TExp Version)
+-getVersionFromEnvironment = do
++getVersionFromEnvironment :: TH.Code TH.Q Version
++getVersionFromEnvironment =
+   let txt = getValFromEnvOrScript "VERSION" "../scripts/get-version.sh"
+-  [|| fromText $ T.dropWhileEnd (== '\n') $ T.pack $$(txt) ||]
++  in [|| fromText $ T.dropWhileEnd (== '\n') $ T.pack $$(txt) ||]
+ 
+ -- | Lots of random things need access to the current version. It would be very convenient to define
+ -- @version :: 'Version'@ in this module and export it, and indeed, that’s what we used to do! But
+diff --git server/src-lib/Hasura/Tracing.hs server/src-lib/Hasura/Tracing.hs
+index cff8fa8fc..ac5faf231 100644
+--- server/src-lib/Hasura/Tracing.hs
++++ server/src-lib/Hasura/Tracing.hs
+@@ -208,11 +208,10 @@ word64ToHex randNum = bsToTxt $ Hex.encode numInBytes
+ -- | Decode 16 character hex string to Word64
+ -- | Hex.Decode returns two tuples: (properly decoded data, string starts at the first invalid base16 sequence)
+ hexToWord64 :: Text -> Maybe Word64
+-hexToWord64 randText = do
+-  let (decoded, leftovers) = Hex.decode $ txtToBs randText
+-      decodedWord64 = Bin.decode $ BL.fromStrict decoded
+-  guard (BS.null leftovers)
+-  pure decodedWord64
++hexToWord64 randText =
++  case Hex.decode $ txtToBs randText of
++    Left _err -> Nothing
++    Right decoded -> Just (Bin.decode $ BL.fromStrict decoded)
+ 
+ 
+ -- | Inject the trace context as a set of HTTP headers.
+diff --git server/src-test/Hasura/Server/AuthSpec.hs server/src-test/Hasura/Server/AuthSpec.hs
+index f9d8ebbff..bc5fdd98a 100644
+--- server/src-test/Hasura/Server/AuthSpec.hs
++++ server/src-test/Hasura/Server/AuthSpec.hs
+@@ -21,6 +21,7 @@ import           Hasura.Server.Utils
+ import           Hasura.Session
+ import qualified Hasura.Tracing              as Tracing
+ import           Test.Hspec
++import Control.Monad.IO.Unlift
+ 
+ spec :: Spec
+ spec = do
+@@ -571,7 +572,7 @@ mkJSONPathE = either error id . parseJSONPath
+ 
+ 
+ newtype NoReporter a = NoReporter { runNoReporter :: IO a }
+-  deriving newtype (Functor, Applicative, Monad, MonadIO, MonadBase IO, MonadBaseControl IO)
++  deriving newtype (Functor, Applicative, Monad, MonadIO, MonadBase IO, MonadBaseControl IO, MonadUnliftIO)
+ 
+ instance Tracing.HasReporter NoReporter
+ 
+-- 
+2.20.1
+
