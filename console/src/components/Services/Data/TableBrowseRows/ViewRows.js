@@ -56,7 +56,7 @@ import {
   getPersistedColumnsOrder,
   persistPageSizeChange,
 } from './localStorageUtils';
-import { compareRows, isTableWithPK } from './utils';
+import { compareRows, isTableWithPK, isJsonColumn } from './utils';
 import styles from '../../../Common/TableCommon/Table.scss';
 
 const ViewRows = ({
@@ -228,13 +228,19 @@ const ViewRows = ({
     const pkClause = {};
 
     if (!isView && hasPrimaryKey) {
-      tableSchema.primary_key.columns.map(pk => {
-        pkClause[pk] = row[pk];
+      tableSchema.primary_key.columns.forEach(key => {
+        pkClause[key] = row[key];
+      });
+    } else if (tableSchema.unique_constraints?.length) {
+      tableSchema.unique_constraints[0].columns.forEach(key => {
+        pkClause[key] = row[key];
       });
     } else {
-      tableSchema.columns.map(k => {
-        pkClause[k.column_name] = row[k.column_name];
-      });
+      tableSchema.columns
+        .filter(c => !isJsonColumn(c))
+        .forEach(key => {
+          pkClause[key.column_name] = row[key.column_name];
+        });
     }
 
     Object.keys(pkClause).forEach(key => {

@@ -1,3 +1,5 @@
+import { BaseTableColumn } from '../../../Common/utils/pgUtils';
+
 type TableSchema = {
   primary_key?: { columns: string[] };
   columns: Array<{ column_name: string }>;
@@ -57,4 +59,8 @@ export const isPostgresTimeoutError = (error: {
   }
 
   return false;
+};
+
+export const isJsonColumn = (column: BaseTableColumn): boolean => {
+  return column.data_type === 'json' || column.data_type === 'jsonb';
 };
