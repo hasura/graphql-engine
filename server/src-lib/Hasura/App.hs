@@ -5,63 +5,64 @@ module Hasura.App where
 
 import           Hasura.Prelude
 
-import qualified Control.Concurrent.Async.Lifted.Safe      as LA
-import qualified Control.Concurrent.Extended               as C
-import qualified Control.Exception.Lifted                  as LE
-import qualified Data.Aeson                                as A
-import qualified Data.ByteString.Char8                     as BC
-import qualified Data.ByteString.Lazy.Char8                as BLC
-import qualified Data.Environment                          as Env
-import qualified Data.HashMap.Strict                       as HM
-import qualified Data.Set                                  as Set
-import qualified Data.Text                                 as T
-import qualified Data.Time.Clock                           as Clock
-import qualified Data.Yaml                                 as Y
-import qualified Database.PG.Query                         as Q
-import qualified Network.HTTP.Client                       as HTTP
-import qualified Network.HTTP.Client.TLS                   as HTTP
-import qualified Network.Wai.Handler.Warp                  as Warp
-import qualified System.Log.FastLogger                     as FL
-import qualified System.Metrics                            as EKG
-import qualified System.Metrics.Gauge                      as EKG.Gauge
-import qualified Text.Mustache.Compile                     as M
-import qualified Web.Spock.Core                            as Spock
+import qualified Control.Concurrent.Async.Lifted.Safe       as LA
+import qualified Control.Concurrent.Extended                as C
+import qualified Control.Exception.Lifted                   as LE
+import qualified Data.Aeson                                 as A
+import qualified Data.ByteString.Char8                      as BC
+import qualified Data.ByteString.Lazy.Char8                 as BLC
+import qualified Data.Environment                           as Env
+import qualified Data.HashMap.Strict                        as HM
+import qualified Data.Set                                   as Set
+import qualified Data.Text                                  as T
+import qualified Data.Time.Clock                            as Clock
+import qualified Data.Yaml                                  as Y
+import qualified Database.PG.Query                          as Q
+import qualified Network.HTTP.Client                        as HTTP
+import qualified Network.HTTP.Client.TLS                    as HTTP
+import qualified Network.Wai.Handler.Warp                   as Warp
+import qualified System.Log.FastLogger                      as FL
+import qualified System.Metrics                             as EKG
+import qualified System.Metrics.Gauge                       as EKG.Gauge
+import qualified Text.Mustache.Compile                      as M
+import qualified Web.Spock.Core                             as Spock
 
-import           Control.Concurrent.STM.TVar               (TVar, readTVarIO)
-import           Control.Exception                         (bracket_, throwIO)
-import           Control.Monad.Catch                       (Exception, MonadCatch, MonadMask,
-                                                            MonadThrow, onException)
-import           Control.Monad.Morph                       (hoist)
-import           Control.Monad.STM                         (atomically)
+import           Control.Concurrent.STM.TVar                (TVar, readTVarIO)
+import           Control.Exception                          (bracket_, throwIO)
+import           Control.Monad.Catch                        (Exception, MonadCatch, MonadMask,
+                                                             MonadThrow, onException)
+import           Control.Monad.Morph                        (hoist)
+import           Control.Monad.STM                          (atomically)
 import           Control.Monad.Stateless
-import           Control.Monad.Trans.Control               (MonadBaseControl (..))
-import           Control.Monad.Trans.Managed               (ManagedT (..), allocate)
+import           Control.Monad.Trans.Control                (MonadBaseControl (..))
+import           Control.Monad.Trans.Managed                (ManagedT (..), allocate)
 import           Control.Monad.Unique
-import           Data.FileEmbed                            (makeRelativeToProject)
-import           Data.Time.Clock                           (UTCTime)
+import           Data.FileEmbed                             (makeRelativeToProject)
+import           Data.Time.Clock                            (UTCTime)
 #ifndef PROFILING
 import           GHC.AssertNF
 #endif
 import           Network.HTTP.Client.Extended
 import           Options.Applicative
-import           System.Environment                        (getEnvironment)
+import           System.Environment                         (getEnvironment)
 
-import qualified Hasura.GraphQL.Execute.LiveQuery.Poll     as EL
-import qualified Hasura.GraphQL.Transport.WebSocket.Server as WS
-import qualified Hasura.Server.API.V2Query                 as V2Q
-import qualified Hasura.Tracing                            as Tracing
+import qualified Hasura.GraphQL.Execute.LiveQuery.Poll      as EL
+import qualified Hasura.GraphQL.Transport.WebSocket.Server  as WS
+import qualified Hasura.Server.API.V2Query                  as V2Q
+import qualified Hasura.Tracing                             as Tracing
 
 import           Hasura.Backends.Postgres.Connection
 import           Hasura.EncJSON
 import           Hasura.Eventing.Common
 import           Hasura.Eventing.EventTrigger
 import           Hasura.Eventing.ScheduledTrigger
-import           Hasura.GraphQL.Execute                    (MonadGQLExecutionCheck (..),
-                                                            checkQueryInAllowlist)
+import           Hasura.GraphQL.Execute                     (MonadGQLExecutionCheck (..),
+                                                             checkQueryInAllowlist)
 import           Hasura.GraphQL.Execute.Action
-import           Hasura.GraphQL.Logging                    (MonadQueryLog (..))
-import           Hasura.GraphQL.Transport.HTTP             (MonadExecuteQuery (..))
-import           Hasura.GraphQL.Transport.HTTP.Protocol    (toParsed)
+import           Hasura.GraphQL.Execute.Action.Subscription
+import           Hasura.GraphQL.Logging                     (MonadQueryLog (..))
+import           Hasura.GraphQL.Transport.HTTP              (MonadExecuteQuery (..))
+import           Hasura.GraphQL.Transport.HTTP.Protocol     (toParsed)
 import           Hasura.Logging
 import           Hasura.Metadata.Class
 import           Hasura.RQL.DDL.Schema.Cache
@@ -70,19 +71,18 @@ import           Hasura.RQL.DDL.Schema.Catalog
 import           Hasura.RQL.DDL.Schema.Source
 import           Hasura.RQL.Types
 import           Hasura.RQL.Types.Run
-import           Hasura.Server.API.Query                   (requiresAdmin, runQueryM)
+import           Hasura.Server.API.Query                    (requiresAdmin, runQueryM)
 import           Hasura.Server.App
 import           Hasura.Server.Auth
-import           Hasura.Server.CheckUpdates                (checkForUpdates)
+import           Hasura.Server.CheckUpdates                 (checkForUpdates)
 import           Hasura.Server.Init
 import           Hasura.Server.Logging
-import           Hasura.Server.Migrate                     (getMigratedFrom, migrateCatalog)
+import           Hasura.Server.Migrate                      (getMigratedFrom, migrateCatalog)
 import           Hasura.Server.SchemaUpdate
 import           Hasura.Server.Telemetry
 import           Hasura.Server.Types
 import           Hasura.Server.Version
 import           Hasura.Session
-
 
 data ExitCode
 -- these are used during server initialization:
@@ -463,7 +463,7 @@ runHGEServer setupHook env ServeOptions{..} ServeCtx{..} initTime postPollHook s
 
   authMode <- onLeft authModeRes (printErrExit AuthConfigurationError . T.unpack)
 
-  HasuraApp app cacheRef stopWsServer <- lift $ flip onException (flushLogger loggerCtx) $
+  HasuraApp app cacheRef actionSubState stopWsServer <- lift $ flip onException (flushLogger loggerCtx) $
     mkWaiApp setupHook env
              logger
              sqlGenCtx
@@ -529,8 +529,16 @@ runHGEServer setupHook env ServeOptions{..} ServeCtx{..} initTime postPollHook s
     _scHttpManager (getSCFromRef cacheRef) eventEngineCtx lockedEventsCtx serverMetrics
 
   -- start a backgroud thread to handle async actions
-  _asyncActionsThread <- C.forkManagedT "asyncActionsProcessor" logger $
-    asyncActionsProcessor env logger (_scrCache cacheRef) _scHttpManager
+  case soAsyncActionsFetchInterval of
+    AAFINoFetch -> pure () -- Don't start the poller thread
+    AAFIInterval sleepTime -> do
+      _asyncActionsThread <- C.forkManagedT "asyncActionsProcessor" logger $
+        asyncActionsProcessor env logger (_scrCache cacheRef) _scHttpManager sleepTime
+      pure ()
+
+  -- start a backgroud thread to handle async action live queries
+  _asyncActionsSubThread <- C.forkManagedT "asyncActionSubscriptionsProcessor" logger $
+    asyncActionSubscriptionsProcessor actionSubState
 
   -- start a background thread to create new cron events
   _cronEventsThread <- C.forkManagedT "runCronEventsGenerator" logger $

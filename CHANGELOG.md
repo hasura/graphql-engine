@@ -3,6 +3,8 @@
 ## Next release
 (Add entries here in the order of: server, console, cli, docs, others)
 
+- server: add `--async-actions-fetch-interval` command-line flag and `HASURA_GRAPHQL_ASYNC_ACTIONS_FETCH_INTERVAL` environment variable for configuring
+          async actions re-fetch interval from metadata storage (fix #6460)
 - server: add 'replace_configuration' option (default: false) in the add source API payload
 - server: add a comment field for actions (#231)
 - server: accept GeoJSON for MSSQL geometry and geography operators (#787)

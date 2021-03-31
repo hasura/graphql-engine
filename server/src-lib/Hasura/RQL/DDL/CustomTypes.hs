@@ -216,7 +216,7 @@ validateCustomTypeDefinitions sources customTypes allScalars = do
       let sourceConfig = do
             source     <- _trSource . NE.head <$> annotatedRelationships
             sourceInfo <- Map.lookup source sources
-            unsafeSourceConfiguration @'Postgres sourceInfo
+            (source,) <$> unsafeSourceConfiguration @'Postgres sourceInfo
 
       pure $ flip AnnotatedObjectType sourceConfig $
              ObjectTypeDefinition objectTypeName (_otdDescription objectDefinition)

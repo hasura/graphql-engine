@@ -35,7 +35,6 @@ convertMutationAction
     , MonadIO m
     , MonadError QErr m
     , MonadMetadataStorage (MetadataStorageT m)
-    , Tracing.MonadTrace m
     )
   => Env.Environment
   -> L.Logger L.Hasura
@@ -43,14 +42,11 @@ convertMutationAction
   -> HTTP.Manager
   -> HTTP.RequestHeaders
   -> ActionMutation 'Postgres (UnpreparedValue 'Postgres)
-  -> m (ActionExecutionPlan, HTTP.ResponseHeaders)
+  -> m ActionExecutionPlan
 convertMutationAction env logger userInfo manager reqHeaders  = \case
-  AMSync s  -> ((AEPSync . _aerExecution) &&& _aerHeaders) <$>
-    resolveActionExecution env logger userInfo s actionExecContext
-  AMAsync s -> do
-    result <-
-      liftEitherM (runMetadataStorageT $ resolveActionMutationAsync s reqHeaders userSession)
-    pure (AEPAsyncMutation result, [])
+  AMSync s  -> pure $ AEPSync $ resolveActionExecution env logger userInfo s actionExecContext
+  AMAsync s -> AEPAsyncMutation <$>
+    liftEitherM (runMetadataStorageT $ resolveActionMutationAsync s reqHeaders userSession)
   where
     userSession = _uiSession userInfo
     actionExecContext = ActionExecContext manager reqHeaders $ _uiSession userInfo
@@ -93,7 +89,7 @@ convertMutationSelectionSet env logger gqlContext SQLGenCtx{stringifyNum} userIn
       RemoteFieldG remoteSchemaInfo resolvedRemoteField <- resolveRemoteField userInfo remoteField
       pure $ buildExecStepRemote remoteSchemaInfo G.OperationTypeMutation $ [G.SelectionField resolvedRemoteField]
     RFAction action ->
-      uncurry ExecStepAction <$> convertMutationAction env logger userInfo manager reqHeaders action
+      ExecStepAction <$> convertMutationAction env logger userInfo manager reqHeaders action
     RFRaw s ->
       pure $ ExecStepRaw s
 

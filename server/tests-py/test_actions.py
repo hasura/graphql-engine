@@ -32,7 +32,7 @@ use_action_fixtures_with_remote_joins = pytest.mark.usefixtures(
     "per_method_db_data_for_mutation_tests"
 )
 
-@pytest.mark.parametrize("transport", ['http', 'websocket'])
+@pytest.mark.parametrize("transport", ['websocket'])
 @use_action_fixtures
 class TestActionsSyncWebsocket:
 

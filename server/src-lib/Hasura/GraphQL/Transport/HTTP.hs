@@ -239,8 +239,8 @@ runGQ env logger reqId userInfo ipAddress reqHeaders queryType reqUnparsed = do
                 return $ ResultsFragment telemTimeIO_DT Telem.Local resp []
               E.ExecStepRemote rsi gqlReq ->
                 runRemoteGQ httpManager fieldName rsi gqlReq
-              E.ExecStepAction aep _ -> do
-                (time, r) <- doQErr $ EA.runActionExecution aep
+              E.ExecStepAction aep -> do
+                (time, (r, _)) <- doQErr $ EA.runActionExecution aep
                 pure $ ResultsFragment time Telem.Empty r []
               E.ExecStepRaw json ->
                 buildRaw json
@@ -266,14 +266,14 @@ runGQ env logger reqId userInfo ipAddress reqHeaders queryType reqUnparsed = do
             return $ ResultsFragment telemTimeIO_DT Telem.Local resp responseHeaders
           E.ExecStepRemote rsi gqlReq ->
             runRemoteGQ httpManager fieldName rsi gqlReq
-          E.ExecStepAction aep hdrs -> do
-            (time, r) <- doQErr $ EA.runActionExecution aep
-            pure $ ResultsFragment time Telem.Empty r hdrs
+          E.ExecStepAction aep -> do
+            (time, (r, hdrs)) <- doQErr $ EA.runActionExecution aep
+            pure $ ResultsFragment time Telem.Empty r $ fromMaybe [] hdrs
           E.ExecStepRaw json ->
             buildRaw json
         buildResult Telem.Mutation conclusion []
 
-      E.SubscriptionExecutionPlan _sourceName _sub ->
+      E.SubscriptionExecutionPlan _sub ->
         throw400 UnexpectedPayload "subscriptions are not supported over HTTP, use websockets instead"
   -- The response and misc telemetry data:
   let telemTimeIO = convertDuration telemTimeIO_DT

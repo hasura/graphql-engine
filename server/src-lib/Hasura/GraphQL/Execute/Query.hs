@@ -21,7 +21,6 @@ import qualified Network.HTTP.Types                     as HTTP
 import qualified Hasura.GraphQL.Transport.HTTP.Protocol as GH
 import qualified Hasura.Logging                         as L
 import qualified Hasura.SQL.AnyBackend                  as AB
-import qualified Hasura.Tracing                         as Tracing
 
 import           Hasura.GraphQL.Context
 import           Hasura.GraphQL.Execute.Action
@@ -61,8 +60,6 @@ convertQuerySelSet
   :: forall m .
      ( MonadError QErr m
      , HasVersion
-     , Tracing.MonadTrace m
-     , MonadIO m
      )
   => Env.Environment
   -> L.Logger L.Hasura
@@ -89,11 +86,10 @@ convertQuerySelSet env logger gqlContext userInfo manager reqHeaders directives 
     RFRemote rf -> do
       RemoteFieldG remoteSchemaInfo remoteField <- for rf $ resolveRemoteVariable userInfo
       pure $ buildExecStepRemote remoteSchemaInfo G.OperationTypeQuery [G.SelectionField remoteField]
-    RFAction a -> do
-      action <- case a of
-        AQQuery s -> AEPSync . _aerExecution <$> resolveActionExecution env logger userInfo s (ActionExecContext manager reqHeaders usrVars)
-        AQAsync s -> pure $ AEPAsyncQuery (_aaaqActionId s) $ resolveAsyncActionQuery userInfo s
-      pure $ ExecStepAction action []
+    RFAction a ->
+      pure $ ExecStepAction $ case a of
+        AQQuery s -> AEPSync $ resolveActionExecution env logger userInfo s (ActionExecContext manager reqHeaders usrVars)
+        AQAsync s -> AEPAsyncQuery $ AsyncActionQueryExecutionPlan (_aaaqActionId s) $ resolveAsyncActionQuery userInfo s
     RFRaw r ->
       pure $ ExecStepRaw r
 

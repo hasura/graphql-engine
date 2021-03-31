@@ -96,7 +96,6 @@ data ExecutionStep where
   -- ^ A query to execute against the database
   ExecStepAction
     :: ActionExecutionPlan
-    -> HTTP.ResponseHeaders
     -> ExecutionStep
   -- ^ Execute an action
   ExecStepRemote

@@ -5,32 +5,35 @@ module Hasura.GraphQL.Explain
 
 import           Hasura.Prelude
 
-import qualified Data.Aeson                                as J
-import qualified Data.Aeson.Casing                         as J
-import qualified Data.Aeson.TH                             as J
-import qualified Data.HashMap.Strict                       as Map
-import qualified Data.HashMap.Strict.InsOrd                as OMap
-import qualified Database.PG.Query                         as Q
-import qualified Language.GraphQL.Draft.Syntax             as G
+import qualified Data.Aeson                                  as J
+import qualified Data.Aeson.Casing                           as J
+import qualified Data.Aeson.TH                               as J
+import qualified Data.HashMap.Strict                         as Map
+import qualified Data.HashMap.Strict.InsOrd                  as OMap
+import qualified Database.PG.Query                           as Q
+import qualified Language.GraphQL.Draft.Syntax               as G
 
-import           Control.Monad.Trans.Control               (MonadBaseControl)
+import           Control.Monad.Trans.Control                 (MonadBaseControl)
 import           Data.Text.Extended
 
-import qualified Hasura.Backends.Postgres.SQL.DML          as S
-import qualified Hasura.Backends.Postgres.Translate.Select as DS
-import qualified Hasura.GraphQL.Execute                    as E
-import qualified Hasura.GraphQL.Execute.Inline             as E
-import qualified Hasura.GraphQL.Execute.LiveQuery.Explain  as E
-import qualified Hasura.GraphQL.Execute.Query              as E
-import qualified Hasura.GraphQL.Execute.RemoteJoin         as RR
-import qualified Hasura.GraphQL.Transport.HTTP.Protocol    as GH
-import qualified Hasura.SQL.AnyBackend                     as AB
+import qualified Hasura.Backends.Postgres.Execute.RemoteJoin as RR
+import qualified Hasura.Backends.Postgres.SQL.DML            as S
+import qualified Hasura.Backends.Postgres.Translate.Select   as DS
+import qualified Hasura.GraphQL.Execute                      as E
+import qualified Hasura.GraphQL.Execute.Action               as EA
+import qualified Hasura.GraphQL.Execute.Inline               as E
+import qualified Hasura.GraphQL.Execute.LiveQuery.Explain    as E
+import qualified Hasura.GraphQL.Execute.Query                as E
+import qualified Hasura.GraphQL.Execute.RemoteJoin           as RR
+import qualified Hasura.GraphQL.Transport.HTTP.Protocol      as GH
+import qualified Hasura.SQL.AnyBackend                       as AB
 
 import           Hasura.Backends.Postgres.SQL.Value
-import           Hasura.Backends.Postgres.Translate.Column (toTxtValue)
+import           Hasura.Backends.Postgres.Translate.Column   (toTxtValue)
 import           Hasura.EncJSON
 import           Hasura.GraphQL.Context
 import           Hasura.GraphQL.Parser
+import           Hasura.Metadata.Class
 import           Hasura.RQL.DML.Internal
 import           Hasura.RQL.Types
 import           Hasura.SQL.Types
@@ -125,6 +128,7 @@ explainGQLQuery
   . ( MonadError QErr m
     , MonadIO m
     , MonadBaseControl IO m
+    , MonadMetadataStorage (MetadataStorageT m)
     )
   => SchemaCache
   -> GQLExplain
@@ -155,12 +159,16 @@ explainGQLQuery sc (GQLExplain query userVarsRaw maybeIsRelay) = do
       -- (Here the above fragment inlining is actually executed.)
       inlinedSelSet <- E.inlineSelectionSet fragments selSet
       (unpreparedQueries, _) <- E.parseGraphQLQuery graphQLContext varDefs (GH._grVariables query) inlinedSelSet
-      (_, E.LQP exists) <-
-        E.createSubscriptionPlan userInfo unpreparedQueries
-      case AB.unpackAnyBackend exists of
-        Nothing -> pure mempty
-        Just (E.MultiplexedLiveQueryPlan execPlan) ->
-          encJFromJValue <$> E.explainLiveQueryPlan execPlan
+      validSubscription <-  E.buildSubscriptionPlan userInfo unpreparedQueries
+      case validSubscription of
+        E.SEAsyncActionsWithNoRelationships _ -> throw400 NotSupported "async action query fields without relationships to table cannot be explained"
+        E.SEOnSourceDB actionIds liveQueryBuilder -> do
+          actionLogResponseMap <- fst <$> EA.fetchActionLogResponses actionIds
+          (_, E.LQP exists) <- liftEitherM $ liftIO $ runExceptT $ liveQueryBuilder actionLogResponseMap
+          case AB.unpackAnyBackend exists of
+            Nothing -> pure mempty
+            Just (E.MultiplexedLiveQueryPlan execPlan) ->
+              encJFromJValue <$> E.explainLiveQueryPlan execPlan
   where
     queryType = bool E.QueryHasura E.QueryRelay $ Just True == maybeIsRelay
     sessionVariables = mkSessionVariablesText $ fromMaybe mempty userVarsRaw

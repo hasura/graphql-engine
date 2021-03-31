@@ -293,7 +293,7 @@ fieldTypeToScalarType = \case
 data AnnotatedObjectType
   = AnnotatedObjectType
   { _aotDefinition :: !(ObjectTypeDefinition (G.GType, AnnotatedObjectFieldType) (TableInfo 'Postgres) (ColumnInfo 'Postgres))
-  , _aotSource     :: !(Maybe (SourceConfig 'Postgres))
+  , _aotSource     :: !(Maybe (SourceName, SourceConfig 'Postgres))
   } deriving (Generic)
 instance J.ToJSON (AnnotatedObjectType) where
   toJSON = J.toJSON . _aotDefinition

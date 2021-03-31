@@ -11,6 +11,7 @@ import qualified Database.PG.Query                        as Q
 import qualified Network.WebSockets                       as WS
 
 
+import           Data.Aeson
 import           Data.Char                                (toLower)
 import           Data.Time
 import           Data.URL.Template
@@ -46,6 +47,31 @@ data RawConnParams
 
 type RawAuthHook = AuthHookG (Maybe Text) (Maybe AuthHookType)
 
+-- | Sleep time interval for async actions poller (@'asyncActionsProcessor')
+data AsyncActionsFetchInterval
+  = AAFINoFetch -- ^ No polling
+  | AAFIInterval !Milliseconds -- ^ Interval time
+  deriving (Show, Eq)
+
+msToAsyncActionsFetchInterval :: Milliseconds -> AsyncActionsFetchInterval
+msToAsyncActionsFetchInterval = \case
+  0 -> AAFINoFetch
+  s -> AAFIInterval s
+
+readAsyncActionFetchInterval
+  :: String -> Either String AsyncActionsFetchInterval
+readAsyncActionFetchInterval s = do
+  millisecs <- readEither s
+  pure $ msToAsyncActionsFetchInterval millisecs
+
+instance FromJSON AsyncActionsFetchInterval where
+  parseJSON v = msToAsyncActionsFetchInterval <$> parseJSON v
+
+instance ToJSON AsyncActionsFetchInterval where
+  toJSON = \case
+    AAFINoFetch    -> toJSON @Milliseconds 0
+    AAFIInterval s -> toJSON s
+
 data RawServeOptions impl
   = RawServeOptions
   { rsoPort                          :: !(Maybe Int)
@@ -73,6 +99,7 @@ data RawServeOptions impl
   , rsoAdminInternalErrors           :: !(Maybe Bool)
   , rsoEventsHttpPoolSize            :: !(Maybe Int)
   , rsoEventsFetchInterval           :: !(Maybe Milliseconds)
+  , rsoAsyncActionsFetchInterval     :: !(Maybe AsyncActionsFetchInterval)
   , rsoLogHeadersFromEnv             :: !Bool
   , rsoEnableRemoteSchemaPermissions :: !Bool
   , rsoWebSocketCompression          :: !Bool
@@ -126,6 +153,7 @@ data ServeOptions impl
   , soResponseInternalErrorsConfig  :: !ResponseInternalErrorsConfig
   , soEventsHttpPoolSize            :: !(Maybe Int)
   , soEventsFetchInterval           :: !(Maybe Milliseconds)
+  , soAsyncActionsFetchInterval     :: !AsyncActionsFetchInterval
   , soLogHeadersFromEnv             :: !Bool
   , soEnableRemoteSchemaPermissions :: !RemoteSchemaPermsCtx
   , soConnectionOptions             :: !WS.ConnectionOptions
@@ -343,6 +371,9 @@ instance FromEnv Cache.CacheSize where
 
 instance FromEnv URLTemplate where
   fromEnv = parseURLTemplate . T.pack
+
+instance FromEnv AsyncActionsFetchInterval where
+  fromEnv = readAsyncActionFetchInterval
 
 type WithEnv a = ReaderT Env (ExceptT String Identity) a
 

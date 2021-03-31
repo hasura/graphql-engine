@@ -13,7 +13,6 @@ import qualified Data.HashMap.Strict                 as HM
 import qualified Data.HashSet                        as HS
 import qualified Language.GraphQL.Draft.Syntax       as G
 
-import           Data.Foldable
 import           Data.Text.Extended
 
 import           Hasura.Backends.Postgres.SQL.Types

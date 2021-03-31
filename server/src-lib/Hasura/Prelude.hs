@@ -50,7 +50,7 @@ import           Data.Bool                         as M (bool)
 import           Data.Coerce
 import           Data.Data                         as M (Data (..))
 import           Data.Either                       as M (lefts, partitionEithers, rights)
-import           Data.Foldable                     as M (asum, fold, foldrM, for_, toList,
+import           Data.Foldable                     as M (asum, fold, foldlM, foldrM, for_, toList,
                                                          traverse_)
 import           Data.Function                     as M (on, (&))
 import           Data.Functor                      as M (($>), (<&>))

@@ -29,6 +29,7 @@ import qualified Data.CaseInsensitive                        as CI
 import qualified Data.Environment                            as Env
 import qualified Data.HashMap.Strict                         as Map
 import qualified Data.HashMap.Strict.InsOrd                  as OMap
+import qualified Data.List.NonEmpty                          as NE
 import qualified Data.Text                                   as T
 import qualified Data.Text.Encoding                          as TE
 import qualified Data.Time.Clock                             as TC
@@ -79,7 +80,6 @@ import           Hasura.Server.Init.Config                   (KeepAliveDelay (..
 import           Hasura.Server.Types                         (RequestId, getRequestId)
 import           Hasura.Server.Version                       (HasVersion)
 import           Hasura.Session
-
 
 -- | 'LQ.LiveQueryId' comes from 'Hasura.GraphQL.Execute.LiveQuery.State.addLiveQuery'. We use
 -- this to track a connection's operations so we can remove them from 'LiveQueryState', and
@@ -406,17 +406,18 @@ onStart env serverEnv wsConn (StartMsg opId q) = catchAndIgnore $ do
               return $ ResultsFragment telemTimeIO_DT Telem.Local resp []
             E.ExecStepRemote rsi gqlReq -> do
               runRemoteGQ fieldName userInfo reqHdrs rsi gqlReq
-            E.ExecStepAction actionExecPlan _headers -> do
-              (time, r) <- doQErr $ EA.runActionExecution actionExecPlan
+            E.ExecStepAction actionExecPlan -> do
+              (time, (r, _)) <- doQErr $ EA.runActionExecution actionExecPlan
               pure $ ResultsFragment time Telem.Empty r []
             E.ExecStepRaw json ->
               buildRaw json
           buildResult Telem.Query telemCacheHit timerTot requestId conclusion
           case conclusion of
-            Left _ -> pure ()
-            Right results ->
-              Tracing.interpTraceT (withExceptT mempty) $ cacheStore cacheKey $ encJFromInsOrdHashMap $ rfResponse <$> OMap.mapKeys G.unName results
-      sendCompleted (Just requestId)
+            Left _        -> pure ()
+            Right results -> Tracing.interpTraceT (withExceptT mempty) $
+                             cacheStore cacheKey $ encJFromInsOrdHashMap $
+                             rfResponse <$> OMap.mapKeys G.unName results
+      liftIO $ sendCompleted (Just requestId)
 
     E.MutationExecutionPlan mutationPlan -> do
       conclusion <- runExceptT $ forWithKey mutationPlan $ \fieldName -> \case
@@ -435,36 +436,69 @@ onStart env serverEnv wsConn (StartMsg opId q) = catchAndIgnore $ do
                      tx
                      genSql
           return $ ResultsFragment telemTimeIO_DT Telem.Local resp []
-        E.ExecStepAction actionExecPlan hdrs -> do
-          (time, r) <- doQErr $ EA.runActionExecution actionExecPlan
-          pure $ ResultsFragment time Telem.Empty r hdrs
+        E.ExecStepAction actionExecPlan -> do
+          (time, (r, hdrs)) <- doQErr $ EA.runActionExecution actionExecPlan
+          pure $ ResultsFragment time Telem.Empty r $ fromMaybe [] hdrs
         E.ExecStepRemote rsi gqlReq -> do
           runRemoteGQ fieldName userInfo reqHdrs rsi gqlReq
         E.ExecStepRaw json ->
           buildRaw json
       buildResult Telem.Query telemCacheHit timerTot requestId conclusion
-      sendCompleted (Just requestId)
+      liftIO $ sendCompleted (Just requestId)
 
-    E.SubscriptionExecutionPlan sourceName (E.LQP exists) -> do
+    E.SubscriptionExecutionPlan subExec -> do
       -- log the graphql query
       logQueryLog logger $ QueryLog q Nothing requestId
-      let subscriberMetadata = LQ.mkSubscriberMetadata $ J.object
-                               [ "websocket_id" J..= WS.getWSId wsConn
-                               , "operation_id" J..= opId
-                               ]
-      -- NOTE!: we mask async exceptions higher in the call stack, but it's
-      -- crucial we don't lose lqId after addLiveQuery returns successfully.
-      !lqId <- liftIO $ AB.dispatchAnyBackend @BackendTransport exists
-        \(E.MultiplexedLiveQueryPlan liveQueryPlan) ->
-          LQ.addLiveQuery logger subscriberMetadata lqMap sourceName liveQueryPlan liveQOnChange
-      let !opName = _grOperationName q
-#ifndef PROFILING
-      liftIO $ $assertNFHere (lqId, opName)  -- so we don't write thunks to mutable vars
-#endif
-      liftIO $ STM.atomically $
-        -- NOTE: see crucial `lookup` check above, ensuring this doesn't clobber:
-        STMMap.insert (lqId, opName) opId opMap
-      logOpEv ODStarted (Just requestId)
+
+      case subExec of
+        E.SEAsyncActionsWithNoRelationships actions -> liftIO do
+          let allActionIds = map fst $ OMap.elems actions
+          case NE.nonEmpty allActionIds of
+            Nothing -> sendCompleted $ Just requestId
+            Just actionIds -> do
+              let sendResponseIO actionLogMap = do
+                   (dTime, resultsE) <- withElapsedTime $ runExceptT $
+                     for actions $ \(actionId, resultBuilder) -> do
+                       actionLogResponse <- Map.lookup actionId actionLogMap
+                         `onNothing` throw500 "unexpected: cannot lookup action_id in response map"
+                       liftEither $ resultBuilder actionLogResponse
+                   case resultsE of
+                     Left err -> sendError requestId err
+                     Right results -> do
+                       let dataMsg = SMData $ DataMsg opId $ pure $ encJToLBS $
+                                     encJFromInsOrdHashMap $ OMap.mapKeys G.unName results
+                       sendMsgWithMetadata wsConn dataMsg $ LQ.LiveQueryMetadata dTime
+
+                  asyncActionQueryLive = LQ.LAAQNoRelationships $
+                    LQ.LiveAsyncActionQueryWithNoRelationships sendResponseIO (sendCompleted (Just requestId))
+
+              LQ.addAsyncActionLiveQuery (LQ._lqsAsyncActions lqMap) opId actionIds
+                                         (sendError requestId) asyncActionQueryLive
+
+        E.SEOnSourceDB actionIds liveQueryBuilder -> do
+          actionLogMapE <- fmap fst <$> runExceptT (EA.fetchActionLogResponses actionIds)
+          actionLogMap <- onLeft actionLogMapE (withComplete . preExecErr requestId)
+          lqIdE <- liftIO $ startLiveQuery liveQueryBuilder actionLogMap
+          lqId <- onLeft lqIdE (withComplete . preExecErr requestId)
+
+          -- Update async action query subscription state
+          case NE.nonEmpty (toList actionIds) of
+            Nothing                ->
+              -- No async action query fields present, do nothing.
+              pure ()
+            Just nonEmptyActionIds -> liftIO $ do
+              let asyncActionQueryLive = LQ.LAAQOnSourceDB $
+                    LQ.LiveAsyncActionQueryOnSource lqId actionLogMap $ restartLiveQuery liveQueryBuilder
+
+                  onUnexpectedException err = do
+                    sendError requestId err
+                    stopOperation serverEnv wsConn opId (pure ()) -- Don't log in case opId don't exist
+
+              LQ.addAsyncActionLiveQuery (LQ._lqsAsyncActions lqMap) opId
+                                          nonEmptyActionIds onUnexpectedException
+                                          asyncActionQueryLive
+
+      liftIO $ logOpEv ODStarted (Just requestId)
   where
     doQErr = withExceptT Right
 
@@ -508,16 +542,16 @@ onStart env serverEnv wsConn (StartMsg opId q) = catchAndIgnore $ do
       let errFn = getErrFn errRespTy
       sendMsg wsConn $
         SMErr $ ErrorMsg opId $ errFn False $ err400 StartFailed e
-      logOpEv (ODProtoErr e) Nothing
+      liftIO $ logOpEv (ODProtoErr e) Nothing
 
     sendCompleted reqId = do
-      liftIO $ sendMsg wsConn (SMComplete $ CompletionMsg opId)
+      sendMsg wsConn (SMComplete $ CompletionMsg opId)
       logOpEv ODCompleted reqId
 
     postExecErr :: RequestId -> QErr -> ExceptT () m ()
     postExecErr reqId qErr = do
       let errFn = getErrFn errRespTy False
-      logOpEv (ODQueryErr qErr) (Just reqId)
+      liftIO $ logOpEv (ODQueryErr qErr) (Just reqId)
       postExecErr' $ GQExecError $ pure $ errFn qErr
 
     postExecErr' :: GQExecError -> ExceptT () m ()
@@ -526,7 +560,9 @@ onStart env serverEnv wsConn (StartMsg opId q) = catchAndIgnore $ do
         DataMsg opId $ throwError qErr
 
     -- why wouldn't pre exec error use graphql response?
-    preExecErr reqId qErr = do
+    preExecErr reqId qErr = liftIO $ sendError reqId qErr
+
+    sendError reqId qErr = do
       let errFn = getErrFn errRespTy
       logOpEv (ODQueryErr qErr) (Just reqId)
       let err = case errRespTy of
@@ -542,8 +578,35 @@ onStart env serverEnv wsConn (StartMsg opId q) = catchAndIgnore $ do
     withComplete :: ExceptT () m () -> ExceptT () m a
     withComplete action = do
       action
-      sendCompleted Nothing
+      liftIO $ sendCompleted Nothing
       throwError ()
+
+    restartLiveQuery liveQueryBuilder lqId actionLogMap = do
+      LQ.removeLiveQuery logger lqMap lqId
+      either (const Nothing) Just <$> startLiveQuery liveQueryBuilder actionLogMap
+
+    startLiveQuery liveQueryBuilder actionLogMap = do
+      liveQueryE <- runExceptT $ liveQueryBuilder actionLogMap
+      for liveQueryE $ \(sourceName, E.LQP exists) -> do
+        let subscriberMetadata = LQ.mkSubscriberMetadata $ J.object
+                                 [ "websocket_id" J..= WS.getWSId wsConn
+                                 , "operation_id" J..= opId
+                                 ]
+
+        -- NOTE!: we mask async exceptions higher in the call stack, but it's
+        -- crucial we don't lose lqId after addLiveQuery returns successfully.
+        !lqId <- liftIO $ AB.dispatchAnyBackend @BackendTransport exists
+          \(E.MultiplexedLiveQueryPlan liveQueryPlan) ->
+            LQ.addLiveQuery logger subscriberMetadata lqMap sourceName liveQueryPlan liveQOnChange
+        let !opName = _grOperationName q
+#ifndef PROFILING
+        liftIO $ $assertNFHere (lqId, opName)  -- so we don't write thunks to mutable vars
+#endif
+
+        STM.atomically $
+          -- NOTE: see crucial `lookup` check above, ensuring this doesn't clobber:
+          STMMap.insert (lqId, opName) opId opMap
+        pure lqId
 
     -- on change, send message on the websocket
     liveQOnChange :: LQ.OnChange
@@ -603,16 +666,22 @@ onStop serverEnv wsConn (StopMsg opId) = do
   -- OpMap as soon as it is executed
   -- 2. A misbehaving client
   -- 3. A bug on our end
+  stopOperation serverEnv wsConn opId $
+    L.unLogger logger $ L.UnstructuredLog L.LevelDebug $ fromString $
+      "Received STOP for an operation that we have no record for: "
+      <> show (unOperationId opId)
+      <> " (could be a query/mutation operation or a misbehaving client or a bug)"
+  where
+    logger = _wseLogger serverEnv
+
+stopOperation :: WSServerEnv -> WSConn -> OperationId -> IO () -> IO ()
+stopOperation serverEnv wsConn opId logWhenOpNotExist = do
   opM <- liftIO $ STM.atomically $ STMMap.lookup opId opMap
   case opM of
     Just (lqId, opNameM) -> do
       logWSEvent logger wsConn $ EOperation $ opDet opNameM
       LQ.removeLiveQuery logger lqMap lqId
-    Nothing    ->
-      L.unLogger logger $ L.UnstructuredLog L.LevelDebug $ fromString $
-        "Received STOP for an operation that we have no record for: "
-        <> show (unOperationId opId)
-        <> " (could be a query/mutation operation or a misbehaving client or a bug)"
+    Nothing    -> logWhenOpNotExist
   STM.atomically $ STMMap.delete opId opMap
   where
     logger = _wseLogger serverEnv

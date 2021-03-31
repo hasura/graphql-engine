@@ -120,7 +120,7 @@ newtype MutationDBRoot v b = MDBR (MutationDB b (v b))
 
 type QueryRootField        v = RootField (QueryDBRoot    v) RemoteField (ActionQuery    'Postgres (v 'Postgres)) J.Value
 type MutationRootField     v = RootField (MutationDBRoot v) RemoteField (ActionMutation 'Postgres (v 'Postgres)) J.Value
-type SubscriptionRootField v = RootField (QueryDBRoot    v) Void Void Void
+type SubscriptionRootField v = RootField (QueryDBRoot    v) Void        Void                                     Void
 
 
 traverseQueryDB

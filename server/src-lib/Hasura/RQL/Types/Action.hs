@@ -59,6 +59,7 @@ module Hasura.RQL.Types.Action
   , actionIdToText
   , ActionLogItem(..)
   , ActionLogResponse(..)
+  , ActionLogResponseMap
   , AsyncActionStatus(..)
   ) where
 
@@ -283,10 +284,10 @@ instance J.FromJSON ActionMetadata where
 
 data ActionSourceInfo b
   = ASINoSource -- ^ No relationships defined on the action output object
-  | ASISource !(SourceConfig b) -- ^ All relationships refer to tables in one source
+  | ASISource !SourceName !(SourceConfig b) -- ^ All relationships refer to tables in one source
 
 getActionSourceInfo :: AnnotatedObjectType -> ActionSourceInfo 'Postgres
-getActionSourceInfo = maybe ASINoSource ASISource . _aotSource
+getActionSourceInfo = maybe ASINoSource (uncurry ASISource) . _aotSource
 
 data AnnActionExecution (b :: BackendType) v
   = AnnActionExecution
@@ -367,7 +368,7 @@ data ActionExecContext
   }
 
 newtype ActionId = ActionId {unActionId :: UUID.UUID}
-  deriving (Show, Eq, Q.ToPrepArg, Q.FromCol, J.ToJSON, J.FromJSON)
+  deriving (Show, Eq, Q.ToPrepArg, Q.FromCol, J.ToJSON, J.FromJSON, Hashable)
 
 actionIdToText :: ActionId -> Text
 actionIdToText = UUID.toText . unActionId
@@ -390,6 +391,8 @@ data ActionLogResponse
   , _alrSessionVariables :: !SessionVariables
   } deriving (Show, Eq)
 $(J.deriveJSON hasuraJSON ''ActionLogResponse)
+
+type ActionLogResponseMap = HashMap ActionId ActionLogResponse
 
 data AsyncActionStatus
   = AASCompleted !J.Value

@@ -583,6 +583,7 @@ gqlExplainHandler
                , MonadBaseControl IO m
                , MonadError QErr m
                , MonadReader HandlerCtx m
+               , MonadMetadataStorage (MetadataStorageT m)
                )
   => GE.GQLExplain
   -> m (HttpResponse EncJSON)
@@ -706,9 +707,10 @@ configApiGetHandler serverCtx@ServerCtx{..} consoleAssetsDir =
 
 data HasuraApp
   = HasuraApp
-  { _hapApplication      :: !Wai.Application
-  , _hapSchemaRef        :: !SchemaCacheRef
-  , _hapShutdownWsServer :: !(IO ())
+  { _hapApplication                  :: !Wai.Application
+  , _hapSchemaRef                    :: !SchemaCacheRef
+  , _hapAsyncActionSubscriptionState :: !EL.AsyncActionSubscriptionState
+  , _hapShutdownWsServer             :: !(IO ())
   }
 
 -- TODO: Put Env into ServerCtx?
@@ -817,8 +819,7 @@ mkWaiApp setupHook env logger sqlGenCtx enableAL httpManager mode corsCfg enable
     waiApp <- liftWithStateless $ \lowerIO ->
       pure $ WSC.websocketsOr connectionOptions (\ip conn -> lowerIO $ wsServerApp ip conn) spockApp
 
-    return $ HasuraApp waiApp schemaCacheRef stopWSServer
-
+    return $ HasuraApp waiApp schemaCacheRef (EL._lqsAsyncActions lqState) stopWSServer
 
 -- initialiseCache :: m (E.PlanCache, SchemaCacheRef)
 initialiseCache :: MonadIO m => RebuildableSchemaCache -> m SchemaCacheRef

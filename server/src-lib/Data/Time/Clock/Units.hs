@@ -1,6 +1,7 @@
 {-# LANGUAGE AllowAmbiguousTypes #-}
 {-# LANGUAGE DataKinds           #-}
 {-# LANGUAGE DerivingVia         #-}
+{-# LANGUAGE NumDecimals         #-}
 {-# LANGUAGE TypeOperators       #-}
 
 {-| Types for time intervals of various units. Each newtype wraps 'DiffTime',
@@ -68,13 +69,17 @@ module Data.Time.Clock.Units
 
 import           Prelude
 
-import           Control.Arrow   (first)
+import           Control.Applicative ((<|>))
+import           Control.Arrow       (first)
 import           Data.Aeson
 import           Data.Hashable
 import           Data.Proxy
+import           Data.Text           (unpack)
 import           Data.Time.Clock
 import           GHC.TypeLits
-import           Numeric         (readFloat)
+import           Numeric             (readFloat)
+
+import qualified Text.Read           as TR
 
 newtype Seconds = Seconds { seconds :: DiffTime }
   -- NOTE: we want Show to give a pastable data structure string, even
@@ -100,6 +105,18 @@ newtype Minutes = Minutes { minutes :: DiffTime }
 newtype Milliseconds = Milliseconds { milliseconds :: DiffTime }
   deriving (Duration, Show, Eq, Ord)
   deriving (Read, Num, Fractional, Real, Hashable, RealFrac) via (TimeUnit 1000000000)
+
+-- TODO: Has an alternative string representation instead of a numberic one here
+-- in order to clarify what's going on.
+-- Rounding is also problematic, but should be ok for now...
+instance ToJSON Milliseconds where
+  toJSON = toJSON . flip div 1e9 . diffTimeToPicoseconds . milliseconds
+
+instance FromJSON Milliseconds where
+  parseJSON v
+    =   withScientific "Milliseconds Number" (pure . Milliseconds . picosecondsToDiffTime . (* 1e9) . ceiling) v
+    <|> withText       "Milliseconds String" (either (fail . show) pure . TR.readEither . unpack) v
+
 
 newtype Microseconds = Microseconds { microseconds :: DiffTime }
   deriving (Duration, Show, Eq, Ord)
