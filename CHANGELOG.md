@@ -8,6 +8,7 @@
 - server: add 'replace_configuration' option (default: false) in the add source API payload
 - server: add a comment field for actions (#231)
 - server: accept GeoJSON for MSSQL geometry and geography operators (#787)
+- server: fix a bug preventing some MSSQL foreign key relationships from being tracked
 - console: add a comment field for actions (#231)
 
 ## v2.0.0-alpha.6

@@ -115,7 +115,9 @@ args:
           is_published BIT,
           published_on TIMESTAMP,
           author_id int,
+          co_author_id int,
           FOREIGN KEY (author_id) REFERENCES author(id),
+          FOREIGN KEY (co_author_id) REFERENCES author(id),
       );
 
       INSERT INTO

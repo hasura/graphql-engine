@@ -45,6 +45,15 @@ args:
     using:
       foreign_key_constraint_on: author_id
 
+#Object relationship
+- type: mssql_create_object_relationship
+  args:
+    source: mssql
+    table: article
+    name: co_author
+    using:
+      foreign_key_constraint_on: co_author_id
+
 #Array relationship
 - type: mssql_create_array_relationship
   args:
@@ -55,3 +64,15 @@ args:
       foreign_key_constraint_on:
         table: article
         column: author_id
+
+
+#Array relationship
+- type: mssql_create_array_relationship
+  args:
+    source: mssql
+    table: author
+    name: co_articles
+    using:
+      foreign_key_constraint_on:
+        table: article
+        column: co_author_id
