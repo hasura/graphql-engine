@@ -53,7 +53,7 @@ For the ``graphql-engine`` command these are the available flags and ENV variabl
        ``postgres://<user>:<password>@<host>:<port>/<db-name>``
 
        Example: ``postgres://admin:mypass@mydomain.com:5432/metadata_db``
-    
+
 Or you can specify the following options *(only via flags)*:
 
 .. code-block:: none
@@ -159,6 +159,12 @@ For the ``serve`` sub-command these are the available flags and ENV variables:
      - ``HASURA_GRAPHQL_EVENTS_FETCH_INTERVAL``
      - Interval in milliseconds to sleep before trying to fetch events again after a fetch
        returned no events from postgres
+
+   * - ``--async-actions-fetch-interval``
+     - ``HASURA_GRAPHQL_ASYNC_ACTIONS_FETCH_INTERVAL``
+     - Interval in milliseconds to sleep before trying to fetch async actions again after a fetch
+       returned no async actions from metadata storage. Value ``0`` implies completely disable fetching
+       async actions from the storage.
 
    * - ``-s, --stripes <NO_OF_STRIPES>``
      - ``HASURA_GRAPHQL_PG_STRIPES``
