@@ -8,6 +8,7 @@
 - server: add 'replace_configuration' option (default: false) in the add source API payload
 - server: add a comment field for actions (#231)
 - server: accept GeoJSON for MSSQL geometry and geography operators (#787)
+- server: update pg_dump clean output to disable function body validation in create function statements to avoid errors due to forward references
 - server: fix a bug preventing some MSSQL foreign key relationships from being tracked
 - console: add a comment field for actions (#231)
 
