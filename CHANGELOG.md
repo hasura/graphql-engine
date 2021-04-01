@@ -13,6 +13,7 @@
 - console: add a comment field for actions (#231)
 - cli: fix seeds incorrectly being applied to databases in config v3 (#6683)
 - cli: add `--all-databases` flag for `migrate apply`, this allows applying migrations on all connected databases in one go
+- docs: update docker-run.sh script for windows.
 
 ## v2.0.0-alpha.6
 
