@@ -120,7 +120,7 @@ command to allow the Docker container to access the host's network:
 
   .. tab:: Docker for Windows
 
-     Use ``docker.for.win.localhost`` as hostname to access the host's Postgres service.
+     Use ``docker.for.win.localhost`` or ``host.docker.internal`` (Docker 18.03+) as hostname to access the host's Postgres service.
 
      This is what your command should look like:
 
