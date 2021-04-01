@@ -53,7 +53,7 @@ func newMigrateCreateCmd(ec *cli.ExecutionContext) *cobra.Command {
 			if cmd.Flags().Changed("metadata-from-file") {
 				return fmt.Errorf("metadata-from-file flag is depricated")
 			}
-			return nil
+			return validateConfigV3Flags(cmd, ec)
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
 			opts.name = args[0]

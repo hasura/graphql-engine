@@ -108,3 +108,53 @@ func TestGetSources(t *testing.T) {
 		})
 	}
 }
+
+func TestGetSourcesAndKind(t *testing.T) {
+	type args struct {
+		exportMetadata func() (io.Reader, error)
+	}
+	tests := []struct {
+		name    string
+		args    args
+		want    []Source
+		wantErr bool
+	}{
+		{
+			"can get sources and kind",
+			args{
+				func() (io.Reader, error) {
+					return strings.NewReader(
+						`
+{
+	"sources": [
+		{
+			"name": "test1",
+			"kind": "postgres"
+		},
+		{
+
+			"name": "test2",
+			"kind": "mssql"
+		}
+	]
+}
+`), nil
+				},
+			},
+			[]Source{{"test1", hasura.SourceKindPG}, {"test2", hasura.SourceKindMSSQL}},
+			false,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := GetSourcesAndKind(tt.args.exportMetadata)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("GetSourcesAndKind() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("GetSourcesAndKind() got = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}

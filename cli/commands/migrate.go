@@ -3,18 +3,15 @@ package commands
 import (
 	"fmt"
 
-	"github.com/hasura/graphql-engine/cli/internal/hasura"
-
 	"github.com/hasura/graphql-engine/cli/internal/metadatautil"
 
+	"github.com/hasura/graphql-engine/cli/internal/hasura"
 	"github.com/hasura/graphql-engine/cli/internal/scripts"
-
-	"github.com/hasura/graphql-engine/cli/util"
-	"github.com/pkg/errors"
 
 	"github.com/hasura/graphql-engine/cli"
 	"github.com/hasura/graphql-engine/cli/migrate"
 	mig "github.com/hasura/graphql-engine/cli/migrate/cmd"
+	"github.com/hasura/graphql-engine/cli/util"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
@@ -40,27 +37,7 @@ func NewMigrateCmd(ec *cli.ExecutionContext) *cobra.Command {
 			if err := ec.Validate(); err != nil {
 				return err
 			}
-			if ec.Config.Version >= cli.V3 {
-				if !cmd.Flags().Changed("database-name") {
-					return errors.New("--database-name flag is required")
-				}
-				sourceKind, err := metadatautil.GetSourceKind(ec.APIClient.V1Metadata.ExportMetadata, ec.Source.Name)
-				if err != nil {
-					return err
-				}
-				if sourceKind == nil {
-					return fmt.Errorf("cannot determine source kind for %v", ec.Source.Name)
-				}
-				ec.Source.Kind = *sourceKind
-			} else {
-				// for project using config older than v3, use PG source kind
-				ec.Source.Kind = hasura.SourceKindPG
-				if err := scripts.CheckIfUpdateToConfigV3IsRequired(ec); err != nil {
-					return err
-				}
-			}
 			return nil
-
 		},
 	}
 
@@ -123,4 +100,39 @@ func executeStatus(t *migrate.Migrate) (*migrate.Status, error) {
 		return nil, err
 	}
 	return status, nil
+}
+
+func validateConfigV3Flags(cmd *cobra.Command, ec *cli.ExecutionContext) error {
+	if ec.Config.Version >= cli.V3 {
+		if !cmd.Flags().Changed("database-name") {
+			return errDatabaseNameNotSet{"--database-name flag is required"}
+		} else {
+			// if database-name flag is set
+			// find out the database kind by making a API call to server
+			// and update ec to include the database name and kind
+			sourceKind, err := metadatautil.GetSourceKind(ec.APIClient.V1Metadata.ExportMetadata, ec.Source.Name)
+			if err != nil {
+				return fmt.Errorf("determining database kind of %s: %w", ec.Source.Name, err)
+			}
+			if sourceKind == nil {
+				return fmt.Errorf("error determining database kind for %s, check if database exists on hasura", ec.Source.Name)
+			}
+			ec.Source.Kind = *sourceKind
+		}
+	} else {
+		// for project using config older than v3, use PG source kind
+		ec.Source.Kind = hasura.SourceKindPG
+		if err := scripts.CheckIfUpdateToConfigV3IsRequired(ec); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+type errDatabaseNameNotSet struct {
+	message string
+}
+
+func (e errDatabaseNameNotSet) Error() string {
+	return e.message
 }

@@ -286,8 +286,7 @@ func getUniqueName(t *testing.T) string {
 }
 
 func checkIfSkippable(t *testing.T) {
-	switch SkipDockerTests {
-	case "true":
+	if SkipDockerTests {
 		t.Skip()
 	}
 }

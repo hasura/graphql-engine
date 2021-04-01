@@ -3,7 +3,10 @@ package commands
 import (
 	"fmt"
 	"os"
+	"path/filepath"
 	"strconv"
+
+	"github.com/hasura/graphql-engine/cli/internal/metadatautil"
 
 	"github.com/hasura/graphql-engine/cli"
 	migrate "github.com/hasura/graphql-engine/cli/migrate"
@@ -55,38 +58,90 @@ func newMigrateApplyCmd(ec *cli.ExecutionContext) *cobra.Command {
   hasura migrate apply --down all`,
 		SilenceUsage: true,
 		PreRunE: func(cmd *cobra.Command, args []string) error {
-			err := ec.Prepare()
-			if err != nil {
+			err := validateConfigV3Flags(cmd, ec)
+			// --database-name / --all-databases flag is required to be set
+			if _, ok := err.(errDatabaseNameNotSet); !ok {
 				return err
+			} else if ok {
+				if !cmd.Flags().Changed("all-databases") {
+					return fmt.Errorf("one of --database-name or --all-databases flag is required")
+				}
 			}
-			return ec.Validate()
+			return nil
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
 			opts.Source = ec.Source
 			if opts.dryRun && opts.SkipExecution {
 				return errors.New("both --skip-execution and --dry-run flags cannot be used together")
 			}
-			if !opts.dryRun {
-				opts.EC.Spin("Applying migrations...")
-			}
-			err := opts.Run()
-			opts.EC.Spinner.Stop()
-			if err != nil {
-				if err == migrate.ErrNoChange {
-					opts.EC.Logger.Info("nothing to apply")
-					return nil
+			if opts.allDatabases {
+				opts.EC.Spin("getting lists of databases from server ")
+				sourcesAndKind, err := metadatautil.GetSourcesAndKind(ec.APIClient.V1Metadata.ExportMetadata)
+				opts.EC.Spinner.Stop()
+				if err != nil {
+					return fmt.Errorf("determing list of connected sources and kind: %w", err)
 				}
-				if e, ok := err.(*os.PathError); ok {
-					// If Op is first, then log No migrations to apply
-					if e.Op == "first" {
+				for _, source := range sourcesAndKind {
+					opts.Source.Kind = source.Kind
+					opts.Source.Name = source.Name
+					if !opts.dryRun {
+						opts.EC.Spin(fmt.Sprintf("Applying migrations on database: %s ", opts.Source.Name))
+					}
+					err := opts.Run()
+					opts.EC.Spinner.Stop()
+					if err != nil {
+						if err == migrate.ErrNoChange {
+							opts.EC.Logger.Infof("nothing to apply on database: %s", opts.Source.Name)
+							continue
+						}
+						if e, ok := err.(*os.PathError); ok {
+							// If Op is first, then log No migrations to apply
+							if e.Op == "first" {
+								opts.EC.Logger.Infof("nothing to apply on database: %s", opts.Source.Name)
+								continue
+							}
+						}
+						// check if the returned error is a directory not found error
+						// ie might be because  a migrations/<source_name> directory is not found
+						// if so skip this
+						if e, ok := err.(*errDatabaseMigrationDirectoryNotFound); ok {
+							opts.EC.Logger.Errorf("skipping applying migrations for database %s, encountered: \n%s", opts.Source.Name, e.Error())
+							continue
+						}
+						opts.EC.Logger.Errorf("skipping applying migrations for database %s, encountered: \n%v", opts.Source.Name, err)
+						continue
+					}
+					opts.EC.Logger.Infof("applied migrations on database: %s", opts.Source.Name)
+				}
+			} else {
+				if !opts.dryRun {
+					opts.EC.Spin("Applying migrations...")
+				}
+				err := opts.Run()
+				opts.EC.Spinner.Stop()
+				if err != nil {
+					if err == migrate.ErrNoChange {
 						opts.EC.Logger.Info("nothing to apply")
 						return nil
 					}
+					// check if the returned error is a directory not found error
+					// ie might be because  a migrations/<source_name> directory is not found
+					// if so skip this
+					if e, ok := err.(*errDatabaseMigrationDirectoryNotFound); ok {
+						return fmt.Errorf("applying migrations on database %s: %w", opts.Source.Name, e)
+					}
+					if e, ok := err.(*os.PathError); ok {
+						// If Op is first, then log No migrations to apply
+						if e.Op == "first" {
+							opts.EC.Logger.Info("nothing to apply")
+							return nil
+						}
+					}
+					return fmt.Errorf("apply failed\n%w", err)
 				}
-				return fmt.Errorf("apply failed\n%w", err)
-			}
-			if !opts.dryRun {
-				opts.EC.Logger.Info("migrations applied")
+				if !opts.dryRun {
+					opts.EC.Logger.Info("migrations applied")
+				}
 			}
 			return nil
 		},
@@ -103,6 +158,7 @@ func newMigrateApplyCmd(ec *cli.ExecutionContext) *cobra.Command {
 	f.StringVar(&opts.MigrationType, "type", "up", "type of migration (up, down) to be used with version flag")
 
 	f.BoolVar(&opts.dryRun, "dry-run", false, "print the names of migrations which are going to be applied")
+	f.BoolVar(&opts.allDatabases, "all-databases", false, "set this flag to attempt to apply migrations on all databases present on server")
 	return migrateApplyCmd
 }
 
@@ -118,9 +174,26 @@ type MigrateApplyOptions struct {
 	SkipExecution bool
 	dryRun        bool
 	Source        cli.Source
+	allDatabases  bool
+}
+type errDatabaseMigrationDirectoryNotFound struct {
+	message string
 }
 
+func (e *errDatabaseMigrationDirectoryNotFound) Error() string {
+	return e.message
+}
 func (o *MigrateApplyOptions) Run() error {
+	if o.EC.Config.Version >= cli.V3 {
+		// check if  a migrations directory exists for source in project
+		migrationDirectory := filepath.Join(o.EC.MigrationDir, o.Source.Name)
+		if f, err := os.Stat(migrationDirectory); err != nil || f == nil {
+			return &errDatabaseMigrationDirectoryNotFound{fmt.Sprintf("expected to find a migrations directory for database %s in %s, but encountered error: %s", o.Source.Name, o.EC.MigrationDir, err.Error())}
+		}
+	}
+	if o.allDatabases && (len(o.GotoVersion) > 0 || len(o.VersionMigration) > 0) {
+		return fmt.Errorf("cannot use --goto or --version in conjunction with --all-databases")
+	}
 	migrationType, step, err := getMigrationTypeAndStep(o.UpMigration, o.DownMigration, o.VersionMigration, o.MigrationType, o.GotoVersion, o.SkipExecution)
 	if err != nil {
 		return errors.Wrap(err, "error validating flags")

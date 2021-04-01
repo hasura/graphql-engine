@@ -12,11 +12,11 @@ var (
 	Hostname        = "localhost"
 	BaseURL         = fmt.Sprintf("http://%s", Hostname)
 	MSSQLPassword   = "MSSQLp@ssw0rd"
-	SkipDockerTests = func() string {
+	SkipDockerTests = func() bool {
 		if len(os.Getenv("CI")) > 0 {
 			// skip in CI
-			return "true"
+			return true
 		}
-		return "false"
+		return false
 	}()
 )

@@ -9,7 +9,6 @@ require (
 	github.com/andybalholm/cascadia v1.1.0 // indirect
 	github.com/aryann/difflib v0.0.0-20170710044230-e206f873d14a
 	github.com/asaskevich/govalidator v0.0.0-20190424111038-f61b66f89f4a // indirect
-	github.com/aws/aws-sdk-go v1.25.50 // indirect
 	github.com/briandowns/spinner v1.8.0
 	github.com/denisenkom/go-mssqldb v0.0.0-20190515213511-eb9f6a1743f3
 	github.com/disintegration/imaging v1.6.2 // indirect
@@ -24,7 +23,6 @@ require (
 	github.com/gofrs/uuid v3.2.0+incompatible
 	github.com/gorilla/sessions v1.2.0 // indirect
 	github.com/gosimple/slug v1.9.0 // indirect
-	github.com/jinzhu/configor v1.1.1 // indirect
 	github.com/jinzhu/gorm v1.9.11 // indirect
 	github.com/kardianos/osext v0.0.0-20190222173326-2bc1f35cddc0
 	github.com/lib/pq v1.1.1
@@ -55,9 +53,9 @@ require (
 	github.com/sirupsen/logrus v1.4.2
 	github.com/skratchdot/open-golang v0.0.0-20190402232053-79abb63cd66e
 	github.com/spf13/afero v1.1.2
-	github.com/spf13/cobra v0.0.5
+	github.com/spf13/cobra v1.1.3
 	github.com/spf13/pflag v1.0.5
-	github.com/spf13/viper v1.6.1
+	github.com/spf13/viper v1.7.0
 	github.com/stretchr/testify v1.4.0
 	github.com/subosito/gotenv v1.2.0
 	github.com/theplant/cldr v0.0.0-20190423050709-9f76f7ce4ee8 // indirect
@@ -68,7 +66,7 @@ require (
 	golang.org/x/net v0.0.0-20200226121028-0de0cce0169b // indirect
 	golang.org/x/sys v0.0.0-20201117222635-ba5294a509c7 // indirect
 	gopkg.in/src-d/go-git.v4 v4.13.1
-	gopkg.in/yaml.v2 v2.2.7
+	gopkg.in/yaml.v2 v2.4.0
 	gopkg.in/yaml.v3 v3.0.0-20210107192922-496545a6307b
 	moul.io/http2curl v1.0.0 // indirect
 )
