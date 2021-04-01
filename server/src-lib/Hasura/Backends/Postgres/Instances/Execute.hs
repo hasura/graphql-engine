@@ -58,17 +58,18 @@ pgDBQueryPlan
   -> [HTTP.Header]
   -> UserInfo
   -> [G.Directive G.Name]
+  -> SourceName
   -> SourceConfig 'Postgres
   -> QueryDB 'Postgres (UnpreparedValue 'Postgres)
   -> m ExecutionStep
-pgDBQueryPlan env manager reqHeaders userInfo _directives sourceConfig qrf = do
+pgDBQueryPlan env manager reqHeaders userInfo _directives sourceName sourceConfig qrf = do
   (preparedQuery, PlanningSt _ _ planVals expectedVariables) <- flip runStateT initPlanningSt $ traverseQueryDB prepareWithPlan qrf
   validateSessionVariables expectedVariables $ _uiSession userInfo
   let (action, preparedSQL) = mkCurPlanTx env manager reqHeaders userInfo $ irToRootFieldPlan planVals preparedQuery
   pure
     $ ExecStepDB []
     . AB.mkAnyBackend
-    $ DBStepInfo sourceConfig preparedSQL action
+    $ DBStepInfo sourceName sourceConfig preparedSQL action
 
 
 -- mutation
@@ -164,10 +165,11 @@ pgDBMutationPlan
   -> [HTTP.Header]
   -> UserInfo
   -> Bool
+  -> SourceName
   -> SourceConfig 'Postgres
   -> MutationDB 'Postgres (UnpreparedValue 'Postgres)
   -> m ExecutionStep
-pgDBMutationPlan env manager reqHeaders userInfo stringifyNum sourceConfig mrf =
+pgDBMutationPlan env manager reqHeaders userInfo stringifyNum sourceName sourceConfig mrf =
     go <$> case mrf of
     MDBInsert s              -> convertInsert env userSession remoteJoinCtx s stringifyNum
     MDBUpdate s              -> convertUpdate env userSession remoteJoinCtx s stringifyNum
@@ -176,7 +178,8 @@ pgDBMutationPlan env manager reqHeaders userInfo stringifyNum sourceConfig mrf =
   where
     userSession = _uiSession userInfo
     remoteJoinCtx = (manager, reqHeaders, userInfo)
-    go = ExecStepDB [] . AB.mkAnyBackend . DBStepInfo sourceConfig Nothing
+    go = ExecStepDB [] . AB.mkAnyBackend . DBStepInfo sourceName sourceConfig Nothing
+
 
 -- subscription
 
@@ -186,10 +189,11 @@ pgDBSubscriptionPlan
      , MonadIO m
      )
   => UserInfo
+  -> SourceName
   -> SourceConfig 'Postgres
   -> InsOrdHashMap G.Name (QueryDB 'Postgres (UnpreparedValue 'Postgres))
   -> m (LiveQueryPlan 'Postgres (MultiplexedQuery 'Postgres))
-pgDBSubscriptionPlan userInfo sourceConfig unpreparedAST = do
+pgDBSubscriptionPlan userInfo _sourceName sourceConfig unpreparedAST = do
   (preparedAST, PGL.QueryParametersInfo{..}) <- flip runStateT mempty $
     for unpreparedAST $ traverseQueryDB PGL.resolveMultiplexedValue
   let multiplexedQuery = PGL.mkMultiplexedQuery preparedAST

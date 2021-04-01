@@ -5,6 +5,7 @@ module Hasura.GraphQL.Transport.HTTP
   , MonadExecuteQuery(..)
   , runGQ
   , runGQBatched
+  , coalescePostgresMutations
   , extractFieldFromResponse
   , buildRaw
   -- * imported from HTTP.Protocol; required by pro
@@ -23,43 +24,44 @@ module Hasura.GraphQL.Transport.HTTP
 
 import           Hasura.Prelude
 
-import qualified Data.Aeson                             as J
-import qualified Data.Aeson.Ordered                     as JO
-import qualified Data.ByteString.Lazy                   as LBS
-import qualified Data.Environment                       as Env
-import qualified Data.HashMap.Strict.InsOrd             as OMap
-import qualified Data.Text                              as T
-import qualified Language.GraphQL.Draft.Syntax          as G
-import qualified Network.HTTP.Types                     as HTTP
-import qualified Network.Wai.Extended                   as Wai
+import qualified Data.Aeson                                   as J
+import qualified Data.Aeson.Ordered                           as JO
+import qualified Data.ByteString.Lazy                         as LBS
+import qualified Data.Environment                             as Env
+import qualified Data.HashMap.Strict.InsOrd                   as OMap
+import qualified Data.Text                                    as T
+import qualified Language.GraphQL.Draft.Syntax                as G
+import qualified Network.HTTP.Types                           as HTTP
+import qualified Network.Wai.Extended                         as Wai
 
-import           Control.Lens                           (toListOf)
-import           Control.Monad.Morph                    (hoist)
-import           Control.Monad.Trans.Control            (MonadBaseControl)
+import           Control.Lens                                 (toListOf)
+import           Control.Monad.Morph                          (hoist)
+import           Control.Monad.Trans.Control                  (MonadBaseControl)
 
-import qualified Hasura.GraphQL.Execute                 as E
-import qualified Hasura.GraphQL.Execute.Action          as EA
-import qualified Hasura.GraphQL.Execute.Backend         as EB
-import qualified Hasura.Logging                         as L
-import qualified Hasura.SQL.AnyBackend                  as AB
-import qualified Hasura.Server.Telemetry.Counters       as Telem
-import qualified Hasura.Tracing                         as Tracing
+import qualified Hasura.GraphQL.Execute                       as E
+import qualified Hasura.GraphQL.Execute.Action                as EA
+import qualified Hasura.GraphQL.Execute.Backend               as EB
+import qualified Hasura.Logging                               as L
+import qualified Hasura.SQL.AnyBackend                        as AB
+import qualified Hasura.Server.Telemetry.Counters             as Telem
+import qualified Hasura.Tracing                               as Tracing
 
+import           Hasura.Backends.Postgres.Instances.Transport (runPGMutationTransaction)
 import           Hasura.EncJSON
 import           Hasura.GraphQL.Context
-import           Hasura.GraphQL.Logging                 (MonadQueryLog)
-import           Hasura.GraphQL.Parser.Column           (UnpreparedValue (..))
+import           Hasura.GraphQL.Logging                       (MonadQueryLog)
+import           Hasura.GraphQL.Parser.Column                 (UnpreparedValue (..))
 import           Hasura.GraphQL.Transport.Backend
 import           Hasura.GraphQL.Transport.HTTP.Protocol
-import           Hasura.GraphQL.Transport.Instances     ()
+import           Hasura.GraphQL.Transport.Instances           ()
 import           Hasura.HTTP
 import           Hasura.Metadata.Class
 import           Hasura.RQL.Types
 import           Hasura.Server.Init.Config
-import           Hasura.Server.Types                    (RequestId)
-import           Hasura.Server.Version                  (HasVersion)
+import           Hasura.Server.Types                          (RequestId)
+import           Hasura.Server.Version                        (HasVersion)
 import           Hasura.Session
-import           Hasura.Tracing                         (MonadTrace, TraceT, trace)
+import           Hasura.Tracing                               (MonadTrace, TraceT, trace)
 
 
 data QueryCacheKey = QueryCacheKey
@@ -226,7 +228,7 @@ runGQ env logger reqId userInfo ipAddress reqHeaders queryType reqUnparsed = do
               E.ExecStepDB _headers exists -> doQErr $ do
                 (telemTimeIO_DT, resp) <-
                   AB.dispatchAnyBackend @BackendTransport exists
-                    \(EB.DBStepInfo sourceConfig genSql tx) ->
+                    \(EB.DBStepInfo _ sourceConfig genSql tx) ->
                         runDBQuery
                           reqId
                           reqUnparsed
@@ -244,34 +246,59 @@ runGQ env logger reqId userInfo ipAddress reqHeaders queryType reqUnparsed = do
                 pure $ ResultsFragment time Telem.Empty r []
               E.ExecStepRaw json ->
                 buildRaw json
-            out@(_, _, _, HttpResponse responseData _) <- buildResult Telem.Query conclusion responseHeaders
+            out@(_, _, _, HttpResponse responseData _) <- buildResultFromFragments Telem.Query conclusion responseHeaders
             Tracing.interpTraceT (liftEitherM . runExceptT) $ cacheStore cacheKey $ snd responseData
             pure out
 
       E.MutationExecutionPlan mutationPlans -> do
-        conclusion <- runExceptT $ forWithKey mutationPlans $ \fieldName -> \case
-          E.ExecStepDB responseHeaders exists -> doQErr $ do
-            (telemTimeIO_DT, resp) <-
-              AB.dispatchAnyBackend @BackendTransport exists
-                \(EB.DBStepInfo sourceConfig genSql tx) ->
-                    runDBMutation
-                      reqId
-                      reqUnparsed
-                      fieldName
-                      userInfo
-                      logger
-                      sourceConfig
-                      tx
-                      genSql
-            return $ ResultsFragment telemTimeIO_DT Telem.Local resp responseHeaders
-          E.ExecStepRemote rsi gqlReq ->
-            runRemoteGQ httpManager fieldName rsi gqlReq
-          E.ExecStepAction aep -> do
-            (time, (r, hdrs)) <- doQErr $ EA.runActionExecution aep
-            pure $ ResultsFragment time Telem.Empty r $ fromMaybe [] hdrs
-          E.ExecStepRaw json ->
-            buildRaw json
-        buildResult Telem.Mutation conclusion []
+        {- Note [Backwards-compatible transaction optimisation]
+
+           For backwards compatibility, we perform the following optimisation: if all mutation steps
+           are going to the same source, and that source is Postgres, we group all mutations as a
+           transaction. This is a somewhat dangerous beaviour, and we would prefer, in the future,
+           to make transactionality explicit rather than implicit and context-dependent.
+        -}
+        case coalescePostgresMutations mutationPlans of
+          -- we are in the aforementioned case; we circumvent the normal process
+          Just (sourceConfig, pgMutations) -> do
+            resp <- runExceptT $ doQErr $
+              runPGMutationTransaction reqId reqUnparsed userInfo logger sourceConfig pgMutations
+            -- we do not construct result fragments since we have only one result
+            buildResult Telem.Mutation resp \(telemTimeIO_DT, results) ->
+              let responseData = Right $ encJToLBS $ encJFromInsOrdHashMap $ OMap.mapKeys G.unName results
+              in  ( Telem.Mutation
+                  , telemTimeIO_DT
+                  , Telem.Local
+                  , HttpResponse
+                    (Just responseData, encodeGQResp responseData)
+                    []
+                  )
+
+          -- we are not in the transaction case; proceeding normally
+          Nothing -> do
+            conclusion <- runExceptT $ forWithKey mutationPlans $ \fieldName -> \case
+              E.ExecStepDB responseHeaders exists -> doQErr $ do
+                (telemTimeIO_DT, resp) <-
+                  AB.dispatchAnyBackend @BackendTransport exists
+                    \(EB.DBStepInfo _ sourceConfig genSql tx) ->
+                        runDBMutation
+                          reqId
+                          reqUnparsed
+                          fieldName
+                          userInfo
+                          logger
+                          sourceConfig
+                          tx
+                          genSql
+                return $ ResultsFragment telemTimeIO_DT Telem.Local resp responseHeaders
+              E.ExecStepRemote rsi gqlReq ->
+                runRemoteGQ httpManager fieldName rsi gqlReq
+              E.ExecStepAction aep -> do
+                (time, (r, hdrs)) <- doQErr $ EA.runActionExecution aep
+                pure $ ResultsFragment time Telem.Empty r $ fromMaybe [] hdrs
+              E.ExecStepRaw json ->
+                buildRaw json
+            buildResultFromFragments Telem.Mutation conclusion []
 
       E.SubscriptionExecutionPlan _sub ->
         throw400 UnexpectedPayload "subscriptions are not supported over HTTP, use websockets instead"
@@ -293,24 +320,60 @@ runGQ env logger reqId userInfo ipAddress reqHeaders queryType reqUnparsed = do
       let filteredHeaders = filter ((== "Set-Cookie") . fst) remoteResponseHeaders
       pure $ ResultsFragment telemTimeIO_DT Telem.Remote (JO.toEncJSON value) filteredHeaders
 
+    buildResultFromFragments
+       :: Telem.QueryType
+       -> Either (Either GQExecError QErr) (InsOrdHashMap G.Name ResultsFragment)
+       -> HTTP.ResponseHeaders
+       -> m (Telem.QueryType, DiffTime, Telem.Locality, HttpResponse (Maybe GQResponse, EncJSON))
+    buildResultFromFragments telemType fragments cacheHeaders =
+      buildResult telemType fragments \results ->
+        let responseData = Right $ encJToLBS $ encJFromInsOrdHashMap $ rfResponse <$> OMap.mapKeys G.unName results
+        in  ( telemType
+            , sum (fmap rfTimeIO results)
+            , foldMap rfLocality results
+            , HttpResponse
+              (Just responseData, encodeGQResp responseData)
+              (cacheHeaders <> foldMap rfHeaders results)
+            )
+
     buildResult
       :: Telem.QueryType
-      -> Either (Either GQExecError QErr) (InsOrdHashMap G.Name ResultsFragment)
-      -> HTTP.ResponseHeaders
+      -> Either (Either GQExecError QErr) a
+      -> (a -> (Telem.QueryType, DiffTime, Telem.Locality, HttpResponse (Maybe GQResponse, EncJSON)))
       -> m (Telem.QueryType, DiffTime, Telem.Locality, HttpResponse (Maybe GQResponse, EncJSON))
-    buildResult telemType (Left (Left err)) _ = pure
-      ( telemType , 0 , Telem.Remote , HttpResponse (Just (Left err), encodeGQResp $ Left err) [])
-    buildResult _telemType (Left (Right err)) _ = throwError err
-    buildResult telemType (Right results) cacheHeaders = do
-      let responseData = pure $ encJToLBS $ encJFromInsOrdHashMap $ rfResponse <$> OMap.mapKeys G.unName results
-      pure
-        ( telemType
-        , sum (fmap rfTimeIO results)
-        , foldMap rfLocality results
-        , HttpResponse
-          (Just responseData, encodeGQResp responseData)
-          (cacheHeaders <> foldMap rfHeaders results)
-        )
+    buildResult telemType result f = case result of
+      Right a          -> pure $ f a
+      Left (Right err) -> throwError err
+      Left (Left  err) -> pure ( telemType
+                               , 0
+                               , Telem.Remote
+                               , HttpResponse
+                                   (Just (Left err), encodeGQResp $ Left err)
+                                   []
+                               )
+
+coalescePostgresMutations
+  :: EB.ExecutionPlan
+  -> Maybe ( SourceConfig 'Postgres
+           , InsOrdHashMap G.Name (EB.DBStepInfo 'Postgres)
+           )
+coalescePostgresMutations plan = do
+  -- we extract the name and config of the first mutation root, if any
+  (oneSourceName, oneSourceConfig) <- case toList plan of
+    (E.ExecStepDB _ exists:_) -> AB.unpackAnyBackend @'Postgres exists <&> \dbsi ->
+      ( EB.dbsiSourceName   dbsi
+      , EB.dbsiSourceConfig dbsi
+      )
+    _                         -> Nothing
+  -- we then test whether all mutations are going to that same first source
+  -- and that it is Postgres
+  mutations <- for plan \case
+    E.ExecStepDB _ exists -> do
+      dbStepInfo <- AB.unpackAnyBackend @'Postgres exists
+      guard $ oneSourceName == EB.dbsiSourceName dbStepInfo
+      Just dbStepInfo
+    _ -> Nothing
+  Just (oneSourceConfig, mutations)
 
 extractFieldFromResponse
   :: Monad m => Text -> LBS.ByteString -> ExceptT (Either GQExecError QErr) m JO.Value
@@ -377,4 +440,3 @@ runGQBatched env logger reqId responseErrorsConfig userInfo ipAddress reqHdrs qu
       removeHeaders <$> traverse (try . (fmap . fmap) snd . runGQ env logger reqId userInfo ipAddress reqHdrs queryType) reqs
   where
     try = flip catchError (pure . Left) . fmap Right
-

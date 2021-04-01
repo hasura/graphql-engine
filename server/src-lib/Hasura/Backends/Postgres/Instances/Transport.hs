@@ -1,11 +1,14 @@
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 
-module Hasura.Backends.Postgres.Instances.Transport () where
+module Hasura.Backends.Postgres.Instances.Transport
+  ( runPGMutationTransaction
+  ) where
 
 import           Hasura.Prelude
 
 import qualified Data.Aeson                                 as J
 import qualified Data.ByteString                            as B
+import qualified Data.HashMap.Strict.InsOrd                 as OMap
 import qualified Database.PG.Query                          as Q
 import qualified Language.GraphQL.Draft.Syntax              as G
 
@@ -84,7 +87,7 @@ runPGMutation reqId query fieldName userInfo logger sourceConfig tx _genSql =  d
       . runLazyTx (_pscExecCtx sourceConfig) Q.ReadWrite
       . withTraceContext ctx
       . withUserInfo userInfo
-      )  tx
+      ) tx
 
 runPGSubscription
   :: ( MonadIO m
@@ -110,3 +113,32 @@ mkQueryLog gqlQuery fieldName preparedSql requestId =
   where
     generatedQuery = preparedSql <&> \(EQ.PreparedSql query args _) ->
       GeneratedQuery (Q.getQueryText query) (J.toJSON $ pgScalarValueToJson . snd <$> args)
+
+
+-- ad-hoc transaction optimisation
+-- see Note [Backwards-compatible transaction optimisation]
+
+runPGMutationTransaction
+  :: ( MonadIO m
+     , MonadError QErr m
+     , MonadQueryLog m
+     , MonadTrace m
+     )
+  => RequestId
+  -> GQLReqUnparsed
+  -> UserInfo
+  -> L.Logger L.Hasura
+  -> SourceConfig 'Postgres
+  -> InsOrdHashMap G.Name (DBStepInfo 'Postgres)
+  -> m (DiffTime, InsOrdHashMap G.Name EncJSON)
+runPGMutationTransaction reqId query userInfo logger sourceConfig mutations = do
+  logQueryLog logger $ mkQueryLog query $$(G.litName "transaction") Nothing reqId
+  ctx <- Tracing.currentContext
+  withElapsedTime $ do
+    Tracing.interpTraceT (
+      liftEitherM . liftIO . runExceptT
+      . runLazyTx (_pscExecCtx sourceConfig) Q.ReadWrite
+      . withTraceContext ctx
+      . withUserInfo userInfo
+      ) $ flip OMap.traverseWithKey mutations \fieldName dbsi ->
+            trace ("Postgres Mutation for root field " <>> fieldName) $ dbsiAction dbsi

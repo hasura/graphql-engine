@@ -3,6 +3,31 @@
 ## Next release
 (Add entries here in the order of: server, console, cli, docs, others)
 
+### Transactions for Postgres mutations
+
+With v2 came the introduction of heterogeneous execution: in one query or mutation, you can target different sources: it is possible, for instance, in one mutation, to both insert a row in a table in a table on Postgres and another row in another table on MSSQL:
+
+```
+mutation {
+  // goes to Postgres
+  insert_author_one(object: {name: "Simon Peyton Jones"}) {
+    name
+  }
+
+  // goes to MSSQL
+  insert_publication_one(object: {name: "Template meta-programming for Haskell"}) {
+    name
+  }
+}
+```
+
+However, heterogeneous execution has a cost: we can no longer run mutations as a transaction, given that each part may target a different database. This is a regression compared to v1.
+
+While we want to fix this by offering, in the future, an explicit API that allows our users to *choose* when a series of mutations are executed as a transaction, for now we are introducing the following optimisation: when all the fields in a mutation target the same Postgres source, we will run them as a transaction like we would have in v1.
+
+
+### Bug fixes and improvements
+
 - server: add `--async-actions-fetch-interval` command-line flag and `HASURA_GRAPHQL_ASYNC_ACTIONS_FETCH_INTERVAL` environment variable for configuring
           async actions re-fetch interval from metadata storage (fix #6460)
 - server: add 'replace_configuration' option (default: false) in the add source API payload

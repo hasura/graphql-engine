@@ -81,10 +81,10 @@ convertMutationSelectionSet env logger gqlContext SQLGenCtx{stringifyNum} userIn
 
   -- Transform the RQL AST into a prepared SQL query
   txs <- for unpreparedQueries \case
-    RFDB _ exists ->
+    RFDB sourceName exists ->
       AB.dispatchAnyBackend @BackendExecute exists
         \(SourceConfigWith sourceConfig (MDBR db)) ->
-           mkDBMutationPlan env manager reqHeaders userInfo stringifyNum sourceConfig db
+           mkDBMutationPlan env manager reqHeaders userInfo stringifyNum sourceName sourceConfig db
     RFRemote remoteField -> do
       RemoteFieldG remoteSchemaInfo resolvedRemoteField <- resolveRemoteField userInfo remoteField
       pure $ buildExecStepRemote remoteSchemaInfo G.OperationTypeMutation $ [G.SelectionField resolvedRemoteField]

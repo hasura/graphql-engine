@@ -24,6 +24,7 @@ import           Hasura.GraphQL.Execute.LiveQuery.Plan
 import           Hasura.GraphQL.Parser                  hiding (Type)
 import           Hasura.RQL.IR.RemoteJoin
 import           Hasura.RQL.Types.Backend
+import           Hasura.RQL.Types.Common
 import           Hasura.RQL.Types.Error
 import           Hasura.RQL.Types.RemoteSchema
 import           Hasura.SQL.Backend
@@ -55,6 +56,7 @@ class ( Backend b
     -> [HTTP.Header]
     -> UserInfo
     -> [G.Directive G.Name]
+    -> SourceName
     -> SourceConfig b
     -> QueryDB b (UnpreparedValue b)
     -> m ExecutionStep
@@ -68,6 +70,7 @@ class ( Backend b
     -> [HTTP.Header]
     -> UserInfo
     -> Bool
+    -> SourceName
     -> SourceConfig b
     -> MutationDB b (UnpreparedValue b)
     -> m ExecutionStep
@@ -77,15 +80,17 @@ class ( Backend b
        , MonadIO m
        )
     => UserInfo
+    -> SourceName
     -> SourceConfig b
     -> InsOrdHashMap G.Name (QueryDB b (UnpreparedValue b))
     -> m (LiveQueryPlan b (MultiplexedQuery b))
 
-data DBStepInfo b =
-  DBStepInfo
-    (SourceConfig b)
-    (Maybe (PreparedQuery b))
-    (ExecutionMonad b EncJSON)
+data DBStepInfo b = DBStepInfo
+  { dbsiSourceName    :: SourceName
+  , dbsiSourceConfig  :: SourceConfig b
+  , dbsiPreparedQuery :: Maybe (PreparedQuery b)
+  , dbsiAction        :: ExecutionMonad b EncJSON
+  }
 
 -- | One execution step to processing a GraphQL query (e.g. one root field).
 data ExecutionStep where
@@ -119,5 +124,5 @@ getRemoteSchemaInfo
      . BackendExecute b
     => DBStepInfo b
     -> [RemoteSchemaInfo]
-getRemoteSchemaInfo (DBStepInfo _ genSql _) =
+getRemoteSchemaInfo (DBStepInfo _ _ genSql _) =
     IR._rjRemoteSchema <$> maybe [] (getRemoteJoins @b) genSql

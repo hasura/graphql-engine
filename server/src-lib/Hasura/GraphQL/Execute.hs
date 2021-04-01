@@ -239,7 +239,7 @@ buildSubscriptionPlan userInfo rootFields = do
         \(C.SourceConfigWith (sourceConfig :: SourceConfig b) _) -> do
            qdbs <- traverse (checkField @b sourceName) allFields
            LQP . AB.mkAnyBackend . MultiplexedLiveQueryPlan
-             <$> EB.mkDBSubscriptionPlan userInfo sourceConfig qdbs
+             <$> EB.mkDBSubscriptionPlan userInfo sourceName sourceConfig qdbs
       pure (sourceName, lqp)
 
     checkField

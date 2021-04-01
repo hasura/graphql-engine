@@ -57,10 +57,11 @@ msDBQueryPlan
   -> [HTTP.Header]
   -> UserInfo
   -> [G.Directive G.Name]
+  -> SourceName
   -> SourceConfig 'MSSQL
   -> QueryDB 'MSSQL (UnpreparedValue 'MSSQL)
   -> m ExecutionStep
-msDBQueryPlan _env _manager _reqHeaders userInfo _directives sourceConfig qrf = do
+msDBQueryPlan _env _manager _reqHeaders userInfo _directives sourceName sourceConfig qrf = do
   select <- fromSelect <$> planNoPlan userInfo qrf
   let queryString = ODBC.renderQuery $ toQueryPretty select
       pool  = _mscConnectionPool sourceConfig
@@ -68,7 +69,7 @@ msDBQueryPlan _env _manager _reqHeaders userInfo _directives sourceConfig qrf = 
   pure
     $ ExecStepDB []
     . AB.mkAnyBackend
-    $ DBStepInfo sourceConfig (Just queryString) odbcQuery
+    $ DBStepInfo sourceName sourceConfig (Just queryString) odbcQuery
 
 -- mutation
 
@@ -81,10 +82,11 @@ msDBMutationPlan
   -> [HTTP.Header]
   -> UserInfo
   -> Bool
+  -> SourceName
   -> SourceConfig 'MSSQL
   -> MutationDB 'MSSQL (UnpreparedValue 'MSSQL)
   -> m ExecutionStep
-msDBMutationPlan _env _manager _reqHeaders _userInfo _stringifyNum _sourceConfig _mrf =
+msDBMutationPlan _env _manager _reqHeaders _userInfo _stringifyNum _sourceName _sourceConfig _mrf =
   throw500 "mutations are not supported in MSSQL; this should be unreachable"
 
 
@@ -95,10 +97,11 @@ msDBSubscriptionPlan
      ( MonadError QErr m
      )
   => UserInfo
+  -> SourceName
   -> SourceConfig 'MSSQL
   -> InsOrdHashMap G.Name (QueryDB 'MSSQL (UnpreparedValue 'MSSQL))
   -> m (LiveQueryPlan 'MSSQL (MultiplexedQuery 'MSSQL))
-msDBSubscriptionPlan userInfo sourceConfig rootFields = do
+msDBSubscriptionPlan userInfo _sourceName sourceConfig rootFields = do
   -- WARNING: only keeping the first root field for now!
   query <- traverse mkQuery $ head $ OMap.toList rootFields
   let roleName = _uiRole userInfo

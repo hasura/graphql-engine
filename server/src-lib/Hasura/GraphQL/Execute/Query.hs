@@ -79,10 +79,10 @@ convertQuerySelSet env logger gqlContext userInfo manager reqHeaders directives 
   -- Transform the query plans into an execution plan
   let usrVars = _uiSession userInfo
   executionPlan <- for unpreparedQueries \case
-    RFDB _ exists ->
+    RFDB sourceName exists ->
       AB.dispatchAnyBackend @BackendExecute exists
         \(SourceConfigWith sourceConfig (QDBR db)) ->
-           mkDBQueryPlan env manager reqHeaders userInfo directives sourceConfig db
+           mkDBQueryPlan env manager reqHeaders userInfo directives sourceName sourceConfig db
     RFRemote rf -> do
       RemoteFieldG remoteSchemaInfo remoteField <- for rf $ resolveRemoteVariable userInfo
       pure $ buildExecStepRemote remoteSchemaInfo G.OperationTypeQuery [G.SelectionField remoteField]

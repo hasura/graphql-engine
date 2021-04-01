@@ -17,69 +17,72 @@ module Hasura.GraphQL.Transport.WebSocket
 
 import           Hasura.Prelude
 
-import qualified Control.Concurrent.Async.Lifted.Safe        as LA
-import qualified Control.Concurrent.STM                      as STM
-import qualified Control.Monad.Trans.Control                 as MC
-import qualified Data.Aeson                                  as J
-import qualified Data.Aeson.Casing                           as J
-import qualified Data.Aeson.Ordered                          as JO
-import qualified Data.Aeson.TH                               as J
-import qualified Data.ByteString.Lazy                        as LBS
-import qualified Data.CaseInsensitive                        as CI
-import qualified Data.Environment                            as Env
-import qualified Data.HashMap.Strict                         as Map
-import qualified Data.HashMap.Strict.InsOrd                  as OMap
-import qualified Data.List.NonEmpty                          as NE
-import qualified Data.Text                                   as T
-import qualified Data.Text.Encoding                          as TE
-import qualified Data.Time.Clock                             as TC
-import qualified Language.GraphQL.Draft.Syntax               as G
+import qualified Control.Concurrent.Async.Lifted.Safe         as LA
+import qualified Control.Concurrent.STM                       as STM
+import qualified Control.Monad.Trans.Control                  as MC
+import qualified Data.Aeson                                   as J
+import qualified Data.Aeson.Casing                            as J
+import qualified Data.Aeson.Ordered                           as JO
+import qualified Data.Aeson.TH                                as J
+import qualified Data.ByteString.Lazy                         as LBS
+import qualified Data.CaseInsensitive                         as CI
+import qualified Data.Environment                             as Env
+import qualified Data.HashMap.Strict                          as Map
+import qualified Data.HashMap.Strict.InsOrd                   as OMap
+import qualified Data.List.NonEmpty                           as NE
+import qualified Data.Text                                    as T
+import qualified Data.Text.Encoding                           as TE
+import qualified Data.Time.Clock                              as TC
+import qualified Language.GraphQL.Draft.Syntax                as G
 import qualified ListT
-import qualified Network.HTTP.Client                         as H
-import qualified Network.HTTP.Types                          as H
-import qualified Network.Wai.Extended                        as Wai
-import qualified Network.WebSockets                          as WS
-import qualified StmContainers.Map                           as STMMap
+import qualified Network.HTTP.Client                          as H
+import qualified Network.HTTP.Types                           as H
+import qualified Network.Wai.Extended                         as Wai
+import qualified Network.WebSockets                           as WS
+import qualified StmContainers.Map                            as STMMap
 
-import           Control.Concurrent.Extended                 (sleep)
+import           Control.Concurrent.Extended                  (sleep)
 import           Control.Exception.Lifted
 import           Data.String
 #ifndef PROFILING
 import           GHC.AssertNF
 #endif
 
-import qualified Hasura.GraphQL.Execute                      as E
-import qualified Hasura.GraphQL.Execute.Action               as EA
-import qualified Hasura.GraphQL.Execute.Backend              as EB
-import qualified Hasura.GraphQL.Execute.LiveQuery.Poll       as LQ
-import qualified Hasura.GraphQL.Execute.LiveQuery.State      as LQ
-import qualified Hasura.GraphQL.Transport.WebSocket.Server   as WS
-import qualified Hasura.Logging                              as L
-import qualified Hasura.SQL.AnyBackend                       as AB
-import qualified Hasura.Server.Telemetry.Counters            as Telem
-import qualified Hasura.Tracing                              as Tracing
+import qualified Hasura.GraphQL.Execute                       as E
+import qualified Hasura.GraphQL.Execute.Action                as EA
+import qualified Hasura.GraphQL.Execute.Backend               as EB
+import qualified Hasura.GraphQL.Execute.LiveQuery.Poll        as LQ
+import qualified Hasura.GraphQL.Execute.LiveQuery.State       as LQ
+import qualified Hasura.GraphQL.Transport.WebSocket.Server    as WS
+import qualified Hasura.Logging                               as L
+import qualified Hasura.SQL.AnyBackend                        as AB
+import qualified Hasura.Server.Telemetry.Counters             as Telem
+import qualified Hasura.Tracing                               as Tracing
 
+import           Hasura.Backends.Postgres.Instances.Transport (runPGMutationTransaction)
 import           Hasura.EncJSON
 import           Hasura.GraphQL.Logging
 import           Hasura.GraphQL.Transport.Backend
-import           Hasura.GraphQL.Transport.HTTP               (MonadExecuteQuery (..),
-                                                              QueryCacheKey (..),
-                                                              ResultsFragment (..), buildRaw,
-                                                              extractFieldFromResponse,
-                                                              filterVariablesFromQuery,
-                                                              runSessVarPred)
+import           Hasura.GraphQL.Transport.HTTP                (MonadExecuteQuery (..),
+                                                               QueryCacheKey (..),
+                                                               ResultsFragment (..), buildRaw,
+                                                               coalescePostgresMutations,
+                                                               extractFieldFromResponse,
+                                                               filterVariablesFromQuery,
+                                                               runSessVarPred)
 import           Hasura.GraphQL.Transport.HTTP.Protocol
-import           Hasura.GraphQL.Transport.Instances          ()
+import           Hasura.GraphQL.Transport.Instances           ()
 import           Hasura.GraphQL.Transport.WebSocket.Protocol
 import           Hasura.Metadata.Class
 import           Hasura.RQL.Types
-import           Hasura.Server.Auth                          (AuthMode, UserAuthentication,
-                                                              resolveUserInfo)
+import           Hasura.Server.Auth                           (AuthMode, UserAuthentication,
+                                                               resolveUserInfo)
 import           Hasura.Server.Cors
-import           Hasura.Server.Init.Config                   (KeepAliveDelay (..))
-import           Hasura.Server.Types                         (RequestId, getRequestId)
-import           Hasura.Server.Version                       (HasVersion)
+import           Hasura.Server.Init.Config                    (KeepAliveDelay (..))
+import           Hasura.Server.Types                          (RequestId, getRequestId)
+import           Hasura.Server.Version                        (HasVersion)
 import           Hasura.Session
+
 
 -- | 'LQ.LiveQueryId' comes from 'Hasura.GraphQL.Execute.LiveQuery.State.addLiveQuery'. We use
 -- this to track a connection's operations so we can remove them from 'LiveQueryState', and
@@ -393,7 +396,7 @@ onStart env serverEnv wsConn (StartMsg opId q) = catchAndIgnore $ do
             E.ExecStepDB _headers exists -> doQErr $ do
               (telemTimeIO_DT, resp) <-
                 AB.dispatchAnyBackend @BackendTransport exists
-                  \(EB.DBStepInfo sourceConfig genSql tx) ->
+                  \(EB.DBStepInfo _ sourceConfig genSql tx) ->
                      runDBQuery
                        requestId
                        q
@@ -411,7 +414,7 @@ onStart env serverEnv wsConn (StartMsg opId q) = catchAndIgnore $ do
               pure $ ResultsFragment time Telem.Empty r []
             E.ExecStepRaw json ->
               buildRaw json
-          buildResult Telem.Query telemCacheHit timerTot requestId conclusion
+          buildResultFromFragments Telem.Query telemCacheHit timerTot requestId conclusion
           case conclusion of
             Left _        -> pure ()
             Right results -> Tracing.interpTraceT (withExceptT mempty) $
@@ -420,30 +423,49 @@ onStart env serverEnv wsConn (StartMsg opId q) = catchAndIgnore $ do
       liftIO $ sendCompleted (Just requestId)
 
     E.MutationExecutionPlan mutationPlan -> do
-      conclusion <- runExceptT $ forWithKey mutationPlan $ \fieldName -> \case
-        -- Ignoring response headers since we can't send them over WebSocket
-        E.ExecStepDB _responseHeaders exists -> doQErr $ do
-          (telemTimeIO_DT, resp) <-
-            AB.dispatchAnyBackend @BackendTransport exists
-              \(EB.DBStepInfo sourceConfig genSql tx) ->
-                   runDBMutation
-                     requestId
-                     q
-                     fieldName
-                     userInfo
-                     logger
-                     sourceConfig
-                     tx
-                     genSql
-          return $ ResultsFragment telemTimeIO_DT Telem.Local resp []
-        E.ExecStepAction actionExecPlan -> do
-          (time, (r, hdrs)) <- doQErr $ EA.runActionExecution actionExecPlan
-          pure $ ResultsFragment time Telem.Empty r $ fromMaybe [] hdrs
-        E.ExecStepRemote rsi gqlReq -> do
-          runRemoteGQ fieldName userInfo reqHdrs rsi gqlReq
-        E.ExecStepRaw json ->
-          buildRaw json
-      buildResult Telem.Query telemCacheHit timerTot requestId conclusion
+      -- See Note [Backwards-compatible transaction optimisation]
+      case coalescePostgresMutations mutationPlan of
+        -- we are in the aforementioned case; we circumvent the normal process
+        Just (sourceConfig, pgMutations) -> do
+          resp <- runExceptT $ doQErr $
+            runPGMutationTransaction requestId q userInfo logger sourceConfig pgMutations
+          -- we do not construct result fragments since we have only one result
+          buildResult requestId resp \(telemTimeIO_DT, results) -> do
+            let telemQueryType = Telem.Query
+                telemLocality  = Telem.Local
+                telemTimeIO    = convertDuration telemTimeIO_DT
+            telemTimeTot <- Seconds <$> timerTot
+            sendSuccResp (encJFromInsOrdHashMap $ OMap.mapKeys G.unName results) $
+              LQ.LiveQueryMetadata telemTimeIO_DT
+            -- Telemetry. NOTE: don't time network IO:
+            Telem.recordTimingMetric Telem.RequestDimensions{..} Telem.RequestTimings{..}
+
+        -- we are not in the transaction case; proceeding normally
+        Nothing -> do
+          conclusion <- runExceptT $ forWithKey mutationPlan $ \fieldName -> \case
+            -- Ignoring response headers since we can't send them over WebSocket
+            E.ExecStepDB _responseHeaders exists -> doQErr $ do
+              (telemTimeIO_DT, resp) <-
+                AB.dispatchAnyBackend @BackendTransport exists
+                  \(EB.DBStepInfo _ sourceConfig genSql tx) ->
+                       runDBMutation
+                         requestId
+                         q
+                         fieldName
+                         userInfo
+                         logger
+                         sourceConfig
+                         tx
+                         genSql
+              return $ ResultsFragment telemTimeIO_DT Telem.Local resp []
+            E.ExecStepAction actionExecPlan -> do
+              (time, (r, hdrs)) <- doQErr $ EA.runActionExecution actionExecPlan
+              pure $ ResultsFragment time Telem.Empty r $ fromMaybe [] hdrs
+            E.ExecStepRemote rsi gqlReq -> do
+              runRemoteGQ fieldName userInfo reqHdrs rsi gqlReq
+            E.ExecStepRaw json ->
+              buildRaw json
+          buildResultFromFragments Telem.Query telemCacheHit timerTot requestId conclusion
       liftIO $ sendCompleted (Just requestId)
 
     E.SubscriptionExecutionPlan subExec -> do
@@ -506,16 +528,26 @@ onStart env serverEnv wsConn (StartMsg opId q) = catchAndIgnore $ do
 
     telemTransport = Telem.WebSocket
 
-    buildResult _ _ _ _         (Left (Left  err)) = postExecErr' err
-    buildResult _ _ _ requestId (Left (Right err)) = postExecErr requestId err
-    buildResult telemQueryType telemCacheHit timerTot _ (Right results) = do
-      let telemLocality = foldMap rfLocality results
-          telemTimeIO   = convertDuration $ sum $ fmap rfTimeIO results
-      telemTimeTot <- Seconds <$> timerTot
-      sendSuccResp (encJFromInsOrdHashMap (fmap rfResponse (OMap.mapKeys G.unName results))) $
-        LQ.LiveQueryMetadata $ sum $ fmap rfTimeIO results
-      -- Telemetry. NOTE: don't time network IO:
-      Telem.recordTimingMetric Telem.RequestDimensions{..} Telem.RequestTimings{..}
+    buildResult
+      :: forall a
+       . RequestId
+      -> Either (Either GQExecError QErr) a
+      -> (a -> ExceptT () m ())
+      -> ExceptT () m ()
+    buildResult requestId r f = case r of
+      Left (Left  err) -> postExecErr' err
+      Left (Right err) -> postExecErr requestId err
+      Right results    -> f results
+
+    buildResultFromFragments telemQueryType telemCacheHit timerTot requestId r =
+      buildResult requestId r \results -> do
+        let telemLocality = foldMap rfLocality results
+            telemTimeIO   = convertDuration $ sum $ fmap rfTimeIO results
+        telemTimeTot <- Seconds <$> timerTot
+        sendSuccResp (encJFromInsOrdHashMap (fmap rfResponse (OMap.mapKeys G.unName results))) $
+          LQ.LiveQueryMetadata $ sum $ fmap rfTimeIO results
+        -- Telemetry. NOTE: don't time network IO:
+        Telem.recordTimingMetric Telem.RequestDimensions{..} Telem.RequestTimings{..}
 
     runRemoteGQ fieldName userInfo reqHdrs rsi gqlReq = do
       (telemTimeIO_DT, _respHdrs, resp) <-
