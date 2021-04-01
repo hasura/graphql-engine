@@ -7,9 +7,9 @@ import (
 
 	"github.com/hasura/graphql-engine/cli"
 	"github.com/hasura/graphql-engine/cli/internal/cliext"
-	cliextension "github.com/hasura/graphql-engine/cli/metadata/actions/cli_extension"
-	"github.com/hasura/graphql-engine/cli/metadata/actions/editor"
-	"github.com/hasura/graphql-engine/cli/metadata/actions/types"
+	cliextension "github.com/hasura/graphql-engine/cli/internal/metadataobject/actions/cli_extension"
+	"github.com/hasura/graphql-engine/cli/internal/metadataobject/actions/editor"
+	"github.com/hasura/graphql-engine/cli/internal/metadataobject/actions/types"
 	"github.com/hasura/graphql-engine/cli/util"
 	"github.com/hasura/graphql-engine/cli/version"
 	"github.com/pkg/errors"

@@ -7,18 +7,18 @@ import (
 	"path/filepath"
 	"strings"
 
-	crontriggers "github.com/hasura/graphql-engine/cli/metadata/cron_triggers"
-	"github.com/hasura/graphql-engine/cli/metadata/functions"
-	"github.com/hasura/graphql-engine/cli/metadata/sources"
-	"github.com/hasura/graphql-engine/cli/metadata/tables"
+	"github.com/hasura/graphql-engine/cli/internal/metadataobject"
+	crontriggers "github.com/hasura/graphql-engine/cli/internal/metadataobject/cron_triggers"
+	"github.com/hasura/graphql-engine/cli/internal/metadataobject/functions"
+	"github.com/hasura/graphql-engine/cli/internal/metadataobject/sources"
+	"github.com/hasura/graphql-engine/cli/internal/metadataobject/tables"
 
-	"github.com/hasura/graphql-engine/cli/metadata/actions"
-	"github.com/hasura/graphql-engine/cli/metadata/actions/types"
-	"github.com/hasura/graphql-engine/cli/metadata/allowlist"
-	"github.com/hasura/graphql-engine/cli/metadata/querycollections"
-	"github.com/hasura/graphql-engine/cli/metadata/remoteschemas"
-	metadataTypes "github.com/hasura/graphql-engine/cli/metadata/types"
-	metadataVersion "github.com/hasura/graphql-engine/cli/metadata/version"
+	"github.com/hasura/graphql-engine/cli/internal/metadataobject/actions"
+	actionMetadataFileTypes "github.com/hasura/graphql-engine/cli/internal/metadataobject/actions/types"
+	"github.com/hasura/graphql-engine/cli/internal/metadataobject/allowlist"
+	"github.com/hasura/graphql-engine/cli/internal/metadataobject/querycollections"
+	"github.com/hasura/graphql-engine/cli/internal/metadataobject/remoteschemas"
+	metadataVersion "github.com/hasura/graphql-engine/cli/internal/metadataobject/version"
 	"github.com/hasura/graphql-engine/cli/util"
 
 	"github.com/hasura/graphql-engine/cli"
@@ -206,7 +206,7 @@ func (o *InitOptions) createFiles() error {
 				Endpoint: "http://localhost:8080",
 			},
 			MetadataDirectory: "metadata",
-			ActionConfig: &types.ActionExecutionConfig{
+			ActionConfig: &actionMetadataFileTypes.ActionExecutionConfig{
 				Kind:                  "synchronous",
 				HandlerWebhookBaseURL: "http://localhost:3000",
 			},
@@ -247,7 +247,7 @@ func (o *InitOptions) createFiles() error {
 		o.EC.Version.GetServerFeatureFlags()
 
 		// create metadata files
-		plugins := make(metadataTypes.MetadataPlugins, 0)
+		plugins := make(metadataobject.Objects, 0)
 		plugins = append(plugins, metadataVersion.New(o.EC, o.EC.MetadataDir))
 		plugins = append(plugins, querycollections.New(o.EC, o.EC.MetadataDir))
 		plugins = append(plugins, allowlist.New(o.EC, o.EC.MetadataDir))

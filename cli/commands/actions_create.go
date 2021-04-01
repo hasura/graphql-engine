@@ -9,8 +9,8 @@ import (
 	"github.com/hasura/graphql-engine/cli/migrate"
 
 	"github.com/hasura/graphql-engine/cli"
-	"github.com/hasura/graphql-engine/cli/metadata/actions"
-	"github.com/hasura/graphql-engine/cli/metadata/actions/types"
+	"github.com/hasura/graphql-engine/cli/internal/metadataobject/actions"
+	"github.com/hasura/graphql-engine/cli/internal/metadataobject/actions/types"
 	"github.com/hasura/graphql-engine/cli/util"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
@@ -92,7 +92,7 @@ func (o *actionsCreateOptions) run() error {
 	if err != nil {
 		return errors.Wrap(err, "error in creating action")
 	}
-	err = migrateDrv.ApplyMetadata()
+	err = executeMetadata("apply", o.EC)
 	if err != nil {
 		return errors.Wrap(err, "error in applying metadata")
 	}

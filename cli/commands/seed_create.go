@@ -11,7 +11,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/hasura/graphql-engine/cli"
-	"github.com/hasura/graphql-engine/cli/metadata/actions/editor"
+	"github.com/hasura/graphql-engine/cli/internal/metadataobject/actions/editor"
 	"github.com/hasura/graphql-engine/cli/seed"
 )
 

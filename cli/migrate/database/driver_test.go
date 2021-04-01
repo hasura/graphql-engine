@@ -7,9 +7,7 @@ import (
 
 	"github.com/hasura/graphql-engine/cli/internal/hasura"
 
-	"github.com/hasura/graphql-engine/cli/metadata/types"
 	"github.com/sirupsen/logrus"
-	"gopkg.in/yaml.v2"
 )
 
 type mockDriver struct {
@@ -97,39 +95,7 @@ func (m *mockDriver) Squash(list *CustomList, ret chan<- interface{}) {
 	return
 }
 
-func (m *mockDriver) SetMetadataPlugins(plugins types.MetadataPlugins) {
-	return
-}
-
 func (m *mockDriver) EnableCheckMetadataConsistency(enabled bool) {
-}
-
-func (m *mockDriver) GetInconsistentMetadata() (bool, []InconsistentMetadataInterface, error) {
-	return false, []InconsistentMetadataInterface{}, nil
-}
-
-func (m *mockDriver) DropInconsistentMetadata() error {
-	return nil
-}
-
-func (m *mockDriver) ApplyMetadata() error {
-	return nil
-}
-
-func (m *mockDriver) ReloadMetadata() error {
-	return nil
-}
-
-func (m *mockDriver) ResetMetadata() error {
-	return nil
-}
-
-func (m *mockDriver) BuildMetadata() (yaml.MapSlice, error) {
-	return nil, nil
-}
-
-func (m *mockDriver) ExportMetadata() (map[string][]byte, error) {
-	return nil, nil
 }
 
 func (m *mockDriver) GetIntroSpectionSchema() (interface{}, error) {

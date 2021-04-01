@@ -21,7 +21,6 @@ import (
 	"github.com/mitchellh/mapstructure"
 
 	yaml "github.com/ghodss/yaml"
-	"github.com/hasura/graphql-engine/cli/metadata/types"
 	"github.com/hasura/graphql-engine/cli/migrate/database"
 	"github.com/parnurzeal/gorequest"
 	log "github.com/sirupsen/logrus"
@@ -64,7 +63,6 @@ type Config struct {
 	pgDumpURL                      *nurl.URL
 	Headers                        map[string]string
 	isCMD                          bool
-	Plugins                        types.MetadataPlugins
 	enableCheckMetadataConsistency bool
 	Req                            *gorequest.SuperAgent
 }
@@ -183,7 +181,6 @@ func (h *HasuraDB) Open(url string, isCMD bool, tlsConfig *tls.Config, logger *l
 		},
 		isCMD:   isCMD,
 		Headers: headers,
-		Plugins: make(types.MetadataPlugins, 0),
 		Req:     req,
 	}
 	hx, err := WithInstance(config, logger, hasuraOpts)

@@ -21,12 +21,10 @@ import (
 
 	"github.com/hasura/graphql-engine/cli/util"
 
-	"github.com/hasura/graphql-engine/cli/metadata/types"
 	"github.com/hasura/graphql-engine/cli/migrate/database"
 	"github.com/hasura/graphql-engine/cli/migrate/source"
 	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
-	"gopkg.in/yaml.v2"
 )
 
 // DefaultPrefetchMigrations sets the number of migrations to pre-read
@@ -335,47 +333,6 @@ func (m *Migrate) GetUnappliedMigrations(version uint64) []uint64 {
 
 func (m *Migrate) GetIntroSpectionSchema() (interface{}, error) {
 	return m.databaseDrv.GetIntroSpectionSchema()
-}
-
-func (m *Migrate) SetMetadataPlugins(plugins types.MetadataPlugins) {
-	m.databaseDrv.SetMetadataPlugins(plugins)
-}
-
-func (m *Migrate) EnableCheckMetadataConsistency(enabled bool) {
-	m.databaseDrv.EnableCheckMetadataConsistency(enabled)
-}
-
-func (m *Migrate) ExportMetadata() (map[string][]byte, error) {
-	return m.databaseDrv.ExportMetadata()
-}
-
-func (m *Migrate) WriteMetadata(files map[string][]byte) error {
-	return m.sourceDrv.WriteMetadata(files)
-}
-
-func (m *Migrate) ResetMetadata() error {
-	return m.databaseDrv.ResetMetadata()
-}
-
-// ReloadMetadata - Reload metadata on the database
-func (m *Migrate) ReloadMetadata() error {
-	return m.databaseDrv.ReloadMetadata()
-}
-
-func (m *Migrate) GetInconsistentMetadata() (bool, []database.InconsistentMetadataInterface, error) {
-	return m.databaseDrv.GetInconsistentMetadata()
-}
-
-func (m *Migrate) DropInconsistentMetadata() error {
-	return m.databaseDrv.DropInconsistentMetadata()
-}
-
-func (m *Migrate) BuildMetadata() (yaml.MapSlice, error) {
-	return m.databaseDrv.BuildMetadata()
-}
-
-func (m *Migrate) ApplyMetadata() error {
-	return m.databaseDrv.ApplyMetadata()
 }
 
 func (m *Migrate) ExportSchemaDump(schemName []string, sourceName string, sourceKind hasura.SourceKind) ([]byte, error) {

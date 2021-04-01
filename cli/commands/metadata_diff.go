@@ -7,13 +7,10 @@ import (
 	"os"
 	"strings"
 
-	"github.com/hasura/graphql-engine/cli/internal/hasura"
-
-	"github.com/hasura/graphql-engine/cli/migrate"
+	"github.com/hasura/graphql-engine/cli/internal/metadataobject"
 
 	"github.com/aryann/difflib"
 	"github.com/hasura/graphql-engine/cli"
-	"github.com/hasura/graphql-engine/cli/metadata"
 	"github.com/mgutz/ansi"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
@@ -69,7 +66,7 @@ By default, it shows changes between the exported metadata file and server metad
 func (o *MetadataDiffOptions) runv2(args []string) error {
 	messageFormat := "Showing diff between %s and %s..."
 	message := ""
-
+	metadataHandler := metadataobject.NewHandlerFromEC(o.EC)
 	switch len(args) {
 	case 0:
 		o.Metadata[0] = o.EC.MetadataDir
@@ -97,31 +94,28 @@ func (o *MetadataDiffOptions) runv2(args []string) error {
 	}
 	o.EC.Logger.Info(message)
 	var oldYaml, newYaml []byte
-	migrateDrv, err := migrate.NewMigrate(o.EC, true, "", hasura.SourceKindPG)
-	if err != nil {
-		return err
-	}
 	if o.Metadata[1] == "" {
 		tmpDir, err := ioutil.TempDir("", "*")
 		if err != nil {
 			return err
 		}
 		defer os.RemoveAll(tmpDir)
-		migrate.SetMetadataPluginsWithDir(o.EC, migrateDrv, tmpDir)
-		files, err := migrateDrv.ExportMetadata()
+		metadataobject.SetMetadataObjectsWithDir(o.EC, tmpDir)
+		var files map[string][]byte
+		files, err = metadataHandler.ExportMetadata()
 		if err != nil {
 			return err
 		}
-		err = migrateDrv.WriteMetadata(files)
+		err = metadataHandler.WriteMetadata(files)
 		if err != nil {
 			return err
 		}
 	} else {
-		migrate.SetMetadataPluginsWithDir(o.EC, migrateDrv, o.Metadata[1])
+		metadataobject.SetMetadataObjectsWithDir(o.EC, o.Metadata[1])
 	}
 
 	// build server metadata
-	serverMeta, err := migrateDrv.BuildMetadata()
+	serverMeta, err := metadataHandler.BuildMetadata()
 	if err != nil {
 		return err
 	}
@@ -131,8 +125,8 @@ func (o *MetadataDiffOptions) runv2(args []string) error {
 	}
 
 	// build local metadata
-	migrate.SetMetadataPluginsWithDir(o.EC, migrateDrv, o.Metadata[0])
-	localMeta, err := migrateDrv.BuildMetadata()
+	metadataobject.SetMetadataObjectsWithDir(o.EC, o.Metadata[0])
+	localMeta, err := metadataHandler.BuildMetadata()
 	if err != nil {
 		return err
 	}
@@ -145,70 +139,12 @@ func (o *MetadataDiffOptions) runv2(args []string) error {
 	return nil
 }
 
-func (o *MetadataDiffOptions) runv1(args []string) error {
-	messageFormat := "Showing diff between %s and %s..."
-	message := ""
-
-	switch len(args) {
-	case 0:
-		// no args, diff exported metadata and metadata on server
-		m := metadata.New(o.EC, o.EC.MigrationDir)
-		filename, err := m.GetExistingMetadataFile()
-		if err != nil {
-			return errors.Wrap(err, "failed getting metadata file")
-		}
-		o.Metadata[0] = filename
-		message = fmt.Sprintf(messageFormat, filename, "the server")
-	case 1:
-		// 1 arg, diff given filename and the metadata on server
-		o.Metadata[0] = args[0]
-		message = fmt.Sprintf(messageFormat, args[0], "the server")
-	case 2:
-		// 2 args, diff given filenames
-		o.Metadata[0] = args[0]
-		o.Metadata[1] = args[1]
-		message = fmt.Sprintf(messageFormat, args[0], args[1])
-	}
-
-	o.EC.Logger.Info(message)
-	var oldYaml, newYaml []byte
-	migrateDrv, err := migrate.NewMigrate(o.EC, true, "", hasura.SourceKindPG)
-	if err != nil {
-		return err
-	}
-
-	if o.Metadata[1] == "" {
-		// get metadata from server
-		files, err := migrateDrv.ExportMetadata()
-		if err != nil {
-			return errors.Wrap(err, "cannot fetch metadata from server")
-		}
-
-		// export metadata will always return single file for metadata.yaml
-		for _, content := range files {
-			newYaml = content
-		}
-	} else {
-		newYaml, err = ioutil.ReadFile(o.Metadata[1])
-		if err != nil {
-			return errors.Wrap(err, "cannot read file")
-		}
-	}
-
-	oldYaml, err = ioutil.ReadFile(o.Metadata[0])
-	if err != nil {
-		return errors.Wrap(err, "cannot read file")
-	}
-
-	printDiff(string(oldYaml), string(newYaml), o.Output)
-	return nil
-}
-
 func (o *MetadataDiffOptions) Run() error {
 	if o.EC.Config.Version >= cli.V2 && o.EC.MetadataDir != "" {
 		return o.runv2(o.Args)
+	} else {
+		return fmt.Errorf("metadata diff for config %d not supported", o.EC.Config.Version)
 	}
-	return o.runv1(o.Args)
 }
 
 func printDiff(before, after string, to io.Writer) {
