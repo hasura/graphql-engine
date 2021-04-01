@@ -108,6 +108,13 @@ func (c *Client) LockAndDo(ctx context.Context, req *http.Request, v interface{}
 	return c.Do(ctx, req, v)
 }
 
+func hasJSONContentType(headers http.Header) bool {
+	if headers.Get("Content-Type") == "application/json" {
+		return true
+	}
+	return false
+}
+
 func (c *Client) Do(ctx context.Context, req *http.Request, v interface{}) (*Response, error) {
 	resp, err := c.BareDo(ctx, req)
 	if err != nil {
@@ -117,18 +124,23 @@ func (c *Client) Do(ctx context.Context, req *http.Request, v interface{}) (*Res
 	switch v := v.(type) {
 	case nil:
 	case io.Writer:
-		// indent json response
-		respBodyBytes, err := ioutil.ReadAll(resp.Body)
-		if err != nil {
-			return resp, err
+		if hasJSONContentType(resp.Header) {
+			// indent json response
+			var respBodyBytes []byte
+			respBodyBytes, err = ioutil.ReadAll(resp.Body)
+			if err != nil {
+				return resp, err
+			}
+			var buf bytes.Buffer
+			err = json.Indent(&buf, respBodyBytes, "", "  ")
+			if err != nil {
+				return resp, err
+			}
+			// copy it to writer
+			_, err = io.Copy(v, &buf)
+		} else {
+			_, err = io.Copy(v, resp.Body)
 		}
-		var buf bytes.Buffer
-		err = json.Indent(&buf, respBodyBytes, "", "  ")
-		if err != nil {
-			return resp, err
-		}
-		// copy it to writer
-		_, err = io.Copy(v, &buf)
 	default:
 		decErr := json.NewDecoder(resp.Body).Decode(v)
 		if decErr == io.EOF {

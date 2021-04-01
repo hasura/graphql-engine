@@ -117,8 +117,6 @@ type Driver interface {
 
 	SchemaDriver
 
-	SeedDriver
-
 	SettingsDriver
 
 	Query(data interface{}) error

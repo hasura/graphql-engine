@@ -8,7 +8,10 @@ import (
 	"os"
 	"path/filepath"
 	"strconv"
+	"strings"
 	"time"
+
+	"github.com/hasura/graphql-engine/cli/internal/hasura"
 
 	"github.com/spf13/afero"
 )
@@ -47,4 +50,39 @@ func CreateSeedFile(fs afero.Fs, opts CreateSeedOpts) (*string, error) {
 	io.Copy(file, r)
 
 	return &fullFilePath, nil
+}
+
+func (d *Driver) ExportDatadump(tableNames []string, sourceName string) (io.Reader, error) {
+	// to support tables starting with capital letters
+	modifiedTableNames := make([]string, len(tableNames))
+
+	for idx, val := range tableNames {
+		split := strings.Split(val, ".")
+		splitLen := len(split)
+
+		if splitLen != 1 && splitLen != 2 {
+			return nil, fmt.Errorf(`invalid schema/table provided "%s"`, val)
+		}
+
+		if splitLen == 2 {
+			modifiedTableNames[idx] = fmt.Sprintf(`"%s"."%s"`, split[0], split[1])
+		} else {
+			modifiedTableNames[idx] = fmt.Sprintf(`"%s"`, val)
+		}
+	}
+
+	pgDumpOpts := []string{"--no-owner", "--no-acl", "--data-only", "--column-inserts"}
+	for _, table := range modifiedTableNames {
+		pgDumpOpts = append(pgDumpOpts, "--table", table)
+	}
+	request := hasura.PGDumpRequest{
+		Opts:        pgDumpOpts,
+		CleanOutput: true,
+		SourceName:  sourceName,
+	}
+	response, err := d.PGDumpClient.Send(request)
+	if err != nil {
+		return nil, err
+	}
+	return response, nil
 }

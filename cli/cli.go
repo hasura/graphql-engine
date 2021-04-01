@@ -23,6 +23,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/hasura/graphql-engine/cli/internal/hasura/pgdump"
+
 	"github.com/hasura/graphql-engine/cli/migrate/database/hasuradb"
 
 	"github.com/hasura/graphql-engine/cli/internal/hasura/v1metadata"
@@ -246,6 +248,12 @@ func (s *ServerConfig) GetV1QueryEndpoint() string {
 func (s *ServerConfig) GetV2QueryEndpoint() string {
 	nurl := *s.ParsedEndpoint
 	nurl.Path = path.Join(nurl.Path, s.APIPaths.V2Query)
+	return nurl.String()
+}
+
+func (s *ServerConfig) GetPGDumpEndpoint() string {
+	nurl := *s.ParsedEndpoint
+	nurl.Path = path.Join(nurl.Path, s.APIPaths.PGDump)
 	return nurl.String()
 }
 
@@ -681,6 +689,7 @@ func (ec *ExecutionContext) Validate() error {
 		V1Metadata: v1metadata.New(httpClient, ec.Config.GetV1MetadataEndpoint()),
 		V1Query:    v1query.New(httpClient, ec.Config.GetV1QueryEndpoint()),
 		V2Query:    v2query.New(httpClient, ec.Config.GetV2QueryEndpoint()),
+		PGDump:     pgdump.New(httpClient, ec.Config.GetPGDumpEndpoint()),
 	}
 	var state *util.ServerState
 	if ec.HasMetadataV3 {

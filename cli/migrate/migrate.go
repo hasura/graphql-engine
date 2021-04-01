@@ -12,7 +12,6 @@ import (
 	"fmt"
 	"io"
 	"os"
-	"strings"
 	"sync"
 	"text/tabwriter"
 	"time"
@@ -1801,32 +1800,6 @@ func (m *Migrate) readDownFromVersion(from int64, to int64, ret chan<- interface
 		from = int64(prev.Version)
 		noOfAppliedMigrations++
 	}
-}
-
-func (m *Migrate) ApplySeed(q interface{}) error {
-	return m.databaseDrv.ApplySeed(q)
-}
-
-func (m *Migrate) ExportDataDump(tableNames []string, sourceName string, sourceKind hasura.SourceKind) ([]byte, error) {
-	// to support tables starting with capital letters
-	modifiedTableNames := make([]string, len(tableNames))
-
-	for idx, val := range tableNames {
-		split := strings.Split(val, ".")
-		splitLen := len(split)
-
-		if splitLen != 1 && splitLen != 2 {
-			return nil, fmt.Errorf(`invalid schema/table provided "%s"`, val)
-		}
-
-		if splitLen == 2 {
-			modifiedTableNames[idx] = fmt.Sprintf(`"%s"."%s"`, split[0], split[1])
-		} else {
-			modifiedTableNames[idx] = fmt.Sprintf(`"%s"`, val)
-		}
-	}
-
-	return m.databaseDrv.ExportDataDump(modifiedTableNames, sourceName, sourceKind)
 }
 
 func printDryRunStatus(migrations []*Migration) *bytes.Buffer {

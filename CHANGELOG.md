@@ -11,6 +11,7 @@
 - server: update pg_dump clean output to disable function body validation in create function statements to avoid errors due to forward references
 - server: fix a bug preventing some MSSQL foreign key relationships from being tracked
 - console: add a comment field for actions (#231)
+- cli: fix seeds incorrectly being applied to databases in config v3 (#6683)
 
 ## v2.0.0-alpha.6
 

@@ -12,12 +12,14 @@ type Client struct {
 	V1Metadata V1Metadata
 	V1Query    V1Query
 	V2Query    V2Query
+	PGDump     PGDump
 }
 
 type V1Query interface {
 	CommonMetadataOperations
 	PGSourceOps
 	Send(requestBody interface{}) (httpcResponse *httpc.Response, body io.Reader, error error)
+	Bulk([]RequestBody) (io.Reader, error)
 }
 
 type V1Metadata interface {
@@ -43,6 +45,7 @@ type V2Query interface {
 	PGSourceOps
 	MSSQLSourceOps
 	Send(requestBody interface{}) (httpcResponse *httpc.Response, body io.Reader, error error)
+	Bulk([]RequestBody) (io.Reader, error)
 }
 
 type RequestBody struct {
