@@ -259,16 +259,4 @@ export const dropTable = (table = 'post', cascade = false) => {
   };
 };
 
-export const dropTableIfExists = (
-  table: { name: string; schema: string },
-  source = 'default'
-) => ({
-  type: 'run_sql',
-  source,
-  args: {
-    sql: `DROP TABLE IF EXISTS "${table.schema}"."${table.name}";`,
-    cascade: false,
-  },
-});
-
 export const getSchema = () => 'public';

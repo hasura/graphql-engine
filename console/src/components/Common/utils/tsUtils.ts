@@ -22,7 +22,9 @@ type PathImpl<T, Key extends keyof T> = Key extends string
 
 type PathImpl2<T> = PathImpl<T, keyof T> | keyof T;
 
-type Path<T> = PathImpl2<T> extends string | keyof T ? PathImpl2<T> : keyof T;
+export type Path<T> = PathImpl2<T> extends string | keyof T
+  ? PathImpl2<T>
+  : keyof T;
 
 export type PathValue<
   T,
@@ -37,4 +39,14 @@ export type PathValue<
   ? T[P]
   : never;
 
-// declare function get<T, P extends Path<T>>(obj: T, path: P): PathValue<T, P>;
+export function get<T extends Record<string, any>, P extends Path<T>>(
+  obj: T,
+  path: P
+): PathValue<T, P> {
+  const keys = (path as string).split('.');
+  if (!keys.length) return obj as PathValue<T, P>;
+  const new_obj = keys.reduce((acc, key) => {
+    return acc[key] || false;
+  }, obj);
+  return new_obj as PathValue<T, P>;
+}

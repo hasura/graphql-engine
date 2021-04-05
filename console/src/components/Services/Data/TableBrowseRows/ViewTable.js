@@ -7,10 +7,15 @@ import TableHeader from '../TableCommon/TableHeader';
 import ViewRows from './ViewRows';
 import { NotFoundError } from '../../../Error/PageNotFound';
 import { exists } from '../../../Common/utils/jsUtils';
-import { currentDriver, dataSource } from '../../../../dataSources';
+import {
+  currentDriver,
+  dataSource,
+  isFeatureSupported,
+} from '../../../../dataSources';
 import { RightContainer } from '../../../Common/Layout/RightContainer';
 import { getPersistedPageSize } from './tableUtils';
 import { getManualEventsTriggers } from '../../../../metadata/selector';
+import FeatureDisabled from '../FeatureDisabled';
 
 class ViewTable extends Component {
   constructor(props) {
@@ -31,6 +36,10 @@ class ViewTable extends Component {
 
   getInitialData(tableName) {
     const { dispatch, currentSchema } = this.props;
+
+    if (!isFeatureSupported('tables.browse.enabled')) {
+      dispatch(setTable(tableName));
+    }
 
     const limit = getPersistedPageSize(tableName, currentSchema);
     Promise.all([
@@ -90,6 +99,16 @@ class ViewTable extends Component {
       currentSource,
     } = this.props;
 
+    if (!isFeatureSupported('tables.browse.enabled')) {
+      return (
+        <FeatureDisabled
+          tab="browse"
+          tableName={tableName}
+          schemaName={currentSchema}
+        />
+      );
+    }
+
     // check if table exists
     const tableSchema = schemas.find(
       s => s.table_name === tableName && s.table_schema === currentSchema
@@ -129,6 +148,9 @@ class ViewTable extends Component {
         location={location}
         readOnlyMode={readOnlyMode}
         currentSource={currentSource}
+        useCustomPagination={isFeatureSupported(
+          'tables.browse.customPagination'
+        )}
       />
     );
 

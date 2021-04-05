@@ -2,13 +2,11 @@ import {
   OrderBy,
   WhereClause,
 } from '../../../components/Common/utils/v1QueryUtils';
-import Endpoints, { globalCookiePolicy } from '../../../Endpoints';
+import Endpoints from '../../../Endpoints';
 import { ReduxState } from '../../../types';
-import requestAction from '../../../utils/requestAction';
 import { BaseTableColumn, Relationship, Table } from '../../types';
 
 type Tables = ReduxState['tables'];
-type Headers = Tables['dataHeaders'];
 interface GetGraphQLQuery {
   allSchemas: Table[];
   view: Tables['view'];
@@ -113,7 +111,7 @@ const getColQuery = (
   });
 };
 
-export const getGraphQLQuery = ({
+export const getGraphQLQueryForBrowseRows = ({
   allSchemas,
   view,
   originalTable,
@@ -147,13 +145,17 @@ export const getGraphQLQuery = ({
         });
     }
   }
+  const sortConditions: OrderBy[] = [];
+  if (view.query.order_by) {
+    sortConditions.push(...view.query.order_by);
+  }
   const limit = isExport ? null : `limit: ${view.curFilter.limit}`;
   const offset = isExport
     ? null
     : `offset: ${!isRelationshipView ? view.curFilter.offset : 0}`;
   const clauses = `${[
     generateWhereClauseQueryString(whereConditions, columnTypeInfo),
-    generateSortClauseQueryString(view.curFilter.order_by.slice(0, -1)),
+    generateSortClauseQueryString(sortConditions),
     limit,
     offset,
   ]
@@ -176,12 +178,7 @@ export const getGraphQLQuery = ({
   `;
 };
 
-export const getTableRowRequest = (
-  tables: Tables,
-  headers: Headers,
-  isExport?: boolean
-) => {
-  // TODO: fetch count when agregation for mssql is added
+const getTableRowRequestBody = (tables: Tables, isExport?: boolean) => {
   const {
     currentTable: originalTable,
     view,
@@ -189,8 +186,8 @@ export const getTableRowRequest = (
     currentSchema,
   } = tables;
 
-  const tableRowsRequestBody = {
-    query: getGraphQLQuery({
+  return {
+    query: getGraphQLQueryForBrowseRows({
       allSchemas,
       view,
       originalTable,
@@ -200,13 +197,26 @@ export const getTableRowRequest = (
     variables: null,
     operationName: 'TableRows',
   };
+};
 
-  const tableRowsOptions: RequestInit = {
-    method: 'POST',
-    body: JSON.stringify(tableRowsRequestBody),
-    headers,
-    credentials: globalCookiePolicy,
+const processTableRowData = (
+  data: any,
+  config?: { originalTable: string; currentSchema: string }
+) => {
+  const { originalTable, currentSchema } = config!;
+  const rows =
+    data.data[
+      currentSchema === 'dbo'
+        ? originalTable
+        : `${currentSchema}_${originalTable}`
+    ];
+  return { estimatedCount: rows.length, rows };
+};
+
+export const generateTableRowRequest = () => {
+  return {
+    endpoint: Endpoints.graphQLUrl,
+    getTableRowRequestBody,
+    processTableRowData,
   };
-
-  return requestAction(Endpoints.graphQLUrl, tableRowsOptions);
 };

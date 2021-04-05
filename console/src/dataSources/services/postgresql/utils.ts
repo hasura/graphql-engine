@@ -52,3 +52,53 @@ export function getTableRowRequest(
 
   return requestAction(Endpoints.query, options);
 }
+
+const getTableRowRequestBody = (tables: Tables, isExport = false) => {
+  const {
+    currentTable: originalTable,
+    currentSchema,
+    currentDataSource,
+    view,
+  } = tables;
+  const limit = isExport ? null : view.query.limit;
+  const offset = isExport ? null : view.query.offset;
+  const requestBody = {
+    type: 'bulk',
+    source: currentDataSource,
+    args: [
+      getSelectQuery(
+        'select',
+        generateTableDef(originalTable, currentSchema),
+        view.query.columns,
+        view.query.where,
+        offset,
+        limit,
+        view.query.order_by,
+        currentDataSource
+      ),
+      getRunSqlQuery(
+        dataSource.getEstimateCountQuery(currentSchema, originalTable),
+        currentDataSource
+      ),
+    ],
+  };
+  return requestBody;
+};
+
+const processTableRowData = (data: any) => {
+  let estimatedCount =
+    data.length > 1 && data[0].result > 1 && data.result[1].length
+      ? data[1].result[1][0]
+      : null;
+  estimatedCount =
+    estimatedCount !== null ? parseInt(data[1]?.result[1][0], 10) : null;
+  return { rows: data[0], estimatedCount };
+};
+
+export const generateTableRowRequest = () => {
+  return {
+    endpoint: Endpoints.query,
+    getTableRowRequestBody,
+    processTableRowData,
+  };
+};

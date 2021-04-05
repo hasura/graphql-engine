@@ -1,6 +1,11 @@
 import { Nullable } from '../components/Common/utils/tsUtils';
 import { Column } from '../utils/postgresColumnTypes';
 import { FunctionDefinition, RemoteRelationshipDef } from '../metadata/types';
+import { ReduxState } from '../types';
+import {
+  getSelectQuery,
+  getRunSqlQuery,
+} from '../../src/components/Common/utils/v1QueryUtils';
 
 export interface Relationship
   extends Pick<BaseTable, 'table_name' | 'table_schema'> {
@@ -181,3 +186,66 @@ type ColumnCategories =
   | 'uuid'
   | 'user_defined';
 export type PermissionColumnCategories = Record<ColumnCategories, string[]>;
+
+export type SupportedFeaturesType = {
+  driver: {
+    name: string;
+  };
+  tables: {
+    create: {
+      enabled: boolean;
+    };
+    browse: {
+      enabled: boolean;
+      customPagination?: boolean;
+      aggregation: boolean;
+    };
+    insert: {
+      enabled: boolean;
+    };
+    modify: {
+      enabled: boolean;
+    };
+    relationships: {
+      enabled: boolean;
+      remoteRelationships?: boolean;
+    };
+    permissions: {
+      enabled: boolean;
+    };
+  };
+  events: {
+    triggers: {
+      enabled: boolean;
+      add: boolean;
+    };
+  };
+  actions: {
+    enabled: boolean;
+    relationships: boolean;
+  };
+};
+
+type Tables = ReduxState['tables'];
+
+export type generateTableRowRequestType = {
+  endpoint: string;
+  getTableRowRequestBody: (
+    tables: Tables,
+    isExport: false
+  ) =>
+    | {
+        type: string;
+        source: string;
+        args: (
+          | ReturnType<typeof getSelectQuery>
+          | ReturnType<typeof getRunSqlQuery>
+        )[];
+      }
+    | {
+        query: string;
+        variables: null;
+        operationName: string;
+      };
+  processTableRowData: <T>(data: T) => { rows: T[]; estimatedCount: number };
+};

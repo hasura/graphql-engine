@@ -3,12 +3,13 @@ import {
   Table,
   TableColumn,
   ComputedField,
+  SupportedFeaturesType,
   BaseTableColumn,
 } from '../../types';
 import { QUERY_TYPES, Operations } from '../../common';
 import { PGFunction } from './types';
 import { DataSourcesAPI, ColumnsInfoResult } from '../..';
-import { getTableRowRequest } from './utils';
+import { generateTableRowRequest } from './utils';
 import {
   getFetchTablesListQuery,
   fetchColumnTypesQuery,
@@ -472,15 +473,6 @@ const getReferenceOption = (opt: string) => {
   }
 };
 
-const processTableRowData = (data: any) => {
-  let estimatedCount =
-    data.length > 1 && data[0].result > 1 && data.result[1].length
-      ? data[1].result[1][0]
-      : null;
-  estimatedCount =
-    estimatedCount !== null ? parseInt(data[1]?.result[1][0], 10) : null;
-  return { rows: data[0], estimatedCount };
-};
 const permissionColumnDataTypes = {
   boolean: ['boolean'],
   character: ['character', 'character varying', 'text', 'citext'],
@@ -509,6 +501,44 @@ const permissionColumnDataTypes = {
   ],
   uuid: ['uuid'],
   user_defined: [], // default for all other types
+};
+
+export const supportedFeatures: SupportedFeaturesType = {
+  driver: {
+    name: 'postgres',
+  },
+  tables: {
+    create: {
+      enabled: true,
+    },
+    browse: {
+      enabled: true,
+      aggregation: true,
+    },
+    insert: {
+      enabled: true,
+    },
+    modify: {
+      enabled: true,
+    },
+    relationships: {
+      enabled: true,
+      remoteRelationships: true,
+    },
+    permissions: {
+      enabled: true,
+    },
+  },
+  events: {
+    triggers: {
+      enabled: true,
+      add: true,
+    },
+  },
+  actions: {
+    enabled: true,
+    relationships: true,
+  },
 };
 
 export const postgres: DataSourcesAPI = {
@@ -578,11 +608,11 @@ export const postgres: DataSourcesAPI = {
   getDatabaseInfo,
   getTableInfo,
   operators,
-  getTableRowRequest,
-  processTableRowData,
+  generateTableRowRequest,
   getDatabaseVersionSql,
   permissionColumnDataTypes,
   viewsSupported: true,
   supportedColumnOperators: null,
   aggregationPermissionsAllowed: true,
+  supportedFeatures,
 };

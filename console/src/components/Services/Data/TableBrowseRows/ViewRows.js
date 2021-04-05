@@ -45,7 +45,6 @@ import {
   findTable,
   getRelationshipRefTable,
   dataSource,
-  currentDriver,
 } from '../../../../dataSources';
 import { updateSchemaInfo } from '../DataActions';
 import {
@@ -83,6 +82,7 @@ const ViewRows = props => {
     readOnlyMode,
     shouldHidePagination,
     currentSource,
+    useCustomPagination,
   } = props;
   const [invokedRow, setInvokedRow] = useState(null);
   const [invocationFunc, setInvocationFunc] = useState(null);
@@ -981,9 +981,9 @@ const ViewRows = props => {
       );
     };
 
-    const mssqlProps = {};
-    if (currentDriver === 'mssql') {
-      mssqlProps.PaginationComponent = PaginationWithOnlyNav;
+    const paginationProps = {};
+    if (useCustomPagination) {
+      paginationProps.PaginationComponent = PaginationWithOnlyNav;
     }
 
     return (
@@ -1017,7 +1017,7 @@ const ViewRows = props => {
         }
         defaultReorders={columnsOrder}
         showPagination={!shouldHidePagination}
-        {...mssqlProps}
+        {...paginationProps}
       />
     );
   };

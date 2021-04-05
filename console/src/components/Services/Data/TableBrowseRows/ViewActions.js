@@ -19,7 +19,7 @@ import {
   generateTableDef,
   dataSource,
   findTableFromRel,
-  currentDriver,
+  isFeatureSupported,
 } from '../../../../dataSources';
 
 /* ****************** View actions *************/
@@ -59,10 +59,22 @@ const vMakeRowsRequest = () => {
     const headers = dataHeaders(getState);
     dispatch({ type: V_REQUEST_PROGRESS, data: true });
 
-    return dispatch(dataSource.getTableRowRequest(tables, headers)).then(
+    const {
+      endpoint,
+      getTableRowRequestBody,
+      processTableRowData,
+    } = dataSource.generateTableRowRequest();
+    const options = {
+      method: 'POST',
+      body: JSON.stringify(getTableRowRequestBody(tables)),
+      headers,
+      credentials: globalCookiePolicy,
+    };
+
+    return dispatch(requestAction(endpoint, options)).then(
       data => {
         const { currentSchema, currentTable: originalTable } = tables;
-        const { rows, estimatedCount } = dataSource.processTableRowData(data, {
+        const { rows, estimatedCount } = processTableRowData(data, {
           currentSchema,
           originalTable,
         });
@@ -94,11 +106,22 @@ const vMakeExportRequest = () => {
   return (dispatch, getState) => {
     const { tables } = getState();
     const headers = dataHeaders(getState);
+    const {
+      endpoint,
+      getTableRowRequestBody,
+      processTableRowData,
+    } = dataSource.generateTableRowRequest();
+    const options = {
+      method: 'POST',
+      body: JSON.stringify(getTableRowRequestBody(tables)),
+      headers,
+      credentials: globalCookiePolicy,
+    };
     return new Promise((resolve, reject) => {
-      dispatch(dataSource.getTableRowRequest(tables, headers))
+      dispatch(requestAction(endpoint, options))
         .then(data => {
           const { currentSchema, currentTable: originalTable } = tables;
-          const { rows } = dataSource.processTableRowData(data, {
+          const { rows } = processTableRowData(data, {
             currentSchema,
             originalTable,
           });
@@ -108,11 +131,11 @@ const vMakeExportRequest = () => {
     });
   };
 };
+
 const vMakeCountRequest = () => {
-  // TODO: fix when aggregate is available
-  if (currentDriver === 'mssql')
+  // For datasources that do not supported aggregation like count
+  if (!isFeatureSupported('tables.browse.aggregation'))
     return (dispatch, getState) => {
-      // This is just for the moment, until aggregators for mssql is ready
       const { estimatedCount } = getState().tables.view;
       dispatch({
         type: V_COUNT_REQUEST_SUCCESS,

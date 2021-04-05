@@ -25,7 +25,7 @@ import RelationshipEditor from './RelationshipEditor';
 import { NotFoundError } from '../../../Error/PageNotFound';
 import styles from '../TableModify/ModifyTable.scss';
 import tableStyles from '../../../Common/TableCommon/TableStyles.scss';
-import { currentDriver, findAllFromRel } from '../../../../dataSources';
+import { findAllFromRel, isFeatureSupported } from '../../../../dataSources';
 import { getRemoteSchemasSelector } from '../../../../metadata/selector';
 import { RightContainer } from '../../../Common/Layout/RightContainer';
 import FeatureDisabled from '../FeatureDisabled';
@@ -297,8 +297,6 @@ const AddRelationship = ({
   );
 };
 
-const supportedDrivers = ['postgres', 'mssql'];
-
 const Relationships = ({
   tableName,
   allSchemas,
@@ -325,7 +323,7 @@ const Relationships = ({
     t => t.table_name === tableName && t.table_schema === currentSchema
   );
 
-  if (!supportedDrivers.includes(currentDriver)) {
+  if (!isFeatureSupported('tables.relationships.enabled')) {
     return (
       <FeatureDisabled
         tab="relationships"
@@ -335,7 +333,7 @@ const Relationships = ({
     );
   }
 
-  if (!tableSchema && supportedDrivers.includes(currentDriver)) {
+  if (!tableSchema && isFeatureSupported('tables.relationships.enabled')) {
     // throw a 404 exception
     throw new NotFoundError();
   }
@@ -488,7 +486,7 @@ const Relationships = ({
             {addedRelationshipsView}
             {getAddRelSection()}
           </div>
-          {currentDriver === 'postgres' ? (
+          {isFeatureSupported('tables.relationships.remoteRelationships') ? (
             <div className={`${styles.padd_left_remove} col-xs-10 col-md-10`}>
               <RemoteRelationships
                 relationships={existingRemoteRelationships}

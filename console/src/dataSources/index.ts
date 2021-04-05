@@ -1,5 +1,7 @@
 /* eslint-disable import/no-mutable-exports */
 import { useState, useEffect } from 'react';
+
+import { Path, get } from '../components/Common/utils/tsUtils';
 import { services } from './services';
 
 import {
@@ -8,12 +10,16 @@ import {
   TableColumn,
   FrequentlyUsedColumn,
   PermissionColumnCategories,
+  SupportedFeaturesType,
+  generateTableRowRequestType,
   BaseTableColumn,
 } from './types';
 import { PGFunction, FunctionState } from './services/postgresql/types';
 import { Operations } from './common';
 import { QualifiedTable } from '../metadata/types';
-import { ReduxState, Thunk } from '../types';
+
+import { supportedFeatures as PGSupportedFeatures } from './services/postgresql';
+import { supportedFeatures as MssqlSupportedFeatures } from './services/mssql';
 
 export const drivers = ['postgres', 'mysql', 'mssql'] as const;
 export type Driver = typeof drivers[number];
@@ -299,25 +305,35 @@ export interface DataSourcesAPI {
   ) => string;
   getDatabaseInfo: string;
   getTableInfo?: (tables: string[]) => string;
-  getTableRowRequest?: <T = any>(
-    tables: ReduxState['tables'],
-    headers: ReduxState['tables']['dataHeaders'],
-    isExport?: boolean
-  ) => Thunk<Promise<T>>;
-  processTableRowData?: (
-    data: any,
-    config?: { originalTable: string; currentSchema: string }
-  ) => { rows: any[]; estimatedCount: number };
+  generateTableRowRequest?: () => generateTableRowRequestType;
   getDatabaseVersionSql?: string;
   permissionColumnDataTypes: Partial<PermissionColumnCategories> | null;
   viewsSupported: boolean;
   // use null, if all operators are supported
   supportedColumnOperators: string[] | null;
   aggregationPermissionsAllowed: boolean;
+  supportedFeatures?: SupportedFeaturesType;
 }
 
 export let currentDriver: Driver = 'postgres';
 export let dataSource: DataSourcesAPI = services[currentDriver || 'postgres'];
+
+export const isFeatureSupported = (feature: Path<SupportedFeaturesType>) => {
+  if (dataSource.supportedFeatures)
+    return get(dataSource.supportedFeatures, feature);
+};
+
+export const getSupportedDrivers = (
+  feature: Path<SupportedFeaturesType>
+): Driver[] => {
+  const isEnabled = (supportedFeatures: SupportedFeaturesType) => {
+    return get(supportedFeatures, feature) || false;
+  };
+
+  return [PGSupportedFeatures, MssqlSupportedFeatures]
+    .filter(d => isEnabled(d))
+    .map(d => d.driver.name) as Driver[];
+};
 
 class DataSourceChangedEvent extends Event {
   static type = 'data-source-changed';

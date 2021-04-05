@@ -1,7 +1,12 @@
 import React from 'react';
 import { DataSourcesAPI } from '../..';
-import { TableColumn, Table, BaseTableColumn } from '../../types';
-import { getTableRowRequest } from './utils';
+import {
+  TableColumn,
+  Table,
+  BaseTableColumn,
+  SupportedFeaturesType,
+} from '../../types';
+import { generateTableRowRequest } from './utils';
 
 const permissionColumnDataTypes = {
   character: [
@@ -87,22 +92,46 @@ export const displayTableName = (table: Table) => {
   return isTable(table) ? <span>{tableName}</span> : <i>{tableName}</i>;
 };
 
-export const isJsonColumn = (column: BaseTableColumn): boolean => {
-  return column.data_type_name === 'json' || column.data_type_name === 'jsonb';
+export const supportedFeatures: SupportedFeaturesType = {
+  driver: {
+    name: 'mssql',
+  },
+  tables: {
+    create: {
+      enabled: false,
+    },
+    browse: {
+      enabled: true,
+      customPagination: true,
+      aggregation: false,
+    },
+    insert: {
+      enabled: false,
+    },
+    modify: {
+      enabled: false,
+    },
+    relationships: {
+      enabled: true,
+    },
+    permissions: {
+      enabled: true,
+    },
+  },
+  events: {
+    triggers: {
+      enabled: true,
+      add: false,
+    },
+  },
+  actions: {
+    enabled: true,
+    relationships: false,
+  },
 };
 
-const processTableRowData = (
-  data: any,
-  config?: { originalTable: string; currentSchema: string }
-) => {
-  const { originalTable, currentSchema } = config!;
-  const rows =
-    data.data[
-      currentSchema === 'dbo'
-        ? originalTable
-        : `${currentSchema}_${originalTable}`
-    ];
-  return { estimatedCount: rows.length, rows };
+export const isJsonColumn = (column: BaseTableColumn): boolean => {
+  return column.data_type_name === 'json' || column.data_type_name === 'jsonb';
 };
 
 export const mssql: DataSourcesAPI = {
@@ -110,8 +139,7 @@ export const mssql: DataSourcesAPI = {
   isJsonColumn,
   displayTableName,
   operators,
-  getTableRowRequest,
-  processTableRowData,
+  generateTableRowRequest,
   getFunctionSchema: () => {
     return '';
   },
@@ -394,4 +422,5 @@ WHERE
   viewsSupported: false,
   supportedColumnOperators,
   aggregationPermissionsAllowed: false,
+  supportedFeatures,
 };
