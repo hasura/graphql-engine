@@ -284,7 +284,7 @@ func TestClient_GetInconsistentMetadata(t *testing.T) {
 	defer teardownLatest()
 	// create a table track it and delete it
 	sendReq := func(body io.Reader, url string) {
-		resp, err := http.Post(fmt.Sprintf("http://%s:%s/%s", testutil.DockerSwitchIP, portHasuraLatest, url), "application/json", body)
+		resp, err := http.Post(fmt.Sprintf("http://%s:%s/%s", "0.0.0.0", portHasuraLatest, url), "application/json", body)
 		assert.NoError(t, err)
 		defer resp.Body.Close()
 		if err != nil {

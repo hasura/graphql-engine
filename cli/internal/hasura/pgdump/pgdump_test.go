@@ -81,7 +81,8 @@ ALTER TABLE public.test OWNER TO postgres;
 					CleanOutput: true,
 				},
 			},
-			`CREATE TABLE public.test (
+			`SET check_function_bodies = false;
+CREATE TABLE public.test (
     section numeric NOT NULL,
     id1 numeric NOT NULL,
     id2 numeric NOT NULL

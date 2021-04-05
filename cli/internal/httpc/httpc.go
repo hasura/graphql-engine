@@ -109,7 +109,8 @@ func (c *Client) LockAndDo(ctx context.Context, req *http.Request, v interface{}
 }
 
 func hasJSONContentType(headers http.Header) bool {
-	if headers.Get("Content-Type") == "application/json" {
+	const jsonHeaderName = "application/json"
+	if strings.Contains(headers.Get("Content-Type"), jsonHeaderName) || strings.Contains(headers.Get("content-type"), jsonHeaderName) {
 		return true
 	}
 	return false

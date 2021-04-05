@@ -23,7 +23,7 @@ func GetServerState(endpoint string, adminSecret string, config *tls.Config, has
 		UUID: "00000000-0000-0000-0000-000000000000",
 	}
 
-	if hasMetadataV3{
+	if hasMetadataV3 {
 		payload := `
 	{
     "type": "get_catalog_state",
@@ -37,7 +37,7 @@ func GetServerState(endpoint string, adminSecret string, config *tls.Config, has
 		req.Post(endpoint).Send(payload)
 		req.Set("X-Hasura-Admin-Secret", adminSecret)
 
-		var r struct{
+		var r struct {
 			ID string `json:"id"`
 		}
 		_, _, errs := req.EndStruct(&r)
@@ -47,7 +47,7 @@ func GetServerState(endpoint string, adminSecret string, config *tls.Config, has
 		}
 
 		state.UUID = r.ID
-	}else {
+	} else {
 		state := &ServerState{
 			UUID: "00000000-0000-0000-0000-000000000000",
 		}
