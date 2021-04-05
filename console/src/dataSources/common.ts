@@ -328,7 +328,7 @@ export const findAllFromRel = (curTable: Table, rel: Relationship) => {
       if (fkc) {
         rTable = fkc.ref_table;
         rSchema = fkc.ref_table_table_schema;
-        rcol = [fkc.column_mapping[(lcol as any) as string]];
+        rcol = [fkc ? fkc.column_mapping[(lcol as any) as string] : ''];
       }
     }
 
@@ -344,7 +344,7 @@ export const findAllFromRel = (curTable: Table, rel: Relationship) => {
         rSchema = 'public';
       }
       const rfkc = findOppFKConstraint(curTable, rcol);
-      lcol = [rfkc!.column_mapping[(rcol as any) as string]];
+      lcol = [rfkc ? rfkc!.column_mapping[(rcol as any) as string] : ''];
     }
   }
   return {
