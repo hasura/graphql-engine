@@ -16,6 +16,7 @@ import {
   getUntrackFunctionQuery,
   getTrackTableQuery,
 } from '../../../../metadata/queryUtils';
+import { setSidebarLoading } from '../DataSubSidebar';
 
 const SET_DEFAULTS = 'AddExistingTable/SET_DEFAULTS';
 const SET_TABLENAME = 'AddExistingTable/SET_TABLENAME';
@@ -28,6 +29,7 @@ const setTableName = value => ({ type: SET_TABLENAME, value });
 
 const addExistingTableSql = (name, customSchema, skipRouting = false) => {
   return (dispatch, getState) => {
+    dispatch(setSidebarLoading(true));
     dispatch({ type: MAKING_REQUEST });
     dispatch(showSuccessNotification('Adding an existing table...'));
     const state = getState().addTable.existingTableView;
@@ -81,11 +83,13 @@ const addExistingTableSql = (name, customSchema, skipRouting = false) => {
         if (!skipRouting) {
           dispatch(_push(nextRoute));
         }
+        dispatch(setSidebarLoading(false));
       });
       return;
     };
     const customOnError = err => {
       dispatch({ type: REQUEST_ERROR, data: err });
+      dispatch(setSidebarLoading(false));
     };
 
     return makeMigrationCall(
@@ -110,6 +114,7 @@ const addExistingFunction = (
   skipRouting = false
 ) => {
   return (dispatch, getState) => {
+    dispatch(setSidebarLoading(true));
     dispatch({ type: MAKING_REQUEST });
     const currentSchema = customSchema
       ? customSchema
@@ -142,9 +147,11 @@ const addExistingFunction = (
           _push(getFunctionModifyRoute(currentSchema, currentDataSource, name))
         );
       }
+      dispatch(setSidebarLoading(false));
     };
     const customOnError = err => {
       dispatch({ type: REQUEST_ERROR, data: err });
+      dispatch(setSidebarLoading(false));
     };
 
     return makeMigrationCall(

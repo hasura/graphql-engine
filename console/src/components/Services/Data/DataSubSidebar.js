@@ -1,10 +1,47 @@
 import React, { useEffect, useState } from 'react';
 import { connect } from 'react-redux';
-import LeftSubSidebar from '../../Common/Layout/LeftSubSidebar/LeftSubSidebar';
+import { Link } from 'react-router';
 import { manageDatabasesRoute } from '../../Common/utils/routesUtils';
 import TreeView from './TreeView';
 import { getDatabaseTableTypeInfo } from './DataActions';
+import { useDataSource } from '../../../dataSources';
 import { isInconsistentSource } from './utils';
+import { getSourceDriver } from './utils';
+import { getDataSources } from '../../../metadata/selector';
+import {
+  updateCurrentSchema,
+  UPDATE_CURRENT_DATA_SOURCE,
+  fetchDataInit,
+} from './DataActions';
+import _push from './push';
+import Button from '../../Common/Button/Button';
+import styles from '../../Common/Layout/LeftSubSidebar/LeftSubSidebar.scss';
+import { Spinner } from '../../UIKit/atoms';
+
+const DATA_SIDEBAR_SET_LOADING = 'dataSidebar/DATA_SIDEBAR_SET_LOADING';
+
+export const setSidebarLoading = isLoading => ({
+  type: DATA_SIDEBAR_SET_LOADING,
+  data: isLoading,
+});
+
+// initial state
+const sidebarState = {
+  loading: false,
+};
+
+/* Reducer */
+export const dataSidebarReducer = (state = sidebarState, action) => {
+  switch (action.type) {
+    case DATA_SIDEBAR_SET_LOADING:
+      return {
+        ...state,
+        loading: action.data,
+      };
+    default:
+      return state;
+  }
+};
 
 const groupByKey = (list, key) =>
   list.reduce(
@@ -19,8 +56,6 @@ const DataSubSidebar = props => {
   const {
     migrationMode,
     dispatch,
-    onDatabaseChange,
-    onSchemaChange,
     tables,
     functions,
     sources,
@@ -30,7 +65,49 @@ const DataSubSidebar = props => {
     enums,
     inconsistentObjects,
     pathname,
+    dataSources,
+    sidebarLoadingState,
   } = props;
+  const { setDriver } = useDataSource();
+
+  const [databaseLoading, setDatabaseLoading] = useState(false);
+  const [schemaLoading, setSchemaLoading] = useState(false);
+  const [isFetching, setIsFetching] = useState(false);
+  const [preLoadState, setPreLoadState] = useState(true);
+
+  const onDatabaseChange = newSourceName => {
+    if (newSourceName === currentDataSource) {
+      dispatch(_push(`/data/${newSourceName}/`));
+      return;
+    }
+    setDatabaseLoading(true);
+    const driver = getSourceDriver(dataSources, newSourceName);
+    dispatch({
+      type: UPDATE_CURRENT_DATA_SOURCE,
+      source: newSourceName,
+    });
+    setDriver(driver);
+    dispatch(_push(`/data/${newSourceName}/`));
+    dispatch(fetchDataInit()).finally(() => {
+      setDatabaseLoading(false);
+    });
+  };
+
+  const onSchemaChange = value => {
+    if (value === currentSchema) {
+      dispatch(_push(`/data/${currentDataSource}/schema/${value}`));
+      return;
+    }
+
+    setSchemaLoading(true);
+    dispatch(updateCurrentSchema(value, currentDataSource))
+      .then(() => {
+        dispatch(_push(`/data/${currentDataSource}/schema/${value}`));
+      })
+      .finally(() => {
+        setSchemaLoading(false);
+      });
+  };
 
   const getItems = (schemaInfo = null) => {
     let sourceItems = [];
@@ -142,10 +219,13 @@ const DataSubSidebar = props => {
       });
       const newItems = getItems(schemaInfo);
       setTreeViewItems(newItems);
+      setIsFetching(false);
+      setPreLoadState(false);
     });
   };
 
   useEffect(() => {
+    setIsFetching(true);
     updateTreeViewItemsWithSchemaInfo();
   }, [
     sources.length,
@@ -153,29 +233,82 @@ const DataSubSidebar = props => {
     functions,
     enums,
     schemaList,
+    dataSources, // trigger rerender on table name change
     inconsistentObjects,
   ]);
+
+  const loadStyle = {
+    pointerEvents: 'none',
+    cursor: 'progress',
+  };
 
   const databasesCount = treeViewItems?.length || 0;
 
   return (
-    <LeftSubSidebar
-      showAddBtn={migrationMode}
-      heading={`Databases (${databasesCount})`}
-      addLink={manageDatabasesRoute}
-      addLabel={'Manage'}
-      addTestString={'sidebar-manage-database'}
-      childListTestString={'table-links'}
-    >
-      <TreeView
-        items={treeViewItems}
-        onDatabaseChange={onDatabaseChange}
-        onSchemaChange={onSchemaChange}
-        currentDataSource={currentDataSource}
-        currentSchema={currentSchema}
-        pathname={pathname}
-      />
-    </LeftSubSidebar>
+    <div className={`${styles.subSidebarList} ${styles.padd_top_small}`}>
+      <div className={styles.sidebarHeadingWrapper}>
+        <div
+          className={`col-xs-8 ${styles.sidebarHeading} ${styles.padd_left_remove}`}
+        >
+          <div
+            className={`${styles.padd_top_small} ${styles.inline_display} ${styles.display_flex} ${styles.align_items_center}`}
+          >
+            <div>Databases ({databasesCount})</div>
+            {schemaLoading ||
+            databaseLoading ||
+            sidebarLoadingState ||
+            isFetching ? (
+              <div className={styles.inline_display}>
+                <Spinner size="small" ml={4} />
+              </div>
+            ) : (
+              <i
+                className={`fa fa-check-circle ${styles.padd_left_sm} ${styles.color_green}`}
+                aria-hidden="true"
+              />
+            )}
+          </div>
+        </div>
+        {migrationMode && (
+          <div
+            className={`col-xs-4 text-center ${styles.padd_left_remove} ${styles.sidebarCreateTable}`}
+          >
+            <Link className={styles.padd_remove_full} to={manageDatabasesRoute}>
+              <Button
+                size="xs"
+                color="white"
+                data-test="sidebar-manage-database"
+              >
+                Manage
+              </Button>
+            </Link>
+          </div>
+        )}
+      </div>
+      <ul className={styles.subSidebarListUL} data-test="table-links">
+        <div
+          style={
+            schemaLoading ||
+            databaseLoading ||
+            sidebarLoadingState ||
+            isFetching
+              ? loadStyle
+              : { pointerEvents: 'auto' }
+          }
+        >
+          <TreeView
+            items={treeViewItems}
+            onDatabaseChange={onDatabaseChange}
+            onSchemaChange={onSchemaChange}
+            currentDataSource={currentDataSource}
+            currentSchema={currentSchema}
+            pathname={pathname}
+            databaseLoading={databaseLoading}
+            preLoadState={preLoadState}
+          />
+        </div>
+      </ul>
+    </div>
   );
 };
 
@@ -197,6 +330,8 @@ const mapStateToProps = state => {
     currentSchema: state.tables.currentSchema,
     schemaList: state.tables.schemaList,
     pathname: state?.routing?.locationBeforeTransitions?.pathname,
+    dataSources: getDataSources(state),
+    sidebarLoadingState: state.dataSidebar.loading,
   };
 };
 

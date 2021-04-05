@@ -57,6 +57,7 @@ import {
 } from '../../../../metadata/queryUtils';
 import { getColumnUpdateMigration } from '../../../../utils/migration/utils';
 import Migration from '../../../../utils/migration/Migration';
+import { setSidebarLoading } from '../DataSubSidebar';
 
 const DELETE_PK_WARNING =
   'Without a primary key there is no way to uniquely identify a row of a table';
@@ -767,6 +768,7 @@ const setUniqueKeys = keys => ({
 
 const changeTableName = (oldName, newName, isTable, tableType) => {
   return (dispatch, getState) => {
+    dispatch(setSidebarLoading(true));
     dispatch({ type: SAVE_NEW_TABLE_NAME });
     const source = getState().tables.currentDataSource;
 
@@ -825,10 +827,12 @@ const changeTableName = (oldName, newName, isTable, tableType) => {
         dispatch(
           _push(getTableModifyRoute(currentSchema, source, newName, isTable))
         );
+        dispatch(setSidebarLoading(false));
       });
     };
     const customOnError = err => {
       dispatch({ type: UPDATE_MIGRATION_STATUS_ERROR, data: err });
+      dispatch(setSidebarLoading(false));
     };
     makeMigrationCall(
       dispatch,
@@ -897,6 +901,7 @@ const deleteTrigger = (trigger, table) => {
 
 const deleteTableSql = tableName => {
   return (dispatch, getState) => {
+    dispatch(setSidebarLoading(true));
     const currentSchema = getState().tables.currentSchema;
     const source = getState().tables.currentDataSource;
     // handle no primary key
@@ -913,10 +918,12 @@ const deleteTableSql = tableName => {
     const customOnSuccess = () => {
       dispatch(updateSchemaInfo());
       dispatch(_push(getSchemaBaseRoute(currentSchema, source)));
+      dispatch(setSidebarLoading(false));
     };
 
     const customOnError = err => {
       dispatch({ type: UPDATE_MIGRATION_STATUS_ERROR, data: err });
+      dispatch(setSidebarLoading(false));
     };
 
     makeMigrationCall(
@@ -937,6 +944,7 @@ const deleteTableSql = tableName => {
 
 const untrackTableSql = tableName => {
   return (dispatch, getState) => {
+    dispatch(setSidebarLoading(true));
     const currentSchema = getState().tables.currentSchema;
     const currentDataSource = getState().tables.currentDataSource;
     const tableDef = generateTableDef(tableName, currentSchema);
@@ -954,12 +962,14 @@ const untrackTableSql = tableName => {
     const errorMsg = 'Untrack table failed';
 
     const customOnSuccess = () => {
-      dispatch(exportMetadata()).then(
-        dispatch(_push(getSchemaBaseRoute(currentSchema, currentDataSource)))
-      );
+      dispatch(exportMetadata()).then(() => {
+        dispatch(_push(getSchemaBaseRoute(currentSchema, currentDataSource)));
+        dispatch(setSidebarLoading(false));
+      });
     };
     const customOnError = err => {
       dispatch({ type: UPDATE_MIGRATION_STATUS_ERROR, data: err });
+      dispatch(setSidebarLoading(false));
     };
 
     makeMigrationCall(
@@ -1037,6 +1047,7 @@ const fetchViewDefinition = (viewName, isRedirect) => {
 
 const deleteViewSql = (viewName, viewType) => {
   return (dispatch, getState) => {
+    dispatch(setSidebarLoading(true));
     const currentSchema = getState().tables.currentSchema;
     const source = getState().tables.currentDataSource;
     const property = viewType.toLowerCase();
@@ -1058,8 +1069,11 @@ const deleteViewSql = (viewName, viewType) => {
 
     const customOnSuccess = () => {
       dispatch(_push(getSchemaBaseRoute(currentSchema, source)));
+      dispatch(setSidebarLoading(false));
     };
-    const customOnError = () => {};
+    const customOnError = () => {
+      dispatch(setSidebarLoading(false));
+    };
 
     makeMigrationCall(
       dispatch,

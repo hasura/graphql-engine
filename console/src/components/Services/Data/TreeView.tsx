@@ -38,9 +38,13 @@ const LeafItemsView: React.FC<LeafItemsViewProps> = ({
   pathname,
 }) => {
   const [isOpen, setIsOpen] = useState(false);
-  const isActive = pathname.includes(
-    `/data/${currentSource}/schema/${currentSchema}/tables/${item.name}/`
-  );
+  const isActive =
+    pathname.includes(
+      `/data/${currentSource}/schema/${currentSchema}/tables/${item.name}/`
+    ) ||
+    pathname.includes(
+      `/data/${currentSource}/schema/${currentSchema}/views/${item.name}/`
+    );
 
   const isView = item.type === 'view';
 
@@ -58,6 +62,7 @@ const LeafItemsView: React.FC<LeafItemsViewProps> = ({
   return (
     <>
       <div
+        className={styles.sidebarTablePadding}
         onClick={() => {
           setIsOpen(prev => !prev);
         }}
@@ -126,6 +131,7 @@ type SchemaItemsViewProps = {
   isActive: boolean;
   setActiveSchema: (value: string) => void;
   pathname: string;
+  databaseLoading: boolean;
 };
 const SchemaItemsView: React.FC<SchemaItemsViewProps> = ({
   item,
@@ -133,8 +139,11 @@ const SchemaItemsView: React.FC<SchemaItemsViewProps> = ({
   isActive,
   setActiveSchema,
   pathname,
+  databaseLoading,
 }) => {
   const [isOpen, setIsOpen] = useState(false);
+  const showActiveStyle =
+    pathname === `/data/${currentSource}/schema/${item.name}`;
 
   useEffect(() => {
     setIsOpen(isActive);
@@ -151,7 +160,7 @@ const SchemaItemsView: React.FC<SchemaItemsViewProps> = ({
         }}
         role="button"
         className={styles.padd_bottom_small}
-        style={isActive ? activeStyle : {}}
+        style={showActiveStyle ? activeStyle : {}}
       >
         <span
           className={
@@ -164,8 +173,9 @@ const SchemaItemsView: React.FC<SchemaItemsViewProps> = ({
         </span>
       </div>
       <ul className={styles.reducedChildPadding}>
-        {isOpen && item.children
-          ? item.children.map((child, key) => (
+        {isOpen && item.children ? (
+          !databaseLoading ? (
+            item.children.map((child, key) => (
               <li key={key}>
                 <LeafItemsView
                   item={child}
@@ -176,7 +186,17 @@ const SchemaItemsView: React.FC<SchemaItemsViewProps> = ({
                 />
               </li>
             ))
-          : null}
+          ) : (
+            <li>
+              <span
+                className={`${styles.title} ${styles.titleClosed} ${styles.padd_bottom_small}`}
+              >
+                <i className="fa fa-table" />
+                <span className={styles.loaderBar} />
+              </span>
+            </li>
+          )
+        ) : null}
       </ul>
     </>
   );
@@ -189,6 +209,7 @@ type DatabaseItemsViewProps = {
   onSchemaChange: (value: string) => void;
   currentSchema: string;
   pathname: string;
+  databaseLoading: boolean;
 };
 const DatabaseItemsView: React.FC<DatabaseItemsViewProps> = ({
   item,
@@ -197,8 +218,10 @@ const DatabaseItemsView: React.FC<DatabaseItemsViewProps> = ({
   onSchemaChange,
   currentSchema,
   pathname,
+  databaseLoading,
 }) => {
   const [isOpen, setIsOpen] = useState(false);
+  const showActiveStyle = pathname === `/data/${item.name}/`;
 
   useEffect(() => {
     setIsOpen(isActive);
@@ -211,11 +234,9 @@ const DatabaseItemsView: React.FC<DatabaseItemsViewProps> = ({
     <div className={styles.padd_bottom_small}>
       <div
         onClick={() => {
-          // setIsOpen(prev => !prev);
           setActiveDataSource(item.name);
         }}
         onKeyDown={() => {
-          // setIsOpen(prev => !prev);
           setActiveDataSource(item.name);
         }}
         role="button"
@@ -226,7 +247,7 @@ const DatabaseItemsView: React.FC<DatabaseItemsViewProps> = ({
             item.children &&
             `${styles.title} ${isOpen ? '' : styles.titleClosed}`
           }
-          style={isActive ? activeStyle : {}}
+          style={showActiveStyle ? activeStyle : {}}
         >
           <i className={`fa fa-${item.type}`} /> {item.name}
         </span>
@@ -241,10 +262,21 @@ const DatabaseItemsView: React.FC<DatabaseItemsViewProps> = ({
                 setActiveSchema={handleSelectSchema}
                 key={key}
                 pathname={pathname}
+                databaseLoading={databaseLoading}
               />
             </li>
           ))
         : null}
+      {databaseLoading && isActive ? (
+        <li>
+          <span
+            className={`${styles.title} ${styles.titleClosed} ${styles.padd_bottom_small}`}
+          >
+            <i className="fa fa-folder" />
+            <span className={styles.loaderBar} />
+          </span>
+        </li>
+      ) : null}
     </div>
   );
 };
@@ -256,6 +288,8 @@ type TreeViewProps = {
   currentDataSource: string;
   currentSchema: string;
   pathname: string;
+  databaseLoading: boolean;
+  preLoadState: boolean;
 };
 const TreeView: React.FC<TreeViewProps> = ({
   items,
@@ -264,13 +298,36 @@ const TreeView: React.FC<TreeViewProps> = ({
   onSchemaChange,
   currentSchema,
   pathname,
+  databaseLoading,
+  preLoadState,
 }) => {
   const handleSelectDataSource = (dataSource: string) => {
     onDatabaseChange(dataSource);
   };
 
   if (items.length === 0) {
-    return (
+    return preLoadState ? (
+      <div className={styles.treeNav}>
+        <span className={`${styles.title} ${styles.padd_bottom_small}`}>
+          <i className="fa fa-database" />
+        </span>
+        <span className={styles.loaderBar} />
+        <li>
+          <span className={`${styles.title} ${styles.padd_bottom_small}`}>
+            <i className="fa fa-folder" />
+            <span className={styles.loaderBar} />
+            <ul className={styles.reducedChildPadding}>
+              <li
+                className={`${styles.sidebarTablePadding} ${styles.add_mar_left_mid}`}
+              >
+                <i className="fa fa-table" />
+                <span className={styles.loaderBar} />
+              </li>
+            </ul>
+          </span>
+        </li>
+      </div>
+    ) : (
       <li className={styles.noChildren} data-test="sidebar-no-services">
         <i>No data available</i>
       </li>
@@ -288,6 +345,7 @@ const TreeView: React.FC<TreeViewProps> = ({
           setActiveDataSource={handleSelectDataSource}
           currentSchema={currentSchema}
           pathname={pathname}
+          databaseLoading={databaseLoading}
         />
       ))}
     </div>

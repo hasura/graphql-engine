@@ -36,6 +36,7 @@ While we want to fix this by offering, in the future, an explicit API that allow
 - server: update pg_dump clean output to disable function body validation in create function statements to avoid errors due to forward references
 - server: fix a bug preventing some MSSQL foreign key relationships from being tracked
 - console: add a comment field for actions (#231)
+- console: data sidebar bug fixes and improvements (#921)
 - cli: fix seeds incorrectly being applied to databases in config v3 (#6683)
 - cli: add `--all-databases` flag for `migrate apply`, this allows applying migrations on all connected databases in one go
 - docs: add Hasura v2 upgrade guide (#1030)
