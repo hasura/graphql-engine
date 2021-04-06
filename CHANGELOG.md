@@ -3,6 +3,10 @@
 ## Next release
 (Add entries here in the order of: server, console, cli, docs, others)
 
+### Bug fixes and improvements
+
+- console: fix Postgres table creation when table has a non-lowercase name and a comment (#6760)
+
 ## v2.0.0-alpha.7
 
 ### Transactions for Postgres mutations
