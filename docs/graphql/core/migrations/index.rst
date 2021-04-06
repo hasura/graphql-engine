@@ -1,11 +1,11 @@
 .. meta::
-   :description: Manage Hasura migrations and metadata
-   :keywords: hasura, docs, migration, metadata
+   :description: Manage Hasura migrations and metadata in CI/CD
+   :keywords: hasura, docs, migration, metadata, ci, cd
 
 .. _migrations:
 
-Migrations & Metadata
-=====================
+Migrations & Metadata (CI/CD)
+=============================
 
 .. contents:: Table of contents
   :backlinks: none
