@@ -3,6 +3,8 @@
 ## Next release
 (Add entries here in the order of: server, console, cli, docs, others)
 
+## v2.0.0-alpha.7
+
 ### Transactions for Postgres mutations
 
 With v2 came the introduction of heterogeneous execution: in one query or mutation, you can target different sources: it is possible, for instance, in one mutation, to both insert a row in a table in a table on Postgres and another row in another table on MSSQL:
