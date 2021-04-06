@@ -314,7 +314,7 @@ data DefaultPostgresPoolSettings =
 defaultPostgresPoolSettings :: DefaultPostgresPoolSettings
 defaultPostgresPoolSettings =
   DefaultPostgresPoolSettings
-  { _dppsMaxConnections = 150
+  { _dppsMaxConnections = 50
   , _dppsIdleTimeout    = 180
   , _dppsRetries        = 1
   }
