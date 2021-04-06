@@ -206,14 +206,18 @@ mkServeOptions rso = do
     bool MaintenanceModeDisabled MaintenanceModeEnabled
     <$> withEnvBool (rsoEnableMaintenanceMode rso) (fst maintenanceModeEnv)
 
-  return $ ServeOptions port host connParams txIso adminScrt authHook jwtSecret
+  schemaPollInterval <- withEnv (rsoSchemaPollInterval rso) (fst schemaPollIntervalEnv)
+
+  disableSchemaSync <- withEnvBool (rsoSchemaSyncDisable rso) (fst schemaSyncDisableEnv)
+
+  pure $ ServeOptions port host connParams txIso adminScrt authHook jwtSecret
                         unAuthRole corsCfg enableConsole consoleAssetsDir
                         enableTelemetry strfyNum enabledAPIs lqOpts enableAL
                         enabledLogs serverLogLevel planCacheOptions
                         internalErrorsConfig eventsHttpPoolSize eventsFetchInterval
                         asyncActionsFetchInterval logHeadersFromEnv enableRemoteSchemaPerms
-                        connectionOptions webSocketKeepAlive
-                        inferFunctionPerms maintenanceMode experimentalFeatures
+                        connectionOptions webSocketKeepAlive inferFunctionPerms maintenanceMode
+                        schemaPollInterval experimentalFeatures disableSchemaSync
   where
 #ifdef DeveloperAPIs
     defaultAPIs = [METADATA,GRAPHQL,PGDUMP,CONFIG,DEVELOPER]
@@ -593,6 +597,12 @@ maintenanceModeEnv =
   , "Flag to enable maintenance mode in the graphql-engine"
   )
 
+schemaPollIntervalEnv :: (String, String)
+schemaPollIntervalEnv =
+  ( "HASURA_GRAPHQL_SCHEMA_POLL_INTERVAL"
+  , "Interval to poll metadata storage for updates in milliseconds - Default 1000 (1s)"
+  )
+
 adminInternalErrorsEnv :: (String, String)
 adminInternalErrorsEnv =
   ( "HASURA_GRAPHQL_ADMIN_INTERNAL_ERRORS"
@@ -953,6 +963,15 @@ parseEnableMaintenanceMode =
            help (snd maintenanceModeEnv)
          )
 
+parseSchemaPollInterval :: Parser (Maybe Milliseconds)
+parseSchemaPollInterval = optional $
+  option (eitherReader readEither)
+  ( long "schema-poll-interval" <>
+    metavar (fst schemaPollIntervalEnv)  <>
+    help (snd schemaPollIntervalEnv)
+  )
+
+
 mxRefetchDelayEnv :: (String, String)
 mxRefetchDelayEnv =
   ( "HASURA_GRAPHQL_LIVE_QUERIES_MULTIPLEXED_REFETCH_INTERVAL"
@@ -971,6 +990,12 @@ enableAllowlistEnv :: (String, String)
 enableAllowlistEnv =
   ( "HASURA_GRAPHQL_ENABLE_ALLOWLIST"
   , "Only accept allowed GraphQL queries"
+  )
+
+schemaSyncDisableEnv :: (String, String)
+schemaSyncDisableEnv =
+  ( "HASURA_SCHEMA_SYNC_DISABLE"
+  , "Disable Schema Sync Listener"
   )
 
 -- NOTES re. default:
@@ -1009,6 +1034,12 @@ parseLogLevel = optional $
   option (eitherReader readLogLevel)
          ( long "log-level" <>
            help (snd logLevelEnv)
+         )
+
+parseSchemaSyncDisable :: Parser Bool
+parseSchemaSyncDisable =
+  switch ( long "schema-sync-disable" <>
+           help (snd schemaSyncDisableEnv)
          )
 
 -- Init logging related
@@ -1119,7 +1150,9 @@ serveOptionsParser =
   <*> parseWebSocketKeepAlive
   <*> parseInferFunctionPerms
   <*> parseEnableMaintenanceMode
+  <*> parseSchemaPollInterval
   <*> parseExperimentalFeatures
+  <*> parseSchemaSyncDisable
 
 -- | This implements the mapping between application versions
 -- and catalog schema versions.

@@ -271,17 +271,24 @@ runMetadataQuery env instanceId userInfo httpManager serverConfigCtx schemaCache
     & runExceptT
     & liftEitherM
   -- set modified metadata in storage
-  when (queryModifiesMetadata _rqlMetadata) $
-    case (_sccMaintenanceMode serverConfigCtx) of
-      MaintenanceModeDisabled ->
-        -- set modified metadata in storage
-        setMetadata (fromMaybe currentResourceVersion _rqlMetadataResourceVersion) modMetadata
-      MaintenanceModeEnabled ->
-        throw500 "metadata cannot be modified in maintenance mode"
-  -- notify schema cache sync
-  notifySchemaCacheSync instanceId cacheInvalidations
-
-  pure (r, modSchemaCache)
+  if (queryModifiesMetadata _rqlMetadata)
+    then
+      case (_sccMaintenanceMode serverConfigCtx) of
+        MaintenanceModeDisabled -> do
+          -- set modified metadata in storage
+          newResourceVersion <- setMetadata (fromMaybe currentResourceVersion _rqlMetadataResourceVersion) modMetadata
+          -- notify schema cache sync
+          notifySchemaCacheSync newResourceVersion instanceId cacheInvalidations
+          (_, modSchemaCache', _) <- setMetadataResourceVersionInSchemaCache newResourceVersion
+            & runCacheRWT modSchemaCache
+            & peelRun (RunCtx userInfo httpManager serverConfigCtx)
+            & runExceptT
+            & liftEitherM
+          pure (r, modSchemaCache')
+        MaintenanceModeEnabled ->
+          throw500 "metadata cannot be modified in maintenance mode"
+    else
+      pure (r, modSchemaCache)
 
 queryModifiesMetadata :: RQLMetadataRequest -> Bool
 queryModifiesMetadata = \case

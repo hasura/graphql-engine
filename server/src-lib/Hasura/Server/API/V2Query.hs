@@ -85,13 +85,13 @@ runQuery env instanceId userInfo schemaCache httpManager serverConfigCtx rqlQuer
     withReload currentResourceVersion (result, updatedCache, invalidations, updatedMetadata) = do
       when (queryModifiesSchema rqlQuery) $ do
         case (_sccMaintenanceMode serverConfigCtx) of
-          MaintenanceModeDisabled ->
+          MaintenanceModeDisabled -> do
             -- set modified metadata in storage
-            setMetadata currentResourceVersion updatedMetadata
+            newResourceVersion <- setMetadata currentResourceVersion updatedMetadata
+            -- notify schema cache sync
+            notifySchemaCacheSync newResourceVersion instanceId invalidations
           MaintenanceModeEnabled ->
             throw500 "metadata cannot be modified in maintenance mode"
-        -- notify schema cache sync
-        notifySchemaCacheSync instanceId invalidations
       pure (result, updatedCache)
 
 queryModifiesSchema :: RQLQuery -> Bool

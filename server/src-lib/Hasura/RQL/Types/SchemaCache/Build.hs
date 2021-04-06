@@ -116,6 +116,7 @@ withRecordInconsistency f = proc (e, (metadataObject, s)) -> do
 class (CacheRM m) => CacheRWM m where
   buildSchemaCacheWithOptions
     :: BuildReason -> CacheInvalidations -> Metadata -> m ()
+  setMetadataResourceVersionInSchemaCache :: MetadataResourceVersion -> m ()
 
 data BuildReason
   -- | The build was triggered by an update this instance made to the catalog (in the
@@ -149,12 +150,16 @@ instance Monoid CacheInvalidations where
 
 instance (CacheRWM m) => CacheRWM (ReaderT r m) where
   buildSchemaCacheWithOptions a b c = lift $ buildSchemaCacheWithOptions a b c
+  setMetadataResourceVersionInSchemaCache = lift . setMetadataResourceVersionInSchemaCache
 instance (CacheRWM m) => CacheRWM (StateT s m) where
   buildSchemaCacheWithOptions a b c = lift $ buildSchemaCacheWithOptions a b c
+  setMetadataResourceVersionInSchemaCache = lift . setMetadataResourceVersionInSchemaCache
 instance (CacheRWM m) => CacheRWM (TraceT m) where
   buildSchemaCacheWithOptions a b c = lift $ buildSchemaCacheWithOptions a b c
+  setMetadataResourceVersionInSchemaCache = lift . setMetadataResourceVersionInSchemaCache
 instance (CacheRWM m) => CacheRWM (LazyTxT QErr m) where
   buildSchemaCacheWithOptions a b c = lift $ buildSchemaCacheWithOptions a b c
+  setMetadataResourceVersionInSchemaCache = lift . setMetadataResourceVersionInSchemaCache
 
 -- | A simple monad class which enables fetching and setting @'Metadata'
 -- in the state.

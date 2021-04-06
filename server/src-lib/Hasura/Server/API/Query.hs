@@ -209,13 +209,13 @@ runQuery env instanceId userInfo sc hMgr serverConfigCtx query = do
     withReload currentResourceVersion (result, updatedCache, invalidations, updatedMetadata) = do
       when (queryModifiesSchemaCache query) $ do
         case (_sccMaintenanceMode serverConfigCtx) of
-          MaintenanceModeDisabled ->
+          MaintenanceModeDisabled -> do
             -- set modified metadata in storage
-            setMetadata currentResourceVersion updatedMetadata
+            newResourceVersion <- setMetadata currentResourceVersion updatedMetadata
+            -- notify schema cache sync
+            notifySchemaCacheSync newResourceVersion instanceId invalidations
           MaintenanceModeEnabled ->
             throw500 "metadata cannot be modified in maintenance mode"
-        -- notify schema cache sync
-        notifySchemaCacheSync instanceId invalidations
       pure (result, updatedCache)
 
 -- | A predicate that determines whether the given query might modify/rebuild the schema cache. If

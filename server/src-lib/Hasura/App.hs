@@ -7,6 +7,7 @@ import           Hasura.Prelude
 
 import qualified Control.Concurrent.Async.Lifted.Safe       as LA
 import qualified Control.Concurrent.Extended                as C
+import qualified Control.Concurrent.STM                     as STM
 import qualified Control.Exception.Lifted                   as LE
 import qualified Data.Aeson                                 as A
 import qualified Data.ByteString.Char8                      as BC
@@ -222,7 +223,7 @@ data ServeCtx
   , _scShutdownLatch  :: !ShutdownLatch
   , _scSchemaCache    :: !RebuildableSchemaCache
   , _scSchemaCacheRef :: !SchemaCacheRef
-  , _scSchemaSyncCtx  :: !SchemaSyncCtx
+  , _scMetaVersionRef :: !(STM.TMVar MetadataResourceVersion)
   }
 
 -- | Collection of the LoggerCtx, the regular Logger and the PGLogger
@@ -282,27 +283,26 @@ initialiseServeCtx env GlobalCtx{..} so@ServeOptions{..} = do
         in PostgresConnConfiguration sourceConnInfo Nothing
       sqlGenCtx = SQLGenCtx soStringifyNum
 
-  -- Start a background thread for listening schema sync events from other server instances,
-  -- just before building @'RebuildableSchemaCache' (happens in @'migrateCatalogSchema' function).
-  -- See Note [Schema Cache Sync]
-  (schemaSyncListenerThread, schemaSyncEventRef) <- startSchemaSyncListenerThread metadataDbPool logger instanceId
-
   let serverConfigCtx =
         ServerConfigCtx soInferFunctionPermissions soEnableRemoteSchemaPermissions
                         sqlGenCtx soEnableMaintenanceMode soExperimentalFeatures
 
-  (rebuildableSchemaCache, cacheInitStartTime) <-
+  (rebuildableSchemaCache, _) <-
     lift . flip onException (flushLogger loggerCtx) $
     migrateCatalogSchema env logger metadataDbPool maybeDefaultSourceConfig _gcHttpManager
       serverConfigCtx (mkPgSourceResolver pgLogger)
 
-  let schemaSyncCtx = SchemaSyncCtx schemaSyncListenerThread schemaSyncEventRef cacheInitStartTime
+
+  -- Start a background thread for listening schema sync events from other server instances,
+  metaVersionRef <- liftIO $ STM.newEmptyTMVarIO
+  startSchemaSyncListenerThread logger metadataDbPool instanceId (fromMaybe 1000 soSchemaPollInterval) metaVersionRef soSchemaSyncDisable
+
   -- See Note [Temporarily disabling query plan caching]
   -- (planCache, schemaCacheRef) <- initialiseCache
   schemaCacheRef <- initialiseCache rebuildableSchemaCache
 
   pure $ ServeCtx _gcHttpManager instanceId loggers metadataDbPool latch
-                  rebuildableSchemaCache schemaCacheRef schemaSyncCtx
+                  rebuildableSchemaCache schemaCacheRef metaVersionRef
 
 mkLoggers
   :: (MonadIO m, MonadBaseControl IO m)
@@ -456,7 +456,7 @@ runHGEServer setupHook env ServeOptions{..} ServeCtx{..} initTime postPollHook s
 
   let sqlGenCtx = SQLGenCtx soStringifyNum
       Loggers loggerCtx logger _ = _scLoggers
-      SchemaSyncCtx{..} = _scSchemaSyncCtx
+      --SchemaSyncCtx{..} = _scSchemaSyncCtx
 
   authModeRes <- runExceptT $ setupAuthMode soAdminSecret soAuthHook soJwtSecret soUnAuthRole
                               _scHttpManager logger
@@ -501,8 +501,8 @@ runHGEServer setupHook env ServeOptions{..} ServeCtx{..} initTime postPollHook s
   liftIO $ logInconsObjs logger inconsObjs
 
   -- Start a background thread for processing schema sync event present in the '_sscSyncEventRef'
-  _ <- startSchemaSyncProcessorThread logger _scHttpManager _sscSyncEventRef
-                               cacheRef _scInstanceId _sscCacheInitStartTime
+  _ <- startSchemaSyncProcessorThread logger _scHttpManager _scMetaVersionRef
+                               cacheRef _scInstanceId
                                serverConfigCtx
 
   let
@@ -764,19 +764,16 @@ runInSeparateTx tx = do
   pool <- lift $ asks fst
   liftEitherM $ liftIO $ runExceptT $ Q.runTx pool (Q.RepeatableRead, Nothing) tx
 
--- | Using @pg_notify@ function to publish schema sync events to other server
--- instances via 'hasura_schema_update' channel.
--- See Note [Schema Cache Sync]
-notifySchemaCacheSyncTx :: InstanceId -> CacheInvalidations -> Q.TxE QErr ()
-notifySchemaCacheSyncTx instanceId invalidations = do
+notifySchemaCacheSyncTx :: MetadataResourceVersion -> InstanceId -> CacheInvalidations -> Q.TxE QErr ()
+notifySchemaCacheSyncTx (MetadataResourceVersion resourceVersion) instanceId invalidations = do
   Q.Discard () <- Q.withQE defaultTxErrorHandler [Q.sql|
-      SELECT pg_notify('hasura_schema_update', json_build_object(
-        'instance_id', $1,
-        'occurred_at', NOW(),
-        'invalidations', $2
-        )::text
-      )
-    |] (instanceId, Q.AltJ invalidations) True
+      INSERT INTO hdb_catalog.hdb_schema_notifications(id, notification, resource_version, instance_id)
+      VALUES (1, $1::json, $2, $3::uuid)
+      ON CONFLICT (id) DO UPDATE SET
+        notification = $1::json,
+        resource_version = $2,
+        instance_id = $3::uuid
+    |] (Q.AltJ invalidations, resourceVersion, instanceId) True
   pure ()
 
 getCatalogStateTx :: Q.TxE QErr CatalogState
@@ -808,12 +805,12 @@ setCatalogStateTx stateTy stateValue =
 --
 -- To learn more about why the instance is derived as following, see Note [Generic MetadataStorageT transformer]
 instance MonadMetadataStorage (MetadataStorageT PGMetadataStorageApp) where
-  fetchMetadata             = runInSeparateTx fetchMetadataAndResourceVersionFromCatalog
-  setMetadata r             = runInSeparateTx . setMetadataInCatalog (Just r)
-  notifySchemaCacheSync a b = runInSeparateTx $ notifySchemaCacheSyncTx a b
-  processSchemaSyncEventPayload instanceId payload = do
-    EventPayload{..} <- decodeValue payload
-    pure $ SchemaSyncEventProcessResult (instanceId /= _epInstanceId) _epInvalidations
+
+  fetchMetadataResourceVersion   = runInSeparateTx fetchMetadataResourceVersionFromCatalog
+  fetchMetadata                  = runInSeparateTx fetchMetadataAndResourceVersionFromCatalog
+  fetchMetadataNotifications a b = runInSeparateTx $ fetchMetadataNotificationsFromCatalog a b
+  setMetadata r                  = runInSeparateTx . setMetadataInCatalog (Just r)
+  notifySchemaCacheSync a b c    = runInSeparateTx $ notifySchemaCacheSyncTx a b c
   getCatalogState     = runInSeparateTx getCatalogStateTx
   setCatalogState a b = runInSeparateTx $ setCatalogStateTx a b
 

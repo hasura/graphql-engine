@@ -110,11 +110,12 @@ instance (Monad m) => CacheRM (CacheRWT m) where
 instance (MonadIO m, MonadError QErr m, HasHttpManagerM m
          , MonadResolveSource m, HasServerConfigCtx m) => CacheRWM (CacheRWT m) where
   buildSchemaCacheWithOptions buildReason invalidations metadata = CacheRWT do
-    (RebuildableSchemaCache _ invalidationKeys rule, oldInvalidations) <- get
-    let newInvalidationKeys = invalidateKeys invalidations invalidationKeys
+    (RebuildableSchemaCache lastBuiltSC invalidationKeys rule, oldInvalidations) <- get
+    let metadataVersion = scMetadataResourceVersion lastBuiltSC
+        newInvalidationKeys = invalidateKeys invalidations invalidationKeys
     result <- lift $ runCacheBuildM $ flip runReaderT buildReason $
               Inc.build rule (metadata, newInvalidationKeys)
-    let schemaCache = Inc.result result
+    let schemaCache = (Inc.result result) { scMetadataResourceVersion = metadataVersion }
         prunedInvalidationKeys = pruneInvalidationKeys schemaCache newInvalidationKeys
         !newCache = RebuildableSchemaCache schemaCache prunedInvalidationKeys (Inc.rebuildRule result)
         !newInvalidations = oldInvalidations <> invalidations
@@ -125,6 +126,14 @@ instance (MonadIO m, MonadError QErr m, HasHttpManagerM m
       pruneInvalidationKeys schemaCache = over ikRemoteSchemas $ M.filterWithKey \name _ ->
         -- see Note [Keep invalidation keys for inconsistent objects]
         name `elem` getAllRemoteSchemas schemaCache
+
+  setMetadataResourceVersionInSchemaCache resourceVersion = CacheRWT $ do
+    (rebuildableSchemaCache, invalidations) <- get
+    put (rebuildableSchemaCache
+          { lastBuiltSchemaCache = (lastBuiltSchemaCache rebuildableSchemaCache)
+            { scMetadataResourceVersion = Just resourceVersion} }
+        , invalidations)
+
 
 
 buildSchemaCacheRule
@@ -227,6 +236,7 @@ buildSchemaCacheRule env = proc (metadata, invalidationKeys) -> do
         <> ambiguousRestEndpoints
     , scApiLimits = _boApiLimits resolvedOutputs
     , scMetricsConfig = _boMetricsConfig resolvedOutputs
+    , scMetadataResourceVersion = Nothing
     }
   where
     getSourceConfigIfNeeded

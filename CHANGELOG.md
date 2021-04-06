@@ -114,6 +114,7 @@ query {
 
 - server/mssql: support tracking and querying from views
 - server: inherited roles for PG queries and subscription
+- server: replaces postgres LISTEN/NOTIFY channel with lightweight polling for metadata syncing in order to resolve proxy issues
 - server: fix issue when a remote relationship's joining field had a custom GraphQL name defined (fix #6626)
 - server: fix handling of nullable object relationships (fix #6633)
 - console: add inherited roles support (#483)

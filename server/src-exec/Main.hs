@@ -89,6 +89,7 @@ runApp env (HGEOptionsG rci metadataDbUrl hgeCmd) = do
                   Nothing
 
         let Loggers _ logger pgLogger = _scLoggers serveCtx
+
         _idleGCThread <- C.forkImmortal "ourIdleGC" logger $
           GC.ourIdleGC logger (seconds 0.3) (seconds 10) (seconds 60)
 

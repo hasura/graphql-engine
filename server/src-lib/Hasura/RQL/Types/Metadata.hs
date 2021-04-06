@@ -18,7 +18,6 @@ import           Control.Lens                        hiding (set, (.=))
 import           Data.Aeson.Casing
 import           Data.Aeson.TH
 import           Data.Aeson.Types
-import           Data.Int                            (Int64)
 
 import qualified Hasura.SQL.AnyBackend               as AB
 
@@ -310,14 +309,6 @@ parseNonSourcesMetadata o = do
   pure ( remoteSchemas, queryCollections, allowlist, customTypes
        , actions, cronTriggers, apiLimits, metricsConfig, inheritedRoles
        )
-
-newtype MetadataResourceVersion
-  = MetadataResourceVersion
-  { getMetadataResourceVersion :: Int64
-  } deriving (Show, Eq, FromJSON, ToJSON)
-
-initialResourceVersion :: MetadataResourceVersion
-initialResourceVersion = MetadataResourceVersion 0
 
 -- | A complete GraphQL Engine metadata representation to be stored,
 -- exported/replaced via metadata queries.

@@ -106,7 +106,9 @@ data RawServeOptions impl
   , rsoWebSocketKeepAlive            :: !(Maybe Int)
   , rsoInferFunctionPermissions      :: !(Maybe Bool)
   , rsoEnableMaintenanceMode         :: !Bool
+  , rsoSchemaPollInterval            :: !(Maybe Milliseconds)
   , rsoExperimentalFeatures          :: !(Maybe [ExperimentalFeature])
+  , rsoSchemaSyncDisable             :: !Bool
   }
 
 -- | @'ResponseInternalErrorsConfig' represents the encoding of the internal
@@ -160,7 +162,9 @@ data ServeOptions impl
   , soWebsocketKeepAlive            :: !KeepAliveDelay
   , soInferFunctionPermissions      :: !FunctionPermissionsCtx
   , soEnableMaintenanceMode         :: !MaintenanceMode
+  , soSchemaPollInterval            :: !(Maybe Milliseconds)
   , soExperimentalFeatures          :: !(Set.HashSet ExperimentalFeature)
+  , soSchemaSyncDisable             :: !Bool
   }
 
 data DowngradeOptions

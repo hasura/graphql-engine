@@ -116,6 +116,8 @@ module Hasura.RQL.Types.SchemaCache
   , FunctionCache
   , CronTriggerInfo(..)
 
+  , MetadataResourceVersion(..)
+  , initialResourceVersion
   , getBoolExpDeps
   ) where
 
@@ -129,6 +131,7 @@ import qualified Language.GraphQL.Draft.Syntax       as G
 import           Control.Lens                        (makeLenses)
 import           Data.Aeson
 import           Data.Aeson.TH
+import           Data.Int                            (Int64)
 import           Data.Text.Extended
 import           System.Cron.Types
 
@@ -162,6 +165,14 @@ import           Hasura.RQL.Types.Table
 import           Hasura.Session
 import           Hasura.Tracing                      (TraceT)
 
+
+newtype MetadataResourceVersion
+  = MetadataResourceVersion
+  { getMetadataResourceVersion :: Int64
+  } deriving (Show, Eq, Num, FromJSON, ToJSON)
+
+initialResourceVersion :: MetadataResourceVersion
+initialResourceVersion = MetadataResourceVersion 0
 
 reportSchemaObjs :: [SchemaObjId] -> Text
 reportSchemaObjs = commaSeparated . sort . map reportSchemaObj
@@ -311,6 +322,7 @@ data SchemaCache
   , scEndpoints                   :: !(EndpointTrie GQLQueryWithText)
   , scApiLimits                   :: !ApiLimit
   , scMetricsConfig               :: !MetricsConfig
+  , scMetadataResourceVersion     :: !(Maybe MetadataResourceVersion)
   }
 $(deriveToJSON hasuraJSON ''SchemaCache)
 
