@@ -4,8 +4,8 @@
 
 .. _config_examples:
 
-GraphQL engine server config examples
-=====================================
+Server config examples
+======================
 
 .. contents:: Table of contents
   :backlinks: none

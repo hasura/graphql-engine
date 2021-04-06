@@ -4,8 +4,8 @@
 
 .. _manual_migrations_v2:
 
-Writing migrations manually
-===========================
+Writing migrations manually (config v2)
+=======================================
 
 .. contents:: Table of contents
   :backlinks: none

@@ -20,7 +20,7 @@ directory of multiple files/directories.
 
 .. note::
 
-  For ``config v1``, see :ref:`metadata_file_format_v1`.
+  For ``config v2``, see :ref:`metadata_format_v2`.
 
 Metadata directory format
 -------------------------

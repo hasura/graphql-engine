@@ -4,8 +4,8 @@
 
 .. _migration_reference_v2:
 
-Migrations reference documentation
-==================================
+Migrations reference documentation (config v2)
+==============================================
 
 .. toctree::
   :maxdepth: 1

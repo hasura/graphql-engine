@@ -60,21 +60,20 @@ Hasura configuration
   with a Postgres database to start a Hasura v2 instance as Hasura always needs a Postgres database to store
   its metadata.
 
-- ``HASURA_GRAPHQL_DATABASE_URL`` env var works in a backwards compatible way. The database set using this env var is
-  connected automatically with the name ``default`` in Hasura v2 while upgrading an existing instance or while starting a fresh
-  instance.
+- The database set using the ``HASURA_GRAPHQL_DATABASE_URL`` env var is connected automatically with the name
+  ``default`` in Hasura v2 while upgrading an existing instance or while starting a fresh instance.
 
-  Setting this env var post startup/upgrade will have no effect as the Hasura metadata would already have been initalized and the
-  env var will be treated as any other custom env var.
+  Setting this env var post initial setup/upgrade will have no effect as the Hasura metadata for data sources would already
+  have been initialized and the env var will be treated as any other custom env var.
 
   It is now not mandatory to set this env var if a dedicated ``HASURA_GRAPHQL_METADATA_DATABASE_URL`` is set.
 
 - The values of the env vars ``HASURA_GRAPHQL_PG_CONNECTIONS``, ``HASURA_GRAPHQL_PG_TIMEOUT`` and ``HASURA_GRAPHQL_NO_OF_RETRIES``
-  are used to define the connection parameters of the ``default`` database while upgrading an existing instance or while starting a fresh
-  instance.
+  are used to define the connection parameters of the ``default`` database while upgrading an existing instance
+  or while starting a fresh instance.
 
-  Changing or setting values of these env vars post startup/upgrade will have no impact as their initial values would have been moved to
-  the Hasura metadata already and the values there are now used to define the connection parameters.
+  Post initial setup/upgrade, these env vars can be considered as Deprecated. Changing or setting values of these env vars
+  will have no impact as the values in the Hasura metadata are now used to define the connection parameters.
 
 - Custom env vars can now be used to connect databases dynamically at runtime.
 
@@ -85,8 +84,8 @@ Hasura Cloud projects' metadata is now stored in metadata DBs managed by Hasura 
 the ``HASURA_GRAPHQL_METADATA_DATABASE_URL`` env var is not configurable on Hasura Cloud and is managed
 by Hasura Cloud itself.
 
-By default Hasura Cloud projects are created without any databases connected to them. See :ref:`connecting databases <connect_database>` to add a database
-to a Hasura Cloud v2 project.
+By default Hasura Cloud projects are created without any databases connected to them. See :ref:`connecting databases <connect_database>`
+to add a database to a Hasura Cloud v2 project.
 
 See the below section on :ref:`hasura_v1_v2_compatibility` to use a Hasura v2 Cloud project like a Hasura v1
 Cloud project.

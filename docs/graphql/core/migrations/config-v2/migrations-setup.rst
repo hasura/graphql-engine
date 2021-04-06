@@ -4,8 +4,8 @@
 
 .. _migrations_setup_v2:
 
-Setting up Hasura migrations
-============================
+Setting up Hasura migrations (config v2)
+========================================
 
 .. contents:: Table of contents
   :backlinks: none

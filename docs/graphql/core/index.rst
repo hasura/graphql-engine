@@ -63,13 +63,14 @@ The Hasura GraphQL engine makes your data instantly accessible over a real-time 
 
     .. container:: toc-list-head
 
-      Migrate & Deploy
+      CI/CD & Deployments
 
     .. container:: toc-list-content
 
       - :ref:`Migrations basics <migrations>`
       - :ref:`Setting Up Migrations <migrations_setup>`
       - :ref:`Managing Metadata <manage_hasura_metadata>`
+      - :ref:`Server configuration <hge_flags>`
       - :ref:`Deploy Using Hasura Cloud <cloud_docs>`
       - :ref:`Deploy Using Docker <deployment_docker>`
       - :ref:`Deploy Using Kubernetes <deploy_kubernetes>`
@@ -99,6 +100,7 @@ The Hasura GraphQL engine makes your data instantly accessible over a real-time 
       - `30-Minute Hasura Basics Course <https://hasura.io/learn/graphql/hasura/introduction/>`__
       - `GraphQL & Hasura Courses <https://hasura.io/learn/>`__
       - :ref:`Guides & Resources <guides>`
+      - :ref:`Upgrading to Hasura v2 <upgrade_hasura_v2>`
 
 
 .. toctree::

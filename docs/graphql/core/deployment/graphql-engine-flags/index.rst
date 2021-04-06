@@ -15,12 +15,12 @@ GraphQL engine server configuration
 Introduction
 ------------
 
-Hasura supports various flags and options for customising how you are running the GraphQL engine in your environment.
+Hasura supports various flags/env vars for customizing how you are running the GraphQL engine in your environment.
 
-Server flags
-------------
+Server config
+-------------
 
-See the :ref:`server flag reference <server_flag_reference>` for all the available flags.
+See the :ref:`server config reference <server_flag_reference>` for all the available flags/env vars.
 
 Use cases
 ---------
@@ -37,5 +37,5 @@ The following are a few configuration use cases:
 .. toctree::
    :hidden:
 
-   Server flags reference <reference>
+   Server config reference <reference>
    Server config examples <config-examples>
