@@ -701,11 +701,16 @@ instance HasResourceLimits PGMetadataStorageApp where
   askResourceLimits = pure (ResourceLimits id)
 
 instance HttpLog PGMetadataStorageApp where
+
+  type HTTPLoggingMetadata PGMetadataStorageApp = ()
+
+  buildHTTPLoggingMetadata _ = ()
+
   logHttpError logger userInfoM reqId waiReq req qErr headers =
     unLogger logger $ mkHttpLog $
       mkHttpErrorLogContext userInfoM reqId waiReq req qErr Nothing Nothing headers
 
-  logHttpSuccess logger userInfoM reqId waiReq _reqBody _response compressedResponse qTime cType headers =
+  logHttpSuccess logger userInfoM reqId waiReq _reqBody _response compressedResponse qTime cType headers () =
     unLogger logger $ mkHttpLog $
       mkHttpAccessLogContext userInfoM reqId waiReq compressedResponse qTime cType headers
 

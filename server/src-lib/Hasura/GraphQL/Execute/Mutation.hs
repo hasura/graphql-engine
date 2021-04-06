@@ -69,15 +69,16 @@ convertMutationSelectionSet
   -> G.SelectionSet G.NoFragments G.Name
   -> [G.VariableDefinition]
   -> Maybe GH.VariableValues
-  -> m ExecutionPlan
+  -> m (ExecutionPlan, G.SelectionSet G.NoFragments Variable)
 convertMutationSelectionSet env logger gqlContext SQLGenCtx{stringifyNum} userInfo manager reqHeaders fields varDefs varValsM = do
   mutationParser <- onNothing (gqlMutationParser gqlContext) $
     throw400 ValidationFailed "no mutations exist"
+
+  resolvedSelSet <- resolveVariables varDefs (fromMaybe Map.empty varValsM) fields
   -- Parse the GraphQL query into the RQL AST
   (unpreparedQueries, _reusability)
     :: (OMap.InsOrdHashMap G.Name (MutationRootField UnpreparedValue), QueryReusability)
-    <-  resolveVariables varDefs (fromMaybe Map.empty varValsM) fields
-    >>= (mutationParser >>> (`onLeft` reportParseErrors))
+    <-(mutationParser >>> (`onLeft` reportParseErrors)) resolvedSelSet
 
   -- Transform the RQL AST into a prepared SQL query
   txs <- for unpreparedQueries \case
@@ -93,7 +94,7 @@ convertMutationSelectionSet env logger gqlContext SQLGenCtx{stringifyNum} userIn
     RFRaw s ->
       pure $ ExecStepRaw s
 
-  return txs
+  return (txs, resolvedSelSet)
   where
     reportParseErrors errs = case NE.head errs of
       -- TODO: Our error reporting machinery doesn’t currently support reporting

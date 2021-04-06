@@ -13,6 +13,7 @@ module Hasura.GraphQL.Execute
   , checkQueryInAllowlist
   , MultiplexedLiveQueryPlan(..)
   , LiveQueryPlan (..)
+  , getQueryParts -- this function is exposed for testing in parameterized query hash
   ) where
 
 import           Hasura.Prelude
@@ -46,6 +47,7 @@ import qualified Hasura.Tracing                         as Tracing
 
 import           Hasura.EncJSON
 import           Hasura.GraphQL.Parser.Column           (UnpreparedValue)
+import           Hasura.GraphQL.Parser.Schema           (Variable)
 import           Hasura.GraphQL.RemoteServer            (execRemoteGQ)
 import           Hasura.GraphQL.Transport.HTTP.Protocol
 import           Hasura.Metadata.Class
@@ -103,6 +105,31 @@ instance MonadGQLExecutionCheck m => MonadGQLExecutionCheck (MetadataStorageT m)
   checkGQLExecution ui det enableAL sc req =
     lift $ checkGQLExecution ui det enableAL sc req
 
+-- | Depending on the request parameters, fetch the correct typed operation
+-- definition from the GraphQL query
+getQueryParts
+  :: MonadError QErr m
+  => GQLReqParsed
+  -> m QueryParts
+getQueryParts (GQLReq opNameM q _varValsM) = do
+  let (selSets, opDefs, _fragDefsL) = G.partitionExDefs $ unGQLExecDoc q
+  case (opNameM, selSets, opDefs) of
+    (Just opName, [], _) -> do
+      let n = _unOperationName opName
+          opDefM = find (\opDef -> G._todName opDef == Just n) opDefs
+      onNothing opDefM $ throw400 ValidationFailed $
+        "no such operation found in the document: " <> dquote n
+    (Just _, _, _)  ->
+      throw400 ValidationFailed $ "operationName cannot be used when " <>
+      "an anonymous operation exists in the document"
+    (Nothing, [selSet], []) ->
+      return $ G.TypedOperationDefinition G.OperationTypeQuery Nothing [] [] selSet
+    (Nothing, [], [opDef])  ->
+      return opDef
+    (Nothing, _, _) ->
+      throw400 ValidationFailed $ "exactly one operation has to be present " <>
+      "in the document when operationName is not specified"
+
 getExecPlanPartial
   :: (MonadError QErr m)
   => UserInfo
@@ -134,30 +161,6 @@ getExecPlanPartial userInfo sc queryType req =
             BOFAAllowed    -> fromMaybe frontend backend
             BOFADisallowed -> frontend
 
-    -- | Depending on the request parameters, fetch the correct typed operation
-    -- definition from the GraphQL query
-    getQueryParts
-      :: MonadError QErr m
-      => GQLReqParsed
-      -> m QueryParts
-    getQueryParts (GQLReq opNameM q _varValsM) = do
-      let (selSets, opDefs, _fragDefsL) = G.partitionExDefs $ unGQLExecDoc q
-      case (opNameM, selSets, opDefs) of
-        (Just opName, [], _) -> do
-          let n = _unOperationName opName
-              opDefM = find (\opDef -> G._todName opDef == Just n) opDefs
-          onNothing opDefM $ throw400 ValidationFailed $
-            "no such operation found in the document: " <> dquote n
-        (Just _, _, _)  ->
-          throw400 ValidationFailed $ "operationName cannot be used when " <>
-          "an anonymous operation exists in the document"
-        (Nothing, [selSet], []) ->
-          return $ G.TypedOperationDefinition G.OperationTypeQuery Nothing [] [] selSet
-        (Nothing, [], [opDef])  ->
-          return opDef
-        (Nothing, _, _) ->
-          throw400 ValidationFailed $ "exactly one operation has to be present " <>
-          "in the document when operationName is not specified"
 
 -- The graphql query is resolved into a sequence of execution operations
 data ResolvedExecutionPlan
@@ -292,7 +295,7 @@ getResolvedExecPlan
   -> HTTP.Manager
   -> [HTTP.Header]
   -> (GQLReqUnparsed, GQLReqParsed)
-  -> m (Telem.CacheHit, ResolvedExecutionPlan)
+  -> m (Telem.CacheHit, (G.SelectionSet G.NoFragments Variable, ResolvedExecutionPlan))
 getResolvedExecPlan env logger {- planCache-} userInfo sqlGenCtx
   sc scVer queryType httpManager reqHeaders (reqUnparsed, reqParsed) = -- do
 
@@ -314,7 +317,7 @@ getResolvedExecPlan env logger {- planCache-} userInfo sqlGenCtx
     -- addPlanToCache plan =
     --   liftIO $ EP.addPlan scVer (userRole userInfo)
     --   opNameM queryStr plan planCache
-    noExistingPlan :: m ResolvedExecutionPlan
+    noExistingPlan :: m (G.SelectionSet G.NoFragments Variable, ResolvedExecutionPlan)
     noExistingPlan = do
       -- GraphQL requests may incorporate fragments which insert a pre-defined
       -- part of a GraphQL query. Here we make sure to remember those
@@ -329,23 +332,25 @@ getResolvedExecPlan env logger {- planCache-} userInfo sqlGenCtx
         G.TypedOperationDefinition G.OperationTypeQuery _ varDefs dirs selSet -> do
           -- (Here the above fragment inlining is actually executed.)
           inlinedSelSet <- EI.inlineSelectionSet fragments selSet
-          uncurry QueryExecutionPlan <$>
+          (executionPlan, queryRootFields, normalizedSelectionSet) <-
             EQ.convertQuerySelSet env logger gCtx userInfo httpManager reqHeaders dirs inlinedSelSet varDefs (_grVariables reqUnparsed)
+          pure $ (normalizedSelectionSet, QueryExecutionPlan executionPlan queryRootFields)
           -- See Note [Temporarily disabling query plan caching]
           -- traverse_ (addPlanToCache . EP.RPQuery) plan
         G.TypedOperationDefinition G.OperationTypeMutation _ varDefs _ selSet -> do
           -- (Here the above fragment inlining is actually executed.)
           inlinedSelSet <- EI.inlineSelectionSet fragments selSet
-          MutationExecutionPlan <$>
+          (executionPlan, normalizedSelectionSet) <-
             EM.convertMutationSelectionSet env logger gCtx sqlGenCtx userInfo httpManager reqHeaders
             inlinedSelSet varDefs (_grVariables reqUnparsed)
+          pure $ (normalizedSelectionSet, MutationExecutionPlan executionPlan)
           -- See Note [Temporarily disabling query plan caching]
           -- traverse_ (addPlanToCache . EP.RPQuery) plan
         G.TypedOperationDefinition G.OperationTypeSubscription _ varDefs directives selSet -> do
           -- (Here the above fragment inlining is actually executed.)
           inlinedSelSet <- EI.inlineSelectionSet fragments selSet
           -- Parse as query to check correctness
-          (unpreparedAST, _reusability) <-
+          (unpreparedAST, _reusability, normalizedSelectionSet) <-
             EQ.parseGraphQLQuery gCtx varDefs (_grVariables reqUnparsed) inlinedSelSet
           -- A subscription should have exactly one root field
           -- As an internal testing feature, we support subscribing to multiple
@@ -362,5 +367,5 @@ getResolvedExecPlan env logger {- planCache-} userInfo sqlGenCtx
               in
               unless (multipleAllowed || null rst) $
                 throw400 ValidationFailed "subscriptions must select one top level field"
-
-          SubscriptionExecutionPlan <$> buildSubscriptionPlan userInfo unpreparedAST
+          subscriptionPlan <- buildSubscriptionPlan userInfo unpreparedAST
+          pure (normalizedSelectionSet, SubscriptionExecutionPlan subscriptionPlan)

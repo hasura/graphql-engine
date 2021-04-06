@@ -231,7 +231,7 @@ data UpdateAction
   = UpdateAction
   { _uaName       :: !ActionName
   , _uaDefinition :: !ActionDefinitionInput
-  , _usComment    :: !(Maybe Text)
+  , _uaComment    :: !(Maybe Text)
   } deriving (Show, Eq)
 $(J.deriveJSON hasuraJSON ''UpdateAction)
 

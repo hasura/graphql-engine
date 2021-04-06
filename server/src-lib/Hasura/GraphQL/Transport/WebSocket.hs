@@ -375,7 +375,7 @@ onStart env serverEnv wsConn (StartMsg opId q) = catchAndIgnore $ do
     userInfo sqlGenCtx sc scVer queryType
     httpMgr reqHdrs (q, reqParsed)
 
-  (telemCacheHit, execPlan) <- onLeft execPlanE (withComplete . preExecErr requestId)
+  (telemCacheHit, (_normalizeSelSet, execPlan)) <- onLeft execPlanE (withComplete . preExecErr requestId)
 
   case execPlan of
     E.QueryExecutionPlan queryPlan asts -> Tracing.trace "Query" $ do

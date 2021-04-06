@@ -147,7 +147,7 @@ explainGQLQuery sc (GQLExplain query userVarsRaw maybeIsRelay) = do
     G.TypedOperationDefinition G.OperationTypeQuery _ varDefs _ selSet -> do
       -- (Here the above fragment inlining is actually executed.)
       inlinedSelSet <- E.inlineSelectionSet fragments selSet
-      (unpreparedQueries, _) <-
+      (unpreparedQueries, _, _) <-
         E.parseGraphQLQuery graphQLContext varDefs (GH._grVariables query) inlinedSelSet
       encJFromJValue . catMaybes
         <$> for (OMap.toList unpreparedQueries) (uncurry (explainQueryField userInfo))
@@ -158,7 +158,7 @@ explainGQLQuery sc (GQLExplain query userVarsRaw maybeIsRelay) = do
     G.TypedOperationDefinition G.OperationTypeSubscription _ varDefs _ selSet -> do
       -- (Here the above fragment inlining is actually executed.)
       inlinedSelSet <- E.inlineSelectionSet fragments selSet
-      (unpreparedQueries, _) <- E.parseGraphQLQuery graphQLContext varDefs (GH._grVariables query) inlinedSelSet
+      (unpreparedQueries, _, _) <- E.parseGraphQLQuery graphQLContext varDefs (GH._grVariables query) inlinedSelSet
       validSubscription <-  E.buildSubscriptionPlan userInfo unpreparedQueries
       case validSubscription of
         E.SEAsyncActionsWithNoRelationships _ -> throw400 NotSupported "async action query fields without relationships to table cannot be explained"
