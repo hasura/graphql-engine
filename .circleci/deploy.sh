@@ -123,6 +123,24 @@ push_latest_cli_migrations_image_v2() {
     docker push "$LATEST_IMAGE_TAG"
 }
 
+# build and push container for auto-migrations-v3
+build_and_push_cli_migrations_image_v3() {
+    IMAGE_TAG="hasura/graphql-engine:${CIRCLE_TAG}.cli-migrations-v3"
+    docker load -i /build/_cli_migrations_output/v3.tar
+    docker tag cli-migrations-v3 "$IMAGE_TAG"
+    docker push "$IMAGE_TAG"
+}
+
+# build and push latest container for auto-migrations-v3
+push_latest_cli_migrations_image_v3() {
+    IMAGE_TAG="hasura/graphql-engine:${CIRCLE_TAG}.cli-migrations-v3"
+    LATEST_IMAGE_TAG="hasura/graphql-engine:latest.cli-migrations-v3"
+
+    # push latest.cli-migrations-v3 tag
+    docker tag "$IMAGE_TAG" "$LATEST_IMAGE_TAG"
+    docker push "$LATEST_IMAGE_TAG"
+}
+
 
 # copy docker-compose-https manifests to gcr for digital ocean one-click app
 deploy_do_manifests() {
@@ -177,12 +195,14 @@ deploy_console
 deploy_server
 if [[ ! -z "$CIRCLE_TAG" ]]; then
     build_and_push_cli_migrations_image_v2
+    build_and_push_cli_migrations_image_v3
 
     # if this is a stable release, update all latest assets
     if [ $IS_STABLE_RELEASE = true ]; then
         deploy_server_latest
         push_server_binary
         push_latest_cli_migrations_image_v2
+        push_latest_cli_migrations_image_v3
         send_pr_to_repo graphql-engine-heroku
         deploy_do_manifests
     fi
