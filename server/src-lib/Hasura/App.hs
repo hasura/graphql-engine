@@ -295,7 +295,13 @@ initialiseServeCtx env GlobalCtx{..} so@ServeOptions{..} = do
 
   -- Start a background thread for listening schema sync events from other server instances,
   metaVersionRef <- liftIO $ STM.newEmptyTMVarIO
-  startSchemaSyncListenerThread logger metadataDbPool instanceId (fromMaybe 1000 soSchemaPollInterval) metaVersionRef soSchemaSyncDisable
+
+  -- An interval of 0 indicates that no schema sync is required
+  case soSchemaPollInterval of
+    Skip -> unLogger logger $ mkGenericStrLog LevelInfo "schema-sync" "Schema sync disabled"
+    Interval i -> do
+      unLogger logger $ mkGenericStrLog LevelInfo "schema-sync" ("Schema sync enabled. Polling at " <> show i)
+      void $ startSchemaSyncListenerThread logger metadataDbPool instanceId i metaVersionRef
 
   -- See Note [Temporarily disabling query plan caching]
   -- (planCache, schemaCacheRef) <- initialiseCache
@@ -530,8 +536,8 @@ runHGEServer setupHook env ServeOptions{..} ServeCtx{..} initTime postPollHook s
 
   -- start a backgroud thread to handle async actions
   case soAsyncActionsFetchInterval of
-    AAFINoFetch -> pure () -- Don't start the poller thread
-    AAFIInterval sleepTime -> do
+    Skip -> pure () -- Don't start the poller thread
+    Interval sleepTime -> do
       _asyncActionsThread <- C.forkManagedT "asyncActionsProcessor" logger $
         asyncActionsProcessor env logger (_scrCache cacheRef) _scHttpManager sleepTime
       pure ()

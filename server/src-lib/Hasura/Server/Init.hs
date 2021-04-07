@@ -186,14 +186,16 @@ mkServeOptions rso = do
   webSocketCompressionFromEnv <- withEnvBool (rsoWebSocketCompression rso) $
                                  fst webSocketCompressionEnv
 
+  maybeSchemaPollInterval <- withEnv (rsoSchemaPollInterval rso) (fst schemaPollIntervalEnv)
+
   let connectionOptions = WS.defaultConnectionOptions {
                             WS.connectionCompressionOptions =
                               if webSocketCompressionFromEnv
                                 then WS.PermessageDeflateCompression WS.defaultPermessageDeflate
                                 else WS.NoCompression
                           }
-      asyncActionsFetchInterval =
-        fromMaybe defaultAsyncActionsFetchInterval maybeAsyncActionsFetchInterval
+      asyncActionsFetchInterval = maybe defaultAsyncActionsFetchInterval msToOptionalInterval maybeAsyncActionsFetchInterval
+      schemaPollInterval        = maybe defaultSchemaPollInterval msToOptionalInterval maybeSchemaPollInterval
   webSocketKeepAlive <- KeepAliveDelay . fromIntegral . fromMaybe 5
       <$> withEnv (rsoWebSocketKeepAlive rso) (fst webSocketKeepAliveEnv)
 
@@ -206,10 +208,6 @@ mkServeOptions rso = do
     bool MaintenanceModeDisabled MaintenanceModeEnabled
     <$> withEnvBool (rsoEnableMaintenanceMode rso) (fst maintenanceModeEnv)
 
-  schemaPollInterval <- withEnv (rsoSchemaPollInterval rso) (fst schemaPollIntervalEnv)
-
-  disableSchemaSync <- withEnvBool (rsoSchemaSyncDisable rso) (fst schemaSyncDisableEnv)
-
   pure $ ServeOptions port host connParams txIso adminScrt authHook jwtSecret
                         unAuthRole corsCfg enableConsole consoleAssetsDir
                         enableTelemetry strfyNum enabledAPIs lqOpts enableAL
@@ -217,14 +215,15 @@ mkServeOptions rso = do
                         internalErrorsConfig eventsHttpPoolSize eventsFetchInterval
                         asyncActionsFetchInterval logHeadersFromEnv enableRemoteSchemaPerms
                         connectionOptions webSocketKeepAlive inferFunctionPerms maintenanceMode
-                        schemaPollInterval experimentalFeatures disableSchemaSync
+                        schemaPollInterval experimentalFeatures
   where
 #ifdef DeveloperAPIs
     defaultAPIs = [METADATA,GRAPHQL,PGDUMP,CONFIG,DEVELOPER]
 #else
     defaultAPIs = [METADATA,GRAPHQL,PGDUMP,CONFIG]
 #endif
-    defaultAsyncActionsFetchInterval = AAFIInterval 1000 -- 1000 Milliseconds or 1 Second
+    defaultAsyncActionsFetchInterval = Interval 1000 -- 1000 Milliseconds or 1 Second
+    defaultSchemaPollInterval = Interval 1000 -- 1000 Milliseconds or 1 Second
     mkConnParams (RawConnParams s c i cl p pt) = do
       stripes <- fromMaybe 1 <$> withEnv s (fst pgStripesEnv)
       -- Note: by Little's Law we can expect e.g. (with 50 max connections) a
@@ -600,7 +599,7 @@ maintenanceModeEnv =
 schemaPollIntervalEnv :: (String, String)
 schemaPollIntervalEnv =
   ( "HASURA_GRAPHQL_SCHEMA_POLL_INTERVAL"
-  , "Interval to poll metadata storage for updates in milliseconds - Default 1000 (1s)"
+  , "Interval to poll metadata storage for updates in milliseconds - Default 1000 (1s) - Set to 0 to disable"
   )
 
 adminInternalErrorsEnv :: (String, String)
@@ -931,9 +930,9 @@ parseGraphqlEventsFetchInterval = optional $
     help (snd eventsFetchIntervalEnv)
   )
 
-parseGraphqlAsyncActionsFetchInterval :: Parser (Maybe AsyncActionsFetchInterval)
+parseGraphqlAsyncActionsFetchInterval :: Parser (Maybe Milliseconds)
 parseGraphqlAsyncActionsFetchInterval = optional $
-  option (eitherReader readAsyncActionFetchInterval)
+  option (eitherReader readEither)
   ( long "async-actions-fetch-interval" <>
     metavar (fst asyncActionsFetchIntervalEnv) <>
     help (snd eventsFetchIntervalEnv)
@@ -992,12 +991,6 @@ enableAllowlistEnv =
   , "Only accept allowed GraphQL queries"
   )
 
-schemaSyncDisableEnv :: (String, String)
-schemaSyncDisableEnv =
-  ( "HASURA_SCHEMA_SYNC_DISABLE"
-  , "Disable Schema Sync Listener"
-  )
-
 -- NOTES re. default:
 --     There's a lot of guesswork and estimation here. Based on our test suite
 --   the average in-memory payload for a cache entry is 7kb, with the largest
@@ -1034,12 +1027,6 @@ parseLogLevel = optional $
   option (eitherReader readLogLevel)
          ( long "log-level" <>
            help (snd logLevelEnv)
-         )
-
-parseSchemaSyncDisable :: Parser Bool
-parseSchemaSyncDisable =
-  switch ( long "schema-sync-disable" <>
-           help (snd schemaSyncDisableEnv)
          )
 
 -- Init logging related
@@ -1152,7 +1139,6 @@ serveOptionsParser =
   <*> parseEnableMaintenanceMode
   <*> parseSchemaPollInterval
   <*> parseExperimentalFeatures
-  <*> parseSchemaSyncDisable
 
 -- | This implements the mapping between application versions
 -- and catalog schema versions.
