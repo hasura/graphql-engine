@@ -53,9 +53,24 @@ const vCollapseRow = () => ({
 
 const vSetDefaults = limit => ({ type: V_SET_DEFAULTS, limit });
 
+const getConfiguration = (tables, sources) => {
+  const {
+    currentSchema,
+    currentTable: originalTable,
+    currentDataSource,
+  } = tables;
+  return sources
+    ?.find(s => s.name === currentDataSource)
+    ?.tables.find(
+      t => originalTable === t.table.name && currentSchema === t.table.schema
+    )?.configuration;
+};
+
 const vMakeRowsRequest = () => {
   return (dispatch, getState) => {
-    const { tables } = getState();
+    const { tables, metadata } = getState();
+    const sources = metadata.metadataObject?.sources;
+    const tableConfiguration = getConfiguration(tables, sources);
     const headers = dataHeaders(getState);
     dispatch({ type: V_REQUEST_PROGRESS, data: true });
 
@@ -66,7 +81,9 @@ const vMakeRowsRequest = () => {
     } = dataSource.generateTableRowRequest();
     const options = {
       method: 'POST',
-      body: JSON.stringify(getTableRowRequestBody(tables)),
+      body: JSON.stringify(
+        getTableRowRequestBody({ tables, tableConfiguration })
+      ),
       headers,
       credentials: globalCookiePolicy,
     };
@@ -77,6 +94,7 @@ const vMakeRowsRequest = () => {
         const { rows, estimatedCount } = processTableRowData(data, {
           currentSchema,
           originalTable,
+          tableConfiguration,
         });
         const currentTable = getState().tables.currentTable;
         if (currentTable === originalTable) {
@@ -104,8 +122,10 @@ const vMakeRowsRequest = () => {
 
 const vMakeExportRequest = () => {
   return (dispatch, getState) => {
-    const { tables } = getState();
+    const { tables, metadata } = getState();
     const headers = dataHeaders(getState);
+    const sources = metadata.metadataObject?.sources;
+    const tableConfiguration = getConfiguration(tables, sources);
     const {
       endpoint,
       getTableRowRequestBody,
@@ -113,7 +133,9 @@ const vMakeExportRequest = () => {
     } = dataSource.generateTableRowRequest();
     const options = {
       method: 'POST',
-      body: JSON.stringify(getTableRowRequestBody(tables)),
+      body: JSON.stringify(
+        getTableRowRequestBody({ tables, tableConfiguration, isExport: true })
+      ),
       headers,
       credentials: globalCookiePolicy,
     };

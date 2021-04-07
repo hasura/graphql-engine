@@ -6,7 +6,7 @@ import {
   BaseTableColumn,
   SupportedFeaturesType,
 } from '../../types';
-import { generateTableRowRequest } from './utils';
+import { generateTableRowRequest, operators } from './utils';
 
 const permissionColumnDataTypes = {
   character: [
@@ -73,15 +73,6 @@ const columnDataTypes = {
   TIME: 'time',
   TEXT: 'text',
 };
-
-const operators = [
-  { name: 'equals', value: '$eq', graphqlOp: '_eq' },
-  { name: 'not equals', value: '$ne', graphqlOp: '_neq' },
-  { name: '>', value: '$gt', graphqlOp: '_gt' },
-  { name: '<', value: '$lt', graphqlOp: '_lt' },
-  { name: '>=', value: '$gte', graphqlOp: '_gte' },
-  { name: '<=', value: '$lte', graphqlOp: '_lte' },
-];
 
 // eslint-disable-next-line no-useless-escape
 const createSQLRegex = /create\s*(?:|or\s*replace)\s*(view|table|function)\s*(?:\s*if*\s*not\s*exists\s*)?((\"?\w+\"?)\.(\"?\w+\"?)|(\"?\w+\"?))/g;

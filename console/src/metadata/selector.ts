@@ -155,13 +155,23 @@ export const getTablesInfoSelector = createSelector(
   }
 );
 
-// TODO?: make it generic i.e to fetch any property from all tables
-export const getCurrentTableInformation = createSelector(
+export const getTableInformation = createSelector(
   getTables,
-  tables => (tableName: string, tableSchema: string) =>
-    tables?.find(
+  tables => (tableName: string, tableSchema: string) => <
+    T extends keyof TableEntry
+  >(
+    property: T
+  ): TableEntry[T] | null => {
+    const table = tables?.find(
       t => tableName === t.table.name && tableSchema === t.table.schema
-    )?.select_permissions ?? []
+    );
+    return table ? table[property] : null;
+  }
+);
+
+export const getCurrentTableInformation = createSelector(
+  [getTableInformation, getCurrentTable, getCurrentSchema],
+  (getTableInfo, tableName, schema) => getTableInfo(tableName, schema)
 );
 
 export const getFunctions = createSelector(

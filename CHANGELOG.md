@@ -3,6 +3,8 @@
 ## Next release
 (Add entries here in the order of: server, console, cli, docs, others)
 
+- console: add custom_column_names to track_table request with replaced invalid characters (#992)
+
 ## v2.0.0-alpha.7
 
 ### Transactions for Postgres mutations

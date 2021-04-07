@@ -3,7 +3,8 @@ import { connect, ConnectedProps } from 'react-redux';
 
 import {
   getFunctions,
-  getCurrentTableInformation,
+  // getCurrentTableInformation,
+  getTableInformation,
   rolesSelector,
 } from '../../../../../../metadata/selector';
 import { permissionsSymbols } from '../../../../../Common/Permissions/PermissionSymbols';
@@ -213,9 +214,9 @@ const Permissions: React.FC<PermissionsProps> = ({
   currentFunctionName,
   allRoles,
   readOnlyMode = false,
-  getTableSelectPermissions,
+  tableSelectPermissions,
   isPermissionsEditable,
-  functions,
+  // functions,
 }) => {
   const [permissionsEditState, permissionsDispatch] = useReducer(
     functionsPermissionsReducer,
@@ -242,11 +243,7 @@ const Permissions: React.FC<PermissionsProps> = ({
     currentFunctionName
   );
 
-  const { setOffTable, setOffTableSchema } = functions;
-
-  const selectRoles = !isPermissionsEditable
-    ? getTableSelectPermissions(setOffTable, setOffTableSchema)
-    : null;
+  const selectRoles = !isPermissionsEditable ? tableSelectPermissions : null;
 
   const isPermSet =
     getRoleQueryPermissionSymbol(allPermissions, permEditRole, selectRoles) ===
@@ -287,13 +284,19 @@ const Permissions: React.FC<PermissionsProps> = ({
   );
 };
 
-const mapStateToProps = (state: ReduxState) => ({
-  allRoles: rolesSelector(state),
-  allFunctions: getFunctions(state),
-  functions: state.functions,
-  readOnlyMode: state.main.readOnlyMode,
-  getTableSelectPermissions: getCurrentTableInformation(state),
-});
+const mapStateToProps = (state: ReduxState) => {
+  const { setOffTable, setOffTableSchema } = state.functions;
+  return {
+    allRoles: rolesSelector(state),
+    allFunctions: getFunctions(state),
+    functions: state.functions,
+    readOnlyMode: state.main.readOnlyMode,
+    tableSelectPermissions:
+      getTableInformation(state)(setOffTable, setOffTableSchema)(
+        'select_permissions'
+      ) ?? [],
+  };
+};
 
 const permissionsUIConnector = connect(
   mapStateToProps,

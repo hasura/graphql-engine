@@ -13,7 +13,11 @@ import { parseCreateSQL } from './utils';
 import dataHeaders from '../Common/Headers';
 import returnMigrateUrl from '../Common/getMigrateUrl';
 import requestAction from '../../../../utils/requestAction';
-import { dataSource } from '../../../../dataSources';
+import {
+  dataSource,
+  escapeTableColumns,
+  findTable,
+} from '../../../../dataSources';
 import { getRunSqlQuery } from '../../../Common/utils/v1QueryUtils';
 import { getDownQueryComments } from '../../../../utils/migration/utils';
 import {
@@ -50,7 +54,14 @@ const trackAllItems = (sql, isMigration, migrationName, source, driver) => (
     if (type === 'function') {
       req = getTrackFunctionQuery(name, schema, source, {}, driver);
     } else {
-      req = getTrackTableQuery({ name, schema }, source, driver);
+      const tableDef = { name, schema };
+      const table = findTable(getState().tables.allSchemas, tableDef);
+      req = getTrackTableQuery({
+        tableDef,
+        source,
+        driver,
+        customColumnNames: escapeTableColumns(table),
+      });
     }
     changes.push(req);
   });

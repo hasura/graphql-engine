@@ -70,6 +70,17 @@ export const getTableColumnNames = (table: Table) => {
   return table.columns.map(c => c.column_name);
 };
 
+export function escapeTableColumns(table: Table) {
+  if (!table) return {};
+  const pattern = /\W+/g;
+  return getTableColumnNames(table)
+    .filter(col => pattern.test(col))
+    .reduce((acc: Record<string, string>, col) => {
+      acc[col] = col.replace(pattern, '_');
+      return acc;
+    }, {});
+}
+
 export const getTableColumn = (table: Table, columnName: string) => {
   return (table.columns || []).find(
     column => column.column_name === columnName

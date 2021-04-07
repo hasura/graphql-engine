@@ -9,6 +9,7 @@ import {
   getFunctionModifyRoute,
 } from '../../../Common/utils/routesUtils';
 import { dataSource } from '../../../../dataSources';
+import { findTable, escapeTableColumns } from '../../../../dataSources/common';
 import { exportMetadata } from '../../../../metadata/actions';
 import {
   getUntrackTableQuery,
@@ -38,14 +39,13 @@ const addExistingTableSql = (name, customSchema, skipRouting = false) => {
       : getState().tables.currentSchema;
     const currentDataSource = getState().tables.currentDataSource;
     const tableName = name ? name : state.tableName.trim();
-
-    const requestBodyUp = getTrackTableQuery(
-      {
-        name: tableName,
-        schema: currentSchema,
-      },
-      currentDataSource
-    );
+    const tableDef = { name: tableName, schema: currentSchema };
+    const table = findTable(getState().tables.allSchemas, tableDef);
+    const requestBodyUp = getTrackTableQuery({
+      tableDef,
+      source: currentDataSource,
+      customColumnNames: escapeTableColumns(table),
+    });
 
     const requestBodyDown = getUntrackTableQuery(
       {
@@ -180,11 +180,17 @@ const addAllUntrackedTablesSql = tableList => {
     const bulkQueryDown = [];
     for (let i = 0; i < tableList.length; i++) {
       if (tableList[i].table_name !== 'schema_migrations') {
+        const tableDef = {
+          name: tableList[i].table_name,
+          schema: currentSchema,
+        };
+        const table = findTable(getState().tables.allSchemas, tableDef);
         bulkQueryUp.push(
-          getTrackTableQuery(
-            { name: tableList[i].table_name, schema: currentSchema },
-            currentDataSource
-          )
+          getTrackTableQuery({
+            tableDef,
+            source: currentDataSource,
+            customColumnNames: escapeTableColumns(table),
+          })
         );
         bulkQueryDown.push(
           getUntrackTableQuery(

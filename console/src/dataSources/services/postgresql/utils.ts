@@ -10,11 +10,15 @@ import { ReduxState } from './../../../types';
 type Tables = ReduxState['tables'];
 type Headers = Tables['dataHeaders'];
 
-export function getTableRowRequest(
-  tables: Tables,
-  headers: Headers,
-  isExport = false
-) {
+export function getTableRowRequest({
+  tables,
+  headers,
+  isExport = false,
+}: {
+  tables: Tables;
+  headers: Headers;
+  isExport?: boolean;
+}) {
   const {
     currentTable: originalTable,
     currentSchema,
@@ -53,7 +57,13 @@ export function getTableRowRequest(
   return requestAction(Endpoints.query, options);
 }
 
-const getTableRowRequestBody = (tables: Tables, isExport = false) => {
+const getTableRowRequestBody = ({
+  tables,
+  isExport = false,
+}: {
+  tables: Tables;
+  isExport?: boolean;
+}) => {
   const {
     currentTable: originalTable,
     currentSchema,

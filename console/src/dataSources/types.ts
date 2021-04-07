@@ -1,6 +1,10 @@
 import { Nullable } from '../components/Common/utils/tsUtils';
 import { Column } from '../utils/postgresColumnTypes';
-import { FunctionDefinition, RemoteRelationshipDef } from '../metadata/types';
+import {
+  FunctionDefinition,
+  RemoteRelationshipDef,
+  TableEntry,
+} from '../metadata/types';
 import { ReduxState } from '../types';
 import {
   getSelectQuery,
@@ -230,10 +234,11 @@ type Tables = ReduxState['tables'];
 
 export type generateTableRowRequestType = {
   endpoint: string;
-  getTableRowRequestBody: (
-    tables: Tables,
-    isExport: false
-  ) =>
+  getTableRowRequestBody: (data: {
+    tables: Tables;
+    isExport?: boolean;
+    tableConfiguration?: TableEntry['configuration'];
+  }) =>
     | {
         type: string;
         source: string;
@@ -247,5 +252,12 @@ export type generateTableRowRequestType = {
         variables: null;
         operationName: string;
       };
-  processTableRowData: <T>(data: T) => { rows: T[]; estimatedCount: number };
+  processTableRowData: <T>(
+    data: T,
+    config?: {
+      originalTable: string;
+      currentSchema: string;
+      tableConfiguration?: TableEntry['configuration'];
+    }
+  ) => { rows: T[]; estimatedCount: number };
 };

@@ -35,6 +35,7 @@ import {
   getTableCustomName,
   generateTableDef,
   dataSource,
+  escapeTableColumns,
 } from '../../../../dataSources';
 import { getRunSqlQuery } from '../../../Common/utils/v1QueryUtils';
 import {
@@ -948,10 +949,15 @@ const untrackTableSql = tableName => {
     const currentSchema = getState().tables.currentSchema;
     const currentDataSource = getState().tables.currentDataSource;
     const tableDef = generateTableDef(tableName, currentSchema);
+    const table = findTable(getState().tables.allSchemas, tableDef);
     const migration = new Migration();
     migration.add(
       getUntrackTableQuery(tableDef, currentDataSource),
-      getTrackTableQuery(tableDef, currentDataSource)
+      getTrackTableQuery({
+        tableDef,
+        source: currentDataSource,
+        customColumnNames: escapeTableColumns(table),
+      })
     );
 
     // apply migrations
