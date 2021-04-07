@@ -26,6 +26,7 @@ Guides / Tutorials / Resources
    Telemetry <telemetry>
    Code Editor Integrations <code-editor-integrations/index>
    MySQL preview <mysql-preview>
+   Subscriptions Tuning <performance-tuning/index>
 
 .. note::
 
