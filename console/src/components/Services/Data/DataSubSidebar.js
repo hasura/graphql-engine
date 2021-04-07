@@ -16,7 +16,7 @@ import {
 import _push from './push';
 import Button from '../../Common/Button/Button';
 import styles from '../../Common/Layout/LeftSubSidebar/LeftSubSidebar.scss';
-import { Spinner } from '../../UIKit/atoms';
+import Spinner from '../../Common/Spinner/Spinner';
 
 const DATA_SIDEBAR_SET_LOADING = 'dataSidebar/DATA_SIDEBAR_SET_LOADING';
 
@@ -259,7 +259,7 @@ const DataSubSidebar = props => {
             sidebarLoadingState ||
             isFetching ? (
               <div className={styles.inline_display}>
-                <Spinner size="small" ml={4} />
+                <Spinner className={styles.spinner} />
               </div>
             ) : (
               <i
