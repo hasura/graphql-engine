@@ -158,18 +158,24 @@ Visit [http://localhost:3000](http://localhost:3000) to confirm the setup.
 Make changes to the code and the console will reload automatically to reflect the new changes. Keep iterating.
 When adding a new feature, it is recommended to add corresponding tests too.
 
-Tests are written using [Cypress](https://www.cypress.io/).
-
 You can use the [Redux DevTools Extension](http://extension.remotedev.io/) to inspect and debug the Redux store.
 It should automatically connect to the Redux store when started in development mode.
 
 By default [redux-logger](https://www.npmjs.com/package/redux-logger) is enabled to assist in development.
 You can disable it if you wish by commenting out the `createLogger` line in `src/client.js`
 
-### Run tests
+### E2E and Unit Tests
 
-- Run tests: `npm run cypress`
-- Write your tests in the `cypress` directory, integration.
+* E2E Tests are written using [Cypress](https://www.cypress.io/) .  
+   - Run tests: `npm run cypress`
+   - Write your tests in the `cypress/integration` directory.
+
+* Unit tests are written using [Jest Framework](https://jestjs.io/)
+    - Tests are written inside `__test__` folder of respective services. 
+    - Unit testing is mostly applied on the utility functions.
+    - If you want to run tests, execute `npm run jest` or `npm run jest-watch` (for watch mode)
+    - [Snapshot testing](https://jestjs.io/docs/en/snapshot-testing) is also used with unit tests.
+    - when you want to update the snapshot, you can run `npm run jest -- -u` or press `u` if you are in jest-watch mode.  
 
 ### Linter and formatter
 

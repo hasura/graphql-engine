@@ -535,7 +535,34 @@ jobs:
         root: /build
         paths:
           - _console_output
-
+  console_unit_tests:
+    docker:
+    - image: hasura/graphql-engine-console-builder:20210224 
+    working_directory: ~/graphql-engine
+    steps:
+    - attach_workspace:
+        at: /build
+    - *skip_job_on_ciignore
+    - checkout
+    - restore_cache:
+        key:
+          console-npm-cache-{{ checksum "console/package.json" }}-{{ checksum "console/package-lock.json" }}
+    - run:
+        name: install dependencies
+        working_directory: console
+        command: make ci-deps
+    - save_cache:
+        key:
+          console-npm-cache-{{ checksum "console/package.json" }}-{{ checksum "console/package-lock.json" }}
+        paths:
+        - console/node_modules
+        - ~/.npm
+        - ~/.cache
+    - run:
+        name: unit test console
+        working_directory: console
+        command: |
+          make jest
   # test console
   test_console:
     docker:
@@ -632,6 +659,10 @@ workflows:
         requires:
         - check_build_worthiness
     - build_console:
+        <<: *filter_only_vtags
+        requires:
+        - check_build_worthiness
+    - console_unit_tests:
         <<: *filter_only_vtags
         requires:
         - check_build_worthiness
