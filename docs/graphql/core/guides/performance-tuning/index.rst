@@ -4,6 +4,8 @@
  
 .. _subscriptions_performance_tuning:
 
+.. include:: <isonum.txt>
+
 Tuning Subscriptions
 ====================
 
@@ -53,22 +55,42 @@ Improving subscription performance
 Depending on the complexity of the subscription query and how realtime the subscription data should be, one can improve the overall subscription performance of the system by tuning the 
 ``HASURA_GRAPHQL_LIVE_QUERIES_MULTIPLEXED_BATCH_SIZE``(batch_size) and ``HASURA_GRAPHQL_PG_CONNECTIONS`` (connection_pool) for subscriptions.
 
-For relatively simple subscription queries
+For relatively simple subscription queries (|uARR| - parameter increases, |dArr| - parameter decreases)
 
-1. Increasing batch_size helps reduce CPU-Memory utilization and number of active connections on DB. Consider the food-ordering system where users subscribe to get the latest location of the delivery_agent carrying their order.
+.. list-table::
+   :header-rows: 1
 
-.. thumbnail:: /img/graphql/core/guides/subscription-food-ordering-schema.png
-    :class: no-shadow
-    :width: 900px
-    :alt: Hasura subscription food ordering schema 
+   * - 
+     - DB CPU utilization
+     - DB Memory utilization
+     - Number of DB connections
+     - Hasura CPU utilization
+     - Hasura Memory utilization
+   * - batch_size |uArr|
+     - |dARR|
+     - |dARR|
+     - |dARR|
+     - no change
+     - no change
+   * - connection_pool |uArr|
+     - |uArr|
+     - |uArr|
+     - |uArr|
+     - no change
+     - no change
+   * - refetch_interval |uArr|
+     - |dARR|
+     - |dARR|
+     - no change
+     - no changed
+     - no change
 
-**table comes here**
-
-2. For small batch_size, increasing the connection_pool helps reduce subscription latency.
+The above trends are indicative in nature of the general trend. 
+As Hasura resource utilisation is not the bottleneck, to improve subscription performance, one should look for DB performance improvement with different combinations of the above parameters.
 
 However when the subscription queries are complex, finding the optimal parameter combination at scale varies from case to case. 
 Below are few pointers one can follow to improve subscription performance.
 
-1. increase the refetch_interval to make sure the refetch_interval is greater than the DB execution time for a batch of subscriptions
-2. for lower subscription concurrency(say 1000), lowering batch_size tends to improve subscription latency. One should consider setting ``HASURA_GRAPHQL_LIVE_QUERIES_MULTIPLEXED_BATCH_SIZE`` = 1, and see if there is improvement in performance
-3. for higher concurrency in subscription(5000 or more), higher ``HASURA_GRAPHQL_LIVE_QUERIES_MULTIPLEXED_BATCH_SIZE`` value helps improve latency. But this is not a linear correlation, as there tends to be a particular value of batch_size which gives the best subscription performance, beyond which performance decreases
+1. Increase the refetch_interval to make sure the refetch_interval is greater than the DB execution time for a batch of subscriptions
+2. For lower subscription concurrency(say 1000), lowering batch_size tends to improve subscription latency. One should consider setting ``HASURA_GRAPHQL_LIVE_QUERIES_MULTIPLEXED_BATCH_SIZE`` = 1, and see if there is improvement in performance
+3. For higher concurrency in subscription(5000 or more), higher ``HASURA_GRAPHQL_LIVE_QUERIES_MULTIPLEXED_BATCH_SIZE`` value helps improve latency. But this is not a linear correlation, as there tends to be a particular value of batch_size which gives the best subscription performance, beyond which performance decreases
