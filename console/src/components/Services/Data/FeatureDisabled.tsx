@@ -12,6 +12,7 @@ type OwnProps = {
   schemaName: string;
   tab: string;
   showTab?: boolean;
+  tableType?: string;
 };
 
 function FeatureDisabled({
@@ -22,6 +23,7 @@ function FeatureDisabled({
   migrationMode,
   schemaName,
   tableName,
+  tableType,
 }: Props) {
   return (
     <RightContainer>
@@ -29,7 +31,11 @@ function FeatureDisabled({
         count={0}
         isCountEstimated
         dispatch={dispatch}
-        table={{ table_name: tableName, table_schema: schemaName }}
+        table={{
+          table_name: tableName,
+          table_schema: schemaName,
+          table_type: tableType,
+        }}
         source={currentDataSource}
         tabName={tab}
         migrationMode={migrationMode}

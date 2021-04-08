@@ -55,11 +55,7 @@ const supportedColumnOperators = [
 
 const isTable = (table: Table) => {
   if (!table.table_type) return true; // todo
-  return (
-    table.table_type === 'TABLE' ||
-    table.table_type === 'VIEW' ||
-    table.table_type === 'BASE TABLE'
-  );
+  return table.table_type === 'TABLE' || table.table_type === 'BASE TABLE';
 };
 
 const columnDataTypes = {
@@ -204,6 +200,7 @@ WHERE
         when obj.type = 'SO' then 'Sequence object'
         when obj.type = 'U' then 'TABLE'
         when obj.type = 'EC' then 'Edge constraint'
+        when obj.type = 'V' then 'VIEW'
     end as table_type,
     obj.type_desc AS comment,
     JSON_QUERY([isc].json) AS columns
