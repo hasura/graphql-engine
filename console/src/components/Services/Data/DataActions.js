@@ -625,6 +625,39 @@ const handleMigrationErrors = (title, errorMsg) => dispatch => {
   }
 };
 
+export const handleOutOfDateMetadata = dispatch => {
+  return dispatch(
+    showNotification(
+      {
+        title: 'Metadata is Out-of-Date',
+        level: 'error',
+        message: (
+          <p>
+            The operation failed as the metadata on the server is newer than
+            what is currently loaded on the console. The metadata has to be
+            re-fetched to continue editing it.
+            <br />
+            <br />
+            Do you want fetch the latest metadata?
+          </p>
+        ),
+        autoDismiss: 0,
+        action: {
+          label: (
+            <>
+              <i className="fa fa-refresh" aria-hidden="true" /> Fetch metadata
+            </>
+          ),
+          callback: () => {
+            dispatch(exportMetadata());
+          },
+        },
+      },
+      'error'
+    )
+  );
+};
+
 const makeMigrationCall = (
   dispatch,
   getState,
@@ -641,9 +674,11 @@ const makeMigrationCall = (
   isRetry = false
 ) => {
   const source = getState().tables.currentDataSource;
+  const { resourceVersion } = getState().metadata;
   const upQuery = {
     type: 'bulk',
     source,
+    resource_version: resourceVersion,
     args: upQueries,
   };
 
@@ -741,7 +776,12 @@ const makeMigrationCall = (
         return retryMigration(sqlDependencyError, errorMsg, true);
     }
 
-    dispatch(handleMigrationErrors(errorMsg, err));
+    if (err?.code === 'conflict') {
+      dispatch(handleOutOfDateMetadata);
+    } else {
+      dispatch(handleMigrationErrors(errorMsg, err));
+    }
+
     customOnError(err);
   };
 

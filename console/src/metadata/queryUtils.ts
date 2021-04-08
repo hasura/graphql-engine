@@ -1,11 +1,9 @@
-// Note: This file MUST contain all/only metadata requests
-
 import {
   CustomRootFields,
   ActionDefinition,
   CustomTypes,
-  HasuraMetadataV2,
   QualifiedTable,
+  HasuraMetadataV3,
   QualifiedFunction,
   RestEndpointEntry,
 } from './types';
@@ -385,11 +383,12 @@ export const getReloadRemoteSchemaCacheQuery = (remoteSchemaName: string) => {
 
 export const exportMetadataQuery = {
   type: 'export_metadata',
+  version: 2,
   args: {},
 };
 
 export const generateReplaceMetadataQuery = (
-  metadataJson: HasuraMetadataV2
+  metadataJson: HasuraMetadataV3
 ) => ({
   type: 'replace_metadata',
   args: metadataJson,

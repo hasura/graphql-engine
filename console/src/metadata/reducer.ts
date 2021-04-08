@@ -10,6 +10,7 @@ export type AllowedQueriesCollection = {
 
 type MetadataState = {
   metadataObject: null | HasuraMetadataV3;
+  resourceVersion: number;
   error: null | string | boolean;
   loading: boolean;
   inconsistentObjects: any[];
@@ -20,6 +21,7 @@ type MetadataState = {
 
 const defaultState: MetadataState = {
   metadataObject: null,
+  resourceVersion: 1,
   error: null,
   loading: false,
   inconsistentObjects: [],
@@ -34,14 +36,18 @@ export const metadataReducer = (
 ): MetadataState => {
   switch (action.type) {
     case 'Metadata/EXPORT_METADATA_SUCCESS':
+      const metadata =
+        'metadata' in action.data ? action.data.metadata : action.data;
       return {
         ...state,
-        metadataObject: action.data,
+        metadataObject: metadata,
+        resourceVersion:
+          'resource_version' in action.data ? action.data.resource_version : 1,
         allowedQueries: setAllowedQueries(
-          action.data?.query_collections,
-          action.data?.allowlist
+          metadata?.query_collections,
+          metadata?.allowlist
         ),
-        inheritedRoles: action.data?.inherited_roles,
+        inheritedRoles: metadata?.inherited_roles,
         loading: false,
         error: null,
       };

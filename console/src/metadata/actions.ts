@@ -1,7 +1,6 @@
 import requestAction from '../utils/requestAction';
 import Endpoints, { globalCookiePolicy } from '../Endpoints';
 import {
-  HasuraMetadataV2,
   HasuraMetadataV3,
   RestEndpointEntry,
   SourceConnectionInfo,
@@ -51,7 +50,12 @@ import _push from '../components/Services/Data/push';
 
 export interface ExportMetadataSuccess {
   type: 'Metadata/EXPORT_METADATA_SUCCESS';
-  data: HasuraMetadataV3;
+  data:
+    | {
+        resource_version: number;
+        metadata: HasuraMetadataV3;
+      }
+    | HasuraMetadataV3;
 }
 export interface ExportMetadataError {
   type: 'Metadata/EXPORT_METADATA_ERROR';
@@ -199,7 +203,7 @@ export type MetadataActions =
   | { type: typeof UPDATE_CURRENT_DATA_SOURCE; source: string };
 
 export const exportMetadata = (
-  successCb?: (data: HasuraMetadataV2) => void,
+  successCb?: (data: HasuraMetadataV3, resourceVersion?: number) => void,
   errorCb?: (err: string) => void
 ): Thunk<Promise<ReduxState | void>, MetadataActions> => (
   dispatch,
@@ -381,11 +385,11 @@ export const editDataSource = (
 };
 
 export const replaceMetadata = (
-  newMetadata: HasuraMetadataV2,
+  newMetadata: HasuraMetadataV3,
   successCb: () => void,
   errorCb: () => void
 ): Thunk<void, MetadataActions> => (dispatch, getState) => {
-  const exportSuccessCb = (oldMetadata: HasuraMetadataV2) => {
+  const exportSuccessCb = (oldMetadata: HasuraMetadataV3) => {
     const upQuery = generateReplaceMetadataQuery(newMetadata);
     const downQuery = generateReplaceMetadataQuery(oldMetadata);
 
