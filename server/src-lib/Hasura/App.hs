@@ -281,7 +281,7 @@ initialiseServeCtx env GlobalCtx{..} so@ServeOptions{..} = do
                            }
             sourceConnInfo = PostgresSourceConnInfo dbUrlConf (Just connSettings)
         in PostgresConnConfiguration sourceConnInfo Nothing
-      sqlGenCtx = SQLGenCtx soStringifyNum
+      sqlGenCtx = SQLGenCtx soStringifyNum soDangerousBooleanCollapse
 
   let serverConfigCtx =
         ServerConfigCtx soInferFunctionPermissions soEnableRemoteSchemaPermissions
@@ -460,7 +460,7 @@ runHGEServer setupHook env ServeOptions{..} ServeCtx{..} initTime postPollHook s
   liftIO disableAssertNF
 #endif
 
-  let sqlGenCtx = SQLGenCtx soStringifyNum
+  let sqlGenCtx = SQLGenCtx soStringifyNum soDangerousBooleanCollapse
       Loggers loggerCtx logger _ = _scLoggers
       --SchemaSyncCtx{..} = _scSchemaSyncCtx
 

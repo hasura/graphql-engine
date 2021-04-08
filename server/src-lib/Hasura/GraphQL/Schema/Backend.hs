@@ -129,7 +129,7 @@ class Backend b => BackendSchema (b :: BackendType) where
   orderByOperators
     :: NonEmpty (Definition EnumValueInfo, (BasicOrderType b, NullsOrderType b))
   comparisonExps
-    :: (MonadSchema n m, MonadError QErr m)
+    :: MonadBuildSchema b r m n
     => ColumnType b
     -> m (Parser 'Input n [ComparisonExp b])
   updateOperators

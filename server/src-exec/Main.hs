@@ -108,7 +108,7 @@ runApp env (HGEOptionsG rci metadataDbUrl hgeCmd) = do
 
     HCExecute -> do
       queryBs <- liftIO BL.getContents
-      let sqlGenCtx = SQLGenCtx False
+      let sqlGenCtx = SQLGenCtx False False
           remoteSchemaPermsCtx = RemoteSchemaPermsDisabled
           pgLogger = print
           pgSourceResolver = mkPgSourceResolver pgLogger

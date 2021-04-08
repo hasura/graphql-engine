@@ -66,7 +66,7 @@ buildGQLContext
      )
 buildGQLContext =
   proc (queryType, sources, allRemoteSchemas, allActions, nonObjectCustomTypes) -> do
-    ServerConfigCtx functionPermsCtx remoteSchemaPermsCtx sqlGenCtx@(SQLGenCtx stringifyNum) _maintenanceMode _experimentalFeatures <-
+    ServerConfigCtx functionPermsCtx remoteSchemaPermsCtx sqlGenCtx@(SQLGenCtx stringifyNum boolCollapse) _maintenanceMode _experimentalFeatures <-
       bindA -< askServerConfigCtx
     let remoteSchemasRoles = concatMap (Map.keys . _rscPermissions . fst . snd) $ Map.toList allRemoteSchemas
 
@@ -85,9 +85,12 @@ buildGQLContext =
         allRoles = nonTableRoles <> allTableRoles
         -- The function permissions context doesn't actually matter because the
         -- admin will have access to the function anyway
-        adminQueryContext =
-          QueryContext stringifyNum queryType
-                       adminRemoteRelationshipQueryCtx FunctionPermissionsInferred
+        adminQueryContext = QueryContext
+          stringifyNum
+          boolCollapse
+          queryType
+          adminRemoteRelationshipQueryCtx
+          FunctionPermissionsInferred
 
     -- build the admin DB-only context so that we can check against name clashes with remotes
     -- TODO: Is there a better way to check for conflicts without actually building the admin schema?
@@ -138,7 +141,7 @@ buildRoleContext
   -> RoleName
   -> RemoteSchemaPermsCtx
   -> m (RoleContext GQLContext)
-buildRoleContext (SQLGenCtx stringifyNum, queryType, functionPermsCtx) sources
+buildRoleContext (SQLGenCtx stringifyNum boolCollapse, queryType, functionPermsCtx) sources
   allRemoteSchemas allActionInfos nonObjectCustomTypes remotes role remoteSchemaPermsCtx = do
 
   roleBasedRemoteSchemas <-
@@ -151,8 +154,12 @@ buildRoleContext (SQLGenCtx stringifyNum, queryType, functionPermsCtx) sources
   let queryRemotes    = getQueryRemotes $ snd . snd <$> roleBasedRemoteSchemas
       mutationRemotes = getMutationRemotes $ snd . snd <$> roleBasedRemoteSchemas
       remoteRelationshipQueryContext = Map.fromList roleBasedRemoteSchemas
-      roleQueryContext =
-        QueryContext stringifyNum queryType remoteRelationshipQueryContext functionPermsCtx
+      roleQueryContext = QueryContext
+        stringifyNum
+        boolCollapse
+        queryType
+        remoteRelationshipQueryContext
+        functionPermsCtx
       buildSource :: forall b. BackendSchema b => SourceInfo b ->
         m ( [FieldParser (P.ParseT Identity) (QueryRootField    UnpreparedValue)]
           , [FieldParser (P.ParseT Identity) (MutationRootField UnpreparedValue)]
@@ -213,12 +220,17 @@ buildRelayRoleContext
   => (SQLGenCtx, GraphQLQueryType, FunctionPermissionsCtx) -> SourceCache -> [ActionInfo] -> NonObjectTypeMap
   -> RoleName
   -> m (RoleContext GQLContext)
-buildRelayRoleContext (SQLGenCtx stringifyNum, queryType, functionPermsCtx) sources
+buildRelayRoleContext (SQLGenCtx stringifyNum boolCollapse, queryType, functionPermsCtx) sources
   allActionInfos nonObjectCustomTypes role = do
   -- TODO: At the time of writing this, remote schema queries are not supported in relay.
   -- When they are supported, we should get do what `buildRoleContext` does. Since, they
   -- are not supported yet, we use `mempty` below for `RemoteRelationshipQueryContext`.
-  let roleQueryContext = QueryContext stringifyNum queryType mempty functionPermsCtx
+  let roleQueryContext = QueryContext
+        stringifyNum
+        boolCollapse
+        queryType
+        mempty
+        functionPermsCtx
       buildSource :: forall b. BackendSchema b => SourceInfo b ->
         m ( [FieldParser (P.ParseT Identity) (QueryRootField    UnpreparedValue)]
           , [FieldParser (P.ParseT Identity) (MutationRootField UnpreparedValue)]

@@ -158,6 +158,8 @@ mkServeOptions rso = do
   enableTelemetry <- fromMaybe True <$>
                      withEnv (rsoEnableTelemetry rso) (fst enableTelemetryEnv)
   strfyNum <- withEnvBool (rsoStringifyNum rso) $ fst stringifyNumEnv
+  dangerousBooleanCollapse <-
+    fromMaybe False <$> withEnv (rsoDangerousBooleanCollapse rso) (fst dangerousBooleanCollapseEnv)
   enabledAPIs <- Set.fromList . fromMaybe defaultAPIs <$>
                      withEnv (rsoEnabledAPIs rso) (fst enabledAPIsEnv)
   lqOpts <- mkLQOpts
@@ -169,7 +171,7 @@ mkServeOptions rso = do
                       withEnv (rsoPlanCacheSize rso) (fst planCacheSizeEnv)
   devMode <- withEnvBool (rsoDevMode rso) $ fst devModeEnv
   adminInternalErrors <- fromMaybe True <$> -- Default to `true` to enable backwards compatibility
-                                withEnv (rsoAdminInternalErrors rso) (fst adminInternalErrorsEnv)
+                         withEnv (rsoAdminInternalErrors rso) (fst adminInternalErrorsEnv)
   let internalErrorsConfig =
         if | devMode             -> InternalErrorsAllRequests
            | adminInternalErrors -> InternalErrorsAdminOnly
@@ -208,14 +210,39 @@ mkServeOptions rso = do
     bool MaintenanceModeDisabled MaintenanceModeEnabled
     <$> withEnvBool (rsoEnableMaintenanceMode rso) (fst maintenanceModeEnv)
 
-  pure $ ServeOptions port host connParams txIso adminScrt authHook jwtSecret
-                        unAuthRole corsCfg enableConsole consoleAssetsDir
-                        enableTelemetry strfyNum enabledAPIs lqOpts enableAL
-                        enabledLogs serverLogLevel planCacheOptions
-                        internalErrorsConfig eventsHttpPoolSize eventsFetchInterval
-                        asyncActionsFetchInterval logHeadersFromEnv enableRemoteSchemaPerms
-                        connectionOptions webSocketKeepAlive inferFunctionPerms maintenanceMode
-                        schemaPollInterval experimentalFeatures
+  pure $ ServeOptions
+           port
+           host
+           connParams
+           txIso
+           adminScrt
+           authHook
+           jwtSecret
+           unAuthRole
+           corsCfg
+           enableConsole
+           consoleAssetsDir
+           enableTelemetry
+           strfyNum
+           dangerousBooleanCollapse
+           enabledAPIs
+           lqOpts
+           enableAL
+           enabledLogs
+           serverLogLevel
+           planCacheOptions
+           internalErrorsConfig
+           eventsHttpPoolSize
+           eventsFetchInterval
+           asyncActionsFetchInterval
+           logHeadersFromEnv
+           enableRemoteSchemaPerms
+           connectionOptions
+           webSocketKeepAlive
+           inferFunctionPerms
+           maintenanceMode
+           schemaPollInterval
+           experimentalFeatures
   where
 #ifdef DeveloperAPIs
     defaultAPIs = [METADATA,GRAPHQL,PGDUMP,CONFIG,DEVELOPER]
@@ -358,14 +385,36 @@ serveCmdFooter =
 
     envVarDoc = mkEnvVarDoc $ envVars <> eventEnvs
     envVars =
-      [ databaseUrlEnv, retriesNumEnv, servePortEnv, serveHostEnv
-      , pgStripesEnv, pgConnsEnv, pgTimeoutEnv, pgUsePrepareEnv, txIsoEnv
-      , adminSecretEnv , accessKeyEnv, authHookEnv, authHookModeEnv
-      , jwtSecretEnv, unAuthRoleEnv, corsDomainEnv, corsDisableEnv, enableConsoleEnv
-      , enableTelemetryEnv, wsReadCookieEnv, stringifyNumEnv, enabledAPIsEnv
-      , enableAllowlistEnv, enabledLogsEnv, logLevelEnv, devModeEnv
-      , adminInternalErrorsEnv, webSocketKeepAliveEnv
+      [ accessKeyEnv
+      , adminInternalErrorsEnv
+      , adminSecretEnv
       , asyncActionsFetchIntervalEnv
+      , authHookEnv
+      , authHookModeEnv
+      , corsDisableEnv
+      , corsDomainEnv
+      , dangerousBooleanCollapseEnv
+      , databaseUrlEnv
+      , devModeEnv
+      , enableAllowlistEnv
+      , enableConsoleEnv
+      , enableTelemetryEnv
+      , enabledAPIsEnv
+      , enabledLogsEnv
+      , jwtSecretEnv
+      , logLevelEnv
+      , pgConnsEnv
+      , pgStripesEnv
+      , pgTimeoutEnv
+      , pgUsePrepareEnv
+      , retriesNumEnv
+      , serveHostEnv
+      , servePortEnv
+      , stringifyNumEnv
+      , txIsoEnv
+      , unAuthRoleEnv
+      , webSocketKeepAliveEnv
+      , wsReadCookieEnv
       ]
 
     eventEnvs = [ eventsHttpPoolSizeEnv, eventsFetchIntervalEnv ]
@@ -536,6 +585,14 @@ stringifyNumEnv :: (String, String)
 stringifyNumEnv =
   ( "HASURA_GRAPHQL_STRINGIFY_NUMERIC_TYPES"
   , "Stringify numeric types (default: false)"
+  )
+
+dangerousBooleanCollapseEnv :: (String, String)
+dangerousBooleanCollapseEnv =
+  ( "HASURA_GRAPHQL_V1_BOOLEAN_NULL_COLLAPSE"
+  , "Emulate V1's behaviour re. boolean expression, where an explicit 'null'"
+    <> " value will be interpreted to mean that the field should be ignored"
+    <> " [DEPRECATED, WILL BE REMOVED SOON] (default: false)"
   )
 
 enabledAPIsEnv :: (String, String)
@@ -863,6 +920,13 @@ parseStringifyNum =
            help (snd stringifyNumEnv)
          )
 
+parseDangerousBooleanCollapse :: Parser (Maybe Bool)
+parseDangerousBooleanCollapse = optional $
+  option (eitherReader parseStrAsBool)
+         ( long "v1-boolean-null-collapse" <>
+           help (snd dangerousBooleanCollapseEnv)
+         )
+
 parseEnabledAPIs :: Parser (Maybe [API])
 parseEnabledAPIs = optional $
   option (eitherReader readAPIs)
@@ -1074,6 +1138,7 @@ serveOptsToLog so =
       , "enable_telemetry" J..= soEnableTelemetry so
       , "use_prepared_statements" J..= (Q.cpAllowPrepare . soConnParams) so
       , "stringify_numeric_types" J..= soStringifyNum so
+      , "v1-boolean-null-collapse" J..= soDangerousBooleanCollapse so
       , "enabled_apis" J..= soEnabledAPIs so
       , "live_query_options" J..= soLiveQueryOpts so
       , "enable_allowlist" J..= soEnableAllowlist so
@@ -1119,6 +1184,7 @@ serveOptionsParser =
   <*> parseEnableTelemetry
   <*> parseWsReadCookie
   <*> parseStringifyNum
+  <*> parseDangerousBooleanCollapse
   <*> parseEnabledAPIs
   <*> parseMxRefetchInt
   <*> parseMxBatchSize

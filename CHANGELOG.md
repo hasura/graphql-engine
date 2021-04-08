@@ -1,6 +1,39 @@
 # Hasura GraphQL Engine Changelog
 
 ## Next release
+
+### Support for null values in boolean expressions
+
+In v2, we introduced a breaking change, that aimed at fixing a [long-standing issue](https://github.com/hasura/graphql-engine/issues/704): a null value in a boolean expression would always evaluate to `True` for all rows. For example, the following queries were all equivalent:
+
+```graphql
+delete_users(where: {_id: {_eq: null}})  # field is null, which is as if it were omitted
+delete_users(where: {_id: {}})           # object is empty, evaluates to True for all rows
+delete_users(where: {})                  # object is empty, evaluates to True for all rows
+delete_users()                           # delete all users
+```
+
+This behaviour was unintuitive, and could be an unpleasant surprise for users that expected the first query to mean "delete all users for whom the id column is null". Therefore in v2, we changed the implementation of boolean operators to reject null values, as we deemed it safer:
+
+
+```graphql
+delete_users(where: {_id: {_eq: null}})  # error: argument of _eq cannot be null
+```
+
+However, this change broke the workflows of [some of our users](https://github.com/hasura/graphql-engine/issues/6660) who were relying on this property of boolean operators. This was used, for instance, to _conditionally_ enable a test:
+
+```graphql
+query($isVerified: Boolean) {
+  users(where: {_isVerified: {_eq: $isVerified}}) {
+    name
+  }
+}
+```
+
+In the future, we will probably offer a way to explicitly choose which behaviour to use for each `where` clause; perhaps by introducing new and distinct operators that make it explicit that they will default to true if the value is null. In the meantime, this release provides a way to revert the engine to its previous behaviour: if the `HASURA_GRAPHQL_V1_BOOLEAN_NULL_COLLAPSE` environment variable is set to "true", null values in boolean expression will behave like they did in v1 for the following operators: `_is_null`, `_eq`, `_neq`, `_in`, `_nin`, `_gt`, `_lt`, `_gte`, `_lte`.
+
+### Bug fixes and improvements
+
 (Add entries here in the order of: server, console, cli, docs, others)
 
 - console: add custom_column_names to track_table request with replaced invalid characters (#992)
@@ -11,7 +44,7 @@
 
 With v2 came the introduction of heterogeneous execution: in one query or mutation, you can target different sources: it is possible, for instance, in one mutation, to both insert a row in a table in a table on Postgres and another row in another table on MSSQL:
 
-```
+```graphql
 mutation {
   // goes to Postgres
   insert_author_one(object: {name: "Simon Peyton Jones"}) {

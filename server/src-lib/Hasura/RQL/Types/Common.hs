@@ -251,9 +251,10 @@ newtype SystemDefined = SystemDefined { unSystemDefined :: Bool }
 isSystemDefined :: SystemDefined -> Bool
 isSystemDefined = unSystemDefined
 
-newtype SQLGenCtx
+data SQLGenCtx
   = SQLGenCtx
-  { stringifyNum :: Bool
+  { stringifyNum             :: Bool
+  , dangerousBooleanCollapse :: Bool
   } deriving (Show, Eq)
 
 successMsg :: EncJSON

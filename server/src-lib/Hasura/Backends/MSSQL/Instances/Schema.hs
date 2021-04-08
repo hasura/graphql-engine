@@ -9,6 +9,7 @@ import qualified Data.List.NonEmpty                    as NE
 import qualified Database.ODBC.SQLServer               as ODBC
 import qualified Language.GraphQL.Draft.Syntax         as G
 
+import           Data.Has
 import           Data.Text.Encoding                    (encodeUtf8)
 import           Data.Text.Extended
 
@@ -22,6 +23,7 @@ import           Hasura.GraphQL.Context
 import           Hasura.GraphQL.Parser                 hiding (EnumValueInfo, field)
 import           Hasura.GraphQL.Parser.Internal.Parser hiding (field)
 import           Hasura.GraphQL.Schema.Backend
+import           Hasura.GraphQL.Schema.BoolExp
 import           Hasura.GraphQL.Schema.Common
 import           Hasura.RQL.Types
 
@@ -285,34 +287,44 @@ msOrderByOperators = NE.fromList
     define name desc = P.mkDefinition name (Just desc) P.EnumValueInfo
 
 msComparisonExps
-  :: forall m n
-  . (BackendSchema 'MSSQL, MonadSchema n m, MonadError QErr m)
+  :: forall m n r
+   . ( BackendSchema 'MSSQL
+     , MonadSchema n m
+     , MonadError QErr m
+     , MonadReader r m
+     , Has QueryContext r
+     )
   => ColumnType 'MSSQL
   -> m (Parser 'Input n [ComparisonExp 'MSSQL])
 msComparisonExps = P.memoize 'comparisonExps \columnType -> do
   -- see Note [Columns in comparison expression are never nullable]
+  collapseIfNull <- asks $ qcDangerousBooleanCollapse . getter
+
+  -- parsers used for individual values
   typedParser        <- columnParser columnType (G.Nullability False)
   nullableTextParser <- columnParser (ColumnScalar MSSQL.VarcharType) (G.Nullability True)
   textParser         <- columnParser (ColumnScalar MSSQL.VarcharType) (G.Nullability False)
-  let name = P.getName typedParser <> $$(G.litName "_MSSQL_comparison_exp")
-      desc = G.Description $ "Boolean expression to compare columns of type "
-        <>  P.getName typedParser
-        <<> ". All fields are combined with logical 'AND'."
-      textListParser = P.list textParser `P.bind` traverse P.openOpaque
-      columnListParser = P.list typedParser `P.bind` traverse P.openOpaque
+  let
+    columnListParser = P.list typedParser `P.bind` traverse P.openOpaque
+    textListParser   = P.list textParser  `P.bind` traverse P.openOpaque
+
+  -- field info
+  let
+    name = P.getName typedParser <> $$(G.litName "_MSSQL_comparison_exp")
+    desc = G.Description $ "Boolean expression to compare columns of type "
+      <>  P.getName typedParser
+      <<> ". All fields are combined with logical 'AND'."
+
   pure $ P.object name (Just desc) $ fmap catMaybes $ sequenceA $ concat
     [
     -- Common ops for all types
-      [ P.fieldOptional $$(G.litName "_is_null") Nothing (bool ANISNOTNULL ANISNULL <$> P.boolean)
-      , P.fieldOptional $$(G.litName "_eq")      Nothing (AEQ True . mkParameter <$> typedParser)
-      , P.fieldOptional $$(G.litName "_neq")     Nothing (ANE True . mkParameter <$> typedParser)
-      , P.fieldOptional $$(G.litName "_gt")      Nothing (AGT  . mkParameter <$> typedParser)
-      , P.fieldOptional $$(G.litName "_lt")      Nothing (ALT  . mkParameter <$> typedParser)
-      , P.fieldOptional $$(G.litName "_gte")     Nothing (AGTE . mkParameter <$> typedParser)
-      , P.fieldOptional $$(G.litName "_lte")     Nothing (ALTE . mkParameter <$> typedParser)
-      , P.fieldOptional $$(G.litName "_in")      Nothing (AIN . mkListLiteral <$> columnListParser)
-      , P.fieldOptional $$(G.litName "_nin")     Nothing (ANIN . mkListLiteral <$> columnListParser)
-      ]
+      equalityOperators
+        collapseIfNull
+        (mkParameter <$> typedParser)
+        (mkListLiteral <$> columnListParser)
+    , comparisonOperators
+        collapseIfNull
+        (mkParameter <$> typedParser)
 
     -- Ops for String like types
     , guard (isScalarColumnWhere (`elem` MSSQL.stringTypes) columnType) *>

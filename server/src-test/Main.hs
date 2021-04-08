@@ -99,7 +99,7 @@ buildPostgresSpecs maybeUrlTemplate = do
 
       setupCacheRef = do
         httpManager <- HTTP.newManager HTTP.tlsManagerSettings
-        let sqlGenCtx = SQLGenCtx False
+        let sqlGenCtx = SQLGenCtx False False
             maintenanceMode = MaintenanceModeDisabled
             serverConfigCtx =
               ServerConfigCtx FunctionPermissionsInferred RemoteSchemaPermsDisabled sqlGenCtx maintenanceMode mempty

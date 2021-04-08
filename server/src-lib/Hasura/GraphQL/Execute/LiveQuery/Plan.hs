@@ -234,14 +234,14 @@ instance Q.ToPrepArg CohortVariablesArray where
 
 newtype ValidatedVariables f = ValidatedVariables (f TxtEncodedPGVal)
 
-deriving instance (Show (f TxtEncodedPGVal)) => Show (ValidatedVariables f)
-deriving instance (Eq (f TxtEncodedPGVal)) => Eq (ValidatedVariables f)
-deriving instance (Hashable (f TxtEncodedPGVal)) => Hashable (ValidatedVariables f)
-deriving instance (J.ToJSON (f TxtEncodedPGVal)) => J.ToJSON (ValidatedVariables f)
+deriving instance (Show      (f TxtEncodedPGVal)) => Show      (ValidatedVariables f)
+deriving instance (Eq        (f TxtEncodedPGVal)) => Eq        (ValidatedVariables f)
+deriving instance (Hashable  (f TxtEncodedPGVal)) => Hashable  (ValidatedVariables f)
+deriving instance (J.ToJSON  (f TxtEncodedPGVal)) => J.ToJSON  (ValidatedVariables f)
 deriving instance (Semigroup (f TxtEncodedPGVal)) => Semigroup (ValidatedVariables f)
-deriving instance (Monoid (f TxtEncodedPGVal)) => Monoid (ValidatedVariables f)
+deriving instance (Monoid    (f TxtEncodedPGVal)) => Monoid    (ValidatedVariables f)
 
-type ValidatedQueryVariables = ValidatedVariables (Map.HashMap G.Name)
+type ValidatedQueryVariables     = ValidatedVariables (Map.HashMap G.Name)
 type ValidatedSyntheticVariables = ValidatedVariables []
 
 

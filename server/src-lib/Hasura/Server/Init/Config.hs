@@ -83,6 +83,7 @@ data RawServeOptions impl
   , rsoEnableTelemetry               :: !(Maybe Bool)
   , rsoWsReadCookie                  :: !Bool
   , rsoStringifyNum                  :: !Bool
+  , rsoDangerousBooleanCollapse      :: !(Maybe Bool)
   , rsoEnabledAPIs                   :: !(Maybe [API])
   , rsoMxRefetchInt                  :: !(Maybe LQ.RefetchInterval)
   , rsoMxBatchSize                   :: !(Maybe LQ.BatchSize)
@@ -140,6 +141,7 @@ data ServeOptions impl
   , soConsoleAssetsDir              :: !(Maybe Text)
   , soEnableTelemetry               :: !Bool
   , soStringifyNum                  :: !Bool
+  , soDangerousBooleanCollapse      :: !Bool
   , soEnabledAPIs                   :: !(Set.HashSet API)
   , soLiveQueryOpts                 :: !LQ.LiveQueriesOptions
   , soEnableAllowlist               :: !Bool

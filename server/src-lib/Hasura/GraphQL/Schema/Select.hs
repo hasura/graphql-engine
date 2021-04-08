@@ -579,7 +579,7 @@ selectFunctionConnection function fieldName description pkeyColumns selectPermis
 -- | Argument to filter rows returned from table selection
 -- > where: table_bool_exp
 tableWhere
-  :: forall m n r b. (BackendSchema b, MonadSchema n m, MonadTableInfo r m, MonadRole r m)
+  :: forall b r m n. MonadBuildSchema b r m n
   => TableName b
   -> SelPermInfo b
   -> m (InputFieldsParser n (Maybe (IR.AnnBoolExp b (UnpreparedValue b))))
@@ -616,7 +616,7 @@ tableOrderBy table selectPermissions = do
 -- > order_by: [table_order_by!]
 -- > where: table_bool_exp
 tableArgs
-  :: forall m n r b. (BackendSchema b, MonadSchema n m, MonadTableInfo r m, MonadRole r m)
+  :: forall b r m n. MonadBuildSchema b r m n
   => TableName b
   -> SelPermInfo b
   -> m (InputFieldsParser n (SelectArgs b))
@@ -680,7 +680,7 @@ positiveInt = P.int `P.bind` \value -> do
 -- > before: String
 -- > after: String
 tableConnectionArgs
-  :: forall m n r b. (BackendSchema b, MonadSchema n m, MonadTableInfo r m, MonadRole r m)
+  :: forall b r m n. MonadBuildSchema b r m n
   => PrimaryKeyColumns b
   -> TableName b
   -> SelPermInfo b

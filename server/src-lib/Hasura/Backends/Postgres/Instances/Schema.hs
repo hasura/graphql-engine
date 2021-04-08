@@ -13,6 +13,7 @@ import qualified Data.Text                              as T
 import qualified Database.PG.Query                      as Q
 import qualified Language.GraphQL.Draft.Syntax          as G
 
+import           Data.Has
 import           Data.Parser.JSONPath
 import           Data.Text.Extended
 
@@ -33,6 +34,7 @@ import           Hasura.GraphQL.Parser                  hiding (EnumValueInfo, f
 import           Hasura.GraphQL.Parser.Internal.Parser  hiding (field)
 import           Hasura.GraphQL.Schema.Backend          (BackendSchema, ComparisonExp,
                                                          MonadBuildSchema)
+import           Hasura.GraphQL.Schema.BoolExp
 import           Hasura.GraphQL.Schema.Common
 import           Hasura.GraphQL.Schema.Select
 import           Hasura.GraphQL.Schema.Table
@@ -236,14 +238,23 @@ orderByOperators = NE.fromList
     define name desc = P.mkDefinition name (Just desc) P.EnumValueInfo
 
 comparisonExps
-  :: forall m n. (BackendSchema 'Postgres, MonadSchema n m, MonadError QErr m)
+  :: forall m n r
+   . (BackendSchema 'Postgres
+     , MonadSchema n m
+     , MonadError QErr m
+     , MonadReader r m
+     , Has QueryContext r
+     )
   => ColumnType 'Postgres -> m (Parser 'Input n [ComparisonExp 'Postgres])
 comparisonExps = P.memoize 'comparisonExps \columnType -> do
-  geogInputParser <- geographyWithinDistanceInput
-  geomInputParser <- geometryWithinDistanceInput
-  ignInputParser  <- intersectsGeomNbandInput
-  ingInputParser  <- intersectsNbandGeomInput
   -- see Note [Columns in comparison expression are never nullable]
+  collapseIfNull <- asks $ qcDangerousBooleanCollapse . getter
+
+  -- parsers used for comparison arguments
+  geogInputParser    <- geographyWithinDistanceInput
+  geomInputParser    <- geometryWithinDistanceInput
+  ignInputParser     <- intersectsGeomNbandInput
+  ingInputParser     <- intersectsNbandGeomInput
   typedParser        <- columnParser columnType (G.Nullability False)
   nullableTextParser <- columnParser (ColumnScalar PGText) (G.Nullability True)
   textParser         <- columnParser (ColumnScalar PGText) (G.Nullability False)
@@ -256,26 +267,26 @@ comparisonExps = P.memoize 'comparisonExps \columnType -> do
       desc = G.Description $ "Boolean expression to compare columns of type "
         <>  P.getName typedParser
         <<> ". All fields are combined with logical 'AND'."
-      textListParser = P.list textParser `P.bind` traverse P.openOpaque
+      textListParser   = P.list textParser  `P.bind` traverse P.openOpaque
       columnListParser = P.list typedParser `P.bind` traverse P.openOpaque
+
   pure $ P.object name (Just desc) $ fmap catMaybes $ sequenceA $ concat
     [ flip (maybe []) maybeCastParser $ \castParser ->
       [ P.fieldOptional $$(G.litName "_cast")    Nothing (ACast <$> castParser)
       ]
+
     -- Common ops for all types
-    , [ P.fieldOptional $$(G.litName "_is_null") Nothing (bool ANISNOTNULL ANISNULL <$> P.boolean)
-      , P.fieldOptional $$(G.litName "_eq")      Nothing (AEQ True . mkParameter <$> typedParser)
-      , P.fieldOptional $$(G.litName "_neq")     Nothing (ANE True . mkParameter <$> typedParser)
-      , P.fieldOptional $$(G.litName "_in")      Nothing (AIN  . mkListLiteral columnType <$> columnListParser)
-      , P.fieldOptional $$(G.litName "_nin")     Nothing (ANIN . mkListLiteral columnType <$> columnListParser)
-      ]
+    , equalityOperators
+        collapseIfNull
+        (mkParameter <$> typedParser)
+        (mkListLiteral columnType <$> columnListParser)
+
     -- Comparison ops for non Raster types
     , guard (isScalarColumnWhere (/= PGRaster) columnType) *>
-      [ P.fieldOptional $$(G.litName "_gt")  Nothing (AGT  . mkParameter <$> typedParser)
-      , P.fieldOptional $$(G.litName "_lt")  Nothing (ALT  . mkParameter <$> typedParser)
-      , P.fieldOptional $$(G.litName "_gte") Nothing (AGTE . mkParameter <$> typedParser)
-      , P.fieldOptional $$(G.litName "_lte") Nothing (ALTE . mkParameter <$> typedParser)
-      ]
+      comparisonOperators
+        collapseIfNull
+        (mkParameter <$> typedParser)
+
     -- Ops for Raster types
     , guard (isScalarColumnWhere (== PGRaster) columnType) *>
       [ P.fieldOptional $$(G.litName "_st_intersects_rast")
@@ -288,6 +299,7 @@ comparisonExps = P.memoize 'comparisonExps \columnType -> do
         Nothing
         (ABackendSpecific . ASTIntersectsGeomNband <$> ignInputParser)
       ]
+
     -- Ops for String like types
     , guard (isScalarColumnWhere isStringType columnType) *>
       [ P.fieldOptional $$(G.litName "_like")
@@ -321,6 +333,7 @@ comparisonExps = P.memoize 'comparisonExps \columnType -> do
         (Just "does the column NOT match the given POSIX regular expression, case insensitive")
         (ABackendSpecific . ANIREGEX . mkParameter <$> typedParser)
       ]
+
     -- Ops for JSONB type
     , guard (isScalarColumnWhere (== PGJSONB) columnType) *>
       [ P.fieldOptional $$(G.litName "_contains")
@@ -339,6 +352,7 @@ comparisonExps = P.memoize 'comparisonExps \columnType -> do
         (Just "do all of these strings exist as top-level keys in the column")
         (ABackendSpecific . AHasKeysAll . mkListLiteral (ColumnScalar PGText) <$> textListParser)
       ]
+
     -- Ops for Geography type
     , guard (isScalarColumnWhere (== PGGeography) columnType) *>
       [ P.fieldOptional $$(G.litName "_st_intersects")
@@ -348,6 +362,7 @@ comparisonExps = P.memoize 'comparisonExps \columnType -> do
         (Just "is the column within a given distance from the given geography value")
         (ABackendSpecific . ASTDWithinGeog <$> geogInputParser)
       ]
+
     -- Ops for Geometry type
     , guard (isScalarColumnWhere (== PGGeometry) columnType) *>
       [ P.fieldOptional $$(G.litName "_st_contains")
