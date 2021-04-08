@@ -775,6 +775,7 @@ const changeTableName = (oldName, newName, isTable, tableType) => {
 
     const property = tableType.toLowerCase();
     if (oldName === newName) {
+      dispatch(setSidebarLoading(false));
       return dispatch(
         showErrorNotification(
           `Renaming ${property} failed`,
@@ -784,6 +785,7 @@ const changeTableName = (oldName, newName, isTable, tableType) => {
     }
 
     if (!gqlPattern.test(newName)) {
+      dispatch(setSidebarLoading(false));
       const gqlValidationError = isTable
         ? gqlTableErrorNotif
         : gqlViewErrorNotif;

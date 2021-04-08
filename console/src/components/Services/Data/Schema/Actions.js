@@ -12,6 +12,7 @@ export const createNewSchema = (schemaName, successCb, errorCb) => {
     dispatch(setSidebarLoading(true));
     const source = getState().tables.currentDataSource;
     if (!gqlPattern.test(schemaName)) {
+      dispatch(setSidebarLoading(false));
       return dispatch(
         showErrorNotification(
           gqlSchemaErrorNotif[0],
@@ -69,6 +70,7 @@ export const deleteCurrentSchema = (successCb, errorCb) => {
     const confirmMessage = `This will permanently delete schema "${currentSchema}" from the database`;
     const isOk = getConfirmation(confirmMessage, true, currentSchema);
     if (!isOk) {
+      dispatch(setSidebarLoading(false));
       return;
     }
     const migration = new Migration();
