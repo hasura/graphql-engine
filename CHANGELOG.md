@@ -37,6 +37,7 @@ In the future, we will probably offer a way to explicitly choose which behaviour
 (Add entries here in the order of: server, console, cli, docs, others)
 
 - console: add custom_column_names to track_table request with replaced invalid characters (#992)
+- console: add details button to the success notification to see inserted row
 
 ## v2.0.0-alpha.7
 
