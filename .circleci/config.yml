@@ -427,14 +427,6 @@ jobs:
     - restore_cache:
         keys:
         - cli-gopkg-{{ checksum "cli/go.mod" }}-{{ checksum "cli/go.sum" }}
-    - run:
-        name: get cli dependencies
-        working_directory: cli
-        command: make deps
-    - save_cache:
-        key: cli-gopkg-{{ checksum "cli/go.mod" }}-{{ checksum "cli/go.sum" }}
-        paths:
-        - /go/pkg
     - *wait_for_postgres
     - run:
         name: test cli
@@ -446,6 +438,10 @@ jobs:
           make build
           make compress
           make ci-copy-binary
+    - save_cache:
+        key: cli-gopkg-{{ checksum "cli/go.mod" }}-{{ checksum "cli/go.sum" }}
+        paths:
+        - /go/pkg/mod
     - store_artifacts:
         path: /build/_cli_output
         destination: cli
