@@ -26,7 +26,7 @@ Inherited roles are useful when you need to define multiple permission rules (ma
    to ``inherited_roles`` or by providing the server flag ``--experimental-features``
    to ``inherited_roles``.
 
-   See :ref:`server flag reference <server_flag_reference>` for info on setting the flag/env var.
+   See :ref:`server config reference <server_flag_reference>` for info on setting the flag/env var.
 
 .. admonition:: Supported from
 

@@ -25,7 +25,7 @@ Adding read replica urls
 
    .. tab:: Console
 
-     Currently it is only possible to add read replicas for a database at the time of creation.
+     Currently it is only possible to add read replicas for a database at the time of connecting.
 
      Head to ``Data -> Manage -> Connect database``
 
@@ -66,7 +66,7 @@ Adding read replica urls
 
    .. tab:: API
 
-      Currently it is only possible to add read replicas for a database at the time of creation using the :ref:`pg_add_source metadata API <pg_add_source>`
+      Currently it is only possible to add read replicas for a database at the time of connecting using the :ref:`pg_add_source metadata API <pg_add_source>`
 
       .. code-block:: http
          :emphasize-lines: 15-26
@@ -98,6 +98,7 @@ Adding read replica urls
                }
              ]
            }
+         }
 
 .. admonition:: For existing v1.3 projects
 

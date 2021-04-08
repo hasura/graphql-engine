@@ -30,7 +30,7 @@ latest result of the query being made and not necessarily all the individual eve
 By default updates are delivered to clients every **1 sec**. This interval can be configured via the
 ``HASURA_GRAPHQL_LIVE_QUERIES_MULTIPLEXED_REFETCH_INTERVAL`` env var or the
 ``--live-queries-multiplexed-refetch-interval`` flag. See the
-:ref:`server flag reference <server_flag_reference>` for info on setting the flag/env var.
+:ref:`server config reference <server_flag_reference>` for info on setting the flag/env var.
 
 You can read more about the implementation of subscriptions in the `architecture doc <https://github.com/hasura/graphql-engine/blob/master/architecture/live-queries.md>`__.
 

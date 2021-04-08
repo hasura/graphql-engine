@@ -116,13 +116,17 @@ Migrate Hasura v1 instance to Hasura v2
 Hasura v2 is backwards compatible with Hasura v1. Hence simply updating the Hasura docker image version number
 and restarting your Hasura instance should work seamlessly. The database connected using the ``HASURA_GRAPHQL_DATABASE_URL``
 env var will be added as a database with the name ``default`` automatically and all existing metadata and migrations will be
-run against it.
+assumed to belong to it.
 
 Upgrade CLI project to enable multiple database support
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Update your Hasura CLI project to ``config v3`` using the steps mentioned in :ref:`this guide <migrations_upgrade_v3>`
 to take full advantages of the features introduced in Hasura v2.
+
+Post upgrading to ``config v3``, the database connection parameters would have been moved to the metadata. Hence it is important
+to ensure that the same env vars are used for storing database connection strings across all environments and the metadata
+being applied also uses the appropriate env vars.
 
 .. note::
 
@@ -133,12 +137,25 @@ to take full advantages of the features introduced in Hasura v2.
 Updates to CI/CD after upgrading to Hasura v2
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-- Ensure the same env vars are used to store the database urls across different environments.
-
-- If using Hasura CLI project in ``config v3``:
-
-  Run ``hasura metadata apply`` first and then ``hasura migrate apply``.
+The following commands need to be executed in the specified order to apply metadata and migrations in CI/CD workflows
 
 - If using Hasura CLI project in ``config v2``:
 
-  No changes needed. Run ``hasura migrate apply`` first and then ``hasura metadata apply``.
+  - No changes needed.
+
+  - Run:
+
+    - ``hasura migrate apply`` - *(apply migrations to the database named "default")*
+    - ``hasura metadata apply`` - *(apply metadata to the database named "default")*
+
+
+- If using Hasura CLI project in ``config v3``:
+
+  - Ensure that the same env vars are used for storing database connection strings across all environments and the metadata
+    being applied also uses the appropriate env vars.
+
+  - Run:
+
+    - ``hasura metadata apply`` - *(connect Hasura to the databases configured in the metadata)*
+    - ``hasura migrate apply --all-databases`` - *(apply the migrations to the connected databases)*
+    - ``hasura metadata reload`` - *(make Hasura aware of any newly created database objects in the previous step)*
