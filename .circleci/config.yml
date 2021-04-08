@@ -443,9 +443,16 @@ jobs:
         name: build cli
         working_directory: cli
         command: |
-          make build
-          make compress
-          make ci-copy-binary
+          # if a patch release build and push assets, otherwise do a normal build
+          # if patch release this script will create a file in /tmp/is_patch_release
+          scripts/patch-releases.sh is_patch_release; 
+          if [ -e /tmp/is_patch_release ]; then
+            echo building and pushing patch release
+            (scripts/patch-releases.sh build_and_push_patch_release) &&  scripts/ci-copy-binaries.sh $(cat /tmp/patch_release_version)
+          else
+            echo building cli
+            make build && make compress && make ci-copy-binary
+          fi
     - store_artifacts:
         path: /build/_cli_output
         destination: cli
