@@ -83,6 +83,7 @@ export type CustomFieldType = {
   return?: string;
   typeName?: string;
   children?: FieldType[];
+  defaultValue?: any;
 };
 
 export type FieldType = CustomFieldType & GraphQLField<any, any>;
