@@ -13,21 +13,19 @@ module Hasura.EncJSON
   , encJFromLBS
   , encJFromList
   , encJFromAssocList
-  , encJFromInsOrdHashMap
   ) where
 
 import           Hasura.Prelude
 
-import qualified Data.Aeson                      as J
-import qualified Data.ByteString                 as B
-import qualified Data.ByteString.Builder         as BB
-import qualified Data.ByteString.Lazy            as BL
-import qualified Data.Text.Encoding              as TE
-import qualified Database.PG.Query               as Q
-import qualified Data.HashMap.Strict.InsOrd      as OMap
+import qualified Data.Aeson              as J
+import qualified Data.ByteString         as B
+import qualified Data.ByteString.Builder as BB
+import qualified Data.ByteString.Lazy    as BL
+import qualified Data.Text.Encoding      as TE
+import qualified Database.PG.Query       as Q
 
 -- encoded json
--- TODO (from master): can be improved with gadts capturing bytestring, lazybytestring
+-- TODO: can be improved with gadts capturing bytestring, lazybytestring
 -- and builder
 newtype EncJSON
   = EncJSON { unEncJSON :: BB.Builder }
@@ -95,6 +93,3 @@ encJFromAssocList = \case
     -- builds "key":value from (key,value)
     builder' (t, v) =
       encJFromChar '"' <> encJFromText t <> encJFromText "\":" <> v
-
-encJFromInsOrdHashMap :: InsOrdHashMap Text EncJSON -> EncJSON
-encJFromInsOrdHashMap = encJFromAssocList . OMap.toList

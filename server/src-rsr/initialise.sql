@@ -1,16 +1,5 @@
-/* We define our own uuid generator function that uses gen_random_uuid() underneath.
-Since the column default is not directly referencing gen_random_uuid(),
-it prevents the column default to be dropped when pgcrypto or public schema is dropped unwittingly.
-
-See https://github.com/hasura/graphql-engine/issues/4217
-*/
-CREATE FUNCTION hdb_catalog.gen_hasura_uuid() RETURNS uuid AS
--- We assume gen_random_uuid() is available in the search_path.
--- This may not be true but we can't do much till https://github.com/hasura/graphql-engine/issues/3657
-'select gen_random_uuid()' LANGUAGE SQL;
-
 CREATE TABLE hdb_catalog.hdb_version (
-    hasura_uuid UUID PRIMARY KEY DEFAULT hdb_catalog.gen_hasura_uuid(),
+    hasura_uuid UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     version TEXT NOT NULL,
     upgraded_on TIMESTAMPTZ NOT NULL,
     cli_state JSONB NOT NULL DEFAULT '{}'::jsonb,
@@ -323,7 +312,7 @@ FOR EACH ROW EXECUTE PROCEDURE hdb_catalog.event_trigger_table_name_update();
 
 CREATE TABLE hdb_catalog.event_log
 (
-  id TEXT DEFAULT hdb_catalog.gen_hasura_uuid() PRIMARY KEY,
+  id TEXT DEFAULT gen_random_uuid() PRIMARY KEY,
   schema_name TEXT NOT NULL,
   table_name TEXT NOT NULL,
   trigger_name TEXT NOT NULL,
@@ -332,8 +321,7 @@ CREATE TABLE hdb_catalog.event_log
   error BOOLEAN NOT NULL DEFAULT FALSE,
   tries INTEGER NOT NULL DEFAULT 0,
   created_at TIMESTAMP DEFAULT NOW(),
-  /* when locked IS NULL the event is unlocked and can be processed */
-  locked TIMESTAMPTZ,
+  locked BOOLEAN NOT NULL DEFAULT FALSE,
   next_retry_at TIMESTAMP,
   archived BOOLEAN NOT NULL DEFAULT FALSE
 );
@@ -345,7 +333,7 @@ CREATE INDEX ON hdb_catalog.event_log (created_at);
 
 CREATE TABLE hdb_catalog.event_invocation_logs
 (
-  id TEXT DEFAULT hdb_catalog.gen_hasura_uuid() PRIMARY KEY,
+  id TEXT DEFAULT gen_random_uuid() PRIMARY KEY,
   event_id TEXT,
   status INTEGER,
   request JSON,
@@ -748,7 +736,7 @@ CREATE TABLE hdb_catalog.hdb_action_permission
 
 CREATE TABLE hdb_catalog.hdb_action_log
 (
-  id UUID PRIMARY KEY DEFAULT hdb_catalog.gen_hasura_uuid(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   -- we deliberately do not reference the action name
   -- because sometimes we may want to retain history
   -- after dropping the action
@@ -792,7 +780,7 @@ CREATE TABLE hdb_catalog.hdb_cron_triggers
 
 CREATE TABLE hdb_catalog.hdb_cron_events
 (
-  id TEXT DEFAULT hdb_catalog.gen_hasura_uuid() PRIMARY KEY,
+  id TEXT DEFAULT gen_random_uuid() PRIMARY KEY,
   trigger_name TEXT NOT NULL,
   scheduled_time TIMESTAMPTZ NOT NULL,
   status TEXT NOT NULL DEFAULT 'scheduled',
@@ -809,7 +797,7 @@ CREATE INDEX hdb_cron_event_status ON hdb_catalog.hdb_cron_events (status);
 
 CREATE TABLE hdb_catalog.hdb_cron_event_invocation_logs
 (
-  id TEXT DEFAULT hdb_catalog.gen_hasura_uuid() PRIMARY KEY,
+  id TEXT DEFAULT gen_random_uuid() PRIMARY KEY,
   event_id TEXT,
   status INTEGER,
   request JSON,
@@ -835,7 +823,7 @@ CREATE VIEW hdb_catalog.hdb_cron_events_stats AS
 
 CREATE TABLE hdb_catalog.hdb_scheduled_events
 (
-  id TEXT DEFAULT hdb_catalog.gen_hasura_uuid() PRIMARY KEY,
+  id TEXT DEFAULT gen_random_uuid() PRIMARY KEY,
   webhook_conf JSON NOT NULL,
   scheduled_time TIMESTAMPTZ NOT NULL,
   retry_conf JSON,
@@ -853,7 +841,7 @@ CREATE INDEX hdb_scheduled_event_status ON hdb_catalog.hdb_scheduled_events (sta
 
 CREATE TABLE hdb_catalog.hdb_scheduled_event_invocation_logs
 (
-id TEXT DEFAULT hdb_catalog.gen_hasura_uuid() PRIMARY KEY,
+id TEXT DEFAULT gen_random_uuid() PRIMARY KEY,
 event_id TEXT,
 status INTEGER,
 request JSON,

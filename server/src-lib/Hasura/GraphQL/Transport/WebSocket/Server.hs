@@ -1,6 +1,5 @@
 {-# LANGUAGE NondecreasingIndentation #-}
 {-# LANGUAGE RankNTypes               #-}
-{-# LANGUAGE CPP #-}
 
 module Hasura.GraphQL.Transport.WebSocket.Server
   ( WSId(..)
@@ -46,9 +45,7 @@ import qualified Data.TByteString                            as TBS
 import qualified Data.UUID                                   as UUID
 import qualified Data.UUID.V4                                as UUID
 import           Data.Word                                   (Word16)
-#ifndef PROFILING
 import           GHC.AssertNF
-#endif
 import           GHC.Int                                     (Int64)
 import           Hasura.Prelude
 import qualified ListT
@@ -119,6 +116,10 @@ $(J.deriveToJSON
                    }
   ''WSLog)
 
+instance L.ToEngineLog WSLog L.Hasura where
+  toEngineLog wsLog =
+    (L.LevelDebug, L.ELTInternal L.ILTWsServer, J.toJSON wsLog)
+
 class Monad m => MonadWSLog m where
   -- | Takes WS server log data and logs it
   -- logWSServer
@@ -129,10 +130,6 @@ instance MonadWSLog m => MonadWSLog (ExceptT e m) where
 
 instance MonadWSLog m => MonadWSLog (ReaderT r m) where
   logWSLog l ws = lift $ logWSLog l ws
-
-instance L.ToEngineLog WSLog L.Hasura where
-  toEngineLog wsLog =
-    (L.LevelDebug, L.ELTInternal L.ILTWsServer, J.toJSON wsLog)
 
 data WSQueueResponse
   = WSQueueResponse
@@ -174,10 +171,8 @@ closeConnWithCode wsConn code bs = do
 -- writes to a queue instead of the raw connection
 -- so that sendMsg doesn't block
 sendMsg :: WSConn a -> WSQueueResponse -> IO ()
-sendMsg wsConn !resp = do
-#ifndef PROFILING
+sendMsg wsConn = \ !resp -> do
   $assertNFHere resp  -- so we don't write thunks to mutable vars
-#endif
   STM.atomically $ STM.writeTQueue (_wcSendQ wsConn) resp
 
 type ConnMap a = STMMap.Map WSId (WSConn a)
@@ -366,6 +361,7 @@ createServerApp (WSServer logger@(L.Logger writeLog) serverStatus) wsHandlers !i
         liftIO $ STM.atomically $ STMMap.delete (_wcConnId wsConn) connMap
         _hOnClose wsHandlers wsConn
         logWSLog logger $ WSLog (_wcConnId wsConn) EClosed Nothing
+
 
 shutdown :: WSServer a -> IO ()
 shutdown (WSServer (L.Logger writeLog) serverStatus) = do

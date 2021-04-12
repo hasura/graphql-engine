@@ -102,14 +102,12 @@ func (r *APIServer) setConfigVersion(configVersion cli.ConfigVersion) gin.Handle
 	}
 }
 
-/*
 func (r *APIServer) setMetadataFile(file string) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		c.Set("metadataFile", file)
 		c.Next()
 	}
 }
-*/
 
 func (r *APIServer) setLogger(logger *logrus.Logger) gin.HandlerFunc {
 	return func(c *gin.Context) {

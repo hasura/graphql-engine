@@ -2,7 +2,7 @@ description: As backend user without header
 url: /v1/graphql
 status: 200
 headers:
-  X-Hasura-Role: backend_user_2
+  X-Hasura-Role: backend_user
 response:
   errors:
   - extensions:

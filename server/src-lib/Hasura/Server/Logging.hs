@@ -15,30 +15,29 @@ module Hasura.Server.Logging
   , HttpLog (..)
   ) where
 
-import           Hasura.Prelude
-
-import qualified Data.ByteString.Lazy      as BL
-import qualified Network.HTTP.Types        as HTTP
-import qualified Network.Wai.Extended      as Wai
-
 import           Data.Aeson
 import           Data.Aeson.Casing
 import           Data.Aeson.TH
 import           Data.Int                  (Int64)
 
+import qualified Data.ByteString.Lazy      as BL
+import qualified Data.Text                 as T
+import qualified Network.HTTP.Types        as HTTP
+import qualified Network.Wai.Extended      as Wai
+
 import           Hasura.HTTP
 import           Hasura.Logging
+import           Hasura.Prelude
 import           Hasura.RQL.Types
 import           Hasura.Server.Compression
 import           Hasura.Server.Utils
 import           Hasura.Session
 import           Hasura.Tracing            (TraceT)
 
-
 data StartupLog
   = StartupLog
   { slLogLevel :: !LogLevel
-  , slKind     :: !Text
+  , slKind     :: !T.Text
   , slInfo     :: !Value
   } deriving (Show, Eq)
 
@@ -55,7 +54,7 @@ instance ToEngineLog StartupLog Hasura where
 data PGLog
   = PGLog
   { plLogLevel :: !LogLevel
-  , plMessage  :: !Text
+  , plMessage  :: !T.Text
   } deriving (Show, Eq)
 
 instance ToJSON PGLog where
@@ -69,7 +68,7 @@ instance ToEngineLog PGLog Hasura where
 data MetadataLog
   = MetadataLog
   { mlLogLevel :: !LogLevel
-  , mlMessage  :: !Text
+  , mlMessage  :: !T.Text
   , mlInfo     :: !Value
   } deriving (Show, Eq)
 
@@ -92,11 +91,11 @@ data WebHookLog
   = WebHookLog
   { whlLogLevel   :: !LogLevel
   , whlStatusCode :: !(Maybe HTTP.Status)
-  , whlUrl        :: !Text
+  , whlUrl        :: !T.Text
   , whlMethod     :: !HTTP.StdMethod
   , whlError      :: !(Maybe HttpException)
-  , whlResponse   :: !(Maybe Text)
-  , whlMessage    :: !(Maybe Text)
+  , whlResponse   :: !(Maybe T.Text)
+  , whlMessage    :: !(Maybe T.Text)
   } deriving (Show)
 
 instance ToEngineLog WebHookLog Hasura where
@@ -146,7 +145,7 @@ class (Monad m) => HttpLog m where
     -- ^ the response bytes
     -> BL.ByteString
     -- ^ the compressed response bytes
-    -- ^ TODO (from master): make the above two type represented
+    -- ^ TODO: make the above two type represented
     -> Maybe (DiffTime, DiffTime)
     -- ^ IO/network wait time and service time (respectively) for this request, if available.
     -> Maybe CompressionType
@@ -163,9 +162,9 @@ instance HttpLog m => HttpLog (TraceT m) where
 data HttpInfoLog
   = HttpInfoLog
   { hlStatus      :: !HTTP.Status
-  , hlMethod      :: !Text
+  , hlMethod      :: !T.Text
   , hlSource      :: !Wai.IpAddress
-  , hlPath        :: !Text
+  , hlPath        :: !T.Text
   , hlHttpVersion :: !HTTP.HttpVersion
   , hlCompression :: !(Maybe CompressionType)
   , hlHeaders     :: ![HTTP.Header]

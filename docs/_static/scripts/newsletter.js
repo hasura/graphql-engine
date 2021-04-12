@@ -1,7 +1,7 @@
 const email_input = document.getElementById('mce-EMAIL');
 const submit_btn = document.getElementById('mc-embedded-subscribe');
-const mcStatusSuccess = document.getElementById('mce-success-response');
-const mcStatusError = document.getElementById('mce-error-response');
+const mcStatusSuccess = document.querySelector('.mce-success-response');
+const mcStatusError = document.querySelector('.mce-error-response');
 
 email_input.addEventListener('input', function() {
     submit_btn.value = 'Subscribe';
@@ -60,19 +60,16 @@ const submitNewsletterForm = function (form) {
         "pageUri": window.location.host + window.location.pathname,
         "pageName": document.title,
     };
-
     const gqlMutation = `mutation docsNewsletterSignup($objects: [newsletterSignupInput!]! ) {
       signupNewsletter(objects: $objects) {
         affected_rows
       }
     }`;
-
     const objects = [{
         "email": email,
         "hbs_context": hbs_context,
         "category": "docs"
-    }];
-
+    }]
     fetch(gqlEndpoint, {
       method: 'POST',
       body: JSON.stringify({

@@ -10,28 +10,26 @@ module Hasura.RQL.DDL.Schema.Rename
   )
 where
 
-import           Hasura.Prelude
-
-import qualified Data.HashMap.Strict                as M
-import qualified Data.List.NonEmpty                 as NE
-import qualified Data.Set                           as Set
-import qualified Database.PG.Query                  as Q
-import qualified Language.GraphQL.Draft.Syntax      as G
-
 import           Control.Lens.Combinators
-import           Data.Aeson
-import           Data.Text.Extended
+import           Control.Lens.Operators
+import           Hasura.Prelude
+import           Hasura.RQL.DDL.Permission
+import           Hasura.RQL.DDL.Permission.Internal
+import           Hasura.RQL.DDL.Relationship.Types
+import           Hasura.RQL.DDL.Schema.Catalog
+import           Hasura.RQL.Types
+import           Hasura.Session
+import           Hasura.SQL.Types
 
 import qualified Hasura.RQL.DDL.EventTrigger        as DS
 import qualified Hasura.RQL.DDL.RemoteRelationship  as RR
 
-import           Hasura.Backends.Postgres.SQL.Types
-import           Hasura.RQL.DDL.Permission
-import           Hasura.RQL.DDL.Permission.Internal
-import           Hasura.RQL.DDL.Schema.Catalog
-import           Hasura.RQL.Types
-import           Hasura.Session
-
+import qualified Data.HashMap.Strict                as M
+import qualified Database.PG.Query                  as Q
+import qualified Data.Set                           as Set
+import qualified Data.List.NonEmpty                 as NE
+import qualified Language.GraphQL.Draft.Syntax      as G
+import           Data.Aeson
 
 data RenameItem a
   = RenameItem
@@ -93,7 +91,7 @@ renameTableInCatalog newQT oldQT = do
 
 renameColInCatalog
   :: (MonadTx m, CacheRM m)
-  => PGCol -> PGCol -> QualifiedTable -> FieldInfoMap (FieldInfo 'Postgres) -> m ()
+  => PGCol -> PGCol -> QualifiedTable -> FieldInfoMap FieldInfo -> m ()
 renameColInCatalog oCol nCol qt fieldInfo = do
   sc <- askSchemaCache
   -- Check if any relation exists with new column name
@@ -217,7 +215,7 @@ updatePermFlds refQT rn pt rename = do
 
 updateInsPermFlds
   :: (MonadTx m, CacheRM m)
-  => QualifiedTable -> Rename -> RoleName -> InsPerm 'Postgres -> m ()
+  => QualifiedTable -> Rename -> RoleName -> InsPerm -> m ()
 updateInsPermFlds refQT rename rn (InsPerm chk preset cols mBackendOnly) = do
   updatedPerm <- case rename of
     RTable rt -> do
@@ -232,7 +230,7 @@ updateInsPermFlds refQT rename rn (InsPerm chk preset cols mBackendOnly) = do
 
 updateSelPermFlds
   :: (MonadTx m, CacheRM m)
-  => QualifiedTable -> Rename -> RoleName -> SelPerm 'Postgres -> m ()
+  => QualifiedTable -> Rename -> RoleName -> SelPerm -> m ()
 updateSelPermFlds refQT rename rn (SelPerm cols fltr limit aggAllwd computedFields) = do
   updatedPerm <- case rename of
     RTable rt -> do
@@ -246,7 +244,7 @@ updateSelPermFlds refQT rename rn (SelPerm cols fltr limit aggAllwd computedFiel
 
 updateUpdPermFlds
   :: (MonadTx m, CacheRM m)
-  => QualifiedTable -> Rename -> RoleName -> UpdPerm 'Postgres -> m ()
+  => QualifiedTable -> Rename -> RoleName -> UpdPerm -> m ()
 updateUpdPermFlds refQT rename rn (UpdPerm cols preset fltr check) = do
   updatedPerm <- case rename of
     RTable rt -> do
@@ -263,7 +261,7 @@ updateUpdPermFlds refQT rename rn (UpdPerm cols preset fltr check) = do
 
 updateDelPermFlds
   :: (MonadTx m, CacheRM m)
-  => QualifiedTable -> Rename -> RoleName -> DelPerm 'Postgres -> m ()
+  => QualifiedTable -> Rename -> RoleName -> DelPerm -> m ()
 updateDelPermFlds refQT rename rn (DelPerm fltr) = do
   updFltr <- case rename of
     RTable rt -> return $ updateTableInBoolExp rt fltr
@@ -271,7 +269,7 @@ updateDelPermFlds refQT rename rn (DelPerm fltr) = do
   liftTx $ updatePermDefInCatalog PTDelete refQT rn $ DelPerm updFltr
 
 updatePreset
-  :: QualifiedTable -> RenameField -> ColumnValues Value -> ColumnValues Value
+  :: QualifiedTable -> RenameField -> (ColumnValues Value) -> (ColumnValues Value)
 updatePreset qt rf obj =
    case rf of
      RFCol (RenameItem opQT oCol nCol) ->
@@ -303,21 +301,21 @@ updateCols qt rf permSpec =
       PCCols c -> PCCols $ flip map c $
         \col -> if col == oCol then nCol else col
 
-updateTableInBoolExp :: RenameTable -> BoolExp 'Postgres -> BoolExp 'Postgres
+updateTableInBoolExp :: RenameTable -> BoolExp -> BoolExp
 updateTableInBoolExp (oldQT, newQT) =
   over _Wrapped . transform $ (_BoolExists . geTable) %~ \rqfQT ->
     if rqfQT == oldQT then newQT else rqfQT
 
 updateFieldInBoolExp
   :: (QErrM m, CacheRM m)
-  => QualifiedTable -> RenameField -> BoolExp 'Postgres -> m (BoolExp 'Postgres)
+  => QualifiedTable -> RenameField -> BoolExp -> m BoolExp
 updateFieldInBoolExp qt rf be = BoolExp <$>
   case unBoolExp be of
     BoolAnd exps -> BoolAnd <$> procExps exps
     BoolOr  exps -> BoolOr <$> procExps exps
     BoolNot e    -> BoolNot <$> updateBoolExp' e
     BoolExists (GExists refqt wh) ->
-      BoolExists . GExists refqt . unBoolExp
+      (BoolExists . GExists refqt . unBoolExp)
       <$> updateFieldInBoolExp refqt rf (BoolExp wh)
     BoolFld fld  -> BoolFld <$> updateColExp qt rf fld
   where
@@ -379,27 +377,34 @@ updateColInRemoteRelationship remoteRelationshipName renameCol = do
       newColFieldName = FieldName $ newColPGTxt
       modifiedHasuraFlds = Set.insert newColFieldName $ Set.delete oldColFieldName hasuraFlds
       fieldCalls = unRemoteFields remoteFields
-  oldColName <- parseGraphQLName oldColPGTxt
-  newColName <- parseGraphQLName newColPGTxt
-  let modifiedFieldCalls = NE.map (\(FieldCall name args) ->
+      oldColName = G.Name $ oldColPGTxt
+      newColName = G.Name $ newColPGTxt
+      modifiedFieldCalls = NE.map (\(FieldCall name args) ->
                                      let remoteArgs = getRemoteArguments args
                                      in FieldCall name $ RemoteArguments $
-                                         fmap (replaceVariableName oldColName newColName) remoteArgs
+                                         map (\(G.ObjectFieldG key val) ->
+                                                G.ObjectFieldG key $ replaceVariableName oldColName newColName val
+                                             ) $ remoteArgs
                                   ) $ fieldCalls
   liftTx $ RR.updateRemoteRelInCatalog (RemoteRelationship remoteRelationshipName qt modifiedHasuraFlds remoteSchemaName (RemoteFields modifiedFieldCalls))
   where
-    parseGraphQLName txt = onNothing (G.mkName txt) $ throw400 ParseFailed $ errMsg
-      where
-        errMsg = txt <> " is not a valid GraphQL name"
-
-    replaceVariableName :: G.Name -> G.Name -> G.Value G.Name -> G.Value G.Name
+    replaceVariableName :: G.Name -> G.Name -> G.Value -> G.Value
     replaceVariableName oldColName newColName = \case
-      G.VVariable oldColName' ->
-        G.VVariable $ bool oldColName newColName $ oldColName == oldColName'
-      G.VList values -> G.VList $ map (replaceVariableName oldColName newColName) values
-      G.VObject values ->
-        G.VObject $ fmap (replaceVariableName oldColName newColName) values
-      v -> v
+      G.VVariable (G.Variable oldColName') ->
+        G.VVariable $
+        if oldColName == oldColName'
+        then (G.Variable newColName)
+        else (G.Variable oldColName')
+      G.VList (G.unListValue -> values) -> G.VList $ G.ListValueG $ map (replaceVariableName oldColName newColName) values
+      G.VObject (G.unObjectValue -> values) ->
+        G.VObject $ G.ObjectValueG $
+        map (\(G.ObjectFieldG key val) -> G.ObjectFieldG key $ replaceVariableName oldColName newColName val) values
+      G.VInt i -> G.VInt i
+      G.VFloat f -> G.VFloat f
+      G.VBoolean b -> G.VBoolean b
+      G.VNull -> G.VNull
+      G.VString s -> G.VString s
+      G.VEnum e -> G.VEnum e
 
 -- rename columns in relationship definitions
 updateColInEventTriggerDef
@@ -433,7 +438,7 @@ updateColInObjRel
   :: QualifiedTable -> QualifiedTable
   -> RenameCol -> ObjRelUsing -> ObjRelUsing
 updateColInObjRel fromQT toQT rnCol = \case
-  RUFKeyOn col       -> RUFKeyOn $ getNewCol rnCol fromQT col
+  RUFKeyOn col -> RUFKeyOn $ getNewCol rnCol fromQT col
   RUManual manConfig -> RUManual $ updateRelManualConfig fromQT toQT rnCol manConfig
 
 updateColInArrRel
@@ -474,12 +479,12 @@ updateColMap fromQT toQT rnCol =
 possiblyUpdateCustomColumnNames
   :: MonadTx m => QualifiedTable -> PGCol -> PGCol -> m ()
 possiblyUpdateCustomColumnNames qt oCol nCol = do
-  TableConfig customRootFields customColumns identifier <- getTableConfig qt
+  TableConfig customRootFields customColumns <- getTableConfig qt
   let updatedCustomColumns =
         M.fromList $ flip map (M.toList customColumns) $
         \(dbCol, val) -> (, val) $ if dbCol == oCol then nCol else dbCol
   when (updatedCustomColumns /= customColumns) $
-    updateTableConfig qt $ TableConfig customRootFields updatedCustomColumns identifier
+    updateTableConfig qt $ TableConfig customRootFields updatedCustomColumns
 
 -- database functions for relationships
 getRelDef :: QualifiedTable -> RelName -> Q.TxE QErr Value

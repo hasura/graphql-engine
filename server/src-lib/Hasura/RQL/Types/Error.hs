@@ -148,7 +148,7 @@ data QErr
   = QErr
   { qePath     :: !JSONPath
   , qeStatus   :: !N.Status
-  , qeError    :: !Text
+  , qeError    :: !T.Text
   , qeCode     :: !Code
   , qeInternal :: !(Maybe Value)
   } deriving (Show, Eq)
@@ -210,7 +210,7 @@ encodeJSONPath = format "$"
         specialChars []     = True
         -- first char must not be number
         specialChars (c:xs) = notElem c (alphabet ++ "_") ||
-          any (`notElem` (alphaNumerics ++ "_-")) xs
+          any (flip notElem (alphaNumerics ++ "_-")) xs
 
 instance Q.FromPGConnErr QErr where
   fromPGConnErr c =
@@ -222,36 +222,36 @@ instance Q.FromPGTxErr QErr where
     let e = err500 PostgresError "postgres tx error"
     in e {qeInternal = Just $ toJSON txe}
 
-err400 :: Code -> Text -> QErr
+err400 :: Code -> T.Text -> QErr
 err400 c t = QErr [] N.status400 t c Nothing
 
-err404 :: Code -> Text -> QErr
+err404 :: Code -> T.Text -> QErr
 err404 c t = QErr [] N.status404 t c Nothing
 
-err401 :: Code -> Text -> QErr
+err401 :: Code -> T.Text -> QErr
 err401 c t = QErr [] N.status401 t c Nothing
 
-err500 :: Code -> Text -> QErr
+err500 :: Code -> T.Text -> QErr
 err500 c t = QErr [] N.status500 t c Nothing
 
 type QErrM m = (MonadError QErr m)
 
-throw400 :: (QErrM m) => Code -> Text -> m a
+throw400 :: (QErrM m) => Code -> T.Text -> m a
 throw400 c t = throwError $ err400 c t
 
-throw404 :: (QErrM m) => Text -> m a
+throw404 :: (QErrM m) => T.Text -> m a
 throw404 t = throwError $ err404 NotFound t
 
-throw401 :: (QErrM m) => Text -> m a
+throw401 :: (QErrM m) => T.Text -> m a
 throw401 t = throwError $ err401 AccessDenied t
 
-throw500 :: (QErrM m) => Text -> m a
+throw500 :: (QErrM m) => T.Text -> m a
 throw500 t = throwError $ internalError t
 
 internalError :: Text -> QErr
 internalError = err500 Unexpected
 
-throw500WithDetail :: (QErrM m) => Text -> Value -> m a
+throw500WithDetail :: (QErrM m) => T.Text -> Value -> m a
 throw500WithDetail t detail =
   throwError $ (err500 Unexpected t) {qeInternal = Just detail}
 
@@ -260,22 +260,22 @@ modifyQErr :: (QErrM m)
 modifyQErr f a = catchError a (throwError . f)
 
 modifyErr :: (QErrM m)
-          => (Text -> Text)
+          => (T.Text -> T.Text)
           -> m a -> m a
 modifyErr f = modifyQErr (liftTxtMod f)
 
 modifyErrA :: (ArrowError QErr arr) => arr (e, s) a -> arr (e, (Text -> Text, s)) a
 modifyErrA f = proc (e, (g, s)) -> (| mapErrorA (f -< (e, s)) |) (liftTxtMod g)
 
-liftTxtMod :: (Text -> Text) -> QErr -> QErr
+liftTxtMod :: (T.Text -> T.Text) -> QErr -> QErr
 liftTxtMod f (QErr path st s c i) = QErr path st (f s) c i
 
 modifyErrAndSet500 :: (QErrM m)
-                   => (Text -> Text)
+                   => (T.Text -> T.Text)
                    -> m a -> m a
 modifyErrAndSet500 f = modifyQErr (liftTxtMod500 f)
 
-liftTxtMod500 :: (Text -> Text) -> QErr -> QErr
+liftTxtMod500 :: (T.Text -> T.Text) -> QErr -> QErr
 liftTxtMod500 f (QErr path _ s c i) = QErr path N.status500 (f s) c i
 
 withPathE :: (ArrowError QErr arr) => arr (e, s) a -> arr (e, (JSONPathElement, s)) a
@@ -350,7 +350,7 @@ formatMsg str = case T.splitOn "the key " txt of
   where
     txt = T.pack str
 
-runAesonParser :: (QErrM m) => (v -> Parser a) -> v -> m a
+runAesonParser :: (QErrM m) => (Value -> Parser a) -> Value -> m a
 runAesonParser p =
   liftIResult . iparse p
 

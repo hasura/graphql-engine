@@ -15,14 +15,12 @@ import (
 	"github.com/pkg/errors"
 )
 
-/*
 const (
 	sqlFile  = ".sql"
 	yamlFile = ".yaml"
 )
 
 var ext = []string{sqlFile, yamlFile}
-*/
 
 type CreateOptions struct {
 	Version   string

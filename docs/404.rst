@@ -1,7 +1,5 @@
 .. title:: 404 - Page Not Found
 
-:orphan:
-
 404 - Page Not Found
 ---------------------
 

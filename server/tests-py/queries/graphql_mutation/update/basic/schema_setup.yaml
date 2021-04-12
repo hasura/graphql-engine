@@ -80,7 +80,6 @@ args:
 - type: run_sql
   args:
     sql: |
-      SET lc_monetary TO "en_US.utf-8";
       CREATE TABLE numerics (
         id SERIAL PRIMARY KEY,
         num_smallint SMALLINT,

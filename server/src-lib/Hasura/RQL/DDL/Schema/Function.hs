@@ -4,26 +4,45 @@ Description: Create/delete SQL functions to/from Hasura metadata.
 
 module Hasura.RQL.DDL.Schema.Function where
 
-import           Hasura.Prelude
-
-import qualified Control.Monad.Validate             as MV
-import qualified Data.HashMap.Strict                as M
-import qualified Data.Sequence                      as Seq
-import qualified Data.Text                          as T
-import qualified Database.PG.Query                  as Q
-
-import           Control.Lens
-import           Data.Aeson
-import           Data.Text.Extended
-import           Language.Haskell.TH.Syntax         (Lift)
-
-import qualified Language.GraphQL.Draft.Syntax      as G
-
-import           Hasura.Backends.Postgres.SQL.Types
 import           Hasura.EncJSON
+import           Hasura.GraphQL.Utils          (showNames)
+import           Hasura.Incremental            (Cacheable)
+import           Hasura.Prelude
 import           Hasura.RQL.Types
-import           Hasura.Server.Utils                (englishList, makeReasonMessage)
+import           Hasura.Server.Utils           (makeReasonMessage)
+import           Hasura.SQL.Types
 
+import           Data.Aeson
+import           Data.Aeson.Casing
+import           Data.Aeson.TH
+import           Language.Haskell.TH.Syntax    (Lift)
+
+import qualified Hasura.GraphQL.Schema         as GS
+import qualified Language.GraphQL.Draft.Syntax as G
+
+import qualified Control.Monad.Validate        as MV
+import qualified Data.HashMap.Strict           as M
+import qualified Data.Sequence                 as Seq
+import qualified Data.Text                     as T
+import qualified Database.PG.Query             as Q
+
+data RawFunctionInfo
+  = RawFunctionInfo
+  { rfiHasVariadic      :: !Bool
+  , rfiFunctionType     :: !FunctionType
+  , rfiReturnTypeSchema :: !SchemaName
+  , rfiReturnTypeName   :: !PGScalarType
+  , rfiReturnTypeType   :: !PGTypeKind
+  , rfiReturnsSet       :: !Bool
+  , rfiInputArgTypes    :: ![QualifiedPGType]
+  , rfiInputArgNames    :: ![FunctionArgName]
+  , rfiDefaultArgs      :: !Int
+  , rfiReturnsTable     :: !Bool
+  , rfiDescription      :: !(Maybe PGDescription)
+  } deriving (Show, Eq, Generic)
+instance NFData RawFunctionInfo
+instance Cacheable RawFunctionInfo
+$(deriveJSON (aesonDrop 3 snakeCase) ''RawFunctionInfo)
 
 mkFunctionArgs :: Int -> [QualifiedPGType] -> [FunctionArgName] -> [FunctionArg]
 mkFunctionArgs defArgsNo tys argNames =
@@ -43,13 +62,12 @@ mkFunctionArgs defArgsNo tys argNames =
 
 validateFuncArgs :: MonadError QErr m => [FunctionArg] -> m ()
 validateFuncArgs args =
-  for_ (nonEmpty invalidArgs) \someInvalidArgs ->
-    throw400 NotSupported $
-      "arguments: " <> englishList "and" someInvalidArgs
-      <> " are not in compliance with GraphQL spec"
+  unless (null invalidArgs) $ throw400 NotSupported $
+    "arguments: " <> showNames invalidArgs
+    <> " are not in compliance with GraphQL spec"
   where
     funcArgsText = mapMaybe (fmap getFuncArgNameTxt . faName) args
-    invalidArgs = filter (isNothing . G.mkName) funcArgsText
+    invalidArgs = filter (not . G.isValidName) $ map G.Name funcArgsText
 
 data FunctionIntegrityError
   = FunctionNameNotGQLCompliant
@@ -83,8 +101,7 @@ mkFunctionInfo qf systemDefined config rawFuncInfo =
     throwValidateError = MV.dispute . pure
 
     validateFunction = do
-      unless (has _Right $ qualifiedObjectToName qf) $
-        throwValidateError FunctionNameNotGQLCompliant
+      unless (G.isValidName $ GS.qualObjectToName qf) $ throwValidateError FunctionNameNotGQLCompliant
       when hasVariadic $ throwValidateError FunctionVariadic
       when (retTyTyp /= PGKindComposite) $ throwValidateError FunctionReturnNotCompositeType
       unless retSet $ throwValidateError FunctionReturnNotSetof
@@ -104,18 +121,18 @@ mkFunctionInfo qf systemDefined config rawFuncInfo =
 
     validateFunctionArgNames = do
       let argNames = mapMaybe faName functionArgs
-          invalidArgs = filter (isNothing . G.mkName . getFuncArgNameTxt) argNames
-      unless (null invalidArgs) $
+          invalidArgs = filter (not . G.isValidName . G.Name . getFuncArgNameTxt) argNames
+      when (not $ null invalidArgs) $
         throwValidateError $ FunctionInvalidArgumentNames invalidArgs
 
     makeInputArguments =
       case _fcSessionArgument config of
         Nothing -> pure $ Seq.fromList $ map IAUserProvided functionArgs
         Just sessionArgName -> do
-          unless (any (\arg -> Just sessionArgName == faName arg) functionArgs) $
+          when (not $ any (\arg -> (Just sessionArgName) == faName arg) functionArgs) $
             throwValidateError $ FunctionInvalidSessionArgument sessionArgName
           fmap Seq.fromList $ forM functionArgs $ \arg ->
-            if Just sessionArgName == faName arg then do
+            if (Just sessionArgName) == faName arg then do
               let argTy = _qptName $ faType arg
               if argTy == PGJSON then pure $ IASessionVariables sessionArgName
               else MV.refute $ pure $ FunctionSessionArgumentNotJSON sessionArgName
@@ -164,6 +181,17 @@ newtype TrackFunction
   { tfName :: QualifiedFunction}
   deriving (Show, Eq, FromJSON, ToJSON, Lift)
 
+data FunctionConfig
+  = FunctionConfig
+  { _fcSessionArgument :: !(Maybe FunctionArgName)
+  } deriving (Show, Eq, Generic, Lift)
+instance NFData FunctionConfig
+instance Cacheable FunctionConfig
+$(deriveJSON (aesonDrop 3 snakeCase){omitNothingFields = True} ''FunctionConfig)
+
+emptyFunctionConfig :: FunctionConfig
+emptyFunctionConfig = FunctionConfig Nothing
+
 -- | Track function, Phase 1:
 -- Validate function tracking operation. Fails if function is already being
 -- tracked, or if a table with the same name is being tracked.
@@ -211,6 +239,19 @@ runTrackFunc
 runTrackFunc (TrackFunction qf)= do
   trackFunctionP1 qf
   trackFunctionP2 qf emptyFunctionConfig
+
+data TrackFunctionV2
+  = TrackFunctionV2
+  { _tfv2Function      :: !QualifiedFunction
+  , _tfv2Configuration :: !FunctionConfig
+  } deriving (Show, Eq, Lift, Generic)
+$(deriveToJSON (aesonDrop 5 snakeCase) ''TrackFunctionV2)
+
+instance FromJSON TrackFunctionV2 where
+  parseJSON = withObject "Object" $ \o ->
+    TrackFunctionV2
+    <$> o .: "function"
+    <*> o .:? "configuration" .!= emptyFunctionConfig
 
 runTrackFunctionV2
   :: ( QErrM m, CacheRWM m, HasSystemDefined m

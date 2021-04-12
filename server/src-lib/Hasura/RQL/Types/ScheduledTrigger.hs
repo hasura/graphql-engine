@@ -18,7 +18,7 @@ import           Data.Time.Clock
 import           Data.Time.Clock.Units
 import           Data.Time.Format.ISO8601
 import           Hasura.Incremental
-import           Hasura.RQL.Types.Common     (NonNegativeDiffTime, unsafeNonNegativeDiffTime)
+import           Hasura.RQL.Types.Common     (NonNegativeDiffTime(..))
 import           Hasura.RQL.Types.Action     (InputWebhook(..))
 import           Hasura.Prelude
 import           System.Cron.Types
@@ -51,11 +51,11 @@ instance FromJSON STRetryConf where
   parseJSON = withObject "STRetryConf" \o -> do
     numRetries' <- o .:? "num_retries" .!= 0
     retryInterval <-
-      o .:? "retry_interval_seconds" .!= unsafeNonNegativeDiffTime (seconds 10)
+      o .:? "retry_interval_seconds" .!= (NonNegativeDiffTime $ seconds 10)
     timeout <-
-      o .:? "timeout_seconds" .!= unsafeNonNegativeDiffTime (seconds 60)
+      o .:? "timeout_seconds" .!= (NonNegativeDiffTime $ seconds 60)
     tolerance <-
-      o .:? "tolerance_seconds" .!= unsafeNonNegativeDiffTime (hours 6)
+      o .:? "tolerance_seconds" .!= (NonNegativeDiffTime $ hours 6)
     if numRetries' < 0
     then fail "num_retries cannot be a negative value"
     else pure $ STRetryConf numRetries' retryInterval timeout tolerance
@@ -66,9 +66,9 @@ defaultSTRetryConf :: STRetryConf
 defaultSTRetryConf =
   STRetryConf
   { strcNumRetries = 0
-  , strcRetryIntervalSeconds = unsafeNonNegativeDiffTime $ seconds 10
-  , strcTimeoutSeconds = unsafeNonNegativeDiffTime $ seconds 60
-  , strcToleranceSeconds = unsafeNonNegativeDiffTime $ hours 6
+  , strcRetryIntervalSeconds = NonNegativeDiffTime $ seconds 10
+  , strcTimeoutSeconds = NonNegativeDiffTime $ seconds 60
+  , strcToleranceSeconds = NonNegativeDiffTime $ hours 6
   }
 
 data CronTriggerMetadata
@@ -139,7 +139,7 @@ newtype ScheduledTriggerName
 
 $(deriveJSON (aesonDrop 2 snakeCase) ''ScheduledTriggerName)
 
-formatTime' :: UTCTime -> Text
+formatTime' :: UTCTime -> T.Text
 formatTime'= T.pack . iso8601Show
 
 data CreateScheduledEvent

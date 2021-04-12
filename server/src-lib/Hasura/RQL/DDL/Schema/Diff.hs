@@ -22,20 +22,19 @@ module Hasura.RQL.DDL.Schema.Diff
   ) where
 
 import           Hasura.Prelude
+import           Hasura.RQL.Types
+import           Hasura.RQL.Types.Catalog
+import           Hasura.SQL.Types
 
-import qualified Data.HashMap.Strict                as M
-import qualified Data.HashSet                       as HS
-import qualified Data.List.NonEmpty                 as NE
-import qualified Database.PG.Query                  as Q
+import qualified Database.PG.Query        as Q
 
 import           Data.Aeson.Casing
 import           Data.Aeson.TH
-import           Data.List.Extended                 (duplicates)
+import           Data.List.Extended       (duplicates)
 
-import           Hasura.Backends.Postgres.SQL.Types
-import           Hasura.RQL.Types                   hiding (ConstraintName, fmFunction,
-                                                     tmComputedFields, tmTable)
-import           Hasura.RQL.Types.Catalog
+import qualified Data.HashMap.Strict      as M
+import qualified Data.HashSet             as HS
+import qualified Data.List.NonEmpty       as NE
 
 data FunctionMeta
   = FunctionMeta
@@ -57,7 +56,7 @@ data TableMeta
   { tmTable          :: !QualifiedTable
   , tmInfo           :: !CatalogTableInfo
   , tmComputedFields :: ![ComputedFieldMeta]
-  } deriving (Eq)
+  } deriving (Show, Eq)
 
 fetchTableMeta :: Q.Tx [TableMeta]
 fetchTableMeta = Q.listQ $(Q.sqlFromFile "src-rsr/table_meta.sql") () False <&>
@@ -83,12 +82,12 @@ data ComputedFieldDiff
   , _cfdOverloaded :: [(ComputedFieldName, QualifiedFunction)]
   } deriving (Show, Eq)
 
-data TableDiff (b :: BackendType)
+data TableDiff
   = TableDiff
   { _tdNewName         :: !(Maybe QualifiedTable)
-  , _tdDroppedCols     :: ![Column b]
-  , _tdAddedCols       :: ![RawColumnInfo b]
-  , _tdAlteredCols     :: ![(RawColumnInfo b, RawColumnInfo b)]
+  , _tdDroppedCols     :: ![PGCol]
+  , _tdAddedCols       :: ![PGRawColumnInfo]
+  , _tdAlteredCols     :: ![(PGRawColumnInfo, PGRawColumnInfo)]
   , _tdDroppedFKeyCons :: ![ConstraintName]
   , _tdComputedFields  :: !ComputedFieldDiff
   -- The final list of uniq/primary constraint names
@@ -96,9 +95,9 @@ data TableDiff (b :: BackendType)
   -- TODO: this ideally should't be part of TableDiff
   , _tdUniqOrPriCons   :: ![ConstraintName]
   , _tdNewDescription  :: !(Maybe PGDescription)
-  }
+  } deriving (Show, Eq)
 
-getTableDiff :: TableMeta -> TableMeta -> TableDiff 'Postgres
+getTableDiff :: TableMeta -> TableMeta -> TableDiff
 getTableDiff oldtm newtm =
   TableDiff mNewName droppedCols addedCols alteredCols
   droppedFKeyConstraints computedFieldDiff uniqueOrPrimaryCons mNewDesc
@@ -151,7 +150,7 @@ getTableDiff oldtm newtm =
 
 getTableChangeDeps
   :: (QErrM m, CacheRM m)
-  => QualifiedTable -> TableDiff 'Postgres -> m [SchemaObjId]
+  => QualifiedTable -> TableDiff -> m [SchemaObjId]
 getTableChangeDeps tn tableDiff = do
   sc <- askSchemaCache
   -- for all the dropped columns
@@ -167,13 +166,13 @@ getTableChangeDeps tn tableDiff = do
     TableDiff _ droppedCols _ _ droppedFKeyConstraints computedFieldDiff _ _ = tableDiff
     droppedComputedFieldDeps = map (SOTableObj tn . TOComputedField) $ _cfdDropped computedFieldDiff
 
-data SchemaDiff (b :: BackendType)
+data SchemaDiff
   = SchemaDiff
   { _sdDroppedTables :: ![QualifiedTable]
-  , _sdAlteredTables :: ![(QualifiedTable, TableDiff b)]
-  }
+  , _sdAlteredTables :: ![(QualifiedTable, TableDiff)]
+  } deriving (Show, Eq)
 
-getSchemaDiff :: [TableMeta] -> [TableMeta] -> SchemaDiff 'Postgres
+getSchemaDiff :: [TableMeta] -> [TableMeta] -> SchemaDiff
 getSchemaDiff oldMeta newMeta =
   SchemaDiff droppedTables survivingTables
   where
@@ -184,7 +183,7 @@ getSchemaDiff oldMeta newMeta =
 
 getSchemaChangeDeps
   :: (QErrM m, CacheRM m)
-  => SchemaDiff 'Postgres -> m [SchemaObjId]
+  => SchemaDiff -> m [SchemaObjId]
 getSchemaChangeDeps schemaDiff = do
   -- Get schema cache
   sc <- askSchemaCache

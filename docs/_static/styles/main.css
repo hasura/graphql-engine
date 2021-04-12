@@ -99,16 +99,16 @@ p {
 }
 
 /* Newsletter */
-.mc_embed_signup {
+#mc_embed_signup {
   display: flex;
   align-items: center;
 }
-.mc_embed_signup .subscribe-form-content {
+#mc_embed_signup .subscribe-form-content {
   font-weight: bold;
   color: #001934;
   padding-right: 40px;
 }
-.mc_embed_signup form {
+#mc_embed_signup form {
   display: flex !important;
   padding: 0 0 0 0 !important;
   flex: 1 !important;
@@ -116,17 +116,17 @@ p {
   font-size: 16px;
   }
 /* todo: redesign & clean up */
-.mc_embed_signup input:focus {border-color:#333;}
-.mc_embed_signup .button {clear:both; background-color: #aaa; border: 0 none; border-radius:4px; transition: all 0.23s ease-in-out 0s; color: #FFFFFF; cursor: pointer; display: inline-block; font-size:15px; font-weight: normal; height: 32px; line-height: 32px; margin: 0 5px 10px 0; padding: 0 22px; text-align: center; text-decoration: none; vertical-align: top; white-space: nowrap; width: auto;}
-.mc_embed_signup .button:hover {background-color:#777;}
-.mc_embed_signup .clear {clear:both;}
+#mc_embed_signup input:focus {border-color:#333;}
+#mc_embed_signup .button {clear:both; background-color: #aaa; border: 0 none; border-radius:4px; transition: all 0.23s ease-in-out 0s; color: #FFFFFF; cursor: pointer; display: inline-block; font-size:15px; font-weight: normal; height: 32px; line-height: 32px; margin: 0 5px 10px 0; padding: 0 22px; text-align: center; text-decoration: none; vertical-align: top; white-space: nowrap; width: auto;}
+#mc_embed_signup .button:hover {background-color:#777;}
+#mc_embed_signup .clear {clear:both;}
 
-.mc_embed_signup div.mce-responses {float:left; top:-1.4em; padding:0em .5em 0em .5em; overflow:hidden; width:90%; margin: 0 5%; clear: both;}
-.mc_embed_signup div.response {margin:1em 0; padding:1em .5em .5em 0; font-weight:bold; float:left; top:-1.5em; z-index:1; width:80%;}
-/*.mc_embed_signup .mce-error-response {display:none;}*/
-.mc_embed_signup .mce-success-response {color:#529214;}
-.mc_embed_signup label.error {display:block; float:none; width:auto; margin-left:1.05em; text-align:left; padding:.5em 0;}
-.mc-embedded-subscribe {clear:both; width:auto; display:block; margin:1em 0 1em 5%;}
+#mc_embed_signup div#mce-responses {float:left; top:-1.4em; padding:0em .5em 0em .5em; overflow:hidden; width:90%; margin: 0 5%; clear: both;}
+#mc_embed_signup div.response {margin:1em 0; padding:1em .5em .5em 0; font-weight:bold; float:left; top:-1.5em; z-index:1; width:80%;}
+#mc_embed_signup #mce-error-response {display:none;}
+#mc_embed_signup #mce-success-response {color:#529214; display:none;}
+#mc_embed_signup label.error {display:block; float:none; width:auto; margin-left:1.05em; text-align:left; padding:.5em 0;}
+#mc-embedded-subscribe {clear:both; width:auto; display:block; margin:1em 0 1em 5%;}
 
 .newsletter-link,
 .newsletter-link:hover,
@@ -204,7 +204,7 @@ p {
 .submit-box input:focus {
   outline: none;
 }
-.mce-responses .error-message, .mce-responses .success-message {
+#mce-responses .error-message, #mce-responses .success-message {
   background-color: #001934;
   padding: 8px 12px !important;
   border-radius: 4px;
@@ -216,13 +216,13 @@ p {
   width: auto !important;
 }
 
-.mce-responses .error-message a, .mce-responses .success-message a {
+#mce-responses .error-message a, #mce-responses .success-message a {
   color: #fff !important;
 }
-.mce-responses .error-message {
+#mce-responses .error-message {
   color: #efc371 !important;
 }
-.mce-responses .success-message {
+#mce-responses .success-message {
   color: #1cd3c6 !important;
 }
 #content_inner_wrapper {
@@ -640,10 +640,6 @@ article ol ol {
   margin: 15px;
 }
 
-.sphinxsidebarwrapper > ul:not(.current) {
-  display: none;
-}
-
 #sidebar {
   background-color: #001934;
   width: 24% !important;
@@ -1014,17 +1010,17 @@ article ol ol {
   }
 }
 @media (min-width: 768px) and (max-width: 1385px) {
-  .mc_embed_signup form {
+  #mc_embed_signup form {
     padding-top: 10px !important;
   }
-  .mc_embed_signup {
+  #mc_embed_signup {
     display: block;
   }
-  .mc_embed_signup .subscribe-form-content {
+  #mc_embed_signup .subscribe-form-content {
     padding-right: 0;
     text-align: center;
   }
-  .mce-responses .error-message, .mce-responses .success-message {
+  #mce-responses .error-message, #mce-responses .success-message {
     top: 34px !important;
   }
 }
@@ -1034,20 +1030,20 @@ article ol ol {
     top: 170px;
     height: calc(100% - 170px);
   }
-  .mc_embed_signup {
+  #mc_embed_signup {
     display: block;
   }
-  .mc_embed_signup .subscribe-form-content {
+  #mc_embed_signup .subscribe-form-content {
     padding-right: 0;
     text-align: center;
   }
-  .mc_embed_signup form {
+  #mc_embed_signup form {
     padding-top: 10px !important;
   }
   .submit-box input {
     padding: 0 4px !important;
   }
-  .mce-responses .error-message, .mce-responses .success-message {
+  #mce-responses .error-message, #mce-responses .success-message {
     top: 34px !important;
   }
   #input_search_box {

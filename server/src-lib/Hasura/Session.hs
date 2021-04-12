@@ -7,14 +7,12 @@ module Hasura.Session
   , SessionVariable
   , mkSessionVariable
   , SessionVariables
-  , filterSessionVariables
   , SessionVariableValue
   , sessionVariableToText
   , mkSessionVariablesText
   , mkSessionVariablesHeaders
   , sessionVariablesToHeaders
   , getSessionVariableValue
-  , getSessionVariablesSet
   , getSessionVariables
   , UserAdminSecret(..)
   , UserRoleBuild(..)
@@ -27,35 +25,32 @@ module Hasura.Session
   , BackendOnlyFieldAccess(..)
   ) where
 
+import           Hasura.Incremental         (Cacheable)
 import           Hasura.Prelude
-
-import qualified Data.CaseInsensitive       as CI
-import qualified Data.HashMap.Strict        as Map
-import qualified Data.HashSet               as Set
-import qualified Data.Text                  as T
-import qualified Database.PG.Query          as Q
-import qualified Network.HTTP.Types         as HTTP
+import           Hasura.RQL.Types.Common    (NonEmptyText, adminText, mkNonEmptyText,
+                                             unNonEmptyText)
+import           Hasura.RQL.Types.Error
+import           Hasura.Server.Utils
+import           Hasura.SQL.Types
 
 import           Data.Aeson
 import           Data.Aeson.Types           (Parser, toJSONKeyText)
-import           Data.Text.Extended
-import           Data.Text.NonEmpty
 import           Instances.TH.Lift          ()
 import           Language.Haskell.TH.Syntax (Lift)
 
-import           Hasura.Incremental         (Cacheable)
-import           Hasura.RQL.Types.Common    (adminText)
-import           Hasura.RQL.Types.Error
-import           Hasura.Server.Utils
-
+import qualified Data.CaseInsensitive       as CI
+import qualified Data.HashMap.Strict        as Map
+import qualified Data.Text                  as T
+import qualified Database.PG.Query          as Q
+import qualified Network.HTTP.Types         as HTTP
 
 newtype RoleName
   = RoleName {getRoleTxt :: NonEmptyText}
   deriving ( Show, Eq, Ord, Hashable, FromJSONKey, ToJSONKey, FromJSON
            , ToJSON, Q.FromCol, Q.ToPrepArg, Lift, Generic, Arbitrary, NFData, Cacheable )
 
-instance ToTxt RoleName where
-  toTxt = roleNameToTxt
+instance DQuote RoleName where
+  dquoteTxt = roleNameToTxt
 
 roleNameToTxt :: RoleName -> Text
 roleNameToTxt = unNonEmptyText . getRoleTxt
@@ -101,11 +96,6 @@ newtype SessionVariables =
   SessionVariables { unSessionVariables :: Map.HashMap SessionVariable SessionVariableValue}
   deriving (Show, Eq, Hashable, Semigroup, Monoid)
 
-filterSessionVariables
-  :: (SessionVariable -> SessionVariableValue -> Bool)
-  -> SessionVariables -> SessionVariables
-filterSessionVariables f = SessionVariables . Map.filterWithKey f . unSessionVariables
-
 instance ToJSON SessionVariables where
   toJSON (SessionVariables varMap) =
     toJSON $ Map.fromList $ map (first sessionVariableToText) $ Map.toList varMap
@@ -133,9 +123,6 @@ sessionVariablesToHeaders =
 
 getSessionVariables :: SessionVariables -> [Text]
 getSessionVariables = map sessionVariableToText . Map.keys . unSessionVariables
-
-getSessionVariablesSet :: SessionVariables -> Set.HashSet SessionVariable
-getSessionVariablesSet = Map.keysSet . unSessionVariables
 
 getSessionVariableValue :: SessionVariable -> SessionVariables -> Maybe SessionVariableValue
 getSessionVariableValue k = Map.lookup k . unSessionVariables

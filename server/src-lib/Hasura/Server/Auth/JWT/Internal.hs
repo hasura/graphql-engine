@@ -22,7 +22,7 @@ import qualified Data.X509                as X509
 
 -- | Helper functions to decode Text to JWK
 
-parseHmacKey :: Text -> Int64 -> Either Text JWK
+parseHmacKey :: T.Text -> Int64 -> Either T.Text JWK
 parseHmacKey key size = do
   let secret = unUTF8 $ fromText key
       err s = "Key size too small; should be atleast " <> show (s `div` 8) <> " characters"
@@ -30,7 +30,7 @@ parseHmacKey key size = do
     then Left . T.pack $ err size
     else pure $ fromOctets secret
 
-parseRsaKey :: Text -> Either Text JWK
+parseRsaKey :: T.Text -> Either T.Text JWK
 parseRsaKey key = do
   let res = fromRawPem (unUTF8 $ fromText key)
       err e = "Could not decode PEM: " <> e

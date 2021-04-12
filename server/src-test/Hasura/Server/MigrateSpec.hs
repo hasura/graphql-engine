@@ -20,7 +20,7 @@ import           Hasura.RQL.DDL.Metadata        (ClearMetadata (..), runClearMet
 import           Hasura.RQL.DDL.Schema
 import           Hasura.RQL.Types
 import           Hasura.Server.API.PGDump
-import           Hasura.Server.Init             (DowngradeOptions (..))
+import           Hasura.Server.Init             (DowngradeOptions (..), MaintenanceMode (..))
 import           Hasura.Server.Migrate
 import           Hasura.Server.Version          (HasVersion)
 
@@ -66,13 +66,13 @@ spec
   => Q.ConnInfo -> SpecWithCache m
 spec pgConnInfo = do
   let dropAndInit env time = CacheRefT $ flip modifyMVar \_ ->
-        dropCatalog *> (swap <$> migrateCatalog env time)
+        dropCatalog *> (swap <$> migrateCatalog env time MaintenanceModeDisabled)
 
   describe "migrateCatalog" $ do
     it "initializes the catalog" $ singleTransaction do
       env <- liftIO Env.getEnvironment
       time <- liftIO getCurrentTime
-      dropAndInit env time `shouldReturn` MRInitialized
+      (dropAndInit env time) `shouldReturn` MRInitialized
 
     it "is idempotent" \(NT transact) -> do
       let dumpSchema = execPGDump (PGDumpReqBody ["--schema-only"] (Just False)) pgConnInfo
@@ -87,7 +87,7 @@ spec pgConnInfo = do
     it "supports upgrades after downgrade to version 12" \(NT transact) -> do
       let downgradeTo v = downgradeCatalog DowngradeOptions{ dgoDryRun = False, dgoTargetVersion = v }
           upgradeToLatest env time = CacheRefT $ flip modifyMVar \_ ->
-            swap <$> migrateCatalog env time
+            swap <$> migrateCatalog env time MaintenanceModeDisabled
       env <- Env.getEnvironment
       time <- getCurrentTime
       transact (dropAndInit env time) `shouldReturn` MRInitialized
@@ -116,7 +116,7 @@ spec pgConnInfo = do
     it "is idempotent" \(NT transact) -> do
       env <- Env.getEnvironment
       time <- getCurrentTime
-      transact (dropAndInit env time) `shouldReturn` MRInitialized
+      (transact $ dropAndInit env time) `shouldReturn` MRInitialized
       firstDump <- transact dumpMetadata
       transact recreateSystemMetadata
       secondDump <- transact dumpMetadata
@@ -125,7 +125,7 @@ spec pgConnInfo = do
     it "does not create any objects affected by ClearMetadata" \(NT transact) -> do
       env <- Env.getEnvironment
       time <- getCurrentTime
-      transact (dropAndInit env time) `shouldReturn` MRInitialized
+      (transact $ dropAndInit env time) `shouldReturn` MRInitialized
       firstDump <- transact dumpMetadata
       transact (runClearMetadata ClearMetadata) `shouldReturn` successMsg
       secondDump <- transact dumpMetadata

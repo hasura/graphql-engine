@@ -6,6 +6,7 @@ import           Hasura.Logging
 import           Hasura.Prelude
 import           Hasura.Server.Version
 
+import           Control.Monad.Trans.Managed     (lowerManagedT)
 import           Control.Monad.Trans.Control
 import qualified Crypto.JOSE.JWK             as Jose
 import           Data.Aeson                  ((.=))
@@ -344,7 +345,7 @@ setupAuthModeTests = describe "setupAuthMode" $ do
   -- These are all various error cases, except for the AMNoAuth mode:
   it "with no admin secret provided" $ do
     setupAuthMode' Nothing       Nothing             Nothing              Nothing
-      `shouldReturn` Right AMNoAuth
+      `shouldReturn` (Right AMNoAuth)
     -- We insist on an admin secret in order to use webhook or JWT auth:
     setupAuthMode' Nothing       Nothing             (Just fakeJWTConfig) Nothing
       `shouldReturn` Left ()
@@ -419,7 +420,7 @@ parseClaimsMapTests = describe "parseClaimMapTests" $ do
                         [ "x-hasura-allowed-roles" .= (["user","editor"] :: [Text])
                         , "x-hasura-default-role"  .= ("user" :: Text)
                         ]
-        let obj = unObject $ ["claims_map" .= claimsObj]
+        let obj = (unObject $ ["claims_map" .= claimsObj])
         parseClaimsMap_ obj  (JCNamespace (ClaimNs "claims_map") defaultClaimsFormat)
           `shouldReturn`
           Right defaultClaimsMap
@@ -429,7 +430,7 @@ parseClaimsMapTests = describe "parseClaimMapTests" $ do
                         [ "x-hasura-allowed-roles" .= (["user","editor"] :: [Text])
                         , "x-hasura-default-role"  .= ("user" :: Text)
                         ]
-        let obj = unObject $ ["claims_map" .= claimsObj]
+        let obj = (unObject $ ["claims_map" .= claimsObj])
         parseClaimsMap_ obj  (JCNamespace (ClaimNs "wrong_claims_map") defaultClaimsFormat)
           `shouldReturn`
           Left JWTInvalidClaims
@@ -475,7 +476,7 @@ parseClaimsMapTests = describe "parseClaimMapTests" $ do
         let customDefRoleClaim = mkCustomDefaultRoleClaim (Just "$.roles.default") Nothing
             customAllowedRolesClaim = mkCustomAllowedRoleClaim (Just "$.roles.allowed") Nothing
             otherClaims = Map.fromList
-                 [(userIdClaim, mkCustomOtherClaim (Just "$.user.id") Nothing)]
+                 [(userIdClaim, (mkCustomOtherClaim (Just "$.user.id") Nothing))]
             customClaimsMap = JWTCustomClaimsMap customDefRoleClaim customAllowedRolesClaim otherClaims
 
         parseClaimsMap_ obj  (JCMap customClaimsMap)
@@ -521,17 +522,17 @@ parseClaimsMapTests = describe "parseClaimMapTests" $ do
            , (defaultRoleClaim, J.toJSON (mkRoleNameE "editor"))
            ])
 
-mkCustomDefaultRoleClaim :: Maybe Text -> Maybe Text -> JWTCustomClaimsMapDefaultRole
+mkCustomDefaultRoleClaim :: (Maybe Text) -> (Maybe Text) -> JWTCustomClaimsMapDefaultRole
 mkCustomDefaultRoleClaim claimPath defVal =
   -- check if claimPath is provided, if not then use the default value
   -- as the literal value by removing the `Maybe` of defVal
   case claimPath of
     Just path -> JWTCustomClaimsMapJSONPath (mkJSONPathE path) $ defRoleName
-    Nothing -> JWTCustomClaimsMapStatic $ fromMaybe (mkRoleNameE "user") defRoleName
+    Nothing -> JWTCustomClaimsMapStatic $ maybe (mkRoleNameE "user") id defRoleName
   where
     defRoleName = mkRoleNameE <$> defVal
 
-mkCustomAllowedRoleClaim :: Maybe Text -> Maybe [Text] -> JWTCustomClaimsMapAllowedRoles
+mkCustomAllowedRoleClaim :: (Maybe Text) -> (Maybe [Text]) -> JWTCustomClaimsMapAllowedRoles
 mkCustomAllowedRoleClaim claimPath defVal =
   -- check if claimPath is provided, if not then use the default value
   -- as the literal value by removing the `Maybe` of defVal
@@ -539,18 +540,18 @@ mkCustomAllowedRoleClaim claimPath defVal =
     Just path -> JWTCustomClaimsMapJSONPath (mkJSONPathE path) $ defAllowedRoles
     Nothing ->
       JWTCustomClaimsMapStatic $
-        fromMaybe (mkRoleNameE <$> ["user", "editor"]) defAllowedRoles
+        maybe (fmap mkRoleNameE $ ["user", "editor"]) id defAllowedRoles
   where
     defAllowedRoles = fmap mkRoleNameE <$> defVal
 
 -- use for claims other than `x-hasura-default-role` and `x-hasura-allowed-roles`
-mkCustomOtherClaim :: Maybe Text -> Maybe Text -> JWTCustomClaimsMapValue
+mkCustomOtherClaim :: (Maybe Text) -> (Maybe Text) -> JWTCustomClaimsMapValue
 mkCustomOtherClaim claimPath defVal =
   -- check if claimPath is provided, if not then use the default value
   -- as the literal value by removing the `Maybe` of defVal
   case claimPath of
     Just path -> JWTCustomClaimsMapJSONPath (mkJSONPathE path) $ defVal
-    Nothing -> JWTCustomClaimsMapStatic $ fromMaybe "default claim value" defVal
+    Nothing -> JWTCustomClaimsMapStatic $ maybe "default claim value" id defVal
 
 fakeJWTConfig :: JWTConfig
 fakeJWTConfig =
@@ -586,6 +587,7 @@ setupAuthMode'  mAdminSecretHash mWebHook mJwtSecret mUnAuthRole =
   -- just throw away the error message for ease of testing:
   fmap (either (const $ Left ()) Right)
     $ runNoReporter
+    $ lowerManagedT
     $ runExceptT
     $ setupAuthMode mAdminSecretHash mWebHook mJwtSecret mUnAuthRole
       -- NOTE: this won't do any http or launch threads if we don't specify JWT URL:

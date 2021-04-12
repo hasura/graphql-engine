@@ -1,9 +1,9 @@
 -- | The RQL query ('/v1/query')
 {-# LANGUAGE NamedFieldPuns #-}
+
 module Hasura.Server.API.Query where
 
 import           Control.Lens
-import           Control.Monad.Unique
 import           Data.Aeson
 import           Data.Aeson.Casing
 import           Data.Aeson.TH
@@ -34,11 +34,10 @@ import           Hasura.RQL.DML.Count
 import           Hasura.RQL.DML.Delete
 import           Hasura.RQL.DML.Insert
 import           Hasura.RQL.DML.Select
-import           Hasura.RQL.DML.Types
 import           Hasura.RQL.DML.Update
 import           Hasura.RQL.Types
 import           Hasura.RQL.Types.Run
-import           Hasura.Server.Init                 (InstanceId (..))
+import           Hasura.Server.Init                 (InstanceId (..), MaintenanceMode (..))
 import           Hasura.Server.Utils
 import           Hasura.Server.Version              (HasVersion)
 import           Hasura.Session
@@ -68,15 +67,15 @@ data RQLQueryV1
   | RQUpdateRemoteRelationship !RemoteRelationship
   | RQDeleteRemoteRelationship !DeleteRemoteRelationship
 
-  | RQCreateInsertPermission !(CreateInsPerm 'Postgres)
-  | RQCreateSelectPermission !(CreateSelPerm 'Postgres)
-  | RQCreateUpdatePermission !(CreateUpdPerm 'Postgres)
-  | RQCreateDeletePermission !(CreateDelPerm 'Postgres)
+  | RQCreateInsertPermission !CreateInsPerm
+  | RQCreateSelectPermission !CreateSelPerm
+  | RQCreateUpdatePermission !CreateUpdPerm
+  | RQCreateDeletePermission !CreateDelPerm
 
-  | RQDropInsertPermission !(DropPerm (InsPerm 'Postgres))
-  | RQDropSelectPermission !(DropPerm (SelPerm 'Postgres))
-  | RQDropUpdatePermission !(DropPerm (UpdPerm 'Postgres))
-  | RQDropDeletePermission !(DropPerm (DelPerm 'Postgres))
+  | RQDropInsertPermission !(DropPerm InsPerm)
+  | RQDropSelectPermission !(DropPerm SelPerm)
+  | RQDropUpdatePermission !(DropPerm UpdPerm)
+  | RQDropDeletePermission !(DropPerm DelPerm)
   | RQSetPermissionComment !SetPermComment
 
   | RQGetInconsistentMetadata !GetInconsistentMetadata
@@ -116,7 +115,7 @@ data RQLQueryV1
 
   | RQRunSql !RunSQL
 
-  | RQReplaceMetadata !Metadata
+  | RQReplaceMetadata !ReplaceMetadata
   | RQExportMetadata !ExportMetadata
   | RQClearMetadata !ClearMetadata
   | RQReloadMetadata !ReloadMetadata
@@ -130,12 +129,11 @@ data RQLQueryV1
   | RQDumpInternalState !DumpInternalState
 
   | RQSetCustomTypes !CustomTypes
-  | RQSetTableCustomization !SetTableCustomization
   deriving (Show, Eq)
 
 data RQLQueryV2
   = RQV2TrackTable !TrackTableV2
-  | RQV2SetTableCustomFields !SetTableCustomFields -- deprecated
+  | RQV2SetTableCustomFields !SetTableCustomFields
   | RQV2TrackFunction !TrackFunctionV2
   deriving (Show, Eq)
 
@@ -197,8 +195,10 @@ runQuery
   :: (HasVersion, MonadIO m, MonadError QErr m, Tracing.MonadTrace m)
   => Env.Environment -> PGExecCtx -> InstanceId
   -> UserInfo -> RebuildableSchemaCache Run -> HTTP.Manager
-  -> SQLGenCtx -> SystemDefined -> RQLQuery -> m (EncJSON, RebuildableSchemaCache Run)
-runQuery env pgExecCtx instanceId userInfo sc hMgr sqlGenCtx systemDefined query = do
+  -> SQLGenCtx -> SystemDefined -> MaintenanceMode -> RQLQuery -> m (EncJSON, RebuildableSchemaCache Run)
+runQuery env pgExecCtx instanceId userInfo sc hMgr sqlGenCtx systemDefined maintenanceMode query = do
+  when (maintenanceMode == MaintenanceModeEnabled && queryModifiesMetadata query) $
+    throw500 "metadata cannot be modified when maintenance mode is enabled"
   accessMode <- getQueryAccessMode query
   traceCtx <- Tracing.currentContext
   resE <- runQueryM env query & Tracing.interpTraceT \x -> do
@@ -306,7 +306,6 @@ queryModifiesSchemaCache (RQV1 qi) = case qi of
 
   RQDumpInternalState _           -> False
   RQSetCustomTypes _              -> True
-  RQSetTableCustomization _       -> True
 
   RQBulk qs                       -> any queryModifiesSchemaCache qs
 
@@ -315,8 +314,32 @@ queryModifiesSchemaCache (RQV2 qi) = case qi of
   RQV2SetTableCustomFields _ -> True
   RQV2TrackFunction _        -> True
 
+-- | Helper function to find which APIs modify the metadata.
+queryModifiesMetadata :: RQLQuery -> Bool
+queryModifiesMetadata (RQV1 qi) = case qi of
+  RQGetInconsistentMetadata _     -> False
+
+  RQInsert _                      -> False
+  RQSelect _                      -> False
+  RQUpdate _                      -> False
+  RQDelete _                      -> False
+  RQCount _                       -> False
+
+  RQIntrospectRemoteSchema _      -> False
+
+  RQRunSql q                      -> isSchemaCacheBuildRequiredRunSQL q
+
+  RQExportMetadata _              -> False
+  RQReloadMetadata _              -> False
+
+  RQDumpInternalState _           -> False
+
+  RQBulk qs                       -> any queryModifiesMetadata qs
+  _                               -> True
+queryModifiesMetadata _ = True
+
 getQueryAccessMode :: (MonadError QErr m) => RQLQuery -> m Q.TxAccess
-getQueryAccessMode q = fromMaybe Q.ReadOnly <$> getQueryAccessMode' q
+getQueryAccessMode q = (fromMaybe Q.ReadOnly) <$> getQueryAccessMode' q
   where
     getQueryAccessMode' ::
          (MonadError QErr m) => RQLQuery -> m (Maybe Q.TxAccess)
@@ -334,12 +357,12 @@ getQueryAccessMode q = fromMaybe Q.ReadOnly <$> getQueryAccessMode' q
             throw400 BadRequest $
             "incompatible access mode requirements in bulk query, " <>
             "expected access mode: " <>
-            T.pack (maybe "ANY" show expectedMode) <>
+            (T.pack $ maybe "ANY" show expectedMode) <>
             " but " <>
             "$.args[" <>
-            T.pack (show i) <>
+            (T.pack $ show i) <>
             "] forces " <>
-            T.pack (show errMode)
+            (T.pack $ show errMode)
     getQueryAccessMode' (RQV2 _) = pure $ Just Q.ReadWrite
 
 -- | onRight, return reconciled access mode. onLeft, return conflicting access mode
@@ -352,7 +375,7 @@ reconcileAccessModes (Just mode1) (Just mode2)
 
 runQueryM
   :: ( HasVersion, QErrM m, CacheRWM m, UserInfoM m, MonadTx m
-     , MonadIO m, MonadUnique m, HasHttpManager m, HasSQLGenCtx m
+     , MonadIO m, HasHttpManager m, HasSQLGenCtx m
      , HasSystemDefined m
      , Tracing.MonadTrace m
      )
@@ -364,88 +387,87 @@ runQueryM env rq = withPathK "args" $ case rq of
   RQV2 q -> runQueryV2M q
   where
     runQueryV1M = \case
-      RQAddExistingTableOrView q      -> runTrackTableQ q
-      RQTrackTable q                  -> runTrackTableQ q
-      RQUntrackTable q                -> runUntrackTableQ q
-      RQSetTableIsEnum q              -> runSetExistingTableIsEnumQ q
+      RQAddExistingTableOrView q   -> runTrackTableQ q
+      RQTrackTable q               -> runTrackTableQ q
+      RQUntrackTable q             -> runUntrackTableQ q
+      RQSetTableIsEnum q           -> runSetExistingTableIsEnumQ q
 
-      RQTrackFunction q               -> runTrackFunc q
-      RQUntrackFunction q             -> runUntrackFunc q
+      RQTrackFunction q            -> runTrackFunc q
+      RQUntrackFunction q          -> runUntrackFunc q
 
-      RQCreateObjectRelationship q    -> runCreateRelationship ObjRel q
-      RQCreateArrayRelationship  q    -> runCreateRelationship ArrRel q
-      RQDropRelationship  q           -> runDropRel q
-      RQSetRelationshipComment  q     -> runSetRelComment q
-      RQRenameRelationship q          -> runRenameRel q
+      RQCreateObjectRelationship q -> runCreateRelationship ObjRel q
+      RQCreateArrayRelationship  q -> runCreateRelationship ArrRel q
+      RQDropRelationship  q        -> runDropRel q
+      RQSetRelationshipComment  q  -> runSetRelComment q
+      RQRenameRelationship q       -> runRenameRel q
 
-      RQAddComputedField q            -> runAddComputedField q
-      RQDropComputedField q           -> runDropComputedField q
+      RQAddComputedField q        -> runAddComputedField q
+      RQDropComputedField q       -> runDropComputedField q
 
-      RQCreateInsertPermission q      -> runCreatePerm q
-      RQCreateSelectPermission q      -> runCreatePerm q
-      RQCreateUpdatePermission q      -> runCreatePerm q
-      RQCreateDeletePermission q      -> runCreatePerm q
+      RQCreateInsertPermission q   -> runCreatePerm q
+      RQCreateSelectPermission q   -> runCreatePerm q
+      RQCreateUpdatePermission q   -> runCreatePerm q
+      RQCreateDeletePermission q   -> runCreatePerm q
 
-      RQDropInsertPermission q        -> runDropPerm q
-      RQDropSelectPermission q        -> runDropPerm q
-      RQDropUpdatePermission q        -> runDropPerm q
-      RQDropDeletePermission q        -> runDropPerm q
-      RQSetPermissionComment q        -> runSetPermComment q
+      RQDropInsertPermission q     -> runDropPerm q
+      RQDropSelectPermission q     -> runDropPerm q
+      RQDropUpdatePermission q     -> runDropPerm q
+      RQDropDeletePermission q     -> runDropPerm q
+      RQSetPermissionComment q     -> runSetPermComment q
 
-      RQGetInconsistentMetadata q     -> runGetInconsistentMetadata q
-      RQDropInconsistentMetadata q    -> runDropInconsistentMetadata q
+      RQGetInconsistentMetadata q  -> runGetInconsistentMetadata q
+      RQDropInconsistentMetadata q -> runDropInconsistentMetadata q
 
-      RQInsert q                      -> runInsert env q
-      RQSelect q                      -> runSelect q
-      RQUpdate q                      -> runUpdate env q
-      RQDelete q                      -> runDelete env q
-      RQCount  q                      -> runCount q
+      RQInsert q                   -> runInsert env q
+      RQSelect q                   -> runSelect q
+      RQUpdate q                   -> runUpdate env q
+      RQDelete q                   -> runDelete env q
+      RQCount  q                   -> runCount q
 
-      RQAddRemoteSchema    q          -> runAddRemoteSchema env q
-      RQRemoveRemoteSchema q          -> runRemoveRemoteSchema q
-      RQReloadRemoteSchema q          -> runReloadRemoteSchema q
-      RQIntrospectRemoteSchema q      -> runIntrospectRemoteSchema q
+      RQAddRemoteSchema    q       -> runAddRemoteSchema env q
+      RQRemoveRemoteSchema q       -> runRemoveRemoteSchema q
+      RQReloadRemoteSchema q       -> runReloadRemoteSchema q
+      RQIntrospectRemoteSchema q   -> runIntrospectRemoteSchema q
 
-      RQCreateRemoteRelationship q    -> runCreateRemoteRelationship q
-      RQUpdateRemoteRelationship q    -> runUpdateRemoteRelationship q
-      RQDeleteRemoteRelationship q    -> runDeleteRemoteRelationship q
+      RQCreateRemoteRelationship q -> runCreateRemoteRelationship q
+      RQUpdateRemoteRelationship q -> runUpdateRemoteRelationship q
+      RQDeleteRemoteRelationship q -> runDeleteRemoteRelationship q
 
-      RQCreateEventTrigger q          -> runCreateEventTriggerQuery q
-      RQDeleteEventTrigger q          -> runDeleteEventTriggerQuery q
-      RQRedeliverEvent q              -> runRedeliverEvent q
-      RQInvokeEventTrigger q          -> runInvokeEventTrigger q
+      RQCreateEventTrigger q       -> runCreateEventTriggerQuery q
+      RQDeleteEventTrigger q       -> runDeleteEventTriggerQuery q
+      RQRedeliverEvent q           -> runRedeliverEvent q
+      RQInvokeEventTrigger q       -> runInvokeEventTrigger q
 
-      RQCreateCronTrigger q           -> runCreateCronTrigger q
-      RQDeleteCronTrigger q           -> runDeleteCronTrigger q
+      RQCreateCronTrigger q      -> runCreateCronTrigger q
+      RQDeleteCronTrigger q      -> runDeleteCronTrigger q
 
-      RQCreateScheduledEvent q        -> runCreateScheduledEvent q
+      RQCreateScheduledEvent q   -> runCreateScheduledEvent q
 
-      RQCreateQueryCollection q       -> runCreateCollection q
-      RQDropQueryCollection q         -> runDropCollection q
-      RQAddQueryToCollection q        -> runAddQueryToCollection q
-      RQDropQueryFromCollection q     -> runDropQueryFromCollection q
-      RQAddCollectionToAllowlist q    -> runAddCollectionToAllowlist q
-      RQDropCollectionFromAllowlist q -> runDropCollectionFromAllowlist q
+      RQCreateQueryCollection q        -> runCreateCollection q
+      RQDropQueryCollection q          -> runDropCollection q
+      RQAddQueryToCollection q         -> runAddQueryToCollection q
+      RQDropQueryFromCollection q      -> runDropQueryFromCollection q
+      RQAddCollectionToAllowlist q     -> runAddCollectionToAllowlist q
+      RQDropCollectionFromAllowlist q  -> runDropCollectionFromAllowlist q
 
-      RQReplaceMetadata q             -> runReplaceMetadata q
-      RQClearMetadata q               -> runClearMetadata q
-      RQExportMetadata q              -> runExportMetadata q
-      RQReloadMetadata q              -> runReloadMetadata q
+      RQReplaceMetadata q          -> runReplaceMetadata q
+      RQClearMetadata q            -> runClearMetadata q
+      RQExportMetadata q           -> runExportMetadata q
+      RQReloadMetadata q           -> runReloadMetadata q
 
-      RQCreateAction q                -> runCreateAction q
-      RQDropAction q                  -> runDropAction q
-      RQUpdateAction q                -> runUpdateAction q
-      RQCreateActionPermission q      -> runCreateActionPermission q
-      RQDropActionPermission q        -> runDropActionPermission q
+      RQCreateAction q           -> runCreateAction q
+      RQDropAction q             -> runDropAction q
+      RQUpdateAction q           -> runUpdateAction q
+      RQCreateActionPermission q -> runCreateActionPermission q
+      RQDropActionPermission q   -> runDropActionPermission q
 
-      RQDumpInternalState q           -> runDumpInternalState q
+      RQDumpInternalState q        -> runDumpInternalState q
 
-      RQRunSql q                      -> runRunSQL q
+      RQRunSql q                   -> runRunSQL q
 
-      RQSetCustomTypes q              -> runSetCustomTypes q
-      RQSetTableCustomization q       -> runSetTableCustomization q
+      RQSetCustomTypes q           -> runSetCustomTypes q
 
-      RQBulk qs                       -> encJFromList <$> indexedMapM (runQueryM env) qs
+      RQBulk qs                    -> encJFromList <$> indexedMapM (runQueryM env) qs
 
     runQueryV2M = \case
       RQV2TrackTable q           -> runTrackTableV2Q q
@@ -532,7 +554,6 @@ requiresAdmin = \case
 
     RQDumpInternalState _           -> True
     RQSetCustomTypes _              -> True
-    RQSetTableCustomization _       -> True
 
     RQRunSql _                      -> True
 

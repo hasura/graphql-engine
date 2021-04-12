@@ -1,84 +1,28 @@
 module Data.Text.Extended
-       ( ToTxt(..)
-       , bquote
+       ( module DT
        , squote
        , dquote
-       , dquoteList
-       , commaSeparated
        , paren
-       , parenB
        , (<->)
-       , (<~>)
-       , (<>>)
-       , (<<>)
        ) where
 
 import           Hasura.Prelude
 
-import qualified Language.GraphQL.Draft.Syntax as G
-import qualified Text.Builder                  as TB
+import           Data.Text as DT
 
-import           Data.Text                     as DT
-
-
-class ToTxt a where
-  toTxt :: a -> Text
-
-instance ToTxt Text where
-  toTxt = id
-  {-# INLINE toTxt #-}
-
-instance ToTxt G.Name where
-  toTxt = G.unName
-
-deriving instance ToTxt G.EnumValue
-
-
-bquote :: ToTxt t => t -> Text
-bquote t = DT.singleton '`' <> toTxt t <> DT.singleton '`'
-{-# INLINE bquote #-}
-
-squote :: ToTxt t => t -> Text
-squote t = DT.singleton '\'' <> toTxt t <> DT.singleton '\''
+squote :: DT.Text -> DT.Text
+squote t = DT.singleton '\'' <> t <> DT.singleton '\''
 {-# INLINE squote #-}
 
-dquote :: ToTxt t => t -> Text
-dquote t = DT.singleton '"' <> toTxt t <> DT.singleton '"'
+dquote :: DT.Text -> DT.Text
+dquote t = DT.singleton '"' <> t <> DT.singleton '"'
 {-# INLINE dquote #-}
 
-paren :: ToTxt t => t -> Text
-paren t = "(" <> toTxt t <> ")"
+paren :: DT.Text -> DT.Text
+paren t = "(" <> t <> ")"
 {-# INLINE paren #-}
 
-parenB :: TB.Builder -> TB.Builder
-parenB t = TB.char '(' <> t <> TB.char ')'
-{-# INLINE parenB #-}
-
-dquoteList :: (ToTxt t, Foldable f) => f t -> Text
-dquoteList = DT.intercalate ", " . fmap dquote . toList
-{-# INLINE dquoteList #-}
-
-commaSeparated :: (ToTxt t, Foldable f) => f t -> Text
-commaSeparated = DT.intercalate ", " . fmap toTxt . toList
-{-# INLINE commaSeparated #-}
-
-
 infixr 6 <->
-(<->) :: ToTxt t => t -> t -> Text
-(<->) l r = toTxt l <> DT.singleton ' ' <> toTxt r
+(<->) :: DT.Text -> DT.Text -> DT.Text
+(<->) l r = l <> DT.singleton ' ' <> r
 {-# INLINE (<->) #-}
-
-infixr 6 <>>
-(<>>) :: ToTxt t => Text -> t -> Text
-(<>>) lTxt a = lTxt <> dquote a
-{-# INLINE (<>>) #-}
-
-infixr 6 <<>
-(<<>) :: ToTxt t => t -> Text -> Text
-(<<>) a rTxt = dquote a <> rTxt
-{-# INLINE (<<>) #-}
-
-infixr 6 <~>
-(<~>) :: TB.Builder -> TB.Builder -> TB.Builder
-(<~>) l r = l <> TB.char ' ' <> r
-{-# INLINE (<~>) #-}

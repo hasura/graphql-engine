@@ -4,10 +4,9 @@ status: 200
 response:
   errors:
   - extensions:
-      path: $.selectionSet.update_author.args.where.id._eq
-      code: validation-failed
-    message: expected a 32-bit integer for type "Int", but found null
-
+      path: "$.variableValues.author_id"
+      code: "validation-failed"
+    message: "null value found for non-nullable type: Int!"
 query:
   variables:
     author_id: null

@@ -7,7 +7,7 @@ module Hasura.RQL.DDL.EventTrigger
   , runRedeliverEvent
   , runInvokeEventTrigger
 
-  -- TODO(from master): review
+  -- TODO: review
   , delEventTriggerFromCatalog
   , mkEventTriggerInfo
   , mkAllTriggersQ
@@ -19,8 +19,6 @@ module Hasura.RQL.DDL.EventTrigger
   , replaceEventTriggersInCatalog
   ) where
 
-import           Hasura.Prelude
-
 import qualified Data.Environment                   as Env
 import qualified Data.HashMap.Strict.Extended       as Map
 import qualified Data.Text                          as T
@@ -30,30 +28,34 @@ import qualified Text.Shakespeare.Text              as ST
 
 import           Data.Aeson
 
-import qualified Hasura.Backends.Postgres.SQL.DML   as S
-
-import           Hasura.Backends.Postgres.SQL.Types
 import           Hasura.EncJSON
+import           Hasura.Prelude
 import           Hasura.RQL.DDL.Headers
 import           Hasura.RQL.DML.Internal
 import           Hasura.RQL.Types
 import           Hasura.SQL.Types
 
+import qualified Hasura.SQL.DML          as S
 
 data OpVar = OLD | NEW deriving (Show)
 
 -- pgIdenTrigger is a method used to construct the name of the pg function
--- used for event triggers which are present in the hdb_catalog schema.
-pgIdenTrigger:: Ops -> TriggerName -> Text
-pgIdenTrigger op trn = pgFmtIdentifier . qualifyTriggerName op $ triggerNameToTxt trn
+-- used for event triggers which are present in the hdb_views schema.
+pgIdenTrigger:: Ops -> TriggerName -> T.Text
+pgIdenTrigger op trn = pgFmtIden . qualifyTriggerName op $ triggerNameToTxt trn
   where
     qualifyTriggerName op' trn' = "notify_hasura_" <> trn' <> "_" <> T.pack (show op')
+
+getDropFuncSql :: Ops -> TriggerName -> T.Text
+getDropFuncSql op trn = "DROP FUNCTION IF EXISTS"
+                        <> " hdb_views." <> pgIdenTrigger op trn <> "()"
+                        <> " CASCADE"
 
 mkAllTriggersQ
   :: (MonadTx m, HasSQLGenCtx m)
   => TriggerName
   -> QualifiedTable
-  -> [ColumnInfo 'Postgres]
+  -> [PGColumnInfo]
   -> TriggerOpsDef
   -> m ()
 mkAllTriggersQ trn qt allCols fullspec = do
@@ -65,7 +67,7 @@ mkTriggerQ
   :: (MonadTx m, HasSQLGenCtx m)
   => TriggerName
   -> QualifiedTable
-  -> [ColumnInfo 'Postgres]
+  -> [PGColumnInfo]
   -> Ops
   -> SubscribeOpSpec
   -> m ()
@@ -74,7 +76,7 @@ mkTriggerQ trn qt allCols op (SubscribeOpSpec columns payload) = do
   liftTx $ Q.multiQE defaultTxErrorHandler $ Q.fromText . TL.toStrict $
     let payloadColumns = fromMaybe SubCStar payload
         mkQId opVar colInfo = toJSONableExp strfyNum (pgiType colInfo) False $
-          S.SEQIdentifier $ S.QIdentifier (opToQual opVar) $ toIdentifier $ pgiColumn colInfo
+          S.SEQIden $ S.QIden (opToQual opVar) $ toIden $ pgiColumn colInfo
         getRowExpression opVar = case payloadColumns of
           SubCStar -> applyRowToJson $ S.SEUnsafe $ opToTxt opVar
           SubCArray cols -> applyRowToJson $
@@ -117,16 +119,9 @@ mkTriggerQ trn qt allCols op (SubscribeOpSpec columns payload) = do
     opToTxt = T.pack . show
 
 delTriggerQ :: TriggerName -> Q.TxE QErr ()
-delTriggerQ trn =
-  mapM_ (\op -> Q.unitQE
-                defaultTxErrorHandler
-          (Q.fromText $ getDropFuncSql op) () False) [INSERT, UPDATE, DELETE]
-  where
-    getDropFuncSql :: Ops -> T.Text
-    getDropFuncSql op =
-      "DROP FUNCTION IF EXISTS"
-      <> " hdb_catalog." <> pgIdenTrigger op trn <> "()"
-      <> " CASCADE"
+delTriggerQ trn = mapM_ (\op -> Q.unitQE
+                          defaultTxErrorHandler
+                          (Q.fromText $ getDropFuncSql op trn) () False) [INSERT, UPDATE, DELETE]
 
 addEventTriggerToCatalog
   :: QualifiedTable
@@ -165,7 +160,7 @@ fetchEvent :: EventId -> Q.TxE QErr (EventId, Bool)
 fetchEvent eid = do
   events <- Q.listQE defaultTxErrorHandler
             [Q.sql|
-              SELECT l.id, l.locked IS NOT NULL AND l.locked >= (NOW() - interval '30 minute')
+              SELECT l.id, l.locked
               FROM hdb_catalog.event_log l
               JOIN hdb_catalog.event_triggers e
               ON l.trigger_name = e.name
@@ -340,6 +335,13 @@ getWebhookInfoFromConf env wc = case wc of
   WCEnv we -> do
     envVal <- getEnv env we
     return $ WebhookConfInfo wc envVal
+
+getEnv :: QErrM m => Env.Environment -> T.Text -> m T.Text
+getEnv env k = do
+  let mEnv = Env.lookupEnv env (T.unpack k)
+  case mEnv of
+    Nothing     -> throw400 NotFound $ "environment variable '" <> k <> "' not set"
+    Just envVal -> return (T.pack envVal)
 
 getEventTriggerDef
   :: TriggerName

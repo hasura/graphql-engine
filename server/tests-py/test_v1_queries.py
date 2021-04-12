@@ -765,37 +765,6 @@ class TestSetTableCustomFields:
         check_query_f(hge_ctx, self.dir() + "/relationship_conflict_with_custom_column.yaml")
 
 @usefixtures('per_method_tests_db_state')
-class TestSetTableCustomization:
-
-    @classmethod
-    def dir(cls):
-        return 'queries/v1/set_table_configuration'
-
-    def test_set_and_unset(self, hge_ctx):
-        check_query_f(hge_ctx, self.dir() + '/set_and_unset.yaml')
-
-    def test_set_invalid_table(self, hge_ctx):
-        check_query_f(hge_ctx, self.dir() + '/set_invalid_table.yaml')
-
-    def test_alter_column(self, hge_ctx):
-        check_query_f(hge_ctx, self.dir() + '/alter_column.yaml')
-
-    def test_conflict_with_relationship(self, hge_ctx):
-        check_query_f(hge_ctx, self.dir() + '/conflict_with_relationship.yaml')
-
-    def test_column_field_swap(self, hge_ctx):
-        check_query_f(hge_ctx, self.dir() + "/column_field_swap.yaml")
-
-    def test_relationship_conflict_with_custom_column(self, hge_ctx):
-        check_query_f(hge_ctx, self.dir() + "/relationship_conflict_with_custom_column.yaml")
-
-    def test_alter_table_name_with_custom_name(self, hge_ctx):
-        check_query_f(hge_ctx, self.dir() + "/rename_original_table_with_custom_name.yaml")
-
-    def test_conflicting_custom_table_name(self, hge_ctx):
-        check_query_f(hge_ctx, self.dir() + "/fail_conflicting_custom_table_name.yaml")
-
-@usefixtures('per_method_tests_db_state')
 class TestComputedFields:
     @classmethod
     def dir(cls):

@@ -18,30 +18,30 @@ module Hasura.RQL.Types.Catalog
 
 import           Hasura.Prelude
 
-import qualified Data.HashMap.Strict                 as M
+import qualified Data.HashMap.Strict              as M
 
 import           Data.Aeson
 import           Data.Aeson.Casing
 import           Data.Aeson.TH
-import           System.Cron.Types                   (CronSchedule (..))
 
-import           Hasura.Backends.Postgres.SQL.Types
-import           Hasura.Incremental                  (Cacheable)
+import           Hasura.Incremental               (Cacheable)
 import           Hasura.RQL.DDL.ComputedField
+import           Hasura.RQL.DDL.Schema.Function
 import           Hasura.RQL.Types.Action
 import           Hasura.RQL.Types.Column
 import           Hasura.RQL.Types.Common
 import           Hasura.RQL.Types.CustomTypes
 import           Hasura.RQL.Types.EventTrigger
-import           Hasura.RQL.Types.Function
 import           Hasura.RQL.Types.Permission
 import           Hasura.RQL.Types.QueryCollection
 import           Hasura.RQL.Types.RemoteRelationship
 import           Hasura.RQL.Types.RemoteSchema
-import           Hasura.RQL.Types.ScheduledTrigger
 import           Hasura.RQL.Types.SchemaCache
-import           Hasura.SQL.Backend
+import           Hasura.RQL.Types.ScheduledTrigger
 import           Hasura.Session
+import           Hasura.SQL.Types
+
+import           System.Cron.Types                    (CronSchedule(..))
 
 newtype CatalogForeignKey
   = CatalogForeignKey
@@ -67,14 +67,14 @@ instance FromJSON CatalogForeignKey where
 data CatalogTableInfo
   = CatalogTableInfo
   { _ctiOid               :: !OID
-  , _ctiColumns           :: ![RawColumnInfo 'Postgres]
+  , _ctiColumns           :: ![PGRawColumnInfo]
   , _ctiPrimaryKey        :: !(Maybe (PrimaryKey PGCol))
   , _ctiUniqueConstraints :: !(HashSet Constraint)
   -- ^ Does /not/ include the primary key!
   , _ctiForeignKeys       :: !(HashSet CatalogForeignKey)
   , _ctiViewInfo          :: !(Maybe ViewInfo)
   , _ctiDescription       :: !(Maybe PGDescription)
-  } deriving (Eq, Generic)
+  } deriving (Show, Eq, Generic)
 instance NFData CatalogTableInfo
 instance Cacheable CatalogTableInfo
 $(deriveFromJSON (aesonDrop 4 snakeCase) ''CatalogTableInfo)
@@ -86,7 +86,7 @@ data CatalogTable
   , _ctIsEnum          :: !Bool
   , _ctConfiguration   :: !TableConfig
   , _ctInfo            :: !(Maybe CatalogTableInfo)
-  } deriving (Eq, Generic)
+  } deriving (Show, Eq, Generic)
 instance NFData CatalogTable
 instance Cacheable CatalogTable
 $(deriveFromJSON (aesonDrop 3 snakeCase) ''CatalogTable)
@@ -146,10 +146,10 @@ instance NFData CatalogFunction
 instance Cacheable CatalogFunction
 $(deriveFromJSON (aesonDrop 3 snakeCase) ''CatalogFunction)
 
-data CatalogCustomTypes (b :: BackendType)
+data CatalogCustomTypes
   = CatalogCustomTypes
   { _cctCustomTypes :: !CustomTypes
-  , _cctPgScalars   :: !(HashSet (ScalarType b))
+  , _cctPgScalars   :: !(HashSet PGScalarType)
   -- ^ All Postgres base types, which may be referenced in custom type definitions.
   -- When we validate the custom types (see 'validateCustomTypeDefinitions'),
   -- we record which base types were referenced so that we can be sure to include them
@@ -160,24 +160,22 @@ data CatalogCustomTypes (b :: BackendType)
   -- metadata, so we include them here.
   --
   -- See Note [Postgres scalars in custom types] for more details.
-  } deriving (Generic)
-instance NFData (CatalogCustomTypes 'Postgres)
-deriving instance Eq (CatalogCustomTypes 'Postgres)
-instance Cacheable (CatalogCustomTypes 'Postgres)
-instance FromJSON (CatalogCustomTypes 'Postgres) where
-  parseJSON = genericParseJSON $ aesonDrop 4 snakeCase
+  } deriving (Show, Eq, Generic)
+instance NFData CatalogCustomTypes
+instance Cacheable CatalogCustomTypes
+$(deriveFromJSON (aesonDrop 4 snakeCase) ''CatalogCustomTypes)
 
 type CatalogAction = ActionMetadata
 
 data CatalogCronTrigger
   = CatalogCronTrigger
-  { _cctName         :: !TriggerName
-  , _cctWebhookConf  :: !InputWebhook
-  , _cctCronSchedule :: !CronSchedule
-  , _cctPayload      :: !(Maybe Value)
-  , _cctRetryConf    :: !(Maybe STRetryConf)
-  , _cctHeaderConf   :: !(Maybe [HeaderConf])
-  , _cctComment      :: !(Maybe Text)
+  { _cctName           :: !TriggerName
+  , _cctWebhookConf    :: !InputWebhook
+  , _cctCronSchedule   :: !CronSchedule
+  , _cctPayload        :: !(Maybe Value)
+  , _cctRetryConf      :: !(Maybe STRetryConf)
+  , _cctHeaderConf     :: !(Maybe [HeaderConf])
+  , _cctComment        :: !(Maybe Text)
   } deriving (Show, Eq, Generic)
 instance NFData CatalogCronTrigger
 instance Cacheable CatalogCronTrigger
@@ -193,12 +191,11 @@ data CatalogMetadata
   , _cmFunctions            :: ![CatalogFunction]
   , _cmAllowlistCollections :: ![CollectionDef]
   , _cmComputedFields       :: ![CatalogComputedField]
-  , _cmCustomTypes          :: !(CatalogCustomTypes 'Postgres)
+  , _cmCustomTypes          :: !CatalogCustomTypes
   , _cmActions              :: ![CatalogAction]
   , _cmRemoteRelationships  :: ![RemoteRelationship]
   , _cmCronTriggers         :: ![CatalogCronTrigger]
-  } deriving (Eq, Generic)
+  } deriving (Show, Eq, Generic)
 instance NFData CatalogMetadata
 instance Cacheable CatalogMetadata
-instance FromJSON CatalogMetadata where
-  parseJSON = genericParseJSON $ aesonDrop 3 snakeCase
+$(deriveFromJSON (aesonDrop 3 snakeCase) ''CatalogMetadata)

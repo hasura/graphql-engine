@@ -22,5 +22,5 @@ latestCatalogVersion =
   $(do let s = $(embedStringFile "src-rsr/catalog_version.txt")
        TH.lift (read s :: Integer))
 
-latestCatalogVersionString :: Text
+latestCatalogVersionString :: T.Text
 latestCatalogVersionString = T.pack $ show latestCatalogVersion

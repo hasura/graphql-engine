@@ -143,12 +143,6 @@ class TestGraphQLQueryAggPerm:
     def test_author_post_agg_order_by(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + '/author_post_agg_order_by.yaml', transport)
 
-    def test_article_agg_without_select_access_to_any_col(self, hge_ctx, transport):
-        check_query_f(hge_ctx, self.dir() + '/article_agg_with_role_without_select_access.yaml', transport)
-
-    def test_article_agg_with_select_access(self, hge_ctx, transport):
-        check_query_f(hge_ctx, self.dir() + '/article_agg_with_role_with_select_access.yaml', transport)
-
     @classmethod
     def dir(cls):
         return 'queries/graphql_query/agg_perm'
@@ -336,12 +330,6 @@ class TestGraphqlQueryPermissions:
 
     def test_in_and_nin(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + '/in_and_nin.yaml', transport)
-
-    def test_user_accessing_books_by_pk_should_fail(self, hge_ctx, transport):
-        check_query_f(hge_ctx, self.dir() + '/user_should_not_be_able_to_access_books_by_pk.yaml')
-
-    def test_author_articles_without_required_headers_set(self, hge_ctx, transport):
-        check_query_f(hge_ctx, self.dir() + '/select_articles_without_required_headers.yaml', transport)
 
     @classmethod
     def dir(cls):
@@ -544,7 +532,7 @@ class TestGraphQLQueryFunctions:
     @pytest.mark.parametrize("transport", ['http', 'websocket'])
     def test_query_get_test_session_id(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + '/query_get_test_session_id.yaml')
-
+    
     @pytest.mark.parametrize("transport", ['http', 'websocket'])
     def test_query_search_author_mview(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + '/query_search_author_mview.yaml')
@@ -566,17 +554,6 @@ class TestGraphQLQueryCustomSchema:
     @classmethod
     def dir(cls):
         return 'queries/graphql_query/custom_schema'
-
-@pytest.mark.parametrize("transport", ['http', 'websocket'])
-@usefixtures('per_class_tests_db_state')
-class TestGraphQLQueryCustomTableName:
-
-    def test_author(self, hge_ctx, transport):
-        check_query_f(hge_ctx, self.dir() + 'author.yaml', transport)
-
-    @classmethod
-    def dir(cls):
-        return 'queries/graphql_query/custom_schema/custom_table_name/'
 
 @pytest.mark.parametrize('transport', ['http', 'websocket'])
 @usefixtures('per_class_tests_db_state')

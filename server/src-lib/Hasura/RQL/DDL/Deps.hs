@@ -9,14 +9,12 @@ module Hasura.RQL.DDL.Deps
 
 import           Hasura.Prelude
 
-import qualified Data.HashSet                       as HS
-import qualified Data.Text                          as T
-import qualified Database.PG.Query                  as Q
+import qualified Data.HashSet      as HS
+import qualified Data.Text         as T
+import qualified Database.PG.Query as Q
 
-import           Data.Text.Extended
-
-import           Hasura.Backends.Postgres.SQL.Types
 import           Hasura.RQL.Types
+import           Hasura.SQL.Types
 
 purgeRel :: QualifiedTable -> RelName -> Q.Tx ()
 purgeRel (QualifiedObject sn tn) rn =
@@ -33,14 +31,14 @@ reportDeps deps =
     "cannot drop due to the following dependent objects : "
      <> reportSchemaObjs deps
 
-reportDepsExt :: (QErrM m) => [SchemaObjId] -> [Text] -> m ()
+reportDepsExt :: (QErrM m) => [SchemaObjId] -> [T.Text] -> m ()
 reportDepsExt deps unknownDeps =
   throw400 DependencyError $
     "cannot drop due to the following dependent objects : " <> depObjsTxt
   where
-    depObjsTxt = commaSeparated $ reportSchemaObjs deps:unknownDeps
+    depObjsTxt = T.intercalate ", " (reportSchemaObjs deps:unknownDeps)
 
-parseDropNotice :: (QErrM m ) => Text -> m [Either Text SchemaObjId]
+parseDropNotice :: (QErrM m ) => T.Text -> m [Either T.Text SchemaObjId]
 parseDropNotice t = do
   cascadeLines <- getCascadeLines
   mapM parseCascadeLine cascadeLines
@@ -79,7 +77,7 @@ parseDropNotice t = do
             _       -> throw500 $ "failed to parse constraint cascade line : " <> cl
       | otherwise = return $ Left cl
 
-getPGDeps :: Q.Tx () -> Q.TxE QErr [Either Text SchemaObjId]
+getPGDeps :: Q.Tx () -> Q.TxE QErr [Either T.Text SchemaObjId]
 getPGDeps tx = do
   dropNotices <- Q.catchE defaultTxErrorHandler $ do
     Q.unitQ "SAVEPOINT hdb_get_pg_deps" () False
@@ -95,7 +93,7 @@ getPGDeps tx = do
 getIndirectDeps
   :: (CacheRM m, MonadTx m)
   => [SchemaObjId] -> Q.Tx ()
-  -> m ([SchemaObjId], [Text])
+  -> m ([SchemaObjId], [T.Text])
 getIndirectDeps initDeps tx = do
   sc <- askSchemaCache
   -- Now, trial run the drop sql to get pg dependencies
@@ -103,5 +101,5 @@ getIndirectDeps initDeps tx = do
   let (unparsedLines, parsedObjIds) = partitionEithers pgDeps
       indirectDeps = HS.fromList $ parsedObjIds <>
                      concatMap (getDependentObjs sc) parsedObjIds
-      newDeps = indirectDeps `HS.difference` HS.fromList initDeps
+      newDeps = indirectDeps `HS.difference` (HS.fromList initDeps)
   return (HS.toList newDeps, unparsedLines)

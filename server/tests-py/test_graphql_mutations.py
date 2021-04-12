@@ -53,15 +53,6 @@ class TestGraphQLInsert:
     def test_insert_null_col_value(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + "/order_col_shipped_null.yaml")
 
-    def test_insert_valid_variable_but_invalid_graphql_value(self, hge_ctx):
-        check_query_f(hge_ctx, self.dir() + "/person_valid_variable_but_invalid_graphql_value.yaml")
-
-    def test_can_insert_in_insertable_view(self, hge_ctx):
-        check_query_f(hge_ctx, self.dir() + "/can_insert_in_insertable_view.yaml")
-
-    def test_cannot_insert_in_non_insertable_view(self, hge_ctx):
-        check_query_f(hge_ctx, self.dir() + "/cannot_insert_in_non_insertable_view.yaml")
-
     @classmethod
     def dir(cls):
         return "queries/graphql_mutation/insert/basic"
@@ -200,9 +191,6 @@ class TestGraphqlInsertPermission:
             check_query_f(hge_ctx, self.dir() + "/backend_user_no_admin_secret_fail.yaml")
         else:
             pytest.skip("authorization not configured, skipping the test")
-
-    def test_check_set_headers_while_doing_upsert(self,hge_ctx):
-        check_query_f(hge_ctx, self.dir() + "/leads_upsert_check_with_headers.yaml")
 
     @classmethod
     def dir(cls):
@@ -542,26 +530,6 @@ class TestGraphqlMutationCustomSchema:
     @classmethod
     def dir(cls):
         return "queries/graphql_mutation/custom_schema"
-
-@pytest.mark.parametrize("transport", ['http', 'websocket'])
-@use_mutation_fixtures
-class TestGraphqlMutationCustomGraphQLTableName:
-
-    def test_insert_author(self, hge_ctx, transport):
-        check_query_f(hge_ctx, self.dir() + '/insert_author_details.yaml', transport)
-
-    def test_insert_article_author(self, hge_ctx, transport):
-        check_query_f(hge_ctx, self.dir() + '/insert_article_author.yaml', transport)
-
-    def test_update_author(self, hge_ctx, transport):
-        check_query_f(hge_ctx, self.dir() + '/update_author_details.yaml', transport)
-
-    def test_delete_author(self, hge_ctx, transport):
-        check_query_f(hge_ctx, self.dir() + '/delete_author_details.yaml', transport)
-
-    @classmethod
-    def dir(cls):
-        return "queries/graphql_mutation/custom_schema/custom_table_name"
 
 @pytest.mark.parametrize('transport', ['http', 'websocket'])
 @use_mutation_fixtures

@@ -40,15 +40,3 @@ args:
       url: http://localhost:4000
       forward_client_headers: false
 
-- type: run_sql
-  args:
-    sql: |
-      create table authors (
-         id serial primary key,
-         name text
-      );
-
-- type: track_table
-  args:
-    schema: public
-    name: authors

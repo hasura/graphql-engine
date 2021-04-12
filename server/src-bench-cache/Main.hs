@@ -35,7 +35,7 @@ main = defaultMain [
     ]
     -- simple insert benchmark. Try to avoid drift by initialising fresh
     -- and measuring 1000 inserts at a time.
-  , env (randomInts 1000) $ \rs ->
+  , env (randomInts 1000) $ \ ~rs->
       bgroup "insert x1000" [
         -- use perRunEnv so we can be sure we're not triggering cache
         -- evictions in bounded due to long bootstrap batch runs
@@ -45,7 +45,7 @@ main = defaultMain [
       -- an eviction on each insert, all LRU counters at zero. Simulates a scan.
       , bench "bounded evicting scan" $
           let preloaded = populate 5000 (Cache.initialise 5000) Cache.insertAllStripes
-           in perRunEnv preloaded $ \(cache, _) ->
+           in perRunEnv (preloaded) $ \(cache, _) ->
                 V.mapM_ (\k -> Cache.insert k k cache) rs
       ]
 
@@ -82,7 +82,7 @@ main = defaultMain [
 -- correct, or might be incorrect for some users. Or it might be that many
 -- users interact with hasura ONLY with parameterized queries with variables,
 -- where all of these fit into a fairly small cache (but where occurrences of
--- these are zipf-distributed). (TODO (from master) It should be simple to adapt this to the latter
+-- these are zipf-distributed). (TODO It should be simple to adapt this to the latter
 -- case (just test on zipf Word8 domain), but these benchmarks don't seem very
 -- useful if we assume we effectively get only cache hits).
 --
@@ -141,13 +141,13 @@ realisticBenches name wrk =
       _hitsMisses <- forConcurrently localPayloads $ \payloadL -> do
         foldM lookupInsertLoop (0,0) payloadL
       aft <- getMonotonicTimeNSec
-      -- TODO (from master) we need to decide whether to rewrite these benchmarks or fix
+      -- TODO we need to decide whether to rewrite these benchmarks or fix
       -- criterion so it can support what I want here (to run a slow benchmark
       -- perhaps one time, with an actual time limit).
       --   We should also look into just generating a report by hand that takes
       -- into account per-thread misses without actually simulating them with
       -- burnCycles.
-      putStrLn $ "TIMING: " <> show (fromIntegral (aft - bef) / (1000*1000 :: Double)) <> "ms"
+      putStrLn $ "TIMING: " <>(show $ fromIntegral (aft - bef) / (1000*1000 :: Double)) <> "ms"
       -- putStrLn $ "HITS/MISSES: "<> show _hitsMisses  -- DEBUGGING/FYI
       return ()
       where
@@ -198,9 +198,9 @@ readBenches n =
     env (populate n (Cache.initialise (fromIntegral $ n*2)) Cache.insertAllStripes) $ \ ~(cache, k)->
       bgroup "bounded" [
         bench "hit" $
-          nfAppIO (`Cache.lookup` cache) k
+          nfAppIO (\k' -> Cache.lookup k' cache) k
       , bench "miss" $
-          nfAppIO (`Cache.lookup` cache) 0xDEAD
+          nfAppIO (\k' -> Cache.lookup k' cache) 0xDEAD
       ]
   ]
 

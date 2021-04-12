@@ -1,23 +1,51 @@
 module Hasura.GraphQL.Utils
   ( showName
+  , showNamedTy
+  , throwVE
+  , getBaseTy
   , groupTuples
   , groupListWith
   , mkMapWith
   , showNames
+  , unwrapTy
   , simpleGraphQLQuery
+  , jsonValueToGValue
   , getBaseTyWithNestedLevelsCount
   ) where
 
 import           Hasura.Prelude
+import           Hasura.RQL.Types.Error
 
+import           Data.Scientific               (floatingOrInteger)
+
+import qualified Data.Aeson                    as A
 import qualified Data.HashMap.Strict           as Map
 import qualified Data.List.NonEmpty            as NE
+import qualified Data.Text                     as T
 import qualified Language.GraphQL.Draft.Syntax as G
-
-import           Data.Text.Extended
 
 showName :: G.Name -> Text
 showName name = "\"" <> G.unName name <> "\""
+
+throwVE :: (MonadError QErr m) => Text -> m a
+throwVE = throw400 ValidationFailed
+
+showNamedTy :: G.NamedType -> Text
+showNamedTy nt =
+  "'" <> G.showNT nt <> "'"
+
+getBaseTy :: G.GType -> G.NamedType
+getBaseTy = \case
+  G.TypeNamed _ n     -> n
+  G.TypeList _ lt     -> getBaseTyL lt
+  where
+    getBaseTyL = getBaseTy . G.unListType
+
+unwrapTy :: G.GType -> G.GType
+unwrapTy =
+  \case
+    G.TypeList _ lt -> G.unListType lt
+    nt -> nt
 
 getBaseTyWithNestedLevelsCount :: G.GType -> (G.Name, Int)
 getBaseTyWithNestedLevelsCount ty = go ty 0
@@ -25,8 +53,8 @@ getBaseTyWithNestedLevelsCount ty = go ty 0
     go :: G.GType -> Int -> (G.Name, Int)
     go gType ctr =
       case gType of
-        G.TypeNamed _ n      -> (n, ctr)
-        G.TypeList  _ gType' -> go gType' (ctr + 1)
+        G.TypeNamed _ n  -> (G.unNamedType n, ctr)
+        G.TypeList  _ gType' -> flip go (ctr + 1) $ G.unListType gType'
 
 groupListWith
   :: (Eq k, Hashable k, Foldable t, Functor t)
@@ -56,9 +84,22 @@ mkMapWith f l =
     mapG = groupListWith f l
     dups = Map.keys $ Map.filter ((> 1) . length) mapG
 
-showNames :: (Functor t, Foldable t) => t G.Name -> Text
-showNames = commaSeparated . fmap G.unName
+showNames :: (Foldable t) => t G.Name -> Text
+showNames names =
+  T.intercalate ", " $ map G.unName $ toList names
 
 -- A simple graphql query to be used in generators
 simpleGraphQLQuery :: Text
 simpleGraphQLQuery = "query {author {id name}}"
+
+-- | Convert a JSON value to a GraphQL value.
+jsonValueToGValue :: A.Value -> G.Value
+jsonValueToGValue = \case
+  A.String t -> G.VString $ G.StringValue t
+  -- TODO: Note the danger zone of scientific:
+  A.Number n -> either (\(_::Float) -> G.VFloat n) G.VInt (floatingOrInteger n)
+  A.Bool b -> G.VBoolean b
+  A.Object o -> G.VObject $ G.ObjectValueG $
+    map (uncurry G.ObjectFieldG . (G.Name *** jsonValueToGValue)) $ Map.toList o
+  A.Array a -> G.VList $ G.ListValueG $ map jsonValueToGValue $ toList a
+  A.Null -> G.VNull

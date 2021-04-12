@@ -45,4 +45,4 @@ generateJSONPath = map (either id id) <$> listOf1 genPathElementEither
       keyRight <- Right <$> genKey
       elements [indexLeft, keyRight]
     genIndex = Index <$> choose (0, 100)
-    genKey = Key . T.pack <$> listOf1 (elements $ alphaNumerics ++ ".,!@#$%^&*_-?:;|/\"")
+    genKey = (Key . T.pack) <$> listOf1 (elements $ alphaNumerics ++ ".,!@#$%^&*_-?:;|/\"")

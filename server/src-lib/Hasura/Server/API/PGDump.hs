@@ -34,7 +34,7 @@ execPGDump
   -> m BL.ByteString
 execPGDump b ci = do
   eOutput <- liftIO $ try execProcess
-  output <- onLeft eOutput throwException
+  output <- either throwException return eOutput
   case output of
     Left err ->
       RTE.throw500 $ "error while executing pg_dump: " <> err
@@ -53,7 +53,7 @@ execPGDump b ci = do
     opts = connString : "--encoding=utf8" : prbOpts b
 
     clean str
-      | Just True == prbCleanOutput b =
+      | fromMaybe False (prbCleanOutput b) =
           unlines $ filter (not . shouldDropLine) (lines str)
       | otherwise = str
 
@@ -91,5 +91,5 @@ execPGDump b ci = do
         -- These changes are also documented on the method pgIdenTrigger
             "^CREATE TRIGGER \"?notify_hasura_.+\"? AFTER [[:alnum:]]+ "
               <> "ON .+ FOR EACH ROW EXECUTE (FUNCTION|PROCEDURE) "
-              <> "\"?hdb_catalog\"?\\.\"?notify_hasura_.+\"?\\(\\);$"
+              <> "\"?hdb_views\"?\\.\"?notify_hasura_.+\"?\\(\\);$"
       in TDFA.makeRegex regexStr :: TDFA.Regex

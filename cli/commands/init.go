@@ -131,9 +131,9 @@ func (o *InitOptions) Run() error {
 			return errors.Errorf("current working directory is already a hasura project directory")
 		}
 		o.EC.ExecutionDirectory = cwdir
-		infoMsg = `hasura project initialised. execute the following command to continue:
+		infoMsg = fmt.Sprintf(`hasura project initialised. execute the following command to continue:
   hasura console
-`
+`)
 	} else {
 		// create execution directory
 		err := o.createExecutionDirectory()

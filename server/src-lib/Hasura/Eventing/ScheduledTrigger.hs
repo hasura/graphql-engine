@@ -72,45 +72,42 @@ module Hasura.Eventing.ScheduledTrigger
   , unlockAllLockedScheduledEvents
   ) where
 
-import           Hasura.Prelude
-
-import qualified Data.Aeson                         as J
-import qualified Data.Aeson.Casing                  as J
-import qualified Data.Aeson.TH                      as J
-import qualified Data.ByteString.Lazy               as BL
-import qualified Data.Environment                   as Env
-import qualified Data.HashMap.Strict                as Map
-import qualified Data.Set                           as Set
-import qualified Data.TByteString                   as TBS
-import qualified Data.Text                          as T
-import qualified Database.PG.Query                  as Q
-import qualified Database.PG.Query.PTI              as PTI
-import qualified Network.HTTP.Client                as HTTP
-import qualified PostgreSQL.Binary.Decoding         as PD
-import qualified PostgreSQL.Binary.Encoding         as PE
-
-import           Control.Arrow.Extended             (dup)
-import           Control.Concurrent.Extended        (sleep)
+import           Control.Arrow.Extended      (dup)
+import           Control.Concurrent.Extended (sleep)
 import           Control.Concurrent.STM.TVar
 import           Data.Has
-import           Data.Int                           (Int64)
-import           Data.List                          (unfoldr)
+import           Data.Int                    (Int64)
+import           Data.List                   (unfoldr)
 import           Data.Time.Clock
-import           System.Cron
-
-import qualified Hasura.Logging                     as L
-import qualified Hasura.Tracing                     as Tracing
-
-import           Hasura.Backends.Postgres.SQL.DML
-import           Hasura.Backends.Postgres.SQL.Types
 import           Hasura.Eventing.Common
 import           Hasura.Eventing.HTTP
 import           Hasura.HTTP
-import           Hasura.RQL.DDL.EventTrigger        (getHeaderInfosFromConf)
+import           Hasura.Prelude
+import           Hasura.RQL.DDL.EventTrigger (getHeaderInfosFromConf)
 import           Hasura.RQL.DDL.Headers
 import           Hasura.RQL.Types
+import           Hasura.Server.Version       (HasVersion)
+import           Hasura.SQL.DML
 import           Hasura.SQL.Types
-import           Hasura.Server.Version              (HasVersion)
+import           System.Cron
+
+import qualified Data.Aeson                  as J
+import qualified Data.Aeson.Casing           as J
+import qualified Data.Aeson.TH               as J
+import qualified Data.ByteString.Lazy        as BL
+import qualified Data.Environment            as Env
+import qualified Data.HashMap.Strict         as Map
+import qualified Data.Set                    as Set
+import qualified Data.TByteString            as TBS
+import qualified Data.Text                   as T
+import qualified Database.PG.Query           as Q
+import qualified Database.PG.Query.PTI       as PTI
+import qualified Hasura.Logging              as L
+import qualified Hasura.Tracing              as Tracing
+import qualified Network.HTTP.Client         as HTTP
+import qualified PostgreSQL.Binary.Decoding  as PD
+import qualified PostgreSQL.Binary.Encoding  as PE
+import qualified Text.Builder                as TB (run)
 
 
 newtype ScheduledTriggerInternalErr
@@ -311,7 +308,7 @@ insertCronEventsFor cronTriggersWithStats = do
   case scheduledEvents of
     []     -> pure ()
     events -> do
-      let insertCronEventsSql = toSQLTxt
+      let insertCronEventsSql = TB.run $ toSQL
             SQLInsert
               { siTable    = cronEventsTable
               , siCols     = map unsafePGCol ["trigger_name", "scheduled_time"]
@@ -321,12 +318,12 @@ insertCronEventsFor cronTriggersWithStats = do
               }
       Q.unitQE defaultTxErrorHandler (Q.fromText insertCronEventsSql) () False
   where
-    toArr (CronEventSeed n t) = [triggerNameToTxt n, formatTime' t]
+    toArr (CronEventSeed n t) = [(triggerNameToTxt n), (formatTime' t)]
     toTupleExp = TupleExp . map SELit
 
 insertCronEvents :: [CronEventSeed] -> Q.TxE QErr ()
 insertCronEvents events = do
-  let insertCronEventsSql = toSQLTxt
+  let insertCronEventsSql = TB.run $ toSQL
         SQLInsert
           { siTable    = cronEventsTable
           , siCols     = map unsafePGCol ["trigger_name", "scheduled_time"]
@@ -336,7 +333,7 @@ insertCronEvents events = do
           }
   Q.unitQE defaultTxErrorHandler (Q.fromText insertCronEventsSql) () False
   where
-    toArr (CronEventSeed n t) = [triggerNameToTxt n, formatTime' t]
+    toArr (CronEventSeed n t) = [(triggerNameToTxt n), (formatTime' t)]
     toTupleExp = TupleExp . map SELit
 
 generateCronEventsFrom :: UTCTime -> CronTriggerInfo-> [CronEventSeed]
@@ -389,7 +386,7 @@ processCronEvents logger logEnv httpMgr pgpool getSC lockedCronEvents = do
                                        ctiHeaders
                                        ctiComment
                                        createdAt
-            finally <- runExceptT $
+            finally <- Tracing.runTraceT "scheduled event" . runExceptT $
               runReaderT (processScheduledEvent logEnv pgpool scheduledEvent Cron) (logger, httpMgr)
             removeEventFromLockedEvents id' lockedCronEvents
             either logInternalError pure finally
@@ -446,7 +443,7 @@ processOneOffScheduledEvents env logger logEnv httpMgr pgpool lockedOneOffSchedu
                                                         headerInfo'
                                                         comment
                                                         createdAt
-                finally <- runExceptT $
+                finally <- Tracing.runTraceT "scheduled event" . runExceptT $
                   runReaderT (processScheduledEvent logEnv pgpool scheduledEvent OneOff) $
                     (logger, httpMgr)
                 removeEventFromLockedEvents id' lockedOneOffScheduledEvents
@@ -483,14 +480,15 @@ processScheduledEvent ::
   , HasVersion
   , MonadIO m
   , MonadError QErr m
-  , Tracing.HasReporter m
+  , Tracing.MonadTrace m
   )
   => LogEnvHeaders
   -> Q.PGPool
   -> ScheduledEventFull
   -> ScheduledEventType
   -> m ()
-processScheduledEvent logEnv pgpool se@ScheduledEventFull {..} type' = Tracing.runTraceT traceNote do
+processScheduledEvent
+  logEnv pgpool se@ScheduledEventFull {..} type' = do
   currentTime <- liftIO getCurrentTime
   if convertDuration (diffUTCTime currentTime sefScheduledTime)
     > unNonNegativeDiffTime (strcToleranceSeconds sefRetryConf)
@@ -516,8 +514,6 @@ processScheduledEvent logEnv pgpool se@ScheduledEventFull {..} type' = Tracing.r
         (processError pgpool se decodedHeaders type' webhookReqBodyJson)
         (processSuccess pgpool se decodedHeaders type' webhookReqBodyJson)
         res
-  where
-    traceNote = "Scheduled trigger" <> foldMap ((": " <>) . triggerNameToTxt) sefName
 
 processError
   :: (MonadIO m, MonadError QErr m)
@@ -542,7 +538,7 @@ processError pgpool se decodedHeaders type' reqJson err = do
               respStatus = hrsStatus errResp
           mkInvocation se respStatus decodedHeaders respPayload respHeaders reqJson
         HOther detail -> do
-          let errMsg = TBS.fromLBS $ J.encode detail
+          let errMsg = (TBS.fromLBS $ J.encode detail)
           mkInvocation se 500 decodedHeaders errMsg [] reqJson
   liftExceptTIO $
     Q.runTx pgpool (Q.ReadCommitted, Just Q.ReadWrite) $ do
@@ -648,7 +644,7 @@ mkInvocation
   -> TBS.TByteString
   -> [HeaderConf]
   -> J.Value
-  -> Invocation 'ScheduledType
+  -> (Invocation 'ScheduledType)
 mkInvocation ScheduledEventFull {sefId} status reqHeaders respBody respHeaders reqBodyJson
   = let resp = if isClientError status
           then mkClientErr respBody
@@ -660,7 +656,7 @@ mkInvocation ScheduledEventFull {sefId} status reqHeaders respBody respHeaders r
       (mkWebhookReq reqBodyJson reqHeaders invocationVersionST)
       resp
 
-insertInvocation :: Invocation 'ScheduledType -> ScheduledEventType ->  Q.TxE QErr ()
+insertInvocation :: (Invocation 'ScheduledType) -> ScheduledEventType ->  Q.TxE QErr ()
 insertInvocation invo type' = do
   case type' of
     Cron -> do
@@ -784,7 +780,7 @@ instance Q.ToPrepArg ScheduledEventIdArray where
 
 unlockCronEvents :: [ScheduledEventId] -> Q.TxE QErr Int
 unlockCronEvents scheduledEventIds =
-   runIdentity . Q.getRow <$> Q.withQE defaultTxErrorHandler
+   (runIdentity . Q.getRow) <$> Q.withQE defaultTxErrorHandler
    [Q.sql|
      WITH "cte" AS
      (UPDATE hdb_catalog.hdb_cron_events
@@ -796,7 +792,7 @@ unlockCronEvents scheduledEventIds =
 
 unlockOneOffScheduledEvents :: [ScheduledEventId] -> Q.TxE QErr Int
 unlockOneOffScheduledEvents scheduledEventIds =
-   runIdentity . Q.getRow <$> Q.withQE defaultTxErrorHandler
+   (runIdentity . Q.getRow) <$> Q.withQE defaultTxErrorHandler
    [Q.sql|
      WITH "cte" AS
      (UPDATE hdb_catalog.hdb_scheduled_events

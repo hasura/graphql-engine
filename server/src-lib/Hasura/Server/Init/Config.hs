@@ -12,11 +12,10 @@ import qualified Database.PG.Query                as Q
 import           Data.Char                        (toLower)
 import           Data.Time
 import           Network.Wai.Handler.Warp         (HostPreference)
-import qualified Network.WebSockets               as WS
 
 import qualified Hasura.Cache.Bounded             as Cache
+import qualified Hasura.GraphQL.Execute           as E
 import qualified Hasura.GraphQL.Execute.LiveQuery as LQ
-import qualified Hasura.GraphQL.Execute.Plan      as E
 import qualified Hasura.Logging                   as L
 
 import           Hasura.Prelude
@@ -35,7 +34,17 @@ data RawConnParams
   , rcpAllowPrepare :: !(Maybe Bool)
   } deriving (Show, Eq)
 
-type RawAuthHook = AuthHookG (Maybe Text) (Maybe AuthHookType)
+type RawAuthHook = AuthHookG (Maybe T.Text) (Maybe AuthHookType)
+
+data MaintenanceMode = MaintenanceModeEnabled | MaintenanceModeDisabled
+  deriving (Show, Eq)
+
+instance J.FromJSON MaintenanceMode where
+  parseJSON = J.withBool "MaintenanceMode" $
+    pure . bool MaintenanceModeDisabled MaintenanceModeEnabled
+
+instance J.ToJSON MaintenanceMode where
+  toJSON = J.Bool . (== MaintenanceModeEnabled)
 
 data RawServeOptions impl
   = RawServeOptions
@@ -65,8 +74,7 @@ data RawServeOptions impl
   , rsoEventsHttpPoolSize    :: !(Maybe Int)
   , rsoEventsFetchInterval   :: !(Maybe Milliseconds)
   , rsoLogHeadersFromEnv     :: !Bool
-  , rsoWebSocketCompression  :: !Bool
-  , rsoWebSocketKeepAlive    :: !(Maybe Int)
+  , rsoEnableMaintenanceMode :: !Bool
   }
 
 -- | @'ResponseInternalErrorsConfig' represents the encoding of the internal
@@ -83,11 +91,6 @@ shouldIncludeInternal role = \case
   InternalErrorsAllRequests -> True
   InternalErrorsAdminOnly   -> isAdmin role
   InternalErrorsDisabled    -> False
-
-newtype KeepAliveDelay
-  = KeepAliveDelay
-      { unKeepAliveDelay :: Seconds
-      } deriving (Eq, Show)
 
 data ServeOptions impl
   = ServeOptions
@@ -114,13 +117,12 @@ data ServeOptions impl
   , soEventsHttpPoolSize           :: !(Maybe Int)
   , soEventsFetchInterval          :: !(Maybe Milliseconds)
   , soLogHeadersFromEnv            :: !Bool
-  , soConnectionOptions            :: !WS.ConnectionOptions
-  , soWebsocketKeepAlive           :: !KeepAliveDelay
+  , soEnableMaintenanceMode        :: !MaintenanceMode
   }
 
 data DowngradeOptions
   = DowngradeOptions
-  { dgoTargetVersion :: !Text
+  { dgoTargetVersion :: !T.Text
   , dgoDryRun        :: !Bool
   } deriving (Show, Eq)
 
@@ -152,7 +154,7 @@ data API
   | DEVELOPER
   | CONFIG
   deriving (Show, Eq, Read, Generic)
-
+  
 $(J.deriveJSON (J.defaultOptions { J.constructorTagModifier = map toLower })
   ''API)
 
@@ -267,14 +269,10 @@ instance FromEnv [API] where
   fromEnv = readAPIs
 
 instance FromEnv LQ.BatchSize where
-  fromEnv s = do
-    val <- readEither s
-    maybe (Left "batch size should be a non negative integer") Right $ LQ.mkBatchSize val
+  fromEnv = fmap LQ.BatchSize . readEither
 
 instance FromEnv LQ.RefetchInterval where
-  fromEnv x = do
-    val <- fmap (milliseconds . fromInteger) . readEither $ x
-    maybe (Left "refetch interval should be a non negative integer") Right $ LQ.mkRefetchInterval val
+  fromEnv = fmap (LQ.RefetchInterval . milliseconds . fromInteger) . readEither
 
 instance FromEnv Milliseconds where
   fromEnv = fmap fromInteger . readEither

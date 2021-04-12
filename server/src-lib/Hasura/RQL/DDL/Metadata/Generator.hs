@@ -1,19 +1,25 @@
 {-# OPTIONS_GHC -fno-warn-orphans #-}
-
--- | This module generates a random 'Metadata' object, using a number of
--- 'Arbitrary' instances.  This is used by the QuickCheck-based testing suite.
--- This module is not used by the graphql-engine library itself, and we may wish
--- to relocate it, for instance to Hasura.Generator.
-
 module Hasura.RQL.DDL.Metadata.Generator
-  (genMetadata)
+  (genReplaceMetadata)
 where
 
+import           Hasura.GraphQL.Utils                          (simpleGraphQLQuery)
 import           Hasura.Prelude
+import           Hasura.RQL.DDL.Headers
+import           Hasura.RQL.DDL.Metadata.Types
+import           Hasura.RQL.Types
+import           Hasura.SQL.Types
+
+import qualified Hasura.RQL.DDL.ComputedField                  as ComputedField
+import qualified Hasura.RQL.DDL.Permission                     as Permission
+import qualified Hasura.RQL.DDL.Permission.Internal            as Permission
+import qualified Hasura.RQL.DDL.QueryCollection                as Collection
+import qualified Hasura.RQL.DDL.Relationship                   as Relationship
+import qualified Hasura.RQL.DDL.Schema                         as Schema
+
+import           System.Cron.Types
 
 import qualified Data.Aeson                                    as J
-import qualified Data.HashMap.Strict.InsOrd                    as OM
-import qualified Data.HashSet.InsOrd                           as SetIns
 import qualified Data.Text                                     as T
 import qualified Data.Vector                                   as V
 import qualified Language.GraphQL.Draft.Parser                 as G
@@ -22,24 +28,18 @@ import qualified Language.Haskell.TH.Syntax                    as TH
 import qualified Network.URI                                   as N
 import qualified System.Cron.Parser                            as Cr
 
+
 import           Data.List.Extended                            (duplicates)
 import           Data.Scientific
-import           System.Cron.Types
 import           Test.QuickCheck
 import           Test.QuickCheck.Instances.Semigroup           ()
 import           Test.QuickCheck.Instances.Time                ()
 import           Test.QuickCheck.Instances.UnorderedContainers ()
 
-import           Hasura.Backends.Postgres.SQL.Types
-import           Hasura.GraphQL.Utils                          (simpleGraphQLQuery)
-import           Hasura.RQL.DDL.Headers
-import           Hasura.RQL.DDL.Metadata.Types
-import           Hasura.RQL.Types
-
-genMetadata :: Gen Metadata
-genMetadata = do
+genReplaceMetadata :: Gen ReplaceMetadata
+genReplaceMetadata = do
   version <- arbitrary
-  Metadata
+  ReplaceMetadata version
     <$> arbitrary
     <*> genFunctionsMetadata version
     <*> arbitrary
@@ -49,24 +49,15 @@ genMetadata = do
     <*> arbitrary
     <*> arbitrary
   where
-    genFunctionsMetadata :: MetadataVersion -> Gen Functions
+    genFunctionsMetadata :: MetadataVersion -> Gen FunctionsMetadata
     genFunctionsMetadata = \case
-      MVVersion1 -> OM.fromList . map (\qf -> (qf, FunctionMetadata qf emptyFunctionConfig)) <$> arbitrary
-      MVVersion2 -> arbitrary
-
-instance (Arbitrary k, Eq k, Hashable k, Arbitrary v) => Arbitrary (InsOrdHashMap k v) where
-  arbitrary = OM.fromList <$> arbitrary
-
-instance (Arbitrary a, Eq a, Hashable a) => Arbitrary (SetIns.InsOrdHashSet a) where
-  arbitrary = SetIns.fromList <$> arbitrary
+      MVVersion1 -> FMVersion1 <$> arbitrary
+      MVVersion2 -> FMVersion2 <$> arbitrary
 
 instance Arbitrary G.Name where
-  arbitrary = G.unsafeMkName . T.pack <$> listOf1 (elements ['a'..'z'])
+  arbitrary = G.Name . T.pack <$> listOf1 (elements ['a'..'z'])
 
 instance Arbitrary MetadataVersion where
-  arbitrary = genericArbitrary
-
-instance Arbitrary FunctionMetadata where
   arbitrary = genericArbitrary
 
 instance Arbitrary TableCustomRootFields where
@@ -81,25 +72,25 @@ instance Arbitrary TableCustomRootFields where
 instance Arbitrary TableConfig where
   arbitrary = genericArbitrary
 
-instance (Arbitrary a) => Arbitrary (RelUsing a) where
+instance (Arbitrary a) => Arbitrary (Relationship.RelUsing a) where
   arbitrary = genericArbitrary
 
-instance (Arbitrary a) => Arbitrary (RelDef a) where
+instance (Arbitrary a) => Arbitrary (Relationship.RelDef a) where
   arbitrary = genericArbitrary
 
-instance Arbitrary RelManualConfig where
+instance Arbitrary Relationship.RelManualConfig where
   arbitrary = genericArbitrary
 
-instance Arbitrary ArrRelUsingFKeyOn where
+instance Arbitrary Relationship.ArrRelUsingFKeyOn where
   arbitrary = genericArbitrary
 
-instance (Arbitrary a) => Arbitrary (PermDef a) where
+instance (Arbitrary a) => Arbitrary (Permission.PermDef a) where
   arbitrary = genericArbitrary
 
-instance Arbitrary ComputedFieldDefinition where
+instance Arbitrary ComputedField.ComputedFieldDefinition where
   arbitrary = genericArbitrary
 
-instance Arbitrary ComputedFieldMetadata where
+instance Arbitrary ComputedFieldMeta where
   arbitrary = genericArbitrary
 
 instance Arbitrary Scientific where
@@ -122,28 +113,28 @@ instance Arbitrary J.Value where
 instance Arbitrary ColExp where
   arbitrary = genericArbitrary
 
-instance Arbitrary (GExists 'Postgres ColExp) where
+instance Arbitrary (GExists ColExp) where
   arbitrary = genericArbitrary
 
-instance Arbitrary (GBoolExp 'Postgres ColExp) where
+instance Arbitrary (GBoolExp ColExp) where
   arbitrary = genericArbitrary
 
-instance Arbitrary (BoolExp 'Postgres) where
+instance Arbitrary BoolExp where
   arbitrary = genericArbitrary
 
-instance Arbitrary PermColSpec where
+instance Arbitrary Permission.PermColSpec where
   arbitrary = genericArbitrary
 
-instance Arbitrary (InsPerm 'Postgres) where
+instance Arbitrary Permission.InsPerm where
   arbitrary = genericArbitrary
 
-instance Arbitrary (SelPerm 'Postgres) where
+instance Arbitrary Permission.SelPerm where
   arbitrary = genericArbitrary
 
-instance Arbitrary (UpdPerm 'Postgres) where
+instance Arbitrary Permission.UpdPerm where
   arbitrary = genericArbitrary
 
-instance Arbitrary (DelPerm 'Postgres) where
+instance Arbitrary Permission.DelPerm where
   arbitrary = genericArbitrary
 
 instance Arbitrary SubscribeColumns where
@@ -167,13 +158,13 @@ instance Arbitrary HeaderConf where
 instance Arbitrary EventTriggerConf where
   arbitrary = genericArbitrary
 
-instance Arbitrary TableMetadata where
+instance Arbitrary TableMeta where
   arbitrary = genericArbitrary
 
-instance Arbitrary FunctionConfig where
+instance Arbitrary Schema.FunctionConfig where
   arbitrary = genericArbitrary
 
-instance Arbitrary TrackFunctionV2 where
+instance Arbitrary Schema.TrackFunctionV2 where
   arbitrary = genericArbitrary
 
 instance Arbitrary QualifiedTable where
@@ -195,30 +186,36 @@ instance Arbitrary AddRemoteSchemaQuery where
 
 -- FIXME:- The GraphQL AST has 'Gen' by Hedgehog testing package which lacks the
 -- 'Arbitrary' class implementation. For time being, a single query is generated every time.
-instance Arbitrary GQLQueryWithText where
-  arbitrary = pure $ GQLQueryWithText ( simpleGraphQLQuery
-                                      , GQLQuery simpleQuery
-                                      )
+instance Arbitrary Collection.GQLQueryWithText where
+  arbitrary = pure $ Collection.GQLQueryWithText ( simpleGraphQLQuery
+                                                 , Collection.GQLQuery simpleQuery
+                                                 )
     where
       simpleQuery = $(either (fail . T.unpack) TH.lift $ G.parseExecutableDoc simpleGraphQLQuery)
 
-instance Arbitrary ListedQuery where
+instance Arbitrary Collection.ListedQuery where
   arbitrary = genericArbitrary
 
-instance Arbitrary CollectionDef where
+instance Arbitrary Collection.CollectionDef where
   arbitrary = genericArbitrary
 
-instance Arbitrary CreateCollection where
+instance Arbitrary Collection.CreateCollection where
   arbitrary = genericArbitrary
 
-instance Arbitrary CollectionReq where
+instance Arbitrary Collection.CollectionReq where
   arbitrary = genericArbitrary
+
+instance Arbitrary G.NamedType where
+  arbitrary = G.NamedType <$> arbitrary
 
 instance Arbitrary G.Description where
   arbitrary = G.Description <$> arbitrary
 
 instance Arbitrary G.Nullability where
   arbitrary = genericArbitrary
+
+instance Arbitrary G.ListType where
+  arbitrary = G.ListType <$> arbitrary
 
 instance Arbitrary G.GType where
   arbitrary = genericArbitrary
@@ -250,16 +247,16 @@ instance Arbitrary RelationshipName where
 instance Arbitrary ObjectFieldName where
   arbitrary = genericArbitrary
 
-instance (Arbitrary a, Arbitrary b) => Arbitrary (TypeRelationship a b)  where
+instance Arbitrary TypeRelationshipDefinition  where
   arbitrary = genericArbitrary
 
 instance Arbitrary ObjectTypeName where
   arbitrary = genericArbitrary
 
-instance (Arbitrary a) => Arbitrary (ObjectFieldDefinition a) where
+instance Arbitrary ObjectFieldDefinition where
   arbitrary = genericArbitrary
 
-instance (Arbitrary a, Arbitrary b, Arbitrary c) => Arbitrary (ObjectTypeDefinition a b c) where
+instance Arbitrary ObjectTypeDefinition where
   arbitrary = genericArbitrary
 
 instance Arbitrary ScalarTypeDefinition where
@@ -280,7 +277,7 @@ instance Arbitrary CustomTypes where
 instance Arbitrary ArgumentName where
   arbitrary = genericArbitrary
 
-instance (Arbitrary a) => Arbitrary (ArgumentDefinition a) where
+instance Arbitrary ArgumentDefinition where
   arbitrary = genericArbitrary
 
 instance Arbitrary ActionMutationKind where
@@ -289,7 +286,7 @@ instance Arbitrary ActionMutationKind where
 instance Arbitrary ActionType where
   arbitrary = genericArbitrary
 
-instance (Arbitrary a, Arbitrary b) => Arbitrary (ActionDefinition a b) where
+instance (Arbitrary a) => Arbitrary (ActionDefinition a) where
   arbitrary = genericArbitrary
 
 instance Arbitrary ActionName where
@@ -304,10 +301,18 @@ instance Arbitrary ActionPermissionMetadata where
 instance Arbitrary ActionMetadata where
   arbitrary = genericArbitrary
 
-deriving instance Arbitrary RemoteArguments
+deriving instance Arbitrary G.StringValue
+deriving instance Arbitrary G.Variable
+deriving instance Arbitrary G.ListValue
+deriving instance Arbitrary G.ObjectValue
 
-instance Arbitrary a => Arbitrary (G.Value a) where
+instance Arbitrary G.Value where
   arbitrary = genericArbitrary
+
+instance (Arbitrary a) => Arbitrary (G.ObjectFieldG a) where
+  arbitrary = genericArbitrary
+
+deriving instance Arbitrary RemoteArguments
 
 instance Arbitrary FieldCall where
   arbitrary = genericArbitrary
@@ -317,13 +322,13 @@ deriving instance Arbitrary RemoteFields
 instance Arbitrary RemoteRelationshipDef where
   arbitrary = genericArbitrary
 
-instance Arbitrary RemoteRelationshipMetadata where
+instance Arbitrary RemoteRelationshipMeta where
   arbitrary = genericArbitrary
 
 instance Arbitrary CronTriggerMetadata where
   arbitrary = genericArbitrary
 
-instance Arbitrary UrlConf where
+instance Arbitrary WebhookConf where
   arbitrary = genericArbitrary
 
 instance Arbitrary STRetryConf where
@@ -336,7 +341,7 @@ instance Arbitrary CronSchedule where
   arbitrary = elements sampleCronSchedules
 
 sampleCronSchedules :: [CronSchedule]
-sampleCronSchedules = rights $ map Cr.parseCronSchedule
+sampleCronSchedules = rights $ map Cr.parseCronSchedule $
   [ "* * * * *"
   -- every minute
   , "5 * * * *"

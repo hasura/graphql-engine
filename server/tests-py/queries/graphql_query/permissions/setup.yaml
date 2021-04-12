@@ -283,42 +283,6 @@ args:
     name: search_tracks
     schema: public
 
-#Create Books table
-- type: run_sql
-  args:
-    sql: |
-      CREATE TABLE books (
-        id int,
-        author_name text,
-        book_name text,
-        published_on timestamptz,
-        PRIMARY KEY (id,book_name)
-      );
-
-# Track table Books
-- type: track_table
-  args:
-    schema: public
-    name: books
-
-- type: insert
-  args:
-    table: books
-    objects:
-      - id: 1
-        author_name: J.K. Rowling
-        book_name: Harry Porter
-        published_on: "1997-06-26"
-
-#Create select permission on books, granting permission only to one of the columns of the primary key
-- type: create_select_permission
-  args:
-    table: books
-    role: user
-    permission:
-      columns: ["author_name","book_name","published_on"]
-      filter: {}
-
 #Permission based on PostGIS operators
 - type: run_sql
   args:
@@ -559,24 +523,3 @@ args:
       columns:
       - id
       - bid_price
-
-- type: create_select_permission
-  args:
-    table: article
-    role: critic
-    permission:
-      columns:
-      - title
-      - content
-      - is_published
-      filter:
-        id:
-          _eq: X-Hasura-Critic-Id
-
-- type: create_select_permission
-  args:
-    table: author
-    role: critic
-    permission:
-      columns: ["name"]
-      filter: {}

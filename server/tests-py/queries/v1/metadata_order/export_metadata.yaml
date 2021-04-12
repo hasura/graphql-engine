@@ -112,14 +112,6 @@ response:
             name: test2
           column_mapping:
             id: id
-  - table:
-      schema: public
-      name: user address
-    configuration:
-      custom_name: user_address
-      custom_root_fields: {}
-      custom_column_names: {}
-
   functions:
   - function:
       schema: public

@@ -19,9 +19,9 @@ instance NFData HeaderConf
 instance Hashable HeaderConf
 instance Cacheable HeaderConf
 
-type HeaderName  = Text
+type HeaderName  = T.Text
 
-data HeaderValue = HVValue Text | HVEnv Text
+data HeaderValue = HVValue T.Text | HVEnv T.Text
    deriving (Show, Eq, Lift, Generic)
 instance NFData HeaderValue
 instance Hashable HeaderValue

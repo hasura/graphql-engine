@@ -14,8 +14,8 @@ window.hdocs = (function () {
 
       docsearch({
         appId: 'WCBB1VVLRC',
-        apiKey: HDOCS_ALGOLIA_API_KEY,
-        indexName: HDOCS_ALGOLIA_INDEX,
+        apiKey: '298d448cd9d7ed93fbab395658da19e8',
+        indexName: 'graphql-docs-prod',
         inputSelector: '#search_element',
         transformData: hdocs.transformSearchData,
         debug: false
@@ -116,22 +116,13 @@ window.hdocs = (function () {
         });
       }
 
-      const searchField = document.getElementById('search_element');
-      const searchHelp = document.getElementById('search_help');
-      const hideHelp = function () { searchHelp.classList.add('hide'); }
-
       if (suggestions.length === 0) {
-        setTimeout(function () { searchHelp.classList.remove('hide'); }, 100);
-        searchField.addEventListener('blur', function () {
-          setTimeout(hideHelp, 100);
-        }, { once: true });
-        searchField.addEventListener('input', function () {
-          if (searchField.value === '') {
-            setTimeout(hideHelp, 100);
-          }
-        }, { once: true });
-      } else if (!searchHelp.classList.contains('hide')) {
-        hideHelp();
+        setTimeout(function () { document.getElementById('search_help').classList.remove('hide'); }, 100);
+        document.getElementById('search_element').addEventListener('blur', function () {
+          setTimeout(function () { document.getElementById('search_help').classList.add('hide'); }, 100);
+        });
+      } else if (!document.getElementById('search_help').classList.contains('hide')) {
+        document.getElementById('search_help').classList.add('hide');
       }
 
       return suggestions;

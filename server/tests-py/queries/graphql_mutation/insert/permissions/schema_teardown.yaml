@@ -21,5 +21,4 @@ args:
       drop table computer;
       drop table "user";
       drop table account;
-      drop table leads;
     cascade: true

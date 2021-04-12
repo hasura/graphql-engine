@@ -15,11 +15,13 @@
 }
 
 .body_content {
+  font-family: 'Gudea';
   font-size: 15px;
   color: #333;
 }
 
 .small_content {
+  font-family: 'Gudea';
   font-size: 14px;
   color: #333;
 }
@@ -97,10 +99,6 @@
 .space_wrapper {
   padding: 15px 15px;
   padding-bottom: 0;
-}
-
-.description {
-  margin-bottom: 20px;
 }
 
 .text_left {

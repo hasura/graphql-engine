@@ -32,6 +32,7 @@ import qualified Data.ByteString.Lazy             as BL
 import qualified Data.HashMap.Strict              as Map
 import qualified Data.List                        as L
 import qualified Data.Text                        as T
+import qualified Language.GraphQL.Draft.Syntax    as G
 import qualified Network.HTTP.Client              as HTTP
 import qualified Network.HTTP.Types               as HTTP
 import qualified Network.Wreq                     as Wreq
@@ -166,7 +167,7 @@ computeMetrics sc _mtServiceTimings _mtPgVersion =
                     $ Map.map _tiEventTriggerInfoMap userTables
       _mtRemoteSchemas   = Map.size $ scRemoteSchemas sc
       _mtFunctions = Map.size $ Map.filter (not . isSystemDefined . fiSystemDefined) $ scFunctions sc
-      _mtActions = computeActionsMetrics $ scActions sc
+      _mtActions = computeActionsMetrics (scActions sc) (snd . scCustomTypes $ sc)
 
   in Metrics{..}
 
@@ -174,28 +175,32 @@ computeMetrics sc _mtServiceTimings _mtPgVersion =
     userTables = Map.filter (not . isSystemDefined . _tciSystemDefined . _tiCoreInfo) $ scTables sc
     countUserTables predicate = length . filter predicate $ Map.elems userTables
 
-    calcPerms :: (RolePermInfo 'Postgres -> Maybe a) -> [RolePermInfo 'Postgres] -> Int
+    calcPerms :: (RolePermInfo -> Maybe a) -> [RolePermInfo] -> Int
     calcPerms fn perms = length $ mapMaybe fn perms
 
-    permsOfTbl :: TableInfo 'Postgres -> [(RoleName, RolePermInfo 'Postgres)]
+    permsOfTbl :: TableInfo -> [(RoleName, RolePermInfo)]
     permsOfTbl = Map.toList . _tiRolePermInfoMap
 
-computeActionsMetrics :: ActionCache -> ActionMetric
-computeActionsMetrics actionCache =
+computeActionsMetrics :: ActionCache -> AnnotatedObjects -> ActionMetric
+computeActionsMetrics ac ao =
   ActionMetric syncActionsLen asyncActionsLen queryActionsLen typeRelationships customTypesLen
-  where actions = Map.elems actionCache
-        syncActionsLen  = length . filter ((== ActionMutation ActionSynchronous) . _adType . _aiDefinition) $ actions
-        asyncActionsLen  = length . filter ((== ActionMutation ActionAsynchronous) . _adType . _aiDefinition) $ actions
-        queryActionsLen = length . filter ((== ActionQuery) . _adType . _aiDefinition) $ actions
+  where actions = Map.elems ac
+        syncActionsLen  = length . filter ((==(ActionMutation ActionSynchronous)) . _adType . _aiDefinition) $ actions
+        asyncActionsLen  = length . filter ((==(ActionMutation ActionAsynchronous)) . _adType . _aiDefinition) $ actions
+        queryActionsLen = length . filter ((==ActionQuery) . _adType . _aiDefinition) $ actions
 
-        outputTypesLen = length . L.nub . map (_adOutputType . _aiDefinition) $ actions
-        inputTypesLen = length . L.nub . concatMap (map _argType . _adArguments . _aiDefinition) $ actions
+        outputTypesLen = length . L.nub . (map (_adOutputType . _aiDefinition)) $ actions
+        inputTypesLen = length . L.nub . concat . (map ((map _argType) . _adArguments . _aiDefinition)) $ actions
         customTypesLen = inputTypesLen + outputTypesLen
 
-        typeRelationships =
-          length . L.nub . concatMap
-          (map _trName . maybe [] toList . _otdRelationships . _aiOutputObject) $
-          actions
+        typeRelationships = length . L.nub . concat . map ((getActionTypeRelationshipNames ao) . _aiDefinition) $ actions
+
+        -- gives the count of relationships associated with an action
+        getActionTypeRelationshipNames :: AnnotatedObjects -> ResolvedActionDefinition -> [RelationshipName]
+        getActionTypeRelationshipNames annotatedObjs actionDefn =
+          let typeName = G.getBaseType $ unGraphQLType $ _adOutputType actionDefn
+              annotatedObj = Map.lookup (ObjectTypeName typeName) annotatedObjs
+          in maybe [] (Map.keys . _aotRelationships) annotatedObj
 
 -- | Logging related
 
@@ -210,9 +215,9 @@ data TelemetryLog
 data TelemetryHttpError
   = TelemetryHttpError
   { tlheStatus        :: !(Maybe HTTP.Status)
-  , tlheUrl           :: !Text
+  , tlheUrl           :: !T.Text
   , tlheHttpException :: !(Maybe HttpException)
-  , tlheResponse      :: !(Maybe Text)
+  , tlheResponse      :: !(Maybe T.Text)
   } deriving (Show)
 
 instance A.ToJSON TelemetryLog where

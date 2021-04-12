@@ -13,9 +13,9 @@ import           Data.Aeson
 import           Data.List                          (nub)
 import           Data.Monoid                        (First)
 
-import           Data.Text.Extended
 import           Hasura.RQL.DDL.Schema.Cache.Common
 import           Hasura.RQL.Types
+import           Hasura.SQL.Types
 
 -- | Processes collected 'CIDependency' values into a 'DepMap', performing integrity checking to
 -- ensure the dependencies actually exist. If a dependency is missing, its transitive dependents are
@@ -116,7 +116,7 @@ pruneDanglingDependents cache = fmap (M.filter (not . null)) . traverse do
     resolveTable tableName = M.lookup tableName (_boTables cache) `onNothing`
       Left ("table " <> tableName <<> " is not tracked")
 
-    resolveField :: TableInfo 'Postgres -> FieldName -> Getting (First a) (FieldInfo 'Postgres) a -> Text -> Either Text a
+    resolveField :: TableInfo -> FieldName -> Getting (First a) FieldInfo a -> Text -> Either Text a
     resolveField tableInfo fieldName fieldType fieldTypeName = do
       let coreInfo = _tiCoreInfo tableInfo
           tableName = _tciName coreInfo
@@ -132,12 +132,12 @@ deleteMetadataObject objectId = case objectId of
   MORemoteSchema name -> boRemoteSchemas %~ M.delete name
   MOCronTrigger name  -> boCronTriggers %~ M.delete name
   MOTableObj tableName tableObjectId -> boTables.ix tableName %~ case tableObjectId of
-    MTORel           name _ -> tiCoreInfo.tciFieldInfoMap %~ M.delete (fromRel name)
-    MTOComputedField name   -> tiCoreInfo.tciFieldInfoMap %~ M.delete (fromComputedField name)
+    MTORel           name _    -> tiCoreInfo.tciFieldInfoMap %~ M.delete (fromRel name)
+    MTOComputedField name      -> tiCoreInfo.tciFieldInfoMap %~ M.delete (fromComputedField name)
     MTORemoteRelationship name -> tiCoreInfo.tciFieldInfoMap %~ M.delete (fromRemoteRelationship name)
     MTOPerm roleName permType -> withPermType permType \accessor ->
       tiRolePermInfoMap.ix roleName.permAccToLens accessor .~ Nothing
     MTOTrigger name -> tiEventTriggerInfoMap %~ M.delete name
-  MOCustomTypes                -> boCustomTypes %~ const emptyAnnotatedCustomTypes
+  MOCustomTypes                -> boCustomTypes %~ const (NonObjectTypeMap mempty, mempty)
   MOAction           name      -> boActions %~ M.delete name
   MOActionPermission name role -> boActions.ix name.aiPermissions %~ M.delete role

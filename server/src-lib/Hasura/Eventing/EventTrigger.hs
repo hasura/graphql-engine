@@ -40,19 +40,6 @@ module Hasura.Eventing.EventTrigger
   , EventEngineCtx(..)
   ) where
 
-import           Hasura.Prelude
-
-import qualified Control.Concurrent.Async.Lifted.Safe as LA
-import qualified Data.ByteString.Lazy                 as LBS
-import qualified Data.HashMap.Strict                  as M
-import qualified Data.TByteString                     as TBS
-import qualified Data.Text                            as T
-import qualified Data.Time.Clock                      as Time
-import qualified Database.PG.Query                    as Q
-import qualified Database.PG.Query.PTI                as PTI
-import qualified Network.HTTP.Client                  as HTTP
-import qualified PostgreSQL.Binary.Encoding           as PE
-
 import           Control.Concurrent.Extended          (sleep)
 import           Control.Concurrent.STM.TVar
 import           Control.Monad.Catch                  (MonadMask, bracket_)
@@ -64,21 +51,29 @@ import           Data.Aeson.TH
 import           Data.Has
 import           Data.Int                             (Int64)
 import           Data.String
-import           Data.Text.Extended
-import           Data.Text.NonEmpty
 import           Data.Time.Clock
-
-import qualified Hasura.Logging                       as L
-import qualified Hasura.Tracing                       as Tracing
-
-import           Hasura.Backends.Postgres.SQL.Types
+import           Data.Word
 import           Hasura.Eventing.Common
 import           Hasura.Eventing.HTTP
 import           Hasura.HTTP
+import           Hasura.Prelude
 import           Hasura.RQL.DDL.Headers
 import           Hasura.RQL.Types
 import           Hasura.Server.Version                (HasVersion)
+import           Hasura.SQL.Types
+import qualified Hasura.Tracing                       as Tracing
 
+import qualified Control.Concurrent.Async.Lifted.Safe as LA
+import qualified Data.ByteString.Lazy                 as LBS
+import qualified Data.HashMap.Strict                  as M
+import qualified Data.TByteString                     as TBS
+import qualified Data.Text                            as T
+import qualified Data.Time.Clock                      as Time
+import qualified Database.PG.Query                    as Q
+import qualified Database.PG.Query.PTI                as PTI
+import qualified Hasura.Logging                       as L
+import qualified Network.HTTP.Client                  as HTTP
+import qualified PostgreSQL.Binary.Encoding           as PE
 
 data TriggerMetadata
   = TriggerMetadata { tmName :: TriggerName }
@@ -219,7 +214,13 @@ processEventQueue logger logenv httpMgr pool getSchemaCache eeCtx@EventEngineCtx
       eventsNext <- LA.withAsync popEventsBatch $ \eventsNextA -> do
         -- process approximately in order, minding HASURA_GRAPHQL_EVENTS_HTTP_POOL_SIZE:
         forM_ events $ \event -> do
+          tracingCtx <- liftIO (Tracing.extractEventContext (eEvent event))
+          let runTraceT = maybe
+                Tracing.runTraceT
+                Tracing.runTraceTInContext
+                tracingCtx
           t <- processEvent event
+            & runTraceT "process event"
             & withEventEngineCtx eeCtx
             & flip runReaderT (logger, httpMgr)
             & LA.async
@@ -256,20 +257,13 @@ processEventQueue logger logenv httpMgr pool getSchemaCache eeCtx@EventEngineCtx
          , MonadReader r io
          , Has HTTP.Manager r
          , Has (L.Logger L.Hasura) r
-         , Tracing.HasReporter io
+         , Tracing.MonadTrace io
          )
       => Event -> io ()
     processEvent e = do
       cache <- liftIO getSchemaCache
-
-      tracingCtx <- liftIO (Tracing.extractEventContext (eEvent e))
-      let spanName eti = "Event trigger: " <> unNonEmptyText (unTriggerName (etiName eti))
-          runTraceT = maybe
-            Tracing.runTraceT
-            Tracing.runTraceTInContext
-            tracingCtx
-
-      case getEventTriggerInfoFromEvent cache e of
+      let meti = getEventTriggerInfoFromEvent cache e
+      case meti of
         Left err -> do
           --  This rare error can happen in the following known cases:
           --  i) schema cache is not up-to-date (due to some bug, say during schema syncing across multiple instances)
@@ -280,7 +274,7 @@ processEventQueue logger logenv httpMgr pool getSchemaCache eeCtx@EventEngineCtx
             -- For such an event, we unlock the event and retry after a minute
             setRetry e (addUTCTime 60 currentTime)
           >>= flip onLeft logQErr
-        Right eti -> runTraceT (spanName eti) do
+        Right eti -> do
           let webhook = T.unpack $ wciCachedValue $ etiWebhookInfo eti
               retryConf = etiRetryConf eti
               timeoutSeconds = fromMaybe defaultTimeoutSeconds (rcTimeoutSec retryConf)
@@ -361,7 +355,7 @@ processError pool e retryConf decodedHeaders ep err = do
               respStatus = hrsStatus errResp
           mkInvocation ep respStatus decodedHeaders respPayload respHeaders
         HOther detail -> do
-          let errMsg = TBS.fromLBS $ encode detail
+          let errMsg = (TBS.fromLBS $ encode detail)
           mkInvocation ep 500 decodedHeaders errMsg []
   liftIO $ runExceptT $ Q.runTx pool (Q.ReadCommitted, Just Q.ReadWrite) $ do
     insertInvocation invocation
@@ -392,7 +386,7 @@ retryOrSetError e retryConf err = do
 
 mkInvocation
   :: EventPayload -> Int -> [HeaderConf] -> TBS.TByteString -> [HeaderConf]
-  -> Invocation 'EventType
+  -> (Invocation 'EventType)
 mkInvocation ep status reqHeaders respBody respHeaders
   = let resp = if isClientError status
           then mkClientErr respBody
@@ -433,11 +427,10 @@ fetchEvents :: Int -> Q.TxE QErr [Event]
 fetchEvents limitI =
   map uncurryEvent <$> Q.listQE defaultTxErrorHandler [Q.sql|
       UPDATE hdb_catalog.event_log
-      SET locked = NOW()
+      SET locked = 't'
       WHERE id IN ( SELECT l.id
                     FROM hdb_catalog.event_log l
-                    WHERE l.delivered = 'f' and l.error = 'f'
-                          and (l.locked IS NULL or l.locked < (NOW() - interval '30 minute'))
+                    WHERE l.delivered = 'f' and l.error = 'f' and l.locked = 'f'
                           and (l.next_retry_at is NULL or l.next_retry_at <= now())
                           and l.archived = 'f'
                     ORDER BY created_at
@@ -474,14 +467,14 @@ insertInvocation invo = do
 setSuccess :: Event -> Q.TxE QErr ()
 setSuccess e = Q.unitQE defaultTxErrorHandler [Q.sql|
                         UPDATE hdb_catalog.event_log
-                        SET delivered = 't', next_retry_at = NULL, locked = NULL
+                        SET delivered = 't', next_retry_at = NULL, locked = 'f'
                         WHERE id = $1
                         |] (Identity $ eId e) True
 
 setError :: Event -> Q.TxE QErr ()
 setError e = Q.unitQE defaultTxErrorHandler [Q.sql|
                         UPDATE hdb_catalog.event_log
-                        SET error = 't', next_retry_at = NULL, locked = NULL
+                        SET error = 't', next_retry_at = NULL, locked = 'f'
                         WHERE id = $1
                         |] (Identity $ eId e) True
 
@@ -489,7 +482,7 @@ setRetry :: Event -> UTCTime -> Q.TxE QErr ()
 setRetry e time =
   Q.unitQE defaultTxErrorHandler [Q.sql|
           UPDATE hdb_catalog.event_log
-          SET next_retry_at = $1, locked = NULL
+          SET next_retry_at = $1, locked = 'f'
           WHERE id = $2
           |] (time, eId e) True
 
@@ -497,8 +490,8 @@ unlockAllEvents :: Q.TxE QErr ()
 unlockAllEvents =
   Q.unitQE defaultTxErrorHandler [Q.sql|
           UPDATE hdb_catalog.event_log
-          SET locked = NULL
-          WHERE locked IS NOT NULL
+          SET locked = 'f'
+          WHERE locked = 't'
           |] () True
 
 toInt64 :: (Integral a) => a -> Int64
@@ -517,16 +510,16 @@ instance Q.ToPrepArg EventIdArray where
 --   when a graceful shutdown is initiated.
 unlockEvents :: [EventId] -> Q.TxE QErr Int
 unlockEvents eventIds =
-   runIdentity . Q.getRow <$> Q.withQE defaultTxErrorHandler
+   (runIdentity . Q.getRow) <$> Q.withQE defaultTxErrorHandler
    [Q.sql|
      WITH "cte" AS
      (UPDATE hdb_catalog.event_log
-     SET locked = NULL
+     SET locked = 'f'
      WHERE id = ANY($1::text[])
      -- only unlock those events that have been locked, it's possible
      -- that an event has been processed but not yet been removed from
      -- the saved locked events, which will lead to a double send
-     AND locked IS NOT NULL
+     AND locked = 't'
      RETURNING *)
      SELECT count(*) FROM "cte"
    |] (Identity $ EventIdArray eventIds) True

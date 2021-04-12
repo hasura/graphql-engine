@@ -1,4 +1,3 @@
-{-# LANGUAGE CPP #-}
 module Hasura.Server.Auth.JWT
   ( processJwt
   , RawJWT
@@ -35,9 +34,7 @@ import           Data.IORef                      (IORef, readIORef, writeIORef)
 import           Data.Parser.JSONPath            (parseJSONPath)
 import           Data.Time.Clock                 (NominalDiffTime, UTCTime, diffUTCTime,
                                                   getCurrentTime)
-#ifndef PROFILING
 import           GHC.AssertNF
-#endif
 import           Network.URI                     (URI)
 
 import           Data.Aeson.Internal             (JSONPath)
@@ -167,7 +164,7 @@ instance J.FromJSON JWTCustomClaimsMap where
 -- key in the JWT token.
 data JWTNamespace
   = ClaimNsPath JSONPath
-  | ClaimNs Text
+  | ClaimNs T.Text
   deriving (Show, Eq)
 
 instance J.ToJSON JWTNamespace where
@@ -225,7 +222,7 @@ jwkRefreshCtrl logger manager url ref time = do
     liftIO $ C.sleep time
     forever $ Tracing.runTraceT "jwk refresh" do
       res <- runExceptT $ updateJwkRef logger manager url ref
-      mTime <- onLeft res (const $ logNotice >> return Nothing)
+      mTime <- either (const $ logNotice >> return Nothing) return res
       -- if can't parse time from header, defaults to 1 min
       -- let delay = maybe (minutes 1) fromUnits mTime
       let delay = maybe (minutes 1) convertDuration mTime
@@ -257,7 +254,7 @@ updateJwkRef (Logger logger) manager url jwkRef = do
     let req = initReq { HTTP.requestHeaders = addDefaultHeaders (HTTP.requestHeaders initReq) }
     Tracing.tracedHttpRequest req \req' -> do
       liftIO $ HTTP.httpLbs req' manager
-  resp <- onLeft res logAndThrowHttp
+  resp <- either logAndThrowHttp return res
   let status = resp ^. Wreq.responseStatus
       respBody = resp ^. Wreq.responseBody
       statusCode = status ^. Wreq.statusCode
@@ -268,11 +265,9 @@ updateJwkRef (Logger logger) manager url jwkRef = do
     logAndThrow err
 
   let parseErr e = JFEJwkParseError (T.pack e) $ "Error parsing JWK from url: " <> urlT
-  !jwkset <- onLeft (J.eitherDecode' respBody) (logAndThrow . parseErr)
+  !jwkset <- either (logAndThrow . parseErr) return $ J.eitherDecode' respBody
   liftIO $ do
-#ifndef PROFILING
     $assertNFHere jwkset  -- so we don't write thunks to mutable vars
-#endif
     writeIORef jwkRef jwkset
 
   -- first check for Cache-Control header to get max-age, if not found, look for Expires header
@@ -371,7 +366,7 @@ processJwt_ processAuthZHeader_ jwtCtx headers mUnAuthRole =
       pure (userInfo, expTimeM)
 
     withoutAuthZHeader = do
-      unAuthRole <- onNothing mUnAuthRole missingAuthzHeader
+      unAuthRole <- maybe missingAuthzHeader return mUnAuthRole
       userInfo <- mkUserInfo (URBPreDetermined unAuthRole) UAdminSecretNotSent $
         mkSessionVariablesHeaders headers
       pure (userInfo, Nothing)
@@ -413,7 +408,7 @@ processAuthZHeader jwtCtx authzHeader = do
     liftJWTError :: (MonadError e' m) => (e -> e') -> ExceptT e m a -> m a
     liftJWTError ef action = do
       res <- runExceptT action
-      onLeft res (throwError . ef)
+      either (throwError . ef) return res
 
     invalidJWTError e =
       err400 JWTInvalid $ "Could not verify JWT: " <> T.pack (show e)
@@ -472,7 +467,6 @@ parseClaimsMap unregisteredClaims jcxClaims =
             (allowedRolesClaim, J.toJSON allowedRoles),
             (defaultRoleClaim, J.toJSON defaultRole)
             ] <> otherClaims
-
   where
     parseAllowedRolesClaim defaultVal = \case
       Nothing ->
@@ -497,7 +491,8 @@ parseClaimsMap unregisteredClaims jcxClaims =
     parseObjectFromString namespace claimsFmt jVal =
       case (claimsFmt, jVal) of
         (JCFStringifiedJson, J.String v) ->
-          onLeft (J.eitherDecodeStrict $ T.encodeUtf8 v) (const $ claimsErr $ strngfyErr v)
+          either (const $ claimsErr $ strngfyErr v) return
+          $ J.eitherDecodeStrict $ T.encodeUtf8 v
         (JCFStringifiedJson, _) ->
           claimsErr "expecting a string when claims_format is stringified_json"
         (JCFJson, J.Object o) -> return o
@@ -602,7 +597,7 @@ instance J.FromJSON JWTConfig where
           "RS256" -> runEither $ parseRsaKey rawKey
           "RS384" -> runEither $ parseRsaKey rawKey
           "RS512" -> runEither $ parseRsaKey rawKey
-          -- TODO(from master): support ES256, ES384, ES512, PS256, PS384
+          -- TODO: support ES256, ES384, ES512, PS256, PS384
           _       -> invalidJwk ("Key type: " <> T.unpack keyType <> " is not supported")
 
       runEither = either (invalidJwk . T.unpack) return
@@ -621,7 +616,7 @@ parseHasuraClaims claimsMap = do
   where
     parseClaim :: J.FromJSON a => SessionVariable -> Text -> m a
     parseClaim claim hint = do
-      claimV <- onNothing (Map.lookup claim claimsMap) missingClaim
+      claimV <- maybe missingClaim return $ Map.lookup claim claimsMap
       parseJwtClaim claimV $ "invalid " <> claimText <> "; " <> hint
       where
         missingClaim = throw400 JWTRoleClaimMissing $ "JWT claim does not contain " <> claimText

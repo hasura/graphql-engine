@@ -318,7 +318,7 @@ def assert_graphql_resp_expected(resp_orig, exp_response_orig, query, resp_hdrs=
             # If it is a batch GraphQL query, compare each individual response separately
             for (exp, out) in zip(as_list(exp_response), as_list(resp)):
                 matched_ = equal_CommentedMap(exp, out)
-                if is_err_msg(exp) and is_err_msg(out):
+                if is_err_msg(exp):
                     if not matched_:
                         warnings.warn("Response does not have the expected error message\n" + dump_str.getvalue())
                         return resp, matched

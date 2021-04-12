@@ -14,28 +14,35 @@ module Hasura.RQL.DDL.ComputedField
 
 import           Hasura.Prelude
 
+import           Hasura.EncJSON
+import           Hasura.Incremental                 (Cacheable)
+import           Hasura.RQL.DDL.Deps
+import           Hasura.RQL.DDL.Permission.Internal
+import           Hasura.RQL.DDL.Schema.Function     (RawFunctionInfo (..), mkFunctionArgs)
+import           Hasura.RQL.Types
+import           Hasura.Server.Utils                (makeReasonMessage)
+import           Hasura.SQL.Types
+
+import           Data.Aeson
+import           Data.Aeson.Casing
+import           Data.Aeson.TH
+import           Language.Haskell.TH.Syntax         (Lift)
+
 import qualified Control.Monad.Validate             as MV
 import qualified Data.HashSet                       as S
 import qualified Data.Sequence                      as Seq
 import qualified Database.PG.Query                  as Q
 import qualified Language.GraphQL.Draft.Syntax      as G
 
-import           Data.Aeson
-import           Data.Aeson.Casing
-import           Data.Aeson.TH
-import           Data.Text.Extended
-import           Language.Haskell.TH.Syntax         (Lift)
-
-import           Hasura.Backends.Postgres.SQL.Types
-import           Hasura.EncJSON
-import           Hasura.Incremental                 (Cacheable)
-import           Hasura.RQL.DDL.Deps
-import           Hasura.RQL.DDL.Permission.Internal
-import           Hasura.RQL.DDL.Schema.Function     (mkFunctionArgs)
-import           Hasura.RQL.Types
-import           Hasura.SQL.Types
-import           Hasura.Server.Utils                (makeReasonMessage)
-
+data ComputedFieldDefinition
+  = ComputedFieldDefinition
+  { _cfdFunction        :: !QualifiedFunction
+  , _cfdTableArgument   :: !(Maybe FunctionArgName)
+  , _cfdSessionArgument :: !(Maybe FunctionArgName)
+  } deriving (Show, Eq, Lift, Generic)
+instance NFData ComputedFieldDefinition
+instance Cacheable ComputedFieldDefinition
+$(deriveJSON (aesonDrop 4 snakeCase){omitNothingFields = True} ''ComputedFieldDefinition)
 
 data AddComputedField
   = AddComputedField
@@ -103,7 +110,7 @@ showError qf = \case
     "the function " <> qf <<> " is of type VOLATILE; cannot be added as a computed field"
   where
     showFunctionTableArgument = \case
-      FTAFirst           -> "first argument of the function " <>> qf
+      FTAFirst          -> "first argument of the function " <>> qf
       FTANamed argName _ -> argName <<> " argument of the function " <>> qf
     showFunctionSessionArgument = \case
       FunctionSessionArgument argName _ -> argName <<> " argument of the function " <>> qf
@@ -117,9 +124,9 @@ addComputedFieldP2Setup
   -> ComputedFieldDefinition
   -> RawFunctionInfo
   -> Maybe Text
-  -> m (ComputedFieldInfo 'Postgres)
+  -> m ComputedFieldInfo
 addComputedFieldP2Setup trackedTables table computedField definition rawFunctionInfo comment =
-  either (throw400 NotSupported . showErrors) pure =<< MV.runValidateT mkComputedFieldInfo
+  either (throw400 NotSupported . showErrors) pure =<< MV.runValidateT (mkComputedFieldInfo)
   where
     inputArgNames = rfiInputArgNames rawFunctionInfo
     ComputedFieldDefinition function maybeTableArg maybeSessionArg = definition
@@ -127,13 +134,13 @@ addComputedFieldP2Setup trackedTables table computedField definition rawFunction
                          (rfiReturnTypeName rawFunctionInfo)
                          (rfiReturnTypeType rawFunctionInfo)
 
-    computedFieldGraphQLName = G.mkName $ computedFieldNameToText computedField
+    computedFieldGraphQLName = G.Name $ computedFieldNameToText computedField
 
     mkComputedFieldInfo :: (MV.MonadValidate [ComputedFieldValidateError] m)
-                          => m (ComputedFieldInfo 'Postgres)
+                          => m ComputedFieldInfo
     mkComputedFieldInfo = do
       -- Check if computed field name is a valid GraphQL name
-      unless (isJust computedFieldGraphQLName) $
+      unless (G.isValidName computedFieldGraphQLName) $
         MV.dispute $ pure $ CFVENotValidGraphQLName computedField
 
       -- Check if function is VOLATILE
@@ -158,7 +165,7 @@ addComputedFieldP2Setup trackedTables table computedField definition rawFunction
                          (rfiInputArgTypes rawFunctionInfo) inputArgNames
       tableArgument <- case maybeTableArg of
         Just argName ->
-          case findWithIndex ((Just argName ==) . faName) inputArgs of
+          case findWithIndex (maybe False (argName ==) . faName) inputArgs of
             Just (tableArg, index) -> do
               let functionTableArg = FTANamed argName index
               validateTableArgumentType functionTableArg $ faType tableArg
@@ -174,7 +181,7 @@ addComputedFieldP2Setup trackedTables table computedField definition rawFunction
 
       maybePGSessionArg <- sequence $ do
           argName <- maybeSessionArg
-          return $ case findWithIndex ((Just argName ==) . faName) inputArgs of
+          return $ case findWithIndex (maybe False (argName ==) . faName) inputArgs of
             Just (sessionArg, index) -> do
               let functionSessionArg = FunctionSessionArgument argName index
               validateSessionArgumentType functionSessionArg $ faType sessionArg
@@ -207,7 +214,7 @@ addComputedFieldP2Setup trackedTables table computedField definition rawFunction
                                 -> QualifiedPGType
                                 -> m ()
     validateSessionArgumentType sessionArg qpt = do
-      unless (isJSONType $ _qptName qpt) $
+      when (not . isJSONType . _qptName $ qpt) $
         MV.dispute $ pure $ CFVEInvalidSessionArgument $ ISANotJSON sessionArg
 
     showErrors :: [ComputedFieldValidateError] -> Text

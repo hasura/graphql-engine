@@ -13,14 +13,14 @@ import (
 // Default Codegen Assets constants
 const (
 	ActionsCodegenOrg     string = "hasura/codegen-assets"
-	ActionsCodegenRepoURI string = "https://github.com/hasura/codegen-assets.git"
-	ActionsCodegenDirName string = "actions-codegen-assets"
+	ActionsCodegenRepoURI        = "https://github.com/hasura/codegen-assets.git"
+	ActionsCodegenDirName        = "actions-codegen-assets"
 )
 
 // Default init-templates repo constants
 const (
 	InitTemplatesRepoURI string = "https://github.com/hasura/graphql-engine-install-manifests.git"
-	InitTemplatesDirName string = "init-templates"
+	InitTemplatesDirName        = "init-templates"
 )
 
 type GitUtil struct {

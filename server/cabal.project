@@ -15,16 +15,9 @@
 packages: .
 
 constraints:
-  -- ensure we don't end up with a freeze file that forces an incompatible
+  -- ensure we don’t end up with a freeze file that forces an incompatible
   -- version in CI for Setup.hs scripts.
   setup.Cabal <3.4
-
-allow-newer:
-  -- dependent-map depends on constraints-extras, but its bounds have not yet
-  -- been relaxed for GHC 8.10.
-  constraints-extras-0.3.0.2:base,
-  constraints-extras-0.3.0.2:constraints,
-  constraints-extras-0.3.0.2:template-haskell
 
 package *
   optimization: 2
@@ -43,19 +36,16 @@ package graphql-engine
 source-repository-package
   type: git
   location: https://github.com/hasura/pg-client-hs.git
-  tag: 633a06ba9c1e6a561b0ad0d25951fcdf6dd054ca
+  -- NOTE: this is on stable-cherry-pick and corresponds to 
+  -- a55e94ee33231ae95b267b06afc903c3699361bb on master:
+  tag: 77e9ddaef5c2b6aae829d66295644beebfb55ff1
 
 source-repository-package
   type: git
   location: https://github.com/hasura/graphql-parser-hs.git
-  tag: a19a4bfcf295a832f6636fb957c2338444c6d486
+  tag: f4a093981ca5626982a17c2bfaad047cc0834a81
 
 source-repository-package
   type: git
   location: https://github.com/hasura/ci-info-hs.git
   tag: 947fd56582b1e8bec9ffed98ca9ac2f6b63e36c9
-
-source-repository-package
-  type: git
-  location: https://github.com/hasura/pool.git
-  tag: 0fdfaed4e109ca6a6bf00ed6d79c329626e3bdd4

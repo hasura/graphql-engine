@@ -1,73 +1,34 @@
 module Hasura.RQL.DML.Select
   ( selectP2
   , convSelectQuery
+  , asSingleRowJsonResp
+  , module Hasura.RQL.DML.Select.Internal
   , runSelect
   )
 where
 
-import           Hasura.Prelude
-
-import qualified Data.HashSet                              as HS
-import qualified Data.List.NonEmpty                        as NE
-import qualified Data.Sequence                             as DS
-import qualified Database.PG.Query                         as Q
-
 import           Data.Aeson.Types
-import           Data.Text.Extended
-import           Instances.TH.Lift                         ()
-import           Language.Haskell.TH.Syntax                (Lift)
+import           Instances.TH.Lift              ()
 
-import qualified Hasura.Backends.Postgres.SQL.DML          as S
+import qualified Data.HashSet                   as HS
+import qualified Data.List.NonEmpty             as NE
+import qualified Data.Sequence                  as DS
 
-import           Hasura.Backends.Postgres.SQL.Types
-import           Hasura.Backends.Postgres.Translate.Select
 import           Hasura.EncJSON
+import           Hasura.Prelude
 import           Hasura.RQL.DML.Internal
-import           Hasura.RQL.DML.Types
-import           Hasura.RQL.IR.OrderBy
-import           Hasura.RQL.IR.Select
+import           Hasura.RQL.DML.Select.Internal
 import           Hasura.RQL.Types
 import           Hasura.SQL.Types
 
-
-type SelectQExt b = SelectG (ExtCol b) (BoolExp b) Int
-
--- Columns in RQL
--- This technically doesn't need to be generalized to all backends as
--- it is specific to this module; however the generalization work was
--- already done, and there's no particular reason to force this to be
--- specific.
-data ExtCol (b :: BackendType)
-  = ECSimple !(Column b)
-  | ECRel !RelName !(Maybe RelName) !(SelectQExt b)
-deriving instance Lift (ExtCol 'Postgres)
-
-instance ToJSON (ExtCol 'Postgres) where
-  toJSON (ECSimple s) = toJSON s
-  toJSON (ECRel rn mrn selq) =
-    object $ [ "name" .= rn
-             , "alias" .= mrn
-             ] ++ selectGToPairs selq
-
-instance FromJSON (ExtCol 'Postgres) where
-  parseJSON v@(Object o) =
-    ECRel
-    <$> o .:  "name"
-    <*> o .:? "alias"
-    <*> parseJSON v
-  parseJSON v@(String _) =
-    ECSimple <$> parseJSON v
-  parseJSON _ =
-    fail $ mconcat
-    [ "A column should either be a string or an "
-    , "object (relationship)"
-    ]
+import qualified Database.PG.Query              as Q
+import qualified Hasura.SQL.DML                 as S
 
 convSelCol :: (UserInfoM m, QErrM m, CacheRM m)
-           => FieldInfoMap (FieldInfo 'Postgres)
-           -> SelPermInfo 'Postgres
-           -> SelCol 'Postgres
-           -> m [ExtCol 'Postgres]
+           => FieldInfoMap FieldInfo
+           -> SelPermInfo
+           -> SelCol
+           -> m [ExtCol]
 convSelCol _ _ (SCExtSimple cn) =
   return [ECSimple cn]
 convSelCol fieldInfoMap _ (SCExtRel rn malias selQ) = do
@@ -75,7 +36,7 @@ convSelCol fieldInfoMap _ (SCExtRel rn malias selQ) = do
   let pgWhenRelErr = "only relationships can be expanded"
   relInfo <- withPathK "name" $
     askRelType fieldInfoMap rn pgWhenRelErr
-  let (RelInfo _ _ _ relTab _ _) = relInfo
+  let (RelInfo _ _ _ relTab _) = relInfo
   (rfim, rspi) <- fetchRelDet rn relTab
   resolvedSelQ <- resolveStar rfim rspi selQ
   return [ECRel rn malias resolvedSelQ]
@@ -84,10 +45,10 @@ convSelCol fieldInfoMap spi (SCStar wildcard) =
 
 convWildcard
   :: (UserInfoM m, QErrM m, CacheRM m)
-  => FieldInfoMap (FieldInfo 'Postgres)
-  -> SelPermInfo 'Postgres
+  => FieldInfoMap FieldInfo
+  -> SelPermInfo
   -> Wildcard
-  -> m [ExtCol 'Postgres]
+  -> m [ExtCol]
 convWildcard fieldInfoMap selPermInfo wildcard =
   case wildcard of
   Star         -> return simpleCols
@@ -113,10 +74,10 @@ convWildcard fieldInfoMap selPermInfo wildcard =
     relExtCols wc = mapM (mkRelCol wc) relColInfos
 
 resolveStar :: (UserInfoM m, QErrM m, CacheRM m)
-            => FieldInfoMap (FieldInfo 'Postgres)
-            -> SelPermInfo 'Postgres
-            -> SelectQ 'Postgres
-            -> m (SelectQExt 'Postgres)
+            => FieldInfoMap FieldInfo
+            -> SelPermInfo
+            -> SelectQ
+            -> m SelectQExt
 resolveStar fim spi (SelectG selCols mWh mOb mLt mOf) = do
   procOverrides <- fmap (concat . catMaybes) $ withPathK "columns" $
     indexedForM selCols $ \selCol -> case selCol of
@@ -139,10 +100,10 @@ resolveStar fim spi (SelectG selCols mWh mOb mLt mOf) = do
 
 convOrderByElem
   :: (UserInfoM m, QErrM m, CacheRM m)
-  => SessVarBldr 'Postgres m
-  -> (FieldInfoMap (FieldInfo 'Postgres), SelPermInfo 'Postgres)
+  => SessVarBldr m
+  -> (FieldInfoMap FieldInfo, SelPermInfo)
   -> OrderByCol
-  -> m (AnnOrderByElement 'Postgres S.SQLExp)
+  -> m (AnnOrderByElement S.SQLExp)
 convOrderByElem sessVarBldr (flds, spi) = \case
   OCPG fldName -> do
     fldInfo <- askFieldInfo flds fldName
@@ -164,7 +125,7 @@ convOrderByElem sessVarBldr (flds, spi) = \case
         [ fldName <<> " is a"
         , " computed field and can't be used in 'order_by'"
         ]
-      -- TODO Rakesh (from master)
+      -- TODO Rakesh
       FIRemoteRelationship {} ->
         throw400 UnexpectedPayload (mconcat [ fldName <<> " is a remote field" ])
   OCRel fldName rest -> do
@@ -194,12 +155,12 @@ convOrderByElem sessVarBldr (flds, spi) = \case
 convSelectQ
   :: (UserInfoM m, QErrM m, CacheRM m, HasSQLGenCtx m)
   => QualifiedTable
-  -> FieldInfoMap (FieldInfo 'Postgres)  -- Table information of current table
-  -> SelPermInfo 'Postgres   -- Additional select permission info
-  -> SelectQExt 'Postgres     -- Given Select Query
-  -> SessVarBldr 'Postgres m
+  -> FieldInfoMap FieldInfo  -- Table information of current table
+  -> SelPermInfo   -- Additional select permission info
+  -> SelectQExt     -- Given Select Query
+  -> SessVarBldr m
   -> (PGColumnType -> Value -> m S.SQLExp)
-  -> m (AnnSimpleSel 'Postgres)
+  -> m AnnSimpleSel
 convSelectQ table fieldInfoMap selPermInfo selQ sessVarBldr prepValBldr = do
 
   annFlds <- withPathK "columns" $
@@ -247,10 +208,10 @@ convSelectQ table fieldInfoMap selPermInfo selQ sessVarBldr prepValBldr = do
 
 convExtSimple
   :: (UserInfoM m, QErrM m)
-  => FieldInfoMap (FieldInfo 'Postgres)
-  -> SelPermInfo 'Postgres
+  => FieldInfoMap FieldInfo
+  -> SelPermInfo
   -> PGCol
-  -> m (ColumnInfo 'Postgres)
+  -> m PGColumnInfo
 convExtSimple fieldInfoMap selPermInfo pgCol = do
   checkSelOnCol selPermInfo pgCol
   askPGColInfo fieldInfoMap pgCol relWhenPGErr
@@ -259,18 +220,18 @@ convExtSimple fieldInfoMap selPermInfo pgCol = do
 
 convExtRel
   :: (UserInfoM m, QErrM m, CacheRM m, HasSQLGenCtx m)
-  => FieldInfoMap (FieldInfo 'Postgres)
+  => FieldInfoMap FieldInfo
   -> RelName
   -> Maybe RelName
-  -> SelectQExt 'Postgres
-  -> SessVarBldr 'Postgres m
+  -> SelectQExt
+  -> SessVarBldr m
   -> (PGColumnType -> Value -> m S.SQLExp)
-  -> m (Either (ObjectRelationSelect 'Postgres) (ArraySelect 'Postgres))
+  -> m (Either ObjectRelationSelect ArraySelect)
 convExtRel fieldInfoMap relName mAlias selQ sessVarBldr prepValBldr = do
   -- Point to the name key
   relInfo <- withPathK "name" $
     askRelType fieldInfoMap relName pgWhenRelErr
-  let (RelInfo _ relTy colMapping relTab _ _) = relInfo
+  let (RelInfo _ relTy colMapping relTab _) = relInfo
   (relCIM, relSPI) <- fetchRelDet relName relTab
   annSel <- convSelectQ relTab relCIM relSPI selQ sessVarBldr prepValBldr
   case relTy of
@@ -297,10 +258,10 @@ convExtRel fieldInfoMap relName mAlias selQ sessVarBldr prepValBldr = do
 
 convSelectQuery
   :: (UserInfoM m, QErrM m, CacheRM m, HasSQLGenCtx m)
-  => SessVarBldr 'Postgres m
-  -> (ColumnType 'Postgres -> Value -> m S.SQLExp)
+  => SessVarBldr m
+  -> (PGColumnType -> Value -> m S.SQLExp)
   -> SelectQuery
-  -> m (AnnSimpleSel  'Postgres)
+  -> m AnnSimpleSel
 convSelectQuery sessVarBldr prepArgBuilder (DMLQuery qt selQ) = do
   tabInfo     <- withPathK "table" $ askTabInfo qt
   selPermInfo <- askSelPermInfo tabInfo
@@ -309,20 +270,25 @@ convSelectQuery sessVarBldr prepArgBuilder (DMLQuery qt selQ) = do
   validateHeaders $ spiRequiredHeaders selPermInfo
   convSelectQ qt fieldInfo selPermInfo extSelQ sessVarBldr prepArgBuilder
 
-selectP2 :: JsonAggSelect -> (AnnSimpleSel 'Postgres, DS.Seq Q.PrepArg) -> Q.TxE QErr EncJSON
+selectP2 :: JsonAggSelect -> (AnnSimpleSel, DS.Seq Q.PrepArg) -> Q.TxE QErr EncJSON
 selectP2 jsonAggSelect (sel, p) =
   encJFromBS . runIdentity . Q.getRow
   <$> Q.rawQE dmlTxErrorHandler (Q.fromBuilder selectSQL) (toList p) True
   where
     selectSQL = toSQL $ mkSQLSelect jsonAggSelect sel
 
+asSingleRowJsonResp :: Q.Query -> [Q.PrepArg] -> Q.TxE QErr EncJSON
+asSingleRowJsonResp query args =
+  encJFromBS . runIdentity . Q.getRow
+  <$> Q.rawQE dmlTxErrorHandler query args True
+
 phaseOne
   :: (QErrM m, UserInfoM m, CacheRM m, HasSQLGenCtx m)
-  => SelectQuery -> m (AnnSimpleSel  'Postgres, DS.Seq Q.PrepArg)
+  => SelectQuery -> m (AnnSimpleSel, DS.Seq Q.PrepArg)
 phaseOne =
   runDMLP1T . convSelectQuery sessVarFromCurrentSetting binRHSBuilder
 
-phaseTwo :: (MonadTx m) => (AnnSimpleSel 'Postgres, DS.Seq Q.PrepArg) -> m EncJSON
+phaseTwo :: (MonadTx m) => (AnnSimpleSel, DS.Seq Q.PrepArg) -> m EncJSON
 phaseTwo =
   liftTx . selectP2 JASMultipleRows
 

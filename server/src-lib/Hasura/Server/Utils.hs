@@ -6,7 +6,6 @@ import           Control.Lens               ((^..))
 import           Data.Aeson
 import           Data.Aeson.Internal
 import           Data.Char
-import           Data.Text.Extended
 import           Language.Haskell.TH.Syntax (Lift, Q, TExp)
 import           System.Environment
 import           System.Exit
@@ -230,13 +229,13 @@ instance FromJSON APIVersion where
       2 -> return VIVersion2
       i -> fail $ "expected 1 or 2, encountered " ++ show i
 
-englishList :: Text -> NonEmpty Text -> Text
-englishList joiner = \case
+englishList :: NonEmpty Text -> Text
+englishList = \case
   one :| []    -> one
-  one :| [two] -> one <> " " <> joiner <> " " <> two
+  one :| [two] -> one <> " and " <> two
   several      ->
     let final :| initials = NE.reverse several
-    in commaSeparated (reverse initials) <> ", " <> joiner <> " " <> final
+    in T.intercalate ", " (reverse initials) <> ", and " <> final
 
 makeReasonMessage :: [a] -> (a -> Text) -> Text
 makeReasonMessage errors showError =

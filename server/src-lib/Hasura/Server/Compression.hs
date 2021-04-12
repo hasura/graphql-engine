@@ -18,7 +18,7 @@ data CompressionType
   = CTGZip
   deriving (Show, Eq)
 
-compressionTypeToTxt :: CompressionType -> Text
+compressionTypeToTxt :: CompressionType -> T.Text
 compressionTypeToTxt CTGZip   = "gzip"
 
 compressResponse
