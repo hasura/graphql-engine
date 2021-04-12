@@ -73,6 +73,7 @@ import           Data.Text.Extended
 import           Data.Text.NonEmpty
 import           Data.URL.Template
 
+
 import qualified Hasura.Backends.Postgres.SQL.Types as PG
 
 import           Hasura.EncJSON

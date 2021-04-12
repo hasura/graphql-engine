@@ -16,12 +16,14 @@ import           Data.Text.Extended
 data BackendType
   = Postgres
   | MSSQL
+  | BigQuery
   deriving (Eq, Ord, Bounded, Enum)
 
 -- | The name of the backend, as we expect it to appear in our metadata and API.
 instance ToTxt BackendType where
   toTxt Postgres = "postgres"
   toTxt MSSQL    = "mssql"
+  toTxt BigQuery = "bigquery"
 
 -- | The FromJSON instance uses this lookup mechanism to avoid having
 -- to duplicate and hardcode the backend string.

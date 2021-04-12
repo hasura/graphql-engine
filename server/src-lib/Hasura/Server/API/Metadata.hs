@@ -115,6 +115,28 @@ data RQLMetadataV1
   | RMMssqlDropDeletePermission !(DropPerm 'MSSQL (DelPerm 'MSSQL))
   | RMMssqlSetPermissionComment !(SetPermComment 'MSSQL)
 
+  -- BigQuery sources
+  | RMBigqueryAddSource !(AddSource 'BigQuery)
+  | RMBigqueryDropSource !DropSource
+  | RMBigqueryTrackTable !(TrackTableV2 'BigQuery)
+  | RMBigqueryUntrackTable !(UntrackTable 'BigQuery)
+  | RMBigqueryCreateObjectRelationship !(CreateObjRel 'BigQuery)
+  | RMBigqueryCreateArrayRelationship !(CreateArrRel 'BigQuery)
+  | RMBigqueryDropRelationship !(DropRel 'BigQuery)
+  | RMBigquerySetRelationshipComment !(SetRelComment 'BigQuery)
+  | RMBigqueryRenameRelationship !(RenameRel 'BigQuery)
+
+  | RMBigqueryCreateInsertPermission !(CreateInsPerm 'BigQuery)
+  | RMBigqueryCreateSelectPermission !(CreateSelPerm 'BigQuery)
+  | RMBigqueryCreateUpdatePermission !(CreateUpdPerm 'BigQuery)
+  | RMBigqueryCreateDeletePermission !(CreateDelPerm 'BigQuery)
+
+  | RMBigqueryDropInsertPermission !(DropPerm 'BigQuery (InsPerm 'BigQuery))
+  | RMBigqueryDropSelectPermission !(DropPerm 'BigQuery (SelPerm 'BigQuery))
+  | RMBigqueryDropUpdatePermission !(DropPerm 'BigQuery (UpdPerm 'BigQuery))
+  | RMBigqueryDropDeletePermission !(DropPerm 'BigQuery (DelPerm 'BigQuery))
+  | RMBigquerySetPermissionComment !(SetPermComment 'BigQuery)
+
   -- Inconsistent metadata
   | RMGetInconsistentMetadata !GetInconsistentMetadata
   | RMDropInconsistentMetadata !DropInconsistentMetadata
@@ -389,6 +411,28 @@ runMetadataQueryV1M env currentResourceVersion = \case
   RMPgDeleteEventTrigger q          -> runDeleteEventTriggerQuery q
   RMPgRedeliverEvent     q          -> runRedeliverEvent q
   RMPgInvokeEventTrigger q          -> runInvokeEventTrigger q
+
+  RMBigqueryAddSource q             -> runAddSource q
+  RMBigqueryDropSource q            -> runDropSource q
+  RMBigqueryTrackTable q            -> runTrackTableV2Q q
+  RMBigqueryUntrackTable q          -> runUntrackTableQ q
+
+  RMBigqueryCreateObjectRelationship q -> runCreateRelationship ObjRel q
+  RMBigqueryCreateArrayRelationship q  -> runCreateRelationship ArrRel q
+  RMBigqueryDropRelationship q         -> runDropRel q
+  RMBigquerySetRelationshipComment q   -> runSetRelComment q
+  RMBigqueryRenameRelationship q       -> runRenameRel q
+
+  RMBigqueryCreateInsertPermission q   -> runCreatePerm q
+  RMBigqueryCreateSelectPermission q   -> runCreatePerm q
+  RMBigqueryCreateUpdatePermission q   -> runCreatePerm q
+  RMBigqueryCreateDeletePermission q   -> runCreatePerm q
+
+  RMBigqueryDropInsertPermission q     -> runDropPerm q
+  RMBigqueryDropSelectPermission q     -> runDropPerm q
+  RMBigqueryDropUpdatePermission q     -> runDropPerm q
+  RMBigqueryDropDeletePermission q     -> runDropPerm q
+  RMBigquerySetPermissionComment q     -> runSetPermComment q
 
   RMMssqlAddSource q                -> runAddSource q
   RMMssqlDropSource q               -> runDropSource q

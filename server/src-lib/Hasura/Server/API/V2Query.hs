@@ -27,6 +27,7 @@ import           Hasura.Server.Version            (HasVersion)
 import           Hasura.Session
 
 import qualified Hasura.Backends.MSSQL.DDL.RunSQL as MSSQL
+import qualified Hasura.Backends.BigQuery.DDL.RunSQL as BigQuery
 import qualified Hasura.Tracing                   as Tracing
 
 data RQLQuery
@@ -37,6 +38,8 @@ data RQLQuery
   | RQCount  !CountQuery
   | RQRunSql !RunSQL
   | RQMssqlRunSql !MSSQL.MSSQLRunSQL
+  | RQBigqueryRunSql !BigQuery.BigQueryRunSQL
+  | RQBigqueryDatabaseInspection !BigQuery.BigQueryRunSQL
   | RQBulk ![RQLQuery]
   deriving (Show)
 
@@ -120,4 +123,6 @@ runQueryM env = \case
   RQCount  q      -> runCount q
   RQRunSql q      -> runRunSQL q
   RQMssqlRunSql q -> MSSQL.runSQL q
+  RQBigqueryRunSql q -> BigQuery.runSQL q
+  RQBigqueryDatabaseInspection q -> BigQuery.runDatabaseInspection q
   RQBulk   l      -> encJFromList <$> indexedMapM (runQueryM env) l

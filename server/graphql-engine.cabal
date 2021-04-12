@@ -112,10 +112,12 @@ library
                      , deepseq
                      , dependent-map >=0.4 && <0.5
                      , exceptions
+                     , safe-exceptions
                      , fast-logger
                      , hashable
                      , http-client-tls
                      , http-types
+                     , http-conduit
                      , kan-extensions
                      , lifted-base
                      , monad-control
@@ -142,6 +144,7 @@ library
                      , unordered-containers >= 0.2.12
                      , validation
                      , vector
+                     , vector-instances
                      , wai
 
                      -- Encoder related
@@ -260,6 +263,10 @@ library
                      , odbc
                      , resource-pool
 
+                     -- bigquery support
+                     , memory
+                     , x509-store
+
   if !flag(profiling)
     build-depends:
       -- 0.6.1 is supposedly not okay for ghc 8.6:
@@ -290,6 +297,25 @@ library
                      , Data.URL.Template
                      , Hasura.App
                      , Hasura.Metadata.Class
+
+                     , Hasura.Backends.BigQuery.Connection
+                     , Hasura.Backends.BigQuery.DataLoader.Execute
+                     , Hasura.Backends.BigQuery.DataLoader.Plan
+                     , Hasura.Backends.BigQuery.DDL
+                     , Hasura.Backends.BigQuery.DDL.BoolExp
+                     , Hasura.Backends.BigQuery.DDL.RunSQL
+                     , Hasura.Backends.BigQuery.DDL.Source
+                     , Hasura.Backends.BigQuery.FromIr
+                     , Hasura.Backends.BigQuery.Instances.Execute
+                     , Hasura.Backends.BigQuery.Instances.Schema
+                     , Hasura.Backends.BigQuery.Instances.Transport
+                     , Hasura.Backends.BigQuery.Instances.Types
+                     , Hasura.Backends.BigQuery.Instances.Metadata
+                     , Hasura.Backends.BigQuery.Meta
+                     , Hasura.Backends.BigQuery.Plan
+                     , Hasura.Backends.BigQuery.Source
+                     , Hasura.Backends.BigQuery.ToQuery
+                     , Hasura.Backends.BigQuery.Types
 
                      , Hasura.Backends.Postgres.Connection
                      , Hasura.Backends.Postgres.DDL

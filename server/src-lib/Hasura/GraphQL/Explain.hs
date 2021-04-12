@@ -15,6 +15,7 @@ import qualified Language.GraphQL.Draft.Syntax               as G
 
 import           Control.Monad.Trans.Control                 (MonadBaseControl)
 import           Data.Text.Extended
+import qualified Data.Text                                   as T
 
 import qualified Hasura.Backends.Postgres.Execute.RemoteJoin as RR
 import qualified Hasura.Backends.Postgres.SQL.DML            as S
@@ -27,6 +28,8 @@ import qualified Hasura.GraphQL.Execute.Query                as E
 import qualified Hasura.GraphQL.Execute.RemoteJoin           as RR
 import qualified Hasura.GraphQL.Transport.HTTP.Protocol      as GH
 import qualified Hasura.SQL.AnyBackend                       as AB
+import qualified Hasura.Backends.BigQuery.DataLoader.Plan    as BigQuery
+import qualified Hasura.Backends.BigQuery.Plan               as BigQuery
 
 import           Hasura.Backends.Postgres.SQL.Value
 import           Hasura.Backends.Postgres.Translate.Column   (toTxtValue)
@@ -95,7 +98,7 @@ explainQueryField userInfo fieldName rootField = do
     RFRemote _ -> throw400 InvalidParams "only hasura queries can be explained"
     RFAction _ -> throw400 InvalidParams "query actions cannot be explained"
     RFRaw _    -> pure $ Just $ FieldPlan fieldName Nothing Nothing
-    RFDB _ exists -> runMaybeT $ do
+    RFDB _ exists -> dispatch [do
       -- TEMPORARY!!!
       -- We don't handle non-Postgres backends yet: for now, we filter root fields to only keep those
       -- that are targeting postgres, and we *silently* discard all the others. This is fine for now, as
@@ -120,6 +123,23 @@ explainQueryField userInfo fieldName rootField = do
                      liftTx $ map runIdentity <$>
                      Q.listQE dmlTxErrorHandler (Q.fromText withExplain) () True
         pure $ FieldPlan fieldName (Just textSQL) $ Just planLines
+        ,do
+      -- BigQuery case
+      SourceConfigWith _ (QDBR bqQDB) <-
+        hoistMaybe $ AB.unpackAnyBackend exists
+      lift $ do
+        actionsForest <- BigQuery.planToForest userInfo bqQDB
+        pure $
+          FieldPlan
+            fieldName
+            (Just ("--\n" <> BigQuery.drawActionsForestSQL actionsForest))
+            (Just ("": T.lines (BigQuery.drawActionsForest actionsForest)))]
+  where dispatch [] = pure Nothing
+        dispatch (x:xs) = do
+          mv <- runMaybeT x
+          case mv of
+            Nothing -> dispatch xs
+            Just v  -> pure (Just v)
 
 -- NOTE: This function has a 'MonadTrace' constraint in master, but we don't need it
 -- here. We should evaluate if we need it here.

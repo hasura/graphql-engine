@@ -71,6 +71,7 @@ data Code
   | PostgresMaxConnectionsError
   | MSSQLError
   | DatabaseConnectionTimeout
+  | BigQueryError
   | NotSupported
   | DependencyError
   | InvalidHeaders
@@ -158,6 +159,7 @@ instance Show Code where
     InvalidCustomTypes          -> "invalid-custom-types"
     MethodNotAllowed            -> "method-not-allowed"
     Conflict                    -> "conflict"
+    BigQueryError               -> "bigquery-error"
     ActionWebhookCode t         -> T.unpack t
     CustomCode t                -> T.unpack t
 
