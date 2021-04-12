@@ -330,10 +330,6 @@ func (m *Migrate) GetUnappliedMigrations(version uint64) []uint64 {
 	return m.sourceDrv.GetUnappliedMigrations(version)
 }
 
-func (m *Migrate) GetIntroSpectionSchema() (interface{}, error) {
-	return m.databaseDrv.GetIntroSpectionSchema()
-}
-
 func (m *Migrate) ExportSchemaDump(schemName []string, sourceName string, sourceKind hasura.SourceKind) ([]byte, error) {
 	return m.databaseDrv.ExportSchemaDump(schemName, sourceName, sourceKind)
 }

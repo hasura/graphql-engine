@@ -1,6 +1,9 @@
 package types
 
-import "gopkg.in/yaml.v2"
+import (
+	"github.com/hasura/graphql-engine/cli/internal/hasura"
+	"gopkg.in/yaml.v2"
+)
 
 // CodegenExecutionConfig represents the config required to generate codegen for an action.
 type CodegenExecutionConfig struct {
@@ -95,9 +98,9 @@ type CustomTypeDef struct {
 
 // DerivePayload defines the object required to derive operation
 type DerivePayload struct {
-	IntrospectionSchema interface{} `json:"introspection_schema" yaml:"introspection_schema,omitempty"`
-	Operation           string      `json:"operation" yaml:"operation,omitempty"`
-	ActionName          string      `json:"action_name" yaml:"action_name,omitempty"`
+	IntrospectionSchema hasura.IntrospectionSchema `json:"introspection_schema" yaml:"introspection_schema,omitempty"`
+	Operation           string                     `json:"operation" yaml:"operation,omitempty"`
+	ActionName          string                     `json:"action_name" yaml:"action_name,omitempty"`
 }
 
 type SDLPayload struct {

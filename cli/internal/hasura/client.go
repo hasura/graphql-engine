@@ -13,6 +13,7 @@ type Client struct {
 	V1Query    V1Query
 	V2Query    V2Query
 	PGDump     PGDump
+	V1Graphql  V1Graphql
 }
 
 type V1Query interface {
@@ -48,6 +49,10 @@ type V2Query interface {
 	Bulk([]RequestBody) (io.Reader, error)
 }
 
+type IntrospectionSchema interface{}
+type V1Graphql interface {
+	GetIntrospectionSchema() (IntrospectionSchema, error)
+}
 type RequestBody struct {
 	Type    string      `json:"type"`
 	Version uint        `json:"version,omitempty"`

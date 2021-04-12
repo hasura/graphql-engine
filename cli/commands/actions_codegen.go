@@ -4,10 +4,6 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/hasura/graphql-engine/cli/internal/hasura"
-
-	"github.com/hasura/graphql-engine/cli/migrate"
-
 	"github.com/hasura/graphql-engine/cli"
 	"github.com/hasura/graphql-engine/cli/internal/metadataobject/actions"
 	"github.com/hasura/graphql-engine/cli/internal/metadataobject/actions/types"
@@ -52,16 +48,11 @@ type actionsCodegenOptions struct {
 }
 
 func (o *actionsCodegenOptions) run() (err error) {
-	migrateDrv, err := migrate.NewMigrate(o.EC, true, "", hasura.SourceKindPG)
-	if err != nil {
-		return err
-	}
-
 	var derivePayload types.DerivePayload
 	if o.deriveFrom != "" {
 		derivePayload.Operation = strings.TrimSpace(o.deriveFrom)
 		o.EC.Spin("Deriving a Hasura operation...")
-		introSchema, err := migrateDrv.GetIntroSpectionSchema()
+		introSchema, err := o.EC.APIClient.V1Graphql.GetIntrospectionSchema()
 		if err != nil {
 			return errors.Wrap(err, "unable to fetch introspection schema")
 		}

@@ -113,8 +113,6 @@ type Driver interface {
 
 	MetadataDriver
 
-	GraphQLDriver
-
 	SchemaDriver
 
 	SettingsDriver

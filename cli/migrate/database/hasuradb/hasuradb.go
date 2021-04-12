@@ -400,25 +400,6 @@ func (h *HasuraDB) Drop() error {
 	return nil
 }
 
-func (h *HasuraDB) sendv1GraphQL(query interface{}) (resp *http.Response, body []byte, err error) {
-	request := h.config.Req.Clone()
-	request = request.Post(h.config.graphqlURL.String()).Send(query)
-
-	for headerName, headerValue := range h.config.Headers {
-		request.Set(headerName, headerValue)
-	}
-
-	resp, body, errs := request.EndBytes()
-
-	if len(errs) == 0 {
-		err = nil
-	} else {
-		err = errs[0]
-	}
-
-	return resp, body, err
-}
-
 func (h *HasuraDB) sendSchemaDumpQuery(m interface{}) (resp *http.Response, body []byte, err error) {
 	request := h.config.Req.Clone()
 
