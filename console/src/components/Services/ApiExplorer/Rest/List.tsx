@@ -70,78 +70,79 @@ const ListComponent: React.FC<Props> = ({
         </div>
       </div>
       <hr />
-      <>
-        {restEndpoints.map(endpoint => (
-          <>
-            <div className={styles.rest_list_item_style}>
-              <div className={styles.rest_list_left_content}>
-                <div className={styles.rest_list_header}>
-                  <Link
-                    to={{
-                      pathname: `/api/rest/details/${endpoint.name}`,
-                      state: {
-                        ...endpoint,
-                        currentQuery: findQuery(endpoint.name),
-                      },
-                    }}
+      {restEndpoints.map(endpoint => (
+        <>
+          <div
+            className={styles.rest_list_item_style}
+            key={`rest_list_endpoint_${endpoint.name}`}
+          >
+            <div className={styles.rest_list_left_content}>
+              <div className={styles.rest_list_header}>
+                <Link
+                  to={{
+                    pathname: `/api/rest/details/${endpoint.name}`,
+                    state: {
+                      ...endpoint,
+                      currentQuery: findQuery(endpoint.name),
+                    },
+                  }}
+                >
+                  <h4
+                    className={`${styles.subheading_text_no_padd} ${styles.display_inline}`}
                   >
-                    <h4
-                      className={`${styles.subheading_text_no_padd} ${styles.display_inline}`}
-                    >
-                      {endpoint.name}
-                    </h4>
-                  </Link>
-                  {badgeSort(endpoint.methods).map(method => (
-                    <span
-                      className={styles.padd_small_left}
-                      key={`badge-list-${method}`}
-                    >
-                      <Badge type={`rest-${method}`} />
-                    </span>
-                  ))}
-                </div>
-                <URLPreview urlInput={endpoint.url} />
-                {endpoint.comment && <p>{endpoint.comment}</p>}
-                <CollapsibleToggle title="GraphQL Request" useDefaultTitleStyle>
-                  <AceEditor
-                    name="query-viewer"
-                    value={findQuery(endpoint.name)}
-                    placeholder="query SampleQuery {}"
-                    height="300px"
-                    mode="graphqlschema"
-                    readOnly
-                  />
-                </CollapsibleToggle>
+                    {endpoint.name}
+                  </h4>
+                </Link>
+                {badgeSort(endpoint.methods).map(method => (
+                  <span
+                    className={styles.padd_small_left}
+                    key={`badge-list-${method}`}
+                  >
+                    <Badge type={`rest-${method}`} />
+                  </span>
+                ))}
               </div>
-              <div className={styles.rest_list_right_content}>
-                <div className={styles.rest_list_action_btns}>
-                  <Button
-                    size="sm"
-                    onClick={onClickDelete(
-                      endpoint.name,
-                      findQuery(endpoint.name)
-                    )}
-                    color="white"
-                    style={{ marginRight: '4px' }}
-                  >
-                    <i className="fa fa-times" style={{ marginRight: '4px' }} />
-                    Delete
-                  </Button>
-                  <Button
-                    size="sm"
-                    onClick={onClickEdit(endpoint.name)}
-                    color="white"
-                  >
-                    <i className="fa fa-edit" style={{ marginRight: '4px' }} />
-                    Edit
-                  </Button>
-                </div>
+              <URLPreview urlInput={endpoint.url} />
+              {endpoint.comment && <p>{endpoint.comment}</p>}
+              <CollapsibleToggle title="GraphQL Request" useDefaultTitleStyle>
+                <AceEditor
+                  name="query-viewer"
+                  value={findQuery(endpoint.name)}
+                  placeholder="query SampleQuery {}"
+                  height="300px"
+                  mode="graphqlschema"
+                  readOnly
+                />
+              </CollapsibleToggle>
+            </div>
+            <div className={styles.rest_list_right_content}>
+              <div className={styles.rest_list_action_btns}>
+                <Button
+                  size="sm"
+                  onClick={onClickDelete(
+                    endpoint.name,
+                    findQuery(endpoint.name)
+                  )}
+                  color="white"
+                  style={{ marginRight: '4px' }}
+                >
+                  <i className="fa fa-times" style={{ marginRight: '4px' }} />
+                  Delete
+                </Button>
+                <Button
+                  size="sm"
+                  onClick={onClickEdit(endpoint.name)}
+                  color="white"
+                >
+                  <i className="fa fa-edit" style={{ marginRight: '4px' }} />
+                  Edit
+                </Button>
               </div>
             </div>
-            <hr />
-          </>
-        ))}
-      </>
+          </div>
+          <hr />
+        </>
+      ))}
     </div>
   );
 };

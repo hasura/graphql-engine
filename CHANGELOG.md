@@ -40,6 +40,7 @@ In the future, we will probably offer a way to explicitly choose which behaviour
 - server: support for bigquery datasets
 - console: add custom_column_names to track_table request with replaced invalid characters (#992)
 - console: add details button to the success notification to see inserted row
+- console: add request preview for REST endpoints
 
 ## v2.0.0-alpha.7
 
