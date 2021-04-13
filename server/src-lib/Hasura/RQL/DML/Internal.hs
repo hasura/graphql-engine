@@ -253,13 +253,31 @@ sessVarFromCurrentSetting pgType sessVar =
 
 sessVarFromCurrentSetting' :: CollectableType PGScalarType -> SessionVariable -> S.SQLExp
 sessVarFromCurrentSetting' ty sessVar =
-  flip S.SETyAnn (S.mkTypeAnn ty) $
+  withTypeAnn ty $ fromCurrentSession currentSession sessVar
+
+withTypeAnn :: CollectableType PGScalarType -> S.SQLExp -> S.SQLExp
+withTypeAnn ty sessVarVal = flip S.SETyAnn (S.mkTypeAnn ty) $
   case ty of
     CollectableTypeScalar baseTy -> withConstructorFn baseTy sessVarVal
     CollectableTypeArray _       -> sessVarVal
-  where
-    sessVarVal = S.SEOpApp (S.SQLOp "->>")
-                 [currentSession, S.SELit $ sessionVariableToText sessVar]
+
+retrieveAndFlagSessionVariableValue
+  :: (MonadState s m)
+  => (SessionVariable -> s -> s)
+  -> SessionVariable
+  -> S.SQLExp
+  -> m S.SQLExp
+retrieveAndFlagSessionVariableValue updateState sessVar currentSessionExp = do
+  modify $ updateState sessVar
+  pure $ fromCurrentSession currentSessionExp sessVar
+
+fromCurrentSession
+  :: S.SQLExp
+  -> SessionVariable
+  -> S.SQLExp
+fromCurrentSession currentSessionExp sessVar =
+  S.SEOpApp (S.SQLOp "->>")
+    [currentSessionExp, S.SELit $ sessionVariableToText sessVar]
 
 currentSession :: S.SQLExp
 currentSession = S.SEUnsafe "current_setting('hasura.user')::json"

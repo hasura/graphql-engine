@@ -98,6 +98,7 @@ module Hasura.GraphQL.Execute.LiveQuery.Plan
   , ValidatedQueryVariables
   , ValidatedSyntheticVariables
   , LiveQueryPlan(..)
+  , LiveQueryPlanExplanation(..)
   , ParameterizedLiveQueryPlan(..)
   ) where
 
@@ -265,3 +266,11 @@ data ParameterizedLiveQueryPlan (b :: BackendType) q
   , _plqpQuery :: !q
   } deriving (Show)
 $(J.deriveToJSON hasuraJSON ''ParameterizedLiveQueryPlan)
+
+data LiveQueryPlanExplanation
+  = LiveQueryPlanExplanation
+  { _lqpeSql       :: !Text
+  , _lqpePlan      :: ![Text]
+  , _lqpeVariables :: !CohortVariables
+  } deriving (Show)
+$(J.deriveToJSON hasuraJSON ''LiveQueryPlanExplanation)

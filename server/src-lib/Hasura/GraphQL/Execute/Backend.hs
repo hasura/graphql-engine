@@ -5,11 +5,13 @@ module Hasura.GraphQL.Execute.Backend where
 import           Hasura.Prelude
 
 import qualified Data.Aeson                             as J
+import qualified Data.Aeson.Casing                      as J
 import qualified Data.Environment                       as Env
 import qualified Language.GraphQL.Draft.Syntax          as G
 import qualified Network.HTTP.Client                    as HTTP
 import qualified Network.HTTP.Types                     as HTTP
 
+import           Control.Monad.Trans.Control            (MonadBaseControl)
 import           Data.Kind                              (Type)
 import           Data.Text.Extended
 
@@ -85,6 +87,23 @@ class ( Backend b
     -> SourceConfig b
     -> InsOrdHashMap G.Name (QueryDB b (UnpreparedValue b))
     -> m (LiveQueryPlan b (MultiplexedQuery b))
+  mkDBQueryExplain
+    :: forall m
+     . ( MonadError QErr m
+       )
+    => G.Name
+    -> UserInfo
+    -> SourceName
+    -> SourceConfig b
+    -> QueryDB b (UnpreparedValue b)
+    -> m (AB.AnyBackend DBStepInfo)
+  mkLiveQueryExplain
+    :: ( MonadError QErr m
+      , MonadIO m
+      , MonadBaseControl IO m
+      )
+    => LiveQueryPlan b (MultiplexedQuery b)
+    -> m LiveQueryPlanExplanation
 
 data DBStepInfo b = DBStepInfo
   { dbsiSourceName    :: SourceName
@@ -92,6 +111,22 @@ data DBStepInfo b = DBStepInfo
   , dbsiPreparedQuery :: Maybe (PreparedQuery b)
   , dbsiAction        :: ExecutionMonad b EncJSON
   }
+
+
+-- | The result of an explain query: for a given root field (denoted by its name): the generated SQL
+-- query, and the detailed explanation obtained from the database (if any). We mostly use this type
+-- as an intermediary step, and immediately tranform any value we obtain into an equivalent JSON
+-- representation.
+data ExplainPlan
+  = ExplainPlan
+  { _fpField :: !G.Name
+  , _fpSql   :: !(Maybe Text)
+  , _fpPlan  :: !(Maybe [Text])
+  } deriving (Show, Eq, Generic)
+
+instance J.ToJSON ExplainPlan where
+  toJSON = J.genericToJSON $ J.aesonPrefix J.camelCase
+
 
 -- | One execution step to processing a GraphQL query (e.g. one root field).
 data ExecutionStep where

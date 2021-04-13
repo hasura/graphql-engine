@@ -37,6 +37,7 @@ instance BackendTransport 'Postgres where
   runDBQuery = runPGQuery
   runDBMutation = runPGMutation
   runDBSubscription = runPGSubscription
+  runDBQueryExplain = runPGQueryExplain
 
 runPGQuery
   :: ( MonadIO m
@@ -54,7 +55,7 @@ runPGQuery
   -> Maybe EQ.PreparedSql
   -> m (DiffTime, EncJSON)
   -- ^ Also return the time spent in the PG query; for telemetry.
-runPGQuery reqId query fieldName _userInfo logger sourceConfig tx genSql =  do
+runPGQuery reqId query fieldName _userInfo logger sourceConfig tx genSql = do
   -- log the generated SQL and the graphql query
   logQueryLog logger $ mkQueryLog query fieldName genSql reqId
   withElapsedTime $ trace ("Postgres Query for root field " <>> fieldName) $
@@ -100,6 +101,20 @@ runPGSubscription sourceConfig query variables = withElapsedTime
   $ runExceptT
   $ runQueryTx (_pscExecCtx sourceConfig)
   $ PGL.executeMultiplexedQuery query variables
+
+runPGQueryExplain
+  :: forall m
+   . ( MonadIO m
+     , MonadError QErr m
+     )
+  => DBStepInfo 'Postgres
+  -> m EncJSON
+runPGQueryExplain (DBStepInfo _ sourceConfig _ action) =
+  -- All Postgres transport functions use the same monad stack: the ExecutionMonad defined in the
+  -- matching instance of BackendExecute. However, Explain doesn't need tracing! Rather than
+  -- introducing a separate "ExplainMonad", we simply use @runTraceTWithReporter@ to remove the
+  -- TraceT.
+  runQueryTx (_pscExecCtx sourceConfig) $ runTraceTWithReporter noReporter "explain" $ action
 
 
 mkQueryLog

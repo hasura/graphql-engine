@@ -36,7 +36,8 @@ instance BackendExecute 'MSSQL where
   mkDBQueryPlan = msDBQueryPlan
   mkDBMutationPlan = msDBMutationPlan
   mkDBSubscriptionPlan = msDBSubscriptionPlan
-
+  mkDBQueryExplain = msDBQueryExplain
+  mkLiveQueryExplain = msDBLiveQueryExplain
 
 -- multiplexed query
 
@@ -70,6 +71,42 @@ msDBQueryPlan _env _manager _reqHeaders userInfo _directives sourceName sourceCo
     $ ExecStepDB []
     . AB.mkAnyBackend
     $ DBStepInfo sourceName sourceConfig (Just queryString) odbcQuery
+
+msDBQueryExplain
+  :: forall m
+    . ( MonadError QErr m
+      )
+  => G.Name
+  -> UserInfo
+  -> SourceName
+  -> SourceConfig 'MSSQL
+  -> QueryDB 'MSSQL (UnpreparedValue 'MSSQL)
+  -> m (AB.AnyBackend DBStepInfo)
+msDBQueryExplain fieldName userInfo sourceName sourceConfig qrf = do
+  select <- withExplain . fromSelect <$> planNoPlan userInfo qrf
+  let queryString = ODBC.renderQuery $ toQueryPretty select
+      pool        = _mscConnectionPool sourceConfig
+      -- TODO: execute `select` in separate batch
+      -- https://github.com/hasura/graphql-engine-mono/issues/1024
+      odbcQuery   = runJSONPathQuery pool (toQueryFlat select) <&> \explainInfo ->
+        encJFromJValue $ ExplainPlan fieldName (Just queryString) (Just [explainInfo])
+  pure
+    $ AB.mkAnyBackend
+    $ DBStepInfo sourceName sourceConfig Nothing odbcQuery
+
+msDBLiveQueryExplain
+  :: ( MonadError QErr m
+     , MonadIO m
+     )
+  => LiveQueryPlan 'MSSQL (MultiplexedQuery 'MSSQL) -> m LiveQueryPlanExplanation
+msDBLiveQueryExplain (LiveQueryPlan plan sourceConfig variables) = do
+  let NoMultiplex (_name, query) = _plqpQuery plan
+      select    = withExplain $ QueryPrinter query
+      pool      = _mscConnectionPool sourceConfig
+  -- TODO: execute `select` in separate batch
+  -- https://github.com/hasura/graphql-engine-mono/issues/1024
+  _explainInfo <- runJSONPathQuery pool (toQueryFlat select)
+  pure $ LiveQueryPlanExplanation (toTxt query) [] variables
 
 -- mutation
 

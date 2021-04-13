@@ -36,7 +36,8 @@ instance BackendExecute 'BigQuery where
   mkDBMutationPlan = msDBMutationPlan
   mkDBSubscriptionPlan _ _ _ _ =
     throwError $ RQL.internalError "Cannot currently perform subscriptions on BigQuery sources."
-
+  mkDBQueryExplain _ _ _ _ _ = throwError $ RQL.internalError "Cannot currently retrieve query execution plans on BigQuery sources."
+  mkLiveQueryExplain _ = throwError $ RQL.internalError "Cannot currently retrieve query execution plans on BigQuery sources."
 
 -- query
 

@@ -64,3 +64,10 @@ class BackendExecute b => BackendTransport (b :: BackendType) where
     -> [(CohortId, CohortVariables)]
     -- ^ WARNING: Postgres-specific, ignored by other backends
     -> m (DiffTime, Either QErr [(CohortId, B.ByteString)])
+  runDBQueryExplain
+    :: forall m
+     . ( MonadIO m
+       , MonadError QErr m
+       )
+    => DBStepInfo b
+    -> m EncJSON

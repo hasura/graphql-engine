@@ -7,6 +7,7 @@ module Hasura.GraphQL.Execute.Prepare
   , initPlanningSt
   , prepareWithPlan
   , prepareWithoutPlan
+  , resolveUnpreparedValue
   , validateSessionVariables
   , withUserVars
   ) where
@@ -31,9 +32,10 @@ import           Hasura.Backends.Postgres.Types.Column
 import           Hasura.GraphQL.Execute.Backend
 import           Hasura.GraphQL.Parser.Column
 import           Hasura.GraphQL.Parser.Schema
-import           Hasura.RQL.DML.Internal                   (currentSession)
+import           Hasura.RQL.DML.Internal                   (currentSession,
+                                                            retrieveAndFlagSessionVariableValue,
+                                                            withTypeAnn)
 import           Hasura.RQL.Types
-import           Hasura.SQL.Types
 import           Hasura.Session
 
 
@@ -65,9 +67,7 @@ prepareWithPlan = \case
 
   UVSessionVar ty sessVar -> do
     sessVarVal <- retrieveAndFlagSessionVariableValue insertSessionVariable sessVar currentSessionExp
-    pure $ flip S.SETyAnn (S.mkTypeAnn ty) $ case ty of
-      CollectableTypeScalar colTy -> withConstructorFn colTy sessVarVal
-      CollectableTypeArray _      -> sessVarVal
+    pure $ withTypeAnn ty sessVarVal
 
   UVLiteral sqlExp -> pure sqlExp
   UVSession        -> pure currentSessionExp
@@ -83,22 +83,21 @@ prepareWithoutPlan = \case
   UVSession               -> pure currentSession
   UVSessionVar ty sessVar -> do
     sessVarVal <- retrieveAndFlagSessionVariableValue Set.insert sessVar currentSession
-    -- TODO: this piece of code appears at least three times: twice here
-    -- and once in RQL.DML.Internal. Some de-duplication is in order.
-    pure $ flip S.SETyAnn (S.mkTypeAnn ty) $ case ty of
-      CollectableTypeScalar colTy -> withConstructorFn colTy sessVarVal
-      CollectableTypeArray _      -> sessVarVal
+    pure $ withTypeAnn ty sessVarVal
 
-retrieveAndFlagSessionVariableValue
-  :: (MonadState s m)
-  => (SessionVariable -> s -> s)
-  -> SessionVariable
-  -> S.SQLExp
-  -> m S.SQLExp
-retrieveAndFlagSessionVariableValue updateState sessVar currentSessionExp = do
-  modify $ updateState sessVar
-  pure $ S.SEOpApp (S.SQLOp "->>")
-    [currentSessionExp, S.SELit $ sessionVariableToText sessVar]
+resolveUnpreparedValue
+  :: (MonadError QErr m)
+  => UserInfo -> UnpreparedValue 'Postgres -> m S.SQLExp
+resolveUnpreparedValue userInfo = \case
+  UVParameter _ cv      -> pure $ toTxtValue cv
+  UVLiteral sqlExp      -> pure sqlExp
+  UVSession             -> pure $ sessionInfoJsonExp $ _uiSession userInfo
+  UVSessionVar ty sessionVariable -> do
+    let maybeSessionVariableValue =
+          getSessionVariableValue sessionVariable (_uiSession userInfo)
+    sessionVariableValue <- fmap S.SELit <$>
+      onNothing maybeSessionVariableValue $ throw400 UnexpectedPayload $ "missing required session variable for role " <> _uiRole userInfo <<> " : " <> sessionVariableToText sessionVariable
+    pure $ withTypeAnn ty sessionVariableValue
 
 withUserVars :: SessionVariables -> PrepArgMap -> PrepArgMap
 withUserVars usrVars list =

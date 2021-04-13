@@ -2,24 +2,26 @@
 
 module Hasura.Backends.BigQuery.Instances.Transport () where
 
-import qualified Data.Aeson as J
+import qualified Data.Aeson                                 as J
 import           Hasura.Backends.BigQuery.Instances.Execute ()
-import           Hasura.Backends.MSSQL.Instances.Execute ()
+import           Hasura.Backends.MSSQL.Instances.Execute    ()
 import           Hasura.EncJSON
-import           Hasura.GraphQL.Logging (MonadQueryLog (..), QueryLog(..), GeneratedQuery(..))
+import           Hasura.GraphQL.Logging                     (GeneratedQuery (..),
+                                                             MonadQueryLog (..), QueryLog (..))
 import           Hasura.GraphQL.Transport.Backend
 import           Hasura.GraphQL.Transport.HTTP.Protocol
-import qualified Hasura.Logging as L
+import qualified Hasura.Logging                             as L
 import           Hasura.Prelude
 import           Hasura.RQL.Types
-import           Hasura.Server.Types (RequestId)
+import           Hasura.Server.Types                        (RequestId)
 import           Hasura.Session
 import           Hasura.Tracing
-import qualified Hasura.Tracing as Tracing
-import qualified Language.GraphQL.Draft.Syntax as G
+import qualified Hasura.Tracing                             as Tracing
+import qualified Language.GraphQL.Draft.Syntax              as G
 
 instance BackendTransport 'BigQuery  where
   runDBQuery = runQuery
+  runDBQueryExplain = error "Not supported."
   runDBMutation = runMutation
   runDBSubscription = error "Not supported."
 

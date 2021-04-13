@@ -511,7 +511,6 @@ library
                      , Hasura.GraphQL.Execute.Inline
                      , Hasura.GraphQL.Execute.Insert
                      , Hasura.GraphQL.Execute.Instances
-                     , Hasura.GraphQL.Execute.LiveQuery.Explain
                      , Hasura.GraphQL.Execute.LiveQuery.Options
                      , Hasura.GraphQL.Execute.LiveQuery.Plan
                      , Hasura.GraphQL.Execute.LiveQuery.Poll

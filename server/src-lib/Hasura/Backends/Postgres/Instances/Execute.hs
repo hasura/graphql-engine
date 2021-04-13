@@ -4,9 +4,11 @@ module Hasura.Backends.Postgres.Instances.Execute () where
 
 import           Hasura.Prelude
 
+import qualified Control.Monad.Trans.Control                as MT
 import qualified Data.Environment                           as Env
 import qualified Data.HashSet                               as Set
 import qualified Data.Sequence                              as Seq
+import qualified Database.PG.Query                          as Q
 import qualified Language.GraphQL.Draft.Syntax              as G
 import qualified Network.HTTP.Client                        as HTTP
 import qualified Network.HTTP.Types                         as HTTP
@@ -30,6 +32,7 @@ import           Hasura.GraphQL.Execute.Insert
 import           Hasura.GraphQL.Execute.LiveQuery.Plan
 import           Hasura.GraphQL.Execute.Prepare
 import           Hasura.GraphQL.Parser
+import           Hasura.RQL.DML.Internal                    (dmlTxErrorHandler)
 import           Hasura.RQL.Types
 import           Hasura.Server.Version                      (HasVersion)
 import           Hasura.Session
@@ -44,6 +47,8 @@ instance BackendExecute 'Postgres where
   mkDBQueryPlan = pgDBQueryPlan
   mkDBMutationPlan = pgDBMutationPlan
   mkDBSubscriptionPlan = pgDBSubscriptionPlan
+  mkDBQueryExplain = pgDBQueryExplain
+  mkLiveQueryExplain = pgDBLiveQueryExplain
 
 
 -- query
@@ -71,6 +76,50 @@ pgDBQueryPlan env manager reqHeaders userInfo _directives sourceName sourceConfi
     . AB.mkAnyBackend
     $ DBStepInfo sourceName sourceConfig preparedSQL action
 
+pgDBQueryExplain
+  :: forall m
+    . ( MonadError QErr m
+      )
+  => G.Name
+  -> UserInfo
+  -> SourceName
+  -> SourceConfig 'Postgres
+  -> QueryDB 'Postgres (UnpreparedValue 'Postgres)
+  -> m (AB.AnyBackend DBStepInfo)
+pgDBQueryExplain fieldName userInfo sourceName sourceConfig qrf = do
+  preparedQuery <- traverseQueryDB (resolveUnpreparedValue userInfo) qrf
+  let PreparedSql querySQL _ remoteJoins = irToRootFieldPlan mempty preparedQuery
+      textSQL = Q.getQueryText querySQL
+      -- CAREFUL!: an `EXPLAIN ANALYZE` here would actually *execute* this
+      -- query, maybe resulting in privilege escalation:
+      withExplain = "EXPLAIN (FORMAT TEXT) " <> textSQL
+  -- Reject if query contains any remote joins
+  when (remoteJoins /= mempty) $
+    throw400 NotSupported "Remote relationships are not allowed in explain query"
+  let action = liftTx $
+        Q.listQE dmlTxErrorHandler (Q.fromText withExplain) () True <&> \planList ->
+          encJFromJValue $ ExplainPlan fieldName (Just textSQL) (Just $ map runIdentity planList)
+  pure
+    $ AB.mkAnyBackend
+    $ DBStepInfo sourceName sourceConfig Nothing action
+
+pgDBLiveQueryExplain
+  :: ( MonadError QErr m
+     , MonadIO m
+     , MT.MonadBaseControl IO m
+     )
+  => LiveQueryPlan 'Postgres (MultiplexedQuery 'Postgres) -> m LiveQueryPlanExplanation
+pgDBLiveQueryExplain plan = do
+  let parameterizedPlan = _lqpParameterizedPlan plan
+      pgExecCtx = _pscExecCtx $ _lqpSourceConfig plan
+      queryText = Q.getQueryText . PGL.unMultiplexedQuery $ _plqpQuery parameterizedPlan
+      -- CAREFUL!: an `EXPLAIN ANALYZE` here would actually *execute* this
+      -- query, maybe resulting in privilege escalation:
+      explainQuery = Q.fromText $ "EXPLAIN (FORMAT TEXT) " <> queryText
+  cohortId <- newCohortId
+  explanationLines <- liftEitherM $ runExceptT $ runLazyTx pgExecCtx Q.ReadOnly $
+                      map runIdentity <$> PGL.executeQuery explainQuery [(cohortId, _lqpVariables plan)]
+  pure $ LiveQueryPlanExplanation queryText explanationLines $ _lqpVariables plan
 
 -- mutation
 

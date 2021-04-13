@@ -173,7 +173,7 @@ executeMultiplexedQuery
   => MultiplexedQuery -> [(CohortId, CohortVariables)] -> m [(CohortId, B.ByteString)]
 executeMultiplexedQuery (MultiplexedQuery query) = executeQuery query
 
--- | Internal; used by both 'executeMultiplexedQuery' and 'explainLiveQueryPlan'.
+-- | Internal; used by both 'executeMultiplexedQuery' and 'pgDBLiveQueryExplain'.
 executeQuery
   :: (MonadTx m, Q.FromRow a)
   => Q.Query -> [(CohortId, CohortVariables)] -> m [a]
