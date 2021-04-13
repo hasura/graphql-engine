@@ -14,8 +14,6 @@ import {
   updateSchemaInfo,
   fetchFunctionInit,
   updateCurrentSchema,
-  UPDATE_CURRENT_DATA_SOURCE,
-  fetchDataInit,
 } from '../DataActions';
 import {
   autoAddRelName,
@@ -25,9 +23,7 @@ import { getRelDef } from '../TableRelationships/utils';
 import {
   getSchemaAddTableRoute,
   getSchemaPermissionsRoute,
-  manageDatabasesRoute,
 } from '../../../Common/utils/routesUtils';
-// import { createNewSchema, deleteCurrentSchema } from './Actions';
 import { createNewSchema, deleteCurrentSchema } from './Actions';
 import CollapsibleToggle from '../../../Common/CollapsibleToggle/CollapsibleToggle';
 import GqlCompatibilityWarning from '../../../Common/GqlCompatibilityWarning/GqlCompatibilityWarning';
@@ -35,7 +31,6 @@ import {
   getSchemaTables,
   getUntrackedTables,
   dataSource,
-  setDriver,
   currentDriver,
 } from '../../../../dataSources';
 import { isEmpty } from '../../../Common/utils/jsUtils';
@@ -44,12 +39,25 @@ import ToolTip from '../../../Common/Tooltip/Tooltip';
 import KnowMoreLink from '../../../Common/KnowMoreLink/KnowMoreLink';
 import RawSqlButton from '../Common/Components/RawSqlButton';
 import styles from '../../../Common/Common.scss';
-import {
-  getConsistentFunctions,
-  getDataSources,
-} from '../../../../metadata/selector';
+import { getConsistentFunctions } from '../../../../metadata/selector';
 import { RightContainer } from '../../../Common/Layout/RightContainer';
 import { TrackableFunctionsList } from './FunctionsList';
+import { getTrackableFunctions } from './utils';
+
+const FEATURES = {
+  UNTRACKED_TABLES: 'UNTRACKED_TABLES',
+  UNTRACKED_RELATIONS: 'UNTRACKED_RELATIONS',
+  UNTRACKED_FUNCTION: 'UNTRACKED_FUNCTION',
+  NON_TRACKABLE_FUNCTIONS: 'NON_TRACKABLE_FUNCTIONS',
+};
+
+const supportedFeaturesByDriver = {
+  postgres: Object.values(FEATURES),
+  mssql: [FEATURES.UNTRACKED_TABLES, FEATURES.UNTRACKED_RELATIONS],
+};
+
+const isAllowed = (driver, feature) =>
+  supportedFeaturesByDriver[driver].includes(feature);
 
 const DeleteSchemaButton = ({ dispatch, migrationMode, currentDataSource }) => {
   const successCb = () => {
@@ -69,7 +77,7 @@ const DeleteSchemaButton = ({ dispatch, migrationMode, currentDataSource }) => {
         title="Delete current schema"
         style={{ marginRight: '20px', maxHeight: '22px' }}
       >
-        Delete
+        Delete Schema
       </Button>
     )
   );
@@ -94,7 +102,7 @@ const OpenCreateSection = React.forwardRef(
         onClick={handleCreate}
         className={styles.add_mar_left_mid}
       >
-        Create
+        Create New Schema
       </Button>
       <Button
         color="white"
@@ -110,7 +118,7 @@ const OpenCreateSection = React.forwardRef(
 
 const ClosedCreateSection = ({ onClick }) => (
   <Button color="white" size="xs" onClick={onClick} title="Create new schema">
-    Create
+    Create New Schema
   </Button>
 );
 
@@ -152,14 +160,6 @@ const SchemaPermissionsButton = ({ schema, source }) => (
   >
     <Button color="white" size="xs">
       Show Permissions Summary
-    </Button>
-  </Link>
-);
-
-const ManageDatabasesButton = () => (
-  <Link to={manageDatabasesRoute} style={{ marginLeft: '20px' }}>
-    <Button color="white" size="sm">
-      Manage Databases
     </Button>
   </Link>
 );
@@ -219,35 +219,9 @@ class Schema extends Component {
     this.props.dispatch(createNewSchema(schemaName, successCb));
   };
 
-  onDataSourceChange = e => {
-    const value = e.target.value;
-    let newName;
-    let newDriver;
-    try {
-      [newName, newDriver] = JSON.parse(value);
-    } catch {
-      return;
-    }
-    setDriver(newDriver);
-    this.props.dispatch({
-      type: UPDATE_CURRENT_DATA_SOURCE,
-      source: newName,
-    });
-    this.props.dispatch(push(`/data/${newName}/schema/`));
-    this.setState({ loadingSchemas: true });
-    this.props.dispatch(fetchDataInit()).then(() => {
-      this.setState({ loadingSchemas: false });
-    });
-    this.props.dispatch({
-      type: UPDATE_CURRENT_DATA_SOURCE,
-      source: newName,
-    });
-  };
-
   render() {
     const {
       schema,
-      schemaList,
       migrationMode,
       readOnlyMode,
       untrackedRelations,
@@ -256,25 +230,8 @@ class Schema extends Component {
       functionsList,
       nonTrackableFunctions,
       trackedFunctions,
-      dataSources,
       currentDataSource,
     } = this.props;
-
-    const handleSchemaChange = e => {
-      dispatch(updateCurrentSchema(e.target.value, currentDataSource));
-    };
-
-    const _getTrackableFunctions = () => {
-      const trackedFuncNames = trackedFunctions.map(fn => fn.function_name);
-
-      // Assuming schema for both function and tables are same
-      // return function which are tracked
-      const filterCondition = func => {
-        return !trackedFuncNames.includes(func.function_name);
-      };
-
-      return functionsList.filter(filterCondition);
-    };
 
     const getSectionHeading = (headingText, tooltip, actionElement = null) => {
       return (
@@ -293,12 +250,15 @@ class Schema extends Component {
     const allUntrackedTables = getUntrackedTables(
       getSchemaTables(schema, currentSchema)
     );
-    const trackableFuncs = _getTrackableFunctions();
 
+    const trackableFuncs = getTrackableFunctions(
+      functionsList,
+      trackedFunctions
+    );
     const getCreateBtn = () => {
       let createBtn = null;
 
-      if (migrationMode) {
+      if (migrationMode && currentDriver === 'postgres') {
         const handleClick = e => {
           e.preventDefault();
 
@@ -324,51 +284,11 @@ class Schema extends Component {
     };
 
     const getCurrentSchemaSection = () => {
-      const getSchemaOptions = () => {
-        return (
-          !this.state.loadingSchemas &&
-          schemaList.map(s => <option key={s}>{s}</option>)
-        );
-      };
-
       return (
         <div className={styles.add_mar_top}>
-          <div>
-            <div className={styles.display_inline} style={{ width: '120px' }}>
-              Database
-            </div>
-            <div className={styles.display_inline}>
-              <select
-                onChange={this.onDataSourceChange}
-                className={`${styles.add_mar_left_mid} ${styles.width_auto} form-control`}
-                style={{ width: '200px' }}
-                value={JSON.stringify([currentDataSource, currentDriver])}
-              >
-                {dataSources.map(s => (
-                  <option
-                    key={s.name}
-                    value={JSON.stringify([s.name, s.driver])}
-                  >
-                    {s.name} ({s.driver})
-                  </option>
-                ))}
-              </select>
-            </div>
-            <ManageDatabasesButton />
-          </div>
           <div style={{ marginTop: '20px' }}>
             <div className={styles.display_inline} style={{ width: '120px' }}>
               Database Schema
-            </div>
-            <div className={styles.display_inline}>
-              <select
-                onChange={handleSchemaChange}
-                className={`${styles.add_mar_left_mid} ${styles.width_auto} form-control`}
-                value={currentSchema}
-                style={{ width: '200px' }}
-              >
-                {getSchemaOptions()}
-              </select>
             </div>
             <div className={`${styles.display_inline} ${styles.add_mar_left}`}>
               <div style={{ display: 'flex', alignItems: 'center' }}>
@@ -376,6 +296,7 @@ class Schema extends Component {
                   dispatch={dispatch}
                   migrationMode={migrationMode}
                   currentDataSource={currentDataSource}
+                  schemaList={this.props.schemaList}
                 />
                 <CreateSchemaSection
                   ref={this.schemaNameInputRef}
@@ -617,7 +538,7 @@ class Schema extends Component {
         'Untracked foreign-key relationships',
         'Relationships inferred via foreign-keys that are not exposed over the GraphQL API',
         <>
-          <KnowMoreLink href="https://hasura.io/docs/1.0/graphql/manual/schema/table-relationships/index.html" />
+          <KnowMoreLink href="https://hasura.io/docs/latest/graphql/core/schema/table-relationships/index.html" />
           <span className={styles.add_mar_left}>{getTrackAllBtn()}</span>
         </>
       );
@@ -634,11 +555,11 @@ class Schema extends Component {
       );
     };
 
-    const getUntrackedFunctionsSection = () => {
+    const getUntrackedFunctionsSection = isSupported => {
       const heading = getSectionHeading(
         'Untracked custom functions',
         'Custom functions that are not exposed over the GraphQL API',
-        <KnowMoreLink href="https://hasura.io/docs/1.0/graphql/manual/schema/custom-functions.html" />
+        <KnowMoreLink href="https://hasura.io/docs/latest/graphql/core/schema/custom-functions.html" />
       );
 
       return (
@@ -649,12 +570,18 @@ class Schema extends Component {
             testId={'toggle-trackable-functions'}
           >
             <div className={`${styles.padd_left_remove} col-xs-12`}>
-              <TrackableFunctionsList
-                dispatch={dispatch}
-                funcs={trackableFuncs}
-                readOnlyMode={readOnlyMode}
-                source={currentDataSource}
-              />
+              {isSupported ? (
+                <TrackableFunctionsList
+                  dispatch={dispatch}
+                  funcs={trackableFuncs}
+                  readOnlyMode={readOnlyMode}
+                  source={currentDataSource}
+                />
+              ) : (
+                `Currently unsupported for ${(
+                  currentDriver + ''
+                ).toUpperCase()}`
+              )}
             </div>
             <div className={styles.clear_fix} />
           </CollapsibleToggle>
@@ -731,7 +658,7 @@ class Schema extends Component {
             <Helmet title="Schema - Data | Hasura" />
             <div className={styles.display_flex}>
               <h2 className={`${styles.headerText} ${styles.display_inline}`}>
-                Schema
+                {currentSchema}
               </h2>
               {getCreateBtn()}
             </div>
@@ -740,8 +667,11 @@ class Schema extends Component {
             <hr />
             {getUntrackedTablesSection()}
             {getUntrackedRelationsSection()}
-            {getUntrackedFunctionsSection()}
-            {getNonTrackableFunctionsSection()}
+            {getUntrackedFunctionsSection(
+              isAllowed(currentDriver, FEATURES.NON_TRACKABLE_FUNCTIONS)
+            )}
+            {isAllowed(currentDriver, FEATURES.NON_TRACKABLE_FUNCTIONS) &&
+              getNonTrackableFunctionsSection()}
             <hr />
           </div>
         </div>
@@ -770,7 +700,6 @@ const mapStateToProps = state => ({
   trackedFunctions: getConsistentFunctions(state),
   serverVersion: state.main.serverVersion ? state.main.serverVersion : '',
   metadata: state.metadata.metadataObject,
-  dataSources: getDataSources(state),
   currentDataSource: state.tables.currentDataSource,
 });
 

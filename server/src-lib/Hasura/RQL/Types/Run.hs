@@ -24,10 +24,9 @@ import           Hasura.Session
 
 data RunCtx
   = RunCtx
-  { _rcUserInfo             :: !UserInfo
-  , _rcHttpMgr              :: !HTTP.Manager
-  , _rcSqlGenCtx            :: !SQLGenCtx
-  , _rcRemoteSchemaPermsCtx :: !RemoteSchemaPermsCtx
+  { _rcUserInfo        :: !UserInfo
+  , _rcHttpMgr         :: !HTTP.Manager
+  , _rcServerConfigCtx :: !ServerConfigCtx
   }
 
 newtype RunT m a
@@ -54,11 +53,8 @@ instance (Monad m) => UserInfoM (RunT m) where
 instance (Monad m) => HTTP.HasHttpManagerM (RunT m) where
   askHttpManager = asks _rcHttpMgr
 
-instance (Monad m) => HasSQLGenCtx (RunT m) where
-  askSQLGenCtx = asks _rcSqlGenCtx
-
-instance (Monad m) => HasRemoteSchemaPermsCtx (RunT m) where
-  askRemoteSchemaPermsCtx = asks _rcRemoteSchemaPermsCtx
+instance (Monad m) => HasServerConfigCtx (RunT m) where
+  askServerConfigCtx = asks _rcServerConfigCtx
 
 instance (MonadResolveSource m) => MonadResolveSource (RunT m) where
   getSourceResolver = RunT . lift . lift $ getSourceResolver

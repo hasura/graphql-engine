@@ -144,13 +144,17 @@ form {
   height: auto;
 }
 
+.max-width-250 {
+  max-width: 250px;
+}
+
 select.form-control {
   border-radius: 0;
   -webkit-border-radius: 0px;
+  font-family: 'Gudea', sans-serif;
 }
 
 .btn {
-  // border-radius: 0;
   outline: none;
 }
 

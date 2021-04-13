@@ -42,8 +42,8 @@ import           Data.Aeson.Types              (Parser, toJSONKeyText)
 import           Data.Text.Extended
 import           Data.Text.NonEmpty
 
+
 import           Hasura.Incremental            (Cacheable)
-import           Hasura.RQL.Types.Common       (adminText)
 import           Hasura.RQL.Types.Error
 import           Hasura.Server.Utils
 import           Hasura.Tracing                (TraceT)
@@ -54,17 +54,17 @@ newtype RoleName
   deriving ( Show, Eq, Ord, Hashable, FromJSONKey, ToJSONKey, FromJSON
            , ToJSON, Q.FromCol, Q.ToPrepArg, Generic, Arbitrary, NFData, Cacheable )
 
-instance ToTxt RoleName where
-  toTxt = roleNameToTxt
-
 roleNameToTxt :: RoleName -> Text
 roleNameToTxt = unNonEmptyText . getRoleTxt
+
+instance ToTxt RoleName where
+  toTxt = roleNameToTxt
 
 mkRoleName :: Text -> Maybe RoleName
 mkRoleName = fmap RoleName . mkNonEmptyText
 
 adminRoleName :: RoleName
-adminRoleName = RoleName adminText
+adminRoleName = RoleName $ mkNonEmptyTextUnsafe "admin"
 
 isAdmin :: RoleName -> Bool
 isAdmin = (adminRoleName ==)
@@ -205,14 +205,13 @@ mkUserInfo roleBuild userAdminSecret sessionVariables = do
   roleName <- case roleBuild of
     URBFromSessionVariables -> onNothing maybeSessionRole $
       throw400 InvalidParams $ userRoleHeader <> " not found in session variables"
-    URBFromSessionVariablesFallback role -> pure $ fromMaybe role maybeSessionRole
-    URBPreDetermined role -> pure role
+    URBFromSessionVariablesFallback roleName' -> pure $ fromMaybe roleName' maybeSessionRole
+    URBPreDetermined roleName' -> pure roleName'
   backendOnlyFieldAccess <- getBackendOnlyFieldAccess
   let modifiedSession = modifySessionVariables roleName sessionVariables
   pure $ UserInfo roleName modifiedSession backendOnlyFieldAccess
   where
     maybeSessionRole = maybeRoleFromSessionVariables sessionVariables
-
     -- | Add x-hasura-role header and remove admin secret headers
     modifySessionVariables :: RoleName -> SessionVariables -> SessionVariables
     modifySessionVariables roleName =

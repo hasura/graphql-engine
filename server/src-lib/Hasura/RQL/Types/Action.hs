@@ -31,6 +31,7 @@ module Hasura.RQL.Types.Action
   , aiOutputObject
   , aiDefinition
   , aiPermissions
+  , aiForwardedClientHeaders
   , aiComment
   , defaultActionTimeoutSecs
   , ActionPermissionInfo(..)
@@ -48,16 +49,22 @@ module Hasura.RQL.Types.Action
   , ActionSourceInfo(..)
   , getActionSourceInfo
   , AnnActionExecution(..)
+  , traverseAnnActionExecution
   , AnnActionMutationAsync(..)
   , ActionExecContext(..)
   , AsyncActionQueryFieldG(..)
   , AnnActionAsyncQuery(..)
+  , traverseAnnActionAsyncQuery
 
   , ActionId(..)
   , actionIdToText
   , ActionLogItem(..)
   , ActionLogResponse(..)
+  , ActionLogResponseMap
   , AsyncActionStatus(..)
+  , ActionsInfo(..)
+  , asiName
+  , asiForwardClientHeaders
   ) where
 
 
@@ -80,11 +87,12 @@ import           Data.Text.Extended
 import           Hasura.Incremental            (Cacheable)
 import           Hasura.RQL.DDL.Headers
 import           Hasura.RQL.IR.Select
+import           Hasura.RQL.Types.Backend
 import           Hasura.RQL.Types.Common
 import           Hasura.RQL.Types.CustomTypes
 import           Hasura.RQL.Types.Error
-import           Hasura.Session
 import           Hasura.SQL.Backend
+import           Hasura.Session
 
 
 newtype ActionName
@@ -194,19 +202,20 @@ type ActionPermissionMap = Map.HashMap RoleName ActionPermissionInfo
 
 type ActionOutputFields = Map.HashMap G.Name G.GType
 
-getActionOutputFields :: AnnotatedObjectType backend -> ActionOutputFields
+getActionOutputFields :: AnnotatedObjectType -> ActionOutputFields
 getActionOutputFields =
   Map.fromList . map ( (unObjectFieldName . _ofdName) &&& (fst . _ofdType)) . toList . _otdFields . _aotDefinition
 
-data ActionInfo (b :: BackendType)
+data ActionInfo
   = ActionInfo
-  { _aiName         :: !ActionName
-  , _aiOutputObject :: !(AnnotatedObjectType b)
-  , _aiDefinition   :: !ResolvedActionDefinition
-  , _aiPermissions  :: !ActionPermissionMap
-  , _aiComment      :: !(Maybe Text)
+  { _aiName                   :: !ActionName
+  , _aiOutputObject           :: !(G.GType, AnnotatedObjectType)
+  , _aiDefinition             :: !ResolvedActionDefinition
+  , _aiPermissions            :: !ActionPermissionMap
+  , _aiForwardedClientHeaders :: !Bool
+  , _aiComment                :: !(Maybe Text)
   } deriving (Generic)
-instance J.ToJSON (ActionInfo 'Postgres) where
+instance J.ToJSON ActionInfo where
   toJSON = J.genericToJSON hasuraJSON
 $(makeLenses ''ActionInfo)
 
@@ -227,6 +236,7 @@ data UpdateAction
   = UpdateAction
   { _uaName       :: !ActionName
   , _uaDefinition :: !ActionDefinitionInput
+  , _uaComment    :: !(Maybe Text)
   } deriving (Show, Eq)
 $(J.deriveJSON hasuraJSON ''UpdateAction)
 
@@ -279,10 +289,10 @@ instance J.FromJSON ActionMetadata where
 
 data ActionSourceInfo b
   = ASINoSource -- ^ No relationships defined on the action output object
-  | ASISource !(SourceConfig b) -- ^ All relationships refer to tables in one source
+  | ASISource !SourceName !(SourceConfig b) -- ^ All relationships refer to tables in one source
 
-getActionSourceInfo :: AnnotatedObjectType b -> ActionSourceInfo b
-getActionSourceInfo = maybe ASINoSource ASISource . _aotSource
+getActionSourceInfo :: AnnotatedObjectType -> ActionSourceInfo 'Postgres
+getActionSourceInfo = maybe ASINoSource (uncurry ASISource) . _aotSource
 
 data AnnActionExecution (b :: BackendType) v
   = AnnActionExecution
@@ -301,10 +311,19 @@ data AnnActionExecution (b :: BackendType) v
   , _aaeSource               :: !(ActionSourceInfo b)
   }
 
+traverseAnnActionExecution
+  :: (Applicative f, Backend backend)
+  => (a -> f b)
+  -> AnnActionExecution backend a
+  -> f (AnnActionExecution backend b)
+traverseAnnActionExecution f (AnnActionExecution n ot fs p oF dl w h fch sn to s) =
+  traverse (traverse $ traverseAnnField f) fs <&> \tfs -> AnnActionExecution n ot tfs p oF dl w h fch sn to s
+
 data AnnActionMutationAsync
   = AnnActionMutationAsync
-  { _aamaName    :: !ActionName
-  , _aamaPayload :: !J.Value -- ^ jsonified input arguments
+  { _aamaName                 :: !ActionName
+  , _aamaForwardClientHeaders :: !Bool
+  , _aamaPayload              :: !J.Value -- ^ jsonified input arguments
   } deriving (Show, Eq)
 
 data AsyncActionQueryFieldG (b :: BackendType) v
@@ -314,18 +333,39 @@ data AsyncActionQueryFieldG (b :: BackendType) v
   | AsyncCreatedAt
   | AsyncErrors
 
+traverseAsyncActionQueryField
+  :: (Applicative f, Backend backend)
+  => (a -> f b)
+  -> AsyncActionQueryFieldG backend a
+  -> f (AsyncActionQueryFieldG backend b)
+traverseAsyncActionQueryField f = \case
+  AsyncTypename t    -> pure $ AsyncTypename t
+  AsyncOutput fields -> AsyncOutput <$> traverse (traverse $ traverseAnnField f) fields
+  AsyncId            -> pure AsyncId
+  AsyncCreatedAt     -> pure AsyncCreatedAt
+  AsyncErrors        -> pure AsyncErrors
+
 type AsyncActionQueryFieldsG b v = Fields (AsyncActionQueryFieldG b v)
 
 data AnnActionAsyncQuery (b :: BackendType) v
   = AnnActionAsyncQuery
-  { _aaaqName           :: !ActionName
-  , _aaaqActionId       :: !ActionId
-  , _aaaqOutputType     :: !GraphQLType
-  , _aaaqFields         :: !(AsyncActionQueryFieldsG b v)
-  , _aaaqDefinitionList :: ![(Column b, ScalarType b)]
-  , _aaaqStringifyNum   :: !Bool
-  , _aaaqSource         :: !(ActionSourceInfo b)
+  { _aaaqName                 :: !ActionName
+  , _aaaqActionId             :: !ActionId
+  , _aaaqOutputType           :: !GraphQLType
+  , _aaaqFields               :: !(AsyncActionQueryFieldsG b v)
+  , _aaaqDefinitionList       :: ![(Column b, ScalarType b)]
+  , _aaaqStringifyNum         :: !Bool
+  , _aaaqForwardClientHeaders :: !Bool
+  , _aaaqSource               :: !(ActionSourceInfo b)
   }
+
+traverseAnnActionAsyncQuery
+  :: (Applicative f, Backend backend)
+  => (a -> f b)
+  -> AnnActionAsyncQuery backend a
+  -> f (AnnActionAsyncQuery backend b)
+traverseAnnActionAsyncQuery f (AnnActionAsyncQuery n aid ot fs dl sn fch s) =
+  traverse (traverse $ traverseAsyncActionQueryField f) fs <&> \tfs -> AnnActionAsyncQuery n aid ot tfs dl sn fch s
 
 data ActionExecContext
   = ActionExecContext
@@ -335,7 +375,7 @@ data ActionExecContext
   }
 
 newtype ActionId = ActionId {unActionId :: UUID.UUID}
-  deriving (Show, Eq, Q.ToPrepArg, Q.FromCol, J.ToJSON, J.FromJSON)
+  deriving (Show, Eq, Q.ToPrepArg, Q.FromCol, J.ToJSON, J.FromJSON, Hashable)
 
 actionIdToText :: ActionId -> Text
 actionIdToText = UUID.toText . unActionId
@@ -359,6 +399,16 @@ data ActionLogResponse
   } deriving (Show, Eq)
 $(J.deriveJSON hasuraJSON ''ActionLogResponse)
 
+type ActionLogResponseMap = HashMap ActionId ActionLogResponse
+
 data AsyncActionStatus
   = AASCompleted !J.Value
   | AASError !QErr
+
+data ActionsInfo
+  = ActionsInfo
+  { _asiName                 :: !ActionName
+  , _asiForwardClientHeaders :: !Bool
+  }
+  deriving (Show, Eq, Generic)
+$(makeLenses ''ActionsInfo)

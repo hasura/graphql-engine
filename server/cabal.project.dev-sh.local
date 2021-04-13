@@ -26,3 +26,13 @@ package graphql-engine
   coverage: true
   -- to match CI:
   ghc-options: -Werror
+  -- By default GHC is dynamically linked, so to run TemplateHaskell you need dynamic versions of
+  -- libraries. But, also by default, cabal links executables statically, which requires static
+  -- versions of the libraries. Therefore, by default, cabal builds with -dynamic-too to generate
+  -- static and dynamic versions of all object files.
+  -- Setting executable-dynamic: True forces cabal to build a dynamic executable; but it's not
+  -- enough on its own: since library-vanilla defaults to True, cabal would still build a static
+  -- library. With those two flags together, we can finally only build one version of the library,
+  -- which substentially improves compilation time.
+  executable-dynamic: True
+  library-vanilla: False

@@ -23,6 +23,7 @@ import qualified Hasura.Tracing                               as Tracing
 import           Hasura.Backends.Postgres.Connection
 import           Hasura.Backends.Postgres.Execute.Mutation
 import           Hasura.Backends.Postgres.Translate.Returning
+import           Hasura.Backends.Postgres.Types.Table
 import           Hasura.EncJSON
 import           Hasura.RQL.DML.Internal
 import           Hasura.RQL.DML.Types
@@ -67,7 +68,7 @@ validateDeleteQWith sessVarBldr prepValBldr
 
   -- convert the where clause
   annSQLBoolExp <- withPathK "where" $
-    convBoolExp fieldInfoMap selPerm rqlBE sessVarBldr prepValBldr
+    convBoolExp fieldInfoMap selPerm rqlBE sessVarBldr (valueParserWithCollectableType prepValBldr)
 
   resolvedDelFltr <- convAnnBoolExpPartialSQL sessVarBldr $
                      dpiFilter delPerm
@@ -87,21 +88,22 @@ validateDeleteQ
   => DeleteQuery -> m (AnnDel 'Postgres, DS.Seq Q.PrepArg)
 validateDeleteQ query = do
   let source = doSource query
-  tableCache <- askTableCache source
+  tableCache :: TableCache 'Postgres <- askTableCache source
   flip runTableCacheRT (source, tableCache) $ runDMLP1T $
     validateDeleteQWith sessVarFromCurrentSetting binRHSBuilder query
 
 runDelete
   :: ( HasVersion, QErrM m, UserInfoM m, CacheRM m
-     , HasSQLGenCtx m, MonadIO m
+     , HasServerConfigCtx m, MonadIO m
      , Tracing.MonadTrace m, MonadBaseControl IO m
+     , MetadataM m
      )
   => Env.Environment
   -> DeleteQuery
   -> m EncJSON
 runDelete env q = do
   sourceConfig <- askSourceConfig (doSource q)
-  strfyNum <- stringifyNum <$> askSQLGenCtx
+  strfyNum <- stringifyNum . _sccSQLGenCtx <$> askServerConfigCtx
   validateDeleteQ q
     >>= runQueryLazyTx (_pscExecCtx sourceConfig) Q.ReadWrite
         . execDeleteQuery env strfyNum Nothing

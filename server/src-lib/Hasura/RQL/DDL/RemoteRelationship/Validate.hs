@@ -7,19 +7,22 @@ module Hasura.RQL.DDL.RemoteRelationship.Validate
   , errorToText
   ) where
 
-import           Hasura.Prelude                     hiding (first)
+import           Hasura.Prelude                      hiding (first)
 
-import qualified Data.HashMap.Strict                as HM
-import qualified Data.HashSet                       as HS
-import qualified Language.GraphQL.Draft.Syntax      as G
+import qualified Data.HashMap.Strict                 as HM
+import qualified Data.HashSet                        as HS
+import qualified Language.GraphQL.Draft.Syntax       as G
 
-import           Data.Foldable
 import           Data.Text.Extended
 
 import           Hasura.Backends.Postgres.SQL.Types
-import           Hasura.GraphQL.Parser.Column
 import           Hasura.GraphQL.Schema.Remote
-import           Hasura.RQL.Types
+import           Hasura.RQL.Types.Column
+import           Hasura.RQL.Types.Common
+import           Hasura.RQL.Types.RemoteRelationship
+import           Hasura.RQL.Types.RemoteSchema
+import           Hasura.RQL.Types.SchemaCache
+import           Hasura.SQL.Backend
 import           Hasura.SQL.Types
 
 
@@ -85,7 +88,7 @@ errorToText = \case
 validateRemoteRelationship
   :: forall m
   .  (MonadError ValidationError m)
-  => RemoteRelationship
+  => RemoteRelationship 'Postgres
   -> (RemoteSchemaInfo, IntrospectionResult)
   -> [ColumnInfo 'Postgres]
   -> m (RemoteFieldInfo 'Postgres)
@@ -110,7 +113,8 @@ validateRemoteRelationship remoteRelationship (remoteSchemaInfo, introspectionRe
     (queryRoot, (mempty, mempty))
     (unRemoteFields $ rtrRemoteField remoteRelationship)
   pure $ RemoteFieldInfo
-        { _rfiName = rtrName remoteRelationship
+        { _rfiXRemoteFieldInfo = ()
+        , _rfiName = rtrName remoteRelationship
         , _rfiParamMap = leafParamMap
         , _rfiHasuraFields = HS.fromList hasuraFields
         , _rfiRemoteFields = rtrRemoteField remoteRelationship
@@ -185,7 +189,7 @@ validateRemoteRelationship remoteRelationship (remoteSchemaInfo, introspectionRe
 -- list types are preserved because they can be merged, if any arguments are
 -- provided by the user while querying a remote join field.
 stripInMap
-  :: RemoteRelationship
+  :: RemoteRelationship 'Postgres
   -> RemoteSchemaIntrospection
   -> HM.HashMap G.Name RemoteSchemaInputValueDefinition
   -> HM.HashMap G.Name (G.Value G.Name)
@@ -214,7 +218,7 @@ stripInMap remoteRelationship types schemaArguments providedArguments =
 -- | Strip a value type completely, or modify it, if the given value
 -- is atomic-ish.
 stripValue
-  :: RemoteRelationship
+  :: RemoteRelationship 'Postgres
   -> RemoteSchemaIntrospection
   -> G.GType
   -> G.Value G.Name
@@ -241,7 +245,7 @@ stripValue remoteRelationshipName types gtype value = do
 
 -- | Produce a new type for the list, or strip it entirely.
 stripList
-  :: RemoteRelationship
+  :: RemoteRelationship 'Postgres
   -> RemoteSchemaIntrospection
   -> G.GType
   -> G.Value G.Name
@@ -260,7 +264,7 @@ stripList remoteRelationshipName types originalOuterGType value =
 -- 'stripInMap'. Objects can't be deleted entirely, just keys of an
 -- object.
 stripObject
-  :: RemoteRelationship
+  :: RemoteRelationship 'Postgres
   -> RemoteSchemaIntrospection
   -> G.GType
   -> HashMap G.Name (G.Value G.Name)
@@ -299,7 +303,7 @@ stripObject remoteRelationshipName schemaDoc originalGtype templateArguments =
 -- -- | Produce a new name for a type, used when stripping the schema
 -- -- types for a remote relationship.
 -- TODO: Consider a separator character to avoid conflicts. (from master)
-renameTypeForRelationship :: RemoteRelationship -> Text -> Text
+renameTypeForRelationship :: RemoteRelationship 'Postgres -> Text -> Text
 renameTypeForRelationship rtr text =
   text <> "_remote_rel_" <> name
   where name = schema <> "_" <> table <> remoteRelationshipNameToText (rtrName rtr)

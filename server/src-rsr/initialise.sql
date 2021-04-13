@@ -24,7 +24,8 @@ ON hdb_catalog.hdb_version((version IS NOT NULL));
 CREATE TABLE hdb_catalog.hdb_metadata
 (
   id INTEGER PRIMARY KEY,
-  metadata JSON NOT NULL
+  metadata JSON NOT NULL,
+  resource_version INTEGER NOT NULL DEFAULT 1 UNIQUE
 );
 
 CREATE TABLE hdb_catalog.hdb_action_log
@@ -102,4 +103,15 @@ CREATE TABLE hdb_catalog.hdb_scheduled_event_invocation_logs
 
   FOREIGN KEY (event_id) REFERENCES hdb_catalog.hdb_scheduled_events (id)
      ON DELETE CASCADE ON UPDATE CASCADE
+);
+
+-- NOTE: In OSS this table only contains a single row (indicated by ID 1).
+--       This may change to allow multiple notifications in future.
+CREATE TABLE hdb_catalog.hdb_schema_notifications
+(
+  id INTEGER PRIMARY KEY CHECK (id = 1),
+  notification JSON NOT NULL,
+  resource_version INTEGER NOT NULL DEFAULT 1,
+  instance_id UUID NOT NULL,
+  updated_at TIMESTAMPTZ DEFAULT NOW()
 );

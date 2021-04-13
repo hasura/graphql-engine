@@ -3,8 +3,6 @@ package commands
 import (
 	"os"
 
-	"github.com/hasura/graphql-engine/cli/migrate"
-
 	"github.com/hasura/graphql-engine/cli"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
@@ -19,7 +17,7 @@ func newMetadataApplyCmd(ec *cli.ExecutionContext) *cobra.Command {
 	metadataApplyCmd := &cobra.Command{
 		Use:   "apply",
 		Short: "Apply Hasura metadata on a database",
-		Example: `  # Apply Hasura GraphQL Engine metadata present in metadata.[yaml|json] file:
+		Example: `  # Apply Hasura GraphQL engine metadata present in metadata.[yaml|json] file:
   hasura metadata apply
 
   # Use with admin secret:
@@ -74,10 +72,5 @@ func (o *MetadataApplyOptions) Run() error {
 		}()
 	}
 
-	// TODO
-	migrateDrv, err := migrate.NewMigrate(o.EC, true, "")
-	if err != nil {
-		return err
-	}
-	return executeMetadata(o.ActionType, migrateDrv, o.EC)
+	return executeMetadata(o.ActionType, o.EC)
 }

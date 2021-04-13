@@ -1,4 +1,5 @@
-{-# LANGUAGE AllowAmbiguousTypes #-}
+{-# LANGUAGE AllowAmbiguousTypes  #-}
+{-# LANGUAGE UndecidableInstances #-}
 
 module Hasura.RQL.Types.Source where
 
@@ -7,19 +8,22 @@ import           Hasura.Prelude
 import qualified Data.HashMap.Strict                 as M
 
 import           Control.Lens
-import           Data.Aeson
+import           Data.Aeson.Extended
 import           Data.Aeson.TH
-import           Data.Typeable                       (cast)
 
+import qualified Hasura.SQL.AnyBackend               as AB
 import qualified Hasura.Tracing                      as Tracing
 
 import           Hasura.Backends.Postgres.Connection
-import           Hasura.Incremental                  (Cacheable (..))
+import           Hasura.RQL.IR.BoolExp
+import           Hasura.RQL.Types.Backend
 import           Hasura.RQL.Types.Common
 import           Hasura.RQL.Types.Error
 import           Hasura.RQL.Types.Function
+import           Hasura.RQL.Types.Instances          ()
 import           Hasura.RQL.Types.Table
 import           Hasura.SQL.Backend
+import           Hasura.SQL.Tag
 import           Hasura.Session
 
 
@@ -31,13 +35,10 @@ data SourceInfo b
   , _siConfiguration :: !(SourceConfig b)
   } deriving (Generic)
 $(makeLenses ''SourceInfo)
-instance Backend b => ToJSON (SourceInfo b) where
+instance (Backend b, ToJSONKeyValue (BooleanOperators b (PartialSQLExp b))) => ToJSON (SourceInfo b) where
   toJSON = genericToJSON hasuraJSON
 
-data BackendSourceInfo =
-  forall b. Backend b => BackendSourceInfo (SourceInfo b)
-instance ToJSON (BackendSourceInfo) where
-  toJSON (BackendSourceInfo si) = toJSON si
+type BackendSourceInfo = AB.AnyBackend SourceInfo
 
 type SourceCache = HashMap SourceName BackendSourceInfo
 
@@ -48,86 +49,43 @@ type SourceCache = HashMap SourceName BackendSourceInfo
 -- They are thus a temporary workaround as we work on generalizing code that
 -- uses the schema cache.
 
-unsafeSourceInfo :: forall b. Backend b => BackendSourceInfo -> Maybe (SourceInfo b)
-unsafeSourceInfo (BackendSourceInfo si) = cast si
+unsafeSourceInfo :: forall b. HasTag b => BackendSourceInfo -> Maybe (SourceInfo b)
+unsafeSourceInfo = AB.unpackAnyBackend
 
 unsafeSourceName :: BackendSourceInfo -> SourceName
-unsafeSourceName (BackendSourceInfo (SourceInfo name _ _ _)) = name
+unsafeSourceName bsi = AB.dispatchAnyBackend @Backend bsi go
+  where
+    go (SourceInfo name _ _ _) = name
 
-unsafeSourceTables :: forall b. Backend b => BackendSourceInfo -> Maybe (TableCache b)
-unsafeSourceTables = fmap _siTables . unsafeSourceInfo
+unsafeSourceTables :: forall b. HasTag b => BackendSourceInfo -> Maybe (TableCache b)
+unsafeSourceTables = fmap _siTables . unsafeSourceInfo @b
 
-unsafeSourceFunctions :: forall b. Backend b => BackendSourceInfo -> Maybe (FunctionCache b)
-unsafeSourceFunctions = fmap _siFunctions . unsafeSourceInfo
+unsafeSourceFunctions :: forall b. HasTag b => BackendSourceInfo -> Maybe (FunctionCache b)
+unsafeSourceFunctions = fmap _siFunctions . unsafeSourceInfo @b
 
-unsafeSourceConfiguration :: forall b. Backend b => BackendSourceInfo -> Maybe (SourceConfig b)
+unsafeSourceConfiguration :: forall b. HasTag b => BackendSourceInfo -> Maybe (SourceConfig b)
 unsafeSourceConfiguration = fmap _siConfiguration . unsafeSourceInfo @b
 
-
 getTableRoles :: BackendSourceInfo -> [RoleName]
-getTableRoles (BackendSourceInfo si) = M.keys . _tiRolePermInfoMap =<< M.elems (_siTables si)
+getTableRoles bsi = AB.dispatchAnyBackend @Backend bsi go
+  where
+    go si = M.keys . _tiRolePermInfoMap =<< M.elems (_siTables si)
 
 
 -- | Contains Postgres connection configuration and essential metadata from the
 -- database to build schema cache for tables and function.
-data ResolvedPGSource
-  = ResolvedPGSource
-  { _rsConfig    :: !(SourceConfig 'Postgres)
-  , _rsTables    :: !(DBTablesMetadata 'Postgres)
-  , _rsFunctions :: !PostgresFunctionsMetadata
-  , _rsPgScalars :: !(HashSet (ScalarType 'Postgres))
+data ResolvedSource b
+  = ResolvedSource
+  { _rsConfig    :: !(SourceConfig b)
+  , _rsTables    :: !(DBTablesMetadata b)
+  , _rsFunctions :: !(DBFunctionsMetadata b)
+  , _rsPgScalars :: !(HashSet (ScalarType b))
   } deriving (Eq)
 
 type SourceTables b = HashMap SourceName (TableCache b)
 
-data PostgresPoolSettings
-  = PostgresPoolSettings
-  { _ppsMaxConnections :: !Int
-  , _ppsIdleTimeout    :: !Int
-  , _ppsRetries        :: !Int
-  } deriving (Show, Eq, Generic)
-instance Cacheable PostgresPoolSettings
-$(deriveToJSON hasuraJSON ''PostgresPoolSettings)
-
-instance FromJSON PostgresPoolSettings where
-  parseJSON = withObject "Object" $ \o ->
-    PostgresPoolSettings
-      <$> o .:? "max_connections" .!= _ppsMaxConnections defaultPostgresPoolSettings
-      <*> o .:? "idle_timeout"    .!= _ppsIdleTimeout    defaultPostgresPoolSettings
-      <*> o .:? "retries"         .!= _ppsRetries        defaultPostgresPoolSettings
-
-defaultPostgresPoolSettings :: PostgresPoolSettings
-defaultPostgresPoolSettings =
-  PostgresPoolSettings
-  { _ppsMaxConnections = 50
-  , _ppsIdleTimeout    = 180
-  , _ppsRetries        = 1
-  }
-
-data PostgresSourceConnInfo
-  = PostgresSourceConnInfo
-  { _psciDatabaseUrl  :: !UrlConf
-  , _psciPoolSettings :: !PostgresPoolSettings
-  } deriving (Show, Eq, Generic)
-instance Cacheable PostgresSourceConnInfo
-$(deriveToJSON hasuraJSON ''PostgresSourceConnInfo)
-
-instance FromJSON PostgresSourceConnInfo where
-  parseJSON = withObject "Object" $ \o ->
-    PostgresSourceConnInfo
-      <$> o .: "database_url"
-      <*> o .:? "pool_settings" .!= defaultPostgresPoolSettings
-
-data SourceConfiguration
-  = SourceConfiguration
-  { _scConnectionInfo :: !PostgresSourceConnInfo
-  , _scReadReplicas   :: !(Maybe (NonEmpty PostgresSourceConnInfo))
-  } deriving (Show, Eq, Generic)
-instance Cacheable SourceConfiguration
-$(deriveJSON hasuraJSON{omitNothingFields = True} ''SourceConfiguration)
-
 type SourceResolver =
-  SourceName -> SourceConfiguration -> IO (Either QErr (SourceConfig 'Postgres))
+  SourceName -> PostgresConnConfiguration -> IO (Either QErr (SourceConfig 'Postgres))
 
 class (Monad m) => MonadResolveSource m where
   getSourceResolver :: m SourceResolver
@@ -145,23 +103,35 @@ instance (MonadResolveSource m) => MonadResolveSource (LazyTxT QErr m) where
   getSourceResolver = lift getSourceResolver
 
 -- Metadata API related types
-data AddPgSource
-  = AddPgSource
-  { _apsName          :: !SourceName
-  , _apsConfiguration :: !SourceConfiguration
-  } deriving (Show, Eq)
-$(deriveJSON hasuraJSON ''AddPgSource)
+data AddSource b
+  = AddSource
+  { _asName                 :: !SourceName
+  , _asConfiguration        :: !(SourceConnConfiguration b)
+  , _asReplaceConfiguration :: !Bool
+  } deriving (Generic)
+deriving instance (Backend b) => Show (AddSource b)
+deriving instance (Backend b) => Eq (AddSource b)
 
-data DropPgSource
-  = DropPgSource
-  { _dpsName    :: !SourceName
-  , _dpsCascade :: !Bool
-  } deriving (Show, Eq)
-$(deriveToJSON hasuraJSON ''DropPgSource)
+instance (Backend b) => ToJSON (AddSource b) where
+  toJSON = genericToJSON hasuraJSON
 
-instance FromJSON DropPgSource where
+instance (Backend b) => FromJSON (AddSource b) where
   parseJSON = withObject "Object" $ \o ->
-    DropPgSource <$> o .: "name" <*> o .:? "cascade" .!= False
+    AddSource
+      <$> o .: "name"
+      <*> o .: "configuration"
+      <*> o .:? "replace_configuration" .!= False
+
+data DropSource
+  = DropSource
+  { _dsName    :: !SourceName
+  , _dsCascade :: !Bool
+  } deriving (Show, Eq)
+$(deriveToJSON hasuraJSON ''DropSource)
+
+instance FromJSON DropSource where
+  parseJSON = withObject "Object" $ \o ->
+    DropSource <$> o .: "name" <*> o .:? "cascade" .!= False
 
 newtype PostgresSourceName =
   PostgresSourceName {_psnName :: SourceName}

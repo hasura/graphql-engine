@@ -32,8 +32,9 @@ import           Data.Scientific
 import           Data.Text.Extended
 import           Data.Text.NonEmpty
 
-import           Hasura.Backends.Postgres.SQL.Types
+import           Hasura.Backends.Postgres.SQL.Types hiding (TableName)
 import           Hasura.Incremental                 (Cacheable)
+import           Hasura.RQL.Types.Backend
 import           Hasura.RQL.Types.Column
 import           Hasura.RQL.Types.Common
 import           Hasura.RQL.Types.RemoteSchema
@@ -56,23 +57,24 @@ fromRemoteRelationship = FieldName . remoteRelationshipNameToText
 -- | Resolved remote relationship
 data RemoteFieldInfo (b :: BackendType)
   = RemoteFieldInfo
-  { _rfiName             :: !RemoteRelationshipName
+  { _rfiXRemoteFieldInfo      :: !(XRemoteField b)
+  , _rfiName                  :: !RemoteRelationshipName
     -- ^ Field name to which we'll map the remote in hasura; this becomes part
     -- of the hasura schema.
-  , _rfiParamMap         :: !(HashMap G.Name RemoteSchemaInputValueDefinition)
+  , _rfiParamMap              :: !(HashMap G.Name RemoteSchemaInputValueDefinition)
   -- ^ Input arguments to the remote field info; The '_rfiParamMap' will only
   --   include the arguments to the remote field that is being joined. The
   --   names of the arguments here are modified, it will be in the format of
   --   <Original Field Name>_remote_rel_<hasura table schema>_<hasura table name><remote relationship name>
-  , _rfiHasuraFields     :: !(HashSet (ColumnInfo b))
+  , _rfiHasuraFields          :: !(HashSet (ColumnInfo b))
   -- ^ Hasura fields used to join the remote schema node
-  , _rfiRemoteFields     :: !RemoteFields
-  , _rfiRemoteSchema     :: !RemoteSchemaInfo
+  , _rfiRemoteFields          :: !RemoteFields
+  , _rfiRemoteSchema          :: !RemoteSchemaInfo
   , _rfiInputValueDefinitions :: ![G.TypeDefinition [G.Name] RemoteSchemaInputValueDefinition]
   -- ^ The new input value definitions created for this remote field
-  , _rfiRemoteSchemaName :: !RemoteSchemaName
+  , _rfiRemoteSchemaName      :: !RemoteSchemaName
   -- ^ Name of the remote schema, that's used for joining
-  , _rfiTable            :: !(QualifiedTable, SourceName)
+  , _rfiTable                 :: !(QualifiedTable, SourceName)
   -- ^ Name of the table and its source
   } deriving (Generic)
 deriving instance Backend b => Eq (RemoteFieldInfo b)
@@ -235,13 +237,13 @@ instance ToJSON RemoteFields where
           ]
 
 -- | Metadata type for remote relationship
-data RemoteRelationship =
+data RemoteRelationship b =
   RemoteRelationship
     { rtrName         :: !RemoteRelationshipName
     -- ^ Field name to which we'll map the remote in hasura; this becomes part
     -- of the hasura schema.
     , rtrSource       :: !SourceName
-    , rtrTable        :: !QualifiedTable
+    , rtrTable        :: !(TableName b)
     -- ^ (SourceName, QualifiedTable) determines the table on which the relationship
     -- is defined
     , rtrHasuraFields :: !(HashSet FieldName) -- TODO change to PGCol
@@ -250,12 +252,15 @@ data RemoteRelationship =
     , rtrRemoteSchema :: !RemoteSchemaName
     -- ^ Identifier for this mapping.
     , rtrRemoteField  :: !RemoteFields
-    }  deriving (Show, Eq, Generic)
-instance NFData RemoteRelationship
-instance Cacheable RemoteRelationship
-$(deriveToJSON hasuraJSON ''RemoteRelationship)
+    }  deriving (Generic)
+deriving instance (Backend b) => Show (RemoteRelationship b)
+deriving instance (Backend b) => Eq (RemoteRelationship b)
+instance (Backend b) => NFData (RemoteRelationship b)
+instance (Backend b) => Cacheable (RemoteRelationship b)
+instance (Backend b) => ToJSON (RemoteRelationship b) where
+  toJSON = genericToJSON hasuraJSON
 
-instance FromJSON RemoteRelationship where
+instance (Backend b) => FromJSON (RemoteRelationship b) where
   parseJSON = withObject "RemoteRelationship" $ \o ->
     RemoteRelationship
       <$> o .: "name"

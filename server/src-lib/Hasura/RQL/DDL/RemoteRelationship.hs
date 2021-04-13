@@ -3,28 +3,29 @@ module Hasura.RQL.DDL.RemoteRelationship
   ( runCreateRemoteRelationship
   , runDeleteRemoteRelationship
   , runUpdateRemoteRelationship
-  , resolveRemoteRelationship
   , dropRemoteRelationshipInMetadata
   ) where
 
 import           Hasura.Prelude
 
-import qualified Data.HashMap.Strict                        as Map
-import qualified Data.HashMap.Strict.InsOrd                 as OMap
-import qualified Data.HashSet                               as HS
+import qualified Data.HashMap.Strict.InsOrd as OMap
 
-import           Data.Text.Extended
+import qualified Hasura.SQL.AnyBackend      as AB
 
 import           Hasura.EncJSON
-import           Hasura.RQL.DDL.RemoteRelationship.Validate
 import           Hasura.RQL.Types
 
 runCreateRemoteRelationship
-  :: (MonadError QErr m, CacheRWM m, MetadataM m) => RemoteRelationship -> m EncJSON
+  :: forall m b
+   . (MonadError QErr m, CacheRWM m, MetadataM m, BackendMetadata b)
+  => RemoteRelationship b
+  -> m EncJSON
 runCreateRemoteRelationship RemoteRelationship{..} = do
   void $ askTabInfo rtrSource rtrTable
-  let metadataObj = MOSourceObjId rtrSource $
-                    SMOTableObj rtrTable $ MTORemoteRelationship rtrName
+  let metadataObj = MOSourceObjId rtrSource
+                    $ AB.mkAnyBackend
+                    $ SMOTableObj rtrTable
+                    $ MTORemoteRelationship rtrName
       metadata = RemoteRelationshipMetadata rtrName $
         RemoteRelationshipDef rtrRemoteSchema rtrHasuraFields rtrRemoteField
   buildSchemaCacheFor metadataObj
@@ -33,42 +34,18 @@ runCreateRemoteRelationship RemoteRelationship{..} = do
       %~ OMap.insert rtrName metadata
   pure successMsg
 
-resolveRemoteRelationship
-  :: QErrM m
-  => RemoteRelationship
-  -> [ColumnInfo 'Postgres]
-  -> RemoteSchemaMap
-  -> m (RemoteFieldInfo 'Postgres, [SchemaDependency])
-resolveRemoteRelationship remoteRelationship
-                          pgColumns
-                          remoteSchemaMap = do
-  let remoteSchemaName = rtrRemoteSchema remoteRelationship
-  (RemoteSchemaCtx _name introspectionResult remoteSchemaInfo _ _ _permissions) <-
-    onNothing (Map.lookup remoteSchemaName remoteSchemaMap)
-      $ throw400 RemoteSchemaError $ "remote schema with name " <> remoteSchemaName <<> " not found"
-  eitherRemoteField <- runExceptT $
-    validateRemoteRelationship remoteRelationship (remoteSchemaInfo, introspectionResult) pgColumns
-  remoteField <- onLeft eitherRemoteField $ throw400 RemoteSchemaError . errorToText
-  let table = rtrTable remoteRelationship
-      source = rtrSource remoteRelationship
-      schemaDependencies =
-        let tableDep = SchemaDependency (SOSourceObj source $ SOITable table) DRTable
-            columnsDep =
-              map
-                (flip SchemaDependency DRRemoteRelationship . SOSourceObj source . SOITableObj table . TOCol . pgiColumn)
-                $ HS.toList $ _rfiHasuraFields remoteField
-            remoteSchemaDep =
-              SchemaDependency (SORemoteSchema remoteSchemaName) DRRemoteSchema
-         in (tableDep : remoteSchemaDep : columnsDep)
-
-  pure (remoteField, schemaDependencies)
-
-runUpdateRemoteRelationship :: (MonadError QErr m, CacheRWM m, MetadataM m) => RemoteRelationship -> m EncJSON
+runUpdateRemoteRelationship
+  :: forall m b
+   . (MonadError QErr m, CacheRWM m, MetadataM m, BackendMetadata b)
+  => RemoteRelationship b
+  -> m EncJSON
 runUpdateRemoteRelationship RemoteRelationship{..} = do
   fieldInfoMap <- askFieldInfoMap rtrSource rtrTable
   void $ askRemoteRel fieldInfoMap rtrName
-  let metadataObj = MOSourceObjId rtrSource $
-                    SMOTableObj rtrTable $ MTORemoteRelationship rtrName
+  let metadataObj = MOSourceObjId rtrSource
+                      $ AB.mkAnyBackend
+                      $ SMOTableObj rtrTable
+                      $ MTORemoteRelationship rtrName
       metadata = RemoteRelationshipMetadata rtrName $
         RemoteRelationshipDef rtrRemoteSchema rtrHasuraFields rtrRemoteField
   buildSchemaCacheFor metadataObj
@@ -78,18 +55,22 @@ runUpdateRemoteRelationship RemoteRelationship{..} = do
   pure successMsg
 
 runDeleteRemoteRelationship
-  :: (MonadError QErr m, CacheRWM m, MetadataM m) => DeleteRemoteRelationship -> m EncJSON
+  :: (MonadError QErr m, CacheRWM m, MetadataM m)
+  => DeleteRemoteRelationship
+  -> m EncJSON
 runDeleteRemoteRelationship (DeleteRemoteRelationship source table relName)= do
   fieldInfoMap <- askFieldInfoMap source table
   void $ askRemoteRel fieldInfoMap relName
-  let metadataObj = MOSourceObjId source $
-                    SMOTableObj table $ MTORemoteRelationship relName
+  let metadataObj = MOSourceObjId source
+                      $ AB.mkAnyBackend
+                      $ SMOTableObj table
+                      $ MTORemoteRelationship relName
   buildSchemaCacheFor metadataObj
     $ MetadataModifier
     $ tableMetadataSetter source table %~ dropRemoteRelationshipInMetadata relName
   pure successMsg
 
 dropRemoteRelationshipInMetadata
-  :: RemoteRelationshipName -> TableMetadata -> TableMetadata
+  :: RemoteRelationshipName -> TableMetadata b -> TableMetadata b
 dropRemoteRelationshipInMetadata name =
   tmRemoteRelationships %~ OMap.delete name

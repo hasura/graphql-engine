@@ -1,10 +1,10 @@
 package commands
 
 import (
-	"fmt"
 	"os"
 	"sync"
 
+	"github.com/hasura/graphql-engine/cli/internal/scripts"
 	"github.com/hasura/graphql-engine/cli/util"
 
 	"github.com/gin-gonic/gin"
@@ -23,8 +23,8 @@ func NewConsoleCmd(ec *cli.ExecutionContext) *cobra.Command {
 	}
 	consoleCmd := &cobra.Command{
 		Use:   "console",
-		Short: "Open console to manage database and try out APIs",
-		Long:  "Run a web server to serve Hasura Console for GraphQL Engine to manage database and build queries",
+		Short: "Open the console to manage the database and try out APIs",
+		Long:  "Run a web server to serve the Hasura console for the GraphQL engine to manage the database and build queries",
 		Example: `  # Start console:
   hasura console
 
@@ -49,12 +49,7 @@ func NewConsoleCmd(ec *cli.ExecutionContext) *cobra.Command {
 			if err := ec.Validate(); err != nil {
 				return err
 			}
-			if ec.Config.Version < cli.V2 && ec.HasMetadataV3 {
-				ec.Logger.Errorf("config V1 is not supported with metadata V3 please upgrade to config V2")
-				ec.Logger.Info("upgrade to config V2 using the following command\nhasura scripts update-project-v2")
-				return fmt.Errorf("invalid config version")
-			}
-			return nil
+			return scripts.CheckIfUpdateToConfigV3IsRequired(ec)
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
 			return opts.Run()
@@ -70,9 +65,9 @@ func NewConsoleCmd(ec *cli.ExecutionContext) *cobra.Command {
 	f.StringVar(&opts.Browser, "browser", "", "open console in a specific browser")
 	f.BoolVar(&opts.UseServerAssets, "use-server-assets", false, "when rendering console, use assets provided by HGE server")
 
-	f.String("endpoint", "", "http(s) endpoint for Hasura GraphQL Engine")
-	f.String("admin-secret", "", "admin secret for Hasura GraphQL Engine")
-	f.String("access-key", "", "access key for Hasura GraphQL Engine")
+	f.String("endpoint", "", "http(s) endpoint for Hasura GraphQL engine")
+	f.String("admin-secret", "", "admin secret for Hasura GraphQL engine")
+	f.String("access-key", "", "access key for Hasura GraphQL engine")
 	f.MarkDeprecated("access-key", "use --admin-secret instead")
 	f.Bool("insecure-skip-tls-verify", false, "skip TLS verification and disable cert checking (default: false)")
 	f.String("certificate-authority", "", "path to a cert file for the certificate authority")

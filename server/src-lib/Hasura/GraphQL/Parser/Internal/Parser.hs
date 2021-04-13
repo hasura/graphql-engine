@@ -82,6 +82,9 @@ data FieldParser m a = FieldParser
   , fParser     :: Field NoFragments Variable -> m a
   } deriving (Functor)
 
+instance HasDefinition (FieldParser m a) FieldInfo where
+  definitionLens f parser = definitionLens f (fDefinition parser) <&> \fDefinition -> parser { fDefinition }
+
 infixl 1 `bindField`
 bindField :: Monad m => FieldParser m a -> (a -> m b) -> FieldParser m b
 bindField p f = p { fParser = fParser p >=> f }
@@ -271,6 +274,10 @@ field = field
 -- | Decorate a schema output type as NON_NULL
 nonNullableParser :: forall m a . Parser 'Output m a -> Parser 'Output m a
 nonNullableParser parser = parser { pType = nonNullableType (pType parser) }
+
+-- | Make a schema output as nullable
+nullableParser :: forall m a . Parser 'Output m a -> Parser 'Output m a
+nullableParser parser = parser { pType = nullableType (pType parser) }
 
 multiple :: Parser 'Output m a -> Parser 'Output m a
 multiple parser = parser { pType = Nullable $ TList $ pType parser }
@@ -736,7 +743,13 @@ rawSelection name description argumentsParser resultParser = FieldParser
       fmap (_fAlias, _fArguments, ) $ withPath (++[Key "args"]) $ ifParser argumentsParser $ GraphQLValue <$> _fArguments
   }
   where
-    argumentNames = S.fromList (dName <$> ifDefinitions argumentsParser)
+    -- If  `ifDefinitions` is empty, then not forcing this will lead to
+    -- a thunk which is usually never forced because the definition is only used
+    -- inside the loop which checks arguments have the correct name.
+    -- Forcing it will lead to the statically allocated empty set.
+    -- If it's non-empty then it will be forced the first time the parser
+    -- is used so might as well force it when constructing the parser.
+    !argumentNames = S.fromList (dName <$> ifDefinitions argumentsParser)
 
 -- | Builds a 'FieldParser' for a field that takes a subselection set, i.e. a
 -- field that returns an object.

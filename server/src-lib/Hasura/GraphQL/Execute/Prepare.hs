@@ -24,16 +24,17 @@ import qualified Language.GraphQL.Draft.Syntax             as G
 import           Data.Text.Extended
 
 import qualified Hasura.Backends.Postgres.SQL.DML          as S
-import qualified Hasura.GraphQL.Transport.HTTP.Protocol    as GH
 
 import           Hasura.Backends.Postgres.SQL.Value
 import           Hasura.Backends.Postgres.Translate.Column
+import           Hasura.Backends.Postgres.Types.Column
+import           Hasura.GraphQL.Execute.Backend
 import           Hasura.GraphQL.Parser.Column
 import           Hasura.GraphQL.Parser.Schema
 import           Hasura.RQL.DML.Internal                   (currentSession)
 import           Hasura.RQL.Types
-import           Hasura.Session
 import           Hasura.SQL.Types
+import           Hasura.Session
 
 
 type PlanVariables = Map.HashMap G.Name Int
@@ -42,23 +43,6 @@ type PlanVariables = Map.HashMap G.Name Int
 -- prepared argument and not the binary encoding in PG format
 type PrepArgMap = IntMap.IntMap (Q.PrepArg, PGScalarValue)
 
--- | Full execution plan to process one GraphQL query.  Once we work on
--- heterogeneous execution this will contain a mixture of things to run on the
--- database and things to run on remote schemas.
-type ExecutionPlan action db = InsOrdHashMap G.Name (ExecutionStep action db)
-
--- | One execution step to processing a GraphQL query (e.g. one root field).
--- Polymorphic to allow the SQL to be generated in stages.
-data ExecutionStep action db
-  = ExecStepDB PGExecCtx db
-  -- ^ A query to execute against the database
-  | ExecStepAction action
-  -- ^ Execute an action
-  | ExecStepRemote !RemoteSchemaInfo !GH.GQLReqOutgoing
-  -- ^ A graphql query to execute against a remote schema
-  | ExecStepRaw J.Value
-  -- ^ Output a plain JSON object
-  deriving (Functor, Foldable, Traversable)
 
 data PlanningSt
   = PlanningSt

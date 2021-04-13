@@ -38,6 +38,10 @@ const FETCH_CONSOLE_NOTIFICATIONS_SET_DEFAULT =
   'Main/FETCH_CONSOLE_NOTIFICATIONS_SET_DEFAULT';
 const FETCH_CONSOLE_NOTIFICATIONS_ERROR =
   'Main/FETCH_CONSOLE_NOTIFICATIONS_ERROR';
+const FETCHING_HEROKU_SESSION = 'Main/FETCHING_HEROKU_SESSION';
+const FETCHING_HEROKU_SESSION_FAILED = 'Main/FETCHING_HEROKU_SESSION_FAILED';
+const SET_HEROKU_SESSION = 'Main/SET_HEROKU_SESSION';
+const SET_CLOUD_PROJECT_INFO = 'Main/SET_CLOUD_PROJECT_INFO';
 
 const RUN_TIME_ERROR = 'Main/RUN_TIME_ERROR';
 const registerRunTimeError = data => ({
@@ -455,6 +459,128 @@ const updateMigrationModeStatus = () => (dispatch, getState) => {
   // refresh console
 };
 
+export const setHerokuSession = session => ({
+  type: SET_HEROKU_SESSION,
+  data: session,
+});
+
+// TODO to be queried via Apollo client
+export const fetchHerokuSession = () => dispatch => {
+  if (globals.consoleType !== 'cloud') {
+    return;
+  }
+  dispatch({
+    type: FETCHING_HEROKU_SESSION,
+  });
+  return fetch(Endpoints.hasuraCloudDataGraphql, {
+    method: 'POST',
+    credentials: 'include',
+    headers: {
+      'content-type': 'application/json',
+    },
+    body: JSON.stringify({
+      query:
+        'mutation { getHerokuSession { access_token refresh_token expires_in token_type } }',
+    }),
+  })
+    .then(r => r.json())
+    .then(response => {
+      if (response.errors) {
+        dispatch({ type: FETCHING_HEROKU_SESSION_FAILED });
+        console.error('Failed fetching heroku session');
+      } else {
+        const session = response.data.getHerokuSession;
+        if (!session.access_token) {
+          dispatch({ type: FETCHING_HEROKU_SESSION_FAILED });
+          console.error('Failed fetching heroku session');
+        } else {
+          dispatch(setHerokuSession(session));
+        }
+      }
+    })
+    .catch(e => {
+      console.error('Failed fetching Heroku session');
+      console.error(e);
+    });
+};
+
+const fetchCloudProjectInfo = () => dispatch => {
+  if (globals.consoleType !== 'cloud') {
+    return;
+  }
+  if (!Endpoints.hasuraCloudDataGraphql) {
+    return;
+  }
+
+  // TODO: this needs to be addressed in a better way with Apollo Client
+  const projectID = globals.hasuraCloudProjectId;
+  const query = `
+  query ProjectsQuery($id: uuid!) {
+    projects_by_pk(id: $id) {
+      name
+      plan_name
+      tenant {
+        active
+        region
+        custom_domains {
+          id
+          fqdn
+          dns_validation
+          created_at
+          cert
+        }
+      }
+      heroku_integrations {
+        app_id
+        app_name
+        project_id
+        var_name
+        webhook_id
+      }
+      owner {
+        id
+        email
+      }
+      collaborators {
+        collaborator {
+          email
+          id
+        }
+      }
+    }
+  }
+  `;
+  const variables = {
+    id: projectID,
+  };
+  return fetch(Endpoints.hasuraCloudDataGraphql, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    credentials: 'include',
+    body: JSON.stringify({
+      query,
+      variables,
+    }),
+  })
+    .then(r => r.json())
+    .then(data => {
+      const projectData = data?.data?.projects_by_pk;
+      dispatch({
+        type: SET_CLOUD_PROJECT_INFO,
+        data: projectData,
+      });
+    })
+    .catch(e => {
+      console.error(e);
+      dispatch({
+        type: SET_CLOUD_PROJECT_INFO,
+        data: undefined,
+      });
+    });
+};
+
 const mainReducer = (state = defaultState, action) => {
   switch (action.type) {
     case SET_MIGRATION_STATUS_SUCCESS:
@@ -591,6 +717,20 @@ const mainReducer = (state = defaultState, action) => {
         ...state,
         consoleNotifications: [errorNotification],
       };
+    case SET_HEROKU_SESSION:
+      return {
+        ...state,
+        heroku: {
+          session: action.data,
+        },
+      };
+    case SET_CLOUD_PROJECT_INFO:
+      return {
+        ...state,
+        cloud: {
+          project: action.data,
+        },
+      };
     default:
       return state;
   }
@@ -615,4 +755,5 @@ export {
   RUN_TIME_ERROR,
   registerRunTimeError,
   fetchConsoleNotifications,
+  fetchCloudProjectInfo,
 };

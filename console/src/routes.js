@@ -1,5 +1,5 @@
 import React from 'react';
-import { Route, IndexRoute, IndexRedirect } from 'react-router';
+import { Route, IndexRedirect, IndexRoute } from 'react-router';
 
 import { connect } from 'react-redux';
 
@@ -30,9 +30,11 @@ import generatedVoyagerConnector from './components/Services/VoyagerView/Voyager
 import generatedLoginConnector from './components/Login/Login';
 
 import settingsContainer from './components/Services/Settings/Container';
+import ApiContainer from './components/Services/ApiExplorer/Container';
 import metadataOptionsConnector from './components/Services/Settings/MetadataOptions/MetadataOptions';
 import metadataStatusConnector from './components/Services/Settings/MetadataStatus/MetadataStatus';
 import allowedQueriesConnector from './components/Services/Settings/AllowedQueries/AllowedQueries';
+import inheritedRolesConnector from './components/Services/Settings/InheritedRoles/InheritedRoles';
 import logoutConnector from './components/Services/Settings/Logout/Logout';
 import aboutConnector from './components/Services/Settings/About/About';
 
@@ -42,6 +44,10 @@ import UIKit from './components/UIKit/';
 import { Heading } from './components/UIKit/atoms';
 import { SupportContainer } from './components/Services/Support/SupportContainer';
 import HelpPage from './components/Services/Support/HelpPage';
+import CreateRestView from './components/Services/ApiExplorer/Rest/Create/';
+import RestListView from './components/Services/ApiExplorer/Rest/List';
+import DetailsView from './components/Services/ApiExplorer/Rest/Details';
+import TempHerokuCallback from './components/Services/Data/DataSources/CreateDataSource/Heroku/TempCallback';
 
 const routes = store => {
   // load hasuractl migration status
@@ -73,7 +79,18 @@ const routes = store => {
 
     return;
   };
-  const _dataRouterUtils = dataRouterUtils(connect, store, composeOnEnterHooks);
+
+  const _dataRouterUtils = dataRouterUtils(
+    connect,
+    store,
+    composeOnEnterHooks,
+    () => {
+      return {};
+    },
+    () => {
+      return { public: [], personal: [] };
+    }
+  );
   const requireSource = _dataRouterUtils.requireSource;
   const dataRouter = _dataRouterUtils.makeDataRouter;
 
@@ -105,6 +122,8 @@ const routes = store => {
       onEnter={composeOnEnterHooks([validateLogin(store)])}
     >
       <Route path="login" component={generatedLoginConnector(connect)} />
+      {/*Temp route, it'll be in dashboard*/}
+      <Route path="heroku-callback" component={TempHerokuCallback} />
       <Route
         path=""
         component={Main}
@@ -114,8 +133,22 @@ const routes = store => {
           requireAsyncGlobals(store),
         ])}
       >
-        <IndexRoute component={generatedApiExplorer(connect)} />
-        <Route path="api-explorer" component={generatedApiExplorer(connect)} />
+        <IndexRoute component={ApiContainer} />
+        <Route path="api" component={ApiContainer}>
+          <IndexRedirect to="api-explorer" />
+          <Route
+            path="api-explorer"
+            component={generatedApiExplorer(connect)}
+          />
+          <Route path="rest">
+            <IndexRedirect to="list" />
+            <Route path="create" component={CreateRestView} />
+            <Route path="list" component={RestListView} />
+            <Route path="details/:name" component={DetailsView} />
+            <Route path="edit/:name" component={CreateRestView} />
+          </Route>
+        </Route>
+
         <Route
           path="voyager-view"
           component={generatedVoyagerConnector(connect)}
@@ -136,6 +169,7 @@ const routes = store => {
           />
           <Route path="logout" component={logoutConnector(connect)} />
           <Route path="about" component={aboutConnector(connect)} />
+          <Route path="inherited-roles" component={inheritedRolesConnector} />
         </Route>
         {dataRouter}
         {remoteSchemaRouter}

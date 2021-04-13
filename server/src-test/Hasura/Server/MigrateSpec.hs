@@ -26,6 +26,7 @@ import           Hasura.RQL.Types
 import           Hasura.Server.API.PGDump
 import           Hasura.Server.Init                  (DowngradeOptions (..))
 import           Hasura.Server.Migrate
+import           Hasura.Server.Types                 (MaintenanceMode (..))
 import           Hasura.Server.Version               (HasVersion)
 import           Hasura.Session
 
@@ -37,7 +38,7 @@ newtype CacheRefT m a
   = CacheRefT { runCacheRefT :: MVar RebuildableSchemaCache -> m a }
   deriving
     ( Functor, Applicative, Monad, MonadIO, MonadError e, MonadBase b, MonadBaseControl b
-    , MonadTx, MonadUnique, UserInfoM, HTTP.HasHttpManagerM, HasSQLGenCtx)
+    , MonadTx, MonadUnique, UserInfoM, HTTP.HasHttpManagerM, HasServerConfigCtx)
     via (ReaderT (MVar RebuildableSchemaCache) m)
 
 instance MonadTrans CacheRefT where
@@ -51,10 +52,16 @@ instance (MonadBase IO m) => CacheRM (CacheRefT m) where
   askSchemaCache = CacheRefT (fmap lastBuiltSchemaCache . readMVar)
 
 instance (MonadIO m, MonadBaseControl IO m, MonadTx m, HTTP.HasHttpManagerM m
-         , HasSQLGenCtx m, HasRemoteSchemaPermsCtx m, MonadResolveSource m) => CacheRWM (CacheRefT m) where
-  buildSchemaCacheWithOptions reason invalidations metadata = CacheRefT $ flip modifyMVar \schemaCache -> do
-    ((), cache, _) <- runCacheRWT schemaCache (buildSchemaCacheWithOptions reason invalidations metadata)
-    pure (cache, ())
+         , MonadResolveSource m, HasServerConfigCtx m) => CacheRWM (CacheRefT m) where
+  buildSchemaCacheWithOptions reason invalidations metadata =
+    CacheRefT $ flip modifyMVar \schemaCache -> do
+      ((), cache, _) <- runCacheRWT schemaCache (buildSchemaCacheWithOptions reason invalidations metadata)
+      pure (cache, ())
+
+  setMetadataResourceVersionInSchemaCache resourceVersion =
+    CacheRefT $ flip modifyMVar \schemaCache -> do
+      ((), cache, _) <- runCacheRWT schemaCache (setMetadataResourceVersionInSchemaCache resourceVersion)
+      pure (cache, ())
 
 instance Example (MetadataT (CacheRefT m) ()) where
   type Arg (MetadataT (CacheRefT m) ()) = MetadataT (CacheRefT m) :~> IO
@@ -72,14 +79,13 @@ spec
      , MonadBaseControl IO m
      , MonadError QErr m
      , HTTP.HasHttpManagerM m
-     , HasSQLGenCtx m
-     , HasRemoteSchemaPermsCtx m
+     , HasServerConfigCtx m
      , MonadResolveSource m
      )
-  => SourceConfiguration -> PGExecCtx -> Q.ConnInfo -> SpecWithCache m
+  => PostgresConnConfiguration -> PGExecCtx -> Q.ConnInfo -> SpecWithCache m
 spec srcConfig pgExecCtx pgConnInfo = do
   let migrateCatalogAndBuildCache env time = do
-        (migrationResult, metadata) <- runTx pgExecCtx $ migrateCatalog (Just srcConfig) time
+        (migrationResult, metadata) <- runTx pgExecCtx $ migrateCatalog (Just srcConfig) MaintenanceModeDisabled time
         (,migrationResult) <$> runCacheBuildM (buildRebuildableSchemaCache env metadata)
 
       dropAndInit env time = lift $ CacheRefT $ flip modifyMVar \_ ->

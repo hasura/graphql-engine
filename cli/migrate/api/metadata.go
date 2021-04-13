@@ -4,7 +4,10 @@ import (
 	"net/http"
 	"strings"
 
+	"github.com/hasura/graphql-engine/cli/internal/metadataobject"
+
 	"github.com/hasura/graphql-engine/cli"
+	"github.com/hasura/graphql-engine/cli/internal/hasura"
 
 	"github.com/gin-gonic/gin"
 	"github.com/hasura/graphql-engine/cli/migrate"
@@ -23,16 +26,17 @@ func MetadataAPI(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, &Response{Code: "internal_error", Message: "cannot get execution context"})
 		return
 	}
-	t, err := migrate.NewMigrate(ec, false, "")
+	t, err := migrate.NewMigrate(ec, false, "", hasura.SourceKindPG)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, &Response{Code: "internal_error", Message: err.Error()})
 		return
 	}
-
+	mdHandler := metadataobject.NewHandlerFromEC(ec)
 	// Switch on request method
 	switch c.Request.Method {
 	case "GET":
-		files, err := t.ExportMetadata()
+		var files map[string][]byte
+		files, err = mdHandler.ExportMetadata()
 		if err != nil {
 			if strings.HasPrefix(err.Error(), DataAPIError) {
 				c.JSON(http.StatusInternalServerError, &Response{Code: "data_api_error", Message: err.Error()})
@@ -46,7 +50,7 @@ func MetadataAPI(c *gin.Context) {
 		queryValues := c.Request.URL.Query()
 		export := queryValues.Get("export")
 		if export == "true" {
-			err := t.WriteMetadata(files)
+			err := mdHandler.WriteMetadata(files)
 			if err != nil {
 				c.JSON(http.StatusInternalServerError, &Response{Code: "internal_error", Message: err.Error()})
 				return
@@ -77,8 +81,8 @@ func MetadataAPI(c *gin.Context) {
 			c.JSON(http.StatusInternalServerError, &Response{Code: "internal_error", Message: err.Error()})
 			return
 		}
-
-		files, err := t.ExportMetadata()
+		var files map[string][]byte
+		files, err = mdHandler.ExportMetadata()
 		if err != nil {
 			if strings.HasPrefix(err.Error(), DataAPIError) {
 				c.JSON(http.StatusInternalServerError, &Response{Code: "data_api_error", Message: err.Error()})
@@ -87,7 +91,7 @@ func MetadataAPI(c *gin.Context) {
 			c.JSON(http.StatusInternalServerError, &Response{Code: "internal_error", Message: err.Error()})
 			return
 		}
-		err = t.WriteMetadata(files)
+		err = mdHandler.WriteMetadata(files)
 		if err != nil {
 			if strings.HasPrefix(err.Error(), DataAPIError) {
 				c.JSON(http.StatusInternalServerError, &Response{Code: "data_api_error", Message: err.Error()})

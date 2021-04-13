@@ -8,7 +8,7 @@ import { redirectToMetadataStatus } from '../Common/utils/routesUtils';
 import { loadInconsistentObjects } from '../../metadata/actions';
 import { Dispatch, FixMe } from '../../types';
 
-const isMetadataStatusPage = () => {
+export const isMetadataStatusPage = () => {
   return window.location.pathname.includes('/settings/metadata-status');
 };
 

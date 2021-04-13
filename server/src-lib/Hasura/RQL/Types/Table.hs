@@ -1,90 +1,6 @@
-{-# LANGUAGE GADTs      #-}
-{-# LANGUAGE RankNTypes #-}
+{-# LANGUAGE UndecidableInstances #-}
 
-module Hasura.RQL.Types.Table
-       ( TableConfig(..)
-
-       , tcCustomRootFields
-       , tcCustomColumnNames
-       , tcCustomName
-       , emptyTableConfig
-
-       , TableCoreCache
-       , TableCache
-
-       , TableInfo(..)
-       , tiCoreInfo
-       , tiRolePermInfoMap
-       , tiEventTriggerInfoMap
-
-       , ForeignKeyMetadata(..)
-       , DBTableMetadata(..)
-       , DBTablesMetadata
-
-       , TableCoreInfoG(..)
-       , TableCoreInfo
-       , tciName
-       , tciDescription
-       , tciSystemDefined
-       , tciFieldInfoMap
-       , tciPrimaryKey
-       , tciUniqueConstraints
-       , tciForeignKeys
-       , tciViewInfo
-       , tciEnumValues
-       , tciCustomConfig
-       , tciUniqueOrPrimaryKeyConstraints
-
-       -- , TableConstraint(..)
-       -- , ConstraintType(..)
-       , ViewInfo(..)
-       , isMutable
-       , mutableView
-
-       , FieldInfoMap
-       , FieldInfo(..)
-       , _FIColumn
-       , _FIRelationship
-       , _FIComputedField
-       , _FIRemoteRelationship
-       , fieldInfoName
-       , fieldInfoGraphQLName
-       , fieldInfoGraphQLNames
-       , getFieldInfoM
-       , getColumnInfoM
-       , getCols
-       , sortCols
-       , getRels
-       , getComputedFieldInfos
-
-       , isPGColInfo
-       , RelInfo(..)
-
-       , RolePermInfo(..)
-       , mkRolePermInfo
-       , permIns
-       , permSel
-       , permUpd
-       , permDel
-       , PermAccessor(..)
-       , permAccToLens
-       , permAccToType
-       , withPermType
-       , RolePermInfoMap
-
-       , InsPermInfo(..)
-       , SelPermInfo(..)
-       , getSelectPermissionInfoM
-       , UpdPermInfo(..)
-       , DelPermInfo(..)
-       , PreSetColsPartial
-
-       , EventTriggerInfo(..)
-       , EventTriggerInfoMap
-       , TableCustomRootFields(..)
-       , emptyCustomRootFields
-
-       ) where
+module Hasura.RQL.Types.Table where
 
 import           Hasura.Prelude
 
@@ -94,22 +10,25 @@ import qualified Data.List.NonEmpty                  as NE
 import qualified Data.Text                           as T
 import qualified Language.GraphQL.Draft.Syntax       as G
 
-import           Control.Lens
-import           Data.Aeson
+import           Control.Lens                        hiding ((.=))
 import           Data.Aeson.Casing
+import           Data.Aeson.Extended
 import           Data.Aeson.TH
 import           Data.List.Extended                  (duplicates)
 import           Data.Text.Extended
 
-import qualified Hasura.Backends.Postgres.SQL.Types  as PG
+import qualified Hasura.Backends.Postgres.SQL.Types  as PG (PGDescription)
+
 import           Hasura.Incremental                  (Cacheable)
 import           Hasura.RQL.IR.BoolExp
+import           Hasura.RQL.Types.Backend
 import           Hasura.RQL.Types.Column
 import           Hasura.RQL.Types.Common
 import           Hasura.RQL.Types.ComputedField
 import           Hasura.RQL.Types.Error
 import           Hasura.RQL.Types.EventTrigger
 import           Hasura.RQL.Types.Permission
+import           Hasura.RQL.Types.Relationship
 import           Hasura.RQL.Types.RemoteRelationship
 import           Hasura.SQL.Backend
 import           Hasura.Server.Utils                 (englishList)
@@ -187,9 +106,9 @@ $(makePrisms ''FieldInfo)
 
 type FieldInfoMap = M.HashMap FieldName
 
-fieldInfoName :: FieldInfo 'Postgres -> FieldName
+fieldInfoName :: forall b. Backend b => FieldInfo b -> FieldName
 fieldInfoName = \case
-  FIColumn info             -> fromCol @'Postgres $ pgiColumn info
+  FIColumn info             -> fromCol @b $ pgiColumn info
   FIRelationship info       -> fromRel $ riName info
   FIComputedField info      -> fromComputedField $ _cfiName info
   FIRemoteRelationship info -> fromRemoteRelationship $ _rfiName info
@@ -204,7 +123,7 @@ fieldInfoGraphQLName = \case
 -- | Returns all the field names created for the given field. Columns, object relationships, and
 -- computed fields only ever produce a single field, but array relationships also contain an
 -- @_aggregate@ field.
-fieldInfoGraphQLNames :: FieldInfo 'Postgres -> [G.Name]
+fieldInfoGraphQLNames :: FieldInfo b -> [G.Name]
 fieldInfoGraphQLNames info = case info of
   FIColumn _ -> maybeToList $ fieldInfoGraphQLName info
   FIRelationship relationshipInfo -> fold do
@@ -240,26 +159,69 @@ data InsPermInfo (b :: BackendType)
   , ipiBackendOnly     :: !Bool
   , ipiRequiredHeaders :: ![Text]
   } deriving (Generic)
-instance Backend b => NFData (InsPermInfo b)
-deriving instance Backend b => Eq (InsPermInfo b)
-instance Backend b => Cacheable (InsPermInfo b)
-instance Backend b => ToJSON (InsPermInfo b) where
+
+deriving instance
+  ( Backend b
+  , Eq (BooleanOperators b (PartialSQLExp b))
+  ) => Eq (InsPermInfo b)
+
+instance
+  ( Backend b
+  , NFData (BooleanOperators b (PartialSQLExp b))
+  ) => NFData (InsPermInfo b)
+
+instance
+  ( Backend b
+  , Hashable  (BooleanOperators b (PartialSQLExp b))
+  , Cacheable (BooleanOperators b (PartialSQLExp b))
+  ) => Cacheable (InsPermInfo b)
+
+instance
+  ( Backend b
+  , ToJSONKeyValue (BooleanOperators b (PartialSQLExp b))
+  ) => ToJSON (InsPermInfo b) where
   toJSON = genericToJSON hasuraJSON
+
 
 data SelPermInfo (b :: BackendType)
   = SelPermInfo
-  { spiCols                 :: !(HS.HashSet (Column b))
-  , spiScalarComputedFields :: !(HS.HashSet ComputedFieldName)
+  { spiCols                 :: !(M.HashMap (Column b) (Maybe (AnnColumnCaseBoolExpPartialSQL b)))
+  -- ^ HashMap of accessible columns to the role, the `Column` may be mapped to
+  -- an `AnnColumnCaseBoolExpPartialSQL`, which happens only in the case of an
+  -- inherited role, for a non-inherited role, it will be `Nothing`. The above
+  -- bool exp will determine if the column should be nullified in a row, when
+  -- there aren't requisite permissions.
+  , spiScalarComputedFields :: !(M.HashMap ComputedFieldName (Maybe (AnnColumnCaseBoolExpPartialSQL b)))
+  -- ^ HashMap of accessible scalar computed fields to the role, mapped to
+  -- `AnnColumnCaseBoolExpPartialSQL`, simililar to `spiCols`
   , spiFilter               :: !(AnnBoolExpPartialSQL b)
   , spiLimit                :: !(Maybe Int)
   , spiAllowAgg             :: !Bool
   , spiRequiredHeaders      :: ![Text]
   } deriving (Generic)
-instance Backend b => NFData (SelPermInfo b)
-deriving instance Backend b => Eq (SelPermInfo b)
-instance Backend b => Cacheable (SelPermInfo b)
-instance Backend b => ToJSON (SelPermInfo b) where
+
+deriving instance
+  ( Backend b
+  , Eq (BooleanOperators b (PartialSQLExp b))
+  ) => Eq (SelPermInfo b)
+
+instance
+  ( Backend b
+  , NFData (BooleanOperators b (PartialSQLExp b))
+  ) => NFData (SelPermInfo b)
+
+instance
+  ( Backend b
+  , Hashable  (BooleanOperators b (PartialSQLExp b))
+  , Cacheable (BooleanOperators b (PartialSQLExp b))
+  ) => Cacheable (SelPermInfo b)
+
+instance
+  ( Backend b
+  , ToJSONKeyValue (BooleanOperators b (PartialSQLExp b))
+  ) => ToJSON (SelPermInfo b) where
   toJSON = genericToJSON hasuraJSON
+
 
 data UpdPermInfo (b :: BackendType)
   = UpdPermInfo
@@ -270,11 +232,29 @@ data UpdPermInfo (b :: BackendType)
   , upiSet             :: !(PreSetColsPartial b)
   , upiRequiredHeaders :: ![Text]
   } deriving (Generic)
-instance Backend b => NFData (UpdPermInfo b)
-deriving instance Backend b => Eq (UpdPermInfo b)
-instance Backend b => Cacheable (UpdPermInfo b)
-instance Backend b => ToJSON (UpdPermInfo b) where
+
+deriving instance
+  ( Backend b
+  , Eq (BooleanOperators b (PartialSQLExp b))
+  ) => Eq (UpdPermInfo b)
+
+instance
+  ( Backend b
+  , NFData (BooleanOperators b (PartialSQLExp b))
+  ) => NFData (UpdPermInfo b)
+
+instance
+  ( Backend b
+  , Hashable  (BooleanOperators b (PartialSQLExp b))
+  , Cacheable (BooleanOperators b (PartialSQLExp b))
+  ) => Cacheable (UpdPermInfo b)
+
+instance
+  ( Backend b
+  , ToJSONKeyValue (BooleanOperators b (PartialSQLExp b))
+  ) => ToJSON (UpdPermInfo b) where
   toJSON = genericToJSON hasuraJSON
+
 
 data DelPermInfo (b :: BackendType)
   = DelPermInfo
@@ -282,14 +262,29 @@ data DelPermInfo (b :: BackendType)
   , dpiFilter          :: !(AnnBoolExpPartialSQL b)
   , dpiRequiredHeaders :: ![Text]
   } deriving (Generic)
-instance Backend b => NFData (DelPermInfo b)
-deriving instance Backend b => Eq (DelPermInfo b)
-instance Backend b => Cacheable (DelPermInfo b)
-instance Backend b => ToJSON (DelPermInfo b) where
+
+deriving instance
+  ( Backend b
+  , Eq (BooleanOperators b (PartialSQLExp b))
+  ) => Eq (DelPermInfo b)
+
+instance
+  ( Backend b
+  , NFData (BooleanOperators b (PartialSQLExp b))
+  ) => NFData (DelPermInfo b)
+
+instance
+  ( Backend b
+  , Hashable  (BooleanOperators b (PartialSQLExp b))
+  , Cacheable (BooleanOperators b (PartialSQLExp b))
+  ) => Cacheable (DelPermInfo b)
+
+instance
+  ( Backend b
+  , ToJSONKeyValue (BooleanOperators b (PartialSQLExp b))
+  ) => ToJSON (DelPermInfo b) where
   toJSON = genericToJSON hasuraJSON
 
-mkRolePermInfo :: RolePermInfo backend
-mkRolePermInfo = RolePermInfo Nothing Nothing Nothing Nothing
 
 data RolePermInfo (b :: BackendType)
   = RolePermInfo
@@ -298,8 +293,8 @@ data RolePermInfo (b :: BackendType)
   , _permUpd :: !(Maybe (UpdPermInfo b))
   , _permDel :: !(Maybe (DelPermInfo b))
   } deriving (Generic)
-instance Backend b => NFData (RolePermInfo b)
-instance Backend b => ToJSON (RolePermInfo b) where
+instance (Backend b, NFData (BooleanOperators b (PartialSQLExp b))) => NFData (RolePermInfo b)
+instance (Backend b, ToJSONKeyValue (BooleanOperators b (PartialSQLExp b))) => ToJSON (RolePermInfo b) where
   toJSON = genericToJSON hasuraJSON
 
 makeLenses ''RolePermInfo
@@ -319,9 +314,17 @@ data EventTriggerInfo
    , etiHeaders     :: ![EventHeaderInfo]
    -- ^ Custom headers can be added to an event trigger. Each webhook request will have these
    -- headers added.
-   } deriving (Show, Eq, Generic)
+   } deriving (Generic, Show, Eq)
 instance NFData EventTriggerInfo
-$(deriveToJSON hasuraJSON ''EventTriggerInfo)
+
+instance ToJSON EventTriggerInfo where
+  toJSON EventTriggerInfo{..} =
+    object [ "name" .= etiName
+           , "ops_def" .= etiOpsDef
+           , "retry_conf" .= etiRetryConf
+           , "webhook_info" .= etiWebhookInfo
+           , "headers" .= etiHeaders
+           ]
 
 type EventTriggerInfoMap = M.HashMap TriggerName EventTriggerInfo
 
@@ -386,34 +389,79 @@ isMutable :: (ViewInfo -> Bool) -> Maybe ViewInfo -> Bool
 isMutable _ Nothing   = True
 isMutable f (Just vi) = f vi
 
-mutableView :: (MonadError QErr m) => TableName 'Postgres
-            -> (ViewInfo -> Bool) -> Maybe ViewInfo
-            -> Text -> m ()
-mutableView qt f mVI operation =
-  unless (isMutable f mVI) $ throw400 NotSupported $
-  "view " <> qt <<> " is not " <> operation
+type CustomColumnNames b = HashMap (Column b) G.Name
 
-data TableConfig
+data TableConfig b
   = TableConfig
   { _tcCustomRootFields  :: !TableCustomRootFields
-  , _tcCustomColumnNames :: !CustomColumnNames
+  , _tcCustomColumnNames :: !(CustomColumnNames b)
   , _tcCustomName        :: !(Maybe G.Name)
-  } deriving (Show, Eq, Generic)
-instance NFData TableConfig
-instance Cacheable TableConfig
-$(deriveToJSON hasuraJSON{omitNothingFields=True} ''TableConfig)
+  } deriving (Generic)
+deriving instance (Backend b) => Eq (TableConfig b)
+deriving instance (Backend b) => Show (TableConfig b)
+instance (Backend b) => NFData (TableConfig b)
+instance (Backend b) => Cacheable (TableConfig b)
+instance Backend b => ToJSON (TableConfig b) where
+  toJSON = genericToJSON hasuraJSON{omitNothingFields = True}
 $(makeLenses ''TableConfig)
 
-emptyTableConfig :: TableConfig
+emptyTableConfig :: (TableConfig b)
 emptyTableConfig =
   TableConfig emptyCustomRootFields M.empty Nothing
 
-instance FromJSON TableConfig where
+instance (Backend b) => FromJSON (TableConfig b) where
   parseJSON = withObject "TableConfig" $ \obj ->
     TableConfig
     <$> obj .:? "custom_root_fields" .!= emptyCustomRootFields
     <*> obj .:? "custom_column_names" .!= M.empty
     <*> obj .:? "custom_name"
+
+data Constraint (b :: BackendType)
+  = Constraint
+  { _cName :: !(ConstraintName b)
+  , _cOid  :: !OID
+  } deriving (Generic)
+deriving instance Backend b => Eq (Constraint b)
+deriving instance Backend b => Show (Constraint b)
+instance Backend b => NFData (Constraint b)
+instance Backend b => Hashable (Constraint b)
+instance Backend b => Cacheable (Constraint b)
+instance Backend b => ToJSON (Constraint b) where
+  toJSON = genericToJSON hasuraJSON
+instance Backend b => FromJSON (Constraint b) where
+  parseJSON = genericParseJSON hasuraJSON
+
+data PrimaryKey (b :: BackendType) a
+  = PrimaryKey
+  { _pkConstraint :: !(Constraint b)
+  , _pkColumns    :: !(NESeq a)
+  } deriving (Generic, Foldable)
+deriving instance (Backend b, Eq a) => Eq (PrimaryKey b a)
+deriving instance (Backend b, Show a) => Show (PrimaryKey b a)
+instance (Backend b, NFData a) => NFData (PrimaryKey b a)
+instance (Backend b, Hashable (NESeq a)) => Hashable (PrimaryKey b a)
+instance (Backend b, Cacheable a) => Cacheable (PrimaryKey b a)
+instance (Backend b, ToJSON a) => ToJSON (PrimaryKey b a) where
+  toJSON = genericToJSON hasuraJSON
+instance (Backend b, FromJSON a) => FromJSON (PrimaryKey b a) where
+  parseJSON = genericParseJSON hasuraJSON
+$(makeLenses ''PrimaryKey)
+
+data ForeignKey (b :: BackendType)
+  = ForeignKey
+  { _fkConstraint    :: !(Constraint b)
+  , _fkForeignTable  :: !(TableName b)
+  , _fkColumnMapping :: !(HashMap (Column b) (Column b))
+  } deriving (Generic)
+deriving instance Backend b => Eq (ForeignKey b)
+deriving instance Backend b => Show (ForeignKey b)
+instance Backend b => NFData (ForeignKey b)
+instance Backend b => Hashable (ForeignKey b)
+instance Backend b => Cacheable (ForeignKey b)
+instance Backend b => ToJSON (ForeignKey b) where
+  toJSON = genericToJSON hasuraJSON
+instance Backend b => FromJSON (ForeignKey b) where
+  parseJSON = genericParseJSON hasuraJSON
 
 -- | The @field@ and @primaryKeyColumn@ type parameters vary as the schema cache is built and more
 -- information is accumulated. See also 'TableCoreInfo'.
@@ -423,24 +471,25 @@ data TableCoreInfoG (b :: BackendType) field primaryKeyColumn
   , _tciDescription       :: !(Maybe PG.PGDescription) -- TODO make into type family?
   , _tciSystemDefined     :: !SystemDefined
   , _tciFieldInfoMap      :: !(FieldInfoMap field)
-  , _tciPrimaryKey        :: !(Maybe (PrimaryKey primaryKeyColumn))
-  , _tciUniqueConstraints :: !(HashSet Constraint)
+  , _tciPrimaryKey        :: !(Maybe (PrimaryKey b primaryKeyColumn))
+  , _tciUniqueConstraints :: !(HashSet (Constraint b))
   -- ^ Does /not/ include the primary key; use 'tciUniqueOrPrimaryKeyConstraints' if you need both.
   , _tciForeignKeys       :: !(HashSet (ForeignKey b))
   , _tciViewInfo          :: !(Maybe ViewInfo)
   , _tciEnumValues        :: !(Maybe EnumValues)
-  , _tciCustomConfig      :: !TableConfig
+  , _tciCustomConfig      :: !(TableConfig b)
   } deriving (Generic)
 deriving instance (Eq field, Eq pkCol, Backend b) => Eq (TableCoreInfoG b field pkCol)
 instance (Cacheable field, Cacheable pkCol, Backend b) => Cacheable (TableCoreInfoG b field pkCol)
-instance (Backend b, ToJSON field, ToJSON pkCol) => ToJSON (TableCoreInfoG b field pkCol) where
+instance (Backend b, Generic pkCol, ToJSON field, ToJSON pkCol) => ToJSON (TableCoreInfoG b field pkCol) where
   toJSON = genericToJSON hasuraJSON
 $(makeLenses ''TableCoreInfoG)
 
 -- | Fully-processed table info that includes non-column fields.
 type TableCoreInfo b = TableCoreInfoG b (FieldInfo b) (ColumnInfo b)
 
-tciUniqueOrPrimaryKeyConstraints :: TableCoreInfoG b f pkCol -> Maybe (NonEmpty Constraint)
+tciUniqueOrPrimaryKeyConstraints
+  :: TableCoreInfoG b f pkCol -> Maybe (NonEmpty (Constraint b))
 tciUniqueOrPrimaryKeyConstraints info = NE.nonEmpty $
   maybeToList (_pkConstraint <$> _tciPrimaryKey info)
   <> toList (_tciUniqueConstraints info)
@@ -451,7 +500,7 @@ data TableInfo (b :: BackendType)
   , _tiRolePermInfoMap     :: !(RolePermInfoMap b)
   , _tiEventTriggerInfoMap :: !EventTriggerInfoMap
   } deriving (Generic)
-instance Backend b => ToJSON (TableInfo b) where
+instance (Backend b, ToJSONKeyValue (BooleanOperators b (PartialSQLExp b))) => ToJSON (TableInfo b) where
   toJSON = genericToJSON hasuraJSON
 $(makeLenses ''TableInfo)
 
@@ -487,8 +536,8 @@ data DBTableMetadata (b :: BackendType)
   = DBTableMetadata
   { _ptmiOid               :: !OID
   , _ptmiColumns           :: ![RawColumnInfo b]
-  , _ptmiPrimaryKey        :: !(Maybe (PrimaryKey (Column b)))
-  , _ptmiUniqueConstraints :: !(HashSet Constraint)
+  , _ptmiPrimaryKey        :: !(Maybe (PrimaryKey b (Column b)))
+  , _ptmiUniqueConstraints :: !(HashSet (Constraint b))
   -- ^ Does /not/ include the primary key!
   , _ptmiForeignKeys       :: !(HashSet (ForeignKeyMetadata b))
   , _ptmiViewInfo          :: !(Maybe ViewInfo)
@@ -513,12 +562,7 @@ getColumnInfoM
 getColumnInfoM tableInfo fieldName =
   (^? _FIColumn) =<< getFieldInfoM tableInfo fieldName
 
-getSelectPermissionInfoM
-  :: TableInfo b -> RoleName -> Maybe (SelPermInfo b)
-getSelectPermissionInfoM tableInfo roleName =
-  join $ tableInfo ^? tiRolePermInfoMap.at roleName._Just.permSel
-
-data PermAccessor b a where
+data PermAccessor (b :: BackendType) a where
   PAInsert :: PermAccessor b (InsPermInfo b)
   PASelect :: PermAccessor b (SelPermInfo b)
   PAUpdate :: PermAccessor b (UpdPermInfo b)
@@ -541,3 +585,42 @@ withPermType PTInsert f = f PAInsert
 withPermType PTSelect f = f PASelect
 withPermType PTUpdate f = f PAUpdate
 withPermType PTDelete f = f PADelete
+
+askFieldInfo :: (MonadError QErr m)
+             => FieldInfoMap fieldInfo
+             -> FieldName
+             -> m fieldInfo
+askFieldInfo m f =
+  onNothing (M.lookup f m) $ throw400 NotExists (f <<> " does not exist")
+
+askColumnType
+  :: (MonadError QErr m, Backend backend)
+  => FieldInfoMap (FieldInfo backend)
+  -> Column backend
+  -> Text
+  -> m (ColumnType backend)
+askColumnType m c msg =
+  pgiType <$> askColInfo m c msg
+
+askColInfo
+  :: forall m backend
+  . (MonadError QErr m, Backend backend)
+  => FieldInfoMap (FieldInfo backend)
+  -> Column backend
+  -> Text
+  -> m (ColumnInfo backend)
+askColInfo m c msg = do
+  fieldInfo <- modifyErr ("column " <>) $
+             askFieldInfo m (fromCol @backend c)
+  case fieldInfo of
+    (FIColumn pgColInfo)     -> pure pgColInfo
+    (FIRelationship   _)     -> throwErr "relationship"
+    (FIComputedField _)      -> throwErr "computed field"
+    (FIRemoteRelationship _) -> throwErr "remote relationship"
+  where
+    throwErr fieldType =
+      throwError $ err400 UnexpectedPayload $ mconcat
+      [ "expecting a postgres column; but, "
+      , c <<> " is a " <> fieldType <> "; "
+      , msg
+      ]

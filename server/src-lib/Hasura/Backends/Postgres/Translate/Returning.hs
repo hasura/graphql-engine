@@ -49,7 +49,9 @@ checkPermissionRequired = \case
 pgColsToSelFlds :: [ColumnInfo 'Postgres] -> [(FieldName, AnnField 'Postgres)]
 pgColsToSelFlds cols =
   flip map cols $
-  \pgColInfo -> (fromCol @'Postgres $ pgiColumn pgColInfo, mkAnnColumnField pgColInfo Nothing)
+  \pgColInfo -> (fromCol @'Postgres $ pgiColumn pgColInfo, mkAnnColumnField pgColInfo Nothing Nothing)
+  --                                                                         ^^ Nothing because mutations aren't supported
+  --                                                                         with inherited role
 
 mkDefaultMutFlds :: Maybe [ColumnInfo 'Postgres] -> MutationOutput 'Postgres
 mkDefaultMutFlds = MOutMultirowFields . \case
@@ -164,6 +166,6 @@ checkRetCols
   -> m [ColumnInfo 'Postgres]
 checkRetCols fieldInfoMap selPermInfo cols = do
   mapM_ (checkSelOnCol selPermInfo) cols
-  forM cols $ \col -> askPGColInfo fieldInfoMap col relInRetErr
+  forM cols $ \col -> askColInfo fieldInfoMap col relInRetErr
   where
     relInRetErr = "Relationships can't be used in \"returning\"."

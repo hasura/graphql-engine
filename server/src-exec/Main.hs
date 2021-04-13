@@ -1,7 +1,9 @@
+{-# LANGUAGE NamedFieldPuns  #-}
 {-# LANGUAGE RecordWildCards #-}
 
 module Main where
 
+import           Control.Applicative
 import           Control.Exception
 import           Control.Monad.Trans.Managed        (ManagedT (..), lowerManagedT)
 import           Data.Int                           (Int64)
@@ -20,6 +22,7 @@ import           Hasura.RQL.DDL.Schema.Source
 import           Hasura.RQL.Types
 import           Hasura.Server.Init
 import           Hasura.Server.Migrate              (downgradeCatalog)
+import           Hasura.Server.Types                (MaintenanceMode (..))
 import           Hasura.Server.Version
 
 import qualified Control.Concurrent.Extended        as C
@@ -44,7 +47,7 @@ main = do
   where
     tryExit io = try io >>= \case
       Left (ExitException _code msg) -> BC.putStrLn msg >> Sys.exitFailure
-      Right r -> return r
+      Right r                        -> return r
 
 runApp :: Env.Environment -> HGEOptions Hasura -> IO ()
 runApp env (HGEOptionsG rci metadataDbUrl hgeCmd) = do
@@ -73,18 +76,26 @@ runApp env (HGEOptionsG rci metadataDbUrl hgeCmd) = do
         -- Warp, and is triggered by invoking the 'closeSocket' callback.
         -- We only catch the SIGTERM signal once, that is, if the user hits CTRL-C
         -- once again, we terminate the process immediately.
-        _ <- liftIO $ Signals.installHandler
-          Signals.sigTERM
-          (Signals.CatchOnce (shutdownGracefully $ _scShutdownLatch serveCtx))
-          Nothing
+
+        -- The function is written in this style to avoid the shutdown
+        -- handler retaining a reference to the entire serveCtx (see #344)
+        -- If you modify this code then you should check the core to see
+        -- that serveCtx is not retained.
+        _ <- case serveCtx of
+               ServeCtx{_scShutdownLatch} ->
+                liftIO $ Signals.installHandler
+                  Signals.sigTERM
+                  (Signals.CatchOnce (shutdownGracefully _scShutdownLatch))
+                  Nothing
 
         let Loggers _ logger pgLogger = _scLoggers serveCtx
+
         _idleGCThread <- C.forkImmortal "ourIdleGC" logger $
           GC.ourIdleGC logger (seconds 0.3) (seconds 10) (seconds 60)
 
         serverMetrics <- liftIO $ createServerMetrics ekgStore
         flip runPGMetadataStorageApp (_scMetadataDbPool serveCtx, pgLogger) . lowerManagedT $ do
-          runHGEServer env serveOptions serveCtx initTime Nothing serverMetrics ekgStore
+          runHGEServer (const $ pure ()) env serveOptions serveCtx initTime Nothing serverMetrics ekgStore
 
     HCExport -> do
       res <- runTxWithMinimalPool _gcMetadataDbConnInfo fetchMetadataFromCatalog
@@ -97,16 +108,21 @@ runApp env (HGEOptionsG rci metadataDbUrl hgeCmd) = do
 
     HCExecute -> do
       queryBs <- liftIO BL.getContents
-      let sqlGenCtx = SQLGenCtx False
+      let sqlGenCtx = SQLGenCtx False False
           remoteSchemaPermsCtx = RemoteSchemaPermsDisabled
           pgLogger = print
           pgSourceResolver = mkPgSourceResolver pgLogger
-          cacheBuildParams = CacheBuildParams _gcHttpManager sqlGenCtx remoteSchemaPermsCtx pgSourceResolver
+          functionPermsCtx = FunctionPermissionsInferred
+          maintenanceMode = MaintenanceModeDisabled
+          serverConfigCtx =
+            ServerConfigCtx functionPermsCtx remoteSchemaPermsCtx sqlGenCtx maintenanceMode mempty
+          cacheBuildParams =
+            CacheBuildParams _gcHttpManager pgSourceResolver serverConfigCtx
       runManagedT (mkMinimalPool _gcMetadataDbConnInfo) $ \metadataDbPool -> do
         res <- flip runPGMetadataStorageApp (metadataDbPool, pgLogger) $
           runMetadataStorageT $ liftEitherM do
-          metadata <- fetchMetadata
-          runAsAdmin sqlGenCtx _gcHttpManager remoteSchemaPermsCtx $ do
+          (metadata, _) <- fetchMetadata
+          runAsAdmin _gcHttpManager serverConfigCtx $ do
             schemaCache <- runCacheBuild cacheBuildParams $
                            buildRebuildableSchemaCache env metadata
             execQuery env queryBs
@@ -119,8 +135,8 @@ runApp env (HGEOptionsG rci metadataDbUrl hgeCmd) = do
     HCDowngrade opts -> do
       let defaultSourceConfig = maybeDefaultPgConnInfo <&> \(dbUrlConf, _) ->
             let pgSourceConnInfo = PostgresSourceConnInfo dbUrlConf
-                                   defaultPostgresPoolSettings{_ppsRetries = fromMaybe 1 maybeRetries}
-            in SourceConfiguration pgSourceConnInfo Nothing
+                                   (Just setPostgresPoolSettings{_ppsRetries = maybeRetries <|> Just 1})
+            in PostgresConnConfiguration pgSourceConnInfo Nothing
       res <- runTxWithMinimalPool _gcMetadataDbConnInfo $ downgradeCatalog defaultSourceConfig opts initTime
       either (printErrJExit DowngradeProcessError) (liftIO . print) res
 

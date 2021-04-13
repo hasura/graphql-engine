@@ -32,7 +32,7 @@ func (c *CustomList) Iterate() linq.Iterator {
 	}
 }
 
-type Datasource struct {
+type Database struct {
 	Name string
 	Type string
 }

@@ -15,26 +15,32 @@ import qualified Language.GraphQL.Draft.Syntax               as G
 
 import           Control.Monad.Trans.Control                 (MonadBaseControl)
 import           Data.Text.Extended
+import qualified Data.Text                                   as T
 
 import qualified Hasura.Backends.Postgres.Execute.RemoteJoin as RR
 import qualified Hasura.Backends.Postgres.SQL.DML            as S
 import qualified Hasura.Backends.Postgres.Translate.Select   as DS
 import qualified Hasura.GraphQL.Execute                      as E
+import qualified Hasura.GraphQL.Execute.Action               as EA
 import qualified Hasura.GraphQL.Execute.Inline               as E
-import qualified Hasura.GraphQL.Execute.LiveQuery            as E
+import qualified Hasura.GraphQL.Execute.LiveQuery.Explain    as E
 import qualified Hasura.GraphQL.Execute.Query                as E
+import qualified Hasura.GraphQL.Execute.RemoteJoin           as RR
 import qualified Hasura.GraphQL.Transport.HTTP.Protocol      as GH
-import qualified Hasura.RQL.IR.Select                        as DS
+import qualified Hasura.SQL.AnyBackend                       as AB
+import qualified Hasura.Backends.BigQuery.DataLoader.Plan    as BigQuery
+import qualified Hasura.Backends.BigQuery.Plan               as BigQuery
 
 import           Hasura.Backends.Postgres.SQL.Value
 import           Hasura.Backends.Postgres.Translate.Column   (toTxtValue)
 import           Hasura.EncJSON
 import           Hasura.GraphQL.Context
 import           Hasura.GraphQL.Parser
+import           Hasura.Metadata.Class
 import           Hasura.RQL.DML.Internal
 import           Hasura.RQL.Types
-import           Hasura.Session
 import           Hasura.SQL.Types
+import           Hasura.Session
 
 
 data GQLExplain
@@ -85,30 +91,55 @@ explainQueryField
      )
   => UserInfo
   -> G.Name
-  -> QueryRootField (UnpreparedValue 'Postgres)
-  -> m FieldPlan
+  -> QueryRootField UnpreparedValue
+  -> m (Maybe FieldPlan)
 explainQueryField userInfo fieldName rootField = do
-  resolvedRootField <- E.traverseQueryRootField (resolveUnpreparedValue userInfo) rootField
-  case resolvedRootField of
+  case rootField of
     RFRemote _ -> throw400 InvalidParams "only hasura queries can be explained"
     RFAction _ -> throw400 InvalidParams "query actions cannot be explained"
-    RFRaw _    -> pure $ FieldPlan fieldName Nothing Nothing
-    RFDB _ pgExecCtx qDB   -> do
-      let (querySQL, remoteJoins) = case qDB of
-            QDBSimple s      -> first (DS.selectQuerySQL DS.JASMultipleRows) $ RR.getRemoteJoins s
-            QDBPrimaryKey s  -> first (DS.selectQuerySQL DS.JASSingleObject) $ RR.getRemoteJoins s
-            QDBAggregation s -> first DS.selectAggregateQuerySQL $ RR.getRemoteJoinsAggregateSelect s
-            QDBConnection s  -> first DS.connectionSelectQuerySQL $ RR.getRemoteJoinsConnectionSelect s
-          textSQL = Q.getQueryText querySQL
-          -- CAREFUL!: an `EXPLAIN ANALYZE` here would actually *execute* this
-          -- query, maybe resulting in privilege escalation:
-          withExplain = "EXPLAIN (FORMAT TEXT) " <> textSQL
-      -- Reject if query contains any remote joins
-      when (remoteJoins /= mempty) $ throw400 NotSupported "Remote relationships are not allowed in explain query"
-      planLines <- liftEitherM $ runExceptT $ runLazyTx pgExecCtx Q.ReadOnly $
-                   liftTx $ map runIdentity <$>
-                   Q.listQE dmlTxErrorHandler (Q.fromText withExplain) () True
-      pure $ FieldPlan fieldName (Just textSQL) $ Just planLines
+    RFRaw _    -> pure $ Just $ FieldPlan fieldName Nothing Nothing
+    RFDB _ exists -> dispatch [do
+      -- TEMPORARY!!!
+      -- We don't handle non-Postgres backends yet: for now, we filter root fields to only keep those
+      -- that are targeting postgres, and we *silently* discard all the others. This is fine for now, as
+      -- we haven't integrated any other backend yet, but will need to be fixed as soon as possible for
+      -- other backends to work.
+      SourceConfigWith pgConfig (QDBR pgQDB) <-
+        hoistMaybe $ AB.unpackAnyBackend exists
+      lift $ do
+        resolvedQuery <- E.traverseQueryDB (resolveUnpreparedValue userInfo) pgQDB
+        let (querySQL, remoteJoins) = case resolvedQuery of
+              QDBMultipleRows s -> first (DS.selectQuerySQL JASMultipleRows) $ RR.getRemoteJoinsSelect s
+              QDBSingleRow    s -> first (DS.selectQuerySQL JASSingleObject) $ RR.getRemoteJoinsSelect s
+              QDBAggregation  s -> first DS.selectAggregateQuerySQL $ RR.getRemoteJoinsAggregateSelect s
+              QDBConnection   s -> first DS.connectionSelectQuerySQL $ RR.getRemoteJoinsConnectionSelect s
+            textSQL = Q.getQueryText querySQL
+            -- CAREFUL!: an `EXPLAIN ANALYZE` here would actually *execute* this
+            -- query, maybe resulting in privilege escalation:
+            withExplain = "EXPLAIN (FORMAT TEXT) " <> textSQL
+        -- Reject if query contains any remote joins
+        when (remoteJoins /= mempty) $ throw400 NotSupported "Remote relationships are not allowed in explain query"
+        planLines <- liftEitherM $ runExceptT $ runLazyTx (_pscExecCtx pgConfig) Q.ReadOnly $
+                     liftTx $ map runIdentity <$>
+                     Q.listQE dmlTxErrorHandler (Q.fromText withExplain) () True
+        pure $ FieldPlan fieldName (Just textSQL) $ Just planLines
+        ,do
+      -- BigQuery case
+      SourceConfigWith _ (QDBR bqQDB) <-
+        hoistMaybe $ AB.unpackAnyBackend exists
+      lift $ do
+        actionsForest <- BigQuery.planToForest userInfo bqQDB
+        pure $
+          FieldPlan
+            fieldName
+            (Just ("--\n" <> BigQuery.drawActionsForestSQL actionsForest))
+            (Just ("": T.lines (BigQuery.drawActionsForest actionsForest)))]
+  where dispatch [] = pure Nothing
+        dispatch (x:xs) = do
+          mv <- runMaybeT x
+          case mv of
+            Nothing -> dispatch xs
+            Just v  -> pure (Just v)
 
 -- NOTE: This function has a 'MonadTrace' constraint in master, but we don't need it
 -- here. We should evaluate if we need it here.
@@ -117,13 +148,16 @@ explainGQLQuery
   . ( MonadError QErr m
     , MonadIO m
     , MonadBaseControl IO m
+    , MonadMetadataStorage (MetadataStorageT m)
     )
   => SchemaCache
   -> GQLExplain
   -> m EncJSON
 explainGQLQuery sc (GQLExplain query userVarsRaw maybeIsRelay) = do
   -- NOTE!: we will be executing what follows as though admin role. See e.g. notes in explainField:
-  userInfo <- mkUserInfo (URBFromSessionVariablesFallback adminRoleName) UAdminSecretSent sessionVariables
+  userInfo <-
+    mkUserInfo (URBFromSessionVariablesFallback adminRoleName) UAdminSecretSent
+               sessionVariables
   -- we don't need to check in allow list as we consider it an admin endpoint
   let takeFragment =
         \case G.ExecutableDefinitionFragment f -> Just f; _ -> Nothing
@@ -133,9 +167,9 @@ explainGQLQuery sc (GQLExplain query userVarsRaw maybeIsRelay) = do
     G.TypedOperationDefinition G.OperationTypeQuery _ varDefs _ selSet -> do
       -- (Here the above fragment inlining is actually executed.)
       inlinedSelSet <- E.inlineSelectionSet fragments selSet
-      (unpreparedQueries, _) <-
+      (unpreparedQueries, _, _) <-
         E.parseGraphQLQuery graphQLContext varDefs (GH._grVariables query) inlinedSelSet
-      encJFromJValue
+      encJFromJValue . catMaybes
         <$> for (OMap.toList unpreparedQueries) (uncurry (explainQueryField userInfo))
 
     G.TypedOperationDefinition G.OperationTypeMutation _ _ _ _ ->
@@ -144,10 +178,17 @@ explainGQLQuery sc (GQLExplain query userVarsRaw maybeIsRelay) = do
     G.TypedOperationDefinition G.OperationTypeSubscription _ varDefs _ selSet -> do
       -- (Here the above fragment inlining is actually executed.)
       inlinedSelSet <- E.inlineSelectionSet fragments selSet
-      (unpreparedQueries, _) <- E.parseGraphQLQuery graphQLContext varDefs (GH._grVariables query) inlinedSelSet
-      (pgExecCtx, validSubscriptionQueries) <-  E.validateSubscriptionRootField unpreparedQueries
-      (plan, _) <- E.buildLiveQueryPlan pgExecCtx userInfo validSubscriptionQueries
-      encJFromJValue <$> E.explainLiveQueryPlan plan
+      (unpreparedQueries, _, _) <- E.parseGraphQLQuery graphQLContext varDefs (GH._grVariables query) inlinedSelSet
+      validSubscription <-  E.buildSubscriptionPlan userInfo unpreparedQueries
+      case validSubscription of
+        E.SEAsyncActionsWithNoRelationships _ -> throw400 NotSupported "async action query fields without relationships to table cannot be explained"
+        E.SEOnSourceDB actionIds liveQueryBuilder -> do
+          actionLogResponseMap <- fst <$> EA.fetchActionLogResponses actionIds
+          (_, E.LQP exists) <- liftEitherM $ liftIO $ runExceptT $ liveQueryBuilder actionLogResponseMap
+          case AB.unpackAnyBackend exists of
+            Nothing -> pure mempty
+            Just (E.MultiplexedLiveQueryPlan execPlan) ->
+              encJFromJValue <$> E.explainLiveQueryPlan execPlan
   where
     queryType = bool E.QueryHasura E.QueryRelay $ Just True == maybeIsRelay
     sessionVariables = mkSessionVariablesText $ fromMaybe mempty userVarsRaw

@@ -27,9 +27,12 @@ func newMigrateStatusCmd(ec *cli.ExecutionContext) *cobra.Command {
   # Check status on a different server:
   hasura migrate status --endpoint "<endpoint>"`,
 		SilenceUsage: true,
+		PreRunE: func(cmd *cobra.Command, args []string) error {
+			return validateConfigV3Flags(cmd, ec)
+		},
 		RunE: func(cmd *cobra.Command, args []string) error {
 			opts.EC.Spin("Fetching migration status...")
-			opts.Datasource = ec.Datasource
+			opts.Source = ec.Source
 			status, err := opts.Run()
 			opts.EC.Spinner.Stop()
 			if err != nil {
@@ -44,12 +47,12 @@ func newMigrateStatusCmd(ec *cli.ExecutionContext) *cobra.Command {
 }
 
 type MigrateStatusOptions struct {
-	EC         *cli.ExecutionContext
-	Datasource string
+	EC     *cli.ExecutionContext
+	Source cli.Source
 }
 
 func (o *MigrateStatusOptions) Run() (*migrate.Status, error) {
-	migrateDrv, err := migrate.NewMigrate(o.EC, true, o.Datasource)
+	migrateDrv, err := migrate.NewMigrate(o.EC, true, o.Source.Name, o.Source.Kind)
 	if err != nil {
 		return nil, err
 	}
@@ -65,14 +68,13 @@ func printStatus(status *migrate.Status) *bytes.Buffer {
 	buf := &bytes.Buffer{}
 	out.Init(buf, 0, 8, 2, ' ', 0)
 	w := util.NewPrefixWriter(out)
-	w.Write(util.LEVEL_0, "VERSION\tNAME\tSOURCE STATUS\tDATABASE STATUS\tDIRTY\n")
+	w.Write(util.LEVEL_0, "VERSION\tNAME\tSOURCE STATUS\tDATABASE STATUS\n")
 	for _, version := range status.Index {
-		w.Write(util.LEVEL_0, "%d\t%s\t%s\t%s\t%t\n",
+		w.Write(util.LEVEL_0, "%d\t%s\t%s\t%s\n",
 			version,
 			status.Migrations[version].Name,
 			convertBool(status.Migrations[version].IsPresent),
 			convertBool(status.Migrations[version].IsApplied),
-			status.Migrations[version].IsDirty,
 		)
 	}
 	out.Flush()

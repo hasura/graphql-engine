@@ -40,6 +40,8 @@ args:
         type: String!
       - name: email
         type: String!
+      - name: parent
+        type: UserInput
 
     - name: InObject
       fields:

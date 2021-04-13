@@ -50,8 +50,8 @@ module Hasura.GraphQL.Parser.Schema (
   , DirectiveInfo(..)
   ) where
 
+import           Hasura.Incremental            (Cacheable)
 import           Hasura.Prelude
-import           Hasura.Incremental           (Cacheable)
 
 import qualified Data.Aeson                    as J
 import qualified Data.HashMap.Strict.Extended  as Map
@@ -59,15 +59,13 @@ import qualified Data.HashSet                  as Set
 import qualified Data.List.NonEmpty            as NE
 import qualified Data.Text                     as T
 
-import           Data.Text.Extended
 import           Control.Lens.Extended
 import           Control.Monad.Unique
 import           Data.Functor.Classes
-import           Data.Hashable                 ( Hashable (..) )
-import           Language.GraphQL.Draft.Syntax ( Description (..), Name (..)
-                                               , Value (..), Nullability(..)
-                                               , GType (..), DirectiveLocation(..)
-                                               )
+import           Data.Hashable                 (Hashable (..))
+import           Data.Text.Extended
+import           Language.GraphQL.Draft.Syntax (Description (..), DirectiveLocation (..),
+                                                GType (..), Name (..), Nullability (..), Value (..))
 
 class HasName a where
   getName :: a -> Name
@@ -308,10 +306,13 @@ discardNullability (NonNullable t) = t
 discardNullability (Nullable t)    = t
 
 nullableType :: Type k -> Type k
-nullableType = Nullable . discardNullability
+nullableType (NonNullable t) = Nullable t
+-- Defined like this to preserve sharing
+nullableType t@(Nullable {}) = t
 
 nonNullableType :: Type k -> Type k
-nonNullableType = NonNullable . discardNullability
+nonNullableType (Nullable t)       = NonNullable t
+nonNullableType t@(NonNullable {}) = t
 
 data NonNullableType k
   = TNamed (Definition (TypeInfo k))
@@ -444,7 +445,7 @@ instance Eq InputObjectInfo where
     =  Set.fromList (fmap dName fields1)     == Set.fromList (fmap dName fields2)
 
 data ObjectInfo = ObjectInfo
-  { oiFields :: ~[Definition FieldInfo]
+  { oiFields     :: ~[Definition FieldInfo]
     -- ^ The fields that this object has.  This consists of the fields of the
     -- interfaces that it implements, as well as any additional fields.
   , oiImplements :: ~[Definition InterfaceInfo]
@@ -465,7 +466,7 @@ instance Eq ObjectInfo where
 -- 2018), interfaces may implement other interfaces, but we currently don't
 -- support this.
 data InterfaceInfo = InterfaceInfo
-  { iiFields :: ~[Definition FieldInfo]
+  { iiFields        :: ~[Definition FieldInfo]
     -- ^ Fields declared by this interface. Every object implementing this
     -- interface must include those fields.
   , iiPossibleTypes :: ~[Definition ObjectInfo]
@@ -516,14 +517,14 @@ getObjectInfo = traverse getTI . (^.definitionLens)
   where
     getTI :: TypeInfo k -> Maybe ObjectInfo
     getTI (TIObject oi) = Just oi
-    getTI _ = Nothing
+    getTI _             = Nothing
 
 getInterfaceInfo :: Type 'Output -> Maybe (Definition InterfaceInfo)
 getInterfaceInfo = traverse getTI . (^.definitionLens)
   where
     getTI :: TypeInfo 'Output -> Maybe InterfaceInfo
     getTI (TIInterface ii) = Just ii
-    getTI _ = Nothing
+    getTI _                = Nothing
 
 data SomeTypeInfo = forall k. SomeTypeInfo (TypeInfo k)
 
@@ -742,7 +743,7 @@ typeOriginRecurse field (TypeOriginStack origins) = TypeOriginStack (field:origi
 -- This is kind of a hack to make sure that the query root name is part of the origin stack
 typeRootRecurse :: Name -> TypeOriginStack -> TypeOriginStack
 typeRootRecurse rootName (TypeOriginStack []) = (TypeOriginStack [rootName])
-typeRootRecurse _ x = x
+typeRootRecurse _ x                           = x
 
 instance ToTxt TypeOriginStack where
   toTxt (TypeOriginStack fields) = T.intercalate "." $ toTxt <$> reverse fields

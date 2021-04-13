@@ -1,11 +1,11 @@
-// Note: This file MUST contain all/only metadata requests
-
 import {
   CustomRootFields,
   ActionDefinition,
   CustomTypes,
-  HasuraMetadataV2,
   QualifiedTable,
+  HasuraMetadataV3,
+  QualifiedFunction,
+  RestEndpointEntry,
 } from './types';
 import { transformHeaders } from '../components/Common/Headers/utils';
 import { LocalEventTriggerState } from '../components/Services/Events/EventTriggers/state';
@@ -15,6 +15,7 @@ import { RemoteRelationshipPayload } from '../components/Services/Data/TableRela
 import { Driver, currentDriver } from '../dataSources';
 import { ConsoleState } from '../telemetry/state';
 import { TriggerOperation } from '../components/Common/FilterQuery/state';
+import { isEmpty } from '../components/Common/utils/jsUtils';
 
 export const metadataQueryTypes = [
   'add_source',
@@ -82,6 +83,10 @@ export const metadataQueryTypes = [
   'get_event_invocations',
   'get_scheduled_events',
   'delete_scheduled_event',
+  'create_function_permission',
+  'drop_function_permission',
+  'create_rest_endpoint',
+  'drop_rest_endpoint',
 ] as const;
 
 export type MetadataQueryType = typeof metadataQueryTypes[number];
@@ -102,17 +107,27 @@ export const getMetadataQuery = (
   type: MetadataQueryType,
   source: string,
   args: MetadataQueryArgs,
-  options?: { version: number }
+  driver: Driver = currentDriver
 ): {
   type: string;
   args: MetadataQueryArgs;
   version?: number;
 } => {
-  const prefix = currentDriver === 'postgres' ? 'pg_' : 'mysq_';
+  let prefix = '';
+  switch (driver) {
+    case 'mysql':
+      prefix = 'mysql_';
+      break;
+    case 'mssql':
+      prefix = 'mssql_';
+      break;
+    case 'postgres':
+    default:
+      prefix = 'pg_';
+  }
   return {
     type: `${prefix}${type}`,
     args: { ...args, source },
-    ...options,
   };
 };
 
@@ -208,22 +223,15 @@ export const getSetCustomRootFieldsQuery = (
 ) => {
   const customNameValue = customTableName || null;
 
-  return getMetadataQuery(
-    'set_table_customization',
+  return getMetadataQuery('set_table_customization', source, {
     source,
-    {
-      source,
-      table: tableDef,
-      configuration: {
-        custom_name: customNameValue,
-        custom_root_fields: rootFields,
-        custom_column_names: customColumnNames,
-      },
+    table: tableDef,
+    configuration: {
+      custom_name: customNameValue,
+      custom_root_fields: rootFields,
+      custom_column_names: customColumnNames,
     },
-    {
-      version: 2,
-    }
-  );
+  });
 };
 
 export const generateDropActionQuery = (name: string) => {
@@ -292,13 +300,26 @@ export const getSetTableEnumQuery = (
   });
 };
 
-export const getTrackTableQuery = (
-  tableDef: QualifiedTable,
-  source: string
-) => {
-  return getMetadataQuery('track_table', source, {
-    table: tableDef,
-  });
+export const getTrackTableQuery = ({
+  tableDef,
+  source,
+  driver,
+  customColumnNames,
+}: {
+  tableDef: QualifiedTable;
+  source: string;
+  driver: Driver;
+  customColumnNames?: Record<string, string>;
+}) => {
+  const args = isEmpty(customColumnNames)
+    ? { table: tableDef }
+    : {
+        table: tableDef,
+        configuration: {
+          custom_column_names: customColumnNames,
+        },
+      };
+  return getMetadataQuery('track_table', source, args, driver);
 };
 
 export const getUntrackTableQuery = (
@@ -362,11 +383,12 @@ export const getReloadRemoteSchemaCacheQuery = (remoteSchemaName: string) => {
 
 export const exportMetadataQuery = {
   type: 'export_metadata',
+  version: 2,
   args: {},
 };
 
 export const generateReplaceMetadataQuery = (
-  metadataJson: HasuraMetadataV2
+  metadataJson: HasuraMetadataV3
 ) => ({
   type: 'replace_metadata',
   args: metadataJson,
@@ -505,14 +527,12 @@ export const getDropRemoteRelQuery = (
   name: string,
   table: QualifiedTable,
   source: string
-) => ({
-  type: 'delete_remote_relationship',
-  args: {
+) =>
+  getMetadataQuery('delete_remote_relationship', source, {
     name,
     table,
     source,
-  },
-});
+  });
 
 export const getRemoteSchemaIntrospectionQuery = (
   remoteSchemaName: string
@@ -537,7 +557,8 @@ export const getTrackFunctionQuery = (
   name: string,
   schema: string,
   source: string,
-  configuration?: Record<string, any>
+  configuration?: Record<string, any>,
+  driver?: Driver
 ) => {
   if (configuration) {
     return getMetadataQuery(
@@ -547,12 +568,17 @@ export const getTrackFunctionQuery = (
         function: { name, schema },
         configuration,
       },
-      { version: 2 }
+      driver
     );
   }
-  return getMetadataQuery('track_function', source, {
-    function: { name, schema },
-  });
+  return getMetadataQuery(
+    'track_function',
+    source,
+    {
+      function: { name, schema },
+    },
+    driver
+  );
 };
 
 export const getUntrackFunctionQuery = (
@@ -753,3 +779,33 @@ export const invokeManualTriggerQuery = (
   args: InvokeManualTriggerArgs,
   source: string
 ) => getMetadataQuery('invoke_event_trigger', source, args);
+
+export const createFunctionPermissionQuery = (
+  source: string,
+  func: QualifiedFunction,
+  role: string
+) =>
+  getMetadataQuery('create_function_permission', source, {
+    function: func,
+    role,
+  });
+
+export const dropFunctionPermissionQuery = (
+  source: string,
+  func: QualifiedFunction,
+  role: string
+) =>
+  getMetadataQuery('drop_function_permission', source, {
+    function: func,
+    role,
+  });
+
+export const createRESTEndpointQuery = (args: RestEndpointEntry) => ({
+  type: 'create_rest_endpoint',
+  args,
+});
+
+export const dropRESTEndpointQuery = (name: string) => ({
+  type: 'drop_rest_endpoint',
+  args: { name },
+});

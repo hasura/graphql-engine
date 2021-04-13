@@ -9,18 +9,18 @@ module Hasura.RQL.DDL.ScheduledTrigger
   , runGetEventInvocations
   ) where
 
+import           Hasura.Backends.Postgres.DDL.Table (getHeaderInfosFromConf)
 import           Hasura.EncJSON
 import           Hasura.Eventing.ScheduledTrigger
 import           Hasura.Metadata.Class
 import           Hasura.Prelude
-import           Hasura.RQL.DDL.EventTrigger      (getHeaderInfosFromConf)
 import           Hasura.RQL.Types
 
-import qualified Data.Aeson                       as J
-import qualified Data.Environment                 as Env
-import qualified Data.HashMap.Strict              as Map
-import qualified Data.HashMap.Strict.InsOrd       as OMap
-import qualified Data.Time.Clock                  as C
+import qualified Data.Aeson                         as J
+import qualified Data.Environment                   as Env
+import qualified Data.HashMap.Strict                as Map
+import qualified Data.HashMap.Strict.InsOrd         as OMap
+import qualified Data.Time.Clock                    as C
 
 -- | runCreateCronTrigger will update a existing cron trigger when the 'replace'
 --   value is set to @true@ and when replace is @false@ a new cron trigger will
@@ -117,9 +117,11 @@ dropCronTriggerInMetadata name =
   MetadataModifier $ metaCronTriggers %~ OMap.delete name
 
 runCreateScheduledEvent
-  :: (MonadMetadataStorageQueryAPI m) => CreateScheduledEvent -> m EncJSON
-runCreateScheduledEvent =
-  (createScheduledEvent . SESOneOff) >=> \() -> pure successMsg
+  :: ( MonadMetadataStorageQueryAPI m  )
+  => CreateScheduledEvent -> m EncJSON
+runCreateScheduledEvent scheduledEvent = do
+  createScheduledEvent $ SESOneOff scheduledEvent
+  pure successMsg
 
 checkExists :: (CacheRM m, MonadError QErr m) => TriggerName -> m ()
 checkExists name = do
@@ -129,7 +131,7 @@ checkExists name = do
       "cron trigger with name: " <> triggerNameToTxt name <> " does not exist"
 
 runDeleteScheduledEvent
-  :: (MonadMetadataStorageQueryAPI m) => DeleteScheduledEvent -> m EncJSON
+  :: ( MonadMetadataStorageQueryAPI m ) => DeleteScheduledEvent -> m EncJSON
 runDeleteScheduledEvent DeleteScheduledEvent{..} = do
   dropEvent _dseEventId _dseType
   pure successMsg

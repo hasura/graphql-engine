@@ -5,6 +5,7 @@ args:
 - type: run_sql
   args:
     sql: |
+      CREATE EXTENSION IF NOT EXISTS ltree;
       CREATE TYPE complex AS (
           r       double precision,
           i       double precision
@@ -61,12 +62,13 @@ args:
           c42_range_timestamp tsrange,
           c43_range_timestamptz tstzrange,
           c44_xml xml,
-          c45_money money
+          c45_money money,
+          c46_ltree ltree
       );
       create table author(
           id serial primary key,
           name text unique,
-          "createdAt" timestamptz
+          "createdAt" timestamp
       );
       CREATE TABLE article (
         id SERIAL PRIMARY KEY,
@@ -119,6 +121,7 @@ args:
       , c43_range_timestamptz
       , c44_xml
       , c45_money
+      , c46_ltree
       )
       values
       ( 32767                                       -- c1_smallint
@@ -163,11 +166,12 @@ args:
       , '(2011-02-05T12:03:00+00:00, 2012-03-04T16:40:04+00:00]' -- c43_range_timestamptz
       , '<foo>bar</foo>'                            -- c44_xml
       ,  123.45                                     -- c45_money
+      , 'A.B.C'                                     -- c46_ltree
       );
       insert into author (name, "createdAt")
       values
-      ('Author 1', '2017-09-21T09:39:44Z'),
-      ('Author 2', '2017-09-21T09:50:44Z');
+      ('Author 1', '2017-09-21T09:39:44'),
+      ('Author 2', '2017-09-21T09:50:44');
       insert into article (title,content,author_id,is_published)
       values
       (

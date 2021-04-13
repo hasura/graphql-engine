@@ -33,7 +33,7 @@ class Add extends React.Component {
               type="submit"
               color="yellow"
               size="sm"
-              disabled={isRequesting}
+              // disabled={isRequesting} // TODO
               data-test="add-remote-schema-submit"
             >
               {isRequesting ? 'Adding...' : 'Add Remote Schema'}

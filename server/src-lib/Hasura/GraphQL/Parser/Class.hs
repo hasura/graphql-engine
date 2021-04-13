@@ -19,10 +19,12 @@ import           Type.Reflection                      (Typeable)
 
 import           Hasura.GraphQL.Parser.Class.Parse
 import           Hasura.GraphQL.Parser.Internal.Types
-import           Hasura.RQL.Types.Common
+import           Hasura.GraphQL.Parser.Schema         (HasDefinition)
+import           Hasura.RQL.Types.Backend
 import           Hasura.RQL.Types.Error
 import           Hasura.RQL.Types.Source
 import           Hasura.RQL.Types.Table
+-- import           Hasura.SQL.Backend
 import           Hasura.Session                       (RoleName)
 
 
@@ -95,8 +97,17 @@ class (Monad m, MonadParse n) => MonadSchema n m | m -> n where
   -- | Memoizes a parser constructor function for the extent of a single schema
   -- construction process. This is mostly useful for recursive parsers;
   -- see Note [Tying the knot] for more details.
+  --
+  -- The generality of the type here allows us to use this with multiple concrete
+  -- parser types:
+  --
+  -- @
+  -- 'memoizeOn' :: 'MonadSchema' n m => 'TH.Name' -> a -> m (Parser n b) -> m (Parser n b)
+  -- 'memoizeOn' :: 'MonadSchema' n m => 'TH.Name' -> a -> m (FieldParser n b) -> m (FieldParser n b)
+  -- @
   memoizeOn
-    :: (HasCallStack, Ord a, Typeable a, Typeable b, Typeable k)
+    :: forall p d a b
+     . (HasCallStack, HasDefinition (p n b) d, Ord a, Typeable p, Typeable a, Typeable b)
     => TH.Name
     -- ^ A unique name used to identify the function being memoized. There isn’t
     -- really any metaprogramming going on here, we just use a Template Haskell
@@ -105,7 +116,7 @@ class (Monad m, MonadParse n) => MonadSchema n m | m -> n where
     -- ^ The value to use as the memoization key. It’s the caller’s
     -- responsibility to ensure multiple calls to the same function don’t use
     -- the same key.
-    -> m (Parser k n b) -> m (Parser k n b)
+    -> m (p n b) -> m (p n b)
 
 type MonadRole r m = (MonadReader r m, Has RoleName r)
 

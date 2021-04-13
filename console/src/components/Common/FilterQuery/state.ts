@@ -53,17 +53,6 @@ export const useFilterQuery = (
 
     const { offset, limit, sorts: newSorts } = runQueryOpts;
 
-    // const where = {
-    //   $and: [...state.filters, ...presets.filters]
-    //     .filter(f => !!f.key && !!f.value)
-    //     .map(f => parseFilter(f)),
-    // };
-
-    // const orderBy = newSorts || [
-    //   ...state.sorts.filter(f => !!f.column),
-    //   ...presets.sorts,
-    // ];
-
     const offsetValue = isNotDefined(offset) ? state.offset : offset;
     const limitValue = isNotDefined(limit) ? state.limit : limit;
 
@@ -107,7 +96,7 @@ export const useFilterQuery = (
       if (triggerName) {
         query = getDataTriggerLogsQuery(
           triggerOp,
-          currentSource ?? 'default',
+          currentSource || 'default',
           triggerName,
           limitValue,
           offsetValue

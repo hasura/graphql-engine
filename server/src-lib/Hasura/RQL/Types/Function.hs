@@ -2,6 +2,7 @@ module Hasura.RQL.Types.Function where
 
 import           Hasura.Prelude
 
+import qualified Data.HashSet                       as Set
 import qualified Data.Sequence                      as Seq
 import qualified Data.Text                          as T
 
@@ -15,9 +16,10 @@ import           Data.Text.Extended
 import qualified Hasura.Backends.Postgres.SQL.Types as PG
 
 import           Hasura.Incremental                 (Cacheable)
+import           Hasura.RQL.Types.Backend
 import           Hasura.RQL.Types.Common
 import           Hasura.SQL.Backend
-
+import           Hasura.Session
 
 -- | https://www.postgresql.org/docs/current/xfunc-volatility.html
 data FunctionVolatility
@@ -83,31 +85,35 @@ $(deriveJSON
     ''FunctionExposedAs)
 
 
--- | Tracked SQL function metadata. See 'mkFunctionInfo'.
+-- | Tracked SQL function metadata. See 'buildFunctionInfo'.
 data FunctionInfo (b :: BackendType)
   = FunctionInfo
-  { fiName          :: !(FunctionName b)
-  , fiSystemDefined :: !SystemDefined
-  , fiVolatility    :: !FunctionVolatility
-  , fiExposedAs     :: !FunctionExposedAs
+  { _fiName          :: !(FunctionName b)
+  , _fiSystemDefined :: !SystemDefined
+  , _fiVolatility    :: !FunctionVolatility
+  , _fiExposedAs     :: !FunctionExposedAs
   -- ^ In which part of the schema should this function be exposed?
   --
   -- See 'mkFunctionInfo' and '_fcExposedAs'.
-  , fiInputArgs     :: !(Seq.Seq (FunctionInputArgument b))
-  , fiReturnType    :: !(TableName b)
+  , _fiInputArgs     :: !(Seq.Seq (FunctionInputArgument b))
+  , _fiReturnType    :: !(TableName b)
   -- ^ NOTE: when a table is created, a new composite type of the same name is
   -- automatically created; so strictly speaking this field means "the function
   -- returns the composite type corresponding to this table".
-  , fiDescription   :: !(Maybe PG.PGDescription) -- FIXME: make generic
+  , _fiDescription   :: !(Maybe PG.PGDescription) -- FIXME: make generic
+  , _fiPermissions   :: !(Set.HashSet RoleName)
+  , _fiJsonAggSelect :: !JsonAggSelect
+  -- ^ Roles to which the function is accessible
   } deriving (Generic)
 deriving instance Backend b => Show (FunctionInfo b)
 deriving instance Backend b => Eq   (FunctionInfo b)
 instance (Backend b) => ToJSON (FunctionInfo b) where
   toJSON = genericToJSON hasuraJSON
+$(makeLenses ''FunctionInfo)
 
 getInputArgs :: FunctionInfo b -> Seq.Seq (FunctionArg b)
 getInputArgs =
-  Seq.fromList . mapMaybe (^? _IAUserProvided) . toList . fiInputArgs
+  Seq.fromList . mapMaybe (^? _IAUserProvided) . toList . _fiInputArgs
 
 type FunctionCache b = HashMap (FunctionName b) (FunctionInfo b) -- info of all functions
 
@@ -135,7 +141,7 @@ emptyFunctionConfig = FunctionConfig Nothing Nothing
 
 -- | JSON API payload for v2 of 'track_function':
 --
--- https://hasura.io/docs/1.0/graphql/core/api-reference/schema-metadata-api/custom-functions.html#track-function-v2
+-- https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/custom-functions.html#track-function-v2
 data TrackFunctionV2
   = TrackFunctionV2
   { _tfv2Source        :: !SourceName
@@ -171,4 +177,26 @@ instance NFData RawFunctionInfo
 instance Cacheable RawFunctionInfo
 $(deriveJSON hasuraJSON ''RawFunctionInfo)
 
-type PostgresFunctionsMetadata = HashMap PG.QualifiedFunction [RawFunctionInfo]
+type DBFunctionsMetadata b = HashMap (FunctionName b) [RawFunctionInfo] -- TODO: Generalize RawFunctionInfo
+
+data FunctionPermissionsCtx
+  = FunctionPermissionsInferred
+  | FunctionPermissionsManual
+  deriving (Show, Eq)
+
+instance FromJSON FunctionPermissionsCtx where
+  parseJSON = withBool "FunctionPermissionsCtx" $
+    pure . bool FunctionPermissionsManual FunctionPermissionsInferred
+
+instance ToJSON FunctionPermissionsCtx where
+  toJSON = \case
+    FunctionPermissionsInferred -> Bool True
+    FunctionPermissionsManual   -> Bool False
+
+newtype FunctionPermissionMetadata
+  = FunctionPermissionMetadata
+  { _fpmRole       :: RoleName
+  } deriving (Show, Eq, Generic)
+instance Cacheable FunctionPermissionMetadata
+$(makeLenses ''FunctionPermissionMetadata)
+$(deriveJSON hasuraJSON ''FunctionPermissionMetadata)

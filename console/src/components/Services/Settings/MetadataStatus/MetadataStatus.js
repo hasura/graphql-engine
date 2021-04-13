@@ -33,6 +33,9 @@ const MetadataStatus = ({ dispatch, metadata }) => {
           {metadata.inconsistentObjects.map((ico, _i) => {
             let name;
             let definition;
+            if (ico.type === 'source') {
+              name = ico.definition;
+            }
             if (
               ico.type === 'object_relation' ||
               ico.type === 'array_relation'

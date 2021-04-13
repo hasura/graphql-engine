@@ -47,11 +47,11 @@ import           Hasura.Backends.Postgres.Connection
 import           Hasura.RQL.Types.Common
 import           Hasura.RQL.Types.Error
 import           Hasura.RQL.Types.Metadata
+import           Hasura.RQL.Types.Metadata.Object
 import           Hasura.RQL.Types.RemoteSchema       (RemoteSchemaName)
 import           Hasura.RQL.Types.SchemaCache
 import           Hasura.Session
 import           Hasura.Tracing                      (TraceT)
-
 
 -- ----------------------------------------------------------------------------
 -- types used during schema cache construction
@@ -62,7 +62,7 @@ data CollectedInfo
     !MetadataObject -- ^ for error reporting on missing dependencies
     !SchemaObjId
     !SchemaDependency
-  deriving (Show, Eq)
+  deriving (Eq)
 $(makePrisms ''CollectedInfo)
 
 class AsInconsistentMetadata s where
@@ -116,6 +116,7 @@ withRecordInconsistency f = proc (e, (metadataObject, s)) -> do
 class (CacheRM m) => CacheRWM m where
   buildSchemaCacheWithOptions
     :: BuildReason -> CacheInvalidations -> Metadata -> m ()
+  setMetadataResourceVersionInSchemaCache :: MetadataResourceVersion -> m ()
 
 data BuildReason
   -- | The build was triggered by an update this instance made to the catalog (in the
@@ -149,12 +150,16 @@ instance Monoid CacheInvalidations where
 
 instance (CacheRWM m) => CacheRWM (ReaderT r m) where
   buildSchemaCacheWithOptions a b c = lift $ buildSchemaCacheWithOptions a b c
+  setMetadataResourceVersionInSchemaCache = lift . setMetadataResourceVersionInSchemaCache
 instance (CacheRWM m) => CacheRWM (StateT s m) where
   buildSchemaCacheWithOptions a b c = lift $ buildSchemaCacheWithOptions a b c
+  setMetadataResourceVersionInSchemaCache = lift . setMetadataResourceVersionInSchemaCache
 instance (CacheRWM m) => CacheRWM (TraceT m) where
   buildSchemaCacheWithOptions a b c = lift $ buildSchemaCacheWithOptions a b c
+  setMetadataResourceVersionInSchemaCache = lift . setMetadataResourceVersionInSchemaCache
 instance (CacheRWM m) => CacheRWM (LazyTxT QErr m) where
   buildSchemaCacheWithOptions a b c = lift $ buildSchemaCacheWithOptions a b c
+  setMetadataResourceVersionInSchemaCache = lift . setMetadataResourceVersionInSchemaCache
 
 -- | A simple monad class which enables fetching and setting @'Metadata'
 -- in the state.
@@ -203,7 +208,7 @@ runMetadataT metadata (MetadataT m) =
 buildSchemaCacheWithInvalidations :: (MetadataM m, CacheRWM m) => CacheInvalidations -> MetadataModifier -> m ()
 buildSchemaCacheWithInvalidations cacheInvalidations metadataModifier = do
   metadata <- getMetadata
-  let modifiedMetadata = unMetadataModifier metadataModifier $ metadata
+  let modifiedMetadata = unMetadataModifier metadataModifier metadata
   buildSchemaCacheWithOptions CatalogUpdate cacheInvalidations modifiedMetadata
   putMetadata modifiedMetadata
 

@@ -13,16 +13,16 @@ import {
 export const StyledHeading = styled.h1<
   TypographyProps & ColorProps & SpaceProps
 >`
-    ${typography}
-    ${color}
+  ${typography}
+  ${color}
     ${space}
 `;
 
 export const StyledText = styled.p<
   TypographyProps & ColorProps & SpaceProps & BorderProps
 >`
-    ${typography}
-    ${color}
+  ${typography}
+  ${color}
     ${space}
     ${border}
 `;

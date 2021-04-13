@@ -56,13 +56,13 @@ runAddRemoteSchema env q@(AddRemoteSchemaQuery name defn comment) = do
 runAddRemoteSchemaPermissions
   :: ( QErrM m
      , CacheRWM m
-     , HasRemoteSchemaPermsCtx m
+     , HasServerConfigCtx m
      , MetadataM m
      )
   => AddRemoteSchemaPermissions
   -> m EncJSON
 runAddRemoteSchemaPermissions q = do
-  remoteSchemaPermsCtx <- askRemoteSchemaPermsCtx
+  remoteSchemaPermsCtx <- _sccRemoteSchemaPermsCtx <$> askServerConfigCtx
   unless (remoteSchemaPermsCtx == RemoteSchemaPermsEnabled) $ do
     throw400 ConstraintViolation
       $ "remote schema permissions can only be added when "

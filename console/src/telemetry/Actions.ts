@@ -1,22 +1,24 @@
-import { Dispatch, AnyAction } from 'redux';
+/* eslint-disable no-underscore-dangle */
+import { AnyAction, Dispatch } from 'redux';
 import { ThunkDispatch } from 'redux-thunk';
-import Endpoints, { globalCookiePolicy } from '../Endpoints';
-import requestAction from '../utils/requestAction';
-import dataHeaders from '../components/Services/Data/Common/Headers';
+
+import { getUserType } from '../components/Main/utils';
 import {
   showErrorNotification,
   showSuccessNotification,
 } from '../components/Services/Common/Notification';
+import dataHeaders from '../components/Services/Data/Common/Headers';
+import { HASURA_COLLABORATOR_TOKEN } from '../constants';
+import Endpoints, { globalCookiePolicy } from '../Endpoints';
 import globals from '../Globals';
 import {
-  getSetConsoleStateQuery,
   getConsoleStateQuery,
+  getSetConsoleStateQuery,
 } from '../metadata/queryUtils';
 import { GetReduxState, ReduxState } from '../types';
+import requestAction from '../utils/requestAction';
+import { ConsoleState, defaultConsoleState, NotificationsState } from './state';
 import { isUpdateIDsEqual } from './utils';
-import { HASURA_COLLABORATOR_TOKEN } from '../constants';
-import { getUserType } from '../components/Main/utils';
-import { ConsoleState, NotificationsState, defaultConsoleState } from './state';
 
 const SET_CONSOLE_OPTS = 'Telemetry/SET_CONSOLE_OPTS';
 const SET_NOTIFICATION_SHOWN = 'Telemetry/SET_NOTIFICATION_SHOWN';
@@ -103,7 +105,42 @@ const setTelemetryNotificationShownInDB = () => {
   return setConsoleOptsInDB(opts, successCb, errorCb);
 };
 
-type X = ReduxState['telemetry'];
+const setOnboardingCompletedInDB = (
+  dispatch: ThunkDispatch<ReduxState, unknown, AnyAction>,
+  getState: GetReduxState
+) => {
+  const successCb = () => {
+    // the success notification won't be shown on cloud
+    const isCloudContext = globals.consoleType !== 'cloud';
+    if (!isCloudContext) {
+      dispatch(
+        showSuccessNotification('Success', 'Dismissed console onboarding')
+      );
+    }
+  };
+
+  const errorCb = (error: Error) => {
+    dispatch(
+      showErrorNotification(
+        'Failed to update console onboarding status',
+        null,
+        error
+      )
+    );
+  };
+
+  dispatch({
+    type: SET_CONSOLE_OPTS,
+    data: {
+      ...getState().telemetry.console_opts,
+      onboardingShown: true,
+    },
+  });
+
+  return dispatch(
+    setConsoleOptsInDB({ onboardingShown: true }, successCb, errorCb)
+  );
+};
 
 const setPreReleaseNotificationOptOutInDB = () => (
   dispatch: ThunkDispatch<ReduxState, unknown, AnyAction>,
@@ -370,7 +407,6 @@ interface SetConsoleOptsAction {
   type: typeof SET_CONSOLE_OPTS;
   data: ConsoleState['console_opts'];
 }
-
 interface SetNotificationShowAction {
   type: typeof SET_NOTIFICATION_SHOWN;
 }
@@ -442,11 +478,12 @@ const telemetryReducer = (
 
 export default telemetryReducer;
 export {
-  setConsoleOptsInDB,
   loadConsoleOpts,
-  telemetryNotificationShown,
+  setConsoleOptsInDB,
+  setOnboardingCompletedInDB,
   setPreReleaseNotificationOptOutInDB,
   setTelemetryNotificationShownInDB,
-  updateConsoleNotificationsState,
+  telemetryNotificationShown,
   UPDATE_CONSOLE_NOTIFICATIONS,
+  updateConsoleNotificationsState,
 };

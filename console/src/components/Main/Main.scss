@@ -97,9 +97,9 @@
   display: flex;
   align-items: center;
   border-right: 1px solid #788095;
-  display: inline-block;
   width: 20%;
   min-width: 240px;
+  height: 54px;
 
   .logoParent {
     display: flex;
@@ -1530,13 +1530,21 @@
   }
 }
 
-@media (max-width: 1250px) {
+@media (max-width: 150px) {
   .secureSectionText {
     display: none;
   }
 }
 
-@media (max-width: 1050px) {
+@media (max-width: 1350px) {
+  .sidebar {
+    .header_logo_wrapper {
+      padding: 0px 10px;
+    }
+  }
+}
+
+@media (max-width: 1250px) {
   .sidebar {
     .sidebarItems {
       li {

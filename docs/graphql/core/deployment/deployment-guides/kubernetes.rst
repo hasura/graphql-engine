@@ -87,7 +87,7 @@ For example, using Docker-for-desktop on Mac:
   hasura       LoadBalancer   10.96.214.240   localhost     80:30303/TCP   4m
   kubernetes   ClusterIP      10.96.0.1       <none>        443/TCP        8m
 
-Head to: http://localhost and the console should load!
+Head to: ``http://localhost`` and the console should load!
 
 Step 5: Track existing tables and relationships
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^

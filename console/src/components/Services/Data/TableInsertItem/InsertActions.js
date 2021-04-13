@@ -4,7 +4,7 @@ import { Reals } from '../constants';
 
 import {
   showErrorNotification,
-  showSuccessNotification,
+  showNotification,
 } from '../../Common/Notification';
 import dataHeaders from '../Common/Headers';
 import { getEnumColumnMappings, dataSource } from '../../../../dataSources';
@@ -16,6 +16,7 @@ import {
 import { isStringArray } from '../../../Common/utils/jsUtils';
 import { makeMigrationCall } from '../DataActions';
 import { removeAll } from 'react-notification-system-redux';
+import { getNotificationDetails } from '../../Common/Notification';
 
 const I_SET_CLONE = 'InsertItem/I_SET_CLONE';
 const I_RESET = 'InsertItem/I_RESET';
@@ -151,10 +152,7 @@ const insertItem = (tableName, colValues, isMigration = false) => {
         error: { message: 'Not valid JSON' },
       });
     }
-    let returning = [];
-    if (isMigration) {
-      returning = columns.map(col => col.column_name);
-    }
+    const returning = columns.map(col => col.column_name);
     const reqBody = {
       type: 'insert',
       args: {
@@ -171,12 +169,35 @@ const insertItem = (tableName, colValues, isMigration = false) => {
       body: JSON.stringify(reqBody),
     };
     const url = Endpoints.query;
-    const migrationSuccessCB = affectedRows => {
+
+    const migrationSuccessCB = (affectedRows, returnedFields) => {
+      const detailsAction = {
+        label: 'Details',
+        callback: () => {
+          dispatch(
+            showNotification(
+              {
+                position: 'br',
+                title: 'Inserted data!',
+                message: `Affected rows: ${affectedRows}`,
+                dismissible: 'button',
+                autoDismiss: 0,
+                children: getNotificationDetails(returnedFields),
+              },
+              'success'
+            )
+          );
+        },
+      };
+
       dispatch(
-        showSuccessNotification(
-          'Inserted data!',
-          `Affected rows: ${affectedRows}`,
-          true
+        showNotification(
+          {
+            title: 'Inserted data!',
+            message: `Affected rows: ${affectedRows}`,
+            action: detailsAction,
+          },
+          'success'
         )
       );
     };
@@ -192,13 +213,14 @@ const insertItem = (tableName, colValues, isMigration = false) => {
               data.returning[0],
               currentTableInfo.primary_key,
               columns,
-              () => migrationSuccessCB(affectedRows)
+              () => migrationSuccessCB(affectedRows, data.returning[0])
             )
           );
         } else {
-          migrationSuccessCB(affectedRows);
+          migrationSuccessCB(affectedRows, data.returning[0]);
         }
       },
+
       err => {
         dispatch(removeAll());
         dispatch(showErrorNotification('Insert failed!', err.error, err));

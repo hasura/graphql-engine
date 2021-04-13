@@ -108,7 +108,10 @@ export const passCT = () => {
   // Check if the table got created and navigatied to modify table
   cy.url().should(
     'eq',
-    `${baseUrl}/data/default/schema/public/tables/${getTableName(0, testName)}/modify`
+    `${baseUrl}/data/default/schema/public/tables/${getTableName(
+      0,
+      testName
+    )}/modify`
   );
   cy.get(getElementFromAlias(getTableName(0, testName)));
   // Validate
@@ -117,7 +120,10 @@ export const passCT = () => {
 
 export const passCTWithFK = () => {
   // go to create-table
-  cy.get(getElementFromAlias('sidebar-add-table')).click();
+  cy.visit(getIndexRoute());
+  cy.wait(5000);
+  cy.get(getElementFromAlias('data-create-table')).click();
+  // cy.get(getElementFromAlias('table-create')).click();
   // Set tablename
   cy.get(getElementFromAlias('tableName'))
     .clear()
@@ -172,7 +178,10 @@ export const passCTWithFK = () => {
   // Check if the table got created and navigatied to modify table
   cy.url().should(
     'eq',
-    `${baseUrl}/data/default/schema/public/tables/${getTableName(1, testName)}/modify`
+    `${baseUrl}/data/default/schema/public/tables/${getTableName(
+      1,
+      testName
+    )}/modify`
   );
   cy.get('div').contains(
     `${getTableName(1, testName)}_${getColName(1)}_${getColName(0)}`
@@ -184,7 +193,9 @@ export const passCTWithFK = () => {
 
 export const failCTDuplicateTable = () => {
   // Visit data page
-  cy.get(getElementFromAlias('sidebar-add-table')).click();
+  cy.visit(getIndexRoute());
+  cy.wait(5000);
+  cy.get(getElementFromAlias('data-create-table')).click();
   // Type table name
   cy.get(getElementFromAlias('tableName')).type(getTableName(0, testName));
   // Set column

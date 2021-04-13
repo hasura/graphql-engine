@@ -14,20 +14,24 @@ import qualified Language.GraphQL.Draft.Syntax as G
 import qualified Network.URI.Extended          as N
 
 import           Data.Aeson                    (Value)
+import           Data.ByteString               (ByteString)
 import           Data.CaseInsensitive          (CI)
 import           Data.Functor.Classes          (Eq1 (..), Eq2 (..))
+import           Data.Functor.Const
 import           Data.GADT.Compare
 import           Data.Int
 import           Data.Scientific               (Scientific)
 import           Data.Set                      (Set)
 import           Data.Text.NonEmpty
-import           Data.Time.Clock
+import           Data.Time
 import           Data.Vector                   (Vector)
-import           GHC.Generics                  ((:*:) (..), (:+:) (..), Generic (..), K1 (..),
-                                                M1 (..), U1 (..), V1)
+import           Data.Word
+import           GHC.Generics                  (Generic (..), K1 (..), M1 (..), U1 (..), V1,
+                                                (:*:) (..), (:+:) (..))
 import           System.Cron.Types
 
 import           Hasura.Incremental.Select
+
 
 -- | A 'Dependency' represents a value that a 'Rule' can /conditionally/ depend on. A 'Dependency'
 -- is created using 'newDependency', and it can be “opened” again using 'dependOn'. What makes a
@@ -172,6 +176,12 @@ instance Cacheable G.Name where unchanged _ = (==)
 instance Cacheable DiffTime where unchanged _ = (==)
 instance Cacheable NominalDiffTime where unchanged _ = (==)
 instance Cacheable UTCTime where unchanged _ = (==)
+instance Cacheable Day where unchanged _ = (==)
+instance Cacheable TimeOfDay where unchanged _ = (==)
+instance Cacheable LocalTime where unchanged _ = (==)
+instance Cacheable ByteString where unchanged _ = (==)
+instance Cacheable Float where unchanged _ = (==)
+instance Cacheable Word8 where unchanged _ = (==)
 
 -- instances for CronSchedule from package `cron`
 instance Cacheable StepField
@@ -247,6 +257,8 @@ instance (Cacheable (a b), Cacheable b) => Cacheable (G.Selection a b)
 instance (Cacheable (a b), Cacheable b) => Cacheable (G.TypedOperationDefinition a b)
 
 instance Cacheable a => Cacheable (G.Value a)
+
+instance Cacheable a => Cacheable (Const a b)
 
 deriving instance Cacheable G.Description
 deriving instance Cacheable G.EnumValue

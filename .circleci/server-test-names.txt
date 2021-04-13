@@ -12,6 +12,7 @@ jwt-with-claims-namespace-path
 jwt-claims-map-with-json-path-values
 jwt-claims-map-with-literal-values
 jwt-with-expiry-time-leeway
+jwt-cookie
 cors-domains
 ws-init-cookie-read-cors-enabled
 ws-init-cookie-noread
@@ -19,8 +20,12 @@ ws-init-cookie-read-cors-disabled
 ws-graphql-api-disabled
 ws-metadata-api-disabled
 remote-schema-permissions
+function-permissions
+inherited-roles
+remote-schema-https
 query-caching
 query-logs
+webhook-request-context
 post-webhook
 get-webhook
 insecure-webhook

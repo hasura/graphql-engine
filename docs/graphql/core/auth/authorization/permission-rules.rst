@@ -4,7 +4,7 @@
 
 .. _permission_rules:
 
-Configuring Permission Rules
+Configuring permission rules
 ============================
 
 .. contents:: Table of contents
@@ -107,7 +107,6 @@ See the :ref:`API reference <MetadataOperator>` for a list of all supported colu
 **For example**, the following two images illustrate the different operators available for ``integer`` and ``text``
 types:
 
-
 .. thumbnail:: /img/graphql/core/auth/operators-for-integer-types.png
    :width: 40%
    :alt: Column operators for integer types
@@ -130,6 +129,7 @@ the value in the ``id`` column is greater than 10:
       You can define permissions using boolean expressions on the Hasura console as follows:
 
       .. thumbnail:: /img/graphql/core/auth/simple-boolean-expression.png
+         :width: 700px
          :alt: Using boolean expressions to build rules
 
    .. tab:: CLI
@@ -146,9 +146,9 @@ the value in the ``id`` column is greater than 10:
               - role: user
                 permission:
                   columns: []
-                    filter:
-                      id:
-                        _gt: 10
+                  filter:
+                    id:
+                      _gt: 10
 
       Apply the metadata by running:
 
@@ -184,6 +184,7 @@ the value in the ``id`` column is greater than 10:
 You can construct more complex boolean expressions using the ``_and``, ``_or`` and ``not`` operators:
 
 .. thumbnail:: /img/graphql/core/auth/boolean-operators.png
+   :width: 600px
    :alt: Using more complex boolean expressions to build rules
 
 **For example**, using the ``_and`` operator, you can construct a rule to restrict access for ``select`` to rows where
@@ -198,6 +199,7 @@ or "A":
       You can define permissions using the ``_and`` operator on the Hasura console as follows:
 
       .. thumbnail:: /img/graphql/core/auth/composite-boolean-expression.png
+         :width: 600px
          :alt: Example of a rule with the _and operator
 
    .. tab:: CLI
@@ -280,6 +282,7 @@ the author's ID*):
       You can define session variables in permissions on the Hasura console:
 
       .. thumbnail:: /img/graphql/core/auth/session-variables-in-permissions-simple-example.png
+         :width: 600px
          :alt: Using session variables to build rules
 
    .. tab:: CLI
@@ -298,9 +301,9 @@ the author's ID*):
                   columns:
                   - title
                   - content
-                filter:
-                  id:
-                    _eq: X-Hasura-User-Id
+                  filter:
+                    id:
+                      _eq: X-Hasura-User-Id
 
       Apply the metadata by running:
 
@@ -336,7 +339,7 @@ the author's ID*):
 .. admonition:: Array session variables in permission rules
 
    Support for using session variables for array operators like ``_in``, ``_nin``, ``_has_any_keys``,
-   ``_has_all_keys`` is available in versions ``v.1.0.0-beta.3`` and above.
+   ``_has_all_keys`` is available in versions ``v1.0.0-beta.3`` and above.
 
    When you use array operators such as ``_in`` in the permissions builder in the Hasura console, it will automatically open an array for your values.
    If your session variable value is already an array, you can click the ``[X-Hasura-Allowed-Ids]`` suggestion to remove the brackets and set your
@@ -363,6 +366,7 @@ that uses the aforementioned object relationship:
       You can use a nested object to build rules on the Hasura console:
 
       .. thumbnail:: /img/graphql/core/auth/nested-object-permission-simple-example.png
+         :width: 600px
          :alt: Using a nested object to build rules
 
    .. tab:: CLI
@@ -542,6 +546,7 @@ permissions.
       Column-level permissions are simple selections on the Hasura console:
 
       .. thumbnail:: /img/graphql/core/auth/column-level-permissions.png
+         :width: 600px
          :alt: Column level permissions
 
    .. tab:: CLI
@@ -622,6 +627,7 @@ using this configuration:
       You can set a row fetch limit on the Hasura console as follows:
 
       .. thumbnail:: /img/graphql/core/auth/limit-rows-for-select.png
+         :width: 500px
          :alt: Row fetch limit
 
    .. tab:: CLI
@@ -699,6 +705,7 @@ can be enabled for a given role using this configuration.
       You can enable aggregation queries permissions on the Hasura console as follows:
 
       .. thumbnail:: /img/graphql/core/auth/aggregation-query-permissions.png
+         :width: 500px
          :alt: Aggregation queries permissions
 
    .. tab:: CLI
@@ -786,3 +793,6 @@ via a "trusted backend".
 
   Setting ``backend-only`` is currently available for insert mutations only.
 
+.. admonition:: Additional Resources
+
+  Enterprise Grade Authorization - `Watch Webinar <https://hasura.io/events/webinar/authorization-modeling-hasura/?pg=docs&plcmt=body&cta=watch-webinar&tech=>`__.

@@ -36,6 +36,7 @@ import {
   findTable,
   generateTableDef,
   getTableCustomColumnNames,
+  isFeatureSupported,
 } from '../../../../dataSources';
 import Tooltip from '../../../Common/Tooltip/Tooltip';
 import {
@@ -47,9 +48,11 @@ import {
 import { RightContainer } from '../../../Common/Layout/RightContainer';
 import { NotSupportedNote } from '../../../Common/NotSupportedNote';
 import ConnectedComputedFields from './ComputedFields';
+import FeatureDisabled from '../FeatureDisabled';
 
 class ModifyTable extends React.Component {
   componentDidMount() {
+    if (!isFeatureSupported('tables.modify.enabled')) return;
     const { dispatch } = this.props;
     dispatch({ type: RESET });
     dispatch(setTable(this.props.tableName));
@@ -86,6 +89,16 @@ class ModifyTable extends React.Component {
       currentSource,
     } = this.props;
 
+    if (!isFeatureSupported('tables.modify.enabled')) {
+      return (
+        <FeatureDisabled
+          tab="modify"
+          tableName={tableName}
+          schemaName={currentSchema}
+        />
+      );
+    }
+
     const dataTypeIndexMap = getAllDataTypeMap(dataTypes);
 
     const table = findTable(
@@ -93,8 +106,7 @@ class ModifyTable extends React.Component {
       generateTableDef(tableName, currentSchema)
     );
 
-    if (!table) {
-      // throw a 404 exception
+    if (!table && isFeatureSupported('tables.modify.enabled')) {
       throw new NotFoundError();
     }
 

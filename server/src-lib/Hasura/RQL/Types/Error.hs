@@ -9,13 +9,17 @@ module Hasura.RQL.Types.Error
        , noInternalQErrEnc
        , err400
        , err404
+       , err405
        , err401
+       , err409
        , err500
        , internalError
 
        , QErrM
        , throw400
        , throw404
+       , throw405
+       , throw409
        , throw500
        , throw500WithDetail
        , throw401
@@ -64,6 +68,10 @@ data Code
   | NotExists
   | AlreadyExists
   | PostgresError
+  | PostgresMaxConnectionsError
+  | MSSQLError
+  | DatabaseConnectionTimeout
+  | BigQueryError
   | NotSupported
   | DependencyError
   | InvalidHeaders
@@ -83,6 +91,8 @@ data Code
   | ConstraintViolation
   | DataException
   | BadRequest
+  | MethodNotAllowed
+  | Conflict
   -- Graphql error
   | NoTables
   | ValidationFailed
@@ -107,44 +117,51 @@ data Code
 
 instance Show Code where
   show = \case
-    NotNullViolation                  -> "not-null-violation"
-    DataException                     -> "data-exception"
-    BadRequest                        -> "bad-request"
-    ConstraintViolation               -> "constraint-violation"
-    PermissionDenied                  -> "permission-denied"
-    NotExists                         -> "not-exists"
-    AlreadyExists                     -> "already-exists"
-    AlreadyTracked                    -> "already-tracked"
-    AlreadyUntracked                  -> "already-untracked"
-    PostgresError                     -> "postgres-error"
-    NotSupported                      -> "not-supported"
-    DependencyError                   -> "dependency-error"
-    InvalidHeaders                    -> "invalid-headers"
-    InvalidJSON                       -> "invalid-json"
-    AccessDenied                      -> "access-denied"
-    ParseFailed                       -> "parse-failed"
-    ConstraintError                   -> "constraint-error"
-    PermissionError                   -> "permission-error"
-    NotFound                          -> "not-found"
-    Unexpected                        -> "unexpected"
-    UnexpectedPayload                 -> "unexpected-payload"
-    NoUpdate                          -> "no-update"
-    InvalidParams                     -> "invalid-params"
-    AlreadyInit                       -> "already-initialised"
-    NoTables                          -> "no-tables"
-    ValidationFailed                  -> "validation-failed"
-    Busy                              -> "busy"
-    JWTRoleClaimMissing               -> "jwt-missing-role-claims"
-    JWTInvalidClaims                  -> "jwt-invalid-claims"
-    JWTInvalid                        -> "invalid-jwt"
-    JWTInvalidKey                     -> "invalid-jwt-key"
-    RemoteSchemaError                 -> "remote-schema-error"
-    RemoteSchemaConflicts             -> "remote-schema-conflicts"
-    CoercionError                     -> "coercion-error"
-    StartFailed                       -> "start-failed"
-    InvalidCustomTypes                -> "invalid-custom-types"
-    ActionWebhookCode t               -> T.unpack t
-    CustomCode t                      -> T.unpack t
+    NotNullViolation            -> "not-null-violation"
+    DataException               -> "data-exception"
+    BadRequest                  -> "bad-request"
+    ConstraintViolation         -> "constraint-violation"
+    PermissionDenied            -> "permission-denied"
+    NotExists                   -> "not-exists"
+    AlreadyExists               -> "already-exists"
+    AlreadyTracked              -> "already-tracked"
+    AlreadyUntracked            -> "already-untracked"
+    PostgresError               -> "postgres-error"
+    PostgresMaxConnectionsError -> "postgres-max-connections-error"
+    MSSQLError                  -> "mssql-error"
+    DatabaseConnectionTimeout   -> "connection-timeout-error"
+    -- TODO (Naveen): We don't use the above error anywhere, do we remove this?
+    NotSupported                -> "not-supported"
+    DependencyError             -> "dependency-error"
+    InvalidHeaders              -> "invalid-headers"
+    InvalidJSON                 -> "invalid-json"
+    AccessDenied                -> "access-denied"
+    ParseFailed                 -> "parse-failed"
+    ConstraintError             -> "constraint-error"
+    PermissionError             -> "permission-error"
+    NotFound                    -> "not-found"
+    Unexpected                  -> "unexpected"
+    UnexpectedPayload           -> "unexpected-payload"
+    NoUpdate                    -> "no-update"
+    InvalidParams               -> "invalid-params"
+    AlreadyInit                 -> "already-initialised"
+    NoTables                    -> "no-tables"
+    ValidationFailed            -> "validation-failed"
+    Busy                        -> "busy"
+    JWTRoleClaimMissing         -> "jwt-missing-role-claims"
+    JWTInvalidClaims            -> "jwt-invalid-claims"
+    JWTInvalid                  -> "invalid-jwt"
+    JWTInvalidKey               -> "invalid-jwt-key"
+    RemoteSchemaError           -> "remote-schema-error"
+    RemoteSchemaConflicts       -> "remote-schema-conflicts"
+    CoercionError               -> "coercion-error"
+    StartFailed                 -> "start-failed"
+    InvalidCustomTypes          -> "invalid-custom-types"
+    MethodNotAllowed            -> "method-not-allowed"
+    Conflict                    -> "conflict"
+    BigQueryError               -> "bigquery-error"
+    ActionWebhookCode t         -> T.unpack t
+    CustomCode t                -> T.unpack t
 
 data QErr
   = QErr
@@ -214,11 +231,25 @@ encodeJSONPath = format "$"
         specialChars (c:xs) = notElem c (alphabet ++ "_") ||
           any (`notElem` (alphaNumerics ++ "_-")) xs
 
+-- Postgres Connection Errors
 instance Q.FromPGConnErr QErr where
+  -- | According to <https://github.com/hasura/graphql-engine-mono/issues/800>
+  -- we want to track when we receive max connections reached error from
+  -- Postgres. But @libpq@ does not provide any structured errors for connection
+  -- errors [1]. It only provides an error message as string. So to capture max
+  -- connections error we are resorting to substring matching here. This will,
+  -- obviously, fail if the error message changes in libpq.
+  -- [1]: <https://www.postgresql.org/docs/current/libpq-status.html#LIBPQ-PQERRORMESSAGE>
+  fromPGConnErr c
+    | "too many clients" `T.isInfixOf` (Q.getConnErr c) =
+      let e = err500 PostgresMaxConnectionsError "max connections reached on postgres"
+      in e {qeInternal = Just $ toJSON c}
+
   fromPGConnErr c =
     let e = err500 PostgresError "connection error"
     in e {qeInternal = Just $ toJSON c}
 
+-- Postgres Transaction error
 instance Q.FromPGTxErr QErr where
   fromPGTxErr txe =
     let e = err500 PostgresError "postgres tx error"
@@ -230,8 +261,14 @@ err400 c t = QErr [] N.status400 t c Nothing
 err404 :: Code -> Text -> QErr
 err404 c t = QErr [] N.status404 t c Nothing
 
+err405 :: Code -> Text -> QErr
+err405 c t = QErr [] N.status405 t c Nothing
+
 err401 :: Code -> Text -> QErr
 err401 c t = QErr [] N.status401 t c Nothing
+
+err409 :: Code -> Text -> QErr
+err409 c t = QErr [] N.status409 t c Nothing
 
 err500 :: Code -> Text -> QErr
 err500 c t = QErr [] N.status500 t c Nothing
@@ -244,8 +281,17 @@ throw400 c t = throwError $ err400 c t
 throw404 :: (QErrM m) => Text -> m a
 throw404 t = throwError $ err404 NotFound t
 
+-- | MethodNotAllowed
+throw405 :: (QErrM m) => Text -> m a
+throw405 t = throwError $ err405 MethodNotAllowed t
+
+-- | AccessDenied
 throw401 :: (QErrM m) => Text -> m a
 throw401 t = throwError $ err401 AccessDenied t
+
+-- | Conflict
+throw409 :: (QErrM m) => Text -> m a
+throw409 t = throwError $ err409 Conflict t
 
 throw500 :: (QErrM m) => Text -> m a
 throw500 t = throwError $ internalError t

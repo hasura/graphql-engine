@@ -54,6 +54,7 @@
     "eslint-plugin-promise": "^4.2.1",
     "husky": "^4.2.5",
     "lint-staged": "^10.1.5",
+    "pkg": "^4.4.9",
     "prettier-eslint-cli": "^5.0.0",
     "typescript": "^3.9.2"
   }

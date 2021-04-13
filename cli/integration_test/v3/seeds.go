@@ -51,7 +51,7 @@ func TestSeedsCreateCmd(t *testing.T, ec *cli.ExecutionContext) {
 					DirectoryPath:        "seeds/",
 					Data:                 strings.NewReader("INSERT INTO account1 (username, password, email) values ('scriptonist', 'no you cant guess it', 'hello@drogon.com');"),
 					UserProvidedSeedName: "can_we_create_seed_files",
-					Datasource:           "default",
+					Database:             "default",
 				},
 			},
 			false,
@@ -89,13 +89,13 @@ func TestSeedsCreateCmd(t *testing.T, ec *cli.ExecutionContext) {
 				t.Fatalf("CreateSeedFile() = %v, but want filepath of form"+` [a-z]+\/[0-9]+\_[a-zA-Z]+\.sql`, *gotFilename)
 			}
 			gotDirectoryPath := regexGroups[1]
-			gotDatasourceDirectory := regexGroups[2]
+			gotDatabaseDirectory := regexGroups[2]
 			gotUserProvidedFilename := regexGroups[4]
 			gotFileExtension := regexGroups[5]
 			fmt.Println(regexGroups)
 			assert.Equal(t, gotDirectoryPath, tc.args.opts.DirectoryPath)
 			assert.Equal(t, gotUserProvidedFilename, tc.args.opts.UserProvidedSeedName)
-			assert.Equal(t, gotDatasourceDirectory, tc.args.opts.Datasource+"/")
+			assert.Equal(t, gotDatabaseDirectory, tc.args.opts.Database+"/")
 			assert.Equal(t, gotFileExtension, ".sql")
 
 			// test if a filewith the filename was created
@@ -128,8 +128,9 @@ func TestSeedsApplyCmd(t *testing.T, ec *cli.ExecutionContext) {
 		{
 			"can apply all seeds",
 			&commands.SeedApplyOptions{
-				EC:         ec,
-				Datasource: "default",
+				EC:     ec,
+				Source: cli.Source{Name: "default"},
+				Driver: seed.NewDriver(ec.APIClient.V2Query.Bulk, ec.APIClient.PGDump),
 			},
 			false,
 		},
@@ -138,6 +139,7 @@ func TestSeedsApplyCmd(t *testing.T, ec *cli.ExecutionContext) {
 			&commands.SeedApplyOptions{
 				EC:        ec,
 				FileNames: []string{"1591867862409_test.sql"},
+				Driver:    seed.NewDriver(ec.APIClient.V2Query.Bulk, ec.APIClient.PGDump),
 			},
 			false,
 		},
@@ -146,6 +148,7 @@ func TestSeedsApplyCmd(t *testing.T, ec *cli.ExecutionContext) {
 			&commands.SeedApplyOptions{
 				EC:        ec,
 				FileNames: []string{"1591867862419_test2.sql"},
+				Driver:    seed.NewDriver(ec.APIClient.V2Query.Bulk, ec.APIClient.PGDump),
 			},
 			true,
 		},

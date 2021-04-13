@@ -68,7 +68,9 @@ Head to [https://hasura.io/jwt-config](https://hasura.io/jwt-config) and generat
 
 ## Deploy Hasura GraphQL Engine
 
-[![Deploy HGE on heroku](https://www.herokucdn.com/deploy/button.svg)](https://heroku.com/deploy?template=https://github.com/hasura/graphql-engine-heroku)
+- Deploy GraphQL Engine on Hasura Cloud and setup PostgreSQL via Heroku:
+  
+  [![Deploy to Hasura Cloud](https://graphql-engine-cdn.hasura.io/img/deploy_to_hasura.png)](https://cloud.hasura.io/)
 
 After deploying, add the following environment variables to configure JWT mode:
 
@@ -102,10 +104,10 @@ To do this, open `auth_config.json`, and replace the values within with your own
 ```
 
 ## Create the initial tables
-1. Add your graphql URL (like https://your-app.herokuapp.com) and admin secret in `hasura/config.yaml`
+1. Add your graphql URL (like https://your-app.hasura.app) and admin secret in `hasura/config.yaml`
 
 ```yaml
-endpoint: https://<hge-heroku-url>
+endpoint: https://<your-app.hasura.app>
 admin_secret: <your-admin-secret>
 ```
 
@@ -145,7 +147,7 @@ mutation ($id: String!, $email: String!) {
 
   request.post({
     headers: {'content-type': 'application/json', 'x-hasura-admin-secret': configuration['x-hasura-admin-secret']},
-    url:     'https://your-app.herokuapp.com/v1/graphql',
+    url:     'https://your-app.hasura.app/v1/graphql',
     body:    JSON.stringify(body)
   }, function(error, response, body) {
     console.log(body);

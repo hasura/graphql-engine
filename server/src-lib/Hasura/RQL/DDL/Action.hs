@@ -21,27 +21,28 @@ module Hasura.RQL.DDL.Action
 
 import           Hasura.Prelude
 
-import qualified Data.Aeson                         as J
-import qualified Data.Aeson.TH                      as J
-import qualified Data.Environment                   as Env
-import qualified Data.HashMap.Strict                as Map
-import qualified Data.HashMap.Strict.InsOrd         as OMap
-import qualified Language.GraphQL.Draft.Syntax      as G
+import qualified Data.Aeson                    as J
+import qualified Data.Aeson.TH                 as J
+import qualified Data.Dependent.Map            as DMap
+import qualified Data.Environment              as Env
+import qualified Data.HashMap.Strict           as Map
+import qualified Data.HashMap.Strict.InsOrd    as OMap
+import qualified Language.GraphQL.Draft.Syntax as G
 
-import           Control.Lens                       ((.~))
+import           Control.Lens                  ((.~))
 import           Data.Text.Extended
 
-import           Hasura.Backends.Postgres.SQL.Types
 import           Hasura.EncJSON
 import           Hasura.Metadata.Class
-import           Hasura.RQL.DDL.CustomTypes         (lookupPGScalar)
+import           Hasura.RQL.DDL.CustomTypes    (lookupPGScalar)
 import           Hasura.RQL.Types
+import           Hasura.SQL.Tag
 import           Hasura.Session
 
 
 getActionInfo
   :: (QErrM m, CacheRM m)
-  => ActionName -> m (ActionInfo 'Postgres)
+  => ActionName -> m ActionInfo
 getActionInfo actionName = do
   actionMap <- scActions <$> askSchemaCache
   onNothing (Map.lookup actionName actionMap) $
@@ -86,20 +87,20 @@ referred scalars.
 resolveAction
   :: QErrM m
   => Env.Environment
-  -> AnnotatedCustomTypes 'Postgres
+  -> AnnotatedCustomTypes
   -> ActionDefinitionInput
-  -> HashSet PGScalarType -- See Note [Postgres scalars in custom types]
+  -> DMap.DMap BackendTag ScalarSet -- See Note [Postgres scalars in custom types]
   -> m ( ResolvedActionDefinition
-       , AnnotatedObjectType 'Postgres
+       , AnnotatedObjectType
        )
-resolveAction env AnnotatedCustomTypes{..} ActionDefinition{..} allPGScalars = do
+resolveAction env AnnotatedCustomTypes{..} ActionDefinition{..} allScalars = do
   resolvedArguments <- forM _adArguments $ \argumentDefinition -> do
     forM argumentDefinition $ \argumentType -> do
       let gType = unGraphQLType argumentType
           argumentBaseType = G.getBaseType gType
       (gType,) <$>
-        if | Just pgScalar <- lookupPGScalar allPGScalars argumentBaseType ->
-               pure $ NOCTScalar $ ASTReusedScalar argumentBaseType pgScalar
+        if | Just noCTScalar <- lookupPGScalar allScalars argumentBaseType (NOCTScalar . ASTReusedScalar argumentBaseType) ->
+               pure noCTScalar
            | Just nonObjectType <- Map.lookup argumentBaseType _actNonObjects ->
                pure nonObjectType
            | otherwise ->
@@ -122,15 +123,18 @@ resolveAction env AnnotatedCustomTypes{..} ActionDefinition{..} allPGScalars = d
 runUpdateAction
   :: forall m. ( QErrM m , CacheRWM m, MetadataM m)
   => UpdateAction -> m EncJSON
-runUpdateAction (UpdateAction actionName actionDefinition) = do
+runUpdateAction (UpdateAction actionName actionDefinition actionComment) = do
   sc <- askSchemaCache
   let actionsMap = scActions sc
   void $ onNothing (Map.lookup actionName actionsMap) $
     throw400 NotExists $ "action with name " <> actionName <<> " not exists"
-  buildSchemaCacheFor (MOAction actionName)
-    $ MetadataModifier
-    $ metaActions.ix actionName.amDefinition .~ actionDefinition
+  buildSchemaCacheFor (MOAction actionName) $ updateActionMetadataModifier actionDefinition actionComment
   pure successMsg
+    where
+      updateActionMetadataModifier :: ActionDefinitionInput -> Maybe Text -> MetadataModifier
+      updateActionMetadataModifier def comment = MetadataModifier $
+        (metaActions.ix actionName.amDefinition .~ def) .
+        (metaActions.ix actionName.amComment .~ comment)
 
 newtype ClearActionData
   = ClearActionData { unClearActionData :: Bool }

@@ -21,7 +21,6 @@ import qualified Data.Environment                       as Env
 import qualified Data.HashMap.Strict                    as Map
 import qualified Data.HashMap.Strict.Extended           as Map
 import qualified Data.HashMap.Strict.InsOrd             as OMap
-import qualified Data.HashSet                           as HS
 import qualified Data.List.NonEmpty                     as NE
 import qualified Data.Text                              as T
 import qualified Database.PG.Query                      as Q
@@ -29,26 +28,25 @@ import qualified Language.GraphQL.Draft.Syntax          as G
 import qualified Network.HTTP.Client                    as HTTP
 import qualified Network.HTTP.Types                     as N
 
-import           Control.Lens
 import           Data.Text.Extended                     (commaSeparated, (<<>))
 import           Data.Validation
 
-import qualified Hasura.Backends.Postgres.SQL.DML       as S
 import qualified Hasura.Tracing                         as Tracing
 
 import           Hasura.Backends.Postgres.Connection
 import           Hasura.EncJSON
+import           Hasura.GraphQL.Execute.Remote
+import           Hasura.GraphQL.Execute.RemoteJoin
 import           Hasura.GraphQL.Parser                  hiding (field)
 import           Hasura.GraphQL.RemoteServer            (execRemoteGQ)
 import           Hasura.GraphQL.Transport.HTTP.Protocol
-import           Hasura.GraphQL.Execute.Remote
 import           Hasura.RQL.DML.Internal
 import           Hasura.RQL.IR.RemoteJoin
-import           Hasura.RQL.IR.Returning
 import           Hasura.RQL.IR.Select
 import           Hasura.RQL.Types                       hiding (Alias)
 import           Hasura.Server.Version                  (HasVersion)
 import           Hasura.Session
+
 
 -- | Executes given query and fetch response JSON from Postgres. Substitutes remote relationship fields.
 executeQueryWithRemoteJoins
@@ -98,14 +96,7 @@ processRemoteJoins env manager reqHdrs userInfo pgRes rjs = do
   where
     rjMap = Map.fromList $ toList rjs
 
--- | Path to the remote join field in query response JSON from Postgres.
-newtype FieldPath = FieldPath {unFieldPath :: [FieldName]}
-  deriving (Show, Eq, Semigroup, Monoid, Hashable)
-
 type Alias = G.Name
-
-appendPath :: FieldName -> FieldPath -> FieldPath
-appendPath fieldName = FieldPath . (<> [fieldName]) . unFieldPath
 
 -- | The counter which is used to append the alias generated for remote field. See 'pathToAlias'.
 -- This guarentees the uniqueness of the alias.
@@ -131,153 +122,6 @@ pathToAlias :: (MonadError QErr m) => FieldPath -> Counter -> m Alias
 pathToAlias path counter =
   parseGraphQLName $ T.intercalate "_" (map getFieldNameTxt $ unFieldPath path)
                  <> "__" <> (tshow . unCounter) counter
-
-type RemoteJoins b = NE.NonEmpty (FieldPath, NE.NonEmpty (RemoteJoin b))
-type RemoteJoinMap b = Map.HashMap FieldPath (NE.NonEmpty (RemoteJoin b))
-
-mapToNonEmpty :: RemoteJoinMap backend -> Maybe (RemoteJoins backend)
-mapToNonEmpty = NE.nonEmpty . Map.toList
-
--- | Traverse through 'AnnSimpleSel' and collect remote join fields (if any).
-getRemoteJoins :: AnnSimpleSel 'Postgres -> (AnnSimpleSel 'Postgres, Maybe (RemoteJoins 'Postgres))
-getRemoteJoins =
-  second mapToNonEmpty . flip runState mempty . transformSelect mempty
-
-transformSelect :: FieldPath -> AnnSimpleSel 'Postgres -> State (RemoteJoinMap 'Postgres) (AnnSimpleSel 'Postgres)
-transformSelect path sel = do
-  let fields = _asnFields sel
-  -- Transform selects in array, object and computed fields
-  transformedFields <- transformAnnFields path fields
-  pure sel{_asnFields = transformedFields}
-
-transformObjectSelect :: FieldPath -> AnnObjectSelect 'Postgres -> State (RemoteJoinMap 'Postgres) (AnnObjectSelect 'Postgres)
-transformObjectSelect path sel = do
-  let fields = _aosFields sel
-  transformedFields <- transformAnnFields path fields
-  pure sel{_aosFields = transformedFields}
-
--- | Traverse through @'AnnAggregateSelect' and collect remote join fields (if any).
-getRemoteJoinsAggregateSelect :: AnnAggregateSelect 'Postgres -> (AnnAggregateSelect 'Postgres, Maybe (RemoteJoins 'Postgres))
-getRemoteJoinsAggregateSelect =
-  second mapToNonEmpty . flip runState mempty . transformAggregateSelect mempty
-
-transformAggregateSelect
-  :: FieldPath
-  -> AnnAggregateSelect 'Postgres
-  -> State (RemoteJoinMap 'Postgres) (AnnAggregateSelect 'Postgres)
-transformAggregateSelect path sel = do
-  let aggFields = _asnFields sel
-  transformedFields <- forM aggFields $ \(fieldName, aggField) ->
-    (fieldName,) <$> case aggField of
-      TAFAgg agg         -> pure $ TAFAgg agg
-      TAFNodes annFields -> TAFNodes <$> transformAnnFields (appendPath fieldName path) annFields
-      TAFExp t           -> pure $ TAFExp t
-  pure sel{_asnFields = transformedFields}
-
--- | Traverse through @'ConnectionSelect' and collect remote join fields (if any).
-getRemoteJoinsConnectionSelect :: ConnectionSelect 'Postgres S.SQLExp -> (ConnectionSelect 'Postgres S.SQLExp, Maybe (RemoteJoins 'Postgres))
-getRemoteJoinsConnectionSelect =
-  second mapToNonEmpty . flip runState mempty . transformConnectionSelect mempty
-
-transformConnectionSelect
-  :: FieldPath
-  -> ConnectionSelect 'Postgres S.SQLExp
-  -> State (RemoteJoinMap 'Postgres) (ConnectionSelect 'Postgres S.SQLExp)
-transformConnectionSelect path ConnectionSelect{..} = do
-  let connectionFields = _asnFields _csSelect
-  transformedFields <- forM connectionFields $ \(fieldName, field) ->
-    (fieldName,) <$> case field of
-      ConnectionTypename t  -> pure $ ConnectionTypename t
-      ConnectionPageInfo p  -> pure $ ConnectionPageInfo p
-      ConnectionEdges edges -> ConnectionEdges <$> transformEdges (appendPath fieldName path) edges
-  let select = _csSelect{_asnFields = transformedFields}
-  pure $ ConnectionSelect _csPrimaryKeyColumns _csSplit _csSlice select
-  where
-    transformEdges edgePath edgeFields =
-      forM edgeFields $ \(fieldName, edgeField) ->
-      (fieldName,) <$> case edgeField of
-        EdgeTypename t -> pure $ EdgeTypename t
-        EdgeCursor -> pure EdgeCursor
-        EdgeNode annFields ->
-          EdgeNode <$> transformAnnFields (appendPath fieldName edgePath) annFields
-
--- | Traverse through 'MutationOutput' and collect remote join fields (if any)
-getRemoteJoinsMutationOutput
-  :: MutationOutput 'Postgres
-  -> (MutationOutput 'Postgres, Maybe (RemoteJoins 'Postgres))
-getRemoteJoinsMutationOutput =
-  second mapToNonEmpty . flip runState mempty . transformMutationOutput mempty
-  where
-    transformMutationOutput :: FieldPath -> MutationOutput 'Postgres -> State (RemoteJoinMap 'Postgres) (MutationOutput 'Postgres)
-    transformMutationOutput path = \case
-      MOutMultirowFields mutationFields ->
-        MOutMultirowFields <$> transfromMutationFields mutationFields
-      MOutSinglerowObject annFields ->
-        MOutSinglerowObject <$> transformAnnFields path annFields
-      where
-        transfromMutationFields fields =
-          forM fields $ \(fieldName, field') -> do
-          let fieldPath = appendPath fieldName path
-          (fieldName,) <$> case field' of
-            MCount         -> pure MCount
-            MExp t         -> pure $ MExp t
-            MRet annFields -> MRet <$> transformAnnFields fieldPath annFields
-
-transformAnnFields :: FieldPath -> AnnFields 'Postgres -> State (RemoteJoinMap 'Postgres) (AnnFields 'Postgres)
-transformAnnFields path fields = do
-  let pgColumnFields = map fst $ getFields _AFColumn fields
-      remoteSelects = getFields _AFRemote fields
-      remoteJoins = flip map remoteSelects $ \(fieldName, remoteSelect) ->
-        let RemoteSelect argsMap selSet hasuraColumns remoteFields rsi = remoteSelect
-            hasuraColumnL = toList hasuraColumns
-            hasuraColumnFields = HS.fromList $ map (fromCol @'Postgres . pgiColumn) hasuraColumnL
-            phantomColumns = filter ((`notElem` pgColumnFields) . fromCol @'Postgres . pgiColumn) hasuraColumnL
-        in RemoteJoin fieldName argsMap selSet hasuraColumnFields remoteFields rsi phantomColumns
-
-  transformedFields <- forM fields $ \(fieldName, field') -> do
-    let fieldPath = appendPath fieldName path
-    (fieldName,) <$> case field' of
-      AFNodeId qt pkeys -> pure $ AFNodeId qt pkeys
-      AFColumn c -> pure $ AFColumn c
-      AFObjectRelation annRel ->
-        AFObjectRelation <$> transformAnnRelation annRel (transformObjectSelect fieldPath)
-      AFArrayRelation (ASSimple annRel) ->
-        AFArrayRelation . ASSimple <$> transformAnnRelation annRel (transformSelect fieldPath)
-      AFArrayRelation (ASAggregate aggRel) ->
-        AFArrayRelation . ASAggregate <$> transformAnnAggregateRelation fieldPath aggRel
-      AFArrayRelation (ASConnection annRel) ->
-        AFArrayRelation . ASConnection <$> transformArrayConnection fieldPath annRel
-      AFComputedField computedField ->
-        AFComputedField <$> case computedField of
-          CFSScalar _         -> pure computedField
-          CFSTable jas annSel -> CFSTable jas <$> transformSelect fieldPath annSel
-      AFRemote rs -> pure $ AFRemote rs
-      AFExpression t     -> pure $ AFExpression t
-
-  case NE.nonEmpty remoteJoins of
-    Nothing -> pure transformedFields
-    Just nonEmptyRemoteJoins -> do
-      let phantomColumns = map (\ci -> (fromCol @'Postgres $ pgiColumn ci, AFColumn $ AnnColumnField ci False Nothing)) $
-                           concatMap _rjPhantomFields remoteJoins
-      modify (Map.insert path nonEmptyRemoteJoins)
-      pure $ transformedFields <> phantomColumns
-    where
-      getFields f = mapMaybe (sequence . second (^? f))
-
-      transformAnnRelation annRel f = do
-        let annSel = aarAnnSelect annRel
-        transformedSel <- f annSel
-        pure annRel{aarAnnSelect = transformedSel}
-
-      transformAnnAggregateRelation fieldPath annRel = do
-        let annSel = aarAnnSelect annRel
-        transformedSel <- transformAggregateSelect fieldPath annSel
-        pure annRel{aarAnnSelect = transformedSel}
-
-      transformArrayConnection fieldPath annRel = do
-        let connectionSelect = aarAnnSelect annRel
-        transformedConnectionSelect <- transformConnectionSelect fieldPath connectionSelect
-        pure annRel{aarAnnSelect = transformedConnectionSelect}
 
 type CompositeObject a = OMap.InsOrdHashMap Text (CompositeValue a)
 

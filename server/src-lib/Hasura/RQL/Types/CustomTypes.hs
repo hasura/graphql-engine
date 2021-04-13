@@ -17,11 +17,12 @@ module Hasura.RQL.Types.CustomTypes
   , ObjectFieldDefinition(..)
   , RelationshipName(..)
   , TypeRelationship(..)
-  , trName, trType, trRemoteTable, trFieldMapping
+  , trName, trSource, trType, trRemoteTable, trFieldMapping
   , ObjectTypeName(..)
   , ObjectTypeDefinition(..)
   , ObjectType
   , AnnotatedScalarType(..)
+  , ScalarSet(..)
   , NonObjectCustomType(..)
   , NonObjectTypeMap
   , AnnotatedObjectFieldType(..)
@@ -32,27 +33,29 @@ module Hasura.RQL.Types.CustomTypes
   , emptyAnnotatedCustomTypes
   ) where
 
-import           Control.Lens.TH                    (makeLenses)
+import           Control.Lens.TH                          (makeLenses)
 import           Data.Text.Extended
 
-import qualified Data.Aeson                         as J
-import qualified Data.Aeson.TH                      as J
-import qualified Data.HashMap.Strict                as Map
-import qualified Data.List.NonEmpty                 as NEList
-import qualified Data.Text                          as T
-import qualified Language.GraphQL.Draft.Parser      as GParse
-import qualified Language.GraphQL.Draft.Printer     as GPrint
-import qualified Language.GraphQL.Draft.Syntax      as G
-import qualified Text.Builder                       as T
+import qualified Data.Aeson                               as J
+import qualified Data.Aeson.TH                            as J
+import qualified Data.HashMap.Strict                      as Map
+import qualified Data.List.NonEmpty                       as NEList
+import qualified Data.Text                                as T
+import qualified Language.GraphQL.Draft.Parser            as GParse
+import qualified Language.GraphQL.Draft.Printer           as GPrint
+import qualified Language.GraphQL.Draft.Syntax            as G
+import qualified Text.Builder                             as T
 
+import           Hasura.Backends.Postgres.Instances.Types ()
 import           Hasura.Backends.Postgres.SQL.Types
-import           Hasura.Incremental                 (Cacheable)
+import           Hasura.Incremental                       (Cacheable)
 import           Hasura.Prelude
+import           Hasura.RQL.Types.Backend
 import           Hasura.RQL.Types.Column
-import           Hasura.RQL.Types.Common            (Backend, RelType, ScalarType, SourceConfig,
-                                                     SourceName, defaultSource)
+import           Hasura.RQL.Types.Common
 import           Hasura.RQL.Types.Table
 import           Hasura.SQL.Backend
+
 
 newtype GraphQLType
   = GraphQLType { unGraphQLType :: G.GType }
@@ -185,14 +188,6 @@ instance Cacheable ScalarTypeDefinition
 instance Hashable ScalarTypeDefinition
 $(J.deriveJSON hasuraJSON ''ScalarTypeDefinition)
 
--- default scalar names
-intScalar, floatScalar, stringScalar, boolScalar, idScalar :: G.Name
-intScalar    = $$(G.litName "Int")
-floatScalar  = $$(G.litName "Float")
-stringScalar = $$(G.litName "String")
-boolScalar   = $$(G.litName "Boolean")
-idScalar     = $$(G.litName "ID")
-
 defaultScalars :: [ScalarTypeDefinition]
 defaultScalars =
   map (`ScalarTypeDefinition` Nothing)
@@ -241,11 +236,23 @@ emptyCustomTypes = CustomTypes Nothing Nothing Nothing Nothing
 
 data AnnotatedScalarType
   = ASTCustom !ScalarTypeDefinition
-  | forall b . (b ~ 'Postgres) => ASTReusedScalar !G.Name !(ScalarType b)
-  -- TODO: at a later stage, we shouldn't hardcode reused scalar types to be
-  -- Postgres, but allow scalar types to come from any kind of backend.  In
-  -- order words, the restriction (b ~ 'Postgres) should be relaxed.
-deriving instance Eq AnnotatedScalarType
+  | ASTReusedScalar !G.Name !(ScalarType 'Postgres)
+
+
+-- | A simple type-level function: `ScalarSet :: Backend b => b -> HashSet (ScalarType b)`
+data ScalarSet b where
+  ScalarSet :: Backend b => HashSet (ScalarType b) -> ScalarSet b
+instance Backend b => Semigroup (ScalarSet b) where
+  ScalarSet s1 <> ScalarSet s2 = ScalarSet $ s1 <> s2
+instance Backend b => Monoid (ScalarSet b) where
+  mempty = ScalarSet mempty
+
+
+instance Eq AnnotatedScalarType where
+  (ASTCustom std1) == (ASTCustom std2)                 = std1 == std2
+  (ASTReusedScalar g1 st1) == (ASTReusedScalar g2 st2) = g1 == g2 && st1 == st2
+  _ == _                                               = False
+
 instance J.ToJSON AnnotatedScalarType where
   toJSON (ASTCustom std)           = J.toJSON std
   toJSON (ASTReusedScalar name st) = J.object ["name" J..= name, "type" J..= st]
@@ -283,22 +290,27 @@ fieldTypeToScalarType = \case
            | _stdName == boolScalar   -> PGBoolean
            | otherwise                -> PGJSON
 
-data AnnotatedObjectType b
+data AnnotatedObjectType
   = AnnotatedObjectType
-  { _aotDefinition :: !(ObjectTypeDefinition (G.GType, AnnotatedObjectFieldType) (TableInfo b) (ColumnInfo b))
-  , _aotSource     :: !(Maybe (SourceConfig b))
+  { _aotDefinition :: !(ObjectTypeDefinition (G.GType, AnnotatedObjectFieldType) (TableInfo 'Postgres) (ColumnInfo 'Postgres))
+  , _aotSource     :: !(Maybe (SourceName, SourceConfig 'Postgres))
   } deriving (Generic)
-instance Backend b => J.ToJSON (AnnotatedObjectType b) where
+instance J.ToJSON (AnnotatedObjectType) where
   toJSON = J.toJSON . _aotDefinition
 
-type AnnotatedObjects b = Map.HashMap G.Name (AnnotatedObjectType b)
+type AnnotatedObjects = Map.HashMap G.Name AnnotatedObjectType
 
-data AnnotatedCustomTypes (b :: BackendType)
+data AnnotatedCustomTypes
   = AnnotatedCustomTypes
     { _actNonObjects :: !NonObjectTypeMap
-    , _actObjects    :: !(AnnotatedObjects b)
+    , _actObjects    :: !AnnotatedObjects
     }
 
-emptyAnnotatedCustomTypes :: AnnotatedCustomTypes backend
+instance Semigroup AnnotatedCustomTypes where
+  AnnotatedCustomTypes no1 o1 <> AnnotatedCustomTypes no2 o2 = AnnotatedCustomTypes (no1 <> no2) (o1 <> o2)
+instance Monoid AnnotatedCustomTypes where
+  mempty = AnnotatedCustomTypes mempty mempty
+
+emptyAnnotatedCustomTypes :: AnnotatedCustomTypes
 emptyAnnotatedCustomTypes =
   AnnotatedCustomTypes mempty mempty

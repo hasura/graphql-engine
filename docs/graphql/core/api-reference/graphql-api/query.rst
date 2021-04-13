@@ -751,6 +751,32 @@ Operator
 
 (For more details on intersect operators on ``raster`` columns refer to the `PostGIS docs <https://postgis.net/docs/RT_ST_Intersects.html>`__.)
 
+.. _ltree_operators:
+
+**ltree operators:**
+
+.. list-table::
+   :header-rows: 1
+
+   * - Operator
+     - PostgreSQL equivalent
+   * - ``_ancestor``
+     - ``@>``
+   * - ``_ancestor_any``
+     - ``@>``
+   * - ``_descendant``
+     - ``<@``
+   * - ``_descendant_any``
+     - ``<@``
+   * - ``_matches``
+     - ``~``
+   * - ``_matches_any``
+     - ``?``
+   * - ``_matches_fulltext``
+     - ``@``
+
+(For more details on operators on ``ltree`` columns refer to the `Postgres docs <https://www.postgresql.org/docs/current/ltree.html>`__.)
+
 .. _CastExp:
 
 CastExp

@@ -6,7 +6,7 @@ echo "Running tests on node $CIRCLE_NODE_INDEX of $CIRCLE_NODE_TOTAL"
 if [ -z "$SERVER_TEST_TO_RUN" ]; then
   echo 'Please specify $SERVER_TEST_TO_RUN'
   exit 1
-else 
+else
   echo "Running test $SERVER_TEST_TO_RUN"
 fi
 
@@ -182,7 +182,7 @@ if [ $EUID != 0 ] ; then
   RUN_WEBHOOK_TESTS=false
 fi
 
-for port in 8080 8081 9876 5592 5000 5594
+for port in 8080 8081 9876 5592 5000 5001 5594
 do
 	fail_if_port_busy $port
 done
@@ -215,6 +215,7 @@ HGE_PIDS=""
 WH_PID=""
 WHC_PID=""
 HS_PID=""
+GQL_SERVER_PID=""
 
 trap stop_services ERR
 trap stop_services INT
@@ -506,6 +507,26 @@ case "$SERVER_TEST_TO_RUN" in
     unset HASURA_GRAPHQL_JWT_SECRET
     ;;
 
+  jwt-cookie)
+
+    echo -e "\n$(time_elapsed): <########## TEST GRAPHQL-ENGINE WITH ADMIN SECRET AND JWT (in cookie mode) #####################################>\n"
+    TEST_TYPE="jwt-cookie"
+
+    init_jwt
+
+    export HASURA_GRAPHQL_JWT_SECRET="$(jq -n --arg key "$(cat $OUTPUT_FOLDER/ssl/jwt_public.key)" '{ type: "RS512", key: $key , header: {"type": "Cookie", "name": "hasura_user"}}')"
+    export HASURA_GRAPHQL_ADMIN_SECRET="HGE$RANDOM$RANDOM"
+
+    run_hge_with_args serve
+    wait_for_port 8080
+
+    pytest -n 1 -vv --hge-urls "$HGE_URL" --pg-urls "$HASURA_GRAPHQL_DATABASE_URL" --hge-key="$HASURA_GRAPHQL_ADMIN_SECRET" --hge-jwt-key-file="$OUTPUT_FOLDER/ssl/jwt_private.key" --hge-jwt-conf="$HASURA_GRAPHQL_JWT_SECRET" test_jwt.py
+
+    kill_hge_servers
+
+    unset HASURA_GRAPHQL_JWT_SECRET
+    ;;
+
   # test with CORS modes
   cors-domains)
     echo -e "\n$(time_elapsed): <########## TEST GRAPHQL-ENGINE WITH CORS DOMAINS ########>\n"
@@ -522,11 +543,11 @@ case "$SERVER_TEST_TO_RUN" in
 
     unset HASURA_GRAPHQL_CORS_DOMAIN
     ;;
- 
+
   ws-init-cookie-read-cors-enabled)
     # test websocket transport with initial cookie header
 
-    echo -e "\n$(time_elapsped): <########## TEST GRAPHQL-ENGINE WITH COOKIE IN WEBSOCKET INIT ########>\n"
+    echo -e "\n$(time_elapsed): <########## TEST GRAPHQL-ENGINE WITH COOKIE IN WEBSOCKET INIT ########>\n"
     TEST_TYPE="ws-init-cookie-read-cors-enabled"
     export HASURA_GRAPHQL_AUTH_HOOK="http://localhost:9876/auth"
     export HASURA_GRAPHQL_AUTH_HOOK_MODE="POST"
@@ -660,6 +681,42 @@ case "$SERVER_TEST_TO_RUN" in
     kill_hge_servers
     ;;
 
+  function-permissions)
+      echo -e "\n$(time_elapsed): <########## TEST GRAPHQL-ENGINE WITH FUNCTION PERMISSIONS ENABLED ########>\n"
+      TEST_TYPE="function-permissions"
+      export HASURA_GRAPHQL_INFER_FUNCTION_PERMISSIONS=false
+      export HASURA_GRAPHQL_ADMIN_SECRET="HGE$RANDOM$RANDOM"
+
+      run_hge_with_args serve
+      wait_for_port 8080
+
+      pytest -n 1 -vv --hge-urls "$HGE_URL" --pg-urls "$HASURA_GRAPHQL_DATABASE_URL" --hge-key="$HASURA_GRAPHQL_ADMIN_SECRET"  --test-function-permissions test_graphql_queries.py::TestGraphQLQueryFunctionPermissions
+      pytest -n 1 -vv --hge-urls "$HGE_URL" --pg-urls "$HASURA_GRAPHQL_DATABASE_URL" --hge-key="$HASURA_GRAPHQL_ADMIN_SECRET"  --test-function-permissions test_graphql_mutations.py::TestGraphQLMutationFunctions
+
+      unset HASURA_GRAPHQL_INFER_FUNCTION_PERMISSIONS
+      unset HASURA_GRAPHQL_ADMIN_SECRET
+
+      kill_hge_servers
+      ;;
+
+  inherited-roles)
+      echo -e "\n$(time_elapsed): <########## TEST GRAPHQL-ENGINE WITH EXPERIMENTAL FEATURE: INHERITED-ROLES ########>\n"
+      TEST_TYPE="experimental-features-inherited-roles"
+      export HASURA_GRAPHQL_EXPERIMENTAL_FEATURES="inherited_roles"
+      export HASURA_GRAPHQL_ADMIN_SECRET="HGE$RANDOM$RANDOM"
+
+      run_hge_with_args serve
+      wait_for_port 8080
+
+      pytest -n 1 -vv --hge-urls "$HGE_URL" --pg-urls "$HASURA_GRAPHQL_DATABASE_URL" --hge-key="$HASURA_GRAPHQL_ADMIN_SECRET"  --test-inherited-roles test_graphql_queries.py::TestGraphQLInheritedRoles
+      pytest -vv --hge-urls="$HGE_URL" --pg-urls="$HASURA_GRAPHQL_DATABASE_URL" --hge-key="$HASURA_GRAPHQL_ADMIN_SECRET" --test-inherited-roles test_graphql_mutations.py::TestGraphQLInheritedRoles
+
+      unset HASURA_GRAPHQL_EXPERIMENTAL_FEATURES
+      unset HASURA_GRAPHQL_ADMIN_SECRET
+
+      kill_hge_servers
+      ;;
+
   query-caching)
     echo -e "\n$(time_elapsed): <########## TEST GRAPHQL-ENGINE QUERY CACHING #####################################>\n"
     TEST_TYPE="query-caching"
@@ -701,25 +758,65 @@ case "$SERVER_TEST_TO_RUN" in
     # end verbose logging tests
     ;;
 
+  remote-schema-https)
+      TEST_TYPE="remote-schemas-https"
+      echo -e "\n$(time_elapsed): <########## TEST GRAPHQL-ENGINE WITH SECURE REMOTE SCHEMA #########################>\n"
+
+      export REMOTE_SCHEMAS_WEBHOOK_DOMAIN="https://127.0.0.1:5001/"
+      init_ssl
+
+      run_hge_with_args serve
+
+      wait_for_port 8080
+
+      python3 graphql_server.py 5001 "$OUTPUT_FOLDER/ssl/webhook.pem" "$OUTPUT_FOLDER/ssl/webhook-key.pem" > "$OUTPUT_FOLDER/remote_gql_server.log" 2>&1 & GQL_SERVER_PID=$!
+
+      wait_for_port 5001
+
+      pytest -n 1 -vv --hge-urls="$HGE_URL" --pg-urls="$HASURA_GRAPHQL_DATABASE_URL" test_schema_stitching.py::TestRemoteSchemaBasic
+
+      export REMOTE_SCHEMA_WEBHOOK_DOMAIN="https://localhost:5000/"
+      kill_hge_servers
+      kill $GQL_SERVER_PID
+      ;;
+
   post-webhook)
     if [ "$RUN_WEBHOOK_TESTS" == "true" ] ; then
       TEST_TYPE="post-webhook"
       echo -e "\n$(time_elapsed): <########## TEST GRAPHQL-ENGINE WITH ADMIN SECRET & WEBHOOK (POST) #########################>\n"
-      
+
       export HASURA_GRAPHQL_AUTH_HOOK="https://localhost:9090/"
       export HASURA_GRAPHQL_ADMIN_SECRET="HGE$RANDOM$RANDOM"
       init_ssl
-      
+
       start_multiple_hge_servers
-      
+
       python3 webhook.py 9090 "$OUTPUT_FOLDER/ssl/webhook-key.pem" "$OUTPUT_FOLDER/ssl/webhook.pem" > "$OUTPUT_FOLDER/webhook.log" 2>&1  & WH_PID=$!
       wait_for_port 9090
-      
+
       run_pytest_parallel --hge-key="$HASURA_GRAPHQL_ADMIN_SECRET" --hge-webhook="$HASURA_GRAPHQL_AUTH_HOOK"
-      
+
       kill_hge_servers
     fi
     ;;
+
+  webhook-request-context)
+    if [ "$RUN_WEBHOOK_TESTS" == "true" ] ; then
+      echo -e "\n$(time_elapsed): <########## TEST WEBHOOK RECEIVES REQUEST DATA AS CONTEXT #########################>\n"
+      TEST_TYPE="webhook-request-context"
+      export HASURA_GRAPHQL_AUTH_HOOK="http://localhost:5594/"
+      export HASURA_GRAPHQL_AUTH_HOOK_MODE="POST"
+      export HASURA_GRAPHQL_ADMIN_SECRET="HGE$RANDOM$RANDOM"
+
+      run_hge_with_args serve
+      wait_for_port 8080
+
+      pytest -s -n 1 -vv --hge-urls "$HGE_URL" --pg-urls "$HASURA_GRAPHQL_DATABASE_URL" --hge-key="$HASURA_GRAPHQL_ADMIN_SECRET" --hge-webhook="$HASURA_GRAPHQL_AUTH_HOOK" --test-webhook-request-context test_webhook_request_context.py
+
+      kill_hge_servers
+    fi
+    ;;
+
 
   get-webhook)
     if [ "$RUN_WEBHOOK_TESTS" == "true" ] ; then

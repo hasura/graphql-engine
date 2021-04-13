@@ -17,6 +17,7 @@ module Hasura.Prelude
   , spanMaybeM
   , liftEitherM
   , hoistMaybe
+  , hoistEither
   , tshow
   -- * Efficient coercions
   , coerce
@@ -47,9 +48,10 @@ import           Control.Monad.Writer.Strict       as M (MonadWriter (..), Write
                                                          execWriterT, runWriterT)
 import           Data.Align                        as M (Semialign (align, alignWith))
 import           Data.Bool                         as M (bool)
+import           Data.Coerce
 import           Data.Data                         as M (Data (..))
 import           Data.Either                       as M (lefts, partitionEithers, rights)
-import           Data.Foldable                     as M (asum, fold, foldrM, for_, toList,
+import           Data.Foldable                     as M (asum, fold, foldlM, foldrM, for_, toList,
                                                          traverse_)
 import           Data.Function                     as M (on, (&))
 import           Data.Functor                      as M (($>), (<&>))
@@ -86,7 +88,6 @@ import qualified Data.Aeson.Casing                 as J
 import qualified Data.ByteString                   as B
 import qualified Data.ByteString.Base64.Lazy       as Base64
 import qualified Data.ByteString.Lazy              as BL
-import           Data.Coerce
 import qualified Data.HashMap.Strict               as Map
 import qualified Data.HashMap.Strict.InsOrd        as OMap
 import qualified Data.Text                         as T
@@ -94,6 +95,7 @@ import qualified Data.Text.Encoding                as TE
 import qualified Data.Text.Encoding.Error          as TE
 import qualified GHC.Clock                         as Clock
 import qualified Test.QuickCheck                   as QC
+
 
 alphabet :: String
 alphabet = ['a'..'z'] ++ ['A'..'Z']
@@ -200,8 +202,11 @@ startTimer = do
     return $ nanoseconds $ fromIntegral (aft - bef)
 
 -- copied from http://hackage.haskell.org/package/errors-2.3.0/docs/src/Control.Error.Util.html#hoistMaybe
-hoistMaybe :: (Monad m) => Maybe b -> MaybeT m b
-hoistMaybe = MaybeT . return
+hoistMaybe :: Applicative m => Maybe b -> MaybeT m b
+hoistMaybe = MaybeT . pure
+
+hoistEither :: Applicative m => Either e a -> ExceptT e m a
+hoistEither = ExceptT . pure
 
 tshow :: Show a => a -> Text
 tshow = T.pack . show

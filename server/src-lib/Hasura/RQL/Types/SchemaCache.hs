@@ -20,6 +20,7 @@ module Hasura.RQL.Types.SchemaCache
   , TableCoreCache
   , TableCache
   , ActionCache
+  , InheritedRolesCache
 
   , TypeRelationship(..)
   , trName, trType, trRemoteTable, trFieldMapping
@@ -44,7 +45,6 @@ module Hasura.RQL.Types.SchemaCache
 
   , ViewInfo(..)
   , isMutable
-  , mutableView
 
   , IntrospectionResult(..)
   , ParsedIntrospection(..)
@@ -82,12 +82,6 @@ module Hasura.RQL.Types.SchemaCache
   , isPGColInfo
   , RelInfo(..)
 
-  , RolePermInfo(..)
-  , mkRolePermInfo
-  , permIns
-  , permSel
-  , permUpd
-  , permDel
   , PermAccessor(..)
   , permAccToLens
   , permAccToType
@@ -95,8 +89,6 @@ module Hasura.RQL.Types.SchemaCache
   , RolePermInfoMap
 
   , InsPermInfo(..)
-  , SelPermInfo(..)
-  , getSelectPermissionInfoM
   , UpdPermInfo(..)
   , DelPermInfo(..)
   , PreSetColsPartial
@@ -123,6 +115,10 @@ module Hasura.RQL.Types.SchemaCache
   , FunctionInfo(..)
   , FunctionCache
   , CronTriggerInfo(..)
+
+  , MetadataResourceVersion(..)
+  , initialResourceVersion
+  , getBoolExpDeps
   ) where
 
 import           Hasura.Prelude
@@ -135,50 +131,89 @@ import qualified Language.GraphQL.Draft.Syntax       as G
 import           Control.Lens                        (makeLenses)
 import           Data.Aeson
 import           Data.Aeson.TH
+import           Data.Int                            (Int64)
 import           Data.Text.Extended
 import           System.Cron.Types
 
 import qualified Hasura.Backends.Postgres.Connection as PG
-import qualified Hasura.Backends.Postgres.SQL.Types  as PG
 import qualified Hasura.GraphQL.Parser               as P
+import qualified Hasura.SQL.AnyBackend               as AB
 
 import           Hasura.GraphQL.Context              (GQLContext, RemoteField, RoleContext)
 import           Hasura.Incremental                  (Cacheable, Dependency, MonadDepend (..),
                                                       selectKeyD)
 import           Hasura.RQL.IR.BoolExp
 import           Hasura.RQL.Types.Action
+import           Hasura.RQL.Types.ApiLimit
+import           Hasura.RQL.Types.Backend
+import           Hasura.RQL.Types.Column
 import           Hasura.RQL.Types.Common
 import           Hasura.RQL.Types.ComputedField
 import           Hasura.RQL.Types.CustomTypes
+import           Hasura.RQL.Types.Endpoint
 import           Hasura.RQL.Types.Error
 import           Hasura.RQL.Types.EventTrigger
 import           Hasura.RQL.Types.Function
-import           Hasura.RQL.Types.Metadata
+import           Hasura.RQL.Types.Metadata.Object
 import           Hasura.RQL.Types.QueryCollection
+import           Hasura.RQL.Types.Relationship
 import           Hasura.RQL.Types.RemoteSchema
 import           Hasura.RQL.Types.ScheduledTrigger
 import           Hasura.RQL.Types.SchemaCacheTypes
 import           Hasura.RQL.Types.Source
 import           Hasura.RQL.Types.Table
-import           Hasura.SQL.Backend
 import           Hasura.Session
 import           Hasura.Tracing                      (TraceT)
 
 
+newtype MetadataResourceVersion
+  = MetadataResourceVersion
+  { getMetadataResourceVersion :: Int64
+  } deriving (Show, Eq, Num, FromJSON, ToJSON)
+
+initialResourceVersion :: MetadataResourceVersion
+initialResourceVersion = MetadataResourceVersion 0
+
 reportSchemaObjs :: [SchemaObjId] -> Text
 reportSchemaObjs = commaSeparated . sort . map reportSchemaObj
 
-mkParentDep :: SourceName -> PG.QualifiedTable -> SchemaDependency
-mkParentDep s tn = SchemaDependency (SOSourceObj s $ SOITable tn) DRTable
+mkParentDep
+  :: forall b
+   . Backend b
+  => SourceName
+  -> TableName b
+  -> SchemaDependency
+mkParentDep s tn =
+  SchemaDependency (SOSourceObj s $ AB.mkAnyBackend (SOITable tn)) DRTable
 
-mkColDep :: DependencyReason -> SourceName -> PG.QualifiedTable -> PG.PGCol -> SchemaDependency
+mkColDep
+  :: forall b
+  . (Backend b)
+  => DependencyReason
+  -> SourceName
+  -> TableName b
+  -> Column b
+  -> SchemaDependency
 mkColDep reason source tn col =
-  flip SchemaDependency reason . SOSourceObj source . SOITableObj tn $ TOCol col
+  flip SchemaDependency reason
+    . SOSourceObj source
+    . AB.mkAnyBackend
+    . SOITableObj tn
+    $ TOCol col
 
 mkComputedFieldDep
-  :: DependencyReason -> SourceName -> PG.QualifiedTable -> ComputedFieldName -> SchemaDependency
+  :: forall b. (Backend b)
+  => DependencyReason
+  -> SourceName
+  -> TableName b
+  -> ComputedFieldName
+  -> SchemaDependency
 mkComputedFieldDep reason s tn computedField =
-  flip SchemaDependency reason . SOSourceObj s . SOITableObj tn $ TOComputedField computedField
+  flip SchemaDependency reason
+    . SOSourceObj s
+    . AB.mkAnyBackend
+    . SOITableObj tn
+    $ TOComputedField computedField
 
 type WithDeps a = (a, [SchemaDependency])
 
@@ -247,42 +282,47 @@ incSchemaCacheVer :: SchemaCacheVer -> SchemaCacheVer
 incSchemaCacheVer (SchemaCacheVer prev) =
   SchemaCacheVer $ prev + 1
 
-type ActionCache (b :: BackendType) = M.HashMap ActionName (ActionInfo b) -- info of all actions
+type ActionCache = M.HashMap ActionName ActionInfo -- info of all actions
 
 unsafeFunctionCache
   :: forall b. Backend b => SourceName -> SourceCache -> Maybe (FunctionCache b)
 unsafeFunctionCache sourceName cache =
-  unsafeSourceFunctions =<< M.lookup sourceName cache
+  unsafeSourceFunctions @b =<< M.lookup sourceName cache
 
 unsafeFunctionInfo
   :: forall b. Backend b => SourceName -> FunctionName b -> SourceCache -> Maybe (FunctionInfo b)
 unsafeFunctionInfo sourceName functionName cache =
-  M.lookup functionName =<< unsafeFunctionCache sourceName cache
+  M.lookup functionName =<< unsafeFunctionCache @b sourceName cache
+
+type InheritedRolesCache = M.HashMap RoleName (HashSet RoleName)
 
 unsafeTableCache
   :: forall b. Backend b => SourceName -> SourceCache -> Maybe (TableCache b)
 unsafeTableCache sourceName cache = do
-  unsafeSourceTables =<< M.lookup sourceName cache
+  unsafeSourceTables @b =<< M.lookup sourceName cache
 
 unsafeTableInfo
   :: forall b. Backend b => SourceName -> TableName b -> SourceCache -> Maybe (TableInfo b)
 unsafeTableInfo sourceName tableName cache =
-  M.lookup tableName =<< unsafeTableCache sourceName cache
+  M.lookup tableName =<< unsafeTableCache @b sourceName cache
 
 data SchemaCache
   = SchemaCache
-  { scPostgres                    :: !SourceCache
-  , scActions                     :: !(ActionCache 'Postgres)
+  { scSources                     :: !SourceCache
+  , scActions                     :: !ActionCache
   , scRemoteSchemas               :: !RemoteSchemaMap
   , scAllowlist                   :: !(HS.HashSet GQLQuery)
   , scGQLContext                  :: !(HashMap RoleName (RoleContext GQLContext))
   , scUnauthenticatedGQLContext   :: !GQLContext
   , scRelayContext                :: !(HashMap RoleName (RoleContext GQLContext))
   , scUnauthenticatedRelayContext :: !GQLContext
-  -- , scCustomTypes       :: !(NonObjectTypeMap, AnnotatedObjects)
   , scDepMap                      :: !DepMap
   , scInconsistentObjs            :: ![InconsistentMetadata]
   , scCronTriggers                :: !(M.HashMap TriggerName CronTriggerInfo)
+  , scEndpoints                   :: !(EndpointTrie GQLQueryWithText)
+  , scApiLimits                   :: !ApiLimit
+  , scMetricsConfig               :: !MetricsConfig
+  , scMetadataResourceVersion     :: !(Maybe MetadataResourceVersion)
   }
 $(deriveToJSON hasuraJSON ''SchemaCache)
 
@@ -400,15 +440,64 @@ getDependentObjs = getDependentObjsWith (const True)
 getDependentObjsWith
   :: (DependencyReason -> Bool) -> SchemaCache -> SchemaObjId -> [SchemaObjId]
 getDependentObjsWith f sc objId =
-  -- [ sdObjId sd | sd <- filter (f . sdReason) allDeps]
   map fst $ filter (isDependency . snd) $ M.toList $ scDepMap sc
   where
     isDependency deps = not $ HS.null $ flip HS.filter deps $
       \(SchemaDependency depId reason) -> objId `induces` depId && f reason
     -- induces a b : is b dependent on a
-    induces (SOSource s1)                   (SOSource s2)                        = s1 == s2
-    induces (SOSource s1)                   (SOSourceObj s2 _)                   = s1 == s2
-    induces (SOSourceObj s1 (SOITable tn1)) (SOSourceObj s2 (SOITable tn2))      = s1 == s2 && tn1 == tn2
-    induces (SOSourceObj s1 (SOITable tn1)) (SOSourceObj s2 (SOITableObj tn2 _)) = s1 == s2 && tn1 == tn2
-    induces objId1 objId2                                                        = objId1 == objId2
-    -- allDeps = toList $ fromMaybe HS.empty $ M.lookup objId $ scDepMap sc
+    induces (SOSource s1) (SOSource s2)                   = s1 == s2
+    induces (SOSource s1) (SOSourceObj s2 _)              = s1 == s2
+    induces o1@(SOSourceObj s1 e1) o2@(SOSourceObj s2 e2) =
+        s1 == s2 && fromMaybe (o1 == o2) (AB.composeAnyBackend @Backend go e1 e2 Nothing)
+    induces o1 o2                                         = o1 == o2
+
+    go (SOITable tn1) (SOITable tn2)      = Just $ tn1 == tn2
+    go (SOITable tn1) (SOITableObj tn2 _) = Just $ tn1 == tn2
+    go _              _                   = Nothing
+
+
+-- | Build dependencies from an AnnBoolExpPartialSQL.
+getBoolExpDeps
+  :: Backend b
+  => SourceName
+  -> TableName b
+  -> AnnBoolExpPartialSQL b
+  -> [SchemaDependency]
+getBoolExpDeps source tn = \case
+  BoolAnd exps -> procExps exps
+  BoolOr  exps -> procExps exps
+  BoolNot e    -> getBoolExpDeps source tn e
+  BoolFld fld  -> getColExpDeps  source tn fld
+  BoolExists (GExists refqt whereExp) ->
+    let tableDep = SchemaDependency
+                     (SOSourceObj source
+                       $ AB.mkAnyBackend
+                       $ SOITable refqt)
+                     DRRemoteTable
+    in tableDep : getBoolExpDeps source refqt whereExp
+  where
+    procExps = concatMap (getBoolExpDeps source tn)
+
+getColExpDeps
+  :: Backend b
+  => SourceName
+  -> TableName b
+  -> AnnBoolExpFld b (PartialSQLExp b)
+  -> [SchemaDependency]
+getColExpDeps source tn = \case
+  AVCol colInfo opExps ->
+    let cn = pgiColumn colInfo
+        colDepReason = bool DRSessionVariable DROnType $ any hasStaticExp opExps
+        colDep = mkColDep colDepReason source tn cn
+        depColsInOpExp = mapMaybe opExpDepCol opExps
+        colDepsInOpExp = map (mkColDep DROnType source tn) depColsInOpExp
+    in colDep:colDepsInOpExp
+  AVRel relInfo relBoolExp ->
+    let rn = riName relInfo
+        relTN = riRTable relInfo
+        pd = SchemaDependency
+               (SOSourceObj source
+                 $ AB.mkAnyBackend
+                 $ SOITableObj tn (TORel rn))
+               DROnType
+    in pd : getBoolExpDeps source relTN relBoolExp

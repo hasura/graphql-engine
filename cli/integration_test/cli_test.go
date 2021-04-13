@@ -9,8 +9,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/hasura/graphql-engine/cli/commands"
-
 	"github.com/briandowns/spinner"
 	"github.com/hasura/graphql-engine/cli"
 	integrationtest "github.com/hasura/graphql-engine/cli/integration_test"
@@ -25,11 +23,7 @@ import (
 func init() {
 	rand.Seed(time.Now().UTC().UnixNano())
 }
-func skipMetadataTests(t *testing.T) {
-	if os.Getenv("SKIP_METADATA_TESTS") != "" {
-		t.Skip("Skipping metadata tests")
-	}
-}
+
 func TestCommands(t *testing.T) {
 	// Run tests only for config version v1
 	t.Run("config=v1", func(t *testing.T) {
@@ -74,7 +68,6 @@ func TestCommands(t *testing.T) {
 
 		skip(t)
 		t.Run("metadata commands", func(t *testing.T) {
-			skipMetadataTests(t)
 			v1.TestMetadataCmd(t, ec)
 		})
 	})
@@ -110,21 +103,6 @@ func TestCommands(t *testing.T) {
 		})
 
 		skip(t)
-		if cliExtManifestFilePath := os.Getenv("HASURA_GRAPHQL_TEST_CLI_EXT_MANIFEST_FILE_PATH"); cliExtManifestFilePath != "" {
-			t.Run("cli-ext-plugin-install", func(t *testing.T) {
-				installOpts := &commands.PluginInstallOptions{
-					EC:           ec,
-					Name:         cli.CLIExtPluginName,
-					ManifestFile: cliExtManifestFilePath,
-				}
-				err := installOpts.Run()
-				if err != nil {
-					t.Fatalf("unable to install %s plugin, got %v", cli.CLIExtPluginName, err)
-				}
-			})
-		}
-
-		skip(t)
 		t.Run("console command", func(t *testing.T) {
 			v2.TestConsoleCmd(t, ec)
 		})
@@ -136,7 +114,6 @@ func TestCommands(t *testing.T) {
 
 		skip(t)
 		t.Run("metadata commands", func(t *testing.T) {
-			skipMetadataTests(t)
 			v2.TestMetadataCmd(t, ec)
 		})
 
@@ -180,21 +157,6 @@ func TestCommands(t *testing.T) {
 		})
 
 		skip(t)
-		if cliExtManifestFilePath := os.Getenv("HASURA_GRAPHQL_TEST_CLI_EXT_MANIFEST_FILE_PATH"); cliExtManifestFilePath != "" {
-			t.Run("cli-ext-plugin-install", func(t *testing.T) {
-				installOpts := &commands.PluginInstallOptions{
-					EC:           ec,
-					Name:         cli.CLIExtPluginName,
-					ManifestFile: cliExtManifestFilePath,
-				}
-				err := installOpts.Run()
-				if err != nil {
-					t.Fatalf("unable to install %s plugin, got %v", cli.CLIExtPluginName, err)
-				}
-			})
-		}
-
-		skip(t)
 		t.Run("console command", func(t *testing.T) {
 			v3.TestConsoleCmd(t, ec)
 		})
@@ -206,7 +168,6 @@ func TestCommands(t *testing.T) {
 
 		skip(t)
 		t.Run("metadata commands", func(t *testing.T) {
-			skipMetadataTests(t)
 			v3.TestMetadataCmd(t, ec)
 		})
 

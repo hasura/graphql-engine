@@ -838,3 +838,32 @@ label {
   font-size: 14px;
   display: inline-block;
 }
+
+.topNavContainer {
+  height: 45px;
+  width: 100%;
+  background: #f8fafb;
+  padding: 0 16px;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  border-bottom: 1px solid #ccc;
+}
+
+.sectionLink {
+  display: inline-block;
+  color: #273848;
+  font-size: 14px;
+  font-weight: 600;
+  background: transparent;
+  padding: 14px 12px 9px;
+  margin-right: 8px;
+  text-decoration: none;
+  &.sectionLinkActive {
+    padding-top: 14px; 
+    padding-right: 12px;
+    padding-bottom: 6px;
+    padding-left: 12px;
+    border-bottom: 4px solid #ccc;
+  }
+}

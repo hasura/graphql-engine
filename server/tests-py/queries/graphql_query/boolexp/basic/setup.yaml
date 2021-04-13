@@ -44,8 +44,8 @@ args:
 
       CREATE TABLE orders (
         id SERIAL PRIMARY KEY,
-        received_at TIMESTAMP WITH TIME ZONE NOT NULL,
-        delivered_at TIMESTAMP WITH TIME ZONE
+        received_at TIMESTAMP NOT NULL,
+        delivered_at TIMESTAMP
       );
 
       CREATE TABLE message (
@@ -215,9 +215,9 @@ args:
   args:
     table: orders
     objects:
-      - received_at: '2018-09-21T09:39:44Z'
-      - received_at: '2018-09-21T09:40:44Z'
-        delivered_at: '2018-09-21T09:50:44Z'
+      - received_at: '2018-09-21T09:39:44'
+      - received_at: '2018-09-21T09:40:44'
+        delivered_at: '2018-09-21T09:50:44'
 
 - type: track_table
   args:

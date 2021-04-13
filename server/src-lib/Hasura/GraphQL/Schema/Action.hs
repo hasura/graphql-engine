@@ -20,7 +20,7 @@ import qualified Hasura.RQL.DML.Internal               as RQL
 import qualified Hasura.RQL.IR.Select                  as RQL
 
 import           Hasura.Backends.Postgres.SQL.Types
-import           Hasura.Backends.Postgres.SQL.Value
+import           Hasura.Backends.Postgres.Types.Column
 import           Hasura.GraphQL.Parser                 (FieldParser, InputFieldsParser, Kind (..),
                                                         Parser, UnpreparedValue (..))
 import           Hasura.GraphQL.Parser.Class
@@ -48,17 +48,18 @@ actionExecute
      , MonadTableInfo r m
      , MonadRole r m
      , Has QueryContext r
+     , Has (BackendExtension 'Postgres) r
      )
   => NonObjectTypeMap
-  -> ActionInfo 'Postgres
+  -> ActionInfo
   -> m (Maybe (FieldParser n (AnnActionExecution 'Postgres (UnpreparedValue 'Postgres))))
 actionExecute nonObjectTypeMap actionInfo = runMaybeT do
-  roleName <- lift askRoleName
-  guard $ roleName == adminRoleName || roleName `Map.member` permissions
+  roleName <- askRoleName
+  guard (roleName == adminRoleName || roleName `Map.member` permissions)
   let fieldName = unActionName actionName
       description = G.Description <$> comment
   inputArguments <- lift $ actionInputArguments nonObjectTypeMap $ _adArguments definition
-  selectionSet <- lift $ actionOutputFields outputObject
+  selectionSet <- lift $ actionOutputFields outputType outputObject
   stringifyNum <- asks $ qcStringifyNum . getter
   pure $ P.subselection fieldName description inputArguments selectionSet
          <&> \(argsJson, fields) -> AnnActionExecution
@@ -73,10 +74,10 @@ actionExecute nonObjectTypeMap actionInfo = runMaybeT do
                , _aaeForwardClientHeaders = _adForwardClientHeaders definition
                , _aaeStrfyNum = stringifyNum
                , _aaeTimeOut = _adTimeout definition
-               , _aaeSource  = getActionSourceInfo (_aiOutputObject actionInfo)
+               , _aaeSource  = getActionSourceInfo outputObject
                }
   where
-    ActionInfo actionName outputObject definition permissions comment = actionInfo
+    ActionInfo actionName (outputType, outputObject) definition permissions _ comment = actionInfo
 
 -- | actionAsyncMutation is used to execute a asynchronous mutation action. An
 --   asynchronous action expects the field name and the input arguments to the
@@ -87,7 +88,7 @@ actionExecute nonObjectTypeMap actionInfo = runMaybeT do
 actionAsyncMutation
   :: forall m n r. (MonadSchema n m, MonadTableInfo r m, MonadRole r m)
   => NonObjectTypeMap
-  -> ActionInfo 'Postgres
+  -> ActionInfo
   -> m (Maybe (FieldParser n AnnActionMutationAsync))
 actionAsyncMutation nonObjectTypeMap actionInfo = runMaybeT do
   roleName <- lift askRoleName
@@ -96,9 +97,9 @@ actionAsyncMutation nonObjectTypeMap actionInfo = runMaybeT do
   let fieldName = unActionName actionName
       description = G.Description <$> comment
   pure $ P.selection fieldName description inputArguments actionIdParser
-         <&> AnnActionMutationAsync actionName
+    <&> AnnActionMutationAsync actionName forwardClientHeaders
   where
-    ActionInfo actionName _ definition permissions comment = actionInfo
+    ActionInfo actionName _ definition permissions forwardClientHeaders comment = actionInfo
 
 -- | actionAsyncQuery is used to query/subscribe to the result of an
 --   asynchronous mutation action. The only input argument to an
@@ -120,13 +121,14 @@ actionAsyncQuery
      , MonadTableInfo r m
      , MonadRole r m
      , Has QueryContext r
+     , Has (BackendExtension 'Postgres) r
      )
-  => ActionInfo 'Postgres
+  => ActionInfo
   -> m (Maybe (FieldParser n (AnnActionAsyncQuery 'Postgres (UnpreparedValue 'Postgres))))
 actionAsyncQuery actionInfo = runMaybeT do
-  roleName <- lift askRoleName
+  roleName <- askRoleName
   guard $ roleName == adminRoleName || roleName `Map.member` permissions
-  actionOutputParser <- lift $ actionOutputFields outputObject
+  actionOutputParser <- lift $ actionOutputFields outputType outputObject
   createdAtFieldParser <-
     lift $ columnParser @'Postgres (ColumnScalar PGTimeStampTZ) (G.Nullability False)
   errorsFieldParser <-
@@ -163,10 +165,11 @@ actionAsyncQuery actionInfo = runMaybeT do
               , _aaaqFields = fields
               , _aaaqDefinitionList = mkDefinitionList outputObject
               , _aaaqStringifyNum = stringifyNum
-              , _aaaqSource  = getActionSourceInfo (_aiOutputObject actionInfo)
+              , _aaaqForwardClientHeaders = forwardClientHeaders
+              , _aaaqSource  = getActionSourceInfo outputObject
               }
   where
-    ActionInfo actionName outputObject definition permissions comment = actionInfo
+    ActionInfo actionName (outputType, outputObject) definition permissions forwardClientHeaders comment = actionInfo
     idFieldName = $$(G.litName "id")
     idFieldDescription = "the unique id of an action"
 
@@ -182,10 +185,12 @@ actionOutputFields
      , MonadTableInfo r m
      , MonadRole r m
      , Has QueryContext r
+     , Has (BackendExtension 'Postgres) r
      )
-  => AnnotatedObjectType 'Postgres
+  => G.GType
+  -> AnnotatedObjectType
   -> m (Parser 'Output n (RQL.AnnFieldsG 'Postgres (UnpreparedValue 'Postgres)))
-actionOutputFields annotatedObject = do
+actionOutputFields outputType annotatedObject = do
   let outputObject = _aotDefinition annotatedObject
       scalarOrEnumFields = map scalarOrEnumFieldParser $ toList $ _otdFields outputObject
   relationshipFields <- forM (_otdRelationships outputObject) $ traverse relationshipFieldParser
@@ -193,8 +198,9 @@ actionOutputFields annotatedObject = do
                         maybe [] (concat . catMaybes . toList) relationshipFields
       outputTypeName = unObjectTypeName $ _otdName outputObject
       outputTypeDescription = _otdDescription outputObject
-  pure $ P.selectionSet outputTypeName outputTypeDescription allFieldParsers
-         <&> parsedSelectionsToFields RQL.AFExpression
+  pure $ mkOutputParserModifier outputType $
+    P.selectionSet outputTypeName outputTypeDescription allFieldParsers
+    <&> parsedSelectionsToFields RQL.AFExpression
   where
     scalarOrEnumFieldParser
       :: ObjectFieldDefinition (G.GType, AnnotatedObjectFieldType)
@@ -210,7 +216,7 @@ actionOutputFields annotatedObject = do
             AOFTEnum def   -> customEnumParser def
       in bool P.nonNullableField id (G.isNullable gType) $
          P.selection_ (unObjectFieldName name) description fieldParser
-         $> RQL.mkAnnColumnField pgColumnInfo Nothing
+         $> RQL.mkAnnColumnField pgColumnInfo Nothing Nothing
 
     relationshipFieldParser
       :: TypeRelationship (TableInfo 'Postgres) (ColumnInfo 'Postgres)
@@ -245,8 +251,16 @@ actionOutputFields annotatedObject = do
                            , fmap (RQL.AFArrayRelation . RQL.ASAggregate . RQL.AnnRelationSelectG tableRelName columnMapping) <$> tableAggField
                            ]
 
+mkOutputParserModifier :: G.GType -> Parser 'Output m a -> Parser 'Output m a
+mkOutputParserModifier = \case
+  G.TypeNamed nullable _ -> nullableModifier nullable
+  G.TypeList nullable ty ->
+    nullableModifier nullable . P.multiple . mkOutputParserModifier ty
+  where
+    nullableModifier nullable =
+      if G.unNullability nullable then P.nullableParser else P.nonNullableParser
 
-mkDefinitionList :: AnnotatedObjectType 'Postgres -> [(PGCol, ScalarType 'Postgres)]
+mkDefinitionList :: AnnotatedObjectType -> [(PGCol, ScalarType 'Postgres)]
 mkDefinitionList AnnotatedObjectType{..} =
   flip map (toList _otdFields) $ \ObjectFieldDefinition{..} ->
     (unsafePGCol . G.unName . unObjectFieldName $ _ofdName,) $
@@ -284,23 +298,26 @@ actionInputArguments nonObjectTypeMap arguments = do
       -> G.GType
       -> NonObjectCustomType
       -> m (InputFieldsParser n (Maybe J.Value))
-    argumentParser name description gType = \case
-      NOCTScalar def -> pure $ mkArgumentInputFieldParser name description gType $ customScalarParser def
-      NOCTEnum def -> pure $ mkArgumentInputFieldParser name description gType $ customEnumParser def
-      NOCTInputObject def -> do
-        let InputObjectTypeDefinition typeName objectDescription inputFields = def
-            objectName = unInputObjectTypeName typeName
-        inputFieldsParsers <- forM (toList inputFields) $ \inputField -> do
-          let InputObjectFieldName fieldName = _iofdName inputField
-              GraphQLType fieldType = _iofdType inputField
-          nonObjectFieldType <-
-            onNothing (Map.lookup (G.getBaseType fieldType) nonObjectTypeMap) $
-              throw500 "object type for a field found in custom input object type"
-          (fieldName,) <$> argumentParser fieldName (_iofdDescription inputField) fieldType nonObjectFieldType
+    argumentParser name description gType nonObjectType = do
+      let mkResult :: forall k. ('Input P.<: k) => Parser k n J.Value -> InputFieldsParser n (Maybe J.Value)
+          mkResult = mkArgumentInputFieldParser name description gType
+      case nonObjectType of
+        -- scalar and enum parsers are not recursive and need not be memoized
+        NOCTScalar def -> pure $ mkResult $ customScalarParser def
+        NOCTEnum   def -> pure $ mkResult $ customEnumParser   def
+        -- input objects however may recursively contain one another
+        NOCTInputObject (InputObjectTypeDefinition (InputObjectTypeName objectName) objectDesc inputFields) ->
+          mkResult <$> memoizeOn 'actionInputArguments objectName do
+            inputFieldsParsers <- forM (toList inputFields)
+              \(InputObjectFieldDefinition (InputObjectFieldName fieldName) fieldDesc (GraphQLType fieldType)) -> do
+                nonObjectFieldType <-
+                  Map.lookup (G.getBaseType fieldType) nonObjectTypeMap
+                  `onNothing` throw500 "object type for a field found in custom input object type"
+                (fieldName,) <$> argumentParser fieldName fieldDesc fieldType nonObjectFieldType
+            pure
+              $ P.object objectName objectDesc
+              $ J.Object <$> inputFieldsToObject inputFieldsParsers
 
-        pure $ mkArgumentInputFieldParser name description gType $
-               P.object objectName objectDescription $
-               J.Object <$> inputFieldsToObject inputFieldsParsers
 
 mkArgumentInputFieldParser
   :: forall m k. (MonadParse m, 'Input P.<: k)
@@ -343,7 +360,7 @@ customScalarParser = \case
        { pType = schemaType
        , pParser = P.valueToJSON (P.toGraphQLType schemaType) >=>
                    either (parseErrorWith ParseFailed . qeError)
-                   (pure . pgScalarValueToJson) . runAesonParser (parsePGValue pgScalarType)
+                   (pure . scalarValueToJSON) . parseScalarValue pgScalarType
        }
 
 customEnumParser

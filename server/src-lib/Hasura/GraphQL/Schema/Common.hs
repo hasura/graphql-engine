@@ -19,7 +19,6 @@ import qualified Hasura.RQL.IR.Select               as IR
 import           Hasura.GraphQL.Parser              (UnpreparedValue)
 import           Hasura.RQL.Types
 
-
 type SelectExp           b = IR.AnnSimpleSelG       b (UnpreparedValue b)
 type AggSelectExp        b = IR.AnnAggregateSelectG b (UnpreparedValue b)
 type ConnectionSelectExp b = IR.ConnectionSelect    b (UnpreparedValue b)
@@ -31,8 +30,10 @@ type AnnotatedField      b = IR.AnnFieldG           b (UnpreparedValue b)
 data QueryContext =
   QueryContext
   { qcStringifyNum              :: !Bool
+  , qcDangerousBooleanCollapse  :: !Bool
   , qcQueryType                 :: !ET.GraphQLQueryType
   , qcRemoteRelationshipContext :: !(HashMap RemoteSchemaName (IntrospectionResult, ParsedIntrospection))
+  , qcFunctionPermsContext      :: !FunctionPermissionsCtx
   }
 
 textToName :: MonadError QErr m => Text -> m G.Name
@@ -126,7 +127,24 @@ takeValidTables = Map.filterWithKey graphQLTableFilter . Map.filter tableFilter
       isJust (_tcCustomName $ _tciCustomConfig $ _tiCoreInfo tableInfo)
 
 -- TODO and what about graphql-compliant function names here too?
-takeValidFunctions :: forall b. FunctionCache b -> [FunctionInfo b]
-takeValidFunctions = Map.elems . Map.filter functionFilter
+takeValidFunctions :: forall b. FunctionCache b -> FunctionCache b
+takeValidFunctions = Map.filter functionFilter
   where
-    functionFilter = not . isSystemDefined . fiSystemDefined
+    functionFilter = not . isSystemDefined . _fiSystemDefined
+
+
+-- root field builder helpers
+
+requiredFieldParser
+  :: (Functor n, Functor m)
+  => (a -> b)
+  -> m (P.FieldParser n a)
+  -> m (Maybe (P.FieldParser n b))
+requiredFieldParser f = fmap $ Just . fmap f
+
+optionalFieldParser
+  :: (Functor n, Functor m)
+  => (a -> b)
+  -> m (Maybe (P.FieldParser n a))
+  -> m (Maybe (P.FieldParser n b))
+optionalFieldParser = fmap . fmap . fmap

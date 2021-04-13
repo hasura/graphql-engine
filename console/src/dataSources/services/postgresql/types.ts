@@ -1,7 +1,13 @@
+// eslint-disable-next-line no-shadow
+export enum ArgType {
+  CompositeType = 'c',
+  BaseType = 'b',
+}
+
 export type PGInputArgType = {
   schema: string;
   name: string;
-  type: string;
+  type: ArgType;
 };
 
 export type PGFunction = {
@@ -57,7 +63,7 @@ export interface PostgresTrigger {
   event_manipulation: string;
 }
 
-type InputArgType = {
+export type InputArgType = {
   schema: string;
   name: string;
 };

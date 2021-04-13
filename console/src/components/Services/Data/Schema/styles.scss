@@ -46,3 +46,24 @@
   width: 420px;
   padding: 8px 0;
 }
+
+.inconsistentSourceIcon {
+  padding: 3px;
+  color: #c02020;
+  font-size: 15px;
+}
+
+.replica_badge {
+  display: flex;
+  align-items: center;
+  background-color: #ccc;
+  width: auto;
+  border-radius: 10px;
+  height: 20px;
+  padding: 8px;
+  font-size: 13px;
+  color: black;
+  margin: 0px 4px;
+  font-weight: 600;
+  letter-spacing: 0.3px;
+}

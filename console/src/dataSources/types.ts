@@ -1,6 +1,15 @@
 import { Nullable } from '../components/Common/utils/tsUtils';
 import { Column } from '../utils/postgresColumnTypes';
-import { FunctionDefinition, RemoteRelationshipDef } from '../metadata/types';
+import {
+  FunctionDefinition,
+  RemoteRelationshipDef,
+  TableEntry,
+} from '../metadata/types';
+import { ReduxState } from '../types';
+import {
+  getSelectQuery,
+  getRunSqlQuery,
+} from '../../src/components/Common/utils/v1QueryUtils';
 
 export interface Relationship
   extends Pick<BaseTable, 'table_name' | 'table_schema'> {
@@ -24,6 +33,7 @@ export type Permission = {
 export interface BaseTableColumn {
   column_name: string;
   data_type: string;
+  data_type_name?: string;
 }
 
 export interface TableColumn extends BaseTableColumn {
@@ -37,7 +47,7 @@ export interface TableColumn extends BaseTableColumn {
   table_name: string;
   column_name: string;
   table_schema: string;
-  column_default: string | null;
+  column_default?: string | null;
   ordinal_position: number;
   /**
    * auto_increment for columns that have the AUTO_INCREMENT attribute.
@@ -98,7 +108,8 @@ export interface Table extends BaseTable {
     | 'MATERIALIZED VIEW'
     | 'FOREIGN TABLE'
     | 'PARTITIONED TABLE'
-    | 'BASE TABLE';
+    | 'BASE TABLE'
+    | 'TABLE'; // specific to SQL Server
   primary_key: {
     table_name: string;
     table_schema: string;
@@ -140,7 +151,7 @@ export interface Table extends BaseTable {
     table_schema: string;
     table_name: string;
     view_definition: string;
-  };
+  } | null;
   remote_relationships: {
     remote_relationship_name: string;
     table_name: string;
@@ -166,3 +177,87 @@ export interface FrequentlyUsedColumn {
   ) => { upSql: string; downSql: string };
   minPGVersion?: number;
 }
+
+type ColumnCategories =
+  | 'boolean'
+  | 'character'
+  | 'dateTime'
+  | 'geometry'
+  | 'geography'
+  | 'json'
+  | 'jsonb'
+  | 'numeric'
+  | 'uuid'
+  | 'user_defined';
+export type PermissionColumnCategories = Record<ColumnCategories, string[]>;
+
+export type SupportedFeaturesType = {
+  driver: {
+    name: string;
+  };
+  tables: {
+    create: {
+      enabled: boolean;
+    };
+    browse: {
+      enabled: boolean;
+      customPagination?: boolean;
+      aggregation: boolean;
+    };
+    insert: {
+      enabled: boolean;
+    };
+    modify: {
+      enabled: boolean;
+    };
+    relationships: {
+      enabled: boolean;
+      remoteRelationships?: boolean;
+    };
+    permissions: {
+      enabled: boolean;
+    };
+  };
+  events: {
+    triggers: {
+      enabled: boolean;
+      add: boolean;
+    };
+  };
+  actions: {
+    enabled: boolean;
+    relationships: boolean;
+  };
+};
+
+type Tables = ReduxState['tables'];
+
+export type generateTableRowRequestType = {
+  endpoint: string;
+  getTableRowRequestBody: (data: {
+    tables: Tables;
+    isExport?: boolean;
+    tableConfiguration?: TableEntry['configuration'];
+  }) =>
+    | {
+        type: string;
+        source: string;
+        args: (
+          | ReturnType<typeof getSelectQuery>
+          | ReturnType<typeof getRunSqlQuery>
+        )[];
+      }
+    | {
+        query: string;
+        variables: null;
+        operationName: string;
+      };
+  processTableRowData: <T>(
+    data: T,
+    config?: {
+      originalTable: string;
+      currentSchema: string;
+      tableConfiguration?: TableEntry['configuration'];
+    }
+  ) => { rows: T[]; estimatedCount: number };
+};

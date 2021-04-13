@@ -72,7 +72,7 @@ const MetadataOptions = props => {
           permissions, etc. that is used to generate the GraphQL schema and
           API.&nbsp;
           <a
-            href="https://hasura.io/docs/1.0/graphql/manual/how-it-works/metadata-schema.html"
+            href="https://hasura.io/docs/latest/graphql/core/how-it-works/metadata-schema.html"
             target="_blank"
             rel="noopener noreferrer"
           >

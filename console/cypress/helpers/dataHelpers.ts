@@ -1,5 +1,5 @@
 import { QueryType } from './../integration/validators/validators';
-import { ADMIN_SECRET_HEADER_KEY } from '../../src/constants';
+import { ADMIN_SECRET_HEADER_KEY } from './constants';
 
 export const baseUrl = Cypress.config('baseUrl');
 
@@ -80,7 +80,12 @@ interface APIPayload {
   [key: string]: any;
 }
 
-export type QueryEndpoint = 'query' | 'metadata';
+export const queryEndpoints = {
+  query: 'query',
+  metadata: 'metadata',
+} as const;
+
+export type QueryEndpoint = keyof typeof queryEndpoints;
 
 export const makeDataAPIOptions = (
   dataApiUrl: string,
@@ -211,18 +216,26 @@ export const trackCreateFunctionTable = () => {
   };
 };
 
-export const createSampleTable = () => {
-  return {
-    type: 'run_sql',
-    source: 'default',
-    args: {
-      sql: `CREATE TABLE text_result(
-          result text
-        );`,
-      cascade: false,
-    },
-  };
-};
+export const createSampleTable = () => ({
+  type: 'run_sql',
+  source: 'default',
+  args: {
+    sql: 'CREATE TABLE text_result(result text);',
+    cascade: false,
+  },
+});
+
+export const dropTableIfExists = (
+  table: { name: string; schema: string },
+  source = 'default'
+) => ({
+  type: 'run_sql',
+  source,
+  args: {
+    sql: `DROP TABLE IF EXISTS "${table.schema}"."${table.name}";`,
+    cascade: false,
+  },
+});
 
 export const getTrackSampleTableQuery = () => {
   return {
@@ -238,17 +251,11 @@ export const getTrackSampleTableQuery = () => {
 };
 export const dropTable = (table = 'post', cascade = false) => {
   return {
-    type: 'bulk',
-    source: 'default',
-    args: [
-      {
-        type: 'run_sql',
-        args: {
-          sql: `DROP table "public"."${table}"${cascade ? ' CASCADE;' : ';'}`,
-          cascade,
-        },
-      },
-    ],
+    type: 'run_sql',
+    args: {
+      sql: `DROP table "public"."${table}"${cascade ? ' CASCADE;' : ';'}`,
+      cascade,
+    },
   };
 };
 

@@ -2,20 +2,12 @@ import React, { Component } from 'react';
 import PropTypes from 'prop-types';
 import ApiRequest from './ApiRequest/ApiRequest';
 import ApiResponse from './ApiResponse/ApiResponse';
-// import ApiRequestDetails from './ApiRequestDetails';
 
 class ApiRequestWrapper extends Component {
   render() {
     const styles = require('./ApiExplorer.scss');
 
     const getAPIRequestDetailsSection = () => {
-      // return (
-      //   <ApiRequestDetails
-      //     title={this.props.details.title}
-      //     description={this.props.details.description}
-      //   />
-      // );
-
       return null;
     };
 

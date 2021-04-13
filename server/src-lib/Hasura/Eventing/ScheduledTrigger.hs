@@ -87,6 +87,7 @@ module Hasura.Eventing.ScheduledTrigger
   , getCronEventsTx
   , deleteScheduledEventTx
   , getInvocationsTx
+  , getInvocationsQuery
 
   -- * Export utility functions which are useful to build
   -- SQLs for fetching data from metadata storage
@@ -96,6 +97,7 @@ module Hasura.Eventing.ScheduledTrigger
   , withCount
   , invocationFieldExtractors
   , mkEventIdBoolExp
+  , EventTables (..)
   ) where
 
 import           Hasura.Prelude
@@ -125,13 +127,13 @@ import qualified Hasura.Backends.Postgres.SQL.DML       as S
 import qualified Hasura.Logging                         as L
 import qualified Hasura.Tracing                         as Tracing
 
+import           Hasura.Backends.Postgres.DDL.Table     (getHeaderInfosFromConf)
 import           Hasura.Backends.Postgres.SQL.Types
 import           Hasura.Eventing.Common
 import           Hasura.Eventing.HTTP
 import           Hasura.Eventing.ScheduledTrigger.Types
 import           Hasura.HTTP
 import           Hasura.Metadata.Class
-import           Hasura.RQL.DDL.EventTrigger            (getHeaderInfosFromConf)
 import           Hasura.RQL.DDL.Headers
 import           Hasura.RQL.Types
 import           Hasura.SQL.Types
@@ -152,17 +154,22 @@ runCronEventsGenerator logger getSC = do
     -- get cron triggers from cache
     let cronTriggersCache = scCronTriggers sc
 
-    -- get cron trigger stats from db
-    eitherRes <- runMetadataStorageT $ do
-      deprivedCronTriggerStats <- getDeprivedCronTriggerStats
-      -- join stats with cron triggers and produce @[(CronTriggerInfo, CronTriggerStats)]@
-      cronTriggersForHydrationWithStats <-
-        catMaybes <$>
-        mapM (withCronTrigger cronTriggersCache) deprivedCronTriggerStats
-      insertCronEventsFor cronTriggersForHydrationWithStats
+    if (Map.null cronTriggersCache)
+    then return ()
+    else do
+      -- Poll the DB only when there's at-least one cron trigger present
+      -- in the schema cache
+      -- get cron trigger stats from db
+      eitherRes <- runMetadataStorageT $ do
+        deprivedCronTriggerStats <- getDeprivedCronTriggerStats
+        -- join stats with cron triggers and produce @[(CronTriggerInfo, CronTriggerStats)]@
+        cronTriggersForHydrationWithStats <-
+          catMaybes <$>
+          mapM (withCronTrigger cronTriggersCache) deprivedCronTriggerStats
+        insertCronEventsFor cronTriggersForHydrationWithStats
 
-    onLeft eitherRes $ L.unLogger logger .
-      ScheduledTriggerInternalErr . err500 Unexpected . tshow
+      onLeft eitherRes $ L.unLogger logger .
+        ScheduledTriggerInternalErr . err500 Unexpected . tshow
 
     liftIO $ sleep (minutes 1)
     where
@@ -249,7 +256,8 @@ processOneOffScheduledEvents
   -> [OneOffScheduledEvent]
   -> TVar (Set.Set OneOffScheduledEventId)
   -> m ()
-processOneOffScheduledEvents env logger logEnv httpMgr oneOffEvents lockedOneOffScheduledEvents = do
+processOneOffScheduledEvents env logger logEnv httpMgr
+                             oneOffEvents lockedOneOffScheduledEvents = do
   -- save the locked one-off events that have been fetched from the
   -- database, the events stored here will be unlocked in case a
   -- graceful shutdown is initiated in midst of processing these events
@@ -291,7 +299,7 @@ processScheduledTriggers env logger logEnv httpMgr getSC LockedEventsCtx {..} =
       Right (cronEvents, oneOffEvents) -> do
         processCronEvents logger logEnv httpMgr cronEvents getSC leCronEvents
         processOneOffScheduledEvents env logger logEnv httpMgr oneOffEvents leOneOffEvents
-        liftIO $ sleep (minutes 1)
+    liftIO $ sleep (minutes 1)
   where
     logInternalError err = liftIO . L.unLogger logger $ ScheduledTriggerInternalErr err
 
@@ -811,15 +819,27 @@ getInvocationsTx
   -> ScheduledEventPagination
   -> Q.TxE QErr (WithTotalCount [ScheduledEventInvocation])
 getInvocationsTx invocationsBy pagination = do
-  let sql = Q.fromBuilder $ toSQL $ mkPaginationSelectExp allRowsSelect pagination
+  let eventsTables = EventTables oneOffInvocationsTable cronInvocationsTable cronEventsTable
+      sql = Q.fromBuilder $ toSQL $ getInvocationsQuery eventsTables invocationsBy pagination
   (withCount . Q.getRow) <$> Q.withQE defaultTxErrorHandler sql () True
+  where
+    oneOffInvocationsTable = QualifiedObject "hdb_catalog" $ TableName "hdb_scheduled_event_invocation_logs"
+    cronInvocationsTable = QualifiedObject "hdb_catalog" $ TableName "hdb_cron_event_invocation_logs"
+
+data EventTables
+  = EventTables
+  { etOneOffInvocationsTable :: QualifiedTable
+  , etCronInvocationsTable   :: QualifiedTable
+  , etCronEventsTable        :: QualifiedTable
+  }
+
+getInvocationsQuery :: EventTables -> GetInvocationsBy -> ScheduledEventPagination -> S.Select
+getInvocationsQuery (EventTables oneOffInvocationsTable cronInvocationsTable cronEventsTable') invocationsBy pagination =
+  mkPaginationSelectExp allRowsSelect pagination
   where
     createdAtOrderBy table =
       let createdAtCol = S.SEQIdentifier $ S.mkQIdentifierTable table $ Identifier "created_at"
       in S.OrderByExp $ flip (NE.:|) [] $ S.OrderByItem createdAtCol (Just S.OTDesc) Nothing
-
-    oneOffInvocationsTable = QualifiedObject "hdb_catalog" $ TableName "hdb_scheduled_event_invocation_logs"
-    cronInvocationsTable = QualifiedObject "hdb_catalog" $ TableName "hdb_cron_event_invocation_logs"
 
     allRowsSelect = case invocationsBy of
       GIBEventId eventId eventType ->
@@ -843,7 +863,7 @@ getInvocationsTx invocationsBy pagination = do
              }
         SECron triggerName ->
           let invocationTable = cronInvocationsTable
-              eventTable = cronEventsTable
+              eventTable = cronEventsTable'
               joinCondition = S.JoinOn $ S.BECompare S.SEQ
                 (S.SEQIdentifier $ S.mkQIdentifierTable eventTable $ Identifier "id")
                 (S.SEQIdentifier $ S.mkQIdentifierTable invocationTable $ Identifier "event_id")

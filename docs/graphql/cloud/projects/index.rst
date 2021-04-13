@@ -27,11 +27,11 @@ For each project, you can do the one of the following actions:
    :alt: Project actions
    :width: 860px
 
-- Click ``Launch Console`` to open the Hasura console in your browser. The ``Pro`` tab
+- Click ``Launch Console`` to open the Hasura console in your browser. The ``Monitoring`` tab
   lets you use the Pro features that Hasura Cloud has set up for you.
 
-  .. thumbnail:: /img/graphql/cloud/metrics/pro-tab-overview.png
-     :alt: Hasura Console: Pro tab
+  .. thumbnail:: /img/graphql/cloud/metrics/monitoring-tab-overview.png
+     :alt: Hasura Console: Monitoring tab
      :width: 900px
 
 - Click the gear icon to manage your project
@@ -54,6 +54,7 @@ Dig deeper
    Creating projects <create>
    Project Details <details>
    Project Collaborators <collaborators>
+   Transfer Ownership <ownership>
    Project Env vars <env-vars>
    Project Domains <domains>
    Securing projects <secure>
@@ -61,4 +62,5 @@ Dig deeper
    Deployment regions <regions>
    Heroku database URL Sync <heroku-url-sync>
    Deleting projects <delete>
+   Moving v1.3 projects to v2.0 <move-project-v2>
    

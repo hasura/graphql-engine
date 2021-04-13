@@ -82,6 +82,7 @@ const ViewRows = props => {
     readOnlyMode,
     shouldHidePagination,
     currentSource,
+    useCustomPagination,
   } = props;
   const [invokedRow, setInvokedRow] = useState(null);
   const [invocationFunc, setInvocationFunc] = useState(null);
@@ -226,13 +227,19 @@ const ViewRows = props => {
     const pkClause = {};
 
     if (!isView && hasPrimaryKey) {
-      tableSchema.primary_key.columns.map(key => {
+      tableSchema.primary_key.columns.forEach(key => {
+        pkClause[key] = row[key];
+      });
+    } else if (tableSchema.unique_constraints?.length) {
+      tableSchema.unique_constraints[0].columns.forEach(key => {
         pkClause[key] = row[key];
       });
     } else {
-      tableSchema.columns.map(key => {
-        pkClause[key.column_name] = row[key.column_name];
-      });
+      tableSchema.columns
+        .filter(c => !dataSource.isJsonColumn(c))
+        .forEach(key => {
+          pkClause[key.column_name] = row[key.column_name];
+        });
     }
 
     Object.keys(pkClause).forEach(key => {
@@ -928,6 +935,57 @@ const ViewRows = props => {
       }
     };
 
+    const PaginationWithOnlyNav = () => {
+      const newPage = curFilter.offset / curFilter.limit;
+      return (
+        <div className={`row`} style={{ maxWidth: '500px' }}>
+          <div className="col-xs-2">
+            <button
+              className="btn"
+              onClick={() => handlePageChange(newPage - 1)}
+              disabled={curFilter.offset === 0}
+            >
+              prev
+            </button>
+          </div>
+          <div className="col-xs-4">
+            <select
+              value={curFilter.limit}
+              onChange={e => {
+                e.persist();
+                handlePageSizeChange(parseInt(e.target.value, 10) || 10);
+              }}
+              className="form-control"
+            >
+              <option disabled value="">
+                --
+              </option>
+              <option value={5}>5 rows</option>
+              <option value={10}>10 rows</option>
+              <option value={20}>20 rows</option>
+              <option value={25}>25 rows</option>
+              <option value={50}>50 rows</option>
+              <option value={100}>100 rows</option>
+            </select>
+          </div>
+          <div className="col-xs-2">
+            <button
+              className="btn"
+              onClick={() => handlePageChange(newPage + 1)}
+              disabled={curRows.length === 0}
+            >
+              next
+            </button>
+          </div>
+        </div>
+      );
+    };
+
+    const paginationProps = {};
+    if (useCustomPagination) {
+      paginationProps.PaginationComponent = PaginationWithOnlyNav;
+    }
+
     return (
       <DragFoldTable
         className="dataTable -highlight -fit-content"
@@ -959,6 +1017,7 @@ const ViewRows = props => {
         }
         defaultReorders={columnsOrder}
         showPagination={!shouldHidePagination}
+        {...paginationProps}
       />
     );
   };

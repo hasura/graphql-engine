@@ -51,17 +51,17 @@ Let's see access control in action using a simple example.
 Create a table
 ^^^^^^^^^^^^^^
 
-Head to your console and :ref:`create a table <create_tables>` called ``author`` with the following
+Head to your console and :ref:`create a table <create_tables>` called ``authors`` with the following
 schema:
 
 .. code-block:: sql
 
-  author (
+  authors (
     id INT PRIMARY KEY,
     name TEXT
   )
 
-Now, insert some sample data into the table using the ``Insert Row`` tab of the ``author`` table.
+Now, insert some sample data into the table using the ``Insert Row`` tab of the ``authors`` table.
 
 Run a query **without** access control
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -71,7 +71,7 @@ Head to the ``GraphiQL`` tab in your console and try out the below query:
 .. code-block:: graphql
 
   query {
-    author {
+    authors {
       id
       name
     }
@@ -86,7 +86,7 @@ query is accepted with **admin** permissions.
 Define access control rules
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Now let's define an access control rule for the ``author`` table for a role ``users``. 
+Now let's define an access control rule for the ``authors`` table for a role ``user``. 
 
 .. rst-class:: api_tabs
 .. tabs::
@@ -94,7 +94,7 @@ Now let's define an access control rule for the ``author`` table for a role ``us
   .. tab:: Console
 
     Head to the
-    **Permissions** section of the table (``Data`` --> <table> --> ``Permissions`` tab) and define permissions
+    **Permissions** section of the table (``Data -> [table] -> Permissions`` tab) and define permissions
     as shown below:
 
     .. thumbnail:: /img/graphql/core/auth/permission-basics-simple-example.png
@@ -109,7 +109,7 @@ Now let's define an access control rule for the ``author`` table for a role ``us
 
         - table:
             schema: public
-            name: author
+            name: authors
           select_permissions:
           - role: user
             permission:
@@ -139,7 +139,7 @@ Now let's define an access control rule for the ``author`` table for a role ``us
       {
           "type" : "create_select_permission",
           "args" : {
-              "table" : "author",
+              "table" : "authors",
               "role" : "user",
               "permission" : {
                   "columns" : [
@@ -153,7 +153,7 @@ Now let's define an access control rule for the ``author`` table for a role ``us
           }
       }
 
-This permission rule reads as: "*For the role* ``user`` *, table* ``author`` *and operation* ``select``/``query``,
+This permission rule reads as: "*For the role* ``user`` *, table* ``authors`` *and operation* ``select``/``query``,
 allow access to those rows where the value in the ``id`` *column is the same as the value in the*
 ``X-Hasura-User-ID`` *session variable*".
 
@@ -181,3 +181,7 @@ Next steps
 Read about roles and session variables at: :ref:`roles_variables`
 
 See more detailed examples at: :ref:`Common access control examples<auth_examples>`
+
+.. admonition:: Additional Resources
+
+  Enterprise Grade Authorization - `Watch Webinar <https://hasura.io/events/webinar/authorization-modeling-hasura/?pg=docs&plcmt=body&cta=watch-webinar&tech=>`__.

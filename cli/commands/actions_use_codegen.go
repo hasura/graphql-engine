@@ -23,7 +23,7 @@ func newActionsUseCodegenCmd(ec *cli.ExecutionContext) *cobra.Command {
 	}
 	actionsUseCodegenCmd := &cobra.Command{
 		Use:   "use-codegen",
-		Short: "Configure the codegen module",
+		Short: "Use the codegen to generate code for Hasura actions",
 		Example: `  # Use codegen by providing framework
   hasura actions use-codegen --framework nodejs-express
 

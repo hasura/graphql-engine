@@ -155,3 +155,4 @@ In case you need an automated way of applying/importing the metadata, take a
 look at the :ref:`cli-migrations <auto_apply_migrations_v1>` Docker image, which
 can start the GraphQL engine after automatically importing a mounted ``metadata.yaml``
 file.
+

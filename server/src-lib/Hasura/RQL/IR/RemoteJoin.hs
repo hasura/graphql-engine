@@ -23,4 +23,4 @@ data RemoteJoin (b :: BackendType)
     -- ^ Hasura fields which are not in the selection set, but are required as
     -- parameters to satisfy the remote join.
   }
-deriving instance Eq (RemoteJoin 'Postgres)
+deriving instance Backend b => Eq (RemoteJoin b)

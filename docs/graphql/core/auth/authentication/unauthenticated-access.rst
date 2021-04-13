@@ -58,3 +58,7 @@ For :ref:`JWT authentication <auth_jwt>`, any request which does not contain a J
 You can use the env variable ``HASURA_GRAPHQL_UNAUTHORIZED_ROLE`` or the ``--unauthorized-role`` flag to set a role
 for unauthenticated (non-logged in) users. See :ref:`server_flag_reference` for more details
 on setting this flag/env var.
+
+.. admonition:: Additional Resources
+
+  Enterprise Grade Authorization - `Watch Webinar <https://hasura.io/events/webinar/authorization-modeling-hasura/?pg=docs&plcmt=body&cta=watch-webinar&tech=>`__.

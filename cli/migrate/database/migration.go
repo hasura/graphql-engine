@@ -3,7 +3,9 @@ package database
 import (
 	"sort"
 
-	"github.com/hasura/graphql-engine/cli/internal/client"
+	"github.com/hasura/graphql-engine/cli/internal/statestore"
+
+	"github.com/hasura/graphql-engine/cli/internal/hasura"
 )
 
 // Migrations wraps Migration and has an internal index
@@ -104,8 +106,17 @@ func (s migrationVersions) Search(x uint64) int {
 
 type HasuraOpts struct {
 	HasMetadataV3 bool
-	Datasource         string
-	Client             *client.Client
-	APIVersion         client.APIVersion
-	MigrationExectionStrategy client.MigrationExecutionStrategy
+	SourceName    string
+	SourceKind    hasura.SourceKind
+
+	Client *hasura.Client
+
+	PGSourceOps         hasura.PGSourceOps
+	MSSQLSourceOps      hasura.MSSQLSourceOps
+	MetadataOps         hasura.CommonMetadataOperations
+	V2MetadataOps       hasura.V2CommonMetadataOperations
+	GenericQueryRequest hasura.GenericSend
+
+	MigrationsStateStore statestore.MigrationsStateStore
+	SettingsStateStore   statestore.SettingsStateStore
 }

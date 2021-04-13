@@ -1,10 +1,13 @@
 module Hasura.SQL.GeoJSON
-  ( Point(..)
+  ( Position(..)
+  , Point(..)
   , MultiPoint(..)
   , LineString(..)
+  , LinearRing(..)
   , MultiLineString(..)
   , Polygon(..)
   , MultiPolygon(..)
+  , Geometry(..)
   , GeometryCollection(..)
   , GeometryWithCRS(..)
   ) where

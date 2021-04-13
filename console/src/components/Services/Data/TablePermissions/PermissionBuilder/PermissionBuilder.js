@@ -11,11 +11,10 @@ import {
   isBoolOperator,
   isArrayColumnOperator,
   isColumnOperator,
-  getRootPGType,
+  getRootType,
   getOperatorInputType,
   boolOperators,
-  PGTypes,
-  PGTypesOperators,
+  getPermissionOperators,
   existOperators,
   isExistOperator,
   TABLE_KEY,
@@ -34,6 +33,7 @@ import {
   getSchemaTableNames,
   generateTableDef,
   dataSource,
+  currentDriver,
 } from '../../../../../dataSources';
 
 import {
@@ -512,19 +512,32 @@ class PermissionBuilder extends React.Component {
       tableColumns,
       showSuggestion = true
     ) => {
+      const currentTypeMap = dataSource.permissionColumnDataTypes;
+      if (!currentTypeMap) {
+        // shouldn't happen ideally. check in place for the MySQL `null`
+        return;
+      }
       const dispatchInput = val => {
         let _val = val;
 
         if (val !== '') {
-          if (PGTypes.boolean.includes(valueType)) {
+          if (
+            currentTypeMap?.boolean &&
+            currentTypeMap.boolean.includes(valueType)
+          ) {
             _val = val === 'true';
           } else if (
-            PGTypes.numeric.includes(valueType) &&
+            currentTypeMap?.numeric &&
+            currentTypeMap.numeric.includes(valueType) &&
             !isNaN(val) &&
             val.substr(-1) !== '.'
           ) {
             _val = Number(val);
-          } else if (PGTypes.jsonb.includes(valueType) && isJsonString(val)) {
+          } else if (
+            currentTypeMap?.jsonb &&
+            currentTypeMap.jsonb.includes(valueType) &&
+            isJsonString(val)
+          ) {
             _val = JSON.parse(val);
           }
         }
@@ -547,9 +560,17 @@ class PermissionBuilder extends React.Component {
       let input;
       let suggestion;
 
-      if (PGTypes.boolean.includes(valueType)) {
+      if (
+        currentTypeMap?.boolean &&
+        currentTypeMap.boolean.includes(valueType) &&
+        currentDriver === 'postgres'
+      ) {
         input = renderBoolSelect(dispatchInput, value);
-      } else if (PGTypes.jsonb.includes(valueType)) {
+      } else if (
+        currentTypeMap?.jsonb &&
+        currentTypeMap.jsonb.includes(valueType) &&
+        currentDriver === 'postgres'
+      ) {
         input = inputBox();
         suggestion = jsonSuggestion();
       } else if (valueType === 'column') {
@@ -635,8 +656,12 @@ class PermissionBuilder extends React.Component {
       const operator = Object.keys(_expression)[0];
       const operationValue = _expression[operator];
 
-      const rootValueType = getRootPGType(valueType);
-      const operators = PGTypesOperators[rootValueType];
+      const currentTypeMap = dataSource.permissionColumnDataTypes;
+      const rootValueType = getRootType(valueType, currentTypeMap);
+      const operators = getPermissionOperators(
+        dataSource.supportedColumnOperators,
+        currentTypeMap
+      )[rootValueType];
 
       const _operatorSelect = renderSelect(
         dispatchColumnOperatorSelect,

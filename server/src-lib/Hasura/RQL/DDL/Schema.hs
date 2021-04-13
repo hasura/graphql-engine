@@ -33,28 +33,31 @@ module Hasura.RQL.DDL.Schema
  , RunSQL(..)
  , runRunSQL
  , isSchemaCacheBuildRequiredRunSQL
+
+ , RunSQLRes(..)
  ) where
 
 import           Hasura.Prelude
 
-import qualified Data.Text.Encoding             as TE
-import qualified Database.PG.Query              as Q
-import qualified Database.PostgreSQL.LibPQ      as PQ
-import qualified Text.Regex.TDFA                as TDFA
+import qualified Data.Text.Encoding                  as TE
+import qualified Database.PG.Query                   as Q
+import qualified Database.PostgreSQL.LibPQ           as PQ
+import qualified Text.Regex.TDFA                     as TDFA
 
-import           Control.Monad.Trans.Control    (MonadBaseControl)
+import           Control.Monad.Trans.Control         (MonadBaseControl)
 import           Data.Aeson
 import           Data.Aeson.TH
 
+import           Hasura.Backends.Postgres.DDL.RunSQL
 import           Hasura.EncJSON
 import           Hasura.RQL.DDL.Schema.Cache
 import           Hasura.RQL.DDL.Schema.Catalog
 import           Hasura.RQL.DDL.Schema.Function
 import           Hasura.RQL.DDL.Schema.Rename
 import           Hasura.RQL.DDL.Schema.Table
-import           Hasura.RQL.Instances           ()
+import           Hasura.RQL.Instances                ()
 import           Hasura.RQL.Types
-import           Hasura.Server.Utils            (quoteRegex)
+import           Hasura.Server.Utils                 (quoteRegex)
 
 data RunSQL
   = RunSQL
@@ -105,7 +108,7 @@ isSchemaCacheBuildRequiredRunSQL RunSQL {..} =
         { TDFA.captureGroups = False }
         "\\balter\\b|\\bdrop\\b|\\breplace\\b|\\bcreate function\\b|\\bcomment on\\b")
 
-runRunSQL :: (MonadIO m, MonadBaseControl IO m, MonadError QErr m, CacheRWM m, HasSQLGenCtx m, MetadataM m)
+runRunSQL :: (MonadIO m, MonadBaseControl IO m, MonadError QErr m, CacheRWM m, HasServerConfigCtx m, MetadataM m)
   => RunSQL -> m EncJSON
 runRunSQL q@RunSQL {..}
   -- see Note [Checking metadata consistency in run_sql]

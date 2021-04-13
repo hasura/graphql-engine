@@ -1,5 +1,7 @@
 /* eslint-disable import/no-mutable-exports */
 import { useState, useEffect } from 'react';
+
+import { Path, get } from '../components/Common/utils/tsUtils';
 import { services } from './services';
 
 import {
@@ -7,13 +9,20 @@ import {
   ComputedField,
   TableColumn,
   FrequentlyUsedColumn,
+  PermissionColumnCategories,
+  SupportedFeaturesType,
+  generateTableRowRequestType,
+  BaseTableColumn,
 } from './types';
 import { PGFunction, FunctionState } from './services/postgresql/types';
 import { Operations } from './common';
 import { QualifiedTable } from '../metadata/types';
 
-export const drivers = ['postgres', 'mysql'];
-export type Driver = 'postgres' | 'mysql';
+import { supportedFeatures as PGSupportedFeatures } from './services/postgresql';
+import { supportedFeatures as MssqlSupportedFeatures } from './services/mssql';
+
+export const drivers = ['postgres', 'mysql', 'mssql'] as const;
+export type Driver = typeof drivers[number];
 
 export type ColumnsInfoResult = {
   [tableName: string]: {
@@ -53,19 +62,19 @@ export interface DataSourcesAPI {
   getTableSupportedQueries(table: Table): Operations[];
   getColumnType(col: TableColumn): string;
   arrayToPostgresArray(arr: any[]): string;
-  schemaListSql: string;
+  schemaListSql(schemas: string[]): string;
   getAdditionalColumnsInfoQuerySql?: (currentSchema: string) => string;
   parseColumnsInfoResult: (data: string[][]) => ColumnsInfoResult;
   columnDataTypes: {
-    INTEGER: string;
-    SERIAL: string;
-    BIGINT: string;
-    JSONDTYPE: string;
-    TIMESTAMP: string;
-    NUMERIC: string;
-    DATE: string;
-    BOOLEAN: string;
-    TEXT: string;
+    INTEGER?: string;
+    SERIAL?: string;
+    BIGINT?: string;
+    JSONDTYPE?: string;
+    TIMESTAMP?: string;
+    NUMERIC?: string;
+    DATE?: string;
+    BOOLEAN?: string;
+    TEXT?: string;
     ARRAY?: string;
     BIGSERIAL?: string;
     DATETIME?: string;
@@ -74,6 +83,7 @@ export interface DataSourcesAPI {
     TIME?: string;
     TIMETZ?: string;
   };
+  operators: Array<{ name: string; value: string; graphqlOp: string }>;
   getFetchTablesListQuery: (options: {
     schemas: string[];
     tables: Table[];
@@ -86,6 +96,7 @@ export interface DataSourcesAPI {
   fetchColumnTypesQuery: string;
   fetchColumnDefaultFunctions(schema: string): string;
   isSQLFunction(str: string): boolean;
+  isJsonColumn(column: BaseTableColumn): boolean;
   getEstimateCountQuery: (schemaName: string, tableName: string) => string;
   isColTypeString(colType: string): boolean;
   cascadeSqlQuery(sql: string): string;
@@ -106,7 +117,7 @@ export interface DataSourcesAPI {
       };
   getDropTableSql(schema: string, table: string): string;
   createSQLRegex: RegExp;
-  getStatementTimeoutSql: (statementTimeoutInSecs: number) => string;
+  getStatementTimeoutSql?: (statementTimeoutInSecs: number) => string;
   getDropSchemaSql(schema: string): string;
   getCreateSchemaSql(schema: string): string;
   isTimeoutError: (error: any) => boolean;
@@ -264,11 +275,13 @@ export interface DataSourcesAPI {
     selectedPkColumns: string[];
     constraintName?: string;
   }) => string;
-  getFunctionDefinitionSql: (
-    schemaName: string,
-    functionName?: string | null | undefined,
-    type?: 'trackable' | 'non-trackable' | undefined
-  ) => string;
+  getFunctionDefinitionSql:
+    | null
+    | ((
+        schemaName: string,
+        functionName?: string | null | undefined,
+        type?: 'trackable' | 'non-trackable' | undefined
+      ) => string);
   frequentlyUsedColumns: FrequentlyUsedColumn[];
   primaryKeysInfoSql: (options: {
     schemas: string[];
@@ -291,10 +304,36 @@ export interface DataSourcesAPI {
     eventId: string
   ) => string;
   getDatabaseInfo: string;
+  getTableInfo?: (tables: string[]) => string;
+  generateTableRowRequest?: () => generateTableRowRequestType;
+  getDatabaseVersionSql?: string;
+  permissionColumnDataTypes: Partial<PermissionColumnCategories> | null;
+  viewsSupported: boolean;
+  // use null, if all operators are supported
+  supportedColumnOperators: string[] | null;
+  aggregationPermissionsAllowed: boolean;
+  supportedFeatures?: SupportedFeaturesType;
 }
 
 export let currentDriver: Driver = 'postgres';
-export let dataSource: DataSourcesAPI = services[currentDriver];
+export let dataSource: DataSourcesAPI = services[currentDriver || 'postgres'];
+
+export const isFeatureSupported = (feature: Path<SupportedFeaturesType>) => {
+  if (dataSource.supportedFeatures)
+    return get(dataSource.supportedFeatures, feature);
+};
+
+export const getSupportedDrivers = (
+  feature: Path<SupportedFeaturesType>
+): Driver[] => {
+  const isEnabled = (supportedFeatures: SupportedFeaturesType) => {
+    return get(supportedFeatures, feature) || false;
+  };
+
+  return [PGSupportedFeatures, MssqlSupportedFeatures]
+    .filter(d => isEnabled(d))
+    .map(d => d.driver.name) as Driver[];
+};
 
 class DataSourceChangedEvent extends Event {
   static type = 'data-source-changed';

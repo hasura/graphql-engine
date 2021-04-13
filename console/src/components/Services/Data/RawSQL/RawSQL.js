@@ -27,8 +27,11 @@ import {
 } from '../../../Common/AceEditor/utils';
 import { CLI_CONSOLE_MODE } from '../../../../constants';
 import NotesSection from './molecules/NotesSection';
-import { dataSource } from '../../../../dataSources';
 import { getLSItem, setLSItem, LS_KEYS } from '../../../../utils/localStorage';
+import DropDownSelector from './DropDownSelector';
+import { getSourceDriver } from '../utils';
+import { getDataSources } from '../../../../metadata/selector';
+import { services } from '../../../../dataSources/services';
 /**
  * # RawSQL React FC
  * ## renders raw SQL page on route `/data/sql`
@@ -66,12 +69,27 @@ const RawSQL = ({
   isTableTrackChecked,
   migrationMode,
   allSchemas,
+  sources,
+  currentDataSource,
 }) => {
   const [statementTimeout, setStatementTimeout] = useState(
     Number(getLSItem(LS_KEYS.rawSqlStatementTimeout)) || 10
   );
 
   const [sqlText, onChangeSQLText] = useState(sql);
+
+  const [selectedDatabase, setSelectedDatabase] = useState(currentDataSource);
+  const [selectedDriver, setSelectedDriver] = useState('postgres');
+
+  useEffect(() => {
+    const driver = getSourceDriver(sources, selectedDatabase);
+    setSelectedDriver(driver);
+    if (driver !== 'postgres') setStatementTimeout(null);
+  }, [selectedDatabase, sources]);
+
+  const dropDownSelectorValueChange = value => {
+    setSelectedDatabase(value);
+  };
 
   useEffect(() => {
     if (!sql) {
@@ -105,15 +123,23 @@ const RawSQL = ({
       }
       if (!isMigration && globals.consoleMode === CLI_CONSOLE_MODE) {
         // if migration is not checked, check if is schema modification
-        if (dataSource.checkSchemaModification(sqlText)) {
+        if (services[selectedDriver].checkSchemaModification(sqlText)) {
           dispatch(modalOpen());
           return;
         }
       }
-      dispatch(executeSQL(isMigration, migrationName, statementTimeout));
+      dispatch(
+        executeSQL(
+          isMigration,
+          migrationName,
+          statementTimeout,
+          selectedDatabase,
+          selectedDriver
+        )
+      );
       return;
     }
-    dispatch(executeSQL(false, '', statementTimeout));
+    dispatch(executeSQL(false, '', statementTimeout, selectedDatabase));
   };
 
   const getMigrationWarningModal = () => {
@@ -154,14 +180,14 @@ const RawSQL = ({
       dispatch({ type: SET_SQL, data: val });
 
       // set migration checkbox true
-      if (dataSource.checkSchemaModification(val)) {
+      if (services[selectedDriver].checkSchemaModification(val)) {
         dispatch({ type: SET_MIGRATION_CHECKED, data: true });
       } else {
         dispatch({ type: SET_MIGRATION_CHECKED, data: false });
       }
 
       // set track this checkbox true
-      const objects = parseCreateSQL(val);
+      const objects = parseCreateSQL(val, selectedDriver);
       if (objects.length) {
         let allObjectsTrackable = true;
 
@@ -326,7 +352,7 @@ const RawSQL = ({
         <KnowMoreLink
           text={'See supported functions requirements'}
           href={
-            'https://hasura.io/docs/1.0/graphql/manual/schema/custom-functions.html#supported-sql-functions'
+            'https://hasura.io/docs/latest/graphql/core/schema/custom-functions.html#supported-sql-functions'
           }
         />
       </div>
@@ -431,7 +457,16 @@ const RawSQL = ({
         <div className={`${styles.padd_left_remove} col-xs-8`}>
           <NotesSection />
         </div>
-
+        <div className={`${styles.padd_left_remove} col-xs-8`}>
+          <label>
+            <b>Database</b>
+          </label>{' '}
+          <DropDownSelector
+            options={sources.map(source => source.name)}
+            defaultValue={currentDataSource}
+            onChange={dropDownSelectorValueChange}
+          />
+        </div>
         <div className={`${styles.padd_left_remove} col-xs-10`}>
           {getSQLSection()}
         </div>
@@ -443,13 +478,15 @@ const RawSQL = ({
           {getMetadataCascadeSection()}
           {getMigrationSection()}
 
-          <StatementTimeout
-            statementTimeout={statementTimeout}
-            isMigrationChecked={
-              globals.consoleMode === CLI_CONSOLE_MODE && isMigrationChecked
-            }
-            updateStatementTimeout={updateStatementTimeout}
-          />
+          {selectedDriver === 'postgres' && (
+            <StatementTimeout
+              statementTimeout={statementTimeout}
+              isMigrationChecked={
+                globals.consoleMode === CLI_CONSOLE_MODE && isMigrationChecked
+              }
+              updateStatementTimeout={updateStatementTimeout}
+            />
+          )}
           <Button
             type="submit"
             className={styles.add_mar_top}
@@ -508,6 +545,8 @@ const mapStateToProps = state => ({
   currentSchema: state.tables.currentSchema,
   allSchemas: state.tables.allSchemas,
   serverVersion: state.main.serverVersion ? state.main.serverVersion : '',
+  sources: getDataSources(state),
+  currentDataSource: state.tables.currentDataSource,
 });
 
 const rawSQLConnector = connect => connect(mapStateToProps)(RawSQL);

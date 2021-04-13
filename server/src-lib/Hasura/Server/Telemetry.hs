@@ -164,15 +164,15 @@ computeMetrics sc _mtServiceTimings _mtPgVersion =
       _mtEventTriggers = Map.size $ Map.filter (not . Map.null)
                     $ Map.map _tiEventTriggerInfoMap userTables
       _mtRemoteSchemas   = Map.size $ scRemoteSchemas sc
-      _mtFunctions = Map.size $ Map.filter (not . isSystemDefined . fiSystemDefined) pgFunctionCache
+      _mtFunctions = Map.size $ Map.filter (not . isSystemDefined . _fiSystemDefined) pgFunctionCache
       _mtActions = computeActionsMetrics $ scActions sc
 
   in Metrics{..}
 
   where
       -- TODO: multiple sources
-    pgTableCache    = fromMaybe mempty $ unsafeTableCache    @'Postgres defaultSource $ scPostgres sc
-    pgFunctionCache = fromMaybe mempty $ unsafeFunctionCache @'Postgres defaultSource $ scPostgres sc
+    pgTableCache    = fromMaybe mempty $ unsafeTableCache    @'Postgres defaultSource $ scSources sc
+    pgFunctionCache = fromMaybe mempty $ unsafeFunctionCache @'Postgres defaultSource $ scSources sc
     userTables = Map.filter (not . isSystemDefined . _tciSystemDefined . _tiCoreInfo) pgTableCache
     countUserTables predicate = length . filter predicate $ Map.elems userTables
 
@@ -182,7 +182,7 @@ computeMetrics sc _mtServiceTimings _mtPgVersion =
     permsOfTbl :: TableInfo 'Postgres -> [(RoleName, RolePermInfo 'Postgres)]
     permsOfTbl = Map.toList . _tiRolePermInfoMap
 
-computeActionsMetrics :: ActionCache b -> ActionMetric
+computeActionsMetrics :: ActionCache -> ActionMetric
 computeActionsMetrics actionCache =
   ActionMetric syncActionsLen asyncActionsLen queryActionsLen typeRelationships customTypesLen
   where actions = Map.elems actionCache
@@ -196,7 +196,7 @@ computeActionsMetrics actionCache =
 
         typeRelationships =
           length . L.nub . concatMap
-          (map _trName . maybe [] toList . _otdRelationships . _aotDefinition . _aiOutputObject) $
+          (map _trName . maybe [] toList . _otdRelationships . _aotDefinition . snd . _aiOutputObject) $
           actions
 
 -- | Logging related

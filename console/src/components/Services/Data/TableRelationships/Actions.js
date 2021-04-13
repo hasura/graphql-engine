@@ -85,13 +85,15 @@ export const saveRemoteRelationship = (
     ];
     let downQuery = [];
     if (isNew) {
-      downQuery = getDropRemoteRelQuery(state.name, state.table);
+      downQuery = [getDropRemoteRelQuery(state.name, state.table)];
     } else {
-      downQuery = getSaveRemoteRelQuery(
-        getRemoteRelPayload(parseRemoteRelationship(existingRel)),
-        isNew,
-        source
-      );
+      downQuery = [
+        getSaveRemoteRelQuery(
+          getRemoteRelPayload(parseRemoteRelationship(existingRel)),
+          isNew,
+          source
+        ),
+      ];
     }
 
     // Apply migrations

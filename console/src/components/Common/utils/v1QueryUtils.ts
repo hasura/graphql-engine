@@ -1,4 +1,4 @@
-import { dataSource, terminateSql } from '../../../dataSources';
+import { currentDriver, dataSource, terminateSql } from '../../../dataSources';
 import { QualifiedTable } from '../../../metadata/types';
 import { Nullable } from './tsUtils';
 import { ConsoleScope } from '../../Main/ConsoleNotification';
@@ -12,10 +12,16 @@ export const getRunSqlQuery = (
   sql: string,
   source: string,
   cascade = false,
-  read_only = false
+  read_only = false,
+  driver = currentDriver
 ) => {
+  let type = 'run_sql';
+  if (driver === 'mssql') {
+    type = 'mssql_run_sql';
+  }
+
   return {
-    type: 'run_sql',
+    type,
     args: {
       source,
       sql: terminateSql(sql),

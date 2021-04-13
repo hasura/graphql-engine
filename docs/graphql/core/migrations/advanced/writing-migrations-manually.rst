@@ -20,10 +20,6 @@ sometimes you might want to write the migrations yourself, by hand. Using the
 Hasura CLI, you can bootstrap these migration files and write the SQL for the
 Postgres schema.
 
-.. note::
-
-  For ``config v1``, see :ref:`manual_migrations_v1`.
-
 Create migration manually
 -------------------------
 
@@ -31,7 +27,7 @@ Create migration manually
 
    .. code-block:: bash
 
-      hasura migrate create <name-of-migration>
+      hasura migrate create <name-of-migration> --database-name <database-name>
 
    This command will create up and down migration SQL files in the
    ``migrations`` directory.
@@ -44,9 +40,11 @@ Create migration manually
    the appropriate metadata file in the ``/metadata`` directory, refer to
    :ref:`metadata format <metadata_format_v2>`.
 
-#. Apply the migration and metadata:
+#. Apply the metadata and migrations:
 
    .. code-block:: bash
 
-      hasura migrate apply
       hasura metadata apply
+      hasura migrate apply --database-name <database-name>
+      hasura metadata reload
+

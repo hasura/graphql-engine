@@ -1,5 +1,6 @@
 import React from 'react';
-import styles from './Styles.scss';
+import styles from '../../../Common/Common.scss';
+import actionStyles from '../Actions.scss';
 import Helmet from 'react-helmet';
 import HandlerEditor from '../Common/components/HandlerEditor';
 import KindEditor from '../Common/components/KindEditor';
@@ -12,6 +13,7 @@ import {
   setActionKind,
   setActionDefinition,
   setTypeDefinition,
+  setActionComment,
   setHeaders as dispatchNewHeaders,
   toggleForwardClientHeaders as toggleFCH,
 } from './reducer';
@@ -37,7 +39,13 @@ const ActionEditor = ({
   readOnlyMode,
   ...modifyProps
 }) => {
-  const { handler, kind, actionDefinition, typeDefinition } = modifyProps;
+  const {
+    handler,
+    kind,
+    actionDefinition,
+    typeDefinition,
+    comment,
+  } = modifyProps;
 
   const {
     sdl: typesDefinitionSdl,
@@ -101,6 +109,9 @@ const ActionEditor = ({
     }
   }
 
+  const updateActionComment = e =>
+    dispatch(setActionComment(e.target.value?.trim()));
+
   return (
     <div>
       <Helmet title={`Modify Action - ${actionName} - Actions | Hasura`} />
@@ -124,6 +135,20 @@ const ActionEditor = ({
         tooltip={typeDefinitionInfo.tooltip}
         allowEmpty
       />
+      <hr />
+      <div className={actionStyles.comment_container_styles}>
+        <h2
+          className={`${styles.subheading_text} ${styles.add_mar_bottom_small}`}
+        >
+          Comment
+        </h2>
+        <input
+          type="text"
+          value={comment}
+          className={`form-control ${styles.inputWidthLarge}`}
+          onChange={updateActionComment}
+        />
+      </div>
       <hr />
       <HandlerEditor
         value={handler}

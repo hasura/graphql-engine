@@ -4,11 +4,6 @@ module Hasura.GraphQL.RemoteServer
   , execRemoteGQ
   ) where
 
-import           Control.Exception                      (try)
-import           Control.Lens                           ((^.))
-import           Control.Monad.Unique
-import           Data.Aeson                             ((.:), (.:?))
-import           Hasura.HTTP
 import           Hasura.Prelude
 
 import qualified Data.Aeson                             as J
@@ -24,10 +19,17 @@ import qualified Network.HTTP.Client                    as HTTP
 import qualified Network.HTTP.Types                     as N
 import qualified Network.Wreq                           as Wreq
 
+import           Control.Exception                      (try)
+import           Control.Lens                           ((^.))
+import           Control.Monad.Unique
+import           Data.Aeson                             ((.:), (.:?))
+import           Data.FileEmbed                         (makeRelativeToProject)
 
 import qualified Hasura.GraphQL.Parser.Monad            as P
+
 import           Hasura.GraphQL.Schema.Remote
 import           Hasura.GraphQL.Transport.HTTP.Protocol
+import           Hasura.HTTP
 import           Hasura.RQL.DDL.Headers                 (makeHeadersFromConf)
 import           Hasura.RQL.Types
 import           Hasura.Server.Utils
@@ -37,7 +39,7 @@ import           Hasura.Session
 introspectionQuery :: GQLReqParsed
 introspectionQuery =
   $(do
-       let fp = "src-rsr/introspection.json"
+       fp <- makeRelativeToProject "src-rsr/introspection.json"
        TH.qAddDependentFile fp
        eitherResult <- TH.runIO $ J.eitherDecodeFileStrict fp
        case eitherResult of
@@ -360,6 +362,6 @@ execRemoteGQ env manager userInfo reqHdrs rsi gqlReq@GQLReq{..} =  do
     httpThrow :: (MonadError QErr m) => HTTP.HttpException -> m a
     httpThrow = \case
       HTTP.HttpExceptionRequest _req content -> throw500 $ tshow content
-      HTTP.InvalidUrlException _url reason -> throw500 $ tshow reason
+      HTTP.InvalidUrlException _url reason   -> throw500 $ tshow reason
 
     userInfoToHdrs = sessionVariablesToHeaders $ _uiSession userInfo

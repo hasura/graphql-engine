@@ -1,6 +1,10 @@
 import defaultState from './State';
 import Endpoints, { globalCookiePolicy } from '../../../../Endpoints';
-import { handleMigrationErrors, fetchDataInit } from '../DataActions';
+import {
+  handleMigrationErrors,
+  fetchDataInit,
+  handleOutOfDateMetadata,
+} from '../DataActions';
 import {
   showErrorNotification,
   showSuccessNotification,
@@ -13,7 +17,11 @@ import { parseCreateSQL } from './utils';
 import dataHeaders from '../Common/Headers';
 import returnMigrateUrl from '../Common/getMigrateUrl';
 import requestAction from '../../../../utils/requestAction';
-import { dataSource } from '../../../../dataSources';
+import {
+  dataSource,
+  escapeTableColumns,
+  findTable,
+} from '../../../../dataSources';
 import { getRunSqlQuery } from '../../../Common/utils/v1QueryUtils';
 import { getDownQueryComments } from '../../../../utils/migration/utils';
 import {
@@ -22,6 +30,7 @@ import {
 } from '../../../../metadata/queryUtils';
 import globals from '../../../../Globals';
 import { CLI_CONSOLE_MODE } from '../../../../constants';
+import { exportMetadata } from '../../../../metadata/actions';
 
 const MAKING_REQUEST = 'RawSQL/MAKING_REQUEST';
 const SET_SQL = 'RawSQL/SET_SQL';
@@ -37,21 +46,28 @@ const MODAL_OPEN = 'EditItem/MODAL_OPEN';
 const modalOpen = () => ({ type: MODAL_OPEN });
 const modalClose = () => ({ type: MODAL_CLOSE });
 
-const trackAllItems = (sql, isMigration, migrationName) => (
+const trackAllItems = (sql, isMigration, migrationName, source, driver) => (
   dispatch,
   getState
 ) => {
   const currMigrationMode = getState().main.migrationMode;
-  const source = getState().tables.currentDataSource;
+  const { resourceVersion } = getState().metadata;
 
-  const objects = parseCreateSQL(sql);
+  const objects = parseCreateSQL(sql, driver);
   const changes = [];
   objects.forEach(({ type, name, schema }) => {
     let req = {};
     if (type === 'function') {
-      req = getTrackFunctionQuery(name, schema, source, {});
+      req = getTrackFunctionQuery(name, schema, source, {}, driver);
     } else {
-      req = getTrackTableQuery({ name, schema }, source);
+      const tableDef = { name, schema };
+      const table = findTable(getState().tables.allSchemas, tableDef);
+      req = getTrackTableQuery({
+        tableDef,
+        source,
+        driver,
+        customColumnNames: escapeTableColumns(table),
+      });
     }
     changes.push(req);
   });
@@ -73,7 +89,9 @@ const trackAllItems = (sql, isMigration, migrationName) => (
   } else {
     request = {
       type: 'bulk',
+      source: source,
       args: changes,
+      resource_version: resourceVersion,
     };
   }
 
@@ -89,15 +107,22 @@ const trackAllItems = (sql, isMigration, migrationName) => (
       dispatch(showSuccessNotification('Items were tracked successfuly'));
     },
     err => {
+      if (err.code === 'conflict') {
+        dispatch(handleOutOfDateMetadata);
+      }
       dispatch(showErrorNotification('Tracking items failed', err.code, err));
+      throw new Error(err);
     }
   );
 };
 
-const executeSQL = (isMigration, migrationName, statementTimeout) => (
-  dispatch,
-  getState
-) => {
+const executeSQL = (
+  isMigration,
+  migrationName,
+  statementTimeout,
+  source,
+  driver
+) => (dispatch, getState) => {
   dispatch({ type: MAKING_REQUEST });
   dispatch(showSuccessNotification('Executing the Query...'));
 
@@ -106,24 +131,23 @@ const executeSQL = (isMigration, migrationName, statementTimeout) => (
 
   const isStatementTimeout = statementTimeout && !isMigration;
   const migrateUrl = returnMigrateUrl(migrationMode);
-
   let url = Endpoints.query;
-  const source = getState().tables.currentDataSource;
   const schemaChangesUp = [];
 
-  if (isStatementTimeout) {
+  if (isStatementTimeout && dataSource.getStatementTimeoutSql) {
     schemaChangesUp.push(
       getRunSqlQuery(
         dataSource.getStatementTimeoutSql(statementTimeout),
         source,
         false,
-        readOnlyMode
+        readOnlyMode,
+        driver
       )
     );
   }
 
   schemaChangesUp.push(
-    getRunSqlQuery(sql, source, isCascadeChecked, readOnlyMode)
+    getRunSqlQuery(sql, source, isCascadeChecked, readOnlyMode, driver)
   );
 
   const schemaChangesDown = getDownQueryComments(schemaChangesUp, source);
@@ -156,7 +180,7 @@ const executeSQL = (isMigration, migrationName, statementTimeout) => (
       dispatch(loadMigrationStatus());
     }
     dispatch(showSuccessNotification('SQL executed!'));
-    dispatch(fetchDataInit()).then(() => {
+    dispatch(fetchDataInit(source, driver)).then(() => {
       dispatch({
         type: REQUEST_SUCCESS,
         data: data && (isStatementTimeout ? data[1] : data[0]),
@@ -168,9 +192,11 @@ const executeSQL = (isMigration, migrationName, statementTimeout) => (
     .then(
       data => {
         if (isTableTrackChecked) {
-          dispatch(trackAllItems(sql, isMigration, migrationName)).then(
-            callback(data)
-          );
+          dispatch(exportMetadata()).then(() => {
+            dispatch(
+              trackAllItems(sql, isMigration, migrationName, source, driver)
+            ).then(() => callback(data));
+          });
           return;
         }
         callback(data);

@@ -422,9 +422,8 @@ mkSQLOpExp
   -> SQLExp -- result
 mkSQLOpExp op lhs rhs = SEOpApp op [lhs, rhs]
 
-mkColDefValMap :: [PGCol] -> HM.HashMap PGCol SQLExp
-mkColDefValMap cols =
-  HM.fromList $ zip cols (repeat $ SEUnsafe "DEFAULT")
+columnDefaultValue :: SQLExp
+columnDefaultValue = SEUnsafe "DEFAULT"
 
 handleIfNull :: SQLExp -> SQLExp -> SQLExp
 handleIfNull l e = SEFnApp "coalesce" [e, l] Nothing
@@ -741,6 +740,7 @@ data CompareOp
   | SHasKey
   | SHasKeysAny
   | SHasKeysAll
+  | SMatchesFulltext
   deriving (Eq, Generic, Data)
 instance NFData CompareOp
 instance Cacheable CompareOp
@@ -748,29 +748,30 @@ instance Hashable CompareOp
 
 instance Show CompareOp where
   show = \case
-    SEQ          -> "="
-    SGT          -> ">"
-    SLT          -> "<"
-    SIN          -> "IN"
-    SNE          -> "<>"
-    SGTE         -> ">="
-    SLTE         -> "<="
-    SNIN         -> "NOT IN"
-    SLIKE        -> "LIKE"
-    SNLIKE       -> "NOT LIKE"
-    SILIKE       -> "ILIKE"
-    SNILIKE      -> "NOT ILIKE"
-    SSIMILAR     -> "SIMILAR TO"
-    SNSIMILAR    -> "NOT SIMILAR TO"
-    SREGEX       -> "~"
-    SIREGEX      -> "~*"
-    SNREGEX      -> "!~"
-    SNIREGEX     -> "!~*"
-    SContains    -> "@>"
-    SContainedIn -> "<@"
-    SHasKey      -> "?"
-    SHasKeysAny  -> "?|"
-    SHasKeysAll  -> "?&"
+    SEQ              -> "="
+    SGT              -> ">"
+    SLT              -> "<"
+    SIN              -> "IN"
+    SNE              -> "<>"
+    SGTE             -> ">="
+    SLTE             -> "<="
+    SNIN             -> "NOT IN"
+    SLIKE            -> "LIKE"
+    SNLIKE           -> "NOT LIKE"
+    SILIKE           -> "ILIKE"
+    SNILIKE          -> "NOT ILIKE"
+    SSIMILAR         -> "SIMILAR TO"
+    SNSIMILAR        -> "NOT SIMILAR TO"
+    SREGEX           -> "~"
+    SIREGEX          -> "~*"
+    SNREGEX          -> "!~"
+    SNIREGEX         -> "!~*"
+    SContains        -> "@>"
+    SContainedIn     -> "<@"
+    SHasKey          -> "?"
+    SHasKeysAny      -> "?|"
+    SHasKeysAll      -> "?&"
+    SMatchesFulltext -> "@"
 
 instance ToSQL CompareOp where
   toSQL = fromString . show

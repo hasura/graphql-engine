@@ -9,7 +9,7 @@ export const openRawSQL = () => {
   cy.get(getElementFromAlias('sql-link')).click();
   cy.wait(3000);
   // Match URL
-  cy.url().should('eq', `${baseUrl}/data/default/sql`);
+  cy.url().should('eq', `${baseUrl}/data/sql`);
 };
 const clearText = () => {
   cy.get('textarea').type('{selectall}', { force: true });

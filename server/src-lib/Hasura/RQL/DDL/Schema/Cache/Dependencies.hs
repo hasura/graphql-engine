@@ -12,8 +12,10 @@ import           Control.Lens                       hiding ((.=))
 import           Data.Aeson
 import           Data.List                          (nub)
 import           Data.Monoid                        (First)
-
 import           Data.Text.Extended
+
+import qualified Hasura.SQL.AnyBackend              as AB
+
 import           Hasura.RQL.DDL.Schema.Cache.Common
 import           Hasura.RQL.Types
 
@@ -22,9 +24,9 @@ import           Hasura.RQL.Types
 -- removed from the cache, and 'InconsistentMetadata's are returned.
 resolveDependencies
   :: (ArrowKleisli m arr, QErrM m)
-  => ( BuildOutputs 'Postgres
+  => ( BuildOutputs
      , [(MetadataObject, SchemaObjId, SchemaDependency)]
-     ) `arr` (BuildOutputs 'Postgres, [InconsistentMetadata], DepMap)
+     ) `arr` (BuildOutputs, [InconsistentMetadata], DepMap)
 resolveDependencies = arrM \(cache, dependencies) -> do
   let dependencyMap = dependencies
         & M.groupOn (view _2)
@@ -48,10 +50,10 @@ resolveDependencies = arrM \(cache, dependencies) -> do
 performIteration
   :: (QErrM m)
   => Int
-  -> BuildOutputs 'Postgres
+  -> BuildOutputs
   -> [InconsistentMetadata]
   -> HashMap SchemaObjId [(MetadataObject, SchemaDependency)]
-  -> m (BuildOutputs 'Postgres, [InconsistentMetadata], DepMap)
+  -> m (BuildOutputs, [InconsistentMetadata], DepMap)
 performIteration iterationNumber cache inconsistencies dependencies = do
   let (newInconsistencies, prunedDependencies) = pruneDanglingDependents cache dependencies
   case newInconsistencies of
@@ -73,7 +75,7 @@ performIteration iterationNumber cache inconsistencies dependencies = do
                 , "pruned_dependencies" .= (map snd <$> prunedDependencies) ] }
 
 pruneDanglingDependents
-  :: BuildOutputs 'Postgres
+  :: BuildOutputs
   -> HashMap SchemaObjId [(MetadataObject, SchemaDependency)]
   -> ([InconsistentMetadata], HashMap SchemaObjId [(MetadataObject, SchemaDependency)])
 pruneDanglingDependents cache = fmap (M.filter (not . null)) . traverse do
@@ -85,35 +87,6 @@ pruneDanglingDependents cache = fmap (M.filter (not . null)) . traverse do
     resolveDependency (SchemaDependency objectId _) = case objectId of
       SOSource source -> void $ M.lookup source (_boSources cache)
         `onNothing` Left ("no such source exists: " <>> source)
-      SOSourceObj source sourceObjId -> case sourceObjId of
-        SOITable tableName -> void $ resolveTable source tableName
-        SOIFunction functionName -> void $
-          unsafeFunctionInfo @'Postgres source functionName (_boSources cache)
-          `onNothing` Left ("function " <> functionName <<> " is not tracked")
-        SOITableObj tableName tableObjectId -> do
-          tableInfo <- resolveTable source tableName
-          case tableObjectId of
-            TOCol columnName ->
-              void $ resolveField tableInfo (fromCol @'Postgres columnName) _FIColumn "column"
-            TORel relName ->
-              void $ resolveField tableInfo (fromRel relName) _FIRelationship "relationship"
-            TOComputedField fieldName ->
-              void $ resolveField tableInfo (fromComputedField fieldName) _FIComputedField "computed field"
-            TORemoteRel fieldName ->
-              void $ resolveField tableInfo (fromRemoteRelationship fieldName) _FIRemoteRelationship "remote relationship"
-            TOForeignKey constraintName -> do
-              let foreignKeys = _tciForeignKeys $ _tiCoreInfo tableInfo
-              unless (isJust $ find ((== constraintName) . _cName . _fkConstraint) foreignKeys) $
-                Left $ "no foreign key constraint named " <> constraintName <<> " is "
-                  <> "defined for table " <>> tableName
-            TOPerm roleName permType -> withPermType permType \accessor -> do
-              let permLens = permAccToLens accessor
-              unless (has (tiRolePermInfoMap.ix roleName.permLens._Just) tableInfo) $
-                Left $ "no " <> permTypeToCode permType <> " permission defined on table "
-                  <> tableName <<> " for role " <>> roleName
-            TOTrigger triggerName ->
-              unless (M.member triggerName (_tiEventTriggerInfoMap tableInfo)) $ Left $
-                "no event trigger named " <> triggerName <<> " is defined for table " <>> tableName
       SORemoteSchema remoteSchemaName -> unless (remoteSchemaName `M.member` _boRemoteSchemas cache) $
         Left $ "remote schema " <> remoteSchemaName <<> " is not found"
       SORemoteSchemaPermission remoteSchemaName roleName -> do
@@ -123,12 +96,59 @@ pruneDanglingDependents cache = fmap (M.filter (not . null)) . traverse do
         unless (roleName `M.member` _rscPermissions (fst remoteSchema)) $
           Left $ "no permission defined on remote schema " <> remoteSchemaName
                   <<> " for role " <>> roleName
+      SOSourceObj source exists -> do
+        AB.dispatchAnyBackend @BackendMetadata exists $ \sourceObjId -> do
+          sourceInfo <- castSourceInfo source sourceObjId
+          case sourceObjId of
+            SOITable tableName -> do
+              void $ resolveTable sourceInfo tableName
+            SOIFunction functionName -> void $
+              M.lookup functionName (_siFunctions sourceInfo)
+              `onNothing` Left ("function " <> functionName <<> " is not tracked")
+            SOITableObj tableName tableObjectId -> do
+              tableInfo <- resolveTable sourceInfo tableName
+              case tableObjectId of
+                TOCol columnName ->
+                  void $ resolveField tableInfo (columnToFieldName tableInfo columnName) _FIColumn "column"
+                TORel relName ->
+                  void $ resolveField tableInfo (fromRel relName) _FIRelationship "relationship"
+                TOComputedField fieldName ->
+                  void $ resolveField tableInfo (fromComputedField fieldName) _FIComputedField "computed field"
+                TORemoteRel fieldName ->
+                  void $ resolveField tableInfo (fromRemoteRelationship fieldName) _FIRemoteRelationship "remote relationship"
+                TOForeignKey constraintName -> do
+                  let foreignKeys = _tciForeignKeys $ _tiCoreInfo tableInfo
+                  unless (isJust $ find ((== constraintName) . _cName . _fkConstraint) foreignKeys) $
+                    Left $ "no foreign key constraint named " <> constraintName <<> " is "
+                      <> "defined for table " <>> tableName
+                TOPerm roleName permType -> withPermType permType \accessor -> do
+                  let permLens = permAccToLens accessor
+                  unless (has (tiRolePermInfoMap.ix roleName.permLens._Just) tableInfo) $
+                    Left $ "no " <> permTypeToCode permType <> " permission defined on table "
+                      <> tableName <<> " for role " <>> roleName
+                TOTrigger triggerName ->
+                  unless (M.member triggerName (_tiEventTriggerInfoMap tableInfo)) $ Left $
+                    "no event trigger named " <> triggerName <<> " is defined for table " <>> tableName
 
-    resolveTable source tableName =
-      unsafeTableInfo source tableName (_boSources cache)
+    castSourceInfo
+      :: (Backend b) => SourceName -> SourceObjId b -> Either Text (SourceInfo b)
+    castSourceInfo sourceName _ =
+      -- TODO: if the cast returns Nothing, we should be throwing an internal error
+      -- the type of the dependency in sources is not as recorded
+      (M.lookup sourceName (_boSources cache) >>= unsafeSourceInfo)
+      `onNothing` Left ("no such source found " <>> sourceName)
+
+    resolveTable sourceInfo tableName =
+      M.lookup tableName (_siTables sourceInfo)
       `onNothing` Left ("table " <> tableName <<> " is not tracked")
 
-    resolveField :: TableInfo 'Postgres -> FieldName -> Getting (First a) (FieldInfo 'Postgres) a -> Text -> Either Text a
+    columnToFieldName :: forall b. (Backend b) => TableInfo b -> Column b -> FieldName
+    columnToFieldName _ = fromCol @b
+
+
+    resolveField
+      :: Backend b
+      => TableInfo b -> FieldName -> Getting (First a) (FieldInfo b) a -> Text -> Either Text a
     resolveField tableInfo fieldName fieldType fieldTypeName = do
       let coreInfo = _tiCoreInfo tableInfo
           tableName = _tciName coreInfo
@@ -138,23 +158,32 @@ pruneDanglingDependents cache = fmap (M.filter (not . null)) . traverse do
         ("field " <> fieldName <<> "of table " <> tableName <<> " is not a " <> fieldTypeName)
 
 deleteMetadataObject
-  :: MetadataObjId -> BuildOutputs 'Postgres -> BuildOutputs 'Postgres
+  :: MetadataObjId -> BuildOutputs -> BuildOutputs
 deleteMetadataObject = \case
   MOSource name                       -> boSources %~ M.delete name
-  MOSourceObjId source sourceObjId    -> boSources %~ M.adjust (deleteObjId sourceObjId) source
+  MOSourceObjId source exists         -> AB.dispatchAnyBackend @Backend exists (\sourceObjId -> boSources %~ M.adjust (deleteObjId sourceObjId) source)
   MORemoteSchema name                 -> boRemoteSchemas %~ M.delete name
   MORemoteSchemaPermissions name role -> boRemoteSchemas.ix name._1.rscPermissions %~ M.delete role
   MOCronTrigger name                  -> boCronTriggers %~ M.delete name
   MOCustomTypes                       -> boCustomTypes %~ const emptyAnnotatedCustomTypes
   MOAction name                       -> boActions %~ M.delete name
+  MOEndpoint name                     -> boEndpoints %~ M.delete name
   MOActionPermission name role        -> boActions.ix name.aiPermissions %~ M.delete role
+  MOInheritedRole name                -> boInheritedRoles %~ M.delete name
   where
-    deleteObjId :: SourceMetadataObjId -> BackendSourceInfo -> BackendSourceInfo
-    deleteObjId sourceObjId sourceInfo = maybe sourceInfo (BackendSourceInfo . deleteObjFn sourceObjId) $ unsafeSourceInfo sourceInfo
-    deleteObjFn :: SourceMetadataObjId -> SourceInfo 'Postgres -> SourceInfo 'Postgres
+    deleteObjId :: forall b. (Backend b) => SourceMetadataObjId b -> BackendSourceInfo -> BackendSourceInfo
+    deleteObjId sourceObjId sourceInfo =
+      maybe
+        sourceInfo
+        (AB.mkAnyBackend . deleteObjFn sourceObjId)
+        $ unsafeSourceInfo sourceInfo
+
+    deleteObjFn :: (Backend b) => SourceMetadataObjId b -> SourceInfo b -> SourceInfo b
     deleteObjFn = \case
       SMOTable    name -> siTables    %~ M.delete name
       SMOFunction name -> siFunctions %~ M.delete name
+      SMOFunctionPermission functionName role ->
+        siFunctions.ix functionName.fiPermissions %~ HS.delete role
       SMOTableObj tableName tableObjectId -> siTables.ix tableName %~ case tableObjectId of
         MTORel name _              -> tiCoreInfo.tciFieldInfoMap %~ M.delete (fromRel name)
         MTOComputedField name      -> tiCoreInfo.tciFieldInfoMap %~ M.delete (fromComputedField name)

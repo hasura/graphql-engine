@@ -23,19 +23,33 @@ module Hasura.Backends.Postgres.Connection
   , enablePgcryptoExtension
   , dropHdbCatalogSchema
 
+  , PostgresPoolSettings(..)
+  , PostgresSourceConnInfo(..)
+  , PostgresConnConfiguration(..)
+  , DefaultPostgresPoolSettings(..)
+  , getDefaultPGPoolSettingIfNotExists
+  , defaultPostgresPoolSettings
+  , setPostgresPoolSettings
+  , pccConnectionInfo
+  , pccReadReplicas
+  , psciDatabaseUrl
+  , psciPoolSettings
   , module ET
   ) where
 
 import           Hasura.Prelude
 
-import qualified Data.Aeson.Extended                    as J
 import qualified Database.PG.Query                      as Q
 import qualified Database.PG.Query.Connection           as Q
 
+import           Control.Lens                           (makeLenses)
 import           Control.Monad.Morph                    (hoist)
 import           Control.Monad.Trans.Control            (MonadBaseControl (..))
 import           Control.Monad.Unique
 import           Control.Monad.Validate
+import           Data.Aeson
+import           Data.Aeson.Extended
+import           Data.Aeson.TH
 import           Network.HTTP.Client.Extended           (HasHttpManagerM (..))
 
 import qualified Hasura.Backends.Postgres.SQL.DML       as S
@@ -44,6 +58,8 @@ import qualified Hasura.Tracing                         as Tracing
 import           Hasura.Backends.Postgres.Execute.Types as ET
 import           Hasura.Backends.Postgres.SQL.Types
 import           Hasura.EncJSON
+import           Hasura.Incremental                     (Cacheable (..))
+import           Hasura.RQL.Types.Common                (UrlConf)
 import           Hasura.RQL.Types.Error
 import           Hasura.SQL.Types
 import           Hasura.Session
@@ -124,7 +140,7 @@ setHeadersTx session = do
       "SET LOCAL \"hasura.user\" = " <> toSQLTxt (sessionInfoJsonExp session)
 
 sessionInfoJsonExp :: SessionVariables -> S.SQLExp
-sessionInfoJsonExp = S.SELit . J.encodeToStrictText
+sessionInfoJsonExp = S.SELit . encodeToStrictText
 
 withUserInfo :: (MonadIO m) => UserInfo -> LazyTxT QErr m a -> LazyTxT QErr m a
 withUserInfo uInfo = \case
@@ -147,7 +163,7 @@ withTraceContext ctx = \case
   LTTx tx  ->
     let sql = Q.fromText $
           "SET LOCAL \"hasura.tracecontext\" = " <>
-            toSQLTxt (S.SELit . J.encodeToStrictText . Tracing.injectEventContext $ ctx)
+            toSQLTxt (S.SELit . encodeToStrictText . Tracing.injectEventContext $ ctx)
         setTraceContext =
           Q.unitQE defaultTxErrorHandler sql () False
      in LTTx $ setTraceContext >> tx
@@ -256,14 +272,14 @@ enablePgcryptoExtension = do
               _            -> requiredError
           where
             requiredError =
-              (err500 PostgresError requiredMessage) { qeInternal = Just $ J.toJSON e }
+              (err500 PostgresError requiredMessage) { qeInternal = Just $ toJSON e }
             requiredMessage =
               "pgcrypto extension is required, but it could not be created;"
               <> " encountered unknown postgres error"
             permissionsMessage =
               "pgcrypto extension is required, but the current user doesn’t have permission to"
               <> " create it. Please grant superuser permission, or setup the initial schema via"
-              <> " https://hasura.io/docs/1.0/graphql/manual/deployment/postgres-permissions.html"
+              <> " https://hasura.io/docs/latest/graphql/core/deployment/postgres-permissions.html"
 
 dropHdbCatalogSchema :: (MonadTx m) => m ()
 dropHdbCatalogSchema = liftTx $ Q.catchE defaultTxErrorHandler $
@@ -271,3 +287,105 @@ dropHdbCatalogSchema = liftTx $ Q.catchE defaultTxErrorHandler $
   -- 1. Metadata storage:- Metadata and its stateful information stored
   -- 2. Postgres source:- Table event trigger related stuff & insert permission check function stored
   Q.unitQ "DROP SCHEMA IF EXISTS hdb_catalog CASCADE" () False
+
+data PostgresPoolSettings
+  = PostgresPoolSettings
+  { _ppsMaxConnections :: !(Maybe Int)
+  , _ppsIdleTimeout    :: !(Maybe Int)
+  , _ppsRetries        :: !(Maybe Int)
+  } deriving (Show, Eq, Generic)
+instance Cacheable PostgresPoolSettings
+instance Hashable PostgresPoolSettings
+instance NFData PostgresPoolSettings
+$(deriveToJSON hasuraJSON{omitNothingFields = True} ''PostgresPoolSettings)
+
+instance FromJSON PostgresPoolSettings where
+  parseJSON = withObject "Object" $ \o ->
+    PostgresPoolSettings
+      <$> o .:? "max_connections"
+      <*> o .:? "idle_timeout"
+      <*> o .:? "retries"
+
+instance Arbitrary PostgresPoolSettings where
+  arbitrary = genericArbitrary
+
+data DefaultPostgresPoolSettings =
+  DefaultPostgresPoolSettings
+  { _dppsMaxConnections :: !Int
+  , _dppsIdleTimeout    :: !Int
+  , _dppsRetries        :: !Int
+  } deriving (Show, Eq)
+
+defaultPostgresPoolSettings :: DefaultPostgresPoolSettings
+defaultPostgresPoolSettings =
+  DefaultPostgresPoolSettings
+  { _dppsMaxConnections = 50
+  , _dppsIdleTimeout    = 180
+  , _dppsRetries        = 1
+  }
+
+-- Use this when you want to set only few of the PG Pool settings.
+-- The values which are not set will use the default values.
+setPostgresPoolSettings :: PostgresPoolSettings
+setPostgresPoolSettings =
+  PostgresPoolSettings
+  { _ppsMaxConnections = (Just $ _dppsMaxConnections defaultPostgresPoolSettings)
+  , _ppsIdleTimeout    = (Just $ _dppsIdleTimeout defaultPostgresPoolSettings)
+  , _ppsRetries        = (Just $ _dppsRetries defaultPostgresPoolSettings)
+  }
+
+-- PG Pool Settings are not given by the user, set defaults
+getDefaultPGPoolSettingIfNotExists :: Maybe PostgresPoolSettings -> DefaultPostgresPoolSettings -> (Int, Int, Int)
+getDefaultPGPoolSettingIfNotExists connSettings defaultPgPoolSettings =
+  case connSettings of
+    -- Atleast one of the postgres pool settings is set, then set default values to other settings
+    Just connSettings' -> (maxConnections connSettings', idleTimeout connSettings', retries connSettings')
+     -- No PG Pool settings provided by user, set default values for all
+    Nothing -> (defMaxConnections, defIdleTimeout, defRetries)
+
+  where
+    defMaxConnections = _dppsMaxConnections defaultPgPoolSettings
+    defIdleTimeout = _dppsIdleTimeout defaultPgPoolSettings
+    defRetries = _dppsRetries defaultPgPoolSettings
+
+    maxConnections = fromMaybe defMaxConnections . _ppsMaxConnections
+    idleTimeout = fromMaybe defIdleTimeout . _ppsIdleTimeout
+    retries = fromMaybe defRetries . _ppsRetries
+
+data PostgresSourceConnInfo
+  = PostgresSourceConnInfo
+  { _psciDatabaseUrl  :: !UrlConf
+  , _psciPoolSettings :: !(Maybe PostgresPoolSettings)
+  } deriving (Show, Eq, Generic)
+instance Cacheable PostgresSourceConnInfo
+instance Hashable PostgresSourceConnInfo
+instance NFData PostgresSourceConnInfo
+$(deriveToJSON hasuraJSON{omitNothingFields = True} ''PostgresSourceConnInfo)
+$(makeLenses ''PostgresSourceConnInfo)
+
+
+instance FromJSON PostgresSourceConnInfo where
+  parseJSON = withObject "Object" $ \o ->
+    PostgresSourceConnInfo
+      <$> o .: "database_url"
+      <*> o .:? "pool_settings"
+
+instance Arbitrary PostgresSourceConnInfo where
+  arbitrary = genericArbitrary
+
+instance Arbitrary (NonEmpty PostgresSourceConnInfo) where
+  arbitrary = genericArbitrary
+
+data PostgresConnConfiguration
+  = PostgresConnConfiguration
+  { _pccConnectionInfo :: !PostgresSourceConnInfo
+  , _pccReadReplicas   :: !(Maybe (NonEmpty PostgresSourceConnInfo))
+  } deriving (Show, Eq, Generic)
+instance Cacheable PostgresConnConfiguration
+instance Hashable PostgresConnConfiguration
+instance NFData PostgresConnConfiguration
+$(deriveJSON hasuraJSON{omitNothingFields = True} ''PostgresConnConfiguration)
+$(makeLenses ''PostgresConnConfiguration)
+
+instance Arbitrary PostgresConnConfiguration where
+  arbitrary = genericArbitrary
