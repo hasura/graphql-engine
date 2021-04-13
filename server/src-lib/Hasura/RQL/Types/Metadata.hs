@@ -246,10 +246,10 @@ data SourceMetadata b
   , _smFunctions     :: !(Functions b)
   , _smConfiguration :: !(SourceConnConfiguration b)
   } deriving (Generic)
+$(makeLenses ''SourceMetadata)
 deriving instance (Backend b) => Show (SourceMetadata b)
 deriving instance (Backend b) => Eq (SourceMetadata b)
 instance (Backend b) => Cacheable (SourceMetadata b)
-$(makeLenses ''SourceMetadata)
 instance (Backend b) => FromJSON (SourceMetadata b) where
   parseJSON = withObject "Object" $ \o -> do
     _smName          <- o .: "name"
@@ -326,7 +326,6 @@ data Metadata
   , _metaMetricsConfig    :: !MetricsConfig
   , _metaInheritedRoles   :: !InheritedRoles
   } deriving (Show, Eq)
-
 $(makeLenses ''Metadata)
 
 instance FromJSON Metadata where

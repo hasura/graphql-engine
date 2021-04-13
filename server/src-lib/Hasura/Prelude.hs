@@ -17,6 +17,7 @@ module Hasura.Prelude
   , spanMaybeM
   , liftEitherM
   , hoistMaybe
+  , hoistEither
   , tshow
   -- * Efficient coercions
   , coerce
@@ -201,8 +202,11 @@ startTimer = do
     return $ nanoseconds $ fromIntegral (aft - bef)
 
 -- copied from http://hackage.haskell.org/package/errors-2.3.0/docs/src/Control.Error.Util.html#hoistMaybe
-hoistMaybe :: (Monad m) => Maybe b -> MaybeT m b
-hoistMaybe = MaybeT . return
+hoistMaybe :: Applicative m => Maybe b -> MaybeT m b
+hoistMaybe = MaybeT . pure
+
+hoistEither :: Applicative m => Either e a -> ExceptT e m a
+hoistEither = ExceptT . pure
 
 tshow :: Show a => a -> Text
 tshow = T.pack . show

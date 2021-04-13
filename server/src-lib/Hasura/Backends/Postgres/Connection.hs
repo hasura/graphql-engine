@@ -30,6 +30,10 @@ module Hasura.Backends.Postgres.Connection
   , getDefaultPGPoolSettingIfNotExists
   , defaultPostgresPoolSettings
   , setPostgresPoolSettings
+  , pccConnectionInfo
+  , pccReadReplicas
+  , psciDatabaseUrl
+  , psciPoolSettings
   , module ET
   ) where
 
@@ -38,6 +42,7 @@ import           Hasura.Prelude
 import qualified Database.PG.Query                      as Q
 import qualified Database.PG.Query.Connection           as Q
 
+import           Control.Lens                           (makeLenses)
 import           Control.Monad.Morph                    (hoist)
 import           Control.Monad.Trans.Control            (MonadBaseControl (..))
 import           Control.Monad.Unique
@@ -356,6 +361,8 @@ instance Cacheable PostgresSourceConnInfo
 instance Hashable PostgresSourceConnInfo
 instance NFData PostgresSourceConnInfo
 $(deriveToJSON hasuraJSON{omitNothingFields = True} ''PostgresSourceConnInfo)
+$(makeLenses ''PostgresSourceConnInfo)
+
 
 instance FromJSON PostgresSourceConnInfo where
   parseJSON = withObject "Object" $ \o ->
@@ -378,6 +385,7 @@ instance Cacheable PostgresConnConfiguration
 instance Hashable PostgresConnConfiguration
 instance NFData PostgresConnConfiguration
 $(deriveJSON hasuraJSON{omitNothingFields = True} ''PostgresConnConfiguration)
+$(makeLenses ''PostgresConnConfiguration)
 
 instance Arbitrary PostgresConnConfiguration where
   arbitrary = genericArbitrary
