@@ -5,7 +5,7 @@ const gqlTableErrorNotif = [
   'Table name cannot contain special characters',
   {
     custom:
-      'Table name cannot contain special characters. It can have alphabets, numbers and _ (cannot start with numbers)',
+      'Table name cannot contain special characters. It can have letters, numbers and _ (cannot start with numbers)',
   },
   'Error renaming table!',
 ];
@@ -15,7 +15,7 @@ const gqlColumnErrorNotif = [
   'Column name cannot contain special characters',
   {
     custom:
-      'Column name cannot contain special characters. It can have alphabets, numbers and _ (cannot start with numbers)',
+      'Column name cannot contain special characters. It can have letters, numbers and _ (cannot start with numbers)',
   },
   'Error renaming column!',
 ];
@@ -25,7 +25,7 @@ const gqlViewErrorNotif = [
   'View name cannot contain special characters',
   {
     custom:
-      'View name cannot contain special characters. It can have alphabets, numbers and _ (cannot start with numbers)',
+      'View name cannot contain special characters. It can have letters, numbers and _ (cannot start with numbers)',
   },
   'Error renaming view!',
 ];
@@ -35,7 +35,7 @@ const gqlRelErrorNotif = [
   'Relationship name cannot contain special characters',
   {
     custom:
-      'Relationship name cannot contain special characters. It can have alphabets, numbers and _ (cannot start with numbers)',
+      'Relationship name cannot contain special characters. It can have letters, numbers and _ (cannot start with numbers)',
   },
   'Error renaming relationship!',
 ];
@@ -45,7 +45,7 @@ const gqlSchemaErrorNotif = [
   'Schema name cannot contain special characters',
   {
     custom:
-      'Schema name cannot contain special characters. It can have alphabets, numbers and _ (cannot start with numbers)',
+      'Schema name cannot contain special characters. It can have letters, numbers and _ (cannot start with numbers)',
   },
 ];
 
