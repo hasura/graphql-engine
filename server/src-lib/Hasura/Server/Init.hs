@@ -257,7 +257,10 @@ mkServeOptions rso = do
       -- hard throughput cap at 1000RPS when db queries take 50ms on average:
       conns <- fromMaybe 50 <$> withEnv c (fst pgConnsEnv)
       iTime <- fromMaybe 180 <$> withEnv i (fst pgTimeoutEnv)
-      connLifetime <- withEnv cl (fst pgConnLifetimeEnv)
+      connLifetime <- withEnv cl (fst pgConnLifetimeEnv) <&> \case
+        Nothing -> Just 600 -- Not set by user; use the default timeout
+        Just 0  -> Nothing  -- user wants to disable PG_CONN_LIFETIME
+        Just n  -> Just n   -- user specified n seconds lifetime
       allowPrepare <- fromMaybe True <$> withEnv p (fst pgUsePrepareEnv)
       poolTimeout <- withEnv pt (fst pgPoolTimeoutEnv)
       return $ Q.ConnParams
@@ -488,7 +491,8 @@ pgConnLifetimeEnv :: (String, String)
 pgConnLifetimeEnv =
   ( "HASURA_GRAPHQL_PG_CONN_LIFETIME"
   , "Time from connection creation after which the connection should be destroyed and a new one "
-    <> "created. (default: none)"
+    <> "created. A value of 0 indicates we should never destroy an active connection. If 0 is "
+    <> "passed, memory from large query results may not be reclaimed. (default: 600 sec)"
   )
 
 pgPoolTimeoutEnv :: (String, String)
