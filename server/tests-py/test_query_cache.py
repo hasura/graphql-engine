@@ -50,3 +50,11 @@ class TestQueryCache:
     def test_no_variables_in_query_key(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + '/test_no_variables_in_query_key.yaml', transport)
         self.flushRedis()
+
+    def test_action_query_with_forward_client_headers_set(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/test_action_query_with_forward_client_headers_set.yaml', transport)
+        self.flushRedis()
+
+    def test_action_query_with_forward_client_header_unset(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/test_action_query_with_forward_client_headers_unset.yaml', transport)
+        self.flushRedis()

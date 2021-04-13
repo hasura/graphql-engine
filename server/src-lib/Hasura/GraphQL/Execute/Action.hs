@@ -185,7 +185,7 @@ resolveActionMutationAsync
 resolveActionMutationAsync annAction reqHeaders sessionVariables =
   insertAction actionName sessionVariables reqHeaders inputArgs
   where
-    AnnActionMutationAsync actionName inputArgs = annAction
+    AnnActionMutationAsync actionName _ inputArgs = annAction
 
 {- Note: [Resolving async action query]
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -260,7 +260,7 @@ resolveAsyncActionQuery userInfo annAction =
 
         in RS.AnnSelectG annotatedFields tableFromExp tablePermissions tableArguments stringifyNumerics
   where
-    AnnActionAsyncQuery _ actionId outputType asyncFields definitionList stringifyNumerics actionSource = annAction
+    AnnActionAsyncQuery _ actionId outputType asyncFields definitionList stringifyNumerics _ actionSource = annAction
 
     idColumn = (unsafePGCol "id", PGUUID)
     responsePayloadColumn = (unsafePGCol "response_payload", PGJSONB)

@@ -55,7 +55,7 @@ actionExecute
   -> m (Maybe (FieldParser n (AnnActionExecution 'Postgres (UnpreparedValue 'Postgres))))
 actionExecute nonObjectTypeMap actionInfo = runMaybeT do
   roleName <- askRoleName
-  guard $ (roleName == adminRoleName || roleName `Map.member` permissions)
+  guard (roleName == adminRoleName || roleName `Map.member` permissions)
   let fieldName = unActionName actionName
       description = G.Description <$> comment
   inputArguments <- lift $ actionInputArguments nonObjectTypeMap $ _adArguments definition
@@ -77,7 +77,7 @@ actionExecute nonObjectTypeMap actionInfo = runMaybeT do
                , _aaeSource  = getActionSourceInfo outputObject
                }
   where
-    ActionInfo actionName (outputType, outputObject) definition permissions comment = actionInfo
+    ActionInfo actionName (outputType, outputObject) definition permissions _ comment = actionInfo
 
 -- | actionAsyncMutation is used to execute a asynchronous mutation action. An
 --   asynchronous action expects the field name and the input arguments to the
@@ -97,9 +97,9 @@ actionAsyncMutation nonObjectTypeMap actionInfo = runMaybeT do
   let fieldName = unActionName actionName
       description = G.Description <$> comment
   pure $ P.selection fieldName description inputArguments actionIdParser
-         <&> AnnActionMutationAsync actionName
+    <&> AnnActionMutationAsync actionName forwardClientHeaders
   where
-    ActionInfo actionName _ definition permissions comment = actionInfo
+    ActionInfo actionName _ definition permissions forwardClientHeaders comment = actionInfo
 
 -- | actionAsyncQuery is used to query/subscribe to the result of an
 --   asynchronous mutation action. The only input argument to an
@@ -165,10 +165,11 @@ actionAsyncQuery actionInfo = runMaybeT do
               , _aaaqFields = fields
               , _aaaqDefinitionList = mkDefinitionList outputObject
               , _aaaqStringifyNum = stringifyNum
+              , _aaaqForwardClientHeaders = forwardClientHeaders
               , _aaaqSource  = getActionSourceInfo outputObject
               }
   where
-    ActionInfo actionName (outputType, outputObject) definition permissions comment = actionInfo
+    ActionInfo actionName (outputType, outputObject) definition permissions forwardClientHeaders comment = actionInfo
     idFieldName = $$(G.litName "id")
     idFieldDescription = "the unique id of an action"
 

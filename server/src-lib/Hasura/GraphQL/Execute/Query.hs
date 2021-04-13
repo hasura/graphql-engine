@@ -86,10 +86,11 @@ convertQuerySelSet env logger gqlContext userInfo manager reqHeaders directives 
     RFRemote rf -> do
       RemoteFieldG remoteSchemaInfo remoteField <- for rf $ resolveRemoteVariable userInfo
       pure $ buildExecStepRemote remoteSchemaInfo G.OperationTypeQuery [G.SelectionField remoteField]
-    RFAction a ->
-      pure $ ExecStepAction $ case a of
-        AQQuery s -> AEPSync $ resolveActionExecution env logger userInfo s (ActionExecContext manager reqHeaders usrVars)
-        AQAsync s -> AEPAsyncQuery $ AsyncActionQueryExecutionPlan (_aaaqActionId s) $ resolveAsyncActionQuery userInfo s
+    RFAction a -> do
+      (action, actionName, fch) <- pure $ case a of
+        AQQuery s -> (AEPSync $ resolveActionExecution env logger userInfo s (ActionExecContext manager reqHeaders usrVars), _aaeName s, _aaeForwardClientHeaders s)
+        AQAsync s -> (AEPAsyncQuery $ AsyncActionQueryExecutionPlan (_aaaqActionId s) $ resolveAsyncActionQuery userInfo s, _aaaqName s, _aaaqForwardClientHeaders s)
+      pure $ ExecStepAction (action, (ActionsInfo actionName fch))
     RFRaw r ->
       pure $ ExecStepRaw r
 

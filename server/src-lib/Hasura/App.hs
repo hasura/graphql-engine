@@ -721,7 +721,7 @@ instance HttpLog PGMetadataStorageApp where
       mkHttpAccessLogContext userInfoM reqId waiReq compressedResponse qTime cType headers
 
 instance MonadExecuteQuery PGMetadataStorageApp where
-  cacheLookup _ _ = pure ([], Nothing)
+  cacheLookup _ _ _ = pure ([], Nothing)
   cacheStore  _ _ = pure ()
 
 instance UserAuthentication (Tracing.TraceT PGMetadataStorageApp) where

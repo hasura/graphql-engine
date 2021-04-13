@@ -89,11 +89,15 @@ convertMutationSelectionSet env logger gqlContext SQLGenCtx{stringifyNum} userIn
     RFRemote remoteField -> do
       RemoteFieldG remoteSchemaInfo resolvedRemoteField <- resolveRemoteField userInfo remoteField
       pure $ buildExecStepRemote remoteSchemaInfo G.OperationTypeMutation $ [G.SelectionField resolvedRemoteField]
-    RFAction action ->
-      ExecStepAction <$> convertMutationAction env logger userInfo manager reqHeaders action
+    RFAction action -> do
+      (actionName, _fch) <- pure $ case action of
+        AMSync s  -> (_aaeName s, _aaeForwardClientHeaders s)
+        AMAsync s -> (_aamaName s, _aamaForwardClientHeaders s)
+      plan <- convertMutationAction env logger userInfo manager reqHeaders action
+      pure $ ExecStepAction (plan, ActionsInfo actionName _fch) -- `_fch` represents the `forward_client_headers` option from the action
+                                                                -- definition which is currently being ignored for actions that are mutations
     RFRaw s ->
       pure $ ExecStepRaw s
-
   return (txs, resolvedSelSet)
   where
     reportParseErrors errs = case NE.head errs of

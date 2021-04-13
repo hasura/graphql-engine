@@ -86,6 +86,8 @@ class Monad m => MonadExecuteQuery m where
   cacheLookup
     :: [RemoteSchemaInfo]
     -- ^ Used to check if the elaborated query supports caching
+    -> [ActionsInfo]
+    -- ^ Used to check if actions query supports caching (unsupported if `forward_client_headers` is set)
     -> QueryCacheKey
     -- ^ Key that uniquely identifies the result of a query execution
     -> TraceT (ExceptT QErr m) (HTTP.ResponseHeaders, Maybe EncJSON)
@@ -112,19 +114,19 @@ class Monad m => MonadExecuteQuery m where
     -- ^ Always succeeds
 
 instance MonadExecuteQuery m => MonadExecuteQuery (ReaderT r m) where
-  cacheLookup a b = hoist (hoist lift) $ cacheLookup a b
+  cacheLookup a b c = hoist (hoist lift) $ cacheLookup a b c
   cacheStore  a b = hoist (hoist lift) $ cacheStore  a b
 
 instance MonadExecuteQuery m => MonadExecuteQuery (ExceptT r m) where
-  cacheLookup a b = hoist (hoist lift) $ cacheLookup a b
+  cacheLookup a b c = hoist (hoist lift) $ cacheLookup a b c
   cacheStore  a b = hoist (hoist lift) $ cacheStore  a b
 
 instance MonadExecuteQuery m => MonadExecuteQuery (TraceT m) where
-  cacheLookup a b = hoist (hoist lift) $ cacheLookup a b
+  cacheLookup a b c = hoist (hoist lift) $ cacheLookup a b c
   cacheStore  a b = hoist (hoist lift) $ cacheStore  a b
 
 instance MonadExecuteQuery m => MonadExecuteQuery (MetadataStorageT m) where
-  cacheLookup a b = hoist (hoist lift) $ cacheLookup a b
+  cacheLookup a b c = hoist (hoist lift) $ cacheLookup a b c
   cacheStore  a b = hoist (hoist lift) $ cacheStore  a b
 
 -- | A partial result, e.g. from a remote schema or postgres, which we'll
@@ -222,7 +224,12 @@ runGQ env logger reqId userInfo ipAddress reqHeaders queryType reqUnparsed = do
               E.ExecStepDB _headers exists ->
                 AB.dispatchAnyBackend @BackendTransport exists EB.getRemoteSchemaInfo
               _ -> []
-        (responseHeaders, cachedValue) <- Tracing.interpTraceT (liftEitherM . runExceptT) $ cacheLookup remoteJoins cacheKey
+            actionsInfo = foldl getExecStepActionWithActionInfo [] $ OMap.elems $ OMap.filter (\x -> case x of
+              E.ExecStepAction (_, _) -> True
+              _                       -> False
+              ) queryPlans
+
+        (responseHeaders, cachedValue) <- Tracing.interpTraceT (liftEitherM . runExceptT) $ cacheLookup remoteJoins actionsInfo cacheKey
         case fmap decodeGQResp cachedValue of
           Just cachedResponseData ->
             pure (Telem.Query, 0, Telem.Local, HttpResponse cachedResponseData responseHeaders, normalizedSelectionSet)
@@ -244,7 +251,7 @@ runGQ env logger reqId userInfo ipAddress reqHeaders queryType reqUnparsed = do
                 return $ ResultsFragment telemTimeIO_DT Telem.Local resp []
               E.ExecStepRemote rsi gqlReq ->
                 runRemoteGQ httpManager fieldName rsi gqlReq
-              E.ExecStepAction aep -> do
+              E.ExecStepAction (aep, _) -> do
                 (time, (r, _)) <- doQErr $ EA.runActionExecution aep
                 pure $ ResultsFragment time Telem.Empty r []
               E.ExecStepRaw json ->
@@ -298,7 +305,7 @@ runGQ env logger reqId userInfo ipAddress reqHeaders queryType reqUnparsed = do
                 return $ ResultsFragment telemTimeIO_DT Telem.Local resp responseHeaders
               E.ExecStepRemote rsi gqlReq ->
                 runRemoteGQ httpManager fieldName rsi gqlReq
-              E.ExecStepAction aep -> do
+              E.ExecStepAction (aep, _) -> do
                 (time, (r, hdrs)) <- doQErr $ EA.runActionExecution aep
                 pure $ ResultsFragment time Telem.Empty r $ fromMaybe [] hdrs
               E.ExecStepRaw json ->
@@ -314,6 +321,10 @@ runGQ env logger reqId userInfo ipAddress reqHeaders queryType reqUnparsed = do
   Telem.recordTimingMetric Telem.RequestDimensions{..} Telem.RequestTimings{..}
   return (normalizedSelectionSet, resp)
   where
+    getExecStepActionWithActionInfo acc execStep = case execStep of
+       EB.ExecStepAction (_, actionInfo) -> (actionInfo:acc)
+       _                                 -> acc
+
     doQErr = withExceptT Right
 
     forWithKey = flip OMap.traverseWithKey

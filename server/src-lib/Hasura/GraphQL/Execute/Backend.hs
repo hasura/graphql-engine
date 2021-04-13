@@ -23,6 +23,7 @@ import           Hasura.GraphQL.Execute.Action.Types    (ActionExecutionPlan)
 import           Hasura.GraphQL.Execute.LiveQuery.Plan
 import           Hasura.GraphQL.Parser                  hiding (Type)
 import           Hasura.RQL.IR.RemoteJoin
+import           Hasura.RQL.Types.Action
 import           Hasura.RQL.Types.Backend
 import           Hasura.RQL.Types.Common
 import           Hasura.RQL.Types.Error
@@ -100,7 +101,7 @@ data ExecutionStep where
     -> ExecutionStep
   -- ^ A query to execute against the database
   ExecStepAction
-    :: ActionExecutionPlan
+    :: (ActionExecutionPlan, ActionsInfo)
     -> ExecutionStep
   -- ^ Execute an action
   ExecStepRemote
