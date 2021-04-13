@@ -36,6 +36,7 @@ In the future, we will probably offer a way to explicitly choose which behaviour
 
 (Add entries here in the order of: server, console, cli, docs, others)
 
+- server: add a new `/dev/rts_stats` endpoint, enabled when hasura is started with '+RTS -T'
 - server: re-enable a default HASURA_GRAPHQL_PG_CONN_LIFETIME of 10min
 - server: support for bigquery datasets
 - console: add custom_column_names to track_table request with replaced invalid characters (#992)

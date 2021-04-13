@@ -74,7 +74,7 @@ try_jq() {
 
 # Bump this to:
 #  - force a reinstall of python dependencies, etc.
-DEVSH_VERSION=1.3
+DEVSH_VERSION=1.4
 
 case "${1-}" in
   graphql-engine)

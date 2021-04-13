@@ -15,6 +15,7 @@ import qualified Data.HashMap.Strict                       as M
 import qualified Data.HashSet                              as S
 import qualified Data.Text                                 as T
 import qualified Data.Text.Encoding                        as T
+import qualified GHC.Stats.Extended                        as RTS
 import qualified Network.HTTP.Client                       as HTTP
 import qualified Network.HTTP.Types                        as HTTP
 import qualified Network.Wai.Extended                      as Wai
@@ -987,6 +988,15 @@ httpApp setupHook corsCfg serverCtx enableConsole consoleAssetsDir enableTelemet
 
       Spock.post "v1beta1/relay" $ spockAction GH.encodeGQErr allMod200 $
         mkGQLRequestHandler $ mkGQLAPIRespHandler $ v1GQRelayHandler
+
+    -- This exposes some simple RTS stats when we run with `+RTS -T`. We want
+    -- this to be available even when developer APIs are not compiled in, to
+    -- support benchmarking.
+    -- See: https://hackage.haskell.org/package/base/docs/GHC-Stats.html
+    exposeRtsStats <- liftIO RTS.getRTSStatsEnabled
+    when exposeRtsStats $ do
+      stats <- liftIO RTS.getRTSStats
+      Spock.get "dev/rts_stats" $ Spock.json stats
 
     when (isDeveloperAPIEnabled serverCtx) $ do
       Spock.get "dev/ekg" $ spockAction encodeQErr id $

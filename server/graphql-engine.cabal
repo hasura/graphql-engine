@@ -295,6 +295,7 @@ library
                      , Data.Text.NonEmpty
                      , Data.Time.Clock.Units
                      , Data.URL.Template
+                     , GHC.Stats.Extended
                      , Hasura.App
                      , Hasura.Metadata.Class
 
