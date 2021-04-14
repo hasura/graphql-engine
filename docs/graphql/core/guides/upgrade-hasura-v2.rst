@@ -44,6 +44,32 @@ The following are the most significant conceptual changes introduced in Hasura v
   A detailed changelog with all the new features introduced in Hasura v2 is available on the
   `releases page <https://github.com/hasura/graphql-engine/releases>`__.
 
+Breaking behaviour changes
+^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+- **Semantics of explicit "null" values in "where" filters have changed**
+
+  According to the discussion in `issue 704 <https://github.com/hasura/graphql-engine/issues/704#issuecomment-635571407>`_, an explicit ``null``
+  value in a comparison input object will be treated as an error rather than resulting in the expression being evaluated to ``True``.
+
+  For example: ``delete_users(where: {id: {_eq: $userId}}) { name }`` will yield an error if ``$userId`` is ``null`` instead of deleting
+  all users.
+
+  The older behaviour can be preserved by setting the ``HASURA_GRAPHQL_V1_BOOLEAN_NULL_COLLAPSE`` env var to ``true``.
+
+- **Semantics of "null" join values in remote schema relationships have changed**
+
+  In a remote schema relationship query, the remote schema will be queried when
+  all of the joining arguments are not ``null`` values. When there are ``null`` value(s), the remote schema won't be queried and the response of
+  the remote relationship field will be ``null``. Earlier, the remote schema was queried with the ``null`` value arguments and the response
+  depended upon how the remote schema handled the ``null`` arguments but as per user feedback, this behaviour was clearly not expected.
+
+- **Incompatibility with older Hasura version remote schemas**
+
+  With v2.0, some of the auto-generated schema types have been extended. For example, ``String_comparison_exp`` has an additional ``regex`` input
+  object field. This means if you have a Hasura API with an older Hasura version added as a remote schema then it will have a type conflict. You
+  should upgrade all Hasura remote schemas to avoid such type conflicts.
+
 Hasura configuration
 ^^^^^^^^^^^^^^^^^^^^
 
