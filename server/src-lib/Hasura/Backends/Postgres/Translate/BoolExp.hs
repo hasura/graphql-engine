@@ -168,48 +168,46 @@ mkFieldCompExp qual lhsField = mkCompExp (mkQField lhsField)
       ANISNULL         -> S.BENull lhs
       ANISNOTNULL      -> S.BENotNull lhs
 
-      ABackendSpecific (AILIKE       val)     -> S.BECompare S.SILIKE lhs val
-      ABackendSpecific (ANILIKE      val)     -> S.BECompare S.SNILIKE lhs val
-      ABackendSpecific (ASIMILAR     val)     -> S.BECompare S.SSIMILAR lhs val
-      ABackendSpecific (ANSIMILAR    val)     -> S.BECompare S.SNSIMILAR lhs val
-      ABackendSpecific (AREGEX       val)     -> S.BECompare S.SREGEX lhs val
-      ABackendSpecific (AIREGEX      val)     -> S.BECompare S.SIREGEX lhs val
-      ABackendSpecific (ANREGEX      val)     -> S.BECompare S.SNREGEX lhs val
-      ABackendSpecific (ANIREGEX     val)     -> S.BECompare S.SNIREGEX lhs val
-      ABackendSpecific (AContains    val)     -> S.BECompare S.SContains lhs val
-      ABackendSpecific (AContainedIn val)     -> S.BECompare S.SContainedIn lhs val
+      ABackendSpecific op -> case op of
+        AILIKE       val     -> S.BECompare S.SILIKE lhs val
+        ANILIKE      val     -> S.BECompare S.SNILIKE lhs val
+        ASIMILAR     val     -> S.BECompare S.SSIMILAR lhs val
+        ANSIMILAR    val     -> S.BECompare S.SNSIMILAR lhs val
+        AREGEX       val     -> S.BECompare S.SREGEX lhs val
+        AIREGEX      val     -> S.BECompare S.SIREGEX lhs val
+        ANREGEX      val     -> S.BECompare S.SNREGEX lhs val
+        ANIREGEX     val     -> S.BECompare S.SNIREGEX lhs val
+        AContains    val     -> S.BECompare S.SContains lhs val
+        AContainedIn val     -> S.BECompare S.SContainedIn lhs val
 
-      ABackendSpecific (AHasKey     val)      -> S.BECompare S.SHasKey lhs val
-      ABackendSpecific (AHasKeysAny val)      -> S.BECompare S.SHasKeysAny lhs val
-      ABackendSpecific (AHasKeysAll val)      -> S.BECompare S.SHasKeysAll lhs val
+        AHasKey     val      -> S.BECompare S.SHasKey lhs val
+        AHasKeysAny val      -> S.BECompare S.SHasKeysAny lhs val
+        AHasKeysAll val      -> S.BECompare S.SHasKeysAll lhs val
 
-      ABackendSpecific (AAncestor        val) -> S.BECompare S.SContains lhs val
-      ABackendSpecific (AAncestorAny     val) -> S.BECompare S.SContains lhs val
-      ABackendSpecific (ADescendant      val) -> S.BECompare S.SContainedIn lhs val
-      ABackendSpecific (ADescendantAny   val) -> S.BECompare S.SContainedIn lhs val
-      ABackendSpecific (AMatches         val) -> S.BECompare S.SREGEX lhs val
-      ABackendSpecific (AMatchesAny      val) -> S.BECompare S.SHasKey lhs val
-      ABackendSpecific (AMatchesFulltext val) -> S.BECompare S.SMatchesFulltext lhs val
+        AAncestor        val -> S.BECompare S.SContains lhs val
+        AAncestorAny     val -> S.BECompare S.SContains lhs val
+        ADescendant      val -> S.BECompare S.SContainedIn lhs val
+        ADescendantAny   val -> S.BECompare S.SContainedIn lhs val
+        AMatches         val -> S.BECompare S.SREGEX lhs val
+        AMatchesAny      val -> S.BECompare S.SHasKey lhs val
+        AMatchesFulltext val -> S.BECompare S.SMatchesFulltext lhs val
 
-      ABackendSpecific (ASTContains   val)    -> mkGeomOpBe "ST_Contains" val
-      ABackendSpecific (ASTCrosses    val)    -> mkGeomOpBe "ST_Crosses" val
-      ABackendSpecific (ASTEquals     val)    -> mkGeomOpBe "ST_Equals" val
-      ABackendSpecific (ASTIntersects val)    -> mkGeomOpBe "ST_Intersects" val
-      ABackendSpecific (ASTOverlaps   val)    -> mkGeomOpBe "ST_Overlaps" val
-      ABackendSpecific (ASTTouches    val)    -> mkGeomOpBe "ST_Touches" val
-      ABackendSpecific (ASTWithin     val)    -> mkGeomOpBe "ST_Within" val
+        ASTContains   val    -> mkGeomOpBe "ST_Contains" val
+        ASTCrosses    val    -> mkGeomOpBe "ST_Crosses" val
+        ASTEquals     val    -> mkGeomOpBe "ST_Equals" val
+        ASTIntersects val    -> mkGeomOpBe "ST_Intersects" val
+        AST3DIntersects val  -> mkGeomOpBe "ST_3DIntersects" val
+        ASTOverlaps   val    -> mkGeomOpBe "ST_Overlaps" val
+        ASTTouches    val    -> mkGeomOpBe "ST_Touches" val
+        ASTWithin     val    -> mkGeomOpBe "ST_Within" val
 
-      ABackendSpecific (ASTDWithinGeom (DWithinGeomOp r val)     ) ->
-        applySQLFn "ST_DWithin" [lhs, val, r]
-      ABackendSpecific (ASTDWithinGeog (DWithinGeogOp r val sph) ) ->
-        applySQLFn "ST_DWithin" [lhs, val, r, sph]
+        AST3DDWithinGeom (DWithinGeomOp r val)   -> applySQLFn "ST_3DDWithin" [lhs, val, r]
+        ASTDWithinGeom (DWithinGeomOp r val)     -> applySQLFn "ST_DWithin" [lhs, val, r]
+        ASTDWithinGeog (DWithinGeogOp r val sph) -> applySQLFn "ST_DWithin" [lhs, val, r, sph]
 
-      ABackendSpecific (ASTIntersectsRast val ) ->
-        applySTIntersects [lhs, val]
-      ABackendSpecific (ASTIntersectsNbandGeom (STIntersectsNbandGeommin nband geommin) ) ->
-        applySTIntersects [lhs, nband, geommin]
-      ABackendSpecific (ASTIntersectsGeomNband (STIntersectsGeomminNband geommin mNband)) ->
-        applySTIntersects [lhs, geommin, withSQLNull mNband]
+        ASTIntersectsRast val  -> applySTIntersects [lhs, val]
+        ASTIntersectsNbandGeom (STIntersectsNbandGeommin nband geommin)  -> applySTIntersects [lhs, nband, geommin]
+        ASTIntersectsGeomNband (STIntersectsGeomminNband geommin mNband) -> applySTIntersects [lhs, geommin, withSQLNull mNband]
 
       where
         mkGeomOpBe fn v = applySQLFn fn [lhs, v]

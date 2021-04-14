@@ -852,6 +852,8 @@ Operator
      - ``ST_Crosses(column, input)``
    * - ``_st_equals``
      - ``ST_Equals(column, input)``
+   * - ``_st_3d_intersects``
+     - ``ST_3DIntersects(column, input)``
    * - ``_st_intersects``
      - ``ST_Intersects(column, input)``
    * - ``_st_overlaps``
@@ -862,6 +864,8 @@ Operator
      - ``ST_Within(column, input)``
    * - ``_st_d_within``
      - ``ST_DWithin(column, input)``
+   * - ``_st_3d_d_within``
+     - ``ST_3DDWithin(column, input)``
 
 (For more details on spatial relationship operators, refer to the `PostGIS docs <http://postgis.net/workshops/postgis-intro/spatial_relationships.html>`__.)
 

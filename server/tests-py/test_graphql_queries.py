@@ -535,6 +535,9 @@ class TestGraphQLQueryBoolExpPostGIS:
     def test_query_geography_spatial_ops(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + '/query_geography_spatial_ops.yaml', transport)
 
+    def test_query_geometry_3d_spatial_ops(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/query_geometry_3d_spatial_ops.yaml', transport)
+
     def test_query_cast_geometry_to_geography(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + '/query_cast_geometry_to_geography.yaml', transport)
 

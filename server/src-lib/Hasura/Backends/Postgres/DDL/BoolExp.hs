@@ -153,8 +153,12 @@ parseBoolExpOperations rhsParser fim columnInfo value = do
         -- geometry and geography types
         "_st_intersects" -> parseGeometryOrGeographyOp ASTIntersects
         "$st_intersects" -> parseGeometryOrGeographyOp ASTIntersects
+        "_st_3d_intersects" -> parseGeometryOp AST3DIntersects
+        "$st_3d_intersects" -> parseGeometryOp AST3DIntersects
         "_st_d_within"   -> parseSTDWithinObj
         "$st_d_within"   -> parseSTDWithinObj
+        "_st_3d_d_within" -> parseST3DDWithinObj
+        "$st_3d_d_within" -> parseST3DDWithinObj
 
         "$ceq"           -> parseCeq
         "_ceq"           -> parseCeq
@@ -262,6 +266,13 @@ parseBoolExpOperations rhsParser fim columnInfo value = do
             useSpheroid <- withPathK "use_spheroid" $ parseOneNoSess (ColumnScalar PGBoolean) sphVal
             return $ ASTDWithinGeog $ DWithinGeogOp dist from useSpheroid
           _ -> throwError $ buildMsg colTy [PGGeometry, PGGeography]
+
+        parseST3DDWithinObj = ABackendSpecific <$> do
+          guardType [PGGeometry]
+          DWithinGeomOp distVal fromVal <- parseVal
+          dist <- withPathK "distance" $ parseOneNoSess (ColumnScalar PGFloat) distVal
+          from <- withPathK "from" $ parseOneNoSess colTy fromVal
+          return $ AST3DDWithinGeom $ DWithinGeomOp dist from
 
         decodeAndValidateRhsCol =
           parseVal >>= validateRhsCol

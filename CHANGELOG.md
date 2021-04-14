@@ -2,6 +2,11 @@
 
 ## Next release
 
+### Support for 3D PostGIS Operators
+
+We now support the use of the functions `ST_3DDWithin` and `ST_3DIntersects` in boolean expressions.
+Note that `ST_3DIntersects` requires PostGIS be [built with SFCGAL support](https://www.postgis.net/docs/manual-3.1/reference.html#reference_sfcgal) which may depend on the PostGIS distribution used.
+
 ### Support for null values in boolean expressions
 
 In v2, we introduced a breaking change, that aimed at fixing a [long-standing issue](https://github.com/hasura/graphql-engine/issues/704): a null value in a boolean expression would always evaluate to `True` for all rows. For example, the following queries were all equivalent:

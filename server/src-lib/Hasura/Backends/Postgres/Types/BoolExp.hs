@@ -30,11 +30,13 @@ data BooleanOperators a
   | ASTCrosses        !a
   | ASTEquals         !a
   | ASTIntersects     !a
+  | AST3DIntersects     !a
   | ASTOverlaps       !a
   | ASTTouches        !a
   | ASTWithin         !a
   | ASTIntersectsRast !a
   | ASTDWithinGeom         !(DWithinGeomOp a)
+  | AST3DDWithinGeom       !(DWithinGeomOp a)
   | ASTDWithinGeog         !(DWithinGeogOp a)
   | ASTIntersectsGeomNband !(STIntersectsGeomminNband a)
   | ASTIntersectsNbandGeom !(STIntersectsNbandGeommin a)
@@ -74,10 +76,12 @@ instance ToJSON a => ToJSONKeyValue (BooleanOperators a) where
 
     ASTContains    a         -> ("_st_contains",              toJSON a)
     ASTCrosses     a         -> ("_st_crosses",               toJSON a)
+    AST3DDWithinGeom o       -> ("_st_3d_d_within",           toJSON o)
     ASTDWithinGeom o         -> ("_st_d_within",              toJSON o)
     ASTDWithinGeog o         -> ("_st_d_within",              toJSON o)
     ASTEquals      a         -> ("_st_equals",                toJSON a)
     ASTIntersects  a         -> ("_st_intersects",            toJSON a)
+    AST3DIntersects  a       -> ("_st_3d_intersects",         toJSON a)
     ASTOverlaps    a         -> ("_st_overlaps",              toJSON a)
     ASTTouches     a         -> ("_st_touches",               toJSON a)
     ASTWithin      a         -> ("_st_within",                toJSON a)

@@ -386,9 +386,15 @@ comparisonExps = P.memoize 'comparisonExps \columnType -> do
       , P.fieldOptional $$(G.litName "_st_intersects")
         (Just "does the column spatially intersect the given geometry value")
         (ABackendSpecific . ASTIntersects . mkParameter <$> typedParser)
+      , P.fieldOptional $$(G.litName "_st_3d_intersects")
+        (Just "does the column spatially intersect the given geometry value in 3D")
+        (ABackendSpecific . AST3DIntersects . mkParameter <$> typedParser)
       , P.fieldOptional $$(G.litName "_st_d_within")
         (Just "is the column within a given distance from the given geometry value")
         (ABackendSpecific . ASTDWithinGeom <$> geomInputParser)
+      , P.fieldOptional $$(G.litName "_st_3d_d_within")
+        (Just "is the column within a given 3D distance from the given geometry value")
+        (ABackendSpecific . AST3DDWithinGeom <$> geomInputParser)
       ]
 
     -- Ops for Ltree type
