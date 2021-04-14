@@ -279,7 +279,7 @@ initialiseServeCtx env GlobalCtx{..} so@ServeOptions{..} = do
                            , _ppsIdleTimeout    = Just $ Q.cpIdleTime soConnParams
                            , _ppsRetries        = snd _gcDefaultPostgresConnInfo <|> Just 1
                            }
-            sourceConnInfo = PostgresSourceConnInfo dbUrlConf (Just connSettings)
+            sourceConnInfo = PostgresSourceConnInfo dbUrlConf (Just connSettings) $ Q.cpAllowPrepare soConnParams
         in PostgresConnConfiguration sourceConnInfo Nothing
       sqlGenCtx = SQLGenCtx soStringifyNum soDangerousBooleanCollapse
 

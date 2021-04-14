@@ -51,6 +51,7 @@ func TestSourceConfig_Export(t *testing.T) {
         idle_timeout: 180
         max_connections: 50
         retries: 1
+      use_prepared_statements: true
   tables: "!include default/tables/tables.yaml"
   functions: "!include default/functions/functions.yaml"
 `),
@@ -164,6 +165,7 @@ func TestSourceConfig_Build(t *testing.T) {
         idle_timeout: 180
         max_connections: 50
         retries: 1
+      use_prepared_statements: true
   functions:
   - function:
       name: get_t1
@@ -188,6 +190,7 @@ func TestSourceConfig_Build(t *testing.T) {
         idle_timeout: 180
         max_connections: 50
         retries: 1
+      use_prepared_statements: true
   functions:
   - function:
       name: get_t1

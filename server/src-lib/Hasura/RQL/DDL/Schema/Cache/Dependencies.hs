@@ -81,7 +81,7 @@ pruneDanglingDependents
 pruneDanglingDependents cache = fmap (M.filter (not . null)) . traverse do
   partitionEithers . map \(metadataObject, dependency) -> case resolveDependency dependency of
     Right ()          -> Right (metadataObject, dependency)
-    Left errorMessage -> Left (InconsistentObject errorMessage metadataObject)
+    Left errorMessage -> Left (InconsistentObject errorMessage Nothing metadataObject)
   where
     resolveDependency :: SchemaDependency -> Either Text ()
     resolveDependency (SchemaDependency objectId _) = case objectId of

@@ -76,6 +76,7 @@ While we want to fix this by offering, in the future, an explicit API that allow
 
 ### Bug fixes and improvements
 
+- server: `use_prepared_statements` option (default: False) in `add_pg_source` metadata API
 - server: add `--async-actions-fetch-interval` command-line flag and `HASURA_GRAPHQL_ASYNC_ACTIONS_FETCH_INTERVAL` environment variable for configuring
           async actions re-fetch interval from metadata storage (fix #6460)
 - server: add 'replace_configuration' option (default: false) in the add source API payload

@@ -23,13 +23,14 @@ import           Hasura.RQL.Types
 mkPgSourceResolver :: Q.PGLogger -> SourceResolver
 mkPgSourceResolver pgLogger _ config = runExceptT do
   env <- lift Env.getEnvironment
-  let PostgresSourceConnInfo urlConf connSettings = _pccConnectionInfo config
+  let PostgresSourceConnInfo urlConf connSettings allowPrepare = _pccConnectionInfo config
   -- If the user does not provide values for the pool settings, then use the default values
   let (maxConns, idleTimeout, retries) = getDefaultPGPoolSettingIfNotExists connSettings defaultPostgresPoolSettings
   urlText <- resolveUrlConf env urlConf
   let connInfo = Q.ConnInfo retries $ Q.CDDatabaseURI $ txtToBs urlText
       connParams = Q.defaultConnParams{ Q.cpIdleTime = idleTimeout
                                       , Q.cpConns = maxConns
+                                      , Q.cpAllowPrepare = allowPrepare
                                       }
   pgPool <- liftIO $ Q.initPGPool connInfo connParams pgLogger
   let pgExecCtx = mkPGExecCtx Q.ReadCommitted pgPool

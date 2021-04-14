@@ -125,6 +125,12 @@ PGSourceConnectionInfo
      - true
      - PGPoolSettings_
      - Connection pool settings
+   * - use_prepared_statements
+     - false
+     - Boolean
+     - If set to ``true`` the server prepares statement before executing on the source database (default: ``false``).
+       For more details, refer to the `Postgres docs <https://www.postgresql.org/docs/current/sql-prepare.html>`__
+
 
 .. _FromEnv:
 
@@ -781,7 +787,7 @@ Operator
      - ``!~``
    * - ``$niregex``
      - ``!~*``
-  
+
 
 (For more details on text related operators, refer to the `Postgres docs <https://www.postgresql.org/docs/current/functions-matching.html>`__.)
 
