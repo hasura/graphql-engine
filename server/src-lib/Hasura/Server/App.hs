@@ -995,8 +995,9 @@ httpApp setupHook corsCfg serverCtx enableConsole consoleAssetsDir enableTelemet
     -- See: https://hackage.haskell.org/package/base/docs/GHC-Stats.html
     exposeRtsStats <- liftIO RTS.getRTSStatsEnabled
     when exposeRtsStats $ do
-      stats <- liftIO RTS.getRTSStats
-      Spock.get "dev/rts_stats" $ Spock.json stats
+      Spock.get "dev/rts_stats" $ do
+        stats <- liftIO RTS.getRTSStats
+        Spock.json stats
 
     when (isDeveloperAPIEnabled serverCtx) $ do
       Spock.get "dev/ekg" $ spockAction encodeQErr id $
