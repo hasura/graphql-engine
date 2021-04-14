@@ -1,0 +1,10 @@
+{
+  "settings": {
+    "migration_mode": "true"
+  },
+  "migrations": {
+    "default": {
+      "1616826329751": false
+    }
+  }
+}

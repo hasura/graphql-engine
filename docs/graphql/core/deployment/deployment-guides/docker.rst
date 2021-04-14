@@ -61,7 +61,7 @@ Edit the ``HASURA_GRAPHQL_DATABASE_URL`` env var value, so that you can connect 
 
    #! /bin/bash
    docker run -d -p 8080:8080 \
-     -e HASURA_GRAPHQL_DATABASE_URL=postgres://username:password@hostname:port/dbname \
+     -e HASURA_GRAPHQL_DATABASE_URL=postgres://<username>:<password>@hostname:<port>/<dbname> \
      -e HASURA_GRAPHQL_ENABLE_CONSOLE=true \
      hasura/graphql-engine:latest
 
@@ -100,7 +100,7 @@ command to allow the Docker container to access the host's network:
         :emphasize-lines: 1
 
         docker run -d --net=host \
-          -e HASURA_GRAPHQL_DATABASE_URL=postgres://username:password@hostname:port/dbname \
+          -e HASURA_GRAPHQL_DATABASE_URL=postgres://<username>:<password>@hostname:<port>/<dbname> \
           -e HASURA_GRAPHQL_ENABLE_CONSOLE=true \
           hasura/graphql-engine:latest
 
@@ -114,7 +114,7 @@ command to allow the Docker container to access the host's network:
         :emphasize-lines: 2
 
         docker run -d -p 8080:8080 \
-          -e HASURA_GRAPHQL_DATABASE_URL=postgres://username:password@host.docker.internal:port/dbname \
+          -e HASURA_GRAPHQL_DATABASE_URL=postgres://<username>:<password>@host.docker.internal:<port>/<dbname> \
           -e HASURA_GRAPHQL_ENABLE_CONSOLE=true \
           hasura/graphql-engine:latest
 
@@ -128,7 +128,7 @@ command to allow the Docker container to access the host's network:
         :emphasize-lines: 2
 
         docker run -d -p 8080:8080 \
-          -e HASURA_GRAPHQL_DATABASE_URL=postgres://username:password@docker.for.win.localhost:port/dbname \
+          -e HASURA_GRAPHQL_DATABASE_URL=postgres://<username>:<password>@docker.for.win.localhost:<port>/<dbname> \
           -e HASURA_GRAPHQL_ENABLE_CONSOLE=true \
           hasura/graphql-engine:latest
           
@@ -149,7 +149,7 @@ Execute ``docker-run.sh`` & check if everything is running well:
 Step 4: Open the Hasura console
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Head to http://localhost:8080/console to open the Hasura console.
+Head to ``http://localhost:8080/console`` to open the Hasura console.
 
 Step 5: Track existing tables and relationships
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -172,9 +172,9 @@ Run the Docker command with an admin-secret env var
 
     #! /bin/bash
     docker run -d -p 8080:8080 \
-     -e HASURA_GRAPHQL_DATABASE_URL=postgres://username:password@hostname:port/dbname \
+     -e HASURA_GRAPHQL_DATABASE_URL=postgres://<username>:<password>@hostname:<port>/<dbname> \
      -e HASURA_GRAPHQL_ENABLE_CONSOLE=true \
-     -e HASURA_GRAPHQL_ADMIN_SECRET=myadminsecretkey \
+     -e HASURA_GRAPHQL_ADMIN_SECRET=<myadminsecretkey> \
      hasura/graphql-engine:latest
 
 .. note::

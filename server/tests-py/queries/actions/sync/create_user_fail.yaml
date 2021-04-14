@@ -10,8 +10,9 @@ query:
     }
 
 response:
+  data:
   errors:
-    - extensions:
-        path: $
-        code: invalid-email
-      message: Given email address is not valid
+  - extensions:
+      path: $
+      code: invalid-email
+    message: Given email address is not valid

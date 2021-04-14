@@ -39,6 +39,7 @@ const state = {
     operation: '',
   },
   timeout: 30,
+  comment: '',
 };
 
 export default state;

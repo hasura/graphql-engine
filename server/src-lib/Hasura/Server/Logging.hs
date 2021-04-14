@@ -1,5 +1,5 @@
 -- This is taken from wai-logger and customised for our use
-
+{-# LANGUAGE AllowAmbiguousTypes #-}
 module Hasura.Server.Logging
   ( StartupLog(..)
   , PGLog(..)
@@ -17,22 +17,24 @@ module Hasura.Server.Logging
 
 import           Hasura.Prelude
 
-import qualified Data.ByteString.Lazy      as BL
-import qualified Network.HTTP.Types        as HTTP
-import qualified Network.Wai.Extended      as Wai
+import qualified Data.ByteString.Lazy          as BL
+import qualified Language.GraphQL.Draft.Syntax as G
+import qualified Network.HTTP.Types            as HTTP
+import qualified Network.Wai.Extended          as Wai
 
 import           Data.Aeson
-import           Data.Aeson.Casing
 import           Data.Aeson.TH
-import           Data.Int                  (Int64)
+import           Data.Int                      (Int64)
 
+import           Hasura.GraphQL.Parser.Schema  (Variable)
 import           Hasura.HTTP
 import           Hasura.Logging
+import           Hasura.Metadata.Class
 import           Hasura.RQL.Types
 import           Hasura.Server.Compression
-import           Hasura.Server.Utils
+import           Hasura.Server.Types
 import           Hasura.Session
-import           Hasura.Tracing            (TraceT)
+import           Hasura.Tracing                (TraceT)
 
 
 data StartupLog
@@ -113,7 +115,12 @@ instance ToJSON WebHookLog where
            , "message" .= whlMessage whl
            ]
 
-class (Monad m) => HttpLog m where
+class (Monad m, Monoid (HTTPLoggingMetadata m)) => HttpLog m where
+
+  type HTTPLoggingMetadata m
+
+  buildHTTPLoggingMetadata :: [(G.SelectionSet G.NoFragments Variable)] -> HTTPLoggingMetadata m
+
   logHttpError
     :: Logger Hasura
     -- ^ the logger
@@ -153,11 +160,38 @@ class (Monad m) => HttpLog m where
     -- ^ possible compression type
     -> [HTTP.Header]
     -- ^ list of request headers
+    -> HTTPLoggingMetadata m
     -> m ()
 
 instance HttpLog m => HttpLog (TraceT m) where
+
+  type HTTPLoggingMetadata (TraceT m) = HTTPLoggingMetadata m
+
+  buildHTTPLoggingMetadata a = buildHTTPLoggingMetadata @m a
+
   logHttpError a b c d e f g = lift $ logHttpError a b c d e f g
-  logHttpSuccess a b c d e f g h i j = lift $ logHttpSuccess a b c d e f g h i j
+
+  logHttpSuccess a b c d e f g h i j k = lift $ logHttpSuccess a b c d e f g h i j k
+
+instance HttpLog m => HttpLog (ReaderT r m) where
+
+  type HTTPLoggingMetadata (ReaderT r m) = HTTPLoggingMetadata m
+
+  buildHTTPLoggingMetadata a = buildHTTPLoggingMetadata @m a
+
+  logHttpError a b c d e f g = lift $ logHttpError a b c d e f g
+
+  logHttpSuccess a b c d e f g h i j k = lift $ logHttpSuccess a b c d e f g h i j k
+
+instance HttpLog m => HttpLog (MetadataStorageT m) where
+
+  type HTTPLoggingMetadata (MetadataStorageT m) = HTTPLoggingMetadata m
+
+  buildHTTPLoggingMetadata a = buildHTTPLoggingMetadata @m a
+
+  logHttpError a b c d e f g = lift $ logHttpError a b c d e f g
+
+  logHttpSuccess a b c d e f g h i j k = lift $ logHttpSuccess a b c d e f g h i j k
 
 -- | Log information about the HTTP request
 data HttpInfoLog
@@ -197,14 +231,15 @@ data OperationLog
   , olError              :: !(Maybe QErr)
   } deriving (Show, Eq)
 
-$(deriveToJSON (aesonDrop 2 snakeCase){omitNothingFields = True} ''OperationLog)
+$(deriveToJSON hasuraJSON{omitNothingFields = True} ''OperationLog)
 
 data HttpLogContext
   = HttpLogContext
   { hlcHttpInfo  :: !HttpInfoLog
   , hlcOperation :: !OperationLog
+  , hlcRequestId :: !RequestId
   } deriving (Show, Eq)
-$(deriveToJSON (aesonDrop 3 snakeCase) ''HttpLogContext)
+$(deriveToJSON hasuraJSON ''HttpLogContext)
 
 mkHttpAccessLogContext
   :: Maybe UserInfo
@@ -236,7 +271,7 @@ mkHttpAccessLogContext userInfoM reqId req res mTiming compressTypeM headers =
            , olRawQuery = Nothing
            , olError = Nothing
            }
-  in HttpLogContext http op
+  in HttpLogContext http op reqId
   where
     status = HTTP.status200
     respSize = Just $ BL.length res
@@ -272,7 +307,7 @@ mkHttpErrorLogContext userInfoM reqId waiReq (reqBody, parsedReq) err mTiming co
            , olRawQuery           = maybe (Just $ bsToTxt $ BL.toStrict reqBody) (const Nothing) parsedReq
            , olError              = Just err
            }
-  in HttpLogContext http op
+  in HttpLogContext http op reqId
 
 data HttpLogLine
   = HttpLogLine

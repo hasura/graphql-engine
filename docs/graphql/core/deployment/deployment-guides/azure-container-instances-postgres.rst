@@ -208,9 +208,8 @@ Replace ``<dns-name-label>`` with the label given earlier.
 .. image:: https://storage.googleapis.com/graphql-engine-cdn.hasura.io/main-repo/img/azure_arm_aci_console_graphiql.png
    :class: no-shadow
    :alt: Hasura console
-
-You can create tables and test your GraphQL queries here. Check out :ref:`Making
-your first GraphQL Query <first_graphql_query>` for a detailed guide.
+   
+You can create tables and test your GraphQL queries here.   
 
 Troubleshooting
 ---------------

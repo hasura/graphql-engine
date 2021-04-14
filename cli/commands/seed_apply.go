@@ -1,7 +1,6 @@
 package commands
 
 import (
-	"github.com/hasura/graphql-engine/cli/migrate"
 	"github.com/spf13/afero"
 	"github.com/spf13/cobra"
 
@@ -10,10 +9,12 @@ import (
 )
 
 type SeedApplyOptions struct {
-	EC *cli.ExecutionContext
+	EC     *cli.ExecutionContext
+	Driver *seed.Driver
 
 	// seed file to apply
 	FileNames []string
+	Source    cli.Source
 }
 
 func newSeedApplyCmd(ec *cli.ExecutionContext) *cobra.Command {
@@ -33,7 +34,9 @@ func newSeedApplyCmd(ec *cli.ExecutionContext) *cobra.Command {
 			return ec.Validate()
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
+			opts.Driver = getSeedDriver(ec.Config.Version)
 			opts.EC.Spin("Applying seeds...")
+			opts.Source = ec.Source
 			err := opts.Run()
 			opts.EC.Spinner.Stop()
 			if err != nil {
@@ -48,10 +51,6 @@ func newSeedApplyCmd(ec *cli.ExecutionContext) *cobra.Command {
 }
 
 func (o *SeedApplyOptions) Run() error {
-	migrateDriver, err := migrate.NewMigrate(o.EC, true)
-	if err != nil {
-		return err
-	}
 	fs := afero.NewOsFs()
-	return seed.ApplySeedsToDatabase(o.EC, fs, migrateDriver, o.FileNames)
+	return o.Driver.ApplySeedsToDatabase(fs, o.EC.SeedsDirectory, o.FileNames, o.EC.Source)
 }

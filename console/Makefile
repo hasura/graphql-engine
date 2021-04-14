@@ -14,6 +14,9 @@ ci-deps:
 build:
 	npm run build
 
+jest:
+	npm run jest
+
 test:
 	npm run dev & npm run test
 

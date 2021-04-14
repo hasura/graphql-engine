@@ -7,7 +7,7 @@ import qualified Data.HashMap.Strict.InsOrd as OMap
 
 import           Hasura.EncJSON
 import           Hasura.RQL.IR.Select
-import           Hasura.RQL.Types.Common
+import           Hasura.RQL.Types.Backend
 import           Hasura.SQL.Backend
 
 
@@ -16,7 +16,7 @@ data MutFldG (b :: BackendType) v
   | MExp !Text
   | MRet !(AnnFieldsG b v)
 
-type MutFld b = MutFldG b (SQLExp b)
+type MutFld b = MutFldG b (SQLExpression b)
 
 type MutFldsG b v = Fields (MutFldG b v)
 
@@ -24,9 +24,9 @@ data MutationOutputG (b :: BackendType) v
   = MOutMultirowFields !(MutFldsG b v)
   | MOutSinglerowObject !(AnnFieldsG b v)
 
-type MutationOutput b = MutationOutputG b (SQLExp b)
+type MutationOutput b = MutationOutputG b (SQLExpression b)
 
-type MutFlds b = MutFldsG b (SQLExp b)
+type MutFlds b = MutFldsG b (SQLExpression b)
 
 buildEmptyMutResp :: MutationOutput backend -> EncJSON
 buildEmptyMutResp = \case
@@ -39,7 +39,7 @@ buildEmptyMutResp = \case
       MRet _ -> J.toJSON ([] :: [J.Value])
 
 traverseMutFld
-  :: (Applicative f)
+  :: (Applicative f, Backend backend)
   => (a -> f b)
   -> MutFldG backend a
   -> f (MutFldG backend b)
@@ -49,7 +49,7 @@ traverseMutFld f = \case
   MRet flds -> MRet <$> traverse (traverse (traverseAnnField f)) flds
 
 traverseMutationOutput
-  :: (Applicative f)
+  :: (Applicative f, Backend backend)
   => (a -> f b)
   -> MutationOutputG backend a -> f (MutationOutputG backend b)
 traverseMutationOutput f = \case
@@ -59,7 +59,7 @@ traverseMutationOutput f = \case
     MOutSinglerowObject <$> traverseAnnFields f annFields
 
 traverseMutFlds
-  :: (Applicative f)
+  :: (Applicative f, Backend backend)
   => (a -> f b)
   -> MutFldsG backend a
   -> f (MutFldsG backend b)

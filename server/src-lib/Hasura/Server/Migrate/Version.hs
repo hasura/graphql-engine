@@ -12,14 +12,14 @@ import           Hasura.Prelude
 import qualified Data.Text                  as T
 import qualified Language.Haskell.TH.Syntax as TH
 
-import           Data.FileEmbed             (embedStringFile)
+import           Data.FileEmbed             (embedStringFile, makeRelativeToProject)
 
 -- | The current catalog schema version. We store this in a file
 -- because we want to append the current verson to the catalog_versions file
 -- when tagging a new release, in @tag-release.sh@.
 latestCatalogVersion :: Integer
 latestCatalogVersion =
-  $(do let s = $(embedStringFile "src-rsr/catalog_version.txt")
+  $(do let s = $(makeRelativeToProject "src-rsr/catalog_version.txt" >>= embedStringFile)
        TH.lift (read s :: Integer))
 
 latestCatalogVersionString :: Text

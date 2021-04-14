@@ -15,6 +15,7 @@ const state = {
   headers: [defaultHeader],
   forwardClientHeaders: false,
   timeout: 30,
+  comment: '',
 };
 
 export default state;

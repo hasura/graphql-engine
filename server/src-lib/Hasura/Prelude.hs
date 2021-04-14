@@ -11,26 +11,33 @@ module Hasura.Prelude
   , choice
   , afold
   , bsToTxt
+  , lbsToTxt
   , txtToBs
   , base64Decode
   , spanMaybeM
   , liftEitherM
   , hoistMaybe
+  , hoistEither
+  , tshow
   -- * Efficient coercions
   , coerce
   , findWithIndex
+  -- * Map-related utilities
   , mapFromL
+  , mapKeys
   , oMapFromL
   -- * Measuring and working with moments and durations
   , withElapsedTime
   , startTimer
+  -- * Aeson options
+  , hasuraJSON
   , module Data.Time.Clock.Units
   ) where
 
 import           Control.Applicative               as M (Alternative (..), liftA2)
 import           Control.Arrow                     as M (first, second, (&&&), (***), (<<<), (>>>))
 import           Control.DeepSeq                   as M (NFData, deepseq, force)
-import           Control.Lens                      as M ((%~))
+import           Control.Lens                      as M (ix, (%~))
 import           Control.Monad.Base                as M
 import           Control.Monad.Except              as M
 import           Control.Monad.Identity            as M
@@ -41,16 +48,17 @@ import           Control.Monad.Writer.Strict       as M (MonadWriter (..), Write
                                                          execWriterT, runWriterT)
 import           Data.Align                        as M (Semialign (align, alignWith))
 import           Data.Bool                         as M (bool)
+import           Data.Coerce
 import           Data.Data                         as M (Data (..))
 import           Data.Either                       as M (lefts, partitionEithers, rights)
-import           Data.Foldable                     as M (asum, fold, foldrM, for_, toList,
+import           Data.Foldable                     as M (asum, fold, foldlM, foldrM, for_, toList,
                                                          traverse_)
 import           Data.Function                     as M (on, (&))
 import           Data.Functor                      as M (($>), (<&>))
-import           Data.Hashable                     as M (Hashable)
 import           Data.HashMap.Strict               as M (HashMap)
 import           Data.HashMap.Strict.InsOrd        as M (InsOrdHashMap)
 import           Data.HashSet                      as M (HashSet)
+import           Data.Hashable                     as M (Hashable)
 import           Data.List                         as M (find, findIndex, foldl', group,
                                                          intercalate, intersect, lookup, sort,
                                                          sortBy, sortOn, union, unionBy, (\\))
@@ -75,10 +83,11 @@ import           Prelude                           as M hiding (fail, init, look
 import           Test.QuickCheck.Arbitrary.Generic as M
 import           Text.Read                         as M (readEither, readMaybe)
 
+import qualified Data.Aeson                        as J
+import qualified Data.Aeson.Casing                 as J
 import qualified Data.ByteString                   as B
 import qualified Data.ByteString.Base64.Lazy       as Base64
 import qualified Data.ByteString.Lazy              as BL
-import           Data.Coerce
 import qualified Data.HashMap.Strict               as Map
 import qualified Data.HashMap.Strict.InsOrd        as OMap
 import qualified Data.Text                         as T
@@ -86,6 +95,7 @@ import qualified Data.Text.Encoding                as TE
 import qualified Data.Text.Encoding.Error          as TE
 import qualified GHC.Clock                         as Clock
 import qualified Test.QuickCheck                   as QC
+
 
 alphabet :: String
 alphabet = ['a'..'z'] ++ ['A'..'Z']
@@ -117,6 +127,9 @@ afold = getAlt . foldMap pure
 
 bsToTxt :: B.ByteString -> Text
 bsToTxt = TE.decodeUtf8With TE.lenientDecode
+
+lbsToTxt :: BL.ByteString -> Text
+lbsToTxt = bsToTxt . BL.toStrict
 
 txtToBs :: Text -> B.ByteString
 txtToBs = TE.encodeUtf8
@@ -150,6 +163,13 @@ findWithIndex p l = do
 mapFromL :: (Eq k, Hashable k) => (a -> k) -> [a] -> Map.HashMap k a
 mapFromL f = Map.fromList . map (\v -> (f v, v))
 
+-- | re-key a map. In the case that @f@ is not injective you may end up with a
+-- smaller map than what you started with.
+--
+-- This may be a code smell.
+mapKeys :: (Eq k2, Hashable k2) => (k1 -> k2) -> Map.HashMap k1 a -> Map.HashMap k2 a
+mapKeys f = Map.fromList . map (first f) . Map.toList
+
 oMapFromL :: (Eq k, Hashable k) => (a -> k) -> [a] -> InsOrdHashMap k a
 oMapFromL f = OMap.fromList . map (\v -> (f v, v))
 
@@ -182,5 +202,14 @@ startTimer = do
     return $ nanoseconds $ fromIntegral (aft - bef)
 
 -- copied from http://hackage.haskell.org/package/errors-2.3.0/docs/src/Control.Error.Util.html#hoistMaybe
-hoistMaybe :: (Monad m) => Maybe b -> MaybeT m b
-hoistMaybe = MaybeT . return
+hoistMaybe :: Applicative m => Maybe b -> MaybeT m b
+hoistMaybe = MaybeT . pure
+
+hoistEither :: Applicative m => Either e a -> ExceptT e m a
+hoistEither = ExceptT . pure
+
+tshow :: Show a => a -> Text
+tshow = T.pack . show
+
+hasuraJSON :: J.Options
+hasuraJSON = J.aesonPrefix J.snakeCase

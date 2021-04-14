@@ -1,7 +1,11 @@
 import React from 'react';
 import ExpandableEditor from '../../../Common/Layout/ExpandableEditor/Editor';
 import RootFieldEditor from '../Common/Components/RootFieldEditor';
-import { modifyRootFields, setCustomRootFields } from './ModifyActions';
+import {
+  modifyTableCustomName,
+  modifyRootFields,
+  setCustomRootFields,
+} from './ModifyActions';
 import { isEmpty } from '../../../Common/utils/jsUtils';
 
 import styles from './ModifyTable.scss';
@@ -12,6 +16,8 @@ type RootFieldsEditorProps = {
   rootFieldsEdit: Record<string, string>;
   dispatch: Dispatch;
   tableName: string;
+  customName: string;
+  existingCustomName?: string;
 };
 
 const RootFieldsEditor = ({
@@ -19,6 +25,8 @@ const RootFieldsEditor = ({
   rootFieldsEdit,
   dispatch,
   tableName,
+  customName,
+  existingCustomName,
 }: RootFieldsEditorProps) => {
   const setRootFieldsBulk = (rf: Record<string, string>) => {
     dispatch(modifyRootFields(rf));
@@ -32,8 +40,20 @@ const RootFieldsEditor = ({
     dispatch(modifyRootFields(newRootFields));
   };
 
+  const onChangeCustomName = (newName: string) => {
+    dispatch(modifyTableCustomName(newName));
+  };
+
   const collapsedLabel = () => {
     const customRootFieldLabels: React.ReactNode[] = [];
+
+    if (existingCustomName) {
+      customRootFieldLabels.push(
+        <span className={styles.display_inline} key={existingCustomName}>
+          <i>custom_table_name</i> &rarr; {existingCustomName}
+        </span>
+      );
+    }
 
     Object.keys(existingRootFields).forEach(rootField => {
       const customRootField = existingRootFields[rootField];
@@ -49,7 +69,7 @@ const RootFieldsEditor = ({
       }
     });
 
-    if (isEmpty(customRootFieldLabels)) {
+    if (isEmpty(customRootFieldLabels) && !existingCustomName) {
       customRootFieldLabels.push('No root fields customised');
     }
 
@@ -61,6 +81,10 @@ const RootFieldsEditor = ({
       disabled={false}
       tableName={tableName}
       rootFields={rootFieldsEdit}
+      customName={customName}
+      customNameOnChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+        onChangeCustomName(e.target.value);
+      }}
       selectOnChange={(e: React.ChangeEvent<HTMLInputElement>) => {
         onChange('select', e.target.value);
       }}
@@ -92,6 +116,7 @@ const RootFieldsEditor = ({
   );
 
   const expandCallback = () => {
+    dispatch(modifyTableCustomName(existingCustomName));
     setRootFieldsBulk(existingRootFields);
   };
 

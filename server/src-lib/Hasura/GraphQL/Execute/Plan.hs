@@ -11,7 +11,6 @@ module Hasura.GraphQL.Execute.Plan
   ) where
 
 import qualified Data.Aeson                             as J
-import qualified Data.Aeson.Casing                      as J
 import qualified Data.Aeson.TH                          as J
 
 import           Hasura.Prelude
@@ -77,7 +76,7 @@ data ReusablePlan = ReusablePlan
 newtype PlanCacheOptions
   = PlanCacheOptions { unPlanCacheSize :: Cache.CacheSize }
   deriving (Show, Eq)
-$(J.deriveJSON (J.aesonDrop 2 J.snakeCase) ''PlanCacheOptions)
+$(J.deriveJSON hasuraJSON ''PlanCacheOptions)
 
 mkPlanCacheOptions :: Cache.CacheSize -> PlanCacheOptions
 mkPlanCacheOptions = PlanCacheOptions

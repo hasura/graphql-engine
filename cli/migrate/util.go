@@ -3,20 +3,14 @@ package migrate
 import (
 	"fmt"
 	nurl "net/url"
+	"os"
+	"path/filepath"
 	"runtime"
 	"strings"
 
-	crontriggers "github.com/hasura/graphql-engine/cli/metadata/cron_triggers"
+	"github.com/hasura/graphql-engine/cli/internal/hasura"
 
-	"github.com/hasura/graphql-engine/cli/metadata"
-	"github.com/hasura/graphql-engine/cli/metadata/actions"
-	"github.com/hasura/graphql-engine/cli/metadata/allowlist"
-	"github.com/hasura/graphql-engine/cli/metadata/functions"
-	"github.com/hasura/graphql-engine/cli/metadata/querycollections"
-	"github.com/hasura/graphql-engine/cli/metadata/remoteschemas"
-	"github.com/hasura/graphql-engine/cli/metadata/tables"
-	"github.com/hasura/graphql-engine/cli/metadata/types"
-	"github.com/hasura/graphql-engine/cli/metadata/version"
+	migratedb "github.com/hasura/graphql-engine/cli/migrate/database"
 
 	"github.com/hasura/graphql-engine/cli"
 	"github.com/pkg/errors"
@@ -118,17 +112,57 @@ func FilterCustomQuery(u *nurl.URL) *nurl.URL {
 	return &ux
 }
 
-func NewMigrate(ec *cli.ExecutionContext, isCmd bool) (*Migrate, error) {
+func NewMigrate(ec *cli.ExecutionContext, isCmd bool, sourceName string, sourceKind hasura.SourceKind) (*Migrate, error) {
+	// set a default source kind
+	if len(sourceKind) < 1 {
+		return nil, fmt.Errorf("invalid source kind")
+	}
+	// create a new directory for the database if it does'nt exists
+	if f, _ := os.Stat(filepath.Join(ec.MigrationDir, sourceName)); f == nil {
+		err := os.MkdirAll(filepath.Join(ec.MigrationDir, sourceName), 0755)
+		if err != nil {
+			return nil, err
+		}
+	}
 	dbURL := GetDataPath(ec)
-	fileURL := GetFilePath(ec.MigrationDir)
-	t, err := New(fileURL.String(), dbURL.String(), isCmd, int(ec.Config.Version), ec.Config.ServerConfig.TLSConfig, ec.Logger)
+	fileURL := GetFilePath(filepath.Join(ec.MigrationDir, sourceName))
+	opts := NewMigrateOpts{
+		fileURL.String(),
+		dbURL.String(),
+		isCmd, int(ec.Config.Version),
+		ec.Config.ServerConfig.TLSConfig,
+		ec.Logger,
+		&migratedb.HasuraOpts{
+			HasMetadataV3: ec.HasMetadataV3,
+			SourceName:    sourceName,
+			SourceKind:    sourceKind,
+			Client:        ec.APIClient,
+			V2MetadataOps: func() hasura.V2CommonMetadataOperations {
+				if ec.Config.Version >= cli.V3 {
+					return ec.APIClient.V1Metadata
+				}
+				return nil
+			}(),
+			MetadataOps:          cli.GetCommonMetadataOps(ec),
+			MigrationsStateStore: cli.GetMigrationsStateStore(ec),
+			SettingsStateStore:   cli.GetSettingsStateStore(ec),
+		},
+	}
+	if ec.HasMetadataV3 {
+		opts.hasuraOpts.PGSourceOps = ec.APIClient.V2Query
+		opts.hasuraOpts.MSSQLSourceOps = ec.APIClient.V2Query
+		opts.hasuraOpts.GenericQueryRequest = ec.APIClient.V2Query.Send
+	} else {
+		opts.hasuraOpts.PGSourceOps = ec.APIClient.V1Query
+		opts.hasuraOpts.GenericQueryRequest = ec.APIClient.V1Query.Send
+	}
+
+	t, err := New(opts)
 	if err != nil {
 		return nil, errors.Wrap(err, "cannot create migrate instance")
 	}
-	// Set Plugins
-	SetMetadataPluginsWithDir(ec, t)
-	if ec.Config.Version == cli.V2 {
-		t.EnableCheckMetadataConsistency(true)
+	if ec.Config.Version >= cli.V2 {
+		t.databaseDrv.EnableCheckMetadataConsistency(true)
 	}
 	return t, nil
 }
@@ -154,29 +188,6 @@ func GetDataPath(ec *cli.ExecutionContext) *nurl.URL {
 	}
 	host.RawQuery = q.Encode()
 	return host
-}
-
-func SetMetadataPluginsWithDir(ec *cli.ExecutionContext, drv *Migrate, dir ...string) {
-	var metadataDir string
-	if len(dir) == 0 {
-		metadataDir = ec.MetadataDir
-	} else {
-		metadataDir = dir[0]
-	}
-	plugins := make(types.MetadataPlugins, 0)
-	if ec.Config.Version == cli.V2 && metadataDir != "" {
-		plugins = append(plugins, version.New(ec, metadataDir))
-		plugins = append(plugins, tables.New(ec, metadataDir))
-		plugins = append(plugins, functions.New(ec, metadataDir))
-		plugins = append(plugins, querycollections.New(ec, metadataDir))
-		plugins = append(plugins, allowlist.New(ec, metadataDir))
-		plugins = append(plugins, remoteschemas.New(ec, metadataDir))
-		plugins = append(plugins, actions.New(ec, metadataDir))
-		plugins = append(plugins, crontriggers.New(ec, metadataDir))
-	} else {
-		plugins = append(plugins, metadata.New(ec, ec.MigrationDir))
-	}
-	drv.SetMetadataPlugins(plugins)
 }
 
 func GetFilePath(dir string) *nurl.URL {

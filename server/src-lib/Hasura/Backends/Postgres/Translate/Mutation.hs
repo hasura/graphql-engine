@@ -5,15 +5,16 @@ where
 
 import           Hasura.Prelude
 
-import qualified Data.HashMap.Strict                as Map
+import qualified Data.HashMap.Strict                   as Map
 
 import           Data.Text.Extended
 
-import qualified Hasura.Backends.Postgres.SQL.DML   as S
+import qualified Hasura.Backends.Postgres.SQL.DML      as S
 
 import           Hasura.Backends.Postgres.SQL.Types
 import           Hasura.Backends.Postgres.SQL.Value
-import           Hasura.RQL.Instances               ()
+import           Hasura.Backends.Postgres.Types.Column
+import           Hasura.RQL.Instances                  ()
 import           Hasura.RQL.Types
 import           Hasura.SQL.Types
 
@@ -24,7 +25,7 @@ import           Hasura.SQL.Types
 -- `SELECT ("row"::table).* VALUES (1, 'Robert', 23) AS "row"`.
 mkSelectExpFromColumnValues
   :: (MonadError QErr m)
-  => QualifiedTable -> [ColumnInfo 'Postgres] -> [ColumnValues TxtEncodedPGVal] -> m S.Select
+  => QualifiedTable -> [ColumnInfo 'Postgres] -> [ColumnValues 'Postgres TxtEncodedPGVal] -> m S.Select
 mkSelectExpFromColumnValues qt allCols = \case
   []       -> return selNoRows
   colVals  -> do
@@ -54,4 +55,4 @@ mkSelectExpFromColumnValues qt allCols = \case
     txtEncodedToSQLExp colTy = \case
       TENull          -> S.SENull
       TELit textValue ->
-        S.withTyAnn (unsafePGColumnToRepresentation colTy) $ S.SELit textValue
+        S.withTyAnn (unsafePGColumnToBackend colTy) $ S.SELit textValue

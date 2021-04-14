@@ -1,0 +1,11 @@
+array_relationships:
+- name: locations
+  using:
+    foreign_key_constraint_on:
+      column: vehicle_id
+      table:
+        name: vehicle_location
+        schema: public
+table:
+  name: vehicle
+  schema: public

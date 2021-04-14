@@ -69,3 +69,4 @@ If the insert statement was successful, the data is now added to the DB.
 
 Navigate to the ``migrations`` directory in your Hasura project. The latest migration
 will be the the insert statement that was just run.
+

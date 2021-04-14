@@ -1,0 +1,20 @@
+description: Select cities not starting with any letter A-G
+url: /v1/graphql
+status: 200
+response:
+  data:
+    city:
+      - name: New York
+        country: USA
+      - name: New Orleans
+        country: USA
+query:
+  query: |
+    query {
+      city (
+      where: {name: {_nlike: "[A-G]%" }}
+      ) {
+        name
+        country
+      }
+    }

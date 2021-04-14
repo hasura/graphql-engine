@@ -62,3 +62,4 @@ Applying only metadata
 If you're managing migrations with a different tool and want to use this image to apply only the
 metadata, mount a directory with just a ``metadata.yaml`` file and the script will
 apply the metadata.
+

@@ -4,8 +4,8 @@ import           Hasura.Prelude
 
 import           Hasura.RQL.IR.BoolExp
 import           Hasura.RQL.IR.Returning
+import           Hasura.RQL.Types.Backend
 import           Hasura.RQL.Types.Column
-import           Hasura.RQL.Types.Common
 import           Hasura.SQL.Backend
 
 
@@ -17,10 +17,10 @@ data AnnDelG (b :: BackendType) v
   , dqp1AllCols :: ![ColumnInfo b]
   }
 
-type AnnDel b = AnnDelG b (SQLExp b)
+type AnnDel b = AnnDelG b (SQLExpression b)
 
 traverseAnnDel
-  :: (Applicative f)
+  :: (Applicative f, Backend backend)
   => (a -> f b)
   -> AnnDelG backend a
   -> f (AnnDelG backend b)

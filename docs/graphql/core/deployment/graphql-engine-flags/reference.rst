@@ -1,11 +1,11 @@
 .. meta::
-   :description: Hasura GraphQL engine server flags reference
-   :keywords: hasura, docs, deployment, server, flags
+   :description: Hasura GraphQL engine server config reference
+   :keywords: hasura, docs, deployment, server, config, flags, env vars
 
 .. _server_flag_reference:
 
-GraphQL engine server flags reference
-=====================================
+GraphQL engine server config reference
+======================================
 
 .. contents:: Table of contents
   :backlinks: none
@@ -23,8 +23,8 @@ Every GraphQL engine command is structured as:
 
 The flags can be passed as ENV variables as well.
 
-Server flags
-------------
+Server config
+-------------
 
 For the ``graphql-engine`` command these are the available flags and ENV variables:
 
@@ -44,6 +44,15 @@ For the ``graphql-engine`` command these are the available flags and ENV variabl
        ``postgres://<user>:<password>@<host>:<port>/<db-name>``
 
        Example: ``postgres://admin:mypass@mydomain.com:5432/mydb``
+
+   * - ``--metadata-database-url <METADATA-DATABASE-URL>``
+     - ``HASURA_GRAPHQL_METADATA_DATABASE_URL``
+     - Postgres database URL that will be used to store the Hasura metadata. By default the database configured using ``HASURA_GRAPHQL_DATABASE_URL``
+       will be used to store the metadata. *(Available for versions > v2.0.0)*
+
+       ``postgres://<user>:<password>@<host>:<port>/<db-name>``
+
+       Example: ``postgres://admin:mypass@mydomain.com:5432/metadata_db``
 
 Or you can specify the following options *(only via flags)*:
 
@@ -69,8 +78,8 @@ Or you can specify the following options *(only via flags)*:
 
 .. _command-flags:
 
-Command flags
--------------
+Command config
+--------------
 
 For the ``serve`` sub-command these are the available flags and ENV variables:
 
@@ -151,6 +160,12 @@ For the ``serve`` sub-command these are the available flags and ENV variables:
      - Interval in milliseconds to sleep before trying to fetch events again after a fetch
        returned no events from postgres
 
+   * - ``--async-actions-fetch-interval``
+     - ``HASURA_GRAPHQL_ASYNC_ACTIONS_FETCH_INTERVAL``
+     - Interval in milliseconds to sleep before trying to fetch async actions again after a fetch
+       returned no async actions from metadata storage. Value ``0`` implies completely disable fetching
+       async actions from the storage.
+
    * - ``-s, --stripes <NO_OF_STRIPES>``
      - ``HASURA_GRAPHQL_PG_STRIPES``
      - Number of stripes (distinct sub-pools) to maintain with Postgres (default: 1).
@@ -173,6 +188,10 @@ For the ``serve`` sub-command these are the available flags and ENV variables:
    * - ``-i, --tx-iso <TXISO>``
      - ``HASURA_GRAPHQL_TX_ISOLATION``
      - Transaction isolation. read-committed / repeatable-read / serializable (default: read-commited)
+
+   * - ``--retries <NO_OF_RETRIES>``
+     - ``HASURA_GRAPHQL_NO_OF_RETRIES``
+     - Number of retries if Postgres connection error occurs (default: 1)
 
    * - ``--stringify-numeric-types``
      - ``HASURA_GRAPHQL_STRINGIFY_NUMERIC_TYPES``
@@ -222,6 +241,26 @@ For the ``serve`` sub-command these are the available flags and ENV variables:
    * - ``--admin-internal-errors``
      - ``HASURA_GRAPHQL_ADMIN_INTERNAL_ERRORS``
      - Include the ``internal`` key in the errors extensions of the response for GraphQL requests with the admin role (if required).
+
+   * - ``--enable-remote-schema-permissions``
+     - ``HASURA_GRAPHQL_ENABLE_REMOTE_SCHEMA_PERMISSIONS``
+     - Enable remote schema permissions (default: ``false``)
+
+   * - ``--infer-function-permissions``
+     - ``HASURA_GRAPHQL_INFER_FUNCTION_PERMISSIONS``
+     - When the ``--infer-function-permissions`` flag is set to ``false``, a function ``f``, stable, immutable or volatile is
+       only exposed for a role ``r`` if there is a permission defined on the function ``f`` for the role ``r``, creating a
+       function permission will only be allowed if there is a select permission on the table type.
+
+       When the ``--infer-function-permissions`` flag is set to ``true`` or the flag is omitted (defaults to ``true``), the
+       permission of the function is inferred from the select permissions from the target table of the function, only for
+       stable/immutable functions. Volatile functions are not exposed to any of the roles in this case.
+
+       *(Available for versions > v2.0.0)*
+
+   * - ``--experimental-features``
+     - ``HASURA_GRAPHQL_EXPERIMENTAL_FEATURES``
+     - List of experimental features to be enabled. A comma separated value is expected. Options: ``inherited_roles``.
 
 .. note::
 

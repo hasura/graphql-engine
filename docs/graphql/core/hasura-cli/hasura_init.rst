@@ -1,5 +1,5 @@
 .. meta::
-   :description: Use hasura init to initialise a directory for Hasura migrations on the Hasura CLI
+   :description: Initialize a directory for Hasura GraphQL engine migrations using the Hasura CLI
    :keywords: hasura, docs, CLI, hasura init
 
 .. _hasura_init:
@@ -35,7 +35,7 @@ Examples
     # Create a hasura project in the current working directory
     hasura init .
 
-    # See https://hasura.io/docs/1.0/graphql/manual/migrations/index.html for more details
+    # See https://hasura.io/docs/latest/graphql/core/migrations/index.html for more details
 
 Options
 ~~~~~~~
@@ -46,7 +46,7 @@ Options
       --endpoint string           http(s) endpoint for Hasura GraphQL engine
   -h, --help                      help for init
       --install-manifest string   install manifest to be cloned
-      --version int               config version to be used (default 2)
+      --version int               config version to be used (default 3)
 
 Options inherited from parent commands
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

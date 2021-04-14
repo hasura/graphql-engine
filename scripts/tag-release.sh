@@ -33,7 +33,6 @@ fi
 
 # replace the image version with latest tag for all references in install-manifests
 find "$ROOT/install-manifests" \
-     "$ROOT/scripts/cli-migrations" \
      -type f -exec sed -i -E \
      's#(hasura/graphql-engine:)v(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)(\-[0-9A-Za-z-]+(\.[0-9A-Za-z-]+)*)?(\+[0-9A-Za-z-]+(\.[0-9A-Za-z-]+)*)?(.*)*$#\1'"${TAG}"'\9#' {} \;
 
@@ -42,7 +41,6 @@ find "$ROOT/install-manifests" \
 echo $TAG $(cat "$ROOT/server/src-rsr/catalog_version.txt") >> "$ROOT/server/src-rsr/catalog_versions.txt"
 
 git add "$ROOT/install-manifests" \
-        "$ROOT/scripts/cli-migrations" \
         "$ROOT/server/src-rsr"
 
 git commit -m "tag release $TAG"

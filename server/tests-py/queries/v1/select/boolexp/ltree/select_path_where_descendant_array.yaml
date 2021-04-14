@@ -1,0 +1,18 @@
+description: Select descendants of an array of `ltree` arguments
+url: /v1/query
+status: 200
+response:
+  - path: Tree.Science.Astronomy
+  - path: Tree.Science.Astronomy.Astrophysics
+  - path: Tree.Science.Astronomy.Cosmology
+  - path: Tree.Hobbies
+  - path: Tree.Hobbies.Amateurs_Astronomy
+query:
+  type: select
+  args:
+    table: tree
+    where:
+      path:
+        $descendant_any: ["Tree.Science.Astronomy", "Tree.Hobbies"]
+    columns:
+      - path

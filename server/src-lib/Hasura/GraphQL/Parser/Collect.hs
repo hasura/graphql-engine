@@ -23,7 +23,7 @@ import           Language.GraphQL.Draft.Syntax
 import           Data.Text.Extended
 import           Hasura.GraphQL.Parser.Class
 import           Hasura.GraphQL.Parser.Schema
-import           Hasura.GraphQL.Utils          (showNames)
+
 
 -- | Collects the effective set of fields queried by a selection set by
 -- flattening fragments and merging duplicate fields.
@@ -153,7 +153,7 @@ flattenSelectionSet objectTypeNames boolParser = fmap concat . traverse flattenS
         Nothing -> pure ()
         Just duplicatedDirectives -> parseError
           $ "the following directives are used more than once: "
-          <> showNames duplicatedDirectives
+          <> commaSeparated duplicatedDirectives
 
 -- | Merges fields according to the rules in the GraphQL specification, specifically
 -- <§ 5.3.2 Field Selection Merging http://spec.graphql.org/June2018/#sec-Field-Selection-Merging>.

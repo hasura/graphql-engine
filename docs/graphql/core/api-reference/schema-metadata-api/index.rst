@@ -2,7 +2,7 @@
    :description: Hasura schema/metadata API reference
    :keywords: hasura, docs, schema/metadata API, API reference
 
-.. _metadata_apis:
+.. _schema_metadata_apis:
 
 Schema / Metadata API Reference
 ===============================
@@ -21,6 +21,13 @@ The schema / metadata API provides the following features:
 2. Modify Hasura metadata (permission rules and relationships).
 
 This is primarily intended to be used as an ``admin`` API to manage the Hasura schema and metadata.
+
+.. admonition:: Deprecation
+
+  In versions ``v2.0.0`` and above, the schema/metadata API is deprecated in favour of the :ref:`schema API <schema_apis>` and the
+  :ref:`metadata API <metadata_apis>`.
+
+  Though for backwards compatibility, the schema/metadata APIs will continue to function.
 
 Endpoint
 --------
@@ -44,9 +51,9 @@ Request body
 
 .. parsed-literal::
 
-   Query_
+   :ref:`Query <api_query>`
 
-.. _Query:
+.. _api_query:
 
 Query
 *****
@@ -85,7 +92,7 @@ The various types of queries are listed in the following table:
      - Synopsis
 
    * - **bulk**
-     - :ref:`Query <Query>` array
+     - :ref:`Query <api_query>` array
      - 1
      - Execute multiple operations in a single query
 
@@ -118,6 +125,11 @@ The various types of queries are listed in the following table:
      - :ref:`untrack_table_args <untrack_table_syntax>`
      - 1
      - Remove a table/view
+
+   * - :ref:`set_table_is_enum`
+     - :ref:`set_table_is_enum_args <set_table_is_enum_syntax>`
+     - 1
+     - Set a tracked table as an enum table
 
    * - :ref:`track_function`
      - :ref:`FunctionName <FunctionName>`
@@ -264,6 +276,16 @@ The various types of queries are listed in the following table:
      - 1
      - Reload schema of an existing remote schema
 
+   * - :ref:`add_remote_schema_permissions`
+     - :ref:`add_remote_schema_permissions <add_remote_schema_permissions_syntax>`
+     - 1
+     - Add permissions to a role of an existing remote schema
+
+   * - :ref:`drop_remote_schema_permissions`
+     - :ref:`drop_remote_schema_permissions <drop_remote_schema_permissions_syntax>`
+     - 1
+     - Drop existing permissions defined for a role for a remote schema
+
    * - :ref:`create_remote_relationship`
      - :ref:`create_remote_relationship_args <create_remote_relationship_syntax>`
      - 1
@@ -278,7 +300,6 @@ The various types of queries are listed in the following table:
      - :ref:`delete_remote_relationship_args <delete_remote_relationship_syntax>`
      - 1
      - Delete an existing remote relationship
-
 
    * - :ref:`export_metadata`
      - :ref:`Empty Object`
@@ -370,6 +391,16 @@ The various types of queries are listed in the following table:
      - 1
      - Drop an action permission
 
+   * - :ref:`create_rest_endpoint`
+     - :ref:`create_rest_endpoint_args <create_rest_endpoint_syntax>`
+     - 3
+     - Create a RESTified GraphQL Endpoint
+
+   * - :ref:`drop_rest_endpoint`
+     - :ref:`drop_rest_endpoint_args <drop_rest_endpoint_syntax>`
+     - 3
+     - Drop a RESTified GraphQL Endpoint
+
 **See:**
 
 - :ref:`Run SQL <api_run_sql>`
@@ -378,6 +409,7 @@ The various types of queries are listed in the following table:
 - :ref:`Relationships <api_relationship>`
 - :ref:`Computed Fields <api_computed_field>`
 - :ref:`Permissions <api_permission>`
+- :ref:`Remote Schema Permissions <remote_schema_api_permission>`
 - :ref:`Event Triggers <api_event_triggers>`
 - :ref:`Remote Schemas <api_remote_schemas>`
 - :ref:`Query Collections <api_query_collections>`
@@ -463,13 +495,14 @@ See :ref:`server_flag_reference` for info on setting the above flag/env var.
   Custom Functions <custom-functions>
   Relationships <relationship>
   Permissions <permission>
+  Remote Schema Permissions <remote-schema-permissions>
   Computed Fields <computed-field>
   Event Triggers <event-triggers>
   Scheduled Triggers <scheduled-triggers>
   Remote Schemas <remote-schemas>
   Remote Relationships <remote-relationships>
   Query Collections <query-collections>
+  RESTified GraphQL Endpoints <restified-endpoints>
   Custom Types <custom-types>
   Actions <actions>
   Manage Metadata <manage-metadata>
-  Common syntax definitions <syntax-defs>

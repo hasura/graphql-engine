@@ -14,8 +14,8 @@ import qualified Data.Environment                             as Env
 import qualified Data.Sequence                                as DS
 import qualified Database.PG.Query                            as Q
 
+import           Control.Monad.Trans.Control                  (MonadBaseControl)
 import           Data.Aeson
-import           Instances.TH.Lift                            ()
 
 import qualified Hasura.Backends.Postgres.SQL.DML             as S
 import qualified Hasura.Tracing                               as Tracing
@@ -23,23 +23,26 @@ import qualified Hasura.Tracing                               as Tracing
 import           Hasura.Backends.Postgres.Connection
 import           Hasura.Backends.Postgres.Execute.Mutation
 import           Hasura.Backends.Postgres.Translate.Returning
+import           Hasura.Backends.Postgres.Types.Table
 import           Hasura.EncJSON
 import           Hasura.RQL.DML.Internal
 import           Hasura.RQL.DML.Types
 import           Hasura.RQL.IR.Delete
 import           Hasura.RQL.Types
+import           Hasura.RQL.Types.Run
 import           Hasura.Server.Version                        (HasVersion)
+import           Hasura.Session
 
 
 validateDeleteQWith
-  :: (UserInfoM m, QErrM m, CacheRM m)
+  :: (UserInfoM m, QErrM m, TableInfoRM 'Postgres m)
   => SessVarBldr 'Postgres m
   -> (ColumnType 'Postgres -> Value -> m S.SQLExp)
   -> DeleteQuery
   -> m (AnnDel 'Postgres)
 validateDeleteQWith sessVarBldr prepValBldr
-  (DeleteQuery tableName rqlBE mRetCols) = do
-  tableInfo <- askTabInfo tableName
+  (DeleteQuery tableName _ rqlBE mRetCols) = do
+  tableInfo <- askTabInfoSource tableName
   let coreInfo = _tiCoreInfo tableInfo
 
   -- If table is view then check if it deletable
@@ -65,7 +68,7 @@ validateDeleteQWith sessVarBldr prepValBldr
 
   -- convert the where clause
   annSQLBoolExp <- withPathK "where" $
-    convBoolExp fieldInfoMap selPerm rqlBE sessVarBldr prepValBldr
+    convBoolExp fieldInfoMap selPerm rqlBE sessVarBldr (valueParserWithCollectableType prepValBldr)
 
   resolvedDelFltr <- convAnnBoolExpPartialSQL sessVarBldr $
                      dpiFilter delPerm
@@ -83,17 +86,24 @@ validateDeleteQWith sessVarBldr prepValBldr
 validateDeleteQ
   :: (QErrM m, UserInfoM m, CacheRM m)
   => DeleteQuery -> m (AnnDel 'Postgres, DS.Seq Q.PrepArg)
-validateDeleteQ =
-  runDMLP1T . validateDeleteQWith sessVarFromCurrentSetting binRHSBuilder
+validateDeleteQ query = do
+  let source = doSource query
+  tableCache :: TableCache 'Postgres <- askTableCache source
+  flip runTableCacheRT (source, tableCache) $ runDMLP1T $
+    validateDeleteQWith sessVarFromCurrentSetting binRHSBuilder query
 
 runDelete
   :: ( HasVersion, QErrM m, UserInfoM m, CacheRM m
-     , MonadTx m, HasSQLGenCtx m, MonadIO m
-     , Tracing.MonadTrace m
+     , HasServerConfigCtx m, MonadIO m
+     , Tracing.MonadTrace m, MonadBaseControl IO m
+     , MetadataM m
      )
   => Env.Environment
   -> DeleteQuery
   -> m EncJSON
 runDelete env q = do
-  strfyNum <- stringifyNum <$> askSQLGenCtx
-  validateDeleteQ q >>= execDeleteQuery env strfyNum Nothing
+  sourceConfig <- askSourceConfig (doSource q)
+  strfyNum <- stringifyNum . _sccSQLGenCtx <$> askServerConfigCtx
+  validateDeleteQ q
+    >>= runQueryLazyTx (_pscExecCtx sourceConfig) Q.ReadWrite
+        . execDeleteQuery env strfyNum Nothing

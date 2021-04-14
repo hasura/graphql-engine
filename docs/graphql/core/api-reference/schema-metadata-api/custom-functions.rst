@@ -19,13 +19,20 @@ Track/untrack a custom SQL function in the Hasura GraphQL engine.
 
 Only tracked custom functions are available for querying/mutating/subscribing data over the GraphQL API.
 
+.. admonition:: Deprecation
+
+  In versions ``v2.0.0`` and above, the schema/metadata API is deprecated in favour of the :ref:`schema API <schema_apis>` and the
+  :ref:`metadata API <metadata_apis>`.
+
+  Though for backwards compatibility, the schema/metadata APIs will continue to function.
+
 .. _track_function:
 
 track_function
 --------------
 
 ``track_function`` is used to add a custom SQL function to the ``query`` root field of the GraphQL schema.
-Also refer a note :ref:`here <note>`.
+Also refer a note :ref:`here <function_req_note>`.
 
 Add an SQL function ``search_articles``:
 
@@ -51,7 +58,7 @@ track_function v2
 Version 2 of ``track_function`` is used to add a custom SQL function to the GraphQL schema.
 It supports more configuration options than v1, and also supports tracking
 functions as mutations.
-Also refer a note :ref:`here <note>`.
+Also refer a note :ref:`here <function_req_note>`.
 
 Track an SQL function called ``search_articles`` with a Hasura session argument:
 
@@ -107,7 +114,7 @@ In most cases you will want ``VOLATILE`` functions to only be exposed as
 mutations, and only ``STABLE`` and ``IMMUTABLE`` functions to be queries.
 When tracking ``VOLATILE`` functions under the ``query`` root, the user needs
 to guarantee that the field is idempotent and side-effect free, in the context
-of the resulting GraphQL API. 
+of the resulting GraphQL API.
 
 One such use case might be a function that wraps a simple query and performs
 some logging visible only to administrators.
@@ -137,38 +144,6 @@ Args syntax
      - false
      - :ref:`Function Configuration <function_configuration>`
      - Configuration for the SQL function
-
-.. _function_configuration:
-
-Function Configuration
-^^^^^^^^^^^^^^^^^^^^^^
-
-.. list-table::
-   :header-rows: 1
-
-   * - Key
-     - Required
-     - Schema
-     - Description
-   * - session_argument
-     - false
-     - `String`
-     - Function argument which accepts session info JSON
-   * - exposed_as
-     - false
-     - `String`
-     - In which part of the schema should we expose this function? Either "mutation" or "query".
-
-.. _note:
-
-.. note::
-
-   Currently, only functions which satisfy the following constraints can be exposed over the GraphQL API
-   (*terminology from* `Postgres docs <https://www.postgresql.org/docs/current/sql-createfunction.html>`__):
-
-   - **Function behaviour**: ``STABLE`` or ``IMMUTABLE`` functions may *only* be exposed as queries (i.e. with ``exposed_as: query``)
-   - **Return type**: MUST be ``SETOF <table-name>`` where ``<table-name>`` is already tracked
-   - **Argument modes**: ONLY ``IN``
 
 .. _untrack_function:
 

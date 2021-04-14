@@ -1,0 +1,10 @@
+object_relationships:
+- name: created_by_user
+  using:
+    foreign_key_constraint_on: created_by_user_id
+- name: option
+  using:
+    foreign_key_constraint_on: option_id
+table:
+  name: vote
+  schema: public

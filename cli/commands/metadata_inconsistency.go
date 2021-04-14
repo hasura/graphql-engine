@@ -8,7 +8,7 @@ import (
 func newMetadataInconsistencyCmd(ec *cli.ExecutionContext) *cobra.Command {
 	metadataInconsistencyCmd := &cobra.Command{
 		Use:          "inconsistency",
-		Short:        "Manage inconsistent objects in Hasura Metadata",
+		Short:        "Manage inconsistent objects in Hasura metadata",
 		Aliases:      []string{"inconsistencies", "ic"},
 		SilenceUsage: true,
 	}

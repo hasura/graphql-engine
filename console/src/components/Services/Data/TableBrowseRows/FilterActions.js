@@ -1,7 +1,13 @@
 // import Endpoints, {globalCookiePolicy} from '../../Endpoints';
 import { defaultCurFilter } from '../DataState';
-import { vMakeTableRequests } from './ViewActions';
+import { vMakeTableRequests, vMakeExportRequest } from './ViewActions';
 import { Integers, Reals } from '../constants';
+import {
+  downloadObjectAsJsonFile,
+  downloadObjectAsCsvFile,
+  getCurrTimeForFileName,
+  getConfirmation,
+} from '../../../Common/utils/jsUtils';
 
 const LOADING = 'ViewTable/FilterQuery/LOADING';
 
@@ -112,6 +118,84 @@ const runQuery = tableSchema => {
   };
 };
 
+const exportDataQuery = (tableSchema, type) => {
+  return (dispatch, getState) => {
+    const count = getState().tables.view.count;
+
+    const confirmed = getConfirmation(
+      `There ${
+        count === 1 ? 'is 1 row' : `are ${count} rows`
+      } selected for export.`
+    );
+    if (!confirmed) {
+      return;
+    }
+
+    const state = getState().tables.view.curFilter;
+    let finalWhereClauses = state.where.$and.filter(w => {
+      const colName = Object.keys(w)[0].trim();
+      if (colName === '') {
+        return false;
+      }
+      const opName = Object.keys(w[colName])[0].trim();
+      if (opName === '') {
+        return false;
+      }
+      return true;
+    });
+
+    finalWhereClauses = finalWhereClauses.map(w => {
+      const colName = Object.keys(w)[0];
+      const opName = Object.keys(w[colName])[0];
+      const val = w[colName][opName];
+
+      if (['$in', '$nin'].includes(opName)) {
+        w[colName][opName] = parseArray(val);
+        return w;
+      }
+
+      const colType = tableSchema.columns.find(c => c.column_name === colName)
+        .data_type;
+      if (Integers.indexOf(colType) > 0) {
+        w[colName][opName] = parseInt(val, 10);
+        return w;
+      }
+      if (Reals.indexOf(colType) > 0) {
+        w[colName][opName] = parseFloat(val);
+        return w;
+      }
+      if (colType === 'boolean') {
+        if (val === 'true') {
+          w[colName][opName] = true;
+        } else if (val === 'false') {
+          w[colName][opName] = false;
+        }
+      }
+      return w;
+    });
+    const newQuery = {
+      where: { $and: finalWhereClauses },
+      order_by: state.order_by.filter(w => w.column.trim() !== ''),
+    };
+    if (newQuery.where.$and.length === 0) {
+      delete newQuery.where;
+    }
+    if (newQuery.order_by.length === 0) {
+      delete newQuery.order_by;
+    }
+
+    const { table_schema, table_name } = tableSchema;
+    const fileName = `export_${table_schema}_${table_name}_${getCurrTimeForFileName()}`;
+
+    dispatch({ type: 'ViewTable/V_SET_QUERY_OPTS', queryStuff: newQuery });
+    dispatch(vMakeExportRequest()).then(d => {
+      if (d) {
+        if (type === 'JSON') downloadObjectAsJsonFile(fileName, d);
+        else if (type === 'CSV') downloadObjectAsCsvFile(fileName, d);
+      }
+    });
+  };
+};
 const filterReducer = (state = defaultCurFilter, action) => {
   const i = action.index;
   const newFilter = {};
@@ -285,4 +369,5 @@ export {
   setLoading,
   unsetLoading,
   runQuery,
+  exportDataQuery,
 };
