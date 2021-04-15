@@ -218,7 +218,7 @@ if [ "$MODE" = "graphql-engine" ]; then
       # works when cabal.project.dev-sh.local is edited to turn on optimizations.
       # See also: https://hackage.haskell.org/package/cabal-plan
       distdir=$(cat dist-newstyle/cache/plan.json | jq -r '."install-plan"[] | select(."id" == "graphql-engine-1.0.0-inplace")? | ."dist-dir"')
-      hpcdir="$distdir/hpc/vanilla/mix/graphql-engine-1.0.0"
+      hpcdir="$distdir/hpc/dyn/mix/graphql-engine-1.0.0"
       echo_pretty "Generating code coverage report..."
       COVERAGE_DIR="dist-newstyle/dev.sh-coverage"
       hpc_invocation=(hpc markup
@@ -526,15 +526,15 @@ elif [ "$MODE" = "test" ]; then
     COVERAGE_DIR="dist-newstyle/dev.sh-coverage"
     hpc markup \
       --exclude=Main \
-      --hpcdir dist-newstyle/build/*/ghc-*/graphql-engine-*/noopt/hpc/vanilla/mix/graphql-engine-* \
-      --hpcdir dist-newstyle/build/*/ghc-*/graphql-engine-*/t/graphql-engine-tests/noopt/hpc/vanilla/mix/graphql-engine-tests \
+      --hpcdir dist-newstyle/build/*/ghc-*/graphql-engine-*/noopt/hpc/dyn/mix/graphql-engine-* \
+      --hpcdir dist-newstyle/build/*/ghc-*/graphql-engine-*/t/graphql-engine-tests/noopt/hpc/dyn/mix/graphql-engine-tests \
       --reset-hpcdirs graphql-engine-combined.tix \
       --fun-entry-count \
       --destdir="$COVERAGE_DIR" >/dev/null
     hpc report \
       --exclude=Main \
-      --hpcdir dist-newstyle/build/*/ghc-*/graphql-engine-*/noopt/hpc/vanilla/mix/graphql-engine-* \
-      --hpcdir dist-newstyle/build/*/ghc-*/graphql-engine-*/t/graphql-engine-tests/noopt/hpc/vanilla/mix/graphql-engine-tests \
+      --hpcdir dist-newstyle/build/*/ghc-*/graphql-engine-*/noopt/hpc/dyn/mix/graphql-engine-* \
+      --hpcdir dist-newstyle/build/*/ghc-*/graphql-engine-*/t/graphql-engine-tests/noopt/hpc/dyn/mix/graphql-engine-tests \
       --reset-hpcdirs graphql-engine-combined.tix
     echo_pretty "To view full coverage report open:"
     echo_pretty "  file://$(pwd)/$COVERAGE_DIR/hpc_index.html"
