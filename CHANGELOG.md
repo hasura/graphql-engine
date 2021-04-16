@@ -48,6 +48,7 @@ In the future, we will probably offer a way to explicitly choose which behaviour
 - console: add custom_column_names to track_table request with replaced invalid characters (#992)
 - console: add details button to the success notification to see inserted row
 - console: add request preview for REST endpoints
+- cli: fix errors being ignored during `metadata apply` in config v3 (fix #6784)
 
 ## v2.0.0-alpha.7
 

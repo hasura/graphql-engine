@@ -1,6 +1,8 @@
 package commands
 
 import (
+	"fmt"
+
 	"github.com/hasura/graphql-engine/cli"
 	"github.com/hasura/graphql-engine/cli/internal/metadataobject"
 	"github.com/hasura/graphql-engine/cli/internal/scripts"
@@ -92,8 +94,9 @@ func executeMetadata(cmd string, ec *cli.ExecutionContext) error {
 			}
 			return nil
 		}
-
-		metadataHandler.V2ApplyMetadata()
+		if err := metadataHandler.V2ApplyMetadata(); err != nil {
+			return fmt.Errorf("\n%w", err)
+		}
 	}
 	return nil
 }
