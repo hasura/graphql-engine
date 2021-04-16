@@ -206,6 +206,7 @@ This is how the HTTP access logs look like:
           },
           "error": null,
           "request_id": "072b3617-6653-4fd5-b5ee-580e9d098c3d",
+          "parameterized_query_hash": "7116865cef017c3b09e5c9271b0e182a6dcf4c01"
           "response_size": 105,
           "query": null
         },
@@ -215,8 +216,7 @@ This is how the HTTP access logs look like:
           "url": "/v1/graphql",
           "ip": "127.0.0.1",
           "method": "POST"
-        },
-        "parameterized_query_hash": "7116865cef017c3b09e5c9271b0e182a6dcf4c01"
+        }
       }
     }
 
