@@ -1,5 +1,3 @@
-{-# LANGUAGE OverloadedStrings #-}
-
 -- | Convert the simple BigQuery AST to an SQL query, ready to be passed
 -- to the odbc package's query/exec functions.
 
@@ -20,20 +18,20 @@ module Hasura.Backends.BigQuery.ToQuery
 import           Control.Monad.State.Strict
 import           Data.Bifunctor
 import           Data.Foldable
-import           Data.HashMap.Strict.InsOrd (InsOrdHashMap)
-import qualified Data.HashMap.Strict.InsOrd as OMap
-import           Data.List (intersperse)
-import           Data.List.NonEmpty (NonEmpty(..))
-import qualified Data.List.NonEmpty as NE
+import           Data.HashMap.Strict.InsOrd     (InsOrdHashMap)
+import qualified Data.HashMap.Strict.InsOrd     as OMap
+import           Data.List                      (intersperse)
+import           Data.List.NonEmpty             (NonEmpty (..))
+import qualified Data.List.NonEmpty             as NE
 import           Data.Maybe
 import           Data.String
-import           Data.Text (Text)
-import qualified Data.Text as T
-import qualified Data.Text.Lazy as LT
-import           Data.Text.Lazy.Builder (Builder)
-import qualified Data.Text.Lazy.Builder as LT
+import           Data.Text                      (Text)
+import qualified Data.Text                      as T
+import qualified Data.Text.Lazy                 as LT
+import           Data.Text.Lazy.Builder         (Builder)
+import qualified Data.Text.Lazy.Builder         as LT
 import           Data.Tuple
-import qualified Data.Vector as V
+import qualified Data.Vector                    as V
 import           Hasura.Backends.BigQuery.Types
 import           Prelude
 
@@ -109,25 +107,25 @@ fromExpression =
 fromScalarType :: ScalarType -> Printer
 fromScalarType =
   \case
-    StringScalarType -> "STRING"
-    BytesScalarType -> "BYTES"
-    IntegerScalarType -> "INT64"
-    FloatScalarType -> "FLOAT64"
-    BoolScalarType -> "BOOL"
-    TimestampScalarType -> "TIMESTAMP"
-    DateScalarType -> "DATE"
-    TimeScalarType -> "TIME"
-    DatetimeScalarType -> "DATETIME"
-    GeographyScalarType -> "GEOGRAPHY"
-    StructScalarType -> "STRUCT"
-    DecimalScalarType -> "DECIMAL"
+    StringScalarType     -> "STRING"
+    BytesScalarType      -> "BYTES"
+    IntegerScalarType    -> "INT64"
+    FloatScalarType      -> "FLOAT64"
+    BoolScalarType       -> "BOOL"
+    TimestampScalarType  -> "TIMESTAMP"
+    DateScalarType       -> "DATE"
+    TimeScalarType       -> "TIME"
+    DatetimeScalarType   -> "DATETIME"
+    GeographyScalarType  -> "GEOGRAPHY"
+    StructScalarType     -> "STRUCT"
+    DecimalScalarType    -> "DECIMAL"
     BigDecimalScalarType -> "BIGDECIMAL"
 
 fromOp :: Op -> Printer
 fromOp =
   \case
-    LessOp -> "<"
-    MoreOp -> ">"
+    LessOp        -> "<"
+    MoreOp        -> ">"
     MoreOrEqualOp -> ">="
     LessOrEqualOp -> "<="
 
@@ -139,7 +137,7 @@ fromPath path =
              ValueExpression . StringValue . LT.toStrict . LT.toLazyText . go
     go =
       \case
-        RootPath -> "$"
+        RootPath      -> "$"
         IndexPath r i -> go r <> "[" <> LT.fromString (show i) <> "]"
         FieldPath r f -> go r <> "." <> LT.fromText f
 
@@ -180,7 +178,7 @@ fromSelect Select {..} = finalExpression
         , fromWhere selectWhere
         , fromOrderBys selectTop selectOffset selectOrderBy
         , case selectGroupBy of
-            [] -> ""
+            []         -> ""
             fieldNames -> "GROUP BY " <+> SepByPrinter ", " (map fromFieldName fieldNames)
         ]
 
@@ -245,15 +243,15 @@ fromOrderBy OrderBy {..} =
 fromOrder :: Order -> Printer
 fromOrder =
   \case
-    AscOrder -> "ASC"
+    AscOrder  -> "ASC"
     DescOrder -> "DESC"
 
 fromNullsOrder :: NullsOrder -> Printer
 fromNullsOrder =
   \case
     NullsAnyOrder -> ""
-    NullsFirst -> " NULLS FIRST"
-    NullsLast -> " NULLS LAST"
+    NullsFirst    -> " NULLS FIRST"
+    NullsLast     -> " NULLS LAST"
 
 fromJoinAlias :: EntityAlias -> Printer
 fromJoinAlias EntityAlias {entityAliasText} =
@@ -339,9 +337,9 @@ fromWhere =
           "WHERE " <+>
           IndentPrinter 6 (fromExpression (AndExpression collapsedExpressions))
       where collapse (AndExpression [x]) = collapse x
-            collapse (AndExpression []) = trueExpression
-            collapse (OrExpression [x]) = collapse x
-            collapse x = x
+            collapse (AndExpression [])  = trueExpression
+            collapse (OrExpression [x])  = collapse x
+            collapse x                   = x
 
 fromFrom :: From -> Printer
 fromFrom =

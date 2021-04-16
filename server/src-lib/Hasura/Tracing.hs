@@ -1,4 +1,3 @@
-{-# LANGUAGE RecordWildCards      #-}
 {-# LANGUAGE UndecidableInstances #-}
 
 module Hasura.Tracing

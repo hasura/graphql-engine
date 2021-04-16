@@ -1,5 +1,3 @@
-{-# LANGUAGE AllowAmbiguousTypes #-}
-
 module Hasura.RQL.Types.Backend where
 
 import           Hasura.Prelude

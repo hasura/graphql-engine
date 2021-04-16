@@ -1,6 +1,4 @@
-{-# LANGUAGE CPP             #-}
-{-# LANGUAGE RankNTypes      #-}
-{-# LANGUAGE RecordWildCards #-}
+{-# LANGUAGE CPP #-}
 
 module Hasura.GraphQL.Transport.WebSocket
   ( createWSServerApp

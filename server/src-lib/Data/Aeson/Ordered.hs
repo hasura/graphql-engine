@@ -1,5 +1,4 @@
-{-# LANGUAGE CPP                #-}
-{-# LANGUAGE DeriveDataTypeable #-}
+{-# LANGUAGE CPP #-}
 
 -- | A version of aeson that parses with key order preserved.
 --

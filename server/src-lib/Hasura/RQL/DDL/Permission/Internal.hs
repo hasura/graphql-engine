@@ -1,5 +1,3 @@
-{-# LANGUAGE TypeFamilyDependencies #-}
-
 module Hasura.RQL.DDL.Permission.Internal where
 
 import           Hasura.Prelude

@@ -1,4 +1,3 @@
-{-# LANGUAGE AllowAmbiguousTypes #-}
 module Hasura.RQL.Types.Column
   ( ColumnType(..)
   , _ColumnScalar

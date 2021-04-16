@@ -1,6 +1,3 @@
-{-# LANGUAGE NamedFieldPuns  #-}
-{-# LANGUAGE RecordWildCards #-}
-
 module Hasura.RQL.Types.RemoteRelationship
   ( RemoteRelationshipName(..)
   , remoteRelationshipNameToText

@@ -1,5 +1,5 @@
 -- | Execution of GraphQL queries over HTTP transport
-{-# LANGUAGE RecordWildCards #-}
+
 module Hasura.GraphQL.Transport.HTTP
   ( QueryCacheKey(..)
   , MonadExecuteQuery(..)

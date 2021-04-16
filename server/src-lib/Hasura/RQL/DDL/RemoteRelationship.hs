@@ -1,4 +1,3 @@
-{-# LANGUAGE RecordWildCards #-}
 module Hasura.RQL.DDL.RemoteRelationship
   ( runCreateRemoteRelationship
   , runDeleteRemoteRelationship
@@ -14,6 +13,7 @@ import qualified Hasura.SQL.AnyBackend      as AB
 
 import           Hasura.EncJSON
 import           Hasura.RQL.Types
+
 
 runCreateRemoteRelationship
   :: forall m b

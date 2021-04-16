@@ -1,18 +1,16 @@
-{-# LANGUAGE DerivingVia #-}
-
 module Control.Monad.Trans.Managed where
-  
+
 import           Prelude
 
 import           Control.Exception.Lifted    (bracket, bracket_)
-import           Control.Monad.Codensity     (Codensity(..))
-import           Control.Monad.Fix           (MonadFix(..))
+import           Control.Monad.Codensity     (Codensity (..))
+import           Control.Monad.Fix           (MonadFix (..))
 import           Control.Monad.IO.Class      (MonadIO, liftIO)
 import           Control.Monad.Reader.Class  (MonadReader)
 import           Control.Monad.State.Class   (MonadState)
-import           Control.Monad.Trans         (MonadTrans(..))
+import           Control.Monad.Trans         (MonadTrans (..))
 import           Control.Monad.Trans.Control (MonadBaseControl)
-import           Control.Monad.Trans.Reader  (ReaderT(..))
+import           Control.Monad.Trans.Reader  (ReaderT (..))
 import           GHC.IO.Unsafe               (unsafeDupableInterleaveIO)
 
 import qualified Control.Concurrent          as C
@@ -53,16 +51,16 @@ allocate_ setup finalize = ManagedT (\k -> bracket_ setup finalize (k ()))
 -- Watch out: this function might leak finalized resources.
 lowerManagedT :: Monad m => ManagedT m a -> m a
 lowerManagedT m = runManagedT m return
-  
+
 hoistManagedTReaderT :: Monad m => r -> ManagedT (ReaderT r m) a -> ManagedT m a
-hoistManagedTReaderT r cod = ManagedT $ \k -> 
+hoistManagedTReaderT r cod = ManagedT $ \k ->
   runReaderT (runManagedT cod (lift . k)) r
-  
+
 -- | We need this instance to tie the knot when initializing resources.
 -- It'd be nice if we could do this with a 'MonadFix' constraint on the underlying
 -- monad, but here we just use 'MonadIO' to tie the knot using a lazily-evaluated
 -- 'MVar'-based promise for the eventual result.
--- 
+--
 -- We need to be careful not to leak allocated resources via the use of
 -- recursively-defined monadic actions when making use of this instance.
 instance MonadIO m => MonadFix (ManagedT m) where

@@ -1,5 +1,3 @@
-{-# LANGUAGE AllowAmbiguousTypes #-}
-
 module Hasura.GraphQL.Execute.Backend where
 
 import           Hasura.Prelude

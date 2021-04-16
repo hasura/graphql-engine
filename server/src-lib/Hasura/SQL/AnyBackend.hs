@@ -1,4 +1,3 @@
-{-# LANGUAGE AllowAmbiguousTypes  #-}
 {-# LANGUAGE Arrows               #-}
 {-# LANGUAGE UndecidableInstances #-}
 

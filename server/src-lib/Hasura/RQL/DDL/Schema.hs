@@ -21,8 +21,6 @@ load and modify the Hasura catalog and schema cache.
     functions incrementally update the cache when they modify the catalog.
 -}
 
-{-# LANGUAGE RecordWildCards #-}
-
 module Hasura.RQL.DDL.Schema
  ( module Hasura.RQL.DDL.Schema.Cache
  , module Hasura.RQL.DDL.Schema.Catalog

@@ -1,5 +1,5 @@
 -- | The RQL query ('/v1/query')
-{-# LANGUAGE NamedFieldPuns #-}
+
 module Hasura.Server.API.Query where
 
 import           Hasura.Prelude

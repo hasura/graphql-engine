@@ -1,5 +1,3 @@
-{-# LANGUAGE ApplicativeDo #-}
-
 -- |
 
 module Hasura.Backends.MSSQL.Meta

@@ -1,5 +1,5 @@
 -- This is taken from wai-logger and customised for our use
-{-# LANGUAGE AllowAmbiguousTypes #-}
+
 module Hasura.Server.Logging
   ( StartupLog(..)
   , PGLog(..)

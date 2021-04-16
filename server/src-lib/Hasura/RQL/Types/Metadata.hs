@@ -1,5 +1,5 @@
-{-# LANGUAGE AllowAmbiguousTypes  #-}
 {-# LANGUAGE UndecidableInstances #-}
+
 module Hasura.RQL.Types.Metadata where
 
 import           Hasura.Prelude

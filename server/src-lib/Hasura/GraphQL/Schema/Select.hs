@@ -1,5 +1,5 @@
-{-# LANGUAGE RecordWildCards #-}
-{-# LANGUAGE ViewPatterns    #-}
+{-# LANGUAGE ViewPatterns #-}
+
 -- | Generate table selection schema both for ordinary Hasura-type and
 -- relay-type queries.  All schema with "relay" or "connection" in the name is
 -- used exclusively by relay.
@@ -19,7 +19,6 @@ module Hasura.GraphQL.Schema.Select
   , nodePG
   , nodeField
   ) where
-
 
 import           Hasura.Prelude
 
@@ -66,6 +65,7 @@ import           Hasura.RQL.DDL.RemoteRelationship.Validate
 import           Hasura.RQL.Types
 import           Hasura.Server.Utils                        (executeJSONPath)
 import           Hasura.Session
+
 
 -- 1. top level selection functions
 -- write a blurb?

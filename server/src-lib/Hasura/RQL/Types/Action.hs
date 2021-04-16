@@ -1,4 +1,3 @@
-{-# LANGUAGE RecordWildCards #-}
 module Hasura.RQL.Types.Action
   ( ArgumentName(..)
   , ArgumentDefinition(..)

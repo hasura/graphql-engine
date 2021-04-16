@@ -1,5 +1,3 @@
-{-# LANGUAGE RecordWildCards #-}
-
 module Hasura.RQL.DDL.CustomTypes
   ( runSetCustomTypes
   , clearCustomTypesInMetadata
