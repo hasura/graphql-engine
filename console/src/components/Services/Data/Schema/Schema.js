@@ -21,7 +21,9 @@ import {
 } from '../TableRelationships/Actions';
 import { getRelDef } from '../TableRelationships/utils';
 import {
+  getDataSourceBaseRoute,
   getSchemaAddTableRoute,
+  getSchemaBaseRoute,
   getSchemaPermissionsRoute,
 } from '../../../Common/utils/routesUtils';
 import { createNewSchema, deleteCurrentSchema } from './Actions';
@@ -43,6 +45,7 @@ import { getConsistentFunctions } from '../../../../metadata/selector';
 import { RightContainer } from '../../../Common/Layout/RightContainer';
 import { TrackableFunctionsList } from './FunctionsList';
 import { getTrackableFunctions } from './utils';
+import BreadCrumb from '../../../Common/Layout/BreadCrumb/BreadCrumb';
 
 const FEATURES = {
   UNTRACKED_TABLES: 'UNTRACKED_TABLES',
@@ -651,11 +654,24 @@ class Schema extends Component {
 
     return (
       <RightContainer>
-        <div
-          className={`container-fluid ${styles.padd_left_remove} ${styles.padd_top}`}
-        >
+        <div className={`container-fluid ${styles.padd_left_remove}`}>
           <div className={styles.padd_left}>
             <Helmet title="Schema - Data | Hasura" />
+            <BreadCrumb
+              breadCrumbs={[
+                { url: `/data`, title: 'Data' },
+                {
+                  url: getDataSourceBaseRoute(currentDataSource),
+                  title: currentDataSource,
+                  prefix: <i className="fa fa-database" />,
+                },
+                {
+                  url: getSchemaBaseRoute(currentSchema, currentDataSource),
+                  title: currentSchema,
+                  prefix: <i className="fa fa-folder" />,
+                },
+              ]}
+            />
             <div className={styles.display_flex}>
               <h2 className={`${styles.headerText} ${styles.display_inline}`}>
                 {currentSchema}

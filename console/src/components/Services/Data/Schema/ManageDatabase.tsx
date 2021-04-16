@@ -48,7 +48,7 @@ const DatabaseListItem: React.FC<DatabaseListItemProps> = ({
   const [showUrl, setShowUrl] = useState(false);
 
   const viewDB = () => {
-    if (dataSource?.name) pushRoute(`/data/${dataSource.name}`);
+    if (dataSource?.name) pushRoute(`/data/${dataSource.name}/schema`);
   };
   const isInconsistentDataSource = isInconsistentSource(
     dataSource.name,

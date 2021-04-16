@@ -313,6 +313,7 @@ export interface DataSourcesAPI {
   supportedColumnOperators: string[] | null;
   aggregationPermissionsAllowed: boolean;
   supportedFeatures?: SupportedFeaturesType;
+  defaultRedirectSchema?: string;
 }
 
 export let currentDriver: Driver = 'postgres';

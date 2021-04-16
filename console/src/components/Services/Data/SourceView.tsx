@@ -7,8 +7,12 @@ import styles from '../../Common/Common.scss';
 import Button from '../../Common/Button/Button';
 import { createNewSchema, deleteSchema } from './Schema/Actions';
 import { updateCurrentSchema } from './DataActions';
-import { getSchemaPermissionsRoute } from '../../Common/utils/routesUtils';
+import {
+  getDataSourceBaseRoute,
+  getSchemaPermissionsRoute,
+} from '../../Common/utils/routesUtils';
 import _push from './push';
+import BreadCrumb from '../../Common/Layout/BreadCrumb/BreadCrumb';
 
 interface Props {
   dispatch: Dispatch;
@@ -48,9 +52,21 @@ const SourceView: React.FC<Props> = props => {
 
   return (
     <div>
-      <div style={{ paddingTop: '40px', paddingLeft: '15px' }}>
+      <div style={{ paddingTop: '20px', paddingLeft: '15px' }}>
         <div className={styles.padd_left}>
           <Helmet title="Source - Data | Hasura" />
+          <div>
+            <BreadCrumb
+              breadCrumbs={[
+                { url: `/data`, title: 'Data' },
+                {
+                  url: getDataSourceBaseRoute(currentDataSource),
+                  title: currentDataSource,
+                  prefix: <i className="fa fa-database" />,
+                },
+              ]}
+            />
+          </div>
           <div className={styles.display_flex}>
             <h2 className={`${styles.headerText} ${styles.display_inline}`}>
               {currentDataSource}

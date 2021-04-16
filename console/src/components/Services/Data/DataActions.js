@@ -340,6 +340,17 @@ const fetchDataInit = (source, driver) => (dispatch, getState) => {
         type: FETCH_SCHEMA_LIST,
         schemaList,
       });
+
+      let newSchema = '';
+      if (schemaList.length) {
+        newSchema =
+          dataSource.defaultRedirectSchema &&
+          schemaList.includes(dataSource.defaultRedirectSchema)
+            ? dataSource.defaultRedirectSchema
+            : schemaList.sort(Intl.Collator().compare)[0];
+      }
+      dispatch({ type: UPDATE_CURRENT_SCHEMA, currentSchema: newSchema });
+
       return dispatch(updateSchemaInfo()); // TODO
     },
     error => {

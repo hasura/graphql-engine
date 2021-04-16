@@ -121,6 +121,8 @@ export const isJsonColumn = (column: BaseTableColumn): boolean => {
   return column.data_type_name === 'json' || column.data_type_name === 'jsonb';
 };
 
+const defaultRedirectSchema = 'dbo';
+
 export const mssql: DataSourcesAPI = {
   isTable,
   isJsonColumn,
@@ -411,4 +413,5 @@ WHERE
   supportedColumnOperators,
   aggregationPermissionsAllowed: false,
   supportedFeatures,
+  defaultRedirectSchema,
 };

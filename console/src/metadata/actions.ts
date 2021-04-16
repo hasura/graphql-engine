@@ -260,7 +260,8 @@ export const addDataSource = (
       });
       setDriver(data.driver);
       const onButtonClick = () => {
-        if (data.payload.name) dispatch(_push(`/data/${data.payload.name}`));
+        if (data.payload.name)
+          dispatch(_push(`/data/${data.payload.name}/schema`));
       };
       return dispatch(exportMetadata()).then(() => {
         dispatch(fetchDataInit(data.payload.name, data.driver));

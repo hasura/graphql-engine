@@ -541,6 +541,8 @@ export const supportedFeatures: SupportedFeaturesType = {
   },
 };
 
+const defaultRedirectSchema = 'public';
+
 export const postgres: DataSourcesAPI = {
   isTable,
   isJsonColumn,
@@ -615,4 +617,5 @@ export const postgres: DataSourcesAPI = {
   supportedColumnOperators: null,
   aggregationPermissionsAllowed: true,
   supportedFeatures,
+  defaultRedirectSchema,
 };
