@@ -1,4 +1,4 @@
-import { Driver } from '../../../../dataSources';
+import { Driver, getSupportedDrivers } from '../../../../dataSources';
 import { makeConnectionStringFromConnectionParams } from './ManageDBUtils';
 import { addDataSource } from '../../../../metadata/actions';
 import { Dispatch } from '../../../../types';
@@ -30,9 +30,12 @@ export type ConnectDBState = {
   connectionParamState: ConnectionParams;
   databaseURLState: {
     dbURL: string;
+    serviceAccountFile: string;
+    projectId: string;
+    datasets: string;
   };
-  envVarURLState: {
-    envVarURL: string;
+  envVarState: {
+    envVar: string;
   };
   connectionSettings: ConnectionSettings;
 };
@@ -49,9 +52,12 @@ export const defaultState: ConnectDBState = {
   },
   databaseURLState: {
     dbURL: '',
+    serviceAccountFile: '',
+    projectId: '',
+    datasets: '',
   },
-  envVarURLState: {
-    envVarURL: '',
+  envVarState: {
+    envVar: '',
   },
   connectionSettings: {},
 };
@@ -69,10 +75,11 @@ export const getDefaultState = (props?: DefaultStateProps): ConnectDBState => {
     ...defaultState,
     displayName: props?.dbConnection.dbName || '',
     databaseURLState: {
+      ...defaultState.databaseURLState,
       dbURL: props?.dbConnection.dbURL || '',
     },
-    envVarURLState: {
-      envVarURL: props?.dbConnection.envVar || '',
+    envVarState: {
+      envVar: props?.dbConnection.envVar || '',
     },
   };
 };
@@ -88,12 +95,23 @@ export const connectDataSource = (
   cb: () => void,
   replicas?: Omit<SourceConnectionInfo, 'connection_string'>[]
 ) => {
-  let databaseURL:
-    | string
-    | { from_env: string } = currentState.databaseURLState.dbURL.trim();
-  if (typeConnection === connectionTypes.ENV_VAR) {
-    databaseURL = { from_env: currentState.envVarURLState.envVarURL.trim() };
-  } else if (typeConnection === connectionTypes.CONNECTION_PARAMS) {
+  let databaseURL: string | { from_env: string } =
+    currentState.dbType === 'bigquery'
+      ? currentState.databaseURLState.serviceAccountFile.trim()
+      : currentState.databaseURLState.dbURL.trim();
+  if (
+    typeConnection === connectionTypes.ENV_VAR &&
+    getSupportedDrivers('connectDbForm.environmentVariable').includes(
+      currentState.dbType
+    )
+  ) {
+    databaseURL = { from_env: currentState.envVarState.envVar.trim() };
+  } else if (
+    typeConnection === connectionTypes.CONNECTION_PARAMS &&
+    getSupportedDrivers('connectDbForm.connectionParameters').includes(
+      currentState.dbType
+    )
+  ) {
     databaseURL = makeConnectionStringFromConnectionParams({
       dbType: currentState.dbType,
       ...currentState.connectionParamState,
@@ -108,6 +126,10 @@ export const connectDataSource = (
           name: currentState.displayName.trim(),
           dbUrl: databaseURL,
           connection_pool_settings: currentState.connectionSettings,
+          bigQuery: {
+            projectId: currentState.databaseURLState.projectId,
+            datasets: currentState.databaseURLState.datasets,
+          },
         },
       },
       cb,
@@ -128,6 +150,9 @@ export type ConnectDBActions =
     }
   | { type: 'UPDATE_DISPLAY_NAME'; data: string }
   | { type: 'UPDATE_DB_URL'; data: string }
+  | { type: 'UPDATE_DB_BIGQUERY_SERVICE_ACCOUNT_FILE'; data: string }
+  | { type: 'UPDATE_DB_BIGQUERY_PROJECT_ID'; data: string }
+  | { type: 'UPDATE_DB_BIGQUERY_DATASETS'; data: string }
   | { type: 'UPDATE_DB_URL_ENV_VAR'; data: string }
   | { type: 'UPDATE_DB_HOST'; data: string }
   | { type: 'UPDATE_DB_PORT'; data: string }
@@ -152,6 +177,7 @@ export const connectDBReducer = (
         displayName: action.data.name,
         dbType: action.data.driver,
         databaseURLState: {
+          ...state.databaseURLState,
           dbURL: action.data.databaseUrl,
         },
         connectionSettings: action.data.connectionSettings,
@@ -170,14 +196,15 @@ export const connectDBReducer = (
       return {
         ...state,
         databaseURLState: {
+          ...state.databaseURLState,
           dbURL: action.data,
         },
       };
     case 'UPDATE_DB_URL_ENV_VAR':
       return {
         ...state,
-        envVarURLState: {
-          envVarURL: action.data,
+        envVarState: {
+          envVar: action.data,
         },
       };
     case 'UPDATE_DB_HOST':
@@ -253,6 +280,30 @@ export const connectDBReducer = (
         ...state,
         connectionSettings: action.data,
       };
+    case 'UPDATE_DB_BIGQUERY_SERVICE_ACCOUNT_FILE':
+      return {
+        ...state,
+        databaseURLState: {
+          ...state.databaseURLState,
+          serviceAccountFile: action.data,
+        },
+      };
+    case 'UPDATE_DB_BIGQUERY_DATASETS':
+      return {
+        ...state,
+        databaseURLState: {
+          ...state.databaseURLState,
+          datasets: action.data,
+        },
+      };
+    case 'UPDATE_DB_BIGQUERY_PROJECT_ID':
+      return {
+        ...state,
+        databaseURLState: {
+          ...state.databaseURLState,
+          projectId: action.data,
+        },
+      };
     default:
       return state;
   }
@@ -310,7 +361,7 @@ export const makeReadReplicaConnectionObject = (
     database_url = stateVal.databaseURLState?.dbURL?.trim() ?? '';
   } else if (stateVal.chosenConnectionType === connectionTypes.ENV_VAR) {
     database_url = {
-      from_env: stateVal.envVarURLState?.envVarURL?.trim() ?? '',
+      from_env: stateVal.envVarState?.envVar?.trim() ?? '',
     };
   } else {
     database_url = makeConnectionStringFromConnectionParams({

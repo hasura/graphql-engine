@@ -83,6 +83,7 @@ const DataSourceContainer = ({
       dispatch({ type: UPDATE_CURRENT_SCHEMA, currentSchema: schema });
       return;
     }
+    // eslint-disable-next-line no-useless-return
     if (!dataLoaded) return;
 
     let newSchema = '';
@@ -94,11 +95,10 @@ const DataSourceContainer = ({
           ? dataSource.defaultRedirectSchema
           : schemaList.sort(Intl.Collator().compare)[0];
     }
-
     if (location.pathname.includes('schema')) {
       dispatch(push(`/data/${source}/schema/${newSchema}`));
     }
-  }, [dispatch, schema, schemaList, source, location, dataLoaded]);
+  }, [dispatch, schema, schemaList, location, source, dataLoaded]);
 
   useEffect(() => {
     const driver = getSourceDriver(dataSources, currentSource);

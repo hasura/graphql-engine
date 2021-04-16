@@ -359,11 +359,17 @@ export const getInheritedRoles = (state: ReduxState) =>
 export const getDataSources = createSelector(getMetadata, metadata => {
   const sources: DataSource[] = [];
   metadata?.sources.forEach(source => {
+    let url: string | { from_env: string } = '';
+    if (source.kind === 'bigquery') {
+      url = source.configuration?.service_account?.from_env || '';
+    } else {
+      url = source.configuration?.connection_info?.connection_string
+        ? source.configuration?.connection_info.connection_string
+        : source.configuration?.connection_info?.database_url || '';
+    }
     sources.push({
       name: source.name,
-      url: source.configuration?.connection_info?.connection_string
-        ? source.configuration?.connection_info.connection_string
-        : source.configuration?.connection_info?.database_url || '',
+      url,
       connection_pool_settings: source.configuration?.connection_info
         ?.pool_settings || {
         retries: 1,

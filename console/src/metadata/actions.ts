@@ -123,6 +123,10 @@ export interface AddDataSourceRequest {
         idle_timeout?: number; // in seconds
         retries?: number;
       };
+      bigQuery: {
+        projectId: string;
+        datasets: string;
+      };
     };
   };
 }

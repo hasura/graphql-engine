@@ -86,9 +86,9 @@ const DataSubSidebar = props => {
       type: UPDATE_CURRENT_DATA_SOURCE,
       source: newSourceName,
     });
-    setDriver(driver);
     dispatch(_push(`/data/${newSourceName}/`));
-    dispatch(fetchDataInit()).finally(() => {
+    setDriver(driver);
+    dispatch(fetchDataInit(newSourceName, driver)).finally(() => {
       setDatabaseLoading(false);
     });
   };
@@ -201,7 +201,7 @@ const DataSubSidebar = props => {
     sources.forEach(source => {
       const currentSourceTables = sources
         .filter(i => i.name === source.name)[0]
-        .tables.map(i => `'${i.table.name}'`);
+        .tables.map(t => t.table);
       schemaPromises.push(
         dispatch(
           getDatabaseTableTypeInfo(

@@ -3,6 +3,7 @@ import {
   ActionDefinition,
   CustomTypes,
   QualifiedTable,
+  QualifiedTableBigQuery,
   HasuraMetadataV3,
   QualifiedFunction,
   RestEndpointEntry,
@@ -120,6 +121,9 @@ export const getMetadataQuery = (
       break;
     case 'mssql':
       prefix = 'mssql_';
+      break;
+    case 'bigquery':
+      prefix = 'bigquery_';
       break;
     case 'postgres':
     default:
@@ -306,7 +310,7 @@ export const getTrackTableQuery = ({
   driver,
   customColumnNames,
 }: {
-  tableDef: QualifiedTable;
+  tableDef: QualifiedTable | QualifiedTableBigQuery;
   source: string;
   driver: Driver;
   customColumnNames?: Record<string, string>;
@@ -319,6 +323,7 @@ export const getTrackTableQuery = ({
           custom_column_names: customColumnNames,
         },
       };
+
   return getMetadataQuery('track_table', source, args, driver);
 };
 

@@ -116,7 +116,8 @@ const TableHeader = ({
               }`,
               'table-browse-rows'
             )}
-            {!readOnlyMode &&
+            {isFeatureSupported('tables.insert.enabled') &&
+              !readOnlyMode &&
               isTableType &&
               getTab(
                 'insert',
@@ -129,7 +130,8 @@ const TableHeader = ({
                 'Insert Row',
                 'table-insert-rows'
               )}
-            {migrationMode &&
+            {isFeatureSupported('tables.modify.enabled') &&
+              migrationMode &&
               getTab(
                 'modify',
                 getTableModifyRoute(

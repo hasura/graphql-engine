@@ -109,7 +109,8 @@ export interface Table extends BaseTable {
     | 'FOREIGN TABLE'
     | 'PARTITIONED TABLE'
     | 'BASE TABLE'
-    | 'TABLE'; // specific to SQL Server
+    | 'TABLE' // specific to SQL Server
+    | 'EXTERNAL'; // specific to Big Query
   primary_key: {
     table_name: string;
     table_schema: string;
@@ -195,6 +196,14 @@ export type SupportedFeaturesType = {
   driver: {
     name: string;
   };
+  schemas: {
+    create: {
+      enabled: boolean;
+    };
+    delete: {
+      enabled: boolean;
+    };
+  };
   tables: {
     create: {
       enabled: boolean;
@@ -213,8 +222,21 @@ export type SupportedFeaturesType = {
     relationships: {
       enabled: boolean;
       remoteRelationships?: boolean;
+      track: boolean;
     };
     permissions: {
+      enabled: boolean;
+    };
+    track: {
+      enabled: boolean;
+    };
+  };
+  functions: {
+    enabled: boolean;
+    track: {
+      enabled: boolean;
+    };
+    nonTrackableFunctions: {
       enabled: boolean;
     };
   };
@@ -227,6 +249,16 @@ export type SupportedFeaturesType = {
   actions: {
     enabled: boolean;
     relationships: boolean;
+  };
+  rawSQL: {
+    enabled: boolean;
+    tracking: boolean;
+  };
+  connectDbForm: {
+    connectionParameters: boolean;
+    databaseURL: boolean;
+    environmentVariable: boolean;
+    read_replicas: boolean;
   };
 };
 

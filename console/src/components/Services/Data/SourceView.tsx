@@ -12,6 +12,7 @@ import {
   getSchemaPermissionsRoute,
 } from '../../Common/utils/routesUtils';
 import _push from './push';
+import { isFeatureSupported } from '../../../dataSources';
 import BreadCrumb from '../../Common/Layout/BreadCrumb/BreadCrumb';
 
 interface Props {
@@ -71,55 +72,59 @@ const SourceView: React.FC<Props> = props => {
             <h2 className={`${styles.headerText} ${styles.display_inline}`}>
               {currentDataSource}
             </h2>
-            {!isCreateActive ? (
-              <Button
-                data-test="data-create-schema"
-                color="yellow"
-                size="sm"
-                className={styles.add_mar_left}
-                onClick={() => setIsCreateActive(true)}
-              >
-                Create Schema
-              </Button>
-            ) : (
-              <div
-                className={styles.display_inline}
-                style={{ paddingLeft: '10px' }}
-              >
-                <div className={styles.display_inline}>
-                  <input
-                    type="text"
-                    placeholder="Enter Schema name"
-                    className={`form-control input-sm ${styles.display_inline}`}
-                    value={createSchemaName}
-                    onChange={(e: any) => {
-                      e.persist();
-                      setCreateSchemaName(e.target.value);
-                    }}
-                  />
-                </div>
-                <Button
-                  data-test="data-create-schema"
-                  color="yellow"
-                  size="sm"
-                  className={styles.add_mar_left}
-                  onClick={handleCreateSchema}
-                >
-                  Create Schema
-                </Button>
-                <Button
-                  color="white"
-                  size="xs"
-                  className={styles.add_mar_left_mid}
-                  onClick={() => {
-                    setIsCreateActive(false);
-                    setCreateSchemaName('');
-                  }}
-                >
-                  Cancel
-                </Button>
-              </div>
-            )}
+            {isFeatureSupported('schemas.create.enabled') ? (
+              <span>
+                {!isCreateActive ? (
+                  <Button
+                    data-test="data-create-schema"
+                    color="yellow"
+                    size="sm"
+                    className={styles.add_mar_left}
+                    onClick={() => setIsCreateActive(true)}
+                  >
+                    Create Schema
+                  </Button>
+                ) : (
+                  <div
+                    className={styles.display_inline}
+                    style={{ paddingLeft: '10px' }}
+                  >
+                    <div className={styles.display_inline}>
+                      <input
+                        type="text"
+                        placeholder="Enter Schema name"
+                        className={`form-control input-sm ${styles.display_inline}`}
+                        value={createSchemaName}
+                        onChange={(e: any) => {
+                          e.persist();
+                          setCreateSchemaName(e.target.value);
+                        }}
+                      />
+                    </div>
+                    <Button
+                      data-test="data-create-schema"
+                      color="yellow"
+                      size="sm"
+                      className={styles.add_mar_left}
+                      onClick={handleCreateSchema}
+                    >
+                      Create Schema
+                    </Button>
+                    <Button
+                      color="white"
+                      size="xs"
+                      className={styles.add_mar_left_mid}
+                      onClick={() => {
+                        setIsCreateActive(false);
+                        setCreateSchemaName('');
+                      }}
+                    >
+                      Cancel
+                    </Button>
+                  </div>
+                )}
+              </span>
+            ) : null}
           </div>
           <div>
             <hr />
@@ -127,11 +132,12 @@ const SourceView: React.FC<Props> = props => {
               {schemaList.length ? (
                 schemaList.map((schema, key: number) => {
                   return (
-                    <div className={styles.padd_small}>
+                    <div
+                      className={`${styles.padd_small} ${styles.padd_left_remove}`}
+                    >
                       <Button
                         color="white"
                         size="xs"
-                        className={styles.mar_small_left}
                         onClick={() => handleView(schema)}
                       >
                         View
@@ -144,14 +150,16 @@ const SourceView: React.FC<Props> = props => {
                       >
                         Permissions Summary
                       </Button>
-                      <Button
-                        color="white"
-                        size="xs"
-                        className={styles.mar_small_left}
-                        onClick={() => handleDelete(schema)}
-                      >
-                        <i className="fa fa-trash" aria-hidden="true" />
-                      </Button>
+                      {isFeatureSupported('schemas.delete.enabled') ? (
+                        <Button
+                          color="white"
+                          size="xs"
+                          className={styles.mar_small_left}
+                          onClick={() => handleDelete(schema)}
+                        >
+                          <i className="fa fa-trash" aria-hidden="true" />
+                        </Button>
+                      ) : null}
                       <div
                         key={key}
                         className={`${styles.display_inline} ${styles.padd_small_left}`}

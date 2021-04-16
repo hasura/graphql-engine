@@ -28,6 +28,7 @@ import ConnectDatabaseForm from './ConnectDBForm';
 import ReadReplicaForm from './ReadReplicaForm';
 
 import styles from './DataSources.scss';
+import { getSupportedDrivers } from '../../../../dataSources';
 
 interface ConnectDatabaseProps extends InjectedProps {}
 
@@ -128,7 +129,10 @@ const ConnectDatabase: React.FC<ConnectDatabaseProps> = props => {
       (connectionType === connectionTypes.CONNECTION_PARAMS &&
         connectDBInputState.dbType === 'mssql')
     ) {
-      if (!connectDBInputState.databaseURLState.dbURL.trim()) {
+      if (
+        !connectDBInputState.databaseURLState.dbURL.trim() &&
+        connectDBInputState.dbType !== 'bigquery'
+      ) {
         dispatch(
           showErrorNotification(
             'Database URL is a mandatory field',
@@ -152,7 +156,10 @@ const ConnectDatabase: React.FC<ConnectDatabaseProps> = props => {
     }
 
     if (connectionType === connectionTypes.ENV_VAR) {
-      if (!connectDBInputState.envVarURLState.envVarURL.trim()) {
+      if (
+        !connectDBInputState.envVarState.envVar.trim() &&
+        connectDBInputState.dbType !== 'bigquery'
+      ) {
         dispatch(
           showErrorNotification(
             'Environment Variable is a mandatory field',
@@ -184,17 +191,19 @@ const ConnectDatabase: React.FC<ConnectDatabaseProps> = props => {
       database,
     } = connectDBInputState.connectionParamState;
 
-    if (!host || !port || !username || !database) {
-      const errorMessage = getErrorMessageFromMissingFields(
-        host,
-        port,
-        username,
-        database
-      );
-      dispatch(
-        showErrorNotification('Required fields are missing', errorMessage)
-      );
-      return;
+    if (connectDBInputState.dbType !== 'bigquery') {
+      if (!host || !port || !username || !database) {
+        const errorMessage = getErrorMessageFromMissingFields(
+          host,
+          port,
+          username,
+          database
+        );
+        dispatch(
+          showErrorNotification('Required fields are missing', errorMessage)
+        );
+        return;
+      }
     }
     setLoading(true);
     connectDataSource(
@@ -259,7 +268,9 @@ const ConnectDatabase: React.FC<ConnectDatabaseProps> = props => {
           updateConnectionTypeRadio={onChangeConnectionType}
         />
         {/* Should be rendered only on Pro and Cloud Console */}
-        {connectDBInputState.dbType !== 'mssql' &&
+        {getSupportedDrivers('connectDbForm.read_replicas').includes(
+          connectDBInputState.dbType
+        ) &&
           (window.__env.consoleId || window.__env.userRole) && (
             <ReadReplicaForm
               readReplicaState={readReplicasState}

@@ -34,6 +34,7 @@ import {
   getUntrackedTables,
   dataSource,
   currentDriver,
+  isFeatureSupported,
 } from '../../../../dataSources';
 import { isEmpty } from '../../../Common/utils/jsUtils';
 import { getConfirmation } from '../../../Common/utils/jsUtils';
@@ -46,21 +47,6 @@ import { RightContainer } from '../../../Common/Layout/RightContainer';
 import { TrackableFunctionsList } from './FunctionsList';
 import { getTrackableFunctions } from './utils';
 import BreadCrumb from '../../../Common/Layout/BreadCrumb/BreadCrumb';
-
-const FEATURES = {
-  UNTRACKED_TABLES: 'UNTRACKED_TABLES',
-  UNTRACKED_RELATIONS: 'UNTRACKED_RELATIONS',
-  UNTRACKED_FUNCTION: 'UNTRACKED_FUNCTION',
-  NON_TRACKABLE_FUNCTIONS: 'NON_TRACKABLE_FUNCTIONS',
-};
-
-const supportedFeaturesByDriver = {
-  postgres: Object.values(FEATURES),
-  mssql: [FEATURES.UNTRACKED_TABLES, FEATURES.UNTRACKED_RELATIONS],
-};
-
-const isAllowed = (driver, feature) =>
-  supportedFeaturesByDriver[driver].includes(feature);
 
 const DeleteSchemaButton = ({ dispatch, migrationMode, currentDataSource }) => {
   const successCb = () => {
@@ -140,17 +126,21 @@ const CreateSchemaSection = React.forwardRef(
   }) =>
     migrationMode && (
       <div className={`${styles.display_flex}`}>
-        {createSchemaOpen ? (
-          <OpenCreateSection
-            ref={ref}
-            value={schemaNameEdit}
-            handleInputChange={handleSchemaNameChange}
-            handleCreate={handleCreateClick}
-            handleCancelCreate={handleCancelCreateNewSchema}
-          />
-        ) : (
-          <ClosedCreateSection onClick={handleCreateNewClick} />
-        )}
+        {isFeatureSupported('schemas.create.enabled') ? (
+          <span>
+            {createSchemaOpen ? (
+              <OpenCreateSection
+                ref={ref}
+                value={schemaNameEdit}
+                handleInputChange={handleSchemaNameChange}
+                handleCreate={handleCreateClick}
+                handleCancelCreate={handleCancelCreateNewSchema}
+              />
+            ) : (
+              <ClosedCreateSection onClick={handleCreateNewClick} />
+            )}
+          </span>
+        ) : null}
         <SchemaPermissionsButton schema={schema} source={currentDataSource} />
       </div>
     )
@@ -261,7 +251,7 @@ class Schema extends Component {
     const getCreateBtn = () => {
       let createBtn = null;
 
-      if (migrationMode && currentDriver === 'postgres') {
+      if (migrationMode && isFeatureSupported('tables.create.enabled')) {
         const handleClick = e => {
           e.preventDefault();
 
@@ -295,12 +285,14 @@ class Schema extends Component {
             </div>
             <div className={`${styles.display_inline} ${styles.add_mar_left}`}>
               <div style={{ display: 'flex', alignItems: 'center' }}>
-                <DeleteSchemaButton
-                  dispatch={dispatch}
-                  migrationMode={migrationMode}
-                  currentDataSource={currentDataSource}
-                  schemaList={this.props.schemaList}
-                />
+                {isFeatureSupported('schemas.delete.enabled') ? (
+                  <DeleteSchemaButton
+                    dispatch={dispatch}
+                    migrationMode={migrationMode}
+                    currentDataSource={currentDataSource}
+                    schemaList={this.props.schemaList}
+                  />
+                ) : null}
                 <CreateSchemaSection
                   ref={this.schemaNameInputRef}
                   migrationMode={migrationMode}
@@ -682,11 +674,12 @@ class Schema extends Component {
             {getCurrentSchemaSection()}
             <hr />
             {getUntrackedTablesSection()}
-            {getUntrackedRelationsSection()}
+            {isFeatureSupported('tables.relationships.track') &&
+              getUntrackedRelationsSection()}
             {getUntrackedFunctionsSection(
-              isAllowed(currentDriver, FEATURES.NON_TRACKABLE_FUNCTIONS)
+              isFeatureSupported('functions.track.enabled')
             )}
-            {isAllowed(currentDriver, FEATURES.NON_TRACKABLE_FUNCTIONS) &&
+            {isFeatureSupported('functions.nonTrackableFunctions.enabled') &&
               getNonTrackableFunctionsSection()}
             <hr />
           </div>

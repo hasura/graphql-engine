@@ -44,6 +44,11 @@ export interface QualifiedTable {
   schema: string;
 }
 
+export interface QualifiedTableBigQuery {
+  name: string;
+  dataset: string;
+}
+
 /**
  * Configuration for the table/view
  * https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/table-view.html#table-config
@@ -854,6 +859,13 @@ export interface RestEndpointDefinition {
   };
 }
 
+export interface BigQueryServiceAccount {
+  project_id?: string;
+  client_email?: string;
+  private_key?: string;
+  from_env?: string;
+}
+
 export interface RestEndpointEntry {
   name: string;
   url: string;
@@ -903,11 +915,14 @@ export interface HasuraMetadataV2 {
 
 export interface MetadataDataSource {
   name: string;
-  kind?: 'postgres' | 'mysql' | 'mssql';
+  kind?: 'postgres' | 'mysql' | 'mssql' | 'bigquery';
   configuration?: {
     connection_info?: SourceConnectionInfo;
     // pro-only feature
     read_replicas?: SourceConnectionInfo[];
+    service_account?: BigQueryServiceAccount;
+    project_id?: string;
+    datasets?: string[];
   };
   tables: TableEntry[];
   functions?: Array<{

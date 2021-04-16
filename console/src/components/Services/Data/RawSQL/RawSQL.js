@@ -32,6 +32,8 @@ import DropDownSelector from './DropDownSelector';
 import { getSourceDriver } from '../utils';
 import { getDataSources } from '../../../../metadata/selector';
 import { services } from '../../../../dataSources/services';
+import { isFeatureSupported } from '../../../../dataSources';
+
 /**
  * # RawSQL React FC
  * ## renders raw SQL page on route `/data/sql`
@@ -332,17 +334,19 @@ const RawSQL = ({
 
     return (
       <div className={styles.add_mar_top}>
-        <label>
-          <input
-            checked={isTableTrackChecked}
-            className={`${styles.add_mar_right_small} ${styles.cursorPointer}`}
-            id="track-checkbox"
-            type="checkbox"
-            onChange={dispatchTrackThis}
-            data-test="raw-sql-track-check"
-          />
-          Track this
-        </label>
+        {isFeatureSupported('rawSQL.tracking') && (
+          <label>
+            <input
+              checked={isTableTrackChecked}
+              className={`${styles.add_mar_right_small} ${styles.cursorPointer}`}
+              id="track-checkbox"
+              type="checkbox"
+              onChange={dispatchTrackThis}
+              data-test="raw-sql-track-check"
+            />
+            Track this
+          </label>
+        )}
         <Tooltip
           message={
             'If you are creating tables, views or functions, checking this will also expose them over the GraphQL API as top level fields'

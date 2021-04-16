@@ -3,6 +3,7 @@
 ## Next release
 (Add entries here in the order of: server, console, cli, docs, others)
 
+- console: add bigquery support (#1000)
 
 ## v2.0.0-alpha.8
 

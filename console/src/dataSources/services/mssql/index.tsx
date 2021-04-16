@@ -1,5 +1,6 @@
 import React from 'react';
 import { DataSourcesAPI } from '../..';
+import { QualifiedTable } from '../../../metadata/types';
 import {
   TableColumn,
   Table,
@@ -83,6 +84,14 @@ export const supportedFeatures: SupportedFeaturesType = {
   driver: {
     name: 'mssql',
   },
+  schemas: {
+    create: {
+      enabled: true,
+    },
+    delete: {
+      enabled: true,
+    },
+  },
   tables: {
     create: {
       enabled: false,
@@ -100,9 +109,22 @@ export const supportedFeatures: SupportedFeaturesType = {
     },
     relationships: {
       enabled: true,
+      track: true,
     },
     permissions: {
       enabled: true,
+    },
+    track: {
+      enabled: false,
+    },
+  },
+  functions: {
+    enabled: true,
+    track: {
+      enabled: false,
+    },
+    nonTrackableFunctions: {
+      enabled: false,
     },
   },
   events: {
@@ -114,6 +136,16 @@ export const supportedFeatures: SupportedFeaturesType = {
   actions: {
     enabled: true,
     relationships: false,
+  },
+  rawSQL: {
+    enabled: true,
+    tracking: true,
+  },
+  connectDbForm: {
+    connectionParameters: false,
+    databaseURL: true,
+    environmentVariable: true,
+    read_replicas: false,
   },
 };
 
@@ -389,7 +421,7 @@ INNER JOIN sys.schemas sch2
     return '';
   },
   getDatabaseInfo: '',
-  getTableInfo: (tables: string[]) => `
+  getTableInfo: (tables: QualifiedTable[]) => `
 SELECT
 	o.name AS table_name,
 	s.name AS table_schema,
@@ -405,7 +437,7 @@ FROM
 	sys.objects AS o
 	JOIN sys.schemas AS s ON (o.schema_id = s.schema_id)
 WHERE
-	o.name in (${tables.join(',')}) for json path;
+	o.name in (${tables.map(t => `'${t.name}'`).join(',')}) for json path;
   `,
   getDatabaseVersionSql: 'SELECT @@VERSION;',
   permissionColumnDataTypes,

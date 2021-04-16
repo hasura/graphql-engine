@@ -34,3 +34,20 @@ export const getDatasourceURL = (
   }
   return link.from_env.toString();
 };
+
+export const readFile = (
+  file: File | null,
+  callback: (content: string) => void
+) => {
+  const reader = new FileReader();
+  reader.onload = event => {
+    const content = event.target!.result as string;
+    callback(content);
+  };
+
+  reader.onerror = event => {
+    console.error(`File could not be read! Code ${event.target!.error!.code}`);
+  };
+
+  if (file) reader.readAsText(file);
+};

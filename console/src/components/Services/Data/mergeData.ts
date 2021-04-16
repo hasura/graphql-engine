@@ -377,3 +377,123 @@ export const mergeLoadSchemaDataPostgres = (
 
   return _mergedTableData;
 };
+
+type BigQueryTable = {
+  columns: Array<{
+    column_name: string;
+    data_type: string;
+    data_type_name: string;
+    is_nullable: 'YES' | 'NO';
+    ordinal_position: number;
+    table_name: string;
+    table_schema: string;
+  }>;
+  comment: string;
+  table_name: string;
+  table_schema: string;
+  table_type: 'TABLE' | 'VIEW' | 'EXTERNAL';
+};
+
+export const mergeDataBigQuery = (
+  data: Array<{ result: string[] }>,
+  metadataTables: TableEntry[]
+): Table[] => {
+  const result = [] as Table[];
+  const tables = [] as BigQueryTable[];
+  data[0].result.slice(1).forEach(row => {
+    try {
+      tables.push({
+        table_schema: row[0],
+        table_name: row[1],
+        table_type: row[2] as BigQueryTable['table_type'],
+        comment: row[3],
+        columns: JSON.parse(row[4]),
+      });
+      // eslint-disable-next-line no-empty
+    } catch (err) {
+      console.log(err);
+    }
+  });
+
+  tables.forEach(table => {
+    const metadataTable = metadataTables?.find(
+      t =>
+        t.table.schema === table.table_schema &&
+        t.table.name === table.table_name
+    );
+
+    const relationships = [] as Table['relationships'];
+    metadataTable?.array_relationships?.forEach(rel => {
+      relationships.push({
+        rel_def: rel.using,
+        rel_name: rel.name,
+        table_name: table.table_name,
+        table_schema: table.table_schema,
+        rel_type: 'array',
+      });
+    });
+
+    metadataTable?.object_relationships?.forEach(rel => {
+      relationships.push({
+        rel_def: rel.using,
+        rel_name: rel.name,
+        table_name: table.table_name,
+        table_schema: table.table_schema,
+        rel_type: 'object',
+      });
+    });
+
+    const rolePermMap = permKeys.reduce((rpm: Record<string, any>, key) => {
+      if (metadataTable) {
+        metadataTable[key]?.forEach(
+          (perm: { role: string; permission: Record<string, any> }) => {
+            rpm[perm.role] = {
+              permissions: {
+                ...(rpm[perm.role] && rpm[perm.role].permissions),
+                [keyToPermission[key]]: perm.permission,
+              },
+            };
+          }
+        );
+      }
+      return rpm;
+    }, {});
+
+    const permissions: Table['permissions'] = Object.keys(rolePermMap).map(
+      role => ({
+        role_name: role,
+        permissions: rolePermMap[role].permissions,
+        table_name: table.table_name,
+        table_schema: table.table_schema,
+      })
+    );
+
+    const mergedInfo = {
+      table_schema: table.table_schema,
+      table_name: table.table_name,
+      table_type: table.table_type,
+      is_table_tracked: metadataTables.some(
+        t =>
+          t.table.name === table.table_name &&
+          t.table.schema === table.table_schema
+      ),
+      columns: table.columns,
+      comment: '',
+      triggers: [],
+      primary_key: null,
+      relationships,
+      permissions,
+      unique_constraints: [],
+      check_constraints: [],
+      foreign_key_constraints: [] as Table['foreign_key_constraints'],
+      opp_foreign_key_constraints: [] as Table['foreign_key_constraints'],
+      view_info: null,
+      remote_relationships: [],
+      is_enum: false,
+      configuration: undefined,
+      computed_fields: [],
+    };
+    result.push(mergedInfo);
+  });
+  return result;
+};

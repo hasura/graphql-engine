@@ -33,8 +33,19 @@ export const getTableDef = (table: Table) => {
   return generateTableDef(table.table_name, table.table_schema);
 };
 
-export const getQualifiedTableDef = (tableDef: QualifiedTable | string) => {
-  return typeof tableDef === 'string' ? generateTableDef(tableDef) : tableDef;
+export const getQualifiedTableDef = (
+  tableDef: QualifiedTable | string,
+  driver?: string
+) => {
+  if (typeof tableDef === 'string') return generateTableDef(tableDef);
+
+  if (driver === 'bigquery')
+    return {
+      name: tableDef.name,
+      dataset: tableDef.schema,
+    };
+
+  return tableDef;
 };
 
 export const getTableNameWithSchema = (

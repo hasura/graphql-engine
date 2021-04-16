@@ -24,6 +24,7 @@ const driverToLabel: Record<Driver, string> = {
   mysql: 'MySQL',
   postgres: 'PostgreSQL',
   mssql: 'MS Server',
+  bigquery: 'Big Query',
 };
 
 type DatabaseListItemProps = {
