@@ -1,8 +1,10 @@
 # Hasura GraphQL Engine Changelog
 
 ## Next release
+(Add entries here in the order of: server, console, cli, docs, others)
 
-- server: all query APIs now require admin privileges
+
+## v2.0.0-alpha.8
 
 ### Support for 3D PostGIS Operators
 
@@ -41,8 +43,7 @@ In the future, we will probably offer a way to explicitly choose which behaviour
 
 ### Bug fixes and improvements
 
-(Add entries here in the order of: server, console, cli, docs, others)
-
+- server: all /query APIs now require admin privileges
 - server: add a new `/dev/rts_stats` endpoint, enabled when hasura is started with '+RTS -T'
 - server: re-enable a default HASURA_GRAPHQL_PG_CONN_LIFETIME of 10min
 - server: support for bigquery datasets
