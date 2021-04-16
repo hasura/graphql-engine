@@ -49,7 +49,6 @@ import           System.Environment                         (getEnvironment)
 
 import qualified Hasura.GraphQL.Execute.LiveQuery.Poll      as EL
 import qualified Hasura.GraphQL.Transport.WebSocket.Server  as WS
-import qualified Hasura.Server.API.V2Query                  as V2Q
 import qualified Hasura.Tracing                             as Tracing
 
 import           Hasura.Backends.Postgres.Connection
@@ -743,9 +742,9 @@ instance MonadMetadataApiAuthorization PGMetadataStorageApp where
     when (currRole /= adminRoleName) $
       withPathK "args" $ throw400 AccessDenied accessDeniedErrMsg
 
-  authorizeV2QueryApi query handlerCtx = runExceptT do
+  authorizeV2QueryApi _ handlerCtx = runExceptT do
     let currRole = _uiRole $ hcUser handlerCtx
-    when (V2Q.queryNeedsAdmin query && currRole /= adminRoleName) $
+    when (currRole /= adminRoleName) $
       withPathK "args" $ throw400 AccessDenied accessDeniedErrMsg
 
 instance ConsoleRenderer PGMetadataStorageApp where

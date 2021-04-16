@@ -2,6 +2,8 @@
 
 ## Next release
 
+- server: all query APIs now require admin privileges
+
 ### Support for 3D PostGIS Operators
 
 We now support the use of the functions `ST_3DDWithin` and `ST_3DIntersects` in boolean expressions.

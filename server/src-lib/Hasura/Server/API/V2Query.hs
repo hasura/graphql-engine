@@ -2,13 +2,13 @@
 module Hasura.Server.API.V2Query where
 
 import           Control.Lens
-import           Control.Monad.Trans.Control      (MonadBaseControl)
+import           Control.Monad.Trans.Control         (MonadBaseControl)
 import           Data.Aeson
 import           Data.Aeson.Casing
 import           Data.Aeson.TH
 
-import qualified Data.Environment                 as Env
-import qualified Network.HTTP.Client              as HTTP
+import qualified Data.Environment                    as Env
+import qualified Network.HTTP.Client                 as HTTP
 
 import           Hasura.EncJSON
 import           Hasura.Metadata.Class
@@ -23,12 +23,12 @@ import           Hasura.RQL.DML.Update
 import           Hasura.RQL.Types
 import           Hasura.RQL.Types.Run
 import           Hasura.Server.Types
-import           Hasura.Server.Version            (HasVersion)
+import           Hasura.Server.Version               (HasVersion)
 import           Hasura.Session
 
-import qualified Hasura.Backends.MSSQL.DDL.RunSQL as MSSQL
 import qualified Hasura.Backends.BigQuery.DDL.RunSQL as BigQuery
-import qualified Hasura.Tracing                   as Tracing
+import qualified Hasura.Backends.MSSQL.DDL.RunSQL    as MSSQL
+import qualified Hasura.Tracing                      as Tracing
 
 data RQLQuery
   = RQInsert !InsertQuery
@@ -48,12 +48,6 @@ $(deriveJSON
                  , sumEncoding = TaggedObject "type" "args"
                  }
   ''RQLQuery)
-
-queryNeedsAdmin :: RQLQuery -> Bool
-queryNeedsAdmin = \case
-  RQRunSql _ -> True
-  RQBulk   l -> any queryNeedsAdmin l
-  _          -> False
 
 runQuery
   :: ( HasVersion
@@ -116,13 +110,13 @@ runQueryM
      )
   => Env.Environment -> RQLQuery -> m EncJSON
 runQueryM env = \case
-  RQInsert q      -> runInsert env q
-  RQSelect q      -> runSelect q
-  RQUpdate q      -> runUpdate env q
-  RQDelete q      -> runDelete env q
-  RQCount  q      -> runCount q
-  RQRunSql q      -> runRunSQL q
-  RQMssqlRunSql q -> MSSQL.runSQL q
-  RQBigqueryRunSql q -> BigQuery.runSQL q
+  RQInsert q                     -> runInsert env q
+  RQSelect q                     -> runSelect q
+  RQUpdate q                     -> runUpdate env q
+  RQDelete q                     -> runDelete env q
+  RQCount  q                     -> runCount q
+  RQRunSql q                     -> runRunSQL q
+  RQMssqlRunSql q                -> MSSQL.runSQL q
+  RQBigqueryRunSql q             -> BigQuery.runSQL q
   RQBigqueryDatabaseInspection q -> BigQuery.runDatabaseInspection q
-  RQBulk   l      -> encJFromList <$> indexedMapM (runQueryM env) l
+  RQBulk   l                     -> encJFromList <$> indexedMapM (runQueryM env) l
