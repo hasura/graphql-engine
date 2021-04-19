@@ -71,32 +71,32 @@ const columnOperatorsInfo = {
   },
   _ceq: {
     type: 'comparision',
-    inputStructure: 'object',
+    inputStructure: 'array',
     inputType: 'column',
   },
   _cne: {
     type: 'comparision',
-    inputStructure: 'object',
+    inputStructure: 'array',
     inputType: 'column',
   },
   _cgt: {
     type: 'comparision',
-    inputStructure: 'object',
+    inputStructure: 'array',
     inputType: 'column',
   },
   _clt: {
     type: 'comparision',
-    inputStructure: 'object',
+    inputStructure: 'array',
     inputType: 'column',
   },
   _cgte: {
     type: 'comparision',
-    inputStructure: 'object',
+    inputStructure: 'array',
     inputType: 'column',
   },
   _clte: {
     type: 'comparision',
-    inputStructure: 'object',
+    inputStructure: 'array',
     inputType: 'column',
   },
   _is_null: {

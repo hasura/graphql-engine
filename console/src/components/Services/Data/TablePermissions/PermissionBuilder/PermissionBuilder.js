@@ -1,47 +1,48 @@
 /* eslint-disable no-use-before-define*/
 
 import React from 'react';
+
 import PropTypes from 'prop-types';
 
+import {
+  currentDriver,
+  dataSource,
+  findTable,
+  generateTableDef,
+  getQualifiedTableDef,
+  getRelationshipRefTable,
+  getSchemaTableNames,
+  getTableColumn,
+  getTableColumnNames,
+  getTableRelationship,
+  getTableRelationshipNames,
+  getTrackedTables,
+  getTableFromRelationshipChain,
+} from '../../../../../dataSources';
 import QueryBuilderJson from '../../../../Common/QueryBuilderJson/QueryBuilderJson';
-
+import {
+  getAllJsonPaths,
+  isArray,
+  isJsonString,
+  isObject,
+} from '../../../../Common/utils/jsUtils';
+// import { ColumnArray } from './ColumnArray';
 import {
   addToPrefix,
-  isArrayBoolOperator,
-  isBoolOperator,
-  isArrayColumnOperator,
-  isColumnOperator,
-  getRootType,
-  getOperatorInputType,
   boolOperators,
-  getPermissionOperators,
   existOperators,
+  getOperatorInputType,
+  getPermissionOperators,
+  getRootType,
+  isArrayBoolOperator,
+  isArrayColumnOperator,
+  isBoolOperator,
+  isColumnOperator,
   isExistOperator,
   TABLE_KEY,
   WHERE_KEY,
 } from './utils';
-
-import {
-  findTable,
-  getTrackedTables,
-  getTableColumn,
-  getRelationshipRefTable,
-  getTableColumnNames,
-  getTableRelationshipNames,
-  getTableRelationship,
-  getQualifiedTableDef,
-  getSchemaTableNames,
-  generateTableDef,
-  dataSource,
-  currentDriver,
-} from '../../../../../dataSources';
-
-import {
-  isJsonString,
-  getAllJsonPaths,
-  isObject,
-  isArray,
-} from '../../../../Common/utils/jsUtils';
+import SelectGroup from './SelectGroup';
 
 class PermissionBuilder extends React.Component {
   static propTypes = {
@@ -541,7 +542,6 @@ class PermissionBuilder extends React.Component {
             _val = JSON.parse(val);
           }
         }
-
         dispatchFunc({ prefix: prefix, value: _val });
       };
 
@@ -574,9 +574,19 @@ class PermissionBuilder extends React.Component {
         input = inputBox();
         suggestion = jsonSuggestion();
       } else if (valueType === 'column') {
-        input = wrapDoubleQuotes(
-          renderSelect(dispatchInput, value, tableColumns)
-        );
+        if (Array.isArray(tableColumns)) {
+          input = wrapDoubleQuotes(
+            renderSelect(dispatchInput, value, tableColumns)
+          );
+        } else if (tableColumns.relationships || tableColumns.columns) {
+          input = (
+            <SelectGroup
+              selectDispatchFunc={dispatchInput}
+              value={value}
+              values={tableColumns}
+            />
+          );
+        }
       } else {
         input = wrapDoubleQuotes(inputBox());
         suggestion = sessionVariableSuggestion();
@@ -589,6 +599,68 @@ class PermissionBuilder extends React.Component {
       );
     };
 
+    const renderColumnArray = (dispatchFunc, values, prefix, valueType) => {
+      const { tableDef, allTableSchemas } = this.props;
+      const rootTable = findTable(allTableSchemas, tableDef);
+      let prevTable = getTableFromRelationshipChain(
+        allTableSchemas,
+        rootTable,
+        prefix
+      );
+
+      const inputArray = (values?.length < 1 ? [''] : [])
+        .concat(values || [])
+        .concat([''])
+        .map((val, i, arr) => {
+          const onChange = v => {
+            dispatchFunc({
+              prefix: v.prefix,
+              value: [...arr.slice(0, i), v.value],
+            });
+          };
+
+          const options = {};
+          // uncomment options.relationships assignment to enable selection of relationships
+          if (i === 0) {
+            options.root = ['$'];
+            // options.relationships = getTableRelationshipNames(prevTable);
+            options.columns = getTableColumnNames(prevTable);
+          } else if (arr[i - 1] === '$') {
+            // options.relationships = getTableRelationshipNames(rootTable);
+            options.columns = getTableColumnNames(rootTable);
+            prevTable = rootTable;
+          } else if (arr[i - 1]?.length) {
+            if (prevTable) {
+              const rel = getTableRelationship(prevTable, arr[i - 1]);
+              if (rel) {
+                const def = getRelationshipRefTable(prevTable, rel);
+                prevTable = findTable(allTableSchemas, def);
+                if (prevTable) {
+                  // options.relationships = getTableRelationshipNames(prevTable);
+                  options.columns = getTableColumnNames(prevTable);
+                } else {
+                  return null;
+                }
+              } else {
+                prevTable = null;
+              }
+            }
+          }
+          return renderValue(onChange, val, prefix, valueType, options, false);
+        });
+
+      const unselectedElements = [(values || []).length];
+
+      return (
+        <span>
+          <QueryBuilderJson
+            element={inputArray}
+            unselectedElements={unselectedElements}
+          />
+        </span>
+      );
+    };
+
     const renderValueArray = (
       dispatchFunc,
       values,
@@ -596,6 +668,9 @@ class PermissionBuilder extends React.Component {
       valueType,
       tableColumns
     ) => {
+      if (valueType === 'column') {
+        return renderColumnArray(dispatchFunc, values, prefix, valueType);
+      }
       const dispatchInput = val => {
         dispatchFunc({ prefix: prefix, value: val });
       };
@@ -867,7 +942,6 @@ class PermissionBuilder extends React.Component {
       prefix
     ) => {
       const _boolExpArray = [];
-
       expressions = isArray(expressions) ? expressions : [];
 
       expressions.concat([{}]).forEach((expression, i) => {
