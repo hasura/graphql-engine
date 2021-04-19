@@ -3,6 +3,17 @@
 ## Next release
 (Add entries here in the order of: server, console, cli, docs, others)
 
+### Support comparing columns across related tables in permission's boolean expressions
+
+We now support comparing columns across related tables. For example:
+
+Consider two tables, `items(id, name, quantity)` and `shopping_cart(id, item_id, quantity)`
+and these two tables are related via the `item_id` column. Now, while defining insert permission
+on the `shopping_cart` table, there can be a check to insert an item into the shopping cart
+only when there are enough present in the items inventory.
+
+### Bug fixes and improvements
+
 - console: add bigquery support (#1000)
 - cli: add support for bigquery in metadata operations
 

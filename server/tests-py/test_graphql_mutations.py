@@ -205,6 +205,9 @@ class TestGraphqlInsertPermission:
     def test_check_set_headers_while_doing_upsert(self,hge_ctx):
         check_query_f(hge_ctx, self.dir() + "/leads_upsert_check_with_headers.yaml")
 
+    def test_column_comparison_across_different_tables(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + "/column_comparison_across_tables.yaml")
+
     @classmethod
     def dir(cls):
         return "queries/graphql_mutation/insert/permissions"

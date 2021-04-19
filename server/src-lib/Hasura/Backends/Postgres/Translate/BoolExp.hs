@@ -17,7 +17,6 @@ import           Hasura.Backends.Postgres.Types.BoolExp
 import           Hasura.RQL.Types
 import           Hasura.SQL.Types
 
-
 -- This convoluted expression instead of col = val
 -- to handle the case of col : null
 equalsBoolExpBuilder :: SQLExpression 'Postgres -> SQLExpression 'Postgres -> S.BoolExp
@@ -37,38 +36,40 @@ notEqualsBoolExpBuilder qualColExp rhsExp =
 annBoolExp
   :: (QErrM m, TableCoreInfoRM b m, BackendMetadata b)
   => ValueParser b m v
+  -> TableName b
   -> FieldInfoMap (FieldInfo b)
   -> GBoolExp b ColExp
   -> m (AnnBoolExp b v)
-annBoolExp rhsParser fim boolExp =
+annBoolExp rhsParser rootTable fim boolExp =
   case boolExp of
     BoolAnd exps -> BoolAnd <$> procExps exps
     BoolOr exps  -> BoolOr <$> procExps exps
-    BoolNot e    -> BoolNot <$> annBoolExp rhsParser fim e
+    BoolNot e    -> BoolNot <$> annBoolExp rhsParser rootTable fim e
     BoolExists (GExists refqt whereExp) ->
       withPathK "_exists" $ do
         refFields <- withPathK "_table" $ askFieldInfoMapSource refqt
         annWhereExp <- withPathK "_where" $
-                       annBoolExp rhsParser refFields whereExp
+                       annBoolExp rhsParser rootTable refFields whereExp
         return $ BoolExists $ GExists refqt annWhereExp
-    BoolFld fld -> BoolFld <$> annColExp rhsParser fim fld
+    BoolFld fld -> BoolFld <$> annColExp rhsParser rootTable fim fld
   where
-    procExps = mapM (annBoolExp rhsParser fim)
+    procExps = mapM (annBoolExp rhsParser rootTable fim)
 
 annColExp
   :: (QErrM m, TableCoreInfoRM b m, BackendMetadata b)
   => ValueParser b m v
+  -> TableName b
   -> FieldInfoMap (FieldInfo b)
   -> ColExp
   -> m (AnnBoolExpFld b v)
-annColExp rhsParser colInfoMap (ColExp fieldName colVal) = do
+annColExp rhsParser rootTable colInfoMap (ColExp fieldName colVal) = do
   colInfo <- askFieldInfo colInfoMap fieldName
   case colInfo of
-    FIColumn pgi -> AVCol pgi <$> parseBoolExpOperations rhsParser colInfoMap pgi colVal
+    FIColumn pgi -> AVCol pgi <$> parseBoolExpOperations rhsParser rootTable colInfoMap pgi colVal
     FIRelationship relInfo -> do
       relBoolExp      <- decodeValue colVal
       relFieldInfoMap <- askFieldInfoMapSource $ riRTable relInfo
-      annRelBoolExp   <- annBoolExp rhsParser relFieldInfoMap $
+      annRelBoolExp   <- annBoolExp rhsParser rootTable relFieldInfoMap $
                          unBoolExp relBoolExp
       return $ AVRel relInfo annRelBoolExp
     FIComputedField _ ->
@@ -139,7 +140,8 @@ mkFieldCompExp
   :: S.Qual -> FieldName -> OpExpG 'Postgres S.SQLExp -> S.BoolExp
 mkFieldCompExp qual lhsField = mkCompExp (mkQField lhsField)
   where
-    mkQCol = S.SEQIdentifier . S.QIdentifier qual . toIdentifier
+    mkQCol (col, Nothing)    = S.SEQIdentifier $ S.QIdentifier qual $ toIdentifier col
+    mkQCol (col, Just table) = S.SEQIdentifier $ S.mkQIdentifierTable table $ toIdentifier col
     mkQField = S.SEQIdentifier . S.QIdentifier qual . Identifier . getFieldNameTxt
 
     mkCompExp :: SQLExpression 'Postgres -> OpExpG 'Postgres (SQLExpression 'Postgres) -> S.BoolExp

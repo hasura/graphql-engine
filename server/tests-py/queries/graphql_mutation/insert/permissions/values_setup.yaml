@@ -49,4 +49,11 @@ args:
       name: Resident 6
       age: 22
 
-#Insert users
+- type: insert
+  args:
+    table: items
+    objects:
+      - name: Apsara Pencil
+        quantity: 10
+      - name: Reynolds Trimax
+        quantity: 1323

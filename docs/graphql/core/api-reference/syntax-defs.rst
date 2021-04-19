@@ -793,6 +793,48 @@ Operator
 
 **Operators for comparing columns (all column types except json, jsonb):**
 
+**Column Comparison Operator**
+
+.. parsed-literal::
+   :class: haskell-pre
+
+   {
+     PGColumn_: {
+       Operator_: {
+         PGColumn_ | ["$", PGColumn_]
+       }
+     }
+   }
+
+Column comparison operators can be used to compare columns of the same
+table or a related table. To compare a column of a table with another column of :
+
+1. The same table -
+
+.. parsed-literal::
+   :class: haskell-pre
+
+   {
+     PGColumn_: {
+       Operator_: {
+         PGColumn_
+       }
+     }
+   }
+
+2. The table on which the permission is being defined on -
+
+.. parsed-literal::
+   :class: haskell-pre
+
+   {
+     PGColumn_: {
+       Operator_: {
+         [$, PGColumn_]
+       }
+     }
+   }
+
 .. list-table::
    :header-rows: 1
 

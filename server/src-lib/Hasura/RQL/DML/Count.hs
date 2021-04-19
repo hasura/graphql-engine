@@ -91,7 +91,7 @@ validateCountQWith sessVarBldr prepValBldr (CountQuery qt _ mDistCols mWhere) = 
   -- convert the where clause
   annSQLBoolExp <- forM mWhere $ \be ->
     withPathK "where" $
-    convBoolExp colInfoMap selPerm be sessVarBldr (valueParserWithCollectableType prepValBldr)
+    convBoolExp colInfoMap selPerm be sessVarBldr qt (valueParserWithCollectableType prepValBldr)
 
   resolvedSelFltr <- convAnnBoolExpPartialSQL sessVarBldr $
                      spiFilter selPerm

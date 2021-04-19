@@ -297,10 +297,11 @@ convBoolExp
   -> SelPermInfo b
   -> BoolExp b
   -> SessVarBldr b m
+  -> TableName b
   -> ValueParser b m (SQLExpression b)
   -> m (AnnBoolExpSQL b)
-convBoolExp cim spi be sessVarBldr rhsParser = do
-  abe <- annBoolExp rhsParser cim $ unBoolExp be
+convBoolExp cim spi be sessVarBldr rootTable rhsParser = do
+  abe <- annBoolExp rhsParser rootTable cim $ unBoolExp be
   checkSelPerm spi sessVarBldr abe
 
 dmlTxErrorHandler :: Q.PGTxErr -> QErr

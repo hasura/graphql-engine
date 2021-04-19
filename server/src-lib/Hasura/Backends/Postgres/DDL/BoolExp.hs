@@ -39,13 +39,16 @@ instance ToTxt (ColumnReference 'Postgres) where
 
 parseBoolExpOperations
   :: forall m v
-   . (MonadError QErr m)
+   . ( MonadError QErr m
+     , TableCoreInfoRM 'Postgres m
+     )
   => ValueParser 'Postgres m v
+  -> QualifiedTable
   -> FieldInfoMap (FieldInfo 'Postgres)
   -> ColumnInfo 'Postgres
   -> Value
   -> m [OpExpG 'Postgres v]
-parseBoolExpOperations rhsParser fim columnInfo value = do
+parseBoolExpOperations rhsParser rootTable fim columnInfo value = do
   restrictJSONColumn
   withPathK (getPGColTxt $ pgiColumn columnInfo) $
     parseOperations (ColumnReferenceColumn columnInfo) value
@@ -211,12 +214,12 @@ parseBoolExpOperations rhsParser fim columnInfo value = do
         parseGte      = AGTE <$> parseOne -- >=
         parseLte      = ALTE <$> parseOne -- <=
 
-        parseCeq      = CEQ  <$> decodeAndValidateRhsCol
-        parseCne      = CNE  <$> decodeAndValidateRhsCol
-        parseCgt      = CGT  <$> decodeAndValidateRhsCol
-        parseClt      = CLT  <$> decodeAndValidateRhsCol
-        parseCgte     = CGTE <$> decodeAndValidateRhsCol
-        parseClte     = CLTE <$> decodeAndValidateRhsCol
+        parseCeq      = CEQ  <$> decodeAndValidateRhsCol val
+        parseCne      = CNE  <$> decodeAndValidateRhsCol val
+        parseCgt      = CGT  <$> decodeAndValidateRhsCol val
+        parseClt      = CLT  <$> decodeAndValidateRhsCol val
+        parseCgte     = CGTE <$> decodeAndValidateRhsCol val
+        parseClte     = CLTE <$> decodeAndValidateRhsCol val
 
         parseLike     = guardType stringTypes >> ALIKE                      <$> parseOne
         parseNlike    = guardType stringTypes >> ANLIKE                     <$> parseOne
@@ -267,6 +270,33 @@ parseBoolExpOperations rhsParser fim columnInfo value = do
             return $ ASTDWithinGeog $ DWithinGeogOp dist from useSpheroid
           _ -> throwError $ buildMsg colTy [PGGeometry, PGGeography]
 
+        decodeAndValidateRhsCol :: Value -> m (PGCol, Maybe QualifiedTable)
+        decodeAndValidateRhsCol v@(String _) = do
+          j <- decodeValue v
+          col <- validateRhsCol fim j
+          pure (col, Nothing)
+        decodeAndValidateRhsCol (Array path) = do
+          case toList path of
+            [] -> throw400 Unexpected "path cannot be empty"
+            [col] -> do
+              j <- decodeValue col
+              col' <- validateRhsCol fim j
+              pure $ (col', Nothing)
+            (root : col : []) -> do
+              root' :: Text <- decodeValue root
+              unless (root' == "$") $
+                throw400 NotSupported "Relationship references are not supported in column comparison RHS"
+              rootTableInfo <-
+                lookupTableCoreInfo rootTable
+                >>= (`onNothing` (throw500 $ "unexpected: " <> rootTable <<> " doesn't exist"))
+              j <- decodeValue col
+              col' <- validateRhsCol (_tciFieldInfoMap rootTableInfo) j
+              pure $ (col', Just rootTable)
+            _ -> throw400 NotSupported "Relationship references are not supported in column comparison RHS"
+
+        decodeAndValidateRhsCol _ =
+          throw400 Unexpected "a boolean expression JSON can either be a string or an array"
+
         parseST3DDWithinObj = ABackendSpecific <$> do
           guardType [PGGeometry]
           DWithinGeomOp distVal fromVal <- parseVal
@@ -274,12 +304,9 @@ parseBoolExpOperations rhsParser fim columnInfo value = do
           from <- withPathK "from" $ parseOneNoSess colTy fromVal
           return $ AST3DDWithinGeom $ DWithinGeomOp dist from
 
-        decodeAndValidateRhsCol =
-          parseVal >>= validateRhsCol
-
-        validateRhsCol rhsCol = do
+        validateRhsCol fieldInfoMap rhsCol = do
           let errMsg = "column operators can only compare postgres columns"
-          rhsType <- askColumnType fim rhsCol errMsg
+          rhsType <- askColumnType fieldInfoMap rhsCol errMsg
           if colTy /= rhsType
             then throw400 UnexpectedPayload $
                  "incompatible column types : " <> column <<> ", " <>> rhsCol

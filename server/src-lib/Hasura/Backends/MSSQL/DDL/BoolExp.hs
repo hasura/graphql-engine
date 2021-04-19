@@ -21,11 +21,12 @@ parseBoolExpOperations
   :: forall m v
    . (MonadError QErr m) -- , TableCoreInfoRM 'MSSQL m)
   => ValueParser 'MSSQL m v
+  -> TableName
   -> FieldInfoMap (FieldInfo 'MSSQL)
   -> ColumnInfo 'MSSQL
   -> J.Value
   -> m [OpExpG 'MSSQL v]
-parseBoolExpOperations rhsParser _fields columnInfo value =
+parseBoolExpOperations rhsParser _table _fields columnInfo value =
   withPathK (columnNameText $ pgiColumn columnInfo) $
     parseOperations (pgiType columnInfo) value
   where

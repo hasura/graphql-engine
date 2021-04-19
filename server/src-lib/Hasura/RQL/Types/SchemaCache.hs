@@ -484,20 +484,23 @@ getColExpDeps
   -> TableName b
   -> AnnBoolExpFld b (PartialSQLExp b)
   -> [SchemaDependency]
-getColExpDeps source tn = \case
+getColExpDeps source tableName = \case
   AVCol colInfo opExps ->
-    let cn = pgiColumn colInfo
+    let columnName = pgiColumn colInfo
         colDepReason = bool DRSessionVariable DROnType $ any hasStaticExp opExps
-        colDep = mkColDep colDepReason source tn cn
+        colDep = mkColDep colDepReason source tableName columnName
         depColsInOpExp = mapMaybe opExpDepCol opExps
-        colDepsInOpExp = map (mkColDep DROnType source tn) depColsInOpExp
+        colDepsInOpExp = do
+          (col, rootTable) <- depColsInOpExp
+          pure $ mkColDep DROnType source (fromMaybe tableName rootTable) col
     in colDep:colDepsInOpExp
   AVRel relInfo relBoolExp ->
-    let rn = riName relInfo
-        relTN = riRTable relInfo
-        pd = SchemaDependency
-               (SOSourceObj source
-                 $ AB.mkAnyBackend
-                 $ SOITableObj tn (TORel rn))
-               DROnType
-    in pd : getBoolExpDeps source relTN relBoolExp
+    let relationshipName = riName relInfo
+        relationshipTable = riRTable relInfo
+        schemaDependency =
+          SchemaDependency
+            (SOSourceObj source
+              $ AB.mkAnyBackend
+              $ SOITableObj tableName (TORel relationshipName))
+            DROnType
+    in schemaDependency : getBoolExpDeps source relationshipTable relBoolExp

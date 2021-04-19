@@ -110,6 +110,7 @@ data ComputedFieldInfo (b :: BackendType)
   , _cfiComment            :: !(Maybe Text)
   } deriving (Generic)
 deriving instance (Backend b) => Eq (ComputedFieldInfo b)
+deriving instance (Backend b) => Show (ComputedFieldInfo b)
 instance (Backend b) => Cacheable (ComputedFieldInfo b)
 instance (Backend b) => ToJSON (ComputedFieldInfo b) where
   -- spelling out the JSON instance in order to skip the Trees That Grow field

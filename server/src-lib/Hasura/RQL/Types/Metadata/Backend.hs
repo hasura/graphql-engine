@@ -86,6 +86,7 @@ class (Backend b) => BackendMetadata (b :: BackendType) where
   parseBoolExpOperations
     :: (MonadError QErr m, TableCoreInfoRM b m)
     => ValueParser b m v
+    -> TableName b
     -> FieldInfoMap (FieldInfo b)
     -> ColumnInfo b
     -> Value

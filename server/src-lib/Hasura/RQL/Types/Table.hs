@@ -95,6 +95,7 @@ data FieldInfo (b :: BackendType)
   | FIComputedField !(ComputedFieldInfo b)
   | FIRemoteRelationship !(RemoteFieldInfo b)
   deriving (Generic)
+deriving instance Backend b => Show (FieldInfo b)
 deriving instance Backend b => Eq (FieldInfo b)
 instance Backend b => Cacheable (FieldInfo b)
 instance Backend b => ToJSON (FieldInfo b) where
