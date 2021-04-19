@@ -473,7 +473,7 @@ onStart env serverEnv wsConn (StartMsg opId q) = catchAndIgnore $ do
 
     E.SubscriptionExecutionPlan subExec -> do
       -- log the graphql query
-      logQueryLog logger $ QueryLog q Nothing requestId
+      logQueryLog logger $ QueryLog q Nothing requestId Subscription
 
       case subExec of
         E.SEAsyncActionsWithNoRelationships actions -> liftIO do

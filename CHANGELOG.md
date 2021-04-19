@@ -49,6 +49,7 @@ In the future, we will probably offer a way to explicitly choose which behaviour
 - server: re-enable a default HASURA_GRAPHQL_PG_CONN_LIFETIME of 10min
 - server: support for bigquery datasets
 - server: format the values of `injectEventContext` as hexadecimal string instead of integer (fix #6465)
+- server: add "kind" field to query-log items. Kind can be "database", "action", "remote-schema", "graphql", "cached", or "subscription".
 - console: add custom_column_names to track_table request with replaced invalid characters (#992)
 - console: add details button to the success notification to see inserted row
 - console: add request preview for REST endpoints

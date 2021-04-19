@@ -49,7 +49,8 @@ import qualified Hasura.Tracing                               as Tracing
 import           Hasura.Backends.Postgres.Instances.Transport (runPGMutationTransaction)
 import           Hasura.EncJSON
 import           Hasura.GraphQL.Context
-import           Hasura.GraphQL.Logging                       (MonadQueryLog)
+import           Hasura.GraphQL.Logging                       (MonadQueryLog (logQueryLog),
+                                                               QueryLog (..), QueryLogKind (Cached))
 import           Hasura.GraphQL.Parser.Column                 (UnpreparedValue (..))
 import           Hasura.GraphQL.Parser.Schema                 (Variable)
 import           Hasura.GraphQL.Transport.Backend
@@ -224,15 +225,17 @@ runGQ env logger reqId userInfo ipAddress reqHeaders queryType reqUnparsed = do
               E.ExecStepDB _headers exists ->
                 AB.dispatchAnyBackend @BackendTransport exists EB.getRemoteSchemaInfo
               _ -> []
-            actionsInfo = foldl getExecStepActionWithActionInfo [] $ OMap.elems $ OMap.filter (\x -> case x of
+            actionsInfo = foldl getExecStepActionWithActionInfo [] $ OMap.elems $ OMap.filter (\case
               E.ExecStepAction (_, _) -> True
               _                       -> False
               ) queryPlans
 
         (responseHeaders, cachedValue) <- Tracing.interpTraceT (liftEitherM . runExceptT) $ cacheLookup remoteJoins actionsInfo cacheKey
         case fmap decodeGQResp cachedValue of
-          Just cachedResponseData ->
+          Just cachedResponseData -> do
+            logQueryLog logger $ QueryLog reqUnparsed Nothing reqId Cached
             pure (Telem.Query, 0, Telem.Local, HttpResponse cachedResponseData responseHeaders, normalizedSelectionSet)
+
           Nothing -> do
             conclusion <- runExceptT $ forWithKey queryPlans $ \fieldName -> \case
               E.ExecStepDB _headers exists -> doQErr $ do

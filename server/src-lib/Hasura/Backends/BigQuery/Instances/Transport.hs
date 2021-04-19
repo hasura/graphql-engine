@@ -7,7 +7,8 @@ import           Hasura.Backends.BigQuery.Instances.Execute ()
 import           Hasura.Backends.MSSQL.Instances.Execute    ()
 import           Hasura.EncJSON
 import           Hasura.GraphQL.Logging                     (GeneratedQuery (..),
-                                                             MonadQueryLog (..), QueryLog (..))
+                                                             MonadQueryLog (..), QueryLog (..),
+                                                             QueryLogKind (Database))
 import           Hasura.GraphQL.Transport.Backend
 import           Hasura.GraphQL.Transport.HTTP.Protocol
 import qualified Hasura.Logging                             as L
@@ -78,6 +79,6 @@ mkQueryLog
   -> RequestId
   -> QueryLog
 mkQueryLog gqlQuery fieldName preparedSql requestId =
-  QueryLog gqlQuery ((fieldName,) <$> generatedQuery) requestId
+  QueryLog gqlQuery ((fieldName,) <$> generatedQuery) requestId Database
   where
     generatedQuery = preparedSql <&> \qs -> GeneratedQuery qs J.Null

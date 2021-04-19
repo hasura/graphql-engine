@@ -7,6 +7,7 @@ module Hasura.GraphQL.Logging
   ( QueryLog(..)
   , GeneratedQuery(..)
   , MonadQueryLog(..)
+  , QueryLogKind(..)
   ) where
 
 import           Hasura.Prelude
@@ -28,7 +29,25 @@ data QueryLog = QueryLog
   { _qlQuery        :: !GQLReqUnparsed
   , _qlGeneratedSql :: !(Maybe (G.Name, GeneratedQuery))
   , _qlRequestId    :: !RequestId
+  , _qlKind         :: !QueryLogKind
   }
+
+data QueryLogKind
+  = Database
+  | Action
+  | RemoteSchema
+  | GraphQL
+  | Cached
+  | Subscription -- This field is a workaround due to src-lib/Hasura/GraphQL/Transport/WebSocket.hs logging the query before execution is determined.
+
+instance J.ToJSON QueryLogKind where
+  toJSON = \case
+    Database     -> "database"
+    Action       -> "action"
+    RemoteSchema -> "remote-schema"
+    GraphQL      -> "graphql"
+    Cached       -> "cached"
+    Subscription -> "subscription"
 
 data GeneratedQuery = GeneratedQuery
   { _gqQueryString  :: Text
@@ -36,10 +55,11 @@ data GeneratedQuery = GeneratedQuery
   }
 
 instance J.ToJSON QueryLog where
-  toJSON (QueryLog gqlQuery generatedQuery reqId) =
-    J.object [ "query" J..= gqlQuery
+  toJSON (QueryLog gqlQuery generatedQuery reqId kind) =
+    J.object [ "query"         J..= gqlQuery
              , "generated_sql" J..= generatedQuery
-             , "request_id" J..= reqId
+             , "request_id"    J..= reqId
+             , "kind"          J..= kind
              ]
 
 instance J.ToJSON GeneratedQuery where
@@ -57,7 +77,6 @@ class Monad m => MonadQueryLog m where
     :: L.Logger L.Hasura
     -> QueryLog
     -> m ()
-
 
 instance MonadQueryLog m => MonadQueryLog (ExceptT e m) where
   logQueryLog logger l = lift $ logQueryLog logger l
