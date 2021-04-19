@@ -10,4 +10,3 @@
         retries: 1
       use_prepared_statements: true
   tables: "!include default/tables/tables.yaml"
-  functions: "!include default/functions/functions.yaml"

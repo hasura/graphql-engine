@@ -8,7 +8,7 @@ import (
 
 // this can be overridden by ldflags
 var (
-	HasuraVersion  = "main-1a6ffaf34"
+	HasuraVersion  = "main-10df859cf"
 	DockerSwitchIP = func() string {
 		switch runtime.GOOS {
 		case "darwin", "windows":

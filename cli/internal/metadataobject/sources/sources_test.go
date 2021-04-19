@@ -4,6 +4,8 @@ import (
 	"io/ioutil"
 	"testing"
 
+	"github.com/google/go-cmp/cmp"
+
 	"github.com/stretchr/testify/assert"
 	"gopkg.in/yaml.v2"
 
@@ -54,6 +56,17 @@ func TestSourceConfig_Export(t *testing.T) {
       use_prepared_statements: true
   tables: "!include default/tables/tables.yaml"
   functions: "!include default/functions/functions.yaml"
+- name: bg
+  kind: bigquery
+  configuration:
+    datasets:
+    - t1
+    project_id: test_id
+    service_account:
+      client_email: some_email
+      private_key: the private key
+      project_id: some_test
+  tables: "!include bg/tables/tables.yaml"
 `),
 				"metadata/databases/default/tables/public_t1.yaml": []byte(`table:
   name: t1
@@ -102,6 +115,17 @@ xyz_test:
   name: get_t2
   schema: public
 `),
+				"metadata/databases/bg/tables/tables.yaml": []byte(`- "!include london_cycles_cycle_hire.yaml"
+- "!include london_cycles_cycle_stations.yaml"
+`),
+				"metadata/databases/bg/tables/london_cycles_cycle_hire.yaml": []byte(`table:
+  dataset: london_cycles
+  name: cycle_hire
+`),
+				"metadata/databases/bg/tables/london_cycles_cycle_stations.yaml": []byte(`table:
+  dataset: london_cycles
+  name: cycle_stations
+`),
 			},
 			false,
 		},
@@ -127,7 +151,9 @@ xyz_test:
 			}
 			assert.NoError(t, err)
 			assert.NoError(t, err)
-			assert.Equal(t, wantContent, gotContent)
+			if diff := cmp.Diff(wantContent, gotContent); diff != "" {
+				t.Errorf("Export() mismatch (-want +got):\n%s", diff)
+			}
 		})
 	}
 }

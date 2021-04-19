@@ -44,6 +44,10 @@ func NewSeedCmd(ec *cli.ExecutionContext) *cobra.Command {
 					return fmt.Errorf("cannot determine source kind for %v", ec.Source.Name)
 				}
 				ec.Source.Kind = *sourceKind
+				// check if seed ops are supported for the database
+				if !seed.IsSeedsSupported(*sourceKind) {
+					return fmt.Errorf("seed operations on database %s of kind %s is not supported", ec.Source.Name, *sourceKind)
+				}
 			} else {
 				// for project using config older than v3, use PG source kind
 				ec.Source.Kind = hasura.SourceKindPG

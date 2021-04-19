@@ -15,3 +15,11 @@ type Driver struct {
 func NewDriver(s sendBulk, pgDumpClient hasura.PGDump) *Driver {
 	return &Driver{s, pgDumpClient}
 }
+
+func IsSeedsSupported(kind hasura.SourceKind) bool {
+	switch kind {
+	case hasura.SourceKindMSSQL, hasura.SourceKindPG:
+		return true
+	}
+	return false
+}
