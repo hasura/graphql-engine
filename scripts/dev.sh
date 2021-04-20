@@ -413,6 +413,11 @@ elif [ "$MODE" = "test" ]; then
     echo_pretty "Starting graphql-engine, logging to $GRAPHQL_ENGINE_TEST_LOG"
     export HASURA_GRAPHQL_SERVER_PORT=8088
 
+    # Extra sources for multi-source tests. Uses the default postgres DB if no extra sources
+    # are defined.
+    export HASURA_GRAPHQL_PG_SOURCE_URL_1=${HASURA_GRAPHQL_PG_SOURCE_URL_1-$PG_DB_URL}
+    export HASURA_GRAPHQL_PG_SOURCE_URL_2=${HASURA_GRAPHQL_PG_SOURCE_URL_2-$PG_DB_URL}
+
     # Using --metadata-database-url flag to test multiple backends
     cabal new-run --project-file=cabal.project.dev-sh -- exe:graphql-engine \
       --metadata-database-url="$PG_DB_URL" serve --stringify-numeric-types \
