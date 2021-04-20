@@ -1,23 +1,27 @@
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 
-module Hasura.Backends.MSSQL.Instances.Execute (NoMultiplex(..)) where
+module Hasura.Backends.MSSQL.Instances.Execute (MultiplexedQuery'(..), multiplexRootReselect) where
 
 import           Hasura.Prelude
 
+import qualified Data.Aeson.Extended                   as J
 import qualified Data.Environment                      as Env
-import qualified Data.HashMap.Strict.InsOrd            as OMap
+import qualified Data.List.NonEmpty                    as NE
+import qualified Data.Text.Extended                    as T
 import qualified Database.ODBC.SQLServer               as ODBC
 import qualified Language.GraphQL.Draft.Syntax         as G
 import qualified Network.HTTP.Client                   as HTTP
 import qualified Network.HTTP.Types                    as HTTP
 
-import           Data.Text.Extended
 
 import qualified Hasura.SQL.AnyBackend                 as AB
 
 import           Hasura.Backends.MSSQL.Connection
+import           Hasura.Backends.MSSQL.FromIr          as TSQL
 import           Hasura.Backends.MSSQL.Plan
+import           Hasura.Backends.MSSQL.SQL.Value       (toTxtEncodedVal)
 import           Hasura.Backends.MSSQL.ToQuery
+import           Hasura.Backends.MSSQL.Types           as TSQL
 import           Hasura.EncJSON
 import           Hasura.GraphQL.Context
 import           Hasura.GraphQL.Execute.Backend
@@ -29,7 +33,7 @@ import           Hasura.Session
 
 instance BackendExecute 'MSSQL where
   type PreparedQuery    'MSSQL = Text
-  type MultiplexedQuery 'MSSQL = NoMultiplex
+  type MultiplexedQuery 'MSSQL = MultiplexedQuery'
   type ExecutionMonad   'MSSQL = ExceptT QErr IO
   getRemoteJoins = const []
 
@@ -39,12 +43,12 @@ instance BackendExecute 'MSSQL where
   mkDBQueryExplain = msDBQueryExplain
   mkLiveQueryExplain = msDBLiveQueryExplain
 
+
 -- multiplexed query
+newtype MultiplexedQuery' = MultiplexedQuery' Reselect
 
-newtype NoMultiplex = NoMultiplex (G.Name, ODBC.Query)
-
-instance ToTxt NoMultiplex where
-  toTxt (NoMultiplex (_name, query)) = toTxt query
+instance T.ToTxt MultiplexedQuery' where
+  toTxt (MultiplexedQuery' reselect) = T.toTxt $ toQueryPretty $ fromReselect reselect
 
 
 -- query
@@ -73,9 +77,7 @@ msDBQueryPlan _env _manager _reqHeaders userInfo _directives sourceName sourceCo
     $ DBStepInfo sourceName sourceConfig (Just queryString) odbcQuery
 
 msDBQueryExplain
-  :: forall m
-    . ( MonadError QErr m
-      )
+  :: MonadError QErr m
   => G.Name
   -> UserInfo
   -> SourceName
@@ -95,18 +97,86 @@ msDBQueryExplain fieldName userInfo sourceName sourceConfig qrf = do
     $ DBStepInfo sourceName sourceConfig Nothing odbcQuery
 
 msDBLiveQueryExplain
-  :: ( MonadError QErr m
-     , MonadIO m
-     )
+  :: MonadError QErr m
   => LiveQueryPlan 'MSSQL (MultiplexedQuery 'MSSQL) -> m LiveQueryPlanExplanation
-msDBLiveQueryExplain (LiveQueryPlan plan sourceConfig variables) = do
-  let NoMultiplex (_name, query) = _plqpQuery plan
-      select    = withExplain $ QueryPrinter query
-      pool      = _mscConnectionPool sourceConfig
-  -- TODO: execute `select` in separate batch
-  -- https://github.com/hasura/graphql-engine-mono/issues/1024
-  _explainInfo <- runJSONPathQuery pool (toQueryFlat select)
-  pure $ LiveQueryPlanExplanation (toTxt query) [] variables
+msDBLiveQueryExplain (LiveQueryPlan plan _sourceConfig variables) = do
+  let query = _plqpQuery plan
+      -- TODO: execute `select` in separate batch
+      -- https://github.com/hasura/graphql-engine-mono/issues/1024
+      -- select    = withExplain $ QueryPrinter query
+      -- pool      = _mscConnectionPool sourceConfig
+      -- explainInfo <- runJSONPathQuery pool (toQueryFlat select)
+  pure $ LiveQueryPlanExplanation (T.toTxt query) [] variables
+
+--------------------------------------------------------------------------------
+-- Producing the correct SQL-level list comprehension to multiplex a query
+
+-- Problem description:
+--
+-- Generate a query that repeats the same query N times but with
+-- certain slots replaced:
+--
+-- [ Select x y | (x,y) <- [..] ]
+--
+
+multiplexRootReselect
+  :: [(CohortId, CohortVariables)]
+  -> TSQL.Reselect
+  -> TSQL.Select
+multiplexRootReselect variables rootReselect =
+  Select
+    { selectTop = NoTop
+    , selectProjections =
+        [ FieldNameProjection
+            Aliased
+              { aliasedThing =
+                  TSQL.FieldName
+                    {fieldNameEntity = rowAlias, fieldName = resultIdAlias}
+              , aliasedAlias = resultIdAlias
+              }
+        , ExpressionProjection
+            Aliased
+              { aliasedThing =
+                  ColumnExpression
+                    (TSQL.FieldName
+                      { fieldNameEntity = resultAlias
+                      , fieldName = TSQL.jsonFieldName
+                      })
+              , aliasedAlias = resultAlias
+              }
+        ]
+    , selectFrom =
+        FromOpenJson
+          Aliased
+            { aliasedThing =
+                OpenJson
+                  { openJsonExpression =
+                      ValueExpression (ODBC.TextValue $ lbsToTxt $ J.encode variables)
+                  , openJsonWith =
+                      NE.fromList
+                        [ UuidField resultIdAlias (Just $ IndexPath RootPath 0)
+                        , JsonField resultVarsAlias (Just $ IndexPath RootPath 1)
+                        ]
+                  }
+            , aliasedAlias = rowAlias
+            }
+    , selectJoins =
+        [ Join
+            { joinSource = JoinReselect rootReselect
+            , joinJoinAlias =
+                JoinAlias
+                  { joinAliasEntity = resultAlias
+                  , joinAliasField = Just TSQL.jsonFieldName
+                  }
+            }
+        ]
+    , selectWhere = Where mempty
+    , selectFor =
+        JsonFor ForJson {jsonCardinality = JsonArray, jsonRoot = NoRoot}
+    , selectOrderBy = Nothing
+    , selectOffset = Nothing
+    }
+
 
 -- mutation
 
@@ -138,13 +208,18 @@ msDBSubscriptionPlan
   -> SourceConfig 'MSSQL
   -> InsOrdHashMap G.Name (QueryDB 'MSSQL (UnpreparedValue 'MSSQL))
   -> m (LiveQueryPlan 'MSSQL (MultiplexedQuery 'MSSQL))
-msDBSubscriptionPlan userInfo _sourceName sourceConfig rootFields = do
-  -- WARNING: only keeping the first root field for now!
-  query <- traverse mkQuery $ head $ OMap.toList rootFields
-  let roleName = _uiRole userInfo
-      parameterizedPlan = ParameterizedLiveQueryPlan roleName $ NoMultiplex query
+msDBSubscriptionPlan UserInfo {_uiSession, _uiRole} _sourceName sourceConfig rootFields = do
+  (reselect, prepareState) <- planMultiplex rootFields _uiSession
+  let PrepareState{sessionVariables, namedArguments, positionalArguments} = prepareState
+  -- TODO: call MSSQL validateVariables
+  -- We need to ensure that the values provided for variables are correct according to MSSQL.
+  -- Without this check an invalid value for a variable for one instance of the subscription will
+  -- take down the entire multiplexed query.
+  let cohortVariables = mkCohortVariables
+        sessionVariables
+        _uiSession
+        (toTxtEncodedVal namedArguments)
+        (toTxtEncodedVal positionalArguments)
+  let parameterizedPlan = ParameterizedLiveQueryPlan _uiRole $ MultiplexedQuery' reselect
   pure
-    $ LiveQueryPlan parameterizedPlan sourceConfig
-    $ mkCohortVariables mempty mempty mempty mempty
-  where
-    mkQuery = fmap (toQueryFlat . fromSelect) . planNoPlan userInfo
+    $ LiveQueryPlan parameterizedPlan sourceConfig cohortVariables

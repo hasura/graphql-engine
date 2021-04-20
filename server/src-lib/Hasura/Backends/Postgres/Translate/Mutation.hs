@@ -25,7 +25,7 @@ import           Hasura.SQL.Types
 -- `SELECT ("row"::table).* VALUES (1, 'Robert', 23) AS "row"`.
 mkSelectExpFromColumnValues
   :: (MonadError QErr m)
-  => QualifiedTable -> [ColumnInfo 'Postgres] -> [ColumnValues 'Postgres TxtEncodedPGVal] -> m S.Select
+  => QualifiedTable -> [ColumnInfo 'Postgres] -> [ColumnValues 'Postgres TxtEncodedVal] -> m S.Select
 mkSelectExpFromColumnValues qt allCols = \case
   []       -> return selNoRows
   colVals  -> do

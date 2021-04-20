@@ -68,7 +68,7 @@ validateVariables pgExecCtx variableValues = do
   let valSel = mkValidationSel $ toList variableValues
   Q.Discard () <- runQueryTx_ $ liftTx $
     Q.rawQE dataExnErrHandler (Q.fromBuilder $ toSQL valSel) [] False
-  pure . ValidatedVariables $ fmap (txtEncodedPGVal . cvValue) variableValues
+  pure . ValidatedVariables $ fmap (txtEncodedVal . cvValue) variableValues
   where
     mkExtr = flip S.Extractor Nothing . toTxtValue
     mkValidationSel vars =

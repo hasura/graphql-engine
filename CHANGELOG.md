@@ -14,6 +14,7 @@ only when there are enough present in the items inventory.
 
 ### Bug fixes and improvements
 
+- server: support query multiplexing in MSSQL subscriptions
 - console: add bigquery support (#1000)
 - cli: add support for bigquery in metadata operations
 

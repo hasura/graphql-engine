@@ -356,9 +356,9 @@ library
 
                      , Hasura.Backends.MSSQL.Connection
                      , Hasura.Backends.MSSQL.DDL
+                     , Hasura.Backends.MSSQL.DDL.BoolExp
                      , Hasura.Backends.MSSQL.DDL.RunSQL
                      , Hasura.Backends.MSSQL.DDL.Source
-                     , Hasura.Backends.MSSQL.DDL.BoolExp
                      , Hasura.Backends.MSSQL.FromIr
                      , Hasura.Backends.MSSQL.Instances.Execute
                      , Hasura.Backends.MSSQL.Instances.Metadata
@@ -367,6 +367,7 @@ library
                      , Hasura.Backends.MSSQL.Instances.Types
                      , Hasura.Backends.MSSQL.Meta
                      , Hasura.Backends.MSSQL.Plan
+                     , Hasura.Backends.MSSQL.SQL.Value
                      , Hasura.Backends.MSSQL.ToQuery
                      , Hasura.Backends.MSSQL.Types
                      , Hasura.Backends.MSSQL.Types.Instances
@@ -571,6 +572,7 @@ library
                      , Hasura.SQL.GeoJSON
                      , Hasura.SQL.Time
                      , Hasura.SQL.Types
+                     , Hasura.SQL.Value
                      , Hasura.SQL.WKT
                      , Hasura.Tracing
                      , Network.HTTP.Client.Extended

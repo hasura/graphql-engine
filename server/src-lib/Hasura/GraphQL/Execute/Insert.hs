@@ -146,7 +146,7 @@ insertObject
   -> PGE.MutationRemoteJoinCtx
   -> Seq.Seq Q.PrepArg
   -> Bool
-  -> m (Int, Maybe (ColumnValues 'Postgres TxtEncodedPGVal))
+  -> m (Int, Maybe (ColumnValues 'Postgres TxtEncodedVal))
 insertObject env singleObjIns additionalColumns remoteJoinCtx planVars stringifyNum = Tracing.trace ("Insert " <> qualifiedObjectToText table) do
   validateInsert (map fst columns) (map IR._riRelInfo objectRels) (map fst additionalColumns)
 
@@ -197,7 +197,7 @@ insertObject env singleObjIns additionalColumns remoteJoinCtx planVars stringify
         _aiDefVals
 
     withArrRels
-      :: Maybe (ColumnValues 'Postgres TxtEncodedPGVal)
+      :: Maybe (ColumnValues 'Postgres TxtEncodedVal)
       -> m Int
     withArrRels colValM = do
       colVal <- onNothing colValM $ throw400 NotSupported cannotInsArrRelErr
@@ -207,8 +207,8 @@ insertObject env singleObjIns additionalColumns remoteJoinCtx planVars stringify
       return $ sum arrInsARows
 
     asSingleObject
-      :: [ColumnValues 'Postgres TxtEncodedPGVal]
-      -> m (Maybe (ColumnValues 'Postgres TxtEncodedPGVal))
+      :: [ColumnValues 'Postgres TxtEncodedVal]
+      -> m (Maybe (ColumnValues 'Postgres TxtEncodedVal))
     asSingleObject = \case
       []  -> pure Nothing
       [r] -> pure $ Just r
@@ -325,7 +325,7 @@ mkInsertQ table onConflictM insCols defVals (insCheck, updCheck) = do
 
 fetchFromColVals
   :: MonadError QErr m
-  => ColumnValues 'Postgres TxtEncodedPGVal
+  => ColumnValues 'Postgres TxtEncodedVal
   -> [ColumnInfo 'Postgres]
   -> m [(PGCol, PG.SQLExp)]
 fetchFromColVals colVal reqCols =
