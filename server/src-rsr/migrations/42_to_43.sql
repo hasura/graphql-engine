@@ -39,7 +39,13 @@ DROP VIEW hdb_catalog.hdb_cron_events_stats;
 DROP TABLE hdb_catalog.hdb_cron_triggers;
 
 -- Create table which stores metadata JSON blob
-CREATE TABLE hdb_catalog.hdb_metadata
+-- The "IF NOT EXISTS" is added due to the introduction of maintenance mode
+-- in which migrations are not applied on startup but the 'hdb_catalog.hdb_table'
+-- is expected to exist and contain the metadata of the graphql-engine. Now, when
+-- the graphql-engine is run in normal mode (with maintenance mode disabled) this
+-- migration file will be run and since this table already exists, we should add
+-- the "IF NOT EXISTS" clause to avoid a migration error
+CREATE TABLE IF NOT EXISTS hdb_catalog.hdb_metadata
 (
   id INTEGER PRIMARY KEY,
   metadata JSON NOT NULL

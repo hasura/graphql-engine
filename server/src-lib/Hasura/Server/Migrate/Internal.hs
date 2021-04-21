@@ -6,6 +6,7 @@ module Hasura.Server.Migrate.Internal
 where
 import           Hasura.Backends.Postgres.Connection
 import           Hasura.Prelude
+import           Hasura.RQL.Types.Error
 import           Hasura.RQL.Types.EventTrigger
 
 import qualified Data.Aeson                          as A
@@ -16,8 +17,8 @@ runTx = liftTx . Q.multiQE defaultTxErrorHandler
 
 -- | The old 0.8 catalog version is non-integral, so we store it in the database as a
 -- string.
-getCatalogVersion :: MonadTx m => m Text
-getCatalogVersion = liftTx $ runIdentity . Q.getRow <$> Q.withQE defaultTxErrorHandler
+getCatalogVersion :: Q.TxE QErr Text
+getCatalogVersion = runIdentity . Q.getRow <$> Q.withQE defaultTxErrorHandler
   [Q.sql| SELECT version FROM hdb_catalog.hdb_version |] () False
 
 from3To4 :: MonadTx m => m ()

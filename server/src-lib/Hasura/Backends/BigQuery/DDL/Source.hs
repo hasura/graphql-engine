@@ -27,6 +27,7 @@ import           Hasura.RQL.Types.Error
 import           Hasura.RQL.Types.Source
 import           Hasura.RQL.Types.Table
 import           Hasura.SQL.Backend
+import           Hasura.Server.Types                      (MaintenanceMode)
 
 
 resolveSourceConfig ::
@@ -52,8 +53,9 @@ resolveSourceConfig _name BigQueryConnSourceConfig{..} = runExceptT $ do
 resolveSource
   :: (MonadIO m)
   => BigQuerySourceConfig
+  -> MaintenanceMode
   -> m (Either QErr (ResolvedSource 'BigQuery))
-resolveSource sourceConfig =
+resolveSource sourceConfig _maintenanceMode =
   runExceptT $ do
     result <- getTables sourceConfig
     case result of

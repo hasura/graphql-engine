@@ -63,6 +63,7 @@ class (Backend b) => BackendMetadata (b :: BackendType) where
   resolveDatabaseMetadata
     :: (MonadIO m, MonadBaseControl IO m, MonadResolveSource m)
     => SourceConfig b
+    -> MaintenanceMode
     -> m (Either QErr (ResolvedSource b))
 
   createTableEventTrigger

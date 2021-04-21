@@ -262,6 +262,7 @@ buildSchemaCacheRule env = proc (metadata, invalidationKeys) -> do
          , MonadIO m, MonadBaseControl IO m
          , MonadResolveSource m
          , BackendMetadata b
+         , HasServerConfigCtx m
          )
       => ( Inc.Dependency (HashMap SourceName Inc.InvalidationKey)
          , SourceMetadata b
@@ -269,12 +270,13 @@ buildSchemaCacheRule env = proc (metadata, invalidationKeys) -> do
     resolveSourceIfNeeded = Inc.cache proc (invalidationKeys, sourceMetadata) -> do
       let sourceName = _smName sourceMetadata
           metadataObj = MetadataObject (MOSource sourceName) $ toJSON sourceName
+      maintenanceMode <- bindA -< _sccMaintenanceMode <$> askServerConfigCtx
       maybeSourceConfig <- getSourceConfigIfNeeded -< (invalidationKeys, sourceName, _smConfiguration sourceMetadata)
       case maybeSourceConfig of
         Nothing -> returnA -< Nothing
         Just sourceConfig ->
           (| withRecordInconsistency (
-             liftEitherA <<< bindA -< resolveDatabaseMetadata sourceConfig)
+             liftEitherA <<< bindA -< resolveDatabaseMetadata sourceConfig maintenanceMode)
           |) metadataObj
 
     buildSource
