@@ -33,11 +33,15 @@ func NewHandler(objects Objects, v1MetadataOps hasura.CommonMetadataOperations, 
 }
 
 func NewHandlerFromEC(ec *cli.ExecutionContext) *Handler {
-	metadataObjects := SetMetadataObjectsWithDir(ec)
+	metadataObjects := GetMetadataObjectsWithDir(ec)
 	return NewHandler(metadataObjects, cli.GetCommonMetadataOps(ec), ec.APIClient.V1Metadata, ec.Logger)
 }
 
-// WriteMetadaa writes the files in the metadata folder
+func (h *Handler) SetMetadataObjects(objects Objects) {
+	h.objects = objects
+}
+
+// WriteMetadata writes the files in the metadata folder
 func (h *Handler) WriteMetadata(files map[string][]byte) error {
 	for name, content := range files {
 		fs := afero.NewOsFs()
@@ -209,6 +213,7 @@ type InconsistentMetadataObject struct {
     }
 ]
 */
+
 func (obj InconsistentMetadataObject) GetType() string {
 	if v, ok := obj.Type.(string); ok {
 		return v

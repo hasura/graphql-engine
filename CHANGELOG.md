@@ -21,6 +21,7 @@ only when there are enough present in the items inventory.
 - server: support query multiplexing in MSSQL subscriptions
 - console: add bigquery support (#1000)
 - cli: add support for bigquery in metadata operations
+- cli: fix regression - `metadata apply —dry-run` was overwriting local metadata files with metadata on server when it should just display the differences.
 
 ## v2.0.0-alpha.8
 

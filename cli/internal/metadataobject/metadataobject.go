@@ -25,7 +25,7 @@ type Object interface {
 	Name() string
 }
 
-func SetMetadataObjectsWithDir(ec *cli.ExecutionContext, dir ...string) Objects {
+func GetMetadataObjectsWithDir(ec *cli.ExecutionContext, dir ...string) Objects {
 	var metadataDir string
 	if len(dir) == 0 {
 		metadataDir = ec.MetadataDir

@@ -62,7 +62,6 @@ func NewMetadataCmd(ec *cli.ExecutionContext) *cobra.Command {
 }
 
 func executeMetadata(cmd string, ec *cli.ExecutionContext) error {
-	metadataobject.SetMetadataObjectsWithDir(ec, ec.MetadataDir)
 	var files map[string][]byte
 	var err error
 	metadataHandler := metadataobject.NewHandlerFromEC(ec)
