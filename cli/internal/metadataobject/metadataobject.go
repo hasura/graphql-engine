@@ -4,6 +4,7 @@ import (
 	"github.com/hasura/graphql-engine/cli"
 	"github.com/hasura/graphql-engine/cli/internal/metadataobject/actions"
 	"github.com/hasura/graphql-engine/cli/internal/metadataobject/allowlist"
+	apilimits "github.com/hasura/graphql-engine/cli/internal/metadataobject/api_limits"
 	crontriggers "github.com/hasura/graphql-engine/cli/internal/metadataobject/cron_triggers"
 	"github.com/hasura/graphql-engine/cli/internal/metadataobject/functions"
 	inheritedroles "github.com/hasura/graphql-engine/cli/internal/metadataobject/inherited_roles"
@@ -43,6 +44,7 @@ func GetMetadataObjectsWithDir(ec *cli.ExecutionContext, dir ...string) Objects 
 		objects = append(objects, crontriggers.New(ec, metadataDir))
 		objects = append(objects, restendpoints.New(ec, metadataDir))
 		objects = append(objects, inheritedroles.New(ec, metadataDir))
+		objects = append(objects, apilimits.New(ec, metadataDir))
 
 		if ec.HasMetadataV3 {
 			if ec.Config.Version >= cli.V3 {

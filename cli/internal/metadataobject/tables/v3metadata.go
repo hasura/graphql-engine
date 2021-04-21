@@ -8,6 +8,10 @@ import (
 	"gopkg.in/yaml.v2"
 )
 
+/*
+V3MetadataTableConfig is responsible for exporting and applying "tables" metadata objects
+in config v2 format on a server with v3 metadata
+ */
 type V3MetadataTableConfig struct {
 	*TableConfig
 }

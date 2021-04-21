@@ -3,6 +3,9 @@
 ## Next release
 (Add entries below in the order of: server, console, cli, docs, others)
 
+- cli: fix regression - `metadata apply —dry-run` was overwriting local metadata files with metadata on server when it should just display the differences.
+- cli: add support for `api_limits` metadata object
+
 ## v2.0.0-alpha.9
 
 ### Support comparing columns across related tables in permission's boolean expressions
@@ -22,7 +25,6 @@ only when there are enough present in the items inventory.
 - server: an inherited role's limit will be the max limit of all the roles (#6671)
 - console: add bigquery support (#1000)
 - cli: add support for bigquery in metadata operations
-- cli: fix regression - `metadata apply —dry-run` was overwriting local metadata files with metadata on server when it should just display the differences.
 
 ## v2.0.0-alpha.8
 
