@@ -24,6 +24,7 @@ import           Hasura.RQL.Types.Source
 import           Hasura.RQL.Types.Table
 import           Hasura.SQL.Backend
 import           Hasura.Server.Migrate.Internal
+import           Hasura.Server.Types                 (MaintenanceMode (..))
 
 resolveSourceConfig
   :: (MonadIO m, MonadResolveSource m)
@@ -34,23 +35,25 @@ resolveSourceConfig name config = runExceptT do
 
 resolveDatabaseMetadata
   :: (MonadIO m, MonadBaseControl IO m)
-  => SourceConfig 'Postgres -> m (Either QErr (ResolvedSource 'Postgres))
-resolveDatabaseMetadata sourceConfig = runExceptT do
+  => SourceConfig 'Postgres -> MaintenanceMode -> m (Either QErr (ResolvedSource 'Postgres))
+resolveDatabaseMetadata sourceConfig maintenanceMode = runExceptT do
   (tablesMeta, functionsMeta, pgScalars) <- runLazyTx (_pscExecCtx sourceConfig) Q.ReadWrite $ do
-    initSource
+    initSource maintenanceMode
     tablesMeta    <- fetchTableMetadata
     functionsMeta <- fetchFunctionMetadata
     pgScalars     <- fetchPgScalars
     pure (tablesMeta, functionsMeta, pgScalars)
   pure $ ResolvedSource sourceConfig tablesMeta functionsMeta pgScalars
 
-initSource :: MonadTx m => m ()
-initSource = do
+initSource :: MonadTx m => MaintenanceMode -> m ()
+initSource maintenanceMode = do
   hdbCatalogExist <- doesSchemaExist "hdb_catalog"
   eventLogTableExist <- doesTableExist "hdb_catalog" "event_log"
   sourceVersionTableExist <- doesTableExist "hdb_catalog" "hdb_source_catalog_version"
+     -- when maintenance mode is enabled, don't perform any migrations
+  if | maintenanceMode == MaintenanceModeEnabled -> pure ()
      -- Fresh database
-  if | not hdbCatalogExist -> liftTx do
+     | not hdbCatalogExist -> liftTx do
         Q.unitQE defaultTxErrorHandler "CREATE SCHEMA hdb_catalog" () False
         enablePgcryptoExtension
         initPgSourceCatalog
@@ -61,7 +64,7 @@ initSource = do
      | not sourceVersionTableExist && eventLogTableExist -> do
        -- Update the Source Catalog to v43 to include the new migration
        -- changes. Skipping this step will result in errors.
-        currCatalogVersion <- getCatalogVersion
+        currCatalogVersion <- liftTx getCatalogVersion
         migrateTo43 currCatalogVersion
         liftTx createVersionTable
      | otherwise -> migrateSourceCatalog

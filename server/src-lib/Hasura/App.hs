@@ -530,8 +530,14 @@ runHGEServer setupHook env ServeOptions{..} ServeCtx{..} initTime postPollHook s
   unLogger logger $ mkGenericStrLog LevelInfo "event_triggers" "starting workers"
 
   _eventQueueThread <- C.forkManagedT "processEventQueue" logger $
-    processEventQueue logger logEnvHeaders
-    _scHttpManager (getSCFromRef cacheRef) eventEngineCtx lockedEventsCtx serverMetrics
+    processEventQueue logger
+                      logEnvHeaders
+                      _scHttpManager
+                      (getSCFromRef cacheRef)
+                      eventEngineCtx
+                      lockedEventsCtx
+                      serverMetrics
+                      soEnableMaintenanceMode
 
   -- start a backgroud thread to handle async actions
   case soAsyncActionsFetchInterval of

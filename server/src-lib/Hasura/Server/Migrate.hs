@@ -105,19 +105,23 @@ migrateCatalog
 migrateCatalog maybeDefaultSourceConfig maintenanceMode migrationTime = do
   catalogSchemaExists <- doesSchemaExist (SchemaName "hdb_catalog")
   versionTableExists <- doesTableExist (SchemaName "hdb_catalog") (TableName "hdb_version")
+  metadataTableExists <- doesTableExist (SchemaName "hdb_catalog") (TableName "hdb_metadata")
   migrationResult <-
     if | maintenanceMode == MaintenanceModeEnabled -> do
            if | not catalogSchemaExists ->
                   throw500 "unexpected: hdb_catalog schema not found in maintenance mode"
               | not versionTableExists ->
                   throw500 "unexpected: hdb_catalog.hdb_version table not found in maintenance mode"
-              -- TODO: should we also have a check for the catalog version?
+              | not metadataTableExists ->
+                  throw500 $
+                    "the \"hdb_catalog.hdb_metadata\" table is expected to exist and contain" <>
+                    " the metadata of the graphql-engine"
               | otherwise -> pure MRMaintanenceMode
        | otherwise -> case catalogSchemaExists of
            False -> initialize True
            True  -> case versionTableExists of
              False -> initialize False
-             True  -> migrateFrom =<< getCatalogVersion
+             True  -> migrateFrom =<< liftTx getCatalogVersion
   metadata <- liftTx fetchMetadataFromCatalog
   pure (migrationResult, metadata)
   where
@@ -166,7 +170,7 @@ downgradeCatalog
   => Maybe (SourceConnConfiguration 'Postgres)
   -> DowngradeOptions -> UTCTime -> m MigrationResult
 downgradeCatalog defaultSourceConfig opts time = do
-    downgradeFrom =<< getCatalogVersion
+    downgradeFrom =<< liftTx getCatalogVersion
   where
     -- downgrades an existing catalog to the specified version
     downgradeFrom :: Text -> m MigrationResult
