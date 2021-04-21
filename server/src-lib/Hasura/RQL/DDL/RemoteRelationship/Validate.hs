@@ -82,7 +82,7 @@ errorToText = \case
   InvalidGraphQLName t ->
     t <<> " is not a valid GraphQL identifier"
   IDTypeJoin typeName ->
-    "Only ID, Int, uuid or String scalar types can be joined to the ID type, but recieved " <>> typeName
+    "Only ID, Int, uuid or String scalar types can be joined to the ID type, but received " <>> typeName
 
 -- | Validate a remote relationship given a context.
 validateRemoteRelationship

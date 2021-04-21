@@ -420,8 +420,10 @@ elif [ "$MODE" = "test" ]; then
 
     # Using --metadata-database-url flag to test multiple backends
     cabal new-run --project-file=cabal.project.dev-sh -- exe:graphql-engine \
-      --metadata-database-url="$PG_DB_URL" serve --stringify-numeric-types \
-      --enable-console --console-assets-dir ../console/static/dist \
+      --metadata-database-url="$PG_DB_URL" serve \
+      --stringify-numeric-types \
+      --enable-console \
+      --console-assets-dir ../console/static/dist \
       &> "$GRAPHQL_ENGINE_TEST_LOG" & GRAPHQL_ENGINE_PID=$!
 
     echo -n "Waiting for graphql-engine"

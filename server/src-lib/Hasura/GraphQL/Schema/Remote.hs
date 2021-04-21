@@ -376,16 +376,51 @@ remoteSchemaUnion schemaDoc defn@(G.UnionTypeDefinition description name _direct
             " can only include object types. It cannot include " <> squote objectName
 
 -- | remoteSchemaInputObject returns an input parser for a given 'G.InputObjectTypeDefinition'
+--
+-- Now, this is tricky! We are faced with two contradicting constraints here. On one hand, the
+-- GraphQL spec forbids us from creating empty input objects. This means that if all the arguments
+-- have presets, we CANNOT use the parser this function creates, and the caller cannot create a
+-- field for this object (and instead should use @pure@ to include the preset values in the result
+-- of parsing the fields).
+--
+-- One way we could fix this would be to change the type of this function to return a `Maybe
+-- Parser`, inspect the result of 'argumentsParser', and return @Nothing@ when we realize that there
+-- aren't any actual field in it (or at least return a value that propagates the preset values). But
+-- this would contradict our second constraint: this function needs to be memoized!
+--
+-- At time of writing, we can't memoize functions that return arbitrary functors of Parsers; so no
+-- memoizing Maybe Parser or Either Presets Parser. Which means that we would need to first call
+-- `argumentsParser`, then memoize the "Just" branch that builds the actual Parser. The problem is
+-- that the recursive call ro remoteSchemaInputObject is within 'argumentsParser', meaning the call
+-- to it MUST be in the memoized branch!
+--
+-- This is why, in the end, we do the following: we first test whether there is any non-preset
+-- field: if yes, we memoize that branch and proceed as normal. Otherwise we can omit the
+-- memoization: we know for sure that the preset fields won't generate a recursive call!
 remoteSchemaInputObject
   :: forall n m
   .  (MonadSchema n m, MonadError QErr m)
   => RemoteSchemaIntrospection
   -> G.InputObjectTypeDefinition RemoteSchemaInputValueDefinition
-  -> m (Parser 'Input n (Maybe (HashMap G.Name (Value RemoteSchemaVariable))))
+  -> m ( Either
+           (InputFieldsParser n (Maybe (HashMap G.Name (Value RemoteSchemaVariable))))
+           (Parser 'Input     n (Maybe (HashMap G.Name (Value RemoteSchemaVariable))))
+       )
 remoteSchemaInputObject schemaDoc defn@(G.InputObjectTypeDefinition desc name _ valueDefns) =
-  P.memoizeOn 'remoteSchemaInputObject defn do
-  argsParser <- argumentsParser valueDefns schemaDoc
-  pure $ P.object name desc $ argsParser
+  if all (isJust . _rsitdPresetArgument) valueDefns
+  then
+    -- All the fields are preset: we can't create a parser, that would result in an invalid type in
+    -- the schema (an input object with no field). We therefore forward the InputFieldsParser
+    -- unmodified. No need to memoize this branch: since all arguments are preset, 'argumentsParser'
+    -- won't be recursively calling this function.
+    Left <$> argumentsParser valueDefns schemaDoc
+  else
+    -- At least one field is not a preset, meaning we have the guarantee that there will be at least
+    -- one field in the input object. We have to memoize this branch as we might recursively call
+    -- the same parser.
+    Right <$> P.memoizeOn 'remoteSchemaInputObject defn do
+      argsParser <- argumentsParser valueDefns schemaDoc
+      pure $ P.object name desc $ argsParser
 
 lookupType
   :: RemoteSchemaIntrospection
@@ -476,7 +511,7 @@ remoteFieldFromName
   -> m (FieldParser n (Field NoFragments RemoteSchemaVariable))
 remoteFieldFromName sdoc fieldName description fieldTypeName argsDefns =
   case lookupType sdoc fieldTypeName of
-    Nothing      -> throw400 RemoteSchemaError $ "Could not find type with name " <>> fieldName
+    Nothing      -> throw400 RemoteSchemaError $ "Could not find type with name " <>> fieldTypeName
     Just typeDef -> remoteField sdoc fieldName description argsDefns typeDef
 
 -- | 'inputValueDefinitionParser' accepts a 'G.InputValueDefinition' and will return an
@@ -541,7 +576,31 @@ inputValueDefinitionParser schemaDoc (G.InputValueDefinition desc name fieldType
                  pure $ fieldConstructor' $ doNullability nullability $ remoteFieldEnumParser defn $> Nothing
                G.TypeDefinitionObject _ -> throw400 RemoteSchemaError "expected input type, but got output type" -- couldn't find the equivalent error in Validate/Types.hs, so using a new error message
                G.TypeDefinitionInputObject defn -> do
-                 fieldConstructor' . doNullability nullability <$> remoteSchemaInputObject schemaDoc defn
+                 potentialObject <- remoteSchemaInputObject schemaDoc defn
+                 pure $ case potentialObject of
+                   Left dummyInputFieldsParser -> do
+                     -- We couln't create a parser, meaning we can't create a field for this
+                     -- object. Instead we must return a "pure" InputFieldsParser that always yields
+                     -- the needed result without containing a field definition.
+                     --
+                     -- !!! WARNING #1 !!!
+                     -- Since we have no input field in the schema for this field, we can't make the
+                     -- distinction between it being actually present at parsing time or not. We
+                     -- therefore choose to behave as if it was always present, and we always
+                     -- include the preset values in the result.
+                     --
+                     -- !!! WARNING #2 !!!
+                     -- We are re-using an 'InputFieldsParser' that was created earlier! Won't that
+                     -- create new fields in the current context? No, it won't, but only because in
+                     -- this case we know that it was created from the preset fields in
+                     -- 'argumentsParser', and therefore contains no field definition.
+                     let dummyInputValue = Just $ GraphQLValue $ G.VObject mempty
+                     dummyInputFieldsParser <&> \presets ->
+                       (dummyInputValue, (Map.singleton name . G.VObject) <$> presets)
+                   Right actualParser -> do
+                     -- We're in the normal case: we do have a parser for the input object, which is
+                     -- therefore valid (non-empty).
+                     fieldConstructor' $ doNullability nullability actualParser
                G.TypeDefinitionUnion _ -> throw400 RemoteSchemaError "expected input type, but got output type"
                G.TypeDefinitionInterface _ -> throw400 RemoteSchemaError "expected input type, but got output type"
        G.TypeList nullability subType ->
@@ -593,6 +652,22 @@ argumentsParser
   -> RemoteSchemaIntrospection
   -> m (InputFieldsParser n (Maybe (HashMap G.Name (Value RemoteSchemaVariable))))
 argumentsParser args schemaDoc = do
+  -- ! DANGER !
+  --
+  -- This function is mutually recursive with 'inputValueDefinitionParser': if one of the non-preset
+  -- arguments is an input object, then recursively we'll end up using 'argumentsParser' to parse
+  -- its arguments. Note however that if there is no "nonPresetArgs", meaning that all the arguments
+  -- have a preset value, then this function will not call 'inputValueDefinitionParser', and will
+  -- simply return without any recursion.
+  --
+  -- This is labelled as dangerous because another function in this module,
+  -- 'remoteSchemaInputObject', EXPLICITLY RELIES ON THIS BEHAVIOUR. Due to limitations of the
+  -- GraphQL spec and of parser memoization functions, it cannot memoize the case where all
+  -- arguments are preset, and therefore relies on the assumption that 'argumentsParser' is not
+  -- recursive in this edge case.
+  --
+  -- This assumptions is unlikely to ever be broken; but if you ever modify this function, please
+  -- nonetheless make sure that it is maintained.
   nonPresetArgsParser <- sequenceA <$> for nonPresetArgs (inputValueDefinitionParser schemaDoc)
   let nonPresetArgsParser' = (fmap . fmap) snd nonPresetArgsParser
   pure $ mkPresets <$> nonPresetArgsParser'

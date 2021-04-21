@@ -37,6 +37,16 @@ args:
        eq : String
      }
 
+     type Photo {
+       height : Int
+       width  : Int
+     }
+
+     input Dimensions {
+       height : Int @preset(value: 42)
+       width  : Int @preset(value: 101)
+     }
+
      type Query {
        hello: String
        messages(where: MessageWhereInpObj @preset(value: {id: {eq: 1}})): [Message]
@@ -44,6 +54,7 @@ args:
        users(user_ids: [Int]!): [User]
        message(id: Int!) : Message
        communications(id: Int): [Communication]
+       profilePicture(dimensions: Dimensions): Photo
      }
 
      schema {
