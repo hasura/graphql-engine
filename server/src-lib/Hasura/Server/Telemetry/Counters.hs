@@ -1,5 +1,5 @@
 {-# LANGUAGE DuplicateRecordFields #-}
-{-# LANGUAGE RecordWildCards       #-}
+
 {-|
   Counters used in telemetry collection. Additional counters can be added here.and
   serviced in "Hasura.Server.Telemetry".

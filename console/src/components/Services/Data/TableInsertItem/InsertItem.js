@@ -8,7 +8,7 @@ import { ordinalColSort } from '../utils';
 import { insertItem, I_RESET, fetchEnumOptions } from './InsertActions';
 import { setTable } from '../DataActions';
 import { NotFoundError } from '../../../Error/PageNotFound';
-import { currentDriver, findTable } from '../../../../dataSources';
+import { findTable, isFeatureSupported } from '../../../../dataSources';
 import styles from '../../../Common/TableCommon/Table.scss';
 import { TableRow } from '../Common/Components/TableRow';
 import { generateTableDef } from '../../../../dataSources';
@@ -17,8 +17,6 @@ import MigrationCheckbox from './MigrationCheckbox';
 import globals from '../../../../Globals';
 import { CLI_CONSOLE_MODE } from '../../../../constants';
 import FeatureDisabled from '../FeatureDisabled';
-
-const supportedDrivers = ['postgres'];
 
 class InsertItem extends Component {
   constructor() {
@@ -71,7 +69,7 @@ class InsertItem extends Component {
       generateTableDef(tableName, currentSchema)
     );
 
-    if (!supportedDrivers.includes(currentDriver)) {
+    if (!isFeatureSupported('tables.insert.enabled')) {
       return (
         <FeatureDisabled
           tab="insert"
@@ -82,7 +80,7 @@ class InsertItem extends Component {
     }
 
     // check if table exists
-    if (!currentTable && supportedDrivers.includes(currentDriver)) {
+    if (!currentTable && isFeatureSupported('tables.insert.enabled')) {
       // throw a 404 exception
       throw new NotFoundError();
     }

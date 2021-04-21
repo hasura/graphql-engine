@@ -27,8 +27,9 @@ of each event in the database, and we have to retry
 failed requests at a regular (user-configurable) interval.
 
 -}
-{-# LANGUAGE RecordWildCards #-}
-{-# LANGUAGE StrictData      #-}
+
+{-# LANGUAGE StrictData #-}
+
 module Hasura.Eventing.EventTrigger
   ( initEventEngineCtx
   , processEventQueue
@@ -440,7 +441,7 @@ logQErr err = do
   L.unLogger logger $ EventInternalErr err
 
 getEventTriggerInfoFromEvent
-  :: SchemaCache -> Event -> Either Text (EventTriggerInfo 'Postgres)
+  :: SchemaCache -> Event -> Either Text EventTriggerInfo
 getEventTriggerInfoFromEvent sc e = do
   let table = eTable e
       mTableInfo = unsafeTableInfo @'Postgres (eSource e) table $ scSources sc

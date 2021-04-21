@@ -241,7 +241,7 @@ mutateAndFetchCols
   -> [ColumnInfo 'Postgres]
   -> (MutationCTE, DS.Seq Q.PrepArg)
   -> Bool
-  -> Q.TxE QErr (MutateResp TxtEncodedPGVal)
+  -> Q.TxE QErr (MutateResp TxtEncodedVal)
 mutateAndFetchCols qt cols (cte, p) strfyNum = do
   let mutationTx :: Q.FromRes a => Q.TxE QErr a
       mutationTx =

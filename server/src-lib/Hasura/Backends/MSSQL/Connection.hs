@@ -10,6 +10,8 @@ import           Data.Aeson
 import           Data.Aeson.Casing
 import           Data.Aeson.TH
 
+import qualified Data.Environment        as Env
+import           Data.Text               (pack, unpack)
 import           Hasura.Incremental      (Cacheable (..))
 import           Hasura.RQL.Types.Error
 
@@ -17,6 +19,30 @@ import           Hasura.RQL.Types.Error
 newtype MSSQLConnectionString
   = MSSQLConnectionString {unMSSQLConnectionString :: Text}
   deriving (Show, Eq, ToJSON, FromJSON, Cacheable, Hashable, NFData, Arbitrary)
+
+data InputConnectionString
+  = RawString !MSSQLConnectionString
+  | FromEnvironment !Text
+  deriving stock (Show, Eq, Generic)
+instance Cacheable InputConnectionString
+instance Hashable InputConnectionString
+instance NFData InputConnectionString
+
+instance Arbitrary InputConnectionString where
+  arbitrary = genericArbitrary
+
+instance ToJSON InputConnectionString where
+  toJSON =
+    \case
+      (RawString m)          -> toJSON m
+      (FromEnvironment wEnv) -> object ["from_env" .= wEnv]
+
+instance FromJSON InputConnectionString where
+  parseJSON =
+    \case
+      (Object o)   -> FromEnvironment <$> o .: "from_env"
+      s@(String _) -> RawString <$> parseJSON s
+      _            -> fail "one of string or object must be provided"
 
 data MSSQLPoolSettings
   = MSSQLPoolSettings
@@ -46,7 +72,7 @@ defaultMSSQLPoolSettings =
 
 data MSSQLConnectionInfo
   = MSSQLConnectionInfo
-  { _mciConnectionString :: !MSSQLConnectionString
+  { _mciConnectionString :: !InputConnectionString
   , _mciPoolSettings     :: !MSSQLPoolSettings
   } deriving (Show, Eq, Generic)
 instance Cacheable MSSQLConnectionInfo
@@ -79,11 +105,39 @@ instance Arbitrary MSSQLConnConfiguration where
 newtype MSSQLPool
   = MSSQLPool { unMSSQLPool :: Pool.Pool ODBC.Connection }
 
-createMSSQLPool :: MSSQLConnectionInfo -> IO MSSQLPool
-createMSSQLPool (MSSQLConnectionInfo connString MSSQLPoolSettings{..}) =
-  MSSQLPool <$>
-    Pool.createPool (ODBC.connect $ unMSSQLConnectionString connString)
-    ODBC.close 1 (fromIntegral _mpsIdleTimeout) _mpsMaxConnections
+createMSSQLPool
+  :: MonadIO m
+  => QErrM m
+  => MSSQLConnectionInfo
+  -> m (MSSQLConnectionString, MSSQLPool)
+createMSSQLPool (MSSQLConnectionInfo iConnString MSSQLPoolSettings{..}) = do
+  env        <- liftIO Env.getEnvironment
+  connString <- resolveInputConnectionString env iConnString
+  pool       <- liftIO
+                  $ MSSQLPool
+                  <$> Pool.createPool
+                        (ODBC.connect $ unMSSQLConnectionString connString)
+                        ODBC.close
+                        1
+                        (fromIntegral _mpsIdleTimeout) _mpsMaxConnections
+  pure (connString, pool)
+
+resolveInputConnectionString
+  :: QErrM m
+  => Env.Environment
+  -> InputConnectionString
+  -> m MSSQLConnectionString
+resolveInputConnectionString env =
+  \case
+      (RawString cs)           -> pure cs
+      (FromEnvironment envVar) -> MSSQLConnectionString <$> getEnv env envVar
+
+getEnv :: QErrM m => Env.Environment -> Text -> m Text
+getEnv env k = do
+  let mEnv = Env.lookupEnv env (unpack k)
+  case mEnv of
+    Nothing     -> throw400 NotFound $ "environment variable '" <> k <> "' not set"
+    Just envVal -> return (pack envVal)
 
 drainMSSQLPool :: MSSQLPool -> IO ()
 drainMSSQLPool (MSSQLPool pool) =

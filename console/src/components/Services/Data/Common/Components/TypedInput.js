@@ -89,8 +89,8 @@ export const TypedInput = ({
   }
 
   switch (colType) {
-    case dataSource.JSONB:
-    case dataSource.JSONDTYPE:
+    case dataSource.columnDataTypes.JSONB:
+    case dataSource.columnDataTypes.JSONDTYPE:
       return (
         <JsonInput
           standardProps={{
@@ -103,7 +103,7 @@ export const TypedInput = ({
         />
       );
 
-    case dataSource.TEXT:
+    case dataSource.columnDataTypes.TEXT:
       return (
         <TextInput
           standardProps={standardInputProps}
@@ -111,7 +111,7 @@ export const TypedInput = ({
         />
       );
 
-    case dataSource.BOOLEAN:
+    case dataSource.columnDataTypes.BOOLEAN:
       return (
         <select {...standardInputProps}>
           <option value="" disabled>

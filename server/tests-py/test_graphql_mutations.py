@@ -205,6 +205,9 @@ class TestGraphqlInsertPermission:
     def test_check_set_headers_while_doing_upsert(self,hge_ctx):
         check_query_f(hge_ctx, self.dir() + "/leads_upsert_check_with_headers.yaml")
 
+    def test_column_comparison_across_different_tables(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + "/column_comparison_across_tables.yaml")
+
     @classmethod
     def dir(cls):
         return "queries/graphql_mutation/insert/permissions"
@@ -655,3 +658,13 @@ class TestGraphQLInheritedRoles:
     # should be removed/modified.
     def test_mutations_not_exposed_for_inherited_roles(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + '/mutation_not_exposed_to_inherited_roles.yaml')
+
+@pytest.mark.parametrize('transport', ['http', 'websocket'])
+@use_mutation_fixtures
+class TestGraphQLMutationTransactions:
+    def test_transaction_revert(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/transaction_revert_' + transport + '.yaml', transport)
+
+    @classmethod
+    def dir(cls):
+        return 'queries/graphql_mutation/transactions'

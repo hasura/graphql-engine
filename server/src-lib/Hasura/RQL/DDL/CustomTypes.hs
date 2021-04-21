@@ -1,5 +1,3 @@
-{-# LANGUAGE RecordWildCards #-}
-
 module Hasura.RQL.DDL.CustomTypes
   ( runSetCustomTypes
   , clearCustomTypesInMetadata
@@ -25,6 +23,8 @@ import           Data.Text.Extended
 import           Hasura.Backends.Postgres.SQL.Types
 import           Hasura.EncJSON
 import           Hasura.RQL.Types
+import           Hasura.SQL.Tag
+
 
 {- Note [Postgres scalars in custom types]
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -214,7 +214,7 @@ validateCustomTypeDefinitions sources customTypes allScalars = do
       let sourceConfig = do
             source     <- _trSource . NE.head <$> annotatedRelationships
             sourceInfo <- Map.lookup source sources
-            unsafeSourceConfiguration @'Postgres sourceInfo
+            (source,) <$> unsafeSourceConfiguration @'Postgres sourceInfo
 
       pure $ flip AnnotatedObjectType sourceConfig $
              ObjectTypeDefinition objectTypeName (_otdDescription objectDefinition)

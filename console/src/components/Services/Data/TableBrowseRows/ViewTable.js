@@ -7,7 +7,11 @@ import TableHeader from '../TableCommon/TableHeader';
 import ViewRows from './ViewRows';
 import { NotFoundError } from '../../../Error/PageNotFound';
 import { exists } from '../../../Common/utils/jsUtils';
-import { currentDriver, dataSource } from '../../../../dataSources';
+import {
+  currentDriver,
+  dataSource,
+  isFeatureSupported,
+} from '../../../../dataSources';
 import { RightContainer } from '../../../Common/Layout/RightContainer';
 import { getPersistedPageSize } from './tableUtils';
 import { getManualEventsTriggers } from '../../../../metadata/selector';
@@ -33,10 +37,10 @@ class ViewTable extends Component {
   getInitialData(tableName) {
     const { dispatch, currentSchema } = this.props;
 
-    if (currentDriver !== 'postgres') {
+    if (!isFeatureSupported('tables.browse.enabled')) {
       dispatch(setTable(tableName));
-      return;
     }
+
     const limit = getPersistedPageSize(tableName, currentSchema);
     Promise.all([
       dispatch(setTable(tableName)),
@@ -95,16 +99,7 @@ class ViewTable extends Component {
       currentSource,
     } = this.props;
 
-    // check if table exists
-    const tableSchema = schemas.find(
-      s => s.table_name === tableName && s.table_schema === currentSchema
-    );
-
-    if (!tableSchema && currentDriver === 'postgres') {
-      throw new NotFoundError();
-    }
-
-    if (currentDriver === 'mssql') {
+    if (!isFeatureSupported('tables.browse.enabled')) {
       return (
         <FeatureDisabled
           tab="browse"
@@ -112,6 +107,15 @@ class ViewTable extends Component {
           schemaName={currentSchema}
         />
       );
+    }
+
+    // check if table exists
+    const tableSchema = schemas.find(
+      s => s.table_name === tableName && s.table_schema === currentSchema
+    );
+
+    if (!tableSchema && currentDriver === 'postgres') {
+      throw new NotFoundError();
     }
 
     const styles = require('../../../Common/Common.scss');
@@ -144,6 +148,9 @@ class ViewTable extends Component {
         location={location}
         readOnlyMode={readOnlyMode}
         currentSource={currentSource}
+        useCustomPagination={isFeatureSupported(
+          'tables.browse.customPagination'
+        )}
       />
     );
 
@@ -174,7 +181,7 @@ class ViewTable extends Component {
 
     return (
       <RightContainer>
-        <div>
+        <div className={styles.padd_left}>
           {header}
           {comment}
           <div>{viewRows}</div>

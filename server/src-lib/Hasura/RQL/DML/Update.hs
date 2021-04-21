@@ -20,6 +20,7 @@ import           Hasura.Backends.Postgres.Connection
 import           Hasura.Backends.Postgres.Execute.Mutation
 import           Hasura.Backends.Postgres.SQL.Types
 import           Hasura.Backends.Postgres.Translate.Returning
+import           Hasura.Backends.Postgres.Types.Table
 import           Hasura.EncJSON
 import           Hasura.RQL.DML.Internal
 import           Hasura.RQL.DML.Types
@@ -154,7 +155,7 @@ validateUpdateQueryWith sessVarBldr prepValBldr uq = do
 
   -- convert the where clause
   annSQLBoolExp <- withPathK "where" $
-    convBoolExp fieldInfoMap selPerm (uqWhere uq) sessVarBldr prepValBldr
+    convBoolExp fieldInfoMap selPerm (uqWhere uq) sessVarBldr tableName prepValBldr
 
   resolvedUpdFltr <- convAnnBoolExpPartialSQL sessVarBldr $
                      upiFilter updPerm

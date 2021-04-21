@@ -267,10 +267,13 @@ class TestExecution:
         assert st_code == 200, resp
         check_query_f(hge_ctx, self.dir() + 'rename_table_with_remote_rel_dependency.yaml')
 
-    def test_remote_joins_with_subscription_should_throw_error(self, hge_ctx):
-        st_code, resp = hge_ctx.v1q_f(self.dir() + 'setup_remote_rel_basic.yaml')
-        assert st_code == 200, resp
-        check_query_f(hge_ctx, self.dir() + 'subscription_with_remote_join_fields.yaml')
+    # The check for the presence of the remote relationships is deferred to later stage
+    # in the server source code. To run this test we need to use proper websocket client
+    # instead of HTTP.
+    # def test_remote_joins_with_subscription_should_throw_error(self, hge_ctx):
+    #     st_code, resp = hge_ctx.v1q_f(self.dir() + 'setup_remote_rel_basic.yaml')
+    #     assert st_code == 200, resp
+    #     check_query_f(hge_ctx, self.dir() + 'subscription_with_remote_join_fields.yaml')
 
     def test_remote_joins_in_mutation_response(self, hge_ctx):
         st_code, resp = hge_ctx.v1q_f(self.dir() + 'setup_remote_rel_basic_with_authors.yaml')

@@ -2,10 +2,10 @@ module Hasura.RQL.Types.Metadata.Backend where
 
 import           Hasura.Prelude
 
+import qualified Data.Environment                    as Env
+
 import           Control.Monad.Trans.Control         (MonadBaseControl)
 import           Data.Aeson
-
-import qualified Data.Environment                    as Env
 
 import           Hasura.RQL.IR.BoolExp
 import           Hasura.RQL.Types.Backend
@@ -23,9 +23,6 @@ import           Hasura.SQL.Backend
 import           Hasura.SQL.Types
 import           Hasura.Server.Types
 
-import qualified Hasura.Backends.Postgres.DDL        as PG
-
-import qualified Hasura.Backends.MSSQL.DDL           as MSSQL
 
 class (Backend b) => BackendMetadata (b :: BackendType) where
 
@@ -84,11 +81,12 @@ class (Backend b) => BackendMetadata (b :: BackendType) where
     -> SourceName
     -> TableName b
     -> EventTriggerConf
-    -> m (EventTriggerInfo b, [SchemaDependency])
+    -> m (EventTriggerInfo, [SchemaDependency])
 
   parseBoolExpOperations
     :: (MonadError QErr m, TableCoreInfoRM b m)
     => ValueParser b m v
+    -> TableName b
     -> FieldInfoMap (FieldInfo b)
     -> ColumnInfo b
     -> Value
@@ -122,31 +120,3 @@ class (Backend b) => BackendMetadata (b :: BackendType) where
     :: (MonadError QErr m, MonadIO m, MonadBaseControl IO m)
     => SourceConfig b
     -> m ()
-
-instance BackendMetadata 'Postgres where
-  buildComputedFieldInfo = PG.buildComputedFieldInfo
-  buildRemoteFieldInfo = PG.buildRemoteFieldInfo
-  fetchAndValidateEnumValues = PG.fetchAndValidateEnumValues
-  resolveSourceConfig = PG.resolveSourceConfig
-  resolveDatabaseMetadata = PG.resolveDatabaseMetadata
-  createTableEventTrigger = PG.createTableEventTrigger
-  buildEventTriggerInfo = PG.buildEventTriggerInfo
-  parseBoolExpOperations = PG.parseBoolExpOperations
-  buildFunctionInfo = PG.buildFunctionInfo
-  updateColumnInEventTrigger = PG.updateColumnInEventTrigger
-  parseCollectableType = PG.parseCollectableType
-  postDropSourceHook = PG.postDropSourceHook
-
-instance BackendMetadata 'MSSQL where
-  buildComputedFieldInfo = MSSQL.buildComputedFieldInfo
-  buildRemoteFieldInfo = MSSQL.buildRemoteFieldInfo
-  fetchAndValidateEnumValues = MSSQL.fetchAndValidateEnumValues
-  resolveSourceConfig = MSSQL.resolveSourceConfig
-  resolveDatabaseMetadata = MSSQL.resolveDatabaseMetadata
-  createTableEventTrigger = MSSQL.createTableEventTrigger
-  buildEventTriggerInfo = MSSQL.buildEventTriggerInfo
-  parseBoolExpOperations = MSSQL.parseBoolExpOperations
-  buildFunctionInfo = MSSQL.buildFunctionInfo
-  updateColumnInEventTrigger = MSSQL.updateColumnInEventTrigger
-  parseCollectableType = MSSQL.parseCollectableType
-  postDropSourceHook = MSSQL.postDropSourceHook

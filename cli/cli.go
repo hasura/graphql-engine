@@ -23,6 +23,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/hasura/graphql-engine/cli/internal/hasura/pgdump"
+	"github.com/hasura/graphql-engine/cli/internal/hasura/v1graphql"
 	"github.com/hasura/graphql-engine/cli/migrate/database/hasuradb"
 
 	"github.com/hasura/graphql-engine/cli/internal/hasura/v1metadata"
@@ -41,10 +43,9 @@ import (
 
 	"github.com/hasura/graphql-engine/cli/internal/hasura"
 
-	"github.com/Masterminds/semver"
 	"github.com/briandowns/spinner"
 	"github.com/gofrs/uuid"
-	"github.com/hasura/graphql-engine/cli/metadata/actions/types"
+	"github.com/hasura/graphql-engine/cli/internal/metadataobject/actions/types"
 	"github.com/hasura/graphql-engine/cli/plugins"
 	"github.com/hasura/graphql-engine/cli/telemetry"
 	"github.com/hasura/graphql-engine/cli/util"
@@ -66,9 +67,6 @@ const (
 
 	// Name of the file to store last update check time
 	LastUpdateCheckFileName = "last_update_check_at"
-
-	// Name of the cli extension plugin
-	CLIExtPluginName = "cli-ext"
 
 	DefaultMigrationsDirectory = "migrations"
 	DefaultMetadataDirectory   = "metadata"
@@ -250,6 +248,18 @@ func (s *ServerConfig) GetV1QueryEndpoint() string {
 func (s *ServerConfig) GetV2QueryEndpoint() string {
 	nurl := *s.ParsedEndpoint
 	nurl.Path = path.Join(nurl.Path, s.APIPaths.V2Query)
+	return nurl.String()
+}
+
+func (s *ServerConfig) GetPGDumpEndpoint() string {
+	nurl := *s.ParsedEndpoint
+	nurl.Path = path.Join(nurl.Path, s.APIPaths.PGDump)
+	return nurl.String()
+}
+
+func (s *ServerConfig) GetV1GraphqlEndpoint() string {
+	nurl := *s.ParsedEndpoint
+	nurl.Path = path.Join(nurl.Path, s.APIPaths.GraphQL)
 	return nurl.String()
 }
 
@@ -685,6 +695,8 @@ func (ec *ExecutionContext) Validate() error {
 		V1Metadata: v1metadata.New(httpClient, ec.Config.GetV1MetadataEndpoint()),
 		V1Query:    v1query.New(httpClient, ec.Config.GetV1QueryEndpoint()),
 		V2Query:    v2query.New(httpClient, ec.Config.GetV2QueryEndpoint()),
+		PGDump:     pgdump.New(httpClient, ec.Config.GetPGDumpEndpoint()),
+		V1Graphql:  v1graphql.New(httpClient, ec.Config.GetV1GraphqlEndpoint()),
 	}
 	var state *util.ServerState
 	if ec.HasMetadataV3 {
@@ -893,46 +905,6 @@ func (ec *ExecutionContext) setVersion() {
 	if ec.Version == nil {
 		ec.Version = version.New()
 	}
-}
-
-// InstallPlugin installs a plugin depending on forceCLIVersion.
-// If forceCLIVersion is set, it uses ec.Version.CLISemver version for the plugin to be installed.
-// Else, it installs the latest version of the plugin
-func (ec ExecutionContext) InstallPlugin(name string, forceCLIVersion bool) error {
-	var version *semver.Version
-	if forceCLIVersion {
-		err := ec.PluginsConfig.Repo.EnsureUpdated()
-		if err != nil {
-			ec.Logger.Debugf("cannot update plugin index %v", err)
-		}
-		version = ec.Version.CLISemver
-	}
-	plugin, err := ec.PluginsConfig.GetPlugin(name, plugins.FetchOpts{
-		Version: version,
-	})
-	if err != nil {
-		if err != plugins.ErrIsAlreadyInstalled {
-			return errors.Wrapf(err, "cannot fetch plugin manifest %s", name)
-		}
-		return nil
-	}
-	if ec.Spinner.Active() {
-		prevPrefix := ec.Spinner.Prefix
-		defer ec.Spin(prevPrefix)
-	}
-	ec.Spin(fmt.Sprintf("Installing plugin %s...", name))
-	defer ec.Spinner.Stop()
-	err = ec.PluginsConfig.Install(plugin)
-	if err != nil {
-		msg := fmt.Sprintf(`unable to install %s plugin. execute the following commands to continue:
-
-  hasura plugins install %s
-`, name, name)
-		ec.Logger.Info(msg)
-		return errors.Wrapf(err, "cannot install plugin %s", name)
-	}
-	ec.Logger.WithField("name", name).Infoln("plugin installed")
-	return nil
 }
 
 func GetAdminSecretHeaderName(v *version.Version) string {

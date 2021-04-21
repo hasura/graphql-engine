@@ -42,6 +42,15 @@ class TestMetadata:
     def test_dump_internal_state(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + '/dump_internal_state.yaml')
 
+    def test_pg_add_source(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/pg_add_source.yaml')
+
+    def test_pg_track_table_source(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/pg_track_table_source.yaml')
+
+    def test_pg_multisource_query(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/pg_multisource_query.yaml')
+
     @classmethod
     def dir(cls):
         return "queries/v1/metadata"
@@ -240,3 +249,4 @@ class TestMetadataOrder:
 
         # `resource_version` should be unchanged
         assert export_resp['resource_version'] == export_resp_1['resource_version']
+

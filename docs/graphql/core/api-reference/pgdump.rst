@@ -69,6 +69,7 @@ Sample response
   HTTP/1.1 200 OK
   Content-Type: application/sql
 
+  SET check_function_bodies = false;
   CREATE TABLE public.author (
       id integer NOT NULL,
       name text NOT NULL

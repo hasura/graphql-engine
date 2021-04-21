@@ -13,7 +13,6 @@ import qualified Data.HashMap.Strict                 as HM
 import qualified Data.HashSet                        as HS
 import qualified Language.GraphQL.Draft.Syntax       as G
 
-import           Data.Foldable
 import           Data.Text.Extended
 
 import           Hasura.Backends.Postgres.SQL.Types
@@ -83,7 +82,7 @@ errorToText = \case
   InvalidGraphQLName t ->
     t <<> " is not a valid GraphQL identifier"
   IDTypeJoin typeName ->
-    "Only ID, Int, uuid or String scalar types can be joined to the ID type, but recieved " <>> typeName
+    "Only ID, Int, uuid or String scalar types can be joined to the ID type, but received " <>> typeName
 
 -- | Validate a remote relationship given a context.
 validateRemoteRelationship

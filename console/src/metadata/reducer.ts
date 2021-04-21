@@ -1,25 +1,27 @@
 import { MetadataActions } from './actions';
-import {
-  QueryCollection,
-  HasuraMetadataV3,
-  RestEndpointEntry,
-  InheritedRole,
-} from './types';
-import { allowedQueriesCollection } from './utils';
+import { HasuraMetadataV3, CollectionName, InheritedRole } from './types';
+import { setAllowedQueries } from './utils';
+
+export type AllowedQueriesCollection = {
+  name: string;
+  query: string;
+  collection: CollectionName;
+};
 
 type MetadataState = {
   metadataObject: null | HasuraMetadataV3;
+  resourceVersion: number;
   error: null | string | boolean;
   loading: boolean;
   inconsistentObjects: any[];
   ongoingRequest: boolean; // deprecate
-  allowedQueries: QueryCollection[];
+  allowedQueries: AllowedQueriesCollection[];
   inheritedRoles: InheritedRole[];
-  rest_endpoints?: RestEndpointEntry[];
 };
 
 const defaultState: MetadataState = {
   metadataObject: null,
+  resourceVersion: 1,
   error: null,
   loading: false,
   inconsistentObjects: [],
@@ -28,20 +30,87 @@ const defaultState: MetadataState = {
   inheritedRoles: [],
 };
 
+const renameSourceAttributes = (sources: HasuraMetadataV3['sources']) =>
+  sources.map((s: any) => {
+    let tables = s.tables;
+    if (s.kind === 'bigquery') {
+      tables = s.tables.map((t: any) => {
+        let object_relationships = [];
+        if (t.object_relationships) {
+          object_relationships = t.object_relationships.map((objRel: any) => {
+            return {
+              ...objRel,
+              using: {
+                ...objRel.using,
+                manual_configuration: {
+                  ...objRel.using.manual_configuration,
+                  remote_table: {
+                    schema:
+                      objRel.using.manual_configuration.remote_table.dataset,
+                    name: objRel.using.manual_configuration.remote_table.name,
+                  },
+                },
+              },
+            };
+          });
+        }
+
+        let array_relationships = [];
+        if (t.array_relationships) {
+          array_relationships = t.array_relationships.map((objRel: any) => {
+            return {
+              ...objRel,
+              using: {
+                ...objRel.using,
+                manual_configuration: {
+                  ...objRel.using.manual_configuration,
+                  remote_table: {
+                    schema:
+                      objRel.using.manual_configuration.remote_table.dataset,
+                    name: objRel.using.manual_configuration.remote_table.name,
+                  },
+                },
+              },
+            };
+          });
+        }
+
+        return {
+          object_relationships,
+          array_relationships,
+          table: {
+            name: t.table.name,
+            schema: t.table.dataset,
+          },
+          select_permissions: t.select_permissions,
+        };
+      });
+    }
+
+    return { ...s, tables };
+  });
+
 export const metadataReducer = (
   state = defaultState,
   action: MetadataActions
 ): MetadataState => {
   switch (action.type) {
     case 'Metadata/EXPORT_METADATA_SUCCESS':
+      const metadata =
+        'metadata' in action.data ? action.data.metadata : action.data;
       return {
         ...state,
-        metadataObject: action.data,
-        allowedQueries:
-          action.data?.query_collections?.find(
-            query => query.name === allowedQueriesCollection
-          )?.definition.queries || [],
-        inheritedRoles: action.data?.inherited_roles,
+        metadataObject: {
+          ...metadata,
+          sources: renameSourceAttributes(metadata.sources),
+        },
+        resourceVersion:
+          'resource_version' in action.data ? action.data.resource_version : 1,
+        allowedQueries: setAllowedQueries(
+          metadata?.query_collections,
+          metadata?.allowlist
+        ),
+        inheritedRoles: metadata?.inherited_roles,
         loading: false,
         error: null,
       };
@@ -144,17 +213,6 @@ export const metadataReducer = (
             ir.role_name === action.data.role_name ? action.data : ir
           ),
         ],
-      };
-
-    case 'Metadata/ADD_REST_ENDPOINT':
-      return {
-        ...state,
-        rest_endpoints: action.data,
-      };
-    case 'Metadata/DROP_REST_ENDPOINT':
-      return {
-        ...state,
-        rest_endpoints: action.data,
       };
     default:
       return state;

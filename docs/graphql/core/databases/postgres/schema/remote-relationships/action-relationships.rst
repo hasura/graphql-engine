@@ -2,8 +2,7 @@
    :description: Adding action relationships with Postgres tables in Hasura
    :keywords: hasura, docs, action relationship, remote join
 
-.. _action_relationships:
-
+.. _pg_action_relationships:
 
 Postgres: Action relationships
 ==============================
@@ -28,20 +27,8 @@ Step 0: Create an action
 
 Create an action either :ref:`from scratch <create_actions>` or :ref:`derived from an existing mutation <derive_actions>`.
 
-Step 1: Open the action relationship section
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-- From your action, go to the ``Relationships`` tab.
-- Click ``Add a relationship``.
-
-.. thumbnail:: /img/graphql/core/schema/add-action-relationship.png
-   :alt: Opening the action relationship section
-   :width: 559px
-
-In this example, we're creating a relationship for the ``createUser`` action.
-
-Step 2: Define the relationship
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Step 1: Define and create the relationship
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 The following values can be defined for an action relationship:
 
@@ -56,12 +43,21 @@ The following values can be defined for an action relationship:
 - **From**: Select a field returned in the action response.
 - **To**: Select a column from the reference table to join the field to.
 
+In this example, we're creating a relationship for the ``createUser`` action.
+
 .. rst-class:: api_tabs
 .. tabs::
 
   .. tab:: Console
 
-    In the section opened by the above step, fill out the following fields:
+    - Head to the ``Actions -> [action-name] -> Relationships`` tab.
+    - Click ``Add a relationship``.
+
+    .. thumbnail:: /img/graphql/core/schema/add-action-relationship.png
+       :alt: Opening the action relationship section
+       :width: 559px
+
+    - In the section opened by the above step, fill out the following fields and hit ``Save``.
 
     .. thumbnail:: /img/graphql/core/schema/define-action-relationship.png
       :alt: Defining the relationship
@@ -135,7 +131,7 @@ The following values can be defined for an action relationship:
 
 In this example, we're creating a relationship called ``user``, from the ``id`` field returned in the action response, to the ``id`` column of the ``users`` table.
 
-Step 3: Explore with GraphiQL
+Step 2: Explore with GraphiQL
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 In the GraphiQL tab, test out your action relationship.
@@ -165,7 +161,7 @@ In the GraphiQL tab, test out your action relationship.
       }
     }
 
-If your table has an existing :ref:`remote relationship <remote_schema_relationships>`, you can also query the fields from the remote schema.
+If your table has an existing :ref:`remote relationship <pg_remote_schema_relationships>`, you can also query the fields from the remote schema.
 
 .. graphiql::
   :view_only:
@@ -202,4 +198,5 @@ If your table has an existing :ref:`remote relationship <remote_schema_relations
       }
     }
 
-In the :ref:`remote_schema_relationships` section, we joined our ``users`` table with a remote `Auth0 <https://auth0.com/>`__ schema. Here, we're able to get the Auth0 profile data of the user returned from our action.
+In the :ref:`Remote schema relationships <pg_remote_schema_relationships>` section, we joined our ``users`` table with a remote `Auth0 <https://auth0.com/>`__ schema. Here, we're
+able to get the Auth0 profile data of the user returned from our action.

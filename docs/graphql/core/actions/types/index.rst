@@ -59,7 +59,7 @@ Relationships
 *************
 
 Custom object types can be connected to the rest of the graph by setting up
-:ref:`action relationships <action_relationships>` with tables/views.
+:ref:`action relationships <pg_action_relationships>` with tables/views.
 
 **For example**, given the object type:
 

@@ -76,6 +76,11 @@ Args syntax
      - true
      - :ref:`PGConfiguration <PGConfiguration>`
      - Database connection configuration
+   * - replace_configuration
+     - false
+     - Boolean
+     - If set to ``true`` the configuration will be replaced if the source with
+       given name already exists (default: ``false``)
 
 .. _pg_drop_source:
 
@@ -115,4 +120,3 @@ Args syntax
      - true
      - :ref:`SourceName <SourceName>`
      - Name of the Postgres database
-

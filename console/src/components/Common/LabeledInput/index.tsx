@@ -3,13 +3,13 @@ import styles from '../../Common/Common.scss';
 
 interface LabeledInputProps extends InputHTMLAttributes<HTMLInputElement> {
   label: string;
-  labelInBold?: boolean;
+  boldlabel?: boolean;
 }
 
 export const LabeledInput: React.FC<LabeledInputProps> = props => (
   <>
-    <label className={props.labelInBold ? '' : styles.connect_db_input_label}>
-      {props?.labelInBold ? <b>{props.label}</b> : props.label}
+    <label className={props.boldlabel ? '' : styles.connect_db_input_label}>
+      {props?.boldlabel ? <b>{props.label}</b> : props.label}
     </label>
     <input
       type="text"

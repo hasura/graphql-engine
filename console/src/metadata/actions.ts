@@ -1,6 +1,10 @@
 import requestAction from '../utils/requestAction';
 import Endpoints, { globalCookiePolicy } from '../Endpoints';
-import { HasuraMetadataV2, HasuraMetadataV3, RestEndpointEntry } from './types';
+import {
+  HasuraMetadataV3,
+  RestEndpointEntry,
+  SourceConnectionInfo,
+} from './types';
 import {
   showSuccessNotification,
   showErrorNotification,
@@ -46,7 +50,12 @@ import _push from '../components/Services/Data/push';
 
 export interface ExportMetadataSuccess {
   type: 'Metadata/EXPORT_METADATA_SUCCESS';
-  data: HasuraMetadataV3;
+  data:
+    | {
+        resource_version: number;
+        metadata: HasuraMetadataV3;
+      }
+    | HasuraMetadataV3;
 }
 export interface ExportMetadataError {
   type: 'Metadata/EXPORT_METADATA_ERROR';
@@ -91,7 +100,7 @@ export interface UpdateAllowedQuery {
   type: 'Metadata/UPDATE_ALLOWED_QUERY';
   data: {
     queryName: string;
-    newQuery: { name: string; query: string };
+    newQuery: { name: string; query: string; collection: string };
   };
 }
 export interface DeleteAllowedQuery {
@@ -113,6 +122,10 @@ export interface AddDataSourceRequest {
         max_connections?: number;
         idle_timeout?: number; // in seconds
         retries?: number;
+      };
+      bigQuery: {
+        projectId: string;
+        datasets: string;
       };
     };
   };
@@ -166,15 +179,6 @@ export interface UpdateInheritedRole {
     role_set: string[];
   };
 }
-export interface AddRestEndpoint {
-  type: 'Metadata/ADD_REST_ENDPOINT';
-  data: RestEndpointEntry[];
-}
-
-export interface DropRestEndpoint {
-  type: 'Metadata/DROP_REST_ENDPOINT';
-  data: RestEndpointEntry[];
-}
 
 export type MetadataActions =
   | ExportMetadataSuccess
@@ -200,12 +204,10 @@ export type MetadataActions =
   | AddInheritedRole
   | DeleteInheritedRole
   | UpdateInheritedRole
-  | AddRestEndpoint
-  | DropRestEndpoint
   | { type: typeof UPDATE_CURRENT_DATA_SOURCE; source: string };
 
 export const exportMetadata = (
-  successCb?: (data: HasuraMetadataV2) => void,
+  successCb?: (data: HasuraMetadataV3, resourceVersion?: number) => void,
   errorCb?: (err: string) => void
 ): Thunk<Promise<ReduxState | void>, MetadataActions> => (
   dispatch,
@@ -238,6 +240,7 @@ export const exportMetadata = (
 export const addDataSource = (
   data: AddDataSourceRequest['data'],
   successCb: () => void,
+  replicas?: Omit<SourceConnectionInfo, 'connection_string'>[],
   skipNotification = false
 ): Thunk<Promise<void | ReduxState>, MetadataActions> => (
   dispatch,
@@ -245,7 +248,7 @@ export const addDataSource = (
 ) => {
   const { dataHeaders } = getState().tables;
 
-  const query = addSource(data.driver, data.payload);
+  const query = addSource(data.driver, data.payload, replicas);
 
   const options = {
     method: 'POST',
@@ -261,7 +264,8 @@ export const addDataSource = (
       });
       setDriver(data.driver);
       const onButtonClick = () => {
-        if (data.payload.name) dispatch(_push(`/data/${data.payload.name}`));
+        if (data.payload.name)
+          dispatch(_push(`/data/${data.payload.name}/schema`));
       };
       return dispatch(exportMetadata()).then(() => {
         dispatch(fetchDataInit(data.payload.name, data.driver));
@@ -361,6 +365,7 @@ export const editDataSource = (
             );
             onSuccessCb();
           },
+          [],
           true
         )
       ).catch(err => {
@@ -385,11 +390,11 @@ export const editDataSource = (
 };
 
 export const replaceMetadata = (
-  newMetadata: HasuraMetadataV2,
+  newMetadata: HasuraMetadataV3,
   successCb: () => void,
   errorCb: () => void
 ): Thunk<void, MetadataActions> => (dispatch, getState) => {
-  const exportSuccessCb = (oldMetadata: HasuraMetadataV2) => {
+  const exportSuccessCb = (oldMetadata: HasuraMetadataV3) => {
     const upQuery = generateReplaceMetadataQuery(newMetadata);
     const downQuery = generateReplaceMetadataQuery(oldMetadata);
 
@@ -715,20 +720,27 @@ export const dropInconsistentObjects = (
 
 export const updateAllowedQuery = (
   queryName: string,
-  newQuery: { name: string; query: string }
+  newQuery: { name: string; query: string },
+  collectionName: string
 ): Thunk<void, MetadataActions> => {
   return (dispatch, getState) => {
-    const upQuery = updateAllowedQueryQuery(queryName, newQuery);
+    const upQuery = updateAllowedQueryQuery(
+      queryName,
+      newQuery,
+      collectionName
+    );
 
     const migrationName = `update_allowed_query`;
     const requestMsg = 'Updating allowed query...';
     const successMsg = 'Updated allow-list query';
     const errorMsg = 'Updating allow-list query failed';
 
+    const updatedQuery = { ...newQuery, collection: collectionName };
+
     const onSuccess = () => {
       dispatch({
         type: 'Metadata/UPDATE_ALLOWED_QUERY',
-        data: { queryName, newQuery },
+        data: { queryName, newQuery: updatedQuery },
       });
     };
 
@@ -751,12 +763,13 @@ export const updateAllowedQuery = (
 
 export const deleteAllowedQuery = (
   queryName: string,
-  isLastQuery: boolean
+  isLastQuery: boolean,
+  collectionName: string
 ): Thunk<void, MetadataActions> => {
   return (dispatch, getState) => {
     const upQuery = isLastQuery
-      ? deleteAllowListQuery()
-      : deleteAllowedQueryQuery(queryName);
+      ? deleteAllowListQuery(collectionName)
+      : deleteAllowedQueryQuery(queryName, collectionName);
 
     const migrationName = `delete_allowed_query`;
     const requestMsg = 'Deleting allowed query...';
@@ -784,9 +797,19 @@ export const deleteAllowedQuery = (
   };
 };
 
-export const deleteAllowList = (): Thunk<void, MetadataActions> => {
+export const deleteAllowList = (
+  collectionNames: string[]
+): Thunk<void, MetadataActions> => {
   return (dispatch, getState) => {
-    const upQuery = deleteAllowListQuery();
+    const upQueries: {
+      type: string;
+      args: { collection: string; cascade: boolean };
+    }[] = [];
+
+    collectionNames.forEach(collectionName => {
+      upQueries.push(deleteAllowListQuery(collectionName));
+    });
+
     const migrationName = 'delete_allow_list';
     const requestMsg = 'Deleting allow list...';
     const successMsg = 'Deleted all queries from allow-list';
@@ -801,7 +824,7 @@ export const deleteAllowList = (): Thunk<void, MetadataActions> => {
     makeMigrationCall(
       dispatch,
       getState,
-      [upQuery],
+      upQueries,
       undefined,
       migrationName,
       onSuccess,
@@ -987,11 +1010,7 @@ export const addRESTEndpoint = (
   getState
 ) => {
   const { currentDataSource } = getState().tables;
-  const { rest_endpoints, metadataObject } = getState().metadata;
-  let currentEndpoints: RestEndpointEntry[] = [];
-  if (rest_endpoints?.length) {
-    currentEndpoints = rest_endpoints;
-  }
+  const { metadataObject } = getState().metadata;
   const upQueries = [];
   const downQueries = [];
 
@@ -1025,10 +1044,6 @@ export const addRESTEndpoint = (
   const errorMsg = 'Error creating REST endpoint';
 
   const onSuccess = () => {
-    dispatch({
-      type: 'Metadata/ADD_REST_ENDPOINT',
-      data: [...currentEndpoints, queryObj],
-    });
     if (successCb) {
       successCb();
     }
@@ -1088,10 +1103,6 @@ export const dropRESTEndpoint = (
     return;
   }
 
-  const filteredEndpoints = currentRESTEndpoints.filter(
-    re => re.name !== endpointName
-  );
-
   const confirmation = getConfirmation(
     `You want to delete the endpoint: ${endpointName}`
   );
@@ -1115,10 +1126,6 @@ export const dropRESTEndpoint = (
   const errorMsg = 'Error dropping REST endpoint';
 
   const onSuccess = () => {
-    dispatch({
-      type: 'Metadata/DROP_REST_ENDPOINT',
-      data: filteredEndpoints,
-    });
     if (successCb) {
       successCb();
     }
@@ -1155,6 +1162,7 @@ export const editRESTEndpoint = (
   getState
 ) => {
   const currentEndpoints = getState().metadata.metadataObject?.rest_endpoints;
+
   if (!currentEndpoints) {
     dispatch(
       showErrorNotification(
@@ -1165,56 +1173,38 @@ export const editRESTEndpoint = (
     return;
   }
 
-  // using `any` here since the 3 queries have a different
-  // return types, hence ended up using any
-  let upQueries: any = [
+  const dropOldQueryFromCollection = deleteAllowedQueryQuery(oldQueryObj.name);
+  const addNewQueryToCollection = addAllowedQuery({
+    name: newQueryObj.name,
+    query: request,
+  });
+
+  const dropNewQueryFromCollection = deleteAllowedQueryQuery(newQueryObj.name);
+  const addOldQueryToCollection = addAllowedQuery({
+    name: oldQueryObj.name,
+    query: request,
+  });
+
+  const upQueries = [
     dropRESTEndpointQuery(oldQueryObj.name),
+    dropOldQueryFromCollection,
+    addNewQueryToCollection,
     createRESTEndpointQuery(newQueryObj),
   ];
-  let downQueries: any = [
-    createRESTEndpointQuery(oldQueryObj),
-    dropRESTEndpointQuery(newQueryObj.name),
-  ];
 
-  if (newQueryObj.name !== oldQueryObj.name) {
-    const newAllowedQuery = addAllowedQuery({
-      name: newQueryObj.name,
-      query: request,
-    });
-    const deleteOldFromCollection = deleteAllowedQueryQuery(oldQueryObj.name);
-    const addOldIntoQueryCollection = addAllowedQuery({
-      name: oldQueryObj.name,
-      query: request,
-    });
-    const newDeleteAllowedQuery = deleteAllowedQueryQuery(newQueryObj.name);
-    upQueries = [
-      upQueries[0],
-      deleteOldFromCollection,
-      newAllowedQuery,
-      upQueries[1],
-    ];
-    downQueries = [
-      addOldIntoQueryCollection,
-      downQueries[0],
-      downQueries[1],
-      newDeleteAllowedQuery,
-    ];
-  }
+  const downQueries = [
+    dropRESTEndpointQuery(newQueryObj.name),
+    dropNewQueryFromCollection,
+    addOldQueryToCollection,
+    createRESTEndpointQuery(oldQueryObj),
+  ];
 
   const migrationName = `edit_rest_endpoint_${newQueryObj.url}_${newQueryObj.name}`;
   const requestMsg = `Editing REST endpoint ${oldQueryObj.name}`;
   const successMsg = 'Successfully edited REST endpoint';
   const errorMsg = 'Error editing REST endpoint';
 
-  const filteredEndpoints = currentEndpoints.filter(
-    re => re.name !== oldQueryObj.name
-  );
-
   const onSuccess = () => {
-    dispatch({
-      type: 'Metadata/ADD_REST_ENDPOINT',
-      data: [...filteredEndpoints, newQueryObj],
-    });
     if (successCb) {
       successCb();
     }

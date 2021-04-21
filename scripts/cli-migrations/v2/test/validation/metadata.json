@@ -4,9 +4,17 @@
     {
       "name": "default",
       "kind": "postgres",
-      "tables": [],
+      "tables": [
+        {
+          "table": {
+            "schema": "public",
+            "name": "test"
+          }
+        }
+      ],
       "configuration": {
         "connection_info": {
+          "use_prepared_statements": true,
           "database_url": "postgres://postgres:postgrespassword@postgres:5432/postgres",
           "pool_settings": {
             "retries": 1,

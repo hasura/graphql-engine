@@ -33,8 +33,7 @@ const App = ({
   }, []);
   const telemetryShown = React.useRef(false);
   // should be true only in the case of hasura cloud
-  const isContextCloud =
-    window.__env.userRole || window.location.host.includes('cloud');
+  const isContextCloud = globals.consoleType === 'cloud';
 
   React.useEffect(() => {
     if (

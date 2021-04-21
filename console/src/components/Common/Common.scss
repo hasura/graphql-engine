@@ -1490,7 +1490,6 @@ code {
 
 .connect_db_radios {
   display: flex;
-  width: 70%;
   align-items: center;
   height: auto;
   justify-content: flex-start;
@@ -1507,7 +1506,7 @@ code {
 }
 
 .connect_form_layout {
-  width: 50%;
+  width: 100%;
   padding: 8px 0;
   display: flex;
   flex-direction: column;
@@ -1552,7 +1551,7 @@ code {
   justify-content: space-between;
 }
 
-.connnection_settings_form_input_layout {
+.connection_settings_form_input_layout {
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -1564,6 +1563,18 @@ code {
 
 .connnection_settings_form_input {
   width: 65%;
+}
+
+.float_right {
+  float: right;
+}
+
+.icon_margin {
+  margin-right: 4px;
+}
+
+.connect_form_width {
+  width: 50%;
 }
 
 /* container height subtracting top header and bottom scroll bar */

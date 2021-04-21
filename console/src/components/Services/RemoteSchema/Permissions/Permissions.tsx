@@ -128,6 +128,7 @@ const Permissions: React.FC<PermissionsProps> = props => {
         currentRemoteSchema={currentRemoteSchema}
         permissionEdit={permissionEdit}
         isEditing={isEditing}
+        schema={schema}
         bulkSelect={bulkSelect}
         readOnlyMode={readOnlyMode}
         permSetRoleName={permSetRoleName}

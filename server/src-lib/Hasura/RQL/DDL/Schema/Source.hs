@@ -7,7 +7,7 @@ import qualified Data.HashMap.Strict                 as HM
 import qualified Data.HashMap.Strict.InsOrd          as OMap
 import qualified Database.PG.Query                   as Q
 
-import           Control.Lens                        (at, (^.))
+import           Control.Lens                        (at, (.~), (^.))
 import           Control.Monad.Trans.Control         (MonadBaseControl)
 import           Data.Text.Extended
 
@@ -23,12 +23,14 @@ import           Hasura.RQL.Types
 mkPgSourceResolver :: Q.PGLogger -> SourceResolver
 mkPgSourceResolver pgLogger _ config = runExceptT do
   env <- lift Env.getEnvironment
-  let PostgresSourceConnInfo urlConf connSettings = _pccConnectionInfo config
-      PostgresPoolSettings maxConns idleTimeout retries = connSettings
+  let PostgresSourceConnInfo urlConf connSettings allowPrepare = _pccConnectionInfo config
+  -- If the user does not provide values for the pool settings, then use the default values
+  let (maxConns, idleTimeout, retries) = getDefaultPGPoolSettingIfNotExists connSettings defaultPostgresPoolSettings
   urlText <- resolveUrlConf env urlConf
   let connInfo = Q.ConnInfo retries $ Q.CDDatabaseURI $ txtToBs urlText
       connParams = Q.defaultConnParams{ Q.cpIdleTime = idleTimeout
                                       , Q.cpConns = maxConns
+                                      , Q.cpAllowPrepare = allowPrepare
                                       }
   pgPool <- liftIO $ Q.initPGPool connInfo connParams pgLogger
   let pgExecCtx = mkPGExecCtx Q.ReadCommitted pgPool
@@ -39,13 +41,17 @@ runAddSource
   :: forall m b
    . (MonadError QErr m, CacheRWM m, MetadataM m, BackendMetadata b)
   => AddSource b -> m EncJSON
-runAddSource (AddSource name sourceConfig) = do
+runAddSource (AddSource name sourceConfig replaceConfiguration) = do
   sources <- scSources <$> askSchemaCache
-  onJust (HM.lookup name sources) $ const $
-    throw400 AlreadyExists $ "source with name " <> name <<> " already exists"
-  buildSchemaCacheFor (MOSource name)
-    $ MetadataModifier
-    $ metaSources %~ OMap.insert name (mkSourceMetadata @b name sourceConfig)
+  let sourceMetadata = mkSourceMetadata @b name sourceConfig
+
+  metadataModifier <- MetadataModifier <$>
+    if HM.member name sources then
+      if replaceConfiguration then pure $ metaSources.ix name .~ sourceMetadata
+      else throw400 AlreadyExists $ "source with name " <> name <<> " already exists"
+    else pure $ metaSources %~ OMap.insert name sourceMetadata
+
+  buildSchemaCacheFor (MOSource name) metadataModifier
   pure successMsg
 
 runDropSource

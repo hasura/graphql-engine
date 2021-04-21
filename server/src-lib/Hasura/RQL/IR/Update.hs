@@ -50,7 +50,7 @@ updateOperatorText (UpdDeleteElem   _) = "_delete_elem"
 updateOperatorText (UpdDeleteAtPath _) = "_delete_at_path"
 
 traverseAnnUpd
-  :: (Applicative f)
+  :: (Applicative f, Backend backend)
   => (a -> f b)
   -> AnnUpdG backend a
   -> f (AnnUpdG backend b)

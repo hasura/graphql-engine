@@ -15,7 +15,7 @@ import qualified Database.PG.Query                        as Q
 import qualified Language.Haskell.TH.Syntax               as TH
 import qualified Text.PrettyPrint.ANSI.Leijen             as PP
 
-import           Data.FileEmbed                           (embedStringFile)
+import           Data.FileEmbed                           (embedStringFile, makeRelativeToProject)
 import           Data.Time                                (NominalDiffTime)
 import           Data.URL.Template
 import           Network.Wai.Handler.Warp                 (HostPreference)
@@ -41,7 +41,7 @@ import           Network.URI                              (parseURI)
 
 getDbId :: Q.TxE QErr Text
 getDbId =
-  (runIdentity . Q.getRow) <$>
+  runIdentity . Q.getRow <$>
   Q.withQE defaultTxErrorHandler
   [Q.sql|
     SELECT (hasura_uuid :: text) FROM hdb_catalog.hdb_version
@@ -158,6 +158,8 @@ mkServeOptions rso = do
   enableTelemetry <- fromMaybe True <$>
                      withEnv (rsoEnableTelemetry rso) (fst enableTelemetryEnv)
   strfyNum <- withEnvBool (rsoStringifyNum rso) $ fst stringifyNumEnv
+  dangerousBooleanCollapse <-
+    fromMaybe False <$> withEnv (rsoDangerousBooleanCollapse rso) (fst dangerousBooleanCollapseEnv)
   enabledAPIs <- Set.fromList . fromMaybe defaultAPIs <$>
                      withEnv (rsoEnabledAPIs rso) (fst enabledAPIsEnv)
   lqOpts <- mkLQOpts
@@ -169,7 +171,7 @@ mkServeOptions rso = do
                       withEnv (rsoPlanCacheSize rso) (fst planCacheSizeEnv)
   devMode <- withEnvBool (rsoDevMode rso) $ fst devModeEnv
   adminInternalErrors <- fromMaybe True <$> -- Default to `true` to enable backwards compatibility
-                                withEnv (rsoAdminInternalErrors rso) (fst adminInternalErrorsEnv)
+                         withEnv (rsoAdminInternalErrors rso) (fst adminInternalErrorsEnv)
   let internalErrorsConfig =
         if | devMode             -> InternalErrorsAllRequests
            | adminInternalErrors -> InternalErrorsAdminOnly
@@ -177,13 +179,16 @@ mkServeOptions rso = do
 
   eventsHttpPoolSize <- withEnv (rsoEventsHttpPoolSize rso) (fst eventsHttpPoolSizeEnv)
   eventsFetchInterval <- withEnv (rsoEventsFetchInterval rso) (fst eventsFetchIntervalEnv)
+  maybeAsyncActionsFetchInterval <- withEnv (rsoAsyncActionsFetchInterval rso) (fst asyncActionsFetchIntervalEnv)
   logHeadersFromEnv <- withEnvBool (rsoLogHeadersFromEnv rso) (fst logHeadersFromEnvEnv)
   enableRemoteSchemaPerms <-
     bool RemoteSchemaPermsDisabled RemoteSchemaPermsEnabled <$>
-    (withEnvBool (rsoEnableRemoteSchemaPermissions rso) (fst enableRemoteSchemaPermsEnv))
+    withEnvBool (rsoEnableRemoteSchemaPermissions rso) (fst enableRemoteSchemaPermsEnv)
 
   webSocketCompressionFromEnv <- withEnvBool (rsoWebSocketCompression rso) $
                                  fst webSocketCompressionEnv
+
+  maybeSchemaPollInterval <- withEnv (rsoSchemaPollInterval rso) (fst schemaPollIntervalEnv)
 
   let connectionOptions = WS.defaultConnectionOptions {
                             WS.connectionCompressionOptions =
@@ -191,38 +196,71 @@ mkServeOptions rso = do
                                 then WS.PermessageDeflateCompression WS.defaultPermessageDeflate
                                 else WS.NoCompression
                           }
+      asyncActionsFetchInterval = maybe defaultAsyncActionsFetchInterval msToOptionalInterval maybeAsyncActionsFetchInterval
+      schemaPollInterval        = maybe defaultSchemaPollInterval msToOptionalInterval maybeSchemaPollInterval
   webSocketKeepAlive <- KeepAliveDelay . fromIntegral . fromMaybe 5
       <$> withEnv (rsoWebSocketKeepAlive rso) (fst webSocketKeepAliveEnv)
 
   experimentalFeatures <- maybe mempty Set.fromList <$> withEnv (rsoExperimentalFeatures rso) (fst experimentalFeaturesEnv)
   inferFunctionPerms <-
     maybe FunctionPermissionsInferred (bool FunctionPermissionsManual FunctionPermissionsInferred) <$>
-    (withEnv (rsoInferFunctionPermissions rso) (fst inferFunctionPermsEnv))
+    withEnv (rsoInferFunctionPermissions rso) (fst inferFunctionPermsEnv)
 
   maintenanceMode <-
     bool MaintenanceModeDisabled MaintenanceModeEnabled
     <$> withEnvBool (rsoEnableMaintenanceMode rso) (fst maintenanceModeEnv)
 
-  return $ ServeOptions port host connParams txIso adminScrt authHook jwtSecret
-                        unAuthRole corsCfg enableConsole consoleAssetsDir
-                        enableTelemetry strfyNum enabledAPIs lqOpts enableAL
-                        enabledLogs serverLogLevel planCacheOptions
-                        internalErrorsConfig eventsHttpPoolSize eventsFetchInterval
-                        logHeadersFromEnv enableRemoteSchemaPerms connectionOptions webSocketKeepAlive
-                        inferFunctionPerms maintenanceMode experimentalFeatures
+  pure $ ServeOptions
+           port
+           host
+           connParams
+           txIso
+           adminScrt
+           authHook
+           jwtSecret
+           unAuthRole
+           corsCfg
+           enableConsole
+           consoleAssetsDir
+           enableTelemetry
+           strfyNum
+           dangerousBooleanCollapse
+           enabledAPIs
+           lqOpts
+           enableAL
+           enabledLogs
+           serverLogLevel
+           planCacheOptions
+           internalErrorsConfig
+           eventsHttpPoolSize
+           eventsFetchInterval
+           asyncActionsFetchInterval
+           logHeadersFromEnv
+           enableRemoteSchemaPerms
+           connectionOptions
+           webSocketKeepAlive
+           inferFunctionPerms
+           maintenanceMode
+           schemaPollInterval
+           experimentalFeatures
   where
 #ifdef DeveloperAPIs
     defaultAPIs = [METADATA,GRAPHQL,PGDUMP,CONFIG,DEVELOPER]
 #else
     defaultAPIs = [METADATA,GRAPHQL,PGDUMP,CONFIG]
 #endif
+    defaultAsyncActionsFetchInterval = Interval 1000 -- 1000 Milliseconds or 1 Second
+    defaultSchemaPollInterval = Interval 1000 -- 1000 Milliseconds or 1 Second
     mkConnParams (RawConnParams s c i cl p pt) = do
       stripes <- fromMaybe 1 <$> withEnv s (fst pgStripesEnv)
       -- Note: by Little's Law we can expect e.g. (with 50 max connections) a
       -- hard throughput cap at 1000RPS when db queries take 50ms on average:
       conns <- fromMaybe 50 <$> withEnv c (fst pgConnsEnv)
       iTime <- fromMaybe 180 <$> withEnv i (fst pgTimeoutEnv)
-      connLifetime <- withEnv cl (fst pgConnLifetimeEnv)
+      connLifetime <- withEnv cl (fst pgConnLifetimeEnv) <&> \case
+        Nothing -> Just 600 -- Not set by user; use the default timeout
+        Just 0  -> Nothing  -- user wants to disable PG_CONN_LIFETIME
+        Just n  -> Just n   -- user specified n seconds lifetime
       allowPrepare <- fromMaybe True <$> withEnv p (fst pgUsePrepareEnv)
       poolTimeout <- withEnv pt (fst pgPoolTimeoutEnv)
       return $ Q.ConnParams
@@ -350,13 +388,36 @@ serveCmdFooter =
 
     envVarDoc = mkEnvVarDoc $ envVars <> eventEnvs
     envVars =
-      [ databaseUrlEnv, retriesNumEnv, servePortEnv, serveHostEnv
-      , pgStripesEnv, pgConnsEnv, pgTimeoutEnv, pgUsePrepareEnv, txIsoEnv
-      , adminSecretEnv , accessKeyEnv, authHookEnv, authHookModeEnv
-      , jwtSecretEnv, unAuthRoleEnv, corsDomainEnv, corsDisableEnv, enableConsoleEnv
-      , enableTelemetryEnv, wsReadCookieEnv, stringifyNumEnv, enabledAPIsEnv
-      , enableAllowlistEnv, enabledLogsEnv, logLevelEnv, devModeEnv
-      , adminInternalErrorsEnv, webSocketKeepAliveEnv
+      [ accessKeyEnv
+      , adminInternalErrorsEnv
+      , adminSecretEnv
+      , asyncActionsFetchIntervalEnv
+      , authHookEnv
+      , authHookModeEnv
+      , corsDisableEnv
+      , corsDomainEnv
+      , dangerousBooleanCollapseEnv
+      , databaseUrlEnv
+      , devModeEnv
+      , enableAllowlistEnv
+      , enableConsoleEnv
+      , enableTelemetryEnv
+      , enabledAPIsEnv
+      , enabledLogsEnv
+      , jwtSecretEnv
+      , logLevelEnv
+      , pgConnsEnv
+      , pgStripesEnv
+      , pgTimeoutEnv
+      , pgUsePrepareEnv
+      , retriesNumEnv
+      , serveHostEnv
+      , servePortEnv
+      , stringifyNumEnv
+      , txIsoEnv
+      , unAuthRoleEnv
+      , webSocketKeepAliveEnv
+      , wsReadCookieEnv
       ]
 
     eventEnvs = [ eventsHttpPoolSizeEnv, eventsFetchIntervalEnv ]
@@ -371,6 +432,14 @@ eventsFetchIntervalEnv :: (String, String)
 eventsFetchIntervalEnv =
   ( "HASURA_GRAPHQL_EVENTS_FETCH_INTERVAL"
   , "Interval in milliseconds to sleep before trying to fetch events again after a fetch returned no events from postgres."
+  )
+
+asyncActionsFetchIntervalEnv :: (String, String)
+asyncActionsFetchIntervalEnv =
+  ( "HASURA_GRAPHQL_ASYNC_ACTIONS_FETCH_INTERVAL"
+  , "Interval in milliseconds to sleep before trying to fetch new async actions. "
+    ++ "Value \"0\" implies completely disable fetching async actions from storage. "
+    ++ "Default 1000 milliseconds"
   )
 
 logHeadersFromEnvEnv :: (String, String)
@@ -422,7 +491,8 @@ pgConnLifetimeEnv :: (String, String)
 pgConnLifetimeEnv =
   ( "HASURA_GRAPHQL_PG_CONN_LIFETIME"
   , "Time from connection creation after which the connection should be destroyed and a new one "
-    <> "created. (default: none)"
+    <> "created. A value of 0 indicates we should never destroy an active connection. If 0 is "
+    <> "passed, memory from large query results may not be reclaimed. (default: 600 sec)"
   )
 
 pgPoolTimeoutEnv :: (String, String)
@@ -521,6 +591,14 @@ stringifyNumEnv =
   , "Stringify numeric types (default: false)"
   )
 
+dangerousBooleanCollapseEnv :: (String, String)
+dangerousBooleanCollapseEnv =
+  ( "HASURA_GRAPHQL_V1_BOOLEAN_NULL_COLLAPSE"
+  , "Emulate V1's behaviour re. boolean expression, where an explicit 'null'"
+    <> " value will be interpreted to mean that the field should be ignored"
+    <> " [DEPRECATED, WILL BE REMOVED SOON] (default: false)"
+  )
+
 enabledAPIsEnv :: (String, String)
 enabledAPIsEnv =
   ( "HASURA_GRAPHQL_ENABLED_APIS"
@@ -579,6 +657,12 @@ maintenanceModeEnv =
   , "Flag to enable maintenance mode in the graphql-engine"
   )
 
+schemaPollIntervalEnv :: (String, String)
+schemaPollIntervalEnv =
+  ( "HASURA_GRAPHQL_SCHEMA_POLL_INTERVAL"
+  , "Interval to poll metadata storage for updates in milliseconds - Default 1000 (1s) - Set to 0 to disable"
+  )
+
 adminInternalErrorsEnv :: (String, String)
 adminInternalErrorsEnv =
   ( "HASURA_GRAPHQL_ADMIN_INTERNAL_ERRORS"
@@ -616,8 +700,8 @@ parseRawConnDetails = do
   dbName' <- dbName
   options' <- options
   pure $ PostgresRawConnDetails
-         <$> host' <*> port' <*> user' <*> (pure password')
-         <*> dbName' <*> (pure options')
+         <$> host' <*> port' <*> user' <*> pure password'
+         <*> dbName' <*> pure options'
   where
     host = optional $
       strOption ( long "host" <>
@@ -840,6 +924,13 @@ parseStringifyNum =
            help (snd stringifyNumEnv)
          )
 
+parseDangerousBooleanCollapse :: Parser (Maybe Bool)
+parseDangerousBooleanCollapse = optional $
+  option (eitherReader parseStrAsBool)
+         ( long "v1-boolean-null-collapse" <>
+           help (snd dangerousBooleanCollapseEnv)
+         )
+
 parseEnabledAPIs :: Parser (Maybe [API])
 parseEnabledAPIs = optional $
   option (eitherReader readAPIs)
@@ -907,6 +998,14 @@ parseGraphqlEventsFetchInterval = optional $
     help (snd eventsFetchIntervalEnv)
   )
 
+parseGraphqlAsyncActionsFetchInterval :: Parser (Maybe Milliseconds)
+parseGraphqlAsyncActionsFetchInterval = optional $
+  option (eitherReader readEither)
+  ( long "async-actions-fetch-interval" <>
+    metavar (fst asyncActionsFetchIntervalEnv) <>
+    help (snd eventsFetchIntervalEnv)
+  )
+
 parseLogHeadersFromEnv :: Parser Bool
 parseLogHeadersFromEnv =
   switch ( long "log-headers-from-env" <>
@@ -930,6 +1029,15 @@ parseEnableMaintenanceMode =
   switch ( long "enable-maintenance-mode" <>
            help (snd maintenanceModeEnv)
          )
+
+parseSchemaPollInterval :: Parser (Maybe Milliseconds)
+parseSchemaPollInterval = optional $
+  option (eitherReader readEither)
+  ( long "schema-poll-interval" <>
+    metavar (fst schemaPollIntervalEnv)  <>
+    help (snd schemaPollIntervalEnv)
+  )
+
 
 mxRefetchDelayEnv :: (String, String)
 mxRefetchDelayEnv =
@@ -1034,6 +1142,7 @@ serveOptsToLog so =
       , "enable_telemetry" J..= soEnableTelemetry so
       , "use_prepared_statements" J..= (Q.cpAllowPrepare . soConnParams) so
       , "stringify_numeric_types" J..= soStringifyNum so
+      , "v1-boolean-null-collapse" J..= soDangerousBooleanCollapse so
       , "enabled_apis" J..= soEnabledAPIs so
       , "live_query_options" J..= soLiveQueryOpts so
       , "enable_allowlist" J..= soEnableAllowlist so
@@ -1079,6 +1188,7 @@ serveOptionsParser =
   <*> parseEnableTelemetry
   <*> parseWsReadCookie
   <*> parseStringifyNum
+  <*> parseDangerousBooleanCollapse
   <*> parseEnabledAPIs
   <*> parseMxRefetchInt
   <*> parseMxBatchSize
@@ -1090,19 +1200,21 @@ serveOptionsParser =
   <*> parseGraphqlAdminInternalErrors
   <*> parseGraphqlEventsHttpPoolSize
   <*> parseGraphqlEventsFetchInterval
+  <*> parseGraphqlAsyncActionsFetchInterval
   <*> parseLogHeadersFromEnv
   <*> parseEnableRemoteSchemaPerms
   <*> parseWebSocketCompression
   <*> parseWebSocketKeepAlive
   <*> parseInferFunctionPerms
   <*> parseEnableMaintenanceMode
+  <*> parseSchemaPollInterval
   <*> parseExperimentalFeatures
 
 -- | This implements the mapping between application versions
 -- and catalog schema versions.
 downgradeShortcuts :: [(String, String)]
 downgradeShortcuts =
-  $(do let s = $(embedStringFile "src-rsr/catalog_versions.txt")
+  $(do let s = $(makeRelativeToProject "src-rsr/catalog_versions.txt" >>= embedStringFile)
 
            parseVersions = map (parseVersion . words) . lines
 

@@ -84,7 +84,7 @@ data CombinedSelPermInfo (b :: BackendType)
 --      nullable to accomodate cell-value nullification.
 --   2. Scalar computed fields - Scalar computed fields work the same as Columns (#1)
 --   3. Filter / Boolean expression - The filters are combined using a `BoolOr`
---   4. Limit - Limits are combined by taking the minimum of the two limits
+--   4. Limit - Limits are combined by taking the maximum of the two limits
 --   5. Allow Aggregation - Aggregation is allowed, if any of the permissions allow it.
 --   6. Request Headers - Request headers are concatenated
 --
@@ -136,7 +136,7 @@ combineSelectPermInfos selPermInfos@(headSelPermInfo NE.:| restSelPermInfos) =
             (Nothing, Nothing) -> Nothing
             (Just l, Nothing)  -> Just l
             (Nothing, Just r)  -> Just r
-            (Just l , Just r)  -> Just $ min l r
+            (Just l , Just r)  -> Just $ max l r
       , cspiAllowAgg = cspiAllowAgg lSelPermInfo || cspiAllowAgg accSelPermInfo
       , cspiRequiredHeaders = (cspiRequiredHeaders lSelPermInfo) <> (cspiRequiredHeaders accSelPermInfo)
       }
@@ -180,7 +180,7 @@ buildTablePermissions = Inc.cache proc (source, tableCache, tableFields, tablePe
        let singleRoleSelectPerms =
              map ((_permSel =<<) . (`M.lookup` nonInheritedRolePermissions)) $
                   toList roleSet
-           nonEmptySelPerms = NE.nonEmpty =<< sequenceA singleRoleSelectPerms
+           nonEmptySelPerms = NE.nonEmpty $ catMaybes singleRoleSelectPerms
            combinedSelPermInfo = combineSelectPermInfos <$> nonEmptySelPerms
        returnA -< RolePermInfo Nothing combinedSelPermInfo Nothing Nothing)
     |) inheritedRolesMap

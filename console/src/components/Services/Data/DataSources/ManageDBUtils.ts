@@ -1,7 +1,7 @@
 import { DataSource } from '../../../../metadata/types';
 import { Driver } from '../../../../dataSources';
 
-const parseURI = (url: string) => {
+export const parseURI = (url: string) => {
   try {
     const pattern = /^(?:([^:/?#\s]+):\/{2})?(?:([^@/?#\s]+)@)?([^/?#\s]+)?(?:\/([^?#\s]*))?(?:[?]([^#\s]+))?\S*$/;
     const matches = url.match(pattern);

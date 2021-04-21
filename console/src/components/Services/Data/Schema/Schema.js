@@ -21,7 +21,9 @@ import {
 } from '../TableRelationships/Actions';
 import { getRelDef } from '../TableRelationships/utils';
 import {
+  getDataSourceBaseRoute,
   getSchemaAddTableRoute,
+  getSchemaBaseRoute,
   getSchemaPermissionsRoute,
 } from '../../../Common/utils/routesUtils';
 import { createNewSchema, deleteCurrentSchema } from './Actions';
@@ -32,6 +34,7 @@ import {
   getUntrackedTables,
   dataSource,
   currentDriver,
+  isFeatureSupported,
 } from '../../../../dataSources';
 import { isEmpty } from '../../../Common/utils/jsUtils';
 import { getConfirmation } from '../../../Common/utils/jsUtils';
@@ -43,21 +46,7 @@ import { getConsistentFunctions } from '../../../../metadata/selector';
 import { RightContainer } from '../../../Common/Layout/RightContainer';
 import { TrackableFunctionsList } from './FunctionsList';
 import { getTrackableFunctions } from './utils';
-
-const FEATURES = {
-  UNTRACKED_TABLES: 'UNTRACKED_TABLES',
-  UNTRACKED_RELATIONS: 'UNTRACKED_RELATIONS',
-  UNTRACKED_FUNCTION: 'UNTRACKED_FUNCTION',
-  NON_TRACKABLE_FUNCTIONS: 'NON_TRACKABLE_FUNCTIONS',
-};
-
-const supportedFeaturesByDriver = {
-  postgres: Object.values(FEATURES),
-  mssql: [FEATURES.UNTRACKED_TABLES, FEATURES.UNTRACKED_RELATIONS],
-};
-
-const isAllowed = (driver, feature) =>
-  supportedFeaturesByDriver[driver].includes(feature);
+import BreadCrumb from '../../../Common/Layout/BreadCrumb/BreadCrumb';
 
 const DeleteSchemaButton = ({ dispatch, migrationMode, currentDataSource }) => {
   const successCb = () => {
@@ -137,17 +126,21 @@ const CreateSchemaSection = React.forwardRef(
   }) =>
     migrationMode && (
       <div className={`${styles.display_flex}`}>
-        {createSchemaOpen ? (
-          <OpenCreateSection
-            ref={ref}
-            value={schemaNameEdit}
-            handleInputChange={handleSchemaNameChange}
-            handleCreate={handleCreateClick}
-            handleCancelCreate={handleCancelCreateNewSchema}
-          />
-        ) : (
-          <ClosedCreateSection onClick={handleCreateNewClick} />
-        )}
+        {isFeatureSupported('schemas.create.enabled') ? (
+          <span>
+            {createSchemaOpen ? (
+              <OpenCreateSection
+                ref={ref}
+                value={schemaNameEdit}
+                handleInputChange={handleSchemaNameChange}
+                handleCreate={handleCreateClick}
+                handleCancelCreate={handleCancelCreateNewSchema}
+              />
+            ) : (
+              <ClosedCreateSection onClick={handleCreateNewClick} />
+            )}
+          </span>
+        ) : null}
         <SchemaPermissionsButton schema={schema} source={currentDataSource} />
       </div>
     )
@@ -258,7 +251,7 @@ class Schema extends Component {
     const getCreateBtn = () => {
       let createBtn = null;
 
-      if (migrationMode && currentDriver === 'postgres') {
+      if (migrationMode && isFeatureSupported('tables.create.enabled')) {
         const handleClick = e => {
           e.preventDefault();
 
@@ -292,12 +285,14 @@ class Schema extends Component {
             </div>
             <div className={`${styles.display_inline} ${styles.add_mar_left}`}>
               <div style={{ display: 'flex', alignItems: 'center' }}>
-                <DeleteSchemaButton
-                  dispatch={dispatch}
-                  migrationMode={migrationMode}
-                  currentDataSource={currentDataSource}
-                  schemaList={this.props.schemaList}
-                />
+                {isFeatureSupported('schemas.delete.enabled') ? (
+                  <DeleteSchemaButton
+                    dispatch={dispatch}
+                    migrationMode={migrationMode}
+                    currentDataSource={currentDataSource}
+                    schemaList={this.props.schemaList}
+                  />
+                ) : null}
                 <CreateSchemaSection
                   ref={this.schemaNameInputRef}
                   migrationMode={migrationMode}
@@ -651,11 +646,24 @@ class Schema extends Component {
 
     return (
       <RightContainer>
-        <div
-          className={`container-fluid ${styles.padd_left_remove} ${styles.padd_top}`}
-        >
+        <div className={`container-fluid ${styles.padd_left_remove}`}>
           <div className={styles.padd_left}>
             <Helmet title="Schema - Data | Hasura" />
+            <BreadCrumb
+              breadCrumbs={[
+                { url: `/data`, title: 'Data' },
+                {
+                  url: getDataSourceBaseRoute(currentDataSource),
+                  title: currentDataSource,
+                  prefix: <i className="fa fa-database" />,
+                },
+                {
+                  url: getSchemaBaseRoute(currentSchema, currentDataSource),
+                  title: currentSchema,
+                  prefix: <i className="fa fa-folder" />,
+                },
+              ]}
+            />
             <div className={styles.display_flex}>
               <h2 className={`${styles.headerText} ${styles.display_inline}`}>
                 {currentSchema}
@@ -666,11 +674,12 @@ class Schema extends Component {
             {getCurrentSchemaSection()}
             <hr />
             {getUntrackedTablesSection()}
-            {getUntrackedRelationsSection()}
+            {isFeatureSupported('tables.relationships.track') &&
+              getUntrackedRelationsSection()}
             {getUntrackedFunctionsSection(
-              isAllowed(currentDriver, FEATURES.NON_TRACKABLE_FUNCTIONS)
+              isFeatureSupported('functions.track.enabled')
             )}
-            {isAllowed(currentDriver, FEATURES.NON_TRACKABLE_FUNCTIONS) &&
+            {isFeatureSupported('functions.nonTrackableFunctions.enabled') &&
               getNonTrackableFunctionsSection()}
             <hr />
           </div>

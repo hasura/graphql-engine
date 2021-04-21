@@ -11,6 +11,7 @@ import qualified Database.PG.Query                        as Q
 import qualified Network.WebSockets                       as WS
 
 
+import           Data.Aeson
 import           Data.Char                                (toLower)
 import           Data.Time
 import           Data.URL.Template
@@ -46,6 +47,26 @@ data RawConnParams
 
 type RawAuthHook = AuthHookG (Maybe Text) (Maybe AuthHookType)
 
+-- | Sleep time interval for recurring activities such as (@'asyncActionsProcessor')
+--   Presently @'msToOptionalInterval' interprets `0` as Skip.
+data OptionalInterval
+  = Skip -- ^ No polling
+  | Interval !Milliseconds -- ^ Interval time
+  deriving (Show, Eq)
+
+msToOptionalInterval :: Milliseconds -> OptionalInterval
+msToOptionalInterval = \case
+  0 -> Skip
+  s -> Interval s
+
+instance FromJSON OptionalInterval where
+  parseJSON v = msToOptionalInterval <$> parseJSON v
+
+instance ToJSON OptionalInterval where
+  toJSON = \case
+    Skip       -> toJSON @Milliseconds 0
+    Interval s -> toJSON s
+
 data RawServeOptions impl
   = RawServeOptions
   { rsoPort                          :: !(Maybe Int)
@@ -62,6 +83,7 @@ data RawServeOptions impl
   , rsoEnableTelemetry               :: !(Maybe Bool)
   , rsoWsReadCookie                  :: !Bool
   , rsoStringifyNum                  :: !Bool
+  , rsoDangerousBooleanCollapse      :: !(Maybe Bool)
   , rsoEnabledAPIs                   :: !(Maybe [API])
   , rsoMxRefetchInt                  :: !(Maybe LQ.RefetchInterval)
   , rsoMxBatchSize                   :: !(Maybe LQ.BatchSize)
@@ -73,12 +95,14 @@ data RawServeOptions impl
   , rsoAdminInternalErrors           :: !(Maybe Bool)
   , rsoEventsHttpPoolSize            :: !(Maybe Int)
   , rsoEventsFetchInterval           :: !(Maybe Milliseconds)
+  , rsoAsyncActionsFetchInterval     :: !(Maybe Milliseconds)
   , rsoLogHeadersFromEnv             :: !Bool
   , rsoEnableRemoteSchemaPermissions :: !Bool
   , rsoWebSocketCompression          :: !Bool
   , rsoWebSocketKeepAlive            :: !(Maybe Int)
   , rsoInferFunctionPermissions      :: !(Maybe Bool)
   , rsoEnableMaintenanceMode         :: !Bool
+  , rsoSchemaPollInterval            :: !(Maybe Milliseconds)
   , rsoExperimentalFeatures          :: !(Maybe [ExperimentalFeature])
   }
 
@@ -117,6 +141,7 @@ data ServeOptions impl
   , soConsoleAssetsDir              :: !(Maybe Text)
   , soEnableTelemetry               :: !Bool
   , soStringifyNum                  :: !Bool
+  , soDangerousBooleanCollapse      :: !Bool
   , soEnabledAPIs                   :: !(Set.HashSet API)
   , soLiveQueryOpts                 :: !LQ.LiveQueriesOptions
   , soEnableAllowlist               :: !Bool
@@ -126,12 +151,14 @@ data ServeOptions impl
   , soResponseInternalErrorsConfig  :: !ResponseInternalErrorsConfig
   , soEventsHttpPoolSize            :: !(Maybe Int)
   , soEventsFetchInterval           :: !(Maybe Milliseconds)
+  , soAsyncActionsFetchInterval     :: !OptionalInterval
   , soLogHeadersFromEnv             :: !Bool
   , soEnableRemoteSchemaPermissions :: !RemoteSchemaPermsCtx
   , soConnectionOptions             :: !WS.ConnectionOptions
   , soWebsocketKeepAlive            :: !KeepAliveDelay
   , soInferFunctionPermissions      :: !FunctionPermissionsCtx
   , soEnableMaintenanceMode         :: !MaintenanceMode
+  , soSchemaPollInterval            :: !OptionalInterval
   , soExperimentalFeatures          :: !(Set.HashSet ExperimentalFeature)
   }
 

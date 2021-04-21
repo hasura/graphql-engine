@@ -37,6 +37,7 @@ import qualified Hasura.IncrementalSpec             as IncrementalSpec
 -- import qualified Hasura.RQL.MetadataSpec      as MetadataSpec
 import qualified Hasura.CacheBoundedSpec            as CacheBoundedSpec
 import qualified Hasura.RQL.Types.EndpointSpec      as EndpointSpec
+import qualified Hasura.SQL.WKTSpec                 as WKTSpec
 import qualified Hasura.Server.AuthSpec             as AuthSpec
 import qualified Hasura.Server.MigrateSpec          as MigrateSpec
 import qualified Hasura.Server.TelemetrySpec        as TelemetrySpec
@@ -74,6 +75,7 @@ unitSpecs = do
   describe "Hasura.Server.Auth" AuthSpec.spec
   describe "Hasura.Cache.Bounded" CacheBoundedSpec.spec
   describe "Hasura.RQL.Types.Endpoint" EndpointSpec.spec
+  describe "Hasura.SQL.WKT" WKTSpec.spec
 
 buildPostgresSpecs :: HasVersion => Maybe URLTemplate -> IO Spec
 buildPostgresSpecs maybeUrlTemplate = do
@@ -89,7 +91,7 @@ buildPostgresSpecs maybeUrlTemplate = do
   pgUrlText <- flip onLeft printErrExit $ renderURLTemplate envMap pgUrlTemplate
   let pgConnInfo = Q.ConnInfo 1 $ Q.CDDatabaseURI $ txtToBs pgUrlText
       urlConf = UrlValue $ InputWebhook pgUrlTemplate
-      sourceConnInfo = PostgresSourceConnInfo urlConf defaultPostgresPoolSettings
+      sourceConnInfo = PostgresSourceConnInfo urlConf (Just setPostgresPoolSettings) True
       sourceConfig = PostgresConnConfiguration sourceConnInfo Nothing
 
   pgPool <- Q.initPGPool pgConnInfo Q.defaultConnParams { Q.cpConns = 1 } print
@@ -97,7 +99,7 @@ buildPostgresSpecs maybeUrlTemplate = do
 
       setupCacheRef = do
         httpManager <- HTTP.newManager HTTP.tlsManagerSettings
-        let sqlGenCtx = SQLGenCtx False
+        let sqlGenCtx = SQLGenCtx False False
             maintenanceMode = MaintenanceModeDisabled
             serverConfigCtx =
               ServerConfigCtx FunctionPermissionsInferred RemoteSchemaPermsDisabled sqlGenCtx maintenanceMode mempty

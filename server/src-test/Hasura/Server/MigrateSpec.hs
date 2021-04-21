@@ -53,9 +53,15 @@ instance (MonadBase IO m) => CacheRM (CacheRefT m) where
 
 instance (MonadIO m, MonadBaseControl IO m, MonadTx m, HTTP.HasHttpManagerM m
          , MonadResolveSource m, HasServerConfigCtx m) => CacheRWM (CacheRefT m) where
-  buildSchemaCacheWithOptions reason invalidations metadata = CacheRefT $ flip modifyMVar \schemaCache -> do
-    ((), cache, _) <- runCacheRWT schemaCache (buildSchemaCacheWithOptions reason invalidations metadata)
-    pure (cache, ())
+  buildSchemaCacheWithOptions reason invalidations metadata =
+    CacheRefT $ flip modifyMVar \schemaCache -> do
+      ((), cache, _) <- runCacheRWT schemaCache (buildSchemaCacheWithOptions reason invalidations metadata)
+      pure (cache, ())
+
+  setMetadataResourceVersionInSchemaCache resourceVersion =
+    CacheRefT $ flip modifyMVar \schemaCache -> do
+      ((), cache, _) <- runCacheRWT schemaCache (setMetadataResourceVersionInSchemaCache resourceVersion)
+      pure (cache, ())
 
 instance Example (MetadataT (CacheRefT m) ()) where
   type Arg (MetadataT (CacheRefT m) ()) = MetadataT (CacheRefT m) :~> IO

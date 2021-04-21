@@ -4,12 +4,12 @@ module Hasura.Backends.Postgres.Instances.Types where
 
 import           Hasura.Prelude
 
-import qualified Hasura.Backends.Postgres.Connection as PG
-import qualified Hasura.Backends.Postgres.SQL.DML    as PG
-import qualified Hasura.Backends.Postgres.SQL.Types  as PG
-import qualified Hasura.Backends.Postgres.SQL.Value  as PG
+import qualified Hasura.Backends.Postgres.Connection    as PG
+import qualified Hasura.Backends.Postgres.SQL.DML       as PG
+import qualified Hasura.Backends.Postgres.SQL.Types     as PG
+import qualified Hasura.Backends.Postgres.SQL.Value     as PG
+import qualified Hasura.Backends.Postgres.Types.BoolExp as PG
 
-import           Hasura.RQL.DDL.Headers              ()
 import           Hasura.RQL.Types.Backend
 import           Hasura.RQL.Types.Common
 import           Hasura.RQL.Types.Error
@@ -31,19 +31,17 @@ instance Backend 'Postgres where
   type Column                  'Postgres = PG.PGCol
   type ScalarValue             'Postgres = PG.PGScalarValue
   type ScalarType              'Postgres = PG.PGScalarType
+  type BooleanOperators        'Postgres = PG.BooleanOperators
   type SQLExpression           'Postgres = PG.SQLExp
   type SQLOperator             'Postgres = PG.SQLOp
-  type XAILIKE                 'Postgres = ()
-  type XANILIKE                'Postgres = ()
-  type XComputedField          'Postgres = ()
-  type XRemoteField            'Postgres = ()
-  type XEventTrigger           'Postgres = ()
-  type XRelay                  'Postgres = ()
-  type XNodesAgg               'Postgres = ()
-  type XDistinct               'Postgres = ()
 
-  backendTag              = PostgresTag
-  functionArgScalarType   = PG._qptName
+  type XComputedField          'Postgres = XEnable
+  type XRemoteField            'Postgres = XEnable
+  type XRelay                  'Postgres = XEnable
+  type XNodesAgg               'Postgres = XEnable
+  type XDistinct               'Postgres = XEnable
+
+  functionArgScalarType   = PG.mkFunctionArgScalarType
   isComparableType        = PG.isComparableType
   isNumType               = PG.isNumType
   textToScalarValue       = maybe (PG.PGNull PG.PGText) PG.PGValText

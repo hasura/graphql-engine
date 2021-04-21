@@ -1,4 +1,3 @@
-{-# LANGUAGE RecordWildCards #-}
 {-|
   Send anonymized metrics to the telemetry server regarding usage of various
   features of Hasura.
@@ -196,7 +195,7 @@ computeActionsMetrics actionCache =
 
         typeRelationships =
           length . L.nub . concatMap
-          (map _trName . maybe [] toList . _otdRelationships . _aotDefinition . _aiOutputObject) $
+          (map _trName . maybe [] toList . _otdRelationships . _aotDefinition . snd . _aiOutputObject) $
           actions
 
 -- | Logging related

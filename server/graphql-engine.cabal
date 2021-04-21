@@ -37,6 +37,7 @@ common common-all
 
   default-language: Haskell2010
   default-extensions:
+    AllowAmbiguousTypes
     ApplicativeDo
     BangPatterns
     BlockArguments
@@ -103,56 +104,52 @@ library
   import: common-all
   hs-source-dirs:      src-lib
   build-depends:       base
-                     , bifunctors
-                     , witherable
-                     , validation
-                     , lifted-base
-                     , pg-client
-                     , http-conduit
-                     , validation
-                     , text
-                     , text-builder >= 0.6
-                     , vector-builder
-                     , bytestring
-                     , postgresql-libpq
-                     , mtl
                      , aeson
                      , aeson-casing
-                     , unordered-containers >= 0.2.12
-                     , template-haskell
-                     , hashable
-                     , kan-extensions
-                     , transformers
-                     , transformers-base
-                     , http-types
                      , attoparsec
                      , attoparsec-iso8601 >= 1.0
-                     , time >= 1.9
-                     , scientific
-                     , Spock-core
-                     , split
-                     , optparse-applicative
+                     , bytestring
                      , containers
-                     , monad-control
-                     , monad-time
-                     , monad-validate
-                     , fast-logger
-                     , wai
-                     , postgresql-binary
-                     , process
-                     , http-client-tls
-                     , profunctors
                      , deepseq
                      , dependent-map >=0.4 && <0.5
-                     , dependent-sum >=0.7.1 && <0.8
                      , exceptions
-                     , these
+                     , safe-exceptions
+                     , fast-logger
+                     , hashable
+                     , http-client-tls
+                     , http-types
+                     , http-conduit
+                     , kan-extensions
+                     , lifted-base
+                     , monad-control
+                     , monad-validate
+                     , mtl
+                     , optparse-applicative
+                     , pg-client
+                     , postgresql-binary
+                     , postgresql-libpq
+                     , process
+                     , profunctors
+                     , scientific
                      , semialign
+                     , some
+                     , split
+                     , Spock-core
+                     , template-haskell
+                     , text
+                     , text-builder >= 0.6
+                     , these
+                     , time >= 1.9
+                     , transformers
+                     , transformers-base
+                     , unordered-containers >= 0.2.12
+                     , validation
+                     , vector
+                     , vector-instances
+                     , wai
 
                      -- Encoder related
                      , uuid
-                     , vector
-                     , vector-builder
                      , binary
                      , base16-bytestring
 
@@ -172,7 +169,6 @@ library
 
                      -- Server related
                      , warp
-                     , th-lift-instances
                      , lens
 
                      -- GraphQL related
@@ -209,7 +205,6 @@ library
 
                      -- websockets interface related
                      , websockets
-                     , wai-websockets
                      , stm
                      , stm-containers
                      , list-t
@@ -226,7 +221,6 @@ library
 
                      -- pretty printer
                      , ansi-wl-pprint
-                     , pretty-simple
 
                      -- for capturing various metrics
                      , ekg-core
@@ -258,7 +252,6 @@ library
                      , mmorph
                      , http-api-data
                      , lens-aeson
-                     , safe
 
                      , semigroups >= 0.19.1
 
@@ -270,6 +263,10 @@ library
                      -- mssql support
                      , odbc
                      , resource-pool
+
+                     -- bigquery support
+                     , memory
+                     , x509-store
 
   if !flag(profiling)
     build-depends:
@@ -299,8 +296,28 @@ library
                      , Data.Text.NonEmpty
                      , Data.Time.Clock.Units
                      , Data.URL.Template
+                     , GHC.Stats.Extended
                      , Hasura.App
                      , Hasura.Metadata.Class
+
+                     , Hasura.Backends.BigQuery.Connection
+                     , Hasura.Backends.BigQuery.DataLoader.Execute
+                     , Hasura.Backends.BigQuery.DataLoader.Plan
+                     , Hasura.Backends.BigQuery.DDL
+                     , Hasura.Backends.BigQuery.DDL.BoolExp
+                     , Hasura.Backends.BigQuery.DDL.RunSQL
+                     , Hasura.Backends.BigQuery.DDL.Source
+                     , Hasura.Backends.BigQuery.FromIr
+                     , Hasura.Backends.BigQuery.Instances.Execute
+                     , Hasura.Backends.BigQuery.Instances.Schema
+                     , Hasura.Backends.BigQuery.Instances.Transport
+                     , Hasura.Backends.BigQuery.Instances.Types
+                     , Hasura.Backends.BigQuery.Instances.Metadata
+                     , Hasura.Backends.BigQuery.Meta
+                     , Hasura.Backends.BigQuery.Plan
+                     , Hasura.Backends.BigQuery.Source
+                     , Hasura.Backends.BigQuery.ToQuery
+                     , Hasura.Backends.BigQuery.Types
 
                      , Hasura.Backends.Postgres.Connection
                      , Hasura.Backends.Postgres.DDL
@@ -315,6 +332,7 @@ library
                      , Hasura.Backends.Postgres.Execute.RemoteJoin
                      , Hasura.Backends.Postgres.Execute.Types
                      , Hasura.Backends.Postgres.Instances.Execute
+                     , Hasura.Backends.Postgres.Instances.Metadata
                      , Hasura.Backends.Postgres.Instances.Schema
                      , Hasura.Backends.Postgres.Instances.Transport
                      , Hasura.Backends.Postgres.Instances.Types
@@ -332,19 +350,24 @@ library
                      , Hasura.Backends.Postgres.Translate.Select
                      , Hasura.Backends.Postgres.Translate.Types
                      , Hasura.Backends.Postgres.Translate.Update
+                     , Hasura.Backends.Postgres.Types.BoolExp
+                     , Hasura.Backends.Postgres.Types.Column
+                     , Hasura.Backends.Postgres.Types.Table
 
                      , Hasura.Backends.MSSQL.Connection
                      , Hasura.Backends.MSSQL.DDL
+                     , Hasura.Backends.MSSQL.DDL.BoolExp
                      , Hasura.Backends.MSSQL.DDL.RunSQL
                      , Hasura.Backends.MSSQL.DDL.Source
-                     , Hasura.Backends.MSSQL.DDL.BoolExp
                      , Hasura.Backends.MSSQL.FromIr
                      , Hasura.Backends.MSSQL.Instances.Execute
+                     , Hasura.Backends.MSSQL.Instances.Metadata
                      , Hasura.Backends.MSSQL.Instances.Schema
                      , Hasura.Backends.MSSQL.Instances.Transport
                      , Hasura.Backends.MSSQL.Instances.Types
                      , Hasura.Backends.MSSQL.Meta
                      , Hasura.Backends.MSSQL.Plan
+                     , Hasura.Backends.MSSQL.SQL.Value
                      , Hasura.Backends.MSSQL.ToQuery
                      , Hasura.Backends.MSSQL.Types
                      , Hasura.Backends.MSSQL.Types.Instances
@@ -413,8 +436,10 @@ library
                      , Hasura.RQL.Types.Error
                      , Hasura.RQL.Types.EventTrigger
                      , Hasura.RQL.Types.Function
+                     , Hasura.RQL.Types.Instances
                      , Hasura.RQL.Types.Metadata
                      , Hasura.RQL.Types.Metadata.Backend
+                     , Hasura.RQL.Types.Metadata.Instances
                      , Hasura.RQL.Types.Metadata.Object
                      , Hasura.RQL.Types.Permission
                      , Hasura.RQL.Types.QueryCollection
@@ -482,12 +507,13 @@ library
                      , Hasura.GraphQL.Context
                      , Hasura.GraphQL.Execute
                      , Hasura.GraphQL.Execute.Action
+                     , Hasura.GraphQL.Execute.Action.Subscription
                      , Hasura.GraphQL.Execute.Action.Types
                      , Hasura.GraphQL.Execute.Backend
                      , Hasura.GraphQL.Execute.Common
                      , Hasura.GraphQL.Execute.Inline
                      , Hasura.GraphQL.Execute.Insert
-                     , Hasura.GraphQL.Execute.LiveQuery.Explain
+                     , Hasura.GraphQL.Execute.Instances
                      , Hasura.GraphQL.Execute.LiveQuery.Options
                      , Hasura.GraphQL.Execute.LiveQuery.Plan
                      , Hasura.GraphQL.Execute.LiveQuery.Poll
@@ -518,6 +544,7 @@ library
                      , Hasura.GraphQL.Schema.Build
                      , Hasura.GraphQL.Schema.Common
                      , Hasura.GraphQL.Schema.Introspect
+                     , Hasura.GraphQL.Schema.Instances
                      , Hasura.GraphQL.Schema.Mutation
                      , Hasura.GraphQL.Schema.OrderBy
                      , Hasura.GraphQL.Schema.Postgres
@@ -527,6 +554,7 @@ library
                      , Hasura.GraphQL.Transport.Backend
                      , Hasura.GraphQL.Transport.HTTP
                      , Hasura.GraphQL.Transport.HTTP.Protocol
+                     , Hasura.GraphQL.Transport.Instances
                      , Hasura.GraphQL.Transport.WebSocket
                      , Hasura.GraphQL.Transport.WebSocket.Protocol
                      , Hasura.GraphQL.Transport.WebSocket.Server
@@ -539,9 +567,13 @@ library
                      , Data.Tuple.Extended
                      , Hasura.SQL.AnyBackend
                      , Hasura.SQL.Backend
+                     , Hasura.SQL.TH
+                     , Hasura.SQL.Tag
                      , Hasura.SQL.GeoJSON
                      , Hasura.SQL.Time
                      , Hasura.SQL.Types
+                     , Hasura.SQL.Value
+                     , Hasura.SQL.WKT
                      , Hasura.Tracing
                      , Network.HTTP.Client.Extended
                      , Network.URI.Extended
@@ -600,18 +632,19 @@ test-suite graphql-engine-tests
   hs-source-dirs: src-test
   main-is: Main.hs
   other-modules:
-    Data.Parser.CacheControlSpec
-    Data.Parser.URLTemplate
-    Data.Parser.JSONPathSpec
-    Data.TimeSpec
     Data.NonNegativeIntSpec
+    Data.Parser.CacheControlSpec
+    Data.Parser.JSONPathSpec
+    Data.Parser.URLTemplate
+    Data.TimeSpec
+    Hasura.CacheBoundedSpec
     Hasura.IncrementalSpec
     Hasura.RQL.MetadataSpec
     Hasura.RQL.Types.EndpointSpec
+    Hasura.SQL.WKTSpec
+    Hasura.Server.AuthSpec
     Hasura.Server.MigrateSpec
     Hasura.Server.TelemetrySpec
-    Hasura.CacheBoundedSpec
-    Hasura.Server.AuthSpec
 
 -- Benchmarks related to caching (e.g. the plan cache).
 --

@@ -3,6 +3,8 @@ package commands
 import (
 	"fmt"
 
+	"github.com/hasura/graphql-engine/cli/seed"
+
 	"github.com/hasura/graphql-engine/cli"
 	"github.com/hasura/graphql-engine/cli/internal/hasura"
 	"github.com/hasura/graphql-engine/cli/internal/metadatautil"
@@ -42,6 +44,10 @@ func NewSeedCmd(ec *cli.ExecutionContext) *cobra.Command {
 					return fmt.Errorf("cannot determine source kind for %v", ec.Source.Name)
 				}
 				ec.Source.Kind = *sourceKind
+				// check if seed ops are supported for the database
+				if !seed.IsSeedsSupported(*sourceKind) {
+					return fmt.Errorf("seed operations on database %s of kind %s is not supported", ec.Source.Name, *sourceKind)
+				}
 			} else {
 				// for project using config older than v3, use PG source kind
 				ec.Source.Kind = hasura.SourceKindPG
@@ -75,4 +81,13 @@ func NewSeedCmd(ec *cli.ExecutionContext) *cobra.Command {
 	util.BindPFlag(v, "certificate_authority", f.Lookup("certificate-authority"))
 
 	return seedCmd
+}
+
+func getSeedDriver(configVersion cli.ConfigVersion) (driver *seed.Driver) {
+	if configVersion >= cli.V3 {
+		driver = seed.NewDriver(ec.APIClient.V2Query.Bulk, ec.APIClient.PGDump)
+	} else {
+		driver = seed.NewDriver(ec.APIClient.V1Query.Bulk, ec.APIClient.PGDump)
+	}
+	return driver
 }

@@ -37,3 +37,45 @@ args:
       ('Foo', 'Bar'),
       ('Baz', 'Qux'),
       ('X%20Y', 'Test');
+
+- type: run_sql
+  args:
+    sql: |
+      CREATE TABLE "user"(
+        id SERIAL PRIMARY KEY,
+        name TEXT NOT NULL,
+        email TEXT NOT NULL
+      );
+      INSERT INTO "user" (name, email) VALUES ('Clarke 1', 'clarke1@gmail.com');
+      INSERT INTO "user" (name, email) VALUES ('Clarke 2', 'clarke2@gmail.com');
+
+- type: set_custom_types
+  args:
+    objects:
+    - name: EmailResponse
+      fields:
+      - name: user
+        type: String!
+
+- type: create_action
+  args:
+    name: get_user_by_email_1    # this action is being created with forward_client_headers set to `true`
+    definition:
+      type: query
+      arguments:
+      - name: email
+        type: String!
+      output_type: EmailResponse
+      handler: http://127.0.0.1:5593/get-user-by-email
+      forward_client_headers: true
+
+- type: create_action
+  args:
+    name: get_user_by_email_2    # this action is being created with forward_client_headers set to `false`
+    definition:
+      type: query
+      arguments:
+      - name: email
+        type: String!
+      output_type: EmailResponse
+      handler: http://127.0.0.1:5593/get-user-by-email      

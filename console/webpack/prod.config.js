@@ -156,7 +156,7 @@ module.exports = {
           keep_classnames: undefined,
           keep_fnames: false,
           safari10: false,
-          parallel: 4,
+          parallel: 2,
         },
         extractComments: false,
       }),

@@ -22,30 +22,32 @@ import {
   rolesSelector,
   getRemoteSchemaPermissions,
 } from '../../../../metadata/selector';
-import { RemoteSchema } from '../../../../metadata/types';
 
 export type RSPContainerProps = {
-  allRoles: string[];
-  allRemoteSchemas: RemoteSchema[];
-  params: { remoteSchemaName: string };
-  viewRemoteSchema: (data: string) => void;
+  rspEnabled: boolean;
 };
 
 const RSP: React.FC<Props> = props => {
-  const { allRoles, allRemoteSchemas, params, viewRemoteSchema } = props;
+  const { allRemoteSchemas, params, viewRemoteSchema, rspEnabled } = props;
   return (
     <RSPWrapper
       params={params}
       allRemoteSchemas={allRemoteSchemas}
       tabName="permissions"
       viewRemoteSchema={viewRemoteSchema}
-      permissionRenderer={currentRemoteSchema => (
-        <Permissions
-          allRoles={allRoles}
-          {...props}
-          {...{ currentRemoteSchema }}
-        />
-      )}
+      permissionRenderer={currentRemoteSchema =>
+        rspEnabled ? (
+          <Permissions {...props} {...{ currentRemoteSchema }} />
+        ) : (
+          <div>
+            Remote schema permissions are not enabled. To enable remote schema
+            permissions, start the Hasura server with environment variable
+            <code>
+              HASURA_GRAPHQL_ENABLE_REMOTE_SCHEMA_PERMISSIONS: &quot;true&quot;
+            </code>
+          </div>
+        )
+      }
     />
   );
 };
@@ -56,6 +58,8 @@ const mapStateToProps = (state: ReduxState) => {
     ...state.remoteSchemas,
     allRoles: rolesSelector(state),
     allRemoteSchemas: getRemoteSchemas(state),
+    rspEnabled:
+      state.main.serverConfig?.data?.is_remote_schema_permissions_enabled,
     readOnlyMode: state.main.readOnlyMode,
   };
 };
@@ -89,7 +93,8 @@ const connector = connect(mapStateToProps, mapDispatchToProps);
 
 type InjectedProps = ConnectedProps<typeof connector>;
 
-type ComponentProps = RSPWrapperProps & PermissionsProps;
+type ComponentProps = RSPWrapperProps & PermissionsProps & RSPContainerProps;
+
 type Props = ComponentProps & InjectedProps;
 
 const RSPContainer = connector(RSP);

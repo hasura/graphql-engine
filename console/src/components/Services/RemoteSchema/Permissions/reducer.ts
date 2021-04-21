@@ -1,4 +1,4 @@
-import defaultState from './state';
+import defaultState, { RemoteSchemaPermissionsState } from './state';
 import { Dispatch } from '../../../../types';
 import { updateBulkSelect } from './utils';
 import {
@@ -81,7 +81,10 @@ export const permSetBulkSelect = (isChecked: boolean, selectedRole: string) => {
   };
 };
 
-const reducer = (state = defaultState, action: RSPEvents) => {
+const reducer = (
+  state = defaultState,
+  action: RSPEvents
+): RemoteSchemaPermissionsState => {
   switch (action.type) {
     case MAKE_REQUEST:
       return {

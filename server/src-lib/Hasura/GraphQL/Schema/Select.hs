@@ -1,5 +1,5 @@
-{-# LANGUAGE RecordWildCards #-}
-{-# LANGUAGE ViewPatterns    #-}
+{-# LANGUAGE ViewPatterns #-}
+
 -- | Generate table selection schema both for ordinary Hasura-type and
 -- relay-type queries.  All schema with "relay" or "connection" in the name is
 -- used exclusively by relay.
@@ -19,7 +19,6 @@ module Hasura.GraphQL.Schema.Select
   , nodePG
   , nodeField
   ) where
-
 
 import           Hasura.Prelude
 
@@ -66,6 +65,7 @@ import           Hasura.RQL.DDL.RemoteRelationship.Validate
 import           Hasura.RQL.Types
 import           Hasura.Server.Utils                        (executeJSONPath)
 import           Hasura.Session
+
 
 -- 1. top level selection functions
 -- write a blurb?
@@ -579,7 +579,7 @@ selectFunctionConnection function fieldName description pkeyColumns selectPermis
 -- | Argument to filter rows returned from table selection
 -- > where: table_bool_exp
 tableWhere
-  :: forall m n r b. (BackendSchema b, MonadSchema n m, MonadTableInfo r m, MonadRole r m)
+  :: forall b r m n. MonadBuildSchema b r m n
   => TableName b
   -> SelPermInfo b
   -> m (InputFieldsParser n (Maybe (IR.AnnBoolExp b (UnpreparedValue b))))
@@ -616,7 +616,7 @@ tableOrderBy table selectPermissions = do
 -- > order_by: [table_order_by!]
 -- > where: table_bool_exp
 tableArgs
-  :: forall m n r b. (BackendSchema b, MonadSchema n m, MonadTableInfo r m, MonadRole r m)
+  :: forall b r m n. MonadBuildSchema b r m n
   => TableName b
   -> SelPermInfo b
   -> m (InputFieldsParser n (SelectArgs b))
@@ -680,7 +680,7 @@ positiveInt = P.int `P.bind` \value -> do
 -- > before: String
 -- > after: String
 tableConnectionArgs
-  :: forall m n r b. (BackendSchema b, MonadSchema n m, MonadTableInfo r m, MonadRole r m)
+  :: forall b r m n. MonadBuildSchema b r m n
   => PrimaryKeyColumns b
   -> TableName b
   -> SelPermInfo b
@@ -1078,7 +1078,7 @@ computedFieldPG ComputedFieldInfo{..} selectPermissions = runMaybeT do
       in mkDescriptionWith (_cffDescription _cfiFunction) defaultDescription
 
     computedFieldFunctionArgs
-      :: ComputedFieldFunction -> m (InputFieldsParser n (IR.FunctionArgsExpTableRow 'Postgres (UnpreparedValue 'Postgres)))
+      :: ComputedFieldFunction 'Postgres -> m (InputFieldsParser n (IR.FunctionArgsExpTableRow 'Postgres (UnpreparedValue 'Postgres)))
     computedFieldFunctionArgs ComputedFieldFunction{..} =
       functionArgs _cffName (IAUserProvided <$> _cffInputArgs) <&> fmap addTableAndSessionArgument
       where
@@ -1295,7 +1295,7 @@ functionArgs functionName (toList -> inputArgs) = do
         Nothing -> whenMaybe (not $ unHasDefault $ faHasDefault arg) $
           parseErrorWith NotSupported "Non default arguments cannot be omitted"
 
-tablePermissionsInfo :: SelPermInfo b -> TablePerms b
+tablePermissionsInfo :: Backend b => SelPermInfo b -> TablePerms b
 tablePermissionsInfo selectPermissions = IR.TablePerm
   { IR._tpFilter = fmapAnnBoolExp partialSQLExpToUnpreparedValue $ spiFilter selectPermissions
   , IR._tpLimit  = spiLimit selectPermissions

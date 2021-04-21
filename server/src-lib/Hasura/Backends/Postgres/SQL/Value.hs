@@ -6,8 +6,8 @@ module Hasura.Backends.Postgres.SQL.Value
   , scientificToInteger
   , scientificToFloat
 
-  , TxtEncodedPGVal(..)
-  , txtEncodedPGVal
+  , TxtEncodedVal(..)
+  , txtEncodedVal
 
   , binEncoder
   , txtEncoder
@@ -15,6 +15,8 @@ module Hasura.Backends.Postgres.SQL.Value
   ) where
 
 import           Hasura.Prelude
+
+import           Hasura.SQL.Value                   (TxtEncodedVal (..))
 
 import qualified Data.Aeson.Text                    as AE
 import qualified Data.Aeson.Types                   as AT
@@ -201,25 +203,8 @@ parsePGValue ty val = case (ty, val) of
       PGUnknown tyName ->
         fail $ "A string is expected for type: " ++ T.unpack tyName
 
-data TxtEncodedPGVal
-  = TENull
-  | TELit !Text
-  deriving (Show, Eq, Generic)
-
-instance Hashable TxtEncodedPGVal
-
-instance ToJSON TxtEncodedPGVal where
-  toJSON = \case
-    TENull  -> Null
-    TELit t -> String t
-
-instance FromJSON TxtEncodedPGVal where
-  parseJSON Null       = pure TENull
-  parseJSON (String t) = pure $ TELit t
-  parseJSON v          = AT.typeMismatch "String" v
-
-txtEncodedPGVal :: PGScalarValue -> TxtEncodedPGVal
-txtEncodedPGVal = \case
+txtEncodedVal :: PGScalarValue -> TxtEncodedVal
+txtEncodedVal = \case
   PGValInteger i  -> TELit $ tshow i
   PGValSmallInt i -> TELit $ tshow i
   PGValBigInt i   -> TELit $ tshow i
@@ -317,7 +302,7 @@ binEncoder = \case
   PGValUnknown t                   -> (PTI.auto, Just (TE.encodeUtf8 t, PQ.Text))
 
 txtEncoder :: PGScalarValue -> S.SQLExp
-txtEncoder colVal = case txtEncodedPGVal colVal of
+txtEncoder colVal = case txtEncodedVal colVal of
   TENull  -> S.SENull
   TELit t -> S.SELit t
 

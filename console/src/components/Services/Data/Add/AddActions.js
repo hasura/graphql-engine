@@ -7,11 +7,13 @@ import { UPDATE_MIGRATION_STATUS_ERROR } from '../../../Main/Actions';
 import { setTable } from '../DataActions.js';
 import { getTableModifyRoute } from '../../../Common/utils/routesUtils';
 import { dataSource } from '../../../../dataSources';
+import { findTable, escapeTableColumns } from '../../../../dataSources/common';
 import { getRunSqlQuery } from '../../../Common/utils/v1QueryUtils';
 import {
   getTrackTableQuery,
   getUntrackTableQuery,
 } from '../../../../metadata/queryUtils';
+import { setSidebarLoading } from '../DataSubSidebar';
 
 const SET_DEFAULTS = 'AddTable/SET_DEFAULTS';
 const SET_TABLENAME = 'AddTable/SET_TABLENAME';
@@ -148,9 +150,13 @@ const resetValidation = () => ({ type: RESET_VALIDATION_ERROR });
  */
 export const trackTable = payload => (dispatch, getState) => {
   dispatch({ type: MAKING_REQUEST });
-  const currentDataSource = getState().tables.currentDataSource;
-
-  const requestBodyUp = getTrackTableQuery(payload, currentDataSource);
+  const { currentDataSource, allSchemas } = getState().tables;
+  const table = findTable(allSchemas, payload);
+  const requestBodyUp = getTrackTableQuery({
+    tableDef: payload,
+    source: currentDataSource,
+    customColumnNames: escapeTableColumns(table),
+  });
   const requestBodyDown = getUntrackTableQuery(payload, currentDataSource);
 
   const migrationName = 'track_table_' + payload.schema + '_' + payload.name;
@@ -162,7 +168,7 @@ export const trackTable = payload => (dispatch, getState) => {
     dispatch({ type: REQUEST_SUCCESS });
     dispatch({ type: SET_DEFAULTS });
     dispatch(setTable(payload.name));
-    dispatch(updateSchemaInfo()).then(() =>
+    dispatch(updateSchemaInfo()).then(() => {
       dispatch(
         _push(
           getTableModifyRoute(
@@ -172,13 +178,15 @@ export const trackTable = payload => (dispatch, getState) => {
             true
           )
         )
-      )
-    );
+      );
+      dispatch(setSidebarLoading(false));
+    });
     return;
   };
 
   const customOnError = err => {
     dispatch({ type: REQUEST_ERROR, data: err });
+    dispatch(setSidebarLoading(false));
   };
 
   makeMigrationCall(
@@ -198,6 +206,7 @@ export const trackTable = payload => (dispatch, getState) => {
 const createTableSql = () => {
   return (dispatch, getState) => {
     dispatch({ type: MAKING_REQUEST });
+    dispatch(setSidebarLoading(true));
 
     const state = getState().addTable.table;
     const currentSchema = getState().tables.currentSchema;
@@ -230,6 +239,7 @@ const createTableSql = () => {
     );
 
     if (createTableQueries.error) {
+      dispatch(setSidebarLoading(false));
       return dispatch(
         showErrorNotification('Create table failed', createTableQueries.error)
       );
@@ -257,6 +267,7 @@ const createTableSql = () => {
     const customOnError = err => {
       dispatch({ type: REQUEST_ERROR, data: errorMsg });
       dispatch({ type: UPDATE_MIGRATION_STATUS_ERROR, data: err });
+      dispatch(setSidebarLoading(false));
       return;
     };
 

@@ -79,10 +79,11 @@ TODO: Reference to open issue or rfc?
 class (MonadError QErr m) => MonadMetadataStorage m where
 
   -- Metadata
+  fetchMetadataResourceVersion :: m MetadataResourceVersion
   fetchMetadata :: m (Metadata, MetadataResourceVersion)
-  setMetadata :: MetadataResourceVersion -> Metadata -> m ()
-  notifySchemaCacheSync :: InstanceId -> CacheInvalidations -> m ()
-  processSchemaSyncEventPayload :: InstanceId -> Value -> m SchemaSyncEventProcessResult
+  fetchMetadataNotifications ::  MetadataResourceVersion -> InstanceId -> m [(MetadataResourceVersion, CacheInvalidations)]
+  setMetadata :: MetadataResourceVersion -> Metadata -> m MetadataResourceVersion
+  notifySchemaCacheSync :: MetadataResourceVersion -> InstanceId -> CacheInvalidations -> m ()
   getCatalogState :: m CatalogState
   -- the `setCatalogState` function is used by the console and CLI to store its state
   -- it is disabled when maintenance mode is on
@@ -123,10 +124,11 @@ class (MonadError QErr m) => MonadMetadataStorage m where
   clearActionData :: ActionName -> m ()
 
 instance (MonadMetadataStorage m) => MonadMetadataStorage (ReaderT r m) where
+  fetchMetadataResourceVersion         = lift fetchMetadataResourceVersion
   fetchMetadata                        = lift fetchMetadata
+  fetchMetadataNotifications a b       = lift $ fetchMetadataNotifications a b
   setMetadata r                        = lift . setMetadata r
-  notifySchemaCacheSync a b            = lift $ notifySchemaCacheSync a b
-  processSchemaSyncEventPayload a b    = lift $ processSchemaSyncEventPayload a b
+  notifySchemaCacheSync a b c          = lift $ notifySchemaCacheSync a b c
   getCatalogState                      = lift getCatalogState
   setCatalogState a b                  = lift $ setCatalogState a b
 
@@ -154,10 +156,11 @@ instance (MonadMetadataStorage m) => MonadMetadataStorage (ReaderT r m) where
   clearActionData                      = lift . clearActionData
 
 instance (MonadMetadataStorage m) => MonadMetadataStorage (StateT s m) where
+  fetchMetadataResourceVersion         = lift fetchMetadataResourceVersion
   fetchMetadata                        = lift fetchMetadata
+  fetchMetadataNotifications a b       = lift $ fetchMetadataNotifications a b
   setMetadata r                        = lift . setMetadata r
-  notifySchemaCacheSync a b            = lift $ notifySchemaCacheSync a b
-  processSchemaSyncEventPayload a b    = lift $ processSchemaSyncEventPayload a b
+  notifySchemaCacheSync a b c          = lift $ notifySchemaCacheSync a b c
   getCatalogState                      = lift getCatalogState
   setCatalogState a b                  = lift $ setCatalogState a b
 
@@ -186,10 +189,11 @@ instance (MonadMetadataStorage m) => MonadMetadataStorage (StateT s m) where
 
 
 instance (MonadMetadataStorage m) => MonadMetadataStorage (Tracing.TraceT m) where
+  fetchMetadataResourceVersion         = lift fetchMetadataResourceVersion
   fetchMetadata                        = lift fetchMetadata
+  fetchMetadataNotifications a b       = lift $ fetchMetadataNotifications a b
   setMetadata r                        = lift . setMetadata r
-  notifySchemaCacheSync a b            = lift $ notifySchemaCacheSync a b
-  processSchemaSyncEventPayload a b    = lift $ processSchemaSyncEventPayload a b
+  notifySchemaCacheSync a b c          = lift $ notifySchemaCacheSync a b c
   getCatalogState                      = lift getCatalogState
   setCatalogState a b                  = lift $ setCatalogState a b
 
@@ -217,10 +221,11 @@ instance (MonadMetadataStorage m) => MonadMetadataStorage (Tracing.TraceT m) whe
   clearActionData                      = lift . clearActionData
 
 instance (MonadMetadataStorage m) => MonadMetadataStorage (ExceptT QErr m) where
+  fetchMetadataResourceVersion         = lift fetchMetadataResourceVersion
   fetchMetadata                        = lift fetchMetadata
+  fetchMetadataNotifications a b       = lift $ fetchMetadataNotifications a b
   setMetadata r                        = lift . setMetadata r
-  notifySchemaCacheSync a b            = lift $ notifySchemaCacheSync a b
-  processSchemaSyncEventPayload a b    = lift $ processSchemaSyncEventPayload a b
+  notifySchemaCacheSync a b c          = lift $ notifySchemaCacheSync a b c
   getCatalogState                      = lift getCatalogState
   setCatalogState a b                  = lift $ setCatalogState a b
 
@@ -248,10 +253,11 @@ instance (MonadMetadataStorage m) => MonadMetadataStorage (ExceptT QErr m) where
   clearActionData                      = lift . clearActionData
 
 instance (MonadMetadataStorage m) => MonadMetadataStorage (MetadataT m) where
+  fetchMetadataResourceVersion         = lift fetchMetadataResourceVersion
   fetchMetadata                        = lift fetchMetadata
+  fetchMetadataNotifications a b       = lift $ fetchMetadataNotifications a b
   setMetadata r                        = lift . setMetadata r
-  notifySchemaCacheSync a b            = lift $ notifySchemaCacheSync a b
-  processSchemaSyncEventPayload a b    = lift $ processSchemaSyncEventPayload a b
+  notifySchemaCacheSync a b c          = lift $ notifySchemaCacheSync a b c
   getCatalogState                      = lift getCatalogState
   setCatalogState a b                  = lift $ setCatalogState a b
 
@@ -350,10 +356,11 @@ runMetadataStorageT =
 instance (Monad m, Monad (t m), MonadTrans t, MonadMetadataStorage (MetadataStorageT m))
   => MonadMetadataStorage (MetadataStorageT (t m)) where
 
+  fetchMetadataResourceVersion      = hoist lift fetchMetadataResourceVersion
   fetchMetadata                     = hoist lift fetchMetadata
+  fetchMetadataNotifications a b    = hoist lift $ fetchMetadataNotifications a b
   setMetadata r                     = hoist lift . setMetadata r
-  notifySchemaCacheSync a b         = hoist lift $ notifySchemaCacheSync a b
-  processSchemaSyncEventPayload a b = hoist lift $ processSchemaSyncEventPayload a b
+  notifySchemaCacheSync a b c       = hoist lift $ notifySchemaCacheSync a b c
   getCatalogState                   = hoist lift getCatalogState
   setCatalogState a b               = hoist lift $ setCatalogState a b
 

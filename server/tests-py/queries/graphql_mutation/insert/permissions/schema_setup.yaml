@@ -83,6 +83,17 @@ args:
         name text not null,
         added_by text not null
       );
+      create table items (
+        id serial primary key,
+        name text,
+        quantity int
+      );
+      create table order_cart (
+        id serial primary key,
+        item_id int not null references items(id),
+        quantity int
+      );
+
 
 - type: track_table
   args:
@@ -538,3 +549,36 @@ args:
       check:
         name:
           _ne: ''
+
+- type: track_table
+  args:
+    schema: public
+    name: items
+
+- type: track_table
+  args:
+    schema: public
+    name: order_cart
+
+- type: create_object_relationship
+  args:
+    table: order_cart
+    name: item
+    using:
+      foreign_key_constraint_on: item_id
+
+# an user can add an item in the order_cart
+# iff there are enough of the them present
+- type: create_insert_permission
+  args:
+    table: order_cart
+    role:  user
+    permission:
+      columns: [item_id, quantity]
+      check:
+        item:
+          quantity:
+            _cgte:
+              - $
+              - quantity
+      set: {}

@@ -320,7 +320,8 @@ updateTableByPk table fieldName description updatePerms selectPerms = runMaybeT 
     <&> mkUpdateObject table columns updatePerms . fmap IR.MOutSinglerowObject
 
 mkUpdateObject
-  :: TableName b
+  :: Backend b
+  => TableName b
   -> [ColumnInfo b]
   -> UpdPermInfo b
   -> ( ( [(Column b, IR.UpdOpExpG (UnpreparedValue b))]
@@ -385,7 +386,8 @@ deleteFromTableByPk table fieldName description deletePerms selectPerms = runMay
     <&> mkDeleteObject table columns deletePerms . fmap IR.MOutSinglerowObject
 
 mkDeleteObject
-  :: TableName b
+  :: Backend b
+  => TableName b
   -> [ColumnInfo b]
   -> DelPermInfo b
   -> (AnnBoolExp b (UnpreparedValue b), IR.MutationOutputG b (UnpreparedValue b))

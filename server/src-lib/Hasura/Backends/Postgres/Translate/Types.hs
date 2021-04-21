@@ -10,9 +10,7 @@ import qualified Hasura.Backends.Postgres.SQL.DML   as PG
 import qualified Hasura.Backends.Postgres.SQL.Types as PG
 
 import           Hasura.RQL.IR.Select
-import           Hasura.RQL.Types.Backend
 import           Hasura.RQL.Types.Common
-import           Hasura.SQL.Backend
 
 
 data SourcePrefixes
@@ -25,7 +23,7 @@ data SourcePrefixes
   } deriving (Show, Eq, Generic)
 instance Hashable SourcePrefixes
 
-data SelectSource (b :: BackendType)
+data SelectSource
   = SelectSource
   { _ssPrefix   :: !PG.Identifier
   , _ssFrom     :: !PG.FromItem
@@ -33,19 +31,19 @@ data SelectSource (b :: BackendType)
   , _ssWhere    :: !PG.BoolExp
   , _ssOrderBy  :: !(Maybe PG.OrderByExp)
   , _ssLimit    :: !(Maybe Int)
-  , _ssOffset   :: !(Maybe (SQLExpression b))
+  , _ssOffset   :: !(Maybe (PG.SQLExp))
   } deriving (Generic)
-instance Hashable (SelectSource 'Postgres)
-deriving instance Show (SelectSource 'Postgres)
-deriving instance Eq   (SelectSource 'Postgres)
+instance Hashable SelectSource
+deriving instance Show SelectSource
+deriving instance Eq   SelectSource
 
-data SelectNode (b :: BackendType)
+data SelectNode
   = SelectNode
-  { _snExtractors :: !(HM.HashMap (Alias b) (SQLExpression b))
-  , _snJoinTree   :: !(JoinTree b)
+  { _snExtractors :: !(HM.HashMap PG.Alias PG.SQLExp)
+  , _snJoinTree   :: !JoinTree
   }
 
-instance Semigroup (SelectNode 'Postgres) where
+instance Semigroup SelectNode where
   SelectNode lExtrs lJoinTree <> SelectNode rExtrs rJoinTree =
     SelectNode (lExtrs <> rExtrs) (lJoinTree <> rJoinTree)
 
@@ -57,76 +55,76 @@ data ObjectSelectSource
   } deriving (Show, Eq, Generic)
 instance Hashable ObjectSelectSource
 
-objectSelectSourceToSelectSource :: ObjectSelectSource -> (SelectSource backend)
+objectSelectSourceToSelectSource :: ObjectSelectSource -> SelectSource
 objectSelectSourceToSelectSource ObjectSelectSource{..} =
   SelectSource _ossPrefix _ossFrom Nothing _ossWhere Nothing Nothing Nothing
 
-data ObjectRelationSource (b :: BackendType)
+data ObjectRelationSource
   = ObjectRelationSource
   { _orsRelationshipName :: !RelName
-  , _orsRelationMapping  :: !(HM.HashMap (Column b) (Column b))
+  , _orsRelationMapping  :: !(HM.HashMap PG.PGCol PG.PGCol)
   , _orsSelectSource     :: !ObjectSelectSource
   } deriving (Generic)
-instance Hashable (ObjectRelationSource 'Postgres)
-deriving instance Eq (Column b) => Eq (ObjectRelationSource b)
+instance Hashable ObjectRelationSource
+deriving instance Eq ObjectRelationSource
 
-data ArrayRelationSource (b :: BackendType)
+data ArrayRelationSource
   = ArrayRelationSource
-  { _arsAlias           :: !(Alias b)
-  , _arsRelationMapping :: !(HM.HashMap (Column b) (Column b))
-  , _arsSelectSource    :: !(SelectSource b)
+  { _arsAlias           :: !PG.Alias
+  , _arsRelationMapping :: !(HM.HashMap PG.PGCol PG.PGCol)
+  , _arsSelectSource    :: !SelectSource
   } deriving (Generic)
-instance Hashable (ArrayRelationSource 'Postgres)
-deriving instance Eq (ArrayRelationSource 'Postgres)
+instance Hashable ArrayRelationSource
+deriving instance Eq ArrayRelationSource
 
-data ArraySelectNode (b :: BackendType)
+data ArraySelectNode
   = ArraySelectNode
   { _asnTopExtractors :: ![PG.Extractor]
-  , _asnSelectNode    :: !(SelectNode b)
+  , _asnSelectNode    :: !SelectNode
   }
 
-instance Semigroup (ArraySelectNode 'Postgres) where
+instance Semigroup ArraySelectNode where
   ArraySelectNode lTopExtrs lSelNode <> ArraySelectNode rTopExtrs rSelNode =
     ArraySelectNode (lTopExtrs <> rTopExtrs) (lSelNode <> rSelNode)
 
-data ComputedFieldTableSetSource (b :: BackendType)
+data ComputedFieldTableSetSource
   = ComputedFieldTableSetSource
   { _cftssFieldName    :: !FieldName
   , _cftssSelectType   :: !JsonAggSelect
-  , _cftssSelectSource :: !(SelectSource b)
+  , _cftssSelectSource :: !SelectSource
   } deriving (Generic)
-instance Hashable (ComputedFieldTableSetSource 'Postgres)
-deriving instance Show (ComputedFieldTableSetSource 'Postgres)
-deriving instance Eq   (ComputedFieldTableSetSource 'Postgres)
+instance Hashable ComputedFieldTableSetSource
+deriving instance Show ComputedFieldTableSetSource
+deriving instance Eq   ComputedFieldTableSetSource
 
-data ArrayConnectionSource (b :: BackendType)
+data ArrayConnectionSource
   = ArrayConnectionSource
-  { _acsAlias           :: !(Alias b)
-  , _acsRelationMapping :: !(HM.HashMap (Column b) (Column b))
+  { _acsAlias           :: !PG.Alias
+  , _acsRelationMapping :: !(HM.HashMap PG.PGCol PG.PGCol)
   , _acsSplitFilter     :: !(Maybe PG.BoolExp)
   , _acsSlice           :: !(Maybe ConnectionSlice)
-  , _acsSource          :: !(SelectSource b)
+  , _acsSource          :: !SelectSource
   } deriving (Generic)
-deriving instance Eq (ArrayConnectionSource 'Postgres)
+deriving instance Eq ArrayConnectionSource
 
-instance Hashable (ArrayConnectionSource 'Postgres)
+instance Hashable ArrayConnectionSource
 
-data JoinTree (b :: BackendType)
+data JoinTree
   = JoinTree
-  { _jtObjectRelations        :: !(HM.HashMap (ObjectRelationSource b) (SelectNode b))
-  , _jtArrayRelations         :: !(HM.HashMap (ArrayRelationSource b) (ArraySelectNode b))
-  , _jtArrayConnections       :: !(HM.HashMap (ArrayConnectionSource b) (ArraySelectNode b))
-  , _jtComputedFieldTableSets :: !(HM.HashMap (ComputedFieldTableSetSource b) (SelectNode b))
+  { _jtObjectRelations        :: !(HM.HashMap ObjectRelationSource SelectNode)
+  , _jtArrayRelations         :: !(HM.HashMap ArrayRelationSource ArraySelectNode)
+  , _jtArrayConnections       :: !(HM.HashMap ArrayConnectionSource ArraySelectNode)
+  , _jtComputedFieldTableSets :: !(HM.HashMap ComputedFieldTableSetSource SelectNode)
   }
 
-instance Semigroup (JoinTree 'Postgres) where
+instance Semigroup JoinTree where
   JoinTree lObjs lArrs lArrConns lCfts <> JoinTree rObjs rArrs rArrConns rCfts =
     JoinTree (HM.unionWith (<>) lObjs rObjs)
              (HM.unionWith (<>) lArrs rArrs)
              (HM.unionWith (<>) lArrConns rArrConns)
              (HM.unionWith (<>) lCfts rCfts)
 
-instance Monoid (JoinTree 'Postgres) where
+instance Monoid JoinTree where
   mempty = JoinTree mempty mempty mempty mempty
 
 

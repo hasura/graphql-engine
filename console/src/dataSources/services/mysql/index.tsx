@@ -120,12 +120,22 @@ const commonDataTypes = [
   },
 ];
 
+const operators = [
+  { name: 'equals', value: '$eq', graphqlOp: '_eq' },
+  { name: 'not equals', value: '$ne', graphqlOp: '_neq' },
+  { name: '>', value: '$gt', graphqlOp: '_gt' },
+  { name: '<', value: '$lt', graphqlOp: '_lt' },
+  { name: '>=', value: '$gte', graphqlOp: '_gte' },
+  { name: '<=', value: '$lte', graphqlOp: '_lte' },
+];
+
 const createSQLRegex = /create\s*((?:|or\s*replace)\s*view|\s*(table|function|view))\s*(?:\s*if*\s*not\s*exists\s*)?(((\`?\w+\`?)\.(\`?\w+\`?))|(\`?\w+\`?))/g; // eslint-disable-line
 
 export const mysql: DataSourcesAPI = {
   getFunctionSchema: () => {
     return '';
   },
+  isJsonColumn: () => false,
   getFunctionDefinitionSql: () => {
     return '';
   },
@@ -185,6 +195,7 @@ WHERE
   dependencyErrorCode: '',
   columnDataTypes,
   commonDataTypes,
+  operators,
   createSQLRegex,
   isTable,
   displayTableName,

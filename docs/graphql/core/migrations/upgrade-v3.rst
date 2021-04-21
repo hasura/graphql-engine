@@ -146,24 +146,30 @@ has a sub directory ``default`` which corresponds to the connected database.
 Changes needed in existing workflows
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-With the introduction of multiple databases and it's configuration being in metadata, brings a change of workflow with it.
+With the introduction of multiple databases and it's configuration being in metadata, it brings a change of workflow with it.
 
-The steps to apply migrations and metadata to a new hasura instance will be:
+The steps to apply migrations and metadata to a new Hasura instance will be:
 
 .. code-block:: bash
   
-  # first apply metadata, this will populate hasura with configuration of connected databases
+  # first apply metadata, this will connect Hasura to the configured databases
   hasura metadata apply
-  # now we can apply migrations
-  hasura migrate apply --database-name <database-name>
-  # follow it with a metadata reload to make sure hasura is aware of the changes
+  # now we can apply migrations to the connected databases
+  hasura migrate apply --all-databases
+  # follow it with a metadata reload to make sure Hasura is aware of any newly created database objects
   hasura metadata reload
 
-The reason why we have to do ``metadata apply`` first instead of ``migrate apply`` (that we are used to doing in ``config v2``) is 
-If we do a ``migrate apply`` first then hasura might not be aware about the databases it has to connect to. Earlier we could not start hasura
+The reason why we have to do ``metadata apply`` first instead of ``migrate apply`` (that we are used to doing in ``config v2``) is that
+if we do a ``migrate apply`` first then Hasura might not be aware about the databases it has to connect to. Earlier we could not start Hasura
 without a connected database, but now we can.
 
-Also, ``hasura seeds`` and ``hasura migrate`` now accepts a required flag ``--database-name``.
+Also, ``hasura seeds`` and ``hasura migrate`` commands now accept a required flag ``--database-name``.
+
+.. note::
+
+  As the database connection configuration is now picked up from metadata, it is important to ensure that all the environments
+  use the same env vars to store the database connection strings and the metadata being applied also uses the appropriate env
+  vars.
 
 Upgrade steps
 -------------
@@ -212,14 +218,14 @@ In your project directory, run:
 Your project directory and ``config.yaml`` should be updated to v3. 
 
 The update script will ask for the name of database the current migrations and seeds correspond to. 
-If you are starting hasura with a ``HASURA_GRAPHQL_DATABASE_URL`` then the name of the database should be ``default``.
+If you are starting Hasura with a ``HASURA_GRAPHQL_DATABASE_URL`` then the name of the database should be ``default``.
 
 Continue using config v2
 ------------------------
 
-It is possible to continue using ``config v2`` with Hasura ``v2.0.0`` and above if you would like to do so.
+It is possible to continue using ``config v2`` with Hasura versions ``v2.0.0`` and above if you would like to do so.
 
-While using ``config v2`` with Hasura ``v2.0.0`` and above, as we have metadata and migrations for only a single database,
+While using ``config v2`` with Hasura versions ``v2.0.0`` and above, as we have metadata and migrations for only a single database,
 the server assumes that they belong to a database named ``default`` and attempts to apply them to it.
 
 Hence, to continue using ``config v2`` we need to connect a database to Hasura GraphQL engine with the name ``default`` and then run
@@ -231,4 +237,8 @@ any metadata and migrations commands.
 - Else you can connect a database with the name ``default`` following the steps :ref:`here <connect_database_v2.0>`.
 
 Post this, the metadata and migration commands should work as usual.
+
+.. note::
+
+  Ensure the ``version`` key in ``config.yaml`` is set to ``2`` while using ``config v2``
 

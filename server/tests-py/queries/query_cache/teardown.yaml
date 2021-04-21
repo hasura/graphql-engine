@@ -4,7 +4,16 @@ args:
   args:
     collection: test_collection
     cascade: false
+- type: drop_action
+  args:
+    name: get_user_by_email_1
+- type: drop_action
+  args:
+    name: get_user_by_email_2
+- type: set_custom_types
+  args: {}
 - type: run_sql
   args:
     sql: |
-      drop table test_table
+      drop table test_table;
+      drop table user;

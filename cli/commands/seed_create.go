@@ -2,21 +2,25 @@ package commands
 
 import (
 	"bytes"
+	"fmt"
+	"io/ioutil"
 	"os"
 	"path/filepath"
 
-	"github.com/hasura/graphql-engine/cli/migrate"
+	"github.com/hasura/graphql-engine/cli/internal/hasura"
+
 	"github.com/pkg/errors"
 	"github.com/spf13/afero"
 	"github.com/spf13/cobra"
 
 	"github.com/hasura/graphql-engine/cli"
-	"github.com/hasura/graphql-engine/cli/metadata/actions/editor"
+	"github.com/hasura/graphql-engine/cli/internal/metadataobject/actions/editor"
 	"github.com/hasura/graphql-engine/cli/seed"
 )
 
 type SeedNewOptions struct {
-	EC *cli.ExecutionContext
+	EC     *cli.ExecutionContext
+	Driver *seed.Driver
 
 	// filename for the new seed file
 	SeedName string
@@ -51,6 +55,7 @@ func newSeedCreateCmd(ec *cli.ExecutionContext) *cobra.Command {
 		RunE: func(cmd *cobra.Command, args []string) error {
 			opts.SeedName = args[0]
 			opts.Source = ec.Source
+			opts.Driver = getSeedDriver(ec.Config.Version)
 			err := opts.Run()
 			if err != nil {
 				return err
@@ -76,20 +81,22 @@ func (o *SeedNewOptions) Run() error {
 		UserProvidedSeedName: o.SeedName,
 		DirectoryPath:        filepath.Join(o.EC.SeedsDirectory, o.Source.Name),
 	}
-
 	// If we are initializing from a database table
 	// create a hasura client and add table name opts
 	if createSeedOpts.Data == nil {
 		var body []byte
 		if len(o.FromTableNames) > 0 {
-			migrateDriver, err := migrate.NewMigrate(ec, true, o.Source.Name, o.Source.Kind)
-			if err != nil {
-				return errors.Wrap(err, "cannot initialize migrate driver")
+			if o.Source.Kind != hasura.SourceKindPG && o.EC.Config.Version >= cli.V3 {
+				return fmt.Errorf("--from-table is supported only for postgres sources")
 			}
 			// Send the query
-			body, err = migrateDriver.ExportDataDump(o.FromTableNames, o.Source.Name, o.Source.Kind)
+			bodyReader, err := o.Driver.ExportDatadump(o.FromTableNames, o.Source.Name)
 			if err != nil {
 				return errors.Wrap(err, "exporting seed data")
+			}
+			body, err = ioutil.ReadAll(bodyReader)
+			if err != nil {
+				return err
 			}
 		} else {
 			const defaultText = ""

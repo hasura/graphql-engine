@@ -61,6 +61,10 @@ CREATE TABLE hdb_catalog.hdb_cron_events
 
 CREATE INDEX hdb_cron_event_status ON hdb_catalog.hdb_cron_events (status);
 
+CREATE UNIQUE INDEX hdb_cron_events_unique_scheduled ON
+hdb_catalog.hdb_cron_events (trigger_name, scheduled_time)
+where status = 'scheduled';
+
 CREATE TABLE hdb_catalog.hdb_cron_event_invocation_logs
 (
   id TEXT DEFAULT hdb_catalog.gen_hasura_uuid() PRIMARY KEY,
@@ -103,4 +107,15 @@ CREATE TABLE hdb_catalog.hdb_scheduled_event_invocation_logs
 
   FOREIGN KEY (event_id) REFERENCES hdb_catalog.hdb_scheduled_events (id)
      ON DELETE CASCADE ON UPDATE CASCADE
+);
+
+-- NOTE: In OSS this table only contains a single row (indicated by ID 1).
+--       This may change to allow multiple notifications in future.
+CREATE TABLE hdb_catalog.hdb_schema_notifications
+(
+  id INTEGER PRIMARY KEY CHECK (id = 1),
+  notification JSON NOT NULL,
+  resource_version INTEGER NOT NULL DEFAULT 1,
+  instance_id UUID NOT NULL,
+  updated_at TIMESTAMPTZ DEFAULT NOW()
 );

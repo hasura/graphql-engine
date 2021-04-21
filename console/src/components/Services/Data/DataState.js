@@ -130,8 +130,8 @@ const defaultModifyState = {
     delete: '',
     delete_by_pk: '',
   },
-  permissionsState: { ...defaultPermissionsState },
-  prevPermissionState: { ...defaultPermissionsState },
+  permissionsState: defaultPermissionsState,
+  prevPermissionState: defaultPermissionsState,
   ongoingRequest: false,
   lastError: null,
   lastSuccess: null,
@@ -144,6 +144,8 @@ const defaultModifyState = {
 };
 
 const defaultState = {
+  schemaFilter: [],
+  tableFilter: {},
   columnDataTypes: [], // To store list of column types supported by postgres
   columnDataTypeInfoErr: null,
   columnDefaultFunctions: {},

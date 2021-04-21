@@ -6,8 +6,14 @@ where
 
 import           Data.Aeson
 
+import           Hasura.Backends.Postgres.DDL.BoolExp      as M
+import           Hasura.Backends.Postgres.DDL.Field        as M
+import           Hasura.Backends.Postgres.DDL.Function     as M
+import           Hasura.Backends.Postgres.DDL.Source       as M
+import           Hasura.Backends.Postgres.DDL.Table        as M
 import           Hasura.Backends.Postgres.SQL.DML
 import           Hasura.Backends.Postgres.Translate.Column
+import           Hasura.Backends.Postgres.Types.Column
 import           Hasura.Prelude
 import           Hasura.RQL.IR.BoolExp
 import           Hasura.RQL.Types.Column
@@ -17,11 +23,6 @@ import           Hasura.SQL.Types
 import           Hasura.Server.Utils
 import           Hasura.Session
 
-import           Hasura.Backends.Postgres.DDL.BoolExp      as M
-import           Hasura.Backends.Postgres.DDL.Field        as M
-import           Hasura.Backends.Postgres.DDL.Function     as M
-import           Hasura.Backends.Postgres.DDL.Source       as M
-import           Hasura.Backends.Postgres.DDL.Table        as M
 
 parseCollectableType
   :: (MonadError QErr m)

@@ -23,6 +23,7 @@ import qualified Hasura.Tracing                               as Tracing
 import           Hasura.Backends.Postgres.Connection
 import           Hasura.Backends.Postgres.Execute.Mutation
 import           Hasura.Backends.Postgres.Translate.Returning
+import           Hasura.Backends.Postgres.Types.Table
 import           Hasura.EncJSON
 import           Hasura.RQL.DML.Internal
 import           Hasura.RQL.DML.Types
@@ -67,7 +68,7 @@ validateDeleteQWith sessVarBldr prepValBldr
 
   -- convert the where clause
   annSQLBoolExp <- withPathK "where" $
-    convBoolExp fieldInfoMap selPerm rqlBE sessVarBldr (valueParserWithCollectableType prepValBldr)
+    convBoolExp fieldInfoMap selPerm rqlBE sessVarBldr tableName (valueParserWithCollectableType prepValBldr)
 
   resolvedDelFltr <- convAnnBoolExpPartialSQL sessVarBldr $
                      dpiFilter delPerm

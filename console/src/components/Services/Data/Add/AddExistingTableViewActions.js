@@ -8,7 +8,12 @@ import {
   getTableModifyRoute,
   getFunctionModifyRoute,
 } from '../../../Common/utils/routesUtils';
-import { dataSource } from '../../../../dataSources';
+import { dataSource, currentDriver } from '../../../../dataSources';
+import {
+  findTable,
+  escapeTableColumns,
+  getQualifiedTableDef,
+} from '../../../../dataSources/common';
 import { exportMetadata } from '../../../../metadata/actions';
 import {
   getUntrackTableQuery,
@@ -16,6 +21,7 @@ import {
   getUntrackFunctionQuery,
   getTrackTableQuery,
 } from '../../../../metadata/queryUtils';
+import { setSidebarLoading } from '../DataSubSidebar';
 
 const SET_DEFAULTS = 'AddExistingTable/SET_DEFAULTS';
 const SET_TABLENAME = 'AddExistingTable/SET_TABLENAME';
@@ -28,6 +34,7 @@ const setTableName = value => ({ type: SET_TABLENAME, value });
 
 const addExistingTableSql = (name, customSchema, skipRouting = false) => {
   return (dispatch, getState) => {
+    dispatch(setSidebarLoading(true));
     dispatch({ type: MAKING_REQUEST });
     dispatch(showSuccessNotification('Adding an existing table...'));
     const state = getState().addTable.existingTableView;
@@ -37,21 +44,23 @@ const addExistingTableSql = (name, customSchema, skipRouting = false) => {
     const currentDataSource = getState().tables.currentDataSource;
     const tableName = name ? name : state.tableName.trim();
 
-    const requestBodyUp = getTrackTableQuery(
+    const tableDef = getQualifiedTableDef(
       {
         name: tableName,
         schema: currentSchema,
       },
-      currentDataSource
+      currentDriver
     );
 
-    const requestBodyDown = getUntrackTableQuery(
-      {
-        name: tableName,
-        schema: currentSchema,
-      },
-      currentDataSource
-    );
+    const table = findTable(getState().tables.allSchemas, tableDef);
+
+    const requestBodyUp = getTrackTableQuery({
+      tableDef,
+      source: currentDataSource,
+      customColumnNames: escapeTableColumns(table),
+    });
+
+    const requestBodyDown = getUntrackTableQuery(tableDef, currentDataSource);
 
     const migrationName = `add_existing_table_or_view_${currentSchema}_${tableName}`;
 
@@ -65,27 +74,30 @@ const addExistingTableSql = (name, customSchema, skipRouting = false) => {
           t => t.table_name === tableName && t.table_schema === currentSchema
         );
         const isTableType = dataSource.isTable(newTable);
-        const nextRoute = isTableType
-          ? getTableModifyRoute(
-              currentSchema,
-              currentDataSource,
-              tableName,
-              isTableType
-            )
-          : getTableBrowseRoute(
-              currentSchema,
-              currentDataSource,
-              tableName,
-              isTableType
-            );
+        const nextRoute =
+          isTableType && currentDriver !== 'bigquery'
+            ? getTableModifyRoute(
+                currentSchema,
+                currentDataSource,
+                tableName,
+                isTableType
+              )
+            : getTableBrowseRoute(
+                currentSchema,
+                currentDataSource,
+                tableName,
+                isTableType
+              );
         if (!skipRouting) {
           dispatch(_push(nextRoute));
         }
+        dispatch(setSidebarLoading(false));
       });
       return;
     };
     const customOnError = err => {
       dispatch({ type: REQUEST_ERROR, data: err });
+      dispatch(setSidebarLoading(false));
     };
 
     return makeMigrationCall(
@@ -110,6 +122,7 @@ const addExistingFunction = (
   skipRouting = false
 ) => {
   return (dispatch, getState) => {
+    dispatch(setSidebarLoading(true));
     dispatch({ type: MAKING_REQUEST });
     const currentSchema = customSchema
       ? customSchema
@@ -142,9 +155,11 @@ const addExistingFunction = (
           _push(getFunctionModifyRoute(currentSchema, currentDataSource, name))
         );
       }
+      dispatch(setSidebarLoading(false));
     };
     const customOnError = err => {
       dispatch({ type: REQUEST_ERROR, data: err });
+      dispatch(setSidebarLoading(false));
     };
 
     return makeMigrationCall(
@@ -171,20 +186,33 @@ const addAllUntrackedTablesSql = tableList => {
     dispatch(showSuccessNotification('Adding...'));
     const bulkQueryUp = [];
     const bulkQueryDown = [];
+
     for (let i = 0; i < tableList.length; i++) {
       if (tableList[i].table_name !== 'schema_migrations') {
+        const tableDef = getQualifiedTableDef(
+          {
+            name: tableList[i].table_name,
+            schema: currentSchema,
+          },
+          currentDriver
+        );
+
+        const table = findTable(getState().tables.allSchemas, tableDef);
         bulkQueryUp.push(
-          getTrackTableQuery(
-            { name: tableList[i].table_name, schema: currentSchema },
-            currentDataSource
-          )
+          getTrackTableQuery({
+            tableDef,
+            source: currentDataSource,
+            customColumnNames: escapeTableColumns(table),
+          })
         );
         bulkQueryDown.push(
           getUntrackTableQuery(
             {
               table: {
                 name: tableList[i].table_name,
-                schema: currentSchema,
+                [currentDriver === 'bigquery'
+                  ? 'dataset'
+                  : 'schema']: currentSchema,
               },
             },
             currentDataSource
@@ -192,6 +220,7 @@ const addAllUntrackedTablesSql = tableList => {
         );
       }
     }
+
     const migrationName = 'add_all_existing_table_or_view_' + currentSchema;
 
     const requestMsg = 'Adding existing table/view...';

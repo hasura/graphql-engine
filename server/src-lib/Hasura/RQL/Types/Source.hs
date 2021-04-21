@@ -1,27 +1,30 @@
-{-# LANGUAGE AllowAmbiguousTypes #-}
+{-# LANGUAGE UndecidableInstances #-}
 
 module Hasura.RQL.Types.Source where
 
 import           Hasura.Prelude
 
-import qualified Data.HashMap.Strict                   as M
+import qualified Data.HashMap.Strict                 as M
 
 import           Control.Lens
-import           Data.Aeson
+import           Data.Aeson.Extended
 import           Data.Aeson.TH
 
-import qualified Hasura.SQL.AnyBackend                 as AB
-import qualified Hasura.Tracing                        as Tracing
+import qualified Hasura.SQL.AnyBackend               as AB
+import qualified Hasura.Tracing                      as Tracing
 
-import           Hasura.Backends.MSSQL.Instances.Types ()
 import           Hasura.Backends.Postgres.Connection
+import           Hasura.RQL.IR.BoolExp
 import           Hasura.RQL.Types.Backend
 import           Hasura.RQL.Types.Common
 import           Hasura.RQL.Types.Error
 import           Hasura.RQL.Types.Function
+import           Hasura.RQL.Types.Instances          ()
 import           Hasura.RQL.Types.Table
 import           Hasura.SQL.Backend
+import           Hasura.SQL.Tag
 import           Hasura.Session
+
 
 data SourceInfo b
   = SourceInfo
@@ -31,7 +34,7 @@ data SourceInfo b
   , _siConfiguration :: !(SourceConfig b)
   } deriving (Generic)
 $(makeLenses ''SourceInfo)
-instance Backend b => ToJSON (SourceInfo b) where
+instance (Backend b, ToJSONKeyValue (BooleanOperators b (PartialSQLExp b))) => ToJSON (SourceInfo b) where
   toJSON = genericToJSON hasuraJSON
 
 type BackendSourceInfo = AB.AnyBackend SourceInfo
@@ -45,7 +48,7 @@ type SourceCache = HashMap SourceName BackendSourceInfo
 -- They are thus a temporary workaround as we work on generalizing code that
 -- uses the schema cache.
 
-unsafeSourceInfo :: forall b. Backend b => BackendSourceInfo -> Maybe (SourceInfo b)
+unsafeSourceInfo :: forall b. HasTag b => BackendSourceInfo -> Maybe (SourceInfo b)
 unsafeSourceInfo = AB.unpackAnyBackend
 
 unsafeSourceName :: BackendSourceInfo -> SourceName
@@ -53,13 +56,13 @@ unsafeSourceName bsi = AB.dispatchAnyBackend @Backend bsi go
   where
     go (SourceInfo name _ _ _) = name
 
-unsafeSourceTables :: forall b. Backend b => BackendSourceInfo -> Maybe (TableCache b)
+unsafeSourceTables :: forall b. HasTag b => BackendSourceInfo -> Maybe (TableCache b)
 unsafeSourceTables = fmap _siTables . unsafeSourceInfo @b
 
-unsafeSourceFunctions :: forall b. Backend b => BackendSourceInfo -> Maybe (FunctionCache b)
+unsafeSourceFunctions :: forall b. HasTag b => BackendSourceInfo -> Maybe (FunctionCache b)
 unsafeSourceFunctions = fmap _siFunctions . unsafeSourceInfo @b
 
-unsafeSourceConfiguration :: forall b. Backend b => BackendSourceInfo -> Maybe (SourceConfig b)
+unsafeSourceConfiguration :: forall b. HasTag b => BackendSourceInfo -> Maybe (SourceConfig b)
 unsafeSourceConfiguration = fmap _siConfiguration . unsafeSourceInfo @b
 
 getTableRoles :: BackendSourceInfo -> [RoleName]
@@ -101,8 +104,9 @@ instance (MonadResolveSource m) => MonadResolveSource (LazyTxT QErr m) where
 -- Metadata API related types
 data AddSource b
   = AddSource
-  { _asName          :: !SourceName
-  , _asConfiguration :: !(SourceConnConfiguration b)
+  { _asName                 :: !SourceName
+  , _asConfiguration        :: !(SourceConnConfiguration b)
+  , _asReplaceConfiguration :: !Bool
   } deriving (Generic)
 deriving instance (Backend b) => Show (AddSource b)
 deriving instance (Backend b) => Eq (AddSource b)
@@ -111,7 +115,11 @@ instance (Backend b) => ToJSON (AddSource b) where
   toJSON = genericToJSON hasuraJSON
 
 instance (Backend b) => FromJSON (AddSource b) where
-  parseJSON = genericParseJSON hasuraJSON
+  parseJSON = withObject "Object" $ \o ->
+    AddSource
+      <$> o .: "name"
+      <*> o .: "configuration"
+      <*> o .:? "replace_configuration" .!= False
 
 data DropSource
   = DropSource

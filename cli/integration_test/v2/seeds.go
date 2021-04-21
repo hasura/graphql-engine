@@ -124,7 +124,8 @@ func TestSeedsApplyCmd(t *testing.T, ec *cli.ExecutionContext) {
 		{
 			"can apply all seeds",
 			&commands.SeedApplyOptions{
-				EC: ec,
+				EC:     ec,
+				Driver: seed.NewDriver(ec.APIClient.V1Query.Bulk, ec.APIClient.PGDump),
 			},
 			false,
 		},
@@ -133,6 +134,7 @@ func TestSeedsApplyCmd(t *testing.T, ec *cli.ExecutionContext) {
 			&commands.SeedApplyOptions{
 				EC:        ec,
 				FileNames: []string{"1591867862409_test.sql"},
+				Driver:    seed.NewDriver(ec.APIClient.V1Query.Bulk, ec.APIClient.PGDump),
 			},
 			false,
 		},
@@ -141,6 +143,7 @@ func TestSeedsApplyCmd(t *testing.T, ec *cli.ExecutionContext) {
 			&commands.SeedApplyOptions{
 				EC:        ec,
 				FileNames: []string{"1591867862419_test2.sql"},
+				Driver:    seed.NewDriver(ec.APIClient.V1Query.Bulk, ec.APIClient.PGDump),
 			},
 			true,
 		},

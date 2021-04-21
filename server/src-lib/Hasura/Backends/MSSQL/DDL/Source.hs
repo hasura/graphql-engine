@@ -19,11 +19,9 @@ resolveSourceConfig
   => SourceName
   -> MSSQLConnConfiguration
   -> m (Either QErr MSSQLSourceConfig)
-resolveSourceConfig _name (MSSQLConnConfiguration connInfo) = do
-  mssqlPool <- liftIO $ createMSSQLPool connInfo
-  pure $ Right $ MSSQLSourceConfig connString mssqlPool
-  where
-    connString = _mciConnectionString connInfo
+resolveSourceConfig _name (MSSQLConnConfiguration connInfo) = runExceptT do
+  (connString, mssqlPool) <- createMSSQLPool connInfo
+  pure $ MSSQLSourceConfig connString mssqlPool
 
 resolveDatabaseMetadata
   :: (MonadIO m)

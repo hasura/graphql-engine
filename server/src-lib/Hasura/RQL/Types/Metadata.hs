@@ -1,5 +1,5 @@
-{-# LANGUAGE AllowAmbiguousTypes  #-}
 {-# LANGUAGE UndecidableInstances #-}
+
 module Hasura.RQL.Types.Metadata where
 
 import           Hasura.Prelude
@@ -11,13 +11,13 @@ import qualified Data.HashSet                        as HS
 import qualified Data.HashSet.InsOrd                 as HSIns
 import qualified Data.List.Extended                  as L
 import qualified Data.Text                           as T
+import qualified Data.Text.Extended                  as T
 import qualified Language.GraphQL.Draft.Syntax       as G
 
 import           Control.Lens                        hiding (set, (.=))
 import           Data.Aeson.Casing
 import           Data.Aeson.TH
 import           Data.Aeson.Types
-import           Data.Int                            (Int64)
 
 import qualified Hasura.SQL.AnyBackend               as AB
 
@@ -34,6 +34,7 @@ import           Hasura.RQL.Types.EventTrigger
 import           Hasura.RQL.Types.Function
 import           Hasura.RQL.Types.InheritedRoles
 import           Hasura.RQL.Types.Metadata.Backend
+import           Hasura.RQL.Types.Metadata.Instances ()
 import           Hasura.RQL.Types.Permission
 import           Hasura.RQL.Types.QueryCollection
 import           Hasura.RQL.Types.Relationship
@@ -42,7 +43,9 @@ import           Hasura.RQL.Types.RemoteSchema
 import           Hasura.RQL.Types.ScheduledTrigger
 import           Hasura.RQL.Types.Table
 import           Hasura.SQL.Backend
+import           Hasura.SQL.Tag
 import           Hasura.Session
+
 
 -- | Raise exception if parsed list has multiple declarations
 parseListAsMap
@@ -243,10 +246,10 @@ data SourceMetadata b
   , _smFunctions     :: !(Functions b)
   , _smConfiguration :: !(SourceConnConfiguration b)
   } deriving (Generic)
+$(makeLenses ''SourceMetadata)
 deriving instance (Backend b) => Show (SourceMetadata b)
 deriving instance (Backend b) => Eq (SourceMetadata b)
 instance (Backend b) => Cacheable (SourceMetadata b)
-$(makeLenses ''SourceMetadata)
 instance (Backend b) => FromJSON (SourceMetadata b) where
   parseJSON = withObject "Object" $ \o -> do
     _smName          <- o .: "name"
@@ -307,14 +310,6 @@ parseNonSourcesMetadata o = do
        , actions, cronTriggers, apiLimits, metricsConfig, inheritedRoles
        )
 
-newtype MetadataResourceVersion
-  = MetadataResourceVersion
-  { getMetadataResourceVersion :: Int64
-  } deriving (Show, Eq, FromJSON, ToJSON)
-
-initialResourceVersion :: MetadataResourceVersion
-initialResourceVersion = MetadataResourceVersion 0
-
 -- | A complete GraphQL Engine metadata representation to be stored,
 -- exported/replaced via metadata queries.
 data Metadata
@@ -331,7 +326,6 @@ data Metadata
   , _metaMetricsConfig    :: !MetricsConfig
   , _metaInheritedRoles   :: !InheritedRoles
   } deriving (Show, Eq)
-
 $(makeLenses ''Metadata)
 
 instance FromJSON Metadata where
@@ -465,7 +459,7 @@ metadataToOrdJSON ( Metadata
     sourceMetaToOrdJSON exists =
       AB.dispatchAnyBackend @BackendMetadata exists $ \(SourceMetadata {..} :: SourceMetadata b) ->
         let sourceNamePair = ("name", AO.toOrdered _smName)
-            sourceKind     = backendName $ backendTag @b
+            sourceKind     = T.toTxt $ reify $ backendTag @b
             sourceKindPair = ("kind", AO.String sourceKind)
             tablesPair     = ("tables", AO.array $ map tableMetaToOrdJSON $ sortOn _tmTable $ OM.elems _smTables)
             functionsPair  = listToMaybeOrdPairSort "functions" functionMetadataToOrdJSON _fmFunction _smFunctions

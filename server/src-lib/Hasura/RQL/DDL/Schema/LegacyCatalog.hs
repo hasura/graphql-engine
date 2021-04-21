@@ -15,6 +15,7 @@ import qualified Database.PG.Query                   as Q
 
 import           Control.Lens                        hiding ((.=))
 import           Data.Aeson
+import           Data.FileEmbed                      (makeRelativeToProject)
 import           Data.Text.NonEmpty
 
 import           Hasura.Backends.Postgres.Connection
@@ -557,7 +558,7 @@ fetchMetadataFromHdbTables = liftTx do
 -- instead.
 recreateSystemMetadata :: (MonadTx m) => m ()
 recreateSystemMetadata = do
-  () <- liftTx $ Q.multiQE defaultTxErrorHandler $(Q.sqlFromFile "src-rsr/clear_system_metadata.sql")
+  () <- liftTx $ Q.multiQE defaultTxErrorHandler $(makeRelativeToProject "src-rsr/clear_system_metadata.sql" >>= Q.sqlFromFile)
   runHasSystemDefinedT (SystemDefined True) $ for_ systemMetadata \(tableName, tableRels) -> do
     saveTableToCatalog tableName False emptyTableConfig
     for_ tableRels \case

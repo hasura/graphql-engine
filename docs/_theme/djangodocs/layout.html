@@ -4,14 +4,17 @@
   {% set is_landing_page = true %}
 {%- endif %}
 
+{% set ALGOLIA_INDEX = 'graphql-docs-prod' %}
+{% set ALGOLIA_API_KEY = '298d448cd9d7ed93fbab395658da19e8' %}
+
 {%- if pagename.startswith('graphql/core') %}
   {% set is_core = true %}
-  {% set ALGOLIA_INDEX = 'graphql-docs-prod' %}
-  {% set ALGOLIA_API_KEY = '298d448cd9d7ed93fbab395658da19e8' %}
+  {# % set ALGOLIA_INDEX = 'graphql-docs-prod' % #}
+  {# % set ALGOLIA_API_KEY = '298d448cd9d7ed93fbab395658da19e8' % #}
 {%- elif pagename.startswith('graphql/cloud') %}
   {% set is_cloud = true %}
-  {% set ALGOLIA_INDEX = 'cloud-docs-prod' %}
-  {% set ALGOLIA_API_KEY = 'cf84f05a225bedb72ce472dada63d29f' %}
+  {# % set ALGOLIA_INDEX = 'cloud-docs-prod' % #}
+  {# % set ALGOLIA_API_KEY = 'cf84f05a225bedb72ce472dada63d29f' % #}
 {%- endif %}
 
 {% set css_files = css_files + ['_static/graphiql/graphiql.css', '_static/styles/main.css'] %}
@@ -332,7 +335,7 @@
                   </div>
                   <div>
                     Powered by <a target="_blank" rel="noopener" href="http://www.sphinx-doc.org">Sphinx</a>.
-                    |  Copyright &copy; 2020 <a target="_blank" rel="noopener" href="https://hasura.io">Hasura</a>.
+                    |  Copyright &copy; 2021 <a target="_blank" rel="noopener" href="https://hasura.io">Hasura</a>.
                   </div>
                 </div>
               </div>

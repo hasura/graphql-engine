@@ -34,19 +34,15 @@ instance Backend 'MSSQL where
   type Column                  'MSSQL = MSSQL.ColumnName
   type ScalarValue             'MSSQL = MSSQL.Value
   type ScalarType              'MSSQL = MSSQL.ScalarType
+  type BooleanOperators        'MSSQL = MSSQL.BooleanOperators
   type SQLExpression           'MSSQL = MSSQL.Expression
   type SQLOperator             'MSSQL = MSSQL.Op
-  type XAILIKE                 'MSSQL = ()
-  type XANILIKE                'MSSQL = ()
-  type XComputedField          'MSSQL = Void
-  type XRemoteField            'MSSQL = Void
-  type XEventTrigger           'MSSQL = Void
-  type XRelay                  'MSSQL = Void
-  type XNodesAgg               'MSSQL = Void
-  type XDistinct               'MSSQL = Void
 
-  backendTag :: BackendTag 'MSSQL
-  backendTag = MSSQLTag
+  type XComputedField          'MSSQL = XDisable
+  type XRemoteField            'MSSQL = XDisable
+  type XRelay                  'MSSQL = XDisable
+  type XNodesAgg               'MSSQL = XDisable
+  type XDistinct               'MSSQL = XDisable
 
   functionArgScalarType :: FunctionArgType 'MSSQL -> ScalarType 'MSSQL
   functionArgScalarType = absurd

@@ -22,6 +22,7 @@ import           Data.Text
 import           System.Cron.Parser
 import           System.Cron.Types
 
+
 instance NFData G.FragmentDefinition
 instance NFData G.GType
 instance NFData G.OperationType
@@ -124,5 +125,6 @@ instance Q.FromCol CronSchedule where
         case parseCronSchedule dbCron of
           Left err'  -> Left $ "invalid cron schedule " <> pack err'
           Right cron -> Right cron
+
 
 instance J.ToJSONKey Void

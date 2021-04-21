@@ -45,6 +45,7 @@ module Hasura.Backends.Postgres.SQL.Types
   , QualifiedPGType(..)
   , isBaseType
   , typeToTable
+  , mkFunctionArgScalarType
   )
 where
 
@@ -504,3 +505,16 @@ isBaseType (QualifiedPGType _ n ty) =
 typeToTable :: QualifiedPGType -> QualifiedTable
 typeToTable (QualifiedPGType sch n _) =
   QualifiedObject sch $ TableName $ toSQLTxt n
+
+mkFunctionArgScalarType :: QualifiedPGType -> PGScalarType
+mkFunctionArgScalarType (QualifiedPGType _schema name type') =
+  case type' of
+    -- When the function argument is a row type argument
+    -- then it's possible that there can be an object type
+    -- with the table name depending upon whether the table
+    -- is tracked or not. As a result, we get a conflict between
+    -- both these types (scalar and object type with same name).
+    -- To avoid this, we suffix the table name with `_scalar`
+    -- and create a new scalar type
+    PGKindComposite -> PGUnknown $ toTxt name <> "_scalar"
+    _               -> name

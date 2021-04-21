@@ -30,6 +30,7 @@ type AnnotatedField      b = IR.AnnFieldG           b (UnpreparedValue b)
 data QueryContext =
   QueryContext
   { qcStringifyNum              :: !Bool
+  , qcDangerousBooleanCollapse  :: !Bool
   , qcQueryType                 :: !ET.GraphQLQueryType
   , qcRemoteRelationshipContext :: !(HashMap RemoteSchemaName (IntrospectionResult, ParsedIntrospection))
   , qcFunctionPermsContext      :: !FunctionPermissionsCtx

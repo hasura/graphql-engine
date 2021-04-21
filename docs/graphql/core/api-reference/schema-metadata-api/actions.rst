@@ -167,7 +167,8 @@ Update an action ``create_user`` by making it's kind to ``asynchronous``:
             ],
             "output_type":"User",
             "handler":"https://action.my_app.com/create-user"
-         }
+         },
+         "comment": "Custom action to create user",
       }
    }
 
@@ -192,6 +193,10 @@ Args syntax
      - true
      - :ref:`ActionDefinition`
      - Definition of the action to be replaced
+   * - comment
+     - false
+     - text
+     - comment
 
 .. _create_action_permission:
 

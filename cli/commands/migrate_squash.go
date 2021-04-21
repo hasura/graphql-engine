@@ -36,6 +36,9 @@ func newMigrateSquashCmd(ec *cli.ExecutionContext) *cobra.Command {
   # Add a name for the new squashed migration
   hasura migrate squash --name "<name>" --from 123`,
 		SilenceUsage: true,
+		PreRunE: func(cmd *cobra.Command, args []string) error {
+			return validateConfigV3Flags(cmd, ec)
+		},
 		RunE: func(cmd *cobra.Command, args []string) error {
 			opts.newVersion = getTime()
 			opts.Source = ec.Source

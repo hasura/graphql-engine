@@ -79,3 +79,31 @@ func GetSources(exportMetadata func() (io.Reader, error)) ([]string, error) {
 	}
 	return sources, nil
 }
+
+type Source struct {
+	Name string            `yaml: "name"`
+	Kind hasura.SourceKind `yaml:"kind"`
+}
+
+func GetSourcesAndKind(exportMetadata func() (io.Reader, error)) ([]Source, error) {
+	metadata, err := getMetadataAsYaml(exportMetadata)
+	if err != nil {
+		return nil, err
+	}
+	ast, err := parser.ParseBytes(metadata, 0)
+	if err != nil {
+		return nil, err
+	}
+	if len(ast.Docs) <= 0 {
+		return nil, fmt.Errorf("failed listing sources from metadata")
+	}
+	path, err := yaml.PathString("$.sources")
+	if err != nil {
+		return nil, err
+	}
+	var sources []Source
+	if err := path.Read(ast.Docs[0], &sources); err != nil {
+		return nil, err
+	}
+	return sources, nil
+}

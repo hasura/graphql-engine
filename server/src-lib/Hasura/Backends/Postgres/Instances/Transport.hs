@@ -1,11 +1,14 @@
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 
-module Hasura.Backends.Postgres.Instances.Transport () where
+module Hasura.Backends.Postgres.Instances.Transport
+  ( runPGMutationTransaction
+  ) where
 
 import           Hasura.Prelude
 
 import qualified Data.Aeson                                 as J
 import qualified Data.ByteString                            as B
+import qualified Data.HashMap.Strict.InsOrd                 as OMap
 import qualified Database.PG.Query                          as Q
 import qualified Language.GraphQL.Draft.Syntax              as G
 
@@ -34,6 +37,7 @@ instance BackendTransport 'Postgres where
   runDBQuery = runPGQuery
   runDBMutation = runPGMutation
   runDBSubscription = runPGSubscription
+  runDBQueryExplain = runPGQueryExplain
 
 runPGQuery
   :: ( MonadIO m
@@ -51,7 +55,7 @@ runPGQuery
   -> Maybe EQ.PreparedSql
   -> m (DiffTime, EncJSON)
   -- ^ Also return the time spent in the PG query; for telemetry.
-runPGQuery reqId query fieldName _userInfo logger sourceConfig tx genSql =  do
+runPGQuery reqId query fieldName _userInfo logger sourceConfig tx genSql = do
   -- log the generated SQL and the graphql query
   logQueryLog logger $ mkQueryLog query fieldName genSql reqId
   withElapsedTime $ trace ("Postgres Query for root field " <>> fieldName) $
@@ -84,7 +88,7 @@ runPGMutation reqId query fieldName userInfo logger sourceConfig tx _genSql =  d
       . runLazyTx (_pscExecCtx sourceConfig) Q.ReadWrite
       . withTraceContext ctx
       . withUserInfo userInfo
-      )  tx
+      ) tx
 
 runPGSubscription
   :: ( MonadIO m
@@ -98,6 +102,20 @@ runPGSubscription sourceConfig query variables = withElapsedTime
   $ runQueryTx (_pscExecCtx sourceConfig)
   $ PGL.executeMultiplexedQuery query variables
 
+runPGQueryExplain
+  :: forall m
+   . ( MonadIO m
+     , MonadError QErr m
+     )
+  => DBStepInfo 'Postgres
+  -> m EncJSON
+runPGQueryExplain (DBStepInfo _ sourceConfig _ action) =
+  -- All Postgres transport functions use the same monad stack: the ExecutionMonad defined in the
+  -- matching instance of BackendExecute. However, Explain doesn't need tracing! Rather than
+  -- introducing a separate "ExplainMonad", we simply use @runTraceTWithReporter@ to remove the
+  -- TraceT.
+  runQueryTx (_pscExecCtx sourceConfig) $ runTraceTWithReporter noReporter "explain" $ action
+
 
 mkQueryLog
   :: GQLReqUnparsed
@@ -106,7 +124,36 @@ mkQueryLog
   -> RequestId
   -> QueryLog
 mkQueryLog gqlQuery fieldName preparedSql requestId =
-  QueryLog gqlQuery ((fieldName,) <$> generatedQuery) requestId
+  QueryLog gqlQuery ((fieldName,) <$> generatedQuery) requestId Database
   where
     generatedQuery = preparedSql <&> \(EQ.PreparedSql query args _) ->
       GeneratedQuery (Q.getQueryText query) (J.toJSON $ pgScalarValueToJson . snd <$> args)
+
+
+-- ad-hoc transaction optimisation
+-- see Note [Backwards-compatible transaction optimisation]
+
+runPGMutationTransaction
+  :: ( MonadIO m
+     , MonadError QErr m
+     , MonadQueryLog m
+     , MonadTrace m
+     )
+  => RequestId
+  -> GQLReqUnparsed
+  -> UserInfo
+  -> L.Logger L.Hasura
+  -> SourceConfig 'Postgres
+  -> InsOrdHashMap G.Name (DBStepInfo 'Postgres)
+  -> m (DiffTime, InsOrdHashMap G.Name EncJSON)
+runPGMutationTransaction reqId query userInfo logger sourceConfig mutations = do
+  logQueryLog logger $ mkQueryLog query $$(G.litName "transaction") Nothing reqId
+  ctx <- Tracing.currentContext
+  withElapsedTime $ do
+    Tracing.interpTraceT (
+      liftEitherM . liftIO . runExceptT
+      . runLazyTx (_pscExecCtx sourceConfig) Q.ReadWrite
+      . withTraceContext ctx
+      . withUserInfo userInfo
+      ) $ flip OMap.traverseWithKey mutations \fieldName dbsi ->
+            trace ("Postgres Mutation for root field " <>> fieldName) $ dbsiAction dbsi

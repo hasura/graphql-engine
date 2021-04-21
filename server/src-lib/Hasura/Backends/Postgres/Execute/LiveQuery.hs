@@ -30,6 +30,7 @@ import           Hasura.Backends.Postgres.SQL.Error
 import           Hasura.Backends.Postgres.SQL.Types
 import           Hasura.Backends.Postgres.SQL.Value
 import           Hasura.Backends.Postgres.Translate.Column (toTxtValue)
+import           Hasura.Backends.Postgres.Types.Column
 import           Hasura.GraphQL.Context
 import           Hasura.GraphQL.Execute.LiveQuery.Plan
 import           Hasura.GraphQL.Parser
@@ -67,7 +68,7 @@ validateVariables pgExecCtx variableValues = do
   let valSel = mkValidationSel $ toList variableValues
   Q.Discard () <- runQueryTx_ $ liftTx $
     Q.rawQE dataExnErrHandler (Q.fromBuilder $ toSQL valSel) [] False
-  pure . ValidatedVariables $ fmap (txtEncodedPGVal . cvValue) variableValues
+  pure . ValidatedVariables $ fmap (txtEncodedVal . cvValue) variableValues
   where
     mkExtr = flip S.Extractor Nothing . toTxtValue
     mkValidationSel vars =
@@ -172,7 +173,7 @@ executeMultiplexedQuery
   => MultiplexedQuery -> [(CohortId, CohortVariables)] -> m [(CohortId, B.ByteString)]
 executeMultiplexedQuery (MultiplexedQuery query) = executeQuery query
 
--- | Internal; used by both 'executeMultiplexedQuery' and 'explainLiveQueryPlan'.
+-- | Internal; used by both 'executeMultiplexedQuery' and 'pgDBLiveQueryExplain'.
 executeQuery
   :: (MonadTx m, Q.FromRow a)
   => Q.Query -> [(CohortId, CohortVariables)] -> m [a]

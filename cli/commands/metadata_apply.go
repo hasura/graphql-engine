@@ -3,10 +3,6 @@ package commands
 import (
 	"os"
 
-	"github.com/hasura/graphql-engine/cli/internal/hasura"
-
-	"github.com/hasura/graphql-engine/cli/migrate"
-
 	"github.com/hasura/graphql-engine/cli"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
@@ -76,10 +72,5 @@ func (o *MetadataApplyOptions) Run() error {
 		}()
 	}
 
-	// TODO
-	migrateDrv, err := migrate.NewMigrate(o.EC, true, "", hasura.SourceKindPG)
-	if err != nil {
-		return err
-	}
-	return executeMetadata(o.ActionType, migrateDrv, o.EC)
+	return executeMetadata(o.ActionType, o.EC)
 }

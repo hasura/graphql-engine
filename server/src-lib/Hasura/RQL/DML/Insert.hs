@@ -4,6 +4,7 @@ module Hasura.RQL.DML.Insert
 
 import           Hasura.Prelude
 
+import qualified Data.Environment                             as Env
 import qualified Data.HashMap.Strict                          as HM
 import qualified Data.HashSet                                 as HS
 import qualified Data.Sequence                                as DS
@@ -14,11 +15,13 @@ import           Data.Aeson.Types
 import           Data.Text.Extended
 
 import qualified Hasura.Backends.Postgres.SQL.DML             as S
+import qualified Hasura.Tracing                               as Tracing
 
 import           Hasura.Backends.Postgres.Connection
 import           Hasura.Backends.Postgres.Execute.Mutation
 import           Hasura.Backends.Postgres.SQL.Types
 import           Hasura.Backends.Postgres.Translate.Returning
+import           Hasura.Backends.Postgres.Types.Table
 import           Hasura.EncJSON
 import           Hasura.RQL.DML.Internal
 import           Hasura.RQL.DML.Types
@@ -28,9 +31,6 @@ import           Hasura.RQL.Types.Run
 import           Hasura.Server.Version                        (HasVersion)
 import           Hasura.Session
 
-
-import qualified Data.Environment                             as Env
-import qualified Hasura.Tracing                               as Tracing
 
 convObj
   :: (UserInfoM m, QErrM m)

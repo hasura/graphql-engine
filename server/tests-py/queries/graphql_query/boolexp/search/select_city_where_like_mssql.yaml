@@ -1,0 +1,45 @@
+description: Select cities starting with any letter A-G. Query all types listed in `MSSQL.Types.stringTypes` to confirm they work with `like`
+url: /v1/graphql
+status: 200
+response:
+  data:
+    city:
+      - name: Durham
+        name_varchar: Durham
+        name_char: "Durham     "
+        name_nvarchar: Durham
+        name_nchar: "Durham     "
+        name_ntext: Durham
+        country: USA
+      - name: Framlingham
+        name_varchar: Framlingham
+        name_char: "Framlingham"
+        name_nvarchar: Framlingham
+        name_nchar: "Framlingham"
+        name_ntext: Framlingham
+        country: UK
+query:
+  query: |
+    query {
+      city (
+        where: { _and:
+          [
+            {name: {_like: "[A-G]%" }}
+            {name_varchar: {_like: "[A-G]%"}}
+            {name_char: {_like: "[A-G]%"}}
+            {name_nvarchar: {_like: "[A-G]%"}}
+            {name_nchar: {_like: "[A-G]%"}}
+            {name_ntext: {_like: "[A-G]%"}}
+          ]
+
+        }
+      ) {
+        name
+        name_varchar
+        name_char
+        name_nvarchar
+        name_nchar
+        name_ntext
+        country
+      }
+    }

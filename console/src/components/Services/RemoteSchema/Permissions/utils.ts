@@ -308,11 +308,15 @@ export const getType = (
         ) {
           checked = true;
         }
-        childArray.push({
+        const field: CustomFieldType = {
           name: v.name,
           checked,
           return: v.type.toString(),
-        });
+        };
+        if (v.defaultValue !== undefined) {
+          field.defaultValue = v.defaultValue;
+        }
+        childArray.push(field);
       });
 
       type.children = childArray;
@@ -522,7 +526,13 @@ const getSDLField = (
           });
           fieldStr = `${fieldStr})`;
           fieldStr = `${fieldStr}: ${f.return}`;
-        } else fieldStr = `${fieldStr} : ${f.return}`; // normal data type - ie: without arguments/ presets
+        } else {
+          // normal data type - ie: without arguments/ presets
+          fieldStr =
+            f.defaultValue === undefined
+              ? `${fieldStr} : ${f.return}`
+              : `${fieldStr} : ${f.return} = ${f.defaultValue}`;
+        }
       }
 
       result = `${result}
@@ -767,7 +777,7 @@ export const addDepFields = (list: FieldType[], field: FieldType) => {
   return newList;
 };
 
-export const getExpandeItems = (list: FieldType[]) => {
+export const getExpandedItems = (list: FieldType[]) => {
   const res: ExpandedItems = {};
   list.forEach((item: FieldType, ix) => {
     const hasValidChildren = item?.children?.find(i => i.checked === true);

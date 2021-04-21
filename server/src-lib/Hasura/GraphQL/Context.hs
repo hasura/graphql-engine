@@ -42,6 +42,7 @@ import qualified Hasura.SQL.AnyBackend         as AB
 import           Hasura.GraphQL.Parser
 import           Hasura.SQL.Backend
 
+
 -- | For storing both a normal GQLContext and one for the backend variant.
 -- Currently, this is to enable the backend variant to have certain insert
 -- permissions which the frontend variant does not.
@@ -119,12 +120,12 @@ newtype MutationDBRoot v b = MDBR (MutationDB b (v b))
 
 type QueryRootField        v = RootField (QueryDBRoot    v) RemoteField (ActionQuery    'Postgres (v 'Postgres)) J.Value
 type MutationRootField     v = RootField (MutationDBRoot v) RemoteField (ActionMutation 'Postgres (v 'Postgres)) J.Value
-type SubscriptionRootField v = RootField (QueryDBRoot    v) Void Void Void
+type SubscriptionRootField v = RootField (QueryDBRoot    v) Void        Void                                     Void
 
 
 traverseQueryDB
   :: forall f a b backend
-   . Applicative f
+   . (Applicative f, RQL.Backend backend)
   => (a -> f b)
   -> QueryDB backend a
   -> f (QueryDB backend b)
@@ -135,7 +136,7 @@ traverseQueryDB f = \case
   QDBConnection   s -> QDBConnection   <$> IR.traverseConnectionSelect   f s
 
 traverseActionQuery
-  :: Applicative f
+  :: (Applicative f, RQL.Backend backend)
   => (a -> f b)
   -> ActionQuery backend a
   -> f (ActionQuery backend b)

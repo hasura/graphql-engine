@@ -79,7 +79,18 @@ const routes = store => {
 
     return;
   };
-  const _dataRouterUtils = dataRouterUtils(connect, store, composeOnEnterHooks);
+
+  const _dataRouterUtils = dataRouterUtils(
+    connect,
+    store,
+    composeOnEnterHooks,
+    () => {
+      return {};
+    },
+    () => {
+      return { public: [], personal: [] };
+    }
+  );
   const requireSource = _dataRouterUtils.requireSource;
   const dataRouter = _dataRouterUtils.makeDataRouter;
 

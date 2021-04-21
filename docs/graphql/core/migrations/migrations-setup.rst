@@ -132,7 +132,7 @@ This command will create a new directory named ``<timestamp>_init`` inside the `
 In the newly created directory, there's a file named ``up.sql``.
 This file will contain the required information to reproduce the current state of the server
 including the Postgres (public) schema. If you'd like to read more about the format of migration files,
-check out the :ref:`migration_file_format_v2`.
+check out the :ref:`migration_file_format`.
 
 The apply command will mark this migration as "applied" on the server.
 
@@ -160,7 +160,7 @@ Export the Hasura metadata from the server:
 
 This command will export the current Hasura metadata as a bunch of YAML files in the ``metadata`` directory.
 
-If you'd like to read more about the format of metadata files, check out the :ref:`metadata_format_v2`.
+If you'd like to read more about the format of metadata files, check out the :ref:`metadata_format`.
 
 Step 3.3: Add a checkpoint to version control
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^

@@ -363,8 +363,8 @@ getAnnArr (f, annFld) = case annFld of
 
 
 withWriteJoinTree
-  :: (MonadWriter (JoinTree 'Postgres) m)
-  => (JoinTree 'Postgres -> b -> JoinTree 'Postgres)
+  :: (MonadWriter JoinTree m)
+  => (JoinTree -> b -> JoinTree)
   -> m (a, b)
   -> m a
 withWriteJoinTree joinTreeUpdater action =
@@ -375,8 +375,8 @@ withWriteJoinTree joinTreeUpdater action =
     pure (out, fromJoinTree)
 
 withWriteObjectRelation
-  :: (MonadWriter (JoinTree 'Postgres) m)
-  => m ( ObjectRelationSource 'Postgres
+  :: (MonadWriter JoinTree m)
+  => m ( ObjectRelationSource
        , HM.HashMap S.Alias S.SQLExp
        , a
        )
@@ -391,8 +391,8 @@ withWriteObjectRelation action =
       in mempty{_jtObjectRelations = HM.singleton source selectNode}
 
 withWriteArrayRelation
-  :: (MonadWriter (JoinTree 'Postgres) m)
-  => m ( ArrayRelationSource 'Postgres
+  :: (MonadWriter JoinTree m)
+  => m ( ArrayRelationSource
        , S.Extractor
        , HM.HashMap S.Alias S.SQLExp
        , a
@@ -409,8 +409,8 @@ withWriteArrayRelation action =
       in mempty{_jtArrayRelations = HM.singleton source arraySelectNode}
 
 withWriteArrayConnection
-  :: (MonadWriter (JoinTree 'Postgres) m)
-  => m ( ArrayConnectionSource 'Postgres
+  :: (MonadWriter JoinTree m)
+  => m ( ArrayConnectionSource
        , S.Extractor
        , HM.HashMap S.Alias S.SQLExp
        , a
@@ -427,8 +427,8 @@ withWriteArrayConnection action =
       in mempty{_jtArrayConnections = HM.singleton source arraySelectNode}
 
 withWriteComputedFieldTableSet
-  :: (MonadWriter (JoinTree 'Postgres) m)
-  => m ( ComputedFieldTableSetSource 'Postgres
+  :: (MonadWriter JoinTree m)
+  => m ( ComputedFieldTableSetSource
        , HM.HashMap S.Alias S.SQLExp
        , a
        )
@@ -445,13 +445,13 @@ withWriteComputedFieldTableSet action =
 
 processAnnSimpleSelect
   :: forall m . ( MonadReader Bool m
-               , MonadWriter (JoinTree 'Postgres) m
-               )
+                , MonadWriter JoinTree m
+                )
   => SourcePrefixes
   -> FieldName
   -> PermissionLimitSubQuery
   -> AnnSimpleSel 'Postgres
-  -> m ( SelectSource 'Postgres
+  -> m ( SelectSource
        , HM.HashMap S.Alias S.SQLExp
        )
 processAnnSimpleSelect sourcePrefixes fieldAlias permLimitSubQuery annSimpleSel = do
@@ -468,12 +468,12 @@ processAnnSimpleSelect sourcePrefixes fieldAlias permLimitSubQuery annSimpleSel 
 
 processAnnAggregateSelect
   :: forall m. ( MonadReader Bool m
-               , MonadWriter (JoinTree 'Postgres) m
+               , MonadWriter JoinTree m
                )
   => SourcePrefixes
   -> FieldName
   -> AnnAggregateSelect 'Postgres
-  -> m ( SelectSource 'Postgres
+  -> m ( SelectSource
        , HM.HashMap S.Alias S.SQLExp
        , S.Extractor
        )
@@ -546,7 +546,7 @@ mkPermissionLimitSubQuery permLimit aggFields orderBys =
 
 processArrayRelation
   :: forall m. ( MonadReader Bool m
-               , MonadWriter (JoinTree 'Postgres) m
+               , MonadWriter JoinTree m
                )
   => SourcePrefixes
   -> FieldName
@@ -589,7 +589,7 @@ processArrayRelation sourcePrefixes fieldAlias relAlias arrSel =
 
 processSelectParams
   :: forall m. ( MonadReader Bool m
-               , MonadWriter (JoinTree 'Postgres) m
+               , MonadWriter JoinTree m
                )
   => SourcePrefixes
   -> FieldName
@@ -598,7 +598,7 @@ processSelectParams
   -> PermissionLimitSubQuery
   -> TablePerm 'Postgres
   -> SelectArgs 'Postgres
-  -> m ( SelectSource 'Postgres
+  -> m ( SelectSource
        , [(S.Alias, S.SQLExp)]
        , Maybe S.SQLExp -- Order by cursor
        )
@@ -639,7 +639,7 @@ processSelectParams sourcePrefixes fieldAlias similarArrFields selectFrom
 
 processOrderByItems
   :: forall m. ( MonadReader Bool m
-               , MonadWriter (JoinTree 'Postgres) m
+               , MonadWriter JoinTree m
                )
   => Identifier
   -> FieldName
@@ -778,7 +778,7 @@ the schema has been generated. The SQL generated will look like this:
 processAnnFields
   :: forall m
    . ( MonadReader Bool m
-     , MonadWriter (JoinTree 'Postgres) m
+     , MonadWriter JoinTree m
      )
   => Identifier
   -> FieldName
@@ -919,8 +919,8 @@ mkJoinCond baseTablepfx colMapn =
 
 generateSQLSelect
   :: S.BoolExp -- ^ Pre join condition
-  -> SelectSource 'Postgres
-  -> SelectNode 'Postgres
+  -> SelectSource
+  -> SelectNode
   -> S.Select
 generateSQLSelect joinCondition selectSource selectNode =
   S.mkSelect
@@ -960,7 +960,7 @@ generateSQLSelect joinCondition selectSource selectNode =
 
 
     objectRelationToFromItem
-      :: (ObjectRelationSource 'Postgres, SelectNode 'Postgres) -> S.FromItem
+      :: (ObjectRelationSource, SelectNode) -> S.FromItem
     objectRelationToFromItem (objectRelationSource, node) =
       let ObjectRelationSource _ colMapping objectSelectSource = objectRelationSource
           alias = S.Alias $ _ossPrefix objectSelectSource
@@ -969,7 +969,7 @@ generateSQLSelect joinCondition selectSource selectNode =
       in S.mkLateralFromItem select alias
 
     arrayRelationToFromItem
-      :: (ArrayRelationSource 'Postgres, ArraySelectNode 'Postgres) -> S.FromItem
+      :: (ArrayRelationSource, ArraySelectNode) -> S.FromItem
     arrayRelationToFromItem (arrayRelationSource, arraySelectNode) =
       let ArrayRelationSource _ colMapping source = arrayRelationSource
           alias = S.Alias $ _ssPrefix source
@@ -978,14 +978,14 @@ generateSQLSelect joinCondition selectSource selectNode =
       in S.mkLateralFromItem select alias
 
     arrayConnectionToFromItem
-      :: (ArrayConnectionSource 'Postgres, ArraySelectNode 'Postgres) -> S.FromItem
+      :: (ArrayConnectionSource, ArraySelectNode) -> S.FromItem
     arrayConnectionToFromItem (arrayConnectionSource, arraySelectNode) =
       let selectWith = connectionToSelectWith baseSelectAlias arrayConnectionSource arraySelectNode
           alias = S.Alias $ _ssPrefix $ _acsSource arrayConnectionSource
       in S.FISelectWith (S.Lateral True) selectWith alias
 
     computedFieldToFromItem
-      :: (ComputedFieldTableSetSource 'Postgres, SelectNode 'Postgres) -> S.FromItem
+      :: (ComputedFieldTableSetSource, SelectNode) -> S.FromItem
     computedFieldToFromItem (computedFieldTableSource, node) =
       let ComputedFieldTableSetSource fieldName selectTy source = computedFieldTableSource
           internalSelect = generateSQLSelect (S.BELit True) source node
@@ -999,8 +999,8 @@ generateSQLSelect joinCondition selectSource selectNode =
       in S.mkLateralFromItem select alias
 
 generateSQLSelectFromArrayNode
-  :: SelectSource 'Postgres
-  -> ArraySelectNode 'Postgres
+  :: SelectSource
+  -> ArraySelectNode
   -> S.BoolExp
   -> S.Select
 generateSQLSelectFromArrayNode selectSource arraySelectNode joinCondition =
@@ -1116,14 +1116,14 @@ encodeBase64 =
 
 processConnectionSelect
   :: ( MonadReader Bool m
-     , MonadWriter (JoinTree 'Postgres) m
+     , MonadWriter JoinTree m
      )
   => SourcePrefixes
   -> FieldName
   -> S.Alias
   -> HM.HashMap PGCol PGCol
   -> ConnectionSelect 'Postgres S.SQLExp
-  -> m ( ArrayConnectionSource 'Postgres
+  -> m ( ArrayConnectionSource
        , S.Extractor
        , HM.HashMap S.Alias S.SQLExp
        )
@@ -1212,7 +1212,7 @@ processConnectionSelect sourcePrefixes fieldAlias relAlias colMapping connection
 
     processFields
       :: ( MonadReader Bool m
-         , MonadWriter (JoinTree 'Postgres) m
+         , MonadWriter JoinTree m
          , MonadState [(S.Alias, S.SQLExp)] m
          )
       => Maybe S.OrderByExp -> m S.SQLExp
@@ -1257,8 +1257,8 @@ processConnectionSelect sourcePrefixes fieldAlias relAlias colMapping connection
 
 connectionToSelectWith
   :: S.Alias
-  -> ArrayConnectionSource 'Postgres
-  -> ArraySelectNode 'Postgres
+  -> ArrayConnectionSource
+  -> ArraySelectNode
   -> S.SelectWithG S.Select
 connectionToSelectWith baseSelectAlias arrayConnectionSource arraySelectNode =
   let extractionSelect = S.mkSelect

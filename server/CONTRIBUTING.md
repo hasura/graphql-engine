@@ -99,9 +99,13 @@ Optionally, launch a new container for alternative (MSSQL) backend with:
 
     $ scripts/dev.sh mssql
 
+Tests can be run against a specific backend (defaulting to Postgres) with the `backend` flag, for example:
+
+    $ scripts/dev.sh test --integration -k TestGraphQLQueryBasicCommon --backend mssql
+
 ### Run and test manually
 
-If you want, you can also run the server and test suite manually against a Postgres instance of your choosing.
+If you want, you can also run the server and test suite manually against an instance of your choosing.
 
 #### Run
 
@@ -173,9 +177,27 @@ cabal new-run -- test:graphql-engine-tests \
        serve --stringify-numeric-types
    ```
 
+   Optionally, replace the `--database-url` parameter with `--metadata-database-url` to enable testing against multiple sources.
+
    The environment variables are needed for a couple tests, and the `--stringify-numeric-types` option is used to avoid the need to do floating-point comparisons.
 
-5. With the server running, run the test suite:
+5. Optionally, add alternative sources to test against:
+
+    If you enabled testing against multiple sources with in the last step, you can add those sources as follows:
+    ```
+    # Add a Postgres source
+    curl "$METADATA_URL" \
+    --data-raw '{"type":"pg_add_source","args":{"name":"default","configuration":{"connection_info":{"database_url":"'"$POSTGRES_DB_URL"'","pool_settings":{}}}}}'
+
+    # Add a SQL Server source
+    curl "$METADATA_URL" \
+    --data-raw '{"type":"mssql_add_source","args":{"name":"mssql","configuration":{"connection_info":{"connection_string":"'"$MSSQL_DB_URL"'","pool_settings":{}}}}}'
+
+    # Optionally verify sources have been added
+    curl "$METADATA_URL" --data-raw '{"type":"export_metadata","args":{}}'
+    ```
+
+6. With the server running, run the test suite:
 
    ```
    cd tests-py
@@ -190,6 +212,13 @@ Some other useful points of note:
   - It is recommended to use a separate Postgres database for testing, since the tests will drop and recreate the `hdb_catalog` schema, and they may fail if certain tables already exist. (It’s also useful to be able to just drop and recreate the entire test database if it somehow gets into a bad state.)
 
   - You can pass the `-v` or `-vv` options to `pytest` to enable more verbose output while running the tests and in test failures. You can also pass the `-l` option to display the current values of Python local variables in test failures.
+
+  - Tests can be run against a specific backend (defaulting to Postgres) with the `backend` flag, for example:
+    ```
+      pytest --hge-urls http://localhost:8080 \
+             --pg-urls 'postgres://<user>:<password>@<host>:<port>/<dbname>'
+             --backend mssql -k TestGraphQLQueryBasicCommon
+    ```
 
 ##### Guide on writing python tests
 
@@ -224,6 +253,21 @@ Some other useful points of note:
    from pytest called (`--enable-remote-schema-permissions`) and the presence of this flag means that
    we need to run these tests. When the tests are run with this command line option, it's assumed that
    the server has enabled remote schema permissions.
+
+##### Adding test support for a new backend
+The current workflow for supporting a new backend in integration tests is as follows:
+
+1. Add functions to launch and cleanup a server for the new backend. [Example](https://github.com/hasura/graphql-engine/commit/64d52f5fa333f337ef76ada4e0b6abd49353c457/scripts/dev.sh#diff-876c076817b4e593cf797bdfa378ac3a24b6dc76c6f6408dd2f27da903bb331dR520-R523).
+2. Connect to the database you've just launched. [Example](https://github.com/hasura/graphql-engine/commit/64d52f5fa333f337ef76ada4e0b6abd49353c457/scripts/dev.sh#diff-876c076817b4e593cf797bdfa378ac3a24b6dc76c6f6408dd2f27da903bb331dR554-R557).
+3. Add setup and teardown files:
+    1. `setup_<backend>`: for `v1/query` or metadata queries such as `<backend>_track_table`. [Example](https://github.com/hasura/graphql-engine/commit/64d52f5fa333f337ef76ada4e0b6abd49353c457/scripts/dev.sh#diff-97ba2b889f4ed620e8bd044f819b1f94f95bfc695a69804519e38a00119337d9).
+    2. `schema_setup_<backend>`: for `v2/query` queries such as `<backend>_run_sql`. [Example](https://github.com/hasura/graphql-engine/commit/64d52f5fa333f337ef76ada4e0b6abd49353c457/scripts/dev.sh#diff-b34081ef8e1c34492fcf0cf72a8c1d64bcb66944f2ab2efb9ac0812cd7a003c7).
+    3. `teardown_<backend>` and `cleardb_<backend>`
+    4. important: filename suffixes should be the same as the value that’s being passed to `—backend`; that's how the files are looked up.
+4. Write test using [the `per_backend_tests` fixture](https://github.com/hasura/graphql-engine/commit/64d52f5fa333f337ef76ada4e0b6abd49353c457/scripts/dev.sh#diff-1034b560ce9984643a4aa4edab1d612aa512f1c3c28bbc93364700620681c962R420), parameterised by backend. [Example](https://github.com/hasura/graphql-engine/commit/64d52f5fa333f337ef76ada4e0b6abd49353c457/scripts/dev.sh#diff-40b7c6ad5362e70cafd29a3ac5d0a5387bd75befad92532ea4aaba99421ba3c8R12-R13).
+5. Optional: Run the existing (Postgres) test suite against the new backend to identify and group common and backend-specific tests into their own classes.
+
+Tests against alternative backends aren't yet run/supported in CI, so please test locally.
 
 ### Create Pull Request
 

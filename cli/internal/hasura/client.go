@@ -12,12 +12,15 @@ type Client struct {
 	V1Metadata V1Metadata
 	V1Query    V1Query
 	V2Query    V2Query
+	PGDump     PGDump
+	V1Graphql  V1Graphql
 }
 
 type V1Query interface {
 	CommonMetadataOperations
 	PGSourceOps
 	Send(requestBody interface{}) (httpcResponse *httpc.Response, body io.Reader, error error)
+	Bulk([]RequestBody) (io.Reader, error)
 }
 
 type V1Metadata interface {
@@ -43,8 +46,13 @@ type V2Query interface {
 	PGSourceOps
 	MSSQLSourceOps
 	Send(requestBody interface{}) (httpcResponse *httpc.Response, body io.Reader, error error)
+	Bulk([]RequestBody) (io.Reader, error)
 }
 
+type IntrospectionSchema interface{}
+type V1Graphql interface {
+	GetIntrospectionSchema() (IntrospectionSchema, error)
+}
 type RequestBody struct {
 	Type    string      `json:"type"`
 	Version uint        `json:"version,omitempty"`

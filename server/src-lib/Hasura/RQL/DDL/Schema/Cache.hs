@@ -57,9 +57,11 @@ import           Hasura.RQL.DDL.Schema.Cache.Permission
 import           Hasura.RQL.DDL.Schema.Function
 import           Hasura.RQL.DDL.Schema.Table
 import           Hasura.RQL.Types                         hiding (fmFunction, tmTable)
+import           Hasura.SQL.Tag
 import           Hasura.Server.Types                      (MaintenanceMode (..))
 import           Hasura.Server.Version                    (HasVersion)
 import           Hasura.Session
+
 
 buildRebuildableSchemaCache
   :: HasVersion
@@ -108,11 +110,12 @@ instance (Monad m) => CacheRM (CacheRWT m) where
 instance (MonadIO m, MonadError QErr m, HasHttpManagerM m
          , MonadResolveSource m, HasServerConfigCtx m) => CacheRWM (CacheRWT m) where
   buildSchemaCacheWithOptions buildReason invalidations metadata = CacheRWT do
-    (RebuildableSchemaCache _ invalidationKeys rule, oldInvalidations) <- get
-    let newInvalidationKeys = invalidateKeys invalidations invalidationKeys
+    (RebuildableSchemaCache lastBuiltSC invalidationKeys rule, oldInvalidations) <- get
+    let metadataVersion = scMetadataResourceVersion lastBuiltSC
+        newInvalidationKeys = invalidateKeys invalidations invalidationKeys
     result <- lift $ runCacheBuildM $ flip runReaderT buildReason $
               Inc.build rule (metadata, newInvalidationKeys)
-    let schemaCache = Inc.result result
+    let schemaCache = (Inc.result result) { scMetadataResourceVersion = metadataVersion }
         prunedInvalidationKeys = pruneInvalidationKeys schemaCache newInvalidationKeys
         !newCache = RebuildableSchemaCache schemaCache prunedInvalidationKeys (Inc.rebuildRule result)
         !newInvalidations = oldInvalidations <> invalidations
@@ -123,6 +126,14 @@ instance (MonadIO m, MonadError QErr m, HasHttpManagerM m
       pruneInvalidationKeys schemaCache = over ikRemoteSchemas $ M.filterWithKey \name _ ->
         -- see Note [Keep invalidation keys for inconsistent objects]
         name `elem` getAllRemoteSchemas schemaCache
+
+  setMetadataResourceVersionInSchemaCache resourceVersion = CacheRWT $ do
+    (rebuildableSchemaCache, invalidations) <- get
+    put (rebuildableSchemaCache
+          { lastBuiltSchemaCache = (lastBuiltSchemaCache rebuildableSchemaCache)
+            { scMetadataResourceVersion = Just resourceVersion} }
+        , invalidations)
+
 
 
 buildSchemaCacheRule
@@ -225,6 +236,7 @@ buildSchemaCacheRule env = proc (metadata, invalidationKeys) -> do
         <> ambiguousRestEndpoints
     , scApiLimits = _boApiLimits resolvedOutputs
     , scMetricsConfig = _boMetricsConfig resolvedOutputs
+    , scMetadataResourceVersion = Nothing
     }
   where
     getSourceConfigIfNeeded
@@ -381,11 +393,13 @@ buildSchemaCacheRule env = proc (metadata, invalidationKeys) -> do
           remoteSchemaRoles = map _rspmRole . _rsmPermissions =<< OMap.elems remoteSchemas
           sourceRoles =
             HS.fromList $ concat $
-            OMap.elems sources >>=
-              \e -> AB.dispatchAnyBackend @Backend e \(SourceMetadata _ tables _functions _) -> do
-               table <- OMap.elems tables
-               pure ( OMap.keys (_tmInsertPermissions table) <> OMap.keys (_tmSelectPermissions table)
-                    <> OMap.keys (_tmUpdatePermissions table) <> OMap.keys (_tmDeletePermissions table))
+            OMap.elems sources >>= \e ->
+               AB.dispatchAnyBackend @Backend e \(SourceMetadata _ tables _functions _) -> do
+                 table <- OMap.elems tables
+                 pure $ OMap.keys (_tmInsertPermissions table) <>
+                        OMap.keys (_tmSelectPermissions table) <>
+                        OMap.keys (_tmUpdatePermissions table) <>
+                        OMap.keys (_tmDeletePermissions table)
 
           remoteSchemaPermissions =
             let remoteSchemaPermsList = OMap.toList $ _rsmPermissions <$> remoteSchemas
@@ -614,7 +628,7 @@ buildSchemaCacheRule env = proc (metadata, invalidationKeys) -> do
          , MonadReader BuildReason m, HasServerConfigCtx m, BackendMetadata b)
       => ( SourceName, SourceConfig b, TableCoreInfo b
          , [EventTriggerConf], Inc.Dependency Inc.InvalidationKey
-         ) `arr` EventTriggerInfoMap b
+         ) `arr` EventTriggerInfoMap
     buildTableEventTriggers = proc (source, sourceConfig, tableInfo, eventTriggerConfs, metadataInvalidationKey) ->
       buildInfoMap (etcName . (^. _5)) mkEventTriggerMetadataObject buildEventTrigger
         -< (tableInfo, map (metadataInvalidationKey, source, sourceConfig, _tciName tableInfo,) eventTriggerConfs)
@@ -691,7 +705,9 @@ buildSchemaCacheRule env = proc (metadata, invalidationKeys) -> do
                     runExceptT $ resolveAction env resolvedCustomTypes def scalarsMap
                   let permissionInfos = map (ActionPermissionInfo . _apmRole) actionPermissions
                       permissionMap = mapFromL _apiRole permissionInfos
-                  returnA -< ActionInfo name outObject resolvedDef permissionMap comment)
+                      forwardClientHeaders = _adForwardClientHeaders resolvedDef
+                      outputType = unGraphQLType $ _adOutputType def
+                  returnA -< ActionInfo name (outputType, outObject) resolvedDef permissionMap forwardClientHeaders comment)
               |) addActionContext)
            |) (mkActionMetadataObject action)
 

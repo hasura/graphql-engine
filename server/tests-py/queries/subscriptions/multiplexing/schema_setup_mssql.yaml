@@ -1,0 +1,14 @@
+type: bulk
+args:
+  - type: mssql_run_sql
+    args:
+      source: mssql
+      sql: |
+        CREATE TABLE test(id int identity NOT NULL PRIMARY KEY);
+        create table articles(
+          id int identity NOT NULL PRIMARY KEY,
+          user_id int,
+          content text,
+          title text,
+          is_public bit default 0
+        );

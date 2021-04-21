@@ -57,10 +57,10 @@ argument to filter on equality.
 
 You can see the complete specification of the ``where`` argument in the :ref:`API reference <WhereExp>`.
 
-Comparision operators
----------------------
+Comparison operators
+--------------------
 
-Let’s take a look at different comparision operators that can be used to filter results.
+Let’s take a look at different comparison operators that can be used to filter results.
 
 Equality operators (_eq, _neq)
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -603,10 +603,10 @@ Fetch authors if the ``phone`` key is present in their JSONB ``address`` column:
 PostGIS spatial relationship operators (_st_contains, _st_crosses, etc.)
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-The ``_st_contains``, ``_st_crosses``, ``_st_equals``, ``_st_intersects``, ``_st_overlaps``, ``_st_touches``,
-``_st_within`` and ``_st_d_within`` operators are used to filter based on ``geometry`` like columns.
+The ``_st_contains``, ``_st_crosses``, ``_st_equals``, ``_st_intersects``, ``_st_3d_intersects``, ``_st_overlaps``, ``_st_touches``,
+``_st_within``, ``_st_d_within``, and ``_st_3d_d_within`` operators are used to filter based on ``geometry`` like columns.
 
-``_st_d_within`` and ``_st_intersects`` can be used on ``geography`` columns also.
+``_st_d_within`` and ``_st_intersects`` can be used on ``geography`` columns also (but their 3D variations are for ``geometry`` only).
 
 For more details on spatial relationship operators and Postgres equivalents, refer to the :ref:`API reference <geometry_operators>`.
 
@@ -664,7 +664,7 @@ Fetch a list of geometry values which are within the given ``polygon`` value:
 
 **Example: _st_d_within**
 
-Fetch a list of ``geometry`` values which are 3 units from given ``point`` value:
+Fetch a list of ``geometry`` values which are 3 units from a given ``point`` value:
 
 .. graphiql::
   :view_only:
@@ -709,6 +709,109 @@ Fetch a list of ``geometry`` values which are 3 units from given ``point`` value
       "point": {
         "type": "Point",
         "coordinates": [ 0, 0 ]
+      }
+    }
+
+**Example: _st_3d_d_within**
+
+This is completely analogous to the ``_st_d_within`` example above, the only
+difference being that our coordinates now have three components instead of
+two.
+
+.. graphiql::
+  :view_only:
+  :query:
+    query geom_table($point: geometry){
+      geom_table(
+        where: {geom_col: {_st_3d_d_within: {distance: 3, from: $point}}}
+      ){
+        id
+        geom_col
+      }
+    }
+  :response:
+    {
+      "data": {
+        "geom_table": [
+          {
+            "id": 1,
+            "geom_col": {
+              "type": "Point",
+              "coordinates": [
+                1,
+                2,
+                1
+              ]
+            }
+          },
+          {
+            "id": 2,
+            "geom_col": {
+              "type": "Point",
+              "coordinates": [
+                3,
+                0,
+                0
+              ]
+            }
+          }
+        ]
+      }
+    }
+  :variables:
+    {
+      "point": {
+        "type": "Point",
+        "coordinates": [ 0, 0, 0 ]
+      }
+    }
+
+**Example: _st_3d_intersects**
+
+Fetch a list of (3D) ``geometry`` values which intersect a given ``polygon`` value:
+
+.. graphiql::
+  :view_only:
+  :query:
+    query geom_table($point: geometry){
+      geom_table(
+        where: {geom_col: {_st_3d_intersects: $polygon}}
+      ){
+        id
+        geom_col
+      }
+    }
+  :response:
+    {
+      "data": {
+        "geom_table": [
+          {
+            "id": 1,
+            "geom_col": {
+              "type": "LineString",
+              "coordinates":
+                [
+                  [ -1, -2, -2 ],
+                  [ 3, 3, 2 ]
+                ]
+            }
+          }
+        ]
+      }
+    }
+  :variables:
+    {
+      "polygon": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [0, 0, 0],
+            [2, 0, 0],
+            [1, 2, 0],
+            [1, 1, 2],
+            [0, 0, 0]
+          ]
+        ]
       }
     }
 
@@ -1267,7 +1370,7 @@ For example:
         }
       }
 
-The behaviour of the comparision operators depends on whether the nested objects are a single object related via an
+The behaviour of the comparison operators depends on whether the nested objects are a single object related via an
 object relationship or an array of objects related via an array relationship.
 
 - In case of an **object relationship**, a row will be returned if the single nested object satisfies the defined
@@ -1826,10 +1929,17 @@ The expression ``{}`` evaluates to ``true`` if an object exists (even if it's ``
 
 .. _null_value_evaluation:
 
-Evaluation of **null** values in comparision expressions
---------------------------------------------------------
+Evaluation of **null** values in comparison expressions
+-------------------------------------------------------
 
-If in any comparision expression a ``null`` (or ``undefined``) value is passed, the expression currently gets
-reduced to ``{}`` (:ref:`TRUE expression <true_expression>`)
+In **versions v2.0.0 and above**, if in any comparison expression a ``null`` value is passed, a type mismatch error
+will be thrown.
 
-**For example**, the expression ``{ where: { _eq: null } }`` will be reduced to ``{ where: {} }``
+For example, the expression ``{ where: {id: { _eq: null }}}`` will throw an error.
+
+
+In **versions v1.3.3 and below**, if in any comparison expression a ``null`` value is passed, the expression gets
+reduced to ``{}``, the :ref:`TRUE expression <true_expression>`.
+
+For example, the expression ``{ where: { id: {_eq: null }}}`` will be reduced to ``{ where: {id: {}} }`` which
+will return all objects for which an ``id`` is set, i.e. all objects will be returned.

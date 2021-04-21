@@ -36,6 +36,7 @@ export type PermissionEdit = {
   isNewRole: boolean;
   isNewPerm: boolean;
   role: string;
+  filter?: Record<string, string>;
 };
 
 export type ArgTreeType = {
@@ -82,6 +83,7 @@ export type CustomFieldType = {
   return?: string;
   typeName?: string;
   children?: FieldType[];
+  defaultValue?: any;
 };
 
 export type FieldType = CustomFieldType & GraphQLField<any, any>;

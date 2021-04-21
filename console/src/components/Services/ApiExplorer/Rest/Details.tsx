@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useRef } from 'react';
 import { RouteComponentProps } from 'react-router';
 import { connect, ConnectedProps } from 'react-redux';
 
@@ -6,10 +6,11 @@ import BreadCrumb from '../../../Common/Layout/BreadCrumb/BreadCrumb';
 import AceEditor from '../../../Common/AceEditor/BaseEditor';
 import Button from '../../../Common/Button/Button';
 import { Badge } from '../../../UIKit/atoms';
-import { Dispatch } from '../../../../types';
+import { Dispatch, ReduxState } from '../../../../types';
 import _push from '../../Data/push';
 import { badgeSort, getCurrentPageHost } from './utils';
 import { LS_KEYS, setLSItem } from '../../../../utils/localStorage';
+import LivePreview from './LivePreview';
 
 import styles from './RESTStyles.scss';
 
@@ -20,9 +21,12 @@ interface DetailsComponentProps extends InjectedProps {
 const DetailsComponent: React.FC<DetailsComponentProps> = ({
   location,
   pushToRoute,
+  dataHeaders,
 }) => {
   const endpointState = location.state;
-  const endText = getCurrentPageHost();
+  const endpointLocation = useRef(
+    `${getCurrentPageHost()}/api/rest/${endpointState.url}`
+  );
 
   const crumbs = [
     {
@@ -67,59 +71,72 @@ const DetailsComponent: React.FC<DetailsComponentProps> = ({
         </div>
         <div className={styles.add_mar_top}>{endpointState.comment}</div>
         <hr />
-        <div>
-          <h4 className={`${styles.subheading_text} ${styles.display_inline}`}>
-            REST Endpoint
-          </h4>
-          <input
-            className="form-control"
-            type="text"
-            placeholder="Rest endpoint URL"
-            value={`${endText}/api/rest/${endpointState.url}`}
-            data-key="name"
-            disabled
-            required
-          />
-        </div>
-        <div>
-          <h4
-            className={`${styles.subheading_text} ${styles.display_inline} ${styles.padd_top}`}
-          >
-            Methods Available
-          </h4>
-          <div>
-            {badgeSort(endpointState.methods).map(method => (
-              <span
-                className={`${styles.headerBadge} ${styles.padd_right}`}
-                key={`badge-details-${method}`}
+        <div className={styles.rest_details_layout}>
+          <div className={styles.rest_details_left_content}>
+            <div>
+              <h4
+                className={`${styles.subheading_text} ${styles.display_inline}`}
               >
-                <Badge type={`rest-${method}`} />
-              </span>
-            ))}
+                REST Endpoint
+              </h4>
+              <input
+                className="form-control"
+                type="text"
+                placeholder="Rest endpoint URL"
+                value={endpointLocation && endpointLocation.current}
+                data-key="name"
+                disabled
+                required
+              />
+            </div>
+            <h4
+              className={`${styles.subheading_text} ${styles.display_inline} ${styles.padd_top}`}
+            >
+              Methods Available
+            </h4>
+            <div>
+              {badgeSort(endpointState.methods).map(method => (
+                <span
+                  className={`${styles.headerBadge} ${styles.padd_right}`}
+                  key={`badge-details-${method}`}
+                >
+                  <Badge type={`rest-${method}`} />
+                </span>
+              ))}
+            </div>
+            <hr />
+            <div className={styles.gql_header_details}>
+              <h4
+                className={`${styles.subheading_text} ${styles.display_inline}`}
+              >
+                GraphQL Request
+              </h4>
+              <Button
+                size="sm"
+                color="white"
+                onClick={onClickOpenInGQL(endpointState.currentQuery)}
+              >
+                Open in GraphiQL
+              </Button>
+            </div>
+            <AceEditor
+              name="query-viewer"
+              value={endpointState.currentQuery}
+              placeholder={`query SampleQuery {}`}
+              height="300px"
+              width="100%"
+              mode="graphqlschema"
+              readOnly
+            />
+          </div>
+          <div className={styles.rest_details_right_content}>
+            <LivePreview
+              endpointState={endpointState}
+              pageHost={endpointLocation && endpointLocation.current}
+              dataHeaders={dataHeaders}
+            />
           </div>
         </div>
-        <hr />
-        <div className={styles.gql_header_details}>
-          <h4 className={`${styles.subheading_text} ${styles.display_inline}`}>
-            GraphQL Request
-          </h4>
-          <Button
-            size="sm"
-            color="white"
-            onClick={onClickOpenInGQL(endpointState.currentQuery)}
-          >
-            Open in GraphiQL
-          </Button>
-        </div>
-        <AceEditor
-          name="query-viewer"
-          value={endpointState.currentQuery}
-          placeholder={`query SampleQuery {}`}
-          height="300px"
-          mode="graphqlschema"
-          readOnly
-        />
-        <hr />
       </div>
     </>
   );
@@ -128,7 +145,10 @@ const DetailsComponent: React.FC<DetailsComponentProps> = ({
 const mapDispatchToProps = (dispatch: Dispatch) => ({
   pushToRoute: (link: string) => dispatch(_push(link)),
 });
-const detailsComponentConnector = connect(null, mapDispatchToProps);
+const mapStateToProps = (state: ReduxState) => ({
+  dataHeaders: state?.apiexplorer?.displayedApi?.request?.headers ?? [],
+});
+const detailsComponentConnector = connect(mapStateToProps, mapDispatchToProps);
 type InjectedProps = ConnectedProps<typeof detailsComponentConnector>;
 
 export default detailsComponentConnector(DetailsComponent);

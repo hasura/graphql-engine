@@ -7,14 +7,16 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/hasura/graphql-engine/cli/internal/hasura"
+	"github.com/hasura/graphql-engine/cli/internal/metadataobject"
 
+	"github.com/hasura/graphql-engine/cli/internal/cliext"
+	"github.com/hasura/graphql-engine/cli/internal/hasura"
 	"github.com/hasura/graphql-engine/cli/migrate"
 
 	"gopkg.in/yaml.v2"
 
 	"github.com/hasura/graphql-engine/cli"
-	"github.com/hasura/graphql-engine/cli/metadata/actions/types"
+	"github.com/hasura/graphql-engine/cli/internal/metadataobject/actions/types"
 	"github.com/hasura/graphql-engine/cli/migrate/database/hasuradb"
 	"github.com/hasura/graphql-engine/cli/migrate/source"
 	"github.com/hasura/graphql-engine/cli/migrate/source/file"
@@ -60,16 +62,9 @@ func newScriptsUpdateConfigV2Cmd(ec *cli.ExecutionContext) *cobra.Command {
 			if ec.Config.Version != cli.V1 {
 				return fmt.Errorf("this script can be executed only when the current config version is 1")
 			}
-			// update the plugin index
-			ec.Spin("Updating the plugin index...")
+			ec.Spin("Setting up cli-ext")
 			defer ec.Spinner.Stop()
-			err := ec.PluginsConfig.Repo.EnsureUpdated()
-			if err != nil {
-				return errors.Wrap(err, "cannot update plugin index")
-			}
-			// install the plugin
-			ec.Spin(fmt.Sprintf("Installing %s plugin...", cli.CLIExtPluginName))
-			err = ec.InstallPlugin(cli.CLIExtPluginName, true)
+			err := cliext.Setup(ec)
 			if err != nil {
 				return err
 			}
@@ -314,12 +309,14 @@ func newScriptsUpdateConfigV2Cmd(ec *cli.ExecutionContext) *cobra.Command {
 			if err != nil {
 				return errors.Wrap(err, "unable to initialize migrations driver")
 			}
-			files, err := migrateDrv.ExportMetadata()
+			var files map[string][]byte
+			mdHandler := metadataobject.NewHandlerFromEC(ec)
+			files, err = mdHandler.ExportMetadata()
 			if err != nil {
 				return errors.Wrap(err, "cannot export metadata from server")
 			}
 			ec.Spin("Writing metadata...")
-			err = migrateDrv.WriteMetadata(files)
+			err = mdHandler.WriteMetadata(files)
 			if err != nil {
 				return errors.Wrap(err, "cannot write metadata")
 			}

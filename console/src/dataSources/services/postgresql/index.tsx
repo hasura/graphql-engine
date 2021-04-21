@@ -1,8 +1,15 @@
 import React from 'react';
-import { Table, TableColumn, ComputedField } from '../../types';
+import {
+  Table,
+  TableColumn,
+  ComputedField,
+  SupportedFeaturesType,
+  BaseTableColumn,
+} from '../../types';
 import { QUERY_TYPES, Operations } from '../../common';
 import { PGFunction } from './types';
 import { DataSourcesAPI, ColumnsInfoResult } from '../..';
+import { generateTableRowRequest } from './utils';
 import {
   getFetchTablesListQuery,
   fetchColumnTypesQuery,
@@ -175,6 +182,10 @@ export const getSchemaFunctions = (
   );
 };
 
+export const isJsonColumn = (column: BaseTableColumn): boolean => {
+  return column.data_type === 'json' || column.data_type === 'jsonb';
+};
+
 export const findFunction = (
   allFunctions: PGFunction[],
   functionName: string,
@@ -214,8 +225,11 @@ export const getGroupedTableComputedFields = (
   return groupedComputedFields;
 };
 
-const schemaListSql = `SELECT schema_name FROM information_schema.schemata WHERE
+const schemaListSql = (
+  schemas?: string[]
+) => `SELECT schema_name FROM information_schema.schemata WHERE
 schema_name NOT IN ('information_schema', 'pg_catalog', 'hdb_catalog', 'hdb_views', 'pg_temp_1', 'pg_toast_temp_1', 'pg_toast')
+${schemas?.length ? ` AND schema_name IN (${schemas.join(',')})` : ''}
 ORDER BY schema_name ASC;`;
 
 const getAdditionalColumnsInfoQuerySql = (
@@ -354,6 +368,59 @@ const commonDataTypes = [
   },
 ];
 
+const operators = [
+  { name: 'equals', value: '$eq', graphqlOp: '_eq' },
+  { name: 'not equals', value: '$ne', graphqlOp: '_neq' },
+  { name: 'in', value: '$in', graphqlOp: '_in', defaultValue: '[]' },
+  { name: 'not in', value: '$nin', graphqlOp: '_nin', defaultValue: '[]' },
+  { name: '>', value: '$gt', graphqlOp: '_gt' },
+  { name: '<', value: '$lt', graphqlOp: '_lt' },
+  { name: '>=', value: '$gte', graphqlOp: '_gte' },
+  { name: '<=', value: '$lte', graphqlOp: '_lte' },
+  { name: 'like', value: '$like', graphqlOp: '_like', defaultValue: '%%' },
+  {
+    name: 'not like',
+    value: '$nlike',
+    graphqlOp: '_nlike',
+    defaultValue: '%%',
+  },
+  {
+    name: 'like (case-insensitive)',
+    value: '$ilike',
+    graphqlOp: '_ilike',
+    defaultValue: '%%',
+  },
+  {
+    name: 'not like (case-insensitive)',
+    value: '$nilike',
+    graphqlOp: '_nilike',
+    defaultValue: '%%',
+  },
+  { name: 'similar', value: '$similar', graphqlOp: '_similar' },
+  { name: 'not similar', value: '$nsimilar', graphqlOp: '_nsimilar' },
+
+  {
+    name: '~',
+    value: '$regex',
+    graphqlOp: '_regex',
+  },
+  {
+    name: '~*',
+    value: '$iregex',
+    graphqlOp: '_iregex',
+  },
+  {
+    name: '!~',
+    value: '$nregex',
+    graphqlOp: '_nregex',
+  },
+  {
+    name: '!~*',
+    value: '$niregex',
+    graphqlOp: '_niregex',
+  },
+];
+
 export const isColTypeString = (colType: string) =>
   ['text', 'varchar', 'char', 'bpchar', 'name'].includes(colType);
 
@@ -436,8 +503,80 @@ const permissionColumnDataTypes = {
   user_defined: [], // default for all other types
 };
 
+export const supportedFeatures: SupportedFeaturesType = {
+  driver: {
+    name: 'postgres',
+  },
+  schemas: {
+    create: {
+      enabled: true,
+    },
+    delete: {
+      enabled: true,
+    },
+  },
+  tables: {
+    create: {
+      enabled: true,
+    },
+    browse: {
+      enabled: true,
+      aggregation: true,
+    },
+    insert: {
+      enabled: true,
+    },
+    modify: {
+      enabled: true,
+    },
+    relationships: {
+      enabled: true,
+      remoteRelationships: true,
+      track: true,
+    },
+    permissions: {
+      enabled: true,
+    },
+    track: {
+      enabled: false,
+    },
+  },
+  functions: {
+    enabled: true,
+    track: {
+      enabled: true,
+    },
+    nonTrackableFunctions: {
+      enabled: true,
+    },
+  },
+  events: {
+    triggers: {
+      enabled: true,
+      add: true,
+    },
+  },
+  actions: {
+    enabled: true,
+    relationships: true,
+  },
+  rawSQL: {
+    enabled: true,
+    tracking: true,
+  },
+  connectDbForm: {
+    connectionParameters: true,
+    databaseURL: true,
+    environmentVariable: true,
+    read_replicas: true,
+  },
+};
+
+const defaultRedirectSchema = 'public';
+
 export const postgres: DataSourcesAPI = {
   isTable,
+  isJsonColumn,
   displayTableName,
   getFunctionSchema,
   getFunctionDefinition,
@@ -501,9 +640,13 @@ export const postgres: DataSourcesAPI = {
   getEventInvocationInfoByIDSql,
   getDatabaseInfo,
   getTableInfo,
+  operators,
+  generateTableRowRequest,
   getDatabaseVersionSql,
   permissionColumnDataTypes,
   viewsSupported: true,
   supportedColumnOperators: null,
   aggregationPermissionsAllowed: true,
+  supportedFeatures,
+  defaultRedirectSchema,
 };

@@ -19,6 +19,7 @@ import {
   generateTableDef,
   dataSource,
   findTableFromRel,
+  isFeatureSupported,
 } from '../../../../dataSources';
 
 /* ****************** View actions *************/
@@ -52,62 +53,56 @@ const vCollapseRow = () => ({
 
 const vSetDefaults = limit => ({ type: V_SET_DEFAULTS, limit });
 
+const getConfiguration = (tables, sources) => {
+  const {
+    currentSchema,
+    currentTable: originalTable,
+    currentDataSource,
+  } = tables;
+  return sources
+    ?.find(s => s.name === currentDataSource)
+    ?.tables.find(
+      t => originalTable === t.table.name && currentSchema === t.table.schema
+    )?.configuration;
+};
+
 const vMakeRowsRequest = () => {
   return (dispatch, getState) => {
-    const {
-      currentTable: originalTable,
-      currentSchema,
-      currentDataSource,
-      view,
-    } = getState().tables;
-
-    const url = Endpoints.query;
+    const { tables, metadata } = getState();
+    const sources = metadata.metadataObject?.sources;
+    const tableConfiguration = getConfiguration(tables, sources);
+    const headers = dataHeaders(getState);
     dispatch({ type: V_REQUEST_PROGRESS, data: true });
 
-    const requestBody = {
-      type: 'bulk',
-      source: currentDataSource,
-      args: [
-        getSelectQuery(
-          'select',
-          generateTableDef(originalTable, currentSchema),
-          view.query.columns,
-          view.query.where,
-          view.query.offset,
-          view.query.limit,
-          view.query.order_by,
-          currentDataSource
-        ),
-        getRunSqlQuery(
-          dataSource.getEstimateCountQuery(currentSchema, originalTable),
-          currentDataSource
-        ),
-      ],
-    };
+    const {
+      endpoint,
+      getTableRowRequestBody,
+      processTableRowData,
+    } = dataSource.generateTableRowRequest();
     const options = {
       method: 'POST',
-      body: JSON.stringify(requestBody),
-      headers: dataHeaders(getState),
+      body: JSON.stringify(
+        getTableRowRequestBody({ tables, tableConfiguration })
+      ),
+      headers,
       credentials: globalCookiePolicy,
     };
-    return dispatch(requestAction(url, options)).then(
-      data => {
-        const currentTable = getState().tables.currentTable;
-        const estimatedCount =
-          data.length > 1 && data[0].result > 1 && data.result[1].length
-            ? data[1].result[1][0]
-            : null;
 
-        // in case table has changed before count load
+    return dispatch(requestAction(endpoint, options)).then(
+      data => {
+        const { currentSchema, currentTable: originalTable } = tables;
+        const { rows, estimatedCount } = processTableRowData(data, {
+          currentSchema,
+          originalTable,
+          tableConfiguration,
+        });
+        const currentTable = getState().tables.currentTable;
         if (currentTable === originalTable) {
           Promise.all([
             dispatch({
               type: V_REQUEST_SUCCESS,
-              data: data[0],
-              estimatedCount:
-                estimatedCount !== null
-                  ? parseInt(data[1]?.result[1][0], 10)
-                  : null,
+              data: rows,
+              estimatedCount,
             }),
             dispatch({ type: V_REQUEST_PROGRESS, data: false }),
           ]);
@@ -124,51 +119,51 @@ const vMakeRowsRequest = () => {
     );
   };
 };
+
 const vMakeExportRequest = () => {
   return (dispatch, getState) => {
+    const { tables, metadata } = getState();
+    const headers = dataHeaders(getState);
+    const sources = metadata.metadataObject?.sources;
+    const tableConfiguration = getConfiguration(tables, sources);
     const {
-      currentTable: originalTable,
-      currentSchema,
-      view,
-      currentDataSource,
-    } = getState().tables;
-
-    const url = Endpoints.query;
-
-    const requestBody = {
-      type: 'bulk',
-      args: [
-        getSelectQuery(
-          'select',
-          generateTableDef(originalTable, currentSchema),
-          view.query.columns,
-          view.query.where,
-          null,
-          null,
-          view.query.order_by,
-          currentDataSource
-        ),
-        getRunSqlQuery(
-          dataSource.getEstimateCountQuery(currentSchema, originalTable)
-        ),
-      ],
-    };
+      endpoint,
+      getTableRowRequestBody,
+      processTableRowData,
+    } = dataSource.generateTableRowRequest();
     const options = {
       method: 'POST',
-      body: JSON.stringify(requestBody),
-      headers: dataHeaders(getState),
+      body: JSON.stringify(
+        getTableRowRequestBody({ tables, tableConfiguration, isExport: true })
+      ),
+      headers,
       credentials: globalCookiePolicy,
     };
     return new Promise((resolve, reject) => {
-      dispatch(requestAction(url, options))
+      dispatch(requestAction(endpoint, options))
         .then(data => {
-          resolve(data);
+          const { currentSchema, currentTable: originalTable } = tables;
+          const { rows } = processTableRowData(data, {
+            currentSchema,
+            originalTable,
+          });
+          resolve(rows);
         })
         .catch(reject);
     });
   };
 };
+
 const vMakeCountRequest = () => {
+  // For datasources that do not supported aggregation like count
+  if (!isFeatureSupported('tables.browse.aggregation'))
+    return (dispatch, getState) => {
+      const { estimatedCount } = getState().tables.view;
+      dispatch({
+        type: V_COUNT_REQUEST_SUCCESS,
+        count: estimatedCount,
+      });
+    };
   return (dispatch, getState) => {
     const {
       currentTable: originalTable,
@@ -241,7 +236,7 @@ const vMakeCountRequest = () => {
 };
 
 const vMakeTableRequests = () => (dispatch, getState) => {
-  dispatch(vMakeRowsRequest()).then(() => {
+  return dispatch(vMakeRowsRequest()).then(() => {
     const { estimatedCount } = getState().tables.view;
     if (estimatedCount > COUNT_LIMIT) {
       dispatch({

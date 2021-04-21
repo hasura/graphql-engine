@@ -4,12 +4,11 @@ import (
 	"path/filepath"
 	"regexp"
 
+	"github.com/hasura/graphql-engine/cli/internal/metadataobject"
+
 	"github.com/hasura/graphql-engine/cli/internal/metadatautil"
 
-	"github.com/hasura/graphql-engine/cli/internal/hasura"
-
 	"github.com/fatih/color"
-	"github.com/hasura/graphql-engine/cli/migrate"
 
 	"github.com/hasura/graphql-engine/cli/internal/statestore"
 	"github.com/hasura/graphql-engine/cli/internal/statestore/migrations"
@@ -151,16 +150,13 @@ func UpdateProjectV3(opts UpgradeToMuUpgradeProjectToMultipleSourcesOpts) error 
 	if err := removeDirectories(opts.Fs, opts.EC.MetadataDir, metadataFiles); err != nil {
 		return err
 	}
-	// do a metadata export
-	m, err := migrate.NewMigrate(opts.EC, true, "", hasura.SourceKindPG)
+	var files map[string][]byte
+	mdHandler := metadataobject.NewHandlerFromEC(opts.EC)
+	files, err = mdHandler.ExportMetadata()
 	if err != nil {
 		return err
 	}
-	files, err := m.ExportMetadata()
-	if err != nil {
-		return err
-	}
-	if err := m.WriteMetadata(files); err != nil {
+	if err := mdHandler.WriteMetadata(files); err != nil {
 		return err
 	}
 	opts.EC.Spinner.Stop()
@@ -286,7 +282,7 @@ func CheckIfUpdateToConfigV3IsRequired(ec *cli.ExecutionContext) error {
 	// see if an update to config V3 is necessary
 	if ec.Config.Version <= cli.V1 && ec.HasMetadataV3 {
 		ec.Logger.Info("config v1 is deprecated from v1.4")
-		return errors.New("please upgrade your project to a newer version.\ntip: use " + color.New(color.FgCyan).SprintFunc()("hasura scripts update-project-v2") + " to upgrade your project to config v2")
+		return errors.New("please upgrade your project to a newer version.\nuse " + color.New(color.FgCyan).SprintFunc()("hasura scripts update-project-v2") + " to upgrade your project to config v2")
 	}
 	if ec.Config.Version < cli.V3 && ec.HasMetadataV3 {
 		sources, err := metadatautil.GetSources(ec.APIClient.V1Metadata.ExportMetadata)

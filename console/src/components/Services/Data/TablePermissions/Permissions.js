@@ -69,7 +69,7 @@ import {
   generateTableDef,
   QUERY_TYPES,
   dataSource,
-  currentDriver,
+  isFeatureSupported,
 } from '../../../../dataSources';
 import KnowMoreLink from '../../../Common/KnowMoreLink/KnowMoreLink';
 import {
@@ -85,8 +85,6 @@ import PermButtonSection from './PermButtonsSection';
 import { rolesSelector } from '../../../../metadata/selector';
 import { RightContainer } from '../../../Common/Layout/RightContainer';
 import FeatureDisabled from '../FeatureDisabled';
-
-const supportedDrivers = ['postgres', 'mssql'];
 
 class Permissions extends Component {
   constructor() {
@@ -113,7 +111,7 @@ class Permissions extends Component {
   componentDidMount() {
     const { dispatch } = this.props;
 
-    if (!supportedDrivers.includes(currentDriver)) return;
+    if (!isFeatureSupported('tables.permissions.enabled')) return;
 
     dispatch({ type: RESET });
     dispatch(setTable(this.props.tableName));
@@ -205,7 +203,7 @@ class Permissions extends Component {
       generateTableDef(tableName, currentSchema)
     );
 
-    if (!supportedDrivers.includes(currentDriver)) {
+    if (!isFeatureSupported('tables.permissions.enabled')) {
       return (
         <FeatureDisabled
           tab="permissions"
@@ -215,7 +213,10 @@ class Permissions extends Component {
       );
     }
 
-    if (!currentTableSchema && supportedDrivers.includes(currentDriver)) {
+    if (
+      !currentTableSchema &&
+      isFeatureSupported('tables.permissions.enabled')
+    ) {
       // throw a 404 exception
       throw new NotFoundError();
     }
@@ -447,7 +448,11 @@ class Permissions extends Component {
 
         const dispatchRoleNameChange = e => {
           const newRole = e.target.value;
-          dispatch(permOpenEdit(tableSchema, newRole, permissionsState.query));
+          if (permissionsState.query) {
+            dispatch(
+              permOpenEdit(tableSchema, newRole, permissionsState.query)
+            );
+          }
           dispatch(permSetRoleName(newRole));
         };
 

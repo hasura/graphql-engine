@@ -17,14 +17,21 @@ import {
   getDefaultState,
 } from '../../../DataSources/state';
 import HerokuLogoComponent from './HerokuButtonLogo';
+import { DataSource } from '../../../../../../metadata/types';
 
 type Props = {
   session: HerokuSession;
   shouldStart: boolean;
   dispatch: Dispatch;
+  allDataSources: DataSource[];
 };
 
-const DBCreation: React.FC<Props> = ({ session, shouldStart, dispatch }) => {
+const DBCreation: React.FC<Props> = ({
+  session,
+  shouldStart,
+  dispatch,
+  allDataSources,
+}) => {
   const { start, state, inProgress } = useHerokuDBCreation(
     session,
     shouldStart,
@@ -49,7 +56,7 @@ const DBCreation: React.FC<Props> = ({ session, shouldStart, dispatch }) => {
       const dbURL = state['getting-config'].details.DATABASE_URL;
       const appName = state['creating-app'].details.name;
       const appID = state['creating-app'].details.id;
-      const dbName = `herokuapp-${appName}`;
+      const dbName = allDataSources.length ? `herokuapp-${appName}` : 'default';
       setIsSettingEnvVar(true);
       setDBURLInEnvVars(dbURL)
         .then(envVar => {

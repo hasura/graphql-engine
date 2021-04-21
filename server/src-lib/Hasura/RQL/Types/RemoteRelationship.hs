@@ -1,6 +1,3 @@
-{-# LANGUAGE NamedFieldPuns  #-}
-{-# LANGUAGE RecordWildCards #-}
-
 module Hasura.RQL.Types.RemoteRelationship
   ( RemoteRelationshipName(..)
   , remoteRelationshipNameToText
@@ -78,6 +75,7 @@ data RemoteFieldInfo (b :: BackendType)
   -- ^ Name of the table and its source
   } deriving (Generic)
 deriving instance Backend b => Eq (RemoteFieldInfo b)
+deriving instance Backend b => Show (RemoteFieldInfo b)
 instance Backend b => Cacheable (RemoteFieldInfo b)
 
 graphQLValueToJSON :: G.Value Void -> Value

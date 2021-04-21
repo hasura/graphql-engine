@@ -3,22 +3,56 @@ import {
   getReloadMetadataQuery,
   getReloadRemoteSchemaCacheQuery,
 } from './queryUtils';
-import { HasuraMetadataV3 } from './types';
+import { AllowList, QueryCollectionEntry, HasuraMetadataV3 } from './types';
+import { AllowedQueriesCollection } from './reducer';
 
 export const allowedQueriesCollection = 'allowed-queries';
 
-export const deleteAllowedQueryQuery = (queryName: string) => ({
+export const findAllowedQueryCollections = (
+  collectionName: string,
+  allowList: AllowList[]
+) => {
+  return allowList.find(
+    allowedCollection => collectionName === allowedCollection.collection
+  );
+};
+
+export const setAllowedQueries = (
+  allQueryCollections?: QueryCollectionEntry[],
+  allowlist?: AllowList[]
+): AllowedQueriesCollection[] => {
+  if (!allQueryCollections || !allowlist) return [];
+  const allowedQueryCollections = allQueryCollections.filter(query =>
+    findAllowedQueryCollections(query.name, allowlist)
+  );
+
+  const allowedQueries: AllowedQueriesCollection[] = [];
+  allowedQueryCollections.forEach(collection => {
+    collection.definition.queries.forEach(query => {
+      allowedQueries.push({ ...query, collection: collection.name });
+    });
+  });
+  return allowedQueries;
+};
+
+export const deleteAllowedQueryQuery = (
+  queryName: string,
+  collectionName = allowedQueriesCollection
+) => ({
   type: 'drop_query_from_collection',
   args: {
-    collection_name: allowedQueriesCollection,
+    collection_name: collectionName,
     query_name: queryName,
   },
 });
 
-export const addAllowedQuery = (query: { name: string; query: string }) => ({
+export const addAllowedQuery = (
+  query: { name: string; query: string },
+  collectionName = allowedQueriesCollection
+) => ({
   type: 'add_query_to_collection',
   args: {
-    collection_name: allowedQueriesCollection,
+    collection_name: collectionName,
     query_name: query.name,
     query: query.query,
   },
@@ -26,16 +60,22 @@ export const addAllowedQuery = (query: { name: string; query: string }) => ({
 
 export const updateAllowedQueryQuery = (
   queryName: string,
-  newQuery: { name: string; query: string }
+  newQuery: { name: string; query: string },
+  collectionName = allowedQueriesCollection
 ) => ({
   type: 'bulk',
-  args: [deleteAllowedQueryQuery(queryName), addAllowedQuery(newQuery)],
+  args: [
+    deleteAllowedQueryQuery(queryName, collectionName),
+    addAllowedQuery(newQuery, collectionName),
+  ],
 });
 
-export const deleteAllowListQuery = () => ({
+export const deleteAllowListQuery = (
+  collectionName = allowedQueriesCollection
+) => ({
   type: 'drop_query_collection',
   args: {
-    collection: allowedQueriesCollection,
+    collection: collectionName,
     cascade: true,
   },
 });

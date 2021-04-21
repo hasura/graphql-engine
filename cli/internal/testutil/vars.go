@@ -3,20 +3,28 @@ package testutil
 import (
 	"fmt"
 	"os"
+	"runtime"
 )
 
 // this can be overridden by ldflags
 var (
-	HasuraVersion   = "v2.0.0-alpha.2"
-	DockerSwitchIP  = "172.17.0.1"
+	HasuraVersion  = "main-10df859cf"
+	DockerSwitchIP = func() string {
+		switch runtime.GOOS {
+		case "darwin", "windows":
+			return "host.docker.internal"
+		}
+		return "172.17.0.1"
+	}()
 	Hostname        = "localhost"
 	BaseURL         = fmt.Sprintf("http://%s", Hostname)
 	MSSQLPassword   = "MSSQLp@ssw0rd"
-	SkipDockerTests = func() string {
+	SkipDockerTests = func() bool {
 		if len(os.Getenv("CI")) > 0 {
 			// skip in CI
-			return "true"
+			return true
 		}
-		return "false"
+		return false
 	}()
+	CLIBinaryPath = "hasura"
 )

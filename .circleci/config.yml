@@ -126,6 +126,8 @@ refs:
           DATABASE_URL: 'postgresql://gql_test:@localhost:5432/gql_test'
         command: |
           psql "$DATABASE_URL" -c "SELECT 1 FROM pg_database WHERE datname = 'gql_test2'" | grep -q -F '(1 row)' || psql "$DATABASE_URL" -c 'CREATE DATABASE gql_test2;'
+          psql "$DATABASE_URL" -c "SELECT 1 FROM pg_database WHERE datname = 'pg_source_1'" | grep -q -F '(1 row)' || psql "$DATABASE_URL" -c 'CREATE DATABASE pg_source_1;'
+          psql "$DATABASE_URL" -c "SELECT 1 FROM pg_database WHERE datname = 'pg_source_2'" | grep -q -F '(1 row)' || psql "$DATABASE_URL" -c 'CREATE DATABASE pg_source_2;'
     - run:
         name: Run tests
         environment:
@@ -136,6 +138,8 @@ refs:
           HASURA_GRAPHQL_EVENTS_HTTP_POOL_SIZE: 8
           HASURA_GRAPHQL_DATABASE_URL: postgresql://gql_test:@localhost:5432/gql_test
           HASURA_GRAPHQL_DATABASE_URL_2: postgresql://gql_test:@localhost:5432/gql_test2
+          HASURA_GRAPHQL_PG_SOURCE_URL_1: postgresql://gql_test@localhost:5432/pg_source_1
+          HASURA_GRAPHQL_PG_SOURCE_URL_2: postgresql://gql_test@localhost:5432/pg_source_2
           GRAPHQL_ENGINE: /build/_server_output/graphql-engine
           GRAPHQL_ENGINE_TESTS: /build/_server_output/graphql-engine-tests
           MIX_FILES_FOLDER: /build/_server_output/mix
@@ -155,7 +159,7 @@ jobs:
   # changes only contains files in .ciignore
   check_build_worthiness:
     docker:
-    - image: hasura/graphql-engine-cli-builder:20191205
+    - image: hasura/graphql-engine-cli-builder:20210310
     working_directory: ~/graphql-engine
     steps:
     - attach_workspace:
@@ -338,7 +342,7 @@ jobs:
 
   test_cli_with_last_release:
     docker:
-    - image: hasura/graphql-engine-cli-builder:20191205
+    - image: hasura/graphql-engine-cli-builder:20210310
     - image: circleci/postgres:10-alpine
       environment:
         POSTGRES_USER: gql_test
@@ -396,8 +400,7 @@ jobs:
         name: build extension cli
         working_directory: cli-ext
         command: |
-          npm run build
-          make deploy
+          make build
           make ci-copy-assets
     - store_artifacts:
         path: /build/_cli_ext_output
@@ -410,7 +413,7 @@ jobs:
   # test and build cli
   test_and_build_cli:
     docker:
-    - image: hasura/graphql-engine-cli-builder:20210223
+    - image: hasura/graphql-engine-cli-builder:20210310
     - image: circleci/postgres:10-alpine
       environment:
         POSTGRES_USER: gql_test
@@ -424,14 +427,6 @@ jobs:
     - restore_cache:
         keys:
         - cli-gopkg-{{ checksum "cli/go.mod" }}-{{ checksum "cli/go.sum" }}
-    - run:
-        name: get cli dependencies
-        working_directory: cli
-        command: make deps
-    - save_cache:
-        key: cli-gopkg-{{ checksum "cli/go.mod" }}-{{ checksum "cli/go.sum" }}
-        paths:
-        - /go/pkg
     - *wait_for_postgres
     - run:
         name: test cli
@@ -443,6 +438,10 @@ jobs:
           make build
           make compress
           make ci-copy-binary
+    - save_cache:
+        key: cli-gopkg-{{ checksum "cli/go.mod" }}-{{ checksum "cli/go.sum" }}
+        paths:
+        - /go/pkg/mod
     - store_artifacts:
         path: /build/_cli_output
         destination: cli
@@ -532,12 +531,40 @@ jobs:
         root: /build
         paths:
           - _console_output
-
+  console_unit_tests:
+    docker:
+    - image: hasura/graphql-engine-console-builder:20210224 
+    working_directory: ~/graphql-engine
+    steps:
+    - attach_workspace:
+        at: /build
+    - *skip_job_on_ciignore
+    - checkout
+    - restore_cache:
+        key:
+          console-npm-cache-{{ checksum "console/package.json" }}-{{ checksum "console/package-lock.json" }}
+    - run:
+        name: install dependencies
+        working_directory: console
+        command: make ci-deps
+    - save_cache:
+        key:
+          console-npm-cache-{{ checksum "console/package.json" }}-{{ checksum "console/package-lock.json" }}
+        paths:
+        - console/node_modules
+        - ~/.npm
+        - ~/.cache
+    - run:
+        name: unit test console
+        working_directory: console
+        command: |
+          make jest
   # test console
   test_console:
     docker:
     - image: hasura/graphql-engine-console-builder:20210224
       environment:
+        HASURA_GRAPHQL_DATABASE_URL: 'postgres://gql_test:@localhost:5432/gql_test'
         CYPRESS_KEY: 983be0db-0f19-40cc-bfc4-194fcacd85e1
         GHCRTS: -N1
     - image: circleci/postgres:10-alpine-postgis
@@ -628,6 +655,10 @@ workflows:
         requires:
         - check_build_worthiness
     - build_console:
+        <<: *filter_only_vtags
+        requires:
+        - check_build_worthiness
+    - console_unit_tests:
         <<: *filter_only_vtags
         requires:
         - check_build_worthiness

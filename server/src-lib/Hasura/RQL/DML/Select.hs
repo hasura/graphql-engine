@@ -206,7 +206,7 @@ convSelectQ table fieldInfoMap selPermInfo selQ sessVarBldr prepValBldr = do
   -- Convert where clause
   wClause <- forM (sqWhere selQ) $ \boolExp ->
     withPathK "where" $
-    convBoolExp fieldInfoMap selPermInfo boolExp sessVarBldr prepValBldr
+    convBoolExp fieldInfoMap selPermInfo boolExp sessVarBldr table prepValBldr
 
   annFlds <- withPathK "columns" $
     indexedForM (sqColumns selQ) $ \case

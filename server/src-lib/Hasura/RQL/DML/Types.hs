@@ -34,20 +34,21 @@ module Hasura.RQL.DML.Types
 
 import           Hasura.Prelude
 
-import qualified Data.Attoparsec.Text               as AT
-import qualified Data.HashMap.Strict                as M
+import qualified Data.Attoparsec.Text                     as AT
+import qualified Data.HashMap.Strict                      as M
 
 import           Data.Aeson
 import           Data.Aeson.Casing
 import           Data.Aeson.TH
 
-import qualified Hasura.Backends.Postgres.SQL.DML   as PG
+import qualified Hasura.Backends.Postgres.SQL.DML         as PG
 
+import           Hasura.Backends.Postgres.Instances.Types ()
 import           Hasura.Backends.Postgres.SQL.Types
 import           Hasura.RQL.IR.BoolExp
 import           Hasura.RQL.IR.OrderBy
-import           Hasura.RQL.Instances               ()
-import           Hasura.RQL.Types.Backend           hiding (ConstraintName)
+import           Hasura.RQL.Instances                     ()
+import           Hasura.RQL.Types.Backend                 hiding (ConstraintName)
 import           Hasura.RQL.Types.Column
 import           Hasura.RQL.Types.Common
 import           Hasura.SQL.Backend

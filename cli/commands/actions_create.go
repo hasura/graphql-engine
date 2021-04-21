@@ -6,11 +6,9 @@ import (
 
 	"github.com/hasura/graphql-engine/cli/internal/hasura"
 
-	"github.com/hasura/graphql-engine/cli/migrate"
-
 	"github.com/hasura/graphql-engine/cli"
-	"github.com/hasura/graphql-engine/cli/metadata/actions"
-	"github.com/hasura/graphql-engine/cli/metadata/actions/types"
+	"github.com/hasura/graphql-engine/cli/internal/metadataobject/actions"
+	"github.com/hasura/graphql-engine/cli/internal/metadataobject/actions/types"
 	"github.com/hasura/graphql-engine/cli/util"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
@@ -66,18 +64,12 @@ type actionsCreateOptions struct {
 }
 
 func (o *actionsCreateOptions) run() error {
-	//TODO
-	migrateDrv, err := migrate.NewMigrate(o.EC, true, "", hasura.SourceKindPG)
-	if err != nil {
-		return err
-	}
-
-	// introspect Hasura schema if a mutation is being derived
-	var introSchema interface{}
+	var introSchema hasura.IntrospectionSchema
+	var err error
 	if o.deriveFrom != "" {
 		o.deriveFrom = strings.TrimSpace(o.deriveFrom)
 		o.EC.Spin("Deriving a Hasura operation...")
-		introSchema, err = migrateDrv.GetIntroSpectionSchema()
+		introSchema, err = o.EC.APIClient.V1Graphql.GetIntrospectionSchema()
 		if err != nil {
 			return errors.Wrap(err, "error in fetching introspection schema")
 		}
@@ -92,7 +84,7 @@ func (o *actionsCreateOptions) run() error {
 	if err != nil {
 		return errors.Wrap(err, "error in creating action")
 	}
-	err = migrateDrv.ApplyMetadata()
+	err = executeMetadata("apply", o.EC)
 	if err != nil {
 		return errors.Wrap(err, "error in applying metadata")
 	}

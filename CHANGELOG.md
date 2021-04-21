@@ -1,13 +1,191 @@
 # Hasura GraphQL Engine Changelog
 
 ## Next release
+(Add entries below in the order of: server, console, cli, docs, others)
+
+- cli: fix regression - `metadata apply —dry-run` was overwriting local metadata files with metadata on server when it should just display the differences.
+- cli: add support for `api_limits` metadata object
+
+## v2.0.0-alpha.9
+
+### Support comparing columns across related tables in permission's boolean expressions
+
+We now support comparing columns across related tables. For example:
+
+Consider two tables, `items(id, name, quantity)` and `shopping_cart(id, item_id, quantity)`
+and these two tables are related via the `item_id` column. Now, while defining insert permission
+on the `shopping_cart` table, there can be a check to insert an item into the shopping cart
+only when there are enough present in the items inventory.
 
 ### Bug fixes and improvements
 
-(Add entries here in the order of: server, console, cli, docs, others)
+- server: fix bug with catalog upgrade from alpha.7 (fix #6802)
+- server: fix a bug in remote schema permissions that could result in an invalid GraphQL schema (fix #6029, #6703)
+- server: support query multiplexing in MSSQL subscriptions
+- server: an inherited role's limit will be the max limit of all the roles (#6671)
+- console: add bigquery support (#1000)
+- cli: add support for bigquery in metadata operations
+
+## v2.0.0-alpha.8
+
+### Support for 3D PostGIS Operators
+
+We now support the use of the functions `ST_3DDWithin` and `ST_3DIntersects` in boolean expressions.
+Note that `ST_3DIntersects` requires PostGIS be [built with SFCGAL support](https://www.postgis.net/docs/manual-3.1/reference.html#reference_sfcgal) which may depend on the PostGIS distribution used.
+
+### Support for null values in boolean expressions
+
+In v2, we introduced a breaking change, that aimed at fixing a [long-standing issue](https://github.com/hasura/graphql-engine/issues/704): a null value in a boolean expression would always evaluate to `True` for all rows. For example, the following queries were all equivalent:
+
+```graphql
+delete_users(where: {_id: {_eq: null}})  # field is null, which is as if it were omitted
+delete_users(where: {_id: {}})           # object is empty, evaluates to True for all rows
+delete_users(where: {})                  # object is empty, evaluates to True for all rows
+delete_users()                           # delete all users
+```
+
+This behaviour was unintuitive, and could be an unpleasant surprise for users that expected the first query to mean "delete all users for whom the id column is null". Therefore in v2, we changed the implementation of boolean operators to reject null values, as we deemed it safer:
+
+
+```graphql
+delete_users(where: {_id: {_eq: null}})  # error: argument of _eq cannot be null
+```
+
+However, this change broke the workflows of [some of our users](https://github.com/hasura/graphql-engine/issues/6660) who were relying on this property of boolean operators. This was used, for instance, to _conditionally_ enable a test:
+
+```graphql
+query($isVerified: Boolean) {
+  users(where: {_isVerified: {_eq: $isVerified}}) {
+    name
+  }
+}
+```
+
+In the future, we will probably offer a way to explicitly choose which behaviour to use for each `where` clause; perhaps by introducing new and distinct operators that make it explicit that they will default to true if the value is null. In the meantime, this release provides a way to revert the engine to its previous behaviour: if the `HASURA_GRAPHQL_V1_BOOLEAN_NULL_COLLAPSE` environment variable is set to "true", null values in boolean expression will behave like they did in v1 for the following operators: `_is_null`, `_eq`, `_neq`, `_in`, `_nin`, `_gt`, `_lt`, `_gte`, `_lte`.
+
+### Bug fixes and improvements
+
+- server: all /query APIs now require admin privileges
+- server: add a new `/dev/rts_stats` endpoint, enabled when hasura is started with '+RTS -T'
+- server: re-enable a default HASURA_GRAPHQL_PG_CONN_LIFETIME of 10min
+- server: support for bigquery datasets
+- server: format the values of `injectEventContext` as hexadecimal string instead of integer (fix #6465)
+- server: add "kind" field to query-log items. Kind can be "database", "action", "remote-schema", "graphql", "cached", or "subscription".
+- console: add custom_column_names to track_table request with replaced invalid characters (#992)
+- console: add details button to the success notification to see inserted row
+- console: add request preview for REST endpoints
+- cli: fix errors being ignored during `metadata apply` in config v3 (fix #6784)
+
+
+## v2.0.0-alpha.7
+
+### Transactions for Postgres mutations
+
+With v2 came the introduction of heterogeneous execution: in one query or mutation, you can target different sources: it is possible, for instance, in one mutation, to both insert a row in a table in a table on Postgres and another row in another table on MSSQL:
+
+```graphql
+mutation {
+  // goes to Postgres
+  insert_author_one(object: {name: "Simon Peyton Jones"}) {
+    name
+  }
+
+  // goes to MSSQL
+  insert_publication_one(object: {name: "Template meta-programming for Haskell"}) {
+    name
+  }
+}
+```
+
+However, heterogeneous execution has a cost: we can no longer run mutations as a transaction, given that each part may target a different database. This is a regression compared to v1.
+
+While we want to fix this by offering, in the future, an explicit API that allows our users to *choose* when a series of mutations are executed as a transaction, for now we are introducing the following optimisation: when all the fields in a mutation target the same Postgres source, we will run them as a transaction like we would have in v1.
+
+
+### Bug fixes and improvements
+
+- server: `use_prepared_statements` option (default: False) in `add_pg_source` metadata API
+- server: add `--async-actions-fetch-interval` command-line flag and `HASURA_GRAPHQL_ASYNC_ACTIONS_FETCH_INTERVAL` environment variable for configuring
+          async actions re-fetch interval from metadata storage (fix #6460)
+- server: add 'replace_configuration' option (default: false) in the add source API payload
+- server: add a comment field for actions (#231)
+- server: accept GeoJSON for MSSQL geometry and geography operators (#787)
+- server: update pg_dump clean output to disable function body validation in create function statements to avoid errors due to forward references
+- server: fix a bug preventing some MSSQL foreign key relationships from being tracked
+- console: add a comment field for actions (#231)
+- console: data sidebar bug fixes and improvements (#921)
+- cli: fix seeds incorrectly being applied to databases in config v3 (#6683)
+- cli: add `--all-databases` flag for `migrate apply`, this allows applying migrations on all connected databases in one go
+- cli-migrations: add config v3 image
+- docs: add Hasura v2 upgrade guide (#1030)
+
+## v2.0.0-alpha.6
+
+### Support geometry and geography spatial data comparison operators in MS SQL Server
+
+Comparison operators on spatial data types, geometry and geography, are now supported in MS SQL Server. The following operators are supported:
+
+- STEquals
+- STIntersects
+- STTouches
+- STOverlaps
+- STCrosses
+- STWithin
+- STContains
+
+**Example query:** Select values equal to a given geography instance
+
+```
+query {
+  spatial_types_geog(
+    where: {
+      point: { _st_equals: "POINT(3 4)" }
+      }
+    ) {
+    point
+  }
+}
+```
+
+**Example query:** Select values that spatially contain a given geometry instance
+
+```
+query {
+  spatial_types_geom(
+    where: {
+      compoundcurve: { _st_contains: "POINT(0.5 0)" }
+    }
+  ) {
+    compoundcurve
+  }
+}
+```
+
+### Bug fixes and improvements
+
+- server: fix action output type schema generation (fix #6631)
+- server/mssql: `mssql_add_source` can now take connection strings from environment variables
+- server: support `IN`, `NIN`, `LIKE` and `NLIKE` operators in MS SQL Server
+- server: remove the restriction of supporting only base type function arguments. The type of an argument with a table type is now `<tablename>_scalar` to avoid conflicts with the object type `<tablename>`.
+- server: fix inherited_roles issue when some of the underlying roles don't have permissions configured (fixes #6672)
+- server: fix action custom types failing to parse when mutually recursive
+- server: fix MSSQL table name descriptions
+- server: emit `postgres-max-connections-error` when max postgres connections are reached
+- server: disable caching for actions when "forward-client-headers" option is turned on
+- console: allow editing rest endpoints queries and misc ui improvements
+- console: display collection names and queries from all collections in allowlist
+- cli: match ordering of keys in project metadata files with server metadata
+
+## v2.0.0-alpha.5
+
+### Bug fixes and improvements
 
 - server: fix issue with parsing of remote schema list of input objects (fix #6584)
-
+- server: support tracking functions having only base type arguments (fix #6628)
+- console: add browse rows for mssql tables (#805)
+- console: remote schema permissions bug fixes (#439)
+- cli: cli-ext is now a native part of cli binary (no longer needed as a plugin)
+- cli: fix issue with adding operation to allow list in console mode (fix #6617)
 
 ## v2.0.0-alpha.4
 
@@ -15,6 +193,7 @@
 
 - server/mssql: support tracking and querying from views
 - server: inherited roles for PG queries and subscription
+- server: replaces postgres LISTEN/NOTIFY channel with lightweight polling for metadata syncing in order to resolve proxy issues
 - server: fix issue when a remote relationship's joining field had a custom GraphQL name defined (fix #6626)
 - server: fix handling of nullable object relationships (fix #6633)
 - console: add inherited roles support (#483)
@@ -70,7 +249,6 @@ keys in the response body.
 - server: fix issue with queries on character column types (close #6217)
 - server: optimize resolving source. Resolving a source would create connection pools every time. Optimize that to re-create connection pools only when necessary. (#609)
 - server: fix issues with remote schema introspection and queries over TLS.
-- console: add support for MS SQL Server
 - server: Prohibit Invalid slashes, duplicate variables, subscriptions for REST endpoints
 - server: Prohibit non-singular query definitions for REST endpoints
 - server: better handling for one-to-one relationships via both `manual_configuration` and `foreign_key_constraint_on` (#2576)

@@ -224,13 +224,13 @@ p {
 }
 /* new subscribe form css */
 .marketoFormWrapper {
-	 width: 100% !important;
-	 border-radius: 8px;
-	 padding: 0px;
-	 margin: 0 auto;
-	 position: relative;
-   flex: 1;
-   height: 34px;
+  width: 100% !important;
+  border-radius: 8px;
+  padding: 0px;
+  margin: 0 auto;
+  position: relative;
+  flex: 1;
+  height: 34px;
 }
 .marketoFormWrapper .mktoFormRow {
   position: absolute;
@@ -238,103 +238,103 @@ p {
   top: 0;
   width: calc(100% - 186px);
 }
- .marketoFormWrapper .mktoFormRow .mktoFieldDescriptor {
-	 float: none;
-	 min-height: unset !important;
-	 margin-bottom: 0px !important;
+.marketoFormWrapper .mktoFormRow .mktoFieldDescriptor {
+  float: none;
+  min-height: unset !important;
+  margin-bottom: 0px !important;
 }
- .marketoFormWrapper .mktoFormRow .mktoFieldDescriptor .mktoOffset {
-	 display: none;
+.marketoFormWrapper .mktoFormRow .mktoFieldDescriptor .mktoOffset {
+  display: none;
 }
- .marketoFormWrapper .mktoFormRow .mktoFieldDescriptor .mktoFieldWrap {
-	 float: none;
+.marketoFormWrapper .mktoFormRow .mktoFieldDescriptor .mktoFieldWrap {
+  float: none;
 }
- .marketoFormWrapper .mktoFormRow .mktoFieldDescriptor .mktoFieldWrap .mktoGutter {
-	 display: none;
+.marketoFormWrapper .mktoFormRow .mktoFieldDescriptor .mktoFieldWrap .mktoGutter {
+  display: none;
 }
- .marketoFormWrapper .mktoFormRow .mktoFieldDescriptor .mktoFieldWrap .mktoLabel {
-	 display: none;
-	 font-size: 16px;
-	 line-height: 220%;
-	 font-weight: 400;
-	 color: #717780;
-	 font-weight: 400;
-	 float: none;
-	 width: 100% !important;
+.marketoFormWrapper .mktoFormRow .mktoFieldDescriptor .mktoFieldWrap .mktoLabel {
+  display: none;
+  font-size: 16px;
+  line-height: 220%;
+  font-weight: 400;
+  color: #717780;
+  font-weight: 400;
+  float: none;
+  width: 100% !important;
 }
- .marketoFormWrapper .mktoFormRow .mktoFieldDescriptor .mktoFieldWrap .mktoField {
-	 width: 100% !important;
-	 height: 34px;
-	 border-radius: 5px;
-   color: #001934!important;
-   opacity: .8!important;
-	 font-weight: 400;
-	 border: solid 1px #ddd;
-	 padding: 0 0 !important;
-	 text-indent: 12px;
-	 font-size: 16px;
-	 background-color: #fff;;
-	 z-index: 1;
+.marketoFormWrapper .mktoFormRow .mktoFieldDescriptor .mktoFieldWrap .mktoField {
+  width: 100% !important;
+  height: 34px;
+  border-radius: 5px;
+  color: #001934!important;
+  opacity: .8!important;
+  font-weight: 400;
+  border: solid 1px #ddd;
+  padding: 0 0 !important;
+  text-indent: 12px;
+  font-size: 16px;
+  background-color: #fff;;
+  z-index: 1;
 }
- .marketoFormWrapper .mktoFormRow .mktoFieldDescriptor .mktoFieldWrap .mktoField:hover, .marketoFormWrapper .mktoFormRow .mktoFieldDescriptor .mktoFieldWrap textarea:hover, .marketoFormWrapper .mktoFormRow .mktoFieldDescriptor .mktoFieldWrap select:hover {
-	 border: 1px solid #111b29;
+.marketoFormWrapper .mktoFormRow .mktoFieldDescriptor .mktoFieldWrap .mktoField:hover, .marketoFormWrapper .mktoFormRow .mktoFieldDescriptor .mktoFieldWrap textarea:hover, .marketoFormWrapper .mktoFormRow .mktoFieldDescriptor .mktoFieldWrap select:hover {
+  border: 1px solid #111b29;
 }
- .marketoFormWrapper .mktoFormRow .mktoFieldDescriptor .mktoFieldWrap .mktoField:focus, .marketoFormWrapper .mktoFormRow .mktoFieldDescriptor .mktoFieldWrap textarea:focus, .marketoFormWrapper .mktoFormRow .mktoFieldDescriptor .mktoFieldWrap select:focus {
-	 outline: none;
-	 border: 1px solid #0093a5;
+.marketoFormWrapper .mktoFormRow .mktoFieldDescriptor .mktoFieldWrap .mktoField:focus, .marketoFormWrapper .mktoFormRow .mktoFieldDescriptor .mktoFieldWrap textarea:focus, .marketoFormWrapper .mktoFormRow .mktoFieldDescriptor .mktoFieldWrap select:focus {
+  outline: none;
+  border: 1px solid #0093a5;
 }
- .marketoFormWrapper .mktoFormRow .mktoFieldDescriptor .mktoFieldWrap .mktoField:-webkit-autofill {
-	 -webkit-animation-name: autofill;
-	 -webkit-animation-fill-mode: both;
-	 -webkit-box-shadow: 0 0 0px 1000px white inset;
-	 background-color: transparent;
-	 font-size: 16px;
+.marketoFormWrapper .mktoFormRow .mktoFieldDescriptor .mktoFieldWrap .mktoField:-webkit-autofill {
+  -webkit-animation-name: autofill;
+  -webkit-animation-fill-mode: both;
+  -webkit-box-shadow: 0 0 0px 1000px white inset;
+  background-color: transparent;
+  font-size: 16px;
 }
- .marketoFormWrapper .mktoFormRow .mktoFieldDescriptor .mktoFieldWrap .mktoField:-webkit-autofill, .marketoFormWrapper .mktoFormRow .mktoFieldDescriptor .mktoFieldWrap .mktoField:-webkit-autofill:hover, .marketoFormWrapper .mktoFormRow .mktoFieldDescriptor .mktoFieldWrap .mktoField:-webkit-autofill:focus, .marketoFormWrapper .mktoFormRow .mktoFieldDescriptor .mktoFieldWrap .mktoField:-webkit-autofill:active {
-	 -webkit-box-shadow: 0 0 0 35px #fff inset !important;
-	 -webkit-text-fill-color: #505050 !important;
-	 font-size: 16px;
-	 caret-color: #505050;
-	 color: #fff !important;
+.marketoFormWrapper .mktoFormRow .mktoFieldDescriptor .mktoFieldWrap .mktoField:-webkit-autofill, .marketoFormWrapper .mktoFormRow .mktoFieldDescriptor .mktoFieldWrap .mktoField:-webkit-autofill:hover, .marketoFormWrapper .mktoFormRow .mktoFieldDescriptor .mktoFieldWrap .mktoField:-webkit-autofill:focus, .marketoFormWrapper .mktoFormRow .mktoFieldDescriptor .mktoFieldWrap .mktoField:-webkit-autofill:active {
+  -webkit-box-shadow: 0 0 0 35px #fff inset !important;
+  -webkit-text-fill-color: #505050 !important;
+  font-size: 16px;
+  caret-color: #505050;
+  color: #fff !important;
 }
- .marketoFormWrapper .mktoFormRow .mktoFieldDescriptor .mktoFieldWrap .mktoField:-internal-autofill-selected {
-	 color: #505050 !important;
-	 font-size: 16px;
+.marketoFormWrapper .mktoFormRow .mktoFieldDescriptor .mktoFieldWrap .mktoField:-internal-autofill-selected {
+  color: #505050 !important;
+  font-size: 16px;
 }
- .marketoFormWrapper .mktoButtonRow {
-	 display: block;
-   position: absolute;
-   right: 0;
-   top: 0;
-   width: 170px;
+.marketoFormWrapper .mktoButtonRow {
+  display: block;
+  position: absolute;
+  right: 0;
+  top: 0;
+  width: 170px;
 }
- .marketoFormWrapper .mktoButtonRow .mktoButtonWrap {
-	 margin-left: 0 !important;
+.marketoFormWrapper .mktoButtonRow .mktoButtonWrap {
+  margin-left: 0 !important;
 }
- .marketoFormWrapper .mktoButtonRow .mktoButtonWrap .mktoButton {
-	 padding: 3px 15px !important;
-	 font-size: 14px !important;
-	 border-radius: 8px;
-	 font-weight: 600;
-	 width: 100%;
-	 border: 0;
-	 cursor: pointer;
-	 transition: all 0.2s ease-in-out;
-	 background-color: rgba(0,25,52,1) !important;
-	 background-image: none !important;
-	 color: #fff !important;
-	 transition: all 0.2s ease-in-out;
-	 border: 0 !important;
-	 height: 34px;
+.marketoFormWrapper .mktoButtonRow .mktoButtonWrap .mktoButton {
+  padding: 3px 15px !important;
+  font-size: 14px !important;
+  border-radius: 8px;
+  font-weight: 600;
+  width: 100%;
+  border: 0;
+  cursor: pointer;
+  transition: all 0.2s ease-in-out;
+  background-color: rgba(0,25,52,1) !important;
+  background-image: none !important;
+  color: #fff !important;
+  transition: all 0.2s ease-in-out;
+  border: 0 !important;
+  height: 34px;
 }
- .marketoFormWrapper .mktoButtonRow .mktoButtonWrap .mktoButton:hover {
-	 background-color: rgba(92, 148, 200, 1);
+.marketoFormWrapper .mktoButtonRow .mktoButtonWrap .mktoButton:hover {
+  background-color: rgba(92, 148, 200, 1);
 }
- .marketoFormWrapper .mktoButtonRow .mktoButtonWrap .mktoButton:focus {
-	 outline: none;
+.marketoFormWrapper .mktoButtonRow .mktoButtonWrap .mktoButton:focus {
+  outline: none;
 }
- .marketoFormWrapper .mktoButtonRow .mktoButtonWrap .mktoButton:hover {
-	 transform: scale(0.98);
+.marketoFormWrapper .mktoButtonRow .mktoButtonWrap .mktoButton:hover {
+  transform: scale(0.98);
 }
 .subscribeNewsletterSuccess {
   background-color: #f8f8f8;
@@ -506,7 +506,7 @@ article ol ol {
 }
 
 .edit-github-btn-wrap {
- margin-left: auto;
+  margin-left: auto;
 }
 
 .edit-github-btn,
@@ -755,7 +755,7 @@ article ol ol {
 }
 
 .footer-hasura-custom .footer_text {
- display: inline-block;
+  display: inline-block;
 }
 
 /*** Footer END ***/
@@ -1013,6 +1013,24 @@ article ol ol {
   background: #FFF1DB;
 }
 
+#input_search_box .algolia-autocomplete a.algolia-docsearch-suggestion[href*="graphql/cloud"] .algolia-docsearch-suggestion--category-header-lvl0::after {
+  content: 'Cloud';
+  background-color: rgba(28,211,198,.86);
+}
+
+#input_search_box .algolia-autocomplete a.algolia-docsearch-suggestion[href*="graphql/core"] .algolia-docsearch-suggestion--category-header-lvl0::after {
+  content: 'Core';
+  background-color: #eee;
+}
+
+#input_search_box .algolia-autocomplete a.algolia-docsearch-suggestion .algolia-docsearch-suggestion--category-header-lvl0::after {
+  border-radius: 5px;
+  padding: 4px 8px;
+  font-size: 10px;
+  font-weight: 600;
+  float: right;
+}
+
 /*** Algolia docsearch overrides END ***/
 
 /*** Loader ***/
@@ -1139,6 +1157,10 @@ article ol ol {
     max-width: calc(166% + 10px);
     min-width: calc(166% + 10px);  /* 1 / width(input_search_box) + 10px */
   }
+
+  #input_search_box .algolia-autocomplete a.algolia-docsearch-suggestion .algolia-docsearch-suggestion--category-header-lvl0::after {
+    float: none;
+  }
 }
 @media (min-width: 768px) and (max-width: 1385px) {
   .mc_embed_signup {
@@ -1236,143 +1258,143 @@ article ol ol {
   background-color: rgba(28, 211, 198, 1);
   border: 1px solid rgba(28, 211, 198, 1);
 }
- .visibleMobile {
-	 display: none;
+.visibleMobile {
+  display: none;
 }
- .navBarToggle {
-	 border-radius: 4px;
-	 padding: 8px 8px;
-	 display: none;
-	 position: absolute;
-	 right: 0;
-	 top: 16px;
-   cursor: pointer;
+.navBarToggle {
+  border-radius: 4px;
+  padding: 8px 8px;
+  display: none;
+  position: absolute;
+  right: 0;
+  top: 16px;
+  cursor: pointer;
 }
- .navBarToggle .iconBar {
-	 display: block;
-	 width: 22px;
-	 height: 2px;
-	 border-radius: 1px;
-	 margin: 0 auto;
-	 margin-top: 4px;
+.navBarToggle .iconBar {
+  display: block;
+  width: 22px;
+  height: 2px;
+  border-radius: 1px;
+  margin: 0 auto;
+  margin-top: 4px;
 }
- .navBarToggle .iconBar:first-child {
-	 margin-top: 0px;
+.navBarToggle .iconBar:first-child {
+  margin-top: 0px;
 }
- .navBarToggle:focus {
-	 outline: none;
+.navBarToggle:focus {
+  outline: none;
 }
- .navBlueBG .navBarToggle {
-	 border: 1px solid #fff !important;
+.navBlueBG .navBarToggle {
+  border: 1px solid #fff !important;
 }
- .navBlueBG .navBarToggle .iconBar {
-	 background-color: #fff !important;
+.navBlueBG .navBarToggle .iconBar {
+  background-color: #fff !important;
 }
- .headerWrapper {
-	 height: 60px;
-	 display: flex;
-	 align-items: center;
-	 position: relative;
-	 z-index: 1;
+.headerWrapper {
+  height: 60px;
+  display: flex;
+  align-items: center;
+  position: relative;
+  z-index: 1;
 }
- .headerWrapper .navLeft {
-	 display: flex;
-	 align-items: center;
-	 flex: 1;
+.headerWrapper .navLeft {
+  display: flex;
+  align-items: center;
+  flex: 1;
 }
- .headerWrapper .navLeft a {
-	 display: contents;
+.headerWrapper .navLeft a {
+  display: contents;
 }
- .headerWrapper .navLeft .brand {
-	 margin-right: 25px;
-   margin-top: 7px;
+.headerWrapper .navLeft .brand {
+  margin-right: 25px;
+  margin-top: 7px;
 }
- .headerWrapper .navLeft .brand img {
-	 width: 120px;
+.headerWrapper .navLeft .brand img {
+  width: 120px;
 }
- .headerWrapper .navLeft .twitterBtn, .headerWrapper .navLeft .discordBtn {
-	 border-radius: 4px;
-	 border: solid 1px #d1d2d3;
-	 background-color: #f1f5f8;
-	 width: 20px;
-	 height: 20px;
-   max-height: 18px;
-   max-width: 18px;
-	 margin-top: 8px;
-	 margin-right: 12px;
-	 display: flex;
-	 align-items: center;
-	 justify-content: center;
-	 opacity: 0.8;
-	 cursor: pointer;
+.headerWrapper .navLeft .twitterBtn, .headerWrapper .navLeft .discordBtn {
+  border-radius: 4px;
+  border: solid 1px #d1d2d3;
+  background-color: #f1f5f8;
+  width: 20px;
+  height: 20px;
+  max-height: 18px;
+  max-width: 18px;
+  margin-top: 8px;
+  margin-right: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0.8;
+  cursor: pointer;
 }
- .headerWrapper .navLeft .twitterBtn img, .headerWrapper .navLeft .discordBtn img {
-	 width: 12px;
+.headerWrapper .navLeft .twitterBtn img, .headerWrapper .navLeft .discordBtn img {
+  width: 12px;
 }
- .headerWrapper .navLeft .twitterBtn:hover, .headerWrapper .navLeft .discordBtn:hover {
-	 opacity: 1;
+.headerWrapper .navLeft .twitterBtn:hover, .headerWrapper .navLeft .discordBtn:hover {
+  opacity: 1;
 }
- .headerWrapper .navLeft .discordBtn {
-	 padding-top: 2px;
-   max-height: 16px;
+.headerWrapper .navLeft .discordBtn {
+  padding-top: 2px;
+  max-height: 16px;
 }
- .headerWrapper .navLeft .discordBtn img {
-	 width: 10px;
+.headerWrapper .navLeft .discordBtn img {
+  width: 10px;
 }
- .headerWrapper .navLeft .gitHubBtn {
-   margin-top: 8px;
-   opacity: .8;
-   border-radius: 4px;
-   color: #001934;
-   border: solid 1px #d1d2d3;
-   font-size: 11px;
-   font-weight: 600;
-   display: flex;
-   align-items: center;
-   height: 20px;
-   text-decoration: none;
+.headerWrapper .navLeft .gitHubBtn {
+  margin-top: 8px;
+  opacity: .8;
+  border-radius: 4px;
+  color: #001934;
+  border: solid 1px #d1d2d3;
+  font-size: 11px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  height: 20px;
+  text-decoration: none;
 }
- .headerWrapper .navLeft .gitHubBtn .gitHubStars {
-   display: flex;
-   align-items: center;
-   padding-left: 4px;
-   background-color: #f1f5f8;
-   height: 20px;
- }
- .headerWrapper .navLeft .gitHubBtn .gitHubStars img {
-   width: 12px;
- }
- .headerWrapper .navLeft .gitHubBtn .gitHubStars span {
-   line-height: 8px;
-   margin-top: 0px;
-   padding-right: 4px;
-   padding: 4px;
- }
- .headerWrapper .navLeft .gitHubBtn .gitHubCount {
-   border-left: 1px solid #d1d2d3;
-   height: 12px;
-   padding: 4px;
-   line-height: 8px;
-   display: flex;
-   margin-top: 0px;
-   align-items: center;
-   background-color: #fff;
- }
- .headerWrapper .navLeft .gitHubBtn:hover {
-   opacity: 1;
- }
+.headerWrapper .navLeft .gitHubBtn .gitHubStars {
+  display: flex;
+  align-items: center;
+  padding-left: 4px;
+  background-color: #f1f5f8;
+  height: 20px;
+}
+.headerWrapper .navLeft .gitHubBtn .gitHubStars img {
+  width: 12px;
+}
+.headerWrapper .navLeft .gitHubBtn .gitHubStars span {
+  line-height: 8px;
+  margin-top: 0px;
+  padding-right: 4px;
+  padding: 4px;
+}
+.headerWrapper .navLeft .gitHubBtn .gitHubCount {
+  border-left: 1px solid #d1d2d3;
+  height: 12px;
+  padding: 4px;
+  line-height: 8px;
+  display: flex;
+  margin-top: 0px;
+  align-items: center;
+  background-color: #fff;
+}
+.headerWrapper .navLeft .gitHubBtn:hover {
+  opacity: 1;
+}
 .headerWrapper .navBlueBG .navBarUL {
   padding-left: 0;
   margin: 2px 0 0;
 }
- .headerWrapper .navBlueBG .navBarUL li {
-   font-size: 16px;
-	 list-style-type: none;
-	 display: inline-block;
-	 padding: 10px 6px;
-	 font-weight: 600;
-   margin: 0 0;
-   letter-spacing: -.48px;
+.headerWrapper .navBlueBG .navBarUL li {
+  font-size: 16px;
+  list-style-type: none;
+  display: inline-block;
+  padding: 10px 6px;
+  font-weight: 600;
+  margin: 0 0;
+  letter-spacing: -.48px;
 }
 .headerWrapper .navBlueBG .navBarUL li, .versionTxt {
   color: #1CD3C6;
@@ -1415,71 +1437,71 @@ article ol ol {
 .versionTxt select::-moz-focus-inner, .versionTxt select option::-moz-focus-inner {
   border: 0;
 }
- .headerWrapper .navBlueBG .navBarUL li a:hover {
-	 text-decoration: none;
+.headerWrapper .navBlueBG .navBarUL li a:hover {
+  text-decoration: none;
 }
- .headerWrapper .navBlueBG .navBarUL li:last-child {
-	 padding: 0 0;
-	 margin-left: 0px;
+.headerWrapper .navBlueBG .navBarUL li:last-child {
+  padding: 0 0;
+  margin-left: 0px;
 }
- .headerWrapper .navBlueBG .navBarUL li a {
-	 color: rgba(255, 255, 255, .6);
-   text-decoration: none;
+.headerWrapper .navBlueBG .navBarUL li a {
+  color: rgba(255, 255, 255, .6);
+  text-decoration: none;
 }
- .headerWrapper .navBlueBG .navBarUL li a:hover {
-	 color: rgba(255, 255, 255, 1);
+.headerWrapper .navBlueBG .navBarUL li a:hover {
+  color: rgba(255, 255, 255, 1);
 }
- .headerWrapper .navBlueBG .navBarUL .navListActive a {
-	 color: #fff;
-	 border-bottom: 2px solid #fff;
+.headerWrapper .navBlueBG .navBarUL .navListActive a {
+  color: #fff;
+  border-bottom: 2px solid #fff;
 }
- @media (min-width: 768px) and (max-width: 1200px) {
-   .versionTxt select {
-     margin-right: 0;
-     margin-left: 8px;
-   }
-	 .headerWrapper {
-		 position: relative;
-		 display: block;
-     z-index: 10;
+@media (min-width: 768px) and (max-width: 1200px) {
+  .versionTxt select {
+    margin-right: 0;
+    margin-left: 8px;
+  }
+  .headerWrapper {
+    position: relative;
+    display: block;
+    z-index: 10;
   }
   .headerWrapper .navLeft {
     padding-top: 5px;
   }
-	 .headerWrapper .topnav .visibleMobile .navBarULMobile {
-		 padding: 10px 15px;
-		 background-color: #001934;
-		 border-bottom: 1px solid rgba(255, 255, 255, .6);
-     margin-top: 0;
-     position: relative;
-     bottom: 1px;
-	}
-	 .headerWrapper .topnav .visibleMobile .navBarULMobile li {
-		 list-style-type: none;
-		 font-weight: 600;
-		 text-transform: uppercase;
-		 padding: 10px 0;
-     margin: 0 0;
-	}
-	 .headerWrapper .topnav .visibleMobile .navBarULMobile li a {
-		 color: rgba(255, 255, 255, .6);
-     text-decoration: none;
-	}
-	 .headerWrapper .topnav .visibleMobile .navBarULMobile li a:hover {
-		 color: rgba(255, 255, 255, 1);
-		 text-decoration: none;
-	}
-	 .navBarToggle {
-		 display: block;
-	}
-	 .topnav.responsive .visibleMobile {
-		 display: block;
-	}
-	 .navBarUL {
-		 display: none;
-	}
+  .headerWrapper .topnav .visibleMobile .navBarULMobile {
+    padding: 10px 15px;
+    background-color: #001934;
+    border-bottom: 1px solid rgba(255, 255, 255, .6);
+    margin-top: 0;
+    position: relative;
+    bottom: 1px;
+  }
+  .headerWrapper .topnav .visibleMobile .navBarULMobile li {
+    list-style-type: none;
+    font-weight: 600;
+    text-transform: uppercase;
+    padding: 10px 0;
+    margin: 0 0;
+  }
+  .headerWrapper .topnav .visibleMobile .navBarULMobile li a {
+    color: rgba(255, 255, 255, .6);
+    text-decoration: none;
+  }
+  .headerWrapper .topnav .visibleMobile .navBarULMobile li a:hover {
+    color: rgba(255, 255, 255, 1);
+    text-decoration: none;
+  }
+  .navBarToggle {
+    display: block;
+  }
+  .topnav.responsive .visibleMobile {
+    display: block;
+  }
+  .navBarUL {
+    display: none;
+  }
 }
- @media (max-width: 767px) {
+@media (max-width: 767px) {
   .versionTxt select {
     margin-right: 0;
     margin-left: 8px;
@@ -1494,51 +1516,51 @@ article ol ol {
   .headerWrapper .navLeft .brand {
     margin-right: 16px;
   }
-	.headerWrapper .topnav .visibleMobile .navBarULMobile {
-		 padding: 10px 15px;
-		 background-color: #001934;
-     border-bottom: 1px solid rgba(255, 255, 255, .6);
-     position: relative;
-     bottom: 11px;
-	}
-	 .headerWrapper .topnav .visibleMobile .navBarULMobile li {
-		 list-style-type: none;
-		 font-weight: 600;
-		 text-transform: uppercase;
-		 padding: 10px 0;
-	}
-	 .headerWrapper .topnav .visibleMobile .navBarULMobile li a {
-		 color: rgba(255, 255, 255, .6);
-     text-decoration: none;
-	}
-	 .headerWrapper .topnav .visibleMobile .navBarULMobile li a:hover {
-		 color: rgba(255, 255, 255, 1);
-		 text-decoration: none;
-	}
-	 .navBarToggle {
-		 display: block;
-		 right: 0px;
-	}
-	 .topnav.responsive .visibleMobile {
-		 display: block;
-	}
-	 .navBarUL {
-		 display: none;
-	}
+  .headerWrapper .topnav .visibleMobile .navBarULMobile {
+    padding: 10px 15px;
+    background-color: #001934;
+    border-bottom: 1px solid rgba(255, 255, 255, .6);
+    position: relative;
+    bottom: 11px;
+  }
+  .headerWrapper .topnav .visibleMobile .navBarULMobile li {
+    list-style-type: none;
+    font-weight: 600;
+    text-transform: uppercase;
+    padding: 10px 0;
+  }
+  .headerWrapper .topnav .visibleMobile .navBarULMobile li a {
+    color: rgba(255, 255, 255, .6);
+    text-decoration: none;
+  }
+  .headerWrapper .topnav .visibleMobile .navBarULMobile li a:hover {
+    color: rgba(255, 255, 255, 1);
+    text-decoration: none;
+  }
+  .navBarToggle {
+    display: block;
+    right: 0px;
+  }
+  .topnav.responsive .visibleMobile {
+    display: block;
+  }
+  .navBarUL {
+    display: none;
+  }
 }
- @media (max-width: 359px) {
-	 .headerWrapper .navLeft .gitHubBtn {
-		 display: none;
-	}
+@media (max-width: 359px) {
+  .headerWrapper .navLeft .gitHubBtn {
+    display: none;
+  }
 }
- @media (max-width: 320px) {
-	 .headerWrapper .navLeft .brand {
-		 margin-right: 16px;
-	}
+@media (max-width: 320px) {
+  .headerWrapper .navLeft .brand {
+    margin-right: 16px;
+  }
 }
 .navContainerWrapper {
-    width: calc(100% - 30px);
-    padding: 0 15px !important;
+  width: calc(100% - 30px);
+  padding: 0 15px !important;
 }
 
 .tabbarContainerWrapper {

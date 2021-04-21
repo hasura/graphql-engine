@@ -85,7 +85,7 @@ $(deriveJSON
     ''FunctionExposedAs)
 
 
--- | Tracked SQL function metadata. See 'mkFunctionInfo'.
+-- | Tracked SQL function metadata. See 'buildFunctionInfo'.
 data FunctionInfo (b :: BackendType)
   = FunctionInfo
   { _fiName          :: !(FunctionName b)

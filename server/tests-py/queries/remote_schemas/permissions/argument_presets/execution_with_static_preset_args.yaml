@@ -90,3 +90,31 @@
         userMessages:
           - id: 2
             msg: You lose!
+
+
+- description: "query in which one argument has all fields preset; also check that the type does not exist"
+  url: /v1/graphql
+  status: 200
+  headers:
+    X-Hasura-Role: user
+  query:
+    query: |
+      {
+        __type(name: "Dimensions") {
+          name
+          fields {
+            name
+            type {
+              name
+            }
+          }
+        }
+        profilePicture {
+          width
+        }
+      }
+  response:
+    data:
+      __type:
+      profilePicture:
+        width: 101

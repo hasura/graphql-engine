@@ -24,6 +24,7 @@ import qualified Text.Shakespeare.Text               as ST
 
 import           Control.Monad.Trans.Control         (MonadBaseControl)
 import           Control.Monad.Validate
+import           Data.FileEmbed                      (makeRelativeToProject)
 import           Data.List                           (delete)
 import           Data.Text.Extended
 
@@ -159,7 +160,7 @@ mkTriggerQ trn qt@(QualifiedObject schema table) allCols op (SubscribeOpSpec col
         oldPayloadExpression = toSQLTxt oldDataExp
         newPayloadExpression = toSQLTxt newDataExp
 
-    in $(ST.stextFile "src-rsr/trigger.sql.shakespeare")
+    in $(makeRelativeToProject "src-rsr/trigger.sql.shakespeare" >>= ST.stextFile )
   where
     applyRowToJson' e = SEFnApp "row_to_json" [e] Nothing
     applyRow e = SEFnApp "row" [e] Nothing
@@ -172,7 +173,7 @@ buildEventTriggerInfo
   -> SourceName
   -> QualifiedTable
   -> EventTriggerConf
-  -> m (EventTriggerInfo 'Postgres, [SchemaDependency])
+  -> m (EventTriggerInfo, [SchemaDependency])
 buildEventTriggerInfo env source qt (EventTriggerConf name def webhook webhookFromEnv rconf mheaders) = do
   webhookConf <- case (webhook, webhookFromEnv) of
     (Just w, Nothing)    -> return $ WCValue w
@@ -181,7 +182,7 @@ buildEventTriggerInfo env source qt (EventTriggerConf name def webhook webhookFr
   let headerConfs = fromMaybe [] mheaders
   webhookInfo <- getWebhookInfoFromConf env webhookConf
   headerInfos <- getHeaderInfosFromConf env headerConfs
-  let eTrigInfo = EventTriggerInfo () name def rconf webhookInfo headerInfos
+  let eTrigInfo = EventTriggerInfo name def rconf webhookInfo headerInfos
       tabDep = SchemaDependency
                  (SOSourceObj source
                    $ AB.mkAnyBackend

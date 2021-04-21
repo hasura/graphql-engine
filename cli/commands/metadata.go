@@ -1,9 +1,11 @@
 package commands
 
 import (
+	"fmt"
+
 	"github.com/hasura/graphql-engine/cli"
+	"github.com/hasura/graphql-engine/cli/internal/metadataobject"
 	"github.com/hasura/graphql-engine/cli/internal/scripts"
-	"github.com/hasura/graphql-engine/cli/migrate"
 	"github.com/hasura/graphql-engine/cli/util"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
@@ -59,33 +61,41 @@ func NewMetadataCmd(ec *cli.ExecutionContext) *cobra.Command {
 	return metadataCmd
 }
 
-func executeMetadata(cmd string, t *migrate.Migrate, ec *cli.ExecutionContext) error {
+func executeMetadata(cmd string, ec *cli.ExecutionContext) error {
+	var files map[string][]byte
+	var err error
+	metadataHandler := metadataobject.NewHandlerFromEC(ec)
 	switch cmd {
 	case "export":
-		files, err := t.ExportMetadata()
+		files, err = metadataHandler.ExportMetadata()
 		if err != nil {
 			return errors.Wrap(err, "cannot export metadata from server")
 		}
-		err = t.WriteMetadata(files)
+		err = metadataHandler.WriteMetadata(files)
 		if err != nil {
 			return errors.Wrap(err, "cannot write metadata")
 		}
 	case "clear":
-		err := t.ResetMetadata()
+		err = metadataHandler.ResetMetadata()
 		if err != nil {
 			return errors.Wrap(err, "cannot clear Metadata")
 		}
 	case "reload":
-		err := t.ReloadMetadata()
+		err = metadataHandler.ReloadMetadata()
 		if err != nil {
 			return errors.Wrap(err, "cannot reload Metadata")
 		}
 	case "apply":
-		err := t.ApplyMetadata()
-		if err != nil {
-			return errors.Wrap(err, "cannot apply metadata on the database")
+		if ec.Config.Version <= cli.V2 {
+			err := metadataHandler.V1ApplyMetadata()
+			if err != nil {
+				return errors.Wrap(err, "cannot apply metadata on the database")
+			}
+			return nil
 		}
-		return nil
+		if err := metadataHandler.V2ApplyMetadata(); err != nil {
+			return fmt.Errorf("\n%w", err)
+		}
 	}
 	return nil
 }

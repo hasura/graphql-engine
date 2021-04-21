@@ -1,12 +1,10 @@
-{-# LANGUAGE AllowAmbiguousTypes #-}
-
 module Hasura.RQL.Types.Backend where
 
 import           Hasura.Prelude
 
 import qualified Language.GraphQL.Draft.Syntax as G
 
-import           Data.Aeson
+import           Data.Aeson.Extended
 import           Data.Kind                     (Type)
 import           Data.Text.Extended
 import           Data.Typeable                 (Typeable)
@@ -15,12 +13,17 @@ import           Hasura.Incremental            (Cacheable)
 import           Hasura.RQL.DDL.Headers        ()
 import           Hasura.RQL.Types.Error
 import           Hasura.SQL.Backend
+import           Hasura.SQL.Tag
 import           Hasura.SQL.Types
 
 
 type Representable a = (Show a, Eq a, Hashable a, Cacheable a, NFData a, Typeable a)
 
 type SessionVarType b = CollectableType (ScalarType b)
+
+-- Used for extension types.
+type XEnable  = ()
+type XDisable = Void
 
 -- | Mapping from abstract types to concrete backend representation
 --
@@ -46,13 +49,10 @@ class
   , Representable (SQLOperator b)
   , Representable (SessionVarType b)
   , Representable (SourceConnConfiguration b)
-  , Representable (XAILIKE b)
-  , Representable (XANILIKE b)
   , Representable (XRelay b)
   , Representable (XNodesAgg b)
   , Representable (XRemoteField b)
   , Representable (XComputedField b)
-  , Representable (XEventTrigger b)
   , Representable (XDistinct b)
   , Generic (Column b)
   , Ord (TableName b)
@@ -62,8 +62,8 @@ class
   , Ord (Column b)
   , Data (TableName b)
   , Data (ScalarType b)
+  , Traversable (BooleanOperators b)
   , Data (SQLExpression b)
-  , Typeable b
   , ToSQL (SQLExpression b)
   , FromJSON (BasicOrderType b)
   , FromJSON (Column b)
@@ -99,6 +99,8 @@ class
   , Arbitrary (FunctionName b)
   , Arbitrary (SourceConnConfiguration b)
   , Cacheable (SourceConfig b)
+  , Typeable b
+  , HasTag b
   ) => Backend (b :: BackendType) where
   -- types
   type SourceConfig            b = sc | sc -> b
@@ -115,19 +117,18 @@ class
   type Column                  b = c | c -> b
   type ScalarValue             b = sv | sv -> b
   type ScalarType              b = s | s -> b
+  type BooleanOperators        b :: Type -> Type
   type SQLExpression           b :: Type
   type SQLOperator             b :: Type
-  type XAILIKE                 b :: Type
-  type XANILIKE                b :: Type
+
+  -- extension types
   type XComputedField          b :: Type
   type XRemoteField            b :: Type
-  type XEventTrigger           b :: Type
   type XRelay                  b :: Type
   type XNodesAgg               b :: Type
   type XDistinct               b :: Type
 
   -- functions on types
-  backendTag            :: BackendTag b
   functionArgScalarType :: FunctionArgType b -> ScalarType b
   isComparableType      :: ScalarType b -> Bool
   isNumType             :: ScalarType b -> Bool

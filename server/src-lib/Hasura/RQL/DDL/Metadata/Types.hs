@@ -1,6 +1,5 @@
 -- | Types related to metadata management API
 
-{-# LANGUAGE TypeApplications #-}
 module Hasura.RQL.DDL.Metadata.Types
   ( currentMetadataVersion
   , MetadataVersion(..)

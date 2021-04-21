@@ -88,6 +88,7 @@ module Hasura.Eventing.ScheduledTrigger
   , deleteScheduledEventTx
   , getInvocationsTx
   , getInvocationsQuery
+  , getInvocationsQueryNoPagination
 
   -- * Export utility functions which are useful to build
   -- SQLs for fetching data from metadata storage
@@ -154,17 +155,22 @@ runCronEventsGenerator logger getSC = do
     -- get cron triggers from cache
     let cronTriggersCache = scCronTriggers sc
 
-    -- get cron trigger stats from db
-    eitherRes <- runMetadataStorageT $ do
-      deprivedCronTriggerStats <- getDeprivedCronTriggerStats
-      -- join stats with cron triggers and produce @[(CronTriggerInfo, CronTriggerStats)]@
-      cronTriggersForHydrationWithStats <-
-        catMaybes <$>
-        mapM (withCronTrigger cronTriggersCache) deprivedCronTriggerStats
-      insertCronEventsFor cronTriggersForHydrationWithStats
+    if (Map.null cronTriggersCache)
+    then return ()
+    else do
+      -- Poll the DB only when there's at-least one cron trigger present
+      -- in the schema cache
+      -- get cron trigger stats from db
+      eitherRes <- runMetadataStorageT $ do
+        deprivedCronTriggerStats <- getDeprivedCronTriggerStats
+        -- join stats with cron triggers and produce @[(CronTriggerInfo, CronTriggerStats)]@
+        cronTriggersForHydrationWithStats <-
+          catMaybes <$>
+          mapM (withCronTrigger cronTriggersCache) deprivedCronTriggerStats
+        insertCronEventsFor cronTriggersForHydrationWithStats
 
-    onLeft eitherRes $ L.unLogger logger .
-      ScheduledTriggerInternalErr . err500 Unexpected . tshow
+      onLeft eitherRes $ L.unLogger logger .
+        ScheduledTriggerInternalErr . err500 Unexpected . tshow
 
     liftIO $ sleep (minutes 1)
     where
@@ -294,7 +300,7 @@ processScheduledTriggers env logger logEnv httpMgr getSC LockedEventsCtx {..} =
       Right (cronEvents, oneOffEvents) -> do
         processCronEvents logger logEnv httpMgr cronEvents getSC leCronEvents
         processOneOffScheduledEvents env logger logEnv httpMgr oneOffEvents leOneOffEvents
-        liftIO $ sleep (minutes 1)
+    liftIO $ sleep (minutes 1)
   where
     logInternalError err = liftIO . L.unLogger logger $ ScheduledTriggerInternalErr err
 
@@ -828,9 +834,9 @@ data EventTables
   , etCronEventsTable        :: QualifiedTable
   }
 
-getInvocationsQuery :: EventTables -> GetInvocationsBy -> ScheduledEventPagination -> S.Select
-getInvocationsQuery (EventTables oneOffInvocationsTable cronInvocationsTable cronEventsTable') invocationsBy pagination =
-  mkPaginationSelectExp allRowsSelect pagination
+getInvocationsQueryNoPagination :: EventTables -> GetInvocationsBy -> S.Select
+getInvocationsQueryNoPagination (EventTables oneOffInvocationsTable cronInvocationsTable cronEventsTable') invocationsBy =
+    allRowsSelect
   where
     createdAtOrderBy table =
       let createdAtCol = S.SEQIdentifier $ S.mkQIdentifierTable table $ Identifier "created_at"
@@ -875,3 +881,7 @@ getInvocationsQuery (EventTables oneOffInvocationsTable cronInvocationsTable cro
              , S.selWhere = Just $ S.WhereFrag triggerBoolExp
              , S.selOrderBy = Just $ createdAtOrderBy invocationTable
              }
+
+getInvocationsQuery :: EventTables -> GetInvocationsBy -> ScheduledEventPagination -> S.Select
+getInvocationsQuery ets invocationsBy pagination =
+  mkPaginationSelectExp (getInvocationsQueryNoPagination ets invocationsBy) pagination

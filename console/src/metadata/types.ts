@@ -10,6 +10,7 @@ export type DataSource = {
     idle_timeout?: number;
     retries?: number;
   };
+  read_replicas?: Omit<SourceConnectionInfo, 'connection_string'>[];
 };
 
 // GENERATED
@@ -41,6 +42,11 @@ export type TableName = string | QualifiedTable;
 export interface QualifiedTable {
   name: string;
   schema: string;
+}
+
+export interface QualifiedTableBigQuery {
+  name: string;
+  dataset: string;
 }
 
 /**
@@ -853,6 +859,13 @@ export interface RestEndpointDefinition {
   };
 }
 
+export interface BigQueryServiceAccount {
+  project_id?: string;
+  client_email?: string;
+  private_key?: string;
+  from_env?: string;
+}
+
 export interface RestEndpointEntry {
   name: string;
   url: string;
@@ -864,6 +877,22 @@ export interface RestEndpointEntry {
 // //////////////////////////////
 //  #endregion REST ENDPOINT
 // /////////////////////////////
+
+/**
+ * Docs for type: https://hasura.io/docs/latest/graphql/core/api-reference/syntax-defs.html#pgsourceconnectioninfo
+ */
+
+export interface SourceConnectionInfo {
+  // used for SQL Server
+  connection_string: string;
+  // used for Postgres
+  database_url: string | { from_env: string };
+  pool_settings: {
+    max_connections: number;
+    idle_timeout: number;
+    retries: number;
+  };
+}
 
 /**
  * Type used in exported 'metadata.json' and replace metadata endpoint
@@ -886,17 +915,14 @@ export interface HasuraMetadataV2 {
 
 export interface MetadataDataSource {
   name: string;
-  kind?: 'postgres' | 'mysql';
+  kind?: 'postgres' | 'mysql' | 'mssql' | 'bigquery';
   configuration?: {
-    connection_info?: {
-      connection_string?: string;
-      database_url?: string | { from_env: string };
-      pool_settings?: {
-        max_connections: number;
-        idle_timeout: number;
-        retries: number;
-      };
-    };
+    connection_info?: SourceConnectionInfo;
+    // pro-only feature
+    read_replicas?: SourceConnectionInfo[];
+    service_account?: BigQueryServiceAccount;
+    project_id?: string;
+    datasets?: string[];
   };
   tables: TableEntry[];
   functions?: Array<{
@@ -923,7 +949,8 @@ export interface HasuraMetadataV3 {
   actions?: Action[];
   custom_types?: CustomTypes;
   cron_triggers?: CronTrigger[];
-  query_collections: QueryCollectionEntry[];
+  query_collections?: QueryCollectionEntry[];
+  allowlist?: AllowList[];
   inherited_roles: InheritedRole[];
   rest_endpoints?: RestEndpointEntry[];
 }

@@ -1,5 +1,5 @@
 import { QueryType } from './../integration/validators/validators';
-import { ADMIN_SECRET_HEADER_KEY } from '../../src/constants';
+import { ADMIN_SECRET_HEADER_KEY } from './constants';
 
 export const baseUrl = Cypress.config('baseUrl');
 
@@ -258,17 +258,5 @@ export const dropTable = (table = 'post', cascade = false) => {
     },
   };
 };
-
-export const dropTableIfExists = (
-  table: { name: string; schema: string },
-  source = 'default'
-) => ({
-  type: 'run_sql',
-  source,
-  args: {
-    sql: `DROP TABLE IF EXISTS "${table.schema}"."${table.name}";`,
-    cascade: false,
-  },
-});
 
 export const getSchema = () => 'public';

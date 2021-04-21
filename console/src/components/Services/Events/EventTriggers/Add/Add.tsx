@@ -19,7 +19,12 @@ import { getDataSources } from '../../../../../metadata/selector';
 import { DataSource } from '../../../../../metadata/types';
 import { getDatabaseSchemasInfo } from '../../../Data/DataActions';
 import { getSourceDriver } from '../../../Data/utils';
-import { currentDriver, setDriver } from '../../../../../dataSources';
+import {
+  currentDriver,
+  setDriver,
+  getSupportedDrivers,
+  isFeatureSupported,
+} from '../../../../../dataSources';
 
 interface Props extends InjectedProps {}
 
@@ -40,7 +45,7 @@ const Add: React.FC<Props> = props => {
   useEffect(() => {
     setState.source(currentDataSource);
     const driver = getSourceDriver(dataSourcesList, currentDataSource);
-    if (driver === 'mssql' || driver === 'postgres') {
+    if (isFeatureSupported('events.triggers.enabled')) {
       setDriver(driver);
     }
   }, [currentDataSource, dataSourcesList]);
@@ -49,7 +54,7 @@ const Add: React.FC<Props> = props => {
     [schema_name: string]: { [table_name: string]: string[] };
   }>({});
 
-  const supportedDrivers = ['postgres'];
+  const supportedDrivers = getSupportedDrivers('events.triggers.add');
 
   useEffect(() => {
     dispatch(

@@ -11,8 +11,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/stretchr/testify/assert"
-
 	"github.com/gofrs/uuid"
 
 	"github.com/Pallinder/go-randomdata"
@@ -23,7 +21,17 @@ import (
 	"github.com/ory/dockertest/v3"
 )
 
-func StartHasura(t *testing.T, version string) (port string, teardown func()) {
+// As a workaround for using test helpers on Ginkgo tests
+// and normal go tests this interfaces is introduced
+// ginkgo specs do not have a handle of *testing.T and therefore
+// cannot be used directly in test helpers
+type TestingT interface {
+	Skip(args ...interface{})
+	Fatal(args ...interface{})
+	Fatalf(format string, args ...interface{})
+}
+
+func StartHasura(t TestingT, version string) (port string, teardown func()) {
 	checkIfSkippable(t)
 	if len(version) == 0 {
 		t.Fatal("no hasura version provided, probably use testutil.HasuraVersion")
@@ -51,7 +59,7 @@ func StartHasura(t *testing.T, version string) (port string, teardown func()) {
 	var db *sql.DB
 	if err = pool.Retry(func() error {
 		var err error
-		db, err = sql.Open("postgres", fmt.Sprintf("postgres://postgres:postgrespassword@%s:%s/%s?sslmode=disable", DockerSwitchIP, pg.GetPort("5432/tcp"), "postgres"))
+		db, err = sql.Open("postgres", fmt.Sprintf("postgres://postgres:postgrespassword@%s:%s/%s?sslmode=disable", "0.0.0.0", pg.GetPort("5432/tcp"), "postgres"))
 		if err != nil {
 			return err
 		}
@@ -59,7 +67,6 @@ func StartHasura(t *testing.T, version string) (port string, teardown func()) {
 	}); err != nil {
 		t.Fatal(err)
 	}
-
 	hasuraopts := &dockertest.RunOptions{
 		Name:       fmt.Sprintf("%s-%s", uniqueName, "hasura"),
 		Repository: "hasura/graphql-engine",
@@ -121,7 +128,6 @@ func StartHasuraWithMetadataDatabase(t *testing.T, version string) (port string,
 			"POSTGRES_PASSWORD=postgrespassword",
 			"POSTGRES_DB=postgres",
 		},
-		ExposedPorts: []string{"5432/tcp"},
 	}
 	pg, err := pool.RunWithOptions(pgopts)
 	if err != nil {
@@ -130,7 +136,7 @@ func StartHasuraWithMetadataDatabase(t *testing.T, version string) (port string,
 	var db *sql.DB
 	if err = pool.Retry(func() error {
 		var err error
-		db, err = sql.Open("postgres", fmt.Sprintf("postgres://postgres:postgrespassword@%s:%s/%s?sslmode=disable", DockerSwitchIP, pg.GetPort("5432/tcp"), "postgres"))
+		db, err = sql.Open("postgres", fmt.Sprintf("postgres://postgres:postgrespassword@%s:%s/%s?sslmode=disable", "0.0.0.0", pg.GetPort("5432/tcp"), "postgres"))
 		if err != nil {
 			return err
 		}
@@ -219,7 +225,7 @@ func startMSSQLContainer(t *testing.T) (string, func()) {
 	}
 	if err = pool.Retry(func() error {
 		connString := fmt.Sprintf("server=%s;user id=%s;password=%s;port=%s;database=%s;",
-			DockerSwitchIP, "SA", MSSQLPassword, mssql.GetPort("1433/tcp"), "master")
+			"0.0.0.0", "SA", MSSQLPassword, mssql.GetPort("1433/tcp"), "master")
 		db, err := sql.Open("sqlserver", connString)
 		if err != nil {
 			return err
@@ -279,15 +285,17 @@ func NewHttpcClient(t *testing.T, port string, headers map[string]string) *httpc
 	return c
 }
 
-func getUniqueName(t *testing.T) string {
+func getUniqueName(t TestingT) string {
 	u, err := uuid.NewV4()
-	assert.NoError(t, err)
+	// assert.NoError(t, err)
+	if err != nil {
+		t.Fatalf("Could not connect to docker: %s", err)
+	}
 	return u.String() + "-" + randomdata.SillyName()
 }
 
-func checkIfSkippable(t *testing.T) {
-	switch SkipDockerTests {
-	case "true":
+func checkIfSkippable(t TestingT) {
+	if SkipDockerTests {
 		t.Skip()
 	}
 }

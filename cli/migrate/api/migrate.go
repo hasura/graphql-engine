@@ -10,6 +10,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/hasura/graphql-engine/cli/internal/metadataobject"
+
 	"github.com/hasura/graphql-engine/cli/internal/hasura"
 	"github.com/hasura/graphql-engine/cli/internal/metadatautil"
 
@@ -77,6 +79,7 @@ func MigrateAPI(c *gin.Context) {
 	//sourceURL := sourcePtr.(*url.URL)
 	logger := loggerPtr.(*logrus.Logger)
 
+	mdHandler := metadataobject.NewHandlerFromEC(ec)
 	// Switch on request method
 	switch c.Request.Method {
 	case "GET":
@@ -267,12 +270,13 @@ func MigrateAPI(c *gin.Context) {
 			return
 		}
 		defer func() {
-			files, err := t.ExportMetadata()
+			var files map[string][]byte
+			files, err = mdHandler.ExportMetadata()
 			if err != nil {
 				logger.Debug(err)
 				return
 			}
-			err = t.WriteMetadata(files)
+			err = mdHandler.WriteMetadata(files)
 			if err != nil {
 				logger.Debug(err)
 				return

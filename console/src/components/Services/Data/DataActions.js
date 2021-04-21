@@ -26,7 +26,11 @@ import {
   cascadeUpQueries,
   getDependencyError,
 } from './utils';
-import { mergeDataMssql, mergeLoadSchemaDataPostgres } from './mergeData';
+import {
+  mergeDataMssql,
+  mergeLoadSchemaDataPostgres,
+  mergeDataBigQuery,
+} from './mergeData';
 import _push from './push';
 import { convertArrayToJson } from './TableModify/utils';
 import { CLI_CONSOLE_MODE, SERVER_CONSOLE_MODE } from '../../../constants';
@@ -68,7 +72,16 @@ const MAKE_REQUEST = 'ModifyTable/MAKE_REQUEST';
 const REQUEST_SUCCESS = 'ModifyTable/REQUEST_SUCCESS';
 const REQUEST_ERROR = 'ModifyTable/REQUEST_ERROR';
 
+const SET_FILTER_SCHEMA = 'Data/SET_FILTER_SCHEMA';
+const SET_FILTER_TABLES = 'Data/SET_FILTER_TABLES';
+
 const SET_ADDITIONAL_COLUMNS_INFO = 'Data/SET_ADDITIONAL_COLUMNS_INFO';
+
+export const SET_ALL_ROLES = 'Data/SET_ALL_ROLES';
+export const setAllRoles = roles => ({
+  type: SET_ALL_ROLES,
+  roles,
+});
 
 const SET_DB_CONNECTION_ENV_VAR = 'Data/SET_DB_CONNECTION_ENV_VAR';
 const RESET_DB_CONNECTION_ENV_VAR = 'Data/RESET_DB_CONNECTION_ENV_VAR';
@@ -137,7 +150,9 @@ const loadSchema = configOptions => {
         (!configOptions.tables || configOptions.tables.length === 0))
     ) {
       configOptions = {
-        schemas: [getState().tables.currentSchema],
+        schemas: [
+          getState().tables.currentSchema || getState().tables.schemaList[0],
+        ],
       };
     }
 
@@ -162,7 +177,6 @@ const loadSchema = configOptions => {
         );
       }
     }
-
     const body = {
       type: 'bulk',
       source,
@@ -215,6 +229,9 @@ const loadSchema = configOptions => {
               break;
             case 'mssql':
               mergedData = mergeDataMssql(data, metadataTables);
+              break;
+            case 'bigquery':
+              mergedData = mergeDataBigQuery(data, metadataTables);
               break;
             default:
           }
@@ -299,10 +316,16 @@ const setConsistentSchema = data => ({
 const fetchDataInit = (source, driver) => (dispatch, getState) => {
   const url = Endpoints.query;
 
-  const currentSource = source || getState().tables.currentDataSource;
+  let { schemaFilter } = getState().tables;
 
+  if (driver === 'bigquery')
+    schemaFilter = getState().metadata.metadataObject.sources.find(
+      x => x.name === source
+    ).configuration.datasets;
+
+  const currentSource = source || getState().tables.currentDataSource;
   const query = getRunSqlQuery(
-    dataSource.schemaListSql,
+    dataSource.schemaListSql(schemaFilter),
     currentSource,
     false,
     false,
@@ -330,6 +353,15 @@ const fetchDataInit = (source, driver) => (dispatch, getState) => {
         type: FETCH_SCHEMA_LIST,
         schemaList,
       });
+      let newSchema = '';
+      if (schemaList.length) {
+        newSchema =
+          dataSource.defaultRedirectSchema &&
+          schemaList.includes(dataSource.defaultRedirectSchema)
+            ? dataSource.defaultRedirectSchema
+            : schemaList.sort(Intl.Collator().compare)[0];
+      }
+      dispatch({ type: UPDATE_CURRENT_SCHEMA, currentSchema: newSchema });
       return dispatch(updateSchemaInfo()); // TODO
     },
     error => {
@@ -341,8 +373,14 @@ const fetchDataInit = (source, driver) => (dispatch, getState) => {
 
 const fetchFunctionInit = (schema = null) => (dispatch, getState) => {
   const url = Endpoints.query;
-  const fnSchema = schema || getState().tables.currentSchema;
   const source = getState().tables.currentDataSource;
+
+  const { schemaFilter } = getState().tables;
+  let fnSchema = schema || getState().tables.currentSchema;
+  if (schemaFilter && schemaFilter.length) {
+    fnSchema = schemaFilter[0]; // todo: fix me
+  }
+
   if (!source || !dataSource.getFunctionDefinitionSql) return;
   const body = {
     type: 'bulk',
@@ -411,7 +449,11 @@ const updateCurrentSchema = (
 const fetchSchemaList = () => (dispatch, getState) => {
   const url = Endpoints.query;
   const currentSource = getState().tables.currentDataSource;
-  const query = getRunSqlQuery(dataSource.schemaListSql, currentSource);
+  const { schemaFilter } = getState().tables;
+  const query = getRunSqlQuery(
+    dataSource.schemaListSql(schemaFilter),
+    currentSource
+  );
 
   const options = {
     credentials: globalCookiePolicy,
@@ -433,6 +475,28 @@ const fetchSchemaList = () => (dispatch, getState) => {
       });
       return data;
     },
+    error => {
+      console.error('Failed to fetch schema ' + JSON.stringify(error));
+      return error;
+    }
+  );
+};
+
+export const getSchemaList = (sourceType, sourceName) => (
+  dispatch,
+  getState
+) => {
+  const url = Endpoints.query;
+  const sql = services[sourceType].schemaListSql();
+  const query = getRunSqlQuery(sql, sourceName);
+  const options = {
+    credentials: globalCookiePolicy,
+    method: 'POST',
+    headers: dataHeaders(getState),
+    body: JSON.stringify(query),
+  };
+  return dispatch(requestAction(url, options)).then(
+    data => data,
     error => {
       console.error('Failed to fetch schema ' + JSON.stringify(error));
       return error;
@@ -505,7 +569,6 @@ export const getDatabaseTableTypeInfo = (
       resolve({});
     });
   }
-
   const url = Endpoints.query;
   const sql = services[sourceType].getTableInfo(tables);
   const query = getRunSqlQuery(sql, sourceName, false, false, sourceType);
@@ -529,13 +592,18 @@ export const getDatabaseTableTypeInfo = (
       try {
         if (currentDriver === 'mssql') {
           res = JSON.parse(result.slice(1).join());
+        } else if (currentDriver === 'bigquery') {
+          res = result.slice(1).map(t => ({
+            table_name: t[0],
+            table_schema: t[1],
+            table_type: t[2],
+          }));
         } else {
           res = JSON.parse(result[1]);
         }
-      } catch {
+      } catch (err) {
         res = [];
       }
-
       res.forEach(i => {
         if (
           !trackedTables.some(
@@ -583,6 +651,39 @@ const handleMigrationErrors = (title, errorMsg) => dispatch => {
   }
 };
 
+export const handleOutOfDateMetadata = dispatch => {
+  return dispatch(
+    showNotification(
+      {
+        title: 'Metadata is Out-of-Date',
+        level: 'error',
+        message: (
+          <p>
+            The operation failed as the metadata on the server is newer than
+            what is currently loaded on the console. The metadata has to be
+            re-fetched to continue editing it.
+            <br />
+            <br />
+            Do you want fetch the latest metadata?
+          </p>
+        ),
+        autoDismiss: 0,
+        action: {
+          label: (
+            <>
+              <i className="fa fa-refresh" aria-hidden="true" /> Fetch metadata
+            </>
+          ),
+          callback: () => {
+            dispatch(exportMetadata());
+          },
+        },
+      },
+      'error'
+    )
+  );
+};
+
 const makeMigrationCall = (
   dispatch,
   getState,
@@ -599,9 +700,11 @@ const makeMigrationCall = (
   isRetry = false
 ) => {
   const source = getState().tables.currentDataSource;
+  const { resourceVersion } = getState().metadata;
   const upQuery = {
     type: 'bulk',
     source,
+    resource_version: resourceVersion,
     args: upQueries,
   };
 
@@ -699,7 +802,12 @@ const makeMigrationCall = (
         return retryMigration(sqlDependencyError, errorMsg, true);
     }
 
-    dispatch(handleMigrationErrors(errorMsg, err));
+    if (err?.code === 'conflict') {
+      dispatch(handleOutOfDateMetadata);
+    } else {
+      dispatch(handleMigrationErrors(errorMsg, err));
+    }
+
     customOnError(err);
   };
 
@@ -920,6 +1028,16 @@ const dataReducer = (state = defaultState, action) => {
           };
         }),
       };
+    case SET_FILTER_SCHEMA:
+      return {
+        ...state,
+        schemaFilter: action.data,
+      };
+    case SET_FILTER_TABLES:
+      return {
+        ...state,
+        tableFilter: action.data,
+      };
     case SET_DB_CONNECTION_ENV_VAR:
       return {
         ...state,
@@ -964,4 +1082,6 @@ export {
   setUntrackedRelations,
   SET_ADDITIONAL_COLUMNS_INFO,
   fetchAdditionalColumnsInfo,
+  SET_FILTER_SCHEMA,
+  SET_FILTER_TABLES,
 };

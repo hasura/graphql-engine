@@ -8,6 +8,8 @@ import           Hasura.Prelude
 
 import qualified Data.Aeson                    as J
 import qualified Database.ODBC.SQLServer       as ODBC
+import qualified Hasura.SQL.GeoJSON            as Geo
+import qualified Hasura.SQL.WKT                as WKT
 import qualified Language.GraphQL.Draft.Syntax as G
 
 import           Data.Text.Encoding            (encodeUtf8)
@@ -58,6 +60,15 @@ data UnifiedOn = UnifiedOn
 
 -------------------------------------------------------------------------------
 -- AST types
+
+data BooleanOperators a
+  = ASTContains   !a
+  | ASTCrosses    !a
+  | ASTEquals     !a
+  | ASTIntersects !a
+  | ASTOverlaps   !a
+  | ASTTouches    !a
+  | ASTWithin     !a
 
 data Select = Select
   { selectTop         :: !Top
@@ -164,6 +175,8 @@ data Expression
     -- ^ This is for getting actual atomic values out of a JSON
     -- string.
   | OpExpression Op Expression Expression
+  | ListExpression [Expression]
+  | STOpExpression SpatialOp Expression Expression
 
 data JsonPath
   = RootPath
@@ -190,8 +203,10 @@ data OpenJson = OpenJson
   }
 
 data JsonFieldSpec
-  = IntField Text
-  | JsonField Text
+  = IntField Text (Maybe JsonPath)
+  | JsonField Text (Maybe JsonPath)
+  | StringField Text (Maybe JsonPath)
+  | UuidField Text (Maybe JsonPath)
 
 data Aliased a = Aliased
   { aliasedThing :: !a
@@ -221,26 +236,24 @@ newtype EntityAlias = EntityAlias
   }
 
 data Op
-  = LessOp
-  | LessOrEqualOp
-  | MoreOp
-  | MoreOrEqualOp
-  -- | SIN
-  -- | SNE
-  -- | SLIKE
-  -- | SNLIKE
-  -- | SILIKE
-  -- | SNILIKE
-  -- | SSIMILAR
-  -- | SNSIMILAR
-  -- | SGTE
-  -- | SLTE
-  -- | SNIN
-  -- | SContains
-  -- | SContainedIn
-  -- | SHasKey
-  -- | SHasKeysAny
-  -- | SHasKeysAll
+  = LT
+  | LTE
+  | GT
+  | GTE
+  | IN
+  | LIKE
+  | NLIKE
+  | NIN
+
+-- | Supported operations for spatial data types
+data SpatialOp
+  = STEquals
+  | STContains
+  | STCrosses
+  | STIntersects
+  | STOverlaps
+  | STWithin
+  | STTouches
 
 -- | Column name of some database table -- this differs to FieldName
 -- that is used for referring to things within a query.
@@ -328,11 +341,9 @@ parseScalarValue scalarType jValue = case scalarType of
   -- boolean
   BitType       -> ODBC.ByteValue <$> parseJValue jValue
 
-
   -- geo
-  -- TODO: We'll need to wrap this with geography::STGeomFromText
-  GeographyType -> ODBC.TextValue <$> parseJValue jValue
-  GeometryType  -> ODBC.TextValue <$> parseJValue jValue
+  GeographyType -> ODBC.TextValue <$> parseGeoTypes jValue
+  GeometryType  -> ODBC.TextValue <$> parseGeoTypes jValue
 
   -- misc
   BinaryType    -> ODBC.BinaryValue . ODBC.Binary . txtToBs <$> parseJValue jValue
@@ -347,6 +358,15 @@ parseScalarValue scalarType jValue = case scalarType of
   where
     parseJValue :: (J.FromJSON a) => J.Value -> Either QErr a
     parseJValue = runAesonParser J.parseJSON
+
+    parseGeoTypes :: J.Value -> Either QErr Text
+    parseGeoTypes jv =
+      runAesonParser (J.parseJSON @Text) jv <> parseGeoJSONAsWKT jValue
+
+    parseGeoJSONAsWKT :: J.Value -> Either QErr Text
+    parseGeoJSONAsWKT jv =
+      runAesonParser (J.parseJSON @Geo.GeometryWithCRS) jv
+        >>= fmap WKT.getWKT . WKT.toWKT
 
 isComparableType, isNumType :: ScalarType -> Bool
 isComparableType = \case
@@ -377,3 +397,16 @@ snakeCaseTableName TableName { tableName, tableSchema } =
   if tableSchema == "dbo"
      then tableName
      else tableSchema <> "_" <> tableName
+
+stringTypes :: [ScalarType]
+stringTypes =
+  [ CharType
+  , VarcharType
+  , TextType
+  , WcharType
+  , WvarcharType
+  , WtextType
+  ]
+
+geoTypes :: [ScalarType]
+geoTypes = [GeometryType, GeographyType]

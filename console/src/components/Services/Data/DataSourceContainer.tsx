@@ -37,7 +37,7 @@ const DataSourceContainer = ({
   location,
   inconsistentObjects,
 }: DataSourceContainerProps) => {
-  const { setDriver } = useDataSource();
+  const { setDriver, dataSource } = useDataSource();
   const [dataLoaded, setDataLoaded] = useState(false);
   const { source, schema } = params;
 
@@ -83,17 +83,22 @@ const DataSourceContainer = ({
       dispatch({ type: UPDATE_CURRENT_SCHEMA, currentSchema: schema });
       return;
     }
+    // eslint-disable-next-line no-useless-return
     if (!dataLoaded) return;
 
     let newSchema = '';
+
     if (schemaList.length) {
-      newSchema = schemaList.includes('public') ? 'public' : schemaList[0];
+      newSchema =
+        dataSource.defaultRedirectSchema &&
+        schemaList.includes(dataSource.defaultRedirectSchema)
+          ? dataSource.defaultRedirectSchema
+          : schemaList.sort(Intl.Collator().compare)[0];
     }
-    dispatch({ type: UPDATE_CURRENT_SCHEMA, currentSchema: newSchema });
     if (location.pathname.includes('schema')) {
       dispatch(push(`/data/${source}/schema/${newSchema}`));
     }
-  }, [dispatch, schema, schemaList, source, location, dataLoaded]);
+  }, [dispatch, schema, schemaList, location, source, dataLoaded]);
 
   useEffect(() => {
     const driver = getSourceDriver(dataSources, currentSource);

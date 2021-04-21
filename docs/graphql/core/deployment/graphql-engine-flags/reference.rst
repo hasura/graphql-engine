@@ -1,11 +1,11 @@
 .. meta::
-   :description: Hasura GraphQL engine server flags reference
-   :keywords: hasura, docs, deployment, server, flags
+   :description: Hasura GraphQL engine server config reference
+   :keywords: hasura, docs, deployment, server, config, flags, env vars
 
 .. _server_flag_reference:
 
-GraphQL engine server flags reference
-=====================================
+GraphQL engine server config reference
+======================================
 
 .. contents:: Table of contents
   :backlinks: none
@@ -23,8 +23,8 @@ Every GraphQL engine command is structured as:
 
 The flags can be passed as ENV variables as well.
 
-Server flags
-------------
+Server config
+-------------
 
 For the ``graphql-engine`` command these are the available flags and ENV variables:
 
@@ -53,7 +53,7 @@ For the ``graphql-engine`` command these are the available flags and ENV variabl
        ``postgres://<user>:<password>@<host>:<port>/<db-name>``
 
        Example: ``postgres://admin:mypass@mydomain.com:5432/metadata_db``
-    
+
 Or you can specify the following options *(only via flags)*:
 
 .. code-block:: none
@@ -78,8 +78,8 @@ Or you can specify the following options *(only via flags)*:
 
 .. _command-flags:
 
-Command flags
--------------
+Command config
+--------------
 
 For the ``serve`` sub-command these are the available flags and ENV variables:
 
@@ -159,6 +159,12 @@ For the ``serve`` sub-command these are the available flags and ENV variables:
      - ``HASURA_GRAPHQL_EVENTS_FETCH_INTERVAL``
      - Interval in milliseconds to sleep before trying to fetch events again after a fetch
        returned no events from postgres
+
+   * - ``--async-actions-fetch-interval``
+     - ``HASURA_GRAPHQL_ASYNC_ACTIONS_FETCH_INTERVAL``
+     - Interval in milliseconds to sleep before trying to fetch async actions again after a fetch
+       returned no async actions from metadata storage. Value ``0`` implies completely disable fetching
+       async actions from the storage.
 
    * - ``-s, --stripes <NO_OF_STRIPES>``
      - ``HASURA_GRAPHQL_PG_STRIPES``

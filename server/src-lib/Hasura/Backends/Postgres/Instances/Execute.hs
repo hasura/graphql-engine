@@ -4,9 +4,11 @@ module Hasura.Backends.Postgres.Instances.Execute () where
 
 import           Hasura.Prelude
 
+import qualified Control.Monad.Trans.Control                as MT
 import qualified Data.Environment                           as Env
 import qualified Data.HashSet                               as Set
 import qualified Data.Sequence                              as Seq
+import qualified Database.PG.Query                          as Q
 import qualified Language.GraphQL.Draft.Syntax              as G
 import qualified Network.HTTP.Client                        as HTTP
 import qualified Network.HTTP.Types                         as HTTP
@@ -30,6 +32,7 @@ import           Hasura.GraphQL.Execute.Insert
 import           Hasura.GraphQL.Execute.LiveQuery.Plan
 import           Hasura.GraphQL.Execute.Prepare
 import           Hasura.GraphQL.Parser
+import           Hasura.RQL.DML.Internal                    (dmlTxErrorHandler)
 import           Hasura.RQL.Types
 import           Hasura.Server.Version                      (HasVersion)
 import           Hasura.Session
@@ -44,6 +47,8 @@ instance BackendExecute 'Postgres where
   mkDBQueryPlan = pgDBQueryPlan
   mkDBMutationPlan = pgDBMutationPlan
   mkDBSubscriptionPlan = pgDBSubscriptionPlan
+  mkDBQueryExplain = pgDBQueryExplain
+  mkLiveQueryExplain = pgDBLiveQueryExplain
 
 
 -- query
@@ -58,18 +63,63 @@ pgDBQueryPlan
   -> [HTTP.Header]
   -> UserInfo
   -> [G.Directive G.Name]
+  -> SourceName
   -> SourceConfig 'Postgres
   -> QueryDB 'Postgres (UnpreparedValue 'Postgres)
   -> m ExecutionStep
-pgDBQueryPlan env manager reqHeaders userInfo _directives sourceConfig qrf = do
+pgDBQueryPlan env manager reqHeaders userInfo _directives sourceName sourceConfig qrf = do
   (preparedQuery, PlanningSt _ _ planVals expectedVariables) <- flip runStateT initPlanningSt $ traverseQueryDB prepareWithPlan qrf
   validateSessionVariables expectedVariables $ _uiSession userInfo
   let (action, preparedSQL) = mkCurPlanTx env manager reqHeaders userInfo $ irToRootFieldPlan planVals preparedQuery
   pure
     $ ExecStepDB []
     . AB.mkAnyBackend
-    $ DBStepInfo sourceConfig preparedSQL action
+    $ DBStepInfo sourceName sourceConfig preparedSQL action
 
+pgDBQueryExplain
+  :: forall m
+    . ( MonadError QErr m
+      )
+  => G.Name
+  -> UserInfo
+  -> SourceName
+  -> SourceConfig 'Postgres
+  -> QueryDB 'Postgres (UnpreparedValue 'Postgres)
+  -> m (AB.AnyBackend DBStepInfo)
+pgDBQueryExplain fieldName userInfo sourceName sourceConfig qrf = do
+  preparedQuery <- traverseQueryDB (resolveUnpreparedValue userInfo) qrf
+  let PreparedSql querySQL _ remoteJoins = irToRootFieldPlan mempty preparedQuery
+      textSQL = Q.getQueryText querySQL
+      -- CAREFUL!: an `EXPLAIN ANALYZE` here would actually *execute* this
+      -- query, maybe resulting in privilege escalation:
+      withExplain = "EXPLAIN (FORMAT TEXT) " <> textSQL
+  -- Reject if query contains any remote joins
+  when (remoteJoins /= mempty) $
+    throw400 NotSupported "Remote relationships are not allowed in explain query"
+  let action = liftTx $
+        Q.listQE dmlTxErrorHandler (Q.fromText withExplain) () True <&> \planList ->
+          encJFromJValue $ ExplainPlan fieldName (Just textSQL) (Just $ map runIdentity planList)
+  pure
+    $ AB.mkAnyBackend
+    $ DBStepInfo sourceName sourceConfig Nothing action
+
+pgDBLiveQueryExplain
+  :: ( MonadError QErr m
+     , MonadIO m
+     , MT.MonadBaseControl IO m
+     )
+  => LiveQueryPlan 'Postgres (MultiplexedQuery 'Postgres) -> m LiveQueryPlanExplanation
+pgDBLiveQueryExplain plan = do
+  let parameterizedPlan = _lqpParameterizedPlan plan
+      pgExecCtx = _pscExecCtx $ _lqpSourceConfig plan
+      queryText = Q.getQueryText . PGL.unMultiplexedQuery $ _plqpQuery parameterizedPlan
+      -- CAREFUL!: an `EXPLAIN ANALYZE` here would actually *execute* this
+      -- query, maybe resulting in privilege escalation:
+      explainQuery = Q.fromText $ "EXPLAIN (FORMAT TEXT) " <> queryText
+  cohortId <- newCohortId
+  explanationLines <- liftEitherM $ runExceptT $ runLazyTx pgExecCtx Q.ReadOnly $
+                      map runIdentity <$> PGL.executeQuery explainQuery [(cohortId, _lqpVariables plan)]
+  pure $ LiveQueryPlanExplanation queryText explanationLines $ _lqpVariables plan
 
 -- mutation
 
@@ -164,10 +214,11 @@ pgDBMutationPlan
   -> [HTTP.Header]
   -> UserInfo
   -> Bool
+  -> SourceName
   -> SourceConfig 'Postgres
   -> MutationDB 'Postgres (UnpreparedValue 'Postgres)
   -> m ExecutionStep
-pgDBMutationPlan env manager reqHeaders userInfo stringifyNum sourceConfig mrf =
+pgDBMutationPlan env manager reqHeaders userInfo stringifyNum sourceName sourceConfig mrf =
     go <$> case mrf of
     MDBInsert s              -> convertInsert env userSession remoteJoinCtx s stringifyNum
     MDBUpdate s              -> convertUpdate env userSession remoteJoinCtx s stringifyNum
@@ -176,7 +227,9 @@ pgDBMutationPlan env manager reqHeaders userInfo stringifyNum sourceConfig mrf =
   where
     userSession = _uiSession userInfo
     remoteJoinCtx = (manager, reqHeaders, userInfo)
-    go = ExecStepDB [] . AB.mkAnyBackend . DBStepInfo sourceConfig Nothing
+    go = ExecStepDB [] . AB.mkAnyBackend . DBStepInfo sourceName sourceConfig Nothing
+
+
 
 -- subscription
 
@@ -186,10 +239,11 @@ pgDBSubscriptionPlan
      , MonadIO m
      )
   => UserInfo
+  -> SourceName
   -> SourceConfig 'Postgres
   -> InsOrdHashMap G.Name (QueryDB 'Postgres (UnpreparedValue 'Postgres))
   -> m (LiveQueryPlan 'Postgres (MultiplexedQuery 'Postgres))
-pgDBSubscriptionPlan userInfo sourceConfig unpreparedAST = do
+pgDBSubscriptionPlan userInfo _sourceName sourceConfig unpreparedAST = do
   (preparedAST, PGL.QueryParametersInfo{..}) <- flip runStateT mempty $
     for unpreparedAST $ traverseQueryDB PGL.resolveMultiplexedValue
   let multiplexedQuery = PGL.mkMultiplexedQuery preparedAST

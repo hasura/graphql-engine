@@ -1,5 +1,4 @@
-{-# LANGUAGE GADTs      #-}
-{-# LANGUAGE RankNTypes #-}
+{-# LANGUAGE UndecidableInstances #-}
 
 module Hasura.RQL.Types.Table where
 
@@ -12,13 +11,14 @@ import qualified Data.Text                           as T
 import qualified Language.GraphQL.Draft.Syntax       as G
 
 import           Control.Lens                        hiding ((.=))
-import           Data.Aeson
 import           Data.Aeson.Casing
+import           Data.Aeson.Extended
 import           Data.Aeson.TH
 import           Data.List.Extended                  (duplicates)
 import           Data.Text.Extended
 
-import qualified Hasura.Backends.Postgres.SQL.Types  as PG
+import qualified Hasura.Backends.Postgres.SQL.Types  as PG (PGDescription)
+
 import           Hasura.Incremental                  (Cacheable)
 import           Hasura.RQL.IR.BoolExp
 import           Hasura.RQL.Types.Backend
@@ -95,6 +95,7 @@ data FieldInfo (b :: BackendType)
   | FIComputedField !(ComputedFieldInfo b)
   | FIRemoteRelationship !(RemoteFieldInfo b)
   deriving (Generic)
+deriving instance Backend b => Show (FieldInfo b)
 deriving instance Backend b => Eq (FieldInfo b)
 instance Backend b => Cacheable (FieldInfo b)
 instance Backend b => ToJSON (FieldInfo b) where
@@ -159,11 +160,29 @@ data InsPermInfo (b :: BackendType)
   , ipiBackendOnly     :: !Bool
   , ipiRequiredHeaders :: ![Text]
   } deriving (Generic)
-instance Backend b => NFData (InsPermInfo b)
-deriving instance Backend b => Eq (InsPermInfo b)
-instance Backend b => Cacheable (InsPermInfo b)
-instance Backend b => ToJSON (InsPermInfo b) where
+
+deriving instance
+  ( Backend b
+  , Eq (BooleanOperators b (PartialSQLExp b))
+  ) => Eq (InsPermInfo b)
+
+instance
+  ( Backend b
+  , NFData (BooleanOperators b (PartialSQLExp b))
+  ) => NFData (InsPermInfo b)
+
+instance
+  ( Backend b
+  , Hashable  (BooleanOperators b (PartialSQLExp b))
+  , Cacheable (BooleanOperators b (PartialSQLExp b))
+  ) => Cacheable (InsPermInfo b)
+
+instance
+  ( Backend b
+  , ToJSONKeyValue (BooleanOperators b (PartialSQLExp b))
+  ) => ToJSON (InsPermInfo b) where
   toJSON = genericToJSON hasuraJSON
+
 
 data SelPermInfo (b :: BackendType)
   = SelPermInfo
@@ -181,11 +200,29 @@ data SelPermInfo (b :: BackendType)
   , spiAllowAgg             :: !Bool
   , spiRequiredHeaders      :: ![Text]
   } deriving (Generic)
-instance Backend b => NFData (SelPermInfo b)
-deriving instance Backend b => Eq (SelPermInfo b)
-instance Backend b => Cacheable (SelPermInfo b)
-instance Backend b => ToJSON (SelPermInfo b) where
+
+deriving instance
+  ( Backend b
+  , Eq (BooleanOperators b (PartialSQLExp b))
+  ) => Eq (SelPermInfo b)
+
+instance
+  ( Backend b
+  , NFData (BooleanOperators b (PartialSQLExp b))
+  ) => NFData (SelPermInfo b)
+
+instance
+  ( Backend b
+  , Hashable  (BooleanOperators b (PartialSQLExp b))
+  , Cacheable (BooleanOperators b (PartialSQLExp b))
+  ) => Cacheable (SelPermInfo b)
+
+instance
+  ( Backend b
+  , ToJSONKeyValue (BooleanOperators b (PartialSQLExp b))
+  ) => ToJSON (SelPermInfo b) where
   toJSON = genericToJSON hasuraJSON
+
 
 data UpdPermInfo (b :: BackendType)
   = UpdPermInfo
@@ -196,11 +233,29 @@ data UpdPermInfo (b :: BackendType)
   , upiSet             :: !(PreSetColsPartial b)
   , upiRequiredHeaders :: ![Text]
   } deriving (Generic)
-instance Backend b => NFData (UpdPermInfo b)
-deriving instance Backend b => Eq (UpdPermInfo b)
-instance Backend b => Cacheable (UpdPermInfo b)
-instance Backend b => ToJSON (UpdPermInfo b) where
+
+deriving instance
+  ( Backend b
+  , Eq (BooleanOperators b (PartialSQLExp b))
+  ) => Eq (UpdPermInfo b)
+
+instance
+  ( Backend b
+  , NFData (BooleanOperators b (PartialSQLExp b))
+  ) => NFData (UpdPermInfo b)
+
+instance
+  ( Backend b
+  , Hashable  (BooleanOperators b (PartialSQLExp b))
+  , Cacheable (BooleanOperators b (PartialSQLExp b))
+  ) => Cacheable (UpdPermInfo b)
+
+instance
+  ( Backend b
+  , ToJSONKeyValue (BooleanOperators b (PartialSQLExp b))
+  ) => ToJSON (UpdPermInfo b) where
   toJSON = genericToJSON hasuraJSON
+
 
 data DelPermInfo (b :: BackendType)
   = DelPermInfo
@@ -208,11 +263,29 @@ data DelPermInfo (b :: BackendType)
   , dpiFilter          :: !(AnnBoolExpPartialSQL b)
   , dpiRequiredHeaders :: ![Text]
   } deriving (Generic)
-instance Backend b => NFData (DelPermInfo b)
-deriving instance Backend b => Eq (DelPermInfo b)
-instance Backend b => Cacheable (DelPermInfo b)
-instance Backend b => ToJSON (DelPermInfo b) where
+
+deriving instance
+  ( Backend b
+  , Eq (BooleanOperators b (PartialSQLExp b))
+  ) => Eq (DelPermInfo b)
+
+instance
+  ( Backend b
+  , NFData (BooleanOperators b (PartialSQLExp b))
+  ) => NFData (DelPermInfo b)
+
+instance
+  ( Backend b
+  , Hashable  (BooleanOperators b (PartialSQLExp b))
+  , Cacheable (BooleanOperators b (PartialSQLExp b))
+  ) => Cacheable (DelPermInfo b)
+
+instance
+  ( Backend b
+  , ToJSONKeyValue (BooleanOperators b (PartialSQLExp b))
+  ) => ToJSON (DelPermInfo b) where
   toJSON = genericToJSON hasuraJSON
+
 
 data RolePermInfo (b :: BackendType)
   = RolePermInfo
@@ -221,33 +294,31 @@ data RolePermInfo (b :: BackendType)
   , _permUpd :: !(Maybe (UpdPermInfo b))
   , _permDel :: !(Maybe (DelPermInfo b))
   } deriving (Generic)
-instance Backend b => NFData (RolePermInfo b)
-instance Backend b => ToJSON (RolePermInfo b) where
+instance (Backend b, NFData (BooleanOperators b (PartialSQLExp b))) => NFData (RolePermInfo b)
+instance (Backend b, ToJSONKeyValue (BooleanOperators b (PartialSQLExp b))) => ToJSON (RolePermInfo b) where
   toJSON = genericToJSON hasuraJSON
 
 makeLenses ''RolePermInfo
 
 type RolePermInfoMap b = M.HashMap RoleName (RolePermInfo b)
 
-data EventTriggerInfo b
+data EventTriggerInfo
  = EventTriggerInfo
-   { etiXEventTrigger :: !(XEventTrigger b)
-   , etiName          :: !TriggerName
-   , etiOpsDef        :: !TriggerOpsDef
-   , etiRetryConf     :: !RetryConf
-   , etiWebhookInfo   :: !WebhookConfInfo
+   { etiName        :: !TriggerName
+   , etiOpsDef      :: !TriggerOpsDef
+   , etiRetryConf   :: !RetryConf
+   , etiWebhookInfo :: !WebhookConfInfo
    -- ^ The HTTP(s) URL which will be called with the event payload on configured operation.
    -- Must be a POST handler. This URL can be entered manually or can be picked up from an
    -- environment variable (the environment variable needs to be set before using it for
    -- this configuration).
-   , etiHeaders       :: ![EventHeaderInfo]
+   , etiHeaders     :: ![EventHeaderInfo]
    -- ^ Custom headers can be added to an event trigger. Each webhook request will have these
    -- headers added.
-   } deriving (Generic)
-deriving instance (Backend b) => Show (EventTriggerInfo b)
-deriving instance (Backend b) => Eq (EventTriggerInfo b)
-instance (Backend b) => NFData (EventTriggerInfo b)
-instance (Backend b) => ToJSON (EventTriggerInfo b) where
+   } deriving (Generic, Show, Eq)
+instance NFData EventTriggerInfo
+
+instance ToJSON EventTriggerInfo where
   toJSON EventTriggerInfo{..} =
     object [ "name" .= etiName
            , "ops_def" .= etiOpsDef
@@ -256,7 +327,7 @@ instance (Backend b) => ToJSON (EventTriggerInfo b) where
            , "headers" .= etiHeaders
            ]
 
-type EventTriggerInfoMap b = M.HashMap TriggerName (EventTriggerInfo b)
+type EventTriggerInfoMap = M.HashMap TriggerName EventTriggerInfo
 
 -- data ConstraintType
 --   = CTCHECK
@@ -318,13 +389,6 @@ $(deriveJSON hasuraJSON ''ViewInfo)
 isMutable :: (ViewInfo -> Bool) -> Maybe ViewInfo -> Bool
 isMutable _ Nothing   = True
 isMutable f (Just vi) = f vi
-
-mutableView :: (MonadError QErr m) => TableName 'Postgres
-            -> (ViewInfo -> Bool) -> Maybe ViewInfo
-            -> Text -> m ()
-mutableView qt f mVI operation =
-  unless (isMutable f mVI) $ throw400 NotSupported $
-  "view " <> qt <<> " is not " <> operation
 
 type CustomColumnNames b = HashMap (Column b) G.Name
 
@@ -435,9 +499,9 @@ data TableInfo (b :: BackendType)
   = TableInfo
   { _tiCoreInfo            :: TableCoreInfo b
   , _tiRolePermInfoMap     :: !(RolePermInfoMap b)
-  , _tiEventTriggerInfoMap :: !(EventTriggerInfoMap b)
+  , _tiEventTriggerInfoMap :: !EventTriggerInfoMap
   } deriving (Generic)
-instance Backend b => ToJSON (TableInfo b) where
+instance (Backend b, ToJSONKeyValue (BooleanOperators b (PartialSQLExp b))) => ToJSON (TableInfo b) where
   toJSON = genericToJSON hasuraJSON
 $(makeLenses ''TableInfo)
 

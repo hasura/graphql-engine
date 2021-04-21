@@ -1,5 +1,7 @@
 /* eslint-disable import/no-mutable-exports */
 import { useState, useEffect } from 'react';
+
+import { Path, get } from '../components/Common/utils/tsUtils';
 import { services } from './services';
 
 import {
@@ -8,12 +10,19 @@ import {
   TableColumn,
   FrequentlyUsedColumn,
   PermissionColumnCategories,
+  SupportedFeaturesType,
+  generateTableRowRequestType,
+  BaseTableColumn,
 } from './types';
 import { PGFunction, FunctionState } from './services/postgresql/types';
 import { Operations } from './common';
 import { QualifiedTable } from '../metadata/types';
 
-export const drivers = ['postgres', 'mysql', 'mssql'] as const;
+import { supportedFeatures as PGSupportedFeatures } from './services/postgresql';
+import { supportedFeatures as MssqlSupportedFeatures } from './services/mssql';
+import { supportedFeatures as BigQuerySupportedFeatures } from './services/bigquery';
+
+export const drivers = ['postgres', 'mysql', 'mssql', 'bigquery'] as const;
 export type Driver = typeof drivers[number];
 
 export type ColumnsInfoResult = {
@@ -54,7 +63,7 @@ export interface DataSourcesAPI {
   getTableSupportedQueries(table: Table): Operations[];
   getColumnType(col: TableColumn): string;
   arrayToPostgresArray(arr: any[]): string;
-  schemaListSql: string;
+  schemaListSql(schemas: string[]): string;
   getAdditionalColumnsInfoQuerySql?: (currentSchema: string) => string;
   parseColumnsInfoResult: (data: string[][]) => ColumnsInfoResult;
   columnDataTypes: {
@@ -75,6 +84,7 @@ export interface DataSourcesAPI {
     TIME?: string;
     TIMETZ?: string;
   };
+  operators: Array<{ name: string; value: string; graphqlOp: string }>;
   getFetchTablesListQuery: (options: {
     schemas: string[];
     tables: Table[];
@@ -87,6 +97,7 @@ export interface DataSourcesAPI {
   fetchColumnTypesQuery: string;
   fetchColumnDefaultFunctions(schema: string): string;
   isSQLFunction(str: string): boolean;
+  isJsonColumn(column: BaseTableColumn): boolean;
   getEstimateCountQuery: (schemaName: string, tableName: string) => string;
   isColTypeString(colType: string): boolean;
   cascadeSqlQuery(sql: string): string;
@@ -294,17 +305,41 @@ export interface DataSourcesAPI {
     eventId: string
   ) => string;
   getDatabaseInfo: string;
-  getTableInfo?: (tables: string[]) => string;
+  getTableInfo?: (tables: QualifiedTable[]) => string;
+  generateTableRowRequest?: () => generateTableRowRequestType;
   getDatabaseVersionSql?: string;
   permissionColumnDataTypes: Partial<PermissionColumnCategories> | null;
   viewsSupported: boolean;
   // use null, if all operators are supported
   supportedColumnOperators: string[] | null;
   aggregationPermissionsAllowed: boolean;
+  supportedFeatures?: SupportedFeaturesType;
+  defaultRedirectSchema?: string;
 }
 
 export let currentDriver: Driver = 'postgres';
 export let dataSource: DataSourcesAPI = services[currentDriver || 'postgres'];
+
+export const isFeatureSupported = (feature: Path<SupportedFeaturesType>) => {
+  if (dataSource.supportedFeatures)
+    return get(dataSource.supportedFeatures, feature);
+};
+
+export const getSupportedDrivers = (
+  feature: Path<SupportedFeaturesType>
+): Driver[] => {
+  const isEnabled = (supportedFeatures: SupportedFeaturesType) => {
+    return get(supportedFeatures, feature) || false;
+  };
+
+  return [
+    PGSupportedFeatures,
+    MssqlSupportedFeatures,
+    BigQuerySupportedFeatures,
+  ]
+    .filter(d => isEnabled(d))
+    .map(d => d.driver.name) as Driver[];
+};
 
 class DataSourceChangedEvent extends Event {
   static type = 'data-source-changed';

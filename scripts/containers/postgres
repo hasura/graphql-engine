@@ -1,0 +1,99 @@
+### This file is not meant to be run directly, but to be sourced from
+### the dev script. It defines all the functions required to run a
+### postgres docker container.
+
+
+######################
+#    Configuration   #
+######################
+
+if [ "$MODE" = "test" ]; then
+  PG_PORT=35432
+else
+  PG_PORT=25432
+fi
+
+PG_PASSWORD=postgres
+PG_CONTAINER_NAME="hasura-dev-postgres-$PG_PORT"
+PG_DB_URL="postgres://postgres:$PG_PASSWORD@127.0.0.1:$PG_PORT/postgres"
+PG_DOCKER="docker exec -u postgres -it $PG_CONTAINER_NAME psql $PG_DB_URL"
+
+# Useful development defaults for postgres (no spaces here, please):
+#
+# setting 'port' in container is a workaround for the pg_dump endpoint (see tests)
+# log_hostname=off to avoid timeout failures when running offline due to:
+#   https://forums.aws.amazon.com/thread.jspa?threadID=291285
+#
+# All lines up to log_error_verbosity are to support pgBadger:
+#   https://github.com/darold/pgbadger#LOG-STATEMENTS
+#
+# Also useful:
+#   log_autovacuum_min_duration=0
+CONF=$(cat <<-EOF
+log_min_duration_statement=0
+log_checkpoints=on
+log_connections=on
+log_disconnections=on
+log_lock_waits=on
+log_temp_files=0
+log_error_verbosity=default
+log_hostname=off
+log_duration=on
+port=$PG_PORT
+EOF
+)
+
+# log lines above as -c flag arguments we pass to postgres
+CONF_FLAGS=$(echo "$CONF" | sed  -e 's/^/-c /'  | tr '\n' ' ')
+
+
+######################
+#     Functions      #
+######################
+
+function pg_launch_container(){
+  echo_pretty "Launching postgres container: $PG_CONTAINER_NAME"
+  docker run \
+    --name "$PG_CONTAINER_NAME" \
+    -p 127.0.0.1:"$PG_PORT":$PG_PORT \
+    --expose="$PG_PORT" \
+    -e POSTGRES_PASSWORD="$PG_PASSWORD" \
+    -d circleci/postgres:11.5-alpine-postgis \
+    $CONF_FLAGS
+
+  # graphql-engine calls the pg_dump executable. To avoid a version mismatch (and
+  # the dependency entirely) we create a shim that executes the pg_dump in the
+  # postgres container. Note output to file won't work.
+  DEV_SHIM_PATH="/tmp/hasura-dev-shims-$PG_PORT"
+  mkdir -p "$DEV_SHIM_PATH"
+  cat >"$DEV_SHIM_PATH/pg_dump" <<EOL
+#!/bin/bash
+# Generated from: $0
+if [[ \$@ == *" -f"* ]]; then
+  echo "It looks like we're trying to pg_dump to a file, but that won't work with this shim. See $0" >&2
+  exit 1
+fi
+docker exec -u postgres $PG_CONTAINER_NAME pg_dump "\$@"
+EOL
+  chmod a+x "$DEV_SHIM_PATH/pg_dump"
+  export PATH="$DEV_SHIM_PATH":$PATH
+}
+
+function pg_wait {
+  echo -n "Waiting for postgres to come up"
+  until ( $PG_DOCKER -c '\l' ) &>/dev/null; do
+    echo -n '.' && sleep 0.2
+  done
+  echo " Ok"
+}
+
+function pg_cleanup(){
+  # Since scripts here are tailored to the env we've just launched:
+  rm -r "$DEV_SHIM_PATH"
+
+  echo_pretty "Removing $PG_CONTAINER_NAME and its volumes in 5 seconds!"
+  echo_pretty "  PRESS CTRL-C TO ABORT removal of all containers, or ENTER to clean up right away"
+  read -t5 || true
+  docker stop "$PG_CONTAINER_NAME"
+  docker rm -v "$PG_CONTAINER_NAME"
+}

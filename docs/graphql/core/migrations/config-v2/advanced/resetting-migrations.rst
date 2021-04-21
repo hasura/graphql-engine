@@ -4,8 +4,8 @@
 
 .. _reset_migration_v2:
 
-Resetting Hasura migrations
-===========================
+Resetting Hasura migrations (config v2)
+=======================================
 
 .. contents:: Table of contents
   :backlinks: none

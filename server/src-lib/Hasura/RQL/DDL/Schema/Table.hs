@@ -1,5 +1,4 @@
-{-# LANGUAGE AllowAmbiguousTypes #-}
-{-# LANGUAGE Arrows              #-}
+{-# LANGUAGE Arrows #-}
 
 -- | Description: Create/delete SQL tables to/from Hasura metadata.
 module Hasura.RQL.DDL.Schema.Table

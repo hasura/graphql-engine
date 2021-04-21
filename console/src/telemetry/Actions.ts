@@ -111,8 +111,7 @@ const setOnboardingCompletedInDB = (
 ) => {
   const successCb = () => {
     // the success notification won't be shown on cloud
-    const isCloudContext =
-      window.__env.userRole || window.location.host.includes('cloud');
+    const isCloudContext = globals.consoleType !== 'cloud';
     if (!isCloudContext) {
       dispatch(
         showSuccessNotification('Success', 'Dismissed console onboarding')
@@ -142,8 +141,6 @@ const setOnboardingCompletedInDB = (
     setConsoleOptsInDB({ onboardingShown: true }, successCb, errorCb)
   );
 };
-
-type X = ReduxState['telemetry'];
 
 const setPreReleaseNotificationOptOutInDB = () => (
   dispatch: ThunkDispatch<ReduxState, unknown, AnyAction>,

@@ -22,11 +22,13 @@ import {
   getTableCustomColumnNames,
   findTable,
   generateTableDef,
+  isFeatureSupported,
 } from '../../../../dataSources';
 import ViewDefinitions from './ViewDefinitions';
 import { RightContainer } from '../../../Common/Layout/RightContainer';
 import ComputedFields from './ComputedFields';
 import RootFields from './RootFields';
+import FeatureDisabled from '../FeatureDisabled';
 
 const ModifyView = props => {
   const {
@@ -63,7 +65,9 @@ const ModifyView = props => {
   };
 
   React.useEffect(() => {
-    setCustomColumnNames(tableSchema.configuration.custom_column_names);
+    if (tableSchema.configuration) {
+      setCustomColumnNames(tableSchema.configuration.custom_column_names);
+    }
   }, [tableSchema.configuration]);
 
   if (!tableSchema) {
@@ -220,6 +224,17 @@ const ModifyView = props => {
       Delete view
     </Button>
   );
+
+  if (!isFeatureSupported('tables.modify.enabled')) {
+    return (
+      <FeatureDisabled
+        tab="modify"
+        tableName={tableName}
+        schemaName={currentSchema}
+        tableType={tableType}
+      />
+    );
+  }
 
   return (
     <RightContainer>

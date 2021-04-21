@@ -21,7 +21,6 @@ import (
 	"github.com/mitchellh/mapstructure"
 
 	yaml "github.com/ghodss/yaml"
-	"github.com/hasura/graphql-engine/cli/metadata/types"
 	"github.com/hasura/graphql-engine/cli/migrate/database"
 	"github.com/parnurzeal/gorequest"
 	log "github.com/sirupsen/logrus"
@@ -64,7 +63,6 @@ type Config struct {
 	pgDumpURL                      *nurl.URL
 	Headers                        map[string]string
 	isCMD                          bool
-	Plugins                        types.MetadataPlugins
 	enableCheckMetadataConsistency bool
 	Req                            *gorequest.SuperAgent
 }
@@ -183,7 +181,6 @@ func (h *HasuraDB) Open(url string, isCMD bool, tlsConfig *tls.Config, logger *l
 		},
 		isCMD:   isCMD,
 		Headers: headers,
-		Plugins: make(types.MetadataPlugins, 0),
 		Req:     req,
 	}
 	hx, err := WithInstance(config, logger, hasuraOpts)
@@ -316,13 +313,13 @@ func sendMetadataMigrations(hasuradb *HasuraDB, requests []interface{}) error {
 			}
 			metadataRequests = append(metadataRequests, metadataBulk)
 			queryRequests = append(queryRequests, queryBulk)
-		}
-		if ok := isQueryRequest(v); ok {
-			queryRequests = append(queryRequests, v)
 		} else {
-			metadataRequests = append(metadataRequests, v)
+			if ok := isQueryRequest(v); ok {
+				queryRequests = append(queryRequests, v)
+			} else {
+				metadataRequests = append(metadataRequests, v)
+			}
 		}
-
 	}
 	if len(queryRequests) > 0 {
 		queryBulk := HasuraInterfaceBulk{
@@ -401,25 +398,6 @@ func (h *HasuraDB) Version() (version int64, dirty bool, err error) {
 
 func (h *HasuraDB) Drop() error {
 	return nil
-}
-
-func (h *HasuraDB) sendv1GraphQL(query interface{}) (resp *http.Response, body []byte, err error) {
-	request := h.config.Req.Clone()
-	request = request.Post(h.config.graphqlURL.String()).Send(query)
-
-	for headerName, headerValue := range h.config.Headers {
-		request.Set(headerName, headerValue)
-	}
-
-	resp, body, errs := request.EndBytes()
-
-	if len(errs) == 0 {
-		err = nil
-	} else {
-		err = errs[0]
-	}
-
-	return resp, body, err
 }
 
 func (h *HasuraDB) sendSchemaDumpQuery(m interface{}) (resp *http.Response, body []byte, err error) {

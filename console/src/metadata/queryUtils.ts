@@ -1,11 +1,10 @@
-// Note: This file MUST contain all/only metadata requests
-
 import {
   CustomRootFields,
   ActionDefinition,
   CustomTypes,
-  HasuraMetadataV2,
   QualifiedTable,
+  QualifiedTableBigQuery,
+  HasuraMetadataV3,
   QualifiedFunction,
   RestEndpointEntry,
 } from './types';
@@ -17,6 +16,7 @@ import { RemoteRelationshipPayload } from '../components/Services/Data/TableRela
 import { Driver, currentDriver } from '../dataSources';
 import { ConsoleState } from '../telemetry/state';
 import { TriggerOperation } from '../components/Common/FilterQuery/state';
+import { isEmpty } from '../components/Common/utils/jsUtils';
 
 export const metadataQueryTypes = [
   'add_source',
@@ -121,6 +121,9 @@ export const getMetadataQuery = (
       break;
     case 'mssql':
       prefix = 'mssql_';
+      break;
+    case 'bigquery':
+      prefix = 'bigquery_';
       break;
     case 'postgres':
     default:
@@ -301,19 +304,27 @@ export const getSetTableEnumQuery = (
   });
 };
 
-export const getTrackTableQuery = (
-  tableDef: QualifiedTable,
-  source: string,
-  driver: Driver
-) => {
-  return getMetadataQuery(
-    'track_table',
-    source,
-    {
-      table: tableDef,
-    },
-    driver
-  );
+export const getTrackTableQuery = ({
+  tableDef,
+  source,
+  driver,
+  customColumnNames,
+}: {
+  tableDef: QualifiedTable | QualifiedTableBigQuery;
+  source: string;
+  driver: Driver;
+  customColumnNames?: Record<string, string>;
+}) => {
+  const args = isEmpty(customColumnNames)
+    ? { table: tableDef }
+    : {
+        table: tableDef,
+        configuration: {
+          custom_column_names: customColumnNames,
+        },
+      };
+
+  return getMetadataQuery('track_table', source, args, driver);
 };
 
 export const getUntrackTableQuery = (
@@ -377,11 +388,12 @@ export const getReloadRemoteSchemaCacheQuery = (remoteSchemaName: string) => {
 
 export const exportMetadataQuery = {
   type: 'export_metadata',
+  version: 2,
   args: {},
 };
 
 export const generateReplaceMetadataQuery = (
-  metadataJson: HasuraMetadataV2
+  metadataJson: HasuraMetadataV3
 ) => ({
   type: 'replace_metadata',
   args: metadataJson,

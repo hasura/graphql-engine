@@ -11,34 +11,44 @@ module Hasura.GraphQL.Execute.LiveQuery.State
   , LiveQueryPostPollHook
   , addLiveQuery
   , removeLiveQuery
+
+  , LiveAsyncActionQueryOnSource(..)
+  , LiveAsyncActionQueryWithNoRelationships(..)
+  , LiveAsyncActionQuery(..)
+  , AsyncActionQueryLive(..)
+  , AsyncActionSubscriptionState
+  , addAsyncActionLiveQuery
+  , removeAsyncActionLiveQuery
   ) where
 
 import           Hasura.Prelude
 
-import qualified Control.Concurrent.STM                   as STM
-import qualified Control.Immortal                         as Immortal
-import qualified Data.Aeson.Extended                      as J
-import qualified Data.UUID.V4                             as UUID
-import qualified StmContainers.Map                        as STMMap
+import qualified Control.Concurrent.STM                      as STM
+import qualified Control.Immortal                            as Immortal
+import qualified Data.Aeson.Extended                         as J
+import qualified Data.UUID.V4                                as UUID
+import qualified StmContainers.Map                           as STMMap
 
-import           Control.Concurrent.Extended              (forkImmortal, sleep)
-import           Control.Exception                        (mask_)
+import           Control.Concurrent.Extended                 (forkImmortal, sleep)
+import           Control.Exception                           (mask_)
 import           Data.String
 import           Data.Text.Extended
 #ifndef PROFILING
 import           GHC.AssertNF
 #endif
 
-import qualified Hasura.GraphQL.Execute.LiveQuery.TMap    as TMap
-import qualified Hasura.Logging                           as L
+import qualified Hasura.GraphQL.Execute.LiveQuery.TMap       as TMap
+import qualified Hasura.Logging                              as L
 
 import           Hasura.GraphQL.Execute.Backend
 import           Hasura.GraphQL.Execute.LiveQuery.Options
 import           Hasura.GraphQL.Execute.LiveQuery.Plan
 import           Hasura.GraphQL.Execute.LiveQuery.Poll
 import           Hasura.GraphQL.Transport.Backend
-import           Hasura.RQL.Types.Common                  (SourceName, unNonNegativeDiffTime)
-
+import           Hasura.GraphQL.Transport.WebSocket.Protocol
+import           Hasura.RQL.Types.Action
+import           Hasura.RQL.Types.Common                     (SourceName, unNonNegativeDiffTime)
+import           Hasura.RQL.Types.Error
 
 -- | The top-level datatype that holds the state for all active live queries.
 --
@@ -50,15 +60,16 @@ data LiveQueriesState
   , _lqsLiveQueryMap :: !PollerMap
   , _lqsPostPollHook :: !LiveQueryPostPollHook
   -- ^ A hook function which is run after each fetch cycle
+  , _lqsAsyncActions :: !AsyncActionSubscriptionState
   }
 
 initLiveQueriesState
   :: LiveQueriesOptions -> LiveQueryPostPollHook -> IO LiveQueriesState
-initLiveQueriesState options pollHook =
-  LiveQueriesState options <$> STMMap.newIO <*> pure pollHook
+initLiveQueriesState options pollHook = STM.atomically $
+  LiveQueriesState options <$> STMMap.new <*> pure pollHook <*> TMap.new
 
 dumpLiveQueriesState :: Bool -> LiveQueriesState -> IO J.Value
-dumpLiveQueriesState extended (LiveQueriesState opts lqMap _) = do
+dumpLiveQueriesState extended (LiveQueriesState opts lqMap _ _) = do
   lqMapJ <- dumpPollerMap extended lqMap
   return $ J.object
     [ "options" J..= opts
@@ -126,7 +137,7 @@ addLiveQuery logger subscriberMetadata lqState source plan onResultAction = do
 
   pure $ LiveQueryId handlerId cohortKey subscriberId
   where
-    LiveQueriesState lqOpts lqMap postPollHook = lqState
+    LiveQueriesState lqOpts lqMap postPollHook _ = lqState
     LiveQueriesOptions _ refetchInterval = lqOpts
     LiveQueryPlan (ParameterizedLiveQueryPlan role query) sourceConfig cohortKey = plan
 
@@ -189,3 +200,55 @@ removeLiveQuery logger lqState lqId@(LiveQueryId handlerId cohortId sinkId) = ma
                 "In removeLiveQuery no worker thread installed. Please report this as a bug: "<>
                 show lqId
         else return Nothing
+
+-- | An async action query whose relationships are refered to table in a source.
+-- We need to generate an SQL statement with the action response and execute it
+-- in the source database so as to fetch response joined with relationship rows.
+-- For more details see Note [Resolving async action query]
+data LiveAsyncActionQueryOnSource
+  = LiveAsyncActionQueryOnSource
+  { _laaqpCurrentLqId      :: !LiveQueryId
+  , _laaqpPrevActionLogMap :: !ActionLogResponseMap
+  , _laaqpRestartLq        :: !(LiveQueryId -> ActionLogResponseMap -> IO (Maybe LiveQueryId))
+  -- ^ An IO action to restart the live query poller with updated action log responses fetched from metadata storage
+  -- Restarting a live query re-generates the SQL statement with new action log responses to send latest action
+  -- response to the client.
+  }
+
+data LiveAsyncActionQueryWithNoRelationships
+  = LiveAsyncActionQueryWithNoRelationships
+  { _laaqwnrSendResponse  :: !(ActionLogResponseMap -> IO ())
+  -- ^ An IO action to send response to the websocket client
+  , _laaqwnrSendCompleted :: !(IO ())
+  -- ^ An IO action to send "completed" message to the websocket client
+  }
+
+data LiveAsyncActionQuery
+  = LAAQNoRelationships !LiveAsyncActionQueryWithNoRelationships
+  | LAAQOnSourceDB !LiveAsyncActionQueryOnSource
+
+data AsyncActionQueryLive
+  = AsyncActionQueryLive
+  { _aaqlActionIds     :: !(NonEmpty ActionId)
+  , _aaqlOnException   :: !(QErr -> IO ())
+  -- ^ An IO action to send error message (in case of any exception) to the websocket client
+  , _aaqlLiveExecution :: !LiveAsyncActionQuery
+  }
+
+-- | A share-able state map which stores an async action live query with it's subscription operation id
+type AsyncActionSubscriptionState = TMap.TMap OperationId AsyncActionQueryLive
+
+addAsyncActionLiveQuery
+  :: AsyncActionSubscriptionState
+  -> OperationId
+  -> NonEmpty ActionId
+  -> (QErr -> IO ())
+  -> LiveAsyncActionQuery -> IO ()
+addAsyncActionLiveQuery queriesState opId actionIds onException liveQuery =
+  STM.atomically $
+  TMap.insert (AsyncActionQueryLive actionIds onException liveQuery) opId queriesState
+
+removeAsyncActionLiveQuery
+  :: AsyncActionSubscriptionState -> OperationId -> IO ()
+removeAsyncActionLiveQuery queriesState opId =
+  STM.atomically $ TMap.delete opId queriesState

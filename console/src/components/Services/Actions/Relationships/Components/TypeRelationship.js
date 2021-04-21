@@ -18,6 +18,7 @@ import {
 import { addActionRel, removeActionRel } from '../../ServerIO';
 import { showErrorNotification } from '../../../Common/Notification';
 import tableStyles from '../../../../Common/TableCommon/TableStyles.scss';
+import { getSupportedDrivers } from '../../../../../dataSources';
 
 const RelationshipEditor = ({
   objectType,
@@ -29,7 +30,8 @@ const RelationshipEditor = ({
   const [relConfig, setRelConfig] = React.useState(
     existingRelConfig || defaultRelConfig
   );
-  const supportedDrivers = ['postgres'];
+
+  const supportedDrivers = getSupportedDrivers('actions.relationships');
   const [currentDatabaseInfo, setCurrentDatabaseInfo] = React.useState({});
 
   // if it is an existing relationship, fetch the pg schemas metadata

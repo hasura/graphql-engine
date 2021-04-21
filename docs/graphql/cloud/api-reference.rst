@@ -20,11 +20,6 @@ and manage your projects.
 
 You can use any GraphQL client and use the API with the right authentication header.
 
-.. note::
-
-   Please note that the API is still in beta and might change before the
-   stable release.
-
 Endpoint
 --------
 
@@ -68,7 +63,6 @@ Create a Tenant
      createTenant(
        cloud: "aws"
        region: "us-east-2"
-       databaseUrl: "postgres://username:password@database-host.com:5432/dbname"
      ) {
        id
        name

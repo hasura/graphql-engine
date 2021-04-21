@@ -22,9 +22,11 @@ import           Hasura.Backends.Postgres.SQL.Types         hiding (TableName)
 import           Hasura.Backends.Postgres.SQL.Value
 import           Hasura.Backends.Postgres.Translate.BoolExp
 import           Hasura.Backends.Postgres.Translate.Column
+import           Hasura.Backends.Postgres.Types.Column
 import           Hasura.RQL.Types
 import           Hasura.SQL.Types
 import           Hasura.Session
+
 
 newtype DMLP1T m a
   = DMLP1T { unDMLP1T :: StateT (DS.Seq Q.PrepArg) m a }
@@ -220,7 +222,7 @@ checkOnColExp spi sessVarBldr annFld = case annFld of
     return $ AVRel relInfo $ andAnnBoolExps modAnn resolvedFltr
 
 convAnnBoolExpPartialSQL
-  :: (Applicative f)
+  :: (Applicative f, Backend backend)
   => SessVarBldr backend f
   -> AnnBoolExpPartialSQL backend
   -> f (AnnBoolExpSQL backend)
@@ -228,7 +230,7 @@ convAnnBoolExpPartialSQL f =
   traverseAnnBoolExp (convPartialSQLExp f)
 
 convAnnColumnCaseBoolExpPartialSQL
-  :: (Applicative f)
+  :: (Applicative f, Backend backend)
   => SessVarBldr backend f
   -> AnnColumnCaseBoolExpPartialSQL backend
   -> f (AnnColumnCaseBoolExp backend (SQLExpression backend))
@@ -251,13 +253,31 @@ sessVarFromCurrentSetting pgType sessVar =
 
 sessVarFromCurrentSetting' :: CollectableType PGScalarType -> SessionVariable -> S.SQLExp
 sessVarFromCurrentSetting' ty sessVar =
-  flip S.SETyAnn (S.mkTypeAnn ty) $
+  withTypeAnn ty $ fromCurrentSession currentSession sessVar
+
+withTypeAnn :: CollectableType PGScalarType -> S.SQLExp -> S.SQLExp
+withTypeAnn ty sessVarVal = flip S.SETyAnn (S.mkTypeAnn ty) $
   case ty of
     CollectableTypeScalar baseTy -> withConstructorFn baseTy sessVarVal
     CollectableTypeArray _       -> sessVarVal
-  where
-    sessVarVal = S.SEOpApp (S.SQLOp "->>")
-                 [currentSession, S.SELit $ sessionVariableToText sessVar]
+
+retrieveAndFlagSessionVariableValue
+  :: (MonadState s m)
+  => (SessionVariable -> s -> s)
+  -> SessionVariable
+  -> S.SQLExp
+  -> m S.SQLExp
+retrieveAndFlagSessionVariableValue updateState sessVar currentSessionExp = do
+  modify $ updateState sessVar
+  pure $ fromCurrentSession currentSessionExp sessVar
+
+fromCurrentSession
+  :: S.SQLExp
+  -> SessionVariable
+  -> S.SQLExp
+fromCurrentSession currentSessionExp sessVar =
+  S.SEOpApp (S.SQLOp "->>")
+    [currentSessionExp, S.SELit $ sessionVariableToText sessVar]
 
 currentSession :: S.SQLExp
 currentSession = S.SEUnsafe "current_setting('hasura.user')::json"
@@ -277,10 +297,11 @@ convBoolExp
   -> SelPermInfo b
   -> BoolExp b
   -> SessVarBldr b m
+  -> TableName b
   -> ValueParser b m (SQLExpression b)
   -> m (AnnBoolExpSQL b)
-convBoolExp cim spi be sessVarBldr rhsParser = do
-  abe <- annBoolExp rhsParser cim $ unBoolExp be
+convBoolExp cim spi be sessVarBldr rootTable rhsParser = do
+  abe <- annBoolExp rhsParser rootTable cim $ unBoolExp be
   checkSelPerm spi sessVarBldr abe
 
 dmlTxErrorHandler :: Q.PGTxErr -> QErr

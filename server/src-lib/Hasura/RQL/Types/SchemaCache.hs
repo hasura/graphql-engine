@@ -45,7 +45,6 @@ module Hasura.RQL.Types.SchemaCache
 
   , ViewInfo(..)
   , isMutable
-  , mutableView
 
   , IntrospectionResult(..)
   , ParsedIntrospection(..)
@@ -116,34 +115,38 @@ module Hasura.RQL.Types.SchemaCache
   , FunctionInfo(..)
   , FunctionCache
   , CronTriggerInfo(..)
+
+  , MetadataResourceVersion(..)
+  , initialResourceVersion
+  , getBoolExpDeps
   ) where
 
 import           Hasura.Prelude
 
-import qualified Data.ByteString.Lazy                     as BL
-import qualified Data.HashMap.Strict                      as M
-import qualified Data.HashSet                             as HS
-import qualified Language.GraphQL.Draft.Syntax            as G
+import qualified Data.ByteString.Lazy                as BL
+import qualified Data.HashMap.Strict                 as M
+import qualified Data.HashSet                        as HS
+import qualified Language.GraphQL.Draft.Syntax       as G
 
-import           Control.Lens                             (makeLenses)
+import           Control.Lens                        (makeLenses)
 import           Data.Aeson
 import           Data.Aeson.TH
+import           Data.Int                            (Int64)
 import           Data.Text.Extended
 import           System.Cron.Types
 
-import qualified Hasura.Backends.Postgres.Connection      as PG
-import qualified Hasura.GraphQL.Parser                    as P
-import qualified Hasura.SQL.AnyBackend                    as AB
+import qualified Hasura.Backends.Postgres.Connection as PG
+import qualified Hasura.GraphQL.Parser               as P
+import qualified Hasura.SQL.AnyBackend               as AB
 
-import           Hasura.Backends.MSSQL.Instances.Types    ()
-import           Hasura.Backends.Postgres.Instances.Types ()
-import           Hasura.GraphQL.Context                   (GQLContext, RemoteField, RoleContext)
-import           Hasura.Incremental                       (Cacheable, Dependency, MonadDepend (..),
-                                                           selectKeyD)
+import           Hasura.GraphQL.Context              (GQLContext, RemoteField, RoleContext)
+import           Hasura.Incremental                  (Cacheable, Dependency, MonadDepend (..),
+                                                      selectKeyD)
 import           Hasura.RQL.IR.BoolExp
 import           Hasura.RQL.Types.Action
 import           Hasura.RQL.Types.ApiLimit
 import           Hasura.RQL.Types.Backend
+import           Hasura.RQL.Types.Column
 import           Hasura.RQL.Types.Common
 import           Hasura.RQL.Types.ComputedField
 import           Hasura.RQL.Types.CustomTypes
@@ -160,8 +163,16 @@ import           Hasura.RQL.Types.SchemaCacheTypes
 import           Hasura.RQL.Types.Source
 import           Hasura.RQL.Types.Table
 import           Hasura.Session
-import           Hasura.Tracing                           (TraceT)
+import           Hasura.Tracing                      (TraceT)
 
+
+newtype MetadataResourceVersion
+  = MetadataResourceVersion
+  { getMetadataResourceVersion :: Int64
+  } deriving (Show, Eq, Num, FromJSON, ToJSON)
+
+initialResourceVersion :: MetadataResourceVersion
+initialResourceVersion = MetadataResourceVersion 0
 
 reportSchemaObjs :: [SchemaObjId] -> Text
 reportSchemaObjs = commaSeparated . sort . map reportSchemaObj
@@ -311,6 +322,7 @@ data SchemaCache
   , scEndpoints                   :: !(EndpointTrie GQLQueryWithText)
   , scApiLimits                   :: !ApiLimit
   , scMetricsConfig               :: !MetricsConfig
+  , scMetadataResourceVersion     :: !(Maybe MetadataResourceVersion)
   }
 $(deriveToJSON hasuraJSON ''SchemaCache)
 
@@ -442,3 +454,53 @@ getDependentObjsWith f sc objId =
     go (SOITable tn1) (SOITable tn2)      = Just $ tn1 == tn2
     go (SOITable tn1) (SOITableObj tn2 _) = Just $ tn1 == tn2
     go _              _                   = Nothing
+
+
+-- | Build dependencies from an AnnBoolExpPartialSQL.
+getBoolExpDeps
+  :: Backend b
+  => SourceName
+  -> TableName b
+  -> AnnBoolExpPartialSQL b
+  -> [SchemaDependency]
+getBoolExpDeps source tn = \case
+  BoolAnd exps -> procExps exps
+  BoolOr  exps -> procExps exps
+  BoolNot e    -> getBoolExpDeps source tn e
+  BoolFld fld  -> getColExpDeps  source tn fld
+  BoolExists (GExists refqt whereExp) ->
+    let tableDep = SchemaDependency
+                     (SOSourceObj source
+                       $ AB.mkAnyBackend
+                       $ SOITable refqt)
+                     DRRemoteTable
+    in tableDep : getBoolExpDeps source refqt whereExp
+  where
+    procExps = concatMap (getBoolExpDeps source tn)
+
+getColExpDeps
+  :: Backend b
+  => SourceName
+  -> TableName b
+  -> AnnBoolExpFld b (PartialSQLExp b)
+  -> [SchemaDependency]
+getColExpDeps source tableName = \case
+  AVCol colInfo opExps ->
+    let columnName = pgiColumn colInfo
+        colDepReason = bool DRSessionVariable DROnType $ any hasStaticExp opExps
+        colDep = mkColDep colDepReason source tableName columnName
+        depColsInOpExp = mapMaybe opExpDepCol opExps
+        colDepsInOpExp = do
+          (col, rootTable) <- depColsInOpExp
+          pure $ mkColDep DROnType source (fromMaybe tableName rootTable) col
+    in colDep:colDepsInOpExp
+  AVRel relInfo relBoolExp ->
+    let relationshipName = riName relInfo
+        relationshipTable = riRTable relInfo
+        schemaDependency =
+          SchemaDependency
+            (SOSourceObj source
+              $ AB.mkAnyBackend
+              $ SOITableObj tableName (TORel relationshipName))
+            DROnType
+    in schemaDependency : getBoolExpDeps source relationshipTable relBoolExp

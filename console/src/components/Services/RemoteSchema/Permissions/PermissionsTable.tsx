@@ -1,9 +1,14 @@
 import React, { ChangeEvent } from 'react';
+import { GraphQLSchema } from 'graphql';
 import styles from '../../../Common/Permissions/PermissionStyles.scss';
 import PermTableHeader from '../../../Common/Permissions/TableHeader';
 import PermTableBody from '../../../Common/Permissions/TableBody';
 import { permissionsSymbols } from '../../../Common/Permissions/PermissionSymbols';
-import { findRemoteSchemaPermission } from './utils';
+import {
+  buildSchemaFromRoleDefn,
+  findRemoteSchemaPermission,
+  getRemoteSchemaFields,
+} from './utils';
 import {
   RolePermissions,
   PermOpenEditType,
@@ -22,6 +27,7 @@ export type PermissionsTableProps = {
     name: string;
     permissions?: PermissionsType[];
   };
+  schema: GraphQLSchema;
   bulkSelect: string[];
   readOnlyMode: boolean;
   permissionEdit: PermissionEdit;
@@ -37,6 +43,7 @@ const PermissionsTable: React.FC<PermissionsTableProps> = ({
   isEditing,
   bulkSelect,
   readOnlyMode,
+  schema,
   permSetRoleName,
   permSetBulkSelect,
   setSchemaDefinition,
@@ -82,7 +89,6 @@ const PermissionsTable: React.FC<PermissionsTableProps> = ({
     };
   };
 
-  // get root types for a given role
   const getQueryTypes = (role: string, isNewRole: boolean) => {
     return queryTypes.map(queryType => {
       const dispatchOpenEdit = () => () => {
@@ -139,10 +145,28 @@ const PermissionsTable: React.FC<PermissionsTableProps> = ({
           permissionAccess = permissionsSymbols.noAccess;
         } else {
           const existingPerm = findRemoteSchemaPermission(allPermissions, role);
-          if (!existingPerm) {
-            permissionAccess = permissionsSymbols.noAccess;
-          } else {
+          if (existingPerm) {
+            const remoteFields = getRemoteSchemaFields(
+              schema,
+              buildSchemaFromRoleDefn(existingPerm?.definition.schema)
+            );
             permissionAccess = permissionsSymbols.fullAccess;
+
+            if (
+              remoteFields
+                .filter(
+                  field =>
+                    !field.name.startsWith('enum') &&
+                    !field.name.startsWith('scalar')
+                )
+                .some(field =>
+                  field.children?.some(element => element.checked === false)
+                )
+            ) {
+              permissionAccess = permissionsSymbols.partialAccess;
+            }
+          } else {
+            permissionAccess = permissionsSymbols.noAccess;
           }
         }
         return permissionAccess;
@@ -182,10 +206,13 @@ const PermissionsTable: React.FC<PermissionsTableProps> = ({
       <div>
         <div className={styles.permissionsLegend}>
           <span className={styles.permissionsLegendValue}>
-            {permissionsSymbols.fullAccess} : allowed
+            {permissionsSymbols.fullAccess} : full access
           </span>
           <span className={styles.permissionsLegendValue}>
-            {permissionsSymbols.noAccess} : not allowed
+            {permissionsSymbols.noAccess} : no access
+          </span>
+          <span className={styles.permissionsLegendValue}>
+            {permissionsSymbols.partialAccess} : partial access
           </span>
         </div>
       </div>
