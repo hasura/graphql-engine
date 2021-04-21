@@ -1,6 +1,9 @@
 # Hasura GraphQL Engine Changelog
 
 ## Next release
+(Add entries below in the order of: server, console, cli, docs, others)
+
+## v2.0.0-alpha.9
 
 ### Support comparing columns across related tables in permission's boolean expressions
 
@@ -13,8 +16,7 @@ only when there are enough present in the items inventory.
 
 ### Bug fixes and improvements
 
-(Add entries here in the order of: server, console, cli, docs, others)
-
+- server: fix bug with catalog upgrade from alpha.7 (fix #6802)
 - server: fix a bug in remote schema permissions that could result in an invalid GraphQL schema (fix #6029, #6703)
 - server: support query multiplexing in MSSQL subscriptions
 - console: add bigquery support (#1000)
