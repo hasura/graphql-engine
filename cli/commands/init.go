@@ -61,6 +61,10 @@ func NewInitCmd(ec *cli.ExecutionContext) *cobra.Command {
 			if err != nil {
 				return err
 			}
+			// show deprecation message if initializing a config v1 project
+			if opts.Version <= cli.V1 {
+				return fmt.Errorf("config v1 is deprecated, please consider using config v3")
+			}
 			return ec.PluginsConfig.Repo.EnsureCloned()
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
