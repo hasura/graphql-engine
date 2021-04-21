@@ -1,29 +1,39 @@
 module Hasura.SQL.Backend
-  ( BackendType(..)
+  ( PostgresKind(..)
+  , BackendType(..)
   , supportedBackends
   ) where
 
 import           Hasura.Prelude
 
 import           Data.Aeson
+import           Data.Proxy
 import           Data.Text          (unpack)
 import           Data.Text.Extended
 
+import           Hasura.Incremental
+
+
+-- | Argument to Postgres; we represent backends which are variations on Postgres as sub-types of
+-- Postgres. This value indicates which "flavour" of Postgres a backend is.
+data PostgresKind
+  = Vanilla
+  deriving (Eq, Ord)
 
 -- | An enum that represents each backend we support.
--- This type MUST be an enumeration (an enumeration consists of one or
--- more nullary, non-GADT constructors).
+-- As we lift values to the type level, we expect this type to have an Enum instance.
 data BackendType
-  = Postgres
+  = Postgres PostgresKind
   | MSSQL
   | BigQuery
-  deriving (Eq, Ord, Bounded, Enum)
+  deriving (Eq, Ord)
+
 
 -- | The name of the backend, as we expect it to appear in our metadata and API.
 instance ToTxt BackendType where
-  toTxt Postgres = "postgres"
-  toTxt MSSQL    = "mssql"
-  toTxt BigQuery = "bigquery"
+  toTxt (Postgres Vanilla) = "postgres"
+  toTxt MSSQL              = "mssql"
+  toTxt BigQuery           = "bigquery"
 
 -- | The FromJSON instance uses this lookup mechanism to avoid having
 -- to duplicate and hardcode the backend string.
@@ -35,6 +45,12 @@ instance FromJSON BackendType where
 instance ToJSON BackendType where
   toJSON = String . toTxt
 
+instance Cacheable (Proxy (b :: BackendType))
+
 
 supportedBackends :: [BackendType]
-supportedBackends = [minBound @BackendType .. maxBound]
+supportedBackends =
+  [ Postgres Vanilla
+  , MSSQL
+  , BigQuery
+  ]

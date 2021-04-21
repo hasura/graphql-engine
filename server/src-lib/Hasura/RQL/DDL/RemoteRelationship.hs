@@ -16,58 +16,59 @@ import           Hasura.RQL.Types
 
 
 runCreateRemoteRelationship
-  :: forall m b
+  :: forall b m
    . (MonadError QErr m, CacheRWM m, MetadataM m, BackendMetadata b)
   => RemoteRelationship b
   -> m EncJSON
 runCreateRemoteRelationship RemoteRelationship{..} = do
-  void $ askTabInfo rtrSource rtrTable
+  void $ askTabInfo @b rtrSource rtrTable
   let metadataObj = MOSourceObjId rtrSource
                     $ AB.mkAnyBackend
-                    $ SMOTableObj rtrTable
+                    $ SMOTableObj @b rtrTable
                     $ MTORemoteRelationship rtrName
       metadata = RemoteRelationshipMetadata rtrName $
         RemoteRelationshipDef rtrRemoteSchema rtrHasuraFields rtrRemoteField
   buildSchemaCacheFor metadataObj
     $ MetadataModifier
-    $ tableMetadataSetter rtrSource rtrTable.tmRemoteRelationships
+    $ tableMetadataSetter @b rtrSource rtrTable.tmRemoteRelationships
       %~ OMap.insert rtrName metadata
   pure successMsg
 
 runUpdateRemoteRelationship
-  :: forall m b
+  :: forall b m
    . (MonadError QErr m, CacheRWM m, MetadataM m, BackendMetadata b)
   => RemoteRelationship b
   -> m EncJSON
 runUpdateRemoteRelationship RemoteRelationship{..} = do
-  fieldInfoMap <- askFieldInfoMap rtrSource rtrTable
+  fieldInfoMap <- askFieldInfoMap @b rtrSource rtrTable
   void $ askRemoteRel fieldInfoMap rtrName
   let metadataObj = MOSourceObjId rtrSource
                       $ AB.mkAnyBackend
-                      $ SMOTableObj rtrTable
+                      $ SMOTableObj @b rtrTable
                       $ MTORemoteRelationship rtrName
       metadata = RemoteRelationshipMetadata rtrName $
         RemoteRelationshipDef rtrRemoteSchema rtrHasuraFields rtrRemoteField
   buildSchemaCacheFor metadataObj
     $ MetadataModifier
-    $ tableMetadataSetter rtrSource rtrTable.tmRemoteRelationships
+    $ tableMetadataSetter @b rtrSource rtrTable.tmRemoteRelationships
       %~ OMap.insert rtrName metadata
   pure successMsg
 
 runDeleteRemoteRelationship
-  :: (MonadError QErr m, CacheRWM m, MetadataM m)
-  => DeleteRemoteRelationship
+  :: forall b m
+   . (BackendMetadata b, MonadError QErr m, CacheRWM m, MetadataM m)
+  => DeleteRemoteRelationship b
   -> m EncJSON
 runDeleteRemoteRelationship (DeleteRemoteRelationship source table relName)= do
-  fieldInfoMap <- askFieldInfoMap source table
+  fieldInfoMap <- askFieldInfoMap @b source table
   void $ askRemoteRel fieldInfoMap relName
   let metadataObj = MOSourceObjId source
                       $ AB.mkAnyBackend
-                      $ SMOTableObj table
+                      $ SMOTableObj @b table
                       $ MTORemoteRelationship relName
   buildSchemaCacheFor metadataObj
     $ MetadataModifier
-    $ tableMetadataSetter source table %~ dropRemoteRelationshipInMetadata relName
+    $ tableMetadataSetter @b source table %~ dropRemoteRelationshipInMetadata relName
   pure successMsg
 
 dropRemoteRelationshipInMetadata

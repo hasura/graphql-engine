@@ -15,6 +15,8 @@
 module Hasura.SQL.TH
   ( backendConstructors
   , forEachBackend
+  , getBackendValue
+  , getBackendTypeValue
   , getBackendTagName
   , getBackendValueName
   , backendList
@@ -30,41 +32,57 @@ import           Language.Haskell.TH
 import           Hasura.SQL.Backend
 
 
--- | Inspects the 'BackendType' to produce a list of its constructors in the 'Q'
--- monad.
-backendConstructors :: Q [Name]
+type BackendConstructor = [Name]
+
+-- | Inspects the 'BackendType' to produce a list of its constructors in the 'Q' monad. Each
+-- constructor is represented as a list of names, to include the arguments, if any.
+-- This assumes that the arguments themselves don't have arguments.
+backendConstructors :: Q [BackendConstructor]
 backendConstructors = do
-  -- It is safe to assume that we know the "shape" of 'BackendType' here. It is
-  -- an instance of `Enum`, and therefore was already checked by the compiler:
-  -- we have the guarantee it only has nullary normal constructors. Furthermore,
-  -- a fail here would only result in a compilation error, not a runtime one.
   TyConI (DataD _ _ _ _ cons _) <- reify ''BackendType
-  pure [name | NormalC name _ <- cons]
+  concat <$> for cons \con -> do
+    -- We pattern match in the monad to rely on 'fail'.
+    NormalC name args <- pure con
+    argsConstructors <- for args \(_, arg) -> do
+      ConT argName <- pure arg
+      TyConI (DataD _ _ _ _ argCons _) <- reify argName
+      pure [argCon | NormalC argCon _ <- argCons]
+    pure $ map (name :) $ sequenceA argsConstructors
 
 -- | Associates a value in the 'Q' monad to each backend @Name@.
-forEachBackend :: (Name -> Q a) -> Q [a]
+forEachBackend :: (BackendConstructor -> Q a) -> Q [a]
 forEachBackend f = traverse f =<< backendConstructors
 
+-- | Associates to a backend the promoted type level value.
+--   getBackendValue ["Postgres", "Vanilla"] = [| Postgres Vanilla |]
+getBackendValue :: BackendConstructor -> Exp
+getBackendValue backend = foldl1 AppE $ ConE <$> backend
+
+-- | Associates to a backend the promoted type level value.
+--   getBackendValue ["Postgres", "Vanilla"] = [t| ('Postgres 'Vanilla) |]
+getBackendTypeValue :: BackendConstructor -> Type
+getBackendTypeValue backend = ParensT $ foldl1 AppT $ PromotedT <$> backend
+
 -- | Associates to a backend the Name of its corresponding tag.
-getBackendTagName :: Name -> Name
-getBackendTagName backend = mkName $ nameBase backend ++ "Tag"
+getBackendTagName :: BackendConstructor -> Name
+getBackendTagName backend = mkName $ concatMap nameBase backend ++ "Tag"
 
 -- | Associates to a backend the Name of its corresponding 'AnyBackend' constructor.
-getBackendValueName :: Name -> Name
-getBackendValueName backend = mkName $ nameBase backend ++ "Value"
+getBackendValueName :: BackendConstructor -> Name
+getBackendValueName backend = mkName $ concatMap nameBase backend ++ "Value"
 
 -- | Creates a list of values by associating an expression to each backend.
-backendList :: (Name -> Q Exp) -> Q Exp
+backendList :: (BackendConstructor -> Q Exp) -> Q Exp
 backendList f = ListE <$> forEachBackend f
 
 -- | Creates a case expression with a match for each backend. It is not possible
 -- do directly expand a @Q [Match]@, which is a body of a case, hence the need
 -- to instead generate the full @Q Exp@.
 backendCase
-  :: Q Exp           -- ^ the expresion on which we do a case switch
-  -> (Name -> Q Pat) -- ^ the match pattern for a given backend
-  -> (Name -> Q Exp) -- ^ the match body for a given backend
-  -> Maybe (Q Exp)   -- ^ the default case, if any
+  :: Q Exp                         -- ^ the expresion on which we do a case switch
+  -> (BackendConstructor -> Q Pat) -- ^ the match pattern for a given backend
+  -> (BackendConstructor -> Q Exp) -- ^ the match body for a given backend
+  -> Maybe (Q Exp)                 -- ^ the default case, if any
   -> Q Exp
 backendCase caseExp toPat toBody defaultCase = do
   cexp    <- caseExp
@@ -83,9 +101,9 @@ backendCase caseExp toPat toBody defaultCase = do
 -- this only returns one declaration, it nonetheless returns a @[Dec]@ as it's
 -- what the $() splice interpolation syntax expects.
 backendData
-  :: Name            -- ^ the name of the type
-  -> [TyVarBndr]     -- ^ type variables of the type if any
-  -> (Name -> Q Con) -- ^ the constructor for a given backend
+  :: Name                          -- ^ the name of the type
+  -> [TyVarBndr]                   -- ^ type variables of the type if any
+  -> (BackendConstructor -> Q Con) -- ^ the constructor for a given backend
   -> Q [Dec]
 backendData name tVars mkCon = do
   constructors <- forEachBackend mkCon

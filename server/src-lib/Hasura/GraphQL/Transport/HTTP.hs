@@ -241,8 +241,8 @@ runGQ env logger reqId userInfo ipAddress reqHeaders queryType reqUnparsed = do
               E.ExecStepDB _headers exists -> doQErr $ do
                 (telemTimeIO_DT, resp) <-
                   AB.dispatchAnyBackend @BackendTransport exists
-                    \(EB.DBStepInfo _ sourceConfig genSql tx) ->
-                        runDBQuery
+                    \(EB.DBStepInfo _ sourceConfig genSql tx :: EB.DBStepInfo b) ->
+                        runDBQuery @b
                           reqId
                           reqUnparsed
                           fieldName
@@ -295,8 +295,8 @@ runGQ env logger reqId userInfo ipAddress reqHeaders queryType reqUnparsed = do
               E.ExecStepDB responseHeaders exists -> doQErr $ do
                 (telemTimeIO_DT, resp) <-
                   AB.dispatchAnyBackend @BackendTransport exists
-                    \(EB.DBStepInfo _ sourceConfig genSql tx) ->
-                        runDBMutation
+                    \(EB.DBStepInfo _ sourceConfig genSql tx :: EB.DBStepInfo b) ->
+                        runDBMutation @b
                           reqId
                           reqUnparsed
                           fieldName
@@ -394,13 +394,13 @@ runGQ env logger reqId userInfo ipAddress reqHeaders queryType reqUnparsed = do
 
 coalescePostgresMutations
   :: EB.ExecutionPlan
-  -> Maybe ( SourceConfig 'Postgres
-           , InsOrdHashMap G.Name (EB.DBStepInfo 'Postgres)
+  -> Maybe ( SourceConfig ('Postgres 'Vanilla)
+           , InsOrdHashMap G.Name (EB.DBStepInfo ('Postgres 'Vanilla))
            )
 coalescePostgresMutations plan = do
   -- we extract the name and config of the first mutation root, if any
   (oneSourceName, oneSourceConfig) <- case toList plan of
-    (E.ExecStepDB _ exists:_) -> AB.unpackAnyBackend @'Postgres exists <&> \dbsi ->
+    (E.ExecStepDB _ exists:_) -> AB.unpackAnyBackend @('Postgres 'Vanilla) exists <&> \dbsi ->
       ( EB.dbsiSourceName   dbsi
       , EB.dbsiSourceConfig dbsi
       )
@@ -409,7 +409,7 @@ coalescePostgresMutations plan = do
   -- and that it is Postgres
   mutations <- for plan \case
     E.ExecStepDB _ exists -> do
-      dbStepInfo <- AB.unpackAnyBackend @'Postgres exists
+      dbStepInfo <- AB.unpackAnyBackend @('Postgres 'Vanilla) exists
       guard $ oneSourceName == EB.dbsiSourceName dbStepInfo
       Just dbStepInfo
     _ -> Nothing

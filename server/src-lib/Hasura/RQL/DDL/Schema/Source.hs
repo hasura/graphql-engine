@@ -93,7 +93,7 @@ runDropSource (DropSource name cascade) = do
         tell dropSourceMetadataModifier
 
       buildSchemaCacheFor (MOSource name) metadataModifier
-      postDropSourceHook sourceConfig
+      postDropSourceHook @b sourceConfig
       where
         getIndirectDep :: SchemaObjId -> Maybe (SourceObjId b)
         getIndirectDep = \case

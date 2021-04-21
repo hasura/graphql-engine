@@ -98,7 +98,7 @@ migrateCatalog
      , MonadIO m
      , MonadBaseControl IO m
      )
-  => Maybe (SourceConnConfiguration 'Postgres)
+  => Maybe (SourceConnConfiguration ('Postgres 'Vanilla))
   -> MaintenanceMode
   -> UTCTime
   -> m (MigrationResult, Metadata)
@@ -139,7 +139,7 @@ migrateCatalog maybeDefaultSourceConfig maintenanceMode migrationTime = do
             Just defaultSourceConfig ->
               -- insert metadata with default source
               let defaultSourceMetadata = AB.mkAnyBackend $
-                    SourceMetadata defaultSource mempty mempty defaultSourceConfig
+                    SourceMetadata @('Postgres 'Vanilla) defaultSource mempty mempty defaultSourceConfig
                   sources = OMap.singleton defaultSource defaultSourceMetadata
               in emptyMetadata{_metaSources = sources}
 
@@ -167,7 +167,7 @@ migrateCatalog maybeDefaultSourceConfig maintenanceMode migrationTime = do
 
 downgradeCatalog
   :: forall m. (MonadIO m, MonadTx m)
-  => Maybe (SourceConnConfiguration 'Postgres)
+  => Maybe (SourceConnConfiguration ('Postgres 'Vanilla))
   -> DowngradeOptions -> UTCTime -> m MigrationResult
 downgradeCatalog defaultSourceConfig opts time = do
     downgradeFrom =<< liftTx getCatalogVersion
@@ -232,7 +232,7 @@ setCatalogVersion ver time = liftTx $ Q.unitQE defaultTxErrorHandler [Q.sql|
 
 migrations
   :: forall m. (MonadIO m, MonadTx m)
-  => Maybe (SourceConnConfiguration 'Postgres) -> Bool -> MaintenanceMode -> [(Text, MigrationPair m)]
+  => Maybe (SourceConnConfiguration ('Postgres 'Vanilla)) -> Bool -> MaintenanceMode -> [(Text, MigrationPair m)]
 migrations maybeDefaultSourceConfig dryRun maintenanceMode =
     -- We need to build the list of migrations at compile-time so that we can compile the SQL
     -- directly into the executable using `Q.sqlFromFile`. The GHC stage restriction makes

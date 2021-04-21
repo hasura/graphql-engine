@@ -20,8 +20,9 @@ import           Hasura.SQL.TH
 -- declaration results in the following type:
 --
 --   data BackendTag (b :: BackendType) where
---     PostgresTag :: BackendTag 'Postgres
---     MSSQLTag    :: BackendTag 'MSSQL
+--     PostgresVanillaTag :: BackendTag ('Postgres 'Vanilla)
+--     PostgresCitusTag   :: BackendTag ('Postgres 'Citus)
+--     MSSQLTag           :: BackendTag 'MSSQL
 --     ...
 $(let name = mkName "BackendTag" in
   backendData
@@ -36,7 +37,7 @@ $(let name = mkName "BackendTag" in
     -- no type argument
     []
     -- the resulting type (BackendTag 'Foo)
-    (AppT (ConT name) (PromotedT b))
+    (AppT (ConT name) (getBackendTypeValue b))
   )
  )
 
@@ -51,7 +52,7 @@ $(concat <$> forEachBackend \b -> do
   -- the name of the tag: FooTag
   let tagName      = pure $ ConE $ getBackendTagName b
   -- the promoted version of b: 'Foo
-  let promotedName = pure $ PromotedT b
+  let promotedName = pure $ getBackendTypeValue b
   -- the instance:
   --  instance HasTag 'Foo          where backendTag = FooTag
   [d| instance HasTag $promotedName where backendTag = $tagName |]
@@ -71,7 +72,7 @@ reify t = $(backendCase
   -- the pattern for a given backend: just its tag, no argument
   (\b -> pure $ ConP (getBackendTagName b) [])
   -- the body for a given backend: the backend constructor itself
-  (\b -> pure $ ConE b)
+  (\b -> pure $ getBackendValue b)
   -- no default case: every constructor should be handled
   Nothing
   )

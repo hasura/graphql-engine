@@ -534,21 +534,16 @@ selectFunctionAggregate function fieldName description selectPermissions = runMa
       }
 
 selectFunctionConnection
-  :: ( BackendSchema 'Postgres
-     , MonadSchema n m
-     , MonadTableInfo r m
-     , MonadRole r m
-     , Has QueryContext r
-     , Has (BackendExtension 'Postgres) r
-     )
-  => FunctionInfo 'Postgres       -- ^ SQL function info
-  -> G.Name                       -- ^ field display name
-  -> Maybe G.Description          -- ^ field description, if any
-  -> PrimaryKeyColumns 'Postgres  -- ^ primary key columns of the target table
-  -> SelPermInfo 'Postgres        -- ^ select permissions of the target table
-  -> m (Maybe (FieldParser n (ConnectionSelectExp 'Postgres)))
+  :: forall pgKind r m n
+   . MonadBuildSchema ('Postgres pgKind) r m n
+  => FunctionInfo ('Postgres pgKind)      -- ^ SQL function info
+  -> G.Name                               -- ^ field display name
+  -> Maybe G.Description                  -- ^ field description, if any
+  -> PrimaryKeyColumns ('Postgres pgKind) -- ^ primary key columns of the target table
+  -> SelPermInfo ('Postgres pgKind)       -- ^ select permissions of the target table
+  -> m (Maybe (FieldParser n (ConnectionSelectExp ('Postgres pgKind))))
 selectFunctionConnection function fieldName description pkeyColumns selectPermissions = do
-  xRelay <- asks $ backendRelay @'Postgres . getter
+  xRelay <- asks $ backendRelay @('Postgres pgKind) . getter
   for xRelay \xRelayInfo -> do
     stringifyNum <- asks $ qcStringifyNum . getter
     let table = _fiReturnType function
@@ -1022,17 +1017,11 @@ relationshipField relationshipInfo = runMaybeT do
 
 -- | Computed field parser
 computedFieldPG
-  :: forall m n r
-   . ( BackendSchema 'Postgres
-     , MonadSchema n m
-     , MonadTableInfo r m
-     , MonadRole r m
-     , Has QueryContext r
-     , Has (BackendExtension 'Postgres) r
-     )
-  => ComputedFieldInfo 'Postgres
-  -> SelPermInfo 'Postgres
-  -> m (Maybe (FieldParser n (AnnotatedField 'Postgres)))
+  :: forall pgKind r m n
+   . MonadBuildSchema ('Postgres pgKind) r m n
+  => ComputedFieldInfo ('Postgres pgKind)
+  -> SelPermInfo ('Postgres pgKind)
+  -> m (Maybe (FieldParser n (AnnotatedField ('Postgres pgKind))))
 computedFieldPG ComputedFieldInfo{..} selectPermissions = runMaybeT do
   stringifyNum <- asks $ qcStringifyNum . getter
   fieldName <- lift $ textToName $ computedFieldNameToText _cfiName
@@ -1056,7 +1045,7 @@ computedFieldPG ComputedFieldInfo{..} selectPermissions = runMaybeT do
                        , IR._cfssArguments = args
                        })
                       caseBoolExpUnpreparedValue)
-      dummyParser <- lift $ columnParser @'Postgres (ColumnScalar scalarReturnType) (G.Nullability True)
+      dummyParser <- lift $ columnParser @('Postgres pgKind) (ColumnScalar scalarReturnType) (G.Nullability True)
       pure $ P.selection fieldName (Just fieldDescription) fieldArgsParser dummyParser
     CFRSetofTable tableName -> do
       remotePerms        <- MaybeT $ tableSelectPermissions tableName
@@ -1078,7 +1067,7 @@ computedFieldPG ComputedFieldInfo{..} selectPermissions = runMaybeT do
       in mkDescriptionWith (_cffDescription _cfiFunction) defaultDescription
 
     computedFieldFunctionArgs
-      :: ComputedFieldFunction 'Postgres -> m (InputFieldsParser n (IR.FunctionArgsExpTableRow 'Postgres (UnpreparedValue 'Postgres)))
+      :: ComputedFieldFunction ('Postgres pgKind) -> m (InputFieldsParser n (IR.FunctionArgsExpTableRow ('Postgres pgKind) (UnpreparedValue ('Postgres pgKind))))
     computedFieldFunctionArgs ComputedFieldFunction{..} =
       functionArgs _cffName (IAUserProvided <$> _cffInputArgs) <&> fmap addTableAndSessionArgument
       where
@@ -1097,13 +1086,10 @@ computedFieldPG ComputedFieldInfo{..} selectPermissions = runMaybeT do
 
 -- | Remote relationship field parsers
 remoteRelationshipFieldPG
-  :: ( MonadSchema n m
-     , MonadRole r m
-     , MonadError QErr m
-     , Has QueryContext r
-     )
-  => RemoteFieldInfo 'Postgres
-  -> m (Maybe [FieldParser n (AnnotatedField 'Postgres)])
+  :: forall pgKind r m n
+   . MonadBuildSchema ('Postgres pgKind) r m n
+  => RemoteFieldInfo ('Postgres pgKind)
+  -> m (Maybe [FieldParser n (AnnotatedField ('Postgres pgKind))])
 remoteRelationshipFieldPG remoteFieldInfo = runMaybeT do
   queryType                   <- asks $ qcQueryType . getter
   remoteRelationshipQueryCtx  <- asks $ qcRemoteRelationshipContext . getter
@@ -1330,7 +1316,7 @@ base64 encoded JSON string is accepted for 'node' field resolver's 'id' input.
 
 data V1NodeId
   = V1NodeId
-  { _nidTable   :: !(TableName 'Postgres)
+  { _nidTable   :: !(TableName ('Postgres 'Vanilla))
   , _nidColumns :: !(NESeq.NESeq J.Value)
   } deriving (Show, Eq)
 
@@ -1361,20 +1347,20 @@ throwInvalidNodeId t = parseError $ "the node id is invalid: " <> t
 -- | The 'node' root field of a Relay request.
 nodePG
   :: forall m n r
-   . ( BackendSchema 'Postgres
+   . ( BackendSchema ('Postgres 'Vanilla)
      , MonadSchema n m
      , MonadTableInfo r m
      , MonadRole r m
      , Has QueryContext r
-     , Has (BackendExtension 'Postgres) r
+     , Has (BackendExtension ('Postgres 'Vanilla)) r
      )
   => m (P.Parser 'Output n
-         ( HashMap (TableName 'Postgres)
+         ( HashMap (TableName ('Postgres 'Vanilla))
            ( SourceName
-           , SourceConfig 'Postgres
-           , SelPermInfo 'Postgres
-           , PrimaryKeyColumns 'Postgres
-           , AnnotatedFields 'Postgres
+           , SourceConfig ('Postgres 'Vanilla)
+           , SelPermInfo ('Postgres 'Vanilla)
+           , PrimaryKeyColumns ('Postgres 'Vanilla)
+           , AnnotatedFields ('Postgres 'Vanilla)
            )
          )
        )
@@ -1386,8 +1372,8 @@ nodePG = memoizeOn 'nodePG () do
   let allTables = Map.fromList $ do
         -- FIXME? When source name is used in type generation?
         (source, sourceInfo) <- Map.toList sources
-        tableName            <- maybe [] (Map.keys . takeValidTables) $ unsafeSourceTables @'Postgres sourceInfo
-        sourceConfig         <- maybeToList $ unsafeSourceConfiguration @'Postgres sourceInfo
+        tableName            <- maybe [] (Map.keys . takeValidTables) $ unsafeSourceTables @('Postgres 'Vanilla) sourceInfo
+        sourceConfig         <- maybeToList $ unsafeSourceConfiguration @('Postgres 'Vanilla) sourceInfo
         pure (tableName, (source, sourceConfig))
   tables <-
     Map.mapMaybe id <$> flip Map.traverseWithKey allTables \table (source, sourceConfig) -> runMaybeT do
@@ -1400,12 +1386,12 @@ nodePG = memoizeOn 'nodePG () do
 
 nodeField
   :: forall m n r
-   . ( BackendSchema 'Postgres
+   . ( BackendSchema ('Postgres 'Vanilla)
      , MonadSchema n m
      , MonadTableInfo r m
      , MonadRole r m
      , Has QueryContext r
-     , Has (BackendExtension 'Postgres) r
+     , Has (BackendExtension ('Postgres 'Vanilla)) r
      )
   => m (P.FieldParser n (QueryRootField UnpreparedValue))
 nodeField = do
@@ -1447,8 +1433,8 @@ nodeField = do
 
     buildNodeIdBoolExp
       :: NESeq.NESeq J.Value
-      -> NESeq.NESeq (ColumnInfo 'Postgres)
-      -> n (IR.AnnBoolExp 'Postgres (UnpreparedValue 'Postgres))
+      -> NESeq.NESeq (ColumnInfo ('Postgres 'Vanilla))
+      -> n (IR.AnnBoolExp ('Postgres 'Vanilla) (UnpreparedValue ('Postgres 'Vanilla)))
     buildNodeIdBoolExp columnValues pkeyColumns = do
         let firstPkColumn NESeq.:<|| remainingPkColumns = pkeyColumns
             firstColumnValue NESeq.:<|| remainingColumns = columnValues

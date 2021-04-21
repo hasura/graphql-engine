@@ -51,9 +51,9 @@ data TableMeta (b :: BackendType)
 
 fetchMeta
   :: (MonadTx m)
-  => TableCache 'Postgres
-  -> FunctionCache 'Postgres
-  -> m ([TableMeta 'Postgres], [FunctionMeta])
+  => TableCache ('Postgres 'Vanilla)
+  -> FunctionCache ('Postgres 'Vanilla)
+  -> m ([TableMeta ('Postgres 'Vanilla)], [FunctionMeta])
 fetchMeta tables functions = do
   tableMetaInfos <- fetchTableMetadata
   functionMetaInfos <- fetchFunctionMetadata
@@ -112,7 +112,7 @@ data TableDiff (b :: BackendType)
   , _tdNewDescription  :: !(Maybe PGDescription)
   }
 
-getTableDiff :: TableMeta 'Postgres -> TableMeta 'Postgres -> TableDiff 'Postgres
+getTableDiff :: TableMeta ('Postgres 'Vanilla) -> TableMeta ('Postgres 'Vanilla) -> TableDiff ('Postgres 'Vanilla)
 getTableDiff oldtm newtm =
   TableDiff mNewName droppedCols addedCols alteredCols
   droppedFKeyConstraints computedFieldDiff uniqueOrPrimaryCons mNewDesc
@@ -165,22 +165,22 @@ getTableDiff oldtm newtm =
 
 getTableChangeDeps
   :: (QErrM m, CacheRM m)
-  => SourceName -> QualifiedTable -> TableDiff 'Postgres -> m [SchemaObjId]
+  => SourceName -> QualifiedTable -> TableDiff ('Postgres 'Vanilla) -> m [SchemaObjId]
 getTableChangeDeps source tn tableDiff = do
   sc <- askSchemaCache
   -- for all the dropped columns
   droppedColDeps <- fmap concat $ forM droppedCols $ \droppedCol -> do
     let objId = SOSourceObj source
                   $ AB.mkAnyBackend
-                  $ SOITableObj tn
-                  $ TOCol droppedCol
+                  $ SOITableObj @('Postgres 'Vanilla) tn
+                  $ TOCol @('Postgres 'Vanilla) droppedCol
     return $ getDependentObjs sc objId
   -- for all dropped constraints
   droppedConsDeps <- fmap concat $ forM droppedFKeyConstraints $ \droppedCons -> do
     let objId = SOSourceObj source
                   $ AB.mkAnyBackend
-                  $ SOITableObj tn
-                  $ TOForeignKey droppedCons
+                  $ SOITableObj @('Postgres 'Vanilla) tn
+                  $ TOForeignKey @('Postgres 'Vanilla) droppedCons
     return $ getDependentObjs sc objId
   return $ droppedConsDeps <> droppedColDeps <> droppedComputedFieldDeps
   where
@@ -189,7 +189,7 @@ getTableChangeDeps source tn tableDiff = do
       map
         (SOSourceObj source
           . AB.mkAnyBackend
-          . SOITableObj tn
+          . SOITableObj @('Postgres 'Vanilla) tn
           . TOComputedField)
         $ _cfdDropped computedFieldDiff
 
@@ -199,7 +199,7 @@ data SchemaDiff (b :: BackendType)
   , _sdAlteredTables :: ![(QualifiedTable, TableDiff b)]
   }
 
-getSchemaDiff :: [TableMeta 'Postgres] -> [TableMeta 'Postgres] -> SchemaDiff 'Postgres
+getSchemaDiff :: [TableMeta ('Postgres 'Vanilla)] -> [TableMeta ('Postgres 'Vanilla)] -> SchemaDiff ('Postgres 'Vanilla)
 getSchemaDiff oldMeta newMeta =
   SchemaDiff droppedTables survivingTables
   where
@@ -210,13 +210,13 @@ getSchemaDiff oldMeta newMeta =
 
 getSchemaChangeDeps
   :: (QErrM m, CacheRM m)
-  => SourceName -> SchemaDiff 'Postgres -> m [SourceObjId 'Postgres]
+  => SourceName -> SchemaDiff ('Postgres 'Vanilla) -> m [SourceObjId ('Postgres 'Vanilla)]
 getSchemaChangeDeps source schemaDiff = do
   -- Get schema cache
   sc <- askSchemaCache
   let tableIds =
         map
-          (SOSourceObj source . AB.mkAnyBackend . SOITable)
+          (SOSourceObj source . AB.mkAnyBackend . SOITable @('Postgres 'Vanilla))
           droppedTables
   -- Get the dependent of the dropped tables
   let tableDropDeps = concatMap (getDependentObjs sc) tableIds
@@ -227,7 +227,7 @@ getSchemaChangeDeps source schemaDiff = do
   where
     SchemaDiff droppedTables alteredTables = schemaDiff
 
-    getIndirectDep :: SchemaObjId -> Maybe (SourceObjId 'Postgres)
+    getIndirectDep :: SchemaObjId -> Maybe (SourceObjId ('Postgres 'Vanilla))
     getIndirectDep (SOSourceObj s exists) =
       AB.unpackAnyBackend exists >>= \case
         srcObjId@(SOITableObj tn _) ->
@@ -315,7 +315,7 @@ withMetadataCheck source cascade txAccess action = do
               SOIFunction qf -> Just qf
               _              -> Nothing
 
-        forM_ (droppedFuncs \\ purgedFuncs) $ tell . dropFunctionInMetadata source
+        forM_ (droppedFuncs \\ purgedFuncs) $ tell . dropFunctionInMetadata @('Postgres 'Vanilla) source
 
         -- Process altered functions
         forM_ alteredFuncs $ \(qf, newTy) -> do
@@ -335,7 +335,7 @@ withMetadataCheck source cascade txAccess action = do
   postActionSchemaCache <- askSchemaCache
 
   -- Recreate event triggers in hdb_catalog
-  let postActionTables = fromMaybe mempty $ unsafeTableCache source $ scSources postActionSchemaCache
+  let postActionTables = fromMaybe mempty $ unsafeTableCache @('Postgres 'Vanilla) source $ scSources postActionSchemaCache
   serverConfigCtx <- askServerConfigCtx
   liftEitherM $ runPgSourceWriteTx sourceConfig $
     forM_ (M.elems postActionTables) $ \(TableInfo coreInfo _ eventTriggers) -> do
@@ -352,11 +352,11 @@ withMetadataCheck source cascade txAccess action = do
          , CacheRM m
          , MonadWriter MetadataModifier m
          )
-      => TableCache 'Postgres -> SchemaDiff 'Postgres -> m ()
+      => TableCache ('Postgres 'Vanilla) -> SchemaDiff ('Postgres 'Vanilla) -> m ()
     processSchemaChanges preActionTables schemaDiff = do
       -- Purge the dropped tables
       forM_ droppedTables $
-        \tn -> tell $ MetadataModifier $ metaSources.ix source.toSourceMetadata.smTables %~ OMap.delete tn
+        \tn -> tell $ MetadataModifier $ metaSources.ix source.(toSourceMetadata @('Postgres 'Vanilla)).smTables %~ OMap.delete tn
 
       for_ alteredTables $ \(oldQtn, tableDiff) -> do
         ti <- onNothing
@@ -371,7 +371,7 @@ processTableChanges
      , CacheRM m
      , MonadWriter MetadataModifier m
      )
-  => SourceName -> TableCoreInfo 'Postgres -> TableDiff 'Postgres -> m ()
+  => SourceName -> TableCoreInfo ('Postgres 'Vanilla) -> TableDiff ('Postgres 'Vanilla) -> m ()
 processTableChanges source ti tableDiff = do
   -- If table rename occurs then don't replace constraints and
   -- process dropped/added columns, because schema reload happens eventually
@@ -386,7 +386,7 @@ processTableChanges source ti tableDiff = do
         checkConflictingNode sc tnGQL
         procAlteredCols sc tn
         -- update new table in metadata
-        renameTableInMetadata source newTN tn
+        renameTableInMetadata @('Postgres 'Vanilla) source newTN tn
 
   -- Process computed field diff
   processComputedFieldDiff tn
@@ -401,7 +401,7 @@ processTableChanges source ti tableDiff = do
           modifiedCustomColumnNames = foldl' (flip M.delete) customColumnNames droppedCols
       when (modifiedCustomColumnNames /= customColumnNames) $
         tell $ MetadataModifier $
-          tableMetadataSetter source tn.tmConfiguration .~ TableConfig customFields modifiedCustomColumnNames customName
+          tableMetadataSetter @('Postgres 'Vanilla) source tn.tmConfiguration .~ TableConfig customFields modifiedCustomColumnNames customName
 
     procAlteredCols sc tn = for_ alteredCols $
       \( RawColumnInfo oldName _ oldType _ _
@@ -413,8 +413,8 @@ processTableChanges source ti tableDiff = do
               let colId =
                     SOSourceObj source
                       $ AB.mkAnyBackend
-                      $ SOITableObj tn
-                      $ TOCol oldName
+                      $ SOITableObj @('Postgres 'Vanilla) tn
+                      $ TOCol @('Postgres 'Vanilla) oldName
                   typeDepObjs = getDependentObjsWith (== DROnType) sc colId
 
               unless (null typeDepObjs) $ throw400 DependencyError $

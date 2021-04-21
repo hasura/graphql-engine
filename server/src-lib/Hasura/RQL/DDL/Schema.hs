@@ -113,7 +113,7 @@ runRunSQL q@RunSQL {..}
   | isSchemaCacheBuildRequiredRunSQL q
   = withMetadataCheck rSource rCascade rTxAccessMode $ execRawSQL rSql
   | otherwise
-  = askSourceConfig rSource >>= \sourceConfig ->
+  = askSourceConfig @('Postgres 'Vanilla) rSource >>= \sourceConfig ->
       liftEitherM $ runExceptT $
       runLazyTx (_pscExecCtx sourceConfig) rTxAccessMode $ execRawSQL rSql
   where

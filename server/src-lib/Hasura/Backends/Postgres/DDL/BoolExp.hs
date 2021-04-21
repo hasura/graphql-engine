@@ -1,6 +1,8 @@
 module Hasura.Backends.Postgres.DDL.BoolExp
-  (parseBoolExpOperations)
-where
+  ( parseBoolExpOperations
+  ) where
+
+import           Hasura.Prelude
 
 import qualified Data.HashMap.Strict                    as Map
 import qualified Data.Text                              as T
@@ -10,8 +12,8 @@ import           Data.Text.Extended
 
 import           Hasura.Backends.Postgres.SQL.Types
 import           Hasura.Backends.Postgres.Types.BoolExp
-import           Hasura.Prelude
 import           Hasura.RQL.IR.BoolExp
+import           Hasura.RQL.Types.Backend
 import           Hasura.RQL.Types.Column
 import           Hasura.RQL.Types.Error
 import           Hasura.RQL.Types.SchemaCache
@@ -31,23 +33,24 @@ columnReferenceType = \case
   ColumnReferenceColumn column     -> pgiType column
   ColumnReferenceCast _ targetType -> targetType
 
-instance ToTxt (ColumnReference 'Postgres) where
+instance Backend b => ToTxt (ColumnReference b) where
   toTxt = \case
     ColumnReferenceColumn column -> toTxt $ pgiColumn column
     ColumnReferenceCast reference targetType ->
       toTxt reference <> "::" <> toTxt targetType
 
 parseBoolExpOperations
-  :: forall m v
-   . ( MonadError QErr m
-     , TableCoreInfoRM 'Postgres m
+  :: forall pgKind m v
+   . ( Backend ('Postgres pgKind)
+     , MonadError QErr m
+     , TableCoreInfoRM ('Postgres pgKind) m
      )
-  => ValueParser 'Postgres m v
+  => ValueParser ('Postgres pgKind) m v
   -> QualifiedTable
-  -> FieldInfoMap (FieldInfo 'Postgres)
-  -> ColumnInfo 'Postgres
+  -> FieldInfoMap (FieldInfo ('Postgres pgKind))
+  -> ColumnInfo ('Postgres pgKind)
   -> Value
-  -> m [OpExpG 'Postgres v]
+  -> m [OpExpG ('Postgres pgKind) v]
 parseBoolExpOperations rhsParser rootTable fim columnInfo value = do
   restrictJSONColumn
   withPathK (getPGColTxt $ pgiColumn columnInfo) $
@@ -59,14 +62,14 @@ parseBoolExpOperations rhsParser rootTable fim columnInfo value = do
         throwError (err400 UnexpectedPayload "JSON column can not be part of boolean expression")
       _                                          -> pure ()
 
-    parseOperations :: ColumnReference 'Postgres -> Value -> m [OpExpG 'Postgres v]
+    parseOperations :: ColumnReference ('Postgres pgKind) -> Value -> m [OpExpG ('Postgres pgKind) v]
     parseOperations column = \case
       Object o -> mapM (parseOperation column) (Map.toList o)
       val      -> pure . AEQ False <$> rhsParser columnType val
       where
         columnType = CollectableTypeScalar $ columnReferenceType column
 
-    parseOperation :: ColumnReference 'Postgres -> (Text, Value) -> m (OpExpG 'Postgres v)
+    parseOperation :: ColumnReference ('Postgres pgKind) -> (Text, Value) -> m (OpExpG ('Postgres pgKind) v)
     parseOperation column (opStr, val) = withPathK opStr $
       case opStr of
         "$cast"          -> parseCast

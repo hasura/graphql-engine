@@ -58,7 +58,7 @@ initPlanningSt :: PlanningSt
 initPlanningSt =
   PlanningSt 2 Map.empty IntMap.empty Set.empty
 
-prepareWithPlan :: (MonadState PlanningSt m) => UnpreparedValue 'Postgres -> m S.SQLExp
+prepareWithPlan :: (MonadState PlanningSt m) => UnpreparedValue ('Postgres pgKind) -> m S.SQLExp
 prepareWithPlan = \case
   UVParameter varInfoM ColumnValue{..} -> do
     argNum <- maybe getNextArgNum (getVarArgNum . getName) varInfoM
@@ -76,7 +76,7 @@ prepareWithPlan = \case
     insertSessionVariable sessVar plan =
       plan { _psSessionVariables = Set.insert sessVar $ _psSessionVariables plan }
 
-prepareWithoutPlan :: (MonadState (Set.HashSet SessionVariable) m) => UnpreparedValue 'Postgres -> m S.SQLExp
+prepareWithoutPlan :: (MonadState (Set.HashSet SessionVariable) m) => UnpreparedValue ('Postgres pgKind) -> m S.SQLExp
 prepareWithoutPlan = \case
   UVParameter _ cv        -> pure $ toTxtValue cv
   UVLiteral sqlExp        -> pure sqlExp
@@ -87,7 +87,9 @@ prepareWithoutPlan = \case
 
 resolveUnpreparedValue
   :: (MonadError QErr m)
-  => UserInfo -> UnpreparedValue 'Postgres -> m S.SQLExp
+  => UserInfo
+  -> UnpreparedValue ('Postgres pgKind)
+  -> m S.SQLExp
 resolveUnpreparedValue userInfo = \case
   UVParameter _ cv      -> pure $ toTxtValue cv
   UVLiteral sqlExp      -> pure sqlExp

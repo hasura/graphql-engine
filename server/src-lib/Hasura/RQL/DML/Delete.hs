@@ -35,11 +35,11 @@ import           Hasura.Session
 
 
 validateDeleteQWith
-  :: (UserInfoM m, QErrM m, TableInfoRM 'Postgres m)
-  => SessVarBldr 'Postgres m
-  -> (ColumnType 'Postgres -> Value -> m S.SQLExp)
+  :: (UserInfoM m, QErrM m, TableInfoRM ('Postgres 'Vanilla) m)
+  => SessVarBldr ('Postgres 'Vanilla) m
+  -> (ColumnType ('Postgres 'Vanilla) -> Value -> m S.SQLExp)
   -> DeleteQuery
-  -> m (AnnDel 'Postgres)
+  -> m (AnnDel ('Postgres 'Vanilla))
 validateDeleteQWith sessVarBldr prepValBldr
   (DeleteQuery tableName _ rqlBE mRetCols) = do
   tableInfo <- askTabInfoSource tableName
@@ -85,10 +85,10 @@ validateDeleteQWith sessVarBldr prepValBldr
 
 validateDeleteQ
   :: (QErrM m, UserInfoM m, CacheRM m)
-  => DeleteQuery -> m (AnnDel 'Postgres, DS.Seq Q.PrepArg)
+  => DeleteQuery -> m (AnnDel ('Postgres 'Vanilla), DS.Seq Q.PrepArg)
 validateDeleteQ query = do
   let source = doSource query
-  tableCache :: TableCache 'Postgres <- askTableCache source
+  tableCache :: TableCache ('Postgres 'Vanilla) <- askTableCache source
   flip runTableCacheRT (source, tableCache) $ runDMLP1T $
     validateDeleteQWith sessVarFromCurrentSetting binRHSBuilder query
 
@@ -102,7 +102,7 @@ runDelete
   -> DeleteQuery
   -> m EncJSON
 runDelete env q = do
-  sourceConfig <- askSourceConfig (doSource q)
+  sourceConfig <- askSourceConfig @('Postgres 'Vanilla) (doSource q)
   strfyNum <- stringifyNum . _sccSQLGenCtx <$> askServerConfigCtx
   validateDeleteQ q
     >>= runQueryLazyTx (_pscExecCtx sourceConfig) Q.ReadWrite

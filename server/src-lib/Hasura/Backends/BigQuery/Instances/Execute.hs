@@ -2,21 +2,21 @@
 
 module Hasura.Backends.BigQuery.Instances.Execute () where
 
-import qualified Data.Aeson as Aeson
-import qualified Data.HashMap.Strict.InsOrd as OMap
+import qualified Data.Aeson                                  as Aeson
+import qualified Data.HashMap.Strict.InsOrd                  as OMap
 import qualified Hasura.Backends.BigQuery.DataLoader.Execute as DataLoader
-import qualified Hasura.Backends.BigQuery.DataLoader.Plan as DataLoader
+import qualified Hasura.Backends.BigQuery.DataLoader.Plan    as DataLoader
 import           Hasura.EncJSON
 import           Hasura.Prelude
-import qualified Hasura.RQL.Types.Error as RQL
-import qualified Hasura.SQL.AnyBackend as AB
+import qualified Hasura.RQL.Types.Error                      as RQL
+import qualified Hasura.SQL.AnyBackend                       as AB
 
-import qualified Data.Environment as Env
-import qualified Language.GraphQL.Draft.Syntax as G
-import qualified Network.HTTP.Client as HTTP
-import qualified Network.HTTP.Types as HTTP
+import qualified Data.Environment                            as Env
+import qualified Language.GraphQL.Draft.Syntax               as G
+import qualified Network.HTTP.Client                         as HTTP
+import qualified Network.HTTP.Types                          as HTTP
 
-import qualified Hasura.Tracing as Tracing
+import qualified Hasura.Tracing                              as Tracing
 
 import           Hasura.Backends.BigQuery.Plan
 import           Hasura.GraphQL.Context
@@ -67,12 +67,12 @@ msDBQueryPlan _env _manager _reqHeaders userInfo _directives sourceName sourceCo
             headAndTail
             (DataLoader.execute actionsForest)
         case result of
-          Left err -> throw500WithDetail "dataLoader error" $ Aeson.toJSON $ show err
+          Left err        -> throw500WithDetail "dataLoader error" $ Aeson.toJSON $ show err
           Right recordSet -> pure $! recordSetToEncJSON recordSet
   pure
     $ ExecStepDB []
     . AB.mkAnyBackend
-    $ DBStepInfo sourceName sourceConfig (Just (DataLoader.drawActionsForest actionsForest)) action
+    $ DBStepInfo @'BigQuery sourceName sourceConfig (Just (DataLoader.drawActionsForest actionsForest)) action
 
 -- | Convert the dataloader's 'RecordSet' type to JSON.
 recordSetToEncJSON :: DataLoader.RecordSet -> EncJSON

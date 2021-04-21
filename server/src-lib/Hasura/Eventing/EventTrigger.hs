@@ -198,7 +198,7 @@ initEventEngineCtx maxT _eeCtxFetchInterval = do
   _eeCtxEventThreadsCapacity <- newTVar maxT
   return $ EventEngineCtx{..}
 
-type EventWithSource = (Event, SourceConfig 'Postgres, Time.UTCTime)
+type EventWithSource b = (Event, SourceConfig b, Time.UTCTime)
 
 -- | Service events from our in-DB queue.
 --
@@ -235,7 +235,7 @@ processEventQueue logger logenv httpMgr getSchemaCache eeCtx@EventEngineCtx{..} 
   where
     fetchBatchSize = 100
 
-    popEventsBatch :: m [EventWithSource]
+    popEventsBatch :: m [EventWithSource ('Postgres 'Vanilla)]
     popEventsBatch = do
       {-
         SELECT FOR UPDATE .. SKIP LOCKED can throw serialization errors in RepeatableRead: https://stackoverflow.com/a/53289263/1911889
@@ -249,7 +249,7 @@ processEventQueue logger logenv httpMgr getSchemaCache eeCtx@EventEngineCtx{..} 
       -}
       pgSources <- scSources <$> liftIO getSchemaCache
       liftIO $ fmap concat $ forM (M.toList pgSources) $ \(sourceName, sourceCache) ->
-        case unsafeSourceConfiguration @'Postgres sourceCache of
+        case unsafeSourceConfiguration @('Postgres 'Vanilla) sourceCache of
           Nothing           -> pure []
           Just sourceConfig -> do
             fetchEventsTxE <-
@@ -276,7 +276,7 @@ processEventQueue logger logenv httpMgr getSchemaCache eeCtx@EventEngineCtx{..} 
 
     -- work on this batch of events while prefetching the next. Recurse after we've forked workers
     -- for each in the batch, minding the requested pool size.
-    go :: [EventWithSource] -> Int -> Bool -> m void
+    go :: [EventWithSource ('Postgres 'Vanilla)] -> Int -> Bool -> m void
     go events !fullFetchCount !alreadyWarned = do
       -- process events ASAP until we've caught up; only then can we sleep
       when (null events) . liftIO $ sleep _eeCtxFetchInterval
@@ -327,7 +327,7 @@ processEventQueue logger logenv httpMgr getSchemaCache eeCtx@EventEngineCtx{..} 
          , MonadMask io
          )
       => Event
-      -> SourceConfig 'Postgres
+      -> SourceConfig ('Postgres 'Vanilla)
       -> Time.UTCTime
       -- ^ Time when the event was fetched from DB. Used to calculate Event Lock time
       -> io ()
@@ -426,7 +426,7 @@ createEventPayload retryConf e = EventPayload
 
 processSuccess
   :: ( MonadIO m )
-  => SourceConfig 'Postgres
+  => SourceConfig ('Postgres 'Vanilla)
   -> Event
   -> [HeaderConf]
   -> EventPayload
@@ -444,7 +444,7 @@ processSuccess sourceConfig e decodedHeaders ep maintenanceModeVersion resp = do
 
 processError
   :: ( MonadIO m )
-  => SourceConfig 'Postgres
+  => SourceConfig ('Postgres 'Vanilla)
   -> Event
   -> RetryConf
   -> [HeaderConf]
@@ -523,7 +523,7 @@ getEventTriggerInfoFromEvent
   :: SchemaCache -> Event -> Either Text EventTriggerInfo
 getEventTriggerInfoFromEvent sc e = do
   let table = eTable e
-      mTableInfo = unsafeTableInfo @'Postgres (eSource e) table $ scSources sc
+      mTableInfo = unsafeTableInfo @('Postgres 'Vanilla) (eSource e) table $ scSources sc
   tableInfo <- onNothing mTableInfo $ Left ("table '" <> table <<> "' not found")
   let triggerName = tmName $ eTrigger e
       mEventTriggerInfo = M.lookup triggerName (_tiEventTriggerInfoMap tableInfo)

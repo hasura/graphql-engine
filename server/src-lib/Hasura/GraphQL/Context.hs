@@ -83,6 +83,7 @@ data QueryDB (b :: BackendType) v
   | QDBSingleRow    (IR.AnnSimpleSelG       b v)
   | QDBAggregation  (IR.AnnAggregateSelectG b v)
   | QDBConnection   (IR.ConnectionSelect    b v)
+  deriving stock (Generic)
 
 data MutationDB (b :: BackendType) v
   = MDBInsert (IR.AnnInsert b v)
@@ -91,6 +92,7 @@ data MutationDB (b :: BackendType) v
   | MDBFunction RQL.JsonAggSelect (IR.AnnSimpleSelG b v)
   -- ^ This represents a VOLATILE function, and is AnnSimpleSelG for easy
   -- re-use of non-VOLATILE function tracking code.
+  deriving stock (Generic)
 
 data ActionQuery (b :: BackendType) v
   = AQQuery !(RQL.AnnActionExecution  b v)
@@ -118,13 +120,13 @@ newtype QueryDBRoot    v b = QDBR (QueryDB    b (v b))
 newtype MutationDBRoot v b = MDBR (MutationDB b (v b))
 
 
-type QueryRootField        v = RootField (QueryDBRoot    v) RemoteField (ActionQuery    'Postgres (v 'Postgres)) J.Value
-type MutationRootField     v = RootField (MutationDBRoot v) RemoteField (ActionMutation 'Postgres (v 'Postgres)) J.Value
-type SubscriptionRootField v = RootField (QueryDBRoot    v) Void        Void                                     Void
+type QueryRootField        v = RootField (QueryDBRoot    v) RemoteField (ActionQuery    ('Postgres 'Vanilla) (v ('Postgres 'Vanilla))) J.Value
+type MutationRootField     v = RootField (MutationDBRoot v) RemoteField (ActionMutation ('Postgres 'Vanilla) (v ('Postgres 'Vanilla))) J.Value
+type SubscriptionRootField v = RootField (QueryDBRoot    v) Void        Void                                                           Void
 
 
 traverseQueryDB
-  :: forall f a b backend
+  :: forall backend f a b
    . (Applicative f, RQL.Backend backend)
   => (a -> f b)
   -> QueryDB backend a
@@ -136,7 +138,8 @@ traverseQueryDB f = \case
   QDBConnection   s -> QDBConnection   <$> IR.traverseConnectionSelect   f s
 
 traverseActionQuery
-  :: (Applicative f, RQL.Backend backend)
+  :: forall backend f a b
+   . (Applicative f, RQL.Backend backend)
   => (a -> f b)
   -> ActionQuery backend a
   -> f (ActionQuery backend b)

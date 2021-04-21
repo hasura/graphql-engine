@@ -2,25 +2,30 @@
 
 module Hasura.Backends.BigQuery.Instances.Schema () where
 
-import qualified Data.Aeson as J
-import qualified Data.HashMap.Strict as Map
-import qualified Data.List.NonEmpty as NE
-import qualified Data.Text as T
+import           Hasura.Prelude
+
+import qualified Data.Aeson                            as J
+import qualified Data.HashMap.Strict                   as Map
+import qualified Data.List.NonEmpty                    as NE
+import qualified Data.Text                             as T
+
 import           Data.Text.Extended
-import qualified Hasura.Backends.BigQuery.Types as BigQuery
+
+import qualified Hasura.Backends.BigQuery.Types        as BigQuery
+import qualified Hasura.GraphQL.Parser                 as P
+import qualified Hasura.GraphQL.Schema.Build           as GSB
+import qualified Hasura.RQL.IR.Select                  as IR
+import qualified Hasura.RQL.IR.Update                  as IR
+import qualified Hasura.RQL.Types.Error                as RQL
+import qualified Language.GraphQL.Draft.Syntax         as G
+
 import           Hasura.GraphQL.Context
-import qualified Hasura.GraphQL.Parser as P
-import           Hasura.GraphQL.Parser hiding (EnumValueInfo, field)
+import           Hasura.GraphQL.Parser                 hiding (EnumValueInfo, field)
 import           Hasura.GraphQL.Parser.Internal.Parser hiding (field)
 import           Hasura.GraphQL.Schema.Backend
-import qualified Hasura.GraphQL.Schema.Build as GSB
 import           Hasura.GraphQL.Schema.Common
-import           Hasura.Prelude
-import qualified Hasura.RQL.IR.Select as IR
-import qualified Hasura.RQL.IR.Update as IR
 import           Hasura.RQL.Types
-import qualified Hasura.RQL.Types.Error as RQL
-import qualified Language.GraphQL.Draft.Syntax as G
+
 
 ----------------------------------------------------------------
 -- BackendSchema instance
@@ -53,6 +58,7 @@ instance BackendSchema 'BigQuery where
   remoteRelationshipField   = msRemoteRelationshipField
   -- SQL literals
   columnDefaultValue = error "TODO: Make impossible by the type system. BigQuery doesn't support insertions."
+
 
 ----------------------------------------------------------------
 -- Top level parsers
@@ -185,7 +191,7 @@ msColumnParser columnType (G.Nullability isNullable) =
     ColumnEnumReference (EnumReference tableName enumValues) ->
       case nonEmpty (Map.toList enumValues) of
         Just enumValuesList -> do
-          tableGQLName <- tableGraphQLName tableName `onLeft` throwError
+          tableGQLName <- tableGraphQLName @'BigQuery tableName `onLeft` throwError
           let enumName = tableGQLName <> $$(G.litName "_enum")
           pure $ possiblyNullable BigQuery.StringScalarType $ P.enum enumName Nothing (mkEnumValue <$> enumValuesList)
         Nothing -> throw400 ValidationFailed "empty enum values"
@@ -272,8 +278,8 @@ msComparisonExps
 msComparisonExps = P.memoize 'comparisonExps $ \columnType -> do
   -- see Note [Columns in comparison expression are never nullable]
   typedParser        <- columnParser columnType (G.Nullability False)
-  nullableTextParser <- columnParser (ColumnScalar BigQuery.StringScalarType) (G.Nullability True)
-  textParser         <- columnParser (ColumnScalar BigQuery.StringScalarType) (G.Nullability False)
+  nullableTextParser <- columnParser (ColumnScalar @'BigQuery BigQuery.StringScalarType) (G.Nullability True)
+  textParser         <- columnParser (ColumnScalar @'BigQuery BigQuery.StringScalarType) (G.Nullability False)
   let name = P.getName typedParser <> $$(G.litName "_BigQuery_comparison_exp")
       desc = G.Description $ "Boolean expression to compare columns of type "
         <>  P.getName typedParser

@@ -324,7 +324,7 @@ mkLoggers enabledLogs logLevel = do
 -- | helper function to initialize or migrate the @hdb_catalog@ schema (used by pro as well)
 migrateCatalogSchema
   :: (HasVersion, MonadIO m, MonadBaseControl IO m)
-  => Env.Environment -> Logger Hasura -> Q.PGPool -> Maybe (SourceConnConfiguration 'Postgres)
+  => Env.Environment -> Logger Hasura -> Q.PGPool -> Maybe (SourceConnConfiguration ('Postgres 'Vanilla))
   -> HTTP.Manager -> ServerConfigCtx
   -> SourceResolver
   -> m (RebuildableSchemaCache, UTCTime)
@@ -514,7 +514,7 @@ runHGEServer setupHook env ServeOptions{..} ServeCtx{..} initTime postPollHook s
     maxEvThrds    = fromMaybe defaultMaxEventThreads soEventsHttpPoolSize
     fetchI        = milliseconds $ fromMaybe (Milliseconds defaultFetchInterval) soEventsFetchInterval
     logEnvHeaders = soLogHeadersFromEnv
-    allPgSources  = mapMaybe (unsafeSourceConfiguration @'Postgres) $ HM.elems $ scSources $ lastBuiltSchemaCache _scSchemaCache
+    allPgSources  = mapMaybe (unsafeSourceConfiguration @('Postgres 'Vanilla)) $ HM.elems $ scSources $ lastBuiltSchemaCache _scSchemaCache
 
   -- TODO: is this correct?
   -- event triggers should be tied to the life cycle of a source
@@ -642,7 +642,7 @@ runHGEServer setupHook env ServeOptions{..} ServeCtx{..} initTime postPollHook s
     -- processed but not been marked as delivered in the db will be unlocked by `shutdownEvents`
     -- and will be processed when the events are proccessed next time.
     shutdownEvents
-      :: [SourceConfig 'Postgres]
+      :: [SourceConfig ('Postgres 'Vanilla)]
       -> (ScheduledEventType -> [ScheduledEventId] -> MetadataStorageT IO Int)
       -> Logger Hasura
       -> LockedEventsCtx

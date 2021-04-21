@@ -1,7 +1,6 @@
 -- As of GHC 8.6, a use of DefaultSignatures in this module triggers a false positive for this
 -- warning, so don’t treat it as an error even if -Werror is enabled.
 {-# OPTIONS_GHC -Wwarn=redundant-constraints #-}
-
 {-# LANGUAGE UndecidableInstances #-}
 
 module Hasura.RQL.Types.SchemaCache
@@ -184,7 +183,7 @@ mkParentDep
   -> TableName b
   -> SchemaDependency
 mkParentDep s tn =
-  SchemaDependency (SOSourceObj s $ AB.mkAnyBackend (SOITable tn)) DRTable
+  SchemaDependency (SOSourceObj s $ AB.mkAnyBackend @b (SOITable tn)) DRTable
 
 mkColDep
   :: forall b
@@ -198,8 +197,8 @@ mkColDep reason source tn col =
   flip SchemaDependency reason
     . SOSourceObj source
     . AB.mkAnyBackend
-    . SOITableObj tn
-    $ TOCol col
+    . SOITableObj @b tn
+    $ TOCol @b col
 
 mkComputedFieldDep
   :: forall b. (Backend b)
@@ -212,7 +211,7 @@ mkComputedFieldDep reason s tn computedField =
   flip SchemaDependency reason
     . SOSourceObj s
     . AB.mkAnyBackend
-    . SOITableObj tn
+    . SOITableObj @b tn
     $ TOComputedField computedField
 
 type WithDeps a = (a, [SchemaDependency])
@@ -458,7 +457,7 @@ getDependentObjsWith f sc objId =
 
 -- | Build dependencies from an AnnBoolExpPartialSQL.
 getBoolExpDeps
-  :: Backend b
+  :: forall b. Backend b
   => SourceName
   -> TableName b
   -> AnnBoolExpPartialSQL b
@@ -472,14 +471,14 @@ getBoolExpDeps source tn = \case
     let tableDep = SchemaDependency
                      (SOSourceObj source
                        $ AB.mkAnyBackend
-                       $ SOITable refqt)
+                       $ SOITable @b refqt)
                      DRRemoteTable
     in tableDep : getBoolExpDeps source refqt whereExp
   where
     procExps = concatMap (getBoolExpDeps source tn)
 
 getColExpDeps
-  :: Backend b
+  :: forall b. Backend b
   => SourceName
   -> TableName b
   -> AnnBoolExpFld b (PartialSQLExp b)
@@ -488,11 +487,11 @@ getColExpDeps source tableName = \case
   AVCol colInfo opExps ->
     let columnName = pgiColumn colInfo
         colDepReason = bool DRSessionVariable DROnType $ any hasStaticExp opExps
-        colDep = mkColDep colDepReason source tableName columnName
+        colDep = mkColDep @b colDepReason source tableName columnName
         depColsInOpExp = mapMaybe opExpDepCol opExps
         colDepsInOpExp = do
           (col, rootTable) <- depColsInOpExp
-          pure $ mkColDep DROnType source (fromMaybe tableName rootTable) col
+          pure $ mkColDep @b DROnType source (fromMaybe tableName rootTable) col
     in colDep:colDepsInOpExp
   AVRel relInfo relBoolExp ->
     let relationshipName = riName relInfo
@@ -501,6 +500,6 @@ getColExpDeps source tableName = \case
           SchemaDependency
             (SOSourceObj source
               $ AB.mkAnyBackend
-              $ SOITableObj tableName (TORel relationshipName))
+              $ SOITableObj @b tableName (TORel relationshipName))
             DROnType
     in schemaDependency : getBoolExpDeps source relationshipTable relBoolExp

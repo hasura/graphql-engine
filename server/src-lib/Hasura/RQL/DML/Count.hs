@@ -33,7 +33,7 @@ import           Hasura.Session
 data CountQueryP1
   = CountQueryP1
   { cqp1Table    :: !QualifiedTable
-  , cqp1Where    :: !(AnnBoolExpSQL 'Postgres, Maybe (AnnBoolExpSQL 'Postgres))
+  , cqp1Where    :: !(AnnBoolExpSQL ('Postgres 'Vanilla), Maybe (AnnBoolExpSQL ('Postgres 'Vanilla)))
   , cqp1Distinct :: !(Maybe [PGCol])
   } deriving (Eq)
 
@@ -69,9 +69,9 @@ mkSQLCount (CountQueryP1 tn (permFltr, mWc) mDistCols) =
 -- SELECT count(*) FROM (SELECT DISTINCT c1, .. cn FROM .. WHERE ..) r;
 -- SELECT count(*) FROM (SELECT * FROM .. WHERE ..) r;
 validateCountQWith
-  :: (UserInfoM m, QErrM m, TableInfoRM 'Postgres m)
-  => SessVarBldr 'Postgres m
-  -> (ColumnType 'Postgres -> Value -> m S.SQLExp)
+  :: (UserInfoM m, QErrM m, TableInfoRM ('Postgres 'Vanilla) m)
+  => SessVarBldr ('Postgres 'Vanilla) m
+  -> (ColumnType ('Postgres 'Vanilla) -> Value -> m S.SQLExp)
   -> CountQuery
   -> m CountQueryP1
 validateCountQWith sessVarBldr prepValBldr (CountQuery qt _ mDistCols mWhere) = do
@@ -112,7 +112,7 @@ validateCountQ
   => CountQuery -> m (CountQueryP1, DS.Seq Q.PrepArg)
 validateCountQ query = do
   let source = cqSource query
-  tableCache :: TableCache 'Postgres <- askTableCache source
+  tableCache :: TableCache ('Postgres 'Vanilla) <- askTableCache source
   flip runTableCacheRT (source, tableCache) $ runDMLP1T $
     validateCountQWith sessVarFromCurrentSetting binRHSBuilder query
 
@@ -135,5 +135,5 @@ runCount
      )
   => CountQuery -> m EncJSON
 runCount q = do
-  sourceConfig <- askSourceConfig (cqSource q)
+  sourceConfig <- askSourceConfig @('Postgres 'Vanilla) (cqSource q)
   validateCountQ q >>= runQueryLazyTx (_pscExecCtx sourceConfig) Q.ReadOnly . countQToTx

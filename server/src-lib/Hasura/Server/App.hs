@@ -628,7 +628,7 @@ v1Alpha1PGDumpHandler b = do
   sc    <- getSCFromRef scRef
   let sources      = scSources sc
       sourceName   = PGD.prbSource b
-      sourceConfig = unsafeSourceConfiguration @'Postgres =<< M.lookup sourceName sources
+      sourceConfig = unsafeSourceConfiguration @('Postgres 'Vanilla) =<< M.lookup sourceName sources
   ci <- fmap _pscConnInfo sourceConfig
         `onNothing` throw400 NotFound ("source " <> sourceName <<> " not found")
   output <- PGD.execPGDump b ci
@@ -971,7 +971,7 @@ httpApp setupHook corsCfg serverCtx enableConsole consoleAssetsDir enableTelemet
         mkSpockAction serverCtx encodeQErr id $
           mkPostHandler $
           fmap (mempty, )
-          <$> (mkAPIRespHandler $ legacyQueryHandler (PG.TableName tableName) queryType)
+          <$> mkAPIRespHandler (legacyQueryHandler (PG.TableName tableName) queryType)
 
     when enablePGDump $
       Spock.post "v1alpha1/pg_dump" $ spockAction encodeQErr id $

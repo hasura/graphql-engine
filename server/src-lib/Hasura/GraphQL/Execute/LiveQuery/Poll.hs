@@ -1,4 +1,5 @@
 {-# LANGUAGE CPP #-}
+
 -- | Multiplexed live query poller threads; see "Hasura.GraphQL.Execute.LiveQuery" for details.
 module Hasura.GraphQL.Execute.LiveQuery.Poll (
   -- * Pollers
@@ -432,7 +433,7 @@ pollQuery pollerId lqOpts sourceConfig query cohortMap postPollHook = do
 
     -- concurrently process each batch
     batchesDetails <- A.forConcurrently cohortBatches $ \cohorts -> do
-      (queryExecutionTime, mxRes) <- runDBSubscription sourceConfig query $ over (each._2) _csVariables cohorts
+      (queryExecutionTime, mxRes) <- runDBSubscription @b sourceConfig query $ over (each._2) _csVariables cohorts
 
       let lqMeta = LiveQueryMetadata $ convertDuration queryExecutionTime
           operations = getCohortOperations cohorts mxRes

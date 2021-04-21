@@ -84,7 +84,7 @@ data ResolvedSource b
 type SourceTables b = HashMap SourceName (TableCache b)
 
 type SourceResolver =
-  SourceName -> PostgresConnConfiguration -> IO (Either QErr (SourceConfig 'Postgres))
+  SourceName -> PostgresConnConfiguration -> IO (Either QErr (SourceConfig ('Postgres 'Vanilla)))
 
 class (Monad m) => MonadResolveSource m where
   getSourceResolver :: m SourceResolver

@@ -144,7 +144,7 @@ moiName objectId = moiTypeName objectId <> " " <> case objectId of
             <> " in "
             <> moiName (MOSourceObjId source
                          $ AB.mkAnyBackend
-                         $ SMOTable tableName)
+                         $ SMOTable @b tableName)
 
 data MetadataObject
   = MetadataObject

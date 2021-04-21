@@ -252,9 +252,10 @@ data RemoteRelationship b =
     , rtrRemoteField  :: !RemoteFields
     }  deriving (Generic)
 deriving instance (Backend b) => Show (RemoteRelationship b)
-deriving instance (Backend b) => Eq (RemoteRelationship b)
-instance (Backend b) => NFData (RemoteRelationship b)
+deriving instance (Backend b) => Eq   (RemoteRelationship b)
+instance (Backend b) => NFData    (RemoteRelationship b)
 instance (Backend b) => Cacheable (RemoteRelationship b)
+
 instance (Backend b) => ToJSON (RemoteRelationship b) where
   toJSON = genericToJSON hasuraJSON
 
@@ -278,17 +279,21 @@ instance Cacheable RemoteRelationshipDef
 $(deriveJSON hasuraJSON ''RemoteRelationshipDef)
 $(makeLenses ''RemoteRelationshipDef)
 
-data DeleteRemoteRelationship
+data DeleteRemoteRelationship (b :: BackendType)
   = DeleteRemoteRelationship
   { drrSource :: !SourceName
-  , drrTable  :: !QualifiedTable
+  , drrTable  :: !(TableName b)
   , drrName   :: !RemoteRelationshipName
-  } deriving (Show, Eq)
-instance FromJSON DeleteRemoteRelationship where
+  } deriving (Generic)
+deriving instance (Backend b) => Show (DeleteRemoteRelationship b)
+deriving instance (Backend b) => Eq   (DeleteRemoteRelationship b)
+
+instance Backend b => FromJSON (DeleteRemoteRelationship b) where
   parseJSON = withObject "Object" $ \o ->
     DeleteRemoteRelationship
       <$> o .:? "source" .!= defaultSource
       <*> o .: "table"
       <*> o .: "name"
 
-$(deriveToJSON hasuraJSON{omitNothingFields=True} ''DeleteRemoteRelationship)
+instance Backend b => ToJSON (DeleteRemoteRelationship b) where
+  toJSON = genericToJSON hasuraJSON{omitNothingFields=True}

@@ -45,7 +45,7 @@ runSQL
   :: (MonadIO m, CacheRWM m, MonadError QErr m, MetadataM m)
   => MSSQLRunSQL -> m EncJSON
 runSQL (MSSQLRunSQL sqlText source) = do
-  pool <- _mscConnectionPool <$> askSourceConfig source
+  pool <- _mscConnectionPool <$> askSourceConfig @'MSSQL source
   results <- withMSSQLPool pool $ \conn -> ODBC.query conn $ fromString $ T.unpack sqlText
   pure $ encJFromJValue $ toResult results
 

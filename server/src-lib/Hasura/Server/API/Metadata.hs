@@ -42,55 +42,55 @@ import           Hasura.Session
 
 
 data RQLMetadataV1
-  = RMPgAddSource !(AddSource 'Postgres)
+  = RMPgAddSource !(AddSource ('Postgres 'Vanilla))
   | RMPgDropSource !DropSource
 
-  | RMPgTrackTable !(TrackTableV2 'Postgres)
-  | RMPgUntrackTable !(UntrackTable 'Postgres)
+  | RMPgTrackTable !(TrackTableV2 ('Postgres 'Vanilla))
+  | RMPgUntrackTable !(UntrackTable ('Postgres 'Vanilla))
   | RMPgSetTableIsEnum !SetTableIsEnum
   | RMPgSetTableCustomization !SetTableCustomization
 
   -- Postgres functions
-  | RMPgTrackFunction !TrackFunctionV2
-  | RMPgUntrackFunction !(UnTrackFunction 'Postgres)
+  | RMPgTrackFunction !(TrackFunctionV2 ('Postgres 'Vanilla))
+  | RMPgUntrackFunction !(UnTrackFunction ('Postgres 'Vanilla))
 
   -- Postgres function permissions
-  | RMPgCreateFunctionPermission !(CreateFunctionPermission 'Postgres)
-  | RMPgDropFunctionPermission !(DropFunctionPermission 'Postgres)
+  | RMPgCreateFunctionPermission !(CreateFunctionPermission ('Postgres 'Vanilla))
+  | RMPgDropFunctionPermission !(DropFunctionPermission ('Postgres 'Vanilla))
 
   -- Postgres table relationships
-  | RMPgCreateObjectRelationship !(CreateObjRel 'Postgres)
-  | RMPgCreateArrayRelationship !(CreateArrRel 'Postgres)
-  | RMPgDropRelationship !(DropRel 'Postgres)
-  | RMPgSetRelationshipComment !(SetRelComment 'Postgres)
-  | RMPgRenameRelationship !(RenameRel 'Postgres)
+  | RMPgCreateObjectRelationship !(CreateObjRel ('Postgres 'Vanilla))
+  | RMPgCreateArrayRelationship !(CreateArrRel ('Postgres 'Vanilla))
+  | RMPgDropRelationship !(DropRel ('Postgres 'Vanilla))
+  | RMPgSetRelationshipComment !(SetRelComment ('Postgres 'Vanilla))
+  | RMPgRenameRelationship !(RenameRel ('Postgres 'Vanilla))
 
   -- Postgres computed fields
-  | RMPgAddComputedField !(AddComputedField 'Postgres)
-  | RMPgDropComputedField !(DropComputedField 'Postgres)
+  | RMPgAddComputedField !(AddComputedField ('Postgres 'Vanilla))
+  | RMPgDropComputedField !(DropComputedField ('Postgres 'Vanilla))
 
   -- Postgres tables remote relationships
-  | RMPgCreateRemoteRelationship !(RemoteRelationship 'Postgres)
-  | RMPgUpdateRemoteRelationship !(RemoteRelationship 'Postgres)
-  | RMPgDeleteRemoteRelationship !DeleteRemoteRelationship
+  | RMPgCreateRemoteRelationship !(RemoteRelationship ('Postgres 'Vanilla))
+  | RMPgUpdateRemoteRelationship !(RemoteRelationship ('Postgres 'Vanilla))
+  | RMPgDeleteRemoteRelationship !(DeleteRemoteRelationship ('Postgres 'Vanilla))
 
   -- Postgres tables permissions
-  | RMPgCreateInsertPermission !(CreateInsPerm 'Postgres)
-  | RMPgCreateSelectPermission !(CreateSelPerm 'Postgres)
-  | RMPgCreateUpdatePermission !(CreateUpdPerm 'Postgres)
-  | RMPgCreateDeletePermission !(CreateDelPerm 'Postgres)
+  | RMPgCreateInsertPermission !(CreateInsPerm ('Postgres 'Vanilla))
+  | RMPgCreateSelectPermission !(CreateSelPerm ('Postgres 'Vanilla))
+  | RMPgCreateUpdatePermission !(CreateUpdPerm ('Postgres 'Vanilla))
+  | RMPgCreateDeletePermission !(CreateDelPerm ('Postgres 'Vanilla))
 
-  | RMPgDropInsertPermission !(DropPerm 'Postgres (InsPerm 'Postgres))
-  | RMPgDropSelectPermission !(DropPerm 'Postgres (SelPerm 'Postgres))
-  | RMPgDropUpdatePermission !(DropPerm 'Postgres (UpdPerm 'Postgres))
-  | RMPgDropDeletePermission !(DropPerm 'Postgres (DelPerm 'Postgres))
-  | RMPgSetPermissionComment !(SetPermComment 'Postgres)
+  | RMPgDropInsertPermission !(DropPerm ('Postgres 'Vanilla) (InsPerm ('Postgres 'Vanilla)))
+  | RMPgDropSelectPermission !(DropPerm ('Postgres 'Vanilla) (SelPerm ('Postgres 'Vanilla)))
+  | RMPgDropUpdatePermission !(DropPerm ('Postgres 'Vanilla) (UpdPerm ('Postgres 'Vanilla)))
+  | RMPgDropDeletePermission !(DropPerm ('Postgres 'Vanilla) (DelPerm ('Postgres 'Vanilla)))
+  | RMPgSetPermissionComment !(SetPermComment ('Postgres 'Vanilla))
 
   -- Postgres tables event triggers
-  | RMPgCreateEventTrigger !CreateEventTriggerQuery
-  | RMPgDeleteEventTrigger !DeleteEventTriggerQuery
-  | RMPgRedeliverEvent     !RedeliverEventQuery
-  | RMPgInvokeEventTrigger !InvokeEventTriggerQuery
+  | RMPgCreateEventTrigger !(CreateEventTriggerQuery ('Postgres 'Vanilla))
+  | RMPgDeleteEventTrigger !(DeleteEventTriggerQuery ('Postgres 'Vanilla))
+  | RMPgRedeliverEvent     !(RedeliverEventQuery     ('Postgres 'Vanilla))
+  | RMPgInvokeEventTrigger !(InvokeEventTriggerQuery ('Postgres 'Vanilla))
 
   -- MSSQL sources
   | RMMssqlAddSource !(AddSource 'MSSQL)

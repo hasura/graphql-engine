@@ -35,14 +35,14 @@ runCreateRelationship
 runCreateRelationship relType (WithTable source tableName relDef) = do
   let relName = _rdName relDef
   -- Check if any field with relationship name already exists in the table
-  tableFields <- _tciFieldInfoMap <$> askTableCoreInfo source tableName
+  tableFields <- _tciFieldInfoMap <$> askTableCoreInfo @b source tableName
   onJust (HM.lookup (fromRel relName) tableFields) $ const $
     throw400 AlreadyExists $
     "field with name " <> relName <<> " already exists in table " <>> tableName
   let comment = _rdComment relDef
       metadataObj = MOSourceObjId source
                       $ AB.mkAnyBackend
-                      $ SMOTableObj tableName
+                      $ SMOTableObj @b tableName
                       $ MTORel relName relType
   addRelationshipToMetadata <- case relType of
     ObjRel -> do
@@ -54,7 +54,7 @@ runCreateRelationship relType (WithTable source tableName relDef) = do
 
   buildSchemaCacheFor metadataObj
     $ MetadataModifier
-    $ tableMetadataSetter source tableName %~ addRelationshipToMetadata
+    $ tableMetadataSetter @b source tableName %~ addRelationshipToMetadata
   pure successMsg
 
 runDropRel
@@ -66,19 +66,19 @@ runDropRel (DropRel source qt rn cascade) = do
   withNewInconsistentObjsCheck do
     metadataModifiers <- traverse purgeRelDep depObjs
     buildSchemaCache $ MetadataModifier $
-      tableMetadataSetter source qt %~
+      tableMetadataSetter @b source qt %~
       dropRelationshipInMetadata rn . foldr (.) id metadataModifiers
   pure successMsg
   where
     collectDependencies = do
-      tabInfo <- askTableCoreInfo source qt
+      tabInfo <- askTableCoreInfo @b source qt
       void $ askRelType (_tciFieldInfoMap tabInfo) rn ""
       sc      <- askSchemaCache
       let depObjs = getDependentObjs
                       sc
                       (SOSourceObj source
                         $ AB.mkAnyBackend
-                        $ SOITableObj qt
+                        $ SOITableObj @b qt
                         $ TORel rn)
       when (depObjs /= [] && not cascade) $ reportDeps depObjs
       pure depObjs
@@ -109,60 +109,60 @@ objRelP2Setup source qt foreignKeys (RelDef rn ru _) fieldInfoMap = case ru of
         mkDependency tableName reason col = SchemaDependency
                                               (SOSourceObj source
                                                 $ AB.mkAnyBackend
-                                                $ SOITableObj tableName
-                                                $ TOCol col)
+                                                $ SOITableObj @b tableName
+                                                $ TOCol @b col)
                                               reason
         dependencies = map (mkDependency qt DRLeftColumn) lCols
                     <> map (mkDependency refqt DRRightColumn) rCols
     pure (RelInfo rn ObjRel (rmColumns rm) refqt True True io, dependencies)
   RUFKeyOn (SameTable columnName) -> do
-    foreignTableForeignKeys <- findTable qt foreignKeys
+    foreignTableForeignKeys <- findTable @b qt foreignKeys
     ForeignKey constraint foreignTable colMap <- getRequiredFkey columnName (HS.toList foreignTableForeignKeys)
     let dependencies =
           [ SchemaDependency
               (SOSourceObj source
                 $ AB.mkAnyBackend
-                $ SOITableObj qt
-                $ TOForeignKey (_cName constraint))
+                $ SOITableObj @b qt
+                $ TOForeignKey @b (_cName constraint))
               DRFkey
           , SchemaDependency
               (SOSourceObj source
                 $ AB.mkAnyBackend
-                $ SOITableObj qt
-                $ TOCol columnName)
+                $ SOITableObj @b qt
+                $ TOCol @b columnName)
               DRUsingColumn
           -- this needs to be added explicitly to handle the remote table being untracked. In this case,
           -- neither the using_col nor the constraint name will help.
           , SchemaDependency
               (SOSourceObj source
                 $ AB.mkAnyBackend
-                $ SOITable foreignTable)
+                $ SOITable @b foreignTable)
               DRRemoteTable
           ]
-    colInfo <- HM.lookup (fromCol columnName) fieldInfoMap
+    colInfo <- HM.lookup (fromCol @b columnName) fieldInfoMap
                `onNothing` throw500 "could not find column info in schema cache"
     let nullable = pgiIsNullable colInfo
     pure (RelInfo rn ObjRel colMap foreignTable False nullable BeforeParent, dependencies)
   RUFKeyOn (RemoteTable remoteTable remoteCol) -> do
-    foreignTableForeignKeys <- findTable remoteTable foreignKeys
+    foreignTableForeignKeys <- findTable @b remoteTable foreignKeys
     ForeignKey constraint _foreignTable colMap <- getRequiredRemoteFkey remoteCol (HS.toList foreignTableForeignKeys)
     let dependencies =
           [ SchemaDependency
               (SOSourceObj source
                 $ AB.mkAnyBackend
-                $ SOITableObj remoteTable
-                $ TOForeignKey (_cName constraint))
+                $ SOITableObj @b remoteTable
+                $ TOForeignKey @b (_cName constraint))
               DRRemoteFkey
           , SchemaDependency
               (SOSourceObj source
                 $ AB.mkAnyBackend
-                $ SOITableObj qt
-                $ TOCol remoteCol)
+                $ SOITableObj @b qt
+                $ TOCol @b remoteCol)
               DRUsingColumn
           , SchemaDependency
               (SOSourceObj source
                 $ AB.mkAnyBackend
-                $ SOITable remoteTable)
+                $ SOITable @b remoteTable)
               DRRemoteTable
           ]
     pure (RelInfo rn ObjRel colMap remoteTable False False AfterParent, dependencies)
@@ -182,32 +182,32 @@ arrRelP2Setup foreignKeys source qt (RelDef rn ru _) = case ru of
         deps  = map (\c -> SchemaDependency
                              (SOSourceObj source
                                $ AB.mkAnyBackend
-                               $ SOITableObj qt
-                               $ TOCol c) DRLeftColumn)
+                               $ SOITableObj @b qt
+                               $ TOCol @b c) DRLeftColumn)
                   lCols
                   <> map (\c -> SchemaDependency
                                   (SOSourceObj source
                                     $ AB.mkAnyBackend
-                                    $ SOITableObj refqt
-                                    $ TOCol c)
+                                    $ SOITableObj @b refqt
+                                    $ TOCol @b c)
                                   DRRightColumn)
                   rCols
     pure (RelInfo rn ArrRel (rmColumns rm) refqt True True BeforeParent, deps)
   RUFKeyOn (ArrRelUsingFKeyOn refqt refCol) -> do
-    foreignTableForeignKeys <- findTable refqt foreignKeys
+    foreignTableForeignKeys <- findTable @b refqt foreignKeys
     let keysThatReferenceUs = filter ((== qt) . _fkForeignTable) (HS.toList foreignTableForeignKeys)
     ForeignKey constraint _ colMap <- getRequiredFkey refCol keysThatReferenceUs
     let deps = [ SchemaDependency
                    (SOSourceObj source
                      $ AB.mkAnyBackend
-                     $ SOITableObj refqt
-                     $ TOForeignKey (_cName constraint))
+                     $ SOITableObj @b refqt
+                     $ TOForeignKey @b (_cName constraint))
                    DRRemoteFkey
                , SchemaDependency
                    (SOSourceObj source
                      $ AB.mkAnyBackend
-                     $ SOITableObj refqt
-                     $ TOCol refCol)
+                     $ SOITableObj @b refqt
+                     $ TOCol @b refCol)
                    DRUsingColumn
                -- we don't need to necessarily track the remote table like we did in
                -- case of obj relationships as the remote table is indirectly
@@ -215,7 +215,7 @@ arrRelP2Setup foreignKeys source qt (RelDef rn ru _) = case ru of
                , SchemaDependency
                    (SOSourceObj source
                      $ AB.mkAnyBackend
-                     $ SOITable refqt)
+                     $ SOITable @b refqt)
                    DRRemoteTable
                ]
         mapping = HM.fromList $ map swap $ HM.toList colMap
@@ -237,15 +237,15 @@ runSetRelComment
    . (CacheRWM m, MonadError QErr m, MetadataM m, BackendMetadata b)
   => SetRelComment b -> m EncJSON
 runSetRelComment defn = do
-  tabInfo <- askTableCoreInfo source qt
+  tabInfo <- askTableCoreInfo @b source qt
   relType <- riType <$> askRelType (_tciFieldInfoMap tabInfo) rn ""
   let metadataObj = MOSourceObjId source
                       $ AB.mkAnyBackend
-                      $ SMOTableObj qt
+                      $ SMOTableObj @b qt
                       $ MTORel rn relType
   buildSchemaCacheFor metadataObj
     $ MetadataModifier
-    $ tableMetadataSetter source qt %~ case relType of
+    $ tableMetadataSetter @b source qt %~ case relType of
       ObjRel -> tmObjectRelationships.ix rn.rdComment .~ comment
       ArrRel -> tmArrayRelationships.ix rn.rdComment .~ comment
   pure successMsg

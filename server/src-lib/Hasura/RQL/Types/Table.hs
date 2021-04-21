@@ -295,6 +295,7 @@ data RolePermInfo (b :: BackendType)
   , _permDel :: !(Maybe (DelPermInfo b))
   } deriving (Generic)
 instance (Backend b, NFData (BooleanOperators b (PartialSQLExp b))) => NFData (RolePermInfo b)
+
 instance (Backend b, ToJSONKeyValue (BooleanOperators b (PartialSQLExp b))) => ToJSON (RolePermInfo b) where
   toJSON = genericToJSON hasuraJSON
 
@@ -402,6 +403,7 @@ deriving instance (Backend b) => Eq (TableConfig b)
 deriving instance (Backend b) => Show (TableConfig b)
 instance (Backend b) => NFData (TableConfig b)
 instance (Backend b) => Cacheable (TableConfig b)
+
 instance Backend b => ToJSON (TableConfig b) where
   toJSON = genericToJSON hasuraJSON{omitNothingFields = True}
 $(makeLenses ''TableConfig)
@@ -482,6 +484,7 @@ data TableCoreInfoG (b :: BackendType) field primaryKeyColumn
   } deriving (Generic)
 deriving instance (Eq field, Eq pkCol, Backend b) => Eq (TableCoreInfoG b field pkCol)
 instance (Cacheable field, Cacheable pkCol, Backend b) => Cacheable (TableCoreInfoG b field pkCol)
+
 instance (Backend b, Generic pkCol, ToJSON field, ToJSON pkCol) => ToJSON (TableCoreInfoG b field pkCol) where
   toJSON = genericToJSON hasuraJSON
 $(makeLenses ''TableCoreInfoG)
@@ -501,6 +504,7 @@ data TableInfo (b :: BackendType)
   , _tiRolePermInfoMap     :: !(RolePermInfoMap b)
   , _tiEventTriggerInfoMap :: !EventTriggerInfoMap
   } deriving (Generic)
+
 instance (Backend b, ToJSONKeyValue (BooleanOperators b (PartialSQLExp b))) => ToJSON (TableInfo b) where
   toJSON = genericToJSON hasuraJSON
 $(makeLenses ''TableInfo)

@@ -108,12 +108,12 @@ saveMetadataToHdbTables (MetadataNoSources tables functions schemas collections
 
   where
     processPerms tableName perms = indexedForM_ perms $ \perm -> do
-      let pt = permAccToType @'Postgres $ getPermAcc1 perm
+      let pt = permAccToType @('Postgres 'Vanilla) $ getPermAcc1 perm
       systemDefined <- askSystemDefined
       liftTx $ addPermissionToCatalog pt tableName perm systemDefined
 
 saveTableToCatalog
-  :: (MonadTx m, HasSystemDefined m) => QualifiedTable -> Bool -> TableConfig 'Postgres -> m ()
+  :: (MonadTx m, HasSystemDefined m) => QualifiedTable -> Bool -> TableConfig ('Postgres 'Vanilla) -> m ()
 saveTableToCatalog (QualifiedObject sn tn) isEnum config = do
   systemDefined <- askSystemDefined
   liftTx $ Q.unitQE defaultTxErrorHandler [Q.sql|
@@ -159,7 +159,7 @@ addEventTriggerToCatalog qt etc = liftTx do
 
 addComputedFieldToCatalog
   :: MonadTx m
-  => AddComputedField 'Postgres -> m ()
+  => AddComputedField ('Postgres 'Vanilla) -> m ()
 addComputedFieldToCatalog q =
   liftTx $ Q.withQE defaultTxErrorHandler
     [Q.sql|
@@ -171,7 +171,7 @@ addComputedFieldToCatalog q =
     QualifiedObject schemaName tableName = table
     AddComputedField _ table computedField definition comment = q
 
-addRemoteRelationshipToCatalog :: MonadTx m => RemoteRelationship 'Postgres -> m ()
+addRemoteRelationshipToCatalog :: MonadTx m => RemoteRelationship ('Postgres 'Vanilla) -> m ()
 addRemoteRelationshipToCatalog remoteRelationship = liftTx $
   Q.unitQE defaultTxErrorHandler [Q.sql|
        INSERT INTO hdb_catalog.hdb_remote_relationship
@@ -565,7 +565,7 @@ recreateSystemMetadata = do
       Left relDef  -> insertRelationshipToCatalog tableName ObjRel relDef
       Right relDef -> insertRelationshipToCatalog tableName ArrRel relDef
   where
-    systemMetadata :: [(QualifiedTable, [Either (ObjRelDef 'Postgres) (ArrRelDef 'Postgres)])]
+    systemMetadata :: [(QualifiedTable, [Either (ObjRelDef ('Postgres 'Vanilla)) (ArrRelDef ('Postgres 'Vanilla))])]
     systemMetadata =
       [ table "information_schema" "tables" []
       , table "information_schema" "schemata" []

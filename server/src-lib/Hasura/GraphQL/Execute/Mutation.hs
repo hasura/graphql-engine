@@ -41,7 +41,7 @@ convertMutationAction
   -> UserInfo
   -> HTTP.Manager
   -> HTTP.RequestHeaders
-  -> ActionMutation 'Postgres (UnpreparedValue 'Postgres)
+  -> ActionMutation ('Postgres 'Vanilla) (UnpreparedValue ('Postgres 'Vanilla))
   -> m ActionExecutionPlan
 convertMutationAction env logger userInfo manager reqHeaders  = \case
   AMSync s  -> pure $ AEPSync $ resolveActionExecution env logger userInfo s actionExecContext

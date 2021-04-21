@@ -48,39 +48,39 @@ import           Hasura.Server.Version              (HasVersion)
 import           Hasura.Session
 
 data RQLQueryV1
-  = RQAddExistingTableOrView !(TrackTable 'Postgres)
-  | RQTrackTable !(TrackTable 'Postgres)
-  | RQUntrackTable !(UntrackTable 'Postgres)
+  = RQAddExistingTableOrView !(TrackTable ('Postgres 'Vanilla))
+  | RQTrackTable !(TrackTable ('Postgres 'Vanilla))
+  | RQUntrackTable !(UntrackTable ('Postgres 'Vanilla))
   | RQSetTableIsEnum !SetTableIsEnum
   | RQSetTableCustomization !SetTableCustomization
 
-  | RQTrackFunction !(TrackFunction 'Postgres)
-  | RQUntrackFunction !(UnTrackFunction 'Postgres)
+  | RQTrackFunction !(TrackFunction ('Postgres 'Vanilla))
+  | RQUntrackFunction !(UnTrackFunction ('Postgres 'Vanilla))
 
-  | RQCreateObjectRelationship !(CreateObjRel 'Postgres)
-  | RQCreateArrayRelationship !(CreateArrRel 'Postgres)
-  | RQDropRelationship !(DropRel 'Postgres)
-  | RQSetRelationshipComment !(SetRelComment 'Postgres)
-  | RQRenameRelationship !(RenameRel 'Postgres)
+  | RQCreateObjectRelationship !(CreateObjRel ('Postgres 'Vanilla))
+  | RQCreateArrayRelationship !(CreateArrRel ('Postgres 'Vanilla))
+  | RQDropRelationship !(DropRel ('Postgres 'Vanilla))
+  | RQSetRelationshipComment !(SetRelComment ('Postgres 'Vanilla))
+  | RQRenameRelationship !(RenameRel ('Postgres 'Vanilla))
 
   -- computed fields related
-  | RQAddComputedField !(AddComputedField 'Postgres)
-  | RQDropComputedField !(DropComputedField 'Postgres)
+  | RQAddComputedField !(AddComputedField ('Postgres 'Vanilla))
+  | RQDropComputedField !(DropComputedField ('Postgres 'Vanilla))
 
-  | RQCreateRemoteRelationship !(RemoteRelationship 'Postgres)
-  | RQUpdateRemoteRelationship !(RemoteRelationship 'Postgres)
-  | RQDeleteRemoteRelationship !DeleteRemoteRelationship
+  | RQCreateRemoteRelationship !(RemoteRelationship ('Postgres 'Vanilla))
+  | RQUpdateRemoteRelationship !(RemoteRelationship ('Postgres 'Vanilla))
+  | RQDeleteRemoteRelationship !(DeleteRemoteRelationship ('Postgres 'Vanilla))
 
-  | RQCreateInsertPermission !(CreateInsPerm 'Postgres)
-  | RQCreateSelectPermission !(CreateSelPerm 'Postgres)
-  | RQCreateUpdatePermission !(CreateUpdPerm 'Postgres)
-  | RQCreateDeletePermission !(CreateDelPerm 'Postgres)
+  | RQCreateInsertPermission !(CreateInsPerm ('Postgres 'Vanilla))
+  | RQCreateSelectPermission !(CreateSelPerm ('Postgres 'Vanilla))
+  | RQCreateUpdatePermission !(CreateUpdPerm ('Postgres 'Vanilla))
+  | RQCreateDeletePermission !(CreateDelPerm ('Postgres 'Vanilla))
 
-  | RQDropInsertPermission !(DropPerm 'Postgres (InsPerm 'Postgres))
-  | RQDropSelectPermission !(DropPerm 'Postgres (SelPerm 'Postgres))
-  | RQDropUpdatePermission !(DropPerm 'Postgres (UpdPerm 'Postgres))
-  | RQDropDeletePermission !(DropPerm 'Postgres (DelPerm 'Postgres))
-  | RQSetPermissionComment !(SetPermComment 'Postgres)
+  | RQDropInsertPermission !(DropPerm ('Postgres 'Vanilla) (InsPerm ('Postgres 'Vanilla)))
+  | RQDropSelectPermission !(DropPerm ('Postgres 'Vanilla) (SelPerm ('Postgres 'Vanilla)))
+  | RQDropUpdatePermission !(DropPerm ('Postgres 'Vanilla) (UpdPerm ('Postgres 'Vanilla)))
+  | RQDropDeletePermission !(DropPerm ('Postgres 'Vanilla) (DelPerm ('Postgres 'Vanilla)))
+  | RQSetPermissionComment !(SetPermComment ('Postgres 'Vanilla))
 
   | RQGetInconsistentMetadata !GetInconsistentMetadata
   | RQDropInconsistentMetadata !DropInconsistentMetadata
@@ -98,10 +98,10 @@ data RQLQueryV1
   | RQReloadRemoteSchema !RemoteSchemaNameQuery
   | RQIntrospectRemoteSchema !RemoteSchemaNameQuery
 
-  | RQCreateEventTrigger !CreateEventTriggerQuery
-  | RQDeleteEventTrigger !DeleteEventTriggerQuery
-  | RQRedeliverEvent     !RedeliverEventQuery
-  | RQInvokeEventTrigger !InvokeEventTriggerQuery
+  | RQCreateEventTrigger !(CreateEventTriggerQuery ('Postgres 'Vanilla))
+  | RQDeleteEventTrigger !(DeleteEventTriggerQuery ('Postgres 'Vanilla))
+  | RQRedeliverEvent     !(RedeliverEventQuery     ('Postgres 'Vanilla))
+  | RQInvokeEventTrigger !(InvokeEventTriggerQuery ('Postgres 'Vanilla))
 
   -- scheduled triggers
   | RQCreateCronTrigger !CreateCronTrigger
@@ -139,9 +139,9 @@ data RQLQueryV1
   deriving (Eq)
 
 data RQLQueryV2
-  = RQV2TrackTable !(TrackTableV2 'Postgres)
+  = RQV2TrackTable !(TrackTableV2 ('Postgres 'Vanilla))
   | RQV2SetTableCustomFields !SetTableCustomFields -- deprecated
-  | RQV2TrackFunction !TrackFunctionV2
+  | RQV2TrackFunction !(TrackFunctionV2 ('Postgres 'Vanilla))
   | RQV2ReplaceMetadata !ReplaceMetadataV2
   deriving (Eq)
 

@@ -4,19 +4,19 @@ module Hasura.Backends.Postgres.DDL.Source
   , resolveDatabaseMetadata
   ) where
 
+import           Hasura.Prelude
+
 import qualified Data.HashMap.Strict                 as Map
 import qualified Database.PG.Query                   as Q
 import qualified Language.Haskell.TH.Lib             as TH
 import qualified Language.Haskell.TH.Syntax          as TH
 
-import           Control.Lens                        hiding (from, index, op, to, (.=))
 import           Control.Monad.Trans.Control         (MonadBaseControl)
 import           Data.FileEmbed                      (makeRelativeToProject)
 
 import           Hasura.Backends.Postgres.Connection
 import           Hasura.Backends.Postgres.SQL.Types
-import           Hasura.Prelude
-import           Hasura.RQL.Types.Backend            (SourceConfig)
+import           Hasura.RQL.Types.Backend
 import           Hasura.RQL.Types.Common
 import           Hasura.RQL.Types.Error
 import           Hasura.RQL.Types.Function
@@ -26,16 +26,18 @@ import           Hasura.SQL.Backend
 import           Hasura.Server.Migrate.Internal
 import           Hasura.Server.Types                 (MaintenanceMode (..))
 
+
 resolveSourceConfig
   :: (MonadIO m, MonadResolveSource m)
-  => SourceName -> PostgresConnConfiguration -> m (Either QErr (SourceConfig 'Postgres))
+  => SourceName -> PostgresConnConfiguration -> m (Either QErr (SourceConfig ('Postgres pgKind)))
 resolveSourceConfig name config = runExceptT do
   sourceResolver <- getSourceResolver
   liftEitherM $ liftIO $ sourceResolver name config
 
 resolveDatabaseMetadata
-  :: (MonadIO m, MonadBaseControl IO m)
-  => SourceConfig 'Postgres -> MaintenanceMode -> m (Either QErr (ResolvedSource 'Postgres))
+  :: forall pgKind m
+   . (Backend ('Postgres pgKind), MonadIO m, MonadBaseControl IO m)
+  => SourceConfig ('Postgres pgKind) -> MaintenanceMode -> m (Either QErr (ResolvedSource ('Postgres pgKind)))
 resolveDatabaseMetadata sourceConfig maintenanceMode = runExceptT do
   (tablesMeta, functionsMeta, pgScalars) <- runLazyTx (_pscExecCtx sourceConfig) Q.ReadWrite $ do
     initSource maintenanceMode
@@ -132,7 +134,10 @@ getSourceCatalogVersion = liftTx $ runIdentity . Q.getRow <$> Q.withQE defaultTx
   [Q.sql| SELECT version FROM hdb_catalog.hdb_source_catalog_version |] () False
 
 -- | Fetch Postgres metadata of all user tables
-fetchTableMetadata :: (MonadTx m) => m (DBTablesMetadata 'Postgres)
+fetchTableMetadata
+  :: forall pgKind m
+   . (Backend ('Postgres pgKind), MonadTx m)
+  => m (DBTablesMetadata ('Postgres pgKind))
 fetchTableMetadata = do
   results <- liftTx $ Q.withQE defaultTxErrorHandler
              $(makeRelativeToProject "src-rsr/pg_table_metadata.sql" >>= Q.sqlFromFile) () True
@@ -140,7 +145,7 @@ fetchTableMetadata = do
     \(schema, table, Q.AltJ info) -> (QualifiedObject schema table, info)
 
 -- | Fetch Postgres metadata for all user functions
-fetchFunctionMetadata :: (MonadTx m) => m (DBFunctionsMetadata 'Postgres)
+fetchFunctionMetadata :: (MonadTx m) => m (DBFunctionsMetadata ('Postgres pgKind))
 fetchFunctionMetadata = do
   results <- liftTx $ Q.withQE defaultTxErrorHandler
              $(makeRelativeToProject "src-rsr/pg_function_metadata.sql" >>= Q.sqlFromFile) () True

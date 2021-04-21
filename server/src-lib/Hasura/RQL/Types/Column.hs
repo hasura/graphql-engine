@@ -133,7 +133,7 @@ parseScalarValueColumnType columnType value = case columnType of
           let enums = map getEnumValue $ M.keys enumValues
           unless (evn `elem` enums) $ throw400 UnexpectedPayload
             $ "expected one of the values " <> dquoteList enums
-            <> " for type " <> snakeCaseTableName tableName <<> ", given " <>> evn
+            <> " for type " <> snakeCaseTableName @b tableName <<> ", given " <>> evn
         pure $ textToScalarValue @b $ G.unName <$> enumValueName
 
 parseScalarValuesColumnType

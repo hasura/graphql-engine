@@ -399,8 +399,8 @@ onStart env serverEnv wsConn (StartMsg opId q) = catchAndIgnore $ do
             E.ExecStepDB _headers exists -> doQErr $ do
               (telemTimeIO_DT, resp) <-
                 AB.dispatchAnyBackend @BackendTransport exists
-                  \(EB.DBStepInfo _ sourceConfig genSql tx) ->
-                     runDBQuery
+                  \(EB.DBStepInfo _ sourceConfig genSql tx :: EB.DBStepInfo b) ->
+                     runDBQuery @b
                        requestId
                        q
                        fieldName
@@ -450,8 +450,8 @@ onStart env serverEnv wsConn (StartMsg opId q) = catchAndIgnore $ do
             E.ExecStepDB _responseHeaders exists -> doQErr $ do
               (telemTimeIO_DT, resp) <-
                 AB.dispatchAnyBackend @BackendTransport exists
-                  \(EB.DBStepInfo _ sourceConfig genSql tx) ->
-                       runDBMutation
+                  \(EB.DBStepInfo _ sourceConfig genSql tx :: EB.DBStepInfo b) ->
+                       runDBMutation @b
                          requestId
                          q
                          fieldName

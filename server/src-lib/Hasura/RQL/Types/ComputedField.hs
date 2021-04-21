@@ -82,6 +82,7 @@ data ComputedFieldReturn (b :: BackendType)
 deriving instance Backend b => Show (ComputedFieldReturn b)
 deriving instance Backend b => Eq (ComputedFieldReturn b)
 instance Backend b => Cacheable (ComputedFieldReturn b)
+
 instance Backend b => ToJSON (ComputedFieldReturn b) where
   toJSON = genericToJSON $
     defaultOptions { constructorTagModifier = snakeCase . drop 3
@@ -98,6 +99,7 @@ data ComputedFieldFunction (b :: BackendType)
   , _cffDescription     :: !(Maybe PGDescription)
   } deriving (Show, Eq, Generic)
 instance (Backend b) => Cacheable (ComputedFieldFunction b)
+
 instance (Backend b) => ToJSON (ComputedFieldFunction b) where
   toJSON = genericToJSON hasuraJSON
 

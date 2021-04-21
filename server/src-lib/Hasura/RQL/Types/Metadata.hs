@@ -265,7 +265,7 @@ mkSourceMetadata
   -> SourceConnConfiguration b
   -> BackendSourceMetadata
 mkSourceMetadata name config =
-  AB.mkAnyBackend $ SourceMetadata name mempty mempty config
+  AB.mkAnyBackend $ SourceMetadata @b name mempty mempty config
 
 type BackendSourceMetadata = AB.AnyBackend SourceMetadata
 
@@ -353,8 +353,8 @@ tableMetadataSetter source table =
 
 data MetadataNoSources
   = MetadataNoSources
-  { _mnsTables           :: !(Tables 'Postgres)
-  , _mnsFunctions        :: !(Functions 'Postgres)
+  { _mnsTables           :: !(Tables ('Postgres 'Vanilla))
+  , _mnsFunctions        :: !(Functions ('Postgres 'Vanilla))
   , _mnsRemoteSchemas    :: !RemoteSchemas
   , _mnsQueryCollections :: !QueryCollections
   , _mnsAllowlist        :: !Allowlist

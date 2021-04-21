@@ -9,18 +9,7 @@ module Hasura.Server.Telemetry
   )
   where
 
-import           Control.Exception                (try)
-import           Control.Lens
-import           Data.Text.Conversions            (UTF8 (..), decodeText)
-
-import           Hasura.HTTP
-import           Hasura.Logging
 import           Hasura.Prelude
-import           Hasura.RQL.Types
-import           Hasura.Server.Telemetry.Counters
-import           Hasura.Server.Types
-import           Hasura.Server.Version
-import           Hasura.Session
 
 import qualified CI
 import qualified Control.Concurrent.Extended      as C
@@ -33,6 +22,19 @@ import qualified Data.Text                        as T
 import qualified Network.HTTP.Client              as HTTP
 import qualified Network.HTTP.Types               as HTTP
 import qualified Network.Wreq                     as Wreq
+
+import           Control.Exception                (try)
+import           Control.Lens
+import           Data.Text.Conversions            (UTF8 (..), decodeText)
+
+import           Hasura.HTTP
+import           Hasura.Logging
+import           Hasura.RQL.Types
+import           Hasura.Server.Telemetry.Counters
+import           Hasura.Server.Types
+import           Hasura.Server.Version
+import           Hasura.Session
+
 
 data RelationshipMetric
   = RelationshipMetric
@@ -170,33 +172,34 @@ computeMetrics sc _mtServiceTimings _mtPgVersion =
 
   where
       -- TODO: multiple sources
-    pgTableCache    = fromMaybe mempty $ unsafeTableCache    @'Postgres defaultSource $ scSources sc
-    pgFunctionCache = fromMaybe mempty $ unsafeFunctionCache @'Postgres defaultSource $ scSources sc
+    pgTableCache    = fromMaybe mempty $ unsafeTableCache    @('Postgres 'Vanilla) defaultSource $ scSources sc
+    pgFunctionCache = fromMaybe mempty $ unsafeFunctionCache @('Postgres 'Vanilla) defaultSource $ scSources sc
     userTables = Map.filter (not . isSystemDefined . _tciSystemDefined . _tiCoreInfo) pgTableCache
     countUserTables predicate = length . filter predicate $ Map.elems userTables
 
-    calcPerms :: (RolePermInfo 'Postgres -> Maybe a) -> [RolePermInfo 'Postgres] -> Int
+    calcPerms :: (RolePermInfo ('Postgres 'Vanilla) -> Maybe a) -> [RolePermInfo ('Postgres 'Vanilla)] -> Int
     calcPerms fn perms = length $ mapMaybe fn perms
 
-    permsOfTbl :: TableInfo 'Postgres -> [(RoleName, RolePermInfo 'Postgres)]
+    permsOfTbl :: TableInfo b -> [(RoleName, RolePermInfo b)]
     permsOfTbl = Map.toList . _tiRolePermInfoMap
 
 computeActionsMetrics :: ActionCache -> ActionMetric
 computeActionsMetrics actionCache =
   ActionMetric syncActionsLen asyncActionsLen queryActionsLen typeRelationships customTypesLen
-  where actions = Map.elems actionCache
-        syncActionsLen  = length . filter ((== ActionMutation ActionSynchronous) . _adType . _aiDefinition) $ actions
-        asyncActionsLen  = length . filter ((== ActionMutation ActionAsynchronous) . _adType . _aiDefinition) $ actions
-        queryActionsLen = length . filter ((== ActionQuery) . _adType . _aiDefinition) $ actions
+  where
+    actions = Map.elems actionCache
+    syncActionsLen  = length . filter ((== ActionMutation ActionSynchronous)  . _adType . _aiDefinition) $ actions
+    asyncActionsLen = length . filter ((== ActionMutation ActionAsynchronous) . _adType . _aiDefinition) $ actions
+    queryActionsLen = length . filter ((== ActionQuery)                       . _adType . _aiDefinition) $ actions
 
-        outputTypesLen = length . L.nub . map (_adOutputType . _aiDefinition) $ actions
-        inputTypesLen = length . L.nub . concatMap (map _argType . _adArguments . _aiDefinition) $ actions
-        customTypesLen = inputTypesLen + outputTypesLen
+    outputTypesLen = length . L.nub . map (_adOutputType . _aiDefinition) $ actions
+    inputTypesLen = length . L.nub . concatMap (map _argType . _adArguments . _aiDefinition) $ actions
+    customTypesLen = inputTypesLen + outputTypesLen
 
-        typeRelationships =
-          length . L.nub . concatMap
-          (map _trName . maybe [] toList . _otdRelationships . _aotDefinition . snd . _aiOutputObject) $
-          actions
+    typeRelationships =
+      length . L.nub . concatMap
+      (map _trName . maybe [] toList . _otdRelationships . _aotDefinition . snd . _aiOutputObject) $
+      actions
 
 -- | Logging related
 

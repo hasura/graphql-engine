@@ -16,6 +16,7 @@ import           Hasura.Backends.Postgres.Translate.Column
 import           Hasura.Backends.Postgres.Types.Column
 import           Hasura.Prelude
 import           Hasura.RQL.IR.BoolExp
+import           Hasura.RQL.Types.Backend
 import           Hasura.RQL.Types.Column
 import           Hasura.RQL.Types.Error
 import           Hasura.SQL.Backend
@@ -25,9 +26,11 @@ import           Hasura.Session
 
 
 parseCollectableType
-  :: (MonadError QErr m)
-  => CollectableType (ColumnType 'Postgres)
-  -> Value -> m (PartialSQLExp 'Postgres)
+  :: forall pgKind m
+   . (Backend ('Postgres pgKind), MonadError QErr m)
+  => CollectableType (ColumnType ('Postgres pgKind))
+  -> Value
+  -> m (PartialSQLExp ('Postgres pgKind))
 parseCollectableType pgType = \case
   -- When it is a special variable
   String t
@@ -45,7 +48,7 @@ parseCollectableType pgType = \case
         (mkTypeAnn $ CollectableTypeArray (unsafePGColumnToBackend ofType))
 
 mkTypedSessionVar
-  :: CollectableType (ColumnType 'Postgres)
-  -> SessionVariable -> PartialSQLExp 'Postgres
+  :: CollectableType (ColumnType ('Postgres pgKind))
+  -> SessionVariable -> PartialSQLExp ('Postgres pgKind)
 mkTypedSessionVar columnType =
   PSESessVar (unsafePGColumnToBackend <$> columnType)

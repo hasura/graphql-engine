@@ -42,25 +42,19 @@ import           Hasura.Session
 -- >   col2: col2_type
 -- > }
 actionExecute
-  :: forall m n r
-   . ( BackendSchema 'Postgres
-     , MonadSchema n m
-     , MonadTableInfo r m
-     , MonadRole r m
-     , Has QueryContext r
-     , Has (BackendExtension 'Postgres) r
-     )
+  :: forall r m n
+   . MonadBuildSchema ('Postgres 'Vanilla) r m n
   => NonObjectTypeMap
   -> ActionInfo
-  -> m (Maybe (FieldParser n (AnnActionExecution 'Postgres (UnpreparedValue 'Postgres))))
+  -> m (Maybe (FieldParser n (AnnActionExecution ('Postgres 'Vanilla) (UnpreparedValue ('Postgres 'Vanilla)))))
 actionExecute nonObjectTypeMap actionInfo = runMaybeT do
   roleName <- askRoleName
   guard (roleName == adminRoleName || roleName `Map.member` permissions)
   let fieldName = unActionName actionName
       description = G.Description <$> comment
   inputArguments <- lift $ actionInputArguments nonObjectTypeMap $ _adArguments definition
-  selectionSet <- lift $ actionOutputFields outputType outputObject
-  stringifyNum <- asks $ qcStringifyNum . getter
+  selectionSet   <- lift $ actionOutputFields outputType outputObject
+  stringifyNum   <- asks $ qcStringifyNum . getter
   pure $ P.subselection fieldName description inputArguments selectionSet
          <&> \(argsJson, fields) -> AnnActionExecution
                { _aaeName = actionName
@@ -115,24 +109,18 @@ actionAsyncMutation nonObjectTypeMap actionInfo = runMaybeT do
 -- >   output: user_defined_type!
 -- > }
 actionAsyncQuery
-  :: forall m n r
-   . ( BackendSchema 'Postgres
-     , MonadSchema n m
-     , MonadTableInfo r m
-     , MonadRole r m
-     , Has QueryContext r
-     , Has (BackendExtension 'Postgres) r
-     )
+  :: forall r m n
+   . MonadBuildSchema ('Postgres 'Vanilla) r m n
   => ActionInfo
-  -> m (Maybe (FieldParser n (AnnActionAsyncQuery 'Postgres (UnpreparedValue 'Postgres))))
+  -> m (Maybe (FieldParser n (AnnActionAsyncQuery ('Postgres 'Vanilla) (UnpreparedValue ('Postgres 'Vanilla)))))
 actionAsyncQuery actionInfo = runMaybeT do
   roleName <- askRoleName
   guard $ roleName == adminRoleName || roleName `Map.member` permissions
   actionOutputParser <- lift $ actionOutputFields outputType outputObject
   createdAtFieldParser <-
-    lift $ columnParser @'Postgres (ColumnScalar PGTimeStampTZ) (G.Nullability False)
+    lift $ columnParser @('Postgres 'Vanilla) (ColumnScalar PGTimeStampTZ) (G.Nullability False)
   errorsFieldParser <-
-    lift $ columnParser @'Postgres (ColumnScalar PGJSON) (G.Nullability True)
+    lift $ columnParser @('Postgres 'Vanilla) (ColumnScalar PGJSON) (G.Nullability True)
 
   let fieldName = unActionName actionName
       description = G.Description <$> comment
@@ -179,17 +167,11 @@ actionIdParser
 actionIdParser = ActionId <$> P.uuid
 
 actionOutputFields
-  :: forall m n r
-   . ( BackendSchema 'Postgres
-     , MonadSchema n m
-     , MonadTableInfo r m
-     , MonadRole r m
-     , Has QueryContext r
-     , Has (BackendExtension 'Postgres) r
-     )
+  :: forall r m n
+   . MonadBuildSchema ('Postgres 'Vanilla) r m n
   => G.GType
   -> AnnotatedObjectType
-  -> m (Parser 'Output n (RQL.AnnFieldsG 'Postgres (UnpreparedValue 'Postgres)))
+  -> m (Parser 'Output n (RQL.AnnFieldsG ('Postgres 'Vanilla) (UnpreparedValue ('Postgres 'Vanilla))))
 actionOutputFields outputType annotatedObject = do
   let outputObject = _aotDefinition annotatedObject
       scalarOrEnumFields = map scalarOrEnumFieldParser $ toList $ _otdFields outputObject
@@ -204,7 +186,7 @@ actionOutputFields outputType annotatedObject = do
   where
     scalarOrEnumFieldParser
       :: ObjectFieldDefinition (G.GType, AnnotatedObjectFieldType)
-      -> FieldParser n (RQL.AnnFieldG 'Postgres (UnpreparedValue 'Postgres))
+      -> FieldParser n (RQL.AnnFieldG ('Postgres 'Vanilla) (UnpreparedValue ('Postgres 'Vanilla)))
     scalarOrEnumFieldParser (ObjectFieldDefinition name _ description ty) =
       let (gType, objectFieldType) = ty
           fieldName = unObjectFieldName name
@@ -219,8 +201,8 @@ actionOutputFields outputType annotatedObject = do
          $> RQL.mkAnnColumnField pgColumnInfo Nothing Nothing
 
     relationshipFieldParser
-      :: TypeRelationship (TableInfo 'Postgres) (ColumnInfo 'Postgres)
-      -> m (Maybe [FieldParser n (RQL.AnnFieldG 'Postgres (UnpreparedValue 'Postgres))])
+      :: TypeRelationship (TableInfo ('Postgres 'Vanilla)) (ColumnInfo ('Postgres 'Vanilla))
+      -> m (Maybe [FieldParser n (RQL.AnnFieldG ('Postgres 'Vanilla) (UnpreparedValue ('Postgres 'Vanilla)))])
     relationshipFieldParser (TypeRelationship relName relType _ tableInfo fieldMapping) = runMaybeT do
       let tableName     = _tciName $ _tiCoreInfo tableInfo
           fieldName     = unRelationshipName relName
@@ -260,7 +242,7 @@ mkOutputParserModifier = \case
     nullableModifier nullable =
       if G.unNullability nullable then P.nullableParser else P.nonNullableParser
 
-mkDefinitionList :: AnnotatedObjectType -> [(PGCol, ScalarType 'Postgres)]
+mkDefinitionList :: AnnotatedObjectType -> [(PGCol, ScalarType ('Postgres 'Vanilla))]
 mkDefinitionList AnnotatedObjectType{..} =
   flip map (toList _otdFields) $ \ObjectFieldDefinition{..} ->
     (unsafePGCol . G.unName . unObjectFieldName $ _ofdName,) $
@@ -345,7 +327,8 @@ mkArgumentInputFieldParser name description gType parser =
 
 customScalarParser
   :: MonadParse m
-  => AnnotatedScalarType -> Parser 'Both m J.Value
+  => AnnotatedScalarType
+  -> Parser 'Both m J.Value
 customScalarParser = \case
   ASTCustom ScalarTypeDefinition{..} ->
         if | _stdName == idScalar     -> J.toJSON <$> P.identifier
@@ -360,12 +343,13 @@ customScalarParser = \case
        { pType = schemaType
        , pParser = P.valueToJSON (P.toGraphQLType schemaType) >=>
                    either (parseErrorWith ParseFailed . qeError)
-                   (pure . scalarValueToJSON) . parseScalarValue pgScalarType
+                   (pure . scalarValueToJSON @('Postgres 'Vanilla)) . parseScalarValue @('Postgres 'Vanilla) pgScalarType
        }
 
 customEnumParser
   :: MonadParse m
-  => EnumTypeDefinition -> Parser 'Both m J.Value
+  => EnumTypeDefinition
+  -> Parser 'Both m J.Value
 customEnumParser (EnumTypeDefinition typeName description enumValues) =
   let enumName = unEnumTypeName typeName
       enumValueDefinitions = enumValues <&> \enumValue ->

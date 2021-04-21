@@ -35,6 +35,13 @@ type XDisable = Void
 -- Additionally, grouping all those types under one typeclass rather than having
 -- dedicated type families allows to explicitly list all typeclass requirements,
 -- which simplifies the instance declarations of all IR types.
+--
+-- There are no injectivity requirements on those type families: it's
+-- okay for two different backends to use the same types. That means,
+-- however, that functions cannot identify to what backend b a given
+-- @TableName b@ refers to; most generic functions will need either a
+-- type application or a 'Proxy' parameter to disambiguate between
+-- different backends at the call site.
 class
   ( Representable (Identifier b)
   , Representable (TableName b)
@@ -103,20 +110,20 @@ class
   , HasTag b
   ) => Backend (b :: BackendType) where
   -- types
-  type SourceConfig            b = sc | sc -> b
-  type SourceConnConfiguration b = scc | scc -> b
+  type SourceConfig            b :: Type
+  type SourceConnConfiguration b :: Type
   type Identifier              b :: Type
   type Alias                   b :: Type
-  type TableName               b = tn | tn -> b
-  type FunctionName            b = fn | fn -> b
+  type TableName               b :: Type
+  type FunctionName            b :: Type
   type FunctionArgType         b :: Type
   type ConstraintName          b :: Type
   type BasicOrderType          b :: Type
   type NullsOrderType          b :: Type
   type CountType               b :: Type
-  type Column                  b = c | c -> b
-  type ScalarValue             b = sv | sv -> b
-  type ScalarType              b = s | s -> b
+  type Column                  b :: Type
+  type ScalarValue             b :: Type
+  type ScalarType              b :: Type
   type BooleanOperators        b :: Type -> Type
   type SQLExpression           b :: Type
   type SQLOperator             b :: Type

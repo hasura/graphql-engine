@@ -239,7 +239,7 @@ buildSubscriptionPlan userInfo rootFields = do
 
     buildAction (C.RFDB sourceName exists) allFields = do
       lqp <- AB.dispatchAnyBackend @EB.BackendExecute exists
-        \(C.SourceConfigWith (sourceConfig :: SourceConfig b) _) -> do
+        \(C.SourceConfigWith sourceConfig _ :: C.SourceConfigWith db b) -> do
            qdbs <- traverse (checkField @b sourceName) allFields
            LQP . AB.mkAnyBackend . MultiplexedLiveQueryPlan
              <$> EB.mkDBSubscriptionPlan userInfo sourceName sourceConfig qdbs

@@ -1,3 +1,5 @@
+{-# LANGUAGE UndecidableInstances #-}
+
 module Hasura.RQL.Types.Action
   ( ArgumentName(..)
   , ArgumentDefinition(..)
@@ -81,6 +83,7 @@ import qualified Network.HTTP.Client           as HTTP
 import qualified Network.HTTP.Types            as HTTP
 
 import           Control.Lens                  (makeLenses, makePrisms)
+import           Data.Aeson.Extended
 import           Data.Text.Extended
 
 import           Hasura.Incremental            (Cacheable)
@@ -290,15 +293,18 @@ data ActionSourceInfo b
   = ASINoSource -- ^ No relationships defined on the action output object
   | ASISource !SourceName !(SourceConfig b) -- ^ All relationships refer to tables in one source
 
-getActionSourceInfo :: AnnotatedObjectType -> ActionSourceInfo 'Postgres
+getActionSourceInfo :: AnnotatedObjectType -> ActionSourceInfo ('Postgres 'Vanilla)
 getActionSourceInfo = maybe ASINoSource (uncurry ASISource) . _aotSource
 
 data AnnActionExecution (b :: BackendType) v
   = AnnActionExecution
   { _aaeName                 :: !ActionName
-  , _aaeOutputType           :: !GraphQLType -- ^ output type
-  , _aaeFields               :: !(AnnFieldsG b v) -- ^ output selection
-  , _aaePayload              :: !J.Value -- ^ jsonified input arguments
+  , _aaeOutputType           :: !GraphQLType
+  -- ^ output type
+  , _aaeFields               :: !(AnnFieldsG b v)
+  -- ^ output selection
+  , _aaePayload              :: !J.Value
+  -- ^ jsonified input arguments
   , _aaeOutputFields         :: !ActionOutputFields
   -- ^ to validate the response fields from webhook
   , _aaeDefinitionList       :: ![(Column b, ScalarType b)]

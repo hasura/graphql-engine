@@ -206,7 +206,7 @@ validateCustomTypeDefinitions sources customTypes allScalars = do
                     objectTypeName _trName fieldName
 
               -- the column should be a column of the table
-              onNothing (getColumnInfoM remoteTableInfo (fromCol @'Postgres columnName)) $ refute $ pure $
+              onNothing (getColumnInfoM remoteTableInfo (fromCol @('Postgres 'Vanilla) columnName)) $ refute $ pure $
                 ObjectRelationshipColumnDoesNotExist objectTypeName _trName _trRemoteTable columnName
 
           pure $ TypeRelationship _trName _trType _trSource remoteTableInfo annotatedFieldMapping
@@ -214,19 +214,23 @@ validateCustomTypeDefinitions sources customTypes allScalars = do
       let sourceConfig = do
             source     <- _trSource . NE.head <$> annotatedRelationships
             sourceInfo <- Map.lookup source sources
-            (source,) <$> unsafeSourceConfiguration @'Postgres sourceInfo
+            (source,) <$> unsafeSourceConfiguration @('Postgres 'Vanilla) sourceInfo
 
       pure $ flip AnnotatedObjectType sourceConfig $
              ObjectTypeDefinition objectTypeName (_otdDescription objectDefinition)
              scalarOrEnumFields annotatedRelationships
 
 -- see Note [Postgres scalars in custom types]
-lookupPGScalar :: DMap.DMap BackendTag ScalarSet -> G.Name -> (PGScalarType -> a) -> Maybe a
+lookupPGScalar
+  :: DMap.DMap BackendTag ScalarSet
+  -> G.Name
+  -> (PGScalarType -> a)
+  -> Maybe a
 lookupPGScalar allScalars baseType callback = afold $ do
-  ScalarSet scalars <- DMap.lookup PostgresTag $ allScalars
+  ScalarSet scalars <- DMap.lookup (backendTag @('Postgres 'Vanilla)) $ allScalars
   let scalarsMap = Map.fromList $ do
         scalar     <- Set.toList scalars
-        scalarName <- afold $ scalarTypeGraphQLName scalar
+        scalarName <- afold $ scalarTypeGraphQLName @('Postgres 'Vanilla) scalar
         pure (scalarName, scalar)
   match <- afold $ Map.lookup baseType scalarsMap
   pure $ callback match

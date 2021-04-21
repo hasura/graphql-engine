@@ -216,7 +216,7 @@ msColumnParser columnType (G.Nullability isNullable) =
     ColumnEnumReference (EnumReference tableName enumValues) ->
       case nonEmpty (Map.toList enumValues) of
         Just enumValuesList -> do
-          tableGQLName <- tableGraphQLName tableName `onLeft` throwError
+          tableGQLName <- tableGraphQLName @'MSSQL tableName `onLeft` throwError
           let enumName = tableGQLName <> $$(G.litName "_enum")
           pure $ possiblyNullable MSSQL.VarcharType $ P.enum enumName Nothing (mkEnumValue <$> enumValuesList)
         Nothing -> throw400 ValidationFailed "empty enum values"
@@ -303,8 +303,8 @@ msComparisonExps = P.memoize 'comparisonExps \columnType -> do
 
   -- parsers used for individual values
   typedParser        <- columnParser columnType (G.Nullability False)
-  nullableTextParser <- columnParser (ColumnScalar MSSQL.VarcharType) (G.Nullability True)
-  textParser         <- columnParser (ColumnScalar MSSQL.VarcharType) (G.Nullability False)
+  nullableTextParser <- columnParser (ColumnScalar @'MSSQL MSSQL.VarcharType) (G.Nullability True)
+  textParser         <- columnParser (ColumnScalar @'MSSQL MSSQL.VarcharType) (G.Nullability False)
   let
     columnListParser = P.list typedParser `P.bind` traverse P.openOpaque
     textListParser   = P.list textParser  `P.bind` traverse P.openOpaque

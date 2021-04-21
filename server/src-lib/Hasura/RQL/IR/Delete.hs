@@ -20,7 +20,8 @@ data AnnDelG (b :: BackendType) v
 type AnnDel b = AnnDelG b (SQLExpression b)
 
 traverseAnnDel
-  :: (Applicative f, Backend backend)
+  :: forall backend f a b
+   . (Applicative f, Backend backend)
   => (a -> f b)
   -> AnnDelG backend a
   -> f (AnnDelG backend b)

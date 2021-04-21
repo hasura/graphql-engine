@@ -74,7 +74,7 @@ msDBQueryPlan _env _manager _reqHeaders userInfo _directives sourceName sourceCo
   pure
     $ ExecStepDB []
     . AB.mkAnyBackend
-    $ DBStepInfo sourceName sourceConfig (Just queryString) odbcQuery
+    $ DBStepInfo @'MSSQL sourceName sourceConfig (Just queryString) odbcQuery
 
 msDBQueryExplain
   :: MonadError QErr m
@@ -94,7 +94,7 @@ msDBQueryExplain fieldName userInfo sourceName sourceConfig qrf = do
         encJFromJValue $ ExplainPlan fieldName (Just queryString) (Just [explainInfo])
   pure
     $ AB.mkAnyBackend
-    $ DBStepInfo sourceName sourceConfig Nothing odbcQuery
+    $ DBStepInfo @'MSSQL sourceName sourceConfig Nothing odbcQuery
 
 msDBLiveQueryExplain
   :: MonadError QErr m
