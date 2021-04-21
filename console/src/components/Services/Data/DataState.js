@@ -184,6 +184,7 @@ const defaultState = {
     dbURL: '',
     dbName: '',
   },
+  allSourcesSchemas: {},
 };
 
 export default defaultState;

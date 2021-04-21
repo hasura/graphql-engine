@@ -103,6 +103,8 @@ const DataSourceContainer = ({
   useEffect(() => {
     const driver = getSourceDriver(dataSources, currentSource);
     if (driver !== currentDriver) return;
+    if (schemaList?.length > 0) return setDataLoaded(true);
+
     if (currentSource) {
       dispatch(fetchDataInit(currentSource, currentDriver)).then(() => {
         dispatch(fetchFunctionInit()); // todo

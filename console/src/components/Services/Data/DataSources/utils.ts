@@ -1,3 +1,6 @@
+import { Table } from '../../../../dataSources/types';
+import { MetadataDataSource } from '../../../../metadata/types';
+
 export const getErrorMessageFromMissingFields = (
   host: string,
   port: string,
@@ -33,6 +36,34 @@ export const getDatasourceURL = (
     return link.toString();
   }
   return link.from_env.toString();
+};
+
+type TableType = Record<string, { table_type: Table['table_type'] }>;
+type SchemaType = Record<string, TableType>;
+type SourceSchemasType = Record<string, SchemaType>;
+
+export const canReUseTableTypes = (
+  allSources: SourceSchemasType,
+  sources: MetadataDataSource[]
+) => {
+  if (
+    !sources ||
+    !allSources ||
+    Object.keys(allSources).length !== sources.length
+  )
+    return false;
+
+  // make sure all table names and schema names are same in metadata and table_type cache (allSourcesSchemas)
+  return sources.every(sourceFromMetada =>
+    sourceFromMetada?.tables?.every(
+      ({ table: { name, schema } = {} }) =>
+        name &&
+        schema &&
+        allSources[sourceFromMetada.name] &&
+        allSources[sourceFromMetada.name][schema] &&
+        allSources[sourceFromMetada.name][schema][name]
+    )
+  );
 };
 
 export const readFile = (
