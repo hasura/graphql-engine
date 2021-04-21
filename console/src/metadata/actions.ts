@@ -406,6 +406,7 @@ export const replaceMetadata = (
 
     const customOnSuccess = () => {
       if (successCb) successCb();
+      dispatch(exportMetadata());
     };
     const customOnError = () => {
       if (errorCb) errorCb();
