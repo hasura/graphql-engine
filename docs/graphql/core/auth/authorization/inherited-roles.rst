@@ -124,7 +124,7 @@ The above GraphQL query will be translated to the following SQL query.
 
 The other parameters of the select permission will be combined in the following manner:
 
-1. Limit - Minimum of the limits will be the limit of the inherited role
+1. Limit - Maximum of the limits will be the limit of the inherited role
 2. Allow aggregations - If any of the role allows aggregation, then the inherited role will allow aggregation
 3. Scalar computed fields - same as table column fields, as in the above example
 

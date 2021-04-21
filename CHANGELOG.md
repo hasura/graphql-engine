@@ -19,6 +19,7 @@ only when there are enough present in the items inventory.
 - server: fix bug with catalog upgrade from alpha.7 (fix #6802)
 - server: fix a bug in remote schema permissions that could result in an invalid GraphQL schema (fix #6029, #6703)
 - server: support query multiplexing in MSSQL subscriptions
+- server: an inherited role's limit will be the max limit of all the roles (#6671)
 - console: add bigquery support (#1000)
 - cli: add support for bigquery in metadata operations
 - cli: fix regression - `metadata apply —dry-run` was overwriting local metadata files with metadata on server when it should just display the differences.
