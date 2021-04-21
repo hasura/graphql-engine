@@ -1164,3 +1164,4 @@ Read more about it in the [docs](https://hasura.io/docs/latest/graphql/core/auth
 - console: show pre-release update notifications with opt out option (#3888)
 - console: handle invalid keys in permission builder (close #3848) (#3863)
 - docs: add page on data validation to docs (close #4085) (#4260)
+- docs: add Qovery deployment option (#6666)
