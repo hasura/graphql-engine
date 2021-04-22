@@ -8,6 +8,7 @@
 (Add entries below in the order of: server, console, cli, docs, others)
 
 - server: fix regression: `on_conflict` was missing in the schema for inserts in tables where the current user has no columns listed in their update permissions (fix #6804)
+- console: fix Postgres table creation when table has a non-lowercase name and a comment (#6760)
 - cli: fix regression - `metadata apply —dry-run` was overwriting local metadata files with metadata on server when it should just display the differences.
 - cli: add support for `api_limits` metadata object
 
@@ -80,11 +81,6 @@ In the future, we will probably offer a way to explicitly choose which behaviour
 - console: add details button to the success notification to see inserted row
 - console: add request preview for REST endpoints
 - cli: fix errors being ignored during `metadata apply` in config v3 (fix #6784)
-
-
-### Bug fixes and improvements
-
-- console: fix Postgres table creation when table has a non-lowercase name and a comment (#6760)
 
 ## v2.0.0-alpha.7
 
