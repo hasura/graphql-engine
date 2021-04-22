@@ -103,6 +103,9 @@ class TestGraphqlInsertPermission:
     def test_user_role_on_conflict_update(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + "/article_on_conflict_user_role.yaml")
 
+    def test_restricted_role_on_conflict_update(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + "/article_on_conflict_restricted_role.yaml")
+
     def test_user_role_on_conflict_constraint_on_error(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + "/article_on_conflict_constraint_on_user_role_error.yaml")
 

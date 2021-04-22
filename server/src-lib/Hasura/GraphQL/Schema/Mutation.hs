@@ -34,6 +34,7 @@ import           Hasura.GraphQL.Schema.Select
 import           Hasura.GraphQL.Schema.Table
 import           Hasura.RQL.Types
 
+
 -- insert
 
 -- | Construct a root field, normally called insert_tablename, that can be used to add several rows to a DB table
@@ -217,7 +218,11 @@ mkInsertObject objects table columns conflictClause insertPerms updatePerms =
         defaultValues = Map.union (partialSQLExpToUnpreparedValue <$> ipiSet insertPerms)
           $ Map.fromList [(column, UVLiteral $ columnDefaultValue @b column) | column <- pgiColumn <$> columns]
 
--- | Specifies the "ON CONFLICT" SQL clause
+-- | Specifies the "ON CONFLICT" SQL clause.
+-- This object cannot exist if there aren't any unique or primary keys constraints. However,
+-- if there are no columns for which the current role has update permissions, we must still
+-- accept an empty list for `update_columns`; we do this by adding a placeholder value to
+-- the enum (see 'tableUpdateColumnsEnum').
 conflictObject
   :: forall b r m n
    . MonadBuildSchema b r m n
@@ -226,8 +231,8 @@ conflictObject
   -> UpdPermInfo b
   -> m (Maybe (Parser 'Input n (IR.ConflictClauseP1 b (UnpreparedValue b))))
 conflictObject table selectPerms updatePerms = runMaybeT $ do
-  tableGQLName      <- getTableGQLName @b table
-  columnsEnum      <- MaybeT $ tableUpdateColumnsEnum table updatePerms
+  tableGQLName     <- getTableGQLName @b table
+  columnsEnum      <- lift $ tableUpdateColumnsEnum table updatePerms
   constraints      <- MaybeT $ tciUniqueOrPrimaryKeyConstraints . _tiCoreInfo <$> askTableInfo @b table
   constraintParser <- lift $ conflictConstraint constraints table
   whereExpParser   <- lift $ boolExp table selectPerms
@@ -238,8 +243,10 @@ conflictObject table selectPerms updatePerms = runMaybeT $ do
       whereExpName   = $$(G.litName "where")
       fieldsParser = do
         constraint <- IR.CTConstraint <$> P.field constraintName Nothing constraintParser
-        columns    <- P.field columnsName Nothing $ P.list columnsEnum
         whereExp   <- P.fieldOptional whereExpName Nothing whereExpParser
+        columns    <- P.fieldWithDefault columnsName Nothing (G.VList []) (P.list columnsEnum) `P.bindFields` \cs ->
+          -- this can only happen if the placeholder was used
+          sequenceA cs `onNothing` parseError "erroneous column name"
         pure $ case columns of
           [] -> IR.CP1DoNothing $ Just constraint
           _  -> IR.CP1Update constraint columns preSetColumns $
@@ -343,7 +350,6 @@ mkUpdateObject table columns updatePerms ((opExps, whereExp), mutationOutput) =
     checkExp = maybe annBoolExpTrue (fmapAnnBoolExp partialSQLExpToUnpreparedValue) $ upiCheck updatePerms
 
 
-
 -- delete
 
 -- | Construct a root field, normally called delete_tablename, that can be used
@@ -400,7 +406,6 @@ mkDeleteObject table columns deletePerms (whereExp, mutationOutput) =
             }
   where
     permissionFilter = fmapAnnBoolExp partialSQLExpToUnpreparedValue $ dpiFilter deletePerms
-
 
 
 -- common

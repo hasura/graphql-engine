@@ -83,29 +83,30 @@ tableSelectColumnsEnum table selectPermissions = do
 -- table. Used for conflict resolution in "insert" mutations, among
 -- others. Maps to the table_update_column object.
 --
--- Return Nothing if there's no column the current user has "update"
--- permissions for.
+-- If there's no column for which the current user has "update"
+-- permissions, this functions returns an enum that only contains a
+-- placeholder, so as to still allow this type to exist in the schema.
 tableUpdateColumnsEnum
   :: forall m n r b
    . (BackendSchema b, MonadSchema n m, MonadRole r m, MonadTableInfo r m)
   => TableName b
   -> UpdPermInfo b
-  -> m (Maybe (Parser 'Both n (Column b)))
+  -> m (Parser 'Both n (Maybe (Column b)))
 tableUpdateColumnsEnum table updatePermissions = do
   tableGQLName <- getTableGQLName @b table
   columns      <- tableUpdateColumns table updatePermissions
-  let enumName    = tableGQLName <> $$(G.litName "_update_column")
-      description = Just $ G.Description $
-        "update columns of table " <>> table
-  pure $ P.enum enumName description <$> nonEmpty
-    [ ( define $ pgiName column
-      , pgiColumn column
-      )
-    | column <- columns
-    ]
+  let enumName   = tableGQLName <> $$(G.litName "_update_column")
+      enumDesc   = Just $ G.Description $ "update columns of table " <>> table
+      altDesc    = Just $ G.Description $ "placeholder for update columns of table " <> table <<> " (current role has no relevant permissions)"
+      enumValues = do
+        column <- columns
+        pure (define $ pgiName column, Just $ pgiColumn column)
+  pure $ case nonEmpty enumValues of
+    Just values -> P.enum enumName enumDesc values
+    Nothing     -> P.enum enumName altDesc $ pure (placeholder, Nothing)
   where
-    define name =
-      P.mkDefinition name (Just $ G.Description "column name") P.EnumValueInfo
+    define name = P.mkDefinition name (Just $ G.Description "column name") P.EnumValueInfo
+    placeholder = P.mkDefinition $$(G.litName "_PLACEHOLDER") (Just $ G.Description "placeholder (do not use)") P.EnumValueInfo
 
 tablePermissions
   :: forall m n r b. (Backend b, MonadSchema n m, MonadTableInfo r m, MonadRole r m)

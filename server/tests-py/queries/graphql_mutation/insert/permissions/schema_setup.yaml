@@ -162,6 +162,18 @@ args:
           - author_id: X-HASURA-USER-ID
           - is_published: true
 
+#Article select permission for restricted
+- type: create_select_permission
+  args:
+    table: article
+    role: restricted
+    permission:
+      columns: '*'
+      filter:
+        $or:
+          - author_id: X-HASURA-USER-ID
+          - is_published: true
+
 #Article select permission for editor
 - type: create_select_permission
   args:
@@ -180,6 +192,15 @@ args:
   args:
     table: article
     role: user
+    permission:
+      check:
+        author_id: X-Hasura-User-Id
+
+#Article insert permission for restricted
+- type: create_insert_permission
+  args:
+    table: article
+    role: restricted
     permission:
       check:
         author_id: X-Hasura-User-Id
@@ -204,6 +225,16 @@ args:
       filter:
         author_id: X-Hasura-User-Id
       columns: '*'
+
+#Article udpate permission for restricted
+- type: create_update_permission
+  args:
+    table: article
+    role: restricted
+    permission:
+      filter:
+        author_id: X-Hasura-User-Id
+      columns: []
 
 #Author select permission for user
 - type: create_select_permission
