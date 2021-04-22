@@ -1,6 +1,6 @@
 {-# OPTIONS_GHC -fno-warn-type-defaults #-}
 {-# LANGUAGE DuplicateRecordFields #-}
-{-# LANGUAGE ExtendedDefaultRules #-}
+{-# LANGUAGE ExtendedDefaultRules  #-}
 
 -- | Execute the plan given from .Plan.
 
@@ -20,32 +20,32 @@ import           Control.Concurrent
 import           Control.Exception.Safe
 import           Control.Monad.Except
 import           Control.Monad.Reader
-import           Data.Aeson ((.=),(.:),(.:?))
-import qualified Data.Aeson as Aeson
-import qualified Data.Aeson.Types as Aeson
-import qualified Data.ByteString.Lazy as L
+import           Data.Aeson                               ((.:), (.:?), (.=))
+import qualified Data.Aeson                               as Aeson
+import qualified Data.Aeson.Types                         as Aeson
+import qualified Data.ByteString.Lazy                     as L
 import           Data.Foldable
-import qualified Data.HashMap.Strict as HM
-import qualified Data.HashMap.Strict.InsOrd as OMap
+import qualified Data.HashMap.Strict                      as HM
+import qualified Data.HashMap.Strict.InsOrd               as OMap
 import           Data.IORef
 import           Data.Maybe
-import qualified Data.Text as T
-import qualified Data.Text.Lazy as LT
-import qualified Data.Text.Lazy.Builder as LT
+import qualified Data.Text                                as T
+import qualified Data.Text.Lazy                           as LT
+import qualified Data.Text.Lazy.Builder                   as LT
 import           Data.Tree
 import           Data.Tuple
-import           Data.Vector (Vector)
-import qualified Data.Vector as V
+import           Data.Vector                              (Vector)
+import qualified Data.Vector                              as V
 import           GHC.Generics
 import           Hasura.Backends.BigQuery.Connection
 import qualified Hasura.Backends.BigQuery.DataLoader.Plan as Plan
 import qualified Hasura.Backends.BigQuery.DataLoader.Plan as Select (Select (..))
 import           Hasura.Backends.BigQuery.Source
-import qualified Hasura.Backends.BigQuery.ToQuery as ToQuery
-import           Hasura.Backends.BigQuery.Types as BigQuery
+import qualified Hasura.Backends.BigQuery.ToQuery         as ToQuery
+import           Hasura.Backends.BigQuery.Types           as BigQuery
+import           Hasura.Prelude                           hiding (head, state, tail)
 import           Network.HTTP.Simple
 import           Network.HTTP.Types
-import           Hasura.Prelude hiding (head, tail, state)
 
 --------------------------------------------------------------------------------
 -- Types
@@ -56,8 +56,8 @@ import           Hasura.Prelude hiding (head, tail, state)
 -- we choose a naive implementation in the interest of getting other
 -- work done.
 data RecordSet = RecordSet
-  { origin :: !(Maybe Plan.PlannedAction)
-  , rows :: !(Vector (InsOrdHashMap Plan.FieldName OutputValue))
+  { origin       :: !(Maybe Plan.PlannedAction)
+  , rows         :: !(Vector (InsOrdHashMap Plan.FieldName OutputValue))
   , wantedFields :: !(Maybe [Text])
   } deriving (Show)
 
@@ -81,24 +81,24 @@ data OutputValue
 instance Hashable OutputValue
 instance Aeson.ToJSON OutputValue where
   toJSON = \case
-    NullOutputValue -> Aeson.toJSON Aeson.Null
-    DecimalOutputValue !i -> Aeson.toJSON i
-    BigDecimalOutputValue !i -> Aeson.toJSON i
-    FloatOutputValue !i -> Aeson.toJSON i
-    TextOutputValue !i -> Aeson.toJSON i
-    BytesOutputValue !i -> Aeson.toJSON i
-    DateOutputValue !i -> Aeson.toJSON i
-    TimestampOutputValue !i -> Aeson.toJSON i
-    TimeOutputValue !i -> Aeson.toJSON i
-    DatetimeOutputValue !i -> Aeson.toJSON i
-    GeographyOutputValue !i -> Aeson.toJSON i
-    BoolOutputValue !i -> Aeson.toJSON i
-    IntegerOutputValue !i -> Aeson.toJSON i
-    ArrayOutputValue !vector -> Aeson.toJSON vector
+    NullOutputValue           -> Aeson.toJSON Aeson.Null
+    DecimalOutputValue !i     -> Aeson.toJSON i
+    BigDecimalOutputValue !i  -> Aeson.toJSON i
+    FloatOutputValue !i       -> Aeson.toJSON i
+    TextOutputValue !i        -> Aeson.toJSON i
+    BytesOutputValue !i       -> Aeson.toJSON i
+    DateOutputValue !i        -> Aeson.toJSON i
+    TimestampOutputValue !i   -> Aeson.toJSON i
+    TimeOutputValue !i        -> Aeson.toJSON i
+    DatetimeOutputValue !i    -> Aeson.toJSON i
+    GeographyOutputValue !i   -> Aeson.toJSON i
+    BoolOutputValue !i        -> Aeson.toJSON i
+    IntegerOutputValue !i     -> Aeson.toJSON i
+    ArrayOutputValue !vector  -> Aeson.toJSON vector
     RecordOutputValue !record -> Aeson.toJSON record
 
 data ExecuteReader = ExecuteReader
-  { recordSets :: IORef (InsOrdHashMap Plan.Ref RecordSet)
+  { recordSets  :: IORef (InsOrdHashMap Plan.Ref RecordSet)
   , credentials :: !BigQuerySourceConfig
   }
 
@@ -146,12 +146,12 @@ data BigQueryType
   deriving (Show, Eq)
 
 data BigQuery = BigQuery
-  { query :: !LT.Text
+  { query      :: !LT.Text
   , parameters :: !(InsOrdHashMap ParameterName Parameter)
   } deriving (Show)
 
 data Parameter = Parameter
-  { typ :: !BigQueryType
+  { typ   :: !BigQueryType
   , value :: !Value
   } deriving (Show)
 
@@ -160,7 +160,7 @@ newtype ParameterName =
 
 data BigQueryField = BigQueryField
   { name :: !Plan.FieldName
-  , typ :: !BigQueryFieldType
+  , typ  :: !BigQueryFieldType
   , mode :: !Mode
   } deriving (Show)
 
@@ -248,15 +248,15 @@ executePlannedAction =
             case joinProvenance of
               ArrayJoinProvenance ->
                 case leftArrayJoin wantedFields joinFieldName joinOn left right of
-                  Left problem -> throwError (JoinProblem problem)
+                  Left problem    -> throwError (JoinProblem problem)
                   Right recordSet -> pure recordSet
               ObjectJoinProvenance ->
                 case leftObjectJoin wantedFields joinFieldName joinOn left right of
-                  Left problem -> throwError (JoinProblem problem)
+                  Left problem    -> throwError (JoinProblem problem)
                   Right recordSet -> pure recordSet
               ArrayAggregateJoinProvenance ->
                 case leftObjectJoin wantedFields joinFieldName joinOn left right of
-                  Left problem -> throwError (JoinProblem problem)
+                  Left problem    -> throwError (JoinProblem problem)
                   Right recordSet -> pure recordSet
               p -> throwError (UnacceptableJoinProvenanceBUG p)
       saveRecordSet ref recordSet
@@ -298,7 +298,7 @@ makeRelationshipIn Plan.Relationship {leftRecordSet, onFields, rightTable} = do
     lookupField' k row =
       case OMap.lookup k row of
         Nothing -> Nothing
-        Just x -> Just x
+        Just x  -> Just x
 
 planFieldNameToQueryFieldName :: EntityAlias -> Plan.FieldName -> FieldName
 planFieldNameToQueryFieldName (EntityAlias fieldNameEntity) (Plan.FieldName fieldName) =
@@ -307,21 +307,21 @@ planFieldNameToQueryFieldName (EntityAlias fieldNameEntity) (Plan.FieldName fiel
 outputValueToValue  :: OutputValue -> Maybe Value
 outputValueToValue =
   \case
-    DecimalOutputValue i -> pure (DecimalValue i)
+    DecimalOutputValue i    -> pure (DecimalValue i)
     BigDecimalOutputValue i -> pure (BigDecimalValue i)
-    IntegerOutputValue i -> pure (IntegerValue i)
-    DateOutputValue i -> pure (DateValue i)
-    TimeOutputValue i -> pure (TimeValue i)
-    DatetimeOutputValue i -> pure (DatetimeValue i)
-    TimestampOutputValue i -> pure (TimestampValue i)
-    FloatOutputValue i -> pure (FloatValue i)
-    GeographyOutputValue i -> pure (GeographyValue i)
-    TextOutputValue i -> pure (StringValue i)
-    BytesOutputValue i -> pure (BytesValue i)
-    BoolOutputValue i -> pure (BoolValue i)
-    ArrayOutputValue v -> fmap ArrayValue (mapM outputValueToValue v)
-    RecordOutputValue {} -> Nothing
-    NullOutputValue -> Nothing
+    IntegerOutputValue i    -> pure (IntegerValue i)
+    DateOutputValue i       -> pure (DateValue i)
+    TimeOutputValue i       -> pure (TimeValue i)
+    DatetimeOutputValue i   -> pure (DatetimeValue i)
+    TimestampOutputValue i  -> pure (TimestampValue i)
+    FloatOutputValue i      -> pure (FloatValue i)
+    GeographyOutputValue i  -> pure (GeographyValue i)
+    TextOutputValue i       -> pure (StringValue i)
+    BytesOutputValue i      -> pure (BytesValue i)
+    BoolOutputValue i       -> pure (BoolValue i)
+    ArrayOutputValue v      -> fmap ArrayValue (mapM outputValueToValue v)
+    RecordOutputValue {}    -> Nothing
+    NullOutputValue         -> Nothing
 
 saveRecordSet :: Plan.Ref -> RecordSet -> Execute ()
 saveRecordSet ref recordSet = do
@@ -613,7 +613,7 @@ valueType =
     ArrayValue values ->
       ARRAY
         (case values V.!? 0 of
-           Just v -> valueType v
+           Just v  -> valueType v
            -- Above: We base the type from the first element. Later,
            -- we could add some kind of sanity check that they are all
            -- the same type.
@@ -767,7 +767,7 @@ getJobResults sc@BigQuerySourceConfig {..} Job {jobId} Fetch {pageToken} =
         Right resp ->
           case getResponseStatusCode resp of
             200 -> case Aeson.eitherDecode (getResponseBody resp) of
-                     Left e -> pure (Left (GetJobDecodeProblem e))
+                     Left e        -> pure (Left (GetJobDecodeProblem e))
                      Right results -> pure (Right results)
             _   -> do
                     pure $ Left $ RESTRequestNonOK (getResponseStatus resp) $ lbsToTxt $ getResponseBody resp
@@ -775,7 +775,7 @@ getJobResults sc@BigQuerySourceConfig {..} Job {jobId} Fetch {pageToken} =
       where
         pageTokenParam =
           case pageToken of
-            Nothing -> []
+            Nothing    -> []
             Just token -> [("pageToken", token)]
     encodeParams = T.intercalate "&" . map (\(k, v) -> k <> "=" <> v)
 
@@ -824,7 +824,7 @@ createQueryJob sc@BigQuerySourceConfig {..} BigQuery {..} =
           case getResponseStatusCode resp of
             200 ->
               case Aeson.eitherDecode (getResponseBody resp) of
-                Left e -> pure (Left (CreateQueryJobDecodeProblem e))
+                Left e    -> pure (Left (CreateQueryJobDecodeProblem e))
                 Right job -> pure (Right job)
             _ -> do
 
@@ -875,7 +875,7 @@ parseRow columnTypes value = do
   result <- parseBigQueryRow columnTypes value
   case result of
     RecordOutputValue row -> pure row
-    _ -> fail ("Expected a record when parsing a top-level row: " ++ show value)
+    _                     -> fail ("Expected a record when parsing a top-level row: " ++ show value)
 
 -- | Parse a row, which at the top-level of the "rows" output has no
 -- {"v":..} wrapper. But when appearing nestedly, does have the
@@ -920,7 +920,7 @@ parseBigQueryValue isNullable fieldType object =
       has_v isNullable (fmap DatetimeOutputValue . Aeson.parseJSON) object Aeson.<?>
       Aeson.Key "DATETIME"
     FieldTIMESTAMP ->
-      has_v isNullable (fmap TimestampOutputValue . Aeson.parseJSON) object Aeson.<?>
+      has_v isNullable (fmap (TimestampOutputValue . Timestamp . utctimeToISO8601Text) . Aeson.withText "FieldTIMESTAMP" textToUTCTime) object Aeson.<?>
       Aeson.Key "TIMESTAMP"
     FieldGEOGRAPHY ->
       has_v isNullable (fmap GeographyOutputValue . Aeson.parseJSON) object Aeson.<?>
@@ -992,19 +992,19 @@ has_v_generic f =
 instance Aeson.ToJSON BigQueryType where
   toJSON =
     \case
-      ARRAY t -> Aeson.object ["type" .= ("ARRAY" :: Text), "arrayType" .= t]
-      DECIMAL -> atomic "NUMERIC"
+      ARRAY t    -> Aeson.object ["type" .= ("ARRAY" :: Text), "arrayType" .= t]
+      DECIMAL    -> atomic "NUMERIC"
       BIGDECIMAL -> atomic "BIGNUMERIC"
-      INTEGER -> atomic "INTEGER"
-      DATE -> atomic "DATE"
-      TIME -> atomic "TIME"
-      DATETIME -> atomic "DATETIME"
-      TIMESTAMP -> atomic "TIMESTAMP"
-      FLOAT -> atomic "FLOAT"
-      GEOGRAPHY -> atomic "GEOGRAPHY"
-      STRING -> atomic "STRING"
-      BYTES -> atomic "BYTES"
-      BOOL -> atomic "BOOL"
+      INTEGER    -> atomic "INTEGER"
+      DATE       -> atomic "DATE"
+      TIME       -> atomic "TIME"
+      DATETIME   -> atomic "DATETIME"
+      TIMESTAMP  -> atomic "TIMESTAMP"
+      FLOAT      -> atomic "FLOAT"
+      GEOGRAPHY  -> atomic "GEOGRAPHY"
+      STRING     -> atomic "STRING"
+      BYTES      -> atomic "BYTES"
+      BOOL       -> atomic "BOOL"
     where
       atomic ty = Aeson.object ["type" .= (ty :: Text)]
 
@@ -1042,4 +1042,4 @@ instance Aeson.FromJSON Mode where
     case s :: Text of
       "NULLABLE" -> pure Nullable
       "REPEATED" -> pure Repeated
-      _ -> pure NotNullable
+      _          -> pure NotNullable

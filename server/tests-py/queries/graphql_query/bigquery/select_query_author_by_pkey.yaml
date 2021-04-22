@@ -1,0 +1,16 @@
+description: select query on author with id = 1
+url: /v1/graphql
+status: 200
+response:
+  data:
+    hasura_author:
+    - id: '1'
+      name: Author 1
+query:
+  query: |
+    query {
+      hasura_author (order_by: {id: asc}, where: {id: {_eq: 1}}){
+        id
+        name
+      }
+    }

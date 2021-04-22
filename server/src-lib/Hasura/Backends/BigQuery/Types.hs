@@ -4,36 +4,44 @@
 
 module Hasura.Backends.BigQuery.Types where
 
-import qualified Data.Text.Encoding as T
 import           Control.DeepSeq
-import           Data.Aeson (ToJSONKey,FromJSONKey,ToJSON,FromJSON)
-import qualified Data.Aeson as J
-import           Data.ByteString (ByteString)
-import qualified Data.ByteString.Base64 as Base64
-import qualified Data.ByteString.Lazy as L
+import           Data.Aeson                             (FromJSON, FromJSONKey, ToJSON, ToJSONKey)
+import qualified Data.Aeson                             as J
+import qualified Data.Aeson.Types                       as J
+import           Data.ByteString                        (ByteString)
+import qualified Data.ByteString.Base64                 as Base64
+import qualified Data.ByteString.Lazy                   as L
+import           Data.Coerce
 import           Data.Data
 import           Data.Hashable
-import qualified Data.Text as T
+import           Data.Hashable.Time                     ()
+import           Data.Scientific
+import qualified Data.Text                              as T
+import qualified Data.Text.Encoding                     as T
 import           Data.Text.Extended
-import           Data.Vector (Vector)
-import           Data.Vector.Instances ()
+import qualified Data.Text.Read                         as TR
+import           Data.Time
+import           Data.Time.Format.ISO8601               (iso8601Show)
+import           Data.Vector                            (Vector)
+import           Data.Vector.Instances                  ()
 import           GHC.Generics
 import           Hasura.Incremental.Internal.Dependency
 import           Hasura.Prelude
 import           Hasura.RQL.Types.Error
-import qualified Language.GraphQL.Draft.Syntax as G
+import qualified Language.GraphQL.Draft.Syntax          as G
 import           Language.Haskell.TH.Syntax
+import           Text.ParserCombinators.ReadP           (readP_to_S)
 
 data Select = Select
-  { selectTop :: !Top
-  , selectProjections :: !(NonEmpty Projection)
-  , selectFrom :: !From
-  , selectJoins :: ![Join]
-  , selectWhere :: !Where
-  , selectFor :: !For
-  , selectOrderBy :: !(Maybe (NonEmpty OrderBy))
-  , selectOffset :: !(Maybe Expression)
-  , selectGroupBy :: [FieldName]
+  { selectTop               :: !Top
+  , selectProjections       :: !(NonEmpty Projection)
+  , selectFrom              :: !From
+  , selectJoins             :: ![Join]
+  , selectWhere             :: !Where
+  , selectFor               :: !For
+  , selectOrderBy           :: !(Maybe (NonEmpty OrderBy))
+  , selectOffset            :: !(Maybe Expression)
+  , selectGroupBy           :: [FieldName]
   , selectFinalWantedFields :: !(Maybe [Text])
   } deriving (Eq, Show, Generic, Data, Lift)
 instance FromJSON Select
@@ -44,9 +52,9 @@ instance NFData Select
 
 data ArrayAgg = ArrayAgg
   { arrayAggProjections :: !(NonEmpty Projection)
-  , arrayAggOrderBy :: !(Maybe (NonEmpty OrderBy))
-  , arrayAggTop :: !Top
-  , arrayAggOffset :: !(Maybe Expression)
+  , arrayAggOrderBy     :: !(Maybe (NonEmpty OrderBy))
+  , arrayAggTop         :: !Top
+  , arrayAggOffset      :: !(Maybe Expression)
   } deriving (Eq, Show, Generic, Data, Lift)
 instance FromJSON ArrayAgg
 instance Hashable ArrayAgg
@@ -56,8 +64,8 @@ instance NFData ArrayAgg
 
 data Reselect = Reselect
   { reselectProjections :: !(NonEmpty Projection)
-  , reselectFor :: !For
-  , reselectWhere :: !Where
+  , reselectFor         :: !For
+  , reselectWhere       :: !Where
   } deriving (Eq, Show, Generic, Data, Lift)
 instance FromJSON Reselect
 instance Hashable Reselect
@@ -66,8 +74,8 @@ instance ToJSON Reselect
 instance NFData Reselect
 
 data OrderBy = OrderBy
-  { orderByFieldName :: FieldName
-  , orderByOrder :: Order
+  { orderByFieldName  :: FieldName
+  , orderByOrder      :: Order
   , orderByNullsOrder :: NullsOrder
   } deriving (Eq, Show, Generic, Data, Lift)
 instance FromJSON OrderBy
@@ -109,7 +117,7 @@ instance NFData For
 
 data ForJson = ForJson
   { jsonCardinality :: JsonCardinality
-  , jsonRoot :: Root
+  , jsonRoot        :: Root
   } deriving (Eq, Show, Generic, Data, Lift)
 instance FromJSON ForJson
 instance Hashable ForJson
@@ -152,13 +160,13 @@ instance ToJSON Projection
 instance NFData Projection
 
 data Join = Join
-  { joinSource :: !JoinSource
-  , joinAlias :: !EntityAlias
-  , joinOn :: [(FieldName,FieldName)]
-  , joinProvenance :: !JoinProvenance
-  , joinFieldName :: !Text
+  { joinSource      :: !JoinSource
+  , joinAlias       :: !EntityAlias
+  , joinOn          :: [(FieldName,FieldName)]
+  , joinProvenance  :: !JoinProvenance
+  , joinFieldName   :: !Text
   , joinExtractPath :: !(Maybe Text)
-  , joinRightTable :: !EntityAlias
+  , joinRightTable  :: !EntityAlias
   } deriving (Eq, Show, Generic, Data, Lift)
 instance FromJSON Join
 instance Hashable Join
@@ -216,8 +224,8 @@ instance Monoid Top where
 
 instance Semigroup Top where
   (<>) :: Top -> Top -> Top
-  (<>) NoTop x = x
-  (<>) x NoTop = x
+  (<>) NoTop x         = x
+  (<>) x NoTop         = x
   (<>) (Top x) (Top y) = Top (min x y)
 
 data Expression
@@ -296,7 +304,7 @@ instance NFData From
 
 data OpenJson = OpenJson
   { openJsonExpression :: Expression
-  , openJsonWith :: NonEmpty JsonFieldSpec
+  , openJsonWith       :: NonEmpty JsonFieldSpec
   } deriving (Eq, Show, Generic, Data, Lift)
 instance FromJSON OpenJson
 instance Hashable OpenJson
@@ -330,7 +338,7 @@ newtype SchemaName = SchemaName
   } deriving (NFData, Eq, Show, Generic, Data, Lift, FromJSON, ToJSON, Hashable, Cacheable)
 
 data TableName = TableName
-  { tableName :: Text
+  { tableName       :: Text
   , tableNameSchema :: Text
   } deriving (Eq, Show, Generic, Data, Lift, Ord)
 instance FromJSON TableName where
@@ -349,7 +357,7 @@ instance Arbitrary TableName where arbitrary = genericArbitrary
 instance ToTxt TableName where toTxt = T.pack . show
 
 data FieldName = FieldName
-  { fieldName :: Text
+  { fieldName       :: Text
   , fieldNameEntity :: !Text
   } deriving (Eq, Show, Generic, Data, Lift)
 instance FromJSON FieldName
@@ -440,6 +448,14 @@ instance Hashable Value
 newtype Timestamp = Timestamp Text
   deriving (Show, Eq, Ord, Generic, Data, Lift, ToJSON, FromJSON, Cacheable, NFData, Hashable)
 
+textToUTCTime :: Text -> J.Parser UTCTime
+textToUTCTime =
+  either fail (pure . flip addUTCTime (UTCTime (fromGregorian 1970 0 0) 0) . fst)
+  . (TR.rational :: TR.Reader NominalDiffTime)
+
+utctimeToISO8601Text :: UTCTime -> Text
+utctimeToISO8601Text = T.pack . iso8601Show
+
 -- | BigQuery's conception of a date.
 newtype Date = Date Text
   deriving (Show, Eq, Ord, Generic, Data, Lift, ToJSON, FromJSON, Cacheable, NFData, Hashable)
@@ -454,28 +470,36 @@ newtype Datetime = Datetime Text
 
 -- | BigQuery's conception of an INTEGER/INT64 (they are the same).
 newtype Int64 = Int64 Text
-  deriving (Show, Eq, Ord, Generic, Data, Lift, ToJSON, FromJSON, Cacheable, NFData, Hashable)
+  deriving (Show, Eq, Ord, Generic, Data, Lift, Cacheable, NFData, Hashable)
+instance FromJSON Int64 where parseJSON = liberalInt64Parser Int64
+instance ToJSON Int64 where toJSON = liberalIntegralPrinter
 
 intToInt64 :: Int -> Int64
 intToInt64 = Int64 . T.pack . show
 
 -- | BigQuery's conception of a fixed precision decimal.
 newtype Decimal = Decimal Text
-  deriving (Show, Eq, Ord, Generic, Data, ToJSON, FromJSON, Cacheable, NFData, Hashable, Lift)
+  deriving (Show, Eq, Ord, Generic, Data, Cacheable, NFData, Hashable, Lift)
+instance FromJSON Decimal where parseJSON = liberalDecimalParser Decimal
+instance ToJSON Decimal where toJSON = liberalDecimalPrinter
 
 doubleToDecimal :: Double -> Decimal
 doubleToDecimal = Decimal . T.decodeUtf8 . L.toStrict . J.encode
 
 -- | BigQuery's conception of a \"big\" fixed precision decimal.
 newtype BigDecimal = BigDecimal Text
-  deriving (Show, Eq, Ord, Generic, Data, ToJSON, FromJSON, Cacheable, NFData, Hashable, Lift)
+  deriving (Show, Eq, Ord, Generic, Data, Cacheable, NFData, Hashable, Lift)
+instance FromJSON BigDecimal where parseJSON = liberalDecimalParser BigDecimal
+instance ToJSON BigDecimal where toJSON = liberalDecimalPrinter
 
 doubleToBigDecimal :: Double -> BigDecimal
 doubleToBigDecimal = BigDecimal . T.decodeUtf8 . L.toStrict . J.encode
 
 -- | BigQuery's conception of a fixed precision decimal.
 newtype Float64 = Float64 Text
-  deriving (Show, Eq, Ord, Generic, Data, ToJSON, FromJSON, Cacheable, NFData, Hashable, Lift)
+  deriving (Show, Eq, Ord, Generic, Data, Cacheable, NFData, Hashable, Lift)
+instance FromJSON Float64 where parseJSON = liberalDecimalParser Float64
+instance ToJSON Float64 where toJSON = liberalDecimalPrinter
 
 doubleToFloat64 :: Double -> Float64
 doubleToFloat64 = Float64 . T.decodeUtf8 . L.toStrict . J.encode
@@ -528,30 +552,30 @@ data UnifiedMetadata = UnifiedMetadata
   }deriving (Eq, Show)
 
 data UnifiedTableMetadata = UnifiedTableMetadata
-  { table :: !UnifiedTableName
+  { table                :: !UnifiedTableName
   , object_relationships :: ![UnifiedObjectRelationship]
-  , array_relationships :: ![UnifiedArrayRelationship]
-  , columns :: ![UnifiedColumn]
+  , array_relationships  :: ![UnifiedArrayRelationship]
+  , columns              :: ![UnifiedColumn]
   }deriving (Eq, Show)
 
 data UnifiedColumn = UnifiedColumn
-  { name :: !Text
+  { name  :: !Text
   , type' :: !ScalarType
   }deriving (Eq, Show)
 
 data UnifiedTableName = UnifiedTableName
   { schema :: !Text
-  , name :: !Text
+  , name   :: !Text
   }deriving (Eq, Show)
 
 data UnifiedObjectRelationship = UnifiedObjectRelationship
   { using :: !UnifiedUsing
-  , name :: !Text
+  , name  :: !Text
   }deriving (Eq, Show)
 
 data UnifiedArrayRelationship = UnifiedArrayRelationship
   { using :: !UnifiedUsing
-  , name :: !Text
+  , name  :: !Text
   }deriving (Eq, Show)
 
 data UnifiedUsing = UnifiedUsing
@@ -559,7 +583,7 @@ data UnifiedUsing = UnifiedUsing
   }deriving (Eq, Show)
 
 data UnifiedOn = UnifiedOn
-  { table :: !UnifiedTableName
+  { table  :: !UnifiedTableName
   , column :: !Text
   }deriving (Eq, Show)
 
@@ -579,13 +603,13 @@ parseScalarValue scalarType jValue = case scalarType of
   BoolScalarType -> BoolValue <$> parseJValue jValue
   DecimalScalarType -> DecimalValue <$> parseJValue jValue
   BigDecimalScalarType -> BigDecimalValue <$> parseJValue jValue
+  TimestampScalarType -> TimestampValue <$> parseJValue jValue
+  DateScalarType -> DateValue <$> parseJValue jValue
+  TimeScalarType -> TimeValue <$> parseJValue jValue
+  DatetimeScalarType -> DatetimeValue <$> parseJValue jValue
+  GeographyScalarType -> GeographyValue <$> parseJValue jValue
   _ -> Left (internalError (T.pack ("Unsupported scalar type: " <> show scalarType <> ": " <> show jValue)))
   -- TODO: These types:
-  -- TimestampScalarType -> TimestampValue <$> parseJValue jValue
-  -- DateScalarType -> DateValue <$> parseJValue jValue
-  -- TimeScalarType -> TimeValue <$> parseJValue jValue
-  -- DatetimeScalarType -> DatetimeValue <$> parseJValue jValue
-  -- GeographyScalarType -> GeographyValue <$> parseJValue jValue
   -- RecordScalarType -> RecordValue <$> parseJValue jValue
   -- StructScalarType -> StructValue <$> parseJValue jValue
   where
@@ -596,28 +620,79 @@ isComparableType, isNumType :: ScalarType -> Bool
 
 -- TODO: What does this mean?
 isComparableType = \case
-                      BoolScalarType -> True
+                      BoolScalarType  -> True
                       BytesScalarType -> True
-                      _ -> False
+                      _               -> False
 
 isNumType =
   \case
-    StringScalarType -> False
-    BytesScalarType -> False
-    IntegerScalarType -> True
-    FloatScalarType -> True
-    BoolScalarType -> False
-    TimestampScalarType -> False
-    DateScalarType -> False
-    TimeScalarType -> False
-    DatetimeScalarType -> False
-    GeographyScalarType -> False
-    DecimalScalarType -> True
+    StringScalarType     -> False
+    BytesScalarType      -> False
+    IntegerScalarType    -> True
+    FloatScalarType      -> True
+    BoolScalarType       -> False
+    TimestampScalarType  -> False
+    DateScalarType       -> False
+    TimeScalarType       -> False
+    DatetimeScalarType   -> False
+    GeographyScalarType  -> False
+    DecimalScalarType    -> True
     BigDecimalScalarType -> True
-    StructScalarType -> False
+    StructScalarType     -> False
 
 getGQLTableName :: TableName -> Either QErr G.Name
 getGQLTableName (TableName table schema) = do
   let textName = schema <> "_" <> table
   onNothing (G.mkName textName) $ throw400 ValidationFailed $
     "cannot include " <> textName <> " in the GraphQL schema because it is not a valid GraphQL identifier"
+
+--------------------------------------------------------------------------------
+-- Liberal numeric parsers/printers (via JSON)
+--
+-- These are parsers/printers that go via text predominantly, except
+-- where in simple cases they go via raw number representations in
+-- JSON.
+
+-- These printers may do something more clever later. See PG backend's
+-- equivalent functions.
+liberalIntegralPrinter :: Coercible Text a => a -> J.Value
+liberalIntegralPrinter a = J.toJSON (coerce a :: Text)
+
+liberalDecimalPrinter :: Coercible a Text => a -> J.Value
+liberalDecimalPrinter a = J.toJSON (coerce a :: Text)
+
+-- | Parse from text by simply validating it contains digits;
+-- otherwise, require a JSON integer.
+liberalInt64Parser :: (Text -> a) -> J.Value -> J.Parser a
+liberalInt64Parser fromText json = viaText <|> viaNumber
+  where
+    viaText = do
+      text <- J.parseJSON json
+      -- Parsing scientific is safe; it doesn't normalise until we ask
+      -- it to.
+      case readP_to_S scientificP (T.unpack text) of
+        [(sci, "")] | isInteger sci -> pure (fromText text)
+        _ -> fail ("String containing integral number is invalid: " ++ show text)
+    viaNumber = do
+      int <- J.parseJSON json
+      pure (fromText (T.pack (show (int :: Int))))
+
+-- | Parse either a JSON native double number, or a text string
+-- containing something vaguely in scientific notation. In either
+-- case, producing a wrapped Text as the final result.
+liberalDecimalParser :: (Text -> a) -> J.Value -> J.Parser a
+liberalDecimalParser fromText json = viaText <|> viaNumber
+  where
+    viaText = do
+      text <- J.parseJSON json
+      -- Parsing scientific is safe; it doesn't normalise until we ask
+      -- it to.
+      case readP_to_S scientificP (T.unpack text) of
+        [(_)] -> pure (fromText text)
+        _     -> fail ("String containing decimal places is invalid: " ++ show text)
+    viaNumber = do
+      d <- J.parseJSON json
+      -- Converting a scientific to an unbounded number is unsafe, but
+      -- to a double is bounded and therefore OK. JSON only supports
+      -- doubles, so that's fine.
+      pure (fromText (T.pack (show (d :: Double))))

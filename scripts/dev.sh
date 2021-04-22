@@ -249,6 +249,11 @@ if [ "$MODE" = "graphql-engine" ]; then
   export HASURA_GRAPHQL_DATABASE_URL=${HASURA_GRAPHQL_DATABASE_URL-$PG_DB_URL}
   export HASURA_GRAPHQL_SERVER_PORT=${HASURA_GRAPHQL_SERVER_PORT-8181}
 
+  export HASURA_BIGQUERY_SERVICE_ACCOUNT="<<<SERVICE_ACCOUNT_FILE_CONTENTS>>>" # `cat ../SERVICE_ACCOUNT_FILE.json`
+  export HASURA_BIGQUERY_PROJECT_ID="<<<PROJECT_ID>>>"
+  export HASURA_BIGQUERY_DATASETS="<<<CSV_DATASETS>>>"
+
+
   echo_pretty "We will connect to postgres at '$HASURA_GRAPHQL_DATABASE_URL'"
   echo_pretty "If you haven't overridden HASURA_GRAPHQL_DATABASE_URL, you can"
   echo_pretty "launch a fresh postgres container for us to connect to, in a"

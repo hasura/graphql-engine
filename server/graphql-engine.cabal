@@ -140,6 +140,7 @@ library
                      , text-builder >= 0.6
                      , these
                      , time >= 1.9
+                     , hashable-time
                      , transformers
                      , transformers-base
                      , unordered-containers >= 0.2.12

@@ -9,6 +9,102 @@ pytestmark = pytest.mark.allow_server_upgrade_test
 usefixtures = pytest.mark.usefixtures
 
 @pytest.mark.parametrize("transport", ['http', 'websocket'])
+@pytest.mark.parametrize("backend", ['bigquery'])
+@usefixtures('per_class_tests_db_state', 'per_backend_tests')
+class TestGraphQLQueryBasicBigquery:
+
+    # initialize the metadata
+    def test_replace_metadata(self, hge_ctx, transport):
+        if transport == 'http':
+            check_query_f(hge_ctx, self.dir() + '/replace_metadata.yaml')
+
+    def test_user_perms(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + "/user_perms.yaml", transport)
+
+    def test_empty_perms(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + "/empty_perms.yaml", transport)
+
+    def test_timestamp_perm(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + "/timestamp_perm.yaml", transport)
+
+    def test_exact_article_id(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + "/exact_article_id.yaml", transport)
+
+    def test_perms_published_articles(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + "/perms_published_articles.yaml", transport)
+
+    # types
+    def test_select_query_all_types(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + "/select_query_all_types.yaml", transport)
+
+    # relational queries
+    def test_select_query_author(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/select_query_author.yaml', transport)
+
+    def test_select_query_author_pk(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/select_query_author_by_pkey.yaml', transport)
+
+    def test_select_query_author_quoted_col(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/select_query_author_col_quoted.yaml', transport)
+
+    def test_select_query_author_with_skip_directive(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/select_query_author_skip_directive.yaml', transport)
+
+    def test_select_query_author_with_include_directive(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/select_query_author_include_directive.yaml', transport)
+
+    def test_select_query_where(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/select_query_author_where.yaml', transport)
+
+    def test_nested_select_query_article_author(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/nested_select_query_article_author.yaml', transport)
+
+    def test_nested_select_query_deep(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/nested_select_query_deep.yaml', transport)
+
+    def test_nested_select_query_where(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/nested_select_where_query_author_article.yaml', transport)
+
+    def test_nested_select_query_where_on_relationship(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/nested_select_query_article_author_where_on_relationship.yaml', transport)
+
+    def test_select_query_non_tracked_table(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + "/select_query_non_tracked_table_err.yaml", transport)
+
+    def test_select_query_col_not_present_err(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + "/select_query_author_col_not_present_err.yaml", transport)
+
+    # batching # works only with http, not with websocket
+    def test_select_query_batching(self, hge_ctx, transport):
+        if transport == 'http':
+            check_query_f(hge_ctx, self.dir() + "/select_query_batching.yaml", transport)
+
+    def test_select_query_batching_with_one_error(self, hge_ctx, transport):
+        if transport == 'http':
+            check_query_f(hge_ctx, self.dir() + "/select_query_batching_with_one_error.yaml", transport)
+
+    # fragments
+    def test_select_query_top_level_fragment(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/select_query_top_level_fragment.yaml', transport)
+
+    def test_select_query_nested_fragment(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/select_query_nested_fragment.yaml', transport)
+
+    def test_select_query_fragment_cycles(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/select_query_fragment_cycles.yaml', transport)
+
+    def test_select_query_fragment_with_variable(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/select_query_fragment_with_variable.yaml', transport)
+
+    # invalid # this is not applicable to bigquery, it simply returns empty results
+    def test_select_query_invalid_escape_sequence(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + "/select_query_invalid_escape_sequence.yaml", transport)
+
+    @classmethod
+    def dir(cls):
+        return 'queries/graphql_query/bigquery'
+
+@pytest.mark.parametrize("transport", ['http', 'websocket'])
 @pytest.mark.parametrize("backend", ['mssql', 'postgres'])
 @usefixtures('per_class_tests_db_state', 'per_backend_tests')
 class TestGraphQLQueryBasicCommon:

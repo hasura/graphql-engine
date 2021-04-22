@@ -26,7 +26,6 @@ import           Hasura.GraphQL.Schema.Backend
 import           Hasura.GraphQL.Schema.Common
 import           Hasura.RQL.Types
 
-
 ----------------------------------------------------------------
 -- BackendSchema instance
 
@@ -176,17 +175,25 @@ msColumnParser columnType (G.Nullability isNullable) =
       -- will in all likelihood error on the BigQuery side. Do we want to handle those
       -- properly here?
       BigQuery.FloatScalarType   -> pure $ possiblyNullable scalarType $  BigQuery.FloatValue . BigQuery.doubleToFloat64 <$> P.float
-      -- Int types; we cram everything into Double at the moment
-      -- TODO: Distinguish between ints and doubles
-      BigQuery.IntegerScalarType -> pure $ possiblyNullable scalarType $  BigQuery.IntegerValue . BigQuery.intToInt64 . round <$> P.float
+      BigQuery.IntegerScalarType -> pure $ possiblyNullable scalarType $  BigQuery.IntegerValue . BigQuery.intToInt64 . fromIntegral <$> P.int
       BigQuery.DecimalScalarType -> pure $ possiblyNullable scalarType $  BigQuery.DecimalValue . BigQuery.doubleToDecimal <$> P.float
       BigQuery.BigDecimalScalarType -> pure $ possiblyNullable scalarType $  BigQuery.BigDecimalValue . BigQuery.doubleToBigDecimal <$> P.float
       -- boolean type
       BigQuery.BoolScalarType -> pure $ possiblyNullable scalarType $  BigQuery.BoolValue <$> P.boolean
       BigQuery.DateScalarType -> pure $ possiblyNullable scalarType $  BigQuery.DateValue . BigQuery.Date <$> P.string
+      BigQuery.TimeScalarType -> pure $ possiblyNullable scalarType $  BigQuery.TimeValue . BigQuery.Time <$> P.string
       BigQuery.DatetimeScalarType -> pure $ possiblyNullable scalarType $  BigQuery.DatetimeValue . BigQuery.Datetime <$> P.string
       BigQuery.GeographyScalarType -> pure $ possiblyNullable scalarType $  BigQuery.GeographyValue . BigQuery.Geography <$> P.string
-      BigQuery.TimestampScalarType -> pure $ possiblyNullable scalarType $  BigQuery.TimestampValue . BigQuery.Timestamp <$> P.string
+      BigQuery.TimestampScalarType -> do
+        let schemaType =  P.Nullable . P.TNamed $ P.mkDefinition stringScalar Nothing P.TIScalar
+        pure $ possiblyNullable scalarType $ Parser
+          { pType = schemaType
+          , pParser =
+              valueToJSON (P.toGraphQLType schemaType)
+                >=> fmap (BigQuery.StringValue . BigQuery.utctimeToISO8601Text)
+                    . either (parseErrorWith ParseFailed . qeError) pure
+                    . runAesonParser (J.withText "TimestampColumn" BigQuery.textToUTCTime)
+          }
       ty -> throwError $ RQL.internalError $ T.pack $ "Type currently unsupported for BigQuery: " ++ show ty
     ColumnEnumReference (EnumReference tableName enumValues) ->
       case nonEmpty (Map.toList enumValues) of
