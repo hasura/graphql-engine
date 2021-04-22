@@ -49,7 +49,6 @@ import           System.Environment                         (getEnvironment)
 
 import qualified Hasura.GraphQL.Execute.LiveQuery.Poll      as EL
 import qualified Hasura.GraphQL.Transport.WebSocket.Server  as WS
-import qualified Hasura.Server.API.V2Query                  as V2Q
 import qualified Hasura.Tracing                             as Tracing
 
 import           Hasura.Backends.Postgres.Connection
@@ -279,9 +278,9 @@ initialiseServeCtx env GlobalCtx{..} so@ServeOptions{..} = do
                            , _ppsIdleTimeout    = Just $ Q.cpIdleTime soConnParams
                            , _ppsRetries        = snd _gcDefaultPostgresConnInfo <|> Just 1
                            }
-            sourceConnInfo = PostgresSourceConnInfo dbUrlConf (Just connSettings)
+            sourceConnInfo = PostgresSourceConnInfo dbUrlConf (Just connSettings) $ Q.cpAllowPrepare soConnParams
         in PostgresConnConfiguration sourceConnInfo Nothing
-      sqlGenCtx = SQLGenCtx soStringifyNum
+      sqlGenCtx = SQLGenCtx soStringifyNum soDangerousBooleanCollapse
 
   let serverConfigCtx =
         ServerConfigCtx soInferFunctionPermissions soEnableRemoteSchemaPermissions
@@ -295,7 +294,13 @@ initialiseServeCtx env GlobalCtx{..} so@ServeOptions{..} = do
 
   -- Start a background thread for listening schema sync events from other server instances,
   metaVersionRef <- liftIO $ STM.newEmptyTMVarIO
-  startSchemaSyncListenerThread logger metadataDbPool instanceId (fromMaybe 1000 soSchemaPollInterval) metaVersionRef soSchemaSyncDisable
+
+  -- An interval of 0 indicates that no schema sync is required
+  case soSchemaPollInterval of
+    Skip -> unLogger logger $ mkGenericStrLog LevelInfo "schema-sync" "Schema sync disabled"
+    Interval i -> do
+      unLogger logger $ mkGenericStrLog LevelInfo "schema-sync" ("Schema sync enabled. Polling at " <> show i)
+      void $ startSchemaSyncListenerThread logger metadataDbPool instanceId i metaVersionRef
 
   -- See Note [Temporarily disabling query plan caching]
   -- (planCache, schemaCacheRef) <- initialiseCache
@@ -319,7 +324,7 @@ mkLoggers enabledLogs logLevel = do
 -- | helper function to initialize or migrate the @hdb_catalog@ schema (used by pro as well)
 migrateCatalogSchema
   :: (HasVersion, MonadIO m, MonadBaseControl IO m)
-  => Env.Environment -> Logger Hasura -> Q.PGPool -> Maybe (SourceConnConfiguration 'Postgres)
+  => Env.Environment -> Logger Hasura -> Q.PGPool -> Maybe (SourceConnConfiguration ('Postgres 'Vanilla))
   -> HTTP.Manager -> ServerConfigCtx
   -> SourceResolver
   -> m (RebuildableSchemaCache, UTCTime)
@@ -380,7 +385,7 @@ waitForShutdown = C.takeMVar . unShutdownLatch
 -- | Initiate a graceful shutdown of the server associated with the provided
 -- latch.
 shutdownGracefully :: ShutdownLatch -> IO ()
-shutdownGracefully = flip C.putMVar () . unShutdownLatch
+shutdownGracefully = void . flip C.tryPutMVar () . unShutdownLatch
 
 -- | If an exception is encountered , flush the log buffer and
 -- rethrow If we do not flush the log buffer on exception, then log lines
@@ -454,7 +459,7 @@ runHGEServer setupHook env ServeOptions{..} ServeCtx{..} initTime postPollHook s
   liftIO disableAssertNF
 #endif
 
-  let sqlGenCtx = SQLGenCtx soStringifyNum
+  let sqlGenCtx = SQLGenCtx soStringifyNum soDangerousBooleanCollapse
       Loggers loggerCtx logger _ = _scLoggers
       --SchemaSyncCtx{..} = _scSchemaSyncCtx
 
@@ -509,7 +514,7 @@ runHGEServer setupHook env ServeOptions{..} ServeCtx{..} initTime postPollHook s
     maxEvThrds    = fromMaybe defaultMaxEventThreads soEventsHttpPoolSize
     fetchI        = milliseconds $ fromMaybe (Milliseconds defaultFetchInterval) soEventsFetchInterval
     logEnvHeaders = soLogHeadersFromEnv
-    allPgSources  = mapMaybe (unsafeSourceConfiguration @'Postgres) $ HM.elems $ scSources $ lastBuiltSchemaCache _scSchemaCache
+    allPgSources  = mapMaybe (unsafeSourceConfiguration @('Postgres 'Vanilla)) $ HM.elems $ scSources $ lastBuiltSchemaCache _scSchemaCache
 
   -- TODO: is this correct?
   -- event triggers should be tied to the life cycle of a source
@@ -525,13 +530,19 @@ runHGEServer setupHook env ServeOptions{..} ServeCtx{..} initTime postPollHook s
   unLogger logger $ mkGenericStrLog LevelInfo "event_triggers" "starting workers"
 
   _eventQueueThread <- C.forkManagedT "processEventQueue" logger $
-    processEventQueue logger logEnvHeaders
-    _scHttpManager (getSCFromRef cacheRef) eventEngineCtx lockedEventsCtx serverMetrics
+    processEventQueue logger
+                      logEnvHeaders
+                      _scHttpManager
+                      (getSCFromRef cacheRef)
+                      eventEngineCtx
+                      lockedEventsCtx
+                      serverMetrics
+                      soEnableMaintenanceMode
 
   -- start a backgroud thread to handle async actions
   case soAsyncActionsFetchInterval of
-    AAFINoFetch -> pure () -- Don't start the poller thread
-    AAFIInterval sleepTime -> do
+    Skip -> pure () -- Don't start the poller thread
+    Interval sleepTime -> do
       _asyncActionsThread <- C.forkManagedT "asyncActionsProcessor" logger $
         asyncActionsProcessor env logger (_scrCache cacheRef) _scHttpManager sleepTime
       pure ()
@@ -631,7 +642,7 @@ runHGEServer setupHook env ServeOptions{..} ServeCtx{..} initTime postPollHook s
     -- processed but not been marked as delivered in the db will be unlocked by `shutdownEvents`
     -- and will be processed when the events are proccessed next time.
     shutdownEvents
-      :: [SourceConfig 'Postgres]
+      :: [SourceConfig ('Postgres 'Vanilla)]
       -> (ScheduledEventType -> [ScheduledEventId] -> MetadataStorageT IO Int)
       -> Logger Hasura
       -> LockedEventsCtx
@@ -701,16 +712,21 @@ instance HasResourceLimits PGMetadataStorageApp where
   askResourceLimits = pure (ResourceLimits id)
 
 instance HttpLog PGMetadataStorageApp where
+
+  type HTTPLoggingMetadata PGMetadataStorageApp = ()
+
+  buildHTTPLoggingMetadata _ = ()
+
   logHttpError logger userInfoM reqId waiReq req qErr headers =
     unLogger logger $ mkHttpLog $
       mkHttpErrorLogContext userInfoM reqId waiReq req qErr Nothing Nothing headers
 
-  logHttpSuccess logger userInfoM reqId waiReq _reqBody _response compressedResponse qTime cType headers =
+  logHttpSuccess logger userInfoM reqId waiReq _reqBody _response compressedResponse qTime cType headers () =
     unLogger logger $ mkHttpLog $
       mkHttpAccessLogContext userInfoM reqId waiReq compressedResponse qTime cType headers
 
 instance MonadExecuteQuery PGMetadataStorageApp where
-  cacheLookup _ _ = pure ([], Nothing)
+  cacheLookup _ _ _ = pure ([], Nothing)
   cacheStore  _ _ = pure ()
 
 instance UserAuthentication (Tracing.TraceT PGMetadataStorageApp) where
@@ -732,9 +748,9 @@ instance MonadMetadataApiAuthorization PGMetadataStorageApp where
     when (currRole /= adminRoleName) $
       withPathK "args" $ throw400 AccessDenied accessDeniedErrMsg
 
-  authorizeV2QueryApi query handlerCtx = runExceptT do
+  authorizeV2QueryApi _ handlerCtx = runExceptT do
     let currRole = _uiRole $ hcUser handlerCtx
-    when (V2Q.queryNeedsAdmin query && currRole /= adminRoleName) $
+    when (currRole /= adminRoleName) $
       withPathK "args" $ throw400 AccessDenied accessDeniedErrMsg
 
 instance ConsoleRenderer PGMetadataStorageApp where

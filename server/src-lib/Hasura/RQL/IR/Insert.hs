@@ -57,7 +57,6 @@ instance Monoid (AnnInsObj backend v) where
   mempty = AnnInsObj [] [] []
 
 
-
 data ConflictTarget (b :: BackendType)
   = CTColumn ![Column b]
   | CTConstraint !(ConstraintName b)
@@ -68,7 +67,6 @@ data ConflictClauseP1 (b :: BackendType) v
   = CP1DoNothing !(Maybe (ConflictTarget b))
   | CP1Update !(ConflictTarget b) ![Column b] !(PreSetColsG b v) (AnnBoolExp b v)
   deriving (Functor, Foldable, Traversable)
-
 
 
 data InsertQueryP1 (b :: BackendType)

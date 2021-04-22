@@ -25,21 +25,21 @@ purgeDependentObject
   => SourceName -> SourceObjId b -> m MetadataModifier
 purgeDependentObject source sourceObjId = case sourceObjId of
   SOITableObj tn tableObj -> pure $ MetadataModifier $
-    tableMetadataSetter source tn %~ case tableObj of
+    tableMetadataSetter @b source tn %~ case tableObj of
       TOPerm rn pt        -> dropPermissionInMetadata rn pt
       TORel rn            -> dropRelationshipInMetadata rn
       TOTrigger trn       -> dropEventTriggerInMetadata trn
       TOComputedField ccn -> dropComputedFieldInMetadata ccn
       TORemoteRel rrn     -> dropRemoteRelationshipInMetadata rrn
       _                   -> id
-  SOIFunction qf -> pure $ dropFunctionInMetadata source qf
+  SOIFunction qf -> pure $ dropFunctionInMetadata @b source qf
   _           ->
     throw500
       $ "unexpected dependent object: "
       <> reportSchemaObj (SOSourceObj source $ AB.mkAnyBackend sourceObjId)
 
 -- | Fetch Postgres metadata of all user tables
-fetchTableMetadata :: (MonadTx m) => m (DBTablesMetadata 'Postgres)
+fetchTableMetadata :: (MonadTx m) => m (DBTablesMetadata ('Postgres 'Vanilla))
 fetchTableMetadata = do
   results <- liftTx $ Q.withQE defaultTxErrorHandler
              $(makeRelativeToProject "src-rsr/pg_table_metadata.sql" >>= Q.sqlFromFile) () True
@@ -47,7 +47,7 @@ fetchTableMetadata = do
     \(schema, table, Q.AltJ info) -> (QualifiedObject schema table, info)
 
 -- | Fetch Postgres metadata for all user functions
-fetchFunctionMetadata :: (MonadTx m) => m (DBFunctionsMetadata 'Postgres)
+fetchFunctionMetadata :: (MonadTx m) => m (DBFunctionsMetadata ('Postgres 'Vanilla))
 fetchFunctionMetadata = do
   results <- liftTx $ Q.withQE defaultTxErrorHandler
              $(makeRelativeToProject "src-rsr/pg_function_metadata.sql" >>=  Q.sqlFromFile) () True

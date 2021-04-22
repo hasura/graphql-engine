@@ -23,8 +23,9 @@ used) cache, and removed from the cache as needed based on usage.
 
 A query's response can be cached only if the following conditions hold:
 
-- The query does not make use of remote schemas or remote joins
-- The response JSON is under 100KB in size
+- The query does **not** make use of ``remote schemas`` or ``remote joins``.
+- The query **isn't** an ``Action`` that has ``forward_client_headers`` (see :ref:`ActionDefinition`) set to ``true``.
+- The response JSON is **under** 100KB in size
 
 .. admonition:: Support
 

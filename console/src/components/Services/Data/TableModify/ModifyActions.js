@@ -35,6 +35,7 @@ import {
   getTableCustomName,
   generateTableDef,
   dataSource,
+  escapeTableColumns,
 } from '../../../../dataSources';
 import { getRunSqlQuery } from '../../../Common/utils/v1QueryUtils';
 import {
@@ -774,6 +775,7 @@ const changeTableName = (oldName, newName, isTable, tableType) => {
 
     const property = tableType.toLowerCase();
     if (oldName === newName) {
+      dispatch(setSidebarLoading(false));
       return dispatch(
         showErrorNotification(
           `Renaming ${property} failed`,
@@ -783,6 +785,7 @@ const changeTableName = (oldName, newName, isTable, tableType) => {
     }
 
     if (!gqlPattern.test(newName)) {
+      dispatch(setSidebarLoading(false));
       const gqlValidationError = isTable
         ? gqlTableErrorNotif
         : gqlViewErrorNotif;
@@ -948,10 +951,15 @@ const untrackTableSql = tableName => {
     const currentSchema = getState().tables.currentSchema;
     const currentDataSource = getState().tables.currentDataSource;
     const tableDef = generateTableDef(tableName, currentSchema);
+    const table = findTable(getState().tables.allSchemas, tableDef);
     const migration = new Migration();
     migration.add(
       getUntrackTableQuery(tableDef, currentDataSource),
-      getTrackTableQuery(tableDef, currentDataSource)
+      getTrackTableQuery({
+        tableDef,
+        source: currentDataSource,
+        customColumnNames: escapeTableColumns(table),
+      })
     );
 
     // apply migrations

@@ -1,7 +1,86 @@
 # Hasura GraphQL Engine Changelog
 
 ## Next release
-(Add entries here in the order of: server, console, cli, docs, others)
+
+
+### Bug fixes and improvements
+
+(Add entries below in the order of: server, console, cli, docs, others)
+
+- server: fix regression: `on_conflict` was missing in the schema for inserts in tables where the current user has no columns listed in their update permissions (fix #6804)
+- cli: fix regression - `metadata apply —dry-run` was overwriting local metadata files with metadata on server when it should just display the differences.
+- cli: add support for `api_limits` metadata object
+
+## v2.0.0-alpha.9
+
+### Support comparing columns across related tables in permission's boolean expressions
+
+We now support comparing columns across related tables. For example:
+
+Consider two tables, `items(id, name, quantity)` and `shopping_cart(id, item_id, quantity)`
+and these two tables are related via the `item_id` column. Now, while defining insert permission
+on the `shopping_cart` table, there can be a check to insert an item into the shopping cart
+only when there are enough present in the items inventory.
+
+### Bug fixes and improvements
+
+- server: fix bug with catalog upgrade from alpha.7 (fix #6802)
+- server: fix a bug in remote schema permissions that could result in an invalid GraphQL schema (fix #6029, #6703)
+- server: support query multiplexing in MSSQL subscriptions
+- server: an inherited role's limit will be the max limit of all the roles (#6671)
+- console: add bigquery support (#1000)
+- cli: add support for bigquery in metadata operations
+
+## v2.0.0-alpha.8
+
+### Support for 3D PostGIS Operators
+
+We now support the use of the functions `ST_3DDWithin` and `ST_3DIntersects` in boolean expressions.
+Note that `ST_3DIntersects` requires PostGIS be [built with SFCGAL support](https://www.postgis.net/docs/manual-3.1/reference.html#reference_sfcgal) which may depend on the PostGIS distribution used.
+
+### Support for null values in boolean expressions
+
+In v2, we introduced a breaking change, that aimed at fixing a [long-standing issue](https://github.com/hasura/graphql-engine/issues/704): a null value in a boolean expression would always evaluate to `True` for all rows. For example, the following queries were all equivalent:
+
+```graphql
+delete_users(where: {_id: {_eq: null}})  # field is null, which is as if it were omitted
+delete_users(where: {_id: {}})           # object is empty, evaluates to True for all rows
+delete_users(where: {})                  # object is empty, evaluates to True for all rows
+delete_users()                           # delete all users
+```
+
+This behaviour was unintuitive, and could be an unpleasant surprise for users that expected the first query to mean "delete all users for whom the id column is null". Therefore in v2, we changed the implementation of boolean operators to reject null values, as we deemed it safer:
+
+
+```graphql
+delete_users(where: {_id: {_eq: null}})  # error: argument of _eq cannot be null
+```
+
+However, this change broke the workflows of [some of our users](https://github.com/hasura/graphql-engine/issues/6660) who were relying on this property of boolean operators. This was used, for instance, to _conditionally_ enable a test:
+
+```graphql
+query($isVerified: Boolean) {
+  users(where: {_isVerified: {_eq: $isVerified}}) {
+    name
+  }
+}
+```
+
+In the future, we will probably offer a way to explicitly choose which behaviour to use for each `where` clause; perhaps by introducing new and distinct operators that make it explicit that they will default to true if the value is null. In the meantime, this release provides a way to revert the engine to its previous behaviour: if the `HASURA_GRAPHQL_V1_BOOLEAN_NULL_COLLAPSE` environment variable is set to "true", null values in boolean expression will behave like they did in v1 for the following operators: `_is_null`, `_eq`, `_neq`, `_in`, `_nin`, `_gt`, `_lt`, `_gte`, `_lte`.
+
+### Bug fixes and improvements
+
+- server: all /query APIs now require admin privileges
+- server: add a new `/dev/rts_stats` endpoint, enabled when hasura is started with '+RTS -T'
+- server: re-enable a default HASURA_GRAPHQL_PG_CONN_LIFETIME of 10min
+- server: support for bigquery datasets
+- server: format the values of `injectEventContext` as hexadecimal string instead of integer (fix #6465)
+- server: add "kind" field to query-log items. Kind can be "database", "action", "remote-schema", "graphql", "cached", or "subscription".
+- console: add custom_column_names to track_table request with replaced invalid characters (#992)
+- console: add details button to the success notification to see inserted row
+- console: add request preview for REST endpoints
+- cli: fix errors being ignored during `metadata apply` in config v3 (fix #6784)
+
 
 ### Bug fixes and improvements
 
@@ -13,7 +92,7 @@
 
 With v2 came the introduction of heterogeneous execution: in one query or mutation, you can target different sources: it is possible, for instance, in one mutation, to both insert a row in a table in a table on Postgres and another row in another table on MSSQL:
 
-```
+```graphql
 mutation {
   // goes to Postgres
   insert_author_one(object: {name: "Simon Peyton Jones"}) {
@@ -34,6 +113,7 @@ While we want to fix this by offering, in the future, an explicit API that allow
 
 ### Bug fixes and improvements
 
+- server: `use_prepared_statements` option (default: False) in `add_pg_source` metadata API
 - server: add `--async-actions-fetch-interval` command-line flag and `HASURA_GRAPHQL_ASYNC_ACTIONS_FETCH_INTERVAL` environment variable for configuring
           async actions re-fetch interval from metadata storage (fix #6460)
 - server: add 'replace_configuration' option (default: false) in the add source API payload
@@ -100,6 +180,7 @@ query {
 - server: fix action custom types failing to parse when mutually recursive
 - server: fix MSSQL table name descriptions
 - server: emit `postgres-max-connections-error` when max postgres connections are reached
+- server: disable caching for actions when "forward-client-headers" option is turned on
 - console: allow editing rest endpoints queries and misc ui improvements
 - console: display collection names and queries from all collections in allowlist
 - cli: match ordering of keys in project metadata files with server metadata

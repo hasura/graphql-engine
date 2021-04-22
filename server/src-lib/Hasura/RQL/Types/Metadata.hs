@@ -1,5 +1,5 @@
-{-# LANGUAGE AllowAmbiguousTypes  #-}
 {-# LANGUAGE UndecidableInstances #-}
+
 module Hasura.RQL.Types.Metadata where
 
 import           Hasura.Prelude
@@ -246,10 +246,10 @@ data SourceMetadata b
   , _smFunctions     :: !(Functions b)
   , _smConfiguration :: !(SourceConnConfiguration b)
   } deriving (Generic)
+$(makeLenses ''SourceMetadata)
 deriving instance (Backend b) => Show (SourceMetadata b)
 deriving instance (Backend b) => Eq (SourceMetadata b)
 instance (Backend b) => Cacheable (SourceMetadata b)
-$(makeLenses ''SourceMetadata)
 instance (Backend b) => FromJSON (SourceMetadata b) where
   parseJSON = withObject "Object" $ \o -> do
     _smName          <- o .: "name"
@@ -265,7 +265,7 @@ mkSourceMetadata
   -> SourceConnConfiguration b
   -> BackendSourceMetadata
 mkSourceMetadata name config =
-  AB.mkAnyBackend $ SourceMetadata name mempty mempty config
+  AB.mkAnyBackend $ SourceMetadata @b name mempty mempty config
 
 type BackendSourceMetadata = AB.AnyBackend SourceMetadata
 
@@ -326,7 +326,6 @@ data Metadata
   , _metaMetricsConfig    :: !MetricsConfig
   , _metaInheritedRoles   :: !InheritedRoles
   } deriving (Show, Eq)
-
 $(makeLenses ''Metadata)
 
 instance FromJSON Metadata where
@@ -354,8 +353,8 @@ tableMetadataSetter source table =
 
 data MetadataNoSources
   = MetadataNoSources
-  { _mnsTables           :: !(Tables 'Postgres)
-  , _mnsFunctions        :: !(Functions 'Postgres)
+  { _mnsTables           :: !(Tables ('Postgres 'Vanilla))
+  , _mnsFunctions        :: !(Functions ('Postgres 'Vanilla))
   , _mnsRemoteSchemas    :: !RemoteSchemas
   , _mnsQueryCollections :: !QueryCollections
   , _mnsAllowlist        :: !Allowlist

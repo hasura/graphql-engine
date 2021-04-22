@@ -1,5 +1,4 @@
 {-# LANGUAGE Arrows               #-}
-{-# LANGUAGE RecordWildCards      #-}
 {-# LANGUAGE UndecidableInstances #-}
 
 -- | Types/functions shared between modules that implement "Hasura.RQL.DDL.Schema.Cache". Other

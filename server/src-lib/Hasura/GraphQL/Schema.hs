@@ -66,7 +66,7 @@ buildGQLContext
      )
 buildGQLContext =
   proc (queryType, sources, allRemoteSchemas, allActions, nonObjectCustomTypes) -> do
-    ServerConfigCtx functionPermsCtx remoteSchemaPermsCtx sqlGenCtx@(SQLGenCtx stringifyNum) _maintenanceMode _experimentalFeatures <-
+    ServerConfigCtx functionPermsCtx remoteSchemaPermsCtx sqlGenCtx@(SQLGenCtx stringifyNum boolCollapse) _maintenanceMode _experimentalFeatures <-
       bindA -< askServerConfigCtx
     let remoteSchemasRoles = concatMap (Map.keys . _rscPermissions . fst . snd) $ Map.toList allRemoteSchemas
 
@@ -85,9 +85,12 @@ buildGQLContext =
         allRoles = nonTableRoles <> allTableRoles
         -- The function permissions context doesn't actually matter because the
         -- admin will have access to the function anyway
-        adminQueryContext =
-          QueryContext stringifyNum queryType
-                       adminRemoteRelationshipQueryCtx FunctionPermissionsInferred
+        adminQueryContext = QueryContext
+          stringifyNum
+          boolCollapse
+          queryType
+          adminRemoteRelationshipQueryCtx
+          FunctionPermissionsInferred
 
     -- build the admin DB-only context so that we can check against name clashes with remotes
     -- TODO: Is there a better way to check for conflicts without actually building the admin schema?
@@ -138,7 +141,7 @@ buildRoleContext
   -> RoleName
   -> RemoteSchemaPermsCtx
   -> m (RoleContext GQLContext)
-buildRoleContext (SQLGenCtx stringifyNum, queryType, functionPermsCtx) sources
+buildRoleContext (SQLGenCtx stringifyNum boolCollapse, queryType, functionPermsCtx) sources
   allRemoteSchemas allActionInfos nonObjectCustomTypes remotes role remoteSchemaPermsCtx = do
 
   roleBasedRemoteSchemas <-
@@ -151,8 +154,12 @@ buildRoleContext (SQLGenCtx stringifyNum, queryType, functionPermsCtx) sources
   let queryRemotes    = getQueryRemotes $ snd . snd <$> roleBasedRemoteSchemas
       mutationRemotes = getMutationRemotes $ snd . snd <$> roleBasedRemoteSchemas
       remoteRelationshipQueryContext = Map.fromList roleBasedRemoteSchemas
-      roleQueryContext =
-        QueryContext stringifyNum queryType remoteRelationshipQueryContext functionPermsCtx
+      roleQueryContext = QueryContext
+        stringifyNum
+        boolCollapse
+        queryType
+        remoteRelationshipQueryContext
+        functionPermsCtx
       buildSource :: forall b. BackendSchema b => SourceInfo b ->
         m ( [FieldParser (P.ParseT Identity) (QueryRootField    UnpreparedValue)]
           , [FieldParser (P.ParseT Identity) (MutationRootField UnpreparedValue)]
@@ -161,8 +168,8 @@ buildRoleContext (SQLGenCtx stringifyNum, queryType, functionPermsCtx) sources
       buildSource (SourceInfo sourceName tables functions sourceConfig) = do
         let validFunctions = takeValidFunctions functions
             validTables    = takeValidTables tables
-            xNodesAgg      = nodesAggExtension sourceConfig
-            xRelay         = relayExtension    sourceConfig
+            xNodesAgg      = nodesAggExtension @b sourceConfig
+            xRelay         = relayExtension    @b sourceConfig
         runMonadSchema role roleQueryContext sources (BackendExtension @b xRelay xNodesAgg) $
           (,,)
             <$> buildQueryFields sourceName sourceConfig validTables validFunctions
@@ -177,7 +184,7 @@ buildRoleContext (SQLGenCtx stringifyNum, queryType, functionPermsCtx) sources
   -- remotes, which are backend-agnostic.
   -- In the long term, all backend-specific processing should be moved to `buildSource`, and this
   -- block should be running in the schema for a `None` backend.
-  runMonadSchema role roleQueryContext sources (BackendExtension @'Postgres (Just ()) (Just ())) $ do
+  runMonadSchema role roleQueryContext sources (BackendExtension @('Postgres 'Vanilla) (Just ()) (Just ())) $ do
     mutationParserFrontend <-
       buildMutationParser mutationRemotes allActionInfos nonObjectCustomTypes mutationFrontendFields
 
@@ -213,12 +220,17 @@ buildRelayRoleContext
   => (SQLGenCtx, GraphQLQueryType, FunctionPermissionsCtx) -> SourceCache -> [ActionInfo] -> NonObjectTypeMap
   -> RoleName
   -> m (RoleContext GQLContext)
-buildRelayRoleContext (SQLGenCtx stringifyNum, queryType, functionPermsCtx) sources
+buildRelayRoleContext (SQLGenCtx stringifyNum boolCollapse, queryType, functionPermsCtx) sources
   allActionInfos nonObjectCustomTypes role = do
   -- TODO: At the time of writing this, remote schema queries are not supported in relay.
   -- When they are supported, we should get do what `buildRoleContext` does. Since, they
   -- are not supported yet, we use `mempty` below for `RemoteRelationshipQueryContext`.
-  let roleQueryContext = QueryContext stringifyNum queryType mempty functionPermsCtx
+  let roleQueryContext = QueryContext
+        stringifyNum
+        boolCollapse
+        queryType
+        mempty
+        functionPermsCtx
       buildSource :: forall b. BackendSchema b => SourceInfo b ->
         m ( [FieldParser (P.ParseT Identity) (QueryRootField    UnpreparedValue)]
           , [FieldParser (P.ParseT Identity) (MutationRootField UnpreparedValue)]
@@ -227,8 +239,8 @@ buildRelayRoleContext (SQLGenCtx stringifyNum, queryType, functionPermsCtx) sour
       buildSource (SourceInfo sourceName tables functions sourceConfig) = do
         let validFunctions = takeValidFunctions functions
             validTables    = takeValidTables tables
-            xNodesAgg      = nodesAggExtension sourceConfig
-            xRelay         = relayExtension    sourceConfig
+            xNodesAgg      = nodesAggExtension @b sourceConfig
+            xRelay         = relayExtension    @b sourceConfig
         runMonadSchema role roleQueryContext sources (BackendExtension @b xRelay xNodesAgg) $
           (,,)
           <$> buildRelayQueryFields sourceName sourceConfig validTables validFunctions
@@ -242,7 +254,7 @@ buildRelayRoleContext (SQLGenCtx stringifyNum, queryType, functionPermsCtx) sour
   -- remotes, which are backend-agnostic.
   -- In the long term, all backend-specific processing should be moved to `buildSource`, and this
   -- block should be running in the schema for a `None` backend.
-  runMonadSchema role roleQueryContext sources (BackendExtension @'Postgres (Just ()) (Just ())) $ do
+  runMonadSchema role roleQueryContext sources (BackendExtension @('Postgres 'Vanilla) (Just ()) (Just ())) $ do
     -- Add node root field.
     -- FIXME: for now this is PG-only. This isn't a problem yet since for now only PG supports relay.
     -- To fix this, we'd need to first generalize `nodeField`.
@@ -285,8 +297,8 @@ buildFullestDBSchema queryContext sources allActionInfos nonObjectCustomTypes = 
       buildSource (SourceInfo sourceName tables functions sourceConfig) = do
         let validFunctions = takeValidFunctions functions
             validTables    = takeValidTables tables
-            xNodesAgg      = nodesAggExtension sourceConfig
-            xRelay         = relayExtension    sourceConfig
+            xNodesAgg      = nodesAggExtension @b sourceConfig
+            xRelay         = relayExtension    @b sourceConfig
         runMonadSchema adminRoleName queryContext sources (BackendExtension @b xRelay xNodesAgg) $
           (,)
             <$> buildQueryFields sourceName sourceConfig validTables validFunctions
@@ -300,7 +312,7 @@ buildFullestDBSchema queryContext sources allActionInfos nonObjectCustomTypes = 
   -- remotes, which are backend-agnostic.
   -- In the long term, all backend-specific processing should be moved to `buildSource`, and this
   -- block should be running in the schema for a `None` backend.
-  runMonadSchema adminRoleName queryContext sources (BackendExtension @'Postgres (Just ()) (Just ())) $ do
+  runMonadSchema adminRoleName queryContext sources (BackendExtension @('Postgres 'Vanilla) (Just ()) (Just ())) $ do
     mutationParserFrontend <-
       -- NOTE: we omit remotes here on purpose since we're trying to check name
       -- clashes with remotes:
@@ -522,7 +534,7 @@ buildQueryParser
      , MonadTableInfo r m
      , MonadRole r m
      , Has QueryContext r
-     , Has (BackendExtension 'Postgres) r
+     , Has (BackendExtension ('Postgres 'Vanilla)) r
      )
   => [P.FieldParser n (QueryRootField UnpreparedValue)]
   -> [P.FieldParser n RemoteField]
@@ -613,7 +625,7 @@ buildSubscriptionParser
      , MonadTableInfo r m
      , MonadRole r m
      , Has QueryContext r
-     , Has (BackendExtension 'Postgres) r
+     , Has (BackendExtension ('Postgres 'Vanilla)) r
      )
   => [P.FieldParser n (QueryRootField UnpreparedValue)]
   -> [ActionInfo]
@@ -630,7 +642,7 @@ buildMutationParser
      , MonadTableInfo r m
      , MonadRole r m
      , Has QueryContext r
-     , Has (BackendExtension 'Postgres) r
+     , Has (BackendExtension ('Postgres 'Vanilla)) r
      )
   => [P.FieldParser n RemoteField]
   -> [ActionInfo]

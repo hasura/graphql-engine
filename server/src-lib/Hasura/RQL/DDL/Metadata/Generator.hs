@@ -188,7 +188,7 @@ instance Arbitrary FunctionConfig where
 instance Arbitrary FunctionExposedAs where
   arbitrary = genericArbitrary
 
-instance Arbitrary TrackFunctionV2 where
+instance Backend b => Arbitrary (TrackFunctionV2 b) where
   arbitrary = genericArbitrary
 
 -- FIXME:- URI type do not have Arbitrary class implemented.

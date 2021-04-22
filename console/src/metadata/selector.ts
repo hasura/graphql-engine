@@ -155,13 +155,23 @@ export const getTablesInfoSelector = createSelector(
   }
 );
 
-// TODO?: make it generic i.e to fetch any property from all tables
-export const getCurrentTableInformation = createSelector(
+export const getTableInformation = createSelector(
   getTables,
-  tables => (tableName: string, tableSchema: string) =>
-    tables?.find(
+  tables => (tableName: string, tableSchema: string) => <
+    T extends keyof TableEntry
+  >(
+    property: T
+  ): TableEntry[T] | null => {
+    const table = tables?.find(
       t => tableName === t.table.name && tableSchema === t.table.schema
-    )?.select_permissions ?? []
+    );
+    return table ? table[property] : null;
+  }
+);
+
+export const getCurrentTableInformation = createSelector(
+  [getTableInformation, getCurrentTable, getCurrentSchema],
+  (getTableInfo, tableName, schema) => getTableInfo(tableName, schema)
 );
 
 export const getFunctions = createSelector(
@@ -349,11 +359,17 @@ export const getInheritedRoles = (state: ReduxState) =>
 export const getDataSources = createSelector(getMetadata, metadata => {
   const sources: DataSource[] = [];
   metadata?.sources.forEach(source => {
+    let url: string | { from_env: string } = '';
+    if (source.kind === 'bigquery') {
+      url = source.configuration?.service_account?.from_env || '';
+    } else {
+      url = source.configuration?.connection_info?.connection_string
+        ? source.configuration?.connection_info.connection_string
+        : source.configuration?.connection_info?.database_url || '';
+    }
     sources.push({
       name: source.name,
-      url: source.configuration?.connection_info?.connection_string
-        ? source.configuration?.connection_info.connection_string
-        : source.configuration?.connection_info?.database_url || '',
+      url,
       connection_pool_settings: source.configuration?.connection_info
         ?.pool_settings || {
         retries: 1,

@@ -1,4 +1,3 @@
-{-# LANGUAGE AllowAmbiguousTypes #-}
 module Hasura.RQL.Types.Column
   ( ColumnType(..)
   , _ColumnScalar
@@ -134,7 +133,7 @@ parseScalarValueColumnType columnType value = case columnType of
           let enums = map getEnumValue $ M.keys enumValues
           unless (evn `elem` enums) $ throw400 UnexpectedPayload
             $ "expected one of the values " <> dquoteList enums
-            <> " for type " <> snakeCaseTableName tableName <<> ", given " <>> evn
+            <> " for type " <> snakeCaseTableName @b tableName <<> ", given " <>> evn
         pure $ textToScalarValue @b $ G.unName <$> enumValueName
 
 parseScalarValuesColumnType
@@ -179,6 +178,7 @@ data ColumnInfo (b :: BackendType)
   , pgiDescription :: !(Maybe G.Description)
   } deriving (Generic)
 deriving instance Backend b => Eq (ColumnInfo b)
+deriving instance Backend b => Show (ColumnInfo b)
 instance Backend b => Cacheable (ColumnInfo b)
 instance Backend b => NFData (ColumnInfo b)
 instance Backend b => Hashable (ColumnInfo b)

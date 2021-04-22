@@ -1,3 +1,5 @@
+# IF YOU CHANGE THIS PLEASE INCREMENT DEVSH_VERSION in `scripts/dev.sh`
+# Please add direct dependencies to requirements-top-level.txt
 aniso8601==7.0.0
 apipkg==1.5
 atomicwrites==1.3.0

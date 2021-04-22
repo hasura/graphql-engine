@@ -80,8 +80,38 @@
             "retries": 1,
             "idle_timeout": 180,
             "max_connections": 50
+          },
+          "use_prepared_statements": true
+        }
+      }
+    },
+    {
+      "name": "bg",
+      "kind": "bigquery",
+      "tables": [
+        {
+          "table": {
+            "dataset": "london_cycles",
+            "name": "cycle_hire"
+          }
+        },
+        {
+          "table": {
+            "dataset": "london_cycles",
+            "name": "cycle_stations"
           }
         }
+      ],
+      "configuration": {
+        "service_account": {
+          "project_id": "some_test",
+          "client_email": "some_email",
+          "private_key": "the private key"
+        },
+        "project_id": "test_id",
+        "datasets": [
+          "t1"
+        ]
       }
     }
   ],

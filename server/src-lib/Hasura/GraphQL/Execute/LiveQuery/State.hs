@@ -127,7 +127,7 @@ addLiveQuery logger subscriberMetadata lqState source plan onResultAction = do
   onJust handlerM $ \handler -> do
     pollerId <- PollerId <$> UUID.nextRandom
     threadRef <- forkImmortal ("pollQuery." <> show pollerId) logger $ forever $ do
-      pollQuery pollerId lqOpts sourceConfig query (_pCohorts handler) postPollHook
+      pollQuery @b pollerId lqOpts sourceConfig query (_pCohorts handler) postPollHook
       sleep $ unNonNegativeDiffTime $ unRefetchInterval refetchInterval
     let !pState = PollerIOState threadRef pollerId
 #ifndef PROFILING

@@ -29,6 +29,7 @@ import           Hasura.GraphQL.Transport.HTTP.Protocol
 import           Hasura.HTTP
 import           Hasura.Metadata.Class
 import           Hasura.RQL.Types
+import           Hasura.Server.Logging                  (HttpLog (..))
 import           Hasura.Server.Types
 import           Hasura.Server.Version
 import           Hasura.Session
@@ -107,6 +108,7 @@ runCustomEndpoint
        , MonadQueryLog m
        , GH.MonadExecuteQuery m
        , MonadMetadataStorage (MetadataStorageT m)
+       , HttpLog m
        )
     => Env.Environment
     -> E.ExecutionCtx
@@ -116,7 +118,7 @@ runCustomEndpoint
     -> Wai.IpAddress
     -> RestRequest EndpointMethod
     -> EndpointTrie GQLQueryWithText
-    -> m (HttpResponse EncJSON)
+    -> m (HTTPLoggingMetadata m, HttpResponse EncJSON)
 runCustomEndpoint env execCtx requestId userInfo reqHeaders ipAddress RestRequest{..} endpoints = do
   -- First match the path to an endpoint.
   case matchPath reqMethod (T.split (== '/') reqPath) endpoints of
@@ -146,10 +148,12 @@ runCustomEndpoint env execCtx requestId userInfo reqHeaders ipAddress RestReques
           -- Construct a graphql query by pairing the resolved variables
           -- with the query string from the schema cache, and pass it
           -- through to the /v1/graphql endpoint.
-          handlerResp <- flip runReaderT execCtx $
-              fmap fst <$> GH.runGQ env (E._ecxLogger execCtx) requestId userInfo ipAddress reqHeaders E.QueryHasura (mkPassthroughRequest queryx resolvedVariables)
+          (httpLoggingMetadata, handlerResp) <- flip runReaderT execCtx $ do
+              (normalizedSelectionSet, resp) <- GH.runGQ env (E._ecxLogger execCtx) requestId userInfo ipAddress reqHeaders E.QueryHasura (mkPassthroughRequest queryx resolvedVariables)
+              let httpLoggingMetadata = buildHTTPLoggingMetadata @m [normalizedSelectionSet]
+              return (httpLoggingMetadata, fst <$> resp)
           case sequence handlerResp of
-            Just resp -> pure $ fmap encodeHTTPResp resp
+            Just resp -> pure $ (httpLoggingMetadata, fmap encodeHTTPResp resp)
             -- a Nothing value here indicates a failure to parse the cached request from redis.
             -- TODO: Do we need an additional log message here?
             Nothing -> throw500 "An unexpected error occurred while fetching the data from the cache"

@@ -24,6 +24,7 @@ const driverToLabel: Record<Driver, string> = {
   mysql: 'MySQL',
   postgres: 'PostgreSQL',
   mssql: 'MS Server',
+  bigquery: 'Big Query',
 };
 
 type DatabaseListItemProps = {
@@ -48,7 +49,7 @@ const DatabaseListItem: React.FC<DatabaseListItemProps> = ({
   const [showUrl, setShowUrl] = useState(false);
 
   const viewDB = () => {
-    if (dataSource?.name) pushRoute(`/data/${dataSource.name}`);
+    if (dataSource?.name) pushRoute(`/data/${dataSource.name}/schema`);
   };
   const isInconsistentDataSource = isInconsistentSource(
     dataSource.name,

@@ -1,6 +1,4 @@
-{-# LANGUAGE CPP             #-}
-{-# LANGUAGE RankNTypes      #-}
-{-# LANGUAGE RecordWildCards #-}
+{-# LANGUAGE CPP #-}
 
 module Hasura.GraphQL.Transport.WebSocket
   ( createWSServerApp
@@ -375,7 +373,7 @@ onStart env serverEnv wsConn (StartMsg opId q) = catchAndIgnore $ do
     userInfo sqlGenCtx sc scVer queryType
     httpMgr reqHdrs (q, reqParsed)
 
-  (telemCacheHit, execPlan) <- onLeft execPlanE (withComplete . preExecErr requestId)
+  (telemCacheHit, (_normalizeSelSet, execPlan)) <- onLeft execPlanE (withComplete . preExecErr requestId)
 
   case execPlan of
     E.QueryExecutionPlan queryPlan asts -> Tracing.trace "Query" $ do
@@ -385,9 +383,14 @@ onStart env serverEnv wsConn (StartMsg opId q) = catchAndIgnore $ do
             E.ExecStepDB _remoteHeaders exists ->
               AB.dispatchAnyBackend @BackendTransport exists EB.getRemoteSchemaInfo
             _ -> []
+          actionsInfo = foldl getExecStepActionWithActionInfo [] $ OMap.elems $ OMap.filter (\x -> case x of
+              E.ExecStepAction (_, _) -> True
+              _                       -> False
+              ) queryPlan
+
       -- We ignore the response headers (containing TTL information) because
       -- WebSockets don't support them.
-      (_responseHeaders, cachedValue) <- Tracing.interpTraceT (withExceptT mempty) $ cacheLookup remoteJoins cacheKey
+      (_responseHeaders, cachedValue) <- Tracing.interpTraceT (withExceptT mempty) $ cacheLookup remoteJoins actionsInfo cacheKey
       case cachedValue of
         Just cachedResponseData -> do
           sendSuccResp cachedResponseData $ LQ.LiveQueryMetadata 0
@@ -396,8 +399,8 @@ onStart env serverEnv wsConn (StartMsg opId q) = catchAndIgnore $ do
             E.ExecStepDB _headers exists -> doQErr $ do
               (telemTimeIO_DT, resp) <-
                 AB.dispatchAnyBackend @BackendTransport exists
-                  \(EB.DBStepInfo _ sourceConfig genSql tx) ->
-                     runDBQuery
+                  \(EB.DBStepInfo _ sourceConfig genSql tx :: EB.DBStepInfo b) ->
+                     runDBQuery @b
                        requestId
                        q
                        fieldName
@@ -409,7 +412,7 @@ onStart env serverEnv wsConn (StartMsg opId q) = catchAndIgnore $ do
               return $ ResultsFragment telemTimeIO_DT Telem.Local resp []
             E.ExecStepRemote rsi gqlReq -> do
               runRemoteGQ fieldName userInfo reqHdrs rsi gqlReq
-            E.ExecStepAction actionExecPlan -> do
+            E.ExecStepAction (actionExecPlan, _) -> do
               (time, (r, _)) <- doQErr $ EA.runActionExecution actionExecPlan
               pure $ ResultsFragment time Telem.Empty r []
             E.ExecStepRaw json ->
@@ -447,8 +450,8 @@ onStart env serverEnv wsConn (StartMsg opId q) = catchAndIgnore $ do
             E.ExecStepDB _responseHeaders exists -> doQErr $ do
               (telemTimeIO_DT, resp) <-
                 AB.dispatchAnyBackend @BackendTransport exists
-                  \(EB.DBStepInfo _ sourceConfig genSql tx) ->
-                       runDBMutation
+                  \(EB.DBStepInfo _ sourceConfig genSql tx :: EB.DBStepInfo b) ->
+                       runDBMutation @b
                          requestId
                          q
                          fieldName
@@ -458,7 +461,7 @@ onStart env serverEnv wsConn (StartMsg opId q) = catchAndIgnore $ do
                          tx
                          genSql
               return $ ResultsFragment telemTimeIO_DT Telem.Local resp []
-            E.ExecStepAction actionExecPlan -> do
+            E.ExecStepAction (actionExecPlan, _) -> do
               (time, (r, hdrs)) <- doQErr $ EA.runActionExecution actionExecPlan
               pure $ ResultsFragment time Telem.Empty r $ fromMaybe [] hdrs
             E.ExecStepRemote rsi gqlReq -> do
@@ -470,7 +473,7 @@ onStart env serverEnv wsConn (StartMsg opId q) = catchAndIgnore $ do
 
     E.SubscriptionExecutionPlan subExec -> do
       -- log the graphql query
-      logQueryLog logger $ QueryLog q Nothing requestId
+      logQueryLog logger $ QueryLog q Nothing requestId Subscription
 
       case subExec of
         E.SEAsyncActionsWithNoRelationships actions -> liftIO do
@@ -522,6 +525,10 @@ onStart env serverEnv wsConn (StartMsg opId q) = catchAndIgnore $ do
 
       liftIO $ logOpEv ODStarted (Just requestId)
   where
+    getExecStepActionWithActionInfo acc execStep = case execStep of
+       E.ExecStepAction (_, actionInfo) -> (actionInfo:acc)
+       _                                -> acc
+
     doQErr = withExceptT Right
 
     forWithKey = flip OMap.traverseWithKey
@@ -651,7 +658,6 @@ onStart env serverEnv wsConn (StartMsg opId q) = catchAndIgnore $ do
 
     catchAndIgnore :: ExceptT () m () -> m ()
     catchAndIgnore m = void $ runExceptT m
-
 
 onMessage
   :: ( HasVersion

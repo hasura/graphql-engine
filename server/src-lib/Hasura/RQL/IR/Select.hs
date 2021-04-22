@@ -73,7 +73,7 @@ data AnnRelationSelectG (b :: BackendType) a
   { aarRelationshipName :: !RelName -- Relationship name
   , aarColumnMapping    :: !(HashMap (Column b) (Column b)) -- Column of left table to join with
   , aarAnnSelect        :: !a -- Current table. Almost ~ to SQL Select
-  } deriving (Functor, Foldable, Traversable)
+  } deriving  (Functor, Foldable, Traversable)
 
 type ArrayRelationSelectG b v = AnnRelationSelectG b (AnnSimpleSelG b v)
 type ArrayAggregateSelectG b v = AnnRelationSelectG b (AnnAggregateSelectG b v)
@@ -325,6 +325,7 @@ data PageInfoField
   | PageInfoStartCursor
   | PageInfoEndCursor
   deriving (Show, Eq)
+
 type PageInfoFields = Fields PageInfoField
 
 data EdgeField (b :: BackendType) v
@@ -345,6 +346,7 @@ data ConnectionField (b :: BackendType) v
   = ConnectionTypename !Text
   | ConnectionPageInfo !PageInfoFields
   | ConnectionEdges !(EdgeFields b v)
+
 type ConnectionFields b v = Fields (ConnectionField b v)
 
 traverseConnectionField

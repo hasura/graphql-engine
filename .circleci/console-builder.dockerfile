@@ -1,12 +1,14 @@
-FROM node:12
+FROM node:12.18.2
 
 ARG gcloud_version="207.0.0"
 
 # update npm
-RUN npm install -g npm@5
+RUN npm install -g npm@6
 
 # install dependencies
 RUN apt-get update && apt-get install -y \
+    apt-transport-https \
+    ca-certificates \
     netcat \
     libpq5 \
     libgtk2.0-0 \
@@ -22,7 +24,7 @@ RUN apt-get update && apt-get install -y \
     && curl -s https://packages.microsoft.com/config/debian/9/prod.list > /etc/apt/sources.list.d/mssql-release.list \
     && curl -s https://packages.microsoft.com/keys/microsoft.asc | apt-key add - \
     && apt-get update \
-    && ACCEPT_EULA=Y apt-get install -y ca-certificates libkrb5-3 libnuma1 unixodbc-dev msodbcsql17 \
+    && ACCEPT_EULA=Y apt-get install -y libkrb5-3 libnuma1 unixodbc-dev msodbcsql17 \
     && apt-get -y auto-remove \
     && apt-get -y clean \
     && rm -rf /var/lib/apt/lists/* \

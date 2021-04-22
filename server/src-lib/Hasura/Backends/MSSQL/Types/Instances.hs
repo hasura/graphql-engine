@@ -1,4 +1,3 @@
-{-# LANGUAGE TemplateHaskell #-}
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 
 -- | Instances that're slow to compile.
@@ -143,9 +142,11 @@ instance ToJSON TableName where
 instance ToJSONKey TableName where
   toJSONKey = toJSONKeyText $ \(TableName schema name) -> schema <> "." <> name
 
-deriving newtype instance ToJSONKey ColumnName
 instance ToJSONKey ScalarType
 
+-- NOTE!: an empty (default) instance declaration here caused a bug; instead
+-- use standalone deriving via underlying Int instance
+deriving newtype instance ToJSONKey ColumnName
 deriving newtype instance FromJSONKey ColumnName
 
 instance Arbitrary ColumnName where

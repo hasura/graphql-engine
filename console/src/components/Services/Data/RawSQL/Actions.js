@@ -1,6 +1,10 @@
 import defaultState from './State';
 import Endpoints, { globalCookiePolicy } from '../../../../Endpoints';
-import { handleMigrationErrors, fetchDataInit } from '../DataActions';
+import {
+  handleMigrationErrors,
+  fetchDataInit,
+  handleOutOfDateMetadata,
+} from '../DataActions';
 import {
   showErrorNotification,
   showSuccessNotification,
@@ -13,7 +17,11 @@ import { parseCreateSQL } from './utils';
 import dataHeaders from '../Common/Headers';
 import returnMigrateUrl from '../Common/getMigrateUrl';
 import requestAction from '../../../../utils/requestAction';
-import { dataSource } from '../../../../dataSources';
+import {
+  dataSource,
+  escapeTableColumns,
+  findTable,
+} from '../../../../dataSources';
 import { getRunSqlQuery } from '../../../Common/utils/v1QueryUtils';
 import { getDownQueryComments } from '../../../../utils/migration/utils';
 import {
@@ -22,6 +30,7 @@ import {
 } from '../../../../metadata/queryUtils';
 import globals from '../../../../Globals';
 import { CLI_CONSOLE_MODE } from '../../../../constants';
+import { exportMetadata } from '../../../../metadata/actions';
 
 const MAKING_REQUEST = 'RawSQL/MAKING_REQUEST';
 const SET_SQL = 'RawSQL/SET_SQL';
@@ -42,6 +51,7 @@ const trackAllItems = (sql, isMigration, migrationName, source, driver) => (
   getState
 ) => {
   const currMigrationMode = getState().main.migrationMode;
+  const { resourceVersion } = getState().metadata;
 
   const objects = parseCreateSQL(sql, driver);
   const changes = [];
@@ -50,7 +60,14 @@ const trackAllItems = (sql, isMigration, migrationName, source, driver) => (
     if (type === 'function') {
       req = getTrackFunctionQuery(name, schema, source, {}, driver);
     } else {
-      req = getTrackTableQuery({ name, schema }, source, driver);
+      const tableDef = { name, schema };
+      const table = findTable(getState().tables.allSchemas, tableDef);
+      req = getTrackTableQuery({
+        tableDef,
+        source,
+        driver,
+        customColumnNames: escapeTableColumns(table),
+      });
     }
     changes.push(req);
   });
@@ -74,6 +91,7 @@ const trackAllItems = (sql, isMigration, migrationName, source, driver) => (
       type: 'bulk',
       source: source,
       args: changes,
+      resource_version: resourceVersion,
     };
   }
 
@@ -89,6 +107,9 @@ const trackAllItems = (sql, isMigration, migrationName, source, driver) => (
       dispatch(showSuccessNotification('Items were tracked successfuly'));
     },
     err => {
+      if (err.code === 'conflict') {
+        dispatch(handleOutOfDateMetadata);
+      }
       dispatch(showErrorNotification('Tracking items failed', err.code, err));
       throw new Error(err);
     }
@@ -171,9 +192,11 @@ const executeSQL = (
     .then(
       data => {
         if (isTableTrackChecked) {
-          dispatch(
-            trackAllItems(sql, isMigration, migrationName, source, driver)
-          ).then(() => callback(data));
+          dispatch(exportMetadata()).then(() => {
+            dispatch(
+              trackAllItems(sql, isMigration, migrationName, source, driver)
+            ).then(() => callback(data));
+          });
           return;
         }
         callback(data);

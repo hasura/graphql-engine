@@ -41,3 +41,5 @@ v2.0.0-alpha.4 44
 v2.0.0-alpha.5 44
 v2.0.0-alpha.6 44
 v2.0.0-alpha.7 45
+v2.0.0-alpha.8 46
+v2.0.0-alpha.9 46

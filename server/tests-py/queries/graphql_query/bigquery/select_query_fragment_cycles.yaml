@@ -1,0 +1,30 @@
+url: /v1/graphql
+status: 200
+query:
+  query: |
+    query fragmentCycle {
+      hasura_author (order_by: {id: asc}) {
+        ...authorFragment
+      }
+    }
+
+    fragment authorFragment on hasura_author {
+      id
+      name
+      articles (order_by: {id: asc}) {
+        ...articleFragment
+      }
+    }
+
+    fragment articleFragment on hasura_article {
+      title
+      author {
+        ...authorFragment
+      }
+    }
+response:
+  errors:
+  - extensions:
+      path: $.selectionSet.hasura_author.selectionSet.authorFragment.selectionSet.articles.selectionSet.articleFragment.selectionSet.author.selectionSet
+      code: validation-failed
+    message: the fragment definition(s) authorFragment and articleFragment form a cycle

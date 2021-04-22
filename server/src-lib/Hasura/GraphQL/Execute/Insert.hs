@@ -74,9 +74,9 @@ traverseAnnInsert f (IR.AnnInsert fieldName isSingle (annIns, mutationOutput)) =
 
 
 convertToSQLTransaction
-  :: (HasVersion, MonadTx m, MonadIO m, Tracing.MonadTrace m)
+  :: (HasVersion, MonadTx m, MonadIO m, Tracing.MonadTrace m, Backend ('Postgres pgKind))
   => Env.Environment
-  -> IR.AnnInsert 'Postgres PG.SQLExp
+  -> IR.AnnInsert ('Postgres pgKind) PG.SQLExp
   -> PGE.MutationRemoteJoinCtx
   -> Seq.Seq Q.PrepArg
   -> Bool
@@ -91,12 +91,12 @@ convertToSQLTransaction env (IR.AnnInsert fieldName isSingle (annIns, mutationOu
     suffix = bool "objects" "object" isSingle
 
 insertMultipleObjects
-  :: (HasVersion, MonadTx m, MonadIO m, Tracing.MonadTrace m)
+  :: (HasVersion, MonadTx m, MonadIO m, Tracing.MonadTrace m, Backend ('Postgres pgKind))
   => Env.Environment
-  -> IR.MultiObjIns 'Postgres PG.SQLExp
+  -> IR.MultiObjIns ('Postgres pgKind) PG.SQLExp
   -> [(PGCol, PG.SQLExp)]
   -> PGE.MutationRemoteJoinCtx
-  -> IR.MutationOutput 'Postgres
+  -> IR.MutationOutput ('Postgres pgKind)
   -> Seq.Seq Q.PrepArg
   -> Bool
   -> m EncJSON
@@ -138,15 +138,15 @@ insertMultipleObjects env multiObjIns additionalColumns remoteJoinCtx mutationOu
         mutOutputRJ stringifyNum [] $ (, remoteJoinCtx) <$> remoteJoins
 
 insertObject
-  :: forall m
-   . (HasVersion, MonadTx m, MonadIO m, Tracing.MonadTrace m)
+  :: forall pgKind m
+   . (HasVersion, MonadTx m, MonadIO m, Tracing.MonadTrace m, Backend ('Postgres pgKind))
   => Env.Environment
-  -> IR.SingleObjIns 'Postgres PG.SQLExp
+  -> IR.SingleObjIns ('Postgres pgKind) PG.SQLExp
   -> [(PGCol, PG.SQLExp)]
   -> PGE.MutationRemoteJoinCtx
   -> Seq.Seq Q.PrepArg
   -> Bool
-  -> m (Int, Maybe (ColumnValues 'Postgres TxtEncodedPGVal))
+  -> m (Int, Maybe (ColumnValues ('Postgres pgKind) TxtEncodedVal))
 insertObject env singleObjIns additionalColumns remoteJoinCtx planVars stringifyNum = Tracing.trace ("Insert " <> qualifiedObjectToText table) do
   validateInsert (map fst columns) (map IR._riRelInfo objectRels) (map fst additionalColumns)
 
@@ -161,7 +161,7 @@ insertObject env singleObjIns additionalColumns remoteJoinCtx planVars stringify
   cte <- mkInsertQ table onConflict finalInsCols defaultValues checkCond
 
   PGE.MutateResp affRows colVals <- liftTx $
-    PGE.mutateAndFetchCols table allColumns (PGT.MCCheckConstraint cte, planVars) stringifyNum
+    PGE.mutateAndFetchCols @pgKind table allColumns (PGT.MCCheckConstraint cte, planVars) stringifyNum
   colValM <- asSingleObject colVals
 
   arrRelAffRows <- bool (withArrRels colValM) (return 0) $ null allAfterInsertRels
@@ -172,15 +172,15 @@ insertObject env singleObjIns additionalColumns remoteJoinCtx planVars stringify
     IR.AnnIns annObj table onConflict checkCond allColumns defaultValues = singleObjIns
     IR.AnnInsObj columns objectRels arrayRels = annObj
 
-    afterInsert, beforeInsert :: [IR.ObjRelIns 'Postgres PG.SQLExp]
+    afterInsert, beforeInsert :: [IR.ObjRelIns ('Postgres pgKind) PG.SQLExp]
     (afterInsert, beforeInsert) =
       L.partition ((== AfterParent) . riInsertOrder . IR._riRelInfo) objectRels
 
-    allAfterInsertRels :: [IR.ArrRelIns 'Postgres PG.SQLExp]
+    allAfterInsertRels :: [IR.ArrRelIns ('Postgres pgKind) PG.SQLExp]
     allAfterInsertRels = arrayRels <> map objToArr afterInsert
 
-    afterInsertDepCols :: [ColumnInfo 'Postgres]
-    afterInsertDepCols = flip getColInfos allColumns $
+    afterInsertDepCols :: [ColumnInfo ('Postgres pgKind)]
+    afterInsertDepCols = flip (getColInfos @('Postgres pgKind)) allColumns $
       concatMap (Map.keys . riMapping . IR._riRelInfo) allAfterInsertRels
 
     objToArr :: forall a b. IR.ObjRelIns b a -> IR.ArrRelIns b a
@@ -197,7 +197,7 @@ insertObject env singleObjIns additionalColumns remoteJoinCtx planVars stringify
         _aiDefVals
 
     withArrRels
-      :: Maybe (ColumnValues 'Postgres TxtEncodedPGVal)
+      :: Maybe (ColumnValues ('Postgres pgKind) TxtEncodedVal)
       -> m Int
     withArrRels colValM = do
       colVal <- onNothing colValM $ throw400 NotSupported cannotInsArrRelErr
@@ -207,8 +207,8 @@ insertObject env singleObjIns additionalColumns remoteJoinCtx planVars stringify
       return $ sum arrInsARows
 
     asSingleObject
-      :: [ColumnValues 'Postgres TxtEncodedPGVal]
-      -> m (Maybe (ColumnValues 'Postgres TxtEncodedPGVal))
+      :: [ColumnValues ('Postgres pgKind) TxtEncodedVal]
+      -> m (Maybe (ColumnValues ('Postgres pgKind) TxtEncodedVal))
     asSingleObject = \case
       []  -> pure Nothing
       [r] -> pure $ Just r
@@ -220,12 +220,12 @@ insertObject env singleObjIns additionalColumns remoteJoinCtx planVars stringify
       <> table <<> " affects zero rows"
 
 insertObjRel
-  :: (HasVersion, MonadTx m, MonadIO m, Tracing.MonadTrace m)
+  :: (HasVersion, MonadTx m, MonadIO m, Tracing.MonadTrace m, Backend ('Postgres pgKind))
   => Env.Environment
   -> Seq.Seq Q.PrepArg
   -> PGE.MutationRemoteJoinCtx
   -> Bool
-  -> IR.ObjRelIns 'Postgres PG.SQLExp
+  -> IR.ObjRelIns ('Postgres pgKind) PG.SQLExp
   -> m (Int, [(PGCol, PG.SQLExp)])
 insertObjRel env planVars remoteJoinCtx stringifyNum objRelIns =
   withPathK (relNameToTxt relName) $ do
@@ -249,13 +249,13 @@ insertObjRel env planVars remoteJoinCtx stringifyNum objRelIns =
              <> table <<> " affects zero rows"
 
 insertArrRel
-  :: (HasVersion, MonadTx m, MonadIO m, Tracing.MonadTrace m)
+  :: (HasVersion, MonadTx m, MonadIO m, Tracing.MonadTrace m, Backend ('Postgres pgKind))
   => Env.Environment
   -> [(PGCol, PG.SQLExp)]
   -> PGE.MutationRemoteJoinCtx
   -> Seq.Seq Q.PrepArg
   -> Bool
-  -> IR.ArrRelIns 'Postgres PG.SQLExp
+  -> IR.ArrRelIns ('Postgres pgKind) PG.SQLExp
   -> m Int
 insertArrRel env resCols remoteJoinCtx planVars stringifyNum arrRelIns =
   withPathK (relNameToTxt $ riName relInfo) $ do
@@ -277,7 +277,7 @@ insertArrRel env resCols remoteJoinCtx planVars stringifyNum arrRelIns =
 validateInsert
   :: (MonadError QErr m)
   => [PGCol]             -- ^ inserting columns
-  -> [RelInfo 'Postgres] -- ^ object relation inserts
+  -> [RelInfo ('Postgres pgKind)] -- ^ object relation inserts
   -> [PGCol]             -- ^ additional fields from parent
   -> m ()
 validateInsert insCols objRels addCols = do
@@ -300,12 +300,12 @@ validateInsert insCols objRels addCols = do
 
 
 mkInsertQ
-  :: MonadError QErr m
+  :: (MonadError QErr m, Backend ('Postgres pgKind))
   => QualifiedTable
-  -> Maybe (IR.ConflictClauseP1 'Postgres PG.SQLExp)
+  -> Maybe (IR.ConflictClauseP1 ('Postgres pgKind) PG.SQLExp)
   -> [(PGCol, PG.SQLExp)]
   -> Map.HashMap PGCol PG.SQLExp
-  -> (AnnBoolExpSQL 'Postgres, Maybe (AnnBoolExpSQL 'Postgres))
+  -> (AnnBoolExpSQL ('Postgres pgKind), Maybe (AnnBoolExpSQL ('Postgres pgKind)))
   -> m PG.CTE
 mkInsertQ table onConflictM insCols defVals (insCheck, updCheck) = do
   let sqlConflict = PGT.toSQLConflict table <$> onConflictM
@@ -325,8 +325,8 @@ mkInsertQ table onConflictM insCols defVals (insCheck, updCheck) = do
 
 fetchFromColVals
   :: MonadError QErr m
-  => ColumnValues 'Postgres TxtEncodedPGVal
-  -> [ColumnInfo 'Postgres]
+  => ColumnValues ('Postgres pgKind) TxtEncodedVal
+  -> [ColumnInfo ('Postgres pgKind)]
   -> m [(PGCol, PG.SQLExp)]
 fetchFromColVals colVal reqCols =
   forM reqCols $ \ci -> do

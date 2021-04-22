@@ -27,24 +27,25 @@ import           Hasura.Server.Version                       (HasVersion)
 import           Hasura.Session
 
 
-data PreparedSql
+data PreparedSql pgKind
   = PreparedSql
   { _psQuery       :: !Q.Query
   , _psPrepArgs    :: !PrepArgMap
-  , _psRemoteJoins :: !(Maybe (RemoteJoins 'Postgres))
+  , _psRemoteJoins :: !(Maybe (RemoteJoins ('Postgres pgKind)))
   }
 
 
 -- turn the current plan into a transaction
 mkCurPlanTx
   :: ( HasVersion
+     , Backend ('Postgres pgKind)
      )
   => Env.Environment
   -> HTTP.Manager
   -> [HTTP.Header]
   -> UserInfo
-  -> PreparedSql
-  -> (Tracing.TraceT (LazyTxT QErr IO) EncJSON, Maybe PreparedSql)
+  -> PreparedSql pgKind
+  -> (Tracing.TraceT (LazyTxT QErr IO) EncJSON, Maybe (PreparedSql pgKind))
 mkCurPlanTx env manager reqHdrs userInfo ps@(PreparedSql q prepMap remoteJoinsM) =
   -- generate the SQL and prepared vars or the bytestring
   let args = withUserVars (_uiSession userInfo) prepMap
@@ -58,16 +59,17 @@ mkCurPlanTx env manager reqHdrs userInfo ps@(PreparedSql q prepMap remoteJoinsM)
 
 -- convert a query from an intermediate representation to... another
 irToRootFieldPlan
-  :: PrepArgMap
-  -> QueryDB 'Postgres S.SQLExp
-  -> PreparedSql
+  :: Backend ('Postgres pgKind)
+  => PrepArgMap
+  -> QueryDB ('Postgres pgKind) S.SQLExp
+  -> PreparedSql pgKind
 irToRootFieldPlan prepped = \case
   QDBMultipleRows s -> mkPreparedSql getRemoteJoinsSelect (DS.selectQuerySQL JASMultipleRows) s
   QDBSingleRow s    -> mkPreparedSql getRemoteJoinsSelect (DS.selectQuerySQL JASSingleObject) s
   QDBAggregation s  -> mkPreparedSql getRemoteJoinsAggregateSelect DS.selectAggregateQuerySQL s
   QDBConnection s   -> mkPreparedSql getRemoteJoinsConnectionSelect DS.connectionSelectQuerySQL s
   where
-    mkPreparedSql :: (s -> (t, Maybe (RemoteJoins 'Postgres))) -> (t -> Q.Query) -> s -> PreparedSql
+    mkPreparedSql :: (s -> (t, Maybe (RemoteJoins ('Postgres pgKind)))) -> (t -> Q.Query) -> s -> PreparedSql pgKind
     mkPreparedSql getJoins f simpleSel =
       let (simpleSel',remoteJoins) = getJoins simpleSel
       in PreparedSql (f simpleSel') prepped remoteJoins

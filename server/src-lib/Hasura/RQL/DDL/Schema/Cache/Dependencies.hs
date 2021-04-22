@@ -19,6 +19,7 @@ import qualified Hasura.SQL.AnyBackend              as AB
 import           Hasura.RQL.DDL.Schema.Cache.Common
 import           Hasura.RQL.Types
 
+
 -- | Processes collected 'CIDependency' values into a 'DepMap', performing integrity checking to
 -- ensure the dependencies actually exist. If a dependency is missing, its transitive dependents are
 -- removed from the cache, and 'InconsistentMetadata's are returned.
@@ -81,7 +82,7 @@ pruneDanglingDependents
 pruneDanglingDependents cache = fmap (M.filter (not . null)) . traverse do
   partitionEithers . map \(metadataObject, dependency) -> case resolveDependency dependency of
     Right ()          -> Right (metadataObject, dependency)
-    Left errorMessage -> Left (InconsistentObject errorMessage metadataObject)
+    Left errorMessage -> Left (InconsistentObject errorMessage Nothing metadataObject)
   where
     resolveDependency :: SchemaDependency -> Either Text ()
     resolveDependency (SchemaDependency objectId _) = case objectId of

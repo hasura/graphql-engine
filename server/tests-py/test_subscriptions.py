@@ -250,7 +250,8 @@ class TestSubscriptionLiveQueries:
         with pytest.raises(queue.Empty):
             ev = ws_client.get_ws_event(3)
 
-@usefixtures('per_method_tests_db_state')
+@pytest.mark.parametrize("backend", ['mssql', 'postgres'])
+@usefixtures('per_class_tests_db_state', 'per_backend_tests')
 class TestSubscriptionMultiplexing:
 
     @classmethod

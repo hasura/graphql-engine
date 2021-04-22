@@ -67,20 +67,18 @@ class CollapsibleToggle extends React.Component<
       return resultTitle;
     };
 
-    const getChildren = () => {
-      return <div className={styles.collapsibleContent}>{children}</div>;
-    };
-
     return (
-      <div className={styles.collapsibleWrapper}>
-        <div
-          className={styles.collapsibleToggle}
-          data-test={testId}
-          onClick={toggleHandler}
-          onKeyDown={toggleHandler}
-          role="button"
-          tabIndex={0}
-        >
+      <details
+        className={styles.collapsibleWrapper}
+        onToggle={(event: React.ChangeEvent<HTMLDetailsElement>) => {
+          // it gets called on mount if open=true, so we check if we really need to call handler
+          if (event.target.open !== isOpen) {
+            toggleHandler();
+          }
+        }}
+        open={isOpen}
+      >
+        <summary className={styles.collapsibleToggle} data-test={testId}>
           <span className={styles.collapsibleIndicatorWrapper}>
             <i
               className={`fa fa-chevron-right ${styles.collapsibleIndicator} ${
@@ -90,10 +88,9 @@ class CollapsibleToggle extends React.Component<
           </span>
 
           <span className={styles.titleWrapper}>{getTitle()}</span>
-        </div>
-
-        {isOpen && getChildren()}
-      </div>
+        </summary>
+        <div className={styles.collapsibleContent}>{children}</div>
+      </details>
     );
   }
 }

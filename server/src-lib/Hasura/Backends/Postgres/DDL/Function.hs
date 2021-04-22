@@ -18,6 +18,7 @@ import           Data.Text.Extended
 import qualified Hasura.SQL.AnyBackend              as AB
 
 import           Hasura.Backends.Postgres.SQL.Types
+import           Hasura.RQL.Types.Backend
 import           Hasura.RQL.Types.Common
 import           Hasura.RQL.Types.Error
 import           Hasura.RQL.Types.Function
@@ -26,7 +27,8 @@ import           Hasura.RQL.Types.SchemaCacheTypes
 import           Hasura.SQL.Backend
 import           Hasura.Server.Utils
 
-mkFunctionArgs :: Int -> [QualifiedPGType] -> [FunctionArgName] -> [FunctionArg 'Postgres]
+
+mkFunctionArgs :: Int -> [QualifiedPGType] -> [FunctionArgName] -> [FunctionArg ('Postgres pgKind)]
 mkFunctionArgs defArgsNo tys argNames =
   bool withNames withNoNames $ null argNames
   where
@@ -54,14 +56,15 @@ data FunctionIntegrityError
   deriving (Show, Eq)
 
 buildFunctionInfo
-  :: (QErrM m)
+  :: forall pgKind m
+   . (Backend ('Postgres pgKind), QErrM m)
   => SourceName
   -> QualifiedFunction
   -> SystemDefined
   -> FunctionConfig
   -> [FunctionPermissionMetadata]
   -> RawFunctionInfo
-  -> m (FunctionInfo 'Postgres, SchemaDependency)
+  -> m (FunctionInfo ('Postgres pgKind), SchemaDependency)
 buildFunctionInfo source qf systemDefined FunctionConfig{..} permissions rawFuncInfo =
   either (throw400 NotSupported . showErrors) pure
     =<< MV.runValidateT validateFunction
@@ -113,7 +116,7 @@ buildFunctionInfo source qf systemDefined FunctionConfig{..} permissions rawFunc
            , SchemaDependency
                (SOSourceObj source
                  $ AB.mkAnyBackend
-                 $ SOITable retTable)
+                 $ SOITable @('Postgres pgKind) retTable)
                DRTable
            )
 

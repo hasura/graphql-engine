@@ -1,4 +1,3 @@
-{-# LANGUAGE RecordWildCards #-}
 {-| An in-memory, Bounded by LRU strategy, capability-local cache implementation.
 By making the cache capability-local, data may be recomputed up to once per
 capability (which usually means up to once per OS thread), but write contention
@@ -24,16 +23,17 @@ module Hasura.Cache.Bounded
 
 import           Hasura.Prelude     hiding (lookup)
 
-import           Control.Concurrent (getNumCapabilities, myThreadId, threadCapability)
-import           Data.Word          (Word16)
-
 import qualified Data.Aeson         as J
 import qualified Data.HashPSQ       as HashPSQ
 import qualified Data.IORef         as IORef
 import qualified Data.Vector        as V
+
+import           Control.Concurrent (getNumCapabilities, myThreadId, threadCapability)
+import           Data.Word          (Word16)
 import           GHC.Natural        (Natural)
 
--- MISC TODO: 
+
+-- MISC TODO:
 --  - benchmark and consider unsafeLookupIncreasePriority and unsafeInsertIncreasePriorityView
 --  - our own concurrent cache, that doesn't need redundant stripes
 --    - this would save significant memory
@@ -89,9 +89,9 @@ insertPure key val c =
   let (mbOldVal,queue) = HashPSQ.insertView key (_lcTick c) val (_lcQueue c)
       cTicked = c{ _lcTick = _lcTick c + 1 }
    in case mbOldVal of
-        Nothing 
+        Nothing
           -- at capacity; remove LRU to maintain _lcSize:
-          | _lcSize c == _lcCapacity c -> 
+          | _lcSize c == _lcCapacity c ->
                cTicked{ _lcQueue = HashPSQ.deleteMin queue }
           -- under capacity; just record new size after insert:
           | otherwise ->
@@ -171,15 +171,15 @@ getEntries (BoundedCache localCaches) =
 
 -- | Creates a new BoundedCache of the specified size, with one stripe per capability.
 initialise :: CacheSize -> IO (BoundedCache k v)
-initialise sz = do 
+initialise sz = do
   caps <- getNumCapabilities
   initialiseStripes caps sz
 
 -- | Creates a new BoundedCache of the specified size, for each stripe
 initialiseStripes
-  :: Int 
+  :: Int
   -- ^ Stripes; to minimize contention this should probably match the number of capabilities.
-  -> CacheSize 
+  -> CacheSize
   -> IO (BoundedCache k v)
 initialiseStripes stripes capacity = do
   BoundedCache <$> V.replicateM stripes (initLocalCache capacity)
@@ -220,7 +220,7 @@ checkInvariants (BoundedCache handles) =
     when (_lcSize > _lcCapacity) $
       error "Size > capacity!"
 
-getEntriesRecency :: (Hashable k, Ord k) => BoundedCache k v -> IO [[(k, Tick, v)]] 
-getEntriesRecency (BoundedCache localCaches) = 
-  forM (V.toList localCaches) $ \(LocalCacheRef ref) -> 
+getEntriesRecency :: (Hashable k, Ord k) => BoundedCache k v -> IO [[(k, Tick, v)]]
+getEntriesRecency (BoundedCache localCaches) =
+  forM (V.toList localCaches) $ \(LocalCacheRef ref) ->
     HashPSQ.toList . _lcQueue <$> IORef.readIORef ref

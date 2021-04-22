@@ -104,7 +104,7 @@ resolveActionExecution
   => Env.Environment
   -> L.Logger L.Hasura
   -> UserInfo
-  -> AnnActionExecution 'Postgres (UnpreparedValue 'Postgres)
+  -> AnnActionExecution ('Postgres 'Vanilla) (UnpreparedValue ('Postgres 'Vanilla))
   -> ActionExecContext
   -> ActionExecution
 resolveActionExecution env logger userInfo annAction execContext =
@@ -130,7 +130,7 @@ resolveActionExecution env logger userInfo annAction execContext =
 
 
     executeActionInDb :: (MonadError QErr m, MonadIO m, MonadBaseControl IO m, Tracing.MonadTrace m)
-                      => SourceConfig 'Postgres -> RS.AnnSimpleSel 'Postgres -> [Q.PrepArg] -> m EncJSON
+                      => SourceConfig ('Postgres 'Vanilla) -> RS.AnnSimpleSel ('Postgres 'Vanilla) -> [Q.PrepArg] -> m EncJSON
     executeActionInDb sourceConfig astResolved prepArgs = do
       let (astResolvedWithoutRemoteJoins, maybeRemoteJoins) = RJ.getRemoteJoinsSelect astResolved
           jsonAggType = mkJsonAggSelect outputType
@@ -185,7 +185,7 @@ resolveActionMutationAsync
 resolveActionMutationAsync annAction reqHeaders sessionVariables =
   insertAction actionName sessionVariables reqHeaders inputArgs
   where
-    AnnActionMutationAsync actionName inputArgs = annAction
+    AnnActionMutationAsync actionName _ inputArgs = annAction
 
 {- Note: [Resolving async action query]
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -215,8 +215,8 @@ Resolving async action query happens in two steps;
 -- | See Note: [Resolving async action query]
 resolveAsyncActionQuery
   :: UserInfo
-  -> AnnActionAsyncQuery 'Postgres (UnpreparedValue 'Postgres)
-  -> AsyncActionQueryExecution (UnpreparedValue 'Postgres)
+  -> AnnActionAsyncQuery ('Postgres 'Vanilla) (UnpreparedValue ('Postgres 'Vanilla))
+  -> AsyncActionQueryExecution (UnpreparedValue ('Postgres 'Vanilla))
 resolveAsyncActionQuery userInfo annAction =
   case actionSource of
     ASINoSource -> AAQENoRelationships \actionLogResponse -> runExcept do
@@ -260,7 +260,7 @@ resolveAsyncActionQuery userInfo annAction =
 
         in RS.AnnSelectG annotatedFields tableFromExp tablePermissions tableArguments stringifyNumerics
   where
-    AnnActionAsyncQuery _ actionId outputType asyncFields definitionList stringifyNumerics actionSource = annAction
+    AnnActionAsyncQuery _ actionId outputType asyncFields definitionList stringifyNumerics _ actionSource = annAction
 
     idColumn = (unsafePGCol "id", PGUUID)
     responsePayloadColumn = (unsafePGCol "response_payload", PGJSONB)
@@ -467,12 +467,12 @@ callWebhook env manager outputType outputFields reqHeaders confHeaders
                       "expecting not null value for field " <>> fieldName
 
 processOutputSelectionSet
-  :: RS.ArgumentExp 'Postgres v
+  :: RS.ArgumentExp ('Postgres 'Vanilla) v
   -> GraphQLType
   -> [(PGCol, PGScalarType)]
-  -> RS.AnnFieldsG 'Postgres v
+  -> RS.AnnFieldsG ('Postgres 'Vanilla) v
   -> Bool
-  -> RS.AnnSimpleSelG 'Postgres v
+  -> RS.AnnSimpleSelG ('Postgres 'Vanilla) v
 processOutputSelectionSet tableRowInput actionOutputType definitionList annotatedFields =
   RS.AnnSelectG annotatedFields selectFrom RS.noTablePermissions RS.noSelectArgs
   where

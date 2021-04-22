@@ -1,3 +1,4 @@
+import { TableEntry } from './../../../metadata/types';
 import {
   OrderBy,
   WhereClause,
@@ -5,6 +6,7 @@ import {
 import Endpoints from '../../../Endpoints';
 import { ReduxState } from '../../../types';
 import { BaseTableColumn, Relationship, Table } from '../../types';
+import { isEmpty } from '../../../components/Common/utils/jsUtils';
 
 type Tables = ReduxState['tables'];
 interface GetGraphQLQuery {
@@ -13,6 +15,7 @@ interface GetGraphQLQuery {
   originalTable: string;
   currentSchema: string;
   isExport?: boolean;
+  tableConfiguration: TableEntry['configuration'];
 }
 
 export const SQLServerTypes = {
@@ -50,6 +53,15 @@ export const SQLServerTypes = {
   user_defined: [],
 };
 
+export const operators = [
+  { name: 'equals', value: '$eq', graphqlOp: '_eq' },
+  { name: 'not equals', value: '$ne', graphqlOp: '_neq' },
+  { name: '>', value: '$gt', graphqlOp: '_gt' },
+  { name: '<', value: '$lt', graphqlOp: '_lt' },
+  { name: '>=', value: '$gte', graphqlOp: '_gte' },
+  { name: '<=', value: '$lte', graphqlOp: '_lte' },
+];
+
 const getFormattedValue = (
   type: string,
   value: any
@@ -65,32 +77,39 @@ const getFormattedValue = (
 
 const RqlToGraphQlOp = (op: string) => {
   if (!op || !op?.startsWith('$')) return 'none';
-  return op.replace('$', '_');
+  return (
+    operators.find(_op => _op.value === op)?.graphqlOp ?? op.replace('$', '_')
+  );
 };
 
 const generateWhereClauseQueryString = (
   wheres: WhereClause[],
-  columnTypeInfo: BaseTableColumn[]
+  columnTypeInfo: BaseTableColumn[],
+  tableConfiguration: TableEntry['configuration']
 ): string | null => {
+  const customColumns = tableConfiguration?.custom_column_names ?? {};
   const whereClausesArr = wheres.map((i: Record<string, any>) => {
     const columnName = Object.keys(i)[0];
     const RqlOperator = Object.keys(i[columnName])[0];
     const value = i[columnName][RqlOperator];
     const type = columnTypeInfo?.find(c => c.column_name === columnName)
       ?.data_type_name;
-    return `${columnName}: {${RqlToGraphQlOp(RqlOperator)}: ${getFormattedValue(
-      type || 'varchar',
-      value
-    )} }`;
+    return `${customColumns[columnName] ?? columnName}: {${RqlToGraphQlOp(
+      RqlOperator
+    )}: ${getFormattedValue(type || 'varchar', value)} }`;
   });
   return whereClausesArr.length
     ? `where: {${whereClausesArr.join(',')}}`
     : null;
 };
 
-const generateSortClauseQueryString = (sorts: OrderBy[]): string | null => {
+const generateSortClauseQueryString = (
+  sorts: OrderBy[],
+  tableConfiguration: TableEntry['configuration']
+): string | null => {
+  const customColumns = tableConfiguration?.custom_column_names ?? {};
   const sortClausesArr = sorts.map((i: OrderBy) => {
-    return `${i.column}: ${i.type}`;
+    return `${customColumns[i.column] ?? i.column}: ${i.type}`;
   });
   return sortClausesArr.length
     ? `order_by: {${sortClausesArr.join(',')}}`
@@ -100,14 +119,19 @@ const generateSortClauseQueryString = (sorts: OrderBy[]): string | null => {
 const getColQuery = (
   cols: (string | { name: string; columns: string[] })[],
   limit: number,
-  relationships: Relationship[]
+  relationships: Relationship[],
+  tableConfiguration: TableEntry['configuration']
 ): string[] => {
   return cols.map(c => {
-    if (typeof c === 'string') return c;
+    const customColumns = tableConfiguration?.custom_column_names ?? {};
+    if (typeof c === 'string') return customColumns[c] ?? c;
     const rel = relationships.find((r: any) => r.rel_name === c.name);
-    return `${c.name} ${
+    return `${customColumns[c.name] ?? c.name} ${
       rel?.rel_type === 'array' ? `(limit: ${limit})` : ''
-    } { ${getColQuery(c.columns, limit, relationships).join('\n')} }`;
+    } { 
+      ${getColQuery(c.columns, limit, relationships, tableConfiguration).join(
+        '\n'
+      )} }`;
   });
 };
 
@@ -116,7 +140,8 @@ export const getGraphQLQueryForBrowseRows = ({
   view,
   originalTable,
   currentSchema,
-  isExport,
+  isExport = false,
+  tableConfiguration,
 }: GetGraphQLQuery) => {
   const currentTable: Table | undefined = allSchemas?.find(
     (t: Table) =>
@@ -154,8 +179,12 @@ export const getGraphQLQueryForBrowseRows = ({
     ? null
     : `offset: ${!isRelationshipView ? view.curFilter.offset : 0}`;
   const clauses = `${[
-    generateWhereClauseQueryString(whereConditions, columnTypeInfo),
-    generateSortClauseQueryString(sortConditions),
+    generateWhereClauseQueryString(
+      whereConditions,
+      columnTypeInfo,
+      tableConfiguration
+    ),
+    generateSortClauseQueryString(sortConditions, tableConfiguration),
     limit,
     offset,
   ]
@@ -171,14 +200,23 @@ export const getGraphQLQueryForBrowseRows = ({
           ${getColQuery(
             view.query.columns,
             view.curFilter.limit,
-            relationshipInfo
-          ).join('\n')}
-      } 
+            relationshipInfo,
+            tableConfiguration
+          ).join('\n')} 
     }
-  `;
+  }`;
 };
 
-const getTableRowRequestBody = (tables: Tables, isExport?: boolean) => {
+export const getTableRowRequestBody = ({
+  tables,
+  isExport,
+  tableConfiguration,
+}: {
+  tables: Tables;
+  isExport?: boolean;
+  tableConfiguration?: TableEntry['configuration'];
+}) => {
+  // TODO: fetch count when agregation for mssql is added
   const {
     currentTable: originalTable,
     view,
@@ -193,6 +231,7 @@ const getTableRowRequestBody = (tables: Tables, isExport?: boolean) => {
       originalTable,
       currentSchema,
       isExport,
+      tableConfiguration,
     }),
     variables: null,
     operationName: 'TableRows',
@@ -201,15 +240,39 @@ const getTableRowRequestBody = (tables: Tables, isExport?: boolean) => {
 
 const processTableRowData = (
   data: any,
-  config?: { originalTable: string; currentSchema: string }
+  config?: {
+    originalTable: string;
+    currentSchema: string;
+    tableConfiguration?: TableEntry['configuration'];
+  }
 ) => {
   const { originalTable, currentSchema } = config!;
-  const rows =
+
+  const reversedCustomColumns = Object.entries(
+    config?.tableConfiguration?.custom_column_names ?? {}
+  ).reduce((acc: Record<string, string>, [col, customCol]) => {
+    acc[customCol] = col;
+    return acc;
+  }, {});
+
+  const results =
     data.data[
       currentSchema === 'dbo'
         ? originalTable
         : `${currentSchema}_${originalTable}`
     ];
+
+  const rows = isEmpty(reversedCustomColumns)
+    ? results
+    : results?.map((row: Record<string, any>) =>
+        Object.entries(row).reduce(
+          (acc: Record<string, any>, [maybeCustomCol, col]) => {
+            acc[reversedCustomColumns[maybeCustomCol] ?? maybeCustomCol] = col;
+            return acc;
+          },
+          {}
+        )
+      );
   return { estimatedCount: rows.length, rows };
 };
 

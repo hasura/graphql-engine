@@ -21,6 +21,7 @@ import           Hasura.RQL.Types.Common
 import           Hasura.SQL.Backend
 import           Hasura.Session
 
+
 -- | https://www.postgresql.org/docs/current/xfunc-volatility.html
 data FunctionVolatility
   = FTVOLATILE
@@ -107,6 +108,7 @@ data FunctionInfo (b :: BackendType)
   } deriving (Generic)
 deriving instance Backend b => Show (FunctionInfo b)
 deriving instance Backend b => Eq   (FunctionInfo b)
+
 instance (Backend b) => ToJSON (FunctionInfo b) where
   toJSON = genericToJSON hasuraJSON
 $(makeLenses ''FunctionInfo)
@@ -142,15 +144,19 @@ emptyFunctionConfig = FunctionConfig Nothing Nothing
 -- | JSON API payload for v2 of 'track_function':
 --
 -- https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/custom-functions.html#track-function-v2
-data TrackFunctionV2
+data TrackFunctionV2 (b :: BackendType)
   = TrackFunctionV2
   { _tfv2Source        :: !SourceName
-  , _tfv2Function      :: !PG.QualifiedFunction
+  , _tfv2Function      :: !(FunctionName b)
   , _tfv2Configuration :: !FunctionConfig
-  } deriving (Show, Eq, Generic)
-$(deriveToJSON hasuraJSON ''TrackFunctionV2)
+  } deriving (Generic)
+deriving instance Backend b => Show (TrackFunctionV2 b)
+deriving instance Backend b => Eq   (TrackFunctionV2 b)
 
-instance FromJSON TrackFunctionV2 where
+instance Backend b => ToJSON (TrackFunctionV2 b) where
+  toJSON = genericToJSON hasuraJSON
+
+instance Backend b => FromJSON (TrackFunctionV2 b) where
   parseJSON = withObject "Object" $ \o ->
     TrackFunctionV2
     <$> o .:? "source" .!= defaultSource

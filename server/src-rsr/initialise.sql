@@ -61,6 +61,10 @@ CREATE TABLE hdb_catalog.hdb_cron_events
 
 CREATE INDEX hdb_cron_event_status ON hdb_catalog.hdb_cron_events (status);
 
+CREATE UNIQUE INDEX hdb_cron_events_unique_scheduled ON
+hdb_catalog.hdb_cron_events (trigger_name, scheduled_time)
+where status = 'scheduled';
+
 CREATE TABLE hdb_catalog.hdb_cron_event_invocation_logs
 (
   id TEXT DEFAULT hdb_catalog.gen_hasura_uuid() PRIMARY KEY,

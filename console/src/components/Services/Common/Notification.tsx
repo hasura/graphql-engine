@@ -55,7 +55,7 @@ export const showNotification = (
   };
 };
 
-const getNotificationDetails = (
+export const getNotificationDetails = (
   detailsJson: Json,
   children: React.ReactNode
 ) => {

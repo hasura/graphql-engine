@@ -117,7 +117,7 @@ func NewMigrate(ec *cli.ExecutionContext, isCmd bool, sourceName string, sourceK
 	if len(sourceKind) < 1 {
 		return nil, fmt.Errorf("invalid source kind")
 	}
-	// create a new directory for the database if it does'nt exists
+	// create a new directory for the database if it doesn't exists
 	if f, _ := os.Stat(filepath.Join(ec.MigrationDir, sourceName)); f == nil {
 		err := os.MkdirAll(filepath.Join(ec.MigrationDir, sourceName), 0755)
 		if err != nil {
@@ -201,4 +201,12 @@ func GetFilePath(dir string) *nurl.URL {
 		host.Path = "/" + host.Path
 	}
 	return host
+}
+
+func IsMigrationsSupported(kind hasura.SourceKind) bool {
+	switch kind {
+	case hasura.SourceKindMSSQL, hasura.SourceKindPG:
+		return true
+	}
+	return false
 }

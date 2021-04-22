@@ -1,5 +1,3 @@
-{-# LANGUAGE DeriveGeneric #-}
-
 module Data.Environment
     ( Environment()
     , getEnvironment

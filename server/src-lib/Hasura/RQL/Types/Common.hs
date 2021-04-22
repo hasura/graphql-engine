@@ -1,5 +1,3 @@
-{-# LANGUAGE AllowAmbiguousTypes #-}
-
 module Hasura.RQL.Types.Common
        ( RelName(..)
        , relNameToTxt
@@ -72,6 +70,7 @@ import           Data.Scientific                    (toBoundedInteger)
 import           Data.Text.Extended
 import           Data.Text.NonEmpty
 import           Data.URL.Template
+
 
 import qualified Hasura.Backends.Postgres.SQL.Types as PG
 
@@ -251,9 +250,10 @@ newtype SystemDefined = SystemDefined { unSystemDefined :: Bool }
 isSystemDefined :: SystemDefined -> Bool
 isSystemDefined = unSystemDefined
 
-newtype SQLGenCtx
+data SQLGenCtx
   = SQLGenCtx
-  { stringifyNum :: Bool
+  { stringifyNum             :: Bool
+  , dangerousBooleanCollapse :: Bool
   } deriving (Show, Eq)
 
 successMsg :: EncJSON

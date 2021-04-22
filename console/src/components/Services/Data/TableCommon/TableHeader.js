@@ -19,6 +19,7 @@ import {
   getTableModifyRoute,
   getTablePermissionsRoute,
   getTableRelationshipsRoute,
+  getDataSourceBaseRoute,
 } from '../../../Common/utils/routesUtils';
 import { getReadableNumber } from '../../../Common/utils/jsUtils';
 
@@ -54,19 +55,22 @@ const TableHeader = ({
     return [
       {
         title: 'Data',
-        url: getSchemaBaseRoute(tableSchema, source),
+        url: '/data',
       },
       {
-        title: 'Schema',
-        url: getSchemaBaseRoute(tableSchema, source),
+        title: source,
+        url: getDataSourceBaseRoute(source),
+        prefix: <i className="fa fa-database" />,
       },
       {
         title: tableSchema,
         url: getSchemaBaseRoute(tableSchema, source),
+        prefix: <i className="fa fa-folder" />,
       },
       {
         title: tableName,
         url: getTableBrowseRoute(tableSchema, source, tableName, isTableType),
+        prefix: <i className="fa fa-table" />,
       },
       {
         title: activeTab,
@@ -112,7 +116,8 @@ const TableHeader = ({
               }`,
               'table-browse-rows'
             )}
-            {!readOnlyMode &&
+            {isFeatureSupported('tables.insert.enabled') &&
+              !readOnlyMode &&
               isTableType &&
               getTab(
                 'insert',
@@ -125,7 +130,8 @@ const TableHeader = ({
                 'Insert Row',
                 'table-insert-rows'
               )}
-            {migrationMode &&
+            {isFeatureSupported('tables.modify.enabled') &&
+              migrationMode &&
               getTab(
                 'modify',
                 getTableModifyRoute(

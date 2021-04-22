@@ -1,5 +1,3 @@
-{-# LANGUAGE AllowAmbiguousTypes #-}
-
 module Hasura.GraphQL.Schema.OrderBy
   ( orderByExp
   ) where

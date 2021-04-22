@@ -2,7 +2,9 @@ import React, { ChangeEvent, Dispatch, useState } from 'react';
 
 import { ConnectDBActions, ConnectDBState, connectionTypes } from './state';
 import { LabeledInput } from '../../../Common/LabeledInput';
+import Tooltip from '../../../Common/Tooltip/Tooltip';
 import { Driver } from '../../../../dataSources';
+import { readFile } from './utils';
 
 import styles from './DataSources.scss';
 
@@ -41,6 +43,7 @@ const dbTypePlaceholders: Record<Driver, string> = {
   mssql:
     'Driver={ODBC Driver 17 for SQL Server};Server=serveraddress;Database=dbname;Uid=username;Pwd=password;',
   mysql: 'MySQL connection string',
+  bigquery: 'SERVICE_ACCOUNT_KEY_FROM_ENV',
 };
 
 const defaultTitle = 'Connect Database Via';
@@ -59,6 +62,23 @@ const ConnectDatabaseForm: React.FC<ConnectDatabaseFormProps> = ({
   const toggleConnectionParams = (value: boolean) => () => {
     toggleConnectionParamState(value);
   };
+
+  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files![0];
+    const addFileQueries = (content: string) => {
+      try {
+        connectionDBStateDispatch({
+          type: 'UPDATE_DB_BIGQUERY_SERVICE_ACCOUNT_FILE',
+          data: content,
+        });
+      } catch (error) {
+        console.log(error);
+      }
+    };
+
+    readFile(file, addFileQueries);
+  };
+
   return (
     <>
       <h4 className={`${styles.remove_pad_bottom} ${styles.connect_db_header}`}>
@@ -132,12 +152,16 @@ const ConnectDatabaseForm: React.FC<ConnectDatabaseFormProps> = ({
               <option key="mssql" value="mssql">
                 MS Server
               </option>
+              <option key="bigquery" value="bigquery">
+                BigQuery
+              </option>
             </select>
           </>
         )}
-        {connectionTypeState.includes(connectionTypes.DATABASE_URL) ||
-        (connectionTypeState.includes(connectionTypes.CONNECTION_PARAMS) &&
-          connectionDBState.dbType === 'mssql') ? (
+        {(connectionTypeState.includes(connectionTypes.DATABASE_URL) ||
+          (connectionTypeState.includes(connectionTypes.CONNECTION_PARAMS) &&
+            connectionDBState.dbType === 'mssql')) &&
+        connectionDBState.dbType !== 'bigquery' ? (
           <LabeledInput
             label="Database URL"
             onChange={e =>
@@ -152,7 +176,8 @@ const ConnectDatabaseForm: React.FC<ConnectDatabaseFormProps> = ({
             // disabled={isEditState}
           />
         ) : null}
-        {connectionTypeState.includes(connectionTypes.ENV_VAR) ? (
+        {connectionTypeState.includes(connectionTypes.ENV_VAR) &&
+        connectionDBState.dbType !== 'bigquery' ? (
           <LabeledInput
             label="Environment Variable"
             placeholder="HASURA_GRAPHQL_DB_URL_FROM_ENV"
@@ -162,12 +187,69 @@ const ConnectDatabaseForm: React.FC<ConnectDatabaseFormProps> = ({
                 data: e.target.value,
               })
             }
-            value={connectionDBState.envVarURLState.envVarURL}
+            value={connectionDBState.envVarState.envVar}
             data-test="database-url-env"
           />
         ) : null}
+        {(connectionTypeState.includes(connectionTypes.DATABASE_URL) ||
+          connectionTypeState.includes(connectionTypes.CONNECTION_PARAMS) ||
+          connectionTypeState.includes(connectionTypes.ENV_VAR)) &&
+        connectionDBState.dbType === 'bigquery' ? (
+          <>
+            {connectionTypeState.includes(connectionTypes.ENV_VAR) ? (
+              <LabeledInput
+                label="Environment Variable"
+                placeholder={dbTypePlaceholders[connectionDBState.dbType]}
+                onChange={e =>
+                  connectionDBStateDispatch({
+                    type: 'UPDATE_DB_URL_ENV_VAR',
+                    data: e.target.value,
+                  })
+                }
+                value={connectionDBState.envVarState.envVar}
+                data-test="service-account-env-var"
+              />
+            ) : (
+              <div className={styles.add_mar_bottom_mid}>
+                <div className={styles.add_mar_bottom_mid}>
+                  <b>Service Account File:</b>
+                  <Tooltip message="Service account key file for bigquery db" />
+                </div>
+                <input
+                  type="file"
+                  className={`form-control input-sm ${styles.inline_block}`}
+                  onChange={handleFileUpload}
+                />
+              </div>
+            )}
+            <LabeledInput
+              label="Project Id"
+              onChange={e =>
+                connectionDBStateDispatch({
+                  type: 'UPDATE_DB_BIGQUERY_PROJECT_ID',
+                  data: e.target.value,
+                })
+              }
+              value={connectionDBState.databaseURLState.projectId}
+              placeholder="project_id"
+              data-test="project-id"
+            />
+            <LabeledInput
+              label="Datasets"
+              onChange={e =>
+                connectionDBStateDispatch({
+                  type: 'UPDATE_DB_BIGQUERY_DATASETS',
+                  data: e.target.value,
+                })
+              }
+              value={connectionDBState.databaseURLState.datasets}
+              placeholder="dataset1, dataset2"
+              data-test="datasets"
+            />
+          </>
+        ) : null}
         {connectionTypeState.includes(connectionTypes.CONNECTION_PARAMS) &&
-        connectionDBState.dbType !== 'mssql' ? (
+        connectionDBState.dbType === 'postgres' ? (
           <>
             <LabeledInput
               label="Host"

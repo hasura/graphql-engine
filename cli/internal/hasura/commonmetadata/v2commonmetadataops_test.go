@@ -60,7 +60,8 @@ func TestClientCommonMetadataOps_V2ReplaceMetadata(t *testing.T) {
                         "retries": 1,
                         "idle_timeout": 180,
                         "max_connections": 50
-                    }
+                    },
+		    "use_prepared_statements": true
                 }
             }
         }
@@ -120,7 +121,8 @@ func TestClientCommonMetadataOps_V2ReplaceMetadata(t *testing.T) {
                         "retries": 1,
                         "idle_timeout": 180,
                         "max_connections": 50
-                    }
+                    },
+  		    "use_prepared_statements": true
                 }
             }
         }

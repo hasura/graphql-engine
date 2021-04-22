@@ -189,7 +189,7 @@ const SchemaItemsView: React.FC<SchemaItemsViewProps> = ({
           ) : (
             <li>
               <span
-                className={`${styles.title} ${styles.titleClosed} ${styles.padd_bottom_small}`}
+                className={`${styles.sidebarTablePadding} ${styles.padd_bottom_small}`}
               >
                 <i className="fa fa-table" />
                 <span className={styles.loaderBar} />

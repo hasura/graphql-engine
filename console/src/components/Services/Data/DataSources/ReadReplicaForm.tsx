@@ -31,7 +31,7 @@ const checkIfFieldsAreEmpty = (
   }
   if (
     currentReadReplicaConnectionType === connectionTypes.ENV_VAR &&
-    !currentReadReplicaState?.envVarURLState?.envVarURL
+    !currentReadReplicaState?.envVarState?.envVar
   ) {
     return true;
   }
@@ -149,7 +149,7 @@ const ReadReplicaListItem: React.FC<ReadReplicaListItemProps> = ({
       >
         Remove
       </Button>
-      <p>{isFromEnvVar ? currentState.envVarURLState.envVarURL : host}</p>
+      <p>{isFromEnvVar ? currentState.envVarState.envVar : host}</p>
       {/* The connection string is redundant if it's provided via ENV VAR */}
       {!isFromEnvVar && (
         <span

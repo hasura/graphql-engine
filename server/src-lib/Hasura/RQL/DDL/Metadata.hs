@@ -50,6 +50,7 @@ import           Hasura.RQL.DDL.Metadata.Types
 import           Hasura.RQL.Types
 import           Hasura.Server.Types                (ExperimentalFeature (..))
 
+
 runClearMetadata
   :: (MonadIO m, CacheRWM m, MetadataM m, MonadError QErr m, HasServerConfigCtx m)
   => ClearMetadata -> m EncJSON
@@ -65,10 +66,10 @@ runClearMetadata _ = do
             -- If default postgres source is defined, we need to set metadata
             -- which contains only default source without any tables and functions.
             let emptyDefaultSource =
-                  AB.dispatchAnyBackend @Backend exists
-                    $ AB.mkAnyBackend
-                    . SourceMetadata defaultSource mempty mempty
-                    . _smConfiguration
+                  AB.dispatchAnyBackend @Backend exists \(s :: SourceMetadata b) ->
+                    AB.mkAnyBackend @b
+                    $ SourceMetadata @b defaultSource mempty mempty
+                    $ _smConfiguration @b s
             in emptyMetadata
                & metaSources %~ OMap.insert defaultSource emptyDefaultSource
   runReplaceMetadataV1 $ RMWithSources emptyMetadata'
@@ -154,12 +155,12 @@ runReplaceMetadataV2 ReplaceMetadataV2{..} = do
   sc <- askSchemaCache
   pure $ encJFromJValue $ formatInconsistentObjs $ scInconsistentObjs sc
   where
-    getOnlyPGSources :: Metadata -> InsOrdHashMap SourceName (SourceMetadata 'Postgres)
+    getOnlyPGSources :: Metadata -> InsOrdHashMap SourceName (SourceMetadata ('Postgres 'Vanilla))
     getOnlyPGSources = OMap.mapMaybe AB.unpackAnyBackend . _metaSources
 
     dropPostgresTriggers
-      :: InsOrdHashMap SourceName (SourceMetadata 'Postgres) -- ^ old pg sources
-      -> InsOrdHashMap SourceName (SourceMetadata 'Postgres) -- ^ new pg sources
+      :: InsOrdHashMap SourceName (SourceMetadata ('Postgres 'Vanilla)) -- ^ old pg sources
+      -> InsOrdHashMap SourceName (SourceMetadata ('Postgres 'Vanilla)) -- ^ new pg sources
       -> m ()
     dropPostgresTriggers oldSources newSources =
       for_ (OMap.toList newSources) $ \(source, newSourceCache) ->
@@ -167,7 +168,7 @@ runReplaceMetadataV2 ReplaceMetadataV2{..} = do
           let oldTriggersMap = getPGTriggersMap oldSourceCache
               newTriggersMap = getPGTriggersMap newSourceCache
               droppedTriggers = OMap.keys $ oldTriggersMap `OMap.difference` newTriggersMap
-          sourceConfig <- askSourceConfig source
+          sourceConfig <- askSourceConfig @('Postgres 'Vanilla) source
           for_ droppedTriggers $
             \name -> liftIO $ runPgSourceWriteTx sourceConfig $ delTriggerQ name >> archiveEvents name
       where
@@ -263,14 +264,14 @@ purgeMetadataObj = \case
   MOEndpoint epName                     -> dropEndpointInMetadata epName
   MOInheritedRole role                  -> dropInheritedRoleInMetadata role
   where
-    handleSourceObj :: BackendMetadata b => SourceName -> SourceMetadataObjId b -> MetadataModifier
+    handleSourceObj :: forall b. BackendMetadata b => SourceName -> SourceMetadataObjId b -> MetadataModifier
     handleSourceObj source = \case
-      SMOTable qt                 -> dropTableInMetadata source qt
-      SMOFunction qf              -> dropFunctionInMetadata source qf
-      SMOFunctionPermission qf rn -> dropFunctionPermissionInMetadata source qf rn
+      SMOTable qt                 -> dropTableInMetadata @b source qt
+      SMOFunction qf              -> dropFunctionInMetadata @b source qf
+      SMOFunctionPermission qf rn -> dropFunctionPermissionInMetadata @b source qf rn
       SMOTableObj qt tableObj     ->
         MetadataModifier
-          $ tableMetadataSetter source qt %~ case tableObj of
+          $ tableMetadataSetter @b source qt %~ case tableObj of
             MTORel rn _              -> dropRelationshipInMetadata rn
             MTOPerm rn pt            -> dropPermissionInMetadata rn pt
             MTOTrigger trn           -> dropEventTriggerInMetadata trn

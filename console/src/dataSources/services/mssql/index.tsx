@@ -1,12 +1,13 @@
 import React from 'react';
 import { DataSourcesAPI } from '../..';
+import { QualifiedTable } from '../../../metadata/types';
 import {
   TableColumn,
   Table,
   BaseTableColumn,
   SupportedFeaturesType,
 } from '../../types';
-import { generateTableRowRequest } from './utils';
+import { generateTableRowRequest, operators } from './utils';
 
 const permissionColumnDataTypes = {
   character: [
@@ -55,11 +56,7 @@ const supportedColumnOperators = [
 
 const isTable = (table: Table) => {
   if (!table.table_type) return true; // todo
-  return (
-    table.table_type === 'TABLE' ||
-    table.table_type === 'VIEW' ||
-    table.table_type === 'BASE TABLE'
-  );
+  return table.table_type === 'TABLE' || table.table_type === 'BASE TABLE';
 };
 
 const columnDataTypes = {
@@ -74,15 +71,6 @@ const columnDataTypes = {
   TEXT: 'text',
 };
 
-const operators = [
-  { name: 'equals', value: '$eq', graphqlOp: '_eq' },
-  { name: 'not equals', value: '$ne', graphqlOp: '_neq' },
-  { name: '>', value: '$gt', graphqlOp: '_gt' },
-  { name: '<', value: '$lt', graphqlOp: '_lt' },
-  { name: '>=', value: '$gte', graphqlOp: '_gte' },
-  { name: '<=', value: '$lte', graphqlOp: '_lte' },
-];
-
 // eslint-disable-next-line no-useless-escape
 const createSQLRegex = /create\s*(?:|or\s*replace)\s*(view|table|function)\s*(?:\s*if*\s*not\s*exists\s*)?((\"?\w+\"?)\.(\"?\w+\"?)|(\"?\w+\"?))/g;
 
@@ -95,6 +83,14 @@ export const displayTableName = (table: Table) => {
 export const supportedFeatures: SupportedFeaturesType = {
   driver: {
     name: 'mssql',
+  },
+  schemas: {
+    create: {
+      enabled: true,
+    },
+    delete: {
+      enabled: true,
+    },
   },
   tables: {
     create: {
@@ -113,9 +109,22 @@ export const supportedFeatures: SupportedFeaturesType = {
     },
     relationships: {
       enabled: true,
+      track: true,
     },
     permissions: {
       enabled: true,
+    },
+    track: {
+      enabled: false,
+    },
+  },
+  functions: {
+    enabled: true,
+    track: {
+      enabled: false,
+    },
+    nonTrackableFunctions: {
+      enabled: false,
     },
   },
   events: {
@@ -128,11 +137,23 @@ export const supportedFeatures: SupportedFeaturesType = {
     enabled: true,
     relationships: false,
   },
+  rawSQL: {
+    enabled: true,
+    tracking: true,
+  },
+  connectDbForm: {
+    connectionParameters: false,
+    databaseURL: true,
+    environmentVariable: true,
+    read_replicas: false,
+  },
 };
 
 export const isJsonColumn = (column: BaseTableColumn): boolean => {
   return column.data_type_name === 'json' || column.data_type_name === 'jsonb';
 };
+
+const defaultRedirectSchema = 'dbo';
 
 export const mssql: DataSourcesAPI = {
   isTable,
@@ -213,6 +234,7 @@ WHERE
         when obj.type = 'SO' then 'Sequence object'
         when obj.type = 'U' then 'TABLE'
         when obj.type = 'EC' then 'Edge constraint'
+        when obj.type = 'V' then 'VIEW'
     end as table_type,
     obj.type_desc AS comment,
     JSON_QUERY([isc].json) AS columns
@@ -399,7 +421,7 @@ INNER JOIN sys.schemas sch2
     return '';
   },
   getDatabaseInfo: '',
-  getTableInfo: (tables: string[]) => `
+  getTableInfo: (tables: QualifiedTable[]) => `
 SELECT
 	o.name AS table_name,
 	s.name AS table_schema,
@@ -415,7 +437,7 @@ FROM
 	sys.objects AS o
 	JOIN sys.schemas AS s ON (o.schema_id = s.schema_id)
 WHERE
-	o.name in (${tables.join(',')}) for json path;
+	o.name in (${tables.map(t => `'${t.name}'`).join(',')}) for json path;
   `,
   getDatabaseVersionSql: 'SELECT @@VERSION;',
   permissionColumnDataTypes,
@@ -423,4 +445,5 @@ WHERE
   supportedColumnOperators,
   aggregationPermissionsAllowed: false,
   supportedFeatures,
+  defaultRedirectSchema,
 };

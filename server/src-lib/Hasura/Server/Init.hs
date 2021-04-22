@@ -158,6 +158,8 @@ mkServeOptions rso = do
   enableTelemetry <- fromMaybe True <$>
                      withEnv (rsoEnableTelemetry rso) (fst enableTelemetryEnv)
   strfyNum <- withEnvBool (rsoStringifyNum rso) $ fst stringifyNumEnv
+  dangerousBooleanCollapse <-
+    fromMaybe False <$> withEnv (rsoDangerousBooleanCollapse rso) (fst dangerousBooleanCollapseEnv)
   enabledAPIs <- Set.fromList . fromMaybe defaultAPIs <$>
                      withEnv (rsoEnabledAPIs rso) (fst enabledAPIsEnv)
   lqOpts <- mkLQOpts
@@ -169,7 +171,7 @@ mkServeOptions rso = do
                       withEnv (rsoPlanCacheSize rso) (fst planCacheSizeEnv)
   devMode <- withEnvBool (rsoDevMode rso) $ fst devModeEnv
   adminInternalErrors <- fromMaybe True <$> -- Default to `true` to enable backwards compatibility
-                                withEnv (rsoAdminInternalErrors rso) (fst adminInternalErrorsEnv)
+                         withEnv (rsoAdminInternalErrors rso) (fst adminInternalErrorsEnv)
   let internalErrorsConfig =
         if | devMode             -> InternalErrorsAllRequests
            | adminInternalErrors -> InternalErrorsAdminOnly
@@ -186,14 +188,16 @@ mkServeOptions rso = do
   webSocketCompressionFromEnv <- withEnvBool (rsoWebSocketCompression rso) $
                                  fst webSocketCompressionEnv
 
+  maybeSchemaPollInterval <- withEnv (rsoSchemaPollInterval rso) (fst schemaPollIntervalEnv)
+
   let connectionOptions = WS.defaultConnectionOptions {
                             WS.connectionCompressionOptions =
                               if webSocketCompressionFromEnv
                                 then WS.PermessageDeflateCompression WS.defaultPermessageDeflate
                                 else WS.NoCompression
                           }
-      asyncActionsFetchInterval =
-        fromMaybe defaultAsyncActionsFetchInterval maybeAsyncActionsFetchInterval
+      asyncActionsFetchInterval = maybe defaultAsyncActionsFetchInterval msToOptionalInterval maybeAsyncActionsFetchInterval
+      schemaPollInterval        = maybe defaultSchemaPollInterval msToOptionalInterval maybeSchemaPollInterval
   webSocketKeepAlive <- KeepAliveDelay . fromIntegral . fromMaybe 5
       <$> withEnv (rsoWebSocketKeepAlive rso) (fst webSocketKeepAliveEnv)
 
@@ -206,32 +210,57 @@ mkServeOptions rso = do
     bool MaintenanceModeDisabled MaintenanceModeEnabled
     <$> withEnvBool (rsoEnableMaintenanceMode rso) (fst maintenanceModeEnv)
 
-  schemaPollInterval <- withEnv (rsoSchemaPollInterval rso) (fst schemaPollIntervalEnv)
-
-  disableSchemaSync <- withEnvBool (rsoSchemaSyncDisable rso) (fst schemaSyncDisableEnv)
-
-  pure $ ServeOptions port host connParams txIso adminScrt authHook jwtSecret
-                        unAuthRole corsCfg enableConsole consoleAssetsDir
-                        enableTelemetry strfyNum enabledAPIs lqOpts enableAL
-                        enabledLogs serverLogLevel planCacheOptions
-                        internalErrorsConfig eventsHttpPoolSize eventsFetchInterval
-                        asyncActionsFetchInterval logHeadersFromEnv enableRemoteSchemaPerms
-                        connectionOptions webSocketKeepAlive inferFunctionPerms maintenanceMode
-                        schemaPollInterval experimentalFeatures disableSchemaSync
+  pure $ ServeOptions
+           port
+           host
+           connParams
+           txIso
+           adminScrt
+           authHook
+           jwtSecret
+           unAuthRole
+           corsCfg
+           enableConsole
+           consoleAssetsDir
+           enableTelemetry
+           strfyNum
+           dangerousBooleanCollapse
+           enabledAPIs
+           lqOpts
+           enableAL
+           enabledLogs
+           serverLogLevel
+           planCacheOptions
+           internalErrorsConfig
+           eventsHttpPoolSize
+           eventsFetchInterval
+           asyncActionsFetchInterval
+           logHeadersFromEnv
+           enableRemoteSchemaPerms
+           connectionOptions
+           webSocketKeepAlive
+           inferFunctionPerms
+           maintenanceMode
+           schemaPollInterval
+           experimentalFeatures
   where
 #ifdef DeveloperAPIs
     defaultAPIs = [METADATA,GRAPHQL,PGDUMP,CONFIG,DEVELOPER]
 #else
     defaultAPIs = [METADATA,GRAPHQL,PGDUMP,CONFIG]
 #endif
-    defaultAsyncActionsFetchInterval = AAFIInterval 1000 -- 1000 Milliseconds or 1 Second
+    defaultAsyncActionsFetchInterval = Interval 1000 -- 1000 Milliseconds or 1 Second
+    defaultSchemaPollInterval = Interval 1000 -- 1000 Milliseconds or 1 Second
     mkConnParams (RawConnParams s c i cl p pt) = do
       stripes <- fromMaybe 1 <$> withEnv s (fst pgStripesEnv)
       -- Note: by Little's Law we can expect e.g. (with 50 max connections) a
       -- hard throughput cap at 1000RPS when db queries take 50ms on average:
       conns <- fromMaybe 50 <$> withEnv c (fst pgConnsEnv)
       iTime <- fromMaybe 180 <$> withEnv i (fst pgTimeoutEnv)
-      connLifetime <- withEnv cl (fst pgConnLifetimeEnv)
+      connLifetime <- withEnv cl (fst pgConnLifetimeEnv) <&> \case
+        Nothing -> Just 600 -- Not set by user; use the default timeout
+        Just 0  -> Nothing  -- user wants to disable PG_CONN_LIFETIME
+        Just n  -> Just n   -- user specified n seconds lifetime
       allowPrepare <- fromMaybe True <$> withEnv p (fst pgUsePrepareEnv)
       poolTimeout <- withEnv pt (fst pgPoolTimeoutEnv)
       return $ Q.ConnParams
@@ -359,14 +388,36 @@ serveCmdFooter =
 
     envVarDoc = mkEnvVarDoc $ envVars <> eventEnvs
     envVars =
-      [ databaseUrlEnv, retriesNumEnv, servePortEnv, serveHostEnv
-      , pgStripesEnv, pgConnsEnv, pgTimeoutEnv, pgUsePrepareEnv, txIsoEnv
-      , adminSecretEnv , accessKeyEnv, authHookEnv, authHookModeEnv
-      , jwtSecretEnv, unAuthRoleEnv, corsDomainEnv, corsDisableEnv, enableConsoleEnv
-      , enableTelemetryEnv, wsReadCookieEnv, stringifyNumEnv, enabledAPIsEnv
-      , enableAllowlistEnv, enabledLogsEnv, logLevelEnv, devModeEnv
-      , adminInternalErrorsEnv, webSocketKeepAliveEnv
+      [ accessKeyEnv
+      , adminInternalErrorsEnv
+      , adminSecretEnv
       , asyncActionsFetchIntervalEnv
+      , authHookEnv
+      , authHookModeEnv
+      , corsDisableEnv
+      , corsDomainEnv
+      , dangerousBooleanCollapseEnv
+      , databaseUrlEnv
+      , devModeEnv
+      , enableAllowlistEnv
+      , enableConsoleEnv
+      , enableTelemetryEnv
+      , enabledAPIsEnv
+      , enabledLogsEnv
+      , jwtSecretEnv
+      , logLevelEnv
+      , pgConnsEnv
+      , pgStripesEnv
+      , pgTimeoutEnv
+      , pgUsePrepareEnv
+      , retriesNumEnv
+      , serveHostEnv
+      , servePortEnv
+      , stringifyNumEnv
+      , txIsoEnv
+      , unAuthRoleEnv
+      , webSocketKeepAliveEnv
+      , wsReadCookieEnv
       ]
 
     eventEnvs = [ eventsHttpPoolSizeEnv, eventsFetchIntervalEnv ]
@@ -440,7 +491,8 @@ pgConnLifetimeEnv :: (String, String)
 pgConnLifetimeEnv =
   ( "HASURA_GRAPHQL_PG_CONN_LIFETIME"
   , "Time from connection creation after which the connection should be destroyed and a new one "
-    <> "created. (default: none)"
+    <> "created. A value of 0 indicates we should never destroy an active connection. If 0 is "
+    <> "passed, memory from large query results may not be reclaimed. (default: 600 sec)"
   )
 
 pgPoolTimeoutEnv :: (String, String)
@@ -539,6 +591,14 @@ stringifyNumEnv =
   , "Stringify numeric types (default: false)"
   )
 
+dangerousBooleanCollapseEnv :: (String, String)
+dangerousBooleanCollapseEnv =
+  ( "HASURA_GRAPHQL_V1_BOOLEAN_NULL_COLLAPSE"
+  , "Emulate V1's behaviour re. boolean expression, where an explicit 'null'"
+    <> " value will be interpreted to mean that the field should be ignored"
+    <> " [DEPRECATED, WILL BE REMOVED SOON] (default: false)"
+  )
+
 enabledAPIsEnv :: (String, String)
 enabledAPIsEnv =
   ( "HASURA_GRAPHQL_ENABLED_APIS"
@@ -600,7 +660,7 @@ maintenanceModeEnv =
 schemaPollIntervalEnv :: (String, String)
 schemaPollIntervalEnv =
   ( "HASURA_GRAPHQL_SCHEMA_POLL_INTERVAL"
-  , "Interval to poll metadata storage for updates in milliseconds - Default 1000 (1s)"
+  , "Interval to poll metadata storage for updates in milliseconds - Default 1000 (1s) - Set to 0 to disable"
   )
 
 adminInternalErrorsEnv :: (String, String)
@@ -864,6 +924,13 @@ parseStringifyNum =
            help (snd stringifyNumEnv)
          )
 
+parseDangerousBooleanCollapse :: Parser (Maybe Bool)
+parseDangerousBooleanCollapse = optional $
+  option (eitherReader parseStrAsBool)
+         ( long "v1-boolean-null-collapse" <>
+           help (snd dangerousBooleanCollapseEnv)
+         )
+
 parseEnabledAPIs :: Parser (Maybe [API])
 parseEnabledAPIs = optional $
   option (eitherReader readAPIs)
@@ -931,9 +998,9 @@ parseGraphqlEventsFetchInterval = optional $
     help (snd eventsFetchIntervalEnv)
   )
 
-parseGraphqlAsyncActionsFetchInterval :: Parser (Maybe AsyncActionsFetchInterval)
+parseGraphqlAsyncActionsFetchInterval :: Parser (Maybe Milliseconds)
 parseGraphqlAsyncActionsFetchInterval = optional $
-  option (eitherReader readAsyncActionFetchInterval)
+  option (eitherReader readEither)
   ( long "async-actions-fetch-interval" <>
     metavar (fst asyncActionsFetchIntervalEnv) <>
     help (snd eventsFetchIntervalEnv)
@@ -992,12 +1059,6 @@ enableAllowlistEnv =
   , "Only accept allowed GraphQL queries"
   )
 
-schemaSyncDisableEnv :: (String, String)
-schemaSyncDisableEnv =
-  ( "HASURA_SCHEMA_SYNC_DISABLE"
-  , "Disable Schema Sync Listener"
-  )
-
 -- NOTES re. default:
 --     There's a lot of guesswork and estimation here. Based on our test suite
 --   the average in-memory payload for a cache entry is 7kb, with the largest
@@ -1034,12 +1095,6 @@ parseLogLevel = optional $
   option (eitherReader readLogLevel)
          ( long "log-level" <>
            help (snd logLevelEnv)
-         )
-
-parseSchemaSyncDisable :: Parser Bool
-parseSchemaSyncDisable =
-  switch ( long "schema-sync-disable" <>
-           help (snd schemaSyncDisableEnv)
          )
 
 -- Init logging related
@@ -1087,6 +1142,7 @@ serveOptsToLog so =
       , "enable_telemetry" J..= soEnableTelemetry so
       , "use_prepared_statements" J..= (Q.cpAllowPrepare . soConnParams) so
       , "stringify_numeric_types" J..= soStringifyNum so
+      , "v1-boolean-null-collapse" J..= soDangerousBooleanCollapse so
       , "enabled_apis" J..= soEnabledAPIs so
       , "live_query_options" J..= soLiveQueryOpts so
       , "enable_allowlist" J..= soEnableAllowlist so
@@ -1132,6 +1188,7 @@ serveOptionsParser =
   <*> parseEnableTelemetry
   <*> parseWsReadCookie
   <*> parseStringifyNum
+  <*> parseDangerousBooleanCollapse
   <*> parseEnabledAPIs
   <*> parseMxRefetchInt
   <*> parseMxBatchSize
@@ -1152,7 +1209,6 @@ serveOptionsParser =
   <*> parseEnableMaintenanceMode
   <*> parseSchemaPollInterval
   <*> parseExperimentalFeatures
-  <*> parseSchemaSyncDisable
 
 -- | This implements the mapping between application versions
 -- and catalog schema versions.

@@ -16,8 +16,8 @@ export const getRunSqlQuery = (
   driver = currentDriver
 ) => {
   let type = 'run_sql';
-  if (driver === 'mssql') {
-    type = 'mssql_run_sql';
+  if (driver === 'mssql' || driver === 'bigquery') {
+    type = `${driver}_run_sql`;
   }
 
   return {

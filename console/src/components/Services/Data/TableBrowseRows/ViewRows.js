@@ -772,8 +772,8 @@ const ViewRows = props => {
           if (isObjectRel) {
             childRows = [childRows];
           }
-
           const childTableDef = getRelationshipRefTable(tableSchema, rel);
+
           const childTable = findTable(schemas, childTableDef);
 
           return (

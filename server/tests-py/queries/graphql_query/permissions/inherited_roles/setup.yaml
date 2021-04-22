@@ -164,6 +164,32 @@ args:
       columns: "*"
       filter: {}
 
+- type: pg_create_select_permission
+  args:
+    table: articles
+    role: free_user
+    permission:
+      columns:
+        - title
+        - content
+      filter:
+        is_published:
+          _eq: true
+      limit: 2
+
+- type: pg_create_select_permission
+  args:
+    table: articles
+    role: premium_user_free_trial
+    permission:
+      columns:
+        - title
+        - content
+      filter:
+        is_published:
+          _eq: true
+      limit: 4
+
 - type: add_inherited_role
   args:
     role_name: author_editor_guest_inherited_role
@@ -171,3 +197,10 @@ args:
       - author
       - editor
       - guest
+
+- type: add_inherited_role
+  args:
+    role_name: non_paying_user
+    role_set:
+      - free_user
+      - premium_user_free_trial

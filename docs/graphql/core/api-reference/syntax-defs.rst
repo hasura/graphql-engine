@@ -125,6 +125,12 @@ PGSourceConnectionInfo
      - true
      - PGPoolSettings_
      - Connection pool settings
+   * - use_prepared_statements
+     - false
+     - Boolean
+     - If set to ``true`` the server prepares statement before executing on the source database (default: ``false``).
+       For more details, refer to the `Postgres docs <https://www.postgresql.org/docs/current/sql-prepare.html>`__
+
 
 .. _FromEnv:
 
@@ -781,11 +787,53 @@ Operator
      - ``!~``
    * - ``$niregex``
      - ``!~*``
-  
+
 
 (For more details on text related operators, refer to the `Postgres docs <https://www.postgresql.org/docs/current/functions-matching.html>`__.)
 
 **Operators for comparing columns (all column types except json, jsonb):**
+
+**Column Comparison Operator**
+
+.. parsed-literal::
+   :class: haskell-pre
+
+   {
+     PGColumn_: {
+       Operator_: {
+         PGColumn_ | ["$", PGColumn_]
+       }
+     }
+   }
+
+Column comparison operators can be used to compare columns of the same
+table or a related table. To compare a column of a table with another column of :
+
+1. The same table -
+
+.. parsed-literal::
+   :class: haskell-pre
+
+   {
+     PGColumn_: {
+       Operator_: {
+         PGColumn_
+       }
+     }
+   }
+
+2. The table on which the permission is being defined on -
+
+.. parsed-literal::
+   :class: haskell-pre
+
+   {
+     PGColumn_: {
+       Operator_: {
+         [$, PGColumn_]
+       }
+     }
+   }
 
 .. list-table::
    :header-rows: 1
@@ -852,6 +900,8 @@ Operator
      - ``ST_Crosses(column, input)``
    * - ``_st_equals``
      - ``ST_Equals(column, input)``
+   * - ``_st_3d_intersects``
+     - ``ST_3DIntersects(column, input)``
    * - ``_st_intersects``
      - ``ST_Intersects(column, input)``
    * - ``_st_overlaps``
@@ -862,6 +912,8 @@ Operator
      - ``ST_Within(column, input)``
    * - ``_st_d_within``
      - ``ST_DWithin(column, input)``
+   * - ``_st_3d_d_within``
+     - ``ST_3DDWithin(column, input)``
 
 (For more details on spatial relationship operators, refer to the `PostGIS docs <http://postgis.net/workshops/postgis-intro/spatial_relationships.html>`__.)
 

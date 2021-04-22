@@ -235,12 +235,17 @@ data OpExpG (b :: BackendType) a
   | ALIKE  !a -- LIKE
   | ANLIKE !a -- NOT LIKE
 
-  | CEQ  !(Column b)
-  | CNE  !(Column b)
-  | CGT  !(Column b)
-  | CLT  !(Column b)
-  | CGTE !(Column b)
-  | CLTE !(Column b)
+  -- column comparison operators, the (Maybe (TableName b))
+  -- is for setting the root table if there's a comparison
+  -- of a relationship column with a column of the root table
+  -- it will be set, otherwise it will be Nothing
+
+  | CEQ  !(Column b, Maybe (TableName b))
+  | CNE  !(Column b, Maybe (TableName b))
+  | CGT  !(Column b, Maybe (TableName b))
+  | CLT  !(Column b, Maybe (TableName b))
+  | CGTE !(Column b, Maybe (TableName b))
+  | CLTE !(Column b, Maybe (TableName b))
 
   | ANISNULL    -- IS NULL
   | ANISNOTNULL -- IS NOT NULL
@@ -284,7 +289,7 @@ instance (Backend b, ToJSONKeyValue (BooleanOperators b a), ToJSON a) => ToJSONK
 
     ABackendSpecific b -> toJSONKeyValue b
 
-opExpDepCol :: OpExpG backend a -> Maybe (Column backend)
+opExpDepCol :: OpExpG backend a -> Maybe (Column backend, Maybe (TableName backend))
 opExpDepCol = \case
   CEQ c  -> Just c
   CNE c  -> Just c

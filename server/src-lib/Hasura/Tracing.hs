@@ -1,4 +1,3 @@
-{-# LANGUAGE RecordWildCards      #-}
 {-# LANGUAGE UndecidableInstances #-}
 
 module Hasura.Tracing
@@ -247,8 +246,8 @@ extractHttpContext hdrs = do
 injectEventContext :: TraceContext -> J.Value
 injectEventContext TraceContext{..} =
   J.object
-    [ "trace_id" J..= tcCurrentTrace
-    , "span_id"  J..= tcCurrentSpan
+    [ "trace_id" J..= word64ToHex tcCurrentTrace
+    , "span_id"  J..= word64ToHex tcCurrentSpan
     ]
 
 -- | Extract a trace context from an event trigger payload.
@@ -256,9 +255,9 @@ extractEventContext :: J.Value -> IO (Maybe TraceContext)
 extractEventContext e = do
   freshSpanId <- liftIO Rand.randomIO
   pure $ TraceContext
-    <$> (e ^? JL.key "trace_context" . JL.key "trace_id" . JL._Integral)
+    <$> (hexToWord64 =<< e ^? JL.key "trace_context" . JL.key "trace_id" . JL._String)
     <*> pure freshSpanId
-    <*> pure (e ^? JL.key "trace_context" . JL.key "span_id" . JL._Integral)
+    <*> pure (hexToWord64 =<< e ^? JL.key "trace_context" . JL.key "span_id" . JL._String)
 
 -- | Perform HTTP request which supports Trace headers
 tracedHttpRequest

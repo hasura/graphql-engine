@@ -111,6 +111,7 @@ actions: "!include actions.yaml"
             idle_timeout: 180
             max_connections: 50
             retries: 1
+        use_prepared_statements: true
   tables:
     - table:
         name: t1
@@ -135,6 +136,7 @@ actions: "!include actions.yaml"
             idle_timeout: 180
             max_connections: 50
             retries: 1
+        use_prepared_statements: true
   tables:
     - table:
         name: t1

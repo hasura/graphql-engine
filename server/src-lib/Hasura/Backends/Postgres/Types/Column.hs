@@ -10,7 +10,7 @@ import           Hasura.SQL.Backend
 -- | Gets the representation type associated with a 'ColumnType'. Avoid using this if possible.
 -- Prefer 'parsePGScalarValue', 'parsePGScalarValues', or
 -- 'Hasura.RQL.Types.BoolExp.mkTypedSessionVar'.
-unsafePGColumnToBackend :: ColumnType 'Postgres -> PGScalarType
+unsafePGColumnToBackend :: ColumnType ('Postgres pgKind) -> PGScalarType
 unsafePGColumnToBackend = \case
   ColumnScalar scalarType -> scalarType
   ColumnEnumReference _   -> PGText

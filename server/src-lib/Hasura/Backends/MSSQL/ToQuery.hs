@@ -1,4 +1,3 @@
-{-# LANGUAGE OverloadedStrings #-}
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 
 -- | Convert the simple T-SQL AST to an SQL query, ready to be passed
@@ -6,7 +5,9 @@
 
 module Hasura.Backends.MSSQL.ToQuery
   ( fromSelect
+  , withExplain
   , fromReselect
+  , toSQL
   , toQueryFlat
   , toQueryPretty
   , fromDelete
@@ -16,8 +17,6 @@ module Hasura.Backends.MSSQL.ToQuery
 import           Hasura.Prelude              hiding (GT, LT)
 
 import qualified Data.Text                   as T
-import qualified Data.Text.Lazy              as L
-import qualified Data.Text.Lazy.Builder      as L
 
 import           Data.List                   (intersperse)
 import           Data.String
@@ -64,7 +63,7 @@ fromExpression =
   \case
     JsonQueryExpression e -> "JSON_QUERY(" <+> fromExpression e <+> ")"
     JsonValueExpression e path ->
-      "JSON_VALUE(" <+> fromExpression e <+> fromPath path <+> ")"
+      "JSON_VALUE(" <+> fromExpression e <+> ", " <+> fromPath path <+> ")"
     ValueExpression value -> QueryPrinter (toSql value)
     AndExpression xs ->
       SepByPrinter
@@ -120,16 +119,10 @@ fromOp =
     NLIKE -> "NOT LIKE"
 
 fromPath :: JsonPath -> Printer
-fromPath path =
-  ", " <+> string path
-  where
-    string = fromExpression .
-             ValueExpression . TextValue . L.toStrict . L.toLazyText . go
-    go =
-      \case
-        RootPath      -> "$"
-        IndexPath r i -> go r <> "[" <> L.fromString (show i) <> "]"
-        FieldPath r f -> go r <> ".\"" <> L.fromText f <> "\""
+fromPath = \case
+  RootPath      -> "$"
+  IndexPath r i -> fromPath r <+> "[" <+> fromString (show i) <+> "]"
+  FieldPath r f -> fromPath r <+> ".\"" <+> fromString (T.unpack f) <+> "\""
 
 fromFieldName :: FieldName -> Printer
 fromFieldName (FieldName {..}) =
@@ -175,6 +168,15 @@ fromSelect Select {..} = case selectFor of
       , fromWhere selectWhere
       , fromOrderBys selectTop selectOffset selectOrderBy
       , fromFor selectFor
+      ]
+
+withExplain :: Printer -> Printer
+withExplain p =
+  SepByPrinter
+    NewlinePrinter
+      [ "SET SHOWPLAN_TEXT ON"
+      , p
+      , "SET SHOWPLAN_TEXT OFF"
       ]
 
 fromJoinSource :: JoinSource -> Printer
@@ -335,8 +337,12 @@ fromOpenJson OpenJson {openJsonExpression, openJsonWith} =
 fromJsonFieldSpec :: JsonFieldSpec -> Printer
 fromJsonFieldSpec =
   \case
-    IntField name  -> fromNameText name <+> " INT"
-    JsonField name -> fromNameText name <+> " NVARCHAR(MAX) AS JSON"
+    IntField name mPath    -> fromNameText name <+> " INT" <+> quote mPath
+    StringField name mPath -> fromNameText name <+> " NVARCHAR(MAX)" <+> quote mPath
+    UuidField name mPath   -> fromNameText name <+> " UNIQUEIDENTIFIER" <+> quote mPath
+    JsonField name mPath   -> fromJsonFieldSpec (StringField name mPath) <+> " AS JSON"
+    where
+      quote mPath = maybe "" ((\p -> " '" <+> p <+> "'"). fromPath) mPath
 
 fromTableName :: TableName -> Printer
 fromTableName TableName {tableName, tableSchema} =

@@ -21,8 +21,6 @@ load and modify the Hasura catalog and schema cache.
     functions incrementally update the cache when they modify the catalog.
 -}
 
-{-# LANGUAGE RecordWildCards #-}
-
 module Hasura.RQL.DDL.Schema
  ( module Hasura.RQL.DDL.Schema.Cache
  , module Hasura.RQL.DDL.Schema.Catalog
@@ -115,7 +113,7 @@ runRunSQL q@RunSQL {..}
   | isSchemaCacheBuildRequiredRunSQL q
   = withMetadataCheck rSource rCascade rTxAccessMode $ execRawSQL rSql
   | otherwise
-  = askSourceConfig rSource >>= \sourceConfig ->
+  = askSourceConfig @('Postgres 'Vanilla) rSource >>= \sourceConfig ->
       liftEitherM $ runExceptT $
       runLazyTx (_pscExecCtx sourceConfig) rTxAccessMode $ execRawSQL rSql
   where

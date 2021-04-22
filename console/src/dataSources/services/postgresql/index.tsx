@@ -507,6 +507,14 @@ export const supportedFeatures: SupportedFeaturesType = {
   driver: {
     name: 'postgres',
   },
+  schemas: {
+    create: {
+      enabled: true,
+    },
+    delete: {
+      enabled: true,
+    },
+  },
   tables: {
     create: {
       enabled: true,
@@ -524,8 +532,21 @@ export const supportedFeatures: SupportedFeaturesType = {
     relationships: {
       enabled: true,
       remoteRelationships: true,
+      track: true,
     },
     permissions: {
+      enabled: true,
+    },
+    track: {
+      enabled: false,
+    },
+  },
+  functions: {
+    enabled: true,
+    track: {
+      enabled: true,
+    },
+    nonTrackableFunctions: {
       enabled: true,
     },
   },
@@ -539,7 +560,19 @@ export const supportedFeatures: SupportedFeaturesType = {
     enabled: true,
     relationships: true,
   },
+  rawSQL: {
+    enabled: true,
+    tracking: true,
+  },
+  connectDbForm: {
+    connectionParameters: true,
+    databaseURL: true,
+    environmentVariable: true,
+    read_replicas: true,
+  },
 };
+
+const defaultRedirectSchema = 'public';
 
 export const postgres: DataSourcesAPI = {
   isTable,
@@ -615,4 +648,5 @@ export const postgres: DataSourcesAPI = {
   supportedColumnOperators: null,
   aggregationPermissionsAllowed: true,
   supportedFeatures,
+  defaultRedirectSchema,
 };

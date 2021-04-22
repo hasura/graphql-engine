@@ -187,3 +187,26 @@
           name
         }
       }
+
+- description: "The limits of the role should be combined to be the max of the limits of the rows. The
+  'non_paying_user' inherited role is created out of the 'free_user' role which has limit set to 2
+  and the 'premium_user_free_trial' role which has limit set to 4. So 4 rows are expected to be returned
+  for the inherited role."
+  url: /v1/graphql
+  status: 200
+  headers:
+    X-Hasura-Role: non_paying_user
+  response:
+    data:
+      articles:
+        - title: title 2
+        - title: title 3
+        - title: title 4
+        - title: title 5
+  query:
+    query: |
+      query {
+        articles {
+          title
+        }
+      }

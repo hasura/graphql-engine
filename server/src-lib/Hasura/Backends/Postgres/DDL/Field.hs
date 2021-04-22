@@ -19,6 +19,7 @@ import qualified Hasura.SQL.AnyBackend                      as AB
 import           Hasura.Backends.Postgres.DDL.Function
 import           Hasura.Backends.Postgres.SQL.Types
 import           Hasura.RQL.DDL.RemoteRelationship.Validate
+import           Hasura.RQL.Types.Backend
 import           Hasura.RQL.Types.Column
 import           Hasura.RQL.Types.ComputedField
 import           Hasura.RQL.Types.Error
@@ -29,6 +30,7 @@ import           Hasura.RQL.Types.SchemaCacheTypes
 import           Hasura.SQL.Backend
 import           Hasura.SQL.Types
 import           Hasura.Server.Utils
+
 
 data ComputedFieldValidateError
   = CFVENotValidGraphQLName !ComputedFieldName
@@ -84,15 +86,15 @@ showError qf = \case
       FunctionSessionArgument argName _ -> argName <<> " argument of the function " <>> qf
 
 buildComputedFieldInfo
-  :: (QErrM m)
+  :: forall pgKind m. (QErrM m)
   => S.HashSet QualifiedTable
   -- ^ the set of all tracked tables
   -> QualifiedTable
   -> ComputedFieldName
-  -> ComputedFieldDefinition 'Postgres
+  -> ComputedFieldDefinition ('Postgres pgKind)
   -> RawFunctionInfo
   -> Maybe Text
-  -> m (ComputedFieldInfo 'Postgres)
+  -> m (ComputedFieldInfo ('Postgres pgKind))
 buildComputedFieldInfo trackedTables table computedField definition rawFunctionInfo comment =
   either (throw400 NotSupported . showErrors) pure =<< MV.runValidateT mkComputedFieldInfo
   where
@@ -104,8 +106,9 @@ buildComputedFieldInfo trackedTables table computedField definition rawFunctionI
 
     computedFieldGraphQLName = G.mkName $ computedFieldNameToText computedField
 
-    mkComputedFieldInfo :: (MV.MonadValidate [ComputedFieldValidateError] m)
-                          => m (ComputedFieldInfo 'Postgres)
+    mkComputedFieldInfo
+      :: MV.MonadValidate [ComputedFieldValidateError] n
+      => n (ComputedFieldInfo ('Postgres pgKind))
     mkComputedFieldInfo = do
       -- Check if computed field name is a valid GraphQL name
       unless (isJust computedFieldGraphQLName) $
@@ -129,8 +132,10 @@ buildComputedFieldInfo trackedTables table computedField definition rawFunctionI
           pure $ CFRScalar scalarType
 
       -- Validate and resolve table argument
-      let inputArgs = mkFunctionArgs (rfiDefaultArgs rawFunctionInfo)
-                         (rfiInputArgTypes rawFunctionInfo) inputArgNames
+      let inputArgs = mkFunctionArgs
+            (rfiDefaultArgs   rawFunctionInfo)
+            (rfiInputArgTypes rawFunctionInfo)
+            inputArgNames
       tableArgument <- case maybeTableArg of
         Just argName ->
           case findWithIndex ((Just argName ==) . faName) inputArgs of
@@ -158,18 +163,19 @@ buildComputedFieldInfo trackedTables table computedField definition rawFunctionI
               MV.refute $ pure $ CFVEInvalidSessionArgument $ ISANotFound argName
 
 
-      let inputArgSeq = Seq.fromList $ dropTableAndSessionArgument tableArgument
-                        maybePGSessionArg inputArgs
+      let inputArgSeq = Seq.fromList $
+            dropTableAndSessionArgument tableArgument maybePGSessionArg inputArgs
           computedFieldFunction =
             ComputedFieldFunction function inputArgSeq tableArgument maybePGSessionArg $
             rfiDescription rawFunctionInfo
 
-      pure $ ComputedFieldInfo () computedField computedFieldFunction returnType comment
+      pure $ ComputedFieldInfo @('Postgres pgKind) () computedField computedFieldFunction returnType comment
 
-    validateTableArgumentType :: (MV.MonadValidate [ComputedFieldValidateError] m)
-                              => FunctionTableArgument
-                              -> QualifiedPGType
-                              -> m ()
+    validateTableArgumentType
+      :: (MV.MonadValidate [ComputedFieldValidateError] n)
+      => FunctionTableArgument
+      -> QualifiedPGType
+      -> n ()
     validateTableArgumentType tableArg qpt = do
       when (_qptType qpt /= PGKindComposite) $
         MV.dispute $ pure $ CFVEInvalidTableArgument $ ITANotComposite tableArg
@@ -177,10 +183,11 @@ buildComputedFieldInfo trackedTables table computedField definition rawFunctionI
       unless (table == typeTable) $
         MV.dispute $ pure $ CFVEInvalidTableArgument $ ITANotTable typeTable tableArg
 
-    validateSessionArgumentType :: (MV.MonadValidate [ComputedFieldValidateError] m)
-                                => FunctionSessionArgument
-                                -> QualifiedPGType
-                                -> m ()
+    validateSessionArgumentType
+      :: (MV.MonadValidate [ComputedFieldValidateError] n)
+      => FunctionSessionArgument
+      -> QualifiedPGType
+      -> n ()
     validateSessionArgumentType sessionArg qpt = do
       unless (isJSONType $ _qptName qpt) $
         MV.dispute $ pure $ CFVEInvalidSessionArgument $ ISANotJSON sessionArg
@@ -193,8 +200,8 @@ buildComputedFieldInfo trackedTables table computedField definition rawFunctionI
         reasonMessage = makeReasonMessage allErrors (showError function)
 
     dropTableAndSessionArgument :: FunctionTableArgument
-                                -> Maybe FunctionSessionArgument -> [FunctionArg 'Postgres]
-                                -> [FunctionArg 'Postgres]
+                                -> Maybe FunctionSessionArgument -> [FunctionArg ('Postgres pgKind)]
+                                -> [FunctionArg ('Postgres pgKind)]
     dropTableAndSessionArgument tableArg sessionArg inputArgs =
       let withoutTable = case tableArg of
             FTAFirst  -> tail inputArgs
@@ -207,11 +214,12 @@ buildComputedFieldInfo trackedTables table computedField definition rawFunctionI
       in alsoWithoutSession
 
 buildRemoteFieldInfo
-  :: QErrM m
-  => RemoteRelationship 'Postgres
-  -> [ColumnInfo 'Postgres]
+  :: forall m pgKind
+   . (Backend ('Postgres pgKind), QErrM m)
+  => RemoteRelationship ('Postgres pgKind)
+  -> [ColumnInfo ('Postgres pgKind)]
   -> RemoteSchemaMap
-  -> m (RemoteFieldInfo 'Postgres, [SchemaDependency])
+  -> m (RemoteFieldInfo ('Postgres pgKind), [SchemaDependency])
 buildRemoteFieldInfo remoteRelationship
                           pgColumns
                           remoteSchemaMap = do
@@ -228,15 +236,15 @@ buildRemoteFieldInfo remoteRelationship
         let tableDep = SchemaDependency
                          (SOSourceObj source
                             $ AB.mkAnyBackend
-                            $ SOITable table)
+                            $ SOITable @('Postgres pgKind) table)
                          DRTable
             columnsDep =
               map
                 (flip SchemaDependency DRRemoteRelationship
                    . SOSourceObj source
                    . AB.mkAnyBackend
-                   . SOITableObj table
-                   . TOCol
+                   . SOITableObj @('Postgres pgKind)table
+                   . TOCol @('Postgres pgKind)
                    . pgiColumn)
                 $ S.toList $ _rfiHasuraFields remoteField
             remoteSchemaDep =

@@ -26,7 +26,11 @@ import {
   cascadeUpQueries,
   getDependencyError,
 } from './utils';
-import { mergeDataMssql, mergeLoadSchemaDataPostgres } from './mergeData';
+import {
+  mergeDataMssql,
+  mergeLoadSchemaDataPostgres,
+  mergeDataBigQuery,
+} from './mergeData';
 import _push from './push';
 import { convertArrayToJson } from './TableModify/utils';
 import { CLI_CONSOLE_MODE, SERVER_CONSOLE_MODE } from '../../../constants';
@@ -81,6 +85,8 @@ export const setAllRoles = roles => ({
 
 const SET_DB_CONNECTION_ENV_VAR = 'Data/SET_DB_CONNECTION_ENV_VAR';
 const RESET_DB_CONNECTION_ENV_VAR = 'Data/RESET_DB_CONNECTION_ENV_VAR';
+
+const SET_ALL_SOURCES_SCHEMAS = 'Data/SET_ALL_SOURCES_SCHEMAS';
 
 export const mergeRemoteRelationshipsWithSchema = (
   remoteRelationships,
@@ -146,7 +152,9 @@ const loadSchema = configOptions => {
         (!configOptions.tables || configOptions.tables.length === 0))
     ) {
       configOptions = {
-        schemas: [getState().tables.currentSchema],
+        schemas: [
+          getState().tables.currentSchema || getState().tables.schemaList[0],
+        ],
       };
     }
 
@@ -171,7 +179,6 @@ const loadSchema = configOptions => {
         );
       }
     }
-
     const body = {
       type: 'bulk',
       source,
@@ -224,6 +231,9 @@ const loadSchema = configOptions => {
               break;
             case 'mssql':
               mergedData = mergeDataMssql(data, metadataTables);
+              break;
+            case 'bigquery':
+              mergedData = mergeDataBigQuery(data, metadataTables);
               break;
             default:
           }
@@ -308,9 +318,14 @@ const setConsistentSchema = data => ({
 const fetchDataInit = (source, driver) => (dispatch, getState) => {
   const url = Endpoints.query;
 
-  const { schemaFilter } = getState().tables;
-  const currentSource = source || getState().tables.currentDataSource;
+  let { schemaFilter } = getState().tables;
 
+  if (driver === 'bigquery')
+    schemaFilter = getState().metadata.metadataObject.sources.find(
+      x => x.name === source
+    ).configuration.datasets;
+
+  const currentSource = source || getState().tables.currentDataSource;
   const query = getRunSqlQuery(
     dataSource.schemaListSql(schemaFilter),
     currentSource,
@@ -340,6 +355,15 @@ const fetchDataInit = (source, driver) => (dispatch, getState) => {
         type: FETCH_SCHEMA_LIST,
         schemaList,
       });
+      let newSchema = '';
+      if (schemaList.length) {
+        newSchema =
+          dataSource.defaultRedirectSchema &&
+          schemaList.includes(dataSource.defaultRedirectSchema)
+            ? dataSource.defaultRedirectSchema
+            : schemaList.sort(Intl.Collator().compare)[0];
+      }
+      dispatch({ type: UPDATE_CURRENT_SCHEMA, currentSchema: newSchema });
       return dispatch(updateSchemaInfo()); // TODO
     },
     error => {
@@ -530,27 +554,24 @@ export const getDatabaseSchemasInfo = (sourceType = 'postgres', sourceName) => (
   );
 };
 
-/**
- *
- * @param {'postgres' | 'mssql'} sourceType
- * @param {string} sourceName
- * @param {string[]} tables
- * @returns {{ [schema_name]: {[table_name]: string, [table_type]: string}}}
- */
-export const getDatabaseTableTypeInfo = (
-  sourceType = 'postgres',
-  sourceName,
-  tables
-) => (dispatch, getState) => {
-  if (!tables.length) {
+export const getDatabaseTableTypeInfoForAllSources = schemaRequests => (
+  dispatch,
+  getState
+) => {
+  if (!schemaRequests.length) {
     return new Promise(resolve => {
-      resolve({});
+      resolve([]);
     });
   }
-
   const url = Endpoints.query;
-  const sql = services[sourceType].getTableInfo(tables);
-  const query = getRunSqlQuery(sql, sourceName, false, false, sourceType);
+
+  const bulkQueries = [];
+  schemaRequests.forEach(({ sourceType = 'postgres', sourceName, tables }) => {
+    if (!tables.length) return;
+    const sql = services[sourceType].getTableInfo(tables);
+    bulkQueries.push(getRunSqlQuery(sql, sourceName, false, false, sourceType));
+  });
+  const query = { type: 'bulk', version: 1, args: bulkQueries };
   const options = {
     credentials: globalCookiePolicy,
     method: 'POST',
@@ -558,41 +579,71 @@ export const getDatabaseTableTypeInfo = (
     body: JSON.stringify(query),
   };
   return dispatch(requestAction(url, options)).then(
-    ({ result }) => {
-      if (!result.length > 1) {
-        return {};
-      }
-      const trackedTables = getTablesFromAllSources(getState()).filter(
-        ({ source }) => source === sourceName
-      );
-      const schemasInfo = {};
-
-      let res;
-      try {
-        if (currentDriver === 'mssql') {
-          res = JSON.parse(result.slice(1).join());
-        } else {
-          res = JSON.parse(result[1]);
+    results => {
+      const schemas = results.map(({ result }, index) => {
+        if (!result.length > 1) {
+          return {};
         }
-      } catch {
-        res = [];
-      }
+        const trackedTables = getTablesFromAllSources(getState()).filter(
+          ({ source }) => source === schemaRequests[index]?.sourceName
+        );
+        const schemasInfo = {};
 
-      res.forEach(i => {
-        if (
-          !trackedTables.some(
-            t =>
-              t.table.name === i.table_name && t.table.schema === i.table_schema
-          )
-        ) {
-          return;
+        let res;
+        try {
+          if (currentDriver === 'mssql') {
+            res = JSON.parse(result.slice(1).join(''));
+          } else if (currentDriver === 'bigquery') {
+            res = result.slice(1).map(t => ({
+              table_name: t[0],
+              table_schema: t[1],
+              table_type: t[2],
+            }));
+          } else {
+            res = JSON.parse(result[1]);
+          }
+        } catch {
+          res = [];
         }
-        schemasInfo[i.table_schema] = {
-          ...schemasInfo[i.table_schema],
-          [i.table_name]: { table_type: i.table_type },
+
+        res.forEach(i => {
+          if (
+            !trackedTables.some(
+              t =>
+                t.table.name === i.table_name &&
+                t.table.schema === i.table_schema
+            )
+          ) {
+            return;
+          }
+          schemasInfo[i.table_schema] = {
+            ...schemasInfo[i.table_schema],
+            [i.table_name]: { table_type: i.table_type },
+          };
+        });
+        return {
+          source: schemaRequests[index]?.sourceName,
+          schemaInfo: schemasInfo,
         };
       });
-      return schemasInfo;
+      let allSourceSchemas = {};
+      if (schemas?.length > 0) {
+        schemas.forEach(item => {
+          allSourceSchemas[item.source] = item.schemaInfo;
+        });
+        const {
+          tables: { allSourcesSchemas: existingSourcesSchemas = {} } = {},
+        } = getState();
+        allSourceSchemas = {
+          ...existingSourcesSchemas,
+          ...allSourceSchemas,
+        };
+        dispatch({
+          type: SET_ALL_SOURCES_SCHEMAS,
+          data: allSourceSchemas,
+        });
+      }
+      return allSourceSchemas;
     },
     error => {
       console.error('Failed to fetch schemas info ' + JSON.stringify(error));
@@ -625,6 +676,39 @@ const handleMigrationErrors = (title, errorMsg) => dispatch => {
   }
 };
 
+export const handleOutOfDateMetadata = dispatch => {
+  return dispatch(
+    showNotification(
+      {
+        title: 'Metadata is Out-of-Date',
+        level: 'error',
+        message: (
+          <p>
+            The operation failed as the metadata on the server is newer than
+            what is currently loaded on the console. The metadata has to be
+            re-fetched to continue editing it.
+            <br />
+            <br />
+            Do you want fetch the latest metadata?
+          </p>
+        ),
+        autoDismiss: 0,
+        action: {
+          label: (
+            <>
+              <i className="fa fa-refresh" aria-hidden="true" /> Fetch metadata
+            </>
+          ),
+          callback: () => {
+            dispatch(exportMetadata());
+          },
+        },
+      },
+      'error'
+    )
+  );
+};
+
 const makeMigrationCall = (
   dispatch,
   getState,
@@ -641,9 +725,11 @@ const makeMigrationCall = (
   isRetry = false
 ) => {
   const source = getState().tables.currentDataSource;
+  const { resourceVersion } = getState().metadata;
   const upQuery = {
     type: 'bulk',
     source,
+    resource_version: resourceVersion,
     args: upQueries,
   };
 
@@ -741,7 +827,12 @@ const makeMigrationCall = (
         return retryMigration(sqlDependencyError, errorMsg, true);
     }
 
-    dispatch(handleMigrationErrors(errorMsg, err));
+    if (err?.code === 'conflict') {
+      dispatch(handleOutOfDateMetadata);
+    } else {
+      dispatch(handleMigrationErrors(errorMsg, err));
+    }
+
     customOnError(err);
   };
 
@@ -976,6 +1067,11 @@ const dataReducer = (state = defaultState, action) => {
       return {
         ...state,
         dbConnection: action.data,
+      };
+    case SET_ALL_SOURCES_SCHEMAS:
+      return {
+        ...state,
+        allSourcesSchemas: action.data,
       };
     case RESET_DB_CONNECTION_ENV_VAR:
       return {

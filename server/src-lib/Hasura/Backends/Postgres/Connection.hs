@@ -30,6 +30,11 @@ module Hasura.Backends.Postgres.Connection
   , getDefaultPGPoolSettingIfNotExists
   , defaultPostgresPoolSettings
   , setPostgresPoolSettings
+  , pccConnectionInfo
+  , pccReadReplicas
+  , psciDatabaseUrl
+  , psciPoolSettings
+  , psciUsePreparedStatements
   , module ET
   ) where
 
@@ -38,6 +43,7 @@ import           Hasura.Prelude
 import qualified Database.PG.Query                      as Q
 import qualified Database.PG.Query.Connection           as Q
 
+import           Control.Lens                           (makeLenses)
 import           Control.Monad.Morph                    (hoist)
 import           Control.Monad.Trans.Control            (MonadBaseControl (..))
 import           Control.Monad.Unique
@@ -349,19 +355,23 @@ getDefaultPGPoolSettingIfNotExists connSettings defaultPgPoolSettings =
 
 data PostgresSourceConnInfo
   = PostgresSourceConnInfo
-  { _psciDatabaseUrl  :: !UrlConf
-  , _psciPoolSettings :: !(Maybe PostgresPoolSettings)
+  { _psciDatabaseUrl           :: !UrlConf
+  , _psciPoolSettings          :: !(Maybe PostgresPoolSettings)
+  , _psciUsePreparedStatements :: !Bool
   } deriving (Show, Eq, Generic)
 instance Cacheable PostgresSourceConnInfo
 instance Hashable PostgresSourceConnInfo
 instance NFData PostgresSourceConnInfo
 $(deriveToJSON hasuraJSON{omitNothingFields = True} ''PostgresSourceConnInfo)
+$(makeLenses ''PostgresSourceConnInfo)
+
 
 instance FromJSON PostgresSourceConnInfo where
   parseJSON = withObject "Object" $ \o ->
     PostgresSourceConnInfo
       <$> o .: "database_url"
       <*> o .:? "pool_settings"
+      <*> o .:? "use_prepared_statements" .!= False -- By default preparing statements is OFF for postgres source
 
 instance Arbitrary PostgresSourceConnInfo where
   arbitrary = genericArbitrary
@@ -378,6 +388,7 @@ instance Cacheable PostgresConnConfiguration
 instance Hashable PostgresConnConfiguration
 instance NFData PostgresConnConfiguration
 $(deriveJSON hasuraJSON{omitNothingFields = True} ''PostgresConnConfiguration)
+$(makeLenses ''PostgresConnConfiguration)
 
 instance Arbitrary PostgresConnConfiguration where
   arbitrary = genericArbitrary

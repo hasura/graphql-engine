@@ -133,15 +133,10 @@ startSchemaSyncListenerThread
   -> InstanceId
   -> Milliseconds
   -> STM.TMVar MetadataResourceVersion
-  -> Bool
-  -- ^ Disable schema listener
   -> ManagedT m (Immortal.Thread)
-startSchemaSyncListenerThread logger pool instanceId interval metaVersionRef isDisabled = do
+startSchemaSyncListenerThread logger pool instanceId interval metaVersionRef = do
   -- Start listener thread
-  -- TODO: Move isActive out of schemasync function and eliminate else case
-  listenerThread <- if not isDisabled
-                   then C.forkManagedT "SchemeUpdate.listener" logger $ listener logger pool metaVersionRef interval
-                   else C.forkManagedT "SchemaUpdate.listener" logger . liftIO $ forever $ C.sleep 10
+  listenerThread <- C.forkManagedT "SchemeUpdate.listener" logger $ listener logger pool metaVersionRef interval
   logThreadStarted logger instanceId TTListener listenerThread
   pure listenerThread
 

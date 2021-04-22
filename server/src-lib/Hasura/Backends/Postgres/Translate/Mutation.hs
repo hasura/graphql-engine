@@ -24,8 +24,12 @@ import           Hasura.SQL.Types
 -- The generated values expression should be in order of columns;
 -- `SELECT ("row"::table).* VALUES (1, 'Robert', 23) AS "row"`.
 mkSelectExpFromColumnValues
-  :: (MonadError QErr m)
-  => QualifiedTable -> [ColumnInfo 'Postgres] -> [ColumnValues 'Postgres TxtEncodedPGVal] -> m S.Select
+  :: forall pgKind m
+   . (MonadError QErr m)
+  => QualifiedTable
+  -> [ColumnInfo ('Postgres pgKind)]
+  -> [ColumnValues ('Postgres pgKind) TxtEncodedVal]
+  -> m S.Select
 mkSelectExpFromColumnValues qt allCols = \case
   []       -> return selNoRows
   colVals  -> do

@@ -8,15 +8,13 @@ import (
 
 // this can be overridden by ldflags
 var (
-	HasuraVersion  = "main-225403eda"
+	HasuraVersion  = "main-10df859cf"
 	DockerSwitchIP = func() string {
 		switch runtime.GOOS {
 		case "darwin", "windows":
 			return "host.docker.internal"
-		default:
-			return "172.17.0.1"
 		}
-		return ""
+		return "172.17.0.1"
 	}()
 	Hostname        = "localhost"
 	BaseURL         = fmt.Sprintf("http://%s", Hostname)

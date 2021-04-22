@@ -9,7 +9,7 @@ import { NotFoundError } from '../../../Error/PageNotFound';
 import RemoteRelationships from './RemoteRelationships/RemoteRelationships';
 import ToolTip from '../../../Common/Tooltip/Tooltip';
 import KnowMoreLink from '../../../Common/KnowMoreLink/KnowMoreLink';
-import { findAllFromRel } from '../../../../dataSources';
+import { findAllFromRel, isFeatureSupported } from '../../../../dataSources';
 import { getRemoteSchemasSelector } from '../../../../metadata/selector';
 import { RightContainer } from '../../../Common/Layout/RightContainer';
 
@@ -176,7 +176,8 @@ class RelationshipsView extends Component {
                 />
               </div>
             </div>
-            {remoteRelationshipsSection()}
+            {isFeatureSupported('tables.relationships.track') &&
+              remoteRelationshipsSection()}
           </div>
           <div className={`${styles.fixed} hidden`}>{alert}</div>
         </div>

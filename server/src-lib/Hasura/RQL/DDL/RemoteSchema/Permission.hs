@@ -40,17 +40,17 @@ module Hasura.RQL.DDL.RemoteSchema.Permission (
 import           Hasura.Prelude
 
 import           Control.Monad.Validate
-import qualified Data.HashMap.Strict                   as Map
-import qualified Data.HashSet                          as S
-import qualified Data.List.NonEmpty                    as NE
-import           Data.List.Extended                    (duplicates, getDifference)
-import qualified Data.Text                             as T
+import qualified Data.HashMap.Strict           as Map
+import qualified Data.HashSet                  as S
+import           Data.List.Extended            (duplicates, getDifference)
+import qualified Data.List.NonEmpty            as NE
+import qualified Data.Text                     as T
 import           Data.Text.Extended
-import qualified Language.GraphQL.Draft.Syntax         as G
+import qualified Language.GraphQL.Draft.Syntax as G
 
-import           Hasura.RQL.Types              hiding (GraphQLType, defaultScalars)
-import           Hasura.Server.Utils                  (englishList, isSessionVariable)
 import           Hasura.GraphQL.Schema.Remote
+import           Hasura.RQL.Types              hiding (GraphQLType, defaultScalars)
+import           Hasura.Server.Utils           (englishList, isSessionVariable)
 import           Hasura.Session
 
 data FieldDefinitionType
@@ -260,12 +260,12 @@ showRoleBasedSchemaValidationError :: RoleBasedSchemaValidationError -> Text
 showRoleBasedSchemaValidationError = \case
   NonMatchingType fldName fldType expectedType providedType ->
     "expected type of " <> dquote fldName <> "(" <> dquote fldType <> ")" <>" to be " <>
-    (G.showGT expectedType) <> " but recieved " <> (G.showGT providedType)
+    (G.showGT expectedType) <> " but received " <> (G.showGT providedType)
   TypeDoesNotExist graphQLType typeName ->
     graphQLType <<> ": " <> typeName <<> " does not exist in the upstream remote schema"
   NonMatchingDefaultValue inpObjName inpValName expectedVal providedVal ->
     "expected default value of input value: " <> inpValName <<> "of input object "
-    <> inpObjName <<> " to be " <> defaultValueToText expectedVal <> " but recieved "
+    <> inpObjName <<> " to be " <> defaultValueToText expectedVal <> " but received "
     <> defaultValueToText providedVal
   NonExistingInputArgument inpObjName inpArgName ->
     "input argument " <> inpArgName <<> " does not exist in the input object:" <>> inpObjName
@@ -378,13 +378,13 @@ lookupInputType (G.SchemaDocument types) name = go types
           case typeDef of
             G.TypeDefinitionScalar (G.ScalarTypeDefinition _ scalarName _) ->
               if | name == scalarName -> Just $ PresetScalar scalarName
-                 | otherwise -> go tps
+                 | otherwise          -> go tps
             G.TypeDefinitionEnum (G.EnumTypeDefinition _ enumName _ vals) ->
               if | name == enumName -> Just $ PresetEnum enumName $ map G._evdName vals
-                 | otherwise -> go tps
+                 | otherwise        -> go tps
             G.TypeDefinitionInputObject (G.InputObjectTypeDefinition _ inpObjName _ vals) ->
               if | name == inpObjName -> Just $ PresetInputObject vals
-                 | otherwise -> go tps
+                 | otherwise          -> go tps
             _ -> go tps
     go [] = Nothing
 
@@ -430,7 +430,7 @@ parsePresetValue gType varName isStatic value = do
           case value of
             enumVal@(G.VEnum e) ->
               case e `elem` enumVals of
-                True -> pure $ G.literal enumVal
+                True  -> pure $ G.literal enumVal
                 False -> refute $ pure $ EnumValueNotFound typeName $ G.unEnumValue e
             G.VString t ->
               case isSessionVariable t of
@@ -460,7 +460,7 @@ parsePresetValue gType varName isStatic value = do
         -- a type `[Int]` or `[[Int]]`
         s'@(G.VString s) ->
           case isSessionVariable s of
-            True -> refute $ pure $ DisallowSessionVarForListType varName
+            True  -> refute $ pure $ DisallowSessionVarForListType varName
             False -> parsePresetValue gType' varName isStatic s'
         v -> parsePresetValue gType' varName isStatic v
 
@@ -481,9 +481,9 @@ parsePresetDirective gType parentArgName (G.Directive name args) = do
            refute $ pure $ InvalidPresetArgument parentArgName
          isStatic <-
            case (Map.lookup $$(G.litName "static") args) of
-             Nothing -> pure False
+             Nothing               -> pure False
              (Just (G.VBoolean b)) -> pure b
-             _ -> refute $ pure $ InvalidStaticValue
+             _                     -> refute $ pure $ InvalidStaticValue
          parsePresetValue gType parentArgName isStatic val
 
 -- | validateDirective checks if the arguments of a given directive

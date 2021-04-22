@@ -88,6 +88,7 @@ module Hasura.Eventing.ScheduledTrigger
   , deleteScheduledEventTx
   , getInvocationsTx
   , getInvocationsQuery
+  , getInvocationsQueryNoPagination
 
   -- * Export utility functions which are useful to build
   -- SQLs for fetching data from metadata storage
@@ -833,9 +834,9 @@ data EventTables
   , etCronEventsTable        :: QualifiedTable
   }
 
-getInvocationsQuery :: EventTables -> GetInvocationsBy -> ScheduledEventPagination -> S.Select
-getInvocationsQuery (EventTables oneOffInvocationsTable cronInvocationsTable cronEventsTable') invocationsBy pagination =
-  mkPaginationSelectExp allRowsSelect pagination
+getInvocationsQueryNoPagination :: EventTables -> GetInvocationsBy -> S.Select
+getInvocationsQueryNoPagination (EventTables oneOffInvocationsTable cronInvocationsTable cronEventsTable') invocationsBy =
+    allRowsSelect
   where
     createdAtOrderBy table =
       let createdAtCol = S.SEQIdentifier $ S.mkQIdentifierTable table $ Identifier "created_at"
@@ -880,3 +881,7 @@ getInvocationsQuery (EventTables oneOffInvocationsTable cronInvocationsTable cro
              , S.selWhere = Just $ S.WhereFrag triggerBoolExp
              , S.selOrderBy = Just $ createdAtOrderBy invocationTable
              }
+
+getInvocationsQuery :: EventTables -> GetInvocationsBy -> ScheduledEventPagination -> S.Select
+getInvocationsQuery ets invocationsBy pagination =
+  mkPaginationSelectExp (getInvocationsQueryNoPagination ets invocationsBy) pagination

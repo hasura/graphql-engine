@@ -30,7 +30,7 @@ type SourceWithNormalFields struct {
 type Source struct {
 	SourceWithNormalFields `yaml:",inline"`
 	Tables                 interface{} `yaml:"tables"`
-	Functions              interface{} `yaml:"functions"`
+	Functions              interface{} `yaml:"functions,omitempty"`
 }
 
 type SourceConfig struct {
@@ -177,8 +177,12 @@ func (t *SourceConfig) Export(metadata goyaml.MapSlice) (map[string][]byte, erro
 		// populate !include syntax
 		var tablesKey []struct {
 			Table struct {
-				Name   string `yaml:"name"`
-				Schema string `yaml:"schema"`
+				Name string `yaml:"name"`
+				// Depending on the datasource the namespacing parameter can change.
+				// for example in pg and mssql the namespacing is done with the concept of schemas
+				// and in cases like bigquery it'll be called "dataset"
+				Schema  *string `yaml:"schema"`
+				Dataset *string `yaml:"dataset"`
 			} `yaml:"table"`
 		}
 		path := fmt.Sprintf("$.sources[%d].tables", idx)
@@ -195,7 +199,18 @@ func (t *SourceConfig) Export(metadata goyaml.MapSlice) (map[string][]byte, erro
 			t.logger.Debug("reading tables node from metadata", err)
 		}
 		for idx, table := range tablesKey {
-			tableFileName := fmt.Sprintf("%s_%s.yaml", table.Table.Schema, table.Table.Name)
+			var tableNamespaceIdentifier string
+			// according to what namespacing parameter is set w.r.t to the source
+			// return the name of the namespacing identifier
+			// for pg and mssql it'll be schema name
+			// for big query this will be dataset name
+			if table.Table.Schema != nil {
+				tableNamespaceIdentifier = *table.Table.Schema
+			} else if table.Table.Dataset != nil {
+				tableNamespaceIdentifier = *table.Table.Dataset
+			}
+
+			tableFileName := fmt.Sprintf("%s_%s.yaml", tableNamespaceIdentifier, table.Table.Name)
 			tableIncludeTag := fmt.Sprintf(fmt.Sprintf("%s %s", "!include", tableFileName))
 			tableTags = append(tableTags, tableIncludeTag)
 
@@ -207,6 +222,13 @@ func (t *SourceConfig) Export(metadata goyaml.MapSlice) (map[string][]byte, erro
 			tableFilePath := filepath.Join(t.MetadataDir, sourcesDirectory, source.Name, tablesDirectory, tableFileName)
 			files[tableFilePath] = b
 		}
+		tableTagsFilePath := filepath.Join(t.MetadataDir, sourcesDirectory, source.Name, tablesDirectory, "tables.yaml")
+		tableTagsBytes, err := yaml.Marshal(tableTags)
+		if err != nil {
+			return nil, fmt.Errorf("building contents for %v: %w", tableTagsFilePath, err)
+		}
+		files[tableTagsFilePath] = tableTagsBytes
+		source.Tables = fmt.Sprintf("!include %s", filepath.Join(source.Name, tablesDirectory, "tables.yaml"))
 
 		var functions []struct {
 			Function struct {
@@ -238,22 +260,15 @@ func (t *SourceConfig) Export(metadata goyaml.MapSlice) (map[string][]byte, erro
 			functionFilePath := filepath.Join(t.MetadataDir, sourcesDirectory, source.Name, functionsDirectory, functionFileName)
 			files[functionFilePath] = b
 		}
-		tableTagsFilePath := filepath.Join(t.MetadataDir, sourcesDirectory, source.Name, tablesDirectory, "tables.yaml")
-		tableTagsBytes, err := yaml.Marshal(tableTags)
-		if err != nil {
-			return nil, fmt.Errorf("building contents for %v: %w", tableTagsFilePath, err)
+		if len(functions) > 0 {
+			functionsTagsFilePath := filepath.Join(t.MetadataDir, sourcesDirectory, source.Name, functionsDirectory, "functions.yaml")
+			functionTagsBytes, err := yaml.Marshal(functionTags)
+			if err != nil {
+				return nil, fmt.Errorf("building contents for %v: %w", functionsTagsFilePath, err)
+			}
+			files[functionsTagsFilePath] = functionTagsBytes
+			source.Functions = fmt.Sprintf("!include %s", filepath.Join(source.Name, functionsDirectory, "functions.yaml"))
 		}
-		files[tableTagsFilePath] = tableTagsBytes
-
-		functionsTagsFilePath := filepath.Join(t.MetadataDir, sourcesDirectory, source.Name, functionsDirectory, "functions.yaml")
-		functionTagsBytes, err := yaml.Marshal(functionTags)
-		if err != nil {
-			return nil, fmt.Errorf("building contents for %v: %w", functionsTagsFilePath, err)
-		}
-		files[functionsTagsFilePath] = functionTagsBytes
-
-		source.Tables = fmt.Sprintf("!include %s", filepath.Join(source.Name, tablesDirectory, "tables.yaml"))
-		source.Functions = fmt.Sprintf("!include %s", filepath.Join(source.Name, functionsDirectory, "functions.yaml"))
 	}
 
 	sourcesYamlBytes, err := yaml.Marshal(sources)

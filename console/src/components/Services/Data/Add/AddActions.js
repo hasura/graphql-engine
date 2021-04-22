@@ -7,6 +7,7 @@ import { UPDATE_MIGRATION_STATUS_ERROR } from '../../../Main/Actions';
 import { setTable } from '../DataActions.js';
 import { getTableModifyRoute } from '../../../Common/utils/routesUtils';
 import { dataSource } from '../../../../dataSources';
+import { findTable, escapeTableColumns } from '../../../../dataSources/common';
 import { getRunSqlQuery } from '../../../Common/utils/v1QueryUtils';
 import {
   getTrackTableQuery,
@@ -149,9 +150,13 @@ const resetValidation = () => ({ type: RESET_VALIDATION_ERROR });
  */
 export const trackTable = payload => (dispatch, getState) => {
   dispatch({ type: MAKING_REQUEST });
-  const currentDataSource = getState().tables.currentDataSource;
-
-  const requestBodyUp = getTrackTableQuery(payload, currentDataSource);
+  const { currentDataSource, allSchemas } = getState().tables;
+  const table = findTable(allSchemas, payload);
+  const requestBodyUp = getTrackTableQuery({
+    tableDef: payload,
+    source: currentDataSource,
+    customColumnNames: escapeTableColumns(table),
+  });
   const requestBodyDown = getUntrackTableQuery(payload, currentDataSource);
 
   const migrationName = 'track_table_' + payload.schema + '_' + payload.name;

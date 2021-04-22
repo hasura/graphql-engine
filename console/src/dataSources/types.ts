@@ -1,6 +1,10 @@
 import { Nullable } from '../components/Common/utils/tsUtils';
 import { Column } from '../utils/postgresColumnTypes';
-import { FunctionDefinition, RemoteRelationshipDef } from '../metadata/types';
+import {
+  FunctionDefinition,
+  RemoteRelationshipDef,
+  TableEntry,
+} from '../metadata/types';
 import { ReduxState } from '../types';
 import {
   getSelectQuery,
@@ -105,7 +109,8 @@ export interface Table extends BaseTable {
     | 'FOREIGN TABLE'
     | 'PARTITIONED TABLE'
     | 'BASE TABLE'
-    | 'TABLE'; // specific to SQL Server
+    | 'TABLE' // specific to SQL Server
+    | 'EXTERNAL'; // specific to Big Query
   primary_key: {
     table_name: string;
     table_schema: string;
@@ -191,6 +196,14 @@ export type SupportedFeaturesType = {
   driver: {
     name: string;
   };
+  schemas: {
+    create: {
+      enabled: boolean;
+    };
+    delete: {
+      enabled: boolean;
+    };
+  };
   tables: {
     create: {
       enabled: boolean;
@@ -209,8 +222,21 @@ export type SupportedFeaturesType = {
     relationships: {
       enabled: boolean;
       remoteRelationships?: boolean;
+      track: boolean;
     };
     permissions: {
+      enabled: boolean;
+    };
+    track: {
+      enabled: boolean;
+    };
+  };
+  functions: {
+    enabled: boolean;
+    track: {
+      enabled: boolean;
+    };
+    nonTrackableFunctions: {
       enabled: boolean;
     };
   };
@@ -224,16 +250,27 @@ export type SupportedFeaturesType = {
     enabled: boolean;
     relationships: boolean;
   };
+  rawSQL: {
+    enabled: boolean;
+    tracking: boolean;
+  };
+  connectDbForm: {
+    connectionParameters: boolean;
+    databaseURL: boolean;
+    environmentVariable: boolean;
+    read_replicas: boolean;
+  };
 };
 
 type Tables = ReduxState['tables'];
 
 export type generateTableRowRequestType = {
   endpoint: string;
-  getTableRowRequestBody: (
-    tables: Tables,
-    isExport: false
-  ) =>
+  getTableRowRequestBody: (data: {
+    tables: Tables;
+    isExport?: boolean;
+    tableConfiguration?: TableEntry['configuration'];
+  }) =>
     | {
         type: string;
         source: string;
@@ -247,5 +284,12 @@ export type generateTableRowRequestType = {
         variables: null;
         operationName: string;
       };
-  processTableRowData: <T>(data: T) => { rows: T[]; estimatedCount: number };
+  processTableRowData: <T>(
+    data: T,
+    config?: {
+      originalTable: string;
+      currentSchema: string;
+      tableConfiguration?: TableEntry['configuration'];
+    }
+  ) => { rows: T[]; estimatedCount: number };
 };

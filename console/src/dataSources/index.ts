@@ -20,8 +20,9 @@ import { QualifiedTable } from '../metadata/types';
 
 import { supportedFeatures as PGSupportedFeatures } from './services/postgresql';
 import { supportedFeatures as MssqlSupportedFeatures } from './services/mssql';
+import { supportedFeatures as BigQuerySupportedFeatures } from './services/bigquery';
 
-export const drivers = ['postgres', 'mysql', 'mssql'] as const;
+export const drivers = ['postgres', 'mysql', 'mssql', 'bigquery'] as const;
 export type Driver = typeof drivers[number];
 
 export type ColumnsInfoResult = {
@@ -304,7 +305,7 @@ export interface DataSourcesAPI {
     eventId: string
   ) => string;
   getDatabaseInfo: string;
-  getTableInfo?: (tables: string[]) => string;
+  getTableInfo?: (tables: QualifiedTable[]) => string;
   generateTableRowRequest?: () => generateTableRowRequestType;
   getDatabaseVersionSql?: string;
   permissionColumnDataTypes: Partial<PermissionColumnCategories> | null;
@@ -313,6 +314,7 @@ export interface DataSourcesAPI {
   supportedColumnOperators: string[] | null;
   aggregationPermissionsAllowed: boolean;
   supportedFeatures?: SupportedFeaturesType;
+  defaultRedirectSchema?: string;
 }
 
 export let currentDriver: Driver = 'postgres';
@@ -330,7 +332,11 @@ export const getSupportedDrivers = (
     return get(supportedFeatures, feature) || false;
   };
 
-  return [PGSupportedFeatures, MssqlSupportedFeatures]
+  return [
+    PGSupportedFeatures,
+    MssqlSupportedFeatures,
+    BigQuerySupportedFeatures,
+  ]
     .filter(d => isEnabled(d))
     .map(d => d.driver.name) as Driver[];
 };

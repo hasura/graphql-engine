@@ -16,7 +16,7 @@ export const generateTableDef = (
   tableName: string,
   tableSchema: Nullable<string> = 'public',
   tableNameWithSchema: Nullable<string> = null
-) => {
+): QualifiedTable => {
   if (tableNameWithSchema) {
     return {
       schema: tableNameWithSchema.split('.')[0],
@@ -33,8 +33,19 @@ export const getTableDef = (table: Table) => {
   return generateTableDef(table.table_name, table.table_schema);
 };
 
-export const getQualifiedTableDef = (tableDef: QualifiedTable | string) => {
-  return typeof tableDef === 'string' ? generateTableDef(tableDef) : tableDef;
+export const getQualifiedTableDef = (
+  tableDef: QualifiedTable | string,
+  driver?: string
+) => {
+  if (typeof tableDef === 'string') return generateTableDef(tableDef);
+
+  if (driver === 'bigquery')
+    return {
+      name: tableDef.name,
+      dataset: tableDef.schema,
+    };
+
+  return tableDef;
 };
 
 export const getTableNameWithSchema = (
@@ -70,6 +81,17 @@ export const getTableColumnNames = (table: Table) => {
   return table.columns.map(c => c.column_name);
 };
 
+export function escapeTableColumns(table: Table) {
+  if (!table) return {};
+  const pattern = /\W+/g;
+  return getTableColumnNames(table)
+    .filter(col => pattern.test(col))
+    .reduce((acc: Record<string, string>, col) => {
+      acc[col] = col.replace(pattern, '_');
+      return acc;
+    }, {});
+}
+
 export const getTableColumn = (table: Table, columnName: string) => {
   return (table.columns || []).find(
     column => column.column_name === columnName
@@ -89,7 +111,7 @@ export function getTableRelationship(table: Table, relationshipName: string) {
 export function getRelationshipRefTable(
   table: Table,
   relationship: Relationship
-) {
+): QualifiedTable | null {
   let refTable = null;
 
   const relationshipDef = relationship.rel_def;
@@ -130,6 +152,22 @@ export function getRelationshipRefTable(
   }
 
   return refTable;
+}
+
+export function getTableFromRelationshipChain(
+  allTables: Table[],
+  startTable: Table,
+  chains: string
+): Table {
+  const rels = chains
+    .split(/\./g)
+    .filter(it => !it.startsWith('_') && Number.isNaN(parseInt(it, 10)))
+    .slice(0, -1);
+  return rels.reduce((acc, name) => {
+    const rship = getTableRelationship(acc, name)!;
+    const rShipDef = getRelationshipRefTable(acc, rship)!;
+    return findTable(allTables, rShipDef)!;
+  }, startTable);
 }
 
 export const getEnumColumnMappings = (

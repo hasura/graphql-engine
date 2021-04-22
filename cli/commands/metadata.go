@@ -1,6 +1,8 @@
 package commands
 
 import (
+	"fmt"
+
 	"github.com/hasura/graphql-engine/cli"
 	"github.com/hasura/graphql-engine/cli/internal/metadataobject"
 	"github.com/hasura/graphql-engine/cli/internal/scripts"
@@ -60,7 +62,6 @@ func NewMetadataCmd(ec *cli.ExecutionContext) *cobra.Command {
 }
 
 func executeMetadata(cmd string, ec *cli.ExecutionContext) error {
-	metadataobject.SetMetadataObjectsWithDir(ec, ec.MetadataDir)
 	var files map[string][]byte
 	var err error
 	metadataHandler := metadataobject.NewHandlerFromEC(ec)
@@ -92,8 +93,9 @@ func executeMetadata(cmd string, ec *cli.ExecutionContext) error {
 			}
 			return nil
 		}
-
-		metadataHandler.V2ApplyMetadata()
+		if err := metadataHandler.V2ApplyMetadata(); err != nil {
+			return fmt.Errorf("\n%w", err)
+		}
 	}
 	return nil
 }

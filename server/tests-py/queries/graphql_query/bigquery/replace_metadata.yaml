@@ -1,0 +1,78 @@
+description: Replace schema cache (metadata)
+url: /v1/metadata
+status: 200
+response:
+  message: success
+query:
+  type: replace_metadata
+  args:
+    version: 3
+    sources:
+    - name: hasura
+      kind: bigquery
+      configuration:
+        service_account: {from_env: HASURA_BIGQUERY_SERVICE_ACCOUNT}
+        project_id: {from_env: HASURA_BIGQUERY_PROJECT_ID}
+        datasets: {from_env: HASURA_BIGQUERY_DATASETS}
+      tables:
+      - table:
+          dataset: hasura
+          name: author
+        # is_enum: false
+        array_relationships:
+        - using:
+            manual_configuration:
+              remote_table:
+                name: article
+                dataset: hasura
+              column_mapping:
+                id: author_id
+          name: articles
+      - table:
+          dataset: hasura
+          name: article
+        # is_enum: false
+        object_relationships:
+        - using:
+            manual_configuration:
+              remote_table:
+                name: author
+                dataset: hasura
+              column_mapping:
+                author_id: id
+          name: author
+        select_permissions:
+        - role: published_only
+          permission:
+            columns: [is_published, id, title]
+            filter:
+              is_published: true
+        - role: exact_article_id
+          permission:
+            columns: [id, title, content]
+            filter:
+              id:
+                '_eq': 2
+        - role: empty_perms
+          permission:
+            columns: []
+            filter: {}
+        - role: user
+          permission:
+            columns: [id, title, content, author_id, is_published, published_on, created_at]
+            filter: {}
+        - role: test_timestamp_perm
+          permission:
+            columns: [id, title, content]
+            filter:
+              created_at:
+                '_eq': '2008-12-25T07:30:02'
+      - table:
+          dataset: hasura
+          name: all_types
+        # is_enum: false
+
+
+inherited_roles:
+ - role_name: user_anonymous_test_inherited_role
+   role_set: ["user", "anonymous", "test", "anonymous2"]

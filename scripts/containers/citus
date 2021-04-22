@@ -1,0 +1,50 @@
+### This file is not meant to be run directly, but to be sourced from
+### the dev script. It defines all the functions required to run a
+### citus docker container.
+
+
+######################
+#    Configuration   #
+######################
+
+if [ "$MODE" = "test" ]; then
+  CITUS_PORT=55432
+else
+  CITUS_PORT=65432
+fi
+
+CITUS_PASSWORD=hasuraCITUS2
+CITUS_CONTAINER_NAME="hasura-dev-citus-single-$CITUS_PORT"
+CITUS_DB_URL="postgres://postgres:$CITUS_PASSWORD@127.0.0.1:5432/postgres"
+CITUS_DOCKER="docker exec -u postgres -it $CITUS_CONTAINER_NAME psql $CITUS_DB_URL"
+
+
+######################
+#     Functions      #
+######################
+
+function citus_launch_container(){
+  echo_pretty "Launching Citus container: $CITUS_CONTAINER_NAME"
+  docker run \
+    --name "$CITUS_CONTAINER_NAME" \
+    -p 127.0.0.1:"$CITUS_PORT":5432 \
+    --expose="$CITUS_PORT" \
+    -e POSTGRES_PASSWORD="$CITUS_PASSWORD" \
+    -d citusdata/citus
+}
+
+function citus_wait {
+  echo -n "Waiting for citus to come up"
+  until ( $CITUS_DOCKER -c "SELECT * FROM citus_version();" ) &>/dev/null; do
+    echo -n '.' && sleep 0.2
+  done
+  echo " Ok"
+}
+
+function citus_cleanup(){
+  echo_pretty "Removing $CITUS_CONTAINER_NAME and its volumes in 5 seconds!"
+  echo_pretty "  PRESS CTRL-C TO ABORT removal of all containers, or ENTER to clean up right away"
+  read -t5 || true
+  docker stop "$CITUS_CONTAINER_NAME"
+  docker rm -v "$CITUS_CONTAINER_NAME"
+}

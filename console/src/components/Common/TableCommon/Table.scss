@@ -174,6 +174,12 @@ a.expanded {
 
 .dataBreadCrumb {
   padding-bottom: 10px;
+  font-size: 12px;
+  color: #6b7280;
+}
+
+.dataBreadCrumb a {
+  color: #6b7280 !important;
 }
 
 .tableCellCenterAlignedOverflow {

@@ -1210,7 +1210,7 @@ FROM (
 		table_schema) AS info;
 `;
 
-export const getTableInfo = (tables: string[]) => `
+export const getTableInfo = (tables: QualifiedTable[]) => `
 SELECT
 	COALESCE(json_agg(row_to_json(info)), '[]'::JSON)
 FROM (
@@ -1226,7 +1226,7 @@ FROM (
         join pg_catalog.pg_namespace n
         on n.oid = pgclass.relnamespace
         where
-        pgclass.relname in (${tables.join(',')})
+        pgclass.relname in (${tables.map(t => `'${t.name}'`).join(',')})
 ) AS info;
 `;
 

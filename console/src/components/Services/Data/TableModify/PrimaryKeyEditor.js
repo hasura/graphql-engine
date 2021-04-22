@@ -36,7 +36,6 @@ const PrimaryKeyEditor = ({
     return orderedCols.find(c => c.name === pk).index;
   });
 
-  // get PK constraint name
   const pkConstraintName = tableSchema.primary_key
     ? tableSchema.primary_key.constraint_name
     : '';

@@ -94,7 +94,7 @@ askPermInfo pa tableInfo = do
   where
     pt = permTypeToCode $ permAccToType pa
 
-isTabUpdatable :: RoleName -> TableInfo 'Postgres -> Bool
+isTabUpdatable :: RoleName -> TableInfo ('Postgres pgKind) -> Bool
 isTabUpdatable role ti
   | role == adminRoleName = True
   | otherwise = isJust $ M.lookup role rpim >>= _permUpd
@@ -124,13 +124,18 @@ askDelPermInfo = askPermInfo PADelete
 verifyAsrns :: (MonadError QErr m) => [a -> m ()] -> [a] -> m ()
 verifyAsrns preds xs = indexedForM_ xs $ \a -> mapM_ ($ a) preds
 
-checkSelOnCol :: forall m b. (UserInfoM m, QErrM m, Backend b)
-              => SelPermInfo b -> Column b -> m ()
+checkSelOnCol
+  :: forall b m
+   . (UserInfoM m, QErrM m, Backend b)
+  => SelPermInfo b
+  -> Column b
+  -> m ()
 checkSelOnCol selPermInfo =
-  checkPermOnCol PTSelect (HS.fromList $ M.keys $ spiCols selPermInfo)
+  checkPermOnCol @b PTSelect (HS.fromList $ M.keys $ spiCols @b selPermInfo)
 
 checkPermOnCol
-  :: (UserInfoM m, QErrM m, Backend b)
+  :: forall b m
+   . (UserInfoM m, QErrM m, Backend b)
   => PermType
   -> HS.HashSet (Column b)
   -> Column b
@@ -149,9 +154,10 @@ checkPermOnCol pt allowedCols col = do
         ]
 
 valueParserWithCollectableType
-  :: (MonadError QErr m)
-  => (ColumnType 'Postgres -> Value -> m S.SQLExp)
-  -> CollectableType (ColumnType 'Postgres)
+  :: forall pgKind m
+   . (Backend ('Postgres pgKind), MonadError QErr m)
+  => (ColumnType ('Postgres pgKind) -> Value -> m S.SQLExp)
+  -> CollectableType (ColumnType ('Postgres pgKind))
   -> Value
   -> m S.SQLExp
 valueParserWithCollectableType valBldr pgType val = case pgType of
@@ -164,8 +170,12 @@ valueParserWithCollectableType valBldr pgType val = case pgType of
       (S.SEArray $ map (toTxtValue . ColumnValue ofTy) scalarValues)
       (S.mkTypeAnn $ CollectableTypeArray (unsafePGColumnToBackend ofTy))
 
-binRHSBuilder :: (QErrM m)
-  => ColumnType 'Postgres -> Value -> DMLP1T m S.SQLExp
+binRHSBuilder
+  :: forall pgKind m
+   . (Backend ('Postgres pgKind), QErrM m)
+  => ColumnType ('Postgres pgKind)
+  -> Value
+  -> DMLP1T m S.SQLExp
 binRHSBuilder colType val = do
   preparedArgs <- get
   scalarValue <- parseScalarValueColumnType colType val
@@ -253,13 +263,31 @@ sessVarFromCurrentSetting pgType sessVar =
 
 sessVarFromCurrentSetting' :: CollectableType PGScalarType -> SessionVariable -> S.SQLExp
 sessVarFromCurrentSetting' ty sessVar =
-  flip S.SETyAnn (S.mkTypeAnn ty) $
+  withTypeAnn ty $ fromCurrentSession currentSession sessVar
+
+withTypeAnn :: CollectableType PGScalarType -> S.SQLExp -> S.SQLExp
+withTypeAnn ty sessVarVal = flip S.SETyAnn (S.mkTypeAnn ty) $
   case ty of
     CollectableTypeScalar baseTy -> withConstructorFn baseTy sessVarVal
     CollectableTypeArray _       -> sessVarVal
-  where
-    sessVarVal = S.SEOpApp (S.SQLOp "->>")
-                 [currentSession, S.SELit $ sessionVariableToText sessVar]
+
+retrieveAndFlagSessionVariableValue
+  :: (MonadState s m)
+  => (SessionVariable -> s -> s)
+  -> SessionVariable
+  -> S.SQLExp
+  -> m S.SQLExp
+retrieveAndFlagSessionVariableValue updateState sessVar currentSessionExp = do
+  modify $ updateState sessVar
+  pure $ fromCurrentSession currentSessionExp sessVar
+
+fromCurrentSession
+  :: S.SQLExp
+  -> SessionVariable
+  -> S.SQLExp
+fromCurrentSession currentSessionExp sessVar =
+  S.SEOpApp (S.SQLOp "->>")
+    [currentSessionExp, S.SELit $ sessionVariableToText sessVar]
 
 currentSession :: S.SQLExp
 currentSession = S.SEUnsafe "current_setting('hasura.user')::json"
@@ -279,10 +307,11 @@ convBoolExp
   -> SelPermInfo b
   -> BoolExp b
   -> SessVarBldr b m
+  -> TableName b
   -> ValueParser b m (SQLExpression b)
   -> m (AnnBoolExpSQL b)
-convBoolExp cim spi be sessVarBldr rhsParser = do
-  abe <- annBoolExp rhsParser cim $ unBoolExp be
+convBoolExp cim spi be sessVarBldr rootTable rhsParser = do
+  abe <- annBoolExp rhsParser rootTable cim $ unBoolExp be
   checkSelPerm spi sessVarBldr abe
 
 dmlTxErrorHandler :: Q.PGTxErr -> QErr
@@ -294,7 +323,7 @@ dmlTxErrorHandler = mkTxErrorHandler $ \case
     , PGInvalidColumnReference ]
   _ -> False
 
-toJSONableExp :: Bool -> ColumnType 'Postgres -> Bool -> S.SQLExp -> S.SQLExp
+toJSONableExp :: Bool -> ColumnType ('Postgres pgKind) -> Bool -> S.SQLExp -> S.SQLExp
 toJSONableExp strfyNum colTy asText expn
   | asText || (isScalarColumnWhere isBigNum colTy && strfyNum) =
     expn `S.SETyAnn` S.textTypeAnn

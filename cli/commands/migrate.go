@@ -118,6 +118,10 @@ func validateConfigV3Flags(cmd *cobra.Command, ec *cli.ExecutionContext) error {
 				return fmt.Errorf("error determining database kind for %s, check if database exists on hasura", ec.Source.Name)
 			}
 			ec.Source.Kind = *sourceKind
+
+			if !migrate.IsMigrationsSupported(*sourceKind) {
+				return fmt.Errorf("migrations on source %s of kind %s is not supported", ec.Source.Name, *sourceKind)
+			}
 		}
 	} else {
 		// for project using config older than v3, use PG source kind

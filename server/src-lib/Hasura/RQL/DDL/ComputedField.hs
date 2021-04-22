@@ -50,12 +50,16 @@ instance (Backend b) => FromJSON (AddComputedField b) where
       <*> o .: "definition"
       <*> o .:? "comment"
 
-runAddComputedField :: (MonadError QErr m, CacheRWM m, MetadataM m) => AddComputedField 'Postgres -> m EncJSON
+runAddComputedField
+  :: forall b m
+   . (BackendMetadata b, MonadError QErr m, CacheRWM m, MetadataM m)
+  => AddComputedField b
+  -> m EncJSON
 runAddComputedField q = do
-  withPathK "table" $ askTabInfo source table
+  withPathK "table" $ askTabInfo @b source table
   let metadataObj = MOSourceObjId source
                       $ AB.mkAnyBackend
-                      $ SMOTableObj table
+                      $ SMOTableObj @b table
                       $ MTOComputedField computedFieldName
       metadata = ComputedFieldMetadata computedFieldName (_afcDefinition q) (_afcComment q)
   buildSchemaCacheFor metadataObj
@@ -94,7 +98,7 @@ runDropComputedField
   => DropComputedField b -> m EncJSON
 runDropComputedField (DropComputedField source table computedField cascade) = do
   -- Validation
-  fields <- withPathK "table" $ _tciFieldInfoMap <$> askTableCoreInfo source table
+  fields <- withPathK "table" $ _tciFieldInfoMap <$> askTableCoreInfo @b source table
   void $ withPathK "name" $ askComputedFieldInfo fields computedField
 
   -- Dependencies check
@@ -102,14 +106,14 @@ runDropComputedField (DropComputedField source table computedField cascade) = do
   let deps = getDependentObjs sc
                $ SOSourceObj source
                $ AB.mkAnyBackend
-               $ SOITableObj table
+               $ SOITableObj @b table
                $ TOComputedField computedField
   when (not cascade && not (null deps)) $ reportDeps deps
 
   withNewInconsistentObjsCheck do
     metadataModifiers <- mapM purgeComputedFieldDependency deps
     buildSchemaCache $ MetadataModifier $
-      tableMetadataSetter source table
+      tableMetadataSetter @b source table
       %~ dropComputedFieldInMetadata computedField . foldl' (.) id metadataModifiers
   pure successMsg
   where

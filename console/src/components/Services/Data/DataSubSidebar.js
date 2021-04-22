@@ -3,10 +3,10 @@ import { connect } from 'react-redux';
 import { Link } from 'react-router';
 import { manageDatabasesRoute } from '../../Common/utils/routesUtils';
 import TreeView from './TreeView';
-import { getDatabaseTableTypeInfo } from './DataActions';
+import { getDatabaseTableTypeInfoForAllSources } from './DataActions';
+import { isInconsistentSource, getSourceDriver } from './utils';
+import { canReUseTableTypes } from './DataSources/utils';
 import { useDataSource } from '../../../dataSources';
-import { isInconsistentSource } from './utils';
-import { getSourceDriver } from './utils';
 import { getDataSources } from '../../../metadata/selector';
 import {
   updateCurrentSchema,
@@ -16,7 +16,7 @@ import {
 import _push from './push';
 import Button from '../../Common/Button/Button';
 import styles from '../../Common/Layout/LeftSubSidebar/LeftSubSidebar.scss';
-import { Spinner } from '../../UIKit/atoms';
+import Spinner from '../../Common/Spinner/Spinner';
 
 const DATA_SIDEBAR_SET_LOADING = 'dataSidebar/DATA_SIDEBAR_SET_LOADING';
 
@@ -64,6 +64,7 @@ const DataSubSidebar = props => {
     currentSchema,
     enums,
     inconsistentObjects,
+    allSourcesSchemas,
     pathname,
     dataSources,
     sidebarLoadingState,
@@ -86,9 +87,9 @@ const DataSubSidebar = props => {
       type: UPDATE_CURRENT_DATA_SOURCE,
       source: newSourceName,
     });
-    setDriver(driver);
     dispatch(_push(`/data/${newSourceName}/`));
-    dispatch(fetchDataInit()).finally(() => {
+    setDriver(driver);
+    dispatch(fetchDataInit(newSourceName, driver)).finally(() => {
       setDatabaseLoading(false);
     });
   };
@@ -156,14 +157,10 @@ const DataSubSidebar = props => {
         const tableItems = [];
         schemaGroups[schema].forEach(table => {
           const is_view =
-            schemaInfo &&
-            schemaInfo[source.name][schema] &&
-            schemaInfo[source.name][schema][table.name]
-              ? schemaInfo[source.name][schema][table.name].table_type ===
-                  'view' ||
-                schemaInfo[source.name][schema][table.name].table_type ===
-                  'materialized_view'
-              : false;
+            schemaInfo?.[source.name]?.[schema]?.[table.name]?.table_type ===
+              'view' ||
+            schemaInfo?.[source.name]?.[schema]?.[table.name]?.table_type ===
+              'materialized_view';
           let type = table.type;
           if (is_view) type = 'view';
           if (table.is_enum) type = 'enum';
@@ -196,46 +193,43 @@ const DataSubSidebar = props => {
 
   const [treeViewItems, setTreeViewItems] = useState([]);
 
-  const updateTreeViewItemsWithSchemaInfo = () => {
-    const schemaPromises = [];
+  useEffect(() => {
+    // skip api call, if the data is there in store
+    if (canReUseTableTypes(allSourcesSchemas, sources)) {
+      const newItems = getItems(allSourcesSchemas);
+      if (isFetching) setIsFetching(false);
+      if (preLoadState) setPreLoadState(false);
+      return setTreeViewItems(newItems);
+    }
+
+    const schemaRequests = [];
     sources.forEach(source => {
       const currentSourceTables = sources
         .filter(i => i.name === source.name)[0]
-        .tables.map(i => `'${i.table.name}'`);
-      schemaPromises.push(
-        dispatch(
-          getDatabaseTableTypeInfo(
-            source.kind,
-            source.name,
-            currentSourceTables
-          )
-        ).then(data => ({ source: source.name, schemaInfo: data }))
-      );
-    });
-    Promise.all(schemaPromises).then(data => {
-      const schemaInfo = {};
-      data.forEach(item => {
-        schemaInfo[item.source] = item.schemaInfo;
+        .tables.map(t => t.table);
+      schemaRequests.push({
+        sourceType: source.kind,
+        sourceName: source.name,
+        tables: currentSourceTables,
       });
-      const newItems = getItems(schemaInfo);
-      setTreeViewItems(newItems);
+    });
+    setIsFetching(true);
+
+    if (schemaRequests.length === 0) {
       setIsFetching(false);
       setPreLoadState(false);
-    });
-  };
+      return;
+    }
 
-  useEffect(() => {
-    setIsFetching(true);
-    updateTreeViewItemsWithSchemaInfo();
-  }, [
-    sources.length,
-    tables,
-    functions,
-    enums,
-    schemaList,
-    dataSources, // trigger rerender on table name change
-    inconsistentObjects,
-  ]);
+    dispatch(getDatabaseTableTypeInfoForAllSources(schemaRequests)).then(
+      schemaInfo => {
+        setIsFetching(false);
+        setPreLoadState(false);
+        const newItems = getItems(schemaInfo);
+        setTreeViewItems(newItems);
+      }
+    );
+  }, [sources.length, tables, functions, enums, schemaList]);
 
   const loadStyle = {
     pointerEvents: 'none',
@@ -259,7 +253,7 @@ const DataSubSidebar = props => {
             sidebarLoadingState ||
             isFetching ? (
               <div className={styles.inline_display}>
-                <Spinner size="small" ml={4} />
+                <Spinner className={styles.spinner} />
               </div>
             ) : (
               <i
@@ -329,6 +323,7 @@ const mapStateToProps = state => {
     currentDataSource: state.tables.currentDataSource,
     currentSchema: state.tables.currentSchema,
     schemaList: state.tables.schemaList,
+    allSourcesSchemas: state.tables?.allSourcesSchemas,
     pathname: state?.routing?.locationBeforeTransitions?.pathname,
     dataSources: getDataSources(state),
     sidebarLoadingState: state.dataSidebar.loading,

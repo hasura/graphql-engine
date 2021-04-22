@@ -34,13 +34,13 @@ data AsyncActionQuerySourceExecution v
   = AsyncActionQuerySourceExecution
   { _aaqseSource        :: !SourceName
   , _aaqseJsonAggSelect :: !JsonAggSelect
-  , _aaqseSelectBuilder :: !(ActionLogResponse -> RS.AnnSimpleSelG 'Postgres v)
+  , _aaqseSelectBuilder :: !(ActionLogResponse -> RS.AnnSimpleSelG ('Postgres 'Vanilla) v)
   }
 
 data AsyncActionQueryExecution v
   = AAQENoRelationships !(ActionLogResponse -> Either QErr EncJSON)
   -- ^ Async actions associated with no relationships.
-  | AAQEOnSourceDB !(SourceConfig 'Postgres) !(AsyncActionQuerySourceExecution v)
+  | AAQEOnSourceDB !(SourceConfig ('Postgres 'Vanilla)) !(AsyncActionQuerySourceExecution v)
   -- ^ Async actions with relationships defined to Postgres
   -- (as of now, we may have support for other backends as well in further iterations) tables.
 
@@ -48,7 +48,7 @@ data AsyncActionQueryExecution v
 data AsyncActionQueryExecutionPlan
   = AsyncActionQueryExecutionPlan
   { _aaqepId        :: !ActionId
-  , _aaqepExecution :: !(AsyncActionQueryExecution (UnpreparedValue 'Postgres))
+  , _aaqepExecution :: !(AsyncActionQueryExecution (UnpreparedValue ('Postgres 'Vanilla)))
   }
 
 -- A plan to execute any action

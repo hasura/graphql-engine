@@ -236,7 +236,7 @@ emptyCustomTypes = CustomTypes Nothing Nothing Nothing Nothing
 
 data AnnotatedScalarType
   = ASTCustom !ScalarTypeDefinition
-  | ASTReusedScalar !G.Name !(ScalarType 'Postgres)
+  | ASTReusedScalar !G.Name !(ScalarType ('Postgres 'Vanilla))
 
 
 -- | A simple type-level function: `ScalarSet :: Backend b => b -> HashSet (ScalarType b)`
@@ -292,8 +292,8 @@ fieldTypeToScalarType = \case
 
 data AnnotatedObjectType
   = AnnotatedObjectType
-  { _aotDefinition :: !(ObjectTypeDefinition (G.GType, AnnotatedObjectFieldType) (TableInfo 'Postgres) (ColumnInfo 'Postgres))
-  , _aotSource     :: !(Maybe (SourceName, SourceConfig 'Postgres))
+  { _aotDefinition :: !(ObjectTypeDefinition (G.GType, AnnotatedObjectFieldType) (TableInfo ('Postgres 'Vanilla)) (ColumnInfo ('Postgres 'Vanilla)))
+  , _aotSource     :: !(Maybe (SourceName, SourceConfig ('Postgres 'Vanilla)))
   } deriving (Generic)
 instance J.ToJSON (AnnotatedObjectType) where
   toJSON = J.toJSON . _aotDefinition

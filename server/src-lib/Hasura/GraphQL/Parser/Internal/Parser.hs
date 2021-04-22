@@ -1,6 +1,5 @@
 {-# OPTIONS_HADDOCK not-home #-}
-{-# LANGUAGE AllowAmbiguousTypes #-}
-{-# LANGUAGE StrictData          #-}
+{-# LANGUAGE StrictData #-}
 
 -- | Defines the 'Parser' type and its primitive combinators.
 module Hasura.GraphQL.Parser.Internal.Parser
@@ -308,6 +307,10 @@ list parser = gcastWith (inputParserInput @k) Parser
   where
     schemaType = NonNullable $ TList $ pType parser
 
+-- TODO: if we had an optional "strict" mode, we could (and should!) enforce
+-- that `fieldName` isn't empty, which sadly can't be done at the type level.
+-- This would prevent the creation of an object with no fields, which is against
+-- the spec.
 object
   :: MonadParse m
   => Name
