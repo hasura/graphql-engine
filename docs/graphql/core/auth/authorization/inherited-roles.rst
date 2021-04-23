@@ -154,7 +154,7 @@ Let's take the example of an ``users`` table with the following columns:
 
 There are two roles defined namely ``employee`` and ``manager``.
 
-1. User role - The user role will be able to able to access all columns of their row  when the session variable ``X-Hasura-User-Id`` is equal to the ``id``.
+1. User role - The user role will be able to access all columns of their row  when the session variable ``X-Hasura-User-Id`` is equal to the ``id``.
 
 2. Anonymous role - The anonymous role will be able to access only the ``id`` and ``name`` columns of all the users.
 
