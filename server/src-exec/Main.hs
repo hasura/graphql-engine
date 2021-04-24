@@ -83,10 +83,9 @@ runApp env (HGEOptionsG rci metadataDbUrl hgeCmd) = do
         -- that serveCtx is not retained.
         _ <- case serveCtx of
                ServeCtx{_scShutdownLatch} ->
-                liftIO $ Signals.installHandler
-                  Signals.sigTERM
-                  (Signals.CatchOnce (shutdownGracefully _scShutdownLatch))
-                  Nothing
+                liftIO $ do
+                   void $ Signals.installHandler Signals.sigTERM (Signals.CatchOnce (shutdownGracefully _scShutdownLatch)) Nothing
+                   void $ Signals.installHandler Signals.sigINT  (Signals.CatchOnce (shutdownGracefully _scShutdownLatch)) Nothing
 
         let Loggers _ logger pgLogger = _scLoggers serveCtx
 
