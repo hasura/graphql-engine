@@ -171,6 +171,12 @@ class GraphiQLWrapper extends Component {
     const routeToREST = gqlProps => () => {
       const { query, schema } = graphiqlContext.state;
       if (!query || !schema || !gqlProps.query || !isQueryValid(query)) {
+        dispatch(
+          showErrorNotification(
+            'Unable to create a REST endpoint',
+            'Please enter a valid named GraphQL query or mutation'
+          )
+        );
         return;
       }
       dispatch(_push('/api/rest/create'));
