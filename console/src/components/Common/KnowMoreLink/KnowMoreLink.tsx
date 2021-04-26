@@ -1,7 +1,12 @@
 import React from 'react';
 // import styles from './KnowMoreLink.scss';
 
-const KnowMoreLink = ({ href, text = 'Know more' }) => (
+interface KnowMoreLinkProps {
+  href: string,
+  text?: string
+}
+
+const KnowMoreLink = ({ href, text = 'Know more' }: KnowMoreLinkProps) => (
   <a href={href} target="_blank" rel="noopener noreferrer">
     <small>
       <i>({text})</i>
