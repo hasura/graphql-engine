@@ -316,19 +316,24 @@ queryModifiesMetadata :: RQLMetadataRequest -> Bool
 queryModifiesMetadata = \case
   RMV1 q ->
     case q of
-      RMGetCatalogState _      -> False
-      RMExportMetadata _       -> False
-      RMGetEventInvocations _  -> False
-      RMGetScheduledEvents _   -> False
-
-      RMCreateScheduledEvent _ -> False
-      RMDeleteScheduledEvent _ -> False
-      RMBulk qs                -> any queryModifiesMetadata qs
-      _                        -> True
+      RMPgRedeliverEvent _        -> False
+      RMPgInvokeEventTrigger _    -> False
+      RMGetInconsistentMetadata _ -> False
+      RMIntrospectRemoteSchema _  -> False
+      RMDumpInternalState _       -> False
+      RMSetCatalogState _         -> False
+      RMGetCatalogState _         -> False
+      RMExportMetadata _          -> False
+      RMGetEventInvocations _     -> False
+      RMGetScheduledEvents _      -> False
+      RMCreateScheduledEvent _    -> False
+      RMDeleteScheduledEvent _    -> False
+      RMBulk qs                   -> any queryModifiesMetadata qs
+      _                           -> True
   RMV2 q ->
     case q of
-      RMV2ExportMetadata _  -> False
-      RMV2ReplaceMetadata _ -> True
+      RMV2ExportMetadata _ -> False
+      _                    -> True
 
 runMetadataQueryM
   :: ( HasVersion
