@@ -101,7 +101,7 @@ Create an ``object relationship`` ``details`` on ``author`` *table*, *using* the
            "using": {
                "foreign_key_constraint_on" : {
                    "table": "author_details",
-                   "column": "id"
+                   "column": "author_id"
                }
            }
        }

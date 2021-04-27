@@ -8,6 +8,7 @@
 (Add entries below in the order of: server, console, cli, docs, others)
 
 - server: fix regression: `on_conflict` was missing in the schema for inserts in tables where the current user has no columns listed in their update permissions (fix #6804)
+- server: fix one-to-one relationship bug (introduced in #459) which prevented adding one-to-one relationships which didn't have the same column name for target and source
 - console: fix Postgres table creation when table has a non-lowercase name and a comment (#6760)
 - cli: fix regression - `metadata apply —dry-run` was overwriting local metadata files with metadata on server when it should just display the differences.
 - cli: add support for `api_limits` metadata object
