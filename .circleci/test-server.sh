@@ -190,7 +190,10 @@ done
 echo -e "\nINFO: GraphQL Executable : $GRAPHQL_ENGINE"
 echo -e "INFO: Logs Folder        : $OUTPUT_FOLDER\n"
 
-pip3 install -r requirements.txt
+# This seems to flake out relatively often; try a mirror if so.
+# Might also need to disable ipv6 or use a longer --timeout
+pip3 install -r requirements.txt ||\
+pip3 install -i http://mirrors.digitalocean.com/pypi/web/simple --trusted-host mirrors.digitalocean.com   -r requirements.txt
 
 # node js deps
 curl -sL https://deb.nodesource.com/setup_8.x | bash -

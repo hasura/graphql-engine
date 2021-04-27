@@ -176,6 +176,10 @@ class TestRetryConf(object):
     def dir(cls):
         return 'queries/event_triggers/retry_conf'
 
+    # webhook: http://127.0.0.1:5592/fail
+    # retry_conf:
+    #   num_retries: 4
+    #   interval_sec: 1
     def test_basic(self, hge_ctx, evts_webhook):
         table = {"schema": "hge_tests", "name": "test_t1"}
 
@@ -186,10 +190,17 @@ class TestRetryConf(object):
         }
         st_code, resp = insert(hge_ctx, table, init_row)
         assert st_code == 200, resp
-        time.sleep(15)
-        tries = evts_webhook.get_error_queue_size()
-        assert tries == 5, tries
+        check_event(hge_ctx, evts_webhook, "t1_retry", table, "INSERT", exp_ev_data, webhook_path = "/fail", retry = 0)
+        check_event(hge_ctx, evts_webhook, "t1_retry", table, "INSERT", exp_ev_data, webhook_path = "/fail", retry = 1)
+        check_event(hge_ctx, evts_webhook, "t1_retry", table, "INSERT", exp_ev_data, webhook_path = "/fail", retry = 2)
+        check_event(hge_ctx, evts_webhook, "t1_retry", table, "INSERT", exp_ev_data, webhook_path = "/fail", retry = 3)
+        check_event(hge_ctx, evts_webhook, "t1_retry", table, "INSERT", exp_ev_data, webhook_path = "/fail", retry = 4)
 
+    # webhook: http://127.0.0.1:5592/sleep_2s
+    # retry_conf:
+    #   num_retries: 2
+    #   interval_sec: 1
+    #   timeout_sec: 1
     def test_timeout_short(self, hge_ctx, evts_webhook):
         table = {"schema": "hge_tests", "name": "test_t2"}
 
@@ -200,10 +211,15 @@ class TestRetryConf(object):
         }
         st_code, resp = insert(hge_ctx, table, init_row)
         assert st_code == 200, resp
-        time.sleep(20)
-        tries = evts_webhook.get_error_queue_size()
-        assert tries == 3, tries
+        check_event(hge_ctx, evts_webhook, "t2_timeout_short", table, "INSERT", exp_ev_data, webhook_path = "/sleep_2s", retry = 0, get_timeout = 5)
+        check_event(hge_ctx, evts_webhook, "t2_timeout_short", table, "INSERT", exp_ev_data, webhook_path = "/sleep_2s", retry = 1, get_timeout = 5)
+        check_event(hge_ctx, evts_webhook, "t2_timeout_short", table, "INSERT", exp_ev_data, webhook_path = "/sleep_2s", retry = 2, get_timeout = 5)
 
+    # webhook: http://127.0.0.1:5592/sleep_2s
+    # retry_conf:
+    #   num_retries: 0
+    #   interval_sec: 2
+    #   timeout_sec: 10
     def test_timeout_long(self, hge_ctx, evts_webhook):
         table = {"schema": "hge_tests", "name": "test_t3"}
 
@@ -214,8 +230,16 @@ class TestRetryConf(object):
         }
         st_code, resp = insert(hge_ctx, table, init_row)
         assert st_code == 200, resp
-        time.sleep(15)
-        check_event(hge_ctx, evts_webhook, "t3_timeout_long", table, "INSERT", exp_ev_data, webhook_path = "/timeout_long")
+        time.sleep(2)
+        check_event(hge_ctx, evts_webhook, "t3_timeout_long", table, "INSERT", exp_ev_data, webhook_path = "/sleep_2s")
+
+    # Keep this one last
+    def test_queue_empty(self, hge_ctx, evts_webhook):
+        try:
+            evts_webhook.get_event(3)
+            assert False, "expected queue to be empty"
+        except queue.Empty:
+            pass
 
 @usefixtures('per_method_tests_db_state')
 class TestEvtHeaders(object):
@@ -242,8 +266,18 @@ class TestUpdateEvtQuery(object):
     @pytest.fixture(autouse=True)
     def transact(self, request, hge_ctx, evts_webhook):
         print("In setup method")
+        # Adds trigger on 'test_t1' with...
+        #   insert:
+        #     columns: '*'
+        #   update:
+        #     columns: [c2, c3]
         st_code, resp = hge_ctx.v1q_f('queries/event_triggers/update_query/create-setup.yaml')
         assert st_code == 200, resp
+        # overwrites trigger added above, with...
+        #   delete:
+        #     columns: "*"
+        #   update:
+        #     columns: ["c1", "c3"]
         st_code, resp = hge_ctx.v1q_f('queries/event_triggers/update_query/update-setup.yaml')
         assert st_code == 200, '{}'.format(resp)
         assert resp[1]["sources"][0]["tables"][0]["event_triggers"][0]["webhook"] == 'http://127.0.0.1:5592/new'
@@ -254,23 +288,21 @@ class TestUpdateEvtQuery(object):
     def test_update_basic(self, hge_ctx, evts_webhook):
         table = {"schema": "hge_tests", "name": "test_t1"}
 
+        # Expect that inserting a row (which would have triggered in original
+        # create_event_trigger) does not trigger
         init_row = {"c1": 1, "c2": "hello", "c3": {"name": "clarke"}}
-        exp_ev_data = {
-            "old": None,
-            "new": {"c1": 1, "c2": "hello", "c3": {"name": "clarke"}}
-        }
         st_code, resp = insert(hge_ctx, table, init_row)
         assert st_code == 200, resp
         with pytest.raises(queue.Empty):
-            check_event(hge_ctx, evts_webhook, "t1_cols", table, "INSERT", exp_ev_data, webhook_path = "/new")
+            check_event(hge_ctx, evts_webhook, "t1_cols", table, "INSERT", {}, webhook_path = "/new", get_timeout = 0)
 
+        # Likewise for an update on c2:
         where_exp = {"c1": 1}
         set_exp = {"c2": "world"}
-        # expected no event hence previous expected data
         st_code, resp = update(hge_ctx, table, where_exp, set_exp)
         assert st_code == 200, resp
         with pytest.raises(queue.Empty):
-            check_event(hge_ctx, evts_webhook, "t1_cols", table, "UPDATE", exp_ev_data, webhook_path = "/new")
+            check_event(hge_ctx, evts_webhook, "t1_cols", table, "UPDATE", {}, webhook_path = "/new", get_timeout = 0)
 
         where_exp = {"c1": 1}
         set_exp = {"c3": {"name": "bellamy"}}
@@ -313,6 +345,7 @@ class TestDeleteEvtQuery(object):
 
     teardown_files = [ directory + '/delete_query/teardown.yaml']
 
+    # Ensure deleting an event trigger works
     def test_delete_basic(self, hge_ctx, evts_webhook):
         table = {"schema": "hge_tests", "name": "test_t1"}
 
@@ -324,7 +357,7 @@ class TestDeleteEvtQuery(object):
         st_code, resp = insert(hge_ctx, table, init_row)
         assert st_code == 200, resp
         with pytest.raises(queue.Empty):
-            check_event(hge_ctx, evts_webhook, "t1_all", table, "INSERT", exp_ev_data)
+            check_event(hge_ctx, evts_webhook, "t1_all", table, "INSERT", exp_ev_data, get_timeout=0)
 
         where_exp = {"c1": 1}
         set_exp = {"c2": "world"}
@@ -335,7 +368,7 @@ class TestDeleteEvtQuery(object):
         st_code, resp = update(hge_ctx, table, where_exp, set_exp)
         assert st_code == 200, resp
         with pytest.raises(queue.Empty):
-            check_event(hge_ctx, evts_webhook, "t1_all", table, "UPDATE", exp_ev_data)
+            check_event(hge_ctx, evts_webhook, "t1_all", table, "UPDATE", exp_ev_data, get_timeout=0)
 
         exp_ev_data = {
             "old": {"c1": 1, "c2": "world"},
@@ -344,7 +377,8 @@ class TestDeleteEvtQuery(object):
         st_code, resp = delete(hge_ctx, table, where_exp)
         assert st_code == 200, resp
         with pytest.raises(queue.Empty):
-            check_event(hge_ctx, evts_webhook, "t1_all", table, "DELETE", exp_ev_data)
+            # NOTE: use a bit of a delay here, to catch any stray events generated above
+            check_event(hge_ctx, evts_webhook, "t1_all", table, "DELETE", exp_ev_data, get_timeout=2)
 
 @usefixtures('per_class_tests_db_state')
 class TestEvtSelCols:
@@ -371,7 +405,7 @@ class TestEvtSelCols:
         st_code, resp = update(hge_ctx, table, where_exp, set_exp)
         assert st_code == 200, resp
         with pytest.raises(queue.Empty):
-            check_event(hge_ctx, evts_webhook, "t1_cols", table, "UPDATE", exp_ev_data)
+            check_event(hge_ctx, evts_webhook, "t1_cols", table, "UPDATE", exp_ev_data, get_timeout=0)
 
         where_exp = {"c1": 1}
         set_exp = {"c1": 2}
@@ -439,7 +473,7 @@ class TestEvtInsertOnly:
         st_code, resp = update(hge_ctx, table, where_exp, set_exp)
         assert st_code == 200, resp
         with pytest.raises(queue.Empty):
-            check_event(hge_ctx, evts_webhook, "t1_insert", table, "UPDATE", exp_ev_data)
+            check_event(hge_ctx, evts_webhook, "t1_insert", table, "UPDATE", exp_ev_data, get_timeout=0)
 
         exp_ev_data = {
             "old": {"c1": 1, "c2": "world"},
@@ -448,7 +482,8 @@ class TestEvtInsertOnly:
         st_code, resp = delete(hge_ctx, table, where_exp)
         assert st_code == 200, resp
         with pytest.raises(queue.Empty):
-            check_event(hge_ctx, evts_webhook, "t1_insert", table, "DELETE", exp_ev_data)
+            # NOTE: use a bit of a delay here, to catch any stray events generated above
+            check_event(hge_ctx, evts_webhook, "t1_insert", table, "DELETE", exp_ev_data, get_timeout=2)
 
 
 @usefixtures('per_class_tests_db_state')
@@ -660,10 +695,10 @@ class TestEventsAsynchronousExecution(object):
         all the events and that time should definitely be lesser than the time
         taken if the events were to be executed sequentially.
 
-        This test inserts 5 rows and the webhook(/timeout_long) takes
-        ~5 seconds to process one request. So, if the graphql-engine
-        were to process the events sequentially it will take 5 * 5 = 25 seconds.
-        Theorotically, all the events should have been processed in ~5 seconds,
+        This test inserts 5 rows and the webhook(/sleep_2s) takes
+        ~2 seconds to process one request. So, if the graphql-engine
+        were to process the events sequentially it will take 5 * 2 = 10 seconds.
+        Theorotically, all the events should have been processed in ~2 seconds,
         adding a 5 seconds buffer to the comparision, so that this test
         doesn't flake in the CI.
         """
@@ -675,7 +710,7 @@ class TestEventsAsynchronousExecution(object):
         start_time = time.perf_counter()
         assert st_code == 200, resp
         for i in range(1,6):
-            _ = evts_webhook.get_event(7) # webhook takes 5 seconds to process a request
+            _ = evts_webhook.get_event(5) # webhook takes 2 seconds to process a request (+ buffer)
         end_time = time.perf_counter()
         time_elapsed = end_time - start_time
         assert time_elapsed < 10

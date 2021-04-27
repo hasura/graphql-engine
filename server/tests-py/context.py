@@ -366,29 +366,18 @@ class EvtsWebhookHandler(http.server.BaseHTTPRequestHandler):
         if req_path == "/fail":
             self.send_response(HTTPStatus.INTERNAL_SERVER_ERROR)
             self.end_headers()
-            self.server.error_queue.put({"path": req_path,
-                                         "body": req_json,
-                                         "headers": req_headers})
-        elif req_path == "/timeout_short":
-            time.sleep(5)
+        # This endpoint just sleeps for 2 seconds:
+        elif req_path == "/sleep_2s":
+            time.sleep(2)
             self.send_response(HTTPStatus.NO_CONTENT)
             self.end_headers()
-            self.server.error_queue.put({"path": req_path,
-                                         "body": req_json,
-                                         "headers": req_headers})
-        elif req_path == "/timeout_long":
-            time.sleep(5)
-            self.send_response(HTTPStatus.NO_CONTENT)
-            self.end_headers()
-            self.server.resp_queue.put({"path": req_path,
-                                        "body": req_json,
-                                        "headers": req_headers})
         else:
             self.send_response(HTTPStatus.NO_CONTENT)
             self.end_headers()
-            self.server.resp_queue.put({"path": req_path,
-                                        "body": req_json,
-                                        "headers": req_headers})
+
+        self.server.resp_queue.put({"path": req_path,
+                                    "body": req_json,
+                                    "headers": req_headers})
 
 # A very slightly more sane/performant http server.
 # See: https://stackoverflow.com/a/14089457/176841
@@ -399,8 +388,8 @@ class ThreadedHTTPServer(ThreadingMixIn, http.server.HTTPServer):
 
 class EvtsWebhookServer(ThreadedHTTPServer):
     def __init__(self, server_address):
-        self.resp_queue = queue.Queue(maxsize=1)
-        self.error_queue = queue.Queue()
+        # Data received from hasura by our web hook, pushed after it returns to the client:
+        self.resp_queue = queue.Queue()
         super().__init__(server_address, EvtsWebhookHandler)
 
     def server_bind(self):
@@ -409,13 +398,6 @@ class EvtsWebhookServer(ThreadedHTTPServer):
 
     def get_event(self, timeout):
         return self.resp_queue.get(timeout=timeout)
-
-    def get_error_queue_size(self):
-        sz = 0
-        while not self.error_queue.empty():
-            self.error_queue.get()
-            sz = sz + 1
-        return sz
 
     def is_queue_empty(self):
         return self.resp_queue.empty
@@ -475,6 +457,7 @@ class HGECtx:
         self.may_skip_test_teardown = False
         self.function_permissions = config.getoption('--test-function-permissions')
 
+        # This will be GC'd, but we also explicitly dispose() in teardown()
         self.engine = create_engine(self.pg_url)
         self.meta = MetaData()
 
@@ -485,6 +468,8 @@ class HGECtx:
         self.inherited_roles_tests = config.getoption('--test-inherited-roles')
 
         self.ws_client = GQLWsClient(self, '/v1/graphql')
+        self.ws_client_v1alpha1 = GQLWsClient(self, '/v1alpha1/graphql')
+        self.ws_client_relay = GQLWsClient(self, '/v1beta1/relay')
 
         self.backend = config.getoption('--backend')
 
@@ -606,3 +591,7 @@ class HGECtx:
     def teardown(self):
         self.http.close()
         self.engine.dispose()
+        # Close websockets:
+        self.ws_client.teardown()
+        self.ws_client_v1alpha1.teardown()
+        self.ws_client_relay.teardown()

@@ -5,22 +5,7 @@ args:
   args:
     source: mssql
     sql: |
-      drop table test_types
-
-- type: mssql_run_sql
-  args:
-    source: mssql
-    sql: |
-      drop table article
-
-- type: mssql_run_sql
-  args:
-    source: mssql
-    sql: |
-      drop table author
-
-- type: mssql_run_sql
-  args:
-    source: mssql
-    sql: |
-      drop table [user]
+      drop table test_types;
+      drop table article;
+      drop table author;
+      drop table [user];

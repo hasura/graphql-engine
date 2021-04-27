@@ -604,6 +604,7 @@ test-suite graphql-engine-tests
     , base
     , bytestring
     , containers
+    , cron
     , graphql-engine
     , hspec >=2.6.1 && <3
     , hspec-core >=2.6.1 && <3
@@ -639,6 +640,7 @@ test-suite graphql-engine-tests
     Data.Parser.URLTemplate
     Data.TimeSpec
     Hasura.CacheBoundedSpec
+    Hasura.EventingSpec
     Hasura.IncrementalSpec
     Hasura.RQL.MetadataSpec
     Hasura.RQL.Types.EndpointSpec

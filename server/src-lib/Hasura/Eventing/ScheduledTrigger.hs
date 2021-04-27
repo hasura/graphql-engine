@@ -61,6 +61,14 @@ During the startup, two threads are started:
 2. Processor: Fetches the undelivered cron events and the scheduled events
    from the database and which have timestamp lesser than the
    current timestamp and then process them.
+
+TODO
+- Consider and document ordering guarantees
+  - do we have any in the presence of multiple hasura instances?
+- If we have nothing useful to say about ordering, then consider processing
+  events asynchronously, so that a slow webhook doesn't cause everything
+  subsequent to be delayed
+
 -}
 module Hasura.Eventing.ScheduledTrigger
   ( runCronEventsGenerator
@@ -155,9 +163,7 @@ runCronEventsGenerator logger getSC = do
     -- get cron triggers from cache
     let cronTriggersCache = scCronTriggers sc
 
-    if (Map.null cronTriggersCache)
-    then return ()
-    else do
+    unless (Map.null cronTriggersCache) $ do
       -- Poll the DB only when there's at-least one cron trigger present
       -- in the schema cache
       -- get cron trigger stats from db
@@ -172,6 +178,7 @@ runCronEventsGenerator logger getSC = do
       onLeft eitherRes $ L.unLogger logger .
         ScheduledTriggerInternalErr . err500 Unexpected . tshow
 
+    -- See discussion: https://github.com/hasura/graphql-engine-mono/issues/1001
     liftIO $ sleep (minutes 1)
     where
       withCronTrigger cronTriggerCache cronTriggerStat = do
@@ -198,7 +205,8 @@ insertCronEventsFor cronTriggersWithStats = do
 generateCronEventsFrom :: UTCTime -> CronTriggerInfo-> [CronEventSeed]
 generateCronEventsFrom startTime CronTriggerInfo{..} =
   map (CronEventSeed ctiName) $
-      generateScheduleTimes startTime 100 ctiSchedule -- generate next 100 events
+      -- generate next 100 events; see getDeprivedCronTriggerStatsTx:
+      generateScheduleTimes startTime 100 ctiSchedule
 
 -- | Generates next @n events starting @from according to 'CronSchedule'
 generateScheduleTimes :: UTCTime -> Int -> CronSchedule -> [UTCTime]
@@ -300,7 +308,11 @@ processScheduledTriggers env logger logEnv httpMgr getSC LockedEventsCtx {..} =
       Right (cronEvents, oneOffEvents) -> do
         processCronEvents logger logEnv httpMgr cronEvents getSC leCronEvents
         processOneOffScheduledEvents env logger logEnv httpMgr oneOffEvents leOneOffEvents
-    liftIO $ sleep (minutes 1)
+    -- NOTE: cron events are scheduled at times with minute resolution (as on
+    -- unix), while one-off events can be set for arbitrary times. The sleep
+    -- time here determines how overdue a scheduled event (cron or one-off)
+    -- might be before we begin processing:
+    liftIO $ sleep (seconds 10)
   where
     logInternalError err = liftIO . L.unLogger logger $ ScheduledTriggerInternalErr err
 
@@ -476,6 +488,12 @@ mkInvocation eventId status reqHeaders respBody respHeaders reqBodyJson
 
 -- metadata database transactions
 
+-- | Get cron trigger stats for cron jobs with fewer than 100 future reified
+-- events in the database
+--
+-- The point here is to maintain a certain number of future events so the user
+-- can kind of see what's coming up, and obviously to give 'processCronEvents'
+-- something to do.
 getDeprivedCronTriggerStatsTx :: Q.TxE QErr [CronTriggerStats]
 getDeprivedCronTriggerStatsTx =
   map (\(n, count, maxTx) -> CronTriggerStats n count maxTx) <$>
@@ -493,6 +511,12 @@ getDeprivedCronTriggerStatsTx =
       WHERE q.upcoming_events_count < 100
      |] () True
 
+-- TODO
+--  - cron events have minute resolution, while one-off events have arbitrary
+--    resolution, so it doesn't make sense to fetch them at the same rate
+--  - if we decide to fetch cron events less frequently we should wake up that
+--    thread at second 0 of every minute, and then pass hasura's now time into
+--    the query (since the DB may disagree about the time)
 getScheduledEventsForDeliveryTx :: Q.TxE QErr ([CronEvent], [OneOffScheduledEvent])
 getScheduledEventsForDeliveryTx =
   (,) <$> getCronEventsForDelivery <*> getOneOffEventsForDelivery

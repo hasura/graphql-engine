@@ -199,6 +199,24 @@ function citus_start() {
   citus_wait
 }
 
+# This is just a faster version of
+#    mssql_start
+#    pg_start
+#    citus_start
+function all_dbs_start() {
+  # start all
+  mssql_launch_container
+  MSSQL_RUNNING=1
+  pg_launch_container
+  PG_RUNNING=1
+  citus_launch_container
+  CITUS_RUNNING=1
+  # wait for all
+  pg_wait
+  mssql_wait
+  citus_wait
+}
+
 
 #################################
 ###     Graphql-engine        ###
@@ -397,9 +415,13 @@ elif [ "$MODE" = "test" ]; then
   # PG, but make sure that new-run uses the exact same build plan, else we risk
   # rebuilding twice... ugh
   cabal new-build --project-file=cabal.project.dev-sh exe:graphql-engine test:graphql-engine-tests
-  pg_start
+  if [ "$RUN_INTEGRATION_TESTS" = true ]; then
+    all_dbs_start
+  else
+    # unit tests just need access to a postgres instance:
+    pg_start
+  fi
 
-  # These also depend on a running DB:
   if [ "$RUN_UNIT_TESTS" = true ]; then
     echo_pretty "Running Haskell test suite"
     HASURA_GRAPHQL_DATABASE_URL="$PG_DB_URL" cabal new-run --project-file=cabal.project.dev-sh -- test:graphql-engine-tests
@@ -411,9 +433,6 @@ elif [ "$MODE" = "test" ]; then
   fi
 
   if [ "$RUN_INTEGRATION_TESTS" = true ]; then
-    mssql_start
-    citus_start
-
     GRAPHQL_ENGINE_TEST_LOG=/tmp/hasura-dev-test-engine.log
     echo_pretty "Starting graphql-engine, logging to $GRAPHQL_ENGINE_TEST_LOG"
     export HASURA_GRAPHQL_SERVER_PORT=8088
@@ -424,6 +443,9 @@ elif [ "$MODE" = "test" ]; then
     export HASURA_GRAPHQL_PG_SOURCE_URL_2=${HASURA_GRAPHQL_PG_SOURCE_URL_2-$PG_DB_URL}
 
     # Using --metadata-database-url flag to test multiple backends
+    #       HASURA_GRAPHQL_PG_SOURCE_URL_* For a couple multi-source pytests:
+    HASURA_GRAPHQL_PG_SOURCE_URL_1="$PG_DB_URL" \
+    HASURA_GRAPHQL_PG_SOURCE_URL_2="$PG_DB_URL" \
     cabal new-run --project-file=cabal.project.dev-sh -- exe:graphql-engine \
       --metadata-database-url="$PG_DB_URL" serve \
       --stringify-numeric-types \
@@ -506,7 +528,7 @@ elif [ "$MODE" = "test" ]; then
     fi
 
     # TODO MAYBE: fix deprecation warnings, make them an error
-    if ! pytest -W ignore::DeprecationWarning --hge-urls http://127.0.0.1:$HASURA_GRAPHQL_SERVER_PORT --pg-urls "$PG_DB_URL" "${PYTEST_ARGS[@]}"; then
+    if ! pytest -W ignore::DeprecationWarning --hge-urls http://127.0.0.1:$HASURA_GRAPHQL_SERVER_PORT --pg-urls "$PG_DB_URL" --durations=20 "${PYTEST_ARGS[@]}"; then
       echo_error "^^^ graphql-engine logs from failed test run can be inspected at: $GRAPHQL_ENGINE_TEST_LOG"
     fi
     deactivate  # python venv

@@ -48,13 +48,16 @@ def validate_event_headers(ev_headers, headers):
 def validate_event_webhook(ev_webhook_path, webhook_path):
     assert ev_webhook_path == webhook_path
 
-
+# Make some assertions on a single event recorded by webhook. Waits up to 3
+# seconds by default for an event to appear
 def check_event(hge_ctx, evts_webhook, trig_name, table, operation, exp_ev_data,
                 headers = {},
                 webhook_path = '/',
-                session_variables = {'x-hasura-role': 'admin'}
+                session_variables = {'x-hasura-role': 'admin'},
+                retry = 0,
+                get_timeout = 3
 ):
-    ev_full = evts_webhook.get_event(3)
+    ev_full = evts_webhook.get_event(get_timeout)
     validate_event_webhook(ev_full['path'], webhook_path)
     validate_event_headers(ev_full['headers'], headers)
     validate_event_payload(ev_full['body'], trig_name, table)
@@ -62,6 +65,7 @@ def check_event(hge_ctx, evts_webhook, trig_name, table, operation, exp_ev_data,
     assert ev['op'] == operation, ev
     assert ev['session_variables'] == session_variables, ev
     assert ev['data'] == exp_ev_data, ev
+    assert ev_full['body']['delivery_info']['current_retry'] == retry
 
 
 def test_forbidden_when_admin_secret_reqd(hge_ctx, conf):
@@ -229,9 +233,9 @@ def validate_gql_ws_q(hge_ctx, conf, headers, retry=False, via_subscription=Fals
         query['query'] = 'subscription' + query_text[len('query'):].replace("{"," @_multiple_top_level_fields {",1)
 
     if endpoint == '/v1alpha1/graphql':
-        ws_client = GQLWsClient(hge_ctx, '/v1alpha1/graphql')
+        ws_client = hge_ctx.ws_client_v1alpha1
     elif endpoint == '/v1beta1/relay':
-        ws_client = GQLWsClient(hge_ctx, '/v1beta1/relay')
+        ws_client = hge_ctx.ws_client_relay
     else:
         ws_client = hge_ctx.ws_client
     print(ws_client.ws_url)

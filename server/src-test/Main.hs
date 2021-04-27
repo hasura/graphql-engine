@@ -36,6 +36,7 @@ import qualified Data.TimeSpec                      as TimeSpec
 import qualified Hasura.IncrementalSpec             as IncrementalSpec
 -- import qualified Hasura.RQL.MetadataSpec      as MetadataSpec
 import qualified Hasura.CacheBoundedSpec            as CacheBoundedSpec
+import qualified Hasura.EventingSpec                as EventingSpec
 import qualified Hasura.RQL.Types.EndpointSpec      as EndpointSpec
 import qualified Hasura.SQL.WKTSpec                 as WKTSpec
 import qualified Hasura.Server.AuthSpec             as AuthSpec
@@ -76,6 +77,7 @@ unitSpecs = do
   describe "Hasura.Cache.Bounded" CacheBoundedSpec.spec
   describe "Hasura.RQL.Types.Endpoint" EndpointSpec.spec
   describe "Hasura.SQL.WKT" WKTSpec.spec
+  describe "Hasura.Eventing" EventingSpec.spec
 
 buildPostgresSpecs :: HasVersion => Maybe URLTemplate -> IO Spec
 buildPostgresSpecs maybeUrlTemplate = do

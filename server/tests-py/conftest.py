@@ -287,6 +287,7 @@ def hge_ctx(request):
     yield hge_ctx  # provide the fixture value
     print("teardown hge_ctx")
     hge_ctx.teardown()
+    # TODO why do we sleep here?
     time.sleep(1)
 
 @pytest.fixture(scope='class')

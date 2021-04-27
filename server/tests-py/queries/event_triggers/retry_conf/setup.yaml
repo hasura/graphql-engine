@@ -44,7 +44,7 @@ args:
     webhook: http://127.0.0.1:5592/fail
     retry_conf:
       num_retries: 4
-      interval_sec: 2
+      interval_sec: 1
 - type: create_event_trigger
   args:
     name: t2_timeout_short
@@ -57,11 +57,11 @@ args:
       columns: '*'
     delete:
       columns: '*'
-    webhook: http://127.0.0.1:5592/timeout_short
+    webhook: http://127.0.0.1:5592/sleep_2s
     retry_conf:
       num_retries: 2
-      interval_sec: 2
-      timeout_sec: 2
+      interval_sec: 1
+      timeout_sec: 1
 - type: create_event_trigger
   args:
     name: t3_timeout_long
@@ -74,7 +74,7 @@ args:
       columns: '*'
     delete:
       columns: '*'
-    webhook: http://127.0.0.1:5592/timeout_long
+    webhook: http://127.0.0.1:5592/sleep_2s
     retry_conf:
       num_retries: 0
       interval_sec: 2

@@ -32,6 +32,7 @@ class TestScheduledEvent(object):
     webhook_domain = "http://127.0.0.1:5594"
 
 
+    # Succeeds
     def test_create_scheduled_event(self,hge_ctx):
         query = {
             "type":"create_scheduled_event",
@@ -46,6 +47,7 @@ class TestScheduledEvent(object):
         st, resp = hge_ctx.v1q(query)
         assert st == 200,resp
 
+    # Fails immediately, with 'dead'
     def test_create_scheduled_event_with_very_old_scheduled_time(self,hge_ctx):
         query = {
             "type":"create_scheduled_event",
@@ -59,6 +61,7 @@ class TestScheduledEvent(object):
         st, resp = hge_ctx.v1q(query)
         assert st == 200,resp
 
+    # Fails on request, trying twice:
     def test_create_trigger_with_error_returning_webhook(self,hge_ctx):
         query = {
             "type":"create_scheduled_event",
@@ -78,7 +81,17 @@ class TestScheduledEvent(object):
         st, resp = hge_ctx.v1q(query)
         assert st == 200, resp
 
-    def test_check_fired_webhook_event(self,hge_ctx,scheduled_triggers_evts_webhook):
+    # Here we check the three requests received by the webhook, from above.
+    def test_check_fired_webhook_events(self,hge_ctx,scheduled_triggers_evts_webhook):
+        # Collect the three generated events (they may arrive out of order):
+        e1 = scheduled_triggers_evts_webhook.get_event(12) # at least 10 sec, see processScheduledTriggers.sleep
+        e2 = scheduled_triggers_evts_webhook.get_event(12)
+        e3 = scheduled_triggers_evts_webhook.get_event(12)
+        [event_fail1, event_fail2, event_success] = sorted([e1,e2,e3], key=lambda e: e['path'])
+        # Check the two failures:
+        validate_event_webhook(event_fail1['path'],'/fail')
+        validate_event_webhook(event_fail2['path'],'/fail')
+        # Check the one successful webhook call:
         query = {
             "type":"run_sql",
             "args":{
@@ -92,18 +105,16 @@ class TestScheduledEvent(object):
         st, resp = hge_ctx.v1q(query)
         assert st == 200, resp
         db_created_at = resp['result'][1][0]
-        event = scheduled_triggers_evts_webhook.get_event(65)
-        validate_event_webhook(event['path'],'/test')
-        validate_event_headers(event['headers'],{"header-key":"header-value"})
-        assert event['body']['payload'] == self.webhook_payload
-        assert event['body']['created_at'] == db_created_at.replace(" ","T") + "Z"
-        payload_keys = dict.keys(event['body'])
+        validate_event_webhook(event_success['path'],'/test')
+        validate_event_headers(event_success['headers'],{"header-key":"header-value"})
+        assert event_success['body']['payload'] == self.webhook_payload
+        assert event_success['body']['created_at'] == db_created_at.replace(" ","T") + "Z"
+        payload_keys = dict.keys(event_success['body'])
         for k in ["scheduled_time","created_at","id"]: # additional keys
             assert k in payload_keys
         assert scheduled_triggers_evts_webhook.is_queue_empty()
 
     def test_check_events_statuses(self,hge_ctx):
-        time.sleep(65) # need to sleep here for atleast a minute for the failed event to be retried
         query = {
             "type":"run_sql",
             "args":{
@@ -117,9 +128,12 @@ class TestScheduledEvent(object):
         # one should be dead because the timestamp was past the tolerance limit
         # one should be delivered because all the parameters were reasonable
         # one should be error because the webhook returns an error state
-        assert "dead" in scheduled_event_statuses
-        assert "delivered" in scheduled_event_statuses
-        assert int(scheduled_event_statuses['error']) == 2 # num_retries + 1
+        assert scheduled_event_statuses == {
+                 'status':    'tries',
+                 'dead':      '0',
+                 'delivered': '1',
+                 'error':     '2' # num_retries + 1
+                }
 
     def test_teardown_scheduled_events(self,hge_ctx):
         query = {
@@ -272,16 +286,16 @@ class TestCronTrigger(object):
         }
         st,resp = hge_ctx.v1q(q)
         assert st == 200, resp
-        # The maximum timeout is set to 120s because, the cron timestamps
+        # The maximum timeout is set to 75s because, the cron timestamps
         # that are generated will start from the next minute, suppose
         # the cron schedule is "* * * * *" and the time the cron trigger
         # is created is 10:00:00, then the next event will be scheduled
         # at 10:01:00, but the events processor will not process it
         # exactly at the zeroeth second of 10:01. The only guarantee
-        # is that, the event processor will process the event before
-        # 10:02:00. So, in the worst case, it will take 2 minutes
-        # to process the first scheduled event.
-        event = scheduled_triggers_evts_webhook.get_event(120)
+        # is that, the event processor will start to process the event before
+        # 10:01:10 (seel sleep in processScheduledTriggers). So, in the worst
+        # case, it will take 70 seconds to process the first scheduled event.
+        event = scheduled_triggers_evts_webhook.get_event(75)
         validate_event_webhook(event['path'],'/test')
         validate_event_headers(event['headers'],{"header-key":"header-value"})
         assert event['body']['payload'] == {"foo":"baz"}

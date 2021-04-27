@@ -3,17 +3,9 @@ args:
 - type: run_sql
   args:
     sql: |
-      drop table if exists profiles
-
-- type: run_sql
-  args:
-    sql: |
-      drop table if exists user_profiles
-
-- type: run_sql
-  args:
-    sql: |
-      drop table if exists authors
+      drop table if exists profiles;
+      drop table if exists user_profiles;
+      drop table if exists authors;
 
 # also drops remote relationship and permissions as direct dependencies
 - type: remove_remote_schema

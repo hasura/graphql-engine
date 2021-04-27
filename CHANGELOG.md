@@ -11,6 +11,7 @@
 - console: fix Postgres table creation when table has a non-lowercase name and a comment (#6760)
 - cli: fix regression - `metadata apply —dry-run` was overwriting local metadata files with metadata on server when it should just display the differences.
 - cli: add support for `api_limits` metadata object
+- server: decrease polling interval for scheduled triggers from 60 to 10 seconds
 
 ## v2.0.0-alpha.9
 
