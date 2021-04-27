@@ -104,6 +104,7 @@ data RawServeOptions impl
   , rsoEnableMaintenanceMode         :: !Bool
   , rsoSchemaPollInterval            :: !(Maybe Milliseconds)
   , rsoExperimentalFeatures          :: !(Maybe [ExperimentalFeature])
+  , rsoEventsFetchBatchSize          :: !(Maybe NonNegativeInt)
   }
 
 -- | @'ResponseInternalErrorsConfig' represents the encoding of the internal
@@ -160,6 +161,7 @@ data ServeOptions impl
   , soEnableMaintenanceMode         :: !MaintenanceMode
   , soSchemaPollInterval            :: !OptionalInterval
   , soExperimentalFeatures          :: !(Set.HashSet ExperimentalFeature)
+  , soEventsFetchBatchSize          :: !NonNegativeInt
   }
 
 data DowngradeOptions
@@ -270,6 +272,10 @@ readIsoLevel isoS =
     "serializable"    -> return Q.Serializable
     _                 -> Left "Only expecting read-committed / repeatable-read / serializable"
 
+readNonNegativeInt :: String -> Either String NonNegativeInt
+readNonNegativeInt s =
+  onNothing (mkNonNegativeInt =<< readMaybe s) $ Left "Only expecting a non negative integer"
+
 readAPIs :: String -> Either String [API]
 readAPIs = mapM readAPI . T.splitOn "," . T.pack
   where readAPI si = case T.toUpper $ T.strip si of
@@ -370,6 +376,9 @@ instance FromEnv Cache.CacheSize where
 
 instance FromEnv URLTemplate where
   fromEnv = parseURLTemplate . T.pack
+
+instance FromEnv NonNegativeInt where
+  fromEnv = readNonNegativeInt
 
 type WithEnv a = ReaderT Env (ExceptT String Identity) a
 

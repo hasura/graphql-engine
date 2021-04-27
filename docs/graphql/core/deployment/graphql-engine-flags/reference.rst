@@ -160,6 +160,10 @@ For the ``serve`` sub-command these are the available flags and ENV variables:
      - Interval in milliseconds to sleep before trying to fetch events again after a fetch
        returned no events from postgres
 
+   * - ``--events-fetch-batch-size``
+     - ``HASURA_GRAPHQL_EVENTS_FETCH_BATCH_SIZE``
+     - Maximum number of events to be fetched from the DB in a single batch (default: 100)
+
    * - ``--async-actions-fetch-interval``
      - ``HASURA_GRAPHQL_ASYNC_ACTIONS_FETCH_INTERVAL``
      - Interval in milliseconds to sleep before trying to fetch async actions again after a fetch

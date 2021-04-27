@@ -525,19 +525,21 @@ runHGEServer setupHook env ServeOptions{..} ServeCtx{..} initTime postPollHook s
           shutdownEvents allPgSources
           (\a b -> hoist lowerIO (unlockScheduledEvents a b)) logger lockedEventsCtx)
 
-  -- prepare event triggers data
-  eventEngineCtx <- liftIO $ atomically $ initEventEngineCtx maxEvThrds fetchI
-  unLogger logger $ mkGenericStrLog LevelInfo "event_triggers" "starting workers"
 
-  _eventQueueThread <- C.forkManagedT "processEventQueue" logger $
-    processEventQueue logger
-                      logEnvHeaders
-                      _scHttpManager
-                      (getSCFromRef cacheRef)
-                      eventEngineCtx
-                      lockedEventsCtx
-                      serverMetrics
-                      soEnableMaintenanceMode
+  unless (getNonNegativeInt soEventsFetchBatchSize == 0 || soEventsFetchInterval == Just 0) $ do
+  -- Don't start the events poller thread when fetchBatchSize or fetchInterval is 0
+    -- prepare event triggers data
+    eventEngineCtx <- liftIO $ atomically $ initEventEngineCtx maxEvThrds fetchI soEventsFetchBatchSize
+    unLogger logger $ mkGenericStrLog LevelInfo "event_triggers" "starting workers"
+    void $ C.forkManagedT "processEventQueue" logger $
+      processEventQueue logger
+                        logEnvHeaders
+                        _scHttpManager
+                        (getSCFromRef cacheRef)
+                        eventEngineCtx
+                        lockedEventsCtx
+                        serverMetrics
+                        soEnableMaintenanceMode
 
   -- start a backgroud thread to handle async actions
   case soAsyncActionsFetchInterval of

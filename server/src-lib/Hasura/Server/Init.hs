@@ -28,6 +28,7 @@ import qualified Hasura.GraphQL.Execute.Plan              as E
 import qualified Hasura.Logging                           as L
 
 import           Hasura.Backends.Postgres.Connection
+import           Hasura.Eventing.EventTrigger             (defaultFetchBatchSize)
 import           Hasura.Prelude
 import           Hasura.RQL.Types
 import           Hasura.Server.Auth
@@ -210,6 +211,10 @@ mkServeOptions rso = do
     bool MaintenanceModeDisabled MaintenanceModeEnabled
     <$> withEnvBool (rsoEnableMaintenanceMode rso) (fst maintenanceModeEnv)
 
+  eventsFetchBatchSize <-
+    fromMaybe defaultFetchBatchSize
+    <$> withEnv (rsoEventsFetchBatchSize rso) (fst eventsFetchBatchSizeEnv)
+
   pure $ ServeOptions
            port
            host
@@ -243,6 +248,7 @@ mkServeOptions rso = do
            maintenanceMode
            schemaPollInterval
            experimentalFeatures
+           eventsFetchBatchSize
   where
 #ifdef DeveloperAPIs
     defaultAPIs = [METADATA,GRAPHQL,PGDUMP,CONFIG,DEVELOPER]
@@ -432,6 +438,12 @@ eventsFetchIntervalEnv :: (String, String)
 eventsFetchIntervalEnv =
   ( "HASURA_GRAPHQL_EVENTS_FETCH_INTERVAL"
   , "Interval in milliseconds to sleep before trying to fetch events again after a fetch returned no events from postgres."
+  )
+
+eventsFetchBatchSizeEnv :: (String, String)
+eventsFetchBatchSizeEnv =
+  ( "HASURA_GRAPHQL_EVENTS_FETCH_BATCH_SIZE"
+  , "The maximum number of events to be fetched from the events table in a single batch. Default 100"
   )
 
 asyncActionsFetchIntervalEnv :: (String, String)
@@ -998,6 +1010,14 @@ parseGraphqlEventsFetchInterval = optional $
     help (snd eventsFetchIntervalEnv)
   )
 
+parseEventsFetchBatchSize :: Parser (Maybe NonNegativeInt)
+parseEventsFetchBatchSize = optional $
+  option (eitherReader readNonNegativeInt)
+  ( long "events-fetch-batch-size" <>
+    metavar (fst eventsFetchBatchSizeEnv)  <>
+    help (snd eventsFetchBatchSizeEnv)
+  )
+
 parseGraphqlAsyncActionsFetchInterval :: Parser (Maybe Milliseconds)
 parseGraphqlAsyncActionsFetchInterval = optional $
   option (eitherReader readEither)
@@ -1155,6 +1175,7 @@ serveOptsToLog so =
       , "infer_function_permissions" J..= soInferFunctionPermissions so
       , "enable_maintenance_mode" J..= soEnableMaintenanceMode so
       , "experimental_features" J..= soExperimentalFeatures so
+      , "events_fetch_batch_size" J..= soEventsFetchBatchSize so
       ]
 
 mkGenericStrLog :: L.LogLevel -> Text -> String -> StartupLog
@@ -1209,6 +1230,7 @@ serveOptionsParser =
   <*> parseEnableMaintenanceMode
   <*> parseSchemaPollInterval
   <*> parseExperimentalFeatures
+  <*> parseEventsFetchBatchSize
 
 -- | This implements the mapping between application versions
 -- and catalog schema versions.

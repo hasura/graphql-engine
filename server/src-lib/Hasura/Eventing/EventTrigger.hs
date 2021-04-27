@@ -35,6 +35,7 @@ module Hasura.Eventing.EventTrigger
   , processEventQueue
   , defaultMaxEventThreads
   , defaultFetchInterval
+  , defaultFetchBatchSize
   , Event(..)
   , unlockEvents
   , EventEngineCtx(..)
@@ -155,6 +156,7 @@ data EventEngineCtx
   = EventEngineCtx
   { _eeCtxEventThreadsCapacity :: TVar Int
   , _eeCtxFetchInterval        :: DiffTime
+  , _eeCtxFetchSize            :: NonNegativeInt
   }
 
 data DeliveryInfo
@@ -193,8 +195,11 @@ defaultMaxEventThreads = 100
 defaultFetchInterval :: DiffTime
 defaultFetchInterval = seconds 1
 
-initEventEngineCtx :: Int -> DiffTime -> STM EventEngineCtx
-initEventEngineCtx maxT _eeCtxFetchInterval = do
+defaultFetchBatchSize :: NonNegativeInt
+defaultFetchBatchSize = unsafeNonNegativeInt 100
+
+initEventEngineCtx :: Int -> DiffTime -> NonNegativeInt -> STM EventEngineCtx
+initEventEngineCtx maxT _eeCtxFetchInterval _eeCtxFetchSize = do
   _eeCtxEventThreadsCapacity <- newTVar maxT
   return $ EventEngineCtx{..}
 
@@ -233,7 +238,7 @@ processEventQueue logger logenv httpMgr getSchemaCache eeCtx@EventEngineCtx{..} 
   _ <- liftIO $ EKG.Distribution.add (smNumEventsFetched serverMetrics) (fromIntegral $ length events0)
   go events0 0 False
   where
-    fetchBatchSize = 100
+    fetchBatchSize = getNonNegativeInt _eeCtxFetchSize
 
     popEventsBatch :: m [EventWithSource ('Postgres 'Vanilla)]
     popEventsBatch = do
@@ -402,10 +407,10 @@ withEventEngineCtx ::
 withEventEngineCtx eeCtx = bracket_ (decrementThreadCount eeCtx) (incrementThreadCount eeCtx)
 
 incrementThreadCount :: MonadIO m => EventEngineCtx -> m ()
-incrementThreadCount (EventEngineCtx c _) = liftIO $ atomically $ modifyTVar' c (+1)
+incrementThreadCount (EventEngineCtx c _ _) = liftIO $ atomically $ modifyTVar' c (+1)
 
 decrementThreadCount :: MonadIO m => EventEngineCtx -> m ()
-decrementThreadCount (EventEngineCtx c _)  = liftIO $ atomically $ do
+decrementThreadCount (EventEngineCtx c _ _)  = liftIO $ atomically $ do
   countThreads <- readTVar c
   if countThreads > 0
      then modifyTVar' c (\v -> v - 1)
