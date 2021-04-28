@@ -60,6 +60,7 @@ func TestClient_ExportMetadata(t *testing.T) {
       "configuration": {
         "connection_info": {
           "use_prepared_statements": true,
+          "isolation_level": "read-committed",
           "database_url": {
             "from_env": "HASURA_GRAPHQL_DATABASE_URL"
           },

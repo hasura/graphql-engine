@@ -56,6 +56,7 @@ func TestClientCommonMetadataOps_V2ReplaceMetadata(t *testing.T) {
                     "database_url": {
                         "from_env": "HASURA_GRAPHQL_DATABASE_URL"
                     },
+		    "isolation_level": "read-committed",
                     "pool_settings": {
                         "retries": 1,
                         "idle_timeout": 180,
@@ -117,12 +118,13 @@ func TestClientCommonMetadataOps_V2ReplaceMetadata(t *testing.T) {
                     "database_url": {
                         "from_env": "HASURA_GRAPHQL_DATABASE_URL"
                     },
+		    "isolation_level": "read-committed",
                     "pool_settings": {
                         "retries": 1,
                         "idle_timeout": 180,
                         "max_connections": 50
                     },
-  		    "use_prepared_statements": true
+		    "use_prepared_statements": true
                 }
             }
         }

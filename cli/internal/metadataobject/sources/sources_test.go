@@ -49,6 +49,7 @@ func TestSourceConfig_Export(t *testing.T) {
     connection_info:
       database_url:
         from_env: HASURA_GRAPHQL_DATABASE_URL
+      isolation_level: read-committed
       pool_settings:
         idle_timeout: 180
         max_connections: 50
@@ -187,6 +188,7 @@ func TestSourceConfig_Build(t *testing.T) {
     connection_info:
       database_url:
         from_env: HASURA_GRAPHQL_DATABASE_URL
+      isolation_level: read-committed
       pool_settings:
         idle_timeout: 180
         max_connections: 50
@@ -212,6 +214,7 @@ func TestSourceConfig_Build(t *testing.T) {
     connection_info:
       database_url:
         from_env: HASURA_GRAPHQL_DATABASE_URL
+      isolation_level: read-committed
       pool_settings:
         idle_timeout: 180
         max_connections: 50

@@ -28,6 +28,7 @@ only when there are enough present in the items inventory.
 
 ### Bug fixes and improvements
 
+- server: make the ``HASURA_GRAPHQL_PG_CONN_LIFETIME``, ``HASURA_GRAPHQL_POOL_TIMEOUT`` and ``HASURA_GRAPHQL_TX_ISOLATION`` configs source specific
 - server: fix bug with catalog upgrade from alpha.7 (fix #6802)
 - server: fix a bug in remote schema permissions that could result in an invalid GraphQL schema (fix #6029, #6703)
 - server: support query multiplexing in MSSQL subscriptions

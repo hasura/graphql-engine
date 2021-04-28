@@ -15,7 +15,6 @@ import qualified Data.Aeson              as J
 
 import           Hasura.RQL.Types.Common
 
-
 data LiveQueriesOptions
   = LiveQueriesOptions
   { _lqoBatchSize       :: !BatchSize

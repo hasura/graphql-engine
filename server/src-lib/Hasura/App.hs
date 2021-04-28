@@ -274,11 +274,17 @@ initialiseServeCtx env GlobalCtx{..} so@ServeOptions{..} = do
 
   let maybeDefaultSourceConfig = fst _gcDefaultPostgresConnInfo <&> \(dbUrlConf, _) ->
         let connSettings = PostgresPoolSettings
-                           { _ppsMaxConnections = Just $ Q.cpConns soConnParams
-                           , _ppsIdleTimeout    = Just $ Q.cpIdleTime soConnParams
-                           , _ppsRetries        = snd _gcDefaultPostgresConnInfo <|> Just 1
+                           { _ppsMaxConnections     = Just $ Q.cpConns soConnParams
+                           , _ppsIdleTimeout        = Just $ Q.cpIdleTime soConnParams
+                           , _ppsRetries            = snd _gcDefaultPostgresConnInfo <|> Just 1
+                           , _ppsPoolTimeout        = Q.cpTimeout soConnParams
+                           , _ppsConnectionLifetime = Q.cpMbLifetime soConnParams
                            }
-            sourceConnInfo = PostgresSourceConnInfo dbUrlConf (Just connSettings) $ Q.cpAllowPrepare soConnParams
+            sourceConnInfo =
+              PostgresSourceConnInfo dbUrlConf
+                                     (Just connSettings)
+                                     (Q.cpAllowPrepare soConnParams)
+                                     soTxIso
         in PostgresConnConfiguration sourceConnInfo Nothing
       sqlGenCtx = SQLGenCtx soStringifyNum soDangerousBooleanCollapse
 

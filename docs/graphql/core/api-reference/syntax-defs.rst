@@ -130,6 +130,10 @@ PGSourceConnectionInfo
      - Boolean
      - If set to ``true`` the server prepares statement before executing on the source database (default: ``false``).
        For more details, refer to the `Postgres docs <https://www.postgresql.org/docs/current/sql-prepare.html>`__
+   * - isolation_level
+     - false
+     - ``read-committed`` | ``repeatable-read`` | ``serializable``
+     - The transaction isolation level in which the queries made to the source will be run with (default: ``read-committed``).
 
 
 .. _FromEnv:
@@ -173,6 +177,16 @@ PGPoolSettings
      - false
      - ``Integer``
      - Number of retries to perform (default: 1)
+   * - pool_timeout
+     - false
+     - ``Integer``
+     - Maximum time to wait while acquiring a Postgres connection from the pool, in seconds (default: forever)
+   * - connection_lifetime
+     - false
+     - ``Integer``
+     - Time from connection creation after which the connection should be destroyed and a new one
+       created. A value of 0 indicates we should never destroy an active connection. If 0 is
+       passed, memory from large query results may not be reclaimed. (default: 600 sec)
 
 
 .. _PGColumnType:

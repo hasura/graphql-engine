@@ -23,17 +23,19 @@ import           Hasura.RQL.Types
 mkPgSourceResolver :: Q.PGLogger -> SourceResolver
 mkPgSourceResolver pgLogger _ config = runExceptT do
   env <- lift Env.getEnvironment
-  let PostgresSourceConnInfo urlConf connSettings allowPrepare = _pccConnectionInfo config
+  let PostgresSourceConnInfo urlConf poolSettings allowPrepare isoLevel = _pccConnectionInfo config
   -- If the user does not provide values for the pool settings, then use the default values
-  let (maxConns, idleTimeout, retries) = getDefaultPGPoolSettingIfNotExists connSettings defaultPostgresPoolSettings
+  let (maxConns, idleTimeout, retries) = getDefaultPGPoolSettingIfNotExists poolSettings defaultPostgresPoolSettings
   urlText <- resolveUrlConf env urlConf
   let connInfo = Q.ConnInfo retries $ Q.CDDatabaseURI $ txtToBs urlText
       connParams = Q.defaultConnParams{ Q.cpIdleTime = idleTimeout
                                       , Q.cpConns = maxConns
                                       , Q.cpAllowPrepare = allowPrepare
+                                      , Q.cpMbLifetime = _ppsConnectionLifetime =<< poolSettings
+                                      , Q.cpTimeout = _ppsPoolTimeout =<< poolSettings
                                       }
   pgPool <- liftIO $ Q.initPGPool connInfo connParams pgLogger
-  let pgExecCtx = mkPGExecCtx Q.ReadCommitted pgPool
+  let pgExecCtx = mkPGExecCtx isoLevel pgPool
   pure $ PGSourceConfig pgExecCtx connInfo Nothing
 
 --- Metadata APIs related

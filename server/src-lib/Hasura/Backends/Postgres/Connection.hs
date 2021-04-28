@@ -35,11 +35,13 @@ module Hasura.Backends.Postgres.Connection
   , psciDatabaseUrl
   , psciPoolSettings
   , psciUsePreparedStatements
+  , psciIsolationLevel
   , module ET
   ) where
 
 import           Hasura.Prelude
 
+import qualified Data.Text                              as T
 import qualified Database.PG.Query                      as Q
 import qualified Database.PG.Query.Connection           as Q
 
@@ -51,7 +53,9 @@ import           Control.Monad.Validate
 import           Data.Aeson
 import           Data.Aeson.Extended
 import           Data.Aeson.TH
+import           Data.Time
 import           Network.HTTP.Client.Extended           (HasHttpManagerM (..))
+import           Test.QuickCheck.Instances.Time         ()
 
 import qualified Hasura.Backends.Postgres.SQL.DML       as S
 import qualified Hasura.Tracing                         as Tracing
@@ -63,6 +67,7 @@ import           Hasura.Incremental                     (Cacheable (..))
 import           Hasura.RQL.Types.Common                (UrlConf)
 import           Hasura.RQL.Types.Error
 import           Hasura.SQL.Types
+import           Hasura.Server.Utils                    (parseConnLifeTime, readIsoLevel)
 import           Hasura.Session
 
 class (MonadError QErr m) => MonadTx m where
@@ -291,9 +296,11 @@ dropHdbCatalogSchema = liftTx $ Q.catchE defaultTxErrorHandler $
 
 data PostgresPoolSettings
   = PostgresPoolSettings
-  { _ppsMaxConnections :: !(Maybe Int)
-  , _ppsIdleTimeout    :: !(Maybe Int)
-  , _ppsRetries        :: !(Maybe Int)
+  { _ppsMaxConnections     :: !(Maybe Int)
+  , _ppsIdleTimeout        :: !(Maybe Int)
+  , _ppsRetries            :: !(Maybe Int)
+  , _ppsPoolTimeout        :: !(Maybe NominalDiffTime)
+  , _ppsConnectionLifetime :: !(Maybe NominalDiffTime)
   } deriving (Show, Eq, Generic)
 instance Cacheable PostgresPoolSettings
 instance Hashable PostgresPoolSettings
@@ -301,38 +308,38 @@ instance NFData PostgresPoolSettings
 $(deriveToJSON hasuraJSON{omitNothingFields = True} ''PostgresPoolSettings)
 
 instance FromJSON PostgresPoolSettings where
-  parseJSON = withObject "Object" $ \o ->
+  parseJSON = withObject "PostgresPoolSettings" $ \o ->
     PostgresPoolSettings
       <$> o .:? "max_connections"
       <*> o .:? "idle_timeout"
       <*> o .:? "retries"
+      <*> o .:? "pool_timeout"
+      <*> ((o .:? "connection_lifetime") <&> parseConnLifeTime)
 
 instance Arbitrary PostgresPoolSettings where
   arbitrary = genericArbitrary
 
 data DefaultPostgresPoolSettings =
   DefaultPostgresPoolSettings
-  { _dppsMaxConnections :: !Int
-  , _dppsIdleTimeout    :: !Int
-  , _dppsRetries        :: !Int
+  { _dppsMaxConnections     :: !Int
+  , _dppsIdleTimeout        :: !Int
+  , _dppsRetries            :: !Int
+  , _dppsConnectionLifetime :: !(Maybe NominalDiffTime)
   } deriving (Show, Eq)
 
 defaultPostgresPoolSettings :: DefaultPostgresPoolSettings
-defaultPostgresPoolSettings =
-  DefaultPostgresPoolSettings
-  { _dppsMaxConnections = 50
-  , _dppsIdleTimeout    = 180
-  , _dppsRetries        = 1
-  }
+defaultPostgresPoolSettings = DefaultPostgresPoolSettings 50 180 1 (Just 600)
 
 -- Use this when you want to set only few of the PG Pool settings.
 -- The values which are not set will use the default values.
 setPostgresPoolSettings :: PostgresPoolSettings
 setPostgresPoolSettings =
   PostgresPoolSettings
-  { _ppsMaxConnections = (Just $ _dppsMaxConnections defaultPostgresPoolSettings)
-  , _ppsIdleTimeout    = (Just $ _dppsIdleTimeout defaultPostgresPoolSettings)
-  , _ppsRetries        = (Just $ _dppsRetries defaultPostgresPoolSettings)
+  { _ppsMaxConnections     = (Just $ _dppsMaxConnections defaultPostgresPoolSettings)
+  , _ppsIdleTimeout        = (Just $ _dppsIdleTimeout defaultPostgresPoolSettings)
+  , _ppsRetries            = (Just $ _dppsRetries defaultPostgresPoolSettings)
+  , _ppsPoolTimeout        = Nothing -- @Nothing@ is the default value of the pool timeout
+  , _ppsConnectionLifetime = _dppsConnectionLifetime defaultPostgresPoolSettings
   }
 
 -- PG Pool Settings are not given by the user, set defaults
@@ -340,7 +347,8 @@ getDefaultPGPoolSettingIfNotExists :: Maybe PostgresPoolSettings -> DefaultPostg
 getDefaultPGPoolSettingIfNotExists connSettings defaultPgPoolSettings =
   case connSettings of
     -- Atleast one of the postgres pool settings is set, then set default values to other settings
-    Just connSettings' -> (maxConnections connSettings', idleTimeout connSettings', retries connSettings')
+    Just connSettings' ->
+      (maxConnections connSettings', idleTimeout connSettings', retries connSettings')
      -- No PG Pool settings provided by user, set default values for all
     Nothing -> (defMaxConnections, defIdleTimeout, defRetries)
 
@@ -353,11 +361,29 @@ getDefaultPGPoolSettingIfNotExists connSettings defaultPgPoolSettings =
     idleTimeout = fromMaybe defIdleTimeout . _ppsIdleTimeout
     retries = fromMaybe defRetries . _ppsRetries
 
+deriving instance Generic Q.TxIsolation
+instance Cacheable Q.TxIsolation
+instance NFData    Q.TxIsolation
+instance Hashable  Q.TxIsolation
+
+instance FromJSON Q.TxIsolation where
+  parseJSON = withText "Q.TxIsolation" $ \t ->
+    onLeft (readIsoLevel $ T.unpack t) fail
+
+instance ToJSON Q.TxIsolation where
+  toJSON Q.ReadCommitted  = "read-committed"
+  toJSON Q.RepeatableRead = "repeatable-read"
+  toJSON Q.Serializable   = "serializable"
+
+instance Arbitrary Q.TxIsolation where
+  arbitrary = genericArbitrary
+
 data PostgresSourceConnInfo
   = PostgresSourceConnInfo
   { _psciDatabaseUrl           :: !UrlConf
   , _psciPoolSettings          :: !(Maybe PostgresPoolSettings)
   , _psciUsePreparedStatements :: !Bool
+  , _psciIsolationLevel        :: !Q.TxIsolation
   } deriving (Show, Eq, Generic)
 instance Cacheable PostgresSourceConnInfo
 instance Hashable PostgresSourceConnInfo
@@ -365,13 +391,13 @@ instance NFData PostgresSourceConnInfo
 $(deriveToJSON hasuraJSON{omitNothingFields = True} ''PostgresSourceConnInfo)
 $(makeLenses ''PostgresSourceConnInfo)
 
-
 instance FromJSON PostgresSourceConnInfo where
-  parseJSON = withObject "Object" $ \o ->
+  parseJSON = withObject "PostgresSourceConnInfo" $ \o ->
     PostgresSourceConnInfo
       <$> o .: "database_url"
       <*> o .:? "pool_settings"
       <*> o .:? "use_prepared_statements" .!= False -- By default preparing statements is OFF for postgres source
+      <*> o .:? "isolation_level" .!= Q.ReadCommitted
 
 instance Arbitrary PostgresSourceConnInfo where
   arbitrary = genericArbitrary

@@ -329,7 +329,7 @@ data Metadata
 $(makeLenses ''Metadata)
 
 instance FromJSON Metadata where
-  parseJSON = withObject "Object" $ \o -> do
+  parseJSON = withObject "Metadata" $ \o -> do
     version <- o .:? "version" .!= MVVersion1
     when (version /= MVVersion3) $ fail $
       "unexpected metadata version from storage: " <> show version

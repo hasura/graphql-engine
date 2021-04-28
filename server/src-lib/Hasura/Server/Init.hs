@@ -263,10 +263,7 @@ mkServeOptions rso = do
       -- hard throughput cap at 1000RPS when db queries take 50ms on average:
       conns <- fromMaybe 50 <$> withEnv c (fst pgConnsEnv)
       iTime <- fromMaybe 180 <$> withEnv i (fst pgTimeoutEnv)
-      connLifetime <- withEnv cl (fst pgConnLifetimeEnv) <&> \case
-        Nothing -> Just 600 -- Not set by user; use the default timeout
-        Just 0  -> Nothing  -- user wants to disable PG_CONN_LIFETIME
-        Just n  -> Just n   -- user specified n seconds lifetime
+      connLifetime <- withEnv cl (fst pgConnLifetimeEnv) <&> parseConnLifeTime
       allowPrepare <- fromMaybe True <$> withEnv p (fst pgUsePrepareEnv)
       poolTimeout <- withEnv pt (fst pgPoolTimeoutEnv)
       return $ Q.ConnParams

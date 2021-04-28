@@ -49,10 +49,15 @@ Add a database with name ``pg1``:
           "pool_settings": {
             "max_connections": 50,
             "idle_timeout": 180,
-            "retries": 1
-          }
+            "retries": 1,
+            "pool_timeout": 360,
+            "connection_lifetime": 600
+          },
+          "use_prepared_statements": true,
+          "isolation_level": "read-committed",
         }
-      }
+      },
+      "replace_configuration": false
     }
   }
 

@@ -66,6 +66,7 @@ import           Data.Aeson
 import           Data.Aeson.Casing
 import           Data.Aeson.TH
 import           Data.Bifunctor                     (bimap)
+import           Data.Hashable.Time                 ()
 import           Data.Scientific                    (toBoundedInteger)
 import           Data.Text.Extended
 import           Data.Text.NonEmpty
@@ -277,7 +278,7 @@ instance FromJSON NonNegativeInt where
       False -> fail "negative value not allowed"
 
 newtype NonNegativeDiffTime = NonNegativeDiffTime { unNonNegativeDiffTime :: DiffTime }
-  deriving (Show, Eq,ToJSON,Generic, NFData, Cacheable, Num)
+  deriving (Show, Eq, ToJSON, Generic, NFData, Cacheable, Num)
 
 unsafeNonNegativeDiffTime :: DiffTime -> NonNegativeDiffTime
 unsafeNonNegativeDiffTime = NonNegativeDiffTime

@@ -30,6 +30,7 @@ import           Hasura.RQL.Types
 import           Hasura.Server.Auth
 import           Hasura.Server.Cors
 import           Hasura.Server.Types
+import           Hasura.Server.Utils
 import           Hasura.Session
 
 data RawConnParams
@@ -263,14 +264,6 @@ parseStrAsBool t
     errMsg = " Not a valid boolean text. " ++ "True values are "
              ++ show truthVals ++ " and  False values are " ++ show falseVals
              ++ ". All values are case insensitive"
-
-readIsoLevel :: String -> Either String Q.TxIsolation
-readIsoLevel isoS =
-  case isoS of
-    "read-committed"  -> return Q.ReadCommitted
-    "repeatable-read" -> return Q.RepeatableRead
-    "serializable"    -> return Q.Serializable
-    _                 -> Left "Only expecting read-committed / repeatable-read / serializable"
 
 readNonNegativeInt :: String -> Either String NonNegativeInt
 readNonNegativeInt s =

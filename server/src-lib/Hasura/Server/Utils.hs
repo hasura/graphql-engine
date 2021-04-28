@@ -7,6 +7,7 @@ import           Data.Aeson
 import           Data.Aeson.Internal
 import           Data.Char
 import           Data.Text.Extended
+import           Data.Time
 import           Language.Haskell.TH.Syntax (Q, TExp)
 import           System.Environment
 import           System.Exit
@@ -21,6 +22,7 @@ import qualified Data.Text.IO               as TI
 import qualified Data.UUID                  as UUID
 import qualified Data.UUID.V4               as UUID
 import qualified Data.Vector                as V
+import qualified Database.PG.Query          as Q
 import qualified Language.Haskell.TH.Syntax as TH
 import qualified Network.HTTP.Client        as HC
 import qualified Network.HTTP.Types         as HTTP
@@ -243,3 +245,17 @@ executeJSONPath jsonPath = iparse (valueParser jsonPath)
                   Key k   -> withObject "Object" (.: k)
                   Index i -> withArray "Array" $
                              maybe (fail "Array index out of range") pure . (V.!? i)
+
+readIsoLevel :: String -> Either String Q.TxIsolation
+readIsoLevel isoS =
+  case isoS of
+    "read-committed"  -> return Q.ReadCommitted
+    "repeatable-read" -> return Q.RepeatableRead
+    "serializable"    -> return Q.Serializable
+    _                 -> Left "Only expecting read-committed / repeatable-read / serializable"
+
+parseConnLifeTime :: Maybe NominalDiffTime -> Maybe NominalDiffTime
+parseConnLifeTime = \case
+  Nothing -> Just 600  -- Not set by user; use the default timeout
+  Just 0  -> Nothing   -- user wants to disable PG_CONN_LIFETIME
+  Just n  -> Just n    -- user specified n seconds lifetime

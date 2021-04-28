@@ -148,6 +148,7 @@ library
                      , vector
                      , vector-instances
                      , wai
+                     , hashable-time
 
                      -- Encoder related
                      , uuid
