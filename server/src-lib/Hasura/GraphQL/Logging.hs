@@ -13,6 +13,7 @@ module Hasura.GraphQL.Logging
 import           Hasura.Prelude
 
 import qualified Data.Aeson                             as J
+import qualified Data.HashMap.Strict                    as Map
 import qualified Language.GraphQL.Draft.Syntax          as G
 
 import qualified Hasura.Logging                         as L
@@ -33,21 +34,19 @@ data QueryLog = QueryLog
   }
 
 data QueryLogKind
-  = Database
-  | Action
-  | RemoteSchema
-  | GraphQL
-  | Cached
-  | Subscription -- This field is a workaround due to src-lib/Hasura/GraphQL/Transport/WebSocket.hs logging the query before execution is determined.
+  = QueryLogKindDatabase
+  | QueryLogKindAction
+  | QueryLogKindRemoteSchema
+  | QueryLogKindCached
+  | QueryLogKindIntrospection
 
 instance J.ToJSON QueryLogKind where
   toJSON = \case
-    Database     -> "database"
-    Action       -> "action"
-    RemoteSchema -> "remote-schema"
-    GraphQL      -> "graphql"
-    Cached       -> "cached"
-    Subscription -> "subscription"
+    QueryLogKindDatabase      -> "database"
+    QueryLogKindAction        -> "action"
+    QueryLogKindRemoteSchema  -> "remote-schema"
+    QueryLogKindCached        -> "cached"
+    QueryLogKindIntrospection -> "introspection"
 
 data GeneratedQuery = GeneratedQuery
   { _gqQueryString  :: Text
@@ -57,10 +56,13 @@ data GeneratedQuery = GeneratedQuery
 instance J.ToJSON QueryLog where
   toJSON (QueryLog gqlQuery generatedQuery reqId kind) =
     J.object [ "query"         J..= gqlQuery
-             , "generated_sql" J..= generatedQuery
+             -- NOTE: this customizes the default JSON instance of a pair
+             , "generated_sql" J..= fmap fromPair generatedQuery
              , "request_id"    J..= reqId
              , "kind"          J..= kind
              ]
+    where
+      fromPair p = Map.fromList [first G.unName p]
 
 instance J.ToJSON GeneratedQuery where
   toJSON (GeneratedQuery queryString preparedArgs) =

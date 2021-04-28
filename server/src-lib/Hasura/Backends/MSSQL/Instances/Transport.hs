@@ -134,6 +134,6 @@ mkQueryLog
   -> RequestId
   -> QueryLog
 mkQueryLog gqlQuery fieldName preparedSql requestId =
-  QueryLog gqlQuery ((fieldName,) <$> generatedQuery) requestId Database
+  QueryLog gqlQuery ((fieldName,) <$> generatedQuery) requestId QueryLogKindDatabase
   where
     generatedQuery = preparedSql <&> \qs -> GeneratedQuery qs J.Null

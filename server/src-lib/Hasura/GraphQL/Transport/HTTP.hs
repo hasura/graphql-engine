@@ -50,7 +50,7 @@ import           Hasura.Backends.Postgres.Instances.Transport (runPGMutationTran
 import           Hasura.EncJSON
 import           Hasura.GraphQL.Context
 import           Hasura.GraphQL.Logging                       (MonadQueryLog (logQueryLog),
-                                                               QueryLog (..), QueryLogKind (Cached))
+                                                               QueryLog (..), QueryLogKind (..))
 import           Hasura.GraphQL.Parser.Column                 (UnpreparedValue (..))
 import           Hasura.GraphQL.Parser.Schema                 (Variable)
 import           Hasura.GraphQL.Transport.Backend
@@ -233,7 +233,7 @@ runGQ env logger reqId userInfo ipAddress reqHeaders queryType reqUnparsed = do
         (responseHeaders, cachedValue) <- Tracing.interpTraceT (liftEitherM . runExceptT) $ cacheLookup remoteJoins actionsInfo cacheKey
         case fmap decodeGQResp cachedValue of
           Just cachedResponseData -> do
-            logQueryLog logger $ QueryLog reqUnparsed Nothing reqId Cached
+            logQueryLog logger $ QueryLog reqUnparsed Nothing reqId QueryLogKindCached
             pure (Telem.Query, 0, Telem.Local, HttpResponse cachedResponseData responseHeaders, normalizedSelectionSet)
 
           Nothing -> do
@@ -252,12 +252,15 @@ runGQ env logger reqId userInfo ipAddress reqHeaders queryType reqUnparsed = do
                           tx
                           genSql
                 return $ ResultsFragment telemTimeIO_DT Telem.Local resp []
-              E.ExecStepRemote rsi gqlReq ->
+              E.ExecStepRemote rsi gqlReq -> do
+                logQueryLog logger $ QueryLog reqUnparsed Nothing reqId QueryLogKindRemoteSchema
                 runRemoteGQ httpManager fieldName rsi gqlReq
               E.ExecStepAction (aep, _) -> do
+                logQueryLog logger $ QueryLog reqUnparsed Nothing reqId QueryLogKindAction
                 (time, (r, _)) <- doQErr $ EA.runActionExecution aep
                 pure $ ResultsFragment time Telem.Empty r []
-              E.ExecStepRaw json ->
+              E.ExecStepRaw json -> do
+                logQueryLog logger $ QueryLog reqUnparsed Nothing reqId QueryLogKindIntrospection
                 buildRaw json
             out@(_, _, _, HttpResponse responseData _, _) <-
               buildResultFromFragments Telem.Query conclusion responseHeaders normalizedSelectionSet
@@ -306,12 +309,15 @@ runGQ env logger reqId userInfo ipAddress reqHeaders queryType reqUnparsed = do
                           tx
                           genSql
                 return $ ResultsFragment telemTimeIO_DT Telem.Local resp responseHeaders
-              E.ExecStepRemote rsi gqlReq ->
+              E.ExecStepRemote rsi gqlReq -> do
+                logQueryLog logger $ QueryLog reqUnparsed Nothing reqId QueryLogKindRemoteSchema
                 runRemoteGQ httpManager fieldName rsi gqlReq
               E.ExecStepAction (aep, _) -> do
+                logQueryLog logger $ QueryLog reqUnparsed Nothing reqId QueryLogKindAction
                 (time, (r, hdrs)) <- doQErr $ EA.runActionExecution aep
                 pure $ ResultsFragment time Telem.Empty r $ fromMaybe [] hdrs
-              E.ExecStepRaw json ->
+              E.ExecStepRaw json -> do
+                logQueryLog logger $ QueryLog reqUnparsed Nothing reqId QueryLogKindIntrospection
                 buildRaw json
             buildResultFromFragments Telem.Mutation conclusion [] normalizedSelectionSet
 

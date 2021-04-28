@@ -383,7 +383,7 @@ onStart env serverEnv wsConn (StartMsg opId q) = catchAndIgnore $ do
             E.ExecStepDB _remoteHeaders exists ->
               AB.dispatchAnyBackend @BackendTransport exists EB.getRemoteSchemaInfo
             _ -> []
-          actionsInfo = foldl getExecStepActionWithActionInfo [] $ OMap.elems $ OMap.filter (\x -> case x of
+          actionsInfo = foldl getExecStepActionWithActionInfo [] $ OMap.elems $ OMap.filter (\case
               E.ExecStepAction (_, _) -> True
               _                       -> False
               ) queryPlan
@@ -393,6 +393,7 @@ onStart env serverEnv wsConn (StartMsg opId q) = catchAndIgnore $ do
       (_responseHeaders, cachedValue) <- Tracing.interpTraceT (withExceptT mempty) $ cacheLookup remoteJoins actionsInfo cacheKey
       case cachedValue of
         Just cachedResponseData -> do
+          logQueryLog logger $ QueryLog q Nothing requestId QueryLogKindCached
           sendSuccResp cachedResponseData $ LQ.LiveQueryMetadata 0
         Nothing -> do
           conclusion <- runExceptT $ forWithKey queryPlan $ \fieldName -> \case
@@ -411,11 +412,14 @@ onStart env serverEnv wsConn (StartMsg opId q) = catchAndIgnore $ do
                        genSql
               return $ ResultsFragment telemTimeIO_DT Telem.Local resp []
             E.ExecStepRemote rsi gqlReq -> do
+              logQueryLog logger $ QueryLog q Nothing requestId QueryLogKindRemoteSchema
               runRemoteGQ fieldName userInfo reqHdrs rsi gqlReq
             E.ExecStepAction (actionExecPlan, _) -> do
+              logQueryLog logger $ QueryLog q Nothing requestId QueryLogKindAction
               (time, (r, _)) <- doQErr $ EA.runActionExecution actionExecPlan
               pure $ ResultsFragment time Telem.Empty r []
-            E.ExecStepRaw json ->
+            E.ExecStepRaw json -> do
+              logQueryLog logger $ QueryLog q Nothing requestId QueryLogKindIntrospection
               buildRaw json
           buildResultFromFragments Telem.Query telemCacheHit timerTot requestId conclusion
           case conclusion of
@@ -462,43 +466,45 @@ onStart env serverEnv wsConn (StartMsg opId q) = catchAndIgnore $ do
                          genSql
               return $ ResultsFragment telemTimeIO_DT Telem.Local resp []
             E.ExecStepAction (actionExecPlan, _) -> do
+              logQueryLog logger $ QueryLog q Nothing requestId QueryLogKindAction
               (time, (r, hdrs)) <- doQErr $ EA.runActionExecution actionExecPlan
               pure $ ResultsFragment time Telem.Empty r $ fromMaybe [] hdrs
             E.ExecStepRemote rsi gqlReq -> do
+              logQueryLog logger $ QueryLog q Nothing requestId QueryLogKindRemoteSchema
               runRemoteGQ fieldName userInfo reqHdrs rsi gqlReq
-            E.ExecStepRaw json ->
+            E.ExecStepRaw json -> do
+              logQueryLog logger $ QueryLog q Nothing requestId QueryLogKindIntrospection
               buildRaw json
           buildResultFromFragments Telem.Query telemCacheHit timerTot requestId conclusion
       liftIO $ sendCompleted (Just requestId)
 
     E.SubscriptionExecutionPlan subExec -> do
-      -- log the graphql query
-      logQueryLog logger $ QueryLog q Nothing requestId Subscription
-
       case subExec of
-        E.SEAsyncActionsWithNoRelationships actions -> liftIO do
-          let allActionIds = map fst $ OMap.elems actions
-          case NE.nonEmpty allActionIds of
-            Nothing -> sendCompleted $ Just requestId
-            Just actionIds -> do
-              let sendResponseIO actionLogMap = do
-                   (dTime, resultsE) <- withElapsedTime $ runExceptT $
-                     for actions $ \(actionId, resultBuilder) -> do
-                       actionLogResponse <- Map.lookup actionId actionLogMap
-                         `onNothing` throw500 "unexpected: cannot lookup action_id in response map"
-                       liftEither $ resultBuilder actionLogResponse
-                   case resultsE of
-                     Left err -> sendError requestId err
-                     Right results -> do
-                       let dataMsg = SMData $ DataMsg opId $ pure $ encJToLBS $
-                                     encJFromInsOrdHashMap $ OMap.mapKeys G.unName results
-                       sendMsgWithMetadata wsConn dataMsg $ LQ.LiveQueryMetadata dTime
+        E.SEAsyncActionsWithNoRelationships actions -> do
+          logQueryLog logger $ QueryLog q Nothing requestId QueryLogKindAction
+          liftIO do
+            let allActionIds = map fst $ OMap.elems actions
+            case NE.nonEmpty allActionIds of
+              Nothing -> sendCompleted $ Just requestId
+              Just actionIds -> do
+                let sendResponseIO actionLogMap = do
+                     (dTime, resultsE) <- withElapsedTime $ runExceptT $
+                       for actions $ \(actionId, resultBuilder) -> do
+                         actionLogResponse <- Map.lookup actionId actionLogMap
+                           `onNothing` throw500 "unexpected: cannot lookup action_id in response map"
+                         liftEither $ resultBuilder actionLogResponse
+                     case resultsE of
+                       Left err -> sendError requestId err
+                       Right results -> do
+                         let dataMsg = SMData $ DataMsg opId $ pure $ encJToLBS $
+                                       encJFromInsOrdHashMap $ OMap.mapKeys G.unName results
+                         sendMsgWithMetadata wsConn dataMsg $ LQ.LiveQueryMetadata dTime
 
-                  asyncActionQueryLive = LQ.LAAQNoRelationships $
-                    LQ.LiveAsyncActionQueryWithNoRelationships sendResponseIO (sendCompleted (Just requestId))
+                    asyncActionQueryLive = LQ.LAAQNoRelationships $
+                      LQ.LiveAsyncActionQueryWithNoRelationships sendResponseIO (sendCompleted (Just requestId))
 
-              LQ.addAsyncActionLiveQuery (LQ._lqsAsyncActions lqMap) opId actionIds
-                                         (sendError requestId) asyncActionQueryLive
+                LQ.addAsyncActionLiveQuery (LQ._lqsAsyncActions lqMap) opId actionIds
+                                           (sendError requestId) asyncActionQueryLive
 
         E.SEOnSourceDB actionIds liveQueryBuilder -> do
           actionLogMapE <- fmap fst <$> runExceptT (EA.fetchActionLogResponses actionIds)
@@ -508,20 +514,23 @@ onStart env serverEnv wsConn (StartMsg opId q) = catchAndIgnore $ do
 
           -- Update async action query subscription state
           case NE.nonEmpty (toList actionIds) of
-            Nothing                ->
+            Nothing                -> do
+              logQueryLog logger $ QueryLog q Nothing requestId QueryLogKindDatabase
               -- No async action query fields present, do nothing.
               pure ()
-            Just nonEmptyActionIds -> liftIO $ do
-              let asyncActionQueryLive = LQ.LAAQOnSourceDB $
-                    LQ.LiveAsyncActionQueryOnSource lqId actionLogMap $ restartLiveQuery liveQueryBuilder
+            Just nonEmptyActionIds -> do
+              logQueryLog logger $ QueryLog q Nothing requestId QueryLogKindAction
+              liftIO $ do
+                let asyncActionQueryLive = LQ.LAAQOnSourceDB $
+                      LQ.LiveAsyncActionQueryOnSource lqId actionLogMap $ restartLiveQuery liveQueryBuilder
 
-                  onUnexpectedException err = do
-                    sendError requestId err
-                    stopOperation serverEnv wsConn opId (pure ()) -- Don't log in case opId don't exist
+                    onUnexpectedException err = do
+                      sendError requestId err
+                      stopOperation serverEnv wsConn opId (pure ()) -- Don't log in case opId don't exist
 
-              LQ.addAsyncActionLiveQuery (LQ._lqsAsyncActions lqMap) opId
-                                          nonEmptyActionIds onUnexpectedException
-                                          asyncActionQueryLive
+                LQ.addAsyncActionLiveQuery (LQ._lqsAsyncActions lqMap) opId
+                                            nonEmptyActionIds onUnexpectedException
+                                            asyncActionQueryLive
 
       liftIO $ logOpEv ODStarted (Just requestId)
   where
