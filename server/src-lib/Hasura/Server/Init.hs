@@ -668,7 +668,7 @@ maintenanceModeEnv =
 
 schemaPollIntervalEnv :: (String, String)
 schemaPollIntervalEnv =
-  ( "HASURA_GRAPHQL_SCHEMA_POLL_INTERVAL"
+  ( "HASURA_GRAPHQL_SCHEMA_SYNC_POLL_INTERVAL"
   , "Interval to poll metadata storage for updates in milliseconds - Default 1000 (1s) - Set to 0 to disable"
   )
 
@@ -1050,7 +1050,7 @@ parseEnableMaintenanceMode =
 parseSchemaPollInterval :: Parser (Maybe Milliseconds)
 parseSchemaPollInterval = optional $
   option (eitherReader readEither)
-  ( long "schema-poll-interval" <>
+  ( long "schema-sync-poll-interval" <>
     metavar (fst schemaPollIntervalEnv)  <>
     help (snd schemaPollIntervalEnv)
   )

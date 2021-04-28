@@ -262,6 +262,10 @@ For the ``serve`` sub-command these are the available flags and ENV variables:
 
        *(Available for versions > v2.0.0)*
 
+   * - ``--schema-sync-poll-interval``
+     - ``HASURA_GRAPHQL_SCHEMA_SYNC_POLL_INTERVAL``
+     - Interval to poll metadata storage for updates in milliseconds - Default 1000 (1s) - Set to 0 to disable.
+
    * - ``--experimental-features``
      - ``HASURA_GRAPHQL_EXPERIMENTAL_FEATURES``
      - List of experimental features to be enabled. A comma separated value is expected. Options: ``inherited_roles``.
