@@ -138,9 +138,7 @@ fromDelete Delete {deleteTable, deleteWhere} =
     ]
 
 fromSelect :: Select -> Printer
-fromSelect Select {..} = case selectFor of
-  NoFor     -> result
-  JsonFor _ -> SeqPrinter ["SELECT ISNULL((", result, "), '[]')"]
+fromSelect Select {..} = wrapFor selectFor result
   where
     result =
       SepByPrinter
@@ -186,18 +184,20 @@ fromJoinSource =
     JoinReselect reselect -> fromReselect reselect
 
 fromReselect :: Reselect -> Printer
-fromReselect Reselect {..} =
-  SepByPrinter
-    NewlinePrinter
-    [ "SELECT " <+>
-      IndentPrinter
-        7
-        (SepByPrinter
-           ("," <+> NewlinePrinter)
-           (map fromProjection (toList reselectProjections)))
-    , fromFor reselectFor
-    , fromWhere reselectWhere
-    ]
+fromReselect Reselect {..} = wrapFor reselectFor result
+  where
+    result =
+      SepByPrinter
+        NewlinePrinter
+        [ "SELECT " <+>
+          IndentPrinter
+            7
+            (SepByPrinter
+               ("," <+> NewlinePrinter)
+               (map fromProjection (toList reselectProjections)))
+        , fromFor reselectFor
+        , fromWhere reselectWhere
+        ]
 
 fromOrderBys ::
      Top -> Maybe Expression -> Maybe (NonEmpty OrderBy) -> Printer
@@ -258,15 +258,11 @@ fromFor :: For -> Printer
 fromFor =
   \case
     NoFor -> ""
-    JsonFor ForJson {jsonCardinality, jsonRoot = root} ->
+    JsonFor ForJson {jsonCardinality} ->
       "FOR JSON PATH" <+>
       case jsonCardinality of
-        JsonArray -> ""
-        JsonSingleton ->
-          ", WITHOUT_ARRAY_WRAPPER" <+>
-          case root of
-            NoRoot    -> ""
-            Root text -> "ROOT(" <+> QueryPrinter (toSql text) <+> ")"
+        JsonArray     -> ""
+        JsonSingleton -> ", WITHOUT_ARRAY_WRAPPER"
 
 fromProjection :: Projection -> Printer
 fromProjection =
@@ -361,6 +357,32 @@ trueExpression = ValueExpression (BoolValue True)
 
 falseExpression :: Expression
 falseExpression = ValueExpression (BoolValue False)
+
+-- | Wrap a select with things needed when using FOR JSON.
+wrapFor :: For -> Printer -> Printer
+wrapFor for' inner = nullToArray
+  where
+    nullToArray =
+      case for' of
+        NoFor     -> rooted
+        JsonFor _ -> SeqPrinter ["SELECT ISNULL((", rooted, "), '[]')"]
+    rooted =
+      case for' of
+        JsonFor ForJson {jsonRoot, jsonCardinality = JsonSingleton} ->
+          case jsonRoot of
+            NoRoot -> inner
+            -- This is gross, but unfortunately ROOT and
+            -- WITHOUT_ARRAY_WRAPPER are not allowed to be used at the
+            -- same time (reason not specified). Therefore we just
+            -- concatenate the necessary JSON string literals around
+            -- the JSON.
+            Root text ->
+              SeqPrinter
+                [ fromString ("SELECT CONCAT('{" <> show text <> ":', (")
+                , inner
+                , "), '}')"
+                ]
+        _ -> inner
 
 --------------------------------------------------------------------------------
 -- Basic printing API

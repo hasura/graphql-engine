@@ -46,6 +46,7 @@ import           Hasura.SQL.Backend
 data Error
   = UnsupportedOpExpG (IR.OpExpG 'MSSQL Expression)
   | FunctionNotSupported
+  | NodesUnsupportedForNow
   deriving (Show, Eq)
 
 -- | The base monad used throughout this module for all conversion
@@ -188,7 +189,7 @@ fromSelectAggregate annSelectG = do
       , selectJoins = argsJoins <> mapMaybe fieldSourceJoin fieldSources
       , selectWhere = argsWhere <> Where [filterExpression]
       , selectFor =
-          JsonFor ForJson {jsonCardinality = JsonSingleton, jsonRoot = NoRoot}
+          JsonFor ForJson {jsonCardinality = JsonSingleton, jsonRoot = Root "aggregate"}
       , selectOrderBy = argsOrderBy
       , selectOffset = argsOffset
       }
@@ -502,7 +503,8 @@ fromTableAggregateFieldG (IR.FieldName name, field) =
              { aliasedThing = TSQL.ValueExpression (ODBC.TextValue text)
              , aliasedAlias = name
              })
-    IR.TAFNodes x _ -> case x of {}
+    IR.TAFNodes {} ->
+      refute (pure NodesUnsupportedForNow)
 
 fromAggregateField :: IR.AggregateField 'MSSQL -> ReaderT EntityAlias FromIr Aggregate
 fromAggregateField aggregateField =

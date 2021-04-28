@@ -55,7 +55,17 @@ planNoPlan userInfo queryDB = do
       { selectFor =
           case selectFor select of
             NoFor           -> NoFor
-            JsonFor forJson -> JsonFor forJson {jsonRoot = Root "root"}
+            JsonFor forJson ->
+              JsonFor forJson {jsonRoot =
+                                 case jsonRoot forJson of
+                                   NoRoot -> Root "root"
+                                   -- Keep whatever's there if already
+                                   -- specified. In the case of an
+                                   -- aggregate query, the root will
+                                   -- be specified "aggregate", for
+                                   -- example.
+                                   keep   -> keep
+                              }
       }
 
 planMultiplex

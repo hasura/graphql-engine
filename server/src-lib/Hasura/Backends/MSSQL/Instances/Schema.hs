@@ -44,7 +44,7 @@ instance BackendSchema 'MSSQL where
   buildFunctionMutationFields    = msBuildFunctionMutationFields
   -- backend extensions
   relayExtension    = const Nothing
-  nodesAggExtension = const Nothing
+  nodesAggExtension = const $ Just ()
   -- indivdual components
   columnParser              = msColumnParser
   jsonPathArg               = msJsonPathArg
