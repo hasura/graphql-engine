@@ -26,6 +26,9 @@ automerge_label = "auto-update-auto-merge"
 # GitHub branch protection requirements.
 require_automerge_label = true
 
+# When the label is applied to a pull request, the pull request will be placed at the front of the merge queue.
+priority_merge_label = "priority-merge"
+
 # If a PR's title matches this regex, Kodiak will not merge the PR. This is
 # useful to prevent merging work-in-progress PRs.
 #
