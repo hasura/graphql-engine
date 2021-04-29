@@ -493,6 +493,7 @@ runHGEServer setupHook env ServeOptions{..} ServeCtx{..} initTime postPollHook s
              postPollHook
              _scSchemaCacheRef
              ekgStore
+             serverMetrics
              soEnableRemoteSchemaPermissions
              soInferFunctionPermissions
              soConnectionOptions

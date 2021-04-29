@@ -38,6 +38,7 @@ import qualified Network.HTTP.Types                           as H
 import qualified Network.Wai.Extended                         as Wai
 import qualified Network.WebSockets                           as WS
 import qualified StmContainers.Map                            as STMMap
+import qualified System.Metrics.Gauge                         as EKG.Gauge
 
 import           Control.Concurrent.Extended                  (sleep)
 import           Control.Exception.Lifted
@@ -76,7 +77,8 @@ import           Hasura.RQL.Types
 import           Hasura.Server.Auth                           (AuthMode, UserAuthentication,
                                                                resolveUserInfo)
 import           Hasura.Server.Cors
-import           Hasura.Server.Init.Config                    (KeepAliveDelay (..))
+import           Hasura.Server.Init.Config                    (KeepAliveDelay (..),
+                                                               ServerMetrics (..))
 import           Hasura.Server.Types                          (RequestId, getRequestId)
 import           Hasura.Server.Version                        (HasVersion)
 import           Hasura.Session
@@ -878,18 +880,22 @@ createWSServerApp
      )
   => Env.Environment
   -> AuthMode
+  -> ServerMetrics
   -> WSServerEnv
   -> WS.HasuraServerApp m
 --   -- ^ aka generalized 'WS.ServerApp'
-createWSServerApp env authMode serverEnv = \ !ipAddress !pendingConn ->
+createWSServerApp env authMode serverMetrics serverEnv = \ !ipAddress !pendingConn ->
   WS.createServerApp (_wseServer serverEnv) handlers ipAddress pendingConn
   where
-    handlers =
-      WS.WSHandlers
-      -- Mask async exceptions during event processing to help maintain integrity of mutable vars:
-      (\rid rh ip -> mask_ $ flip runReaderT serverEnv $ onConn rid rh ip)
-      (\conn bs -> mask_ $ onMessage env authMode serverEnv conn bs)
-      (mask_ . onClose (_wseLogger serverEnv) (_wseLiveQMap serverEnv))
+    handlers = WS.WSHandlers onConnHandler onMessageHandler onCloseHandler
+    -- Mask async exceptions during event processing to help maintain integrity of mutable vars:
+    onConnHandler rid rh ip = mask_ do
+      liftIO $ EKG.Gauge.inc $ smWebsocketConnections serverMetrics
+      flip runReaderT serverEnv $ onConn rid rh ip
+    onMessageHandler conn bs = mask_ $ onMessage env authMode serverEnv conn bs
+    onCloseHandler conn = mask_ do
+      liftIO $ EKG.Gauge.dec $ smWebsocketConnections serverMetrics
+      onClose (_wseLogger serverEnv) (_wseLiveQMap serverEnv) conn
 
 stopWSServerApp :: WSServerEnv -> IO ()
 stopWSServerApp wsEnv = WS.shutdown (_wseServer wsEnv)

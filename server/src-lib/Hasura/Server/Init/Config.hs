@@ -381,19 +381,22 @@ runWithEnv env m = runIdentity $ runExceptT $ runReaderT m env
 -- | Collection of various server metrics
 data ServerMetrics
   = ServerMetrics
-  { smWarpThreads         :: !EKG.Gauge.Gauge
-  -- ^ Current Number of warp threads
-  , smNumEventsFetched    :: !EKG.Distribution.Distribution
+  { smWarpThreads          :: !EKG.Gauge.Gauge
+  -- ^ Current Number of active Warp threads
+  , smWebsocketConnections :: !EKG.Gauge.Gauge
+  -- ^ Current number of active websocket connections
+  , smNumEventsFetched     :: !EKG.Distribution.Distribution
   -- ^ Total Number of events fetched from last 'Event Trigger Fetch'
-  , smNumEventHTTPWorkers :: !EKG.Gauge.Gauge
+  , smNumEventHTTPWorkers  :: !EKG.Gauge.Gauge
   -- ^ Current number of Event trigger's HTTP workers in process
-  , smEventLockTime       :: !EKG.Distribution.Distribution
+  , smEventLockTime        :: !EKG.Distribution.Distribution
   -- ^ Time between the 'Event Trigger Fetch' from DB and the processing of the event
   }
 
 createServerMetrics :: EKG.Store -> IO ServerMetrics
 createServerMetrics store = do
   smWarpThreads <- EKG.createGauge "warp_threads" store
+  smWebsocketConnections <- EKG.createGauge "websocket_connections" store
   smNumEventsFetched <- EKG.createDistribution "num_events_fetched" store
   smNumEventHTTPWorkers <- EKG.createGauge "num_event_trigger_http_workers" store
   smEventLockTime <- EKG.createDistribution "event_lock_time" store

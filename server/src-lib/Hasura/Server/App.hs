@@ -783,6 +783,7 @@ mkWaiApp
   -> Maybe EL.LiveQueryPostPollHook
   -> SchemaCacheRef
   -> EKG.Store
+  -> ServerMetrics
   -> RemoteSchemaPermsCtx
   -> FunctionPermissionsCtx
   -> WS.ConnectionOptions
@@ -794,8 +795,8 @@ mkWaiApp
   -> m HasuraApp
 mkWaiApp setupHook env logger sqlGenCtx enableAL httpManager mode corsCfg enableConsole consoleAssetsDir
          enableTelemetry instanceId apis lqOpts _ {- planCacheOptions -} responseErrorsConfig
-         liveQueryHook schemaCacheRef ekgStore enableRSPermsCtx functionPermsCtx connectionOptions keepAliveDelay
-         maintenanceMode experimentalFeatures = do
+         liveQueryHook schemaCacheRef ekgStore serverMetrics enableRSPermsCtx functionPermsCtx
+         connectionOptions keepAliveDelay maintenanceMode experimentalFeatures = do
 
     let getSchemaCache = first lastBuiltSchemaCache <$> readIORef (_scrCache schemaCacheRef)
 
@@ -830,7 +831,7 @@ mkWaiApp setupHook env logger sqlGenCtx enableAL httpManager mode corsCfg enable
       Spock.spockAsApp $ Spock.spockT lowerIO $
         httpApp setupHook corsCfg serverCtx enableConsole consoleAssetsDir enableTelemetry
 
-    let wsServerApp  = WS.createWSServerApp env mode wsServerEnv -- TODO: Lyndon: Can we pass environment through wsServerEnv?
+    let wsServerApp  = WS.createWSServerApp env mode serverMetrics wsServerEnv -- TODO: Lyndon: Can we pass environment through wsServerEnv?
         stopWSServer = WS.stopWSServerApp wsServerEnv
 
     waiApp <- liftWithStateless $ \lowerIO ->
