@@ -428,7 +428,7 @@ serveCmdFooter =
 eventsHttpPoolSizeEnv :: (String, String)
 eventsHttpPoolSizeEnv =
   ( "HASURA_GRAPHQL_EVENTS_HTTP_POOL_SIZE"
-  , "Max event threads"
+  , "Max event processing threads (default: 100)"
   )
 
 eventsFetchIntervalEnv :: (String, String)

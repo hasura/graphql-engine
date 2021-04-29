@@ -428,8 +428,11 @@ elif [ "$MODE" = "test" ]; then
   fi
 
   if [ "$RUN_HLINT" = true ]; then
-    cd "$PROJECT_ROOT/server"
-    hlint src-*
+    if command -v hlint >/dev/null; then
+      (cd "$PROJECT_ROOT/server" && hlint src-*)
+    else
+      echo_warn "hlint is not installed: skipping"
+    fi
   fi
 
   if [ "$RUN_INTEGRATION_TESTS" = true ]; then

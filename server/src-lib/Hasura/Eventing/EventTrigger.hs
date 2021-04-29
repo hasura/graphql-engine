@@ -58,7 +58,7 @@ import qualified System.Metrics.Gauge                   as EKG.Gauge
 
 import           Control.Concurrent.Extended            (sleep)
 import           Control.Concurrent.STM.TVar
-import           Control.Monad.Catch                    (MonadMask, bracket_)
+import           Control.Monad.Catch                    (MonadMask, bracket_, finally, mask_)
 import           Control.Monad.STM
 import           Control.Monad.Trans.Control            (MonadBaseControl)
 import           Data.Aeson
@@ -203,6 +203,10 @@ initEventEngineCtx maxT _eeCtxFetchInterval _eeCtxFetchSize = do
   _eeCtxEventThreadsCapacity <- newTVar maxT
   return $ EventEngineCtx{..}
 
+-- | The event payload processed by 'processEvent'
+--
+-- The 'Time.UTCTime' represents the time when the event was fetched from DB.
+-- Used to calculate Event Lock time
 type EventWithSource b = (Event, SourceConfig b, Time.UTCTime)
 
 -- | Service events from our in-DB queue.
@@ -232,7 +236,7 @@ processEventQueue
   -> ServerMetrics
   -> MaintenanceMode
   -> m void
-processEventQueue logger logenv httpMgr getSchemaCache eeCtx@EventEngineCtx{..} LockedEventsCtx{leEvents} serverMetrics maintenanceMode = do
+processEventQueue logger logenv httpMgr getSchemaCache EventEngineCtx{..} LockedEventsCtx{leEvents} serverMetrics maintenanceMode = do
   events0 <- popEventsBatch
   -- Track number of events fetched in EKG
   _ <- liftIO $ EKG.Distribution.add (smNumEventsFetched serverMetrics) (fromIntegral $ length events0)
@@ -279,6 +283,11 @@ processEventQueue logger logenv httpMgr getSchemaCache eeCtx@EventEngineCtx{..} 
                       saveLockedEvents (map eId events) leEvents
                       return $ map (, sourceConfig, eventsFetchedTime) events
 
+    -- !!! CAREFUL !!!
+    --     The logic here in particular is subtle and has been fixed, broken,
+    --     and fixed again in several different ways, several times.
+    -- !!! CAREFUL !!!
+    --
     -- work on this batch of events while prefetching the next. Recurse after we've forked workers
     -- for each in the batch, minding the requested pool size.
     go :: [EventWithSource ('Postgres 'Vanilla)] -> Int -> Bool -> m void
@@ -291,15 +300,25 @@ processEventQueue logger logenv httpMgr getSchemaCache eeCtx@EventEngineCtx{..} 
       -- worth the effort for something more fine-tuned
       eventsNext <- LA.withAsync popEventsBatch $ \eventsNextA -> do
         -- process approximately in order, minding HASURA_GRAPHQL_EVENTS_HTTP_POOL_SIZE:
-        forM_ events $ \(event, sourceConfig, eventFetchedTime) -> do
-          t <- processEvent event sourceConfig eventFetchedTime
-            & withEventEngineCtx eeCtx
-            & flip runReaderT (logger, httpMgr)
-            & LA.async
-          -- removing an event from the _eeCtxLockedEvents after the event has
-          -- been processed
-          removeEventFromLockedEvents (eId event) leEvents
-          LA.link t
+        forM_ events $ \eventWithSource ->
+          -- NOTE: we implement a logical bracket pattern here with the
+          -- increment and decrement of _eeCtxEventThreadsCapacity which
+          -- depends on not putting anything that can throw in the body here:
+          mask_ $ do
+            liftIO $ atomically $ do  -- block until < HASURA_GRAPHQL_EVENTS_HTTP_POOL_SIZE threads:
+              capacity <- readTVar _eeCtxEventThreadsCapacity
+              check $ capacity > 0
+              writeTVar _eeCtxEventThreadsCapacity (capacity - 1)
+            -- since there is some capacity in our worker threads, we can launch another:
+            let restoreCapacity = liftIO $ atomically $
+                  modifyTVar' _eeCtxEventThreadsCapacity (+ 1)
+            t <- LA.async $ flip runReaderT (logger, httpMgr) $
+                    processEvent eventWithSource `finally`
+                      -- NOTE!: this needs to happen IN THE FORKED THREAD:
+                      restoreCapacity
+            LA.link t
+
+        -- return when next batch ready; some 'processEvent' threads may be running.
         LA.wait eventsNextA
 
       let lenEvents = length events
@@ -331,12 +350,9 @@ processEventQueue logger logenv httpMgr getSchemaCache eeCtx@EventEngineCtx{..} 
          , Tracing.HasReporter io
          , MonadMask io
          )
-      => Event
-      -> SourceConfig ('Postgres 'Vanilla)
-      -> Time.UTCTime
-      -- ^ Time when the event was fetched from DB. Used to calculate Event Lock time
+      => EventWithSource ('Postgres 'Vanilla)
       -> io ()
-    processEvent e sourceConfig eventFetchedTime= do
+    processEvent (e, sourceConfig, eventFetchedTime) = do
       -- Track Lock Time of Event
       -- Lock Time = Time when the event was fetched from DB - Time when the event is being processed
       eventProcessTime <- liftIO getCurrentTime
@@ -398,23 +414,8 @@ processEventQueue logger logenv httpMgr getSchemaCache eeCtx@EventEngineCtx{..} 
                 (processError sourceConfig e retryConf decodedHeaders ep maintenanceModeVersion)
                 (processSuccess sourceConfig e decodedHeaders ep maintenanceModeVersion) res
                 >>= flip onLeft logQErr
-
-withEventEngineCtx ::
-    ( MonadIO m
-    , MonadMask m
-    )
-    => EventEngineCtx -> m () -> m ()
-withEventEngineCtx eeCtx = bracket_ (decrementThreadCount eeCtx) (incrementThreadCount eeCtx)
-
-incrementThreadCount :: MonadIO m => EventEngineCtx -> m ()
-incrementThreadCount (EventEngineCtx c _ _) = liftIO $ atomically $ modifyTVar' c (+1)
-
-decrementThreadCount :: MonadIO m => EventEngineCtx -> m ()
-decrementThreadCount (EventEngineCtx c _ _)  = liftIO $ atomically $ do
-  countThreads <- readTVar c
-  if countThreads > 0
-     then modifyTVar' c (\v -> v - 1)
-     else retry
+      -- removing an event from the _eeCtxLockedEvents after the event has been processed:
+      removeEventFromLockedEvents (eId e) leEvents
 
 createEventPayload :: RetryConf -> Event ->  EventPayload
 createEventPayload retryConf e = EventPayload
