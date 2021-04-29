@@ -10,7 +10,7 @@ import {
   getEventInvocationsLogByID,
 } from '../../../../../metadata/queryUtils';
 import { sanitiseRow } from '../../utils';
-import { Dispatch } from '../../../../../types';
+import { Dispatch, ReduxState } from '../../../../../types';
 import requestAction from '../../../../../utils/requestAction';
 import Endpoints from '../../../../../Endpoints';
 
@@ -114,6 +114,7 @@ const EventsSubTable: React.FC<Props> = ({
     const options = {
       method: 'POST',
       body: JSON.stringify(payload),
+      headers: props.headers,
     };
     props
       .getEventInvocationData(url, options)
@@ -128,14 +129,7 @@ const EventsSubTable: React.FC<Props> = ({
   }, []);
 
   if (!makeAPICall || !triggerType) {
-    return (
-      <RenderEventSubTable
-        event={props.event}
-        rowsFormatted={props.rowsFormatted}
-        headings={props.headings}
-        rows={props.rows}
-      />
-    );
+    return <RenderEventSubTable {...props} />;
   }
 
   if (errInfo) {
@@ -166,6 +160,7 @@ const EventsSubTable: React.FC<Props> = ({
 
   return (
     <RenderEventSubTable
+      {...props}
       event={props.event}
       rows={inv}
       rowsFormatted={invocationRows}
@@ -178,7 +173,11 @@ const mapDispatchToProps = (dispatch: Dispatch) => ({
   getEventInvocationData: (url: string, options: RequestInit) =>
     dispatch(requestAction(url, options)),
 });
-const connector = connect(null, mapDispatchToProps);
+
+const mapStateToProps = (state: ReduxState) => ({
+  headers: state.tables.dataHeaders,
+});
+const connector = connect(mapStateToProps, mapDispatchToProps);
 type InjectedReduxProps = ConnectedProps<typeof connector>;
 const ConnectedEventSubTable = connector(EventsSubTable);
 
