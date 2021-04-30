@@ -157,7 +157,7 @@ domainParser parser = do
   where
     schemeParser :: AT.Parser Text
     schemeParser = do
-      scheme <- AT.takeWhile1 (/= ':')
+      scheme <- AT.takeWhile1 (\x -> AT.isDigit x || AT.isAlpha x || elem x ['+', '.', '-'])
       sep <- AT.string "://"
       return $ scheme <> sep
 
