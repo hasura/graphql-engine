@@ -9,9 +9,10 @@
 
 ### Bug fixes and improvements
 
+- server: fix MSSQL table metadata SQL, return empty array for empty rows (fix #1226)
 - server: aggregation fields are now supported on mssql
 - server: accept a new server config flag `--events-fetch-batch-size` to configure the number of rows being fetched from the events log table in a single batch
-- server: restore proper batching behavior in event trigger processing so that at most 2x batch events are checked out at a time 
+- server: restore proper batching behavior in event trigger processing so that at most 2x batch events are checked out at a time
 - server: fix regression: `on_conflict` was missing in the schema for inserts in tables where the current user has no columns listed in their update permissions (fix #6804)
 - server: fix one-to-one relationship bug which prevented adding one-to-one relationships which didn't have the same column name for target and source
 - console: fix Postgres table creation when table has a non-lowercase name and a comment (#6760)
