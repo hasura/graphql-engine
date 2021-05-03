@@ -75,6 +75,28 @@ For auth0-spa-js:
       callback(null, user, context);
     }
 
+If you use both SDKs:
+
+.. code-block:: javascript
+
+    function (user, context, callback) {
+      const namespace = "https://hasura.io/jwt/claims";
+      const tokenConfig = {
+          'x-hasura-default-role': 'user',
+          // do some custom logic to decide allowed roles
+          'x-hasura-allowed-roles': ['user'],
+          'x-hasura-user-id': user.user_id
+        };
+
+      if (context.auth0_client.name === 'auth0-react') {
+         context.accessToken[namespace] = tokenConfig;
+      } else {
+         context.idToken[namespace] = tokenConfig;
+      }
+
+      callback(null, user, context);
+    }
+
 .. _test-auth0:
 
 Create an Auth0 API
