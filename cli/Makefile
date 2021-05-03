@@ -26,15 +26,15 @@ endif
 # get dependencies
 deps:
 	go mod download
-ifndef HAS_GOX
-	go get github.com/mitchellh/gox
-endif
 
 # build cli locally, for all given platform/arch
 .PHONY: build
 build: export CGO_ENABLED=0
 build: copy-cli-ext
 build:
+ifndef HAS_GOX
+	cd ~ && go get github.com/mitchellh/gox && cd -
+endif
 	gox -ldflags '-X github.com/hasura/graphql-engine/cli/version.BuildVersion=$(VERSION) -X github.com/hasura/graphql-engine/cli/plugins.IndexBranchRef=$(PLUGINS_BRANCH) -s -w -extldflags "-static"' \
 	-rebuild \
 	-os="$(OS)" \
