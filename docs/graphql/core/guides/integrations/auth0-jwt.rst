@@ -88,6 +88,7 @@ If you use both SDKs:
           'x-hasura-user-id': user.user_id
         };
 
+      // Replace with library client name
       if (context.auth0_client.name === 'auth0-react') {
          context.accessToken[namespace] = tokenConfig;
       } else {
