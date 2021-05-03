@@ -23,6 +23,7 @@ import qualified Data.Aeson           as J
 import qualified Data.Aeson.Casing    as J
 import qualified Data.Aeson.TH        as J
 import qualified Data.Attoparsec.Text as AT
+import qualified Data.Char
 import qualified Data.HashSet         as Set
 import qualified Data.Text            as T
 
@@ -157,7 +158,7 @@ domainParser parser = do
   where
     schemeParser :: AT.Parser Text
     schemeParser = do
-      scheme <- AT.takeWhile1 (\x -> AT.isDigit x || AT.isAlpha x || elem x ['+', '.', '-'])
+      scheme <- AT.takeWhile1 (\x -> Char.isAlphaNum x || elem x ['+', '.', '-'])
       sep <- AT.string "://"
       return $ scheme <> sep
 
