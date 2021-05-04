@@ -6,6 +6,7 @@
 
 (Add entries below in the order of: server, console, cli, docs, others)
 
+- server: fix a bug in query validation that would cause some queries using default variable values to be rejected (fix #6867)
 - console: read-only modify page for mssql
 - console: filter out partitions from track table list and display partition info
 - console: fixes an issue where no schemas are listed on an MSSQL source

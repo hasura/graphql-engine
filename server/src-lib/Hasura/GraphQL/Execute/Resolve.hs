@@ -65,14 +65,15 @@ resolveVariables definitions jsonValues selSet = do
     buildVariable :: G.VariableDefinition -> m Variable
     buildVariable G.VariableDefinition{ G._vdName, G._vdType, G._vdDefaultValue } = do
       let defaultValue = fromMaybe G.VNull _vdDefaultValue
+          isOptional   = isJust _vdDefaultValue || G.isNullable _vdType
       value <- case Map.lookup _vdName jsonValues of
         Just jsonValue -> pure $ JSONValue jsonValue
         Nothing
-          | G.isNullable _vdType -> pure $ GraphQLValue $ absurd <$> defaultValue
-          | otherwise -> throw400 ValidationFailed $
-            "expecting a value for non-nullable variable: " <>> _vdName
+          | isOptional -> pure $ GraphQLValue $ absurd <$> defaultValue
+          | otherwise  -> throw400 ValidationFailed $
+               "expecting a value for non-nullable variable: " <>> _vdName
       pure $! Variable
-        { vInfo = if G.isNullable _vdType
+        { vInfo = if isOptional
             then VIOptional _vdName defaultValue
             else VIRequired _vdName
         , vType = _vdType
