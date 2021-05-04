@@ -159,6 +159,14 @@ export interface Table extends BaseTable {
     table_schema: string;
     definition: RemoteRelationshipDef;
   }[];
+  unique_constraints:
+    | {
+        table_name: string;
+        table_schema: string;
+        constraint_name: string;
+        columns: string[];
+      }[]
+    | null;
 }
 
 export type Partition = {
@@ -227,6 +235,23 @@ export type SupportedFeaturesType = {
     };
     modify: {
       enabled: boolean;
+      readOnly?: boolean;
+      comments?: boolean;
+      columns?: boolean;
+      columns_edit?: boolean;
+      computedFields?: boolean;
+      primaryKeys?: boolean;
+      primaryKeys_edit?: boolean;
+      foreginKeys?: boolean;
+      foreginKeys_edit?: boolean;
+      uniqueKeys?: boolean;
+      uniqueKeys_edit?: boolean;
+      triggers?: boolean;
+      checkConstraints?: boolean;
+      customGqlRoot?: boolean;
+      setAsEnum?: boolean;
+      untrack?: boolean;
+      delete?: boolean;
     };
     relationships: {
       enabled: boolean;

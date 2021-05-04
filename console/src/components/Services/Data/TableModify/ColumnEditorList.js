@@ -29,6 +29,7 @@ const ColumnEditorList = ({
   currentSchema,
   columnEdit,
   dispatch,
+  readOnlyMode,
   validTypeCasts,
   dataTypeIndexMap,
   columnDefaultFunctions,
@@ -261,6 +262,7 @@ const ColumnEditorList = ({
           property={`column-${i}`}
           service="modify-table"
           saveFunc={onSubmit}
+          readOnlyMode={readOnlyMode}
           removeFunc={columnProperties.pkConstraint ? null : onDelete}
           collapsedClass={styles.display_flex}
           expandedLabel={expandedLabel}

@@ -105,7 +105,23 @@ export const supportedFeatures: SupportedFeaturesType = {
       enabled: false,
     },
     modify: {
-      enabled: false,
+      enabled: true,
+      columns: true,
+      readOnly: true,
+      columns_edit: false,
+      computedFields: false,
+      primaryKeys: true,
+      primaryKeys_edit: false,
+      foreginKeys: true,
+      foreginKeys_edit: false,
+      uniqueKeys: true,
+      uniqueKeys_edit: false,
+      triggers: false,
+      checkConstraints: false,
+      customGqlRoot: false,
+      setAsEnum: false,
+      untrack: true,
+      delete: false,
     },
     relationships: {
       enabled: true,
@@ -370,14 +386,69 @@ FROM sys.objects as obj
     return '';
   },
   getFunctionDefinitionSql: null,
-  primaryKeysInfoSql: () => {
-    return '';
+  primaryKeysInfoSql: ({ schemas }) => {
+    let whereClause = '';
+
+    if (schemas) {
+      whereClause = `WHERE schema_name (schema_id) in (${schemas
+        .map(s => `'${s}'`)
+        .join(',')})`;
+    }
+    return `
+  SELECT
+    schema_name (tab.schema_id) AS table_schema,
+    pk.name AS constraint_name,
+    tab.name AS table_name,
+    (
+      SELECT
+        col.name
+      FROM
+        sys.indexes pk
+        INNER JOIN sys.index_columns ic ON ic.object_id = pk.object_id
+          AND ic.index_id = pk.index_id
+        INNER JOIN sys.columns col ON pk.object_id = col.object_id
+          AND col.column_id = ic.column_id
+      WHERE
+        tab.object_id = pk.object_id FOR json path) AS columns
+    FROM
+      sys.tables tab
+      INNER JOIN sys.indexes pk ON tab.object_id = pk.object_id
+        AND pk.is_primary_key = 1 
+        ${whereClause} FOR JSON PATH;
+    `;
   },
   checkConstraintsSql: () => {
     return '';
   },
-  uniqueKeysSql: () => {
-    return '';
+  uniqueKeysSql: ({ schemas }) => {
+    let whereClause = '';
+
+    if (schemas) {
+      whereClause = `WHERE schema_name (schema_id) in (${schemas
+        .map(s => `'${s}'`)
+        .join(',')})`;
+    }
+    return `
+  SELECT
+    schema_name (tab.schema_id) AS table_schema,
+    idx.name AS constraint_name,
+    tab.name AS table_name,
+    (
+      SELECT
+        col.name
+      FROM
+        sys.indexes idx
+        INNER JOIN sys.index_columns ic ON ic.object_id = idx.object_id
+          AND ic.index_id = idx.index_id
+        INNER JOIN sys.columns col ON idx.object_id = col.object_id
+          AND col.column_id = ic.column_id
+      WHERE
+        tab.object_id = idx.object_id for json path) AS columns
+    FROM
+      sys.tables tab
+      INNER JOIN sys.indexes idx ON tab.object_id = idx.object_id AND idx.is_unique_constraint = 1 
+      ${whereClause} FOR JSON PATH;
+    `;
   },
   frequentlyUsedColumns: [],
   getFKRelations: () => {

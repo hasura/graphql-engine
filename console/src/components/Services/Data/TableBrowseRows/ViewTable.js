@@ -181,11 +181,9 @@ class ViewTable extends Component {
 
     return (
       <RightContainer>
-        <div className={styles.padd_left}>
-          {header}
-          {comment}
-          <div>{viewRows}</div>
-        </div>
+        {header}
+        {comment}
+        <div>{viewRows}</div>
       </RightContainer>
     );
   }

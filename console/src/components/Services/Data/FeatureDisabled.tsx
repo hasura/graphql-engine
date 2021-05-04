@@ -41,14 +41,27 @@ function FeatureDisabled({
         migrationMode={migrationMode}
         readOnlyMode={readOnlyMode}
       />
-      <div style={{ height: '150px', paddingTop: '10px' }}>
-        <p>
-          <b>Coming soon: Data Management for MSSQL</b>
+
+      <div
+        style={{
+          padding: '10px 12px',
+          borderRadius: '4px',
+          background: '#dae0e8',
+          marginBottom: '20px',
+          width: '50%',
+          marginTop: '10px',
+        }}
+      >
+        <p style={{ marginBottom: '5px' }}>
+          <i className="fa fa-flask" aria-hidden="true" />{' '}
+          <b>Coming soon for MSSQL</b>
         </p>
-        <p>
-          We are currently working on bringing our full data management
-          capabilities to MSSQL. <br /> For all row and column based operations
-          our SQL runner is currently available.
+        <p style={{ marginBottom: '5px' }}>
+          This feature is currently unavailable for MSSQL, but we are actively
+          working on making it available for the Console.
+        </p>
+        <p style={{ marginBottom: '5px' }}>
+          For all row and column based operations our SQL runner is available.
         </p>
         <RawSqlButton sql="" dispatch={dispatch}>
           Go to SQL Runner
