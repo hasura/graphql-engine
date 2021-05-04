@@ -585,7 +585,7 @@ export const getDatabaseTableTypeInfoForAllSources = schemaRequests => (
           return {};
         }
         const trackedTables = getTablesFromAllSources(getState()).filter(
-          ({ source }) => source === schemaRequests[index]?.sourceName
+          ({ source }) => source === bulkQueries[index]?.args?.source
         );
         const schemasInfo = {};
 
@@ -622,7 +622,7 @@ export const getDatabaseTableTypeInfoForAllSources = schemaRequests => (
           };
         });
         return {
-          source: schemaRequests[index]?.sourceName,
+          source: bulkQueries[index]?.args?.source,
           schemaInfo: schemasInfo,
         };
       });
