@@ -178,7 +178,7 @@ func (o *InitOptions) createExecutionDirectory() error {
 
 	// create the execution directory
 	if _, err := os.Stat(o.EC.ExecutionDirectory); err == nil {
-		return errors.Errorf("directory '%s' already exist", o.EC.ExecutionDirectory)
+		return errors.Errorf("directory '%s' already exists", o.EC.ExecutionDirectory)
 	}
 	err := os.MkdirAll(o.EC.ExecutionDirectory, os.ModePerm)
 	if err != nil {
@@ -293,7 +293,7 @@ func (o *InitOptions) createTemplateFiles() error {
 	templatePath := filepath.Join(o.EC.InitTemplatesRepo.Path, o.Template)
 	info, err := os.Stat(templatePath)
 	if err != nil {
-		return errors.Wrap(err, "template doesn't exists")
+		return errors.Wrap(err, "template doesn't exist")
 	}
 	if !info.IsDir() {
 		return errors.Errorf("template should be a directory")
