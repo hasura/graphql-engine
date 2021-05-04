@@ -6,9 +6,14 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
-	"net/url"
+	"path/filepath"
 	"strings"
 	"time"
+
+	"github.com/hasura/graphql-engine/cli/internal/metadataobject"
+
+	"github.com/hasura/graphql-engine/cli/internal/hasura"
+	"github.com/hasura/graphql-engine/cli/internal/metadatautil"
 
 	"github.com/gin-gonic/gin"
 	"github.com/hasura/graphql-engine/cli"
@@ -35,21 +40,23 @@ type Request struct {
 	Up            []requestType `json:"up"`
 	Down          []requestType `json:"down"`
 	SkipExecution bool          `json:"skip_execution"`
+	SourceName    string        `json:"datasource,omitempty"`
 }
 
 type requestType struct {
-	Version int         `json:"version,omitempty"`
-	Type    string      `json:"type"`
-	Args    interface{} `json:"args"`
+	Version  int         `json:"version,omitempty"`
+	Type     string      `json:"type"`
+	Database string      `json:"datasource,omitempty"`
+	Args     interface{} `json:"args"`
 }
 
 func MigrateAPI(c *gin.Context) {
-	migratePtr, ok := c.Get("migrate")
+	ecPtr, ok := c.Get("ec")
 	if !ok {
 		return
 	}
 	// Get File url
-	sourcePtr, ok := c.Get("filedir")
+	//sourcePtr, ok := c.Get("filedir")
 	if !ok {
 		return
 	}
@@ -64,15 +71,40 @@ func MigrateAPI(c *gin.Context) {
 	version := c.GetInt("version")
 
 	// Convert to url.URL
-	t := migratePtr.(*migrate.Migrate)
-	sourceURL := sourcePtr.(*url.URL)
+	ec, ok := ecPtr.(*cli.ExecutionContext)
+	if !ok {
+		c.JSON(http.StatusInternalServerError, &Response{Code: "internal_error", Message: "cannot get execution context"})
+		return
+	}
+	//sourceURL := sourcePtr.(*url.URL)
 	logger := loggerPtr.(*logrus.Logger)
 
+	mdHandler := metadataobject.NewHandlerFromEC(ec)
 	// Switch on request method
 	switch c.Request.Method {
 	case "GET":
+		sourceName := c.Query("datasource")
+		if ec.Config.Version >= cli.V3 && sourceName == "" {
+			c.JSON(http.StatusInternalServerError, &Response{Code: "internal_error", Message: "datasource query parameter is required"})
+			return
+		}
+		sourceKind := hasura.SourceKindPG
+		if ec.Config.Version >= cli.V3 {
+			kind, err := metadatautil.GetSourceKind(ec.APIClient.V1Metadata.ExportMetadata, sourceName)
+			if err != nil {
+				c.JSON(http.StatusInternalServerError, &Response{Code: "internal_error", Message: err.Error()})
+				return
+			}
+			sourceKind = *kind
+		}
+
+		t, err := migrate.NewMigrate(ec, false, sourceName, sourceKind)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, &Response{Code: "internal_error", Message: err.Error()})
+			return
+		}
 		// Rescan file system
-		err := t.ReScan()
+		err = t.ReScan()
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, &Response{Code: "internal_error", Message: err.Error()})
 			return
@@ -93,10 +125,32 @@ func MigrateAPI(c *gin.Context) {
 			return
 		}
 
+		if ec.Config.Version >= cli.V3 && request.SourceName == "" {
+			c.JSON(http.StatusInternalServerError, &Response{Code: "internal_error", Message: "datasource key not found in body"})
+			return
+		}
+
 		startTime := time.Now()
 		timestamp := startTime.UnixNano() / int64(time.Millisecond)
-
-		createOptions := cmd.New(timestamp, request.Name, sourceURL.Path)
+		sourceName := request.SourceName
+		if ec.Config.Version < cli.V3 {
+			sourceName = ""
+		}
+		sourceKind := hasura.SourceKindPG
+		if ec.Config.Version >= cli.V3 {
+			kind, err := metadatautil.GetSourceKind(ec.APIClient.V1Metadata.ExportMetadata, sourceName)
+			if err != nil {
+				c.JSON(http.StatusInternalServerError, &Response{Code: "internal_error", Message: err.Error()})
+				return
+			}
+			sourceKind = *kind
+		}
+		t, err := migrate.NewMigrate(ec, false, sourceName, sourceKind)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, &Response{Code: "internal_error", Message: err.Error()})
+			return
+		}
+		createOptions := cmd.New(timestamp, request.Name, filepath.Join(ec.MigrationDir, sourceName))
 		if version != int(cli.V1) {
 			sqlUp := &bytes.Buffer{}
 			sqlDown := &bytes.Buffer{}
@@ -216,12 +270,13 @@ func MigrateAPI(c *gin.Context) {
 			return
 		}
 		defer func() {
-			files, err := t.ExportMetadata()
+			var files map[string][]byte
+			files, err = mdHandler.ExportMetadata()
 			if err != nil {
 				logger.Debug(err)
 				return
 			}
-			err = t.WriteMetadata(files)
+			err = mdHandler.WriteMetadata(files)
 			if err != nil {
 				logger.Debug(err)
 				return

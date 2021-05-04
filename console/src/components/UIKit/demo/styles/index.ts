@@ -27,18 +27,18 @@ export const UIKitWrapperDiv = styled.div<
 // Heading ************************* //
 
 export const Heading = styled.h1`
-    ${typography}
-    ${color}
+  ${typography}
+  ${color}
     ${space}
 `;
 
 // Paragraph ************************* //
 
 export const Text = styled.p`
-    ${typography}
-    ${color}
+  ${typography}
+  ${color}
     ${space}
-    ${border}  
+    ${border}
 `;
 
 // Base Div *************************** //

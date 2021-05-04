@@ -1,8 +1,9 @@
 import jwt_decode from 'jwt-decode';
-import { ConsoleScope } from './ConsoleNotification';
+
+import { NotificationsState } from '../../telemetry/state';
+import { getLSItem, LS_KEYS, setLSItem } from '../../utils/localStorage';
 import { Nullable } from '../Common/utils/tsUtils';
-import { NotificationsState } from '../../types';
-import { setLSItem, getLSItem, LS_KEYS } from '../../utils/localStorage';
+import { ConsoleScope } from './ConsoleNotification';
 
 const defaultProClickState = {
   isProClicked: false,
@@ -100,11 +101,11 @@ const getUserType = (token: string) => {
 };
 
 export {
-  getProClickState,
-  setProClickState,
-  setLoveConsentState,
-  getLoveConsentState,
-  getReadAllNotificationsState,
   getConsoleScope,
+  getLoveConsentState,
+  getProClickState,
+  getReadAllNotificationsState,
   getUserType,
+  setLoveConsentState,
+  setProClickState,
 };

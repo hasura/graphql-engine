@@ -42,3 +42,4 @@ To roll back a particular migration version:
 
    hasura migrate apply --version 1550925483858 --type down
 
+

@@ -26,7 +26,7 @@ enrichment from external sources and any other complex business logic.
 
 .. admonition:: Supported from
 
-   Actions are supported in Hasura GraphQL engine versions ``v.1.2.0`` and above.
+   Actions are supported in Hasura GraphQL engine versions ``v1.2.0`` and above. 
 
    Actions are supported for **Postgres versions 10 and above**.
 
@@ -160,11 +160,16 @@ Learn more
   Custom types <types/index>
   action-handlers
   async-actions
-  Codegen <codegen>
+  Codegen <codegen/index>
   derive
   action-permissions
-  reuse-types-actions
+  action-relationships
   debugging
+  logs-clean-up
 
 ..
   action-examples
+
+.. admonition:: Additional Resources
+
+  Introduction to Hasura Actions - `View Recording <https://hasura.io/events/webinar/hasura-actions/?pg=docs&plcmt=body&cta=view-recording&tech=>`__.

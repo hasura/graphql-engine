@@ -97,8 +97,9 @@
   display: flex;
   align-items: center;
   border-right: 1px solid #788095;
-  display: inline-block;
   width: 20%;
+  min-width: 240px;
+  height: 54px;
 
   .logoParent {
     display: flex;
@@ -150,7 +151,8 @@
 }
 
 .clusterInfoWrapper {
-  width: 35%;
+  width: auto;
+  margin-left: auto;
   display: flex;
   justify-content: flex-end;
   position: relative;
@@ -428,7 +430,6 @@
   align-items: center;
   position: fixed;
   width: 100%;
-  min-width: $minContainerWidth;
   z-index: 100;
 
   hr {
@@ -443,7 +444,6 @@
     padding: 0;
     display: inline-block;
     margin-bottom: 0;
-    margin-top: 16px;
 
     a,
     a:visited {
@@ -473,8 +473,7 @@
         display: block;
         margin-left: 20px;
         border-bottom: 4px solid transparent;
-        padding: 0 10px;
-        padding-bottom: 10px;
+        padding: 16px 10px 10px;
 
         .iconCenter {
           display: inline-block;
@@ -1323,7 +1322,7 @@
   font-size: 16px;
   top: 52px;
   right: 8px;
-  &:hover{
+  &:hover {
     cursor: pointer;
   }
 }
@@ -1334,9 +1333,9 @@
   left: auto;
   border: none;
   user-select: none;
-  -webkit-box-shadow: -3px 4px 10px 0px rgba(0,0,0,0.1);
-  -moz-box-shadow: -3px 4px 10px 0px rgba(0,0,0,0.1);
-  box-shadow: -3px 4px 10px 0px rgba(0,0,0,0.1);
+  -webkit-box-shadow: -3px 4px 10px 0px rgba(0, 0, 0, 0.1);
+  -moz-box-shadow: -3px 4px 10px 0px rgba(0, 0, 0, 0.1);
+  box-shadow: -3px 4px 10px 0px rgba(0, 0, 0, 0.1);
 }
 
 .notificationsContainer {
@@ -1366,7 +1365,7 @@
   position: absolute;
   width: 17px;
   top: 16px;
-  right: 8px;
+  right: 0.8rem;
   border-radius: 50%;
   user-select: none;
   visibility: visible;
@@ -1491,7 +1490,7 @@
 
 @media (max-width: 1500px) {
   .header_items {
-    width: 52%;
+    width: auto;
   }
   .iconCenter {
     i {
@@ -1528,6 +1527,38 @@
     a {
       font-size: 12px;
     }
+  }
+}
+
+@media (max-width: 150px) {
+  .secureSectionText {
+    display: none;
+  }
+}
+
+@media (max-width: 1350px) {
+  .sidebar {
+    .header_logo_wrapper {
+      padding: 0px 10px;
+    }
+  }
+}
+
+@media (max-width: 1250px) {
+  .sidebar {
+    .sidebarItems {
+      li {
+        p {
+          display: none;
+        }
+      }
+    }
+  }
+}
+
+@media (max-width: 600px) {
+  .sidebar {
+    min-width: 600px;
   }
 }
 

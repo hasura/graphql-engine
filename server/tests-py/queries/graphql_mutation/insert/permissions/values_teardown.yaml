@@ -24,3 +24,8 @@ args:
 
       delete from "user";
       SELECT setval('"user_id_seq"', 1, FALSE);
+
+      delete from order_cart;
+
+      delete from items;
+      SELECT setval('items_id_seq', 1, FALSE);

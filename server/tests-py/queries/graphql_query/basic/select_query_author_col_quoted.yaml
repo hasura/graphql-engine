@@ -6,10 +6,10 @@ response:
     author:
     - id: 1
       name: Author 1
-      createdAt: '2017-09-21T09:39:44+00:00'
+      createdAt: '2017-09-21T09:39:44'
     - id: 2
       name: Author 2
-      createdAt: '2017-09-21T09:50:44+00:00'
+      createdAt: '2017-09-21T09:50:44'
 query:
   query: |
     query {

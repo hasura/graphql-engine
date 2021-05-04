@@ -1,6 +1,7 @@
 type: bulk
 args:
 
+
 - type: run_sql
   args:
     sql: |
@@ -55,3 +56,9 @@ args:
       RETURNS SETOF test2 AS $$
           SELECT * FROM test2
       $$ LANGUAGE sql STABLE;
+
+      CREATE TABLE "users address" (
+        id serial primary key,
+        user_id int,
+        address text
+      );

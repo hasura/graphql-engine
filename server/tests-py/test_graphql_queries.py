@@ -1,5 +1,6 @@
 import pytest
 from validate import check_query_f, check_query, get_conf_f
+from conftest import use_inherited_roles_fixtures
 from context import PytestConf
 
 # Mark that all tests in this module can be run as server upgrade tests
@@ -8,28 +9,49 @@ pytestmark = pytest.mark.allow_server_upgrade_test
 usefixtures = pytest.mark.usefixtures
 
 @pytest.mark.parametrize("transport", ['http', 'websocket'])
-@usefixtures('per_class_tests_db_state')
-class TestGraphQLQueryBasic:
+@pytest.mark.parametrize("backend", ['bigquery'])
+@usefixtures('per_class_tests_db_state', 'per_backend_tests')
+class TestGraphQLQueryBasicBigquery:
 
+    # initialize the metadata
+    def test_replace_metadata(self, hge_ctx, transport):
+        if transport == 'http':
+            check_query_f(hge_ctx, self.dir() + '/replace_metadata.yaml')
+
+    def test_user_perms(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + "/user_perms.yaml", transport)
+
+    def test_empty_perms(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + "/empty_perms.yaml", transport)
+
+    def test_timestamp_perm(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + "/timestamp_perm.yaml", transport)
+
+    def test_exact_article_id(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + "/exact_article_id.yaml", transport)
+
+    def test_perms_published_articles(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + "/perms_published_articles.yaml", transport)
+
+    # types
+    def test_select_query_all_types(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + "/select_query_all_types.yaml", transport)
+
+    # relational queries
     def test_select_query_author(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + '/select_query_author.yaml', transport)
+
+    def test_select_query_author_pk(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/select_query_author_by_pkey.yaml', transport)
+
+    def test_select_query_author_quoted_col(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/select_query_author_col_quoted.yaml', transport)
 
     def test_select_query_author_with_skip_directive(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + '/select_query_author_skip_directive.yaml', transport)
 
     def test_select_query_author_with_include_directive(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + '/select_query_author_include_directive.yaml', transport)
-
-    # Can't run server upgrade tests, as this test has a schema change
-    @pytest.mark.skip_server_upgrade_test
-    def test_select_various_postgres_types(self, hge_ctx, transport):
-        check_query_f(hge_ctx, self.dir() + '/select_query_test_types.yaml', transport)
-
-    def test_select_query_author_quoted_col(self, hge_ctx, transport):
-        check_query_f(hge_ctx, self.dir() + '/select_query_author_col_quoted.yaml', transport)
-
-    def test_select_query_author_pk(self, hge_ctx, transport):
-        check_query_f(hge_ctx, self.dir() + '/select_query_author_by_pkey.yaml', transport)
 
     def test_select_query_where(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + '/select_query_author_where.yaml', transport)
@@ -46,8 +68,79 @@ class TestGraphQLQueryBasic:
     def test_nested_select_query_where_on_relationship(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + '/nested_select_query_article_author_where_on_relationship.yaml', transport)
 
-    def test_select_query_user(self, hge_ctx, transport):
-        check_query_f(hge_ctx, self.dir() + "/select_query_user.yaml", transport)
+    def test_select_query_non_tracked_table(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + "/select_query_non_tracked_table_err.yaml", transport)
+
+    def test_select_query_col_not_present_err(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + "/select_query_author_col_not_present_err.yaml", transport)
+
+    # batching # works only with http, not with websocket
+    def test_select_query_batching(self, hge_ctx, transport):
+        if transport == 'http':
+            check_query_f(hge_ctx, self.dir() + "/select_query_batching.yaml", transport)
+
+    def test_select_query_batching_with_one_error(self, hge_ctx, transport):
+        if transport == 'http':
+            check_query_f(hge_ctx, self.dir() + "/select_query_batching_with_one_error.yaml", transport)
+
+    # fragments
+    def test_select_query_top_level_fragment(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/select_query_top_level_fragment.yaml', transport)
+
+    def test_select_query_nested_fragment(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/select_query_nested_fragment.yaml', transport)
+
+    def test_select_query_fragment_cycles(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/select_query_fragment_cycles.yaml', transport)
+
+    def test_select_query_fragment_with_variable(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/select_query_fragment_with_variable.yaml', transport)
+
+    # invalid # this is not applicable to bigquery, it simply returns empty results
+    def test_select_query_invalid_escape_sequence(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + "/select_query_invalid_escape_sequence.yaml", transport)
+
+    @classmethod
+    def dir(cls):
+        return 'queries/graphql_query/bigquery'
+
+@pytest.mark.parametrize("transport", ['http', 'websocket'])
+@pytest.mark.parametrize("backend", ['mssql', 'postgres'])
+@usefixtures('per_class_tests_db_state', 'per_backend_tests')
+class TestGraphQLQueryBasicCommon:
+    # This also exercises support for multiple operations in a document:
+    def test_select_query_author(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/select_query_author.yaml', transport)
+
+    # TODO: this test currently fails when run against MSSQL.
+    # Remove from TestGraphQLQueryBasicPostgres and uncomment here once
+    # https://github.com/hasura/graphql-engine-mono/issues/866 is fixed.
+    # def test_select_query_author_pk(self, hge_ctx, transport):
+    #     check_query_f(hge_ctx, self.dir() + '/select_query_author_by_pkey.yaml', transport)
+
+    def test_select_query_author_quoted_col(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/select_query_author_col_quoted.yaml', transport)
+
+    def test_select_query_author_with_skip_directive(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/select_query_author_skip_directive.yaml', transport)
+
+    def test_select_query_author_with_include_directive(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/select_query_author_include_directive.yaml', transport)
+
+    def test_select_query_where(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/select_query_author_where.yaml', transport)
+
+    def test_nested_select_query_article_author(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/nested_select_query_article_author.yaml', transport)
+
+    def test_nested_select_query_deep(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/nested_select_query_deep.yaml', transport)
+
+    def test_nested_select_query_where(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/nested_select_where_query_author_article.yaml', transport)
+
+    def test_nested_select_query_where_on_relationship(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/nested_select_query_article_author_where_on_relationship.yaml', transport)
 
     def test_select_query_non_tracked_table(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + "/select_query_non_tracked_table_err.yaml", transport)
@@ -55,16 +148,52 @@ class TestGraphQLQueryBasic:
     def test_select_query_col_not_present_err(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + "/select_query_author_col_not_present_err.yaml", transport)
 
+    @classmethod
+    def dir(cls):
+        return 'queries/graphql_query/basic'
+
+@pytest.mark.parametrize("transport", ['http', 'websocket'])
+@pytest.mark.parametrize("backend", ['mssql'])
+@usefixtures('per_class_tests_db_state', 'per_backend_tests')
+class TestGraphQLQueryBasicMSSQL:
+    def test_select_various_mssql_types(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/select_query_test_types_mssql.yaml', transport)
+
+    def test_select_query_user(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + "/select_query_user_mssql.yaml", transport)
+
     def test_select_query_user_col_change(self, hge_ctx, transport):
-        check_query_f(hge_ctx, self.dir() + "/select_query_user_col_change.yaml")
+        check_query_f(hge_ctx, self.dir() + "/select_query_user_col_change_mssql.yaml")
+
+    @classmethod
+    def dir(cls):
+        return 'queries/graphql_query/basic'
+
+@pytest.mark.parametrize("transport", ['http', 'websocket'])
+@pytest.mark.parametrize("backend", ['postgres'])
+@usefixtures('per_class_tests_db_state', 'per_backend_tests')
+class TestGraphQLQueryBasicPostgres:
+    # Can't run server upgrade tests, as this test has a schema change
+    @pytest.mark.skip_server_upgrade_test
+    def test_select_various_postgres_types(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/select_query_test_types_postgres.yaml', transport)
+
+    def test_select_query_author_pk(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/select_query_author_by_pkey.yaml', transport)
+
+    def test_select_query_invalid_escape_sequence(self, hge_ctx, transport):
+        transport = 'http'
+        check_query_f(hge_ctx, self.dir() + "/select_query_invalid_escape_sequence.yaml", transport)
 
     def test_nested_select_with_foreign_key_alter(self, hge_ctx, transport):
         transport = 'http'
         check_query_f(hge_ctx, self.dir() + "/nested_select_with_foreign_key_alter.yaml", transport)
 
-    def test_select_query_invalid_escape_sequence(self, hge_ctx, transport):
-        transport = 'http'
-        check_query_f(hge_ctx, self.dir() + "/select_query_invalid_escape_sequence.yaml", transport)
+    def test_select_query_user(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + "/select_query_user_postgres.yaml", transport)
+
+    def test_select_query_user_col_change(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + "/select_query_user_col_change_postgres.yaml")
 
     def test_select_query_person_citext(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + "/select_query_person_citext.yaml", transport)
@@ -85,7 +214,6 @@ class TestGraphQLQueryBasic:
     def dir(cls):
         return 'queries/graphql_query/basic'
 
-
 @pytest.mark.parametrize("transport", ['http', 'websocket'])
 @usefixtures('per_class_tests_db_state')
 class TestGraphQLQueryFragments:
@@ -98,6 +226,9 @@ class TestGraphQLQueryFragments:
 
     def test_select_query_fragment_cycles(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + '/select_query_fragment_cycles.yaml', transport)
+
+    def test_select_query_fragment_with_variable(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/select_query_fragment_with_variable.yaml', transport)
 
     @classmethod
     def dir(cls):
@@ -205,14 +336,17 @@ class TestGraphQLQueryOffsets:
 
 
 @pytest.mark.parametrize("transport", ['http', 'websocket'])
-@usefixtures('per_class_tests_db_state')
-class TestGraphQLQueryBoolExpBasic:
+@pytest.mark.parametrize("backend", ['mssql', 'postgres'])
+@usefixtures('per_class_tests_db_state', 'per_backend_tests')
+class TestGraphQLQueryBoolExpBasicCommon:
+    def test_order_delivered_at_is_null(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/select_query_order_delivered_at_is_null.yaml', transport)
+
+    def test_order_delivered_at_is_not_null(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/select_query_order_delivered_at_is_not_null.yaml', transport)
 
     def test_author_article_where_not_equal(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + '/select_author_article_where_neq.yaml', transport)
-
-    def test_author_article_operator_ne_not_found_err(self, hge_ctx, transport):
-        check_query_f(hge_ctx, self.dir() + '/select_author_article_operator_ne_not_found_err.yaml', transport)
 
     def test_author_article_where_greater_than(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + '/select_author_article_where_gt.yaml', transport)
@@ -223,32 +357,11 @@ class TestGraphQLQueryBoolExpBasic:
     def test_author_article_where_less_than(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + '/select_author_article_where_lt.yaml', transport)
 
-    def test_author_article_where_less_than_or_equal(self, hge_ctx, transport):
-        check_query_f(hge_ctx, self.dir() + '/select_author_article_where_lte.yaml', transport)
-
-    def test_author_article_where_in(self, hge_ctx, transport):
-        check_query_f(hge_ctx, self.dir() + '/select_author_article_where_in.yaml', transport)
-
-    def test_author_article_where_in_empty_array(self, hge_ctx, transport):
-        check_query_f(hge_ctx, self.dir() + '/select_author_article_where_in_empty_array.yaml', transport)
-
-    def test_author_article_where_nin_empty_array(self, hge_ctx, transport):
-        check_query_f(hge_ctx, self.dir() + '/select_author_article_where_nin_empty_array.yaml', transport)
-
-    def test_author_article_where_nin(self, hge_ctx, transport):
-        check_query_f(hge_ctx, self.dir() + '/select_author_article_where_nin.yaml', transport)
-
-    def test_uuid_test_in_uuid_col(self, hge_ctx, transport):
-        check_query_f(hge_ctx, self.dir() + '/select_uuid_test_in_uuid_col.yaml', transport)
-
-    def test_order_delivered_at_is_null(self, hge_ctx, transport):
-        check_query_f(hge_ctx, self.dir() + '/select_query_order_delivered_at_is_null.yaml', transport)
-
-    def test_order_delivered_at_is_not_null(self, hge_ctx, transport):
-        check_query_f(hge_ctx, self.dir() + '/select_query_order_delivered_at_is_not_null.yaml', transport)
-
     def test_author_article_where_not_less_than(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + '/select_author_article_where_not_lt.yaml', transport)
+
+    def test_author_article_where_less_than_or_equal(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/select_author_article_where_lte.yaml', transport)
 
     def test_article_author_is_published_and_registered(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + '/select_article_author_is_published_and_registered.yaml', transport)
@@ -256,8 +369,34 @@ class TestGraphQLQueryBoolExpBasic:
     def test_article_author_not_published_nor_registered(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + '/select_article_author_not_published_or_not_registered.yaml', transport)
 
+    def test_author_article_where_in(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/select_author_article_where_in.yaml', transport)
+
+    def test_author_article_where_nin(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/select_author_article_where_nin.yaml', transport)
+
+    @classmethod
+    def dir(cls):
+        return 'queries/graphql_query/boolexp/basic'
+
+@pytest.mark.parametrize("transport", ['http', 'websocket'])
+@pytest.mark.parametrize("backend", ['postgres'])
+@usefixtures('per_class_tests_db_state', 'per_backend_tests')
+class TestGraphQLQueryBoolExpBasicPostgres:
+    def test_author_article_operator_ne_not_found_err(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/select_author_article_operator_ne_not_found_err_postgres.yaml', transport)
+
+    def test_author_article_where_in_empty_array(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/select_author_article_where_in_empty_array_postgres.yaml', transport)
+
+    def test_author_article_where_nin_empty_array(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/select_author_article_where_nin_empty_array_postgres.yaml', transport)
+
     def test_article_author_unexpected_operator_in_where_err(self, hge_ctx, transport):
-        check_query_f(hge_ctx, self.dir() + '/select_author_article_unexpected_operator_in_where_err.yaml', transport)
+        check_query_f(hge_ctx, self.dir() + '/select_author_article_unexpected_operator_in_where_err_postgres.yaml', transport)
+
+    def test_uuid_test_in_uuid_col(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/select_uuid_test_in_uuid_col_postgres.yaml', transport)
 
     def test_self_referential_relationships(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + '/self_referential_relationships.yaml', transport)
@@ -275,6 +414,22 @@ class TestGraphQLQueryBoolExpBasic:
     def dir(cls):
         return 'queries/graphql_query/boolexp/basic'
 
+@pytest.mark.parametrize("transport", ['http', 'websocket'])
+@pytest.mark.parametrize("backend", ['mssql'])
+@usefixtures('per_class_tests_db_state', 'per_backend_tests')
+class TestGraphQLQueryBoolExpBasicMSSQL:
+    def test_author_article_operator_ne_not_found_err(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/select_author_article_operator_ne_not_found_err_mssql.yaml', transport)
+
+    def test_article_author_unexpected_operator_in_where_err(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/select_author_article_unexpected_operator_in_where_err_mssql.yaml', transport)
+
+    def test_uuid_test_in_uuid_col(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/select_uuid_test_in_uuid_col_mssql.yaml', transport)
+
+    @classmethod
+    def dir(cls):
+        return 'queries/graphql_query/boolexp/basic'
 
 @pytest.mark.parametrize("transport", ['http', 'websocket'])
 @usefixtures('per_class_tests_db_state')
@@ -337,6 +492,9 @@ class TestGraphqlQueryPermissions:
     def test_in_and_nin(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + '/in_and_nin.yaml', transport)
 
+    def test_iregex(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/iregex.yaml', transport)
+
     def test_user_accessing_books_by_pk_should_fail(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + '/user_should_not_be_able_to_access_books_by_pk.yaml')
 
@@ -347,10 +505,25 @@ class TestGraphqlQueryPermissions:
     def dir(cls):
         return 'queries/graphql_query/permissions'
 
+@pytest.mark.parametrize('transport', ['http', 'websocket'])
+@use_inherited_roles_fixtures
+class TestGraphQLInheritedRoles:
+
+    @classmethod
+    def dir(cls):
+        return 'queries/graphql_query/permissions/inherited_roles'
+
+    def test_basic_inherited_role(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/basic_inherited_roles.yaml')
+
+    def test_inherited_role_when_some_roles_may_not_have_permission_configured(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/inherited_role_with_some_roles_having_no_permissions.yaml')
+
 
 @pytest.mark.parametrize("transport", ['http', 'websocket'])
-@usefixtures('per_class_tests_db_state')
-class TestGraphQLQueryBoolExpSearch:
+@pytest.mark.parametrize("backend", ['postgres', 'mssql'])
+@usefixtures('per_class_tests_db_state', 'per_backend_tests')
+class TestGraphQLQueryBoolExpSearchCommon:
 
     def test_city_where_like(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + '/select_city_where_like.yaml', transport)
@@ -358,22 +531,60 @@ class TestGraphQLQueryBoolExpSearch:
     def test_city_where_not_like(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + '/select_city_where_nlike.yaml', transport)
 
+    @classmethod
+    def dir(cls):
+        return 'queries/graphql_query/boolexp/search'
+
+@pytest.mark.parametrize("transport", ['http', 'websocket'])
+@pytest.mark.parametrize("backend", ['postgres'])
+@usefixtures('per_class_tests_db_state', 'per_backend_tests')
+class TestGraphQLQueryBoolExpSearchPostgres:
+
     def test_city_where_ilike(self, hge_ctx, transport):
-        check_query_f(hge_ctx, self.dir() + '/select_city_where_ilike.yaml', transport)
+        check_query_f(hge_ctx, self.dir() + '/select_city_where_ilike_postgres.yaml', transport)
 
     def test_city_where_not_ilike(self, hge_ctx, transport):
-        check_query_f(hge_ctx, self.dir() + '/select_city_where_nilike.yaml', transport)
+        check_query_f(hge_ctx, self.dir() + '/select_city_where_nilike_postgres.yaml', transport)
 
     def test_city_where_similar(self, hge_ctx, transport):
-        check_query_f(hge_ctx, self.dir() + '/select_city_where_similar.yaml', transport)
+        check_query_f(hge_ctx, self.dir() + '/select_city_where_similar_postgres.yaml', transport)
 
     def test_city_where_not_similar(self, hge_ctx, transport):
-        check_query_f(hge_ctx, self.dir() + '/select_city_where_not_similar.yaml', transport)
+        check_query_f(hge_ctx, self.dir() + '/select_city_where_not_similar_postgres.yaml', transport)
+
+    def test_city_where_regex(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/select_city_where_regex_postgres.yaml', transport)
+
+    def test_city_where_nregex(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/select_city_where_nregex_postgres.yaml', transport)
+
+    def test_city_where_iregex(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/select_city_where_iregex_postgres.yaml', transport)
+
+    def test_city_where_niregex(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/select_city_where_niregex_postgres.yaml', transport)
+
+    def test_project_where_ilike(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/select_project_where_ilike_postgres.yaml', transport)
 
     @classmethod
     def dir(cls):
         return 'queries/graphql_query/boolexp/search'
 
+@pytest.mark.parametrize("transport", ['http', 'websocket'])
+@pytest.mark.parametrize("backend", ['mssql'])
+@usefixtures('per_class_tests_db_state', 'per_backend_tests')
+class TestGraphQLQueryBoolExpSearchMSSQL:
+
+    def test_city_where_like(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/select_city_where_like_mssql.yaml', transport)
+
+    def test_city_where_not_like(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/select_city_where_nlike_mssql.yaml', transport)
+
+    @classmethod
+    def dir(cls):
+        return 'queries/graphql_query/boolexp/search'
 
 @pytest.mark.parametrize("transport", ['http', 'websocket'])
 @usefixtures('per_class_tests_db_state')
@@ -419,6 +630,9 @@ class TestGraphQLQueryBoolExpPostGIS:
 
     def test_query_geography_spatial_ops(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + '/query_geography_spatial_ops.yaml', transport)
+
+    def test_query_geometry_3d_spatial_ops(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/query_geometry_3d_spatial_ops.yaml', transport)
 
     def test_query_cast_geometry_to_geography(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + '/query_cast_geometry_to_geography.yaml', transport)
@@ -545,6 +759,13 @@ class TestGraphQLQueryFunctions:
     def test_query_get_test_session_id(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + '/query_get_test_session_id.yaml')
 
+    @pytest.mark.parametrize("transport", ['http', 'websocket'])
+    def test_query_search_author_mview(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/query_search_author_mview.yaml')
+
+    def test_tracking_function_with_composite_type_argument(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/track_non_base_function_arg_type.yaml')
+
     @classmethod
     def dir(cls):
         return 'queries/graphql_query/functions'
@@ -562,6 +783,17 @@ class TestGraphQLQueryCustomSchema:
     @classmethod
     def dir(cls):
         return 'queries/graphql_query/custom_schema'
+
+@pytest.mark.parametrize("transport", ['http', 'websocket'])
+@usefixtures('per_class_tests_db_state')
+class TestGraphQLQueryCustomTableName:
+
+    def test_author(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + 'author.yaml', transport)
+
+    @classmethod
+    def dir(cls):
+        return 'queries/graphql_query/custom_schema/custom_table_name/'
 
 @pytest.mark.parametrize('transport', ['http', 'websocket'])
 @usefixtures('per_class_tests_db_state')
@@ -772,3 +1004,103 @@ def _test_relay_pagination(hge_ctx, transport, test_file_prefix, no_of_pages):
         page_no = i + 1
         test_file = "page_" + str(page_no) + ".yaml"
         check_query_f(hge_ctx, test_file_prefix + "/" + test_file, transport)
+
+use_function_permission_fixtures = pytest.mark.usefixtures(
+    'per_method_tests_db_state',
+    'functions_permissions_fixtures'
+)
+
+@pytest.mark.parametrize('transport', ['http', 'websocket'])
+@use_function_permission_fixtures
+class TestGraphQLQueryFunctionPermissions:
+
+    @classmethod
+    def dir(cls):
+        return 'queries/graphql_query/functions/permissions/'
+
+    def test_access_function_without_permission_configured(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + 'get_articles_without_permission_configured.yaml')
+
+    def test_access_function_with_permission_configured(self, hge_ctx, transport):
+        st_code, resp = hge_ctx.v1metadataq_f(self.dir() + 'add_function_permission_get_articles.yaml')
+        assert st_code == 200, resp
+        check_query_f(hge_ctx, self.dir() + 'get_articles_with_permission_configured.yaml')
+
+@pytest.mark.parametrize('transport', ['http', 'websocket'])
+@usefixtures('per_class_tests_db_state')
+class TestGraphQLQueryBoolExpLtree:
+    def test_select_path_where_ancestor(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/select_path_where_ancestor.yaml')
+
+    def test_select_path_where_ancestor_array(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/select_path_where_ancestor_array.yaml')
+
+    def test_select_path_where_descendant(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/select_path_where_descendant.yaml')
+
+    def test_select_path_where_descendant_array(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/select_path_where_descendant_array.yaml')
+
+    def test_select_path_where_matches(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/select_path_where_matches.yaml')
+
+    def test_select_path_where_matches_array(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/select_path_where_matches_array.yaml')
+
+    def test_select_path_where_matches_ltxtquery(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/select_path_where_matches_ltxtquery.yaml')
+
+    @classmethod
+    def dir(cls):
+        return 'queries/graphql_query/boolexp/ltree'
+
+@pytest.mark.parametrize("transport", ['http', 'websocket'])
+@pytest.mark.parametrize("backend", ['mssql'])
+@usefixtures('per_class_tests_db_state', 'per_backend_tests')
+class TestGraphQLQueryBoolExpSpatialMSSQL:
+    @pytest.mark.skip_server_upgrade_test
+    def test_select_spatial_mssql_types(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/select_query_spatial_types_mssql.yaml', transport)
+
+    def test_select_spatial_mssql_types_where_st_equals(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/select_query_spatial_types_where_st_equals_mssql.yaml', transport)
+
+    def test_select_spatial_mssql_types_where_st_contains(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/select_query_spatial_types_where_st_contains_mssql.yaml', transport)
+
+    def test_select_spatial_mssql_types_where_st_crosses(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/select_query_geom_where_st_crosses_mssql.yaml', transport)
+
+    def test_select_spatial_mssql_types_where_st_intersects(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/select_query_spatial_types_where_st_intersects_mssql.yaml', transport)
+
+    def test_select_spatial_mssql_types_where_st_overlaps(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/select_query_spatial_types_where_st_overlaps_mssql.yaml', transport)
+
+    def test_select_spatial_mssql_types_where_st_within(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/select_query_spatial_types_where_st_within_mssql.yaml', transport)
+
+    def test_select_spatial_mssql_types_where_st_touches(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/select_query_spatial_types_where_st_touches_mssql.yaml', transport)
+
+    def test_select_spatial_mssql_types_where_st_crosses_geojson(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/select_query_geom_where_st_crosses_geojson_mssql.yaml', transport)
+
+    def test_select_spatial_mssql_types_where_st_contains_geojson(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/select_query_spatial_types_where_st_contains_geojson_mssql.yaml', transport)
+
+    def test_select_spatial_mssql_types_where_st_equals_geojson(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/select_query_spatial_types_where_st_equals_geojson_mssql.yaml', transport)
+
+    def test_select_spatial_mssql_types_where_st_intersects_geojson(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/select_query_spatial_types_where_st_intersects_geojson_mssql.yaml', transport)
+
+    def test_select_spatial_mssql_types_where_st_touches_geojson(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/select_query_spatial_types_where_st_touches_geojson_mssql.yaml', transport)
+
+    def test_select_spatial_mssql_types_where_st_within_geojson(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/select_query_spatial_types_where_st_within_geojson_mssql.yaml', transport)
+
+    @classmethod
+    def dir(cls):
+        return 'queries/graphql_query/boolexp/spatial'

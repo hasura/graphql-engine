@@ -46,7 +46,7 @@ class App extends Component {
                 <img className="hasura-logo" alt="hasura logo" src="https://graphql-engine-cdn.hasura.io/img/powered_by_hasura_black_200px.png" />
               </a>
               &nbsp; | &nbsp;
-              <a href="/console" target="_blank">
+              <a href="https://realtime-poll.hasura.app/console" target="_blank">
                 Backend
               </a>
               &nbsp; | &nbsp;

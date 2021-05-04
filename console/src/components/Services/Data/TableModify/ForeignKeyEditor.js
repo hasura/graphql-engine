@@ -21,6 +21,7 @@ const ForeignKeyEditor = ({
   dispatch,
   fkModify,
   schemaList,
+  readOnlyMode,
 }) => {
   const columns = tableSchema.columns.sort(ordinalColSort);
 
@@ -68,7 +69,7 @@ const ForeignKeyEditor = ({
       }
     });
 
-    const orderedSchemaList = schemaList.map(s => s.schema_name).sort();
+    const orderedSchemaList = schemaList.sort();
 
     const getFkConfigLabel = config => {
       let fkConfigLabel;
@@ -165,6 +166,7 @@ const ForeignKeyEditor = ({
           service="modify-table"
           removeFunc={removeFk}
           saveFunc={saveFk}
+          readOnlyMode={readOnlyMode}
           collapsedLabel={collapsedLabel}
           collapseCallback={resetFk}
           collapseButtonText={collapseButtonText}

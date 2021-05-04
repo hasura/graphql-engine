@@ -8,6 +8,7 @@ resp_pg_version_map = {
     '10': 'response_10_11',
     '11': 'response_10_11',
     '12': 'response_10_11',
+    '13': 'response_10_11',
     'latest': 'response_10_11'
 }
 

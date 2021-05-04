@@ -4,22 +4,19 @@ import { Reals } from '../constants';
 
 import {
   showErrorNotification,
-  showSuccessNotification,
+  showNotification,
 } from '../../Common/Notification';
 import dataHeaders from '../Common/Headers';
+import { getEnumColumnMappings, dataSource } from '../../../../dataSources';
+import { getEnumOptionsQuery } from '../../../Common/utils/v1QueryUtils';
 import {
-  getEnumColumnMappings,
-  arrayToPostgresArray,
-} from '../../../Common/utils/pgUtils';
-import {
-  getEnumOptionsQuery,
   getInsertUpQuery,
   getInsertDownQuery,
 } from '../../../Common/utils/v1QueryUtils';
-import { ARRAY } from '../utils';
 import { isStringArray } from '../../../Common/utils/jsUtils';
 import { makeMigrationCall } from '../DataActions';
 import { removeAll } from 'react-notification-system-redux';
+import { getNotificationDetails } from '../../Common/Notification';
 
 const I_SET_CLONE = 'InsertItem/I_SET_CLONE';
 const I_RESET = 'InsertItem/I_RESET';
@@ -41,16 +38,20 @@ const insertItemAsMigration = (
   columns,
   callback
 ) => (dispatch, getState) => {
+  const source = getState().tables.currentDataSource;
+
   const upQuery = getInsertUpQuery(
     { name: tableInfo.name, schema: tableInfo.schema },
     insertedData,
-    columns
+    columns,
+    source
   );
   const downQuery = getInsertDownQuery(
     { name: tableInfo.name, schema: tableInfo.schema },
     insertedData,
     primaryKeyInfo,
-    columns
+    columns,
+    source
   );
 
   const migrationName = `insert_into_${tableInfo.schema}_${tableInfo.name}`;
@@ -87,7 +88,7 @@ const insertItem = (tableName, colValues, isMigration = false) => {
     dispatch({ type: I_ONGOING_REQ });
     const insertObject = {};
     const state = getState();
-    const { currentSchema } = state.tables;
+    const { currentSchema, currentDataSource } = state.tables;
     const tableDef = { name: tableName, schema: currentSchema };
 
     const currentTableInfo = state.tables.allSchemas.find(
@@ -102,7 +103,7 @@ const insertItem = (tableName, colValues, isMigration = false) => {
       if (Reals.indexOf(colType) > 0) {
         insertObject[colName] =
           parseFloat(colValues[colName], 10) || colValues[colName];
-      } else if (colType === 'boolean') {
+      } else if (colType === dataSource.columnDataTypes.BOOLEAN) {
         if (colValues[colName] === 'true') {
           insertObject[colName] = true;
         } else if (colValues[colName] === 'false') {
@@ -110,7 +111,10 @@ const insertItem = (tableName, colValues, isMigration = false) => {
         } else {
           insertObject[colName] = null;
         }
-      } else if (colType === 'json' || colType === 'jsonb') {
+      } else if (
+        colType === dataSource.columnDataTypes.JSONDTYPE ||
+        colType === dataSource.columnDataTypes.JSONB
+      ) {
         try {
           const val = JSON.parse(colValues[colName]);
           insertObject[colName] = val;
@@ -122,10 +126,13 @@ const insertItem = (tableName, colValues, isMigration = false) => {
             ' as a valid JSON object/array';
           error = true;
         }
-      } else if (colType === ARRAY && isStringArray(colValues[colName])) {
+      } else if (
+        colType === dataSource.columnDataTypes.ARRAY &&
+        isStringArray(colValues[colName])
+      ) {
         try {
           const arr = JSON.parse(colValues[colName]);
-          insertObject[colName] = arrayToPostgresArray(arr);
+          insertObject[colName] = dataSource.arrayToPostgresArray(arr);
         } catch {
           errorMessage =
             colName +
@@ -145,13 +152,11 @@ const insertItem = (tableName, colValues, isMigration = false) => {
         error: { message: 'Not valid JSON' },
       });
     }
-    let returning = [];
-    if (isMigration) {
-      returning = columns.map(col => col.column_name);
-    }
+    const returning = columns.map(col => col.column_name);
     const reqBody = {
       type: 'insert',
       args: {
+        source: currentDataSource,
         table: tableDef,
         objects: [insertObject],
         returning,
@@ -164,12 +169,35 @@ const insertItem = (tableName, colValues, isMigration = false) => {
       body: JSON.stringify(reqBody),
     };
     const url = Endpoints.query;
-    const migrationSuccessCB = affectedRows => {
+
+    const migrationSuccessCB = (affectedRows, returnedFields) => {
+      const detailsAction = {
+        label: 'Details',
+        callback: () => {
+          dispatch(
+            showNotification(
+              {
+                position: 'br',
+                title: 'Inserted data!',
+                message: `Affected rows: ${affectedRows}`,
+                dismissible: 'button',
+                autoDismiss: 0,
+                children: getNotificationDetails(returnedFields),
+              },
+              'success'
+            )
+          );
+        },
+      };
+
       dispatch(
-        showSuccessNotification(
-          'Inserted data!',
-          `Affected rows: ${affectedRows}`,
-          true
+        showNotification(
+          {
+            title: 'Inserted data!',
+            message: `Affected rows: ${affectedRows}`,
+            action: detailsAction,
+          },
+          'success'
         )
       );
     };
@@ -185,13 +213,14 @@ const insertItem = (tableName, colValues, isMigration = false) => {
               data.returning[0],
               currentTableInfo.primary_key,
               columns,
-              () => migrationSuccessCB(affectedRows)
+              () => migrationSuccessCB(affectedRows, data.returning[0])
             )
           );
         } else {
-          migrationSuccessCB(affectedRows);
+          migrationSuccessCB(affectedRows, data.returning[0]);
         }
       },
+
       err => {
         dispatch(removeAll());
         dispatch(showErrorNotification('Insert failed!', err.error, err));
@@ -203,7 +232,7 @@ const insertItem = (tableName, colValues, isMigration = false) => {
 const fetchEnumOptions = () => {
   return (dispatch, getState) => {
     const {
-      tables: { allSchemas, currentTable, currentSchema },
+      tables: { allSchemas, currentTable, currentSchema, currentDataSource },
     } = getState();
 
     const requests = getEnumColumnMappings(
@@ -222,7 +251,11 @@ const fetchEnumOptions = () => {
     const url = Endpoints.query;
 
     requests.forEach(request => {
-      const req = getEnumOptionsQuery(request, currentSchema);
+      const req = getEnumOptionsQuery(
+        request,
+        currentSchema,
+        currentDataSource
+      );
 
       return dispatch(
         requestAction(url, {

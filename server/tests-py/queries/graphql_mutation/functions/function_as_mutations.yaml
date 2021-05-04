@@ -1,0 +1,62 @@
+- description: Test that a tracked VOLATILE function works as a mutation
+  url: /v1/graphql
+  status: 200
+  query:
+    query: |
+      mutation {
+        add_to_score(args: {search: "Bla", increment: 3}){
+          name
+          score
+          role_echo
+        }
+      }
+  response:
+    data:
+      add_to_score:
+      - name: Starke Blake
+        score: 3
+        role_echo: admin
+      - name: Bellamy Blake
+        score: 13
+        role_echo: admin
+      - name: Dora Black
+        score: 53
+        role_echo: admin
+
+- description: Test that defaults in SQL function become default parameters in schema
+  url: /v1/graphql
+  status: 200
+  query:
+    # We omit 'increment' here, defaulting to 1
+    query: |
+      mutation {
+        add_to_score(args: {search: "Blake"}){
+          name
+          score
+        }
+      }
+  response:
+    data:
+      add_to_score:
+      - name: Starke Blake
+        score: 4
+      - name: Bellamy Blake
+        score: 14
+
+- description: Sanity check that VOLATILE function didn't end up in query root too
+  url: /v1/graphql
+  # FIXME: here and elsewhere: https://github.com/hasura/graphql-engine/issues/6106
+  status: 200
+  query:
+    query: |
+      query {
+        add_to_score(args: {search: "Bla", increment: 3}){
+          name
+        }
+      }
+  response:
+    errors:
+    - extensions:
+        path: $.selectionSet.add_to_score
+        code: validation-failed
+      message: "field \"add_to_score\" not found in type: 'query_root'"

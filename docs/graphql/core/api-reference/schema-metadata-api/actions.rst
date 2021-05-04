@@ -17,6 +17,13 @@ Introduction
 
 **actions** are user defined mutations with custom business logic.
 
+.. admonition:: Deprecation
+
+  In versions ``v2.0.0`` and above, the schema/metadata API is deprecated in favour of the :ref:`schema API <schema_apis>` and the
+  :ref:`metadata API <metadata_apis>`.
+
+  Though for backwards compatibility, the schema/metadata APIs will continue to function.
+
 .. _create_action:
 
 create_action
@@ -75,84 +82,12 @@ Args syntax
      - Name of the action
    * - definition
      - true
-     - ActionDefinition_
+     - :ref:`ActionDefinition`
      - Definition of the action
    * - comment
      - false
      - text
      - comment
-
-.. _ActionDefinition:
-
-ActionDefinition
-&&&&&&&&&&&&&&&&
-
-.. list-table::
-   :header-rows: 1
-
-   * - Key
-     - Required
-     - Schema
-     - Description
-   * - arguments
-     - false
-     - Array of InputArgument_
-     - Input arguments
-   * - output_type
-     - true
-     - :ref:`GraphQLType <GraphQLType>`
-     - The output type of the action. Only object and list of objects are allowed.
-   * - kind
-     - false
-     - [ ``synchronous`` | ``asynchronous`` ]
-     - The kind of the mutation action (default: ``synchronous``). If the type of
-       the action is ``query`` then the ``kind`` field should be omitted.
-   * - headers
-     - false
-     - [ :ref:`HeaderFromValue <HeaderFromValue>` | :ref:`HeaderFromEnv <HeaderFromEnv>` ]
-     - List of defined headers to be sent to the handler
-   * - forward_client_headers
-     - false
-     - boolean
-     - If set to ``true`` the client headers are forwarded to the webhook handler (default: ``false``)
-   * - handler
-     - true
-     - :ref:`WebhookURL <WebhookURL>`
-     - The action's webhook URL
-   * - type
-     - false
-     - [ ``mutation`` | ``query`` ]
-     - The type of the action (default: ``mutation``)
-   * - timeout
-     - false
-     - Integer
-     - Number of seconds to wait for response before timing out. Default: 30
-
-
-.. _InputArgument:
-
-InputArgument
-&&&&&&&&&&&&&
-
-.. list-table::
-   :header-rows: 1
-
-   * - Key
-     - Required
-     - Schema
-     - Description
-   * - name
-     - true
-     - text
-     - Name of the argument
-   * - type
-     - true
-     - :ref:`GraphQLType <GraphQLType>`
-     - Type of the argument
-
-.. note::
-
-   The ``GraphQL Types`` used in creating an action must be defined before via :ref:`Custom Types <api_custom_types>`
 
 .. _drop_action:
 
@@ -232,7 +167,8 @@ Update an action ``create_user`` by making it's kind to ``asynchronous``:
             ],
             "output_type":"User",
             "handler":"https://action.my_app.com/create-user"
-         }
+         },
+         "comment": "Custom action to create user",
       }
    }
 
@@ -255,8 +191,12 @@ Args syntax
      - Name of the action
    * - definition
      - true
-     - ActionDefinition_
+     - :ref:`ActionDefinition`
      - Definition of the action to be replaced
+   * - comment
+     - false
+     - text
+     - comment
 
 .. _create_action_permission:
 

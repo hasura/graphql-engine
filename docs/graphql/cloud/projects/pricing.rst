@@ -23,8 +23,8 @@ Pricing plans
 
 There are three different pricing plans that you can chose from: 
 
-- Free tier
-- Pay-as-you-go 
+- Free
+- Standard (Pay-as-you-go)
 - Enterprise
 
 .. note::
@@ -34,9 +34,9 @@ There are three different pricing plans that you can chose from:
 View current pricing plans for projects
 ---------------------------------------
 
-By clicking on the ``Billing`` tab, you can see all your projects and what plan they are currently on:
+By clicking on the ``Projects`` tab, you can see all your projects and what plan they are currently on:
 
-.. thumbnail:: /img/graphql/cloud/projects/pricing-overview.png
+.. thumbnail:: /img/graphql/cloud/projects/project-pricing-plans.png
   :alt: Billing overview
   :width: 1200px
   :class: inline-block
@@ -44,38 +44,38 @@ By clicking on the ``Billing`` tab, you can see all your projects and what plan 
 Switching pricing plans
 -----------------------
 
-Switch from free tier to pay-as-you-go
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Switch from **Free** to **Standard** tier
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Once the free tier data limit is exhausted, the project becomes inactive. In order to keep it active, you can switch to the pay-as-you-go plan.
+Once the ``Free`` tier data limit is exhausted, the project becomes inactive. In order to keep it active, you can switch to the ``Standard`` plan.
 
 Go to ``Projects`` and click on the project you'd like to change.
 
-Now click on the ``Usage tab``. To upgrade to the pay-as-you-go plan, click on the ``Upgrade`` button:
+Now click on the ``Usage tab``. To upgrade to the ``Standard`` plan, click on the ``Upgrade`` button:
 
 .. thumbnail:: /img/graphql/cloud/projects/upgrade-to-paid-plan.png
-   :alt: Upgrade to the pay-as-you-go plan
+   :alt: Upgrade to the Standard plan
    :width: 1200px
    :class: inline-block
 
-Your project is now running on the pay-as-you-go plan.
+Your project is now running on the ``Standard`` plan.
 
-Switch from pay-as-you-go to free tier
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Switch from **Standard** to **Free** tier
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Go to ``Projects`` and click on the project you'd like to change. 
 
 Now click on the ``Usage`` tab and then click on the link ``Switch to the free tier`` on the bottom right:
 
 .. thumbnail:: /img/graphql/cloud/projects/switch-to-free-plan.png
-   :alt: Switch from pay-as-you-go to free tier
+   :alt: Switch from Standard to Free tier
    :width: 1200px
    :class: inline-block
 
-You'll be charged as per the pay-as-you-go plan until the end of the day. From the next day onwards, the project will be on the free tier. 
-If the free tier limit is exhausted, the project might become inactive.
+You'll be charged as per the ``Standard`` plan until the end of the day. From the next day onwards, the project will be on the ``Free`` tier.
+If the ``Free`` tier limit is exhausted, the project might become inactive.
 
-Switch to and from enterprise
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Switch to and from **Enterprise** tier
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-In order to upgrade to the enterprise plan or to switch back to another plan, please `contact our sales team <https://hasura.io/contact-us/?type=hasuraenterprise>`__.
+In order to upgrade to the ``Enterprise`` plan or to switch back to another plan, please `contact our sales team <https://hasura.io/contact-us/?type=hasuraenterprise>`__.

@@ -17,16 +17,46 @@ func Test(t *testing.T) {
 	}
 
 	m := source.NewMigrations()
-	m.Append(&source.Migration{Version: 1, Direction: source.Up})
-	m.Append(&source.Migration{Version: 1, Direction: source.Down})
-	m.Append(&source.Migration{Version: 1, Direction: source.MetaUp})
-	m.Append(&source.Migration{Version: 1, Direction: source.MetaDown})
-	m.Append(&source.Migration{Version: 3, Direction: source.Up})
-	m.Append(&source.Migration{Version: 4, Direction: source.MetaUp})
-	m.Append(&source.Migration{Version: 5, Direction: source.Down})
-	m.Append(&source.Migration{Version: 6, Direction: source.MetaDown})
-	m.Append(&source.Migration{Version: 8, Direction: source.Up})
-	m.Append(&source.Migration{Version: 8, Direction: source.Down})
+	err = m.Append(&source.Migration{Version: 1, Direction: source.Up})
+	if err != nil {
+		t.Fatal(err)
+	}
+	err = m.Append(&source.Migration{Version: 1, Direction: source.Down})
+	if err != nil {
+		t.Fatal(err)
+	}
+	err = m.Append(&source.Migration{Version: 1, Direction: source.MetaUp})
+	if err != nil {
+		t.Fatal(err)
+	}
+	err = m.Append(&source.Migration{Version: 1, Direction: source.MetaDown})
+	if err != nil {
+		t.Fatal(err)
+	}
+	err = m.Append(&source.Migration{Version: 3, Direction: source.Up})
+	if err != nil {
+		t.Fatal(err)
+	}
+	err = m.Append(&source.Migration{Version: 4, Direction: source.MetaUp})
+	if err != nil {
+		t.Fatal(err)
+	}
+	err = m.Append(&source.Migration{Version: 5, Direction: source.Down})
+	if err != nil {
+		t.Fatal(err)
+	}
+	err = m.Append(&source.Migration{Version: 6, Direction: source.MetaDown})
+	if err != nil {
+		t.Fatal(err)
+	}
+	err = m.Append(&source.Migration{Version: 8, Direction: source.Up})
+	if err != nil {
+		t.Fatal(err)
+	}
+	err = m.Append(&source.Migration{Version: 8, Direction: source.Down})
+	if err != nil {
+		t.Fatal(err)
+	}
 
 	d.(*Stub).Migrations = m
 

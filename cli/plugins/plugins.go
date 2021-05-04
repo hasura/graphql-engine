@@ -277,7 +277,6 @@ func (c *Config) Upgrade(pluginName string, version *semver.Version) (Plugin, er
 	// See if it's a newer version
 	if installReceipt.ParsedVersion != nil {
 		if !installReceipt.ParsedVersion.LessThan(plugin.ParsedVersion) || installReceipt.ParsedVersion.Equal(plugin.ParsedVersion) {
-			fmt.Println("asdasd")
 			return plugin, ErrIsAlreadyUpgraded
 		}
 	}

@@ -6,9 +6,14 @@ import RawSqlButton from '../Common/Components/RawSqlButton';
 export interface ViewDefinitionsProps {
   dispatch: () => void;
   sql: string | Record<string, unknown>;
+  source: string;
 }
 
-const ViewDefinitions: React.FC<ViewDefinitionsProps> = ({ dispatch, sql }) => (
+const ViewDefinitions: React.FC<ViewDefinitionsProps> = ({
+  dispatch,
+  sql,
+  source,
+}) => (
   <>
     <h4 className={styles.subheading_text}>
       View Definition:
@@ -17,6 +22,7 @@ const ViewDefinitions: React.FC<ViewDefinitionsProps> = ({ dispatch, sql }) => (
           className={styles.add_mar_right}
           sql={sql}
           dispatch={dispatch}
+          source={source}
           data-test="modify-view"
         >
           Modify

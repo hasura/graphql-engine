@@ -1,0 +1,344 @@
+---
+swagger: '2.0'
+info:
+  description: REST API provided by CLI to work with project metadata and migrations.
+  version: 1.0.0
+  title: CLI REST APIs
+host: localhost:9693
+tags:
+- name: metadata
+  externalDocs:
+    description: Find out more about hasura metadata
+    url: https://hasura.io/docs/latest/graphql/core/migrations/index.html
+- name: migrate
+  externalDocs:
+    description: Find out more about hasura migrations
+    url: https://hasura.io/docs/latest/graphql/core/migrations/index.html
+schemes:
+- http
+paths:
+  "/apis/metadata":
+    get:
+      tags:
+      - metadata
+      summary: Export metadata
+      description: To export metadata to source
+      operationId: GETmetadata
+      produces:
+      - application/json
+      parameters:
+      - name: export
+        in: query
+        description: boolean whether the metadata needs to be exported or not
+        type: boolean
+        default: true
+      responses:
+        '200':
+          description: OK
+          schema:
+            type: object
+            properties:
+              metadata:
+                type: string
+                description: shows Success for metadata key
+          examples:
+            application/json:
+              metadata: Success
+        '500':
+          description: internal server error
+          schema:
+            type: object
+            properties:
+              code:
+                description: shows internal_error for code key
+                type: string
+              message:
+                description: shows error in message key
+                type: string
+          examples:
+            application/json:
+              code: internal_error
+              message: cannot export version from metadata
+    post:
+      tags:
+      - metadata
+      summary: Export metadata
+      description: export metadata with up and down yaml files in v1 config
+      operationId: POSTmetadata
+      consumes:
+      - application/json
+      produces:
+      - application/json
+      parameters:
+      - in: body
+        name: body
+        required: true
+        schema:
+          "$ref": "#/definitions/RequestBody"
+      responses:
+        '200':
+          description: metadata is exported
+          schema:
+            type: object
+            properties:
+              message:
+                type: string
+                description: shows Success for message key
+          examples:
+            application/json:
+              message: Success
+        '400':
+          description: when migration mode is enabled
+          schema:
+            type: object
+            properties:
+              code:
+                description: shows migration_mode_disabled for code key
+                type: string
+              message:
+                description: shows Migration mode is disabled in message key
+                type: string
+          examples:
+            application/json:
+              code: migration_mode_enabled
+              message: Migration mode is enabled
+        '500':
+          description: internal server error
+          schema:
+            type: object
+            properties:
+              code:
+                description: shows internal_error for code key
+                type: string
+              message:
+                description: shows error in message key
+                type: string
+          examples:
+            application/json:
+              code: internal_error
+              message: '{"path":"$","error":"parsing RQLMetadata failed, expected
+                Object, but encountered Array","code":"parse-failed"}'
+  "/apis/migrate":
+    get:
+      tags:
+      - migrate
+      summary: For gettting the details of datasource
+      description: to get the details of a datasource and the status of migrations
+        inside the datasource
+      operationId: GETmigrate
+      produces:
+      - application/json
+      parameters:
+      - name: datasource
+        in: query
+        description: datasource on which api needs to be executed
+        required: true
+        type: string
+        default: default
+      responses:
+        '200':
+          description: successful operation
+          schema:
+            type: object
+            properties:
+              migrations:
+                type: array
+                description: list of migrations versions in the datasource mentioned
+                items:
+                  type: integer
+                  format: uint64
+              status:
+                type: object
+                description: Is a object with migrations are the keys and the values
+                  are objects with keys database_status and source_status.
+          examples:
+            application/json:
+              migrations:
+              - 1613932441857
+              status:
+                '1613932441857':
+                  database_status: false
+                  source_status: true
+        '500':
+          description: internal server error
+          schema:
+            type: object
+            properties:
+              code:
+                description: shows internal_error for code key
+                type: string
+              message:
+                description: shows error in message key
+                type: string
+          examples:
+            application/json:
+              code: internal_error
+              message: datasource query parameter is required
+    post:
+      tags:
+      - migrate
+      summary: Creating migrations on source
+      description: It creates the migrations of a datasource on source directory and
+        outputs the directory name of migration.
+      operationId: POSTmigrate
+      consumes:
+      - application/json
+      produces:
+      - application/json
+      parameters:
+      - in: body
+        name: body
+        required: true
+        schema:
+          "$ref": "#/definitions/RequestBody"
+      responses:
+        '200':
+          description: OK
+          schema:
+            type: object
+            properties:
+              name:
+                description: shows directory name of migration created for name key
+                type: string
+          examples:
+            application/json:
+              name: 0_test1
+        '400':
+          description: migration mode was not enabled
+          schema:
+            type: object
+            properties:
+              code:
+                description: shows migration_mode_disabled for code key
+                type: string
+              message:
+                description: shows Migration mode is disabled in message key
+                type: string
+          examples:
+            application/json:
+              code: migration_mode_disabled
+              message: Migration mode is disabled
+        '500':
+          description: internal server error
+          schema:
+            type: object
+            properties:
+              code:
+                description: shows internal_error for code key
+                type: string
+              message:
+                description: shows error in message key
+                type: string
+          examples:
+            application/json:
+              code: internal_error
+              message: datasource key not found in body
+  "/apis/migrate/settings":
+    get:
+      tags:
+      - migrate
+      summary: Get the status of migration_mode
+      description: It gets the status of migration_mode (true/false.)
+      operationId: GETsettings
+      produces:
+      - application/json
+      responses:
+        '200':
+          description: successful operation
+          schema:
+            type: object
+            properties:
+              migration_mode:
+                description: shows true/false for migration_mode key
+                type: boolean
+          examples:
+            application/json:
+              migration_mode: 'true'
+        '500':
+          description: internal server error
+          schema:
+            type: object
+            properties:
+              code:
+                description: shows internal_error for code key
+                type: string
+              message:
+                description: shows error in message key
+                type: string
+          examples:
+            application/json:
+              code: internal_error
+              message: Something went wrong
+    put:
+      tags:
+      - migrate
+      summary: To set the migration_mode
+      description: It sets the migration_mode (true/false)
+      operationId: PUTsettings
+      consumes:
+      - application/json
+      produces:
+      - application/json
+      parameters:
+      - name: body
+        in: body
+        required: true
+        schema:
+          type: object
+          properties:
+            name:
+              type: string
+            value:
+              type: string
+          example:
+            application/json:
+              name: migration_mode
+              value: 'true'
+      responses:
+        '200':
+          description: successful operation
+          schema:
+            type: object
+            properties:
+              message:
+                description: shows Successfuly set for message key
+                type: string
+          examples:
+            message: Successfuly set
+        '500':
+          description: internal server error
+          schema:
+            type: object
+            properties:
+              code:
+                description: shows internal_error for code key
+                type: string
+              message:
+                description: shows error in message key
+                type: string
+          examples:
+            application/json:
+              code: internal_error
+              message: Something went wrong
+definitions:
+  RequestBody:
+    type: object
+    properties:
+      name:
+        type: string
+        example: test1
+      up:
+        type: array
+        items: {}
+      down:
+        type: array
+        items: {}
+      skip_execution:
+        type: boolean
+        example: true
+      datasource:
+        type: string
+        example: default
+externalDocs:
+  description: Find out more about hasura
+  url: https://hasura.io

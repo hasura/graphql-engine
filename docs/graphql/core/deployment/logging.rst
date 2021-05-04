@@ -54,8 +54,9 @@ All the log-types that can be enabled/disabled are:
 
    * - ``query-log``
      - Logs: the entire GraphQL query with variables, generated SQL statements
-       (only for queries, not for mutations/subscriptions or remote schema
-       queries), the operation name (if provided in the GraphQL request)
+       (only for database queries, not for mutations/subscriptions or remote
+       schema and action queries), the operation name (if provided in the
+       GraphQL request)
      - ``info``
 
    * - ``http-log``
@@ -145,6 +146,7 @@ subscriptions).
       "level": "info",
       "type": "query-log",
       "detail": {
+        "kind": "database",
         "request_id": "840f952d-c489-4d21-a87a-cc23ad17926a",
         "query": {
           "variables": {
@@ -172,6 +174,9 @@ under the ``detail`` key.
 
 This log contains 3 important fields:
 
+- ``kind``: indicates the type or kind of operation. ``kind`` can be
+  ``database``, ``action``, ``remote-schema``, ``cached`` or ``introspection``
+
 - ``request_id``: A unique ID for each request. If the client sends a
   ``x-request-id`` header then that is respected, otherwise a UUID is generated
   for each request. This is useful to correlate between ``http-log`` and
@@ -198,6 +203,7 @@ This is how the HTTP access logs look like:
       "level": "info",
       "type": "http-log",
       "detail": {
+        "request_id": "072b3617-6653-4fd5-b5ee-580e9d098c3d",
         "operation": {
           "query_execution_time": 0.009240042,
           "user_vars": {
@@ -205,6 +211,7 @@ This is how the HTTP access logs look like:
           },
           "error": null,
           "request_id": "072b3617-6653-4fd5-b5ee-580e9d098c3d",
+          "parameterized_query_hash": "7116865cef017c3b09e5c9271b0e182a6dcf4c01",
           "response_size": 105,
           "query": null
         },
@@ -225,7 +232,7 @@ This is how the HTTP access logs look like:
 
     {
       "timestamp": "2019-05-29T15:22:37.834+0530",
-      "level": "info",
+      "level": "error",
       "type": "http-log",
       "detail": {
         "operation": {
@@ -256,7 +263,6 @@ This is how the HTTP access logs look like:
           "ip": "127.0.0.1",
           "method": "POST"
         }
-
     }
 
 The ``type`` in the log will be ``http-log`` for HTTP access/error log. This
@@ -290,6 +296,56 @@ address, URL path, HTTP status code etc.
 
 - ``query``: *optional*. This will contain the GraphQL query object only when
   there is an error. On successful response this will be ``null``.
+
+- ``parametrized_query_hash`` (*): Hash of the incoming GraphQL query after resolving variables
+  with all the leaf nodes (i.e. scalar values) discarded. This value will only be logged when
+  the request is successful. For example, all the queries mentioned
+  in the below snippet will compute the same parametrized query hash.
+
+.. code-block:: graphql
+
+     # sample query
+     query {
+       authors (where: {id: {_eq: 2}}) {
+         id
+         name
+       }
+     }
+
+     # query with a different leaf value to that of the sample query
+     query {
+       authors (where: {id: {_eq: 203943}}) {
+         id
+         name
+       }
+     }
+
+     # query with use of a variable, the value of
+     # the variable `id` can be anything
+     query {
+       authors (where: {id: {_eq: $id}}) {
+         id
+         name
+       }
+     }
+
+     # query with use of a boolean expression variable,
+     # the value when the `whereBoolExp` is in the form of
+     #
+     #  {
+     #     "id": {
+     #       "_eq": <id>
+     #     }
+     #  }
+
+     query {
+       authors (where: $whereBoolExp) {
+         id
+         name
+       }
+     }
+
+(*) - Supported only in Cloud and Enterprise editions only
 
 **websocket-log** structure
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -368,7 +424,7 @@ This is how the Websocket logs look like:
 
     {
       "timestamp": "2019-06-10T10:55:20.650+0530",
-      "level": "info",
+      "level": "error",
       "type": "websocket-log",
       "detail": {
         "event": {

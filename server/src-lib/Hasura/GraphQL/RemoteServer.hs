@@ -1,14 +1,9 @@
 module Hasura.GraphQL.RemoteServer
   ( fetchRemoteSchema
   , IntrospectionResult
-  , execRemoteGQ'
+  , execRemoteGQ
   ) where
 
-import           Control.Exception                      (try)
-import           Control.Lens                           ((^.))
-import           Control.Monad.Unique
-import           Data.Aeson                             ((.:), (.:?))
-import           Hasura.HTTP
 import           Hasura.Prelude
 
 import qualified Data.Aeson                             as J
@@ -24,10 +19,17 @@ import qualified Network.HTTP.Client                    as HTTP
 import qualified Network.HTTP.Types                     as N
 import qualified Network.Wreq                           as Wreq
 
+import           Control.Exception                      (try)
+import           Control.Lens                           ((^.))
+import           Control.Monad.Unique
+import           Data.Aeson                             ((.:), (.:?))
+import           Data.FileEmbed                         (makeRelativeToProject)
 
 import qualified Hasura.GraphQL.Parser.Monad            as P
+
 import           Hasura.GraphQL.Schema.Remote
 import           Hasura.GraphQL.Transport.HTTP.Protocol
+import           Hasura.HTTP
 import           Hasura.RQL.DDL.Headers                 (makeHeadersFromConf)
 import           Hasura.RQL.Types
 import           Hasura.Server.Utils
@@ -37,7 +39,7 @@ import           Hasura.Session
 introspectionQuery :: GQLReqParsed
 introspectionQuery =
   $(do
-       let fp = "src-rsr/introspection.json"
+       fp <- makeRelativeToProject "src-rsr/introspection.json"
        TH.qAddDependentFile fp
        eitherResult <- TH.runIO $ J.eitherDecodeFileStrict fp
        case eitherResult of
@@ -58,7 +60,7 @@ fetchRemoteSchema env manager schemaName schemaInfo@(RemoteSchemaInfo url header
   let hdrsWithDefaults = addDefaultHeaders headers
 
   initReqE <- liftIO $ try $ HTTP.parseRequest (show url)
-  initReq <- either throwHttpErr pure initReqE
+  initReq <- onLeft initReqE throwHttpErr
   let req = initReq
            { HTTP.method = "POST"
            , HTTP.requestHeaders = hdrsWithDefaults
@@ -66,7 +68,7 @@ fetchRemoteSchema env manager schemaName schemaInfo@(RemoteSchemaInfo url header
            , HTTP.responseTimeout = HTTP.responseTimeoutMicro (timeout * 1000000)
            }
   res  <- liftIO $ try $ HTTP.httpLbs req manager
-  resp <- either throwHttpErr return res
+  resp <- onLeft res throwHttpErr
 
   let respData = resp ^. Wreq.responseBody
       statusCode = resp ^. Wreq.responseStatus . Wreq.statusCode
@@ -74,20 +76,21 @@ fetchRemoteSchema env manager schemaName schemaInfo@(RemoteSchemaInfo url header
 
   -- Parse the JSON into flat GraphQL type AST
   (FromIntrospection introspectRes) :: (FromIntrospection IntrospectionResult) <-
-    either (remoteSchemaErr . T.pack) return $ J.eitherDecode respData
+    onLeft (J.eitherDecode respData) (remoteSchemaErr . T.pack)
 
   -- Check that the parsed GraphQL type info is valid by running the schema generation
   (queryParsers, mutationParsers, subscriptionParsers) <-
     P.runSchemaT @m @(P.ParseT Identity) $ buildRemoteParser introspectRes schemaInfo
 
+  let parsedIntrospection = ParsedIntrospection queryParsers mutationParsers subscriptionParsers
+
   -- The 'rawIntrospectionResult' contains the 'Bytestring' response of
   -- the introspection result of the remote server. We store this in the
   -- 'RemoteSchemaCtx' because we can use this when the 'introspect_remote_schema'
   -- is called by simple encoding the result to JSON.
-  return $ RemoteSchemaCtx schemaName introspectRes schemaInfo respData $
-    ParsedIntrospection queryParsers mutationParsers subscriptionParsers
+  return $ RemoteSchemaCtx schemaName introspectRes schemaInfo respData parsedIntrospection mempty
   where
-    remoteSchemaErr :: T.Text -> m a
+    remoteSchemaErr :: Text -> m a
     remoteSchemaErr = throw400 RemoteSchemaError
 
     throwHttpErr :: HTTP.HttpException -> m a
@@ -114,7 +117,7 @@ fetchRemoteSchema env manager schemaName schemaInfo@(RemoteSchemaInfo url header
 -- introspection results.
 newtype FromIntrospection a
   = FromIntrospection { fromIntrospection :: a }
-  deriving (Show, Eq, Generic)
+  deriving (Show, Eq, Generic, Functor)
 
 pErr :: (MonadFail m) => Text -> m a
 pErr = fail . T.unpack
@@ -135,13 +138,13 @@ instance J.FromJSON (FromIntrospection G.ScalarTypeDefinition) where
         r = G.ScalarTypeDefinition desc' name []
     return $ FromIntrospection r
 
-instance J.FromJSON (FromIntrospection G.ObjectTypeDefinition) where
+instance J.FromJSON (FromIntrospection (G.ObjectTypeDefinition G.InputValueDefinition)) where
   parseJSON = J.withObject "ObjectTypeDefinition" $ \o -> do
     kind   <- o .:  "kind"
     name   <- o .:  "name"
     desc   <- o .:? "description"
     fields <- o .:? "fields"
-    interfaces :: Maybe [FromIntrospection (G.InterfaceTypeDefinition [G.Name])] <- o .:? "interfaces"
+    interfaces :: Maybe [FromIntrospection (G.InterfaceTypeDefinition [G.Name] G.InputValueDefinition)] <- o .:? "interfaces"
     when (kind /= "OBJECT") $ kindErr kind "object"
     let implIfaces = map G._itdName $ maybe [] (fmap fromIntrospection) interfaces
         flds = maybe [] (fmap fromIntrospection) fields
@@ -149,7 +152,7 @@ instance J.FromJSON (FromIntrospection G.ObjectTypeDefinition) where
         r = G.ObjectTypeDefinition desc' name implIfaces [] flds
     return $ FromIntrospection r
 
-instance J.FromJSON (FromIntrospection G.FieldDefinition) where
+instance (J.FromJSON (FromIntrospection a)) => J.FromJSON (FromIntrospection (G.FieldDefinition a)) where
   parseJSON = J.withObject "FieldDefinition" $ \o -> do
     name  <- o .:  "name"
     desc  <- o .:? "description"
@@ -188,21 +191,21 @@ instance J.FromJSON (FromIntrospection G.InputValueDefinition) where
     defVal <- o .:? "defaultValue"
     let desc' = fmap fromIntrospection desc
     let defVal' = fmap fromIntrospection defVal
-        r = G.InputValueDefinition desc' name (fromIntrospection _type) defVal'
+        r = G.InputValueDefinition desc' name (fromIntrospection _type) defVal' []
     return $ FromIntrospection r
 
 instance J.FromJSON (FromIntrospection (G.Value Void)) where
    parseJSON = J.withText "Value Void" $ \t ->
      let parseValueConst = G.runParser G.value
-     in fmap FromIntrospection $ either (fail . T.unpack) return $ parseValueConst t
+     in FromIntrospection <$> onLeft (parseValueConst t) (fail . T.unpack)
 
-instance J.FromJSON (FromIntrospection (G.InterfaceTypeDefinition [G.Name])) where
+instance J.FromJSON (FromIntrospection (G.InterfaceTypeDefinition [G.Name] G.InputValueDefinition)) where
   parseJSON = J.withObject "InterfaceTypeDefinition" $ \o -> do
     kind  <- o .: "kind"
     name  <- o .:  "name"
     desc  <- o .:? "description"
     fields <- o .:? "fields"
-    possibleTypes :: Maybe [FromIntrospection G.ObjectTypeDefinition] <- o .:? "possibleTypes"
+    possibleTypes :: Maybe [FromIntrospection (G.ObjectTypeDefinition G.InputValueDefinition)] <- o .:? "possibleTypes"
     let flds = maybe [] (fmap fromIntrospection) fields
         desc' = fmap fromIntrospection desc
         possTps = map G._otdName $ maybe [] (fmap fromIntrospection) possibleTypes
@@ -217,7 +220,7 @@ instance J.FromJSON (FromIntrospection G.UnionTypeDefinition) where
     kind  <- o .: "kind"
     name  <- o .:  "name"
     desc  <- o .:? "description"
-    possibleTypes <- o .: "possibleTypes"
+    possibleTypes :: [FromIntrospection (G.ObjectTypeDefinition G.InputValueDefinition)] <- o .: "possibleTypes"
     let possibleTypes' = map G._otdName $ fmap fromIntrospection possibleTypes
         desc' = fmap fromIntrospection desc
     when (kind /= "UNION") $ kindErr kind "union"
@@ -243,7 +246,7 @@ instance J.FromJSON (FromIntrospection G.EnumValueDefinition) where
     let r = G.EnumValueDefinition desc' name []
     return $ FromIntrospection r
 
-instance J.FromJSON (FromIntrospection G.InputObjectTypeDefinition) where
+instance J.FromJSON (FromIntrospection (G.InputObjectTypeDefinition G.InputValueDefinition)) where
   parseJSON = J.withObject "InputObjectTypeDefinition" $ \o -> do
     kind  <- o .: "kind"
     name  <- o .:  "name"
@@ -255,7 +258,7 @@ instance J.FromJSON (FromIntrospection G.InputObjectTypeDefinition) where
     let r = G.InputObjectTypeDefinition desc' name [] inputFields
     return $ FromIntrospection r
 
-instance J.FromJSON (FromIntrospection (G.TypeDefinition [G.Name])) where
+instance J.FromJSON (FromIntrospection (G.TypeDefinition [G.Name] G.InputValueDefinition)) where
   parseJSON = J.withObject "TypeDefinition" $ \o -> do
     kind :: Text <- o .: "kind"
     r <- case kind of
@@ -297,11 +300,22 @@ instance J.FromJSON (FromIntrospection IntrospectionResult) where
       Just subsType -> do
         subRoot <- subsType .: "name"
         return $ Just subRoot
-    let r = IntrospectionResult (G.SchemaIntrospection (fmap fromIntrospection types))
+    let types' =
+          (fmap . fmap . fmap)
+          -- presets are only defined for non-admin roles,
+          -- an admin will not have any presets
+          -- defined and the admin will be the one,
+          -- who'll be adding the remote schema,
+          -- hence presets are set to `Nothing`
+          (`RemoteSchemaInputValueDefinition` Nothing)
+          types
+        r =
+          IntrospectionResult
+          (RemoteSchemaIntrospection (fmap fromIntrospection types'))
             queryRoot mutationRoot subsRoot
     return $ FromIntrospection r
 
-execRemoteGQ'
+execRemoteGQ
   :: ( HasVersion
      , MonadIO m
      , MonadError QErr m
@@ -311,12 +325,15 @@ execRemoteGQ'
   -> HTTP.Manager
   -> UserInfo
   -> [N.Header]
-  -> GQLReqUnparsed
   -> RemoteSchemaInfo
-  -> G.OperationType
+  -> GQLReqOutgoing
   -> m (DiffTime, [N.Header], BL.ByteString)
-execRemoteGQ' env manager userInfo reqHdrs q rsi opType =  do
-  when (opType == G.OperationTypeSubscription) $
+  -- ^ Returns the response body and headers, along with the time taken for the
+  -- HTTP request to complete
+execRemoteGQ env manager userInfo reqHdrs rsi gqlReq@GQLReq{..} =  do
+  let gqlReqUnparsed = renderGQLReqOutgoing gqlReq
+
+  when (G._todType _grQuery == G.OperationTypeSubscription) $
     throw400 NotSupported "subscription to remote server is not supported"
   confHdrs <- makeHeadersFromConf env hdrConf
   let clientHdrs = bool [] (mkClientHeadersForward reqHdrs) fwdClientHdrs
@@ -329,22 +346,22 @@ execRemoteGQ' env manager userInfo reqHdrs q rsi opType =  do
       headers  = Map.toList $ foldr Map.union Map.empty hdrMaps
       finalHeaders = addDefaultHeaders headers
   initReqE <- liftIO $ try $ HTTP.parseRequest (show url)
-  initReq <- either httpThrow pure initReqE
+  initReq <- onLeft initReqE httpThrow
   let req = initReq
            { HTTP.method = "POST"
            , HTTP.requestHeaders = finalHeaders
-           , HTTP.requestBody = HTTP.RequestBodyLBS (J.encode q)
+           , HTTP.requestBody = HTTP.RequestBodyLBS (J.encode gqlReqUnparsed)
            , HTTP.responseTimeout = HTTP.responseTimeoutMicro (timeout * 1000000)
            }
   Tracing.tracedHttpRequest req \req' -> do
     (time, res)  <- withElapsedTime $ liftIO $ try $ HTTP.httpLbs req' manager
-    resp <- either httpThrow return res
+    resp <- onLeft res httpThrow
     pure (time, mkSetCookieHeaders resp, resp ^. Wreq.responseBody)
   where
     RemoteSchemaInfo url hdrConf fwdClientHdrs timeout = rsi
     httpThrow :: (MonadError QErr m) => HTTP.HttpException -> m a
     httpThrow = \case
-      HTTP.HttpExceptionRequest _req content -> throw500 $ T.pack . show $ content
-      HTTP.InvalidUrlException _url reason -> throw500 $ T.pack . show $ reason
+      HTTP.HttpExceptionRequest _req content -> throw500 $ tshow content
+      HTTP.InvalidUrlException _url reason   -> throw500 $ tshow reason
 
     userInfoToHdrs = sessionVariablesToHeaders $ _uiSession userInfo

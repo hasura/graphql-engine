@@ -1,8 +1,11 @@
 package commands
 
 import (
+	"fmt"
+
 	"github.com/hasura/graphql-engine/cli"
-	"github.com/hasura/graphql-engine/cli/migrate"
+	"github.com/hasura/graphql-engine/cli/internal/metadataobject"
+	"github.com/hasura/graphql-engine/cli/internal/scripts"
 	"github.com/hasura/graphql-engine/cli/util"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
@@ -15,7 +18,7 @@ func NewMetadataCmd(ec *cli.ExecutionContext) *cobra.Command {
 	metadataCmd := &cobra.Command{
 		Use:     "metadata",
 		Aliases: []string{"md"},
-		Short:   "Manage Hasura GraphQL Engine metadata saved in the database",
+		Short:   "Manage Hasura GraphQL engine metadata saved in the database",
 		PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
 			cmd.Root().PersistentPreRun(cmd, args)
 			ec.Viper = v
@@ -23,7 +26,11 @@ func NewMetadataCmd(ec *cli.ExecutionContext) *cobra.Command {
 			if err != nil {
 				return err
 			}
-			return ec.Validate()
+			err = ec.Validate()
+			if err != nil {
+				return err
+			}
+			return scripts.CheckIfUpdateToConfigV3IsRequired(ec)
 		},
 		SilenceUsage: true,
 	}
@@ -38,9 +45,9 @@ func NewMetadataCmd(ec *cli.ExecutionContext) *cobra.Command {
 
 	f := metadataCmd.PersistentFlags()
 
-	f.String("endpoint", "", "http(s) endpoint for Hasura GraphQL Engine")
-	f.String("admin-secret", "", "admin secret for Hasura GraphQL Engine")
-	f.String("access-key", "", "access key for Hasura GraphQL Engine")
+	f.String("endpoint", "", "http(s) endpoint for Hasura GraphQL engine")
+	f.String("admin-secret", "", "admin secret for Hasura GraphQL engine")
+	f.String("access-key", "", "access key for Hasura GraphQL engine")
 	f.MarkDeprecated("access-key", "use --admin-secret instead")
 	f.Bool("insecure-skip-tls-verify", false, "skip TLS verification and disable cert checking (default: false)")
 	f.String("certificate-authority", "", "path to a cert file for the certificate authority")
@@ -54,33 +61,41 @@ func NewMetadataCmd(ec *cli.ExecutionContext) *cobra.Command {
 	return metadataCmd
 }
 
-func executeMetadata(cmd string, t *migrate.Migrate, ec *cli.ExecutionContext) error {
+func executeMetadata(cmd string, ec *cli.ExecutionContext) error {
+	var files map[string][]byte
+	var err error
+	metadataHandler := metadataobject.NewHandlerFromEC(ec)
 	switch cmd {
 	case "export":
-		files, err := t.ExportMetadata()
+		files, err = metadataHandler.ExportMetadata()
 		if err != nil {
 			return errors.Wrap(err, "cannot export metadata from server")
 		}
-		err = t.WriteMetadata(files)
+		err = metadataHandler.WriteMetadata(files)
 		if err != nil {
 			return errors.Wrap(err, "cannot write metadata")
 		}
 	case "clear":
-		err := t.ResetMetadata()
+		err = metadataHandler.ResetMetadata()
 		if err != nil {
 			return errors.Wrap(err, "cannot clear Metadata")
 		}
 	case "reload":
-		err := t.ReloadMetadata()
+		err = metadataHandler.ReloadMetadata()
 		if err != nil {
 			return errors.Wrap(err, "cannot reload Metadata")
 		}
 	case "apply":
-		err := t.ApplyMetadata()
-		if err != nil {
-			return errors.Wrap(err, "cannot apply metadata on the database")
+		if ec.Config.Version <= cli.V2 {
+			err := metadataHandler.V1ApplyMetadata()
+			if err != nil {
+				return errors.Wrap(err, "cannot apply metadata on the database")
+			}
+			return nil
 		}
-		return nil
+		if err := metadataHandler.V2ApplyMetadata(); err != nil {
+			return fmt.Errorf("\n%w", err)
+		}
 	}
 	return nil
 }

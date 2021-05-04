@@ -3,10 +3,12 @@ package commands
 import (
 	"bytes"
 	"fmt"
-	"github.com/hasura/graphql-engine/cli/util"
+	"path/filepath"
 	"strconv"
 	"strings"
 	"text/tabwriter"
+
+	"github.com/hasura/graphql-engine/cli/util"
 
 	"github.com/hasura/graphql-engine/cli/migrate"
 
@@ -25,8 +27,8 @@ func newMigrateSquashCmd(ec *cli.ExecutionContext) *cobra.Command {
 	migrateSquashCmd := &cobra.Command{
 		Use:   "squash",
 		Short: "(PREVIEW) Squash multiple migrations into a single one",
-		Long:  "(PREVIEW) Squash multiple migrations leading upto the latest one into a single migration file",
-		Example: `  # NOTE: This command is in PREVIEW, correctness is not guaranteed and the usage may change.
+		Long:  "(PREVIEW) Squash multiple migrations leading up to the latest one into a single migration file",
+		Example: `  # NOTE: This command is in PREVIEW. Correctness is not guaranteed and the usage may change.
 
   # squash all migrations from version 123 to the latest one:
   hasura migrate squash --from 123
@@ -34,8 +36,15 @@ func newMigrateSquashCmd(ec *cli.ExecutionContext) *cobra.Command {
   # Add a name for the new squashed migration
   hasura migrate squash --name "<name>" --from 123`,
 		SilenceUsage: true,
+		PreRunE: func(cmd *cobra.Command, args []string) error {
+			return validateConfigV3Flags(cmd, ec)
+		},
 		RunE: func(cmd *cobra.Command, args []string) error {
 			opts.newVersion = getTime()
+			opts.Source = ec.Source
+			if opts.EC.HasMetadataV3 && opts.EC.Config.Version < cli.V2 {
+				return fmt.Errorf("squashing when using metadata V3 is supported from Config V2 only")
+			}
 			return opts.run()
 		},
 	}
@@ -59,18 +68,19 @@ type migrateSquashOptions struct {
 	newVersion int64
 
 	deleteSource bool
+	Source       cli.Source
 }
 
 func (o *migrateSquashOptions) run() error {
 	o.EC.Logger.Warnln("This command is currently experimental and hence in preview, correctness of squashed migration is not guaranteed!")
 	o.EC.Spin(fmt.Sprintf("Squashing migrations from %d to latest...", o.from))
 	defer o.EC.Spinner.Stop()
-	migrateDrv, err := migrate.NewMigrate(o.EC, true)
+	migrateDrv, err := migrate.NewMigrate(o.EC, true, o.Source.Name, o.Source.Kind)
 	if err != nil {
 		return errors.Wrap(err, "unable to initialize migrations driver")
 	}
 
-	versions, err := mig.SquashCmd(migrateDrv, o.from, o.newVersion, o.name, o.EC.MigrationDir)
+	versions, err := mig.SquashCmd(migrateDrv, o.from, o.newVersion, o.name, filepath.Join(o.EC.MigrationDir, o.Source.Name))
 	o.EC.Spinner.Stop()
 	if err != nil {
 		return errors.Wrap(err, "unable to squash migrations")
@@ -91,7 +101,7 @@ func (o *migrateSquashOptions) run() error {
 	for _, v := range versions {
 		delOptions := mig.CreateOptions{
 			Version:   strconv.FormatInt(v, 10),
-			Directory: o.EC.MigrationDir,
+			Directory: filepath.Join(o.EC.MigrationDir, o.Source.Name),
 		}
 		err = delOptions.Delete()
 		if err != nil {

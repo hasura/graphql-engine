@@ -1,0 +1,19 @@
+description: Select descendants of an `ltree` argument
+url: /v1/graphql
+status: 200
+response:
+  data:
+    tree:
+      - path: "Tree.Science"
+      - path: "Tree.Science.Astronomy"
+      - path: "Tree.Science.Astronomy.Astrophysics"
+      - path: "Tree.Science.Astronomy.Cosmology"
+query:
+  query: |
+    query {
+      tree (
+        where: {path: {_descendant: "Tree.Science"}}
+      ) {
+        path
+      }
+    }

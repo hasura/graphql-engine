@@ -48,6 +48,7 @@
 .ReactTable .-pagination {
   box-shadow: none;
   border: none;
+  font-family: 'Gudea', sans-serif;
 }
 
 .ReactTable .-pagination .-center {

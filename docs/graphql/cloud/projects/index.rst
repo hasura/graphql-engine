@@ -15,7 +15,7 @@ Projects & collaborators
 Introduction
 ------------
 
-The ``Projects`` page show a list of your projects.
+The ``Projects`` page shows a list of your projects.
 
 .. thumbnail:: /img/graphql/cloud/projects/projects-list.png
    :alt: Projects list
@@ -23,21 +23,21 @@ The ``Projects`` page show a list of your projects.
 
 For each project, you can do the one of the following actions:
 
-.. thumbnail:: /img/graphql/cloud/getting-started/project-actions.png
+.. thumbnail:: /img/graphql/cloud/projects/project-actions.png
    :alt: Project actions
    :width: 860px
+
+- Click ``Launch Console`` to open the Hasura console in your browser. The ``Monitoring`` tab
+  lets you use the Pro features that Hasura Cloud has set up for you.
+
+  .. thumbnail:: /img/graphql/cloud/metrics/monitoring-tab-overview.png
+     :alt: Hasura Console: Monitoring tab
+     :width: 900px
 
 - Click the gear icon to manage your project
 
   .. thumbnail:: /img/graphql/cloud/projects/project-details.png
      :alt: General tab
-     :width: 900px
-
-- Click ``Launch Console`` to open the Hasura console in your browser. The ``Pro`` tab
-  lets you use the Pro features that Hasura Cloud has set up for you.
-
-  .. thumbnail:: /img/graphql/cloud/metrics/pro-tab-overview.png
-     :alt: Hasura Console: Pro tab
      :width: 900px
 
 .. note::
@@ -52,11 +52,15 @@ Dig deeper
    :titlesonly:
 
    Creating projects <create>
+   Project Details <details>
    Project Collaborators <collaborators>
+   Transfer Ownership <ownership>
    Project Env vars <env-vars>
    Project Domains <domains>
    Securing projects <secure>
    Switching pricing plans <pricing>
+   Deployment regions <regions>
    Heroku database URL Sync <heroku-url-sync>
    Deleting projects <delete>
+   Moving v1.3 projects to v2.0 <move-project-v2>
    

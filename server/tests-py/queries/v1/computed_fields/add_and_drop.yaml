@@ -21,10 +21,9 @@
       table: random
       name: get_articles
   response:
-    path: "$.args.table"
-    error: table "random" does not exist
+    path: $.args.table
+    error: 'table "random" does not exist in source: default'
     code: not-exists
-
 - description: Drop a non existed computed field
   url: /v1/query
   status: 400
@@ -34,7 +33,7 @@
       table: author
       name: random
   response:
-    path: "$.args.name"
+    path: $.args.name
     error: computed field "random" does not exist
     code: not-exists
 

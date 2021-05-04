@@ -2,8 +2,6 @@ package util
 
 import (
 	"crypto/tls"
-
-	"github.com/Masterminds/semver"
 	"github.com/parnurzeal/gorequest"
 	"github.com/sirupsen/logrus"
 )
@@ -20,11 +18,40 @@ type hdbVersion struct {
 }
 
 // GetServerState queries a server for the state.
-func GetServerState(endpoint, adminSecret string, config *tls.Config, serverVersion *semver.Version, log *logrus.Logger) *ServerState {
+func GetServerState(endpoint string, adminSecret string, config *tls.Config, hasMetadataV3 bool, log *logrus.Logger) *ServerState {
 	state := &ServerState{
 		UUID: "00000000-0000-0000-0000-000000000000",
 	}
-	payload := `{
+
+	if hasMetadataV3 {
+		payload := `
+	{
+    "type": "get_catalog_state",
+    "args": {}
+	}
+`
+		req := gorequest.New()
+		if config != nil {
+			req.TLSClientConfig(config)
+		}
+		req.Post(endpoint).Send(payload)
+		req.Set("X-Hasura-Admin-Secret", adminSecret)
+
+		var r struct {
+			ID string `json:"id"`
+		}
+		_, _, errs := req.EndStruct(&r)
+		if len(errs) != 0 {
+			log.Debugf("server state: errors: %v", errs)
+			return state
+		}
+
+		state.UUID = r.ID
+	} else {
+		state := &ServerState{
+			UUID: "00000000-0000-0000-0000-000000000000",
+		}
+		payload := `{
 		"type": "select",
 		"args": {
 			"table": {
@@ -37,26 +64,29 @@ func GetServerState(endpoint, adminSecret string, config *tls.Config, serverVers
 			]
 		}
 	}`
-	req := gorequest.New()
-	if config != nil {
-		req.TLSClientConfig(config)
-	}
-	req.Post(endpoint).Send(payload)
-	req.Set("X-Hasura-Admin-Secret", adminSecret)
 
-	var r []hdbVersion
-	_, _, errs := req.EndStruct(&r)
-	if len(errs) != 0 {
-		log.Debugf("server state: errors: %v", errs)
-		return state
-	}
+		req := gorequest.New()
+		if config != nil {
+			req.TLSClientConfig(config)
+		}
+		req.Post(endpoint).Send(payload)
+		req.Set("X-Hasura-Admin-Secret", adminSecret)
 
-	if len(r) != 1 {
-		log.Debugf("invalid response: %v", r)
-		return state
-	}
+		var r []hdbVersion
+		_, _, errs := req.EndStruct(&r)
+		if len(errs) != 0 {
+			log.Debugf("server state: errors: %v", errs)
+			return state
+		}
 
-	state.UUID = r[0].UUID
-	state.CLIState = r[0].CLIState
+		if len(r) != 1 {
+			log.Debugf("invalid response: %v", r)
+			return state
+		}
+
+		state.UUID = r[0].UUID
+		state.CLIState = r[0].CLIState
+	}
 	return state
+
 }

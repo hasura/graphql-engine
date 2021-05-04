@@ -1,0 +1,39 @@
+- description: Test a volatile function that returns a single row returns an object
+  url: /v1/graphql
+  headers:
+    X-Hasura-Role: anonymous
+  status: 200
+  query:
+    query: |
+      mutation {
+        add_to_score_by_user_id (args: {id: 1}) {
+          name
+          score
+        }
+      }
+  response:
+    data:
+      add_to_score_by_user_id:
+        name: Starke Blake
+        score: 1
+
+- description: Try to access a column to which the role doesn't have access to
+  url: /v1/graphql
+  headers:
+    X-Hasura-Role: anonymous
+  status: 200
+  query:
+    query: |
+      mutation {
+        add_to_score_by_user_id (args: {id: 1}) {
+          name
+          score
+          role_echo
+        }
+      }
+  response:
+    errors:
+      - extensions:
+          path: $.selectionSet.add_to_score_by_user_id.selectionSet.role_echo
+          code: validation-failed
+        message: "field \"role_echo\" not found in type: 'user'"

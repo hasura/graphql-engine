@@ -17,6 +17,8 @@ import { getHeadersAsJSON } from '../utils';
 
 import '../GraphiQLWrapper/GraphiQL.css';
 import './OneGraphExplorer.css';
+import styles from '../ApiExplorer.scss';
+import Spinner from '../../../Common/Spinner/Spinner';
 import {
   showErrorNotification,
   showWarningNotification,
@@ -158,7 +160,11 @@ class OneGraphExplorer extends React.Component {
       })
       .catch(err => {
         dispatch(
-          showErrorNotification('Introspection query failed', err.message, err)
+          showErrorNotification(
+            'Schema introspection query failed',
+            err.message,
+            err
+          )
         );
         this.setState({
           schema: null,
@@ -252,16 +258,27 @@ class OneGraphExplorer extends React.Component {
         onMouseUp={this.handleExplorerResizeStop}
       >
         <div className="gqlexplorer">
-          <GraphiQLExplorer
-            schema={schema}
-            query={query}
-            onEdit={this.editQuery}
-            explorerIsOpen={explorerOpen}
-            onToggleExplorer={this.handleToggle}
-            getDefaultScalarArgValue={getDefaultScalarArgValue}
-            makeDefaultArg={makeDefaultArg}
-            width={explorerWidth}
-          />
+          {this.props.loading ? (
+            <div
+              className={`${styles.height100} ${styles.display_flex}`}
+              style={{
+                width: explorerWidth,
+              }}
+            >
+              <Spinner />
+            </div>
+          ) : (
+            <GraphiQLExplorer
+              schema={schema}
+              query={query}
+              onEdit={this.editQuery}
+              explorerIsOpen={explorerOpen}
+              onToggleExplorer={this.handleToggle}
+              getDefaultScalarArgValue={getDefaultScalarArgValue}
+              makeDefaultArg={makeDefaultArg}
+              width={explorerWidth}
+            />
+          )}
           {explorerSeparator}
         </div>
         {graphiql}

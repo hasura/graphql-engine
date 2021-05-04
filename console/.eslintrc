@@ -158,8 +158,10 @@
         "no-unused-vars": "off",
         "camelcase": "off",
         "no-param-reassign": "off",
+        "no-use-before-define": "off",
         "consistent-return": "off",
         "@typescript-eslint/no-unused-vars": 2,
+        "@typescript-eslint/no-use-before-define": "warn",
         "@typescript-eslint/indent": 0,
         "@typescript-eslint/explicit-function-return-type": 0,
         "@typescript-eslint/prefer-interface": 0,
@@ -178,8 +180,9 @@
         ],
         "@typescript-eslint/no-empty-function": "off",
         "@typescript-eslint/explicit-module-boundary-types": "off",
+        "no-restricted-syntax": "warn",
         /**
-         * Disable things that are checked by Typescript
+         * Disable things that are checked by TypeScript
          */
         "import/no-unresolved": 0,
         "getter-return": "off",
@@ -193,6 +196,7 @@
         "no-undef": "off",
         "no-dupe-class-members": "off",
         "no-redeclare": "off",
+        "no-restricted-globals": "warn",
         "no-useless-constructor": "off",
         "no-unused-expressions": "off",
         "no-console": "off",
@@ -207,7 +211,9 @@
         "no-restricted-properties": "off",
         "react/no-danger": "off",
         "react/no-array-index-key": "off",
-        "no-case-declarations": 0
+        "no-case-declarations": 0,
+        "react/jsx-indent": "off",
+        "arrow-body-style": "off"
       }
     }
   ]

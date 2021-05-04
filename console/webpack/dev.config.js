@@ -14,6 +14,7 @@ const webpackIsomorphicToolsPlugin = new WebpackIsomorphicToolsPlugin(
   require('./webpack-isomorphic-tools')
 );
 const ForkTsCheckerWebpackPlugin = require('fork-ts-checker-webpack-plugin');
+const CaseSensitivePathsPlugin = require('case-sensitive-paths-webpack-plugin');
 
 module.exports = {
   mode: 'development',
@@ -168,5 +169,6 @@ module.exports = {
         checkJs: false,
       },
     }),
+    new CaseSensitivePathsPlugin(),
   ],
 };

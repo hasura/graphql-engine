@@ -10,7 +10,7 @@ import {
 } from './ConsoleNotification';
 import styles from './Main.scss';
 import useOnClickOutside from '../../hooks/useOnClickOutside';
-import { ReduxState, NotificationsState, ConsoleState } from '../../types';
+import { ReduxState } from '../../types';
 import { versionGT, checkStableVersion } from '../../helpers/versionUtils';
 import ToolTip from '../Common/Tooltip/Tooltip';
 import {
@@ -28,6 +28,7 @@ import { mapDispatchToPropsEmpty } from '../Common/utils/reactUtils';
 import { HASURA_COLLABORATOR_TOKEN } from '../../constants';
 import { StyledText } from '../UIKit/atoms/Typography/Typography';
 import { LS_KEYS } from '../../utils/localStorage';
+import { ConsoleState, NotificationsState } from '../../telemetry/state';
 
 const getDateString = (date: NotificationDate) => {
   if (!date) {
@@ -262,7 +263,7 @@ const VersionUpdateNotification: React.FC<VersionUpdateNotificationProps> = ({
       <span className={styles.middot}> &middot; </span>
       <a
         className={styles.updateLink}
-        href="https://hasura.io/docs/1.0/graphql/manual/deployment/updating.html"
+        href="https://hasura.io/docs/latest/graphql/core/deployment/updating.html"
         target="_blank"
         rel="noopener noreferrer"
       >
@@ -298,7 +299,7 @@ const VulnerableVersionNotification: React.FC<VulnerableVersionProps> = ({
     <span className={styles.middot}> &middot; </span>
     <a
       className={styles.updateLink}
-      href="https://hasura.io/docs/1.0/graphql/manual/deployment/updating.html"
+      href="https://hasura.io/docs/latest/graphql/core/deployment/updating.html"
       target="_blank"
       rel="noopener noreferrer"
     >
@@ -327,11 +328,11 @@ const ViewMoreOptions: React.FC<ViewMoreProps> = ({
 };
 
 const checkIsRead = (prevRead?: string | string[], id?: number) => {
-  if (!prevRead || !id) {
-    return false;
-  }
   if (prevRead === 'all' || prevRead === 'default' || prevRead === 'error') {
     return true;
+  }
+  if (!prevRead || !id) {
+    return false;
   }
   return prevRead.indexOf(`${id}`) !== -1;
 };
@@ -511,15 +512,19 @@ const HasuraNotifications: React.FC<
 
   let userType = 'admin';
 
-  if (dataHeaders?.[HASURA_COLLABORATOR_TOKEN]) {
-    const collabToken = dataHeaders[HASURA_COLLABORATOR_TOKEN];
+  const headerHasCollabToken = Object.keys(dataHeaders).find(
+    header => header.toLowerCase() === HASURA_COLLABORATOR_TOKEN
+  );
+
+  if (headerHasCollabToken) {
+    const collabToken = dataHeaders[headerHasCollabToken];
     userType = getUserType(collabToken);
   }
 
   const previouslyReadState = React.useMemo(
     () =>
       console_opts?.console_notifications &&
-      console_opts?.console_notifications[userType].read,
+      console_opts?.console_notifications[userType]?.read,
     [console_opts?.console_notifications, userType]
   );
   const showBadge = React.useMemo(
@@ -639,7 +644,7 @@ const HasuraNotifications: React.FC<
 
   useOnClickOutside([dropDownRef, wrapperRef], onClickOutside);
 
-  const onClickShareSection = () => {
+  const onClickNotificationButton = () => {
     if (showBadge) {
       if (console_opts?.console_notifications) {
         let updatedState = {};
@@ -686,8 +691,9 @@ const HasuraNotifications: React.FC<
           onClick: onClickUpdate,
         },
       },
-      ...consoleNotifications.slice(0, pagination.shownCount).map(
-        (payload): NotificationsListItemProps => ({
+      ...consoleNotifications
+        .slice(0, pagination.shownCount)
+        .map((payload: any) => ({
           kind: 'default',
           props: {
             id: payload.id,
@@ -696,10 +702,8 @@ const HasuraNotifications: React.FC<
             consoleScope,
             ...payload,
           },
-        })
-      ),
+        })),
     ].filter((x): x is NotificationsListItemProps => Boolean(x));
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
     consoleNotifications,
     consoleScope,
@@ -718,11 +722,11 @@ const HasuraNotifications: React.FC<
   return (
     <>
       <div
-        className={`${styles.shareSection} ${
+        className={`${styles.shareSection} ${styles.headerRightNavbarBtn} ${
           isDropDownOpen ? styles.opened : ''
         } dropdown-toggle`}
         aria-expanded="false"
-        onClick={onClickShareSection}
+        onClick={onClickNotificationButton}
         ref={wrapperRef}
       >
         <i className={`fa fa-bell ${styles.bellIcon}`} />
@@ -750,7 +754,7 @@ const HasuraNotifications: React.FC<
           <Button
             title="Mark all as read"
             onClick={onClickMarkAllAsRead}
-            disabled={!numberNotifications}
+            disabled={!numberNotifications || !consoleNotifications.length}
             className={styles.markAllAsReadBtn}
           >
             mark all as read
@@ -763,8 +767,10 @@ const HasuraNotifications: React.FC<
           </div>
         </Flex>
         <Box className={styles.notificationsContainer}>
-          {dataShown.length &&
-            dataShown.map(payload => <NotificationsListItem {...payload} />)}
+          {dataShown.length > 0 &&
+            dataShown.map((payload, i) => (
+              <NotificationsListItem key={i} {...payload} />
+            ))}
           {shouldDisplayViewMore && (
             <ViewMoreOptions
               onClickViewMore={pagination.showMore}
