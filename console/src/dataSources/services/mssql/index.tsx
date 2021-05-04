@@ -187,14 +187,18 @@ export const mssql: DataSourcesAPI = {
   arrayToPostgresArray: () => {
     return '';
   },
-  schemaListSql: () => `SELECT
-	s.name AS schema_name
+  schemaListSql: () => `
+SELECT
+  s.name AS schema_name
 FROM
-	sys.schemas s
-	INNER JOIN sys.sysusers u ON u.uid = s.principal_id
+  sys.schemas s
+  INNER JOIN sys.database_principals p ON (s.principal_id = p.principal_id)
 WHERE
-	u.issqluser = 1
-	AND u.name NOT in ('sys', 'guest', 'INFORMATION_SCHEMA')`,
+  p.type_desc = 'SQL_USER'
+  AND s.name NOT IN ('guest', 'INFORMATION_SCHEMA', 'sys')
+ORDER BY
+  s.name
+`,
   parseColumnsInfoResult: () => {
     return {};
   },
@@ -392,7 +396,7 @@ SELECT
         INNER JOIN sys.columns col1
             ON col1.column_id = fkc.parent_column_id AND col1.object_id = tab1.object_id
         INNER JOIN sys.columns col2
-            ON col2.column_id = fkc.referenced_column_id AND col2.object_id = tab2.object_id 
+            ON col2.column_id = fkc.referenced_column_id AND col2.object_id = tab2.object_id
         WHERE fk.object_id = fkc.constraint_object_id
         FOR JSON PATH
     ) AS column_mapping,

@@ -4,7 +4,9 @@
 
 (Add entries below in the order of: server, console, cli, docs, others)
 
+### Bug fixes and improvements
 - console: filter out partitions from track table list and display partition info
+- console: fixes an issue where no schemas are listed on an MSSQL source
 
 ## v2.0.0-alpha.10
 
