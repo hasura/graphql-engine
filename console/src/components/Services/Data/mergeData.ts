@@ -214,6 +214,7 @@ export const mergeLoadSchemaDataPostgres = (
   >[];
   const primaryKeys = JSON.parse(data[2].result[1]) as Table['primary_key'][];
   const uniqueKeys = JSON.parse(data[3].result[1]) as any;
+
   const checkConstraints = dataSource?.checkConstraintsSql
     ? (JSON.parse(data[4].result[1]) as Table['check_constraints'])
     : ([] as Table['check_constraints']);

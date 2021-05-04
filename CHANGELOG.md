@@ -4,6 +4,7 @@
 
 (Add entries below in the order of: server, console, cli, docs, others)
 
+- console: filter out partitions from track table list and display partition info
 
 ## v2.0.0-alpha.10
 

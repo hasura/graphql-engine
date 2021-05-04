@@ -161,6 +161,15 @@ export interface Table extends BaseTable {
   }[];
 }
 
+export type Partition = {
+  parent_schema: string;
+  partition_schema: string;
+  partition_name: string;
+  parent_table: string;
+  partition_def: string;
+  partition_key: string;
+};
+
 export type ColumnAction = 'add' | 'modify';
 
 export interface FrequentlyUsedColumn {

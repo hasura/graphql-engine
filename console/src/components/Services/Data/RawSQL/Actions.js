@@ -55,7 +55,8 @@ const trackAllItems = (sql, isMigration, migrationName, source, driver) => (
 
   const objects = parseCreateSQL(sql, driver);
   const changes = [];
-  objects.forEach(({ type, name, schema }) => {
+  objects.forEach(({ type, name, schema, isPartition }) => {
+    if (isPartition) return;
     let req = {};
     if (type === 'function') {
       req = getTrackFunctionQuery(name, schema, source, {}, driver);

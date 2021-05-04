@@ -49,6 +49,7 @@ import { RightContainer } from '../../../Common/Layout/RightContainer';
 import { NotSupportedNote } from '../../../Common/NotSupportedNote';
 import ConnectedComputedFields from './ComputedFields';
 import FeatureDisabled from '../FeatureDisabled';
+import PartitionInfo from './PartitionInfo';
 
 class ModifyTable extends React.Component {
   componentDidMount() {
@@ -191,6 +192,7 @@ class ModifyTable extends React.Component {
                 dispatch={dispatch}
               />
               <EnumTableModifyWarning isEnum={table.is_enum} />
+
               <h4 className={styles.subheading_text}>Columns</h4>
               <ColumnEditorList
                 validTypeCasts={validTypeCasts}
@@ -269,6 +271,11 @@ class ModifyTable extends React.Component {
                 dispatch={dispatch}
               />
               <hr />
+
+              {table.table_type === 'PARTITIONED TABLE' && (
+                <PartitionInfo table={table} dispatch={dispatch} />
+              )}
+
               <RootFields tableSchema={table} />
               <hr />
               {getEnumsSection()}
