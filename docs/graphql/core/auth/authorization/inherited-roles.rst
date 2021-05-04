@@ -280,7 +280,7 @@ with inherited roles when a column doesn't have permission in the particular row
 
 
 4. Suppose we have two tables ``users`` and ``authors`` and similarly two roles ``user`` and ``author`` are defined. The ``user``
-   role doesn't have permission to query the ``authors`` table and the ``user`` role doesn't have permission to query the ``authors`` table. With only the ``user`` and the ``author`` role, we won't be able to construct a query which fetches data from both the tables. This can be solved by creating an inherited role out of ``user`` and ``author`` which can query both the
+   role doesn't have permission to query the ``authors`` table and the ``author`` role doesn't have permission to query the ``users`` table. With only the ``user`` and the ``author`` role, we won't be able to construct a query which fetches data from both the tables. This can be solved by creating an inherited role out of ``user`` and ``author`` which can query both the
    tables in a single query.
 
 
