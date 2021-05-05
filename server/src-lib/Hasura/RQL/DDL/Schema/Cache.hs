@@ -239,6 +239,7 @@ buildSchemaCacheRule env = proc (metadata, invalidationKeys) -> do
     , scApiLimits = _boApiLimits resolvedOutputs
     , scMetricsConfig = _boMetricsConfig resolvedOutputs
     , scMetadataResourceVersion = Nothing
+    , scSetGraphqlIntrospectionOptions = _metaSetGraphqlIntrospectionOptions metadata
     }
   where
     getSourceConfigIfNeeded
@@ -396,7 +397,8 @@ buildSchemaCacheRule env = proc (metadata, invalidationKeys) -> do
       => (Metadata, Inc.Dependency InvalidationKeys) `arr` BuildOutputs
     buildAndCollectInfo = proc (metadata, invalidationKeys) -> do
       let Metadata sources remoteSchemas collections allowlists
-            customTypes actions cronTriggers endpoints apiLimits metricsConfig inheritedRoles = metadata
+            customTypes actions cronTriggers endpoints apiLimits metricsConfig inheritedRoles
+            _introspectionDisabledRoles = metadata
           actionRoles = map _apmRole . _amPermissions =<< OMap.elems actions
           remoteSchemaRoles = map _rspmRole . _rsmPermissions =<< OMap.elems remoteSchemas
           sourceRoles =

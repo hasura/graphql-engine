@@ -9,7 +9,7 @@ module Hasura.GraphQL.Execute
   , buildSubscriptionPlan
   , EQ.PreparedSql(..)
   , ExecutionCtx(..)
-  , MonadGQLExecutionCheck(..)
+  , EC.MonadGQLExecutionCheck(..)
   , checkQueryInAllowlist
   , MultiplexedLiveQueryPlan(..)
   , LiveQueryPlan (..)
@@ -28,11 +28,13 @@ import qualified Network.HTTP.Client                    as HTTP
 import qualified Network.HTTP.Types                     as HTTP
 import qualified Network.Wai.Extended                   as Wai
 
+
 import           Data.Text.Extended
 
 import qualified Hasura.GraphQL.Context                 as C
 import qualified Hasura.GraphQL.Execute.Action          as EA
 import qualified Hasura.GraphQL.Execute.Backend         as EB
+import qualified Hasura.GraphQL.Execute.Common          as EC
 import qualified Hasura.GraphQL.Execute.Inline          as EI
 import qualified Hasura.GraphQL.Execute.LiveQuery.Plan  as EL
 import qualified Hasura.GraphQL.Execute.Mutation        as EM
@@ -283,6 +285,7 @@ getResolvedExecPlan
      , MonadMetadataStorage (MetadataStorageT m)
      , MonadIO m
      , Tracing.MonadTrace m
+     , EC.MonadGQLExecutionCheck m
      )
   => Env.Environment
   -> L.Logger L.Hasura
@@ -333,8 +336,9 @@ getResolvedExecPlan env logger {- planCache-} userInfo sqlGenCtx
           -- (Here the above fragment inlining is actually executed.)
           inlinedSelSet <- EI.inlineSelectionSet fragments selSet
           (executionPlan, queryRootFields, normalizedSelectionSet) <-
-            EQ.convertQuerySelSet env logger gCtx userInfo httpManager reqHeaders dirs inlinedSelSet varDefs (_grVariables reqUnparsed)
+            EQ.convertQuerySelSet env logger gCtx userInfo httpManager reqHeaders dirs inlinedSelSet varDefs (_grVariables reqUnparsed) (scSetGraphqlIntrospectionOptions sc)
           pure $ (normalizedSelectionSet, QueryExecutionPlan executionPlan queryRootFields)
+
           -- See Note [Temporarily disabling query plan caching]
           -- traverse_ (addPlanToCache . EP.RPQuery) plan
         G.TypedOperationDefinition G.OperationTypeMutation _ varDefs _ selSet -> do
@@ -342,7 +346,7 @@ getResolvedExecPlan env logger {- planCache-} userInfo sqlGenCtx
           inlinedSelSet <- EI.inlineSelectionSet fragments selSet
           (executionPlan, normalizedSelectionSet) <-
             EM.convertMutationSelectionSet env logger gCtx sqlGenCtx userInfo httpManager reqHeaders
-            inlinedSelSet varDefs (_grVariables reqUnparsed)
+            inlinedSelSet varDefs (_grVariables reqUnparsed) (scSetGraphqlIntrospectionOptions sc)
           pure $ (normalizedSelectionSet, MutationExecutionPlan executionPlan)
           -- See Note [Temporarily disabling query plan caching]
           -- traverse_ (addPlanToCache . EP.RPQuery) plan

@@ -437,6 +437,7 @@ library
                      , Hasura.RQL.Types.Endpoint.Trie
                      , Hasura.RQL.Types.Error
                      , Hasura.RQL.Types.EventTrigger
+                     , Hasura.RQL.Types.GraphqlSchemaIntrospection
                      , Hasura.RQL.Types.Function
                      , Hasura.RQL.Types.Instances
                      , Hasura.RQL.Types.Metadata
@@ -461,6 +462,7 @@ library
                      , Hasura.RQL.DDL.CustomTypes
                      , Hasura.RQL.DDL.Deps
                      , Hasura.RQL.DDL.Endpoint
+                     , Hasura.RQL.DDL.GraphqlSchemaIntrospection
                      , Hasura.RQL.DDL.InheritedRoles
                      , Hasura.RQL.DDL.Headers
                      , Hasura.RQL.DDL.Metadata

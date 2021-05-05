@@ -3,16 +3,16 @@ module Hasura.Server.API.Metadata where
 
 import           Hasura.Prelude
 
-import qualified Data.Environment                   as Env
-import qualified Network.HTTP.Client.Extended       as HTTP
+import qualified Data.Environment                          as Env
+import qualified Network.HTTP.Client.Extended              as HTTP
 
-import           Control.Monad.Trans.Control        (MonadBaseControl)
+import           Control.Monad.Trans.Control               (MonadBaseControl)
 import           Control.Monad.Unique
 import           Data.Aeson
 import           Data.Aeson.Casing
 import           Data.Aeson.TH
 
-import qualified Hasura.Tracing                     as Tracing
+import qualified Hasura.Tracing                            as Tracing
 
 import           Hasura.EncJSON
 import           Hasura.Metadata.Class
@@ -22,6 +22,7 @@ import           Hasura.RQL.DDL.ComputedField
 import           Hasura.RQL.DDL.CustomTypes
 import           Hasura.RQL.DDL.Endpoint
 import           Hasura.RQL.DDL.EventTrigger
+import           Hasura.RQL.DDL.GraphqlSchemaIntrospection
 import           Hasura.RQL.DDL.InheritedRoles
 import           Hasura.RQL.DDL.Metadata
 import           Hasura.RQL.DDL.Permission
@@ -35,9 +36,9 @@ import           Hasura.RQL.DDL.Schema
 import           Hasura.RQL.DDL.Schema.Source
 import           Hasura.RQL.Types
 import           Hasura.RQL.Types.Run
-import           Hasura.Server.Types                (InstanceId (..), MaintenanceMode (..))
-import           Hasura.Server.Utils                (APIVersion (..))
-import           Hasura.Server.Version              (HasVersion)
+import           Hasura.Server.Types                       (InstanceId (..), MaintenanceMode (..))
+import           Hasura.Server.Utils                       (APIVersion (..))
+import           Hasura.Server.Version                     (HasVersion)
 import           Hasura.Session
 
 
@@ -201,6 +202,8 @@ data RQLMetadataV1
   -- inherited roles
   | RMAddInheritedRole !AddInheritedRole
   | RMDropInheritedRole !DropInheritedRole
+
+  | RMSetGraphqlSchemaIntrospectionOptions !SetGraphqlIntrospectionOptions
 
   -- bulk metadata queries
   | RMBulk [RQLMetadataRequest]
@@ -516,7 +519,9 @@ runMetadataQueryV1M env currentResourceVersion = \case
   RMAddInheritedRole q              -> runAddInheritedRole q
   RMDropInheritedRole q             -> runDropInheritedRole q
 
-  RMBulk q                          -> encJFromList <$> indexedMapM (runMetadataQueryM env currentResourceVersion) q
+  RMSetGraphqlSchemaIntrospectionOptions q -> runSetGraphqlSchemaIntrospectionOptions q
+
+  RMBulk q                                 -> encJFromList <$> indexedMapM (runMetadataQueryM env currentResourceVersion) q
 
 runMetadataQueryV2M
   :: ( MonadIO m

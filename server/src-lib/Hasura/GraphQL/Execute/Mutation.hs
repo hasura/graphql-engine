@@ -20,6 +20,7 @@ import qualified Hasura.Tracing                         as Tracing
 import           Hasura.GraphQL.Context
 import           Hasura.GraphQL.Execute.Action
 import           Hasura.GraphQL.Execute.Backend
+import           Hasura.GraphQL.Execute.Common
 import           Hasura.GraphQL.Execute.Instances       ()
 import           Hasura.GraphQL.Execute.Remote
 import           Hasura.GraphQL.Execute.Resolve
@@ -58,6 +59,7 @@ convertMutationSelectionSet
      , MonadIO m
      , MonadError QErr m
      , MonadMetadataStorage (MetadataStorageT m)
+     , MonadGQLExecutionCheck m
      )
   => Env.Environment
   -> L.Logger L.Hasura
@@ -69,8 +71,9 @@ convertMutationSelectionSet
   -> G.SelectionSet G.NoFragments G.Name
   -> [G.VariableDefinition]
   -> Maybe GH.VariableValues
+  -> SetGraphqlIntrospectionOptions
   -> m (ExecutionPlan, G.SelectionSet G.NoFragments Variable)
-convertMutationSelectionSet env logger gqlContext SQLGenCtx{stringifyNum} userInfo manager reqHeaders fields varDefs varValsM = do
+convertMutationSelectionSet env logger gqlContext SQLGenCtx{stringifyNum} userInfo manager reqHeaders fields varDefs varValsM introspectionDisabledRoles = do
   mutationParser <- onNothing (gqlMutationParser gqlContext) $
     throw400 ValidationFailed "no mutations exist"
 
@@ -96,8 +99,7 @@ convertMutationSelectionSet env logger gqlContext SQLGenCtx{stringifyNum} userIn
       plan <- convertMutationAction env logger userInfo manager reqHeaders action
       pure $ ExecStepAction (plan, ActionsInfo actionName _fch) -- `_fch` represents the `forward_client_headers` option from the action
                                                                 -- definition which is currently being ignored for actions that are mutations
-    RFRaw s ->
-      pure $ ExecStepRaw s
+    RFRaw s -> flip onLeft throwError =<< executeIntrospection userInfo s introspectionDisabledRoles
   return (txs, resolvedSelSet)
   where
     reportParseErrors errs = case NE.head errs of
