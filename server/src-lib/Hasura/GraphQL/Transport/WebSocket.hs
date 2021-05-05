@@ -238,6 +238,7 @@ data WSServerEnv
   , _wseServer          :: !WSServer
   , _wseEnableAllowlist :: !Bool
   , _wseKeepAliveDelay  :: !KeepAliveDelay
+  , _wseServerMetrics   :: !ServerMetrics
   }
 
 onConn :: (MonadIO m, MonadReader WSServerEnv m)
@@ -574,7 +575,7 @@ onStart env serverEnv wsConn (StartMsg opId q) = catchAndIgnore $ do
       return $ ResultsFragment telemTimeIO_DT Telem.Remote (JO.toEncJSON value) []
 
     WSServerEnv logger lqMap getSchemaCache httpMgr _ sqlGenCtx {- planCache -}
-      _ enableAL _keepAliveDelay = serverEnv
+      _ enableAL _keepAliveDelay _ = serverEnv
 
     WSConnData userInfoR opMap errRespTy queryType = WS.getData wsConn
 
@@ -632,7 +633,7 @@ onStart env serverEnv wsConn (StartMsg opId q) = catchAndIgnore $ do
       throwError ()
 
     restartLiveQuery liveQueryBuilder lqId actionLogMap = do
-      LQ.removeLiveQuery logger lqMap lqId
+      LQ.removeLiveQuery logger (_wseServerMetrics serverEnv) lqMap lqId
       either (const Nothing) Just <$> startLiveQuery liveQueryBuilder actionLogMap
 
     startLiveQuery liveQueryBuilder actionLogMap = do
@@ -647,7 +648,7 @@ onStart env serverEnv wsConn (StartMsg opId q) = catchAndIgnore $ do
         -- crucial we don't lose lqId after addLiveQuery returns successfully.
         !lqId <- liftIO $ AB.dispatchAnyBackend @BackendTransport exists
           \(E.MultiplexedLiveQueryPlan liveQueryPlan) ->
-            LQ.addLiveQuery logger subscriberMetadata lqMap sourceName liveQueryPlan liveQOnChange
+            LQ.addLiveQuery logger (_wseServerMetrics serverEnv) subscriberMetadata lqMap sourceName liveQueryPlan liveQOnChange
         let !opName = _grOperationName q
 #ifndef PROFILING
         liftIO $ $assertNFHere (lqId, opName)  -- so we don't write thunks to mutable vars
@@ -729,7 +730,7 @@ stopOperation serverEnv wsConn opId logWhenOpNotExist = do
   case opM of
     Just (lqId, opNameM) -> do
       logWSEvent logger wsConn $ EOperation $ opDet opNameM
-      LQ.removeLiveQuery logger lqMap lqId
+      LQ.removeLiveQuery logger (_wseServerMetrics serverEnv) lqMap lqId
     Nothing    -> logWhenOpNotExist
   STM.atomically $ STMMap.delete opId opMap
   where
@@ -835,14 +836,15 @@ onConnInit logger manager wsConn authMode connParamsM = do
 onClose
   :: MonadIO m
   => L.Logger L.Hasura
+  -> ServerMetrics
   -> LQ.LiveQueriesState
   -> WSConn
   -> m ()
-onClose logger lqMap wsConn = do
+onClose logger serverMetrics lqMap wsConn = do
   logWSEvent logger wsConn EClosed
   operations <- liftIO $ STM.atomically $ ListT.toList $ STMMap.listT opMap
   liftIO $ for_ operations $ \(_, (lqId, _)) ->
-    LQ.removeLiveQuery logger lqMap lqId
+    LQ.removeLiveQuery logger serverMetrics lqMap lqId
   where
     opMap = _wscOpMap $ WS.getData wsConn
 
@@ -856,14 +858,15 @@ createWSServerEnv
   -> SQLGenCtx
   -> Bool
   -> KeepAliveDelay
+  -> ServerMetrics
   -- -> E.PlanCache
   -> m WSServerEnv
 createWSServerEnv logger lqState getSchemaCache httpManager
-  corsPolicy sqlGenCtx enableAL keepAliveDelay {- planCache -} = do
+  corsPolicy sqlGenCtx enableAL keepAliveDelay serverMetrics {- planCache -} = do
   wsServer <- liftIO $ STM.atomically $ WS.createWSServer logger
   return $
     WSServerEnv logger lqState getSchemaCache httpManager corsPolicy
-    sqlGenCtx {- planCache -} wsServer enableAL keepAliveDelay
+    sqlGenCtx {- planCache -} wsServer enableAL keepAliveDelay serverMetrics
 
 createWSServerApp
   :: ( HasVersion
@@ -880,14 +883,14 @@ createWSServerApp
      )
   => Env.Environment
   -> AuthMode
-  -> ServerMetrics
   -> WSServerEnv
   -> WS.HasuraServerApp m
 --   -- ^ aka generalized 'WS.ServerApp'
-createWSServerApp env authMode serverMetrics serverEnv = \ !ipAddress !pendingConn ->
+createWSServerApp env authMode serverEnv = \ !ipAddress !pendingConn ->
   WS.createServerApp (_wseServer serverEnv) handlers ipAddress pendingConn
   where
     handlers = WS.WSHandlers onConnHandler onMessageHandler onCloseHandler
+    serverMetrics = _wseServerMetrics serverEnv
     -- Mask async exceptions during event processing to help maintain integrity of mutable vars:
     onConnHandler rid rh ip = mask_ do
       liftIO $ EKG.Gauge.inc $ smWebsocketConnections serverMetrics
@@ -895,7 +898,7 @@ createWSServerApp env authMode serverMetrics serverEnv = \ !ipAddress !pendingCo
     onMessageHandler conn bs = mask_ $ onMessage env authMode serverEnv conn bs
     onCloseHandler conn = mask_ do
       liftIO $ EKG.Gauge.dec $ smWebsocketConnections serverMetrics
-      onClose (_wseLogger serverEnv) (_wseLiveQMap serverEnv) conn
+      onClose (_wseLogger serverEnv) serverMetrics (_wseLiveQMap serverEnv) conn
 
 stopWSServerApp :: WSServerEnv -> IO ()
 stopWSServerApp wsEnv = WS.shutdown (_wseServer wsEnv)
