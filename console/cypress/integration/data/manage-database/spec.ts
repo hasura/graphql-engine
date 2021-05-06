@@ -1,4 +1,3 @@
-import { setPromptWithCb } from '../../../helpers/common';
 import { baseUrl } from '../../../helpers/dataHelpers';
 
 const config = {
@@ -8,6 +7,7 @@ const config = {
   username: 'gql_test',
   password: '',
 };
+
 const dbUrl = `postgres://${config.username}:${config.password}@${config.host}:${config.port}/${config.dbName}`;
 
 export const openManageDatabases = () => {
@@ -37,9 +37,7 @@ export const addsNewPostgresDatabaseWithUrl = () => {
   cy.getBySel('idle-timeout').type('180');
   cy.getBySel('retries').type('1');
   cy.getBySel('connect-database-btn').click();
-  cy.get('.notification-success', { timeout: 10000 })
-    .should('be.visible')
-    .and('contain', 'Database added successfully!');
+  cy.checkNotification('Database added successfully!', { timeout: 10000 });
   cy.url().should('eq', `${baseUrl}/data/manage`);
 };
 
@@ -57,9 +55,7 @@ export const addsNewPgDBWithConParams = () => {
   }
   cy.getBySel('database-name').type(config.dbName);
   cy.getBySel('connect-database-btn').click();
-  cy.get('.notification-success', { timeout: 10000 })
-    .should('be.visible')
-    .and('contain', 'Database added successfully!');
+  cy.checkNotification('Database added successfully!', { timeout: 10000 });
   cy.url().should('eq', `${baseUrl}/data/manage`);
 };
 
@@ -71,9 +67,8 @@ export const addsNewPgDBWithEnvVar = () => {
   cy.getBySel('database-type').select('postgres');
   cy.getBySel('database-url-env').type('HASURA_GRAPHQL_DATABASE_URL');
   cy.getBySel('connect-database-btn').click();
-  cy.get('.notification-success', { timeout: 10000 })
-    .should('be.visible')
-    .and('contain', 'Database added successfully!');
+  cy.checkNotification('Database added successfully!', { timeout: 10000 });
+
   cy.url().should('eq', `${baseUrl}/data/manage`);
 };
 
@@ -83,37 +78,26 @@ export const failDuplicateNameDb = () => {
   cy.getBySel('database-display-name').type('testDB1');
   cy.getBySel('database-url').type(dbUrl);
   cy.getBySel('connect-database-btn').click();
-  cy.get('.notification-error')
-    .should('be.visible')
-    .and('contain', 'Add data source failed')
-    .and('contain', 'source with name "testDB1" already exists');
+  cy.checkNotification('source with name "testDB1" already exists', {
+    timeout: 10000,
+    type: 'error',
+  });
 };
 
-export const deleteTestDBWithUrl = () => {
+const deleteDB = (dbName: string) => {
+  cy.setPrompt(dbName, () => {
+    cy.getBySel(dbName).find('button').contains('Remove').click();
+    cy.checkNotification('Data source removed successfully!', {
+      timeout: 10000,
+    });
+    cy.window().its('prompt').should('be.called');
+  });
+};
+
+export const deleteTestDBs = () => {
   cy.getBySel('sidebar-manage-database').click();
-  setPromptWithCb('testDB1', () => {
-    cy.getBySel('testDB1').find('button').contains('Remove').click();
-    cy.get('.notification-success')
-      .should('be.visible')
-      .and('contain', 'Data source removed successfully!');
-    cy.window().its('prompt').should('be.called');
-  });
-};
-export const deleteTestDBWithConParams = () => {
-  setPromptWithCb('testDB2', () => {
-    cy.getBySel('testDB2').find('button').contains('Remove').click();
-    cy.get('.notification-success')
-      .should('be.visible')
-      .and('contain', 'Data source removed successfully!');
-    cy.window().its('prompt').should('be.called');
-  });
-};
-export const deleteTestDDWithEnvVar = () => {
-  setPromptWithCb('testDB3', () => {
-    cy.getBySel('testDB3').find('button').contains('Remove').click();
-    cy.get('.notification-success')
-      .should('be.visible')
-      .and('contain', 'Data source removed successfully!');
-    cy.window().its('prompt').should('be.called');
+  const dbs = ['testDB1', 'testDB2', 'testDB3'];
+  dbs.forEach(db => {
+    deleteDB(db);
   });
 };

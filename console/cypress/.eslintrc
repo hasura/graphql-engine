@@ -14,5 +14,6 @@
         "allowForLoopAfterthoughts": true
       }
     ]
-  }
+  },
+  "ignorePatterns": ["**/*.d.ts"]
 }

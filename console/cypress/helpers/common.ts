@@ -3,7 +3,11 @@ export const baseUrl = Cypress.config('baseUrl');
 export const migrateUrl = Cypress.env('MIGRATE_URL');
 export const migrateModeUrl = `${migrateUrl}/settings`;
 
-// sets value of window.prompt and reloads page
+/**
+ * sets value of window.prompt and reloads page
+ * @param value
+ * @deprecated Use `cy.setPrompt(value, callBackFn)` instead
+ */
 export const setPromptValue = (value: string | null) => {
   cy.log(`Set window.prompt to "${value}"`).then(() => {
     cy.removeAllListeners('window:before:load');
@@ -18,10 +22,20 @@ export const setPromptValue = (value: string | null) => {
   cy.wait(7000);
 };
 
-// This is works as setPromptValue with no unnecessary waiting
+/**
+ * sets value of window.prompt and reloads page
+ * @param value
+ * @deprecated Use `cy.setPrompt(value, callBackFn)` instead
+ */
 export const setPromptWithCb = (value: string | null, cb: () => void) => {
-  cy.window().then(win => {
-    cy.stub(win, 'prompt').returns(value);
-    cb();
-  });
+  const sandbox = Cypress.sinon.createSandbox();
+  cy.window()
+    .then(win => {
+      sandbox.stub(win, 'prompt').returns(value);
+      cb();
+      return null;
+    })
+    .then(() => {
+      sandbox.restore();
+    });
 };
